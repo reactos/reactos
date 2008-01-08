@@ -23,20 +23,18 @@
 
 #include <precomp.h>
 
-WCHAR  szTemp[256];
-WCHAR  szTempA[256];
-
-void ProcessPage_OnSetPriorityRealTime(void)
+void DoSetPriority(DWORD priority)
 {
     LVITEM  lvitem;
     ULONG   Index;
     DWORD   dwProcessId;
     HANDLE  hProcess;
-    WCHAR   strErrorText[260];
+    WCHAR   szText[260];
+    WCHAR   szTitle[256];
 
     for (Index=0; Index<(ULONG)ListView_GetItemCount(hProcessPageListCtrl); Index++)
     {
-        memset(&lvitem, 0, sizeof(LVITEM));
+        ZeroMemory(&lvitem, sizeof(LVITEM));
 
         lvitem.mask = LVIF_STATE;
         lvitem.stateMask = LVIS_SELECTED;
@@ -53,286 +51,26 @@ void ProcessPage_OnSetPriorityRealTime(void)
     if ((ListView_GetSelectedCount(hProcessPageListCtrl) != 1) || (dwProcessId == 0))
         return;
 
-    LoadStringW(hInst, IDS_MSG_WARNINGCHANGEPRIORITY, szTemp, 256);
-    LoadStringW(hInst, IDS_MSG_TASKMGRWARNING, szTempA, 256);
-    if (MessageBoxW(hMainWnd, szTemp, szTempA, MB_YESNO|MB_ICONWARNING) != IDYES)
+    LoadStringW(hInst, IDS_MSG_TASKMGRWARNING, szTitle, 256);
+    LoadStringW(hInst, IDS_MSG_WARNINGCHANGEPRIORITY, szText, 260);
+    if (MessageBoxW(hMainWnd, szText, szTitle, MB_YESNO|MB_ICONWARNING) != IDYES)
         return;
 
     hProcess = OpenProcess(PROCESS_SET_INFORMATION, FALSE, dwProcessId);
 
     if (!hProcess)
     {
-        GetLastErrorText(strErrorText, 260);
-        LoadStringW(hInst, IDS_MSG_UNABLECHANGEPRIORITY, szTemp, 256);
-        MessageBoxW(hMainWnd, strErrorText, szTemp, MB_OK|MB_ICONSTOP);
+        GetLastErrorText(szText, 260);
+        LoadStringW(hInst, IDS_MSG_UNABLECHANGEPRIORITY, szTitle, 256);
+        MessageBoxW(hMainWnd, szText, szTitle, MB_OK|MB_ICONSTOP);
         return;
     }
 
-    if (!SetPriorityClass(hProcess, REALTIME_PRIORITY_CLASS))
+    if (!SetPriorityClass(hProcess, priority))
     {
-        GetLastErrorText(strErrorText, 260);
-        LoadStringW(hInst, IDS_MSG_UNABLECHANGEPRIORITY, szTemp, 256);
-        MessageBoxW(hMainWnd, strErrorText, szTemp, MB_OK|MB_ICONSTOP);
-    }
-
-    CloseHandle(hProcess);
-}
-
-void ProcessPage_OnSetPriorityHigh(void)
-{
-    LVITEM  lvitem;
-    ULONG   Index;
-    DWORD   dwProcessId;
-    HANDLE  hProcess;
-    WCHAR   strErrorText[260];
-
-    for (Index=0; Index<(ULONG)ListView_GetItemCount(hProcessPageListCtrl); Index++)
-    {
-        memset(&lvitem, 0, sizeof(LVITEM));
-
-        lvitem.mask = LVIF_STATE;
-        lvitem.stateMask = LVIS_SELECTED;
-        lvitem.iItem = Index;
-
-        (void)ListView_GetItem(hProcessPageListCtrl, &lvitem);
-
-        if (lvitem.state & LVIS_SELECTED)
-            break;
-    }
-
-    dwProcessId = PerfDataGetProcessId(Index);
-
-    if ((ListView_GetSelectedCount(hProcessPageListCtrl) != 1) || (dwProcessId == 0))
-        return;
-
-    LoadStringW(hInst, IDS_MSG_WARNINGCHANGEPRIORITY, szTemp, 256);
-    LoadStringW(hInst, IDS_MSG_TASKMGRWARNING, szTempA, 256);
-    if (MessageBoxW(hMainWnd, szTemp, szTempA, MB_YESNO|MB_ICONWARNING) != IDYES)
-        return;
-
-    hProcess = OpenProcess(PROCESS_SET_INFORMATION, FALSE, dwProcessId);
-
-    if (!hProcess)
-    {
-        GetLastErrorText(strErrorText, 260);
-        LoadStringW(hInst, IDS_MSG_UNABLECHANGEPRIORITY, szTemp, 256);
-        MessageBoxW(hMainWnd, strErrorText, szTemp, MB_OK|MB_ICONSTOP);
-        return;
-    }
-
-    if (!SetPriorityClass(hProcess, HIGH_PRIORITY_CLASS))
-    {
-        GetLastErrorText(strErrorText, 260);
-        LoadStringW(hInst, IDS_MSG_UNABLECHANGEPRIORITY, szTemp, 256);
-        MessageBoxW(hMainWnd, strErrorText, szTemp, MB_OK|MB_ICONSTOP);
-    }
-
-    CloseHandle(hProcess);
-}
-
-void ProcessPage_OnSetPriorityAboveNormal(void)
-{
-    LVITEM  lvitem;
-    ULONG   Index;
-    DWORD   dwProcessId;
-    HANDLE  hProcess;
-    WCHAR   strErrorText[260];
-
-    for (Index=0; Index<(ULONG)ListView_GetItemCount(hProcessPageListCtrl); Index++)
-    {
-        memset(&lvitem, 0, sizeof(LVITEM));
-
-        lvitem.mask = LVIF_STATE;
-        lvitem.stateMask = LVIS_SELECTED;
-        lvitem.iItem = Index;
-
-        (void)ListView_GetItem(hProcessPageListCtrl, &lvitem);
-
-        if (lvitem.state & LVIS_SELECTED)
-            break;
-    }
-
-    dwProcessId = PerfDataGetProcessId(Index);
-
-    if ((ListView_GetSelectedCount(hProcessPageListCtrl) != 1) || (dwProcessId == 0))
-        return;
-
-    LoadStringW(hInst, IDS_MSG_WARNINGCHANGEPRIORITY, szTemp, 256);
-    LoadStringW(hInst, IDS_MSG_TASKMGRWARNING, szTempA, 256);
-    if (MessageBoxW(hMainWnd, szTemp, szTempA, MB_YESNO|MB_ICONWARNING) != IDYES)
-        return;
-
-    hProcess = OpenProcess(PROCESS_SET_INFORMATION, FALSE, dwProcessId);
-
-    if (!hProcess)
-    {
-        GetLastErrorText(strErrorText, 260);
-        LoadStringW(hInst, IDS_MSG_UNABLECHANGEPRIORITY, szTemp, 256);
-        MessageBoxW(hMainWnd, strErrorText, szTemp, MB_OK|MB_ICONSTOP);
-        return;
-    }
-
-    if (!SetPriorityClass(hProcess, ABOVE_NORMAL_PRIORITY_CLASS))
-    {
-        GetLastErrorText(strErrorText, 260);
-        LoadStringW(hInst, IDS_MSG_UNABLECHANGEPRIORITY, szTemp, 256);
-        MessageBoxW(hMainWnd, strErrorText, szTemp, MB_OK|MB_ICONSTOP);
-    }
-
-    CloseHandle(hProcess);
-}
-
-void ProcessPage_OnSetPriorityNormal(void)
-{
-    LVITEM  lvitem;
-    ULONG   Index;
-    DWORD   dwProcessId;
-    HANDLE  hProcess;
-    WCHAR   strErrorText[260];
-
-    for (Index=0; Index<(ULONG)ListView_GetItemCount(hProcessPageListCtrl); Index++)
-    {
-        memset(&lvitem, 0, sizeof(LVITEM));
-
-        lvitem.mask = LVIF_STATE;
-        lvitem.stateMask = LVIS_SELECTED;
-        lvitem.iItem = Index;
-
-        (void)ListView_GetItem(hProcessPageListCtrl, &lvitem);
-
-        if (lvitem.state & LVIS_SELECTED)
-            break;
-    }
-
-    dwProcessId = PerfDataGetProcessId(Index);
-
-    if ((ListView_GetSelectedCount(hProcessPageListCtrl) != 1) || (dwProcessId == 0))
-        return;
-
-    LoadStringW(hInst, IDS_MSG_WARNINGCHANGEPRIORITY, szTemp, 256);
-    LoadStringW(hInst, IDS_MSG_TASKMGRWARNING, szTempA, 256);
-    if (MessageBoxW(hMainWnd, szTemp, szTempA, MB_YESNO|MB_ICONWARNING) != IDYES)
-        return;
-
-    hProcess = OpenProcess(PROCESS_SET_INFORMATION, FALSE, dwProcessId);
-
-    if (!hProcess)
-    {
-        GetLastErrorText(strErrorText, 260);
-        LoadStringW(hInst, IDS_MSG_UNABLECHANGEPRIORITY, szTemp, 256);
-        MessageBoxW(hMainWnd, strErrorText, szTemp, MB_OK|MB_ICONSTOP);
-        return;
-    }
-
-    if (!SetPriorityClass(hProcess, NORMAL_PRIORITY_CLASS))
-    {
-        GetLastErrorText(strErrorText, 260);
-        LoadStringW(hInst, IDS_MSG_UNABLECHANGEPRIORITY, szTemp, 256);
-        MessageBoxW(hMainWnd, strErrorText, szTemp, MB_OK|MB_ICONSTOP);
-    }
-
-    CloseHandle(hProcess);
-}
-
-void ProcessPage_OnSetPriorityBelowNormal(void)
-{
-    LVITEM  lvitem;
-    ULONG   Index;
-    DWORD   dwProcessId;
-    HANDLE  hProcess;
-    WCHAR   strErrorText[260];
-
-    for (Index=0; Index<(ULONG)ListView_GetItemCount(hProcessPageListCtrl); Index++)
-    {
-        memset(&lvitem, 0, sizeof(LVITEM));
-
-        lvitem.mask = LVIF_STATE;
-        lvitem.stateMask = LVIS_SELECTED;
-        lvitem.iItem = Index;
-
-        (void)ListView_GetItem(hProcessPageListCtrl, &lvitem);
-
-        if (lvitem.state & LVIS_SELECTED)
-            break;
-    }
-
-    dwProcessId = PerfDataGetProcessId(Index);
-
-    if ((ListView_GetSelectedCount(hProcessPageListCtrl) != 1) || (dwProcessId == 0))
-        return;
-
-    LoadStringW(hInst, IDS_MSG_WARNINGCHANGEPRIORITY, szTemp, 256);
-    LoadStringW(hInst, IDS_MSG_TASKMGRWARNING, szTempA, 256);
-    if (MessageBoxW(hMainWnd, szTemp, szTempA, MB_YESNO|MB_ICONWARNING) != IDYES)
-        return;
-
-    hProcess = OpenProcess(PROCESS_SET_INFORMATION, FALSE, dwProcessId);
-
-    if (!hProcess)
-    {
-        GetLastErrorText(strErrorText, 260);
-        LoadStringW(hInst, IDS_MSG_UNABLECHANGEPRIORITY, szTemp, 256);
-        MessageBoxW(hMainWnd, strErrorText, szTemp, MB_OK|MB_ICONSTOP);
-        return;
-    }
-
-    if (!SetPriorityClass(hProcess, BELOW_NORMAL_PRIORITY_CLASS))
-    {
-        GetLastErrorText(strErrorText, 260);
-        LoadStringW(hInst, IDS_MSG_UNABLECHANGEPRIORITY, szTemp, 256);
-        MessageBoxW(hMainWnd, strErrorText, szTemp, MB_OK|MB_ICONSTOP);
-    }
-
-    CloseHandle(hProcess);
-}
-
-void ProcessPage_OnSetPriorityLow(void)
-{
-    LVITEM  lvitem;
-    ULONG   Index;
-    DWORD   dwProcessId;
-    HANDLE  hProcess;
-    WCHAR   strErrorText[260];
-
-    for (Index=0; Index<(ULONG)ListView_GetItemCount(hProcessPageListCtrl); Index++)
-    {
-        memset(&lvitem, 0, sizeof(LVITEM));
-
-        lvitem.mask = LVIF_STATE;
-        lvitem.stateMask = LVIS_SELECTED;
-        lvitem.iItem = Index;
-
-        (void)ListView_GetItem(hProcessPageListCtrl, &lvitem);
-
-        if (lvitem.state & LVIS_SELECTED)
-            break;
-    }
-
-    dwProcessId = PerfDataGetProcessId(Index);
-
-    if ((ListView_GetSelectedCount(hProcessPageListCtrl) != 1) || (dwProcessId == 0))
-        return;
-
-    LoadStringW(hInst, IDS_MSG_WARNINGCHANGEPRIORITY, szTemp, 256);
-    LoadStringW(hInst, IDS_MSG_TASKMGRWARNING, szTempA, 256);
-    if (MessageBoxW(hMainWnd, szTemp, szTempA, MB_YESNO|MB_ICONWARNING) != IDYES)
-        return;
-
-    hProcess = OpenProcess(PROCESS_SET_INFORMATION, FALSE, dwProcessId);
-
-    if (!hProcess)
-    {
-        GetLastErrorText(strErrorText, 260);
-        LoadStringW(hInst, IDS_MSG_UNABLECHANGEPRIORITY, szTemp, 256);
-        MessageBoxW(hMainWnd, strErrorText, szTemp, MB_OK|MB_ICONSTOP);
-        return;
-    }
-
-    if (!SetPriorityClass(hProcess, IDLE_PRIORITY_CLASS))
-    {
-        GetLastErrorText(strErrorText, 260);
-        LoadStringW(hInst, IDS_MSG_UNABLECHANGEPRIORITY, szTemp, 256);
-        MessageBoxW(hMainWnd, strErrorText, szTemp, MB_OK|MB_ICONSTOP);
+        GetLastErrorText(szText, 260);
+        LoadStringW(hInst, IDS_MSG_UNABLECHANGEPRIORITY, szTitle, 256);
+        MessageBoxW(hMainWnd, szText, szTitle, MB_OK|MB_ICONSTOP);
     }
 
     CloseHandle(hProcess);

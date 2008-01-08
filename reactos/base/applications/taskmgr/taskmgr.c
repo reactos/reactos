@@ -212,22 +212,22 @@ TaskManagerWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
             ProcessPage_OnSetAffinity();
             break;
         case ID_PROCESS_PAGE_SETPRIORITY_REALTIME:
-            ProcessPage_OnSetPriorityRealTime();
+            DoSetPriority(REALTIME_PRIORITY_CLASS);
             break;
         case ID_PROCESS_PAGE_SETPRIORITY_HIGH:
-            ProcessPage_OnSetPriorityHigh();
+            DoSetPriority(HIGH_PRIORITY_CLASS);
             break;
         case ID_PROCESS_PAGE_SETPRIORITY_ABOVENORMAL:
-            ProcessPage_OnSetPriorityAboveNormal();
+            DoSetPriority(ABOVE_NORMAL_PRIORITY_CLASS);
             break;
         case ID_PROCESS_PAGE_SETPRIORITY_NORMAL:
-            ProcessPage_OnSetPriorityNormal();
+            DoSetPriority(NORMAL_PRIORITY_CLASS);
             break;
         case ID_PROCESS_PAGE_SETPRIORITY_BELOWNORMAL:
-            ProcessPage_OnSetPriorityBelowNormal();
+            DoSetPriority(BELOW_NORMAL_PRIORITY_CLASS);
             break;
         case ID_PROCESS_PAGE_SETPRIORITY_LOW:
-            ProcessPage_OnSetPriorityLow();
+            DoSetPriority(IDLE_PRIORITY_CLASS);
             break;
         case ID_PROCESS_PAGE_DEBUGCHANNELS:
             ProcessPage_OnDebugChannels();

@@ -124,7 +124,7 @@ void TaskManager_OnTabWndSelChange(void);
 LPTSTR GetLastErrorText( LPTSTR lpszBuf, DWORD dwSize );
 
 #ifdef __cplusplus
-};
+}
 #endif
 
 #endif /* __TASKMGR_H__ */
