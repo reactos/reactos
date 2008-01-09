@@ -272,6 +272,7 @@ BOOL UserInitDefaultKeyboardLayout()
 PKBL W32kGetDefaultKeyLayout(VOID)
 {
    const WCHAR szKeyboardLayoutPath[] = L"\\Keyboard Layout\\Preload";
+   const WCHAR szDefaultUserPath[] = L"\\REGISTRY\\USER\\.DEFAULT";
 
    HANDLE KeyHandle;
    LCID LayoutLocaleId = 0;
@@ -290,41 +291,42 @@ PKBL W32kGetDefaultKeyLayout(VOID)
    if( NT_SUCCESS(Status) )
    {
       // FIXME: Is this 100% correct?
-      // We're called very early, so \\REGISTRY\\USER might not be available yet. Check this first.
+      // We're called very early, so HKEY_CURRENT_USER might not be available yet. Check this first.
       InitializeObjectAttributes(&KeyAttributes, &CurrentUserPath, OBJ_CASE_INSENSITIVE, NULL, NULL);
       Status = ZwOpenKey(&KeyHandle, KEY_READ, &KeyAttributes);
 
       if(Status == STATUS_OBJECT_NAME_NOT_FOUND)
       {
-         // Fall back to US English without any debug message
-         LayoutLocaleId = 0x409;
+         // It is not available, so read it from HKEY_USERS\.DEFAULT
+         RtlCopyMemory(wszBuffer, szDefaultUserPath, sizeof(szDefaultUserPath));
       }
       else
       {
-         // The path is available, so build the full path to HKEY_CURRENT_USER\Keyboard Layout\Preload
+         // The path is available
          ZwClose(KeyHandle);
-
          RtlCopyMemory(wszBuffer, CurrentUserPath.Buffer, CurrentUserPath.MaximumLength);
-         RtlInitUnicodeString(&FullKeyboardLayoutPath, wszBuffer);
-         FullKeyboardLayoutPath.MaximumLength = MAX_PATH;
+      }
 
-         Status = RtlAppendUnicodeToString(&FullKeyboardLayoutPath, szKeyboardLayoutPath);
+      // Build the full path
+      RtlInitUnicodeString(&FullKeyboardLayoutPath, wszBuffer);
+      FullKeyboardLayoutPath.MaximumLength = MAX_PATH;
+
+      Status = RtlAppendUnicodeToString(&FullKeyboardLayoutPath, szKeyboardLayoutPath);
+
+      if( NT_SUCCESS(Status) )
+      {
+         // Return the first keyboard layout listed there
+         RtlInitUnicodeString(&LayoutValueName, L"1");
+
+         Status = ReadRegistryValue(&FullKeyboardLayoutPath, &LayoutValueName, &LayoutLocaleIdString);
 
          if( NT_SUCCESS(Status) )
-         {
-            // Return the first keyboard layout listed there
-            RtlInitUnicodeString(&LayoutValueName, L"1");
-
-            Status = ReadRegistryValue(&FullKeyboardLayoutPath, &LayoutValueName, &LayoutLocaleIdString);
-
-            if( NT_SUCCESS(Status) )
-               RtlUnicodeStringToInteger(&LayoutLocaleIdString, 16, &LayoutLocaleId);
-            else
-               DPRINT1("ReadRegistryValue failed! (%08lx).\n", Status);
-         }
+            RtlUnicodeStringToInteger(&LayoutLocaleIdString, 16, &LayoutLocaleId);
          else
-            DPRINT1("RtlAppendUnicodeToString failed! (%08lx)\n", Status);
+            DPRINT1("ReadRegistryValue failed! (%08lx).\n", Status);
       }
+      else
+         DPRINT1("RtlAppendUnicodeToString failed! (%08lx)\n", Status);
 
       RtlFreeUnicodeString(&CurrentUserPath);
    }
