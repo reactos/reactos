@@ -247,6 +247,8 @@ LoadCursorIconImage(
          {
             return hIcon;
          }
+         else
+             FIXME("Didn't find the shared icon!!\n");
       }
 
       hResource = LoadResource(hinst, hResInfo);
