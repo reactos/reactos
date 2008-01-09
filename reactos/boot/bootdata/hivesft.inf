@@ -3,6 +3,9 @@ Signature="$ReactOS$
 
 [AddReg]
 
+; Internet Explorer
+HKLM,"Software\Microsoft\Internet Explorer","Version",,"6.0.2900.2180"
+
 ; DirectX
 HKLM,"SOFTWARE\Microsoft\DirectX","Version",0x00000000,"4.09.00.0904"
 

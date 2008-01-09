@@ -122,4 +122,10 @@ HKCU, "Control Panel\Desktop\WindowMetrics","IconFont",0x00000001,f5,ff,ff,ff,00
 75,00,20,00,53,00,61,00,6e,00,73,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,\
 00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00
 
+; Internet Explorer
+
+HKCU,"Software\Microsoft\Internet Explorer\Main","Start Page",,"http://www.reactos.org"
+HKCU,"Software\Microsoft\Internet Explorer\Main","Search Page",,"http://www.google.com"
+
+
 ; EOF
