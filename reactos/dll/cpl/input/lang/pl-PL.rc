@@ -34,7 +34,7 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 	GROUPBOX "Kompatybilnoœæ", -1, 7,7,231,60
 	AUTOCHECKBOX "&Rozszerz wspieranie zaawansowanych us³ug tekstowych na wszystkie programy", IDC_SUPPORT_ADV_SERV_CHECKBOX, 14, 19, 210, 10, WS_GROUP
-	LTEXT "Zaznacz t¹ opcjê by uruchomiæ zaawansowane us³ugi tekstowe w Notatniku i innych programach, które normalnie nie obs³uguj¹ rozpoznawania mowy i pisma odrêcznego czy innych zaawansowanych us³ug wprowadzania.",-1,14,33,220,25
+	LTEXT "Zaznacz t¹ opcjê by uruchomiæ zaawansowane us³ugi tekstowe w Notatniku i innych programach, które normalnie nie obs³uguj¹ rozpoznawania mowy i pisma odrêcznego czy innych zaawansowanych us³ug wprowadzania.",IDC_SUPPORT_ADV_SERV_TEXT,14,33,220,25
 	GROUPBOX "Konfiguracja systemu", -1, 7,74,231,60
 	AUTOCHECKBOX "&Wy³¹cz zaawansowane us³ugi tekstowe", IDC_TURNOFF_ADV_TXTSERV_CHECKBOX, 14, 86, 210, 10, WS_GROUP
 	LTEXT "Zaznacz t¹ opcjê by wy³¹czyæ zaawansowane us³ugi tekstowe we wszystkich programach. Nie zalecane dla u¿ytkowników jêzyków Dalekiego Wschodu, jako ¿e zamyka to Pasek Jêzyków.",-1,14,100,220,25

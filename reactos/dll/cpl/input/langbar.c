@@ -26,16 +26,6 @@
  *      06-09-2007  Created
  */
 
-#include <windows.h>
-#include <commctrl.h>
-#include <cpl.h>
-
-#include <stdlib.h>
-#include <stdio.h>
-#include <stdarg.h>
-#include <tchar.h>
-#include <process.h>
-
 #include "resource.h"
 #include "input.h"
 

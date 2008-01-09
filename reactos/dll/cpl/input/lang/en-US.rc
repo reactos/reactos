@@ -27,7 +27,7 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 	GROUPBOX "Compatibility Configuration", -1, 7,7,231,60
 	AUTOCHECKBOX "&Extend support of advanced text services to all programs", IDC_SUPPORT_ADV_SERV_CHECKBOX, 14, 19, 210, 10, WS_GROUP
-	LTEXT "Select this check box to on for active advanced text services in Notepad and other programs that do not normally support speech and handwriting recognition or other advanced input services.",-1,14,33,220,25
+	LTEXT "Select this check box to on for active advanced text services in Notepad and other programs that do not normally support speech and handwriting recognition or other advanced input services.",IDC_SUPPORT_ADV_SERV_TEXT,14,33,220,25
 	GROUPBOX "System Configuration", -1, 7,74,231,60
 	AUTOCHECKBOX "&Turn off advanced text services", IDC_TURNOFF_ADV_TXTSERV_CHECKBOX, 14, 86, 210, 10, WS_GROUP
 	LTEXT "Select this check box to turn off advanced text services in all programs. Not recommended for East Asian users because this closes the language bar.",-1,14,100,220,25

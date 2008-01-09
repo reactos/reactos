@@ -1,6 +1,16 @@
 #ifndef __CPL_INPUT_H
 #define __CPL_INPUT_H
 
+#include <windows.h>
+#include <commctrl.h>
+#include <cpl.h>
+
+#include <stdlib.h>
+#include <stdio.h>
+#include <stdarg.h>
+#include <tchar.h>
+#include <process.h>
+
 typedef LONG (CALLBACK *CPLAPPLET_PROC)(VOID);
 
 typedef struct

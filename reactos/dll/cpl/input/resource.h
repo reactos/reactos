@@ -75,6 +75,7 @@
 #define IDC_MORE_TEXT_SERV_COMBO                    190
 #define IDC_CKS_BUTTON                              191
 #define IDC_GRAVE_ACCENT_RADIOBTN                   192
+#define IDC_SUPPORT_ADV_SERV_TEXT                   193
 
 /* IDS */
 #define IDS_CPLSYSTEMNAME           1

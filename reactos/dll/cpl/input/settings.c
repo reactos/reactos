@@ -26,16 +26,6 @@
  *      06-09-2007  Created
  */
 
-#include <windows.h>
-#include <commctrl.h>
-#include <cpl.h>
-
-#include <stdlib.h>
-#include <stdio.h>
-#include <stdarg.h>
-#include <tchar.h>
-#include <process.h>
-
 #include "resource.h"
 #include "input.h"
 
@@ -121,7 +111,7 @@ GetRootHandle(HWND hWnd, TCHAR * Name)
 }
 
 static BOOL
-InitDefaultLangList(HWND hWnd)
+InitLangList(HWND hWnd)
 {
     HKEY hKey, hSubKey;
     TCHAR szPreload[BUFSIZE], szCount[BUFSIZE], szSub[BUFSIZE];
@@ -270,9 +260,32 @@ SettingPageProc(HWND hwndDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
     switch (uMsg)
     {
         case WM_INITDIALOG:
-            InitDefaultLangList(hwndDlg);
+        {
+            InitLangList(hwndDlg);
+			EnableWindow(GetDlgItem(hwndDlg, IDC_PROP_BUTTON),FALSE);
+			EnableWindow(GetDlgItem(hwndDlg, IDC_SET_DEFAULT),FALSE);
+        }
             break;
-
+        case WM_NOTIFY:
+        {
+            switch (LOWORD(wParam))
+            {
+                case IDC_KEYLAYOUT_TREE:
+                {
+                    LPNMHDR lpnm = (LPNMHDR)lParam;
+                    switch (lpnm->code)
+                    {
+                        case NM_CLICK:
+                        {
+                            
+                        }
+                        break;
+                    }
+                }
+                break;
+            }
+        }
+		    break;
         case WM_COMMAND:
             switch (LOWORD(wParam))
             {
