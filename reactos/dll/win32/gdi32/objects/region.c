@@ -243,6 +243,17 @@ GetClipRgn(
 /*
  * @implemented
  */
+int
+STDCALL
+GetMetaRgn(HDC hdc,
+           HRGN hrgn)
+{
+    return NtGdiGetRandomRgn(hdc,hrgn,2);
+}
+
+/*
+ * @implemented
+ */
 BOOL
 STDCALL
 MirrorRgn(HWND hwnd, HRGN hrgn)
@@ -312,4 +323,29 @@ SetRectRgn(HRGN hrgn,
   return TRUE;
 #endif
 }
+
+/*
+ * @implemented
+ */
+int
+STDCALL
+SetMetaRgn( HDC hDC )
+{
+ if (GDI_HANDLE_GET_TYPE(hDC) == GDI_OBJECT_TYPE_DC)
+    return NtGdiSetMetaRgn(hDC);
+#if 0
+ PLDC pLDC = GdiGetLDC(hDC);
+ if ( pLDC && GDI_HANDLE_GET_TYPE(hDC) != GDI_OBJECT_TYPE_METADC )
+ {
+    if (pLDC->iType == LDC_EMFLDC || EMFDRV_SetMetaRgn(hDC))
+    {
+       return NtGdiSetMetaRgn(hDC);
+    }
+    else
+       SetLastError(ERROR_INVALID_HANDLE);
+ }
+#endif
+ return 0;
+}
+
 

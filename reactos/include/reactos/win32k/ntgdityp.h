@@ -357,6 +357,16 @@ typedef struct _PATRECT
   RECT r;
   HBRUSH hBrush;
 } PATRECT, * PPATRECT;
+
+typedef struct _W32CLIENTINFO
+{
+    ULONG CI_flags;
+    ULONG cSpins;
+    ULONG ulWindowsVersion;
+    ULONG ulAppCompatFlags;
+    ULONG ulAppCompatFlags2;
+    ULONG W32ClientInfo[57];
+} W32CLIENTINFO, *PW32CLIENTINFO;
 #endif
 
 typedef struct _GDIBSPPATBLT

@@ -185,18 +185,6 @@ GetBoundsRect(
 
 
 /*
- * @implemented
- */
-int
-STDCALL
-GetMetaRgn(HDC hdc,
-           HRGN hrgn)
-{
-    return NtGdiGetRandomRgn(hdc,hrgn,2);
-}
-
-
-/*
  * @unimplemented
  */
 UINT
@@ -211,7 +199,6 @@ GetMetaFileBitsEx(
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
 }
-
 
 
 /*
@@ -241,35 +228,6 @@ PlayMetaFile(
 	UNIMPLEMENTED;
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-ResizePalette(
-	HPALETTE	a0,
-	UINT		a1
-	)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-/*
- * @unimplemented
- */
-int
-STDCALL
-SetMetaRgn(
-	HDC	hdc
-	)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
 }
 
 /*
@@ -315,21 +273,6 @@ SetMetaFileBitsEx(
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
 }
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-UpdateColors(
-	HDC	hdc
-	)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
 
 /*
  * @unimplemented

@@ -89,6 +89,18 @@ RealizePalette(HDC hDC) /* [in] Handle of device context */
  return UserRealizePalette(hDC);
 }
 
+/*
+ * @implemented
+ */
+BOOL
+STDCALL
+ResizePalette(
+	HPALETTE	hPalette,
+	UINT		nEntries
+	)
+{
+  return NtGdiResizePalette(hPalette, nEntries);
+}
 
 /*
  * @implemented
@@ -108,6 +120,19 @@ SetDIBColorTable(HDC hDC,
     }
 
     return retValue;
+}
+
+/*
+ * @implemented
+ */
+BOOL
+STDCALL
+UpdateColors(
+	HDC	hdc
+	)
+{
+  ((PW32CLIENTINFO)NtCurrentTeb()->Win32ClientInfo)->cSpins = 0;
+  return NtGdiUpdateColors(hdc);
 }
 
 /* EOF */
