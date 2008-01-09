@@ -199,8 +199,8 @@ DrawBox(
 }
 
 VOID
-PopupError(PCHAR Text,
-    PCHAR Status,
+PopupError(PCCH Text,
+    PCCH Status,
     PINPUT_RECORD Ir,
     ULONG WaitEvent)
 {
@@ -212,7 +212,7 @@ PopupError(PCHAR Text,
     ULONG MaxLength;
     ULONG Lines;
     PCHAR p;
-    PCHAR pnext;
+    PCCH pnext;
     BOOLEAN LastLine;
     SHORT Width;
     SHORT Height;
@@ -560,14 +560,14 @@ CheckUnattendedSetup(VOID)
     DPRINT("Running unattended setup\n");
 }
 
-void
-UpdateKBLayout()
+VOID
+UpdateKBLayout(VOID)
 {
     PLIST_ENTRY Entry;
     PGENERIC_LIST_ENTRY ListEntry;
-    WCHAR szNewLayout[20];
+    LPCWSTR pszNewLayout;
 
-    MUIDefaultKeyboardLayout(szNewLayout);
+    pszNewLayout = MUIDefaultKeyboardLayout();
 
     if (LayoutList == NULL)
     {
@@ -575,17 +575,22 @@ UpdateKBLayout()
     }
 
     Entry = LayoutList->ListHead.Flink;
-    while (Entry != &LayoutList->ListHead)
+
+    /* Search for default layout (if provided) */
+    if (pszNewLayout != NULL)
     {
-        ListEntry = CONTAINING_RECORD (Entry, GENERIC_LIST_ENTRY, Entry);
-
-        if (!wcscmp(szNewLayout, ListEntry->UserData))
+        while (Entry != &LayoutList->ListHead)
         {
-            LayoutList->CurrentEntry = ListEntry;
-            break;
-        }
+            ListEntry = CONTAINING_RECORD (Entry, GENERIC_LIST_ENTRY, Entry);
 
-        Entry = Entry->Flink;
+            if (!wcscmp(pszNewLayout, ListEntry->UserData))
+            {
+                LayoutList->CurrentEntry = ListEntry;
+                break;
+            }
+
+            Entry = Entry->Flink;
+        }
     }
 }
 

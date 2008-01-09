@@ -5,19 +5,19 @@ typedef struct
 {
    BYTE X;
    BYTE Y;
-   CHAR * Buffer;
+   LPCSTR Buffer;
    BYTE Flags;
 }MUI_ENTRY, *PMUI_ENTRY;
 
 typedef struct
 {
-    CHAR * ErrorText;
-    CHAR * ErrorStatus;
+    LPCSTR ErrorText;
+    LPCSTR ErrorStatus;
 }MUI_ERROR;
 
 typedef struct
 {
-    long Number;
+    LONG Number;
     MUI_ENTRY * MuiEntry;
 }MUI_PAGE;
 
@@ -29,8 +29,8 @@ typedef struct
     PWCHAR OEMCPage;
     PWCHAR MACCPage;
     PWCHAR LanguageDescriptor;
-    MUI_PAGE * MuiPages;
-    MUI_ERROR * MuiErrors;
+    const MUI_PAGE * MuiPages;
+    const MUI_ERROR * MuiErrors;
 }MUI_LANGUAGE;
 
 
@@ -50,8 +50,8 @@ MUIDisplayPage (ULONG PageNumber);
 VOID
 MUIDisplayError (ULONG ErrorNum, PINPUT_RECORD Ir, ULONG WaitEvent);
 
-VOID
-MUIDefaultKeyboardLayout(WCHAR * KeyboardLayout);
+LPCWSTR
+MUIDefaultKeyboardLayout(VOID);
 
 BOOLEAN
 AddCodePage(VOID);

@@ -42,7 +42,7 @@
 #include "lang/sv-SE.h"
 #include "lang/uk-UA.h"
 
-static MUI_LANGUAGE LanguageList[] =
+static const MUI_LANGUAGE LanguageList[] =
 {
     {
         L"00000409",        /* The Language ID */
@@ -155,18 +155,18 @@ static MUI_LANGUAGE LanguageList[] =
 
 extern
 VOID
-PopupError(PCHAR Text,
-	   PCHAR Status,
-	   PINPUT_RECORD Ir,
-	   ULONG WaitEvent);
+PopupError(IN PCCH Text,
+           IN PCCH Status,
+           IN PINPUT_RECORD Ir,
+           IN ULONG WaitEvent);
 
 static
-MUI_ENTRY *
-FindMUIEntriesOfPage (ULONG PageNumber)
+const MUI_ENTRY *
+FindMUIEntriesOfPage(IN ULONG PageNumber)
 {
     ULONG muiIndex = 0;
     ULONG lngIndex = 0;
-    MUI_PAGE * Pages = NULL;
+    const MUI_PAGE * Pages = NULL;
 
     do
     {
@@ -195,8 +195,8 @@ FindMUIEntriesOfPage (ULONG PageNumber)
 }
 
 static
-MUI_ERROR *
-FindMUIErrorEntries ()
+const MUI_ERROR *
+FindMUIErrorEntries(VOID)
 {
     ULONG lngIndex = 0;
 
@@ -216,8 +216,8 @@ FindMUIErrorEntries ()
     return NULL;
 }
 
-VOID
-MUIDefaultKeyboardLayout(WCHAR * KeyboardLayout)
+LPCWSTR
+MUIDefaultKeyboardLayout(VOID)
 {
     ULONG lngIndex = 0;
     do
@@ -225,26 +225,25 @@ MUIDefaultKeyboardLayout(WCHAR * KeyboardLayout)
         /* First we search the language list till we find current selected language messages */
         if (_wcsicmp(LanguageList[lngIndex].LanguageID , SelectedLanguageId) == 0)
         {
-            /* Get all available error messages for this language */
-            wcscpy(KeyboardLayout, LanguageList[lngIndex].LanguageKeyboardLayoutID);
-            return;
+            /* Return default keyboard layout */
+            return LanguageList[lngIndex].LanguageKeyboardLayoutID;
         }
 
         lngIndex++;
     }
     while (LanguageList[lngIndex].MuiPages != NULL);
 
-    KeyboardLayout[0] = L'\0';
+    return NULL;
 }
 
 VOID
-MUIDisplayPage(ULONG page)
+MUIDisplayPage(IN ULONG page)
 {
-    MUI_ENTRY * entry;
+    const MUI_ENTRY * entry;
     int index;
     int flags;
 
-    entry = FindMUIEntriesOfPage (page);
+    entry = FindMUIEntriesOfPage(page);
     if (!entry)
     {
         PopupError("Error: Failed to find translated page",
@@ -281,13 +280,13 @@ MUIDisplayPage(ULONG page)
 }
 
 VOID
-MUIDisplayError(ULONG ErrorNum, PINPUT_RECORD Ir, ULONG WaitEvent)
+MUIDisplayError(IN ULONG ErrorNum, OUT PINPUT_RECORD Ir, IN ULONG WaitEvent)
 {
-    MUI_ERROR * entry;
+    const MUI_ERROR * entry;
 
     if (ErrorNum >= ERROR_LAST_ERROR_CODE)
     {
-        PopupError("Pnvalid error number provided",
+        PopupError("Invalid error number provided",
                    "Press ENTER to continue",
                    Ir,
                    POPUP_WAIT_ENTER);
@@ -295,7 +294,7 @@ MUIDisplayError(ULONG ErrorNum, PINPUT_RECORD Ir, ULONG WaitEvent)
         return;
     }
 
-    entry = FindMUIErrorEntries ();
+    entry = FindMUIErrorEntries();
     if (!entry)
     {
         PopupError("Error: Failed to find translated error message",
@@ -312,7 +311,7 @@ MUIDisplayError(ULONG ErrorNum, PINPUT_RECORD Ir, ULONG WaitEvent)
 }
 
 static BOOLEAN
-AddCodepageToRegistry(PWCHAR ACPage, PWCHAR OEMCPage, PWCHAR MACCPage)
+AddCodepageToRegistry(IN LPCWSTR ACPage, IN LPCWSTR OEMCPage, IN LPCWSTR MACCPage)
 {
     OBJECT_ATTRIBUTES ObjectAttributes;
     UNICODE_STRING KeyName;
@@ -322,15 +321,15 @@ AddCodepageToRegistry(PWCHAR ACPage, PWCHAR OEMCPage, PWCHAR MACCPage)
 
     // Open the nls codepage key
     RtlInitUnicodeString(&KeyName,
-		                 L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Control\\NLS\\CodePage");
+                         L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Control\\NLS\\CodePage");
     InitializeObjectAttributes(&ObjectAttributes,
-			                   &KeyName,
-			                   OBJ_CASE_INSENSITIVE,
-			                   NULL,
-			                   NULL);
+                               &KeyName,
+                               OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
     Status =  NtOpenKey(&KeyHandle,
-		                KEY_ALL_ACCESS,
-		                &ObjectAttributes);
+                        KEY_WRITE,
+                        &ObjectAttributes);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("NtOpenKey() failed (Status %lx)\n", Status);
@@ -340,11 +339,11 @@ AddCodepageToRegistry(PWCHAR ACPage, PWCHAR OEMCPage, PWCHAR MACCPage)
     // Set ANSI codepage
     RtlInitUnicodeString(&ValueName, L"ACP");
     Status = NtSetValueKey(KeyHandle,
-			                &ValueName,
-			                0,
-			                REG_SZ,
-			                (PVOID)ACPage,
-			                4 * sizeof(PWCHAR));
+                           &ValueName,
+                           0,
+                           REG_SZ,
+                           (PVOID)ACPage,
+                           wcslen(ACPage) * sizeof(PWCHAR));
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("NtSetValueKey() failed (Status %lx)\n", Status);
@@ -355,11 +354,11 @@ AddCodepageToRegistry(PWCHAR ACPage, PWCHAR OEMCPage, PWCHAR MACCPage)
     // Set OEM codepage
     RtlInitUnicodeString(&ValueName, L"OEMCP");
     Status = NtSetValueKey(KeyHandle,
-			               &ValueName,
-			               0,
-			               REG_SZ,
-			               (PVOID)OEMCPage,
-			               3 * sizeof(PWCHAR));
+                           &ValueName,
+                           0,
+                           REG_SZ,
+                           (PVOID)OEMCPage,
+                           wcslen(OEMCPage) * sizeof(PWCHAR));
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("NtSetValueKey() failed (Status %lx)\n", Status);
@@ -370,11 +369,11 @@ AddCodepageToRegistry(PWCHAR ACPage, PWCHAR OEMCPage, PWCHAR MACCPage)
     // Set MAC codepage
     RtlInitUnicodeString(&ValueName, L"MACCP");
     Status = NtSetValueKey(KeyHandle,
-			               &ValueName,
-			               0,
-			               REG_SZ,
-			               (PVOID)MACCPage,
-			               5 * sizeof(PWCHAR));
+                           &ValueName,
+                           0,
+                           REG_SZ,
+                           (PVOID)MACCPage,
+                           wcslen(MACCPage) * sizeof(PWCHAR));
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("NtSetValueKey() failed (Status %lx)\n", Status);
@@ -403,7 +402,8 @@ AddCodePage(VOID)
         lngIndex++;
     }
     while (LanguageList[lngIndex].MuiPages != NULL);
-	return FALSE;
+
+    return FALSE;
 }
 
 /* EOF */
