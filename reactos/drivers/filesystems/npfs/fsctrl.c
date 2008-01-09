@@ -289,6 +289,7 @@ NpfsWaitPipe(PIRP Irp,
 	PNPFS_CCB ServerCcb;
 	PFILE_PIPE_WAIT_FOR_BUFFER WaitPipe;
 	NTSTATUS Status;
+	LARGE_INTEGER TimeOut;
 
 	DPRINT("NpfsWaitPipe\n");
 
@@ -320,12 +321,20 @@ NpfsWaitPipe(PIRP Irp,
 		current_entry = current_entry->Flink;
 	}
 
-	/* no listening server fcb found -- wait for one */
+	/* No listening server fcb found */
+
+	/* If no timeout specified, use the default one */
+	if (WaitPipe->TimeoutSpecified)
+		TimeOut = WaitPipe->Timeout;
+	else
+		TimeOut = Fcb->TimeOut;
+
+	/* Wait for one */
 	Status = KeWaitForSingleObject(&Ccb->ConnectEvent,
 		UserRequest,
 		KernelMode,
 		FALSE,
-		&WaitPipe->Timeout);
+		&TimeOut);
 
 	DPRINT("KeWaitForSingleObject() returned (Status %lx)\n", Status);
 

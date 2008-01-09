@@ -498,7 +498,30 @@ WaitNamedPipeW(LPCWSTR lpNamedPipeName,
         return FALSE;
     }
 
-    WaitPipe.Timeout.QuadPart = nTimeOut * -10000LL;
+    /* Check what timeout we got */
+    if (nTimeOut == NMPWAIT_USE_DEFAULT_WAIT)
+    {
+        /* Don't use a timeout */
+        WaitPipe.TimeoutSpecified = FALSE;
+    }
+    else
+    {
+        /* Check if we should wait forever */
+        if (nTimeOut == NMPWAIT_WAIT_FOREVER)
+        {
+            /* Set the max */
+            WaitPipe.Timeout.LowPart = 0;
+            WaitPipe.Timeout.HighPart = 0x80000000;
+        }
+        else
+        {
+            /* Convert to NT format */
+            WaitPipe.Timeout.QuadPart = UInt32x32To64(-10000, nTimeOut);
+        }
+
+        /* In both cases, we do have a timeout */
+        WaitPipe.TimeoutSpecified = FALSE;
+    }
 
     Status = NtFsControlFile(FileHandle,
                              NULL,
