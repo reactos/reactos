@@ -2067,9 +2067,11 @@ BOOL
 NTAPI
 NtUserSetCursorIconData(
   HANDLE Handle,
+  PBOOL fIcon,
+  POINT *Hotspot,
   HMODULE hModule,
-  PUNICODE_STRING pstrResName,
-  PICONINFO pIconInfo);
+  HRSRC hRsrc,
+  HRSRC hGroupRsrc);
 
 DWORD
 NTAPI

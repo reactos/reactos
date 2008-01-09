@@ -268,7 +268,7 @@ LoadCursorIconImage(
 
       if (hIcon && 0 != (fuLoad & LR_SHARED))
       {
-#if 0
+#if 1
          NtUserSetCursorIconData((HICON)hIcon, NULL, NULL, hinst, hResInfo,
                                  (HRSRC)NULL);
 #else
@@ -762,7 +762,7 @@ GetIconCurBpp(PICONINFO pIconInfo)
     return pbi->bmiHeader.biBitCount;
 }
 
-
+#if 0
 static BOOL
 SetCursorIconData(
   HANDLE Handle,
@@ -770,6 +770,7 @@ SetCursorIconData(
   LPWSTR lpResName,
   PICONINFO pIconInfo)
 {
+
     UNICODE_STRING Res;
 
     if (!Handle || !pIconInfo)
@@ -778,6 +779,7 @@ SetCursorIconData(
     RtlInitUnicodeString(&Res, lpResName);
 
     return NtUserSetCursorIconData(Handle, hMod, &Res, pIconInfo);
+
 }
 
 
@@ -840,7 +842,7 @@ CopyIcoCur(HANDLE hIconCur,
 
     return hNewIcon;
 }
-
+#endif
 
 /*
  * @unimplemented
@@ -873,7 +875,8 @@ CopyImage(
         return CopyBmp(hnd, type, desiredx, desiredy, flags);
 
       case IMAGE_ICON:
-        return CopyIcoCur(hnd, type, desiredx, desiredy, flags);
+        //return CopyIcoCur(hnd, type, desiredx, desiredy, flags);
+          return CopyIcon(hnd);
 
       case IMAGE_CURSOR:
          {

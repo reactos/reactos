@@ -108,6 +108,8 @@ __inline static PUSER_HANDLE_ENTRY alloc_user_entry(PUSER_HANDLE_TABLE ht)
       }
       DPRINT1("Handle Count by Type:\n Free = %d Window = %d Menu = %d CursorIcon = %d Hook = %d\n CallProc = %d Accel = %d Monitor = %d\n",
       iFree, iWindow, iMenu, iCursorIcon, iHook, iCallProc, iAccel, iMonitor );
+
+      ASSERT(FALSE);
 //#endif      
       return NULL;
 #if 0

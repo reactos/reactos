@@ -1187,6 +1187,7 @@ CLEANUP:
 /*
  * @implemented
  */
+#if 0
 BOOL
 NTAPI
 NtUserSetCursorIconData(
@@ -1272,7 +1273,89 @@ CLEANUP:
    UserLeave();
    END_CLEANUP;
 }
+#else
+BOOL
+STDCALL
+NtUserSetCursorIconData(
+   HANDLE hCurIcon,
+   PBOOL fIcon,
+   POINT *Hotspot,
+   HMODULE hModule,
+   HRSRC hRsrc,
+   HRSRC hGroupRsrc)
+{
+   PCURICON_OBJECT CurIcon;
+   PWINSTATION_OBJECT WinSta;
+   NTSTATUS Status;
+   POINT SafeHotspot;
+   BOOL Ret = FALSE;
+   DECLARE_RETURN(BOOL);
 
+   DPRINT("Enter NtUserSetCursorIconData\n");
+   UserEnterExclusive();
+
+   WinSta = IntGetWinStaObj();
+   if(WinSta == NULL)
+   {
+      RETURN( FALSE);
+   }
+
+   if(!(CurIcon = UserGetCurIconObject(hCurIcon)))
+   {
+      ObDereferenceObject(WinSta);
+      RETURN(FALSE);
+   }
+
+   CurIcon->hModule = hModule;
+   CurIcon->hRsrc = hRsrc;
+   CurIcon->hGroupRsrc = hGroupRsrc;
+
+   /* Copy fields */
+   if(fIcon)
+   {
+      Status = MmCopyFromCaller(&CurIcon->IconInfo.fIcon, fIcon, sizeof(BOOL));
+      if(!NT_SUCCESS(Status))
+      {
+         SetLastNtError(Status);
+         goto done;
+      }
+   }
+   else
+   {
+      if(!Hotspot)
+         Ret = TRUE;
+   }
+
+   if(Hotspot)
+   {
+      Status = MmCopyFromCaller(&SafeHotspot, Hotspot, sizeof(POINT));
+      if(NT_SUCCESS(Status))
+      {
+         CurIcon->IconInfo.xHotspot = SafeHotspot.x;
+         CurIcon->IconInfo.yHotspot = SafeHotspot.y;
+
+         Ret = TRUE;
+      }
+      else
+         SetLastNtError(Status);
+   }
+
+   if(!fIcon && !Hotspot)
+   {
+      Ret = TRUE;
+   }
+
+done:
+   ObDereferenceObject(WinSta);
+   RETURN( Ret);
+
+
+CLEANUP:
+   DPRINT("Leave NtUserSetCursorIconData, ret=%i\n",_ret_);
+   UserLeave();
+   END_CLEANUP;
+}
+#endif
 
 /*
  * @unimplemented
