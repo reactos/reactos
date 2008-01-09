@@ -419,7 +419,7 @@ WaitNamedPipeW(LPCWSTR lpNamedPipeName,
         }
 
         /* In both cases, we do have a timeout */
-        WaitPipeInfo->TimeoutSpecified = FALSE;
+        WaitPipeInfo->TimeoutSpecified = TRUE;
     }
 
     /* Set the length and copy the name */
@@ -520,7 +520,7 @@ WaitNamedPipeW(LPCWSTR lpNamedPipeName,
         }
 
         /* In both cases, we do have a timeout */
-        WaitPipe.TimeoutSpecified = FALSE;
+        WaitPipe.TimeoutSpecified = TRUE;
     }
 
     Status = NtFsControlFile(FileHandle,
