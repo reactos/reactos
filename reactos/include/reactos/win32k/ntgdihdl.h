@@ -339,15 +339,18 @@ typedef struct tagGdiPath
 
 typedef struct _WIN_DC_INFO
 {
-  int  flags;
-  HRGN  hClipRgn;     /* Clip region (may be 0) */
-  HRGN  hVisRgn;      /* Visible region (must never be 0) */
-  HRGN  hGCClipRgn;   /* GC clip region (ClipRgn AND VisRgn) */
+  int      flags;
+
+  HRGN     hClipRgn;     /* Clip region (may be 0) */
+  HRGN     hrgnMeta;     /* Meta region (may be 0) */
+  HRGN     hMetaClipRgn; /* Intersection of meta and clip regions (may be 0) */
+  HRGN     hVisRgn;      /* Should me to DC. Visible region (must never be 0) */
+
+  HRGN     hGCClipRgn;   /* GC clip region (ClipRgn AND VisRgn) */
   HBITMAP  hBitmap;
   HBITMAP  hFirstBitmap; /* Bitmap selected at creation of the DC */
 
 /* #if 0 */
-    HANDLE      hDevice;
     HPALETTE    hPalette;
 
     GdiPath       path;
@@ -381,12 +384,15 @@ typedef struct _DC
   FLONG       flGraphics;
   FLONG       flGraphics2;
   PDC_ATTR    pDc_Attr;
+  WIN_DC_INFO w;
   DC_ATTR     Dc_Attr;
   HDC         hNext;
   HDC         hPrev;
-
+  RECTL       erclClip;
   RECTL       erclWindow;
   RECTL       erclBounds;
+  HRGN        hprgnAPI; 
+  HRGN        hprgnVis;
 
   CLIPOBJ     *CombinedClip;
   XLATEOBJ    *XlateBrush;
@@ -398,7 +404,6 @@ typedef struct _DC
   HPALETTE    PalIndexed;
 
   UNICODE_STRING    DriverName;
-  WIN_DC_INFO w;
 
   HANDLE      hFile;
   LPENHMETAHEADER emh;

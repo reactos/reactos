@@ -1213,9 +1213,6 @@ IntGdiCopyToSaveState(PDC dc, PDC newdc)
   nDc_Attr->hlfntNew        = Dc_Attr->hlfntNew;
   newdc->w.hBitmap          = dc->w.hBitmap;
   newdc->w.hFirstBitmap     = dc->w.hFirstBitmap;
-#if 0
-  newdc->w.hDevice          = dc->w.hDevice;
-#endif
   newdc->PalIndexed         = dc->PalIndexed;
   newdc->w.hPalette         = dc->w.hPalette;
   newdc->w.totalExtent      = dc->w.totalExtent;
@@ -1286,10 +1283,6 @@ IntGdiCopyFromSaveState(PDC dc, PDC dcs, HDC hDC)
   dc->w.flags              = dcs->w.flags & ~DC_SAVED;
 
   dc->w.hFirstBitmap       = dcs->w.hFirstBitmap;
-
-#if 0
-  dc->w.hDevice            = dcs->w.hDevice;
-#endif
 
   Dc_Attr->dwLayout        = sDc_Attr->dwLayout;
   dc->w.totalExtent        = dcs->w.totalExtent;
