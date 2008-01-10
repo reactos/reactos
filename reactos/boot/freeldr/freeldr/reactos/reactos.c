@@ -21,6 +21,7 @@
 
 #include <freeldr.h>
 #include <debug.h>
+#include <reactos/architecture.h>
 
 extern ULONG PageDirectoryStart;
 extern ULONG PageDirectoryEnd;
@@ -648,7 +649,7 @@ LoadAndBootReactOS(PCSTR OperatingSystemName)
 	{
 		/* Normalize */
 		MachDiskGetBootPath(SystemPath, sizeof(SystemPath));
-		strcat(SystemPath, "\\reactos");
+		strcat(SystemPath, "\\" ARCH_CD_ROOT "\\reactos");
 		strcat(strcpy(reactos_kernel_cmdline, SystemPath),
 		       " /MININT");
 	}

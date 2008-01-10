@@ -72,9 +72,21 @@ Convert::StringToHex (unsigned long num)
 }
 
 string
-Environment::GetArch ()
+Environment::GetArchName ()
 {
-	return GetEnvironmentVariablePathOrDefault ( "ROS_ARCH", "i386" );
+	return GetEnvironmentVariablePathOrDefault("ROS_ARCH", "i386");
+}
+
+string
+Environment::GetArchCdPath ( const Project& project )
+{
+    switch( project.architectureType )
+    {
+        case I386:    return "I386";
+        case PowerPC: return "PPC";
+    }
+
+    throw MissingArgumentException("architectureType");
 }
 
 /* static */ string
@@ -92,7 +104,7 @@ Environment::GetEnvironmentVariablePathOrDefault ( const string& name,
 Environment::GetIntermediatePath ()
 {
 	string defaultIntermediate =
-		string( "obj-" ) + GetArch ();
+		string( "obj-" ) + GetArchName ();
 	return GetEnvironmentVariablePathOrDefault ( "ROS_INTERMEDIATE",
 	                                             defaultIntermediate );
 }
@@ -113,7 +125,7 @@ Environment::ReplaceVariable ( const string& name,
 Environment::GetOutputPath ()
 {
 	string defaultOutput =
-		string( "output-" ) + GetArch ();
+		string( "output-" ) + GetArchName ();
 	return GetEnvironmentVariablePathOrDefault ( "ROS_OUTPUT",
 	                                             defaultOutput );
 }
@@ -134,10 +146,10 @@ Environment::GetCdOutputPath ()
 }
 
 /* static */ string
-Environment::GetBootstrapCdOutputPath ()
+Environment::GetBootstrapCdOutputPath ( const Project& project )
 {
 	return GetEnvironmentVariablePathOrDefault ( "ROS_CDBOOTSTRAPOUTPUT",
-	                                             GetArch());
+	                                             GetArchCdPath(project) );
 }
 
 /* static */ string

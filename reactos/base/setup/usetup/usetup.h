@@ -51,6 +51,9 @@
 /* ReactOS Version */
 #include <reactos/buildno.h>
 
+/* Architecture header */
+#include <reactos/architecture.h>
+
 /* Internal Headers */
 #include "interface/consup.h"
 #include "partlist.h"

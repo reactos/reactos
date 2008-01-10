@@ -1836,7 +1836,7 @@ InstallFatBootcodeToPartition(PUNICODE_STRING SystemRootPath,
 
 		/* Copy FreeLoader to the boot partition */
 		wcscpy(SrcPath, SourceRootPath->Buffer);
-		wcscat(SrcPath, L"\\loader\\freeldr.sys");
+		wcscat(SrcPath, L"\\" ARCH_CD_ROOT "\\loader\\freeldr.sys");
 		wcscpy(DstPath, SystemRootPath->Buffer);
 		wcscat(DstPath, L"\\freeldr.sys");
 
@@ -1870,7 +1870,7 @@ InstallFatBootcodeToPartition(PUNICODE_STRING SystemRootPath,
 			{
 				/* Install FAT32 bootcode */
 				wcscpy(SrcPath, SourceRootPath->Buffer);
-				wcscat(SrcPath, L"\\loader\\fat32.bin");
+				wcscat(SrcPath, L"\\" ARCH_CD_ROOT "\\loader\\fat32.bin");
 				wcscpy(DstPath, SystemRootPath->Buffer);
 				wcscat(DstPath, L"\\bootsect.ros");
 
@@ -1888,7 +1888,7 @@ InstallFatBootcodeToPartition(PUNICODE_STRING SystemRootPath,
 			{
 				/* Install FAT16 bootcode */
 				wcscpy(SrcPath, SourceRootPath->Buffer);
-				wcscat(SrcPath, L"\\loader\\fat.bin");
+				wcscat(SrcPath, L"\\" ARCH_CD_ROOT "\\loader\\fat.bin");
 				wcscpy(DstPath, SystemRootPath->Buffer);
 				wcscat(DstPath, L"\\bootsect.ros");
 
@@ -1941,7 +1941,7 @@ InstallFatBootcodeToPartition(PUNICODE_STRING SystemRootPath,
 
 		/* Copy FreeLoader to the boot partition */
 		wcscpy(SrcPath, SourceRootPath->Buffer);
-		wcscat(SrcPath, L"\\loader\\freeldr.sys");
+		wcscat(SrcPath, L"\\" ARCH_CD_ROOT "\\loader\\freeldr.sys");
 		wcscpy(DstPath, SystemRootPath->Buffer);
 		wcscat(DstPath, L"\\freeldr.sys");
 
@@ -1988,7 +1988,7 @@ InstallFatBootcodeToPartition(PUNICODE_STRING SystemRootPath,
 				PartitionType == PARTITION_FAT32_XINT13)
 			{
 				wcscpy(SrcPath, SourceRootPath->Buffer);
-				wcscat(SrcPath, L"\\loader\\fat32.bin");
+				wcscat(SrcPath, L"\\" ARCH_CD_ROOT "\\loader\\fat32.bin");
 
 				DPRINT1("Install FAT32 bootcode: %S ==> %S\n", SrcPath, SystemRootPath->Buffer);
 				Status = InstallFat32BootCodeToDisk(SrcPath,
@@ -2002,7 +2002,7 @@ InstallFatBootcodeToPartition(PUNICODE_STRING SystemRootPath,
 			else
 			{
 				wcscpy(SrcPath, SourceRootPath->Buffer);
-				wcscat(SrcPath, L"\\loader\\fat.bin");
+				wcscat(SrcPath, L"\\" ARCH_CD_ROOT "\\loader\\fat.bin");
 
 				DPRINT1("Install FAT bootcode: %S ==> %S\n", SrcPath, SystemRootPath->Buffer);
 				Status = InstallFat16BootCodeToDisk(SrcPath,
@@ -2036,7 +2036,7 @@ InstallFatBootcodeToPartition(PUNICODE_STRING SystemRootPath,
 
 		/* Copy FreeLoader to the boot partition */
 		wcscpy(SrcPath, SourceRootPath->Buffer);
-		wcscat(SrcPath, L"\\loader\\freeldr.sys");
+		wcscat(SrcPath, L"\\" ARCH_CD_ROOT "\\loader\\freeldr.sys");
 		wcscpy(DstPath, SystemRootPath->Buffer);
 		wcscat(DstPath, L"\\freeldr.sys");
 
@@ -2083,7 +2083,7 @@ InstallFatBootcodeToPartition(PUNICODE_STRING SystemRootPath,
 				PartitionType == PARTITION_FAT32_XINT13)
 			{
 				wcscpy(SrcPath, SourceRootPath->Buffer);
-				wcscat(SrcPath, L"\\loader\\fat32.bin");
+				wcscat(SrcPath, L"\\" ARCH_CD_ROOT "\\loader\\fat32.bin");
 
 				DPRINT("Install FAT32 bootcode: %S ==> %S\n", SrcPath, SystemRootPath->Buffer);
 				Status = InstallFat32BootCodeToDisk(SrcPath,
@@ -2097,7 +2097,7 @@ InstallFatBootcodeToPartition(PUNICODE_STRING SystemRootPath,
 			else
 			{
 				wcscpy(SrcPath, SourceRootPath->Buffer);
-				wcscat(SrcPath, L"\\loader\\fat.bin");
+				wcscat(SrcPath, L"\\" ARCH_CD_ROOT "\\loader\\fat.bin");
 
 				DPRINT("Install FAT bootcode: %S ==> %S\n", SrcPath, SystemRootPath->Buffer);
 				Status = InstallFat16BootCodeToDisk(SrcPath,
@@ -2143,7 +2143,7 @@ InstallFatBootcodeToFloppy(PUNICODE_STRING SourceRootPath,
 
   /* Copy FreeLoader to the boot partition */
   wcscpy(SrcPath, SourceRootPath->Buffer);
-  wcscat(SrcPath, L"\\loader\\freeldr.sys");
+  wcscat(SrcPath, L"\\" ARCH_CD_ROOT "\\loader\\freeldr.sys");
 
   wcscpy(DstPath, L"\\Device\\Floppy0\\freeldr.sys");
 
@@ -2169,7 +2169,7 @@ InstallFatBootcodeToFloppy(PUNICODE_STRING SourceRootPath,
 
   /* Install FAT12/16 boosector */
   wcscpy(SrcPath, SourceRootPath->Buffer);
-  wcscat(SrcPath, L"\\loader\\fat.bin");
+  wcscat(SrcPath, L"\\" ARCH_CD_ROOT "\\loader\\fat.bin");
 
   wcscpy(DstPath, L"\\Device\\Floppy0");
 

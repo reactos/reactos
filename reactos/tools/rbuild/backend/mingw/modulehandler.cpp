@@ -3502,7 +3502,7 @@ void
 MingwIsoModuleHandler::GenerateIsoModuleTarget ()
 {
 	string bootcdDirectory = "cd";
-    string bootcdStrapDirectory = bootcdDirectory + sSep + Environment::GetBootstrapCdOutputPath();
+    string bootcdStrapDirectory = bootcdDirectory + sSep + Environment::GetBootstrapCdOutputPath( module.project );
 
 	FileLocation bootcd ( OutputDirectory,
 	                      bootcdDirectory,
@@ -3620,8 +3620,7 @@ MingwLiveIsoModuleHandler::CreateDirectory ( const string& directory )
 }
 
 void
-MingwLiveIsoModuleHandler::OutputModuleCopyCommands ( string& livecdDirectory,
-                                                      string& reactosDirectory )
+MingwLiveIsoModuleHandler::OutputModuleCopyCommands ( string& livecdReactosDirectory )
 {
 	for ( size_t i = 0; i < module.project.modules.size (); i++ )
 	{
@@ -3633,8 +3632,8 @@ MingwLiveIsoModuleHandler::OutputModuleCopyCommands ( string& livecdDirectory,
 			const Module& aliasedModule = backend->GetAliasedModuleOrModule ( m  );
 			FileLocation destination ( OutputDirectory,
 			                           m.install->relative_path.length () > 0
-			                               ? livecdDirectory + sSep + reactosDirectory + sSep + m.install->relative_path
-			                               : livecdDirectory + sSep + reactosDirectory,
+			                               ? livecdReactosDirectory + sSep + m.install->relative_path
+			                               : livecdReactosDirectory,
 			                           m.install->name );
 			OutputCopyCommand ( *aliasedModule.output,
 			                    destination);
@@ -3643,59 +3642,49 @@ MingwLiveIsoModuleHandler::OutputModuleCopyCommands ( string& livecdDirectory,
 }
 
 void
-MingwLiveIsoModuleHandler::OutputNonModuleCopyCommands ( string& livecdDirectory,
-                                                         string& reactosDirectory )
+MingwLiveIsoModuleHandler::OutputNonModuleCopyCommands ( string& livecdReactosDirectory )
 {
 	for ( size_t i = 0; i < module.project.installfiles.size (); i++ )
 	{
 		const InstallFile& installfile = *module.project.installfiles[i];
 		FileLocation target ( OutputDirectory,
 		                      installfile.target->relative_path.length () > 0
-		                          ? livecdDirectory + sSep + reactosDirectory + sSep + installfile.target->relative_path
-		                          : livecdDirectory + sSep + reactosDirectory,
+		                          ? livecdReactosDirectory + sSep + installfile.target->relative_path
+		                          : livecdReactosDirectory,
 		                      installfile.target->name );
 		OutputCopyCommand ( *installfile.source, target );
 	}
 }
 
 void
-MingwLiveIsoModuleHandler::OutputProfilesDirectoryCommands ( string& livecdDirectory )
+MingwLiveIsoModuleHandler::OutputLoaderCommands ( string& livecdRootDirectory, string& livecdArchDirectory )
 {
-	CreateDirectory ( livecdDirectory + sSep + "Profiles" );
-	CreateDirectory ( livecdDirectory + sSep + "Profiles" + sSep + "All Users") ;
-	CreateDirectory ( livecdDirectory + sSep + "Profiles" + sSep + "All Users" + sSep + "Desktop" );
-	CreateDirectory ( livecdDirectory + sSep + "Profiles" + sSep + "Default User" );
-	CreateDirectory ( livecdDirectory + sSep + "Profiles" + sSep + "Default User" + sSep + "Desktop" );
-	CreateDirectory ( livecdDirectory + sSep + "Profiles" + sSep + "Default User" + sSep + "My Documents" );
-
 	FileLocation livecdIni ( SourceDirectory,
 	                         "boot" + sSep + "bootdata",
 	                         "livecd.ini" );
-	FileLocation destination ( OutputDirectory,
-	                           livecdDirectory,
-	                           "freeldr.ini" );
-	OutputCopyCommand ( livecdIni,
-	                    destination );
-}
 
-void
-MingwLiveIsoModuleHandler::OutputLoaderCommands ( string& livecdDirectory )
-{
+	FileLocation livecdIniDestination ( OutputDirectory,
+	                                    livecdRootDirectory,
+	                                    "freeldr.ini" );
+	OutputCopyCommand ( livecdIni,
+	                    livecdIniDestination );
+
+
 	FileLocation freeldr ( OutputDirectory,
 	                       "boot" + sSep + "freeldr" + sSep + "freeldr",
 	                       "freeldr.sys" );
-	FileLocation destination ( OutputDirectory,
-	                           livecdDirectory + sSep + "loader",
-	                           "setupldr.sys" );
+	FileLocation freeldrDestination ( OutputDirectory,
+	                                  livecdArchDirectory + sSep + "loader",
+	                                  "setupldr.sys" );
 	OutputCopyCommand ( freeldr,
-	                    destination );
+	                    freeldrDestination );
 }
 
 void
-MingwLiveIsoModuleHandler::OutputRegistryCommands ( string& livecdDirectory )
+MingwLiveIsoModuleHandler::OutputRegistryCommands ( string& livecdReactosDirectory )
 {
 	FileLocation reactosSystem32ConfigDirectory ( OutputDirectory,
-	                                              livecdDirectory + sSep + "reactos" + sSep + "system32" + sSep + "config",
+	                                              livecdReactosDirectory + sSep + "system32" + sSep + "config",
 	                                              "" );
 	fprintf ( fMakefile,
 	          "\t$(ECHO_MKHIVE)\n" );
@@ -3708,8 +3697,9 @@ MingwLiveIsoModuleHandler::OutputRegistryCommands ( string& livecdDirectory )
 void
 MingwLiveIsoModuleHandler::GenerateLiveIsoModuleTarget ()
 {
-	string livecdDirectory = module.name;
-	FileLocation livecd ( OutputDirectory, livecdDirectory, "" );
+    string livecdRootDirectory = module.name;
+    string livecdArchDirectory = module.name + sSep + Environment::GetArchCdPath( module.project );
+	FileLocation livecd ( OutputDirectory, livecdRootDirectory, "" );
 
 	string bootloader;
 	string IsoName;
@@ -3727,10 +3717,9 @@ MingwLiveIsoModuleHandler::GenerateLiveIsoModuleTarget ()
 
 	FileLocation isoboot ( OutputDirectory, "boot" + sSep + "freeldr" + sSep + "bootsect", bootloader );
 
-    string reactosDirectory = Environment::GetArch();// "reactos";
-	string livecdReactosNoFixup = livecdDirectory + sSep + reactosDirectory;
+	string livecdReactosDirectory = livecdArchDirectory + sSep + "reactos";
 	FileLocation livecdReactos ( OutputDirectory,
-	                             livecdReactosNoFixup,
+	                             livecdReactosDirectory,
 	                             "" );
 	CLEAN_FILE ( livecdReactos );
 
@@ -3741,13 +3730,10 @@ MingwLiveIsoModuleHandler::GenerateLiveIsoModuleTarget ()
 	          module.name.c_str (),
 	          backend->GetFullName ( isoboot) .c_str (),
 	          backend->GetFullPath ( livecdReactos ).c_str () );
-	OutputModuleCopyCommands ( livecdDirectory,
-	                           reactosDirectory );
-	OutputNonModuleCopyCommands ( livecdDirectory,
-	                              reactosDirectory );
-	OutputProfilesDirectoryCommands ( livecdDirectory );
-	OutputLoaderCommands ( livecdDirectory );
-	OutputRegistryCommands ( livecdDirectory );
+	OutputModuleCopyCommands ( livecdReactosDirectory );
+	OutputNonModuleCopyCommands ( livecdReactosDirectory );
+	OutputLoaderCommands ( livecdRootDirectory, livecdArchDirectory );
+	OutputRegistryCommands ( livecdReactosDirectory );
 	fprintf ( fMakefile, "\t$(ECHO_CDMAKE)\n" );
 	fprintf ( fMakefile,
 	          "\t$(Q)$(CDMAKE_TARGET) -v -m -j -b %s %s REACTOS %s\n",

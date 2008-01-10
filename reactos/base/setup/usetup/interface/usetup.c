@@ -2359,7 +2359,7 @@ FormatPartitionPage (PINPUT_RECORD Ir)
                  || (PartEntry->PartInfo[0].PartitionType == PARTITION_FAT32))
                 {
                     wcscpy(PathBuffer, SourceRootPath.Buffer);
-                    wcscat(PathBuffer, L"\\loader\\fat32.bin");
+                    wcscat(PathBuffer, L"\\" ARCH_CD_ROOT "\\loader\\fat32.bin");
 
                     DPRINT("Install FAT32 bootcode: %S ==> %S\n", PathBuffer,
                         DestinationRootPath.Buffer);
@@ -2377,7 +2377,7 @@ FormatPartitionPage (PINPUT_RECORD Ir)
                 else
                 {
                     wcscpy(PathBuffer, SourceRootPath.Buffer);
-                    wcscat(PathBuffer, L"\\loader\\fat.bin");
+                    wcscat(PathBuffer, L"\\" ARCH_CD_ROOT "\\loader\\fat.bin");
 
                     DPRINT("Install FAT bootcode: %S ==> %S\n", PathBuffer,
                         DestinationRootPath.Buffer);

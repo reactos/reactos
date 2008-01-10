@@ -86,7 +86,7 @@ CreditsGenerator::GenerateTxt ()
     }
 
 
-    FileSupportCode::WriteIfChanged ( buf, NormalizeFilename ( Environment::GetIntermediatePath () + sSep + "CREDITS" ) );
+    FileSupportCode::WriteIfChanged (buf, "CREDITS");
 
     free ( buf );
 }
@@ -105,8 +105,8 @@ CreditsGenerator::GenerateHeader ()
     s = s + sprintf ( s, "/* Auto generated */\n");
     s = s + sprintf ( s, "/* Edit contributors.rbuild to add or remove developers */\n" );
     s = s + sprintf ( s, "\n" );
-	s = s + sprintf ( s, "#ifndef __INCLUDE_AUTOCONTRIBUTORS_H\n" );
-	s = s + sprintf ( s, "#define __INCLUDE_AUTOCONTRIBUTORS_H\n" );
+    s = s + sprintf ( s, "#ifndef __INCLUDE_AUTOCONTRIBUTORS_H\n" );
+    s = s + sprintf ( s, "#define __INCLUDE_AUTOCONTRIBUTORS_H\n" );
     s = s + sprintf ( s, "\n" );
     s = s + sprintf ( s, "const char* szAutoContributors[]= \n" );
     s = s + sprintf ( s, "{\n" );

@@ -450,13 +450,10 @@ public:
 private:
 	void GenerateLiveIsoModuleTarget ();
 	void CreateDirectory ( const std::string& directory );
-	void OutputModuleCopyCommands ( std::string& livecdDirectory,
-	                                std::string& livecdReactos );
-	void OutputNonModuleCopyCommands ( std::string& livecdDirectory,
-	                                   std::string& livecdReactos );
-	void OutputProfilesDirectoryCommands ( std::string& livecdDirectory );
-	void OutputLoaderCommands ( std::string& livecdDirectory );
-	void OutputRegistryCommands ( std::string& livecdDirectory );
+	void OutputModuleCopyCommands ( std::string& livecdReactosDirectory );
+	void OutputNonModuleCopyCommands ( std::string& livecdReactosDirectory );
+    void OutputLoaderCommands ( std::string& livecdRootDirectory, std::string& livecdArchDirectory );
+	void OutputRegistryCommands ( std::string& livecdReactosDirectory );
 };
 
 

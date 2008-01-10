@@ -2504,7 +2504,7 @@ WritePartitionsToDisk (PPARTLIST List)
               DiskEntry1->BiosDiskNumber == 0)
 	    {
 	      wcscpy (SrcPath, SourceRootPath.Buffer);
-	      wcscat (SrcPath, L"\\loader\\dosmbr.bin");
+	      wcscat (SrcPath, L"\\" ARCH_CD_ROOT "\\loader\\dosmbr.bin");
 
 	      DPRINT ("Install MBR bootcode: %S ==> %S\n",
 		       SrcPath, DstPath);

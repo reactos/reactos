@@ -123,6 +123,7 @@ class BaseAddress;
 class BuildFamily;
 class Family;
 class PlatformLanguage;
+class Project;
 
 typedef std::map<std::string,Directory*> directory_map;
 
@@ -209,11 +210,12 @@ class Environment
 {
 public:
 	static std::string GetVariable ( const std::string& name );
-	static std::string GetArch ();
+	static std::string GetArchName ();
+    static std::string GetArchCdPath ( const Project& project );
 	static std::string GetIntermediatePath ();
 	static std::string GetOutputPath ();
 	static std::string GetCdOutputPath ();
-    static std::string GetBootstrapCdOutputPath ();
+    static std::string GetBootstrapCdOutputPath ( const Project& project );
 	static std::string GetInstallPath ();
 	static std::string GetAutomakeFile ( const std::string& defaultFile );
 	static std::string GetEnvironmentVariablePathOrDefault ( const std::string& name,
