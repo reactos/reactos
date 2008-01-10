@@ -404,9 +404,6 @@ typedef struct _DC
   HPALETTE    PalIndexed;
 
   UNICODE_STRING    DriverName;
-
-  HANDLE      hFile;
-  LPENHMETAHEADER emh;
 } DC, *PDC;
 
 #endif
