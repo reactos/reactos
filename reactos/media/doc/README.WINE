@@ -103,7 +103,7 @@ ReactOS shares the following programs with Winehq.
 reactos/base/applications/games/winemine  # Out of sync
 reactos/base/applications/regedit         # Out of sync
 reactos/base/system/expand                # Out of sync
-reactos/base/system/msiexec               # Synced to Wine-0_9_3
+reactos/base/system/msiexec               # Synced to Wine-20080105
 
 In addition the following libs, dlls and source files are mostly based on code ported
 from Winehq CVS. If you are looking to update something in these files
