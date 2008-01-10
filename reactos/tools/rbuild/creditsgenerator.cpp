@@ -57,15 +57,15 @@ CreditsGenerator::GenerateTxt ()
 
         if (strlen(contributor.alias.c_str()))
         {
-            s = s + sprintf ( s, "\t%s %s (%s)\n" , 
-                contributor.firstName.c_str() , 
-                contributor.lastName.c_str() , 
+            s = s + sprintf ( s, "\t%s %s (%s)\n" ,
+                contributor.firstName.c_str() ,
+                contributor.lastName.c_str() ,
                 contributor.alias.c_str());
         }
         else
         {
-            s = s + sprintf ( s, "\t%s %s\n" , 
-                contributor.firstName.c_str() , 
+            s = s + sprintf ( s, "\t%s %s\n" ,
+                contributor.firstName.c_str() ,
                 contributor.lastName.c_str());
         }
 
@@ -77,8 +77,8 @@ CreditsGenerator::GenerateTxt ()
         if (strlen(contributor.city.c_str()) > 0 &&
             strlen(contributor.country.c_str()) > 0)
         {
-            s = s + sprintf ( s, "\t\t%s,%s\n" , 
-                contributor.city.c_str() , 
+            s = s + sprintf ( s, "\t\t%s, %s\n" ,
+                contributor.city.c_str() ,
                 contributor.country.c_str());
         }
 
