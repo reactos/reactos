@@ -15,17 +15,16 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #include <stdarg.h>
 
 #include "windef.h"
-#include "winbase.h"
 
-extern void __getmainargs(int *argc, char** *argv, char** *envp,
+extern void CDECL __getmainargs(int *argc, char** *argv, char** *envp,
                           int expand_wildcards, int *new_mode);
-extern void __wgetmainargs(int *argc, WCHAR** *wargv, WCHAR** *wenvp,
+extern void CDECL __wgetmainargs(int *argc, WCHAR** *wargv, WCHAR** *wenvp,
                            int expand_wildcards, int *new_mode);
 
 /*********************************************************************
@@ -33,7 +32,7 @@ extern void __wgetmainargs(int *argc, WCHAR** *wargv, WCHAR** *wenvp,
  *
  * new_mode is not a pointer in msvcrt20.
  */
-void MSVCRT20__getmainargs( int *argc, char** *argv, char** *envp,
+void CDECL MSVCRT20__getmainargs( int *argc, char** *argv, char** *envp,
                             int expand_wildcards, int new_mode )
 {
     __getmainargs( argc, argv, envp, expand_wildcards, &new_mode );
@@ -44,7 +43,7 @@ void MSVCRT20__getmainargs( int *argc, char** *argv, char** *envp,
  *
  * new_mode is not a pointer in msvcrt20.
  */
-void MSVCRT20__wgetmainargs( int *argc, WCHAR** *wargv, WCHAR** *wenvp,
+void CDECL MSVCRT20__wgetmainargs( int *argc, WCHAR** *wargv, WCHAR** *wenvp,
                              int expand_wildcards, int new_mode )
 {
     __wgetmainargs( argc, wargv, wenvp, expand_wildcards, &new_mode );
