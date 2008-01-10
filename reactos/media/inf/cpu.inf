@@ -1,0 +1,46 @@
+[Version]
+Signature  = "$Windows NT$"
+;Signature  = "$ReactOS$"
+LayoutFile = layout.inf
+Class      = Processor
+ClassGUID  = {50127DC3-0F36-415e-A6CC-4CB3BE910B65}
+Provider   = %ReactOS%
+DriverVer  = 09/27/2007,1.00
+
+[ControlFlags]
+ExcludeFromSelect = *
+
+[DestinationDirs]
+DefaultDestDir = 12
+
+[Manufacturer]
+%Intel%=Intel
+%Standard%=Standard
+
+[Standard]
+%Processor.DeviceDesc% = NO_DRV,ACPI\Processor
+
+[Intel]
+%IntelProcessor.DeviceDesc% = NO_DRV,ACPI\GenuineIntel_-_x86
+
+
+;---------------------------- NO DRIVER REQ -----------------------------
+
+[NO_DRV]
+AddReg=NO_DRV.AddReg
+
+[NO_DRV.Services]
+AddService = , 0x00000002
+
+[NO_DRV.HW]
+
+[NO_DRV.AddReg]
+HKR,,EnumPropPages32,,"devcpux.dll,PropSheetExtProc"
+
+;-------------------------------- STRINGS -------------------------------
+
+[Strings]
+IntelMfg = "Intel"
+Processor.DeviceDesc = "Processor"
+IntelProcessor.DeviceDesc = "Intel Processor"
+Standard = "Standard processor"
