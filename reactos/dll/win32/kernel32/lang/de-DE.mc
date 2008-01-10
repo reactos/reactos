@@ -85,7 +85,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_ARENA_TRASHED
 Language=German
-ERROR_ARENA_TRASHED - The storage control blocks were destroyed.
+ERROR_ARENA_TRASHED - Die Speicherkontrollblöcke wurden zerstört.
 .
 
 MessageId=8
@@ -101,7 +101,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_INVALID_BLOCK
 Language=German
-ERROR_INVALID_BLOCK - The storage control block address is invalid.
+ERROR_INVALID_BLOCK - Die Speicherkontrolladdresse ist ungültig.
 .
 
 MessageId=10
@@ -109,7 +109,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_BAD_ENVIRONMENT
 Language=German
-ERROR_BAD_ENVIRONMENT - Die Umgebung ist incorrect.
+ERROR_BAD_ENVIRONMENT - Die Umgebung ist falsch.
 .
 
 MessageId=11
@@ -117,7 +117,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_BAD_FORMAT
 Language=German
-ERROR_BAD_FORMAT - Es wurde versucht ein Programm mit ungültigem Format zu laden.
+ERROR_BAD_FORMAT - Es wurde versucht ein Programm mit einem ungültigen Format auszuführen.
 .
 
 MessageId=12
@@ -141,7 +141,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_OUTOFMEMORY
 Language=German
-ERROR_OUTOFMEMORY - Es ist nicht genügend Speicher vorhanden, um die Operation abzuschliessen.
+ERROR_OUTOFMEMORY - Es ist nicht genug Speicher verfügbar, um die Operation abzuschließen.
 .
 
 MessageId=15
@@ -157,7 +157,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_CURRENT_DIRECTORY
 Language=German
-ERROR_CURRENT_DIRECTORY - Das Verzeichnis kann nicht entfernt werden.
+ERROR_CURRENT_DIRECTORY - Das aktuelle Verzeichnis kann nicht gelöscht werden.
 .
 
 MessageId=17
@@ -165,7 +165,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_NOT_SAME_DEVICE
 Language=German
-ERROR_NOT_SAME_DEVICE - Das System kann die Datei nicht auf anderes Laufwerk verchieben.
+ERROR_NOT_SAME_DEVICE - Das System kann die Datei nicht auf ein anderes Laufwerk verschieben.
 .
 
 MessageId=18
@@ -173,7 +173,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_NO_MORE_FILES
 Language=German
-ERROR_NO_MORE_FILES - Keine weiteren Dateien vorhanden.
+ERROR_NO_MORE_FILES - Es sind keine weiteren Dateien mehr vorhanden.
 .
 
 MessageId=19
@@ -181,7 +181,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_WRITE_PROTECT
 Language=German
-ERROR_WRITE_PROTECT - Das Medium ist schreibgeschützt.
+ERROR_WRITE_PROTECT - Der Datenträger ist schreibgeschützt.
 .
 
 MessageId=20
@@ -189,7 +189,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_BAD_UNIT
 Language=German
-ERROR_BAD_UNIT - Das System kann das angegebene Gerät nicht finden.
+ERROR_BAD_UNIT - Das System kann das angegbene Laufwerk nicht finden.
 .
 
 MessageId=21
@@ -205,7 +205,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_BAD_COMMAND
 Language=German
-ERROR_BAD_COMMAND - Das Gerät kenn den Befehl nicht.
+ERROR_BAD_COMMAND - Das Gerät kennt den Befehl nicht.
 .
 
 MessageId=23
@@ -213,7 +213,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_CRC
 Language=German
-ERROR_CRC - Datenfehler (cyclic redundancy check).
+ERROR_CRC - CRC-Fehler.
 .
 
 MessageId=24
@@ -221,7 +221,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_BAD_LENGTH
 Language=German
-ERROR_BAD_LENGTH - The program issued a command but the command length is incorrect.
+ERROR_BAD_LENGTH - Das Programm veranlasste einen Befehl aber dessen Länge ist falsch.
 .
 
 MessageId=25
@@ -229,7 +229,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_SEEK
 Language=German
-ERROR_SEEK - Das Laufwerk cannot locate a specific area or track on the disk.
+ERROR_SEEK - Das Laufwerk kann nicht auf einen angebenen Bereich zugreifen.
 .
 
 MessageId=26
@@ -269,7 +269,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_READ_FAULT
 Language=German
-ERROR_READ_FAULT - The system cannot read from the specified device.
+ERROR_READ_FAULT - Das System kann nicht vom angebenen Datenträger lesen.
 .
 
 MessageId=31
@@ -277,7 +277,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_GEN_FAILURE
 Language=German
-ERROR_GEN_FAILURE - A device attached to the system is not functioning.
+ERROR_GEN_FAILURE - Ein an das System angeschlossenes Gerät funtioniert nicht.
 .
 
 MessageId=32
@@ -285,7 +285,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_SHARING_VIOLATION
 Language=German
-ERROR_SHARING_VIOLATION - The process cannot access the file because it is being used by another process.
+ERROR_SHARING_VIOLATION - Der Prozess kann nicht auf die Datei zugreifen, weil sie von einem andern Prozess verwendet wird.
 .
 
 MessageId=33
@@ -293,7 +293,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_LOCK_VIOLATION
 Language=German
-ERROR_LOCK_VIOLATION - The process cannot access the file because another process has locked a portion of the file.
+ERROR_LOCK_VIOLATION - Der Prozess kann nicht auf die Datei zugreifen, da ein anderer Prozess einen Teil der Datei gesperrt hat.
 .
 
 MessageId=34
@@ -301,7 +301,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_WRONG_DISK
 Language=German
-ERROR_WRONG_DISK - The wrong diskette is in the drive. Insert %2 (Volume Serial Number: %3) into drive %1.
+ERROR_WRONG_DISK - Es ist eine falsche Diskette im Laufwerk. Bitte legen Sie %2 (Seriennummer das Datenträgers: %3) in Laufwerk %1 ein.
 .
 
 MessageId=36
@@ -309,7 +309,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_SHARING_BUFFER_EXCEEDED
 Language=German
-ERROR_SHARING_BUFFER_EXCEEDED - Too many files opened for sharing.
+ERROR_SHARING_BUFFER_EXCEEDED - Es sind zu viele Dateien für Freigaben offen.
 .
 
 MessageId=38
@@ -317,7 +317,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_HANDLE_EOF
 Language=German
-ERROR_HANDLE_EOF - Reached the end of the file.
+ERROR_HANDLE_EOF - Das Ende der Datei wurde erreicht.
 .
 
 MessageId=39
@@ -325,7 +325,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_HANDLE_DISK_FULL
 Language=German
-ERROR_HANDLE_DISK_FULL - The disk is full.
+ERROR_HANDLE_DISK_FULL - Der Datenträger ist voll.
 .
 
 MessageId=50
@@ -333,7 +333,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_NOT_SUPPORTED
 Language=German
-ERROR_NOT_SUPPORTED - The request is not supported.
+ERROR_NOT_SUPPORTED - Der Befehl wird nicht unterstützt.
 .
 
 MessageId=51
@@ -341,7 +341,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_REM_NOT_LIST
 Language=German
-ERROR_REM_NOT_LIST - Windows cannot find the network path. Verify that the network path is correct and the destination computer is not busy or turned off. If Windows still cannot find the network path, contact your network administrator.
+ERROR_REM_NOT_LIST - ReactOS konnte den Netzwerkpfad nicht finden. Stellen Sie sicher, dass der Netzwerkpfad korrekt ist und der Ziel-Computer nicht belegt oder aus ist. Wenn ReactOS den Netzwerkpfad immer noch nicht finden kann, kontaktieren Sie den Netzwerk Administrator.
 .
 
 MessageId=52
@@ -349,7 +349,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_DUP_NAME
 Language=German
-ERROR_DUP_NAME - You were not connected because a duplicate name exists on the network. Go to System in the Control Panel to change the computer name and try again.
+ERROR_DUP_NAME - Sie wurden nicht verbunden weil der Computername schon im Netzwerk existiert. Gehen Sie zu System in der Systemsteuerung um den Computernamem zu ändern und versuchen Sie es erneut.
 .
 
 MessageId=53
@@ -357,7 +357,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_BAD_NETPATH
 Language=German
-ERROR_BAD_NETPATH - The network path was not found.
+ERROR_BAD_NETPATH - Der Netzwerkpfad wurde nicht gefunden.
 .
 
 MessageId=54
@@ -365,7 +365,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_NETWORK_BUSY
 Language=German
-ERROR_NETWORK_BUSY - The network is busy.
+ERROR_NETWORK_BUSY - Das Netzwerk ist ausgelastet.
 .
 
 MessageId=55
@@ -373,7 +373,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_DEV_NOT_EXIST
 Language=German
-ERROR_DEV_NOT_EXIST - The specified network resource or device is no longer available.
+ERROR_DEV_NOT_EXIST - Die angegebene Netzwerk Resource oder Gerät ist nicht länger verfügbar.
 .
 
 MessageId=56
@@ -381,7 +381,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_TOO_MANY_CMDS
 Language=German
-ERROR_TOO_MANY_CMDS - The network BIOS command limit has been reached.
+ERROR_TOO_MANY_CMDS - Das Netzwerk BIOS-Befehlslimit wurde erreicht.
 .
 
 MessageId=57
@@ -389,7 +389,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_ADAP_HDW_ERR
 Language=German
-ERROR_ADAP_HDW_ERR - A network adapter hardware error occurred.
+ERROR_ADAP_HDW_ERR - Ein Netzwerkkartenfehler ist aufgetreten.
 .
 
 MessageId=58
@@ -397,7 +397,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_BAD_NET_RESP
 Language=German
-ERROR_BAD_NET_RESP - The specified server cannot perform the requested operation.
+ERROR_BAD_NET_RESP - Der angegebene Server kann die angeforderte Operation nicht durchführen.
 .
 
 MessageId=59
@@ -405,7 +405,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_UNEXP_NET_ERR
 Language=German
-ERROR_UNEXP_NET_ERR - An unexpected network error occurred.
+ERROR_UNEXP_NET_ERR - Es ist ein unerwarteter Netzwerkfehler aufgetreten.
 .
 
 MessageId=60
@@ -413,7 +413,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_BAD_REM_ADAP
 Language=German
-ERROR_BAD_REM_ADAP - The remote adapter is not compatible.
+ERROR_BAD_REM_ADAP - Der Remoteadapter ist nicht kompatibel.
 .
 
 MessageId=61
@@ -421,7 +421,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_PRINTQ_FULL
 Language=German
-ERROR_PRINTQ_FULL - The printer queue is full.
+ERROR_PRINTQ_FULL - Die Druckerwarteschlange ist voll.
 .
 
 MessageId=62
@@ -429,7 +429,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_NO_SPOOL_SPACE
 Language=German
-ERROR_NO_SPOOL_SPACE - Space to store the file waiting to be printed is not available on the server.
+ERROR_NO_SPOOL_SPACE - Es ist kein Speicher für die Druckerwarteschlange auf dem Server verfügbar.
 .
 
 MessageId=63
@@ -437,7 +437,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_PRINT_CANCELLED
 Language=German
-ERROR_PRINT_CANCELLED - Your file waiting to be printed was deleted.
+ERROR_PRINT_CANCELLED - Ihre Datei, die gedruchkt werden sollte, wurde gelöscht.
 .
 
 MessageId=64
@@ -445,7 +445,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_NETNAME_DELETED
 Language=German
-ERROR_NETNAME_DELETED - The specified network name is no longer available.
+ERROR_NETNAME_DELETED - Der angegebene Netzwerkname ist nicht länger verfügbar.
 .
 
 MessageId=65
@@ -453,7 +453,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_NETWORK_ACCESS_DENIED
 Language=German
-ERROR_NETWORK_ACCESS_DENIED - Network access is denied.
+ERROR_NETWORK_ACCESS_DENIED - Der Netzwerk-Zugriff wurde verweigert.
 .
 
 MessageId=66
@@ -461,7 +461,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_BAD_DEV_TYPE
 Language=German
-ERROR_BAD_DEV_TYPE - The network resource type is not correct.
+ERROR_BAD_DEV_TYPE - Der Netzwerkresourcentyp ist falsch.
 .
 
 MessageId=67
@@ -469,7 +469,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_BAD_NET_NAME
 Language=German
-ERROR_BAD_NET_NAME - The network name cannot be found.
+ERROR_BAD_NET_NAME - The Netzwerkname kann nicht gefunden werden.
 .
 
 MessageId=68
@@ -477,7 +477,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_TOO_MANY_NAMES
 Language=German
-ERROR_TOO_MANY_NAMES - The name limit for the local computer network adapter card was exceeded.
+ERROR_TOO_MANY_NAMES - Das Nameslimit für die Netzwerkkarte im lokalen Computer wurde überschritten.
 .
 
 MessageId=69
@@ -485,7 +485,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_TOO_MANY_SESS
 Language=German
-ERROR_TOO_MANY_SESS - The network BIOS session limit was exceeded.
+ERROR_TOO_MANY_SESS - Das Limit für die Netzwerk-BIOS-Session wurde überschritten.
 .
 
 MessageId=70
@@ -493,7 +493,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_SHARING_PAUSED
 Language=German
-ERROR_SHARING_PAUSED - The remote server has been paused or is in the process of being started.
+ERROR_SHARING_PAUSED - Der Remote-Server wurde pausiert oder wird gerade gestartet.
 .
 
 MessageId=71
@@ -501,7 +501,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_REQ_NOT_ACCEP
 Language=German
-ERROR_REQ_NOT_ACCEP - No more connections can be made to this remote computer at this time because there are already as many connections as the computer can accept.
+ERROR_REQ_NOT_ACCEP - Es können keine weiteren Verbindungen zu diesem Computer erstellt werden, da die Grenze der Verbindungen bereits erreicht ist.
 .
 
 MessageId=72
@@ -509,7 +509,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_REDIR_PAUSED
 Language=German
-ERROR_REDIR_PAUSED - The specified printer or disk device has been paused.
+ERROR_REDIR_PAUSED - Der angegebene Drucker oder Datenträger wurde pausiert.
 .
 
 MessageId=80
@@ -517,7 +517,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_FILE_EXISTS
 Language=German
-ERROR_FILE_EXISTS - The file exists.
+ERROR_FILE_EXISTS - Die Datei existiert.
 .
 
 MessageId=82
@@ -525,7 +525,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_CANNOT_MAKE
 Language=German
-ERROR_CANNOT_MAKE - The directory or file cannot be created.
+ERROR_CANNOT_MAKE - Das Verzeichnis oder die Datei kann nicht erzeugt werden.
 .
 
 MessageId=83
@@ -533,7 +533,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_FAIL_I24
 Language=German
-ERROR_FAIL_I24 - Fail on INT 24.
+ERROR_FAIL_I24 - Fehler bei INT 24.
 .
 
 MessageId=84
@@ -541,7 +541,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_OUT_OF_STRUCTURES
 Language=German
-ERROR_OUT_OF_STRUCTURES - Storage to process this request is not available.
+ERROR_OUT_OF_STRUCTURES - Es ist nicht genügend Speicher verfügbar, um diese Anforderung fertigzustellen.
 .
 
 MessageId=85
@@ -549,7 +549,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_ALREADY_ASSIGNED
 Language=German
-ERROR_ALREADY_ASSIGNED - The local device name is already in use.
+ERROR_ALREADY_ASSIGNED - Der lokale Gerätename wird bereits verwendet.
 .
 
 MessageId=86
@@ -557,7 +557,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_INVALID_PASSWORD
 Language=German
-ERROR_INVALID_PASSWORD - The specified network password is not correct.
+ERROR_INVALID_PASSWORD - Das angegebene Netzwerkpasswort ist falsch.
 .
 
 MessageId=87
@@ -565,7 +565,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_INVALID_PARAMETER
 Language=German
-ERROR_INVALID_PARAMETER - The parameter is incorrect.
+ERROR_INVALID_PARAMETER - Ein Parameter ist falsch.
 .
 
 MessageId=88
@@ -573,7 +573,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_NET_WRITE_FAULT
 Language=German
-ERROR_NET_WRITE_FAULT - A write fault occurred on the network.
+ERROR_NET_WRITE_FAULT - Es ist ein Schreibfehler im Netzwerk aufgetreten.
 .
 
 MessageId=89
@@ -581,7 +581,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_NO_PROC_SLOTS
 Language=German
-ERROR_NO_PROC_SLOTS - The system cannot start another process at this time.
+ERROR_NO_PROC_SLOTS - Das System kann zur Zeit keine weitere Prozesse starten.
 .
 
 MessageId=100
@@ -589,7 +589,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_TOO_MANY_SEMAPHORES
 Language=German
-ERROR_TOO_MANY_SEMAPHORES - Cannot create another system semaphore.
+ERROR_TOO_MANY_SEMAPHORES - Es kann keine weitere System-Semaphores erstellt werden.
 .
 
 MessageId=101
@@ -597,7 +597,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_EXCL_SEM_ALREADY_OWNED
 Language=German
-ERROR_EXCL_SEM_ALREADY_OWNED - The exclusive semaphore is owned by another process.
+ERROR_EXCL_SEM_ALREADY_OWNED - Die exklusive Semaphore gehört einem anderen Prozess.
 .
 
 MessageId=102
@@ -605,7 +605,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_SEM_IS_SET
 Language=German
-ERROR_SEM_IS_SET - The semaphore is set and cannot be closed.
+ERROR_SEM_IS_SET - Die Semaphore ist gesetzt und kann nicht geschlossen werden.
 .
 
 MessageId=103
@@ -613,7 +613,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_TOO_MANY_SEM_REQUESTS
 Language=German
-ERROR_TOO_MANY_SEM_REQUESTS - The semaphore cannot be set again.
+ERROR_TOO_MANY_SEM_REQUESTS - Die Semaphore kann nicht erneut gesetzt werden.
 .
 
 MessageId=104
@@ -621,7 +621,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_INVALID_AT_INTERRUPT_TIME
 Language=German
-ERROR_INVALID_AT_INTERRUPT_TIME - Cannot request exclusive semaphores at interrupt time.
+ERROR_INVALID_AT_INTERRUPT_TIME - Die Anforderung von exklusiven Semaphoren kann zur Interruptzeit nicht bearbeitet werden.
 .
 
 MessageId=105
@@ -629,7 +629,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_SEM_OWNER_DIED
 Language=German
-ERROR_SEM_OWNER_DIED - The previous ownership of this semaphore has ended.
+ERROR_SEM_OWNER_DIED - Der vorherige Eigentümer von dieser Semaphore wurde beendet.
 .
 
 MessageId=106
@@ -637,7 +637,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_SEM_USER_LIMIT
 Language=German
-ERROR_SEM_USER_LIMIT - Insert the diskette for drive %1.
+ERROR_SEM_USER_LIMIT - Legen Sie die Diskette für Laufwerk %1 ein.
 .
 
 MessageId=107
@@ -645,7 +645,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_DISK_CHANGE
 Language=German
-ERROR_DISK_CHANGE - The program stopped because an alternate diskette was not inserted.
+ERROR_DISK_CHANGE - Das Programm hielt an, da keine alternative Diskette eingelegt wurde.
 .
 
 MessageId=108
@@ -653,7 +653,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_DRIVE_LOCKED
 Language=German
-ERROR_DRIVE_LOCKED - The disk is in use or locked by another process.
+ERROR_DRIVE_LOCKED - Der Datenträger wird benutzt oder ist von einem anderen Prozess gesperrt.
 .
 
 MessageId=109
@@ -661,7 +661,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_BROKEN_PIPE
 Language=German
-ERROR_BROKEN_PIPE - The pipe has been ended.
+ERROR_BROKEN_PIPE - Die Pipe wurde beendet.
 .
 
 MessageId=110
@@ -669,7 +669,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_OPEN_FAILED
 Language=German
-ERROR_OPEN_FAILED - The system cannot open the device or file specified.
+ERROR_OPEN_FAILED - Das System kann das angegebene Gerät oder die Datei nicht öffnen.
 .
 
 MessageId=111
@@ -677,7 +677,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_BUFFER_OVERFLOW
 Language=German
-ERROR_BUFFER_OVERFLOW - The file name is too long.
+ERROR_BUFFER_OVERFLOW - Der Dateiname ist zu lang.
 .
 
 MessageId=112
@@ -685,7 +685,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_DISK_FULL
 Language=German
-ERROR_DISK_FULL - There is not enough space on the disk.
+ERROR_DISK_FULL - Der Datenträger ist voll.
 .
 
 MessageId=113
@@ -693,7 +693,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_NO_MORE_SEARCH_HANDLES
 Language=German
-ERROR_NO_MORE_SEARCH_HANDLES - No more internal file identifiers available.
+ERROR_NO_MORE_SEARCH_HANDLES - Kein weiteren internen Datei-Handles verfügbar.
 .
 
 MessageId=114
@@ -701,7 +701,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_INVALID_TARGET_HANDLE
 Language=German
-ERROR_INVALID_TARGET_HANDLE - The target internal file identifier is incorrect.
+ERROR_INVALID_TARGET_HANDLE - Das Zieldatei-Handle ist ungültig.
 .
 
 MessageId=117
@@ -709,7 +709,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_INVALID_CATEGORY
 Language=German
-ERROR_INVALID_CATEGORY - The IOCTL call made by the application program is not correct.
+ERROR_INVALID_CATEGORY - Der IOCTL Aufruf ist ungültig.
 .
 
 MessageId=118
@@ -717,7 +717,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_INVALID_VERIFY_SWITCH
 Language=German
-ERROR_INVALID_VERIFY_SWITCH - The verify-on-write switch parameter value is not correct.
+ERROR_INVALID_VERIFY_SWITCH - Der Verify-Parameter ist ungültig.
 .
 
 MessageId=119
@@ -725,7 +725,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_BAD_DRIVER_LEVEL
 Language=German
-ERROR_BAD_DRIVER_LEVEL - The system does not support the command requested.
+ERROR_BAD_DRIVER_LEVEL - Das System unterstützt den angeforderten Befehl nicht.
 .
 
 MessageId=120
@@ -733,7 +733,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_CALL_NOT_IMPLEMENTED
 Language=German
-ERROR_CALL_NOT_IMPLEMENTED - This function is not supported on this system.
+ERROR_CALL_NOT_IMPLEMENTED - Das System unterstützt diese Funktion nicht.
 .
 
 MessageId=121
@@ -741,7 +741,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_SEM_TIMEOUT
 Language=German
-ERROR_SEM_TIMEOUT - The semaphore timeout period has expired.
+ERROR_SEM_TIMEOUT - Der Timeout für die Semaphore ist abgelaufen.
 .
 
 MessageId=122
@@ -749,7 +749,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_INSUFFICIENT_BUFFER
 Language=German
-ERROR_INSUFFICIENT_BUFFER - The data area passed to a system call is too small.
+ERROR_INSUFFICIENT_BUFFER - Der an ein einen Systemaufruf übergebene Puffer ist zu klein.
 .
 
 MessageId=123
@@ -757,7 +757,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_INVALID_NAME
 Language=German
-ERROR_INVALID_NAME - The filename, directory name, or volume label syntax is incorrect.
+ERROR_INVALID_NAME - Die Syntax des Dateinames, Verzeichnissnames, oder Datenträgernames ist falsch.
 .
 
 MessageId=124
@@ -765,7 +765,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_INVALID_LEVEL
 Language=German
-ERROR_INVALID_LEVEL - The system call level is not correct.
+ERROR_INVALID_LEVEL - Das Level des Systemausfrufes ist ungültig.
 .
 
 MessageId=125
@@ -773,7 +773,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_NO_VOLUME_LABEL
 Language=German
-ERROR_NO_VOLUME_LABEL - The disk has no volume label.
+ERROR_NO_VOLUME_LABEL - The Datenträger hat keinen Datenträgernamen.
 .
 
 MessageId=126
@@ -781,7 +781,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_MOD_NOT_FOUND
 Language=German
-ERROR_MOD_NOT_FOUND - The specified module could not be found.
+ERROR_MOD_NOT_FOUND - Das angegebene Modul konnte nicht gefunden werden.
 .
 
 MessageId=127
@@ -789,7 +789,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_PROC_NOT_FOUND
 Language=German
-ERROR_PROC_NOT_FOUND - The specified procedure could not be found.
+ERROR_PROC_NOT_FOUND - Die angegebene Prozedur konnte nicht gefunden werden.
 .
 
 MessageId=128
@@ -797,7 +797,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_WAIT_NO_CHILDREN
 Language=German
-ERROR_WAIT_NO_CHILDREN - There are no child processes to wait for.
+ERROR_WAIT_NO_CHILDREN - Es gibt keine Unterprozesse zum Warten.
 .
 
 MessageId=129
@@ -805,7 +805,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_CHILD_NOT_COMPLETE
 Language=German
-ERROR_CHILD_NOT_COMPLETE - The %1 application cannot be run in Win32 mode.
+ERROR_CHILD_NOT_COMPLETE - Das %1 Programm kann im Win32 Modus nicht ausgeführt werden.
 .
 
 MessageId=130
@@ -813,7 +813,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_DIRECT_ACCESS_HANDLE
 Language=German
-ERROR_DIRECT_ACCESS_HANDLE - Attempt to use a file handle to an open disk partition for an operation other than raw disk I/O.
+ERROR_DIRECT_ACCESS_HANDLE - Es wurde versucht, ein Daten-Handle zu einer Partitiontabelle zu erstellen, um es für etwas anderes als direkten Datenzugriff zu verwenden.
 .
 
 MessageId=131
@@ -821,7 +821,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_NEGATIVE_SEEK
 Language=German
-ERROR_NEGATIVE_SEEK - An attempt was made to move the file pointer before the beginning of the file.
+ERROR_NEGATIVE_SEEK - Es wurde versucht, auf eine Position vor dem Anfang der Datei zuzgugreifen.
 .
 
 MessageId=132
@@ -829,7 +829,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_SEEK_ON_DEVICE
 Language=German
-ERROR_SEEK_ON_DEVICE - The file pointer cannot be set on the specified device or file.
+ERROR_SEEK_ON_DEVICE - Der Dateizeiger kann nicht auf dem angegebenen Gerät oder der Datei gesetzt werden.
 .
 
 MessageId=133
@@ -837,7 +837,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_IS_JOIN_TARGET
 Language=German
-ERROR_IS_JOIN_TARGET - A JOIN or SUBST command cannot be used for a drive that contains previously joined drives.
+ERROR_IS_JOIN_TARGET - Ein JOIN oder SUBST Befehl kann nicht für ein Laufwerk verwendet werden, das vereinigte Laufwerke enthält.
 .
 
 MessageId=134
@@ -845,7 +845,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_IS_JOINED
 Language=German
-ERROR_IS_JOINED - An attempt was made to use a JOIN or SUBST command on a drive that has already been joined.
+ERROR_IS_JOINED - Ein JOIN oder SUBST Befehl kann nicht für ein Laufwerk verwendet werden, das schon vereinigt ist.
 .
 
 MessageId=135
@@ -853,7 +853,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_IS_SUBSTED
 Language=German
-ERROR_IS_SUBSTED - An attempt was made to use a JOIN or SUBST command on a drive that has already been substituted.
+ERROR_IS_SUBSTED - Ein JOIN oder SUBST Befehl kann nicht für ein Laufwerk benutzt werden, das schon gesubst ist.
 .
 
 MessageId=136
@@ -861,7 +861,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_NOT_JOINED
 Language=German
-ERROR_NOT_JOINED - The system tried to delete the JOIN of a drive that is not joined.
+ERROR_NOT_JOINED - Das System versuchte eine Vereinigung von einem Laufwerk zu löschen, das nicht vereinigt ist.
 .
 
 MessageId=137
@@ -869,7 +869,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_NOT_SUBSTED
 Language=German
-ERROR_NOT_SUBSTED - The system tried to delete the substitution of a drive that is not substituted.
+ERROR_NOT_SUBSTED - Das System versuchte ein SUBST von einem Laufwerk zu löschen das nicht gesubst ist. 
 .
 
 MessageId=138
@@ -877,7 +877,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_JOIN_TO_JOIN
 Language=German
-ERROR_JOIN_TO_JOIN - The system tried to join a drive to a directory on a joined drive.
+ERROR_JOIN_TO_JOIN - Das System versuchte ein Laufwerk zu einem Verzeichnis auf einen vereinigten Laufwerk zu vereinen.
 .
 
 MessageId=139
@@ -885,7 +885,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_SUBST_TO_SUBST
 Language=German
-ERROR_SUBST_TO_SUBST - The system tried to substitute a drive to a directory on a substituted drive.
+ERROR_SUBST_TO_SUBST -Das System versuchte ein Verzeichnis zu einem Laufwerk auf einen gesubsteten Laufwerk zu substen.
 .
 
 MessageId=140
@@ -893,7 +893,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_JOIN_TO_SUBST
 Language=German
-ERROR_JOIN_TO_SUBST - The system tried to join a drive to a directory on a substituted drive.
+ERROR_JOIN_TO_SUBST - Das System versuchte ein Laufwerk zu einem Verzeichnis auf einen gesubsteten Laufwerk zu vereinen.
 .
 
 MessageId=141
@@ -901,7 +901,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_SUBST_TO_JOIN
 Language=German
-ERROR_SUBST_TO_JOIN - The system tried to SUBST a drive to a directory on a joined drive.
+ERROR_SUBST_TO_JOIN - Das System versuchte ein Laufwerk zu einem Verzeichnis auf einen vereinten Laufwerk zu substen.
 .
 
 MessageId=142
@@ -909,7 +909,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_BUSY_DRIVE
 Language=German
-ERROR_BUSY_DRIVE - The system cannot perform a JOIN or SUBST at this time.
+ERROR_BUSY_DRIVE - Das System kann zur Zeit kein JOIN oder SUBST ausführen.
 .
 
 MessageId=143
@@ -917,7 +917,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_SAME_DRIVE
 Language=German
-ERROR_SAME_DRIVE - The system cannot join or substitute a drive to or for a directory on the same drive.
+ERROR_SAME_DRIVE - Das System kann kein Laufwerk zu oder für ein Verzeichnis auf dem selben Laufwerk joinen oder substen.
 .
 
 MessageId=144
@@ -925,7 +925,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_DIR_NOT_ROOT
 Language=German
-ERROR_DIR_NOT_ROOT - The directory is not a subdirectory of the root directory.
+ERROR_DIR_NOT_ROOT - The Verzeichnis ist kein Unterverzeichnis vom Stammverzeichnis.
 .
 
 MessageId=145
@@ -933,7 +933,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_DIR_NOT_EMPTY
 Language=German
-ERROR_DIR_NOT_EMPTY - The directory is not empty.
+ERROR_DIR_NOT_EMPTY - The Verzeichnis ist nicht leer.
 .
 
 MessageId=146
@@ -941,7 +941,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_IS_SUBST_PATH
 Language=German
-ERROR_IS_SUBST_PATH - The path specified is being used in a substitute.
+ERROR_IS_SUBST_PATH - Der angegebene Pfad wird in einem SUBST-Laufwerk verwendet.
 .
 
 MessageId=147
@@ -949,7 +949,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_IS_JOIN_PATH
 Language=German
-ERROR_IS_JOIN_PATH - Not enough resources are available to process this command.
+ERROR_IS_JOIN_PATH - Das angegebene Laufwerk wird in einem JOIN-Verzeichnis verwendet.
 .
 
 MessageId=148
@@ -957,7 +957,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_PATH_BUSY
 Language=German
-ERROR_PATH_BUSY - The path specified cannot be used at this time.
+ERROR_PATH_BUSY - Der angegebene Pfad kann zur Zeit nicht verwendet werden.
 .
 
 MessageId=149
@@ -965,7 +965,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_IS_SUBST_TARGET
 Language=German
-ERROR_IS_SUBST_TARGET - An attempt was made to join or substitute a drive for which a directory on the drive is the target of a previous substitute.
+ERROR_IS_SUBST_TARGET - Es wurde versucht von einem Laufwerk zu substen oder zu joinen das schon gesubst ist.
 .
 
 MessageId=150
@@ -973,7 +973,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_SYSTEM_TRACE
 Language=German
-ERROR_SYSTEM_TRACE - System trace information was not specified in your CONFIG.SYS file, or tracing is disallowed.
+ERROR_SYSTEM_TRACE - Systemtracking Information wurden nicht in Ihrer CONFIG.SYS Datei angeben, oder Tracking ist verboten.
 .
 
 MessageId=151
@@ -981,7 +981,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_INVALID_EVENT_COUNT
 Language=German
-ERROR_INVALID_EVENT_COUNT - The number of specified semaphore events for DosMuxSemWait is not correct.
+ERROR_INVALID_EVENT_COUNT - Die Anzahl der angegebenen Semaphoren-Ereignisse für DosMuxSemWait ist ungültig.
 .
 
 MessageId=152
@@ -989,7 +989,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_TOO_MANY_MUXWAITERS
 Language=German
-ERROR_TOO_MANY_MUXWAITERS - DosMuxSemWait did not execute; too many semaphores are already set.
+ERROR_TOO_MANY_MUXWAITERS - DosMuxSemWait wurde nicht ausgeführt. Es sind schon zu viele Semaphoren gesetzt worden.
 .
 
 MessageId=153
@@ -997,7 +997,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_INVALID_LIST_FORMAT
 Language=German
-ERROR_INVALID_LIST_FORMAT - The DosMuxSemWait list is not correct.
+ERROR_INVALID_LIST_FORMAT - Die DosMuxSemWait Liste ist ungültig.
 .
 
 MessageId=154
@@ -1005,7 +1005,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_LABEL_TOO_LONG
 Language=German
-ERROR_LABEL_TOO_LONG - The volume label you entered exceeds the label character limit of the target file system.
+ERROR_LABEL_TOO_LONG - Der Datenträgername ist zu lang.
 .
 
 MessageId=155
@@ -1013,7 +1013,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_TOO_MANY_TCBS
 Language=German
-ERROR_TOO_MANY_TCBS - Cannot create another thread.
+ERROR_TOO_MANY_TCBS - Kann keinen neuen Thread erstellen.
 .
 
 MessageId=156
@@ -1021,7 +1021,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_SIGNAL_REFUSED
 Language=German
-ERROR_SIGNAL_REFUSED - The recipient process has refused the signal.
+ERROR_SIGNAL_REFUSED - The Prozess hat das Signal zurückgewiesen.
 .
 
 MessageId=157
@@ -1029,7 +1029,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_DISCARDED
 Language=German
-ERROR_DISCARDED - The segment is already discarded and cannot be locked.
+ERROR_DISCARDED - Das Segment ist schon verworfen worden und kann nicht gesperrt weden.
 .
 
 MessageId=158
@@ -1037,7 +1037,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_NOT_LOCKED
 Language=German
-ERROR_NOT_LOCKED - The segment is already unlocked.
+ERROR_NOT_LOCKED - Das Segment ist schon freigebenen.
 .
 
 MessageId=159
@@ -1045,7 +1045,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_BAD_THREADID_ADDR
 Language=German
-ERROR_BAD_THREADID_ADDR - The address for the thread ID is not correct.
+ERROR_BAD_THREADID_ADDR - DIe Adresse für den Thread ID ist falsch.
 .
 
 MessageId=160
@@ -1053,7 +1053,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_BAD_ARGUMENTS
 Language=German
-ERROR_BAD_ARGUMENTS - The argument string passed to DosExecPgm is not correct.
+ERROR_BAD_ARGUMENTS - Die an DosExecPgm übergebenen Parameter sind falsch.
 .
 
 MessageId=161
@@ -1061,7 +1061,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_BAD_PATHNAME
 Language=German
-ERROR_BAD_PATHNAME - The specified path is invalid.
+ERROR_BAD_PATHNAME - Der angegebene Pfad ist falsch.
 .
 
 MessageId=162
@@ -1069,7 +1069,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_SIGNAL_PENDING
 Language=German
-ERROR_SIGNAL_PENDING - A signal is already pending.
+ERROR_SIGNAL_PENDING - Es ist schon ein Signal unterwegs.
 .
 
 MessageId=164
@@ -1077,7 +1077,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_MAX_THRDS_REACHED
 Language=German
-ERROR_MAX_THRDS_REACHED - No more threads can be created in the system.
+ERROR_MAX_THRDS_REACHED - Es können keine weiteren Threads erzeugt werden.
 .
 
 MessageId=167
@@ -1085,7 +1085,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_LOCK_FAILED
 Language=German
-ERROR_LOCK_FAILED - Unable to lock a region of a file.
+ERROR_LOCK_FAILED - Ein Bereich konnte nicht gesperrt werden.
 .
 
 MessageId=170
@@ -1093,7 +1093,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_BUSY
 Language=German
-ERROR_BUSY - The requested resource is in use.
+ERROR_BUSY - Die angeforderte Ressorce wird beutzt.
 .
 
 MessageId=173
@@ -1101,7 +1101,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_CANCEL_VIOLATION
 Language=German
-ERROR_CANCEL_VIOLATION - A lock request was not outstanding for the supplied cancel region.
+ERROR_CANCEL_VIOLATION - Es gibt keine Aufforderung den Bereich zu sperren.
 .
 
 MessageId=174
@@ -1109,7 +1109,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_ATOMIC_LOCKS_NOT_SUPPORTED
 Language=German
-ERROR_ATOMIC_LOCKS_NOT_SUPPORTED - The file system does not support atomic changes to the lock type.
+ERROR_ATOMIC_LOCKS_NOT_SUPPORTED - Das Dateisysten unterstützt keine ununterbrechbaren Sperrungen.
 .
 
 MessageId=180
@@ -1117,7 +1117,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_INVALID_SEGMENT_NUMBER
 Language=German
-ERROR_INVALID_SEGMENT_NUMBER - The system detected a segment number that was not correct.
+ERROR_INVALID_SEGMENT_NUMBER - Das System erkannte eine falsche Segmentnummer.
 .
 
 MessageId=182
@@ -1125,7 +1125,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_INVALID_ORDINAL
 Language=German
-ERROR_INVALID_ORDINAL - The operating system cannot run %1.
+ERROR_INVALID_ORDINAL - Das Betriebssystem kann %1 nicht ausführen.
 .
 
 MessageId=183
@@ -1133,7 +1133,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_ALREADY_EXISTS
 Language=German
-ERROR_ALREADY_EXISTS - Cannot create a file when that file already exists.
+ERROR_ALREADY_EXISTS - Die Datei existiert schon.
 .
 
 MessageId=186
@@ -1141,7 +1141,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_INVALID_FLAG_NUMBER
 Language=German
-ERROR_INVALID_FLAG_NUMBER - The flag passed is not correct.
+ERROR_INVALID_FLAG_NUMBER - Das übergebene Flag ist ungültig.
 .
 
 MessageId=187
@@ -1149,7 +1149,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_SEM_NOT_FOUND
 Language=German
-ERROR_SEM_NOT_FOUND - The specified system semaphore name was not found.
+ERROR_SEM_NOT_FOUND - Der angegebene System-Semaphoren-Name wurde nicht gefunden.
 .
 
 MessageId=188
@@ -1157,7 +1157,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_INVALID_STARTING_CODESEG
 Language=German
-ERROR_INVALID_STARTING_CODESEG - The operating system cannot run %1.
+ERROR_INVALID_STARTING_CODESEG - Das Betriebssystem kann %1 nicht ausführen.
 .
 
 MessageId=189
@@ -1165,7 +1165,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_INVALID_STACKSEG
 Language=German
-ERROR_INVALID_STACKSEG - The operating system cannot run %1.
+ERROR_INVALID_STACKSEG - Das Betriebssystem kann %1 nicht ausführen.
 .
 
 MessageId=190
@@ -1173,7 +1173,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_INVALID_MODULETYPE
 Language=German
-ERROR_INVALID_MODULETYPE - The operating system cannot run %1.
+ERROR_INVALID_MODULETYPE - Das Betriebssystem kann %1 nicht ausführen.
 .
 
 MessageId=191
@@ -1181,7 +1181,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_INVALID_EXE_SIGNATURE
 Language=German
-ERROR_INVALID_EXE_SIGNATURE - Cannot run %1 in Win32 mode.
+ERROR_INVALID_EXE_SIGNATURE - %1 kann nicht im Win32 Modus ausgeführt werden.
 .
 
 MessageId=192
@@ -1189,7 +1189,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_EXE_MARKED_INVALID
 Language=German
-ERROR_EXE_MARKED_INVALID - The operating system cannot run %1.
+ERROR_EXE_MARKED_INVALID - Das Betriebssystem kann %1 nicht ausführen.
 .
 
 MessageId=193
@@ -1197,7 +1197,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_BAD_EXE_FORMAT
 Language=German
-ERROR_BAD_EXE_FORMAT - %1 is not a valid Win32 application.
+ERROR_BAD_EXE_FORMAT - %1 ist kein gültiges Win32 Programm.
 .
 
 MessageId=194
@@ -1205,7 +1205,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_ITERATED_DATA_EXCEEDS_64k
 Language=German
-ERROR_ITERATED_DATA_EXCEEDS_64k - The operating system cannot run %1.
+ERROR_ITERATED_DATA_EXCEEDS_64k - Das Betriebssystem kann %1 nicht ausführen.
 .
 
 MessageId=195
@@ -1213,7 +1213,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_INVALID_MINALLOCSIZE
 Language=German
-ERROR_INVALID_MINALLOCSIZE - The operating system cannot run %1.
+ERROR_INVALID_MINALLOCSIZE - Das Betriebssystem kann %1 nicht ausführen.
 .
 
 MessageId=196
@@ -1221,7 +1221,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_DYNLINK_FROM_INVALID_RING
 Language=German
-ERROR_DYNLINK_FROM_INVALID_RING - The operating system cannot run this application program.
+ERROR_DYNLINK_FROM_INVALID_RING - Das Betriebssystem kann dieses Programm nicht ausführen.
 .
 
 MessageId=197
@@ -1229,7 +1229,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_IOPL_NOT_ENABLED
 Language=German
-ERROR_IOPL_NOT_ENABLED - The operating system is not presently configured to run this application.
+ERROR_IOPL_NOT_ENABLED - Das Betriebssystem ist zur Zeit nicht konfiguiert, um dieses Programm auszuführen.
 .
 
 MessageId=198
@@ -1237,7 +1237,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_INVALID_SEGDPL
 Language=German
-ERROR_INVALID_SEGDPL - The operating system cannot run %1.
+ERROR_INVALID_SEGDPL - Das Betriebssystem kann %1 nicht ausführen.
 .
 
 MessageId=199
@@ -1245,7 +1245,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_AUTODATASEG_EXCEEDS_64k
 Language=German
-ERROR_AUTODATASEG_EXCEEDS_64k - The operating system cannot run this application program.
+ERROR_AUTODATASEG_EXCEEDS_64k - Das Betriebssystem kann dieses Programm nicht ausführen.
 .
 
 MessageId=200
@@ -1253,7 +1253,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_RING2SEG_MUST_BE_MOVABLE
 Language=German
-ERROR_RING2SEG_MUST_BE_MOVABLE - The code segment cannot be greater than or equal to 64K.
+ERROR_RING2SEG_MUST_BE_MOVABLE - Das Code-Segment kann nicht größer als oder gleich 64K sein.
 .
 
 MessageId=201
@@ -1261,7 +1261,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_RELOC_CHAIN_XEEDS_SEGLIM
 Language=German
-ERROR_RELOC_CHAIN_XEEDS_SEGLIM - The operating system cannot run %1.
+ERROR_RELOC_CHAIN_XEEDS_SEGLIM - Das Betriebssystem kann %1 nicht ausführen.
 .
 
 MessageId=202
@@ -1269,7 +1269,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_INFLOOP_IN_RELOC_CHAIN
 Language=German
-ERROR_INFLOOP_IN_RELOC_CHAIN - The operating system cannot run %1.
+ERROR_INFLOOP_IN_RELOC_CHAIN - Das Betriebssystem kann %1 nicht ausführen.
 .
 
 MessageId=203
@@ -1277,7 +1277,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_ENVVAR_NOT_FOUND
 Language=German
-ERROR_ENVVAR_NOT_FOUND - The system could not find the environment option that was entered.
+ERROR_ENVVAR_NOT_FOUND - Das System konnte die Umgebungs-Option, die eingegeben wurde, nicht finden.
 .
 
 MessageId=205
@@ -1285,7 +1285,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_NO_SIGNAL_SENT
 Language=German
-ERROR_NO_SIGNAL_SENT - No process in the command subtree has a signal handler.
+ERROR_NO_SIGNAL_SENT - Kein Prozess in der Befehlsstruktur hat eine Signalbehandlung.
 .
 
 MessageId=206
@@ -1293,7 +1293,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_FILENAME_EXCED_RANGE
 Language=German
-ERROR_FILENAME_EXCED_RANGE - The filename or extension is too long.
+ERROR_FILENAME_EXCED_RANGE - Der Dateiname oder die Erweiterung ist zu lang.
 .
 
 MessageId=207
@@ -1301,7 +1301,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_RING2_STACK_IN_USE
 Language=German
-ERROR_RING2_STACK_IN_USE - The ring 2 stack is in use.
+ERROR_RING2_STACK_IN_USE - Der Ring 2 Stack wird benutzt.
 .
 
 MessageId=208
@@ -1309,7 +1309,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_META_EXPANSION_TOO_LONG
 Language=German
-ERROR_META_EXPANSION_TOO_LONG - The global filename characters, * or ?, are entered incorrectly or too many global filename characters are specified.
+ERROR_META_EXPANSION_TOO_LONG - Es wurden zu viele Platzhalter, wie ? oder *, eingeben.
 .
 
 MessageId=209
@@ -1317,7 +1317,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_INVALID_SIGNAL_NUMBER
 Language=German
-ERROR_INVALID_SIGNAL_NUMBER - The signal being posted is not correct.
+ERROR_INVALID_SIGNAL_NUMBER - Das gesendete Signal ist falsch.
 .
 
 MessageId=210
@@ -1325,7 +1325,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_THREAD_1_INACTIVE
 Language=German
-ERROR_THREAD_1_INACTIVE - The signal handler cannot be set.
+ERROR_THREAD_1_INACTIVE - Die Signalbehandlung kann nicht gestartet werden.
 .
 
 MessageId=212
@@ -1333,7 +1333,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_LOCKED
 Language=German
-ERROR_LOCKED - The segment is locked and cannot be reallocated.
+ERROR_LOCKED - Das Segment ist gesperrt und kann nicht verändert werden.
 .
 
 MessageId=214
@@ -1341,7 +1341,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_TOO_MANY_MODULES
 Language=German
-ERROR_TOO_MANY_MODULES - Too many dynamic-link modules are attached to this program or dynamic-link module.
+ERROR_TOO_MANY_MODULES - Es werden zu viele DLLs von diesem Programm oder DLL bentzt.
 .
 
 MessageId=215
@@ -1349,7 +1349,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_NESTING_NOT_ALLOWED
 Language=German
-ERROR_NESTING_NOT_ALLOWED - Cannot nest calls to LoadModule.
+ERROR_NESTING_NOT_ALLOWED - Es können keine Aufrufe in LoadModule gebracht werden.
 .
 
 MessageId=216
@@ -1357,7 +1357,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_EXE_MACHINE_TYPE_MISMATCH
 Language=German
-ERROR_EXE_MACHINE_TYPE_MISMATCH - The image file %1 is valid, but is for a machine type other than the current machine.
+ERROR_EXE_MACHINE_TYPE_MISMATCH - Die ausführbare Datei %1 ist gültig, ist aber für einen anderen Maschinentyp als der derzeitige Computer.
 .
 
 MessageId=217
@@ -1365,7 +1365,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_EXE_CANNOT_MODIFY_SIGNED_BINARY
 Language=German
-ERROR_EXE_CANNOT_MODIFY_SIGNED_BINARY - The image file %1 is signed, unable to modify.
+ERROR_EXE_CANNOT_MODIFY_SIGNED_BINARY - Die ausführbare Datei %1 ist signiert, es es nicht möglich sie zu ändern.
 .
 
 MessageId=218
@@ -1373,7 +1373,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERRO_EXE_CANNOT_MODIFY_STRONG_SIGNED_BINARY
 Language=German
-ERRO_EXE_CANNOT_MODIFY_STRONG_SIGNED_BINARY - The image file %1 is strong signed, unable to modify.
+ERRO_EXE_CANNOT_MODIFY_STRONG_SIGNED_BINARY - Die ausführbare Datei %1 ist stark signiert, es es nicht möglich sie zu ändern.
 .
 
 MessageId=230
@@ -1381,7 +1381,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_BAD_PIPE
 Language=German
-ERROR_BAD_PIPE - The pipe state is invalid.
+ERROR_BAD_PIPE - Der Pipestatus ist falsch.
 .
 
 MessageId=231
@@ -1389,7 +1389,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_PIPE_BUSY
 Language=German
-ERROR_PIPE_BUSY - All pipe instances are busy.
+ERROR_PIPE_BUSY - Alle Pipes sind ausgelastet.
 .
 
 MessageId=232
@@ -1397,7 +1397,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_NO_DATA
 Language=German
-ERROR_NO_DATA - The pipe is being closed.
+ERROR_NO_DATA - Die Pipe wird gerade geschlossen.
 .
 
 MessageId=233
@@ -1405,7 +1405,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_PIPE_NOT_CONNECTED
 Language=German
-ERROR_PIPE_NOT_CONNECTED - No process is on the other end of the pipe.
+ERROR_PIPE_NOT_CONNECTED - Es ist kein Prozess am anderen Ende dieser Pipe.
 .
 
 MessageId=234
@@ -1413,7 +1413,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_MORE_DATA
 Language=German
-ERROR_MORE_DATA - More data is available.
+ERROR_MORE_DATA - Es sind mehr Daten verfügbar.
 .
 
 MessageId=240
@@ -1421,7 +1421,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_VC_DISCONNECTED
 Language=German
-ERROR_VC_DISCONNECTED - The session was canceled.
+ERROR_VC_DISCONNECTED - Die Session wurde abgebrochen.
 .
 
 MessageId=254
@@ -1429,7 +1429,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_INVALID_EA_NAME
 Language=German
-ERROR_INVALID_EA_NAME - The specified extended attribute name was invalid.
+ERROR_INVALID_EA_NAME - Der angegebene erweiterte Attributname ist ungültig.
 .
 
 MessageId=255
@@ -1437,7 +1437,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_EA_LIST_INCONSISTENT
 Language=German
-ERROR_EA_LIST_INCONSISTENT - The extended attributes are inconsistent.
+ERROR_EA_LIST_INCONSISTENT - Die erweiterten Attribute sind unvereinbar.
 .
 
 MessageId=258
@@ -1445,7 +1445,7 @@ Severity=Success
 Facility=System
 SymbolicName=WAIT_TIMEOUT
 Language=German
-WAIT_TIMEOUT - The wait operation timed out.
+WAIT_TIMEOUT - Die Warteoperation ist abgelaufen.
 .
 
 MessageId=259
@@ -1453,7 +1453,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_NO_MORE_ITEMS
 Language=German
-ERROR_NO_MORE_ITEMS - No more data is available.
+ERROR_NO_MORE_ITEMS - Es sind keine weiteren Daten verfügbar.
 .
 
 MessageId=266
@@ -1461,7 +1461,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_CANNOT_COPY
 Language=German
-ERROR_CANNOT_COPY - The copy functions cannot be used.
+ERROR_CANNOT_COPY - Die Kopierfuntionen können nicht benutzt werden.
 .
 
 MessageId=267
@@ -1469,7 +1469,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_DIRECTORY
 Language=German
-ERROR_DIRECTORY - The directory name is invalid.
+ERROR_DIRECTORY - Der Verzeichnisname ist falsch.
 .
 
 MessageId=275
@@ -1477,7 +1477,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_EAS_DIDNT_FIT
 Language=German
-ERROR_EAS_DIDNT_FIT - The extended attributes did not fit in the buffer.
+ERROR_EAS_DIDNT_FIT - Die erweiterte Attribute passten nicht in den Buffer.
 .
 
 MessageId=276
@@ -1485,7 +1485,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_EA_FILE_CORRUPT
 Language=German
-ERROR_EA_FILE_CORRUPT - The extended attribute file on the mounted file system is corrupt.
+ERROR_EA_FILE_CORRUPT - Das erweiterte Datei-Attribut im benutzten Dateisystem ist korrupt.
 .
 
 MessageId=277
@@ -1493,7 +1493,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_EA_TABLE_FULL
 Language=German
-ERROR_EA_TABLE_FULL - The extended attribute table file is full.
+ERROR_EA_TABLE_FULL - Die erweiterte Datei-Attributtabelle ist voll.
 .
 
 MessageId=278
@@ -1501,7 +1501,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_INVALID_EA_HANDLE
 Language=German
-ERROR_INVALID_EA_HANDLE - The specified extended attribute handle is invalid.
+ERROR_INVALID_EA_HANDLE - Der angegebene erweiterte Attribut-Handle ist ungültig.
 .
 
 MessageId=282
@@ -1509,7 +1509,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_EAS_NOT_SUPPORTED
 Language=German
-ERROR_EAS_NOT_SUPPORTED - The mounted file system does not support extended attributes.
+ERROR_EAS_NOT_SUPPORTED - Das benutzte Dateisystem unterstützt keine erweiterte Attribute.
 .
 
 MessageId=288
@@ -1517,7 +1517,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_NOT_OWNER
 Language=German
-ERROR_NOT_OWNER - Attempt to release mutex not owned by caller.
+ERROR_NOT_OWNER - Es wurde versucht, ein Mutex freizugeben das nicht dem Aufrufer gehört.
 .
 
 MessageId=298
@@ -1525,7 +1525,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_TOO_MANY_POSTS
 Language=German
-ERROR_TOO_MANY_POSTS - Too many posts were made to a semaphore.
+ERROR_TOO_MANY_POSTS - Es wurden zu viele Aufrufe zu einer Semaphore gemacht.
 .
 
 MessageId=299
@@ -1533,7 +1533,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_PARTIAL_COPY
 Language=German
-ERROR_PARTIAL_COPY - Only part of a ReadProcessMemory or WriteProcessMemory request was completed.
+ERROR_PARTIAL_COPY - Es wurde nur ein Teil von einer ReadProcessMemory oder WriteProcessMemory Anforderung fertiggestellt.
 .
 
 MessageId=300
@@ -1541,7 +1541,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_OPLOCK_NOT_GRANTED
 Language=German
-ERROR_OPLOCK_NOT_GRANTED - The oplock request is denied.
+ERROR_OPLOCK_NOT_GRANTED - Die Oplock Anforderung ist verboten.
 .
 
 MessageId=301
@@ -1549,7 +1549,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_INVALID_OPLOCK_PROTOCOL
 Language=German
-ERROR_INVALID_OPLOCK_PROTOCOL - An invalid oplock acknowledgment was received by the system.
+ERROR_INVALID_OPLOCK_PROTOCOL - Eine ungültige Oplock Bestätigung wurde vom System empfangen.
 .
 
 MessageId=302
@@ -1557,7 +1557,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_DISK_TOO_FRAGMENTED
 Language=German
-ERROR_DISK_TOO_FRAGMENTED - The volume is too fragmented to complete this operation.
+ERROR_DISK_TOO_FRAGMENTED - Der Datenträger ist zu fragmentiert um diese Operation fertigzustellen.
 .
 
 MessageId=303
@@ -1565,7 +1565,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_DELETE_PENDING
 Language=German
-ERROR_DELETE_PENDING - The file cannot be opened because it is in the process of being deleted.
+ERROR_DELETE_PENDING - Die Datei kann nicht geöffnet werden, da sie gerade gelöscht wird.
 .
 
 MessageId=317
@@ -1573,7 +1573,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_MR_MID_NOT_FOUND
 Language=German
-ERROR_MR_MID_NOT_FOUND - The system cannot find message text for message number 0x%1 in the message file for %2.
+ERROR_MR_MID_NOT_FOUND - Das System kann den Text für die Textnummer 0x%1 in der Textliste für %2 nicht finden.
 .
 
 MessageId=318
@@ -1581,7 +1581,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_SCOPE_NOT_FOUND
 Language=German
-ERROR_SCOPE_NOT_FOUND - The scope specified was not found.
+ERROR_SCOPE_NOT_FOUND - Der angegebene Bereich wurde nicht gefunden.
 .
 
 MessageId=487
@@ -1589,7 +1589,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_INVALID_ADDRESS
 Language=German
-ERROR_INVALID_ADDRESS - Attempt to access invalid address.
+ERROR_INVALID_ADDRESS - Versuch auf eine ungültige Adresse zuzugreifen.
 .
 
 MessageId=534
@@ -1597,7 +1597,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_ARITHMETIC_OVERFLOW
 Language=German
-ERROR_ARITHMETIC_OVERFLOW - Das arithmetische Ergebnis überschreitet 32 Bits.
+ERROR_ARITHMETIC_OVERFLOW - Das Rechenergebnis hat 32 bits überschritten.
 .
 
 MessageId=535
@@ -1605,7 +1605,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_PIPE_CONNECTED
 Language=German
-ERROR_PIPE_CONNECTED - There is a process on other end of the pipe.
+ERROR_PIPE_CONNECTED - Es ist ein Prozess am anderen Ende der Pipe.
 .
 
 MessageId=536
@@ -1613,7 +1613,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_PIPE_LISTENING
 Language=German
-ERROR_PIPE_LISTENING - Waiting for a process to open the other end of the pipe.
+ERROR_PIPE_LISTENING - Es wird auf einen Prozess gewartet, der das andere Ende der Pipe öffnet.
 .
 
 MessageId=537
@@ -1621,7 +1621,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_ACPI_ERROR
 Language=German
-ERROR_ACPI_ERROR - Ein Fehler trat im ACPI Subsystem auf.
+ERROR_ACPI_ERROR - Es ist ein Fehler im ACPI-System aufgetreten.
 .
 
 MessageId=538
@@ -1629,7 +1629,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_ABIOS_ERROR
 Language=German
-ERROR_ABIOS_ERROR - Ein Fehler trat im ABIOS Subsystem auf.
+ERROR_ABIOS_ERROR - Es ist ein Fehler im ABIOS System aufgetreten.
 .
 
 MessageId=539
@@ -1637,7 +1637,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_WX86_WARNING
 Language=German
-ERROR_WX86_WARNING - Eine Warnung trat im WX86 Subsystem auf.
+ERROR_WX86_WARNING - Es ist eine Warnung im WX86 System aufgetreten.
 .
 
 MessageId=540
@@ -1645,7 +1645,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_WX86_ERROR
 Language=German
-ERROR_WX86_ERROR - Ein Fehler trat im WX86 Subsystem auf.
+ERROR_WX86_ERROR - Es ist ein Fehler im WX86 System aufgetreten.
 .
 
 MessageId=541
@@ -1653,7 +1653,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_TIMER_NOT_CANCELED
 Language=German
-ERROR_TIMER_NOT_CANCELED - An attempt was made to cancel or set a timer that has an associated APC and the subject thread is not the thread that originally set the timer with an associated APC routine.
+ERROR_TIMER_NOT_CANCELED - Es wurde der Versuch gemacht einen Timer zu setzen oder zu löschen der nicht dem Aufrufer gehört. 
 .
 
 MessageId=542
@@ -1661,7 +1661,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_UNWIND
 Language=German
-ERROR_UNWIND - Unwind exception code.
+ERROR_UNWIND - Unwind Ausnahme Code.
 .
 
 MessageId=543
@@ -1669,7 +1669,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_BAD_STACK
 Language=German
-ERROR_BAD_STACK - An invalid or unaligned stack was encountered during an unwind operation.
+ERROR_BAD_STACK - Während einer Unwind-Operation wurde ein ungültiger oder unaligned Stack angetroffen.
 .
 
 MessageId=544
@@ -1677,7 +1677,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_INVALID_UNWIND_TARGET
 Language=German
-ERROR_INVALID_UNWIND_TARGET - An invalid unwind target was encountered during an unwind operation.
+ERROR_INVALID_UNWIND_TARGET - Während einer Unwind-Operation wurde ein ungültiges Unwind-Ziel angetroffen.
 .
 
 MessageId=545
@@ -1685,7 +1685,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_INVALID_PORT_ATTRIBUTES
 Language=German
-ERROR_INVALID_PORT_ATTRIBUTES - Invalid Object Attributes specified to NtCreatePort or invalid Port Attributes specified to NtConnectPort
+ERROR_INVALID_PORT_ATTRIBUTES - Es wurden ungültige Portparameter angeben.
 .
 
 MessageId=546
@@ -1693,7 +1693,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_PORT_MESSAGE_TOO_LONG
 Language=German
-ERROR_PORT_MESSAGE_TOO_LONG - Length of message passed to NtRequestPort or NtRequestWaitReplyPort was longer than the maximum message allowed by the port.
+ERROR_PORT_MESSAGE_TOO_LONG - Die Länge der Nachricht war zu lang.
 .
 
 MessageId=547
@@ -1701,7 +1701,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_INVALID_QUOTA_LOWER
 Language=German
-ERROR_INVALID_QUOTA_LOWER - An attempt was made to lower a quota limit below the current usage.
+ERROR_INVALID_QUOTA_LOWER - Es wurde versucht, das Quote-Limit unter der derzeitgen Benutzung zu setzen.
 .
 
 MessageId=548
@@ -1709,7 +1709,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_DEVICE_ALREADY_ATTACHED
 Language=German
-ERROR_DEVICE_ALREADY_ATTACHED - An attempt was made to attach to a device that was already attached to another device.
+ERROR_DEVICE_ALREADY_ATTACHED - Es wurde versucht, ein Gerät anzuschliesen das schon an einem anderen Gerät angeschlossen ist.
 .
 
 MessageId=549
@@ -1717,7 +1717,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_INSTRUCTION_MISALIGNMENT
 Language=German
-ERROR_INSTRUCTION_MISALIGNMENT - An attempt was made to execute an instruction at an unaligned address and the host system does not support unaligned instruction references.
+ERROR_INSTRUCTION_MISALIGNMENT - Es wurde versucht, einen Befehl an einer unaligned Adresse auzuführen, was dieses System nicht unterstützt.
 .
 
 MessageId=550
@@ -1725,7 +1725,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_PROFILING_NOT_STARTED
 Language=German
-ERROR_PROFILING_NOT_STARTED - Profiling not started.
+ERROR_PROFILING_NOT_STARTED - Das Profil wurde nicht gestartet.
 .
 
 MessageId=551
@@ -1733,7 +1733,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_PROFILING_NOT_STOPPED
 Language=German
-ERROR_PROFILING_NOT_STOPPED - Profiling not stopped.
+ERROR_PROFILING_NOT_STOPPED - Das Profil wurde nicht gestoppt.
 .
 
 MessageId=552
@@ -1741,7 +1741,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_COULD_NOT_INTERPRET
 Language=German
-ERROR_COULD_NOT_INTERPRET - The passed ACL did not contain the minimum required information.
+ERROR_COULD_NOT_INTERPRET - Der übergebene ACL hatte nicht die minimalen notwenigen Informationen.
 .
 
 MessageId=553
@@ -1749,7 +1749,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_PROFILING_AT_LIMIT
 Language=German
-ERROR_PROFILING_AT_LIMIT - The number of active profiling objects is at the maximum and no more may be started.
+ERROR_PROFILING_AT_LIMIT - Die Anzahl von von aktiven Profilobjekten ist am Maximum und es können keine weiteren gestartet werden.
 .
 
 MessageId=554
@@ -1757,7 +1757,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_CANT_WAIT
 Language=German
-ERROR_CANT_WAIT - Used to indicate that an operation cannot continue without blocking for I/O.
+ERROR_CANT_WAIT - Die Operation kann nicht fortgesetzt werden, ohne die I/O zu blockieren.
 .
 
 MessageId=555
@@ -1765,7 +1765,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_CANT_TERMINATE_SELF
 Language=German
-ERROR_CANT_TERMINATE_SELF - Indicates that a thread attempted to terminate itself by default (called NtTerminateThread with NULL) and it was the last thread in the current process.
+ERROR_CANT_TERMINATE_SELF - Ein Thread versuchte sich standardmäßig selbst zu beenden und es war der letzte Thread im aktuellen Prozess.
 .
 
 MessageId=556
@@ -1773,7 +1773,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_UNEXPECTED_MM_CREATE_ERR
 Language=German
-ERROR_UNEXPECTED_MM_CREATE_ERR - If an MM error is returned which is not defined in the standard FsRtl filter, it is converted to one of the following errors which is guaranteed to be in the filter. In this case information is lost, however, the filter correctly handles the exception.
+ERROR_UNEXPECTED_MM_CREATE_ERR - Wenn ein nicht im Standard FsRtl Filter definierter Fehler zurückgeben wird, wird es in einen der folgenden Fehler konvertiert, die garantiert im Filter sind. In diesem Fall geht Information verloren, aber der Filter behandelt den Fehler richtig.
 .
 
 MessageId=557
@@ -1781,7 +1781,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_UNEXPECTED_MM_MAP_ERROR
 Language=German
-ERROR_UNEXPECTED_MM_MAP_ERROR - If an MM error is returned which is not defined in the standard FsRtl filter, it is converted to one of the following errors which is guaranteed to be in the filter. In this case information is lost, however, the filter correctly handles the exception.
+ERROR_UNEXPECTED_MM_MAP_ERROR - Wenn ein nicht im Standart FsRtl Filter definierter Fehler zurückgeben wird, wird es in einen der folgenden Fehlern konvertiert, die garantiert im Filter sind. In diesem Fall geht Information verloren, aber der Filter behandelt den Fehler richtig.
 .
 
 MessageId=558
@@ -1789,7 +1789,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_UNEXPECTED_MM_EXTEND_ERR
 Language=German
-ERROR_UNEXPECTED_MM_EXTEND_ERR - If an MM error is returned which is not defined in the standard FsRtl filter, it is converted to one of the following errors which is guaranteed to be in the filter. In this case information is lost, however, the filter correctly handles the exception.
+ERROR_UNEXPECTED_MM_EXTEND_ERR - Wenn ein nicht im Standard FsRtl Filter definierter Fehler zurückgeben wird, wird es in einen der folgenden Fehler konvertiert, die garantiert im Filter sind. In diesem Fall geht Information verloren, aber der Filter behandelt den Fehler richtig.
 .
 
 MessageId=559
@@ -1797,7 +1797,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_BAD_FUNCTION_TABLE
 Language=German
-ERROR_BAD_FUNCTION_TABLE - A malformed function table was encountered during an unwind operation.
+ERROR_BAD_FUNCTION_TABLE - A malformed function table was encountered during an unwind Operation.
 .
 
 MessageId=560
@@ -1805,7 +1805,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_NO_GUID_TRANSLATION
 Language=German
-ERROR_NO_GUID_TRANSLATION - Indicates that an attempt was made to assign protection to a file system file or directory and one of the SIDs in the security descriptor could not be translated into a GUID that could be stored by the file system. This causes the protection attempt to fail, which may cause a file creation attempt to fail.
+ERROR_NO_GUID_TRANSLATION - Die Konvertierung von einer SID zu einer im Dateisystem speicherbaren GUID schlug fehl, was bedeutet das ein Schutzversuch fehlschlug, was bedeuten könnte das die Dtaei nicht erzeugt werden konnte. 
 .
 
 MessageId=561
@@ -1813,7 +1813,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_INVALID_LDT_SIZE
 Language=German
-ERROR_INVALID_LDT_SIZE - Indicates that an attempt was made to grow an LDT by setting its size, or that the size was not an even number of selectors.
+ERROR_INVALID_LDT_SIZE - Es wurde ein Versuch gemacht eine LDT größer zu machen, oder die Größe ist keine gerade Zahl von Auswählern.
 .
 
 MessageId=563
@@ -1821,7 +1821,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_INVALID_LDT_OFFSET
 Language=German
-ERROR_INVALID_LDT_OFFSET - Indicates that the starting value for the LDT information was not an integral multiple of the selector size.
+ERROR_INVALID_LDT_OFFSET - Der Startwert für die LDT Information war kein ganzzahliges Vielfaches von der Auswahlgröße.
 .
 
 MessageId=564
@@ -1829,7 +1829,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_INVALID_LDT_DESCRIPTOR
 Language=German
-ERROR_INVALID_LDT_DESCRIPTOR - Indicates that the user supplied an invalid descriptor when trying to set up Ldt descriptors.
+ERROR_INVALID_LDT_DESCRIPTOR - Der Benutzer hat eine ungültige Bezeichnung angegeben, wenn verucht wurde LDT Bezeichnungen zu erstellen.
 .
 
 MessageId=565
@@ -1837,7 +1837,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_TOO_MANY_THREADS
 Language=German
-ERROR_TOO_MANY_THREADS - Indicates a process has too many threads to perform the requested action. For example, assignment of a primary token may only be performed when a process has zero or one threads.
+ERROR_TOO_MANY_THREADS - Der Prozess hat zu viele Threads, um die angeforderte Aktion durchzuführen.
 .
 
 MessageId=566
@@ -1845,7 +1845,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_THREAD_NOT_IN_PROCESS
 Language=German
-ERROR_THREAD_NOT_IN_PROCESS - An attempt was made to operate on a thread within a specific process, but the thread specified is not in the process specified.
+ERROR_THREAD_NOT_IN_PROCESS - Der Thread ist nicht im angebenen Prozess.
 .
 
 MessageId=567
@@ -1853,7 +1853,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_PAGEFILE_QUOTA_EXCEEDED
 Language=German
-ERROR_PAGEFILE_QUOTA_EXCEEDED - Page file quota was exceeded.
+ERROR_PAGEFILE_QUOTA_EXCEEDED - Die Grenze der Größe der Auslagerungsdatei wurde überschritten.
 .
 
 MessageId=568
@@ -1861,7 +1861,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_LOGON_SERVER_CONFLICT
 Language=German
-ERROR_LOGON_SERVER_CONFLICT - The Netlogon service cannot start because another Netlogon service running in the domain conflicts with the specified role.
+ERROR_LOGON_SERVER_CONFLICT - Der Netlogon-Dienst kann nicht starten weil ein anderer Netlogon-Dienst mit der gleichen Rolle lauft und ein Domänen-Konflikt auftritt.
 .
 
 MessageId=569
@@ -1869,7 +1869,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_SYNCHRONIZATION_REQUIRED
 Language=German
-ERROR_SYNCHRONIZATION_REQUIRED - The SAM database on a Windows Server is significantly out of synchronization with the copy on the Domain Controller. A complete synchronization is required.
+ERROR_SYNCHRONIZATION_REQUIRED - Die SAM Datenbank in einem Windows Server ist nicht synchrom mit der Kopie auf dem Domänenkontroller, wesewegen eine Syncronisation benötigt wird.
 .
 
 MessageId=570
@@ -1877,7 +1877,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_NET_OPEN_FAILED
 Language=German
-ERROR_NET_OPEN_FAILED - The NtCreateFile API failed. This error should never be returned to an application, it is a place holder for the Windows Lan Manager Redirector to use in its internal error mapping routines.
+ERROR_NET_OPEN_FAILED - Die NtCreateFile API schlug fehl. Dieser Fehler sollte nie einem Programm zurückgegeben werden, es ist ein Platzhalter für den ReactOS Lan Manager Redirector zur verwendung in dessen internen Fehlerbehandlungsroutinen.
 .
 
 MessageId=571
@@ -1885,7 +1885,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_IO_PRIVILEGE_FAILED
 Language=German
-ERROR_IO_PRIVILEGE_FAILED - The I/O permissions for the process could not be changed.
+ERROR_IO_PRIVILEGE_FAILED - Die I/O Rechte könnten für den Prozess nicht geändert werden.
 .
 
 MessageId=572
@@ -1893,7 +1893,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_CONTROL_C_EXIT
 Language=German
-ERROR_CONTROL_C_EXIT - The application terminated as a result of a CTRL+C.
+ERROR_CONTROL_C_EXIT - Das Proamm wurde wegen einer Eingabe von Strg+C beendet.
 .
 
 MessageId=573
@@ -1901,7 +1901,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_MISSING_SYSTEMFILE
 Language=German
-ERROR_MISSING_SYSTEMFILE - The required system file %hs is bad or missing.
+ERROR_MISSING_SYSTEMFILE - Die benötigte System Datei %hs ist falsch oder fehlt.
 .
 
 MessageId=574
@@ -1909,7 +1909,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_UNHANDLED_EXCEPTION
 Language=German
-ERROR_UNHANDLED_EXCEPTION - The exception %s (0x%08lx) occurred in the application at location 0x%08lx.
+ERROR_UNHANDLED_EXCEPTION - Die Ausnahme %s (0x%08lx) im Programm an der Stelle 0x%08lxist aufgetreten.
 .
 
 MessageId=575
@@ -1917,7 +1917,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_APP_INIT_FAILURE
 Language=German
-ERROR_APP_INIT_FAILURE - The application failed to initialize properly (0x%lx). Click on OK to terminate the application.
+ERROR_APP_INIT_FAILURE - Das Programm konnte nicht richtig initalisiert werden (0x%lx). Klicken Sie auf OK um das Programm zu beenden.
 .
 
 MessageId=576
@@ -1925,7 +1925,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_PAGEFILE_CREATE_FAILED
 Language=German
-ERROR_PAGEFILE_CREATE_FAILED - The creation of the paging file %hs failed (%lx). The requested size was %ld.
+ERROR_PAGEFILE_CREATE_FAILED - Die Erstellung der Auslagerungsdatei %hs schlug fehl (%lx). Die angeforderte Größe war %ld.
 .
 
 MessageId=578
@@ -1933,7 +1933,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_NO_PAGEFILE
 Language=German
-ERROR_NO_PAGEFILE - No paging file was specified in the system configuration.
+ERROR_NO_PAGEFILE - Es wurde keine Auslagerungsdatei in der Systemkonfiguration angegeben.
 .
 
 MessageId=579
@@ -1941,7 +1941,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_ILLEGAL_FLOAT_CONTEXT
 Language=German
-ERROR_ILLEGAL_FLOAT_CONTEXT - A real-mode application issued a floating-point instruction and floating-point hardware is not present.
+ERROR_ILLEGAL_FLOAT_CONTEXT - Ein Programm im Realmodus veranlasste einen Fließkommabefehl aber es ist keine Fließkomma Hardware vorhanden.
 .
 
 MessageId=580
@@ -1949,7 +1949,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_NO_EVENT_PAIR
 Language=German
-ERROR_NO_EVENT_PAIR - An event pair synchronization operation was performed using the thread specific client/server event pair object, but no event pair object was associated with the thread.
+ERROR_NO_EVENT_PAIR - Eine Ereignispaarsynchronisation wurde unter Benutzung des Client/Server Ereignispaares des Threads angefordert, es wurde aber kein Ereignispaarobjekt mit dem Thread verbunden.
 .
 
 MessageId=581
@@ -1957,7 +1957,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_DOMAIN_CTRLR_CONFIG_ERROR
 Language=German
-ERROR_DOMAIN_CTRLR_CONFIG_ERROR - A Windows Server has an incorrect configuration.
+ERROR_DOMAIN_CTRLR_CONFIG_ERROR - Ein Windows Server hat eine falsche Konfiguration.
 .
 
 MessageId=582
@@ -1965,7 +1965,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_ILLEGAL_CHARACTER
 Language=German
-ERROR_ILLEGAL_CHARACTER - An illegal character was encountered. For a multi-byte character set this includes a lead byte without a succeeding trail byte. For the Unicode character set this includes the characters 0xFFFF and 0xFFFE.
+ERROR_ILLEGAL_CHARACTER - Es wurde ein illegales Zeichen gefunden. For ein multi-byte Zeichensatz schließt dies ein Führungs-Byte ohne ein fogendes Anschluss-Byte ein. Für den Unicode Zeichensatz schließt dies die Zeichen 0xFFFF und 0xFFFE ein.
 .
 
 MessageId=583
@@ -1973,15 +1973,15 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_UNDEFINED_CHARACTER
 Language=German
-ERROR_UNDEFINED_CHARACTER - The Unicode character is not defined in the Unicode character set installed on the system.
+ERROR_UNDEFINED_CHARACTER - Das Unicodezeichen ist nicht im Unicode Zeichensatz definiert.
 .
 
 MessageId=584
 Severity=Success
 Facility=System
-SymbolicName=ERROR_FLOPPY_VOLUME
+SymbolicName=ERROR_Diskette_VOLUME
 Language=German
-ERROR_FLOPPY_VOLUME - The paging file cannot be created on a floppy diskette.
+ERROR_Diskette_VOLUME - Die Auslagerungsdatei kann nicht auf einer Diskette erzeugt werden.
 .
 
 MessageId=585
@@ -1989,7 +1989,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_BIOS_FAILED_TO_CONNECT_INTERRUPT
 Language=German
-ERROR_BIOS_FAILED_TO_CONNECT_INTERRUPT - The system bios failed to connect a system interrupt to the device or bus for which the device is connected.
+ERROR_BIOS_FAILED_TO_CONNECT_INTERRUPT - Das System BIOS konnte einen Systeminterupt nicht an das Gerät oder dessen Bus verbinden.
 .
 
 MessageId=586
@@ -1997,7 +1997,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_BACKUP_CONTROLLER
 Language=German
-ERROR_BACKUP_CONTROLLER - This operation is only allowed for the Primary Domain Controller of the domain.
+ERROR_BACKUP_CONTROLLER - Diese Operation ist nur für den primären Domänenkontroller erlaubt.
 .
 
 MessageId=587
@@ -2005,7 +2005,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_MUTANT_LIMIT_EXCEEDED
 Language=German
-ERROR_MUTANT_LIMIT_EXCEEDED - An attempt was made to acquire a mutant such that its maximum count would have been exceeded.
+ERROR_MUTANT_LIMIT_EXCEEDED - Es wurde versucht, einen Mutanten zu erwerben, so dass dessen maximaler Zähler überschritten worden wäre.
 .
 
 MessageId=588
@@ -2013,7 +2013,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_FS_DRIVER_REQUIRED
 Language=German
-ERROR_FS_DRIVER_REQUIRED - A volume has been accessed for which a file system driver is required that has not yet been loaded.
+ERROR_FS_DRIVER_REQUIRED - Es wurde auf ein Datenträger zugegriffen, dessen Dateisystemtreiber noch nicht geladen sind.
 .
 
 MessageId=589
@@ -2021,7 +2021,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_CANNOT_LOAD_REGISTRY_FILE
 Language=German
-ERROR_CANNOT_LOAD_REGISTRY_FILE - The registry cannot load the hive (file): %hs or its log or alternate. It is corrupt, absent, or not writable.
+ERROR_CANNOT_LOAD_REGISTRY_FILE - Die Registrierungsdatenbank kann die Hive (Datei) nicht laden: %hs, sein Log oder die Alternative. Sie ist korrupt, fehlt oder ist nicht beschreibbar.
 .
 
 MessageId=590
@@ -2029,7 +2029,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_DEBUG_ATTACH_FAILED
 Language=German
-ERROR_DEBUG_ATTACH_FAILED - An unexpected failure occurred while processing a DebugActiveProcess API request. You may choose OK to terminate the process, or Cancel to ignore the error.
+ERROR_DEBUG_ATTACH_FAILED - Es ist während der Abarbeitung einer DebugActiveProcess API Anforderung ein unerwarteter Fehler aufgetreten. Wählen Sie OK, um den Prozess zu beenden oder Abbrechen, um den Fehler zu ignorieren
 .
 
 MessageId=591
@@ -2037,7 +2037,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_SYSTEM_PROCESS_TERMINATED
 Language=German
-ERROR_SYSTEM_PROCESS_TERMINATED - The %hs system process terminated unexpectedly with a status of 0x%08x (0x%08x 0x%08x). The system has been shut down.
+ERROR_SYSTEM_PROCESS_TERMINATED - Der %hs System Prozess wurde mit dem Status 0x%08x (0x%08x 0x%08x) unerwartet beendet. Das System wurde heruntergefahren.
 .
 
 MessageId=592
@@ -2045,7 +2045,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_DATA_NOT_ACCEPTED
 Language=German
-ERROR_DATA_NOT_ACCEPTED - The TDI client could not handle the data received during an indication.
+ERROR_DATA_NOT_ACCEPTED - The TDI konnte die empfangenen Daten während einer Andeutung nicht bearbeiten.
 .
 
 MessageId=593
@@ -2053,7 +2053,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_VDM_HARD_ERROR
 Language=German
-ERROR_VDM_HARD_ERROR - NTVDM encountered a hard error.
+ERROR_VDM_HARD_ERROR - NTVDM fand einen Hardwarefehler.
 .
 
 MessageId=594
@@ -2061,7 +2061,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_DRIVER_CANCEL_TIMEOUT
 Language=German
-ERROR_DRIVER_CANCEL_TIMEOUT - The driver %hs failed to complete a cancelled I/O request in the allotted time.
+ERROR_DRIVER_CANCEL_TIMEOUT - Das Laufwerk %hs konnte eine abgebroche I/O Operation nicht in der vorhergesehenen Zeit fertigstellen.
 .
 
 MessageId=595
@@ -2069,7 +2069,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_REPLY_MESSAGE_MISMATCH
 Language=German
-ERROR_REPLY_MESSAGE_MISMATCH - An attempt was made to reply to an LPC message, but the thread specified by the client ID in the message was not waiting on that message.
+ERROR_REPLY_MESSAGE_MISMATCH - Es wurde versucht, auf eine LPC Nachricht zu antowrten, aber der vom Thread in der Nachricht angegebene Klient wartete nicht auf diese Nachricht.
 .
 
 MessageId=596
@@ -2077,7 +2077,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_LOST_WRITEBEHIND_DATA
 Language=German
-ERROR_LOST_WRITEBEHIND_DATA - Windows was unable to save all the data for the file %hs. The data has been lost. This error may be caused by a failure of your computer hardware or network connection. Please try to save this file elsewhere.
+ERROR_LOST_WRITEBEHIND_DATA - ReactOS konnte nicht alle Daten für die Datei %hs speichern, die Daten gingen verloren. Dieser Fehler könnte von einer fehlerhaften Hardware oder einer getrennten Netzwerkverbindung kommen. Bitte versuchen Sie, die Datei woanders zu speichern.
 .
 
 MessageId=597
@@ -2085,7 +2085,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_CLIENT_SERVER_PARAMETERS_INVALID
 Language=German
-ERROR_CLIENT_SERVER_PARAMETERS_INVALID - The parameter(s) passed to the server in the client/server shared memory window were invalid. Too much data may have been put in the shared memory window.
+ERROR_CLIENT_SERVER_PARAMETERS_INVALID - Die dem Server übergebenen Parameter im gemeinsamen Speicher vom Klienten und Server waren ungültig. Zu viele Daten.
 .
 
 MessageId=598
@@ -2093,7 +2093,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_NOT_TINY_STREAM
 Language=German
-ERROR_NOT_TINY_STREAM - The stream is not a tiny stream.
+ERROR_NOT_TINY_STREAM - Der Stream ist kein kleiner Stream.
 .
 
 MessageId=599
@@ -2101,7 +2101,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_STACK_OVERFLOW_READ
 Language=German
-ERROR_STACK_OVERFLOW_READ - The request must be handled by the stack overflow code.
+ERROR_STACK_OVERFLOW_READ - Die Anforderung muss vom Stack-Überlauf-Code behandelt werden.
 .
 
 MessageId=600
@@ -2109,7 +2109,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_CONVERT_TO_LARGE
 Language=German
-ERROR_CONVERT_TO_LARGE - Internal OFS status codes indicating how an allocation operation is handled. Either it is retried after the containing onode is moved or the extent stream is converted to a large stream.
+ERROR_CONVERT_TO_LARGE - Internal OFS status codes indicating how ein allocation Operation ist Handled. Either es ist retried after the containing onode ist moved oder the extent Stream ist converted to ein lang Stream.
 .
 
 MessageId=601
@@ -2117,7 +2117,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_FOUND_OUT_OF_SCOPE
 Language=German
-ERROR_FOUND_OUT_OF_SCOPE - The attempt to find the object found an object matching by ID on the volume but it is out of the scope of the handle used for the operation.
+ERROR_FOUND_OUT_OF_SCOPE - Der Versuch to find the Objekt gefunden ein Objekt matching von ID on der datenträger aber es ist out von the bereich von the Handle used für the Operation.
 .
 
 MessageId=602
@@ -2133,7 +2133,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_MARSHALL_OVERFLOW
 Language=German
-ERROR_MARSHALL_OVERFLOW - The user/kernel marshalling buffer has overflowed.
+ERROR_MARSHALL_OVERFLOW - The user/kernel marshalling Buffer has overflowed.
 .
 
 MessageId=604
@@ -2141,7 +2141,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_INVALID_VARIANT
 Language=German
-ERROR_INVALID_VARIANT - The supplied variant structure contains invalid data.
+ERROR_INVALID_VARIANT - Die übergebene Variant Struktur enthält ungültige Daten.
 .
 
 MessageId=605
@@ -2149,7 +2149,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_BAD_COMPRESSION_BUFFER
 Language=German
-ERROR_BAD_COMPRESSION_BUFFER - The specified buffer contains ill-formed data.
+ERROR_BAD_COMPRESSION_BUFFER - Der angegebene Puffer enthält falsche Daten.
 .
 
 MessageId=606
@@ -2157,7 +2157,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_AUDIT_FAILED
 Language=German
-ERROR_AUDIT_FAILED - An attempt to generate a security audit failed.
+ERROR_AUDIT_FAILED - Eine Sicherheitsüberprüfung schlug fehl.
 .
 
 MessageId=607
@@ -2165,7 +2165,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_TIMER_RESOLUTION_NOT_SET
 Language=German
-ERROR_TIMER_RESOLUTION_NOT_SET - The timer resolution was not previously set by the current process.
+ERROR_TIMER_RESOLUTION_NOT_SET - Die Auflösung des Zeitgebers wurde vorher nicht vom aktuellen Ptozess gesetzt.
 .
 
 MessageId=608
@@ -2173,7 +2173,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_INSUFFICIENT_LOGON_INFO
 Language=German
-ERROR_INSUFFICIENT_LOGON_INFO - There is insufficient account information to log you on.
+ERROR_INSUFFICIENT_LOGON_INFO - Es gibt zu wenig Account Informationen um sich einzuloggen.
 .
 
 MessageId=609
@@ -2181,7 +2181,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_BAD_DLL_ENTRYPOINT
 Language=German
-ERROR_BAD_DLL_ENTRYPOINT - The dynamic link library %hs is not written correctly. The stack pointer has been left in an inconsistent state. The entrypoint should be declared as WINAPI or STDCALL. Select YES to fail the DLL load. Select NO to continue execution. Selecting NO may cause the application to operate incorrectly.
+ERROR_BAD_DLL_ENTRYPOINT - Die DLL %hs wurde nicht korrekt geschrieben. Der Stack-Zeiger wurde in einem unvereinbaren Status gelassen. The entrypoint should be declared as WINAPI or STDCALL. Select YES to fail the DLL load. Select NO to continue execution. Selecting NO may cause the Programm to operate incorrectly.
 .
 
 MessageId=610
@@ -2189,7 +2189,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_BAD_SERVICE_ENTRYPOINT
 Language=German
-ERROR_BAD_SERVICE_ENTRYPOINT - The %hs service is not written correctly. The stack pointer has been left in an inconsistent state. The callback entrypoint should be declared as WINAPI or STDCALL. Selecting OK will cause the service to continue operation. However, the service process may operate incorrectly.
+ERROR_BAD_SERVICE_ENTRYPOINT - Der %hs Dienst wurde nicht korrekt geschrieben. Der Stack-Zeiger wurde in einem unvereinbaren Status gelassen. The callback entrypoint should be declared as WINAPI oder STDCALL. Selecting OK will cause the service to continue Operation. However, the service Prozess may operate incorrectly.
 .
 
 MessageId=611
@@ -2197,7 +2197,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_IP_ADDRESS_CONFLICT1
 Language=German
-ERROR_IP_ADDRESS_CONFLICT1 - There is an IP address conflict with another system on the network
+ERROR_IP_ADDRESS_CONFLICT1 - Ein anderer Rechner im Netzwerk hat Ihre IP-Adresse
 .
 
 MessageId=612
@@ -2205,7 +2205,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_IP_ADDRESS_CONFLICT2
 Language=German
-ERROR_IP_ADDRESS_CONFLICT2 - There is an IP address conflict with another system on the network
+ERROR_IP_ADDRESS_CONFLICT2 - Ein anderer Rechner im Netzwerk hat Ihre IP-Adresse.
 .
 
 MessageId=613
@@ -2213,7 +2213,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_REGISTRY_QUOTA_LIMIT
 Language=German
-ERROR_REGISTRY_QUOTA_LIMIT - The system has reached the maximum size allowed for the system part of the registry. Additional storage requests will be ignored.
+ERROR_REGISTRY_QUOTA_LIMIT - Der Systemteil der Registierungsdatenbank erreichte seine maximale Größe. Weitere Speicheranforderungen werden ignoriert.
 .
 
 MessageId=614
@@ -2221,7 +2221,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_NO_CALLBACK_ACTIVE
 Language=German
-ERROR_NO_CALLBACK_ACTIVE - A callback return system service cannot be executed when no callback is active.
+ERROR_NO_CALLBACK_ACTIVE - Es ist keine Callback Funktion aktiv, weswegen der Callbackrückgabedienst nicht gestartet werden kann.
 .
 
 MessageId=615
@@ -2229,7 +2229,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_PWD_TOO_SHORT
 Language=German
-ERROR_PWD_TOO_SHORT - The password provided is too short to meet the policy of your user account. Please choose a longer password.
+ERROR_PWD_TOO_SHORT - Das Passwort ist zu kurz für Ihr Richtlinie. Wählen Sie bitte ein längeres Passwort
 .
 
 MessageId=616
@@ -2237,7 +2237,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_PWD_TOO_RECENT
 Language=German
-ERROR_PWD_TOO_RECENT - The policy of your user account does not allow you to change passwords too frequently. This is done to prevent users from changing back to a familiar, but potentially discovered, password. If you feel your password has been compromised then please contact your administrator immediately to have a new one assigned.
+ERROR_PWD_TOO_RECENT - Die Richtlinien verbieten ein zu häufiges Wechseln des Passworts.
 .
 
 MessageId=617
@@ -2245,7 +2245,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_PWD_HISTORY_CONFLICT
 Language=German
-ERROR_PWD_HISTORY_CONFLICT - You have attempted to change your password to one that you have used in the past. The policy of your user account does not allow this. Please select a password that you have not previously used.
+ERROR_PWD_HISTORY_CONFLICT - Das Passwort wurde schon einaml benutzt, was in den Richtlinien verboten ist.
 .
 
 MessageId=618
@@ -2253,7 +2253,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_UNSUPPORTED_COMPRESSION
 Language=German
-ERROR_UNSUPPORTED_COMPRESSION - The specified compression format is unsupported.
+ERROR_UNSUPPORTED_COMPRESSION - Das angegebene Kompressionsformat wird nicht unterstützt.
 .
 
 MessageId=619
@@ -2261,7 +2261,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_INVALID_HW_PROFILE
 Language=German
-ERROR_INVALID_HW_PROFILE - The specified hardware profile configuration is invalid.
+ERROR_INVALID_HW_PROFILE - Das angegebene Hardwareprofil ist ungültig.
 .
 
 MessageId=620
@@ -2269,7 +2269,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_INVALID_PLUGPLAY_DEVICE_PATH
 Language=German
-ERROR_INVALID_PLUGPLAY_DEVICE_PATH - The specified Plug and Play registry device path is invalid.
+ERROR_INVALID_PLUGPLAY_DEVICE_PATH - Der angegebene Plug und Play Gerätepfad in der Registry ist falsch.
 .
 
 MessageId=621
@@ -2277,7 +2277,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_QUOTA_LIST_INCONSISTENT
 Language=German
-ERROR_QUOTA_LIST_INCONSISTENT - The specified quota list is internally inconsistent with its descriptor.
+ERROR_QUOTA_LIST_INCONSISTENT - Die angegebene Quota Liste ist intern unvereinbar mit Ihrem Beschreiber.
 .
 
 MessageId=622
@@ -2285,7 +2285,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_EVALUATION_EXPIRATION
 Language=German
-ERROR_EVALUATION_EXPIRATION - The evaluation period for this installation of Windows has expired. This system will shutdown in 1 hour. To restore access to this installation of Windows, please upgrade this installation using a licensed distribution of this product.
+ERROR_EVALUATION_EXPIRATION - ReactOS ist ein freien Open-Source Betriebsystem und lizensiert under der GNU GPL.  Daher gibt es auch keine Evaluation-Zeit die ablaufen könnte. Wenn Sie diesen Fehler sehen, dann lesen Sie vermutlich den Quellcode.
 .
 
 MessageId=623
@@ -2293,7 +2293,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_ILLEGAL_DLL_RELOCATION
 Language=German
-ERROR_ILLEGAL_DLL_RELOCATION - The system DLL %hs was relocated in memory. The application will not run properly. The relocation occurred because the DLL %hs occupied an address range reserved for Windows system DLLs. The vendor supplying the DLL should be contacted for a new DLL.
+ERROR_ILLEGAL_DLL_RELOCATION - The system DLL %hs was relocated in memory. The application will not run properly. The relocation occurred because the DLL %hs occupied an address range reserved for ReactOS system DLLs. The vendor supplying the DLL should be contacted for a new DLL.
 .
 
 MessageId=624
@@ -2389,7 +2389,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_COMMITMENT_MINIMUM
 Language=German
-ERROR_COMMITMENT_MINIMUM - Your system is low on virtual memory. Windows is increasing the size of your virtual memory paging file. During this process, memory requests for some applications may be denied. For more information, see Help.
+ERROR_COMMITMENT_MINIMUM - Your system is low on virtual memory. ReactOS is increasing the size of your virtual memory paging file. During this process, memory requests for some applications may be denied. For more information, see Help.
 .
 
 MessageId=636
@@ -2445,7 +2445,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_DS_VERSION_CHECK_FAILURE
 Language=German
-ERROR_DS_VERSION_CHECK_FAILURE - This version of Windows is not compatible with the behavior version of directory forest, domain or domain controller.
+ERROR_DS_VERSION_CHECK_FAILURE - This version of ReactOS is not compatible with the behavior version of directory forest, domain or domain controller.
 .
 
 MessageId=644
@@ -2661,7 +2661,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_GUID_SUBSTITUTION_MADE
 Language=German
-ERROR_GUID_SUBSTITUTION_MADE - During the translation of a global identifier (GUID) to a Windows security ID (SID), no administratively-defined GUID prefix was found. A substitute prefix was used, which will not compromise system security. However, this may provide a more restrictive access than intended.
+ERROR_GUID_SUBSTITUTION_MADE - During the translation of a global identifier (GUID) to a ReactOS security ID (SID), no administratively-defined GUID prefix was found. A substitute prefix was used, which will not compromise system security. However, this may provide a more restrictive access than intended.
 .
 
 MessageId=681
@@ -3013,7 +3013,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_FIRMWARE_UPDATED
 Language=German
-ERROR_FIRMWARE_UPDATED - Windows has detected that the system firmware (BIOS) was updated [previous firmware date = %2, current firmware date %3].
+ERROR_FIRMWARE_UPDATED - ReactOS has detected that the system firmware (BIOS) was updated [previous firmware date = %2, current firmware date %3].
 .
 
 MessageId=729
@@ -4125,7 +4125,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_OLD_WIN_VERSION
 Language=German
-ERROR_OLD_WIN_VERSION - The specified program requires a newer version of Windows.
+ERROR_OLD_WIN_VERSION - The specified program requires a newer version of ReactOS.
 .
 
 MessageId=1151
@@ -4621,7 +4621,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_NETWORK_UNREACHABLE
 Language=German
-ERROR_NETWORK_UNREACHABLE - The network location cannot be reached. For information about network troubleshooting, see Windows Help.
+ERROR_NETWORK_UNREACHABLE - The network location cannot be reached. For information about network troubleshooting, see ReactOS Help.
 .
 
 MessageId=1232
@@ -4629,7 +4629,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_HOST_UNREACHABLE
 Language=German
-ERROR_HOST_UNREACHABLE - The network location cannot be reached. For information about network troubleshooting, see Windows Help.
+ERROR_HOST_UNREACHABLE - The network location cannot be reached. For information about network troubleshooting, see ReactOS Help.
 .
 
 MessageId=1233
@@ -4637,7 +4637,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_PROTOCOL_UNREACHABLE
 Language=German
-ERROR_PROTOCOL_UNREACHABLE - The network location cannot be reached. For information about network troubleshooting, see Windows Help.
+ERROR_PROTOCOL_UNREACHABLE - The network location cannot be reached. For information about network troubleshooting, see ReactOS Help.
 .
 
 MessageId=1234
@@ -4821,7 +4821,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_HOST_DOWN
 Language=German
-ERROR_HOST_DOWN - The remote system is not available. For information about network troubleshooting, see Windows Help.
+ERROR_HOST_DOWN - The remote system is not available. For information about network troubleshooting, see ReactOS Help.
 .
 
 MessageId=1257
@@ -4853,7 +4853,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_ACCESS_DISABLED_BY_POLICY
 Language=German
-ERROR_ACCESS_DISABLED_BY_POLICY - Windows cannot open this program because it has been prevented by a software restriction policy. For more information, open Event Viewer or contact your system administrator.
+ERROR_ACCESS_DISABLED_BY_POLICY - ReactOS cannot open this program because it has been prevented by a software restriction policy. For more information, open Event Viewer or contact your system administrator.
 .
 
 MessageId=1261
@@ -4981,7 +4981,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_ACCESS_DISABLED_WEBBLADE
 Language=German
-ERROR_ACCESS_DISABLED_WEBBLADE - Windows cannot open this program since it has been disabled.
+ERROR_ACCESS_DISABLED_WEBBLADE - ReactOS cannot open this program since it has been disabled.
 .
 
 MessageId=1278
@@ -4989,7 +4989,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_ACCESS_DISABLED_WEBBLADE_TAMPER
 Language=German
-ERROR_ACCESS_DISABLED_WEBBLADE_TAMPER - Windows cannot open this program because the license enforcement system has been tampered with or become corrupted.
+ERROR_ACCESS_DISABLED_WEBBLADE_TAMPER - ReactOS cannot open this program because the license enforcement system has been tampered with or become corrupted.
 .
 
 MessageId=1279
@@ -6477,7 +6477,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_INSTALL_SERVICE_FAILURE
 Language=German
-ERROR_INSTALL_SERVICE_FAILURE - The Windows Installer service could not be accessed. This can occur if you are running Windows in safe mode, or if the Windows Installer is not correctly installed. Contact your support personnel for assistance.
+ERROR_INSTALL_SERVICE_FAILURE - The ReactOS Installer service could not be accessed. This can occur if you are running ReactOS in safe mode, or if the ReactOS Installer is not correctly installed. Contact your support personnel for assistance.
 .
 
 MessageId=1602
@@ -6573,7 +6573,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_INSTALL_PACKAGE_VERSION
 Language=German
-ERROR_INSTALL_PACKAGE_VERSION - This installation package cannot be installed by the Windows Installer service. You must install a Windows service pack that contains a newer version of the Windows Installer service.
+ERROR_INSTALL_PACKAGE_VERSION - This installation package cannot be installed by the ReactOS Installer service. You must install a ReactOS service pack that contains a newer version of the ReactOS Installer service.
 .
 
 MessageId=1614
@@ -6621,7 +6621,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_INSTALL_PACKAGE_OPEN_FAILED
 Language=German
-ERROR_INSTALL_PACKAGE_OPEN_FAILED - This installation package could not be opened. Verify that the package exists and that you can access it, or contact the application vendor to verify that this is a valid Windows Installer package.
+ERROR_INSTALL_PACKAGE_OPEN_FAILED - This installation package could not be opened. Verify that the package exists and that you can access it, or contact the application vendor to verify that this is a valid ReactOS Installer package.
 .
 
 MessageId=1620
@@ -6629,7 +6629,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_INSTALL_PACKAGE_INVALID
 Language=German
-ERROR_INSTALL_PACKAGE_INVALID - This installation package could not be opened. Contact the application vendor to verify that this is a valid Windows Installer package.
+ERROR_INSTALL_PACKAGE_INVALID - This installation package could not be opened. Contact the application vendor to verify that this is a valid ReactOS Installer package.
 .
 
 MessageId=1621
@@ -6637,7 +6637,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_INSTALL_UI_FAILURE
 Language=German
-ERROR_INSTALL_UI_FAILURE - There was an error starting the Windows Installer service user interface. Contact your support personnel.
+ERROR_INSTALL_UI_FAILURE - There was an error starting the ReactOS Installer service user interface. Contact your support personnel.
 .
 
 MessageId=1622
@@ -6717,7 +6717,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_CREATE_FAILED
 Language=German
-ERROR_CREATE_FAILED - The Windows Installer service failed to start. Contact your support personnel.
+ERROR_CREATE_FAILED - The ReactOS Installer service failed to start. Contact your support personnel.
 .
 
 MessageId=1632
@@ -6749,7 +6749,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_PATCH_PACKAGE_OPEN_FAILED
 Language=German
-ERROR_PATCH_PACKAGE_OPEN_FAILED - This patch package could not be opened. Verify that the patch package exists and that you can access it, or contact the application vendor to verify that this is a valid Windows Installer patch package.
+ERROR_PATCH_PACKAGE_OPEN_FAILED - This patch package could not be opened. Verify that the patch package exists and that you can access it, or contact the application vendor to verify that this is a valid ReactOS Installer patch package.
 .
 
 MessageId=1636
@@ -6757,7 +6757,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_PATCH_PACKAGE_INVALID
 Language=German
-ERROR_PATCH_PACKAGE_INVALID - This patch package could not be opened. Contact the application vendor to verify that this is a valid Windows Installer patch package.
+ERROR_PATCH_PACKAGE_INVALID - This patch package could not be opened. Contact the application vendor to verify that this is a valid ReactOS Installer patch package.
 .
 
 MessageId=1637
@@ -6765,7 +6765,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_PATCH_PACKAGE_UNSUPPORTED
 Language=German
-ERROR_PATCH_PACKAGE_UNSUPPORTED - This patch package cannot be processed by the Windows Installer service. You must install a Windows service pack that contains a newer version of the Windows Installer service.
+ERROR_PATCH_PACKAGE_UNSUPPORTED - This patch package cannot be processed by the ReactOS Installer service. You must install a ReactOS service pack that contains a newer version of the ReactOS Installer service.
 .
 
 MessageId=1638
@@ -6781,7 +6781,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_INVALID_COMMAND_LINE
 Language=German
-ERROR_INVALID_COMMAND_LINE - Invalid command line argument. Consult the Windows Installer SDK for detailed command line help.
+ERROR_INVALID_COMMAND_LINE - Invalid command line argument. Consult the ReactOS Installer SDK for detailed command line help.
 .
 
 MessageId=1640
@@ -6805,7 +6805,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_PATCH_TARGET_NOT_FOUND
 Language=German
-ERROR_PATCH_TARGET_NOT_FOUND - The upgrade patch cannot be installed by the Windows Installer service because the program to be upgraded may be missing, or the upgrade patch may update a different version of the program. Verify that the program to be upgraded exists on your computer and that you have the correct upgrade patch.
+ERROR_PATCH_TARGET_NOT_FOUND - The upgrade patch cannot be installed by the ReactOS Installer service because the program to be upgraded may be missing, or the upgrade patch may update a different version of the program. Verify that the program to be upgraded exists on your computer and that you have the correct upgrade patch.
 .
 
 MessageId=1643
@@ -6829,7 +6829,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_INSTALL_REMOTE_PROHIBITED
 Language=German
-ERROR_INSTALL_REMOTE_PROHIBITED - The Windows Installer does not permit installation from a Remote Desktop Connection.
+ERROR_INSTALL_REMOTE_PROHIBITED - The ReactOS Installer does not permit installation from a Remote Desktop Connection.
 .
 
 MessageId=1700
@@ -7789,7 +7789,7 @@ Severity=Success
 Facility=System
 SymbolicName=RPC_S_NOT_RPC_ERROR
 Language=German
-RPC_S_NOT_RPC_ERROR - The error specified is not a valid Windows RPC error code.
+RPC_S_NOT_RPC_ERROR - The error specified is not a valid ReactOS RPC error code.
 .
 
 MessageId=1824
@@ -10045,7 +10045,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_CLUSTER_WRONG_OS_VERSION
 Language=German
-ERROR_CLUSTER_WRONG_OS_VERSION - This computer cannot be made a member of a cluster because it does not have the correct version of Windows installed.
+ERROR_CLUSTER_WRONG_OS_VERSION - This computer cannot be made a member of a cluster because it does not have the correct version of ReactOS installed.
 .
 
 MessageId=5900
@@ -10085,7 +10085,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_CLUSTER_OLD_VERSION
 Language=German
-ERROR_CLUSTER_OLD_VERSION - One or more nodes in the cluster are running a version of Windows that does not support this operation.
+ERROR_CLUSTER_OLD_VERSION - One or more nodes in the cluster are running a version of ReactOS that does not support this operation.
 .
 
 MessageId=5905
@@ -14841,7 +14841,7 @@ Severity=Success
 Facility=System
 SymbolicName=WSAEPROCLIM
 Language=German
-WSAEPROCLIM - A Windows Sockets implementation may have a limit on the number of applications that may use it simultaneously.
+WSAEPROCLIM - A ReactOS Sockets implementation may have a limit on the number of applications that may use it simultaneously.
 .
 
 MessageId=10068
@@ -14889,7 +14889,7 @@ Severity=Success
 Facility=System
 SymbolicName=WSAVERNOTSUPPORTED
 Language=German
-WSAVERNOTSUPPORTED - The Windows Sockets version requested is not supported.
+WSAVERNOTSUPPORTED - The ReactOS Sockets version requested is not supported.
 .
 
 MessageId=10093
