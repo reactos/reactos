@@ -585,7 +585,7 @@ Module::ProcessXMLSubElement ( const XMLElement& e,
 		                         switches,
 		                         false );
 		if ( parseContext.compilationUnit )
-			parseContext.compilationUnit->files.push_back ( pFile );
+			parseContext.compilationUnit->AddFile ( pFile );
 		else
 		{
 			CompilationUnit* pCompilationUnit = new CompilationUnit ( pFile );

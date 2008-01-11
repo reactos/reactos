@@ -23,12 +23,15 @@
 using std::string;
 using std::vector;
 
-CompilationUnit::CompilationUnit ( File* file )
+CompilationUnit::CompilationUnit ( const File* file )
 	: project(NULL),
 	  module(NULL),
 	  node(NULL)
 {
-	local_name = file->file.name;
+	default_name = new FileLocation ( IntermediateDirectory,
+	                                  "",
+	                                  file->file.name );
+
 	name = file->file.relative_path + sSep + file->file.name;
 	files.push_back ( file );
 }
@@ -42,7 +45,11 @@ CompilationUnit::CompilationUnit ( const Project* project,
 {
 	const XMLAttribute* att = node->GetAttribute ( "name", true );
 	assert(att);
-	local_name = att->value;
+
+	default_name = new FileLocation ( IntermediateDirectory,
+	                                  module ? module->output->relative_path : "",
+	                                  att->value,
+	                                  node );
 	name = module->output->relative_path + cSep + att->value;
 }
 
@@ -58,7 +65,7 @@ CompilationUnit::ProcessXML ()
 {
 	size_t i;
 	for ( i = 0; i < files.size (); i++ )
-		files[i]->ProcessXML ();
+		const_cast<File*> ( files[i] )->ProcessXML ();
 }
 
 bool
@@ -66,7 +73,7 @@ CompilationUnit::IsGeneratedFile () const
 {
 	if ( files.size () != 1 )
 		return false;
-	File* file = files[0];
+	const File* file = files[0];
 	string extension = GetExtension ( file->file );
 	return ( extension == ".spec" || extension == ".SPEC" || extension == ".mc" || extension == ".MC");
 }
@@ -77,7 +84,7 @@ CompilationUnit::HasFileWithExtension ( const std::string& extension ) const
 	size_t i;
 	for ( i = 0; i < files.size (); i++ )
 	{
-		File& file = *files[i];
+		const File& file = *files[i];
 		string fileExtension = GetExtension ( file.file );
 		if ( !stricmp ( fileExtension.c_str (), extension.c_str () ) )
 			return true;
@@ -90,31 +97,39 @@ CompilationUnit::IsFirstFile () const
 {
 	if ( files.size () == 0 || files.size () > 1 )
 		return false;
-	File* file = files[0];
+	const File* file = files[0];
 	return file->first;
 }
 
 
-const FileLocation*
+const FileLocation&
 CompilationUnit::GetFilename () const
 {
 	if ( files.size () == 0 || files.size () > 1 )
-	{
-		return new FileLocation ( IntermediateDirectory,
-		                          module ? module->output->relative_path : "",
-		                          local_name,
-		                          node );
-	}
+		return *default_name;
 
-	File* file = files[0];
-	return new FileLocation ( file->file );
+	const File* file = files[0];
+	return file->file;
 }
 
-std::string
+const std::string&
 CompilationUnit::GetSwitches () const
 {
+	static const std::string empty_string = std::string("");
 	if ( files.size () == 0 || files.size () > 1 )
-		return "";
-	File* file = files[0];
+		return empty_string;
+	const File* file = files[0];
 	return file->switches;
+}
+
+void
+CompilationUnit::AddFile ( const File * file )
+{
+	files.push_back ( file );
+}
+
+const std::vector<const File*>
+CompilationUnit::GetFiles () const
+{
+	return files;
 }

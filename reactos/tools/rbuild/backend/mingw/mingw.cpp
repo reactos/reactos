@@ -206,7 +206,7 @@ MingwBackend::CanEnablePreCompiledHeaderSupportForModule ( const Module& module 
 	for ( i = 0; i < compilationUnits.size (); i++ )
 	{
 		CompilationUnit& compilationUnit = *compilationUnits[i];
-		if ( compilationUnit.files.size () != 1 )
+		if ( compilationUnit.GetFiles ().size () != 1 )
 			return false;
 	}
 	// intentionally make a copy so that we can append more work in
@@ -224,7 +224,7 @@ MingwBackend::CanEnablePreCompiledHeaderSupportForModule ( const Module& module 
 		for ( j = 0; j < compilationUnits.size (); j++ )
 		{
 			CompilationUnit& compilationUnit = *compilationUnits[j];
-			if ( compilationUnit.files.size () != 1 )
+			if ( compilationUnit.GetFiles ().size () != 1 )
 				return false;
 		}
 	}

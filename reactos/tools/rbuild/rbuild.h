@@ -895,13 +895,9 @@ private:
 class CompilationUnit
 {
 public:
-	const Project* project;
-	const Module* module;
-	const XMLElement* node;
 	std::string name;
-	std::vector<File*> files;
 
-	CompilationUnit ( File* file );
+	CompilationUnit ( const File* file );
 	CompilationUnit ( const Project* project,
 	                  const Module* module,
 	                  const XMLElement* node );
@@ -910,10 +906,16 @@ public:
 	bool IsGeneratedFile () const;
 	bool HasFileWithExtension ( const std::string& extension ) const;
 	bool IsFirstFile () const;
-	const FileLocation* GetFilename () const;
-	std::string GetSwitches () const;
+	const FileLocation& GetFilename () const;
+	const std::string& GetSwitches () const;
+	void AddFile ( const File * file );
+	const std::vector<const File*> GetFiles () const;
 private:
-	std::string local_name;
+	const Project* project;
+	const Module* module;
+	const XMLElement* node;
+	std::vector<const File*> files;
+	FileLocation *default_name;
 };
 
 
