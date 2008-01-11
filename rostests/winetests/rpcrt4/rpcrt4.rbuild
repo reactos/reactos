@@ -6,6 +6,7 @@
 </module>
 <module name="rpcrt4_winetest" type="win32cui" installbase="bin" installname="rpcrt4_winetest.exe" allowwarnings="true">
 	<include base="rpcrt4_winetest">.</include>
+	<include root="intermediate" base="rpcrt4_winetest">.</include>
 	<define name="__USE_W32API" />
 	<library>wine</library>
 	<library>pseh</library>

@@ -20,7 +20,7 @@
 
 #include <windows.h>
 #include "wine/test.h"
-#include "obj-i386/modules/rostests/winetests/rpcrt4/server.h"
+#include "server_s.h"
 #include "server_defines.h"
 
 #include <stddef.h>
