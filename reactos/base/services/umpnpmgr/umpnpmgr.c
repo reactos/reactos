@@ -207,6 +207,9 @@ PNP_ReportLogOn(handle_t BindingHandle,
 
     DPRINT("PNP_ReportLogOn(%u, %u) called\n", Admin, ProcessId);
 
+    if (hInstallEvent != NULL)
+        SetEvent(hInstallEvent);
+
     /* Get the users token */
     hProcess = OpenProcess(PROCESS_ALL_ACCESS,
                            TRUE,
@@ -226,8 +229,8 @@ PNP_ReportLogOn(handle_t BindingHandle,
     }
 
     /* Trigger the installer thread */
-    if (hInstallEvent != NULL)
-        SetEvent(hInstallEvent);
+    /*if (hInstallEvent != NULL)
+        SetEvent(hInstallEvent);*/
 
     return CR_SUCCESS;
 }
@@ -1679,6 +1682,8 @@ DeviceInstallThread(LPVOID lpParameter)
     BOOL showWizard;
 
     UNREFERENCED_PARAMETER(lpParameter);
+
+    WaitForSingleObject(hInstallEvent, INFINITE);
 
     showWizard = !SetupIsActive() && !IsConsoleBoot();
 
