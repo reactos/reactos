@@ -22,14 +22,9 @@
 #define __WIDL_TYPELIB_H
 
 extern int in_typelib;
-extern void start_typelib(char *name, attr_t *attrs);
+extern void start_typelib(char *name, attr_list_t *attrs);
 extern void end_typelib(void);
-extern void add_interface(type_t *iface);
-extern void add_coclass(type_t *cls);
-extern void add_module(type_t *module);
-extern void add_struct(type_t *structure);
-extern void add_enum(type_t *enumeration);
-extern void add_typedef(type_t *tdef, var_t *name);
+extern void add_typelib_entry(type_t *t);
 extern void add_importlib(const char *name);
 
 /* Copied from wtypes.h. Not included directly because that would create a
@@ -87,7 +82,6 @@ enum VARENUM {
     VT_TYPEMASK = 0xfff
 };
 extern unsigned short get_type_vt(type_t *t);
-extern unsigned short get_var_vt(var_t *v);
 
 extern int create_msft_typelib(typelib_t *typelib);
 #endif

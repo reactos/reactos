@@ -148,7 +148,7 @@ typedef struct tagMSFT_TypeInfoBase {
 /*050*/ INT     size;           /* size in bytes, at least for structures */
         /* FIXME: name of this field */
         INT     datatype1;      /* position in type description table */
-                                /* or in base intefaces */
+                                /* or in base interfaces */
                                 /* if coclass: offset in reftable */
                                 /* if interface: reference to inherited if */
         INT     datatype2;      /* for interfaces: hiword is num of inherited funcs */
@@ -286,7 +286,7 @@ typedef struct {
                         /* 0x3800 if name is typeinfo name */
 			/* upper 16 bits are hash code */
 } MSFT_NameIntro;
-/* the custom data table directory has enties like this */
+/* the custom data table directory has entries like this */
 typedef struct {
     INT   GuidOffset;
     INT   DataOffset;
@@ -302,7 +302,7 @@ typedef struct {
  *
  */
 
-#include <host/pshpack1.h>
+#include "pshpack1.h"
 
 typedef struct {
 /*00*/	DWORD SLTG_magic;	/* 0x47544c53  == "SLTG" */
@@ -599,7 +599,7 @@ WORD offset from start of block to SAFEARRAY
 WORD typeofarray
 */
 
-#include <host/poppack.h>
+#include "poppack.h"
 
 /*---------------------------END--------------------------------------------*/
 #endif

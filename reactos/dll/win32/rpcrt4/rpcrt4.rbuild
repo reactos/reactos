@@ -17,28 +17,27 @@
 	<library>ntdll</library>
 	<library>kernel32</library>
 	<library>advapi32</library>
+	<library>secur32</library>
 	<library>iphlpapi</library>
-	<library>pseh</library>
-
-	<metadata
-		description = "Support for the RPC layer of RPC over HTTP"
-		version = "Wine-0_9_10"
-		owner = "Wine" />
-
+	<library>ws2_32</library>
 	<file>cproxy.c</file>
 	<file>cpsf.c</file>
 	<file>cstub.c</file>
+	<file>ndr_contexthandle.c</file>
+	<file>ndr_clientserver.c</file>
+	<file>ndr_fullpointer.c</file>
 	<file>ndr_marshall.c</file>
-	<file>ndr_midl.c</file>
 	<file>ndr_ole.c</file>
 	<file>ndr_stubless.c</file>
+	<file>rpc_assoc.c</file>
 	<file>rpc_binding.c</file>
 	<file>rpc_epmap.c</file>
 	<file>rpc_message.c</file>
 	<file>rpc_server.c</file>
-	<file>ndr_contexth.c</file>
+	<file>rpc_transport.c</file>
 	<file>rpcrt4_main.c</file>
 	<file>rpcss_np_client.c</file>
+	<file>unix_func.c</file>
 	<file>rpcrt4.rc</file>
 	<file>rpcrt4.spec</file>
 </module>

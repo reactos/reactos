@@ -25,8 +25,6 @@
 
 #include <time.h>
 
-#define WIDL_FULLVERSION "0.1"
-
 extern int debuglevel;
 #define DEBUGLEVEL_NONE		0x0000
 #define DEBUGLEVEL_CHAT		0x0001
@@ -38,31 +36,41 @@ extern int debuglevel;
 
 extern int win32;
 extern int pedantic;
+extern int do_everything;
 extern int do_header;
 extern int do_typelib;
 extern int do_proxies;
 extern int do_client;
 extern int do_server;
+extern int do_idfile;
+extern int do_dlldata;
 extern int old_names;
 
 extern char *input_name;
 extern char *header_name;
+extern char *local_stubs_name;
 extern char *typelib_name;
+extern char *dlldata_name;
 extern char *proxy_name;
 extern char *proxy_token;
 extern char *client_name;
 extern char *client_token;
 extern char *server_name;
 extern char *server_token;
+extern const char *prefix_client;
+extern const char *prefix_server;
 extern time_t now;
 
 extern int line_number;
 extern int char_number;
 
 extern FILE* header;
+extern FILE* local_stubs;
+extern FILE* idfile;
 
-extern void write_proxies(ifref_t *ifaces);
-extern void write_client(ifref_t *ifaces);
-extern void write_server(ifref_t *ifaces);
+extern void write_proxies(ifref_list_t *ifaces);
+extern void write_client(ifref_list_t *ifaces);
+extern void write_server(ifref_list_t *ifaces);
+extern void write_dlldata(ifref_list_t *ifaces);
 
 #endif

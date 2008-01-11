@@ -19,7 +19,7 @@
 @ stdcall IUnknown_QueryInterface_Proxy(ptr ptr ptr)
 @ stdcall IUnknown_Release_Proxy(ptr)
 @ stub I_RpcAbortAsyncCall
-@ stub I_RpcAllocate
+@ stdcall I_RpcAllocate(long)
 @ stub I_RpcAsyncAbortCall
 @ stub I_RpcAsyncSendReceive # NT4
 @ stub I_RpcAsyncSetHandle
@@ -45,13 +45,13 @@
 @ stub I_RpcDeleteMutex
 @ stub I_RpcEnableWmiTrace # wxp
 @ stub I_RpcExceptionFilter # wxp
-@ stub I_RpcFree
+@ stdcall I_RpcFree(ptr)
 @ stdcall I_RpcFreeBuffer(ptr)
 @ stub I_RpcFreePipeBuffer
 @ stub I_RpcGetAssociationContext
 @ stdcall I_RpcGetBuffer(ptr)
 @ stub I_RpcGetBufferWithObject
-@ stub I_RpcGetCurrentCallHandle
+@ stdcall I_RpcGetCurrentCallHandle()
 @ stub I_RpcGetExtendedError
 @ stub I_RpcGetServerContextList
 @ stub I_RpcGetThreadEvent # win9x
@@ -59,7 +59,7 @@
 @ stub I_RpcIfInqTransferSyntaxes
 @ stub I_RpcLaunchDatagramReceiveThread # win9x
 @ stub I_RpcLogEvent
-@ stub I_RpcMapWin32Status
+@ stdcall I_RpcMapWin32Status(long)
 @ stub I_RpcMonitorAssociation
 @ stub I_RpcNegotiateTransferSyntax # wxp
 @ stub I_RpcNsBindingSetEntryName
@@ -140,12 +140,12 @@
 @ stdcall NDRCContextBinding(ptr)
 @ stdcall NDRCContextMarshall(ptr ptr)
 @ stdcall NDRCContextUnmarshall(ptr ptr ptr long)
-@ stub NDRSContextMarshall2
+@ stdcall NDRSContextMarshall2(ptr ptr ptr ptr ptr long)
 @ stdcall NDRSContextMarshall(ptr ptr ptr)
 @ stdcall NDRSContextMarshallEx(ptr ptr ptr ptr)
-@ stub NDRSContextUnmarshall2
-@ stdcall NDRSContextUnmarshall(ptr long)
-@ stdcall NDRSContextUnmarshallEx(ptr ptr long)
+@ stdcall NDRSContextUnmarshall2(ptr ptr ptr ptr long)
+@ stdcall NDRSContextUnmarshall(ptr ptr)
+@ stdcall NDRSContextUnmarshallEx(ptr ptr ptr)
 @ stub NDRcopy
 @ stdcall NdrAllocate(ptr long)
 @ stub NdrAsyncClientCall
@@ -158,7 +158,7 @@
 @ stdcall NdrCStdStubBuffer_Release(ptr ptr)
 @ stdcall NdrClearOutParameters(ptr ptr ptr)
 @ varargs NdrClientCall2(ptr ptr)
-@ stub NdrClientCall
+@ varargs NdrClientCall(ptr ptr) NdrClientCall2
 @ stdcall NdrClientContextMarshall(ptr ptr long)
 @ stdcall NdrClientContextUnmarshall(ptr ptr ptr)
 @ stub NdrClientInitialize
@@ -221,12 +221,12 @@
 @ stdcall NdrFixedArrayMemorySize(ptr ptr)
 @ stdcall NdrFixedArrayUnmarshall(ptr ptr ptr long)
 @ stdcall NdrFreeBuffer(ptr)
-@ stub NdrFullPointerFree
-@ stub NdrFullPointerInsertRefId
-@ stub NdrFullPointerQueryPointer
-@ stub NdrFullPointerQueryRefId
-@ stub NdrFullPointerXlatFree
-@ stub NdrFullPointerXlatInit
+@ stdcall NdrFullPointerFree(ptr ptr)
+@ stdcall NdrFullPointerInsertRefId(ptr long ptr)
+@ stdcall NdrFullPointerQueryPointer(ptr ptr long ptr)
+@ stdcall NdrFullPointerQueryRefId(ptr long long ptr)
+@ stdcall NdrFullPointerXlatFree(ptr)
+@ stdcall NdrFullPointerXlatInit(long long) 
 @ stdcall NdrGetBuffer(ptr long ptr)
 @ stub NdrGetDcomProtocolVersion
 @ stub NdrGetPartialBuffer
@@ -294,7 +294,7 @@
 @ stdcall NdrProxyGetBuffer(ptr ptr)
 @ stdcall NdrProxyInitialize(ptr ptr ptr ptr long)
 @ stdcall NdrProxySendReceive(ptr ptr)
-@ stub NdrRangeUnmarshall
+@ stdcall NdrRangeUnmarshall(ptr ptr ptr long)
 @ stub NdrRpcSmClientAllocate
 @ stub NdrRpcSmClientFree
 @ stub NdrRpcSmSetClientToOsf
@@ -377,25 +377,25 @@
 @ stub RpcBindingInqAuthClientExA
 @ stub RpcBindingInqAuthClientExW
 @ stub RpcBindingInqAuthClientW
-@ stub RpcBindingInqAuthInfoA
-@ stub RpcBindingInqAuthInfoExA
-@ stub RpcBindingInqAuthInfoExW
-@ stub RpcBindingInqAuthInfoW
+@ stdcall RpcBindingInqAuthInfoA(ptr ptr ptr ptr ptr ptr)
+@ stdcall RpcBindingInqAuthInfoExA(ptr ptr ptr ptr ptr ptr long ptr)
+@ stdcall RpcBindingInqAuthInfoExW(ptr ptr ptr ptr ptr ptr long ptr)
+@ stdcall RpcBindingInqAuthInfoW(ptr ptr ptr ptr ptr ptr)
 @ stdcall RpcBindingInqObject(ptr ptr)
 @ stub RpcBindingInqOption
 @ stub RpcBindingReset
 @ stub RpcBindingServerFromClient
-@ stub RpcBindingSetAuthInfoA
-@ stub RpcBindingSetAuthInfoExA
-@ stub RpcBindingSetAuthInfoExW
-@ stub RpcBindingSetAuthInfoW
+@ stdcall RpcBindingSetAuthInfoA(ptr str long long ptr long)
+@ stdcall RpcBindingSetAuthInfoExA(ptr str long long ptr long ptr)
+@ stdcall RpcBindingSetAuthInfoExW(ptr wstr long long ptr long ptr)
+@ stdcall RpcBindingSetAuthInfoW(ptr wstr long long ptr long)
 @ stdcall RpcBindingSetObject(ptr ptr)
-@ stub RpcBindingSetOption
+@ stdcall RpcBindingSetOption(ptr long long)
 @ stdcall RpcBindingToStringBindingA(ptr ptr)
 @ stdcall RpcBindingToStringBindingW(ptr ptr)
 @ stdcall RpcBindingVectorFree(ptr)
 @ stub RpcCancelAsyncCall
-@ stub RpcCancelThread
+@ stdcall RpcCancelThread(ptr)
 @ stub RpcCancelThreadEx
 @ stub RpcCertGeneratePrincipalNameA
 @ stub RpcCertGeneratePrincipalNameW
@@ -414,7 +414,7 @@
 @ stub RpcErrorNumberOfRecords # wxp
 @ stub RpcErrorResetEnumeration # wxp
 @ stub RpcErrorSaveErrorInfo # wxp
-@ stub RpcErrorStartEnumeration # wxp
+@ stdcall RpcErrorStartEnumeration(ptr)
 @ stub RpcFreeAuthorizationContext # wxp
 @ stub RpcGetAsyncCallStatus
 @ stub RpcIfIdVectorFree
@@ -423,25 +423,25 @@
 @ stub RpcInitializeAsyncHandle
 @ stub RpcMgmtBindingInqParameter # win9x
 @ stub RpcMgmtBindingSetParameter # win9x
-@ stub RpcMgmtEnableIdleCleanup
-@ stub RpcMgmtEpEltInqBegin
+@ stdcall RpcMgmtEnableIdleCleanup()
+@ stdcall RpcMgmtEpEltInqBegin(ptr long ptr long ptr ptr)
 @ stub RpcMgmtEpEltInqDone
 @ stub RpcMgmtEpEltInqNextA
 @ stub RpcMgmtEpEltInqNextW
 @ stub RpcMgmtEpUnregister
 @ stub RpcMgmtInqComTimeout
 @ stub RpcMgmtInqDefaultProtectLevel
-@ stub RpcMgmtInqIfIds
+@ stdcall RpcMgmtInqIfIds(ptr ptr)
 @ stub RpcMgmtInqParameter # win9x
 @ stub RpcMgmtInqServerPrincNameA
 @ stub RpcMgmtInqServerPrincNameW
 @ stub RpcMgmtInqStats
-@ stub RpcMgmtIsServerListening
+@ stdcall RpcMgmtIsServerListening(ptr)
 @ stub RpcMgmtSetAuthorizationFn
-@ stub RpcMgmtSetCancelTimeout
-@ stub RpcMgmtSetComTimeout
+@ stdcall RpcMgmtSetCancelTimeout(long)
+@ stdcall RpcMgmtSetComTimeout(ptr long)
 @ stub RpcMgmtSetParameter # win9x
-@ stub RpcMgmtSetServerStackSize
+@ stdcall RpcMgmtSetServerStackSize(long)
 @ stub RpcMgmtStatsVectorFree
 @ stdcall RpcMgmtStopServerListening(ptr)
 @ stdcall RpcMgmtWaitServerListen()
@@ -494,7 +494,7 @@
 @ stub RpcServerYield
 @ stub RpcSmAllocate
 @ stub RpcSmClientFree
-@ stdcall RpcSmDestroyClientContext (ptr)
+@ stdcall RpcSmDestroyClientContext(ptr)
 @ stub RpcSmDisableAllocate
 @ stub RpcSmEnableAllocate
 @ stub RpcSmFree
@@ -505,7 +505,7 @@
 @ stub RpcSsAllocate
 @ stub RpcSsContextLockExclusive # wxp
 @ stub RpcSsContextLockShared # wxp
-@ stdcall RpcSsDestroyClientContext (ptr)
+@ stdcall RpcSsDestroyClientContext(ptr)
 @ stub RpcSsDisableAllocate
 @ stub RpcSsDontSerializeContext
 @ stub RpcSsEnableAllocate
@@ -527,8 +527,8 @@
 @ stub SimpleTypeBufferSize # wxp
 @ stub SimpleTypeMemorySize # wxp
 @ stub StartServiceIfNecessary # win9x
-@ stub TowerConstruct
-@ stub TowerExplode
+@ stdcall TowerConstruct(ptr ptr ptr ptr ptr ptr)
+@ stdcall TowerExplode(ptr ptr ptr ptr ptr ptr)
 @ stdcall UuidCompare(ptr ptr ptr)
 @ stdcall UuidCreate(ptr)
 @ stdcall UuidCreateNil(ptr)

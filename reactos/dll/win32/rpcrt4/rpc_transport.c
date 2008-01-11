@@ -375,7 +375,7 @@ static int rpcrt4_conn_np_read(RpcConnection *Connection,
         break;
 
     ret = GetOverlappedResult(npc->pipe, &npc->ovl[0], &bytes_read, TRUE);
-    if (!ret && GetLastError() != ERROR_MORE_DATA)
+    if (!ret /*&& GetLastError() != ERROR_MORE_DATA*/)
         break;
 
     bytes_left -= bytes_read;
@@ -400,7 +400,7 @@ static int rpcrt4_conn_np_write(RpcConnection *Connection,
         break;
 
     ret = GetOverlappedResult(npc->pipe, &npc->ovl[1], &bytes_written, TRUE);
-    if (!ret && GetLastError() != ERROR_MORE_DATA)
+    if (!ret /*&& GetLastError() != ERROR_MORE_DATA*/)
         break;
 
     bytes_left -= bytes_written;

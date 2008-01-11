@@ -21,53 +21,44 @@
 #ifndef __WIDL_WIDLTYPES_H
 #define __WIDL_WIDLTYPES_H
 
-#include <host/typedefs.h>
-#define S_OK           ((HRESULT)0x00000000L)
-#define S_FALSE        ((HRESULT)0x00000001L)
-#define E_OUTOFMEMORY  ((HRESULT)0x8007000EL)
-#define TYPE_E_IOERROR ((HRESULT)0x80028CA2L)
-
-#define min(a, b)  ((a) < (b) ? (a) : (b))
-#define max(a,b)   ((a) < (b) ? (b) : (a))
-
 #include <stdarg.h>
 #include "guiddef.h"
 #include "wine/rpcfc.h"
+#include "wine/list.h"
 
 #ifndef UUID_DEFINED
 #define UUID_DEFINED
 typedef GUID UUID;
 #endif
 
+#define TRUE 1
+#define FALSE 0
+
 typedef struct _attr_t attr_t;
 typedef struct _expr_t expr_t;
 typedef struct _type_t type_t;
 typedef struct _typeref_t typeref_t;
 typedef struct _var_t var_t;
+typedef struct _pident_t pident_t;
 typedef struct _func_t func_t;
 typedef struct _ifref_t ifref_t;
 typedef struct _typelib_entry_t typelib_entry_t;
 typedef struct _importlib_t importlib_t;
 typedef struct _importinfo_t importinfo_t;
 typedef struct _typelib_t typelib_t;
+typedef struct _user_type_t user_type_t;
+typedef struct _user_type_t context_handle_t;
 
-#define DECL_LINK(type) \
-  type *l_next; \
-  type *l_prev
-
-#define LINK(x,y) do { x->l_next = y; if (y) y->l_prev = x; } while (0)
-
-#define INIT_LINK(x) do { x->l_next = NULL; x->l_prev = NULL; } while (0)
-#define NEXT_LINK(x) ((x)->l_next)
-#define PREV_LINK(x) ((x)->l_prev)
-
-#define END_OF_LIST(list)       \
-  do {                          \
-    if (list) {                 \
-      while (NEXT_LINK(list))   \
-        list = NEXT_LINK(list); \
-    }                           \
-  } while(0)
+typedef struct list attr_list_t;
+typedef struct list str_list_t;
+typedef struct list func_list_t;
+typedef struct list expr_list_t;
+typedef struct list var_list_t;
+typedef struct list pident_list_t;
+typedef struct list ifref_list_t;
+typedef struct list array_dims_t;
+typedef struct list user_type_list_t;
+typedef struct list context_handle_list_t;
 
 enum attr_type
 {
@@ -146,6 +137,7 @@ enum expr_type
     EXPR_VOID,
     EXPR_NUM,
     EXPR_HEXNUM,
+    EXPR_DOUBLE,
     EXPR_IDENTIFIER,
     EXPR_NEG,
     EXPR_NOT,
@@ -162,6 +154,7 @@ enum expr_type
     EXPR_OR,
     EXPR_COND,
     EXPR_TRUEFALSE,
+    EXPR_ADDRESSOF,
 };
 
 enum type_kind
@@ -178,6 +171,12 @@ enum type_kind
     TKIND_MAX
 };
 
+struct str_list_entry_t
+{
+    char *str;
+    struct list entry;
+};
+
 struct _attr_t {
   enum attr_type type;
   union {
@@ -185,7 +184,7 @@ struct _attr_t {
     void *pval;
   } u;
   /* parser-internal */
-  DECL_LINK(attr_t);
+  struct list entry;
 };
 
 struct _expr_t {
@@ -193,15 +192,16 @@ struct _expr_t {
   const expr_t *ref;
   union {
     long lval;
+    double dval;
     const char *sval;
     const expr_t *ext;
-    const typeref_t *tref;
+    type_t *tref;
   } u;
   const expr_t *ext2;
   int is_const;
   long cval;
   /* parser-internal */
-  DECL_LINK(expr_t);
+  struct list entry;
 };
 
 struct _type_t {
@@ -209,65 +209,65 @@ struct _type_t {
   enum type_kind kind;
   unsigned char type;
   struct _type_t *ref;
-  const attr_t *attrs;
-  func_t *funcs;                  /* interfaces and modules */
-  var_t *fields;                  /* interfaces, structures and enumerations */
-  ifref_t *ifaces;                /* coclasses */
-  int ignore, is_const, sign;
-  int defined, written, user_types_registered;
+  const attr_list_t *attrs;
+  func_list_t *funcs;             /* interfaces and modules */
+  var_list_t *fields;             /* interfaces, structures and enumerations */
+  ifref_list_t *ifaces;           /* coclasses */
+  unsigned long dim;              /* array dimension */
+  expr_t *size_is, *length_is;
+  type_t *orig;                   /* dup'd types */
+  unsigned int typestring_offset;
+  unsigned int ptrdesc;           /* used for complex structs */
   int typelib_idx;
-  /* parser-internal */
-  DECL_LINK(type_t);
-};
-
-struct _typeref_t {
-  char *name;
-  type_t *ref;
-  int uniq;
+  unsigned int declarray : 1;     /* if declared as an array */
+  unsigned int ignore : 1;
+  unsigned int is_const : 1;
+  unsigned int defined : 1;
+  unsigned int written : 1;
+  unsigned int user_types_registered : 1;
+  unsigned int tfswrite : 1;   /* if the type needs to be written to the TFS */
+  int sign : 2;
 };
 
 struct _var_t {
   char *name;
-  int ptr_level;
-  expr_t *array;
   type_t *type;
-  var_t *args;  /* for function pointers */
-  const char *tname;
-  attr_t *attrs;
+  var_list_t *args;  /* for function pointers */
+  attr_list_t *attrs;
   expr_t *eval;
 
   /* parser-internal */
-  DECL_LINK(var_t);
+  struct list entry;
+};
+
+struct _pident_t {
+  var_t *var;
+  int ptr_level;
+
+  /* parser-internal */
+  struct list entry;
 };
 
 struct _func_t {
   var_t *def;
-  var_t *args;
+  var_list_t *args;
   int ignore, idx;
 
   /* parser-internal */
-  DECL_LINK(func_t);
+  struct list entry;
 };
 
 struct _ifref_t {
   type_t *iface;
-  attr_t *attrs;
+  attr_list_t *attrs;
 
   /* parser-internal */
-  DECL_LINK(ifref_t);
+  struct list entry;
 };
 
 struct _typelib_entry_t {
-    enum type_kind kind;
-    union {
-        type_t *class;
-        type_t *interface;
-        type_t *module;
-        type_t *structure;
-        type_t *enumeration;
-        var_t *tdef;
-    } u;
-    DECL_LINK(typelib_entry_t);
+    type_t *type;
+    struct list entry;
 };
 
 struct _importinfo_t {
@@ -292,15 +292,39 @@ struct _importlib_t {
 
     int allocated;
 
-    DECL_LINK(importlib_t);
+    struct list entry;
 };
 
 struct _typelib_t {
     char *name;
     char *filename;
-    attr_t *attrs;
-    typelib_entry_t *entry;
-    importlib_t *importlibs;
+    attr_list_t *attrs;
+    struct list entries;
+    struct list importlibs;
 };
+
+struct _user_type_t {
+    struct list entry;
+    const char *name;
+};
+
+extern unsigned char pointer_default;
+
+extern user_type_list_t user_type_list;
+void check_for_user_types_and_context_handles(const var_list_t *list);
+
+void init_types(void);
+type_t *alloc_type(void);
+void set_all_tfswrite(int val);
+
+type_t *duptype(type_t *t, int dupname);
+type_t *alias(type_t *t, const char *name);
+
+int is_ptr(const type_t *t);
+int is_array(const type_t *t);
+int is_var_ptr(const var_t *v);
+int cant_be_null(const var_t *v);
+int is_struct(unsigned char tc);
+int is_union(unsigned char tc);
 
 #endif

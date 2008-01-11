@@ -19,6 +19,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include <stdarg.h>
 
 enum pass
 {
@@ -35,15 +36,27 @@ enum remoting_phase
     PHASE_FREE
 };
 
-void write_procformatstring(FILE *file, const ifref_t *ifaces);
-void write_typeformatstring(FILE *file, const ifref_t *ifaces);
-size_t get_type_memsize(const type_t *type);
-unsigned int get_required_buffer_size(const var_t *var, unsigned int *alignment, enum pass pass);
+typedef int (*type_pred_t)(const type_t *);
+
+void write_formatstringsdecl(FILE *f, int indent, ifref_list_t *ifaces, type_pred_t pred);
+void write_procformatstring(FILE *file, const ifref_list_t *ifaces, type_pred_t pred);
+void write_typeformatstring(FILE *file, const ifref_list_t *ifaces, type_pred_t pred);
 void print_phase_basetype(FILE *file, int indent, enum remoting_phase phase, enum pass pass, const var_t *var, const char *varname);
-void write_remoting_arguments(FILE *file, int indent, const func_t *func, unsigned int *type_offset, enum pass pass, enum remoting_phase phase);
+void write_remoting_arguments(FILE *file, int indent, const func_t *func, enum pass pass, enum remoting_phase phase);
 size_t get_size_procformatstring_var(const var_t *var);
-size_t get_size_typeformatstring_var(const var_t *var);
-size_t get_size_procformatstring(const ifref_t *ifaces);
-size_t get_size_typeformatstring(const ifref_t *ifaces);
+size_t get_size_procformatstring_func(const func_t *func);
+size_t get_size_procformatstring(const ifref_list_t *ifaces, type_pred_t pred);
+size_t get_size_typeformatstring(const ifref_list_t *ifaces, type_pred_t pred);
+void assign_stub_out_args( FILE *file, int indent, const func_t *func );
+void declare_stub_args( FILE *file, int indent, const func_t *func );
 int write_expr_eval_routines(FILE *file, const char *iface);
 void write_expr_eval_routine_list(FILE *file, const char *iface);
+void write_user_quad_list(FILE *file);
+void write_endpoints( FILE *f, const char *prefix, const str_list_t *list );
+size_t type_memsize(const type_t *t, unsigned int *align);
+int decl_indirect(const type_t *t);
+void write_parameters_init(FILE *file, int indent, const func_t *func);
+void print(FILE *file, int indent, const char *format, va_list ap);
+int get_padding(const var_list_t *fields);
+int is_user_type(const type_t *t);
+expr_t *get_size_is_expr(const type_t *t, const char *name);

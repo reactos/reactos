@@ -1,40 +1,5 @@
---- rpc_server.c	Tue Jan 01 13:09:34 2008
-+++ rpc_server.c	Fri Jan 11 15:58:57 2008
-@@ -1017,22 +1017,30 @@
- /***********************************************************************
-  *             RpcMgmtServerWaitListen (RPCRT4.@)
-  */
- RPC_STATUS WINAPI RpcMgmtWaitServerListen( void )
- {
--  TRACE("()\n");
-+  RpcServerProtseq *cps;
- 
-   EnterCriticalSection(&listen_cs);
- 
-   if (!std_listen) {
-     LeaveCriticalSection(&listen_cs);
-     return RPC_S_NOT_LISTENING;
-   }
-   
-+  do
-+  {
-   LeaveCriticalSection(&listen_cs);
- 
--  FIXME("not waiting for server calls to finish\n");
-+    LIST_FOR_EACH_ENTRY(cps, &protseqs, RpcServerProtseq, entry)
-+        WaitForSingleObject(cps->server_ready_event, INFINITE);
-+
-+    EnterCriticalSection(&listen_cs);
-+  } while (!std_listen);
-+
-+  LeaveCriticalSection(&listen_cs);
- 
-   return RPC_S_OK;
- }
- 
- /***********************************************************************
---- rpc_transport.c	Sun Jan 06 19:27:38 2008
-+++ rpc_transport.c	Fri Jan 11 15:59:32 2008
+--- H:\Working Copies\wine\dlls\rpcrt4\rpc_transport.c	Sun Jan 06 19:27:38 2008
++++ H:\Working Copies\ReactOS\trunk\reactos\dll\win32\rpcrt4\rpc_transport.c	Mon Jan 07 16:02:15 2008
 @@ -54,10 +54,13 @@
  #endif
  #ifdef HAVE_SYS_POLL_H
@@ -162,7 +127,7 @@
          break;
 +
 +    ret = GetOverlappedResult(npc->pipe, &npc->ovl[0], &bytes_read, TRUE);
-+    if (!ret && GetLastError() != ERROR_MORE_DATA)
++    if (!ret /*&& GetLastError() != ERROR_MORE_DATA*/)
 +        break;
 +
      bytes_left -= bytes_read;
@@ -183,7 +148,7 @@
          break;
 +
 +    ret = GetOverlappedResult(npc->pipe, &npc->ovl[1], &bytes_written, TRUE);
-+    if (!ret && GetLastError() != ERROR_MORE_DATA)
++    if (!ret /*&& GetLastError() != ERROR_MORE_DATA*/)
 +        break;
 +
      bytes_left -= bytes_written;

@@ -21,7 +21,10 @@
 #include <stdio.h>
 #include <stdarg.h>
 
-#include <host/nls.h>
+#include "windef.h"
+#include "winbase.h"
+#include "winnls.h"
+
 #include "hash.h"
 
 static const unsigned char Lookup_16[128 * 3] = {
@@ -511,7 +514,7 @@ unsigned long lhash_val_of_name_sys( syskind_t skind, LCID lcid, LPCSTR lpStr)
   switch (PRIMARYLANGID(LANGIDFROMLCID(lcid)))
   {
   default:
-    fprintf(stderr, "Unknown lcid %lx, treating as latin-based, please report\n", lcid);
+    fprintf(stderr, "Unknown lcid %x, treating as latin-based, please report\n", lcid);
     /* .. Fall Through .. */
   case LANG_AFRIKAANS:  case LANG_ALBANIAN:   case LANG_ARMENIAN:
   case LANG_ASSAMESE:   case LANG_AZERI:      case LANG_BASQUE:
@@ -532,6 +535,7 @@ unsigned long lhash_val_of_name_sys( syskind_t skind, LCID lcid, LPCSTR lpStr)
   case LANG_SWEDISH:    case LANG_SYRIAC:     case LANG_TAMIL:
   case LANG_TATAR:      case LANG_TELUGU:     case LANG_THAI:
   case LANG_UKRAINIAN:  case LANG_URDU:       case LANG_UZBEK:
+#ifndef __REACTOS__
   case LANG_VIETNAMESE: case LANG_GAELIC:     case LANG_MALTESE:
   case LANG_TAJIK:      case LANG_ROMANSH:    case LANG_IRISH:
   case LANG_SAMI:       case LANG_UPPER_SORBIAN: case LANG_SUTU:
@@ -539,6 +543,12 @@ unsigned long lhash_val_of_name_sys( syskind_t skind, LCID lcid, LPCSTR lpStr)
   case LANG_XHOSA:      case LANG_ZULU:       case LANG_ESPERANTO:
   case LANG_WALON:      case LANG_CORNISH:    case LANG_WELSH:
   case LANG_BRETON:
+#else
+  case LANG_VIETNAMESE: case LANG_MALTESE:    case LANG_IRISH:
+  case LANG_SAMI:       case LANG_UPPER_SORBIAN:  case LANG_TSWANA:
+  case LANG_XHOSA:      case LANG_ZULU:       case LANG_WELSH:
+  case LANG_BRETON:
+#endif
     nOffset = 16;
     pnLookup = Lookup_16;
     break;
@@ -602,13 +612,7 @@ unsigned long lhash_val_of_name_sys( syskind_t skind, LCID lcid, LPCSTR lpStr)
 
   while (*str)
   {
-    ULONG newLoWord = 0, i;
-
-    /* Cumulative prime multiplication (*37) with modulo 2^32 wrap-around */
-    for (i = 0; i < 37; i++)
-      newLoWord += nLoWord;
-
-    nLoWord = newLoWord + pnLookup[*str > 0x7f && nMask ? *str + 0x80 : *str];
+    nLoWord = 37 * nLoWord + pnLookup[*str > 0x7f && nMask ? *str + 0x80 : *str];
     str++;
   }
   /* Constrain to a prime modulo and sizeof(WORD) */
