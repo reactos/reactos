@@ -118,7 +118,7 @@ LsarStartRpcServer(VOID)
         return;
     }
 
-    DPRINT("LsarStartRpcServer() done");
+    DPRINT("LsarStartRpcServer() done\n");
 }
 
 /* Function 0 */
