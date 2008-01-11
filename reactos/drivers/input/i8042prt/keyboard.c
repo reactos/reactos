@@ -131,7 +131,7 @@ i8042KbdStartIo(
 		case IOCTL_KEYBOARD_SET_INDICATORS:
 		{
 			TRACE_(I8042PRT, "IOCTL_KEYBOARD_SET_INDICATORS\n");
-			INFO_(I8042PRT, "Leds: {%s%s%s }",
+			INFO_(I8042PRT, "Leds: {%s%s%s }\n",
 				DeviceExtension->KeyboardIndicators.LedFlags & KEYBOARD_CAPS_LOCK_ON ? " CAPSLOCK" : "",
 				DeviceExtension->KeyboardIndicators.LedFlags & KEYBOARD_NUM_LOCK_ON ? " NUMLOCK" : "",
 				DeviceExtension->KeyboardIndicators.LedFlags & KEYBOARD_SCROLL_LOCK_ON ? " SCROLLLOCK" : "");
