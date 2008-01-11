@@ -1030,7 +1030,7 @@ PcVideoCopyOffScreenBufferToVRAM(PVOID Buffer)
   /* BIOS graphics mode */
   else
     {
-      UNIMPLEMENTED();
+      UNIMPLEMENTED;
     }
 }
 

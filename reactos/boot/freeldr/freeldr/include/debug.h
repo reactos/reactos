@@ -85,6 +85,6 @@ void	MEMORY_WRITE_BREAKPOINT4(unsigned long addr);
 
 #endif // defined DBG
 
-#define UNIMPLEMENTED()   BugCheck((DPRINT_WARNING, "This function is unimplemented!\n"))
+#define UNIMPLEMENTED   BugCheck((DPRINT_WARNING, "This function is unimplemented!\n"))
 
 #endif // defined __DEBUG_H
