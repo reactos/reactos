@@ -547,6 +547,7 @@ modules\rostests\winetests\msvcrt\msvcrt_winetest.exe                      7   o
 modules\rostests\winetests\ntdll\ntdll_winetest.exe                        7   optional
 modules\rostests\winetests\powrprof\powrprof_winetest.exe                  7   optional
 modules\rostests\winetests\psapi\psapi_winetest.exe                        7   optional
+modules\rostests\winetests\rpcrt4\rpcrt4_winetest.exe                      7   optional
 modules\rostests\winetests\setupapi\setupapi_winetest.exe                  7   optional
 modules\rostests\winetests\shell32\shell32_winetest.exe                    7   optional
 modules\rostests\winetests\shlwapi\shlwapi_winetest.exe                    7   optional
