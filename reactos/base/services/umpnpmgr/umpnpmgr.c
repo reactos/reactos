@@ -1848,7 +1848,7 @@ main(int argc, char *argv[])
 
     DPRINT("Umpnpmgr: main() started\n");
 
-    hInstallEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
+    hInstallEvent = CreateEvent(NULL, TRUE, SetupIsActive()/*FALSE*/, NULL);
     if (hInstallEvent == NULL)
     {
         dwError = GetLastError();
