@@ -1,3 +1,0 @@
-* netstr.c and prefs_util.c shouldn't support TCHAR, just utf8 char*
-* add mingw makefile
-* add cygwin makefile

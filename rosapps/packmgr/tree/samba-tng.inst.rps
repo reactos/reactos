@@ -1,9 +1,0 @@
-Sub Main
-  ' ToDo: Choose from different mirrors
-  download "http://svn.reactos.org/packages/samba-tng.exe", "samba-tng.exe"
-End Sub
-
-Sub After
-  shell samba-tng.exe
-  ' ToDo: Delete samba-tng.exe
-End Sub
