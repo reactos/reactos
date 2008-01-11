@@ -62,6 +62,9 @@
 <directory name="riched20">
 	<xi:include href="riched20/riched20.rbuild" />
 </directory>
+<directory name="rpcrt4">
+	<xi:include href="rpcrt4/rpcrt4.rbuild" />
+</directory>
 <directory name="rsabase">
 	<xi:include href="rsabase/rsabase.rbuild" />
 </directory>
