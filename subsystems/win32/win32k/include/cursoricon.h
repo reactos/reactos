@@ -9,6 +9,21 @@ typedef struct tagCURICON_PROCESS
   PW32PROCESS Process;
 } CURICON_PROCESS, *PCURICON_PROCESS;
 
+typedef struct _CURSOR
+{
+  LIST_ENTRY pcurNext;
+  UINT CURSORF_flags;       // CURSORF_+ LINKED, SECRET, ACONFRAME, WOWCLEANUP, ACON, LRSHARED, GLOBAL, FROMRESOURCE
+  UNICODE_STRING strName;   // resource string name
+  ATOM atomModName;         // atom for the module name
+  UINT rt;                  // resource type, RT_ICON or RT_CURSOR ??
+  INT cx;
+  INT cy;
+  UINT xhotspot;
+  UINT yhotspot;
+  HBITMAP hbmMask;
+  HBITMAP hbmColor;
+} CURSOR, *PCURSOR;
+
 typedef struct _CURICON_OBJECT
 {
   LIST_ENTRY ListEntry;
