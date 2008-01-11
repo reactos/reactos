@@ -1,29 +1,10 @@
 /*
- *  ReactOS kernel
- *  Copyright (C) 1998, 1999, 2000, 2001 ReactOS Team
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- */
-/* $Id$
- *
- * PROJECT:         ReactOS user32.dll
- * FILE:            lib/user32/windows/input.c
- * PURPOSE:         Input
- * PROGRAMMER:      Casper S. Hornstrup (chorns@users.sourceforge.net)
- * UPDATE HISTORY:
- *      09-05-2001  CSH  Created
+ * PROJECT:         ReactOS User32 dll
+ * LICENSE:         GPL - See COPYING in the top level directory
+ * FILE:            dll/win32/user32/bitmap.c
+ * PURPOSE:         Bitmap handling code
+ * PROGRAMMERS:     Casper S. Hornstrup (chorns@users.sourceforge.net)
+ *                  Ged Murphy (gedmurphy@reactos.org)
  */
 
 /* INCLUDES ******************************************************************/
@@ -32,6 +13,8 @@
 
 #include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(user32);
+
+/* TYPES *********************************************************************/
 
 #include "pshpack1.h"
 
@@ -62,40 +45,8 @@ HICON ICON_CreateIconFromData(HDC hDC, PVOID ImageData, ICONIMAGE* IconImage, in
 CURSORICONDIRENTRY *CURSORICON_FindBestIcon( CURSORICONDIR *dir, int width, int height, int colors);
 CURSORICONDIRENTRY *CURSORICON_FindBestCursor( CURSORICONDIR *dir, int width, int height, int colors);
 
-/* FUNCTIONS *****************************************************************/
 
-/*
- * @implemented
- */
-HANDLE STDCALL
-LoadImageA(HINSTANCE hinst,
-	   LPCSTR lpszName,
-	   UINT uType,
-	   int cxDesired,
-	   int cyDesired,
-	   UINT fuLoad)
-{
-   LPWSTR lpszWName;
-   HANDLE Handle;
-   UNICODE_STRING NameString;
-
-   if (HIWORD(lpszName))
-   {
-      RtlCreateUnicodeStringFromAsciiz(&NameString, (LPSTR)lpszName);
-      lpszWName = NameString.Buffer;
-      Handle = LoadImageW(hinst, lpszWName, uType, cxDesired,
-			  cyDesired, fuLoad);
-      RtlFreeUnicodeString(&NameString);
-   }
-   else
-   {
-      Handle = LoadImageW(hinst, (LPCWSTR)lpszName, uType, cxDesired,
-			  cyDesired, fuLoad);
-   }
-
-   return Handle;
-}
-
+/* PRIVATE FUNCTIONS *********************************************************/
 
 /*
  *  The following macro functions account for the irregularities of
@@ -507,68 +458,6 @@ LoadBitmapImage(HINSTANCE hInstance, LPCWSTR lpszName, UINT fuLoad)
    return hBitmap;
 }
 
-HANDLE STDCALL
-LoadImageW(
-   IN HINSTANCE hinst,
-   IN LPCWSTR lpszName,
-   IN UINT uType,
-   IN INT cxDesired,
-   IN INT cyDesired,
-   IN UINT fuLoad)
-{
-   if (fuLoad & LR_DEFAULTSIZE)
-   {
-      if (uType == IMAGE_ICON)
-      {
-         if (cxDesired == 0)
-            cxDesired = GetSystemMetrics(SM_CXICON);
-         if (cyDesired == 0)
-            cyDesired = GetSystemMetrics(SM_CYICON);
-      }
-      else if (uType == IMAGE_CURSOR)
-      {
-         if (cxDesired == 0)
-            cxDesired = GetSystemMetrics(SM_CXCURSOR);
-         if (cyDesired == 0)
-            cyDesired = GetSystemMetrics(SM_CYCURSOR);
-      }
-   }
-
-   switch (uType)
-   {
-      case IMAGE_BITMAP:
-         return LoadBitmapImage(hinst, lpszName, fuLoad);
-      case IMAGE_CURSOR:
-      case IMAGE_ICON:
-         return LoadCursorIconImage(hinst, lpszName, cxDesired, cyDesired,
-                                    fuLoad, uType);
-      default:
-         break;
-   }
-
-   return NULL;
-}
-
-
-/*
- * @implemented
- */
-HBITMAP STDCALL
-LoadBitmapA(HINSTANCE hInstance, LPCSTR lpBitmapName)
-{
-   return LoadImageA(hInstance, lpBitmapName, IMAGE_BITMAP, 0, 0, 0);
-}
-
-
-/*
- * @implemented
- */
-HBITMAP STDCALL
-LoadBitmapW(HINSTANCE hInstance, LPCWSTR lpBitmapName)
-{
-   return LoadImageW(hInstance, lpBitmapName, IMAGE_BITMAP, 0, 0, 0);
-}
-
 
 static HANDLE
 CopyBmp(HANDLE hnd,
@@ -764,28 +653,27 @@ GetIconCurBpp(PICONINFO pIconInfo)
     return pbi->bmiHeader.biBitCount;
 }
 
-#if 0
+#if 1
 static BOOL
 SetCursorIconData(
   HANDLE Handle,
-  HINSTANCE hMod,
+  LPWSTR lpMod,
   LPWSTR lpResName,
   PICONINFO pIconInfo)
 {
-
-    UNICODE_STRING Res;
+    UNICODE_STRING Mod, Res;
+    POINT p = {pIconInfo->xHotspot, pIconInfo->yHotspot}; // remove
 
     if (!Handle || !pIconInfo)
         return FALSE;
 
+    RtlInitUnicodeString(&Mod, lpResName);
     RtlInitUnicodeString(&Res, lpResName);
 
-    return NtUserSetCursorIconData(Handle, hMod, &Res, pIconInfo);
-
+    //return NtUserSetCursorIconData(Handle, &Mod, &Res, pIconInfo);
+    return NtUserSetCursorIconData(Handle, &pIconInfo->fIcon, &p, NULL, NULL, NULL);
 }
 
-
-/* bare bones icon copy implementation */
 static HANDLE
 CopyIcoCur(HANDLE hIconCur,
            UINT type,
@@ -794,11 +682,14 @@ CopyIcoCur(HANDLE hIconCur,
            UINT flags)
 {
     HANDLE hNewIcon = NULL;
-    ICONINFO origIconInfo, newIconInfo;
+    ICONINFO IconInfo;
     SIZE origSize;
     DWORD origBpp;
 
     if (!hIconCur)
+        return NULL;
+
+    if ((desiredx < 0) || (desiredy < 0))
         return NULL;
 
     if (flags & LR_COPYFROMRESOURCE)
@@ -806,45 +697,213 @@ CopyIcoCur(HANDLE hIconCur,
         TRACE("FIXME: LR_COPYFROMRESOURCE is yet not implemented for icons\n");
     }
 
+    /* Get the original icon size */
     if (NtUserGetIconSize(hIconCur, 0, &origSize.cx, &origSize.cy))
     {
+        /* use the original size 0 was passed in */
         if (desiredx == 0) desiredx = origSize.cx;
-        if (desiredx == 0) desiredy = origSize.cy;
+        if (desiredy == 0) desiredy = origSize.cy;
+    }
+    else
+    {
+        TRACE("Failed to retrieve original icon dimensions\n");
+        return NULL;
+    }
 
-        if (NtUserGetIconInfo(hIconCur, &origIconInfo, NULL, NULL, &origBpp, TRUE))
+    /* get the original icon info */
+    if (NtUserGetIconInfo(hIconCur, &IconInfo, NULL, NULL, &origBpp, TRUE))
+    {
+        /* stretch the bitmap if required */
+        if ((desiredx != origSize.cx) || (desiredy != origSize.cy))
         {
-            hNewIcon = (HANDLE)NtUserCallOneParam(0, ONEPARAM_ROUTINE_CREATECURICONHANDLE);
+            HBITMAP hBitmap;
+            BOOL bSuccess = FALSE;
 
-            if (hNewIcon)
+            /* create a stretched copy of the color bitmap */
+            hBitmap = CopyBmp(IconInfo.hbmColor, IMAGE_BITMAP, desiredx, desiredy, flags);
+            if (hBitmap)
             {
-                /* the bitmaps returned from the NtUserGetIconInfo are copies of the original,
-                 * so we can use these directly to build up our icon/cursor copy */
-                RtlCopyMemory(&newIconInfo, &origIconInfo, sizeof(ICONINFO));
+                /* delete the original bitmap and set the new one */
+                DeleteObject(IconInfo.hbmColor);
+                IconInfo.hbmColor = hBitmap;
 
-                if (!SetCursorIconData(hNewIcon, NULL, NULL, &newIconInfo))
+                /* create a stretched copy of the mask bitmap */
+                hBitmap = CopyBmp(IconInfo.hbmMask, IMAGE_BITMAP, desiredx, desiredy, flags);
+                if (hBitmap)
                 {
-                    if (newIconInfo.fIcon)
-                        DestroyIcon(hNewIcon);
-                    else
-                        DestroyCursor(hNewIcon);
-
-                    hNewIcon = NULL;
+                    /* delete the original bitmap and set the new one */
+                    DeleteObject(IconInfo.hbmMask);
+                    IconInfo.hbmMask = hBitmap;
+                    bSuccess = TRUE;
                 }
             }
 
-            DeleteObject(origIconInfo.hbmMask);
-            DeleteObject(origIconInfo.hbmColor);
+            if (!bSuccess) goto error;
         }
+
+        /* create a new icon handle */
+        hNewIcon = (HANDLE)NtUserCallOneParam(0, ONEPARAM_ROUTINE_CREATECURICONHANDLE);
+        if (hNewIcon)
+        {
+            /* set the icon data */
+            if (!SetCursorIconData(hNewIcon, NULL, NULL, &IconInfo))
+            {
+                goto error;
+            }
+        }
+
+        /* delete the bitmaps, we're done with them now */
+        DeleteObject(IconInfo.hbmMask);
+        DeleteObject(IconInfo.hbmColor);
     }
 
     if (hNewIcon && (flags & LR_COPYDELETEORG))
     {
+        /* delete the icon we copied from */
         DestroyCursor((HCURSOR)hIconCur);
     }
 
+    /* return the copied icon */
     return hNewIcon;
+
+error:
+    if (hNewIcon)
+        DestroyCursor(hNewIcon);
+
+    DeleteObject(IconInfo.hbmColor);
+    DeleteObject(IconInfo.hbmMask);
+
+    return NULL;
 }
 #endif
+
+
+
+/* PUBLIC FUNCTIONS **********************************************************/
+
+/*
+ * @implemented
+ */
+HANDLE STDCALL
+LoadImageW(IN HINSTANCE hinst,
+           IN LPCWSTR lpszName,
+           IN UINT uType,
+           IN INT cxDesired,
+           IN INT cyDesired,
+           IN UINT fuLoad)
+{
+    if (fuLoad & LR_DEFAULTSIZE)
+    {
+        if (uType == IMAGE_ICON)
+        {
+            if (cxDesired == 0)
+                cxDesired = GetSystemMetrics(SM_CXICON);
+            if (cyDesired == 0)
+                cyDesired = GetSystemMetrics(SM_CYICON);
+        }
+        else if (uType == IMAGE_CURSOR)
+        {
+            if (cxDesired == 0)
+                cxDesired = GetSystemMetrics(SM_CXCURSOR);
+            if (cyDesired == 0)
+                cyDesired = GetSystemMetrics(SM_CYCURSOR);
+        }
+    }
+
+    switch (uType)
+    {
+        case IMAGE_BITMAP:
+            return LoadBitmapImage(hinst,
+                                   lpszName,
+                                   fuLoad);
+        case IMAGE_CURSOR:
+        case IMAGE_ICON:
+            return LoadCursorIconImage(hinst,
+                                       lpszName,
+                                       cxDesired,
+                                       cyDesired,
+                                       fuLoad,
+                                       uType);
+        default:
+            break;
+    }
+
+    return NULL;
+}
+
+
+/*
+ * @implemented
+ */
+HBITMAP STDCALL
+LoadBitmapA(HINSTANCE hInstance,
+            LPCSTR lpBitmapName)
+{
+   return LoadImageA(hInstance,
+                     lpBitmapName,
+                     IMAGE_BITMAP,
+                     0,
+                     0,
+                     0);
+}
+
+
+/*
+ * @implemented
+ */
+HBITMAP STDCALL
+LoadBitmapW(HINSTANCE hInstance,
+            LPCWSTR lpBitmapName)
+{
+    return LoadImageW(hInstance,
+                      lpBitmapName,
+                      IMAGE_BITMAP,
+                      0,
+                      0,
+                      0);
+}
+
+
+/*
+ * @implemented
+ */
+HANDLE STDCALL
+LoadImageA(HINSTANCE hinst,
+           LPCSTR lpszName,
+           UINT uType,
+           int cxDesired,
+           int cyDesired,
+           UINT fuLoad)
+{
+    LPWSTR lpszWName;
+    HANDLE Handle;
+    UNICODE_STRING NameString;
+
+    if (HIWORD(lpszName))
+    {
+        RtlCreateUnicodeStringFromAsciiz(&NameString, (LPSTR)lpszName);
+        lpszWName = NameString.Buffer;
+        Handle = LoadImageW(hinst,
+                            lpszWName,
+                            uType,
+                            cxDesired,
+                            cyDesired,
+                            fuLoad);
+        RtlFreeUnicodeString(&NameString);
+    }
+    else
+    {
+        Handle = LoadImageW(hinst,
+                            (LPCWSTR)lpszName,
+                            uType,
+                            cxDesired,
+                            cyDesired,
+                            fuLoad);
+    }
+
+    return Handle;
+}
+
 
 /*
  * @unimplemented
@@ -871,31 +930,21 @@ CopyImage(
  *    if the source is a DIB section.
  *    The LR_MONOCHROME flag is ignored if LR_CREATEDIBSECTION is present.
  */
-   switch (type)
-   {
-      case IMAGE_BITMAP:
-        return CopyBmp(hnd, type, desiredx, desiredy, flags);
+    switch (type)
+    {
+        case IMAGE_BITMAP:
+            return CopyBmp(hnd, type, desiredx, desiredy, flags);
 
-      case IMAGE_ICON:
-        //return CopyIcoCur(hnd, type, desiredx, desiredy, flags);
-          return CopyIcon(hnd);
+        case IMAGE_ICON:
+            //return CopyIcoCur(hnd, type, desiredx, desiredy, flags);
+            return CopyIcon(hnd);
 
-      case IMAGE_CURSOR:
-         {
-            static BOOL IconMsgDisplayed = FALSE;
-            /* FIXME: support loading the image as shared from an instance */
-            if (!IconMsgDisplayed)
-            {
-               FIXME("FIXME: CopyImage doesn't support IMAGE_CURSOR correctly!\n");
-               IconMsgDisplayed = TRUE;
-            }
-            /* Should call CURSORICON_ExtCopy but more testing
-             * needs to be done before we change this
-             */
-            if (flags) FIXME("FIXME: Flags are ignored\n");
+        case IMAGE_CURSOR:
+        {
+            //return CopyIcoCur(hnd, type, desiredx, desiredy, flags);
             return CopyCursor(hnd);
-         }
-   }
+        }
+    }
 
-   return NULL;
+    return NULL;
 }

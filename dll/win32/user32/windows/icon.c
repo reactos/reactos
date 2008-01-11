@@ -1,29 +1,10 @@
 /*
- *  ReactOS kernel
- *  Copyright (C) 1998, 1999, 2000, 2001 ReactOS Team
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- */
-/* $Id$
- *
- * PROJECT:         ReactOS user32.dll
- * FILE:            lib/user32/windows/icon.c
- * PURPOSE:         Icon
- * PROGRAMMER:      Casper S. Hornstrup (chorns@users.sourceforge.net)
- * UPDATE HISTORY:
- *      09-05-2001  CSH  Created
+ * PROJECT:         ReactOS User32 dll
+ * LICENSE:         GPL - See COPYING in the top level directory
+ * FILE:            dll/win32/user32/icon.c
+ * PURPOSE:         Icon handling code
+ * PROGRAMMERS:     Casper S. Hornstrup (chorns@users.sourceforge.net)
+ *                  Ged Murphy (gedmurphy@reactos.org)
  */
 
 /* INCLUDES ******************************************************************/
@@ -33,8 +14,8 @@
 #include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(user32);
 
-/* FUNCTIONS *****************************************************************/
 
+/* PRIVATE FUNCTIONS *********************************************************/
 
 HICON
 ICON_CreateIconFromData(HDC hDC, PVOID ImageData, ICONIMAGE* IconImage, int cxDesired, int cyDesired, int xHotspot, int yHotspot)
@@ -142,6 +123,206 @@ ICON_CreateCursorFromData(HDC hDC, PVOID ImageData, ICONIMAGE* IconImage, int cx
    return NtUserCreateCursorIconHandle(&IconInfo, FALSE);
 }
 
+
+
+
+
+/*
+ *  The following macro function accounts for the irregularities of
+ *   accessing cursor and icon resources in files and resource entries.
+ */
+typedef BOOL
+(*fnGetCIEntry)(LPVOID dir, int n, int *width, int *height, int *bits );
+
+/**********************************************************************
+ *	    CURSORICON_FindBestIcon
+ *
+ * Find the icon closest to the requested size and number of colors.
+ */
+static int
+CURSORICON_FindBestIcon(LPVOID dir,
+                        fnGetCIEntry get_entry,
+                        int Width,
+                        int Height,
+                        int ColorBits)
+{
+    int i, cx, cy, Bits, BestBits = 0, BestEntry = -1;
+    UINT iTotalDiff, iXDiff=0, iYDiff=0, iColorDiff;
+    UINT iTempXDiff, iTempYDiff, iTempColorDiff;
+
+    /* Find Best Fit */
+    iTotalDiff = 0xFFFFFFFF;
+    iColorDiff = 0xFFFFFFFF;
+    for (i = 0; get_entry(dir, i, &cx, &cy, &Bits); i++ )
+    {
+        iTempXDiff = abs(Width - cx);
+        iTempYDiff = abs(Height - cy);
+
+        if(iTotalDiff > (iTempXDiff + iTempYDiff))
+        {
+            iXDiff = iTempXDiff;
+            iYDiff = iTempYDiff;
+            iTotalDiff = iXDiff + iYDiff;
+        }
+    }
+
+    /* Find Best Colors for Best Fit */
+    for (i = 0; get_entry(dir, i, &cx, &cy, &Bits); i++ )
+    {
+        if(abs(Width - cx) == iXDiff && abs(Height - cy) == iYDiff)
+        {
+            iTempColorDiff = abs(ColorBits - Bits);
+            if(iColorDiff > iTempColorDiff)
+            {
+                BestEntry = i;
+                BestBits = Bits;
+                iColorDiff = iTempColorDiff;
+            }
+        }
+    }
+
+    TRACE("Best Icon: ResId: %d, bits : %d\n", BestEntry, BestBits);
+
+    return BestEntry;
+}
+
+
+
+/**********************************************************************
+ *	    CURSORICON_FindBestCursor
+ *
+ * Find the cursor closest to the requested size.
+ * FIXME: parameter 'color' ignored and entries with more than 1 bpp
+ *        ignored too
+ */
+static int
+CURSORICON_FindBestCursor(LPVOID dir,
+                          fnGetCIEntry get_entry,
+                          int Width,
+                          int Height,
+                          int ColorBits)
+{
+    int i, cx, cy, Bits, BestBits = 0, BestEntry = -1;
+    UINT iTotalDiff, iXDiff=0, iYDiff=0, iColorDiff;
+    UINT iTempXDiff, iTempYDiff, iTempColorDiff;
+
+    /* Find Best Fit */
+    iTotalDiff = 0xFFFFFFFF;
+    iColorDiff = 0xFFFFFFFF;
+    for (i = 0; get_entry(dir, i, &cx, &cy, &Bits); i++ )
+    {
+        iTempXDiff = abs(Width - cx);
+        iTempYDiff = abs(Height - cy);
+
+        if(iTotalDiff > (iTempXDiff + iTempYDiff))
+        {
+            iXDiff = iTempXDiff;
+            iYDiff = iTempYDiff;
+            iTotalDiff = iXDiff + iYDiff;
+        }
+    }
+
+    /* Find Best Colors for Best Fit */
+    for (i = 0; get_entry(dir, i, &cx, &cy, &Bits); i++ )
+    {
+        if(abs(Width - cx) == iXDiff && abs(Height - cy) == iYDiff)
+        {
+            iTempColorDiff = abs(ColorBits - Bits);
+            if(iColorDiff > iTempColorDiff)
+            {
+                BestEntry = i;
+                BestBits = Bits;
+                iColorDiff = iTempColorDiff;
+            }
+        }
+    }
+
+    TRACE("Best Cursor: ResId: %d, bits : %d\n", BestEntry, BestBits);
+
+    return BestEntry;
+}
+
+
+static BOOL
+CURSORICON_GetResIconEntry(LPVOID dir,
+                           int n,
+                           int *Width,
+                           int *Height,
+                           int *Bits)
+{
+    GRPCURSORICONDIR *ResDir = dir;
+    ICONRESDIR *Icon;
+
+    if (ResDir->idCount <= n)
+        return FALSE;
+
+    Icon = &ResDir->idEntries[n].ResInfo.icon;
+    *Width = Icon->bWidth;
+    *Height = Icon->bHeight;
+    *Bits = ResDir->idEntries[n].wBitCount;
+    return TRUE;
+}
+
+static BOOL
+CURSORICON_GetResCursorEntry(LPVOID dir,
+                             int n,
+                             int *Width,
+                             int *Height,
+                             int *Bits)
+{
+    GRPCURSORICONDIR *ResDir = dir;
+    CURSORRESDIR *Cursor;
+
+    if (ResDir->idCount <= n)
+        return FALSE;
+
+    Cursor = &ResDir->idEntries[n].ResInfo.cursor;
+    *Width = Cursor->wWidth;
+    *Height = Cursor->wHeight;
+    *Bits = ResDir->idEntries[n].wBitCount;
+    return TRUE;
+}
+
+static GRPCURSORICONDIRENTRY *
+CURSORICON_FindBestIconRes(GRPCURSORICONDIR * dir,
+                           int Width,
+                           int Height,
+                           int ColorBits)
+{
+    int n;
+    n = CURSORICON_FindBestIcon(dir,
+                                CURSORICON_GetResIconEntry,
+                                Width,
+                                Height,
+                                ColorBits);
+    if (n < 0)
+        return NULL;
+
+    return &dir->idEntries[n];
+}
+
+static GRPCURSORICONDIRENTRY *
+CURSORICON_FindBestCursorRes(GRPCURSORICONDIR *dir,
+                             int Width,
+                             int Height,
+                             int ColorBits)
+{
+    int n;
+    n = CURSORICON_FindBestCursor(dir,
+                                  CURSORICON_GetResCursorEntry,
+                                  Width,
+                                  Height,
+                                  ColorBits);
+    if (n < 0)
+        return NULL;
+
+    return &dir->idEntries[n];
+}
+
+
+
+
+/* PUBLIC FUNCTIONS **********************************************************/
 
 /*
  * @implemented
@@ -450,201 +631,6 @@ LookupIconIdFromDirectory(
                                        LR_DEFAULTCOLOR);
 }
 
-
-
-
-
-/*
- *  The following macro function accounts for the irregularities of
- *   accessing cursor and icon resources in files and resource entries.
- */
-typedef BOOL
-(*fnGetCIEntry)(LPVOID dir, int n, int *width, int *height, int *bits );
-
-/**********************************************************************
- *	    CURSORICON_FindBestIcon
- *
- * Find the icon closest to the requested size and number of colors.
- */
-static int
-CURSORICON_FindBestIcon(LPVOID dir,
-                        fnGetCIEntry get_entry,
-                        int Width,
-                        int Height,
-                        int ColorBits)
-{
-    int i, cx, cy, Bits, BestBits = 0, BestEntry = -1;
-    UINT iTotalDiff, iXDiff=0, iYDiff=0, iColorDiff;
-    UINT iTempXDiff, iTempYDiff, iTempColorDiff;
-
-    /* Find Best Fit */
-    iTotalDiff = 0xFFFFFFFF;
-    iColorDiff = 0xFFFFFFFF;
-    for (i = 0; get_entry(dir, i, &cx, &cy, &Bits); i++ )
-    {
-        iTempXDiff = abs(Width - cx);
-        iTempYDiff = abs(Height - cy);
-
-        if(iTotalDiff > (iTempXDiff + iTempYDiff))
-        {
-            iXDiff = iTempXDiff;
-            iYDiff = iTempYDiff;
-            iTotalDiff = iXDiff + iYDiff;
-        }
-    }
-
-    /* Find Best Colors for Best Fit */
-    for (i = 0; get_entry(dir, i, &cx, &cy, &Bits); i++ )
-    {
-        if(abs(Width - cx) == iXDiff && abs(Height - cy) == iYDiff)
-        {
-            iTempColorDiff = abs(ColorBits - Bits);
-            if(iColorDiff > iTempColorDiff)
-            {
-                BestEntry = i;
-                BestBits = Bits;
-                iColorDiff = iTempColorDiff;
-            }
-        }
-    }
-
-    TRACE("Best Icon: ResId: %d, bits : %d\n", BestEntry, BestBits);
-
-    return BestEntry;
-}
-
-
-
-/**********************************************************************
- *	    CURSORICON_FindBestCursor
- *
- * Find the cursor closest to the requested size.
- * FIXME: parameter 'color' ignored and entries with more than 1 bpp
- *        ignored too
- */
-static int
-CURSORICON_FindBestCursor(LPVOID dir,
-                          fnGetCIEntry get_entry,
-                          int Width,
-                          int Height,
-                          int ColorBits)
-{
-    int i, cx, cy, Bits, BestBits = 0, BestEntry = -1;
-    UINT iTotalDiff, iXDiff=0, iYDiff=0, iColorDiff;
-    UINT iTempXDiff, iTempYDiff, iTempColorDiff;
-
-    /* Find Best Fit */
-    iTotalDiff = 0xFFFFFFFF;
-    iColorDiff = 0xFFFFFFFF;
-    for (i = 0; get_entry(dir, i, &cx, &cy, &Bits); i++ )
-    {
-        iTempXDiff = abs(Width - cx);
-        iTempYDiff = abs(Height - cy);
-
-        if(iTotalDiff > (iTempXDiff + iTempYDiff))
-        {
-            iXDiff = iTempXDiff;
-            iYDiff = iTempYDiff;
-            iTotalDiff = iXDiff + iYDiff;
-        }
-    }
-
-    /* Find Best Colors for Best Fit */
-    for (i = 0; get_entry(dir, i, &cx, &cy, &Bits); i++ )
-    {
-        if(abs(Width - cx) == iXDiff && abs(Height - cy) == iYDiff)
-        {
-            iTempColorDiff = abs(ColorBits - Bits);
-            if(iColorDiff > iTempColorDiff)
-            {
-                BestEntry = i;
-                BestBits = Bits;
-                iColorDiff = iTempColorDiff;
-            }
-        }
-    }
-
-    TRACE("Best Cursor: ResId: %d, bits : %d\n", BestEntry, BestBits);
-
-    return BestEntry;
-}
-
-
-static BOOL
-CURSORICON_GetResIconEntry(LPVOID dir,
-                           int n,
-                           int *Width,
-                           int *Height,
-                           int *Bits)
-{
-    GRPCURSORICONDIR *ResDir = dir;
-    ICONRESDIR *Icon;
-
-    if (ResDir->idCount <= n)
-        return FALSE;
-
-    Icon = &ResDir->idEntries[n].ResInfo.icon;
-    *Width = Icon->bWidth;
-    *Height = Icon->bHeight;
-    *Bits = ResDir->idEntries[n].wBitCount;
-    return TRUE;
-}
-
-static BOOL
-CURSORICON_GetResCursorEntry(LPVOID dir,
-                             int n,
-                             int *Width,
-                             int *Height,
-                             int *Bits)
-{
-    GRPCURSORICONDIR *ResDir = dir;
-    CURSORRESDIR *Cursor;
-
-    if (ResDir->idCount <= n)
-        return FALSE;
-
-    Cursor = &ResDir->idEntries[n].ResInfo.cursor;
-    *Width = Cursor->wWidth;
-    *Height = Cursor->wHeight;
-    *Bits = ResDir->idEntries[n].wBitCount;
-    return TRUE;
-}
-
-static GRPCURSORICONDIRENTRY *
-CURSORICON_FindBestIconRes(GRPCURSORICONDIR * dir,
-                           int Width,
-                           int Height,
-                           int ColorBits)
-{
-    int n;
-    n = CURSORICON_FindBestIcon(dir,
-                                CURSORICON_GetResIconEntry,
-                                Width,
-                                Height,
-                                ColorBits);
-    if (n < 0)
-        return NULL;
-
-    return &dir->idEntries[n];
-}
-
-static GRPCURSORICONDIRENTRY *
-CURSORICON_FindBestCursorRes(GRPCURSORICONDIR *dir,
-                             int Width,
-                             int Height,
-                             int ColorBits)
-{
-    int n;
-    n = CURSORICON_FindBestCursor(dir,
-                                  CURSORICON_GetResCursorEntry,
-                                  Width,
-                                  Height,
-                                  ColorBits);
-    if (n < 0)
-        return NULL;
-
-    return &dir->idEntries[n];
-}
 
 
 INT WINAPI

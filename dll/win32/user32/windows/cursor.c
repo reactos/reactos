@@ -1,29 +1,10 @@
 /*
- *  ReactOS kernel
- *  Copyright (C) 1998, 1999, 2000, 2001 ReactOS Team
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- */
-/* $Id$
- *
- * PROJECT:         ReactOS user32.dll
- * FILE:            lib/user32/windows/cursor.c
- * PURPOSE:         Cursor
- * PROGRAMMER:      Casper S. Hornstrup (chorns@users.sourceforge.net)
- * UPDATE HISTORY:
- *      09-05-2001  CSH  Created
+ * PROJECT:         ReactOS User32 dll
+ * LICENSE:         GPL - See COPYING in the top level directory
+ * FILE:            dll/win32/user32/cursor.c
+ * PURPOSE:         Curosr handling code
+ * PROGRAMMERS:     Casper S. Hornstrup (chorns@users.sourceforge.net)
+ *                  Ged Murphy (gedmurphy@reactos.org)
  */
 
 /* INCLUDES ******************************************************************/
@@ -36,35 +17,36 @@ WINE_DEFAULT_DEBUG_CHANNEL(user32);
 
 #undef CopyCursor
 
-HBITMAP
-CopyBitmap(HBITMAP bmp);
+HBITMAP CopyBitmap(HBITMAP bmp);
 
-/* INTERNAL ******************************************************************/
+
+/* PRIVATE FUNCTIONS *********************************************************/
+
 
 /* This callback routine is called directly after switching to gui mode */
 NTSTATUS STDCALL
 User32SetupDefaultCursors(PVOID Arguments, ULONG ArgumentLength)
 {
-  BOOL *DefaultCursor = (BOOL*)Arguments;
-  LRESULT Result = TRUE;
+    BOOL *DefaultCursor = (BOOL*)Arguments;
+    LRESULT Result = TRUE;
 
-  if(*DefaultCursor)
-  {
-    /* set default cursor */
-    SetCursor(LoadCursorW(0, (LPCWSTR)IDC_ARROW));
-  }
-  else
-  {
-    /* FIXME load system cursor scheme */
-    SetCursor(0);
-    SetCursor(LoadCursorW(0, (LPCWSTR)IDC_ARROW));
-  }
+    if(*DefaultCursor)
+    {
+        /* set default cursor */
+        SetCursor(LoadCursorW(0, (LPCWSTR)IDC_ARROW));
+    }
+    else
+    {
+        /* FIXME load system cursor scheme */
+        SetCursor(0);
+        SetCursor(LoadCursorW(0, (LPCWSTR)IDC_ARROW));
+    }
 
-  return(ZwCallbackReturn(&Result, sizeof(LRESULT), STATUS_SUCCESS));
+    return(ZwCallbackReturn(&Result, sizeof(LRESULT), STATUS_SUCCESS));
 }
 
-/* FUNCTIONS *****************************************************************/
 
+/* PUBLIC FUNCTIONS **********************************************************/
 
 /*
  * @implemented
