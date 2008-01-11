@@ -357,8 +357,17 @@ Win32CsrHardError(IN PCSRSS_PROCESS_DATA ProcessData,
         UNICODE_STRING MessageU;
         ANSI_STRING MessageA;
 
-        RtlInitUnicodeString(&MessageU, (PWSTR)MessageResource->Text);
-        RtlUnicodeStringToAnsiString(&MessageA, &MessageU, TRUE);
+        if( !MessageResource->Flags ) {
+            /* we've got an ansi string */
+            DPRINT("MessageResource->Text=%s\n", (PSTR)MessageResource->Text);
+            RtlInitAnsiString(&MessageA, MessageResource->Text);
+        }
+        else {
+            /* we've got a unicode string */
+            DPRINT("MessageResource->Text=%S\n", (PWSTR)MessageResource->Text);
+            RtlInitUnicodeString(&MessageU, (PWSTR)MessageResource->Text);
+            RtlUnicodeStringToAnsiString(&MessageA, &MessageU, TRUE);
+        }
 
         USHORT CaptionSize = 0;
         // check whether a caption exists
@@ -387,6 +396,7 @@ Win32CsrHardError(IN PCSRSS_PROCESS_DATA ProcessData,
                 wsprintfW(szxCaptionText, L"System");
             }
         }
+        DPRINT("ParameterList[0]=0x%lx\n", ParameterList[0]);
         if( STATUS_UNHANDLED_EXCEPTION == HardErrorMessage->Status )
         {
             PRTL_MESSAGE_RESOURCE_ENTRY MsgResException;
@@ -402,10 +412,17 @@ Win32CsrHardError(IN PCSRSS_PROCESS_DATA ProcessData,
             {
                 UNICODE_STRING ExcMessageU;
                 ANSI_STRING ExcMessageA;
-
-                RtlInitUnicodeString(&ExcMessageU, (PWSTR)MsgResException->Text);
-
-                RtlUnicodeStringToAnsiString(&ExcMessageA, &ExcMessageU, TRUE);
+                if( !MsgResException->Flags ) {
+                    /* we've got an ansi string */
+                    DPRINT("MsgResException->Text=%s\n", (PSTR)MsgResException->Text);
+                    RtlInitAnsiString(&ExcMessageA, MsgResException->Text);
+                }
+                else {
+                    /* we've got a unicode string */
+                    DPRINT("MsgResException->Text=%S\n", (PWSTR)MsgResException->Text);
+                    RtlInitUnicodeString(&ExcMessageU, (PWSTR)MsgResException->Text);
+                    RtlUnicodeStringToAnsiString(&ExcMessageA, &ExcMessageU, TRUE);
+                }
 
                 MessageBody = (LPSTR)RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, MsgResException->Length+SizeOfAllUnicodeStrings+1024); // 1024 is a magic number I think it should be enough
                 if( STATUS_ACCESS_VIOLATION == ParameterList[0] ) {
