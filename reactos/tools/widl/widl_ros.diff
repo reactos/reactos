@@ -1,6 +1,21 @@
 --- hash.c	Fri Sep 29 17:48:44 2006
-+++ hash.c	Sat Jan 05 21:25:37 2008
-@@ -533,17 +533,24 @@
++++ hash.c	Fri Jan 11 17:49:22 2008
+@@ -19,13 +19,11 @@
+  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+  */
+ #include <stdio.h>
+ #include <stdarg.h>
+ 
+-#include "windef.h"
+-#include "winbase.h"
+-#include "winnls.h"
++#include <host/nls.h>
+ 
+ #include "hash.h"
+ 
+ static const unsigned char Lookup_16[128 * 3] = {
+  /* Common */
+@@ -533,17 +531,24 @@
    case LANG_ROMANIAN:   case LANG_SANSKRIT:   case LANG_SERBIAN:
    case LANG_SINDHI:     case LANG_SLOVENIAN:  case LANG_SWAHILI:
    case LANG_SWEDISH:    case LANG_SYRIAC:     case LANG_TAMIL:
@@ -26,7 +41,7 @@
    case LANG_CZECH:  case LANG_HUNGARIAN:  case LANG_POLISH:
    case LANG_SLOVAK: case LANG_SPANISH:
 --- server.c	Sat Jan 05 20:48:36 2008
-+++ server.c	Sat Jan 05 22:44:57 2008
++++ server.c	Fri Jan 11 17:49:21 2008
 @@ -388,10 +388,11 @@
          error("Could not open %s for output\n", server_name);
  
@@ -39,8 +54,24 @@
  }
  
  
+--- typelib.c	Sat Jan 05 20:48:36 2008
++++ typelib.c	Fri Jan 11 17:49:21 2008
+@@ -33,12 +33,11 @@
+ #include <signal.h>
+ 
+ #define NONAMELESSUNION
+ #define NONAMELESSSTRUCT
+ 
+-#include "windef.h"
+-#include "winbase.h"
++#include <host/typedefs.h>
+ 
+ #include "widl.h"
+ #include "utils.h"
+ #include "parser.h"
+ #include "header.h"
 --- widl.c	Sat Jan 05 20:48:36 2008
-+++ widl.c	Sat Jan 05 23:44:29 2008
++++ widl.c	Fri Jan 11 17:49:21 2008
 @@ -547,10 +547,15 @@
        return 1;
      }
@@ -57,3 +88,42 @@
      if(!(header = fopen(header_name, "w"))) {
        fprintf(stderr, "Could not open %s for output\n", header_name);
        return 1;
+--- widltypes.h	Sat Jan 05 20:48:36 2008
++++ widltypes.h	Fri Jan 11 17:49:22 2008
+@@ -19,10 +19,17 @@
+  */
+ 
+ #ifndef __WIDL_WIDLTYPES_H
+ #define __WIDL_WIDLTYPES_H
+ 
++#define S_OK           0
++#define S_FALSE        1
++#define E_OUTOFMEMORY  ((HRESULT)0x8007000EL)
++#define TYPE_E_IOERROR ((HRESULT)0x80028CA2L)
++
++#define max(a, b) ((a) > (b) ? a : b)
++
+ #include <stdarg.h>
+ #include "guiddef.h"
+ #include "wine/rpcfc.h"
+ #include "wine/list.h"
+ 
+--- write_msft.c	Sat Jan 05 20:48:36 2008
++++ write_msft.c	Fri Jan 11 17:49:22 2008
+@@ -38,14 +38,12 @@
+ #include <time.h>
+ 
+ #define NONAMELESSUNION
+ #define NONAMELESSSTRUCT
+ 
+-#include "winerror.h"
+-#include "windef.h"
+-#include "winbase.h"
+-#include "winnls.h"
++#include <host/typedefs.h>
++#include <host/nls.h>
+ 
+ #include "widltypes.h"
+ #include "typelib.h"
+ #include "typelib_struct.h"
+ #include "utils.h"
