@@ -6105,7 +6105,7 @@ MmCreateSection (OUT PVOID  * Section,
       Status = ObReferenceObjectByHandle(FileHandle,
                                          FileAccess,
                                          IoFileObjectType,
-                                         UserMode,
+                                         KernelMode,
                                          (PVOID*)&FileObject,
                                          NULL);
       if (!NT_SUCCESS(Status))
