@@ -5,9 +5,12 @@
 #define IDC_STATIC  -1
 #endif
 
-#define IDI_COMPNAME                    50
+#define IDI_COMPNAME                    101
+#define IDI_WARNINGICO                  102
 
-#define IDD_PROPPAGECOMPUTER            200
+#define IDD_PROPPAGECOMPNAMECHENGE      103
+#define IDD_PROPPAGEDNSANDNETBIOS       104
+#define IDD_PROPPAGECOMPUTER            112
 
 #define IDC_COMPDESC                    201
 #define IDC_COMPUTERNAME                202
