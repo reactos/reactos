@@ -142,7 +142,6 @@ NTSTATUS NTAPI VfatBuildRequest (
 {
    NTSTATUS Status;
    PVFAT_IRP_CONTEXT IrpContext;
-   KIRQL Irql;
 
    DPRINT ("VfatBuildRequest (DeviceObject %p, Irp %p)\n", DeviceObject, Irp);
 
@@ -157,22 +156,14 @@ NTSTATUS NTAPI VfatBuildRequest (
    }
    else
    {
-      Irql = KeGetCurrentIrql();
-      if (Irql <= PASSIVE_LEVEL)
-      {
-         FsRtlEnterFileSystem();
-      }
-      else
+      if (KeGetCurrentIrql() > PASSIVE_LEVEL)
       {
          DPRINT1("Vfat is entered at irql = %d\n", Irql);
       }
+
+      FsRtlEnterFileSystem();
       Status = VfatDispatchRequest (IrpContext);
-
-      if (Irql <= PASSIVE_LEVEL)
-      {
-         FsRtlExitFileSystem();
-      }
-
+      FsRtlExitFileSystem();
    }
    return Status;
 }

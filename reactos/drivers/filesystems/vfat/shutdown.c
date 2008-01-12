@@ -51,6 +51,8 @@ VfatShutdown(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 
    DPRINT("VfatShutdown(DeviceObject %p, Irp %p)\n",DeviceObject, Irp);
 
+   FsRtlEnterFileSystem();
+
    /* FIXME: block new mount requests */
 
    if (DeviceObject == VfatGlobalData->DeviceObject)
@@ -107,6 +109,8 @@ VfatShutdown(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 
    Irp->IoStatus.Information = 0;
    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+
+   FsRtlExitFileSystem();
 
    return(Status);
 }
