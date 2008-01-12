@@ -23,6 +23,7 @@
  * FILE:             services/fs/ntfs/ntfs.c
  * PURPOSE:          NTFS filesystem driver
  * PROGRAMMER:       Eric Kohl
+ *                   Pierre Schweitzer 
  */
 
 /* INCLUDES *****************************************************************/
@@ -34,12 +35,12 @@
 
 /* GLOBALS *****************************************************************/
 
-PNTFS_GLOBAL_DATA NtfsGlobalData;
+PNTFS_GLOBAL_DATA NtfsGlobalData = NULL;
 
 
 /* FUNCTIONS ****************************************************************/
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 DriverEntry(PDRIVER_OBJECT DriverObject,
 	    PUNICODE_STRING RegistryPath)
 /*
@@ -50,52 +51,83 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
  * RETURNS: Success or failure
  */
 {
-  PDEVICE_OBJECT DeviceObject;
   NTSTATUS Status;
-  UNICODE_STRING DeviceName = RTL_CONSTANT_STRING(L"\\Ntfs");
+  UNICODE_STRING DeviceName = RTL_CONSTANT_STRING(DEVICE_NAME);
 
-  DPRINT("NTFS 0.0.1\n");
-
-  Status = IoCreateDevice(DriverObject,
-			  sizeof(NTFS_GLOBAL_DATA),
-			  &DeviceName,
-			  FILE_DEVICE_DISK_FILE_SYSTEM,
-			  0,
-			  FALSE,
-			  &DeviceObject);
-  if (!NT_SUCCESS(Status))
-    {
-      return(Status);
-    }
+  TRACE_(NTFS, "DriverEntry(%p, '%wZ')\n", DriverObject, RegistryPath);
 
   /* Initialize global data */
-  NtfsGlobalData = DeviceObject->DeviceExtension;
-  RtlZeroMemory(NtfsGlobalData,
-		sizeof(NTFS_GLOBAL_DATA));
+  NtfsGlobalData = ExAllocatePoolWithTag(NonPagedPool, sizeof(NTFS_GLOBAL_DATA), TAG('N', 'D', 'R', 'G'));
+  if (!NtfsGlobalData)
+  {
+    Status = STATUS_INSUFFICIENT_RESOURCES;
+    goto ErrorEnd;
+  }
+  RtlZeroMemory(NtfsGlobalData, sizeof(NTFS_GLOBAL_DATA));
+  NtfsGlobalData->Identifier.Type = NTFS_TYPE_GLOBAL_DATA;
+  NtfsGlobalData->Identifier.Size = sizeof(NTFS_GLOBAL_DATA);
+  
+  ExInitializeResourceLite(&NtfsGlobalData->Resource);
+
+  /* Keep trace of Driver Object */
   NtfsGlobalData->DriverObject = DriverObject;
-  NtfsGlobalData->DeviceObject = DeviceObject;
 
-  /* Initialize driver data */
-  DeviceObject->Flags |= DO_DIRECT_IO;
-  DriverObject->MajorFunction[IRP_MJ_CLOSE] = NtfsClose;
-  DriverObject->MajorFunction[IRP_MJ_CREATE] = NtfsCreate;
-  DriverObject->MajorFunction[IRP_MJ_READ] = NtfsRead;
-  DriverObject->MajorFunction[IRP_MJ_WRITE] = NtfsWrite;
-  DriverObject->MajorFunction[IRP_MJ_FILE_SYSTEM_CONTROL] =
-    NtfsFileSystemControl;
-  DriverObject->MajorFunction[IRP_MJ_DIRECTORY_CONTROL] =
-    NtfsDirectoryControl;
-  DriverObject->MajorFunction[IRP_MJ_QUERY_INFORMATION] =
-    NtfsQueryInformation;
-  DriverObject->MajorFunction[IRP_MJ_QUERY_VOLUME_INFORMATION] =
-    NtfsQueryVolumeInformation;
-  DriverObject->MajorFunction[IRP_MJ_SET_VOLUME_INFORMATION] =
-    NtfsSetVolumeInformation;
-
+  /* Initialize IRP functions array */
+  NtfsInitializeFunctionPointers(DriverObject);
+  /* Driver can't be unloaded */
   DriverObject->DriverUnload = NULL;
 
-  IoRegisterFileSystem(DeviceObject);
+  Status = IoCreateDevice(DriverObject,
+                          sizeof(NTFS_GLOBAL_DATA),
+                          &DeviceName,
+                          FILE_DEVICE_DISK_FILE_SYSTEM,
+                          0,
+                          FALSE,
+                          &NtfsGlobalData->DeviceObject);
+  if (!NT_SUCCESS(Status))
+  {
+    WARN_(NTFS, "IoCreateDevice failed with status: %lx\n", Status);
+    goto ErrorEnd;
+  }
 
-  return(STATUS_SUCCESS);
+  /* Register file system */
+  IoRegisterFileSystem(NtfsGlobalData->DeviceObject);
+  ObReferenceObject(NtfsGlobalData->DeviceObject);
+
+ErrorEnd:
+
+  if (!NT_SUCCESS(Status))
+  {
+    if (NtfsGlobalData)
+    {
+      ExDeleteResourceLite(&NtfsGlobalData->Resource);
+      ExFreePoolWithTag(NtfsGlobalData, TAG('N', 'D', 'R', 'G'));
+    }
+  }
+  
+
+  return Status;
+}
+
+VOID NTAPI 
+NtfsInitializeFunctionPointers(PDRIVER_OBJECT DriverObject)
+/*
+ * FUNCTION: Called within the driver entry to initialize the IRP functions array 
+ * ARGUMENTS:
+ *           DriverObject = object describing this driver
+ * RETURNS: Nothing
+ */
+{
+  DriverObject->MajorFunction[IRP_MJ_CLOSE]                    = NtfsClose;
+  DriverObject->MajorFunction[IRP_MJ_CREATE]                   = NtfsCreate;
+  DriverObject->MajorFunction[IRP_MJ_READ]                     = NtfsRead;
+  DriverObject->MajorFunction[IRP_MJ_WRITE]                    = NtfsWrite;
+  DriverObject->MajorFunction[IRP_MJ_FILE_SYSTEM_CONTROL]      = NtfsFileSystemControl;
+  DriverObject->MajorFunction[IRP_MJ_DIRECTORY_CONTROL]        = NtfsDirectoryControl;
+  DriverObject->MajorFunction[IRP_MJ_QUERY_INFORMATION]        = NtfsQueryInformation;
+  DriverObject->MajorFunction[IRP_MJ_QUERY_VOLUME_INFORMATION] = NtfsQueryVolumeInformation;
+  DriverObject->MajorFunction[IRP_MJ_SET_VOLUME_INFORMATION]   = NtfsSetVolumeInformation;
+    
+  return;
 }
 

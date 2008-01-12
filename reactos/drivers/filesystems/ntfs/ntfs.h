@@ -8,7 +8,6 @@
 
 #define USE_ROS_CC_AND_FS
 
-
 #define CACHEPAGESIZE(pDeviceExt) \
 	((pDeviceExt)->NtfsInfo.UCHARsPerCluster > PAGE_SIZE ? \
 	 (pDeviceExt)->NtfsInfo.UCHARsPerCluster : PAGE_SIZE)
@@ -18,6 +17,8 @@
 #endif
 
 #define ROUND_UP(N, S) ((((N) + (S) - 1) / (S)) * (S))
+
+#define DEVICE_NAME L"\\Ntfs"
 
 #include <pshpack1.h>
 typedef struct _BIOS_PARAMETERS_BLOCK
@@ -150,8 +151,18 @@ typedef struct _CCB
 
 #define TAG_CCB TAG('I', 'C', 'C', 'B')
 
+#define NTFS_TYPE_GLOBAL_DATA TAG('F','S',0,7)
+
 typedef struct
 {
+  ULONG Type;
+  ULONG Size;
+} NTFSIDENTIFIER, *PNTFSIDENTIFIER;
+
+typedef struct
+{
+  NTFSIDENTIFIER Identifier;
+  ERESOURCE      Resource;
   PDRIVER_OBJECT DriverObject;
   PDEVICE_OBJECT DeviceObject;
   ULONG Flags;
@@ -544,8 +555,7 @@ NtfsSetVolumeInformation(PDEVICE_OBJECT DeviceObject,
 
 /* ntfs.c */
 
-NTSTATUS STDCALL
-DriverEntry(PDRIVER_OBJECT DriverObject,
-	    PUNICODE_STRING RegistryPath);
+DRIVER_INITIALIZE DriverEntry;
 
+VOID NTAPI NtfsInitializeFunctionPointers(PDRIVER_OBJECT DriverObject);
 #endif /* NTFS_H */
