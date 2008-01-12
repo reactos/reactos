@@ -628,6 +628,7 @@ BEGIN
 	IDS_COMMON_PICTURES         "Documentos\\Mis imágenes"
 	IDS_COMMON_VIDEO            "Documentos\\Mis vídeos"
 	IDS_CDBURN_AREA             "Configuración local\\Datos de programa\\Microsoft\\CD Burning"
+	IDS_NETWORKPLACE            "My Network Place"
 
 	IDS_NEWFOLDER               "Nueva carpeta"
 

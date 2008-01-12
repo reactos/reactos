@@ -627,6 +627,7 @@ BEGIN
 	IDS_COMMON_PICTURES         "Documenti\\Foto"
 	IDS_COMMON_VIDEO            "Documenti\\Video"
 	IDS_CDBURN_AREA             "Impostazioni Locali\\Dati Applicazioni\\Microsoft\\Masterizza CD"
+	IDS_NETWORKPLACE            "My Network Place"
 
 	IDS_NEWFOLDER               "New Folder"
 

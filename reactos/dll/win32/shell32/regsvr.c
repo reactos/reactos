@@ -616,7 +616,7 @@ static struct regsvr_coclass const coclass_list[] = {
     },
     {   &CLSID_NetworkPlaces,
 	"My Network Places",
-	0,
+	IDS_NETWORKPLACE,
 	NULL,
 	"shell32.dll",
 	"Apartment"

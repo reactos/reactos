@@ -624,6 +624,7 @@ BEGIN
 	IDS_COMMON_PICTURES         "Общие документы\\Мои рисунки"
 	IDS_COMMON_VIDEO            "Общие документы\\Мои фильмы"
 	IDS_CDBURN_AREA             "Local Settings\\Application Data\\Microsoft\\CD Burning"
+	IDS_NETWORKPLACE            "My Network Place"
 
 	IDS_NEWFOLDER               "Новая папка"
 

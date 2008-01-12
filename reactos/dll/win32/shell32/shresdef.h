@@ -86,6 +86,7 @@
 #define IDS_DRIVE_FIXED             72
 #define IDS_DRIVE_CDROM             73
 #define IDS_DRIVE_NETWORK           74
+#define IDS_NETWORKPLACE            75
 
 #define IDS_CREATEFOLDER_DENIED     128
 #define IDS_CREATEFOLDER_CAPTION    129
