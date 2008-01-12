@@ -33,7 +33,7 @@ BEGIN
     COMBOBOX IDC_TIMEZONELIST, 5, 4, 241, 136,
              CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
     CONTROL  "", IDC_WORLD_BACKGROUND, "Static", SS_OWNERDRAW, 5, 20, 240, 110, WS_EX_STATICEDGE
-    AUTOCHECKBOX "Automatically adjust clock for &daylight saving changes",
+    AUTOCHECKBOX "Automatically adjust clock for &Daylight Saving changes",
                  IDC_AUTODAYLIGHT, 6, 132, 242, 11, WS_VISIBLE | WS_GROUP | WS_TABSTOP
 END
 
@@ -50,7 +50,7 @@ BEGIN
     PUSHBUTTON      "Update Now", IDC_UPDATEBUTTON, 187, 22, 49, 14
     LTEXT           "", IDC_SUCSYNC, 12, 54, 214, 23
     LTEXT           "", IDC_NEXTSYNC, 12, 96, 137, 12
-    LTEXT           "Synchronization can only occur when your computer is connected to the internet.", -1, 12, 114, 225, 25
+    LTEXT           "Synchronization can only occur when your computer is connected to the Internet.", -1, 12, 114, 225, 25
 END
 
 

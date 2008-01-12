@@ -31,6 +31,7 @@
 #define NDEBUG
 #include <debug.h>
 
+#include "lang/bg-BG.h"
 #include "lang/en-US.h"
 #include "lang/de-DE.h"
 #include "lang/el-GR.h"
@@ -53,6 +54,16 @@ static const MUI_LANGUAGE LanguageList[] =
         L"English",         /* Language Name , not used just to make things easier when updating this file */
         enUSPages,          /* Translated page strings  */
         enUSErrorEntries    /* Translated error strings */
+    },
+    {
+        L"00000402",
+        L"00000402",
+        L"1251",
+        L"866",
+        L"10007",
+        L"Bulgarian",
+        bgBGPages,
+        bgBGErrorEntries
     },
     {
         L"0000040C",

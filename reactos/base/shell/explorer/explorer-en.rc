@@ -91,7 +91,7 @@ IDM_NOTIFYAREA MENU DISCARDABLE
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "&Show hidden icons",          ID_SHOW_HIDDEN_ICONS
+        MENUITEM "&Show Hidden Icons",          ID_SHOW_HIDDEN_ICONS
         MENUITEM "Show Icon &Button",           ID_SHOW_ICON_BUTTON
         MENUITEM "&Configure Notifications...", ID_CONFIG_NOTIFYAREA
         MENUITEM "Adjust Date/&Time...",        ID_CONFIG_TIME
@@ -172,7 +172,7 @@ STYLE WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Desktop Properties"
 FONT 8, "MS Sans Serif"
 BEGIN
-    LTEXT           "Please select your prefered icon alignment algorithm:",
+    LTEXT           "Please select your preferred icon alignment algorithm:",
                     IDC_STATIC,7,7,166,8
     CONTROL         "left/top dwn",IDC_ICON_ALIGN_0,"Button",BS_OWNERDRAW |
                     BS_BOTTOM | WS_TABSTOP,7,25,46,44
@@ -207,9 +207,9 @@ STYLE WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Taskbar Properties"
 FONT 8, "MS Sans Serif"
 BEGIN
-    CONTROL         "show &clock",ID_SHOW_CLOCK,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "Show &clock",ID_SHOW_CLOCK,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,7,152,52,10
-    CONTROL         "&hide inactive notification icons",
+    CONTROL         "&Hide inactive notification icons",
                     ID_HIDE_INACTIVE_ICONS,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,7,174,111,10
     PUSHBUTTON      "&Notifications...",ID_CONFIG_NOTIFYAREA,153,173,50,14
@@ -217,7 +217,7 @@ END
 
 IDD_DESKBAR_STARTMENU DIALOG DISCARDABLE  0, 0, 210, 194
 STYLE WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Startmenu Properties"
+CAPTION "Start Menu Properties"
 FONT 8, "MS Sans Serif"
 BEGIN
 END
@@ -260,7 +260,7 @@ EXSTYLE WS_EX_APPWINDOW
 CAPTION "Choose Explorer window mode"
 FONT 8, "MS Sans Serif", 0, 0, 0x1
 BEGIN
-    LTEXT           "Please select your prefered explorer user interface:",
+    LTEXT           "Please select your preferred Explorer user interface:",
                     IDC_STATIC,7,7,160,8
     CONTROL         "&MDI (Multiple Document Interface)",IDC_MDI,"Button",
                     BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,7,31,124,10
@@ -271,7 +271,7 @@ BEGIN
     CONTROL         "Open Subfolders in s&eparate windows",
                     IDC_SEPARATE_SUBFOLDERS,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,7,90,135,10
-    LTEXT           "This setting will be used as default for all explorer windows in the future.",
+    LTEXT           "This setting will be used as default for all Explorer windows in the future.",
                     IDC_STATIC,7,111,174,22
     DEFPUSHBUTTON   "&OK",IDOK,29,136,50,14,WS_GROUP
     PUSHBUTTON      "&Cancel",IDCANCEL,106,136,50,14
@@ -346,17 +346,17 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_STARTMENU           "Startmenu"
-    IDS_MINIMIZE_ALL        "minimize all windows"
+    IDS_STARTMENU           "Start Menu"
+    IDS_MINIMIZE_ALL        "Minimize all windows"
     IDS_DESKTOP_NUM         "Desktop %d"
     IDS_VOLUME              "Volume"
-    IDS_ITEMS_CUR           "current items"
-    IDS_ITEMS_CONFIGURED    "configuration"
-    IDS_ITEMS_VISIBLE       "visible"
-    IDS_ITEMS_HIDDEN        "hidden"
-    IDS_NOTIFY_SHOW         "show"
-    IDS_NOTIFY_HIDE         "hide"
-    IDS_NOTIFY_AUTOHIDE     "autohide"
+    IDS_ITEMS_CUR           "Current items"
+    IDS_ITEMS_CONFIGURED    "Configuration"
+    IDS_ITEMS_VISIBLE       "Visible"
+    IDS_ITEMS_HIDDEN        "Hidden"
+    IDS_NOTIFY_SHOW         "Show"
+    IDS_NOTIFY_HIDE         "Hide"
+    IDS_NOTIFY_AUTOHIDE     "Autohide"
     IDS_SHOW_HIDDEN_ICONS   "Show hidden icons"
     IDS_HIDE_ICONS          "Hide icons"
     IDS_TERMINATE           "Terminate ROS Explorer"
@@ -397,6 +397,7 @@ END
 
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
+
 
 
 

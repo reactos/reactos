@@ -34,11 +34,11 @@ MAIN_MENU MENU
   MENUITEM "Из&ход", MNID_FILE_EXIT
  }
  POPUP "&Обработка" {
-   MENUITEM "За&помняне & Kav", MNID_EDIT_COPYDLG
+   MENUITEM "За&помняне", MNID_EDIT_COPYDLG
    MENUITEM SEPARATOR
    MENUITEM "&Разясняване...", MNID_EDIT_ANNOTATE
  }
- POPUP "&Bookmark" {
+ POPUP "&Отметка" {
    MENUITEM "&Задаване...", MNID_BKMK_DEFINE
  }
  POPUP "Помо&щ" {
