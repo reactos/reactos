@@ -425,6 +425,9 @@ MmInit1(ULONG_PTR FirstKrnlPhysAddr,
 BOOLEAN RmapReady, PageOpReady, SectionsReady, PagingReady;
 extern KMUTANT MmSystemLoadLock;
 
+VOID 
+MmInitSectionImplementation2(VOID);
+
 BOOLEAN
 NTAPI
 MmInitSystem(IN ULONG Phase,
@@ -488,6 +491,7 @@ MmInitSystem(IN ULONG Phase,
         MmInitBsmThread();
 
         /* FIXME: Read parameters from memory */
+        MmInitSectionImplementation2();
     }
 
     return TRUE;
