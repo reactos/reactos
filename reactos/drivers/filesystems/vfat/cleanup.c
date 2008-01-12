@@ -71,7 +71,7 @@ VfatCleanupFile(PVFAT_IRP_CONTEXT IrpContext)
         }
 
         if (pFcb->Flags & FCB_DELETE_PENDING &&
-            pFcb->OpenHandleCount == 1)
+            pFcb->OpenHandleCount == 0)
         {
             PFILE_OBJECT tmpFileObject;
             tmpFileObject = pFcb->FileObject;
