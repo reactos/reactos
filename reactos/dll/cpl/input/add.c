@@ -31,30 +31,6 @@
 
 HWND hLanguageList;
 
-/*struct LangAndLayout
-{
-	TCHAR Lang;
-	TCHAR Layout;
-	TCHAR SubLayout;
-} VarLang[133];
-
-char *SubLang[133] = {}
-
-VOID CreateLangStruct(VOID)
-{
-	UINT Count;
-	TCHAR Layout[256];
-
-	for(Count = 0; Count < END_LAYOUT - BEGIN_LAYOUT; Count++)
-	{
-		LoadString(hApplet,
-				   Count,
-				   Layout,
-				   sizeof(Layout) / sizeof(TCHAR));
-		strcpy(VarLang[Count].Layout,Layout);
-	}
-}*/
-
 /* Language enumerate procedure */
 BOOL
 CALLBACK
@@ -85,7 +61,6 @@ static
 VOID
 CreateLanguagesList(HWND hWnd)
 {
-    //TCHAR LangSel[256];
 
     hLanguageList = hWnd;
     EnumSystemLocales(LanguagesEnumProc, LCID_INSTALLED);

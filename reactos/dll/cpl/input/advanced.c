@@ -74,7 +74,7 @@ SaveSettings(HWND hWnd)
             dwValue = 0x1;
         else
             dwValue = 0x0;
-		RegSetValueEx(hKey,
+        RegSetValueEx(hKey,
                       L"Disable Thread Input Manager",
                       0,
                       REG_DWORD,
@@ -117,12 +117,12 @@ AdvancedPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
                     if (SendDlgItemMessage(hwndDlg, IDC_TURNOFF_ADV_TXTSERV_CHECKBOX, BM_GETCHECK, 0, 0) == BST_CHECKED)
                     {
                         EnableWindow(GetDlgItem(hwndDlg, IDC_SUPPORT_ADV_SERV_CHECKBOX),FALSE);
-						EnableWindow(GetDlgItem(hwndDlg, IDC_SUPPORT_ADV_SERV_TEXT),FALSE);
+                        EnableWindow(GetDlgItem(hwndDlg, IDC_SUPPORT_ADV_SERV_TEXT),FALSE);
                     }
                     else
                     {
                         EnableWindow(GetDlgItem(hwndDlg, IDC_SUPPORT_ADV_SERV_CHECKBOX),TRUE);
-						EnableWindow(GetDlgItem(hwndDlg, IDC_SUPPORT_ADV_SERV_TEXT),TRUE);
+                        EnableWindow(GetDlgItem(hwndDlg, IDC_SUPPORT_ADV_SERV_TEXT),TRUE);
                     }
                     PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                 }

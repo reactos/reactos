@@ -262,8 +262,8 @@ SettingPageProc(HWND hwndDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
         case WM_INITDIALOG:
         {
             InitLangList(hwndDlg);
-			EnableWindow(GetDlgItem(hwndDlg, IDC_PROP_BUTTON),FALSE);
-			EnableWindow(GetDlgItem(hwndDlg, IDC_SET_DEFAULT),FALSE);
+            EnableWindow(GetDlgItem(hwndDlg, IDC_PROP_BUTTON),FALSE);
+            EnableWindow(GetDlgItem(hwndDlg, IDC_SET_DEFAULT),FALSE);
         }
             break;
         case WM_NOTIFY:
@@ -285,7 +285,7 @@ SettingPageProc(HWND hwndDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
                 break;
             }
         }
-		    break;
+            break;
         case WM_COMMAND:
             switch (LOWORD(wParam))
             {
