@@ -1,23 +1,14 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS ReactX
- * FILE:            dll/directx/d3d9/d3d9_helpers.c
- * PURPOSE:         d3d9.dll helper functions
+ * FILE:            dll/directx/d3d9/d3d9_private.h
+ * PURPOSE:         d3d9.dll internal structures
  * PROGRAMERS:      Gregor Brunmar <gregor (dot) brunmar (at) home (dot) se>
  */
 #ifndef _D3D9_PRIVATE_H_
 #define _D3D9_PRIVATE_H_
 
-#define COBJMACROS
 #include <windows.h>
-#include <d3d9.h>
-
-#define DLLAPI __declspec(dllexport)
-#define DX_D3D9_DEBUG 0x80000000
-
-typedef IDirect3D9* (WINAPI *LPDIRECT3DCREATE9)(UINT);
-
-extern const IDirect3D9Vtbl Direct3D9_Vtbl;
 
 typedef struct _tagDIRECT3D9DisplayAdapterInfo_
 {
@@ -133,7 +124,7 @@ typedef struct _tagDIRECT3D9DisplayAdapterInfo_
 
 typedef struct _tagDIRECT3D9_INT_
 {
-/* 0x0000 */    const IDirect3D9Vtbl *lpVtbl; /* LPDIRECTD3D9 functoions table */
+/* 0x0000 */    const struct IDirect3D9Vtbl *lpVtbl; /* LPDIRECTD3D9 functoions table */
 /* 0x0004 */    CRITICAL_SECTION d3d9_cs;
 /* 0x001c */    DWORD unknown000007;    /* 0x00000001 */
 /* 0x0020 */    DWORD dwProcessId;

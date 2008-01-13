@@ -7,13 +7,15 @@
  *                  Gregor Brunmar <gregor (dot) brunmar (at) home (dot) se>
  */
 
-#include <windows.h>
-#include "d3d9_private.h"
+#include <d3d9.h>
 #include "d3d9_helpers.h"
+#include "d3d9_create.h"
 
 #include <debug.h>
 
 #define DEBUG_MESSAGE_BUFFER_SIZE   512
+
+typedef IDirect3D9* (WINAPI *LPDIRECT3DCREATE9)(UINT);
 
 static LPCSTR D3dError_WrongSdkVersion =
     "D3D ERROR: D3D header version mismatch.\n"

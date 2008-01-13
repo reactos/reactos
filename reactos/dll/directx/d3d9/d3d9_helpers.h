@@ -8,6 +8,7 @@
 #ifndef _D3D9_HELPERS_H_
 #define _D3D9_HELPERS_H_
 
+#include "d3d9_common.h"
 #include "d3d9_private.h"
 
 /* Convert a IDirect3D9 pointer safely to the internal implementation struct */
@@ -18,9 +19,6 @@ BOOL ReadRegistryValue(IN DWORD ValueType, IN LPCSTR ValueName, OUT LPBYTE DataB
 
 /* Formats debug strings */
 HRESULT FormatDebugString(IN OUT LPSTR Buffer, IN LONG BufferSize, IN LPCSTR FormatString, ... );
-
-/* Creates a Direct3D9 object */
-HRESULT CreateD3D9(OUT LPDIRECT3D9 *ppDirect3D9);
 
 /* Allocates memory and returns an aligned pointer */
 HRESULT AlignedAlloc(IN OUT LPVOID *ppObject, IN SIZE_T dwSize);

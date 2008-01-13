@@ -5,8 +5,10 @@
  * PURPOSE:         IDirect3D9 implementation
  * PROGRAMERS:      Gregor Brunmar <gregor (dot) brunmar (at) home (dot) se>
  */
-#include "d3d9_helpers.h"
 
+#include "d3d9_common.h"
+#include <d3d9.h>
+#include "d3d9_helpers.h"
 #include <debug.h>
 
 /* IDirect3D9: IUnknown implementation */
