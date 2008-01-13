@@ -28,7 +28,7 @@ VOID
 RegInitializeRegistry (VOID)
 {
   /* Create root key */
-  RootKey = (FRLDRHKEY) MmAllocateMemory (sizeof(KEY));
+  RootKey = (FRLDRHKEY) MmHeapAlloc (sizeof(KEY));
 
   InitializeListHead (&RootKey->SubKeyList);
   InitializeListHead (&RootKey->ValueList);
@@ -38,7 +38,7 @@ RegInitializeRegistry (VOID)
   RootKey->ValueCount = 0;
 
   RootKey->NameSize = 4;
-  RootKey->Name = MmAllocateMemory (4);
+  RootKey->Name = MmHeapAlloc (4);
   wcscpy (RootKey->Name, L"\\");
 
   RootKey->DataType = 0;
@@ -244,7 +244,7 @@ RegCreateKey(FRLDRHKEY ParentKey,
       if (CmpResult != 0)
 	{
 	  /* no key found -> create new subkey */
-	  NewKey = (FRLDRHKEY)MmAllocateMemory(sizeof(KEY));
+	  NewKey = (FRLDRHKEY)MmHeapAlloc(sizeof(KEY));
 	  if (NewKey == NULL)
 	    return(ERROR_OUTOFMEMORY);
 
@@ -262,7 +262,7 @@ RegCreateKey(FRLDRHKEY ParentKey,
 	  CurrentKey->SubKeyCount++;
 
 	  NewKey->NameSize = NameSize;
-	  NewKey->Name = (PWCHAR)MmAllocateMemory(NewKey->NameSize);
+	  NewKey->Name = (PWCHAR)MmHeapAlloc(NewKey->NameSize);
 	  if (NewKey->Name == NULL)
 	    return(ERROR_OUTOFMEMORY);
 	  memcpy(NewKey->Name, name, NewKey->NameSize - sizeof(WCHAR));
@@ -468,7 +468,7 @@ RegSetValue(FRLDRHKEY Key,
       /* set default value */
       if ((Key->Data != NULL) && (Key->DataSize > sizeof(PUCHAR)))
 	{
-	  MmFreeMemory(Key->Data);
+	  MmHeapFree(Key->Data);
 	}
 
       if (DataSize <= sizeof(PUCHAR))
@@ -479,7 +479,7 @@ RegSetValue(FRLDRHKEY Key,
 	}
       else
 	{
-	  Key->Data = MmAllocateMemory(DataSize);
+	  Key->Data = MmHeapAlloc(DataSize);
 	  Key->DataSize = DataSize;
 	  Key->DataType = Type;
 	  memcpy(Key->Data, Data, DataSize);
@@ -508,7 +508,7 @@ RegSetValue(FRLDRHKEY Key,
 	  /* add new value */
 	  DbgPrint((DPRINT_REGISTRY, "No value found - adding new value\n"));
 
-	  Value = (PVALUE)MmAllocateMemory(sizeof(VALUE));
+	  Value = (PVALUE)MmHeapAlloc(sizeof(VALUE));
 	  if (Value == NULL)
 	    return(ERROR_OUTOFMEMORY);
 
@@ -516,7 +516,7 @@ RegSetValue(FRLDRHKEY Key,
 	  Key->ValueCount++;
 
 	  Value->NameSize = (wcslen(ValueName)+1)*sizeof(WCHAR);
-	  Value->Name = (PWCHAR)MmAllocateMemory(Value->NameSize);
+	  Value->Name = (PWCHAR)MmHeapAlloc(Value->NameSize);
 	  if (Value->Name == NULL)
 	    return(ERROR_OUTOFMEMORY);
 	  wcscpy(Value->Name, ValueName);
@@ -528,7 +528,7 @@ RegSetValue(FRLDRHKEY Key,
       /* set new value */
       if ((Value->Data != NULL) && (Value->DataSize > sizeof(PUCHAR)))
 	{
-	  MmFreeMemory(Value->Data);
+	  MmHeapFree(Value->Data);
 	}
 
       if (DataSize <= sizeof(PUCHAR))
@@ -539,7 +539,7 @@ RegSetValue(FRLDRHKEY Key,
 	}
       else
 	{
-	  Value->Data = MmAllocateMemory(DataSize);
+	  Value->Data = MmHeapAlloc(DataSize);
 	  if (Value->Data == NULL)
 	    return(ERROR_OUTOFMEMORY);
 	  Value->DataType = Type;

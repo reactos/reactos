@@ -37,7 +37,7 @@ BOOLEAN IniFileInitialize(VOID)
 
 	// Get the file size & allocate enough memory for it
 	FreeLoaderIniFileSize = FsGetFileSize(Freeldr_Ini);
-	FreeLoaderIniFileData = MmAllocateMemory(FreeLoaderIniFileSize);
+	FreeLoaderIniFileData = MmHeapAlloc(FreeLoaderIniFileSize);
 
 	// If we are out of memory then return FALSE
 	if (FreeLoaderIniFileData == NULL)
@@ -51,7 +51,7 @@ BOOLEAN IniFileInitialize(VOID)
 	if (!FsReadFile(Freeldr_Ini, FreeLoaderIniFileSize, NULL, FreeLoaderIniFileData))
 	{
 		FsCloseFile(Freeldr_Ini);
-		MmFreeMemory(FreeLoaderIniFileData);
+		MmHeapFree(FreeLoaderIniFileData);
 		return FALSE;
 	}
 
@@ -60,7 +60,7 @@ BOOLEAN IniFileInitialize(VOID)
 	// Parse the .ini file data
 	Success = IniParseFile(FreeLoaderIniFileData, FreeLoaderIniFileSize);
 
-	MmFreeMemory(FreeLoaderIniFileData);
+	MmHeapFree(FreeLoaderIniFileData);
 
 	return Success;
 }

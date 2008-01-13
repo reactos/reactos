@@ -139,7 +139,7 @@ static PVOID IsoBufferDirectory(ULONG DirectoryStartSector, ULONG DirectoryLengt
 	// Attempt to allocate memory for directory buffer
 	//
 	DbgPrint((DPRINT_FILESYSTEM, "Trying to allocate (DirectoryLength) %d bytes.\n", DirectoryLength));
-	DirectoryBuffer = MmAllocateMemory(DirectoryLength);
+	DirectoryBuffer = MmHeapAlloc(DirectoryLength);
 
 	if (DirectoryBuffer == NULL)
 	{
@@ -153,7 +153,7 @@ static PVOID IsoBufferDirectory(ULONG DirectoryStartSector, ULONG DirectoryLengt
 	{
 		if (!MachDiskReadLogicalSectors(IsoDriveNumber, DirectoryStartSector + i, 1, (PVOID)DISKREADBUFFER))
 		{
-			MmFreeMemory(DirectoryBuffer);
+			MmHeapFree(DirectoryBuffer);
 			return NULL;
 		}
 		RtlCopyMemory(Ptr, (PVOID)DISKREADBUFFER, SECTORSIZE);
@@ -224,11 +224,11 @@ static BOOLEAN IsoLookupFile(PCSTR FileName, PISO_FILE_INFO IsoFileInfoPointer)
 		//
 		if (!IsoSearchDirectoryBufferForFile(DirectoryBuffer, DirectoryLength, PathPart, &IsoFileInfo))
 		{
-			MmFreeMemory(DirectoryBuffer);
+			MmHeapFree(DirectoryBuffer);
 			return FALSE;
 		}
 
-		MmFreeMemory(DirectoryBuffer);
+		MmHeapFree(DirectoryBuffer);
 
 		//
 		// If we have another sub-directory to go then

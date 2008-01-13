@@ -131,7 +131,7 @@ BOOLEAN FatOpenVolume(UCHAR DriveNumber, ULONGLONG VolumeStartSector, ULONGLONG 
 	//
 	// Allocate the memory to hold the boot sector
 	//
-	FatVolumeBootSector = (PFAT_BOOTSECTOR) MmAllocateMemory(512);
+	FatVolumeBootSector = (PFAT_BOOTSECTOR) MmHeapAlloc(512);
 	Fat32VolumeBootSector = (PFAT32_BOOTSECTOR) FatVolumeBootSector;
 	FatXVolumeBootSector = (PFATX_BOOTSECTOR) FatVolumeBootSector;
 
@@ -148,7 +148,7 @@ BOOLEAN FatOpenVolume(UCHAR DriveNumber, ULONGLONG VolumeStartSector, ULONGLONG 
 	// If this fails then abort
 	if (!MachDiskReadLogicalSectors(DriveNumber, VolumeStartSector, 1, (PVOID)DISKREADBUFFER))
 	{
-		MmFreeMemory(FatVolumeBootSector);
+		MmHeapFree(FatVolumeBootSector);
 		return FALSE;
 	}
 	RtlCopyMemory(FatVolumeBootSector, (PVOID)DISKREADBUFFER, 512);
@@ -247,7 +247,7 @@ BOOLEAN FatOpenVolume(UCHAR DriveNumber, ULONGLONG VolumeStartSector, ULONGLONG 
 		sprintf(ErrMsg, "Invalid boot sector magic on drive 0x%x (expected 0xaa55 found 0x%x)",
 		        DriveNumber, FatVolumeBootSector->BootSectorMagic);
 		FileSystemError(ErrMsg);
-		MmFreeMemory(FatVolumeBootSector);
+		MmHeapFree(FatVolumeBootSector);
 		return FALSE;
 	}
 
@@ -259,7 +259,7 @@ BOOLEAN FatOpenVolume(UCHAR DriveNumber, ULONGLONG VolumeStartSector, ULONGLONG 
 	   (! ISFATX(FatType) && 64 * 1024 < FatVolumeBootSector->SectorsPerCluster * FatVolumeBootSector->BytesPerSector))
 	{
 		FileSystemError("This file system has cluster sizes bigger than 64k.\nFreeLoader does not support this.");
-		MmFreeMemory(FatVolumeBootSector);
+		MmHeapFree(FatVolumeBootSector);
 		return FALSE;
 	}
 
@@ -332,7 +332,7 @@ BOOLEAN FatOpenVolume(UCHAR DriveNumber, ULONGLONG VolumeStartSector, ULONGLONG 
 			return FALSE;
 		}
 	}
-	MmFreeMemory(FatVolumeBootSector);
+	MmHeapFree(FatVolumeBootSector);
 
 	//
 	// Initialize the disk cache for this drive
@@ -445,7 +445,7 @@ PVOID FatBufferDirectory(ULONG DirectoryStartCluster, ULONG *DirectorySize, BOOL
 	// Attempt to allocate memory for directory buffer
 	//
 	DbgPrint((DPRINT_FILESYSTEM, "Trying to allocate (DirectorySize) %d bytes.\n", *DirectorySize));
-	DirectoryBuffer = MmAllocateMemory(*DirectorySize);
+	DirectoryBuffer = MmHeapAlloc(*DirectorySize);
 
 	if (DirectoryBuffer == NULL)
 	{
@@ -459,7 +459,7 @@ PVOID FatBufferDirectory(ULONG DirectoryStartCluster, ULONG *DirectorySize, BOOL
 	{
 		if (!FatReadVolumeSectors(FatDriveNumber, RootDirSectorStart, RootDirSectors, DirectoryBuffer))
 		{
-			MmFreeMemory(DirectoryBuffer);
+			MmHeapFree(DirectoryBuffer);
 			return NULL;
 		}
 	}
@@ -467,7 +467,7 @@ PVOID FatBufferDirectory(ULONG DirectoryStartCluster, ULONG *DirectorySize, BOOL
 	{
 		if (!FatReadClusterChain(DirectoryStartCluster, 0xFFFFFFFF, DirectoryBuffer))
 		{
-			MmFreeMemory(DirectoryBuffer);
+			MmHeapFree(DirectoryBuffer);
 			return NULL;
 		}
 	}
@@ -817,7 +817,7 @@ BOOLEAN FatLookupFile(PCSTR FileName, PFAT_FILE_INFO FatFileInfoPointer)
 		{
 			if (!FatXSearchDirectoryBufferForFile(DirectoryBuffer, DirectorySize, PathPart, &FatFileInfo))
 			{
-				MmFreeMemory(DirectoryBuffer);
+				MmHeapFree(DirectoryBuffer);
 				return FALSE;
 			}
 		}
@@ -825,12 +825,12 @@ BOOLEAN FatLookupFile(PCSTR FileName, PFAT_FILE_INFO FatFileInfoPointer)
 		{
 			if (!FatSearchDirectoryBufferForFile(DirectoryBuffer, DirectorySize, PathPart, &FatFileInfo))
 			{
-				MmFreeMemory(DirectoryBuffer);
+				MmHeapFree(DirectoryBuffer);
 				return FALSE;
 			}
 		}
 
-		MmFreeMemory(DirectoryBuffer);
+		MmHeapFree(DirectoryBuffer);
 
 		//
 		// If we have another sub-directory to go then
@@ -839,7 +839,7 @@ BOOLEAN FatLookupFile(PCSTR FileName, PFAT_FILE_INFO FatFileInfoPointer)
 		if ((i+1) < NumberOfPathParts)
 		{
 			DirectoryStartCluster = FatFileInfo.FileFatChain[0];
-			MmFreeMemory(FatFileInfo.FileFatChain);
+			MmHeapFree(FatFileInfo.FileFatChain);
 		}
 	}
 
@@ -1007,7 +1007,7 @@ FILE* FatOpenFile(PCSTR FileName)
 		return NULL;
 	}
 
-	FileHandle = MmAllocateMemory(sizeof(FAT_FILE_INFO));
+	FileHandle = MmHeapAlloc(sizeof(FAT_FILE_INFO));
 
 	if (FileHandle == NULL)
 	{
@@ -1071,7 +1071,7 @@ ULONG* FatGetClusterChainArray(ULONG StartCluster)
 	//
 	// Allocate array memory
 	//
-	ArrayPointer = MmAllocateMemory(ArraySize);
+	ArrayPointer = MmHeapAlloc(ArraySize);
 
 	if (ArrayPointer == NULL)
 	{
@@ -1104,7 +1104,7 @@ ULONG* FatGetClusterChainArray(ULONG StartCluster)
 		//
 		if (!FatGetFatEntry(StartCluster, &StartCluster))
 		{
-			MmFreeMemory(ArrayPointer);
+			MmHeapFree(ArrayPointer);
 			return NULL;
 		}
 	}

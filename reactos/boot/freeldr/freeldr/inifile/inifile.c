@@ -178,7 +178,7 @@ BOOLEAN IniAddSection(PCSTR SectionName, ULONG* SectionId)
 	PINI_SECTION	Section;
 
 	// Allocate a new section structure
-	Section = MmAllocateMemory(sizeof(INI_SECTION));
+	Section = MmHeapAlloc(sizeof(INI_SECTION));
 	if (!Section)
 	{
 		return FALSE;
@@ -187,10 +187,10 @@ BOOLEAN IniAddSection(PCSTR SectionName, ULONG* SectionId)
 	RtlZeroMemory(Section, sizeof(INI_SECTION));
 
 	// Allocate the section name buffer
-	Section->SectionName = MmAllocateMemory(strlen(SectionName));
+	Section->SectionName = MmHeapAlloc(strlen(SectionName));
 	if (!Section->SectionName)
 	{
-		MmFreeMemory(Section);
+		MmHeapFree(Section);
 		return FALSE;
 	}
 
@@ -212,7 +212,7 @@ BOOLEAN IniAddSettingValueToSection(ULONG SectionId, PCSTR SettingName, PCSTR Se
 	PINI_SECTION_ITEM	SectionItem;
 
 	// Allocate a new item structure
-	SectionItem = MmAllocateMemory(sizeof(INI_SECTION_ITEM));
+	SectionItem = MmHeapAlloc(sizeof(INI_SECTION_ITEM));
 	if (!SectionItem)
 	{
 		return FALSE;
@@ -221,19 +221,19 @@ BOOLEAN IniAddSettingValueToSection(ULONG SectionId, PCSTR SettingName, PCSTR Se
 	RtlZeroMemory(SectionItem, sizeof(INI_SECTION_ITEM));
 
 	// Allocate the setting name buffer
-	SectionItem->ItemName = MmAllocateMemory(strlen(SettingName) + 1);
+	SectionItem->ItemName = MmHeapAlloc(strlen(SettingName) + 1);
 	if (!SectionItem->ItemName)
 	{
-		MmFreeMemory(SectionItem);
+		MmHeapFree(SectionItem);
 		return FALSE;
 	}
 
 	// Allocate the setting value buffer
-	SectionItem->ItemValue = MmAllocateMemory(strlen(SettingValue) + 1);
+	SectionItem->ItemValue = MmHeapAlloc(strlen(SettingValue) + 1);
 	if (!SectionItem->ItemValue)
 	{
-		MmFreeMemory(SectionItem->ItemName);
-		MmFreeMemory(SectionItem);
+		MmHeapFree(SectionItem->ItemName);
+		MmHeapFree(SectionItem);
 		return FALSE;
 	}
 

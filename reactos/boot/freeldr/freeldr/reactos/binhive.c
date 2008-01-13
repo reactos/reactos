@@ -32,7 +32,7 @@ static PVOID
 NTAPI
 CmpAllocate (SIZE_T Size, BOOLEAN Paged, ULONG Tag)
 {
-  return MmAllocateMemory(Size);
+  return MmHeapAlloc(Size);
 }
 
 
@@ -40,7 +40,7 @@ static VOID
 NTAPI
 CmpFree (PVOID Ptr, IN ULONG Quota)
 {
-  return MmFreeMemory(Ptr);
+  return MmHeapFree(Ptr);
 }
 
 static BOOLEAN
@@ -62,7 +62,7 @@ RegImportValue (PHHIVE Hive,
 
   if (ValueCell->Flags & VALUE_COMP_NAME)
     {
-      wName = MmAllocateMemory ((ValueCell->NameLength + 1)*sizeof(WCHAR));
+      wName = MmHeapAlloc ((ValueCell->NameLength + 1)*sizeof(WCHAR));
       for (i = 0; i < ValueCell->NameLength; i++)
         {
           wName[i] = ((PCHAR)ValueCell->Name)[i];
@@ -71,7 +71,7 @@ RegImportValue (PHHIVE Hive,
     }
   else
     {
-      wName = MmAllocateMemory (ValueCell->NameLength + sizeof(WCHAR));
+      wName = MmHeapAlloc (ValueCell->NameLength + sizeof(WCHAR));
       memcpy (wName,
 	      ValueCell->Name,
 	      ValueCell->NameLength);
@@ -93,7 +93,7 @@ RegImportValue (PHHIVE Hive,
       if (Error != ERROR_SUCCESS)
 	{
 	  DbgPrint((DPRINT_REGISTRY, "RegSetValue() failed!\n"));
-	  MmFreeMemory (wName);
+	  MmHeapFree (wName);
 	  return FALSE;
 	}
     }
@@ -111,12 +111,12 @@ RegImportValue (PHHIVE Hive,
       if (Error != ERROR_SUCCESS)
 	{
 	  DbgPrint((DPRINT_REGISTRY, "RegSetValue() failed!\n"));
-	  MmFreeMemory (wName);
+	  MmHeapFree (wName);
 	  return FALSE;
 	}
     }
 
-  MmFreeMemory (wName);
+  MmHeapFree (wName);
 
   return TRUE;
 }
@@ -147,7 +147,7 @@ RegImportSubKey(PHHIVE Hive,
 
   if (KeyCell->Flags & KEY_COMP_NAME)
     {
-      wName = MmAllocateMemory ((KeyCell->NameLength + 1) * sizeof(WCHAR));
+      wName = MmHeapAlloc ((KeyCell->NameLength + 1) * sizeof(WCHAR));
       for (i = 0; i < KeyCell->NameLength; i++)
         {
           wName[i] = ((PCHAR)KeyCell->Name)[i];
@@ -156,7 +156,7 @@ RegImportSubKey(PHHIVE Hive,
     }
   else
     {
-      wName = MmAllocateMemory (KeyCell->NameLength + sizeof(WCHAR));
+      wName = MmHeapAlloc (KeyCell->NameLength + sizeof(WCHAR));
       memcpy (wName,
 	      KeyCell->Name,
 	      KeyCell->NameLength);
@@ -169,7 +169,7 @@ RegImportSubKey(PHHIVE Hive,
   Error = RegCreateKey (ParentKey,
 			wName,
 			&SubKey);
-  MmFreeMemory (wName);
+  MmHeapFree (wName);
   if (Error != ERROR_SUCCESS)
     {
       DbgPrint((DPRINT_REGISTRY, "RegCreateKey() failed!\n"));

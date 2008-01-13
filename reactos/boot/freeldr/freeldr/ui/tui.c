@@ -559,7 +559,7 @@ VOID TuiMessageBox(PCSTR MessageText)
 	PVOID	ScreenBuffer;
 
 	// Save the screen contents
-	ScreenBuffer = MmAllocateMemory(UiScreenWidth * UiScreenHeight * 2);
+	ScreenBuffer = MmHeapAlloc(UiScreenWidth * UiScreenHeight * 2);
 	TuiSaveScreen(ScreenBuffer);
 
 	// Display the message box
@@ -567,7 +567,7 @@ VOID TuiMessageBox(PCSTR MessageText)
 
 	// Restore the screen contents
 	TuiRestoreScreen(ScreenBuffer);
-	MmFreeMemory(ScreenBuffer);
+	MmHeapFree(ScreenBuffer);
 }
 
 VOID TuiMessageBoxCritical(PCSTR MessageText)
@@ -774,7 +774,7 @@ VOID TuiFadeInBackdrop(VOID)
 
 	if (UiUseSpecialEffects && ! MachVideoIsPaletteFixed())
 	{
-		TuiFadePalette = (PPALETTE_ENTRY)MmAllocateMemory(sizeof(PALETTE_ENTRY) * 64);
+		TuiFadePalette = (PPALETTE_ENTRY)MmHeapAlloc(sizeof(PALETTE_ENTRY) * 64);
 
 		if (TuiFadePalette != NULL)
 		{
@@ -789,7 +789,7 @@ VOID TuiFadeInBackdrop(VOID)
 	if (UiUseSpecialEffects && ! MachVideoIsPaletteFixed() && TuiFadePalette != NULL)
 	{
 		VideoFadeIn(TuiFadePalette, 64);
-		MmFreeMemory(TuiFadePalette);
+		MmHeapFree(TuiFadePalette);
 	}
 }
 
@@ -799,7 +799,7 @@ VOID TuiFadeOut(VOID)
 
 	if (UiUseSpecialEffects && ! MachVideoIsPaletteFixed())
 	{
-		TuiFadePalette = (PPALETTE_ENTRY)MmAllocateMemory(sizeof(PALETTE_ENTRY) * 64);
+		TuiFadePalette = (PPALETTE_ENTRY)MmHeapAlloc(sizeof(PALETTE_ENTRY) * 64);
 
 		if (TuiFadePalette != NULL)
 		{
@@ -817,7 +817,7 @@ VOID TuiFadeOut(VOID)
 	if (UiUseSpecialEffects && ! MachVideoIsPaletteFixed() && TuiFadePalette != NULL)
 	{
 		VideoRestorePaletteState(TuiFadePalette, 64);
-		MmFreeMemory(TuiFadePalette);
+		MmHeapFree(TuiFadePalette);
 	}
 
 }
@@ -841,7 +841,7 @@ BOOLEAN TuiEditBox(PCSTR MessageText, PCHAR EditTextBuffer, ULONG Length)
 	PVOID	ScreenBuffer;
 
 	// Save the screen contents
-	ScreenBuffer = MmAllocateMemory(UiScreenWidth * UiScreenHeight * 2);
+	ScreenBuffer = MmHeapAlloc(UiScreenWidth * UiScreenHeight * 2);
 	TuiSaveScreen(ScreenBuffer);
 
 	// Find the height
@@ -982,7 +982,7 @@ BOOLEAN TuiEditBox(PCSTR MessageText, PCHAR EditTextBuffer, ULONG Length)
 
 	// Restore the screen contents
 	TuiRestoreScreen(ScreenBuffer);
-	MmFreeMemory(ScreenBuffer);
+	MmHeapFree(ScreenBuffer);
 
 	return ReturnCode;
 }

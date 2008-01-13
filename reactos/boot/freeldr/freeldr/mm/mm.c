@@ -310,8 +310,8 @@ VOID MmFreeMemory(PVOID MemoryPointer)
 
 PVOID MmHeapAlloc(ULONG MemorySize)
 {
-	// Stub for WinLdr
-	return NULL;
+	// Temporary forwarder...
+	return MmAllocateMemoryWithType(MemorySize, LoaderOsloaderHeap);
 }
 
 VOID MmHeapFree(PVOID MemoryPointer)

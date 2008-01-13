@@ -465,7 +465,7 @@ VOID UiShowMessageBoxesInSection(PCSTR SectionName)
 			//if (MessageBoxTextSize > 0)
 			{
 				// Allocate enough memory to hold the text
-				MessageBoxText = MmAllocateMemory(MessageBoxTextSize);
+				MessageBoxText = MmHeapAlloc(MessageBoxTextSize);
 
 				if (MessageBoxText)
 				{
@@ -479,7 +479,7 @@ VOID UiShowMessageBoxesInSection(PCSTR SectionName)
 					UiMessageBox(MessageBoxText);
 
 					// Free the memory
-					MmFreeMemory(MessageBoxText);
+					MmHeapFree(MessageBoxText);
 				}
 			}
 		}

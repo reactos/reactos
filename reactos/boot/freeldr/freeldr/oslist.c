@@ -119,8 +119,8 @@ BOOLEAN AllocateListMemory(PCHAR **SectionNamesPointer, PCHAR **DisplayNamesPoin
 	//
 	// Allocate memory to hold operating system list arrays
 	//
-	OperatingSystemSectionNames = MmAllocateMemory( sizeof(PCHAR) * OperatingSystemCount);
-	OperatingSystemDisplayNames = MmAllocateMemory( sizeof(PCHAR) * OperatingSystemCount);
+	OperatingSystemSectionNames = MmHeapAlloc( sizeof(PCHAR) * OperatingSystemCount);
+	OperatingSystemDisplayNames = MmHeapAlloc( sizeof(PCHAR) * OperatingSystemCount);
 
 	//
 	// If either allocation failed then return FALSE
@@ -129,12 +129,12 @@ BOOLEAN AllocateListMemory(PCHAR **SectionNamesPointer, PCHAR **DisplayNamesPoin
 	{
 		if (OperatingSystemSectionNames != NULL)
 		{
-			MmFreeMemory(OperatingSystemSectionNames);
+			MmHeapFree(OperatingSystemSectionNames);
 		}
 
 		if (OperatingSystemDisplayNames != NULL)
 		{
-			MmFreeMemory(OperatingSystemDisplayNames);
+			MmHeapFree(OperatingSystemDisplayNames);
 		}
 
 		return FALSE;
@@ -151,8 +151,8 @@ BOOLEAN AllocateListMemory(PCHAR **SectionNamesPointer, PCHAR **DisplayNamesPoin
 	//
 	for (Idx=0; Idx<OperatingSystemCount; Idx++)
 	{
-		OperatingSystemSectionNames[Idx] = MmAllocateMemory(80);
-		OperatingSystemDisplayNames[Idx] = MmAllocateMemory(80);
+		OperatingSystemSectionNames[Idx] = MmHeapAlloc(80);
+		OperatingSystemDisplayNames[Idx] = MmHeapAlloc(80);
 
 		//
 		// If it failed then jump to the cleanup code
@@ -177,20 +177,20 @@ AllocateListMemoryFailed:
 	{
 		if (OperatingSystemSectionNames[Idx] != NULL)
 		{
-			MmFreeMemory(OperatingSystemSectionNames[Idx]);
+			MmHeapFree(OperatingSystemSectionNames[Idx]);
 		}
 
 		if (OperatingSystemDisplayNames[Idx] != NULL)
 		{
-			MmFreeMemory(OperatingSystemDisplayNames[Idx]);
+			MmHeapFree(OperatingSystemDisplayNames[Idx]);
 		}
 	}
 
 	//
 	// Free operating system list arrays
 	//
-	MmFreeMemory(OperatingSystemSectionNames);
-	MmFreeMemory(OperatingSystemDisplayNames);
+	MmHeapFree(OperatingSystemSectionNames);
+	MmHeapFree(OperatingSystemDisplayNames);
 
 	return FALSE;
 }

@@ -159,7 +159,7 @@ InfpCacheFreeLine (PINFCACHELINE Line)
   Next = Line->Next;
   if (Line->Key != NULL)
     {
-      MmFreeMemory (Line->Key);
+      MmHeapFree (Line->Key);
       Line->Key = NULL;
     }
 
@@ -167,12 +167,12 @@ InfpCacheFreeLine (PINFCACHELINE Line)
   while (Line->FirstField != NULL)
     {
       Field = Line->FirstField->Next;
-      MmFreeMemory (Line->FirstField);
+      MmHeapFree (Line->FirstField);
       Line->FirstField = Field;
     }
   Line->LastField = NULL;
 
-  MmFreeMemory (Line);
+  MmHeapFree (Line);
 
   return Next;
 }
@@ -196,7 +196,7 @@ InfpCacheFreeSection (PINFCACHESECTION Section)
     }
   Section->LastLine = NULL;
 
-  MmFreeMemory (Section);
+  MmHeapFree (Section);
 
   return Next;
 }
@@ -245,7 +245,7 @@ InfpCacheAddSection (PINFCACHE Cache,
 
   /* Allocate and initialize the new section */
   Size = sizeof(INFCACHESECTION) + strlen (Name);
-  Section = (PINFCACHESECTION)MmAllocateMemory (Size);
+  Section = (PINFCACHESECTION)MmHeapAlloc (Size);
   if (Section == NULL)
     {
 //      DPRINT("RtlAllocateHeap() failed\n");
@@ -284,7 +284,7 @@ InfpCacheAddLine (PINFCACHESECTION Section)
       return NULL;
     }
 
-  Line = (PINFCACHELINE)MmAllocateMemory (sizeof(INFCACHELINE));
+  Line = (PINFCACHELINE)MmHeapAlloc (sizeof(INFCACHELINE));
   if (Line == NULL)
     {
 //      DPRINT("RtlAllocateHeap() failed\n");
@@ -320,7 +320,7 @@ InfpAddKeyToLine (PINFCACHELINE Line,
   if (Line->Key != NULL)
     return NULL;
 
-  Line->Key = (PCHAR)MmAllocateMemory (strlen (Key) + 1);
+  Line->Key = (PCHAR)MmHeapAlloc (strlen (Key) + 1);
   if (Line->Key == NULL)
     return NULL;
 
@@ -338,7 +338,7 @@ InfpAddFieldToLine (PINFCACHELINE Line,
   ULONG Size;
 
   Size = sizeof(INFCACHEFIELD) + strlen(Data);
-  Field = (PINFCACHEFIELD)MmAllocateMemory (Size);
+  Field = (PINFCACHEFIELD)MmHeapAlloc (Size);
   if (Field == NULL)
     {
       return NULL;
@@ -906,7 +906,7 @@ InfOpenFile(PHINF InfHandle,
 //  DPRINT("File size: %lu\n", FileLength);
 
   /* Allocate file buffer */
-  FileBuffer = MmAllocateMemory (FileSize + 1);
+  FileBuffer = MmHeapAlloc (FileSize + 1);
   if (FileBuffer == NULL)
     {
 //      DPRINT1("RtlAllocateHeap() failed\n");
@@ -921,7 +921,7 @@ InfOpenFile(PHINF InfHandle,
   if (!Success)
     {
 //      DPRINT("FsReadFile() failed\n");
-      MmFreeMemory (FileBuffer);
+      MmHeapFree (FileBuffer);
       return FALSE;
     }
 
@@ -929,11 +929,11 @@ InfOpenFile(PHINF InfHandle,
   FileBuffer[FileSize] = 0;
 
   /* Allocate infcache header */
-  Cache = (PINFCACHE)MmAllocateMemory (sizeof(INFCACHE));
+  Cache = (PINFCACHE)MmHeapAlloc (sizeof(INFCACHE));
   if (Cache == NULL)
     {
 //      DPRINT("RtlAllocateHeap() failed\n");
-      MmFreeMemory (FileBuffer);
+      MmHeapFree (FileBuffer);
       return FALSE;
     }
 
@@ -948,12 +948,12 @@ InfOpenFile(PHINF InfHandle,
 			     ErrorLine);
   if (!Success)
     {
-      MmFreeMemory (Cache);
+      MmHeapFree (Cache);
       Cache = NULL;
     }
 
   /* Free file buffer */
-  MmFreeMemory (FileBuffer);
+  MmHeapFree (FileBuffer);
 
   *InfHandle = (HINF)Cache;
 
@@ -979,7 +979,7 @@ InfCloseFile(HINF InfHandle)
     }
   Cache->LastSection = NULL;
 
-  MmFreeMemory(Cache);
+  MmHeapFree(Cache);
 }
 
 
