@@ -91,6 +91,7 @@ OPENGL32_ThreadDetach()
 		if (!HeapFree( GetProcessHeap(), 0, lpData ))
 			DBGPRINT( "Warning: HeapFree() on GLTHREADDATA failed (%d)",
 			          GetLastError() );
+		lpData = NULL;
 	}
 
 	dispatchTable = NtCurrentTeb()->glTable;

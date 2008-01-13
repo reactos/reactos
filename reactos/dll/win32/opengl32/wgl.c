@@ -978,6 +978,9 @@ rosglMakeCurrent( HDC hdc, HGLRC hglrc )
 
 	DBGTRACE( "Called!" );
 
+	if (OPENGL32_threaddata == NULL)
+		return FALSE;
+
 	/* flush current context */
 	if (OPENGL32_threaddata->glrc != NULL)
 	{
