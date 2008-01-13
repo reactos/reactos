@@ -29,6 +29,8 @@ BUILDNO_HOST_CXXFLAGS = -I$(TOOLS_BASE) -Iinclude/reactos $(TOOLS_CPPFLAGS)
 
 BUILDNO_HOST_LFLAGS = $(TOOLS_LFLAGS)
 
+BUILDNO_VERSION = include$(SEP)reactos$(SEP)version.h
+
 .PHONY: buildno
 buildno: $(BUILDNO_TARGET)
 
@@ -36,7 +38,7 @@ $(BUILDNO_TARGET): $(BUILDNO_OBJECTS) $(XML_SSPRINTF_OBJECTS) | $(BUILDNO_OUT)
 	$(ECHO_LD)
 	${host_gpp} $^ $(BUILDNO_HOST_LFLAGS) -o $@
 
-$(BUILDNO_INT_)buildno.o: $(BUILDNO_BASE_)buildno.cpp | $(BUILDNO_INT)
+$(BUILDNO_INT_)buildno.o: $(BUILDNO_BASE_)buildno.cpp $(BUILDNO_VERSION) | $(BUILDNO_INT)
 	$(ECHO_CC)
 	${host_gpp} $(BUILDNO_HOST_CXXFLAGS) -c $< -o $@
 
@@ -44,6 +46,10 @@ $(BUILDNO_INT_)buildno.o: $(BUILDNO_BASE_)buildno.cpp | $(BUILDNO_INT)
 buildno_clean:
 	-@$(rm) $(BUILDNO_TARGET) $(BUILDNO_OBJECTS) 2>$(NUL)
 clean: buildno_clean
+
+# Uncomment the following line if you want to automatically
+# update build number after SVN update
+#.PHONY: $(BUILDNO_TARGET)
 
 $(BUILDNO_H): $(BUILDNO_TARGET)
 	${mkdir} $(INTERMEDIATE_)include$(SEP)reactos 2>$(NUL)
