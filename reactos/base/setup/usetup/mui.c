@@ -52,6 +52,10 @@
 #include "lang/pt-PT.h"
 #include "lang/sk-SK.h"
 #include "lang/nb-NO.h"
+#include "lang/zh-CN.h"
+#include "lang/th-TH.h"
+#include "lang/tr-TR.h"
+#include "lang/ko-KR.h"
 
 static const MUI_LANGUAGE LanguageList[] =
 {
@@ -84,6 +88,16 @@ static const MUI_LANGUAGE LanguageList[] =
         L"Catalan",
         caESPages,
         caESErrorEntries
+    },
+    {
+        L"00000804",
+        L"00000804",
+        L"936",
+        L"936",
+        L"10008",
+        L"Chinese (PRC)",
+        zhCNPages,
+        zhCNErrorEntries
     },
     {
         L"00000406",
@@ -186,6 +200,16 @@ static const MUI_LANGUAGE LanguageList[] =
         jaJPErrorEntries
     },
     {
+        L"00000412",
+        L"00000412",
+        L"949",
+        L"949",
+        L"10003",
+        L"Korean",
+        koKRPages,
+        koKRErrorEntries
+    },
+    {
         L"00000414",
         L"00000414",
         L"1252",
@@ -254,6 +278,26 @@ static const MUI_LANGUAGE LanguageList[] =
         L"Swedish",
         svSEPages,
         svSEErrorEntries
+    },
+    {
+        L"0000041E",
+        L"0000041E",
+        L"874",
+        L"874",
+        L"10021",
+        L"Thai",
+        thTHPages,
+        thTHErrorEntries
+    },
+    {
+        L"0000041F",
+        L"0000041F",
+        L"1254",
+        L"857",
+        L"10081",
+        L"Turkish",
+        trTRPages,
+        trTRErrorEntries
     },
     {
         L"00000422",
