@@ -513,7 +513,7 @@ FrLdrReMapImage(IN PVOID Base,
 
     /* Allocate memory for the driver */
     DriverSize = NtHeader->OptionalHeader.SizeOfImage;
-    LoadBase = MmAllocateMemoryAtAddress(DriverSize, LoadBase);
+    LoadBase = MmAllocateMemoryAtAddress(DriverSize, LoadBase, LoaderSystemCode);
     ASSERT(LoadBase);
 
     /* Copy headers over */

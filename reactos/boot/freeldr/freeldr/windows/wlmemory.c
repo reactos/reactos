@@ -19,40 +19,33 @@ extern ULONG TotalNLSSize;
 #undef KIP0PCRADDRESS
 #define KIP0PCRADDRESS                      0xffdff000
 
-//
-// This is the zone which is used by the OS loader
-//
-#define LOADER_HIGH_ZONE ((16*1024*1024) >> MM_PAGE_SHIFT) //16Mb page
-
 #define HYPER_SPACE_ENTRY       0x300
 
-//TODO: Check if this is correct
 PCHAR  MemTypeDesc[]  = {
-    "ExceptionBlock    ",
-    "SystemBlock       ",
+    "ExceptionBlock    ", // ?
+    "SystemBlock       ", // ?
     "Free              ",
-    "Bad               ",
-    "LoadedProgram     ",
-    "FirmwareTemporary ",
-    "FirmwarePermanent ",
-    "OsloaderHeap      ",
-    "OsloaderStack     ",
+    "Bad               ", // used
+    "LoadedProgram     ", // == Free
+    "FirmwareTemporary ", // == Free
+    "FirmwarePermanent ", // == Bad
+    "OsloaderHeap      ", // used
+    "OsloaderStack     ", // == Free
     "SystemCode        ",
     "HalCode           ",
-    "BootDriver        ",
-    "ConsoleInDriver   ",
-    "ConsoleOutDriver  ",
-    "StartupDpcStack   ",
-    "StartupKernelStack",
-    "StartupPanicStack ",
-    "StartupPcrPage    ",
-    "StartupPdrPage    ",
-    "RegistryData      ",
-    "MemoryData        ",
-    "NlsData           ",
-    "SpecialMemory     ",
-    "BBTMemory         ",
-    "Maximum           "
+    "BootDriver        ", // not used
+    "ConsoleInDriver   ", // ?
+    "ConsoleOutDriver  ", // ?
+    "StartupDpcStack   ", // ?
+    "StartupKernelStack", // ?
+    "StartupPanicStack ", // ?
+    "StartupPcrPage    ", // ?
+    "StartupPdrPage    ", // ?
+    "RegistryData      ", // used
+    "MemoryData        ", // not used
+    "NlsData           ", // used
+    "SpecialMemory     ", // == Bad
+    "BBTMemory         " // == Bad
     };
 
 VOID
@@ -61,8 +54,8 @@ WinLdrpDumpMemoryDescriptors(PLOADER_PARAMETER_BLOCK LoaderBlock);
 
 VOID
 MempAddMemoryBlock(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
-                   UINT64 BasePage,
-                   UINT64 PageCount,
+                   ULONG BasePage,
+                   ULONG PageCount,
                    ULONG Type);
 VOID
 WinLdrInsertDescriptor(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
@@ -136,8 +129,9 @@ MempAllocatePageTables()
 
 	// Allocate memory block for all these things:
 	// PDE, HAL mapping page table, physical mapping, kernel mapping
+	// FIXME: PDE+HAL+KernelPTEs == FirmwarePermanent, Physical PTEs = FirmwareTemporary
 	TotalSize = (1+1+NumPageTables*2)*MM_PAGE_SIZE;
-	Buffer = MmAllocateMemory(TotalSize);
+	Buffer = MmAllocateMemoryWithType(TotalSize, LoaderFirmwarePermanent);
 
 	if (Buffer == NULL)
 	{
@@ -167,6 +161,9 @@ MempAllocatePageTables()
 	// Store pointers to the tables for easier access
 	PhysicalPageTablesBuffer = &Buffer[MM_PAGE_SIZE*2];
 	KernelPageTablesBuffer = PhysicalPageTablesBuffer + NumPageTables*MM_PAGE_SIZE;
+
+	// Mark physical PTE's buffer as FirmwareTemporary
+	//MmSetMemoryType(KernelPageTablesBuffer, NumPageTables*MM_PAGE_SIZE, LoaderFirmwareTemporary);
 
 	// Zero counters of page tables used
 	PhysicalPageTables = 0;
@@ -211,7 +208,7 @@ MempSetupPaging(IN ULONG StartPage,
 	ULONG Entry, Page;
 
 	//Print(L"MempSetupPaging: SP 0x%X, Number: 0x%X\n", StartPage, NumberOfPages);
-
+	
 	// HACK
 	if (StartPage+NumberOfPages >= 0x80000)
 	{
@@ -266,9 +263,70 @@ MempSetupPaging(IN ULONG StartPage,
 }
 
 VOID
+MempDisablePages()
+{
+	int i;
+
+	//
+	// We need to delete kernel mapping from memory areas which are
+	// marked as Special or Permanent memory (thus non-accessible)
+	//
+
+	for (i=0; i<MadCount; i++)
+	{
+		ULONG StartPage, EndPage, Page;
+
+		StartPage = Mad[i].BasePage;
+		EndPage = Mad[i].BasePage + Mad[i].PageCount;
+
+		if (Mad[i].MemoryType == LoaderFirmwarePermanent ||
+			Mad[i].MemoryType == LoaderSpecialMemory ||
+			Mad[i].MemoryType == LoaderFree ||
+			(Mad[i].MemoryType == LoaderFirmwareTemporary && EndPage <= LOADER_HIGH_ZONE) ||
+			Mad[i].MemoryType == LoaderOsloaderStack ||
+			Mad[i].MemoryType == LoaderLoadedProgram)
+		{
+
+			//
+			// But, the first megabyte of memory always stays!
+			// And, to tell the truth, we don't care about what's higher
+			// than LOADER_HIGH_ZONE
+			if (Mad[i].MemoryType == LoaderFirmwarePermanent ||
+				Mad[i].MemoryType == LoaderSpecialMemory)
+			{
+				if (StartPage < 0x100)
+					StartPage = 0x100;
+
+				if (EndPage > LOADER_HIGH_ZONE)
+					EndPage = LOADER_HIGH_ZONE;
+			}
+
+			for (Page = StartPage; Page < EndPage; Page++)
+			{
+				PHARDWARE_PTE KernelPT;
+				ULONG Entry = (Page >> 10) + (KSEG0_BASE >> 22);
+
+				if (PDE[Entry].Valid)
+				{
+					KernelPT = (PHARDWARE_PTE)(PDE[Entry].PageFrameNumber << MM_PAGE_SHIFT);
+
+					if (KernelPT)
+					{
+						KernelPT[Page & 0x3ff].PageFrameNumber = 0;
+						KernelPT[Page & 0x3ff].Valid = 0;
+						KernelPT[Page & 0x3ff].Write = 0;
+					}
+				}
+			}
+		}
+	}
+}
+
+
+VOID
 MempAddMemoryBlock(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
-                   UINT64 BasePage,
-                   UINT64 PageCount,
+                   ULONG BasePage,
+                   ULONG PageCount,
                    ULONG Type)
 {
 	BOOLEAN Status;
@@ -285,81 +343,42 @@ MempAddMemoryBlock(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 	}
 
 	//
-	// Base page and page count are always set
+	// Set Base page, page count and type
 	//
 	Mad[MadCount].BasePage = BasePage;
 	Mad[MadCount].PageCount = PageCount;
+	Mad[MadCount].MemoryType = Type;
 
 	//
 	// Check if it's more than the allowed for OS loader
 	// if yes - don't map the pages, just add as FirmwareTemporary
 	//
-	if (BasePage + PageCount > LOADER_HIGH_ZONE && (Type != LoaderNlsData))
+	if (BasePage + PageCount > LOADER_HIGH_ZONE)
 	{
-		Mad[MadCount].MemoryType = LoaderFirmwareTemporary;
+		if (Mad[MadCount].MemoryType != LoaderSpecialMemory ||
+			Mad[MadCount].MemoryType != LoaderFirmwarePermanent)
+		{
+			Mad[MadCount].MemoryType = LoaderFirmwareTemporary;
+		}
 
 		WinLdrInsertDescriptor(LoaderBlock, &Mad[MadCount]);
 		MadCount++;
 
-		Status = MempSetupPaging(BasePage, PageCount);
-		if (!Status)
-		{
-			DbgPrint((DPRINT_WINDOWS, "Error during WinLdrpSetupPaging\n"));
-			return;
-		}
 		return;
 	}
+	
+	//
+	// Add descriptor
+	//
+	WinLdrInsertDescriptor(LoaderBlock, &Mad[MadCount]);
+	MadCount++;
 
-	if (BasePage == 0xFFF && PageCount == 1)
+	//
+	// Map it (don't map low 1Mb because it was already contigiously
+	// mapped in WinLdrTurnOnPaging)
+	//
+	if (BasePage >= 0x100)
 	{
-		Mad[MadCount].MemoryType = LoaderSpecialMemory;
-
-		WinLdrInsertDescriptor(LoaderBlock, &Mad[MadCount]);
-		MadCount++;
-
-		//
-		// Map it
-		//
-		Status = MempSetupPaging(BasePage, PageCount);
-		if (!Status)
-		{
-			DbgPrint((DPRINT_WINDOWS, "Error during MempSetupPaging\n"));
-			return;
-		}
-	}
-	else if (BasePage == 0 && PageCount == 1)
-	{
-		Mad[MadCount].MemoryType = LoaderFirmwarePermanent;
-
-		WinLdrInsertDescriptor(LoaderBlock, &Mad[MadCount]);
-		MadCount++;
-
-		//
-		// Map it
-		//
-		Status = MempSetupPaging(BasePage, PageCount);
-		if (!Status)
-		{
-			DbgPrint((DPRINT_WINDOWS, "Error during MempSetupPaging\n"));
-			return;
-		}
-	}
-	else
-	{
-		//
-		// Set memory type
-		//
-		Mad[MadCount].MemoryType = Type;
-
-		//
-		// Add descriptor
-		//
-		WinLdrInsertDescriptor(LoaderBlock, &Mad[MadCount]);
-		MadCount++;
-
-		//
-		// Map it
-		//
 		Status = MempSetupPaging(BasePage, PageCount);
 		if (!Status)
 		{
@@ -375,13 +394,12 @@ WinLdrTurnOnPaging(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
                    ULONG TssBasePage,
                    PVOID GdtIdt)
 {
-	ULONG i, PagesCount;
-	ULONG LastPageIndex, LastPageType, NtType;
+	ULONG i, PagesCount, MemoryMapSizeInPages;
+	ULONG LastPageIndex, LastPageType, MemoryMapStartPage;
 	PPAGE_LOOKUP_TABLE_ITEM MemoryMap;
 	ULONG NoEntries;
 	PKTSS Tss;
-	PVOID NlsBase = VaToPa(((PNLS_DATA_BLOCK)VaToPa(LoaderBlock->NlsData))->AnsiCodePageData);
-	ULONG NlsBasePage = (ULONG_PTR)NlsBase >> PAGE_SHIFT;
+	BOOLEAN Status;
 
 	//
 	// Creating a suitable memory map for the Windows can be tricky, so let's
@@ -418,76 +436,47 @@ WinLdrTurnOnPaging(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 		return FALSE;
 	}
 
-	DbgPrint((DPRINT_WINDOWS, "Got memory map with %d entries, NlsBasePage 0x%X\n",
-		NoEntries, NlsBasePage));
+	// Calculate parameters of the memory map
+	MemoryMapStartPage = (ULONG_PTR)MemoryMap >> MM_PAGE_SHIFT;
+	MemoryMapSizeInPages = NoEntries * sizeof(PAGE_LOOKUP_TABLE_ITEM);
 
-	// Construct a good memory map from what we've got
+	DbgPrint((DPRINT_WINDOWS, "Got memory map with %d entries\n", NoEntries));
+
+	// Always contigiously map low 1Mb of memory
+	Status = MempSetupPaging(0, 0x100);
+	if (!Status)
+	{
+		DbgPrint((DPRINT_WINDOWS, "Error during MempSetupPaging of low 1Mb\n"));
+		return FALSE;
+	}
+
+	// Construct a good memory map from what we've got,
+	// but mark entries which the memory allocation bitmap takes
+	// as free entries (this is done in order to have the ability
+	// to place mem alloc bitmap outside lower 16Mb zone)
 	PagesCount = 1;
 	LastPageIndex = 0;
 	LastPageType = MemoryMap[0].PageAllocated;
 	for(i=1;i<NoEntries;i++)
 	{
+		// Check if its memory map itself
+		if (i >= MemoryMapStartPage &&
+			i < (MemoryMapStartPage+MemoryMapSizeInPages))
+		{
+			// Exclude it if current page belongs to the memory map
+			MemoryMap[i].PageAllocated = LoaderFree;
+		}
+
+		// Process entry
 		if (MemoryMap[i].PageAllocated == LastPageType &&
-			(i < NlsBasePage || i > NlsBasePage+TotalNLSSize) && (i != NoEntries-1) )
+			(i != NoEntries-1) )
 		{
 			PagesCount++;
-		}
-		else if (i == NlsBasePage)
-		{
-			// This is NLS data, map it accordingly
-			// It's VERY important for NT kernel - it calculates size of NLS
-			// tables based on NlsData memory type descriptors!
-
-			// Firstly map what we already have (if we have any)
-			// Convert mem types
-			if (LastPageType == 0)
-				NtType = LoaderFree;
-			else if (LastPageType != 0 && LastPageType != 1)
-				NtType = LoaderFirmwarePermanent;
-			else if (LastPageType == 1)
-				NtType = LoaderSystemCode;
-			else
-				NtType = LoaderFirmwarePermanent;
-
-			if (PagesCount > 0)
-				MempAddMemoryBlock(LoaderBlock, LastPageIndex, PagesCount, NtType);
-
-			// Then map nls data
-			MempAddMemoryBlock(LoaderBlock, NlsBasePage, TotalNLSSize, LoaderNlsData);
-
-			// skip them
-			i += TotalNLSSize;
-
-			// Reset our counter vars
-			LastPageIndex = i;
-			LastPageType = MemoryMap[i].PageAllocated;
-			PagesCount = 1;
-
-			continue;
 		}
 		else
 		{
 			// Add the resulting region
-
-			// Convert mem types
-			if (LastPageType == 0)
-			{
-				NtType = LoaderFree;
-			}
-			else if (LastPageType != 0 && LastPageType != 1)
-			{
-				NtType = LoaderFirmwarePermanent;
-			}
-			else if (LastPageType == 1)
-			{
-				NtType = LoaderSystemCode;
-			}
-			else
-			{
-				NtType = LoaderFirmwarePermanent;
-			}
-
-			MempAddMemoryBlock(LoaderBlock, LastPageIndex, PagesCount, NtType);
+			MempAddMemoryBlock(LoaderBlock, LastPageIndex, PagesCount, LastPageType);
 
 			// Reset our counter vars
 			LastPageIndex = i;
@@ -495,6 +484,30 @@ WinLdrTurnOnPaging(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 			PagesCount = 1;
 		}
 	}
+
+	// TEMP, DEBUG!
+	// adding special reserved memory zones for vmware workstation
+#if 0
+	{
+		Mad[MadCount].BasePage = 0xfec00;
+		Mad[MadCount].PageCount = 0x10;
+		Mad[MadCount].MemoryType = LoaderSpecialMemory;
+		WinLdrInsertDescriptor(LoaderBlock, &Mad[MadCount]);
+		MadCount++;
+
+		Mad[MadCount].BasePage = 0xfee00;
+		Mad[MadCount].PageCount = 0x1;
+		Mad[MadCount].MemoryType = LoaderSpecialMemory;
+		WinLdrInsertDescriptor(LoaderBlock, &Mad[MadCount]);
+		MadCount++;
+
+		Mad[MadCount].BasePage = 0xfffe0;
+		Mad[MadCount].PageCount = 0x20;
+		Mad[MadCount].MemoryType = LoaderSpecialMemory;
+		WinLdrInsertDescriptor(LoaderBlock, &Mad[MadCount]);
+		MadCount++;
+	}
+#endif
 
 	DbgPrint((DPRINT_WINDOWS, "MadCount: %d\n", MadCount));
 
@@ -527,7 +540,10 @@ WinLdrTurnOnPaging(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 
 	Tss = (PKTSS)(KSEG0_BASE | (TssBasePage << MM_PAGE_SHIFT));
 
-	// Fill the memory descriptor list and
+	// Unmap what is not needed from kernel page table
+	MempDisablePages();
+
+	// Fill the memory descriptor list and 
 	//PrepareMemoryDescriptorList();
 	DbgPrint((DPRINT_WINDOWS, "Memory Descriptor List prepared, printing PDE\n"));
 	List_PaToVa(&LoaderBlock->MemoryDescriptorListHead);
@@ -728,7 +744,7 @@ WinLdrSetProcessorContext(PVOID GdtIdt, IN ULONG Pcr, IN ULONG Tss)
 	//
 	// TSS Selector (0x28)
 	//
-	pGdt[5].LimitLow				= 0x78-1; // 60 dwords
+	pGdt[5].LimitLow				= 0x78-1; //FIXME: Check this
 	pGdt[5].BaseLow = (USHORT)(Tss & 0xffff);
 	pGdt[5].HighWord.Bytes.BaseMid = (UCHAR)((Tss >> 16) & 0xff);
 	pGdt[5].HighWord.Bytes.Flags1	= 0x89;
@@ -829,117 +845,8 @@ WinLdrSetProcessorContext(PVOID GdtIdt, IN ULONG Pcr, IN ULONG Tss)
 	// Some unused descriptors should go here
 	// ...
 
-	//
-	// Fill IDT with Traps
-	//
-#if 0
-	pIdt[0].Offset = (i386DivideByZero | KSEG0_BASE) & 0xFFFF;
-	pIdt[0].ExtendedOffset = 0x8; // Selector
-	pIdt[0].Access = 0x8F00;
-	pIdt[0].Selector = (i386DivideByZero | KSEG0_BASE) >> 16; // Extended Offset
-
-	pIdt[1].Offset = (i386DebugException | KSEG0_BASE) & 0xFFFF;
-	pIdt[1].ExtendedOffset = 0x8; // Selector
-	pIdt[1].Access = 0x8F00;
-	pIdt[1].Selector = (i386DebugException | KSEG0_BASE) >> 16; // Extended Offset
-
-	pIdt[2].Offset = (i386NMIException | KSEG0_BASE) & 0xFFFF;
-	pIdt[2].ExtendedOffset = 0x8; // Selector
-	pIdt[2].Access = 0x8F00;
-	pIdt[2].Selector = (i386NMIException | KSEG0_BASE) >> 16; // Extended Offset
-
-	pIdt[3].Offset = (i386Breakpoint | KSEG0_BASE) & 0xFFFF;
-	pIdt[3].ExtendedOffset = 0x8; // Selector
-	pIdt[3].Access = 0x8F00;
-	pIdt[3].Selector = (i386Breakpoint | KSEG0_BASE) >> 16; // Extended Offset
-
-	pIdt[4].Offset = (i386Overflow | KSEG0_BASE) & 0xFFFF;
-	pIdt[4].ExtendedOffset = 0x8; // Selector
-	pIdt[4].Access = 0x8F00;
-	pIdt[4].Selector = (i386Overflow | KSEG0_BASE) >> 16; // Extended Offset
-
-	pIdt[5].Selector = (i386BoundException | KSEG0_BASE) >> 16; // Extended Offset
-	pIdt[5].Offset = (i386BoundException | KSEG0_BASE) & 0xFFFF;
-	pIdt[5].ExtendedOffset = 0x8; // Selector
-	pIdt[5].Access = 0x8F00;
-
-	pIdt[6].Selector = (i386InvalidOpcode | KSEG0_BASE) >> 16; // Extended Offset
-	pIdt[6].Offset = (i386InvalidOpcode | KSEG0_BASE) & 0xFFFF;
-	pIdt[6].ExtendedOffset = 0x8; // Selector
-	pIdt[6].Access = 0x8F00;
-
-	pIdt[7].Selector = (i386FPUNotAvailable | KSEG0_BASE) >> 16; // Extended Offset
-	pIdt[7].Offset = (i386FPUNotAvailable | KSEG0_BASE) & 0xFFFF;
-	pIdt[7].ExtendedOffset = 0x8; // Selector
-	pIdt[7].Access = 0x8F00;
-
-	pIdt[8].Selector = (i386DoubleFault | KSEG0_BASE) >> 16; // Extended Offset
-	pIdt[8].Offset = (i386DoubleFault | KSEG0_BASE) & 0xFFFF;
-	pIdt[8].ExtendedOffset = 0x8; // Selector
-	pIdt[8].Access = 0x8F00;
-
-	pIdt[9].Selector = (i386CoprocessorSegment | KSEG0_BASE) >> 16; // Extended Offset
-	pIdt[9].Offset = (i386CoprocessorSegment | KSEG0_BASE) & 0xFFFF;
-	pIdt[9].ExtendedOffset = 0x8; // Selector
-	pIdt[9].Access = 0x8F00;
-
-	pIdt[10].Selector = (i386InvalidTSS | KSEG0_BASE) >> 16; // Extended Offset
-	pIdt[10].Offset = (i386InvalidTSS | KSEG0_BASE) & 0xFFFF;
-	pIdt[10].ExtendedOffset = 0x8; // Selector
-	pIdt[10].Access = 0x8F00;
-
-	pIdt[11].Selector = (i386SegmentNotPresent | KSEG0_BASE) >> 16; // Extended Offset
-	pIdt[11].Offset = (i386SegmentNotPresent | KSEG0_BASE) & 0xFFFF;
-	pIdt[11].ExtendedOffset = 0x8; // Selector
-	pIdt[11].Access = 0x8F00;
-
-	pIdt[12].Selector = (i386StackException | KSEG0_BASE) >> 16; // Extended Offset
-	pIdt[12].Offset = (i386StackException | KSEG0_BASE) & 0xFFFF;
-	pIdt[12].ExtendedOffset = 0x8; // Selector
-	pIdt[12].Access = 0x8F00;
-
-	pIdt[13].Selector = (i386GeneralProtectionFault | KSEG0_BASE) >> 16; // Extended Offset
-	pIdt[13].Offset = (i386GeneralProtectionFault | KSEG0_BASE) & 0xFFFF;
-	pIdt[13].ExtendedOffset = 0x8; // Selector
-	pIdt[13].Access = 0x8F00;
-
-	pIdt[14].Selector = (i386PageFault | KSEG0_BASE) >> 16; // Extended Offset
-	pIdt[14].Offset = (i386PageFault | KSEG0_BASE) & 0xFFFF;
-	pIdt[14].ExtendedOffset = 0x8; // Selector
-	pIdt[14].Access = 0x8F00;
-
-	pIdt[15].Selector = 0; // Extended Offset
-	pIdt[15].Offset = 0;
-	pIdt[15].ExtendedOffset = 0; // Selector
-	pIdt[15].Access = 0;
-
-	pIdt[16].Selector = (i386CoprocessorError | KSEG0_BASE) >> 16; // Extended Offset
-	pIdt[16].Offset = (i386CoprocessorError | KSEG0_BASE) & 0xFFFF;
-	pIdt[16].ExtendedOffset = 0x8; // Selector
-	pIdt[16].Access = 0x8F00;
-
-	pIdt[17].Selector = (i386AlignmentCheck | KSEG0_BASE) >> 16; // Extended Offset
-	pIdt[17].Offset = (i386AlignmentCheck | KSEG0_BASE) & 0xFFFF;
-	pIdt[17].ExtendedOffset = 0x8; // Selector
-	pIdt[17].Access = 0x8F00;
-#endif
-
-	/*for (i=0; i<16; i++)
-	{
-		//pIdt[i].Offset = ((ULONG_PTR)i386GeneralProtectionFault | KSEG0_BASE) & 0xFFFF;
-		//pIdt[i].ExtendedOffset = 0x8; // Selector
-		//pIdt[i].Access = 0x8F00;
-		//pIdt[i].Selector = ((ULONG_PTR)i386GeneralProtectionFault | KSEG0_BASE) >> 16; // Extended Offset
-
-		pIdt[i].Offset = ((ULONG_PTR)i386GeneralProtectionFault | KSEG0_BASE) & 0xFFFF;
-		pIdt[i].ExtendedOffset = ((ULONG_PTR)i386GeneralProtectionFault | KSEG0_BASE) >> 16; // Extended Offset
-		pIdt[i].Access = 0x8F00;
-		pIdt[i].Selector = 0x8;
-	}*/
-
 	// Copy the old IDT
 	RtlCopyMemory(pIdt, (PVOID)OldIdt.Base, OldIdt.Limit);
-
 
 	// Mask interrupts
 	//asm("cli\n"); // they are already masked before enabling paged mode

@@ -47,6 +47,14 @@ typedef struct
 	( ((a) >> MM_PAGE_SHIFT) + ((a) & MM_PAGE_MASK ? 1 : 0) )
 
 #endif // defined __i386__ or _PPC_ or _MIPS_
+//
+// This is the zone which is used by the OS loader
+//
+#define LOADER_HIGH_ZONE ((16*1024*1024) >> MM_PAGE_SHIFT) //16Mb page
+
+// HEAP and STACK size
+#define HEAP_PAGES	0x100//0x18
+#define STACK_PAGES	0x00
 
 typedef struct
 {
@@ -79,7 +87,7 @@ PVOID	MmFindLocationForPageLookupTable(PBIOS_MEMORY_MAP BiosMemoryMap, ULONG Map
 VOID	MmSortBiosMemoryMap(PBIOS_MEMORY_MAP BiosMemoryMap, ULONG MapCount);	// Sorts the BIOS_MEMORY_MAP array so the first element corresponds to the first address in memory
 VOID	MmInitPageLookupTable(PVOID PageLookupTable, ULONG TotalPageCount, PBIOS_MEMORY_MAP BiosMemoryMap, ULONG MapCount);	// Inits the page lookup table according to the memory types in the memory map
 VOID	MmMarkPagesInLookupTable(PVOID PageLookupTable, ULONG StartPage, ULONG PageCount, TYPE_OF_MEMORY PageAllocated);	// Marks the specified pages as allocated or free in the lookup table
-VOID	MmAllocatePagesInLookupTable(PVOID PageLookupTable, ULONG StartPage, ULONG PageCount);	// Allocates the specified pages in the lookup table
+VOID	MmAllocatePagesInLookupTable(PVOID PageLookupTable, ULONG StartPage, ULONG PageCount, TYPE_OF_MEMORY MemoryType);	// Allocates the specified pages in the lookup table
 ULONG		MmCountFreePagesInLookupTable(PVOID PageLookupTable, ULONG TotalPageCount);	// Returns the number of free pages in the lookup table
 ULONG		MmFindAvailablePages(PVOID PageLookupTable, ULONG TotalPageCount, ULONG PagesNeeded, BOOLEAN FromEnd);	// Returns the page number of the first available page range from the beginning or end of memory
 ULONG		MmFindAvailablePagesBeforePage(PVOID PageLookupTable, ULONG TotalPageCount, ULONG PagesNeeded, ULONG LastPage);	// Returns the page number of the first available page range before the specified page
@@ -93,12 +101,17 @@ PPAGE_LOOKUP_TABLE_ITEM MmGetMemoryMap(ULONG *NoEntries);			// Returns a pointer
 
 //BOOLEAN	MmInitializeMemoryManager(ULONG LowMemoryStart, ULONG LowMemoryLength);
 BOOLEAN	MmInitializeMemoryManager(VOID);
+VOID	MmInitializeHeap(PVOID PageLookupTable);
 PVOID	MmAllocateMemory(ULONG MemorySize);
+PVOID	MmAllocateMemoryWithType(ULONG MemorySize, TYPE_OF_MEMORY MemoryType);
 VOID	MmFreeMemory(PVOID MemoryPointer);
 VOID	MmChangeAllocationPolicy(BOOLEAN PolicyAllocatePagesFromEnd);
 //PVOID	MmAllocateLowMemory(ULONG MemorySize);
 //VOID	MmFreeLowMemory(PVOID MemoryPointer);
-PVOID	MmAllocateMemoryAtAddress(ULONG MemorySize, PVOID DesiredAddress);
-PVOID	MmAllocateHighestMemoryBelowAddress(ULONG MemorySize, PVOID DesiredAddress);
+PVOID	MmAllocateMemoryAtAddress(ULONG MemorySize, PVOID DesiredAddress, TYPE_OF_MEMORY MemoryType);
+PVOID	MmAllocateHighestMemoryBelowAddress(ULONG MemorySize, PVOID DesiredAddress, TYPE_OF_MEMORY MemoryType);
+
+PVOID	MmHeapAlloc(ULONG MemorySize);
+VOID	MmHeapFree(PVOID MemoryPointer);
 
 #endif // defined __MEMORY_H

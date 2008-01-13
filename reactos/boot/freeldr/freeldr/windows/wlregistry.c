@@ -72,8 +72,9 @@ WinLdrLoadSystemHive(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 	}
 
 	/* Round up the size to page boundary and alloc memory */
-	HiveDataPhysical = (ULONG_PTR)MmAllocateMemory(
-		MM_SIZE_TO_PAGES(HiveFileSize + MM_PAGE_SIZE - 1) << MM_PAGE_SHIFT);
+	HiveDataPhysical = (ULONG_PTR)MmAllocateMemoryWithType(
+		MM_SIZE_TO_PAGES(HiveFileSize + MM_PAGE_SIZE - 1) << MM_PAGE_SHIFT,
+		LoaderRegistryData);
 
 	if (HiveDataPhysical == 0)
 	{
@@ -140,6 +141,14 @@ BOOLEAN WinLdrLoadAndScanSystemHive(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 
 	// Scan registry and prepare boot drivers list
 	WinLdrScanRegistry(LoaderBlock, DirectoryPath);
+
+	// Add boot filesystem driver to the list
+	//FIXME: Use corresponding driver instead of hardcoding
+	Status = WinLdrAddDriverToList(&LoaderBlock->BootDriverListHead,
+		L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\",
+		NULL,
+		L"fastfat");
+
 
 	// Get names of NLS files
 	Status = WinLdrGetNLSNames(AnsiName, OemName, LangName);
@@ -331,7 +340,7 @@ WinLdrLoadNLSData(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 	/* Store it for later marking the pages as NlsData type */
 	TotalNLSSize = TotalSize;
 
-	NlsDataBase = (ULONG_PTR)MmAllocateMemory(TotalSize*MM_PAGE_SIZE);
+	NlsDataBase = (ULONG_PTR)MmAllocateMemoryWithType(TotalSize*MM_PAGE_SIZE, LoaderNlsData);
 
 	if (NlsDataBase == 0)
 		goto Failure;
@@ -562,7 +571,7 @@ WinLdrScanRegistry(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 								DbgPrint((DPRINT_WINDOWS, " Failed to add boot driver\n"));
 					} else
 					{
-						//DbgPrint((DPRINT_REACTOS, "  Skipping driver '%S' with Start %d, Tag %d and Group '%S' (Current Tag %d, current group '%S')\n",
+						//DbgPrint((DPRINT_WINDOWS, "  Skipping driver '%S' with Start %d, Tag %d and Group '%S' (Current Tag %d, current group '%S')\n",
 						//	ServiceName, StartValue, TagValue, DriverGroup, OrderList[TagIndex], GroupName));
 					}
 				}
@@ -637,7 +646,7 @@ WinLdrScanRegistry(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 							DbgPrint((DPRINT_WINDOWS, " Failed to add boot driver\n"));
 				} else
 				{
-					//DbgPrint((DPRINT_REACTOS, "  Skipping driver '%S' with Start %d, Tag %d and Group '%S' (Current group '%S')\n",
+					//DbgPrint((DPRINT_WINDOWS, "  Skipping driver '%S' with Start %d, Tag %d and Group '%S' (Current group '%S')\n",
 					//	ServiceName, StartValue, TagValue, DriverGroup, GroupName));
 				}
 			}
@@ -660,7 +669,7 @@ WinLdrAddDriverToList(LIST_ENTRY *BootDriverListHead,
 	NTSTATUS Status;
 	ULONG PathLength;
 
-	BootDriverEntry = MmAllocateMemory(sizeof(BOOT_DRIVER_LIST_ENTRY));
+	BootDriverEntry = MmHeapAlloc(sizeof(BOOT_DRIVER_LIST_ENTRY));
 
 	if (!BootDriverEntry)
 		return FALSE;
@@ -677,14 +686,21 @@ WinLdrAddDriverToList(LIST_ENTRY *BootDriverListHead,
 
 		BootDriverEntry->FilePath.Length = 0;
 		BootDriverEntry->FilePath.MaximumLength = PathLength + sizeof(WCHAR);
-		BootDriverEntry->FilePath.Buffer = MmAllocateMemory(PathLength);
+		BootDriverEntry->FilePath.Buffer = MmHeapAlloc(PathLength);
 
 		if (!BootDriverEntry->FilePath.Buffer)
+		{
+			MmHeapFree(BootDriverEntry);
 			return FALSE;
+		}
 
 		Status = RtlAppendUnicodeToString(&BootDriverEntry->FilePath, ImagePath);
 		if (!NT_SUCCESS(Status))
+		{
+			MmHeapFree(BootDriverEntry->FilePath.Buffer);
+			MmHeapFree(BootDriverEntry);
 			return FALSE;
+		}
 	}
 	else
 	{
@@ -692,29 +708,44 @@ WinLdrAddDriverToList(LIST_ENTRY *BootDriverListHead,
 		PathLength = wcslen(ServiceName)*sizeof(WCHAR) + sizeof(L"system32\\drivers\\.sys");;
 		BootDriverEntry->FilePath.Length = 0;
 		BootDriverEntry->FilePath.MaximumLength = PathLength+sizeof(WCHAR);
-		BootDriverEntry->FilePath.Buffer = MmAllocateMemory(PathLength);
+		BootDriverEntry->FilePath.Buffer = MmHeapAlloc(PathLength);
 
 		if (!BootDriverEntry->FilePath.Buffer)
+		{
+			MmHeapFree(BootDriverEntry);
 			return FALSE;
+		}
 
 		Status = RtlAppendUnicodeToString(&BootDriverEntry->FilePath, L"system32\\drivers\\");
 		if (!NT_SUCCESS(Status))
+		{
+			MmHeapFree(BootDriverEntry->FilePath.Buffer);
+			MmHeapFree(BootDriverEntry);
 			return FALSE;
+		}
 
 		Status = RtlAppendUnicodeToString(&BootDriverEntry->FilePath, ServiceName);
 		if (!NT_SUCCESS(Status))
+		{
+			MmHeapFree(BootDriverEntry->FilePath.Buffer);
+			MmHeapFree(BootDriverEntry);
 			return FALSE;
+		}
 
 		Status = RtlAppendUnicodeToString(&BootDriverEntry->FilePath, L".sys");
 		if (!NT_SUCCESS(Status))
+		{
+			MmHeapFree(BootDriverEntry->FilePath.Buffer);
+			MmHeapFree(BootDriverEntry);
 			return FALSE;
+		}
 	}
 
 	// Add registry path
-	PathLength = wcslen(RegistryPath)*sizeof(WCHAR);
+	PathLength = (wcslen(RegistryPath)+wcslen(ServiceName))*sizeof(WCHAR);
 	BootDriverEntry->RegistryPath.Length = 0;
-	BootDriverEntry->RegistryPath.MaximumLength = PathLength+sizeof(WCHAR);
-	BootDriverEntry->RegistryPath.Buffer = MmAllocateMemory(PathLength);
+	BootDriverEntry->RegistryPath.MaximumLength = PathLength;//+sizeof(WCHAR);
+	BootDriverEntry->RegistryPath.Buffer = MmHeapAlloc(PathLength);
 	if (!BootDriverEntry->RegistryPath.Buffer)
 		return FALSE;
 
@@ -722,8 +753,12 @@ WinLdrAddDriverToList(LIST_ENTRY *BootDriverListHead,
 	if (!NT_SUCCESS(Status))
 		return FALSE;
 
+	Status = RtlAppendUnicodeToString(&BootDriverEntry->RegistryPath, ServiceName);
+	if (!NT_SUCCESS(Status))
+		return FALSE;
+
 	// Insert entry at top of the list
-	InsertHeadList(BootDriverListHead, &BootDriverEntry->ListEntry);
+	InsertTailList(BootDriverListHead, &BootDriverEntry->ListEntry);
 
 	return TRUE;
 }

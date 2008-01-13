@@ -70,7 +70,7 @@ ConvertConfigToVA(PCONFIGURATION_COMPONENT_DATA Start)
 	PCONFIGURATION_COMPONENT_DATA Child;
 	PCONFIGURATION_COMPONENT_DATA Sibling;
 
-	DbgPrint((DPRINT_WINDOWS, "ConvertConfigToVA(Start 0x%X)", Start));
+	DbgPrint((DPRINT_WINDOWS, "ConvertConfigToVA(Start 0x%X)\n", Start));
 	Child = Start;
 
 	while (Child != NULL)
@@ -87,11 +87,12 @@ ConvertConfigToVA(PCONFIGURATION_COMPONENT_DATA Start)
 		if (Child->Sibling)
 			Child->Sibling = PaToVa(Child->Sibling);
 
-		DbgPrint((DPRINT_WINDOWS, "Device 0x%X class %d", Child, Child->ComponentEntry.Class));
+		DbgPrint((DPRINT_WINDOWS, "Device 0x%X class %d type %d, parent %p\n", Child,
+			Child->ComponentEntry.Class, Child->ComponentEntry.Type, Child->Parent));
 
 		// If the child has a sibling list, then search the sibling list
 		// for an entry that matches the specified class, type, and key.
-		Sibling = Child->Sibling;
+		Sibling = VaToPa(Child->Sibling);
 		while (Sibling != NULL)
 		{
 			if (Sibling->ConfigurationData)
@@ -106,7 +107,8 @@ ConvertConfigToVA(PCONFIGURATION_COMPONENT_DATA Start)
 			if (Sibling->Sibling)
 				Sibling->Sibling = PaToVa(Sibling->Sibling);
 
-			DbgPrint((DPRINT_WINDOWS, "Device 0x%X class %d", Sibling, Sibling->ComponentEntry.Class));
+			DbgPrint((DPRINT_WINDOWS, "Device 0x%X class %d type %d sib, parent %p\n", Sibling,
+				Sibling->ComponentEntry.Class, Sibling->ComponentEntry.Type, Sibling->Parent));
 
 			// If the sibling has a child tree, then search the child tree
 			// for an entry that matches the specified class, type, and key.
@@ -116,6 +118,7 @@ ConvertConfigToVA(PCONFIGURATION_COMPONENT_DATA Start)
 			Sibling = VaToPa(Sibling->Sibling);
 		}
 
+		// Go to the next child
 		Child = VaToPa(Child->Child);
 	}
 }

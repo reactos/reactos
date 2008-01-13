@@ -57,7 +57,7 @@ VOID MmChangeAllocationPolicy(BOOLEAN PolicyAllocatePagesFromEnd)
 	AllocateFromEnd = PolicyAllocatePagesFromEnd;
 }
 
-PVOID MmAllocateMemory(ULONG MemorySize)
+PVOID MmAllocateMemoryWithType(ULONG MemorySize, TYPE_OF_MEMORY MemoryType)
 {
 	ULONG	PagesNeeded;
 	ULONG	FirstFreePageFromEnd;
@@ -100,7 +100,7 @@ PVOID MmAllocateMemory(ULONG MemorySize)
 		return NULL;
 	}
 
-	MmAllocatePagesInLookupTable(PageLookupTableAddress, FirstFreePageFromEnd, PagesNeeded);
+	MmAllocatePagesInLookupTable(PageLookupTableAddress, FirstFreePageFromEnd, PagesNeeded, MemoryType);
 
 	FreePagesInLookupTable -= PagesNeeded;
 	MemPointer = (PVOID)(FirstFreePageFromEnd * MM_PAGE_SIZE);
@@ -123,7 +123,13 @@ PVOID MmAllocateMemory(ULONG MemorySize)
 	return MemPointer;
 }
 
-PVOID MmAllocateMemoryAtAddress(ULONG MemorySize, PVOID DesiredAddress)
+PVOID MmAllocateMemory(ULONG MemorySize)
+{
+	// Temporary forwarder...
+	return MmAllocateMemoryWithType(MemorySize, LoaderOsloaderHeap);
+}
+
+PVOID MmAllocateMemoryAtAddress(ULONG MemorySize, PVOID DesiredAddress, TYPE_OF_MEMORY MemoryType)
 {
 	ULONG		PagesNeeded;
 	ULONG		StartPageNumber;
@@ -166,7 +172,7 @@ PVOID MmAllocateMemoryAtAddress(ULONG MemorySize, PVOID DesiredAddress)
 		return NULL;
 	}
 
-	MmAllocatePagesInLookupTable(PageLookupTableAddress, StartPageNumber, PagesNeeded);
+	MmAllocatePagesInLookupTable(PageLookupTableAddress, StartPageNumber, PagesNeeded, MemoryType);
 
 	FreePagesInLookupTable -= PagesNeeded;
 	MemPointer = (PVOID)(StartPageNumber * MM_PAGE_SIZE);
@@ -182,7 +188,7 @@ PVOID MmAllocateMemoryAtAddress(ULONG MemorySize, PVOID DesiredAddress)
 	return MemPointer;
 }
 
-PVOID MmAllocateHighestMemoryBelowAddress(ULONG MemorySize, PVOID DesiredAddress)
+PVOID MmAllocateHighestMemoryBelowAddress(ULONG MemorySize, PVOID DesiredAddress, TYPE_OF_MEMORY MemoryType)
 {
 	ULONG		PagesNeeded;
 	ULONG		FirstFreePageFromEnd;
@@ -221,7 +227,7 @@ PVOID MmAllocateHighestMemoryBelowAddress(ULONG MemorySize, PVOID DesiredAddress
 		return NULL;
 	}
 
-	MmAllocatePagesInLookupTable(PageLookupTableAddress, FirstFreePageFromEnd, PagesNeeded);
+	MmAllocatePagesInLookupTable(PageLookupTableAddress, FirstFreePageFromEnd, PagesNeeded, MemoryType);
 
 	FreePagesInLookupTable -= PagesNeeded;
 	MemPointer = (PVOID)(FirstFreePageFromEnd * MM_PAGE_SIZE);
@@ -301,6 +307,18 @@ VOID MmFreeMemory(PVOID MemoryPointer)
 	//VerifyHeap();
 #endif // DBG
 }
+
+PVOID MmHeapAlloc(ULONG MemorySize)
+{
+	// Stub for WinLdr
+	return NULL;
+}
+
+VOID MmHeapFree(PVOID MemoryPointer)
+{
+	// Stub for WinLdr
+}
+
 
 #ifdef DBG
 VOID VerifyHeap(VOID)
