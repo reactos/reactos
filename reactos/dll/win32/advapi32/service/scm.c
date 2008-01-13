@@ -496,7 +496,7 @@ CreateServiceA(SC_HANDLE hSCManager,
             SetLastError(ERROR_NOT_ENOUGH_MEMORY);
             goto cleanup;
         }
-        MultiByteToWideChar(CP_ACP, 0, lpDisplayName, -1, lpBinaryPathNameW, len);
+        MultiByteToWideChar(CP_ACP, 0, lpBinaryPathName, -1, lpBinaryPathNameW, len);
     }
 
     if (lpLoadOrderGroup)
