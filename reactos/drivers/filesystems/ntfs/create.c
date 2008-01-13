@@ -60,7 +60,7 @@ NtfsMakeAbsoluteFilename(PFILE_OBJECT pFileObject,
   /* construct absolute path name */
   ASSERT(wcslen (Fcb->PathName) + 1 + wcslen (pRelativeFileName) + 1
           <= MAX_PATH);
-  rcName = ExAllocatePool(NonPagedPool, MAX_PATH * sizeof(WCHAR));
+  rcName = ExAllocatePoolWithTag(NonPagedPool, MAX_PATH * sizeof(WCHAR), TAG_NTFS);
   if (!rcName)
     {
       return(STATUS_INSUFFICIENT_RESOURCES);
@@ -223,11 +223,13 @@ NtfsCreate(PDEVICE_OBJECT DeviceObject,
 
   DeviceExt = DeviceObject->DeviceExtension;
 
+  FsRtlEnterFileSystem();
   ExAcquireResourceExclusiveLite(&DeviceExt->DirResource,
 				 TRUE);
   Status = NtfsCreateFile(DeviceObject,
 			  Irp);
   ExReleaseResourceLite(&DeviceExt->DirResource);
+  FsRtlExitFileSystem();
 
 ByeBye:
   Irp->IoStatus.Status = Status;

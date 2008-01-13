@@ -521,7 +521,7 @@ NtfsQueryDirectory(PDEVICE_OBJECT DeviceObject,
 	{
 	  First = TRUE;
 	  Ccb->DirectorySearchPattern =
-	    ExAllocatePool(NonPagedPool, SearchPattern->Length + sizeof(WCHAR));
+	    ExAllocatePoolWithTag(NonPagedPool, SearchPattern->Length + sizeof(WCHAR), TAG_NTFS);
 	  if (!Ccb->DirectorySearchPattern)
 	    {
 	      return(STATUS_INSUFFICIENT_RESOURCES);
@@ -536,7 +536,7 @@ NtfsQueryDirectory(PDEVICE_OBJECT DeviceObject,
   else if (!Ccb->DirectorySearchPattern)
     {
       First = TRUE;
-      Ccb->DirectorySearchPattern = ExAllocatePool(NonPagedPool, 2 * sizeof(WCHAR));
+      Ccb->DirectorySearchPattern = ExAllocatePoolWithTag(NonPagedPool, 2 * sizeof(WCHAR), TAG_NTFS);
       if (!Ccb->DirectorySearchPattern)
 	{
 	  return(STATUS_INSUFFICIENT_RESOURCES);

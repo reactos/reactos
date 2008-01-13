@@ -58,8 +58,8 @@ NtfsOpenMft (PDEVICE_EXTENSION Vcb)
 
   BytesPerFileRecord = Vcb->NtfsInfo.BytesPerFileRecord;
 
-  MftRecord = ExAllocatePool(NonPagedPool,
-			     BytesPerFileRecord);
+  MftRecord = ExAllocatePoolWithTag(NonPagedPool,
+			     BytesPerFileRecord, TAG_NTFS);
   if (MftRecord == NULL)
     {
       return STATUS_INSUFFICIENT_RESOURCES;
@@ -86,7 +86,7 @@ NtfsOpenMft (PDEVICE_EXTENSION Vcb)
   n = AttributeDataLength (FindAttribute (MftRecord, AttributeData, 0))
 		  / BytesPerFileRecord;
 
-  FileRecord = ExAllocatePool(NonPagedPool, BytesPerFileRecord);
+  FileRecord = ExAllocatePoolWithTag(NonPagedPool, BytesPerFileRecord, TAG_NTFS);
   if (FileRecord == NULL)
     {
       ExFreePool(MftRecord);
@@ -198,7 +198,7 @@ ReadFileRecord (PDEVICE_EXTENSION Vcb,
   LONG m = (Vcb->NtfsInfo.BytesPerCluster / BytesPerFileRecord) - 1;
   ULONG n = m > 0 ? (index & m) : 0;
 
-  p = ExAllocatePool(NonPagedPool, clusters * Vcb->NtfsInfo.BytesPerCluster);
+  p = ExAllocatePoolWithTag(NonPagedPool, clusters * Vcb->NtfsInfo.BytesPerCluster, TAG_NTFS);
 
   ReadVCN (Vcb, Mft, AttributeData, vcn, clusters, p);
 

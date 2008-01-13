@@ -91,8 +91,8 @@ NtfsHasFileSystem(PDEVICE_OBJECT DeviceToMount)
   }
 
   DPRINT1("BytesPerSector: %lu\n", DiskGeometry.BytesPerSector);
-  BootSector = ExAllocatePool(NonPagedPool,
-                              DiskGeometry.BytesPerSector);
+  BootSector = ExAllocatePoolWithTag(NonPagedPool,
+                              DiskGeometry.BytesPerSector, TAG_NTFS);
   if (BootSector == NULL)
   {
     return(STATUS_INSUFFICIENT_RESOURCES);
@@ -150,8 +150,8 @@ NtfsGetVolumeData(PDEVICE_OBJECT DeviceObject,
   }
 
   DPRINT("BytesPerSector: %lu\n", DiskGeometry.BytesPerSector);
-  BootSector = ExAllocatePool(NonPagedPool,
-                              DiskGeometry.BytesPerSector);
+  BootSector = ExAllocatePoolWithTag(NonPagedPool,
+                              DiskGeometry.BytesPerSector, TAG_NTFS);
   if (BootSector == NULL)
   {
     return(STATUS_INSUFFICIENT_RESOURCES);
@@ -201,8 +201,8 @@ NtfsGetVolumeData(PDEVICE_OBJECT DeviceObject,
 
   ExFreePool(BootSector);
 
-  MftRecord = ExAllocatePool(NonPagedPool,
-                             NtfsInfo->BytesPerFileRecord);
+  MftRecord = ExAllocatePoolWithTag(NonPagedPool,
+                             NtfsInfo->BytesPerFileRecord, TAG_NTFS);
   if (MftRecord == NULL)
   {
     return STATUS_INSUFFICIENT_RESOURCES;
@@ -220,7 +220,7 @@ NtfsGetVolumeData(PDEVICE_OBJECT DeviceObject,
     return Status;
   }
 
-  VolumeRecord = ExAllocatePool(NonPagedPool, NtfsInfo->BytesPerFileRecord);
+  VolumeRecord = ExAllocatePoolWithTag(NonPagedPool, NtfsInfo->BytesPerFileRecord, TAG_NTFS);
   if (VolumeRecord == NULL)
   {
     ExFreePool (MftRecord);
