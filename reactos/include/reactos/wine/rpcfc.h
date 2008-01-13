@@ -204,4 +204,10 @@
 #define USER_MARSHAL_POINTER	0xc0
 #define USER_MARSHAL_IID	0x20
 
+/* context handle flags */
+#define NDR_CONTEXT_HANDLE_CANNOT_BE_NULL   0x01
+#define NDR_CONTEXT_HANDLE_SERIALIZE        0x02
+#define NDR_CONTEXT_HANDLE_NO_SERIALIZE     0x04
+#define NDR_STRICT_CONTEXT_HANDLE           0x08
+
 #endif /* __WINE_RPCFC_H */
