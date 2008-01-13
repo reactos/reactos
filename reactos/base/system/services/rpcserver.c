@@ -1058,10 +1058,7 @@ ScmrCreateServiceW(handle_t BindingHandle,
 
     if (dwServiceType & SERVICE_DRIVER)
     {
-        /* FIXME: Adjust the image path
-         * Following line is VERY BAD, because it assumes that the
-         * first part of full file name is the OS directory */
-        if (lpBinaryPathName[1] == ':') lpBinaryPathName += GetWindowsDirectoryW(NULL, 0);
+        /* FIXME: Adjust the image path */
 
         lpImagePath = (WCHAR*) HeapAlloc(GetProcessHeap(),
                                 HEAP_ZERO_MEMORY,
@@ -1185,7 +1182,7 @@ ScmrCreateServiceW(handle_t BindingHandle,
                                  0,
                                  REG_EXPAND_SZ,
                                  (LPBYTE)lpImagePath,
-                                 (wcslen(lpImagePath) + 1) *sizeof(WCHAR));
+                                 (wcslen(lpImagePath) + 1) * sizeof(WCHAR));
         if (dwError != ERROR_SUCCESS)
             goto done;
     }
