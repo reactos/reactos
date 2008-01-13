@@ -51,6 +51,7 @@
 		<file>reactos.c</file>
 	</directory>
 	<directory name="rtl">
+		<file>bget.c</file>
 		<file>libsupp.c</file>
 	</directory>
 	<directory name="ui">
