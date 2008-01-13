@@ -137,7 +137,7 @@ CcInitView (VOID)
                                  MEMORY_AREA_CACHE_SEGMENT,
                                  &CcCacheViewBase, Size, 0, &CcCacheViewMemoryArea, FALSE, FALSE, BoundaryAddressMultiple);
     MmUnlockAddressSpace (MmGetKernelAddressSpace ());
-    DPRINT1 ("CcCacheViewBase: %x\n", CcCacheViewBase);
+    DPRINT ("CcCacheViewBase: %x\n", CcCacheViewBase);
     if (!NT_SUCCESS (Status))
     {
         KEBUGCHECK (0);

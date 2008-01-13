@@ -30,6 +30,7 @@ void *_alloca (size_t size);
 #endif
 
 ULONG CcFastMdlReadWait;
+ULONG CcFastMdlReadNotPossible;
 ULONG CcFastReadNotPossible;
 ULONG CcFastReadWait;
 ULONG CcFastReadNoWait;
