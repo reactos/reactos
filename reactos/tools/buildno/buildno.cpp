@@ -3,27 +3,25 @@
  *
  * Copyright (c) 1999,2000 Emanuele Aliberti
  * Copyright (c) 2006 Christoph von Wittich
+ * Copyright (c) 2008 Hervé Poussineau
  *
  * The build number is the day on which the build took
  * place, as YYYYMMDD
  *
- * The build number is stored in the file
- * <reactos/buildno.h> as a set of macros:
- *
- * KERNEL_VERSION_BUILD     base 10 number
- * KERNEL_VERSION_BUILD_STR C string
- * KERNEL_VERSION_BUILD_RC  RC string
+ * The build number is stored in the output file as a set of macros
  *
  * REVISIONS
  * ---------
+ * 2008-01-12 (hpoussin)
+ *  Add -t option to change the build tag
  * 2006-09-09 (cwittich)
- *  read binary entries files from SVN 1.4.x
+ *  Read binary entries files from SVN 1.4.x
  * 2000-01-22 (ea)
- * 	Fixed bugs: tm_year is (current_year - 1900),
- * 	tm_month is 0-11 not 1-12 and code ignored TZ.
+ *  Fixed bugs: tm_year is (current_year - 1900),
+ *  tm_month is 0-11 not 1-12 and code ignored TZ.
  * 2000-12-10 (ea)
- * 	Added -p option to make it simply print the
- * 	version number, but skip buildno.h generation.
+ *  Added -p option to make it simply print the
+ *  version number, but skip buildno.h generation.
  */
 #include <stdio.h>
 #include <stdlib.h>
@@ -36,8 +34,8 @@
 #define TRUE  1
 
 static char * argv0 = "";
-static char * filename = "";
-static char * kernel_version_build_type = 0;
+static char * filename = NULL;
+static char * build_tag = NULL;
 
 int count_wide_string( wchar_t *str )
 {
@@ -169,7 +167,7 @@ write_h (int build, char *buildstr)
 	{
 		s = s + sprintf (s, ".%d", KERNEL_VERSION_PATCH_LEVEL);
 	}
-	s = s + sprintf (s, "-%s\\0\"\n", kernel_version_build_type);
+	s = s + sprintf (s, "%s\\0\"\n", build_tag);
 	s = s + sprintf (s, "#define KERNEL_RELEASE_STR\t\"%d.%d",
 	                 KERNEL_VERSION_MAJOR,
 	                 KERNEL_VERSION_MINOR);
@@ -177,7 +175,7 @@ write_h (int build, char *buildstr)
 	{
 		s = s + sprintf (s, ".%d", KERNEL_VERSION_PATCH_LEVEL);
 	}
-	s = s + sprintf (s, "-%s\"\n", kernel_version_build_type);
+	s = s + sprintf (s, "%s\"\n", build_tag);
 	s = s + sprintf (s, "#define KERNEL_VERSION_RC\t\"%d.%d",
 	                 KERNEL_VERSION_MAJOR,
 	                 KERNEL_VERSION_MINOR);
@@ -185,7 +183,7 @@ write_h (int build, char *buildstr)
 	{
 		s = s + sprintf (s, ".%d", KERNEL_VERSION_PATCH_LEVEL);
 	}
-	s = s + sprintf (s, "-%s\\0\"\n", kernel_version_build_type);
+	s = s + sprintf (s, "%s\\0\"\n", build_tag);
 	s = s + sprintf (s, "#define KERNEL_VERSION_STR\t\"%d.%d",
 	                 KERNEL_VERSION_MAJOR,
 	                 KERNEL_VERSION_MINOR);
@@ -193,7 +191,7 @@ write_h (int build, char *buildstr)
 	{
 		s = s + sprintf (s, ".%d", KERNEL_VERSION_PATCH_LEVEL);
 	}
-	s = s + sprintf (s, "-%s\"\n", kernel_version_build_type);
+	s = s + sprintf (s, "%s\"\n", build_tag);
 	s = s + sprintf (s, "#define REACTOS_DLL_VERSION_MAJOR\t%d\n", dllversion);
 	s = s + sprintf (s, "#define REACTOS_DLL_RELEASE_RC\t\"%d.%d",
 	                 dllversion, KERNEL_VERSION_MINOR);
@@ -201,7 +199,7 @@ write_h (int build, char *buildstr)
 	{
 		s = s + sprintf (s, ".%d", KERNEL_VERSION_PATCH_LEVEL);
 	}
-	s = s + sprintf (s, "-%s\\0\"\n", kernel_version_build_type);
+	s = s + sprintf (s, "%s\\0\"\n", build_tag);
 	s = s + sprintf (s, "#define REACTOS_DLL_RELEASE_STR\t\"%d.%d",
 	                 dllversion,
 	                 KERNEL_VERSION_MINOR);
@@ -209,7 +207,7 @@ write_h (int build, char *buildstr)
 	{
 		s = s + sprintf (s, ".%d", KERNEL_VERSION_PATCH_LEVEL);
 	}
-	s = s + sprintf (s, "-%s\"\n", kernel_version_build_type);
+	s = s + sprintf (s, "%s\"\n", build_tag);
 	s = s + sprintf (s, "#define REACTOS_DLL_VERSION_RC\t\"%d.%d",
 	                 dllversion,
 	                 KERNEL_VERSION_MINOR);
@@ -217,7 +215,7 @@ write_h (int build, char *buildstr)
 	{
 		s = s + sprintf (s, ".%d", KERNEL_VERSION_PATCH_LEVEL);
 	}
-	s = s + sprintf (s, "-%s\\0\"\n", kernel_version_build_type);
+	s = s + sprintf (s, "%s\\0\"\n", build_tag);
 	s = s + sprintf (s, "#define REACTOS_DLL_VERSION_STR\t\"%d.%d",
 	                 dllversion,
 	                 KERNEL_VERSION_MINOR);
@@ -225,10 +223,10 @@ write_h (int build, char *buildstr)
 	{
 		s = s + sprintf (s, ".%d", KERNEL_VERSION_PATCH_LEVEL);
 	}
-	s = s + sprintf (s, "-%s\"\n", kernel_version_build_type);
+	s = s + sprintf (s, "%s\"\n", build_tag);
 	s = s + sprintf (s, "#endif\n/* EOF */\n");
 
-	h = fopen (filename, "wb");
+	h = fopen (filename, "rb");
 	if (h != NULL)
 	{
 		fseek(h, 0, SEEK_END);
@@ -269,9 +267,10 @@ usage (void)
 {
 	fprintf (
 		stderr,
-		"Usage: %s [-{p|q}] path-to-header\n\n"
+		"Usage: %s [-{p|q}] [-t tag] path-to-header\n\n"
 		"  -p  print version number and exit\n"
-		"  -q  run in quiet mode\n",
+		"  -q  run in quiet mode\n"
+		"  -t  specify a build tag\n",
 		argv0);
 	exit (EXIT_SUCCESS);
 }
@@ -292,40 +291,45 @@ main (int argc, char * argv [])
 
 	argv0 = argv[0];
 
-	switch (argc)
+	/* Check arguments */
+	for (i = 1; i < argc; i++)
 	{
-		case 1:
-			break;
-		case 2:
-		case 3:
-			if (argv[1][0] == '-')
+		if (*argv[i] == '-')
+		{
+			switch (argv[i][1])
 			{
-				if (argv[1][1] == 'q')
-				{
-					quiet = TRUE;
-				}
-				else  if (argv[1][1] == 'p')
-				{
+				case 'p':
 					print_only = TRUE;
-				}
-				else
-				{
-					usage ();
-				}
-				filename = argv[2];
+					break;
+				case 'q':
+					quiet = TRUE;
+					break;
+				case 't':
+					if (i + 1 != argc)
+					{
+						build_tag = argv[++i];
+						break;
+					}
+					/* fall through */
+				default:
+					usage();
+					return EXIT_SUCCESS;
 			}
-			else if (argc == 2)
-			{
-				filename = argv[1];
-			}
-			else
-			{
-				usage ();
-			}
-			break;
-		default:
-			usage ();
+		}
+		else if (!filename)
+			filename = argv[i];
+		else
+		{
+			usage();
+			return EXIT_SUCCESS;
+		}
 	}
+	if (!filename)
+	{
+		usage();
+		return EXIT_SUCCESS;
+	}
+
 	/* Set TZ information. */
 	tzset ();
 	/* We are building TODAY! */
@@ -333,15 +337,6 @@ main (int argc, char * argv [])
 	{
 		printf ( "\nReactOS Build Number Generator\n\n");
 	}
-
-	/* Convert kernel_version_build_type to a host-friendly string */
-	length = count_wide_string(KERNEL_VERSION_BUILD_TYPE);
-	kernel_version_build_type = (char *)malloc(length+1);
-	for( i = 0; KERNEL_VERSION_BUILD_TYPE[i]; i++ )
-	{
-		kernel_version_build_type[i] = KERNEL_VERSION_BUILD_TYPE[i];
-	}
-	kernel_version_build_type[i] = 0;
 
 	time (& t1); /* current build time */
 	t1_tm = gmtime (& t1);
@@ -355,10 +350,36 @@ main (int argc, char * argv [])
 			(t1_tm->tm_mon + 1),
 			t1_tm->tm_mday);
 	}
-	/*
-	 * Compute build number.
-	 */
+
+	/* Compute build number. */
 	build = t1_tm->tm_year * 10000 + (t1_tm->tm_mon + 1) * 100 + t1_tm->tm_mday;
+
+	if (!build_tag)
+	{
+		/* Create default build tag */
+		length = count_wide_string(KERNEL_VERSION_BUILD_TYPE);
+		build_tag = (char *)malloc(length+2);
+		if (length > 0)
+		{
+			build_tag[0] = '-';
+			for (i = 0; KERNEL_VERSION_BUILD_TYPE[i]; i++)
+			{
+				build_tag[i + 1] = KERNEL_VERSION_BUILD_TYPE[i];
+			}
+			build_tag[i+1] = 0;
+		}
+		else
+			build_tag[0] = 0;
+	}
+	else if (*build_tag)
+	{
+		/* Prepend '-' */
+		length = strlen(build_tag);
+		char *new_build_tag = (char *)malloc(length + 2);
+		strcpy(new_build_tag, "-");
+		strcat(new_build_tag, build_tag);
+		build_tag = new_build_tag;
+	}
 
 	sprintf(buildstr, "%d-r%s", build, GetRev());
 
@@ -372,7 +393,7 @@ main (int argc, char * argv [])
 		{
 			printf(".%d", KERNEL_VERSION_PATCH_LEVEL);
 		}
-		printf("-%s (Build %s)\n\n", kernel_version_build_type, buildstr);
+		printf("%s (Build %s)\n\n", build_tag, buildstr);
 	}
 	/* (Over)write the include file, unless the user switched on -p. */
 	if (! print_only)
@@ -383,8 +404,6 @@ main (int argc, char * argv [])
 	{
 		printf ("%s: no code generated", argv [0]);
 	}
-
-	free(kernel_version_build_type);
 
 	return EXIT_SUCCESS;
 }
