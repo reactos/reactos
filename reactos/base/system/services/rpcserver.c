@@ -1058,17 +1058,24 @@ ScmrCreateServiceW(handle_t BindingHandle,
 
     if (dwServiceType & SERVICE_DRIVER)
     {
-        /* FIXME: Adjust the image path */
-
         lpImagePath = (WCHAR*) HeapAlloc(GetProcessHeap(),
                                 HEAP_ZERO_MEMORY,
-                                (wcslen(lpBinaryPathName) + 1) * sizeof(WCHAR));
+                                (wcslen(lpBinaryPathName) + 5) * sizeof(WCHAR));
         if (lpImagePath == NULL)
         {
             dwError = ERROR_NOT_ENOUGH_MEMORY;
             goto done;
         }
-        wcscpy(lpImagePath, lpBinaryPathName);
+
+        if (lpBinaryPathName[1] == L':')
+        {
+            wcscpy(lpImagePath, L"\\??\\");
+            wcscat(lpImagePath, lpBinaryPathName);
+        }
+        else
+        {
+            wcscpy(lpImagePath, lpBinaryPathName);
+        }
     }
 
     /* Allocate a new service entry */

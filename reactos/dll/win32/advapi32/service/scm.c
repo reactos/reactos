@@ -1998,34 +1998,36 @@ StartServiceA(SC_HANDLE hService,
               DWORD dwNumServiceArgs,
               LPCSTR *lpServiceArgVectors)
 {
-    LPSTR lpBuffer;
+    LPSTR lpBuffer = NULL;
     LPSTR lpStr;
     DWORD dwError;
-    DWORD dwBufSize;
+    DWORD dwBufSize = 0;
     DWORD i;
 
-    dwBufSize = 0;
-    for (i = 0; i < dwNumServiceArgs; i++)
+    if (dwNumServiceArgs > 0)
     {
-        dwBufSize += (strlen(lpServiceArgVectors[i]) + 1);
-    }
-    dwBufSize++;
-    DPRINT1("dwBufSize: %lu\n", dwBufSize);
+        for (i = 0; i < dwNumServiceArgs; i++)
+        {
+            dwBufSize += (strlen(lpServiceArgVectors[i]) + 1);
+        }
+        dwBufSize++;
+        DPRINT1("dwBufSize: %lu\n", dwBufSize);
 
-    lpBuffer = HeapAlloc(GetProcessHeap(), 0, dwBufSize);
-    if (lpBuffer == NULL)
-    {
-        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-        return FALSE;
-    }
+        lpBuffer = HeapAlloc(GetProcessHeap(), 0, dwBufSize);
+        if (lpBuffer == NULL)
+        {
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            return FALSE;
+        }
 
-    lpStr = lpBuffer;
-    for (i = 0; i < dwNumServiceArgs; i++)
-    {
-        strcpy(lpStr, lpServiceArgVectors[i]);
-        lpStr += (strlen(lpServiceArgVectors[i]) + 1);
+        lpStr = lpBuffer;
+        for (i = 0; i < dwNumServiceArgs; i++)
+        {
+            strcpy(lpStr, lpServiceArgVectors[i]);
+            lpStr += (strlen(lpServiceArgVectors[i]) + 1);
+        }
+        *lpStr = 0;
     }
-    *lpStr = 0;
 
     dwError = ScmrStartServiceA(BindingHandle,
                                 (unsigned int)hService,
@@ -2033,7 +2035,8 @@ StartServiceA(SC_HANDLE hService,
                                 (unsigned char *)lpBuffer,
                                 dwBufSize);
 
-    HeapFree(GetProcessHeap(), 0, lpBuffer);
+    if (lpBuffer != NULL)
+        HeapFree(GetProcessHeap(), 0, lpBuffer);
 
     if (dwError != ERROR_SUCCESS)
     {
