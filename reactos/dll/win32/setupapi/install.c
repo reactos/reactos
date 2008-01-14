@@ -1619,6 +1619,49 @@ BOOL GetStringField( PINFCONTEXT context, DWORD index, PWSTR *value)
     return ret;
 }
 
+static VOID FixupServiceBinaryPath(
+    IN DWORD ServiceType,
+    IN OUT LPWSTR *ServiceBinary)
+{
+    LPWSTR Buffer;
+    WCHAR ReactosDir[MAX_PATH];
+    DWORD RosDirLength, ServiceLength, Win32Length;
+
+    GetWindowsDirectoryW(ReactosDir, MAX_PATH);
+    RosDirLength = strlenW(ReactosDir);
+    ServiceLength = strlenW(*ServiceBinary);
+
+    /* Check and fix two things:
+       1. Get rid of C:\ReactOS and use relative
+          path instead.
+       2. Add %SystemRoot% for Win32 services */
+
+    if (ServiceLength < RosDirLength)
+        return;
+
+    if (!wcsnicmp(*ServiceBinary, ReactosDir, RosDirLength))
+    {
+        /* Yes, the first part is the C:\ReactOS\, just skip it */
+        MoveMemory(*ServiceBinary, *ServiceBinary + RosDirLength + 1,
+            (ServiceLength - RosDirLength) * sizeof(WCHAR));
+
+        /* Handle Win32-services differently */
+        if (ServiceType & SERVICE_WIN32)
+        {
+            Win32Length = (ServiceLength -
+                RosDirLength - 1 + 13) * sizeof(WCHAR);
+            /* -1 to not count the separator after C:\ReactOS
+               wcslen(L"%SystemRoot%\\") = 13*sizeof(wchar_t) */
+            Buffer = MyMalloc(Win32Length);
+
+            wcscpy(Buffer, L"%%SystemRoot%%\\");
+            wcscat(Buffer, *ServiceBinary);
+            MyFree(*ServiceBinary);
+
+            *ServiceBinary = Buffer;
+        }
+    }
+}
 
 static BOOL InstallOneService(
     struct DeviceInfoSet *list,
@@ -1662,6 +1705,9 @@ static BOOL InstallOneService(
 
     if (!GetLineText(hInf, ServiceSection, ServiceBinaryKey, &ServiceBinary))
         goto cleanup;
+
+    /* Adjust binary path according to the service type */
+    FixupServiceBinaryPath(ServiceType, &ServiceBinary);
 
     /* Don't check return value, as these fields are optional and
      * GetLineText initialize output parameter even on failure */
