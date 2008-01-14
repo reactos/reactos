@@ -783,7 +783,7 @@ HEADER_SendNotify(HWND hwnd, UINT code, NMHDR *nmhdr)
     nmhdr->code     = code;
 
     return SendMessageW(infoPtr->hwndNotify, WM_NOTIFY,
-				   (WPARAM)nmhdr->idFrom, (LPARAM)nmhdr);
+				   nmhdr->idFrom, (LPARAM)nmhdr);
 }
 
 static BOOL
@@ -909,9 +909,7 @@ HEADER_PrepareCallbackItems(HWND hwnd, INT iItem, INT reqMask)
     dispInfo.lParam       = lpItem->lParam;
     
     TRACE("Sending HDN_GETDISPINFO%c\n", infoPtr->nNotifyFormat == NFR_UNICODE?'W':'A');
-    SendMessageW(infoPtr->hwndNotify, WM_NOTIFY, 
-                 (WPARAM) dispInfo.hdr.idFrom, 
-                 (LPARAM) &dispInfo);
+    SendMessageW(infoPtr->hwndNotify, WM_NOTIFY, dispInfo.hdr.idFrom, (LPARAM)&dispInfo);
 
     TRACE("SendMessage returns(mask:0x%x,str:%s,lParam:%p)\n", 
           dispInfo.mask,

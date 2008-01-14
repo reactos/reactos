@@ -511,7 +511,7 @@ REBAR_Notify (NMHDR *nmhdr, const REBAR_INFO *infoPtr, UINT code)
 
     TRACE("window %p, code=%08x, via %s\n", parent, code, (infoPtr->bUnicode)?"Unicode":"ANSI");
 
-    return SendMessageW(parent, WM_NOTIFY, (WPARAM)nmhdr->idFrom, (LPARAM)nmhdr);
+    return SendMessageW(parent, WM_NOTIFY, nmhdr->idFrom, (LPARAM)nmhdr);
 }
 
 static INT

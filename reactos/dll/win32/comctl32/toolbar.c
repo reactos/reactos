@@ -341,8 +341,7 @@ TOOLBAR_SendNotify (NMHDR *nmhdr, const TOOLBAR_INFO *infoPtr, UINT code)
     TRACE("to window %p, code=%08x, %s\n", infoPtr->hwndNotify, code,
 	  (infoPtr->bUnicode) ? "via Unicode" : "via ANSI");
 
-    return SendMessageW(infoPtr->hwndNotify, WM_NOTIFY, 
-        (WPARAM)nmhdr->idFrom, (LPARAM)nmhdr);
+    return SendMessageW(infoPtr->hwndNotify, WM_NOTIFY, nmhdr->idFrom, (LPARAM)nmhdr);
 }
 
 /***********************************************************************
@@ -3918,7 +3917,7 @@ TOOLBAR_LoadImages (HWND hwnd, WPARAM wParam, LPARAM lParam)
 {
     TBADDBITMAP tbab;
     tbab.hInst = (HINSTANCE)lParam;
-    tbab.nID = (UINT_PTR)wParam;
+    tbab.nID = wParam;
 
     TRACE("hwnd = %p, hInst = %p, nID = %lu\n", hwnd, tbab.hInst, tbab.nID);
 
@@ -4231,7 +4230,7 @@ TOOLBAR_Restore(TOOLBAR_INFO *infoPtr, const TBSAVEPARAMSW *lpSave)
     if (!res)
     {
         nmtbr.pData = Alloc(dwSize);
-        nmtbr.cbData = (UINT)dwSize;
+        nmtbr.cbData = dwSize;
         if (!nmtbr.pData) res = ERROR_OUTOFMEMORY;
     }
     if (!res)
@@ -6374,7 +6373,7 @@ static LRESULT TOOLBAR_TTGetDispInfo (TOOLBAR_INFO *infoPtr, NMTTDISPINFOW *lpnm
 
     /* last resort: send notification on to app */
     /* FIXME: find out what is really used here */
-    return SendMessageW(infoPtr->hwndNotify, WM_NOTIFY, (WPARAM)lpnmtdi->hdr.idFrom, (LPARAM)lpnmtdi);
+    return SendMessageW(infoPtr->hwndNotify, WM_NOTIFY, lpnmtdi->hdr.idFrom, (LPARAM)lpnmtdi);
 }
 
 

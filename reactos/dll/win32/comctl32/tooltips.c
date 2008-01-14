@@ -320,8 +320,7 @@ static void TOOLTIPS_GetDispInfoA(HWND hwnd, TOOLTIPS_INFO *infoPtr, TTTOOL_INFO
     ttnmdi.lParam = toolPtr->lParam;
 
     TRACE("hdr.idFrom = %lx\n", ttnmdi.hdr.idFrom);
-    SendMessageW(toolPtr->hwnd, WM_NOTIFY,
-                 (WPARAM)toolPtr->uId, (LPARAM)&ttnmdi);
+    SendMessageW(toolPtr->hwnd, WM_NOTIFY, toolPtr->uId, (LPARAM)&ttnmdi);
 
     if (IS_INTRESOURCE(ttnmdi.lpszText)) {
         LoadStringW(ttnmdi.hinst, LOWORD(ttnmdi.lpszText),
@@ -351,8 +350,7 @@ static void TOOLTIPS_GetDispInfoA(HWND hwnd, TOOLTIPS_INFO *infoPtr, TTTOOL_INFO
     /* FIXME: Unsure if SETITEM should save the value or not        */
     if (infoPtr->szTipText[0] == 0x00) {
 
-        SendMessageW(GetParent(toolPtr->hwnd), WM_NOTIFY,
-                    (WPARAM)toolPtr->uId, (LPARAM)&ttnmdi);
+        SendMessageW(GetParent(toolPtr->hwnd), WM_NOTIFY, toolPtr->uId, (LPARAM)&ttnmdi);
 
         if (IS_INTRESOURCE(ttnmdi.lpszText)) {
             LoadStringW(ttnmdi.hinst, LOWORD(ttnmdi.lpszText),
@@ -378,8 +376,7 @@ static void TOOLTIPS_GetDispInfoW(HWND hwnd, TOOLTIPS_INFO *infoPtr, TTTOOL_INFO
     ttnmdi.lParam = toolPtr->lParam;
 
     TRACE("hdr.idFrom = %lx\n", ttnmdi.hdr.idFrom);
-    SendMessageW(toolPtr->hwnd, WM_NOTIFY,
-                 (WPARAM)toolPtr->uId, (LPARAM)&ttnmdi);
+    SendMessageW(toolPtr->hwnd, WM_NOTIFY, toolPtr->uId, (LPARAM)&ttnmdi);
 
     if (IS_INTRESOURCE(ttnmdi.lpszText)) {
         LoadStringW(ttnmdi.hinst, LOWORD(ttnmdi.lpszText),
@@ -409,8 +406,7 @@ static void TOOLTIPS_GetDispInfoW(HWND hwnd, TOOLTIPS_INFO *infoPtr, TTTOOL_INFO
     /* FIXME: Unsure if SETITEM should save the value or not        */
     if (infoPtr->szTipText[0] == 0x00) {
 
-        SendMessageW(GetParent(toolPtr->hwnd), WM_NOTIFY,
-                    (WPARAM)toolPtr->uId, (LPARAM)&ttnmdi);
+        SendMessageW(GetParent(toolPtr->hwnd), WM_NOTIFY, toolPtr->uId, (LPARAM)&ttnmdi);
 
         if (IS_INTRESOURCE(ttnmdi.lpszText)) {
             LoadStringW(ttnmdi.hinst, LOWORD(ttnmdi.lpszText),
@@ -563,8 +559,7 @@ TOOLTIPS_Show (HWND hwnd, TOOLTIPS_INFO *infoPtr, BOOL track_activate)
     hdr.hwndFrom = hwnd;
     hdr.idFrom = toolPtr->uId;
     hdr.code = TTN_SHOW;
-    SendMessageW (toolPtr->hwnd, WM_NOTIFY,
-		    (WPARAM)toolPtr->uId, (LPARAM)&hdr);
+    SendMessageW (toolPtr->hwnd, WM_NOTIFY, toolPtr->uId, (LPARAM)&hdr);
 
     TRACE("%s\n", debugstr_w(infoPtr->szTipText));
 
@@ -792,8 +787,7 @@ TOOLTIPS_Hide (HWND hwnd, TOOLTIPS_INFO *infoPtr)
     hdr.hwndFrom = hwnd;
     hdr.idFrom = toolPtr->uId;
     hdr.code = TTN_POP;
-    SendMessageW (toolPtr->hwnd, WM_NOTIFY,
-		    (WPARAM)toolPtr->uId, (LPARAM)&hdr);
+    SendMessageW (toolPtr->hwnd, WM_NOTIFY, toolPtr->uId, (LPARAM)&hdr);
 
     infoPtr->nCurrentTool = -1;
 
@@ -825,8 +819,7 @@ TOOLTIPS_TrackHide (HWND hwnd, const TOOLTIPS_INFO *infoPtr)
     hdr.hwndFrom = hwnd;
     hdr.idFrom = toolPtr->uId;
     hdr.code = TTN_POP;
-    SendMessageW (toolPtr->hwnd, WM_NOTIFY,
-		    (WPARAM)toolPtr->uId, (LPARAM)&hdr);
+    SendMessageW (toolPtr->hwnd, WM_NOTIFY, toolPtr->uId, (LPARAM)&hdr);
 
     SetWindowPos (hwnd, HWND_TOP, 0, 0, 0, 0,
 		    SWP_NOZORDER | SWP_HIDEWINDOW | SWP_NOACTIVATE);
@@ -1922,7 +1915,7 @@ TOOLTIPS_SetTitleA (HWND hwnd, WPARAM wParam, LPARAM lParam)
 {
     TOOLTIPS_INFO *infoPtr = TOOLTIPS_GetInfoPtr (hwnd);
     LPCSTR pszTitle = (LPCSTR)lParam;
-    UINT_PTR uTitleIcon = (UINT_PTR)wParam;
+    UINT_PTR uTitleIcon = wParam;
     UINT size;
 
     TRACE("hwnd = %p, title = %s, icon = %p\n", hwnd, debugstr_a(pszTitle),
@@ -1955,7 +1948,7 @@ TOOLTIPS_SetTitleW (HWND hwnd, WPARAM wParam, LPARAM lParam)
 {
     TOOLTIPS_INFO *infoPtr = TOOLTIPS_GetInfoPtr (hwnd);
     LPCWSTR pszTitle = (LPCWSTR)lParam;
-    UINT_PTR uTitleIcon = (UINT_PTR)wParam;
+    UINT_PTR uTitleIcon = wParam;
     UINT size;
 
     TRACE("hwnd = %p, title = %s, icon = %p\n", hwnd, debugstr_w(pszTitle),

@@ -352,8 +352,7 @@ PAGER_CalcSize (const PAGER_INFO *infoPtr, INT* size, BOOL getWidth)
     nmpgcs.dwFlag = getWidth ? PGF_CALCWIDTH : PGF_CALCHEIGHT;
     nmpgcs.iWidth = getWidth ? *size : 0;
     nmpgcs.iHeight = getWidth ? 0 : *size;
-    SendMessageW (infoPtr->hwndNotify, WM_NOTIFY,
-                  (WPARAM)nmpgcs.hdr.idFrom, (LPARAM)&nmpgcs);
+    SendMessageW (infoPtr->hwndNotify, WM_NOTIFY, nmpgcs.hdr.idFrom, (LPARAM)&nmpgcs);
 
     *size = getWidth ? nmpgcs.iWidth : nmpgcs.iHeight;
 
@@ -763,8 +762,7 @@ PAGER_Scroll(PAGER_INFO* infoPtr, INT dir)
         }
         nmpgScroll.iScroll -= 2*infoPtr->nButtonSize;
 
-        SendMessageW (infoPtr->hwndNotify, WM_NOTIFY,
-                    (WPARAM)nmpgScroll.hdr.idFrom, (LPARAM)&nmpgScroll);
+        SendMessageW (infoPtr->hwndNotify, WM_NOTIFY, nmpgScroll.hdr.idFrom, (LPARAM)&nmpgScroll);
 
         TRACE("[%p] PGN_SCROLL returns iScroll=%d\n", infoPtr->hwndSelf, nmpgScroll.iScroll);
 
@@ -1076,8 +1074,7 @@ PAGER_MouseMove (PAGER_INFO* infoPtr, INT keys, INT x, INT y)
         	nmhdr.hwndFrom = infoPtr->hwndSelf;
         	nmhdr.idFrom   = GetWindowLongPtrW(infoPtr->hwndSelf, GWLP_ID);
         	nmhdr.code = NM_RELEASEDCAPTURE;
-        	SendMessageW(infoPtr->hwndNotify, WM_NOTIFY,
-                         (WPARAM)nmhdr.idFrom, (LPARAM)&nmhdr);
+		SendMessageW(infoPtr->hwndNotify, WM_NOTIFY, nmhdr.idFrom, (LPARAM)&nmhdr);
         }
         if (IsWindow(infoPtr->hwndSelf))
             KillTimer(infoPtr->hwndSelf, TIMERID1);

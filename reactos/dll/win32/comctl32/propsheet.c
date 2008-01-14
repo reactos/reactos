@@ -522,7 +522,7 @@ static BOOL PROPSHEET_CollectPageInfo(LPCPROPSHEETPAGEW lppsp,
       p += 2;
       break;
     default:
-      p += lstrlenW( (LPCWSTR)p ) + 1;
+      p += lstrlenW( p ) + 1;
       break;
   }
 
@@ -536,14 +536,14 @@ static BOOL PROPSHEET_CollectPageInfo(LPCPROPSHEETPAGEW lppsp,
       p += 2;
       break;
     default:
-      p += lstrlenW( (LPCWSTR)p ) + 1;
+      p += lstrlenW( p ) + 1;
       break;
   }
 
   /* Extract the caption */
-  psInfo->proppage[index].pszText = (LPCWSTR)p;
-  TRACE("Tab %d %s\n",index,debugstr_w((LPCWSTR)p));
-  p += lstrlenW((LPCWSTR)p) + 1;
+  psInfo->proppage[index].pszText = p;
+  TRACE("Tab %d %s\n",index,debugstr_w( p ));
+  p += lstrlenW( p ) + 1;
 
   if (dwFlags & PSP_USETITLE)
   {
@@ -632,7 +632,7 @@ static INT_PTR PROPSHEET_CreateDialog(PropSheetInfo* psInfo)
       return -1;
   }
 
-  if(!(template = (LPVOID)LoadResource(COMCTL32_hModule, hRes)))
+  if(!(template = LoadResource(COMCTL32_hModule, hRes)))
     return -1;
 
   /*
@@ -1288,8 +1288,8 @@ static UINT GetTemplateSize(const DLGTEMPLATE* pTemplate)
       p += 2;
       break;
     default:
-      TRACE("menu %s\n",debugstr_w((LPCWSTR)p));
-      p += lstrlenW( (LPCWSTR)p ) + 1;
+      TRACE("menu %s\n",debugstr_w( p ));
+      p += lstrlenW( p ) + 1;
       break;
   }
 
@@ -1303,22 +1303,22 @@ static UINT GetTemplateSize(const DLGTEMPLATE* pTemplate)
       p += 2; /* 0xffff plus predefined window class ordinal value */
       break;
     default:
-      TRACE("class %s\n",debugstr_w((LPCWSTR)p));
-      p += lstrlenW( (LPCWSTR)p ) + 1;
+      TRACE("class %s\n",debugstr_w( p ));
+      p += lstrlenW( p ) + 1;
       break;
   }
 
   /* title */
-  TRACE("title %s\n",debugstr_w((LPCWSTR)p));
-  p += lstrlenW((LPCWSTR)p) + 1;
+  TRACE("title %s\n",debugstr_w( p ));
+  p += lstrlenW( p ) + 1;
 
   /* font, if DS_SETFONT set */
   if ((DS_SETFONT & ((istemplateex)?  ((const MyDLGTEMPLATEEX*)pTemplate)->style :
 		     pTemplate->style)))
     {
       p+=(istemplateex)?3:1;
-      TRACE("font %s\n",debugstr_w((LPCWSTR)p));
-      p += lstrlenW( (LPCWSTR)p ) + 1; /* the font name */
+      TRACE("font %s\n",debugstr_w( p ));
+      p += lstrlenW( p ) + 1; /* the font name */
     }
 
   /* now process the DLGITEMTEMPLATE(EX) structs (plus custom data)
@@ -1342,8 +1342,8 @@ static UINT GetTemplateSize(const DLGTEMPLATE* pTemplate)
 	  p += 2;
 	  break;
 	default:
-	  TRACE("class %s\n",debugstr_w((LPCWSTR)p));
-	  p += lstrlenW( (LPCWSTR)p ) + 1;
+	  TRACE("class %s\n",debugstr_w( p ));
+	  p += lstrlenW( p ) + 1;
 	  break;
 	}
 
@@ -1358,8 +1358,8 @@ static UINT GetTemplateSize(const DLGTEMPLATE* pTemplate)
 	  p += 2;
 	  break;
 	default:
-	  TRACE("text %s\n",debugstr_w((LPCWSTR)p));
-	  p += lstrlenW( (LPCWSTR)p ) + 1;
+	  TRACE("text %s\n",debugstr_w( p ));
+	  p += lstrlenW( p ) + 1;
 	  break;
 	}
       p += *p / sizeof(WORD) + 1;    /* Skip extra data */

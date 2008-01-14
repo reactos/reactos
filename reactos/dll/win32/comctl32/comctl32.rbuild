@@ -1,5 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
+<group>
 <module name="comctl32" type="win32dll" baseaddress="${BASEADDRESS_COMCTL32}" installbase="system32" installname="comctl32.dll" allowwarnings="true">
 	<autoregister infsection="OleControlDlls" type="DllInstall" />
 	<importlibrary definition="comctl32.spec.def" />
@@ -54,3 +55,4 @@
 	<file>rsrc.rc</file>
 	<file>comctl32.spec</file>
 </module>
+</group>

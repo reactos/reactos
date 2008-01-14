@@ -86,7 +86,7 @@ Index: tooltips.c
 ===================================================================
 --- tooltips.c	(revision 25790)
 +++ tooltips.c	(working copy)
-@@ -2440,7 +2440,34 @@
+@@ -2433,7 +2433,34 @@
  TOOLTIPS_NotifyFormat (HWND hwnd, WPARAM wParam, LPARAM lParam)
  {
      FIXME ("hwnd=%p wParam=%lx lParam=%lx\n", hwnd, wParam, lParam);
@@ -125,7 +125,7 @@ Index: treeview.c
 ===================================================================
 --- treeview.c	(revision 27134)
 +++ treeview.c	(working copy)
-@@ -2844,8 +2844,6 @@
+@@ -2834,8 +2834,6 @@
  	}
      }
  

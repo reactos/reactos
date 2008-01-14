@@ -178,7 +178,7 @@ TAB_SendSimpleNotify (const TAB_INFO *infoPtr, UINT code)
     nmhdr.code = code;
 
     return (BOOL) SendMessageW (infoPtr->hwndNotify, WM_NOTIFY,
-            (WPARAM) nmhdr.idFrom, (LPARAM) &nmhdr);
+            nmhdr.idFrom, (LPARAM) &nmhdr);
 }
 
 static void

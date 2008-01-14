@@ -207,7 +207,7 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 	case DLL_PROCESS_ATTACH:
             DisableThreadLibraryCalls(hinstDLL);
 
-            COMCTL32_hModule = (HMODULE)hinstDLL;
+            COMCTL32_hModule = hinstDLL;
 
             /* add global subclassing atom (used by 'tooltip' and 'updown') */
             COMCTL32_wSubclass = (LPWSTR)(DWORD_PTR)GlobalAddAtomW (strCC32SubclassInfo);
@@ -715,7 +715,7 @@ InitCommonControls (void)
  *
  * NOTES
  *     Probaly all versions of comctl32 initializes the Win95 controls in DllMain
- *     during DLL initializaiton. Starting from comctl32 v5.82 all the controls
+ *     during DLL initialization. Starting from comctl32 v5.82 all the controls
  *     are initialized there. We follow this behaviour and this function is just
  *     a dummy.
  *
@@ -885,7 +885,7 @@ CreateMappedBitmap (HINSTANCE hInstance, INT_PTR idBitmap, UINT wFlags,
 	return 0;
     RtlMoveMemory (lpBitmapInfo, lpBitmap, nSize);
 
-    pColorTable = (RGBQUAD*)(((LPBYTE)lpBitmapInfo)+(UINT)lpBitmapInfo->biSize);
+    pColorTable = (RGBQUAD*)(((LPBYTE)lpBitmapInfo) + lpBitmapInfo->biSize);
 
     for (iColor = 0; iColor < nColorTableSize; iColor++) {
 	for (i = 0; i < iMaps; i++) {
@@ -907,8 +907,8 @@ CreateMappedBitmap (HINSTANCE hInstance, INT_PTR idBitmap, UINT wFlags,
 	    }
 	}
     }
-    nWidth  = (INT)lpBitmapInfo->biWidth;
-    nHeight = (INT)lpBitmapInfo->biHeight;
+    nWidth  = lpBitmapInfo->biWidth;
+    nHeight = lpBitmapInfo->biHeight;
     hdcScreen = GetDC (NULL);
     hbm = CreateCompatibleBitmap (hdcScreen, nWidth, nHeight);
     if (hbm) {

@@ -1072,7 +1072,7 @@ DATETIME_SetFocus (DATETIME_INFO *infoPtr, HWND lostFocus)
     TRACE("got focus from %p\n", lostFocus);
 
     /* if monthcal is open and it loses focus, close monthcal */
-    if (infoPtr->hMonthCal && (lostFocus == infoPtr->hMonthCal) && \
+    if (infoPtr->hMonthCal && (lostFocus == infoPtr->hMonthCal) &&
         IsWindowVisible(infoPtr->hMonthCal))
     {
         ShowWindow(infoPtr->hMonthCal, SW_HIDE);
@@ -1108,7 +1108,7 @@ DATETIME_SendDateTimeChangeNotify (const DATETIME_INFO *infoPtr)
 
     MONTHCAL_CopyTime (&infoPtr->date, &dtdtc.st);
     return (BOOL) SendMessageW (infoPtr->hwndNotify, WM_NOTIFY,
-                                (WPARAM)dtdtc.nmhdr.idFrom, (LPARAM)&dtdtc);
+                                dtdtc.nmhdr.idFrom, (LPARAM)&dtdtc);
 }
 
 
@@ -1123,7 +1123,7 @@ DATETIME_SendSimpleNotify (const DATETIME_INFO *infoPtr, UINT code)
     nmhdr.code     = code;
 
     return (BOOL) SendMessageW (infoPtr->hwndNotify, WM_NOTIFY,
-                                (WPARAM)nmhdr.idFrom, (LPARAM)&nmhdr);
+                                nmhdr.idFrom, (LPARAM)&nmhdr);
 }
 
 static LRESULT
