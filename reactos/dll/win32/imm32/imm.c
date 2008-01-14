@@ -240,6 +240,9 @@ static HIMCC updateCompStr(HIMCC old, LPWSTR compstr, DWORD len)
 
     TRACE("%s, %i\n",debugstr_wn(compstr,len),len);
 
+    if (old == NULL && compstr == NULL && len == 0)
+        return NULL;
+
     if (old != NULL)
     {
         olddata = ImmLockIMCC(old);
@@ -372,6 +375,9 @@ static HIMCC updateResultStr(HIMCC old, LPWSTR resultstr, DWORD len)
     INT current_offset = 0;
 
     TRACE("%s, %i\n",debugstr_wn(resultstr,len),len);
+
+    if (old == NULL && resultstr == NULL && len == 0)
+        return NULL;
 
     if (old != NULL)
     {
@@ -1076,7 +1082,7 @@ HWND WINAPI ImmGetDefaultIMEWnd(HWND hWnd)
         TRACE("Default created (%p)\n",hwndDefault);
   }
 
-  return (HWND)hwndDefault;
+  return hwndDefault;
 }
 
 /***********************************************************************
@@ -1400,15 +1406,18 @@ BOOL WINAPI ImmNotifyIME(
                 case CPS_CANCEL:
                     TRACE("%s - %s\n","NI_COMPOSITIONSTR","CPS_CANCEL");
                     {
-                        HIMCC newCompStr;
+                        BOOL send;
+
                         if (pX11DRV_ForceXIMReset)
                             pX11DRV_ForceXIMReset(root_context->IMC.hWnd);
 
-                        newCompStr = updateCompStr(root_context->IMC.hCompStr, NULL, 0);
-                        ImmDestroyIMCC(root_context->IMC.hCompStr);
-                        root_context->IMC.hCompStr = newCompStr;
+                        send = (root_context->IMC.hCompStr!=NULL);
 
-                        ImmInternalPostIMEMessage(WM_IME_COMPOSITION, 0,
+                        ImmDestroyIMCC(root_context->IMC.hCompStr);
+                        root_context->IMC.hCompStr = NULL;
+
+                        if (send)
+                            ImmInternalPostIMEMessage(WM_IME_COMPOSITION, 0,
                                                   GCS_COMPSTR);
                         rc = TRUE;
                     }
@@ -1419,7 +1428,7 @@ BOOL WINAPI ImmNotifyIME(
                         pX11DRV_ForceXIMReset(root_context->IMC.hWnd);
                     {
                         HIMCC newCompStr;
-                        DWORD cplen;
+                        DWORD cplen = 0;
                         LPWSTR cpstr;
                         LPCOMPOSITIONSTRING cs = NULL;
                         LPBYTE cdata = NULL;
@@ -1429,11 +1438,14 @@ BOOL WINAPI ImmNotifyIME(
                         ImmDestroyIMCC(root_context->IMC.hCompStr);
                         root_context->IMC.hCompStr = newCompStr;
 
-                        cdata = ImmLockIMCC(root_context->IMC.hCompStr);
-                        cs = (LPCOMPOSITIONSTRING)cdata;
-                        cplen = cs->dwCompStrLen;
-                        cpstr = (LPWSTR)&(cdata[cs->dwCompStrOffset]);
-                        ImmUnlockIMCC(root_context->IMC.hCompStr);
+                        if (root_context->IMC.hCompStr)
+                        {
+                            cdata = ImmLockIMCC(root_context->IMC.hCompStr);
+                            cs = (LPCOMPOSITIONSTRING)cdata;
+                            cplen = cs->dwCompStrLen;
+                            cpstr = (LPWSTR)&(cdata[cs->dwCompStrOffset]);
+                            ImmUnlockIMCC(root_context->IMC.hCompStr);
+                        }
                         if (cplen > 0)
                         {
                             WCHAR param = cpstr[0];
