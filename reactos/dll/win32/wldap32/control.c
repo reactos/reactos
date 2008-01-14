@@ -247,7 +247,7 @@ INT CDECL ldap_create_vlv_controlA( WLDAP32_LDAP *ld, WLDAP32_LDAPVLVInfo *info,
  *  Failure: An LDAP error code.
  *
  * NOTES
- *  Pass the created control in conjuction with a sort control as
+ *  Pass the created control in conjunction with a sort control as
  *  server controls in subsequent calls to ldap_search_ext(_s). The
  *  server will then return a sorted, contiguous subset of results
  *  that meets the criteria specified in the LDAPVLVInfo structure.

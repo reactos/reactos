@@ -161,7 +161,7 @@ ULONG CDECL WLDAP32_ber_first_element( BerElement *berelement, ULONG *len, CHAR 
  * Flatten a berelement structure into a berval structure.
  *
  * PARAMS
- *  berlement [I] Pointer to a berelement structure.
+ *  berelement [I] Pointer to a berelement structure.
  *  berval    [O] Pointer to a berval structure.
  *
  * RETURNS
@@ -187,7 +187,7 @@ INT CDECL WLDAP32_ber_flatten( BerElement *berelement, PBERVAL *berval )
  * Free a berelement structure.
  *
  * PARAMS
- *  berlement [I] Pointer to the berelement structure to be freed.
+ *  berelement [I] Pointer to the berelement structure to be freed.
  *  buf       [I] Flag.
  *
  * RETURNS
@@ -245,7 +245,7 @@ BerElement * CDECL WLDAP32_ber_init( BERVAL *berval )
  *  Failure: LBER_DEFAULT (no more data).
  *
  * NOTES
- *  len and cookie are intitialised by ber_first_element and should
+ *  len and cookie are initialized by ber_first_element and should
  *  be passed on in subsequent calls to ber_next_element.
  */
 ULONG CDECL WLDAP32_ber_next_element( BerElement *berelement, ULONG *len, CHAR *opaque )

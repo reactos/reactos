@@ -409,7 +409,7 @@ INT CDECL ldap_parse_vlv_controlA( WLDAP32_LDAP *ld, PLDAPControlA *control,
  * PARAMS
  *  ld         [I] Pointer to an LDAP context.
  *  control    [I] Controls obtained from a result message.
- *  targetpos  [O] Positition of the target in the result list. 
+ *  targetpos  [O] Position of the target in the result list.
  *  listcount  [O] Estimate of the number of results in the list.
  *  context    [O] Server side context.
  *  errcode    [O] Error code from the listview operation.
