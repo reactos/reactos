@@ -54,13 +54,6 @@ typedef struct _REG_VALUE
   PCHAR Data;
 } VALUE, *PVALUE;
 
-
-#define ERROR_SUCCESS                    0L
-#define ERROR_OUTOFMEMORY                14L
-#define ERROR_INVALID_PARAMETER          87L
-#define ERROR_MORE_DATA                  234L
-#define ERROR_NO_MORE_ITEMS              259L
-
 #define assert(x)
 
 VOID
