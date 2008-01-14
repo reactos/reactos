@@ -1,5 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
+<group>
 <module name="msvfw32" type="win32dll" baseaddress="${BASEADDRESS_MSVFW32}" installbase="system32" installname="msvfw32.dll" allowwarnings="true">
 	<importlibrary definition="msvfw32.spec.def" />
 	<include base="msvfw32">.</include>
@@ -9,8 +10,8 @@
 	<define name="_WIN32_WINNT">0x600</define>
 	<library>wine</library>
 	<library>winmm</library>
-	<library>comctl32</library>
 	<library>version</library>
+	<library>comctl32</library>
 	<library>user32</library>
 	<library>gdi32</library>
 	<library>advapi32</library>
@@ -22,3 +23,4 @@
 	<file>rsrc.rc</file>
 	<file>msvfw32.spec</file>
 </module>
+</group>

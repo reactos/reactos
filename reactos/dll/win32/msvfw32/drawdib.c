@@ -183,7 +183,7 @@ BOOL VFWAPI DrawDibBegin(HDRAWDIB hdd,
     WINE_HDD *whdd;
 
     TRACE("(%p,%p,%d,%d,%p,%d,%d,0x%08x)\n",
-          hdd, hdc, dxDst, dyDst, lpbi, dxSrc, dySrc, (DWORD)wFlags);
+          hdd, hdc, dxDst, dyDst, lpbi, dxSrc, dySrc, wFlags);
 
     TRACE("lpbi: %d,%d/%d,%d,%d,%d,%d,%d,%d,%d,%d\n",
           lpbi->biSize, lpbi->biWidth, lpbi->biHeight, lpbi->biPlanes,
@@ -305,7 +305,7 @@ BOOL VFWAPI DrawDibDraw(HDRAWDIB hdd, HDC hdc,
     BOOL ret = TRUE;
 
     TRACE("(%p,%p,%d,%d,%d,%d,%p,%p,%d,%d,%d,%d,0x%08x)\n",
-          hdd, hdc, xDst, yDst, dxDst, dyDst, lpbi, lpBits, xSrc, ySrc, dxSrc, dySrc, (DWORD)wFlags);
+          hdd, hdc, xDst, yDst, dxDst, dyDst, lpbi, lpBits, xSrc, ySrc, dxSrc, dySrc, wFlags);
 
     whdd = MSVIDEO_GetHddPtr(hdd);
     if (!whdd) return FALSE;
@@ -313,7 +313,7 @@ BOOL VFWAPI DrawDibDraw(HDRAWDIB hdd, HDC hdc,
     TRACE("whdd=%p\n", whdd);
 
     if (wFlags & ~(DDF_SAME_HDC | DDF_SAME_DRAW | DDF_NOTKEYFRAME | DDF_UPDATE | DDF_DONTDRAW | DDF_BACKGROUNDPAL))
-        FIXME("wFlags == 0x%08x not handled\n", (DWORD)wFlags);
+        FIXME("wFlags == 0x%08x not handled\n", wFlags);
 
     if (!lpBits) 
     {
