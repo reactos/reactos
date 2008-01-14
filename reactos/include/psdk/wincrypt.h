@@ -1723,6 +1723,19 @@ static const WCHAR MS_ENH_RSA_AES_PROV_W[] =           { 'M','i','c','r','o','s'
 #define KP_KEYEXCHANGE_PIN      32
 #define KP_SIGNATURE_PIN        33
 #define KP_PREHASH              34
+#define KP_ROUNDS               35
+#define KP_OAEP_PARAMS          36
+#define KP_CMS_KEY_INFO         37
+#define KP_CMS_DH_KEY_INFO      38
+#define KP_PUB_PARAMS           39
+#define KP_VERIFY_PARAMS        40
+#define KP_HIGHEST_VERSION      41
+#define KP_GET_USE_COUNT        42
+
+/* Values for KP_PADDING */
+#define PKCS5_PADDING  1
+#define RANDOM_PADDING 2
+#define ZERO_PADDING   3
 
 /* CryptSignHash/CryptVerifySignature */
 #define CRYPT_NOHASHOID         0x00000001
