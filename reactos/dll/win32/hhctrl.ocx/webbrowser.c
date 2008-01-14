@@ -74,7 +74,7 @@ static ULONG STDMETHODCALLTYPE Site_Release(IOleClientSite *iface)
     if (refCount)
         return refCount;
 
-    hhctrl_free(This);
+    heap_free(This);
     return 0;
 }
 
@@ -576,7 +576,7 @@ BOOL InitWebBrowser(HHInfo *info, HWND hwndParent)
     HRESULT hr;
     RECT rc;
 
-    iOleClientSiteImpl = hhctrl_alloc_zero(sizeof(IOleClientSiteImpl));
+    iOleClientSiteImpl = heap_alloc_zero(sizeof(IOleClientSiteImpl));
     if (!iOleClientSiteImpl)
         return FALSE;
 
@@ -625,7 +625,7 @@ BOOL InitWebBrowser(HHInfo *info, HWND hwndParent)
 
 error:
     ReleaseWebBrowser(info);
-    hhctrl_free(iOleClientSiteImpl);
+    heap_free(iOleClientSiteImpl);
 
     return FALSE;
 }

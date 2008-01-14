@@ -92,6 +92,19 @@ typedef struct {
     IOleObject *wb_object;
 
     HH_WINTYPEW WinType;
+
+    LPWSTR pszType;
+    LPWSTR pszCaption;
+    LPWSTR pszToc;
+    LPWSTR pszIndex;
+    LPWSTR pszFile;
+    LPWSTR pszHome;
+    LPWSTR pszJump1;
+    LPWSTR pszJump2;
+    LPWSTR pszUrlJump1;
+    LPWSTR pszUrlJump2;
+    LPWSTR pszCustomTabs;
+
     CHMInfo *pCHMInfo;
     ContentItem *content;
     HWND hwndTabCtrl;
@@ -111,7 +124,7 @@ void InitContent(HHInfo*);
 void ReleaseContent(HHInfo*);
 
 CHMInfo *OpenCHM(LPCWSTR szFile);
-BOOL LoadWinTypeFromCHM(CHMInfo *pCHMInfo, HH_WINTYPEW *pHHWinType);
+BOOL LoadWinTypeFromCHM(HHInfo *info);
 CHMInfo *CloseCHM(CHMInfo *pCHMInfo);
 void SetChmPath(ChmPath*,LPCWSTR,LPCWSTR);
 IStream *GetChmStream(CHMInfo*,LPCWSTR,ChmPath*);
@@ -124,27 +137,27 @@ BOOL NavigateToChm(HHInfo*,LPCWSTR,LPCWSTR);
 
 /* memory allocation functions */
 
-static inline void *hhctrl_alloc(size_t len)
+static inline void *heap_alloc(size_t len)
 {
     return HeapAlloc(GetProcessHeap(), 0, len);
 }
 
-static inline void *hhctrl_alloc_zero(size_t len)
+static inline void *heap_alloc_zero(size_t len)
 {
     return HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, len);
 }
 
-static inline void *hhctrl_realloc(void *mem, size_t len)
+static inline void *heap_realloc(void *mem, size_t len)
 {
     return HeapReAlloc(GetProcessHeap(), 0, mem, len);
 }
 
-static inline void *hhctrl_realloc_zero(void *mem, size_t len)
+static inline void *heap_realloc_zero(void *mem, size_t len)
 {
     return HeapReAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, mem, len);
 }
 
-static inline BOOL hhctrl_free(void *mem)
+static inline BOOL heap_free(void *mem)
 {
     return HeapFree(GetProcessHeap(), 0, mem);
 }
@@ -158,7 +171,7 @@ static inline LPWSTR strdupW(LPCWSTR str)
         return NULL;
 
     size = (strlenW(str)+1)*sizeof(WCHAR);
-    ret = hhctrl_alloc(size);
+    ret = heap_alloc(size);
     memcpy(ret, str, size);
 
     return ret;
@@ -173,7 +186,7 @@ static inline LPWSTR strdupAtoW(LPCSTR str)
         return NULL;
 
     len = MultiByteToWideChar(CP_ACP, 0, str, -1, NULL, 0);
-    ret = hhctrl_alloc(len*sizeof(WCHAR));
+    ret = heap_alloc(len*sizeof(WCHAR));
     MultiByteToWideChar(CP_ACP, 0, str, -1, ret, len);
 
     return ret;

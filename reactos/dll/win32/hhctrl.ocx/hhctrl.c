@@ -147,7 +147,7 @@ HWND WINAPI HtmlHelpW(HWND caller, LPCWSTR filename, UINT command, DWORD_PTR dat
             return NULL;
 
         NavigateToUrl(info, url);
-        hhctrl_free(url);
+        heap_free(url);
 
         return NULL; /* FIXME */
     }
@@ -180,7 +180,7 @@ HWND WINAPI HtmlHelpA(HWND caller, LPCSTR filename, UINT command, DWORD_PTR data
     if (filename)
     {
         len = MultiByteToWideChar( CP_ACP, 0, filename, -1, NULL, 0 );
-        wfile = hhctrl_alloc(len*sizeof(WCHAR));
+        wfile = heap_alloc(len*sizeof(WCHAR));
         MultiByteToWideChar( CP_ACP, 0, filename, -1, wfile, len );
     }
 
@@ -205,7 +205,7 @@ HWND WINAPI HtmlHelpA(HWND caller, LPCSTR filename, UINT command, DWORD_PTR data
         case HH_GET_WIN_HANDLE:
         case HH_SAFE_DISPLAY_TOPIC:
             len = MultiByteToWideChar( CP_ACP, 0, (const char*)data, -1, NULL, 0 );
-            wdata = hhctrl_alloc(len*sizeof(WCHAR));
+            wdata = heap_alloc(len*sizeof(WCHAR));
             MultiByteToWideChar( CP_ACP, 0, (const char*)data, -1, wdata, len );
             break;
 
@@ -227,8 +227,8 @@ HWND WINAPI HtmlHelpA(HWND caller, LPCSTR filename, UINT command, DWORD_PTR data
 
     result = HtmlHelpW( caller, wfile, command, wdata ? (DWORD_PTR)wdata : data );
 
-    hhctrl_free(wfile);
-    hhctrl_free(wdata);
+    heap_free(wfile);
+    heap_free(wdata);
     return result;
 }
 

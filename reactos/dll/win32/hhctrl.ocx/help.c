@@ -56,7 +56,7 @@ static LPWSTR HH_LoadString(DWORD dwID)
     iSize = LoadStringW(hhctrl_hinstance, dwID, NULL, 0);
     iSize += 2; /* some strings (tab text) needs double-null termination */
 
-    string = hhctrl_alloc(iSize * sizeof(WCHAR));
+    string = heap_alloc(iSize * sizeof(WCHAR));
     LoadStringW(hhctrl_hinstance, dwID, string, iSize);
 
     return string;
@@ -95,8 +95,8 @@ BOOL NavigateToUrl(HHInfo *info, LPCWSTR surl)
     SetChmPath(&chm_path, info->pCHMInfo->szFile, surl);
     ret = NavigateToChm(info, chm_path.chm_file, chm_path.chm_index);
 
-    hhctrl_free(chm_path.chm_file);
-    hhctrl_free(chm_path.chm_index);
+    heap_free(chm_path.chm_file);
+    heap_free(chm_path.chm_index);
 
     return ret;
 }
@@ -577,7 +577,7 @@ static BOOL HH_AddToolbar(HHInfo *pHHInfo)
         szBuf[dwLen + 2] = 0; /* Double-null terminate */
 
         buttons[dwIndex].iString = (DWORD)SendMessageW(hToolbar, TB_ADDSTRINGW, 0, (LPARAM)szBuf);
-        hhctrl_free(szBuf);
+        heap_free(szBuf);
     }
 
     SendMessageW(hToolbar, TB_ADDBUTTONSW, dwNumButtons, (LPARAM)&buttons);
@@ -623,7 +623,7 @@ static DWORD NP_CreateTab(HINSTANCE hInstance, HWND hwndTabCtrl, DWORD index)
 
     ret = SendMessageW( hwndTabCtrl, TCM_INSERTITEMW, index, (LPARAM)&tie );
 
-    hhctrl_free(tabText);
+    heap_free(tabText);
     return ret;
 }
 
@@ -922,16 +922,16 @@ void ReleaseHelpViewer(HHInfo *info)
         return;
 
     /* Free allocated strings */
-    hhctrl_free((LPWSTR)info->WinType.pszType);
-    hhctrl_free((LPWSTR)info->WinType.pszCaption);
-    hhctrl_free((LPWSTR)info->WinType.pszToc);
-    hhctrl_free((LPWSTR)info->WinType.pszIndex);
-    hhctrl_free((LPWSTR)info->WinType.pszFile);
-    hhctrl_free((LPWSTR)info->WinType.pszHome);
-    hhctrl_free((LPWSTR)info->WinType.pszJump1);
-    hhctrl_free((LPWSTR)info->WinType.pszJump2);
-    hhctrl_free((LPWSTR)info->WinType.pszUrlJump1);
-    hhctrl_free((LPWSTR)info->WinType.pszUrlJump2);
+    heap_free(info->pszType);
+    heap_free(info->pszCaption);
+    heap_free(info->pszToc);
+    heap_free(info->pszIndex);
+    heap_free(info->pszFile);
+    heap_free(info->pszHome);
+    heap_free(info->pszJump1);
+    heap_free(info->pszJump2);
+    heap_free(info->pszUrlJump1);
+    heap_free(info->pszUrlJump2);
 
     if (info->pCHMInfo)
         CloseCHM(info->pCHMInfo);
@@ -942,13 +942,13 @@ void ReleaseHelpViewer(HHInfo *info)
     if(info->WinType.hwndHelp)
         DestroyWindow(info->WinType.hwndHelp);
 
-    hhctrl_free(info);
+    heap_free(info);
     OleUninitialize();
 }
 
 HHInfo *CreateHelpViewer(LPCWSTR filename)
 {
-    HHInfo *info = hhctrl_alloc_zero(sizeof(HHInfo));
+    HHInfo *info = heap_alloc_zero(sizeof(HHInfo));
 
     OleInitialize(NULL);
 
@@ -958,7 +958,7 @@ HHInfo *CreateHelpViewer(LPCWSTR filename)
         return NULL;
     }
 
-    if (!LoadWinTypeFromCHM(info->pCHMInfo, &info->WinType)) {
+    if (!LoadWinTypeFromCHM(info)) {
         ReleaseHelpViewer(info);
         return NULL;
     }

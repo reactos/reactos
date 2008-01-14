@@ -1,5 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
+<group>
 <module name="hhctrl" type="win32ocx" baseaddress="${BASEADDRESS_HHCTRL}" installbase="system32" installname="hhctrl.ocx" allowwarnings="true">
 	<autoregister infsection="OleControlDlls" type="DllRegisterServer" />
 	<importlibrary definition="hhctrl.ocx.spec.def" />
@@ -13,7 +14,6 @@
 	<library>wine</library>
 	<library>advapi32</library>
 	<library>comctl32</library>
-	<library>shell32</library>
 	<library>shlwapi</library>
 	<library>ole32</library>
 	<library>oleaut32</library>
@@ -31,3 +31,4 @@
 	<file>hhctrl.rc</file>
 	<file>hhctrl.ocx.spec</file>
 </module>
+</group>

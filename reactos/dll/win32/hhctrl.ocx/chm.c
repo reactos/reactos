@@ -39,10 +39,10 @@ static LPCSTR GetChmString(CHMInfo *chm, DWORD offset)
 
     if(chm->strings_size <= (offset >> BLOCK_BITS)) {
         if(chm->strings)
-            chm->strings = hhctrl_realloc_zero(chm->strings,
+            chm->strings = heap_realloc_zero(chm->strings,
                     chm->strings_size = ((offset >> BLOCK_BITS)+1)*sizeof(char*));
         else
-            chm->strings = hhctrl_alloc_zero(
+            chm->strings = heap_alloc_zero(
                     chm->strings_size = ((offset >> BLOCK_BITS)+1)*sizeof(char*));
 
     }
@@ -59,13 +59,13 @@ static LPCSTR GetChmString(CHMInfo *chm, DWORD offset)
             return NULL;
         }
 
-        chm->strings[offset >> BLOCK_BITS] = hhctrl_alloc(BLOCK_SIZE);
+        chm->strings[offset >> BLOCK_BITS] = heap_alloc(BLOCK_SIZE);
 
         hres = IStream_Read(chm->strings_stream, chm->strings[offset >> BLOCK_BITS],
                             BLOCK_SIZE, &read);
         if(FAILED(hres)) {
             WARN("Read failed: %08x\n", hres);
-            hhctrl_free(chm->strings[offset >> BLOCK_BITS]);
+            heap_free(chm->strings[offset >> BLOCK_BITS]);
             chm->strings[offset >> BLOCK_BITS] = NULL;
             return NULL;
         }
@@ -97,7 +97,7 @@ static BOOL ReadChmSystem(CHMInfo *chm)
     IStream_Read(stream, &ver, sizeof(ver), &read);
     TRACE("version is %x\n", ver);
 
-    buf = hhctrl_alloc(8*sizeof(DWORD));
+    buf = heap_alloc(8*sizeof(DWORD));
     buf_size = 8*sizeof(DWORD);
 
     while(1) {
@@ -106,7 +106,7 @@ static BOOL ReadChmSystem(CHMInfo *chm)
             break;
 
         if(entry.len > buf_size)
-            buf = hhctrl_realloc(buf, buf_size=entry.len);
+            buf = heap_realloc(buf, buf_size=entry.len);
 
         hres = IStream_Read(stream, buf, entry.len, &read);
         if(hres != S_OK)
@@ -142,7 +142,7 @@ static BOOL ReadChmSystem(CHMInfo *chm)
         }
     }
 
-    hhctrl_free(buf);
+    heap_free(buf);
     IStream_Release(stream);
 
     return SUCCEEDED(hres);
@@ -171,12 +171,12 @@ LPWSTR FindContextAlias(CHMInfo *chm, DWORD index)
         return NULL;
     }
 
-    buf = hhctrl_alloc(size);
+    buf = heap_alloc(size);
     hres = IStream_Read(ivb_stream, buf, size, &read);
     IStream_Release(ivb_stream);
     if(FAILED(hres)) {
         WARN("Read failed: %08x\n", hres);
-        hhctrl_free(buf);
+        heap_free(buf);
         return NULL;
     }
 
@@ -189,7 +189,7 @@ LPWSTR FindContextAlias(CHMInfo *chm, DWORD index)
         }
     }
 
-    hhctrl_free(buf);
+    heap_free(buf);
 
     TRACE("returning %s\n", debugstr_a(ret));
     return strdupAtoW(ret);
@@ -200,10 +200,10 @@ LPWSTR FindContextAlias(CHMInfo *chm, DWORD index)
  * FIXME: There may be more than one window type in the file, so
  *        add the ability to choose a certain window type
  */
-BOOL LoadWinTypeFromCHM(CHMInfo *pChmInfo, HH_WINTYPEW *pHHWinType)
+BOOL LoadWinTypeFromCHM(HHInfo *info)
 {
     LARGE_INTEGER liOffset;
-    IStorage *pStorage = pChmInfo->pStorage;
+    IStorage *pStorage = info->pCHMInfo->pStorage;
     IStream *pStream;
     HRESULT hr;
     DWORD cbRead;
@@ -221,26 +221,26 @@ BOOL LoadWinTypeFromCHM(CHMInfo *pChmInfo, HH_WINTYPEW *pHHWinType)
     if (FAILED(hr)) goto done;
 
     /* read the HH_WINTYPE struct data */
-    hr = IStream_Read(pStream, pHHWinType, sizeof(*pHHWinType), &cbRead);
+    hr = IStream_Read(pStream, &info->WinType, sizeof(info->WinType), &cbRead);
     if (FAILED(hr)) goto done;
 
     /* convert the #STRINGS offsets to actual strings */
-    pHHWinType->pszType = strdupAtoW(GetChmString(pChmInfo, (DWORD)pHHWinType->pszType));
-    pHHWinType->pszCaption = strdupAtoW(GetChmString(pChmInfo, (DWORD)pHHWinType->pszCaption));
-    pHHWinType->pszToc = strdupAtoW(GetChmString(pChmInfo, (DWORD)pHHWinType->pszToc));
-    pHHWinType->pszIndex = strdupAtoW(GetChmString(pChmInfo, (DWORD)pHHWinType->pszIndex));
-    pHHWinType->pszFile = strdupAtoW(GetChmString(pChmInfo, (DWORD)pHHWinType->pszFile));
-    pHHWinType->pszHome = strdupAtoW(GetChmString(pChmInfo, (DWORD)pHHWinType->pszHome));
-    pHHWinType->pszJump1 = strdupAtoW(GetChmString(pChmInfo, (DWORD)pHHWinType->pszJump1));
-    pHHWinType->pszJump2 = strdupAtoW(GetChmString(pChmInfo, (DWORD)pHHWinType->pszJump2));
-    pHHWinType->pszUrlJump1 = strdupAtoW(GetChmString(pChmInfo, (DWORD)pHHWinType->pszUrlJump1));
-    pHHWinType->pszUrlJump2 = strdupAtoW(GetChmString(pChmInfo, (DWORD)pHHWinType->pszUrlJump2));
-    
+    info->WinType.pszType     = info->pszType     = strdupAtoW(GetChmString(info->pCHMInfo, (DWORD_PTR)info->WinType.pszType));
+    info->WinType.pszCaption  = info->pszCaption  = strdupAtoW(GetChmString(info->pCHMInfo, (DWORD_PTR)info->WinType.pszCaption));
+    info->WinType.pszToc      = info->pszToc      = strdupAtoW(GetChmString(info->pCHMInfo, (DWORD_PTR)info->WinType.pszToc));
+    info->WinType.pszIndex    = info->pszIndex    = strdupAtoW(GetChmString(info->pCHMInfo, (DWORD_PTR)info->WinType.pszIndex));
+    info->WinType.pszFile     = info->pszFile     = strdupAtoW(GetChmString(info->pCHMInfo, (DWORD_PTR)info->WinType.pszFile));
+    info->WinType.pszHome     = info->pszHome     = strdupAtoW(GetChmString(info->pCHMInfo, (DWORD_PTR)info->WinType.pszHome));
+    info->WinType.pszJump1    = info->pszJump1    = strdupAtoW(GetChmString(info->pCHMInfo, (DWORD_PTR)info->WinType.pszJump1));
+    info->WinType.pszJump2    = info->pszJump2    = strdupAtoW(GetChmString(info->pCHMInfo, (DWORD_PTR)info->WinType.pszJump2));
+    info->WinType.pszUrlJump1 = info->pszUrlJump1 = strdupAtoW(GetChmString(info->pCHMInfo, (DWORD_PTR)info->WinType.pszUrlJump1));
+    info->WinType.pszUrlJump2 = info->pszUrlJump2 = strdupAtoW(GetChmString(info->pCHMInfo, (DWORD_PTR)info->WinType.pszUrlJump2));
+
     /* FIXME: pszCustomTabs is a list of multiple zero-terminated strings so ReadString won't
      * work in this case
      */
 #if 0
-    pHHWinType->pszCustomTabs = CHM_ReadString(pChmInfo, (DWORD)pHHWinType->pszCustomTabs);
+    info->WinType.pszCustomTabs = info->pszCustomTabs = CHM_ReadString(pChmInfo, (DWORD_PTR)info->WinType.pszCustomTabs);
 #endif
 
 done:
@@ -340,7 +340,7 @@ CHMInfo *OpenCHM(LPCWSTR szFile)
 
     static const WCHAR wszSTRINGS[] = {'#','S','T','R','I','N','G','S',0};
 
-    CHMInfo *ret = hhctrl_alloc_zero(sizeof(CHMInfo));
+    CHMInfo *ret = heap_alloc_zero(sizeof(CHMInfo));
 
     res = GetFullPathNameW(szFile, sizeof(file), file, NULL);
     ret->szFile = strdupW(file);
@@ -389,11 +389,11 @@ CHMInfo *CloseCHM(CHMInfo *chm)
         int i;
 
         for(i=0; i<chm->strings_size; i++)
-            hhctrl_free(chm->strings[i]);
+            heap_free(chm->strings[i]);
     }
 
-    hhctrl_free(chm->strings);
-    hhctrl_free(chm);
+    heap_free(chm->strings);
+    heap_free(chm);
 
     return NULL;
 }
