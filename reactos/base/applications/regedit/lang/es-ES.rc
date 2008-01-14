@@ -4,6 +4,7 @@
  * Copyright 2003 José Manuel Ferrer Ortiz
  * Copyright 2005 Patricio Martínez Ros
  * Copyright 2005 Samuel Serapión Vega
+ *	     2008 Javier Remacha
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -57,8 +58,8 @@ BEGIN
 	MENUITEM SEPARATOR
 		MENUITEM "Cargar archivo de registro...",				ID_REGISTRY_LOADHIVE, GRAYED
 		MENUITEM "Descargar archivo de registro...",				ID_REGISTRY_UNLOADHIVE, GRAYED
-        MENUITEM "&Conectar registro de red...", ID_REGISTRY_CONNECTNETWORKREGISTRY
-        MENUITEM "&Desconectar registro de red...", ID_REGISTRY_DISCONNECTNETWORKREGISTRY, GRAYED
+        MENUITEM "&Conectar al Registro de red...", ID_REGISTRY_CONNECTNETWORKREGISTRY
+        MENUITEM "&Desconectar del Registro de red...", ID_REGISTRY_DISCONNECTNETWORKREGISTRY, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "Im&primir\tCtrl+P",           ID_REGISTRY_PRINT, GRAYED
         MENUITEM SEPARATOR
@@ -93,7 +94,7 @@ BEGIN
     BEGIN
         MENUITEM "&Barra de estado",            ID_VIEW_STATUSBAR
         MENUITEM SEPARATOR
-        MENUITEM "&Separar",                    ID_VIEW_SPLIT
+        MENUITEM "&Dividir",                    ID_VIEW_SPLIT
         MENUITEM SEPARATOR
         MENUITEM "&Actualizar\tF5",             ID_VIEW_REFRESH
     END
@@ -117,7 +118,7 @@ BEGIN
   POPUP ""
   BEGIN
 	MENUITEM "&Modificar",                     ID_EDIT_MODIFY
-	MENUITEM "Modificar Data Binaria",          ID_EDIT_MODIFY_BIN
+	MENUITEM "Modificar Dato Binario",          ID_EDIT_MODIFY_BIN
 	MENUITEM SEPARATOR
 	MENUITEM "&Borrar\tDel",                ID_EDIT_DELETE
 	MENUITEM "&Renombrar",                     ID_EDIT_RENAME
@@ -128,9 +129,9 @@ BEGIN
         BEGIN
             MENUITEM "&Clave",                        ID_EDIT_NEW_KEY
             MENUITEM SEPARATOR
-            MENUITEM "Valores& Linea",               ID_EDIT_NEW_STRINGVALUE
-            MENUITEM "Valores& Binario",               ID_EDIT_NEW_BINARYVALUE
-            MENUITEM "Valores &DWORD",                ID_EDIT_NEW_DWORDVALUE
+            MENUITEM "Valor &Alfanumérico",               ID_EDIT_NEW_STRINGVALUE
+            MENUITEM "Valor &Binario",               ID_EDIT_NEW_BINARYVALUE
+            MENUITEM "Valor &DWORD",                ID_EDIT_NEW_DWORDVALUE
         END
   END
   POPUP ""
@@ -140,11 +141,11 @@ BEGIN
         BEGIN
             MENUITEM "&Clave",                        ID_EDIT_NEW_KEY
             MENUITEM SEPARATOR
-            MENUITEM "Valores& Linea",              ID_EDIT_NEW_STRINGVALUE
-            MENUITEM "Valores& Binario",               ID_EDIT_NEW_BINARYVALUE
-            MENUITEM "Valores &DWORD",                ID_EDIT_NEW_DWORDVALUE
+            MENUITEM "Valor &Alfanumérico",              ID_EDIT_NEW_STRINGVALUE
+            MENUITEM "Valor &Binario",               ID_EDIT_NEW_BINARYVALUE
+            MENUITEM "Valor &DWORD",                ID_EDIT_NEW_DWORDVALUE
         END
-        MENUITEM "&Encuentra",                           ID_EDIT_FIND
+        MENUITEM "&Buscar",                           ID_EDIT_FIND
         MENUITEM SEPARATOR
         MENUITEM "&Borrar",                         ID_TREE_DELETE
         MENUITEM "&Renombrar",                         ID_TREE_RENAME
@@ -164,12 +165,12 @@ END
 IDD_EDIT_STRING DIALOG  32, 24, 252, 84
 STYLE DS_SETFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_3DLOOK | DS_CONTEXTHELP |
     WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Edit String"
+CAPTION "Editar Cadena"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT           "&Nombre de Valor:",IDC_STATIC,6,6,134,8
     EDITTEXT        IDC_VALUE_NAME,6,17,240,12,ES_AUTOHSCROLL | ES_READONLY
-    LTEXT           "&Valor del data:",IDC_STATIC,6,35,161,8
+    LTEXT           "&Información del valor:",IDC_STATIC,6,35,161,8
     EDITTEXT        IDC_VALUE_DATA,6,46,240,12,ES_AUTOHSCROLL
     DEFPUSHBUTTON   "Aceptar",IDOK,142,64,50,14
     PUSHBUTTON      "Cancelar",IDCANCEL,196,64,50,14
@@ -178,12 +179,12 @@ END
 IDD_EDIT_MULTI_STRING DIALOG  32, 24, 252, 174
 STYLE DS_SETFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_3DLOOK | DS_CONTEXTHELP |
     WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Edit Multi-String"
+CAPTION "Editar Multi-Cadena"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT           "&Nombre de Valor:",IDC_STATIC,6,6,134,8
     EDITTEXT        IDC_VALUE_NAME,6,17,240,12,ES_AUTOHSCROLL | ES_READONLY
-    LTEXT           "&Valor del data:",IDC_STATIC,6,35,161,8
+    LTEXT           "&Información del valor:",IDC_STATIC,6,35,161,8
     EDITTEXT        IDC_VALUE_DATA,6,46,240,102,ES_AUTOHSCROLL | ES_MULTILINE | ES_WANTRETURN | ES_AUTOVSCROLL | WS_VSCROLL
     DEFPUSHBUTTON   "Aceptar",IDOK,142,64,50,14
     PUSHBUTTON      "Cancelar",IDCANCEL,196,64,50,14
@@ -192,12 +193,12 @@ END
 IDD_EDIT_BIN_DATA DIALOG  32, 24, 252, 174
 STYLE DS_SETFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_3DLOOK | DS_CONTEXTHELP |
     WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Edit Binary Value"
+CAPTION "Editar valor Binario"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT           "&Nombre de Valor:",IDC_STATIC,6,6,134,8
     EDITTEXT        IDC_VALUE_NAME,6,17,240,12,ES_AUTOHSCROLL | ES_READONLY
-    LTEXT           "&Valor del data:",IDC_STATIC,6,35,161,8
+    LTEXT           "&Información del valor:",IDC_STATIC,6,35,161,8
     CONTROL         "",IDC_VALUE_DATA,"HexEdit32",WS_VSCROLL | WS_BORDER | WS_TABSTOP,6,46,240,102
     DEFPUSHBUTTON   "Aceptar",IDOK,142,154,50,14
     PUSHBUTTON      "Cancelar",IDCANCEL,196,154,50,14
@@ -207,12 +208,12 @@ END
 IDD_EDIT_DWORD DIALOG  32, 24, 252, 104
 STYLE DS_SETFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_3DLOOK | DS_CONTEXTHELP |
     WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Edit DWORD"
+CAPTION "Editar valor DWORD"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT           "&Nombre de Valor:",IDC_STATIC,6,6,134,8
     EDITTEXT        IDC_VALUE_NAME,6,17,240,12,ES_AUTOHSCROLL | ES_READONLY
-    LTEXT           "&Valor del data:",IDC_STATIC,6,35,161,8
+    LTEXT           "&Información del valor:",IDC_STATIC,6,35,161,8
     EDITTEXT        IDC_VALUE_DATA,6,46,116,12,ES_AUTOHSCROLL
     GROUPBOX        "Base",IDC_STATIC,130,35,116,39
     AUTORADIOBUTTON "&Hexadecimal",IDC_FORMAT_HEX,141,46,60,10,WS_GROUP
@@ -291,15 +292,15 @@ BEGIN
     IDS_BAD_VALUE           "No puede averiguar valor '%s'"
     IDS_UNSUPPORTED_TYPE    "No puede editar claves de este tipo (%ld)"
     IDS_TOO_BIG_VALUE       "Valor es muy grande (%ld)"
-    IDS_MULTI_SZ_EMPTY_STRING "Data del tipo REG_MULTI_SZ no puede contener lineas vacias.\nLas lineas vacias han sido removidas."
-    IDS_QUERY_DELETE_KEY_ONE    "Esta seguro que quiere borrar esta clave?"
-    IDS_QUERY_DELETE_KEY_MORE   "Esta seguro que quiere borrar estas claves?"
+    IDS_MULTI_SZ_EMPTY_STRING "Datos del tipo REG_MULTI_SZ no pueden contener lineas vacias.\nLas lineas vacias han sido eliminadas."
+    IDS_QUERY_DELETE_KEY_ONE    "¿Esta seguro que quiere borrar esta clave?"
+    IDS_QUERY_DELETE_KEY_MORE   "¿Esta seguro que quiere borrar estas claves?"
     IDS_QUERY_DELETE_KEY_CONFIRM "Confirme borrar clave"
-    IDS_QUERY_DELETE_ONE    "Esta seguro que quiere borrar este valor?"
-    IDS_QUERY_DELETE_MORE   "Esta seguro que quiere borrar estos valores?"
+    IDS_QUERY_DELETE_ONE    "¿Esta seguro que quiere borrar este valor?"
+    IDS_QUERY_DELETE_MORE   "¿Esta seguro que quiere borrar estos valores?"
     IDS_QUERY_DELETE_CONFIRM "Confirme borrar valor"
-    IDS_ERR_DELVAL_CAPTION  "Error Borrando Valores"
-    IDS_ERR_DELETEVALUE     "Incapaz de borrar todos los valores especificados!"
+    IDS_ERR_DELVAL_CAPTION  "Error borrando valores"
+    IDS_ERR_DELETEVALUE     "¡Incapaz de borrar todos los valores especificados!"
     IDS_ERR_RENVAL_CAPTION  "Error Renombrando Valor"
     IDS_ERR_RENVAL_TOEMPTY  "No puede renombrar %s. El nombre de valor especificado esta vacio. Trate otro nombre y comienze otra vez."
     IDS_NEW_KEY             "Nueva Clave #%d"
@@ -308,11 +309,11 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_BINARY_EMPTY	    "(valor binario de longitud zero)"
-    IDS_DEFAULT_VALUE_NAME  "(Default)"
-    IDS_VALUE_NOT_SET       "(valor no entrado)"
+    IDS_BINARY_EMPTY	    "(valor binario de longitud cero)"
+    IDS_DEFAULT_VALUE_NAME  "(Por Defecto)"
+    IDS_VALUE_NOT_SET       "(valor no introducido)"
     IDS_UNKNOWN_TYPE        "Tipo desconocido: (0x%lx)"
-    IDS_MY_COMPUTER         "My Computer"
+    IDS_MY_COMPUTER         "Mi PC"
     IDS_IMPORT_REG_FILE     "Importa Fichero de Registro"
     IDS_EXPORT_REG_FILE     "Exporta Fichero de Registro"
     IDS_INVALID_DWORD       "(valor DWORD invalido)"
@@ -330,18 +331,18 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_ACCESS_FULLCONTROL        "Control Completo"
+  IDS_ACCESS_FULLCONTROL        "Control Total"
   IDS_ACCESS_READ               "Lectura"
-  IDS_ACCESS_QUERYVALUE         "Pregunta Valor"
-  IDS_ACCESS_SETVALUE           "Modifica Valor"
+  IDS_ACCESS_QUERYVALUE         "Consultar Valor"
+  IDS_ACCESS_SETVALUE           "Modificar Valor"
   IDS_ACCESS_CREATESUBKEY       "Crear Subclave"
-  IDS_ACCESS_ENUMERATESUBKEYS   "Enumera Subclaves"
-  IDS_ACCESS_NOTIFY             "Notifica"
-  IDS_ACCESS_CREATELINK         "Crear enlace"
+  IDS_ACCESS_ENUMERATESUBKEYS   "Enumerar Subclaves"
+  IDS_ACCESS_NOTIFY             "Notificar"
+  IDS_ACCESS_CREATELINK         "Crear vínculo"
   IDS_ACCESS_DELETE             "Borrar"
   IDS_ACCESS_WRITEDAC           "Escribir DAC"
-  IDS_ACCESS_WRITEOWNER         "Dueño Escritura"
-  IDS_ACCESS_READCONTROL        "Control de Lectura"
+  IDS_ACCESS_WRITEOWNER         "Escribir propietario"
+  IDS_ACCESS_READCONTROL        "Controles de Lectura"
 END
 
 STRINGTABLE DISCARDABLE
@@ -371,9 +372,9 @@ STYLE DS_3DLOOK | DS_CONTROL | WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS |
     WS_BORDER
 FONT 8, "MS Sans Serif"
 BEGIN
-   GROUPBOX "Export Range",IDC_STATIC,2,0,366,48
-   CONTROL "&All",IDC_EXPORT_ALL,"Button",BS_AUTORADIOBUTTON,10,10, 29,11
-   CONTROL "S&elected Branch",IDC_EXPORT_BRANCH,"Button",BS_AUTORADIOBUTTON,10,22, 100,11
+   GROUPBOX "Intervalo de exportación",IDC_STATIC,2,0,366,48
+   CONTROL "&Todos",IDC_EXPORT_ALL,"Button",BS_AUTORADIOBUTTON,10,10, 29,11
+   CONTROL "&Rama seleccionada",IDC_EXPORT_BRANCH,"Button",BS_AUTORADIOBUTTON,10,22, 100,11
    EDITTEXT IDC_EXPORT_BRANCH_TEXT,30,34,335,12
 END
 
@@ -390,33 +391,33 @@ END
 
 IDD_REMOVEFAVORITES DIALOG DISCARDABLE  0, 0, 164, 135
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Remove Favorites"
+CAPTION "Quitar favoritos"
 FONT 8, "MS Sans Serif"
 BEGIN
     DEFPUSHBUTTON   "Aceptar",IDOK,107,114,50,14
     PUSHBUTTON      "Cancelar",IDCANCEL,7,114,50,14
     CONTROL         "Lista1",IDC_FAVORITESLIST,"SysListView32",LVS_LIST |
                     WS_BORDER | WS_TABSTOP,7,20,150,90
-    LTEXT           "Select Favorite(s):",IDC_STATIC,7,7,99,12
+    LTEXT           "Seleccionar favorito(s):",IDC_STATIC,7,7,99,12
 END
 
 IDD_FIND DIALOG DISCARDABLE  0, 0, 254, 82
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Encontrar"
+CAPTION "Buscar"
 FONT 8, "MS Sans Serif"
 BEGIN
-    DEFPUSHBUTTON   "&Encontrar Próximo",IDOK,197,7,50,14
+    DEFPUSHBUTTON   "Buscar &siguiente",IDOK,197,7,50,14
     PUSHBUTTON      "Cancelar",IDCANCEL,197,24,50,14
-    GROUPBOX        "Mirar a",IDC_STATIC,7,25,63,51
-    LTEXT           "Encontrar& que:",IDC_STATIC,7,8,37,10
+    GROUPBOX        "Buscar en",IDC_STATIC,7,25,63,51
+    LTEXT           "&Buscar:",IDC_STATIC,7,8,37,10
     EDITTEXT        IDC_FINDWHAT,47,7,142,13,ES_AUTOHSCROLL
     CONTROL         "&Claves",IDC_LOOKAT_KEYS,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,14,36,35,8
     CONTROL         "&Valores",IDC_LOOKAT_VALUES,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,14,48,36,8
-    CONTROL         "&Data",IDC_LOOKAT_DATA,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "&Datos",IDC_LOOKAT_DATA,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,14,60,42,8
-    CONTROL         "Match &whole string only",IDC_MATCHSTRING,"Button",
+    CONTROL         "Sólo c&adenas completas",IDC_MATCHSTRING,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,83,32,94,13
     CONTROL         "Match &case",IDC_MATCHCASE,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,83,48,90,12
@@ -425,7 +426,7 @@ END
 IDD_FINDING DIALOGEX 0, 0, 145, 50
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | WS_POPUP |
     WS_CAPTION | WS_SYSMENU
-CAPTION "Find"
+CAPTION "Buscar"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     ICON            IDI_REGEDIT,IDC_STATIC,7,7,20,20
@@ -451,8 +452,8 @@ END
 /*
  *STRINGTABLE DISCARDABLE
  *BEGIN
- *    ID_HELP_HELPTOPICS      "Abre la ayuda de registry editor."
- *    ID_HELP_ABOUT           "Despliega información del programa, version y licensia."
+ *    ID_HELP_HELPTOPICS      "Abre la ayuda del Editor de registro."
+ *    ID_HELP_ABOUT           "Despliega información del programa, versión y licencia."
  *END
  */
 

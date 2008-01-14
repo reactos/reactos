@@ -3,7 +3,7 @@ LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
 
 IDD_PROPPAGECOMPUTER DIALOGEX 0, 0, 256, 218
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Computer Name"
+CAPTION "Nome del Computer"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     ICON        IDI_COMPNAME, IDC_STATIC, 4, 3, 26, 24, SS_ICON
@@ -23,53 +23,53 @@ END
 
 IDD_PROPPAGECOMPNAMECHENGE DIALOG 0, 0, 232, 222
 STYLE DS_SETFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Computer Name Changes"
+CAPTION "Modifica del nome del Computer"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "(message goes here)", 1017, 7, 5, 218, 30
-    LTEXT "&Computer name:", -1, 7, 41, 219, 8
+    LTEXT "&Nome del Computer:", -1, 7, 41, 219, 8
     EDITTEXT 1002, 7, 53, 218, 14, ES_AUTOHSCROLL | ES_OEMCONVERT
-    LTEXT "Full computer name:", 1016, 7, 72, 218, 10
+    LTEXT "Nome del Computer completo:", 1016, 7, 72, 218, 10
     EDITTEXT 1001, 7, 82, 219, 14, ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
-    PUSHBUTTON "&More...", 1003, 150, 102, 75, 14
-    GROUPBOX "Member of", 1018, 7, 119, 219, 73
-    AUTORADIOBUTTON "&Domain:", 1008, 17, 132, 192, 10, WS_GROUP
-    AUTORADIOBUTTON "&Workgroup:", 1004, 17, 161, 191, 10
+    PUSHBUTTON "&Altro...", 1003, 150, 102, 75, 14
+    GROUPBOX "Membro di", 1018, 7, 119, 219, 73
+    AUTORADIOBUTTON "&Dominio:", 1008, 17, 132, 192, 10, WS_GROUP
+    AUTORADIOBUTTON "&Gruppo di lavoro:", 1004, 17, 161, 191, 10
     EDITTEXT 116, 28, 144, 181, 14, ES_AUTOHSCROLL | WS_GROUP
-    PUSHBUTTON "&Find my domain", 1010, 7, 203, 109, 14, NOT WS_VISIBLE | WS_DISABLED
+    PUSHBUTTON "&Trova dominio", 1010, 7, 203, 109, 14, NOT WS_VISIBLE | WS_DISABLED
     EDITTEXT 1007, 28, 172, 181, 14, ES_UPPERCASE | ES_AUTOHSCROLL | ES_OEMCONVERT
     DEFPUSHBUTTON "OK", 1, 121, 203, 50, 14, WS_GROUP
-    PUSHBUTTON "Cancel", 2, 176, 203, 50, 14
+    PUSHBUTTON "Annulla", 2, 176, 203, 50, 14
 END
 
 IDD_PROPPAGEDNSANDNETBIOS DIALOG 0, 0, 266, 125
 STYLE DS_SETFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "DNS Suffix and NetBIOS Computer Name"
+CAPTION "Suffisso DNS e Nome del Computer NetBIOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "&Primary DNS suffix of this computer:", -1, 7, 5, 253, 8
+    LTEXT "&Suffisso DNS primario di questo computer:", -1, 7, 5, 253, 8
     EDITTEXT 1011, 7, 17, 252, 14, ES_AUTOHSCROLL
-    AUTOCHECKBOX "&Change primary DNS suffix when domain membership changes", 115, 11, 39, 250, 10
-    LTEXT "&NetBIOS computer name:", -1, 7, 57, 148, 8
+    AUTOCHECKBOX "&Cambiare il suffisso DNS primario quando cambia l'appartenenza al dominio", 115, 11, 39, 250, 10
+    LTEXT "&Nome del computer per NetBIOS:", -1, 7, 57, 148, 8
     EDITTEXT 1013, 7, 69, 150, 14, ES_UPPERCASE | ES_AUTOHSCROLL | ES_READONLY
     DEFPUSHBUTTON "OK", 1, 153, 104, 50, 14
-    PUSHBUTTON "Cancel", 2, 209, 104, 50, 14
-    LTEXT "This name is used for interoperability with older computers and services.", 13, 7, 88, 253, 8
+    PUSHBUTTON "Annulla", 2, 209, 104, 50, 14
+    LTEXT "Questo nome è usato per compatibilità con vecchi servizi o computer.", 13, 7, 88, 253, 8
 END
 
 STRINGTABLE
 BEGIN
-    1 "* Unknown *"
+    1 "* sconosciuto *"
     2 "WORKGROUP"
-    3 "The following error occurred while attempting to read domain membership information:"
-    4 "Computer Name Changes"
-    5 "Workgroup:"
-    6 "Domain:"
-    22 "Welcome to the %1 workgroup."
-    23 "Welcome to the %1 domain."
-    24 "You must restart this computer for the changes to take effect."
-    1021 "Note: Only Administrators can change the identification of this computer."
-    1022 "Note: The identification of the computer cannot be changed because:"
-    3210 "&Details >>"
-    3220 "<< &Details"
+    3 "L'errore seguente si è verificato durante il tentativo di lettura delle informazioni di iscrizione al Dominio:"
+    4 "Modifiche al nome del Computer "
+    5 "Gruppo di lavoro:"
+    6 "Dominio:"
+    22 "Benvenuto al gruppo di lavoro %1."
+    23 "Benvenuto al dominio %1."
+    24 "Il computer deve essre riavviato per rendere operative queste modifiche."
+    1021 "Nota: Solo gli Amministratori possono cambiare l'identificazione di questo computer."
+    1022 "Nota: L'identificazione di questo computer non può essere cambiata perchè:"
+    3210 "&Dettagli >>"
+    3220 "<< &Dettagli"
 END

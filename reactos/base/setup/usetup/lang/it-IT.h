@@ -12,31 +12,31 @@ static MUI_ENTRY itITLanguagePageEntries[] =
     {
         6,
         8,
-        "Language Selection.",
+        "Selezione della lingua.",
         TEXT_NORMAL
     },
     {
         8,
         10,
-        "\x07  Please choose the language used for the installation process.",
+        "\x07  Scegliere la lingua da usare durante l'installazione.",
         TEXT_NORMAL
     },
     {
         8,
         11,
-        "   Then press ENTER.",
+        "   Poi premere invio.",
         TEXT_NORMAL
     },
     {
         8,
         13,
-        "\x07  This Language will be the default language for the final system.",
+        "\x07  Questa lingua sara' quella predefinita per il sistema finale.",
         TEXT_NORMAL
     },
     {
         0,
         0,
-        "   ENTER = Continue  F3 = Quit",
+        "   INVIO = Continua  F3 = Termina",
         TEXT_STATUS
     },
     {
@@ -112,7 +112,7 @@ static MUI_ENTRY itITWelcomePageEntries[] =
     {
         0,
         0,
-        "   INVIO = Continuare  R = Riparare F3 = Uscire",
+        "   INVIO = Continuare  R = Riparare F3 = Termina",
         TEXT_STATUS
     },
     {
@@ -212,7 +212,7 @@ static MUI_ENTRY itITIntroPageEntries[] =
     {
         0,
         0, 
-        "   INVIO = Continuare   F3 = Uscire",
+        "   INVIO = Continuare   F3 = Termina",
         TEXT_STATUS
     },
     {
@@ -429,7 +429,7 @@ static MUI_ENTRY itITDevicePageEntries[] =
     {
         0,
         0,
-        "   INVIO = Continuare   F3 = Uscire",
+        "   INVIO = Continuare   F3 = Termina",
         TEXT_STATUS
     },
     {
@@ -544,7 +544,7 @@ static MUI_ENTRY itITComputerPageEntries[] =
     {
         0,
         0,
-        "   INVIO = Continuare   ESC = Annulla   F3 = Uscire",
+        "   INVIO = Continuare   ESC = Annulla   F3 = Termina",
         TEXT_STATUS
     },
     {
@@ -681,7 +681,7 @@ static MUI_ENTRY itITDisplayPageEntries[] =
     {
         0,
         0,
-        "   INVIO = Continuare   ESC = Annullare   F3 = Uscire",
+        "   INVIO = Continuare   ESC = Annullare   F3 = Termina",
         TEXT_STATUS
     },
     {
@@ -773,7 +773,7 @@ static MUI_ENTRY itITBootPageEntries[] =
     {
         0,
         0,
-        "   INVIO = Continuare   F3 = Uscire",
+        "   INVIO = Continuare   F3 = Termina",
         TEXT_STATUS
     },
     {
@@ -1253,13 +1253,13 @@ static MUI_ENTRY itITRegistryEntries[] =
     {
         6,
         8,
-        "Setup is updating the system configuration. ",
+        "Setup sta aggiornando la configurazione del sistema. ",
         TEXT_NORMAL
     },
     {
         0,
         0,
-        "   Creating registry hives...",
+        "   Creazione degli hive del registro in corso...",
         TEXT_STATUS
     },
     {
@@ -1396,12 +1396,12 @@ MUI_ERROR itITErrorEntries[] =
     },
     {
         //ERROR_CREATE_HIVE,
-        "Setup non ha potuto creare i hives del registro.",
+        "Setup non ha potuto creare gli hive del registro.",
         "INVIO = Riavviare il computer"
     },
     {
         //ERROR_INITIALIZE_REGISTRY,
-        "Setup failed to set the initialize the registry.",
+        "Setup non ha potuto inizializzare il registro.",
         "INVIO = Riavviare il computer"
     },
     {
@@ -1454,17 +1454,17 @@ MUI_ERROR itITErrorEntries[] =
     },
     {
         //ERROR_WRITE_PTABLE,
-        "Setup non ha potuto scrivere le tabelle di partizioni.\n"
+        "Setup non ha potuto scrivere le tabelle delle partizioni.\n"
         "INVIO = Riavviare il computer"
     },
     {
         //ERROR_ADDING_CODEPAGE,
-        "Setup failed to add codepage to registry.\n"
+        "Setup non ha potuto aggiungere la codepage al registry.\n"
         "ENTER = Reboot computer"
     },
     {
         //ERROR_UPDATE_LOCALESETTINGS,
-        "Setup could not set the system locale.\n"
+        "Setup non ha potuto impostare la regionalizzazione del sistema.\n"
         "ENTER = Reboot computer"
     },
     {
@@ -1574,5 +1574,7 @@ MUI_PAGE itITPages[] =
 };
 
 #endif
+
+
 
 

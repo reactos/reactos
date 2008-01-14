@@ -1329,6 +1329,7 @@ static void dwarf2_parse_variable(dwarf2_subprogram_t* subpgm,
         case DW_FORM_data2:
         case DW_FORM_data4:
         case DW_FORM_udata:
+        case DW_FORM_addr:
             v.n1.n2.vt = VT_UI4;
             v.n1.n2.n3.lVal = value.u.uvalue;
             break;

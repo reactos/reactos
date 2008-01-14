@@ -102,7 +102,7 @@ STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Create Scociatoia"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-  LTEXT "Questo wizard permette la creazione di scorciatoie verso programmi locali o di rete, file, cartella, computer, o \nindirizzi Internet.", -1, 120, 15, 200, 30
+  LTEXT "Questo wizard permette la creazione di collegamenti verso programmi locali o di rete, file, cartella, computer, o \nindirizzi Internet.", -1, 120, 15, 200, 30
   LTEXT "Digitare la posizione:", -1, 120, 50, 120, 10
   EDITTEXT IDC_SHORTCUT_LOCATION, 120, 65, 150, 15, ES_LEFT
   PUSHBUTTON "Sfoglia...", IDC_SHORTCUT_BROWSE, 272, 65, 55, 15, ES_LEFT
@@ -114,9 +114,9 @@ STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Scelta del titolo del programma"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-  LTEXT "&Digitare il nome per uesta scorciatoia:", -1, 120, 15, 150, 10
+  LTEXT "&Digitare il nome per questo collegamento:", -1, 120, 15, 150, 10
   EDITTEXT IDC_SHORTCUT_NAME, 120, 35, 150, 15, ES_LEFT
-  LTEXT "Premere Fine per creare la scorciatoia.", -1, 118, 97, 178, 17
+  LTEXT "Premere Fine per creare il collegamento.", -1, 118, 97, 178, 17
 END
 
 IDD_INFORMATION DIALOG 5, 100, 269, 218
@@ -151,7 +151,7 @@ END
 STRINGTABLE
 BEGIN
 	IDS_CPLSYSTEMNAME "Aggiunge/Rimuove programmi"
-	IDS_CPLSYSTEMDESCRIPTION "Predispone i programmi e crea scorciatoie."
+	IDS_CPLSYSTEMDESCRIPTION "Predispone i programmi e crea collegamenti."
 	IDS_ERROR "Errore"
 	IDS_UNABLEREAD_UNINSTSTR "Impossibile leggere la stringa UninstallString. Questo elemento è corrotto o è stato creato da MSI installer."
 	IDS_UNABLEOPEN_UNINSTKEY "Impossibile aprire la Chiave di Disinstallazione"
@@ -160,7 +160,7 @@ BEGIN
 	IDS_LARGEICONS "Icone Grandi"
 	IDS_LIST "Lista"
 	IDS_DETAILS "Dettagli"
-    IDS_CREATE_SHORTCUT "Crea scorciatoia"
+    IDS_CREATE_SHORTCUT "Crea collegamento"
     IDS_ERROR_NOT_FOUND "Il file %s non è stato trovato."
 	IDS_UNABLEREAD_INFORMATION "Impossibile aprire la Chiavi delle informazioni"
 	IDS_NO_INFORMATION "Nessuna informazione"

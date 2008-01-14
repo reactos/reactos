@@ -145,7 +145,7 @@ STRINGTABLE
 BEGIN
   IDS_CPLNAME "Console"
   IDS_CPLDESCRIPTION "Configura le proprietà della console."
-  IDS_APPLY_SHORTCUT_ALL "Modifica la scorciatoia che ha attivato questa finestra"
+  IDS_APPLY_SHORTCUT_ALL "Modifica il collegamento che ha attivato questa finestra"
   IDS_SCREEN_TEXT "C:\ReactOS> dir\nSYSTEM          <DIR>     10-01-99     5:00\nSYSTEM32      <DIR>     10-01-99     5:00"
   IDS_RASTERFONTS "Raster Fonts"
 END
