@@ -46,6 +46,7 @@
 #include "shlwapi.h"
 #include "shellapi.h"
 #include "commdlg.h"
+#include "mshtmhst.h"
 #include "wine/unicode.h"
 #include "wine/debug.h"
 
@@ -3226,13 +3227,10 @@ HRESULT WINAPI IUnknown_EnableModeless(IUnknown *lpUnknown, BOOL bModeless)
     EnableModeless(IOleInPlaceFrame);
   else if (IsIface(IShellBrowser))
     EnableModeless(IShellBrowser);
-#if 0
-  /* FIXME: Wine has no headers for these objects yet */
   else if (IsIface(IInternetSecurityMgrSite))
     EnableModeless(IInternetSecurityMgrSite);
   else if (IsIface(IDocHostUIHandler))
     EnableModeless(IDocHostUIHandler);
-#endif
   else
     return hRet;
 

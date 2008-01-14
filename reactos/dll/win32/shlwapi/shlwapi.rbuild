@@ -1,5 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
+<group>
 <module name="shlwapi" type="win32dll" baseaddress="${BASEADDRESS_SHLWAPI}" installbase="system32" installname="shlwapi.dll" allowwarnings="true">
 	<importlibrary definition="shlwapi.spec.def" />
 	<include base="shlwapi">.</include>
@@ -41,3 +42,4 @@
 	<file>shlwapi.rc</file>
 	<file>shlwapi.spec</file>
 </module>
+</group>
