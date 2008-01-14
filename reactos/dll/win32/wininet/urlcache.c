@@ -113,7 +113,7 @@ typedef struct _URL_CACHEFILE_ENTRY
     /* packing to dword align start of next field */
     /* CHAR szSourceUrlName[]; (url) */
     /* packing to dword align start of next field */
-    /* CHAR szLocalFileName[]; (local file name exluding path) */
+    /* CHAR szLocalFileName[]; (local file name excluding path) */
     /* packing to dword align start of next field */
     /* CHAR szHeaderInfo[]; (header info) */
 } URL_CACHEFILE_ENTRY;
@@ -171,7 +171,7 @@ typedef struct _URLCACHECONTAINER
     LPWSTR path; /* path to url container directory */
     HANDLE hMapping; /* handle of file mapping */
     DWORD file_size; /* size of file when mapping was opened */
-    HANDLE hMutex; /* hande of mutex */
+    HANDLE hMutex; /* handle of mutex */
 } URLCACHECONTAINER;
 
 
@@ -2796,6 +2796,7 @@ INTERNETAPI HANDLE WINAPI FindFirstUrlCacheEntryW(LPCWSTR lpszUrlSearchPattern,
  LPINTERNET_CACHE_ENTRY_INFOW lpFirstCacheEntryInfo, LPDWORD lpdwFirstCacheEntryInfoBufferSize)
 {
   FIXME("(%s, %p, %p): stub\n", debugstr_w(lpszUrlSearchPattern), lpFirstCacheEntryInfo, lpdwFirstCacheEntryInfoBufferSize);
+  SetLastError(ERROR_FILE_NOT_FOUND);
   return 0;
 }
 

@@ -23,7 +23,7 @@ Index: http.c
  WINE_DEFAULT_DEBUG_CHANNEL(wininet);
  
  static const WCHAR g_szHttp1_0[] = {' ','H','T','T','P','/','1','.','0',0 };
-@@ -3027,14 +3028,21 @@
+@@ -3010,7 +3011,11 @@
      /*
       * HACK peek at the buffer
       */
@@ -32,10 +32,10 @@ Index: http.c
 +       a bit different */
      NETCON_recv(&lpwhr->netConnection, buffer, buflen, MSG_PEEK, &rc);
 +#endif
+ 
      /*
       * We should first receive 'HTTP/1.x nnn OK' where nnn is the status code.
-      */
-     buflen = MAX_REPLY_LEN;
+@@ -3019,6 +3024,9 @@
      memset(buffer, 0, MAX_REPLY_LEN);
      if (!NETCON_getNextLine(&lpwhr->netConnection, bufferA, &buflen))
          goto lend;
@@ -305,7 +305,7 @@ Index: wininet.rbuild
 ===================================================================
 --- wininet.rbuild	(revision 30893)
 +++ wininet.rbuild	(working copy)
-@@ -18,6 +18,7 @@
+@@ -19,6 +19,7 @@
  	<library>ntdll</library>
  	<library>secur32</library>
  	<library>crypt32</library>

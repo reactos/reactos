@@ -1070,7 +1070,8 @@ BOOL WINAPI InternetCrackUrlA(LPCSTR lpszUrl, DWORD dwUrlLength, DWORD dwFlags,
 
   TRACE("(%s %u %x %p)\n", debugstr_a(lpszUrl), dwUrlLength, dwFlags, lpUrlComponents);
 
-  if (!lpszUrl || !*lpszUrl)
+  if (!lpszUrl || !*lpszUrl || !lpUrlComponents ||
+          lpUrlComponents->dwStructSize != sizeof(URL_COMPONENTSA))
   {
       INTERNET_SetLastError(ERROR_INVALID_PARAMETER);
       return FALSE;
@@ -1088,6 +1089,7 @@ BOOL WINAPI InternetCrackUrlA(LPCSTR lpszUrl, DWORD dwUrlLength, DWORD dwFlags,
   MultiByteToWideChar(CP_ACP,0,lpszUrl,dwUrlLength,lpwszUrl,nLength);
 
   memset(&UCW,0,sizeof(UCW));
+  UCW.dwStructSize = sizeof(URL_COMPONENTSW);
   if(lpUrlComponents->dwHostNameLength!=0)
       UCW.dwHostNameLength= lpUrlComponents->dwHostNameLength;
   if(lpUrlComponents->dwUserNameLength!=0)
@@ -2329,6 +2331,20 @@ static BOOL INET_QueryOptionHelper(BOOL bIsUnicode, HINTERNET hInternet, DWORD d
                 }
             }
             break;
+        case INTERNET_OPTION_VERSION:
+        {
+            TRACE("INTERNET_OPTION_VERSION\n");
+            if (*lpdwBufferLength < sizeof(INTERNET_VERSION_INFO))
+                INTERNET_SetLastError(ERROR_INSUFFICIENT_BUFFER);
+            else
+            {
+                static const INTERNET_VERSION_INFO info = { 6, 0 };
+                memcpy(lpBuffer, &info, sizeof(info));
+                *lpdwBufferLength = sizeof(info);
+                bSuccess = TRUE;
+            }
+            break;
+        }
         default:
             FIXME("Stub! %d\n", dwOption);
             break;
@@ -2793,7 +2809,7 @@ BOOL WINAPI InternetCheckConnectionW( LPCWSTR lpszUrl, DWORD dwFlags, DWORD dwRe
   if (lpszUrl == NULL)
   {
      /*
-      * According to the doc we are supost to use the ip for the next
+      * According to the doc we are supposed to use the ip for the next
       * server in the WnInet internal server database. I have
       * no idea what that is or how to get it.
       *

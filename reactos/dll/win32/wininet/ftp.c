@@ -845,13 +845,12 @@ BOOL WINAPI FtpGetCurrentDirectoryA(HINTERNET hFtpSession, LPSTR lpszCurrentDire
         }
     }
     ret = FtpGetCurrentDirectoryW(hFtpSession, lpszCurrentDirectory?dir:NULL, lpdwCurrentDirectory?&len:NULL);
-    if(lpdwCurrentDirectory) {
-        *lpdwCurrentDirectory = len;
-        if(lpszCurrentDirectory) { 
-            WideCharToMultiByte(CP_ACP, 0, dir, len, lpszCurrentDirectory, *lpdwCurrentDirectory, NULL, NULL);
-            HeapFree(GetProcessHeap(), 0, dir);
-        }
-    }
+
+    if (ret && lpszCurrentDirectory)
+        WideCharToMultiByte(CP_ACP, 0, dir, -1, lpszCurrentDirectory, len, NULL, NULL);
+
+    if (lpdwCurrentDirectory) *lpdwCurrentDirectory = len;
+    HeapFree(GetProcessHeap(), 0, dir);
     return ret;
 }
 
@@ -886,9 +885,27 @@ BOOL WINAPI FtpGetCurrentDirectoryW(HINTERNET hFtpSession, LPWSTR lpszCurrentDir
     TRACE("len(%d)\n", *lpdwCurrentDirectory);
 
     lpwfs = (LPWININETFTPSESSIONW) WININET_GetObject( hFtpSession );
-    if (NULL == lpwfs || WH_HFTPSESSION != lpwfs->hdr.htype)
+    if (NULL == lpwfs)
+    {
+        INTERNET_SetLastError(ERROR_INVALID_HANDLE);
+        goto lend;
+    }
+
+    if (WH_HFTPSESSION != lpwfs->hdr.htype)
     {
         INTERNET_SetLastError(ERROR_INTERNET_INCORRECT_HANDLE_TYPE);
+        goto lend;
+    }
+
+    if (!lpdwCurrentDirectory)
+    {
+        INTERNET_SetLastError(ERROR_INVALID_PARAMETER);
+        goto lend;
+    }
+
+    if (lpszCurrentDirectory == NULL)
+    {
+        INTERNET_SetLastError(ERROR_INSUFFICIENT_BUFFER);
         goto lend;
     }
 
@@ -948,8 +965,6 @@ BOOL WINAPI FTP_FtpGetCurrentDirectoryW(LPWININETFTPSESSIONW lpwfs, LPWSTR lpszC
     /* Clear any error information */
     INTERNET_SetLastError(0);
 
-    ZeroMemory(lpszCurrentDirectory, *lpdwCurrentDirectory);
-
     hIC = lpwfs->lpAppInfo;
     if (!FTP_SendCommand(lpwfs->sndSocket, FTP_CMD_PWD, NULL,
         lpwfs->hdr.lpfnStatusCB, &lpwfs->hdr, lpwfs->hdr.dwContext))
@@ -961,7 +976,7 @@ BOOL WINAPI FTP_FtpGetCurrentDirectoryW(LPWININETFTPSESSIONW lpwfs, LPWSTR lpszC
         if (nResCode == 257) /* Extract directory name */
         {
             DWORD firstpos, lastpos, len;
-	    LPWSTR lpszResponseBuffer = WININET_strdup_AtoW(INTERNET_GetResponseBuffer());
+            LPWSTR lpszResponseBuffer = WININET_strdup_AtoW(INTERNET_GetResponseBuffer());
 
             for (firstpos = 0, lastpos = 0; lpszResponseBuffer[lastpos]; lastpos++)
             {
@@ -971,14 +986,19 @@ BOOL WINAPI FTP_FtpGetCurrentDirectoryW(LPWININETFTPSESSIONW lpwfs, LPWSTR lpszC
                         firstpos = lastpos;
                     else
                         break;
-		}
+                }
             }
+            len = lastpos - firstpos;
+            if (*lpdwCurrentDirectory >= len)
+            {
+                memcpy(lpszCurrentDirectory, &lpszResponseBuffer[firstpos + 1], len * sizeof(WCHAR));
+                lpszCurrentDirectory[len - 1] = 0;
+                *lpdwCurrentDirectory = len;
+                bSuccess = TRUE;
+            }
+            else INTERNET_SetLastError(ERROR_INSUFFICIENT_BUFFER);
 
-            len = lastpos - firstpos - 1;
-            lstrcpynW(lpszCurrentDirectory, &lpszResponseBuffer[firstpos+1], *lpdwCurrentDirectory);
             HeapFree(GetProcessHeap(), 0, lpszResponseBuffer);
-            *lpdwCurrentDirectory = len;
-            bSuccess = TRUE;
         }
         else
             FTP_SetResponseError(nResCode);
@@ -2335,7 +2355,7 @@ INT FTP_ReceiveResponse(LPWININETFTPSESSIONW lpwfs, DWORD_PTR dwContext)
 	        if(lpszResponse[3] != '-')
 		    break;
 		else
-		{  /* Start of multiline repsonse.  Loop until we get "nnn " */
+		{  /* Start of multiline response.  Loop until we get "nnn " */
 		    multiline = TRUE;
 		    memcpy(firstprefix, lpszResponse, 3);
 		    firstprefix[3] = ' ';
@@ -3411,7 +3431,7 @@ static BOOL FTP_ParseDirectory(LPWININETFTPSESSIONW lpwfs, INT nSocket, LPCWSTR 
 
     TRACE("\n");
 
-    /* Allocate intial file properties array */
+    /* Allocate initial file properties array */
     *lpafp = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(FILEPROPERTIESW)*(sizeFilePropArray));
     if (!*lpafp)
         return FALSE;
@@ -3443,7 +3463,7 @@ static BOOL FTP_ParseDirectory(LPWININETFTPSESSIONW lpwfs, INT nSocket, LPCWSTR 
 
             tmpafp = HeapReAlloc(GetProcessHeap(), 0, *lpafp,
                 sizeof(FILEPROPERTIESW)*indexFilePropArray);
-            if (NULL == tmpafp)
+            if (NULL != tmpafp)
                 *lpafp = tmpafp;
         }
         *dwfp = indexFilePropArray;
