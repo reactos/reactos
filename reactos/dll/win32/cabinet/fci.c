@@ -188,7 +188,7 @@ HFCI __cdecl FCICreate(
     return NULL;
   }
 
-  if (!((hfci = ((HFCI) (*pfnalloc)(sizeof(FCI_Int)))))) {
+  if (!((hfci = (*pfnalloc)(sizeof(FCI_Int))))) {
     perf->erfOper = FCIERR_ALLOC_FAIL;
     perf->erfType = ERROR_NOT_ENOUGH_MEMORY;
     perf->fError = TRUE;

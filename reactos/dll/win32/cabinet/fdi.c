@@ -377,7 +377,7 @@ HFDI __cdecl FDICreate(
     return NULL;
   }
 
-  if (!((rv = ((HFDI) (*pfnalloc)(sizeof(FDI_Int)))))) {
+  if (!((rv = (*pfnalloc)(sizeof(FDI_Int))))) {
     perf->erfOper = FDIERROR_ALLOC_FAIL;
     perf->erfType = ERROR_NOT_ENOUGH_MEMORY;
     perf->fError = TRUE;
@@ -461,7 +461,7 @@ static char *FDI_read_string(HFDI hfdi, INT_PTR hf, long cabsize)
   }
 
   /* otherwise, set the stream to just after the string and return */
-  PFDI_SEEK(hfdi, hf, base + ((cab_off_t) strlen((char *) buf)) + 1, SEEK_SET);
+  PFDI_SEEK(hfdi, hf, base + strlen((char *)buf) + 1, SEEK_SET);
 
   return (char *) buf;
 }
@@ -1138,7 +1138,7 @@ static cab_LONG fdi_Zipinflate_codes(const struct Ziphuft *tl, const struct Ziph
   for(;;)
   {
     ZIPNEEDBITS((cab_ULONG)bl)
-    if((e = (t = tl + ((cab_ULONG)b & ml))->e) > 16)
+    if((e = (t = tl + (b & ml))->e) > 16)
       do
       {
         if (e == 99)
@@ -1146,7 +1146,7 @@ static cab_LONG fdi_Zipinflate_codes(const struct Ziphuft *tl, const struct Ziph
         ZIPDUMPBITS(t->b)
         e -= 16;
         ZIPNEEDBITS(e)
-      } while ((e = (t = t->v.t + ((cab_ULONG)b & Zipmask[e]))->e) > 16);
+      } while ((e = (t = t->v.t + (b & Zipmask[e]))->e) > 16);
     ZIPDUMPBITS(t->b)
     if (e == 16)                /* then it's a literal */
       CAB(outbuf)[w++] = (cab_UBYTE)t->v.n;
@@ -1158,22 +1158,22 @@ static cab_LONG fdi_Zipinflate_codes(const struct Ziphuft *tl, const struct Ziph
 
       /* get length of block to copy */
       ZIPNEEDBITS(e)
-      n = t->v.n + ((cab_ULONG)b & Zipmask[e]);
+      n = t->v.n + (b & Zipmask[e]);
       ZIPDUMPBITS(e);
 
       /* decode distance of block to copy */
       ZIPNEEDBITS((cab_ULONG)bd)
-      if ((e = (t = td + ((cab_ULONG)b & md))->e) > 16)
+      if ((e = (t = td + (b & md))->e) > 16)
         do {
           if (e == 99)
             return 1;
           ZIPDUMPBITS(t->b)
           e -= 16;
           ZIPNEEDBITS(e)
-        } while ((e = (t = t->v.t + ((cab_ULONG)b & Zipmask[e]))->e) > 16);
+        } while ((e = (t = t->v.t + (b & Zipmask[e]))->e) > 16);
       ZIPDUMPBITS(t->b)
       ZIPNEEDBITS(e)
-      d = w - t->v.n - ((cab_ULONG)b & Zipmask[e]);
+      d = w - t->v.n - (b & Zipmask[e]);
       ZIPDUMPBITS(e)
       do
       {
@@ -1217,10 +1217,10 @@ static cab_LONG fdi_Zipinflate_stored(fdi_decomp_state *decomp_state)
 
   /* get the length and its complement */
   ZIPNEEDBITS(16)
-  n = ((cab_ULONG)b & 0xffff);
+  n = (b & 0xffff);
   ZIPDUMPBITS(16)
   ZIPNEEDBITS(16)
-  if (n != (cab_ULONG)((~b) & 0xffff))
+  if (n != ((~b) & 0xffff))
     return 1;                   /* error in compressed data */
   ZIPDUMPBITS(16)
 
@@ -1312,13 +1312,13 @@ static cab_LONG fdi_Zipinflate_dynamic(fdi_decomp_state *decomp_state)
 
   /* read in table lengths */
   ZIPNEEDBITS(5)
-  nl = 257 + ((cab_ULONG)b & 0x1f);      /* number of literal/length codes */
+  nl = 257 + (b & 0x1f);      /* number of literal/length codes */
   ZIPDUMPBITS(5)
   ZIPNEEDBITS(5)
-  nd = 1 + ((cab_ULONG)b & 0x1f);        /* number of distance codes */
+  nd = 1 + (b & 0x1f);        /* number of distance codes */
   ZIPDUMPBITS(5)
   ZIPNEEDBITS(4)
-  nb = 4 + ((cab_ULONG)b & 0xf);         /* number of bit length codes */
+  nb = 4 + (b & 0xf);         /* number of bit length codes */
   ZIPDUMPBITS(4)
   if(nl > 288 || nd > 32)
     return 1;                   /* bad lengths */
@@ -1327,7 +1327,7 @@ static cab_LONG fdi_Zipinflate_dynamic(fdi_decomp_state *decomp_state)
   for(j = 0; j < nb; j++)
   {
     ZIPNEEDBITS(3)
-    ll[Zipborder[j]] = (cab_ULONG)b & 7;
+    ll[Zipborder[j]] = b & 7;
     ZIPDUMPBITS(3)
   }
   for(; j < 19; j++)
@@ -1349,7 +1349,7 @@ static cab_LONG fdi_Zipinflate_dynamic(fdi_decomp_state *decomp_state)
   while((cab_ULONG)i < n)
   {
     ZIPNEEDBITS((cab_ULONG)bl)
-    j = (td = tl + ((cab_ULONG)b & m))->b;
+    j = (td = tl + (b & m))->b;
     ZIPDUMPBITS(j)
     j = td->v.n;
     if (j < 16)                 /* length of code in bits (0..15) */
@@ -1357,7 +1357,7 @@ static cab_LONG fdi_Zipinflate_dynamic(fdi_decomp_state *decomp_state)
     else if (j == 16)           /* repeat last length 3 to 6 times */
     {
       ZIPNEEDBITS(2)
-      j = 3 + ((cab_ULONG)b & 3);
+      j = 3 + (b & 3);
       ZIPDUMPBITS(2)
       if((cab_ULONG)i + j > n)
         return 1;
@@ -1367,7 +1367,7 @@ static cab_LONG fdi_Zipinflate_dynamic(fdi_decomp_state *decomp_state)
     else if (j == 17)           /* 3 to 10 zero length codes */
     {
       ZIPNEEDBITS(3)
-      j = 3 + ((cab_ULONG)b & 7);
+      j = 3 + (b & 7);
       ZIPDUMPBITS(3)
       if ((cab_ULONG)i + j > n)
         return 1;
@@ -1378,7 +1378,7 @@ static cab_LONG fdi_Zipinflate_dynamic(fdi_decomp_state *decomp_state)
     else                        /* j == 18: 11 to 138 zero length codes */
     {
       ZIPNEEDBITS(7)
-      j = 11 + ((cab_ULONG)b & 0x7f);
+      j = 11 + (b & 0x7f);
       ZIPDUMPBITS(7)
       if ((cab_ULONG)i + j > n)
         return 1;
@@ -1436,7 +1436,7 @@ static cab_LONG fdi_Zipinflate_block(cab_LONG *e, fdi_decomp_state *decomp_state
 
   /* read in block type */
   ZIPNEEDBITS(2)
-  t = (cab_ULONG)b & 3;
+  t = b & 3;
   ZIPDUMPBITS(2)
 
   /* restore the global bit buffer */

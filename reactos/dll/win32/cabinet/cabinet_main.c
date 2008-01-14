@@ -229,7 +229,11 @@ static INT_PTR fdi_notify_extract(FDINOTIFICATIONTYPE fdint, PFDINOTIFICATION pf
                 file_in_list(pDestination->FileList, pfdin->psz1, &node);
 
                 if (node && !node->DoExtract)
+                {
+                    HeapFree(GetProcessHeap(), 0, szFullPath);
+                    HeapFree(GetProcessHeap(), 0, szDirectory);
                     return 0;
+                }
 
                 /* create the destination directory if it doesn't exist */
                 if (GetFileAttributesA(szDirectory) == INVALID_FILE_ATTRIBUTES)
