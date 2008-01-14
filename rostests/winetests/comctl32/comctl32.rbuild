@@ -1,5 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
+<group>
 <module name="comctl32_winetest" type="win32cui" installbase="bin" installname="comctl32_winetest.exe" allowwarnings="true" entrypoint="0">
 	<include base="comctl32_winetest">.</include>
 	<define name="WINVER">0x600</define>
@@ -7,7 +8,6 @@
 	<library>wine</library>
 	<library>comctl32</library>
 	<library>ole32</library>
-	<library>shlwapi</library>
 	<library>user32</library>
 	<library>gdi32</library>
 	<library>advapi32</library>
@@ -37,3 +37,4 @@
 	<file>rsrc.rc</file>
 	<file>testlist.c</file>
 </module>
+</group>

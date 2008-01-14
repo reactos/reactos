@@ -65,7 +65,8 @@ typedef struct _ILHEAD
 } ILHEAD;
 #include "poppack.h"
 
-static BOOL (WINAPI *pImageList_DrawIndirect)(IMAGELISTDRAWPARAMS*) = NULL;
+static BOOL (WINAPI *pImageList_DrawIndirect)(IMAGELISTDRAWPARAMS*);
+static BOOL (WINAPI *pImageList_SetImageCount)(HIMAGELIST,UINT);
 
 static HDC desktopDC;
 static HINSTANCE hinst;
@@ -359,12 +360,19 @@ static BOOL DoTest1(void)
     ok(!ImageList_Remove(himl,0),"removed nonexistent icon\n");
 
     /* check SetImageCount/GetImageCount */
-    ok(ImageList_SetImageCount(himl, 3), "couldn't increase image count\n");
-    ok(ImageList_GetImageCount(himl) == 3, "invalid image count after increase\n");
-    ok(ImageList_SetImageCount(himl, 1), "couldn't decrease image count\n");
-    ok(ImageList_GetImageCount(himl) == 1, "invalid image count after decrease to 1\n");
-    ok(ImageList_SetImageCount(himl, 0), "couldn't decrease image count\n");
-    ok(ImageList_GetImageCount(himl) == 0, "invalid image count after decrease to 0\n");
+    if (pImageList_SetImageCount)
+    {
+        ok(pImageList_SetImageCount(himl, 3), "couldn't increase image count\n");
+        ok(ImageList_GetImageCount(himl) == 3, "invalid image count after increase\n");
+        ok(pImageList_SetImageCount(himl, 1), "couldn't decrease image count\n");
+        ok(ImageList_GetImageCount(himl) == 1, "invalid image count after decrease to 1\n");
+        ok(pImageList_SetImageCount(himl, 0), "couldn't decrease image count\n");
+        ok(ImageList_GetImageCount(himl) == 0, "invalid image count after decrease to 0\n");
+    }
+    else
+    {
+        skip("skipped ImageList_SetImageCount tests\n");
+    }
 
     /* destroy it */
     ok(ImageList_Destroy(himl),"destroy imagelist failed\n");
@@ -425,13 +433,8 @@ static BOOL DoTest3(void)
 
     if (!pImageList_DrawIndirect)
     {
-        HMODULE hComCtl32 = LoadLibraryA("comctl32.dll");
-        pImageList_DrawIndirect = (void*)GetProcAddress(hComCtl32, "ImageList_DrawIndirect");
-        if (!pImageList_DrawIndirect)
-        {
-            trace("ImageList_DrawIndirect not available, skipping test\n");
-            return TRUE;
-        }
+        trace("ImageList_DrawIndirect not available, skipping test\n");
+        return TRUE;
     }
 
     hwndfortest = create_a_window();
@@ -454,9 +457,12 @@ static BOOL DoTest3(void)
     ok(0==ImageList_Add(himl, hbm1, 0),"failed to add bitmap 1\n");
     ok(1==ImageList_Add(himl, hbm2, 0),"failed to add bitmap 2\n");
 
-    ok(ImageList_SetImageCount(himl,3),"Setimage count failed\n");
-    /*ok(2==ImageList_Add(himl, hbm3, NULL),"failed to add bitmap 3\n"); */
-    ok(ImageList_Replace(himl, 2, hbm3, 0),"failed to replace bitmap 3\n");
+    if (pImageList_SetImageCount)
+    {
+        ok(pImageList_SetImageCount(himl,3),"Setimage count failed\n");
+        /*ok(2==ImageList_Add(himl, hbm3, NULL),"failed to add bitmap 3\n"); */
+        ok(ImageList_Replace(himl, 2, hbm3, 0),"failed to replace bitmap 3\n");
+    }
 
     memset(&imldp, 0, sizeof (imldp));
     ok(!pImageList_DrawIndirect(&imldp), "zero data succeeded!\n");
@@ -969,6 +975,10 @@ static void test_imagelist_storage(void)
 
 START_TEST(imagelist)
 {
+    HMODULE hComCtl32 = GetModuleHandle("comctl32.dll");
+    pImageList_DrawIndirect = (void*)GetProcAddress(hComCtl32, "ImageList_DrawIndirect");
+    pImageList_SetImageCount = (void*)GetProcAddress(hComCtl32, "ImageList_SetImageCount");
+
     desktopDC=GetDC(NULL);
     hinst = GetModuleHandleA(NULL);
 

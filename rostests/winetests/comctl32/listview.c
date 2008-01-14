@@ -1040,11 +1040,7 @@ static void test_item_position(void)
 
 START_TEST(listview)
 {
-    INITCOMMONCONTROLSEX icc;
-
-    icc.dwICC = 0;
-    icc.dwSize = sizeof icc;
-    InitCommonControlsEx(&icc);
+    InitCommonControls();
 
     init_msg_sequences(sequences, NUM_MSG_SEQUENCES);
 

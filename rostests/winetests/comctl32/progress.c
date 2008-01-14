@@ -91,12 +91,9 @@ static void update_window(HWND hWnd)
 static void init(void)
 {
     WNDCLASSA wc;
-    INITCOMMONCONTROLSEX icex;
     RECT rect;
     
-    icex.dwSize = sizeof(INITCOMMONCONTROLSEX);
-    icex.dwICC   = ICC_PROGRESS_CLASS;
-    InitCommonControlsEx(&icex);
+    InitCommonControls();
   
     wc.style = CS_HREDRAW | CS_VREDRAW;
     wc.cbClsExtra = 0;

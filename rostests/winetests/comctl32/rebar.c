@@ -786,14 +786,11 @@ static void bandinfo_test(void)
 
 START_TEST(rebar)
 {
-    INITCOMMONCONTROLSEX icc;
     WNDCLASSA wc;
     MSG msg;
     RECT rc;
 
-    icc.dwSize = sizeof(icc);
-    icc.dwICC = ICC_COOL_CLASSES;
-    InitCommonControlsEx(&icc);
+    InitCommonControls();
 
     wc.style = CS_HREDRAW | CS_VREDRAW;
     wc.cbClsExtra = 0;

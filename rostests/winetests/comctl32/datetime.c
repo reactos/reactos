@@ -560,11 +560,7 @@ static void test_datetime_control(void)
 
 START_TEST(datetime)
 {
-    INITCOMMONCONTROLSEX icex;
-
-    icex.dwSize = sizeof(icex);
-    icex.dwICC = ICC_DATE_CLASSES;
-    InitCommonControlsEx(&icex);
+    InitCommonControls();
     init_msg_sequences(sequences, NUM_MSG_SEQUENCES);
 
     test_datetime_control();

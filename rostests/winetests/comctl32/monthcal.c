@@ -314,10 +314,9 @@ static void test_monthcal(void)
 {
     HWND hwnd;
     SYSTEMTIME st[2], st1[2];
-    INITCOMMONCONTROLSEX ic = {sizeof(INITCOMMONCONTROLSEX), ICC_DATE_CLASSES};
     int res, month_range;
 
-    InitCommonControlsEx(&ic);
+    InitCommonControls();
     hwnd = CreateWindowA(MONTHCAL_CLASSA, "MonthCal", WS_POPUP | WS_VISIBLE, CW_USEDEFAULT,
                          0, 300, 300, 0, 0, NULL, NULL);
     ok(hwnd != NULL, "Failed to create MonthCal\n");
@@ -479,9 +478,8 @@ static HWND create_monthcal_control(DWORD style, HWND parent_window)
 {
     struct subclass_info *info;
     HWND hwnd;
-    static const INITCOMMONCONTROLSEX ic = {sizeof(INITCOMMONCONTROLSEX), ICC_DATE_CLASSES};
 
-    InitCommonControlsEx(&ic);
+    InitCommonControls();
 
     info = HeapAlloc(GetProcessHeap(), 0, sizeof(struct subclass_info));
     if (!info)

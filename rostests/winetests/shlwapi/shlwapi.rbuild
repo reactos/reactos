@@ -1,5 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
+<group>
 <module name="shlwapi_winetest" type="win32cui" installbase="bin" installname="shlwapi_winetest.exe" allowwarnings="true" entrypoint="0">
 	<include base="shlwapi_winetest">.</include>
 	<define name="WINVER">0x600</define>
@@ -22,3 +23,4 @@
 	<file>url.c</file>
 	<file>testlist.c</file>
 </module>
+</group>

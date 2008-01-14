@@ -1482,11 +1482,8 @@ static LRESULT CALLBACK HeaderTestWndProc(HWND hWnd, UINT msg, WPARAM wParam, LP
 
 static void init(void) {
     WNDCLASSA wc;
-    INITCOMMONCONTROLSEX icex;
 
-    icex.dwSize = sizeof(INITCOMMONCONTROLSEX);
-    icex.dwICC  = ICC_USEREX_CLASSES;
-    InitCommonControlsEx(&icex);
+    InitCommonControls();
 
     wc.style = CS_HREDRAW | CS_VREDRAW;
     wc.cbClsExtra = 0;

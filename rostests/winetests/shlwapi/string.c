@@ -483,6 +483,7 @@ static void test_StrDupA(void)
    */
   lpszStr = StrDupA(NULL);
   ok(lpszStr == NULL || *lpszStr == '\0', "NULL string returned %p\n", lpszStr);
+  LocalFree((HLOCAL)lpszStr);
 }
 
 static void test_StrFormatByteSize64A(void)

@@ -22,3 +22,16 @@ Index: monthcal.c
  #include "winuser.h"
  
  #include "commctrl.h"
+Index: mru.c
+===================================================================
+--- mru.c	(revision 25766)
++++ mru.c	(working copy)
+@@ -75,7 +75,7 @@
+ 
+ 
+ /* Based on RegDeleteTreeW from dlls/advapi32/registry.c */
+-static LSTATUS mru_RegDeleteTreeA(HKEY hKey, LPCSTR lpszSubKey)
++static LONG mru_RegDeleteTreeA(HKEY hKey, LPCSTR lpszSubKey)
+ {
+     LONG ret;
+     DWORD dwMaxSubkeyLen, dwMaxValueLen;

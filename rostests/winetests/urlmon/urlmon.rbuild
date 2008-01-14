@@ -1,5 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
+<group>
 <module name="urlmon_winetest" type="win32cui" installbase="bin" installname="urlmon_winetest.exe" allowwarnings="true" entrypoint="0">
 	<include base="urlmon_winetest">.</include>
 	<define name="WINVER">0x600</define>
@@ -18,3 +19,4 @@
 	<file>url.c</file>
 	<file>testlist.c</file>
 </module>
+</group>

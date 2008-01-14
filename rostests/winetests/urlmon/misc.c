@@ -350,6 +350,48 @@ static void test_CoInternetCompareUrl(void)
     ok(hres == S_FALSE, "CoInternetParseUrl failed: %08x\n", hres);
 }
 
+static const struct {
+    LPCWSTR url;
+    DWORD uses_net;
+} query_info_tests[] = {
+    {url1, 0},
+    {url2, 0},
+    {url3, 0},
+    {url4, 0},
+    {url5, 0},
+    {url6, 0},
+    {url7, 0},
+    {url8, 0}
+};
+
+static void test_CoInternetQueryInfo(void)
+{
+    BYTE buf[100];
+    DWORD cb, i;
+    HRESULT hres;
+
+    for(i=0; i < sizeof(query_info_tests)/sizeof(query_info_tests[0]); i++) {
+        cb = 0xdeadbeef;
+        memset(buf, '?', sizeof(buf));
+        hres = CoInternetQueryInfo(query_info_tests[0].url, QUERY_USES_NETWORK, 0, buf, sizeof(buf), &cb, 0);
+        ok(hres == S_OK, "[%d] CoInternetQueryInfo failed: %08x\n", i, hres);
+        ok(cb == sizeof(DWORD), "[%d] cb = %d\n", i, cb);
+        ok(*(DWORD*)buf == query_info_tests[i].uses_net, "[%d] ret %x, expected %x\n",
+           i, *(DWORD*)buf, query_info_tests[i].uses_net);
+
+        hres = CoInternetQueryInfo(query_info_tests[0].url, QUERY_USES_NETWORK, 0, buf, 3, &cb, 0);
+        ok(hres == E_FAIL, "[%d] CoInternetQueryInfo failed: %08x, expected E_FAIL\n", i, hres);
+        hres = CoInternetQueryInfo(query_info_tests[0].url, QUERY_USES_NETWORK, 0, NULL, sizeof(buf), &cb, 0);
+        ok(hres == E_FAIL, "[%d] CoInternetQueryInfo failed: %08x, expected E_FAIL\n", i, hres);
+
+        memset(buf, '?', sizeof(buf));
+        hres = CoInternetQueryInfo(query_info_tests[0].url, QUERY_USES_NETWORK, 0, buf, sizeof(buf), NULL, 0);
+        ok(hres == S_OK, "[%d] CoInternetQueryInfo failed: %08x\n", i, hres);
+        ok(*(DWORD*)buf == query_info_tests[i].uses_net, "[%d] ret %x, expected %x\n",
+           i, *(DWORD*)buf, query_info_tests[i].uses_net);
+    }
+}
+
 static const WCHAR mimeTextHtml[] = {'t','e','x','t','/','h','t','m','l',0};
 static const WCHAR mimeTextPlain[] = {'t','e','x','t','/','p','l','a','i','n',0};
 static const WCHAR mimeTextRichtext[] = {'t','e','x','t','/','r','i','c','h','t','e','x','t',0};
@@ -608,6 +650,7 @@ static void test_FindMimeFromData(void)
             ok(!lstrcmpW(mime, mimeTextHtml), "[%d] wrong mime\n", i);
         else
             ok(!lstrcmpW(mime, mime_tests2[i].mime), "[%d] wrong mime\n", i);
+        CoTaskMemFree(mime);
 
         hres = FindMimeFromData(NULL, NULL, mime_tests2[i].data, mime_tests2[i].size,
                 mimeImagePjpeg, 0, &mime, 0);
@@ -892,6 +935,13 @@ static ULONG WINAPI ClassFactory_Release(IClassFactory *iface)
 static HRESULT WINAPI ClassFactory_CreateInstance(IClassFactory *iface, IUnknown *pOuter,
                                         REFIID riid, void **ppv)
 {
+    ok(0, "unexpected call\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ProtocolCF_CreateInstance(IClassFactory *iface, IUnknown *pOuter,
+                                        REFIID riid, void **ppv)
+{
     CHECK_EXPECT(CreateInstance);
 
     ok(iface == expect_cf, "unexpected iface\n");
@@ -917,8 +967,17 @@ static const IClassFactoryVtbl ClassFactoryVtbl = {
     ClassFactory_LockServer
 };
 
-static IClassFactory test_protocol_cf = { &ClassFactoryVtbl };
-static IClassFactory test_protocol_cf2 = { &ClassFactoryVtbl };
+static const IClassFactoryVtbl ProtocolCFVtbl = {
+    ClassFactory_QueryInterface,
+    ClassFactory_AddRef,
+    ClassFactory_Release,
+    ProtocolCF_CreateInstance,
+    ClassFactory_LockServer
+};
+
+static IClassFactory test_protocol_cf = { &ProtocolCFVtbl };
+static IClassFactory test_protocol_cf2 = { &ProtocolCFVtbl };
+static IClassFactory test_cf = { &ClassFactoryVtbl };
 
 static void test_NameSpace(void)
 {
@@ -1042,6 +1101,33 @@ static void test_NameSpace(void)
     hres = CoInternetParseUrl(url8, PARSE_ENCODE, 0, buf, sizeof(buf)/sizeof(WCHAR),
                               &size, 0);
     ok(hres == S_OK, "CoInternetParseUrl failed: %08x\n", hres);
+
+    IInternetSession_Release(session);
+}
+
+static void test_MimeFilter(void)
+{
+    IInternetSession *session;
+    HRESULT hres;
+
+    static const WCHAR mimeW[] = {'t','e','s','t','/','m','i','m','e',0};
+
+    hres = CoInternetGetSession(0, &session, 0);
+    ok(hres == S_OK, "CoInternetGetSession failed: %08x\n", hres);
+    if(FAILED(hres))
+        return;
+
+    hres = IInternetSession_RegisterMimeFilter(session, &test_cf, &IID_NULL, mimeW);
+    ok(hres == S_OK, "RegisterMimeFilter failed: %08x\n", hres);
+
+    hres = IInternetSession_UnregisterMimeFilter(session, &test_cf, mimeW);
+    ok(hres == S_OK, "UnregisterMimeFilter failed: %08x\n", hres);
+
+    hres = IInternetSession_UnregisterMimeFilter(session, &test_cf, mimeW);
+    ok(hres == S_OK, "UnregisterMimeFilter failed: %08x\n", hres);
+
+    hres = IInternetSession_UnregisterMimeFilter(session, (void*)0xdeadbeef, mimeW);
+    ok(hres == S_OK, "UnregisterMimeFilter failed: %08x\n", hres);
 
     IInternetSession_Release(session);
 }
@@ -1195,10 +1281,12 @@ START_TEST(misc)
     test_RegisterFormatEnumerator();
     test_CoInternetParseUrl();
     test_CoInternetCompareUrl();
+    test_CoInternetQueryInfo();
     test_FindMimeFromData();
     test_SecurityManager();
     test_ZoneManager();
     test_NameSpace();
+    test_MimeFilter();
     test_ReleaseBindInfo();
     test_UrlMkGetSessionOption();
     test_ObtainUserAgentString();

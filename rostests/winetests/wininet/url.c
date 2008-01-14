@@ -53,7 +53,7 @@
 #define CREATE_URL11 "about:"
 #define CREATE_URL12 "http://www.winehq.org:65535"
 
-static inline void copy_compsA(
+static void copy_compsA(
     URL_COMPONENTSA *src, 
     URL_COMPONENTSA *dst, 
     DWORD scheLen,
@@ -73,7 +73,7 @@ static inline void copy_compsA(
     SetLastError(0xfaceabad);
 }
 
-static inline void zero_compsA(
+static void zero_compsA(
     URL_COMPONENTSA *dst, 
     DWORD scheLen,
     DWORD hostLen,
@@ -237,6 +237,25 @@ static void InternetCrackUrl_test(void)
   copy_compsA(&urlSrc, &urlComponents, 32, 1024, 1024, 1024, 2048, 1024);
   ret = InternetCrackUrl("", 0, 0, &urlComponents);
   GLE = GetLastError();
+  ok(ret == FALSE, "Expected InternetCrackUrl to fail\n");
+  ok(GLE != 0xdeadbeef && GLE != ERROR_SUCCESS, "Expected GLE to represent a failure\n");
+
+  /* Invalid Call: must set size of components structure (Windows only
+   * enforces this on the InternetCrackUrlA version of the call) */
+  copy_compsA(&urlSrc, &urlComponents, 0, 1024, 1024, 1024, 2048, 1024);
+  SetLastError(0xdeadbeef);
+  urlComponents.dwStructSize = 0;
+  ret = InternetCrackUrlA(TEST_URL, 0, 0, &urlComponents);
+  ok(ret == FALSE, "Expected InternetCrackUrl to fail\n");
+  ok(GLE != 0xdeadbeef && GLE != ERROR_SUCCESS, "Expected GLE to represent a failure\n");
+
+  /* Invalid Call: size of dwStructSize must be one of the "standard" sizes
+   * of the URL_COMPONENTS structure (Windows only enforces this on the
+   * InternetCrackUrlA version of the call) */
+  copy_compsA(&urlSrc, &urlComponents, 0, 1024, 1024, 1024, 2048, 1024);
+  SetLastError(0xdeadbeef);
+  urlComponents.dwStructSize = sizeof(urlComponents) + 1;
+  ret = InternetCrackUrlA(TEST_URL, 0, 0, &urlComponents);
   ok(ret == FALSE, "Expected InternetCrackUrl to fail\n");
   ok(GLE != 0xdeadbeef && GLE != ERROR_SUCCESS, "Expected GLE to represent a failure\n");
 }
@@ -442,7 +461,7 @@ static void InternetCreateUrlA_test(void)
 		"Expected ERROR_INVALID_PARAMETER, got %d\n", GetLastError());
 	ok(len == -1, "Expected len -1, got %d\n", len);
 
-	/* test valid lpUrlComponets, emptry szUrl
+	/* test valid lpUrlComponets, empty szUrl
 	 * lpdwUrlLength is size of buffer required on exit, including
 	 * the terminating null when GLE == ERROR_INSUFFICIENT_BUFFER
 	 */

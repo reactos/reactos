@@ -651,11 +651,8 @@ START_TEST(treeview)
 {
     WNDCLASSA wc;
     MSG msg;
-    INITCOMMONCONTROLSEX icex;
   
-    icex.dwSize = sizeof(INITCOMMONCONTROLSEX);
-    icex.dwICC   = ICC_TREEVIEW_CLASSES;
-    InitCommonControlsEx(&icex);
+    InitCommonControls();
     init_msg_sequences(MsgSequences, NUM_MSG_SEQUENCES);
   
     wc.style = CS_HREDRAW | CS_VREDRAW;

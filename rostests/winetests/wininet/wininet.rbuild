@@ -1,5 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
+<group>
 <module name="wininet_winetest" type="win32cui" installbase="bin" installname="wininet_winetest.exe" allowwarnings="true" entrypoint="0">
 	<include base="wininet_winetest">.</include>
 	<define name="WINVER">0x600</define>
@@ -16,3 +17,4 @@
 	<file>url.c</file>
 	<file>testlist.c</file>
 </module>
+</group>

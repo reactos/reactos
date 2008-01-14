@@ -454,12 +454,34 @@ static void test_url_canonicalize(const char *szUrl, DWORD dwFlags, HRESULT dwEx
 
 static void test_UrlEscape(void)
 {
-    DWORD size;
+    DWORD size = 0;
     HRESULT ret;
     unsigned int i;
+    char empty_string[] = "";
 
     ret = UrlEscapeA("/woningplan/woonkamer basis.swf", NULL, &size, URL_ESCAPE_SPACES_ONLY);
     ok(ret == E_INVALIDARG, "got %x, expected %x\n", ret, E_INVALIDARG);
+    ok(size == 0, "got %d, expected %d\n", size, 0);
+
+    size = 0;
+    ret = UrlEscapeA("/woningplan/woonkamer basis.swf", empty_string, &size, URL_ESCAPE_SPACES_ONLY);
+    ok(ret == E_INVALIDARG, "got %x, expected %x\n", ret, E_INVALIDARG);
+    ok(size == 0, "got %d, expected %d\n", size, 0);
+
+    size = 1;
+    ret = UrlEscapeA("/woningplan/woonkamer basis.swf", NULL, &size, URL_ESCAPE_SPACES_ONLY);
+    ok(ret == E_INVALIDARG, "got %x, expected %x\n", ret, E_INVALIDARG);
+    ok(size == 1, "got %d, expected %d\n", size, 1);
+
+    size = 1;
+    ret = UrlEscapeA("/woningplan/woonkamer basis.swf", empty_string, NULL, URL_ESCAPE_SPACES_ONLY);
+    ok(ret == E_INVALIDARG, "got %x, expected %x\n", ret, E_INVALIDARG);
+    ok(size == 1, "got %d, expected %d\n", size, 1);
+
+    size = 1;
+    ret = UrlEscapeA("/woningplan/woonkamer basis.swf", empty_string, &size, URL_ESCAPE_SPACES_ONLY);
+    ok(ret == E_POINTER, "got %x, expected %x\n", ret, E_POINTER);
+    ok(size == 34, "got %d, expected %d\n", size, 34);
 
     for(i=0; i<sizeof(TEST_ESCAPE)/sizeof(TEST_ESCAPE[0]); i++) {
         test_url_escape(TEST_ESCAPE[i].url, TEST_ESCAPE[i].flags,
