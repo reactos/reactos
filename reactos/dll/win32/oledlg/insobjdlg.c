@@ -332,38 +332,39 @@ static void UIINSERTOBJECTDLG_SelectCreateFromFile(InsertObjectDlgInfo* pdlgInfo
  */
 static BOOL UIINSERTOBJECTDLG_PopulateObjectTypes(InsertObjectDlgInfo* pdlgInfo)
 {
+  static const WCHAR szClsid[] = {'C','L','S','I','D',0};
+  static const WCHAR szInsertable[] = {'I','n','s','e','r','t','a','b','l','e',0};
+  static const WCHAR szNotInsertable[] = {'N','o','t','I','n','s','e','r','t','a','b','l','e',0};
   DWORD i;
   LONG len;
   HKEY hkclsids;
   HKEY hkey;
   CLSID clsid;
   HRESULT ret;
-  CHAR szclsid[128];
-  CHAR keydesc[MAX_PATH];
-  CHAR keyname[MAX_PATH];
-  WCHAR wszclsid[128];
+  WCHAR keydesc[MAX_PATH];
+  WCHAR keyname[MAX_PATH];
+  WCHAR szclsid[128];
   DWORD index = 0;
 
   UIINSERTOBJECTDLG_FreeObjectTypes(pdlgInfo);
 
-  RegOpenKeyExA(HKEY_CLASSES_ROOT, "CLSID", 0, KEY_READ, &hkclsids);
+  RegOpenKeyExW(HKEY_CLASSES_ROOT, szClsid, 0, KEY_READ, &hkclsids);
 
-  while (ERROR_SUCCESS == (ret = RegEnumKeyA(hkclsids, index, szclsid, MAX_PATH)))
+  while (ERROR_SUCCESS == (ret = RegEnumKeyW(hkclsids, index, szclsid, sizeof(szclsid)/sizeof(szclsid[0]))))
   {
     index++;
 
-    RegOpenKeyExA(hkclsids, szclsid, 0, KEY_READ, &hkey);
+    RegOpenKeyExW(hkclsids, szclsid, 0, KEY_READ, &hkey);
 
-    len = MAX_PATH;
-    if (ERROR_SUCCESS != RegQueryValueA(hkey, "Insertable", keyname, &len))
+    len = sizeof(keyname);
+    if (ERROR_SUCCESS != RegQueryValueW(hkey, szInsertable, keyname, &len))
         continue;
 
-    len = MAX_PATH;
-    if (ERROR_SUCCESS == RegQueryValueA(hkey, "NotInsertable", keyname, &len))
+    len = sizeof(keyname);
+    if (ERROR_SUCCESS == RegQueryValueW(hkey, szNotInsertable, keyname, &len))
         continue;
 
-    RtlMultiByteToUnicodeN(wszclsid, MAX_PATH, NULL, szclsid, MAX_PATH); 
-    CLSIDFromString(wszclsid, &clsid);
+    CLSIDFromString(szclsid, &clsid);
 
     for (i = 0; i < pdlgInfo->lpOleUIInsertObject->cClsidExclude; i++)
       if (IsEqualGUID(&pdlgInfo->lpOleUIInsertObject->lpClsidExclude[i], &clsid))
@@ -372,14 +373,14 @@ static BOOL UIINSERTOBJECTDLG_PopulateObjectTypes(InsertObjectDlgInfo* pdlgInfo)
     if (i < pdlgInfo->lpOleUIInsertObject->cClsidExclude)
       continue;
 
-    len = MAX_PATH;
-    if (ERROR_SUCCESS == RegQueryValueA(hkey, NULL, keydesc, &len))
+    len = sizeof(keydesc);
+    if (ERROR_SUCCESS == RegQueryValueW(hkey, NULL, keydesc, &len))
     {
        CLSID* lpclsid = HeapAlloc(GetProcessHeap(), 0, sizeof(CLSID));
        memcpy(lpclsid, &clsid, sizeof(CLSID));
 
-       len = SendMessageA(pdlgInfo->hwndObjTypeLB, LB_ADDSTRING, 0, (LPARAM)keydesc);
-       SendMessageA(pdlgInfo->hwndObjTypeLB, LB_SETITEMDATA, (WPARAM)len, (LPARAM)lpclsid);
+       len = SendMessageW(pdlgInfo->hwndObjTypeLB, LB_ADDSTRING, 0, (LPARAM)keydesc);
+       SendMessageW(pdlgInfo->hwndObjTypeLB, LB_SETITEMDATA, (WPARAM)len, (LPARAM)lpclsid);
     }
   }
 
@@ -471,17 +472,15 @@ static BOOL UIINSERTOBJECTDLG_OnOpen(InsertObjectDlgInfo* pdlgInfo)
   }
   else if (BST_CHECKED == SendMessageA(pdlgInfo->hwndCreateFromFileCB, BM_GETCHECK, 0, 0))
   {
-    char fname[MAX_PATH];
-
     if (pdlgInfo->lpOleUIInsertObject->lpszFile)
     {
       HRESULT hres;
       WCHAR wcsFile[MAX_PATH];
 
-      SendMessageA(pdlgInfo->hwndFileTB, WM_GETTEXT, (WPARAM)MAX_PATH, (LPARAM)fname);
-      lstrcpynA(pdlgInfo->lpOleUIInsertObject->lpszFile, fname, pdlgInfo->lpOleUIInsertObject->cchFile);
+      if (SendMessageW(pdlgInfo->hwndFileTB, WM_GETTEXT, MAX_PATH, (LPARAM)wcsFile))
+          WideCharToMultiByte(CP_ACP, 0, wcsFile, -1,
+              pdlgInfo->lpOleUIInsertObject->lpszFile, pdlgInfo->lpOleUIInsertObject->cchFile, NULL, NULL);
 
-      RtlMultiByteToUnicodeN(wcsFile, MAX_PATH, NULL, fname, MAX_PATH); 
       if (ERROR_SUCCESS == (hres = GetClassFile(wcsFile, &pdlgInfo->lpOleUIInsertObject->clsid)))
       {
          if (pdlgInfo->lpOleUIInsertObject->dwFlags & IOF_CREATEFILEOBJECT)

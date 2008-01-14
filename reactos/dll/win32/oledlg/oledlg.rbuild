@@ -1,5 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
+<group>
 <module name="oledlg" type="win32dll" baseaddress="${BASEADDRESS_OLEDLG}" installbase="system32" installname="oledlg.dll" allowwarnings="true">
 	<importlibrary definition="oledlg.spec.def" />
 	<include base="oledlg">.</include>
@@ -20,3 +21,4 @@
 	<file>rsrc.rc</file>
 	<file>oledlg.spec</file>
 </module>
+</group>

@@ -434,7 +434,7 @@ static void update_result_text(HWND hdlg, const ps_struct_t *ps_struct)
     LoadStringW(OLEDLG_hInstance, res_id, resource_txt, sizeof(resource_txt)/sizeof(WCHAR));
     if((ptr = strstrW(resource_txt, percent_s)))
     {
-        /* FIXME handle %s in ResultText. Sub appname if IDS_PS_PASTE_OBJECT{_AS_ICON}.  Else sub appropiate type name */
+        /* FIXME handle %s in ResultText. Sub appname if IDS_PS_PASTE_OBJECT{_AS_ICON}.  Else sub appropriate type name */
         size_t result_txt_len = strlenW(pent->lpstrResultText);
         ptrdiff_t offs = (char*)ptr - (char*)resource_txt;
         result_txt = HeapAlloc(GetProcessHeap(), 0, (strlenW(resource_txt) + result_txt_len - 1) * sizeof(WCHAR));
