@@ -33,7 +33,7 @@ The following libraries are shared with Wine.
 
 reactos/dll/win32/advpack         # Autosync
 reactos/dll/win32/avifil32        # Autosync
-reactos/dll/win32/browseui        # Autosync
+reactos/dll/win32/browseui        # Out of sync
 reactos/dll/win32/cabinet         # Autosync
 reactos/dll/win32/clusapi         # Autosync
 reactos/dll/win32/comcat          # Autosync
@@ -55,17 +55,17 @@ reactos/dll/win32/mlang           # Autosync
 reactos/dll/win32/mpr             # Autosync
 reactos/dll/win32/msacm32         # Out of sync
 reactos/dll/win32/msimg32         # Autosync
-reactos/dll/win32/msi             # Needs a widl update
-reactos/dll/win32/msvcrt20        # Out of sync
+reactos/dll/win32/msi             # Needs a sync script/rbuild update
+reactos/dll/win32/msvcrt20        # Autosync
 reactos/dll/win32/msvfw32         # Autosync
 reactos/dll/win32/msxml3          # Synced to Wine-20071230
 reactos/dll/win32/netapi32        # Autosync
 reactos/dll/win32/objsel          # Autosync
 reactos/dll/win32/odbc32          # Out of sync. Depends on port of Linux ODBC.
 reactos/dll/win32/odbccp32        # Autosync
-reactos/dll/win32/ole32           # Needs a widl update
+reactos/dll/win32/ole32           # Autosync
 reactos/dll/win32/oleacc          # Autosync
-reactos/dll/win32/oleaut32        # Needs a widl update
+reactos/dll/win32/oleaut32        # Needs a sync script/rbuild update
 reactos/dll/win32/oledlg          # Autosync
 reactos/dll/win32/olepro32        # Autosync
 reactos/dll/win32/powrprof        # Autosync
@@ -109,7 +109,7 @@ In addition the following libs, dlls and source files are mostly based on code p
 from Winehq CVS. If you are looking to update something in these files
 check Wine current souces first as it may already be fixed.
 
-reactos/lib/uuid                  #
+reactos/lib/uuid                  # Synced to Wine-20080114
 
 advapi32 -
   reactos/dll/win32/advapi32/crypt/*.c          # ekohl says we're not sharing this
