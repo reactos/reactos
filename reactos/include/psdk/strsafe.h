@@ -342,6 +342,18 @@ StringCbGetsExW(LPWSTR pszDest,
                 unsigned long dwFlags);
 
 STRSAFEAPI
+StringCbPrintfA(LPTSTR pszDest,
+                size_t cbDest,
+                LPCTSTR pszFormat,
+                ...);
+
+STRSAFEAPI
+StringCbPrintfW(LPWSTR pszDest,
+                size_t cbDest,
+                LPCWSTR pszFormat,
+                ...);
+
+STRSAFEAPI
 StringCbPrintfExA(LPTSTR pszDest,
                   size_t cbDest,
                   LPTSTR *ppszDestEnd,
