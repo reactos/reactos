@@ -134,6 +134,8 @@ static void check_os_sse_support( void )
    if ( cpu_has_xmm ) {
       _mesa_debug(NULL, "Testing OS support for SSE unmasked exceptions...\n");
 
+      _mesa_test_os_sse_exception_support();
+
       if ( cpu_has_xmm ) {
 	 _mesa_debug(NULL, "Yes.\n");
       } else {
