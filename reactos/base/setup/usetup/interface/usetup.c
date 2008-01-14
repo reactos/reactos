@@ -3270,13 +3270,13 @@ BootLoaderPage(PINPUT_RECORD Ir)
         else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
                  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_UP))  /* UP */
         {
-            CONSOLE_NormalTextXY (8, Line, 48, 1);
+            CONSOLE_NormalTextXY (8, Line, 60, 1);
 
             Line--;
             if (Line<12) Line=14;
             if (Line>14) Line=12;
 
-            CONSOLE_InvertTextXY (8, Line, 48, 1);
+            CONSOLE_InvertTextXY (8, Line, 60, 1);
         }
         else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
                  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3))  /* F3 */
