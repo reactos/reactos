@@ -127,9 +127,9 @@ static LPVOID WINAPI IMAPIMalloc_fnRealloc(LPMALLOC iface, LPVOID pv, DWORD cb)
         return LocalAlloc(LMEM_FIXED, cb);
 
     if (cb)
-        return LocalReAlloc((HANDLE) pv, cb, LMEM_MOVEABLE);
+        return LocalReAlloc(pv, cb, LMEM_MOVEABLE);
 
-    LocalFree((HANDLE) pv);
+    LocalFree(pv);
     return NULL;
 }
 
@@ -139,7 +139,7 @@ static LPVOID WINAPI IMAPIMalloc_fnRealloc(LPMALLOC iface, LPVOID pv, DWORD cb)
 static void WINAPI IMAPIMalloc_fnFree(LPMALLOC iface, LPVOID pv)
 {
     TRACE("(%p)->(%p)\n", iface, pv);
-    LocalFree((HANDLE) pv);
+    LocalFree(pv);
 }
 
 /**************************************************************************
@@ -148,7 +148,7 @@ static void WINAPI IMAPIMalloc_fnFree(LPMALLOC iface, LPVOID pv)
 static DWORD WINAPI IMAPIMalloc_fnGetSize(LPMALLOC iface, LPVOID pv)
 {
     TRACE("(%p)->(%p)\n", iface, pv);
-    return LocalSize((HANDLE) pv);
+    return LocalSize(pv);
 }
 
 /**************************************************************************
