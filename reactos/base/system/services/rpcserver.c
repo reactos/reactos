@@ -1294,7 +1294,7 @@ ScmCanonDriverImagePath(DWORD dwStartType,
         if (dwStartType == SERVICE_BOOT_START)
             wcscpy(*lpCanonName, L"\\SystemRoot\\");
 
-        wcscat(*lpCanonName, lpServiceName);
+        wcscat(*lpCanonName, lpServiceName + 13);
 
         DPRINT("Canonicalized name %S\n", *lpCanonName);
         return NO_ERROR;
