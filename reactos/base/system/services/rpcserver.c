@@ -1279,7 +1279,7 @@ ScmCanonDriverImagePath(DWORD dwStartType,
 
     /* Check if it has %SystemRoot% (len=13) */
     if (ServiceNameLen > 13 &&
-        !wcsnicmp(L"%SystemRoot%\\", lpServiceName, 13))
+        !wcsnicmp(L"%%SystemRoot%%\\", lpServiceName, 13))
     {
         /* Substitute %SystemRoot% with \\SystemRoot\\ */
         *lpCanonName = LocalAlloc(LMEM_ZEROINIT, ServiceNameLen * sizeof(WCHAR) + sizeof(WCHAR));
