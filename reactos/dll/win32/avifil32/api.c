@@ -1065,9 +1065,9 @@ HRESULT WINAPI AVIBuildFilterW(LPWSTR szFilter, LONG cbFilter, BOOL fSaving)
     HeapFree(GetProcessHeap(), 0, lp);
     return AVIERR_ERROR;
   }
-  for (n = 0;RegEnumKeyW(hKey, n, szFileExt, sizeof(szFileExt)) == S_OK;n++) {
+  for (n = 0;RegEnumKeyW(hKey, n, szFileExt, sizeof(szFileExt)/sizeof(szFileExt[0])) == S_OK;n++) {
     /* get CLSID to extension */
-    size = sizeof(szValue)/sizeof(szValue[0]);
+    size = sizeof(szValue);
     if (RegQueryValueW(hKey, szFileExt, szValue, &size) != S_OK)
       break;
 
@@ -1116,7 +1116,7 @@ HRESULT WINAPI AVIBuildFilterW(LPWSTR szFilter, LONG cbFilter, BOOL fSaving)
   for (n = 0; n <= count; n++) {
     /* first the description */
     if (n != 0) {
-      size = sizeof(szValue)/sizeof(szValue[0]);
+      size = sizeof(szValue);
       if (RegQueryValueW(hKey, lp[n].szClsid, szValue, &size) == S_OK) {
 	size = lstrlenW(szValue);
 	lstrcpynW(szFilter, szValue, cbFilter);
@@ -1509,7 +1509,7 @@ BOOL WINAPI AVISaveOptions(HWND hWnd, UINT uFlags, INT nStreams,
     HeapFree(GetProcessHeap(), 0, pSavedOptions);
   }
 
-  return (BOOL)ret;
+  return ret;
 }
 
 /***********************************************************************

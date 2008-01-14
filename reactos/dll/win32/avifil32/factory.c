@@ -209,7 +209,7 @@ BOOL WINAPI DllMain(HINSTANCE hInstDll, DWORD fdwReason, LPVOID lpvReserved)
   switch (fdwReason) {
   case DLL_PROCESS_ATTACH:
     DisableThreadLibraryCalls(hInstDll);
-    AVIFILE_hModule = (HMODULE)hInstDll;
+    AVIFILE_hModule = hInstDll;
     break;
   case DLL_PROCESS_DETACH:
     break;

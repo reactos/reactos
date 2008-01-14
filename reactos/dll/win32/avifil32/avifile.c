@@ -1795,7 +1795,7 @@ static HRESULT AVIFILE_LoadFile(IAVIFileImpl *This)
 	    if (str == NULL)
 	      return AVIERR_MEMORY;
 
-	    if (mmioRead(This->hmmio, (HPSTR)str, ck.cksize) != ck.cksize)
+	    if (mmioRead(This->hmmio, str, ck.cksize) != ck.cksize)
 	    {
 	      HeapFree(GetProcessHeap(), 0, str);
 	      return AVIERR_FILEREAD;
@@ -2249,7 +2249,7 @@ static HRESULT AVIFILE_SaveFile(IAVIFileImpl *This)
       WideCharToMultiByte(CP_ACP, 0, pStream->sInfo.szName, -1, str,
 			  ck.cksize, NULL, NULL);
 
-      if (mmioWrite(This->hmmio, (HPSTR)str, ck.cksize) != ck.cksize) {
+      if (mmioWrite(This->hmmio, str, ck.cksize) != ck.cksize) {
 	HeapFree(GetProcessHeap(), 0, str);	
 	return AVIERR_FILEWRITE;
       }
