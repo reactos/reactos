@@ -1,5 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
+<group>
 <module name="cryptnet" type="win32dll" baseaddress="${BASEADDRESS_CRYPTNET}" installbase="system32" installname="cryptnet.dll" allowwarnings="true">
 	<autoregister infsection="OleControlDlls" type="DllRegisterServer" />
 	<importlibrary definition="cryptnet.spec.def" />
@@ -16,3 +17,4 @@
 	<file>cryptnet_main.c</file>
 	<file>cryptnet.spec</file>
 </module>
+</group>

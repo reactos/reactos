@@ -476,18 +476,16 @@ static BOOL CRYPT_CrackUrl(LPCWSTR pszURL, URL_COMPONENTSW *components)
 
     memset(components, 0, sizeof(*components));
     components->dwStructSize = sizeof(*components);
-    components->dwHostNameLength = 1;
-    components->dwUrlPathLength = 1;
+    components->lpszHostName = CryptMemAlloc(MAX_PATH * sizeof(WCHAR));
+    components->dwHostNameLength = MAX_PATH;
+    components->lpszUrlPath = CryptMemAlloc(MAX_PATH * 2 * sizeof(WCHAR));
+    components->dwUrlPathLength = 2 * MAX_PATH;
     ret = InternetCrackUrlW(pszURL, 0, ICU_DECODE, components);
     if (ret)
     {
-        LPWSTR hostname = strndupW(components->lpszHostName,
-         components->dwHostNameLength);
-        LPWSTR path = strndupW(components->lpszUrlPath,
-         components->dwUrlPathLength);
-
-        components->lpszHostName = hostname;
-        components->lpszUrlPath = path;
+        if ((components->dwUrlPathLength == 2 * MAX_PATH - 1) ||
+            (components->dwHostNameLength == MAX_PATH - 1))
+            FIXME("Buffers are too small\n");
         switch (components->nScheme)
         {
         case INTERNET_SCHEME_FTP:
@@ -873,11 +871,15 @@ static BOOL WINAPI File_RetrieveEncodedObjectW(LPCWSTR pszURL,
     *ppfnFreeObject = CRYPT_FreeBlob;
     *ppvFreeContext = NULL;
 
-    components.dwUrlPathLength = 1;
+    components.lpszUrlPath = CryptMemAlloc(MAX_PATH * 2 * sizeof(WCHAR));
+    components.dwUrlPathLength = 2 * MAX_PATH;
     ret = InternetCrackUrlW(pszURL, 0, ICU_DECODE, &components);
     if (ret)
     {
         LPWSTR path;
+
+        if (components.dwUrlPathLength == 2 * MAX_PATH - 1)
+            FIXME("Buffers are too small\n");
 
         /* 3 == lstrlenW(L"c:") + 1 */
         path = CryptMemAlloc((components.dwUrlPathLength + 3) * sizeof(WCHAR));
@@ -932,6 +934,7 @@ static BOOL WINAPI File_RetrieveEncodedObjectW(LPCWSTR pszURL,
             CryptMemFree(path);
         }
     }
+    CryptMemFree(components.lpszUrlPath);
     return ret;
 }
 
@@ -952,7 +955,7 @@ static BOOL CRYPT_GetRetrieveFunction(LPCWSTR pszURL,
     *pFunc = NULL;
     *phFunc = 0;
     components.dwSchemeLength = 1;
-    ret = InternetCrackUrlW(pszURL, 0, ICU_DECODE, &components);
+    ret = InternetCrackUrlW(pszURL, 0, 0, &components);
     if (ret)
     {
         /* Microsoft always uses CryptInitOIDFunctionSet/
@@ -1136,7 +1139,7 @@ static BOOL WINAPI CRYPT_CreatePKCS7(LPCSTR pszObjectOid,
         ret = CryptQueryObject(CERT_QUERY_OBJECT_BLOB, &pObject->rgBlob[0],
          CERT_QUERY_CONTENT_FLAG_PKCS7_SIGNED |
          CERT_QUERY_CONTENT_FLAG_PKCS7_UNSIGNED, CERT_QUERY_FORMAT_FLAG_BINARY,
-         0, NULL, NULL, NULL, (HCERTSTORE *)ppvContext, NULL, NULL);
+         0, NULL, NULL, NULL, ppvContext, NULL, NULL);
     else
     {
         FIXME("multiple messages unimplemented\n");
