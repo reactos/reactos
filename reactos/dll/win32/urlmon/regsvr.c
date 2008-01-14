@@ -18,25 +18,14 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <stdarg.h>
 #include <stdio.h>
-#include <string.h>
-
-#include "windef.h"
-#include "winbase.h"
-#include "winuser.h"
-#include "wingdi.h"
-#include "winreg.h"
-#include "winerror.h"
-#include "advpub.h"
-
-#include "objbase.h"
-
-#include "urlmon.h"
-
-#include "wine/debug.h"
 
 #include "urlmon_main.h"
+
+#include "winreg.h"
+#include "advpub.h"
+
+#include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(urlmon);
 
@@ -550,7 +539,7 @@ static HRESULT register_inf(BOOL doregister)
     INF_SET_CLSID(MkProtocol);
 
     for(i = 0; i < sizeof(pse)/sizeof(pse[0]); i++) {
-        pse[i].pszValue = urlmon_alloc(39);
+        pse[i].pszValue = heap_alloc(39);
         sprintf(pse[i].pszValue, "{%08X-%04X-%04X-%02X%02X-%02X%02X%02X%02X%02X%02X}",
                 clsids[i]->Data1, clsids[i]->Data2, clsids[i]->Data3, clsids[i]->Data4[0],
                 clsids[i]->Data4[1], clsids[i]->Data4[2], clsids[i]->Data4[3], clsids[i]->Data4[4],
@@ -566,7 +555,7 @@ static HRESULT register_inf(BOOL doregister)
     hres = pRegInstall(URLMON_hInstance, doregister ? "RegisterDll" : "UnregisterDll", &strtable);
 
     for(i=0; i < sizeof(pse)/sizeof(pse[0]); i++)
-        urlmon_free(pse[i].pszValue);
+        heap_free(pse[i].pszValue);
 
     return hres;
 }

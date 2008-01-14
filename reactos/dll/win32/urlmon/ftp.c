@@ -16,17 +16,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <stdarg.h>
-
-#define COBJMACROS
-
-#include "windef.h"
-#include "winbase.h"
-#include "winuser.h"
-#include "ole2.h"
-#include "urlmon.h"
 #include "urlmon_main.h"
-
 #include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(urlmon);
@@ -81,7 +71,7 @@ static ULONG WINAPI FtpProtocol_Release(IInternetProtocol *iface)
     TRACE("(%p) ref=%d\n", This, ref);
 
     if(!ref) {
-        urlmon_free(This);
+        heap_free(This);
 
         URLMON_UnlockModule();
     }
@@ -191,7 +181,7 @@ HRESULT FtpProtocol_Construct(IUnknown *pUnkOuter, LPVOID *ppobj)
 
     URLMON_LockModule();
 
-    ret = urlmon_alloc(sizeof(FtpProtocol));
+    ret = heap_alloc(sizeof(FtpProtocol));
 
     ret->lpInternetProtocolVtbl = &FtpProtocolVtbl;
     ret->ref = 1;

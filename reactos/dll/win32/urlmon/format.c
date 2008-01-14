@@ -16,17 +16,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <stdarg.h>
-
-#define COBJMACROS
-
-#include "windef.h"
-#include "winbase.h"
-#include "winuser.h"
-#include "ole2.h"
-#include "urlmon.h"
 #include "urlmon_main.h"
-
 #include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(urlmon);
@@ -54,6 +44,7 @@ static HRESULT WINAPI EnumFORMATETC_QueryInterface(IEnumFORMATETC *iface, REFIID
     *ppv = NULL;
 
     if(IsEqualGUID(&IID_IUnknown, riid) || IsEqualGUID(&IID_IEnumFORMATETC, riid)) {
+        IEnumFORMATETC_AddRef(iface);
         *ppv = iface;
         return S_OK;
     }
@@ -78,8 +69,8 @@ static ULONG WINAPI EnumFORMATETC_Release(IEnumFORMATETC *iface)
     TRACE("(%p) ref=%d\n", This, ref);
 
     if(!ref) {
-        urlmon_free(This->fetc);
-        urlmon_free(This);
+        heap_free(This->fetc);
+        heap_free(This);
 
         URLMON_UnlockModule();
     }
@@ -160,7 +151,7 @@ static const IEnumFORMATETCVtbl EnumFORMATETCVtbl = {
 
 static IEnumFORMATETC *EnumFORMATETC_Create(UINT cfmtetc, const FORMATETC *rgfmtetc, UINT it)
 {
-    EnumFORMATETC *ret = urlmon_alloc(sizeof(EnumFORMATETC));
+    EnumFORMATETC *ret = heap_alloc(sizeof(EnumFORMATETC));
 
     URLMON_LockModule();
 
@@ -169,7 +160,7 @@ static IEnumFORMATETC *EnumFORMATETC_Create(UINT cfmtetc, const FORMATETC *rgfmt
     ret->it = it;
     ret->fetc_cnt = cfmtetc;
 
-    ret->fetc = urlmon_alloc(cfmtetc*sizeof(FORMATETC));
+    ret->fetc = heap_alloc(cfmtetc*sizeof(FORMATETC));
     memcpy(ret->fetc, rgfmtetc, cfmtetc*sizeof(FORMATETC));
 
     return (IEnumFORMATETC*)ret;

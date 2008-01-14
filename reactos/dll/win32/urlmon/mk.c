@@ -16,19 +16,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <stdarg.h>
-
-#define COBJMACROS
-
-#include "windef.h"
-#include "winbase.h"
-#include "winuser.h"
-#include "ole2.h"
-#include "urlmon.h"
 #include "urlmon_main.h"
-
 #include "wine/debug.h"
-#include "wine/unicode.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(urlmon);
 
@@ -88,7 +77,7 @@ static ULONG WINAPI MkProtocol_Release(IInternetProtocol *iface)
         if(This->stream)
             IStream_Release(This->stream);
 
-        urlmon_free(This);
+        heap_free(This);
 
         URLMON_UnlockModule();
     }
@@ -153,11 +142,11 @@ static HRESULT WINAPI MkProtocol_Start(IInternetProtocol *iface, LPCWSTR szUrl,
     if(!ptr)
         return report_result(pOIProtSink, INET_E_RESOURCE_NOT_FOUND, ERROR_INVALID_PARAMETER);
 
-    progid = urlmon_alloc((ptr-ptr2+1)*sizeof(WCHAR));
+    progid = heap_alloc((ptr-ptr2+1)*sizeof(WCHAR));
     memcpy(progid, ptr2, (ptr-ptr2)*sizeof(WCHAR));
     progid[ptr-ptr2] = 0;
     hres = CLSIDFromProgID(progid, &clsid);
-    urlmon_free(progid);
+    heap_free(progid);
     if(FAILED(hres))
         return report_result(pOIProtSink, INET_E_RESOURCE_NOT_FOUND, ERROR_INVALID_PARAMETER);
 
@@ -169,10 +158,10 @@ static HRESULT WINAPI MkProtocol_Start(IInternetProtocol *iface, LPCWSTR szUrl,
     }
 
     len = strlenW(--ptr2);
-    display_name = urlmon_alloc((len+1)*sizeof(WCHAR));
+    display_name = heap_alloc((len+1)*sizeof(WCHAR));
     memcpy(display_name, ptr2, (len+1)*sizeof(WCHAR));
     hres = IParseDisplayName_ParseDisplayName(pdn, NULL /* FIXME */, display_name, &eaten, &mon);
-    urlmon_free(display_name);
+    heap_free(display_name);
     IParseDisplayName_Release(pdn);
     if(FAILED(hres)) {
         WARN("ParseDisplayName failed: %08x\n", hres);
@@ -307,7 +296,7 @@ HRESULT MkProtocol_Construct(IUnknown *pUnkOuter, LPVOID *ppobj)
 
     URLMON_LockModule();
 
-    ret = urlmon_alloc(sizeof(MkProtocol));
+    ret = heap_alloc(sizeof(MkProtocol));
 
     ret->lpInternetProtocolVtbl = &MkProtocolVtbl;
     ret->ref = 1;

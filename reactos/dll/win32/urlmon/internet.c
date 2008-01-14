@@ -16,21 +16,11 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <stdarg.h>
-
-#define COBJMACROS
-
-#include "windef.h"
-#include "winbase.h"
-#include "winuser.h"
+#include "urlmon_main.h"
 #include "winreg.h"
 #include "shlwapi.h"
-#include "ole2.h"
-#include "urlmon.h"
-#include "urlmon_main.h"
 
 #include "wine/debug.h"
-#include "wine/unicode.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(urlmon);
 
@@ -263,4 +253,48 @@ HRESULT WINAPI CoInternetCompareUrl(LPCWSTR pwzUrl1, LPCWSTR pwzUrl2, DWORD dwCo
     }
 
     return UrlCompareW(pwzUrl1, pwzUrl2, dwCompareFlags) ? S_FALSE : S_OK;
+}
+
+/***********************************************************************
+ *           CoInternetQueryInfo (URLMON.@)
+ *
+ * Retrieves information relevant to a specified URL
+ *
+ */
+HRESULT WINAPI CoInternetQueryInfo(LPCWSTR pwzUrl, QUERYOPTION QueryOption,
+        DWORD dwQueryFlags, LPVOID pvBuffer, DWORD cbBuffer, DWORD *pcbBuffer,
+        DWORD dwReserved)
+{
+    IInternetProtocolInfo *protocol_info;
+    HRESULT hres;
+
+    TRACE("(%s, %x, %x, %p, %x, %p, %x): stub\n", debugstr_w(pwzUrl),
+          QueryOption, dwQueryFlags, pvBuffer, cbBuffer, pcbBuffer, dwReserved);
+
+    protocol_info = get_protocol_info(pwzUrl);
+
+    if(protocol_info) {
+        hres = IInternetProtocolInfo_QueryInfo(protocol_info, pwzUrl, QueryOption, dwQueryFlags,
+                pvBuffer, cbBuffer, pcbBuffer, dwReserved);
+        IInternetProtocolInfo_Release(protocol_info);
+
+        return SUCCEEDED(hres) ? hres : E_FAIL;
+    }
+
+    switch(QueryOption) {
+    case QUERY_USES_NETWORK:
+        if(!pvBuffer || cbBuffer < sizeof(DWORD))
+            return E_FAIL;
+
+        *(DWORD*)pvBuffer = 0;
+        if(pcbBuffer)
+            *pcbBuffer = sizeof(DWORD);
+        break;
+
+    default:
+        FIXME("Not supported option %d\n", QueryOption);
+        return E_NOTIMPL;
+    }
+
+    return S_OK;
 }

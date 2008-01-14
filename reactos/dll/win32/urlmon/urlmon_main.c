@@ -20,21 +20,15 @@
 
 #include <stdarg.h>
 
-#define COBJMACROS
+#include "urlmon_main.h"
 
-#include "windef.h"
-#include "winbase.h"
 #include "winreg.h"
 
 #define NO_SHLWAPI_REG
 #include "shlwapi.h"
 #include "wine/debug.h"
-#include "wine/unicode.h"
 
-#include "winuser.h"
 #include "urlmon.h"
-#include "urlmon_main.h"
-#include "ole2.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(urlmon);
 

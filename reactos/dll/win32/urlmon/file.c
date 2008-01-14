@@ -16,17 +16,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <stdarg.h>
-
-#define COBJMACROS
-
-#include "windef.h"
-#include "winbase.h"
-#include "winuser.h"
-#include "ole2.h"
-#include "urlmon.h"
 #include "urlmon_main.h"
-
 #include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(urlmon);
@@ -92,7 +82,7 @@ static ULONG WINAPI FileProtocol_Release(IInternetProtocol *iface)
     if(!ref) {
         if(This->file)
             CloseHandle(This->file);
-        urlmon_free(This);
+        heap_free(This);
 
         URLMON_UnlockModule();
     }
@@ -135,10 +125,10 @@ static HRESULT WINAPI FileProtocol_Start(IInternetProtocol *iface, LPCWSTR szUrl
         return MK_E_SYNTAX;
 
     len = lstrlenW(szUrl)+16;
-    url = urlmon_alloc(len*sizeof(WCHAR));
+    url = heap_alloc(len*sizeof(WCHAR));
     hres = CoInternetParseUrl(szUrl, PARSE_ENCODE, 0, url, len, &len, 0);
     if(FAILED(hres)) {
-        urlmon_free(url);
+        heap_free(url);
         return hres;
     }
 
@@ -163,7 +153,7 @@ static HRESULT WINAPI FileProtocol_Start(IInternetProtocol *iface, LPCWSTR szUrl
             This->file = NULL;
             IInternetProtocolSink_ReportResult(pOIProtSink, INET_E_RESOURCE_NOT_FOUND,
                     GetLastError(), NULL);
-            urlmon_free(url);
+            heap_free(url);
             return INET_E_RESOURCE_NOT_FOUND;
         }
 
@@ -180,7 +170,7 @@ static HRESULT WINAPI FileProtocol_Start(IInternetProtocol *iface, LPCWSTR szUrl
         }
     }
 
-    urlmon_free(url);
+    heap_free(url);
 
     if(GetFileSizeEx(This->file, &size))
         IInternetProtocolSink_ReportData(pOIProtSink,
@@ -353,7 +343,7 @@ HRESULT FileProtocol_Construct(IUnknown *pUnkOuter, LPVOID *ppobj)
 
     URLMON_LockModule();
 
-    ret = urlmon_alloc(sizeof(FileProtocol));
+    ret = heap_alloc(sizeof(FileProtocol));
 
     ret->lpInternetProtocolVtbl = &FileProtocolVtbl;
     ret->lpInternetPriorityVtbl = &FilePriorityVtbl;

@@ -16,20 +16,10 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <stdarg.h>
-
-#define COBJMACROS
-
-#include "windef.h"
-#include "winbase.h"
-#include "winuser.h"
-#include "winreg.h"
-#include "ole2.h"
-#include "urlmon.h"
 #include "urlmon_main.h"
+#include "winreg.h"
 
 #include "wine/debug.h"
-#include "wine/unicode.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(urlmon);
 
@@ -41,7 +31,16 @@ typedef struct name_space {
     struct name_space *next;
 } name_space;
 
+typedef struct mime_filter {
+    IClassFactory *cf;
+    CLSID clsid;
+    LPWSTR mime;
+
+    struct mime_filter *next;
+} mime_filter;
+
 static name_space *name_space_list = NULL;
+static mime_filter *mime_filter_list = NULL;
 
 static name_space *find_name_space(LPCWSTR protocol)
 {
@@ -68,12 +67,12 @@ static HRESULT get_protocol_cf(LPCWSTR schema, DWORD schema_len, CLSID *pclsid, 
         {'P','R','O','T','O','C','O','L','S','\\','H','a','n','d','l','e','r','\\'};
     static const WCHAR wszCLSID[] = {'C','L','S','I','D',0};
 
-    wszKey = urlmon_alloc(sizeof(wszProtocolsKey)+(schema_len+1)*sizeof(WCHAR));
+    wszKey = heap_alloc(sizeof(wszProtocolsKey)+(schema_len+1)*sizeof(WCHAR));
     memcpy(wszKey, wszProtocolsKey, sizeof(wszProtocolsKey));
     memcpy(wszKey + sizeof(wszProtocolsKey)/sizeof(WCHAR), schema, (schema_len+1)*sizeof(WCHAR));
 
     res = RegOpenKeyW(HKEY_CLASSES_ROOT, wszKey, &hkey);
-    urlmon_free(wszKey);
+    heap_free(wszKey);
     if(res != ERROR_SUCCESS) {
         TRACE("Could not open protocol handler key\n");
         return E_FAIL;
@@ -194,7 +193,6 @@ static HRESULT WINAPI InternetSession_RegisterNameSpace(IInternetSession *iface,
         const LPCWSTR *ppwzPatterns, DWORD dwReserved)
 {
     name_space *new_name_space;
-    int size;
 
     TRACE("(%p %s %s %d %p %d)\n", pCF, debugstr_guid(rclsid), debugstr_w(pwzProtocol),
           cPatterns, ppwzPatterns, dwReserved);
@@ -207,15 +205,12 @@ static HRESULT WINAPI InternetSession_RegisterNameSpace(IInternetSession *iface,
     if(!pCF || !pwzProtocol)
         return E_INVALIDARG;
 
-    new_name_space = urlmon_alloc(sizeof(name_space));
-
-    size = (strlenW(pwzProtocol)+1)*sizeof(WCHAR);
-    new_name_space->protocol = urlmon_alloc(size);
-    memcpy(new_name_space->protocol, pwzProtocol, size);
+    new_name_space = heap_alloc(sizeof(name_space));
 
     IClassFactory_AddRef(pCF);
     new_name_space->cf = pCF;
     new_name_space->clsid = *rclsid;
+    new_name_space->protocol = heap_strdupW(pwzProtocol);
 
     new_name_space->next = name_space_list;
     name_space_list = new_name_space;
@@ -247,8 +242,8 @@ static HRESULT WINAPI InternetSession_UnregisterNameSpace(IInternetSession *ifac
         name_space_list = iter->next;
 
     IClassFactory_Release(iter->cf);
-    urlmon_free(iter->protocol);
-    urlmon_free(iter);
+    heap_free(iter->protocol);
+    heap_free(iter);
 
     return S_OK;
 }
@@ -256,15 +251,49 @@ static HRESULT WINAPI InternetSession_UnregisterNameSpace(IInternetSession *ifac
 static HRESULT WINAPI InternetSession_RegisterMimeFilter(IInternetSession *iface,
         IClassFactory *pCF, REFCLSID rclsid, LPCWSTR pwzType)
 {
-    FIXME("(%p %s %s)\n", pCF, debugstr_guid(rclsid), debugstr_w(pwzType));
-    return E_NOTIMPL;
+    mime_filter *filter;
+
+    TRACE("(%p %s %s)\n", pCF, debugstr_guid(rclsid), debugstr_w(pwzType));
+
+    filter = heap_alloc(sizeof(mime_filter));
+
+    IClassFactory_AddRef(pCF);
+    filter->cf = pCF;
+    filter->clsid = *rclsid;
+    filter->mime = heap_strdupW(pwzType);
+
+    filter->next = mime_filter_list;
+    mime_filter_list = filter;
+
+    return S_OK;
 }
 
 static HRESULT WINAPI InternetSession_UnregisterMimeFilter(IInternetSession *iface,
         IClassFactory *pCF, LPCWSTR pwzType)
 {
-    FIXME("(%p %s)\n", pCF, debugstr_w(pwzType));
-    return E_NOTIMPL;
+    mime_filter *iter, *prev = NULL;
+
+    TRACE("(%p %s)\n", pCF, debugstr_w(pwzType));
+
+    for(iter = mime_filter_list; iter; iter = iter->next) {
+        if(iter->cf == pCF && !strcmpW(iter->mime, pwzType))
+            break;
+        prev = iter;
+    }
+
+    if(!iter)
+        return S_OK;
+
+    if(prev)
+        prev->next = iter->next;
+    else
+        mime_filter_list = iter->next;
+
+    IClassFactory_Release(iter->cf);
+    heap_free(iter->mime);
+    heap_free(iter);
+
+    return S_OK;
 }
 
 static HRESULT WINAPI InternetSession_CreateBinding(IInternetSession *iface,
@@ -277,7 +306,7 @@ static HRESULT WINAPI InternetSession_CreateBinding(IInternetSession *iface,
     if(pBC || pUnkOuter || ppUnk || dwOption)
         FIXME("Unsupported arguments\n");
 
-    return create_binding_protocol(szUrl, ppOInetProt);
+    return create_binding_protocol(szUrl, FALSE, ppOInetProt);
 }
 
 static HRESULT WINAPI InternetSession_SetSessionOption(IInternetSession *iface,
