@@ -23,9 +23,9 @@
 #include "windef.h"
 
 extern void CDECL __getmainargs(int *argc, char** *argv, char** *envp,
-                          int expand_wildcards, int *new_mode);
+                                int expand_wildcards, int *new_mode);
 extern void CDECL __wgetmainargs(int *argc, WCHAR** *wargv, WCHAR** *wenvp,
-                           int expand_wildcards, int *new_mode);
+                                 int expand_wildcards, int *new_mode);
 
 /*********************************************************************
  *		__getmainargs (MSVCRT20.@)
@@ -33,7 +33,7 @@ extern void CDECL __wgetmainargs(int *argc, WCHAR** *wargv, WCHAR** *wenvp,
  * new_mode is not a pointer in msvcrt20.
  */
 void CDECL MSVCRT20__getmainargs( int *argc, char** *argv, char** *envp,
-                            int expand_wildcards, int new_mode )
+                                  int expand_wildcards, int new_mode )
 {
     __getmainargs( argc, argv, envp, expand_wildcards, &new_mode );
 }
@@ -44,7 +44,7 @@ void CDECL MSVCRT20__getmainargs( int *argc, char** *argv, char** *envp,
  * new_mode is not a pointer in msvcrt20.
  */
 void CDECL MSVCRT20__wgetmainargs( int *argc, WCHAR** *wargv, WCHAR** *wenvp,
-                             int expand_wildcards, int new_mode )
+                                   int expand_wildcards, int new_mode )
 {
     __wgetmainargs( argc, wargv, wenvp, expand_wildcards, &new_mode );
 }

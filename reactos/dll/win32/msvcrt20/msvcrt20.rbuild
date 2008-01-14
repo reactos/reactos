@@ -1,16 +1,18 @@
-<module name="msvcrt20" type="win32dll" entrypoint="0" baseaddress="${BASEADDRESS_MSVCRT20}" mangledsymbols="yes" installbase="system32" installname="msvcrt20.dll">
-	<importlibrary definition="msvcrt20.def" />
+<?xml version="1.0"?>
+<!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
+<group>
+<module name="msvcrt20" type="win32dll" baseaddress="${BASEADDRESS_MSVCRT20}" installbase="system32" installname="msvcrt20.dll" allowwarnings="true" entrypoint="0">
+	<importlibrary definition="msvcrt20.spec.def" />
 	<include base="msvcrt20">.</include>
-	<define name="_DISABLE_TIDENTS" />
-	<define name="__REACTOS__" />
-	<define name="_WIN32_IE">0x600</define>
-	<define name="_WIN32_WINNT">0x501</define>
-	<define name="USE_MSVCRT_PREFIX" />
-	<define name="_MT" />
+	<include base="ReactOS">include/reactos/wine</include>
+	<define name="__WINESRC__" />
+	<define name="WINVER">0x600</define>
+	<define name="_WIN32_WINNT">0x600</define>
 	<library>wine</library>
-	<library>ntdll</library>
-	<library>kernel32</library>
 	<library>msvcrt</library>
+	<library>kernel32</library>
+	<library>ntdll</library>
 	<file>msvcrt20.c</file>
-	<file>msvcrt20.rc</file>
+	<file>msvcrt20.spec</file>
 </module>
+</group>
