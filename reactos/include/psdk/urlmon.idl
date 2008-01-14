@@ -546,8 +546,11 @@ interface IMonikerProp : IUnknown
     typedef [unique] IMonikerProp *LPMONIKERPROP;
 
     typedef enum {
-        MIMETYPEPROP = 0x00000000,
-        USE_SRC_URL  = 0x00000001
+        MIMETYPEPROP        = 0,
+        USE_SRC_URL         = 1,
+        CLASSIDPROP         = 2,
+        TRUSTEDDOWNLOADPROP = 3,
+        POPUPLEVELPROP      = 4
     } MONIKERPROPERTY;
 
     HRESULT PutProperty(
@@ -1264,6 +1267,7 @@ cpp_quote("HRESULT WINAPI CreateFormatEnumerator(UINT,FORMATETC*,IEnumFORMATETC*
 cpp_quote("HRESULT WINAPI GetSoftwareUpdateInfo( LPCWSTR szDistUnit, LPSOFTDISTINFO psdi);")
 cpp_quote("HRESULT WINAPI FaultInIEFeature(HWND,uCLSSPEC*,QUERYCONTEXT*,DWORD);")
 cpp_quote("HRESULT WINAPI FindMimeFromData(LPBC,LPCWSTR,LPVOID,DWORD,LPCWSTR,DWORD,LPWSTR*,DWORD);")
+cpp_quote("HRESULT WINAPI GetClassFileOrMime(LPBC,LPCWSTR,LPVOID,DWORD,LPCWSTR,DWORD,CLSID*);")
 cpp_quote("HRESULT WINAPI HlinkGoBack(IUnknown*);")
 cpp_quote("HRESULT WINAPI HlinkGoForward(IUnknown*);")
 cpp_quote("HRESULT WINAPI HlinkNavigateMoniker(IUnknown*,IMoniker*);")
