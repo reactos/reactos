@@ -72,6 +72,8 @@ typedef struct _RPC_MESSAGE
 #define RPCFLG_ASYNCHRONOUS         0x40000000
 #define RPCFLG_NON_NDR              0x80000000
 
+#define RPC_FLAGS_VALID_BIT         0x00008000
+
 typedef void  (__RPC_STUB *RPC_DISPATCH_FUNCTION)(PRPC_MESSAGE Message);
 
 typedef struct

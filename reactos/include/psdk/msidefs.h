@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #ifndef __WINE_MSIDEFS_H
@@ -200,6 +200,11 @@ enum msidbServiceControlEvent
     msidbServiceControlEventUninstallDelete = 0x00000080,
 };
 
+enum msidbMoveFileOptions
+{
+    msidbMoveFileOptionsMove = 0x00000001,
+};
+
 /*
  * Windows SDK braindamage alert
  *
@@ -229,7 +234,7 @@ enum msidbServiceControlEvent
 #define PID_TEMPLATE 7
 #define PID_LASTAUTHOR 8
 #define PID_REVNUMBER 9
-#define PID_EDITTINE 10
+#define PID_EDITTIME 10
 #define PID_LASTPRINTED 11
 #define PID_CREATE_DTM 12
 #define PID_LASTSAVE_DTM 13
