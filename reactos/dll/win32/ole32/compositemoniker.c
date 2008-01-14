@@ -629,7 +629,7 @@ CompositeMonikerImpl_Hash(IMoniker* iface,DWORD* pdwHash)
         if(FAILED(res))
             break;
         *pdwHash = *pdwHash ^ tempHash;
-
+        
         IMoniker_Release(tempMk);
     }
 
@@ -1411,7 +1411,7 @@ static HRESULT WINAPI CompositeMonikerMarshalImpl_GetMarshalSizeMax(
     return S_OK;
 }
 
-static HRESULT WINAPI CompositeMonikerMarshalImpl_MarshalInterface(LPMARSHAL iface, IStream *pStm,
+static HRESULT WINAPI CompositeMonikerMarshalImpl_MarshalInterface(LPMARSHAL iface, IStream *pStm, 
     REFIID riid, void* pv, DWORD dwDestContext,
     void* pvDestContext, DWORD mshlflags)
 {
@@ -1786,8 +1786,10 @@ CompositeMonikerImpl_Construct(IMoniker** ppMoniker,
     This->tabLastIndex=0;
 
     This->tabMoniker=HeapAlloc(GetProcessHeap(),0,This->tabSize*sizeof(IMoniker));
-    if (This->tabMoniker==NULL)
+    if (This->tabMoniker==NULL) {
+        HeapFree(GetProcessHeap(), 0, This);
         return E_OUTOFMEMORY;
+    }
 
     if (!pmkFirst && !pmkRest)
     {
@@ -1811,12 +1813,16 @@ CompositeMonikerImpl_Construct(IMoniker** ppMoniker,
 
 
             if (++This->tabLastIndex==This->tabSize){
+                LPVOID tab_moniker = This->tabMoniker;
 
                 This->tabSize+=BLOCK_TAB_SIZE;
                 This->tabMoniker=HeapReAlloc(GetProcessHeap(),0,This->tabMoniker,This->tabSize*sizeof(IMoniker));
 
-                if (This->tabMoniker==NULL)
+                if (This->tabMoniker==NULL){
+                    HeapFree(GetProcessHeap(), 0, tab_moniker);
+                    HeapFree(GetProcessHeap(), 0, This);
                     return E_OUTOFMEMORY;
+                }
             }
         }
 
@@ -1860,13 +1866,17 @@ CompositeMonikerImpl_Construct(IMoniker** ppMoniker,
 
         /* resize tabMoniker if needed */
         if (This->tabLastIndex==This->tabSize){
+            LPVOID tab_moniker = This->tabMoniker;
 
             This->tabSize+=BLOCK_TAB_SIZE;
 
             This->tabMoniker=HeapReAlloc(GetProcessHeap(),0,This->tabMoniker,This->tabSize*sizeof(IMoniker));
 
-            if (This->tabMoniker==NULL)
-            return E_OUTOFMEMORY;
+            if (This->tabMoniker==NULL){
+                HeapFree(GetProcessHeap(), 0, tab_moniker);
+                HeapFree(GetProcessHeap(), 0, This);
+                return E_OUTOFMEMORY;
+            }
         }
     }
     else{
@@ -1899,13 +1909,17 @@ CompositeMonikerImpl_Construct(IMoniker** ppMoniker,
             }
 
             if (This->tabLastIndex==This->tabSize){
+                LPVOID tab_moniker = This->tabMoniker;
 
                 This->tabSize+=BLOCK_TAB_SIZE;
 
                 This->tabMoniker=HeapReAlloc(GetProcessHeap(),0,This->tabMoniker,This->tabSize*sizeof(IMoniker));
 
-                if (This->tabMoniker==NULL)
+                if (This->tabMoniker==NULL){
+                    HeapFree(GetProcessHeap(), 0, tab_moniker);
+                    HeapFree(GetProcessHeap(), 0, This);
                     return E_OUTOFMEMORY;
+                }
             }
         }
 

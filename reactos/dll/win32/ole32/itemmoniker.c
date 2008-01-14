@@ -355,6 +355,9 @@ HRESULT WINAPI ItemMonikerImpl_Save(IMoniker* iface,
     res=IStream_Write(pStm,&nameLength,sizeof(DWORD),NULL);
     res=IStream_Write(pStm,itemNameA,nameLength * sizeof(CHAR),NULL);
 
+    HeapFree(GetProcessHeap(), 0, itemNameA);
+    HeapFree(GetProcessHeap(), 0, itemDelimiterA);
+
     return res;
 }
 
@@ -788,7 +791,7 @@ HRESULT WINAPI ItemMonikerImpl_Inverse(IMoniker* iface,IMoniker** ppmk)
 HRESULT WINAPI ItemMonikerImpl_CommonPrefixWith(IMoniker* iface,IMoniker* pmkOther,IMoniker** ppmkPrefix)
 {
     DWORD mkSys;
-
+    
     TRACE("(%p,%p)\n", pmkOther, ppmkPrefix);
 
     IMoniker_IsSystemMoniker(pmkOther,&mkSys);

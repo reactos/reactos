@@ -74,11 +74,11 @@ BindCtxImpl_QueryInterface(IBindCtx* iface,REFIID riid,void** ppvObject)
 {
     BindCtxImpl *This = (BindCtxImpl *)iface;
 
-    TRACE("(%p,%p,%p)\n",This,riid,ppvObject);
+    TRACE("(%p %s %p)\n",This, debugstr_guid(riid), ppvObject);
 
     /* Perform a sanity check on the parameters.*/
-    if ( (This==0) || (ppvObject==0) )
-        return E_INVALIDARG;
+    if (!ppvObject)
+        return E_POINTER;
 
     /* Initialize the return parameter.*/
     *ppvObject = 0;
@@ -199,7 +199,7 @@ BindCtxImpl_RevokeObjectBound(IBindCtx* iface, IUnknown* punk)
     if(This->bindCtxTable[index].pObj)
         IUnknown_Release(This->bindCtxTable[index].pObj);
     HeapFree(GetProcessHeap(),0,This->bindCtxTable[index].pkeyObj);
-
+    
     /* left-shift all elements in the right side of the current revoked object */
     for(j=index; j<This->bindCtxTableLastIndex-1; j++)
         This->bindCtxTable[j]= This->bindCtxTable[j+1];
@@ -227,7 +227,7 @@ BindCtxImpl_ReleaseBoundObjects(IBindCtx* iface)
             IUnknown_Release(This->bindCtxTable[i].pObj);
         HeapFree(GetProcessHeap(),0,This->bindCtxTable[i].pkeyObj);
     }
-
+    
     This->bindCtxTableLastIndex = 0;
 
     return S_OK;
@@ -399,7 +399,7 @@ BindCtxImpl_RevokeObjectParam(IBindCtx* iface,LPOLESTR ppenum)
     if(This->bindCtxTable[index].pObj)
         IUnknown_Release(This->bindCtxTable[index].pObj);
     HeapFree(GetProcessHeap(),0,This->bindCtxTable[index].pkeyObj);
-
+    
     /* remove the object from the table with a left-shifting of all objects in the right side */
     for(j=index; j<This->bindCtxTableLastIndex-1; j++)
         This->bindCtxTable[j]= This->bindCtxTable[j+1];

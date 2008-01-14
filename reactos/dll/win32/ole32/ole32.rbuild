@@ -1,18 +1,19 @@
+<?xml version="1.0"?>
+<!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
+<group>
 <module name="ole32" type="win32dll" baseaddress="${BASEADDRESS_OLE32}" installbase="system32" installname="ole32.dll" allowwarnings="true">
 	<autoregister infsection="OleControlDlls" type="DllRegisterServer" />
 	<importlibrary definition="ole32.spec.def" />
 	<include base="ole32">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
-	<define name="__REACTOS__" />
 	<define name="__WINESRC__" />
-	<define name="__USE_W32API" />
-	<define name="_WIN32_IE">0x600</define>
-	<define name="_WIN32_WINNT">0x501</define>
-	<define name="WINVER">0x501</define>
+	<define name="WINVER">0x600</define>
+	<define name="_WIN32_WINNT">0x600</define>
 	<library>wine</library>
 	<library>advapi32</library>
 	<library>user32</library>
 	<library>gdi32</library>
+	<library>ole32_irot_client</library>
 	<library>rpcrt4</library>
 	<library>kernel32</library>
 	<library>ntdll</library>
@@ -53,6 +54,14 @@
 	<file>usrmarshal.c</file>
 	<file>ole32res.rc</file>
 	<file>dcom.idl</file>
+	<file>irot.idl</file>
 	<include base="ole32" root="intermediate">.</include>
 	<file>ole32.spec</file>
 </module>
+<module name="ole32_irot_server" type="rpcserver">
+	<file>irot.idl</file>
+</module>
+<module name="ole32_irot_client" type="rpcclient">
+	<file>irot.idl</file>
+</module>
+</group>

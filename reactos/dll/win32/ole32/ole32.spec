@@ -20,6 +20,7 @@
 @ stdcall CoFreeAllLibraries()
 @ stdcall CoFreeLibrary(long)
 @ stdcall CoFreeUnusedLibraries()
+@ stdcall CoFreeUnusedLibrariesEx(long long)
 @ stdcall CoGetCallContext(ptr ptr)
 @ stub CoGetCallerTID
 @ stdcall CoGetClassObject(ptr long ptr ptr ptr)
@@ -31,6 +32,7 @@
 @ stdcall CoGetMalloc(long ptr)
 @ stdcall CoGetMarshalSizeMax(ptr ptr ptr long ptr long)
 @ stdcall CoGetObject(wstr ptr ptr ptr)
+@ stdcall CoGetObjectContext(ptr ptr)
 @ stdcall CoGetPSClsid(ptr ptr)
 @ stdcall CoGetStandardMarshal(ptr ptr long ptr long ptr)
 @ stdcall CoGetState(ptr)
@@ -265,10 +267,10 @@
 @ stub UtConvertDvtd32toDvtd16
 @ stub UtGetDvtd16Info
 @ stub UtGetDvtd32Info
-@ stub WdtpInterfacePointer_UserFree
-@ stub WdtpInterfacePointer_UserMarshal
-@ stub WdtpInterfacePointer_UserSize
-@ stub WdtpInterfacePointer_UserUnmarshal
+@ stdcall WdtpInterfacePointer_UserFree(ptr)
+@ stdcall WdtpInterfacePointer_UserMarshal(ptr long ptr ptr ptr)
+@ stdcall WdtpInterfacePointer_UserSize(ptr long ptr long ptr)
+@ stdcall WdtpInterfacePointer_UserUnmarshal(ptr ptr ptr ptr)
 @ stdcall WriteClassStg(ptr ptr)
 @ stdcall WriteClassStm(ptr ptr)
 @ stdcall WriteFmtUserTypeStg(ptr long ptr)

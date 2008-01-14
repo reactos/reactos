@@ -71,7 +71,7 @@ typedef enum ifstub_state
 } STUB_STATE;
 
 /* an interface stub */
-struct ifstub
+struct ifstub   
 {
     struct list       entry;      /* entry in stub_manager->ifstubs list (CS stub_manager->lock) */
     IRpcStubBuffer   *stubbuffer; /* RO */
@@ -141,7 +141,6 @@ struct proxy_manager
   void *dest_context_data;  /* reserved context value (LOCK) */
 };
 
-/* this needs to become a COM object that implements IRemUnknown */
 struct apartment
 {
   struct list entry;
@@ -284,7 +283,7 @@ static inline struct oletls *COM_CurrentInfo(void)
 }
 
 static inline APARTMENT* COM_CurrentApt(void)
-{
+{  
     return COM_CurrentInfo()->apt;
 }
 
@@ -307,6 +306,8 @@ static inline GUID COM_CurrentCausalityId(void)
 extern HINSTANCE OLE32_hInstance; /* FIXME: make static */
 
 #define CHARS_IN_GUID 39 /* including NULL */
+
+#define WINE_CLSCTX_DONT_HOST   0x80000000
 
 /* Exported non-interface Data Advise Holder functions */
 HRESULT DataAdviseHolder_OnConnect(IDataAdviseHolder *iface, IDataObject *pDelegate);

@@ -79,7 +79,7 @@ HINSTANCE OLE32_hInstance = 0; /* FIXME: make static ... */
 static HRESULT COM_GetRegisteredClassObject(const struct apartment *apt, REFCLSID rclsid,
                                             DWORD dwClsContext, LPUNKNOWN*  ppUnk);
 static void COM_RevokeAllClasses(const struct apartment *apt);
-static HRESULT get_inproc_class_object(APARTMENT *apt, HKEY hkeydll, REFCLSID rclsid, REFIID riid, void **ppv);
+static HRESULT get_inproc_class_object(APARTMENT *apt, HKEY hkeydll, REFCLSID rclsid, REFIID riid, BOOL hostifnecessary, void **ppv);
 
 static APARTMENT *MTA; /* protected by csApartment */
 static APARTMENT *MainApartment; /* the first STA apartment */
@@ -181,14 +181,17 @@ struct apartment_loaded_dll
 {
     struct list entry;
     OpenDll *dll;
+    DWORD unload_time;
+    BOOL multi_threaded;
 };
 
 static const WCHAR wszAptWinClass[] = {'O','l','e','M','a','i','n','T','h','r','e','a','d','W','n','d','C','l','a','s','s',' ',
                                        '0','x','#','#','#','#','#','#','#','#',' ',0};
 static LRESULT CALLBACK apartment_wndproc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 static HRESULT apartment_getclassobject(struct apartment *apt, LPCWSTR dllpath,
+                                        BOOL apartment_threaded,
                                         REFCLSID rclsid, REFIID riid, void **ppv);
-static void apartment_freeunusedlibraries(struct apartment *apt);
+static void apartment_freeunusedlibraries(struct apartment *apt, DWORD delay);
 
 static HRESULT COMPOBJ_DllList_Add(LPCWSTR library_name, OpenDll **ret);
 static OpenDll *COMPOBJ_DllList_Get(LPCWSTR library_name);
@@ -302,6 +305,9 @@ static APARTMENT *apartment_get_or_create(DWORD model)
             }
 
             LeaveCriticalSection(&csApartment);
+
+            if (apt->main)
+                apartment_createwindowifneeded(apt);
         }
         else
         {
@@ -403,7 +409,7 @@ DWORD apartment_release(struct apartment *apt)
         if (apt->filter) IUnknown_Release(apt->filter);
 
         /* free as many unused libraries as possible... */
-        apartment_freeunusedlibraries(apt);
+        apartment_freeunusedlibraries(apt, 0);
 
         /* ... and free the memory for the apartment loaded dll entry and
          * release the dll list reference without freeing the library for the
@@ -425,7 +431,7 @@ DWORD apartment_release(struct apartment *apt)
     return ret;
 }
 
-/* The given OXID must be local to this process:
+/* The given OXID must be local to this process: 
  *
  * The ref parameter is here mostly to ensure people remember that
  * they get one, you should normally take a ref for thread safety.
@@ -500,6 +506,7 @@ struct host_object_params
     HANDLE event; /* event signalling when ready for multi-threaded case */
     HRESULT hr; /* result for multi-threaded case */
     IStream *stream; /* stream that the object will be marshaled into */
+    BOOL apartment_threaded; /* is the component purely apartment-threaded? */
 };
 
 static HRESULT apartment_hostobject(struct apartment *apt,
@@ -519,7 +526,8 @@ static HRESULT apartment_hostobject(struct apartment *apt,
         return REGDB_E_CLASSNOTREG;
     }
 
-    hr = apartment_getclassobject(apt, dllpath, &params->clsid, &params->iid, (void **)&object);
+    hr = apartment_getclassobject(apt, dllpath, params->apartment_threaded,
+                                  &params->clsid, &params->iid, (void **)&object);
     if (FAILED(hr))
         return hr;
 
@@ -677,6 +685,7 @@ static HRESULT apartment_hostobject_in_hostapt(struct apartment *apt, BOOL multi
     hr = CreateStreamOnHGlobal(NULL, TRUE, &params.stream);
     if (FAILED(hr))
         return hr;
+    params.apartment_threaded = !multi_threaded;
     if (multi_threaded)
     {
         params.hr = S_OK;
@@ -742,6 +751,7 @@ void apartment_joinmta(void)
 }
 
 static HRESULT apartment_getclassobject(struct apartment *apt, LPCWSTR dllpath,
+                                        BOOL apartment_threaded,
                                         REFCLSID rclsid, REFIID riid, void **ppv)
 {
     static const WCHAR wszOle32[] = {'o','l','e','3','2','.','d','l','l',0};
@@ -779,6 +789,8 @@ static HRESULT apartment_getclassobject(struct apartment *apt, LPCWSTR dllpath,
             hr = E_OUTOFMEMORY;
         if (SUCCEEDED(hr))
         {
+            apartment_loaded_dll->unload_time = 0;
+            apartment_loaded_dll->multi_threaded = FALSE;
             hr = COMPOBJ_DllList_Add( dllpath, &apartment_loaded_dll->dll );
             if (FAILED(hr))
                 HeapFree(GetProcessHeap(), 0, apartment_loaded_dll);
@@ -794,6 +806,11 @@ static HRESULT apartment_getclassobject(struct apartment *apt, LPCWSTR dllpath,
 
     if (SUCCEEDED(hr))
     {
+        /* one component being multi-threaded overrides any number of
+         * apartment-threaded components */
+        if (!apartment_threaded)
+            apartment_loaded_dll->multi_threaded = TRUE;
+
         TRACE("calling DllGetClassObject %p\n", apartment_loaded_dll->dll->DllGetClassObject);
         /* OK: get the ClassObject */
         hr = apartment_loaded_dll->dll->DllGetClassObject(rclsid, riid, ppv);
@@ -805,7 +822,7 @@ static HRESULT apartment_getclassobject(struct apartment *apt, LPCWSTR dllpath,
     return hr;
 }
 
-static void apartment_freeunusedlibraries(struct apartment *apt)
+static void apartment_freeunusedlibraries(struct apartment *apt, DWORD delay)
 {
     struct apartment_loaded_dll *entry, *next;
     EnterCriticalSection(&apt->cs);
@@ -813,10 +830,27 @@ static void apartment_freeunusedlibraries(struct apartment *apt)
     {
 	if (entry->dll->DllCanUnloadNow && (entry->dll->DllCanUnloadNow() == S_OK))
         {
-            list_remove(&entry->entry);
-            COMPOBJ_DllList_ReleaseRef(entry->dll, TRUE);
-            HeapFree(GetProcessHeap(), 0, entry);
+            DWORD real_delay = delay;
+
+            if (real_delay == INFINITE)
+            {
+                if (entry->multi_threaded)
+                    real_delay = 10 * 60 * 1000; /* 10 minutes */
+                else
+                    real_delay = 0;
+            }
+
+            if (!real_delay || (entry->unload_time && (entry->unload_time < GetTickCount())))
+            {
+                list_remove(&entry->entry);
+                COMPOBJ_DllList_ReleaseRef(entry->dll, TRUE);
+                HeapFree(GetProcessHeap(), 0, entry);
+            }
+            else
+                entry->unload_time = GetTickCount() + real_delay;
         }
+        else if (entry->unload_time)
+            entry->unload_time = 0;
     }
     LeaveCriticalSection(&apt->cs);
 }
@@ -932,6 +966,21 @@ static void COMPOBJ_DllList_ReleaseRef(OpenDll *entry, BOOL free_entry)
         HeapFree(GetProcessHeap(), 0, entry->library_name);
         HeapFree(GetProcessHeap(), 0, entry);
     }
+}
+
+/* frees memory associated with active dll list */
+static void COMPOBJ_DllList_Free(void)
+{
+    OpenDll *entry, *cursor2;
+    EnterCriticalSection(&csOpenDllList);
+    LIST_FOR_EACH_ENTRY_SAFE(entry, cursor2, &openDllList, OpenDll, entry)
+    {
+        list_remove(&entry->entry);
+
+        HeapFree(GetProcessHeap(), 0, entry->library_name);
+        HeapFree(GetProcessHeap(), 0, entry);
+    }
+    LeaveCriticalSection(&csOpenDllList);
 }
 
 /******************************************************************************
@@ -1166,6 +1215,7 @@ HRESULT WINAPI CoDisconnectObject( LPUNKNOWN lpUnk, DWORD reserved )
 
 /******************************************************************************
  *		CoCreateGuid [OLE32.@]
+ *		CoCreateGuid [COMPOBJ.73]
  *
  * Simply forwards to UuidCreate in RPCRT4.
  *
@@ -1553,7 +1603,7 @@ HRESULT WINAPI CLSIDFromProgID(LPCOLESTR progid, LPCLSID clsid)
  * PARAMS
  *  riid   [I] Interface whose proxy/stub CLSID is to be returned.
  *  pclsid [O] Where to store returned proxy/stub CLSID.
- *
+ * 
  * RETURNS
  *   S_OK
  *   E_OUTOFMEMORY
@@ -1658,7 +1708,7 @@ HRESULT WINAPI CoGetPSClsid(REFIID riid, CLSID *pclsid)
  * PARAMS
  *  riid   [I] Interface whose proxy/stub CLSID is to be registered.
  *  rclsid [I] CLSID of the proxy/stub.
- *
+ * 
  * RETURNS
  *   Success: S_OK
  *   Failure: E_OUTOFMEMORY
@@ -1913,6 +1963,7 @@ static void COM_RevokeRegisteredClassObject(RegisteredClass *curClass)
         memset(&zero, 0, sizeof(zero));
         IStream_Seek(curClass->pMarshaledData, zero, STREAM_SEEK_SET, NULL);
         CoReleaseMarshalData(curClass->pMarshaledData);
+        IStream_Release(curClass->pMarshaledData);
     }
 
     HeapFree(GetProcessHeap(), 0, curClass);
@@ -2036,38 +2087,51 @@ static void get_threading_model(HKEY key, LPWSTR value, DWORD len)
 }
 
 static HRESULT get_inproc_class_object(APARTMENT *apt, HKEY hkeydll,
-                                       REFCLSID rclsid, REFIID riid, void **ppv)
+                                       REFCLSID rclsid, REFIID riid,
+                                       BOOL hostifnecessary, void **ppv)
 {
-    static const WCHAR wszApartment[] = {'A','p','a','r','t','m','e','n','t',0};
-    static const WCHAR wszFree[] = {'F','r','e','e',0};
-    static const WCHAR wszBoth[] = {'B','o','t','h',0};
     WCHAR dllpath[MAX_PATH+1];
-    WCHAR threading_model[10 /* strlenW(L"apartment")+1 */];
+    BOOL apartment_threaded;
 
-    get_threading_model(hkeydll, threading_model, ARRAYSIZE(threading_model));
-    /* "Apartment" */
-    if (!strcmpiW(threading_model, wszApartment))
+    if (hostifnecessary)
     {
-        if (apt->multi_threaded)
-            return apartment_hostobject_in_hostapt(apt, FALSE, FALSE, hkeydll, rclsid, riid, ppv);
-    }
-    /* "Free" */
-    else if (!strcmpiW(threading_model, wszFree))
-    {
-        if (!apt->multi_threaded)
-            return apartment_hostobject_in_hostapt(apt, TRUE, FALSE, hkeydll, rclsid, riid, ppv);
-    }
-    /* everything except "Apartment", "Free" and "Both" */
-    else if (strcmpiW(threading_model, wszBoth))
-    {
-        /* everything else is main-threaded */
-        if (threading_model[0])
-            FIXME("unrecognised threading model %s for object %s, should be main-threaded?\n",
-                debugstr_w(threading_model), debugstr_guid(rclsid));
+        static const WCHAR wszApartment[] = {'A','p','a','r','t','m','e','n','t',0};
+        static const WCHAR wszFree[] = {'F','r','e','e',0};
+        static const WCHAR wszBoth[] = {'B','o','t','h',0};
+        WCHAR threading_model[10 /* strlenW(L"apartment")+1 */];
 
-        if (apt->multi_threaded || !apt->main)
-            return apartment_hostobject_in_hostapt(apt, FALSE, TRUE, hkeydll, rclsid, riid, ppv);
+        get_threading_model(hkeydll, threading_model, ARRAYSIZE(threading_model));
+        /* "Apartment" */
+        if (!strcmpiW(threading_model, wszApartment))
+        {
+            apartment_threaded = TRUE;
+            if (apt->multi_threaded)
+                return apartment_hostobject_in_hostapt(apt, FALSE, FALSE, hkeydll, rclsid, riid, ppv);
+        }
+        /* "Free" */
+        else if (!strcmpiW(threading_model, wszFree))
+        {
+            apartment_threaded = FALSE;
+            if (!apt->multi_threaded)
+                return apartment_hostobject_in_hostapt(apt, TRUE, FALSE, hkeydll, rclsid, riid, ppv);
+        }
+        /* everything except "Apartment", "Free" and "Both" */
+        else if (strcmpiW(threading_model, wszBoth))
+        {
+            apartment_threaded = TRUE;
+            /* everything else is main-threaded */
+            if (threading_model[0])
+                FIXME("unrecognised threading model %s for object %s, should be main-threaded?\n",
+                    debugstr_w(threading_model), debugstr_guid(rclsid));
+
+            if (apt->multi_threaded || !apt->main)
+                return apartment_hostobject_in_hostapt(apt, FALSE, TRUE, hkeydll, rclsid, riid, ppv);
+        }
+        else
+            apartment_threaded = FALSE;
     }
+    else
+        apartment_threaded = !apt->multi_threaded;
 
     if (COM_RegReadPath(hkeydll, NULL, NULL, dllpath, ARRAYSIZE(dllpath)) != ERROR_SUCCESS)
     {
@@ -2076,7 +2140,8 @@ static HRESULT get_inproc_class_object(APARTMENT *apt, HKEY hkeydll,
         return REGDB_E_CLASSNOTREG;
     }
 
-    return apartment_getclassobject(apt, dllpath, rclsid, riid, ppv);
+    return apartment_getclassobject(apt, dllpath, apartment_threaded,
+                                    rclsid, riid, ppv);
 }
 
 /***********************************************************************
@@ -2175,7 +2240,8 @@ HRESULT WINAPI CoGetClassObject(
 
         if (SUCCEEDED(hres))
         {
-            hres = get_inproc_class_object(apt, hkey, rclsid, iid, ppv);
+            hres = get_inproc_class_object(apt, hkey, rclsid, iid,
+                !(dwClsContext & WINE_CLSCTX_DONT_HOST), ppv);
             RegCloseKey(hkey);
         }
 
@@ -2205,7 +2271,8 @@ HRESULT WINAPI CoGetClassObject(
 
         if (SUCCEEDED(hres))
         {
-            hres = get_inproc_class_object(apt, hkey, rclsid, iid, ppv);
+            hres = get_inproc_class_object(apt, hkey, rclsid, iid,
+                !(dwClsContext & WINE_CLSCTX_DONT_HOST), ppv);
             RegCloseKey(hkey);
         }
 
@@ -2344,8 +2411,12 @@ HRESULT WINAPI CoCreateInstance(
 	hres = IClassFactory_CreateInstance(lpclf, pUnkOuter, iid, ppv);
 	IClassFactory_Release(lpclf);
 	if(FAILED(hres))
-          FIXME("no instance created for interface %s of class %s, hres is 0x%08x\n",
-		debugstr_guid(iid), debugstr_guid(rclsid),hres);
+        {
+          if (hres == CLASS_E_NOAGGREGATION && pUnkOuter)
+              FIXME("Class %s does not support aggregation\n", debugstr_guid(rclsid));
+          else
+              FIXME("no instance created for interface %s of class %s, hres is 0x%08x\n", debugstr_guid(iid), debugstr_guid(rclsid),hres);
+        }
 
 	return hres;
 }
@@ -2482,6 +2553,34 @@ void WINAPI CoFreeAllLibraries(void)
     /* NOP */
 }
 
+/***********************************************************************
+ *           CoFreeUnusedLibrariesEx [OLE32.@]
+ *
+ * Frees any previously unused libraries whose delay has expired and marks
+ * currently unused libraries for unloading. Unused are identified as those that
+ * return S_OK from their DllCanUnloadNow function.
+ *
+ * PARAMS
+ *  dwUnloadDelay [I] Unload delay in milliseconds.
+ *  dwReserved    [I] Reserved. Set to 0.
+ *
+ * RETURNS
+ *  Nothing.
+ *
+ * SEE ALSO
+ *  CoLoadLibrary, CoFreeAllLibraries, CoFreeLibrary
+ */
+void WINAPI CoFreeUnusedLibrariesEx(DWORD dwUnloadDelay, DWORD dwReserved)
+{
+    struct apartment *apt = COM_CurrentApt();
+    if (!apt)
+    {
+        ERR("apartment not initialised\n");
+        return;
+    }
+
+    apartment_freeunusedlibraries(apt, dwUnloadDelay);
+}
 
 /***********************************************************************
  *           CoFreeUnusedLibraries [OLE32.@]
@@ -2498,14 +2597,7 @@ void WINAPI CoFreeAllLibraries(void)
  */
 void WINAPI CoFreeUnusedLibraries(void)
 {
-    struct apartment *apt = COM_CurrentApt();
-    if (!apt)
-    {
-        ERR("apartment not initialised\n");
-        return;
-    }
-
-    apartment_freeunusedlibraries(apt);
+    CoFreeUnusedLibrariesEx(INFINITE, 0);
 }
 
 /***********************************************************************
@@ -2561,14 +2653,14 @@ HRESULT WINAPI CoLockObjectExternal(
     if (!apt) return CO_E_NOTINITIALIZED;
 
     stubmgr = get_stub_manager_from_object(apt, pUnk);
-
+    
     if (stubmgr)
     {
         if (fLock)
             stub_manager_ext_addref(stubmgr, 1);
         else
             stub_manager_ext_release(stubmgr, 1, fLastUnlockReleases);
-
+        
         stub_manager_int_release(stubmgr);
 
         return S_OK;
@@ -3019,7 +3111,7 @@ HRESULT WINAPI CoAllowSetForegroundWindow(IUnknown *pUnk, void *pvReserved)
     FIXME("(%p, %p): stub\n", pUnk, pvReserved);
     return S_OK;
 }
-
+ 
 /***********************************************************************
  *           CoQueryProxyBlanket [OLE32.@]
  *
@@ -3337,7 +3429,7 @@ HRESULT WINAPI CoWaitForMultipleHandles(DWORD dwFlags, DWORD dwTimeout,
         DWORD now = GetTickCount();
         DWORD res;
 
-        if ((dwTimeout != INFINITE) && (start_time + dwTimeout >= now))
+        if (now - start_time > dwTimeout)
         {
             hr = RPC_S_CALLPENDING;
             break;
@@ -3416,7 +3508,7 @@ HRESULT WINAPI CoWaitForMultipleHandles(DWORD dwFlags, DWORD dwTimeout,
                 (dwFlags & COWAIT_ALERTABLE) ? TRUE : FALSE);
         }
 
-        if ((res >= WAIT_OBJECT_0) && (res < WAIT_OBJECT_0 + cHandles))
+        if (res < WAIT_OBJECT_0 + cHandles)
         {
             /* handle signaled, store index */
             *lpdwindex = (res - WAIT_OBJECT_0);
@@ -3510,6 +3602,143 @@ HRESULT WINAPI CoRegisterChannelHook(REFGUID guidExtension, IChannelHook *pChann
     return RPC_RegisterChannelHook(guidExtension, pChannelHook);
 }
 
+typedef struct Context
+{
+    const IComThreadingInfoVtbl *lpVtbl;
+    LONG refs;
+    APTTYPE apttype;
+} Context;
+
+static HRESULT WINAPI Context_QueryInterface(IComThreadingInfo *iface, REFIID riid, LPVOID *ppv)
+{
+    *ppv = NULL;
+
+    if (IsEqualIID(riid, &IID_IComThreadingInfo) ||
+        IsEqualIID(riid, &IID_IUnknown))
+    {
+        *ppv = iface;
+        IUnknown_AddRef(iface);
+        return S_OK;
+    }
+
+    FIXME("interface not implemented %s\n", debugstr_guid(riid));
+    return E_NOINTERFACE;
+}
+
+static ULONG WINAPI Context_AddRef(IComThreadingInfo *iface)
+{
+    Context *This = (Context *)iface;
+    return InterlockedIncrement(&This->refs);
+}
+
+static ULONG WINAPI Context_Release(IComThreadingInfo *iface)
+{
+    Context *This = (Context *)iface;
+    ULONG refs = InterlockedDecrement(&This->refs);
+    if (!refs)
+        HeapFree(GetProcessHeap(), 0, This);
+    return refs;
+}
+
+static HRESULT WINAPI Context_GetCurrentApartmentType(IComThreadingInfo *iface, APTTYPE *apttype)
+{
+    Context *This = (Context *)iface;
+
+    TRACE("(%p)\n", apttype);
+
+    *apttype = This->apttype;
+    return S_OK;
+}
+
+static HRESULT WINAPI Context_GetCurrentThreadType(IComThreadingInfo *iface, THDTYPE *thdtype)
+{
+    Context *This = (Context *)iface;
+
+    TRACE("(%p)\n", thdtype);
+
+    switch (This->apttype)
+    {
+    case APTTYPE_STA:
+    case APTTYPE_MAINSTA:
+        *thdtype = THDTYPE_PROCESSMESSAGES;
+        break;
+    default:
+        *thdtype = THDTYPE_BLOCKMESSAGES;
+        break;
+    }
+    return S_OK;
+}
+
+static HRESULT WINAPI Context_GetCurrentLogicalThreadId(IComThreadingInfo *iface, GUID *logical_thread_id)
+{
+    FIXME("(%p): stub\n", logical_thread_id);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI Context_SetCurrentLogicalThreadId(IComThreadingInfo *iface, REFGUID logical_thread_id)
+{
+    FIXME("(%s): stub\n", debugstr_guid(logical_thread_id));
+    return E_NOTIMPL;
+}
+
+static const IComThreadingInfoVtbl Context_Threading_Vtbl =
+{
+    Context_QueryInterface,
+    Context_AddRef,
+    Context_Release,
+    Context_GetCurrentApartmentType,
+    Context_GetCurrentThreadType,
+    Context_GetCurrentLogicalThreadId,
+    Context_SetCurrentLogicalThreadId
+};
+
+/***********************************************************************
+ *           CoGetObjectContext [OLE32.@]
+ *
+ * Retrieves an object associated with the current context (i.e. apartment).
+ *
+ * PARAMS
+ *  riid [I] ID of the interface of the object to retrieve.
+ *  ppv  [O] Address where object will be stored on return.
+ *
+ * RETURNS
+ *  Success: S_OK.
+ *  Failure: HRESULT code.
+ */
+HRESULT WINAPI CoGetObjectContext(REFIID riid, void **ppv)
+{
+    APARTMENT *apt = COM_CurrentApt();
+    Context *context;
+    HRESULT hr;
+
+    TRACE("(%s, %p)\n", debugstr_guid(riid), ppv);
+
+    *ppv = NULL;
+    if (!apt)
+    {
+        ERR("apartment not initialised\n");
+        return CO_E_NOTINITIALIZED;
+    }
+
+    context = HeapAlloc(GetProcessHeap(), 0, sizeof(*context));
+    if (!context)
+        return E_OUTOFMEMORY;
+
+    context->lpVtbl = &Context_Threading_Vtbl;
+    context->refs = 1;
+    if (apt->multi_threaded)
+        context->apttype = APTTYPE_MTA;
+    else if (apt->main)
+        context->apttype = APTTYPE_MAINSTA;
+    else
+        context->apttype = APTTYPE_STA;
+
+    hr = IUnknown_QueryInterface((IUnknown *)&context->lpVtbl, riid, ppv);
+    IUnknown_Release((IUnknown *)&context->lpVtbl);
+
+    return hr;
+}
+
 /***********************************************************************
  *		DllMain (OLE32.@)
  */
@@ -3529,6 +3758,7 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID fImpLoad)
         OLEDD_UnInitialize();
         COMPOBJ_UninitProcess();
         RPC_UnregisterAllChannelHooks();
+        COMPOBJ_DllList_Free();
         OLE32_hInstance = 0;
 	break;
 

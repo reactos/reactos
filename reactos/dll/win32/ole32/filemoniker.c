@@ -252,7 +252,7 @@ FileMonikerImpl_Load(IMoniker* iface, IStream* pStm)
         goto fail;
 
     if (!dwbuffer) /* No W-string */
-    {
+    {        
         bytesA--;
         len=MultiByteToWideChar(CP_ACP, MB_ERR_INVALID_CHARS, filePathA, bytesA, NULL, 0);
         if (!len)
@@ -315,7 +315,7 @@ FileMonikerImpl_Load(IMoniker* iface, IStream* pStm)
  *
  * This function saves data of this object. In the beginning I thought
  * that I have just to write the filePath string on Stream. But, when I
- * tested this function with windows programs samples, I noticed that it
+ * tested this function with windows program samples, I noticed that it
  * was not the case. This implementation is based on XP SP2. Other versions
  * of Windows have minor variations.
  *
@@ -325,10 +325,10 @@ FileMonikerImpl_Load(IMoniker* iface, IStream* pStm)
  * 3) path string type A
  * 4) DWORD constant : 0xDEADFFFF
  * 5) five DWORD constant: zero
- * 6) If we're only writing the multibyte version,
+ * 6) If we're only writing the multibyte version, 
  *     write a zero DWORD and finish.
  *
- * 7) DWORD: double-length of the the path string type W ("\0" not
+ * 7) DWORD: double-length of the path string type W ("\0" not
  *    included)
  * 8) WORD constant: 0x3
  * 9) filePath unicode string.
@@ -386,16 +386,16 @@ FileMonikerImpl_Save(IMoniker* iface, IStream* pStm, BOOL fClearDirty)
     }
 
     /* Write the wide version if:
-     *    + couldn't convert to CP_ACP,
-     * or + it's a directory,
-     * or + there's a character > 0xFF
+     *    + couldn't convert to CP_ACP, 
+     * or + it's a directory, 
+     * or + there's a character > 0xFF 
      */
     len = lstrlenW(filePathW);
     bWriteWide = (bUsedDefault || (len > 0 && filePathW[len-1]=='\\' ));
     if (!bWriteWide)
     {
         WCHAR* pch;
-        for(pch=filePathW;*pch;++pch)
+        for(pch=filePathW;*pch;++pch) 
         {
             if (*pch > 0xFF)
             {
@@ -793,13 +793,15 @@ FileMonikerImpl_IsEqual(IMoniker* iface,IMoniker* pmkOtherMoniker)
     res = CreateBindCtx(0,&bind);
     if (FAILED(res)) return res;
 
+    res = S_FALSE;
     if (SUCCEEDED(IMoniker_GetDisplayName(pmkOtherMoniker,bind,NULL,&filePath))) {
-	int result = lstrcmpiW(filePath, This->filePathName);
+	if (!lstrcmpiW(filePath, This->filePathName))
+            res = S_OK;
 	CoTaskMemFree(filePath);
-        if ( result == 0 ) return S_OK;
     }
-    return S_FALSE;
 
+    IBindCtx_Release(bind);
+    return res;
 }
 
 /******************************************************************************
@@ -985,17 +987,17 @@ FileMonikerImpl_CommonPrefixWith(IMoniker* iface,IMoniker* pmkOther,IMoniker** p
         {
             for(i=0;i<sameIdx;i++)
                 strcatW(commonPath,stringTable1[i]);
-
+    
             for(i=0;i<nb1;i++)
                 CoTaskMemFree(stringTable1[i]);
-
+    
             CoTaskMemFree(stringTable1);
-
+    
             for(i=0;i<nb2;i++)
                 CoTaskMemFree(stringTable2[i]);
-
+    
             CoTaskMemFree(stringTable2);
-
+    
             ret = CreateFileMoniker(commonPath,ppmkPrefix);
         }
         HeapFree(GetProcessHeap(),0,commonPath);
@@ -1190,7 +1192,7 @@ FileMonikerImpl_GetDisplayName(IMoniker* iface, IBindCtx* pbc,
     strcpyW(*ppszDisplayName,This->filePathName);
 
     TRACE("-- %s\n", debugstr_w(*ppszDisplayName));
-
+    
     return S_OK;
 }
 

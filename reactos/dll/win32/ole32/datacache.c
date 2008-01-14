@@ -295,6 +295,7 @@ static HRESULT DataCache_CreateEntry(DataCache *This, const FORMATETC *formatetc
         (*cache_entry)->fmtetc.ptd = HeapAlloc(GetProcessHeap(), 0, formatetc->ptd->tdSize);
         memcpy((*cache_entry)->fmtetc.ptd, formatetc->ptd, formatetc->ptd->tdSize);
     }
+    (*cache_entry)->data_cf = 0;
     (*cache_entry)->stgmedium.tymed = TYMED_NULL;
     (*cache_entry)->stgmedium.pUnkForRelease = NULL;
     (*cache_entry)->storage = NULL;
@@ -750,6 +751,7 @@ static HRESULT DataCacheEntry_Save(DataCacheEntry *This, IStorage *storage,
 
     if (data)
         hr = IStream_Write(pres_stream, data, header.dwSize, NULL);
+    HeapFree(GetProcessHeap(), 0, data);
 
     IStream_Release(pres_stream);
     return hr;
@@ -829,7 +831,7 @@ static HRESULT DataCacheEntry_GetData(DataCacheEntry *This,
         if (FAILED(hr))
             return hr;
     }
-    if (stgmedium->tymed == TYMED_NULL)
+    if (This->stgmedium.tymed == TYMED_NULL)
         return OLE_E_BLANK;
     return copy_stg_medium(This->data_cf, stgmedium, &This->stgmedium);
 }
@@ -1969,6 +1971,10 @@ static HRESULT WINAPI DataCache_Cache(
     HRESULT hr;
 
     TRACE("(%p, 0x%x, %p)\n", pformatetc, advf, pdwConnection);
+
+    if (!pformatetc || !pdwConnection)
+        return E_INVALIDARG;
+
     TRACE("pformatetc = %s\n", debugstr_formatetc(pformatetc));
 
     *pdwConnection = 0;

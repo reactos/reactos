@@ -284,7 +284,7 @@ HRESULT WINAPI RegisterDragDrop(
   if (!COM_CurrentApt())
   {
     ERR("COM not initialized\n");
-    return CO_E_NOTINITIALIZED;
+    return E_OUTOFMEMORY;
   }
 
   if (!pDropTarget)
@@ -520,14 +520,14 @@ HRESULT WINAPI DoDragDrop (
     msg.message = 0;
 
     /*
-     * Pump messages. All mouse input should go the the capture window.
+     * Pump messages. All mouse input should go to the capture window.
      */
     while (!trackerInfo.trackingDone && GetMessageA(&msg, 0, 0, 0) )
     {
       trackerInfo.curMousePos.x = msg.pt.x;
       trackerInfo.curMousePos.y = msg.pt.y;
       trackerInfo.dwKeyState = OLEDD_GetButtonState();
-
+	    
       if ( (msg.message >= WM_KEYFIRST) &&
 	   (msg.message <= WM_KEYLAST) )
       {
@@ -856,7 +856,7 @@ static HRESULT EnumOLEVERB_Construct(HKEY hkeyVerb, ULONG index, IEnumOLEVERB **
     This->index = index;
     This->hkeyVerb = hkeyVerb;
     *ppenum = (IEnumOLEVERB *)&This->lpvtbl;
-    return S_OK;
+    return S_OK;    
 }
 
 /***********************************************************************
@@ -2477,7 +2477,7 @@ HRESULT WINAPI OleSetAutoConvert(REFCLSID clsidOld, REFCLSID clsidNew)
     HRESULT res = S_OK;
 
     TRACE("(%s,%s)\n", debugstr_guid(clsidOld), debugstr_guid(clsidNew));
-
+    
     res = COM_OpenKeyForCLSID(clsidOld, NULL, KEY_READ | KEY_WRITE, &hkey);
     if (FAILED(res))
         goto done;
@@ -2515,7 +2515,7 @@ BOOL WINAPI OleIsRunning(LPOLEOBJECT pObject)
 
     hr = IOleObject_QueryInterface(pObject, &IID_IRunnableObject, (void **)&pRunnable);
     if (FAILED(hr))
-        return FALSE;
+        return TRUE;
     running = IRunnableObject_IsRunning(pRunnable);
     IRunnableObject_Release(pRunnable);
     return running;

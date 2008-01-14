@@ -206,7 +206,7 @@ getbuffer:
         if (hres) return hres;
 
 	seekto.u.LowPart = 0;seekto.u.HighPart = 0;
-	hres = IStream_Seek(pStm,seekto,SEEK_SET,&newpos);
+	hres = IStream_Seek(pStm,seekto,STREAM_SEEK_SET,&newpos);
 	if (hres) {
             FIXME("IStream_Seek failed, %x\n",hres);
 	    return hres;
@@ -376,9 +376,9 @@ static HRESULT WINAPI CFProxy_CreateInstance(
      *
      * Data: Only the 'IID'.
      */
+    memset(&msg, 0, sizeof(msg));
     msg.iMethod  = 3;
     msg.cbBuffer = sizeof(*riid);
-    msg.Buffer	 = NULL;
     hres = IRpcChannelBuffer_GetBuffer(This->chanbuf,&msg,&IID_IClassFactory);
     if (hres) {
 	FIXME("IRpcChannelBuffer_GetBuffer failed with %x?\n",hres);
@@ -402,9 +402,10 @@ static HRESULT WINAPI CFProxy_CreateInstance(
     hGlobal = GlobalAlloc(GMEM_MOVEABLE|GMEM_NODISCARD|GMEM_SHARE,msg.cbBuffer);
     memcpy(GlobalLock(hGlobal),msg.Buffer,msg.cbBuffer);
     hres = CreateStreamOnHGlobal(hGlobal,TRUE,&pStream);
-    if (hres) {
+    if (hres != S_OK) {
 	FIXME("CreateStreamOnHGlobal failed with %x\n",hres);
 	IRpcChannelBuffer_FreeBuffer(This->chanbuf,&msg);
+        GlobalFree(hGlobal);
 	return hres;
     }
     hres = IStream_Read(pStream, ppv, sizeof(*ppv), NULL);
@@ -508,7 +509,10 @@ static ULONG WINAPI RemUnkStub_Release(LPRPCSTUBBUFFER iface)
   TRACE("(%p)->Release()\n",This);
   refs = InterlockedDecrement(&This->refs);
   if (!refs)
+  {
+    IRpcStubBuffer_Disconnect(iface);
     HeapFree(GetProcessHeap(), 0, This);
+  }
   return refs;
 }
 
@@ -569,10 +573,12 @@ static HRESULT WINAPI RemUnkStub_Invoke(LPRPCSTUBBUFFER iface,
     buf = pMsg->Buffer;
     *(HRESULT *)buf = hr;
     buf += sizeof(HRESULT);
+    
+    if (hr == S_OK)
+      /* FIXME: pQIResults is a unique pointer so pQIResults can be NULL! */
+      memcpy(buf, pQIResults, cIids * sizeof(REMQIRESULT));
 
-    if (hr) return hr;
-    /* FIXME: pQIResults is a unique pointer so pQIResults can be NULL! */
-    memcpy(buf, pQIResults, cIids * sizeof(REMQIRESULT));
+    CoTaskMemFree(pQIResults);
 
     break;
   }

@@ -99,7 +99,7 @@ static const ILockBytesVtbl HGLOBALLockBytesImpl_Vtbl;
  *
  * PARAMS
  *  hGlobal           [ I] Global memory handle
- *  fDeleteOnRelease  [ I] Whether the handle should be freed when the object is released.
+ *  fDeleteOnRelease  [ I] Whether the handle should be freed when the object is released. 
  *  ppLkbyt           [ O] Address of ILockBytes pointer that receives
  *                         the interface pointer to the new byte array object.
  *
@@ -142,7 +142,7 @@ HRESULT WINAPI CreateILockBytesOnHGlobal(HGLOBAL      hGlobal,
  * RETURNS
  *  S_OK          if *phglobal has a correct value
  *  E_INVALIDARG  if any parameters are invalid
- *
+ *  
  */
 HRESULT WINAPI GetHGlobalFromILockBytes(ILockBytes* plkbyt, HGLOBAL* phglobal)
 {

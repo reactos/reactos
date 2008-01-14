@@ -497,7 +497,7 @@ HRESULT CDECL HGLOBALLockBytesImpl16_Stat(
 
 /******************************************************************************
  *           CreateILockBytesOnHGlobal     [OLE2.54]
- *
+ * 
  * Creates an ILockBytes interface for a HGLOBAL handle.
  *
  * PARAMS

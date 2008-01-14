@@ -721,6 +721,9 @@ HRESULT WINAPI CreateStreamOnHGlobal(
 {
   HGLOBALStreamImpl* newStream;
 
+  if (!ppstm)
+    return E_INVALIDARG;
+
   newStream = HGLOBALStreamImpl_Construct(hGlobal,
 					  fDeleteOnRelease);
 

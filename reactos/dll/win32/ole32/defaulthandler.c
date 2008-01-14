@@ -75,6 +75,7 @@ struct DefaultHandler
   const IDataObjectVtbl*     lpvtblIDataObject;
   const IRunnableObjectVtbl* lpvtblIRunnableObject;
   const IAdviseSinkVtbl     *lpvtblIAdviseSink;
+  const IPersistStorageVtbl *lpvtblIPersistStorage;
 
   /* Reference count of this object */
   LONG ref;
@@ -87,6 +88,8 @@ struct DefaultHandler
 
   /* IUnknown implementation of the datacache. */
   IUnknown* dataCache;
+  /* IPersistStorage implementation of the datacache. */
+  IPersistStorage* dataCache_PersistStg;
 
   /* Client site for the embedded object. */
   IOleClientSite* clientSite;
@@ -151,8 +154,17 @@ static inline DefaultHandler *impl_from_IAdviseSink( IAdviseSink *iface )
     return (DefaultHandler *)((char*)iface - FIELD_OFFSET(DefaultHandler, lpvtblIAdviseSink));
 }
 
+static inline DefaultHandler *impl_from_IPersistStorage( IPersistStorage *iface )
+{
+    return (DefaultHandler *)((char*)iface - FIELD_OFFSET(DefaultHandler, lpvtblIPersistStorage));
+}
+
 static void DefaultHandler_Destroy(DefaultHandler* This);
 
+static inline BOOL object_is_running(DefaultHandler *This)
+{
+    return IRunnableObject_IsRunning((IRunnableObject*)&This->lpvtblIRunnableObject);
+}
 
 /*********************************************************
  * Method implementation for the  non delegating IUnknown
@@ -164,7 +176,7 @@ static void DefaultHandler_Destroy(DefaultHandler* This);
  *
  * See Windows documentation for more details on IUnknown methods.
  *
- * This version of QueryInterface will not delegate it's implementation
+ * This version of QueryInterface will not delegate its implementation
  * to the outer unknown.
  */
 static HRESULT WINAPI DefaultHandler_NDIUnknown_QueryInterface(
@@ -189,8 +201,9 @@ static HRESULT WINAPI DefaultHandler_NDIUnknown_QueryInterface(
   else if (IsEqualIID(&IID_IRunnableObject, riid))
     *ppvObject = (IRunnableObject*)&This->lpvtblIRunnableObject;
   else if (IsEqualIID(&IID_IPersist, riid) ||
-           IsEqualIID(&IID_IPersistStorage, riid) ||
-           IsEqualIID(&IID_IViewObject, riid) ||
+           IsEqualIID(&IID_IPersistStorage, riid))
+    *ppvObject = &This->lpvtblIPersistStorage;
+  else if (IsEqualIID(&IID_IViewObject, riid) ||
            IsEqualIID(&IID_IViewObject2, riid) ||
            IsEqualIID(&IID_IOleCache, riid) ||
            IsEqualIID(&IID_IOleCache2, riid))
@@ -221,7 +234,7 @@ static HRESULT WINAPI DefaultHandler_NDIUnknown_QueryInterface(
  *
  * See Windows documentation for more details on IUnknown methods.
  *
- * This version of QueryInterface will not delegate it's implementation
+ * This version of QueryInterface will not delegate its implementation
  * to the outer unknown.
  */
 static ULONG WINAPI DefaultHandler_NDIUnknown_AddRef(
@@ -236,7 +249,7 @@ static ULONG WINAPI DefaultHandler_NDIUnknown_AddRef(
  *
  * See Windows documentation for more details on IUnknown methods.
  *
- * This version of QueryInterface will not delegate it's implementation
+ * This version of QueryInterface will not delegate its implementation
  * to the outer unknown.
  */
 static ULONG WINAPI DefaultHandler_NDIUnknown_Release(
@@ -316,7 +329,7 @@ static HRESULT WINAPI DefaultHandler_SetClientSite(
 
   TRACE("(%p, %p)\n", iface, pClientSite);
 
-  if (This->pOleDelegate)
+  if (object_is_running(This))
     hr = IOleObject_SetClientSite(This->pOleDelegate, pClientSite);
 
   /*
@@ -380,7 +393,7 @@ static HRESULT WINAPI DefaultHandler_SetHostNames(
 	debugstr_w(szContainerApp),
 	debugstr_w(szContainerObj));
 
-  if (This->pOleDelegate)
+  if (object_is_running(This))
     IOleObject_SetHostNames(This->pOleDelegate, szContainerApp, szContainerObj);
 
   /* Be sure to cleanup before re-assinging the strings. */
@@ -409,7 +422,7 @@ static HRESULT WINAPI DefaultHandler_SetHostNames(
 /* undos the work done by DefaultHandler_Run */
 static void WINAPI DefaultHandler_Stop(DefaultHandler *This)
 {
-  if (!This->pOleDelegate)
+  if (!object_is_running(This))
     return;
 
   IOleObject_Unadvise(This->pOleDelegate, This->dwAdvConn);
@@ -449,7 +462,7 @@ static HRESULT WINAPI DefaultHandler_Close(
 
   TRACE("(%d)\n", dwSaveOption);
 
-  if (!This->pOleDelegate)
+  if (!object_is_running(This))
     return S_OK;
 
   hr = IOleObject_Close(This->pOleDelegate, dwSaveOption);
@@ -478,7 +491,7 @@ static HRESULT WINAPI DefaultHandler_SetMoniker(
 	dwWhichMoniker,
 	pmk);
 
-  if (This->pOleDelegate)
+  if (object_is_running(This))
     return IOleObject_SetMoniker(This->pOleDelegate, dwWhichMoniker, pmk);
 
   return S_OK;
@@ -502,7 +515,7 @@ static HRESULT WINAPI DefaultHandler_GetMoniker(
   TRACE("(%p, %d, %d, %p)\n",
 	iface, dwAssign, dwWhichMoniker, ppmk);
 
-  if (This->pOleDelegate)
+  if (object_is_running(This))
     return IOleObject_GetMoniker(This->pOleDelegate, dwAssign, dwWhichMoniker,
                                  ppmk);
 
@@ -537,7 +550,7 @@ static HRESULT WINAPI DefaultHandler_InitFromData(
   TRACE("(%p, %p, %d, %d)\n",
 	iface, pDataObject, fCreation, dwReserved);
 
-  if (This->pOleDelegate)
+  if (object_is_running(This))
     return IOleObject_InitFromData(This->pOleDelegate, pDataObject, fCreation,
 		                   dwReserved);
   return OLE_E_NOTRUNNING;
@@ -560,7 +573,7 @@ static HRESULT WINAPI DefaultHandler_GetClipboardData(
   TRACE("(%p, %d, %p)\n",
 	iface, dwReserved, ppDataObject);
 
-  if (This->pOleDelegate)
+  if (object_is_running(This))
     return IOleObject_GetClipboardData(This->pOleDelegate, dwReserved,
                                        ppDataObject);
 
@@ -606,7 +619,7 @@ static HRESULT WINAPI DefaultHandler_EnumVerbs(
 
   TRACE("(%p, %p)\n", iface, ppEnumOleVerb);
 
-  if (This->pOleDelegate)
+  if (object_is_running(This))
     hr = IOleObject_EnumVerbs(This->pOleDelegate, ppEnumOleVerb);
 
   if (hr == OLE_S_USEREG)
@@ -652,7 +665,7 @@ static HRESULT WINAPI DefaultHandler_GetUserClassID(
 
   TRACE("(%p, %p)\n", iface, pClsid);
 
-  if (This->pOleDelegate)
+  if (object_is_running(This))
     return IOleObject_GetUserClassID(This->pOleDelegate, pClsid);
 
   /* Sanity check. */
@@ -701,7 +714,7 @@ static HRESULT WINAPI DefaultHandler_SetExtent(
   TRACE("(%p, %x, (%d x %d))\n", iface,
         dwDrawAspect, psizel->cx, psizel->cy);
 
-  if (This->pOleDelegate)
+  if (object_is_running(This))
     IOleObject_SetExtent(This->pOleDelegate, dwDrawAspect, psizel);
 
   return OLE_E_NOTRUNNING;
@@ -728,7 +741,7 @@ static HRESULT WINAPI DefaultHandler_GetExtent(
 
   TRACE("(%p, %x, %p)\n", iface, dwDrawAspect, psizel);
 
-  if (This->pOleDelegate)
+  if (object_is_running(This))
     return IOleObject_GetExtent(This->pOleDelegate, dwDrawAspect, psizel);
 
   hres = IUnknown_QueryInterface(This->dataCache, &IID_IViewObject2, (void**)&cacheView);
@@ -740,7 +753,7 @@ static HRESULT WINAPI DefaultHandler_GetExtent(
    *
    * Here we would build a valid DVTARGETDEVICE structure
    * but, since we are calling into the data cache, we
-   * know it's implementation and we'll skip this
+   * know its implementation and we'll skip this
    * extra work until later.
    */
   targetDevice = NULL;
@@ -862,7 +875,7 @@ static HRESULT WINAPI DefaultHandler_GetMiscStatus(
 
   TRACE("(%p, %x, %p)\n", iface, dwAspect, pdwStatus);
 
-  if (This->pOleDelegate)
+  if (object_is_running(This))
     return IOleObject_GetMiscStatus(This->pOleDelegate, dwAspect, pdwStatus);
 
   hres = OleRegGetMiscStatus(&This->clsid, dwAspect, pdwStatus);
@@ -888,7 +901,7 @@ static HRESULT WINAPI DefaultHandler_SetColorScheme(
 
   TRACE("(%p, %p))\n", iface, pLogpal);
 
-  if (This->pOleDelegate)
+  if (object_is_running(This))
     return IOleObject_SetColorScheme(This->pOleDelegate, pLogpal);
 
   return OLE_E_NOTRUNNING;
@@ -1224,7 +1237,7 @@ static HRESULT WINAPI DefaultHandler_IRunnableObject_QueryInterface(
 }
 
 /************************************************************************
- * DefaultHandler_IRunnableObject_QueryInterface (IUnknown)
+ * DefaultHandler_IRunnableObject_AddRef (IUnknown)
  *
  * See Windows documentation for more details on IUnknown methods.
  */
@@ -1237,7 +1250,7 @@ static ULONG WINAPI DefaultHandler_IRunnableObject_AddRef(
 }
 
 /************************************************************************
- * DefaultHandler_IRunnableObject_QueryInterface (IUnknown)
+ * DefaultHandler_IRunnableObject_Release (IUnknown)
  *
  * See Windows documentation for more details on IUnknown methods.
  */
@@ -1272,7 +1285,7 @@ static HRESULT WINAPI DefaultHandler_Run(
   FIXME("(%p): semi-stub\n", pbc);
 
   /* already running? if so nothing to do */
-  if (This->pOleDelegate)
+  if (object_is_running(This))
     return S_OK;
 
   hr = CoCreateInstance(&This->clsid, NULL, CLSCTX_LOCAL_SERVER,
@@ -1438,7 +1451,7 @@ static void WINAPI DefaultHandler_IAdviseSink_OnClose(
     IAdviseSink *iface)
 {
     DefaultHandler *This = impl_from_IAdviseSink(iface);
-
+    
     TRACE("()\n");
 
     if (This->oleAdviseHolder)
@@ -1446,6 +1459,140 @@ static void WINAPI DefaultHandler_IAdviseSink_OnClose(
 
     DefaultHandler_Stop(This);
 }
+
+
+/************************************************************************
+ * DefaultHandler_IPersistStorage_QueryInterface
+ *
+ */
+static HRESULT WINAPI DefaultHandler_IPersistStorage_QueryInterface(
+            IPersistStorage*     iface,
+            REFIID               riid,
+            void**               ppvObject)
+{
+  DefaultHandler *This = impl_from_IPersistStorage(iface);
+
+  return IUnknown_QueryInterface(This->outerUnknown, riid, ppvObject);
+}
+
+/************************************************************************
+ * DefaultHandler_IPersistStorage_AddRef
+ *
+ */
+static ULONG WINAPI DefaultHandler_IPersistStorage_AddRef(
+            IPersistStorage*     iface)
+{
+  DefaultHandler *This = impl_from_IPersistStorage(iface);
+
+  return IUnknown_AddRef(This->outerUnknown);
+}
+
+/************************************************************************
+ * DefaultHandler_IPersistStorage_Release
+ *
+ */
+static ULONG WINAPI DefaultHandler_IPersistStorage_Release(
+            IPersistStorage*     iface)
+{
+  DefaultHandler *This = impl_from_IPersistStorage(iface);
+
+  return IUnknown_Release(This->outerUnknown);
+}
+
+/************************************************************************
+ * DefaultHandler_IPersistStorage_GetClassID
+ *
+ */
+static HRESULT WINAPI DefaultHandler_IPersistStorage_GetClassID(
+            IPersistStorage*     iface,
+            CLSID*               clsid)
+{
+  DefaultHandler *This = impl_from_IPersistStorage(iface);
+
+  return IPersistStorage_GetClassID(This->dataCache_PersistStg, clsid);
+}
+
+/************************************************************************
+ * DefaultHandler_IPersistStorage_IsDirty
+ *
+ */
+static HRESULT WINAPI DefaultHandler_IPersistStorage_IsDirty(
+            IPersistStorage*     iface)
+{
+  DefaultHandler *This = impl_from_IPersistStorage(iface);
+
+  return IPersistStorage_IsDirty(This->dataCache_PersistStg);
+}
+
+/************************************************************************
+ * DefaultHandler_IPersistStorage_InitNew
+ *
+ */
+static HRESULT WINAPI DefaultHandler_IPersistStorage_InitNew(
+           IPersistStorage*     iface,
+           IStorage*            pStg)
+{
+  DefaultHandler *This = impl_from_IPersistStorage(iface);
+
+  return IPersistStorage_InitNew(This->dataCache_PersistStg, pStg);
+}
+
+
+/************************************************************************
+ * DefaultHandler_IPersistStorage_Load
+ *
+ */
+static HRESULT WINAPI DefaultHandler_IPersistStorage_Load(
+           IPersistStorage*     iface,
+           IStorage*            pStg)
+{
+  DefaultHandler *This = impl_from_IPersistStorage(iface);
+
+  return IPersistStorage_Load(This->dataCache_PersistStg, pStg);
+}
+
+
+/************************************************************************
+ * DefaultHandler_IPersistStorage_Save
+ *
+ */
+static HRESULT WINAPI DefaultHandler_IPersistStorage_Save(
+           IPersistStorage*     iface,
+           IStorage*            pStgSave,
+           BOOL                 fSaveAsLoad)
+{
+  DefaultHandler *This = impl_from_IPersistStorage(iface);
+
+  return IPersistStorage_Save(This->dataCache_PersistStg, pStgSave, fSaveAsLoad);
+}
+
+
+/************************************************************************
+ * DefaultHandler_IPersistStorage_SaveCompleted
+ *
+ */
+static HRESULT WINAPI DefaultHandler_IPersistStorage_SaveCompleted(
+           IPersistStorage*     iface,
+           IStorage*            pStgNew)
+{
+  DefaultHandler *This = impl_from_IPersistStorage(iface);
+
+  return IPersistStorage_SaveCompleted(This->dataCache_PersistStg, pStgNew);
+}
+
+
+/************************************************************************
+ * DefaultHandler_IPersistStorage_HandsOffStorage
+ *
+ */
+static HRESULT WINAPI DefaultHandler_IPersistStorage_HandsOffStorage(
+            IPersistStorage*     iface)
+{
+  DefaultHandler *This = impl_from_IPersistStorage(iface);
+
+  return IPersistStorage_HandsOffStorage(This->dataCache_PersistStg);
+}
+
 
 /*
  * Virtual function tables for the DefaultHandler class.
@@ -1525,6 +1672,20 @@ static const IAdviseSinkVtbl DefaultHandler_IAdviseSink_VTable =
   DefaultHandler_IAdviseSink_OnClose
 };
 
+static const IPersistStorageVtbl DefaultHandler_IPersistStorage_VTable =
+{
+  DefaultHandler_IPersistStorage_QueryInterface,
+  DefaultHandler_IPersistStorage_AddRef,
+  DefaultHandler_IPersistStorage_Release,
+  DefaultHandler_IPersistStorage_GetClassID,
+  DefaultHandler_IPersistStorage_IsDirty,
+  DefaultHandler_IPersistStorage_InitNew,
+  DefaultHandler_IPersistStorage_Load,
+  DefaultHandler_IPersistStorage_Save,
+  DefaultHandler_IPersistStorage_SaveCompleted,
+  DefaultHandler_IPersistStorage_HandsOffStorage
+};
+
 /*********************************************************
  * Methods implementation for the DefaultHandler class.
  */
@@ -1533,6 +1694,7 @@ static DefaultHandler* DefaultHandler_Construct(
   LPUNKNOWN pUnkOuter)
 {
   DefaultHandler* This = NULL;
+  HRESULT hr;
 
   /*
    * Allocate space for the object.
@@ -1547,6 +1709,7 @@ static DefaultHandler* DefaultHandler_Construct(
   This->lpvtblIDataObject = &DefaultHandler_IDataObject_VTable;
   This->lpvtblIRunnableObject = &DefaultHandler_IRunnableObject_VTable;
   This->lpvtblIAdviseSink = &DefaultHandler_IAdviseSink_VTable;
+  This->lpvtblIPersistStorage = &DefaultHandler_IPersistStorage_VTable;
 
   /*
    * Start with one reference count. The caller of this function
@@ -1557,7 +1720,7 @@ static DefaultHandler* DefaultHandler_Construct(
   /*
    * Initialize the outer unknown
    * We don't keep a reference on the outer unknown since, the way
-   * aggregation works, our lifetime is at least as large as it's
+   * aggregation works, our lifetime is at least as large as its
    * lifetime.
    */
   if (!pUnkOuter)
@@ -1570,11 +1733,14 @@ static DefaultHandler* DefaultHandler_Construct(
    * We aggregate with the datacache. Make sure we pass our outer
    * unknown as the datacache's outer unknown.
    */
-  CreateDataCache(This->outerUnknown,
-		  clsid,
-		  &IID_IUnknown,
-		  (void**)&This->dataCache);
-
+  hr = CreateDataCache(This->outerUnknown,
+                       clsid,
+                       &IID_IUnknown,
+                       (void**)&This->dataCache);
+  if(SUCCEEDED(hr))
+    hr = IUnknown_QueryInterface(This->dataCache, &IID_IPersistStorage, (void**)&This->dataCache_PersistStg);
+  if(FAILED(hr))
+    ERR("Unexpected error creating data cache\n");
   /*
    * Initialize the other data members of the class.
    */
@@ -1608,7 +1774,9 @@ static void DefaultHandler_Destroy(
   /* Release our reference to the data cache. */
   if (This->dataCache)
   {
+    IPersistStorage_Release(This->dataCache_PersistStg);
     IUnknown_Release(This->dataCache);
+    This->dataCache_PersistStg = NULL;
     This->dataCache = NULL;
   }
 
