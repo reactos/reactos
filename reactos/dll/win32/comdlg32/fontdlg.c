@@ -223,7 +223,7 @@ BOOL WINAPI ChooseFontW(LPCHOOSEFONTW lpChFont)
 /***********************************************************************
  *           ChooseFontA   (COMDLG32.@)
  *
- * See ChosseFontW.
+ * See ChooseFontW.
  */
 BOOL WINAPI ChooseFontA(LPCHOOSEFONTA lpChFont)
 {

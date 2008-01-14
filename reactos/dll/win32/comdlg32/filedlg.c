@@ -2140,7 +2140,6 @@ BOOL FILEDLG95_OnOpen(HWND hwnd)
         if(lstrlenW(lpstrPathAndFile) < fodInfos->ofnInfos->nMaxFile -
             ((fodInfos->ofnInfos->Flags & OFN_ALLOWMULTISELECT) ? 1 : 0))
         {
-          LPWSTR lpszTemp;
 
           /* fill destination buffer */
           if (fodInfos->ofnInfos->lpstrFile)
@@ -2164,13 +2163,31 @@ BOOL FILEDLG95_OnOpen(HWND hwnd)
              }
           }
 
-          /* set filename offset */
-          lpszTemp = PathFindFileNameW(lpstrPathAndFile);
-          fodInfos->ofnInfos->nFileOffset = (lpszTemp - lpstrPathAndFile);
+          if(fodInfos->unicode)
+          {
+              LPWSTR lpszTemp;
 
-          /* set extension offset */
-          lpszTemp = PathFindExtensionW(lpstrPathAndFile);
-          fodInfos->ofnInfos->nFileExtension = (*lpszTemp) ? (lpszTemp - lpstrPathAndFile) + 1 : 0;
+              /* set filename offset */
+              lpszTemp = PathFindFileNameW(lpstrPathAndFile);
+              fodInfos->ofnInfos->nFileOffset = (lpszTemp - lpstrPathAndFile);
+
+              /* set extension offset */
+              lpszTemp = PathFindExtensionW(lpstrPathAndFile);
+              fodInfos->ofnInfos->nFileExtension = (*lpszTemp) ? (lpszTemp - lpstrPathAndFile) + 1 : 0;
+          }
+          else
+          {
+               LPSTR lpszTemp;
+               LPOPENFILENAMEA ofn = (LPOPENFILENAMEA)fodInfos->ofnInfos;
+
+              /* set filename offset */
+              lpszTemp = PathFindFileNameA(ofn->lpstrFile);
+              fodInfos->ofnInfos->nFileOffset = (lpszTemp - ofn->lpstrFile);
+
+              /* set extension offset */
+              lpszTemp = PathFindExtensionA(ofn->lpstrFile);
+              fodInfos->ofnInfos->nFileExtension = (*lpszTemp) ? (lpszTemp - ofn->lpstrFile) + 1 : 0;
+          }
 
           /* set the lpstrFileTitle */
           if(fodInfos->ofnInfos->lpstrFileTitle)
@@ -3658,12 +3675,20 @@ static void CALLBACK FD32_UpdateResult(const FD31_DATA *lfs)
 
     if (priv->ofnA)
     {
+        LPSTR lpszTemp;
         if (ofnW->nMaxFile &&
             !WideCharToMultiByte( CP_ACP, 0, ofnW->lpstrFile, -1,
                                   priv->ofnA->lpstrFile, ofnW->nMaxFile, NULL, NULL ))
             priv->ofnA->lpstrFile[ofnW->nMaxFile-1] = 0;
-        priv->ofnA->nFileOffset = ofnW->nFileOffset;
-        priv->ofnA->nFileExtension = ofnW->nFileExtension;
+
+        /* offsets are not guarenteed to be the same in WCHAR to MULTIBYTE conversion */
+        /* set filename offset */
+        lpszTemp = PathFindFileNameA(priv->ofnA->lpstrFile);
+        priv->ofnA->nFileOffset = (lpszTemp - priv->ofnA->lpstrFile);
+
+        /* set extension offset */
+        lpszTemp = PathFindExtensionA(priv->ofnA->lpstrFile);
+        priv->ofnA->nFileExtension = (*lpszTemp) ? (lpszTemp - priv->ofnA->lpstrFile) + 1 : 0;
     }
 }
 

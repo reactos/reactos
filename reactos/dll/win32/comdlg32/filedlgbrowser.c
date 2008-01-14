@@ -117,11 +117,11 @@ static void COMDLG32_DumpSBSPFlags(UINT uflags)
             FE(SBSP_INITIATEDBYHLINKFRAME),
         };
 #undef FE
-        DPRINTF("SBSP Flags: %08x =", uflags);
+        TRACE("SBSP Flags: %08x =", uflags);
 	for (i = 0; i < (sizeof(flags) / sizeof(flags[0])); i++)
 	    if (flags[i].mask & uflags)
-		DPRINTF("%s ", flags[i].name);
-	DPRINTF("\n");
+		TRACE("%s ", flags[i].name);
+	TRACE("\n");
     }
 }
 
@@ -375,8 +375,7 @@ static HRESULT WINAPI IShellBrowserImpl_BrowseObject(IShellBrowser *iface,
 	    return hRes;
         }
         /* create an absolute pidl */
-        pidlTmp = COMDLG32_PIDL_ILCombine(fodInfos->ShellInfos.pidlAbsCurrent,
-                                                        (LPCITEMIDLIST)pidl);
+        pidlTmp = COMDLG32_PIDL_ILCombine(fodInfos->ShellInfos.pidlAbsCurrent, pidl);
     }
     else if(wFlags & SBSP_PARENT)
     {
@@ -388,7 +387,7 @@ static HRESULT WINAPI IShellBrowserImpl_BrowseObject(IShellBrowser *iface,
     else /* SBSP_ABSOLUTE is 0x0000 */
     {
         /* An absolute pidl (relative from the desktop) */
-        pidlTmp =  COMDLG32_PIDL_ILClone((LPCITEMIDLIST)pidl);
+        pidlTmp =  COMDLG32_PIDL_ILClone(pidl);
         psfTmp = GetShellFolderFromPidl(pidlTmp);
     }
 

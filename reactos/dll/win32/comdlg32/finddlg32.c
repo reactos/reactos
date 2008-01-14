@@ -382,7 +382,7 @@ static HWND COMDLG32_FR_DoFindReplace(
 		HRSRC htemplate;
         	if(pdata->fr.Flags & FR_ENABLETEMPLATE)
 	        {
-        		hmod = (HMODULE)pdata->fr.hInstance;
+			hmod = pdata->fr.hInstance;
                         if(pdata->fr.Flags & FR_WINE_UNICODE)
                         {
 				htemplate = FindResourceW(hmod, (LPCWSTR)pdata->fr.lpTemplateName, (LPWSTR)RT_DIALOG);
