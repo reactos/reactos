@@ -36,7 +36,7 @@
  * 	that only care about gross token distinctions.
  * Major/minor numbers: Within their class, tokens have a major
  * 	number, and may also have a minor number to further
- * 	distinquish tokens with the same major number.
+ * 	distinguish tokens with the same major number.
  *
  *	*** Class, major and minor token numbers are all >= 0 ***
  *
@@ -1005,7 +1005,7 @@ struct RTFStyleElt
  * if no memory available.
  */
 
-# define        New(t)  ((t *) RTFAlloc ((int) sizeof (t)))
+# define        New(t)  (heap_alloc (sizeof (t)))
 
 /* Parser stack size */
 

@@ -487,11 +487,10 @@ void ME_GetGraphicsSize(ME_TextEditor *editor, ME_Run *run, SIZE *pSize)
  * pixel horizontal position. This version rounds left (ie. if the second
  * character is at pixel position 8, then for cx=0..7 it returns 0).  
  */     
-int ME_CharFromPoint(ME_TextEditor *editor, int cx, ME_Run *run)
+int ME_CharFromPoint(ME_Context *c, int cx, ME_Run *run)
 {
   int fit = 0;
   HGDIOBJ hOldFont;
-  HDC hDC;
   SIZE sz;
   if (!run->strText->nLen)
     return 0;
@@ -505,29 +504,28 @@ int ME_CharFromPoint(ME_TextEditor *editor, int cx, ME_Run *run)
   if (run->nFlags & MERF_GRAPHICS)
   {
     SIZE sz;
-    ME_GetGraphicsSize(editor, run, &sz);
+    ME_GetGraphicsSize(c->editor, run, &sz);
     if (cx < sz.cx)
       return 0;
     return 1;
   }
-  hDC = GetDC(editor->hWnd);
-  hOldFont = ME_SelectStyleFont(editor, hDC, run->style);
+  hOldFont = ME_SelectStyleFont(c, run->style);
   
-  if (editor->cPasswordMask)
+  if (c->editor->cPasswordMask)
   {
-    ME_String *strMasked = ME_MakeStringR(editor->cPasswordMask,ME_StrVLen(run->strText));
-    GetTextExtentExPointW(hDC, strMasked->szData, run->strText->nLen,
+    ME_String *strMasked = ME_MakeStringR(c->editor->cPasswordMask,ME_StrVLen(run->strText));
+    GetTextExtentExPointW(c->hDC, strMasked->szData, run->strText->nLen,
       cx, &fit, NULL, &sz);
     ME_DestroyString(strMasked);
   }
   else
   {
-    GetTextExtentExPointW(hDC, run->strText->szData, run->strText->nLen,
+    GetTextExtentExPointW(c->hDC, run->strText->szData, run->strText->nLen,
       cx, &fit, NULL, &sz);
   }
   
-  ME_UnselectStyleFont(editor, hDC, run->style, hOldFont);
-  ReleaseDC(editor->hWnd, hDC);
+  ME_UnselectStyleFont(c, run->style, hOldFont);
+
   return fit;
 }
 
@@ -548,8 +546,8 @@ int ME_CharFromPointCursor(ME_TextEditor *editor, int cx, ME_Run *run)
   /* This could point to either the run's real text, or it's masked form in a password control */
 	
   int fit = 0, fit1 = 0;
+  ME_Context c;
   HGDIOBJ hOldFont;
-  HDC hDC;
   SIZE sz, sz2, sz3;
   if (!run->strText->nLen)
     return 0;
@@ -574,17 +572,17 @@ int ME_CharFromPointCursor(ME_TextEditor *editor, int cx, ME_Run *run)
   else
     strRunText = run->strText;
 
-  hDC = GetDC(editor->hWnd);
-  hOldFont = ME_SelectStyleFont(editor, hDC, run->style);
-  GetTextExtentExPointW(hDC, strRunText->szData, strRunText->nLen,
-    cx, &fit, NULL, &sz);
+  ME_InitContext(&c, editor, GetDC(editor->hWnd));
+  hOldFont = ME_SelectStyleFont(&c, run->style);
+  GetTextExtentExPointW(c.hDC, strRunText->szData, strRunText->nLen,
+                        cx, &fit, NULL, &sz);
   if (fit != strRunText->nLen)
   {
     int chars = 1;
 
-    GetTextExtentPoint32W(hDC, strRunText->szData, fit, &sz2);
+    GetTextExtentPoint32W(c.hDC, strRunText->szData, fit, &sz2);
     fit1 = ME_StrRelPos(strRunText, fit, &chars);
-    GetTextExtentPoint32W(hDC, strRunText->szData, fit1, &sz3);
+    GetTextExtentPoint32W(c.hDC, strRunText->szData, fit1, &sz3);
     if (cx >= (sz2.cx+sz3.cx)/2)
       fit = fit1;
   }
@@ -592,9 +590,22 @@ int ME_CharFromPointCursor(ME_TextEditor *editor, int cx, ME_Run *run)
   if (editor->cPasswordMask)
     ME_DestroyString(strRunText);
   
-  ME_UnselectStyleFont(editor, hDC, run->style, hOldFont);
-  ReleaseDC(editor->hWnd, hDC);
+  ME_UnselectStyleFont(&c, run->style, hOldFont);
+  ReleaseDC(editor->hWnd, c.hDC);
   return fit;
+}
+
+/******************************************************************************
+ * ME_GetTextExtent
+ *
+ * Finds a width and a height of the text using a specified style
+ */
+static void ME_GetTextExtent(ME_Context *c, LPCWSTR szText, int nChars, ME_Style *s, SIZE *size)
+{
+  HGDIOBJ hOldFont;
+  hOldFont = ME_SelectStyleFont(c, s);
+  GetTextExtentPoint32W(c->hDC, szText, nChars, size);
+  ME_UnselectStyleFont(c, s, hOldFont);
 }
 
 /******************************************************************************
@@ -606,8 +617,7 @@ int ME_CharFromPointCursor(ME_TextEditor *editor, int cx, ME_Run *run)
 int ME_PointFromChar(ME_TextEditor *editor, ME_Run *pRun, int nOffset)
 {
   SIZE size;
-  HDC hDC = GetDC(editor->hWnd);
-  HGDIOBJ hOldFont;
+  ME_Context c;
   ME_String *strRunText;
   /* This could point to either the run's real text, or it's masked form in a password control */
 
@@ -623,27 +633,12 @@ int ME_PointFromChar(ME_TextEditor *editor, ME_Run *pRun, int nOffset)
   else
     strRunText = pRun->strText;
   
-  hOldFont = ME_SelectStyleFont(editor, hDC, pRun->style);
-  GetTextExtentPoint32W(hDC, strRunText->szData, nOffset, &size);
-  ME_UnselectStyleFont(editor, hDC, pRun->style, hOldFont);
-  ReleaseDC(editor->hWnd, hDC);
+  ME_InitContext(&c, editor, GetDC(editor->hWnd));
+  ME_GetTextExtent(&c,  strRunText->szData, nOffset, pRun->style, &size);
+  ReleaseDC(editor->hWnd, c.hDC);
   if (editor->cPasswordMask)
     ME_DestroyString(strRunText);
   return size.cx;
-}
-
-/******************************************************************************
- * ME_GetTextExtent
- *
- * Finds a width and a height of the text using a specified style
- */
-static void ME_GetTextExtent(ME_Context *c, LPCWSTR szText, int nChars, ME_Style *s, SIZE *size)
-{
-  HDC hDC = c->hDC;
-  HGDIOBJ hOldFont;
-  hOldFont = ME_SelectStyleFont(c->editor, hDC, s);
-  GetTextExtentPoint32W(hDC, szText, nChars, size);
-  ME_UnselectStyleFont(c->editor, hDC, s, hOldFont);
 }
 
 /******************************************************************************
@@ -683,7 +678,7 @@ static SIZE ME_GetRunSizeCommon(ME_Context *c, const ME_Paragraph *para, ME_Run 
   if (run->nFlags & MERF_TAB)
   {
     int pos = 0, i = 0, ppos;
-    int lpsx = GetDeviceCaps(c->hDC, LOGPIXELSX);
+
     PARAFORMAT2 *pFmt = para->pFmt;
     do {
       if (i < pFmt->cTabCount)
@@ -695,7 +690,7 @@ static SIZE ME_GetRunSizeCommon(ME_Context *c, const ME_Paragraph *para, ME_Run 
       {
         pos += 720-(pos%720);
       }
-      ppos = pos*lpsx/1440;
+      ppos = ME_twips2pointsX(c, pos);
       if (ppos>run->pt.x) {
         size.cx = ppos - run->pt.x;
         break;
@@ -714,9 +709,7 @@ static SIZE ME_GetRunSizeCommon(ME_Context *c, const ME_Paragraph *para, ME_Run 
   }
   if (run->nFlags & MERF_CELL)
   {
-    int lpsx = GetDeviceCaps(c->hDC, LOGPIXELSX);
-
-    size.cx = run->pCell->nRightBoundary * lpsx / 1440 - run->pt.x;
+    size.cx = ME_twips2pointsX(c, run->pCell->nRightBoundary) - run->pt.x;
     return size;
   }
   return size;
@@ -938,8 +931,8 @@ void ME_GetCharFormat(ME_TextEditor *editor, int nFrom, int nTo, CHARFORMAT2W *p
 
   do {
     /* FIXME add more style feature comparisons */
-    int nAttribs = CFM_SIZE | CFM_FACE | CFM_COLOR;
-    int nEffects = CFM_BOLD | CFM_ITALIC | CFM_UNDERLINE;
+    int nAttribs = CFM_SIZE | CFM_FACE | CFM_COLOR | CFM_UNDERLINETYPE;
+    int nEffects = CFM_BOLD | CFM_ITALIC;
 
     run = ME_FindItemFwd(run, diRun);
 
@@ -957,11 +950,14 @@ void ME_GetCharFormat(ME_TextEditor *editor, int nFrom, int nTo, CHARFORMAT2W *p
     {
       if (!(tmp.dwMask & CFM_FACE))
         pFmt->dwMask &= ~CFM_FACE;
-      else if (lstrcmpW(pFmt->szFaceName, tmp.szFaceName))
+      else if (lstrcmpW(pFmt->szFaceName, tmp.szFaceName) ||
+          pFmt->bPitchAndFamily != tmp.bPitchAndFamily)
         pFmt->dwMask &= ~CFM_FACE;
     }
     if (pFmt->yHeight != tmp.yHeight)
       pFmt->dwMask &= ~CFM_SIZE;
+    if (pFmt->bUnderlineType != tmp.bUnderlineType)
+      pFmt->dwMask &= ~CFM_UNDERLINETYPE;
     if (pFmt->dwMask & CFM_COLOR)
     {
       if (!((pFmt->dwEffects&CFE_AUTOCOLOR) & (tmp.dwEffects&CFE_AUTOCOLOR)))

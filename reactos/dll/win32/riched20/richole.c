@@ -112,7 +112,7 @@ IRichEditOle_fnRelease(IRichEditOle *me)
     if (!ref)
     {
         TRACE ("Destroying %p\n", This);
-        richedit_free(This);
+        heap_free(This);
     }
     return ref;
 }
@@ -529,7 +529,7 @@ LRESULT CreateIRichEditOle(ME_TextEditor *editor, LPVOID *ppObj)
 {
     IRichEditOleImpl *reo;
 
-    reo = richedit_alloc(sizeof(IRichEditOleImpl));
+    reo = heap_alloc(sizeof(IRichEditOleImpl));
     if (!reo)
         return 0;
 

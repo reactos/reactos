@@ -1,5 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
+<group>
 <module name="riched20" type="win32dll" baseaddress="${BASEADDRESS_RICHED20}" installbase="system32" installname="riched20.dll" allowwarnings="true">
 	<importlibrary definition="riched20.spec.def" />
 	<include base="riched20">.</include>
@@ -35,3 +36,4 @@
 	<file>version.rc</file>
 	<file>riched20.spec</file>
 </module>
+</group>

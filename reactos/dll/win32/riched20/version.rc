@@ -24,3 +24,7 @@
 #define WINE_PRODUCTVERSION_STR "5,30,23,1215"
 
 #include "wine/wine_common_ver.rc"
+
+#include "res.h"
+
+OCR_REVERSE CURSOR ocr_reverse.cur

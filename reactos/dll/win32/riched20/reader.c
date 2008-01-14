@@ -76,18 +76,6 @@ static void	RTFPutCodePageChar(RTF_Info *info, int c);
 
 /* ---------------------------------------------------------------------- */
 
-/*
- * Memory allocation routines
- */
-
-
-/*
- * Return pointer to block of size bytes, or NULL if there's
- * not enough memory available.
- */
-#define RTFAlloc(size) richedit_alloc(size)
-#define RTFReAlloc(ptr, size) richedit_realloc(ptr, size)
-#define RTFFree(ptr) richedit_free(ptr)
 
 /*
  * Saves a string on the heap and returns a pointer to it.
@@ -96,7 +84,7 @@ static inline char *RTFStrSave(const char *s)
 {
 	char	*p;
 
-	p = RTFAlloc (lstrlenA(s) + 1);
+	p = heap_alloc (lstrlenA(s) + 1);
 	if (p == NULL)
 		return NULL;
 	return lstrcpyA (p, s);
@@ -143,14 +131,14 @@ RTFDestroyAttrs(RTF_Info *info)
 	while (info->fontList)
 	{
 		fp = info->fontList->rtfNextFont;
-		RTFFree (info->fontList->rtfFName);
-		RTFFree (info->fontList);
+		heap_free (info->fontList->rtfFName);
+		heap_free (info->fontList);
 		info->fontList = fp;
 	}
 	while (info->colorList)
 	{
 		cp = info->colorList->rtfNextColor;
-		RTFFree (info->colorList);
+		heap_free (info->colorList);
 		info->colorList = cp;
 	}
 	while (info->styleList)
@@ -160,12 +148,12 @@ RTFDestroyAttrs(RTF_Info *info)
 		while (eltList)
 		{
 			ep = eltList->rtfNextSE;
-			RTFFree (eltList->rtfSEText);
-			RTFFree (eltList);
+			heap_free (eltList->rtfSEText);
+			heap_free (eltList);
 			eltList = ep;
 		}
-		RTFFree (info->styleList->rtfSName);
-		RTFFree (info->styleList);
+		heap_free (info->styleList->rtfSName);
+		heap_free (info->styleList);
 		info->styleList = sp;
 	}
 }
@@ -176,11 +164,11 @@ RTFDestroy(RTF_Info *info)
 {
 	if (info->rtfTextBuf)
 	{
-		RTFFree(info->rtfTextBuf);
-		RTFFree(info->pushedTextBuf);
+		heap_free(info->rtfTextBuf);
+		heap_free(info->pushedTextBuf);
 	}
 	RTFDestroyAttrs(info);
-	RTFFree(info->cpOutputBuffer);
+	heap_free(info->cpOutputBuffer);
 }
 
 
@@ -196,15 +184,15 @@ void RTFInit(RTF_Info *info)
 
 	if (info->rtfTextBuf == NULL)	/* initialize the text buffers */
 	{
-		info->rtfTextBuf = RTFAlloc (rtfBufSiz);
-		info->pushedTextBuf = RTFAlloc (rtfBufSiz);
+		info->rtfTextBuf = heap_alloc (rtfBufSiz);
+		info->pushedTextBuf = heap_alloc (rtfBufSiz);
 		if (info->rtfTextBuf == NULL || info->pushedTextBuf == NULL)
 			ERR ("Cannot allocate text buffers.\n");
 		info->rtfTextBuf[0] = info->pushedTextBuf[0] = '\0';
 	}
 
-	RTFFree (info->inputName);
-	RTFFree (info->outputName);
+	heap_free (info->inputName);
+	heap_free (info->outputName);
 	info->inputName = info->outputName = NULL;
 
 	for (i = 0; i < rtfMaxClass; i++)
@@ -245,7 +233,7 @@ void RTFInit(RTF_Info *info)
         if (!info->cpOutputBuffer)
 	{
 		info->dwMaxCPOutputCount = 0x1000;
-		info->cpOutputBuffer = RTFAlloc(info->dwMaxCPOutputCount);
+		info->cpOutputBuffer = heap_alloc(info->dwMaxCPOutputCount);
 	}
 }
 
@@ -564,7 +552,7 @@ RTFCharSetToCodePage(RTF_Info *info, int charset)
                         /* FIXME: TranslateCharsetInfo does not work as good as it
                          * should, so let's use it only when all else fails */
                         if (!TranslateCharsetInfo(&n, &csi, TCI_SRCCHARSET))
-				ERR("%s: unknown charset %u\n", __FUNCTION__, charset);
+                                ERR("unknown charset %d\n", charset);
 			else
                                 return csi.ciACP;
 		}
@@ -2300,9 +2288,9 @@ void LookupInit(void)
 		rp->rtfKHash = Hash (rp->rtfKStr);
 		index = rp->rtfKHash % (RTF_KEY_COUNT * 2);
 		if (!rtfHashTable[index].count)
-			rtfHashTable[index].value = RTFAlloc(sizeof(RTFKey *));
+			rtfHashTable[index].value = heap_alloc(sizeof(RTFKey *));
 		else
-			rtfHashTable[index].value = RTFReAlloc(rtfHashTable[index].value, sizeof(RTFKey *) * (rtfHashTable[index].count + 1));
+			rtfHashTable[index].value = heap_realloc(rtfHashTable[index].value, sizeof(RTFKey *) * (rtfHashTable[index].count + 1));
 		rtfHashTable[index].value[rtfHashTable[index].count++] = rp;
 	}
 }
@@ -2313,7 +2301,7 @@ void LookupCleanup(void)
 
 	for (i=0; i<RTF_KEY_COUNT*2; i++)
 	{
-		RTFFree( rtfHashTable[i].value );
+		heap_free( rtfHashTable[i].value );
 		rtfHashTable[i].value = NULL;
 		rtfHashTable[i].count = 0;
 	}
@@ -2682,7 +2670,7 @@ static void
 RTFFlushCPOutputBuffer(RTF_Info *info)
 {
         int bufferMax = info->dwCPOutputCount * 2 * sizeof(WCHAR);
-        WCHAR *buffer = RTFAlloc(bufferMax);
+        WCHAR *buffer = heap_alloc(bufferMax);
         int length;
 
         length = MultiByteToWideChar(info->codePage, 0, info->cpOutputBuffer,
@@ -2690,7 +2678,7 @@ RTFFlushCPOutputBuffer(RTF_Info *info)
         info->dwCPOutputCount = 0;
 
         RTFPutUnicodeString(info, buffer, length);
-        RTFFree((char *)buffer);
+        heap_free((char *)buffer);
 }
 
 void
@@ -2719,7 +2707,7 @@ RTFPutCodePageChar(RTF_Info *info, int c)
         if (info->dwCPOutputCount >= info->dwMaxCPOutputCount)
         {
                 info->dwMaxCPOutputCount *= 2;
-                info->cpOutputBuffer = RTFReAlloc(info->cpOutputBuffer, info->dwMaxCPOutputCount);
+                info->cpOutputBuffer = heap_realloc(info->cpOutputBuffer, info->dwMaxCPOutputCount);
         }
         info->cpOutputBuffer[info->dwCPOutputCount++] = c;
 }

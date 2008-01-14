@@ -109,7 +109,8 @@ void ME_UpdateRepaint(ME_TextEditor *editor)
 {
   /* Should be called whenever the contents of the control have changed */
   ME_Cursor *pCursor;
-  
+
+  if (!editor->bRedraw) return;
   if (ME_WrapMarkedParagraphs(editor))
     ME_UpdateScrollBar(editor);
   
@@ -135,27 +136,47 @@ ME_RewrapRepaint(ME_TextEditor *editor)
    * looks, but not content. Like resizing. */
   
   ME_MarkAllForWrapping(editor);
-  ME_WrapMarkedParagraphs(editor);
-  ME_UpdateScrollBar(editor);
-  
-  ME_Repaint(editor);
+  if (editor->bRedraw)
+  {
+    ME_WrapMarkedParagraphs(editor);
+    ME_UpdateScrollBar(editor);
+    ME_Repaint(editor);
+  }
 }
 
+int ME_twips2pointsX(ME_Context *c, int x)
+{
+  if (c->editor->nZoomNumerator == 0)
+    return x * c->dpi.cx / 1440;
+  else
+    return x * c->dpi.cx * c->editor->nZoomNumerator / 1440 / c->editor->nZoomDenominator;
+}
+
+int ME_twips2pointsY(ME_Context *c, int y)
+{
+  if (c->editor->nZoomNumerator == 0)
+    return y * c->dpi.cy / 1440;
+  else
+    return y * c->dpi.cy * c->editor->nZoomNumerator / 1440 / c->editor->nZoomDenominator;
+}
 
 static void ME_DrawTextWithStyle(ME_Context *c, int x, int y, LPCWSTR szText, int nChars, 
   ME_Style *s, int *width, int nSelFrom, int nSelTo, int ymin, int cy) {
   HDC hDC = c->hDC;
   HGDIOBJ hOldFont;
-  COLORREF rgbOld, rgbBack;
+  COLORREF rgbOld;
   int yOffset = 0, yTwipsOffset = 0;
-  hOldFont = ME_SelectStyleFont(c->editor, hDC, s);
-  rgbBack = ME_GetBackColor(c->editor);
+  SIZE          sz;
+  COLORREF      rgb;
+
+  hOldFont = ME_SelectStyleFont(c, s);
   if ((s->fmt.dwMask & CFM_LINK) && (s->fmt.dwEffects & CFE_LINK))
-    rgbOld = SetTextColor(hDC, RGB(0,0,255));  
+    rgb = RGB(0,0,255);
   else if ((s->fmt.dwMask & CFM_COLOR) && (s->fmt.dwEffects & CFE_AUTOCOLOR))
-    rgbOld = SetTextColor(hDC, GetSysColor(COLOR_WINDOWTEXT));
+    rgb = GetSysColor(COLOR_WINDOWTEXT);
   else
-    rgbOld = SetTextColor(hDC, s->fmt.crTextColor);
+    rgb = s->fmt.crTextColor;
+  rgbOld = SetTextColor(hDC, rgb);
   if ((s->fmt.dwMask & s->fmt.dwEffects) & CFM_OFFSET) {
     yTwipsOffset = s->fmt.yOffset;
   }
@@ -164,26 +185,43 @@ static void ME_DrawTextWithStyle(ME_Context *c, int x, int y, LPCWSTR szText, in
     if (s->fmt.dwEffects & CFE_SUBSCRIPT) yTwipsOffset = -s->fmt.yHeight/12;
   }
   if (yTwipsOffset)
-  {
-    int numerator = 1;
-    int denominator = 1;
-    
-    if (c->editor->nZoomNumerator)
-    {
-      numerator = c->editor->nZoomNumerator;
-      denominator = c->editor->nZoomDenominator;
-    }
-    yOffset = yTwipsOffset * GetDeviceCaps(hDC, LOGPIXELSY) * numerator / denominator / 1440;
-  }
+    yOffset = ME_twips2pointsY(c, yTwipsOffset);
   ExtTextOutW(hDC, x, y-yOffset, 0, NULL, szText, nChars, NULL);
-  if (width) {
-    SIZE sz;
-    GetTextExtentPoint32W(hDC, szText, nChars, &sz);
-    *width = sz.cx;
+  GetTextExtentPoint32W(hDC, szText, nChars, &sz);
+  if (width) *width = sz.cx;
+  if (s->fmt.dwMask & CFM_UNDERLINETYPE)
+  {
+    HPEN    hPen;
+    switch (s->fmt.bUnderlineType)
+    {
+    case CFU_UNDERLINE:
+    case CFU_UNDERLINEWORD: /* native seems to map it to simple underline (MSDN) */
+    case CFU_UNDERLINEDOUBLE: /* native seems to map it to simple underline (MSDN) */
+      hPen = CreatePen(PS_SOLID, 1, rgb);
+      break;
+    case CFU_UNDERLINEDOTTED:
+      hPen = CreatePen(PS_DOT, 1, rgb);
+      break;
+    default:
+      WINE_FIXME("Unknown underline type (%u)\n", s->fmt.bUnderlineType);
+      /* fall through */
+    case CFU_CF1UNDERLINE: /* this type is supported in the font, do nothing */
+    case CFU_UNDERLINENONE:
+      hPen = NULL;
+      break;
+    }
+    if (hPen != NULL)
+    {
+      HPEN hOldPen = SelectObject(hDC, hPen);
+      /* FIXME: should use textmetrics info for Descent info */
+      MoveToEx(hDC, x, y - yOffset + 1, NULL);
+      LineTo(hDC, x + sz.cx, y - yOffset + 1);
+      SelectObject(hDC, hOldPen);
+      DeleteObject(hPen);
+    }
   }
   if (nSelFrom < nChars && nSelTo >= 0 && nSelFrom<nSelTo)
   {
-    SIZE sz;
     if (nSelFrom < 0) nSelFrom = 0;
     if (nSelTo > nChars) nSelTo = nChars;
     GetTextExtentPoint32W(hDC, szText, nSelFrom, &sz);
@@ -195,7 +233,7 @@ static void ME_DrawTextWithStyle(ME_Context *c, int x, int y, LPCWSTR szText, in
 	PatBlt(hDC, x, ymin, sz.cx, cy, DSTINVERT);
   }
   SetTextColor(hDC, rgbOld);
-  ME_UnselectStyleFont(c->editor, hDC, s, hOldFont);
+  ME_UnselectStyleFont(c, s, hOldFont);
 }
 
 static void ME_DebugWrite(HDC hDC, const POINT *pt, LPCWSTR szText) {
@@ -239,7 +277,7 @@ static void ME_DrawGraphics(ME_Context *c, int x, int y, ME_Run *run,
 static void ME_DrawRun(ME_Context *c, int x, int y, ME_DisplayItem *rundi, ME_Paragraph *para) 
 {
   ME_Run *run = &rundi->member.run;
-  ME_DisplayItem *start = ME_FindItemBack(rundi, diStartRow);
+  ME_DisplayItem *start;
   int runofs = run->nCharOfs+para->nCharOfs;
   int nSelFrom, nSelTo;
   const WCHAR wszSpace[] = {' ', 0};
@@ -247,6 +285,7 @@ static void ME_DrawRun(ME_Context *c, int x, int y, ME_DisplayItem *rundi, ME_Pa
   if (run->nFlags & MERF_HIDDEN)
     return;
 
+  start = ME_FindItemBack(rundi, diStartRow);
   ME_GetSelection(c->editor, &nSelFrom, &nSelTo);
 
   /* Draw selected end-of-paragraph mark */
@@ -278,15 +317,184 @@ static void ME_DrawRun(ME_Context *c, int x, int y, ME_DisplayItem *rundi, ME_Pa
     }
 }
 
-COLORREF ME_GetBackColor(const ME_TextEditor *editor)
+static struct {unsigned width_num : 4, width_den : 4, pen_style : 4, dble : 1;} border_details[] = {
+  /* none */            {0, 0, PS_SOLID, FALSE},
+  /* 3/4 */             {3, 4, PS_SOLID, FALSE},
+  /* 1 1/2 */           {3, 2, PS_SOLID, FALSE},
+  /* 2 1/4 */           {9, 4, PS_SOLID, FALSE},
+  /* 3 */               {3, 1, PS_SOLID, FALSE},
+  /* 4 1/2 */           {9, 2, PS_SOLID, FALSE},
+  /* 6 */               {6, 1, PS_SOLID, FALSE},
+  /* 3/4 double */      {3, 4, PS_SOLID, TRUE},
+  /* 1 1/2 double */    {3, 2, PS_SOLID, TRUE},
+  /* 2 1/4 double */    {9, 4, PS_SOLID, TRUE},
+  /* 3/4 gray */        {3, 4, PS_DOT /* FIXME */, FALSE},
+  /* 1 1/2 dashed */    {3, 2, PS_DASH, FALSE},
+};
+
+static COLORREF         pen_colors[16] = {
+  /* Black */           RGB(0x00, 0x00, 0x00),  /* Blue */            RGB(0x00, 0x00, 0xFF),
+  /* Cyan */            RGB(0x00, 0xFF, 0xFF),  /* Green */           RGB(0x00, 0xFF, 0x00),
+  /* Magenta */         RGB(0xFF, 0x00, 0xFF),  /* Red */             RGB(0xFF, 0x00, 0x00),
+  /* Yellow */          RGB(0xFF, 0xFF, 0x00),  /* White */           RGB(0xFF, 0xFF, 0xFF),
+  /* Dark blue */       RGB(0x00, 0x00, 0x80),  /* Dark cyan */       RGB(0x00, 0x80, 0x80),
+  /* Dark green */      RGB(0x00, 0x80, 0x80),  /* Dark magenta */    RGB(0x80, 0x00, 0x80),
+  /* Dark red */        RGB(0x80, 0x00, 0x00),  /* Dark yellow */     RGB(0x80, 0x80, 0x00),
+  /* Dark gray */       RGB(0x80, 0x80, 0x80),  /* Light gray */      RGB(0xc0, 0xc0, 0xc0),
+};
+
+static int ME_GetBorderPenWidth(ME_TextEditor* editor, int idx)
 {
-/* Looks like I was seriously confused
-    return GetSysColor((GetWindowLong(editor->hWnd, GWL_STYLE) & ES_READONLY) ? COLOR_3DFACE: COLOR_WINDOW);
-*/
-  if (editor->rgbBackColor == -1)
-    return GetSysColor(COLOR_WINDOW);
+  int width;
+
+  if (editor->nZoomNumerator == 0)
+  {
+      width = border_details[idx].width_num + border_details[idx].width_den / 2;
+      width /= border_details[idx].width_den;
+  }
   else
-    return editor->rgbBackColor;
+  {
+      width = border_details[idx].width_num * editor->nZoomNumerator;
+      width += border_details[idx].width_den * editor->nZoomNumerator / 2;
+      width /= border_details[idx].width_den * editor->nZoomDenominator;
+  }
+  return width;
+}
+
+int  ME_GetParaBorderWidth(ME_TextEditor* editor, int flags)
+{
+  int idx = (flags >> 8) & 0xF;
+  int width;
+
+  if (idx >= sizeof(border_details) / sizeof(border_details[0]))
+  {
+      FIXME("Unsupported border value %d\n", idx);
+      return 0;
+  }
+  width = ME_GetBorderPenWidth(editor, idx);
+  if (border_details[idx].dble) width = width * 2 + 1;
+  return width;
+}
+
+int  ME_GetParaLineSpace(ME_Context* c, ME_Paragraph* para)
+{
+  int   sp = 0, ls = 0;
+  if (!(para->pFmt->dwMask & PFM_LINESPACING)) return 0;
+
+  /* FIXME: how to compute simply the line space in ls ??? */
+  /* FIXME: does line spacing include the line itself ??? */
+  switch (para->pFmt->bLineSpacingRule)
+  {
+  case 0:       sp = ls; break;
+  case 1:       sp = (3 * ls) / 2; break;
+  case 2:       sp = 2 * ls; break;
+  case 3:       sp = ME_twips2pointsY(c, para->pFmt->dyLineSpacing); if (sp < ls) sp = ls; break;
+  case 4:       sp = ME_twips2pointsY(c, para->pFmt->dyLineSpacing); break;
+  case 5:       sp = para->pFmt->dyLineSpacing / 20; break;
+  default: FIXME("Unsupported spacing rule value %d\n", para->pFmt->bLineSpacingRule);
+  }
+  if (c->editor->nZoomNumerator == 0)
+    return sp;
+  else
+    return sp * c->editor->nZoomNumerator / c->editor->nZoomDenominator;
+}
+
+static int ME_DrawParaDecoration(ME_Context* c, ME_Paragraph* para, int y)
+{
+  int           idx, border_width;
+  int           ybefore, yafter;
+  RECT          rc;
+
+  if (!(para->pFmt->dwMask & (PFM_BORDER | PFM_SPACEBEFORE | PFM_SPACEAFTER))) return 0;
+
+  if (para->pFmt->dwMask & PFM_SPACEBEFORE)
+  {
+    rc.left = c->rcView.left;
+    rc.right = c->rcView.right;
+    rc.top = y;
+    ybefore = ME_twips2pointsY(c, para->pFmt->dySpaceBefore);
+    rc.bottom = y + ybefore;
+    FillRect(c->hDC, &rc, c->editor->hbrBackground);
+  }
+  else ybefore = 0;
+  if (para->pFmt->dwMask & PFM_SPACEAFTER)
+  {
+    rc.left = c->rcView.left;
+    rc.right = c->rcView.right;
+    rc.bottom = y + para->nHeight;
+    yafter = ME_twips2pointsY(c, para->pFmt->dySpaceAfter);
+    rc.top = rc.bottom - yafter;
+    FillRect(c->hDC, &rc, c->editor->hbrBackground);
+  }
+  else yafter = 0;
+
+  border_width = 0;
+  idx = (para->pFmt->wBorders >> 8) & 0xF;
+  if ((para->pFmt->dwMask & PFM_BORDER) && idx != 0 && (para->pFmt->wBorders & 0xF)) {
+    int         pen_width;
+    COLORREF    pencr;
+    HPEN        pen = NULL, oldpen = NULL;
+    POINT       pt;
+
+    if (para->pFmt->wBorders & 0x00B0)
+      FIXME("Unsupported border flags %x\n", para->pFmt->wBorders);
+    border_width = ME_GetParaBorderWidth(c->editor, para->pFmt->wBorders);
+
+    if (para->pFmt->wBorders & 64) /* autocolor */
+      pencr = GetSysColor(COLOR_WINDOWTEXT);
+    else
+      pencr = pen_colors[(para->pFmt->wBorders >> 12) & 0xF];
+
+    pen_width = ME_GetBorderPenWidth(c->editor, idx);
+    pen = CreatePen(border_details[idx].pen_style, pen_width, pencr);
+    oldpen = SelectObject(c->hDC, pen);
+    MoveToEx(c->hDC, 0, 0, &pt);
+
+    /* before & after spaces are not included in border */
+    if (para->pFmt->wBorders & 1)
+    {
+      MoveToEx(c->hDC, c->rcView.left, y + ybefore, NULL);
+      LineTo(c->hDC, c->rcView.left, y + para->nHeight - yafter);
+      if (border_details[idx].dble) {
+        MoveToEx(c->hDC, c->rcView.left + pen_width + 1, y + ybefore + pen_width + 1, NULL);
+        LineTo(c->hDC, c->rcView.left + pen_width + 1, y + para->nHeight - yafter - pen_width - 1);
+      }
+    }
+    if (para->pFmt->wBorders & 2)
+    {
+      MoveToEx(c->hDC, c->rcView.right, y + ybefore, NULL);
+      LineTo(c->hDC, c->rcView.right, y + para->nHeight - yafter);
+      if (border_details[idx].dble) {
+        MoveToEx(c->hDC, c->rcView.right - pen_width - 1, y + ybefore + pen_width + 1, NULL);
+        LineTo(c->hDC, c->rcView.right - pen_width - 1, y + para->nHeight - yafter - pen_width - 1);
+      }
+    }
+    if (para->pFmt->wBorders & 4)
+    {
+      MoveToEx(c->hDC, c->rcView.left, y + ybefore, NULL);
+      LineTo(c->hDC, c->rcView.right, y + ybefore);
+      if (border_details[idx].dble) {
+        MoveToEx(c->hDC, c->rcView.left + pen_width + 1, y + ybefore + pen_width + 1, NULL);
+        LineTo(c->hDC, c->rcView.right - pen_width - 1, y + ybefore + pen_width + 1);
+      }
+    }
+    if (para->pFmt->wBorders & 8)
+    {
+      MoveToEx(c->hDC, c->rcView.left, y + para->nHeight - yafter - 1, NULL);
+      LineTo(c->hDC, c->rcView.right, y + para->nHeight - yafter - 1);
+      if (border_details[idx].dble) {
+        MoveToEx(c->hDC, c->rcView.left + pen_width + 1, y + para->nHeight - yafter - 1 - pen_width - 1, NULL);
+        LineTo(c->hDC, c->rcView.right - pen_width - 1, y + para->nHeight - yafter - 1 - pen_width - 1);
+      }
+    }
+
+    MoveToEx(c->hDC, pt.x, pt.y, NULL);
+    SelectObject(c->hDC, oldpen);
+    DeleteObject(pen);
+  }
+  return ybefore +
+      ((para->pFmt->dwMask & PFM_BORDER) && (para->pFmt->wBorders & 4) ?
+       border_width : 0);
 }
 
 void ME_DrawParagraph(ME_Context *c, ME_DisplayItem *paragraph) {
@@ -297,10 +505,10 @@ void ME_DrawParagraph(ME_Context *c, ME_DisplayItem *paragraph) {
   RECT rc, rcPara;
   int y = c->pt.y;
   int height = 0, baseline = 0, no=0, pno = 0;
-  int xs, xe;
-  int visible = 0;
+  int xs = 0, xe = 0;
+  BOOL visible = FALSE;
   int nMargWidth = 0;
-  
+
   c->pt.x = c->rcView.left;
   rcPara.left = c->rcView.left;
   rcPara.right = c->rcView.right;
@@ -308,33 +516,33 @@ void ME_DrawParagraph(ME_Context *c, ME_DisplayItem *paragraph) {
     switch(p->type) {
       case diParagraph:
         para = &p->member.para;
+        assert(para);
+        nMargWidth = ME_twips2pointsX(c, para->pFmt->dxStartIndent);
+        if (pno != 0)
+          nMargWidth += ME_twips2pointsX(c, para->pFmt->dxOffset);
+        xs = c->rcView.left+nMargWidth;
+        xe = c->rcView.right - ME_twips2pointsX(c, para->pFmt->dxRightIndent);
+        y += ME_DrawParaDecoration(c, para, y);
         break;
       case diStartRow:
-        assert(para);
-        nMargWidth = (pno==0?para->nFirstMargin:para->nLeftMargin);
-        xs = c->rcView.left+nMargWidth;
-        xe = c->rcView.right-para->nRightMargin;
         y += height;
         rcPara.top = y;
         rcPara.bottom = y+p->member.row.nHeight;
         visible = RectVisible(c->hDC, &rcPara);
         if (visible) {
-          HBRUSH hbr;
-          hbr = CreateSolidBrush(ME_GetBackColor(c->editor));
           /* left margin */
           rc.left = c->rcView.left;
           rc.right = c->rcView.left+nMargWidth;
           rc.top = y;
           rc.bottom = y+p->member.row.nHeight;
-          FillRect(c->hDC, &rc, hbr/* c->hbrMargin */);
+          FillRect(c->hDC, &rc, c->editor->hbrBackground);
           /* right margin */
           rc.left = xe;
           rc.right = c->rcView.right;
-          FillRect(c->hDC, &rc, hbr/* c->hbrMargin */);
+          FillRect(c->hDC, &rc, c->editor->hbrBackground);
           rc.left = c->rcView.left+nMargWidth;
           rc.right = xe;
-          FillRect(c->hDC, &rc, hbr);
-          DeleteObject(hbr);
+          FillRect(c->hDC, &rc, c->editor->hbrBackground);
         }
         if (me_debug)
         {
@@ -489,8 +697,7 @@ int ME_GetYScrollPos(ME_TextEditor *editor)
   SCROLLINFO si;
   si.cbSize = sizeof(si);
   si.fMask = SIF_POS;
-  GetScrollInfo(editor->hWnd, SB_VERT, &si);
-  return si.nPos;
+  return GetScrollInfo(editor->hWnd, SB_VERT, &si) ? si.nPos : 0;
 }
 
 BOOL ME_GetYScrollVisible(ME_TextEditor *editor)
@@ -558,25 +765,26 @@ ME_InvalidateSelection(ME_TextEditor *editor)
   assert(para2->type == diParagraph);
   /* last selection markers aren't always updated, which means
   they can point past the end of the document */ 
-  if (editor->nLastSelStart > len)
-    editor->nLastSelEnd = len; 
-  if (editor->nLastSelEnd > len)
-    editor->nLastSelEnd = len; 
-    
-  /* if the start part of selection is being expanded or contracted... */
-  if (nStart < editor->nLastSelStart) {
-    ME_MarkForPainting(editor, para1, ME_FindItemFwd(editor->pLastSelStartPara, diParagraphOrEnd));
-  } else 
-  if (nStart > editor->nLastSelStart) {
-    ME_MarkForPainting(editor, editor->pLastSelStartPara, ME_FindItemFwd(para1, diParagraphOrEnd));
-  }
+  if (editor->nLastSelStart > len || editor->nLastSelEnd > len) {
+    ME_MarkForPainting(editor,
+        ME_FindItemFwd(editor->pBuffer->pFirst, diParagraph),
+        ME_FindItemFwd(editor->pBuffer->pFirst, diTextEnd));
+  } else {
+    /* if the start part of selection is being expanded or contracted... */
+    if (nStart < editor->nLastSelStart) {
+      ME_MarkForPainting(editor, para1, ME_FindItemFwd(editor->pLastSelStartPara, diParagraphOrEnd));
+    } else
+    if (nStart > editor->nLastSelStart) {
+      ME_MarkForPainting(editor, editor->pLastSelStartPara, ME_FindItemFwd(para1, diParagraphOrEnd));
+    }
 
-  /* if the end part of selection is being contracted or expanded... */
-  if (nEnd < editor->nLastSelEnd) {
-    ME_MarkForPainting(editor, para2, ME_FindItemFwd(editor->pLastSelEndPara, diParagraphOrEnd));
-  } else 
-  if (nEnd > editor->nLastSelEnd) {
-    ME_MarkForPainting(editor, editor->pLastSelEndPara, ME_FindItemFwd(para2, diParagraphOrEnd));
+    /* if the end part of selection is being contracted or expanded... */
+    if (nEnd < editor->nLastSelEnd) {
+      ME_MarkForPainting(editor, para2, ME_FindItemFwd(editor->pLastSelEndPara, diParagraphOrEnd));
+    } else
+    if (nEnd > editor->nLastSelEnd) {
+      ME_MarkForPainting(editor, editor->pLastSelEndPara, ME_FindItemFwd(para2, diParagraphOrEnd));
+    }
   }
 
   ME_InvalidateMarkedParagraphs(editor);

@@ -23,24 +23,24 @@
 
 extern HANDLE me_heap;
 
-static inline void *richedit_alloc( size_t len )
+static inline void *heap_alloc( size_t len )
 {
     return HeapAlloc( me_heap, 0, len );
 }
 
-static inline BOOL richedit_free( void *ptr )
+static inline BOOL heap_free( void *ptr )
 {
     return HeapFree( me_heap, 0, ptr );
 }
 
-static inline void *richedit_realloc( void *ptr, size_t len )
+static inline void *heap_realloc( void *ptr, size_t len )
 {
     return HeapReAlloc( me_heap, 0, ptr, len );
 }
 
-#define ALLOC_OBJ(type) richedit_alloc(sizeof(type))
-#define ALLOC_N_OBJ(type, count) richedit_alloc((count)*sizeof(type))
-#define FREE_OBJ(ptr) richedit_free(ptr)
+#define ALLOC_OBJ(type) heap_alloc(sizeof(type))
+#define ALLOC_N_OBJ(type, count) heap_alloc((count)*sizeof(type))
+#define FREE_OBJ(ptr) heap_free(ptr)
 
 #define RUN_IS_HIDDEN(run) ((run)->style->fmt.dwMask & CFM_HIDDEN \
                              && (run)->style->fmt.dwEffects & CFE_HIDDEN)
@@ -60,8 +60,8 @@ void ME_AddRefStyle(ME_Style *item);
 void ME_ReleaseStyle(ME_Style *item);
 ME_Style *ME_GetInsertStyle(ME_TextEditor *editor, int nCursor);
 ME_Style *ME_ApplyStyle(ME_Style *sSrc, CHARFORMAT2W *style);
-HFONT ME_SelectStyleFont(ME_TextEditor *editor, HDC hDC, ME_Style *s);
-void ME_UnselectStyleFont(ME_TextEditor *editor, HDC hDC, ME_Style *s, HFONT hOldFont);
+HFONT ME_SelectStyleFont(ME_Context *c, ME_Style *s);
+void ME_UnselectStyleFont(ME_Context *c, ME_Style *s, HFONT hOldFont);
 void ME_InitCharFormat2W(CHARFORMAT2W *pFmt);
 void ME_SaveTempStyle(ME_TextEditor *editor);
 void ME_ClearTempStyle(ME_TextEditor *editor);
@@ -150,7 +150,7 @@ ME_DisplayItem *ME_InsertRunAtCursor(ME_TextEditor *editor, ME_Cursor *cursor,
 void ME_CheckCharOffsets(ME_TextEditor *editor);
 void ME_PropagateCharOffset(ME_DisplayItem *p, int shift);
 void ME_GetGraphicsSize(ME_TextEditor *editor, ME_Run *run, SIZE *pSize);
-int ME_CharFromPoint(ME_TextEditor *editor, int cx, ME_Run *run);
+int ME_CharFromPoint(ME_Context *c, int cx, ME_Run *run);
 /* this one accounts for 1/2 char tolerance */
 int ME_CharFromPointCursor(ME_TextEditor *editor, int cx, ME_Run *run);
 int ME_PointFromChar(ME_TextEditor *editor, ME_Run *pRun, int nOffset);
@@ -181,7 +181,6 @@ void ME_SelectWord(ME_TextEditor *editor);
 void ME_HideCaret(ME_TextEditor *ed);
 void ME_ShowCaret(ME_TextEditor *ed);
 void ME_MoveCaret(ME_TextEditor *ed);
-int ME_FindPixelPos(ME_TextEditor *editor, int x, int y, ME_Cursor *result, BOOL *is_eol);
 int ME_CharFromPos(ME_TextEditor *editor, int x, int y);
 void ME_LButtonDown(ME_TextEditor *editor, int x, int y);
 void ME_MouseMove(ME_TextEditor *editor, int x, int y);
@@ -211,18 +210,16 @@ ME_Style *ME_GetSelectionInsertStyle(ME_TextEditor *editor);
 BOOL ME_UpdateSelection(ME_TextEditor *editor, const ME_Cursor *pTempCursor);
 
 /* wrap.c */
-void ME_PrepareParagraphForWrapping(ME_Context *c, ME_DisplayItem *tp);
-ME_DisplayItem *ME_MakeRow(int height, int baseline, int width);
-void ME_InsertRowStart(ME_WrapContext *wc, const ME_DisplayItem *pEnd);
-void ME_WrapTextParagraph(ME_Context *c, ME_DisplayItem *tp);
 BOOL ME_WrapMarkedParagraphs(ME_TextEditor *editor);
 void ME_InvalidateMarkedParagraphs(ME_TextEditor *editor);
 void ME_SendRequestResize(ME_TextEditor *editor, BOOL force);
+int  ME_twips2pointsX(ME_Context *c, int x);
+int  ME_twips2pointsY(ME_Context *c, int y);
 
 /* para.c */
 ME_DisplayItem *ME_GetParagraph(ME_DisplayItem *run); 
 void ME_GetSelectionParas(ME_TextEditor *editor, ME_DisplayItem **para, ME_DisplayItem **para_end);
-void ME_MakeFirstParagraph(HDC hDC, ME_TextBuffer *editor);
+void ME_MakeFirstParagraph(ME_TextEditor *editor);
 ME_DisplayItem *ME_SplitParagraph(ME_TextEditor *editor, ME_DisplayItem *rp, ME_Style *style);
 ME_DisplayItem *ME_JoinParagraphs(ME_TextEditor *editor, ME_DisplayItem *tp);
 void ME_DumpParaStyle(ME_Paragraph *s);
@@ -243,7 +240,6 @@ void ME_RewrapRepaint(ME_TextEditor *editor);
 void ME_UpdateRepaint(ME_TextEditor *editor);
 void ME_DrawParagraph(ME_Context *c, ME_DisplayItem *paragraph);
 void ME_EnsureVisible(ME_TextEditor *editor, ME_DisplayItem *pRun);
-COLORREF ME_GetBackColor(const ME_TextEditor *editor);
 void ME_InvalidateSelection(ME_TextEditor *editor);
 void ME_QueueInvalidateFromCursor(ME_TextEditor *editor, int nCursor);
 BOOL ME_SetZoom(ME_TextEditor *editor, int numerator, int denominator);
@@ -257,6 +253,10 @@ void ME_Scroll(ME_TextEditor *editor, int value, int type);
 void ME_UpdateScrollBar(ME_TextEditor *editor);
 int ME_GetYScrollPos(ME_TextEditor *editor);
 BOOL ME_GetYScrollVisible(ME_TextEditor *editor);
+
+/* other functions in paint.c */
+int  ME_GetParaBorderWidth(ME_TextEditor *editor, int);
+int  ME_GetParaLineSpace(ME_Context *c, ME_Paragraph*);
 
 /* richole.c */
 extern LRESULT CreateIRichEditOle(ME_TextEditor *editor, LPVOID *);

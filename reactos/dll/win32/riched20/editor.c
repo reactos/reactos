@@ -228,6 +228,7 @@
 #include "shlwapi.h"
 #include "rtf.h"
 #include "imm.h"
+#include "res.h"
 
 #define STACK_SIZE_DEFAULT  100
 #define STACK_SIZE_MAX     1000
@@ -242,6 +243,8 @@ static const WCHAR RichEdit20W[] = {'R', 'i', 'c', 'h', 'E', 'd', 'i', 't', '2',
 static const WCHAR RichEdit50W[] = {'R', 'i', 'c', 'h', 'E', 'd', 'i', 't', '5', '0', 'W', 0};
 static const WCHAR REListBox20W[] = {'R','E','L','i','s','t','B','o','x','2','0','W', 0};
 static const WCHAR REComboBox20W[] = {'R','E','C','o','m','b','o','B','o','x','2','0','W', 0};
+static HCURSOR hLeft;
+static HCURSOR hBeam;
 
 int me_debug = 0;
 HANDLE me_heap = NULL;
@@ -329,10 +332,11 @@ static void ME_RTFCharAttrHook(RTF_Info *info)
   {
     case rtfPlain:
       /* FIXME add more flags once they're implemented */
-      fmt.dwMask = CFM_BOLD | CFM_ITALIC | CFM_UNDERLINE | CFM_STRIKEOUT | CFM_COLOR | CFM_BACKCOLOR | CFM_SIZE | CFM_WEIGHT;
+      fmt.dwMask = CFM_BOLD | CFM_ITALIC | CFM_UNDERLINETYPE | CFM_STRIKEOUT | CFM_COLOR | CFM_BACKCOLOR | CFM_SIZE | CFM_WEIGHT;
       fmt.dwEffects = CFE_AUTOCOLOR | CFE_AUTOBACKCOLOR;
       fmt.yHeight = 12*20; /* 12pt */
       fmt.wWeight = 400;
+      fmt.bUnderlineType = CFU_UNDERLINENONE;
       break;
     case rtfBold:
       fmt.dwMask = CFM_BOLD;
@@ -343,13 +347,24 @@ static void ME_RTFCharAttrHook(RTF_Info *info)
       fmt.dwEffects = info->rtfParam ? fmt.dwMask : 0;
       break;
     case rtfUnderline:
-      fmt.dwMask = CFM_UNDERLINE;
-      fmt.dwEffects = info->rtfParam ? fmt.dwMask : 0;
-      fmt.bUnderlineType = CFU_CF1UNDERLINE;
+      fmt.dwMask = CFM_UNDERLINETYPE;
+      fmt.bUnderlineType = info->rtfParam ? CFU_CF1UNDERLINE : CFU_UNDERLINENONE;
+      break;
+    case rtfDotUnderline:
+      fmt.dwMask = CFM_UNDERLINETYPE;
+      fmt.bUnderlineType = info->rtfParam ? CFU_UNDERLINEDOTTED : CFU_UNDERLINENONE;
+      break;
+    case rtfDbUnderline:
+      fmt.dwMask = CFM_UNDERLINETYPE;
+      fmt.bUnderlineType = info->rtfParam ? CFU_UNDERLINEDOUBLE : CFU_UNDERLINENONE;
+      break;
+    case rtfWordUnderline:
+      fmt.dwMask = CFM_UNDERLINETYPE;
+      fmt.bUnderlineType = info->rtfParam ? CFU_UNDERLINEWORD : CFU_UNDERLINENONE;
       break;
     case rtfNoUnderline:
-      fmt.dwMask = CFM_UNDERLINE;
-      fmt.dwEffects = 0;
+      fmt.dwMask = CFM_UNDERLINETYPE;
+      fmt.bUnderlineType = CFU_UNDERLINENONE;
       break;
     case rtfStrikeThru:
       fmt.dwMask = CFM_STRIKEOUT;
@@ -404,6 +419,7 @@ static void ME_RTFCharAttrHook(RTF_Info *info)
           fmt.szFaceName[sizeof(fmt.szFaceName)/sizeof(WCHAR)-1] = '\0';
           fmt.bCharSet = f->rtfFCharSet;
           fmt.dwMask = CFM_FACE | CFM_CHARSET;
+          fmt.bPitchAndFamily = DEFAULT_PITCH | FF_DONTCARE;
         }
       }
       break;
@@ -1031,6 +1047,27 @@ ME_FindText(ME_TextEditor *editor, DWORD flags, const CHARRANGE *chrg, const WCH
   return -1;
 }
 
+/* helper to send a msg filter notification */
+static BOOL
+ME_FilterEvent(ME_TextEditor *editor, UINT msg, WPARAM* wParam, LPARAM* lParam)
+{
+    MSGFILTER msgf;
+
+    msgf.nmhdr.hwndFrom = editor->hWnd;
+    msgf.nmhdr.idFrom = GetWindowLongW(editor->hWnd, GWLP_ID);
+    msgf.nmhdr.code = EN_MSGFILTER;
+    msgf.msg = msg;
+
+    msgf.wParam = *wParam;
+    msgf.lParam = *lParam;
+    if (SendMessageW(GetParent(editor->hWnd), WM_NOTIFY, msgf.nmhdr.idFrom, (LPARAM)&msgf))
+        return FALSE;
+    *wParam = msgf.wParam;
+    *lParam = msgf.lParam;
+    msgf.wParam = *wParam;
+
+    return TRUE;
+}
 
 static BOOL
 ME_KeyDown(ME_TextEditor *editor, WORD nKey)
@@ -1088,6 +1125,14 @@ ME_KeyDown(ME_TextEditor *editor, WORD nKey)
   return FALSE;
 }
 
+static void ME_SetCursor(ME_TextEditor *editor, int x)
+{
+    if (x < editor->selofs || editor->linesel)
+      SetCursor(hLeft);
+    else
+      SetCursor(hBeam);
+}
+
 static BOOL ME_ShowContextMenu(ME_TextEditor *editor, int x, int y)
 {
   CHARRANGE selrange;
@@ -1115,21 +1160,21 @@ static BOOL ME_ShowContextMenu(ME_TextEditor *editor, int x, int y)
 
 ME_TextEditor *ME_MakeEditor(HWND hWnd) {
   ME_TextEditor *ed = ALLOC_OBJ(ME_TextEditor);
-  HDC hDC;
   int i;
   ed->hWnd = hWnd;
   ed->bEmulateVersion10 = FALSE;
   ed->pBuffer = ME_MakeText();
-  hDC = GetDC(hWnd);
-  ME_MakeFirstParagraph(hDC, ed->pBuffer);
-  ReleaseDC(hWnd, hDC);
+  ed->nZoomNumerator = ed->nZoomDenominator = 0;
+  ME_MakeFirstParagraph(ed);
   ed->bCaretShown = FALSE;
-  ed->nCursors = 2;
+  ed->nCursors = 4;
   ed->pCursors = ALLOC_N_OBJ(ME_Cursor, ed->nCursors);
   ed->pCursors[0].pRun = ME_FindItemFwd(ed->pBuffer->pFirst, diRun);
   ed->pCursors[0].nOffset = 0;
   ed->pCursors[1].pRun = ME_FindItemFwd(ed->pBuffer->pFirst, diRun);
   ed->pCursors[1].nOffset = 0;
+  ed->pCursors[2] = ed->pCursors[0];
+  ed->pCursors[3] = ed->pCursors[1];
   ed->nLastTotalLength = ed->nTotalLength = 0;
   ed->nHeight = 0;
   ed->nUDArrowX = -1;
@@ -1147,7 +1192,6 @@ ME_TextEditor *ME_MakeEditor(HWND hWnd) {
   ed->nParagraphs = 1;
   ed->nLastSelStart = ed->nLastSelEnd = 0;
   ed->pLastSelStartPara = ed->pLastSelEndPara = ME_FindItemFwd(ed->pBuffer->pFirst, diParagraph);
-  ed->nZoomNumerator = ed->nZoomDenominator = 0;
   ed->bRedraw = TRUE;
   ed->bHideSelection = FALSE;
   ed->nInvalidOfs = -1;
@@ -1165,7 +1209,12 @@ ME_TextEditor *ME_MakeEditor(HWND hWnd) {
   }
   
   ME_CheckCharOffsets(ed);
-  
+  if (GetWindowLongW(hWnd, GWL_STYLE) & ES_SELECTIONBAR)
+    ed->selofs = 16;
+  else
+    ed->selofs = 0;
+  ed->linesel = 0;
+
   if (GetWindowLongW(hWnd, GWL_STYLE) & ES_PASSWORD)
     ed->cPasswordMask = '*';
   else
@@ -1235,7 +1284,8 @@ void ME_DestroyEditor(ME_TextEditor *editor)
     if (editor->pFontCache[i].hFont)
       DeleteObject(editor->pFontCache[i].hFont);
   }
-  DeleteObject(editor->hbrBackground);
+  if (editor->rgbBackColor != -1)
+    DeleteObject(editor->hbrBackground);
   if(editor->lpOleCallback)
     IUnknown_Release(editor->lpOleCallback);
 
@@ -1254,6 +1304,8 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
       DisableThreadLibraryCalls(hinstDLL);
       me_heap = HeapCreate (0, 0x10000, 0);
       if (!ME_RegisterEditorClass(hinstDLL)) return FALSE;
+      hLeft = LoadCursorW(hinstDLL, MAKEINTRESOURCEW(OCR_REVERSE));
+      hBeam = LoadCursorW(NULL, MAKEINTRESOURCEW(IDC_IBEAM));
       LookupInit();
       break;
 
@@ -1551,7 +1603,7 @@ static LRESULT RichEditWndProc_common(HWND hWnd, UINT msg, WPARAM wParam,
      * setting the bit to work                                        
      */
     DWORD mask = ECO_VERTICAL | ECO_AUTOHSCROLL | ECO_AUTOVSCROLL |
-                 ECO_NOHIDESEL | ECO_READONLY | ECO_WANTRETURN;
+                 ECO_NOHIDESEL | ECO_READONLY | ECO_WANTRETURN | ECO_SELECTIONBAR;
     DWORD raw = GetWindowLongW(hWnd, GWL_STYLE);
     DWORD settings = mask & raw;
 
@@ -1571,19 +1623,23 @@ static LRESULT RichEditWndProc_common(HWND hWnd, UINT msg, WPARAM wParam,
     }
     SetWindowLongW(hWnd, GWL_STYLE, (raw & ~mask) | (settings & mask));
 
-    if (lParam & ECO_AUTOWORDSELECTION)
+    if (settings & ECO_AUTOWORDSELECTION)
       FIXME("ECO_AUTOWORDSELECTION not implemented yet!\n");
-    if (lParam & ECO_SELECTIONBAR)
-      FIXME("ECO_SELECTIONBAR not implemented yet!\n");
-    if (lParam & ECO_VERTICAL)
+    if (settings & ECO_SELECTIONBAR)
+        editor->selofs = 16;
+    else
+        editor->selofs = 0;
+    ME_WrapMarkedParagraphs(editor);
+
+    if (settings & ECO_VERTICAL)
       FIXME("ECO_VERTICAL not implemented yet!\n");
-    if (lParam & ECO_AUTOHSCROLL)
+    if (settings & ECO_AUTOHSCROLL)
       FIXME("ECO_AUTOHSCROLL not implemented yet!\n");
-    if (lParam & ECO_AUTOVSCROLL)
+    if (settings & ECO_AUTOVSCROLL)
       FIXME("ECO_AUTOVSCROLL not implemented yet!\n");
-    if (lParam & ECO_NOHIDESEL)
+    if (settings & ECO_NOHIDESEL)
       FIXME("ECO_NOHIDESEL not implemented yet!\n");
-    if (lParam & ECO_WANTRETURN)
+    if (settings & ECO_WANTRETURN)
       FIXME("ECO_WANTRETURN not implemented yet!\n");
 
     return settings;
@@ -1677,9 +1733,13 @@ static LRESULT RichEditWndProc_common(HWND hWnd, UINT msg, WPARAM wParam,
   }
   case EM_SETBKGNDCOLOR:
   {
-    LRESULT lColor = ME_GetBackColor(editor);
-    if (editor->rgbBackColor != -1)
+    LRESULT lColor;
+    if (editor->rgbBackColor != -1) {
       DeleteObject(editor->hbrBackground);
+      lColor = editor->rgbBackColor;
+    }
+    else lColor = GetSysColor(COLOR_WINDOW);
+
     if (wParam)
     {
       editor->rgbBackColor = -1;
@@ -1996,19 +2056,47 @@ static LRESULT RichEditWndProc_common(HWND hWnd, UINT msg, WPARAM wParam,
     return 0;
   }
   case WM_GETTEXTLENGTH:
-    return ME_GetTextLength(editor);
+  {
+    GETTEXTLENGTHEX how;
+
+    how.flags = GTL_CLOSE | (editor->bEmulateVersion10 ? 0 : GTL_USECRLF) | GTL_NUMCHARS;
+    how.codepage = unicode ? 1200 : CP_ACP;
+    return ME_GetTextLengthEx(editor, &how);
+  }
   case EM_GETTEXTLENGTHEX:
     return ME_GetTextLengthEx(editor, (GETTEXTLENGTHEX *)wParam);
   case WM_GETTEXT:
   {
     GETTEXTEX ex;
+    LRESULT rc;
+    LPSTR bufferA = NULL;
+    LPWSTR bufferW = NULL;
 
-    ex.cb = wParam;
+    if (unicode)
+        bufferW = heap_alloc((wParam + 2) * sizeof(WCHAR));
+    else
+        bufferA = heap_alloc(wParam + 2);
+
+    ex.cb = wParam + (unicode ? 2*sizeof(WCHAR) : 2);
     ex.flags = GT_USECRLF;
     ex.codepage = unicode ? 1200 : CP_ACP;
     ex.lpDefaultChar = NULL;
     ex.lpUsedDefaultChar = NULL;
-    return RichEditWndProc_common(hWnd, EM_GETTEXTEX, (WPARAM)&ex, lParam, unicode);
+    rc = RichEditWndProc_common(hWnd, EM_GETTEXTEX, (WPARAM)&ex, unicode ? (LPARAM)bufferW : (LPARAM)bufferA, unicode);
+
+    if (unicode)
+    {
+        memcpy((LPWSTR)lParam, bufferW, wParam);
+        if (lstrlenW(bufferW) >= wParam / sizeof(WCHAR)) rc = 0;
+    }
+    else
+    {
+        memcpy((LPSTR)lParam, bufferA, wParam);
+        if (strlen(bufferA) >= wParam) rc = 0;
+    }
+    heap_free(bufferA);
+    heap_free(bufferW);
+    return rc;
   }
   case EM_GETTEXTEX:
   {
@@ -2039,7 +2127,7 @@ static LRESULT RichEditWndProc_common(HWND hWnd, UINT msg, WPARAM wParam,
       /* potentially each char may be a CR, why calculate the exact value with O(N) when
         we can just take a bigger buffer? :) */
       int crlfmul = (ex->flags & GT_USECRLF) ? 2 : 1;
-      LPWSTR buffer = richedit_alloc((crlfmul*nCount + 1) * sizeof(WCHAR));
+      LPWSTR buffer = heap_alloc((crlfmul*nCount + 1) * sizeof(WCHAR));
       DWORD buflen = ex->cb;
       LRESULT rc;
       DWORD flags = 0;
@@ -2048,7 +2136,7 @@ static LRESULT RichEditWndProc_common(HWND hWnd, UINT msg, WPARAM wParam,
       rc = WideCharToMultiByte(ex->codepage, flags, buffer, -1, (LPSTR)lParam, ex->cb, ex->lpDefaultChar, ex->lpUsedDefaultChar);
       if (rc) rc--; /* do not count 0 terminator */
 
-      richedit_free(buffer);
+      heap_free(buffer);
       return rc;
     }
   }
@@ -2324,25 +2412,47 @@ static LRESULT RichEditWndProc_common(HWND hWnd, UINT msg, WPARAM wParam,
     SetWindowLongPtrW(hWnd, 0, 0);
     return 0;
   case WM_LBUTTONDOWN:
+    if ((editor->nEventMask & ENM_MOUSEEVENTS) &&
+        !ME_FilterEvent(editor, msg, &wParam, &lParam))
+      return 0;
     SetFocus(hWnd);
     ME_LButtonDown(editor, (short)LOWORD(lParam), (short)HIWORD(lParam));
     SetCapture(hWnd);
     ME_LinkNotify(editor,msg,wParam,lParam);
+    ME_SetCursor(editor, LOWORD(lParam));
     break;
   case WM_MOUSEMOVE:
+    if ((editor->nEventMask & ENM_MOUSEEVENTS) &&
+        !ME_FilterEvent(editor, msg, &wParam, &lParam))
+      return 0;
     if (GetCapture() == hWnd)
       ME_MouseMove(editor, (short)LOWORD(lParam), (short)HIWORD(lParam));
     ME_LinkNotify(editor,msg,wParam,lParam);
+    ME_SetCursor(editor, LOWORD(lParam));
     break;
   case WM_LBUTTONUP:
     if (GetCapture() == hWnd)
       ReleaseCapture();
+    if ((editor->nEventMask & ENM_MOUSEEVENTS) &&
+        !ME_FilterEvent(editor, msg, &wParam, &lParam))
+      return 0;
+    editor->linesel = 0;
+    ME_SetCursor(editor, LOWORD(lParam));
     ME_LinkNotify(editor,msg,wParam,lParam);
     break;
   case WM_LBUTTONDBLCLK:
+    if ((editor->nEventMask & ENM_MOUSEEVENTS) &&
+        !ME_FilterEvent(editor, msg, &wParam, &lParam))
+      return 0;
     ME_LinkNotify(editor,msg,wParam,lParam);
     ME_SelectWord(editor);
     break;
+  case WM_RBUTTONUP:
+  case WM_RBUTTONDOWN:
+    if ((editor->nEventMask & ENM_MOUSEEVENTS) &&
+        !ME_FilterEvent(editor, msg, &wParam, &lParam))
+      return 0;
+    goto do_default;
   case WM_CONTEXTMENU:
     if (!ME_ShowContextMenu(editor, (short)LOWORD(lParam), (short)HIWORD(lParam)))
       goto do_default;
@@ -2384,7 +2494,15 @@ static LRESULT RichEditWndProc_common(HWND hWnd, UINT msg, WPARAM wParam,
   case WM_COMMAND:
     TRACE("editor wnd command = %d\n", LOWORD(wParam));
     return 0;
+  case WM_KEYUP:
+    if ((editor->nEventMask & ENM_KEYEVENTS) &&
+        !ME_FilterEvent(editor, msg, &wParam, &lParam))
+      return 0;
+    goto do_default;
   case WM_KEYDOWN:
+    if ((editor->nEventMask & ENM_KEYEVENTS) &&
+        !ME_FilterEvent(editor, msg, &wParam, &lParam))
+      return 0;
     if (ME_KeyDown(editor, LOWORD(wParam)))
       return 0;
     goto do_default;
@@ -2491,7 +2609,11 @@ static LRESULT RichEditWndProc_common(HWND hWnd, UINT msg, WPARAM wParam,
   {
     int gcWheelDelta;
     UINT pulScrollLines;
-    
+
+    if ((editor->nEventMask & ENM_MOUSEEVENTS) &&
+        !ME_FilterEvent(editor, msg, &wParam, &lParam))
+      return 0;
+
     SystemParametersInfoW(SPI_GETWHEELSCROLLLINES,0, &pulScrollLines, 0);
     gcWheelDelta = -GET_WHEEL_DELTA_WPARAM(wParam);
     
@@ -2538,7 +2660,8 @@ static LRESULT RichEditWndProc_common(HWND hWnd, UINT msg, WPARAM wParam,
     ME_SendRequestResize(editor, TRUE);
     return 0;
   case WM_SETREDRAW:
-    editor->bRedraw = wParam;
+    if ((editor->bRedraw = wParam))
+      ME_RewrapRepaint(editor);
     return 0;
   case WM_SIZE:
   {
@@ -2804,7 +2927,10 @@ int ME_GetTextW(ME_TextEditor *editor, WCHAR *buffer, int nStart, int nChars, in
       if (!ME_FindItemFwd(item, diRun))
         /* No '\r' is appended to the last paragraph. */
         nLen = 0;
-      else {
+      else if (bCRLF && nChars == 1) {
+        nLen = 0;
+        nChars = 0;
+      } else {
         *buffer = '\r';
         if (bCRLF)
         {
@@ -2847,7 +2973,7 @@ static BOOL ME_RegisterEditorClass(HINSTANCE hInstance)
   wcW.cbWndExtra = sizeof(ME_TextEditor *);
   wcW.hInstance = NULL; /* hInstance would register DLL-local class */
   wcW.hIcon = NULL;
-  wcW.hCursor = LoadCursorW(NULL, MAKEINTRESOURCEW(IDC_IBEAM));
+  wcW.hCursor = hBeam;
   wcW.hbrBackground = (HBRUSH)GetStockObject(NULL_BRUSH);
   wcW.lpszMenuName = NULL;
 
