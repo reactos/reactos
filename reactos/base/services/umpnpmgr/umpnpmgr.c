@@ -39,7 +39,7 @@
 #include <rpc.h>
 #include <rpcdce.h>
 
-#include "pnp_c.h"
+#include "pnp_s.h"
 
 #define NDEBUG
 #include <debug.h>
