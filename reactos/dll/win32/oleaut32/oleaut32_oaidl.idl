@@ -1,7 +1,5 @@
 /*
- * Portuguese resources for oleaut32
- *
- * Copyright 2003 Marcelo Duarte
+ * Copyright 2007 Google (Dan Hipschman)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -18,14 +16,10 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
+/* The header file generated from this includes rpc.h, which ends up
+   including oaidl.h at some point.  This will cause all sorts of errors
+   so the easiest thing to do is just comment out our entire header.  */
 
-STRINGTABLE DISCARDABLE
-{
-  IDS_TRUE  "Verdadeiro"
-  IDS_FALSE "Falso"
-  IDS_YES   "Sim"
-  IDS_NO    "Não"
-  IDS_ON    "Ligado"
-  IDS_OFF   "Desligado"
-}
+cpp_quote("#if 0    /* oleaut32_oaidl.idl hack */")
+#include "oaidl.idl"
+cpp_quote("#endif   /* oleaut32_oaidl.idl hack */")

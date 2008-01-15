@@ -65,6 +65,11 @@ static void *ungif_calloc( size_t num, size_t sz )
     return HeapAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY, num*sz );
 }
 
+static void *ungif_realloc( void *ptr, size_t sz )
+{
+    return HeapReAlloc( GetProcessHeap(), 0, ptr, sz );
+}
+
 static void ungif_free( void *ptr )
 {
     HeapFree( GetProcessHeap(), 0, ptr );
@@ -102,7 +107,7 @@ typedef struct GifFilePrivateType {
 static int DGifGetWord(GifFileType *GifFile, GifWord *Word);
 static int DGifSetupDecompress(GifFileType *GifFile);
 static int DGifDecompressLine(GifFileType *GifFile, GifPixelType *Line, int LineLen);
-static int DGifGetPrefixChar(GifPrefixType *Prefix, int Code, int ClearCode);
+static int DGifGetPrefixChar(const GifPrefixType *Prefix, int Code, int ClearCode);
 static int DGifDecompressInput(GifFileType *GifFile, int *Code);
 static int DGifBufferedInput(GifFileType *GifFile, GifByteType *Buf,
                              GifByteType *NextByte);
@@ -187,14 +192,14 @@ FreeMapObject(ColorMapObject * Object) {
 static int
 AddExtensionBlock(SavedImage * New,
                   int Len,
-                  unsigned char ExtData[]) {
+                  const unsigned char ExtData[]) {
 
     ExtensionBlock *ep;
 
     if (New->ExtensionBlocks == NULL)
         New->ExtensionBlocks = ungif_alloc(sizeof(ExtensionBlock));
     else
-        New->ExtensionBlocks = realloc(New->ExtensionBlocks,
+        New->ExtensionBlocks = ungif_realloc(New->ExtensionBlocks,
                                       sizeof(ExtensionBlock) *
                                       (New->ExtensionBlockCount + 1));
 
@@ -387,7 +392,7 @@ DGifGetImageDesc(GifFileType * GifFile) {
     }
 
     if (GifFile->SavedImages) {
-        if ((GifFile->SavedImages = realloc(GifFile->SavedImages,
+        if ((GifFile->SavedImages = ungif_realloc(GifFile->SavedImages,
                                       sizeof(SavedImage) *
                                       (GifFile->ImageCount + 1))) == NULL) {
             return GIF_ERROR;
@@ -637,17 +642,17 @@ DGifDecompressLine(GifFileType * GifFile,
             Private->MaxCode1 = 1 << Private->RunningBits;
             LastCode = Private->LastCode = NO_SUCH_CODE;
         } else {
-            /* Its regular code - if in pixel range simply add it to output
+            /* It's a regular code - if in pixel range simply add it to output
              * stream, otherwise trace to codes linked list until the prefix
              * is in pixel range: */
             if (CrntCode < ClearCode) {
                 /* This is simple - its pixel scalar, so add it to output: */
                 Line[i++] = CrntCode;
             } else {
-                /* Its a code to needed to be traced: trace the linked list
+                /* It's a code to be traced: trace the linked list
                  * until the prefix is a pixel, while pushing the suffix
                  * pixels on our stack. If we done, pop the stack in reverse
-                 * (thats what stack is good for!) order to output.  */
+                 * order (that's what stack is good for!) for output.  */
                 if (Prefix[CrntCode] == NO_SUCH_CODE) {
                     /* Only allowed if CrntCode is exactly the running code:
                      * In that case CrntCode = XXXCode, CrntCode or the
@@ -718,7 +723,7 @@ DGifDecompressLine(GifFileType * GifFile,
  * the maximum possible if image O.k. - LZ_MAX_CODE times.
  *****************************************************************************/
 static int
-DGifGetPrefixChar(GifPrefixType *Prefix,
+DGifGetPrefixChar(const GifPrefixType *Prefix,
                   int Code,
                   int ClearCode) {
 

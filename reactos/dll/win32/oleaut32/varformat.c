@@ -1492,7 +1492,7 @@ VARIANT_FormatNumber_Bool:
     }
     if (localeValue)
     {
-      if (GetLocaleInfoW(lcid, localeValue, pBuff,
+      if (GetLocaleInfoW(lcid, localeValue, pBuff, 
                          sizeof(buff)/sizeof(WCHAR)-(pBuff-buff)))
       {
         TRACE("added %s\n", debugstr_w(pBuff));
@@ -2493,6 +2493,76 @@ HRESULT WINAPI VarMonthName(INT iMonth, INT fAbbrev, ULONG dwFlags, BSTR *pbstrO
   size = GetLocaleInfoW(LOCALE_USER_DEFAULT,localeValue, *pbstrOut, size);
   if (!size) {
     ERR("GetLocaleInfo of 0x%x failed in 2nd stage?!\n", localeValue);
+    SysFreeString(*pbstrOut);
+    return HRESULT_FROM_WIN32(GetLastError());
+  }
+  return S_OK;
+}
+
+/**********************************************************************
+ *              VarWeekdayName [OLEAUT32.129]
+ *
+ * Print the specified weekday as localized name.
+ *
+ * PARAMS
+ *  iWeekday  [I] day of week, 1..7, 1="the first day of the week"
+ *  fAbbrev   [I] 0 - full name, !0 - abbreviated name
+ *  iFirstDay [I] first day of week,
+ *                0=system default, 1=Sunday, 2=Monday, .. (contrary to MSDN)
+ *  dwFlags   [I] flag stuff. only VAR_CALENDAR_HIJRI possible.
+ *  pbstrOut  [O] Destination for weekday name.
+ *
+ * RETURNS
+ *  Success: S_OK, pbstrOut contains the name.
+ *  Failure: E_INVALIDARG, if any parameter is invalid.
+ *           E_OUTOFMEMORY, if enough memory cannot be allocated.
+ */
+HRESULT WINAPI VarWeekdayName(INT iWeekday, INT fAbbrev, INT iFirstDay,
+                              ULONG dwFlags, BSTR *pbstrOut)
+{
+  DWORD localeValue;
+  INT size;
+
+  /* Windows XP oleaut32.dll doesn't allow iWekday==0, contrary to MSDN */
+  if (iWeekday < 1 || iWeekday > 7)
+    return E_INVALIDARG;
+  if (iFirstDay < 0 || iFirstDay > 7)
+    return E_INVALIDARG;
+  if (!pbstrOut)
+    return E_INVALIDARG;
+
+  if (dwFlags)
+    FIXME("Does not support dwFlags 0x%x, ignoring.\n", dwFlags);
+
+  /* If we have to use the default firstDay, find which one it is */
+  if (iFirstDay == 0) {
+    DWORD firstDay;
+    localeValue = LOCALE_RETURN_NUMBER | LOCALE_IFIRSTDAYOFWEEK;
+    size = GetLocaleInfoW(LOCALE_USER_DEFAULT, localeValue,
+                          (LPWSTR)&firstDay, sizeof(firstDay) / sizeof(WCHAR));
+    if (!size) {
+      ERR("GetLocaleInfo 0x%x failed.\n", localeValue);
+      return HRESULT_FROM_WIN32(GetLastError());
+    }
+    iFirstDay = firstDay + 2;
+  }
+
+  /* Determine what we need to return */
+  localeValue = fAbbrev ? LOCALE_SABBREVDAYNAME1 : LOCALE_SDAYNAME1;
+  localeValue += (7 + iWeekday - 1 + iFirstDay - 2) % 7;
+
+  /* Determine the size of the data, allocate memory and retrieve the data */
+  size = GetLocaleInfoW(LOCALE_USER_DEFAULT, localeValue, NULL, 0);
+  if (!size) {
+    ERR("GetLocaleInfo 0x%x failed.\n", localeValue);
+    return HRESULT_FROM_WIN32(GetLastError());
+  }
+  *pbstrOut = SysAllocStringLen(NULL, size - 1);
+  if (!*pbstrOut)
+    return E_OUTOFMEMORY;
+  size = GetLocaleInfoW(LOCALE_USER_DEFAULT, localeValue, *pbstrOut, size);
+  if (!size) {
+    ERR("GetLocaleInfo 0x%x failed in 2nd stage?!\n", localeValue);
     SysFreeString(*pbstrOut);
     return HRESULT_FROM_WIN32(GetLastError());
   }

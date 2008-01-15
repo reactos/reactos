@@ -1312,7 +1312,7 @@ HRESULT WINAPI VarDateFromUdateEx(UDATE *pUdateIn, LCID lcid, ULONG dwFlags, DAT
 
   if (lcid != MAKELCID(MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US), SORT_DEFAULT))
     FIXME("lcid possibly not handled, treating as en-us\n");
-
+      
   memcpy(&ud, pUdateIn, sizeof(ud));
 
   if (dwFlags & VAR_VALIDDATE)
@@ -1356,7 +1356,7 @@ HRESULT WINAPI VarDateFromUdateEx(UDATE *pUdateIn, LCID lcid, ULONG dwFlags, DAT
 HRESULT WINAPI VarDateFromUdate(UDATE *pUdateIn, ULONG dwFlags, DATE *pDateOut)
 {
   LCID lcid = MAKELCID(MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US), SORT_DEFAULT);
-
+  
   return VarDateFromUdateEx(pUdateIn, lcid, dwFlags, pDateOut);
 }
 
@@ -2759,7 +2759,7 @@ HRESULT WINAPI VarCmp(LPVARIANT left, LPVARIANT right, LCID lcid, DWORD flags)
             VARTYPE breserv = V_VT(bstrv) & ~VT_TYPEMASK;
             VARTYPE nreserv = V_VT(nonbv) & ~VT_TYPEMASK;
 
-            if (!breserv && !nreserv)
+            if (!breserv && !nreserv) 
                 /* No VT_RESERVED set ==> BSTR always greater */
                 rc = VARCMP_GT;
             else if (breserv && !nreserv) {
@@ -5164,7 +5164,7 @@ VarRound_Exit:
 /**********************************************************************
  *              VarIdiv [OLEAUT32.153]
  *
- * Converts input variants to integers and divides them.
+ * Converts input variants to integers and divides them. 
  *
  * PARAMS
  *  left     [I] Left hand variant
@@ -5875,7 +5875,10 @@ HRESULT WINAPI VarImp(LPVARIANT left, LPVARIANT right, LPVARIANT result)
     if (FAILED(hres)) goto VarImp_Exit;
 
     if (rightvt == VT_NULL)
+    {
+        memset( &rv, 0, sizeof(rv) );
         V_VT(&rv) = resvt;
+    }
     else
     {
         hres = VariantCopy(&rv, right);

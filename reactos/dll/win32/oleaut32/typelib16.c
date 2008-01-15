@@ -153,6 +153,9 @@ HRESULT WINAPI LoadTypeLib16(
  *| OLE 2.1   NT                         1993-95  ?? ???
  *| OLE 2.3.1 W95                                 23 700
  *| OLE2 4.0  NT4SP6                     1993-98  40 4277
+ *| OLE 2.1   W2K                        2000     10 3029
+ *| OLE 2.1   WXP                        2002     10 3029
+ *| OLE 2.1   Vista                      2007     10 3029
  */
 DWORD WINAPI OaBuildVersion16(void)
 {
@@ -171,6 +174,12 @@ DWORD WINAPI OaBuildVersion16(void)
 		return MAKELONG(3024, 10); /* W98 SE */
     case 0x00000004:  /* NT4 */
 		return MAKELONG(4277, 40); /* NT4 SP6 */
+    case 0x00000005:  /* W2K */
+		return MAKELONG(3029, 10); /* W2K SP4 */
+    case 0x00000105:  /* WXP */
+		return MAKELONG(3029, 10); /* WXP SP2 */
+    case 0x00000006:  /* Vista */
+		return MAKELONG(3029, 10); /* Vista */
     default:
 	FIXME("Version value not known yet. Please investigate it!\n");
 		return 0;

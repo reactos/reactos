@@ -322,7 +322,7 @@ static int ctl2_find_guid(
  */
 static int ctl2_find_name(
 	ICreateTypeLib2Impl *This, /* [I] The typelib to operate against. */
-	char *name)                /* [I] The encoded name to find. */
+	const char *name)          /* [I] The encoded name to find. */
 {
     int offset;
     int *namestruct;
@@ -331,7 +331,7 @@ static int ctl2_find_name(
     while (offset != -1) {
 	namestruct = (int *)&This->typelib_segment_data[MSFT_SEG_NAME][offset];
 
-	if (!((namestruct[2] ^ *((int *)name)) & 0xffff00ff)) {
+	if (!((namestruct[2] ^ *((const int *)name)) & 0xffff00ff)) {
 	    /* hash codes and lengths match, final test */
 	    if (!strncasecmp(name+4, (void *)(namestruct+3), name[0])) break;
 	}
@@ -828,7 +828,7 @@ static HRESULT ctl2_set_custdata(
  */
 static int ctl2_encode_typedesc(
 	ICreateTypeLib2Impl *This, /* [I] The type library in which to encode the TYPEDESC. */
-	TYPEDESC *tdesc,           /* [I] The type description to encode. */
+	const TYPEDESC *tdesc,     /* [I] The type description to encode. */
 	int *encoded_tdesc,        /* [O] The encoded type description. */
 	int *width,                /* [O] The width of the type, or NULL. */
 	int *alignment,            /* [O] The alignment of the type, or NULL. */
@@ -924,7 +924,7 @@ static int ctl2_encode_typedesc(
 
 	if (typeoffset == This->typelib_segdir[MSFT_SEG_TYPEDESC].length) {
 	    int mix_field;
-
+	    
 	    if (target_type & 0x80000000) {
 		mix_field = ((target_type >> 16) & 0x3fff) | VT_BYREF;
 	    } else {
@@ -959,7 +959,7 @@ static int ctl2_encode_typedesc(
 
 	if (typeoffset == This->typelib_segdir[MSFT_SEG_TYPEDESC].length) {
 	    int mix_field;
-
+	    
 	    if (target_type & 0x80000000) {
 		mix_field = ((target_type >> 16) & VT_TYPEMASK) | VT_ARRAY;
 	    } else {
@@ -1200,7 +1200,7 @@ static HRESULT WINAPI ICreateTypeInfo2_fnSetGuid(ICreateTypeInfo2 *iface, REFGUI
     guidentry.next_hash = -1;
 
     offset = ctl2_alloc_guid(This->typelib, &guidentry);
-
+    
     if (offset == -1) return E_OUTOFMEMORY;
 
     This->typeinfo->posguid = offset;
@@ -1382,7 +1382,7 @@ static HRESULT WINAPI ICreateTypeInfo2_fnAddFuncDesc(
     FIXME("{%d,%p,%p,%d,%d,%d,%d,%d,%d,%d,{%d},%d}\n", pFuncDesc->memid, pFuncDesc->lprgscode, pFuncDesc->lprgelemdescParam, pFuncDesc->funckind, pFuncDesc->invkind, pFuncDesc->callconv, pFuncDesc->cParams, pFuncDesc->cParamsOpt, pFuncDesc->oVft, pFuncDesc->cScodes, pFuncDesc->elemdescFunc.tdesc.vt, pFuncDesc->wFuncFlags);
 /*     FIXME("{%d, %d}\n", pFuncDesc->lprgelemdescParam[0].tdesc.vt, pFuncDesc->lprgelemdescParam[1].tdesc.vt); */
 /*     return E_OUTOFMEMORY; */
-
+    
     if (!This->typedata) {
 	This->typedata = HeapAlloc(GetProcessHeap(), 0, 0x2000);
 	This->typedata[0] = 0;
@@ -1658,7 +1658,7 @@ static HRESULT WINAPI ICreateTypeInfo2_fnAddVarDesc(
     This->datawidth += var_alignment - 1;
     This->datawidth &= ~(var_alignment - 1);
     typedata[4] = This->datawidth;
-
+    
     /* add the new variable to the total data width */
     This->datawidth += var_datawidth;
 
@@ -2468,7 +2468,7 @@ static HRESULT WINAPI ITypeInfo2_fnGetContainingTypeLib(
     ICreateTypeInfo2Impl *This = impl_from_ITypeInfo2(iface);
 
     TRACE("(%p,%p,%p)\n", iface, ppTLib, pIndex);
-
+    
     *ppTLib = (ITypeLib *)&This->typelib->lpVtblTypeLib2;
     This->typelib->ref++;
     *pIndex = This->typeinfo->typekind >> 16;
@@ -3135,7 +3135,7 @@ static HRESULT WINAPI ICreateTypeLib2_fnSetGuid(ICreateTypeLib2 * iface, REFGUID
     guidentry.next_hash = -1;
 
     offset = ctl2_alloc_guid(This, &guidentry);
-
+    
     if (offset == -1) return E_OUTOFMEMORY;
 
     This->typelib_header.posguid = offset;
@@ -3225,7 +3225,7 @@ static HRESULT WINAPI ICreateTypeLib2_fnSetLibFlags(ICreateTypeLib2 * iface, UIN
     return S_OK;
 }
 
-static int ctl2_write_chunk(HANDLE hFile, void *segment, int length)
+static int ctl2_write_chunk(HANDLE hFile, const void *segment, int length)
 {
     DWORD dwWritten;
     if (!WriteFile(hFile, segment, length, &dwWritten, 0)) {
@@ -3493,7 +3493,7 @@ static HRESULT WINAPI ITypeLib2_fnGetTypeInfo(
 
     TRACE("(%p,%d,%p)\n", iface, index, ppTInfo);
 
-    if ((index < 0) || (index >= This->typelib_header.nrtypeinfos)) {
+    if (index >= This->typelib_header.nrtypeinfos) {
 	return TYPE_E_ELEMENTNOTFOUND;
     }
 
@@ -3514,7 +3514,7 @@ static HRESULT WINAPI ITypeLib2_fnGetTypeInfoType(
 
     TRACE("(%p,%d,%p)\n", iface, index, pTKind);
 
-    if ((index < 0) || (index >= This->typelib_header.nrtypeinfos)) {
+    if (index >= This->typelib_header.nrtypeinfos) {
 	return TYPE_E_ELEMENTNOTFOUND;
     }
 

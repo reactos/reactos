@@ -291,6 +291,10 @@ BSTR WINAPI SysAllocStringLen(const OLECHAR *str, unsigned int len)
  */
 int WINAPI SysReAllocStringLen(BSTR* old, const OLECHAR* str, unsigned int len)
 {
+    /* Detect integer overflow. */
+    if (len >= ((UINT_MAX-sizeof(WCHAR)-sizeof(DWORD))/sizeof(WCHAR)))
+	return 0;
+
     if (*old!=NULL) {
       DWORD newbytelen = len*sizeof(WCHAR);
       DWORD *ptr = HeapReAlloc(GetProcessHeap(),0,((DWORD*)*old)-1,newbytelen+sizeof(WCHAR)+sizeof(DWORD));
@@ -339,6 +343,10 @@ BSTR WINAPI SysAllocStringByteLen(LPCSTR str, UINT len)
 {
     DWORD* newBuffer;
     char* stringBuffer;
+
+    /* Detect integer overflow. */
+    if (len >= (UINT_MAX-sizeof(WCHAR)-sizeof(DWORD)))
+	return NULL;
 
     /*
      * Allocate a new buffer to hold the string.
@@ -574,7 +582,7 @@ HRESULT WINAPI GetActiveObject(REFCLSID rcid,LPVOID preserved,LPUNKNOWN *ppunk)
  * Currently the versions returned are 2.20 for Win3.1, 2.30 for Win95 & NT 3.51,
  * and 2.40 for all later versions. The build number is maximum, i.e. 0xffff.
  */
-ULONG WINAPI OaBuildVersion()
+ULONG WINAPI OaBuildVersion(void)
 {
     switch(GetVersion() & 0x8000ffff)  /* mask off build number */
     {

@@ -135,41 +135,41 @@ _unmarshal_interface(marshal_state *buf, REFIID riid, LPUNKNOWN *pUnk) {
     DWORD		xsize;
 
     TRACE("...%s...\n",debugstr_guid(riid));
-
+    
     *pUnk = NULL;
     hres = xbuf_get(buf,(LPBYTE)&xsize,sizeof(xsize));
     if (hres) {
         ERR("xbuf_get failed\n");
         return hres;
     }
-
+    
     if (xsize == 0) return S_OK;
-
+    
     hres = CreateStreamOnHGlobal(0,TRUE,&pStm);
     if (hres) {
 	ERR("Stream create failed %x\n",hres);
 	return hres;
     }
-
+    
     hres = IStream_Write(pStm,buf->base+buf->curoff,xsize,&res);
     if (hres) {
         ERR("stream write %x\n",hres);
         return hres;
     }
-
+    
     memset(&seekto,0,sizeof(seekto));
     hres = IStream_Seek(pStm,seekto,SEEK_SET,&newpos);
     if (hres) {
         ERR("Failed Seek %x\n",hres);
         return hres;
     }
-
+    
     hres = CoUnmarshalInterface(pStm,riid,(LPVOID*)pUnk);
     if (hres) {
 	ERR("Unmarshalling interface %s failed with %x\n",debugstr_guid(riid),hres);
 	return hres;
     }
-
+    
     IStream_Release(pStm);
     return xbuf_skip(buf,xsize);
 }
@@ -199,25 +199,25 @@ _marshal_interface(marshal_state *buf, REFIID riid, LPUNKNOWN pUnk) {
     hres = E_FAIL;
 
     TRACE("...%s...\n",debugstr_guid(riid));
-
+    
     hres = CreateStreamOnHGlobal(0,TRUE,&pStm);
     if (hres) {
 	ERR("Stream create failed %x\n",hres);
 	goto fail;
     }
-
+    
     hres = CoMarshalInterface(pStm,riid,pUnk,0,NULL,0);
     if (hres) {
 	ERR("Marshalling interface %s failed with %x\n", debugstr_guid(riid), hres);
 	goto fail;
     }
-
+    
     hres = IStream_Stat(pStm,&ststg,0);
     if (hres) {
         ERR("Stream stat failed\n");
         goto fail;
     }
-
+    
     tempbuf = HeapAlloc(GetProcessHeap(), 0, ststg.cbSize.u.LowPart);
     memset(&seekto,0,sizeof(seekto));
     hres = IStream_Seek(pStm,seekto,SEEK_SET,&newpos);
@@ -225,22 +225,22 @@ _marshal_interface(marshal_state *buf, REFIID riid, LPUNKNOWN pUnk) {
         ERR("Failed Seek %x\n",hres);
         goto fail;
     }
-
+    
     hres = IStream_Read(pStm,tempbuf,ststg.cbSize.u.LowPart,&res);
     if (hres) {
         ERR("Failed Read %x\n",hres);
         goto fail;
     }
-
+    
     xsize = ststg.cbSize.u.LowPart;
     xbuf_add(buf,(LPBYTE)&xsize,sizeof(xsize));
     hres = xbuf_add(buf,tempbuf,ststg.cbSize.u.LowPart);
-
+    
     HeapFree(GetProcessHeap(),0,tempbuf);
     IStream_Release(pStm);
-
+    
     return hres;
-
+    
 fail:
     xsize = 0;
     xbuf_add(buf,(LPBYTE)&xsize,sizeof(xsize));
@@ -372,12 +372,13 @@ static HRESULT num_of_funcs(ITypeInfo *tinfo, unsigned int *num)
 typedef struct _TMAsmProxy {
     BYTE	popleax;
     BYTE	pushlval;
-    BYTE	nr;
+    DWORD	nr;
     BYTE	pushleax;
     BYTE	lcall;
     DWORD	xcall;
     BYTE	lret;
     WORD	bytestopop;
+    BYTE	nop;
 } TMAsmProxy;
 
 #include "poppack.h"
@@ -470,7 +471,9 @@ TMProxyImpl_Connect(
         HRESULT hr = TMarshalDispatchChannel_Create(pRpcChannelBuffer, &This->iid, &pDelegateChannel);
         if (FAILED(hr))
             return hr;
-        return IRpcProxyBuffer_Connect(This->dispatch_proxy, pDelegateChannel);
+        hr = IRpcProxyBuffer_Connect(This->dispatch_proxy, pDelegateChannel);
+        IRpcChannelBuffer_Release(pDelegateChannel);
+        return hr;
     }
 
     return S_OK;
@@ -570,6 +573,7 @@ serialize_param(
 	return S_OK;
     case VT_I8:
     case VT_UI8:
+    case VT_R8:
     case VT_CY:
 	hres = S_OK;
 	if (debugout) TRACE_(olerelay)("%x%x\n",arg[0],arg[1]);
@@ -633,7 +637,7 @@ serialize_param(
             DWORD len;
             if (!*bstr) {
                 /* -1 means "null string" which is equivalent to empty string */
-                len = -1;
+                len = -1;     
                 hres = xbuf_add(buf, (LPBYTE)&len,sizeof(DWORD));
 		if (hres) return hres;
             } else {
@@ -651,7 +655,7 @@ serialize_param(
         }
         return S_OK;
     }
-
+    
     case VT_BSTR: {
 	if (debugout) {
 	    if (*arg)
@@ -897,6 +901,7 @@ deserialize_param(
 	}
         case VT_I8:
         case VT_UI8:
+        case VT_R8:
         case VT_CY:
 	    if (readit) {
 		hres = xbuf_get(buf,(LPBYTE)arg,8);
@@ -967,6 +972,7 @@ deserialize_param(
 		    hres = xbuf_get(buf,(LPBYTE)str,len*sizeof(WCHAR));
 		    if (hres) {
 			ERR("Failed to read BSTR.\n");
+			HeapFree(GetProcessHeap(),0,str);
 			return hres;
 		    }
                     *bstr = CoTaskMemAlloc(sizeof(BSTR *));
@@ -997,6 +1003,7 @@ deserialize_param(
 		    hres = xbuf_get(buf,(LPBYTE)str,len*sizeof(WCHAR));
 		    if (hres) {
 			ERR("Failed to read BSTR.\n");
+			HeapFree(GetProcessHeap(),0,str);
 			return hres;
 		    }
 		    *arg = (DWORD)SysAllocStringLen(str,len);
@@ -1040,7 +1047,7 @@ deserialize_param(
 		ITypeInfo_ReleaseTypeAttr(tinfo2, tattr);
 		ITypeInfo_Release(tinfo2);
 	    }
-	    /* read it in all cases, we need to know if we have
+	    /* read it in all cases, we need to know if we have 
 	     * NULL pointer or not.
 	     */
 	    hres = xbuf_get(buf,(LPBYTE)&cookie,sizeof(cookie));
@@ -1707,7 +1714,7 @@ static HRESULT init_proxy_entry_point(TMProxyImpl *proxy, unsigned int num)
  * arg3 arg2 arg1 <method> <returnptr>
  */
     xasm->popleax       = 0x58;
-    xasm->pushlval      = 0x6a;
+    xasm->pushlval      = 0x68;
     xasm->nr            = num;
     xasm->pushleax      = 0x50;
     xasm->lcall         = 0xe8; /* relative jump */
@@ -1715,6 +1722,7 @@ static HRESULT init_proxy_entry_point(TMProxyImpl *proxy, unsigned int num)
     xasm->xcall        -= (DWORD)&(xasm->lret);
     xasm->lret          = 0xc2;
     xasm->bytestopop    = (nrofargs+2)*4; /* pop args, This, iMethod */
+    xasm->nop           = 0x90;
     proxy->lpvtbl[num]  = xasm;
 #else
     FIXME("not implemented on non i386\n");
@@ -1752,7 +1760,7 @@ PSFacBuf_CreateProxy(
     proxy = CoTaskMemAlloc(sizeof(TMProxyImpl));
     if (!proxy) return E_OUTOFMEMORY;
 
-    assert(sizeof(TMAsmProxy) == 12);
+    assert(sizeof(TMAsmProxy) == 16);
 
     proxy->dispatch = NULL;
     proxy->dispatch_proxy = NULL;
@@ -1892,7 +1900,7 @@ TMStubImpl_AddRef(LPRPCSTUBBUFFER iface)
 {
     TMStubImpl *This = (TMStubImpl *)iface;
     ULONG refCount = InterlockedIncrement(&This->ref);
-
+        
     TRACE("(%p)->(ref before=%u)\n", This, refCount - 1);
 
     return refCount;
