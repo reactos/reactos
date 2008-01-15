@@ -388,7 +388,7 @@ static int default_dbg_vprintf( const char *format, va_list args )
     char buffer[512];
     vsnprintf( buffer, sizeof(buffer), format, args );
     buffer[sizeof(buffer) - 1] = '\0';
-    return DbgPrint( buffer );
+    return DbgPrint( "%s", buffer );
 }
 
 
