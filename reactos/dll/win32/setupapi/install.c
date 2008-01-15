@@ -1654,7 +1654,7 @@ static VOID FixupServiceBinaryPath(
                wcslen(L"%SystemRoot%\\") = 13*sizeof(wchar_t) */
             Buffer = MyMalloc(Win32Length);
 
-            wcscpy(Buffer, L"%%SystemRoot%%\\");
+            wcscpy(Buffer, L"%SystemRoot%\\");
             wcscat(Buffer, *ServiceBinary);
             MyFree(*ServiceBinary);
 
