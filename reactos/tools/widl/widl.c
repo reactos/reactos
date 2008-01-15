@@ -166,6 +166,9 @@ static char *make_token(const char *name)
   int i;
 
   slash = strrchr(name, '/');
+  if(!slash)
+    slash = strrchr(name, '\\');
+
   if (slash) name = slash + 1;
 
   token = xstrdup(name);
@@ -549,12 +552,7 @@ int main(int argc,char *argv[])
   }
 
   if(do_header) {
-    if (strrchr(header_name, '\\'))
-        header_token = make_token(strrchr(header_name, '\\') + 1);
-    else if (strrchr(header_name, '/'))
-        header_token = make_token(strrchr(header_name, '/') + 1);
-    else
-        header_token = make_token(header_name);
+    header_token = make_token(header_name);
 
     if(!(header = fopen(header_name, "w"))) {
       fprintf(stderr, "Could not open %s for output\n", header_name);

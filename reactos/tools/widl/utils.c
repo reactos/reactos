@@ -136,6 +136,9 @@ char *dup_basename(const char *name, const char *ext)
 		name = "widl.tab";
 
 	slash = strrchr(name, '/');
+	if (!slash)
+		slash = strrchr(name, '\\');
+
 	if (slash)
 		name = slash + 1;
 
