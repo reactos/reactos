@@ -394,14 +394,13 @@ int WINAPI RestartDialogEx(HWND hWndOwner, LPCWSTR lpwstrReason, DWORD uFlags, D
 {
     TRACE("(%p)\n", hWndOwner);
 
-    /*FIXME: use uReason */
-
+    /* FIXME: use lpwstrReason */
     if (ConfirmDialog(hWndOwner, IDS_RESTART_PROMPT, IDS_RESTART_TITLE))
     {
         HANDLE hToken;
         TOKEN_PRIVILEGES npr;
 
-        /* enable shutdown privilege for current process */
+        /* enable the shutdown privilege for the current process */
         if (OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES, &hToken))
         {
             LookupPrivilegeValueA(0, "SeShutdownPrivilege", &npr.Privileges[0].Luid);
@@ -410,7 +409,7 @@ int WINAPI RestartDialogEx(HWND hWndOwner, LPCWSTR lpwstrReason, DWORD uFlags, D
             AdjustTokenPrivileges(hToken, FALSE, &npr, 0, 0, 0);
             CloseHandle(hToken);
         }
-        ExitWindowsEx(EWX_REBOOT, 0);
+        ExitWindowsEx(EWX_REBOOT, uReason);
     }
 
     return 0;

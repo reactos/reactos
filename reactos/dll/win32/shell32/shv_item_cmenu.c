@@ -107,7 +107,7 @@ static BOOL ISvItemCm_CanRenameItems(ItemCmImpl *This)
 /**************************************************************************
 *   ISvItemCm_Constructor()
 */
-IContextMenu2 *ISvItemCm_Constructor(LPSHELLFOLDER pSFParent, LPCITEMIDLIST pidl, LPCITEMIDLIST *apidl, UINT cidl)
+IContextMenu2 *ISvItemCm_Constructor(LPSHELLFOLDER pSFParent, LPCITEMIDLIST pidl, const LPCITEMIDLIST *apidl, UINT cidl)
 {	ItemCmImpl* cm;
 	UINT  u;
 

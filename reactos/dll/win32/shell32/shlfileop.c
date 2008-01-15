@@ -1080,7 +1080,7 @@ static void destroy_file_list(FILE_LIST *flList)
     HeapFree(GetProcessHeap(), 0, flList->feFiles);
 }
 
-static void copy_dir_to_dir(FILE_OPERATION *op, FILE_ENTRY *feFrom, LPWSTR szDestPath)
+static void copy_dir_to_dir(FILE_OPERATION *op, const FILE_ENTRY *feFrom, LPWSTR szDestPath)
 {
     WCHAR szFrom[MAX_PATH], szTo[MAX_PATH];
     SHFILEOPSTRUCTW fileOp;
@@ -1124,7 +1124,7 @@ static void copy_dir_to_dir(FILE_OPERATION *op, FILE_ENTRY *feFrom, LPWSTR szDes
     SHFileOperationW(&fileOp);
 }
 
-static BOOL copy_file_to_file(FILE_OPERATION *op, WCHAR *szFrom, WCHAR *szTo)
+static BOOL copy_file_to_file(FILE_OPERATION *op, const WCHAR *szFrom, const WCHAR *szTo)
 {
     if (!(op->req->fFlags & FOF_NOCONFIRMATION) && PathFileExistsW(szTo))
     {
@@ -1136,7 +1136,7 @@ static BOOL copy_file_to_file(FILE_OPERATION *op, WCHAR *szFrom, WCHAR *szTo)
 }
 
 /* copy a file or directory to another directory */
-static void copy_to_dir(FILE_OPERATION *op, FILE_ENTRY *feFrom, FILE_ENTRY *feTo)
+static void copy_to_dir(FILE_OPERATION *op, const FILE_ENTRY *feFrom, const FILE_ENTRY *feTo)
 {
     if (!PathFileExistsW(feTo->szFullPath))
         SHNotifyCreateDirectoryW(feTo->szFullPath, NULL);
@@ -1172,11 +1172,11 @@ static void create_dest_dirs(LPWSTR szDestDir)
 }
 
 /* the FO_COPY operation */
-static HRESULT copy_files(FILE_OPERATION *op, FILE_LIST *flFrom, FILE_LIST *flTo)
+static HRESULT copy_files(FILE_OPERATION *op, const FILE_LIST *flFrom, const FILE_LIST *flTo)
 {
     DWORD i;
-    FILE_ENTRY *entryToCopy;
-    FILE_ENTRY *fileDest = &flTo->feFiles[0];
+    const FILE_ENTRY *entryToCopy;
+    const FILE_ENTRY *fileDest = &flTo->feFiles[0];
     BOOL bCancelIfAnyDirectories = FALSE;
 
     if (flFrom->bAnyDontExist)
@@ -1269,7 +1269,7 @@ static HRESULT copy_files(FILE_OPERATION *op, FILE_LIST *flFrom, FILE_LIST *flTo
     return ERROR_SUCCESS;
 }
 
-static BOOL confirm_delete_list(HWND hWnd, DWORD fFlags, BOOL fTrash, FILE_LIST *flFrom)
+static BOOL confirm_delete_list(HWND hWnd, DWORD fFlags, BOOL fTrash, const FILE_LIST *flFrom)
 {
     if (flFrom->dwNumFiles > 1)
     {
@@ -1281,7 +1281,7 @@ static BOOL confirm_delete_list(HWND hWnd, DWORD fFlags, BOOL fTrash, FILE_LIST 
     }
     else
     {
-        FILE_ENTRY *fileEntry = &flFrom->feFiles[0];
+        const FILE_ENTRY *fileEntry = &flFrom->feFiles[0];
 
         if (IsAttribFile(fileEntry->attributes))
             return SHELL_ConfirmDialogW(hWnd, (fTrash?ASK_TRASH_FILE:ASK_DELETE_FILE), fileEntry->szFullPath, NULL);
@@ -1292,9 +1292,9 @@ static BOOL confirm_delete_list(HWND hWnd, DWORD fFlags, BOOL fTrash, FILE_LIST 
 }
 
 /* the FO_DELETE operation */
-static HRESULT delete_files(LPSHFILEOPSTRUCTW lpFileOp, FILE_LIST *flFrom)
+static HRESULT delete_files(LPSHFILEOPSTRUCTW lpFileOp, const FILE_LIST *flFrom)
 {
-    FILE_ENTRY *fileEntry;
+    const FILE_ENTRY *fileEntry;
     DWORD i;
     BOOL bPathExists;
     BOOL bTrash;
@@ -1354,7 +1354,7 @@ static HRESULT delete_files(LPSHFILEOPSTRUCTW lpFileOp, FILE_LIST *flFrom)
     return ERROR_SUCCESS;
 }
 
-static void move_dir_to_dir(LPSHFILEOPSTRUCTW lpFileOp, FILE_ENTRY *feFrom, LPWSTR szDestPath)
+static void move_dir_to_dir(LPSHFILEOPSTRUCTW lpFileOp, const FILE_ENTRY *feFrom, LPWSTR szDestPath)
 {
     WCHAR szFrom[MAX_PATH], szTo[MAX_PATH];
     SHFILEOPSTRUCTW fileOp;
@@ -1380,7 +1380,7 @@ static void move_dir_to_dir(LPSHFILEOPSTRUCTW lpFileOp, FILE_ENTRY *feFrom, LPWS
 }
 
 /* moves a file or directory to another directory */
-static void move_to_dir(LPSHFILEOPSTRUCTW lpFileOp, FILE_ENTRY *feFrom, FILE_ENTRY *feTo)
+static void move_to_dir(LPSHFILEOPSTRUCTW lpFileOp, const FILE_ENTRY *feFrom, const FILE_ENTRY *feTo)
 {
     WCHAR szDestPath[MAX_PATH];
 
@@ -1393,11 +1393,11 @@ static void move_to_dir(LPSHFILEOPSTRUCTW lpFileOp, FILE_ENTRY *feFrom, FILE_ENT
 }
 
 /* the FO_MOVE operation */
-static HRESULT move_files(LPSHFILEOPSTRUCTW lpFileOp, FILE_LIST *flFrom, FILE_LIST *flTo)
+static HRESULT move_files(LPSHFILEOPSTRUCTW lpFileOp, const FILE_LIST *flFrom, const FILE_LIST *flTo)
 {
     DWORD i;
-    FILE_ENTRY *entryToMove;
-    FILE_ENTRY *fileDest;
+    const FILE_ENTRY *entryToMove;
+    const FILE_ENTRY *fileDest;
 
     if (!flFrom->dwNumFiles || !flTo->dwNumFiles)
         return ERROR_CANCELLED;
@@ -1445,10 +1445,10 @@ static HRESULT move_files(LPSHFILEOPSTRUCTW lpFileOp, FILE_LIST *flFrom, FILE_LI
 }
 
 /* the FO_RENAME files */
-static HRESULT rename_files(LPSHFILEOPSTRUCTW lpFileOp, FILE_LIST *flFrom, FILE_LIST *flTo)
+static HRESULT rename_files(LPSHFILEOPSTRUCTW lpFileOp, const FILE_LIST *flFrom, const FILE_LIST *flTo)
 {
-    FILE_ENTRY *feFrom;
-    FILE_ENTRY *feTo;
+    const FILE_ENTRY *feFrom;
+    const FILE_ENTRY *feTo;
 
     if (flFrom->dwNumFiles != 1)
         return ERROR_GEN_FAILURE;
