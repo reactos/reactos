@@ -263,11 +263,10 @@ BOOLEAN SetupUiInitialize(VOID)
 {
 	VIDEODISPLAYMODE	UiDisplayMode;
 	CHAR	DisplayModeText[260];
-	ULONG	Depth;
+	ULONG	Depth, Length;
 
 
 	DisplayModeText[0] = '\0';
-
 
 	UiDisplayMode = MachVideoSetDisplayMode(DisplayModeText, TRUE);
 	MachVideoGetDisplaySize(&UiScreenWidth, &UiScreenHeight, &Depth);
@@ -283,11 +282,15 @@ BOOLEAN SetupUiInitialize(VOID)
 			0,
 			ATTR(UiBackdropFgColor, UiBackdropBgColor));
 
-    UiDrawTime = FALSE;
-    UiStatusBarBgColor = 7;
+	UiDrawTime = FALSE;
+	UiStatusBarBgColor = 7;
 
-    UiVtbl.DrawText(4, 1, "ReactOS " KERNEL_VERSION_STR " Setup", ATTR(COLOR_GRAY, UiBackdropBgColor));
-    UiVtbl.DrawText(3, 2, "\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD", ATTR(COLOR_GRAY, UiBackdropBgColor));
+	Length = strlen("ReactOS " KERNEL_VERSION_STR " Setup");
+	memset(DisplayModeText, 0xcd, Length + 2);
+	DisplayModeText[Length + 2] = '\0';
+
+	UiVtbl.DrawText(4, 1, "ReactOS " KERNEL_VERSION_STR " Setup", ATTR(COLOR_GRAY, UiBackdropBgColor));
+	UiVtbl.DrawText(3, 2, DisplayModeText, ATTR(COLOR_GRAY, UiBackdropBgColor));
 
 	DbgPrint((DPRINT_UI, "UiInitialize() returning TRUE.\n"));
 
