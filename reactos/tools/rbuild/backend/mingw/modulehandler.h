@@ -171,6 +171,9 @@ private:
 	void GenerateWidlCommandsClient (
 		const CompilationUnit& compilationUnit,
 		const std::string& widlflagsMacro );
+	void GenerateWidlCommandsProxy (
+		const CompilationUnit& compilationUnit,
+		const std::string& widlflagsMacro );
 	void GenerateWidlCommandsIdlHeader (
 		const CompilationUnit& compilationUnit,
 		const std::string& widlflagsMacro );
@@ -215,12 +218,13 @@ private:
 	void GenerateBuildNonSymbolStrippedCode ();
 	void CleanupCompilationUnitVector ( std::vector<CompilationUnit*>& compilationUnits );
 	void GetRpcHeaderDependencies ( std::vector<FileLocation>& dependencies ) const;
-    void GetMcHeaderDependencies ( std::vector<FileLocation>& dependencies ) const;
+	void GetMcHeaderDependencies ( std::vector<FileLocation>& dependencies ) const;
 	static std::string GetPropertyValue ( const Module& module, const std::string& name );
 	const FileLocation* GetRpcServerHeaderFilename ( const FileLocation *base ) const;
 	const FileLocation* GetRpcClientHeaderFilename ( const FileLocation *base ) const;
+	const FileLocation* GetRpcProxyHeaderFilename ( const FileLocation *base ) const;
 	const FileLocation* GetIdlHeaderFilename ( const FileLocation *base ) const;
-    const FileLocation* GetMcHeaderFilename ( const FileLocation *base ) const;
+	const FileLocation* GetMcHeaderFilename ( const FileLocation *base ) const;
 	std::string GetModuleCleanTarget ( const Module& module ) const;
 	void GetReferencedObjectLibraryModuleCleanTargets ( std::vector<std::string>& moduleNames ) const;
 public:
@@ -493,6 +497,16 @@ public:
 	virtual HostType DefaultHost() { return HostFalse; }
 	virtual void Process ();
 };
+
+
+class MingwRpcProxyModuleHandler : public MingwModuleHandler
+{
+public:
+	MingwRpcProxyModuleHandler ( const Module& module );
+	virtual HostType DefaultHost() { return HostFalse; }
+	virtual void Process ();
+};
+
 
 class MingwAliasModuleHandler : public MingwModuleHandler
 {

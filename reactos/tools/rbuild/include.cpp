@@ -118,6 +118,7 @@ Include::GetDefaultDirectoryTree ( const Module* module ) const
 	if ( module != NULL &&
 	     ( module->type == RpcServer ||
 	       module->type == RpcClient ||
+	       module->type == RpcProxy ||
 	       module->type == IdlHeader) )
 		return IntermediateDirectory;
 	else

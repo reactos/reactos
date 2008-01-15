@@ -913,6 +913,8 @@ Module::GetModuleType ( const string& location, const XMLAttribute& attribute )
 		return RpcServer;
 	if ( attribute.value == "rpcclient" )
 		return RpcClient;
+	if ( attribute.value == "rpcproxy" )
+		return RpcProxy;
 	if ( attribute.value == "alias" )
 		return Alias;
 	if ( attribute.value == "idlheader" )
@@ -957,6 +959,7 @@ Module::GetTargetDirectoryTree () const
 		case ObjectLibrary:
 		case RpcServer:
 		case RpcClient:
+		case RpcProxy:
 		case Alias:
 		case IdlHeader:
 			return IntermediateDirectory;
@@ -1006,8 +1009,8 @@ Module::GetDefaultModuleExtension () const
 		case Test:
 			return ".exe";
 		case RpcServer:
-			return ".o";
 		case RpcClient:
+		case RpcProxy:
 			return ".o";
 		case Alias:
 		case ElfExecutable:
@@ -1060,6 +1063,7 @@ Module::GetDefaultModuleEntrypoint () const
 		case LiveIsoRegTest:
 		case RpcServer:
 		case RpcClient:
+		case RpcProxy:
 		case Alias:
 		case BootProgram:
 		case IdlHeader:
@@ -1105,6 +1109,7 @@ Module::GetDefaultModuleBaseaddress () const
 		case LiveIsoRegTest:
 		case RpcServer:
 		case RpcClient:
+		case RpcProxy:
 		case Alias:
 		case BootProgram:
 		case IdlHeader:
@@ -1150,6 +1155,7 @@ Module::IsDLL () const
 		case LiveIsoRegTest:
 		case RpcServer:
 		case RpcClient:
+		case RpcProxy:
 		case Alias:
 		case IdlHeader:
 		case EmbeddedTypeLib:

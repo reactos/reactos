@@ -65,6 +65,7 @@ Bootstrap::IsSupportedModuleType ( ModuleType type )
 		case Test:
 		case RpcServer:
 		case RpcClient:
+		case RpcProxy:
 		case Alias:
 		case IdlHeader:
 		case EmbeddedTypeLib:

@@ -363,7 +363,12 @@ CBBackend::_generate_cbproj ( const Module& module )
 	string project_linker_flags = "-Wl,--enable-stdcall-fixup ";
 	project_linker_flags += GenerateProjectLinkerFlags();
 
-	bool lib = (module.type == ObjectLibrary) || (module.type == RpcClient) ||(module.type == RpcServer) || (module_type == ".lib") || (module_type == ".a");
+	bool lib = (module.type == ObjectLibrary) ||
+	           (module.type == RpcClient) ||
+	           (module.type == RpcServer) ||
+	           (module.type == RpcProxy) ||
+	           (module_type == ".lib") ||
+	           (module_type == ".a");
 	bool dll = (module_type == ".dll") || (module_type == ".cpl");
 	bool exe = (module_type == ".exe") || (module_type == ".scr");
 	bool sys = (module_type == ".sys");

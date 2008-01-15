@@ -229,6 +229,9 @@ MingwModuleHandler::InstanciateHandler (
 		case RpcClient:
 			handler = new MingwRpcClientModuleHandler ( module );
 			break;
+		case RpcProxy:
+			handler = new MingwRpcProxyModuleHandler ( module );
+			break;
 		case Alias:
 			handler = new MingwAliasModuleHandler ( module );
 			break;
@@ -284,7 +287,7 @@ MingwModuleHandler::GetActualSourceFilename (
 		return sourceFile;
 	}
 	else if ( ( extension == ".idl" || extension == ".IDL" ) &&
-	          ( module.type == RpcServer || module.type == RpcClient ) )
+	          ( module.type == RpcServer || module.type == RpcClient || module.type == RpcProxy ) )
 	{
 		const FileLocation *objectFile = GetObjectFilename ( file, module, NULL );
 		FileLocation *sourceFile = new FileLocation (
@@ -315,25 +318,21 @@ MingwModuleHandler::GetExtraDependencies (
 	string extension = GetExtension ( *file );
 	if ( extension == ".idl" || extension == ".IDL" )
 	{
-		if ( (module.type == RpcServer) || (module.type == RpcClient) )
+		const FileLocation *header;
+		switch ( module.type )
 		{
-			const FileLocation *server_header = GetRpcServerHeaderFilename ( file );
-			const FileLocation *client_header = GetRpcClientHeaderFilename ( file );
-			string dependencies = backend->GetFullName ( *server_header ) + " " +
-			                      backend->GetFullName ( *client_header );
-			delete server_header;
-			delete client_header;
-			return dependencies;
+			case RpcServer: header = GetRpcServerHeaderFilename ( file ); break;
+			case RpcClient: header = GetRpcClientHeaderFilename ( file ); break;
+			case RpcProxy: header = GetRpcProxyHeaderFilename ( file ); break;
+			case IdlHeader: header = GetIdlHeaderFilename ( file ); break;
+			default: header = NULL; break;
 		}
-		else if ( module.type == IdlHeader )
-		{
-			const FileLocation *idl_header = GetIdlHeaderFilename ( file );
-			string dependencies = backend->GetFullName ( *idl_header );
-			delete idl_header;
-			return dependencies;
-		}
-		else
+		if ( !header )
 			return "";
+
+		string dependencies = backend->GetFullName ( *header );
+		delete header;
+		return dependencies;
 	}
 	else
 		return "";
@@ -381,6 +380,8 @@ MingwModuleHandler::ReferenceObjects (
 	if ( module.type == RpcServer )
 		return true;
 	if ( module.type == RpcClient )
+		return true;
+	if ( module.type == RpcProxy )
 		return true;
 	if ( module.type == IdlHeader )
 		return true;
@@ -547,6 +548,8 @@ MingwModuleHandler::GetObjectFilename (
 			newExtension = "_s.o";
 		else if ( module.type == RpcClient )
 			newExtension = "_c.o";
+		else if ( module.type == RpcProxy )
+			newExtension = "_p.o";
 		else
 			newExtension = ".h";
 	}
@@ -1522,6 +1525,14 @@ MingwModuleHandler::GetRpcClientHeaderFilename ( const FileLocation *base ) cons
 
 /* caller needs to delete the returned object */
 const FileLocation*
+MingwModuleHandler::GetRpcProxyHeaderFilename ( const FileLocation *base ) const
+{
+	string newname = GetBasename ( base->name ) + "_p.h";
+	return new FileLocation ( IntermediateDirectory, base->relative_path, newname );
+}
+
+/* caller needs to delete the returned object */
+const FileLocation*
 MingwModuleHandler::GetIdlHeaderFilename ( const FileLocation *base ) const
 {
 	string newname = GetBasename ( base->name ) + ".h";
@@ -1605,6 +1616,44 @@ MingwModuleHandler::GenerateWidlCommandsClient (
 }
 
 void
+MingwModuleHandler::GenerateWidlCommandsProxy (
+	const CompilationUnit& compilationUnit,
+	const string& widlflagsMacro )
+{
+	const FileLocation& sourceFile = compilationUnit.GetFilename ();
+	string dependencies = backend->GetFullName ( sourceFile );
+	dependencies += " " + NormalizeFilename ( module.xmlbuildFile );
+
+	string basename = GetBasename ( sourceFile.name );
+
+	const FileLocation *generatedHeaderFilename = GetRpcProxyHeaderFilename ( &sourceFile );
+	CLEAN_FILE ( *generatedHeaderFilename );
+
+	FileLocation generatedProxyFilename ( IntermediateDirectory,
+	                                      sourceFile.relative_path,
+	                                      basename + "_p.c" );
+	CLEAN_FILE ( generatedProxyFilename );
+
+	fprintf ( fMakefile,
+	          "%s %s: %s $(WIDL_TARGET) | %s\n",
+	          backend->GetFullName ( generatedProxyFilename ).c_str (),
+	          backend->GetFullName ( *generatedHeaderFilename ).c_str (),
+	          dependencies.c_str (),
+	          backend->GetFullPath ( generatedProxyFilename ).c_str () );
+	fprintf ( fMakefile, "\t$(ECHO_WIDL)\n" );
+	fprintf ( fMakefile,
+	          "\t%s %s %s -h -H %s -p -P %s %s\n",
+	          "$(Q)$(WIDL_TARGET)",
+	          GetWidlFlags ( compilationUnit ).c_str (),
+	          widlflagsMacro.c_str (),
+	          backend->GetFullName ( *generatedHeaderFilename ).c_str (),
+	          backend->GetFullName ( generatedProxyFilename ).c_str (),
+	          backend->GetFullName ( sourceFile ).c_str () );
+
+	delete generatedHeaderFilename;
+}
+
+void
 MingwModuleHandler::GenerateWidlCommandsIdlHeader (
 	const CompilationUnit& compilationUnit,
 	const string& widlflagsMacro )
@@ -1646,6 +1695,9 @@ MingwModuleHandler::GenerateWidlCommands (
 	else if ( module.type == RpcClient )
 		GenerateWidlCommandsClient ( compilationUnit,
 		                             widlflagsMacro );
+	else if ( module.type == RpcProxy )
+		GenerateWidlCommandsProxy ( compilationUnit,
+		                            widlflagsMacro );
 	else if ( module.type == EmbeddedTypeLib )
 		GenerateWidlCommandsEmbeddedTypeLib ( compilationUnit,
 		                                      widlflagsMacro );
@@ -1715,7 +1767,7 @@ MingwModuleHandler::GenerateCommands (
 	{
 		GenerateWidlCommands ( compilationUnit,
 		                       widlflagsMacro );
-		if ( (module.type == RpcServer) || (module.type == RpcClient) )
+		if ( (module.type == RpcServer) || (module.type == RpcClient) || (module.type == RpcProxy) )
 		{
 			GenerateGccCommand ( &sourceFile,
 			                     GetExtraDependencies ( &sourceFile ),
@@ -2235,6 +2287,7 @@ MingwModuleHandler::GetRpcHeaderDependencies (
 		Library& library = *module.non_if_data.libraries[i];
 		if ( library.importedModule->type == RpcServer ||
 		     library.importedModule->type == RpcClient ||
+		     library.importedModule->type == RpcProxy ||
 		     library.importedModule->type == IdlHeader )
 		{
 			for ( size_t j = 0; j < library.importedModule->non_if_data.compilationUnits.size (); j++ )
@@ -2254,6 +2307,12 @@ MingwModuleHandler::GetRpcHeaderDependencies (
 					if ( library.importedModule->type == RpcClient )
 					{
 						const FileLocation *header = GetRpcClientHeaderFilename ( &sourceFile );
+						dependencies.push_back ( *header );
+						delete header;
+					}
+					if ( library.importedModule->type == RpcProxy )
+					{
+						const FileLocation *header = GetRpcProxyHeaderFilename ( &sourceFile );
 						dependencies.push_back ( *header );
 						delete header;
 					}
@@ -2736,7 +2795,7 @@ MingwModuleHandler::GetDefinitionDependencies (
 			GetSpecObjectDependencies ( dependencies, &sourceFile );
 		if ( extension == ".idl" || extension == ".IDL" )
 		{
-			if ( ( module.type == RpcServer ) || ( module.type == RpcClient ) )
+			if ( ( module.type == RpcServer ) || ( module.type == RpcClient ) || ( module.type == RpcProxy ) )
 				GetWidlObjectDependencies ( dependencies, &sourceFile );
 		}
 	}
@@ -4069,6 +4128,20 @@ MingwRpcClientModuleHandler::MingwRpcClientModuleHandler (
 
 void
 MingwRpcClientModuleHandler::Process ()
+{
+	GenerateRules ();
+}
+
+
+MingwRpcProxyModuleHandler::MingwRpcProxyModuleHandler (
+	const Module& module_ )
+
+	: MingwModuleHandler ( module_ )
+{
+}
+
+void
+MingwRpcProxyModuleHandler::Process ()
 {
 	GenerateRules ();
 }
