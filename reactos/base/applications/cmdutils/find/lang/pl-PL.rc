@@ -8,7 +8,7 @@
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
 STRINGTABLE DISCARDABLE
-{
+BEGIN
 
 IDS_USAGE, "FIND: Wyœwietla wszystkie linie danego pliku, zawieraj¹ce szukany ci¹g znaków.\n\n\
   FIND [ /C ] [ /I ] [ /N ] [ /V ] \"ci¹g znaków\" [ plik... ]\n\
@@ -21,4 +21,4 @@ IDS_NO_SUCH_FILE, "FIND: %s: Plik nie zosta³ znaleziony\n"
 
 IDS_CANNOT_OPEN, "FIND: %s: Nie mo¿na otworzyæ pliku\n"
 
-}
+END

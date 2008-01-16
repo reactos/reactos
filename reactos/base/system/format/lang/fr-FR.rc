@@ -10,7 +10,7 @@
 LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
 
 STRINGTABLE DISCARDABLE
-{
+BEGIN
 STRING_HELP,  "Utilisation : %S disque: [-FS:système de fichier] [-V:nom] [-Q] [-A:taille] [-C]\n\n\
   [disque:]        Indique le disque à formater.\n\
   -FS:système de fichier  Indique le type de système de fichier (%s).\n\
@@ -70,4 +70,4 @@ STRING_NO_LABEL        "Impossible de donner un nom au disque"
 STRING_FREE_SPACE     "\nEspace disque total : %I64d octet.\n Espace disque disponible : %I64d octet.\n"
 
 STRING_SERIAL_NUMBER   "\nNuméro de série du disque: %04X-%04X\n"
-}
+END

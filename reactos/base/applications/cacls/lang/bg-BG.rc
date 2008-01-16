@@ -1,7 +1,7 @@
 LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
 
 STRINGTABLE DISCARDABLE
-{
+BEGIN
 
 IDS_HELP, "Показва или изменя списъците за достъп (ACL или СзД) до файловете\n\n\
 CACLS файлово_име [/T] [/E] [/C] [/G потребител:права [...]] [/R потребител [...]]\n\
@@ -70,5 +70,4 @@ IDS_WRITE_DAC, "WRITE_DAC"
 IDS_READ_CONTROL, "READ_CONTROL"
 IDS_DELETE, "DELETE"
 IDS_STANDARD_RIGHTS_ALL, "STANDARD_RIGHTS_ALL"
-}
-
+END

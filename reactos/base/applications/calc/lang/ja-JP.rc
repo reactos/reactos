@@ -1,5 +1,5 @@
 /*
- * WineCalc (Ja.rc)
+ * WineCalc (ja-JP.rc)
  *
  * Copyright 2003 James Briggs
  *
@@ -22,22 +22,7 @@
 #include "resource.h"
 #include "winecalc.h"
 
-/////////////////////////////////////////////////////////////////////////////
-#undef APSTUDIO_READONLY_SYMBOLS
-
-/////////////////////////////////////////////////////////////////////////////
-// Japanese resources
-
-#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_JPN)
-#ifdef _WIN32
 LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
-//#pragma code_page(932)
-#endif //_WIN32
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// Menu
-//
 
 MAIN_MENU MENU
 BEGIN
@@ -133,45 +118,30 @@ BEGIN
 END
 
 
-/////////////////////////////////////////////////////////////////////////////
-//
-// Accelerator
-//
-
 MAIN_MENU ACCELERATORS
 BEGIN
     VK_F1,          IDV_HELP,               VIRTKEY
 END
 
 
-/////////////////////////////////////////////////////////////////////////////
-//
-// Dialog
-//
-
-DLG_ABOUT DIALOG  12, 0, 120, 82
+DLG_ABOUT DIALOG  12, 0, 175, 90
+FONT 9, "MS Shell Dlg"
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "GNU winecalc について"
 BEGIN
-    DEFPUSHBUTTON   "OK",IDOK,42,60,30,14
+    DEFPUSHBUTTON   "OK",IDOK,73,70,30,14
 END
 
-DLG_STATS DIALOG  12, 0, 125, 78
+DLG_STATS DIALOG  12, 0, 145, 85
 STYLE DS_SETFONT | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "統計ボックス"
-FONT 9, "Tahoma"
+CAPTION "統計ィEGINックス"
+FONT 9, "MS Shell Dlg"
 BEGIN
-    DEFPUSHBUTTON   "戻る(&R)",ID_STATS_RET,4,52,25,13,WS_GROUP
-    PUSHBUTTON      "ロード(&L)",ID_STATS_LOAD,34,52,25,13,WS_GROUP
-    PUSHBUTTON      "クリア(&C)",ID_STATS_CD,64,52,25,13,WS_GROUP
-    PUSHBUTTON      "すべてクリア(&A)",ID_STATS_CAD,94,52,25,13,WS_GROUP
+    DEFPUSHBUTTON   "戻る(&R)",ID_STATS_RET,4,52,30,13,WS_GROUP
+    PUSHBUTTON      "ロード(&L)",ID_STATS_LOAD,39,52,30,13,WS_GROUP
+    PUSHBUTTON      "クリア(&C)",ID_STATS_CD,74,52,30,13,WS_GROUP
+    PUSHBUTTON      "すべてクリア(&A)",ID_STATS_CAD,109,52,30,13,WS_GROUP
 END
-
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// String Table
-//
 
 STRINGTABLE
 BEGIN
@@ -194,9 +164,3 @@ BEGIN
     IDS_BTN_MEM_STATUS_M    "M"
     IDS_BTN_SQRT            "√"
 END
-
-#endif    // Japanese resources
-/////////////////////////////////////////////////////////////////////////////
-
-
-

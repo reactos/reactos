@@ -1,8 +1,8 @@
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 
 STRINGTABLE DISCARDABLE
-{
-    IDS_USAGE, "Displays data page-by-page on the screen.\n\n\
+BEGIN
+  IDS_USAGE, "Displays data page-by-page on the screen.\n\n\
   MORE < [Drive:][Path]File name\n\
   Command | MORE \n\
   MORE [Drive:][Path]File name\n\n\
@@ -12,4 +12,4 @@ STRINGTABLE DISCARDABLE
 
   IDS_CONTINUE, " -- Continue (100%) -- "
   IDS_FILE_ACCESS, "Cannot access the file %s."
-}
+END

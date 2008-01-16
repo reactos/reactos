@@ -9,7 +9,7 @@
 LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
 
 STRINGTABLE DISCARDABLE
-{
+BEGIN
 
 IDS_USAGE, "Використання: shutdown [-?] [-l | -s | -r] [-f]\n\n\
   Без аргументів або -?\tВідображення цього повідомлення\n\
@@ -19,4 +19,4 @@ IDS_USAGE, "Використання: shutdown [-?] [-l | -s | -r] [-f]\n\n\
   -f\t\t\tПримусове закриття запущених додатків без попереджень\n\
     \t\t\tЯкщо ви не вказали інший параметр, то ця опція також\n\
     \t\t\tзавершить сеанс"
-}
+END

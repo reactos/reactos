@@ -6,7 +6,7 @@
 
 LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
 STRINGTABLE DISCARDABLE
-{
+BEGIN
 
 IDS_UsageMessage, "%s\n\nUso: regsvr32 [/u] [/s] [/c] [/n] [/i[:cmdline]] nomedll\n\
 /u -	Deregistra il server\n\
@@ -29,4 +29,4 @@ non esportato, oppure si trova in memoria una versione corrotta della versione d
 IDS_FailureMessage,  "%s in %s è fallita.\nIl codice di ritorno è: 0x%08x"
 
 IDS_SuccessMessage   "%s in %s effettuata."
-}
+END

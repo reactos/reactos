@@ -10,7 +10,7 @@
 
 LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
 STRINGTABLE DISCARDABLE
-{
+BEGIN
 STRING_HELP,  "Використання: %S пристрій: [-FS:файл-система] [-V:мітка] [-Q] [-A:розмір] [-C]\n\n\
   [пристрій:]      Вказує диск, який слід відформатувати (двокрапка обов'язкова).\n\
   -FS:файл-система Визначає тип файлової системи (%s).\n\
@@ -72,4 +72,4 @@ STRING_NO_LABEL        "Не можу встановити мітку диску"
 STRING_FREE_SPACE     "\n%I64d байтів на диску.\n%I64d байтів наявно на диску.\n"
 
 STRING_SERIAL_NUMBER   "\nСерійний номер диску - %04X-%04X\n"
-}
+END

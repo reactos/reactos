@@ -11,7 +11,7 @@
 
 LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
 STRINGTABLE DISCARDABLE
-{
+BEGIN
 
 STRING_ATTRIB_HELP,    "Відображення або зміна атрибутів файлу.\n\n\
 ATTRIB [+R | -R] [+A | -A] [+S | -S] [+H | -H] файл ...\n\
@@ -702,4 +702,4 @@ STRING_EXPECTED_CLOSE_PAREN,       "Очікується ')'."
 STRING_EXPECTED_NUMBER_OR_VARIABLE,"Очікується число або ім'я змінної."
 STRING_SYNTAX_COMMAND_INCORRECT,   "Некоректний синтаксис команди."
 
-}
+END

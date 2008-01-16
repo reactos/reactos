@@ -12,7 +12,7 @@
 LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
 
 STRINGTABLE DISCARDABLE
-{
+BEGIN
    IDS_APPNAME,            "KalkulaËka"
 
    IDS_COPYRIGHT1,         "KalkulaËka 5.0. Licencovan· pod LGPL 2"
@@ -40,34 +40,39 @@ STRINGTABLE DISCARDABLE
    IDS_ERR_INVALID_INPUT,  "Neplatn˝ vstup pre funkciu."
    IDS_ERR_DIVIDE_BY_ZERO, "Nulou nemoûno deliù."
    IDS_ERR_UNDEFINED,      "V˝sledok funkcie je nedefinovan˝."
-}
+END
 
 MAIN_MENU MENU DISCARDABLE
-{
-   POPUP "⁄pr&avy" {
+BEGIN
+   POPUP "⁄pr&avy"
+   BEGIN
       MENUITEM "&KopÌrovaù Ctrl+C",     IDM_COPY
       MENUITEM "Pri&lepiù Ctrl+V",    IDM_PASTE
-   }
-   POPUP "&Zobraziù" {
+   END
+   POPUP "&Zobraziù"
+   BEGIN
       MENUITEM "ä&tandardn·",         IDM_MODE_STANDARD
       MENUITEM "&Vedeck·",       IDM_MODE_SCIENTIFIC
       MENUITEM SEPARATOR
       MENUITEM "Zoskupov&aù ËÌslice",   IDM_DIGIT_GROUPING
-   }
-   POPUP "&PomocnÌk" {
+   END
+   POPUP "&PomocnÌk"
+   BEGIN
       MENUITEM "&TÈmy PomocnÌka",      IDM_HELP_TOPICS
       MENUITEM SEPARATOR
       MENUITEM "»&o je KalkulaËka", IDM_ABOUT
-   }
-}
+   END
+END
 
 SCIMS_MENU MENU DISCARDABLE
-{
-   POPUP "⁄pr&avy" {
+BEGIN
+   POPUP "⁄pr&avy"
+   BEGIN
       MENUITEM "&KopÌrovaù Ctrl+C",     IDM_COPY
       MENUITEM "Pri&lepiù Ctrl+V",    IDM_PASTE
-   }
-   POPUP "&Zobraziù" {
+   END
+   POPUP "&Zobraziù"
+   BEGIN
       MENUITEM "ä&tandardn·",         IDM_MODE_STANDARD
       MENUITEM "&Vedeck·",       IDM_MODE_SCIENTIFIC
       MENUITEM SEPARATOR
@@ -81,21 +86,24 @@ SCIMS_MENU MENU DISCARDABLE
 	  MENUITEM "&Grady\tF4",        ID_CALC_MS_GRADS
       MENUITEM SEPARATOR
       MENUITEM "Zoskupov&aù ËÌslice",   IDM_DIGIT_GROUPING
-   }
-   POPUP "&PomocnÌk" {
+   END
+   POPUP "&PomocnÌk"
+   BEGIN
       MENUITEM "&TÈmy PomocnÌka",      IDM_HELP_TOPICS
       MENUITEM SEPARATOR
       MENUITEM "»&o je KalkulaËka", IDM_ABOUT
-   }
-}
+   END
+END
 
 SCIWS_MENU MENU DISCARDABLE
-{
-   POPUP "⁄pr&avy" {
+BEGIN
+   POPUP "⁄pr&avy"
+   BEGIN
       MENUITEM "&KopÌrovaù Ctrl+C",     IDM_COPY
       MENUITEM "Pri&lepiù Ctrl+V",    IDM_PASTE
-   }
-   POPUP "&Zobraziù" {
+   END
+   POPUP "&Zobraziù"
+   BEGIN
       MENUITEM "ä&tandardn·",         IDM_MODE_STANDARD
       MENUITEM "&Vedeck·",       IDM_MODE_SCIENTIFIC
       MENUITEM SEPARATOR
@@ -110,40 +118,43 @@ SCIWS_MENU MENU DISCARDABLE
 	  MENUITEM "&Bajt\tF4",         ID_CALC_WS_BYTE
       MENUITEM SEPARATOR
       MENUITEM "Zoskupov&aù ËÌslice",   IDM_DIGIT_GROUPING
-   }
-   POPUP "&PomocnÌk" {
+   END
+   POPUP "&PomocnÌk"
+   BEGIN
       MENUITEM "&TÈmy PomocnÌka",      IDM_HELP_TOPICS
       MENUITEM SEPARATOR
       MENUITEM "»&o je KalkulaËka", IDM_ABOUT
-   }
-}
+   END
+END
 
 MAIN_MENU ACCELERATORS
 BEGIN
    VK_F1, IDV_HELP,     VIRTKEY
 END
 
-DLG_ABOUT DIALOG 12,0,120,82
+DLG_ABOUT DIALOG 12,0,175,90
 CAPTION "»o je KalkulaËka"
+FONT 9, "MS Shell Dlg"
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 BEGIN
-   DEFPUSHBUTTON "OK", IDOK,       42, 60, 30, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+   DEFPUSHBUTTON "OK", IDOK,       73, 70, 30, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
 END
 
 WHATS_THIS_MENU MENU DISCARDABLE
-{
-    POPUP "" {
+BEGIN
+   POPUP ""
+   BEGIN
       MENUITEM "»o je toto?",     IDM_WHATS_THIS
-   }
-}
+   END
+END
 
-DLG_STATS DIALOG 12,0,125,78
+DLG_STATS DIALOG 12,0,145,85
 CAPTION "ätatistika"
-FONT 9, "Tahoma"
+FONT 9, "MS Shell Dlg"
 STYLE WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_VISIBLE
 BEGIN
-   DEFPUSHBUTTON "&RET",  ID_STATS_RET,   4, 52, 25, 13, WS_TABSTOP | WS_GROUP
-   PUSHBUTTON    "&LOAD", ID_STATS_LOAD, 34, 52, 25, 13, WS_TABSTOP | WS_GROUP
-   PUSHBUTTON    "&CD"    ID_STATS_CD,   64, 52, 25, 13, WS_TABSTOP | WS_GROUP
-   PUSHBUTTON    "C&AD",  ID_STATS_CAD,  94, 52, 25, 13, WS_TABSTOP | WS_GROUP
+   DEFPUSHBUTTON "&RET",  ID_STATS_RET,    4, 52, 30, 13, WS_TABSTOP | WS_GROUP
+   PUSHBUTTON    "&LOAD", ID_STATS_LOAD,  39, 52, 30, 13, WS_TABSTOP | WS_GROUP
+   PUSHBUTTON    "&CD"    ID_STATS_CD,    74, 52, 30, 13, WS_TABSTOP | WS_GROUP
+   PUSHBUTTON    "C&AD",  ID_STATS_CAD,  109, 52, 30, 13, WS_TABSTOP | WS_GROUP
 END

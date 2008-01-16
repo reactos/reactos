@@ -11,7 +11,7 @@
 
 LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 STRINGTABLE DISCARDABLE
-{
+BEGIN
 
 STRING_ATTRIB_HELP,    "Вывод и изменение атрибутов файлов.\n\n\
 ATTRIB [+R | -R] [+A | -A] [+S | -S] [+H | -H] файл ...\n\
@@ -653,4 +653,4 @@ STRING_EXPECTED_CLOSE_PAREN,       "Ожидается ')'."
 STRING_EXPECTED_NUMBER_OR_VARIABLE,"Ожидается число или название переменной."
 STRING_SYNTAX_COMMAND_INCORRECT,   "Неверный синтаксис команды."
 
-}
+END

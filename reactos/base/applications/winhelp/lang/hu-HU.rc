@@ -25,24 +25,28 @@ LANGUAGE LANG_HUNGARIAN, SUBLANG_DEFAULT
 /* Menu */
 
 MAIN_MENU MENU
-{
- POPUP "&Fájl" {
+BEGIN
+ POPUP "&Fájl"
+ BEGIN
   MENUITEM "&Megnyitás...", MNID_FILE_OPEN
   MENUITEM SEPARATOR
   MENUITEM "&Nyomtatás", MNID_FILE_PRINT
   MENUITEM "Nyomtató &beállítás...", MNID_FILE_SETUP
    MENUITEM SEPARATOR
   MENUITEM "&Kilépés", MNID_FILE_EXIT
- }
- POPUP "&Szerkesztés" {
+ END
+ POPUP "&Szerkesztés"
+ BEGIN
    MENUITEM "&Másolás...", MNID_EDIT_COPYDLG
    MENUITEM SEPARATOR
    MENUITEM "&Jegyzet...", MNID_EDIT_ANNOTATE
- }
- POPUP "&Könyvjelzõ" {
+ END
+ POPUP "&Könyvjelzõ"
+ BEGIN
    MENUITEM "&Definiálás...", MNID_BKMK_DEFINE
- }
- POPUP "&Súgó" {
+ END
+ POPUP "&Súgó"
+ BEGIN
    MENUITEM "&Használat", MNID_HELP_HELPON
    MENUITEM "Mindig &legfelül", MNID_HELP_HELPTOP
    MENUITEM SEPARATOR
@@ -50,13 +54,13 @@ MAIN_MENU MENU
 #ifdef WINELIB
    MENUITEM "&&A WINE-ról", MNID_HELP_WINE
 #endif
- }
-}
+ END
+END
 
 /* Strings */
 
 STRINGTABLE DISCARDABLE
-{
+BEGIN
 STID_WINE_HELP, 	"WINE súgó"
 STID_WHERROR, 		"HIBA"
 STID_WARNING,  		"FIGYELMEZTETÉS"
@@ -71,4 +75,4 @@ STID_TOPICS,		"&Témakörök"
 STID_ALL_FILES, 	"Minden fájl (*.*)"
 STID_HELP_FILES_HLP, 	"Súgó fájlok (*.hlp)"
 STID_FILE_NOT_FOUND_s	"Cannot find '%s'. Do you want to find this file yourself?"
-}
+END

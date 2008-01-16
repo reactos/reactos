@@ -21,13 +21,13 @@
 LANGUAGE LANG_SWEDISH, SUBLANG_NEUTRAL
 
 ID_ACCEL ACCELERATORS
-{
+BEGIN
     VK_DELETE, ID_EDIT_DELETE, VIRTKEY, NOINVERT
     "^F", ID_EDIT_FIND
     VK_F3, ID_EDIT_FINDNEXT, VIRTKEY, NOINVERT
     VK_F5, ID_VIEW_REFRESH, VIRTKEY, NOINVERT
     VK_F1, ID_HELP_HELPTOPICS, VIRTKEY, NOINVERT
-}
+END
 
 /*
  * Menu
@@ -54,6 +54,9 @@ BEGIN
         MENUITEM "&Exportera registerfil...",   ID_REGISTRY_EXPORTREGISTRYFILE
 
         MENUITEM SEPARATOR
+		MENUITEM "Load Hive...",				ID_REGISTRY_LOADHIVE, GRAYED
+		MENUITEM "Unload Hive...",				ID_REGISTRY_UNLOADHIVE, GRAYED
+		MENUITEM SEPARATOR
         MENUITEM "&Anslut Nätverksregister...",
                                                 ID_REGISTRY_CONNECTNETWORKREGISTRY
         , GRAYED
@@ -76,6 +79,8 @@ BEGIN
             MENUITEM "&Strängvärde",                ID_EDIT_NEW_STRINGVALUE
             MENUITEM "&Binärvärde",                 ID_EDIT_NEW_BINARYVALUE
             MENUITEM "&DWORD-värde",                ID_EDIT_NEW_DWORDVALUE
+			MENUITEM "&Multi-String Value",			ID_EDIT_NEW_MULTISTRINGVALUE
+			MENUITEM "&Expandable String Value",	ID_EDIT_NEW_EXPANDABLESTRINGVALUE
         END
         MENUITEM SEPARATOR
         MENUITEM "B&ehörigheter...",		ID_EDIT_PERMISSIONS
@@ -130,6 +135,8 @@ BEGIN
             MENUITEM "&Strängvärde",                ID_EDIT_NEW_STRINGVALUE
             MENUITEM "&Binärvärde",                 ID_EDIT_NEW_BINARYVALUE
             MENUITEM "&DWORD-värde",                ID_EDIT_NEW_DWORDVALUE
+            MENUITEM "&Multi-String Value",         ID_EDIT_NEW_MULTISTRINGVALUE
+            MENUITEM "&Expandable String Value",    ID_EDIT_NEW_EXPANDABLESTRINGVALUE
         END
   END
   POPUP ""
@@ -142,10 +149,16 @@ BEGIN
             MENUITEM "&Strängvärde",               ID_EDIT_NEW_STRINGVALUE
             MENUITEM "&Binärvärde",               ID_EDIT_NEW_BINARYVALUE
             MENUITEM "&DWORD-värde",                ID_EDIT_NEW_DWORDVALUE
+            MENUITEM "&Multi-String Value",         ID_EDIT_NEW_MULTISTRINGVALUE
+            MENUITEM "&Expandable String Value",    ID_EDIT_NEW_EXPANDABLESTRINGVALUE
         END
         MENUITEM "&Sök",                           ID_EDIT_FIND, GRAYED
+        MENUITEM SEPARATOR
         MENUITEM "&Ta bort",                         ID_TREE_DELETE
         MENUITEM "&Byt namn",                         ID_TREE_RENAME
+        MENUITEM SEPARATOR
+        MENUITEM "&Export",                         ID_TREE_EXPORT
+        MENUITEM "&Permissions...",                 ID_TREE_PERMISSIONS, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "&Kopiera nyckelnamn",                  ID_EDIT_COPYKEYNAME, GRAYED
   END
@@ -282,10 +295,14 @@ STRINGTABLE DISCARDABLE
 BEGIN
     IDS_ERROR		    "Fel"
     IDS_WARNING		    "Varning"
+    IDS_BAD_KEY             "Can't query key '%s'"
     IDS_BAD_VALUE           "Kan inte läsa värdet  '%s'"
     IDS_UNSUPPORTED_TYPE    "Kan inte ändra nycklar av typen %ld"
     IDS_TOO_BIG_VALUE       "Värdet är för stort (%ld)"
     IDS_MULTI_SZ_EMPTY_STRING "Data av typen REG_MULTI_SZ kan inte innehålla tomma strängar.\nDe tomma strängarna har tagits bort från listan."
+    IDS_QUERY_DELETE_KEY_ONE    "Are you sure you want to delete this key?"
+    IDS_QUERY_DELETE_KEY_MORE   "Are you sure you want to delete these keys?"
+    IDS_QUERY_DELETE_KEY_CONFIRM "Confirm Key Delete"
     IDS_QUERY_DELETE_ONE    "Är du säker på att du vill ta bort detta värde?"
     IDS_QUERY_DELETE_MORE   "Är du säker på att du vill ta bort dessa värden?"
     IDS_QUERY_DELETE_CONFIRM "Bekräfta borttagning av värde"
@@ -293,6 +310,8 @@ BEGIN
     IDS_ERR_DELETEVALUE     "Det gick inte att ta bort alla specificerade värden!"
     IDS_ERR_RENVAL_CAPTION  "Namnbyte misslyckades"
     IDS_ERR_RENVAL_TOEMPTY  "Kunde inte byta namn på %s. Det specificerade värdenamnet är tomt. Ange ett annat namn och försök igen."
+    IDS_NEW_KEY             "New Key #%d"
+    IDS_NEW_VALUE           "New Value #%d"
 END
 
 STRINGTABLE DISCARDABLE
@@ -344,6 +363,8 @@ STRINGTABLE DISCARDABLE
 BEGIN
   IDS_EXPAND                     "&Visa nivå"
   IDS_COLLAPSE                   "&Dölj nivå"
+  IDS_GOTO_SUGGESTED_KEY         "&Go to '%s'"
+  IDS_FINISHEDFIND               "Finished searching through the registry."
 END
 
 /*****************************************************************/
@@ -353,22 +374,72 @@ END
  * Dialog
  */
 
-IDD_DIALOG1 DIALOG DISCARDABLE  50, 50, 268, 98
+IDD_EXPORTRANGE DIALOG DISCARDABLE  50, 50, 370, 50
 STYLE DS_3DLOOK | DS_CONTROL | WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS |
     WS_BORDER
-FONT 8, "MS Sans Serif"
+FONT 8, "MS Shell Dlg"
 BEGIN
+   GROUPBOX "Export Range",IDC_STATIC,2,0,366,48
+   CONTROL "&All",IDC_EXPORT_ALL,"Button",BS_AUTORADIOBUTTON,10,10, 29,11
+   CONTROL "S&elected Branch",IDC_EXPORT_BRANCH,"Button",BS_AUTORADIOBUTTON,10,22, 100,11
+   EDITTEXT IDC_EXPORT_BRANCH_TEXT,30,34,335,12
 END
 
-IDD_DIALOG2 DIALOG DISCARDABLE  0, 0, 187, 95
+IDD_ADDFAVORITES DIALOG DISCARDABLE  0, 0, 186, 46
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Dialog"
-FONT 8, "MS Sans Serif"
+CAPTION "Add to Favorites"
+FONT 8, "MS Shell Dlg"
 BEGIN
-    DEFPUSHBUTTON   "OK",IDOK,130,7,50,14
-    PUSHBUTTON      "Avbryt",IDCANCEL,130,24,50,14
+    DEFPUSHBUTTON   "OK",IDOK,129,7,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,129,24,50,14
+    LTEXT           "&Favorite Name:",IDC_STATIC,7,7,70,10
+    EDITTEXT        IDC_FAVORITENAME,7,26,110,13,ES_AUTOHSCROLL
 END
 
+IDD_REMOVEFAVORITES DIALOG DISCARDABLE  0, 0, 164, 135
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Remove Favorites"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,107,114,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,7,114,50,14
+    CONTROL         "List1",IDC_FAVORITESLIST,"SysListView32",LVS_LIST |
+                    WS_BORDER | WS_TABSTOP,7,20,150,90
+    LTEXT           "Select Favorite(s):",IDC_STATIC,7,7,99,12
+END
+
+IDD_FIND DIALOG DISCARDABLE  0, 0, 254, 82
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Find"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "&Find Next",IDOK,197,7,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,197,24,50,14
+    GROUPBOX        "Look at",IDC_STATIC,7,25,63,51
+    LTEXT           "Fi&nd what:",IDC_STATIC,7,8,37,10
+    EDITTEXT        IDC_FINDWHAT,47,7,142,13,ES_AUTOHSCROLL
+    CONTROL         "&Keys",IDC_LOOKAT_KEYS,"Button",BS_AUTOCHECKBOX |
+                    WS_TABSTOP,14,36,35,8
+    CONTROL         "&Values",IDC_LOOKAT_VALUES,"Button",BS_AUTOCHECKBOX |
+                    WS_TABSTOP,14,48,36,8
+    CONTROL         "&Data",IDC_LOOKAT_DATA,"Button",BS_AUTOCHECKBOX |
+                    WS_TABSTOP,14,60,42,8
+    CONTROL         "Match &whole string only",IDC_MATCHSTRING,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,83,32,94,13
+    CONTROL         "Match &case",IDC_MATCHCASE,"Button",BS_AUTOCHECKBOX |
+                    WS_TABSTOP,83,48,90,12
+END
+
+IDD_FINDING DIALOGEX 0, 0, 145, 50
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | WS_POPUP |
+    WS_CAPTION | WS_SYSMENU
+CAPTION "Find"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    ICON            IDI_REGEDIT,IDC_STATIC,7,7,20,20
+    PUSHBUTTON      "&Cancel",IDCANCEL,93,29,45,14
+    LTEXT           "Searching the registry...",IDC_STATIC,33,12,83,8
+END
 
 /*
  * TEXTINCLUDE

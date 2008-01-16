@@ -1,7 +1,7 @@
 LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
 
 STRINGTABLE DISCARDABLE
-{
+BEGIN
 
 IDS_USAGE, "FIND: Visualizza le linee di un file che contengono un stringa.\n\n\
   FIND [ /C ] [ /I ] [ /N ] [ /V ] \"stringa\" [ file... ]\n\
@@ -14,4 +14,4 @@ IDS_NO_SUCH_FILE, "FIND: %s: File non trovato\n"
 
 IDS_CANNOT_OPEN, "FIND: %s: Impossibile aprire il file\n"
 
-}
+END

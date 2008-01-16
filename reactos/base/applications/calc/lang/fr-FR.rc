@@ -1,5 +1,5 @@
 /*
- * WineCalc (Fr.rc)
+ * WineCalc (fr-FR.rc)
  *
  * Copyright 2003 James Briggs
  *
@@ -28,7 +28,7 @@
 LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
 
 STRINGTABLE DISCARDABLE
-{
+BEGIN
    IDS_APPNAME,            "Calculatrice"
 
    IDS_COPYRIGHT1,         "Calculatrice 5.0. Licensed under LGPL 2"
@@ -56,34 +56,39 @@ STRINGTABLE DISCARDABLE
    IDS_ERR_INVALID_INPUT,  "Entrée incorrecte pour l'opération."
    IDS_ERR_DIVIDE_BY_ZERO, "Division par zéro impossble."
    IDS_ERR_UNDEFINED,      "Résultat non défini."
-}
+END
 
 MAIN_MENU MENU DISCARDABLE
-{
-   POPUP "&Édition" {
+BEGIN
+   POPUP "&Édition"
+   BEGIN
       MENUITEM "Co&pier Ctrl+C",     IDM_COPY
       MENUITEM "C&oller Ctrl+V",    IDM_PASTE
-   }
-   POPUP "&Affichage" {
+   END
+   POPUP "&Affichage"
+   BEGIN
       MENUITEM "Standard",         IDM_MODE_STANDARD
       MENUITEM "Scientifique",       IDM_MODE_SCIENTIFIC
       MENUITEM SEPARATOR
       MENUITEM "Séparateur",   IDM_DIGIT_GROUPING
-   }
-   POPUP "Ai&de" {
+   END
+   POPUP "Ai&de"
+   BEGIN
       MENUITEM "Somaire",      IDM_HELP_TOPICS
       MENUITEM SEPARATOR
       MENUITEM "A propos", IDM_ABOUT
-   }
-}
+   END
+END
 
 SCIMS_MENU MENU DISCARDABLE
-{
-   POPUP "&Édition" {
+BEGIN
+   POPUP "&Édition"
+   BEGIN
       MENUITEM "Co&pier Ctrl+C",     IDM_COPY
       MENUITEM "C&oller Ctrl+V",    IDM_PASTE
-   }
-   POPUP "&Affichage" {
+   END
+   POPUP "&Affichage"
+   BEGIN
       MENUITEM "Standard",         IDM_MODE_STANDARD
       MENUITEM "Scientifique",       IDM_MODE_SCIENTIFIC
       MENUITEM SEPARATOR
@@ -97,21 +102,24 @@ SCIMS_MENU MENU DISCARDABLE
 	    MENUITEM "Grades\tF4",        ID_CALC_MS_GRADS
       MENUITEM SEPARATOR
       MENUITEM "Séparateur",   IDM_DIGIT_GROUPING
-   }
-   POPUP "Ai&de" {
+   END
+   POPUP "Ai&de"
+   BEGIN
       MENUITEM "Sommaire",      IDM_HELP_TOPICS
       MENUITEM SEPARATOR
       MENUITEM "À propos", IDM_ABOUT
-   }
-}
+   END
+END
 
 SCIWS_MENU MENU DISCARDABLE
-{
-   POPUP "&Édition" {
+BEGIN
+   POPUP "&Édition"
+   BEGIN
       MENUITEM "Co&pier Ctrl+C",     IDM_COPY
       MENUITEM "C&oller Ctrl+V",    IDM_PASTE
-   }
-   POPUP "&Affichage" {
+   END
+   POPUP "&Affichage"
+   BEGIN
       MENUITEM "Standard",         IDM_MODE_STANDARD
       MENUITEM "Scientifique",       IDM_MODE_SCIENTIFIC
       MENUITEM SEPARATOR
@@ -126,13 +134,14 @@ SCIWS_MENU MENU DISCARDABLE
 	    MENUITEM "Byte\tF4",         ID_CALC_WS_BYTE
       MENUITEM SEPARATOR
       MENUITEM "Séparateur",   IDM_DIGIT_GROUPING
-   }
-   POPUP "Ai&de" {
+   END
+   POPUP "Ai&de"
+   BEGIN
       MENUITEM "Sommaire",      IDM_HELP_TOPICS
       MENUITEM SEPARATOR
       MENUITEM "À propos", IDM_ABOUT
-   }
-}
+   END
+END
 
 MAIN_MENU ACCELERATORS
 BEGIN
@@ -141,26 +150,27 @@ END
 
 DLG_ABOUT DIALOG 12,0,175,90
 CAPTION "À propos de GNU winecalc"
-STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 FONT 9, "MS Shell Dlg"
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 BEGIN
    DEFPUSHBUTTON "OK", IDOK,       73, 70, 30, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
 END
 
 WHATS_THIS_MENU MENU DISCARDABLE
-{
-   POPUP "" {
+BEGIN
+   POPUP ""
+   BEGIN
       MENUITEM "Qu'est-ce ?",     IDM_WHATS_THIS
-  }
-}
+   END
+END
 
-DLG_STATS DIALOG 12,0,125,78
+DLG_STATS DIALOG 12,0,145,85
 CAPTION "Outils Statistiques Box"
-FONT 9, "Tahoma"
+FONT 9, "MS Shell Dlg"
 STYLE WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_VISIBLE
 BEGIN
-   DEFPUSHBUTTON "&RET",  ID_STATS_RET,   4, 52, 25, 13, WS_TABSTOP | WS_GROUP
-   PUSHBUTTON    "&LOAD", ID_STATS_LOAD, 34, 52, 25, 13, WS_TABSTOP | WS_GROUP
-   PUSHBUTTON    "&CD"    ID_STATS_CD,   64, 52, 25, 13, WS_TABSTOP | WS_GROUP
-   PUSHBUTTON    "C&AD",  ID_STATS_CAD,  94, 52, 25, 13, WS_TABSTOP | WS_GROUP
+   DEFPUSHBUTTON "&RET",  ID_STATS_RET,    4, 52, 30, 13, WS_TABSTOP | WS_GROUP
+   PUSHBUTTON    "&LOAD", ID_STATS_LOAD,  39, 52, 30, 13, WS_TABSTOP | WS_GROUP
+   PUSHBUTTON    "&CD"    ID_STATS_CD,    74, 52, 30, 13, WS_TABSTOP | WS_GROUP
+   PUSHBUTTON    "C&AD",  ID_STATS_CAD,  109, 52, 30, 13, WS_TABSTOP | WS_GROUP
 END

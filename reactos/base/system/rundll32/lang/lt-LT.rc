@@ -4,7 +4,7 @@
 
 LANGUAGE LANG_LITHUANIAN, SUBLANG_DEFAULT
 STRINGTABLE DISCARDABLE
-{
+BEGIN
 IDS_DllNotLoaded,   "LoadLibrary nepavyko paleisti '%s'"
 IDS_MissingEntry,   "Trûksta áëjimo taðko:%s\nIn %s"
-}
+END

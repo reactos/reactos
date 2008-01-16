@@ -1,7 +1,7 @@
 LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
 
 STRINGTABLE DISCARDABLE
-{
+BEGIN
 
 IDS_USAGE, "Употреба: shutdown [-?] [-l | -s | -r] [-f]\n\n\
   Без ключове или -?\tПокзава това съобщение\n\
@@ -11,4 +11,4 @@ IDS_USAGE, "Употреба: shutdown [-?] [-l | -s | -r] [-f]\n\n\
   -f\t\t\tНасилване на работещите приложения да се затворят без предупреждение\n\
     \t\t\tАко не сте задали други ключове, тази възможност\n\
     \t\t\tще доведе до изход от потребителя"
-}
+END

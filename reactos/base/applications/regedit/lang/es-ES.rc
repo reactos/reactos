@@ -24,13 +24,13 @@
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 
 ID_ACCEL ACCELERATORS
-{
+BEGIN
     VK_DELETE, ID_EDIT_DELETE, VIRTKEY, NOINVERT
     "^F", ID_EDIT_FIND
     VK_F3, ID_EDIT_FINDNEXT, VIRTKEY, NOINVERT
     VK_F5, ID_VIEW_REFRESH, VIRTKEY, NOINVERT
     VK_F1, ID_HELP_HELPTOPICS, VIRTKEY, NOINVERT
-}
+END
 
 /*
  * Menu
@@ -53,13 +53,19 @@ BEGIN
     POPUP "&Registro"
     BEGIN
         MENUITEM "&Importar archivo de registro...", ID_REGISTRY_IMPORTREGISTRYFILE
+
         MENUITEM "&Exportar archivo de registro...", ID_REGISTRY_EXPORTREGISTRYFILE
 
 	MENUITEM SEPARATOR
 		MENUITEM "Cargar archivo de registro...",				ID_REGISTRY_LOADHIVE, GRAYED
 		MENUITEM "Descargar archivo de registro...",				ID_REGISTRY_UNLOADHIVE, GRAYED
+		MENUITEM SEPARATOR
         MENUITEM "&Conectar al Registro de red...", ID_REGISTRY_CONNECTNETWORKREGISTRY
+
+
         MENUITEM "&Desconectar del Registro de red...", ID_REGISTRY_DISCONNECTNETWORKREGISTRY, GRAYED
+
+
         MENUITEM SEPARATOR
         MENUITEM "Im&primir\tCtrl+P",           ID_REGISTRY_PRINT, GRAYED
         MENUITEM SEPARATOR
@@ -132,6 +138,8 @@ BEGIN
             MENUITEM "Valor &Alfanumérico",               ID_EDIT_NEW_STRINGVALUE
             MENUITEM "Valor &Binario",               ID_EDIT_NEW_BINARYVALUE
             MENUITEM "Valor &DWORD",                ID_EDIT_NEW_DWORDVALUE
+            MENUITEM "&Multi-String Value",         ID_EDIT_NEW_MULTISTRINGVALUE
+            MENUITEM "&Expandable String Value",    ID_EDIT_NEW_EXPANDABLESTRINGVALUE
         END
   END
   POPUP ""
@@ -144,6 +152,8 @@ BEGIN
             MENUITEM "Valor &Alfanumérico",              ID_EDIT_NEW_STRINGVALUE
             MENUITEM "Valor &Binario",               ID_EDIT_NEW_BINARYVALUE
             MENUITEM "Valor &DWORD",                ID_EDIT_NEW_DWORDVALUE
+            MENUITEM "&Multi-String Value",         ID_EDIT_NEW_MULTISTRINGVALUE
+            MENUITEM "&Expandable String Value",    ID_EDIT_NEW_EXPANDABLESTRINGVALUE
         END
         MENUITEM "&Buscar",                           ID_EDIT_FIND
         MENUITEM SEPARATOR
@@ -221,6 +231,7 @@ BEGIN
     DEFPUSHBUTTON   "Aceptar",IDOK,142,82,50,14
     PUSHBUTTON      "Cancelar",IDCANCEL,196,82,50,14
 END
+
 /*
  * String Table
  */
@@ -282,7 +293,6 @@ BEGIN
     ID_EDIT_FIND            "Busca una cadena de texto en una clave, valor o datos"
     ID_EDIT_FINDNEXT        "Busca la siguiente ocurrencia del texto especificado en la búsqueda anterior"
 END
-
 
 STRINGTABLE DISCARDABLE
 BEGIN

@@ -1,7 +1,7 @@
 LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
 STRINGTABLE DISCARDABLE
-{
+BEGIN
 
 IDS_USAGE, "FIND: Поиск текстовой строки в одном или нескольких файлах.\n\n\
   FIND [ /C ] [ /I ] [ /N ] [ /V ] \"строка\" [ файл... ]\n\
@@ -14,4 +14,4 @@ IDS_NO_SUCH_FILE, "FIND: %s: Файл не существует.\n"
 
 IDS_CANNOT_OPEN, "FIND: %s: Невозможно открыть файл.\n"
 
-}
+END

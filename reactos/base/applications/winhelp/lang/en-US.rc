@@ -24,24 +24,28 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 /* Menu */
 
 MAIN_MENU MENU
-{
- POPUP "&File" {
+BEGIN
+ POPUP "&File"
+ BEGIN
   MENUITEM "&Open", MNID_FILE_OPEN
   MENUITEM SEPARATOR
   MENUITEM "&Print", MNID_FILE_PRINT
   MENUITEM "Printer &setup...", MNID_FILE_SETUP
    MENUITEM SEPARATOR
   MENUITEM "E&xit", MNID_FILE_EXIT
- }
- POPUP "&Edit" {
+ END
+ POPUP "&Edit"
+ BEGIN
    MENUITEM "&Copy...", MNID_EDIT_COPYDLG
    MENUITEM SEPARATOR
    MENUITEM "&Annotate...", MNID_EDIT_ANNOTATE
- }
- POPUP "&Bookmark" {
+ END
+ POPUP "&Bookmark"
+ BEGIN
    MENUITEM "&Define...", MNID_BKMK_DEFINE
- }
- POPUP "&Help" {
+ END
+ POPUP "&Help"
+ BEGIN
    MENUITEM "Help &on help", MNID_HELP_HELPON
    MENUITEM "Always on &top", MNID_HELP_HELPTOP
    MENUITEM SEPARATOR
@@ -49,13 +53,13 @@ MAIN_MENU MENU
 #ifdef WINELIB
    MENUITEM "&About WINE", MNID_HELP_WINE
 #endif
- }
-}
+ END
+END
 
 /* Strings */
 
 STRINGTABLE DISCARDABLE
-{
+BEGIN
 STID_WINE_HELP, 	"WINE Help"
 STID_WHERROR, 		"ERROR"
 STID_WARNING,  		"WARNING"
@@ -70,4 +74,4 @@ STID_TOPICS,		"&Topics"
 STID_ALL_FILES, 	"All files (*.*)"
 STID_HELP_FILES_HLP, 	"Help files (*.hlp)"
 STID_FILE_NOT_FOUND_s	"Cannot find '%s'. Do you want to find this file yourself?"
-}
+END

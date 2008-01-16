@@ -3,7 +3,7 @@
 LANGUAGE LANG_LITHUANIAN, SUBLANG_DEFAULT
 
 STRINGTABLE DISCARDABLE
-{
+BEGIN
 
 IDS_USAGE, "Naudojimas: shutdown [-?] [-l | -s | -r] [-f]\n\n\
   Be parametrø arba -?\tParodyti ðá praneðimà\n\
@@ -13,4 +13,4 @@ IDS_USAGE, "Naudojimas: shutdown [-?] [-l | -s | -r] [-f]\n\n\
   -f\t\t\tPriverstinai uþverti visas paleistas programas\n\
     \t\t\tJeigu nenurodyti jokie kiti parametrai, taip pat\n\
     \t\t\tbus ávykdytas atsijungimas"
-}
+END

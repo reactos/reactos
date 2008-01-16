@@ -1,7 +1,7 @@
 LANGUAGE LANG_NORWEGIAN, SUBLANG_NEUTRAL
 
 STRINGTABLE DISCARDABLE
-{
+BEGIN
 
 IDS_USAGE, "Bruk: shutdown [-?] [-l | -s | -r] [-f]\n\n\
   Ingen parametere eller -?\tVis denne meldingen\n\
@@ -11,4 +11,4 @@ IDS_USAGE, "Bruk: shutdown [-?] [-l | -s | -r] [-f]\n\n\
   -f\t\t\tTvinger alle programmer til å avsluttes, og dersom\n\
     \t\t\tdet ikke er spesifisert andre parametere vil\n\
     \t\t\tbrukeren også logges ut."
-}
+END

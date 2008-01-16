@@ -9,7 +9,7 @@
 LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
 
 STRINGTABLE DISCARDABLE
-{
+BEGIN
 
 IDS_USAGE, "Завершення сеансу.\n\n\
   /v\t\tВідображення інформації про виконані дії.\n\
@@ -19,5 +19,5 @@ IDS_LOGOFF_REMOTE, "Завершення сеансу на віддаленій машині."
 IDS_LOGOFF_LOCAL, "Завершення поточного сеансу на цій машині."
 
 IDS_ILLEGAL_PARAM, "Невірні параметри\n"
-}
+END
 /* EOF */

@@ -6,7 +6,7 @@
 
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 STRINGTABLE DISCARDABLE
-{
+BEGIN
 STRING_HELP,  "Uso: %S unidad: [-FS:sistema de archivos] [-V:etiqueta] [-Q] [-A:tamaño] [-C]\n\n\
   [unidad:]       		Especifica la unidad a formatear.\n\
   -FS:sistema de archivos 	Especifica el sistema de archivos (%s).\n\
@@ -69,4 +69,4 @@ STRING_NO_LABEL        "Imposible etiquetar el volumen"
 STRING_FREE_SPACE     "\n%I64d bytes espacio total del disco.\n%I64d bytes disponibles en el disco.\n"
 
 STRING_SERIAL_NUMBER   "\nNúmero de Serie del Volumen es %04X-%04X\n"
-}
+END

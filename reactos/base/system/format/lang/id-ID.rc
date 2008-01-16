@@ -3,7 +3,7 @@
 LANGUAGE LANG_INDONESIAN, SUBLANG_DEFAULT
 
 STRINGTABLE DISCARDABLE
-{
+BEGIN
 STRING_HELP,  "Pemakaian: %S drive: [-FS:file-system] [-V:label] [-Q] [-A:size] [-C]\n\n\
   [drive:]         Menetapkan drive yang akan diformat.\n\
   -FS:file-system  Menetapkan tipe sistem file (%s).\n\
@@ -66,4 +66,4 @@ STRING_NO_LABEL        "Tidak bisa memberi label volume"
 STRING_FREE_SPACE     "\n%I64d byte total ruang disk.\n%I64d byte tersedia pada disk.\n"
 
 STRING_SERIAL_NUMBER   "\nNomor Seri Volume adalah %04X-%04X\n"
-}
+END

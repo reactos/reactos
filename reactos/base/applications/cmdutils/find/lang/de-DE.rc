@@ -1,7 +1,7 @@
-LANGUAGE LANG_GERMAN, SUBLANG_DEFAULT
+LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
 
 STRINGTABLE DISCARDABLE
-{
+BEGIN
 
 IDS_USAGE, "Sucht in einer Datei nach einer Zeichenfolge.\n\n\
   FIND [ /C ] [ /I ] [ /N ] [ /V ] \"string\" [ file... ]\n\
@@ -14,4 +14,4 @@ IDS_NO_SUCH_FILE, "Datei %s nicht gefunden\n"
 
 IDS_CANNOT_OPEN, "Datei %s kann nicht geöffnet werden.\n"
 
-}
+END

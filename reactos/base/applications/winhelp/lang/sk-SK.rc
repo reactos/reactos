@@ -28,23 +28,27 @@
 LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
 
 MAIN_MENU MENU
-{
- POPUP "&S˙bor" {
+BEGIN
+ POPUP "&S˙bor"
+ BEGIN
    MENUITEM "&Otvoriù...", MNID_FILE_OPEN
    MENUITEM SEPARATOR
    MENUITEM "&TlaËiù", MNID_FILE_PRINT
    MENUITEM "&Nastavenie tlaËe...", MNID_FILE_SETUP
    MENUITEM "U&konËiù", MNID_FILE_EXIT
- }
- POPUP "&Upraviù" {
+ END
+ POPUP "&Upraviù"
+ BEGIN
    MENUITEM "KopÌ&rovaù...", MNID_EDIT_COPYDLG
    MENUITEM SEPARATOR
    MENUITEM "&Skomentovaù...", MNID_EDIT_ANNOTATE
- }
- POPUP "&Z·loûka" {
+ END
+ POPUP "&Z·loûka"
+ BEGIN
    MENUITEM "&Definovaù...", MNID_BKMK_DEFINE
- }
- POPUP "&PomocÌk" {
+ END
+ POPUP "&PomocÌk"
+ BEGIN
    MENUITEM "&Ako pouûiù PomocnÌka", MNID_HELP_HELPON
    MENUITEM "Vûdy na &vrchu", MNID_HELP_HELPTOP
    MENUITEM SEPARATOR
@@ -52,12 +56,12 @@ MAIN_MENU MENU
 #ifdef WINELIB
    MENUITEM "»&o je ReactOS", MNID_HELP_WINE
 #endif
- }
-}
+ END
+END
 
 /* Strings */
 STRINGTABLE DISCARDABLE
-{
+BEGIN
 STID_WINE_HELP,             "PomocnÌk ReactOSu"
 STID_WHERROR,               "CHYBA"
 STID_WARNING,               "UPOZORNENIE"
@@ -72,4 +76,4 @@ STID_TOPICS,		    "&TÈmy"
 STID_ALL_FILES,             "Vöetky s˙bory (*.*)"
 STID_HELP_FILES_HLP,        "S˙bory pomoci (*.hlp)"
 STID_FILE_NOT_FOUND_s       "S˙bor '%s' nebol n·jden˝. Chcete sa pok˙siù n·jsù tento s˙bor sami?"
-}
+END

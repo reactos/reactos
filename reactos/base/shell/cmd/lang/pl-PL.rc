@@ -8,7 +8,7 @@
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 STRINGTABLE DISCARDABLE
-{
+BEGIN
 
 STRING_ATTRIB_HELP,    "Wyœwietla lub zmienia atrybuty plików.\n\n\
 ATTRIB [+R | -R] [+A | -A] [+S | -S] [+H | -H] nazwa_pliku ...\n\
@@ -646,4 +646,4 @@ STRING_EXPECTED_CLOSE_PAREN,       "Oczekiwano ')'."
 STRING_EXPECTED_NUMBER_OR_VARIABLE,"Oczekiwano liczby lub nazwy zmiennej."
 STRING_SYNTAX_COMMAND_INCORRECT,   "Sk³adnia komendy jest nieprawid³owa."
 
-}
+END

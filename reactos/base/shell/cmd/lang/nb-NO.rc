@@ -3,7 +3,7 @@
 
 LANGUAGE LANG_NORWEGIAN, SUBLANG_NEUTRAL
 STRINGTABLE DISCARDABLE
-{
+BEGIN
 
 STRING_ATTRIB_HELP,    "Viser eller endrer filattributtene.\n\n\
 ATTRIB [+R | -R] [+A | -A] [+S | -S] [+H | -H] fil ...\n\
@@ -640,4 +640,4 @@ STRING_EXPECTED_CLOSE_PAREN,       "Forventet ')'."
 STRING_EXPECTED_NUMBER_OR_VARIABLE,"Forventet nummer eller variabel navn."
 STRING_SYNTAX_COMMAND_INCORRECT,   "Syntaks for kommandoen er feil."
 
-}
+END

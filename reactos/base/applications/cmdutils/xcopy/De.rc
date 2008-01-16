@@ -23,7 +23,7 @@
 LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
 
 STRINGTABLE
-{
+BEGIN
     STRING_INVPARMS, "Ungültige Anzahl an Parametern - Nutze xcopy /? für Hilfe\n"
     STRING_INVPARM,  "Ungültiger Parameter '%s' -  Nutze xcopy /? für Hilfe\n"
     STRING_PAUSE,    "Drücke <Enter> um den Kopiervorgang zu starten\n"
@@ -61,19 +61,19 @@ Wo:\n\
 [/L]  Listet lediglich die Dateien auf, die kopiert werden würden\n\
 [/W]  Fordert vor dem Beginn des Kopiervorgangs eine Bestätigung\n\
 [/T]  Erstellt die Verzeichnisstruktur, kopiert aber keine Dateien\n\
-[/Y]  Unterdrücke eine Bestätigung vor dem überschreiben einer Datei\n\
-[/-Y] Fordert vor dem überschreiben einer Datei eine Bestätigung\n\
+[/Y]  Unterdrücke eine Bestätigung vor dem Überschreiben einer Datei\n\
+[/-Y] Fordert vor dem Überschreiben einer Datei eine Bestätigung\n\
 [/P]  Fordert vor jedem Kopiervorgang eine Bestätigung\n\
-[/N]  Kurznamen beim kopieren verwenden\n\
+[/N]  Kurznamen beim Kopieren verwenden\n\
 [/U]  Kopiert nur Dateien, die im Zielverzeichnis vorhanden sind\n\
 [/R]  Schreibgeschützte Dateien überschreiben\n\
 [/H]  Verstecke und Systemdateien in den Kopiervorgang miteinbeziehen\n\
 [/C]  Kopiervorgang selbst nach Fehlern fortsetzen\n\
-[/A]  Nur Dateien mit gestztem Archiv Attribut kopieren\n\
-[/M]  Nur Dateien mit gestztem Archiv Attribut kopieren und \n\
+[/A]  Nur Dateien mit gesetztem Archiv Attribut kopieren\n\
+[/M]  Nur Dateien mit gesetztem Archiv Attribut kopieren und \n\
 \tdieses entfernen\n\
 [/D | /D:m-d-y] Kopiert nur die an oder nach dem Datum geänderten Dateien.\n\
 \t\tIst kein Datum angegeben, werden nur Dateien kopiert,\n\
 \t\tdie neuer als die bestehenden Zieldateien sind.\n\n"
 
-}
+END

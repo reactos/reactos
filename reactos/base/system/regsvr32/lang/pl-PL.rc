@@ -7,7 +7,7 @@
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 STRINGTABLE DISCARDABLE
-{
+BEGIN
 
 IDS_UsageMessage, "%s\n\Sposób u¿ycia: regsvr32 [/u] [/s] [/c] [/n] [/i[:wiersz_polecenia]] nazwa_pliku_dll\n\
 /u -	Wyrejestruj serwer\n\
@@ -30,4 +30,4 @@ IDS_MissingEntry,    "%s zosta³ za³adowany, jednak punkt wejœcia %s nie zosta³ o
 IDS_FailureMessage,  "%s w %s nie powiod³a siê.\nKod wynikowy: 0x%08x"
 
 IDS_SuccessMessage   "%s w %s zakoñczona sukcesem."
-}
+END

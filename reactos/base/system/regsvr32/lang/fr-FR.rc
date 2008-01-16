@@ -9,7 +9,7 @@
 
 LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
 STRINGTABLE DISCARDABLE
-{
+BEGIN
 
 IDS_UsageMessage, "%s\n\nUtilisation : regsvr32 [/u] [/s] [/c] [/n] [/i[:lignedecommande]] nomDLL\n\
 /u -	Serveur non enregistré\n\
@@ -32,4 +32,4 @@ IDS_MissingEntry,    "%s est chargé mais le point d'entrée de %s n'a pas été tro
 IDS_FailureMessage,  "%s dans %s a échoué.\nLe code d'erreur est : 0x%08x"
 
 IDS_SuccessMessage   "%s dans %s est un succès."
-}
+END

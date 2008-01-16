@@ -1,7 +1,7 @@
 LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
 STRINGTABLE DISCARDABLE
-{
+BEGIN
    IDS_APPNAME,            "Калькулятор"
 
    IDS_COPYRIGHT1,         "Калькулятор 5.0. Распространяется по LGPL 2"
@@ -29,34 +29,39 @@ STRINGTABLE DISCARDABLE
    IDS_ERR_INVALID_INPUT,  "Неправильный аргумент функции."
    IDS_ERR_DIVIDE_BY_ZERO, "Делить на нуль нельзя."
    IDS_ERR_UNDEFINED,      "Результат не определён."
-}
+END
 
 MAIN_MENU MENU DISCARDABLE
-{
-   POPUP "&Правка" {
+BEGIN
+   POPUP "&Правка"
+   BEGIN
       MENUITEM "&Копировать Ctrl+C",  IDM_COPY
       MENUITEM "Вст&авить Ctrl+V",    IDM_PASTE
-   }
-   POPUP "&Вид" {
+   END
+   POPUP "&Вид"
+   BEGIN
       MENUITEM "&Простой",            IDM_MODE_STANDARD
       MENUITEM "&Научный",            IDM_MODE_SCIENTIFIC
       MENUITEM SEPARATOR
       MENUITEM "Показывать разделитель &тысяч", IDM_DIGIT_GROUPING
-   }
-   POPUP "&Справка" {
+   END
+   POPUP "&Справка"
+   BEGIN
       MENUITEM "&Содержание",         IDM_HELP_TOPICS
       MENUITEM SEPARATOR
       MENUITEM "&О программе",        IDM_ABOUT
-   }
-}
+   END
+END
 
 SCIMS_MENU MENU DISCARDABLE
-{
-   POPUP "&Правка" {
+BEGIN
+   POPUP "&Правка"
+   BEGIN
       MENUITEM "&Копировать \tCtrl+C",  IDM_COPY
       MENUITEM "Вст&авить \tCtrl+V",    IDM_PASTE
-   }
-   POPUP "&Вид" {
+   END
+   POPUP "&Вид"
+   BEGIN
       MENUITEM "&Простой",            IDM_MODE_STANDARD
       MENUITEM "&Научный",            IDM_MODE_SCIENTIFIC
       MENUITEM SEPARATOR
@@ -70,21 +75,24 @@ SCIMS_MENU MENU DISCARDABLE
 	  MENUITEM "Грады\tF4",       ID_CALC_MS_GRADS
       MENUITEM SEPARATOR
       MENUITEM "Показывать разделитель &тысяч", IDM_DIGIT_GROUPING
-   }
-   POPUP "&Справка" {
+   END
+   POPUP "&Справка"
+   BEGIN
       MENUITEM "&Содержание",         IDM_HELP_TOPICS
       MENUITEM SEPARATOR
       MENUITEM "&О программе",        IDM_ABOUT
-   }
-}
+   END
+END
 
 SCIWS_MENU MENU DISCARDABLE
-{
-   POPUP "&Правка" {
+BEGIN
+   POPUP "&Правка"
+   BEGIN
       MENUITEM "&Копировать \tCtrl+C",  IDM_COPY
       MENUITEM "Вст&авить \tCtrl+V",    IDM_PASTE
-   }
-   POPUP "&Вид" {
+   END
+   POPUP "&Вид"
+   BEGIN
       MENUITEM "&Простой",            IDM_MODE_STANDARD
       MENUITEM "&Научный",            IDM_MODE_SCIENTIFIC
       MENUITEM SEPARATOR
@@ -99,41 +107,43 @@ SCIWS_MENU MENU DISCARDABLE
 	  MENUITEM "8-битный\tF4",    ID_CALC_WS_BYTE
       MENUITEM SEPARATOR
       MENUITEM "Показывать разделитель &тысяч", IDM_DIGIT_GROUPING
-   }
-   POPUP "&Справка" {
+   END
+   POPUP "&Справка"
+   BEGIN
       MENUITEM "&Содержание",         IDM_HELP_TOPICS
       MENUITEM SEPARATOR
       MENUITEM "&О программе",        IDM_ABOUT
-   }
-}
+   END
+END
 
 MAIN_MENU ACCELERATORS
 BEGIN
    VK_F1, IDV_HELP,     VIRTKEY
 END
 
-DLG_ABOUT DIALOG 12,0,175,82
+DLG_ABOUT DIALOG 12,0,175,90
 CAPTION "О программе GNU WineCalc"
-STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 FONT 9, "MS Shell Dlg"
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 BEGIN
-   DEFPUSHBUTTON "OK", IDOK,       73, 62, 30, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+   DEFPUSHBUTTON "OK", IDOK,       73, 70, 30, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
 END
 
 WHATS_THIS_MENU MENU DISCARDABLE
-{
-    POPUP "" {
+BEGIN
+   POPUP ""
+   BEGIN
       MENUITEM "Что это?",            IDM_WHATS_THIS
-   }
-}
+   END
+END
 
-DLG_STATS DIALOG 12,0,125,78
+DLG_STATS DIALOG 12,0,145,85
 CAPTION "Статистика"
-FONT 9, "Tahoma"
+FONT 9, "MS Shell Dlg"
 STYLE WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_VISIBLE
 BEGIN
-   DEFPUSHBUTTON "&RET",  ID_STATS_RET,   4, 52, 25, 13, WS_TABSTOP | WS_GROUP
-   PUSHBUTTON    "&LOAD", ID_STATS_LOAD, 34, 52, 25, 13, WS_TABSTOP | WS_GROUP
-   PUSHBUTTON    "&CD"    ID_STATS_CD,   64, 52, 25, 13, WS_TABSTOP | WS_GROUP
-   PUSHBUTTON    "C&AD",  ID_STATS_CAD,  94, 52, 25, 13, WS_TABSTOP | WS_GROUP
+   DEFPUSHBUTTON "&RET",  ID_STATS_RET,    4, 52, 30, 13, WS_TABSTOP | WS_GROUP
+   PUSHBUTTON    "&LOAD", ID_STATS_LOAD,  39, 52, 30, 13, WS_TABSTOP | WS_GROUP
+   PUSHBUTTON    "&CD"    ID_STATS_CD,    74, 52, 30, 13, WS_TABSTOP | WS_GROUP
+   PUSHBUTTON    "C&AD",  ID_STATS_CAD,  109, 52, 30, 13, WS_TABSTOP | WS_GROUP
 END

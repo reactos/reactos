@@ -24,7 +24,7 @@
 LANGUAGE LANG_KOREAN, SUBLANG_DEFAULT
 
 STRINGTABLE
-{
+BEGIN
     STRING_INVPARMS, "올바르지 않은 매개변수의 갯수 - xcopy /?로 도움말을 보시오\n"
     STRING_INVPARM,  "올바르지 않은 매개변수 '%s' -  xcopy /?로 도움말을 보시오\n"
     STRING_PAUSE,    "<enter> 를 누르면 복사가 시작될 것입니다\n"
@@ -77,4 +77,4 @@ Where:\n\
 \t\tIf no date is supplied, only copy if destination is older\n\
 \t\tthan source\n\n"
 
-}
+END

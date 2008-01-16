@@ -1,7 +1,7 @@
 LANGUAGE LANG_GREEK, SUBLANG_DEFAULT
 
 STRINGTABLE DISCARDABLE
-{
+BEGIN
     IDS_USAGE, "Εμφανίζει τα δεδομένα σελίδα-παρά-σελίδα στην οθόνη.\n\n\
   MORE < [Δίσκος:][Μονοπάτι]Όνομα αρχείου\n\
   Εντολή | MORE \n\
@@ -12,4 +12,4 @@ STRINGTABLE DISCARDABLE
 
   IDS_CONTINUE, " -- Συνέχεια (100%) -- "
   IDS_FILE_ACCESS, "Δεν ήταν δυνατή η προσπέλαση του αρχείου %s."
-}
+END

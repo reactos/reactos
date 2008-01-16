@@ -7,11 +7,11 @@
 
 LANGUAGE LANG_HUNGARIAN, SUBLANG_DEFAULT
 STRINGTABLE DISCARDABLE
-{
+BEGIN
 
 IDS_Copy, "ReactOS Fájlkicsomagoló segédprogram 1.0 verzió\n\
 Szerzõi jog: Victor Schneider 1997\n\n\
 Használat: %s forrás [cél]\n"
 
 IDS_FAILS "LZCopy sikertelen, visszatérése: %ld\n"
-}
+END

@@ -8,11 +8,11 @@
 
 LANGUAGE LANG_GREEK, SUBLANG_DEFAULT
 STRINGTABLE DISCARDABLE
-{
+BEGIN
 
 IDS_Copy, "ReactOS Expansion Utility Version 1.0\n\
 Copyright Victor Schneider 1997\n\n\
 Χρήση: %s infile [outfile]\n"
 
 IDS_FAILS "LZΑντιγραφή απέτυχε: επιστράφηκε %ld\n"
-}
+END

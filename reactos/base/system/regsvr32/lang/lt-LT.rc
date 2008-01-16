@@ -4,7 +4,7 @@
 
 LANGUAGE LANG_LITHUANIAN, SUBLANG_DEFAULT
 STRINGTABLE DISCARDABLE
-{
+BEGIN
 
 IDS_UsageMessage, "%s\n\nNaudojimas: regsvr32 [/u] [/s] [/c] [/n] [/i[:parametras]] dll_bylos_vardas\n\
 /u -	Iðregistruoti serverá\n\
@@ -27,4 +27,4 @@ IDS_MissingEntry,    "%s ákelta, bet %s áëjimo taðkas nerastas.\n\n\
 IDS_FailureMessage,  "%s in %s nepavyko.\nGraþino: 0x%08x"
 
 IDS_SuccessMessage   "%s in %s pavyko."
-}
+END

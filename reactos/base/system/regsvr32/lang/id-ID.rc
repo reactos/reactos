@@ -7,7 +7,7 @@
 LANGUAGE LANG_INDONESIAN, SUBLANG_DEFAULT
 
 STRINGTABLE DISCARDABLE
-{
+BEGIN
 
 IDS_UsageMessage, "%s\n\nPemakaian: regsvr32 [/u] [/s] [/c] [/n] [/i[:cmdline]] dllname\n\
 /u -	Jangan register server\n\
@@ -30,4 +30,4 @@ IDS_MissingEntry,    "%s sudah diambil, tapi %s entry point tidak ditemukan.\n\n
 IDS_FailureMessage,  "%s dalam %s gagal.\nKode dihasilkan: 0x%08x"
 
 IDS_SuccessMessage   "%s dalam %s sukses."
-}
+END

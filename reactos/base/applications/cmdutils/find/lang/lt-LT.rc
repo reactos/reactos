@@ -10,7 +10,7 @@
 LANGUAGE LANG_LITHUANIAN, SUBLANG_DEFAULT
 
 STRINGTABLE DISCARDABLE
-{
+BEGIN
 
 IDS_USAGE, "FIND: Spausdina visas bylos eilutes, kuriose yra ieðkomas tekstas.\n\n\
   FIND [ /C ] [ /I ] [ /N ] [ /V ] \"tekstas\" [ byla... ]\n\
@@ -23,4 +23,4 @@ IDS_NO_SUCH_FILE, "FIND: %s: Tokios bylos nëra\n"
 
 IDS_CANNOT_OPEN, "FIND: %s: Nepavyko atverti bylos\n"
 
-}
+END

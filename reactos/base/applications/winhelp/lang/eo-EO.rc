@@ -26,24 +26,28 @@ LANGUAGE LANG_ESPERANTO, SUBLANG_DEFAULT
 /* Menu */
 
 MAIN_MENU MENU
-{
- POPUP "&Dosiero" {
+BEGIN
+ POPUP "&Dosiero"
+ BEGIN
   MENUITEM "&Malfermu", MNID_FILE_OPEN
   MENUITEM SEPARATOR
   MENUITEM "&Presu", MNID_FILE_PRINT
   MENUITEM "&Impozu Printilon...", MNID_FILE_SETUP
    MENUITEM SEPARATOR
   MENUITEM "&Finu", MNID_FILE_EXIT
- }
- POPUP "&Redakto" {
+ END
+ POPUP "&Redakto"
+ BEGIN
    MENUITEM "&Kopiu...", MNID_EDIT_COPYDLG
    MENUITEM SEPARATOR
    MENUITEM "&Notu...", MNID_EDIT_ANNOTATE
- }
- POPUP "&Legosigno" {
+ END
+ POPUP "&Legosigno"
+ BEGIN
    MENUITEM "&Difinu...", MNID_BKMK_DEFINE
- }
- POPUP "&Helpo" {
+ END
+ POPUP "&Helpo"
+ BEGIN
    MENUITEM "&Helpu pri helpo", MNID_HELP_HELPON
    MENUITEM "Æiam &supre", MNID_HELP_HELPTOP
    MENUITEM SEPARATOR
@@ -51,13 +55,13 @@ MAIN_MENU MENU
 #ifdef WINELIB
    MENUITEM "&Pri WINE", MNID_HELP_WINE
 #endif
- }
-}
+ END
+END
 
 /* Strings */
 
 STRINGTABLE DISCARDABLE
-{
+BEGIN
 STID_WINE_HELP, 	"WINE Helpanto"
 STID_WHERROR, 		"ERARO"
 STID_WARNING,  	"ATENTU"
@@ -72,4 +76,4 @@ STID_TOPICS,		"&Temoj"
 STID_ALL_FILES, 	"Tutaj dosieroj (*.*)"
 STID_HELP_FILES_HLP, 	"Helpaj dosieroj (*.hlp)"
 STID_FILE_NOT_FOUND_s	"Cannot find '%s'. Do you want to find this file yourself?"
-}
+END

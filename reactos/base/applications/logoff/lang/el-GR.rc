@@ -1,7 +1,7 @@
 LANGUAGE LANG_GREEK, SUBLANG_DEFAULT
 
 STRINGTABLE DISCARDABLE
-{
+BEGIN
 
 IDS_USAGE, "Τερματίζει μια συνεδρία.\n\n\
   /v\t\tΕμφανίζει πληροφορίες για τις ενέργειες που πραγματοποιούνται.\n\
@@ -11,5 +11,5 @@ IDS_LOGOFF_REMOTE, "Γίνεται τερματισμός της συνεδρίας στον απομακρυσμένο υπολογι
 IDS_LOGOFF_LOCAL, "Γίνεται τερματισμός της συνεδρίας στον υπολογιστή."
 
 IDS_ILLEGAL_PARAM, "Μη έγκυρη παράμετρος(οι)\n"
-}
+END
 /* EOF */

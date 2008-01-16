@@ -2,7 +2,7 @@
 
 LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
 STRINGTABLE DISCARDABLE
-{
+BEGIN
 
 
 
@@ -28,7 +28,7 @@ STRING_HELP,  "Usage: %S drive: [-FS:file-system] [-V:label] [-Q] [-A:size] [-C]
 
 STRING_COMPLETE   "%lu Prozent komplett.\r"
 
-STRING_FORMAT_FAIL "FormatEx konnte Operation nich erfolgreich beenden.\n\n"
+STRING_FORMAT_FAIL "FormatEx konnte Operation nicht erfolgreich beenden.\n\n"
 
 STRING_NO_SUPPORT  "Operation nicht unterstützt"
 
@@ -42,9 +42,9 @@ STRING_ERROR_DRIVE_TYPE  "Konnte den Laufwerkstyp nicht erhalten"
 
 STRING_INSERT_DISK       "Legen Sie eine neue Diskette in Laufwerk %C: ein\nund drücken Sie Enter wenn das Laufwerk bereit ist"
 
-STRING_NO_VOLUME         "Kann Medium nich abfragen"
+STRING_NO_VOLUME         "Kann Medium nicht abfragen"
 
-STRING_NO_VOLUME_SIZE    "Kann Mediumsgröße nich abfragen"
+STRING_NO_VOLUME_SIZE    "Kann Mediumsgröße nicht abfragen"
 
 STRING_FILESYSTEM        "Der Typ des Dateisystems ist %S.\n"
 
@@ -73,4 +73,4 @@ STRING_NO_LABEL        "Konnte Datenträger nicht benennen"
 STRING_FREE_SPACE     "\n%I64d bytes Speicherkapazitaet.\n%I64d bytes freier Speicher.\n"
 
 STRING_SERIAL_NUMBER   "\nVolume Seriennummer ist %04X-%04X\n"
-}
+END

@@ -6,11 +6,11 @@
 
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 STRINGTABLE DISCARDABLE
-{
+BEGIN
 
 IDS_Copy, "ReactOS File Expansion Utility Version 1.0\n\
 Copyright Victor Schneider 1997\n\n\
 Usage: %s infile [outfile]\n"
 
 IDS_FAILS "LZCopy failed: return is %ld\n"
-}
+END

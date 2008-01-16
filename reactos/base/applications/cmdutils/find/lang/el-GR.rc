@@ -1,7 +1,7 @@
 LANGUAGE LANG_GREEK, SUBLANG_DEFAULT
 
 STRINGTABLE DISCARDABLE
-{
+BEGIN
 
 IDS_USAGE, "FIND: Εκτυπώνει όλες τις γραμμές ενός αρχείου που περιέχουν ένα αλφαριθμητικό.\n\n\
   FIND [ /C ] [ /I ] [ /N ] [ /V ] \"αλφαριθμητικό\" [ αρχείο... ]\n\
@@ -14,4 +14,4 @@ IDS_NO_SUCH_FILE, "FIND: %s: Δεν υπάρχει αυτό το αρχείο\n"
 
 IDS_CANNOT_OPEN, "FIND: %s: Δεν ήταν δυνατό το άνοιγμα του αρχείου\n"
 
-}
+END

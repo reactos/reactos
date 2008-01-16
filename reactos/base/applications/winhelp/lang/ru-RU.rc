@@ -23,24 +23,28 @@ LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 /* Menu */
 
 MAIN_MENU MENU
-{
- POPUP "&Файл" {
+BEGIN
+ POPUP "&Файл"
+ BEGIN
   MENUITEM "&Открыть", MNID_FILE_OPEN
   MENUITEM SEPARATOR
   MENUITEM "&Печатать", MNID_FILE_PRINT
   MENUITEM "Настройка &принтера...", MNID_FILE_SETUP
    MENUITEM SEPARATOR
   MENUITEM "&Выход", MNID_FILE_EXIT
- }
- POPUP "&Правка" {
+ END
+ POPUP "&Правка"
+ BEGIN
    MENUITEM "&Копировать...", MNID_EDIT_COPYDLG
    MENUITEM SEPARATOR
    MENUITEM "&Заметки...", MNID_EDIT_ANNOTATE
- }
- POPUP "&Закладка" {
+ END
+ POPUP "&Закладка"
+ BEGIN
    MENUITEM "&Определить...", MNID_BKMK_DEFINE
- }
- POPUP "&Справка" {
+ END
+ POPUP "&Справка"
+ BEGIN
    MENUITEM "Помощь &по помощи", MNID_HELP_HELPON
    MENUITEM "Всегда &сверху", MNID_HELP_HELPTOP
    MENUITEM SEPARATOR
@@ -48,12 +52,12 @@ MAIN_MENU MENU
 #ifdef WINELIB
    MENUITEM "&О Wine", MNID_HELP_WINE
 #endif
- }
-}
+ END
+END
 
 /* Strings */
 STRINGTABLE DISCARDABLE
-{
+BEGIN
 STID_WINE_HELP, 	"Справка WINE"
 STID_WHERROR, 		"ОШИБКА"
 STID_WARNING,  		"ВНИМАНИЕ"
@@ -68,4 +72,4 @@ STID_TOPICS,		"&Указатель"
 STID_ALL_FILES, 	"Все файлы (*.*)"
 STID_HELP_FILES_HLP, 	"Файлы справки (*.hlp)"
 STID_FILE_NOT_FOUND_s	"Не могу найти '%s'. Вы хотите найти этот файл самостоятельно?"
-}
+END

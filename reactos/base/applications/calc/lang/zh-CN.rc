@@ -22,12 +22,10 @@
 #include "resource.h"
 #include "winecalc.h"
 
-//#define IDC_STATIC    1000
-
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
 STRINGTABLE DISCARDABLE
-{
+BEGIN
    IDS_APPNAME,            "计算器"
 
    IDS_COPYRIGHT1,         "计算器 5.0. 基于 LGPL 2 协议"
@@ -55,34 +53,39 @@ STRINGTABLE DISCARDABLE
    IDS_ERR_INVALID_INPUT,  "函数输入无效。"
    IDS_ERR_DIVIDE_BY_ZERO, "除数不能为零。"
    IDS_ERR_UNDEFINED,      "函数结果未定义。"
-}
+END
 
 MAIN_MENU MENU DISCARDABLE
-{
-   POPUP "编辑(&E)" {
+BEGIN
+   POPUP "编辑(&E)"
+   BEGIN
       MENUITEM "复制(&C) Ctrl+C",       IDM_COPY
       MENUITEM "粘贴(&P) Ctrl+V",       IDM_PASTE
-   }
-   POPUP "查看(&V)" {
+   END
+   POPUP "查看(&V)"
+   BEGIN
       MENUITEM "标准型",                IDM_MODE_STANDARD
       MENUITEM "科学型",                IDM_MODE_SCIENTIFIC
       MENUITEM SEPARATOR
       MENUITEM "数字分组",              IDM_DIGIT_GROUPING
-   }
-   POPUP "帮助(&H)" {
+   END
+   POPUP "帮助(&H)"
+   BEGIN
       MENUITEM "帮助主题",              IDM_HELP_TOPICS
       MENUITEM SEPARATOR
       MENUITEM "关于计算器",            IDM_ABOUT
-   }
-}
+   END
+END
 
 SCIMS_MENU MENU DISCARDABLE
-{
-   POPUP "编辑(&E)" {
+BEGIN
+   POPUP "编辑(&E)"
+   BEGIN
       MENUITEM "复制(&C) Ctrl+C",       IDM_COPY
       MENUITEM "粘贴(&P) Ctrl+V",       IDM_PASTE
-   }
-   POPUP "查看(&V)" {
+   END
+   POPUP "查看(&V)"
+   BEGIN
       MENUITEM "标准型",                IDM_MODE_STANDARD
       MENUITEM "科学型",                IDM_MODE_SCIENTIFIC
       MENUITEM SEPARATOR
@@ -96,21 +99,24 @@ SCIMS_MENU MENU DISCARDABLE
 	  MENUITEM "梯度\tF4",          ID_CALC_MS_GRADS
       MENUITEM SEPARATOR
       MENUITEM "数字分组",              IDM_DIGIT_GROUPING
-   }
-   POPUP "帮助(&H)" {
+   END
+   POPUP "帮助(&H)"
+   BEGIN
       MENUITEM "帮助主题",              IDM_HELP_TOPICS
       MENUITEM SEPARATOR
       MENUITEM "关于计算器",            IDM_ABOUT
-   }
-}
+   END
+END
 
 SCIWS_MENU MENU DISCARDABLE
-{
-   POPUP "编辑(&E)" {
+BEGIN
+   POPUP "编辑(&E)"
+   BEGIN
       MENUITEM "复制(&C) Ctrl+C",       IDM_COPY
       MENUITEM "粘贴(&P) Ctrl+V",       IDM_PASTE
-   }
-   POPUP "查看(&V)" {
+   END
+   POPUP "查看(&V)"
+   BEGIN
       MENUITEM "标准型",                IDM_MODE_STANDARD
       MENUITEM "科学型",                IDM_MODE_SCIENTIFIC
       MENUITEM SEPARATOR
@@ -125,13 +131,14 @@ SCIWS_MENU MENU DISCARDABLE
 	  MENUITEM "字节\tF4",          ID_CALC_WS_BYTE
       MENUITEM SEPARATOR
       MENUITEM "数字分组",              IDM_DIGIT_GROUPING
-   }
-   POPUP "帮助(&H)" {
+   END
+   POPUP "帮助(&H)"
+   BEGIN
       MENUITEM "帮助主题",              IDM_HELP_TOPICS
       MENUITEM SEPARATOR
       MENUITEM "关于计算器",            IDM_ABOUT
-   }
-}
+   END
+END
 
 MAIN_MENU ACCELERATORS
 BEGIN
@@ -150,11 +157,12 @@ BEGIN
 END
 
 WHATS_THIS_MENU MENU DISCARDABLE
-{
-    POPUP "" {
+BEGIN
+   POPUP ""
+   BEGIN
       MENUITEM "What's This?",          IDM_WHATS_THIS
-   }
-}
+   END
+END
 
 DLG_STATS DIALOG 12,0,125,78
 CAPTION "统计框"

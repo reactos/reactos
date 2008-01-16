@@ -24,24 +24,28 @@ LANGUAGE LANG_DANISH, SUBLANG_DEFAULT
 /* Menu */
 
 MAIN_MENU MENU
-{
- POPUP "&Filer" {
+BEGIN
+ POPUP "&Filer"
+ BEGIN
   MENUITEM "Å&bn...", MNID_FILE_OPEN
   MENUITEM SEPARATOR
   MENUITEM "&Udskriv emne", MNID_FILE_PRINT
   MENUITEM "&Indstil printer", MNID_FILE_SETUP
    MENUITEM SEPARATOR
   MENUITEM "&Afslut", MNID_FILE_EXIT
- }
- POPUP "&Rediger" {
+ END
+ POPUP "&Rediger"
+ BEGIN
    MENUITEM "K&opier...", MNID_EDIT_COPYDLG
    MENUITEM SEPARATOR
    MENUITEM "&Anmærk...", MNID_EDIT_ANNOTATE
- }
- POPUP "Bog&mærke" {
+ END
+ POPUP "Bog&mærke"
+ BEGIN
    MENUITEM "&Definer...", MNID_BKMK_DEFINE
- }
- POPUP "&Hjælp" {
+ END
+ POPUP "&Hjælp"
+ BEGIN
    MENUITEM "&Brug af Hjælp", MNID_HELP_HELPON
    MENUITEM "Altid &øverst", MNID_HELP_HELPTOP
    MENUITEM SEPARATOR
@@ -49,14 +53,14 @@ MAIN_MENU MENU
 #ifdef WINELIB
    MENUITEM "Om &WINE", MNID_HELP_WINE
 #endif
- }
-}
+ END
+END
 
 
 /* Strings */
 
 STRINGTABLE DISCARDABLE
-{
+BEGIN
 STID_WINE_HELP, 	"WINE Hjælp"
 STID_WHERROR, 		"FEJL"
 STID_WARNING,  		"ADVARSEL"
@@ -71,4 +75,4 @@ STID_TOPICS, 		"To&pics"
 STID_ALL_FILES, 	"Alle filer (*.*)"
 STID_HELP_FILES_HLP, 	"Hjælpe filer (*.hlp)"
 STID_FILE_NOT_FOUND_s	"Cannot find '%s'. Do you want to find this file yourself?"
-}
+END

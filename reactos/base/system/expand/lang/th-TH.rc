@@ -23,11 +23,11 @@
 LANGUAGE LANG_THAI, SUBLANG_DEFAULT
 
 STRINGTABLE DISCARDABLE
-{
+BEGIN
 
 IDS_Copy, "โปรแกรมอรรถประโยชน์เพื่อปรับแต่งแฟ้มของ ReactOS รุ่นที่ 1.0\n\
 สงวนลิขสิทธิ์ Victor Schneider 1997\n\n\
 สภาวะใช้งาน: %s แฟ้มภายใน [แฟ้มภายนอก]\n"
 
 IDS_FAILS "การคัดลอกล้มเหลว: ย้อนกลับเป็น %ld\n"
-}
+END

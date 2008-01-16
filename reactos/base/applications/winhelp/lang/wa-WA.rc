@@ -25,24 +25,28 @@ LANGUAGE LANG_WALON, SUBLANG_DEFAULT
 /* Menu */
 
 MAIN_MENU MENU
-{
- POPUP "&Fitchî" {
+BEGIN
+ POPUP "&Fitchî"
+ BEGIN
   MENUITEM "&Drovî...", MNID_FILE_OPEN
   MENUITEM SEPARATOR
   MENUITEM "&Rexhe", MNID_FILE_PRINT
   MENUITEM "&Apontiaedje del scrirece...", MNID_FILE_SETUP
    MENUITEM SEPARATOR
   MENUITEM "Moussî &Foû", MNID_FILE_EXIT
- }
- POPUP "&Candjî" {
+ END
+ POPUP "&Candjî"
+ BEGIN
    MENUITEM "&Copyî...", MNID_EDIT_COPYDLG
    MENUITEM SEPARATOR
    MENUITEM "&Sicrîre...", MNID_EDIT_ANNOTATE
- }
- POPUP "&Rimårkes" {
+ END
+ POPUP "&Rimårkes"
+ BEGIN
    MENUITEM "&Defini...", MNID_BKMK_DEFINE
- }
- POPUP "&Aide" {
+ END
+ POPUP "&Aide"
+ BEGIN
    MENUITEM "&Aide so l' Aide", MNID_HELP_HELPON
    MENUITEM "Todi &Visibe", MNID_HELP_HELPTOP
    MENUITEM SEPARATOR
@@ -50,13 +54,13 @@ MAIN_MENU MENU
 #ifdef WINELIB
    MENUITEM "Å &dfait di WINEE", MNID_HELP_WINE
 #endif
- }
-}
+ END
+END
 
 /* Strings */
 
 STRINGTABLE DISCARDABLE
-{
+BEGIN
 STID_WINE_HELP, 	"Aidance di WINE"
 STID_WHERROR, 		"AROKE"
 STID_WARNING,  		"ADVERTIXHMINT"
@@ -71,4 +75,4 @@ STID_TOPICS,		"&Topics"
 STID_ALL_FILES, 	"Tos les fitchîs (*.*)"
 STID_HELP_FILES_HLP, 	"Fitchîs d' aide (*.hlp)"
 STID_FILE_NOT_FOUND_s	"Cannot find '%s'. Do you want to find this file yourself?"
-}
+END

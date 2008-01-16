@@ -8,8 +8,8 @@
 LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
 
 STRINGTABLE DISCARDABLE
-{
-    IDS_USAGE, "Виводить інфрмацію поекранно. Використання:\n\n\
+BEGIN
+  IDS_USAGE, "Виводить інфрмацію поекранно. Використання:\n\n\
   MORE < [Drive:][Path]Ім'я_файлу\n\
   Command | MORE \n\
   MORE [Drive:][Path]Ім'я_файлу\n\n\
@@ -20,4 +20,4 @@ STRINGTABLE DISCARDABLE
 
   IDS_CONTINUE, " -- Далі (100%) -- "
   IDS_FILE_ACCESS, "Не можу отримати доступ до файла %s."
-}
+END

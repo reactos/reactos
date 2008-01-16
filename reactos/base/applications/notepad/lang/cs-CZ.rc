@@ -24,7 +24,7 @@
 LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
 
 ID_ACCEL ACCELERATORS
-{
+BEGIN
     "^A", CMD_SELECT_ALL
     "^C", CMD_COPY
     "^F", CMD_SEARCH
@@ -37,7 +37,7 @@ ID_ACCEL ACCELERATORS
     "^Z", CMD_UNDO
     VK_F3, CMD_SEARCH_NEXT, VIRTKEY
     VK_F5, CMD_TIME_DATE, VIRTKEY
-}
+END
 
 MAIN_MENU MENU
 BEGIN
@@ -65,12 +65,20 @@ BEGIN
 		MENUITEM SEPARATOR
 		MENUITEM "&Hledej\tCtrl+F",        CMD_SEARCH
 		MENUITEM "&Najdi další\tF3",       CMD_SEARCH_NEXT
+		MENUITEM "Replace\tCtrl+H",   CMD_REPLACE
+		MENUITEM "Go To...\tCtrl+G",  CMD_GOTO
 		MENUITEM SEPARATOR
 		MENUITEM "Vybrat vš&e\tCtrl+A",    CMD_SELECT_ALL
 		MENUITEM "È&as/Datum\tF5",         CMD_TIME_DATE
-		MENUITEM SEPARATOR
+	END
+	POPUP "F&ormat"
+	BEGIN
 		MENUITEM "Zalo&mit dlouhé øádky",  CMD_WRAP
 		MENUITEM "&Písmo...",              CMD_FONT
+	END
+	POPUP "&View"
+	BEGIN
+		MENUITEM "Status&bar",    CMD_STATUSBAR
 	END
 	POPUP "&Nápovìda"
 	BEGIN
@@ -89,7 +97,7 @@ DIALOG_PAGESETUP DIALOG 0, 0, 225, 95
 STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 CAPTION "Nastavení stránky"
-{
+BEGIN
 LTEXT    "Zá&hlaví:",  0x140,   10, 07, 40, 15
 EDITTEXT                         0x141,       60, 05,110, 12, WS_BORDER | WS_TABSTOP
 LTEXT    "&Zápatí:",  0x142,   10, 24, 40, 15
@@ -108,7 +116,32 @@ EDITTEXT /*STRING_PAGESETUP_BOTTOMVALUE,*/ 0x150,    130, 73, 35, 11, WS_CHILD |
 DEFPUSHBUTTON "OK",         IDOK,                   180,  3, 40, 15, WS_TABSTOP
 PUSHBUTTON    "Storno",     IDCANCEL,               180, 21, 40, 15, WS_TABSTOP
 PUSHBUTTON    "&Nápovìda",       IDHELP,                180, 39, 40, 15, WS_TABSTOP
-}
+END
+
+/* Dialog `Encoding' */
+DIALOG_ENCODING DIALOG 0, 0, 256, 44
+STYLE DS_SETFONT | DS_FIXEDSYS | DS_CONTROL | WS_CHILD | WS_CLIPSIBLINGS |
+    WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "Encoding"
+BEGIN
+COMBOBOX        ID_ENCODING,54,0,156,80,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+LTEXT           "Encoding:",0x155,5,2,41,12
+COMBOBOX        ID_EOLN,54,18,156,80,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+LTEXT           "Endlines:",0x156,5,20,41,12
+END
+
+/* Dialog 'Go To' */
+DIALOG_GOTO DIALOG 0,0,165,50
+STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "Goto line"
+BEGIN
+EDITTEXT        ID_LINENUMBER,54,10,106,12,WS_CHILD | WS_BORDER | WS_TABSTOP
+LTEXT           "Line number:",0x155,5,12,41,12,WS_CHILD | WS_TABSTOP | ES_NUMBER
+DEFPUSHBUTTON   "OK", IDOK, 75, 30, 40, 15, WS_CHILD | WS_TABSTOP
+PUSHBUTTON      "Cancel", IDCANCEL, 120, 30, 40, 15, WS_CHILD | WS_TABSTOP
+END
 
 IDD_ABOUTBOX DIALOG DISCARDABLE  22,16,284,170
 STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
@@ -131,7 +164,7 @@ BEGIN
 END
 
 STRINGTABLE DISCARDABLE
-{
+BEGIN
 STRING_PAGESETUP_HEADERVALUE,   "&n"        /* FIXME */
 STRING_PAGESETUP_FOOTERVALUE,   "Strana &s"   /* FIXME */
 STRING_PAGESETUP_LEFTVALUE,             "20 mm"     /* FIXME */
@@ -161,5 +194,12 @@ STRING_NOTFOUND,                                        "'%s' nebyl nalezen."
 STRING_OUT_OF_MEMORY,                   "Není dost pamìti na dokonèení této úlohy. \
 \nUzavøete jednu èi více aplikací, abyste získali více  \nvolné \
 pamìti."
-
-}
+STRING_CANNOTFIND                               "Cannot find '%s'"
+STRING_ANSI,                                    "ANSI"
+STRING_UNICODE,                                 "Unicode"
+STRING_UNICODE_BE,                              "Unicode (big endian)"
+STRING_UTF8,                                    "UTF-8"
+STRING_CRLF,                                    "Windows"
+STRING_LF,                                      "Unix"
+STRING_CR,                                      "Mac"
+END

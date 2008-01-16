@@ -25,24 +25,28 @@ LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 /* Menu */
 
 MAIN_MENU MENU
-{
- POPUP "&Archivo" {
+BEGIN
+ POPUP "&Archivo"
+ BEGIN
   MENUITEM "A&brir...", MNID_FILE_OPEN
   MENUITEM SEPARATOR
   MENUITEM "&Imprimir", MNID_FILE_PRINT
   MENUITEM "&Configuración impresora...", MNID_FILE_SETUP
    MENUITEM SEPARATOR
   MENUITEM "&Salir", MNID_FILE_EXIT
- }
- POPUP "&Editar" {
+ END
+ POPUP "&Editar"
+ BEGIN
    MENUITEM "&Copiar...", MNID_EDIT_COPYDLG
    MENUITEM SEPARATOR
    MENUITEM "&Anotar...", MNID_EDIT_ANNOTATE
- }
- POPUP "&Marcador" {
+ END
+ POPUP "&Marcador"
+ BEGIN
    MENUITEM "&Definir...", MNID_BKMK_DEFINE
- }
- POPUP "A&yuda" {
+ END
+ POPUP "A&yuda"
+ BEGIN
    MENUITEM "&Ayuda sobre la ayuda", MNID_HELP_HELPON
    MENUITEM "&Siempre visible", MNID_HELP_HELPTOP
    MENUITEM SEPARATOR
@@ -50,13 +54,13 @@ MAIN_MENU MENU
 #ifdef WINELIB
    MENUITEM "&Acerca de WINE", MNID_HELP_WINE
 #endif
- }
-}
+ END
+END
 
 /* Strings */
 
 STRINGTABLE DISCARDABLE
-{
+BEGIN
 STID_WINE_HELP, 	"Ayuda de WINE"
 STID_WHERROR, 		"ERROR"
 STID_WARNING,  		"ADVERTENCIA"
@@ -71,4 +75,4 @@ STID_TOPICS,		"&Temas"
 STID_ALL_FILES, 	"Todos los archivos (*.*)"
 STID_HELP_FILES_HLP, 	"Archivos de ayuda (*.hlp)"
 STID_FILE_NOT_FOUND_s	"Cannot find '%s'. Do you want to find this file yourself?"
-}
+END

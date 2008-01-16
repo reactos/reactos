@@ -6,7 +6,7 @@
 
 LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
 STRINGTABLE DISCARDABLE
-{
+BEGIN
 STRING_HELP,  "Употреба: %S устройство: [-FS:файлова_система] [-V:етикет] [-Q] [-A:размер] [-C]\n\n\
   [drive:]         Указва устройството за оразмеряване.\n\
   -FS:файлова_система  Указва вида на дайловата система (%s).\n\
@@ -69,4 +69,4 @@ STRING_NO_LABEL        "Неуспежно поставяне на етикет"
 STRING_FREE_SPACE     "\n%I64d байта общо дисково пространство.\n%I64d байта достъпни.\n"
 
 STRING_SERIAL_NUMBER   "\nПроизводствен номер на носителя: %04X-%04X\n"
-}
+END

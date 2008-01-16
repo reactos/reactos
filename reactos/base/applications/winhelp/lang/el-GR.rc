@@ -24,24 +24,28 @@ LANGUAGE LANG_GREEK, SUBLANG_DEFAULT
 /* Menu */
 
 MAIN_MENU MENU
-{
- POPUP "&Αρχείο" {
+BEGIN
+ POPUP "&Αρχείο"
+ BEGIN
   MENUITEM "&’νοιγμα", MNID_FILE_OPEN
   MENUITEM SEPARATOR
   MENUITEM "&Εκτύπωση", MNID_FILE_PRINT
   MENUITEM "Ρυ&θμίσεις εκτυπωτή...", MNID_FILE_SETUP
    MENUITEM SEPARATOR
   MENUITEM "Έ&ξοδος", MNID_FILE_EXIT
- }
- POPUP "&ΕΠεξεργασία" {
+ END
+ POPUP "&ΕΠεξεργασία"
+ BEGIN
    MENUITEM "&Αντιγραφή...", MNID_EDIT_COPYDLG
    MENUITEM SEPARATOR
    MENUITEM "&Annotate...", MNID_EDIT_ANNOTATE
- }
- POPUP "Α&γαπημένα" {
+ END
+ POPUP "Α&γαπημένα"
+ BEGIN
    MENUITEM "&Define...", MNID_BKMK_DEFINE
- }
- POPUP "&Βοήθεια" {
+ END
+ POPUP "&Βοήθεια"
+ BEGIN
    MENUITEM "Help &on help", MNID_HELP_HELPON
    MENUITEM "Πάντα στο προ&σκήνιο", MNID_HELP_HELPTOP
    MENUITEM SEPARATOR
@@ -49,13 +53,13 @@ MAIN_MENU MENU
 #ifdef WINELIB
    MENUITEM "&Σχετικά με το WINE", MNID_HELP_WINE
 #endif
- }
-}
+ END
+END
 
 /* Strings */
 
 STRINGTABLE DISCARDABLE
-{
+BEGIN
 STID_WINE_HELP, 	"WINE Help"
 STID_WHERROR, 		"ΣΦΑΛΜΑ"
 STID_WARNING,  		"ΠΡΟΕΙΔΟΠΟΙΗΣΗ"
@@ -70,4 +74,4 @@ STID_TOPICS,		"&Θέματα"
 STID_ALL_FILES, 	"Όλα τα αρχεία (*.*)"
 STID_HELP_FILES_HLP, 	"Αρχεία βοήθειας (*.hlp)"
 STID_FILE_NOT_FOUND_s	"Δεν ήταν δυνατή η εύρεση του '%s'. Θέλετε να ψάξετε μόνοι σας για το αρχείο αυτό;"
-}
+END

@@ -1,7 +1,7 @@
 LANGUAGE LANG_NORWEGIAN, SUBLANG_NEUTRAL
 
 STRINGTABLE DISCARDABLE
-{
+BEGIN
 
 IDS_HELP, "Viser eller endrer tilgang kontroll lister (ACL) av filer\n\n\
 CACLS filnavn  [/T] [/E] [/C] [/G bruker:perm [...]] [/R user [...]]\n\
@@ -71,4 +71,4 @@ IDS_WRITE_DAC, "SKRIVE_DAC"
 IDS_READ_CONTROL, "LESE_KONTROLL"
 IDS_DELETE, "SLETT"
 IDS_STANDARD_RIGHTS_ALL, "STANDARD_RETTIGHETER_ALT"
-}
+END

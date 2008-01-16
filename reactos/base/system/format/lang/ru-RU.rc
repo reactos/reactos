@@ -4,7 +4,7 @@
 
 LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 STRINGTABLE DISCARDABLE
-{
+BEGIN
 STRING_HELP,  "Использование: %S том: [-FS:система] [-V:метка] [-Q] [-A:размер] [-C]\n\n\
   [том:]         Указывает букву диска (с последующим двоеточием),\n\
                  точку подключения или имя тома.\n\
@@ -67,4 +67,4 @@ STRING_NO_LABEL        "Без метки тома"
 STRING_FREE_SPACE     "\n%I64d байт свободно на диске.\n%I64d байт доступно на диске.\n"
 
 STRING_SERIAL_NUMBER   "\nСерийный номер тома %04X-%04X\n"
-}
+END

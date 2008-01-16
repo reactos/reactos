@@ -1,7 +1,7 @@
 LANGUAGE LANG_GREEK, SUBLANG_DEFAULT
 
 STRINGTABLE DISCARDABLE
-{
+BEGIN
 
 IDS_USAGE, "Χρήση: shutdown [-?] [-l | -s | -r] [-f]\n\n\
   Κανένα όρισμα ή -?\tΕμφάνιση αυτού του μηνύματος\n\
@@ -11,4 +11,4 @@ IDS_USAGE, "Χρήση: shutdown [-?] [-l | -s | -r] [-f]\n\n\
   -f\t\t\tΕξαναγκάζει τις τρέχουσες εφαρμογές να κλείσουν χωρίς προειδοποίηση\n\
     \t\t\tΑν δε δηλώσατε κάποια άλλη παράμετρο, αυτή η επιλογή\n\
     \t\t\tθα κάνει την αποσύνδεση"
-}
+END

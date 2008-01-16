@@ -1,7 +1,7 @@
 LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
 STRINGTABLE DISCARDABLE
-{
+BEGIN
 
 IDS_HELP, "Отображает или изменяет списки доступа (ACLs) к файлам\n\n\
 CACLS имя_Файла [/T] [/E] [/C] [/G имя:право [...]] [/R имя [...]]\n\
@@ -72,4 +72,4 @@ IDS_WRITE_DAC, "WRITE_DAC"
 IDS_READ_CONTROL, "READ_CONTROL"
 IDS_DELETE, "DELETE"
 IDS_STANDARD_RIGHTS_ALL, "STANDARD_RIGHTS_ALL"
-}
+END

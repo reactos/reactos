@@ -24,13 +24,13 @@
 LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
 
 ID_ACCEL ACCELERATORS
-{
+BEGIN
     VK_DELETE, ID_EDIT_DELETE, VIRTKEY, NOINVERT
     "^F", ID_EDIT_FIND
     VK_F3, ID_EDIT_FINDNEXT, VIRTKEY, NOINVERT
     VK_F5, ID_VIEW_REFRESH, VIRTKEY, NOINVERT
     VK_F1, ID_HELP_HELPTOPICS, VIRTKEY, NOINVERT
-}
+END
 
 /*
  * Menu
@@ -53,13 +53,19 @@ BEGIN
     POPUP "&Fichier"
     BEGIN
         MENUITEM "&Importer...",    ID_REGISTRY_IMPORTREGISTRYFILE
+
         MENUITEM "&Exporter...",    ID_REGISTRY_EXPORTREGISTRYFILE
+
         MENUITEM SEPARATOR
         MENUITEM "Charger un fichier registre...",				ID_REGISTRY_LOADHIVE, GRAYED
         MENUITEM "Décharger un fichier registre...",				ID_REGISTRY_UNLOADHIVE, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "&Connecter à des registres via le réseau...", ID_REGISTRY_CONNECTNETWORKREGISTRY
+
+
         MENUITEM "&Déconnecter de registres réseau...", ID_REGISTRY_DISCONNECTNETWORKREGISTRY, GRAYED
+
+
         MENUITEM SEPARATOR
         MENUITEM "Im&primer\tCtrl+P",              ID_REGISTRY_PRINT, GRAYED
         MENUITEM SEPARATOR
@@ -132,6 +138,8 @@ BEGIN
             MENUITEM "Valeur chaîne",               ID_EDIT_NEW_STRINGVALUE
             MENUITEM "Valeur &binaire",               ID_EDIT_NEW_BINARYVALUE
             MENUITEM "Valeur mot &double",                ID_EDIT_NEW_DWORDVALUE
+            MENUITEM "&Multi-String Value",         ID_EDIT_NEW_MULTISTRINGVALUE
+            MENUITEM "&Expandable String Value",    ID_EDIT_NEW_EXPANDABLESTRINGVALUE
         END
   END
   POPUP ""
@@ -144,6 +152,8 @@ BEGIN
             MENUITEM "Valeur chaîne",               ID_EDIT_NEW_STRINGVALUE
             MENUITEM "Valeur &binaire",               ID_EDIT_NEW_BINARYVALUE
             MENUITEM "Valeur mot &double",                ID_EDIT_NEW_DWORDVALUE
+            MENUITEM "&Multi-String Value",         ID_EDIT_NEW_MULTISTRINGVALUE
+            MENUITEM "&Expandable String Value",    ID_EDIT_NEW_EXPANDABLESTRINGVALUE
         END
         MENUITEM "Cherche",                           ID_EDIT_FIND
         MENUITEM SEPARATOR

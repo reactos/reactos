@@ -9,7 +9,7 @@
 LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
 STRINGTABLE DISCARDABLE
-{
+BEGIN
   IDS_USAGE, "Показывать данные постранично заполняя экран.\n\n\
   MORE < [Том:][Путь]Имя файла\n\
   Command | MORE \n\
@@ -20,4 +20,4 @@ STRINGTABLE DISCARDABLE
 
   IDS_CONTINUE, " -- Продолжить (100%) -- "
   IDS_FILE_ACCESS, "Нет доступа к файлу %s."
-}
+END

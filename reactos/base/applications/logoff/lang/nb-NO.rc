@@ -1,7 +1,7 @@
 LANGUAGE LANG_NORWEGIAN, SUBLANG_NEUTRAL
 
 STRINGTABLE DISCARDABLE
-{
+BEGIN
 
 IDS_USAGE, "Avslutter en sesjon.\n\n\
   /v\t\tViser informasjon om handlingen som utføres.\n\
@@ -11,6 +11,6 @@ IDS_LOGOFF_REMOTE, "Logger av økt på en annen maskin"
 IDS_LOGOFF_LOCAL, "Logger av økten på denne maskinen."
 
 IDS_ILLEGAL_PARAM, "En eller flere ugyldige parametre.\n"
-}
+END
 
 /* EOF */

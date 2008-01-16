@@ -8,7 +8,7 @@ LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
  */
 
 STRINGTABLE DISCARDABLE
-{
+BEGIN
 STRING_HELP,  "Uso: %S drive: [-FS:file-system] [-V:label] [-Q] [-A:size] [-C]\n\n\
   [drive:]         Specifica l'unità disco da formattare.\n\
   -FS:file-system  Specifica il tipo di filesystem (%s).\n\
@@ -69,4 +69,4 @@ STRING_NO_LABEL        "Impossibile applicare l'etichetta al volume"
 STRING_FREE_SPACE     "\n%I64d bytes totali sul disco.\n%I64d bytes sono liberi.\n"
 
 STRING_SERIAL_NUMBER   "\nVolume Serial Number è %04X-%04X\n"
-}
+END

@@ -9,7 +9,7 @@
 
 LANGUAGE LANG_HUNGARIAN, SUBLANG_DEFAULT
 STRINGTABLE DISCARDABLE
-{
+BEGIN
 
 STRING_ATTRIB_HELP,    "Állományok attribútumok megjelenítése vagy beállításai.\n\n\
 ATTRIB [+R | -R] [+A | -A] [+S | -S] [+H | -H] állomány ...\n\
@@ -620,4 +620,4 @@ STRING_FOR_ERROR,                  "Hibás változó."
 STRING_SCREEN_COL,                 "Érvénytelen érték oszlopnak"
 STRING_SCREEN_ROW,                 "Érvénytelen érték sornak"
 STRING_TIMER_TIME                  "Idõzítõ %d értéke %s: "
-}
+END

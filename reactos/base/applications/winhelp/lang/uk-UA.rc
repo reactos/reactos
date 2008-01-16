@@ -11,24 +11,28 @@ LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
 /* Menu */
 
 MAIN_MENU MENU
-{
- POPUP "&Файл" {
+BEGIN
+ POPUP "&Файл"
+ BEGIN
   MENUITEM "&Відкрити", MNID_FILE_OPEN
   MENUITEM SEPARATOR
   MENUITEM "&Друк", MNID_FILE_PRINT
   MENUITEM "Налаштування &прінтера...", MNID_FILE_SETUP
    MENUITEM SEPARATOR
   MENUITEM "В&ихід", MNID_FILE_EXIT
- }
- POPUP "&Правка" {
+ END
+ POPUP "&Правка"
+ BEGIN
    MENUITEM "&Копіювати...", MNID_EDIT_COPYDLG
    MENUITEM SEPARATOR
    MENUITEM "&Опис...", MNID_EDIT_ANNOTATE
- }
- POPUP "&Закладка" {
+ END
+ POPUP "&Закладка"
+ BEGIN
    MENUITEM "&Визначити...", MNID_BKMK_DEFINE
- }
- POPUP "&Допомога" {
+ END
+ POPUP "&Допомога"
+ BEGIN
    MENUITEM "Допомога &по допомозі", MNID_HELP_HELPON
    MENUITEM "&Над усіма вікнами", MNID_HELP_HELPTOP
    MENUITEM SEPARATOR
@@ -36,13 +40,13 @@ MAIN_MENU MENU
 #ifdef WINELIB
    MENUITEM "&Про WINE", MNID_HELP_WINE
 #endif
- }
-}
+ END
+END
 
 /* Strings */
 
 STRINGTABLE DISCARDABLE
-{
+BEGIN
 STID_WINE_HELP, 	"Допомога WINE"
 STID_WHERROR, 		"ПОМИЛКА"
 STID_WARNING,  		"ПОПЕРЕДЖЕННЯ"
@@ -57,4 +61,4 @@ STID_TOPICS,		"&Розділи"
 STID_ALL_FILES, 	"Всі файли (*.*)"
 STID_HELP_FILES_HLP, 	"Файли допомоги (*.hlp)"
 STID_FILE_NOT_FOUND_s	"Не можу знайти '%s'. Чи не бажаєте вказати розташування самостійно?"
-}
+END

@@ -25,24 +25,28 @@ LANGUAGE LANG_FINNISH, SUBLANG_DEFAULT
 /* Menu */
 
 MAIN_MENU MENU
-{
- POPUP "&Tiedosto" {
+BEGIN
+ POPUP "&Tiedosto"
+ BEGIN
   MENUITEM "&Avaa...", MNID_FILE_OPEN
   MENUITEM SEPARATOR
   MENUITEM "&Tulosta", MNID_FILE_PRINT
   MENUITEM "&Kirjoittimen asetukset...", MNID_FILE_SETUP
    MENUITEM SEPARATOR
   MENUITEM "&Lopeta", MNID_FILE_EXIT
- }
- POPUP "&Muokkaa" {
+ END
+ POPUP "&Muokkaa"
+ BEGIN
    MENUITEM "&Kopioi...", MNID_EDIT_COPYDLG
    MENUITEM SEPARATOR
    MENUITEM "&Huomautus...", MNID_EDIT_ANNOTATE
- }
- POPUP "&Kirjanmerkki" {
+ END
+ POPUP "&Kirjanmerkki"
+ BEGIN
    MENUITEM "&Aseta...", MNID_BKMK_DEFINE
- }
- POPUP "&Ohje" {
+ END
+ POPUP "&Ohje"
+ BEGIN
    MENUITEM "&Ohjeen käyttö", MNID_HELP_HELPON
    MENUITEM "&Aina päällimmäisenä", MNID_HELP_HELPTOP
    MENUITEM SEPARATOR
@@ -50,13 +54,13 @@ MAIN_MENU MENU
 #ifdef WINELIB
    MENUITEM "&Tietoja WINEstä", MNID_HELP_WINE
 #endif
- }
-}
+ END
+END
 
 /* Strings */
 
 STRINGTABLE DISCARDABLE
-{
+BEGIN
 STID_WINE_HELP, 	"WINE Ohje"
 STID_WHERROR, 		"VIRHE"
 STID_WARNING,  		"VAROITUS"
@@ -71,4 +75,4 @@ STID_TOPICS,		"T&opics"
 STID_ALL_FILES, 	"Kaikki tiedostot (*.*)"
 STID_HELP_FILES_HLP, 	"Ohjetiedostot (*.hlp)"
 STID_FILE_NOT_FOUND_s	"Cannot find '%s'. Do you want to find this file yourself?"
-}
+END

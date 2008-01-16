@@ -3,7 +3,7 @@
 
 LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
 STRINGTABLE DISCARDABLE
-{
+BEGIN
 
 STRING_ATTRIB_HELP,    "Visualizza o modifica gli attributi dei file.\n\n\
 ATTRIB [+R | -R] [+A | -A] [+S | -S] [+H | -H] file ...\n\
@@ -654,4 +654,4 @@ STRING_EXPECTED_CLOSE_PAREN,       "Attesa una ')'."
 STRING_EXPECTED_NUMBER_OR_VARIABLE,"Attesa un numero o un nome di variabile."
 STRING_SYNTAX_COMMAND_INCORRECT,   "La sintassi del comando è errata."
 
-}
+END

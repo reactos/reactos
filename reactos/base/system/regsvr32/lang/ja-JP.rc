@@ -6,7 +6,7 @@
 
 LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
 STRINGTABLE DISCARDABLE
-{
+BEGIN
 
 IDS_UsageMessage, "%s\n\ng—p–@: regsvr32 [/u] [/s] [/c] [/n] [/i[:ƒRƒ}ƒ“ƒh ƒ‰ƒCƒ“]] DLL–¼\n\
 /u -	ƒT[ƒo[‚ğ“o˜^‰ğœ‚·‚é\n\
@@ -29,4 +29,4 @@ IDS_MissingEntry,    "%s ‚ğ“Ç‚İ‚İ‚Ü‚µ‚½‚ªA%s ƒGƒ“ƒgƒŠ ƒ|ƒCƒ“ƒg‚ªŒ©‚Â‚©‚è‚Ü‚¹‚
 IDS_FailureMessage,  "%s (%s ‚Ì) ‚É¸”s‚µ‚Ü‚µ‚½B\n•Ô‚Á‚Ä‚«‚½ƒR[ƒh: 0x%08x"
 
 IDS_SuccessMessage   "%s (%s ‚Ì) ‚É¬Œ÷‚µ‚Ü‚µ‚½B"
-}
+END

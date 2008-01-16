@@ -6,11 +6,11 @@
 
 LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
 STRINGTABLE DISCARDABLE
-{
+BEGIN
 
 IDS_Copy, "Принадлежност на РеактОС за разгъване (разкомпресиране) на файлове, в. 1.0\n\
 Възпроизводствено право на Victor Schneider 1997\n\n\
 Употреба: %s входящфайл [изходящфайл]\n"
 
 IDS_FAILS "LZCopy неуспешно: върнато е %ld\n"
-}
+END

@@ -1,7 +1,7 @@
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 
 STRINGTABLE DISCARDABLE
-{
+BEGIN
 
 IDS_USAGE, "FIND: Prints all lines of a file that contain a string.\n\n\
   FIND [ /C ] [ /I ] [ /N ] [ /V ] \"string\" [ file... ]\n\
@@ -14,4 +14,4 @@ IDS_NO_SUCH_FILE, "FIND: %s: No such file\n"
 
 IDS_CANNOT_OPEN, "FIND: %s: Cannot open file\n"
 
-}
+END

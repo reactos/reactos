@@ -8,7 +8,7 @@
 LANGUAGE LANG_INDONESIAN, SUBLANG_DEFAULT
 
 STRINGTABLE DISCARDABLE
-{
+BEGIN
 
 STRING_ATTRIB_HELP,    "Menampilkan atau mengubah atribut file.\n\n\
 ATTRIB [+R | -R] [+A | -A] [+S | -S] [+H | -H] file ...\n\
@@ -648,4 +648,4 @@ STRING_EXPECTED_CLOSE_PAREN,       "Diharapkan ')'."
 STRING_EXPECTED_NUMBER_OR_VARIABLE,"Nomor  atau nama variabel diharapkan."
 STRING_SYNTAX_COMMAND_INCORRECT,   "Sintaks perintah tidak benar."
 
-}
+END

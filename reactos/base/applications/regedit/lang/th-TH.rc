@@ -21,13 +21,13 @@
 LANGUAGE LANG_THAI, SUBLANG_DEFAULT
 
 ID_ACCEL ACCELERATORS
-{
+BEGIN
     VK_DELETE, ID_EDIT_DELETE, VIRTKEY, NOINVERT
     "^F", ID_EDIT_FIND
     VK_F3, ID_EDIT_FINDNEXT, VIRTKEY, NOINVERT
     VK_F5, ID_VIEW_REFRESH, VIRTKEY, NOINVERT
     VK_F1, ID_HELP_HELPTOPICS, VIRTKEY, NOINVERT
-}
+END
 
 /*
  * Menu
@@ -135,6 +135,8 @@ BEGIN
             MENUITEM "&String Value",               ID_EDIT_NEW_STRINGVALUE
             MENUITEM "&Binary Value",               ID_EDIT_NEW_BINARYVALUE
             MENUITEM "&DWORD Value",                ID_EDIT_NEW_DWORDVALUE
+            MENUITEM "&Multi-String Value",         ID_EDIT_NEW_MULTISTRINGVALUE
+            MENUITEM "&Expandable String Value",    ID_EDIT_NEW_EXPANDABLESTRINGVALUE
         END
   END
   POPUP ""
@@ -147,6 +149,8 @@ BEGIN
             MENUITEM "&String Value",               ID_EDIT_NEW_STRINGVALUE
             MENUITEM "&Binary Value",               ID_EDIT_NEW_BINARYVALUE
             MENUITEM "&DWORD Value",                ID_EDIT_NEW_DWORDVALUE
+            MENUITEM "&Multi-String Value",         ID_EDIT_NEW_MULTISTRINGVALUE
+            MENUITEM "&Expandable String Value",    ID_EDIT_NEW_EXPANDABLESTRINGVALUE
         END
         MENUITEM "&Find",                           ID_EDIT_FIND
         MENUITEM SEPARATOR

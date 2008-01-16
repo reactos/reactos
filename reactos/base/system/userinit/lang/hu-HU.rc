@@ -6,8 +6,8 @@
 
 LANGUAGE LANG_HUNGARIAN, SUBLANG_DEFAULT
 STRINGTABLE DISCARDABLE
-{
+BEGIN
 
 STRING_USERINIT_FAIL, "Az Userinit nem tudja elindítani a rendszert!\n"
 
-}
+END

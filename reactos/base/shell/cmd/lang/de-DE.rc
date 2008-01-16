@@ -7,7 +7,7 @@
 
 LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
 STRINGTABLE DISCARDABLE
-{
+BEGIN
 
 STRING_ATTRIB_HELP,    "Zeigt Dateiattribute an oder ändert sie.\n\n\
 ATTRIB [+R | -R] [+A | -A] [+S | -S] [+H | -H] Dateiname ...\n\
@@ -472,7 +472,7 @@ die Stopuhr ausgeschalten.\n\n"
 STRING_TYPE_HELP1, "Zeigt den Inhalt einer oder mehrerer Textdateien an.\n\n\
 TYPE [Laufwerk:][Pfad]Dateiname"
 
-STRING_VERIFY_HELP1, "This command is just a dummy!!\n\
+STRING_VERIFY_HELP1, "Dieser Befehl ist nur eine Atrappe!!\n\
 Legt fest, ob überwacht werden soll, ob Dateien korrekt auf den Datenträger\n\
 geschrieben werden.\n\n\
 VERIFY [ON | OFF]\n\n\
@@ -517,7 +517,7 @@ STRING_VOL_HELP2, " Datenträger im Laufwerk %c hat keine Bezeichnung.\n"
 STRING_VOL_HELP3, " Datenträger-Seriennummer: %04X-%04X\n"
 STRING_VOL_HELP4, "Zeigt die Laufwerksvolumebezeichnung und die Seriennummer an, falls diese existieren.\n\nVOL [drive:]"
 
-STRING_WINDOW_HELP1, "change console window aspect\n\n\
+STRING_WINDOW_HELP1, "Verändert die Größe des Konsolenfensters\n\n\
 WINDOW [/POS[=]left,top,width,heigth]\n\
               [MIN|MAX|RESTORE] ['title']\n\n\
 /POS          Gibt Position und Größe des Fenster an\n\
@@ -525,11 +525,11 @@ MIN           minimieren das Fenster\n\
 MAX           maximieren das Fenster\n\
 RESTORE       stellt das Fenster wieder her"
 
-STRING_WINDOW_HELP2, "change console window aspect\n\n\
+STRING_WINDOW_HELP2, "Verändert die Größe des Konsolenfensters\n\n\
 ACTIVATE 'window' [/POS[=]left,top,width,heigth]\n\
               [MIN|MAX|RESTORE] ['title']\n\n\
-window        tile of window on wich perform actions\n\
-/POS          specify window placement and dimensions\n\
+window        Titel des Fensters, das bearbeitet wird\n\
+/POS          einstellen der Fensterplatzierung und der Dimensionen\n\
 MIN           minimieren das Fenster\n\
 MAX           maximieren das Fenster\n\
 RESTORE       stellt das Fenster wieder her\n\
@@ -602,7 +602,7 @@ STRING_COPY_OPTION,           "JNA"
 STRING_ALIAS_ERROR,          "Die Befehlszeile ist zu lange nach der Alias-Erweiterung!\n"
 STRING_BATCH_ERROR,          "Es trat ein Fehler auf, während die Batch-Datei geöffnet wurde.\n"
 STRING_CHCP_ERROR1,          "Aktive Code-Page: %u\n"
-STRING_CHCP_ERROR4,          "ungültige Code-Page\n"
+STRING_CHCP_ERROR4,          "Ungültige Code-Page\n"
 STRING_CHOICE_ERROR,         "Ungültige Option. Erwartetes Format: /C[:]options"
 STRING_CHOICE_ERROR_TXT,     "Ungültige Option. Erwartetes Format: /T[:]c,nn"
 STRING_CHOICE_ERROR_OPTION,  "Ungültige Option: %s"
@@ -610,8 +610,8 @@ STRING_MD_ERROR,             "Unterverzeichnis oder Datei existiert bereits.\n"
 STRING_CMD_ERROR1,           "Die Eingaben konnten nicht umgeleitet werden (von der Datei) %s\n"
 STRING_CMD_ERROR2,           "Ein Fehler ist beim Erstellen der temporären Datei für Pipedaten aufgetreten\n"
 STRING_CMD_ERROR3,           "%s kann nicht in die Datei umgeleitet werden \n"
-STRING_CMD_ERROR4,           "Running %s...\n"
-STRING_CMD_ERROR5,           "Running cmdexit.bat...\n"
+STRING_CMD_ERROR4,           "Ausführend %s...\n"
+STRING_CMD_ERROR5,           "Ausführend cmdexit.bat...\n"
 STRING_COLOR_ERROR1,         "Fehler: Hinter- und Vordergrund können nicht die selben Farben haben!"
 STRING_COLOR_ERROR2,         "Fehler in der Farb-Angabe"
 STRING_COLOR_ERROR3,         "Farbe %x\n"
@@ -658,8 +658,8 @@ STRING_ERROR_DRIVER_NOT_READY,     "Laufwerk ist nicht bereit"
 STRING_PATH_ERROR,                 "CMD: Nicht in environment '%s'\n"
 STRING_REPLACE_ERROR1,             "Ungültiger Parameter - %s\n"
 STRING_REPLACE_ERROR2,             "Pfad wurde nicht gefunden - %s\n"
-STRING_REPLACE_ERROR3,             "The filename, directory name, or volume label syntax is incorrect.\n"
-STRING_REPLACE_ERROR4,             "Invalid parameter combination\n"
+STRING_REPLACE_ERROR3,             "Der Dateiname, Ordnername oder die Syntax der Volumenbezeichung sind inkorrekt.\n"
+STRING_REPLACE_ERROR4,             "Ungültige Parameterkombination\n"
 STRING_REPLACE_ERROR5,             "Zugriff verweigert - %s\n"
 STRING_REPLACE_ERROR6,             "Keine Dateien gefunden - %s\n"
 STRING_REPLACE_ERROR7,             "Erweiterter Fehler 32\n"
@@ -675,4 +675,4 @@ STRING_INVALID_OPERAND,            "Ungültiger Operand."
 STRING_EXPECTED_CLOSE_PAREN,       "Erwartet ')'."
 STRING_EXPECTED_NUMBER_OR_VARIABLE,"Erwartet Nummer oder Variablennamen."
 STRING_SYNTAX_COMMAND_INCORRECT,   "Syntaxfehler."
-}
+END

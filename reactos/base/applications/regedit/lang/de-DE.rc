@@ -21,13 +21,13 @@
 LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
 
 ID_ACCEL ACCELERATORS
-{
+BEGIN
     VK_DELETE, ID_EDIT_DELETE, VIRTKEY, NOINVERT
     "^F", ID_EDIT_FIND
     VK_F3, ID_EDIT_FINDNEXT, VIRTKEY, NOINVERT
     VK_F5, ID_VIEW_REFRESH, VIRTKEY, NOINVERT
     VK_F1, ID_HELP_HELPTOPICS, VIRTKEY, NOINVERT
-}
+END
 
 /*
  * Menu
@@ -54,6 +54,9 @@ BEGIN
         MENUITEM "&Exportieren...",    ID_REGISTRY_EXPORTREGISTRYFILE
 
         MENUITEM SEPARATOR
+		MENUITEM "Hive laden...",				ID_REGISTRY_LOADHIVE, GRAYED
+		MENUITEM "Hive entladen...",				ID_REGISTRY_UNLOADHIVE, GRAYED
+		MENUITEM SEPARATOR
         MENUITEM "&Mit Netzwerkregistrierung verbinden...",
                                                 ID_REGISTRY_CONNECTNETWORKREGISTRY
 
@@ -135,6 +138,29 @@ BEGIN
             MENUITEM "&Mehrteilige Zeichenkette",	ID_EDIT_NEW_MULTISTRINGVALUE
             MENUITEM "&Erweiterbare Zeichenkette",	ID_EDIT_NEW_EXPANDABLESTRINGVALUE
         END
+  END
+  POPUP ""
+  BEGIN
+        MENUITEM "Expandieren/Schliessen",                 ID_TREE_EXPANDBRANCH
+        POPUP "&Neu"
+        BEGIN
+            MENUITEM "&Schlüssel",                        ID_EDIT_NEW_KEY
+            MENUITEM SEPARATOR
+            MENUITEM "&String-Wert",               ID_EDIT_NEW_STRINGVALUE
+            MENUITEM "&Binär-Wert",               ID_EDIT_NEW_BINARYVALUE
+            MENUITEM "&DWORD-Wert",                ID_EDIT_NEW_DWORDVALUE
+            MENUITEM "&Multi-String-Wert",         ID_EDIT_NEW_MULTISTRINGVALUE
+            MENUITEM "&Expandierbarer String-Wert",    ID_EDIT_NEW_EXPANDABLESTRINGVALUE
+        END
+        MENUITEM "&Suchen",                           ID_EDIT_FIND
+        MENUITEM SEPARATOR
+        MENUITEM "&Löschen",                         ID_TREE_DELETE
+        MENUITEM "&Umbenennen",                         ID_TREE_RENAME
+        MENUITEM SEPARATOR
+        MENUITEM "&Exportieren",                         ID_TREE_EXPORT
+        MENUITEM "&Berechtigungen...",                 ID_TREE_PERMISSIONS, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "S&chlüsselname kopieren",                  ID_EDIT_COPYKEYNAME
   END
 END
 
@@ -269,10 +295,14 @@ STRINGTABLE DISCARDABLE
 BEGIN
     IDS_ERROR		    "Fehler"
     IDS_WARNING		    "Warnung"
+    IDS_BAD_KEY             "Kann den Schlüssel '%s' nicht lesen"
     IDS_BAD_VALUE           "Kann den Wert '%s' nicht lesen"
     IDS_UNSUPPORTED_TYPE    "Kann den Schlüssel des Typen (%ld) nicht ändern"
     IDS_TOO_BIG_VALUE       "Der Wert (%ld) ist zu groß"
     IDS_MULTI_SZ_EMPTY_STRING "Daten vom Typ REG_MULTI_SZ können keine leere Zeichenkette enthalten.\nDie leere Zeichenkette wurde aus der Liste gelöscht."
+    IDS_QUERY_DELETE_KEY_ONE    "Diesen Schlüssel wirklich löschen?"
+    IDS_QUERY_DELETE_KEY_MORE   "Diese Schlüssel wirklich löschen?"
+    IDS_QUERY_DELETE_KEY_CONFIRM "Löschen bestätigen"
     IDS_QUERY_DELETE_ONE    "Diesen Wert wirklich löschen?"
     IDS_QUERY_DELETE_MORE   "Diese Werte wirklich löschen?"
     IDS_QUERY_DELETE_CONFIRM "Löschen bestätigen"
@@ -329,6 +359,14 @@ BEGIN
   IDS_INHERIT_SUBKEYSONLY        "Nur Unterschlüssel"
 END
 
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_EXPAND                     "&Expandieren"
+  IDS_COLLAPSE                   "&Schlissen"
+  IDS_GOTO_SUGGESTED_KEY         "&Gehe zu '%s'"
+  IDS_FINISHEDFIND               "Durchsuchen der Registry beendet."
+END
+
 /*****************************************************************/
 
 
@@ -336,11 +374,15 @@ END
  * Dialog
  */
 
-IDD_DIALOG1 DIALOG DISCARDABLE  50, 50, 268, 98
+IDD_EXPORTRANGE DIALOG DISCARDABLE  50, 50, 370, 50
 STYLE DS_3DLOOK | DS_CONTROL | WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS |
     WS_BORDER
 FONT 8, "MS Shell Dlg"
 BEGIN
+   GROUPBOX "Exportbereich",IDC_STATIC,2,0,366,48
+   CONTROL "&Alles",IDC_EXPORT_ALL,"Button",BS_AUTORADIOBUTTON,10,10, 29,11
+   CONTROL "A&usgewählter Teil",IDC_EXPORT_BRANCH,"Button",BS_AUTORADIOBUTTON,10,22, 100,11
+   EDITTEXT IDC_EXPORT_BRANCH_TEXT,30,34,335,12
 END
 
 IDD_ADDFAVORITES DIALOG DISCARDABLE  0, 0, 186, 46
@@ -385,9 +427,19 @@ BEGIN
     CONTROL         "Nur &ganze Zeichenkette",IDC_MATCHSTRING,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,83,32,94,13
     CONTROL         "Groß-/Kleinschreibung beachten",IDC_MATCHCASE,"Button",BS_AUTOCHECKBOX |
-                    WS_TABSTOP,83,48,90,12
+                    WS_TABSTOP,83,48,120,12
 END
 
+IDD_FINDING DIALOGEX 0, 0, 145, 50
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | WS_POPUP |
+    WS_CAPTION | WS_SYSMENU
+CAPTION "Suchen"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    ICON            IDI_REGEDIT,IDC_STATIC,7,7,20,20
+    PUSHBUTTON      "&Abbrechen",IDCANCEL,93,29,45,14
+    LTEXT           "Durchsuche die Registry...",IDC_STATIC,33,12,85,8
+END
 
 /*
  * TEXTINCLUDE

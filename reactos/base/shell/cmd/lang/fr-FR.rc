@@ -8,7 +8,7 @@
 
 LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
 STRINGTABLE DISCARDABLE
-{
+BEGIN
 
 STRING_ATTRIB_HELP,    "Affiche ou change des attributs de fichiers.\n\n\
 ATTRIB [+R | -R] [+A | -A] [+S | -S] [+H | -H] file ...\n\
@@ -712,4 +712,4 @@ STRING_EXPECTED_CLOSE_PAREN,       "Attendu ')'."
 STRING_EXPECTED_NUMBER_OR_VARIABLE,"Attendu nombre ou nom de variable."
 STRING_SYNTAX_COMMAND_INCORRECT,   "La syntaxe the la commande est incorrecte."
 
-}
+END

@@ -1,7 +1,7 @@
-LANGUAGE LANG_FINNISH, SUBLANG_DEFAULT
+﻿LANGUAGE LANG_FINNISH, SUBLANG_DEFAULT
 
 STRINGTABLE DISCARDABLE
-{
+BEGIN
    IDS_APPNAME,            "Laskin"
 
    IDS_COPYRIGHT1,         "Calculator 5.0. Licensed under LGPL 2"
@@ -29,34 +29,39 @@ STRINGTABLE DISCARDABLE
    IDS_ERR_INVALID_INPUT,  "Väärä syöte funktiolle."
    IDS_ERR_DIVIDE_BY_ZERO, "Nollalla ei voi jakaa."
    IDS_ERR_UNDEFINED,      "Result of function is undefined."
-}
+END
 
 MAIN_MENU MENU DISCARDABLE
-{
-   POPUP "&Muokkaa" {
+BEGIN
+   POPUP "&Muokkaa"
+   BEGIN
       MENUITEM "K&opioi Ctrl+C",        IDM_COPY
       MENUITEM "L&iitä Ctrl+V",        IDM_PASTE
-   }
-   POPUP "&Näytä" {
+   END
+   POPUP "&Näytä"
+   BEGIN
       MENUITEM "Nelilaskin",            IDM_MODE_STANDARD
       MENUITEM "Funktiolaskin",         IDM_MODE_SCIENTIFIC
       MENUITEM SEPARATOR
       MENUITEM "Lukujen ryhmittely",    IDM_DIGIT_GROUPING
-   }
-   POPUP "&Ohje" {
+   END
+   POPUP "&Ohje"
+   BEGIN
       MENUITEM "Ohjeen aiheet",         IDM_HELP_TOPICS
       MENUITEM SEPARATOR
       MENUITEM "Tietoja Laskimesta",    IDM_ABOUT
-   }
-}
+   END
+END
 
 SCIMS_MENU MENU DISCARDABLE
-{
-   POPUP "&Muokkaa" {
+BEGIN
+   POPUP "&Muokkaa"
+   BEGIN
       MENUITEM "K&opioi Ctrl+C",        IDM_COPY
       MENUITEM "L&iitä Ctrl+V",        IDM_PASTE
-   }
-   POPUP "&Näytä" {
+   END
+   POPUP "&Näytä"
+   BEGIN
       MENUITEM "Nelilaskin",            IDM_MODE_STANDARD
       MENUITEM "Funktiolaskin",         IDM_MODE_SCIENTIFIC
       MENUITEM SEPARATOR
@@ -70,21 +75,24 @@ SCIMS_MENU MENU DISCARDABLE
 	  MENUITEM "Grads\tF4",         ID_CALC_MS_GRADS
       MENUITEM SEPARATOR
       MENUITEM "Lukujen ryhmittely",    IDM_DIGIT_GROUPING
-   }
-   POPUP "&Ohje" {
+   END
+   POPUP "&Ohje"
+   BEGIN
       MENUITEM "Ohjeen aiheet",         IDM_HELP_TOPICS
       MENUITEM SEPARATOR
       MENUITEM "Tietoja Laskimesta",    IDM_ABOUT
-   }
-}
+   END
+END
 
 SCIWS_MENU MENU DISCARDABLE
-{
-   POPUP "&Muokkaa" {
+BEGIN
+   POPUP "&Muokkaa"
+   BEGIN
       MENUITEM "K&opioi Ctrl+C",        IDM_COPY
       MENUITEM "L&iitä Ctrl+V",        IDM_PASTE
-   }
-   POPUP "&View" {
+   END
+   POPUP "&View"
+   BEGIN
       MENUITEM "Nelilaskin",            IDM_MODE_STANDARD
       MENUITEM "Funktiolaskin",         IDM_MODE_SCIENTIFIC
       MENUITEM SEPARATOR
@@ -99,40 +107,43 @@ SCIWS_MENU MENU DISCARDABLE
 	  MENUITEM "Byte\tF4",          ID_CALC_WS_BYTE
       MENUITEM SEPARATOR
       MENUITEM "Lukujen ryhmittely",    IDM_DIGIT_GROUPING
-   }
-   POPUP "&Ohje" {
+   END
+   POPUP "&Ohje"
+   BEGIN
       MENUITEM "Ohjeen aiheet",         IDM_HELP_TOPICS
       MENUITEM SEPARATOR
       MENUITEM "Tietoja Laskimesta",    IDM_ABOUT
-   }
-}
+   END
+END
 
 MAIN_MENU ACCELERATORS
 BEGIN
    VK_F1, IDV_HELP,     VIRTKEY
 END
 
-DLG_ABOUT DIALOG 12,0,120,82
+DLG_ABOUT DIALOG 12,0,175,90
 CAPTION "About GNU winecalc"
+FONT 9, "MS Shell Dlg"
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 BEGIN
-   DEFPUSHBUTTON "OK", IDOK,       42, 60, 30, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+   DEFPUSHBUTTON "OK", IDOK,       73, 70, 30, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
 END
 
 WHATS_THIS_MENU MENU DISCARDABLE
-{
-    POPUP "" {
+BEGIN
+   POPUP ""
+   BEGIN
       MENUITEM "Mikä tämä on?",      IDM_WHATS_THIS
-   }
-}
+   END
+END
 
-DLG_STATS DIALOG 12,0,125,78
+DLG_STATS DIALOG 12,0,145,85
 CAPTION "Statistics Box"
-FONT 9, "Tahoma"
+FONT 9, "MS Shell Dlg"
 STYLE WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_VISIBLE
 BEGIN
-   DEFPUSHBUTTON "&RET",  ID_STATS_RET,   4, 52, 25, 13, WS_TABSTOP | WS_GROUP
-   PUSHBUTTON    "&LOAD", ID_STATS_LOAD, 34, 52, 25, 13, WS_TABSTOP | WS_GROUP
-   PUSHBUTTON    "&CD"    ID_STATS_CD,   64, 52, 25, 13, WS_TABSTOP | WS_GROUP
-   PUSHBUTTON    "C&AD",  ID_STATS_CAD,  94, 52, 25, 13, WS_TABSTOP | WS_GROUP
+   DEFPUSHBUTTON "&RET",  ID_STATS_RET,    4, 52, 30, 13, WS_TABSTOP | WS_GROUP
+   PUSHBUTTON    "&LOAD", ID_STATS_LOAD,  39, 52, 30, 13, WS_TABSTOP | WS_GROUP
+   PUSHBUTTON    "&CD"    ID_STATS_CD,    74, 52, 30, 13, WS_TABSTOP | WS_GROUP
+   PUSHBUTTON    "C&AD",  ID_STATS_CAD,  109, 52, 30, 13, WS_TABSTOP | WS_GROUP
 END

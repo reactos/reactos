@@ -33,7 +33,7 @@ BEGIN
             MENUITEM "&Sicherheit...", IDM_SECURITY, MFT_STRING, MFS_ENABLED
             MENUITEM "&Netzwerkverbindungen", IDM_NETWORKCONNECTIONS, MFT_STRING, MFS_ENABLED
             MENUITEM "&Drucker und Faxgeräte", IDM_PRINTERSANDFAXES, MFT_STRING, MFS_ENABLED
-            MENUITEM "&Taskbar und Startmenü", IDM_TASKBARANDSTARTMENU, MFT_STRING, MFS_ENABLED
+            MENUITEM "&Taskleiste und Startmenü", IDM_TASKBARANDSTARTMENU, MFT_STRING, MFS_ENABLED
         END
         POPUP "Sear&ch", IDM_SEARCH
         BEGIN

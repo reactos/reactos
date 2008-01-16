@@ -1,7 +1,7 @@
 LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
 
 STRINGTABLE DISCARDABLE
-{
+BEGIN
 
 IDS_USAGE, "Utilisation: shutdown [-?] [-l | -s | -r] [-f]\n\n\
   Aucun argument ou -?\tAffichent ce message\n\
@@ -11,4 +11,4 @@ IDS_USAGE, "Utilisation: shutdown [-?] [-l | -s | -r] [-f]\n\n\
   -f\t\t\tForce les applications en cours de fonctionnement à se fermer sans avertissements\n\
     \t\t\tSi vous ne spécifiez aucun autre paramètre, cette option\n\
     \t\t\tprovoquera aussi une déconnexion"
-}
+END

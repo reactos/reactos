@@ -23,24 +23,28 @@ LANGUAGE LANG_NORWEGIAN, SUBLANG_NEUTRAL
 /* Menu */
 
 MAIN_MENU MENU
-{
- POPUP "&Fil" {
+BEGIN
+ POPUP "&Fil"
+ BEGIN
   MENUITEM "&Åpne", MNID_FILE_OPEN
   MENUITEM SEPARATOR
   MENUITEM "Skriv &ut", MNID_FILE_PRINT
   MENUITEM "Opp&sett av skriveren . . .", MNID_FILE_SETUP
    MENUITEM SEPARATOR
   MENUITEM "&Avslutt", MNID_FILE_EXIT
- }
- POPUP "R&ediger" {
+ END
+ POPUP "R&ediger"
+ BEGIN
    MENUITEM "&Kopier . . .", MNID_EDIT_COPYDLG
    MENUITEM SEPARATOR
    MENUITEM "K&ommenter . . .", MNID_EDIT_ANNOTATE
- }
- POPUP "&Bokmerke" {
+ END
+ POPUP "&Bokmerke"
+ BEGIN
    MENUITEM "&Definer . . .", MNID_BKMK_DEFINE
- }
- POPUP "&Hjelp" {
+ END
+ POPUP "&Hjelp"
+ BEGIN
    MENUITEM "&Hjelp til Hjelp", MNID_HELP_HELPON
    MENUITEM "All&tid øverst", MNID_HELP_HELPTOP
    MENUITEM SEPARATOR
@@ -48,12 +52,12 @@ MAIN_MENU MENU
 #ifdef WINELIB
    MENUITEM "&om WINE", MNID_HELP_WINE
 #endif
- }
-}
+ END
+END
 
 /* Strings */
 STRINGTABLE DISCARDABLE
-{
+BEGIN
 STID_WINE_HELP, 	"Hjelp"
 STID_WHERROR, 		"FEIL"
 STID_WARNING,  		"ADVARSEL"
@@ -68,4 +72,4 @@ STID_TOPICS,		"&Emner"
 STID_ALL_FILES, 	"Alle filer (*.*)"
 STID_HELP_FILES_HLP, 	"Hjelp-filer (*.hlp)"
 STID_FILE_NOT_FOUND_s	"Cannot find '%s'. Do you want to find this file yourself?"
-}
+END

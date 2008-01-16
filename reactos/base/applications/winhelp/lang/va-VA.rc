@@ -27,24 +27,28 @@
 *  not supported today
 */
 MAIN_MENU MENU LANGUAGE LANG_, SUBLANG_DEFAULT
-{
- POPUP "&Datoteca" {
+BEGIN
+ POPUP "&Datoteca"
+ BEGIN
   MENUITEM "&Rivir", MNID_FILE_OPEN
   MENUITEM SEPARATOR
   MENUITEM "&Stampar tema", MNID_FILE_PRINT
   MENUITEM "&Installaziun dal stampader...", MNID_FILE_SETUP
    MENUITEM SEPARATOR
   MENUITEM "&Finir", MNID_FILE_EXIT
- }
- POPUP "&Lavurar" {
+ END
+ POPUP "&Lavurar"
+ BEGIN
    MENUITEM "Capchar", MNID_EDIT_COPYDLG
    MENUITEM SEPARATOR
    MENUITEM "&Annotaziun...", MNID_EDIT_ANNOTATE
- }
- POPUP "&Marca" {
+ END
+ POPUP "&Marca"
+ BEGIN
    MENUITEM "&Definir...", MNID_BKMK_DEFINE
- }
- POPUP "&Agüd" {
+ END
+ POPUP "&Agüd"
+ BEGIN
    MENUITEM "&Douvrar l'agüd", MNID_HELP_HELPON
    MENUITEM "Adüna da&vant", MNID_HELP_HELPTOP
    MENUITEM SEPARATOR
@@ -52,13 +56,13 @@ MAIN_MENU MENU LANGUAGE LANG_, SUBLANG_DEFAULT
 #ifdef WINELIB
    MENUITEM "Davart &WINE", MNID_HELP_WINE
 #endif
- }
-}
+ END
+END
 
 /* Strings */
 
 STRINGTABLE DISCARDABLE LANGUAGE LANG_FRENCH, SUBLANG_DEFAULT
-{
+BEGIN
 WINE_HELP, 		"WINE agüd"
 WHERROR, 		"SBAGL"
 WARNING,  		"ATTENZIUN"
@@ -73,4 +77,4 @@ TOPICS,			"T&opics"
 ALL_FILES, 		"Tuot las datotecas (*.*)"
 HELP_FILES_HLP, 	"Datotecas d'agüd (*.hlp)"
 STID_FILE_NOT_FOUND_s   "Cannot find '%s'. Do you want to find this file yourself?"
-}
+END

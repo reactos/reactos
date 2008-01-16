@@ -3,7 +3,7 @@
 
 LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
 STRINGTABLE DISCARDABLE
-{
+BEGIN
 
 IDS_UsageMessage, "%s\n\nВикористання: regsvr32 [/u] [/s] [/c] [/n] [/i[:параметри]] назва_dll\n\
 /u -	Відмінити реєстрацію сервера\n\
@@ -26,4 +26,4 @@ IDS_MissingEntry,    "%s було запущено, але точка входу для %s не знайдено.\n\n\
 IDS_FailureMessage,  "%s в %s завершилося аварійно.\nКод завершення: 0x%08x"
 
 IDS_SuccessMessage   "%s в %s успішно виконано."
-}
+END

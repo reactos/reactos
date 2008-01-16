@@ -22,7 +22,7 @@
 LANGUAGE LANG_DANISH, SUBLANG_DEFAULT
 
 ID_ACCEL ACCELERATORS
-{
+BEGIN
     "^A", CMD_SELECT_ALL
     "^C", CMD_COPY
     "^F", CMD_SEARCH
@@ -35,7 +35,7 @@ ID_ACCEL ACCELERATORS
     "^Z", CMD_UNDO
     VK_F3, CMD_SEARCH_NEXT, VIRTKEY
     VK_F5, CMD_TIME_DATE, VIRTKEY
-}
+END
 
 MAIN_MENU MENU
 BEGIN
@@ -45,6 +45,7 @@ BEGIN
 		MENUITEM "Å&bn\tEnter",       CMD_OPEN
 		MENUITEM "&Gem",              CMD_SAVE
 		MENUITEM "Gem so&m...",       CMD_SAVE_AS
+		MENUITEM SEPARATOR
 		MENUITEM "Side&opsætning...", CMD_PAGE_SETUP
 		MENUITEM "&Udskriv",          CMD_PRINT
 		MENUITEM "&Indstil printer...",       CMD_PRINTER_SETUP
@@ -60,16 +61,23 @@ BEGIN
 		MENUITEM "Sæt &ind\tCtrl+V",  CMD_PASTE
 		MENUITEM "&Slet\tDel",        CMD_DELETE
 		MENUITEM SEPARATOR
+		MENUITEM "&Søg...",           CMD_SEARCH
+		MENUITEM "&Find næste\tF3",   CMD_SEARCH_NEXT
+		MENUITEM "Replace\tCtrl+H",   CMD_REPLACE
+		MENUITEM "Go To...\tCtrl+G",  CMD_GOTO
+		MENUITEM SEPARATOR
 		MENUITEM "Marker &alt",       CMD_SELECT_ALL
 		MENUITEM "&Dato/tid\tF5",     CMD_TIME_DATE
-		MENUITEM SEPARATOR
-		MENUITEM "Automatisk &linjeskift",    CMD_WRAP
 	END
 	POPUP "&Søg"
 	BEGIN
-		MENUITEM "&Søg...",           CMD_SEARCH
-		MENUITEM "&Find næste\tF3",   CMD_SEARCH_NEXT
+		MENUITEM "&Wrap long lines",  CMD_WRAP
+		MENUITEM "&Font...",          CMD_FONT
 	END
+	POPUP "&View"
+	BEGIN
+		MENUITEM "Status&bar",    CMD_STATUSBAR
+        END
 	POPUP "&Hjælp"
 	BEGIN
 		MENUITEM "&Indhold",          CMD_HELP_CONTENTS
@@ -87,7 +95,7 @@ DIALOG_PAGESETUP DIALOG 0, 0, 225, 95
 STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 CAPTION "Sideopsætning"
-{
+BEGIN
 LTEXT    "&Sidehoved:",  0x140,   10, 07, 40, 15
 EDITTEXT                         0x141,       60, 05,110, 12, WS_BORDER | WS_TABSTOP
 LTEXT    "Side&fod:",  0x142,   10, 24, 40, 15
@@ -106,7 +114,32 @@ EDITTEXT /*STRING_PAGESETUP_BOTTOMVALUE,*/ 0x150,    130, 73, 35, 11, WS_CHILD |
 DEFPUSHBUTTON "OK",         IDOK,                   180,  3, 40, 15, WS_TABSTOP
 PUSHBUTTON    "Annuller",     IDCANCEL,               180, 21, 40, 15, WS_TABSTOP
 PUSHBUTTON    "&Hjælp",       IDHELP,                180, 39, 40, 15, WS_TABSTOP
-}
+END
+
+/* Dialog `Encoding' */
+DIALOG_ENCODING DIALOG 0, 0, 256, 44
+STYLE DS_SETFONT | DS_FIXEDSYS | DS_CONTROL | WS_CHILD | WS_CLIPSIBLINGS |
+    WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "Encoding"
+BEGIN
+COMBOBOX        ID_ENCODING,54,0,156,80,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+LTEXT           "Encoding:",0x155,5,2,41,12
+COMBOBOX        ID_EOLN,54,18,156,80,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+LTEXT           "Endlines:",0x156,5,20,41,12
+END
+
+/* Dialog 'Go To' */
+DIALOG_GOTO DIALOG 0,0,165,50
+STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "Goto line"
+BEGIN
+EDITTEXT        ID_LINENUMBER,54,10,106,12,WS_CHILD | WS_BORDER | WS_TABSTOP
+LTEXT           "Line number:",0x155,5,12,41,12,WS_CHILD | WS_TABSTOP | ES_NUMBER
+DEFPUSHBUTTON   "OK", IDOK, 75, 30, 40, 15, WS_CHILD | WS_TABSTOP
+PUSHBUTTON      "Cancel", IDCANCEL, 120, 30, 40, 15, WS_CHILD | WS_TABSTOP
+END
 
 IDD_ABOUTBOX DIALOG DISCARDABLE  22,16,284,170
 STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
@@ -129,7 +162,7 @@ BEGIN
 END
 
 STRINGTABLE DISCARDABLE
-{
+BEGIN
 STRING_PAGESETUP_HEADERVALUE,   "&n"        /* FIXME */
 STRING_PAGESETUP_FOOTERVALUE,   "Side &s"
 STRING_PAGESETUP_LEFTVALUE,             "20 mm"     /* FIXME */
@@ -159,5 +192,12 @@ STRING_NOTFOUND,                                        "Kan ikke finde '%s'."
 STRING_OUT_OF_MEMORY,                   "Der er ikke nok hukommelse til at udføre \
 denne operation. \nAfslut et eller flere aktive programmer for at frigøre \
 hukommelse, og prøv så igen."
-
-}
+STRING_CANNOTFIND                               "Cannot find '%s'"
+STRING_ANSI,                                    "ANSI"
+STRING_UNICODE,                                 "Unicode"
+STRING_UNICODE_BE,                              "Unicode (big endian)"
+STRING_UTF8,                                    "UTF-8"
+STRING_CRLF,                                    "Windows"
+STRING_LF,                                      "Unix"
+STRING_CR,                                      "Mac"
+END

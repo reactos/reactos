@@ -1,7 +1,7 @@
 /*
  * Czech language support
  *
- * WineCalc (En.rc)
+ * WineCalc (cs-CZ.rc)
  *
  * Copyright 2005 Denzil <d3nzil@gmail.com>
  *
@@ -27,7 +27,7 @@
 LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
 
 STRINGTABLE DISCARDABLE
-{
+BEGIN
    IDS_APPNAME,            "Kalkulátor"
 
    IDS_COPYRIGHT1,         "Kalkulátor 5.0. Licencován pod LGPL 2"
@@ -55,34 +55,39 @@ STRINGTABLE DISCARDABLE
    IDS_ERR_INVALID_INPUT,  "Neplatný vstup pro funkci."
    IDS_ERR_DIVIDE_BY_ZERO, "Nelze dìlit nulou."
    IDS_ERR_UNDEFINED,      "Výsledek funkce není definován."
-}
+END
 
 MAIN_MENU MENU DISCARDABLE
-{
-   POPUP "&Editace" {
+BEGIN
+   POPUP "&Editace"
+   BEGIN
       MENUITEM "&Kopírovat Ctrl+C",     IDM_COPY
       MENUITEM "&Vložit Ctrl+V",    IDM_PASTE
-   }
-   POPUP "&Zobrazení" {
+   END
+   POPUP "&Zobrazení"
+   BEGIN
       MENUITEM "Standartní",         IDM_MODE_STANDARD
       MENUITEM "Vìdecké",       IDM_MODE_SCIENTIFIC
       MENUITEM SEPARATOR
       MENUITEM "Seskupování èíslic",   IDM_DIGIT_GROUPING
-   }
-   POPUP "&Pomoc" {
+   END
+   POPUP "&Pomoc"
+   BEGIN
       MENUITEM "Témata nápovìdy",      IDM_HELP_TOPICS
       MENUITEM SEPARATOR
       MENUITEM "O Kalkulátoru", IDM_ABOUT
-   }
-}
+   END
+END
 
 SCIMS_MENU MENU DISCARDABLE
-{
-   POPUP "&Editace" {
+BEGIN
+   POPUP "&Editace"
+   BEGIN
       MENUITEM "&Kopírovat Ctrl+C",     IDM_COPY
       MENUITEM "&Vložit Ctrl+V",    IDM_PASTE
-   }
-   POPUP "&Zobrazení" {
+   END
+   POPUP "&Zobrazení"
+   BEGIN
       MENUITEM "Standartní",         IDM_MODE_STANDARD
       MENUITEM "Vìdecké",       IDM_MODE_SCIENTIFIC
       MENUITEM SEPARATOR
@@ -96,21 +101,24 @@ SCIMS_MENU MENU DISCARDABLE
 	  MENUITEM "Grady\tF4",        ID_CALC_MS_GRADS
       MENUITEM SEPARATOR
       MENUITEM "Seskupování èíslic",   IDM_DIGIT_GROUPING
-   }
-   POPUP "&Pomoc" {
+   END
+   POPUP "&Pomoc"
+   BEGIN
       MENUITEM "Témata nápovìdy",      IDM_HELP_TOPICS
       MENUITEM SEPARATOR
       MENUITEM "O Kalkulátoru", IDM_ABOUT
-   }
-}
+   END
+END
 
 SCIWS_MENU MENU DISCARDABLE
-{
-   POPUP "&Editace" {
+BEGIN
+   POPUP "&Editace"
+   BEGIN
       MENUITEM "&Kopírovat Ctrl+C",     IDM_COPY
       MENUITEM "&Vložit Ctrl+V",    IDM_PASTE
-   }
-   POPUP "&Zobrazení" {
+   END
+   POPUP "&Zobrazení"
+   BEGIN
       MENUITEM "Standartní",         IDM_MODE_STANDARD
       MENUITEM "Vìdecké",       IDM_MODE_SCIENTIFIC
       MENUITEM SEPARATOR
@@ -125,40 +133,42 @@ SCIWS_MENU MENU DISCARDABLE
 	  MENUITEM "Byte\tF4",         ID_CALC_WS_BYTE
       MENUITEM SEPARATOR
       MENUITEM "Seskupování èíslic",   IDM_DIGIT_GROUPING
-   }
-   POPUP "&Pomoc" {
+   END
+   POPUP "&Pomoc"
+   BEGIN
       MENUITEM "Témata nápovìdy",      IDM_HELP_TOPICS
       MENUITEM SEPARATOR
       MENUITEM "O Kalkulátoru", IDM_ABOUT
-   }
-}
+   END
+END
 
 MAIN_MENU ACCELERATORS
 BEGIN
    VK_F1, IDV_HELP,     VIRTKEY
 END
 
-DLG_ABOUT DIALOG 12,0,120,82
+DLG_ABOUT DIALOG 12,0,175,90
 CAPTION "O GNU winecalc"
+FONT 9, "MS Shell Dlg"
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 BEGIN
-   DEFPUSHBUTTON "OK", IDOK,       42, 60, 30, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+   DEFPUSHBUTTON "OK", IDOK,       73, 70, 30, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
 END
 
 WHATS_THIS_MENU MENU DISCARDABLE
-{
-    POPUP "" {
+BEGIN
+    POPUP "" BEGIN
       MENUITEM "Co je toto?",     IDM_WHATS_THIS
-   }
-}
+   END
+END
 
-DLG_STATS DIALOG 12,0,125,78
+DLG_STATS DIALOG 12,0,145,85
 CAPTION "Statistics Box"
-FONT 9, "Tahoma"
+FONT 9, "MS Shell Dlg"
 STYLE WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_VISIBLE
 BEGIN
-   DEFPUSHBUTTON "&RET",  ID_STATS_RET,   4, 52, 25, 13, WS_TABSTOP | WS_GROUP
-   PUSHBUTTON    "&LOAD", ID_STATS_LOAD, 34, 52, 25, 13, WS_TABSTOP | WS_GROUP
-   PUSHBUTTON    "&CD"    ID_STATS_CD,   64, 52, 25, 13, WS_TABSTOP | WS_GROUP
-   PUSHBUTTON    "C&AD",  ID_STATS_CAD,  94, 52, 25, 13, WS_TABSTOP | WS_GROUP
+   DEFPUSHBUTTON "&RET",  ID_STATS_RET,    4, 52, 30, 13, WS_TABSTOP | WS_GROUP
+   PUSHBUTTON    "&LOAD", ID_STATS_LOAD,  39, 52, 30, 13, WS_TABSTOP | WS_GROUP
+   PUSHBUTTON    "&CD"    ID_STATS_CD,    74, 52, 30, 13, WS_TABSTOP | WS_GROUP
+   PUSHBUTTON    "C&AD",  ID_STATS_CAD,  109, 52, 30, 13, WS_TABSTOP | WS_GROUP
 END

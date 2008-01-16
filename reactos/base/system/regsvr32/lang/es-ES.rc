@@ -6,7 +6,7 @@
 
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 STRINGTABLE DISCARDABLE
-{
+BEGIN
 
 IDS_UsageMessage, "%s\n\nUtilización: regsvr32 [/u] [/s] [/c] [/n] [/i[:cmdline]] dllname\n\
 /u -	No registrar el servidor\n\
@@ -29,4 +29,4 @@ IDS_MissingEntry,    "%s fue cargada, pero el  %s punto de entrada no fue encont
 IDS_FailureMessage,  "%s en %s falló.\nEl código retornado fue: 0x%08x"
 
 IDS_SuccessMessage   "%s en %s satisfactorio."
-}
+END

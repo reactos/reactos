@@ -24,24 +24,28 @@ LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
 /* Menu */
 
 MAIN_MENU MENU
-{
- POPUP "&Файл" {
+BEGIN
+ POPUP "&Файл"
+ BEGIN
   MENUITEM "&Отваряне", MNID_FILE_OPEN
   MENUITEM SEPARATOR
   MENUITEM "&Печат", MNID_FILE_PRINT
   MENUITEM "&Настройки на печатача...", MNID_FILE_SETUP
    MENUITEM SEPARATOR
   MENUITEM "Из&ход", MNID_FILE_EXIT
- }
- POPUP "&Обработка" {
+ END
+ POPUP "&Обработка"
+ BEGIN
    MENUITEM "За&помняне", MNID_EDIT_COPYDLG
    MENUITEM SEPARATOR
    MENUITEM "&Разясняване...", MNID_EDIT_ANNOTATE
- }
- POPUP "&Отметка" {
+ END
+ POPUP "&Отметка"
+ BEGIN
    MENUITEM "&Задаване...", MNID_BKMK_DEFINE
- }
- POPUP "Помо&щ" {
+ END
+ POPUP "Помо&щ"
+ BEGIN
    MENUITEM "Помощ за &помощта", MNID_HELP_HELPON
    MENUITEM "Винаги отгоре", MNID_HELP_HELPTOP
    MENUITEM SEPARATOR
@@ -49,13 +53,13 @@ MAIN_MENU MENU
 #ifdef WINELIB
    MENUITEM "&За...", MNID_HELP_WINE
 #endif
- }
-}
+ END
+END
 
 /* Strings */
 
 STRINGTABLE DISCARDABLE
-{
+BEGIN
 STID_WINE_HELP, 	"Помощ"
 STID_WHERROR, 		"ГРЕШКА"
 STID_WARNING,  		"ПРЕДУПРЕЖДЕНИЕ"
@@ -70,4 +74,4 @@ STID_TOPICS,		"&Теми"
 STID_ALL_FILES, 	"Всички файлове (*.*)"
 STID_HELP_FILES_HLP, 	"Помощни файлове (*.hlp)"
 STID_FILE_NOT_FOUND_s	"Не намирам '%s'. Искате ли да го намерите сами?"
-}
+END

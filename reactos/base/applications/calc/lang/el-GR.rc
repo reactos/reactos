@@ -1,5 +1,5 @@
 /*
- * WineCalc (Gr.rc)
+ * WineCalc (el-GR.rc)
  *
  * Copyright 2006 Dj Apal
  *
@@ -25,7 +25,7 @@
 LANGUAGE LANG_GREEK, SUBLANG_DEFAULT
 
 STRINGTABLE DISCARDABLE
-{
+BEGIN
    IDS_APPNAME,            "Υπολογιστής"
 
    IDS_COPYRIGHT1,         "Υπολογιστής 5.0. Licensed under LGPL 2"
@@ -53,34 +53,39 @@ STRINGTABLE DISCARDABLE
    IDS_ERR_INVALID_INPUT,  "Λανθασμένο όρισμα για τη συνάρτηση."
    IDS_ERR_DIVIDE_BY_ZERO, "Δε μπορεί να γίνει διαίρεση του μηδενός."
    IDS_ERR_UNDEFINED,      "Το αποτέλεσμα της συνάρτησης είναι αδιευκρίνιστο."
-}
+END
 
 MAIN_MENU MENU DISCARDABLE
-{
-   POPUP "&Επεξεργασία" {
+BEGIN
+   POPUP "&Επεξεργασία"
+   BEGIN
       MENUITEM "&Αντιγραφή Ctrl+C",     IDM_COPY
       MENUITEM "&Επικόλληση Ctrl+V",    IDM_PASTE
-   }
-   POPUP "&Ένδειξη" {
+   END
+   POPUP "&Ένδειξη"
+   BEGIN
       MENUITEM "Κανονικό",         IDM_MODE_STANDARD
       MENUITEM "Επιστημονικό",     IDM_MODE_SCIENTIFIC
       MENUITEM SEPARATOR
       MENUITEM "Οργάνωση ψηφίων",  IDM_DIGIT_GROUPING
-   }
-   POPUP "&Βοήθεια" {
+   END
+   POPUP "&Βοήθεια"
+   BEGIN
       MENUITEM "Θέματα βοήθειας",  IDM_HELP_TOPICS
       MENUITEM SEPARATOR
       MENUITEM "Περί του Υπολογιστή", IDM_ABOUT
-   }
-}
+   END
+END
 
 SCIMS_MENU MENU DISCARDABLE
-{
-   POPUP "&Επεξεργασία" {
+BEGIN
+   POPUP "&Επεξεργασία"
+   BEGIN
       MENUITEM "&Αντιγραφή Ctrl+C",     IDM_COPY
       MENUITEM "&Επικόλληση Ctrl+V",    IDM_PASTE
-   }
-   POPUP "&Ένδειξη" {
+   END
+   POPUP "&Ένδειξη"
+   BEGIN
       MENUITEM "Κανονικό",         IDM_MODE_STANDARD
       MENUITEM "Επιστημονικό",     IDM_MODE_SCIENTIFIC
       MENUITEM SEPARATOR
@@ -94,21 +99,24 @@ SCIMS_MENU MENU DISCARDABLE
 	  MENUITEM "Grads\tF4",   ID_CALC_MS_GRADS
       MENUITEM SEPARATOR
       MENUITEM "Οργάνωση ψηφίων",   IDM_DIGIT_GROUPING
-   }
-   POPUP "&Βοήθεια" {
+   END
+   POPUP "&Βοήθεια"
+   BEGIN
       MENUITEM "Θέματα βοήθειας",  IDM_HELP_TOPICS
       MENUITEM SEPARATOR
       MENUITEM "Περί του Υπολογιστή", IDM_ABOUT
-   }
-}
+   END
+END
 
 SCIWS_MENU MENU DISCARDABLE
-{
-   POPUP "&Επεξεργασία" {
+BEGIN
+   POPUP "&Επεξεργασία"
+   BEGIN
       MENUITEM "&Αντιγραφή Ctrl+C",     IDM_COPY
       MENUITEM "&Επικόλληση Ctrl+V",    IDM_PASTE
-   }
-   POPUP "&Ένδειξη" {
+   END
+   POPUP "&Ένδειξη"
+   BEGIN
       MENUITEM "Κανονικό",         IDM_MODE_STANDARD
       MENUITEM "Επιστημονικό",     IDM_MODE_SCIENTIFIC
       MENUITEM SEPARATOR
@@ -122,40 +130,43 @@ SCIWS_MENU MENU DISCARDABLE
 	  MENUITEM "Grads\tF4",   ID_CALC_MS_GRADS
       MENUITEM SEPARATOR
       MENUITEM "Οργάνωση ψηφίων",   IDM_DIGIT_GROUPING
-   }
-   POPUP "&Βοήθεια" {
+   END
+   POPUP "&Βοήθεια"
+   BEGIN
       MENUITEM "Θέματα βοήθειας",  IDM_HELP_TOPICS
       MENUITEM SEPARATOR
       MENUITEM "Περί του Υπολογιστή", IDM_ABOUT
-   }
-}
+   END
+END
 
 MAIN_MENU ACCELERATORS
 BEGIN
    VK_F1, IDV_HELP,     VIRTKEY
 END
 
-DLG_ABOUT DIALOG 12,0,120,82
+DLG_ABOUT DIALOG 12,0,175,90
 CAPTION "Περί του GNU winecalc"
+FONT 9, "MS Shell Dlg"
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 BEGIN
-   DEFPUSHBUTTON "OK", IDOK,       42, 60, 30, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+   DEFPUSHBUTTON "OK", IDOK,       73, 70, 30, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
 END
 
 WHATS_THIS_MENU MENU DISCARDABLE
-{
-    POPUP "" {
+BEGIN
+   POPUP ""
+   BEGIN
       MENUITEM "Τι είναι αυτό;",     IDM_WHATS_THIS
-   }
-}
+   END
+END
 
-DLG_STATS DIALOG 12,0,125,78
+DLG_STATS DIALOG 12,0,145,85
 CAPTION "Statistics Box"
-FONT 9, "Tahoma"
+FONT 9, "MS Shell Dlg"
 STYLE WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_VISIBLE
 BEGIN
-   DEFPUSHBUTTON "&RET",  ID_STATS_RET,   4, 52, 25, 13, WS_TABSTOP | WS_GROUP
-   PUSHBUTTON    "&LOAD", ID_STATS_LOAD, 34, 52, 25, 13, WS_TABSTOP | WS_GROUP
-   PUSHBUTTON    "&CD"    ID_STATS_CD,   64, 52, 25, 13, WS_TABSTOP | WS_GROUP
-   PUSHBUTTON    "C&AD",  ID_STATS_CAD,  94, 52, 25, 13, WS_TABSTOP | WS_GROUP
+   DEFPUSHBUTTON "&RET",  ID_STATS_RET,    4, 52, 30, 13, WS_TABSTOP | WS_GROUP
+   PUSHBUTTON    "&LOAD", ID_STATS_LOAD,  39, 52, 30, 13, WS_TABSTOP | WS_GROUP
+   PUSHBUTTON    "&CD"    ID_STATS_CD,    74, 52, 30, 13, WS_TABSTOP | WS_GROUP
+   PUSHBUTTON    "C&AD",  ID_STATS_CAD,  109, 52, 30, 13, WS_TABSTOP | WS_GROUP
 END

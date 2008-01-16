@@ -7,7 +7,7 @@
 
 LANGUAGE LANG_HUNGARIAN, SUBLANG_DEFAULT
 STRINGTABLE DISCARDABLE
-{
+BEGIN
 
 IDS_UsageMessage, "%s\n\nHasználat: regsvr32 [/u] [/s] [/c] [/n] [/i[:parancssor]] dll_neve\n\
 /u -	Kiszolgáló regisztrációjának megszüntetése\n\
@@ -30,4 +30,4 @@ A(z) %s -t nem lehet hozzáadni, vagy a(z) %s egy érvénytelen változata van a mem
 IDS_FailureMessage,  "A(z) %s sikertelen a következõben: %s.\nA visszaadott kód: 0x%08x"
 
 IDS_SuccessMessage   "A(z) %s sikerült a következõben: %s."
-}
+END

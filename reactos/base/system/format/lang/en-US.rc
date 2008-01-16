@@ -6,7 +6,7 @@
 
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 STRINGTABLE DISCARDABLE
-{
+BEGIN
 STRING_HELP,  "Usage: %S drive: [-FS:file-system] [-V:label] [-Q] [-A:size] [-C]\n\n\
   [drive:]         Specifies the drive to format.\n\
   -FS:file-system  Specifies the type of file system (%s).\n\
@@ -69,4 +69,4 @@ STRING_NO_LABEL        "Could not label volume"
 STRING_FREE_SPACE     "\n%I64d bytes total disk space.\n%I64d bytes available on disk.\n"
 
 STRING_SERIAL_NUMBER   "\nVolume Serial Number is %04X-%04X\n"
-}
+END

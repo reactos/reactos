@@ -1,7 +1,7 @@
 LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
 
 STRINGTABLE DISCARDABLE
-{
+BEGIN
 
 IDS_HELP, "Visualizza o modifica le liste di controllo di accesso ai file.\n\
 (access control lists ACLs)\n\n\
@@ -72,4 +72,4 @@ IDS_WRITE_DAC, "WRITE_DAC"
 IDS_READ_CONTROL, "READ_CONTROL"
 IDS_DELETE, "DELETE"
 IDS_STANDARD_RIGHTS_ALL, "STANDARD_RIGHTS_ALL"
-}
+END

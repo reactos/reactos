@@ -1,8 +1,8 @@
 LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
 
 STRINGTABLE DISCARDABLE
-{
-    IDS_USAGE, "Visualizza dati una schermata per volta.\n\n\
+BEGIN
+  IDS_USAGE, "Visualizza dati una schermata per volta.\n\n\
   MORE < [Drive:][Path]File\n\
   Comando | MORE \n\
   MORE [Drive:][Path]File\n\n\
@@ -12,4 +12,4 @@ STRINGTABLE DISCARDABLE
 
   IDS_CONTINUE, " -- Continua (100%) -- "
   IDS_FILE_ACCESS, "Impossibile accedere al file %s."
-}
+END

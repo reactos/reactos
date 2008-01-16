@@ -24,13 +24,13 @@
 LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
 
 ID_ACCEL ACCELERATORS
-{
+BEGIN
     VK_DELETE, ID_EDIT_DELETE, VIRTKEY, NOINVERT
     "^F", ID_EDIT_FIND
     VK_F3, ID_EDIT_FINDNEXT, VIRTKEY, NOINVERT
     VK_F5, ID_VIEW_REFRESH, VIRTKEY, NOINVERT
     VK_F1, ID_HELP_HELPTOPICS, VIRTKEY, NOINVERT
-}
+END
 
 /*
  * Menu
@@ -139,9 +139,7 @@ BEGIN
             MENUITEM "Valore &binario",             ID_EDIT_NEW_BINARYVALUE
             MENUITEM "Valore &DWORD",               ID_EDIT_NEW_DWORDVALUE
             MENUITEM "Valore &multi-stringa",       ID_EDIT_NEW_MULTISTRINGVALUE
-
             MENUITEM "Valore stringa &espandibile", ID_EDIT_NEW_EXPANDABLESTRINGVALUE
-
         END
   END
   POPUP ""
@@ -155,9 +153,7 @@ BEGIN
             MENUITEM "Valore &binario",             ID_EDIT_NEW_BINARYVALUE
             MENUITEM "Valore &DWORD",               ID_EDIT_NEW_DWORDVALUE
             MENUITEM "Valore &multi-stringa",       ID_EDIT_NEW_MULTISTRINGVALUE
-
             MENUITEM "Valore stringa &espandibile", ID_EDIT_NEW_EXPANDABLESTRINGVALUE
-
         END
         MENUITEM "&Trova",                       ID_EDIT_FIND
         MENUITEM SEPARATOR

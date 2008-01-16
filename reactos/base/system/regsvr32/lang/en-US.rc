@@ -6,7 +6,7 @@
 
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 STRINGTABLE DISCARDABLE
-{
+BEGIN
 
 IDS_UsageMessage, "%s\n\nUsage: regsvr32 [/u] [/s] [/c] [/n] [/i[:cmdline]] dllname\n\
 /u -	Unregister server\n\
@@ -29,4 +29,4 @@ IDS_MissingEntry,    "%s was loaded, but the %s entry point was not found.\n\n\
 IDS_FailureMessage,  "%s in %s failed.\nReturn code was: 0x%08x"
 
 IDS_SuccessMessage   "%s in %s succeeded."
-}
+END

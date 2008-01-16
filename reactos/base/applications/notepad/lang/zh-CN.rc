@@ -21,7 +21,7 @@
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
 ID_ACCEL ACCELERATORS
-{
+BEGIN
     "^A", CMD_SELECT_ALL
     "^C", CMD_COPY
     "^F", CMD_SEARCH
@@ -34,7 +34,7 @@ ID_ACCEL ACCELERATORS
     "^Z", CMD_UNDO
     VK_F3, CMD_SEARCH_NEXT, VIRTKEY
     VK_F5, CMD_TIME_DATE, VIRTKEY
-}
+END
 
 MAIN_MENU MENU
 BEGIN
@@ -44,6 +44,7 @@ BEGIN
 		MENUITEM "打开（&O）",             CMD_OPEN
 		MENUITEM "保存（&S）",             CMD_SAVE
 		MENUITEM "另存为(&A)...",       CMD_SAVE_AS
+		MENUITEM SEPARATOR
 		MENUITEM "打印（&P）",            CMD_PRINT
 		MENUITEM "页面设置（&T）...",    CMD_PAGE_SETUP
 		MENUITEM "打印设置（&R）...", CMD_PRINTER_SETUP
@@ -61,11 +62,20 @@ BEGIN
 		MENUITEM SEPARATOR
 		MENUITEM "搜索（&S）",           CMD_SEARCH
 		MENUITEM "搜索下一个（&S）\tF3",  CMD_SEARCH_NEXT
+		MENUITEM "Replace\tCtrl+H",   CMD_REPLACE
+		MENUITEM "Go To...\tCtrl+G",  CMD_GOTO
 		MENUITEM SEPARATOR
 		MENUITEM "全选（&A）",       CMD_SELECT_ALL
 		MENUITEM "插入日期、时间（&T）\tF5",    CMD_TIME_DATE
-		MENUITEM SEPARATOR
+	END
+	POPUP "F&ormat"
+	BEGIN
 		MENUITEM "自动换行（&W）",  CMD_WRAP
+		MENUITEM "&Font...",          CMD_FONT
+	END
+	POPUP "&View"
+	BEGIN
+		MENUITEM "Status&bar",    CMD_STATUSBAR
 	END
 	POPUP "帮助（&H）"
 	BEGIN
@@ -81,11 +91,10 @@ END
 /* Dialog `Page setup' */
 
 DIALOG_PAGESETUP DIALOG 0, 0, 225, 95
-LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 FONT 10, "MS Shell Dlg"
 CAPTION "页面设置"
-{
+BEGIN
 LTEXT    "页眉（&H）:",  0x140,   10, 07, 40, 15
 EDITTEXT                         0x141,       60, 05,110, 12, WS_BORDER | WS_TABSTOP
 LTEXT    "脚注（&F）:",  0x142,   10, 24, 40, 15
@@ -104,7 +113,32 @@ EDITTEXT /*STRING_PAGESETUP_BOTTOMVALUE,*/ 0x150,    130, 73, 35, 11, WS_CHILD |
 DEFPUSHBUTTON "确定",         IDOK,                   180,  3, 40, 15, WS_TABSTOP
 PUSHBUTTON    "取消",     IDCANCEL,               180, 21, 40, 15, WS_TABSTOP
 PUSHBUTTON    "帮助（&）",       IDHELP,                180, 39, 40, 15, WS_TABSTOP
-}
+END
+
+/* Dialog `Encoding' */
+DIALOG_ENCODING DIALOG 0, 0, 256, 44
+STYLE DS_SETFONT | DS_FIXEDSYS | DS_CONTROL | WS_CHILD | WS_CLIPSIBLINGS |
+    WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "Encoding"
+BEGIN
+COMBOBOX        ID_ENCODING,54,0,156,80,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+LTEXT           "Encoding:",0x155,5,2,41,12
+COMBOBOX        ID_EOLN,54,18,156,80,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+LTEXT           "Endlines:",0x156,5,20,41,12
+END
+
+/* Dialog 'Go To' */
+DIALOG_GOTO DIALOG 0,0,165,50
+STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "Goto line"
+BEGIN
+EDITTEXT        ID_LINENUMBER,54,10,106,12,WS_CHILD | WS_BORDER | WS_TABSTOP
+LTEXT           "Line number:",0x155,5,12,41,12,WS_CHILD | WS_TABSTOP | ES_NUMBER
+DEFPUSHBUTTON   "OK", IDOK, 75, 30, 40, 15, WS_CHILD | WS_TABSTOP
+PUSHBUTTON      "Cancel", IDCANCEL, 120, 30, 40, 15, WS_CHILD | WS_TABSTOP
+END
 
 IDD_ABOUTBOX DIALOG DISCARDABLE  22,16,284,170
 STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
@@ -127,7 +161,7 @@ BEGIN
 END
 
 STRINGTABLE DISCARDABLE
-{
+BEGIN
 STRING_PAGESETUP_HEADERVALUE,   "&n"        /* FIXME */
 STRING_PAGESETUP_FOOTERVALUE,   "Page &s"   /* FIXME */
 STRING_PAGESETUP_LEFTVALUE,             "20 mm"     /* FIXME */
@@ -156,5 +190,12 @@ STRING_NOTSAVED,                                "文件 '%s'\n正文已更改\n\n \
 STRING_NOTFOUND,                                        "找不到文件 '%s'"
 STRING_OUT_OF_MEMORY,                   "没有足够的内存可以用来完成此项任务。 \
 \n请关闭一些程序施放内存后再试。"
-
-}
+STRING_CANNOTFIND                               "Cannot find '%s'"
+STRING_ANSI,                                    "ANSI"
+STRING_UNICODE,                                 "Unicode"
+STRING_UNICODE_BE,                              "Unicode (big endian)"
+STRING_UTF8,                                    "UTF-8"
+STRING_CRLF,                                    "Windows"
+STRING_LF,                                      "Unix"
+STRING_CR,                                      "Mac"
+END

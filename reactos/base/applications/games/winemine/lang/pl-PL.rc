@@ -9,15 +9,17 @@
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
-STRINGTABLE {
+STRINGTABLE
+BEGIN
 	IDS_SECONDS, "seconds"
 	IDS_NOBODY,  "Anonim"
 	IDS_ABOUT,   "by Joshua Thielen and ReactOS developers"
-}
+END
 
 IDM_WINEMINE MENU DISCARDABLE
-{
-	POPUP "&Game" {
+BEGIN
+	POPUP "&Game"
+        BEGIN
 		MENUITEM "&Nowa gra\tF2",          IDM_NEW
 		MENUITEM SEPARATOR
 		MENUITEM "Poz&iom",                IDM_MARKQ
@@ -30,18 +32,19 @@ IDM_WINEMINE MENU DISCARDABLE
 		MENUITEM "N&ajlepsze czasy",       IDM_TIMES
 		MENUITEM SEPARATOR
 		MENUITEM "&Zamknij",               IDM_EXIT
-	}
-	POPUP "&Informacje" {
+	END
+	POPUP "&Informacje"
+        BEGIN
 		MENUITEM "N&ajlepsze czasy",       IDM_TIMES
 		MENUITEM "&WineMine - informacje", IDM_ABOUT
-	}
-}
+	END
+END
 
 IDD_TIMES DIALOGEX DISCARDABLE 0, 0, 200, 75
 STYLE DS_MODALFRAME | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_POPUP | DS_SHELLFONT
 CAPTION "Najlepsze czasy"
 FONT 8, "MS Shell Dlg"
-{
+BEGIN
 	GROUPBOX        "Najlepsze czasy", IDNONE,     10,  10, 182,  45
 	LTEXT           "Pocz¹tkuj¹cy:",   IDNONE,     20,  20,  58,   8
 	LTEXT           "Zaawansowany:",   IDNONE,     20,  30,  58,   8
@@ -54,23 +57,23 @@ FONT 8, "MS Shell Dlg"
 	LTEXT           "",                IDC_NAME3, 132,  40,  55,   8
 	DEFPUSHBUTTON   "OK",              IDOK,      127,  57,  50,  15
 	PUSHBUTTON      "&Reset Scores",   IDRESET,    18,  57,  67,  15
-}
+END
 
 IDD_CONGRATS DIALOGEX DISCARDABLE  0, 0, 160, 60
 STYLE  DS_MODALFRAME | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_POPUP | DS_SHELLFONT
 CAPTION "Gratulacje!"
 FONT 8, "MS Shell Dlg"
-{
-	LTEXT           "Wpisz swoje imiê", IDNONE,        10,  10, 150,  10
+BEGIN
+	LTEXT           "Wpisz swoje imiê", IDNONE,        25,  10, 150,  10
 	EDITTEXT                            IDC_EDITNAME,  25,  20, 110,  12
 	DEFPUSHBUTTON   "OK",               IDOK,          60,  40,  40,  15
-}
+END
 
 IDD_CUSTOM DIALOGEX DISCARDABLE  0, 0, 139, 80
 STYLE  DS_MODALFRAME | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_POPUP | DS_SHELLFONT
 CAPTION "Ustawienia gry"
 FONT 8, "MS Shell Dlg"
-{
+BEGIN
 	LTEXT           "Iloœæ rzêdów:", IDNONE,         5,  15,  43,  10
 	LTEXT           "Iloœæ kolumn:", IDNONE,         5,  35,  43,  10
 	LTEXT           "Iloœæ min:",    IDNONE,         5,  55,  43,  10
@@ -79,4 +82,4 @@ FONT 8, "MS Shell Dlg"
 	EDITTEXT                         IDC_EDITMINES, 49,  55,  30,  12, ES_NUMBER
 	DEFPUSHBUTTON   "OK",            IDOK,          86,  32,  45,  15
 	PUSHBUTTON      "Anuluj",        IDCANCEL,      86,  52,  45,  15 
-}
+END

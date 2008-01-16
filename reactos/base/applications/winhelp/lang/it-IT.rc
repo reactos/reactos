@@ -24,24 +24,28 @@ LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
 /* Menu */
 
 MAIN_MENU MENU
-{
- POPUP "&File" {
+BEGIN
+ POPUP "&File"
+ BEGIN
   MENUITEM "&Apri...", MNID_FILE_OPEN
   MENUITEM SEPARATOR
   MENUITEM "S&tampa", MNID_FILE_PRINT
   MENUITEM "&Setup stampante...", MNID_FILE_SETUP
    MENUITEM SEPARATOR
   MENUITEM "&Esci", MNID_FILE_EXIT
- }
- POPUP "&Modifica" {
+ END
+ POPUP "&Modifica"
+ BEGIN
    MENUITEM "&Copia...", MNID_EDIT_COPYDLG
    MENUITEM SEPARATOR
    MENUITEM "&Annota...", MNID_EDIT_ANNOTATE
- }
- POPUP "&Segnalibro" {
+ END
+ POPUP "&Segnalibro"
+ BEGIN
    MENUITEM "&Definisci...", MNID_BKMK_DEFINE
- }
- POPUP "&?" {
+ END
+ POPUP "&?"
+ BEGIN
    MENUITEM "&Aiuto sulla guida", MNID_HELP_HELPON
    MENUITEM "Sempre in primo &piano", MNID_HELP_HELPTOP
    MENUITEM SEPARATOR
@@ -49,13 +53,13 @@ MAIN_MENU MENU
 #ifdef WINELIB
    MENUITEM "&Informazion su WINE", MNID_HELP_WINE
 #endif
- }
-}
+ END
+END
 
 /* Strings */
 
 STRINGTABLE DISCARDABLE
-{
+BEGIN
 STID_WINE_HELP,         "Guida di WINE"
 STID_WHERROR,           "ERRORE"
 STID_WARNING,           "ATTENZIONE"
@@ -70,4 +74,4 @@ STID_TOPICS,            "&Argomenti"
 STID_ALL_FILES,         "Tutti i file (*.*)"
 STID_HELP_FILES_HLP, 	"File della Guida (*.hlp)"
 STID_FILE_NOT_FOUND_s	"Impossibile trovare '%s'. Volete indicare voi dove si trova il file?"
-}
+END

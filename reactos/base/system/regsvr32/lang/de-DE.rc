@@ -5,7 +5,7 @@
 
 LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
 STRINGTABLE DISCARDABLE
-{
+BEGIN
 
 IDS_UsageMessage, "%s\n\nSyntax: regsvr32 [/u] [/s] [/c] [/n] [/i[:cmdline]] dllname\n\
 /u -	Serverregistrierung aufheben\n\
@@ -30,4 +30,4 @@ IDS_MissingEntry,    "%s wurde geladen, aber der %s Einstiegspunkt wurde nicht g
 IDS_FailureMessage,  "%s in %s ist fehlgeschlagen.\nRückgabewert: 0x%08x"
 
 IDS_SuccessMessage   "%s in %s war erfolgreich."
-}
+END

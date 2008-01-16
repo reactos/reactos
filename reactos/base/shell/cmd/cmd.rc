@@ -22,7 +22,7 @@
 #include "lang/uk-UA.rc"
 
 STRINGTABLE DISCARDABLE
-{
+BEGIN
   STRING_FREEDOS_DEV, "    Tim Norman        Matt Rains\n\
     Evan Jeffrey      Steffen Kaiser\n\
     Svante Frey       Oliver Mueller\n\
@@ -33,7 +33,7 @@ STRINGTABLE DISCARDABLE
   STRING_REACTOS_DEV,  "    Eric Kohl         Emanuele Aliberti\n\
     Paolo Pantaleo    Phillip Susi\n\
     Sylvain Petreolle\n"
-}
+END
 
 1 ICON DISCARDABLE res/terminal.ico
 

@@ -25,24 +25,28 @@ LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 /* Menu */
 
 MAIN_MENU MENU
-{
- POPUP "&Plik" {
+BEGIN
+ POPUP "&Plik"
+ BEGIN
   MENUITEM "&Otwórz", MNID_FILE_OPEN
   MENUITEM SEPARATOR
   MENUITEM "&Drukuj", MNID_FILE_PRINT
   MENUITEM "&Ustawienia drukarki...", MNID_FILE_SETUP
    MENUITEM SEPARATOR
   MENUITEM "&Wyjœcie", MNID_FILE_EXIT
- }
- POPUP "&Edycja" {
+ END
+ POPUP "&Edycja"
+ BEGIN
    MENUITEM "&Kopiuj...", MNID_EDIT_COPYDLG
    MENUITEM SEPARATOR
    MENUITEM "&Skomentuj...", MNID_EDIT_ANNOTATE
- }
- POPUP "&Zak³adka" {
+ END
+ POPUP "&Zak³adka"
+ BEGIN
    MENUITEM "&Zdefiniuj...", MNID_BKMK_DEFINE
- }
- POPUP "Pomo&c" {
+ END
+ POPUP "Pomo&c"
+ BEGIN
    MENUITEM "&Pomoc", MNID_HELP_HELPON
    MENUITEM "&Zawsze na wierzchu", MNID_HELP_HELPTOP
    MENUITEM SEPARATOR
@@ -50,12 +54,12 @@ MAIN_MENU MENU
 #ifdef WINELIB
    MENUITEM "&O programie WINE", MNID_HELP_WINE
 #endif
- }
-}
+ END
+END
 
 /* Strings */
 STRINGTABLE DISCARDABLE
-{
+BEGIN
 STID_WINE_HELP, 	"WINE - Pomoc"
 STID_WHERROR, 		"B£¥D"
 STID_WARNING,  		"OSTRZE¯ENIE"
@@ -70,4 +74,4 @@ STID_TOPICS,		"&Tematy"
 STID_ALL_FILES, 	"Wszystkie pliki (*.*)"
 STID_HELP_FILES_HLP, 	"Pliki pomocy (*.hlp)"
 STID_FILE_NOT_FOUND_s	"Nie mo¿na odnaleŸæ pliku '%s'. Czy chcesz spróbowaæ zlokalizowaæ ten plik samodzielnie?"
-}
+END

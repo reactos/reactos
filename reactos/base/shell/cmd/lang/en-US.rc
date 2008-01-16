@@ -7,7 +7,7 @@
 
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 STRINGTABLE DISCARDABLE
-{
+BEGIN
 
 STRING_ATTRIB_HELP,    "Displays or changes file attributes.\n\n\
 ATTRIB [+R | -R] [+A | -A] [+S | -S] [+H | -H] file ...\n\
@@ -699,4 +699,4 @@ STRING_EXPECTED_CLOSE_PAREN,       "Expected ')'."
 STRING_EXPECTED_NUMBER_OR_VARIABLE,"Expected number or variable name."
 STRING_SYNTAX_COMMAND_INCORRECT,   "The syntax of the command is incorrect."
 
-}
+END

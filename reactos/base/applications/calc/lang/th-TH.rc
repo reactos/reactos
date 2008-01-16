@@ -25,7 +25,7 @@
 LANGUAGE LANG_THAI, SUBLANG_DEFAULT
 
 STRINGTABLE DISCARDABLE
-{
+BEGIN
     IDS_APPNAME,	"สถานภาพทั่วไป"
 
     IDS_COPYRIGHT1,	"เครื่องคิดเลข 5.0. ลิขสิทธิ์ภายใต้ LGPL 2"
@@ -53,34 +53,39 @@ STRINGTABLE DISCARDABLE
     IDS_ERR_INVALID_INPUT,	"ค่าที่ป้อนให้ไม่สามารถใช้ในกรณีนี้ได้"
     IDS_ERR_DIVIDE_BY_ZERO,	"ไม่สามารถหารด้วยศูนย์"
     IDS_ERR_UNDEFINED,		"ไม่สามารถแสดงผลได้"
-}
+END
 
 MAIN_MENU MENU DISCARDABLE
-{
-    POPUP "แก้ไข" {
+BEGIN
+    POPUP "แก้ไข"
+   BEGIN
         MENUITEM "คัดลอก Ctrl+C",       IDM_COPY
         MENUITEM "วาง Ctrl+V",		IDM_PASTE
-    }
-    POPUP "&มุมมอง" {
+    END
+    POPUP "&มุมมอง"
+   BEGIN
         MENUITEM "แบบมาตรฐาน",		IDM_MODE_STANDARD
         MENUITEM "แบบวิทยาศาสตร์",      IDM_MODE_SCIENTIFIC
         MENUITEM SEPARATOR
         MENUITEM "แสดงหลักตัวเลข",      IDM_DIGIT_GROUPING
-    }
-    POPUP "&ช่วยเหลือ" {
+    END
+    POPUP "&ช่วยเหลือ"
+    BEGIN
         MENUITEM "ข้อมูลช่วยเหลือ",	IDM_HELP_TOPICS
         MENUITEM SEPARATOR
         MENUITEM "เกี่ยวกับ GNU WineCalc", IDM_ABOUT
-    }
-}
+    END
+END
 
 SCIMS_MENU MENU DISCARDABLE
-{
-    POPUP "แก้ไข" {
+BEGIN
+    POPUP "แก้ไข"
+   BEGIN
         MENUITEM "คัดลอก Ctrl+C",       IDM_COPY
         MENUITEM "วาง Ctrl+V",		IDM_PASTE
-    }
-    POPUP "มุมมอง" {
+    END
+    POPUP "มุมมอง"
+    BEGIN
         MENUITEM "แบบมาตรฐาน",		IDM_MODE_STANDARD
         MENUITEM "แบบวิทยาศาสตร์",      IDM_MODE_SCIENTIFIC
         MENUITEM SEPARATOR
@@ -94,21 +99,24 @@ SCIMS_MENU MENU DISCARDABLE
         MENUITEM "เกรเดียน\tF4",	ID_CALC_MS_GRADS
         MENUITEM SEPARATOR
         MENUITEM "แสดงหลักตัวเลข",      IDM_DIGIT_GROUPING
-    }
-    POPUP "ช่วยเหลือ" {
+    END
+    POPUP "ช่วยเหลือ"
+    BEGIN
         MENUITEM "ข้อมูลช่วยเหลือ",	IDM_HELP_TOPICS
         MENUITEM SEPARATOR
         MENUITEM "เกี่ยวกับ GNU WineCalc", IDM_ABOUT
-    }
-}
+    END
+END
 
 SCIWS_MENU MENU DISCARDABLE
-{
-    POPUP "แก้ไข" {
+BEGIN
+    POPUP "แก้ไข"
+    BEGIN
         MENUITEM "คัดลอก Ctrl+C",       IDM_COPY
         MENUITEM "วาง Ctrl+V",		IDM_PASTE
-    }
-    POPUP "มุมมอง" {
+    END
+    POPUP "มุมมอง"
+    BEGIN
         MENUITEM "แบบมาตรฐาน",		IDM_MODE_STANDARD
         MENUITEM "แบบวิทยาศาสตร์",      IDM_MODE_SCIENTIFIC
         MENUITEM SEPARATOR
@@ -123,40 +131,43 @@ SCIWS_MENU MENU DISCARDABLE
         MENUITEM "Byte\tF4",		ID_CALC_WS_BYTE
         MENUITEM SEPARATOR
         MENUITEM "แสดงหลักตัวเลข",      IDM_DIGIT_GROUPING
-    }
-    POPUP "ช่วยเหลือ" {
+    END
+    POPUP "ช่วยเหลือ"
+    BEGIN
         MENUITEM "ข้อมูลช่วยเหลือ",	IDM_HELP_TOPICS
         MENUITEM SEPARATOR
         MENUITEM "เกี่ยวกับ GNU WineCalc", IDM_ABOUT
-    }
-}
+    END
+END
 
 MAIN_MENU ACCELERATORS
 BEGIN
     VK_F1, IDV_HELP, VIRTKEY
 END
 
-DLG_ABOUT DIALOG 12,0,120,82
+DLG_ABOUT DIALOG 12,0,175,90
 CAPTION "เกี่ยวกับ GNU WineCalc"
+FONT 9, "MS Shell Dlg"
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 BEGIN
-    DEFPUSHBUTTON "ตกลง", IDOK, 42, 60, 30, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    DEFPUSHBUTTON "ตกลง", IDOK, 73, 70, 30, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
 END
 
 WHATS_THIS_MENU MENU DISCARDABLE
-{
-    POPUP "" {
+BEGIN
+    POPUP ""
+    BEGIN
         MENUITEM "สิ่งนี้คืออะไร ?",	IDM_WHATS_THIS
-    }
-}
+    END
+END
 
-DLG_STATS DIALOG 12,0,125,78
+DLG_STATS DIALOG 12,0,145,85
 CAPTION "กล่องสถานะ"
-FONT 9, "Tahoma"
+FONT 9, "MS Shell Dlg"
 STYLE WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_VISIBLE
 BEGIN
-    DEFPUSHBUTTON "&RET",  ID_STATS_RET,   4, 52, 25, 13, WS_TABSTOP | WS_GROUP
-    PUSHBUTTON    "&LOAD", ID_STATS_LOAD, 34, 52, 25, 13, WS_TABSTOP | WS_GROUP
-    PUSHBUTTON    "&CD"    ID_STATS_CD,   64, 52, 25, 13, WS_TABSTOP | WS_GROUP
-    PUSHBUTTON    "C&AD",  ID_STATS_CAD,  94, 52, 25, 13, WS_TABSTOP | WS_GROUP
+    DEFPUSHBUTTON "&RET",  ID_STATS_RET,    4, 52, 30, 13, WS_TABSTOP | WS_GROUP
+    PUSHBUTTON    "&LOAD", ID_STATS_LOAD,  39, 52, 30, 13, WS_TABSTOP | WS_GROUP
+    PUSHBUTTON    "&CD"    ID_STATS_CD,    74, 52, 30, 13, WS_TABSTOP | WS_GROUP
+    PUSHBUTTON    "C&AD",  ID_STATS_CAD,  109, 52, 30, 13, WS_TABSTOP | WS_GROUP
 END

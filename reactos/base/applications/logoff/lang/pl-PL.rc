@@ -8,7 +8,7 @@
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
 STRINGTABLE DISCARDABLE
-{
+BEGIN
 
 IDS_USAGE, "Przerywa sesjê.\n\n\
   /v\t\tWyœwietla informacjê o wykonanej czynnoœci.\n\
@@ -18,5 +18,5 @@ IDS_LOGOFF_REMOTE, "Przeywanie sesji na maszynie zdalnej."
 IDS_LOGOFF_LOCAL, "Przerywanie niniejszej sesji na maszynie lokalnej."
 
 IDS_ILLEGAL_PARAM, "Nieprawid³owy parametr\n"
-}
+END
 /* EOF */

@@ -6,7 +6,7 @@
 
 LANGUAGE LANG_NORWEGIAN, SUBLANG_NEUTRAL
 STRINGTABLE DISCARDABLE
-{
+BEGIN
 STRING_HELP,  "bruk: %S stasjon: [-FS:fil-system] [-V:merke] [-Q] [-A:størrelse] [-C]\n\n\
   [stasjon:]         Spesifisere stasjon til formater.\n\
   -FS:file-system  Spesifisere typen av fil system (%s).\n\
@@ -69,4 +69,4 @@ STRING_NO_LABEL        "Kunne ikke merke volumet"
 STRING_FREE_SPACE     "\n%I64d byte total ledig plass.\n%I64d byte tilgjengelig på disken.\n"
 
 STRING_SERIAL_NUMBER   "\nVolumet Serie nummer er %04X-%04X\n"
-}
+END

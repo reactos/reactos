@@ -10,8 +10,8 @@
 LANGUAGE LANG_LITHUANIAN, SUBLANG_DEFAULT
 
 STRINGTABLE DISCARDABLE
-{
-    IDS_USAGE, "Atvaizduoja duomenis puslapiais.\n\n\
+BEGIN
+  IDS_USAGE, "Atvaizduoja duomenis puslapiais.\n\n\
   MORE < [Diskas:][Kelias iki bylos]Bylos vardas\n\
   Komanda | MORE \n\
   MORE [Diskas:][Kelias iki bylos]Bylos vardas\n\n\
@@ -24,4 +24,4 @@ STRINGTABLE DISCARDABLE
 
   IDS_CONTINUE, " -- Toliau (100%) -- "
   IDS_FILE_ACCESS, "Nepavyko atverti bylos %s."
-}
+END

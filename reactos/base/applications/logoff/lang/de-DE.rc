@@ -1,7 +1,7 @@
-LANGUAGE LANG_GERMAN, SUBLANG_DEFAULT
+LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
 
 STRINGTABLE DISCARDABLE
-{
+BEGIN
 
 IDS_USAGE, "Beendet eine Sitzung.\n\n\
   /v\t\tZeigt Informationen zu den Aktionen an, die gerade ausgeführt werden.\n\
@@ -11,5 +11,5 @@ IDS_LOGOFF_REMOTE, "Beendet eine Sitzung auf einem Server."
 IDS_LOGOFF_LOCAL, "Beendet eine Sitzung auf dem aktuellen Server."
 
 IDS_ILLEGAL_PARAM, "Ungültige(r) Parameter\n"
-}
+END
 /* EOF */

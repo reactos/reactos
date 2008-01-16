@@ -3,7 +3,7 @@
 LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
 
 STRINGTABLE DISCARDABLE
-{
+BEGIN
    IDS_APPNAME,            "Изчислител"
 
    IDS_COPYRIGHT1,         "Calculator 5.0. Licensed under LGPL 2"
@@ -31,34 +31,39 @@ STRINGTABLE DISCARDABLE
    IDS_ERR_INVALID_INPUT,  "Неправилни входни данни."
    IDS_ERR_DIVIDE_BY_ZERO, "Деленето на нула е невъзможно."
    IDS_ERR_UNDEFINED,      "Изчислението е невъзможно."
-}
+END
 
 MAIN_MENU MENU DISCARDABLE
-{
-   POPUP "&Обработка" {
+BEGIN
+   POPUP "&Обработка" 
+   BEGIN
       MENUITEM "&Запомни Ctrl+C",     IDM_COPY
       MENUITEM "&Постави Ctrl+V",    IDM_PASTE
-   }
-   POPUP "&Изглед" {
+   END
+   POPUP "&Изглед"
+   BEGIN
       MENUITEM "Обикновен",         IDM_MODE_STANDARD
       MENUITEM "Научен",       IDM_MODE_SCIENTIFIC
       MENUITEM SEPARATOR
       MENUITEM "Разделяне на хилядите",   IDM_DIGIT_GROUPING
-   }
-   POPUP "&Помощ" {
+   END
+   POPUP "&Помощ"
+   BEGIN
       MENUITEM "Помощ",      IDM_HELP_TOPICS
       MENUITEM SEPARATOR
       MENUITEM "За приложението", IDM_ABOUT
-   }
-}
+   END
+END
 
 SCIMS_MENU MENU DISCARDABLE
-{
-   POPUP "&Обработка" {
+BEGIN
+   POPUP "&Обработка"
+   BEGIN
       MENUITEM "&Запомняне Ctrl+C",     IDM_COPY
       MENUITEM "&Поставяне Ctrl+V",    IDM_PASTE
-   }
-   POPUP "&Изглед" {
+   END
+   POPUP "&Изглед"
+   BEGIN
       MENUITEM "Обикновен",         IDM_MODE_STANDARD
       MENUITEM "Научен",       IDM_MODE_SCIENTIFIC
       MENUITEM SEPARATOR
@@ -72,21 +77,24 @@ SCIMS_MENU MENU DISCARDABLE
 	  MENUITEM "Градове\tF4",        ID_CALC_MS_GRADS
       MENUITEM SEPARATOR
       MENUITEM "Разделяне на хилядите",   IDM_DIGIT_GROUPING
-   }
-   POPUP "&Помощ" {
+   END
+   POPUP "&Помощ"
+   BEGIN
       MENUITEM "Помощ",      IDM_HELP_TOPICS
       MENUITEM SEPARATOR
       MENUITEM "За приложението", IDM_ABOUT
-   }
-}
+   END
+END
 
 SCIWS_MENU MENU DISCARDABLE
-{
-   POPUP "&Обработка" {
+BEGIN
+   POPUP "&Обработка"
+   BEGIN
       MENUITEM "&Запомняне Ctrl+C",     IDM_COPY
       MENUITEM "&Поставяне Ctrl+V",    IDM_PASTE
-   }
-   POPUP "&Изглед" {
+   END
+   POPUP "&Изглед"
+   BEGIN
       MENUITEM "Обикновен",         IDM_MODE_STANDARD
       MENUITEM "Научен",       IDM_MODE_SCIENTIFIC
       MENUITEM SEPARATOR
@@ -101,42 +109,43 @@ SCIWS_MENU MENU DISCARDABLE
 	  MENUITEM "Байт\tF4",         ID_CALC_WS_BYTE
       MENUITEM SEPARATOR
       MENUITEM "Разделяне на хилядите",   IDM_DIGIT_GROUPING
-   }
-   POPUP "&Помощ" {
+   END
+   POPUP "&Помощ"
+   BEGIN
       MENUITEM "Помощ",      IDM_HELP_TOPICS
       MENUITEM SEPARATOR
       MENUITEM "За приложението", IDM_ABOUT
-   }
-}
+   END
+END
 
 MAIN_MENU ACCELERATORS
 BEGIN
    VK_F1, IDV_HELP,     VIRTKEY
 END
 
-DLG_ABOUT DIALOG 12,0,120,82
+DLG_ABOUT DIALOG 12,0,175,90
 CAPTION "За GNU winecalc"
+FONT 9, "MS Shell Dlg"
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 BEGIN
-   DEFPUSHBUTTON "Добре", IDOK,       42, 60, 30, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+   DEFPUSHBUTTON "Добре", IDOK,       73, 70, 30, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
 END
 
 WHATS_THIS_MENU MENU DISCARDABLE
-{
-    POPUP "" {
-      MENUITEM "Какво е това?",     IDM_WHATS_THIS
-   }
-}
-
-DLG_STATS DIALOG 12,0,125,78
-CAPTION "Статистика"
-FONT 9, "Tahoma"
-STYLE WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_VISIBLE
 BEGIN
-   DEFPUSHBUTTON "&RET",  ID_STATS_RET,   4, 52, 25, 13, WS_TABSTOP | WS_GROUP
-   PUSHBUTTON    "&LOAD", ID_STATS_LOAD, 34, 52, 25, 13, WS_TABSTOP | WS_GROUP
-   PUSHBUTTON    "&CD"    ID_STATS_CD,   64, 52, 25, 13, WS_TABSTOP | WS_GROUP
-   PUSHBUTTON    "C&AD",  ID_STATS_CAD,  94, 52, 25, 13, WS_TABSTOP | WS_GROUP
+   POPUP ""
+   BEGIN
+      MENUITEM "Какво е това?",     IDM_WHATS_THIS
+   END
 END
 
-
+DLG_STATS DIALOG 12,0,145,85
+CAPTION "Статистика"
+FONT 9, "MS Shell Dlg"
+STYLE WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_VISIBLE
+BEGIN
+   DEFPUSHBUTTON "&RET",  ID_STATS_RET,   4, 52, 30, 13, WS_TABSTOP | WS_GROUP
+   PUSHBUTTON    "&LOAD", ID_STATS_LOAD, 39, 52, 30, 13, WS_TABSTOP | WS_GROUP
+   PUSHBUTTON    "&CD"    ID_STATS_CD,   74, 52, 30, 13, WS_TABSTOP | WS_GROUP
+   PUSHBUTTON    "C&AD",  ID_STATS_CAD, 109, 52, 30, 13, WS_TABSTOP | WS_GROUP
+END

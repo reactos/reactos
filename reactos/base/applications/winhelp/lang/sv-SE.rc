@@ -25,24 +25,28 @@ LANGUAGE LANG_SWEDISH, SUBLANG_NEUTRAL
 /* Menu */
 
 MAIN_MENU MENU
-{
- POPUP "&Arkiv" {
+BEGIN
+ POPUP "&Arkiv"
+ BEGIN
   MENUITEM "&Öppna...", MNID_FILE_OPEN
   MENUITEM SEPARATOR
   MENUITEM "&Skriv ut", MNID_FILE_PRINT
   MENUITEM "Skrivar &inställningar...", MNID_FILE_SETUP
    MENUITEM SEPARATOR
   MENUITEM "&Avsluta", MNID_FILE_EXIT
- }
- POPUP "&Redigera" {
+ END
+ POPUP "&Redigera"
+ BEGIN
    MENUITEM "&Kopiera...", MNID_EDIT_COPYDLG
    MENUITEM SEPARATOR
    MENUITEM "&Markera...", MNID_EDIT_ANNOTATE
- }
- POPUP "&Bokmärke" {
+ END
+ POPUP "&Bokmärke"
+ BEGIN
    MENUITEM "&Defingera...", MNID_BKMK_DEFINE
- }
- POPUP "&Hjälp" {
+ END
+ POPUP "&Hjälp"
+ BEGIN
    MENUITEM "Användningen &av hjälp", MNID_HELP_HELPON
    MENUITEM "Alltid &överst", MNID_HELP_HELPTOP
    MENUITEM SEPARATOR
@@ -50,13 +54,13 @@ MAIN_MENU MENU
 #ifdef WINELIB
    MENUITEM "&Om WINE", MNID_HELP_WINE
 #endif
- }
-}
+ END
+END
 
 /* Strings */
 
 STRINGTABLE DISCARDABLE
-{
+BEGIN
 STID_WINE_HELP, 	"WINE Hjälp"
 STID_WHERROR, 		"FEL"
 STID_WARNING,  		"VARNING"
@@ -71,4 +75,4 @@ STID_TOPICS,		"T&opics"
 STID_ALL_FILES, 	"Alla filer (*.*))"
 STID_HELP_FILES_HLP, 	"Hjälp filer (*.hlp)"
 STID_FILE_NOT_FOUND_s	"Cannot find '%s'. Do you want to find this file yourself?"
-}
+END

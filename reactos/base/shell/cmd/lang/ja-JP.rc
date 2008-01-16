@@ -7,7 +7,7 @@
 
 LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
 STRINGTABLE DISCARDABLE
-{
+BEGIN
 
 STRING_ATTRIB_HELP,    "ファイル属性を表\示または変更します。\n\n\
 ATTRIB [+R | -R] [+A | -A] [+S | -S] [+H | -H] [ファイル] ...\n\
@@ -655,4 +655,4 @@ STRING_EXPECTED_CLOSE_PAREN,       "Expected ')'"
 STRING_EXPECTED_NUMBER_OR_VARIABLE,"Expected number or variable name."
 STRING_SYNTAX_COMMAND_INCORRECT,   "コマンドの構\文が間違っています。"
 
-}
+END

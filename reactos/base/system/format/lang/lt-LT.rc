@@ -4,7 +4,7 @@
 
 LANGUAGE LANG_LITHUANIAN, SUBLANG_DEFAULT
 STRINGTABLE DISCARDABLE
-{
+BEGIN
 STRING_HELP,  "Naudojimas: %S diskas: [-FS:bylø-sistema] [-V:þymë] [-Q] [-A:dydis] [-C]\n\n\
   [diskas:]        Nurodo diskà formavimui.\n\
   -FS:bylø-sistema Nurodo bylø sistemos tipà (%s).\n\
@@ -66,4 +66,4 @@ STRING_NO_LABEL        "Nepavyko paþymëti tomo"
 STRING_FREE_SPACE     "\n%I64d baitai ið viso diske.\n%I64d baitai laisvos vietos diske.\n"
 
 STRING_SERIAL_NUMBER   "\nTomo serijos numeris yra %04X-%04X\n"
-}
+END

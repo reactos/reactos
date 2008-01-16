@@ -6,7 +6,7 @@
 
 LANGUAGE LANG_NORWEGIAN, SUBLANG_NEUTRAL
 STRINGTABLE DISCARDABLE
-{
+BEGIN
 
 IDS_UsageMessage, "%s\n\nUsage: regsvr32 [/u] [/s] [/c] [/n] [/i[:cmdlinje]] dllnavn\n\
 /u -	Uregistert server\n\
@@ -29,4 +29,4 @@ IDS_MissingEntry,    "%s var lastet, men %s oppføring moment ble ikke funnet.\n\
 IDS_FailureMessage,  "%s inngående %s mislykket.\nretur kode ble: 0x%08x"
 
 IDS_SuccessMessage   "%s inngående %s lykkes."
-}
+END

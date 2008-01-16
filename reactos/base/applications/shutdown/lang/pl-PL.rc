@@ -8,7 +8,7 @@
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
 STRINGTABLE DISCARDABLE
-{
+BEGIN
 
 IDS_USAGE, "Sk³adnia: shutdown [-?] [-l | -s | -r] [-f]\n\n\
   Bez parametrów albo z -?\tWyœwietla niniejsz¹ pomoc\n\
@@ -18,4 +18,4 @@ IDS_USAGE, "Sk³adnia: shutdown [-?] [-l | -s | -r] [-f]\n\n\
   -f\t\t\tZamkniêcie wszystkich dzia³aj¹cych aplikacji, bez ostrze¿enia\n\
     \t\t\tBez podania innego parametru, ta opcja domyœlnie wyloguje \n\
     \t\t\tobecnego u¿ytkownika"
-}
+END

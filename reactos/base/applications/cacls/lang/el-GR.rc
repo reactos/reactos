@@ -1,7 +1,7 @@
 LANGUAGE LANG_GREEK, SUBLANG_DEFAULT
 
 STRINGTABLE DISCARDABLE
-{
+BEGIN
 
 IDS_HELP, "Εμφανίζει ή τροποποιεί τις access control lists (ACLs) των αρχείων\n\n\
 CACLS όνομα_αρχείου [/T] [/E] [/C] [/G χρήστης:άδειες [...]] [/R χρήστης [...]]\n\
@@ -71,4 +71,4 @@ IDS_WRITE_DAC, "WRITE_DAC"
 IDS_READ_CONTROL, "READ_CONTROL"
 IDS_DELETE, "DELETE"
 IDS_STANDARD_RIGHTS_ALL, "STANDARD_RIGHTS_ALL"
-}
+END

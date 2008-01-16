@@ -23,24 +23,28 @@ LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 /* Menu */
 
 MAIN_MENU MENU
-{
- POPUP "&Dosya" {
+BEGIN
+ POPUP "&Dosya"
+ BEGIN
   MENUITEM "&Aç", MNID_FILE_OPEN
   MENUITEM SEPARATOR
   MENUITEM "Ya&zdýr", MNID_FILE_PRINT
   MENUITEM "&Yazýcý ayarlarý...", MNID_FILE_SETUP
    MENUITEM SEPARATOR
   MENUITEM "&Çýkýþ", MNID_FILE_EXIT
- }
- POPUP "Dü&zen" {
+ END
+ POPUP "Dü&zen"
+ BEGIN
    MENUITEM "K&opyala...", MNID_EDIT_COPYDLG
    MENUITEM SEPARATOR
    MENUITEM "&Annotate...", MNID_EDIT_ANNOTATE
- }
- POPUP "Yer Ý&mleri" {
+ END
+ POPUP "Yer Ý&mleri"
+ BEGIN
    MENUITEM "&Tanýmla...", MNID_BKMK_DEFINE
- }
- POPUP "&Yardým" {
+ END
+ POPUP "&Yardým"
+ BEGIN
    MENUITEM "&Yardým Kullanýmý", MNID_HELP_HELPON
    MENUITEM "&Her Zaman Üstte", MNID_HELP_HELPTOP
    MENUITEM SEPARATOR
@@ -48,12 +52,12 @@ MAIN_MENU MENU
 #ifdef WINELIB
    MENUITEM "WINE &Hakkýnda", MNID_HELP_WINE
 #endif
- }
-}
+ END
+END
 
 /* Strings */
 STRINGTABLE DISCARDABLE
-{
+BEGIN
 STID_WINE_HELP, 	"WINE Yardým"
 STID_WHERROR, 		"HATA"
 STID_WARNING,  		"UYARI"
@@ -68,4 +72,4 @@ STID_TOPICS,		"&Konular"
 STID_ALL_FILES, 	"Tüm dosyalar (*.*)"
 STID_HELP_FILES_HLP, 	"Yardým dosyalarý (*.hlp)"
 STID_FILE_NOT_FOUND_s	"Cannot find '%s'. Do you want to find this file yourself?"
-}
+END

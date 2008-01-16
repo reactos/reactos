@@ -23,24 +23,28 @@ LANGUAGE LANG_DUTCH, SUBLANG_NEUTRAL
 /* Menu */
 
 MAIN_MENU MENU
-{
- POPUP "&Bestand" {
+BEGIN
+ POPUP "&Bestand"
+ BEGIN
   MENUITEM "&Openen", MNID_FILE_OPEN
   MENUITEM SEPARATOR
   MENUITEM "Af&drukken", MNID_FILE_PRINT
   MENUITEM "&Printerinstellingen...", MNID_FILE_SETUP
   MENUITEM SEPARATOR
   MENUITEM "&Afsluiten", MNID_FILE_EXIT
- }
- POPUP "&Bewerken" {
+ END
+ POPUP "&Bewerken"
+ BEGIN
    MENUITEM "&Kopiëren...", MNID_EDIT_COPYDLG
    MENUITEM SEPARATOR
    MENUITEM "&Annoteren...", MNID_EDIT_ANNOTATE
- }
- POPUP "&Favorieten" {
+ END
+ POPUP "&Favorieten"
+ BEGIN
    MENUITEM "&Aanmaken...", MNID_BKMK_DEFINE
- }
- POPUP "&Help" {
+ END
+ POPUP "&Help"
+ BEGIN
    MENUITEM "Hulp &bij help", MNID_HELP_HELPON
    MENUITEM "Altijd &zichtbaar", MNID_HELP_HELPTOP
    MENUITEM SEPARATOR
@@ -48,12 +52,12 @@ MAIN_MENU MENU
 #ifdef WINELIB
    MENUITEM "&Over WINE", MNID_HELP_WINE
 #endif
- }
-}
+ END
+END
 
 /* Strings */
 STRINGTABLE DISCARDABLE
-{
+BEGIN
 STID_WINE_HELP, 	"WINE Help"
 STID_WHERROR, 		"FOUT"
 STID_WARNING,  		"WAARSCHUWING"
@@ -68,4 +72,4 @@ STID_TOPICS,		"&Onderwerpen"
 STID_ALL_FILES, 	"Alle bestanden (*.*)"
 STID_HELP_FILES_HLP, 	"Helpbestanden (*.hlp)"
 STID_FILE_NOT_FOUND_s	"Cannot find '%s'. Do you want to find this file yourself?"
-}
+END

@@ -28,24 +28,28 @@ LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
 /* Menu */
 
 MAIN_MENU MENU
-{
- POPUP "&Soubor" {
+BEGIN
+ POPUP "&Soubor"
+ BEGIN
   MENUITEM "&Otevøít", MNID_FILE_OPEN
   MENUITEM SEPARATOR
   MENUITEM "&Tisk", MNID_FILE_PRINT
   MENUITEM "Na&stavení tisku...", MNID_FILE_SETUP
    MENUITEM SEPARATOR
   MENUITEM "&Konec", MNID_FILE_EXIT
- }
- POPUP "Úprav&y" {
+ END
+ POPUP "Úprav&y"
+ BEGIN
    MENUITEM "&Kopírovat...", MNID_EDIT_COPYDLG
    MENUITEM SEPARATOR
    MENUITEM "P&oznamenat si...", MNID_EDIT_ANNOTATE
- }
- POPUP "&Záložka" {
+ END
+ POPUP "&Záložka"
+ BEGIN
    MENUITEM "Pøi&dat...", MNID_BKMK_DEFINE
- }
- POPUP "&Nápovìda" {
+ END
+ POPUP "&Nápovìda"
+ BEGIN
    MENUITEM "Náp&ovìda k nápovìdì", MNID_HELP_HELPON
    MENUITEM "Vždy na &vrchu", MNID_HELP_HELPTOP
    MENUITEM SEPARATOR
@@ -53,13 +57,13 @@ MAIN_MENU MENU
 #ifdef WINELIB
    MENUITEM "O &WINE", MNID_HELP_WINE
 #endif
- }
-}
+ END
+END
 
 /* Strings */
 
 STRINGTABLE DISCARDABLE
-{
+BEGIN
 STID_WINE_HELP, 	"Nápovìda WINE"
 STID_WHERROR, 		"CHYBA"
 STID_WARNING,  		"VAROVÁNÍ"
@@ -74,4 +78,4 @@ STID_TOPICS,		"&Témata"
 STID_ALL_FILES, 	"Všechny soubory (*.*)"
 STID_HELP_FILES_HLP, 	"Soubory nápovìdy (*.hlp)"
 STID_FILE_NOT_FOUND_s	"Cannot find '%s'. Do you want to find this file yourself?"
-}
+END

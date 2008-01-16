@@ -1,5 +1,5 @@
 /*
- * WineCalc (En.rc)
+ * WineCalc (sv-SE.rc)
  *
  * Copyright 2005 David Nordenberg
  *
@@ -26,7 +26,7 @@
 LANGUAGE LANG_SWEDISH, SUBLANG_NEUTRAL
 
 STRINGTABLE DISCARDABLE
-{
+BEGIN
    IDS_APPNAME,            "Kalkylatorn"
 
    IDS_COPYRIGHT1,         "Kalkylatorn 5.0. Licenserad under LGPL 2"
@@ -54,34 +54,39 @@ STRINGTABLE DISCARDABLE
    IDS_ERR_INVALID_INPUT,  "Felaktig indata för funktion."
    IDS_ERR_DIVIDE_BY_ZERO, "Kan inte dividera med noll."
    IDS_ERR_UNDEFINED,      "Funktionens resultat är odefinerat."
-}
+END
 
 MAIN_MENU MENU DISCARDABLE
-{
-   POPUP "&Redigera" {
+BEGIN
+   POPUP "&Redigera"
+   BEGIN
       MENUITEM "&Kopiera\tCtrl+C",     IDM_COPY
       MENUITEM "K&listra in\tCtrl+V",    IDM_PASTE
-   }
-   POPUP "&Visa" {
+   END
+   POPUP "&Visa"
+   BEGIN
       MENUITEM "Standard",         IDM_MODE_STANDARD
       MENUITEM "Vetenskaplig",       IDM_MODE_SCIENTIFIC
       MENUITEM SEPARATOR
       MENUITEM "Siffergruppering",   IDM_DIGIT_GROUPING
-   }
-   POPUP "&Hjälp" {
+   END
+   POPUP "&Hjälp"
+   BEGIN
       MENUITEM "Hjälpavsnitt",      IDM_HELP_TOPICS
       MENUITEM SEPARATOR
       MENUITEM "Om Kalkylatorn", IDM_ABOUT
-   }
-}
+   END
+END
 
 SCIMS_MENU MENU DISCARDABLE
-{
-   POPUP "&Redigera" {
+BEGIN
+   POPUP "&Redigera"
+   BEGIN
       MENUITEM "&Kopiera\tCtrl+C",     IDM_COPY
       MENUITEM "K&listra in\tCtrl+V",    IDM_PASTE
-   }
-   POPUP "&Visa" {
+   END
+   POPUP "&Visa"
+   BEGIN
       MENUITEM "Standard",         IDM_MODE_STANDARD
       MENUITEM "Vetenskaplig",       IDM_MODE_SCIENTIFIC
       MENUITEM SEPARATOR
@@ -95,21 +100,24 @@ SCIMS_MENU MENU DISCARDABLE
 	  MENUITEM "Gradienter\tF4",        ID_CALC_MS_GRADS
       MENUITEM SEPARATOR
       MENUITEM "Siffergruppering",   IDM_DIGIT_GROUPING
-   }
-   POPUP "&Hjälp" {
+   END
+   POPUP "&Hjälp"
+   BEGIN
       MENUITEM "Hjälpavsnitt",      IDM_HELP_TOPICS
       MENUITEM SEPARATOR
       MENUITEM "Om Kalkylatorn", IDM_ABOUT
-   }
-}
+   END
+END
 
 SCIWS_MENU MENU DISCARDABLE
-{
-   POPUP "&Redigera" {
+BEGIN
+   POPUP "&Redigera"
+   BEGIN
       MENUITEM "&Kopiera\tCtrl+C",     IDM_COPY
       MENUITEM "K&listra in\tCtrl+V",    IDM_PASTE
-   }
-   POPUP "&Visa" {
+   END
+   POPUP "&Visa"
+   BEGIN
       MENUITEM "Standard",         IDM_MODE_STANDARD
       MENUITEM "Vetenskaplig",       IDM_MODE_SCIENTIFIC
       MENUITEM SEPARATOR
@@ -124,40 +132,43 @@ SCIWS_MENU MENU DISCARDABLE
 	  MENUITEM "Byte\tF4",         ID_CALC_WS_BYTE
       MENUITEM SEPARATOR
       MENUITEM "Siffergruppering",   IDM_DIGIT_GROUPING
-   }
-   POPUP "&Hjälp" {
+   END
+   POPUP "&Hjälp"
+   BEGIN
       MENUITEM "Hjälpavsnitt",      IDM_HELP_TOPICS
       MENUITEM SEPARATOR
       MENUITEM "Om Kalkylatorn", IDM_ABOUT
-   }
-}
+   END
+END
 
 MAIN_MENU ACCELERATORS
 BEGIN
    VK_F1, IDV_HELP,     VIRTKEY
 END
 
-DLG_ABOUT DIALOG 12,0,120,82
+DLG_ABOUT DIALOG 12,0,175,90
 CAPTION "Om GNU Kalkylatorn (winecalc)"
+FONT 9, "MS Shell Dlg"
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 BEGIN
-   DEFPUSHBUTTON "OK", IDOK,       42, 60, 30, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+   DEFPUSHBUTTON "OK", IDOK,       73, 70, 30, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
 END
 
 WHATS_THIS_MENU MENU DISCARDABLE
-{
-    POPUP "" {
+BEGIN
+   POPUP ""
+   BEGIN
       MENUITEM "Vad är det här?",     IDM_WHATS_THIS
-   }
-}
+   END
+END
 
-DLG_STATS DIALOG 12,0,125,78
+DLG_STATS DIALOG 12,0,145,85
 CAPTION "Statistikruta"
-FONT 9, "Tahoma"
+FONT 9, "MS Shell Dlg"
 STYLE WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_VISIBLE
 BEGIN
-   DEFPUSHBUTTON "&RET",  ID_STATS_RET,   4, 52, 25, 13, WS_TABSTOP | WS_GROUP
-   PUSHBUTTON    "&LOAD", ID_STATS_LOAD, 34, 52, 25, 13, WS_TABSTOP | WS_GROUP
-   PUSHBUTTON    "&CD"    ID_STATS_CD,   64, 52, 25, 13, WS_TABSTOP | WS_GROUP
-   PUSHBUTTON    "C&AD",  ID_STATS_CAD,  94, 52, 25, 13, WS_TABSTOP | WS_GROUP
+   DEFPUSHBUTTON "&RET",  ID_STATS_RET,    4, 52, 30, 13, WS_TABSTOP | WS_GROUP
+   PUSHBUTTON    "&LOAD", ID_STATS_LOAD,  39, 52, 30, 13, WS_TABSTOP | WS_GROUP
+   PUSHBUTTON    "&CD"    ID_STATS_CD,    74, 52, 30, 13, WS_TABSTOP | WS_GROUP
+   PUSHBUTTON    "C&AD",  ID_STATS_CAD,  109, 52, 30, 13, WS_TABSTOP | WS_GROUP
 END

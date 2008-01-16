@@ -1,5 +1,5 @@
 /*
- * WineCalc (En.rc)
+ * WineCalc (nb-NO.rc)
  *
  * Copyright 2003 James Briggs
  *
@@ -25,7 +25,7 @@
 LANGUAGE LANG_NORWEGIAN, SUBLANG_NEUTRAL
 
 STRINGTABLE DISCARDABLE
-{
+BEGIN
    IDS_APPNAME,            "Kalkulator"
 
    IDS_COPYRIGHT1,         "Kalkulator 5.0. Lisensert under LGPL 2"
@@ -53,34 +53,39 @@ STRINGTABLE DISCARDABLE
    IDS_ERR_INVALID_INPUT,  "Ugyldig informasjon for funksjon."
    IDS_ERR_DIVIDE_BY_ZERO, "Kan ikke dividere på null."
    IDS_ERR_UNDEFINED,      "Resultatet av funksjoner er ubestemt."
-}
+END
 
 MAIN_MENU MENU DISCARDABLE
-{
-   POPUP "&Rediger" {
+BEGIN
+   POPUP "&Rediger"
+   BEGIN
       MENUITEM "&Kopier Ctrl+C",     IDM_COPY
       MENUITEM "&Lim inn Ctrl+V",    IDM_PASTE
-   }
-   POPUP "&Vis" {
+   END
+   POPUP "&Vis"
+   BEGIN
       MENUITEM "Standard",         IDM_MODE_STANDARD
       MENUITEM "Vitenskapelig",       IDM_MODE_SCIENTIFIC
       MENUITEM SEPARATOR
       MENUITEM "Siffergruppering",   IDM_DIGIT_GROUPING
-   }
-   POPUP "&Hjelp" {
+   END
+   POPUP "&Hjelp"
+   BEGIN
       MENUITEM "Emner i hjelp",      IDM_HELP_TOPICS
       MENUITEM SEPARATOR
       MENUITEM "Om kalkulator", IDM_ABOUT
-   }
-}
+   END
+END
 
 SCIMS_MENU MENU DISCARDABLE
-{
-   POPUP "&Rediger" {
+BEGIN
+   POPUP "&Rediger"
+   BEGIN
       MENUITEM "&Kopiere Ctrl+C",     IDM_COPY
       MENUITEM "&Lim inn Ctrl+V",    IDM_PASTE
-   }
-   POPUP "&Vis" {
+   END
+   POPUP "&Vis"
+   BEGIN
       MENUITEM "Standard",         IDM_MODE_STANDARD
       MENUITEM "Vitenskapelig",       IDM_MODE_SCIENTIFIC
       MENUITEM SEPARATOR
@@ -94,21 +99,24 @@ SCIMS_MENU MENU DISCARDABLE
 	  MENUITEM "Gradienter\tF4",        ID_CALC_MS_GRADS
       MENUITEM SEPARATOR
       MENUITEM "Siffergruppering",   IDM_DIGIT_GROUPING
-   }
-   POPUP "&Hjelp" {
+   END
+   POPUP "&Hjelp"
+   BEGIN
       MENUITEM "Emner i hjelp",      IDM_HELP_TOPICS
       MENUITEM SEPARATOR
       MENUITEM "Om Kalkulator", IDM_ABOUT
-   }
-}
+   END
+END
 
 SCIWS_MENU MENU DISCARDABLE
-{
-   POPUP "&Rediger" {
+BEGIN
+   POPUP "&Rediger"
+   BEGIN
       MENUITEM "&Kopier Ctrl+C",     IDM_COPY
       MENUITEM "&Lim inn Ctrl+V",    IDM_PASTE
-   }
-   POPUP "&Vis" {
+   END
+   POPUP "&Vis"
+   BEGIN
       MENUITEM "Standard",         IDM_MODE_STANDARD
       MENUITEM "Vitenskapelig",       IDM_MODE_SCIENTIFIC
       MENUITEM SEPARATOR
@@ -123,40 +131,43 @@ SCIWS_MENU MENU DISCARDABLE
 	  MENUITEM "Byte\tF4",         ID_CALC_WS_BYTE
       MENUITEM SEPARATOR
       MENUITEM "Siffergruppering",   IDM_DIGIT_GROUPING
-   }
-   POPUP "&Help" {
+   END
+   POPUP "&Help"
+   BEGIN
       MENUITEM "Emner i hjelp",      IDM_HELP_TOPICS
       MENUITEM SEPARATOR
       MENUITEM "Om Kalkulator", IDM_ABOUT
-   }
-}
+   END
+END
 
 MAIN_MENU ACCELERATORS
 BEGIN
    VK_F1, IDV_HELP,     VIRTKEY
 END
 
-DLG_ABOUT DIALOG 12,0,120,82
+DLG_ABOUT DIALOG 12,0,175,90
 CAPTION "Om GNU winecalc"
+FONT 9, "MS Shell Dlg"
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 BEGIN
-   DEFPUSHBUTTON "OK", IDOK,       42, 60, 30, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+   DEFPUSHBUTTON "OK", IDOK,       73, 70, 30, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
 END
 
 WHATS_THIS_MENU MENU DISCARDABLE
-{
-    POPUP "" {
+BEGIN
+   POPUP ""
+   BEGIN
       MENUITEM "Hva er dette?",     IDM_WHATS_THIS
-   }
-}
+   END
+END
 
-DLG_STATS DIALOG 12,0,125,78
+DLG_STATS DIALOG 12,0,145,85
 CAPTION "Statistics Box"
-FONT 9, "Tahoma"
+FONT 9, "MS Shell Dlg"
 STYLE WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_VISIBLE
 BEGIN
-   DEFPUSHBUTTON "&RET",  ID_STATS_RET,   4, 52, 25, 13, WS_TABSTOP | WS_GROUP
-   PUSHBUTTON    "&LOAD", ID_STATS_LOAD, 34, 52, 25, 13, WS_TABSTOP | WS_GROUP
-   PUSHBUTTON    "&CD"    ID_STATS_CD,   64, 52, 25, 13, WS_TABSTOP | WS_GROUP
-   PUSHBUTTON    "C&AD",  ID_STATS_CAD,  94, 52, 25, 13, WS_TABSTOP | WS_GROUP
+   DEFPUSHBUTTON "&RET",  ID_STATS_RET,    4, 52, 30, 13, WS_TABSTOP | WS_GROUP
+   PUSHBUTTON    "&LOAD", ID_STATS_LOAD,  39, 52, 30, 13, WS_TABSTOP | WS_GROUP
+   PUSHBUTTON    "&CD"    ID_STATS_CD,    74, 52, 30, 13, WS_TABSTOP | WS_GROUP
+   PUSHBUTTON    "C&AD",  ID_STATS_CAD,  109, 52, 30, 13, WS_TABSTOP | WS_GROUP
 END

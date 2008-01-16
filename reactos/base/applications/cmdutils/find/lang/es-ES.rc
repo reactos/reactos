@@ -1,7 +1,7 @@
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 
 STRINGTABLE DISCARDABLE
-{
+BEGIN
 
 IDS_USAGE, "FIND: Imprime todas las líneas de un fichero que contiene una cadena.\n\n\
   FIND [ /C ] [ /I ] [ /N ] [ /V ] \"cadena\" [ fichero... ]\n\
@@ -14,4 +14,4 @@ IDS_NO_SUCH_FILE, "FIND: %s: No se encontró el fichero\n"
 
 IDS_CANNOT_OPEN, "FIND: %s: No se pudo abrir el fichero\n"
 
-}
+END

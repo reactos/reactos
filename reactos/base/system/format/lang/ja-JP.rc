@@ -6,7 +6,7 @@
 
 LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
 STRINGTABLE DISCARDABLE
-{
+BEGIN
 STRING_HELP,  "使用法: %S ドライブ: [-FS:ファイルシステム] [-V:ラベル] [-Q] [-A:サイズ] [-C]\n\n\
   [ドライブ:]         フォーマットするドライブを指定します。\n\
   -FS:ファイルシステム\n\
@@ -72,4 +72,4 @@ STRING_NO_LABEL        "ボリュームにラベルをつけられませんでした。"
 STRING_FREE_SPACE      "\nディスク領域は合計で %I64d バイトです。\nそのうち %I64d バイトが使用可能\です。\n"
 
 STRING_SERIAL_NUMBER   "\nボリューム シリアル番号は  %04X-%04X です\n"
-}
+END
