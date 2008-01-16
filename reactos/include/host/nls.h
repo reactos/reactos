@@ -18,6 +18,8 @@ typedef DWORD LCID;
 #define SUBLANGID(l)         ((WORD)(l)>>10)
 #define LANGIDFROMLCID(l)    ((WORD)(l))
 
+#define CP_UTF8 65001
+
 #define LANG_AFRIKAANS       0x36
 #define LANG_ALBANIAN        0x1c
 #define LANG_ARABIC          0x01
@@ -130,5 +132,6 @@ typedef DWORD LCID;
 #define SUBLANG_NORWEGIAN_NYNORSK   0x02
 #define SUBLANG_SERBIAN_CYRILLIC    0x03
 #define SUBLANG_UZBEK_CYRILLIC      0x02
+#define SUBLANG_ENGLISH_US   0x01
 
 #endif

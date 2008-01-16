@@ -152,6 +152,14 @@ extern "C" {
 #define MAP_FOLDDIGITS 128
 #define MAP_PRECOMPOSED 32
 #define MAP_COMPOSITE 64
+
+#define WC_DISCARDNS         0x0010
+#define WC_SEPCHARS          0x0020
+#define WC_DEFAULTCHAR       0x0040
+#define WC_ERR_INVALID_CHARS 0x0080
+#define WC_COMPOSITECHECK    0x0200
+#define WC_NO_BEST_FIT_CHARS 0x0400
+
 #define CP_ACP 0
 #define CP_OEMCP 1
 #define CP_MACCP 2
