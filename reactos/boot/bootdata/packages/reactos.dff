@@ -166,7 +166,7 @@ dll\win32\acledit\acledit.dll                       1
 dll\win32\aclui\aclui.dll                           1
 dll\win32\advapi32\advapi32.dll                     1
 dll\win32\advpack\advpack.dll                       1
-dll\win32\authz\authz.dll
+dll\win32\authz\authz.dll                           1
 dll\win32\avifil32\avifil32.dll                     1
 dll\win32\beepmidi\beepmidi.dll                     1
 dll\win32\browseui\browseui.dll                     1
