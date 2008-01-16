@@ -85,21 +85,24 @@ extern "C" {
 #define FO_COPY	2
 #define FO_DELETE	3
 #define FO_RENAME	4
-#define FOF_MULTIDESTFILES	1
-#define FOF_CONFIRMMOUSE	2
-#define FOF_SILENT	4
-#define FOF_RENAMEONCOLLISION	8
-#define FOF_NOCONFIRMATION	16
-#define FOF_WANTMAPPINGHANDLE	32
-#define FOF_ALLOWUNDO	64
-#define FOF_FILESONLY	128
-#define FOF_SIMPLEPROGRESS	256
-#define FOF_NOCONFIRMMKDIR	512
-#define FOF_NOERRORUI	1024
-#define FOF_NOCOPYSECURITYATTRIBS	2048
-#define FOF_NO_CONNECTED_ELEMENTS  8196
-#define FOF_WANTNUKEWARNING   16384
-#define FOF_NORECURSEREPARSE 32768
+
+#define FOF_MULTIDESTFILES         0x0001
+#define FOF_CONFIRMMOUSE           0x0002
+#define FOF_SILENT                 0x0004
+#define FOF_RENAMEONCOLLISION      0x0008
+#define FOF_NOCONFIRMATION         0x0010
+#define FOF_WANTMAPPINGHANDLE      0x0020
+#define FOF_ALLOWUNDO              0x0040
+#define FOF_FILESONLY              0x0080
+#define FOF_SIMPLEPROGRESS         0x0100
+#define FOF_NOCONFIRMMKDIR         0x0200
+#define FOF_NOERRORUI              0x0400
+#define FOF_NOCOPYSECURITYATTRIBS  0x0800
+#define FOF_NORECURSION            0x1000  /* don't do recursion into directories */
+#define FOF_NO_CONNECTED_ELEMENTS  0x2000  /* don't do connected files */
+#define FOF_WANTNUKEWARNING        0x4000  /* during delete operation, warn if delete instead
+                                              of recycling (even if FOF_NOCONFIRMATION) */
+#define FOF_NORECURSEREPARSE       0x8000  /* don't do recursion into reparse points */
 
 #define PO_DELETE 19
 #define PO_RENAME 20
