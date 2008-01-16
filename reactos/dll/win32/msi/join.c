@@ -23,7 +23,6 @@
 #include "windef.h"
 #include "winbase.h"
 #include "winerror.h"
-#include "wine/debug.h"
 #include "msi.h"
 #include "msiquery.h"
 #include "objbase.h"
@@ -31,130 +30,150 @@
 #include "msipriv.h"
 #include "query.h"
 
+#include "wine/debug.h"
+#include "wine/unicode.h"
+
 WINE_DEFAULT_DEBUG_CHANNEL(msidb);
+
+typedef struct tagJOINTABLE
+{
+    struct list entry;
+    MSIVIEW *view;
+    UINT columns;
+    UINT rows;
+    UINT next_rows;
+} JOINTABLE;
 
 typedef struct tagMSIJOINVIEW
 {
     MSIVIEW        view;
     MSIDATABASE   *db;
-    MSIVIEW       *left, *right;
-    UINT           left_count, right_count;
-    UINT           left_rows, right_rows;
+    struct list    tables;
+    UINT           columns;
+    UINT           rows;
 } MSIJOINVIEW;
 
 static UINT JOIN_fetch_int( struct tagMSIVIEW *view, UINT row, UINT col, UINT *val )
 {
     MSIJOINVIEW *jv = (MSIJOINVIEW*)view;
-    MSIVIEW *table;
+    JOINTABLE *table;
+    UINT cols = 0;
+    UINT prev_rows = 1;
 
-    TRACE("%p %d %d %p\n", jv, row, col, val );
+    TRACE("%d, %d\n", row, col);
 
-    if( !jv->left || !jv->right )
+    if (col == 0 || col > jv->columns)
          return ERROR_FUNCTION_FAILED;
 
-    if( (col==0) || (col>(jv->left_count + jv->right_count)) )
+    if (row >= jv->rows)
          return ERROR_FUNCTION_FAILED;
 
-    if( row >= (jv->left_rows * jv->right_rows) )
-         return ERROR_FUNCTION_FAILED;
-
-    if( col <= jv->left_count )
+    LIST_FOR_EACH_ENTRY(table, &jv->tables, JOINTABLE, entry)
     {
-        table = jv->left;
-        row = (row/jv->right_rows);
-    }
-    else
-    {
-        table = jv->right;
-        row = (row % jv->right_rows);
-        col -= jv->left_count;
+        if (col <= cols + table->columns)
+        {
+            row = (row % (jv->rows / table->next_rows)) / prev_rows;
+            col -= cols;
+            break;
+        }
+
+        prev_rows = table->rows;
+        cols += table->columns;
     }
 
-    return table->ops->fetch_int( table, row, col, val );
+    return table->view->ops->fetch_int( table->view, row, col, val );
 }
 
 static UINT JOIN_fetch_stream( struct tagMSIVIEW *view, UINT row, UINT col, IStream **stm)
 {
     MSIJOINVIEW *jv = (MSIJOINVIEW*)view;
-    MSIVIEW *table;
+    JOINTABLE *table;
+    UINT cols = 0;
+    UINT prev_rows = 1;
 
     TRACE("%p %d %d %p\n", jv, row, col, stm );
 
-    if( !jv->left || !jv->right )
+    if (col == 0 || col > jv->columns)
          return ERROR_FUNCTION_FAILED;
 
-    if( (col==0) || (col>(jv->left_count + jv->right_count)) )
+    if (row >= jv->rows)
          return ERROR_FUNCTION_FAILED;
 
-    if( row >= jv->left_rows * jv->right_rows )
-         return ERROR_FUNCTION_FAILED;
-
-    if( row <= jv->left_count )
+    LIST_FOR_EACH_ENTRY(table, &jv->tables, JOINTABLE, entry)
     {
-        table = jv->left;
-        row = (row/jv->right_rows);
-    }
-    else
-    {
-        table = jv->right;
-        row = (row % jv->right_rows);
-        col -= jv->left_count;
+        if (col <= cols + table->columns)
+        {
+            row = (row % (jv->rows / table->next_rows)) / prev_rows;
+            col -= cols;
+            break;
+        }
+
+        prev_rows = table->rows;
+        cols += table->columns;
     }
 
-    return table->ops->fetch_stream( table, row, col, stm );
+    return table->view->ops->fetch_stream( table->view, row, col, stm );
+}
+
+static UINT JOIN_get_row( struct tagMSIVIEW *view, UINT row, MSIRECORD **rec )
+{
+    FIXME("(%p, %d, %p): stub!\n", view, row, rec);
+    return ERROR_FUNCTION_FAILED;
 }
 
 static UINT JOIN_execute( struct tagMSIVIEW *view, MSIRECORD *record )
 {
     MSIJOINVIEW *jv = (MSIJOINVIEW*)view;
-    UINT r, *ldata = NULL, *rdata = NULL;
+    JOINTABLE *table;
+    UINT r, rows;
 
     TRACE("%p %p\n", jv, record);
 
-    if( !jv->left || !jv->right )
-         return ERROR_FUNCTION_FAILED;
-
-    r = jv->left->ops->execute( jv->left, NULL );
-    if (r != ERROR_SUCCESS)
-        return r;
-
-    r = jv->right->ops->execute( jv->right, NULL );
-    if (r != ERROR_SUCCESS)
-        return r;
-
-    /* get the number of rows in each table */
-    r = jv->left->ops->get_dimensions( jv->left, &jv->left_rows, NULL );
-    if( r != ERROR_SUCCESS )
+    LIST_FOR_EACH_ENTRY(table, &jv->tables, JOINTABLE, entry)
     {
-        ERR("can't get left table dimensions\n");
-        goto end;
+        table->view->ops->execute(table->view, NULL);
+
+        r = table->view->ops->get_dimensions(table->view, &table->rows, NULL);
+        if (r != ERROR_SUCCESS)
+        {
+            ERR("failed to get table dimensions\n");
+            return r;
+        }
+
+        /* each table must have at least one row */
+        if (table->rows == 0)
+        {
+            jv->rows = 0;
+            return ERROR_SUCCESS;
+        }
+
+        if (jv->rows == 0)
+            jv->rows = table->rows;
+        else
+            jv->rows *= table->rows;
     }
 
-    r = jv->right->ops->get_dimensions( jv->right, &jv->right_rows, NULL );
-    if( r != ERROR_SUCCESS )
+    rows = jv->rows;
+    LIST_FOR_EACH_ENTRY(table, &jv->tables, JOINTABLE, entry)
     {
-        ERR("can't get right table dimensions\n");
-        goto end;
+        rows /= table->rows;
+        table->next_rows = rows;
     }
 
-end:
-    msi_free( ldata );
-    msi_free( rdata );
-
-    return r;
+    return ERROR_SUCCESS;
 }
 
 static UINT JOIN_close( struct tagMSIVIEW *view )
 {
     MSIJOINVIEW *jv = (MSIJOINVIEW*)view;
+    JOINTABLE *table;
 
     TRACE("%p\n", jv );
 
-    if( !jv->left || !jv->right )
-        return ERROR_FUNCTION_FAILED;
-
-    jv->left->ops->close( jv->left );
-    jv->right->ops->close( jv->right );
+    LIST_FOR_EACH_ENTRY(table, &jv->tables, JOINTABLE, entry)
+    {
+        table->view->ops->close(table->view);
+    }
 
     return ERROR_SUCCESS;
 }
@@ -165,16 +184,11 @@ static UINT JOIN_get_dimensions( struct tagMSIVIEW *view, UINT *rows, UINT *cols
 
     TRACE("%p %p %p\n", jv, rows, cols );
 
-    if( cols )
-        *cols = jv->left_count + jv->right_count;
+    if (cols)
+        *cols = jv->columns;
 
-    if( rows )
-    {
-        if( !jv->left || !jv->right )
-            return ERROR_FUNCTION_FAILED;
-
-        *rows = jv->left_rows * jv->right_rows;
-    }
+    if (rows)
+        *rows = jv->rows;
 
     return ERROR_SUCCESS;
 }
@@ -183,48 +197,46 @@ static UINT JOIN_get_column_info( struct tagMSIVIEW *view,
                 UINT n, LPWSTR *name, UINT *type )
 {
     MSIJOINVIEW *jv = (MSIJOINVIEW*)view;
+    JOINTABLE *table;
+    UINT cols = 0;
 
     TRACE("%p %d %p %p\n", jv, n, name, type );
 
-    if( !jv->left || !jv->right )
+    if (n == 0 || n > jv->columns)
         return ERROR_FUNCTION_FAILED;
 
-    if( (n==0) || (n>(jv->left_count + jv->right_count)) )
-        return ERROR_FUNCTION_FAILED;
+    LIST_FOR_EACH_ENTRY(table, &jv->tables, JOINTABLE, entry)
+    {
+        if (n <= cols + table->columns)
+            return table->view->ops->get_column_info(table->view, n - cols, name, type);
 
-    if( n <= jv->left_count )
-        return jv->left->ops->get_column_info( jv->left, n, name, type );
+        cols += table->columns;
+    }
 
-    n = n - jv->left_count;
-
-    return jv->right->ops->get_column_info( jv->right, n, name, type );
+    return ERROR_FUNCTION_FAILED;
 }
 
 static UINT JOIN_modify( struct tagMSIVIEW *view, MSIMODIFY eModifyMode,
-                MSIRECORD *rec )
+                         MSIRECORD *rec, UINT row )
 {
-    MSIJOINVIEW *jv = (MSIJOINVIEW*)view;
-
-    TRACE("%p %d %p\n", jv, eModifyMode, rec );
-
+    TRACE("%p %d %p\n", view, eModifyMode, rec);
     return ERROR_FUNCTION_FAILED;
 }
 
 static UINT JOIN_delete( struct tagMSIVIEW *view )
 {
     MSIJOINVIEW *jv = (MSIJOINVIEW*)view;
+    JOINTABLE *table;
 
     TRACE("%p\n", jv );
 
-    if( jv->left )
-        jv->left->ops->delete( jv->left );
-    jv->left = NULL;
+    LIST_FOR_EACH_ENTRY(table, &jv->tables, JOINTABLE, entry)
+    {
+        table->view->ops->delete(table->view);
+        table->view = NULL;
+    }
 
-    if( jv->right )
-        jv->right->ops->delete( jv->right );
-    jv->right = NULL;
-
-    msi_free( jv );
+    msi_free(jv);
 
     return ERROR_SUCCESS;
 }
@@ -233,16 +245,53 @@ static UINT JOIN_find_matching_rows( struct tagMSIVIEW *view, UINT col,
     UINT val, UINT *row, MSIITERHANDLE *handle )
 {
     MSIJOINVIEW *jv = (MSIJOINVIEW*)view;
+    UINT i, row_value;
 
-    FIXME("%p, %d, %u, %p\n", jv, col, val, *handle);
+    TRACE("%p, %d, %u, %p\n", view, col, val, *handle);
 
-    return ERROR_FUNCTION_FAILED;
+    if (col == 0 || col > jv->columns)
+        return ERROR_INVALID_PARAMETER;
+
+    for (i = (UINT)*handle; i < jv->rows; i++)
+    {
+        if (view->ops->fetch_int( view, i, col, &row_value ) != ERROR_SUCCESS)
+            continue;
+
+        if (row_value == val)
+        {
+            *row = i;
+            (*(UINT *)handle) = i + 1;
+            return ERROR_SUCCESS;
+        }
+    }
+
+    return ERROR_NO_MORE_ITEMS;
+}
+
+static UINT JOIN_sort(struct tagMSIVIEW *view, column_info *columns)
+{
+    MSIJOINVIEW *jv = (MSIJOINVIEW *)view;
+    JOINTABLE *table;
+    UINT r;
+
+    TRACE("%p %p\n", view, columns);
+
+    LIST_FOR_EACH_ENTRY(table, &jv->tables, JOINTABLE, entry)
+    {
+        r = table->view->ops->sort(table->view, columns);
+        if (r != ERROR_SUCCESS)
+            return r;
+    }
+
+    return ERROR_SUCCESS;
 }
 
 static const MSIVIEWOPS join_ops =
 {
     JOIN_fetch_int,
     JOIN_fetch_stream,
+    JOIN_get_row,
+    NULL,
     NULL,
     NULL,
     JOIN_execute,
@@ -251,16 +300,22 @@ static const MSIVIEWOPS join_ops =
     JOIN_get_column_info,
     JOIN_modify,
     JOIN_delete,
-    JOIN_find_matching_rows
+    JOIN_find_matching_rows,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    JOIN_sort,
 };
 
-UINT JOIN_CreateView( MSIDATABASE *db, MSIVIEW **view,
-                      LPCWSTR left, LPCWSTR right )
+UINT JOIN_CreateView( MSIDATABASE *db, MSIVIEW **view, LPWSTR tables )
 {
     MSIJOINVIEW *jv = NULL;
     UINT r = ERROR_SUCCESS;
+    JOINTABLE *table;
+    LPWSTR ptr;
 
-    TRACE("%p (%s,%s)\n", jv, debugstr_w(left), debugstr_w(right) );
+    TRACE("%p (%s)\n", jv, debugstr_w(tables) );
 
     jv = msi_alloc_zero( sizeof *jv );
     if( !jv )
@@ -269,35 +324,42 @@ UINT JOIN_CreateView( MSIDATABASE *db, MSIVIEW **view,
     /* fill the structure */
     jv->view.ops = &join_ops;
     jv->db = db;
+    jv->columns = 0;
+    jv->rows = 0;
 
-    /* create the tables to join */
-    r = TABLE_CreateView( db, left, &jv->left );
-    if( r != ERROR_SUCCESS )
-    {
-        ERR("can't create left table\n");
-        goto end;
-    }
+    list_init(&jv->tables);
 
-    r = TABLE_CreateView( db, right, &jv->right );
-    if( r != ERROR_SUCCESS )
+    while (*tables)
     {
-        ERR("can't create right table\n");
-        goto end;
-    }
+        if ((ptr = strchrW(tables, ' ')))
+            *ptr = '\0';
 
-    /* get the number of columns in each table */
-    r = jv->left->ops->get_dimensions( jv->left, NULL, &jv->left_count );
-    if( r != ERROR_SUCCESS )
-    {
-        ERR("can't get left table dimensions\n");
-        goto end;
-    }
+        table = msi_alloc(sizeof(JOINTABLE));
+        if (!table)
+            return ERROR_OUTOFMEMORY;
 
-    r = jv->right->ops->get_dimensions( jv->right, NULL, &jv->right_count );
-    if( r != ERROR_SUCCESS )
-    {
-        ERR("can't get right table dimensions\n");
-        goto end;
+        r = TABLE_CreateView( db, tables, &table->view );
+        if( r != ERROR_SUCCESS )
+        {
+            ERR("can't create table\n");
+            goto end;
+        }
+
+        r = table->view->ops->get_dimensions( table->view, NULL, &table->columns );
+        if( r != ERROR_SUCCESS )
+        {
+            ERR("can't get table dimensions\n");
+            goto end;
+        }
+
+        jv->columns += table->columns;
+
+        list_add_head( &jv->tables, &table->entry );
+
+        if (!ptr)
+            break;
+
+        tables = ptr + 1;
     }
 
     *view = &jv->view;

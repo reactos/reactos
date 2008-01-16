@@ -137,7 +137,7 @@ static LPWSTR load_ttfname_from(LPCWSTR filename)
         {
             int nPos;
             LPSTR buf;
-            static LPCSTR tt = " (TrueType)";
+            static const char tt[] = " (TrueType)";
 
             ttRecord.uStringLength = SWAPWORD(ttRecord.uStringLength);
             ttRecord.uStringOffset = SWAPWORD(ttRecord.uStringOffset);
@@ -216,8 +216,8 @@ static UINT ITERATE_RegisterFonts(MSIRECORD *row, LPVOID param)
 
     if (name)
     {
-        msi_reg_set_val_str( hkey1, name, file->FileName );
-        msi_reg_set_val_str( hkey2, name, file->FileName );
+        msi_reg_set_val_str( hkey1, name, file->TargetPath);
+        msi_reg_set_val_str( hkey2, name, file->TargetPath);
     }
 
     msi_free(name);

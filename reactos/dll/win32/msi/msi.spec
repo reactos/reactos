@@ -214,7 +214,7 @@
 218 stdcall MsiGetFileHashA(str long ptr)
 219 stdcall MsiGetFileHashW(wstr long ptr)
 220 stub MsiEnumComponentCostsA
-221 stub MsiEnumComponentCostsW
+221 stdcall MsiEnumComponentCostsW(long str long long ptr ptr ptr ptr)
 222 stdcall MsiCreateAndVerifyInstallerDirectory(long)
 223 stdcall MsiGetFileSignatureInformationA(str long ptr ptr ptr)
 224 stdcall MsiGetFileSignatureInformationW(wstr long ptr ptr ptr)
@@ -230,6 +230,51 @@
 234 stub MsiDeleteUserDataW
 235 stub Migrate10CachedPackagesA
 236 stub Migrate10CachedPackagesW
+237 stub MsiRemovePatchesA
+238 stub MsiRemovePatchesW
+239 stub MsiApplyMultiplePatchesA
+240 stub MsiApplyMultiplePatchesW
+241 stub MsiExtractPatchXMLDataA
+242 stub MsiExtractPatchXMLDataW
+243 stub MsiGetPatchInfoExA
+244 stub MsiGetPatchInfoExW
+245 stdcall MsiEnumProductsExA(str str long long ptr ptr ptr ptr)
+246 stdcall MsiEnumProductsExW(wstr wstr long long ptr ptr ptr ptr)
+247 stub MsiGetProductInfoExA
+248 stub MsiGetProductInfoExW
+249 stdcall MsiQueryComponentStateA(str str long str ptr)
+250 stdcall MsiQueryComponentStateW(wstr wstr long wstr ptr)
+251 stub MsiQueryFeatureStateExA
+252 stub MsiQueryFeatureStateExW
+253 stub MsiDeterminePatchSequenceA
+254 stub MsiDeterminePatchSequenceW
+255 stdcall MsiSourceListAddSourceExA(str str long long str long)
+256 stdcall MsiSourceListAddSourceExW(wstr wstr long long wstr long)
+257 stub MsiSourceListClearSourceA
+258 stub MsiSourceListClearSourceW
+259 stub MsiSourceListClearAllExA
+260 stub MsiSourceListClearAllExW
+261 stub MsiSourceListForceResolutionExA
+262 stub MsiSourceListForceResolutionExW
+263 stdcall MsiSourceListEnumSourcesA(str str long long long ptr ptr)
+264 stub MsiSourceListEnumSourcesW
+265 stdcall MsiSourceListGetInfoA(str str long long str ptr ptr)
+266 stdcall MsiSourceListGetInfoW(wstr wstr long long wstr ptr ptr)
+267 stub MsiSourceListSetInfoA
+268 stdcall MsiSourceListSetInfoW(wstr wstr long long wstr wstr)
+269 stub MsiEnumPatchesExA
+270 stub MsiEnumPatchesExW
+271 stub MsiSourceListEnumMediaDisksA
+272 stub MsiSourceListEnumMediaDisksW
+273 stub MsiSourceListAddMediaDiskA
+274 stdcall MsiSourceListAddMediaDiskW(wstr wstr long long long wstr wstr)
+275 stub MsiSourceListClearMediaDiskA
+276 stub MsiSourceListClearMediaDiskW
+277 stub MsiDetermineApplicablePatchesA
+278 stub MsiDetermineApplicablePatchesW
+279 stub MsiMessageBoxExA
+280 stub MsiMessageBoxExW
+281 stub MsiSetExternalUIRecord
 
 @ stdcall -private DllCanUnloadNow()
 @ stdcall -private DllGetClassObject(ptr ptr ptr)

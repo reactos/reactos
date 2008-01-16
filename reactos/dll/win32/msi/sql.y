@@ -49,10 +49,11 @@ typedef struct tag_SQL_input
     struct list *mem;
 } SQL_input;
 
-static LPWSTR SQL_getstring( void *info, struct sql_str *str );
+static LPWSTR SQL_getstring( void *info, const struct sql_str *str );
 static INT SQL_getint( void *info );
 static int sql_lex( void *SQL_lval, SQL_input *info );
 
+static LPWSTR parser_add_table( LPWSTR list, LPWSTR table );
 static void *parser_alloc( void *info, unsigned int sz );
 static column_info *parser_alloc_column( void *info, LPCWSTR table, LPCWSTR column );
 
@@ -60,9 +61,9 @@ static BOOL SQL_MarkPrimaryKeys( column_info *cols, column_info *keys);
 
 static struct expr * EXPR_complex( void *info, struct expr *l, UINT op, struct expr *r );
 static struct expr * EXPR_unary( void *info, struct expr *l, UINT op );
-static struct expr * EXPR_column( void *info, column_info *column );
+static struct expr * EXPR_column( void *info, const column_info *column );
 static struct expr * EXPR_ival( void *info, int val );
-static struct expr * EXPR_sval( void *info, struct sql_str * );
+static struct expr * EXPR_sval( void *info, const struct sql_str *str );
 static struct expr * EXPR_wildcard( void *info );
 
 %}
@@ -81,7 +82,7 @@ static struct expr * EXPR_wildcard( void *info );
 }
 
 %token TK_ALTER TK_AND TK_BY TK_CHAR TK_COMMA TK_CREATE TK_DELETE
-%token TK_DISTINCT TK_DOT TK_EQ TK_FREE TK_FROM TK_GE TK_GT TK_HOLD
+%token TK_DISTINCT TK_DOT TK_EQ TK_FREE TK_FROM TK_GE TK_GT TK_HOLD TK_ADD
 %token <str> TK_ID
 %token TK_ILLEGAL TK_INSERT TK_INT
 %token <str> TK_INTEGER
@@ -101,7 +102,7 @@ static struct expr * EXPR_wildcard( void *info );
 %nonassoc END_OF_FILE ILLEGAL SPACE UNCLOSED_STRING COMMENT FUNCTION
           COLUMN AGG_FUNCTION.
 
-%type <string> table id
+%type <string> table tablelist id
 %type <column_list> selcollist column column_and_type column_def table_def
 %type <column_list> column_assignment update_assign_list constlist
 %type <query> query from fromtable selectfrom unorderedsel
@@ -229,8 +230,28 @@ onealter:
             SQL_input* sql = (SQL_input*) info;
             MSIVIEW *alter = NULL;
 
-            ALTER_CreateView( sql->db, &alter, $3, $4 );
+            ALTER_CreateView( sql->db, &alter, $3, NULL, $4 );
             if( !alter )
+                YYABORT;
+            $$ = alter;
+        }
+  | TK_ALTER TK_TABLE table TK_ADD column_and_type
+        {
+            SQL_input *sql = (SQL_input *)info;
+            MSIVIEW *alter = NULL;
+
+            ALTER_CreateView( sql->db, &alter, $3, $5, 0 );
+            if (!alter)
+                YYABORT;
+            $$ = alter;
+        }
+  | TK_ALTER TK_TABLE table TK_ADD column_and_type TK_HOLD
+        {
+            SQL_input *sql = (SQL_input *)info;
+            MSIVIEW *alter = NULL;
+
+            ALTER_CreateView( sql->db, &alter, $3, $5, 1 );
+            if (!alter)
                 YYABORT;
             $$ = alter;
         }
@@ -278,7 +299,8 @@ column_and_type:
     column column_type
         {
             $$ = $1;
-            $$->type = $2 | MSITYPE_VALID;
+            $$->type = ($2 | MSITYPE_VALID);
+            $$->temporary = $2 & MSITYPE_TEMPORARY ? TRUE : FALSE;
         }
     ;
 
@@ -293,7 +315,7 @@ column_type:
         }
   | data_type_l TK_TEMPORARY
         {
-            FIXME("temporary column\n");
+            $$ = $1 | MSITYPE_TEMPORARY;
         }
     ;
 
@@ -351,15 +373,16 @@ data_count:
 oneselect:
     unorderedsel TK_ORDER TK_BY selcollist
         {
-            SQL_input* sql = (SQL_input*) info;
+            UINT r;
 
-            $$ = NULL;
             if( $4 )
-                ORDER_CreateView( sql->db, &$$, $1, $4 );
-            else
-                $$ = $1;
-            if( !$$ )
-                YYABORT;
+            {
+                r = $1->ops->sort( $1, $4 );
+                if ( r != ERROR_SUCCESS)
+                    YYABORT;
+            }
+
+            $$ = $1;
         }
   | unorderedsel
     ;
@@ -445,14 +468,28 @@ fromtable:
             if( r != ERROR_SUCCESS || !$$ )
                 YYABORT;
         }
-  | TK_FROM table TK_COMMA table
+  | TK_FROM tablelist
         {
             SQL_input* sql = (SQL_input*) info;
             UINT r;
 
-            /* only support inner joins on two tables */
-            r = JOIN_CreateView( sql->db, &$$, $2, $4 );
+            r = JOIN_CreateView( sql->db, &$$, $2 );
+            msi_free( $2 );
             if( r != ERROR_SUCCESS )
+                YYABORT;
+        }
+    ;
+
+tablelist:
+    table
+        {
+            $$ = strdupW($1);
+        }
+  |
+    table TK_COMMA tablelist
+        {
+            $$ = parser_add_table($3, $1);
+            if (!$$)
                 YYABORT;
         }
     ;
@@ -642,6 +679,19 @@ number:
 
 %%
 
+static LPWSTR parser_add_table(LPWSTR list, LPWSTR table)
+{
+    DWORD size = lstrlenW(list) + lstrlenW(table) + 2;
+    static const WCHAR space[] = {' ',0};
+
+    list = msi_realloc(list, size * sizeof(WCHAR));
+    if (!list) return NULL;
+
+    lstrcatW(list, space);
+    lstrcatW(list, table);
+    return list;
+}
+
 static void *parser_alloc( void *info, unsigned int sz )
 {
     SQL_input* sql = (SQL_input*) info;
@@ -694,7 +744,7 @@ static int sql_lex( void *SQL_lval, SQL_input *sql )
     return token;
 }
 
-LPWSTR SQL_getstring( void *info, struct sql_str *strdata )
+LPWSTR SQL_getstring( void *info, const struct sql_str *strdata )
 {
     LPCWSTR p = strdata->data;
     UINT len = strdata->len;
@@ -776,7 +826,7 @@ static struct expr * EXPR_unary( void *info, struct expr *l, UINT op )
     return e;
 }
 
-static struct expr * EXPR_column( void *info, column_info *column )
+static struct expr * EXPR_column( void *info, const column_info *column )
 {
     struct expr *e = parser_alloc( info, sizeof *e );
     if( e )
@@ -798,7 +848,7 @@ static struct expr * EXPR_ival( void *info, int val )
     return e;
 }
 
-static struct expr * EXPR_sval( void *info, struct sql_str *str )
+static struct expr * EXPR_sval( void *info, const struct sql_str *str )
 {
     struct expr *e = parser_alloc( info, sizeof *e );
     if( e )

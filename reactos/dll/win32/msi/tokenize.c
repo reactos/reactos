@@ -38,46 +38,38 @@ struct Keyword {
 
 #define MAX_TOKEN_LEN 11
 
+static const WCHAR ADD_W[] = { 'A','D','D',0 };
 static const WCHAR ALTER_W[] = { 'A','L','T','E','R',0 };
 static const WCHAR AND_W[] = { 'A','N','D',0 };
 static const WCHAR BY_W[] = { 'B','Y',0 };
 static const WCHAR CHAR_W[] = { 'C','H','A','R',0 };
 static const WCHAR CHARACTER_W[] = { 'C','H','A','R','A','C','T','E','R',0 };
 static const WCHAR CREATE_W[] = { 'C','R','E','A','T','E',0 };
-static const WCHAR CROSS_W[] = { 'C','R','O','S','S',0 };
 static const WCHAR DELETE_W[] = { 'D','E','L','E','T','E',0 };
 static const WCHAR DISTINCT_W[] = { 'D','I','S','T','I','N','C','T',0 };
 static const WCHAR FREE_W[] = { 'F','R','E','E',0 };
 static const WCHAR FROM_W[] = { 'F','R','O','M',0 };
-static const WCHAR FULL_W[] = { 'F','U','L','L',0 };
 static const WCHAR HOLD_W[] = { 'H','O','L','D',0 };
-static const WCHAR INNER_W[] = { 'I','N','N','E','R',0 };
 static const WCHAR INSERT_W[] = { 'I','N','S','E','R','T',0 };
 static const WCHAR INT_W[] = { 'I','N','T',0 };
 static const WCHAR INTEGER_W[] = { 'I','N','T','E','G','E','R',0 };
 static const WCHAR INTO_W[] = { 'I','N','T','O',0 };
 static const WCHAR IS_W[] = { 'I','S',0 };
-static const WCHAR JOIN_W[] = { 'J','O','I','N',0 };
 static const WCHAR KEY_W[] = { 'K','E','Y',0 };
-static const WCHAR LEFT_W[] = { 'L','E','F','T',0 };
 static const WCHAR LIKE_W[] = { 'L','I','K','E',0 };
 static const WCHAR LOCALIZABLE_W[] = { 'L','O','C','A','L','I','Z','A','B','L','E',0 };
 static const WCHAR LONG_W[] = { 'L','O','N','G',0 };
 static const WCHAR LONGCHAR_W[] = { 'L','O','N','G','C','H','A','R',0 };
-static const WCHAR NATURAL_W[] = { 'N','A','T','U','R','A','L',0 };
 static const WCHAR NOT_W[] = { 'N','O','T',0 };
 static const WCHAR NULL_W[] = { 'N','U','L','L',0 };
 static const WCHAR OBJECT_W[] = { 'O','B','J','E','C','T',0 };
 static const WCHAR OR_W[] = { 'O','R',0 };
 static const WCHAR ORDER_W[] = { 'O','R','D','E','R',0 };
-static const WCHAR OUTER_W[] = { 'O','U','T','E','R',0 };
 static const WCHAR PRIMARY_W[] = { 'P','R','I','M','A','R','Y',0 };
-static const WCHAR RIGHT_W[] = { 'R','I','G','H','T',0 };
 static const WCHAR SELECT_W[] = { 'S','E','L','E','C','T',0 };
 static const WCHAR SET_W[] = { 'S','E','T',0 };
 static const WCHAR SHORT_W[] = { 'S','H','O','R','T',0 };
 static const WCHAR TABLE_W[] = { 'T','A','B','L','E',0 };
-static const WCHAR TEMP_W[] = { 'T','E','M','P',0 };
 static const WCHAR TEMPORARY_W[] = { 'T','E','M','P','O','R','A','R','Y',0 };
 static const WCHAR UPDATE_W[] = { 'U','P','D','A','T','E',0 };
 static const WCHAR VALUES_W[] = { 'V','A','L','U','E','S',0 };
@@ -87,7 +79,8 @@ static const WCHAR WHERE_W[] = { 'W','H','E','R','E',0 };
 ** These are the keywords
 */
 static const Keyword aKeywordTable[] = {
-  /*{ ALTER_W, TK_ALTER },*/
+  { ADD_W, TK_ADD },
+  { ALTER_W, TK_ALTER },
   { AND_W, TK_AND },
   { BY_W, TK_BY },
   { CHAR_W, TK_CHAR },
@@ -118,7 +111,7 @@ static const Keyword aKeywordTable[] = {
   { SET_W, TK_SET },
   { SHORT_W, TK_SHORT },
   { TABLE_W, TK_TABLE },
-  /*{ TEMPORARY_W, TK_TEMPORARY },*/
+  { TEMPORARY_W, TK_TEMPORARY },
   { UPDATE_W, TK_UPDATE },
   { VALUES_W, TK_VALUES },
   { WHERE_W, TK_WHERE },
@@ -137,7 +130,7 @@ static int compKeyword(const void *m1, const void *m2){
 
 /*
 ** This function looks up an identifier to determine if it is a
-** keyword.  If it is a keyword, the token code of that keyword is
+** keyword.  If it is a keyword, the token code of that keyword is 
 ** returned.  If the input is not a keyword, TK_ID is returned.
 */
 static int sqliteKeywordCode(const WCHAR *z, int n){
@@ -255,7 +248,7 @@ int sqliteGetToken(const WCHAR *z, int *tokenType){
     case ',':
       *tokenType = TK_COMMA;
       return 1;
-    case '`': case '\'': case '"': {
+    case '`': case '\'': {
       int delim = z[0];
       for(i=1; z[i]; i++){
         if( z[i]==delim ){

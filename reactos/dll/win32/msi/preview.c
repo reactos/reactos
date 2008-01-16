@@ -18,6 +18,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#define COBJMACROS
+
 #include <stdarg.h>
 
 #include "windef.h"
@@ -25,6 +27,7 @@
 #include "winnls.h"
 #include "msi.h"
 #include "msipriv.h"
+#include "msiserver.h"
 
 #include "wine/debug.h"
 #include "wine/unicode.h"
@@ -69,7 +72,21 @@ UINT WINAPI MsiEnableUIPreview( MSIHANDLE hdb, MSIHANDLE* phPreview )
 
     db = msihandle2msiinfo( hdb, MSIHANDLETYPE_DATABASE );
     if( !db )
-        return ERROR_INVALID_HANDLE;
+    {
+        IWineMsiRemoteDatabase *remote_database;
+
+        remote_database = (IWineMsiRemoteDatabase *)msi_get_remote( hdb );
+        if ( !remote_database )
+            return ERROR_INVALID_HANDLE;
+
+        *phPreview = 0;
+
+        IWineMsiRemoteDatabase_Release( remote_database );
+        WARN("MsiEnableUIPreview not allowed during a custom action!\n");
+
+        return ERROR_FUNCTION_FAILED;
+    }
+
     preview = MSI_EnableUIPreview( db );
     if( preview )
     {

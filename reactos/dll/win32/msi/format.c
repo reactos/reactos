@@ -20,7 +20,7 @@
  */
 
 /*
-http://msdn.microsoft.com/library/default.asp?url=/library/en-us/msi/setup/msiformatrecord.asp
+http://msdn.microsoft.com/library/default.asp?url=/library/en-us/msi/setup/msiformatrecord.asp 
  */
 
 #include <stdarg.h>
@@ -33,21 +33,25 @@ http://msdn.microsoft.com/library/default.asp?url=/library/en-us/msi/setup/msifo
 #include "winerror.h"
 #include "wine/debug.h"
 #include "msi.h"
-#include "msipriv.h"
 #include "winnls.h"
+#include "objbase.h"
+#include "oleauto.h"
+
+#include "msipriv.h"
+#include "msiserver.h"
 #include "wine/unicode.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(msi);
 
 
-static DWORD deformat_string_internal(MSIPACKAGE *package, LPCWSTR ptr,
+static DWORD deformat_string_internal(MSIPACKAGE *package, LPCWSTR ptr, 
                                      WCHAR** data, DWORD len, MSIRECORD* record,
                                      BOOL* in_group);
 
 
-static LPWSTR build_default_format(MSIRECORD* record)
+static LPWSTR build_default_format(const MSIRECORD* record)
 {
-    int i;
+    int i;  
     int count;
     LPWSTR rc, buf;
     static const WCHAR fmt[] = {'%','i',':',' ','%','s',' ',0};
@@ -113,23 +117,24 @@ static LPWSTR deformat_component(MSIPACKAGE* package, LPCWSTR key, DWORD* sz)
 {
     LPWSTR value = NULL;
     MSICOMPONENT *comp;
+    BOOL source;
 
     *sz = 0;
     if (!package)
         return NULL;
 
-    FIXME("component key %s\n", debugstr_w(key));
     comp = get_loaded_component(package,key);
     if (comp)
     {
-        value = resolve_folder(package, comp->Directory, FALSE, FALSE, NULL);
+        source = (comp->Action == INSTALLSTATE_SOURCE) ? TRUE : FALSE;
+        value = resolve_folder(package, comp->Directory, source, FALSE, TRUE, NULL);
         *sz = (strlenW(value)) * sizeof(WCHAR);
     }
 
     return value;
 }
 
-static LPWSTR deformat_file(MSIPACKAGE* package, LPCWSTR key, DWORD* sz,
+static LPWSTR deformat_file(MSIPACKAGE* package, LPCWSTR key, DWORD* sz, 
                             BOOL shortname)
 {
     LPWSTR value = NULL;
@@ -162,8 +167,6 @@ static LPWSTR deformat_file(MSIPACKAGE* package, LPCWSTR key, DWORD* sz,
             }
             else
             {
-                ERR("Unable to get ShortPath size (%s)\n",
-                    debugstr_w( file->TargetPath) );
                 value = strdupW( file->TargetPath );
                 *sz = (lstrlenW(value)) * sizeof(WCHAR);
             }
@@ -173,7 +176,7 @@ static LPWSTR deformat_file(MSIPACKAGE* package, LPCWSTR key, DWORD* sz,
     return value;
 }
 
-static LPWSTR deformat_environment(MSIPACKAGE* package, LPCWSTR key,
+static LPWSTR deformat_environment(MSIPACKAGE* package, LPCWSTR key, 
                                    DWORD* chunk)
 {
     LPWSTR value = NULL;
@@ -189,14 +192,14 @@ static LPWSTR deformat_environment(MSIPACKAGE* package, LPCWSTR key,
     }
     else
     {
-        ERR("Unknown environment variable %s\n", debugstr_w(key));
+        WARN("Unknown environment variable %s\n", debugstr_w(key));
         *chunk = 0;
         value = NULL;
     }
     return value;
 }
 
-
+ 
 static LPWSTR deformat_NULL(DWORD* chunk)
 {
     LPWSTR value;
@@ -235,7 +238,7 @@ static BOOL is_key_number(LPCWSTR key)
 static LPWSTR deformat_index(MSIRECORD* record, LPCWSTR key, DWORD* chunk )
 {
     INT index;
-    LPWSTR value;
+    LPWSTR value; 
 
     index = atoiW(key);
     TRACE("record index %i\n",index);
@@ -266,10 +269,10 @@ static LPWSTR deformat_property(MSIPACKAGE* package, LPCWSTR key, DWORD* chunk)
 }
 
 /*
- * Groups cannot be nested. They are just treated as from { to next }
+ * Groups cannot be nested. They are just treated as from { to next } 
  */
 static BOOL find_next_group(LPCWSTR source, DWORD len_remaining,
-                                    LPWSTR *group, LPCWSTR *mark,
+                                    LPWSTR *group, LPCWSTR *mark, 
                                     LPCWSTR* mark2)
 {
     int i;
@@ -290,7 +293,7 @@ static BOOL find_next_group(LPCWSTR source, DWORD len_remaining,
     if (! found)
         return FALSE;
 
-    *mark2 = &(*mark)[i];
+    *mark2 = &(*mark)[i]; 
 
     i = *mark2 - *mark;
     *group = msi_alloc(i*sizeof(WCHAR));
@@ -305,20 +308,20 @@ static BOOL find_next_group(LPCWSTR source, DWORD len_remaining,
 
 
 static BOOL find_next_outermost_key(LPCWSTR source, DWORD len_remaining,
-                                    LPWSTR *key, LPCWSTR *mark, LPCWSTR* mark2,
+                                    LPWSTR *key, LPCWSTR *mark, LPCWSTR* mark2, 
                                     BOOL *nested)
 {
     INT count = 0;
     INT total_count = 0;
     int i;
 
+    *nested = FALSE;
     *mark = scanW(source,'[',len_remaining);
     if (!*mark)
         return FALSE;
 
     count = 1;
     total_count = 1;
-    *nested = FALSE;
     for (i = 1; (*mark - source) + i < len_remaining && count > 0; i++)
     {
         if ((*mark)[i] == '[' && (*mark)[i-1] != '\\')
@@ -336,7 +339,7 @@ static BOOL find_next_outermost_key(LPCWSTR source, DWORD len_remaining,
     if (count > 0)
         return FALSE;
 
-    *mark2 = &(*mark)[i-1];
+    *mark2 = &(*mark)[i-1]; 
 
     i = *mark2 - *mark;
     *key = msi_alloc(i*sizeof(WCHAR));
@@ -349,7 +352,7 @@ static BOOL find_next_outermost_key(LPCWSTR source, DWORD len_remaining,
     return TRUE;
 }
 
-static LPWSTR deformat_group(MSIPACKAGE* package, LPWSTR group, DWORD len,
+static LPWSTR deformat_group(MSIPACKAGE* package, LPWSTR group, DWORD len, 
                       MSIRECORD* record, DWORD* size)
 {
     LPWSTR value = NULL;
@@ -360,7 +363,7 @@ static LPWSTR deformat_group(MSIPACKAGE* package, LPWSTR group, DWORD len,
     static const WCHAR fmt[] = {'{','%','s','}',0};
     UINT sz;
 
-    if (!group || group[0] == 0)
+    if (!group || group[0] == 0) 
     {
         *size = 0;
         return NULL;
@@ -412,7 +415,7 @@ static LPWSTR deformat_group(MSIPACKAGE* package, LPWSTR group, DWORD len,
  * len is in WCHARs
  * return is also in WCHARs
  */
-static DWORD deformat_string_internal(MSIPACKAGE *package, LPCWSTR ptr,
+static DWORD deformat_string_internal(MSIPACKAGE *package, LPCWSTR ptr, 
                                      WCHAR** data, DWORD len, MSIRECORD* record,
                                      INT* failcount)
 {
@@ -425,7 +428,7 @@ static DWORD deformat_string_internal(MSIPACKAGE *package, LPCWSTR ptr,
     DWORD sz;
     LPBYTE newdata = NULL;
     const WCHAR* progress = NULL;
-    BOOL nested;
+    BOOL nested = FALSE;
 
     if (ptr==NULL)
     {
@@ -437,7 +440,7 @@ static DWORD deformat_string_internal(MSIPACKAGE *package, LPCWSTR ptr,
     TRACE("Starting with %s\n",debugstr_wn(ptr,len));
 
     /* scan for special characters... fast exit */
-    if ((!scanW(ptr,'[',len) || (scanW(ptr,'[',len) && !scanW(ptr,']',len))) &&
+    if ((!scanW(ptr,'[',len) || (scanW(ptr,'[',len) && !scanW(ptr,']',len))) && 
         (scanW(ptr,'{',len) && !scanW(ptr,'}',len)))
     {
         /* not formatted */
@@ -446,7 +449,7 @@ static DWORD deformat_string_internal(MSIPACKAGE *package, LPCWSTR ptr,
         TRACE("Returning %s\n",debugstr_wn(*data,len));
         return len;
     }
-
+  
     progress = ptr;
 
     while (progress - ptr < len)
@@ -455,14 +458,14 @@ static DWORD deformat_string_internal(MSIPACKAGE *package, LPCWSTR ptr,
         if (find_next_group(progress, len - (progress - ptr), &key,
                                 &mark, &mark2))
         {
-            value = deformat_group(package, key, strlenW(key)+1, record,
+            value = deformat_group(package, key, strlenW(key)+1, record, 
                             &chunk);
             msi_free( key );
             key = NULL;
             nested = FALSE;
         }
         /* formatted string located */
-        else if (!find_next_outermost_key(progress, len - (progress - ptr),
+        else if (!find_next_outermost_key(progress, len - (progress - ptr), 
                                 &key, &mark, &mark2, &nested))
         {
             LPBYTE nd2;
@@ -494,7 +497,7 @@ static DWORD deformat_string_internal(MSIPACKAGE *package, LPCWSTR ptr,
             else
                 tgt = msi_realloc(newdata,size);
             newdata  = tgt;
-            memcpy(&newdata[old_size],progress,(cnt * sizeof(WCHAR)));
+            memcpy(&newdata[old_size],progress,(cnt * sizeof(WCHAR)));  
         }
 
         progress = mark;
@@ -509,7 +512,7 @@ static DWORD deformat_string_internal(MSIPACKAGE *package, LPCWSTR ptr,
             key = value;
         }
 
-        TRACE("Current %s .. %s\n",debugstr_wn((LPWSTR)newdata,
+        TRACE("Current %s .. %s\n",debugstr_wn((LPWSTR)newdata, 
                                 size/sizeof(WCHAR)),debugstr_w(key));
 
         if (!package)
@@ -517,7 +520,7 @@ static DWORD deformat_string_internal(MSIPACKAGE *package, LPCWSTR ptr,
             /* only deformat number indexs */
             if (key && is_key_number(key))
             {
-                value = deformat_index(record,key,&chunk);
+                value = deformat_index(record,key,&chunk);  
                 if (!chunk && failcount && *failcount >= 0)
                     (*failcount)++;
             }
@@ -573,7 +576,7 @@ static DWORD deformat_string_internal(MSIPACKAGE *package, LPCWSTR ptr,
                         }
                     else
                         value = deformat_property(package,key,&chunk);
-                break;
+                break;      
             }
         }
 
@@ -582,7 +585,7 @@ static DWORD deformat_string_internal(MSIPACKAGE *package, LPCWSTR ptr,
         if (value!=NULL)
         {
             LPBYTE nd2;
-            TRACE("value %s, chunk %i size %i\n",debugstr_w((LPWSTR)value),
+            TRACE("value %s, chunk %i size %i\n",debugstr_w(value),
                     chunk, size);
             if (size)
                 nd2= msi_realloc(newdata,(size + chunk));
@@ -590,7 +593,7 @@ static DWORD deformat_string_internal(MSIPACKAGE *package, LPCWSTR ptr,
                 nd2= msi_alloc(chunk);
             newdata = nd2;
             memcpy(&newdata[size],value,chunk);
-            size+=chunk;
+            size+=chunk;   
             msi_free(value);
         }
         else if (failcount && *failcount >=0 )
@@ -599,7 +602,7 @@ static DWORD deformat_string_internal(MSIPACKAGE *package, LPCWSTR ptr,
         progress = mark2+1;
     }
 
-    TRACE("after everything %s\n",debugstr_wn((LPWSTR)newdata,
+    TRACE("after everything %s\n",debugstr_wn((LPWSTR)newdata, 
                             size/sizeof(WCHAR)));
 
     *data = (LPWSTR)newdata;
@@ -608,7 +611,7 @@ static DWORD deformat_string_internal(MSIPACKAGE *package, LPCWSTR ptr,
 
 
 UINT MSI_FormatRecordW( MSIPACKAGE* package, MSIRECORD* record, LPWSTR buffer,
-                        DWORD *size )
+                        LPDWORD size )
 {
     LPWSTR deformated;
     LPWSTR rec;
@@ -623,8 +626,8 @@ UINT MSI_FormatRecordW( MSIPACKAGE* package, MSIRECORD* record, LPWSTR buffer,
 
     TRACE("(%s)\n",debugstr_w(rec));
 
-    len = deformat_string_internal(package,rec,&deformated,strlenW(rec),
-                                   record, NULL);
+    len = deformat_string_internal(package,rec,&deformated,
+                                   rec ? strlenW(rec) : 0, record, NULL);
 
     if (buffer)
     {
@@ -654,65 +657,65 @@ UINT MSI_FormatRecordW( MSIPACKAGE* package, MSIRECORD* record, LPWSTR buffer,
     return rc;
 }
 
-UINT MSI_FormatRecordA( MSIPACKAGE* package, MSIRECORD* record, LPSTR buffer,
-                        DWORD *size )
-{
-    LPWSTR deformated;
-    LPWSTR rec;
-    DWORD len,lenA;
-    UINT rc = ERROR_INVALID_PARAMETER;
-
-    TRACE("%p %p %p %i\n", package, record ,buffer, *size);
-
-    rec = msi_dup_record_field(record,0);
-    if (!rec)
-        rec = build_default_format(record);
-
-    TRACE("(%s)\n",debugstr_w(rec));
-
-    len = deformat_string_internal(package,rec,&deformated,strlenW(rec),
-                                   record, NULL);
-    /* If len is zero then WideCharToMultiByte will return 0 indicating
-     * failure, but that will do just as well since we are ignoring
-     * possible errors.
-     */
-    lenA = WideCharToMultiByte(CP_ACP,0,deformated,len,NULL,0,NULL,NULL);
-
-    if (buffer)
-    {
-        /* Ditto above */
-        WideCharToMultiByte(CP_ACP,0,deformated,len,buffer,*size,NULL, NULL);
-        if (*size>lenA)
-        {
-            rc = ERROR_SUCCESS;
-            buffer[lenA] = 0;
-        }
-        else
-        {
-            rc = ERROR_MORE_DATA;
-            if (*size)
-                buffer[(*size)-1] = 0;
-        }
-    }
-    else
-        rc = ERROR_SUCCESS;
-
-    *size = lenA;
-
-    msi_free(rec);
-    msi_free(deformated);
-    return rc;
-}
-
-
-UINT WINAPI MsiFormatRecordW( MSIHANDLE hInstall, MSIHANDLE hRecord,
-                              LPWSTR szResult, DWORD *sz )
+UINT WINAPI MsiFormatRecordW( MSIHANDLE hInstall, MSIHANDLE hRecord, 
+                              LPWSTR szResult, LPDWORD sz )
 {
     UINT r = ERROR_INVALID_HANDLE;
     MSIPACKAGE *package;
     MSIRECORD *record;
 
     TRACE("%ld %ld %p %p\n", hInstall, hRecord, szResult, sz);
+
+    package = msihandle2msiinfo( hInstall, MSIHANDLETYPE_PACKAGE );
+    if (!package)
+    {
+        HRESULT hr;
+        IWineMsiRemotePackage *remote_package;
+        BSTR value = NULL;
+        DWORD len;
+        awstring wstr;
+
+        remote_package = (IWineMsiRemotePackage *)msi_get_remote( hInstall );
+        if (remote_package)
+        {
+            len = 0;
+            hr = IWineMsiRemotePackage_FormatRecord( remote_package, hRecord,
+                                                     NULL, &len );
+            if (FAILED(hr))
+                goto done;
+
+            len++;
+            value = SysAllocStringLen( NULL, len );
+            if (!value)
+            {
+                r = ERROR_OUTOFMEMORY;
+                goto done;
+            }
+
+            hr = IWineMsiRemotePackage_FormatRecord( remote_package, hRecord,
+                                                     value, &len );
+            if (FAILED(hr))
+                goto done;
+
+            wstr.unicode = TRUE;
+            wstr.str.w = szResult;
+            r = msi_strcpy_to_awstring( value, &wstr, sz );
+
+done:
+            IWineMsiRemotePackage_Release( remote_package );
+            SysFreeString( value );
+
+            if (FAILED(hr))
+            {
+                if (HRESULT_FACILITY(hr) == FACILITY_WIN32)
+                    return HRESULT_CODE(hr);
+
+                return ERROR_FUNCTION_FAILED;
+            }
+
+            return r;
+        }
+    }
 
     record = msihandle2msiinfo( hRecord, MSIHANDLETYPE_RECORD );
 
@@ -726,8 +729,6 @@ UINT WINAPI MsiFormatRecordW( MSIHANDLE hInstall, MSIHANDLE hRecord,
         else
             return ERROR_SUCCESS;
     }
-
-    package = msihandle2msiinfo( hInstall, MSIHANDLETYPE_PACKAGE );
 
     r = MSI_FormatRecordW( package, record, szResult, sz );
     msiobj_release( &record->hdr );
@@ -737,32 +738,50 @@ UINT WINAPI MsiFormatRecordW( MSIHANDLE hInstall, MSIHANDLE hRecord,
 }
 
 UINT WINAPI MsiFormatRecordA( MSIHANDLE hInstall, MSIHANDLE hRecord,
-                              LPSTR szResult, DWORD *sz )
+                              LPSTR szResult, LPDWORD sz )
 {
-    UINT r = ERROR_INVALID_HANDLE;
-    MSIPACKAGE *package = NULL;
-    MSIRECORD *record = NULL;
+    UINT r;
+    DWORD len, save;
+    LPWSTR value;
 
     TRACE("%ld %ld %p %p\n", hInstall, hRecord, szResult, sz);
 
-    record = msihandle2msiinfo( hRecord, MSIHANDLETYPE_RECORD );
-
-    if (!record)
+    if (!hRecord)
         return ERROR_INVALID_HANDLE;
+
     if (!sz)
     {
-        msiobj_release( &record->hdr );
         if (szResult)
             return ERROR_INVALID_PARAMETER;
         else
             return ERROR_SUCCESS;
     }
 
-    package = msihandle2msiinfo( hInstall, MSIHANDLETYPE_PACKAGE );
+    r = MsiFormatRecordW( hInstall, hRecord, NULL, &len );
+    if (r != ERROR_SUCCESS)
+        return r;
 
-    r = MSI_FormatRecordA( package, record, szResult, sz );
-    msiobj_release( &record->hdr );
-    if (package)
-        msiobj_release( &package->hdr );
+    value = msi_alloc(++len * sizeof(WCHAR));
+    if (!value)
+        return ERROR_OUTOFMEMORY;
+
+    r = MsiFormatRecordW( hInstall, hRecord, value, &len );
+    if (r != ERROR_SUCCESS)
+        goto done;
+
+    save = len + 1;
+    len = WideCharToMultiByte(CP_ACP, 0, value, -1, NULL, 0, NULL, NULL);
+    WideCharToMultiByte(CP_ACP, 0, value, -1, szResult, *sz, NULL, NULL);
+
+    if (szResult && len > *sz)
+    {
+        if (*sz) szResult[*sz - 1] = '\0';
+        r = ERROR_MORE_DATA;
+    }
+
+    *sz = save - 1;
+
+done:
+    msi_free(value);
     return r;
 }

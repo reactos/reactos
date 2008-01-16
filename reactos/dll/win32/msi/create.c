@@ -59,101 +59,12 @@ static UINT CREATE_fetch_int( struct tagMSIVIEW *view, UINT row, UINT col, UINT 
 static UINT CREATE_execute( struct tagMSIVIEW *view, MSIRECORD *record )
 {
     MSICREATEVIEW *cv = (MSICREATEVIEW*)view;
-    column_info *col;
-    UINT r, nField;
-    static const WCHAR szTables[] =  { '_','T','a','b','l','e','s',0 };
-    static const WCHAR szColumns[] = { '_','C','o','l','u','m','n','s',0 };
-    MSIVIEW *tv = NULL;
-    MSIRECORD *rec = NULL;
+    MSITABLE *table;
 
-    TRACE("%p Table %s (%s)\n", cv, debugstr_w(cv->name),
+    TRACE("%p Table %s (%s)\n", cv, debugstr_w(cv->name), 
           cv->bIsTemp?"temporary":"permanent");
 
-    /* only add tables that don't exist already */
-    if( TABLE_Exists(cv->db, cv->name ) )
-        return ERROR_BAD_QUERY_SYNTAX;
-
-    r = TABLE_CreateView( cv->db, szTables, &tv );
-    TRACE("CreateView returned %x\n", r);
-    if( r )
-        return r;
-
-    r = tv->ops->execute( tv, 0 );
-    TRACE("tv execute returned %x\n", r);
-    if( r )
-        goto err;
-
-    rec = MSI_CreateRecord( 1 );
-    if( !rec )
-        goto err;
-
-    r = MSI_RecordSetStringW( rec, 1, cv->name );
-    if( r )
-        goto err;
-
-    r = tv->ops->insert_row( tv, rec );
-    TRACE("insert_row returned %x\n", r);
-    if( r )
-        goto err;
-
-    tv->ops->delete( tv );
-    tv = NULL;
-
-    msiobj_release( &rec->hdr );
-
-    /* add each column to the _Columns table */
-    r = TABLE_CreateView( cv->db, szColumns, &tv );
-    if( r )
-        return r;
-
-    r = tv->ops->execute( tv, 0 );
-    TRACE("tv execute returned %x\n", r);
-    if( r )
-        goto err;
-
-    rec = MSI_CreateRecord( 4 );
-    if( !rec )
-        goto err;
-
-    r = MSI_RecordSetStringW( rec, 1, cv->name );
-    if( r )
-        goto err;
-
-    /*
-     * need to set the table, column number, col name and type
-     * for each column we enter in the table
-     */
-    nField = 1;
-    for( col = cv->col_info; col; col = col->next )
-    {
-        r = MSI_RecordSetInteger( rec, 2, nField );
-        if( r )
-            goto err;
-
-        r = MSI_RecordSetStringW( rec, 3, col->column );
-        if( r )
-            goto err;
-
-        r = MSI_RecordSetInteger( rec, 4, col->type );
-        if( r )
-            goto err;
-
-        r = tv->ops->insert_row( tv, rec );
-        if( r )
-            goto err;
-
-        nField++;
-    }
-    if( !col )
-        r = ERROR_SUCCESS;
-
-err:
-    if (rec)
-        msiobj_release( &rec->hdr );
-    /* FIXME: remove values from the string table on error */
-    if( tv )
-        tv->ops->delete( tv );
-    return r;
+    return msi_create_table( cv->db, cv->name, cv->col_info, !cv->bIsTemp, &table);
 }
 
 static UINT CREATE_close( struct tagMSIVIEW *view )
@@ -185,7 +96,7 @@ static UINT CREATE_get_column_info( struct tagMSIVIEW *view,
 }
 
 static UINT CREATE_modify( struct tagMSIVIEW *view, MSIMODIFY eModifyMode,
-                MSIRECORD *rec)
+                           MSIRECORD *rec, UINT row)
 {
     MSICREATEVIEW *cv = (MSICREATEVIEW*)view;
 
@@ -206,10 +117,11 @@ static UINT CREATE_delete( struct tagMSIVIEW *view )
     return ERROR_SUCCESS;
 }
 
-
 static const MSIVIEWOPS create_ops =
 {
     CREATE_fetch_int,
+    NULL,
+    NULL,
     NULL,
     NULL,
     NULL,
@@ -218,7 +130,13 @@ static const MSIVIEWOPS create_ops =
     CREATE_get_dimensions,
     CREATE_get_column_info,
     CREATE_modify,
-    CREATE_delete
+    CREATE_delete,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
 };
 
 static UINT check_columns( column_info *col_info )
@@ -235,10 +153,12 @@ static UINT check_columns( column_info *col_info )
 }
 
 UINT CREATE_CreateView( MSIDATABASE *db, MSIVIEW **view, LPWSTR table,
-                        column_info *col_info, BOOL temp )
+                        column_info *col_info, BOOL hold )
 {
     MSICREATEVIEW *cv = NULL;
     UINT r;
+    const column_info *col;
+    BOOL temp = TRUE;
 
     TRACE("%p\n", cv );
 
@@ -249,6 +169,13 @@ UINT CREATE_CreateView( MSIDATABASE *db, MSIVIEW **view, LPWSTR table,
     cv = msi_alloc_zero( sizeof *cv );
     if( !cv )
         return ERROR_FUNCTION_FAILED;
+
+    for( col = col_info; col; col = col->next )
+        if( !col->temporary )
+        {
+            temp = FALSE;
+            break;
+        }
 
     /* fill the structure */
     cv->view.ops = &create_ops;

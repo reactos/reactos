@@ -21,7 +21,6 @@
 
 #define COBJMACROS
 
-#include "stdio.h"
 #include "windef.h"
 #include "winbase.h"
 #include "winreg.h"
@@ -29,6 +28,7 @@
 #include "msiquery.h"
 #include "msidefs.h"
 #include "winver.h"
+#include "shlwapi.h"
 #include "wine/unicode.h"
 #include "wine/debug.h"
 #include "msipriv.h"
@@ -74,103 +74,78 @@ static void ACTION_VerStrToInteger(LPCWSTR verStr, PDWORD ms, PDWORD ls)
     *ls = x3 << 16 | x4;
 }
 
-/* Fills in sig with the the values from the Signature table, where name is the
+/* Fills in sig with the values from the Signature table, where name is the
  * signature to find.  Upon return, sig->File will be NULL if the record is not
  * found, and not NULL if it is found.
  * Warning: clears all fields in sig!
  * Returns ERROR_SUCCESS upon success (where not finding the record counts as
  * success), something else on error.
  */
-static UINT ACTION_AppSearchGetSignature(MSIPACKAGE *package, MSISIGNATURE *sig,
- LPCWSTR name)
+static UINT ACTION_AppSearchGetSignature(MSIPACKAGE *package, MSISIGNATURE *sig, LPCWSTR name)
 {
-    MSIQUERY *view;
-    UINT rc;
-    static const WCHAR ExecSeqQuery[] =  {
-   's','e','l','e','c','t',' ','*',' ',
-   'f','r','o','m',' ',
-   'S','i','g','n','a','t','u','r','e',' ',
-   'w','h','e','r','e',' ','S','i','g','n','a','t','u','r','e',' ','=',' ',
-   '\'','%','s','\'',0};
+    static const WCHAR query[] = {
+        's','e','l','e','c','t',' ','*',' ',
+        'f','r','o','m',' ',
+        'S','i','g','n','a','t','u','r','e',' ',
+        'w','h','e','r','e',' ','S','i','g','n','a','t','u','r','e',' ','=',' ',
+        '\'','%','s','\'',0};
+    LPWSTR minVersion, maxVersion;
+    MSIRECORD *row;
+    DWORD time;
 
-    TRACE("(package %p, sig %p)\n", package, sig);
+    TRACE("package %p, sig %p\n", package, sig);
+
     memset(sig, 0, sizeof(*sig));
     sig->Name = name;
-    rc = MSI_OpenQuery(package->db, &view, ExecSeqQuery, name);
-    if (rc == ERROR_SUCCESS)
+    row = MSI_QueryGetRecord( package->db, query, name );
+    if (!row)
     {
-        MSIRECORD *row = 0;
-        DWORD time;
-        WCHAR *minVersion, *maxVersion;
-
-        rc = MSI_ViewExecute(view, 0);
-        if (rc != ERROR_SUCCESS)
-        {
-            TRACE("MSI_ViewExecute returned %d\n", rc);
-            goto end;
-        }
-        rc = MSI_ViewFetch(view,&row);
-        if (rc != ERROR_SUCCESS)
-        {
-            TRACE("MSI_ViewFetch returned %d\n", rc);
-            rc = ERROR_SUCCESS;
-            goto end;
-        }
-
-        /* get properties */
-        sig->File = msi_dup_record_field(row,2);
-        minVersion = msi_dup_record_field(row,3);
-        if (minVersion)
-        {
-            ACTION_VerStrToInteger(minVersion, &sig->MinVersionMS,
-             &sig->MinVersionLS);
-            msi_free( minVersion);
-        }
-        maxVersion = msi_dup_record_field(row,4);
-        if (maxVersion)
-        {
-            ACTION_VerStrToInteger(maxVersion, &sig->MaxVersionMS,
-             &sig->MaxVersionLS);
-            msi_free( maxVersion);
-        }
-        sig->MinSize = MSI_RecordGetInteger(row,5);
-        if (sig->MinSize == MSI_NULL_INTEGER)
-            sig->MinSize = 0;
-        sig->MaxSize = MSI_RecordGetInteger(row,6);
-        if (sig->MaxSize == MSI_NULL_INTEGER)
-            sig->MaxSize = 0;
-        sig->Languages = msi_dup_record_field(row,9);
-        time = MSI_RecordGetInteger(row,7);
-        if (time != MSI_NULL_INTEGER)
-            DosDateTimeToFileTime(HIWORD(time), LOWORD(time), &sig->MinTime);
-        time = MSI_RecordGetInteger(row,8);
-        if (time != MSI_NULL_INTEGER)
-            DosDateTimeToFileTime(HIWORD(time), LOWORD(time), &sig->MaxTime);
-        TRACE("Found file name %s for Signature_ %s;\n",
-         debugstr_w(sig->File), debugstr_w(name));
-        TRACE("MinVersion is %d.%d.%d.%d\n", HIWORD(sig->MinVersionMS),
-         LOWORD(sig->MinVersionMS), HIWORD(sig->MinVersionLS),
-         LOWORD(sig->MinVersionLS));
-        TRACE("MaxVersion is %d.%d.%d.%d\n", HIWORD(sig->MaxVersionMS),
-         LOWORD(sig->MaxVersionMS), HIWORD(sig->MaxVersionLS),
-         LOWORD(sig->MaxVersionLS));
-        TRACE("MinSize is %d, MaxSize is %d;\n", sig->MinSize, sig->MaxSize);
-        TRACE("Languages is %s\n", debugstr_w(sig->Languages));
-
-end:
-        if (row)
-            msiobj_release(&row->hdr);
-        MSI_ViewClose(view);
-        msiobj_release(&view->hdr);
-    }
-    else
-    {
-        TRACE("MSI_OpenQuery returned %d\n", rc);
-        rc = ERROR_SUCCESS;
+        TRACE("failed to query signature for %s\n", debugstr_w(name));
+        return ERROR_SUCCESS;
     }
 
-    TRACE("returning %d\n", rc);
-    return rc;
+    /* get properties */
+    sig->File = msi_dup_record_field(row,2);
+    minVersion = msi_dup_record_field(row,3);
+    if (minVersion)
+    {
+        ACTION_VerStrToInteger(minVersion, &sig->MinVersionMS, &sig->MinVersionLS);
+        msi_free( minVersion );
+    }
+    maxVersion = msi_dup_record_field(row,4);
+    if (maxVersion)
+    {
+        ACTION_VerStrToInteger(maxVersion, &sig->MaxVersionMS, &sig->MaxVersionLS);
+        msi_free( maxVersion );
+    }
+    sig->MinSize = MSI_RecordGetInteger(row,5);
+    if (sig->MinSize == MSI_NULL_INTEGER)
+        sig->MinSize = 0;
+    sig->MaxSize = MSI_RecordGetInteger(row,6);
+    if (sig->MaxSize == MSI_NULL_INTEGER)
+        sig->MaxSize = 0;
+    sig->Languages = msi_dup_record_field(row,9);
+    time = MSI_RecordGetInteger(row,7);
+    if (time != MSI_NULL_INTEGER)
+        DosDateTimeToFileTime(HIWORD(time), LOWORD(time), &sig->MinTime);
+    time = MSI_RecordGetInteger(row,8);
+    if (time != MSI_NULL_INTEGER)
+        DosDateTimeToFileTime(HIWORD(time), LOWORD(time), &sig->MaxTime);
+
+    TRACE("Found file name %s for Signature_ %s;\n",
+          debugstr_w(sig->File), debugstr_w(name));
+    TRACE("MinVersion is %d.%d.%d.%d\n", HIWORD(sig->MinVersionMS),
+          LOWORD(sig->MinVersionMS), HIWORD(sig->MinVersionLS),
+          LOWORD(sig->MinVersionLS));
+    TRACE("MaxVersion is %d.%d.%d.%d\n", HIWORD(sig->MaxVersionMS),
+          LOWORD(sig->MaxVersionMS), HIWORD(sig->MaxVersionLS),
+          LOWORD(sig->MaxVersionLS));
+    TRACE("MinSize is %d, MaxSize is %d;\n", sig->MinSize, sig->MaxSize);
+    TRACE("Languages is %s\n", debugstr_w(sig->Languages));
+
+    msiobj_release( &row->hdr );
+
+    return ERROR_SUCCESS;
 }
 
 /* Frees any memory allocated in sig */
@@ -180,67 +155,81 @@ static void ACTION_FreeSignature(MSISIGNATURE *sig)
     msi_free(sig->Languages);
 }
 
-static UINT ACTION_AppSearchComponents(MSIPACKAGE *package, LPWSTR *appValue,
- MSISIGNATURE *sig)
+static UINT ACTION_AppSearchComponents(MSIPACKAGE *package, LPWSTR *appValue, MSISIGNATURE *sig)
 {
-    MSIQUERY *view;
-    UINT rc;
-    static const WCHAR ExecSeqQuery[] =  {
-   's','e','l','e','c','t',' ','*',' ',
-   'f','r','o','m',' ',
-   'C','o','m','p','L','o','c','a','t','o','r',' ',
-   'w','h','e','r','e',' ','S','i','g','n','a','t','u','r','e','_',' ','=',' ',
-   '\'','%','s','\'',0};
+    static const WCHAR query[] =  {
+        'S','E','L','E','C','T',' ','*',' ',
+        'F','R','O','M',' ',
+        '`','C','o','m','p','L','o','c','a','t','o','r','`',' ',
+        'W','H','E','R','E',' ','`','S','i','g','n','a','t','u','r','e','_','`',' ','=',' ',
+        '\'','%','s','\'',0};
+    static const WCHAR sigquery[] = {
+        'S','E','L','E','C','T',' ','*',' ','F','R','O','M',' ',
+        '`','S','i','g','n','a','t','u','r','e','`',' ',
+        'W','H','E','R','E',' ','`','S','i','g','n','a','t','u','r','e','`',' ','=',' ',
+        '\'','%','s','\'',0};
 
-    TRACE("(package %p, appValue %p, sig %p)\n", package, appValue, sig);
+    MSIRECORD *row, *rec;
+    LPCWSTR signature, guid;
+    BOOL sigpresent = TRUE;
+    BOOL isdir;
+    UINT type;
+    WCHAR path[MAX_PATH];
+    DWORD size = MAX_PATH;
+    LPWSTR ptr;
+    DWORD attr;
+
+    TRACE("%s\n", debugstr_w(sig->Name));
+
     *appValue = NULL;
-    rc = MSI_OpenQuery(package->db, &view, ExecSeqQuery, sig->Name);
-    if (rc == ERROR_SUCCESS)
+
+    row = MSI_QueryGetRecord(package->db, query, sig->Name);
+    if (!row)
     {
-        MSIRECORD *row = 0;
-        WCHAR guid[50];
-        DWORD sz;
-
-        rc = MSI_ViewExecute(view, 0);
-        if (rc != ERROR_SUCCESS)
-        {
-            TRACE("MSI_ViewExecute returned %d\n", rc);
-            goto end;
-        }
-        rc = MSI_ViewFetch(view,&row);
-        if (rc != ERROR_SUCCESS)
-        {
-            TRACE("MSI_ViewFetch returned %d\n", rc);
-            rc = ERROR_SUCCESS;
-            goto end;
-        }
-
-        /* get GUID */
-        guid[0] = 0;
-        sz=sizeof(guid)/sizeof(guid[0]);
-        rc = MSI_RecordGetStringW(row,2,guid,&sz);
-        if (rc != ERROR_SUCCESS)
-        {
-            ERR("Error is %x\n",rc);
-            goto end;
-        }
-        FIXME("AppSearch unimplemented for CompLocator table (GUID %s)\n",
-         debugstr_w(guid));
-
-end:
-        if (row)
-            msiobj_release(&row->hdr);
-        MSI_ViewClose(view);
-        msiobj_release(&view->hdr);
-    }
-    else
-    {
-        TRACE("MSI_OpenQuery returned %d\n", rc);
-        rc = ERROR_SUCCESS;
+        TRACE("failed to query CompLocator for %s\n", debugstr_w(sig->Name));
+        return ERROR_SUCCESS;
     }
 
-    TRACE("returning %d\n", rc);
-    return rc;
+    signature = MSI_RecordGetString(row, 1);
+    guid = MSI_RecordGetString(row, 2);
+    type = MSI_RecordGetInteger(row, 3);
+
+    rec = MSI_QueryGetRecord(package->db, sigquery, signature);
+    if (!rec)
+        sigpresent = FALSE;
+
+    *path = '\0';
+    MsiLocateComponentW(guid, path, &size);
+    if (!*path)
+        goto done;
+
+    attr = GetFileAttributesW(path);
+    if (attr == INVALID_FILE_ATTRIBUTES)
+        goto done;
+
+    isdir = (attr & FILE_ATTRIBUTE_DIRECTORY);
+
+    if (type != msidbLocatorTypeDirectory && sigpresent && !isdir)
+    {
+        *appValue = strdupW(path);
+    }
+    else if (!sigpresent && (type != msidbLocatorTypeDirectory || isdir))
+    {
+        if (type == msidbLocatorTypeFileName)
+        {
+            ptr = strrchrW(path, '\\');
+            *(ptr + 1) = '\0';
+        }
+        else
+            PathAddBackslashW(path);
+
+        *appValue = strdupW(path);
+    }
+
+done:
+    if (rec) msiobj_release(&rec->hdr);
+    msiobj_release(&row->hdr);
+    return ERROR_SUCCESS;
 }
 
 static void ACTION_ConvertRegValue(DWORD regType, const BYTE *value, DWORD sz,
@@ -294,224 +283,175 @@ static void ACTION_ConvertRegValue(DWORD regType, const BYTE *value, DWORD sz,
 static UINT ACTION_SearchDirectory(MSIPACKAGE *package, MSISIGNATURE *sig,
  LPCWSTR path, int depth, LPWSTR *appValue);
 
-static UINT ACTION_AppSearchReg(MSIPACKAGE *package, LPWSTR *appValue,
- MSISIGNATURE *sig)
+static UINT ACTION_AppSearchReg(MSIPACKAGE *package, LPWSTR *appValue, MSISIGNATURE *sig)
 {
-    MSIQUERY *view;
+    static const WCHAR query[] =  {
+        's','e','l','e','c','t',' ','*',' ',
+        'f','r','o','m',' ',
+        'R','e','g','L','o','c','a','t','o','r',' ',
+        'w','h','e','r','e',' ',
+        'S','i','g','n','a','t','u','r','e','_',' ','=',' ', '\'','%','s','\'',0};
+    LPWSTR keyPath = NULL, valueName = NULL;
+    LPWSTR deformatted = NULL;
+    int root, type;
+    HKEY rootKey, key = NULL;
+    DWORD sz = 0, regType;
+    LPBYTE value = NULL;
+    MSIRECORD *row;
     UINT rc;
-    static const WCHAR ExecSeqQuery[] =  {
-   's','e','l','e','c','t',' ','*',' ',
-   'f','r','o','m',' ',
-   'R','e','g','L','o','c','a','t','o','r',' ',
-   'w','h','e','r','e',' ','S','i','g','n','a','t','u','r','e','_',' ','=',' ',
-   '\'','%','s','\'',0};
 
-    TRACE("(package %p, appValue %p, sig %p)\n", package, appValue, sig);
+    TRACE("%s\n", debugstr_w(sig->Name));
+
     *appValue = NULL;
-    rc = MSI_OpenQuery(package->db, &view, ExecSeqQuery, sig->Name);
-    if (rc == ERROR_SUCCESS)
+
+    row = MSI_QueryGetRecord( package->db, query, sig->Name );
+    if (!row)
     {
-        MSIRECORD *row = 0;
-        LPWSTR keyPath = NULL, valueName = NULL;
-        int root, type;
-        HKEY rootKey, key = NULL;
-        DWORD sz = 0, regType;
-        LPBYTE value = NULL;
+        TRACE("failed to query RegLocator for %s\n", debugstr_w(sig->Name));
+        return ERROR_SUCCESS;
+    }
 
-        rc = MSI_ViewExecute(view, 0);
-        if (rc != ERROR_SUCCESS)
-        {
-            TRACE("MSI_ViewExecute returned %d\n", rc);
-            goto end;
-        }
-        rc = MSI_ViewFetch(view,&row);
-        if (rc != ERROR_SUCCESS)
-        {
-            TRACE("MSI_ViewFetch returned %d\n", rc);
-            rc = ERROR_SUCCESS;
-            goto end;
-        }
+    root = MSI_RecordGetInteger(row,2);
+    keyPath = msi_dup_record_field(row,3);
+    valueName = msi_dup_record_field(row,4);
+    type = MSI_RecordGetInteger(row,5);
 
-        root = MSI_RecordGetInteger(row,2);
-        keyPath = msi_dup_record_field(row,3);
-        /* FIXME: keyPath needs to be expanded for properties */
-        valueName = msi_dup_record_field(row,4);
-        /* FIXME: valueName probably does too */
-        type = MSI_RecordGetInteger(row,5);
+    deformat_string(package, keyPath, &deformatted);
 
-        switch (root)
-        {
-            case msidbRegistryRootClassesRoot:
-                rootKey = HKEY_CLASSES_ROOT;
-                break;
-            case msidbRegistryRootCurrentUser:
-                rootKey = HKEY_CURRENT_USER;
-                break;
-            case msidbRegistryRootLocalMachine:
-                rootKey = HKEY_LOCAL_MACHINE;
-                break;
-            case msidbRegistryRootUsers:
-                rootKey = HKEY_USERS;
-                break;
-            default:
-                WARN("Unknown root key %d\n", root);
-                goto end;
-        }
+    switch (root)
+    {
+    case msidbRegistryRootClassesRoot:
+        rootKey = HKEY_CLASSES_ROOT;
+        break;
+    case msidbRegistryRootCurrentUser:
+        rootKey = HKEY_CURRENT_USER;
+        break;
+    case msidbRegistryRootLocalMachine:
+        rootKey = HKEY_LOCAL_MACHINE;
+        break;
+    case msidbRegistryRootUsers:
+        rootKey = HKEY_USERS;
+        break;
+    default:
+        WARN("Unknown root key %d\n", root);
+        goto end;
+    }
 
-        rc = RegOpenKeyW(rootKey, keyPath, &key);
-        if (rc)
-        {
-            TRACE("RegOpenKeyW returned %d\n", rc);
-            rc = ERROR_SUCCESS;
-            goto end;
-        }
-        rc = RegQueryValueExW(key, valueName, NULL, NULL, NULL, &sz);
-        if (rc)
-        {
-            TRACE("RegQueryValueExW returned %d\n", rc);
-            rc = ERROR_SUCCESS;
-            goto end;
-        }
-        /* FIXME: sanity-check sz before allocating (is there an upper-limit
-         * on the value of a property?)
-         */
-        value = msi_alloc( sz);
-        rc = RegQueryValueExW(key, valueName, NULL, &regType, value, &sz);
-        if (rc)
-        {
-            TRACE("RegQueryValueExW returned %d\n", rc);
-            rc = ERROR_SUCCESS;
-            goto end;
-        }
+    rc = RegOpenKeyW(rootKey, deformatted, &key);
+    if (rc)
+    {
+        TRACE("RegOpenKeyW returned %d\n", rc);
+        goto end;
+    }
 
-        /* bail out if the registry key is empty */
-        if (sz == 0)
-        {
-            rc = ERROR_SUCCESS;
-            goto end;
-        }
+    rc = RegQueryValueExW(key, valueName, NULL, NULL, NULL, &sz);
+    if (rc)
+    {
+        TRACE("RegQueryValueExW returned %d\n", rc);
+        goto end;
+    }
+    /* FIXME: sanity-check sz before allocating (is there an upper-limit
+     * on the value of a property?)
+     */
+    value = msi_alloc( sz );
+    rc = RegQueryValueExW(key, valueName, NULL, &regType, value, &sz);
+    if (rc)
+    {
+        TRACE("RegQueryValueExW returned %d\n", rc);
+        goto end;
+    }
 
-        switch (type & 0x0f)
-        {
-        case msidbLocatorTypeDirectory:
-            rc = ACTION_SearchDirectory(package, sig, (LPCWSTR)value, 0,
-             appValue);
-            break;
-        case msidbLocatorTypeFileName:
-            *appValue = strdupW((LPCWSTR)value);
-            break;
-        case msidbLocatorTypeRawValue:
-            ACTION_ConvertRegValue(regType, value, sz, appValue);
-            break;
-        default:
-            FIXME("AppSearch unimplemented for type %d (key path %s, value %s)\n",
-             type, debugstr_w(keyPath), debugstr_w(valueName));
-        }
+    /* bail out if the registry key is empty */
+    if (sz == 0)
+        goto end;
+
+    switch (type & 0x0f)
+    {
+    case msidbLocatorTypeDirectory:
+        rc = ACTION_SearchDirectory(package, sig, (LPWSTR)value, 0, appValue);
+        break;
+    case msidbLocatorTypeFileName:
+        *appValue = strdupW((LPWSTR)value);
+        break;
+    case msidbLocatorTypeRawValue:
+        ACTION_ConvertRegValue(regType, value, sz, appValue);
+        break;
+    default:
+        FIXME("AppSearch unimplemented for type %d (key path %s, value %s)\n",
+              type, debugstr_w(keyPath), debugstr_w(valueName));
+    }
 end:
-        msi_free( value);
-        RegCloseKey(key);
+    msi_free( value );
+    RegCloseKey( key );
 
-        msi_free( keyPath);
-        msi_free( valueName);
+    msi_free( keyPath );
+    msi_free( valueName );
+    msi_free( deformatted );
 
-        if (row)
-            msiobj_release(&row->hdr);
-        MSI_ViewClose(view);
-        msiobj_release(&view->hdr);
-    }
-    else
-    {
-        TRACE("MSI_OpenQuery returned %d\n", rc);
-        rc = ERROR_SUCCESS;
-    }
+    msiobj_release(&row->hdr);
 
-    TRACE("returning %d\n", rc);
-    return rc;
+    return ERROR_SUCCESS;
 }
 
 static UINT ACTION_AppSearchIni(MSIPACKAGE *package, LPWSTR *appValue,
  MSISIGNATURE *sig)
 {
-    MSIQUERY *view;
-    UINT rc;
-    static const WCHAR ExecSeqQuery[] =  {
-   's','e','l','e','c','t',' ','*',' ',
-   'f','r','o','m',' ',
-   'I','n','i','L','o','c','a','t','o','r',' ',
-   'w','h','e','r','e',' ','S','i','g','n','a','t','u','r','e','_',' ','=',' ',
-   '\'','%','s','\'',0};
+    static const WCHAR query[] =  {
+        's','e','l','e','c','t',' ','*',' ',
+        'f','r','o','m',' ',
+        'I','n','i','L','o','c','a','t','o','r',' ',
+        'w','h','e','r','e',' ',
+        'S','i','g','n','a','t','u','r','e','_',' ','=',' ','\'','%','s','\'',0};
+    MSIRECORD *row;
+    LPWSTR fileName, section, key;
+    int field, type;
+    WCHAR buf[MAX_PATH];
 
-    TRACE("(package %p, appValue %p, sig %p)\n", package, appValue, sig);
+    TRACE("%s\n", debugstr_w(sig->Name));
+
     *appValue = NULL;
-    rc = MSI_OpenQuery(package->db, &view, ExecSeqQuery, sig->Name);
-    if (rc == ERROR_SUCCESS)
+
+    row = MSI_QueryGetRecord( package->db, query, sig->Name );
+    if (!row)
     {
-        MSIRECORD *row = 0;
-        LPWSTR fileName, section, key;
-        int field, type;
-        WCHAR buf[MAX_PATH];
-
-        rc = MSI_ViewExecute(view, 0);
-        if (rc != ERROR_SUCCESS)
-        {
-            TRACE("MSI_ViewExecute returned %d\n", rc);
-            goto end;
-        }
-        rc = MSI_ViewFetch(view,&row);
-        if (rc != ERROR_SUCCESS)
-        {
-            TRACE("MSI_ViewFetch returned %d\n", rc);
-            rc = ERROR_SUCCESS;
-            goto end;
-        }
-
-        fileName = msi_dup_record_field(row, 2);
-        section = msi_dup_record_field(row, 3);
-        key = msi_dup_record_field(row, 4);
-        if ((field = MSI_RecordGetInteger(row, 5)) == MSI_NULL_INTEGER)
-            field = 0;
-        if ((type = MSI_RecordGetInteger(row, 6)) == MSI_NULL_INTEGER)
-            type = 0;
-
-        GetPrivateProfileStringW(section, key, NULL, buf,
-         sizeof(buf) / sizeof(WCHAR), fileName);
-        if (buf[0])
-        {
-            switch (type & 0x0f)
-            {
-            case msidbLocatorTypeDirectory:
-                FIXME("unimplemented for type Directory (dir: %s)\n",
-                 debugstr_w(buf));
-                break;
-            case msidbLocatorTypeFileName:
-                FIXME("unimplemented for type File (file: %s)\n",
-                 debugstr_w(buf));
-                break;
-            case msidbLocatorTypeRawValue:
-                *appValue = strdupW(buf);
-                break;
-            }
-        }
-
-        msi_free(fileName);
-        msi_free(section);
-        msi_free(key);
-
-end:
-        if (row)
-            msiobj_release(&row->hdr);
-        MSI_ViewClose(view);
-        msiobj_release(&view->hdr);
-    }
-    else
-    {
-        TRACE("MSI_OpenQuery returned %d\n", rc);
-        rc = ERROR_SUCCESS;
+        TRACE("failed to query IniLocator for %s\n", debugstr_w(sig->Name));
+        return ERROR_SUCCESS;
     }
 
+    fileName = msi_dup_record_field(row, 2);
+    section = msi_dup_record_field(row, 3);
+    key = msi_dup_record_field(row, 4);
+    field = MSI_RecordGetInteger(row, 5);
+    type = MSI_RecordGetInteger(row, 6);
+    if (field == MSI_NULL_INTEGER)
+        field = 0;
+    if (type == MSI_NULL_INTEGER)
+        type = 0;
 
-    TRACE("returning %d\n", rc);
-    return rc;
+    GetPrivateProfileStringW(section, key, NULL, buf, MAX_PATH, fileName);
+    if (buf[0])
+    {
+        switch (type & 0x0f)
+        {
+        case msidbLocatorTypeDirectory:
+            FIXME("unimplemented for Directory (%s)\n", debugstr_w(buf));
+            break;
+        case msidbLocatorTypeFileName:
+            FIXME("unimplemented for File (%s)\n", debugstr_w(buf));
+            break;
+        case msidbLocatorTypeRawValue:
+            *appValue = strdupW(buf);
+            break;
+        }
+    }
+
+    msi_free(fileName);
+    msi_free(section);
+    msi_free(key);
+
+    msiobj_release(&row->hdr);
+
+    return ERROR_SUCCESS;
 }
 
 /* Expands the value in src into a path without property names and only
@@ -526,8 +466,7 @@ end:
 static void ACTION_ExpandAnyPath(MSIPACKAGE *package, WCHAR *src, WCHAR *dst,
  size_t len)
 {
-    WCHAR *ptr;
-    size_t copied = 0;
+    WCHAR *ptr, *deformatted;
 
     if (!src || !dst || !len)
     {
@@ -535,46 +474,24 @@ static void ACTION_ExpandAnyPath(MSIPACKAGE *package, WCHAR *src, WCHAR *dst,
         return;
     }
 
-    /* Ignore the short portion of the path, don't think we can use it anyway */
+    dst[0] = '\0';
+
+    /* Ignore the short portion of the path */
     if ((ptr = strchrW(src, '|')))
         ptr++;
     else
         ptr = src;
-    while (*ptr && copied < len - 1)
+
+    deformat_string(package, ptr, &deformatted);
+    if (!deformatted || lstrlenW(deformatted) > len - 1)
     {
-        WCHAR *prop = strchrW(ptr, '[');
-
-        if (prop)
-        {
-            WCHAR *propEnd = strchrW(prop + 1, ']');
-
-            if (!propEnd)
-            {
-                WARN("Unterminated property name in AnyPath: %s\n",
-                 debugstr_w(prop));
-                break;
-            }
-            else
-            {
-                DWORD propLen;
-
-                *propEnd = 0;
-                propLen = len - copied - 1;
-                MSI_GetPropertyW(package, prop + 1, dst + copied, &propLen);
-                ptr = propEnd + 1;
-                copied += propLen;
-            }
-        }
-        else
-        {
-            size_t toCopy = min(strlenW(ptr) + 1, len - copied - 1);
-
-            memcpy(dst + copied, ptr, toCopy * sizeof(WCHAR));
-            ptr += toCopy;
-            copied += toCopy;
-        }
+        msi_free(deformatted);
+        return;
     }
-    *(dst + copied) = '\0';
+
+    lstrcpyW(dst, deformatted);
+    dst[lstrlenW(deformatted)] = '\0';
+    msi_free(deformatted);
 }
 
 /* Sets *matches to whether the file (whose path is filePath) matches the
@@ -582,7 +499,7 @@ static void ACTION_ExpandAnyPath(MSIPACKAGE *package, WCHAR *src, WCHAR *dst,
  * Return ERROR_SUCCESS in case of success (whether or not the file matches),
  * something else if an install-halting error occurs.
  */
-static UINT ACTION_FileVersionMatches(MSISIGNATURE *sig, LPCWSTR filePath,
+static UINT ACTION_FileVersionMatches(const MSISIGNATURE *sig, LPCWSTR filePath,
  BOOL *matches)
 {
     UINT rc = ERROR_SUCCESS;
@@ -603,7 +520,7 @@ static UINT ACTION_FileVersionMatches(MSISIGNATURE *sig, LPCWSTR filePath,
 
             if (buf)
             {
-                static WCHAR rootW[] = { '\\',0 };
+                static const WCHAR rootW[] = { '\\',0 };
                 UINT versionLen;
                 LPVOID subBlock = NULL;
 
@@ -657,8 +574,8 @@ static UINT ACTION_FileVersionMatches(MSISIGNATURE *sig, LPCWSTR filePath,
  * Return ERROR_SUCCESS in case of success (whether or not the file matches),
  * something else if an install-halting error occurs.
  */
-static UINT ACTION_FileMatchesSig(MSISIGNATURE *sig,
- LPWIN32_FIND_DATAW findData, LPCWSTR fullFilePath, BOOL *matches)
+static UINT ACTION_FileMatchesSig(const MSISIGNATURE *sig,
+ const WIN32_FIND_DATAW *findData, LPCWSTR fullFilePath, BOOL *matches)
 {
     UINT rc = ERROR_SUCCESS;
 
@@ -785,14 +702,15 @@ static UINT ACTION_RecurseSearchDirectory(MSIPACKAGE *package, LPWSTR *appValue,
 static UINT ACTION_CheckDirectory(MSIPACKAGE *package, LPCWSTR dir,
  LPWSTR *appValue)
 {
-    UINT rc = ERROR_SUCCESS;
+    DWORD attr = GetFileAttributesW(dir);
 
-    if (GetFileAttributesW(dir) & FILE_ATTRIBUTE_DIRECTORY)
+    if (attr != INVALID_FILE_ATTRIBUTES && (attr & FILE_ATTRIBUTE_DIRECTORY))
     {
         TRACE("directory exists, returning %s\n", debugstr_w(dir));
         *appValue = strdupW(dir);
     }
-    return rc;
+
+    return ERROR_SUCCESS;
 }
 
 static BOOL ACTION_IsFullPath(LPCWSTR path)
@@ -838,7 +756,7 @@ static UINT ACTION_SearchDirectory(MSIPACKAGE *package, MSISIGNATURE *sig,
         rc = ERROR_SUCCESS;
         *appValue = NULL;
         for (i = 0; rc == ERROR_SUCCESS && !*appValue && i < 26; i++)
-            if (drives & (1 << drives))
+            if (drives & (1 << i))
             {
                 pathWithDrive[0] = 'A' + i;
                 if (GetDriveTypeW(pathWithDrive) == DRIVE_FIXED)
@@ -861,87 +779,73 @@ static UINT ACTION_SearchDirectory(MSIPACKAGE *package, MSISIGNATURE *sig,
 static UINT ACTION_AppSearchSigName(MSIPACKAGE *package, LPCWSTR sigName,
  MSISIGNATURE *sig, LPWSTR *appValue);
 
-static UINT ACTION_AppSearchDr(MSIPACKAGE *package, LPWSTR *appValue,
- MSISIGNATURE *sig)
+static UINT ACTION_AppSearchDr(MSIPACKAGE *package, LPWSTR *appValue, MSISIGNATURE *sig)
 {
-    MSIQUERY *view;
+    static const WCHAR query[] =  {
+        's','e','l','e','c','t',' ','*',' ',
+        'f','r','o','m',' ',
+        'D','r','L','o','c','a','t','o','r',' ',
+        'w','h','e','r','e',' ',
+        'S','i','g','n','a','t','u','r','e','_',' ','=',' ', '\'','%','s','\'',0};
+    LPWSTR parentName = NULL, path = NULL, parent = NULL;
+    WCHAR expanded[MAX_PATH];
+    MSIRECORD *row;
+    int depth;
     UINT rc;
-    static const WCHAR ExecSeqQuery[] =  {
-   's','e','l','e','c','t',' ','*',' ',
-   'f','r','o','m',' ',
-   'D','r','L','o','c','a','t','o','r',' ',
-   'w','h','e','r','e',' ','S','i','g','n','a','t','u','r','e','_',' ','=',' ',
-   '\'','%','s','\'',0};
 
-    TRACE("(package %p, sig %p)\n", package, sig);
-    rc = MSI_OpenQuery(package->db, &view, ExecSeqQuery, sig->Name);
-    if (rc == ERROR_SUCCESS)
+    TRACE("%s\n", debugstr_w(sig->Name));
+
+    msi_free(sig->File);
+    sig->File = NULL;
+
+    *appValue = NULL;
+
+    row = MSI_QueryGetRecord( package->db, query, sig->Name );
+    if (!row)
     {
-        MSIRECORD *row = 0;
-        WCHAR expanded[MAX_PATH];
-        LPWSTR parentName = NULL, path = NULL, parent = NULL;
-        int depth;
+        TRACE("failed to query DrLocator for %s\n", debugstr_w(sig->Name));
+        return ERROR_SUCCESS;
+    }
 
-        rc = MSI_ViewExecute(view, 0);
-        if (rc != ERROR_SUCCESS)
+    /* check whether parent is set */
+    parentName = msi_dup_record_field(row,2);
+    if (parentName)
+    {
+        MSISIGNATURE parentSig;
+
+        rc = ACTION_AppSearchSigName(package, parentName, &parentSig, &parent);
+        ACTION_FreeSignature(&parentSig);
+        msi_free(parentName);
+    }
+    /* now look for path */
+    path = msi_dup_record_field(row,3);
+    if (MSI_RecordIsNull(row,4))
+        depth = 0;
+    else
+        depth = MSI_RecordGetInteger(row,4);
+    ACTION_ExpandAnyPath(package, path, expanded, MAX_PATH);
+    msi_free(path);
+    if (parent)
+    {
+        path = msi_alloc((strlenW(parent) + strlenW(expanded) + 1) * sizeof(WCHAR));
+        if (!path)
         {
-            TRACE("MSI_ViewExecute returned %d\n", rc);
+            rc = ERROR_OUTOFMEMORY;
             goto end;
         }
-        rc = MSI_ViewFetch(view,&row);
-        if (rc != ERROR_SUCCESS)
-        {
-            TRACE("MSI_ViewFetch returned %d\n", rc);
-            rc = ERROR_SUCCESS;
-            goto end;
-        }
-
-        /* check whether parent is set */
-        parentName = msi_dup_record_field(row,2);
-        if (parentName)
-        {
-            MSISIGNATURE parentSig;
-
-            rc = ACTION_AppSearchSigName(package, parentName, &parentSig,
-             &parent);
-            ACTION_FreeSignature(&parentSig);
-            msi_free(parentName);
-        }
-        /* now look for path */
-        path = msi_dup_record_field(row,3);
-        if (MSI_RecordIsNull(row,4))
-            depth = 0;
-        else
-            depth = MSI_RecordGetInteger(row,4);
-        ACTION_ExpandAnyPath(package, path, expanded,
-         sizeof(expanded) / sizeof(expanded[0]));
-        msi_free(path);
-        if (parent)
-        {
-            path = msi_alloc((strlenW(parent) + strlenW(expanded) + 1) * sizeof(WCHAR));
-            if (!path)
-                goto end;
-            strcpyW(path, parent);
-            strcatW(path, expanded);
-        }
-        else
-            path = expanded;
-        rc = ACTION_SearchDirectory(package, sig, path, depth, appValue);
-
-end:
-        if (path != expanded)
-            msi_free(path);
-        msi_free(parent);
-        if (row)
-            msiobj_release(&row->hdr);
-        MSI_ViewClose(view);
-        msiobj_release(&view->hdr);
+        strcpyW(path, parent);
+        strcatW(path, expanded);
     }
     else
-    {
-        TRACE("MSI_OpenQuery returned %d\n", rc);
-        rc = ERROR_SUCCESS;
-    }
+        path = expanded;
+
+    rc = ACTION_SearchDirectory(package, sig, path, depth, appValue);
+
+end:
+    if (path != expanded)
+        msi_free(path);
+    msi_free(parent);
+    msiobj_release(&row->hdr);
 
     TRACE("returning %d\n", rc);
     return rc;
@@ -971,65 +875,98 @@ static UINT ACTION_AppSearchSigName(MSIPACKAGE *package, LPCWSTR sigName,
     return rc;
 }
 
+static UINT iterate_appsearch(MSIRECORD *row, LPVOID param)
+{
+    MSIPACKAGE *package = param;
+    LPWSTR propName, sigName, value = NULL;
+    MSISIGNATURE sig;
+    UINT r;
+
+    /* get property and signature */
+    propName = msi_dup_record_field(row,1);
+    sigName = msi_dup_record_field(row,2);
+
+    TRACE("%s %s\n", debugstr_w(propName), debugstr_w(sigName));
+
+    r = ACTION_AppSearchSigName(package, sigName, &sig, &value);
+    if (value)
+    {
+        MSI_SetPropertyW(package, propName, value);
+        msi_free(value);
+    }
+    ACTION_FreeSignature(&sig);
+    msi_free(propName);
+    msi_free(sigName);
+
+    return r;
+}
+
 /* http://msdn.microsoft.com/library/en-us/msi/setup/appsearch_table.asp
  * is the best reference for the AppSearch table and how it's used.
  */
 UINT ACTION_AppSearch(MSIPACKAGE *package)
 {
-    MSIQUERY *view;
-    UINT rc;
-    static const WCHAR ExecSeqQuery[] =  {
-   's','e','l','e','c','t',' ','*',' ',
-   'f','r','o','m',' ',
-   'A','p','p','S','e','a','r','c','h',0};
+    static const WCHAR query[] =  {
+        's','e','l','e','c','t',' ','*',' ',
+        'f','r','o','m',' ',
+        'A','p','p','S','e','a','r','c','h',0};
+    MSIQUERY *view = NULL;
+    UINT r;
 
-    rc = MSI_OpenQuery(package->db, &view, ExecSeqQuery);
-    if (rc == ERROR_SUCCESS)
+    r = MSI_OpenQuery( package->db, &view, query );
+    if (r != ERROR_SUCCESS)
+        return ERROR_SUCCESS;
+
+    r = MSI_IterateRecords( view, NULL, iterate_appsearch, package );
+    msiobj_release( &view->hdr );
+
+    return r;
+}
+
+static UINT ITERATE_CCPSearch(MSIRECORD *row, LPVOID param)
+{
+    MSIPACKAGE *package = param;
+    LPCWSTR signature;
+    LPWSTR value = NULL;
+    MSISIGNATURE sig;
+    UINT r = ERROR_SUCCESS;
+
+    static const WCHAR success[] = {'C','C','P','_','S','u','c','c','e','s','s',0};
+    static const WCHAR one[] = {'1',0};
+
+    signature = MSI_RecordGetString(row, 1);
+
+    TRACE("%s\n", debugstr_w(signature));
+
+    ACTION_AppSearchSigName(package, signature, &sig, &value);
+    if (value)
     {
-        MSIRECORD *row = 0;
-        LPWSTR propName, sigName;
-
-        rc = MSI_ViewExecute(view, 0);
-        if (rc != ERROR_SUCCESS)
-            goto end;
-
-        while (!rc)
-        {
-            MSISIGNATURE sig;
-            LPWSTR value = NULL;
-
-            rc = MSI_ViewFetch(view,&row);
-            if (rc != ERROR_SUCCESS)
-            {
-                rc = ERROR_SUCCESS;
-                break;
-            }
-
-            /* get property and signature */
-            propName = msi_dup_record_field(row,1);
-            sigName = msi_dup_record_field(row,2);
-
-            TRACE("Searching for Property %s, Signature_ %s\n",
-             debugstr_w(propName), debugstr_w(sigName));
-
-            rc = ACTION_AppSearchSigName(package, sigName, &sig, &value);
-            if (value)
-            {
-                MSI_SetPropertyW(package, propName, value);
-                msi_free(value);
-            }
-            ACTION_FreeSignature(&sig);
-            msi_free(propName);
-            msi_free(sigName);
-            msiobj_release(&row->hdr);
-        }
-
-end:
-        MSI_ViewClose(view);
-        msiobj_release(&view->hdr);
+        TRACE("Found signature %s\n", debugstr_w(signature));
+        MSI_SetPropertyW(package, success, one);
+        msi_free(value);
+        r = ERROR_NO_MORE_ITEMS;
     }
-    else
-        rc = ERROR_SUCCESS;
 
-    return rc;
+    ACTION_FreeSignature(&sig);
+
+    return r;
+}
+
+UINT ACTION_CCPSearch(MSIPACKAGE *package)
+{
+    static const WCHAR query[] =  {
+        's','e','l','e','c','t',' ','*',' ',
+        'f','r','o','m',' ',
+        'C','C','P','S','e','a','r','c','h',0};
+    MSIQUERY *view = NULL;
+    UINT r;
+
+    r = MSI_OpenQuery(package->db, &view, query);
+    if (r != ERROR_SUCCESS)
+        return ERROR_SUCCESS;
+
+    r = MSI_IterateRecords(view, NULL, ITERATE_CCPSearch, package);
+    msiobj_release(&view->hdr);
+
+    return r;
 }

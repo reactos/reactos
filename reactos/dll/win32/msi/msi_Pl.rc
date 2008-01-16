@@ -1,7 +1,8 @@
 /*
- * Korean resources for MSI
+ * Polish resources for MSI
  *
- * Copyright 2005 YunSong Hwang
+ * Copyright 2005 Mike McCormack
+ * Copyright 2007 Mikolaj Zalewski
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -18,17 +19,17 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-LANGUAGE LANG_KOREAN, SUBLANG_NEUTRAL
+LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
 STRINGTABLE DISCARDABLE
 {
-        4 " ÁöÁ¤ÇÑ ¼³Ä¡ ÆÐÅ°Áö¸¦ ¿­ ¼ö ¾ø½À´Ï´Ù. ÆÄÀÏ °æ·Î¸¦ È®ÀÎÇÏ°í ´Ù½Ã ½ÃµµÇÏ½Ê½Ã¿À."
-	5 "%s  °æ·Î¸¦ Ã£À»¼ö ¾ø½À´Ï´Ù"
-	9 "µð½ºÅ© %s »ðÀÔ"
-	10 "Àý¸øµÈ ¸Å°³º¯¼ö"
-	11 "%s¸¦ Æ÷ÇÔÇÏ´Â Æú´õ¸¦ ÀÔ·ÂÇÏ¼¼¿©"
-	12 "ºüÁø ºÎºÐ(feature)À» À§ÇÑ ¼³Ä¡ ¿øº»"
-	13 "ºüÁø ºÎºÐ(feature)À» À§ÇÑ ³×Æ®¿öÅ© µå¶óÀÌºê"
-	14 "ºÎºÐ(feature)¿¡¼­:"
-	15 " %s¸¦ Æ÷ÇÔÇÏ´Â Æú´õ ¼±ÅÃ"
+	4 "Nie uda³o siê otworzyæ wybranego pakietu instalacyjnego. SprawdŸ czy œcie¿ka jest poprawna i spróbuj ponownie."
+	5 "œcie¿ka '%s' nie zosta³a odnaleziona"
+	9 "w³ó¿ dysk '%s'"
+	10 "z³e parametry"
+	11 "wprowadŸ sice¿kê do folderu zawieraj¹cego '%s'"
+	12 "Ÿród³o danych zawieraj¹ce ¿¹danê funkcjê jest niedostêpne"
+	13 "dysk siecowy zawieraj¹cy ¿¹dan¹ funckje jest niedostêpny"
+	14 "funkcja z:"
+	15 "wybierz folder zawieraj¹cy '%s'"
 }

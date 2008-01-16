@@ -62,7 +62,7 @@ static UINT INSERT_fetch_int( struct tagMSIVIEW *view, UINT row, UINT col, UINT 
  * Merge a value_list and a record to create a second record.
  * Replace wildcard entries in the valuelist with values from the record
  */
-MSIRECORD *msi_query_merge_record( UINT fields, column_info *vl, MSIRECORD *rec )
+MSIRECORD *msi_query_merge_record( UINT fields, const column_info *vl, MSIRECORD *rec )
 {
     MSIRECORD *merged;
     DWORD wildcard_count = 1, i;
@@ -132,7 +132,7 @@ static UINT INSERT_execute( struct tagMSIVIEW *view, MSIRECORD *record )
     if( !values )
         goto err;
 
-    r = sv->ops->insert_row( sv, values );
+    r = sv->ops->insert_row( sv, values, iv->bIsTemp );
 
 err:
     if( values )
@@ -185,7 +185,7 @@ static UINT INSERT_get_column_info( struct tagMSIVIEW *view,
     return sv->ops->get_column_info( sv, n, name, type );
 }
 
-static UINT INSERT_modify( struct tagMSIVIEW *view, MSIMODIFY eModifyMode, MSIRECORD *rec)
+static UINT INSERT_modify( struct tagMSIVIEW *view, MSIMODIFY eModifyMode, MSIRECORD *rec, UINT row)
 {
     MSIINSERTVIEW *iv = (MSIINSERTVIEW*)view;
 
@@ -225,16 +225,23 @@ static const MSIVIEWOPS insert_ops =
     NULL,
     NULL,
     NULL,
+    NULL,
+    NULL,
     INSERT_execute,
     INSERT_close,
     INSERT_get_dimensions,
     INSERT_get_column_info,
     INSERT_modify,
     INSERT_delete,
-    INSERT_find_matching_rows
+    INSERT_find_matching_rows,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
 };
 
-static UINT count_column_info( column_info *ci )
+static UINT count_column_info( const column_info *ci )
 {
     UINT n = 0;
     for ( ; ci; ci = ci->next )
@@ -242,7 +249,7 @@ static UINT count_column_info( column_info *ci )
     return n;
 }
 
-UINT INSERT_CreateView( MSIDATABASE *db, MSIVIEW **view, LPWSTR table,
+UINT INSERT_CreateView( MSIDATABASE *db, MSIVIEW **view, LPCWSTR table,
                         column_info *columns, column_info *values, BOOL temp )
 {
     MSIINSERTVIEW *iv = NULL;

@@ -34,12 +34,13 @@
 #include "msidefs.h"
 #include "msipriv.h"
 #include "objidl.h"
+#include "msiserver.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(msi);
 
 #include "pshpack1.h"
 
-typedef struct {
+typedef struct { 
     WORD wByteOrder;
     WORD wFormat;
     DWORD dwOSVer;
@@ -47,20 +48,20 @@ typedef struct {
     DWORD reserved;
 } PROPERTYSETHEADER;
 
-typedef struct {
+typedef struct { 
     FMTID fmtid;
     DWORD dwOffset;
 } FORMATIDOFFSET;
 
-typedef struct {
+typedef struct { 
     DWORD cbSection;
     DWORD cProperties;
-} PROPERTYSECTIONHEADER;
-
-typedef struct {
+} PROPERTYSECTIONHEADER; 
+ 
+typedef struct { 
     DWORD propid;
     DWORD dwOffset;
-} PROPERTYIDOFFSET;
+} PROPERTYIDOFFSET; 
 
 typedef struct {
     DWORD type;
@@ -74,7 +75,7 @@ typedef struct {
         } str;
     } u;
 } PROPERTY_DATA;
-
+ 
 #include "poppack.h"
 
 #define SECT_HDR_SIZE (sizeof(PROPERTYSECTIONHEADER))
@@ -131,7 +132,7 @@ static UINT get_type( UINT uiProperty )
     return VT_EMPTY;
 }
 
-static UINT get_property_count( PROPVARIANT *property )
+static UINT get_property_count( const PROPVARIANT *property )
 {
     UINT i, n = 0;
 
@@ -293,7 +294,7 @@ static DWORD write_dword( LPBYTE data, DWORD ofs, DWORD val )
     return 4;
 }
 
-static DWORD write_filetime( LPBYTE data, DWORD ofs, LPFILETIME ft )
+static DWORD write_filetime( LPBYTE data, DWORD ofs, const FILETIME *ft )
 {
     write_dword( data, ofs, ft->dwLowDateTime );
     write_dword( data, ofs + 4, ft->dwHighDateTime );
@@ -309,7 +310,7 @@ static DWORD write_string( LPBYTE data, DWORD ofs, LPCSTR str )
     return (7 + len) & ~3;
 }
 
-static UINT write_property_to_data( PROPVARIANT *prop, LPBYTE data )
+static UINT write_property_to_data( const PROPVARIANT *prop, LPBYTE data )
 {
     DWORD sz = 0;
 
@@ -336,7 +337,7 @@ static UINT write_property_to_data( PROPVARIANT *prop, LPBYTE data )
     return sz;
 }
 
-static UINT save_summary_info( MSISUMMARYINFO * si, IStream *stm )
+static UINT save_summary_info( const MSISUMMARYINFO * si, IStream *stm )
 {
     UINT ret = ERROR_FUNCTION_FAILED;
     PROPERTYSETHEADER set_hdr;
@@ -414,7 +415,7 @@ MSISUMMARYINFO *MSI_GetSummaryInformationW( IStorage *stg, UINT uiUpdateCount )
 
     TRACE("%p %d\n", stg, uiUpdateCount );
 
-    si = alloc_msiobject( MSIHANDLETYPE_SUMMARYINFO,
+    si = alloc_msiobject( MSIHANDLETYPE_SUMMARYINFO, 
                   sizeof (MSISUMMARYINFO), MSI_CloseSummaryInfo );
     if( !si )
         return si;
@@ -436,7 +437,7 @@ MSISUMMARYINFO *MSI_GetSummaryInformationW( IStorage *stg, UINT uiUpdateCount )
     return si;
 }
 
-UINT WINAPI MsiGetSummaryInformationW( MSIHANDLE hDatabase,
+UINT WINAPI MsiGetSummaryInformationW( MSIHANDLE hDatabase, 
               LPCWSTR szDatabase, UINT uiUpdateCount, MSIHANDLE *pHandle )
 {
     MSISUMMARYINFO *si;
@@ -459,7 +460,28 @@ UINT WINAPI MsiGetSummaryInformationW( MSIHANDLE hDatabase,
     {
         db = msihandle2msiinfo( hDatabase, MSIHANDLETYPE_DATABASE );
         if( !db )
-            return ERROR_INVALID_PARAMETER;
+        {
+            HRESULT hr;
+            IWineMsiRemoteDatabase *remote_database;
+
+            remote_database = (IWineMsiRemoteDatabase *)msi_get_remote( hDatabase );
+            if ( !remote_database )
+                return ERROR_INVALID_HANDLE;
+
+            hr = IWineMsiRemoteDatabase_GetSummaryInformation( remote_database,
+                                                               uiUpdateCount, pHandle );
+            IWineMsiRemoteDatabase_Release( remote_database );
+
+            if (FAILED(hr))
+            {
+                if (HRESULT_FACILITY(hr) == FACILITY_WIN32)
+                    return HRESULT_CODE(hr);
+
+                return ERROR_FUNCTION_FAILED;
+            }
+
+            return ERROR_SUCCESS;
+        }
     }
 
     si = MSI_GetSummaryInformationW( db->storage, uiUpdateCount );
@@ -479,13 +501,13 @@ UINT WINAPI MsiGetSummaryInformationW( MSIHANDLE hDatabase,
     return ret;
 }
 
-UINT WINAPI MsiGetSummaryInformationA(MSIHANDLE hDatabase,
+UINT WINAPI MsiGetSummaryInformationA(MSIHANDLE hDatabase, 
               LPCSTR szDatabase, UINT uiUpdateCount, MSIHANDLE *pHandle)
 {
     LPWSTR szwDatabase = NULL;
     UINT ret;
 
-    TRACE("%ld %s %d %p\n", hDatabase, debugstr_a(szDatabase),
+    TRACE("%ld %s %d %p\n", hDatabase, debugstr_a(szDatabase), 
           uiUpdateCount, pHandle);
 
     if( szDatabase )
@@ -502,7 +524,7 @@ UINT WINAPI MsiGetSummaryInformationA(MSIHANDLE hDatabase,
     return ret;
 }
 
-UINT WINAPI MsiSummaryInfoGetPropertyCount(MSIHANDLE hSummaryInfo, UINT *pCount)
+UINT WINAPI MsiSummaryInfoGetPropertyCount(MSIHANDLE hSummaryInfo, PUINT pCount)
 {
     MSISUMMARYINFO *si;
 
@@ -529,15 +551,15 @@ static UINT get_prop( MSIHANDLE handle, UINT uiProperty, UINT *puiDataType,
     TRACE("%ld %d %p %p %p %p %p\n", handle, uiProperty, puiDataType,
           piValue, pftValue, str, pcchValueBuf);
 
+    if ( uiProperty >= MSI_MAX_PROPS )
+    {
+        if (puiDataType) *puiDataType = VT_EMPTY;
+        return ERROR_UNKNOWN_PROPERTY;
+    }
+
     si = msihandle2msiinfo( handle, MSIHANDLETYPE_SUMMARYINFO );
     if( !si )
         return ERROR_INVALID_HANDLE;
-
-    if ( uiProperty >= MSI_MAX_PROPS )
-    {
-        *puiDataType = VT_EMPTY;
-        return ret;
-    }
 
     prop = &si->property[uiProperty];
 
@@ -619,8 +641,8 @@ LPWSTR msi_get_suminfo_product( IStorage *stg )
 }
 
 UINT WINAPI MsiSummaryInfoGetPropertyA(
-      MSIHANDLE handle, UINT uiProperty, UINT *puiDataType, INT *piValue,
-      FILETIME *pftValue, LPSTR szValueBuf, DWORD *pcchValueBuf)
+      MSIHANDLE handle, UINT uiProperty, PUINT puiDataType, LPINT piValue,
+      FILETIME *pftValue, LPSTR szValueBuf, LPDWORD pcchValueBuf)
 {
     awstring str;
 
@@ -635,8 +657,8 @@ UINT WINAPI MsiSummaryInfoGetPropertyA(
 }
 
 UINT WINAPI MsiSummaryInfoGetPropertyW(
-      MSIHANDLE handle, UINT uiProperty, UINT *puiDataType, INT *piValue,
-      FILETIME *pftValue, LPWSTR szValueBuf, DWORD *pcchValueBuf)
+      MSIHANDLE handle, UINT uiProperty, PUINT puiDataType, LPINT piValue,
+      FILETIME *pftValue, LPWSTR szValueBuf, LPDWORD pcchValueBuf)
 {
     awstring str;
 

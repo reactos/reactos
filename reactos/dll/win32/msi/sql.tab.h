@@ -44,50 +44,51 @@
      TK_GE = 270,
      TK_GT = 271,
      TK_HOLD = 272,
-     TK_ID = 273,
-     TK_ILLEGAL = 274,
-     TK_INSERT = 275,
-     TK_INT = 276,
-     TK_INTEGER = 277,
-     TK_INTO = 278,
-     TK_IS = 279,
-     TK_KEY = 280,
-     TK_LE = 281,
-     TK_LONG = 282,
-     TK_LONGCHAR = 283,
-     TK_LP = 284,
-     TK_LT = 285,
-     TK_LOCALIZABLE = 286,
-     TK_MINUS = 287,
-     TK_NE = 288,
-     TK_NOT = 289,
-     TK_NULL = 290,
-     TK_OBJECT = 291,
-     TK_OR = 292,
-     TK_ORDER = 293,
-     TK_PRIMARY = 294,
-     TK_RP = 295,
-     TK_SELECT = 296,
-     TK_SET = 297,
-     TK_SHORT = 298,
-     TK_SPACE = 299,
-     TK_STAR = 300,
-     TK_STRING = 301,
-     TK_TABLE = 302,
-     TK_TEMPORARY = 303,
-     TK_UPDATE = 304,
-     TK_VALUES = 305,
-     TK_WHERE = 306,
-     TK_WILDCARD = 307,
-     COLUMN = 309,
-     FUNCTION = 310,
-     COMMENT = 311,
-     UNCLOSED_STRING = 312,
-     SPACE = 313,
-     ILLEGAL = 314,
-     END_OF_FILE = 315,
-     TK_LIKE = 316,
-     TK_NEGATION = 317
+     TK_ADD = 273,
+     TK_ID = 274,
+     TK_ILLEGAL = 275,
+     TK_INSERT = 276,
+     TK_INT = 277,
+     TK_INTEGER = 278,
+     TK_INTO = 279,
+     TK_IS = 280,
+     TK_KEY = 281,
+     TK_LE = 282,
+     TK_LONG = 283,
+     TK_LONGCHAR = 284,
+     TK_LP = 285,
+     TK_LT = 286,
+     TK_LOCALIZABLE = 287,
+     TK_MINUS = 288,
+     TK_NE = 289,
+     TK_NOT = 290,
+     TK_NULL = 291,
+     TK_OBJECT = 292,
+     TK_OR = 293,
+     TK_ORDER = 294,
+     TK_PRIMARY = 295,
+     TK_RP = 296,
+     TK_SELECT = 297,
+     TK_SET = 298,
+     TK_SHORT = 299,
+     TK_SPACE = 300,
+     TK_STAR = 301,
+     TK_STRING = 302,
+     TK_TABLE = 303,
+     TK_TEMPORARY = 304,
+     TK_UPDATE = 305,
+     TK_VALUES = 306,
+     TK_WHERE = 307,
+     TK_WILDCARD = 308,
+     COLUMN = 310,
+     FUNCTION = 311,
+     COMMENT = 312,
+     UNCLOSED_STRING = 313,
+     SPACE = 314,
+     ILLEGAL = 315,
+     END_OF_FILE = 316,
+     TK_LIKE = 317,
+     TK_NEGATION = 318
    };
 #endif
 /* Tokens.  */
@@ -106,56 +107,57 @@
 #define TK_GE 270
 #define TK_GT 271
 #define TK_HOLD 272
-#define TK_ID 273
-#define TK_ILLEGAL 274
-#define TK_INSERT 275
-#define TK_INT 276
-#define TK_INTEGER 277
-#define TK_INTO 278
-#define TK_IS 279
-#define TK_KEY 280
-#define TK_LE 281
-#define TK_LONG 282
-#define TK_LONGCHAR 283
-#define TK_LP 284
-#define TK_LT 285
-#define TK_LOCALIZABLE 286
-#define TK_MINUS 287
-#define TK_NE 288
-#define TK_NOT 289
-#define TK_NULL 290
-#define TK_OBJECT 291
-#define TK_OR 292
-#define TK_ORDER 293
-#define TK_PRIMARY 294
-#define TK_RP 295
-#define TK_SELECT 296
-#define TK_SET 297
-#define TK_SHORT 298
-#define TK_SPACE 299
-#define TK_STAR 300
-#define TK_STRING 301
-#define TK_TABLE 302
-#define TK_TEMPORARY 303
-#define TK_UPDATE 304
-#define TK_VALUES 305
-#define TK_WHERE 306
-#define TK_WILDCARD 307
-#define COLUMN 309
-#define FUNCTION 310
-#define COMMENT 311
-#define UNCLOSED_STRING 312
-#define SPACE 313
-#define ILLEGAL 314
-#define END_OF_FILE 315
-#define TK_LIKE 316
-#define TK_NEGATION 317
+#define TK_ADD 273
+#define TK_ID 274
+#define TK_ILLEGAL 275
+#define TK_INSERT 276
+#define TK_INT 277
+#define TK_INTEGER 278
+#define TK_INTO 279
+#define TK_IS 280
+#define TK_KEY 281
+#define TK_LE 282
+#define TK_LONG 283
+#define TK_LONGCHAR 284
+#define TK_LP 285
+#define TK_LT 286
+#define TK_LOCALIZABLE 287
+#define TK_MINUS 288
+#define TK_NE 289
+#define TK_NOT 290
+#define TK_NULL 291
+#define TK_OBJECT 292
+#define TK_OR 293
+#define TK_ORDER 294
+#define TK_PRIMARY 295
+#define TK_RP 296
+#define TK_SELECT 297
+#define TK_SET 298
+#define TK_SHORT 299
+#define TK_SPACE 300
+#define TK_STAR 301
+#define TK_STRING 302
+#define TK_TABLE 303
+#define TK_TEMPORARY 304
+#define TK_UPDATE 305
+#define TK_VALUES 306
+#define TK_WHERE 307
+#define TK_WILDCARD 308
+#define COLUMN 310
+#define FUNCTION 311
+#define COMMENT 312
+#define UNCLOSED_STRING 313
+#define SPACE 314
+#define ILLEGAL 315
+#define END_OF_FILE 316
+#define TK_LIKE 317
+#define TK_NEGATION 318
 
 
 
 
 #if ! defined (YYSTYPE) && ! defined (YYSTYPE_IS_DECLARED)
-#line 73 "sql.y"
+#line 74 "sql.y"
 typedef union YYSTYPE {
     struct sql_str str;
     LPWSTR string;
@@ -166,7 +168,7 @@ typedef union YYSTYPE {
     int integer;
 } YYSTYPE;
 /* Line 1447 of yacc.c.  */
-#line 170 "sql.tab.h"
+#line 172 "sql.tab.h"
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
 # define YYSTYPE_IS_DECLARED 1
 # define YYSTYPE_IS_TRIVIAL 1

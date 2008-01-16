@@ -2,6 +2,7 @@
  * Portuguese resources for MSI
  *
  * Copyright 2005 Marcelo Duarte
+ * Copyright 2006 Américo José Melo
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -18,7 +19,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
+LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE_BRAZILIAN
 
 STRINGTABLE DISCARDABLE
 {
@@ -31,4 +32,19 @@ STRINGTABLE DISCARDABLE
 	13 "drive de rede para  característica faltando"
 	14 "característica de:"
 	15 "escolha qual pasta contém %s"
+}
+
+LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE
+
+STRINGTABLE DISCARDABLE
+{
+	4 "The specified installation package could not be opened.  Please check the file path and try again."
+	5 "localização %s não encontrada"
+	9 "insira o disco %s"
+	10 "parâmetros inválidos"
+	11 "indique que pasta contém %s"
+	12 "instalar fonte para a opção em falta"
+	13 "controlador de rede para a opção em falta"
+	14 "opção de:"
+	15 "indique que pasta contém %s"
 }

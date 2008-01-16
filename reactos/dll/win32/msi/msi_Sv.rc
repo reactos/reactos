@@ -1,7 +1,7 @@
 /*
- * Korean resources for MSI
+ * Swedish resources for MSI
  *
- * Copyright 2005 YunSong Hwang
+ * Copyright 2007 Daniel Nylander
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -18,17 +18,17 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-LANGUAGE LANG_KOREAN, SUBLANG_NEUTRAL
+LANGUAGE LANG_SWEDISH, SUBLANG_DEFAULT
 
 STRINGTABLE DISCARDABLE
 {
-        4 " ÁöÁ¤ÇÑ ¼³Ä¡ ÆÐÅ°Áö¸¦ ¿­ ¼ö ¾ø½À´Ï´Ù. ÆÄÀÏ °æ·Î¸¦ È®ÀÎÇÏ°í ´Ù½Ã ½ÃµµÇÏ½Ê½Ã¿À."
-	5 "%s  °æ·Î¸¦ Ã£À»¼ö ¾ø½À´Ï´Ù"
-	9 "µð½ºÅ© %s »ðÀÔ"
-	10 "Àý¸øµÈ ¸Å°³º¯¼ö"
-	11 "%s¸¦ Æ÷ÇÔÇÏ´Â Æú´õ¸¦ ÀÔ·ÂÇÏ¼¼¿©"
-	12 "ºüÁø ºÎºÐ(feature)À» À§ÇÑ ¼³Ä¡ ¿øº»"
-	13 "ºüÁø ºÎºÐ(feature)À» À§ÇÑ ³×Æ®¿öÅ© µå¶óÀÌºê"
-	14 "ºÎºÐ(feature)¿¡¼­:"
-	15 " %s¸¦ Æ÷ÇÔÇÏ´Â Æú´õ ¼±ÅÃ"
+	4 "Det angivna installationspaketet kunde inte öppnas.  Kontrollera filsökvägen och försök igen."
+	5 "sökvägen %s hittades inte"
+	9 "mata in %s"
+	10 "felaktiga parametrar"
+	11 "ange vilken mapp som innehåller %s"
+	12 "installationskälla för funktion saknar"
+	13 "nätverksenhet för funktion saknar"
+	14 "funktion från:"
+	15 "välj den mapp som innehåller %s"
 }

@@ -31,7 +31,6 @@
 
 #include <stdarg.h>
 
-#include "stdio.h"
 #include "windef.h"
 #include "winbase.h"
 #include "winerror.h"
@@ -64,7 +63,7 @@ static MSIAPPID *load_appid( MSIPACKAGE* package, MSIRECORD *row )
     appid = msi_alloc_zero( sizeof(MSIAPPID) );
     if (!appid)
         return NULL;
-
+    
     appid->AppID = msi_dup_record_field( row, 1 );
     TRACE("loading appid %s\n", debugstr_w( appid->AppID ));
 
@@ -79,7 +78,7 @@ static MSIAPPID *load_appid( MSIPACKAGE* package, MSIRECORD *row )
     appid->RunAsInteractiveUser = !MSI_RecordIsNull(row,7);
 
     list_add_tail( &package->appids, &appid->entry );
-
+    
     return appid;
 }
 
@@ -104,7 +103,7 @@ static MSIAPPID *load_given_appid( MSIPACKAGE *package, LPCWSTR name )
             return appid;
         }
     }
-
+    
     row = MSI_QueryGetRecord(package->db, ExecSeqQuery, name);
     if (!row)
         return NULL;
@@ -148,13 +147,13 @@ static MSIPROGID *load_progid( MSIPACKAGE* package, MSIRECORD *row )
 
     if (!MSI_RecordIsNull(row,6))
     {
-        INT icon_index = MSI_RecordGetInteger(row,6);
+        INT icon_index = MSI_RecordGetInteger(row,6); 
         LPCWSTR FileName = MSI_RecordGetString(row,5);
         LPWSTR FilePath;
         static const WCHAR fmt[] = {'%','s',',','%','i',0};
 
         FilePath = build_icon_path(package,FileName);
-
+       
         progid->IconPath = msi_alloc( (strlenW(FilePath)+10)* sizeof(WCHAR) );
 
         sprintfW(progid->IconPath,fmt,FilePath,icon_index);
@@ -179,12 +178,12 @@ static MSIPROGID *load_progid( MSIPACKAGE* package, MSIRECORD *row )
         while (parent->Parent && parent->Parent != parent)
             parent = parent->Parent;
 
-        /* FIXME: need to determing if we are really the CurVer */
+        /* FIXME: need to determine if we are really the CurVer */
 
         progid->CurVer = parent;
         parent->VersionInd = progid;
     }
-
+    
     return progid;
 }
 
@@ -209,7 +208,7 @@ static MSIPROGID *load_given_progid(MSIPACKAGE *package, LPCWSTR name)
             return progid;
         }
     }
-
+    
     row = MSI_QueryGetRecord( package->db, ExecSeqQuery, name );
     if (!row)
         return NULL;
@@ -254,13 +253,13 @@ static MSICLASS *load_class( MSIPACKAGE* package, MSIRECORD *row )
     if (!MSI_RecordIsNull(row,9))
     {
 
-        INT icon_index = MSI_RecordGetInteger(row,9);
+        INT icon_index = MSI_RecordGetInteger(row,9); 
         LPCWSTR FileName = MSI_RecordGetString(row,8);
         LPWSTR FilePath;
         static const WCHAR fmt[] = {'%','s',',','%','i',0};
 
         FilePath = build_icon_path(package,FileName);
-
+       
         cls->IconPath = msi_alloc( (strlenW(FilePath)+5)* sizeof(WCHAR) );
 
         sprintfW(cls->IconPath,fmt,FilePath,icon_index);
@@ -309,15 +308,15 @@ static MSICLASS *load_class( MSIPACKAGE* package, MSIRECORD *row )
     cls->Feature = get_loaded_feature(package,buffer);
 
     cls->Attributes = MSI_RecordGetInteger(row,13);
-
+    
     return cls;
 }
 
 /*
- * the Class table has 3 primary keys. Generally it is only
+ * the Class table has 3 primary keys. Generally it is only 
  * referenced through the first CLSID key. However when loading
  * all of the classes we need to make sure we do not ignore rows
- * with other Context and ComponentIndexs
+ * with other Context and ComponentIndexs 
  */
 static MSICLASS *load_given_class(MSIPACKAGE *package, LPCWSTR classid)
 {
@@ -330,7 +329,7 @@ static MSICLASS *load_given_class(MSIPACKAGE *package, LPCWSTR classid)
 
     if (!classid)
         return NULL;
-
+    
     /* check for classes already loaded */
     LIST_FOR_EACH_ENTRY( cls, &package->classes, MSICLASS, entry )
     {
@@ -364,7 +363,7 @@ static MSIMIME *load_mime( MSIPACKAGE* package, MSIRECORD *row )
     if (!mt)
         return mt;
 
-    mt->ContentType = msi_dup_record_field( row, 1 );
+    mt->ContentType = msi_dup_record_field( row, 1 ); 
     TRACE("loading mime %s\n", debugstr_w(mt->ContentType));
 
     buffer = MSI_RecordGetString( row, 2 );
@@ -390,7 +389,7 @@ static MSIMIME *load_given_mime( MSIPACKAGE *package, LPCWSTR mime )
 
     if (!mime)
         return NULL;
-
+    
     /* check for mime already loaded */
     LIST_FOR_EACH_ENTRY( mt, &package->mimes, MSIMIME, entry )
     {
@@ -400,7 +399,7 @@ static MSIMIME *load_given_mime( MSIPACKAGE *package, LPCWSTR mime )
             return mt;
         }
     }
-
+    
     row = MSI_QueryGetRecord(package->db, ExecSeqQuery, mime);
     if (!row)
         return NULL;
@@ -446,7 +445,7 @@ static MSIEXTENSION *load_extension( MSIPACKAGE* package, MSIRECORD *row )
 
 /*
  * While the extension table has 2 primary keys, this function is only looking
- * at the Extension key which is what is referenced as a forign key
+ * at the Extension key which is what is referenced as a foreign key
  */
 static MSIEXTENSION *load_given_extension( MSIPACKAGE *package, LPCWSTR name )
 {
@@ -471,7 +470,7 @@ static MSIEXTENSION *load_given_extension( MSIPACKAGE *package, LPCWSTR name )
             return ext;
         }
     }
-
+    
     row = MSI_QueryGetRecord( package->db, ExecSeqQuery, name );
     if (!row)
         return NULL;
@@ -513,9 +512,9 @@ static UINT iterate_load_verb(MSIRECORD *row, LPVOID param)
     buffer = MSI_RecordGetString(row,5);
     deformat_string(package,buffer,&verb->Argument);
 
-    /* assosiate the verb with the correct extension */
+    /* associate the verb with the correct extension */
     list_add_tail( &extension->verbs, &verb->entry );
-
+    
     return ERROR_SUCCESS;
 }
 
@@ -546,7 +545,7 @@ static UINT iterate_all_classes(MSIRECORD *rec, LPVOID param)
             break;
         }
     }
-
+    
     if (!match)
         load_class(package, rec);
 
@@ -736,7 +735,7 @@ static void mark_mime_for_install( MSIMIME *mime )
     mime->InstallMe = TRUE;
 }
 
-static UINT register_appid(MSIAPPID *appid, LPCWSTR app )
+static UINT register_appid(const MSIAPPID *appid, LPCWSTR app )
 {
     static const WCHAR szAppID[] = { 'A','p','p','I','D',0 };
     static const WCHAR szRemoteServerName[] =
@@ -751,7 +750,7 @@ static UINT register_appid(MSIAPPID *appid, LPCWSTR app )
          {'A','c','t','i','v','a','t','e','A','s','S','t','o','r','a','g','e',0};
     static const WCHAR szY[] = {'Y',0};
     static const WCHAR szRunAs[] = {'R','u','n','A','s',0};
-    static const WCHAR szUser[] =
+    static const WCHAR szUser[] = 
          {'I','n','t','e','r','a','c','t','i','v','e',' ','U','s','e','r',0};
 
     HKEY hkey2,hkey3;
@@ -785,11 +784,11 @@ static UINT register_appid(MSIAPPID *appid, LPCWSTR app )
 
 UINT ACTION_RegisterClassInfo(MSIPACKAGE *package)
 {
-    /*
+    /* 
      * Again I am assuming the words, "Whose key file represents" when referring
      * to a Component as to meaning that Components KeyPath file
      */
-
+    
     UINT rc;
     MSIRECORD *uirow;
     static const WCHAR szCLSID[] = { 'C','L','S','I','D',0 };
@@ -888,7 +887,7 @@ UINT ACTION_RegisterClassInfo(MSIPACKAGE *package)
 
             if (cls->ProgID && cls->ProgID->VersionInd)
             {
-                msi_reg_set_subkey_val( hkey2, szVIProgID, NULL,
+                msi_reg_set_subkey_val( hkey2, szVIProgID, NULL, 
                                         cls->ProgID->VersionInd->ProgID );
             }
         }
@@ -904,7 +903,7 @@ UINT ACTION_RegisterClassInfo(MSIPACKAGE *package)
 
         if (cls->IconPath)
         {
-            static const WCHAR szDefaultIcon[] =
+            static const WCHAR szDefaultIcon[] = 
                 {'D','e','f','a','u','l','t','I','c','o','n',0};
 
             msi_reg_set_subkey_val( hkey2, szDefaultIcon, NULL, cls->IconPath );
@@ -925,7 +924,7 @@ UINT ACTION_RegisterClassInfo(MSIPACKAGE *package)
 
             msi_reg_set_subkey_val( hkey2, szInproc32, NULL, cls->DefInprocHandler32 );
         }
-
+        
         RegCloseKey(hkey2);
 
         /* if there is a FileTypeMask, register the FileType */
@@ -954,7 +953,7 @@ UINT ACTION_RegisterClassInfo(MSIPACKAGE *package)
                 index ++;
             }
         }
-
+        
         uirow = MSI_CreateRecord(1);
 
         MSI_RecordSetStringW( uirow, 1, cls->clsid );
@@ -966,7 +965,7 @@ UINT ACTION_RegisterClassInfo(MSIPACKAGE *package)
     return rc;
 }
 
-static LPCWSTR get_clsid_of_progid( MSIPROGID *progid )
+static LPCWSTR get_clsid_of_progid( const MSIPROGID *progid )
 {
     while (progid)
     {
@@ -977,7 +976,7 @@ static LPCWSTR get_clsid_of_progid( MSIPROGID *progid )
     return NULL;
 }
 
-static UINT register_progid( MSIPROGID* progid )
+static UINT register_progid( const MSIPROGID* progid )
 {
     static const WCHAR szCLSID[] = { 'C','L','S','I','D',0 };
     static const WCHAR szDefaultIcon[] =
@@ -1034,7 +1033,7 @@ UINT ACTION_RegisterProgIdInfo(MSIPACKAGE *package)
                              debugstr_w(progid->ProgID));
             continue;
         }
-
+       
         TRACE("Registering progid %s\n", debugstr_w(progid->ProgID));
 
         register_progid( progid );
@@ -1048,8 +1047,8 @@ UINT ACTION_RegisterProgIdInfo(MSIPACKAGE *package)
     return ERROR_SUCCESS;
 }
 
-static UINT register_verb(MSIPACKAGE *package, LPCWSTR progid,
-                MSICOMPONENT* component, MSIEXTENSION* extension,
+static UINT register_verb(MSIPACKAGE *package, LPCWSTR progid, 
+                MSICOMPONENT* component, const MSIEXTENSION* extension,
                 MSIVERB* verb, INT* Sequence )
 {
     LPWSTR keyname;
@@ -1080,7 +1079,7 @@ static UINT register_verb(MSIPACKAGE *package, LPCWSTR progid,
      msi_reg_set_val_str( key, NULL, command );
      msi_free(command);
 
-     advertise = create_component_advertise_string(package, component,
+     advertise = create_component_advertise_string(package, component, 
                                                    extension->Feature->Feature);
 
      size = strlenW(advertise);
@@ -1100,7 +1099,7 @@ static UINT register_verb(MSIPACKAGE *package, LPCWSTR progid,
      }
 
      msi_reg_set_val_multi_str( key, szCommand, command );
-
+     
      RegCloseKey(key);
      msi_free(keyname);
      msi_free(advertise);
@@ -1128,7 +1127,7 @@ static UINT register_verb(MSIPACKAGE *package, LPCWSTR progid,
 
 UINT ACTION_RegisterExtensionInfo(MSIPACKAGE *package)
 {
-    static const WCHAR szContentType[] =
+    static const WCHAR szContentType[] = 
         {'C','o','n','t','e','n','t',' ','T','y','p','e',0 };
     HKEY hkey;
     MSIEXTENSION *ext;
@@ -1141,18 +1140,18 @@ UINT ACTION_RegisterExtensionInfo(MSIPACKAGE *package)
      * shortcuts and the like. Because Mike McCormack is working on this i am
      * going to default to TRUE
      */
-
+    
     LIST_FOR_EACH_ENTRY( ext, &package->extensions, MSIEXTENSION, entry )
     {
         LPWSTR extension;
         MSIFEATURE *feature;
-
+     
         if (!ext->Component)
             continue;
 
         feature = ext->Feature;
 
-        /*
+        /* 
          * yes. MSDN says that these are based on _Feature_ not on
          * Component.  So verify the feature is to be installed
          */
@@ -1190,14 +1189,14 @@ UINT ACTION_RegisterExtensionInfo(MSIPACKAGE *package)
 
         if (ext->ProgID || ext->ProgIDText)
         {
-            static const WCHAR szSN[] =
+            static const WCHAR szSN[] = 
                 {'\\','S','h','e','l','l','N','e','w',0};
             HKEY hkey2;
             LPWSTR newkey;
             LPCWSTR progid;
             MSIVERB *verb;
             INT Sequence = MSI_NULL_INTEGER;
-
+            
             if (ext->ProgID)
                 progid = ext->ProgID->ProgID;
             else
@@ -1205,7 +1204,7 @@ UINT ACTION_RegisterExtensionInfo(MSIPACKAGE *package)
 
             msi_reg_set_val_str( hkey, NULL, progid );
 
-            newkey = msi_alloc( (strlenW(progid)+strlenW(szSN)+1) * sizeof(WCHAR));
+            newkey = msi_alloc( (strlenW(progid)+strlenW(szSN)+1) * sizeof(WCHAR)); 
 
             strcpyW(newkey,progid);
             strcatW(newkey,szSN);
@@ -1221,7 +1220,7 @@ UINT ACTION_RegisterExtensionInfo(MSIPACKAGE *package)
                                ext, verb, &Sequence);
             }
         }
-
+        
         RegCloseKey(hkey);
 
         uirow = MSI_CreateRecord(1);
@@ -1235,7 +1234,7 @@ UINT ACTION_RegisterExtensionInfo(MSIPACKAGE *package)
 
 UINT ACTION_RegisterMIMEInfo(MSIPACKAGE *package)
 {
-    static const WCHAR szExten[] =
+    static const WCHAR szExten[] = 
         {'E','x','t','e','n','s','i','o','n',0 };
     MSIRECORD *uirow;
     MSIMIME *mt;
@@ -1247,13 +1246,13 @@ UINT ACTION_RegisterMIMEInfo(MSIPACKAGE *package)
         LPWSTR extension;
         LPCWSTR exten;
         LPCWSTR mime;
-        static const WCHAR fmt[] =
+        static const WCHAR fmt[] = 
             {'M','I','M','E','\\','D','a','t','a','b','a','s','e','\\',
              'C','o','n','t','e','n','t',' ','T','y','p','e','\\', '%','s',0};
         LPWSTR key;
 
-        /*
-         * check if the MIME is to be installed. Either as requesed by an
+        /* 
+         * check if the MIME is to be installed. Either as requested by an
          * extension or Class
          */
         mt->InstallMe = (mt->InstallMe ||
@@ -1266,7 +1265,7 @@ UINT ACTION_RegisterMIMEInfo(MSIPACKAGE *package)
                              debugstr_w(mt->ContentType));
             continue;
         }
-
+        
         mime = mt->ContentType;
         exten = mt->Extension->Extension;
 
