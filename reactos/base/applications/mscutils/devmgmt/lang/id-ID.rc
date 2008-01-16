@@ -40,7 +40,7 @@ END
 
 IDD_ABOUTBOX DIALOGEX 22,16,190,182
 CAPTION "Tentang Manajer Device"
-FONT 8,"Tahoma",0,0
+FONT 8,"MS Shell Dlg",0,0
 STYLE WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
 BEGIN
   LTEXT "Manajer Device v0.1\nHak Cipta (C) 2006\nby Ged Murphy (gedmurphy@gmail.com)", IDC_STATIC, 48, 7, 130, 26

@@ -46,7 +46,7 @@ END
 
 IDD_ABOUTBOX DIALOGEX 22,16,190,182
 CAPTION "Mened¿er urz¹dzeñ - informacje"
-FONT 8,"Tahoma",0,0
+FONT 8,"MS Shell Dlg",0,0
 STYLE WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
 BEGIN
   LTEXT "Mened¿er urz¹dzeñ v0.1\nCopyright (C) 2006\nby Ged Murphy (gedmurphy@gmail.com)", IDC_STATIC, 48, 7, 130, 26

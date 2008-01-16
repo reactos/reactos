@@ -10,7 +10,7 @@ LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
 
 IDD_CHARMAP DIALOGEX 6, 6, 293, 205 //233
 CAPTION "Таблиця символів"
-FONT 8,"MS Sans Serif",0,0
+FONT 8,"MS Shell Dlg",0,0
 STYLE WS_BORDER | WS_VISIBLE | WS_SYSMENU | WS_MINIMIZEBOX
 BEGIN
   LTEXT         "Шрифт :", IDC_STATIC, 6, 7, 24, 9
@@ -27,7 +27,7 @@ END
 
 IDD_ABOUTBOX DIALOGEX 22,16,210,182
 CAPTION "Про Таблицю символів"
-FONT 8,"MS Sans Serif",0,0
+FONT 8,"MS Shell Dlg",0,0
 STYLE WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
 BEGIN
   LTEXT         "Таблиця символів v0.1\nCopyright (C) 2007 Ged Murphy (gedmurphy@reactos.org)", IDC_STATIC, 48, 7, 150, 36
