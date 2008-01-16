@@ -162,19 +162,22 @@ dll\keyboard\kbdus\kbdus.dll                        1
 
 dll\ntdll\ntdll.dll                                 1
 
+dll\win32\acledit\acledit.dll                       1
+dll\win32\aclui\aclui.dll                           1
 dll\win32\advapi32\advapi32.dll                     1
 dll\win32\advpack\advpack.dll                       1
-dll\win32\aclui\aclui.dll                           1
+dll\win32\authz\authz.dll
 dll\win32\avifil32\avifil32.dll                     1
+dll\win32\beepmidi\beepmidi.dll                     1
 dll\win32\browseui\browseui.dll                     1
 dll\win32\cabinet\cabinet.dll                       1
 dll\win32\cards\cards.dll                           1
 dll\win32\cfgmgr32\cfgmgr32.dll                     1
 dll\win32\clusapi\clusapi.dll                       1
-dll\win32\console\console.dll                       1
 dll\win32\comcat\comcat.dll                         1
 dll\win32\comctl32\comctl32.dll                     1
 dll\win32\comdlg32\comdlg32.dll                     1
+dll\win32\console\console.dll                       1
 dll\win32\crtdll\crtdll.dll                         1
 dll\win32\crypt32\crypt32.dll                       1
 dll\win32\cryptdll\cryptdll.dll                     1
@@ -199,10 +202,9 @@ dll\win32\kernel32\kernel32.dll                     1
 dll\win32\lsasrv\lsasrv.dll                         1
 dll\win32\lz32\lz32.dll                             1
 dll\win32\mapi32\mapi32.dll                         1
-dll\win32\winmm\midimap\midimap.dll                 1
-dll\win32\modemui\modemui.dll                       1
 dll\win32\mlang\mlang.dll                           1
 dll\win32\mmdrv\mmdrv.dll                           1
+dll\win32\modemui\modemui.dll                       1
 dll\win32\mpr\mpr.dll                               1
 dll\win32\msacm32\msacm32.dll                       1
 dll\win32\msafd\msafd.dll                           1
@@ -220,16 +222,18 @@ dll\win32\netid\netid.dll                           1
 dll\win32\newdev\newdev.dll                         1
 dll\win32\ntmarta\ntmarta.dll                       1
 dll\win32\objsel\objsel.dll                         1
+dll\win32\odbccp32\odbccp32.dll                     1
 dll\win32\ole32\ole32.dll                           1
 dll\win32\oleacc\oleacc.dll                         1
 dll\win32\oleaut32\oleaut32.dll                     1
 dll\win32\oledlg\oledlg.dll                         1
 dll\win32\olepro32\olepro32.dll                     1
 dll\win32\opengl32\opengl32.dll                     1
-dll\win32\psapi\psapi.dll                           1
 dll\win32\powrprof\powrprof.dll                     1
+dll\win32\psapi\psapi.dll                           1
 dll\win32\rasapi32\rasapi32.dll                     1
 dll\win32\rasdlg\rasdlg.dll                         1
+dll\win32\rasman\rasman.dll                         1
 dll\win32\riched20\riched20.dll                     1
 dll\win32\riched32\riched32.dll                     1
 dll\win32\rpcrt4\rpcrt4.dll                         1
@@ -239,6 +243,7 @@ dll\win32\samlib\samlib.dll                         1
 dll\win32\samsrv\samsrv.dll                         1
 dll\win32\schannel\schannel.dll                     1
 dll\win32\secur32\secur32.dll                       1
+dll\win32\security\security.dll                     1
 dll\win32\sensapi\sensapi.dll                       1
 dll\win32\serialui\serialui.dll                     1
 dll\win32\setupapi\setupapi.dll                     1
@@ -246,9 +251,11 @@ dll\win32\shdocvw\shdocvw.dll                       1
 dll\win32\shell32\shell32.dll                       1
 dll\win32\shfolder\shfolder.dll                     1
 dll\win32\shlwapi\shlwapi.dll                       1
-dll\win32\stdole2.tlb\stdole2.tlb                   1
 dll\win32\smdll\smdll.dll                           1
+dll\win32\snmpapi\snmpapi.dll                       1
+dll\win32\stdole2.tlb\stdole2.tlb                   1
 dll\win32\syssetup\syssetup.dll                     1
+dll\win32\tapiui\tapiui.dll                         1
 dll\win32\twain_32\twain_32.dll                     1
 dll\win32\ufat\ufat.dll                             1
 dll\win32\ufatx\ufatx.dll                           1   optional
@@ -257,11 +264,10 @@ dll\win32\user32\user32.dll                         1
 dll\win32\userenv\userenv.dll                       1
 dll\win32\usp10\usp10.dll                           1
 dll\win32\uxtheme\uxtheme.dll                       1
-dll\win32\version\version.dll                       1
 dll\win32\vdmdbg\vdmdbg.dll                         1
+dll\win32\version\version.dll                       1
 dll\win32\wininet\wininet.dll                       1
 dll\win32\winmm\winmm.dll                           1
-dll\win32\winmm\wavemap\msacm32.drv                 1   optional
 dll\win32\winspool\winspool.drv                     1
 dll\win32\winsta\winsta.dll                         1
 dll\win32\wintrust\wintrust.dll                     1
@@ -271,10 +277,10 @@ dll\win32\ws2help\ws2help.dll                       1
 dll\win32\wshirda\wshirda.dll                       1
 dll\win32\wsock32\wsock32.dll                       1
 dll\win32\wtsapi32\wtsapi32.dll                     1
-dll\win32\beepmidi\beepmidi.dll                     1
 dll\win32\shellext\deskadp\deskadp.dll              1
 dll\win32\shellext\deskmon\deskmon.dll              1
-dll\win32\tapiui\tapiui.dll                         1
+dll\win32\winmm\midimap\midimap.dll                 1
+dll\win32\winmm\wavemap\msacm32.drv                 1   optional
 
 ; Drivers
 drivers\base\bootvid\bootvid.dll                    1
@@ -537,24 +543,44 @@ modules\rosapps\winefile\winefile.exe                                      1   o
 modules\rosapps\winver\winver.exe                                          1   optional
 modules\rosapps\write\write.exe                                            1   optional
 modules\rostests\winetests\advapi32\advapi32_winetest.exe                  7   optional
+modules\rostests\winetests\advpack\advpack_winetest.exe                    7   optional
+modules\rostests\winetests\browseui\browseui_winetest.exe                  7   optional
 modules\rostests\winetests\cabinet\cabinet_winetest.exe                    7   optional
+modules\rostests\winetests\comcat\comcat_winetest.exe                      7   optional
 modules\rostests\winetests\comctl32\comctl32_winetest.exe                  7   optional
+modules\rostests\winetests\comdlg32\comdlg32_winetest.exe                  7   optional
 modules\rostests\winetests\gdi32\gdi32_winetest.exe                        7   optional
+modules\rostests\winetests\hlink\hlink_winetest.exe                        7   optional
 modules\rostests\winetests\icmp\icmp_winetest.exe                          7   optional
 modules\rostests\winetests\kernel32\kernel32_winetest.exe                  7   optional
 modules\rostests\winetests\lz32\lz32_winetest.exe                          7   optional
+modules\rostests\winetests\mapi32\mapi32_winetest.exe                      7   optional
+modules\rostests\winetests\mlang\mlang_winetest.exe                        7   optional
 modules\rostests\winetests\msi\msi_winetest.exe                            7   optional
 modules\rostests\winetests\msvcrt\msvcrt_winetest.exe                      7   optional
+modules\rostests\winetests\netapi32\netapi32_winetest.exe                  7   optional
 modules\rostests\winetests\ntdll\ntdll_winetest.exe                        7   optional
+modules\rostests\winetests\odbccp32\odbccp32_winetest.exe                  7   optional
+modules\rostests\winetests\ole32\ole32_winetest.exe                        7   optional
+modules\rostests\winetests\oleaut32\oleaut32_winetest.exe                  7   optional
 modules\rostests\winetests\powrprof\powrprof_winetest.exe                  7   optional
 modules\rostests\winetests\psapi\psapi_winetest.exe                        7   optional
+modules\rostests\winetests\riched20\riched20_winetest.exe                  7   optional
 modules\rostests\winetests\rpcrt4\rpcrt4_winetest.exe                      7   optional
+modules\rostests\winetests\rsabase\rsabase_winetest.exe                    7   optional
+modules\rostests\winetests\rsaenh\rsaenh_winetest.exe                      7   optional
+modules\rostests\winetests\schannel\schannel_winetest.exe                  7   optional
+modules\rostests\winetests\secur32\secur32_winetest.exe                    7   optional
 modules\rostests\winetests\setupapi\setupapi_winetest.exe                  7   optional
+modules\rostests\winetests\shdocvw\shdocvw_winetest.exe                    7   optional
 modules\rostests\winetests\shell32\shell32_winetest.exe                    7   optional
 modules\rostests\winetests\shlwapi\shlwapi_winetest.exe                    7   optional
+modules\rostests\winetests\urlmon\urlmon_winetest.exe                      7   optional
 modules\rostests\winetests\user32\user32_winetest.exe                      7   optional
 modules\rostests\winetests\usp10\usp10_winetest.exe                        7   optional
+modules\rostests\winetests\uxtheme\uxtheme_winetest.exe                    7   optional
 modules\rostests\winetests\version\version_winetest.exe                    7   optional
+modules\rostests\winetests\wininet\wininet_winetest.exe                    7   optional
 modules\wallpaper\lake.bmp                                                 4   optional
 
 ; Native libraries
