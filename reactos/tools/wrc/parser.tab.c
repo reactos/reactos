@@ -4937,27 +4937,32 @@ static event_t *add_event(int key, int id, int flags, event_t *prev)
 
 static event_t *add_string_event(string_t *key, int id, int flags, event_t *prev)
 {
-	int keycode = 0;
+	int keycode = 0, keysym = 0;
 	event_t *ev = new_event();
 
-	if(key->type != str_char)
-		yyerror("Key code must be an ascii string");
+	if(key->type == str_char)
+		keysym = key->str.cstr[0];
+	else
+		keysym = key->str.wstr[0];
 
-	if((flags & WRC_AF_VIRTKEY) && (!isupper(key->str.cstr[0] & 0xff) && !isdigit(key->str.cstr[0] & 0xff)))
+	if((flags & WRC_AF_VIRTKEY) && (!isupper(keysym & 0xff) && !isdigit(keysym & 0xff)))
 		yyerror("VIRTKEY code is not equal to ascii value");
 
-	if(key->str.cstr[0] == '^' && (flags & WRC_AF_CONTROL) != 0)
+	if(keysym == '^' && (flags & WRC_AF_CONTROL) != 0)
 	{
 		yyerror("Cannot use both '^' and CONTROL modifier");
 	}
-	else if(key->str.cstr[0] == '^')
+	else if(keysym == '^')
 	{
-		keycode = toupper(key->str.cstr[1]) - '@';
+		if(key->type == str_char)
+			keycode = toupper(key->str.cstr[1]) - '@';
+		else
+			keycode = toupper(key->str.wstr[1]) - '@';
 		if(keycode >= ' ')
 			yyerror("Control-code out of range");
 	}
 	else
-		keycode = key->str.cstr[0];
+		keycode = keysym;
 	ev->key = keycode;
 	ev->id = id;
 	ev->flags = flags & ~WRC_AF_ASCII;
