@@ -277,7 +277,7 @@ CAPTION "Location Information"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	CONTROL 302, 302, "STATIC", SS_BITMAP, 10, 10, 88, 155
-	LTEXT "Before you can make any phone or modem connections, Windows needs the following information about your current location.", 2000, 107, 15, 188, 25
+	LTEXT "Before you can make any phone or modem connections, ReactOS needs the following information about your current location.", 2000, 107, 15, 188, 25
 	LTEXT "&What country/region are you in now?", -1, 107, 43, 189, 10
 	COMBOBOX 1006, 107, 55, 180, 200, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
 	LTEXT "What area &code (or city code) are you in now?", -1, 107, 74, 189, 10
@@ -298,7 +298,7 @@ STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
 	CONTROL 302, 302, "STATIC", SS_BITMAP, 0, 0, 88, 155
-	LTEXT "Before you can make any phone or modem connections, Windows needs the following information about your current location.", 2000, 95, 2, 188, 25
+	LTEXT "Before you can make any phone or modem connections, ReactOS needs the following information about your current location.", 2000, 95, 2, 188, 25
 	LTEXT "&What country/region are you in now?", -1, 95, 30, 188, 10
 	COMBOBOX 1006, 95, 41, 177, 68, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
 	LTEXT "What area &code (or city code) are you in now?", -1, 95, 61, 188, 10

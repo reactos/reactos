@@ -1,5 +1,5 @@
 /*
- *      translated by Caemyr - Olaf Siejka (Jan,2008)
+ *      translated by Caemyr - Olaf Siejka (Jan, 2008)
  *      Use ReactOS forum PM or IRC to contact me
  *      http://www.reactos.org
  *      IRC: irc.freenode.net #reactos-pl;
@@ -285,7 +285,7 @@ BEGIN
 	AUTORADIOBUTTON "Tylko &ja", 1622, 29, 139, 225, 11, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
 	AUTORADIOBUTTON "&Ka¿dy kto u¿ywa tego komputera", 1623, 29, 152, 225, 11, BS_LEFT | BS_TOP | BS_MULTILINE
 	CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 10, 167, 247, 1
-	LTEXT "D&ial:", 1412, 10, 177, 90, 8
+	LTEXT "P&o³¹czenie:", 1412, 10, 177, 90, 8
 	COMBOBOX 1416, 102, 173, 154, 112, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | NOT WS_TABSTOP
 	CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 10, 192, 247, 1
 	DEFPUSHBUTTON "Dz&woñ", 1590, 10, 199, 60, 14, WS_GROUP
@@ -309,10 +309,10 @@ BEGIN
 	AUTORADIOBUTTON "Tylko &ja", 1622, 24, 117, 229, 11, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
 	AUTORADIOBUTTON "&Ka¿dy kto u¿ywa tego komputera", 1623, 24, 132, 229, 11, BS_LEFT | BS_TOP | BS_MULTILINE
 	CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 10, 147, 247, 1
-	LTEXT "Dz&woñ:", 1412, 13, 157, 88, 8
+	LTEXT "P&o³¹czenie:", 1412, 13, 157, 88, 8
 	COMBOBOX 1416, 103, 154, 154, 112, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | NOT WS_TABSTOP
 	CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 10, 173, 247, 1
-	DEFPUSHBUTTON "&Dial", 1590, 10, 180, 60, 14, WS_GROUP
+	DEFPUSHBUTTON "&Dzwoñ", 1590, 10, 180, 60, 14, WS_GROUP
 	PUSHBUTTON "Anuluj", 1591, 72, 180, 60, 14
 	PUSHBUTTON "W³&aœciwoœci", 1107, 134, 180, 60, 14
 	PUSHBUTTON "&Help", 1592, 197, 180, 60, 14
@@ -626,12 +626,12 @@ STYLE DS_SETFONT | WS_CHILD | WS_CAPTION
 CAPTION "Bezpieczeñstwo"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	GROUPBOX "Opcje bezpieczeñstwa", 1580, 8, 3, 215, 139
+	GROUPBOX "Ustawienia bezpieczeñstwa", 1580, 8, 3, 215, 139
 	AUTORADIOBUTTON "&Typowe (ustawienia zalecane)", 1540, 14, 16, 201, 9, BS_NOTIFY | WS_GROUP
 	AUTORADIOBUTTON "&Zaawansowane (ustawienia w³asne)", 1541, 14, 102, 198, 8, BS_NOTIFY
 	LTEXT "&Uwiarygodnij moj¹ to¿samoœæ za pomoc¹:", 1537, 26, 29, 187, 8, NOT WS_GROUP
 	COMBOBOX 1178, 26, 40, 184, 78, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | NOT WS_TABSTOP
-	AUTOCHECKBOX "&Automagicznie mojej nazwy u¿ytkownika i has³a z ReactOS (domeny te¿ o ile istniej)", 1174, 26, 58, 184, 20, BS_TOP | BS_MULTILINE
+	AUTOCHECKBOX "&Automagicznie u¿yj mojej nazwy u¿ytkownika i has³a z ReactOS (domeny te¿ o ile istniej)", 1174, 26, 58, 184, 20, BS_TOP | BS_MULTILINE
 	AUTOCHECKBOX "&Wymagaj szyfrowania danych (roz³¹cz siê w razie braku)", 1169, 26, 82, 183, 10, BS_TOP | BS_MULTILINE
 	LTEXT "Zmiana tych ustawieñ wymaga wiedzy o protoko³ach bezpieczeñstwa.", 1539, 15, 114, 134, 20
 	PUSHBUTTON "&Ustawienia", 1180, 151, 115, 60, 14
@@ -960,15 +960,15 @@ END
 
 532 DIALOGEX 0, 0, 263, 263
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Router Callback"
+CAPTION "Oddzwanianie z routera"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT "When you dial into a router, it may offer to call you back to reduce your phone charges or to increase security.  Specify whether you want callback or not.", 1043, 7, 5, 253, 24
-	AUTORADIOBUTTON "&No callback", 1501, 9, 36, 252, 10, BS_TOP | BS_MULTILINE | WS_GROUP
-	AUTORADIOBUTTON "Al&ways call me back at the number(s) below:", 1502, 9, 48, 252, 10, BS_TOP | BS_MULTILINE, WS_EX_TRANSPARENT
+	LTEXT "Niektóre routery oferuj¹ opcjê oddzwaniania, co mo¿e zmniejszyæ twój rachunek telefoniczny a tak¿e zwiêkszyæ bezpieczeñstwo. Zadecyduj czy chcesz korzystaæ z tej opcji.", 1043, 7, 5, 253, 24
+	AUTORADIOBUTTON "&Bez oddzwaniania", 1501, 9, 36, 252, 10, BS_TOP | BS_MULTILINE | WS_GROUP
+	AUTORADIOBUTTON "&Zawsze oddzwaniaj na numery z listy poni¿ej:", 1502, 9, 48, 252, 10, BS_TOP | BS_MULTILINE, WS_EX_TRANSPARENT
 	CONTROL "", 1503, "SYSLISTVIEW32", WS_BORDER | WS_GROUP | WS_TABSTOP | 0x00008401, 15, 63, 240, 143
-	PUSHBUTTON "&Edit...", 1504, 131, 213, 60, 14
-	PUSHBUTTON "&Delete", 1505, 194, 213, 60, 14
+	PUSHBUTTON "&Edytuj", 1504, 131, 213, 60, 14
+	PUSHBUTTON "&Skasuj", 1505, 194, 213, 60, 14
 	CONTROL "", -1, "STATIC", SS_ETCHEDHORZ, 7, 233, 249, 1
 	DEFPUSHBUTTON "OK", 1, 132, 242, 60, 14
 	PUSHBUTTON "Anuluj", 2, 196, 242, 60, 14
@@ -976,98 +976,98 @@ END
 
 534 DIALOG 0, 0, 230, 215
 STYLE DS_SETFONT | WS_CHILD | WS_CAPTION
-CAPTION "Options"
+CAPTION "Opcje"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	GROUPBOX "Connection type", 1289, 7, 7, 215, 55
-	AUTORADIOBUTTON "&Demand dial", 1506, 16, 20, 199, 9, BS_TOP | BS_MULTILINE | WS_GROUP | NOT WS_TABSTOP
-	LTEXT "Idle ti&me before hanging up:", 1299, 27, 33, 99, 8, NOT WS_GROUP
+	GROUPBOX "Rodzaj po³¹czenia", 1289, 7, 7, 215, 55
+	AUTORADIOBUTTON "&£¹czenie automatyczne", 1506, 16, 20, 199, 9, BS_TOP | BS_MULTILINE | WS_GROUP | NOT WS_TABSTOP
+	LTEXT "&Czas bezczynnoœci przed roz³¹czeniem:", 1299, 27, 33, 99, 8, NOT WS_GROUP
 	COMBOBOX 1291, 144, 30, 70, 108, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
-	AUTORADIOBUTTON "&Persistent connection", 1507, 16, 47, 197, 9, BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
-	GROUPBOX "Dialing policy", 1290, 7, 66, 215, 48
-	LTEXT "&Redial attempts:", 1300, 14, 79, 123, 8
+	AUTORADIOBUTTON "&Po³¹czenie trwa³e", 1507, 16, 47, 197, 9, BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
+	GROUPBOX "Ustawienia po³¹czeñ", 1290, 7, 66, 215, 48
+	LTEXT "P&rób ³¹czenia:", 1300, 14, 79, 123, 8
 	EDITTEXT 1287, 143, 76, 70, 14, ES_AUTOHSCROLL | ES_NUMBER
-	LTEXT "A&verage redial intervals:", 1301, 14, 96, 123, 8
+	LTEXT "Œrednie przer&wy pomiêdzy po³¹czeniami:", 1301, 14, 96, 123, 8
 	COMBOBOX 1292, 143, 94, 70, 123, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
-	GROUPBOX "Multiple devices", 1288, 7, 116, 215, 35
+	GROUPBOX "Kilka modemów", 1288, 7, 116, 215, 35
 	COMBOBOX 1551, 16, 130, 128, 41, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
-	PUSHBUTTON "C&onfigure...", 1293, 150, 129, 65, 14
-	PUSHBUTTON "Call&back", 1302, 8, 195, 60, 14
+	PUSHBUTTON "&Konfiguruj...", 1293, 150, 129, 65, 14
+	PUSHBUTTON "&Oddzwanianie", 1302, 8, 195, 60, 14
 	PUSHBUTTON "&X.25", 1295, 73, 195, 50, 14
 END
 
 539 DIALOG 0, 0, 265, 110
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Connect %1"
+CAPTION "Po³¹cz z %1"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	CONTROL 1678, 1100, "STATIC", SS_BITMAP, 0, 0, 265, 50
-	LTEXT "&User name:", 1413, 14, 64, 84, 8
+	LTEXT "&Nazwa u¿ytkownika:", 1413, 14, 64, 84, 8
 	EDITTEXT 1104, 102, 62, 154, 14, ES_AUTOHSCROLL
 	CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 9, 82, 247, 1
-	DEFPUSHBUTTON "&Dial", 1590, 8, 89, 60, 14
+	DEFPUSHBUTTON "&Dzwoñ", 1590, 8, 89, 60, 14
 	PUSHBUTTON "Anuluj", 1591, 71, 89, 60, 14
-	PUSHBUTTON "Pr&operties", 1107, 133, 89, 60, 14
-	PUSHBUTTON "&Help", 1592, 195, 89, 60, 14
+	PUSHBUTTON "&W³aœciwoœci", 1107, 133, 89, 60, 14
+	PUSHBUTTON "&Pomoc", 1592, 195, 89, 60, 14
 END
 
 540 DIALOG 0, 0, 265, 133
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Connect %1"
+CAPTION "Po³¹cz z %1"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	CONTROL 1678, 1100, "STATIC", SS_BITMAP, 0, 0, 265, 50
-	LTEXT "&User name:", 1413, 10, 64, 90, 8
+	LTEXT "&Nazwa u¿ytkownika:", 1413, 10, 64, 90, 8
 	EDITTEXT 1104, 105, 60, 154, 14, ES_AUTOHSCROLL
 	CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 7, 80, 252, 1
-	LTEXT "D&ial:", 1412, 10, 91, 92, 10
+	LTEXT "£¹&czenie:", 1412, 10, 91, 92, 10
 	COMBOBOX 1416, 105, 88, 154, 112, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | NOT WS_TABSTOP
 	CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 7, 107, 251, 1
-	DEFPUSHBUTTON "&Dial", 1590, 8, 113, 60, 14
+	DEFPUSHBUTTON "&Dzwoñ", 1590, 8, 113, 60, 14
 	PUSHBUTTON "Anuluj", 1591, 71, 113, 60, 14
-	PUSHBUTTON "Pr&operties", 1107, 134, 113, 60, 14
-	PUSHBUTTON "&Help", 1592, 197, 113, 60, 14
+	PUSHBUTTON "&W³aœciwoœci", 1107, 134, 113, 60, 14
+	PUSHBUTTON "&Pomoc", 1592, 197, 113, 60, 14
 END
 
 541 DIALOG 0, 0, 265, 157
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Connect %1"
+CAPTION "Po³¹cz z %1"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	CONTROL 1678, 1100, "STATIC", SS_BITMAP, 0, 0, 265, 50
-	LTEXT "&User name:", 1413, 12, 67, 87, 8
+	LTEXT "N&azwa u¿ytkownika:", 1413, 12, 67, 87, 8
 	EDITTEXT 1104, 103, 63, 154, 14, ES_AUTOHSCROLL
 	CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 9, 84, 248, 1
-	LTEXT "D&ial:", 1412, 11, 96, 48, 8
+	LTEXT "£¹&czenie:", 1412, 11, 96, 48, 8
 	COMBOBOX 1416, 103, 92, 154, 112, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | NOT WS_TABSTOP
-	LTEXT "Dialing &from:", 1415, 10, 114, 46, 8
+	LTEXT "£¹cze&nie za pomoc¹:", 1415, 10, 114, 46, 8
 	COMBOBOX 1414, 102, 110, 87, 112, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | NOT WS_TABSTOP
-	PUSHBUTTON "Dialing &Rules", 1108, 193, 110, 64, 14
+	PUSHBUTTON "&Ustawienia po³¹czeñ", 1108, 193, 110, 64, 14
 	CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 7, 130, 250, 1
-	DEFPUSHBUTTON "&Dial", 1590, 6, 136, 60, 14
+	DEFPUSHBUTTON "£¹c&z", 1590, 6, 136, 60, 14
 	PUSHBUTTON "Anuluj", 1591, 69, 136, 60, 14
-	PUSHBUTTON "Pr&operties", 1107, 132, 136, 60, 14
-	PUSHBUTTON "&Help", 1592, 196, 136, 60, 14
+	PUSHBUTTON "&W³aœciwoœci", 1107, 132, 136, 60, 14
+	PUSHBUTTON "&Pomoc", 1592, 196, 136, 60, 14
 END
 
 544 DIALOG 0, 0, 317, 143
 STYLE DS_SETFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "New Connection Wizard"
+CAPTION "Kreator konfiguracji po³¹czenia"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT "Internet Connection Sharing allows other computers on your local network to access external resources through this connection.", -1, 10, 5, 300, 22
-	AUTOCHECKBOX "&Enable Internet Connection Sharing for this connection", 1512, 21, 31, 272, 10
-	LTEXT "To dial this connection automatically  when a computer on your local network attempts to access external resources, select the following check box.", 1514, 10, 56, 294, 22
-	AUTOCHECKBOX "Enab&le on-demand dialing", 1513, 21, 86, 260, 10
+	LTEXT "Wspó³dzielenie £¹cza Internetowego umo¿liwia innym komputerom w twojej sieci lokalnej na korzystanie z zasobów zdalnych za pomoc¹ tego po³¹czenia.", -1, 10, 5, 300, 22
+	AUTOCHECKBOX "&W³¹cz Wspó³dzielenie £¹cza Internetowego dla tego po³¹czenia", 1512, 21, 31, 272, 10
+	LTEXT "Aby automatycznie nawi¹zaæ po³¹czenie, gdy komputer w twojej sieci lokalnej spróbuje uzyskaæ dostêp do zasobów zdalnych, zaznacz opcjê Po³¹czenia Automatyczne.", 1514, 10, 56, 294, 22
+	AUTOCHECKBOX "W³¹&cz Po³¹czenia Automatyczne", 1513, 21, 86, 260, 10
 END
 
 545 DIALOG 0, 0, 317, 143
 STYLE DS_SETFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "New Connection Wizard"
+CAPTION "Kreator konfiguracji po³¹czenia"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT "Shared access allows other computers on your local network to access external resources through this dial-up connection. You can enable shared access for one connection and one local network at a time.", -1, 10, 5, 300, 25
-	LTEXT "&Select the local network that will access resources through this connection:", -1, 21, 35, 285, 8
+	LTEXT "Dostêp Wspó³dzielony umo¿liwia komputerom w twojej sieci lokalnej na korzystanie z zasobów zdalnych za pomoc¹ tego po³¹czenia dial-up. Mo¿esz w³¹czyæ Dostêp Wspó³dzielony dla jednego po³¹czenia i jednej sieci w tym samym czasie.", -1, 10, 5, 300, 25
+	LTEXT "&Wybierz sieæ lokaln¹, która uzyska dostêp do zasobów zdalnych za pomoc¹ tego po³¹czenia:", -1, 21, 35, 285, 8
 	COMBOBOX 1522, 21, 48, 231, 56, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | NOT WS_TABSTOP
 END
 
@@ -1075,143 +1075,143 @@ END
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT "You can configure this connection to use your smart card to log you into the remote network.  Select whether to use your smart card with this connection.", -1, 10, 5, 303, 22
-	AUTORADIOBUTTON "&Use my smart card ", 1524, 26, 29, 264, 12, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP | NOT WS_TABSTOP
-	AUTORADIOBUTTON "&Do not use my smart card ", 1525, 26, 44, 261, 16, BS_LEFT | BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
+	LTEXT "Mo¿esz skonfigurowaæ to po³¹czenie tak, by korzysta³o ze smart card przy logowaniu do sieci zdalnej. Wybierz czy chcesz korzystaæ ze smart card z tym po³¹czeniem.", -1, 10, 5, 303, 22
+	AUTORADIOBUTTON "&U¿yj smart card ", 1524, 26, 29, 264, 12, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP | NOT WS_TABSTOP
+	AUTORADIOBUTTON "&Nie u¿ywaj smart card ", 1525, 26, 44, 261, 16, BS_LEFT | BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
 END
 
 547 DIALOG 0, 0, 317, 143
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
-CAPTION "Demand Dial Interface Wizard"
+CAPTION "Kreator Po³¹czeñ Automatycznych"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT "Welcome to the Demand Dial Interface Wizard.", 1530, 122, 8, 192, 32
-	LTEXT "Using this wizard you can create a demand dial interface to connect this router to other routers.", 1531, 122, 43, 192, 37
-	LTEXT "Press Next to continue.", 1532, 122, 85, 191, 29
+	LTEXT "Witamy w Kreatorze Po³¹czeñ Automatycznych.", 1530, 122, 8, 192, 32
+	LTEXT "Za pomoc¹ tego Kreatora mo¿esz stworzyæ interface Po³¹czeñ Automatycznych, w celu po³¹czenia tego routera z innymi.", 1531, 122, 43, 192, 37
+	LTEXT "Naciœnij Dalej aby kontynuowaæ.", 1532, 122, 85, 191, 29
 END
 
 548 DIALOG 0, 0, 317, 143
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
-	AUTORADIOBUTTON "Connect using a &modem, ISDN adapter, or other physical device.", 1531, 21, 17, 290, 15, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP | NOT WS_TABSTOP
-	AUTORADIOBUTTON "Connect using &virtual private networking (VPN)", 1532, 21, 38, 291, 15, BS_LEFT | BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
-	AUTORADIOBUTTON "Connect using PPP over Ethernet (PPPoE)", 1688, 21, 58, 290, 12, NOT WS_TABSTOP
+	AUTORADIOBUTTON "Po³¹cz za pomoc¹ &modemu, adaptera ISDN, lub innego urz¹dzenia.", 1531, 21, 17, 290, 15, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP | NOT WS_TABSTOP
+	AUTORADIOBUTTON "Po³¹cz za pomoc¹ &Wirtualnych Sieci Prywatnych (VPN)", 1532, 21, 38, 291, 15, BS_LEFT | BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
+	AUTORADIOBUTTON "Po³¹cz za pomoc¹ PPP over Ethernet (PPPoE)", 1688, 21, 58, 290, 12, NOT WS_TABSTOP
 END
 
 550 DIALOG 0, 0, 317, 143
 STYLE DS_SETFONT | DS_MODALFRAME | WS_CHILD | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT "Enter the name or IP address of the router to which you are connecting.", 1535, 10, 8, 289, 18
-	LTEXT "&Host name or IP address (such as reactos.org or 145.52.0.1):", 1537, 21, 35, 285, 8
+	LTEXT "WprowadŸ nazwê albo adres IP routera, z którym siê chcesz po³¹czyæ.", 1535, 10, 8, 289, 18
+	LTEXT "&Nazwa hosta albo adres IP (na przyk³ad: reactos.org albo 145.52.0.1):", 1537, 21, 35, 285, 8
 	EDITTEXT 1536, 21, 47, 285, 14, ES_AUTOHSCROLL
 END
 
 551 DIALOG 0, 0, 265, 127
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Connect %1"
+CAPTION "Po³¹cz z %1"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	CONTROL 1678, 1100, "STATIC", SS_BITMAP, 0, 0, 265, 50
-	LTEXT "&User name:", 1413, 12, 62, 89, 8
+	LTEXT "&Nazwa u¿ytkownika:", 1413, 12, 62, 89, 8
 	EDITTEXT 1104, 104, 58, 154, 14, ES_AUTOHSCROLL
-	LTEXT "Do&main:", 1110, 12, 82, 90, 8
+	LTEXT "&Domena:", 1110, 12, 82, 90, 8
 	EDITTEXT 1102, 104, 79, 154, 14, ES_UPPERCASE | ES_AUTOHSCROLL
 	CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 10, 99, 248, 1
-	DEFPUSHBUTTON "&Dial", 1590, 9, 106, 61, 14
+	DEFPUSHBUTTON "D&zwoñ", 1590, 9, 106, 61, 14
 	PUSHBUTTON "Anuluj", 1591, 72, 106, 60, 14
-	PUSHBUTTON "Pr&operties", 1107, 135, 106, 60, 14
-	PUSHBUTTON "&Help", 1592, 198, 106, 60, 14
+	PUSHBUTTON "&W³aœciwoœci", 1107, 135, 106, 60, 14
+	PUSHBUTTON "&Pomoc", 1592, 198, 106, 60, 14
 END
 
 552 DIALOG 0, 0, 265, 159
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Connect %1"
+CAPTION "Po³¹cz z %1"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	CONTROL 1678, 1100, "STATIC", SS_BITMAP, 0, 0, 265, 50
-	LTEXT "&User name:", 1413, 10, 67, 91, 10
+	LTEXT "&Nazwa u¿ytkownika:", 1413, 10, 67, 91, 10
 	EDITTEXT 1104, 104, 64, 154, 14, ES_AUTOHSCROLL
-	LTEXT "Do&main:", 1110, 11, 86, 91, 8
+	LTEXT "&Domena:", 1110, 11, 86, 91, 8
 	EDITTEXT 1102, 104, 83, 154, 14, ES_UPPERCASE | ES_AUTOHSCROLL
 	CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 10, 103, 248, 1
-	LTEXT "D&ial:", 1412, 10, 115, 91, 8
+	LTEXT "P&o³¹czenie", 1412, 10, 115, 91, 8
 	COMBOBOX 1416, 104, 111, 154, 112, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | NOT WS_TABSTOP
 	CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 10, 132, 248, 1
-	DEFPUSHBUTTON "&Dial", 1590, 8, 139, 60, 14
+	DEFPUSHBUTTON "D&zwoñ", 1590, 8, 139, 60, 14
 	PUSHBUTTON "Anuluj", 1591, 71, 139, 60, 14
-	PUSHBUTTON "Pr&operties", 1107, 134, 139, 60, 14
-	PUSHBUTTON "&Help", 1592, 198, 139, 60, 14
+	PUSHBUTTON "&W³aœciwoœci", 1107, 134, 139, 60, 14
+	PUSHBUTTON "&Pomoc", 1592, 198, 139, 60, 14
 END
 
 553 DIALOG 0, 0, 265, 183
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Connect %1"
+CAPTION "Po³¹cz z %1"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	CONTROL 1678, 1100, "STATIC", SS_BITMAP, 0, 0, 265, 50
-	LTEXT "&User name:", 1413, 10, 68, 92, 10
+	LTEXT "N&azwa u¿ytkownika:", 1413, 10, 68, 92, 10
 	EDITTEXT 1104, 104, 65, 154, 14, ES_AUTOHSCROLL
-	LTEXT "Do&main:", 1110, 10, 90, 91, 8
+	LTEXT "&Domena:", 1110, 10, 90, 91, 8
 	EDITTEXT 1102, 104, 86, 154, 14, ES_UPPERCASE | ES_AUTOHSCROLL
 	CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 10, 106, 248, 1
-	LTEXT "D&ial:", 1412, 10, 118, 92, 8
+	LTEXT "P&o³¹czenie:", 1412, 10, 118, 92, 8
 	COMBOBOX 1416, 104, 114, 154, 112, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | NOT WS_TABSTOP
-	LTEXT "Dialing &from:", 1415, 10, 137, 91, 8
+	LTEXT "£¹cze&nie za pomoc¹:", 1415, 10, 137, 91, 8
 	COMBOBOX 1414, 104, 134, 87, 112, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | NOT WS_TABSTOP
-	PUSHBUTTON "Dialing &Rules", 1108, 194, 134, 65, 14
+	PUSHBUTTON "&Ustawienia po³¹czeñ", 1108, 194, 134, 65, 14
 	CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 10, 154, 248, 1
-	DEFPUSHBUTTON "&Dial", 1590, 8, 162, 60, 14
+	DEFPUSHBUTTON "£¹&cz", 1590, 8, 162, 60, 14
 	PUSHBUTTON "Anuluj", 1591, 71, 162, 60, 14
-	PUSHBUTTON "Pr&operties", 1107, 134, 162, 60, 14
-	PUSHBUTTON "&Help", 1592, 198, 162, 60, 14
+	PUSHBUTTON "&W³aœciwoœci", 1107, 134, 162, 60, 14
+	PUSHBUTTON "&Pomoc", 1592, 198, 162, 60, 14
 END
 
 554 DIALOGEX 0, 0, 230, 215
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
-CAPTION "General"
+CAPTION "Ogólne"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT "Connec&t using:", 1124, 7, 4, 193, 8
+	LTEXT "&Po³¹cz za pomoc¹:", 1124, 7, 4, 193, 8
 	CONTROL "", 1128, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x00004C0D, 7, 17, 195, 44, WS_EX_CLIENTEDGE
-	PUSHBUTTON "&Up", 1132, 208, 18, 16, 14, BS_ICON
-	PUSHBUTTON "&Down", 1131, 208, 36, 16, 14, BS_ICON
-	AUTOCHECKBOX "A&ll devices call the same numbers", 1119, 7, 65, 131, 21, BS_TOP | BS_MULTILINE
-	PUSHBUTTON "C&onfigure...", 1130, 140, 66, 60, 14
-	GROUPBOX "Sample type", 1125, 7, 87, 213, 56, WS_GROUP
-	LTEXT "&Phone number:", 1135, 19, 102, 191, 8
+	PUSHBUTTON "&Góra", 1132, 208, 18, 16, 14, BS_ICON
+	PUSHBUTTON "&Dó³", 1131, 208, 36, 16, 14, BS_ICON
+	AUTOCHECKBOX "&Wszystkie urz¹dzenia wybieraj¹ te same numery", 1119, 7, 65, 131, 21, BS_TOP | BS_MULTILINE
+	PUSHBUTTON "&Konfiguruj", 1130, 140, 66, 60, 14
+	GROUPBOX "Przyk³ad", 1125, 7, 87, 213, 56, WS_GROUP
+	LTEXT "&Numer telefonu:", 1135, 19, 102, 191, 8
 	EDITTEXT 1123, 17, 112, 138, 14, ES_AUTOHSCROLL
-	PUSHBUTTON "Alter&nates", 1129, 161, 112, 50, 14
-	AUTOCHECKBOX "Sho&w icon in notification area when connected", 1120, 11, 194, 212, 20, BS_TOP | BS_MULTILINE
+	PUSHBUTTON "P&ozosta³e", 1129, 161, 112, 50, 14
+	AUTOCHECKBOX "Po&ka¿ ikonê w zasobniku systemowym podczas trwania po³¹czenia", 1120, 11, 194, 212, 20, BS_TOP | BS_MULTILINE
 END
 
 555 DIALOG 0, 0, 230, 215
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
-CAPTION "General"
+CAPTION "Ogólne"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	PUSHBUTTON "C&onfigure...", 1130, 160, 38, 60, 14
-	LTEXT "&Phone number:", 1135, 8, 72, 194, 8
+	PUSHBUTTON "&Konfiguruj", 1130, 160, 38, 60, 14
+	LTEXT "&Numer telefonu:", 1135, 8, 72, 194, 8
 	EDITTEXT 1123, 8, 83, 148, 14, ES_AUTOHSCROLL
-	PUSHBUTTON "Alter&nates", 1129, 160, 83, 60, 14
-	AUTOCHECKBOX "Sho&w icon in notification area when connected", 1120, 11, 194, 213, 10, BS_TOP | BS_MULTILINE
-	LTEXT "Connec&t using:", 1124, 8, 5, 214, 8
+	PUSHBUTTON "P&ozosta³e", 1129, 160, 83, 60, 14
+	AUTOCHECKBOX "Po&ka¿ ikonê w zasobniku systemowym podczas trwania po³¹czenia", 1120, 11, 194, 213, 10, BS_TOP | BS_MULTILINE
+	LTEXT "&Po³¹cz za pomoc¹:", 1124, 8, 5, 214, 8
 	CONTROL "", 1127, "SYSLISTVIEW32", WS_DISABLED | WS_BORDER | 0x0000EC0D, 7, 18, 214, 15
 END
 
 556 DIALOG 0, 0, 220, 165
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Program Settings"
+CAPTION "Ustawienia Aplikacji"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT "&Description of program running on your network:", -1, 7, 5, 203, 8
+	LTEXT "&Opis aplikacji dzia³aj¹cej w twojej sieci lokalnej:", -1, 7, 5, 203, 8
 	EDITTEXT 1565, 7, 17, 206, 14, ES_AUTOHSCROLL
-	LTEXT "&Internet server port number:", -1, 7, 35, 202, 8
+	LTEXT "&Numer portu serwera:", -1, 7, 35, 202, 8
 	EDITTEXT 1566, 7, 47, 113, 14, ES_AUTOHSCROLL | ES_NUMBER
 	AUTORADIOBUTTON "&TCP", 1548, 128, 49, 30, 10, NOT WS_TABSTOP
 	AUTORADIOBUTTON "&UDP", 1567, 166, 49, 31, 10, NOT WS_TABSTOP
-	LTEXT "&Listen for Internet server responses on port or port range:\n(for example: 1024-1209, 1300-1310, 1450)", -1, 7, 70, 207, 22
+	LTEXT "&Nas³uchuj na odpowiedzi serwera na porcie lub przedziale portów:\n(na przyk³ad: 1024-1209, 1300-1310, 1450)", -1, 7, 70, 207, 22
 	LTEXT "T&CP:", -1, 7, 100, 28, 8
 	EDITTEXT 1569, 50, 97, 162, 14, ES_AUTOHSCROLL
 	LTEXT "UD&P:", -1, 7, 121, 30, 8
@@ -1222,14 +1222,14 @@ END
 
 557 DIALOG 0, 0, 217, 164
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Service Settings"
+CAPTION "Ustawienia Us³ug"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT "&Description of service:", -1, 7, 5, 203, 8
+	LTEXT "&Opis us³ugi:", -1, 7, 5, 203, 8
 	EDITTEXT 1552, 7, 18, 205, 14, ES_AUTOHSCROLL
-	LTEXT "&Name or IP address (for example 192.168.0.12) of the computer hosting this service on your network:", -1, 7, 37, 208, 16
+	LTEXT "&Nazwa hosta albo adres IP (na przyk³ad 192.168.0.12) komputera, na którym us³uga jest uruchomiona:", -1, 7, 37, 208, 16
 	EDITTEXT 1556, 7, 57, 203, 14, ES_AUTOHSCROLL
-	LTEXT "&Port number where this service resides:", -1, 7, 85, 203, 8
+	LTEXT "&Numer portu przydzielony tej us³udze:", -1, 7, 85, 203, 8
 	EDITTEXT 1553, 7, 97, 113, 14, ES_AUTOHSCROLL | ES_NUMBER
 	AUTORADIOBUTTON "&TCP", 1554, 128, 99, 30, 10, NOT WS_TABSTOP
 	AUTORADIOBUTTON "&UDP", 1555, 166, 99, 31, 10, NOT WS_TABSTOP
@@ -1239,48 +1239,48 @@ END
 
 558 DIALOGEX 0, 0, 230, 215
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Programs"
+CAPTION "Programy"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT "The Internet connection on this computer has been customized to allow the following programs to run properly over your network:", -1, 7, 7, 218, 28
+	LTEXT "Po³¹czenie internetowe na tym komputerze zosta³o ustawione tak, by umo¿liwiæ nastêpuj¹cym programom dostêp do sieci:", -1, 7, 7, 218, 28
 	CONTROL "List1", 1558, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000441D, 7, 37, 215, 155, WS_EX_CLIENTEDGE
-	PUSHBUTTON "A&dd...", 1538, 7, 197, 67, 14
-	PUSHBUTTON "Edi&t...", 1559, 80, 197, 67, 14
-	PUSHBUTTON "D&elete", 1568, 153, 197, 67, 14
+	PUSHBUTTON "&Dodaj", 1538, 7, 197, 67, 14
+	PUSHBUTTON "&Edytuj", 1559, 80, 197, 67, 14
+	PUSHBUTTON "&Skasuj", 1568, 153, 197, 67, 14
 END
 
 559 DIALOGEX 0, 0, 230, 215
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Services"
+CAPTION "Us³ugi"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT "&Select the services running on your network that Internet users can access.", -1, 7, 5, 216, 22
-	LTEXT "Services:", -1, 7, 27, 143, 8
+	LTEXT "&Wybierz us³ugi, dzia³aj¹ce w twojej sieci, które chcesz udostêpniæ u¿ytkownikom przez Internet.", -1, 7, 5, 216, 22
+	LTEXT "Us³ugi:", -1, 7, 27, 143, 8
 	CONTROL "List1", 1560, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000441D, 7, 37, 215, 155, WS_EX_CLIENTEDGE
-	PUSHBUTTON "A&dd...", 1561, 7, 197, 67, 14
-	PUSHBUTTON "Edi&t...", 1563, 80, 197, 67, 14
-	PUSHBUTTON "D&elete", 1562, 153, 197, 67, 14
+	PUSHBUTTON "&Dodaj", 1561, 7, 197, 67, 14
+	PUSHBUTTON "&Edytuj", 1563, 80, 197, 67, 14
+	PUSHBUTTON "&Skasuj", 1562, 153, 197, 67, 14
 END
 
 560 DIALOG 6, 18, 240, 88
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "Initial Connection"
+CAPTION "Po³¹czenie Wstêpne"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	DEFPUSHBUTTON "&Yes", 6, 68, 68, 50, 14
-	PUSHBUTTON "&No", 7, 125, 68, 50, 14
+	DEFPUSHBUTTON "&Tak", 6, 68, 68, 50, 14
+	PUSHBUTTON "&Nie", 7, 125, 68, 50, 14
 	ICON 32516, 1575, 7, 7, 20, 20
 	LTEXT "", 1576, 40, 7, 190, 33
-	AUTOCHECKBOX "&Don't display this reminder again", 1579, 40, 48, 192, 11, BS_TOP | BS_MULTILINE
+	AUTOCHECKBOX "&Nie wyœwietlaj wiêcej tego komunikatu", 1579, 40, 48, 192, 11, BS_TOP | BS_MULTILINE
 END
 
 567 DIALOG 0, 0, 317, 143
 STYLE DS_SETFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "New Connection Wizard"
+CAPTION "Kreator konfiguracji po³¹czenia"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT "Type the name of your service in the following text box. If you leave the text box blank, ReactOS will automatically detect and configure your service when you connect.", -1, 10, 7, 301, 25
-	LTEXT "&Service name (optional):", -1, 22, 32, 229, 8
+	LTEXT "WprowadŸ nazwê us³ugi w pole poni¿ej. Jeœli zostawisz je puste, ReactOS automagicznie wykryje i skonfiguruje t¹ us³ugê podczas ³¹czenia.", -1, 10, 7, 301, 25
+	LTEXT "&Nazwa Us³ugi (opcjonalnie):", -1, 22, 32, 229, 8
 	EDITTEXT 1593, 22, 44, 275, 14, ES_AUTOHSCROLL
 END
 
@@ -1296,53 +1296,53 @@ END
 
 569 DIALOG 0, 0, 230, 215
 STYLE DS_SETFONT | WS_CHILD | WS_CAPTION
-CAPTION "Security"
+CAPTION "Bezpieczeñstwo"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	GROUPBOX "Security options", 1580, 8, 4, 213, 151
-	AUTORADIOBUTTON "&Typical (recommended settings)", 1540, 14, 16, 197, 9, BS_NOTIFY | WS_GROUP
-	AUTORADIOBUTTON "A&dvanced (custom settings)", 1541, 14, 100, 197, 8, BS_NOTIFY
-	LTEXT "&Validate my identity as follows:", 1537, 26, 29, 183, 8, NOT WS_GROUP
+	GROUPBOX "Ustawienia bezpieczeñstwa", 1580, 8, 4, 213, 151
+	AUTORADIOBUTTON "&Typowe (ustawienia zalecane)", 1540, 14, 16, 197, 9, BS_NOTIFY | WS_GROUP
+	AUTORADIOBUTTON "&Zaawansowane (ustawienia w³asne)", 1541, 14, 100, 197, 8, BS_NOTIFY
+	LTEXT "&Uwiarygodnij moj¹ to¿samoœæ za pomoc¹:", 1537, 26, 29, 183, 8, NOT WS_GROUP
 	COMBOBOX 1178, 26, 40, 184, 78, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | NOT WS_TABSTOP
-	AUTOCHECKBOX "A&utomatically use my ReactOS logon name and  password (and domain if any)", 1174, 26, 59, 182, 20, BS_TOP | BS_MULTILINE
-	AUTOCHECKBOX "Requ&ire data encryption (disconnect if none)", 1169, 26, 83, 182, 10, BS_TOP | BS_MULTILINE
-	LTEXT "Using these settings requires a knowledge of security protocols.", 1539, 26, 111, 136, 20
-	PUSHBUTTON "&Settings...", 1180, 151, 134, 60, 14
-	PUSHBUTTON "I&PSec Settings...", 1598, 126, 163, 85, 14
+	AUTOCHECKBOX "&Automagicznie u¿yj mojej nazwy u¿ytkownika i has³a z ReactOS (domeny te¿ o ile istniej)", 1174, 26, 59, 182, 20, BS_TOP | BS_MULTILINE
+	AUTOCHECKBOX "&Wymagaj szyfrowania danych (roz³¹cz siê w razie braku)", 1169, 26, 83, 182, 10, BS_TOP | BS_MULTILINE
+	LTEXT "Zmiana tych ustawieñ wymaga wiedzy o protoko³ach bezpieczeñstwa.", 1539, 26, 111, 136, 20
+	PUSHBUTTON "&Ustawienia", 1180, 151, 134, 60, 14
+	PUSHBUTTON "Ustawienia &IPSec", 1598, 126, 163, 85, 14
 END
 
 570 DIALOG 0, 0, 265, 126
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "IPSec Settings"
+CAPTION "Ustawienia IPSec"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	DEFPUSHBUTTON "OK", 1, 151, 104, 50, 14
 	PUSHBUTTON "Anuluj", 2, 207, 104, 50, 14
-	AUTOCHECKBOX "&Use pre-shared key for authentication", 1604, 21, 15, 217, 10
-	LTEXT "&Key:", 1602, 20, 31, 44, 12
+	AUTOCHECKBOX "&U¿yj klucza pre-shared do uwierzytelniania", 1604, 21, 15, 217, 10
+	LTEXT "&Klucz:", 1602, 20, 31, 44, 12
 	EDITTEXT 1605, 66, 30, 172, 12, ES_AUTOHSCROLL
-	AUTOCHECKBOX "Allow certificiates from my user store in addition to machine certificates", 1606, 20, 50, 242, 13, WS_DISABLED
-	AUTOCHECKBOX "Use a specific certificate", 1607, 20, 67, 239, 10, WS_DISABLED
-	PUSHBUTTON "Select", 1608, 31, 84, 50, 14, WS_DISABLED
+	AUTOCHECKBOX "Zezwól na certyfikaty z mojego magazynu u¿ytkownika oprócz certifikatów systemowych", 1606, 20, 50, 242, 13, WS_DISABLED
+	AUTOCHECKBOX "U¿yj wybranego certyfikatu", 1607, 20, 67, 239, 10, WS_DISABLED
+	PUSHBUTTON "Wybierz", 1608, 31, 84, 50, 14, WS_DISABLED
 	COMBOBOX 1610, 91, 84, 135, 30, CBS_DROPDOWN | CBS_SORT | WS_DISABLED | WS_VSCROLL | NOT WS_TABSTOP
 END
 
 571 DIALOGEX 0, 0, 230, 215
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Security Logging"
+CAPTION "Logowanie komunikatów bezpieczeñstwa"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	GROUPBOX "Logging Options:", -1, 6, 8, 216, 47
-	AUTOCHECKBOX "Log unsuccessful &inbound connection attempts", 1642, 14, 22, 201, 10
-	AUTOCHECKBOX "Log successful &outbound connections", 1641, 14, 37, 200, 10
-	GROUPBOX "Log file options:", -1, 7, 64, 215, 91
-	LTEXT "&Name:", -1, 14, 78, 199, 8
+	GROUPBOX "Opcje logowania:", -1, 6, 8, 216, 47
+	AUTOCHECKBOX "Loguj &nieudane próby po³¹czeñ przychodz¹cych", 1642, 14, 22, 201, 10
+	AUTOCHECKBOX "Loguj &udane po³¹czenia wychodz¹ce", 1641, 14, 37, 200, 10
+	GROUPBOX "Opcje pliku logów:", -1, 7, 64, 215, 91
+	LTEXT "&Nazwa:", -1, 14, 78, 199, 8
 	EDITTEXT 1674, 14, 90, 199, 14, ES_READONLY
-	PUSHBUTTON "&Browse...", 1639, 153, 108, 60, 14
-	LTEXT "&Size limit:", -1, 14, 133, 67, 8
+	PUSHBUTTON "&Przegl¹daj", 1639, 153, 108, 60, 14
+	LTEXT "&Limit wielkoœci:", -1, 14, 133, 67, 8
 	EDITTEXT 1640, 86, 130, 50, 14, ES_AUTOHSCROLL | ES_NUMBER
 	LTEXT "KB", -1, 140, 133, 20, 8
-	PUSHBUTTON "&Restore Defaults", 1643, 135, 197, 85, 14
+	PUSHBUTTON "&Ustawienia Domyœlne", 1643, 135, 197, 85, 14
 END
 
 572 DIALOGEX 0, 0, 230, 215
@@ -1350,15 +1350,15 @@ STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
 CAPTION "ICMP"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT "&Internet Control Message Protocol (ICMP) allows the computers on a network to share error and status information. Select the requests for information from the Internet that this computer will respond to:", -1, 7, 5, 215, 37
+	LTEXT "&Internet Control Message Protocol (ICMP) pozwala komputerom w sieci na przesy³anie informacji o b³êdach i o stanie w³asnym. Wybierz zapytania ICMP na które ten komputer bêdzie móg³ odpowiedzieæ:", -1, 7, 5, 215, 37
 	CONTROL "IList1", 1644, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000440D, 7, 45, 215, 100, WS_EX_CLIENTEDGE
-	GROUPBOX "Description:", -1, 7, 153, 215, 55
+	GROUPBOX "Opis:", -1, 7, 153, 215, 55
 	LTEXT "", 1645, 14, 171, 199, 32
 END
 
 574 DIALOGEX 0, 0, 230, 215
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Advanced"
+CAPTION "Zaawansowane"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	LTEXT "", 575, 7, 60, 213, 100
@@ -1366,185 +1366,185 @@ END
 
 577 DIALOG 0, 0, 312, 144
 STYLE DS_SETFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "New Connection Wizard"
+CAPTION "Kreator konfiguracji po³¹czenia"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT "Type the name of the ISP in the following text box.", 1681, 10, 3, 296, 11
-	LTEXT "N&ame:", 1690, 18, 20, 127, 10
+	LTEXT "Wpisz nazwê ISP w pole poni¿ej.", 1681, 10, 3, 296, 11
+	LTEXT "N&azwa:", 1690, 18, 20, 127, 10
 	EDITTEXT 1680, 17, 32, 222, 14, ES_AUTOHSCROLL
-	LTEXT "The name you type here will be the name of the connection you are creating.", 1683, 17, 52, 282, 42
+	LTEXT "Nazwa wpisana tutaj bêdzie domyœln¹ nazw¹ utworzonego po³¹czenia internetowego.", 1683, 17, 52, 282, 42
 END
 
 580 DIALOG 0, 0, 317, 143
 STYLE DS_SETFONT | DS_MODALFRAME | WS_CHILD | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
-	AUTORADIOBUTTON "&Automatic selection", 1534, 21, 20, 288, 11, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP | NOT WS_TABSTOP
+	AUTORADIOBUTTON "&Wybór automatyczny", 1534, 21, 20, 288, 11, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP | NOT WS_TABSTOP
 	AUTORADIOBUTTON "&Point to Point Tunneling Protocol (PPTP)", 1532, 21, 39, 290, 11, BS_LEFT | BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
 	AUTORADIOBUTTON "&Layer 2 Tunneling Protocol (L2TP)", 1533, 21, 56, 286, 11, BS_LEFT | BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
 END
 
 1420 DIALOG 0, 0, 265, 108
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Connect %1"
+CAPTION "Po³¹cz z %1"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	CONTROL 1678, 1100, "STATIC", SS_BITMAP, 0, 0, 265, 50
-	LTEXT "D&ial:", 1412, 14, 63, 86, 8
+	LTEXT "£¹&czenie:", 1412, 14, 63, 86, 8
 	COMBOBOX 1416, 104, 60, 154, 112, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | NOT WS_TABSTOP
 	CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 10, 80, 248, 1
-	DEFPUSHBUTTON "&Dial", 1590, 9, 87, 60, 14
+	DEFPUSHBUTTON "P&o³¹cz", 1590, 9, 87, 60, 14
 	PUSHBUTTON "Anuluj", 1591, 72, 87, 60, 14
-	PUSHBUTTON "Pr&operties", 1107, 135, 87, 60, 14
-	PUSHBUTTON "&Help", 1592, 198, 87, 60, 14
+	PUSHBUTTON "&W³aœciwoœci", 1107, 135, 87, 60, 14
+	PUSHBUTTON "&Pomoc", 1592, 198, 87, 60, 14
 END
 
 1421 DIALOG 0, 0, 265, 223
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Connect %1"
+CAPTION "Po³¹cz z %1"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	CONTROL 1678, 1100, "STATIC", SS_BITMAP, 0, 0, 265, 50
-	LTEXT "&User name:", 1413, 10, 61, 90, 8
+	LTEXT "&Nazwa u¿ytkownika:", 1413, 10, 61, 90, 8
 	EDITTEXT 1104, 104, 58, 154, 14, ES_AUTOHSCROLL
-	LTEXT "&Password:", 1112, 11, 81, 90, 8
+	LTEXT "&Has³o:", 1112, 11, 81, 90, 8
 	EDITTEXT 1103, 104, 77, 154, 14, ES_PASSWORD | ES_AUTOHSCROLL
 	CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN, 10, 98, 248, 1
-	AUTOCHECKBOX "&Save this user name and password for the following users:", 1101, 14, 105, 242, 13, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
-	AUTORADIOBUTTON "Me o&nly", 1622, 26, 119, 225, 11, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
-	AUTORADIOBUTTON "&Anyone who uses this computer", 1623, 26, 133, 225, 11, BS_LEFT | BS_TOP | BS_MULTILINE
+	AUTOCHECKBOX "&Zapisz t¹ nazwê u¿ytkownika i has³o dla nastêpuj¹cych u¿ytkowników:", 1101, 14, 105, 242, 13, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
+	AUTORADIOBUTTON "Tylko &ja", 1622, 26, 119, 225, 11, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
+	AUTORADIOBUTTON "&Ka¿dy kto u¿ywa tego komputera", 1623, 26, 133, 225, 11, BS_LEFT | BS_TOP | BS_MULTILINE
 	CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 10, 149, 248, 1
-	LTEXT "D&ial:", 1412, 14, 161, 87, 8
+	LTEXT "P&o³¹czenie:", 1412, 14, 161, 87, 8
 	COMBOBOX 1416, 104, 157, 154, 112, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | NOT WS_TABSTOP
-	LTEXT "Dialing &from:", 1415, 14, 178, 88, 8
+	LTEXT "Wy&bieranie z:", 1415, 14, 178, 88, 8
 	COMBOBOX 1414, 104, 175, 87, 112, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | NOT WS_TABSTOP
-	PUSHBUTTON "Dialing &Rules", 1108, 193, 175, 65, 14
+	PUSHBUTTON "&Regu³y wybierania", 1108, 193, 175, 65, 14
 	CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 10, 196, 248, 1
-	DEFPUSHBUTTON "&Dial", 1590, 9, 202, 60, 14, WS_GROUP
+	DEFPUSHBUTTON "&Dzwoñ", 1590, 9, 202, 60, 14, WS_GROUP
 	PUSHBUTTON "Anuluj", 1591, 72, 202, 60, 14
-	PUSHBUTTON "Pr&operties", 1107, 135, 202, 60, 14
-	PUSHBUTTON "&Help", 1592, 198, 202, 60, 14
+	PUSHBUTTON "&W³aœciwoœci", 1107, 135, 202, 60, 14
+	PUSHBUTTON "&Pomoc", 1592, 198, 202, 60, 14
 END
 
 1422 DIALOG 0, 0, 265, 242
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Connect %1"
+CAPTION "Po³¹cz z %1"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	CONTROL 1678, 1100, "STATIC", SS_BITMAP, 0, 0, 265, 50
-	LTEXT "&User name:", 1413, 10, 67, 91, 8
+	LTEXT "&Nazwa u¿ytkownika:", 1413, 10, 67, 91, 8
 	EDITTEXT 1104, 104, 63, 154, 14, ES_AUTOHSCROLL
-	LTEXT "&Password:", 1112, 10, 85, 92, 8
+	LTEXT "&Has³o:", 1112, 10, 85, 92, 8
 	EDITTEXT 1103, 104, 82, 154, 14, ES_PASSWORD | ES_AUTOHSCROLL
-	LTEXT "Do&main:", 1110, 10, 104, 92, 8
+	LTEXT "&Domena:", 1110, 10, 104, 92, 8
 	EDITTEXT 1102, 104, 101, 154, 14, ES_UPPERCASE | ES_AUTOHSCROLL
 	CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN, 10, 121, 248, 1
-	AUTOCHECKBOX "&Save this user name and password for the following users:", 1101, 12, 127, 242, 13, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
-	AUTORADIOBUTTON "Me o&nly", 1622, 24, 141, 227, 11, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
-	AUTORADIOBUTTON "&Anyone who uses this computer", 1623, 24, 155, 230, 11, BS_LEFT | BS_TOP | BS_MULTILINE
+	AUTOCHECKBOX "&Zapisz t¹ nazwê u¿ytkownika i has³o dla nastêpuj¹cych u¿ytkowników:", 1101, 12, 127, 242, 13, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
+	AUTORADIOBUTTON "Tylko &ja", 1622, 24, 141, 227, 11, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
+	AUTORADIOBUTTON "&Ka¿dy kto u¿ywa tego komputera", 1623, 24, 155, 230, 11, BS_LEFT | BS_TOP | BS_MULTILINE
 	CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 10, 170, 248, 1
-	LTEXT "D&ial:", 1412, 14, 182, 87, 8
+	LTEXT "P&o³¹czenie:", 1412, 14, 182, 87, 8
 	COMBOBOX 1416, 104, 178, 154, 112, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | NOT WS_TABSTOP
-	LTEXT "Dialing &from:", 1415, 14, 198, 87, 8
+	LTEXT "Wy&bieranie z:", 1415, 14, 198, 87, 8
 	COMBOBOX 1414, 104, 195, 87, 112, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | NOT WS_TABSTOP
-	PUSHBUTTON "Dialing &Rules", 1108, 193, 195, 65, 14
+	PUSHBUTTON "&Regu³y wybierania", 1108, 193, 195, 65, 14
 	CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 10, 215, 248, 1
-	DEFPUSHBUTTON "&Dial", 1590, 8, 221, 60, 14, WS_GROUP
+	DEFPUSHBUTTON "&Dzwoñ", 1590, 8, 221, 60, 14, WS_GROUP
 	PUSHBUTTON "Anuluj", 1591, 71, 221, 60, 14
-	PUSHBUTTON "Pr&operties", 1107, 134, 221, 60, 14
-	PUSHBUTTON "&Help", 1592, 198, 221, 60, 14
+	PUSHBUTTON "&W³aœciwoœci", 1107, 134, 221, 60, 14
+	PUSHBUTTON "&Pomoc", 1592, 198, 221, 60, 14
 END
 
 1425 DIALOG 0, 0, 230, 215
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
-CAPTION "General"
+CAPTION "Ogólne"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT "&Host name or IP address of destination (such as reactos.org or 145.52.0.1):", 1430, 7, 5, 217, 18
+	LTEXT "WprowadŸ &nazwê hosta albo adres IP celu (na przyk³ad reactos.org albo 145.52.0.1):", 1430, 7, 5, 217, 18
 	EDITTEXT 1427, 7, 25, 215, 14, ES_AUTOHSCROLL
-	GROUPBOX "First connect", 1431, 9, 48, 213, 78
-	LTEXT "ReactOS can first connect the public network, such as the Internet, before trying to establish this virtual connection.", 1432, 17, 63, 199, 24
-	AUTOCHECKBOX "&Dial another connection first:", 1428, 19, 89, 183, 10
+	GROUPBOX "Po³¹czenie wstêpne", 1431, 9, 48, 213, 78
+	LTEXT "ReactOS mo¿e wpierw po³¹czyæ siê z sieci¹ publiczn¹, np z Internetem, przed prób¹ ustanowienia tego po³¹czenia z VPN.", 1432, 17, 63, 199, 24
+	AUTOCHECKBOX "&Wybierz najpierw inne po³¹czenie:", 1428, 19, 89, 183, 10
 	COMBOBOX 1429, 29, 103, 182, 87, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | NOT WS_TABSTOP
-	AUTOCHECKBOX "Sho&w icon in notification area when connected", 1120, 10, 192, 213, 13
+	AUTOCHECKBOX "Po&ka¿ ikonê w zasobniku systemowym podczas trwania po³¹czenia", 1120, 10, 192, 213, 13
 END
 
 1426 DIALOG 0, 0, 230, 215
 STYLE DS_SETFONT | WS_CHILD | WS_CAPTION
-CAPTION "Options"
+CAPTION "Opcje"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	GROUPBOX "Dialing options", 1289, 8, 7, 214, 56
-	AUTOCHECKBOX "&Display progress while connecting", 1284, 16, 17, 199, 10
-	AUTOCHECKBOX "&Prompt for name and password, certificate, etc.", 1554, 16, 32, 199, 10
-	AUTOCHECKBOX "Include &ReactOS logon domain", 1555, 16, 47, 178, 10
-	GROUPBOX "Redialing options", 1290, 8, 68, 214, 89
-	LTEXT "&Redial attempts:", 1300, 16, 81, 121, 8
+	GROUPBOX "Opcje wybierania", 1289, 8, 7, 214, 56
+	AUTOCHECKBOX "&Wyœwietlaj przebieg po³¹czenia", 1284, 16, 17, 199, 10
+	AUTOCHECKBOX "&Zapytaj o nazwê u¿ytkownika, has³o, certyfikat itd.", 1554, 16, 32, 199, 10
+	AUTOCHECKBOX "Do³¹cz domenê logowania z &ReactOS", 1555, 16, 47, 178, 10
+	GROUPBOX "Wybieranie ponowne", 1290, 8, 68, 214, 89
+	LTEXT "&Iloœæ prób wybierania:", 1300, 16, 81, 121, 8
 	EDITTEXT 1287, 140, 77, 70, 14, ES_AUTOHSCROLL | ES_NUMBER
-	LTEXT "&Time between redial attempts:", 1301, 16, 99, 121, 8
+	LTEXT "&Czas pomiêdzy próbami wybierania:", 1301, 16, 99, 121, 8
 	COMBOBOX 1292, 141, 95, 70, 123, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
-	LTEXT "Idle ti&me before hanging up:", 1299, 16, 117, 121, 8
+	LTEXT "Czas &bezczynnoœci przed zawieszeniem po³¹czenia:", 1299, 16, 117, 121, 8
 	COMBOBOX 1291, 141, 113, 70, 108, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
-	AUTOCHECKBOX "Redial if &line is dropped", 1286, 16, 138, 199, 10, BS_TOP | BS_MULTILINE
+	AUTOCHECKBOX "Wybieraj &ponownie przy zerwaniu po³¹czenia", 1286, 16, 138, 199, 10, BS_TOP | BS_MULTILINE
 END
 
 1427 DIALOG 0, 0, 317, 143
 STYLE DS_SETFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT "Type the host name or Internet Protocol (IP) address of the computer to which you are connecting.", -1, 10, 6, 275, 16
-	LTEXT "&Host name or IP address (for example, reactos.org or 145.52.0.1 ):", -1, 21, 28, 277, 11
+	LTEXT "WprowadŸ nazwê hosta albo adres IP komputera z którym chcesz siê po³¹czyæ.", -1, 10, 6, 275, 16
+	LTEXT "&Nazwa hosta albo adres IP (na przyk³ad, reactos.org or 145.52.0.1 ):", -1, 21, 28, 277, 11
 	EDITTEXT 1433, 21, 42, 275, 14, ES_AUTOHSCROLL
 END
 
 1428 DIALOG 0, 0, 317, 143
 STYLE DS_SETFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "New Connection Wizard"
+CAPTION "Kreator konfiguracji po³¹czenia"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT "ReactOS can automatically dial the initial connection to the Internet or other public network, before establishing the virtual connection.", -1, 10, 6, 275, 24
-	AUTORADIOBUTTON "&Do not dial the initial connection.", 1509, 32, 31, 271, 10, BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
-	AUTORADIOBUTTON "&Automatically dial this initial connection:", 1510, 32, 45, 269, 10, BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
+	LTEXT "ReactOS mo¿e wpierw po³¹czyæ siê z sieci¹ publiczn¹, np z Internetem, przed prób¹ ustanowienia tego po³¹czenia z VPN.", -1, 10, 6, 275, 24
+	AUTORADIOBUTTON "&Nie wykonuj po³¹czenia wstêpnego.", 1509, 32, 31, 271, 10, BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
+	AUTORADIOBUTTON "&Automagicznie wykonaj po³¹czenie wstêpne:", 1510, 32, 45, 269, 10, BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
 	COMBOBOX 1435, 43, 62, 253, 87, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | NOT WS_TABSTOP
 END
 
 1436 DIALOG 0, 0, 230, 215
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
-CAPTION "General"
+CAPTION "Ogólne"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT "&Select a device:", 1597, 8, 5, 213, 8
+	LTEXT "&Wybierz urz¹dzenie:", 1597, 8, 5, 213, 8
 	COMBOBOX 1437, 7, 17, 217, 166, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | NOT WS_TABSTOP
-	AUTOCHECKBOX "Sho&w icon in notification area when connected", 1120, 11, 195, 213, 10, BS_TOP | BS_MULTILINE
-	PUSHBUTTON "C&onfigure...", 1130, 160, 34, 60, 14
+	AUTOCHECKBOX "P&oka¿ ikonê w zasobniku systemowym podczas trwania po³¹czenia", 1120, 11, 195, 213, 10, BS_TOP | BS_MULTILINE
+	PUSHBUTTON "&Konfiguruj", 1130, 160, 34, 60, 14
 END
 
 1448 DIALOG 10, 20, 265, 71
 STYLE DS_SETFONT | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "Network Connections"
+CAPTION "Po³¹czenia sieciowe"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT "C&hoose a network connection:", 1456, 7, 7, 251, 10
+	LTEXT "&Wybierz po³¹czenie sieciowe:", 1456, 7, 7, 251, 10
 	COMBOBOX 1457, 8, 18, 250, 140, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | NOT WS_TABSTOP
-	DEFPUSHBUTTON "&Connect...", 1449, 7, 50, 60, 14
+	DEFPUSHBUTTON "&Po³¹cz...", 1449, 7, 50, 60, 14
 	PUSHBUTTON "Anuluj", 1455, 70, 50, 60, 14
-	PUSHBUTTON "&New...", 1459, 134, 50, 60, 14
-	PUSHBUTTON "P&roperties", 1460, 198, 50, 60, 14
+	PUSHBUTTON "&Nowe...", 1459, 134, 50, 60, 14
+	PUSHBUTTON "W³&aœciwoœci", 1460, 198, 50, 60, 14
 END
 
 1466 DIALOG 6, 18, 265, 262
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT "Sample text", 1469, 7, 7, 251, 8
+	LTEXT "Przyk³adowy tekst", 1469, 7, 7, 251, 8
 	EDITTEXT 1470, 7, 17, 193, 14, ES_AUTOHSCROLL
-	PUSHBUTTON "&Add", 1471, 77, 36, 60, 14
-	PUSHBUTTON "&Replace", 1472, 141, 36, 60, 14
-	LTEXT "Sample text", 1473, 7, 57, 193, 8
+	PUSHBUTTON "&Dodaj", 1471, 77, 36, 60, 14
+	PUSHBUTTON "&Zamieñ", 1472, 141, 36, 60, 14
+	LTEXT "Przyk³adowy tekst", 1473, 7, 57, 193, 8
  LISTBOX 1474, 7, 68, 193, 145, WS_VSCROLL | WS_TABSTOP
 	PUSHBUTTON "", 1475, 206, 68, 51, 14, BS_BITMAP | WS_GROUP
-	PUSHBUTTON "&Down", 1476, 206, 86, 51, 14, BS_BITMAP
-	PUSHBUTTON "D&elete", 1477, 141, 215, 60, 14
+	PUSHBUTTON "&Dó³", 1476, 206, 86, 51, 14, BS_BITMAP
+	PUSHBUTTON "&Skasuj", 1477, 141, 215, 60, 14
 	CONTROL "", 1479, "STATIC", SS_ETCHEDHORZ, 7, 233, 249, 1
 	PUSHBUTTON "OK", 1, 132, 242, 60, 14, WS_GROUP
 	PUSHBUTTON "Anuluj", 2, 196, 242, 60, 14
@@ -1554,16 +1554,16 @@ END
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT "Sample text", 1469, 7, 7, 197, 8
+	LTEXT "Przyk³adowy tekst", 1469, 7, 7, 197, 8
 	EDITTEXT 1470, 7, 17, 193, 14, ES_AUTOHSCROLL
-	PUSHBUTTON "&Add", 1471, 76, 36, 60, 14
-	PUSHBUTTON "&Replace", 1472, 141, 36, 60, 14
-	LTEXT "Sample text", 1473, 7, 57, 193, 8
+	PUSHBUTTON "&Dodaj", 1471, 76, 36, 60, 14
+	PUSHBUTTON "&Zamieñ", 1472, 141, 36, 60, 14
+	LTEXT "Przyk³adowy tekst", 1473, 7, 57, 193, 8
  LISTBOX 1474, 7, 68, 193, 135, WS_VSCROLL | WS_TABSTOP
-	PUSHBUTTON "&Up", 1475, 206, 68, 51, 14, BS_BITMAP | WS_GROUP
-	PUSHBUTTON "&Down", 1476, 206, 86, 51, 14, BS_BITMAP
-	PUSHBUTTON "D&elete", 1477, 141, 204, 60, 14
-	AUTOCHECKBOX "Sample text", 1478, 7, 225, 249, 10, BS_TOP | BS_MULTILINE
+	PUSHBUTTON "&Góra", 1475, 206, 68, 51, 14, BS_BITMAP | WS_GROUP
+	PUSHBUTTON "&Dó³", 1476, 206, 86, 51, 14, BS_BITMAP
+	PUSHBUTTON "&Skasuj", 1477, 141, 204, 60, 14
+	AUTOCHECKBOX "Przyk³adowy tekst", 1478, 7, 225, 249, 10, BS_TOP | BS_MULTILINE
 	PUSHBUTTON "OK", 1, 132, 242, 60, 14, WS_GROUP
 	PUSHBUTTON "Anuluj", 2, 196, 242, 60, 14
 END
@@ -1572,13 +1572,13 @@ END
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT "Sample text", 1469, 7, 5, 249, 8
+	LTEXT "Przyk³adowy tekst", 1469, 7, 5, 249, 8
 	EDITTEXT 1470, 7, 17, 249, 14, ES_AUTOHSCROLL
-	PUSHBUTTON "&Add", 1471, 132, 36, 60, 14
-	PUSHBUTTON "&Replace", 1472, 196, 36, 60, 14
-	LTEXT "Sample text", 1473, 7, 55, 251, 8
+	PUSHBUTTON "&Dodaj", 1471, 132, 36, 60, 14
+	PUSHBUTTON "&Zamieñ", 1472, 196, 36, 60, 14
+	LTEXT "Przyk³adowy tekst", 1473, 7, 55, 251, 8
  LISTBOX 1474, 7, 68, 249, 140, LBS_STANDARD | WS_TABSTOP
-	PUSHBUTTON "D&elete", 1477, 196, 214, 60, 14, WS_GROUP
+	PUSHBUTTON "&Skasuj", 1477, 196, 214, 60, 14, WS_GROUP
 	CONTROL "", 1479, "STATIC", SS_ETCHEDHORZ, 7, 233, 249, 1
 	PUSHBUTTON "OK", 1, 132, 242, 60, 14, WS_GROUP
 	PUSHBUTTON "Anuluj", 2, 196, 242, 60, 14
@@ -1586,25 +1586,25 @@ END
 
 1469 DIALOG 0, 0, 317, 143
 STYLE DS_SETFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "New Connection Wizard"
+CAPTION "Kreator konfiguracji po³¹czenia"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	AUTORADIOBUTTON "Dial-up to &private network.", 1488, 24, 9, 116, 10, NOT WS_TABSTOP
-	AUTORADIOBUTTON "Connect to a private network &through the Internet.", 1489, 24, 34, 206, 10, NOT WS_TABSTOP
-	AUTORADIOBUTTON "&Connect directly to another computer.", 1490, 24, 59, 157, 10, NOT WS_TABSTOP
-	AUTORADIOBUTTON "Connect to the network via b&roadband", 1491, 24, 83, 273, 10, NOT WS_TABSTOP
-	LTEXT "Connect using my phone line (modem or ISDN).", -1, 45, 21, 156, 8
-	LTEXT "Create a Virtual Private Network (VPN) connection or tunnel through the internet.", -1, 45, 46, 266, 8
-	LTEXT "Connect using my serial, parallel, or infrared port.", -1, 45, 71, 266, 8
+	AUTORADIOBUTTON "Po³¹czenie &Dial-up do sieci prywatnej.", 1488, 24, 9, 116, 10, NOT WS_TABSTOP
+	AUTORADIOBUTTON "Po³¹cz siê z sieci¹ prywatn¹ za poœrednictwem &Internetu.", 1489, 24, 34, 206, 10, NOT WS_TABSTOP
+	AUTORADIOBUTTON "&Bezpoœrednie po³¹czenie z innym komputerem.", 1490, 24, 59, 157, 10, NOT WS_TABSTOP
+	AUTORADIOBUTTON "Po³¹czenie z sieci¹ poprzez ³¹cze &sta³e", 1491, 24, 83, 273, 10, NOT WS_TABSTOP
+	LTEXT "Po³¹cz za pomoc¹ linii telefonicznej (modem albo ISDN).", -1, 45, 21, 156, 8
+	LTEXT "Stwórz po³¹czenie VPN albo po³¹czenie tunelowe poprzez internet.", -1, 45, 46, 266, 8
+	LTEXT "Po³¹cz za pomoc¹ portu szeregowego, równoleg³ego albo podczerwieni.", -1, 45, 71, 266, 8
 	LTEXT "Connect through my broadband connection.", -1, 45, 95, 266, 8
 END
 
 1480 DIALOG 0, 0, 230, 61
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Phone Number Editor"
+CAPTION "Edytor numerów telefonicznych"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT "&Please enter the new phone number:", 1481, 7, 7, 218, 8
+	LTEXT "&Proszê wprowadziæ nowy numer:", 1481, 7, 7, 218, 8
 	EDITTEXT 1482, 7, 17, 217, 15, ES_AUTOHSCROLL
 	DEFPUSHBUTTON "OK", 1, 99, 40, 60, 14
 	PUSHBUTTON "Anuluj", 2, 163, 40, 60, 14
@@ -1612,19 +1612,19 @@ END
 
 1481 DIALOG 0, 0, 321, 157
 STYLE DS_SETFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "New Connection Wizard"
+CAPTION "Kreator konfiguracji po³¹czenia"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT "Type an ISP account name and password, then write down this information and store it in a safe place. (If you have forgotten an existing account name or password, contact your ISP.)", 1689, 10, 4, 308, 25
-	LTEXT "&User name:", 1636, 23, 35, 89, 15
+	LTEXT "WprowadŸ nazwê konta i has³o u ISP, nastêpnie zapisz te informacje i przechowaj w bezpiecznym miejscu. (Je¿eli mimo to zapomnia³eœ nazwy konta albo has³a, skontaktuj siê ze swoim ISP.)", 1689, 10, 4, 308, 25
+	LTEXT "&Nazwa konta:", 1636, 23, 35, 89, 15
 	EDITTEXT 1614, 115, 34, 190, 15, ES_AUTOHSCROLL
-	LTEXT "&Password:", 1637, 23, 55, 90, 13
+	LTEXT "&Has³o:", 1637, 23, 55, 90, 13
 	EDITTEXT 1615, 115, 54, 190, 15, ES_PASSWORD | ES_AUTOHSCROLL
-	LTEXT "&Confirm password:", 1638, 23, 74, 88, 13
+	LTEXT "&PotwierdŸ has³o:", 1638, 23, 74, 88, 13
 	EDITTEXT 1616, 115, 73, 190, 15, ES_PASSWORD | ES_AUTOHSCROLL
-	AUTOCHECKBOX "U&se this account  name and password when anyone connects to the Internet from this computer", 1596, 23, 91, 291, 17, BS_LEFT | BS_TOP | BS_MULTILINE
-	AUTOCHECKBOX "&Make this the default Internet connection", 1595, 23, 112, 288, 14
-	AUTOCHECKBOX "&Turn on Internet Connection Firewall for this connection", 1682, 23, 133, 290, 14
+	AUTOCHECKBOX "U¿&yj tej nazwy konta i has³a gdy którykolwiek u¿ytkownik bêdzie ³¹czy³ siê z Internetem, z tego komputera", 1596, 23, 91, 291, 17, BS_LEFT | BS_TOP | BS_MULTILINE
+	AUTOCHECKBOX "&Ustaw to po³¹czenie sieciowe jako domyœlne", 1595, 23, 112, 288, 14
+	AUTOCHECKBOX "&W³¹cz Firewall Systemowy dla tego po³¹czenia", 1682, 23, 133, 290, 14
 END
 
 1660 DIALOG 0, 0, 258, 78
@@ -1633,24 +1633,24 @@ CAPTION "Internet Connection Firewall"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	ICON 32515, -1, 7, 7, 20, 20
-	LTEXT "Turning off the Internet Connection Firewall could expose your computer to unauthorized access over the Internet. Are you sure you want to turn it off?", -1, 44, 5, 212, 24
-	AUTOCHECKBOX "&Do not show this dialog again", 1662, 42, 40, 210, 10
-	DEFPUSHBUTTON "&Yes", 6, 74, 60, 50, 14
-	PUSHBUTTON "&No", 7, 128, 60, 50, 14
+	LTEXT "Wy³¹czenie Firewalla Systemowego mo¿e naraziæ twój komputer na nieautoryzowane wtargniêcie z Internetu. Czy na pewno chcesz go wy³¹czyæ?", -1, 44, 5, 212, 24
+	AUTOCHECKBOX "&Nie pokazuj wiêcej tej wiadomoœci", 1662, 42, 40, 210, 10
+	DEFPUSHBUTTON "&Tak", 6, 74, 60, 50, 14
+	PUSHBUTTON "&Nie", 7, 128, 60, 50, 14
 END
 
 7000 DIALOG 0, 0, 215, 103
 STYLE DS_SETFONT | DS_MODALFRAME | DS_3DLOOK | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "General"
+CAPTION "Ogólne"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT "&User name:", -1, 7, 8, 90, 12, SS_CENTERIMAGE
+	LTEXT "&Nazwa u¿ytkownika:", -1, 7, 8, 90, 12, SS_CENTERIMAGE
 	EDITTEXT 7001, 101, 7, 108, 14, ES_AUTOHSCROLL
-	LTEXT "&Full name:", -1, 7, 26, 90, 12
+	LTEXT "&Imie i nazwisko:", -1, 7, 26, 90, 12
 	EDITTEXT 7002, 101, 25, 108, 14, ES_AUTOHSCROLL
-	LTEXT "&Password:", -1, 7, 44, 90, 12
+	LTEXT "&Has³o:", -1, 7, 44, 90, 12
 	EDITTEXT 7003, 101, 43, 108, 14, ES_PASSWORD | ES_AUTOHSCROLL
-	LTEXT "&Confirm password:", -1, 7, 62, 91, 12
+	LTEXT "&PotwierdŸ has³o:", -1, 7, 62, 91, 12
 	EDITTEXT 7004, 101, 61, 108, 14, ES_PASSWORD | ES_AUTOHSCROLL
 	PUSHBUTTON "OK", 1, 84, 82, 60, 14
 	PUSHBUTTON "Anuluj", 2, 149, 82, 60, 14
@@ -1658,72 +1658,72 @@ END
 
 7005 DIALOG 0, 0, 230, 215
 STYLE DS_SETFONT | DS_CONTEXTHELP | WS_CHILD | WS_CAPTION
-CAPTION "Callback"
+CAPTION "Oddzwanianie"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	AUTORADIOBUTTON "&Do not allow callback", 7009, 9, 7, 219, 10, BS_TOP | BS_MULTILINE | WS_GROUP
-	AUTORADIOBUTTON "All&ow the caller to set the callback number", 7006, 9, 20, 218, 10, BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
-	AUTORADIOBUTTON "Al&ways use the following callback number:", 7007, 9, 34, 217, 10, BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
+	AUTORADIOBUTTON "&Nie zezwalaj na oddzwanianie", 7009, 9, 7, 219, 10, BS_TOP | BS_MULTILINE | WS_GROUP
+	AUTORADIOBUTTON "&Zezwól na wybór numeru przez oddzwaniaj¹cego", 7006, 9, 20, 218, 10, BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
+	AUTORADIOBUTTON "&U¿ywaj wy³¹cznie podanych numerów do oddzwaniania:", 7007, 9, 34, 217, 10, BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
 	EDITTEXT 7008, 19, 49, 204, 14, ES_AUTOHSCROLL | WS_GROUP
 END
 
 7010 DIALOGEX 0, 0, 230, 215
 STYLE DS_SETFONT | DS_CONTEXTHELP | WS_CHILD | WS_CAPTION
-CAPTION "General"
+CAPTION "Ogólne"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	GROUPBOX "Incoming connections", -1, 7, 4, 214, 110, WS_GROUP
-	LTEXT "Allow incoming connections on these devices.", -1, 17, 17, 195, 8
-	LTEXT "&Devices:", -1, 17, 29, 29, 8
+	GROUPBOX "Po³¹czenia przychodz¹ce", -1, 7, 4, 214, 110, WS_GROUP
+	LTEXT "Zezwalaj na po³¹czenia przychodz¹ce do tych urz¹dzeñ.", -1, 17, 17, 195, 8
+	LTEXT "&Urz¹dzenia:", -1, 17, 29, 29, 8
 	CONTROL "", 7011, "SYSLISTVIEW32", WS_BORDER | WS_GROUP | WS_TABSTOP | 0x00004405, 17, 41, 193, 47, WS_EX_CLIENTEDGE
-	AUTOCHECKBOX "&Enable multilink", 7012, 17, 96, 121, 10, BS_TOP | BS_MULTILINE | WS_GROUP
-	PUSHBUTTON "P&roperties", 7013, 145, 94, 65, 14, WS_GROUP
-	GROUPBOX "Virtual private network", -1, 6, 122, 214, 49, WS_GROUP
-	AUTOCHECKBOX "Allo&w others to make private connections to my computer by tunneling through the Internet or other network", 7014, 17, 137, 195, 27, BS_TOP | BS_MULTILINE | WS_GROUP
-	AUTOCHECKBOX "&Show icon in notification area when connected", 7015, 12, 184, 209, 10, BS_TOP | BS_MULTILINE | WS_GROUP
+	AUTOCHECKBOX "&W³¹cz multipo³¹czenia", 7012, 17, 96, 121, 10, BS_TOP | BS_MULTILINE | WS_GROUP
+	PUSHBUTTON "W³&aœciwoœci", 7013, 145, 94, 65, 14, WS_GROUP
+	GROUPBOX "Wirtualne sieci prywatne", -1, 6, 122, 214, 49, WS_GROUP
+	AUTOCHECKBOX "&Zezwól innym na ustanawianie po³¹czeñ z moim komputerem poprzez tunelowanie przez Internet lub inn¹ sieæ", 7014, 17, 137, 195, 27, BS_TOP | BS_MULTILINE | WS_GROUP
+	AUTOCHECKBOX "&Poka¿ ikonê w zasobniku systemowym podczas trwania po³¹czenia", 7015, 12, 184, 209, 10, BS_TOP | BS_MULTILINE | WS_GROUP
 END
 
 7016 DIALOGEX 0, 0, 265, 190
 STYLE DS_SETFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Incoming TCP/IP Properties"
+CAPTION "W³aœciwoœci przychodz¹cych po³¹czeñ TCP/IP"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	GROUPBOX "Network access", -1, 6, 5, 252, 32
-	AUTOCHECKBOX "Allow &callers to access my local area network", 7017, 20, 20, 228, 9, BS_LEFT | BS_TOP | BS_MULTILINE
-	GROUPBOX "TCP/IP address assignment", -1, 6, 42, 250, 122
-	AUTORADIOBUTTON "&Assign TCP/IP addresses automatically using DHCP", 7019, 20, 54, 231, 10, BS_TOP | BS_MULTILINE | WS_GROUP
-	AUTORADIOBUTTON "S&pecify TCP/IP addresses", 7020, 20, 71, 231, 10, BS_TOP | BS_MULTILINE
-	LTEXT "&From:", -1, 29, 88, 53, 8
+	GROUPBOX "Dostêp sieciowy", -1, 6, 5, 252, 32
+	AUTOCHECKBOX "&Zezwól dzwoni¹cym na dostêp do mojej sieci lokalnej", 7017, 20, 20, 228, 9, BS_LEFT | BS_TOP | BS_MULTILINE
+	GROUPBOX "Przydzia³ adresów TCP/IP", -1, 6, 42, 250, 122
+	AUTORADIOBUTTON "&Przydziel adresy TCP/IP automagicznie, za pomoc¹ DHCP", 7019, 20, 54, 231, 10, BS_TOP | BS_MULTILINE | WS_GROUP
+	AUTORADIOBUTTON "&Wyznacz adresy TCP/IP", 7020, 20, 71, 231, 10, BS_TOP | BS_MULTILINE
+	LTEXT "&Od:", -1, 29, 88, 53, 8
 	CONTROL "", 7018, "RASIPADDRESS", WS_GROUP | WS_TABSTOP, 90, 85, 103, 13
-	LTEXT "&To:", -1, 29, 105, 53, 8
+	LTEXT "&Do:", -1, 29, 105, 53, 8
 	CONTROL "", 7021, "RASIPADDRESS", WS_GROUP | WS_TABSTOP, 90, 102, 103, 13
-	LTEXT "Total:", -1, 29, 124, 53, 10
+	LTEXT "Ogólnie:", -1, 29, 124, 53, 10
 	LTEXT "", 7024, 90, 121, 150, 14, 0, WS_EX_STATICEDGE
-	AUTOCHECKBOX "Allo&w calling computer to specify its own IP address", 7022, 20, 144, 231, 10, BS_TOP | BS_MULTILINE | WS_GROUP
+	AUTOCHECKBOX "Zezwól dz&woni¹cym komputerom na ustawienie w³asnych adresów IP", 7022, 20, 144, 231, 10, BS_TOP | BS_MULTILINE | WS_GROUP
 	DEFPUSHBUTTON "OK", 1, 133, 169, 60, 14, WS_GROUP
 	PUSHBUTTON "Anuluj", 2, 197, 169, 60, 14
 END
 
 7025 DIALOG 0, 0, 250, 157
 STYLE DS_SETFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Incoming IPX Properties"
+CAPTION "W³aœciwoœci przychodz¹cych po³¹czeñ IPX"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	GROUPBOX "Network access", -1, 8, 6, 234, 32
-	AUTOCHECKBOX "Allow &callers to access my local area network", 7032, 18, 19, 194, 12, BS_LEFT | BS_TOP | BS_MULTILINE
-	GROUPBOX "Network number assignment", -1, 8, 43, 234, 87
-	AUTOCHECKBOX "&Assign same network number to all computers", 7028, 17, 56, 203, 10, BS_TOP | BS_MULTILINE | WS_GROUP
-	AUTORADIOBUTTON "Assi&gn network numbers automatically", 7026, 28, 68, 191, 10, BS_TOP | BS_MULTILINE | WS_GROUP
-	AUTORADIOBUTTON "&Specify network numbers:", 7027, 28, 81, 189, 10, BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
+	GROUPBOX "Dostêp sieciowy", -1, 8, 6, 234, 32
+	AUTOCHECKBOX "A&Zezwól dzwoni¹cym na dostêp do mojej sieci lokalnej", 7032, 18, 19, 194, 12, BS_LEFT | BS_TOP | BS_MULTILINE
+	GROUPBOX "Przydzia³ adresów sieciowych", -1, 8, 43, 234, 87
+	AUTOCHECKBOX "&Przydziel ten sam adres sieciowy wszystkim komputerom", 7028, 17, 56, 203, 10, BS_TOP | BS_MULTILINE | WS_GROUP
+	AUTORADIOBUTTON "P&rzydziel adres sieciowy automagicznie", 7026, 28, 68, 191, 10, BS_TOP | BS_MULTILINE | WS_GROUP
+	AUTORADIOBUTTON "&Wyznacz adresy sieciowe:", 7027, 28, 81, 189, 10, BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
 	EDITTEXT 7029, 40, 92, 154, 14, ES_UPPERCASE | WS_GROUP
-	AUTOCHECKBOX "Allo&w callers to specify their own node numbers", 7031, 17, 113, 208, 11, BS_TOP | BS_MULTILINE | WS_GROUP
+	AUTOCHECKBOX "Zezwól &dzwoni¹cym na ustawienie w³asnych numerów wêz³a", 7031, 17, 113, 208, 11, BS_TOP | BS_MULTILINE | WS_GROUP
 	DEFPUSHBUTTON "OK", 1, 116, 136, 60, 14, WS_GROUP
 	PUSHBUTTON "Anuluj", 2, 181, 136, 60, 14
 END
 
 7033 DIALOG 0, 0, 220, 50
 STYLE DS_SETFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Incoming Protocol Properties"
+CAPTION "W³a"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	AUTOCHECKBOX "Allow &callers to access my local area network", 7034, 7, 7, 208, 18, BS_LEFT | BS_TOP | BS_MULTILINE
@@ -1733,88 +1733,88 @@ END
 
 7035 DIALOGEX 0, 0, 230, 215
 STYLE DS_SETFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Networking"
+CAPTION "Sieæ"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT "&Network components:", -1, 7, 7, 217, 9
+	LTEXT "&Sk³adniki sieci:", -1, 7, 7, 217, 9
 	CONTROL "", 7036, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000440D, 7, 17, 215, 89, WS_EX_CLIENTEDGE
-	PUSHBUTTON "&Install...", 7037, 9, 110, 67, 14, WS_GROUP
-	PUSHBUTTON "&Uninstall", 7038, 80, 110, 67, 14, WS_GROUP
-	PUSHBUTTON "P&roperties", 7039, 153, 110, 67, 14, WS_GROUP
-	GROUPBOX "Description", -1, 7, 138, 213, 69
+	PUSHBUTTON "&Instaluj..", 7037, 9, 110, 67, 14, WS_GROUP
+	PUSHBUTTON "&Odinstaluj", 7038, 80, 110, 67, 14, WS_GROUP
+	PUSHBUTTON "&W³aœciwoœci", 7039, 153, 110, 67, 14, WS_GROUP
+	GROUPBOX "Opis", -1, 7, 138, 213, 69
 	LTEXT "<protocol description>", 7040, 17, 150, 193, 48
 END
 
 7042 DIALOGEX 0, 0, 230, 215
 STYLE DS_SETFONT | DS_CONTEXTHELP | WS_CHILD | WS_CAPTION
-CAPTION "Users"
+CAPTION "U¿ytkownicy"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT "&Users allowed to connect:", -1, 7, 5, 213, 8
+	LTEXT "&U¿ytkownicy którzy mog¹ siê po³¹czyæ:", -1, 7, 5, 213, 8
 	CONTROL "", 7043, "SYSLISTVIEW32", WS_BORDER | WS_GROUP | WS_TABSTOP | 0x0000440D, 7, 19, 214, 83, WS_EX_CLIENTEDGE
-	PUSHBUTTON "&New...", 7044, 7, 107, 67, 14, WS_GROUP
-	PUSHBUTTON "&Delete", 7045, 80, 107, 67, 14, WS_GROUP
-	PUSHBUTTON "P&roperties", 7046, 153, 107, 67, 14, WS_GROUP
-	AUTOCHECKBOX "Re&quire all users to secure their passwords and data.", 7048, 8, 151, 217, 12, BS_TOP | BS_MULTILINE
-	AUTOCHECKBOX "Al&ways allow directly connected devices such as palmtop computers to connect without providing a password.", 7049, 8, 169, 217, 23, BS_TOP | BS_MULTILINE
-	LTEXT "Note that other factors, such as a disabled user account, may affect a user's ability to connect.", -1, 9, 126, 212, 23
+	PUSHBUTTON "&Nowy.....", 7044, 7, 107, 67, 14, WS_GROUP
+	PUSHBUTTON "&Usuñ.....", 7045, 80, 107, 67, 14, WS_GROUP
+	PUSHBUTTON "&W³aœciwoœci", 7046, 153, 107, 67, 14, WS_GROUP
+	AUTOCHECKBOX "Wy&magaj zabezpieczenia danych i hase³ od wszystkich u¿ytkowników.", 7048, 8, 151, 217, 12, BS_TOP | BS_MULTILINE
+	AUTOCHECKBOX "&Zawsze zezwalaj urz¹dzeniom bezpoœrednio po³¹czonym z komputerem do po³¹czenia siê bez podawania has³a.", 7049, 8, 169, 217, 23, BS_TOP | BS_MULTILINE
+	LTEXT "Zauwa¿ ¿e inne ustawienia, takie jak wy³¹czone konto u¿ytkownika, mog¹ mieæ wp³yw na mo¿liwoœæ po³¹czenia siê u¿ytkownika.", -1, 9, 126, 212, 23
 END
 
 7049 DIALOG 0, 0, 317, 143
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT "Select the check box next to each user who should be allowed a connection to this computer.  Note that other factors, such as a disabled user account, may affect a user's ability to connect.", -1, 10, 1, 275, 27
-	LTEXT "&Users allowed to connect:", -1, 10, 28, 275, 8
+	LTEXT "Wybierz u¿ytkowników, którym chcesz zezwoliæ na ³¹czenie siê z tym komputerem.  Note that other factors, such as a disabled user account, may affect a user's ability to connect.", -1, 10, 1, 275, 27
+	LTEXT "&U¿ytkownicy, którzy mog¹ siê po³¹czyæ:", -1, 10, 28, 275, 8
 	CONTROL "", 7043, "SYSLISTVIEW32", WS_BORDER | WS_GROUP | WS_TABSTOP | 0x0000440D, 10, 42, 275, 73
-	PUSHBUTTON "&Add...", 7044, 10, 122, 65, 14, WS_GROUP
-	PUSHBUTTON "&Remove", 7045, 79, 122, 65, 14, WS_GROUP
-	PUSHBUTTON "&Properties", 7046, 147, 122, 65, 14, WS_GROUP
+	PUSHBUTTON "&Dodaj", 7044, 10, 122, 65, 14, WS_GROUP
+	PUSHBUTTON "&Usuñ", 7045, 79, 122, 65, 14, WS_GROUP
+	PUSHBUTTON "&W³aœciwoœci", 7046, 147, 122, 65, 14, WS_GROUP
 END
 
 7050 DIALOG 0, 0, 317, 143
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT "Select the check box next to each device you want to use for incoming connections.", -1, 10, 4, 299, 10
-	LTEXT "&Connection devices:", -1, 10, 16, 275, 8
+	LTEXT "Wybierz urz¹dzenie, które chcesz u¿yæ do odbierania po³¹czeñ przychodz¹cych.", -1, 10, 4, 299, 10
+	LTEXT "&Urz¹dzenia:", -1, 10, 16, 275, 8
 	CONTROL "", 7011, "SYSLISTVIEW32", WS_BORDER | WS_GROUP | WS_TABSTOP | 0x0000440D, 10, 26, 297, 87
-	PUSHBUTTON "P&roperties", 7013, 243, 120, 65, 14, WS_GROUP
+	PUSHBUTTON "&W³aœciwoœci", 7013, 243, 120, 65, 14, WS_GROUP
 END
 
 7051 DIALOG 0, 0, 317, 143
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT "Select the check box next to each type of networking software that should be enabled for incoming connections.", -1, 10, 1, 288, 20
-	LTEXT "Networking &software:", -1, 10, 24, 274, 8
+	LTEXT "Wybierz us³ugi sieciowe, które maj¹ byæ u¿yte do obs³ugi po³¹czeñ przychodz¹cych.", -1, 10, 1, 288, 20
+	LTEXT "&Us³ugi sieciowe:", -1, 10, 24, 274, 8
 	CONTROL "", 7036, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000440D, 10, 34, 286, 33
-	PUSHBUTTON "&Install...", 7037, 108, 71, 60, 14, WS_GROUP
-	PUSHBUTTON "&Uninstall", 7038, 172, 71, 60, 14, WS_GROUP
-	PUSHBUTTON "&Properties", 7039, 236, 71, 60, 14, WS_GROUP
+	PUSHBUTTON "&Instaluj...", 7037, 108, 71, 60, 14, WS_GROUP
+	PUSHBUTTON "&Odinstaluj", 7038, 172, 71, 60, 14, WS_GROUP
+	PUSHBUTTON "&W³aœciwoœci", 7039, 236, 71, 60, 14, WS_GROUP
 	LTEXT "<protocol description>", 7040, 21, 105, 273, 38
-	LTEXT "Description:", -1, 21, 95, 275, 8
+	LTEXT "Opis:", -1, 21, 95, 275, 8
 END
 
 7052 DIALOG 0, 0, 317, 143
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT "Virtual private connections to your computer through the Internet are possible only if your computer has a known name or IP address on the Internet.", -1, 10, 4, 290, 20
-	AUTORADIOBUTTON "&Allow virtual private connections", 7053, 29, 63, 265, 10, BS_TOP | BS_MULTILINE | WS_GROUP
-	AUTORADIOBUTTON "&Do not allow virtual private connections", 7054, 29, 78, 265, 10, BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
-	LTEXT "Do you want to allow virtual private connections to this computer?", -1, 17, 49, 275, 8
-	LTEXT " If you allow VPN connections, ReactOS will modify the Internet Connection Firewall to allow your computer to send and receive VPN packets.", -1, 10, 25, 293, 25
+	LTEXT "Wirtualne Po³¹czenia Prywatne do twojego komputera poprzez Internet s¹ mo¿liwe wy³¹cznie gdy komputer og³asza swoj¹ nazwê albo adres IP.", -1, 10, 4, 290, 20
+	AUTORADIOBUTTON "&Zezwalaj na Wirtualne Po³¹czenia Prywatne", 7053, 29, 63, 265, 10, BS_TOP | BS_MULTILINE | WS_GROUP
+	AUTORADIOBUTTON "&Nie zezwalaj na Wirtualne Po³¹czenia Prywatne", 7054, 29, 78, 265, 10, BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
+	LTEXT "Czy chcesz zezwoliæ na Wirtualne Po³¹czenia Prywatne z tym komputerem?", -1, 17, 49, 275, 8
+	LTEXT " Jeœli tak, ReactOS zmodyfikuje Firewall Systemowy aby przepuszcza³ on pakiety VPN.", -1, 10, 25, 293, 25
 END
 
 7055 DIALOG 0, 0, 317, 143
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT "&Device for this connection:", -1, 23, 24, 275, 8
+	LTEXT "&Urz¹dzenie dla tego po³¹æzenia:", -1, 23, 24, 275, 8
 	COMBOBOX 7056, 22, 36, 275, 125, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
-	LTEXT "Devices other than the one you select will not be affected and may be used for other purposes.", -1, 10, 4, 275, 17
-	PUSHBUTTON "&Properties", 7061, 232, 53, 65, 14, WS_GROUP
+	LTEXT "Urz¹dzenia inne ni¿ wybrane nie zostan¹ zajête i bêd¹ mog³y byæ wykorzystane do innych celów.", -1, 10, 4, 275, 17
+	PUSHBUTTON "&W³aœciwoœci", 7061, 232, 53, 65, 14, WS_GROUP
 END
 
 7379 DIALOG 0, 0, 317, 143
@@ -1825,556 +1825,556 @@ END
 
 19900 DIALOG 0, 0, 156, 44
 STYLE DS_SETFONT | WS_POPUP | WS_CAPTION
-CAPTION "Dial-Up Networking"
+CAPTION "Po³¹czenia Dial-Up"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	ICON 563, 19901, 10, 10, 18, 20
-	LTEXT "Waiting for services to start...", 19902, 34, 16, 120, 8
+	LTEXT "Oczekiwanie na start us³ugi...", 19902, 34, 16, 120, 8
 END
 
 STRINGTABLE
 BEGIN
-	187 "&No, do not dial\0"
-	188 "You (or a program) have requested information from %1. Which connection do you want to use?\0"
-	189 "Add Alternate Phone Number\0"
-	190 "Dial only first available device\0"
-	191 "Dial all devices\0"
-	192 "Dial devices only as needed\0"
-	193 "Enter a user name and password with access to the remote network domain.\0"
-	194 "Network Address Translation (NAT) is currently installed as a routing protocol,\nand must be removed before enabling Internet Connection Sharing.\nTo remove Network Address Translation, open the Routing and Remote Access Manager\nsnapin and expand the router's entry in the left pane.\nDelete the Network Address Translation routing protocol from the list of IP\nrouting protocols.\0"
-	195 "The area code must contain only the digits 0 to 9.\0"
-	196 "The entry name must contain at least one non-blank character and cannot begin with a period.  Choose a different name.\0"
-	197 "You must choose a value from %1 to %2 for this field.\0"
-	198 "The custom authentication configuration DLL could not be loaded.  Make sure the custom authentication package is correctly installed.\0"
-	199 "The connection selected was established by the Multiprotocol router.\nPlease use the 'Routing and RAS Admin' tool to hang up the connection.\0"
-	200 "Comment\0"
-	201 "The custom authentication package configuration failed.\0"
-	202 "TCP/IP is not installed or is disabled for Routing and Remote Access.  In Control Panel, start Network, go to the Services page, choose 'Routing and Remote Access Service' Properties, and press the Network button.\0"
-	203 "IPX is not installed or is disabled for Routing and Remote Access.  You can install/enable IPX by viewing the properties of any connection in \"Connections\" folder.\0"
-	204 "Remove the selected device(s) from the list?\0"
-	205 "Delete %1 from the phonebook?\0"
-	206 "Disconnect from %1?\0"
-	207 "A file named %1 already exists.  Overwrite it?\0"
-	208 "Syntax errors were found in the script. Do you wish to view the error log?\0"
-	209 "'%1' is now connected.  \0"
-	210 "Right-click the Dial-Up Networking Monitor on the task bar to hang up or check the status of your connection.\0"
-	212 "Connected successfully.\0"
-	213 "The custom authentication method selected must be initialized by pressing Properties.\0"
+	187 "&Nie wybieraj\0"
+	188 "U¿ytkownik (lub program) zarz¹da³ informacji z %1. Którego po³¹czenia chcesz u¿yæ?\0"
+	189 "Dodaj kolejne numery telefoniczne\0"
+	190 "Wybieraj tylko na pierwszym dostêpnym urz¹dzeniu\0"
+	191 "Wybieraj na wszystkich urz¹dzeniach\0"
+	192 "Wybieraj na urz¹dzeniach wed³ug potrzeb\0"
+	193 "WprowadŸ nazwê u¿ytkownika i has³o z dostêpem do zdalnej domeny sieciowej.\0"
+	194 "Translacja Adresów w Sieci (NAT) jest obecnie zainstalowana jako protokó³ routuj¹cy,\ni musi zostaæ usuniêta przed w³¹czeniem Udostêpniania Po³¹czenia Internetowego.\nAby usun¹æ NAT, otwórz Mened¿era Routingu i Dostêpu Zdalnego\nsnapin i rozwiñ opcje routera w panelu po lewej.\nSkasuj protokó³ Translacji Adresów w Sieci z listy\nprotoko³ów routingu IP.\0"
+	195 "Numer kierunkowy mo¿e zawieraæ jedynie cyfry od 0 do 9.\0"
+	196 "Wprowadzona nazwa musi zawieraæ co najmniej jeden znak ró¿ny od spacji i nie mo¿e zaczynaæ siê od kropki. Proszê wybraæ inn¹ nazwê.\0"
+	197 "Musisz wybraæ wartoœæ od %1 do %2 dla tego pola.\0"
+	198 "Biblioteka DLL konfiugracji w³asnego uwierzytelniania nie zosta³a za³adowana. Upewnij siê, ¿e pakiet w³asnego uwierzytelniania siê zosta³ poprawnie zainstalowany.\0"
+	199 "Wybrane po³¹czenie zosta³o utworzone przez router wieloprotoko³owy.\nProszê u¿yæ narzêdzia 'Routing i Admin RAS' do zawieszenia tego po³¹czenia.\0"
+	200 "Komentarz\0"
+	201 "Konfiguracja pakietu w³asnego uwierzytelniania zakoñczone niepowodzeniem.\0"
+	202 "TCP/IP nie zosta³ zainstalowanay albo jest wy³¹czony dla Routingu i Dostêpu Zdalnego. W Panelu Sterowania, wybierz Sieci, przejdŸ na Us³ugi, wybierz W³aœciwoœci us³ugi 'Routing i Dostêp Zdalny', i naciœnij przycisk Sieæ.\0"
+	203 "IPX nie zosta³ zainstalowanay albo jest wy³¹czony dla Routingu i Dostêpu Zdalnego. Mo¿esz zainstalowaæ/w³¹czyæ IPX przegl¹daj¹c W³aœciwoœci dowolnego po³¹czenia.\0"
+	204 "Czy usun¹æ wybrane urz¹dzenia z listy?\0"
+	205 "Skasowaæ %1 z Ksi¹¿ki Telefonicznej?\0"
+	206 "Roz³¹czyæ siê z %1?\0"
+	207 "Plik o nazwie %1 ju¿ istnieje. Czy chcesz go nadpisaæ?\0"
+	208 "W skrypcie znajduj¹ siê b³êdy sk³adni. Czy chcesz przejrzeæ komunikaty o b³êdach?\0"
+	209 "'%1' jest teraz po³¹czony.  \0"
+	210 "Naciœnij prawy przycisk myszki na Monitorze Sieci Dial-Up w zasobniku systemowym, aby roz³¹czyæ siê lub sprawdziæ stan twojego po³¹czenia.\0"
+	212 "Po³¹czenie udane.\0"
+	213 "Wybrana metoda uwierzytelniania w³asnego musi zostaæ uaktywniona we W³aœciwoœciach.\0"
 	214 "lnk\0"
-	215 "Dial-up shortcut files (*.rnk)\0"
+	215 "Skrót po³¹czenia Dial-up(*.rnk)\0"
 	216 "*.rnk\0"
-	217 "Create Dial-Up Shortcut\0"
-	218 "Link to %1 failed.  Reconnect pending...\0"
-	219 "Cannot retrieve framing information.\0"
-	220 "Cannot retrieve port information.\0"
+	217 "Utwórz skrót po³¹czenia Dial-Up\0"
+	218 "Po³¹czenie z %1 nieudane.  Ponowne po³¹czenie w toku...\0"
+	219 "Nie mo¿na uzyskaæ informacji o ramce.\0"
+	220 "Nie mo¿na uzyskaæ informacji o.\0"
 	221 "Cannot retrieve projection information.\0"
-	222 "Cannot load connection list.\0"
-	223 "Client:\0"
-	224 "Details\0"
-	225 "Device:\0"
-	226 "Network:\0"
-	227 "(not connected)\0"
-	228 "&Connect...\0"
-	229 "Hang &Up\0"
-	230 "Dial-up Connection\0"
-	231 "Modem configuration set to defaults\0"
+	222 "Nie mo¿na za³¹dowaæ listy po³¹czeñ.\0"
+	223 "Klienci:\0"
+	224 "Szczegó³y\0"
+	225 "Urz¹dzenia:\0"
+	226 "Sieæ:\0"
+	227 "(niepo³¹czony)\0"
+	228 "&Po³¹cz...\0"
+	229 "Zawieœ &po³¹czenie\0"
+	230 "Po³¹czenie Dial-up\0"
+	231 "Konfiguracja Modemu ustawiona na domyœlne\0"
 	232 "COM1\0"
-	233 "Remote Router\0"
-	234 "Modem or device\0"
-	235 "Please enter a username for this interface's account on the remote router.\0"
-	236 "An entry named %1 already exists.  Choose a different name.\0"
-	237 "You may want to allow sending your password without encryption.\0"
-	238 "Password Encryption\0"
-	239 "The wizard is ready to create your connection.\0"
-	240 "Finished\0"
-	241 "Phone &number:\0"
-	242 "Call Me Back At\0"
-	243 "Edit Alternate Phone Number\0"
-	244 "Since this connection is currently active, some settings will not take effect until the next time you dial it.\0"
-	245 "There are no connections available to all users.  You must logon before dialing.\0"
-	246 "The phonebook is empty.\n\nPress OK to add an entry.\0"
-	247 "Due to import/export restrictions, data encryption is not available in this version of ReactOS.\0"
-	248 "Please enter an X.25 address on the next screen.\0"
-	249 "Error %1: %2\0"
-	250 "%1\n\nError %2: %3\0"
-	251 "%1\n\nError %2: %3\nDiagnostic: %4\0"
-	252 "%1\n\nError %2: %3\nFail Code: %4\0"
-	253 "%1\n\nError %2: %3\n\nPress F1 for more information.\0"
-	254 "%1\n\nError %2: %3\nName: %4\0"
+	233 "Router Zdalny\0"
+	234 "Modem albo urz¹dzenie\0"
+	235 "Proszê wprowadziæ nazwê u¿ytkownika dla konta tego interface na routerze zdalnym.\0"
+	236 "Nazwa %1 ju¿ istnieje. Proszê wprowadziæ inn¹ nazwê.\0"
+	237 "Mo¿esz zezwoliæ na wysy³anie twojego has³a bez szyfrowania.\0"
+	238 "Szyfrowanie Has³a\0"
+	239 "Kreator konfiguracji mo¿e ju¿ utworzyæ po³¹czenie.\0"
+	240 "Gotowe\0"
+	241 "Numer &telefoniczny:\0"
+	242 "Oddzwoñ na numer\0"
+	243 "Edycja dodatkowych numerów \0"
+	244 "Jako, ¿e to po³¹czenie jest obecnie aktywne, niektóre ustawienia zostan¹ uwzglêdnione dopiero po roz³¹czeniu.\0"
+	245 "Nie ma ¿adnych po³¹czeñ dostêpnych dla dowolnego u¿ytkownika. Musisz zalogowaæ siê przed po³¹czeniem.\0"
+	246 "Ksi¹¿ka telefoniczna jest pusta.\n\nNaciœnij OK by dodaæ now¹ pozycjê.\0"
+	247 "Ze wzglêdu na ograniczenia w imporcie/eksporcie, szyfrowanie danych nie jest dostêpne w tej wersji ReactOS.\0"
+	248 "Proszê wprowadziæ adres X.25 na nastêpnym ekranie.\0"
+	249 "B³¹d %1: %2\0"
+	250 "%1\n\nB³¹d %2: %3\0"
+	251 "%1\n\nB³¹d %2: %3\nDiagnostyka: %4\0"
+	252 "%1\n\nB³¹d %2: %3\nKod b³êdu: %4\0"
+	253 "%1\n\nB³¹d %2: %3\n\nNaciœnij F1 aby zobaczyæ wiêcej informacji.\0"
+	254 "%1\n\nB³¹d %2: %3\nNazwa: %4\0"
 	255 "%1\n\n%4\0"
-	256 "%1\n\nError %2: %3\nResponse: %4\0"
-	257 "Fail Code: 0x%1\n\0"
-	258 "Name: %1\n\0"
-	259 "%1 CP reported error %2: %3\n\0"
-	260 "%1 CP connected successfully.\n\0"
-	261 "You can choose which dial-up protocol to use.\0"
-	262 "Choose Dial-up Protocol\0"
-	263 "Press Finish to save '%1'.\0"
+	256 "%1\n\nB³¹d %2: %3\nOdpowiedŸ: %4\0"
+	257 "Kod b³êdu: 0x%1\n\0"
+	258 "Nazwa: %1\n\0"
+	259 "%1 CP zg³osi³ b³¹d %2: %3\n\0"
+	260 "%1 CP po³¹czy³ siê.\n\0"
+	261 "Mo¿esz wybraæ protokó³ dial-up którego chcesz u¿ywaæ.\0"
+	262 "Wybierz protokó³ Dial-up\0"
+	263 "Naciœnij Zakoñcz by zapisaæ '%1'.\0"
 	264 "netcfg.hlp\0"
-	265 "&Move successful number to the top of the list on connection\0"
-	266 "&New phone number:\0"
-	267 "&Phone numbers:\0"
-	268 "Phone Numbers\0"
-	269 "You may enter a fixed IP address.\0"
-	270 "IP Address\0"
-	271 "The Internet protocols (TCP/IP), are not installed or are disabled for Remote Access.  In Control Panel, start Network, go to the Services page, choose 'Remote Access Service' Properties, and press the Network button.\0"
+	265 "&Przenieœ dzia³aj¹cy numer na pocz¹tek listy przy po³¹czeniu\0"
+	266 "&Nowy numer telefoniczny:\0"
+	267 "N&umery telefoniczne:\0"
+	268 "Numery telefoniczne\0"
+	269 "Mo¿esz wprowadziæ sta³y adres IP.\0"
+	270 "Adres IP\0"
+	271 "Protokó³ TCP/IP, nie zosta³ zainstalowanay albo jest wy³¹czony dla Dostêpu Zdalnego. W Panelu Sterowania, wybierz Sieci, przejdŸ na Us³ugi, wybierz W³aœciwoœci us³ugi 'Dostêp Zdalny', i naciœnij przycisk Sieæ.\0"
 	272 "TCP/IP\0"
-	273 "IPSec, default policy\0"
-	274 "IPX/SPX or compatible\0"
-	275 " (the current location)\0"
+	273 "IPSec, ustawienia domyœlne\0"
+	274 "IPX/SPX lub kompatybilne\0"
+	275 " (obecna lokalizacja)\0"
 	276 "ISDN\0"
-	277 "All available ISDN lines multi-linked\0"
-	278 "64K Digital\0"
-	279 "56K Digital\0"
-	280 "56K Voice\0"
-	281 "You may need a special procedure before connecting.\0"
-	282 "Choose Logon Options\0"
+	277 "Wszystkie dostêpne linie ISDN po³¹czone\0"
+	278 "64K Cyfrowy\0"
+	279 "56K Cyfrowy\0"
+	280 "56K Analogowy\0"
+	281 "Mo¿esz potrzebowaæ specjalnej procedury przed po³¹czeniem.\0"
+	282 "Wybierz Opcje Logowania\0"
 	283 "%d%%\0"
-	284 "Phone number for %s\0"
-	285 "&New location:\0"
-	286 "&Locations:\0"
-	287 "Locations\0"
-	288 "This is the device that will be used to make the connection.\0"
-	289 "Select a Device\0"
+	284 "Numer telefoniczny dla %s\0"
+	285 "&Nowa lokalizacja:\0"
+	286 "&Lokalizacje:\0"
+	287 "Lokalizacje\0"
+	288 "To urz¹dzenie bêdzie u¿yte do nawi¹zania po³¹czenia.\0"
+	289 "Wybierz urz¹dzenie\0"
 	290 "Multiple Lines cannot be bundled unless you are calling a PPP server.\0"
 	291 "Modem\0"
-	292 "The modem is not installed.\0"
-	293 "MS Point-to-Point Encryption, 128 bit RSA/RC4\0"
-	294 "MS Point-to-Point Encryption, 40 bit RSA/RC4\0"
+	292 "Modem nie jest zainstalowany.\0"
+	293 "Szyfrowanie MS Point-to-Point, 128 bit RSA/RC4\0"
+	294 "Szyfrowanie MS Point-to-Point, 40 bit RSA/RC4\0"
 	295 "Multiple Lines\0"
-	296 "(Press Configure to set)\0"
-	297 "You may enter fixed DNS and WINS addresses.\0"
-	298 "Name Server Addresses\0"
+	296 "(Naciœnij Konfiguruj aby ustawiæ)\0"
+	297 "Mo¿esz wprowadziæ sta³e adresy serwerów DNS i WINS.\0"
+	298 "Adres DNS\0"
 	299 "Down-level RAS\0"
 	300 "PPP\0"
 	301 "PPP multi-link\0"
 	302 "SLIP\0"
 	303 "NetBEUI\0"
-	304 "A personal phonebook has been created and initialized with the contents of the system phonebook.\0"
-	305 "No alternate phonebook is selected.\0"
-	306 "That device cannot be dynamically configured.\0"
-	307 "The entry cannot be deleted because it is connected.\0"
-	308 "No entry is selected.  Press the New button to create an entry.\0"
-	309 "A non-zero IP address must be supplied when 'specify an IP address' is selected.\0"
-	310 "An X.25 Address is required when an X.25 dial-up network or X.25 device is selected.\0"
-	311 "(none)\0"
-	312 "'%1' is already in the list.\0"
-	313 "Secure my password and my data\0"
-	314 "The %1 protocol cannot be selected because it is not installed or is disabled for Remote Access.  To change, in Control Panel start Network, choose Services page, Remote Access Properties, and press the Network button.\0"
-	315 "Cannot save password.\0"
-	316 "Cannot display data.\0"
-	317 "Cannot get auto-dial information.\0"
-	318 "Cannot load dialog.\0"
-	319 "Cannot disable shared access.\0"
-	320 "Cannot load property page.\0"
-	321 "Cannot load phonebook.\0"
-	322 "Cannot load RAS Manager port information.\0"
-	323 "Cannot read user preferences from registry.\0"
-	324 "Cannot load script information.\0"
-	325 "Cannot view script.log with notepad.exe\0"
-	326 "Cannot edit switch.inf with notepad.exe\0"
-	327 "Cannot load TAPI information.\0"
-	328 "Cannot load X.25 information.\0"
-	329 "Cannot create new phonebook.\0"
-	330 "Cannot enable shared access.\0"
-	331 "Cannot connect the phonebook entry.\0"
-	332 "Cannot get send/receive buffer.\0"
-	333 "Cannot get status information for a port.\0"
-	334 "Cannot retrieve protocol information.\0"
-	335 "Cannot receive buffer from device.\0"
-	336 "Cannot send buffer to device.\0"
-	337 "Cannot retrieve data.\0"
-	338 "Cannot save TAPI information.\0"
-	339 "Cannot save data.\0"
-	340 "The script has halted.\0"
-	341 "The script has halted due to an error. Do you wish to view the error log?\0"
-	342 "Cannot set auto-dial information.\0"
-	343 "Cannot delete saved password.\0"
-	344 "Cannot write phonebook.\0"
-	345 "Writing preferences to registry\0"
-	346 "Cannot write the shortcut file.\0"
+	304 "Osobista Ksi¹¿ka Telefoniczna zosta³a stworzona i uzupe³niona zawartoœci¹ Systemowej Ksi¹¿ki Telefonicznej.\0"
+	305 "Brak Dodatkowej Ksi¹¿ki Telefonicznej.\0"
+	306 "To urz¹dzenie nie mo¿e byæ skonfigurowane dynamicznie.\0"
+	307 "Ten wpis nie mo¿e zostaæ skasowany podczas trwania po³¹czenia.\0"
+	308 "Nie wybrano ¿adnego wpisu. Naciœnij przycisk Nowy aby utworzyæ wpis.\0"
+	309 "Niezerowy adres IP musi zostaæ podany, gdy zaznaczona jest opcja 'wyznacz adres IP'.\0"
+	310 "Aby u¿ywaæ interface sieciowego X.25 dial-up albo urz¹dzenia X.25, wymagany jest Adres X.25.\0"
+	311 "(brak)\0"
+	312 "'%1' jest ju¿ na liœcie.\0"
+	313 "Zaszyfruj moje has³o i dane\0"
+	314 "Protokó³ %1 nie mo¿e zostaæ wybrany, gdy¿ nie jest zainstalowany albo jest wy³¹czony dla Dostêpu Zdalnego. Aby to zmieniæ, wPanelu Sterowania, wybierz Sieci, przejdŸ na Us³ugi, wybierz W³aœciwoœci us³ugi 'Dostêp Zdalny', i naciœnij przycisk Sieæ.\0"
+	315 "Nie mo¿na zapisaæ has³a.\0"
+	316 "Nie mo¿na wyœwietliæ danych.\0"
+	317 "Nie mo¿na pobraæ informacji o autowybieraniu.\0"
+	318 "Nie mo¿na za³adowaæ dialogu.\0"
+	319 "Nie mo¿na wy³¹czyæ dostêpu wspó³dzielonego.\0"
+	320 "Nie mo¿na za³adowaæ w³aœciwoœci.\0"
+	321 "Nie mo¿na za³adowaæ Ksi¹¿ki Telefonicznej.\0"
+	322 "Nie mo¿na za³adowaæ informacji o porcie z RAS Managera.\0"
+	323 "Nie mo¿na odczytaæ ustawieñ z rejestru.\0"
+	324 "Nie mo¿na za³adowaæ informacji o skrypcie.\0"
+	325 "Nie mo¿na obejrzeæ script.log za pomoc¹ notepad.exe\0"
+	326 "Nie mo¿na edytowaæ switch.inf za pomoc¹ notepad.exe\0"
+	327 "Nie mo¿na za³adowaæ informacji TAPI.\0"
+	328 "Nie mo¿na za³adowaæ informacji o X.25.\0"
+	329 "Nie mo¿na utworzyæ nowej Ksi¹¿ki Telefonicznej.\0"
+	330 "Nie mo¿na w³¹czyæ dostêpu wspó³dzielonego.\0"
+	331 "Nie mo¿na po³¹czyæ siê z numerem pod tym wpisie w Ksi¹zce Telefonicznej.\0"
+	332 "Nie mo¿na otworzyæ bufora odbierania/wysy³ania.\0"
+	333 "Nie mo¿na uzyskaæ informacji o stanie z portu.\0"
+	334 "Nie mo¿na uzyskaæ informacji o protokole.\0"
+	335 "Nie mo¿na otworzyæ bufora w urz¹dzeniu.\0"
+	336 "Nie mo¿na wys³aæ danych do bufora w urz¹dzeniu.\0"
+	337 "Nie mo¿na odebraæ danych.\0"
+	338 "Nie mo¿na zapisaæ informacji TAPI.\0"
+	339 "Nie mo¿na zapisaæ danych.\0"
+	340 "Skrypt zosta³ zatrzymany.\0"
+	341 "Skrypt zosta³ zatrzymany z powodu b³êdu. Czy chcesz przejrzeæ logi z b³êdami?\0"
+	342 "Nie mo¿na ustawiæ danych do autowybierania.\0"
+	343 "Nie mo¿na skasowaæ zapisanego has³a.\0"
+	344 "Nie mo¿na zapisaæ Ksi¹¿ki Telefonicznej.\0"
+	345 "Zapisywanie ustawieñ do rejestru\0"
+	346 "Nie mo¿na zapisaæ skrótu.\0"
 	347 "OK\0"
-	348 "What is your ISP's phone number?\0"
-	349 "Phone Number to Dial\0"
-	350 "The Password and Confirm password fields do not match.\0"
-	351 "The New Password and Confirm New Password fields do not match.\0"
+	348 "Jaki jest numer telefoniczny twojego ISP?\0"
+	349 "Numer telefoniczny do wybierania\0"
+	350 "Pola Has³o i PotwierdŸ has³o nie zgadzaj¹ siê ze sob¹.\0"
+	351 "Pola Nowe Has³o i PotwierdŸ Nowe has³o nie zgadzaj¹ siê ze sob¹.\0"
 	352 "pbk\0"
-	353 "Phonebook files (*.pbk)\0"
+	353 "Pliki Ksi¹¿ki Telefonicznej (*.pbk)\0"
 	354 "*.pbk\0"
-	355 "Open Phonebook\0"
-	356 "Clone Phonebook Entry\0"
-	357 "Edit Phonebook Entry\0"
-	358 "New Phonebook Entry\0"
-	359 "Phone number\0"
-	360 "Phone numbers\0"
-	361 "Network Connections\0"
-	362 "You must select at least one network protocol.\0"
-	363 "Before you can call PPP servers you must install a network protocol with the Control Network applet.\0"
-	364 "&New prefix:\0"
-	365 "&Prefixes:\0"
-	366 "Phone Number Prefixes\0"
-	367 "One or more requested network protocols did not connect successfully.\n\n\0"
-	368 "Press Accept to use the connection as is, or Hang Up to disconnect.\0"
-	369 "Point-to-point protocol settings to use when %1 initiates a demand dial connection on interface %2:\0"
-	370 "[To change the saved password, click here]\0"
-	405 "NetBEUI protocol is required to call older RAS servers.\0"
-	406 "Before you can call older RAS servers you must install the NetBEUI protocol.  NetBEUI can be installed with the Control Panel Network applet.\0"
-	407 "&Redial\0"
-	408 "You have chosen to disable one or more transports. Doing so requires the routing managers and routing protocols for the disabled transports to be removed from this demand-dial interface.\nClick Yes if you want to conti \n \n\n\n\n\n\nnue, or No if you want to re-enable the transports.\0"
-	409 "Internet Connection Sharing\0"
-	410 "Demand-dial interface dial-in account.\0"
-	411 "You now need to set the dial-out credentials that interface '%1' will use when connecting to the remote router. These credentials must match the dial-in credentials configured on the remote router. When connecting to a \n \n\n\n\n\n\nWin NT4/2000 router, the user name must also match the interface name of the remote router.\0"
+	355 "Otwórz Ksi¹¿kê Telefoniczn¹\0"
+	356 "Skopiuj Wpis w Ksi¹¿ce Telefonicznej\0"
+	357 "Edytuj Wpis w Ksi¹¿ce Telefonicznej\0"
+	358 "Nowy Wpis w Ksi¹¿ce Telefonicznej\0"
+	359 "Numer Telefoniczny\0"
+	360 "Numery Telefoniczne\0"
+	361 "Po³¹czenia sieciowe\0"
+	362 "Musisz wybraæ przynajmniej jeden protokó³ sieciowy.\0"
+	363 "Zanim po³¹czysz siê z którymœ z serwerów PPP musisz zainstalowaæ protokó³ sieciowy za pomoc¹ apletu Control Network.\0"
+	364 "&Nowy prefiks:\0"
+	365 "&Prefiksy:\0"
+	366 "Prefiksy Numeru Telefonicznego\0"
+	367 "Jeden lub wiêcej wymaganych protoko³ów nie ustanowi³o prawid³owego po³¹czenia.\n\n\0"
+	368 "Naciœnij Akceptuj aby u¿yæ po³¹czenia w obecnym stanie, albo Zawieœ aby siê roz³¹czyæ.\0"
+	369 "Protokó³ Point-to-point (PPP) ustawiony do u¿ycia gdy %1 zainicjuje po³¹czenie dial-up na interface %2:\0"
+	370 "[Aby zmieniæ zapisane has³o, naciœnij tutaj]\0"
+	405 "Protokó³ NetBEUI jest wymagany do po³¹czenia ze starszymi serwerami RAS.\0"
+	406 "Zanim bêdziesz w stanie po³¹czyæ siê ze starszymi serwerami RAS, musisz zainstalowaæ protokó³ NetBEUI. NetBEUI z apletu Sieci w Panelu Sterowania.\0"
+	407 "&Ponowne Wybieranie\0"
+	408 "Zdecydowa³eœ siê na wy³¹czenie jednego lub wiêcej transportów. Wymaga to usuniêcia mened¿erów i protoko³ów routowania wy³¹czonych transportów z tego interface demand-dial.\nNaciœnij Tak jeœli chcesz konty \n \n\n\n\n\n\nnuowaæ, lub Nie, jeœli chcesz ponownie w³¹czyæ te transporty.\0"
+	409 "Wspó³dzielenie £¹cza Internetowego\0"
+	410 "Konto dial-in interface Demand-dial.\0"
+	411 "Musisz teraz ustawiæ informacje dial-out które interface '%1' wykorzysta w po³¹czeniu z routerem zdalnym. Te dane musz¹ zgadzaæ siê z informacjami które zosta³y wprowadzone do routera zdalnego. Podczas po³¹czenia z \n \n\n\n\n\n\n routerem Win NT4/2000 nazwa u¿ytkownika musi rownie¿ zgadzaæ siê z nazw¹ interface routera zdalnego.\0"
 	412 "mpradmin.hlp\0"
-	413 "&Move successful number or address to the top of the list on connection\0"
-	414 "&New phone number or address:\0"
-	415 "&Phone numbers or addresses:\0"
-	416 "Numbers and Addresses\0"
+	413 "&Podczas próby po³¹czeia, przenieœ dzia³aj¹cy numer lub adres na pocz¹tek listy\0"
+	414 "&Nowe numery telefoniczne albo adresy:\0"
+	415 "&Numery telefoniczne lub adresy:\0"
+	416 "Numery i Adresy\0"
 	417 "PPP: Win 95/98/NT4/2000, Internet\0"
-	418 "None\0"
-	419 "SLIP: Unix Connection\0"
-	420 "All devices connected.\0"
-	421 "Receiving registration result...\0"
-	422 "Sending callback information...\0"
-	423 "Sending new password...\0"
-	424 "Calculating link speed...\0"
-	425 "Checking authentication status...\0"
-	426 "Registering your computer on the network...\0"
-	427 "Retrying authentication...\0"
-	428 "Verifying username and password...\0"
-	429 "Authenticated.\0"
-	430 "Connecting through %1...\0"
-	431 "Dialing...\0"
-	432 "Modems connecting...\0"
-	433 "Connecting over cable...\0"
-	434 "Dialing %1...\0"
-	435 "Connecting over X.25 to %1...\0"
+	418 "Brak\0"
+	419 "SLIP: Po³¹czenie z Unix \0"
+	420 "Wszystkie urz¹dzenia pod³¹czone.\0"
+	421 "Odbiór rezultatu rejestracji...\0"
+	422 "Przesy³anie informacji o oddzwanianiu...\0"
+	423 "Wysy³anie nowego has³a...\0"
+	424 "Szacowanie przepustowoœci ³¹cza...\0"
+	425 "Sprawdzanie stanu uwierzytelniania...\0"
+	426 "Rejestrowanie twojego komputera w sieci..\0"
+	427 "Powtarzanie uwierzytelniania...\0"
+	428 "Weryfikacja nazwy u¿ytkownika i has³a...\0"
+	429 "Uwierzytelniono.\0"
+	430 "£¹czenie za pomoc¹ %1...\0"
+	431 "Wybieranie...\0"
+	432 "Po³¹czenie modemów...\0"
+	433 "Po³¹czenie poprzez kabel...\0"
+	434 "Wybieranie %1...\0"
+	435 "Po³¹czenie przez X.25 do %1...\0"
 	436 "Postconnecting through %1...\0"
 	437 "Preconnecting through %1...\0"
-	438 "Connected.\0"
-	439 "Device connected.\0"
-	440 "Disconnected.\0"
-	441 "Modem connected.\0"
-	442 "Cable connected.\0"
-	443 "Opening port...\0"
-	444 "X.25 connected.\0"
-	445 "Port opened.\0"
+	438 "Po³¹czono.\0"
+	439 "Urz¹dzenie pod³¹czone.\0"
+	440 "Roz³¹czono.\0"
+	441 "Modem po³¹czony.\0"
+	442 "Kabel po³¹czony.\0"
+	443 "Otwieranie portu...\0"
+	444 "X.25 po³¹czony.\0"
+	445 "Port otwarty.\0"
 	446 "Postconnect complete.\0"
 	447 "Preconnect complete.\0"
-	448 "Preparing for callback...\0"
-	449 "Checking network protocol connections...\0"
-	450 "Verifying username and password...\0"
-	451 "Connected, bundling additional lines\0"
-	452 "Unknown state.\0"
-	453 "Waiting for callback...\0"
-	454 "Waiting for modem reset...\0"
-	455 "Make the phone number change permanent?\0"
+	448 "Przygotowywanie oddzwaniania...\0"
+	449 "Sprawdzanie po³¹czenia protoko³ów sieciowych...\0"
+	450 "Weryfikacja nazwy u¿ytkownika i has³a...\0"
+	451 "Po³¹czono, dodawanie kolejnych linii\0"
+	452 "Stan nieznany.\0"
+	453 "Oczekiwanie na oddzwonienie...\0"
+	454 "Oczekiwanie na reset modemu...\0"
+	455 "Czy zmieniæ numer telefoniczny modemu na sta³e?\0"
 	456 "scp\0"
 	457 "*.scp\0"
-	458 "Dial-up script files (*.scp)\0"
-	459 "Browse Dial-Up Scripts\0"
-	460 "You must check at least one modem or adapter.\0"
-	461 "Phone number\0"
-	462 "TCP/IP protocol is required to call SLIP servers.\0"
-	463 "Before you can call SLIP servers you must install the TCP/IP protocol.  TCP/IP can be installed with the Control Panel Network applet.\0"
-	464 "Status\0"
-	465 "&New suffix:\0"
-	466 "&Suffixes:\0"
-	467 "Phone Number Suffixes\0"
-	468 "You can go on to choose special settings, if necessary.\0"
-	469 "Custom Settings\0"
-	470 "Manual Modem Command Terminal\0"
-	471 "After Dial Terminal\0"
-	472 "Before Dial Terminal\0"
-	473 "SLIP Login Terminal\0"
-	474 "10 minutes\0"
-	475 "10 seconds\0"
-	476 "1 hour\0"
-	477 "1 minute\0"
-	478 "24 hours\0"
-	479 "2 hours\0"
-	480 "2 minutes\0"
-	481 "30 minutes\0"
-	482 "30 seconds\0"
-	483 "3 seconds\0"
-	484 "4 hours\0"
-	485 "4 minutes\0"
-	486 "5 minutes\0"
-	487 "5 seconds\0"
-	488 "8 hours\0"
-	489 "never\0"
-	490 "You can make the new connection available to any user or only to yourself.\0"
-	491 "Connection Availability\0"
+	458 "Pliku skryptów Dial-up (*.scp)\0"
+	459 "Przegl¹daj skrypty Dial-Up\0"
+	460 "Musisz zaznaczyæ przynajmniej jeden modem lub adapter.\0"
+	461 "Numer telefoniczny\0"
+	462 "Protokó³ TCP/IP jest niezbêdny do po³¹czenia z serwerami SLIP.\0"
+	463 "Przed po³¹czeniem z serwerami SLIP musisz zainstalowaæ protokó³ TCP/IP, za pomoc¹ apletu Sieci w Panelu Sterowania.\0"
+	464 "Stan\0"
+	465 "&Nowy sufiks:\0"
+	466 "&Sufiksy:\0"
+	467 "Sufiks numeru telefonicznego\0"
+	468 "Mo¿esz dostosowaæ ustawienia specjalne, w razie potrzeby.\0"
+	469 "Ustawienia specjalne\0"
+	470 "Terminal w³asnych komend Modemu\0"
+	471 "Terminal po wybraniu\0"
+	472 "Terminal przed wybraniem\0"
+	473 "Terminal logowania do SLIP\0"
+	474 "10 minut\0"
+	475 "10 sekund\0"
+	476 "1 godzina\0"
+	477 "1 minuta\0"
+	478 "24 godziny\0"
+	479 "2 godziny\0"
+	480 "2 minuty\0"
+	481 "30 minut\0"
+	482 "30 sekund\0"
+	483 "3 sekundy\0"
+	484 "4 godziny\0"
+	485 "4 minuty\0"
+	486 "5 minut\0"
+	487 "5 sekund\0"
+	488 "8 godzin\0"
+	489 "nigdy\0"
+	490 "Mo¿esz ustawiæ to po³¹czenia dla wszystkich u¿ytkowników albo tylko dla siebie.\0"
+	491 "Dostêpnoœæ po³¹czenia\0"
 	492 "Discard multiple line settings for the entry?\0"
-	493 "Unavailable device\0"
-	494 "Logon Preferences\0"
-	495 "Dial-up Preferences\0"
+	493 "Urz¹dzenie niedostêpne\0"
+	494 "Preferencje logowania\0"
+	495 "Preferencje Dial-up\0"
 	496 "X.25\0"
 	497 "X.25 PAD\0"
-	498 "You can let other computers access resources through this dial-up connection.\0"
-	499 "VPN Server Selection\0"
+	498 "Mo¿esz zezwoliæ innym komputerom na dostêp do zasobów poprzez to po³¹czenie dial-up.\0"
+	499 "Wybór serwera VPN\0"
 	500 "Cannot enable on-demand dialing.\0"
-	501 "What is the name or address of the VPN server?\0"
+	501 "Jaka jest nazwa albo adres serwera VPN?\0"
 	502 "Cannot disable on-demand dialing.\0"
-	503 "Public Network\0"
-	504 "ReactOS can make sure the public network is connected first.\0"
+	503 "Sieæ publiczna\0"
+	504 "ReactOS mo¿e upewniæ siê, ¿e najpierw po³¹czono siê z sieci¹ publiczn¹.\0"
 	505 "VPN1\0"
-	506 "Internet Connection Sharing\0"
+	506 "Wsp\0"
 	507 "You can let a local network access resources through this dial-up connection.\0"
 	508 "Host or Guest?\0"
-	509 "Internet Connection Sharing  is currently enabled for connection '%1'.\n\nIt will now be enabled for connection '%2' instead.\0"
-	510 "To connect two computers, your computer must be identified as either a host or a guest.\0"
-	511 "When Internet Connection Sharing is enabled, your LAN adapter will be set to use IP address 192.168.0.1. Your computer may lose connectivity with other computers on your network. If these other computers have static IP addresses, you should set them to obtain their IP addresses automatically.  Are you sure you want to enable Internet Connection Sharing?\0"
-	512 "Select a Device\0"
-	513 "This is the device that will be used to make the connection.\0"
-	514 "&Connect\0"
-	515 "Let the server determine encryption\0"
-	516 "Always encrypt my data\0"
-	517 "Use MPPE-40 data encryption\0"
-	518 "Use MPPE-128 data encryption\0"
-	519 "The current encryption selection requires MS-CHAP or EAP authentication.\0"
+	509 "Wspó³dzielenie £¹cza Internetowego by³o do tej pory ustawione na po³¹czenie '%1'.\n\nBêdzie teraz ustawione na po³¹czenie '%2'.\0"
+	510 "Aby po³¹czyæ dwa komputery, twój komputer musi byæ ustawiony jako host albo jako goœæ.\0"
+	511 "Z w³¹czonym Wspó³dzieleniem £¹cza Internetowego, twój adapter LAN adapter zostanie ustawiony na adres IP 192.168.0.1. Twój komputer mo¿e straciæ po³¹czenie z innymi komputerami w sieci lokalnej. Jeœli te komputery maj¹ adresy IP ustawione statycznie, powinieneœ je ustawiæ na otrzymywanie adresów IP automatycznie. Czy na pewno chcesz w³¹czyæ Wspó³dzielenie £¹cza Internetowego?\0"
+	512 "Wybierz urz¹dzenie\0"
+	513 "To urz¹dzenie zostanie u¿yte do ustanownienia po³¹czenia.\0"
+	514 "&Po³¹cz\0"
+	515 "Pozwól by serwer wybra³ metodê szyfrowania\0"
+	516 "Zawsze szyfruj moje dane\0"
+	517 "U¿yj szyfrowania danych MPPE-40\0"
+	518 "U¿yj szyfrowania danychMPPE-128\0"
+	519 "Bierz¹ce ustawienie szyfrowania wymaga uwierzytelnienia MS-CHAP lub EAP.\0"
 	520 "Custom Authentication Message\0"
-	521 "Connecting to %1...\0"
-	522 "Connection Name\0"
-	523 "Automatic\0"
+	521 "£¹czenie z %1...\0"
+	522 "Nazwa po³¹czenia\0"
+	523 "Automagicznie\0"
 	524 "PPTP VPN\0"
 	525 "L2TP IPSec VPN\0"
-	526 "Select the type of the connection.\0"
-	527 "Type of Connection\0"
+	526 "Wybierz rodzaj po³¹czenia.\0"
+	527 "Rodzaj po³¹czenia\0"
 	528 "hh.exe netcfg.chm::/trouble_all.htm\0"
-	529 "Virtual Private Connection\0"
-	530 "Use any form of authentication required including clear text.  Do not encrypt data.\0"
-	531 "Use any form of authentication that requires passwords to be encrypted.  Do not encrypt data.\0"
-	532 "Please type a name for the entry.\0"
-	533 "Encrypt passwords and data.\0"
-	534 "Please type a port number between 1 and 65535.\0"
-	535 "Specify custom authentication and data encryption with the Settings button.\0"
-	536 "Use any form of authentication that requires encrypted passwords.  Do not encrypt data.\0"
-	537 "Encrypt passwords and data.\0"
-	538 "Specify custom authentication and data encryption with the Settings button.\0"
-	539 "The port number is already used by another entry.\nPlease enter a unique port number.\0"
-	540 "Please enter one or more ports for incoming responses.\0"
-	541 "Please select the entry to be deleted.\0"
-	542 "1 second\0"
-	543 "Please select the entry to be modified.\0"
-	549 "What is the name of the other computer you are connecting to?\0"
-	576 "20 minutes\0"
-	579 "Specify a name for this connection to your workplace.\0"
-	581 "Network Application Settings\0"
-	582 "Type a name for this connection in the following box.\0"
-	583 "Type the name of the other computer in the following box.\0"
-	584 "Type the name of your ISP in the following box.\0"
-	585 "What is the name of the service that provides your Internet connection?\0"
-	586 "Please type the IP address of the server computer on the private network.\0"
-	587 "Advanced Settings\0"
-	588 "The entry name begins with a period. or contains some invalid characters. \nChoose a different name.\0"
-	589 "Properties\0"
-	1512 "Communications Port\0"
-	1523 " channel\0"
+	529 "Wirtualne po³¹czenie prywatne\0"
+	530 "U¿yj dowolnej metody uwierzytelniania w³¹czaj¹c otwarty tekst. Nie szyfruj danych.\0"
+	531 "U¿yj dowolnej metody uwierzytelniania, która wymaga szyfrowania has³a. Nie szyfruj danych.\0"
+	532 "Proszê podaæ nazwê tego wpisu.\0"
+	533 "Szyfruj has³o i dane.\0"
+	534 "Proszê podaæ numer portu, pomiêdzy 1 a 65535.\0"
+	535 "Ustaw w³asne uwierzytelnianie i szyfrowanie danych przyciskiem Ustawienia.\0"
+	536 "U¿yj dowolnej metody uwierzytelniania, która wymaga szyfrowania has³a. Nie szyfruj danych.\0"
+	537 "Szyfruj has³o i dane.\0"
+	538 "Ustaw w³asne uwierzytelnianie i szyfrowanie danych przyciskiem Ustawienia.\0"
+	539 "Ten numer portu jest ju¿ zajêty przez inny wpis.\nProszê u¿yæ unikalnego numeru portu.\0"
+	540 "Proszê wprowadziæ jeden lub wiêcej numerów portu na odpowiedzi przychodz¹ce.\0"
+	541 "Proszê wybraæ wpis do skasowania.\0"
+	542 "1 sekunda\0"
+	543 "Proszê wybraæ wpis do edycji.\0"
+	549 "Jak siê znazywa komputer z którym siê ³¹czysz?\0"
+	576 "20 minut\0"
+	579 "WprowadŸ nazwê dla po³¹czenia z twoim miejscem pracy.\0"
+	581 "Ustawienia aplikacji sieciowych\0"
+	582 "Wpisz nazwê dla tego po³¹czenia w polu poni¿ej.\0"
+	583 "Wpisz nazwê drugiego komputera w polu poni¿ej.\0"
+	584 "Wpisz nazwê swojego ISP w polu poni¿ej.\0"
+	585 "Jak siê nazywa us³uga za poœrednictwem której ³¹czysz siê z Internetem?\0"
+	586 "Proszê wprowadziæ adres IP serwera w sieci prywatnej.\0"
+	587 "Ustawienia Zaawansowane\0"
+	588 "Nazwa wpisu zaczyna siê od kropki albo zawiera niedozwolone znaku. \nWybierz inn¹ nazwê.\0"
+	589 "W³aœciwoœci\0"
+	1512 "Port komunikacyjny\0"
+	1523 " kana³\0"
 	1526 "Smart Cards\0"
-	1527 "You can use your smart card with this connection.\0"
-	1528 "Direct Connection\0"
-	1529 "Please select a device for this connection.\0"
+	1527 "Mo¿esz u¿yæ swoich smart card z tym po³¹czeniem.\0"
+	1528 "Po³¹czenie bezpoœrednie\0"
+	1529 "Proszê wybraæ urz¹dzenie dla tego po³¹czenia.\0"
 	1530 "Verdana Bold\0"
 	1531 "12\0"
-	1532 "Connection Type\0"
-	1533 "Select the type of demand dial interface you want to create.\0"
-	1534 "Select a device\0"
-	1535 "This is the device that will be used to make the connection.\0"
-	1536 "Phone Number\0"
-	1537 "Enter the phone number of the remote server or router you are calling.\0"
-	1538 "VPN Type\0"
-	1539 "Select the type of VPN interface you want to create.\0"
-	1540 "Destination Address\0"
-	1541 "What is the name or address of the remote router?\0"
-	1544 "IP Address\0"
-	1545 "Configure this router's IP address for this interface.\0"
-	1546 "Name Server Addresses\0"
-	1547 "Configure DNS and WINS addresses for use by this interface.\0"
-	1548 "Router Scripting\0"
-	1549 "You can set up a scripting for connecting to the remote router.\0"
+	1532 "Typ po³¹czenia\0"
+	1533 "Wybierz typ interface demand dial, który chcesz utworzyæ.\0"
+	1534 "Wybierz urz¹dzenie\0"
+	1535 "To urz¹dznie bêdzie u¿yte w tym po³¹czeniu.\0"
+	1536 "Numer telefoniczny\0"
+	1537 "WprowadŸ numer telefoniczny serwera zdalnego albo routera z którym siê ³¹czysz.\0"
+	1538 "Rodzaj VPN\0"
+	1539 "Wybierz rodzaj inferface VPN, który chcesz stworzyæ.\0"
+	1540 "Adres docelowy\0"
+	1541 "Jaka jest nazwa b¹dŸ adres routera zdalnego?\0"
+	1544 "Adres IP\0"
+	1545 "Ustaw adres IP routera dla tego interface.\0"
+	1546 "Adres serwera nazw\0"
+	1547 "Ustaw adres serwera DNS lub WINS dla tego interface.\0"
+	1548 "Skrypty Routera\0"
+	1549 "Mo¿esz ustawiæ skrypty po³¹czenia z routerem zdalnym.\0"
 	1550 "Dial In Credentials\0"
-	1551 "Configure the user name and password that the remote router will use when it dials in to this server.\0"
+	1551 "Ustaw nazwê u¿ytkownika i has³o które router zdalny wykorzysta podcza po³¹czenia z tym serwerem.\0"
 	1552 "Dial Out Credentials\0"
-	1553 "Configure the user name and password to be used when connecting to the remote router.\0"
-	1554 "Interface Name\0"
-	1555 "Select the name by which this new interface will be known.\0"
-	1556 "No available devices\0"
-	1557 "A user account named %1 already exists on the local computer.  Should the demand dial interface be configured to use this user account?\0"
-	1558 "There are no security protocol settings for SLIP server connections.\0"
-	1559 "Allow unsecured password\0"
-	1560 "Require secured password\0"
-	1561 "Use smart card\0"
-	1562 "You must select at least one password authentication protocol.\0"
-	1563 "No encryption allowed (server will disconnect if it requires encryption)\0"
-	1564 "Optional encryption (connect even if no encryption)\0"
-	1565 "Require encryption (disconnect if server declines)\0"
-	1566 "Maximum strength encryption (disconnect if server declines)\0"
-	1567 " (encryption enabled)\0"
-	1568 "Internet Account Information\0"
-	1569 "You will need an account name and password to sign in to your Internet account.\0"
-	1570 "The selected EAP package does not provide encryption keys.  Select an EAP package that does provide keys or select not to encrypt.\0"
-	1571 "The current encryption selection requires EAP or some version of MS-CHAP logon security methods.\0"
-	1572 "Protocols and Security\0"
-	1573 "Select transports and security options for this connection.\0"
-	1574 "The protocols you have selected include PAP, SPAP, and/or CHAP.  If one of these is negotiated, data encryption will not occur.  Do you want to keep these settings?\0"
-	1575 "To connect to '%1', you must first be connected to '%2'.  Do you want  to connect to '%2' now?\0"
-	1576 "Connecting over parallel cable...\0"
-	1577 "Connecting over infrared...\0"
-	1578 "Parallel cable connected.\0"
-	1579 "Infrared connected.\0"
-	1580 "This connection was configured to use a data encryption strength that is not supported by the installed software.  The security properties of this connection have been reset to the available encryption strengths.\0"
-	1581 "Typ&e of VPN:\0"
-	1582 "Please enter a user name.\0"
-	1583 "This user name and password will be saved for your own use.  There is already a user name and password saved for all other users of this connection.  Do you want to delete the user name and password saved for all other users?\0"
-	1584 "For example, you could type the name of your workplace or the name of a server you will connect to.\0"
-	1585 "Account Information\0"
-	1586 "The controls on this property sheet are disabled because the system must first be rebooted before any configuration changes can be made.\0"
-	1587 "The controls on this property sheet are disabled because one or more other Network property sheets are already open. To use these controls, close all these property sheets and then reopen this one.\0"
-	1588 "Some of the controls on this property sheet are disabled because you do not have sufficient privileges to access them.\0"
-	1589 "The following message was received from your service provider:\r\n\r\n%1\0"
-	1590 "Reconnect %1\0"
-	1591 "Service Name\0"
-	1592 "What is the name of the service that provides your broadband connection?\0"
-	1593 "You will need an account name and password to sign on to your account\0"
+	1553 "Ustaw nazwê u¿ytkownika i has³o które bêd¹ wykorzystane podczas po³¹czenia z routerem zdalnym.\0"
+	1554 "Nazwa Interface\0"
+	1555 "Wybierz nazwê pod któr¹ bêdzie opisany ten interface.\0"
+	1556 "Brak dostêpnych urz¹dzeñ\0"
+	1557 "Konto u¿ytkownika %1 ju¿ istnieje na tym komputerze. Czy interface Demand Dial powinien zostaæ skonfigurowany tak by je u¿ywac?\0"
+	1558 "Nie ma ustawieñ protoko³ów bezpieczeñstwa dla po³¹czeñ z serwerem SLIP.\0"
+	1559 "Zezwól na niezabezpieczone has³o\0"
+	1560 "Wymagaj zabezpieczonego has³a\0"
+	1561 "U¿yj smart card\0"
+	1562 "Musisz wybraæ co najmniej jeden protokó³ uwierzytelniania has³a.\0"
+	1563 "Nie u¿ywaj szyfrowania (serwer zostanie roz³¹czony, jeœli bêdzie wymaga³ szyforwania)\0"
+	1564 "Szyfrowanie opcjonalne (po³¹cz tak¿e gdy nie ma szyfrowania)\0"
+	1565 "Wymagaj szyfrowania (roz³¹cz siê jeœli serwer nie zapewnia)\0"
+	1566 "Wymagaj silnego szyfrowania (roz³¹cz siê jeœli serwer nie zapewnia)\0"
+	1567 " (szyfrowanie w³¹czone)\0"
+	1568 "Informacje Konta Internetowego\0"
+	1569 "Potrzebujesz nazwy u¿ytkownika i has³a by skorzystaæ ze swojego Konta Internetowego.\0"
+	1570 "Wybrany pakiet EAP nie zawiera kluczy szyfrowania. Wybierz pakiet EAP który zawiera klucze szyfrowania albo wy³¹cz szyfrowanie.\0"
+	1571 "Wybrana metoda szyfrowania wymaga szyfrowania logowania EAP albo MS-CHAP.\0"
+	1572 "Protoko³y i Bezpieczeñstwo\0"
+	1573 "Wybierz transporty i opcje bezpieczeñstwa dla tego po³¹czenia.\0"
+	1574 "Wybrane przez ciebie protoko³y zawieraj¹ PAP, SPAP, i/lub CHAP. Jeœli którykolwiek z nich zostanie u¿yty, po³¹czenie nie bêdzie szyfrowane. Czy chcesz zachowaæ te ustawienia?\0"
+	1575 "Aby po³¹czyæ siê z '%1', najpierw musisz byæ po³¹czony z '%2'. Czy chcesz siê po³¹czyæ z '%2' w tej chwili?\0"
+	1576 "£¹czenie poprzez kabel równoleg³y...\0"
+	1577 "£¹czenie poprzez podczerwieñ...\0"
+	1578 "Kabel równoleg³y pod³¹czony.\0"
+	1579 "Podczerwieñ pod³¹czona.\0"
+	1580 "To po³¹czeni zosta³o skonfigurowane do u¿ycia szyfrowania danych o sile, która nie jest obs³ugiwana przez zainstalowane oprogramowanie. W³aœciwoœci bezpieczeñstwa zosta³y zmodyfikowanie do obs³ugiwanych wartoœci si³y szyfrowania.\0"
+	1581 "R&odzaje VPN:\0"
+	1582 "Proszê wprowadzziæ nazwê u¿ytkownika.\0"
+	1583 "Ta nazwa u¿ykownika i has³o zostan¹ zapisane dla twojego u¿ytku. Istnieje ju¿ zapisana nazwa u¿ytkownika i has³o dla ka¿dego u¿ytkownika do u¿ycia w tym po³¹czeniu. Czy chcesz skasowaæ nazwê u¿ytkownika i has³o, przeznaczon¹ dla wszystkich u¿ytkowników?\0"
+	1584 "Na przyk³ad, móg³byæ podaæ nazwê twojego miejsca pracy albo nazwê serwera z którym siê ³¹czysz.\0"
+	1585 "Informacje o koncie\0"
+	1586 "Ustawienia w tym oknie w³aœciwoœci s¹ niedostêpne, jako, ¿e wpierw trzeba zrestartowaæ system zanim bêdzie mo¿na wprowadziæ jakiekolwiek zmiany w konfiguracji.\0"
+	1587 "Ustawienia w tym oknie w³aœciwoœci s¹ niedostêpne, jako, ¿e jedno lub wiêcej innych okien w³aœciwoœci Sieci jest ju¿ otwarte. Aby zmieniæ ustawienia, zamknij wszystkie otwarte okna w³aœciwoœci i ponownie otwórz te.\0"
+	1588 "Niektóre z ustawieñ w tym oknie w³aœciwoœci s¹ niedostêpne, gdy¿ nie masz wystarczaj¹cych uprawnieñ na dostêp do nich.\0"
+	1589 "Otrzymano nastêpuj¹c¹ wiadomoœæ od twojego ISP:\r\n\r\n%1\0"
+	1590 "Po³¹cz ponownie z %1\0"
+	1591 "Nazwa us³ugi\0"
+	1592 "Jak sie nazywa us³uga, dostarczaj¹ca twoje ³¹cze internetowe?\0"
+	1593 "Do zalogowania na twoje konto bêdziesz potrzebowaæ nazwy konta i has³a\0"
 	1594 "PPPOE1-0\0"
 	1595 "Point-to-Point Protocol over Ethernet (PPPoE)\0"
-	1596 "Type of &broadband connection to make:\0"
-	1611 "Broadband Connection\0"
-	1612 "You have selected to use a preshared key but you have not entered one. \nPlease enter a preshared key.\0"
-	1613 "Cannot Commit Credentials\0"
-	1634 "Because the Windows Management Instrumentation (WMI) service has been disabled, ReactOS cannot display the properties of this connection or the home network.\n\nTo configure the properties of this connection or your home network, you must first enable the WMI service. To do this, in the Administrative Tools control panel, double-click Services, right-click Windows Management Instrumentation, and then click Start.\0"
-	1635 "ReactOS cannot display the properties of this connection. The Windows Management Instrumentation (WMI) information might be corrupted. To correct this, use System Restore to restore ReactOS to an earlier time (called a restore point). System Restore is located in the System Tools folder in Accessories.\0"
-	1646 "Allow incoming echo request\0"
-	1647 "Allow incoming timestamp request\0"
-	1648 "Allow incoming mask request\0"
-	1649 "Allow incoming router request\0"
-	1650 "Allow outgoing destination unreachable\0"
-	1651 "Allow outgoing source quench\0"
-	1652 "Allow outgoing parameter problem\0"
-	1653 "Allow outgoing time exceeded\0"
-	1654 "Allow redirect\0"
+	1596 "Rodzaj ³¹cza &szerokopasmowego, które u¿ywasz:\0"
+	1611 "£¹cze szerokopasmowe\0"
+	1612 "Wybra³eœ u¿ycie klucza preshared ale nie wprowadzi³eœ ¿adnego. \nProszê wprowadziæ klucz preshared.\0"
+	1613 "Nie mo¿na wys³aæ danych do uwierzytelnienia\0"
+	1634 "Z powodu wy³¹czenia us³ugi Instrumentacji Zarz¹dzania Windows (WMI), nie mo¿e wyœwietliæ w³aœciwoœci tego po³¹czenia albo sieci lokalnej.\n\nAby uzyskaæ dostêp do w³aœciwoœci, musisz wpierw uruchomiæ us³ugê WMI.\0"
+	1635 "ReactOS nie mo¿e wyœwietliæ w³aœciwoœci tego po³¹czenia. Informacja w Instrumentacji Zarz¹dzania Windows (WMI) mo¿e byæ uszkodzona. Aby to poprawiæ, u¿yj Odtwarzania Systemu, by odtworzyæ ReactOS z wczeœniejszego momentu (punktu odtwarzania).\0"
+	1646 "Zezwól na przychodz¹ce zapytania ECHO\0"
+	1647 "Zezwól na przychodz¹ce zapytania timestamp\0"
+	1648 "Zezwól na przychodz¹ce zapytania mask\0"
+	1649 "Zezwól na przychodz¹ce zapytania o router\0"
+	1650 "Zezwól na wychodz¹ce destination unreachable\0"
+	1651 "Zezwól na wychodz¹ce source quench\0"
+	1652 "Zezwól na wychodz¹ce parameter problem\0"
+	1653 "Zezwól na wychodz¹ce time exceeded\0"
+	1654 "Zezwól na przekierowanie\0"
 	1655 "log\0"
 	1656 "*.log\0"
-	1657 "Firewall log files (*.log)\0"
-	1658 "Browse\0"
-	1663 "Select a private network connection\0"
-	1664 "To enable Internet Connection Sharing a connection must be selected for the private network. Please select a connection from the list of available connections.\0"
-	1665 "Messages sent to this computer will be repeated back to the sender. This is commonly used for troubleshooting, for example, to ping a machine.\0"
-	1666 "Data sent to this computer can be acknowledged with a confirmation message indicating the time that the data was received.\0"
-	1667 "This computer will listen for and respond to requests for more information about the public network to which it is attached.\0"
-	1668 "This computer will respond to requests for information about the routes it recognizes.\0"
-	1669 "Data sent over the Internet that fails to reach this computer due to an error will be discarded and acknowledged with a \"destination unreachable\" message explaining the failure.\0"
-	1670 "When this computer's ability to process incoming data cannot keep up with the rate of a transmission, data will be dropped and the sender will be asked to slow down.\0"
-	1671 "When this computer discards data it has received due to a problematic header, it will reply to the sender with a \"bad header\" error message.\0"
-	1672 "When this computer discards an incomplete data transmission because the entire transmission required more time than allowed, it will reply to the sender with a \"time expired\" message.\0"
-	1673 "Data sent from this computer will be rerouted if the default path changes.\0"
-	1675 "The value entered for the log file size is not valid. Enter a value between 1 and 32767 k.\0"
-	1685 "Your user account does not have permission to use this connection.  Usually, this is because you are logged in as Guest.\0"
-	1686 "Type an account name and password. (If you have forgotten an existing account name or password, contact your network administrator.)\0"
-	1687 "Computer N&ame\0"
-	1688 "ISP N&ame\0"
-	1689 "Company N&ame\0"
-	1690 "What is the phone number you will use to make this connection?\n\0"
-	7301 "Incoming TCP/IP Properties\0"
-	7302 "You must choose a value from %1 to %2 for this field.\0"
-	7306 "Incoming Connections Error\0"
-	7307 "Incoming Connections General Error\0"
-	7308 "Incoming Connections\0"
-	7309 "Incoming Connections Networking Error\0"
-	7310 "Incoming Connections Multilink Status Error\0"
-	7311 "Incoming Connections Error\0"
-	7312 "Incoming Connections Initialization Error\0"
-	7313 "Incoming Connections TCP/IP Properties Error\0"
-	7314 "Incoming Connections IPX Properties Error\0"
-	7315 "Incoming Connections Error\0"
-	7316 "Generic\0"
-	7317 "Device\0"
-	7318 "Miscellaneous Database\0"
-	7319 "User Database\0"
-	7320 "Protocol Database\0"
-	7321 "You must enter a logon name for the new user or press Anuluj.\0"
-	7322 "The password you entered was too short.\0"
-	7323 "The passwords entered are not the same.  Please re-enter them.\0"
-	7324 "An internal error has occured.  \0"
+	1657 "Pliki logów Firewalla (*.log)\0"
+	1658 "Przegl¹daj\0"
+	1663 "Wybierz po³¹czenie z sieci¹ lokaln¹\0"
+	1664 "Aby w³¹czyæ Wspó³dzielenie £¹cza Internetowego, musisz wybraæ po³¹czenie dla sieci lokalnej. Proszê je wybraæ z listy dostêpnych po³¹czeñ.\0"
+	1665 "Wiadomoœci wys³ane do tego komputera bêd¹ jednoczeœnie odsy³ane do nadawców. Jest to zwykle u¿ywane do rozwi¹zywania problemów z po³¹czeniem.\0"
+	1666 "Dane wys³ane do tego komputera mog¹ byæ potwierdzane w specjalnej wiadomoœci, zawieraj¹cej czas dostarczenia tych danych.\0"
+	1667 "Ten komputer bêdzie nas³uchiwa³ i odpowiada³ na ¿¹dania informacji o sieci publicznej, do której jest pod³¹czony.\0"
+	1668 "Ten komputer bêdzie odpowiada³ na ¿¹dania informacji dotycz¹cych znanych mu tras.\0"
+	1669 "Dane, wys³ane przez Internet, które nie dotr¹ do tego komputera z powodu b³êdów zostan¹ odrzucone z odes³aniem komunikatu \"destination unreachable\" o przyczynach b³êdów.\0"
+	1670 "Kiedy zdolnoœæ tego komputera do przetwarzania nap³ywaj¹cych danych nie bêdzie w stanie nad¹¿yæ za prêdkoœci¹ transmisji, dane zostan¹ odrzucone a wysy³aj¹cy dostanie wiadomoœæ z proœb¹ o zmniejszenie prêdkoœci.\0"
+	1671 "Kiedy ten komputer odrzuca otrzymane dane z powodu b³êdnego nag³ówka, wyœle on do nadawcy wiadomoœæ o b³êdzie \"bad header\".\0"
+	1672 "Kiedy ten komputer odrzuca niekompletne dane z po³¹czenia, jako, ¿e ca³a transmisja danych wymaga³a wiêcej czasu ni¿ by³o przeznaczone, wyœle on do nadawcy wiadomoœæ o b³êdzie \"time expired\".\0"
+	1673 "Dane wys³ane z tego komputera bêd¹ przekierowane, gdy zmieni siê domyœlna trasa.\0"
+	1675 "Wartoœæ podana jako rozmiar pliku logów. Podaj wartoœæ od 1 and 32767 k.\0"
+	1685 "Twoje konto u¿ytkownika nie ma dostatecznych uprawnieñ by u¿ywaæ tego po³¹czenia. Zwykle dzieje sie tak gdy jesteœ zalogowany jako Goœæ.\0"
+	1686 "WprowadŸ nazwê u¿ytkownika i has³o. (Jeœli zapomnia³eœ nazwy u¿ytkownika lub has³a, skontaktuj siê z twoim administratorem sieci.)\0"
+	1687 "&Nazwa komputera\0"
+	1688 "Nazwa &ISP\0"
+	1689 "Nazwa &firmy\0"
+	1690 "Jaki jest numer telefoniczny, za pomoc¹ którego siê ³¹czysz?\n\0"
+	7301 "W³aœciwoœci przychodz¹cych po³¹czeñ TCP/IP\0"
+	7302 "Musisz wybraæ wartoœæ pomiêdzy %1 a %2 dla tego pola.\0"
+	7306 "B³¹d Po³¹czeñ Przychodz¹cych\0"
+	7307 "Ogólny b³¹d Po³¹czeñ Przychodz¹cych\0"
+	7308 "Po³¹czeñ Przychodz¹cych\0"
+	7309 "B³¹d sieciowy Po³¹czeñ Przychodz¹cych\0"
+	7310 "B³¹d stanu Multilik Po³¹czeñ Przychodz¹cych\0"
+	7311 "B³¹d Po³¹czeñ Przychodz¹cych\0"
+	7312 "B³¹d inicjalizacji Po³¹czeñ Przychodz¹cych\0"
+	7313 "B³¹d w³aœciwoœci TCP/IP Po³¹czeñ Przychodz¹cych\0"
+	7314 "B³¹d w³aœciwoœci IPX Po³¹czeñ Przychodz¹cych\0"
+	7315 "B³¹d Po³¹czeñ Przychodz¹cych\0"
+	7316 "Domyœlne\0"
+	7317 "Urz¹dzenie\0"
+	7318 "Pomocnicza baza danych\0"
+	7319 "Baza danych U¿ytkowników\0"
+	7320 "Baza danych Protoko³ów\0"
+	7321 "Musisz wprowadziæ nazwê logowania nowego u¿ytkownika albo nacisn¹æ Anuluj.\0"
+	7322 "Wprowadzone has³o jest zbyt krótkie.\0"
+	7323 "Oba wprowadzone has³a nie s¹ identyczne. Proszê je poprawiæ.\0"
+	7324 "Wyst¹pi³ b³¹d wewnêtrzny.  \0"
 	7325 "Listview\0"
-	7326 "An error has occurred while attempting to commit the changes you have made to the local user database.  \0"
-	7327 "You have insufficient priveleges to add a user to the local system database.  \0"
-	7328 "The user you are trying create already exists in the local user database.\0"
-	7329 "The user was not added to the local user database because the password you entered was rejected.\0"
-	7330 "Unable to reload the system user database because of an internal error.\0"
-	7331 "An internal error has occurred:  The local user database handle is corrupt.\0"
-	7332 "Unable to load the resources neccessary to display the user tab.\0"
-	7333 "An internal error occured while attempting to rollback the changes you made to the local user database.  \0"
-	7334 "The device database handle is corrupt.\0"
-	7335 "Unable to load the resources neccessary to display the general tab.\0"
-	7336 "An error has occurred while attempting to commit some of the device/vpn related changes you have made.  \0"
-	7337 "An internal error occured.\0"
-	7338 "An internal error occurred: The networking component database handle is corrupt.\0"
-	7339 "An internal error has occurred.  \0"
-	7340 "An error has occurred while attempting to commit the changes you have made to the networking components.\0"
-	7341 "An internal error occured.\0"
-	7342 "Unable to commit the changes you made to the TCP/IP protocol to the system.  \0"
-	7343 "Unable to save the changes you made to the IPX protocol to the system.  \0"
-	7344 "Unable to display the TCPIP properties.\0"
-	7345 "Unable to display the IPX properties.\0"
-	7346 "Unable to load TCP/IP properties from the system.  \0"
-	7347 "Unable to load IPX properties from the system.  \0"
-	7348 "Incoming Connections depend on the Routing and Remote Access service which was unable to start.  For more information, check the system event log.\0"
-	7349 "Unable to allow the editing of networking components at this time because they are currently being modified elsewhere.\0"
-	7350 "The new user you entered was not added to the local user database because  the name or password entered violated a system policy (it was too large, too small, or ill-formed).  \0"
-	7351 "The system is unable to delete the requested user.  \0"
-	7352 "Unable to remove the selected network component because it is in use.\0"
-	7353 "Incoming Connections Warning\0"
-	7354 "Any users that you delete will be permanently removed from the system even if Anuluj is pressed.  Are you sure you want to permanently remove %s? \0"
-	7355 "You are about to switch to a system management console.  This Incoming Connections property sheet will be closed and any changes you may have made will be committed to the system.  Is it ok to continue?\0"
-	7356 "Your Network Mask value has been changed.  A zero bit in a mask can only be followed by other zero bits.  For example, a Network Mask value, expressed in decimal dotted notation, of 255.255.0.0, is valid, but 255.0.255.0 is not.  \n\0"
-	7357 "User Permissions\0"
-	7358 "You can specify the users who can connect to this computer.\0"
-	7359 "Devices for Incoming Connections\0"
-	7360 "You can choose the devices your computer uses to accept incoming connections.\0"
-	7361 "Incoming Virtual Private Network (VPN) Connection\0"
-	7362 "Another computer can connect to yours through a VPN connection\0"
-	7363 "Networking Software\0"
-	7364 "Networking software allows this computer to accept connections from other kinds of computers.\0"
-	7365 "Completing the New Connection Wizard\0"
+	7326 "Wyst¹pi³ b³¹d podczas przesy³ania wprowadzonych zmian do bazy danych u¿ytkownika lokalnego.  \0"
+	7327 "Nie masz dostatecznych przywilejów by dodaæ u¿ytkownika do lokalnej systemowej bazy danych.  \0"
+	7328 "U¿ytkownik, którego chcesz stworzyæ, ju¿ istnieje w lokalnej bazie danych u¿ytkowników.\0"
+	7329 "U¿ytkownik nie zosta³ dodany do lokalnej bazy danych u¿ytkowników, dlatego, ¿e jego has³o zosta³o odrzucone.\0"
+	7330 "Nie mo¿na prze³adowaæ systemowej bazy danych u¿ytkowników z powodu b³êdu wewnêtrznego.\0"
+	7331 "Wyst¹pi³ b³¹d wewnêtrzny:  Handle lokalnej bazy danych u¿ytkowników jest uszkodzony.\0"
+	7332 "Nie uda³o siê za³adowaæ zasobów, niezbêdnych do wyœwietlenia zak³adki U¿ytkownicy.\0"
+	7333 "Wyst¹pi³ b³¹d wewnêytrzny podczas odwracania zmian, uczynionych w lokalnej bazie danych u¿ytkowników.  \0"
+	7334 "Handle bazy danych urz¹dzeñ jest uszkodzony.\0"
+	7335 "Nie uda³o siê za³adowaæ zasobów, niezbêdnych do wyœwietlenia zak³adki Ogólne.\0"
+	7336 "Nast¹pi³ b³¹d podczas zapisywania zmian jakie dokonane zosta³y w Urz¹dzeniach/VPN.  \0"
+	7337 "Wyst¹pi³ b³¹d wewnêtrzny.\0"
+	7338 "Wyst¹pi³ b³¹d wewnêtrzny: Handle bazy danych komponentów sieci jest uszkodzony.\0"
+	7339 "Wyst¹pi³ b³¹d wewnêtrzny.  \0"
+	7340 "Wyst¹pi³ b³¹d pocdczas zapisywania zmian, uczynionych w komponentach sieci.\0"
+	7341 "Wyst¹pi³ b³¹d wewnêtrzny.\0"
+	7342 "Nie mo¿na zapisaæ zmian dokonanych w protokole TCP/IP.  \0"
+	7343 "Nie mo¿na zapisaæ zmian dokonanych w protokole IPX.  \0"
+	7344 "Nie mo¿na wyœwietliæ w³aœciwoœci TCP/IP.\0"
+	7345 "Nie mo¿na wyœwietliæ w³aœciwoœci IPX.\0"
+	7346 "Nie mo¿na za³adowaæ w³aœciwoœci TCP/IP.  \0"
+	7347 "Nie mo¿na za³adowaæ w³aœciwoœci IPX.  \0"
+	7348 "Po³¹czenia przychodz¹ce zale¿¹ od us³ugi Routingu i Dostêpu Zdalnego, której to nie da³o siê uruchomiæ. Wiêcej informacji znajdziesz w logach Zdarzeñ Systemowych.\0"
+	7349 "Nie mo¿na zezwoliæ na edycjê komponentów sieci w danej chwili, gdy¿ w³aœnie s¹ modyfikowane przez kogoœ innego.\0"
+	7350 "Nowoutworzony u¿ytkownik nie zosta³ dodany do lokalnej bazy danych u¿ytkowników dlatego, ¿e jego nazwa albo has³o nie by³o zgodne z wymaganiami systemu (by³o zbyt du¿e, za ma³e, albo Ÿle sformu³owane).  \0"
+	7351 "System nie mo¿e usun¹æ wybranego u¿ytkownika.  \0"
+	7352 "Nie mo¿na usun¹æ wybranego komponentu sieci, poniewa¿ jest on obecnie u¿ywany.\0"
+	7353 "Ostrze¿enie o po³¹czeniu przychodz¹cym\0"
+	7354 "Ka¿dy skasowany u¿ytkownik zostanie trwale usuniêty z systemu, nawet jeœli naciœniesz póŸniej Anuluj. Czy na pewno chcesz trwale usun¹æ %s? \0"
+	7355 "Masz zamiar siê prze³¹czyæ na konsolê zarz¹dzania systemem. Te okno w³aœciwoœci Po³¹czeñ przychodz¹cych zostanie zamkniête a wszystkie dokonane zmiany - zapisane w systemie. Czy kontynuowaæ?\0"
+	7356 "Twoja Maska Podsieci uleg³a zmianie. Po bicie zerowym w Masce mog¹ nast¹piæ wy³¹cznie bity zerowe. Na przyk³ad, Maska, wyra¿ona w zapisie dziesiêtnym jako 255.255.0.0, jest prawid³owa, ale 255.0.255.0 ju¿ nie.  \n\0"
+	7357 "Dopuszczenie U¿ytkowników\0"
+	7358 "Mo¿esz wyznaczyæ u¿ytkowników, którzy bêd¹ mogli siê po³¹czyæ z tym komputerem.\0"
+	7359 "Urz¹dzenia dla po³¹czeñ przychodz¹cych\0"
+	7360 "Mo¿esz wybraæ urz¹dzenia jakich komputer u¿yje do obs³ugi po³¹czeñ przychodz¹cych.\0"
+	7361 "Przychodz¹ce po³¹czenie Wirtualnych Sieci Prywatnych (VPN)\0"
+	7362 "Inny komputer mo¿e po³¹czyæ siê z twoim za poœrednictwem po³¹czenia VPN\0"
+	7363 "Aplikacje sieciowe\0"
+	7364 "Aplikacje sieciowe pozwala¹ temu komputerowi na odbiór po³¹czeñ z innych komputerów.\0"
+	7365 "Zakañczanie Kreatora konfiguracji po³¹czenia\0"
 	7366 " \0"
-	7367 "Incoming Connections\0"
-	7371 "No hardware capable of accepting calls is installed.\0"
+	7367 "Po³¹czenia przychodz¹ce\0"
+	7371 "Nie zainstalowano ¿adnego urz¹dzenia, zdolnego do odbioru po³¹czeñ.\0"
 	7372 " \0"
-	7373 "Assign specified &network number:\0"
-	7374 "Assign &network numbers sequentially from:\0"
-	7375 "New User\0"
-	7376 "Connection Device\0"
-	7377 "What device do you want to use to make this connection?\0"
-	7378 "No devices capable of accepting direct connections are currently installed.\0"
-	7379 "New Incoming Connection Warning\0"
-	7380 "Because this Win 2000 Server belongs to or controls a domain, you must use the Routing and Remote Access system console to configure this machine to receive incoming connections.  Anuluj changes and switch to this console?\n\0"
-	7381 "A&ssign network number automatically\0"
-	7382 "A&ssign network numbers automatically\0"
-	7383 "Incoming Connections can not issue the ipx network numbers 00000000 or FFFFFFFF.  Please either change the assigned network numbers or use automatic network number assignment.\0"
-	7384 "to\0"
-	7385 "Communications Port (%s)\0"
-	7386 "Network Connections does not display some specialized options for inbound connections that have been set using the Local User Manager or Remote Access Policy consoles.  For complete and correct information on incoming connections, you will need to use these consoles.\0"
-	7387 "The user callback mode you have selected requires you to enter a valid callback number.\0"
-	7388 "ReactOS must reboot to complete the operation.  Is it ok to reboot now?\0"
-	7389 "The currently selected device has no configuration options available.\0"
-	7390 "Invalid Range\0"
-	7391 "You have requested that '%1' be disabled for Incoming Connections.  In order to disable this, you must stop the 'Server' service.  Once stopped, any shared directories or printers on this computer will no longer be available to any other computer.  Do you want to bring up a system console that will allow you to stop the 'Server' service?\r\n\nUnder Computer Management, click System Tools and then click Services.  In the right pane, right-click Server and click stop.\0"
-	7392 "This serial port is not enabled for use in a direct connection to another computer.  It will be enabled after you complete this wizard.  You can then configure the port speed and other properties by right-clicking the icon for this connection and selecting Properties.\n\0"
-	7393 "Incoming Connections\0"
-	7394 "The IP address pool you've entered is invalid.\0"
-	7395 "The mask provided is invalid.\0"
-	7396 "The start address entered for the TCP/IP pool is invalid.  It must lie between 1.0.0.0 and 224.0.0.0 and it must not be in the form 127.x.x.x.\0"
-	7397 "The TCP/IP pool entered is invalid because the address is more specific than the mask.\0"
-	7398 "The start address must be less than the end address.\0"
-	7399 "The Routing and Remote Access Service is in the process of stopping.  Until it stops, the Incoming Connections option is not available.  Please wait a few moments and retry.\0"
+	7373 "Przydziel &ustalony numer adresu sieciowego:\0"
+	7374 "Przydziel &numery adresów sieciowych sekwencyjnie od:\0"
+	7375 "Nowy u¿ytkownik\0"
+	7376 "Urz¹dzenie sieciowe\0"
+	7377 "Którego urz¹dzenia chcesz u¿yæ w tym po³¹czeniu?\0"
+	7378 "Nie ma obecnie ¿adnych urz¹dzeñ zainstalowanych, które by³yby w stanie przyj¹æ po³¹czenia przychodz¹ce.\0"
+	7379 "Ostrze¿enie o nowym po³¹czeniu przychodz¹cym\0"
+	7380 "Poniewa¿ ten Serwer Win 2000 nale¿y do, albo kontroluje domenê, musisz u¿yæ konsoli Routingu i Dostêpu Zdalnego by skonfigurowaæ t¹ maszynê tak by akceptowa³a po³¹czenia przychodz¹ce.  Anulowaæ zmiany i w³¹czyæ t¹ konsolê?\n\0"
+	7381 "Przydziel &numer adresu automagicznie\0"
+	7382 "Przydziel n&umer adresu automagicznie\0"
+	7383 "Po³¹czenia przychodz¹ce nie mog¹ u¿ywaæ adresów IPX o numerach 00000000 lub FFFFFFFF. Proszê zmieniæ przydzielone numery adresów albo ustawiæ automagiczne przydzielanie numerów.\0"
+	7384 "do\0"
+	7385 "Port Komunikacyjny (%s)\0"
+	7386 "Po³¹czenia Sieciowe nie wyœwietlaj¹ niektórych zaawansowanych opcji dla po³¹czeñ przychodz¹cych, które mo¿na ustawiæ za pomc¹ konsol MenedŸera U¿ytkownika Lokalnego albo Zdalnego Dostêpu do Ustawieñ Remote. Aby uzyskaæ aktualne i szczegó³owe informacje o po³¹czeniach przychodz¹cych, bêdziesz musia³ u¿yæ tych konsol.\0"
+	7387 "W³asny tryb oddzwaniania, który wybra³eœ, wymaga wprowadzenia w³aœciwego numeru oddzwaniania.\0"
+	7388 "ReactOS musi zrestartowaæ system by dokoñczyæ konfiguracjê. Czy mo¿na zrestartowaæ w tej cwili?\0"
+	7389 "Obecnie wybrane urz¹dzenie nie posiada ¿adnych opcji konfiguracji.\0"
+	7390 "Nieprawid³owy zasiêg\0"
+	7391 "Chcesz wy³¹czyæ '%1' dla Po³¹czeñ Przychodz¹cych.W tym celu musisz wpierw zatrzymaæ us³ugê 'Serwer'. Po zatrzymaniu, ¿aden z udostêpnionych katalogów czy drukarek na tym komputerze nie bêdzie dostêpny dla innych komputerów. Czy chcesz wywo³aæ konsolê systemow¹ która pozwoli ci zatrzymaæ us³ugê 'Serwer'?\r\n\nW Zarz¹dzanie Komputerem kliknij na Narzêdzia Systemowe a nastêpnie na Us³ugi. W prawym panelu kliknij prawym przyciskiem na us³ugê 'Serwer' a nastêpnie na 'Zatrzymaj'.\0"
+	7392 "Ten port szeregowy nie zosta³ ustawiony do u¿ycia w bezpoœrednim po³¹æzeniu z innym komputerem. Zostanie on ustawiony za pomoc¹ kreatora konfiguracji. Aby uruchomiæ kreatora, naciœnij prawym przyciskiem na ikonê po³¹czenia i wybierz W³aœciwoœci.\n\0"
+	7393 "Po³¹czenia Przychodz¹ce\0"
+	7394 "Wprowadzona pula adresów IP jest nieprawid³owa.\0"
+	7395 "Podana maska podsieci jest nieprawid³owa.\0"
+	7396 "Adres startowy wprowadzonej puli TCP/IP jest nieprawid³owy. Musi on znajdowaæ siê pomiêdzy 1.0.0.0 a 224.0.0.0 i nie mo¿e mieæ postaci 127.x.x.x.\0"
+	7397 "Wprowadzona pula adresów TCP/IP jest nieprawid³owa, gdy¿ jest dok³adniejsza ni¿ maska podsieci.\0"
+	7398 "Adres startowy musi byæ mniejszy ni¿ koñcowy\0"
+	7399 "Us³uga Routingu i Dostêpu Zdalnego jest w³aœnie zatrzymywana. Do czasu jej zatrzymania, Po³¹czenia Przychodz¹ce nie s¹ dostêpne. Proszê spróbowaæ ponownie za kilka chwil.\0"
 	7400 "%s (%s)\0"
-	7401 "%s (%d channels)\0"
-	7402 "Incoming Connection VPN (PPTP)\0"
-	7403 "Incoming Connection VPN (L2TP)\0"
-	7404 "IP Security (IKE)\0"
+	7401 "%s (%d kana³ów)\0"
+	7402 "Po³¹czenia Przychodz¹ce VPN (PPTP)\0"
+	7403 "Po³¹czenia Przychodz¹ce VPN (L2TP)\0"
+	7404 "Bezpieczeñstwo IP(IKE)\0"
 	7405 "127.0.0.1\0"
-	7406 "You do not have sufficient privileges to set up Incoming Connections\0"
-	29900 "Cannot load the Remote Access Connection Manager service.\0"
-	29901 "Cannot load the file MPRAPI.DLL in the system32 directory.\0"
+	7406 "Nie masz wystarczaj¹cych przywilejów by ustawic Po³¹czenia Przychodz¹ce\0"
+	29900 "Nie mo¿na za³adowaæ us³ugi Mened¿era Dostêpu Zdalnego.\0"
+	29901 "Nie mo¿na za³adowaæ pliku MPRAPI.DLL z katalogu system32.\0"
 END

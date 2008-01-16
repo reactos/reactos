@@ -2308,7 +2308,7 @@ BEGIN
 	7341 "An internal error occured.\0"
 	7342 "Unable to commit the changes you made to the TCP/IP protocol to the system.  \0"
 	7343 "Unable to save the changes you made to the IPX protocol to the system.  \0"
-	7344 "Unable to display the TCPIP properties.\0"
+	7344 "Unable to display the TCP/IP properties.\0"
 	7345 "Unable to display the IPX properties.\0"
 	7346 "Unable to load TCP/IP properties from the system.  \0"
 	7347 "Unable to load IPX properties from the system.  \0"

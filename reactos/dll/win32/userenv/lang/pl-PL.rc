@@ -14,6 +14,11 @@
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *
+ * updated by Caemyr - Olaf Siejka (Jan, 2008)
+ * Use ReactOS forum PM or IRC to contact me
+ * http://www.reactos.org
+ * IRC: irc.freenode.net #reactos-pl; 
  */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
@@ -33,15 +38,15 @@ BEGIN
     IDS_MYMUSIC        "Moje dokumenty\\Moja muzyka"
     IDS_MYVIDEOS       "Moje dokumenty\\Moje wideo"
     IDS_TEMPLATES      "Szablony"
-    IDS_RECENT         "Recent"
-    IDS_SENDTO         "SendTo"
-    IDS_PRINTHOOD      "PrintHood"
-    IDS_NETHOOD        "NetHood"
+    IDS_RECENT         "Ostatnie"
+    IDS_SENDTO         "WyœlijDo"
+    IDS_PRINTHOOD      "Drukarki"
+    IDS_NETHOOD        "Sieci"
     IDS_LOCALSETTINGS  "Ustawienia lokalne"
     IDS_LOCALAPPDATA   "Ustawienia lokalne\\Dane aplikacji"
     IDS_TEMP           "Ustawienia lokalne\\Temp"
     IDS_CACHE          "Ustawienia lokalne\\Temporary Internet Files"
     IDS_HISTORY        "Ustawienia lokalne\\Historia"
-    IDS_COOKIES        "Cookies"
+    IDS_COOKIES        "Ciasteczka"
     IDS_PROGRAMFILES   "%SystemDrive%\\Program Files"
 END

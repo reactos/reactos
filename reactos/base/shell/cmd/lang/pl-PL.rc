@@ -1,10 +1,10 @@
 #include "windows.h"
 #include "resource.h"
-/**
-* translated by Caemyr
-* caemyr@gmail.com
-* https://sourceforge.net/projects/reactospl
-*/
+/*
+ * translated by Caemyr
+ * caemyr@gmail.com
+ * https://sourceforge.net/projects/reactospl
+ */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 STRINGTABLE DISCARDABLE
