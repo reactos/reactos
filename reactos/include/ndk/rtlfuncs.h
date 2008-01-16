@@ -2416,6 +2416,21 @@ RtlSetBits(
     IN ULONG NumberToSet
 );
 
+NTSYSAPI
+VOID
+NTAPI
+RtlSetAllBits(
+    PRTL_BITMAP BitMapHeader
+);
+
+NTSYSAPI
+BOOLEAN
+NTAPI
+RtlTestBit(
+    PRTL_BITMAP BitMapHeader,
+    ULONG BitNumber
+);
+
 //
 // Timer Functions
 //

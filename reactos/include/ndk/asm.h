@@ -108,7 +108,7 @@ Author:
 #define KTHREAD_PENDING_USER_APC                0x28 + 0x16
 #define KTHREAD_PENDING_KERNEL_APC              0x28 + 0x15
 #define KTHREAD_CONTEXT_SWITCHES                0x48
-#define KTHREAD_STATE                           0x4C
+#define KTHREAD_STATE_                          0x4C
 #define KTHREAD_NPX_STATE                       0x4D
 #define KTHREAD_WAIT_IRQL                       0x4E
 #define KTHREAD_NEXT_PROCESSOR                  0x40
@@ -611,6 +611,7 @@ Author:
 #define PRIMARY_VECTOR_BASE                     0x30 // FIXME: HACK
 #define MAXIMUM_IDTVECTOR                       0xFF
 #endif // !_ASM_H
+
 
 
 

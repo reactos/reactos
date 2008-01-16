@@ -15,7 +15,6 @@ Author:
     Alex Ionescu (alexi@tinykrnl.org) - Updated - 27-Feb-2006
 
 --*/
-
 #ifndef _IOTYPES_H
 #define _IOTYPES_H
 
@@ -354,6 +353,19 @@ typedef enum _PNP_DEVNODE_STATE
 #ifdef NTOS_MODE_USER
 
 //
+// I/O Status Block
+//
+typedef struct _IO_STATUS_BLOCK
+{
+    union
+    {
+        NTSTATUS Status;
+        PVOID Pointer;
+    };
+    ULONG_PTR Information;
+} IO_STATUS_BLOCK, *PIO_STATUS_BLOCK;
+
+//
 // File Information structures for NtQueryInformationFile
 //
 typedef struct _FILE_BASIC_INFORMATION
@@ -560,6 +572,13 @@ typedef struct _FILE_DIRECTORY_INFORMATION
     WCHAR FileName[1];
 } FILE_DIRECTORY_INFORMATION, *PFILE_DIRECTORY_INFORMATION;
 
+typedef struct _FILE_IO_COMPLETION_INFORMATION
+{
+    PVOID KeyContext;
+    PVOID ApcContext;
+    IO_STATUS_BLOCK IoStatusBlock;
+} FILE_IO_COMPLETION_INFORMATION, *PFILE_IO_COMPLETION_INFORMATION;
+
 //
 // File System Information structures for NtQueryInformationFile
 //
@@ -628,19 +647,6 @@ typedef struct _FILE_PIPE_PEEK_BUFFER
     ULONG MessageLength;
     CHAR Data[1];
 } FILE_PIPE_PEEK_BUFFER, *PFILE_PIPE_PEEK_BUFFER;
-
-//
-// I/O Status Block
-//
-typedef struct _IO_STATUS_BLOCK
-{
-    union
-    {
-        NTSTATUS  Status;
-        PVOID  Pointer;
-    };
-    ULONG_PTR  Information;
-} IO_STATUS_BLOCK, *PIO_STATUS_BLOCK;
 
 //
 // I/O Error Log Structures

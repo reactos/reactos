@@ -22,7 +22,7 @@ Author:
 //
 // Include the right file for this architecture.
 //
-#ifdef _M_IX86
+#if defined(_M_IX86) || defined(_M_AMD64)
 #include <i386/mmtypes.h>
 #elif defined(_M_PPC)
 #include <powerpc/mmtypes.h>

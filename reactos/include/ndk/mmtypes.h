@@ -47,6 +47,22 @@ Author:
 #define TAG(A, B, C, D)                                     \
     (ULONG)(((A)<<0) + ((B)<<8) + ((C)<<16) + ((D)<<24))
 
+//
+// PFN Identity Uses
+//
+#define MMPFNUSE_PROCESSPRIVATE                             0
+#define MMPFNUSE_FILE                                       1
+#define MMPFNUSE_PAGEFILEMAPPED                             2
+#define MMPFNUSE_PAGETABLE                                  3
+#define MMPFNUSE_PAGEDPOOL                                  4
+#define MMPFNUSE_NONPAGEDPOOL                               5
+#define MMPFNUSE_SYSTEMPTE                                  6
+#define MMPFNUSE_SESSIONPRIVATE                             7
+#define MMPFNUSE_METAFILE                                   8
+#define MMPFNUSE_AWEPAGE                                    9
+#define MMPFNUSE_DRIVERLOCKPAGE                             10
+#define MMPFNUSE_KERNELSTACK                                11
+
 #ifndef NTOS_MODE_USER
 
 //
@@ -104,6 +120,21 @@ typedef enum _POOL_TYPE
     NonPagedPoolCacheAlignedMustSSession
 } POOL_TYPE;
 #endif
+
+//
+// Memory Manager Page Lists
+//
+typedef enum _MMLISTS
+{
+   ZeroedPageList = 0,
+   FreePageList = 1,
+   StandbyPageList = 2,
+   ModifiedPageList = 3,
+   ModifiedNoWritePageList = 4,
+   BadPageList = 5,
+   ActiveAndValid = 6,
+   TransitionPage = 7
+} MMLISTS;
 
 //
 // Per Processor Non Paged Lookaside List IDs
@@ -176,6 +207,68 @@ typedef struct _VM_COUNTERS_EX
     SIZE_T PrivateUsage;
 } VM_COUNTERS_EX, *PVM_COUNTERS_EX;
 #endif
+
+//
+// Sub-Information Types for PFN Identity
+//
+typedef struct _MEMORY_FRAME_INFORMATION
+{
+    ULONGLONG UseDescription:4;
+    ULONGLONG ListDescription:3;
+    ULONGLONG Reserved0:1;
+    ULONGLONG Pinned:1;
+    ULONGLONG DontUse:48;
+    ULONGLONG Priority:3;
+    ULONGLONG Reserved:4;
+} MEMORY_FRAME_INFORMATION, *PMEMORY_FRAME_INFORMATION;
+
+typedef struct _FILEOFFSET_INFORMATION
+{
+    ULONGLONG DontUse:9;
+    ULONGLONG Offset:48;
+    ULONGLONG Reserved:7;
+} FILEOFFSET_INFORMATION, *PFILEOFFSET_INFORMATION;
+
+typedef struct _PAGEDIR_INFORMATION
+{
+    ULONGLONG DontUse:9;
+    ULONGLONG PageDirectoryBase:48;
+    ULONGLONG Reserved:7;
+} PAGEDIR_INFORMATION, *PPAGEDIR_INFORMATION;
+
+typedef struct _UNIQUE_PROCESS_INFORMATION
+{
+    ULONGLONG DontUse:9;
+    ULONGLONG UniqueProcessKey:48;
+    ULONGLONG Reserved:7;
+} UNIQUE_PROCESS_INFORMATION, *PUNIQUE_PROCESS_INFORMATION;
+
+//
+// PFN Identity Data Structure
+//
+typedef struct _MMPFN_IDENTITY
+{
+    union
+    {
+        MEMORY_FRAME_INFORMATION e1;
+        FILEOFFSET_INFORMATION e2;
+        PAGEDIR_INFORMATION e3;
+        UNIQUE_PROCESS_INFORMATION e4;
+    } u1;
+    SIZE_T PageFrameIndex;
+    union
+    {
+        struct
+        {
+            ULONG Image:1;
+            ULONG Mismatch:1;
+        } e1;
+        PVOID FileObject;
+        PVOID UniqueFileObjectKey;
+        PVOID ProtoPteAddress;
+        PVOID VirtualAddress;
+    } u2;
+} MMPFN_IDENTITY, *PMMPFN_IDENTITY;
 
 //
 // List of Working Sets

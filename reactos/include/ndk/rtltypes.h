@@ -226,6 +226,11 @@ C_ASSERT(HEAP_CREATE_VALID_MASK == 0x0007F0FF);
 #define RTL_DUPLICATE_UNICODE_STRING_ALLOCATE_NULL_STRING   2
 
 //
+// RtlFindCharInUnicodeString Flags
+//
+#define RTL_FIND_CHAR_IN_UNICODE_STRING_CASE_INSENSITIVE    4
+
+//
 // Codepages
 //
 #define NLS_MB_CODE_PAGE_TAG                                NlsMbCodePageTag

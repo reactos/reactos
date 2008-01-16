@@ -727,7 +727,7 @@ CheckNext:
     mov [ebx+KPCR_CURRENT_THREAD], esi
 
     /* Set the thread as running */
-    mov byte ptr [esi+KTHREAD_STATE], Running
+    mov byte ptr [esi+KTHREAD_STATE_], Running
 
 #ifdef CONFIG_SMP
     /* Disable the idle scheduler and release the PRCB lock */
@@ -752,7 +752,7 @@ SameThread:
     /* Clear the next thread, and put the thready as ready after lock release */
     and dword ptr [ebx+KPCR_PRCB_NEXT_THREAD], 0
     and dword ptr [ebx+KPCR_PRCB_PRCB_LOCK], 0
-    and byte ptr [edi+KTHREAD_STATE], Ready
+    and byte ptr [edi+KTHREAD_STATE_], Ready
     jmp MainLoop
 
 NoNextThread:

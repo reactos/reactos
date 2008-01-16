@@ -2387,7 +2387,7 @@ CheckQuantum:
 
     /* Set us as the current running thread */
     mov [ebx+KPCR_CURRENT_THREAD], esi
-    mov byte ptr [esi+KTHREAD_STATE], Running
+    mov byte ptr [esi+KTHREAD_STATE_], Running
     mov byte ptr [edi+KTHREAD_WAIT_REASON], WrDispatchInt
 
     /* Put thread in ECX and get the PRCB in EDX */

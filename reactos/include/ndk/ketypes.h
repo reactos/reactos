@@ -289,9 +289,42 @@ typedef enum _KTHREAD_STATE
     Transition,
     DeferredReady,
 #if (NTDDI_VERSION >= NTDDI_WS03)
-    GateWait,
+    GateWait
 #endif
 } KTHREAD_STATE, *PKTHREAD_STATE;
+
+//
+// Kernel Object Types
+//
+typedef enum _KOBJECTS
+{
+    EventNotificationObject = 0,
+    EventSynchronizationObject = 1,
+    MutantObject = 2,
+    ProcessObject = 3,
+    QueueObject = 4,
+    SemaphoreObject = 5,
+    ThreadObject = 6,
+    GateObject = 7,
+    TimerNotificationObject = 8,
+    TimerSynchronizationObject = 9,
+    Spare2Object = 10,
+    Spare3Object = 11,
+    Spare4Object = 12,
+    Spare5Object = 13,
+    Spare6Object = 14,
+    Spare7Object = 15,
+    Spare8Object = 16,
+    Spare9Object = 17,
+    ApcObject = 18,
+    DpcObject = 19,
+    DeviceQueueObject = 20,
+    EventPairObject = 21,
+    InterruptObject = 22,
+    ProfileObject = 23,
+    ThreadedDpcObject = 24,
+    MaximumKernelObject = 25
+} KOBJECTS;
 
 //
 // Adjust reasons
@@ -668,39 +701,6 @@ typedef struct _KEXECUTE_OPTIONS
 } KEXECUTE_OPTIONS, *PKEXECUTE_OPTIONS;
 
 //
-// Kernel Object Types
-//
-typedef enum _KOBJECTS
-{
-    EventNotificationObject = 0,
-    EventSynchronizationObject = 1,
-    MutantObject = 2,
-    ProcessObject = 3,
-    QueueObject = 4,
-    SemaphoreObject = 5,
-    ThreadObject = 6,
-    GateObject = 7,
-    TimerNotificationObject = 8,
-    TimerSynchronizationObject = 9,
-    Spare2Object = 10,
-    Spare3Object = 11,
-    Spare4Object = 12,
-    Spare5Object = 13,
-    Spare6Object = 14,
-    Spare7Object = 15,
-    Spare8Object = 16,
-    Spare9Object = 17,
-    ApcObject = 18,
-    DpcObject = 19,
-    DeviceQueueObject = 20,
-    EventPairObject = 21,
-    InterruptObject = 22,
-    ProfileObject = 23,
-    ThreadedDpcObject = 24,
-    MaximumKernelObject = 25
-} KOBJECTS;
-
-//
 // Kernel Thread (KTHREAD)
 //
 typedef struct _KTHREAD
@@ -709,6 +709,7 @@ typedef struct _KTHREAD
 #if (NTDDI_VERSION >= NTDDI_LONGHORN)
     ULONGLONG CycleTime;
     ULONG HighCycleTime;
+    ULONGLONG QuantumTarget;
 #else
     LIST_ENTRY MutantListHead;
 #endif
@@ -741,8 +742,26 @@ typedef struct _KTHREAD
         PKWAIT_BLOCK WaitBlockList;
         PKGATE GateObject;
     };
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    union
+    {
+        struct
+        {
+            ULONG KernelStackResident:1;
+            ULONG ReadyTransition:1;
+            ULONG ProcessReadyQueue:1;
+            ULONG WaitNext:1;
+            ULONG SystemAffinityActive:1;
+            ULONG Alertable:1;
+            ULONG GdiFlushActive:1;
+            ULONG Reserved:25;
+        };
+        LONG MiscFlags;
+    };
+#else
     BOOLEAN Alertable;
     BOOLEAN WaitNext;
+#endif
     UCHAR WaitReason;
     SCHAR Priority;
     BOOLEAN EnableStackSwap;
@@ -796,7 +815,11 @@ typedef struct _KTHREAD
         struct
         {
             UCHAR WaitBlockFill0[23];
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+            UCHAR IdealProcessor;
+#else
             BOOLEAN SystemAffinityActive;
+#endif
         };
         struct
         {
@@ -822,31 +845,22 @@ typedef struct _KTHREAD
     PVOID CallbackStack;
     PVOID ServiceTable;
     UCHAR ApcStateIndex;
+#if (NTDDI_VERSION < NTDDI_LONGHORN)
     UCHAR IdealProcessor;
+#endif
     BOOLEAN Preempted;
 #if (NTDDI_VERSION >= NTDDI_LONGHORN)
     BOOLEAN CalloutActive;
 #else
     BOOLEAN ProcessReadyQueue;
-#endif
     BOOLEAN KernelStackResident;
+#endif
     SCHAR BasePriority;
     SCHAR PriorityDecrement;
     CHAR Saturation;
 #if (NTDDI_VERSION >= NTDDI_LONGHORN)
     ULONG SystemCallNumber;
-    union
-    {
-        struct
-        {
-            ULONG Reserved0:1;
-            ULONG ReadyTransition:1;
-            ULONG ProcessReadyQueue:1;
-            ULONG Reserved2:1;
-            ULONG Reserved3:28;
-        };
-        LONG MiscFlags;
-    };
+    ULONG Spare2;
 #endif
     KAFFINITY UserAffinity;
     struct _KPROCESS *Process;

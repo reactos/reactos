@@ -2901,6 +2901,14 @@ typedef struct _RTL_CRITICAL_SECTION {
 #endif
 
 NTSYSAPI
+PVOID
+NTAPI
+RtlPcToFileHeader(
+    IN PVOID PcValue,
+    PVOID* BaseOfImage
+);
+
+NTSYSAPI
 VOID
 NTAPI
 RtlUnwind (

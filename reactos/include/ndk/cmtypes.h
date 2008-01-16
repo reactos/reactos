@@ -227,6 +227,12 @@ typedef struct _KEY_FULL_INFORMATION
     WCHAR Class[1];
 } KEY_FULL_INFORMATION, *PKEY_FULL_INFORMATION;
 
+typedef struct _KEY_NAME_INFORMATION
+{
+    WCHAR Name[1];
+} KEY_NAME_INFORMATION, *PKEY_NAME_INFORMATION;
+
+
 typedef struct _KEY_NODE_INFORMATION
 {
     LARGE_INTEGER LastWriteTime;
@@ -517,5 +523,6 @@ typedef struct _CM_DISK_GEOMETRY_DEVICE_DATA
 #endif // _!NTOS_MODE_USER
 
 #endif // _CMTYPES_H
+
 
 

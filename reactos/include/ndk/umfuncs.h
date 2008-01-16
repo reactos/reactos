@@ -249,13 +249,6 @@ LdrLoadDll(
     OUT PVOID *BaseAddress OPTIONAL
 );
 
-PVOID
-NTAPI
-RtlPcToFileHeader(
-    IN PVOID PcValue,
-    PVOID* BaseOfImage
-);
-
 PIMAGE_BASE_RELOCATION
 NTAPI
 LdrProcessRelocationBlock(
