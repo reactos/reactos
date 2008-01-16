@@ -18,11 +18,11 @@ BEGIN
    IDS_YES                 "J"
    IDS_NO                  "N"
 
-   IDS_MENU                "Tasten: q - beenden, k - Prozess beenden"
+   IDS_MENU                "Tasten: q - Beenden, k - Prozess beenden"
    IDS_MENU_QUIT           "Q"
    IDS_MENU_KILL_PROCESS   "K"
 
-   IDS_KILL_PROCESS        "Sind Sie sicher diesen prozess beendenzu wollen (j/n)"
+   IDS_KILL_PROCESS        "Sind Sie sicher diesen Prozess beenden zu wollen? (j/n)"
    IDS_KILL_PROCESS_ERR1   "Fehler beim Beenden des Prozesses aufgetreten..."
    IDS_KILL_PROCESS_ERR2   "Fehler beim Beenden des Prozesses %d aufgetreten (OpenProcess unmöglich)"
 
