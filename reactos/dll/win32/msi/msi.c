@@ -1786,7 +1786,7 @@ static UINT WINAPI MSI_ProvideQualifiedComponentEx(LPCWSTR szComponent,
  * MsiProvideQualifiedComponentExW [MSI.@]
  */
 UINT WINAPI MsiProvideQualifiedComponentExW(LPCWSTR szComponent,
-                LPCWSTR szQualifier, DWORD dwInstallMode, LPWSTR szProduct,
+                LPCWSTR szQualifier, DWORD dwInstallMode, LPCWSTR szProduct,
                 DWORD Unused1, DWORD Unused2, LPWSTR lpPathBuf,
                 LPDWORD pcchPathBuf)
 {
@@ -1803,7 +1803,7 @@ UINT WINAPI MsiProvideQualifiedComponentExW(LPCWSTR szComponent,
  * MsiProvideQualifiedComponentExA [MSI.@]
  */
 UINT WINAPI MsiProvideQualifiedComponentExA(LPCSTR szComponent,
-                LPCSTR szQualifier, DWORD dwInstallMode, LPSTR szProduct,
+                LPCSTR szQualifier, DWORD dwInstallMode, LPCSTR szProduct,
                 DWORD Unused1, DWORD Unused2, LPSTR lpPathBuf,
                 LPDWORD pcchPathBuf)
 {
