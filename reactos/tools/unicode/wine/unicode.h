@@ -41,6 +41,7 @@
 #define WC_DISCARDNS 16
 #define WC_DEFAULTCHAR 64
 #define WC_NO_BEST_FIT_CHARS 1024
+#define WC_ERR_INVALID_CHARS 0x0080
 
 #ifndef WINE_UNICODE_API
 #define WINE_UNICODE_API DECLSPEC_IMPORT
@@ -93,7 +94,7 @@ extern int wine_cp_wcstombs( const union cptable *table, int flags,
 extern int wine_cpsymbol_mbstowcs( const char *src, int srclen, WCHAR *dst, int dstlen );
 extern int wine_cpsymbol_wcstombs( const WCHAR *src, int srclen, char *dst, int dstlen );
 extern int wine_utf8_mbstowcs( int flags, const char *src, int srclen, WCHAR *dst, int dstlen );
-extern int wine_utf8_wcstombs( const WCHAR *src, int srclen, char *dst, int dstlen );
+extern int wine_utf8_wcstombs( int flags, const WCHAR *src, int srclen, char *dst, int dstlen );
 
 extern int wine_compare_string( int flags, const WCHAR *str1, int len1, const WCHAR *str2, int len2 );
 extern int wine_get_sortkey( int flags, const WCHAR *src, int srclen, char *dst, int dstlen );

@@ -16,7 +16,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #include "config.h"
@@ -73,7 +73,8 @@ __NEW_STRUCT_FUNC(ani_any)
  */
 resource_t *new_resource(enum res_e t, void *res, int memopt, language_t *lan)
 {
-	resource_t *r = (resource_t *)xmalloc(sizeof(resource_t));
+	resource_t *r = xmalloc(sizeof(resource_t));
+	memset( r, 0, sizeof(*r) );
 	r->type = t;
 	r->res.overlay = res;
 	r->memopt = memopt;
@@ -324,10 +325,7 @@ static int convert_bitmap(char *data, int size)
 		type |= FL_SIZEBE | FL_OS2;
 	}
 	else
-	{
-		fprintf(stderr, "bisizel %d bosizel %d b4sizel %d\n", bisizel, bosizel, b4sizel);
-		yyerror("Invalid bitmap format, bih->biSize = %u", bih->biSize);
-	}
+		parser_error("Invalid bitmap format, bih->biSize = %d\n", bih->biSize);
 
 	switch(type)
 	{
@@ -336,12 +334,12 @@ static int convert_bitmap(char *data, int size)
 	case FL_SIZEBE:
 	case FL_SIZEBE | FL_V4:
 	case FL_SIZEBE | FL_OS2:
-		yywarning("Bitmap v%c signature little-endian, but size big-endian", type & FL_V4 ? '4' : '3');
+		parser_warning("Bitmap v%c signature little-endian, but size big-endian\n", type & FL_V4 ? '4' : '3');
 		break;
 	case FL_SIGBE:
 	case FL_SIGBE | FL_V4:
 	case FL_SIGBE | FL_OS2:
-		yywarning("Bitmap v%c signature big-endian, but size little-endian", type & FL_V4 ? '4' : '3');
+		parser_warning("Bitmap v%c signature big-endian, but size little-endian\n", type & FL_V4 ? '4' : '3');
 		break;
 	}
 
@@ -461,7 +459,7 @@ static void split_icons(raw_data_t *rd, icon_group_t *icog, int *nico)
 	else if(BYTESWAP_WORD(ih->type) == 1)
 		swap = 1;
 	else
-		yyerror("Icon resource data has invalid type id %d", ih->type);
+		parser_error("Icon resource data has invalid type id %d\n", ih->type);
 
 	cnt = swap ? BYTESWAP_WORD(ih->count) : ih->count;
 	for(i = 0; i < cnt; i++)
@@ -481,7 +479,7 @@ static void split_icons(raw_data_t *rd, icon_group_t *icog, int *nico)
 		}
 		if(ide.offset > rd->size
 		|| ide.offset + ide.ressize > rd->size)
-			yyerror("Icon resource data corrupt");
+			parser_error("Icon resource data corrupt\n");
 		ico->width = ide.width;
 		ico->height = ide.height;
 		ico->nclr = ide.nclr;
@@ -556,7 +554,7 @@ static void split_cursors(raw_data_t *rd, cursor_group_t *curg, int *ncur)
 	else if(BYTESWAP_WORD(ch->type) == 2)
 		swap = 1;
 	else
-		yyerror("Cursor resource data has invalid type id %d", ch->type);
+		parser_error("Cursor resource data has invalid type id %d\n", ch->type);
 	cnt = swap ? BYTESWAP_WORD(ch->count) : ch->count;
 	for(i = 0; i < cnt; i++)
 	{
@@ -575,7 +573,7 @@ static void split_cursors(raw_data_t *rd, cursor_group_t *curg, int *ncur)
 		}
 		if(cde.offset > rd->size
 		|| cde.offset + cde.ressize > rd->size)
-			yyerror("Cursor resource data corrupt");
+			parser_error("Cursor resource data corrupt\n");
 		cur->width = cde.width;
 		cur->height = cde.height;
 		cur->nclr = cde.nclr;
@@ -598,7 +596,7 @@ static void split_cursors(raw_data_t *rd, cursor_group_t *curg, int *ncur)
 			cur->bits = info.biBitCount;
 		}
 		if(!win32 && (cur->planes != 1 || cur->bits != 1))
-			yywarning("Win16 cursor contains colors");
+			parser_warning("Win16 cursor contains colors\n");
 		cur->xhot = swap ? BYTESWAP_WORD(cde.xhot) : cde.xhot;
 		cur->yhot = swap ? BYTESWAP_WORD(cde.yhot) : cde.yhot;
 		cur->data = new_raw_data();
@@ -745,21 +743,21 @@ static void handle_ani_icon(riff_tag_t *rtp, enum res_e type, int isswapped)
 
 	if(type == res_anicur && ctype != 2 && !once)
 	{
-		yywarning("Animated cursor contains invalid \"icon\" tag cursor-file (%d->%s)",
+		parser_warning("Animated cursor contains invalid \"icon\" tag cursor-file (%d->%s)",
 				ctype,
 				ctype == 1 ? "icontype" : "?");
 		once++;
 	}
 	else if(type == res_aniico && ctype != 1 && !once)
 	{
-		yywarning("Animated icon contains invalid \"icon\" tag icon-file (%d->%s)",
+		parser_warning("Animated icon contains invalid \"icon\" tag icon-file (%d->%s)",
 				ctype,
 				ctype == 2 ? "cursortype" : "?");
 		once++;
 	}
 	else if(ctype != 1 && ctype != 2 && !once)
 	{
-		yywarning("Animated %s contains invalid \"icon\" tag file-type (%d; neither icon nor cursor)", anistr, ctype);
+		parser_warning("Animated %s contains invalid \"icon\" tag file-type (%d; neither icon nor cursor)", anistr, ctype);
 		once++;
 	}
 
@@ -768,7 +766,7 @@ static void handle_ani_icon(riff_tag_t *rtp, enum res_e type, int isswapped)
 		DWORD ofs = isswapped ? BYTESWAP_DWORD(cdp[i].offset) : cdp[i].offset;
 		DWORD sze = isswapped ? BYTESWAP_DWORD(cdp[i].ressize) : cdp[i].ressize;
 		if(ofs > rtp->size || ofs+sze > rtp->size)
-			yyerror("Animated %s's data corrupt", anistr);
+			parser_error("Animated %s's data corrupt", anistr);
 		convert_bitmap((char *)chp + ofs, 0);
 		cdp[i].xhot	= BYTESWAP_WORD(cdp->xhot);
 		cdp[i].yhot	= BYTESWAP_WORD(cdp->yhot);
@@ -817,7 +815,7 @@ static void handle_ani_list(riff_tag_t *lst, enum res_e type, int isswapped)
 				       isprint(rtp->tag[2]) ? rtp->tag[2] : '.',
 				       isprint(rtp->tag[3]) ? rtp->tag[3] : '.');
 
-		if((LONG_PTR)rtp & 1)
+		if((UINT_PTR)rtp & 1)
 			rtp = SKIP_TAG(rtp,1);
 	}
 }
@@ -840,7 +838,7 @@ ani_curico_t *new_ani_curico(enum res_e type, raw_data_t *rd, int *memopt)
 	else if(rtp->size + 2*sizeof(DWORD) == rd->size)
 		isswapped = 0;
 	else
-		yyerror("Animated %s has an invalid RIFF length", anistr);
+		parser_error("Animated %s has an invalid RIFF length\n", anistr);
 
 	switch(byteorder)
 	{
@@ -927,13 +925,13 @@ ani_curico_t *new_ani_curico(enum res_e type, raw_data_t *rd, int *memopt)
 				       isprint(rtp->tag[2]) ? rtp->tag[2] : '.',
 				       isprint(rtp->tag[3]) ? rtp->tag[3] : '.');
 
-			if((LONG_PTR)rtp & 1)
+			if((UINT_PTR)rtp & 1)
 				rtp = SKIP_TAG(rtp,1);
 		}
 
 		/* We must end correctly here */
 		if((char *)rtp != (char *)rd->data + rd->size)
-			yyerror("Animated %s contains invalid field size(s)", anistr);
+			parser_error("Animated %s contains invalid field size(s)", anistr);
 	}
 
 	ani->data = rd;
@@ -1002,7 +1000,7 @@ messagetable_t *new_messagetable(raw_data_t *rd, int *memopt)
 		msg->memopt = WRC_MO_MOVEABLE | WRC_MO_PURE;
 
 	if(rd->size < sizeof(DWORD))
-		yyerror("Invalid messagetable, size too small");
+		parser_error("Invalid messagetable, size too small\n");
 
 	nblk = *(DWORD *)rd->data;
 	lo = WRC_LOWORD(nblk);
@@ -1017,9 +1015,9 @@ messagetable_t *new_messagetable(raw_data_t *rd, int *memopt)
 	 * the ID, offset and length (and flag) fields to be very sure.
 	 */
 	if(hi && lo)
-		internal_error(__FILE__, __LINE__, "Messagetable contains more than 65535 blocks; cannot determine endian");
+		internal_error(__FILE__, __LINE__, "Messagetable contains more than 65535 blocks; cannot determine endian\n");
 	if(!hi && !lo)
-		yyerror("Invalid messagetable block count 0");
+		parser_error("Invalid messagetable block count 0\n");
 
 	if(!hi && lo)  /* Messagetable byteorder == native byteorder */
 	{
@@ -1032,7 +1030,7 @@ messagetable_t *new_messagetable(raw_data_t *rd, int *memopt)
 
 		mbp = (msgtab_block_t *)&(((DWORD *)rd->data)[1]);
 		if(MSGTAB_BAD_PTR(mbp, rd->data, rd->size, nblk * sizeof(*mbp)))
-			yyerror("Messagetable's blocks are outside of defined data");
+			parser_error("Messagetable's blocks are outside of defined data\n");
 		for(i = 0; i < nblk; i++)
 		{
 			msgtab_entry_t *mep, *next_mep;
@@ -1043,7 +1041,7 @@ messagetable_t *new_messagetable(raw_data_t *rd, int *memopt)
 			for(id = mbp[i].idlo; id <= mbp[i].idhi; id++)
 			{
 				if(MSGTAB_BAD_PTR(mep, rd->data, rd->size, mep->length))
-					yyerror("Messagetable's data for block %d, ID 0x%08x is outside of defined data", (int)i, id);
+					parser_error("Messagetable's data for block %d, ID 0x%08x is outside of defined data\n", i, id);
 				if(mep->flags == 1)	/* Docu says 'flags == 0x0001' for unicode */
 				{
 					WORD *wp = (WORD *)&mep[1];
@@ -1051,7 +1049,7 @@ messagetable_t *new_messagetable(raw_data_t *rd, int *memopt)
 					int n;
 
 					if(mep->length & 1)
-						yyerror("Message 0x%08x is unicode (block %d), but has odd length (%d)", id, (int)i, mep->length);
+						parser_error("Message 0x%08x is unicode (block %d), but has odd length (%d)\n", id, i, mep->length);
 					for(n = 0; n < l; n++)
 						wp[n] = BYTESWAP_WORD(wp[n]);
 
@@ -1079,7 +1077,7 @@ messagetable_t *new_messagetable(raw_data_t *rd, int *memopt)
 		mbp = (msgtab_block_t *)&(((DWORD *)rd->data)[1]);
 		nblk = BYTESWAP_DWORD(nblk);
 		if(MSGTAB_BAD_PTR(mbp, rd->data, rd->size, nblk * sizeof(*mbp)))
-			yyerror("Messagetable's blocks are outside of defined data");
+			parser_error("Messagetable's blocks are outside of defined data\n");
 		for(i = 0; i < nblk; i++)
 		{
 			msgtab_entry_t *mep;
@@ -1096,7 +1094,7 @@ messagetable_t *new_messagetable(raw_data_t *rd, int *memopt)
 				mep->flags  = BYTESWAP_WORD(mep->flags);
 
 				if(MSGTAB_BAD_PTR(mep, rd->data, rd->size, mep->length))
-					yyerror("Messagetable's data for block %d, ID 0x%08x is outside of defined data", (int)i, id);
+					parser_error("Messagetable's data for block %d, ID 0x%08x is outside of defined data\n", i, id);
 				if(mep->flags == 1)	/* Docu says 'flags == 0x0001' for unicode */
 				{
 					WORD *wp = (WORD *)&mep[1];
@@ -1104,7 +1102,7 @@ messagetable_t *new_messagetable(raw_data_t *rd, int *memopt)
 					int n;
 
 					if(mep->length & 1)
-						yyerror("Message 0x%08x is unicode (block %d), but has odd length (%d)", id, (int)i, mep->length);
+						parser_error("Message 0x%08x is unicode (block %d), but has odd length (%d)\n", id, i, mep->length);
 					for(n = 0; n < l; n++)
 						wp[n] = BYTESWAP_WORD(wp[n]);
 
@@ -1146,6 +1144,7 @@ stringtable_t *new_stringtable(lvc_t *lvc)
 {
 	stringtable_t *stt = (stringtable_t *)xmalloc(sizeof(stringtable_t));
 
+	memset( stt, 0, sizeof(*stt) );
 	if(lvc)
 		stt->lvc = *lvc;
 

@@ -14,7 +14,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  *
  * History:
  * 21-May-2000 BS	- Fixed the ident requirement of resource names
@@ -68,18 +68,15 @@
  */
 
 /* Exclusive string handling */
-%x yystr
+%x tkstr
 /* Exclusive unicode string handling */
-%x yylstr
+%x tklstr
 /* Exclusive rcdata single quoted data handling */
-%x yyrcd
+%x tkrcd
 /* Exclusive comment eating... */
 %x comment
 /* Set when stripping c-junk */
-%x pp_stripe
-%x pp_strips
-%x pp_stripp
-%x pp_stripp_final
+%x pp_cstrip
 /* Set when scanning #line style directives */
 %x pp_line
 /* Set when scanning #pragma */
@@ -87,8 +84,9 @@
 %x pp_code_page
 
 %option stack
-%option nounput noyy_top_state
+%option nounput noyy_top_state noyywrap
 %option 8bit never-interactive
+%option prefix="parser_"
 
 /* Some shortcut definitions */
 ws	[ \f\t\r]
@@ -127,9 +125,6 @@ static int cbufalloc = 0;
 static WCHAR *wbuffer;
 static int wbufidx;
 static int wbufalloc = 0;
-static int stripslevel = 0;	/* Count {} during pp_strips/pp_stripe mode */
-static int stripplevel = 0;	/* Count () during pp_strips mode */
-static int cjunk_tagline;	/* Where did we start stripping (helps error tracking) */
 
 static int current_codepage = -1;  /* use language default */
 
@@ -320,81 +315,66 @@ static struct keyword *iskeyword(char *kw)
 	 * because we only want to know the linenumber and
 	 * filename.
 	 */
-<INITIAL,pp_strips,pp_stripp>^{ws}*\#{ws}*pragma{ws}+	yy_push_state(pp_pragma);
-<INITIAL,pp_strips,pp_stripp>^{ws}*\#{ws}*	yy_push_state(pp_line);
+<INITIAL,pp_cstrip>^{ws}*\#{ws}*pragma{ws}+	yy_push_state(pp_pragma);
+<INITIAL,pp_cstrip>^{ws}*\#{ws}*	yy_push_state(pp_line);
 <pp_line>[^\n]*	{
-		int lineno;
+		int lineno, len;
 		char *cptr;
 		char *fname;
 		yy_pop_state();
 		lineno = (int)strtol(yytext, &cptr, 10);
 		if(!lineno)
-			yyerror("Malformed '#...' line-directive; invalid linenumber");
+			parser_error("Malformed '#...' line-directive; invalid linenumber\n");
 		fname = strchr(cptr, '"');
 		if(!fname)
-			yyerror("Malformed '#...' line-directive; missing filename");
+			parser_error("Malformed '#...' line-directive; missing filename\n");
 		fname++;
 		cptr = strchr(fname, '"');
 		if(!cptr)
-			yyerror("Malformed '#...' line-directive; missing terminating \"");
+			parser_error("Malformed '#...' line-directive; missing terminating \"");
 		*cptr = '\0';
 		line_number = lineno - 1;	/* We didn't read the newline */
 		input_name = xstrdup(fname);
+                /* ignore contents of C include files */
+                len = strlen(input_name);
+                if (len > 1 && !strcasecmp( input_name + len - 2, ".h" ))
+                    BEGIN(pp_cstrip);
+                else
+                    BEGIN(INITIAL);
 	}
 
 <pp_pragma>code_page[^\n]*	yyless(9); yy_pop_state(); yy_push_state(pp_code_page);
-<pp_pragma>[^\n]*		yy_pop_state(); if (pedantic) yywarning("Unrecognized #pragma directive '%s'",yytext);
+<pp_pragma>[^\n]*		yy_pop_state(); if (pedantic) parser_warning("Unrecognized #pragma directive '%s'\n",yytext);
 
 <pp_code_page>\({ws}*default{ws}*\)[^\n]*	current_codepage = -1; yy_pop_state();
+<pp_code_page>\({ws}*utf8{ws}*\)[^\n]*		current_codepage = CP_UTF8; yy_pop_state();
 <pp_code_page>\({ws}*[0-9]+{ws}*\)[^\n]* {
         char *p = yytext;
         yy_pop_state();
         while (*p < '0' || *p > '9') p++;
         current_codepage = strtol( p, NULL, 10 );
-        if (current_codepage && !wine_cp_get_table( current_codepage ))
+        if (current_codepage && current_codepage != CP_UTF8 && !wine_cp_get_table( current_codepage ))
         {
-            yyerror("Codepage %d not supported", current_codepage);
+            parser_error("Codepage %d not supported\n", current_codepage);
             current_codepage = 0;
         }
     }
-<pp_code_page>[^\n]*	yy_pop_state(); yyerror("Malformed #pragma code_page directive");
+<pp_code_page>[^\n]*	yy_pop_state(); parser_error("Malformed #pragma code_page directive\n");
 
 	/*
 	 * Strip everything until a ';' taking
 	 * into account braces {} for structures,
 	 * classes and enums.
 	 */
-<pp_strips>\{			stripslevel++;
-<pp_strips>\}			stripslevel--;
-<pp_strips>;			if(!stripslevel) yy_pop_state();
-<pp_strips>\/[^*\n]		; /* To catch comments */
-<pp_strips>[^\{\};\n#/]*	; /* Ignore rest */
-<pp_strips>\n			line_number++; char_number = 1;
-
-<pp_stripp>\(			stripplevel++;
-<pp_stripp>\)			{
-					stripplevel--;
-					if(!stripplevel)
-					{
-						yy_pop_state();
-						yy_push_state(pp_stripp_final);
-					}
-				}
-<pp_stripp>\/[^*\n]		; /* To catch comments */
-<pp_stripp>[^\(\);\n#/]*	; /* Ignore rest */
-<pp_stripp>\n			line_number++; char_number = 1;
-
-<pp_stripp_final>{ws}*		; /* Ignore */
-<pp_stripp_final>;		yy_pop_state(); /* Kill the semicolon */
-<pp_stripp_final>\n		line_number++; char_number = 1; yy_pop_state();
-<pp_stripp_final>.		yyless(0); yy_pop_state();
+<pp_cstrip>\n			line_number++; char_number = 1;
+<pp_cstrip>.			; /* ignore */
 
 \{			return tBEGIN;
 \}			return tEND;
 
-[0-9]+[lL]?		{ yylval.num = strtoul(yytext,  0, 10); return toupper(yytext[yyleng-1]) == 'L' ? tLNUMBER : tNUMBER; }
-0[xX][0-9A-Fa-f]+[lL]?	{ yylval.num = strtoul(yytext,  0, 16); return toupper(yytext[yyleng-1]) == 'L' ? tLNUMBER : tNUMBER; }
-0[oO][0-7]+[lL]?	{ yylval.num = strtoul(yytext+2, 0, 8); return toupper(yytext[yyleng-1]) == 'L' ? tLNUMBER : tNUMBER; }
+[0-9]+[lL]?		{ parser_lval.num = strtoul(yytext,  0, 10); return toupper(yytext[yyleng-1]) == 'L' ? tLNUMBER : tNUMBER; }
+0[xX][0-9A-Fa-f]+[lL]?	{ parser_lval.num = strtoul(yytext,  0, 16); return toupper(yytext[yyleng-1]) == 'L' ? tLNUMBER : tNUMBER; }
+0[oO][0-7]+[lL]?	{ parser_lval.num = strtoul(yytext+2, 0, 8); return toupper(yytext[yyleng-1]) == 'L' ? tLNUMBER : tNUMBER; }
 
 	/*
 	 * The next two rules scan identifiers and filenames.
@@ -410,7 +390,7 @@ static struct keyword *iskeyword(char *kw)
 				{
 					if(wanted_id && !tok->alwayskw)
 					{
-						yylval.str = make_string(yytext);
+						parser_lval.str = make_string(yytext);
 						return tIDENT;
 					}
 					else
@@ -418,137 +398,137 @@ static struct keyword *iskeyword(char *kw)
 				}
 				else
 				{
-					yylval.str = make_string(yytext);
+					parser_lval.str = make_string(yytext);
 					return tIDENT;
 				}
 			}
-[A-Za-z_0-9./\\]+		yylval.str = make_string(yytext); return tFILENAME;
+[A-Za-z_0-9./\\]+		parser_lval.str = make_string(yytext); return tFILENAME;
 
 	/*
 	 * Wide string scanning
 	 */
 L\"			{
-				yy_push_state(yylstr);
+				yy_push_state(tklstr);
 				wbufidx = 0;
 				if(!win32)
-					yywarning("16bit resource contains unicode strings\n");
+					parser_warning("16bit resource contains unicode strings\n");
 			}
-<yylstr>\"{ws}+	|
-<yylstr>\"		{
+<tklstr>\"{ws}+	|
+<tklstr>\"		{
 				yy_pop_state();
-				yylval.str = get_buffered_wstring();
+				parser_lval.str = get_buffered_wstring();
 				return tSTRING;
 			}
-<yylstr>\\[0-7]{1,6}	{ /* octal escape sequence */
+<tklstr>\\[0-7]{1,6}	{ /* octal escape sequence */
 				unsigned int result;
 				result = strtoul(yytext+1, 0, 8);
 				if ( result > 0xffff )
-					yyerror("Character constant out of range");
+					parser_error("Character constant out of range\n");
 				addwchar((WCHAR)result);
 			}
-<yylstr>\\x[0-9a-fA-F]{4} {  /* hex escape sequence */
+<tklstr>\\x[0-9a-fA-F]{4} {  /* hex escape sequence */
 				unsigned int result;
 				result = strtoul(yytext+2, 0, 16);
 				addwchar((WCHAR)result);
 			}
-<yylstr>\\x[0-9a-fA-F]{1,3} {  yyerror("Invalid hex escape sequence '%s'", yytext); }
+<tklstr>\\x[0-9a-fA-F]{1,3} {  parser_error("Invalid hex escape sequence '%s'\n", yytext); }
 
-<yylstr>\\[0-9]+	yyerror("Bad escape sequence");
-<yylstr>\\\n{ws}*	line_number++; char_number = 1; /* backslash at EOL continues string after leading whitespace on next line */
-<yylstr>\\a		addwchar('\a');
-<yylstr>\\b		addwchar('\b');
-<yylstr>\\f		addwchar('\f');
-<yylstr>\\n		addwchar('\n');
-<yylstr>\\r		addwchar('\r');
-<yylstr>\\t		addwchar('\t');
-<yylstr>\\v		addwchar('\v');
-<yylstr>\\.		addwchar(yytext[1]);
-<yylstr>\\\r\n		addwchar(yytext[2]); line_number++; char_number = 1;
-<yylstr>\"\"		addwchar('\"');		/* "bla""bla"  -> "bla\"bla" */
-<yylstr>\\\"\"		addwchar('\"');		/* "bla\""bla" -> "bla\"bla" */
-<yylstr>\"{ws}+\"	;			/* "bla" "bla" -> "blabla" */
-<yylstr>[^\\\n\"]+	{
+<tklstr>\\[0-9]+	parser_error("Bad escape sequence\n");
+<tklstr>\\\n{ws}*	line_number++; char_number = 1; /* backslash at EOL continues string after leading whitespace on next line */
+<tklstr>\\a		addwchar('\a');
+<tklstr>\\b		addwchar('\b');
+<tklstr>\\f		addwchar('\f');
+<tklstr>\\n		addwchar('\n');
+<tklstr>\\r		addwchar('\r');
+<tklstr>\\t		addwchar('\t');
+<tklstr>\\v		addwchar('\v');
+<tklstr>\\.		addwchar(yytext[1]);
+<tklstr>\\\r\n		addwchar(yytext[2]); line_number++; char_number = 1;
+<tklstr>\"\"		addwchar('\"');		/* "bla""bla"  -> "bla\"bla" */
+<tklstr>\\\"\"		addwchar('\"');		/* "bla\""bla" -> "bla\"bla" */
+<tklstr>\"{ws}+\"	;			/* "bla" "bla" -> "blabla" */
+<tklstr>[^\\\n\"]+	{
 				char *yptr = yytext;
 				while(*yptr)	/* FIXME: codepage translation */
 					addwchar(*yptr++ & 0xff);
 			}
-<yylstr>\n		yyerror("Unterminated string");
+<tklstr>\n		parser_error("Unterminated string\n");
 
 	/*
 	 * Normal string scanning
 	 */
-\"			yy_push_state(yystr); cbufidx = 0;
-<yystr>\"{ws}+	|
-<yystr>\"		{
+\"			yy_push_state(tkstr); cbufidx = 0;
+<tkstr>\"{ws}+	|
+<tkstr>\"		{
 				yy_pop_state();
-				yylval.str = get_buffered_cstring();
+				parser_lval.str = get_buffered_cstring();
 				return tSTRING;
 			}
-<yystr>\\[0-7]{1,3}	{ /* octal escape sequence */
+<tkstr>\\[0-7]{1,3}	{ /* octal escape sequence */
 				int result;
 				result = strtol(yytext+1, 0, 8);
 				if ( result > 0xff )
-					yyerror("Character constant out of range");
+					parser_error("Character constant out of range\n");
 				addcchar((char)result);
 			}
-<yystr>\\x[0-9a-fA-F]{2} {  /* hex escape sequence */
+<tkstr>\\x[0-9a-fA-F]{2} {  /* hex escape sequence */
 				int result;
 				result = strtol(yytext+2, 0, 16);
 				addcchar((char)result);
 			}
-<yystr>\\x[0-9a-fA-F]	{  yyerror("Invalid hex escape sequence '%s'", yytext); }
+<tkstr>\\x[0-9a-fA-F]	{  parser_error("Invalid hex escape sequence '%s'\n", yytext); }
 
-<yystr>\\[0-9]+		yyerror("Bad escape sequence");
-<yystr>\\\n{ws}*	line_number++; char_number = 1; /* backslash at EOL continues string after leading whitespace on next line */
-<yystr>\\a		addcchar('\a');
-<yystr>\\b		addcchar('\b');
-<yystr>\\f		addcchar('\f');
-<yystr>\\n		addcchar('\n');
-<yystr>\\r		addcchar('\r');
-<yystr>\\t		addcchar('\t');
-<yystr>\\v		addcchar('\v');
-<yystr>\\.		addcchar(yytext[1]);
-<yystr>\\\r\n		addcchar(yytext[2]); line_number++; char_number = 1;
-<yystr>[^\\\n\"]+	{
+<tkstr>\\[0-9]+		parser_error("Bad escape sequence\n");
+<tkstr>\\\n{ws}*	line_number++; char_number = 1; /* backslash at EOL continues string after leading whitespace on next line */
+<tkstr>\\a		addcchar('\a');
+<tkstr>\\b		addcchar('\b');
+<tkstr>\\f		addcchar('\f');
+<tkstr>\\n		addcchar('\n');
+<tkstr>\\r		addcchar('\r');
+<tkstr>\\t		addcchar('\t');
+<tkstr>\\v		addcchar('\v');
+<tkstr>\\.		addcchar(yytext[1]);
+<tkstr>\\\r\n		addcchar(yytext[2]); line_number++; char_number = 1;
+<tkstr>[^\\\n\"]+	{
 				char *yptr = yytext;
 				while(*yptr)
 					addcchar(*yptr++);
 			}
-<yystr>\"\"		addcchar('\"');		/* "bla""bla"   -> "bla\"bla" */
-<yystr>\\\"\"		addcchar('\"');		/* "bla\""bla"  -> "bla\"bla" */
-<yystr>\"{ws}+\"	;			/* "bla" "bla"  -> "blabla" */
-<yystr>\n		yyerror("Unterminated string");
+<tkstr>\"\"		addcchar('\"');		/* "bla""bla"   -> "bla\"bla" */
+<tkstr>\\\"\"		addcchar('\"');		/* "bla\""bla"  -> "bla\"bla" */
+<tkstr>\"{ws}+\"	;			/* "bla" "bla"  -> "blabla" */
+<tkstr>\n		parser_error("Unterminated string\n");
 
 	/*
 	 * Raw data scanning
 	 */
-\'			yy_push_state(yyrcd); cbufidx = 0;
-<yyrcd>\'		{
+\'			yy_push_state(tkrcd); cbufidx = 0;
+<tkrcd>\'		{
 				yy_pop_state();
-				yylval.raw = new_raw_data();
-				yylval.raw->size = cbufidx;
-				yylval.raw->data = xmalloc(yylval.raw->size);
-				memcpy(yylval.raw->data, cbuffer, yylval.raw->size);
+				parser_lval.raw = new_raw_data();
+				parser_lval.raw->size = cbufidx;
+				parser_lval.raw->data = xmalloc(parser_lval.raw->size);
+				memcpy(parser_lval.raw->data, cbuffer, parser_lval.raw->size);
 				return tRAWDATA;
 			}
-<yyrcd>[0-9a-fA-F]{2}	{
+<tkrcd>[0-9a-fA-F]{2}	{
 				int result;
 				result = strtol(yytext, 0, 16);
 				addcchar((char)result);
 			}
-<yyrcd>{ws}+		;	/* Ignore space */
-<yyrcd>\n		line_number++; char_number = 1;
-<yyrcd>.		yyerror("Malformed data-line");
+<tkrcd>{ws}+		;	/* Ignore space */
+<tkrcd>\n		line_number++; char_number = 1;
+<tkrcd>.		parser_error("Malformed data-line\n");
 
 	/*
 	 * Comment stripping
 	 * Should never occur after preprocessing
 	 */
-<INITIAL,pp_stripp,pp_strips>"/*"	{
+<INITIAL,pp_cstrip>"/*"	{
 				yy_push_state(comment);
 				save_wanted_id = wanted_id;
 				if(!no_preprocess)
-					yywarning("Found comments after preprocessing, please report");
+					parser_warning("Found comments after preprocessing, please report\n");
 			}
 <comment>[^*\n]*	;
 <comment>"*"+[^*/\n]*	;
@@ -556,7 +536,7 @@ L\"			{
 <comment>"*"+"/"	yy_pop_state(); want_id = save_wanted_id;
 
 ;[^\n]*			want_id = wanted_id; /* not really comment, but left-over c-junk */
-"//"[^\n]*		want_id = wanted_id; if(!no_preprocess) yywarning("Found comments after preprocessing, please report");
+"//"[^\n]*		want_id = wanted_id; if(!no_preprocess) parser_warning("Found comments after preprocessing, please report\n");
 
 \n			{
 				want_id = wanted_id;
@@ -572,13 +552,6 @@ L\"			{
 
 <INITIAL>.		return yytext[0];
 
-<<EOF>>			{
-				if(YY_START == pp_strips || YY_START == pp_stripe || YY_START == pp_stripp || YY_START == pp_stripp_final)
-					yyerror("Unexpected end of file during c-junk scanning (started at %d)", cjunk_tagline);
-				else
-					yyterminate();
-			}
-
 <*>.|\n			{
 				/* Catch all rule to find any unmatched text */
 				if(*yytext == '\n')
@@ -586,24 +559,11 @@ L\"			{
 					line_number++;
 					char_number = 1;
 				}
-				yywarning("Unmatched text '%c' (0x%02x) YY_START=%d stripslevel=%d",
-					isprint(*yytext & 0xff) ? *yytext : '.', *yytext, YY_START,stripslevel);
+				parser_warning("Unmatched text '%c' (0x%02x) YY_START=%d\n",
+					isprint(*yytext & 0xff) ? *yytext : '.', *yytext, YY_START);
 			}
 
 %%
-
-#ifndef yywrap
-int yywrap(void)
-{
-#if 0
-	if(bufferstackidx > 0)
-	{
-		return 0;
- 	}
-#endif
-	return 1;
-}
-#endif
 
 /* These dup functions copy the enclosed '\0' from
  * the resource string.
@@ -615,7 +575,7 @@ static void addcchar(char c)
 		cbufalloc += 1024;
 		cbuffer = xrealloc(cbuffer, cbufalloc * sizeof(cbuffer[0]));
 		if(cbufalloc > 65536)
-			yywarning("Reallocating string buffer larger than 64kB");
+			parser_warning("Reallocating string buffer larger than 64kB\n");
 	}
 	cbuffer[cbufidx++] = c;
 }
@@ -627,7 +587,7 @@ static void addwchar(WCHAR s)
 		wbufalloc += 1024;
 		wbuffer = xrealloc(wbuffer, wbufalloc * sizeof(wbuffer[0]));
 		if(wbufalloc > 65536)
-			yywarning("Reallocating wide string buffer larger than 64kB");
+			parser_warning("Reallocating wide string buffer larger than 64kB\n");
 	}
 	wbuffer[wbufidx++] = s;
 }
@@ -638,21 +598,21 @@ static string_t *get_buffered_cstring(void)
 
     str->size = cbufidx;
     str->type = str_char;
-    str->str.cstr = (char *)xmalloc(cbufidx+1);
+    str->str.cstr = xmalloc(cbufidx+1);
     memcpy(str->str.cstr, cbuffer, cbufidx);
     str->str.cstr[cbufidx] = '\0';
 
     if (!current_codepage || current_codepage == -1 || !win32)  /* store as ANSI string */
     {
-        if (!current_codepage) yyerror("Codepage set to Unicode only, cannot use ASCII string here");
+        if (!current_codepage) parser_error("Codepage set to Unicode only, cannot use ASCII string here\n");
         return str;
     }
     else  /* convert to Unicode before storing */
     {
         string_t *str_w = convert_string( str, str_unicode, current_codepage );
         if (!check_unicode_conversion( str, str_w, current_codepage ))
-            yyerror("String %s does not convert identically to Unicode and back in codepage %d. "
-                    "Try using a Unicode string instead.", str->str.cstr, current_codepage );
+            parser_error("String %s does not convert identically to Unicode and back in codepage %d. "
+                    "Try using a Unicode string instead\n", str->str.cstr, current_codepage );
         free_string( str );
         return str_w;
     }
@@ -674,7 +634,7 @@ static string_t *make_string(char *s)
 	string_t *str = new_string();
 	str->size = strlen(s);
 	str->type = str_char;
-	str->str.cstr = (char *)xmalloc(str->size+1);
+	str->str.cstr = xmalloc(str->size+1);
 	memcpy(str->str.cstr, s, str->size+1);
 	return str;
 }

@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #include "config.h"
@@ -546,7 +546,7 @@ static void dump_control(const control_t *ctrl)
 		printf("\tExStyle: %08x\n", ctrl->exstyle->or_mask);
 	}
 	if(ctrl->gothelpid)
-		printf("\tHelpid: %u\n", ctrl->helpid);
+		printf("\tHelpid: %d\n", ctrl->helpid);
 	if(ctrl->extra)
 	{
 		printf("\t");
@@ -636,7 +636,7 @@ static void dump_dialogex(const dialogex_t *dlgex)
 		printf("ExStyle: %08x\n", dlgex->exstyle->or_mask);
 	}
 	if(dlgex->gothelpid)
-		printf("Helpid: %u\n", dlgex->helpid);
+		printf("Helpid: %d\n", dlgex->helpid);
 	printf("Menu: %s\n", get_nameid_str(dlgex->menu));
 	printf("Class: %s\n", get_nameid_str(dlgex->dlgclass));
 	printf("Title: "); print_string(dlgex->title); printf("\n");
@@ -732,7 +732,7 @@ static void dump_menuex_item(const menuex_item_t *item)
 			if(item->gotid)
 				printf(", Id=%d", item->id);
 			if(item->gottype)
-				printf(", Type=%u", item->type);
+				printf(", Type=%d", item->type);
 			if(item->gotstate)
 				printf(", State=%08x", item->state);
 			if(item->gothelpid)
@@ -749,7 +749,7 @@ static void dump_menuex_item(const menuex_item_t *item)
 				if(item->gotid)
 					printf(", Id=%d", item->id);
 				if(item->gottype)
-					printf(", Type=%u", item->type);
+					printf(", Type=%d", item->type);
 				if(item->gotstate)
 					printf(", State=%08x", item->state);
 				if(item->gothelpid)

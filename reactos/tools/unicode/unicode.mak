@@ -89,6 +89,7 @@ UNICODE_SOURCES = $(addprefix $(UNICODE_BASE_), \
 	wctomb.c \
 	wctype.c \
 	$(UNICODE_CODEPAGES:%=c_%.o) \
+	utf8.c \
 	)
 
 UNICODE_OBJECTS = \
@@ -371,6 +372,10 @@ $(UNICODE_INT_)c_28605.o: $(UNICODE_BASE_)c_28605.c | $(UNICODE_INT)
 	${host_gcc} $(UNICODE_HOST_CFLAGS) -c $< -o $@
 
 $(UNICODE_INT_)c_28606.o: $(UNICODE_BASE_)c_28606.c | $(UNICODE_INT)
+	$(ECHO_CC)
+	${host_gcc} $(UNICODE_HOST_CFLAGS) -c $< -o $@
+
+$(UNICODE_INT_)utf8.o: $(UNICODE_BASE_)utf8.c | $(UNICODE_INT)
 	$(ECHO_CC)
 	${host_gcc} $(UNICODE_HOST_CFLAGS) -c $< -o $@
 

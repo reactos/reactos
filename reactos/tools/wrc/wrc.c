@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  *
  */
 
@@ -53,7 +53,7 @@
 #define ENDIAN	"little"
 #endif
 
-static char usage[] =
+static const char usage[] =
 	"Usage: wrc [options...] [infile[.rc|.res]] [outfile]\n"
 	"   -D id[=val] Define preprocessor identifier id=val\n"
 	"   -E          Preprocess only\n"
@@ -165,17 +165,17 @@ int char_number = 1;		/* The current char pos within the line */
 char *cmdline;			/* The entire commandline */
 time_t now;			/* The time of start of wrc */
 
-int yy_flex_debug;
+int parser_debug, yy_flex_debug;
 
 resource_t *resource_top;	/* The top of the parsed resources */
 
 int getopt (int argc, char *const *argv, const char *optstring);
-static void rm_tempfile(void);
+static void cleanup_files(void);
 static void segvhandler(int sig);
 
-static const char* short_options =
+static const char short_options[] =
 	"D:Ef:F:hi:I:J:l:o:O:rU:v";
-static struct option long_options[] = {
+static const struct option long_options[] = {
 	{ "debug", 1, 0, 6 },
 	{ "define", 1, 0, 'D' },
 	{ "endianess", 1, 0, 7 },
@@ -188,7 +188,7 @@ static struct option long_options[] = {
 	{ "nostdinc", 0, 0, 1 },
 	{ "output", 1, 0, 'o' },
 	{ "output-format", 1, 0, 'O' },
-	{ "pendantic", 0, 0, 8 },
+	{ "pedantic", 0, 0, 8 },
 	{ "preprocessor", 1, 0, 4 },
 	{ "target", 1, 0, 'F' },
 	{ "undefine", 1, 0, 'U' },
@@ -225,6 +225,12 @@ static void set_version_defines(void)
     free( version );
 }
 
+/* clean things up when aborting on a signal */
+static void exit_on_signal( int sig )
+{
+    exit(1);  /* this will call the atexit functions */
+}
+
 int main(int argc,char *argv[])
 {
 	extern char* optarg;
@@ -238,6 +244,11 @@ int main(int argc,char *argv[])
 	int cmdlen;
 
 	signal(SIGSEGV, segvhandler);
+        signal( SIGTERM, exit_on_signal );
+        signal( SIGINT, exit_on_signal );
+#ifdef SIGHUP
+        signal( SIGHUP, exit_on_signal );
+#endif
 
 	now = time(NULL);
 
@@ -390,7 +401,7 @@ int main(int argc,char *argv[])
 		wpp_add_include_path(INCLUDEDIR"/msvcrt");
 		wpp_add_include_path(INCLUDEDIR"/windows");
 	}
-
+	
 	/* Check for input file on command-line */
 	if(optind < argc)
 	{
@@ -412,7 +423,7 @@ int main(int argc,char *argv[])
 		setbuf(stderr,0);
 	}
 
-	yydebug = debuglevel & DEBUGLEVEL_TRACE ? 1 : 0;
+	parser_debug = debuglevel & DEBUGLEVEL_TRACE ? 1 : 0;
 	yy_flex_debug = debuglevel & DEBUGLEVEL_TRACE ? 1 : 0;
 
         wpp_set_debug( (debuglevel & DEBUGLEVEL_PPLEX) != 0,
@@ -429,6 +440,7 @@ int main(int argc,char *argv[])
 		output_name = dup_basename(input_name, ".rc");
 		strcat(output_name, ".res");
 	}
+	atexit(cleanup_files);
 
 	/* Run the preprocessor on the input */
 	if(!no_preprocess)
@@ -438,11 +450,10 @@ int main(int argc,char *argv[])
 		 * no output was given.
 		 */
 
-		chat("Starting preprocess");
+		chat("Starting preprocess\n");
 
                 if (!preprocess_only)
                 {
-                    atexit(rm_tempfile);
                     ret = wpp_parse_temp( input_name, output_name, &temp_name );
                 }
                 else if (output_name)
@@ -463,20 +474,23 @@ int main(int argc,char *argv[])
 			exit(1);	/* Error during preprocess */
 
 		if(preprocess_only)
+		{
+			output_name = NULL;
 			exit(0);
+		}
 
 		input_name = temp_name;
 	}
 
 	/* Go from .rc to .res */
-	chat("Starting parse");
+	chat("Starting parse\n");
 
-	if(!(yyin = fopen(input_name, "rb")))
+	if(!(parser_in = fopen(input_name, "rb")))
 		error("Could not open %s for input\n", input_name);
 
-	ret = yyparse();
+	ret = parser_parse();
 
-	if(input_name) fclose(yyin);
+	if(input_name) fclose(parser_in);
 
 	if(ret) exit(1); /* Error during parse */
 
@@ -492,17 +506,18 @@ int main(int argc,char *argv[])
 	/* Convert the internal lists to binary data */
 	resources2res(resource_top);
 
-	chat("Writing .res-file");
+	chat("Writing .res-file\n");
 	write_resfile(output_name, resource_top);
+	output_name = NULL;
 
 	return 0;
 }
 
 
-static void rm_tempfile(void)
+static void cleanup_files(void)
 {
-	if(temp_name)
-		unlink(temp_name);
+	if (output_name) unlink(output_name);
+	if (temp_name) unlink(temp_name);
 }
 
 static void segvhandler(int sig)

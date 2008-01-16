@@ -273,7 +273,7 @@ Bertho Stultiens <bertho@akhphd.au.dk>
 - Allocate cursor and icon ordinals according to the language of the item to
   decrease the amount of ordinals in use. This reduces the resource
   directory size by reducing the tree size.
-- Versions 1.0.5 through 1.0.7 were never commited to cvs but were available
+- Versions 1.0.5 through 1.0.7 were never committed to cvs but were available
   for download from an alternate site for elf-dll test generation.
 
 ---------------------------------------------------------------------------

@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  *
  * History:
  * 05-May-2000 BS	- Added code to support endian conversions. The
@@ -54,7 +54,8 @@ res_t *new_res(void)
 	r = (res_t *)xmalloc(sizeof(res_t));
 	r->allocsize = RES_BLOCKSIZE;
 	r->size = 0;
-	r->data = (char *)xmalloc(RES_BLOCKSIZE);
+	r->dataidx = 0;
+	r->data = xmalloc(RES_BLOCKSIZE);
 	return r;
 }
 
@@ -276,7 +277,7 @@ static void string_to_upper(string_t *str)
     }
     else
     {
-        internal_error(__FILE__, __LINE__, "Invalid string type %d", str->type);
+        internal_error(__FILE__, __LINE__, "Invalid string type %d\n", str->type);
     }
 }
 
@@ -317,7 +318,7 @@ static void put_string(res_t *res, const string_t *str, enum str_e type, int ist
         {
             if (!check_unicode_conversion( str, newstr, codepage ))
                 error( "String %s does not convert identically to Unicode and back in codepage %d. "
-                       "Try using a Unicode string instead.", str->str.cstr, codepage );
+                       "Try using a Unicode string instead\n", str->str.cstr, codepage );
         }
         if (!isterm) put_word(res, newstr->size);
         for(cnt = 0; cnt < newstr->size; cnt++)
@@ -370,7 +371,7 @@ static void put_name_id(res_t *res, name_id_t *nid, int upcase, const language_t
 	}
 	else
 	{
-		internal_error(__FILE__, __LINE__, "Invalid name_id type %d", nid->type);
+		internal_error(__FILE__, __LINE__, "Invalid name_id type %d\n", nid->type);
 	}
 }
 
@@ -601,7 +602,7 @@ static res_t *dialog2res(name_id_t *name, dialog_t *dlg)
 			if(ctrl->ctlclass)
 				put_name_id(res, ctrl->ctlclass, TRUE, dlg->lvc.language);
 			else
-				internal_error(__FILE__, __LINE__, "Control has no control-class");
+				internal_error(__FILE__, __LINE__, "Control has no control-class\n");
 			if(ctrl->title)
 				put_name_id(res, ctrl->title, FALSE, dlg->lvc.language);
 			else
@@ -669,10 +670,10 @@ static res_t *dialog2res(name_id_t *name, dialog_t *dlg)
 				else if(ctrl->ctlclass->type == name_str)
 					put_name_id(res, ctrl->ctlclass, FALSE, NULL);
 				else
-					error("Unknown control-class %04x", ctrl->ctlclass->name.i_name);
+					error("Unknown control-class %04x\n", ctrl->ctlclass->name.i_name);
 			}
 			else
-				internal_error(__FILE__, __LINE__, "Control has no control-class");
+				internal_error(__FILE__, __LINE__, "Control has no control-class\n");
 			if(ctrl->title)
 				put_name_id(res, ctrl->title, FALSE, NULL);
 			else
@@ -776,7 +777,7 @@ static res_t *dialogex2res(name_id_t *name, dialogex_t *dlgex)
 			if(ctrl->ctlclass)
 				put_name_id(res, ctrl->ctlclass, TRUE, dlgex->lvc.language);
 			else
-				internal_error(__FILE__, __LINE__, "Control has no control-class");
+				internal_error(__FILE__, __LINE__, "Control has no control-class\n");
 			if(ctrl->title)
 				put_name_id(res, ctrl->title, FALSE, dlgex->lvc.language);
 			else
@@ -1412,7 +1413,7 @@ static res_t *rcdata2res(name_id_t *name, rcdata_t *rdt)
  * Output	: New .res format structure
  * Description	:
  * Remarks	: The data has been converted to the appropriate endian
- *		  after is was parsed.
+ *		  after it was parsed.
  *****************************************************************************
 */
 static res_t *messagetable2res(name_id_t *name, messagetable_t *msg)
@@ -1458,7 +1459,7 @@ static res_t *stringtable2res(stringtable_t *stt)
 	{
 		if(!stt->nentries)
 		{
-			warning("Empty internal stringtable");
+			warning("Empty internal stringtable\n");
 			continue;
 		}
 		name.type = name_ord;
@@ -1595,7 +1596,7 @@ static void versionblock2res(res_t *res, ver_block_t *blk, int level, const lang
 		}
 		else
 		{
-			internal_error(__FILE__, __LINE__, "Invalid value indicator %d in VERSIONINFO", val->type);
+			internal_error(__FILE__, __LINE__, "Invalid value indicator %d in VERSIONINFO\n", val->type);
 		}
 	}
 
@@ -1798,7 +1799,7 @@ char *prep_nid_for_label(const name_id_t *nid)
 			if((unsigned)*sptr < 0x80 && isprint(*sptr & 0xff))
 				buf[i] = *sptr++;
 			else
-				warning("Resourcename (str_unicode) contain unprintable characters or invalid translation, ignored");
+				warning("Resourcename (str_unicode) contain unprintable characters or invalid translation, ignored\n");
 		}
 		buf[i] = '\0';
 	}
@@ -1813,7 +1814,7 @@ char *prep_nid_for_label(const name_id_t *nid)
 			if((unsigned)*cptr < 0x80 && isprint(*cptr & 0xff))
 				buf[i] = *cptr++;
 			else
-				warning("Resourcename (str_char) contain unprintable characters, ignored");
+				warning("Resourcename (str_char) contain unprintable characters, ignored\n");
 		}
 		buf[i] = '\0';
 	}
@@ -1823,7 +1824,7 @@ char *prep_nid_for_label(const name_id_t *nid)
 	}
 	else
 	{
-		internal_error(__FILE__, __LINE__, "Resource name_id with invalid type %d", nid->type);
+		internal_error(__FILE__, __LINE__, "Resource name_id with invalid type %d\n", nid->type);
 	}
 	return buf;
 }
@@ -2004,7 +2005,7 @@ void resources2res(resource_t *top)
 			    top->binres = anicurico2res(top->name, top->res.ani, top->type);
 			break;
 		default:
-			internal_error(__FILE__, __LINE__, "Unknown resource type encountered %d in binary res generation", top->type);
+			internal_error(__FILE__, __LINE__, "Unknown resource type encountered %d in binary res generation\n", top->type);
 		}
 		top->c_name = make_c_name(get_c_typename(top->type), top->name, top->lan);
 		top = top->next;

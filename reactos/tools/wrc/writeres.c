@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #include "config.h"
@@ -74,7 +74,7 @@ void write_resfile(char *outname, resource_t *top)
 		if(ret != res->size)
 		{
 			fclose(fo);
-			error("Error writing %s", outname);
+			error("Error writing %s\n", outname);
 		}
 		free(res);
 	}
@@ -88,7 +88,7 @@ void write_resfile(char *outname, resource_t *top)
 		if(ret != top->binres->size)
 		{
 			fclose(fo);
-			error("Error writing %s", outname);
+			error("Error writing %s\n", outname);
 		}
 		if(win32 && (top->binres->size & 0x03))
 		{
@@ -97,7 +97,7 @@ void write_resfile(char *outname, resource_t *top)
 			if(ret != 4 - (top->binres->size & 0x03))
 			{
 				fclose(fo);
-				error("Error writing %s", outname);
+				error("Error writing %s\n", outname);
 			}
 		}
 	}

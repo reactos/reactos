@@ -41,33 +41,63 @@ static const unsigned char utf8_mask[6] = { 0x7f, 0x1f, 0x0f, 0x07, 0x03, 0x01 }
 /* minimum Unicode value depending on UTF-8 sequence length */
 static const unsigned int utf8_minval[6] = { 0x0, 0x80, 0x800, 0x10000, 0x200000, 0x4000000 };
 
+/* get the next char value taking surrogates into account */
+static inline unsigned int get_surrogate_value( const WCHAR *src, unsigned int srclen )
+{
+    if (src[0] >= 0xd800 && src[0] <= 0xdfff)  /* surrogate pair */
+    {
+        if (src[0] > 0xdbff || /* invalid high surrogate */
+            srclen <= 1 ||     /* missing low surrogate */
+            src[1] < 0xdc00 || src[1] > 0xdfff) /* invalid low surrogate */
+            return 0;
+        return 0x10000 + ((src[0] & 0x3ff) << 10) + (src[1] & 0x3ff);
+    }
+    return src[0];
+}
 
 /* query necessary dst length for src string */
-inline static int get_length_wcs_utf8( const WCHAR *src, unsigned int srclen )
+static inline int get_length_wcs_utf8( int flags, const WCHAR *src, unsigned int srclen )
 {
     int len;
-    for (len = 0; srclen; srclen--, src++, len++)
+    unsigned int val;
+
+    for (len = 0; srclen; srclen--, src++)
     {
-        if (*src >= 0x80)
+        if (*src < 0x80)  /* 0x00-0x7f: 1 byte */
         {
             len++;
-            if (*src >= 0x800) len++;
+            continue;
         }
+        if (*src < 0x800)  /* 0x80-0x7ff: 2 bytes */
+        {
+            len += 2;
+            continue;
+        }
+        if (!(val = get_surrogate_value( src, srclen )))
+        {
+            if (flags & WC_ERR_INVALID_CHARS) return -2;
+            continue;
+        }
+        if (val < 0x10000)  /* 0x800-0xffff: 3 bytes */
+            len += 3;
+        else   /* 0x10000-0x10ffff: 4 bytes */
+            len += 4;
     }
     return len;
 }
 
 /* wide char to UTF-8 string conversion */
-/* return -1 on dst buffer overflow */
-int wine_utf8_wcstombs( const WCHAR *src, int srclen, char *dst, int dstlen )
+/* return -1 on dst buffer overflow, -2 on invalid input char */
+int wine_utf8_wcstombs( int flags, const WCHAR *src, int srclen, char *dst, int dstlen )
 {
     int len;
 
-    if (!dstlen) return get_length_wcs_utf8( src, srclen );
+    if (!dstlen) return get_length_wcs_utf8( flags, src, srclen );
 
     for (len = dstlen; srclen; srclen--, src++)
     {
         WCHAR ch = *src;
+        unsigned int val;
 
         if (ch < 0x80)  /* 0x00-0x7f: 1 byte */
         {
@@ -86,15 +116,34 @@ int wine_utf8_wcstombs( const WCHAR *src, int srclen, char *dst, int dstlen )
             continue;
         }
 
-        /* 0x800-0xffff: 3 bytes */
+        if (!(val = get_surrogate_value( src, srclen )))
+        {
+            if (flags & WC_ERR_INVALID_CHARS) return -2;
+            continue;
+        }
 
-        if ((len -= 3) < 0) return -1;  /* overflow */
-        dst[2] = 0x80 | (ch & 0x3f);
-        ch >>= 6;
-        dst[1] = 0x80 | (ch & 0x3f);
-        ch >>= 6;
-        dst[0] = 0xe0 | ch;
-        dst += 3;
+        if (val < 0x10000)  /* 0x800-0xffff: 3 bytes */
+        {
+            if ((len -= 3) < 0) return -1;  /* overflow */
+            dst[2] = 0x80 | (val & 0x3f);
+            val >>= 6;
+            dst[1] = 0x80 | (val & 0x3f);
+            val >>= 6;
+            dst[0] = 0xe0 | val;
+            dst += 3;
+        }
+        else   /* 0x10000-0x10ffff: 4 bytes */
+        {
+            if ((len -= 4) < 0) return -1;  /* overflow */
+            dst[3] = 0x80 | (val & 0x3f);
+            val >>= 6;
+            dst[2] = 0x80 | (val & 0x3f);
+            val >>= 6;
+            dst[1] = 0x80 | (val & 0x3f);
+            val >>= 6;
+            dst[0] = 0xf0 | val;
+            dst += 4;
+        }
     }
     return dstlen - len;
 }

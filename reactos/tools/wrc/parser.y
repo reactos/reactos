@@ -16,7 +16,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  *
  * History:
  * 24-Jul-2000 BS	- Made a fix for broken Berkeley yacc on
@@ -296,7 +296,6 @@ static int rsrcid_to_token(int lookahead);
 %token tFILEVERSION tPRODUCTVERSION tFILEFLAGSMASK tFILEOS tFILETYPE tFILEFLAGS tFILESUBTYPE
 %token tMENUBARBREAK tMENUBREAK tMENUITEM tPOPUP tSEPARATOR
 %token tHELP
-%token tSTRING tIDENT tRAWDATA
 %token tTOOLBAR tBUTTON
 %token tBEGIN tEND
 %token tDLGINIT
@@ -344,7 +343,7 @@ static int rsrcid_to_token(int lookahead);
 %type <lan>	opt_language
 %type <chars>	opt_characts
 %type <ver>	opt_version
-%type <num>	expr xpr xpr_no_not
+%type <num>	expr xpr
 %type <iptr>	e_expr
 %type <tlbar>	toolbar
 %type <tlbarItems>	toolbar_items
@@ -416,7 +415,7 @@ resources
 					&& rsc->lan->sub == head->lan->sub
 					&& !compare_name_id(rsc->name, head->name))
 					{
-						yyerror("Duplicate resource name '%s'", get_nameid_str(rsc->name));
+						parser_error("Duplicate resource name '%s'\n", get_nameid_str(rsc->name));
 					}
 					rsc = rsc->prev;
 				}
@@ -473,11 +472,11 @@ resource
 		if($$)
 		{
 			if($1 > 65535 || $1 < -32768)
-				yyerror("Resource's ID out of range (%d)", $1);
+				parser_error("Resource's ID out of range (%d)\n", $1);
 			$$->name = new_name_id();
 			$$->name->type = name_ord;
 			$$->name->name.i_name = $1;
-			chat("Got %s (%d)", get_typename($3), $$->name->name.i_name);
+			chat("Got %s (%d)\n", get_typename($3), $$->name->name.i_name);
 			}
 			}
 	| tIDENT usrcvt resource_definition {
@@ -487,7 +486,7 @@ resource
 			$$->name = new_name_id();
 			$$->name->type = name_str;
 			$$->name->name.s_name = $1;
-			chat("Got %s (%s)", get_typename($3), $$->name->name.s_name->str.cstr);
+			chat("Got %s (%s)\n", get_typename($3), $$->name->name.s_name->str.cstr);
 		}
 		}
 	| stringtable {
@@ -496,7 +495,7 @@ resource
 		 * the final rule of the parser is reduced (see above)
 		 */
 		$$ = NULL;
-		chat("Got STRINGTABLE");
+		chat("Got STRINGTABLE\n");
 		}
 	| tLANGUAGE {want_nl = 1; } expr ',' expr {
 		/* We *NEED* the newline to delimit the expression.
@@ -522,19 +521,18 @@ resource
 			yychar = YYEMPTY;	/* Could use 'yyclearin', but we already need the*/
 						/* direct access to yychar in rule 'usrcvt' below. */
 		else if(yychar == tIDENT)
-			yywarning("LANGUAGE statement not delimited with newline; next identifier might be wrong");
+			parser_warning("LANGUAGE statement not delimited with newline; next identifier might be wrong\n");
 
 		want_nl = 0;	/* We don't want it anymore if we didn't get it */
 
 		if(!win32)
-			yywarning("LANGUAGE not supported in 16-bit mode");
-		if(currentlanguage)
-			free(currentlanguage);
+			parser_warning("LANGUAGE not supported in 16-bit mode\n");
+		free(currentlanguage);
 		if (get_language_codepage($3, $5) == -1)
-			yyerror( "Language %04x is not supported", ($5<<10) + $3);
+			parser_error( "Language %04x is not supported\n", ($5<<10) + $3);
 		currentlanguage = new_language($3, $5);
 		$$ = NULL;
-		chat("Got LANGUAGE %d,%d (0x%04x)", $3, $5, ($5<<10) + $3);
+		chat("Got LANGUAGE %d,%d (0x%04x)\n", $3, $5, ($5<<10) + $3);
 		}
 	;
 
@@ -550,7 +548,7 @@ usrcvt	: /* Empty */	{ yychar = rsrcid_to_token(yychar); }
  */
 nameid	: expr	{
 		if($1 > 65535 || $1 < -32768)
-			yyerror("Resource's ID out of range (%d)", $1);
+			parser_error("Resource's ID out of range (%d)\n", $1);
 		$$ = new_name_id();
 		$$->type = name_ord;
 		$$->name.i_name = $1;
@@ -598,7 +596,7 @@ resource_definition
 			}
 		}
 		else
-			internal_error(__FILE__, __LINE__, "Invalid top-level type %d in cursor resource", $1->type);
+			internal_error(__FILE__, __LINE__, "Invalid top-level type %d in cursor resource\n", $1->type);
 		free($1);
 		}
 	| dialog	{ $$ = new_resource(res_dlg, $1, $1->memopt, $1->lvc.language); }
@@ -632,7 +630,7 @@ resource_definition
 			}
 		}
 		else
-			internal_error(__FILE__, __LINE__, "Invalid top-level type %d in icon resource", $1->type);
+			internal_error(__FILE__, __LINE__, "Invalid top-level type %d in icon resource\n", $1->type);
 		free($1);
 		}
 	| menu		{ $$ = new_resource(res_men, $1, $1->memopt, $1->lvc.language); }
@@ -719,7 +717,7 @@ fontdir	: tFONTDIR loadmemopts file_raw	{ $$ = new_fontdir($3, $2); }
 messagetable
 	: tMESSAGETABLE loadmemopts file_raw	{
 		if(!win32)
-			yywarning("MESSAGETABLE not supported in 16-bit mode");
+			parser_warning("MESSAGETABLE not supported in 16-bit mode\n");
 		$$ = new_messagetable($3, $2);
 		}
 	;
@@ -743,7 +741,7 @@ userres	: usertype loadmemopts file_raw		{
 #else
 			if(pedantic && byteorder == WRC_BO_BIG)
 #endif
-				yywarning("Byteordering is not little-endian and type cannot be interpreted");
+				parser_warning("Byteordering is not little-endian and type cannot be interpreted\n");
 			$$ = new_user($1, $3, $2);
 		}
 	;
@@ -774,7 +772,7 @@ accelerators
 			$$->memopt = WRC_MO_MOVEABLE | WRC_MO_PURE;
 		}
 		if(!$5)
-			yyerror("Accelerator table must have at least one entry");
+			parser_error("Accelerator table must have at least one entry\n");
 		$$->events = get_event_head($5);
 		if($3)
 		{
@@ -892,11 +890,9 @@ ctrls	: /* Empty */				{ $$ = NULL; }
 	;
 
 lab_ctrl
-	: tSTRING opt_comma expr ',' expr ',' expr ',' expr ',' expr optional_style_pair {
+	: nameid_s opt_comma expr ',' expr ',' expr ',' expr ',' expr optional_style_pair {
 		$$=new_control();
-		$$->title = new_name_id();
-		$$->title->type = name_str;
-		$$->title->name.s_name = $1;
+		$$->title = $1;
 		$$->id = $3;
 		$$->x = $5;
 		$$->y = $7;
@@ -1006,8 +1002,8 @@ optional_style_pair
 style
 	: style '|' style	{ $$ = new_style($1->or_mask | $3->or_mask, $1->and_mask | $3->and_mask); free($1); free($3);}
 	| '(' style ')'		{ $$ = $2; }
-        | xpr_no_not    	{ $$ = new_style($1, 0); }
-        | tNOT xpr_no_not	{ $$ = new_style(0, $2); }
+        | any_num       	{ $$ = new_style($1, 0); }
+        | tNOT any_num		{ $$ = new_style(0, $2); }
         ;
 
 ctlclass
@@ -1027,7 +1023,7 @@ ctlclass
 dialogex: tDIALOGEX loadmemopts expr ',' expr ',' expr ',' expr helpid dlgex_attribs
 	  tBEGIN  exctrls tEND {
 		if(!win32)
-			yywarning("DIALOGEX not supported in 16-bit mode");
+			parser_warning("DIALOGEX not supported in 16-bit mode\n");
 		if($2)
 		{
 			$11->memopt = *($2);
@@ -1152,11 +1148,9 @@ gen_exctrl
 	;
 
 lab_exctrl
-	: tSTRING opt_comma expr ',' expr ',' expr ',' expr ',' expr optional_style_pair helpid opt_data {
+	: nameid_s opt_comma expr ',' expr ',' expr ',' expr ',' expr optional_style_pair helpid opt_data {
 		$$=new_control();
-		$$->title = new_name_id();
-		$$->title->type = name_str;
-		$$->title->name.s_name = $1;
+		$$->title = $1;
 		$$->id = $3;
 		$$->x = $5;
 		$$->y = $7;
@@ -1226,7 +1220,7 @@ opt_expr: /* Empty */	{ $$ = NULL; }
 /* ------------------------------ Menu ------------------------------ */
 menu	: tMENU loadmemopts opt_lvc menu_body {
 		if(!$4)
-			yyerror("Menu must contain items");
+			parser_error("Menu must contain items\n");
 		$$ = new_menu();
 		if($2)
 		{
@@ -1298,9 +1292,9 @@ item_options
 /* ------------------------------ MenuEx ------------------------------ */
 menuex	: tMENUEX loadmemopts opt_lvc menuex_body	{
 		if(!win32)
-			yywarning("MENUEX not supported in 16-bit mode");
+			parser_warning("MENUEX not supported in 16-bit mode\n");
 		if(!$4)
-			yyerror("MenuEx must contain items");
+			parser_error("MenuEx must contain items\n");
 		$$ = new_menuex();
 		if($2)
 		{
@@ -1378,16 +1372,16 @@ itemex_options
 		$$->gotid = TRUE;
 		$$->gottype = TRUE;
 		$$->gotstate = TRUE;
-		if($2) free($2);
-		if($4) free($4);
+		free($2);
+		free($4);
 		}
 	| ',' e_expr ',' e_expr ',' expr {
 		$$ = new_itemex_opt($2 ? *($2) : 0, $4 ? *($4) : 0, $6, 0);
 		$$->gotid = TRUE;
 		$$->gottype = TRUE;
 		$$->gotstate = TRUE;
-		if($2) free($2);
-		if($4) free($4);
+		free($2);
+		free($4);
 		}
 	;
 
@@ -1399,23 +1393,23 @@ itemex_p_options
 		}
 	| ',' e_expr ',' expr {
 		$$ = new_itemex_opt($2 ? *($2) : 0, $4, 0, 0);
-		if($2) free($2);
+		free($2);
 		$$->gotid = TRUE;
 		$$->gottype = TRUE;
 		}
 	| ',' e_expr ',' e_expr ',' expr {
 		$$ = new_itemex_opt($2 ? *($2) : 0, $4 ? *($4) : 0, $6, 0);
-		if($2) free($2);
-		if($4) free($4);
+		free($2);
+		free($4);
 		$$->gotid = TRUE;
 		$$->gottype = TRUE;
 		$$->gotstate = TRUE;
 		}
 	| ',' e_expr ',' e_expr ',' e_expr ',' expr {
 		$$ = new_itemex_opt($2 ? *($2) : 0, $4 ? *($4) : 0, $6 ? *($6) : 0, $8);
-		if($2) free($2);
-		if($4) free($4);
-		if($6) free($6);
+		free($2);
+		free($4);
+		free($6);
 		$$->gotid = TRUE;
 		$$->gottype = TRUE;
 		$$->gotstate = TRUE;
@@ -1434,7 +1428,7 @@ stringtable
 	: stt_head tBEGIN strings tEND {
 		if(!$3)
 		{
-			yyerror("Stringtable must have at least one entry");
+			parser_error("Stringtable must have at least one entry\n");
 		}
 		else
 		{
@@ -1461,11 +1455,8 @@ stringtable
 			 }
 			 /* Else were done */
 		}
-		if(tagstt_memopt)
-		{
-			free(tagstt_memopt);
-			tagstt_memopt = NULL;
-		}
+		free(tagstt_memopt);
+		tagstt_memopt = NULL;
 
 		$$ = tagstt;
 		}
@@ -1478,8 +1469,7 @@ stt_head: tSTRINGTABLE loadmemopts opt_lvc {
 		tagstt_memopt = $2;
 		tagstt_version = $3->version;
 		tagstt_characts = $3->characts;
-		if($3)
-			free($3);
+		free($3);
 		}
 	;
 
@@ -1488,12 +1478,12 @@ strings	: /* Empty */	{ $$ = NULL; }
 		int i;
 		assert(tagstt != NULL);
 		if($2 > 65535 || $2 < -32768)
-			yyerror("Stringtable entry's ID out of range (%d)", $2);
+			parser_error("Stringtable entry's ID out of range (%d)\n", $2);
 		/* Search for the ID */
 		for(i = 0; i < tagstt->nentries; i++)
 		{
 			if(tagstt->entries[i].id == $2)
-				yyerror("Stringtable ID %d already in use", $2);
+				parser_error("Stringtable ID %d already in use\n", $2);
 		}
 		/* If we get here, then we have a new unique entry */
 		tagstt->nentries++;
@@ -1508,11 +1498,11 @@ strings	: /* Empty */	{ $$ = NULL; }
 		tagstt->entries[tagstt->nentries-1].characts = tagstt_characts;
 
 		if(pedantic && !$4->size)
-			yywarning("Zero length strings make no sense");
+			parser_warning("Zero length strings make no sense\n");
 		if(!win32 && $4->size > 254)
-			yyerror("Stringtable entry more than 254 characters");
+			parser_error("Stringtable entry more than 254 characters\n");
 		if(win32 && $4->size > 65534) /* Hmm..., does this happen? */
-			yyerror("Stringtable entry more than 65534 characters (probably something else that went wrong)");
+			parser_error("Stringtable entry more than 65534 characters (probably something else that went wrong)\n");
 		$$ = tagstt;
 		}
 	;
@@ -1543,7 +1533,7 @@ fix_version
 	: /* Empty */			{ $$ = new_versioninfo(); }
 	| fix_version tFILEVERSION expr ',' expr ',' expr ',' expr {
 		if($1->gotit.fv)
-			yyerror("FILEVERSION already defined");
+			parser_error("FILEVERSION already defined\n");
 		$$ = $1;
 		$$->filever_maj1 = $3;
 		$$->filever_maj2 = $5;
@@ -1553,7 +1543,7 @@ fix_version
 		}
 	| fix_version tPRODUCTVERSION expr ',' expr ',' expr ',' expr {
 		if($1->gotit.pv)
-			yyerror("PRODUCTVERSION already defined");
+			parser_error("PRODUCTVERSION already defined\n");
 		$$ = $1;
 		$$->prodver_maj1 = $3;
 		$$->prodver_maj2 = $5;
@@ -1563,35 +1553,35 @@ fix_version
 		}
 	| fix_version tFILEFLAGS expr {
 		if($1->gotit.ff)
-			yyerror("FILEFLAGS already defined");
+			parser_error("FILEFLAGS already defined\n");
 		$$ = $1;
 		$$->fileflags = $3;
 		$$->gotit.ff = 1;
 		}
 	| fix_version tFILEFLAGSMASK expr {
 		if($1->gotit.ffm)
-			yyerror("FILEFLAGSMASK already defined");
+			parser_error("FILEFLAGSMASK already defined\n");
 		$$ = $1;
 		$$->fileflagsmask = $3;
 		$$->gotit.ffm = 1;
 		}
 	| fix_version tFILEOS expr {
 		if($1->gotit.fo)
-			yyerror("FILEOS already defined");
+			parser_error("FILEOS already defined\n");
 		$$ = $1;
 		$$->fileos = $3;
 		$$->gotit.fo = 1;
 		}
 	| fix_version tFILETYPE expr {
 		if($1->gotit.ft)
-			yyerror("FILETYPE already defined");
+			parser_error("FILETYPE already defined\n");
 		$$ = $1;
 		$$->filetype = $3;
 		$$->gotit.ft = 1;
 		}
 	| fix_version tFILESUBTYPE expr {
 		if($1->gotit.fst)
-			yyerror("FILESUBTYPE already defined");
+			parser_error("FILESUBTYPE already defined\n");
 		$$ = $1;
 		$$->filesubtype = $3;
 		$$->gotit.fst = 1;
@@ -1734,25 +1724,25 @@ lama	: tLOADONCALL	{ $$ = new_int(~WRC_MO_PRELOAD); }
 opt_lvc	: /* Empty */		{ $$ = new_lvc(); }
 	| opt_lvc opt_language {
 		if(!win32)
-			yywarning("LANGUAGE not supported in 16-bit mode");
+			parser_warning("LANGUAGE not supported in 16-bit mode\n");
 		if($1->language)
-			yyerror("Language already defined");
+			parser_error("Language already defined\n");
 		$$ = $1;
 		$1->language = $2;
 		}
 	| opt_lvc opt_characts {
 		if(!win32)
-			yywarning("CHARACTERISTICS not supported in 16-bit mode");
+			parser_warning("CHARACTERISTICS not supported in 16-bit mode\n");
 		if($1->characts)
-			yyerror("Characteristics already defined");
+			parser_error("Characteristics already defined\n");
 		$$ = $1;
 		$1->characts = $2;
 		}
 	| opt_lvc opt_version {
 		if(!win32)
-			yywarning("VERSION not supported in 16-bit mode");
+			parser_warning("VERSION not supported in 16-bit mode\n");
 		if($1->version)
-			yyerror("Version already defined");
+			parser_error("Version already defined\n");
 		$$ = $1;
 		$1->version = $2;
 		}
@@ -1768,7 +1758,7 @@ opt_lvc	: /* Empty */		{ $$ = new_lvc(); }
 opt_language
 	: tLANGUAGE expr ',' expr	{ $$ = new_language($2, $4);
 					  if (get_language_codepage($2, $4) == -1)
-						yyerror( "Language %04x is not supported", ($4<<10) + $2);
+						parser_error( "Language %04x is not supported\n", ($4<<10) + $2);
 					}
 	;
 
@@ -1827,22 +1817,18 @@ e_expr	: /* Empty */	{ $$ = 0; }
 expr	: xpr	{ $$ = ($1); }
 	;
 
-xpr_no_not	: xpr '+' xpr	{ $$ = ($1) + ($3); }
-		| xpr '-' xpr	{ $$ = ($1) - ($3); }
-		| xpr '|' xpr	{ $$ = ($1) | ($3); }
-		| xpr '&' xpr	{ $$ = ($1) & ($3); }
-		| xpr '*' xpr	{ $$ = ($1) * ($3); }
-		| xpr '/' xpr	{ $$ = ($1) / ($3); }
-		| xpr '^' xpr	{ $$ = ($1) ^ ($3); }
-		| '~' xpr	{ $$ = ~($2); }
-		| '-' xpr %prec pUPM	{ $$ = -($2); }
-		| '+' xpr %prec pUPM	{ $$ = $2; }
-		| '(' xpr ')'	{ $$ = $2; }
-		| any_num	{ $$ = $1; }
-		;
-
-
-xpr	: xpr_no_not	{ $$ = ($1); }
+xpr	: xpr '+' xpr	{ $$ = ($1) + ($3); }
+	| xpr '-' xpr	{ $$ = ($1) - ($3); }
+	| xpr '|' xpr	{ $$ = ($1) | ($3); }
+	| xpr '&' xpr	{ $$ = ($1) & ($3); }
+	| xpr '*' xpr	{ $$ = ($1) * ($3); }
+	| xpr '/' xpr	{ $$ = ($1) / ($3); }
+	| xpr '^' xpr	{ $$ = ($1) ^ ($3); }
+	| '~' xpr	{ $$ = ~($2); }
+	| '-' xpr %prec pUPM	{ $$ = -($2); }
+	| '+' xpr %prec pUPM	{ $$ = $2; }
+	| '(' xpr ')'	{ $$ = $2; }
+	| any_num	{ $$ = $1; }
 	| tNOT any_num	{ $$ = ~($2); }
 	;
 
@@ -1862,7 +1848,7 @@ static dialog_t *dialog_style(style_t * st, dialog_t *dlg)
 
 	if(dlg->gotstyle)
 	{
-		yywarning("Style already defined, or-ing together");
+		parser_warning("Style already defined, or-ing together\n");
 	}
 	else
 	{
@@ -1886,7 +1872,7 @@ static dialog_t *dialog_exstyle(style_t *st, dialog_t *dlg)
 
 	if(dlg->gotexstyle)
 	{
-		yywarning("ExStyle already defined, or-ing together");
+		parser_warning("ExStyle already defined, or-ing together\n");
 	}
 	else
 	{
@@ -1904,7 +1890,7 @@ static dialog_t *dialog_caption(string_t *s, dialog_t *dlg)
 {
 	assert(dlg != NULL);
 	if(dlg->title)
-		yyerror("Caption already defined");
+		parser_error("Caption already defined\n");
 	dlg->title = s;
 	return dlg;
 }
@@ -1913,7 +1899,7 @@ static dialog_t *dialog_font(font_id_t *f, dialog_t *dlg)
 {
 	assert(dlg != NULL);
 	if(dlg->font)
-		yyerror("Font already defined");
+		parser_error("Font already defined\n");
 	dlg->font = f;
 	return dlg;
 }
@@ -1922,7 +1908,7 @@ static dialog_t *dialog_class(name_id_t *n, dialog_t *dlg)
 {
 	assert(dlg != NULL);
 	if(dlg->dlgclass)
-		yyerror("Class already defined");
+		parser_error("Class already defined\n");
 	dlg->dlgclass = n;
 	return dlg;
 }
@@ -2034,7 +2020,7 @@ static control_t *ins_ctrl(int type, int special_style, control_t *ctrl, control
 				defaultstyle |= WS_TABSTOP;
 				break;
 			default:
-				yywarning("Unknown default button control-style 0x%08x", special_style);
+				parser_warning("Unknown default button control-style 0x%08x\n", special_style);
 			case BS_GROUPBOX:
 			case BS_RADIOBUTTON:
 				break;
@@ -2052,7 +2038,7 @@ static control_t *ins_ctrl(int type, int special_style, control_t *ctrl, control
 			case SS_ICON:	/* Special case */
 				break;
 			default:
-				yywarning("Unknown default static control-style 0x%08x", special_style);
+				parser_warning("Unknown default static control-style 0x%08x\n", special_style);
 				break;
 			}
 			break;
@@ -2137,7 +2123,7 @@ static dialogex_t *dialogex_style(style_t * st, dialogex_t *dlg)
 
 	if(dlg->gotstyle)
 	{
-		yywarning("Style already defined, or-ing together");
+		parser_warning("Style already defined, or-ing together\n");
 	}
 	else
 	{
@@ -2161,7 +2147,7 @@ static dialogex_t *dialogex_exstyle(style_t * st, dialogex_t *dlg)
 
 	if(dlg->gotexstyle)
 	{
-		yywarning("ExStyle already defined, or-ing together");
+		parser_warning("ExStyle already defined, or-ing together\n");
 	}
 	else
 	{
@@ -2257,32 +2243,27 @@ static event_t *add_event(int key, int id, int flags, event_t *prev)
 
 static event_t *add_string_event(string_t *key, int id, int flags, event_t *prev)
 {
-	int keycode = 0, keysym = 0;
+	int keycode = 0;
 	event_t *ev = new_event();
 
-	if(key->type == str_char)
-		keysym = key->str.cstr[0];
-	else
-		keysym = key->str.wstr[0];
+	if(key->type != str_char)
+		yyerror("Key code must be an ascii string");
 
-	if((flags & WRC_AF_VIRTKEY) && (!isupper(keysym & 0xff) && !isdigit(keysym & 0xff)))
+	if((flags & WRC_AF_VIRTKEY) && (!isupper(key->str.cstr[0] & 0xff) && !isdigit(key->str.cstr[0] & 0xff)))
 		yyerror("VIRTKEY code is not equal to ascii value");
 
-	if(keysym == '^' && (flags & WRC_AF_CONTROL) != 0)
+	if(key->str.cstr[0] == '^' && (flags & WRC_AF_CONTROL) != 0)
 	{
 		yyerror("Cannot use both '^' and CONTROL modifier");
 	}
-	else if(keysym == '^')
+	else if(key->str.cstr[0] == '^')
 	{
-		if(key->type == str_char)
-			keycode = toupper(key->str.cstr[1]) - '@';
-		else
-			keycode = toupper(key->str.wstr[1]) - '@';
+		keycode = toupper(key->str.cstr[1]) - '@';
 		if(keycode >= ' ')
 			yyerror("Control-code out of range");
 	}
 	else
-		keycode = keysym;
+		keycode = key->str.cstr[0];
 	ev->key = keycode;
 	ev->id = id;
 	ev->flags = flags & ~WRC_AF_ASCII;
@@ -2295,7 +2276,8 @@ static event_t *add_string_event(string_t *key, int id, int flags, event_t *prev
 /* MenuEx specific functions */
 static itemex_opt_t *new_itemex_opt(int id, int type, int state, int helpid)
 {
-	itemex_opt_t *opt = (itemex_opt_t *)xmalloc(sizeof(itemex_opt_t));
+	itemex_opt_t *opt = xmalloc(sizeof(itemex_opt_t));
+	memset( opt, 0, sizeof(*opt) );
 	opt->id = id;
 	opt->type = type;
 	opt->state = state;
@@ -2327,7 +2309,7 @@ static raw_data_t *load_file(string_t *filename, language_t *lang)
 	fseek(fp, 0, SEEK_SET);
 	if (rd->size)
 	{
-		rd->data = (char *)xmalloc(rd->size);
+		rd->data = xmalloc(rd->size);
 		fread(rd->data, rd->size, 1, fp);
 	}
 	else rd->data = NULL;
@@ -2343,11 +2325,11 @@ static raw_data_t *int2raw_data(int i)
 
 	if( ( i >= 0 && (int)((unsigned short)i) != i) ||
             ( i < 0  && (int)((short)i) != i) )
-		yywarning("Integer constant out of 16bit range (%d), truncated to %d\n", i, (short)i);
+		parser_warning("Integer constant out of 16bit range (%d), truncated to %d\n", i, (short)i);
 
 	rd = new_raw_data();
 	rd->size = sizeof(short);
-	rd->data = (char *)xmalloc(rd->size);
+	rd->data = xmalloc(rd->size);
 	switch(byteorder)
 	{
 #ifdef WORDS_BIGENDIAN
@@ -2374,7 +2356,7 @@ static raw_data_t *long2raw_data(int i)
 	raw_data_t *rd;
 	rd = new_raw_data();
 	rd->size = sizeof(int);
-	rd->data = (char *)xmalloc(rd->size);
+	rd->data = xmalloc(rd->size);
 	switch(byteorder)
 	{
 #ifdef WORDS_BIGENDIAN
@@ -2405,7 +2387,7 @@ static raw_data_t *str2raw_data(string_t *str)
 	raw_data_t *rd;
 	rd = new_raw_data();
 	rd->size = str->size * (str->type == str_char ? 1 : 2);
-	rd->data = (char *)xmalloc(rd->size);
+	rd->data = xmalloc(rd->size);
 	if(str->type == str_char)
 		memcpy(rd->data, str->str.cstr, rd->size);
 	else if(str->type == str_unicode)
@@ -2436,7 +2418,7 @@ static raw_data_t *str2raw_data(string_t *str)
 		}
 	}
 	else
-		internal_error(__FILE__, __LINE__, "Invalid stringtype");
+		internal_error(__FILE__, __LINE__, "Invalid stringtype\n");
 	return rd;
 }
 
@@ -2561,12 +2543,12 @@ static stringtable_t *find_stringtable(lvc_t *lvc)
 			if((stt->lvc.version && lvc->version && *(stt->lvc.version) != *(lvc->version))
 			|| (!stt->lvc.version && lvc->version)
 			|| (stt->lvc.version && !lvc->version))
-				yywarning("Stringtable's versions are not the same, using first definition");
+				parser_warning("Stringtable's versions are not the same, using first definition\n");
 
 			if((stt->lvc.characts && lvc->characts && *(stt->lvc.characts) != *(lvc->characts))
 			|| (!stt->lvc.characts && lvc->characts)
 			|| (stt->lvc.characts && !lvc->characts))
-				yywarning("Stringtable's characteristics are not the same, using first definition");
+				parser_warning("Stringtable's characteristics are not the same, using first definition\n");
 			*/
 			return stt;
 		}
@@ -2611,7 +2593,8 @@ static resource_t *build_stt_resources(stringtable_t *stthead)
 		for(i = 0; i < stt->nentries; )
 		{
 			newstt = new_stringtable(&stt->lvc);
-			newstt->entries = (stt_entry_t *)xmalloc(16 * sizeof(stt_entry_t));
+			newstt->entries = xmalloc(16 * sizeof(stt_entry_t));
+			memset( newstt->entries, 0, 16 * sizeof(stt_entry_t) );
 			newstt->nentries = 16;
 			newstt->idbase = stt->entries[i].id & ~0xf;
 			for(j = 0; j < 16 && i < stt->nentries; j++)
@@ -2642,7 +2625,7 @@ static resource_t *build_stt_resources(stringtable_t *stthead)
 			}
 			if(andsum != orsum)
 			{
-				warning("Stringtable's memory options are not equal (idbase: %d)", newstt->idbase);
+				warning("Stringtable's memory options are not equal (idbase: %d)\n", newstt->idbase);
 			}
 			/* Check version and characteristics */
 			for(j = 0; j < 16; j++)
@@ -2650,11 +2633,11 @@ static resource_t *build_stt_resources(stringtable_t *stthead)
 				if(characts
 				&& newstt->entries[j].characts
 				&& *newstt->entries[j].characts != *characts)
-					warning("Stringtable's characteristics are not the same (idbase: %d)", newstt->idbase);
+					warning("Stringtable's characteristics are not the same (idbase: %d)\n", newstt->idbase);
 				if(version
 				&& newstt->entries[j].version
 				&& *newstt->entries[j].version != *version)
-					warning("Stringtable's versions are not the same (idbase: %d)", newstt->idbase);
+					warning("Stringtable's versions are not the same (idbase: %d)\n", newstt->idbase);
 			}
 			rsc = new_resource(res_stt, newstt, newstt->memopt, newstt->lvc.language);
 			rsc->name = new_name_id();
@@ -2768,7 +2751,7 @@ static resource_t *build_fontdir(resource_t **fnt, int nfnt)
 	static int once = 0;
 	if(!once)
 	{
-		warning("Need to parse fonts, not yet implemented (fnt: %p, nfnt: %d)", fnt, nfnt);
+		warning("Need to parse fonts, not yet implemented (fnt: %p, nfnt: %d)\n", fnt, nfnt);
 		once++;
 	}
 	return NULL;
@@ -2817,7 +2800,7 @@ static resource_t *build_fontdirs(resource_t *tail)
 	{
 		if(compare_name_id(&nid, fnd[i]->name))
 		{
-			warning("User supplied FONTDIR entry has an invalid name '%s', ignored",
+			warning("User supplied FONTDIR entry has an invalid name '%s', ignored\n",
 				get_nameid_str(fnd[i]->name));
 			fnd[i] = NULL;
 		}
@@ -2827,12 +2810,13 @@ static resource_t *build_fontdirs(resource_t *tail)
 	if(nfnt == 0)
 	{
 		if(nfnd != 0)
-			warning("Found %d FONTDIR entries without any fonts present", nfnd);
+			warning("Found %d FONTDIR entries without any fonts present\n", nfnd);
 		goto clean;
 	}
 
 	/* Copy space */
 	lanfnt = xmalloc(nfnt * sizeof(*lanfnt));
+	memset( lanfnt, 0, nfnt * sizeof(*lanfnt));
 
 	/* Get all fonts covered by fontdirs */
 	for(i = 0; i < nfnd; i++)
@@ -2861,7 +2845,7 @@ static resource_t *build_fontdirs(resource_t *tail)
 		else if(nlanfnt == BYTESWAP_WORD(cnt))
 			isswapped = 1;
 		else
-			error("FONTDIR for language %d,%d has wrong count (%d, expected %d)",
+			error("FONTDIR for language %d,%d has wrong count (%d, expected %d)\n",
 				fnd[i]->lan->id, fnd[i]->lan->sub, cnt, nlanfnt);
 #ifdef WORDS_BIGENDIAN
 		if((byteorder == WRC_BO_LITTLE && !isswapped) || (byteorder != WRC_BO_LITTLE && isswapped))
@@ -2869,7 +2853,7 @@ static resource_t *build_fontdirs(resource_t *tail)
 		if((byteorder == WRC_BO_BIG && !isswapped) || (byteorder != WRC_BO_BIG && isswapped))
 #endif
 		{
-			internal_error(__FILE__, __LINE__, "User supplied FONTDIR needs byteswapping");
+			internal_error(__FILE__, __LINE__, "User supplied FONTDIR needs byteswapping\n");
 		}
 	}
 
@@ -2913,10 +2897,8 @@ static resource_t *build_fontdirs(resource_t *tail)
 
 	free(lanfnt);
 clean:
-	if(fnt)
-		free(fnt);
-	if(fnd)
-		free(fnd);
+	free(fnt);
+	free(fnd);
 	free(str.str.cstr);
 	return lst;
 }
@@ -3034,13 +3016,13 @@ static int rsrcid_to_token(int lookahead)
 	case WRC_RT_ANIICON:
 	case WRC_RT_GROUP_CURSOR:
 	case WRC_RT_GROUP_ICON:
-		yywarning("Usertype uses reserved type ID %d, which is auto-generated", yylval.num);
+		parser_warning("Usertype uses reserved type ID %d, which is auto-generated\n", yylval.num);
 		return lookahead;
 
 	case WRC_RT_DLGINCLUDE:
 	case WRC_RT_PLUGPLAY:
 	case WRC_RT_VXD:
-		yywarning("Usertype uses reserved type ID %d, which is not supported by wrc yet", yylval.num);
+		parser_warning("Usertype uses reserved type ID %d, which is not supported by wrc yet\n", yylval.num);
 	default:
 		return lookahead;
 	}

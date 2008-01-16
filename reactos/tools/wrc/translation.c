@@ -13,16 +13,18 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #include <stdio.h>
 #include <stdlib.h>
 
 #include "dumpres.h"
+#include "utils.h"
 #include "wrc.h"
 
 #define MASTER_LANGUAGE LANG_ENGLISH
+#define MASTER_SUBLANGUAGE SUBLANG_ENGLISH_US
 #define NB_LANG 0x94
 
 enum lang_type_e {
@@ -31,77 +33,65 @@ enum lang_type_e {
 	lang_type_normal
 };
 
-static int present_resources[res_usr+1];
-static char *res_names[res_usr+1];
-static int nb_resources[res_usr+1][lang_type_normal+1];
-static resource_t **list_resources[res_usr+1][lang_type_normal+1];
-
-static int get_language_id(resource_t *resource) {
+static language_t get_language(resource_t *resource) {
 	switch(resource->type) {
 		case res_acc:
-			return resource->res.acc->lvc.language->id;
+			return *resource->res.acc->lvc.language;
 		case res_bmp:
-			return resource->res.bmp->data->lvc.language->id;
+			return *resource->res.bmp->data->lvc.language;
 		case res_cur:
-			return resource->res.cur->lvc.language->id;
+			return *resource->res.cur->lvc.language;
 		case res_curg:
-			return resource->res.curg->lvc.language->id;
+			return *resource->res.curg->lvc.language;
 		case res_dlg:
-			return resource->res.dlg->lvc.language->id;
+			return *resource->res.dlg->lvc.language;
 		case res_dlgex:
-			return resource->res.dlgex->lvc.language->id;
+			return *resource->res.dlgex->lvc.language;
 		case res_fnt:
-			return resource->res.fnt->data->lvc.language->id;
+			return *resource->res.fnt->data->lvc.language;
 		case res_fntdir:
-			return resource->res.fnd->data->lvc.language->id;
+			return *resource->res.fnd->data->lvc.language;
 		case res_ico:
-			return resource->res.ico->lvc.language->id;
+			return *resource->res.ico->lvc.language;
 		case res_icog:
-			return resource->res.icog->lvc.language->id;
+			return *resource->res.icog->lvc.language;
 		case res_men:
-			return resource->res.men->lvc.language->id;
+			return *resource->res.men->lvc.language;
 		case res_menex:
-			return resource->res.menex->lvc.language->id;
+			return *resource->res.menex->lvc.language;
 		case res_rdt:
-			return resource->res.rdt->data->lvc.language->id;
+			return *resource->res.rdt->data->lvc.language;
 		case res_stt:
-			return resource->res.stt->lvc.language->id;
+			return *resource->res.stt->lvc.language;
 		case res_usr:
-			return resource->res.usr->data->lvc.language->id;
+			return *resource->res.usr->data->lvc.language;
 		case res_msg:
-			return resource->res.msg->data->lvc.language->id;
+			return *resource->res.msg->data->lvc.language;
 		case res_ver:
-			return resource->res.ver->lvc.language->id;
+			return *resource->res.ver->lvc.language;
 		case res_dlginit:
-			return resource->res.dlgi->data->lvc.language->id;
+			return *resource->res.dlgi->data->lvc.language;
 		case res_toolbar:
-			return resource->res.tbt->lvc.language->id;
+			return *resource->res.tbt->lvc.language;
 		case res_anicur:
 		case res_aniico:
-			return resource->res.ani->data->lvc.language->id;
+			return *resource->res.ani->data->lvc.language;
+                case res_html:
+                        return *resource->res.html->data->lvc.language;
 		default:
 			/* Not supposed to reach here */
 			fprintf(stderr, "Not supposed to reach here (get_language_id())\n");
 			abort();
-			return -1;
 	}
 }
 
-static void add_resource(resource_t *resource) {
-	enum lang_type_e lang_type;
-	enum res_e res_type = resource->type;
-	int lid = get_language_id(resource);
+static int get_language_id(resource_t *resource) {
+    return get_language(resource).id;
+}
 
-	if(lid == MASTER_LANGUAGE) {
-		lang_type = lang_type_master;
-	} else if(lid == LANG_NEUTRAL) {
-		lang_type = lang_type_neutral;
-	} else {
-		lang_type = lang_type_normal;
-	}
-	nb_resources[res_type][lang_type]++;
-	list_resources[res_type][lang_type] = realloc(list_resources[res_type][lang_type], nb_resources[res_type][lang_type]*sizeof(resource_t *));
-	list_resources[res_type][lang_type][nb_resources[res_type][lang_type]-1] = resource;
+static int compare_lang(language_t lang1, language_t lang2)
+{
+    return memcmp(&lang1, &lang2, sizeof(language_t));
 }
 
 #if 0
@@ -299,7 +289,7 @@ static int compare_control(control_t *control1, control_t *control2) {
 	if(!different && strcmp(nameid, get_nameid_str(control2->ctlclass)))
 		different = 1;
 	free(nameid);
-	if(!different &&
+	if(!different && 
 	   (control1->id != control2->id))
 		different = 1;
 	if(!different && control1->gotstyle && control2->gotstyle) {
@@ -614,6 +604,16 @@ static int compare_rcdata(rcdata_t *rcdata1, rcdata_t *rcdata2) {
 	return different;
 }
 
+static int compare_html(html_t *rcdata1, html_t *rcdata2) {
+        int different = 0;
+        if(!different &&
+           ((rcdata1->memopt != rcdata2->memopt) ||
+           (rcdata1->data->lvc.version != rcdata2->data->lvc.version) ||
+           (rcdata1->data->lvc.characts != rcdata2->data->lvc.characts)))
+                different = 1;
+        return different;
+}
+
 static int compare_stringtable(stringtable_t *stringtable1, stringtable_t *stringtable2) {
 	int different = 0;
 	int i;
@@ -831,7 +831,7 @@ static int compare_versioninfo(versioninfo_t *versioninfo1, versioninfo_t *versi
 		}
 		if(!different &&
 		   ((ver_block1 && !ver_block2) ||
-		   (ver_block1 && !ver_block2)))
+		   (!ver_block1 && ver_block2)))
 			different = 1;
 	}
 	return different;
@@ -917,6 +917,8 @@ static int compare(resource_t *resource1, resource_t *resource2) {
 			return compare_stringtable(resource1->res.stt, resource2->res.stt);
 		case res_usr:
 			return compare_user(resource1->res.usr, resource2->res.usr);
+		case res_html:
+		        return compare_html(resource1->res.html, resource2->res.html);
 		case res_msg:
 			return compare_messagetable(resource1->res.msg, resource2->res.msg);
 		case res_ver:
@@ -936,221 +938,215 @@ static int compare(resource_t *resource1, resource_t *resource2) {
 	}
 }
 
+static void dump_stringtable(resource_t *res)
+{
+    stringtable_t *stt = res->res.stt;
+    int j;
+
+    printf("DUMP ");
+    assert((stt->idbase%16) == 0);
+    assert(stt->nentries == 16);
+    for (j = 0; j < stt->nentries; j++)
+    {
+        stt_entry_t *entry = &stt->entries[j];
+        language_t *lang = stt->lvc.language;
+        string_t *newstr;
+        WCHAR *wstr;
+        int k;
+
+        if (entry->str)
+        {
+            newstr = convert_string(entry->str, str_unicode, get_language_codepage(lang->id, lang->sub));
+            printf("%02x%02x", newstr->size & 0xff, (newstr->size >> 8) & 0xff);
+            wstr = newstr->str.wstr;
+            for (k = 0; k < newstr->size; k++)
+                printf("%02x%02x", wstr[k] & 0xff, wstr[k] >> 8);
+            free_string(newstr);
+        }
+        else
+            printf("0000");
+    }
+    putchar('\n');
+}
+
+static void dump(resource_t *res)
+{
+    switch (res->type)
+    {
+        case res_stt:
+            dump_stringtable(res);
+            return;
+        default:
+            break;
+    }
+}
+
+typedef struct resource_lang_node
+{
+    language_t lang;
+    resource_t *res;
+    struct resource_lang_node *next;
+} resource_lang_node_t;
+
+typedef struct resource_id_node
+{
+    name_id_t *id;
+    resource_lang_node_t *langs;
+    struct resource_id_node *next;
+} resource_id_node_t;
+
+struct
+{
+    int enabled;
+    struct resource_id_node *ids;
+} verify_tab[res_usr+1];
+
+static void add_resource(resource_t *res)
+{
+    resource_id_node_t *idnode;
+    resource_lang_node_t *langnode;
+    if (!verify_tab[res->type].enabled)
+    {
+	fprintf(stderr, "ERR: Report this: unknown resource type parsed %08x\n", res->type);
+	return;
+    }
+
+    for (idnode = verify_tab[res->type].ids; idnode; idnode = idnode->next)
+        if (compare_name_id(idnode->id, res->name) == 0)
+            break;
+
+    if (idnode == NULL)
+    {
+        idnode = xmalloc(sizeof(resource_id_node_t));
+        idnode->id = res->name;
+        idnode->langs = NULL;
+        idnode->next = verify_tab[res->type].ids;
+        verify_tab[res->type].ids = idnode;
+    }
+
+    for (langnode = idnode->langs; langnode; langnode = langnode->next)
+        if (compare_lang(langnode->lang, get_language(res)) == 0)
+        {
+            fprintf(stderr, "ERR: resource %s [type %x] language %03x:%02x duplicated!\n",
+                get_nameid_str(res->name), res->type, langnode->lang.id, langnode->lang.sub);
+            return;
+        }
+
+    langnode = xmalloc(sizeof(resource_lang_node_t));
+    langnode->res = res;
+    langnode->lang = get_language(res);
+    langnode->next = idnode->langs;
+    idnode->langs = langnode;
+}
+
+static void setup_tabs(void)
+{
+    int i;
+
+    for (i = 0; i <= res_usr; i++)
+	switch(i) {
+		case res_acc:
+		case res_bmp:
+		case res_cur:
+		case res_curg:
+		case res_dlg:
+		case res_dlgex:
+		case res_fnt:
+		case res_fntdir:
+		case res_ico:
+		case res_icog:
+		case res_men:
+		case res_menex:
+		case res_rdt:
+		case res_stt:
+		case res_usr:
+		case res_msg:
+		case res_ver:
+		case res_dlginit:
+		case res_toolbar:
+		case res_anicur:
+	        case res_aniico:
+		case res_html:
+		    verify_tab[i].enabled = 1;
+		    break;
+	}
+}
+
+static const char *get_typename_for_int(int type) {
+    resource_t res;
+    res.type = type;
+    return get_typename(&res);
+}
+
+static resource_t *find_main(int type, name_id_t *id, resource_lang_node_t *langnode)
+{
+    resource_t *neutral = NULL, *en = NULL, *en_US = NULL;
+    for (; langnode; langnode = langnode->next)
+    {
+        if (langnode->lang.id == LANG_NEUTRAL && langnode->lang.sub == SUBLANG_NEUTRAL)
+            neutral = langnode->res;
+        if (langnode->lang.id == MASTER_LANGUAGE && langnode->lang.sub == SUBLANG_NEUTRAL)
+            en = langnode->res;
+        if (langnode->lang.id == MASTER_LANGUAGE && langnode->lang.sub == MASTER_SUBLANGUAGE)
+            en_US = langnode->res;
+    }
+
+    if (neutral != NULL && (en != NULL || en_US != NULL))
+    {
+        fprintf(stderr, "INFO: Resource %04x/%s has both NEUTRAL and MASTER language translarion\n",
+            type, get_nameid_str(id));
+    }
+
+    if (en_US != NULL) return en_US;
+    if (en != NULL) return en;
+    return neutral;
+}
+
 void verify_translations(resource_t *top) {
-	enum lang_type_e lang_type;
-	enum res_e res_type;
-	int **presence;
-	int i, j;
-	char *nameid;
-	char **problems;
-	int nb_problems, last_problem;
-	int complete, needs_work, partial;
-	resource_t *next = top;
+    resource_t *curr = top;
+    resource_id_node_t *idnode;
+    resource_lang_node_t *langnode;
+    int type;
 
-	for(res_type = res_0; res_type <= res_usr; res_type++) {
-		present_resources[res_type] = 0;
-		for(lang_type = lang_type_master; lang_type <= lang_type_normal; lang_type++) {
-			nb_resources[res_type][lang_type] = 0;
-			list_resources[res_type][lang_type] = NULL;
-		}
-	}
+    setup_tabs();
+    while (curr)
+    {
+        add_resource(curr);
+        curr = curr->next;
+    }
 
-	while(next) {
-		switch(next->type) {
-			case res_acc:
-			case res_bmp:
-			case res_cur:
-			case res_curg:
-			case res_dlg:
-			case res_dlgex:
-			case res_fnt:
-			case res_fntdir:
-			case res_ico:
-			case res_icog:
-			case res_men:
-			case res_menex:
-			case res_rdt:
-			case res_stt:
-			case res_usr:
-			case res_msg:
-			case res_ver:
-			case res_dlginit:
-			case res_toolbar:
-			case res_anicur:
-			case res_aniico:
-				add_resource(next);
-				break;
-			default:
-				fprintf(stderr, "Report this: unknown resource type parsed %08x\n", next->type);
-		}
-		next = next->next;
-	}
-	present_resources[res_acc] = 1;
-	res_names[res_acc] = strdup("accelerator");
-	present_resources[res_bmp] = 1;
-	res_names[res_bmp] = strdup("bitmap");
-	present_resources[res_cur] = 1;
-	res_names[res_cur] = strdup("cursor");
-	present_resources[res_curg] = 1;
-	res_names[res_curg] = strdup("cursor_group");
-	present_resources[res_dlg] = 1;
-	res_names[res_dlg] = strdup("dialog");
-	present_resources[res_dlgex] = 1;
-	res_names[res_dlgex] = strdup("dialogex");
-	present_resources[res_fnt] = 1;
-	res_names[res_fnt] = strdup("font");
-	present_resources[res_fntdir] = 1;
-	res_names[res_fntdir] = strdup("fontdir");
-	present_resources[res_ico] = 1;
-	res_names[res_ico] = strdup("icon");
-	present_resources[res_icog] = 1;
-	res_names[res_icog] = strdup("icon_group");
-	present_resources[res_men] = 1;
-	res_names[res_men] = strdup("menu");
-	present_resources[res_menex] = 1;
-	res_names[res_menex] = strdup("menuex");
-	present_resources[res_rdt] = 1;
-	res_names[res_rdt] = strdup("rcdata");
-	present_resources[res_stt] = 1;
-	res_names[res_stt] = strdup("stringtable");
-	present_resources[res_usr] = 1;
-	res_names[res_usr] = strdup("user");
-	present_resources[res_msg] = 1;
-	res_names[res_msg] = strdup("messagetable");
-	present_resources[res_ver] = 1;
-	res_names[res_ver] = strdup("versioninfo");
-	present_resources[res_dlginit] = 1;
-	res_names[res_dlginit] = strdup("dlginit");
-	present_resources[res_toolbar] = 1;
-	res_names[res_toolbar] = strdup("toolbar");
-	present_resources[res_anicur] = 1;
-	res_names[res_anicur] = strdup("ani_cursor");
-	present_resources[res_aniico] = 1;
-	res_names[res_aniico] = strdup("ani_icon");
+    for (type = 0; type <= res_usr; type++)
+    {
+        printf("TYPE NEXT [%s]\n", get_typename_for_int(type));
+        for (idnode = verify_tab[type].ids; idnode; idnode = idnode->next)
+        {
+            resource_t *mainres;
+            printf("RESOURCE [%s]\n", get_nameid_str(idnode->id));
 
-	for(res_type = res_0; res_type <= res_usr; res_type++) {
-		if(!present_resources[res_type]) {
-			continue;
-		}
-		if(nb_resources[res_type][lang_type_normal] > 0) {
-			if(nb_resources[res_type][lang_type_master] && nb_resources[res_type][lang_type_neutral]) {
-				fprintf(stderr, "Type %s:\n", res_names[res_type]);
-				fprintf(stderr, "There are both a NEUTRAL and a MASTER version for %s, along with additional localized versions. The NEUTRAL versions will not be checked against other versions.\n", res_names[res_type]);
-			} else if(nb_resources[res_type][lang_type_neutral]) {
-				fprintf(stderr, "Type %s:\n", res_names[res_type]);
-				fprintf(stderr, "There are no MASTER version, but there are some NEUTRAL versions for %s, so will use those instead of MASTER for comparison.\n", res_names[res_type]);
-				list_resources[res_type][lang_type_master] = list_resources[res_type][lang_type_neutral];
-				nb_resources[res_type][lang_type_master] = nb_resources[res_type][lang_type_neutral];
-			} else if(!nb_resources[res_type][lang_type_master]) {
-				fprintf(stderr, "Type %s:\n", res_names[res_type]);
-				fprintf(stderr, "There are no NEUTRAL nor MASTER versions for %s, but there are some other localized versions. No comparison will be done at all.\n", res_names[res_type]);
-			}
-		} else {
-			if(nb_resources[res_type][lang_type_master] && nb_resources[res_type][lang_type_neutral]) {
-				fprintf(stderr, "Type %s:\n", res_names[res_type]);
-				fprintf(stderr, "There are both a NEUTRAL and a MASTER versions for %s, but no other localized version. No comparison will be done at all.\n", res_names[res_type]);
-			} else if(nb_resources[res_type][lang_type_master]) {
-				fprintf(stderr, "Type %s:\n", res_names[res_type]);
-				fprintf(stderr, "There are only MASTER versions for %s. No comparison will be done at all.\n", res_names[res_type]);
-			} else if(nb_resources[res_type][lang_type_neutral]) {
-				/* fprintf(stderr, "There are only NEUTRAL versions for %s. No comparison will be done at all.\n", res_names[res_type]); */
-			} else {
-				/* fprintf(stderr, "There are no versions at all for %s. No comparison will be done at all.\n", res_names[res_type]); */
-			}
-		}
+            mainres = find_main(type, idnode->id, idnode->langs);
+            if (!mainres)
+            {
+                fprintf(stderr, "ERR: resource %04x/%s has translation(s) but not available in NEUTRAL or MASTER language\n",
+                    type, get_nameid_str(idnode->id));
+                for (langnode = idnode->langs; langnode; langnode = langnode->next)
+                    printf("EXTRA %03x:%02x\n", langnode->lang.id, langnode->lang.sub);
+                continue;
+            }
 
-		presence = malloc(nb_resources[res_type][lang_type_master]*sizeof(int *));
-		for(i = 0; i < nb_resources[res_type][lang_type_master]; i++) {
-			presence[i] = calloc(NB_LANG, sizeof(int));
-			presence[i][MASTER_LANGUAGE] = -1;
-		}
+            if (get_language_id(mainres) == LANG_NEUTRAL && idnode->langs->next == NULL) {
+                printf("NOTRANSL\n");
+                continue;
+            }
 
-		for(i = 0; i < nb_resources[res_type][lang_type_normal]; i++) {
-			for(j = 0; j < nb_resources[res_type][lang_type_master]; j++) {
-				nameid = strdup(get_nameid_str(list_resources[res_type][lang_type_normal][i]->name));
-				if(!strcmp(nameid, get_nameid_str(list_resources[res_type][lang_type_master][j]->name))) {
-					if(compare(list_resources[res_type][lang_type_normal][i], list_resources[res_type][lang_type_master][j])) {
-						presence[j][get_language_id(list_resources[res_type][lang_type_normal][i])] = 2;
-						/* fprintf(stderr, "Differences in type %s, ID %s, for language %s\n", res_names[res_type], nameid, get_language_name(get_language_id(list_resources[res_type][lang_type_normal][i]))); */
-					} else {
-						presence[j][get_language_id(list_resources[res_type][lang_type_normal][i])] = 1;
-					}
-				}
-				free(nameid);
-			}
-		}
-
-		problems = malloc(sizeof(char *));
-		problems[0] = strdup("");
-		nb_problems = 0;
-		last_problem = -1;
-		for(i = 0; i < NB_LANG; i++) {
-			complete = 1;
-			needs_work = 0;
-			partial = 0;
-			for(j = 0; j < nb_resources[res_type][lang_type_master]; j++) {
-				if(presence[j][i]) {
-					partial = 1;
-					if(presence[j][i] == 2) {
-						needs_work = 1;
-						problems = realloc(problems, (++nb_problems+1)*sizeof(char *));
-						problems[nb_problems] = malloc(strlen(get_nameid_str(list_resources[res_type][lang_type_master][j]->name)) + 9);
-						sprintf(problems[nb_problems], "DIFF %s %02x", get_nameid_str(list_resources[res_type][lang_type_master][j]->name), i);
-						if(last_problem == i) {
-							problems[nb_problems-1] = realloc(problems[nb_problems-1], strlen(problems[nb_problems-1]) + 3);
-							strcat(problems[nb_problems-1], " \\");
-						} else {
-							last_problem = i;
-						}
-					}
-				} else {
-					complete = 0;
-					problems = realloc(problems, (++nb_problems+1)*sizeof(char *));
-					problems[nb_problems] = malloc(strlen(get_nameid_str(list_resources[res_type][lang_type_master][j]->name)) + 8);
-					sprintf(problems[nb_problems], "ABS %s %02x", get_nameid_str(list_resources[res_type][lang_type_master][j]->name), i);
-					if(last_problem == i) {
-						problems[nb_problems-1] = realloc(problems[nb_problems-1], strlen(problems[nb_problems-1]) + 3);
-						strcat(problems[nb_problems-1], " \\");
-					} else {
-						last_problem = i;
-					}
-				}
-			}
-			if(complete && partial && !needs_work) {
-				/* Support is complete, no need to do anything */
-				/* fprintf(stderr, "Support for language %s is complete for %s.\n", get_language_name(i), res_names[res_type]); */
-				printf(".");
-			} else if(complete && partial && needs_work) {
-				/* Support is incomplete (differing resources), needs work */
-				/* fprintf(stderr, "Support for language %s is incomplete (differing resources) for %s.\n", get_language_name(i), res_names[res_type]); */
-				printf("x");
-			} else if(!complete && partial && !needs_work) {
-				/* Support is incomplete (missing resources), needs work */
-				/* fprintf(stderr, "Support for language %s is incomplete (missing resources) for %s.\n", get_language_name(i), res_names[res_type]); */
-				printf("-");
-			} else if(!complete && partial && needs_work) {
-				/* Support is incomplete (missing and differing resources), needs work */
-				/* fprintf(stderr, "Support for language %s is incomplete (missing and differing resources) for %s.\n", get_language_name(i), res_names[res_type]); */
-				printf("+");
-			} else if(!complete && !partial) {
-				/* Support is totally absent, might be interesting to do */
-				/* fprintf(stderr, "Support for language %s is absent for %s.\n", get_language_name(i), res_names[res_type]); */
-				printf(" ");
-			} else {
-				/* Support is not relevant, no need to do anything */
-				/* fprintf(stderr, "Support for language %s is not relevant for %s.\n", get_language_name(i), res_names[res_type]); */
-				printf("n");
-			}
-		}
-		printf("\n");
-		for(i = 1; i <= nb_problems; i++) {
-			printf("%s\n", problems[i]);
-			free(problems[i]);
-		}
-		free(problems[0]);
-		free(problems);
-		for(i = 0; i < nb_resources[res_type][lang_type_master]; i++)
-			free(presence[i]);
-		free(presence);
-	}
+            for (langnode = idnode->langs; langnode; langnode = langnode->next)
+            {
+                printf("EXIST %03x:%02x\n", langnode->lang.id, langnode->lang.sub);
+                dump(langnode->res);
+                if (compare(langnode->res, mainres))
+                {
+                    printf("DIFF %03x:%02x\n", langnode->lang.id, langnode->lang.sub);
+                }
+            }
+        }
+    }
 }
