@@ -1,7 +1,7 @@
 LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
 
 STRINGTABLE DISCARDABLE
-{
+BEGIN
 	IDS_QUIT, "Quitter"
 	IDS_PRINT, "Imprimer"
 	IDS_STRING, "Voix ambiguë d'un c¶ur qui au zéphyr préfère les jattes de kiwis. 1234567890"
@@ -10,6 +10,6 @@ STRINGTABLE DISCARDABLE
 	IDS_ERROR_NOFONT, "Le fichier %1 n'est pas un fichier police valide."
 	IDS_ERROR_NOCLASS, "Impossible d'initialiser la classe de fenêtre."
 	IDS_ERROR_BADCMD, "Aucun fichier police transmis.\nSyntaxe:\n  fontview.exe <fichier police>"
-}
+END
 
 

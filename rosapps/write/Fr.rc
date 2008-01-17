@@ -21,6 +21,6 @@
 LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
 
 STRINGTABLE
-{
+BEGIN
     IDS_FAILED, "Le lancement de Wordpad a échoué"
-}
+END

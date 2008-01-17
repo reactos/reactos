@@ -1,7 +1,7 @@
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 
 STRINGTABLE DISCARDABLE
-{
+BEGIN
 	IDS_QUIT, "Quit"
 	IDS_PRINT, "Print"
 	IDS_STRING, "Jackdaws love my big sphinx of quartz. 1234567890"
@@ -10,6 +10,6 @@ STRINGTABLE DISCARDABLE
 	IDS_ERROR_NOFONT, "The file %1 ist not a valid font file."
 	IDS_ERROR_NOCLASS, "Could not initialize window class."
 	IDS_ERROR_BADCMD, "No font file given.\nSyntax:\n  fontview.exe <font file>"
-}
+END
 
 

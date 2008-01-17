@@ -1,7 +1,7 @@
 LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
 
 STRINGTABLE DISCARDABLE
-{
+BEGIN
 	IDS_QUIT, "Fertig"
 	IDS_PRINT, "Drucken"
 	IDS_STRING, "Franz jagt im komplett verwahrlosten Taxi quer durch Bayern. 1234567890"
@@ -10,5 +10,5 @@ STRINGTABLE DISCARDABLE
 	IDS_ERROR_NOFONT, "Die angegebene Datei %1 ist keine gültige Schriftartendatei."
 	IDS_ERROR_NOCLASS, "Fehler beim initialisieren der Fensterklasse."
 	IDS_ERROR_BADCMD, "Keine Schriftartendatei angegeben.\nSyntax:\n  fontview.exe <Schriftdatei>"
-}
+END
 

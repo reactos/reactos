@@ -21,6 +21,6 @@
 LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
 
 STRINGTABLE
-{
+BEGIN
     IDS_FAILED, "Не вдалося запустити Wordpad"
-}
+END
