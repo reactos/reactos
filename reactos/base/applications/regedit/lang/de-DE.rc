@@ -90,8 +90,8 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Schlüsselname &kopieren",              ID_EDIT_COPYKEYNAME
         MENUITEM SEPARATOR
-        MENUITEM "&Suchen\tStrg+F",               ID_EDIT_FIND, GRAYED
-        MENUITEM "&Weitersuchen\tF3",              ID_EDIT_FINDNEXT, GRAYED
+        MENUITEM "&Suchen\tStrg+F",               ID_EDIT_FIND
+        MENUITEM "&Weitersuchen\tF3",              ID_EDIT_FINDNEXT
     END
     POPUP "&Ansicht"
     BEGIN

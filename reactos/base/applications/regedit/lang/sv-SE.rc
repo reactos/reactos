@@ -90,8 +90,8 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Kopiera nyckelnamn",         ID_EDIT_COPYKEYNAME
         MENUITEM SEPARATOR
-        MENUITEM "&Sök\tCtrl+F",                ID_EDIT_FIND, GRAYED
-        MENUITEM "Sök N&ästa\tF3",              ID_EDIT_FINDNEXT, GRAYED
+        MENUITEM "&Sök\tCtrl+F",                ID_EDIT_FIND
+        MENUITEM "Sök N&ästa\tF3",              ID_EDIT_FINDNEXT
     END
     POPUP "&Visa"
     BEGIN
@@ -152,7 +152,7 @@ BEGIN
             MENUITEM "&Multi-String Value",         ID_EDIT_NEW_MULTISTRINGVALUE
             MENUITEM "&Expandable String Value",    ID_EDIT_NEW_EXPANDABLESTRINGVALUE
         END
-        MENUITEM "&Sök",                           ID_EDIT_FIND, GRAYED
+        MENUITEM "&Sök",                           ID_EDIT_FIND
         MENUITEM SEPARATOR
         MENUITEM "&Ta bort",                         ID_TREE_DELETE
         MENUITEM "&Byt namn",                         ID_TREE_RENAME

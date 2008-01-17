@@ -93,8 +93,8 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Copiar valor de la clave",   ID_EDIT_COPYKEYNAME
         MENUITEM SEPARATOR
-        MENUITEM "&Buscar\tCtrl+F",             ID_EDIT_FIND, GRAYED
-        MENUITEM "Buscar &siguiente\tF3",       ID_EDIT_FINDNEXT, GRAYED
+        MENUITEM "&Buscar\tCtrl+F",             ID_EDIT_FIND
+        MENUITEM "Buscar &siguiente\tF3",       ID_EDIT_FINDNEXT
     END
     POPUP "&Ver"
     BEGIN

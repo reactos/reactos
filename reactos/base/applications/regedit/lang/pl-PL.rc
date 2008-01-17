@@ -95,8 +95,8 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Kopiuj nazwê klucza",           ID_EDIT_COPYKEYNAME
         MENUITEM SEPARATOR
-        MENUITEM "&ZnajdŸ\tCtrl+F",                ID_EDIT_FIND, GRAYED
-        MENUITEM "Zn&ajdŸ nastêpny\tF3",           ID_EDIT_FINDNEXT, GRAYED
+        MENUITEM "&ZnajdŸ\tCtrl+F",                ID_EDIT_FIND
+        MENUITEM "Zn&ajdŸ nastêpny\tF3",           ID_EDIT_FINDNEXT
     END
     POPUP "&Widok"
     BEGIN
@@ -157,7 +157,7 @@ BEGIN
             MENUITEM "Wartoœæ &wieloci¹gu",         ID_EDIT_NEW_MULTISTRINGVALUE
             MENUITEM "Wartoœæ ci¹gu &rozwijalnego",    ID_EDIT_NEW_EXPANDABLESTRINGVALUE
         END
-        MENUITEM "&ZnajdŸ",                        ID_EDIT_FIND, GRAYED
+        MENUITEM "&ZnajdŸ",                        ID_EDIT_FIND
         MENUITEM SEPARATOR
         MENUITEM "U&suñ",                          ID_TREE_DELETE
         MENUITEM "Z&mieñ nazwê",                   ID_TREE_RENAME

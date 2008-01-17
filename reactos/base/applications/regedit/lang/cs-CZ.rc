@@ -90,8 +90,8 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Z&kopírovat název klíèe",              ID_EDIT_COPYKEYNAME
         MENUITEM SEPARATOR
-        MENUITEM "&Hledat\tCtrl+F",               ID_EDIT_FIND, GRAYED
-        MENUITEM "Hledat &další\tF3",              ID_EDIT_FINDNEXT, GRAYED
+        MENUITEM "&Hledat\tCtrl+F",               ID_EDIT_FIND
+        MENUITEM "Hledat &další\tF3",              ID_EDIT_FINDNEXT
     END
     POPUP "&Zobrazit"
     BEGIN

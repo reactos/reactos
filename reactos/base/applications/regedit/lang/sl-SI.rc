@@ -90,8 +90,8 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Kopiraj ime kljuèa",              ID_EDIT_COPYKEYNAME
         MENUITEM SEPARATOR
-        MENUITEM "&Najdi\tCtrl+F",               ID_EDIT_FIND, GRAYED
-        MENUITEM "Na&daljuj iskanje\tF3",              ID_EDIT_FINDNEXT, GRAYED
+        MENUITEM "&Najdi\tCtrl+F",               ID_EDIT_FIND
+        MENUITEM "Na&daljuj iskanje\tF3",              ID_EDIT_FINDNEXT
     END
     POPUP "Pogl&ed"
     BEGIN
