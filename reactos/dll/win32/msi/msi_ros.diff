@@ -2589,19 +2589,6 @@ Index: msi.rbuild
  	<file>streams.c</file>
  	<file>string.c</file>
  	<file>suminfo.c</file>
-Index: msi.rc
-===================================================================
---- msi.rc	(revision 31639)
-+++ msi.rc	(working copy)
-@@ -47,7 +47,7 @@
- 
- LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
- 
--1 TYPELIB LOADONCALL DISCARDABLE msiserver.tlb
-+/* 1 TYPELIB LOADONCALL DISCARDABLE msiserver.tlb */
- 
- /* @makedep: instadvert.bmp */
- 0x1001 BITMAP instadvert.bmp
 Index: msi_Ja.rc
 ===================================================================
 --- msi_Ja.rc	(revision 31639)
