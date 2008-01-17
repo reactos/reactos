@@ -31,14 +31,14 @@ BEGIN
     PUSHBUTTON      "Eins&tellungen",IDC_SCREENS_SETTINGS, 120, 103, 50, 13, WS_GROUP
     PUSHBUTTON      "&Vorschau",IDC_SCREENS_TESTSC, 175, 103, 50, 13
     LTEXT           "&Warte",IDC_WAITTEXT, 14, 125, 16, 9
-    EDITTEXT        IDC_SCREENS_TIMEDELAY, 34, 123, 32, 13, ES_RIGHT | WS_GROUP
+    EDITTEXT        IDC_SCREENS_TIMEDELAY, 36, 123, 32, 13, ES_RIGHT | WS_GROUP
     CONTROL         "",IDC_SCREENS_TIME ,UPDOWN_CLASS,UDS_SETBUDDYINT |
                     UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS |
-                    WS_BORDER | WS_GROUP, 54, 123, 12, 13
-    LTEXT           "minuten", IDC_MINTEXT, 70, 125, 26, 9
-    CONTROL         "Nach einem Resume nach &Password fragen.",IDC_SCREENS_USEPASSCHK,"button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP, 108, 120, 104, 19
-    GROUPBOX        "&Enerigespar Features des Monitors:", IDC_SCREENS_DUMMY2, 6, 155, 232, 41
+                    WS_BORDER | WS_GROUP, 56, 123, 12, 13
+    LTEXT           "Minuten", IDC_MINTEXT, 70, 125, 26, 9
+    CONTROL         "Nach Reaktivierung &Passwort fordern.",IDC_SCREENS_USEPASSCHK,"button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP, 100, 120, 135, 19
+    GROUPBOX        "&Enerigesparfunktionen des Monitors:", IDC_SCREENS_DUMMY2, 6, 155, 232, 41
     LTEXT           "Um die Energieeinstellungen des Monitors zu editieren, wählen Sie Energieeinstellungen.",
                     IDC_STATIC, 14, 166, 146 ,20
     PUSHBUTTON      "Energieeinstell&ungen", IDC_SCREENS_POWER_BUTTON, 162, 171, 70, 13
@@ -106,8 +106,8 @@ BEGIN
     GROUPBOX        "Bi&ldschirmauflösung",1818,3,120,115,43
     CONTROL         "",IDC_SETTINGS_RESOLUTION,"msctls_trackbar32",
                     TBS_AUTOTICKS | WS_TABSTOP, 30, 130, 58, 17
-    LTEXT           "Niedrig",1815,9,130,15,8,NOT WS_GROUP
-    LTEXT           "Hoch",1816,93,130,21,8,NOT WS_GROUP
+    LTEXT           "Niedrig",1815,9,135,21,8,NOT WS_GROUP
+    LTEXT           "Hoch",1816,93,135,21,8,NOT WS_GROUP
     LTEXT           "",IDC_SETTINGS_RESOLUTION_TEXT,10,150,100,10,NOT WS_GROUP | SS_CENTER
     GROUPBOX        "&Farbqualität",1817,125,120,115,43
     COMBOBOX        IDC_SETTINGS_BPP,131,130,103,80,CBS_DROPDOWNLIST | CBS_AUTOHSCROLL |

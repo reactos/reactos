@@ -3,7 +3,7 @@
  *
  * Copyright 2005 Sebastian Gasiorek
  *
- * Update by Caemyr - Olaf Siejka (Dec,2007)
+ * Update by Caemyr - Olaf Siejka (Dec-Jan, 2007)
  * Use ReactOS forum PM or IRC to contact me
  * http://www.reactos.org
  * IRC: irc.freenode.net #reactos-pl; 
@@ -59,8 +59,8 @@ BEGIN
         MENUITEM "&Eksportuj plik rejestru...",    ID_REGISTRY_EXPORTREGISTRYFILE
 
         MENUITEM SEPARATOR
-		MENUITEM "Load Hive...",				ID_REGISTRY_LOADHIVE, GRAYED
-		MENUITEM "Unload Hive...",				ID_REGISTRY_UNLOADHIVE, GRAYED
+		MENUITEM "£aduj Drzewo....",				ID_REGISTRY_LOADHIVE, GRAYED
+		MENUITEM "Wy³aduj Drzewo..",				ID_REGISTRY_UNLOADHIVE, GRAYED
 		MENUITEM SEPARATOR
         MENUITEM "&Pod³¹cz rejestr sieciowy...",
                                                    ID_REGISTRY_CONNECTNETWORKREGISTRY
@@ -84,8 +84,8 @@ BEGIN
             MENUITEM "Wartoœæ &ci¹gu",             ID_EDIT_NEW_STRINGVALUE
             MENUITEM "Wartoœæ &binarna",           ID_EDIT_NEW_BINARYVALUE
             MENUITEM "Wartoœæ &DWORD",             ID_EDIT_NEW_DWORDVALUE
-			MENUITEM "&Multi-String Value",			ID_EDIT_NEW_MULTISTRINGVALUE
-			MENUITEM "&Expandable String Value",	ID_EDIT_NEW_EXPANDABLESTRINGVALUE
+			MENUITEM "Wartoœæ &wieloci¹gu",			ID_EDIT_NEW_MULTISTRINGVALUE
+			MENUITEM "Wartoœæ ci¹gu &rozwijalnego",	ID_EDIT_NEW_EXPANDABLESTRINGVALUE
         END
         MENUITEM SEPARATOR
         MENUITEM "&Uprawnienia...",		   ID_EDIT_PERMISSIONS
@@ -137,11 +137,11 @@ BEGIN
         BEGIN
             MENUITEM "&Klucz",                    ID_EDIT_NEW_KEY
             MENUITEM SEPARATOR
-            MENUITEM "&Wartoœæ ci¹gu",             ID_EDIT_NEW_STRINGVALUE
+            MENUITEM "Wartoœæ &ci¹gu",             ID_EDIT_NEW_STRINGVALUE
             MENUITEM "Wartoœæ &binarna",           ID_EDIT_NEW_BINARYVALUE
             MENUITEM "Wartoœæ &DWORD",             ID_EDIT_NEW_DWORDVALUE
-            MENUITEM "&Multi-String Value",         ID_EDIT_NEW_MULTISTRINGVALUE
-            MENUITEM "&Expandable String Value",    ID_EDIT_NEW_EXPANDABLESTRINGVALUE
+            MENUITEM "Wartoœæ &wieloci¹gu",         ID_EDIT_NEW_MULTISTRINGVALUE
+            MENUITEM "Wartoœæ ci¹gu &rozwijalnego",    ID_EDIT_NEW_EXPANDABLESTRINGVALUE
         END
   END
   POPUP ""
@@ -151,19 +151,19 @@ BEGIN
         BEGIN
             MENUITEM "&Klucz",                     ID_EDIT_NEW_KEY
             MENUITEM SEPARATOR
-            MENUITEM "&Wartoœæ ci¹gu",             ID_EDIT_NEW_STRINGVALUE
+            MENUITEM "Wartoœæ &ci¹gu",             ID_EDIT_NEW_STRINGVALUE
             MENUITEM "Wartoœæ &binarna",           ID_EDIT_NEW_BINARYVALUE
             MENUITEM "Wartoœæ &DWORD",             ID_EDIT_NEW_DWORDVALUE
-            MENUITEM "&Multi-String Value",         ID_EDIT_NEW_MULTISTRINGVALUE
-            MENUITEM "&Expandable String Value",    ID_EDIT_NEW_EXPANDABLESTRINGVALUE
+            MENUITEM "Wartoœæ &wieloci¹gu",         ID_EDIT_NEW_MULTISTRINGVALUE
+            MENUITEM "Wartoœæ ci¹gu &rozwijalnego",    ID_EDIT_NEW_EXPANDABLESTRINGVALUE
         END
         MENUITEM "&ZnajdŸ",                        ID_EDIT_FIND, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "U&suñ",                          ID_TREE_DELETE
         MENUITEM "Z&mieñ nazwê",                   ID_TREE_RENAME
         MENUITEM SEPARATOR
-        MENUITEM "&Export",                         ID_TREE_EXPORT
-        MENUITEM "&Permissions...",                 ID_TREE_PERMISSIONS, GRAYED
+        MENUITEM "&Eksportuj",                         ID_TREE_EXPORT
+        MENUITEM "&Uprawnienia..",                 ID_TREE_PERMISSIONS, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "&Kopiuj nazwê klucza",           ID_EDIT_COPYKEYNAME
   END
@@ -300,7 +300,7 @@ STRINGTABLE DISCARDABLE
 BEGIN
     IDS_ERROR		    "B³¹d"
     IDS_WARNING		    "Ostrze¿enie"
-    IDS_BAD_KEY             "Can't query key '%s'"
+    IDS_BAD_KEY             "Nie mo¿na odczytaæ klucza '%s'"
     IDS_BAD_VALUE           "Nie mo¿na odczytaæ wartoœci '%s'"
     IDS_UNSUPPORTED_TYPE    "Nie mo¿na edytowaæ kluczy tego typu (%ld)"
     IDS_TOO_BIG_VALUE       "Wartoœæ jest za du¿a (%ld)"
@@ -369,7 +369,7 @@ BEGIN
   IDS_EXPAND                     "&Rozwiñ"
   IDS_COLLAPSE                   "&Zwiñ"
   IDS_GOTO_SUGGESTED_KEY         "&IdŸ do '%s'"
-  IDS_FINISHEDFIND               "Finished searching through the registry."
+  IDS_FINISHEDFIND               "Przeszukiwanie rejestru zakoñczone."
 END
 
 /*****************************************************************/
@@ -392,58 +392,58 @@ END
 
 IDD_ADDFAVORITES DIALOG DISCARDABLE  0, 0, 186, 46
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Add to Favorites"
+CAPTION "Dodaj do ulubionych"
 FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON   "OK",IDOK,129,7,50,14
-    PUSHBUTTON      "Cancel",IDCANCEL,129,24,50,14
-    LTEXT           "&Favorite Name:",IDC_STATIC,7,7,70,10
+    PUSHBUTTON      "Anuluj",IDCANCEL,129,24,50,14
+    LTEXT           "&Nazwa ulubionego:",IDC_STATIC,7,7,70,10
     EDITTEXT        IDC_FAVORITENAME,7,26,110,13,ES_AUTOHSCROLL
 END
 
 IDD_REMOVEFAVORITES DIALOG DISCARDABLE  0, 0, 164, 135
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Remove Favorites"
+CAPTION "Usuñ z ulubionych"
 FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON   "OK",IDOK,107,114,50,14
-    PUSHBUTTON      "Cancel",IDCANCEL,7,114,50,14
+    PUSHBUTTON      "Anuluj",IDCANCEL,7,114,50,14
     CONTROL         "List1",IDC_FAVORITESLIST,"SysListView32",LVS_LIST |
                     WS_BORDER | WS_TABSTOP,7,20,150,90
-    LTEXT           "Select Favorite(s):",IDC_STATIC,7,7,99,12
+    LTEXT           "Wybierz ulubione:",IDC_STATIC,7,7,99,12
 END
 
 IDD_FIND DIALOG DISCARDABLE  0, 0, 254, 82
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Find"
+CAPTION "ZnajdŸ"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    DEFPUSHBUTTON   "&Find Next",IDOK,197,7,50,14
-    PUSHBUTTON      "Cancel",IDCANCEL,197,24,50,14
-    GROUPBOX        "Look at",IDC_STATIC,7,25,63,51
-    LTEXT           "Fi&nd what:",IDC_STATIC,7,8,37,10
+    DEFPUSHBUTTON   "ZnajdŸ &Nastêpny",IDOK,197,7,50,14
+    PUSHBUTTON      "Anuluj",IDCANCEL,197,24,50,14
+    GROUPBOX        "Przeszukaj",IDC_STATIC,7,25,63,51
+    LTEXT           "&Szukaj:",IDC_STATIC,7,8,37,10
     EDITTEXT        IDC_FINDWHAT,47,7,142,13,ES_AUTOHSCROLL
-    CONTROL         "&Keys",IDC_LOOKAT_KEYS,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "&Klucze",IDC_LOOKAT_KEYS,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,14,36,35,8
-    CONTROL         "&Values",IDC_LOOKAT_VALUES,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "&Wartoœci",IDC_LOOKAT_VALUES,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,14,48,36,8
-    CONTROL         "&Data",IDC_LOOKAT_DATA,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "&Dane",IDC_LOOKAT_DATA,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,14,60,42,8
-    CONTROL         "Match &whole string only",IDC_MATCHSTRING,"Button",
+    CONTROL         " &tylko ca³e ci¹gi",IDC_MATCHSTRING,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,83,32,94,13
-    CONTROL         "Match &case",IDC_MATCHCASE,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "Uwzglêdnij wie&lkoœæ liter",IDC_MATCHCASE,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,83,48,90,12
 END
 
 IDD_FINDING DIALOGEX 0, 0, 145, 50
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | WS_POPUP |
     WS_CAPTION | WS_SYSMENU
-CAPTION "Find"
+CAPTION "ZnajdŸ"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     ICON            IDI_REGEDIT,IDC_STATIC,7,7,20,20
-    PUSHBUTTON      "&Cancel",IDCANCEL,93,29,45,14
-    LTEXT           "Searching the registry...",IDC_STATIC,33,12,83,8
+    PUSHBUTTON      "&Anuluj",IDCANCEL,93,29,45,14
+    LTEXT           "Przeszukiwanie rejestru...",IDC_STATIC,33,12,83,8
 END
 
 /*

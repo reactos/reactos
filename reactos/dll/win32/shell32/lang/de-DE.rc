@@ -196,7 +196,7 @@ BEGIN
 	LTEXT "Wählen Sie die erweiterten Einstellungen für diese Verknüpfung.", -1, 5, 30, 210, 10
 	CHECKBOX "Als anderer Benutzer ausführen", 14000, 25, 50, 150, 10
 	LTEXT "Diese Einstellung ermöglicht es, diese Verknüpfung unter einem anderen oder Ihrem eingenen Bentzerkonto auszuführen während der Computer und Ihre Daten vor unauthorisierten Programmaktivitäten geschützt werden können.", -1, 50, 60, 175, 40
-	CHECKBOX "In getrennten Speicherbereich ausführen", 14001, 25, 100, 150, 10, WS_DISABLED
+	CHECKBOX "In getrenntem Speicherbereich ausführen", 14001, 25, 100, 150, 10, WS_DISABLED
 	PUSHBUTTON "OK", 1, 63, 124, 50, 15, WS_VISIBLE
 	PUSHBUTTON "Abbrechen", 2, 120, 124, 50, 15, WS_VISIBLE
 END
@@ -405,7 +405,7 @@ BEGIN
 	//ICON
 	LTEXT "Anwendungsname", 14005, 100, 140, 40, 10
 	PUSHBUTTON "Än&dern...", 14006, 180, 140, 50, 14, WS_TABSTOP
-	LTEXT "Um die EInstellungen, die alle Dateien des Typs '%s' betreffen zu ändern, klicken\nSie auf Erweitert.", 14007, 12, 155, 160, 30
+	LTEXT "Um\ndie Einstellungen, die alle Dateien des Typs '%s' betreffen zu ändern, klicken\nSie auf Erweitert.", 14007, 12, 155, 160, 30
 	PUSHBUTTON "&Erweitert", 14008, 180, 175, 50, 14, WS_TABSTOP
 END
 

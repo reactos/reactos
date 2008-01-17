@@ -13,18 +13,18 @@ BEGIN
 
 
 STRING_HELP,  "Usage: %S drive: [-FS:file-system] [-V:label] [-Q] [-A:size] [-C]\n\n\
-  [Datenträger:]   Legt das Laufwerk zum Formatieren fest.\n\
+  [Datenträger:]   Legt das zu formatierende Laufwerk fest.\n\
   -FS:file-system  Legt das Dateisystem fest (%s).\n\
-  -V:label         Legt den Datentraegernamen fest.\n\
-  -Q               Fuehre Schnellformatierung durch.\n\
-  -A:size          Ueberschreibe Anweisung fuer Standartblockgroesse. Es wird dringend\n\
-                   empfohlen, grundsaetzlich Standarteinstellungen zu verwenden!\n\
-                   NTFS unterstuetzt 512, 1024, 2048, 4096, 8192, 16K, 32K, 64K.\n\
-                   FAT unterstuetzt 8192, 16K, 32K, 64K, 128K, 256K.\n\
-                   NTFS-Kompression wird fuer Blockgroessen ueber 4096 nicht\n\
-                   unterstuetzt.\n\
-  -C               Auf dem neuen Datentraeger erstellte Dateien werden\n\
-                   standartmaessig komprimiert.\n\n"
+  -V:label         Legt den Datenträgernamen fest.\n\
+  -Q               Führt eine Schnellformatierung durch.\n\
+  -A:size          Überschreibt Anweisung für Standardblockgrösse. Es wird dringend\n\
+                   empfohlen, grundsätzlich Standardeinstellungen zu verwenden!\n\
+                   NTFS unterstützt 512, 1024, 2048, 4096, 8192, 16K, 32K, 64K.\n\
+                   FAT unterstützt 8192, 16K, 32K, 64K, 128K, 256K.\n\
+                   NTFS-Kompression wird für Blockgrössen über 4096 nicht\n\
+                   unterstützt.\n\
+  -C               Auf dem neuen Datenträger erstellte Dateien werden\n\
+                   standardmässig komprimiert.\n\n"
 
 STRING_COMPLETE   "%lu Prozent komplett.\r"
 
@@ -36,7 +36,7 @@ STRING_FMIFS_FAIL  "Kann FMIFS-Eingangspunkte nicht lokalisieren.\n\n"
 
 STRING_UNKNOW_ARG  "Unbekanntes Argument: %S\n"
 
-STRING_DRIVE_PARM  "Benötigter Laufwerkparameter fehlt.\n\n"
+STRING_DRIVE_PARM  "Benötigter Laufwerksparameter fehlt.\n\n"
 
 STRING_ERROR_DRIVE_TYPE  "Konnte den Laufwerkstyp nicht erhalten"
 
@@ -60,7 +60,7 @@ STRING_VERIFYING       "Prüfen"
 
 STRING_FAST_FMT        "Schnellformatierung"
 
-STRING_CREATE_FSYS     "Erzeuge Dateisystem Strukturen.\n"
+STRING_CREATE_FSYS     "Erzeuge Dateisystem-Strukturen.\n"
 
 STRING_FMT_COMPLETE    "Formatierung abgeschlossen.\n"
 
@@ -70,7 +70,7 @@ STRING_ENTER_LABEL     "Volumebezeichnung (11 Zeichen, Enter für keine)? "
 
 STRING_NO_LABEL        "Konnte Datenträger nicht benennen"
 
-STRING_FREE_SPACE     "\n%I64d bytes Speicherkapazitaet.\n%I64d bytes freier Speicher.\n"
+STRING_FREE_SPACE     "\n%I64d bytes Speicherkapazität.\n%I64d bytes freier Speicher.\n"
 
 STRING_SERIAL_NUMBER   "\nVolume Seriennummer ist %04X-%04X\n"
 END

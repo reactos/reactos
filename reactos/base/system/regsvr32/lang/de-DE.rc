@@ -10,7 +10,7 @@ BEGIN
 IDS_UsageMessage, "%s\n\nSyntax: regsvr32 [/u] [/s] [/c] [/n] [/i[:cmdline]] dllname\n\
 /u -	Serverregistrierung aufheben\n\
 /s -	Hintergrundmodus; Meldungen werden nicht angezeigt\n\
-/c -	Konsolen ausgabe\n\
+/c -	Konsolenausgabe verwenden\n\
 /i -	Aufruf von DLLInstall, wobei optional eine [Befehlszeile] übergeben\n\
 	werden kann. Unter Verwendung von /u wird die DLL_Deinstallation\n\
 	aufgerufen.\n\

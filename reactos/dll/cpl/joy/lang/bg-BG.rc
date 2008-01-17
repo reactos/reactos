@@ -5,7 +5,7 @@ STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
 EXSTYLE WS_EX_CONTEXTHELP
 CAPTION "Игрови управления"
 FONT 8, "MS Shell Dlg"
-{
+BEGIN
 	ICON IDI_CPLSYSTEM, -1, 7, 7, 20, 20
 	LTEXT "Това са настройките за игровите управления на компютъра ви.", -1, 33, 7, 214, 20, NOT WS_GROUP
 	GROUPBOX "Сложени игрови управления", -1, 7, 34, 238, 117
@@ -16,14 +16,14 @@ FONT 8, "MS Shell Dlg"
 	PUSHBUTTON "Раз&ширени...", IDC_ADVANCED_BUTTON, 111, 157, 65, 14
 	PUSHBUTTON "&Поправка...", IDC_TROUBLESHOOT_BUTTON, 180, 157, 65, 14
 	PUSHBUTTON "Добре", IDOK, 195, 185, 50, 14
-}
+END
 
 IDD_ADD DIALOGEX 0, 0, 265, 200
 STYLE DS_SETFONT | DS_MODALFRAME | DS_SETFOREGROUND | DS_3DLOOK | WS_POPUPWINDOW | WS_CAPTION
 EXSTYLE WS_EX_CONTEXTHELP
 CAPTION "Добавяне на игрово управление"
 FONT 8, "MS Shell Dlg"
-{
+BEGIN
 	ICON IDI_CPLSYSTEM, -1, 8, 7, 20, 20
 	LTEXT "Изберете игрово управление от долния списък и натиснете ""Добре"". Ако игровото ви управление не е в списъка, натиснете ""Нагласяне"".", -1, 35, 7, 210, 33
 	LTEXT "&Игрови управления", -1, 8, 45, 126, 8
@@ -35,14 +35,14 @@ FONT 8, "MS Shell Dlg"
 	CONTROL "", -25525, "STATIC", SS_ETCHEDHORZ, 7, 170, 251, 1
 	DEFPUSHBUTTON "Добре", IDOK, 155, 179, 50, 14
 	PUSHBUTTON "Отказ", IDCANCEL, 208, 179, 50, 14
-}
+END
 
 IDD_CUSTOM DIALOGEX 0, 0, 265, 183, 0
 STYLE DS_SETFONT | DS_MODALFRAME | DS_SETFOREGROUND | DS_3DLOOK | WS_POPUPWINDOW | WS_CAPTION
 EXSTYLE WS_EX_CONTEXTHELP
 CAPTION "Нагласяване на игровите управления"
 FONT 8, "MS Shell Dlg"
-{
+BEGIN
 	GROUPBOX "Особени свойства", -1, 7, 7, 245, 52
 	AUTORADIOBUTTON "&Ръчка", IDC_JOYSTICK_RADIO, 10, 23, 55, 10
 	AUTORADIOBUTTON "&Полетен ярем или полетна ръчка", IDC_FLIGHT_YOKE_RADIO, 115, 23, 135, 10
@@ -59,21 +59,21 @@ FONT 8, "MS Shell Dlg"
 	EDITTEXT IDC_CONTROLLER_NAME_EDIT, 7, 150, 116, 15, ES_AUTOHSCROLL, WS_EX_CLIENTEDGE | WS_EX_STATICEDGE
 	DEFPUSHBUTTON "Добре", IDOK, 137, 150, 50, 14
 	PUSHBUTTON "Отказ", IDCANCEL, 203, 150, 50, 14
-}
+END
 
 IDD_ADVANCED DIALOGEX 0, 0, 220, 86
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
 EXSTYLE WS_EX_CONTEXTHELP
 CAPTION "Разширени настройки"
 FONT 8, "MS Shell Dlg"
-{
+BEGIN
 	ICON IDI_CPLSYSTEM, -1, 7, 24, 20, 20
 	DEFPUSHBUTTON "Добре", IDOK, 106, 65, 50, 14
 	PUSHBUTTON "Отказ", IDCANCEL, 163, 65, 50, 14
 	LTEXT "Изберете устройство, което да ползвате за стари приложения.", -1, 1, 7, 217, 10
 	LTEXT "&Предпочитано устройство:", -1, 34, 24, 100, 10
 	COMBOBOX IDC_PREFERRED_DEV_COMBO, 34, 38, 179, 75, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
-}
+END
 
 STRINGTABLE 
 BEGIN

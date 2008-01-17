@@ -3,6 +3,7 @@
  *      testament@users.sourceforge.net
  * https://sourceforge.net/projects/reactospl
  *
+ * updated by Caemyr - Olaf Siejka (Jan, 2008) 
  */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
@@ -159,7 +160,7 @@ FONT 8, "MS Shell Dlg",0,0
 STYLE 0x10CF0000
 BEGIN
   LTEXT "", IDC_CREATE_HELP, 6, 5, 200, 150
-  PUSHBUTTON "Ok", IDOK, 75, 130, 44, 13
+  PUSHBUTTON "OK", IDOK, 75, 130, 44, 13
 END
 
 IDD_DLG_PROGRESS DIALOGEX 6,6,255,89
@@ -218,7 +219,7 @@ BEGIN
   IDS_PROGRESS_INFO_START "ReactOS usi³uje uruchomiæ nastêpuj¹c¹ us³ugê"
   IDS_PROGRESS_INFO_STOP  "ReactOS usi³uje zatrzymaæ nastêpuj¹c¹ us³ugê"
   IDS_CREATE_SUCCESS "Us³uga utworzona pomyœlnie"
-  IDS_DELETE_SUCCESS "Service Deleted Succesfully"
+  IDS_DELETE_SUCCESS "Us³uga skasowana pomyœlnie"
   IDS_CREATE_REQ "Pola oznaczone gwiazdkami\ns¹ obowi¹zkowe"
   IDS_DELETE_STOP "Musisz rêcznie zatrzymaæ us³ugê przed usuwaniem!"
 END
@@ -290,5 +291,5 @@ END
 /* Application title */
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_APPNAME "ReactOS Service Manager"
+  IDS_APPNAME "Mened¿er Us³ug ReactOS"
 END

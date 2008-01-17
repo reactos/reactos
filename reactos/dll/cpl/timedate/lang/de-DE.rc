@@ -63,6 +63,8 @@ BEGIN
     IDS_TIMEZONEUNKNOWN "Unbekannt"
     IDS_INETTIMESUCSYNC "Die Zeit wurde erfolgreich mit %s am %s um %s synchronisiert"
     IDS_INETTIMENEXTSYNC "Nächste Synchronisierung am %s um %s"
+    IDS_INETTIMESYNCING "Bitte warten Sie, während ReactOS die Zeit mit %s synchonisisert"
+    IDS_INETTIMEERROR "Ein Fehler trat beim synchonisieren mit %s auf"
 END
 
 

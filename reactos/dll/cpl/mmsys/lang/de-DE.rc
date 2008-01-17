@@ -30,7 +30,7 @@ BEGIN
     LTEXT "Ein Soundschema ist eine Kollektion von Sounds, die bestimmtem Ereignissen in Programmen in ReactOS zugordnet sind. Sie können ein existierendes Schema anwählen oder ein modifiziertes speichern.",-1,8,7,230,40
     LTEXT "Sounds&chema:",-1,8,42,150,17
     COMBOBOX IDC_SOUND_SCHEME, 8, 53, 230, 46, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON "Sp&eichern unter...", -1, 134,70,50,15
+    PUSHBUTTON "Sp&eichern unter...", -1, 120,70,65,15
     PUSHBUTTON "&Löschen", -1, 188,70,50,15
     LTEXT "Um Sounds zu ändern, klicken Sie auf ein Programmereignis in der folgenden Liste und wählen Sie einen Sound. Sie können Änderungen als neue Soundschemata speichern.",-1,8,90,230,40
     LTEXT "&Pogrammereignisse:",-1,8,118,150,17

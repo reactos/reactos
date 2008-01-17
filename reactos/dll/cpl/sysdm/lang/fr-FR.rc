@@ -174,7 +174,7 @@ END
 IDD_VIRTMEM DIALOGEX 6, 6, 223, 248
 STYLE DS_FIXEDSYS | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Mémoire Virtuelle"
-FONT 8, "MS Sans Serif", 0, 0, 0x0
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LTEXT       "Lecteur  [Nom de Volume]", IDC_STATIC, 12, 5, 96, 9
     LTEXT       "Taille du fichier d'échange (Mo)", IDC_STATIC, 115, 5, 96, 9

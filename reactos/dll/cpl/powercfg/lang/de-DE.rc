@@ -18,7 +18,7 @@ BEGIN
   LTEXT "Bei:",IDC_SAT,15,120,60,10
   LTEXT "Netzbetrieb",IDC_SAC,100,120,45,15
   ICON IDI_AC, IDC_IAC, 75,115,25,15
-  LTEXT "Batteriebetrieb",IDC_SDC,197,120,45,15
+  LTEXT "Batteriebetrieb",IDC_SDC,190,120,50,15
   ICON IDI_DC, IDC_IDC, 165,115,25,15
   LTEXT "&Monitor ausschalten:",IDC_MONITOR,15,145,80,10
   COMBOBOX IDC_MONITORACLIST, 100,140,65,150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
@@ -48,12 +48,12 @@ BEGIN
                     TBS_AUTOTICKS | WS_TABSTOP,30,40,170,15
     LTEXT           "100%",-1,215,40,25,10
     PUSHBUTTON      "Alar&m Action...",-1,20,70,70,15,WS_DISABLED
-    LTEXT           "Benachrichtigung:",-1,95,70,50,10
-    LTEXT           "Unbekannt",IDC_ALARMMSG1,145,70,95,10
+    LTEXT           "Benachrichtigung:",-1,95,70,60,10
+    LTEXT           "Unbekannt",IDC_ALARMMSG1,155,70,95,10
     LTEXT           "Aktion:",-1,95,80,45,10
-    LTEXT           "Unbekannt",IDC_ALARMAKTION1,145,80,95,10
+    LTEXT           "Unbekannt",IDC_ALARMAKTION1,155,80,95,10
     LTEXT           "Ausführen:",-1,95,90,50,10
-    LTEXT           "Unbekannt",IDC_ALARMPROG1,150,90,40,10
+    LTEXT           "Unbekannt",IDC_ALARMPROG1,155,90,40,10
 
     GROUPBOX        "Alarm bei kritischem Batteriestand",-1,10,115,235,95
     CONTROL         "Alarm bei folgendem &Energiestand auslösen:",IDC_ALARM2,
@@ -64,12 +64,12 @@ BEGIN
                     TBS_AUTOTICKS | WS_TABSTOP,30,140,170,15
     LTEXT           "100%",-1,215,140,25,10
     PUSHBUTTON      "Alar&m Action...",-1,20,170,70,15,WS_DISABLED
-    LTEXT           "Benachrichtigung:",-1,95,170,50,10
-    LTEXT           "Unbekannt",IDC_ALARMMSG2,145,170,95,10
+    LTEXT           "Benachrichtigung:",-1,95,170,60,10
+    LTEXT           "Unbekannt",IDC_ALARMMSG2,155,170,95,10
     LTEXT           "Aktion:",-1,95,180,45,10
-    LTEXT           "Unbekannt",IDC_ALARMAKTION2,145,180,95,10
+    LTEXT           "Unbekannt",IDC_ALARMAKTION2,155,180,95,10
     LTEXT           "Ausführen:",-1,95,190,50,10
-    LTEXT           "Unbekannt",IDC_ALARMPROG2,150,190,40,10
+    LTEXT           "Unbekannt",IDC_ALARMPROG2,155,190,40,10
 END
 
 IDD_PROPPAGEADVANCED DIALOG DISCARDABLE  0, 0, 250, 220
@@ -159,6 +159,6 @@ BEGIN
   IDS_TIMEOUT15 "Nach 5 Stunden"
   IDS_TIMEOUT16 "Nie"
 
-  IDS_DEL_SCHEME "Are you sure you want to delete the power scheme?"
-  IDS_DEL_SCHEME_TITLE "Delete Scheme"
+  IDS_DEL_SCHEME "Sind Sie sicher, dass Sie das Energieschema löschen wollen?"
+  IDS_DEL_SCHEME_TITLE "Schema löschen"
 END

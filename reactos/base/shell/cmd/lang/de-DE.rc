@@ -93,8 +93,8 @@ CMD [/[C|K] command][/P][/Q][/T:bf]\n\n\
 STRING_COLOR_HELP1, "Legt die standard Hinter- und Vordergrundfarben für die Konsole fest.\n\n\
 COLOR [attr [/F]] \n\n\
   attr        Gibt die Farbattribute für die Konsolenausgabe an.\n\
-  /F          füllt die Konsoleausgabe mit dem Farbattribut\n\n\
-Es gibt 3 Möglickeiten die Farbe festzulegen:\n\
+  /F          füllt die Konsolenausgabe mit dem Farbattribut\n\n\
+Es gibt 3 Möglichkeiten die Farbe festzulegen:\n\
 1) [bright] name on [bright] name  (Nur die 4 ersten Buchstaben sind nötig)\n\
 2) decimal on decimal\n\
 3) two hex digits\n\n\
@@ -145,7 +145,7 @@ ERASE [/N /P /T /Q /W /Y /Z] Dateinamen ...\n\n\
   file  Geben Sie die Dateinamen an welche Sie löschen möchten\n\n\
   /N    Nichts.\n\
   /P    Fordert Sie vor dem Löschen jeder Datei zur Bestätigung auf.\n\
-  /T    Zeigt die Anzahl der gelöschten Dateien und deren vorher belegter Speicherplatzbedarf an.\n\
+  /T    Zeigt die Anzahl der gelöschten Dateien und deren vorherigen Speicherplatzbedarf an.\n\
   /Q    Beenden.\n\
   /W    Sicheres Löschen. Dateien werden mit Zufallszahlen überschrieben bevor sie gelöscht werden.\n\
   /Y    Löscht alles (*.*) ohne Vorwarnung.\n\
@@ -395,7 +395,7 @@ REPLACE [Laufwerk1:][Pfad1]Dateiname [Laufwerk2:][Pfad2] [/P] [/R] [/S] [/W] [/U
   /W                           Wartet vor dem Start bis ein Datenträger\n\
                                eingelegt wurde.\n\
   /U                           Ersetzt (aktualisiert) nur Dateien, die älter\n\
-                               sind als die Quelldaten.Kann nicht mit Paramater\n\
+                               sind als die Quelldaten. Kann nicht mit Paramater\n\
                                /A genutzt werden\n"
 
 STRING_REPLACE_HELP2, "Quellpfad benötigt\n"
@@ -423,8 +423,8 @@ SHIFT [DOWN]"
 
 STRING_SCREEN_HELP, "Bewegt den Cursor und optional die Ausgabe\n\n\
 SCREEN Reihe Spalte [Text]\n\n\
-  Reihe         Reihe wohin der Curser bewegt werden soll\n\
-  Spalte        Spalte wohin der Curser bewegt werden soll"
+  Reihe         Reihe, in die der Curser bewegt werden soll\n\
+  Spalte        Spalte, in die der Curser bewegt werden soll"
 
 STRING_SET_HELP, "Setzt oder löscht Umgebungsvariablen für CMD.EXE oder zeigt diese an.\n\n\
 SET [variable[=][Zeichenfolge]]\n\n\
@@ -453,21 +453,21 @@ STRING_TIMER_HELP1, "Verstrichene %d Millisekunden\n"
 
 STRING_TIMER_HELP2, "Verstrichene %02d%c%02d%c%02d%c%02d\n"
 
-STRING_TIMER_HELP3, "Erlaubt die Benutzung von 10 Stopuhren.\n\n\
+STRING_TIMER_HELP3, "Erlaubt die Benutzung von 10 Stoppuhren.\n\n\
 TIMER  [ON|OFF] [/S] [/n] [/Fn]\n\n\
-  ON          schaltet die Stopuhr ein\n\
-  OFF         schaltet die Stopuhr aus\n\
-  /S          Teilzeit. Sende die Stopuhr Teil-\n\
+  ON          schaltet die Stoppuhr ein\n\
+  OFF         schaltet die Stoppuhr aus\n\
+  /S          Teilzeit. Sende die Stoppuhr Teil-\n\
               zeit, ohne den Wert zu verändern\n\
-  /n          Anzahl der Stopuhren\n\
-              gültige Stopuhren sind 0 bis 9\n\
+  /n          Anzahl der Stoppuhren\n\
+              gültige Stoppuhren sind 0 bis 9\n\
               Standardwert = 1\n\
   /Fn         Ausgabeformatierung\n\
               n kann 0 oder 1 sein:\n\
                     0    Millisekunden\n\
                     1    hh%cmm%css%cdd\n\n\
 Falls nicht ON, OFF oder /S angegeben wurde wird\n\
-die Stopuhr ausgeschalten.\n\n"
+die Stoppuhr ausgeschalten.\n\n"
 
 STRING_TYPE_HELP1, "Zeigt den Inhalt einer oder mehrerer Textdateien an.\n\n\
 TYPE [Laufwerk:][Pfad]Dateiname"
@@ -515,14 +515,14 @@ STRING_VERSION_HELP7, "\nReactOS Version programmiert von:\n"
 STRING_VOL_HELP1, " Datenträger im Laufwerk %c ist %s\n"
 STRING_VOL_HELP2, " Datenträger im Laufwerk %c hat keine Bezeichnung.\n"
 STRING_VOL_HELP3, " Datenträger-Seriennummer: %04X-%04X\n"
-STRING_VOL_HELP4, "Zeigt die Laufwerksvolumebezeichnung und die Seriennummer an, falls diese existieren.\n\nVOL [drive:]"
+STRING_VOL_HELP4, "Zeigt die Laufwerksbezeichnung und die Seriennummer an, falls diese existieren.\n\nVOL [drive:]"
 
 STRING_WINDOW_HELP1, "Verändert die Größe des Konsolenfensters\n\n\
 WINDOW [/POS[=]left,top,width,heigth]\n\
               [MIN|MAX|RESTORE] ['title']\n\n\
-/POS          Gibt Position und Größe des Fenster an\n\
-MIN           minimieren das Fenster\n\
-MAX           maximieren das Fenster\n\
+/POS          Gibt Position und Größe des Fensters an\n\
+MIN           minimiert das Fenster\n\
+MAX           maximiert das Fenster\n\
 RESTORE       stellt das Fenster wieder her"
 
 STRING_WINDOW_HELP2, "Verändert die Größe des Konsolenfensters\n\n\
@@ -530,8 +530,8 @@ ACTIVATE 'window' [/POS[=]left,top,width,heigth]\n\
               [MIN|MAX|RESTORE] ['title']\n\n\
 window        Titel des Fensters, das bearbeitet wird\n\
 /POS          einstellen der Fensterplatzierung und der Dimensionen\n\
-MIN           minimieren das Fenster\n\
-MAX           maximieren das Fenster\n\
+MIN           minimiert das Fenster\n\
+MAX           maximiert das Fenster\n\
 RESTORE       stellt das Fenster wieder her\n\
 title         neuer Titel"
 
@@ -541,7 +541,7 @@ STRING_HELP1, "Übersicht aller verfügbaren Befehle und deren Kurzbeschreibungen\
 ?        Listet alle Befehle auf (ohne Erklärung).\n\
 ALIAS    Setzt, löscht oder zeigt den Alias.\n\
 ATTRIB   Zeigt Dateiattribute an bzw. ändert sie.\n\
-BEEP     Gibt einen beep-Ton durch den PC-Speaker aus.\n\
+BEEP     Gibt einen piep-Ton durch den PC-Speaker aus.\n\
 CALL     Ruft eine Batchdatei aus einer anderen Batchdatei heraus auf.\n\
 CD       Zeigt den Namen des aktuellen Verzeichnisses an bzw. ändert diesen.\n\
 CHCP     Zeigt die aktive Codepagenummer an bzw. legt diese fest.\n\
@@ -549,7 +549,7 @@ CHOICE   Wartet auf den Benutzer, welcher aus einer Auswahl eine Option\n\
          wählen muss.\n\
 CLS      Löscht den Bildschirminhalt.\n\
 CMD      Startet eine neue Instanz des ReactOS-Befehlsinterpreters.\n\
-COLOR    Legt die Hintergrund- und Vordergrundfarben für die Konsole fest.\n\
+COLOR    Legt die Farben für Hinter- und Vordergrund der Konsole fest.\n\
 COPY     Kopiert eine oder mehrere Dateien an eine andere Stelle.\n\
 DATE     Zeigt das Datum an bzw. legt dieses fest.\n\
 DELETE   Löscht eine oder mehrere Dateien.\n\
@@ -563,7 +563,7 @@ FREE     Zeigt den (freien) Speicherplatz an.\n\
 GOTO     Setzt den ReactOS-Befehlsinterpreter auf eine markierte Zeile in\n\
          einem Batchprogramm.\n\
 HELP     Zeigt Hilfeinformationen zu ReactOS-Befehlen an.\n\
-HISTORY  Listet alle Befehle auf welche sich im Speicher befinden.\n\
+HISTORY  Listet alle Befehle auf, welche sich im Speicher befinden.\n\
 IF       Verarbeitet Ausdrücke in einer Batchdatei abhängig von Bedingungen.\n\
 LABEL    Erstellt, ändert oder löscht die Bezeichnung eines Volumes.\n\
 MD       Erstellt ein Verzeichnis.\n\
@@ -578,8 +578,8 @@ PUSHD    Speichert das aktuelle Verzeichnis, und wechselt dann zu einem\n\
          anderen Verzeichnis.\n\
 RD       Entfernt ein Verzeichnis.\n\
 REM      Leitet Kommentare in einer Batchdatei.\n\
-REN      Benennt eine Datei bzw. Dateien um.\n\
-RENAME   Bennent eine Datei bzw. Dateien um.\n\
+REN      Benennt eine od. mehrere Dateien um.\n\
+RENAME   Benennt eine od. mehrere Dateien um.\n\
 REPLACE  Ersetzt Dateien.\n\
 RMDIR    Löscht ein Verzeichnis.\n\
 SCREEN   Bewegt den Cursor und optional die Ausgabe.\n\
@@ -588,7 +588,7 @@ SHIFT    Verändert die Position ersetzbarer Parameter in Batchdateien.\n"
 STRING_HELP2, "START    Startet ein eigenes Fenster, um ein bestimmtes Programm oder einen\n\
          Befehl auszuführen.\n\
 TIME     Zeigt die Systemzeit an bzw. legt sie fest.\n\
-TIMER    Erlaubt die Benutzung von bis zu 10 Stopuhren\n\
+TIMER    Erlaubt die Benutzung von bis zu 10 Stoppuhren\n\
 TITLE    Legt den Fenstertitel für das Eingabeaufforderungsfenster fest.\n\
 TYPE     Zeigt den Inhalt einer Textdatei an.\n\
 VER      Zeigt die ReactOS-Version an.\n\

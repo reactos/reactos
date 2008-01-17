@@ -36,8 +36,8 @@ BEGIN
     PUSHBUTTON "&Details...", IDC_DETAIL_BUTTON, 177, 34, 54, 14
     GROUPBOX "Zusätzliche Sprachunterstützung", IDC_GROUPBOX, 5, 62, 234, 82
     LTEXT "Die meisten Sprachen sind standardmäßig installiert. Um weitere Sprachen zu installieren, aktivieren Sie die unteren Kontollkästchen.", -1, 12, 72, 220, 18
-    CHECKBOX "Dateien für Sprachen mit &komplexer Schrift und Rechts-nach-Links Schreibstil installieren", IDC_INST_FILES_FOR_RTOL_LANG, 12, 92, 215, 22, BS_MULTILINE
-    CHECKBOX "Dateien für &ostasiatische Sprachen installieren", IDC_INST_FILES_FOR_ASIAN, 12, 114, 180, 22
+    CHECKBOX "Dateien für Sprachen mit &komplexer Schrift und Rechts-nach-Links Schreibstil installieren.", IDC_INST_FILES_FOR_RTOL_LANG, 12, 92, 215, 22, BS_MULTILINE
+    CHECKBOX "Dateien für &ostasiatische Sprachen installieren.", IDC_INST_FILES_FOR_ASIAN, 12, 114, 180, 22
 END
 
 IDD_ADVANCEDPAGE DIALOGEX 0, 0, 246, 230
@@ -125,9 +125,9 @@ BEGIN
   COMBOBOX IDC_TIMEFORMAT, 88, 50, 84, 100, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP
   LTEXT "&Trennzeichen:", -1, 13, 70, 54, 10, WS_VISIBLE | WS_GROUP
   COMBOBOX IDC_TIMESEPARATOR, 88, 68, 84, 100, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP
-  LTEXT "Symbol für &Vormittag:", -1, 13, 88, 54, 10, WS_VISIBLE | WS_GROUP
+  LTEXT "Symbol für &Vormittag:", -1, 13, 88, 75, 10, WS_VISIBLE | WS_GROUP
   COMBOBOX IDC_TIMEAMSYMBOL, 88, 86, 84, 100, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP
-  LTEXT "Symbol für &Nachmittag:", -1, 13, 106, 54, 10, WS_VISIBLE | WS_GROUP
+  LTEXT "Symbol für &Nachmittag:", -1, 13, 106, 75, 10, WS_VISIBLE | WS_GROUP
   COMBOBOX IDC_TIMEPMSYMBOL, 88, 104, 84, 100, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP
   GROUPBOX "", -1, 7, 140, 230, 80, WS_VISIBLE
   LTEXT "Zeitformat\n\n\
@@ -177,8 +177,8 @@ CAPTION "Sortierung"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Sortierung", -1, 7, 7, 230, 74
-    LTEXT "Sorting methods define the sorting order of characters, words, files and folders.", -1, 14, 17, 220, 25
-    LTEXT "Select a sorting method for your language:", -1, 14, 37, 220, 22
+    LTEXT "Sortiermethoden definieren die Sortierreihenfolge von Zeichen, Wörtern, Dateien und Ordnern.", -1, 14, 17, 220, 25
+    LTEXT "Wählen Sie eine Sortiermethode für Ihre Sprache:", -1, 14, 37, 220, 22
     COMBOBOX IDC_SORTLIST_COMBO, 14, 56, 217, 83, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
 END
 

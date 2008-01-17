@@ -172,7 +172,7 @@ END
 IDD_VIRTMEM DIALOGEX 6, 6, 223, 248
 STYLE DS_FIXEDSYS | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Обменен файл"
-FONT 8, "MS Sans Serif", 0, 0, 0x0
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LTEXT       "Устройство [Етикет на тома]", IDC_STATIC, 12, 5, 100, 9
     LTEXT       "Размер на обменния файл (МБ)", IDC_STATIC, 113, 5, 110, 9
