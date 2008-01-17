@@ -33,6 +33,7 @@
 #include "config.h"
 #include "batch.h"
 
-#include <reactos/resource.h>
+#include <reactos/buildno.h>
+#include <reactos/version.h>
 
 #endif /* __CMD_PRECOMP_H */

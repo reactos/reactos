@@ -1,5 +1,4 @@
 #include <windows.h>
-#include <reactos/resource.h>
 #include "resource.h"
 
 IDI_ICON                ICON    DISCARDABLE     "icon.ico"

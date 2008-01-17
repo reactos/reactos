@@ -1,8 +1,7 @@
 /* $Id$ */
 
 #include <windows.h>
-
-#include <resource.h>
+#include "resource.h"
 
 #define REACTOS_VERSION_DLL
 #define REACTOS_STR_FILE_DESCRIPTION	"ReactOS User API Client Dll\0"
@@ -12,7 +11,7 @@
 
 #define IDS_MDI_MOREWINDOWS     13
 
-LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
 /////////////////////////////////////////////////////////////////////////////
 //

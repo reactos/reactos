@@ -1,5 +1,4 @@
 #include <windows.h>
-#include <reactos/resource.h>
 #include "resource.h"
 
 IDD_MAIN DIALOG DISCARDABLE 20, 20, 220, 140

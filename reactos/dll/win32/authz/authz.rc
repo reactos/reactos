@@ -1,5 +1,4 @@
 #include <windows.h>
-#include <reactos/resource.h>
 #include "resource.h"
 
 #define REACTOS_VERSION_DLL
@@ -7,4 +6,3 @@
 #define REACTOS_STR_INTERNAL_NAME	"authz\0"
 #define REACTOS_STR_ORIGINAL_FILENAME	"authz.dll\0"
 #include <reactos/version.rc>
-
