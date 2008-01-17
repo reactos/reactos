@@ -79,8 +79,6 @@ private:
 	void GenerateInitTarget () const;
 	void GenerateRegTestsRunTarget () const;
 	void GenerateXmlBuildFilesMacro() const;
-	std::string GetBin2ResExecutable ();
-	void UnpackWineResources ();
 	void GenerateTestSupportCode ();
 	void GenerateCompilationUnitSupportCode ();
 	void GenerateSysSetup ();

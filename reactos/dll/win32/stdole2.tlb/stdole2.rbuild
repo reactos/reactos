@@ -11,6 +11,7 @@
 <module name="stdole2" type="win32dll" extension=".tlb" installbase="system32" installname="stdole2.tlb">
 	<importlibrary definition="stdole2.tlb.spec.def" />
 	<include base="stdole2">.</include>
+	<include base="stdole2" root="intermediate">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
 	<dependency>std_ole_v2</dependency>
 	<define name="__WINESRC__" />

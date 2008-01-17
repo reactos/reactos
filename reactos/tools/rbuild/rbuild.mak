@@ -264,7 +264,6 @@ RBUILD_COMMON_SOURCES = \
 		stubbedcomponent.cpp \
 		syssetupgenerator.cpp \
 		testsupportcode.cpp \
-		wineresource.cpp \
 		xmlnode.cpp \
 		)
 

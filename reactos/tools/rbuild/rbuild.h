@@ -89,7 +89,6 @@ class LinkerFlag;
 class LinkerScript;
 class Property;
 class TestSupportCode;
-class WineResource;
 class AutomaticDependency;
 class Bootstrap;
 class CDFile;
@@ -698,26 +697,6 @@ private:
 	char* WriteRegisterTestsFunctionToStartupFile ( char* buffer,
 	                                                Module& module );
 	void WriteStartupFile ( Module& module );
-};
-
-
-class WineResource
-{
-public:
-	const Project& project;
-	std::string bin2res;
-
-	WineResource ( const Project& project,
-	               std::string bin2res );
-	~WineResource ();
-	void UnpackResources ( bool verbose );
-private:
-	bool IsSpecFile ( const File& file );
-	bool IsWineModule ( const Module& module );
-	bool IsResourceFile ( const File& file );
-	std::string GetResourceFilename ( const Module& module );
-	void UnpackResourcesInModule ( Module& module,
-	                               bool verbose );
 };
 
 

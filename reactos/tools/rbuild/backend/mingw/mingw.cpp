@@ -334,7 +334,6 @@ MingwBackend::ProcessNormal ()
 	GenerateHeader ();
 	GenerateGlobalVariables ();
 	GenerateXmlBuildFilesMacro ();
-	UnpackWineResources ();
 	ProcessModules ();
 	GenerateInstallTarget ();
 	GenerateTestTarget ();
@@ -675,22 +674,6 @@ MingwBackend::GenerateXmlBuildFilesMacro() const
 		numberOfExistingFiles++;
 	}
 	fprintf ( fMakefile, "\n" );
-}
-
-string
-MingwBackend::GetBin2ResExecutable ()
-{
-	return NormalizeFilename ( Environment::GetOutputPath () + sSep + "tools/bin2res/bin2res" + ExePostfix );
-}
-
-void
-MingwBackend::UnpackWineResources ()
-{
-	printf ( "Unpacking WINE resources..." );
-	WineResource wineResource ( ProjectNode,
-	                            GetBin2ResExecutable () );
-	wineResource.UnpackResources ( configuration.Verbose );
-	printf ( "done\n" );
 }
 
 void
