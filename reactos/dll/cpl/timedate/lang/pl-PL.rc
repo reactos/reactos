@@ -68,4 +68,6 @@ BEGIN
     IDS_TIMEZONEUNKNOWN "Nieznana"
     IDS_INETTIMESUCSYNC "Zegar zosta³ pomyœlnie zsynchronizowany z %s w dniu %s o %s"
     IDS_INETTIMENEXTSYNC "Nastêpna synchronizacja w dniu %s o %s"
+    IDS_INETTIMESYNCING "Please wait while ReactOS synchronizes the time with %s"
+    IDS_INETTIMEERROR "An error occured while ReactOS was synchronizing with %s"
 END

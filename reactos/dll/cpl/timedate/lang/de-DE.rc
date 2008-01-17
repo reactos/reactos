@@ -3,7 +3,7 @@ LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
 
 IDD_DATETIMEPAGE DIALOGEX 0, 0, 252, 146
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Datum && Uhrzeit"
+CAPTION "Datum & Uhrzeit"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "&Datum", -1, 4, 2, 122, 125
@@ -57,14 +57,12 @@ END
 STRINGTABLE
 BEGIN
     IDS_CPLNAME "Datum/Zeit"
-    IDS_CPLDESCRIPTION "Ändert die Uhrzeit, Datum und Zeitzone."
+    IDS_CPLDESCRIPTION "Ändert Uhrzeit, Datum und Zeitzone."
     IDS_TIMEZONETEXT "Aktuelle Zeitzone: %s"
     IDS_TIMEZONEINVALID "Ungültig"
     IDS_TIMEZONEUNKNOWN "Unbekannt"
     IDS_INETTIMESUCSYNC "Die Zeit wurde erfolgreich mit %s am %s um %s synchronisiert"
     IDS_INETTIMENEXTSYNC "Nächste Synchronisierung am %s um %s"
-    IDS_INETTIMESYNCING "Bitte warten Sie, während ReactOS die Zeit mit %s synchonisisert"
-    IDS_INETTIMEERROR "Ein Fehler trat beim synchonisieren mit %s auf"
+    IDS_INETTIMESYNCING "Bitte warten Sie, während ReactOS die Zeit mit %s synchonisiert"
+    IDS_INETTIMEERROR "Ein Fehler trat beim Synchonisieren mit %s auf"
 END
-
-

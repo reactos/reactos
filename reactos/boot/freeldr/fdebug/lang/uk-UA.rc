@@ -119,7 +119,7 @@ END
 IDD_ABOUTBOX DIALOG DISCARDABLE  22, 17, 259, 210
 STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 CAPTION "Про програму Налагоджувач FreeLoader"
-FONT 8, "Tahoma"
+FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL         "Налагоджувач FreeLoader v1.0\nCopyright (C) 2003\nby Brian Palmer (brianp@reactos.org)",
                     IDC_STATIC,"Static",SS_LEFTNOWORDWRAP | WS_GROUP,53,28,
@@ -133,7 +133,7 @@ END
 IDD_CONNECTION DIALOG DISCARDABLE  0, 0, 196, 100
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Настройки з'єднання"
-FONT 8, "Tahoma"
+FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT           "Введіть COM-порт (напр. COM1):",IDC_STATIC,7,7,108,8
     EDITTEXT        IDC_COMPORT,7,17,182,14,ES_AUTOHSCROLL
@@ -147,7 +147,7 @@ END
 IDD_CAPTURE DIALOG DISCARDABLE  0, 0, 251, 95
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Файл захоплення"
-FONT 8, "Tahoma"
+FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT           "Ім'я файлу захоплення:",IDC_STATIC,7,17,62,8
     EDITTEXT        IDC_CAPTUREFILENAME,7,26,181,14,ES_AUTOHSCROLL

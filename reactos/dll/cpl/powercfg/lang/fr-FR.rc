@@ -37,7 +37,7 @@ END
 IDD_PROPPAGEALARMS DIALOG DISCARDABLE  0, 0, 250, 220
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Alarmes"
-FONT 8, "MS Sans Serif"
+FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX        "Alarme de batterie faible",-1,10,15,235,95
     CONTROL         "Activer l'alarme de batterie faible quand le niveau d'énergie atteint :",IDC_ALARM1,
@@ -75,7 +75,7 @@ END
 IDD_PROPPAGEADVANCED DIALOG DISCARDABLE  0, 0, 250, 220
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Avancé"
-FONT 8, "MS Sans Serif"
+FONT 8, "MS Shell Dlg"
 BEGIN
     ICON            IDI_ACDC,IDI_ACDC,5,5,20,20
     LTEXT           "Choisissez les options d'économie d'énergie que vous voulez utiliser.",-1,30,5,205,20
@@ -101,7 +101,7 @@ END
 IDD_PROPPAGEHIBERNATE DIALOG DISCARDABLE  0, 0, 250, 220
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Mise en veille"
-FONT 8, "MS Sans Serif"
+FONT 8, "MS Shell Dlg"
 BEGIN
     ICON            IDI_SCREEN,IDI_SCREEN,5,5,20,20
     LTEXT           "Quand votre ordinateur se met en veille, il enregistre tout ce qu'il a en memoire sur le disque dur et s'arrête. Quand votre ordinateur sort de la mise en veille, il reprend son état précédent. ",

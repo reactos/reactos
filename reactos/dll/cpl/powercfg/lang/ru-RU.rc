@@ -37,7 +37,7 @@ END
 IDD_PROPPAGEALARMS DIALOG DISCARDABLE  0, 0, 250, 220
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Уведомления"
-FONT 8, "MS Sans Serif"
+FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX        "Сигнал низкого заряда батарей",-1,10,15,235,95
     CONTROL         "Включить сигнал н&изкого заряда при уровне:",IDC_ALARM1,
@@ -75,7 +75,7 @@ END
 IDD_PROPPAGEADVANCED DIALOG DISCARDABLE  0, 0, 250, 220
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Дополнительно"
-FONT 8, "MS Sans Serif"
+FONT 8, "MS Shell Dlg"
 BEGIN
     ICON            IDI_ACDC,IDI_ACDC,5,5,32,32
     LTEXT           "Выберите желаемые параметры энергосбережения.",-1,37,5,205,20
@@ -101,7 +101,7 @@ END
 IDD_PROPPAGEHIBERNATE DIALOG DISCARDABLE  0, 0, 250, 220
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Спящий режим"
-FONT 8, "MS Sans Serif"
+FONT 8, "MS Shell Dlg"
 BEGIN
     ICON            IDI_SCREEN,IDI_SCREEN,5,5,32,32
     LTEXT           "При переходе в спящий режим компьютер переносит содержимое оперативной памяти на диск и выключается. При выходе из спящего режима компьютер возвращается в прежнее состояние.",

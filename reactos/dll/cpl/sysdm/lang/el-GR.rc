@@ -270,4 +270,9 @@ BEGIN
     IDS_MINI_DUMP "Ένδειξη μειωμένης μνήμης(64KB)"
     IDS_KERNEL_DUMP "Ένδειξη μνήμης πυρίνα"
     IDS_FULL_DUMP "Ένδειξη πλήρους μνήμης"
+    IDS_USERPROFILE_NAME "Name"
+    IDS_USERPROFILE_SIZE "Size"
+    IDS_USERPROFILE_TYPE "Type"
+    IDS_USERPROFILE_STATUS "Status"
+    IDS_USERPROFILE_MODIFIED "Modified"
 END

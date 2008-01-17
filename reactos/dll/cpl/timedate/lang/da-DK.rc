@@ -63,4 +63,6 @@ BEGIN
     IDS_TIMEZONEUNKNOWN "Ukendt"
     IDS_INETTIMESUCSYNC "The time has been successfully synchronized with %s on %s at %s"
     IDS_INETTIMENEXTSYNC "Next synchronization: %s at %s"
+    IDS_INETTIMESYNCING "Please wait while ReactOS synchronizes the time with %s"
+    IDS_INETTIMEERROR "An error occured while ReactOS was synchronizing with %s"
 END

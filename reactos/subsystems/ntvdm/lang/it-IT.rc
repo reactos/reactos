@@ -10,8 +10,8 @@
 
 LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
 STRINGTABLE DISCARDABLE
-{
+BEGIN
 
 STRING_WelcomeMsg,      "Supporto di ReactOS per la macchina virtuale DOS.\n"
 STRING_PromptMsg,       "Digitare r<invio> per avviare, s<invio> per arrestare o q<invio> per abbandonare ora."
-}
+END

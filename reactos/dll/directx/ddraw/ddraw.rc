@@ -15,7 +15,7 @@
 #include <reactos/version.rc>
 
 STRINGTABLE DISCARDABLE
-{
+BEGIN
 STR_PRIMARY_DISPLAY,    "Primary Display Driver"
-}
+END
 

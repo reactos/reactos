@@ -163,4 +163,8 @@ BEGIN
 	IDS_DETAILS "Подробности"
     IDS_CREATE_SHORTCUT "Създаване на препратка"
     IDS_ERROR_NOT_FOUND "Не бе открит файл %s."
+	IDS_UNABLEREAD_INFORMATION "Unable to open Information Keys"
+	IDS_NO_INFORMATION "No information"
+	IDS_NONE_APP "There are no installed applications."
+	IDS_NONE_UPD "There are no installed updates."
 END

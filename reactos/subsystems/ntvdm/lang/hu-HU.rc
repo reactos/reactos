@@ -8,8 +8,8 @@
 
 LANGUAGE LANG_HUNGARIAN, SUBLANG_DEFAULT
 STRINGTABLE DISCARDABLE
-{
+BEGIN
 
 STRING_WelcomeMsg,      "ReactOS Virtuális DOS Gép támogatás.\n"
 STRING_PromptMsg,       "Futtatáshoz nyomd meg a r<cr>, leállításhoz a s<cr> vagy kilépéshez a q<cr> gombot."
-}
+END
