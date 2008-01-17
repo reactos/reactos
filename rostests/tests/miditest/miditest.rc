@@ -1,5 +1,4 @@
 #include <windows.h>
-#include "resource.h"
 
 IDR_MAINMENU MENU DISCARDABLE
 BEGIN
