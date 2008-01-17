@@ -14,3 +14,9 @@ BEGIN
   COMBOBOX IDC_REFRESHRATE, 13, 85, 225, 200, WS_VSCROLL | CBS_DROPDOWNLIST | CBS_SORT
   AUTOCHECKBOX "&Versteckt Modi, die der Monitor nicht anzeigen kann.", IDC_PRUNINGCHECK, 13, 106, 225, 10
 END
+
+STRINGTABLE
+BEGIN
+  IDS_USEDEFFRQUENCY "Verwende Hardware Standardeinstellung."
+  IDS_FREQFMT "%u Hertz"
+END

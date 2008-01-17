@@ -46,7 +46,7 @@ BEGIN
     LTEXT           "ReactOS ist unter der GPL veröffentlicht, wenn Sie (Teile von) ReactOS wiederverwenden "\
                     "oder wiederveröffentlichen wollen, müssen Sie die Bestimmungen der GPL anerkennen.",
                     IDC_STATIC,15,110,227,24
-    PUSHBUTTON      "&GPL &ansehen...",IDC_VIEWGPL,251,110,50,19
+    PUSHBUTTON      "&GPL &ansehen...",IDC_VIEWGPL,251,110,55,19
     LTEXT           "Klicken Sie auf Weiter, um mit dem Setup fortzufahren.",IDC_STATIC,15,136,
                     195,17
 END
@@ -79,11 +79,11 @@ BEGIN
     LTEXT "Das Setup wird ein Administratorkonto erstellen. "\
           "Benutzen Sie es, wenn Sie vollen Zugriff auf Ihren Computer benötigen.",
           IDC_STATIC, 54, 57, 250, 25
-    LTEXT "Geben Sie ein Passwort für das Administratorkonto ein, das höchstens 14 Zeichen lang ist.",
+    LTEXT "Geben Sie ein Passwort für das Administratorkonto mit max. 14 Zeichen ein.",
           IDC_STATIC, 54, 87, 250, 8
     LTEXT "&Administrator Passwort:", IDC_STATIC, 54, 104, 75, 8
     EDITTEXT IDC_ADMINPASSWORD1, 132, 101, 172, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
-    LTEXT "&Bestätigung des Passworts:", IDC_STATIC, 54, 123, 75, 8
+    LTEXT "&Passwort bestätigen:", IDC_STATIC, 54, 123, 75, 8
     EDITTEXT IDC_ADMINPASSWORD2, 132, 120, 172, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
 END
 
@@ -97,10 +97,10 @@ BEGIN
           "die Sie nutzen wollen übereinstimmen. Die lokalen Nutzereinstellungen geben vor, "\
           "wie Nummern, Währungen und Datumsangaben dargestellt werden.", IDC_STATIC, 53, 6, 253, 30
     LTEXT "", IDC_LOCALETEXT, 54, 34, 250, 16
-    LTEXT "Um die lokalen Nutzer- oder Systemeinstellungen zu ändern, klicken Sie auf Einstellen",
+    LTEXT "Um die lokalen Nutzer- oder Systemeinstellungen zu ändern, klicken Sie auf Einstellen.",
           IDC_STATIC, 53, 57, 188, 15
     PUSHBUTTON "&Einstellen...", IDC_CUSTOMLOCALE, 245, 57, 50, 14
-    LTEXT "Das Tastaturlayout gibt vor, welche Zeichen erscheinen, wenn Sie eine Taste drücken.",
+    LTEXT "Das Tastaturlayout gibt vor, welche Zeichen ein Tastendruck bewirkt.",
           IDC_STATIC, 53, 86, 253, 8
     LTEXT "", IDC_LAYOUTTEXT, 53, 100, 250, 16
     LTEXT "Um das Tastaturlayout zu ändern, klicken Sie auf Einstellen.",
@@ -205,7 +205,7 @@ BEGIN
     IDS_CMT_SCREENSHOT  "Screenshot erstellen"
     IDS_CMT_DEVMGMT     "Starte Geräte-Manager"
     IDS_CMT_SERVMAN     "Starte Dienst-Manager"
-    IDS_CMT_RDESKTOP    "Launch Remote Desktop"
+    IDS_CMT_RDESKTOP    "Starte Remote Desktop"
 END
 
 STRINGTABLE
@@ -224,8 +224,8 @@ END
 
 STRINGTABLE
 BEGIN
-	IDS_SYS_ACCESSIBILITY        "Accessibility"
-	IDS_CMT_MAGNIFY      	     "Magnify"
+	IDS_SYS_ACCESSIBILITY        "Eingabehilfen"
+	IDS_CMT_MAGNIFY      	     "Bildschirmlupe"
 END
 
 STRINGTABLE
@@ -256,7 +256,7 @@ BEGIN
     IDS_SHORT_SOLITAIRE  "Solitär.lnk"
     IDS_SHORT_WINEMINE   "WineMine.lnk"
     IDS_SHORT_CHARMAP    "Zeichentabelle.lnk"
-    IDS_SHORT_MAGNIFY    "Magnify.lnk"
+    IDS_SHORT_MAGNIFY    "Bildschirmlupe.lnk"
     IDS_SHORT_RDESKTOP   "Remote Desktop.lnk"
 END
 

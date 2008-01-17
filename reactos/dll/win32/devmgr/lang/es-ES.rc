@@ -25,6 +25,9 @@ BEGIN
     IDS_PROPERTIES "P&ropiedades"
     IDS_UPDATEDRV "Actualize controlador..."
     IDS_REBOOT "&Reiniciar equipo..."
+    IDS_NOTAVAILABLE "Not available"
+    IDS_NOTDIGITALLYSIGNED "Not digitally signed"
+    IDS_NODRIVERS "No driver files are required or have been loaded for this device."
 END
 
 /* error messages, source: http://www.z123.org/techsupport/medm.htm */
@@ -139,6 +142,10 @@ BEGIN
      EDITTEXT IDC_DRVDATE, 100, 53, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
      LTEXT "Versión del controlador:", -1, 37, 67, 60, 8, SS_NOPREFIX
      EDITTEXT IDC_DRVVERSION, 100, 67, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
+     LTEXT "Digital Signer:", -1, 37, 81, 60, 8, SS_NOPREFIX
+     EDITTEXT IDC_DIGITALSIGNER, 100, 81, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
+     PUSHBUTTON "&Driver Details...", IDC_DRIVERDETAILS, 7, 106, 70, 15
+     LTEXT "To view details about the driver files.", -1, 91, 110, 154, 17, SS_NOPREFIX
 END
 
 IDD_DRIVERDETAILS DIALOG DISCARDABLE  0, 0, 224, 250

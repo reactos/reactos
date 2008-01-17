@@ -160,21 +160,6 @@ BEGIN
 END
 
 
-IDD_RESTART DIALOG 6, 18, 245, 116
-STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION
-CAPTION "Instalación de ReactOS"
-FONT 8, "MS Shell Dlg"
-BEGIN
-    LTEXT "Usted ha terminado con éxito la instalación de ReactOS.", IDC_STATIC, 13, 12, 212, 16
-    LTEXT "Para poder proseguir, el programa de instalación necesita reiniciar su equipo. "\
-          "El equipo será automáticamente reiniciado en 15 segundos o si presiona el "\
-          "boton de reiniciar.", IDC_STATIC, 13, 33, 212, 32
-/*    GROUPBOX "", -1, 7, 3, 231, 106 */
-    CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 13, 70, 212, 8
-    PUSHBUTTON "&Reiniciar", IDOK, 98, 87, 50, 14
-END
-
-
 IDD_GPL DIALOG 0, 0, 333, 230
 STYLE DS_CENTER | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Licencia Pública General GNU"

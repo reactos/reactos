@@ -27,7 +27,7 @@ STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Sounds"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Ein Soundschema ist eine Kollektion von Sounds, die bestimmtem Ereignissen in Programmen in ReactOS zugordnet sind. Sie können ein existierendes Schema anwählen oder ein modifiziertes speichern.",-1,8,7,230,40
+    LTEXT "Ein Soundschema ist eine Kollektion von Sounds, die bestimmten Programmereignissen in ReactOS zugordnet sind. Sie können ein existierendes Schema anwählen oder ein modifiziertes speichern.",-1,8,7,230,40
     LTEXT "Sounds&chema:",-1,8,42,150,17
     COMBOBOX IDC_SOUND_SCHEME, 8, 53, 230, 46, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON "Sp&eichern unter...", -1, 120,70,65,15
@@ -101,5 +101,3 @@ BEGIN
     IDS_CPLDESCRIPTION "Ändert das Sound-Schema Ihres Computers, oder konfiguriert die Einstellungen für Ihre Lautsprecher und Aufnahmegeräte."
     IDS_NO_SOUND "(Kein)"
 END
-
-

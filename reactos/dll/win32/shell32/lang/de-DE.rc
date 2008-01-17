@@ -331,11 +331,11 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 	CONTROL "", 14000, "SysListView32", LVS_REPORT | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 10, 10, 220, 50
 	GROUPBOX "Einstellungen für gewählten Ort", -1, 10, 72, 220, 70
-	RADIOBUTTON "&Benutzerdefinierte Größe:", 14001, 20, 90, 80, 10, WS_TABSTOP
+	RADIOBUTTON "&Definierte Größe:", 14001, 20, 90, 80, 10, WS_TABSTOP
 	EDITTEXT 14002, 106, 87, 50, 14, WS_TABSTOP | ES_NUMBER
 	LTEXT "M&aximale Größe (MB):", -1, 20, 105, 70, 10
 	RADIOBUTTON "Dateien nicht in den Papie&rkorb verschieben, sondern sofort löschen", 14003, 20, 117, 170, 20, BS_MULTILINE | WS_TABSTOP
-	RADIOBUTTON "Bestätigungs&dialog nach erfolgreichem Löschvorgang anzeigen", 14004, 20, 155, 140, 10, WS_TABSTOP
+	RADIOBUTTON "Bestätigungs&dialog nach erfolgreichem Löschvorgang anzeigen", 14004, 20, 155, 215, 10, WS_TABSTOP
 END
 
 OPEN_WITH_PROGRAMM_DLG DIALOGEX 0, 0, 264, 256
@@ -361,18 +361,18 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 	GROUPBOX "Aufgaben", -1, 7, 10, 249, 45
 	//ICON
-	AUTORADIOBUTTON "&Allgemeine Aufgaben in Ordnern anzeigen", 14001, 40, 25, 120, 10, WS_TABSTOP
-	AUTORADIOBUTTON "ReactOS Klassisc&he Ansicht verwenden", 14002, 40, 37, 120, 10, WS_TABSTOP
+	AUTORADIOBUTTON "&Allgemeine Aufgaben in Ordnern anzeigen", 14001, 40, 25, 150, 10, WS_TABSTOP
+	AUTORADIOBUTTON "ReactOS Klassisc&he Ansicht verwenden", 14002, 40, 37, 150, 10, WS_TABSTOP
 	GROUPBOX "Ordner durchsuchen", -1, 7, 60, 249, 45, WS_TABSTOP
 	//ICON
-	AUTORADIOBUTTON "Jeden Ordner im &selben Fenster öffnen", 14004, 40, 70, 140, 10, WS_TABSTOP
-	AUTORADIOBUTTON "&Jeden Ordner im eigenen Fenster öffnen", 14005, 40, 82, 140, 10, WS_TABSTOP
+	AUTORADIOBUTTON "Jeden Ordner im &selben Fenster öffnen", 14004, 40, 70, 150, 10, WS_TABSTOP
+	AUTORADIOBUTTON "&Jeden Ordner im eigenen Fenster öffnen", 14005, 40, 82, 150, 10, WS_TABSTOP
 	GROUPBOX "Markieren von Elementen", -1, 7, 110, 249, 60
 	//ICON
-	AUTORADIOBUTTON "&Öffnen durch &einfachen Klick (Markieren durch zeigen)", 14007, 40, 120, 170, 10, WS_TABSTOP
-	AUTORADIOBUTTON "Symbolunerschriften wie im Br&owser unterstreichen", 14008, 50, 132, 170, 10, WS_TABSTOP
-	AUTORADIOBUTTON "Symbolunerschriften nur beim Zeigen &unterstreichen", 14009, 50, 144, 170, 10, WS_TABSTOP
-	AUTORADIOBUTTON "&Öffnen durch &Doppelklick (Markieren durch einfachen Klick)", 14010, 40, 156, 170, 10, WS_TABSTOP
+	AUTORADIOBUTTON "&Öffnen durch &einfachen Klick (Markieren durch zeigen)", 14007, 40, 120, 210, 10, WS_TABSTOP
+	AUTORADIOBUTTON "Symbolunerschriften wie im Br&owser unterstreichen", 14008, 50, 132, 210, 10, WS_TABSTOP
+	AUTORADIOBUTTON "Symbolunerschriften nur beim Zeigen &unterstreichen", 14009, 50, 144, 210, 10, WS_TABSTOP
+	AUTORADIOBUTTON "&Öffnen durch &Doppelklick (Markieren durch einfachen Klick)", 14010, 40, 156, 210, 10, WS_TABSTOP
 	PUSHBUTTON "&Wiederherstellen", 14011, 180, 180, 60, 14, WS_TABSTOP
 END
 
@@ -383,9 +383,9 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 	GROUPBOX "Ordneransicht", -1, 7, 10, 249, 60
 	//ICON
-	LTEXT "Sie können die Ansicht (Wie Details oder Kacheln), die\nSie für diesen Ordner verwenden, auf alle Ordner anwenden.", -1, 60, 20, 180, 20
-	PUSHBUTTON "Auf a&lle Ordner anwenden", 14001, 60, 50, 80, 14, WS_TABSTOP
-	PUSHBUTTON "&Alle Ordner zurücksetzen", 14002, 150, 50, 80, 14, WS_TABSTOP
+	LTEXT "Sie können die Ansicht (Details oder Kacheln), die Sie für\ndiesen Ordner verwenden, auf alle Ordner anwenden.", -1, 60, 20, 180, 20
+	PUSHBUTTON "Auf a&lle Ordner anwenden", 14001, 60, 50, 90, 14, WS_TABSTOP
+	PUSHBUTTON "&Alle Ordner zurücksetzen", 14002, 160, 50, 90, 14, WS_TABSTOP
 	LTEXT "Erweiterte Einstellungen:", -1, 7, 80, 100, 10
 	CONTROL "", 14003, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_NOCOLUMNHEADER | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 7, 90, 249, 120
 	PUSHBUTTON "&Wiederherstellen", 14004, 180, 210, 80, 14, WS_TABSTOP
@@ -396,7 +396,7 @@ STYLE DS_SETFONT | DS_FIXEDSYS | WS_POPUP | WS_CAPTION
 CAPTION "Dateitypen"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-	LTEXT "&Registrierte Dateitypen:", -1, 7, 10, 70, 10
+	LTEXT "&Registrierte Dateitypen:", -1, 7, 10, 80, 10
 	CONTROL "", 14000, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 7, 20, 249, 80
 	PUSHBUTTON "&Neu", 14001, 120, 110, 50, 14, WS_TABSTOP
 	PUSHBUTTON "&Löschen", 14002, 180, 110, 50, 14, WS_TABSTOP
@@ -405,7 +405,7 @@ BEGIN
 	//ICON
 	LTEXT "Anwendungsname", 14005, 100, 140, 40, 10
 	PUSHBUTTON "Än&dern...", 14006, 180, 140, 50, 14, WS_TABSTOP
-	LTEXT "Um\ndie Einstellungen, die alle Dateien des Typs '%s' betreffen zu ändern, klicken\nSie auf Erweitert.", 14007, 12, 155, 160, 30
+	LTEXT "Um\ndie Einstellungen, die alle Dateien des Typs '%s' betreffen zu ändern, klicken Sie auf Erweitert.", 14007, 12, 155, 160, 30
 	PUSHBUTTON "&Erweitert", 14008, 180, 175, 50, 14, WS_TABSTOP
 END
 
@@ -485,7 +485,7 @@ CAPTION "Gemischter Inhalt"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	ICON "", 1000, 5, 7, 21, 20
-	LTEXT "ReactOS kann immer dieselbe Aktion durchführen, wenn ein Datenträger eingelegt wird, bzw. ein Gerät, das diesen Dateityp enthält, angeschlossen wird:", 1001, 30, 7, 193, 20
+	LTEXT "ReactOS kann immer dieselbe Aktion durchführen, wenn ein Datenträger eingelegt wird / ein Gerät angeschlossen wird:", 1001, 30, 7, 193, 20
 	ICON "", 1005, 32, 27, 11, 10, SS_REALSIZECONTROL
 	EDITTEXT 1006, 49, 28, 177, 14, ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
 	LTEXT "&Welche Aktion soll ReactOS durchführen?", 1002, 32, 41, 190, 8
@@ -497,7 +497,7 @@ END
 
 AUTOPLAY2_DLG DIALOG 0, 0, 227, 181
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | WS_POPUPWINDOW | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CAPTION
-CAPTION "AutopPlay"
+CAPTION "AutoPlay"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	ICON "", 1000, 5, 7, 21, 20
@@ -517,7 +517,7 @@ BEGIN
 	ICON 8240, -1, 6, 6, 21, 20, SS_REALSIZECONTROL | WS_GROUP
 	LTEXT "Welcher Vorgang soll durchgeführt werden?", -1, 39, 7, 167, 10
 	COMBOBOX 8224, 39, 20, 165, 200, CBS_DROPDOWNLIST | WS_VSCROLL
-	LTEXT "Behält die Sitzung bei, speichert die Daten im Arbeitsspeicher und schaltet den Computer in den Energiesparmodus. Der Computer wird reaktiviert, sobald eine Taste gedrückt oder die Maus bewegt wird.", 8225, 39, 40, 167, 37
+	LTEXT "Behält die Sitzung bei, speichert die Daten im Arbeitsspeicher und schaltet den Computer in den Energiesparmodus. Der Computer wird reaktiviert, sobald die Tastatur bzw. die Maus betätigt wird.", 8225, 39, 40, 167, 37
 	DEFPUSHBUTTON "OK", 1, 7, 82, 60, 14, WS_GROUP
 	PUSHBUTTON "Abbrechen", IDCANCEL, 75, 82, 60, 14
 	PUSHBUTTON "&Hilfe", IDHELP, 144, 82, 60, 14
