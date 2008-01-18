@@ -2127,6 +2127,7 @@ static unsigned long EmbeddedComplexSize(const MIDL_STUB_MESSAGE *pStubMsg,
   case RPC_FC_BOGUS_STRUCT:
   case RPC_FC_SMFARRAY:
   case RPC_FC_SMVARRAY:
+  case RPC_FC_CSTRING:
     return *(const WORD*)&pFormat[2];
   case RPC_FC_USER_MARSHAL:
     return *(const WORD*)&pFormat[4];
@@ -2141,6 +2142,8 @@ static unsigned long EmbeddedComplexSize(const MIDL_STUB_MESSAGE *pStubMsg,
     return *(const SHORT*)pFormat;
   case RPC_FC_IP:
     return sizeof(void *);
+  case RPC_FC_WSTRING:
+    return *(const WORD*)&pFormat[2] * 2;
   default:
     FIXME("unhandled embedded type %02x\n", *pFormat);
   }
