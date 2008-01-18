@@ -2059,13 +2059,13 @@ static size_t write_contexthandle_tfs(FILE *file, const type_t *type,
     unsigned char flags = 0x08 /* strict */;
 
     if (is_ptr(type))
-    {
         flags |= 0x80;
-        if (type->type != RPC_FC_RP)
+    if (is_attr(var->attrs, ATTR_IN))
+    {
+        flags |= 0x40;
+        if (!is_attr(var->attrs, ATTR_OUT))
             flags |= 0x01;
     }
-    if (is_attr(var->attrs, ATTR_IN))
-        flags |= 0x40;
     if (is_attr(var->attrs, ATTR_OUT))
         flags |= 0x20;
 
@@ -2807,15 +2807,13 @@ static void write_remoting_arg(FILE *file, int indent, const func_t *func,
 
         if (pointer_type != RPC_FC_RP) array_type = "Pointer";
         print_phase_function(file, indent, array_type, phase, var, start_offset);
-        if (phase == PHASE_FREE && type->declarray && pointer_type == RPC_FC_RP)
+        if (phase == PHASE_FREE && pointer_type == RPC_FC_RP)
         {
-            /* these are all unmarshalled by pointing into the buffer on the
-             * server side */
+            /* these are all unmarshalled by allocating memory */
             if (type->type == RPC_FC_BOGUS_ARRAY ||
                 type->type == RPC_FC_CVARRAY ||
-                (type->type == RPC_FC_SMVARRAY && type->type == RPC_FC_LGVARRAY && in_attr) ||
-                (type->type == RPC_FC_CARRAY && type->type == RPC_FC_CARRAY && !in_attr))
-            {
+                ((type->type == RPC_FC_SMVARRAY || type->type == RPC_FC_LGVARRAY) && in_attr) ||
+                (type->type == RPC_FC_CARRAY && !in_attr))            {
                 print_file(file, indent, "if (%s)\n", var->name);
                 indent++;
                 print_file(file, indent, "_StubMsg.pfnFree(%s);\n", var->name);
