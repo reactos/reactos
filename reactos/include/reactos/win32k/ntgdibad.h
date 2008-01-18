@@ -59,15 +59,6 @@ NtGdiGetFontFamilyInfo(
     DWORD Size
 );
 
-/* The gdi32 call Should Use NtGdiGetTextExtent */
-BOOL
-NTAPI
-NtGdiGetTextExtentPoint32(
-    HDC hDC,
-    LPCWSTR String,
-    int Count,
-    LPSIZE
-);
 
 /* Use NtGdiAddFontResourceW */
 int

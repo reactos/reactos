@@ -719,7 +719,6 @@ NtGdiAddFontResource                    2
 NtGdiCreateDIBitmap                     6
 NtGdiGetAspectRatioFilterEx             2
 NtGdiGetFontFamilyInfo                  4
-NtGdiGetTextExtentPoint32               4
 NtGdiOffsetViewportOrgEx                4
 NtGdiOffsetWindowOrgEx                  4
 #
