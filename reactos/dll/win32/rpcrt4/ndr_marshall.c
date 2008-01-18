@@ -2655,6 +2655,69 @@ static unsigned long ComplexStructMemorySize(PMIDL_STUB_MESSAGE pStubMsg,
   return size;
 }
 
+static unsigned long ComplexStructSize(PMIDL_STUB_MESSAGE pStubMsg,
+                                       PFORMAT_STRING pFormat)
+{
+  PFORMAT_STRING desc;
+  unsigned long size = 0;
+
+  while (*pFormat != RPC_FC_END) {
+    switch (*pFormat) {
+    case RPC_FC_BYTE:
+    case RPC_FC_CHAR:
+    case RPC_FC_SMALL:
+    case RPC_FC_USMALL:
+      size += 1;
+      break;
+    case RPC_FC_WCHAR:
+    case RPC_FC_SHORT:
+    case RPC_FC_USHORT:
+      size += 2;
+      break;
+    case RPC_FC_LONG:
+    case RPC_FC_ULONG:
+    case RPC_FC_ENUM32:
+      size += 4;
+      break;
+    case RPC_FC_HYPER:
+      size += 8;
+      break;
+    case RPC_FC_POINTER:
+      size += sizeof(void *);
+      break;
+    case RPC_FC_ALIGNM4:
+      ALIGN_LENGTH(size, 4);
+      break;
+    case RPC_FC_ALIGNM8:
+      ALIGN_LENGTH(size, 8);
+      break;
+    case RPC_FC_STRUCTPAD1:
+    case RPC_FC_STRUCTPAD2:
+    case RPC_FC_STRUCTPAD3:
+    case RPC_FC_STRUCTPAD4:
+    case RPC_FC_STRUCTPAD5:
+    case RPC_FC_STRUCTPAD6:
+    case RPC_FC_STRUCTPAD7:
+      size += *pFormat - RPC_FC_STRUCTPAD1 + 1;
+      break;
+    case RPC_FC_EMBEDDED_COMPLEX:
+      size += pFormat[1];
+      pFormat += 2;
+      desc = pFormat + *(const SHORT*)pFormat;
+      size += EmbeddedComplexSize(pStubMsg, desc);
+      pFormat += 2;
+      continue;
+    case RPC_FC_PAD:
+      break;
+    default:
+      FIXME("unhandled format 0x%02x\n", *pFormat);
+    }
+    pFormat++;
+  }
+
+  return size;
+}
+
 /***********************************************************************
  *           NdrComplexStructMarshall [RPCRT4.@]
  */
@@ -3453,7 +3516,6 @@ ULONG WINAPI NdrComplexArrayMemorySize(PMIDL_STUB_MESSAGE pStubMsg,
 {
   ULONG i, count, esize, SavedMemorySize, MemorySize;
   unsigned char alignment;
-  unsigned char *Buffer;
 
   TRACE("(%p,%p)\n", pStubMsg, pFormat);
 
@@ -3475,11 +3537,7 @@ ULONG WINAPI NdrComplexArrayMemorySize(PMIDL_STUB_MESSAGE pStubMsg,
 
   SavedMemorySize = pStubMsg->MemorySize;
 
-  Buffer = pStubMsg->Buffer;
-  pStubMsg->MemorySize = 0;
-  esize = ComplexStructMemorySize(pStubMsg, pFormat);
-  pStubMsg->Buffer = Buffer;
-
+  esize = ComplexStructSize(pStubMsg, pFormat);
   MemorySize = safe_multiply(pStubMsg->MaxCount, esize);
 
   count = pStubMsg->ActualCount;
