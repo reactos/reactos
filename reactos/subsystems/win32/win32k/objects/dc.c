@@ -941,8 +941,8 @@ IntGdiDeleteDC(HDC hDC, BOOL Force)
     if (DCToDelete->DC_Flags & DC_FLAG_PERMANENT)
     {
          DPRINT1("No! You Naughty Application!\n");
-//       if(!UserReleaseDC(NULL, hDC, FALSE)) Ret = FALSE;
          DC_UnlockDc( DCToDelete );
+//       if(!UserReleaseDC(NULL, hDC, FALSE)) Ret = FALSE;
          return Ret;
     }
   }
