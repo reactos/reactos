@@ -106,19 +106,18 @@ Index: widltypes.h
  #include <stdarg.h>
  #include "guiddef.h"
  #include "wine/rpcfc.h"
-@@ -31,8 +38,10 @@
- typedef GUID UUID;
- #endif
+@@ -34,6 +41,11 @@
+ #define TRUE 1
+ #define FALSE 0
  
--#define TRUE 1
--#define FALSE 0
 +// All hosts, which don't define O_BINARY, don't need it :-)
 +#ifndef O_BINARY
 +#define O_BINARY 0
 +#endif
- 
++
  typedef struct _attr_t attr_t;
  typedef struct _expr_t expr_t;
+ typedef struct _type_t type_t;
 Index: write_msft.c
 ===================================================================
 --- write_msft.c	(revision 31863)
