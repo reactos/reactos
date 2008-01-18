@@ -72,10 +72,10 @@
 	</category>
 	<category name="Office" icon="2">
 		<application name="Abiword">
-			<regname>"AbiWord 2.5.2 (remove only)"</regname>
-			<version>2.5.2</version>
+			<regname>"AbiWord 2.4.6 (remove only)"</regname>
+			<version>2.4.6</version>
 			<description>Word processor.</description>
-			<location>http://www.abiword.org/downloads/abiword/2.5.2/Windows/abiword-setup-2.5.2.exe</location>
+			<location>http://www.abiword.org/downloads/abiword/2.4.6/Windows/abiword-setup-2.4.6.exe</location>
 		</application>
 		<application name="OpenOffice">
 			<regname>OpenOffice.org 2.3</regname>
