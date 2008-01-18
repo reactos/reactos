@@ -364,6 +364,7 @@ void WINAPI NdrProxyGetBuffer(void *This,
     RpcRaiseException(hr);
     return;
   }
+  pStubMsg->fBufferValid = TRUE;
   pStubMsg->BufferStart = pStubMsg->RpcMsg->Buffer;
   pStubMsg->BufferEnd = pStubMsg->BufferStart + pStubMsg->BufferLength;
   pStubMsg->Buffer = pStubMsg->BufferStart;
@@ -408,11 +409,13 @@ void WINAPI NdrProxySendReceive(void *This,
 void WINAPI NdrProxyFreeBuffer(void *This,
                               PMIDL_STUB_MESSAGE pStubMsg)
 {
-  HRESULT hr;
-
   TRACE("(%p,%p)\n", This, pStubMsg);
-  hr = IRpcChannelBuffer_FreeBuffer(pStubMsg->pRpcChannelBuffer,
-                                   (RPCOLEMESSAGE*)pStubMsg->RpcMsg);
+  if (pStubMsg->fBufferValid)
+  {
+    IRpcChannelBuffer_FreeBuffer(pStubMsg->pRpcChannelBuffer,
+                                 (RPCOLEMESSAGE*)pStubMsg->RpcMsg);
+    pStubMsg->fBufferValid = TRUE;
+  }
 }
 
 /***********************************************************************
