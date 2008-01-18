@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #ifndef __WINE_SERVER_LIST_H
@@ -54,16 +54,16 @@ struct list
  *
  * And to iterate over it:
  *
- *   struct list *cursor;
- *   LIST_FOR_EACH( cursor, &global_gadgets )
+ *   struct gadget *gadget;
+ *   LIST_FOR_EACH_ENTRY( gadget, &global_gadgets, struct gadget, entry )
  *   {
- *       struct gadget *gadget = LIST_ENTRY( cursor, struct gadget, entry );
+ *       ...
  *   }
  *
  */
 
 /* add an element after the specified one */
-__inline static void list_add_after( struct list *elem, struct list *to_add )
+static inline void list_add_after( struct list *elem, struct list *to_add )
 {
     to_add->next = elem->next;
     to_add->prev = elem;
@@ -72,7 +72,7 @@ __inline static void list_add_after( struct list *elem, struct list *to_add )
 }
 
 /* add an element before the specified one */
-__inline static void list_add_before( struct list *elem, struct list *to_add )
+static inline void list_add_before( struct list *elem, struct list *to_add )
 {
     to_add->next = elem;
     to_add->prev = elem->prev;
@@ -81,26 +81,26 @@ __inline static void list_add_before( struct list *elem, struct list *to_add )
 }
 
 /* add element at the head of the list */
-__inline static void list_add_head( struct list *list, struct list *elem )
+static inline void list_add_head( struct list *list, struct list *elem )
 {
     list_add_after( list, elem );
 }
 
 /* add element at the tail of the list */
-__inline static void list_add_tail( struct list *list, struct list *elem )
+static inline void list_add_tail( struct list *list, struct list *elem )
 {
     list_add_before( list, elem );
 }
 
 /* remove an element from its list */
-__inline static void list_remove( struct list *elem )
+static inline void list_remove( struct list *elem )
 {
     elem->next->prev = elem->prev;
     elem->prev->next = elem->next;
 }
 
 /* get the next element */
-__inline static struct list *list_next( struct list *list, struct list *elem )
+static inline struct list *list_next( const struct list *list, const struct list *elem )
 {
     struct list *ret = elem->next;
     if (elem->next == list) ret = NULL;
@@ -108,7 +108,7 @@ __inline static struct list *list_next( struct list *list, struct list *elem )
 }
 
 /* get the previous element */
-__inline static struct list *list_prev( struct list *list, struct list *elem )
+static inline struct list *list_prev( const struct list *list, const struct list *elem )
 {
     struct list *ret = elem->prev;
     if (elem->prev == list) ret = NULL;
@@ -116,36 +116,60 @@ __inline static struct list *list_prev( struct list *list, struct list *elem )
 }
 
 /* get the first element */
-__inline static struct list *list_head( struct list *list )
+static inline struct list *list_head( const struct list *list )
 {
     return list_next( list, list );
 }
 
 /* get the last element */
-__inline static struct list *list_tail( struct list *list )
+static inline struct list *list_tail( const struct list *list )
 {
     return list_prev( list, list );
 }
 
 /* check if a list is empty */
-__inline static int list_empty( struct list *list )
+static inline int list_empty( const struct list *list )
 {
     return list->next == list;
 }
 
 /* initialize a list */
-__inline static void list_init( struct list *list )
+static inline void list_init( struct list *list )
 {
     list->next = list->prev = list;
 }
 
 /* count the elements of a list */
-__inline static unsigned int list_count( const struct list *list )
+static inline unsigned int list_count( const struct list *list )
 {
     unsigned count = 0;
     const struct list *ptr;
     for (ptr = list->next; ptr != list; ptr = ptr->next) count++;
     return count;
+}
+
+/* move all elements from src to the tail of dst */
+static inline void list_move_tail( struct list *dst, struct list *src )
+{
+    if (list_empty(src)) return;
+
+    dst->prev->next = src->next;
+    src->next->prev = dst->prev;
+    dst->prev = src->prev;
+    src->prev->next = dst;
+    list_init(src);
+}
+
+/* move all elements from src to the head of dst */
+static inline void list_move_head( struct list *dst, struct list *src )
+{
+    if (list_empty(src)) return;
+
+    dst->next->prev = src->prev;
+    src->prev->next = dst->next;
+    dst->next = src->next;
+    src->next->prev = dst;
+    list_init(src);
 }
 
 /* iterate through the list */
@@ -164,6 +188,7 @@ __inline static unsigned int list_count( const struct list *list )
          &(elem)->field != (list); \
          (elem) = LIST_ENTRY((elem)->field.next, type, field))
 
+/* iterate through the list using a list entry, with safety against removal */
 #define LIST_FOR_EACH_ENTRY_SAFE(cursor, cursor2, list, type, field) \
     for ((cursor) = LIST_ENTRY((list)->next, type, field), \
          (cursor2) = LIST_ENTRY((cursor)->field.next, type, field); \
@@ -171,11 +196,29 @@ __inline static unsigned int list_count( const struct list *list )
          (cursor) = (cursor2), \
          (cursor2) = LIST_ENTRY((cursor)->field.next, type, field))
 
+/* iterate through the list in reverse order */
+#define LIST_FOR_EACH_REV(cursor,list) \
+    for ((cursor) = (list)->prev; (cursor) != (list); (cursor) = (cursor)->prev)
+
+/* iterate through the list in reverse order, with safety against removal */
+#define LIST_FOR_EACH_SAFE_REV(cursor, cursor2, list) \
+    for ((cursor) = (list)->prev, (cursor2) = (cursor)->prev; \
+         (cursor) != (list); \
+         (cursor) = (cursor2), (cursor2) = (cursor)->prev)
+
 /* iterate through the list in reverse order using a list entry */
 #define LIST_FOR_EACH_ENTRY_REV(elem, list, type, field) \
     for ((elem) = LIST_ENTRY((list)->prev, type, field); \
          &(elem)->field != (list); \
          (elem) = LIST_ENTRY((elem)->field.prev, type, field))
+
+/* iterate through the list in reverse order using a list entry, with safety against removal */
+#define LIST_FOR_EACH_ENTRY_SAFE_REV(cursor, cursor2, list, type, field) \
+    for ((cursor) = LIST_ENTRY((list)->prev, type, field), \
+         (cursor2) = LIST_ENTRY((cursor)->field.prev, type, field); \
+         &(cursor)->field != (list); \
+         (cursor) = (cursor2), \
+         (cursor2) = LIST_ENTRY((cursor)->field.prev, type, field))
 
 /* macros for statically initialized lists */
 #define LIST_INIT(list)  { &(list), &(list) }
