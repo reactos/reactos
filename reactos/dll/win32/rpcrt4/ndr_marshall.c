@@ -2566,7 +2566,6 @@ static unsigned char * ComplexFree(PMIDL_STUB_MESSAGE pStubMsg,
         else
           m(pStubMsg, pMemory, desc);
       }
-      else FIXME("no freer for embedded type %02x\n", *desc);
       pMemory += size;
       pFormat += 2;
       continue;
@@ -5243,7 +5242,6 @@ static void union_arm_free(PMIDL_STUB_MESSAGE pStubMsg,
                 m(pStubMsg, pMemory, desc);
             }
         }
-        else FIXME("no freer for embedded type %02x\n", *desc);
     }
 }
 

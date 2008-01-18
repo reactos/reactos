@@ -267,6 +267,9 @@ RPC_STATUS WINAPI TowerExplode(
     const twr_uuid_floor_t *object_floor;
     const twr_uuid_floor_t *syntax_floor;
 
+    TRACE("(%p, %p, %p, %p, %p, %p)\n", tower, object, syntax, protseq,
+          endpoint, address);
+
     if (protseq)
         *protseq = NULL;
     if (endpoint)
@@ -335,6 +338,9 @@ RPC_STATUS WINAPI TowerConstruct(
     unsigned char *p;
     twr_uuid_floor_t *object_floor;
     twr_uuid_floor_t *syntax_floor;
+
+    TRACE("(%p, %p, %s, %s, %s, %p)\n", object, syntax, debugstr_a(protseq),
+          debugstr_a(endpoint), debugstr_a(address), tower);
 
     *tower = NULL;
 
