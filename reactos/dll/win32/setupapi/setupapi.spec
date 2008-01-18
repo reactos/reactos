@@ -289,13 +289,14 @@
 @ stdcall SetupDiCreateDeviceInfoListExA(ptr long str ptr)
 @ stdcall SetupDiCreateDeviceInfoListExW(ptr long wstr ptr)
 @ stdcall SetupDiCreateDeviceInfoW(ptr wstr ptr wstr ptr long ptr)
-@ stub SetupDiCreateDeviceInterfaceA
-@ stub SetupDiCreateDeviceInterfaceW
-@ stub SetupDiCreateDeviceInterfaceRegKeyA
-@ stub SetupDiCreateDeviceInterfaceRegKeyW
+@ stdcall SetupDiCreateDeviceInterfaceA(ptr ptr ptr str long ptr)
+@ stdcall SetupDiCreateDeviceInterfaceW(ptr ptr ptr wstr long ptr)
+@ stdcall SetupDiCreateDeviceInterfaceRegKeyA(ptr ptr long long ptr ptr)
+@ stdcall SetupDiCreateDeviceInterfaceRegKeyW(ptr ptr long long ptr ptr)
 @ stdcall SetupDiDeleteDevRegKey(ptr ptr long long long)
 @ stdcall SetupDiDeleteDeviceInfo(long ptr)
 @ stub SetupDiDeleteDeviceInterfaceData
+@ stdcall SetupDiDeleteDeviceInterfaceRegKey(ptr ptr long)
 @ stdcall SetupDiDestroyClassImageList(ptr)
 @ stdcall SetupDiDestroyDeviceInfoList(long)
 @ stdcall SetupDiDestroyDriverInfoList(long ptr long)

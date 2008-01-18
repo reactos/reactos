@@ -131,25 +131,6 @@ BOOL WINAPI SetupSetSourceListW(DWORD flags, PCWSTR *list, UINT count)
 }
 
 /***********************************************************************
- *		SetupDiRegisterDeviceInfo(SETUPAPI.@)
- */
-BOOL WINAPI
-SetupDiRegisterDeviceInfo(
-    IN HDEVINFO DeviceInfoSet,
-    IN PSP_DEVINFO_DATA DeviceInfoData,
-    IN DWORD Flags,
-    IN PSP_DETSIG_CMPPROC CompareProc OPTIONAL,
-    IN PVOID CompareContext OPTIONAL,
-    OUT PSP_DEVINFO_DATA DupDeviceInfoData OPTIONAL)
-{
-    FIXME ("Stub %p %p 0x%lx %p %p %p\n", DeviceInfoSet, DeviceInfoData,
-        Flags, CompareProc, CompareContext, DupDeviceInfoData);
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
-}
-
-
-/***********************************************************************
  *		SetupDiRemoveDevice(SETUPAPI.@)
  */
 BOOL WINAPI

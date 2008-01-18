@@ -422,7 +422,7 @@ StringTableDuplicate(HSTRING_TABLE hStringTable)
     pDestinationTable = MyMalloc(sizeof(STRING_TABLE));
     if (pDestinationTable == NULL)
     {
-        ERR("Cound not allocate a new string table!\n");
+        ERR("Could not allocate a new string table!\n");
         return (HSTRING_TABLE)NULL;
     }
 

@@ -127,11 +127,11 @@ struct DeviceInfo /* Element of DeviceInfoSet.ListHead */
     SP_DEVINSTALL_PARAMS_W InstallParams;
 
     /* Information about devnode:
-     * - DeviceName:
+     * - instanceId:
      *       "Root\*PNP0501" for example.
      *       It doesn't contain the unique ID for the device
      *       (points into the Data field at the end of the structure)
-     *       WARNING: no NULL char exist between DeviceName and UniqueId
+     *       WARNING: no NULL char exist between instanceId and UniqueId
      *       in Data field!
      * - UniqueId
      *       "5&1be2108e&0" or "0000"
@@ -151,7 +151,7 @@ struct DeviceInfo /* Element of DeviceInfoSet.ListHead */
      *       - DICD_INHERIT_CLASSDRVS
      *              inherit driver of the device info set (== same pointer)
      */
-    PCWSTR DeviceName;
+    PCWSTR instanceId;
     PCWSTR UniqueId;
     PCWSTR DeviceDescription;
     GUID ClassGuid;
@@ -167,7 +167,7 @@ struct DeviceInfo /* Element of DeviceInfoSet.ListHead */
     /* Used by SetupDiGetClassInstallParamsW/SetupDiSetClassInstallParamsW */
     struct ClassInstallParams ClassInstallParams;
 
-    /* Variable size array (contains data for DeviceName, UniqueId, DeviceDescription) */
+    /* Variable size array (contains data for instanceId, UniqueId, DeviceDescription) */
     WCHAR Data[ANYSIZE_ARRAY];
 };
 
