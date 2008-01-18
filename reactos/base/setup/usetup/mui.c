@@ -48,6 +48,7 @@
 #include "lang/he-IL.h"
 #include "lang/hu-HU.h"
 #include "lang/ja-JP.h"
+#include "lang/lt-LT.h"
 #include "lang/nl-NL.h"
 #include "lang/pt-PT.h"
 #include "lang/sk-SK.h"
@@ -208,6 +209,16 @@ static const MUI_LANGUAGE LanguageList[] =
         L"Korean",
         koKRPages,
         koKRErrorEntries
+    },
+    {
+        L"00000427",
+        L"00000427",
+        L"1257",
+        L"775",
+        L"10029",
+        L"Lithuanian",
+        ltLTPages,
+        ltLTErrorEntries
     },
     {
         L"00000414",

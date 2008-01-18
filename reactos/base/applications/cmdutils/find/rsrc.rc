@@ -11,5 +11,6 @@
 #include "lang/it-IT.rc"
 #include "lang/lt-LT.rc"
 #include "lang/pl-PL.rc"
+#include "lang/pt-BR.rc"
 #include "lang/ru-RU.rc"
 #include "lang/uk-UA.rc"

@@ -40,7 +40,7 @@ CAPTION "Настройка на РеактОС"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LTEXT           "Разработчиците на РеактОС биха желали да изразят признателността си към следните проекти "\
-                    "с отворен код, (части от които) са използвани при създаването на РеактОС:",
+                    "с отворен код, (части от) които са използвани при създаването на РеактОС:",
                     IDC_STATIC,15,2,286,24
     LISTBOX         IDC_PROJECTS,15,30,286,75,LBS_NOSEL | LBS_HASSTRINGS |
                     LBS_NOINTEGRALHEIGHT | WS_VSCROLL
@@ -82,9 +82,9 @@ BEGIN
           IDC_STATIC, 45, 57, 250, 25
     LTEXT "Напишете парола за „Administrator”, не по- дълга от 14 знака.",
           IDC_STATIC, 54, 87, 250, 8
-    LTEXT "&Парола за „Administrator”:", IDC_STATIC, 45, 104, 85, 8
+    LTEXT "&Парола за „Administrator”:", IDC_STATIC, 45, 104, 95, 8
     EDITTEXT IDC_ADMINPASSWORD1, 132, 101, 172, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
-    LTEXT "По&твърдете паролата:", IDC_STATIC, 45, 123, 77, 8
+    LTEXT "По&твърдете паролата:", IDC_STATIC, 45, 123, 95, 8
     EDITTEXT IDC_ADMINPASSWORD2, 132, 120, 172, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
 END
 
