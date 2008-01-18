@@ -134,11 +134,12 @@ static void add_option( const char *name, unsigned char set, unsigned char clear
 }
 
 /* parse a set of debugging option specifications and add them to the option list */
-static void parse_options( char *options )
+static void parse_options( const char *str )
 {
-    char *opt, *next;
+    char *opt, *next, *options;
     unsigned int i;
 
+    if (!(options = _strdup(str))) return;
     for (opt = options; opt; opt = next)
     {
         const char *p;
@@ -178,6 +179,7 @@ static void parse_options( char *options )
         else
             add_option( p, set, clear );
     }
+    free( options );
 }
 
 /* initialize all options at startup */
