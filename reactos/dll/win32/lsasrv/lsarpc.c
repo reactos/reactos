@@ -102,7 +102,7 @@ LsarStartRpcServer(VOID)
         return;
     }
 
-    Status = RpcServerRegisterIf(lsarpc_ServerIfHandle,
+    Status = RpcServerRegisterIf(lsarpc_v0_0_s_ifspec,
                                  NULL,
                                  NULL);
     if (Status != RPC_S_OK)

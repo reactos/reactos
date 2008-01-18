@@ -127,7 +127,7 @@ ScmStartRpcServer(VOID)
         return;
     }
 
-    Status = RpcServerRegisterIf(svcctl_ServerIfHandle,
+    Status = RpcServerRegisterIf(svcctl_v2_0_s_ifspec,
                                  NULL,
                                  NULL);
     if (Status != RPC_S_OK)

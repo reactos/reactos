@@ -32,11 +32,7 @@ DWORD STDCALL RpcThreadRoutine(LPVOID lpParameter)
         return 0;
     }
 
-#ifdef _MSC_VER
     Status = RpcServerRegisterIf(eventlog_v0_0_s_ifspec, NULL, NULL);
-#else
-    Status = RpcServerRegisterIf(eventlog_ServerIfHandle, NULL, NULL);
-#endif
 
     if (Status != RPC_S_OK)
     {

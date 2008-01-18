@@ -8,21 +8,21 @@
 	<file>pnp.idl</file>
 </module>
 <module name="scm_server" type="rpcserver">
-	<file switches="--oldnames">svcctl.idl</file>
+	<file>svcctl.idl</file>
 </module>
 <module name="scm_client" type="rpcclient">
-	<file switches="--oldnames">svcctl.idl</file>
+	<file>svcctl.idl</file>
 </module>
 <module name="eventlog_server" type="rpcserver" allowwarnings="true">
-	<file switches="--oldnames">eventlogrpc.idl</file>
+	<file>eventlogrpc.idl</file>
 </module>
 <module name="eventlog_client" type="rpcclient" >
-	<file switches="--oldnames">eventlogrpc.idl</file>
+	<file>eventlogrpc.idl</file>
 </module>
 <module name="lsa_server" type="rpcserver">
-	<file switches="--oldnames">lsa.idl</file>
+	<file>lsa.idl</file>
 </module>
 <module name="lsa_client" type="rpcclient">
-	<file switches="--oldnames">lsa.idl</file>
+	<file>lsa.idl</file>
 </module>
 </group>
