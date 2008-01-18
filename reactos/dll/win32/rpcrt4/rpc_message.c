@@ -754,8 +754,12 @@ RPC_STATUS RPCRT4_Receive(RpcConnection *Connection, RpcPktHdr **Header,
 
   TRACE("buffer length = %u\n", pMsg->BufferLength);
 
-  status = I_RpcGetBuffer(pMsg);
-  if (status != RPC_S_OK) goto fail;
+  pMsg->Buffer = I_RpcAllocate(pMsg->BufferLength);
+  if (!pMsg->Buffer)
+  {
+    status = ERROR_OUTOFMEMORY;
+    goto fail;
+  }
 
   first_flag = RPC_FLG_FIRST;
   auth_length = common_hdr.auth_len;
@@ -842,7 +846,7 @@ RPC_STATUS RPCRT4_Receive(RpcConnection *Connection, RpcPktHdr **Header,
             *Header, hdr_length,
             (unsigned char *)pMsg->Buffer + buffer_length, data_length,
             (RpcAuthVerifier *)auth_data,
-            (unsigned char *)auth_data + sizeof(RpcAuthVerifier),
+            auth_data + sizeof(RpcAuthVerifier),
             header_auth_len - sizeof(RpcAuthVerifier));
         if (status != RPC_S_OK) goto fail;
       }
@@ -891,6 +895,54 @@ fail:
 }
 
 /***********************************************************************
+ *           I_RpcNegotiateTransferSyntax [RPCRT4.@]
+ *
+ * Negotiates the transfer syntax used by a client connection by connecting
+ * to the server.
+ *
+ * PARAMS
+ *  pMsg   [I] RPC Message structure.
+ *  pAsync [I] Asynchronous state to set.
+ *
+ * RETURNS
+ *  Success: RPC_S_OK.
+ *  Failure: Any error code.
+ */
+RPC_STATUS WINAPI I_RpcNegotiateTransferSyntax(PRPC_MESSAGE pMsg)
+{
+  RpcBinding* bind = (RpcBinding*)pMsg->Handle;
+  RpcConnection* conn;
+  RPC_STATUS status = RPC_S_OK;
+
+  TRACE("(%p)\n", pMsg);
+
+  if (!bind || bind->server)
+    return RPC_S_INVALID_BINDING;
+
+  /* if we already have a connection, we don't need to negotiate again */
+  if (!pMsg->ReservedForRuntime)
+  {
+    RPC_CLIENT_INTERFACE *cif = pMsg->RpcInterfaceInformation;
+    if (!cif) return RPC_S_INTERFACE_NOT_FOUND;
+
+    if (!bind->Endpoint || !bind->Endpoint[0])
+    {
+      TRACE("automatically resolving partially bound binding\n");
+      status = RpcEpResolveBinding(bind, cif);
+      if (status != RPC_S_OK) return status;
+    }
+
+    status = RPCRT4_OpenBinding(bind, &conn, &cif->TransferSyntax,
+                                &cif->InterfaceId);
+
+    if (status == RPC_S_OK)
+      pMsg->ReservedForRuntime = conn;
+  }
+
+  return status;
+}
+
+/***********************************************************************
  *           I_RpcGetBuffer [RPCRT4.@]
  *
  * Allocates a buffer for use by I_RpcSend or I_RpcSendReceive and binds to the
@@ -916,11 +968,30 @@ fail:
  */
 RPC_STATUS WINAPI I_RpcGetBuffer(PRPC_MESSAGE pMsg)
 {
-  TRACE("(%p): BufferLength=%d\n", pMsg, pMsg->BufferLength);
-  pMsg->Buffer = HeapAlloc(GetProcessHeap(), 0, pMsg->BufferLength);
+  RPC_STATUS status;
+  RpcBinding* bind = (RpcBinding*)pMsg->Handle;
 
+  TRACE("(%p): BufferLength=%d\n", pMsg, pMsg->BufferLength);
+
+  if (!bind)
+    return RPC_S_INVALID_BINDING;
+
+  pMsg->Buffer = I_RpcAllocate(pMsg->BufferLength);
   TRACE("Buffer=%p\n", pMsg->Buffer);
-  return pMsg->Buffer ? RPC_S_OK : ERROR_OUTOFMEMORY;
+
+  if (!pMsg->Buffer)
+    return ERROR_OUTOFMEMORY;
+
+  if (!bind->server)
+  {
+    status = I_RpcNegotiateTransferSyntax(pMsg);
+    if (status != RPC_S_OK)
+      I_RpcFree(pMsg->Buffer);
+  }
+  else
+    status = RPC_S_OK;
+
+  return status;
 }
 
 /***********************************************************************
@@ -952,8 +1023,19 @@ static RPC_STATUS I_RpcReAllocateBuffer(PRPC_MESSAGE pMsg)
  */
 RPC_STATUS WINAPI I_RpcFreeBuffer(PRPC_MESSAGE pMsg)
 {
+  RpcBinding* bind = (RpcBinding*)pMsg->Handle;
+
   TRACE("(%p) Buffer=%p\n", pMsg, pMsg->Buffer);
-  HeapFree(GetProcessHeap(), 0, pMsg->Buffer);
+
+  if (!bind) return RPC_S_INVALID_BINDING;
+
+  if (pMsg->ReservedForRuntime)
+  {
+    RpcConnection *conn = pMsg->ReservedForRuntime;
+    RPCRT4_CloseBinding(bind, conn);
+    pMsg->ReservedForRuntime = NULL;
+  }
+  I_RpcFree(pMsg->Buffer);
   return RPC_S_OK;
 }
 
@@ -978,43 +1060,26 @@ RPC_STATUS WINAPI I_RpcSend(PRPC_MESSAGE pMsg)
 {
   RpcBinding* bind = (RpcBinding*)pMsg->Handle;
   RpcConnection* conn;
-  RPC_CLIENT_INTERFACE* cif = NULL;
   RPC_STATUS status;
   RpcPktHdr *hdr;
 
   TRACE("(%p)\n", pMsg);
-  if (!bind || bind->server) return RPC_S_INVALID_BINDING;
+  if (!bind || bind->server || !pMsg->ReservedForRuntime) return RPC_S_INVALID_BINDING;
 
-  cif = pMsg->RpcInterfaceInformation;
-  if (!cif) return RPC_S_INTERFACE_NOT_FOUND; /* ? */
-
-  if (!bind->Endpoint || !bind->Endpoint[0])
-  {
-    TRACE("automatically resolving partially bound binding\n");
-    status = RpcEpResolveBinding(bind, cif);
-    if (status != RPC_S_OK) return status;
-  }
-
-  status = RPCRT4_OpenBinding(bind, &conn, &cif->TransferSyntax,
-                              &cif->InterfaceId);
-  if (status != RPC_S_OK) return status;
+  conn = pMsg->ReservedForRuntime;
 
   hdr = RPCRT4_BuildRequestHeader(pMsg->DataRepresentation,
-                                  pMsg->BufferLength, pMsg->ProcNum,
+                                  pMsg->BufferLength,
+                                  pMsg->ProcNum & ~RPC_FLAGS_VALID_BIT,
                                   &bind->ObjectUuid);
   if (!hdr)
-  {
-    RPCRT4_CloseBinding(bind, conn);
     return ERROR_OUTOFMEMORY;
-  }
   hdr->common.call_id = conn->NextCallId++;
 
   status = RPCRT4_Send(conn, hdr, pMsg->Buffer, pMsg->BufferLength);
 
   RPCRT4_FreeHeader(hdr);
 
-  /* save the connection, so the response can be read from it */
-  pMsg->ReservedForRuntime = conn;
   return status;
 }
 
@@ -1042,41 +1107,14 @@ static inline BOOL is_hard_error(RPC_STATUS status)
 RPC_STATUS WINAPI I_RpcReceive(PRPC_MESSAGE pMsg)
 {
   RpcBinding* bind = (RpcBinding*)pMsg->Handle;
-  RpcConnection* conn;
-  RPC_CLIENT_INTERFACE* cif = NULL;
-  RPC_SERVER_INTERFACE* sif = NULL;
   RPC_STATUS status;
   RpcPktHdr *hdr = NULL;
+  RpcConnection *conn;
 
   TRACE("(%p)\n", pMsg);
-  if (!bind) return RPC_S_INVALID_BINDING;
+  if (!bind || bind->server || !pMsg->ReservedForRuntime) return RPC_S_INVALID_BINDING;
 
-  if (pMsg->ReservedForRuntime) {
-    conn = pMsg->ReservedForRuntime;
-    pMsg->ReservedForRuntime = NULL;
-  } else {
-    if (bind->server) {
-      sif = pMsg->RpcInterfaceInformation;
-      if (!sif) return RPC_S_INTERFACE_NOT_FOUND; /* ? */
-      status = RPCRT4_OpenBinding(bind, &conn, &sif->TransferSyntax,
-                                  &sif->InterfaceId);
-    } else {
-      cif = pMsg->RpcInterfaceInformation;
-      if (!cif) return RPC_S_INTERFACE_NOT_FOUND; /* ? */
-
-      if (!bind->Endpoint || !bind->Endpoint[0])
-      {
-        TRACE("automatically resolving partially bound binding\n");
-        status = RpcEpResolveBinding(bind, cif);
-        if (status != RPC_S_OK) return status;
-      }
-
-      status = RPCRT4_OpenBinding(bind, &conn, &cif->TransferSyntax,
-                                  &cif->InterfaceId);
-    }
-    if (status != RPC_S_OK) return status;
-  }
-
+  conn = pMsg->ReservedForRuntime;
   status = RPCRT4_Receive(conn, &hdr, pMsg);
   if (status != RPC_S_OK) {
     WARN("receive failed with error %lx\n", status);
@@ -1085,16 +1123,6 @@ RPC_STATUS WINAPI I_RpcReceive(PRPC_MESSAGE pMsg)
 
   switch (hdr->common.ptype) {
   case PKT_RESPONSE:
-    if (bind->server) {
-        status = RPC_S_PROTOCOL_ERROR;
-        goto fail;
-    }
-    break;
-  case PKT_REQUEST:
-    if (!bind->server) {
-        status = RPC_S_PROTOCOL_ERROR;
-        goto fail;
-    }
     break;
   case PKT_FAULT:
     ERR ("we got fault packet with status 0x%lx\n", hdr->fault.status);
@@ -1109,13 +1137,13 @@ RPC_STATUS WINAPI I_RpcReceive(PRPC_MESSAGE pMsg)
   }
 
   /* success */
-  RPCRT4_CloseBinding(bind, conn);
   RPCRT4_FreeHeader(hdr);
   return status;
 
 fail:
   RPCRT4_FreeHeader(hdr);
   RPCRT4_DestroyConnection(conn);
+  pMsg->ReservedForRuntime = NULL;
   return status;
 }
 
@@ -1140,16 +1168,55 @@ fail:
 RPC_STATUS WINAPI I_RpcSendReceive(PRPC_MESSAGE pMsg)
 {
   RPC_STATUS status;
-  RPC_MESSAGE original_message;
+  void *original_buffer;
 
   TRACE("(%p)\n", pMsg);
 
-  original_message = *pMsg;
+  original_buffer = pMsg->Buffer;
   status = I_RpcSend(pMsg);
   if (status == RPC_S_OK)
     status = I_RpcReceive(pMsg);
   /* free the buffer replaced by a new buffer in I_RpcReceive */
   if (status == RPC_S_OK)
-    I_RpcFreeBuffer(&original_message);
+    I_RpcFree(original_buffer);
   return status;
+}
+
+/***********************************************************************
+ *           I_RpcAsyncSetHandle [RPCRT4.@]
+ *
+ * Sets the asynchronous state of the handle contained in the RPC message
+ * structure.
+ *
+ * PARAMS
+ *  pMsg   [I] RPC Message structure.
+ *  pAsync [I] Asynchronous state to set.
+ *
+ * RETURNS
+ *  Success: RPC_S_OK.
+ *  Failure: Any error code.
+ */
+RPC_STATUS WINAPI I_RpcAsyncSetHandle(PRPC_MESSAGE pMsg, PRPC_ASYNC_STATE pAsync)
+{
+    FIXME("(%p, %p): stub\n", pMsg, pAsync);
+    return RPC_S_INVALID_BINDING;
+}
+
+/***********************************************************************
+ *           I_RpcAsyncAbortCall [RPCRT4.@]
+ *
+ * Aborts an asynchronous call.
+ *
+ * PARAMS
+ *  pAsync        [I] Asynchronous state.
+ *  ExceptionCode [I] Exception code.
+ *
+ * RETURNS
+ *  Success: RPC_S_OK.
+ *  Failure: Any error code.
+ */
+RPC_STATUS WINAPI I_RpcAsyncAbortCall(PRPC_ASYNC_STATE pAsync, ULONG ExceptionCode)
+{
+    FIXME("(%p, %d): stub\n", pAsync, ExceptionCode);
+    return RPC_S_INVALID_ASYNC_HANDLE;
 }

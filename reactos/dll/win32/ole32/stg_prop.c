@@ -200,7 +200,7 @@ static HRESULT WINAPI IPropertyStorage_fnQueryInterface(
         IsEqualGUID(&IID_IPropertyStorage, riid))
     {
         IPropertyStorage_AddRef(iface);
-        *ppvObject = (IPropertyStorage*)iface;
+        *ppvObject = iface;
         return S_OK;
     }
 
@@ -263,7 +263,7 @@ static PROPVARIANT *PropertyStorage_FindPropertyByName(
     if (This->codePage == CP_UNICODE)
     {
         if (dictionary_find(This->name_to_propid, name, (void **)&propid))
-            ret = PropertyStorage_FindProperty(This, (PROPID)propid);
+            ret = PropertyStorage_FindProperty(This, propid);
     }
     else
     {
@@ -275,7 +275,7 @@ static PROPVARIANT *PropertyStorage_FindPropertyByName(
         {
             if (dictionary_find(This->name_to_propid, ansiName,
              (void **)&propid))
-                ret = PropertyStorage_FindProperty(This, (PROPID)propid);
+                ret = PropertyStorage_FindProperty(This, propid);
             CoTaskMemFree(ansiName);
         }
     }
@@ -528,7 +528,7 @@ static HRESULT PropertyStorage_StoreNameWithId(PropertyStorage_impl *This,
 
     assert(srcName);
 
-    hr = PropertyStorage_StringCopy((LPCSTR)srcName, cp, &name, This->codePage);
+    hr = PropertyStorage_StringCopy(srcName, cp, &name, This->codePage);
     if (SUCCEEDED(hr))
     {
         if (This->codePage == CP_UNICODE)
@@ -1059,7 +1059,7 @@ static HRESULT PropertyStorage_ReadProperty(PropertyStorage_impl *This,
         TRACE("Read char 0x%x ('%c')\n", prop->u.cVal, prop->u.cVal);
         break;
     case VT_UI1:
-        prop->u.bVal = *(const UCHAR *)data;
+        prop->u.bVal = *data;
         TRACE("Read byte 0x%x\n", prop->u.bVal);
         break;
     case VT_I2:

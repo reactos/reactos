@@ -446,8 +446,8 @@ static size_t rpcrt4_ncacn_np_get_top_of_tower(unsigned char *tower_data,
 
     TRACE("(%p, %s, %s)\n", tower_data, networkaddr, endpoint);
 
-    networkaddr_size = strlen(networkaddr) + 1;
-    endpoint_size = strlen(endpoint) + 1;
+    networkaddr_size = networkaddr ? strlen(networkaddr) + 1 : 1;
+    endpoint_size = endpoint ? strlen(endpoint) + 1 : 1;
     size = sizeof(*smb_floor) + endpoint_size + sizeof(*nb_floor) + networkaddr_size;
 
     if (!tower_data)
@@ -461,7 +461,10 @@ static size_t rpcrt4_ncacn_np_get_top_of_tower(unsigned char *tower_data,
     smb_floor->protid = EPM_PROTOCOL_SMB;
     smb_floor->count_rhs = endpoint_size;
 
-    memcpy(tower_data, endpoint, endpoint_size);
+    if (endpoint)
+        memcpy(tower_data, endpoint, endpoint_size);
+    else
+        tower_data[0] = 0;
     tower_data += endpoint_size;
 
     nb_floor = (twr_empty_floor_t *)tower_data;
@@ -472,7 +475,10 @@ static size_t rpcrt4_ncacn_np_get_top_of_tower(unsigned char *tower_data,
     nb_floor->protid = EPM_PROTOCOL_NETBIOS;
     nb_floor->count_rhs = networkaddr_size;
 
-    memcpy(tower_data, networkaddr, networkaddr_size);
+    if (networkaddr)
+        memcpy(tower_data, networkaddr, networkaddr_size);
+    else
+        tower_data[0] = 0;
     tower_data += networkaddr_size;
 
     return size;
@@ -1025,7 +1031,7 @@ static int rpcrt4_conn_tcp_write(RpcConnection *Connection,
   int bytes_written = 0;
   do
   {
-    int r = write(tcpc->sock, (const char *)buffer + bytes_written, count - bytes_written);
+    int r = send(tcpc->sock, (const char *)buffer + bytes_written, count - bytes_written, 0);
     if (r >= 0)
       bytes_written += r;
     else if (errno != EAGAIN)

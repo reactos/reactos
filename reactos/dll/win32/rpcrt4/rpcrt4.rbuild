@@ -30,6 +30,7 @@
 	<file>ndr_ole.c</file>
 	<file>ndr_stubless.c</file>
 	<file>rpc_assoc.c</file>
+	<file>rpc_async.c</file>
 	<file>rpc_binding.c</file>
 	<file>rpc_epmap.c</file>
 	<file>rpc_message.c</file>

@@ -19,7 +19,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  *
  * TODO:
- *  - Non-conformant strings
  *  - String structs
  *  - Byte count pointers
  *  - transmit_as/represent as
@@ -1528,8 +1527,7 @@ static void PointerFree(PMIDL_STUB_MESSAGE pStubMsg,
    * BufferStart and BufferEnd won't be reset when allocating memory for
    * sending the response. we don't have to check for the new buffer here as
    * it won't be used a type memory, only for buffer memory */
-  if (Pointer >= (unsigned char *)pStubMsg->BufferStart &&
-      Pointer < (unsigned char *)pStubMsg->BufferEnd)
+  if (Pointer >= pStubMsg->BufferStart && Pointer < pStubMsg->BufferEnd)
       goto notfree;
 
   if (attr & RPC_FC_P_ONSTACK) {
@@ -3538,6 +3536,7 @@ ULONG WINAPI NdrComplexArrayMemorySize(PMIDL_STUB_MESSAGE pStubMsg,
   SavedMemorySize = pStubMsg->MemorySize;
 
   esize = ComplexStructSize(pStubMsg, pFormat);
+
   MemorySize = safe_multiply(pStubMsg->MaxCount, esize);
 
   count = pStubMsg->ActualCount;
@@ -4980,7 +4979,7 @@ static ULONG get_discriminant(unsigned char fc, const unsigned char *pMemory)
     case RPC_FC_CHAR:
     case RPC_FC_SMALL:
     case RPC_FC_USMALL:
-        return *(const UCHAR *)pMemory;
+        return *pMemory;
     case RPC_FC_WCHAR:
     case RPC_FC_SHORT:
     case RPC_FC_USHORT:
@@ -5800,12 +5799,12 @@ unsigned char *WINAPI NdrRangeUnmarshall(
     case RPC_FC_CHAR:
     case RPC_FC_SMALL:
         RANGE_UNMARSHALL(UCHAR, "%d");
-        TRACE("value: 0x%02x\n", **(UCHAR **)ppMemory);
+        TRACE("value: 0x%02x\n", **ppMemory);
         break;
     case RPC_FC_BYTE:
     case RPC_FC_USMALL:
         RANGE_UNMARSHALL(CHAR, "%u");
-        TRACE("value: 0x%02x\n", **(UCHAR **)ppMemory);
+        TRACE("value: 0x%02x\n", **ppMemory);
         break;
     case RPC_FC_WCHAR: /* FIXME: valid? */
     case RPC_FC_USHORT:
@@ -5913,7 +5912,7 @@ static unsigned char *WINAPI NdrBaseTypeMarshall(
     case RPC_FC_SMALL:
     case RPC_FC_USMALL:
         safe_copy_to_buffer(pStubMsg, pMemory, sizeof(UCHAR));
-        TRACE("value: 0x%02x\n", *(UCHAR *)pMemory);
+        TRACE("value: 0x%02x\n", *pMemory);
         break;
     case RPC_FC_WCHAR:
     case RPC_FC_SHORT:
@@ -5998,7 +5997,7 @@ static unsigned char *WINAPI NdrBaseTypeUnmarshall(
     case RPC_FC_SMALL:
     case RPC_FC_USMALL:
         BASE_TYPE_UNMARSHALL(UCHAR);
-        TRACE("value: 0x%02x\n", **(UCHAR **)ppMemory);
+        TRACE("value: 0x%02x\n", **ppMemory);
         break;
     case RPC_FC_WCHAR:
     case RPC_FC_SHORT:
@@ -6208,6 +6207,7 @@ static unsigned char *WINAPI NdrContextHandleMarshall(
         ERR("invalid format type %x\n", *pFormat);
         RpcRaiseException(RPC_S_INTERNAL_ERROR);
     }
+    TRACE("flags: 0x%02x\n", pFormat[1]);
 
     if (pFormat[1] & 0x80)
         NdrClientContextMarshall(pStubMsg, *(NDR_CCONTEXT **)pMemory, FALSE);
@@ -6226,16 +6226,22 @@ static unsigned char *WINAPI NdrContextHandleUnmarshall(
     PFORMAT_STRING pFormat,
     unsigned char fMustAlloc)
 {
+    TRACE("pStubMsg %p, ppMemory %p, pFormat %p, fMustAlloc %s\n", pStubMsg,
+        ppMemory, pFormat, fMustAlloc ? "TRUE": "FALSE");
+
     if (*pFormat != RPC_FC_BIND_CONTEXT)
     {
         ERR("invalid format type %x\n", *pFormat);
         RpcRaiseException(RPC_S_INTERNAL_ERROR);
     }
+    TRACE("flags: 0x%02x\n", pFormat[1]);
 
-  **(NDR_CCONTEXT **)ppMemory = NULL;
-  NdrClientContextUnmarshall(pStubMsg, *(NDR_CCONTEXT **)ppMemory, pStubMsg->RpcMsg->Handle);
+    /* [out]-only or [ret] param */
+    if ((pFormat[1] & 0x60) == 0x20)
+        **(NDR_CCONTEXT **)ppMemory = NULL;
+    NdrClientContextUnmarshall(pStubMsg, *(NDR_CCONTEXT **)ppMemory, pStubMsg->RpcMsg->Handle);
 
-  return NULL;
+    return NULL;
 }
 
 /***********************************************************************
@@ -6301,7 +6307,8 @@ void WINAPI NdrServerContextMarshall(PMIDL_STUB_MESSAGE pStubMsg,
     }
 
     NDRSContextMarshall2(pStubMsg->RpcMsg->Handle, ContextHandle,
-                         pStubMsg->Buffer, RundownRoutine, NULL, 0);
+                         pStubMsg->Buffer, RundownRoutine, NULL,
+                         RPC_CONTEXT_HANDLE_DEFAULT_FLAGS);
     pStubMsg->Buffer += cbNDRContext;
 }
 
@@ -6323,7 +6330,7 @@ NDR_SCONTEXT WINAPI NdrServerContextUnmarshall(PMIDL_STUB_MESSAGE pStubMsg)
     ContextHandle = NDRSContextUnmarshall2(pStubMsg->RpcMsg->Handle,
                                            pStubMsg->Buffer,
                                            pStubMsg->RpcMsg->DataRepresentation,
-                                           NULL, 0);
+                                           NULL, RPC_CONTEXT_HANDLE_DEFAULT_FLAGS);
     pStubMsg->Buffer += cbNDRContext;
 
     return ContextHandle;
@@ -6339,9 +6346,24 @@ void WINAPI NdrContextHandleSize(PMIDL_STUB_MESSAGE pStubMsg,
 NDR_SCONTEXT WINAPI NdrContextHandleInitialize(PMIDL_STUB_MESSAGE pStubMsg,
                                                PFORMAT_STRING pFormat)
 {
+    RPC_SYNTAX_IDENTIFIER *if_id = NULL;
+    ULONG flags = RPC_CONTEXT_HANDLE_DEFAULT_FLAGS;
+
     TRACE("(%p, %p)\n", pStubMsg, pFormat);
+
+    if (pFormat[1] & NDR_CONTEXT_HANDLE_SERIALIZE)
+        flags |= RPC_CONTEXT_HANDLE_SERIALIZE;
+    if (pFormat[1] & NDR_CONTEXT_HANDLE_NO_SERIALIZE)
+        flags |= RPC_CONTEXT_HANDLE_DONT_SERIALIZE;
+    if (pFormat[1] & NDR_STRICT_CONTEXT_HANDLE)
+    {
+        RPC_SERVER_INTERFACE *sif = pStubMsg->StubDesc->RpcInterfaceInformation;
+        if_id = &sif->InterfaceId;
+    }
+
     return NDRSContextUnmarshall2(pStubMsg->RpcMsg->Handle, NULL,
-                                  pStubMsg->RpcMsg->DataRepresentation, NULL, 0);
+                                  pStubMsg->RpcMsg->DataRepresentation, if_id,
+                                  flags);
 }
 
 void WINAPI NdrServerContextNewMarshall(PMIDL_STUB_MESSAGE pStubMsg,
@@ -6349,6 +6371,9 @@ void WINAPI NdrServerContextNewMarshall(PMIDL_STUB_MESSAGE pStubMsg,
                                         NDR_RUNDOWN RundownRoutine,
                                         PFORMAT_STRING pFormat)
 {
+    RPC_SYNTAX_IDENTIFIER *if_id = NULL;
+    ULONG flags = RPC_CONTEXT_HANDLE_DEFAULT_FLAGS;
+
     TRACE("(%p, %p, %p, %p)\n", pStubMsg, ContextHandle, RundownRoutine, pFormat);
 
     ALIGN_POINTER(pStubMsg->Buffer, 4);
@@ -6360,9 +6385,18 @@ void WINAPI NdrServerContextNewMarshall(PMIDL_STUB_MESSAGE pStubMsg,
         RpcRaiseException(RPC_X_BAD_STUB_DATA);
     }
 
-    /* FIXME: do something with pFormat */
+    if (pFormat[1] & NDR_CONTEXT_HANDLE_SERIALIZE)
+        flags |= RPC_CONTEXT_HANDLE_SERIALIZE;
+    if (pFormat[1] & NDR_CONTEXT_HANDLE_NO_SERIALIZE)
+        flags |= RPC_CONTEXT_HANDLE_DONT_SERIALIZE;
+    if (pFormat[1] & NDR_STRICT_CONTEXT_HANDLE)
+    {
+        RPC_SERVER_INTERFACE *sif = pStubMsg->StubDesc->RpcInterfaceInformation;
+        if_id = &sif->InterfaceId;
+    }
+
     NDRSContextMarshall2(pStubMsg->RpcMsg->Handle, ContextHandle,
-                          pStubMsg->Buffer, RundownRoutine, NULL, 0);
+                          pStubMsg->Buffer, RundownRoutine, if_id, flags);
     pStubMsg->Buffer += cbNDRContext;
 }
 
@@ -6370,6 +6404,8 @@ NDR_SCONTEXT WINAPI NdrServerContextNewUnmarshall(PMIDL_STUB_MESSAGE pStubMsg,
                                                   PFORMAT_STRING pFormat)
 {
     NDR_SCONTEXT ContextHandle;
+    RPC_SYNTAX_IDENTIFIER *if_id = NULL;
+    ULONG flags = RPC_CONTEXT_HANDLE_DEFAULT_FLAGS;
 
     TRACE("(%p, %p)\n", pStubMsg, pFormat);
 
@@ -6382,12 +6418,74 @@ NDR_SCONTEXT WINAPI NdrServerContextNewUnmarshall(PMIDL_STUB_MESSAGE pStubMsg,
         RpcRaiseException(RPC_X_BAD_STUB_DATA);
     }
 
-    /* FIXME: do something with pFormat */
+    if (pFormat[1] & NDR_CONTEXT_HANDLE_SERIALIZE)
+        flags |= RPC_CONTEXT_HANDLE_SERIALIZE;
+    if (pFormat[1] & NDR_CONTEXT_HANDLE_NO_SERIALIZE)
+        flags |= RPC_CONTEXT_HANDLE_DONT_SERIALIZE;
+    if (pFormat[1] & NDR_STRICT_CONTEXT_HANDLE)
+    {
+        RPC_SERVER_INTERFACE *sif = pStubMsg->StubDesc->RpcInterfaceInformation;
+        if_id = &sif->InterfaceId;
+    }
+
     ContextHandle = NDRSContextUnmarshall2(pStubMsg->RpcMsg->Handle,
                                            pStubMsg->Buffer,
                                            pStubMsg->RpcMsg->DataRepresentation,
-                                           NULL, 0);
+                                           if_id, flags);
     pStubMsg->Buffer += cbNDRContext;
 
     return ContextHandle;
+}
+
+/***********************************************************************
+ *           NdrCorrelationInitialize [RPCRT4.@]
+ *
+ * Initializes correlation validity checking.
+ *
+ * PARAMS
+ *  pStubMsg    [I] MIDL_STUB_MESSAGE used during unmarshalling.
+ *  pMemory     [I] Pointer to memory to use as a cache.
+ *  CacheSize   [I] Size of the memory pointed to by pMemory.
+ *  Flags       [I] Reserved. Set to zero.
+ *
+ * RETURNS
+ *  Nothing.
+ */
+void WINAPI NdrCorrelationInitialize(PMIDL_STUB_MESSAGE pStubMsg, void *pMemory, ULONG CacheSize, ULONG Flags)
+{
+    FIXME("(%p, %p, %d, 0x%x): stub\n", pStubMsg, pMemory, CacheSize, Flags);
+    pStubMsg->fHasNewCorrDesc = TRUE;
+}
+
+/***********************************************************************
+ *           NdrCorrelationPass [RPCRT4.@]
+ *
+ * Performs correlation validity checking.
+ *
+ * PARAMS
+ *  pStubMsg    [I] MIDL_STUB_MESSAGE used during unmarshalling.
+ *
+ * RETURNS
+ *  Nothing.
+ */
+void WINAPI NdrCorrelationPass(PMIDL_STUB_MESSAGE pStubMsg)
+{
+    FIXME("(%p): stub\n", pStubMsg);
+}
+
+/***********************************************************************
+ *           NdrCorrelationFree [RPCRT4.@]
+ *
+ * Frees any resources used while unmarshalling parameters that need
+ * correlation validity checking.
+ *
+ * PARAMS
+ *  pStubMsg    [I] MIDL_STUB_MESSAGE used during unmarshalling.
+ *
+ * RETURNS
+ *  Nothing.
+ */
+void WINAPI NdrCorrelationFree(PMIDL_STUB_MESSAGE pStubMsg)
+{
+    FIXME("(%p): stub\n", pStubMsg);
 }

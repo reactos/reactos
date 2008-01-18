@@ -1,5 +1,7 @@
---- rpc_server.c	Tue Jan 01 13:09:34 2008
-+++ rpc_server.c	Fri Jan 11 15:58:57 2008
+Index: rpc_server.c
+===================================================================
+--- rpc_server.c	(working copy)
++++ rpc_server.c	(working copy)
 @@ -1017,22 +1017,30 @@
  /***********************************************************************
   *             RpcMgmtServerWaitListen (RPCRT4.@)
@@ -33,8 +35,10 @@
  }
  
  /***********************************************************************
---- rpc_transport.c	Sun Jan 06 19:27:38 2008
-+++ rpc_transport.c	Fri Jan 11 15:59:32 2008
+Index: rpc_transport.c
+===================================================================
+--- rpc_transport.c	(working copy)
++++ rpc_transport.c	(working copy)
 @@ -54,10 +54,13 @@
  #endif
  #ifdef HAVE_SYS_POLL_H

@@ -1273,7 +1273,7 @@ static HRESULT WINAPI OLEClipbrd_IDataObject_GetData(
    * Return the clipboard data in the storage medium structure
    */
   pmedium->tymed = (hData == 0) ? TYMED_NULL : TYMED_HGLOBAL;
-  pmedium->u.hGlobal = (HGLOBAL)hData;
+  pmedium->u.hGlobal = hData;
   pmedium->pUnkForRelease = NULL;
 
   hr = S_OK;

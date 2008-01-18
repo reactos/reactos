@@ -51,7 +51,7 @@ void WINAPI NdrClientInitializeNew( PRPC_MESSAGE pRpcMessage, PMIDL_STUB_MESSAGE
     pRpcMessage, pStubMsg, pStubDesc, ProcNum);
 
   pRpcMessage->Handle = NULL;
-  pRpcMessage->ProcNum = ProcNum;
+  pRpcMessage->ProcNum = ProcNum | RPC_FLAGS_VALID_BIT;
   pRpcMessage->RpcInterfaceInformation = pStubDesc->RpcInterfaceInformation;
   pRpcMessage->RpcFlags = 0;
   pRpcMessage->ReservedForRuntime = NULL;
@@ -216,10 +216,29 @@ RPC_STATUS RPC_ENTRY NdrMapCommAndFaultStatus( PMIDL_STUB_MESSAGE pStubMsg,
                                                ULONG *pFaultStatus,
                                                RPC_STATUS Status )
 {
-    FIXME("(%p, %p, %p, %ld): stub\n", pStubMsg, pCommStatus, pFaultStatus, Status);
+    TRACE("(%p, %p, %p, %ld)\n", pStubMsg, pCommStatus, pFaultStatus, Status);
 
-    *pCommStatus = 0;
-    *pFaultStatus = 0;
+    switch (Status)
+    {
+    case ERROR_INVALID_HANDLE:
+    case RPC_S_INVALID_BINDING:
+    case RPC_S_UNKNOWN_IF:
+    case RPC_S_SERVER_UNAVAILABLE:
+    case RPC_S_SERVER_TOO_BUSY:
+    case RPC_S_CALL_FAILED_DNE:
+    case RPC_S_PROTOCOL_ERROR:
+    case RPC_S_UNSUPPORTED_TRANS_SYN:
+    case RPC_S_UNSUPPORTED_TYPE:
+    case RPC_S_PROCNUM_OUT_OF_RANGE:
+    case EPT_S_NOT_REGISTERED:
+    case RPC_S_COMM_FAILURE:
+        *pCommStatus = Status;
+        *pFaultStatus = 0;
+        break;
+    default:
+        *pCommStatus = 0;
+        *pFaultStatus = Status;
+    }
 
     return RPC_S_OK;
 }

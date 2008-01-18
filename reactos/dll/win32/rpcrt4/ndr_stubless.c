@@ -37,8 +37,8 @@
 #include "objbase.h"
 #include "rpc.h"
 #include "rpcproxy.h"
-#include "ndrtypes.h"
 
+#include "wine/exception.h"
 #include "wine/debug.h"
 #include "wine/rpcfc.h"
 
@@ -115,11 +115,12 @@ static inline unsigned long call_memory_sizer(PMIDL_STUB_MESSAGE pStubMsg, PFORM
 }
 
 #define STUBLESS_UNMARSHAL  1
-#define STUBLESS_CALLSERVER 2
-#define STUBLESS_CALCSIZE   3
-#define STUBLESS_GETBUFFER  4
-#define STUBLESS_MARSHAL    5
-#define STUBLESS_FREE       6
+#define STUBLESS_INITOUT    2
+#define STUBLESS_CALLSERVER 3
+#define STUBLESS_CALCSIZE   4
+#define STUBLESS_GETBUFFER  5
+#define STUBLESS_MARSHAL    6
+#define STUBLESS_FREE       7
 
 void WINAPI NdrRpcSmSetClientToOsf(PMIDL_STUB_MESSAGE pMessage)
 {
@@ -563,6 +564,8 @@ LONG_PTR WINAPIV NdrClientCall2(PMIDL_STUB_DESC pStubDesc, PFORMAT_STRING pForma
     /* the pointer to the object when in OLE mode */
     void * This = NULL;
     PFORMAT_STRING pHandleFormat;
+    /* correlation cache */
+    unsigned long NdrCorrCache[256];
 
     TRACE("pStubDesc %p, pFormat %p, ...\n", pStubDesc, pFormat);
 
@@ -664,8 +667,7 @@ LONG_PTR WINAPIV NdrClientCall2(PMIDL_STUB_DESC pStubDesc, PFORMAT_STRING pForma
     if (ext_flags.HasNewCorrDesc)
     {
         /* initialize extra correlation package */
-        FIXME("new correlation description not implemented\n");
-        stubMsg.fHasNewCorrDesc = TRUE;
+        NdrCorrelationInitialize(&stubMsg, NdrCorrCache, sizeof(NdrCorrCache), 0);
     }
 
     /* order of phases:
@@ -675,77 +677,130 @@ LONG_PTR WINAPIV NdrClientCall2(PMIDL_STUB_DESC pStubDesc, PFORMAT_STRING pForma
      * 4. PROXY_SENDRECEIVE - send/receive buffer
      * 5. PROXY_UNMARHSAL - unmarshal [out] params from buffer
      */
-    for (phase = PROXY_CALCSIZE; phase <= PROXY_UNMARSHAL; phase++)
+    if (pProcHeader->Oi_flags & RPC_FC_PROC_OIF_OBJECT)
     {
-        TRACE("phase = %d\n", phase);
-        switch (phase)
+        __TRY
         {
-        case PROXY_GETBUFFER:
-            /* allocate the buffer */
-            if (pProcHeader->Oi_flags & RPC_FC_PROC_OIF_OBJECT)
-                NdrProxyGetBuffer(This, &stubMsg);
-            else if (Oif_flags.HasPipes)
-                /* NdrGetPipeBuffer(...) */
-                FIXME("pipes not supported yet\n");
-            else
+            for (phase = PROXY_CALCSIZE; phase <= PROXY_UNMARSHAL; phase++)
             {
-                if (pProcHeader->handle_type == RPC_FC_AUTO_HANDLE)
-#if 0
-                    NdrNsGetBuffer(&stubMsg, stubMsg.BufferLength, hBinding);
-#else
-                    FIXME("using auto handle - call NdrNsGetBuffer when it gets implemented\n");
-#endif
-                else
-                    NdrGetBuffer(&stubMsg, stubMsg.BufferLength, hBinding);
+                TRACE("phase = %d\n", phase);
+                switch (phase)
+                {
+                case PROXY_GETBUFFER:
+                    /* allocate the buffer */
+                    NdrProxyGetBuffer(This, &stubMsg);
+                    break;
+                case PROXY_SENDRECEIVE:
+                    /* send the [in] params and receive the [out] and [retval]
+                     * params */
+                    NdrProxySendReceive(This, &stubMsg);
+
+                    /* convert strings, floating point values and endianess into our
+                     * preferred format */
+                    if ((rpcMsg.DataRepresentation & 0x0000FFFFUL) != NDR_LOCAL_DATA_REPRESENTATION)
+                        NdrConvert(&stubMsg, pFormat);
+
+                    break;
+                case PROXY_CALCSIZE:
+                case PROXY_MARSHAL:
+                case PROXY_UNMARSHAL:
+                    if (bV2Format)
+                        client_do_args(&stubMsg, pFormat, phase, number_of_params,
+                            (unsigned char *)&RetVal);
+                    else
+                        client_do_args_old_format(&stubMsg, pFormat, phase, stack_size,
+                            (unsigned char *)&RetVal,
+                            (pProcHeader->Oi_flags & RPC_FC_PROC_OIF_OBJECT));
+                    break;
+                default:
+                    ERR("shouldn't reach here. phase %d\n", phase);
+                    break;
+                }
             }
-            break;
-        case PROXY_SENDRECEIVE:
-            /* send the [in] params and receive the [out] and [retval]
-             * params */
-            if (pProcHeader->Oi_flags & RPC_FC_PROC_OIF_OBJECT)
-                NdrProxySendReceive(This, &stubMsg);
-            else if (Oif_flags.HasPipes)
-                /* NdrPipesSendReceive(...) */
-                FIXME("pipes not supported yet\n");
-            else
+        }
+        __EXCEPT(NULL)
+        {
+            RetVal = NdrProxyErrorHandler(GetExceptionCode());
+        }
+        __ENDTRY
+    }
+    else
+    {
+        /* order of phases:
+         * 1. PROXY_CALCSIZE - calculate the buffer size
+         * 2. PROXY_GETBUFFER - allocate the buffer
+         * 3. PROXY_MARHSAL - marshal [in] params into the buffer
+         * 4. PROXY_SENDRECEIVE - send/receive buffer
+         * 5. PROXY_UNMARHSAL - unmarshal [out] params from buffer
+         */
+        for (phase = PROXY_CALCSIZE; phase <= PROXY_UNMARSHAL; phase++)
+        {
+            TRACE("phase = %d\n", phase);
+            switch (phase)
             {
-                if (pProcHeader->handle_type == RPC_FC_AUTO_HANDLE)
-#if 0
-                    NdrNsSendReceive(&stubMsg, stubMsg.Buffer, pStubDesc->IMPLICIT_HANDLE_INFO.pAutoHandle);
-#else
-                    FIXME("using auto handle - call NdrNsSendReceive when it gets implemented\n");
-#endif
+            case PROXY_GETBUFFER:
+                /* allocate the buffer */
+                if (Oif_flags.HasPipes)
+                    /* NdrGetPipeBuffer(...) */
+                    FIXME("pipes not supported yet\n");
                 else
-                    NdrSendReceive(&stubMsg, stubMsg.Buffer);
+                {
+                    if (pProcHeader->handle_type == RPC_FC_AUTO_HANDLE)
+#if 0
+                        NdrNsGetBuffer(&stubMsg, stubMsg.BufferLength, hBinding);
+#else
+                        FIXME("using auto handle - call NdrNsGetBuffer when it gets implemented\n");
+#endif
+                    else
+                        NdrGetBuffer(&stubMsg, stubMsg.BufferLength, hBinding);
+                }
+                break;
+            case PROXY_SENDRECEIVE:
+                /* send the [in] params and receive the [out] and [retval]
+                 * params */
+                if (Oif_flags.HasPipes)
+                    /* NdrPipesSendReceive(...) */
+                    FIXME("pipes not supported yet\n");
+                else
+                {
+                    if (pProcHeader->handle_type == RPC_FC_AUTO_HANDLE)
+#if 0
+                        NdrNsSendReceive(&stubMsg, stubMsg.Buffer, pStubDesc->IMPLICIT_HANDLE_INFO.pAutoHandle);
+#else
+                        FIXME("using auto handle - call NdrNsSendReceive when it gets implemented\n");
+#endif
+                    else
+                        NdrSendReceive(&stubMsg, stubMsg.Buffer);
+                }
+
+                /* convert strings, floating point values and endianess into our
+                 * preferred format */
+                if ((rpcMsg.DataRepresentation & 0x0000FFFFUL) != NDR_LOCAL_DATA_REPRESENTATION)
+                    NdrConvert(&stubMsg, pFormat);
+
+                break;
+            case PROXY_CALCSIZE:
+            case PROXY_MARSHAL:
+            case PROXY_UNMARSHAL:
+                if (bV2Format)
+                    client_do_args(&stubMsg, pFormat, phase, number_of_params,
+                        (unsigned char *)&RetVal);
+                else
+                    client_do_args_old_format(&stubMsg, pFormat, phase, stack_size,
+                        (unsigned char *)&RetVal,
+                        (pProcHeader->Oi_flags & RPC_FC_PROC_OIF_OBJECT));
+                break;
+            default:
+                ERR("shouldn't reach here. phase %d\n", phase);
+                break;
             }
-
-            /* convert strings, floating point values and endianess into our
-             * preferred format */
-            if ((rpcMsg.DataRepresentation & 0x0000FFFFUL) != NDR_LOCAL_DATA_REPRESENTATION)
-                NdrConvert(&stubMsg, pFormat);
-
-            break;
-        case PROXY_CALCSIZE:
-        case PROXY_MARSHAL:
-        case PROXY_UNMARSHAL:
-            if (bV2Format)
-                client_do_args(&stubMsg, pFormat, phase, number_of_params,
-                    (unsigned char *)&RetVal);
-            else
-                client_do_args_old_format(&stubMsg, pFormat, phase, stack_size,
-                    (unsigned char *)&RetVal,
-                    (pProcHeader->Oi_flags & RPC_FC_PROC_OIF_OBJECT));
-            break;
-        default:
-            ERR("shouldn't reach here. phase %d\n", phase);
-            break;
         }
     }
 
     if (ext_flags.HasNewCorrDesc)
     {
         /* free extra correlation package */
-        /* NdrCorrelationFree(&stubMsg); */
+        NdrCorrelationFree(&stubMsg);
     }
 
     if (Oif_flags.HasPipes)
@@ -855,6 +910,7 @@ static DWORD calc_arg_size(MIDL_STUB_MESSAGE *pStubMsg, PFORMAT_STRING pFormat)
         pFormat = ComputeVariance(pStubMsg, NULL, pFormat, pStubMsg->MaxCount);
         size = ComplexStructSize(pStubMsg, pFormat);
         size *= pStubMsg->MaxCount;
+        break;
     default:
         FIXME("Unhandled type %02x\n", *pFormat);
         /* fallthrough */
@@ -886,7 +942,7 @@ static LONG_PTR *stub_do_args(MIDL_STUB_MESSAGE *pStubMsg,
         unsigned char *pArg;
 
         current_stack_offset = pParam->stack_offset;
-        pArg = (unsigned char *)(args+current_stack_offset);
+        pArg = args + current_stack_offset;
 
         TRACE("param[%d]: new format\n", i);
         TRACE("\tparam_attributes:"); dump_RPC_FC_PROC_PF(pParam->param_attributes); TRACE("\n");
@@ -899,6 +955,10 @@ static LONG_PTR *stub_do_args(MIDL_STUB_MESSAGE *pStubMsg,
             &pParam->type_format_char;
 
             TRACE("\tbase type: 0x%02x\n", *pTypeFormat);
+
+            /* make a note of the address of the return value parameter for later */
+            if (pParam->param_attributes.IsReturn)
+                retval_ptr = (LONG_PTR *)pArg;
 
             switch (phase)
             {
@@ -915,6 +975,8 @@ static LONG_PTR *stub_do_args(MIDL_STUB_MESSAGE *pStubMsg,
                     if (pParam->param_attributes.ServerAllocSize)
                         HeapFree(GetProcessHeap(), 0, *(void **)pArg);
                     break;
+                case STUBLESS_INITOUT:
+                    break;
                 case STUBLESS_UNMARSHAL:
                     if (pParam->param_attributes.ServerAllocSize)
                         *(void **)pArg = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY,
@@ -927,11 +989,6 @@ static LONG_PTR *stub_do_args(MIDL_STUB_MESSAGE *pStubMsg,
                         else
                             call_unmarshaller(pStubMsg, &pArg, pTypeFormat, 0);
                     }
-
-                    /* make a note of the address of the return value parameter for later */
-                    if (pParam->param_attributes.IsReturn)
-                        retval_ptr = (LONG_PTR *)pArg;
-
                     break;
                 case STUBLESS_CALCSIZE:
                     if (pParam->param_attributes.IsOut || pParam->param_attributes.IsReturn)
@@ -988,7 +1045,21 @@ static LONG_PTR *stub_do_args(MIDL_STUB_MESSAGE *pStubMsg,
 
                     if (pParam->param_attributes.ServerAllocSize)
                         HeapFree(GetProcessHeap(), 0, *(void **)pArg);
-                    /* FIXME: call call_freer here for IN types with MustFree set */
+                    break;
+                case STUBLESS_INITOUT:
+                    if (!pParam->param_attributes.IsIn &&
+                             pParam->param_attributes.IsOut &&
+                             !pParam->param_attributes.ServerAllocSize &&
+                             !pParam->param_attributes.IsByValue)
+                    {
+                        DWORD size = calc_arg_size(pStubMsg, pTypeFormat);
+
+                        if(size)
+                        {
+                            *(void **)pArg = NdrAllocate(pStubMsg, size);
+                            memset(*(void **)pArg, 0, size);
+                        }
+                    }
                     break;
                 case STUBLESS_UNMARSHAL:
                     if (pParam->param_attributes.ServerAllocSize)
@@ -1001,18 +1072,6 @@ static LONG_PTR *stub_do_args(MIDL_STUB_MESSAGE *pStubMsg,
                             call_unmarshaller(pStubMsg, &pArg, pTypeFormat, 0);
                         else
                             call_unmarshaller(pStubMsg, (unsigned char **)pArg, pTypeFormat, 0);
-                    }
-                    else if (pParam->param_attributes.IsOut &&
-                             !pParam->param_attributes.ServerAllocSize &&
-                             !pParam->param_attributes.IsByValue)
-                    {
-                        DWORD size = calc_arg_size(pStubMsg, pTypeFormat);
-
-                        if(size)
-                        {
-                            *(void **)pArg = NdrAllocate(pStubMsg, size);
-                            memset(*(void **)pArg, 0, size);
-                        }
                     }
                     break;
                 case STUBLESS_CALCSIZE:
@@ -1058,7 +1117,7 @@ static LONG_PTR *stub_do_old_args(MIDL_STUB_MESSAGE *pStubMsg,
          * if present, so adjust this */
         unsigned short current_stack_offset_adjusted = current_stack_offset +
             (object ? sizeof(void *) : 0);
-        unsigned char *pArg = (unsigned char *)(args+current_stack_offset_adjusted);
+        unsigned char *pArg = args + current_stack_offset_adjusted;
 
         /* no more parameters; exit loop */
         if (current_stack_offset_adjusted >= stack_size)
@@ -1076,6 +1135,9 @@ static LONG_PTR *stub_do_old_args(MIDL_STUB_MESSAGE *pStubMsg,
 
             TRACE("\tbase type 0x%02x\n", *pTypeFormat);
 
+            if (pParam->param_direction == RPC_FC_RETURN_PARAM_BASETYPE)
+                retval_ptr = (LONG_PTR *)pArg;
+
             switch (phase)
             {
                 case STUBLESS_MARSHAL:
@@ -1089,9 +1151,7 @@ static LONG_PTR *stub_do_old_args(MIDL_STUB_MESSAGE *pStubMsg,
                 case STUBLESS_UNMARSHAL:
                     if (pParam->param_direction == RPC_FC_IN_PARAM_BASETYPE)
                         call_unmarshaller(pStubMsg, &pArg, pTypeFormat, 0);
-                    else if (pParam->param_direction == RPC_FC_RETURN_PARAM_BASETYPE)
-                        retval_ptr = (LONG_PTR *)pArg;
-                        break;
+                    break;
                 case STUBLESS_CALCSIZE:
                     if (pParam->param_direction == RPC_FC_RETURN_PARAM_BASETYPE)
                         call_buffer_sizer(pStubMsg, pArg, pTypeFormat);
@@ -1113,6 +1173,9 @@ static LONG_PTR *stub_do_old_args(MIDL_STUB_MESSAGE *pStubMsg,
 
             TRACE("\tcomplex type 0x%02x\n", *pTypeFormat);
 
+            if (pParam->param_direction == RPC_FC_RETURN_PARAM)
+                retval_ptr = (LONG_PTR *)pArg;
+
             switch (phase)
             {
                 case STUBLESS_MARSHAL:
@@ -1127,14 +1190,9 @@ static LONG_PTR *stub_do_old_args(MIDL_STUB_MESSAGE *pStubMsg,
                         call_freer(pStubMsg, *(unsigned char **)pArg, pTypeFormat);
                     else if (pParam->param_direction == RPC_FC_OUT_PARAM)
                         pStubMsg->pfnFree(*(void **)pArg);
-                        break;
-                case STUBLESS_UNMARSHAL:
-                    if (pParam->param_direction == RPC_FC_IN_OUT_PARAM ||
-                        pParam->param_direction == RPC_FC_IN_PARAM)
-                        call_unmarshaller(pStubMsg, (unsigned char **)pArg, pTypeFormat, 0);
-                    else if (pParam->param_direction == RPC_FC_RETURN_PARAM)
-                        retval_ptr = (LONG_PTR *)pArg;
-                    else if (pParam->param_direction == RPC_FC_OUT_PARAM)
+                    break;
+                case STUBLESS_INITOUT:
+                    if (pParam->param_direction == RPC_FC_OUT_PARAM)
                     {
                         DWORD size = calc_arg_size(pStubMsg, pTypeFormat);
 
@@ -1144,6 +1202,11 @@ static LONG_PTR *stub_do_old_args(MIDL_STUB_MESSAGE *pStubMsg,
                             memset(*(void **)pArg, 0, size);
                         }
                     }
+                    break;
+                case STUBLESS_UNMARSHAL:
+                    if (pParam->param_direction == RPC_FC_IN_OUT_PARAM ||
+                        pParam->param_direction == RPC_FC_IN_PARAM)
+                        call_unmarshaller(pStubMsg, (unsigned char **)pArg, pTypeFormat, 0);
                     break;
                 case STUBLESS_CALCSIZE:
                     if (pParam->param_direction == RPC_FC_OUT_PARAM ||
@@ -1406,9 +1469,10 @@ LONG WINAPI NdrStubCall2(
                 stubMsg.Buffer = stubMsg.BufferStart;
             }
             break;
-        case STUBLESS_MARSHAL:
         case STUBLESS_UNMARSHAL:
+        case STUBLESS_INITOUT:
         case STUBLESS_CALCSIZE:
+        case STUBLESS_MARSHAL:
         case STUBLESS_FREE:
             if (bV2Format)
                 retval_ptr = stub_do_args(&stubMsg, &pFormat[parameter_start_offset],

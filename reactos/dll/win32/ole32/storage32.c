@@ -1300,14 +1300,7 @@ static HRESULT WINAPI StorageImpl_CreateStorage(
   /*
    * Open it to get a pointer to return.
    */
-  hr = IStorage_OpenStorage(
-         iface,
-         (const OLECHAR*)pwcsName,
-         0,
-         grfMode,
-         0,
-         0,
-         ppstg);
+  hr = IStorage_OpenStorage(iface, pwcsName, 0, grfMode, 0, 0, ppstg);
 
   if( (hr != S_OK) || (*ppstg == NULL))
   {
@@ -2004,9 +1997,7 @@ static HRESULT deleteStorageProperty(
     hr = IEnumSTATSTG_Next(elements, 1, &currentElement, NULL);
     if (hr==S_OK)
     {
-      destroyHr = StorageImpl_DestroyElement(
-                    (IStorage*)childStorage,
-                    (OLECHAR*)currentElement.pwcsName);
+      destroyHr = StorageImpl_DestroyElement(childStorage, currentElement.pwcsName);
 
       CoTaskMemFree(currentElement.pwcsName);
     }
@@ -4053,8 +4044,7 @@ static ULONG IEnumSTATSTGImpl_FindProperty(
       currentProperty);
 
     if ( propertyNameCmp(
-          (const OLECHAR*)currentProperty->name,
-          (const OLECHAR*)lpszPropName) == 0)
+          (const OLECHAR*)currentProperty->name, lpszPropName) == 0)
       return currentSearchNode;
 
     /*

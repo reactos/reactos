@@ -410,6 +410,7 @@ void WINAPI NdrProxyFreeBuffer(void *This,
                               PMIDL_STUB_MESSAGE pStubMsg)
 {
   TRACE("(%p,%p)\n", This, pStubMsg);
+
   if (pStubMsg->fBufferValid)
   {
     IRpcChannelBuffer_FreeBuffer(pStubMsg->pRpcChannelBuffer,

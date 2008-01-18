@@ -1400,7 +1400,7 @@ static LRESULT CALLBACK OLEMenu_CallWndProc(INT code, WPARAM wParam, LPARAM lPar
    * If the window has an OLEMenu property we may need to dispatch
    * the menu message to its active objects window instead. */
 
-  hOleMenu = (HOLEMENU)GetPropA( pMsg->hwnd, "PROP_OLEMenuDescriptor" );
+  hOleMenu = GetPropA( pMsg->hwnd, "PROP_OLEMenuDescriptor" );
   if ( !hOleMenu )
     goto NEXTHOOK;
 
@@ -1505,7 +1505,7 @@ static LRESULT CALLBACK OLEMenu_GetMsgProc(INT code, WPARAM wParam, LPARAM lPara
    * If the window has an OLEMenu property we may need to dispatch
    * the menu message to its active objects window instead. */
 
-  hOleMenu = (HOLEMENU)GetPropA( pMsg->hwnd, "PROP_OLEMenuDescriptor" );
+  hOleMenu = GetPropA( pMsg->hwnd, "PROP_OLEMenuDescriptor" );
   if ( !hOleMenu )
     goto NEXTHOOK;
 

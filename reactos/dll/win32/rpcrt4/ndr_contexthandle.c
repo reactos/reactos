@@ -218,7 +218,8 @@ void WINAPI NDRSContextMarshall(NDR_SCONTEXT SContext,
                                NDR_RUNDOWN userRunDownIn)
 {
     TRACE("(%p %p %p)\n", SContext, pBuff, userRunDownIn);
-    NDRSContextMarshall2(I_RpcGetCurrentCallHandle(), SContext, pBuff, userRunDownIn, NULL, 0);
+    NDRSContextMarshall2(I_RpcGetCurrentCallHandle(), SContext, pBuff,
+                         userRunDownIn, NULL, RPC_CONTEXT_HANDLE_DEFAULT_FLAGS);
 }
 
 /***********************************************************************
@@ -230,7 +231,8 @@ void WINAPI NDRSContextMarshallEx(RPC_BINDING_HANDLE hBinding,
                                   NDR_RUNDOWN userRunDownIn)
 {
     TRACE("(%p %p %p %p)\n", hBinding, SContext, pBuff, userRunDownIn);
-    NDRSContextMarshall2(hBinding, SContext, pBuff, userRunDownIn, NULL, 0);
+    NDRSContextMarshall2(hBinding, SContext, pBuff, userRunDownIn, NULL,
+                         RPC_CONTEXT_HANDLE_DEFAULT_FLAGS);
 }
 
 /***********************************************************************
@@ -251,6 +253,9 @@ void WINAPI NDRSContextMarshall2(RPC_BINDING_HANDLE hBinding,
 
     if (!binding->server || !binding->Assoc)
         RpcRaiseException(ERROR_INVALID_HANDLE);
+
+    if (Flags & RPC_CONTEXT_HANDLE_FLAGS)
+        FIXME("unimplemented flags: 0x%x\n", Flags & RPC_CONTEXT_HANDLE_FLAGS);
 
     if (SContext->userContext)
     {
@@ -287,7 +292,9 @@ NDR_SCONTEXT WINAPI NDRSContextUnmarshall(void *pBuff,
                                           ULONG DataRepresentation)
 {
     TRACE("(%p %08x)\n", pBuff, DataRepresentation);
-    return NDRSContextUnmarshall2(I_RpcGetCurrentCallHandle(), pBuff, DataRepresentation, NULL, 0);
+    return NDRSContextUnmarshall2(I_RpcGetCurrentCallHandle(), pBuff,
+                                  DataRepresentation, NULL,
+                                  RPC_CONTEXT_HANDLE_DEFAULT_FLAGS);
 }
 
 /***********************************************************************
@@ -298,7 +305,8 @@ NDR_SCONTEXT WINAPI NDRSContextUnmarshallEx(RPC_BINDING_HANDLE hBinding,
                                             ULONG DataRepresentation)
 {
     TRACE("(%p %p %08x)\n", hBinding, pBuff, DataRepresentation);
-    return NDRSContextUnmarshall2(hBinding, pBuff, DataRepresentation, NULL, 0);
+    return NDRSContextUnmarshall2(hBinding, pBuff, DataRepresentation, NULL,
+                                  RPC_CONTEXT_HANDLE_DEFAULT_FLAGS);
 }
 
 /***********************************************************************
@@ -319,6 +327,9 @@ NDR_SCONTEXT WINAPI NDRSContextUnmarshall2(RPC_BINDING_HANDLE hBinding,
 
     if (!binding->server || !binding->Assoc)
         RpcRaiseException(ERROR_INVALID_HANDLE);
+
+    if (Flags & RPC_CONTEXT_HANDLE_FLAGS)
+        FIXME("unimplemented flags: 0x%x\n", Flags & RPC_CONTEXT_HANDLE_FLAGS);
 
     if (!pBuff || (!context_ndr->attributes &&
                    UuidIsNil((UUID *)&context_ndr->uuid, &status)))

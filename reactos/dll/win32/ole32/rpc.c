@@ -1026,8 +1026,13 @@ static HRESULT WINAPI ClientRpcChannelBuffer_GetDestCtx(LPRPCCHANNELBUFFER iface
 
 static HRESULT WINAPI ServerRpcChannelBuffer_GetDestCtx(LPRPCCHANNELBUFFER iface, DWORD* pdwDestContext, void** ppvDestContext)
 {
-    FIXME("(%p,%p), stub!\n", pdwDestContext, ppvDestContext);
-    return E_FAIL;
+    WARN("(%p,%p), stub!\n", pdwDestContext, ppvDestContext);
+
+    /* FIXME: implement this by storing the dwDestContext and pvDestContext
+     * values passed into IMarshal_MarshalInterface and returning them here */
+    *pdwDestContext = MSHCTX_DIFFERENTMACHINE;
+    *ppvDestContext = NULL;
+    return S_OK;
 }
 
 static HRESULT WINAPI RpcChannelBuffer_IsConnected(LPRPCCHANNELBUFFER iface)
