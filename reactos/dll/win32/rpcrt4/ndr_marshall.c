@@ -2655,8 +2655,8 @@ static unsigned long ComplexStructMemorySize(PMIDL_STUB_MESSAGE pStubMsg,
   return size;
 }
 
-static unsigned long ComplexStructSize(PMIDL_STUB_MESSAGE pStubMsg,
-                                       PFORMAT_STRING pFormat)
+unsigned long ComplexStructSize(PMIDL_STUB_MESSAGE pStubMsg,
+                                PFORMAT_STRING pFormat)
 {
   PFORMAT_STRING desc;
   unsigned long size = 0;

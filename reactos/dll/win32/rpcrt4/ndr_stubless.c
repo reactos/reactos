@@ -849,6 +849,12 @@ static DWORD calc_arg_size(MIDL_STUB_MESSAGE *pStubMsg, PFORMAT_STRING pFormat)
     case RPC_FC_LGFARRAY:
         size = *(const DWORD*)(pFormat + 2);
         break;
+    case RPC_FC_BOGUS_ARRAY:
+        pFormat = ComputeConformance(pStubMsg, NULL, pFormat + 4, *(const WORD*)&pFormat[2]);
+        TRACE("conformance = %ld\n", pStubMsg->MaxCount);
+        pFormat = ComputeVariance(pStubMsg, NULL, pFormat, pStubMsg->MaxCount);
+        size = ComplexStructSize(pStubMsg, pFormat);
+        size *= pStubMsg->MaxCount;
     default:
         FIXME("Unhandled type %02x\n", *pFormat);
         /* fallthrough */
