@@ -54,6 +54,7 @@ void WINAPI NdrClientInitializeNew( PRPC_MESSAGE pRpcMessage, PMIDL_STUB_MESSAGE
   pRpcMessage->ProcNum = ProcNum;
   pRpcMessage->RpcInterfaceInformation = pStubDesc->RpcInterfaceInformation;
   pRpcMessage->RpcFlags = 0;
+  pRpcMessage->ReservedForRuntime = NULL;
   pRpcMessage->DataRepresentation = NDR_LOCAL_DATA_REPRESENTATION;
 
   pStubMsg->RpcMsg = pRpcMessage;
