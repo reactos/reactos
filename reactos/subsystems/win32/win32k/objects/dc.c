@@ -1,3 +1,4 @@
+
 /*
  *  ReactOS W32 Subsystem
  *  Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003 ReactOS Team
@@ -927,7 +928,6 @@ BOOL
 FASTCALL
 IntGdiDeleteDC(HDC hDC, BOOL Force)
 {
-  BOOL Ret = FALSE;
   PDC  DCToDelete = DC_LockDc(hDC);
 
   if (DCToDelete == NULL)
@@ -942,8 +942,7 @@ IntGdiDeleteDC(HDC hDC, BOOL Force)
     {
          DPRINT1("No! You Naughty Application!\n");
          DC_UnlockDc( DCToDelete );
-//       if(!UserReleaseDC(NULL, hDC, FALSE)) Ret = FALSE;
-         return Ret;
+         return UserReleaseDC(NULL, hDC, FALSE);
     }
   }
 
