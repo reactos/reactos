@@ -2413,7 +2413,7 @@ static int save_all_changes(msft_typelib_t *typelib)
 
     retval = TYPE_E_IOERROR;
 
-    fd = open(typelib->typelib->filename, _O_CREAT | _O_RDWR | _O_BINARY, 0666);
+    fd = open(typelib->typelib->filename, O_CREAT | O_RDWR | O_BINARY, 0666);
     if (fd == -1) return retval;
 
     filepos = sizeof(MSFT_Header) + sizeof(MSFT_SegDir);
