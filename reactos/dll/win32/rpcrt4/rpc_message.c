@@ -917,12 +917,10 @@ fail:
 RPC_STATUS WINAPI I_RpcGetBuffer(PRPC_MESSAGE pMsg)
 {
   TRACE("(%p): BufferLength=%d\n", pMsg, pMsg->BufferLength);
-  /* FIXME: pfnAllocate? */
   pMsg->Buffer = HeapAlloc(GetProcessHeap(), 0, pMsg->BufferLength);
 
   TRACE("Buffer=%p\n", pMsg->Buffer);
-  /* FIXME: which errors to return? */
-  return pMsg->Buffer ? S_OK : E_OUTOFMEMORY;
+  return pMsg->Buffer ? RPC_S_OK : ERROR_OUTOFMEMORY;
 }
 
 /***********************************************************************
@@ -934,7 +932,7 @@ static RPC_STATUS I_RpcReAllocateBuffer(PRPC_MESSAGE pMsg)
   pMsg->Buffer = HeapReAlloc(GetProcessHeap(), 0, pMsg->Buffer, pMsg->BufferLength);
 
   TRACE("Buffer=%p\n", pMsg->Buffer);
-  return pMsg->Buffer ? RPC_S_OK : RPC_S_OUT_OF_RESOURCES;
+  return pMsg->Buffer ? RPC_S_OK : ERROR_OUTOFMEMORY;
 }
 
 /***********************************************************************
@@ -955,10 +953,8 @@ static RPC_STATUS I_RpcReAllocateBuffer(PRPC_MESSAGE pMsg)
 RPC_STATUS WINAPI I_RpcFreeBuffer(PRPC_MESSAGE pMsg)
 {
   TRACE("(%p) Buffer=%p\n", pMsg, pMsg->Buffer);
-  /* FIXME: pfnFree? */
   HeapFree(GetProcessHeap(), 0, pMsg->Buffer);
-  pMsg->Buffer = NULL;
-  return S_OK;
+  return RPC_S_OK;
 }
 
 /***********************************************************************
