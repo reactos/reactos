@@ -3,6 +3,8 @@
 * update by xrogers (13.04.2007)
 * xxrogers@users.sourceforge.net
 * https://sourceforge.net/projects/reactospl
+*
+* update by Caemyr - Olaf Siejka (Jan, 2008)
 */
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
@@ -68,6 +70,6 @@ BEGIN
     IDS_TIMEZONEUNKNOWN "Nieznana"
     IDS_INETTIMESUCSYNC "Zegar zosta³ pomyœlnie zsynchronizowany z %s w dniu %s o %s"
     IDS_INETTIMENEXTSYNC "Nastêpna synchronizacja w dniu %s o %s"
-    IDS_INETTIMESYNCING "Please wait while ReactOS synchronizes the time with %s"
-    IDS_INETTIMEERROR "An error occured while ReactOS was synchronizing with %s"
+    IDS_INETTIMESYNCING "Proszê czekaæ, gdy ReactOS zsynchronizuje czas z %s"
+    IDS_INETTIMEERROR "Wyst¹pi³ b³¹d podczas gdy ReactOS synchronizowa³ czas z %s"
 END

@@ -3,6 +3,8 @@
 * update by xrogers (13.04.2007)
 * xxrogers@users.sourceforge.net
 * https://sourceforge.net/projects/reactospl
+*
+* updates by Caemyr - Olaf Siejka (Jan, 2008)
 */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
@@ -29,9 +31,9 @@ BEGIN
     IDS_PROPERTIES "W³aœciwoœc&i"
     IDS_UPDATEDRV "&Aktualizuj sterownik..."
     IDS_REBOOT "&Uruchom komputer ponownie..."
-    IDS_NOTAVAILABLE "Not available"
-    IDS_NOTDIGITALLYSIGNED "Not digitally signed"
-    IDS_NODRIVERS "No driver files are required or have been loaded for this device."
+    IDS_NOTAVAILABLE "Niedostêpne"
+    IDS_NOTDIGITALLYSIGNED "Niepodpisany cyfrowo"
+    IDS_NODRIVERS "¯adne pliki sterownika nie s¹ potrzebne albo nie zosta³y za³adowane dla tego urz¹dzenia."
 END
 
 /* error messages, source: http://www.z123.org/techsupport/medm.htm */
@@ -146,10 +148,11 @@ BEGIN
      EDITTEXT IDC_DRVDATE, 100, 53, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
      LTEXT "Wersja sterownika:", -1, 37, 67, 60, 8, SS_NOPREFIX
      EDITTEXT IDC_DRVVERSION, 100, 67, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
-     LTEXT "Digital Signer:", -1, 37, 81, 60, 8, SS_NOPREFIX
+     LTEXT "Podpis cyfrowy:", -1, 37, 81, 60, 8, SS_NOPREFIX
      EDITTEXT IDC_DIGITALSIGNER, 100, 81, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
-     PUSHBUTTON "&Driver Details...", IDC_DRIVERDETAILS, 7, 106, 70, 15
-     LTEXT "To view details about the driver files.", -1, 91, 110, 154, 17, SS_NOPREFIX
+     PUSHBUTTON "&Szczegó³y sterownika...", IDC_DRIVERDETAILS, 7, 106, 70, 15
+     LTEXT "Wyœwietla informacje szczegó³owe.", -1, 91, 110, 154, 17, SS_NOPREFIX
 END
+
 
 
