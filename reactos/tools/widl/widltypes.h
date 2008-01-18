@@ -38,8 +38,10 @@
 typedef GUID UUID;
 #endif
 
-#define TRUE 1
-#define FALSE 0
+// All hosts, which don't define O_BINARY, don't need it :-)
+#ifndef O_BINARY
+#define O_BINARY 0
+#endif
 
 typedef struct _attr_t attr_t;
 typedef struct _expr_t expr_t;

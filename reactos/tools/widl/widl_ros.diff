@@ -106,6 +106,19 @@ Index: widltypes.h
  #include <stdarg.h>
  #include "guiddef.h"
  #include "wine/rpcfc.h"
+@@ -31,8 +38,10 @@
+ typedef GUID UUID;
+ #endif
+ 
+-#define TRUE 1
+-#define FALSE 0
++// All hosts, which don't define O_BINARY, don't need it :-)
++#ifndef O_BINARY
++#define O_BINARY 0
++#endif
+ 
+ typedef struct _attr_t attr_t;
+ typedef struct _expr_t expr_t;
 Index: write_msft.c
 ===================================================================
 --- write_msft.c	(revision 31863)
@@ -123,3 +136,12 @@ Index: write_msft.c
  
  #include "widltypes.h"
  #include "typelib.h"
+@@ -2415,7 +2413,7 @@
+ 
+     retval = TYPE_E_IOERROR;
+ 
+-    fd = creat(typelib->typelib->filename, 0666);
++    fd = open(typelib->typelib->filename, O_CREAT | O_RDWR | O_BINARY, 0666);
+     if (fd == -1) return retval;
+ 
+     filepos = sizeof(MSFT_Header) + sizeof(MSFT_SegDir);
