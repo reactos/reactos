@@ -140,28 +140,29 @@
      tSMALL = 366,
      tSOURCE = 367,
      tSTDCALL = 368,
-     tSTRING = 369,
-     tSTRUCT = 370,
-     tSWITCH = 371,
-     tSWITCHIS = 372,
-     tSWITCHTYPE = 373,
-     tTRANSMITAS = 374,
-     tTRUE = 375,
-     tTYPEDEF = 376,
-     tUNION = 377,
-     tUNIQUE = 378,
-     tUNSIGNED = 379,
-     tUUID = 380,
-     tV1ENUM = 381,
-     tVARARG = 382,
-     tVERSION = 383,
-     tVOID = 384,
-     tWCHAR = 385,
-     tWIREMARSHAL = 386,
-     CAST = 387,
-     PPTR = 388,
-     NEG = 389,
-     ADDRESSOF = 390
+     tSTRICTCONTEXTHANDLE = 369,
+     tSTRING = 370,
+     tSTRUCT = 371,
+     tSWITCH = 372,
+     tSWITCHIS = 373,
+     tSWITCHTYPE = 374,
+     tTRANSMITAS = 375,
+     tTRUE = 376,
+     tTYPEDEF = 377,
+     tUNION = 378,
+     tUNIQUE = 379,
+     tUNSIGNED = 380,
+     tUUID = 381,
+     tV1ENUM = 382,
+     tVARARG = 383,
+     tVERSION = 384,
+     tVOID = 385,
+     tWCHAR = 386,
+     tWIREMARSHAL = 387,
+     CAST = 388,
+     PPTR = 389,
+     NEG = 390,
+     ADDRESSOF = 391
    };
 #endif
 /* Tokens.  */
@@ -276,28 +277,29 @@
 #define tSMALL 366
 #define tSOURCE 367
 #define tSTDCALL 368
-#define tSTRING 369
-#define tSTRUCT 370
-#define tSWITCH 371
-#define tSWITCHIS 372
-#define tSWITCHTYPE 373
-#define tTRANSMITAS 374
-#define tTRUE 375
-#define tTYPEDEF 376
-#define tUNION 377
-#define tUNIQUE 378
-#define tUNSIGNED 379
-#define tUUID 380
-#define tV1ENUM 381
-#define tVARARG 382
-#define tVERSION 383
-#define tVOID 384
-#define tWCHAR 385
-#define tWIREMARSHAL 386
-#define CAST 387
-#define PPTR 388
-#define NEG 389
-#define ADDRESSOF 390
+#define tSTRICTCONTEXTHANDLE 369
+#define tSTRING 370
+#define tSTRUCT 371
+#define tSWITCH 372
+#define tSWITCHIS 373
+#define tSWITCHTYPE 374
+#define tTRANSMITAS 375
+#define tTRUE 376
+#define tTYPEDEF 377
+#define tUNION 378
+#define tUNIQUE 379
+#define tUNSIGNED 380
+#define tUUID 381
+#define tV1ENUM 382
+#define tVARARG 383
+#define tVERSION 384
+#define tVOID 385
+#define tWCHAR 386
+#define tWIREMARSHAL 387
+#define CAST 388
+#define PPTR 389
+#define NEG 390
+#define ADDRESSOF 391
 
 
 
@@ -327,7 +329,7 @@ typedef union YYSTYPE {
 	interface_info_t ifinfo;
 } YYSTYPE;
 /* Line 1447 of yacc.c.  */
-#line 331 "parser.tab.h"
+#line 333 "parser.tab.h"
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
 # define YYSTYPE_IS_DECLARED 1
 # define YYSTYPE_IS_TRIVIAL 1

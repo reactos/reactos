@@ -299,6 +299,7 @@ static const struct keyword attr_keywords[] =
         {"single",                      tSINGLE},
         {"size_is",                     tSIZEIS},
         {"source",                      tSOURCE},
+        {"strict_context_handle",       tSTRICTCONTEXTHANDLE},
         {"string",                      tSTRING},
         {"switch_is",                   tSWITCHIS},
         {"switch_type",                 tSWITCHTYPE},

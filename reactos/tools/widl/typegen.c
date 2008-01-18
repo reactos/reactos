@@ -43,6 +43,7 @@
 
 static const func_t *current_func;
 static const type_t *current_structure;
+static const ifref_t *current_iface;
 
 static struct list expr_eval_routines = LIST_INIT(expr_eval_routines);
 struct expr_eval_routine
@@ -1472,10 +1473,8 @@ static size_t write_string_tfs(FILE *file, const attr_list_t *attrs,
                                const char *name, unsigned int *typestring_offset,
                                int toplevel)
 {
-    size_t start_offset = *typestring_offset;
+    size_t start_offset;
     unsigned char rtype;
-
-    update_tfsoff(type, start_offset, file);
 
     if (toplevel && is_declptr(type))
     {
@@ -1493,6 +1492,9 @@ static size_t write_string_tfs(FILE *file, const attr_list_t *attrs,
             *typestring_offset += 2;
         }
     }
+
+    start_offset = *typestring_offset;
+    update_tfsoff(type, start_offset, file);
 
     rtype = type->ref->type;
 
@@ -2056,7 +2058,10 @@ static size_t write_contexthandle_tfs(FILE *file, const type_t *type,
                                       unsigned int *typeformat_offset)
 {
     size_t start_offset = *typeformat_offset;
-    unsigned char flags = 0x08 /* strict */;
+    unsigned char flags = 0;
+
+    if (is_attr(current_iface->attrs, ATTR_STRICTCONTEXTHANDLE))
+        flags |= NDR_STRICT_CONTEXT_HANDLE;
 
     if (is_ptr(type))
         flags |= 0x80;
@@ -2064,20 +2069,21 @@ static size_t write_contexthandle_tfs(FILE *file, const type_t *type,
     {
         flags |= 0x40;
         if (!is_attr(var->attrs, ATTR_OUT))
-            flags |= 0x01;
+            flags |= NDR_CONTEXT_HANDLE_CANNOT_BE_NULL;
     }
     if (is_attr(var->attrs, ATTR_OUT))
         flags |= 0x20;
 
     WRITE_FCTYPE(file, FC_BIND_CONTEXT, *typeformat_offset);
     print_file(file, 2, "0x%x,\t/* Context flags: ", flags);
-    if (((flags & 0x21) != 0x21) && (flags & 0x01))
+    /* return and can't be null values overlap */
+    if (((flags & 0x21) != 0x21) && (flags & NDR_CONTEXT_HANDLE_CANNOT_BE_NULL))
         print_file(file, 0, "can't be null, ");
-    if (flags & 0x02)
+    if (flags & NDR_CONTEXT_HANDLE_SERIALIZE)
         print_file(file, 0, "serialize, ");
-    if (flags & 0x04)
+    if (flags & NDR_CONTEXT_HANDLE_NO_SERIALIZE)
         print_file(file, 0, "no serialize, ");
-    if (flags & 0x08)
+    if (flags & NDR_STRICT_CONTEXT_HANDLE)
         print_file(file, 0, "strict, ");
     if ((flags & 0x21) == 0x20)
         print_file(file, 0, "out, ");
@@ -2279,6 +2285,7 @@ static size_t process_tfs(FILE *file, const ifref_list_t *ifaces, type_pred_t pr
         if (iface->iface->funcs)
         {
             const func_t *func;
+            current_iface = iface;
             LIST_FOR_EACH_ENTRY( func, iface->iface->funcs, const func_t, entry )
             {
                 if (is_local(func->def->attrs)) continue;
@@ -2706,10 +2713,11 @@ static void write_remoting_arg(FILE *file, int indent, const func_t *func,
             }
             else
             {
-                print_file(file, indent, "NdrServerContextMarshall(\n");
+                print_file(file, indent, "NdrServerContextNewMarshall(\n");
                 print_file(file, indent + 1, "&_StubMsg,\n");
                 print_file(file, indent + 1, "(NDR_SCONTEXT)%s,\n", var->name);
-                print_file(file, indent + 1, "(NDR_RUNDOWN)%s_rundown);\n", get_context_handle_type_name(var->type));
+                print_file(file, indent + 1, "(NDR_RUNDOWN)%s_rundown,\n", get_context_handle_type_name(var->type));
+                print_file(file, indent + 1, "(PFORMAT_STRING)&__MIDL_TypeFormatString.Format[%d]);\n", start_offset);
             }
         }
         else if (phase == PHASE_UNMARSHAL)
@@ -2722,7 +2730,11 @@ static void write_remoting_arg(FILE *file, int indent, const func_t *func,
                 print_file(file, indent + 1, "_Handle);\n");
             }
             else
-                print_file(file, indent, "%s = NdrServerContextUnmarshall(&_StubMsg);\n", var->name);
+            {
+                print_file(file, indent, "%s = NdrServerContextNewUnmarshall(\n", var->name);
+                print_file(file, indent + 1, "&_StubMsg,\n");
+                print_file(file, indent + 1, "(PFORMAT_STRING)&__MIDL_TypeFormatString.Format[%d]);\n", start_offset);
+            }
         }
     }
     else if (is_user_type(var->type))
@@ -2743,10 +2755,11 @@ static void write_remoting_arg(FILE *file, int indent, const func_t *func,
             }
 
             if ((phase == PHASE_FREE) || (pointer_type == RPC_FC_UP))
-                print_phase_function(file, indent, "Pointer", phase, var, start_offset);
+                print_phase_function(file, indent, "Pointer", phase, var,
+                                     start_offset - (type->size_is ? 4 : 2));
             else
                 print_phase_function(file, indent, "ConformantString", phase, var,
-                                     start_offset + (type->size_is ? 4 : 2));
+                                     start_offset);
         }
     }
     else if (is_array(type))
@@ -2813,7 +2826,8 @@ static void write_remoting_arg(FILE *file, int indent, const func_t *func,
             if (type->type == RPC_FC_BOGUS_ARRAY ||
                 type->type == RPC_FC_CVARRAY ||
                 ((type->type == RPC_FC_SMVARRAY || type->type == RPC_FC_LGVARRAY) && in_attr) ||
-                (type->type == RPC_FC_CARRAY && !in_attr))            {
+                (type->type == RPC_FC_CARRAY && !in_attr))
+            {
                 print_file(file, indent, "if (%s)\n", var->name);
                 indent++;
                 print_file(file, indent, "_StubMsg.pfnFree(%s);\n", var->name);

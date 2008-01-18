@@ -225,6 +225,7 @@ static void check_all_user_types(ifref_list_t *ifaces);
 %token tSMALL
 %token tSOURCE
 %token tSTDCALL
+%token tSTRICTCONTEXTHANDLE
 %token tSTRING tSTRUCT
 %token tSWITCH tSWITCHIS tSWITCHTYPE
 %token tTRANSMITAS
@@ -497,6 +498,7 @@ attribute:					{ $$ = NULL; }
 	| tRETVAL				{ $$ = make_attr(ATTR_RETVAL); }
 	| tSIZEIS '(' m_exprs ')'		{ $$ = make_attrp(ATTR_SIZEIS, $3); }
 	| tSOURCE				{ $$ = make_attr(ATTR_SOURCE); }
+	| tSTRICTCONTEXTHANDLE                  { $$ = make_attr(ATTR_STRICTCONTEXTHANDLE); }
 	| tSTRING				{ $$ = make_attr(ATTR_STRING); }
 	| tSWITCHIS '(' expr ')'		{ $$ = make_attrp(ATTR_SWITCHIS, $3); }
 	| tSWITCHTYPE '(' type ')'		{ $$ = make_attrp(ATTR_SWITCHTYPE, $3); }
