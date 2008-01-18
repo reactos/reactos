@@ -8,6 +8,8 @@ struct Application
 	WCHAR Licence[0x100];
 	WCHAR Description[0x400];
 	WCHAR Location[0x100];
+	WCHAR Depends[0x100];
+	WCHAR PostInstallAction[0x100];
 	struct Application* Next;
 };
 

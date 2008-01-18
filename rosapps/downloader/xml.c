@@ -134,6 +134,16 @@ void text (void* usrdata, const char* data, int len)
 		int currentlengt = lstrlenW(CurrentApplication->Licence);
 		MultiByteToWideChar(CP_UTF8, 0, data, len, &CurrentApplication->Licence[currentlengt], 0x100-currentlengt);
 	}
+	else if(!strcmp(CurrentTag, "depends"))
+	{
+		int currentlengt = lstrlenW(CurrentApplication->Depends);
+		MultiByteToWideChar(CP_UTF8, 0, data, len, &CurrentApplication->Depends[currentlengt], 0x100-currentlengt);
+	}
+	else if(!strcmp(CurrentTag, "postinstallaction"))
+	{
+		int currentlengt = lstrlenW(CurrentApplication->PostInstallAction);
+		MultiByteToWideChar(CP_UTF8, 0, data, len, &CurrentApplication->PostInstallAction[currentlengt], 0x100-currentlengt);
+	}
 }
 
 void tag_closed (void* tree, const char* tag)

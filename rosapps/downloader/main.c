@@ -635,10 +635,39 @@ ProfDlgProc(HWND hDlg,
     return FALSE;
 }
 
+BOOL IsApplicationInstalled(struct Application* App)
+{
+	WCHAR Uninstaller[200];
+	if(StrCmpW(App->RegName, L"")) {
+		if(getUninstaller(App->RegName, Uninstaller)) {
+			return TRUE;
+		}
+	}
+	return FALSE;
+}
+
+struct Application* GetDependency(const WCHAR* Dependency)
+{
+	struct Category* Category = Root.Children;
+
+	while (Category->Next)
+	{
+		while (Category->Apps)
+		{
+			if(StrCmpW(Category->Apps->Name, Dependency) == 0)
+				return Category->Apps;
+			Category->Apps = Category->Apps->Next;
+		}
+		Category = Category->Next;
+	}
+	return NULL;
+}
+
 LRESULT CALLBACK
 WndProc (HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 {
 	static RECT DescriptionRect;
+	struct Application* AppToInstall;
 
 	switch (Message)
 	{
@@ -683,7 +712,31 @@ WndProc (HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 				if (lParam == (LPARAM)hDownloadButton)
 				{
 					if(SelectedApplication)
+					{
+						/* install dependencies */
+						if(StrCmpW(SelectedApplication->Depends, L""))
+						{
+							AppToInstall = SelectedApplication;
+							SelectedApplication = GetDependency(SelectedApplication->Depends);
+							if (!IsApplicationInstalled(SelectedApplication))
+							{
+								DialogBoxW(GetModuleHandle(NULL), MAKEINTRESOURCEW(IDD_DOWNLOAD), 0, DownloadProc);
+							}
+							SelectedApplication = AppToInstall;
+						}
+
+						/* download and install the app */
 						DialogBoxW(GetModuleHandle(NULL), MAKEINTRESOURCEW(IDD_DOWNLOAD), 0, DownloadProc);
+						
+						/* install req. hacks to get it working */
+						if(StrCmpW(SelectedApplication->PostInstallAction, L""))
+						{
+							AppToInstall = SelectedApplication;
+							CopyMemory(SelectedApplication->Location, SelectedApplication->PostInstallAction, sizeof(SelectedApplication->Location));
+							DialogBoxW(GetModuleHandle(NULL), MAKEINTRESOURCEW(IDD_DOWNLOAD), 0, DownloadProc);
+							SelectedApplication = AppToInstall;
+						}
+					}
 					else
 						ShowMessage(Strings[IDS_NO_APP_TITLE], Strings[IDS_NO_APP]);
 				}

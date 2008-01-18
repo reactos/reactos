@@ -102,6 +102,12 @@
 			<description>An Open Source bitmap graphics editor geared towards young children.</description>
 			<location>http://ovh.dl.sourceforge.net/sourceforge/tuxpaint/tuxpaint-0.9.18-win32-installer.exe</location>
 		</application>
+		<application name="zeckensack's glide wrapper">
+			<regname>GlidewrapZbag</regname>
+			<version>0.84c</version>
+			<description>glidewrapper needed to run Diablo 2 on ReactOS.</description>
+			<location>http://www.zeckensack.de/glide/archive/GlideWrapper084c.exe</location>
+		</application>
 	</category>
 	<category name="Multimedia" icon="4">
 	</category>
@@ -131,6 +137,14 @@
 			<version>0.10.0</version>
 			<description>SamNMax, Day of Tentacle, etc on ReactOS</description>
 			<location>http://ovh.dl.sourceforge.net/sourceforge/scummvm/scummvm-0.10.0-win32.exe</location>
+		</application>
+		<application name="Diablo 2 Shareware">
+			<regname>Diablo 2 Shareware</regname>
+			<version>1.4</version>
+			<description>Diablo 2 Shareware. zeckensack's glide wrapper is req. to run it.</description>
+			<location>http://ftp.freenet.de./pub/filepilot/windows/spiele/diabloiidemo.exe</location>
+			<depends>GlidewrapZbag</depends>
+			<postinstallaction>http://svn.reactos.org/fixes/diablo2fix.exe</postinstallaction>
 		</application>
 		<application name="Tile World">
 			<description>Nice Clone of Chip's Challenge originally made for the Atari Lynx. Includes free CCLP2 Graphics Pack, so you dont need the copyrighted Original.</description>
