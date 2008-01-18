@@ -938,8 +938,11 @@ LookupAccountSidW (
 			else
 			{
 				*pdwAccountName = dwSrcLen;
-				RtlCopyMemory ( pAccountName, TranslatedName->Name.Buffer, TranslatedName->Name.Length );
-				                pAccountName[TranslatedName->Name.Length / sizeof(WCHAR)] = L'\0';
+				if (pAccountName)
+				{
+					RtlCopyMemory ( pAccountName, TranslatedName->Name.Buffer, TranslatedName->Name.Length );
+					pAccountName[TranslatedName->Name.Length / sizeof(WCHAR)] = L'\0';
+				}
 			}
 			if ( peUse )
 				*peUse = TranslatedName->Use;
