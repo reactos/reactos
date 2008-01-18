@@ -375,15 +375,18 @@ static DWORD CALLBACK RPCRT4_io_thread(LPVOID the_arg)
     }
 
     packet = HeapAlloc(GetProcessHeap(), 0, sizeof(RpcPacket));
-    if (!packet)
+    if (!packet) {
+      HeapFree(GetProcessHeap(), 0, msg);
       break;
+    }
     packet->conn = conn;
     packet->hdr = hdr;
     packet->msg = msg;
     if (!QueueUserWorkItem(RPCRT4_worker_thread, packet, WT_EXECUTELONGFUNCTION)) {
-        ERR("couldn't queue work item for worker thread, error was %d\n", GetLastError());
-        HeapFree(GetProcessHeap(), 0, packet);
-        break;
+      ERR("couldn't queue work item for worker thread, error was %d\n", GetLastError());
+      HeapFree(GetProcessHeap(), 0, msg);
+      HeapFree(GetProcessHeap(), 0, packet);
+      break;
     }
     msg = NULL;
   }
