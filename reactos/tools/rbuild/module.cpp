@@ -254,7 +254,7 @@ Module::Module ( const Project& project,
 		                                  __LINE__,
 		                                  "Module created with non-<module> node" );
 
-	xmlbuildFile = Path::RelativeFromWorkingDirectory ( moduleNode.xmlFile->filename () );
+	xmlbuildFile = FixSeparator ( Path::RelativeFromWorkingDirectory ( moduleNode.xmlFile->filename () ) );
 
 	const XMLAttribute* att = moduleNode.GetAttribute ( "name", true );
 	assert(att);
@@ -963,6 +963,8 @@ Module::GetTargetDirectoryTree () const
 		case Alias:
 		case IdlHeader:
 			return IntermediateDirectory;
+		case TypeDontCare:
+			break;
 	}
 	throw InvalidOperationException ( __FILE__,
 	                                  __LINE__,
@@ -1018,6 +1020,8 @@ Module::GetDefaultModuleExtension () const
 			return "";
 		case EmbeddedTypeLib:
 			return ".tlb";
+		case TypeDontCare:
+			break;
 	}
 	throw InvalidOperationException ( __FILE__,
 	                                  __LINE__ );
@@ -1070,6 +1074,8 @@ Module::GetDefaultModuleEntrypoint () const
 		case ElfExecutable:
 		case EmbeddedTypeLib:
 			return "";
+		case TypeDontCare:
+			break;
 	}
 	throw InvalidOperationException ( __FILE__,
 	                                  __LINE__ );
@@ -1115,6 +1121,8 @@ Module::GetDefaultModuleBaseaddress () const
 		case IdlHeader:
 		case EmbeddedTypeLib:
 			return "";
+		case TypeDontCare:
+			break;
 	}
 	throw InvalidOperationException ( __FILE__,
 	                                  __LINE__ );
@@ -1161,6 +1169,8 @@ Module::IsDLL () const
 		case EmbeddedTypeLib:
 		case ElfExecutable:
 			return false;
+		case TypeDontCare:
+			break;
 	}
 	throw InvalidOperationException ( __FILE__,
 	                                  __LINE__ );

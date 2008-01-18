@@ -71,6 +71,8 @@ Bootstrap::IsSupportedModuleType ( ModuleType type )
 		case EmbeddedTypeLib:
 		case ElfExecutable:
 			return false;
+		case TypeDontCare:
+			break;
 	}
 	throw InvalidOperationException ( __FILE__,
 	                                  __LINE__ );

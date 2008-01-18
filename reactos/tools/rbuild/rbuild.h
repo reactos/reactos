@@ -300,13 +300,15 @@ enum ModuleType
 	EmbeddedTypeLib = 26,
 	ElfExecutable = 27,
 	RpcProxy,
+	TypeDontCare,
 };
 
 enum HostType
 {
 	HostFalse,
 	HostDefault,
-	HostTrue
+	HostTrue,
+	HostDontCare,
 };
 
 class FileLocation
