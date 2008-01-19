@@ -352,7 +352,7 @@ GetSwapLock:
     pause
     jmp GetSwapLock
 #endif
-
+NotBusy:
     /* Increase context switches (use ES for lazy load) */
     inc dword ptr es:[ebx+KPCR_CONTEXT_SWITCHES]
 
