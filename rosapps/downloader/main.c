@@ -668,6 +668,9 @@ WndProc (HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 {
 	static RECT DescriptionRect;
 	struct Application* AppToInstall;
+	WCHAR InstallDep[260];
+	WCHAR InstallDepBuffer[260];
+	WCHAR Title[260];
 
 	switch (Message)
 	{
@@ -720,7 +723,13 @@ WndProc (HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 							SelectedApplication = GetDependency(SelectedApplication->Depends);
 							if (!IsApplicationInstalled(SelectedApplication))
 							{
-								DialogBoxW(GetModuleHandle(NULL), MAKEINTRESOURCEW(IDD_DOWNLOAD), 0, DownloadProc);
+								LoadString(GetModuleHandle(NULL), IDS_INSTALL_DEP, InstallDep, sizeof(InstallDep) / sizeof(WCHAR));
+								LoadString(GetModuleHandle(NULL), IDS_WINDOW_TITLE, Title, sizeof(Title) / sizeof(WCHAR));
+								_snwprintf(InstallDepBuffer, sizeof(InstallDepBuffer) / sizeof(WCHAR), InstallDep, SelectedApplication->Name, AppToInstall->Name, SelectedApplication->Name);
+								if (MessageBox(hwnd, InstallDepBuffer, Title, MB_YESNO | MB_ICONINFORMATION) == IDYES)
+								{
+									DialogBoxW(GetModuleHandle(NULL), MAKEINTRESOURCEW(IDD_DOWNLOAD), 0, DownloadProc);
+								}
 							}
 							SelectedApplication = AppToInstall;
 						}

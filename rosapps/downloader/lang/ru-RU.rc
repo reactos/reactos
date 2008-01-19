@@ -56,6 +56,7 @@ BEGIN
   IDS_DOWNLOAD_FOLDER		"Скачать!"
   IDS_UNABLECREATE_FOLDER	"Не удалось создать папку с таким именем!"
   IDS_UPDATE_URL		"http://svn.reactos.org"
+  IDS_INSTALL_DEP		"%s is required to run %s. Should %s be installed now?"
   TTT_HELPBUTTON, "Get help about the downloader"
   TTT_UPDATEBUTTON, "Not yet available"
   TTT_PROFBUTTON, "Let you configure the downloader"
