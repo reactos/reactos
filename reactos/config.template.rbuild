@@ -45,7 +45,7 @@
 <!--
 	Whether to compile in the integrated kernel debugger.
 -->
-<property name="KDBG" value="0" />
+<property name="KDBG" value="1" />
 
 
 <!--
