@@ -50,7 +50,7 @@ VOID
 OpenBitPlane()
 {
     /* disable interrupts */
-    __asm__("cli\n\t");
+    _disable();
 
     /* sequence reg */
     WRITE_PORT_UCHAR (SEQ_COMMAND, SEQ_RESET); WRITE_PORT_UCHAR (SEQ_DATA, 0x01);
@@ -64,14 +64,14 @@ OpenBitPlane()
     WRITE_PORT_UCHAR (GCT_COMMAND, GCT_GRAPH_MODE); WRITE_PORT_UCHAR (GCT_DATA, 0x00);
 
     /* enable interrupts */
-    __asm__("sti\n\t");
+    _enable();
 }
 
 VOID
 CloseBitPlane()
 {
     /* disable interrupts */
-    __asm__("cli\n\t");
+    _disable();
 
     /* sequence reg */
     WRITE_PORT_UCHAR (SEQ_COMMAND, SEQ_RESET); WRITE_PORT_UCHAR (SEQ_DATA, 0x01);
@@ -85,7 +85,7 @@ CloseBitPlane()
     WRITE_PORT_UCHAR (GCT_COMMAND, GCT_GRAPH_MODE); WRITE_PORT_UCHAR (GCT_DATA, 0x0e);
 
     /* enable interrupts */
-    __asm__("sti\n\t");
+    _enable();
 }
 
 VOID
