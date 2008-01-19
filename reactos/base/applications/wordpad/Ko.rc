@@ -19,7 +19,8 @@
 
 
 LANGUAGE LANG_KOREAN, SUBLANG_NEUTRAL
-MAINMENU MENU DISCARDABLE
+
+IDM_MAINMENU MENU DISCARDABLE
 BEGIN
     POPUP "파일(&F)"
     BEGIN
@@ -76,7 +77,7 @@ BEGIN
     POPUP "형식(&O)"
     BEGIN
 	MENUITEM "글꼴(&F) . . .",                  ID_FONTSETTINGS
-        MENUITEM " 강조 점(&U)"                ID_BULLET
+        MENUITEM "강조 점(&U)"                ID_BULLET
         MENUITEM "단락(&P) . . ."              ID_PARAFORMAT
         MENUITEM "탭(&T) . . ."                   ID_TABSTOPS
         POPUP "배경(&B)"
@@ -107,7 +108,7 @@ END
 IDD_DATETIME DIALOG DISCARDABLE 30, 20, 130, 80
 STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 CAPTION "날짜와 시간"
-FONT 10, "MS Sans Serif"
+FONT 10, "MS Shell Dlg"
 BEGIN
     LTEXT        "가능한 형식",0,3,2,100,15
     LISTBOX      IDC_DATETIME,3,12,80,65,LBS_NOINTEGRALHEIGHT
@@ -118,7 +119,7 @@ END
 IDD_NEWFILE DIALOG DISCARDABLE 30, 20, 140, 80
 STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 CAPTION "새 문서"
-FONT 10, "MS Sans Serif"
+FONT 10, "MS Shell Dlg"
 BEGIN
     LTEXT        "새 문서 형식",0,3,2,100,15
     LISTBOX      IDC_NEWFILE,3,12,90,65,LBS_NOINTEGRALHEIGHT
@@ -147,7 +148,7 @@ END
 IDD_TABSTOPS DIALOG DISCARDABLE 30, 20, 200, 110
 STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 Caption "탭"
-FONT 8, "MS SHell DLg"
+FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "탭 정지", 0, 10, 10, 120, 90
     COMBOBOX IDC_TABSTOPS, 20, 20, 100, 60, CBS_SIMPLE | CBS_SORT
@@ -223,4 +224,5 @@ BEGIN
                                  "이것은 특수한 꾸밈을 없엘 것입니다. " \
                                  "당신은 정말로 저장하기를 원합니까?"
     STRING_INVALID_NUMBER,       "올바르지 않은 수 형식"
+    STRING_OLE_STORAGE_NOT_SUPPORTED, "OLE 저장 문서는 지원되지 않습니다"
 END

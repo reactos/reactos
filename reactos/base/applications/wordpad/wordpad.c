@@ -22,9 +22,8 @@
 #define WIN32_LEAN_AND_MEAN
 //#define _WIN32_IE 0x0400
 
-#define MAX_STRING_LEN 255
-
 #include <stdarg.h>
+#include <stdlib.h>
 #include <ctype.h>
 #include <stdio.h>
 #include <assert.h>
@@ -33,12 +32,11 @@
 #include <richedit.h>
 #include <commctrl.h>
 #include <commdlg.h>
-#include <shlobj.h>
 #include <shellapi.h>
 #include <math.h>
 #include <errno.h>
 
-#include "resource.h"
+#include "wordpad.h"
 
 #ifdef NONAMELESSUNION
 # define U(x)  (x).u
@@ -52,22 +50,10 @@
 
 /* use LoadString */
 static const WCHAR xszAppTitle[] = {'W','i','n','e',' ','W','o','r','d','p','a','d',0};
-static const WCHAR xszMainMenu[] = {'M','A','I','N','M','E','N','U',0};
 
 static const WCHAR wszRichEditClass[] = {'R','I','C','H','E','D','I','T','2','0','W',0};
 static const WCHAR wszMainWndClass[] = {'W','O','R','D','P','A','D','T','O','P',0};
 static const WCHAR wszAppTitle[] = {'W','i','n','e',' ','W','o','r','d','p','a','d',0};
-
-static const WCHAR key_recentfiles[] = {'R','e','c','e','n','t',' ','f','i','l','e',
-                                        ' ','l','i','s','t',0};
-static const WCHAR key_options[] = {'O','p','t','i','o','n','s',0};
-static const WCHAR key_rtf[] = {'R','T','F',0};
-static const WCHAR key_text[] = {'T','e','x','t',0};
-
-static const WCHAR var_file[] = {'F','i','l','e','%','d',0};
-static const WCHAR var_framerect[] = {'F','r','a','m','e','R','e','c','t',0};
-static const WCHAR var_barstate0[] = {'B','a','r','S','t','a','t','e','0',0};
-static const WCHAR var_pagemargin[] = {'P','a','g','e','M','a','r','g','i','n',0};
 
 static const WCHAR stringFormat[] = {'%','2','d','\0'};
 
@@ -78,10 +64,14 @@ static HMENU hPopupMenu;
 
 static UINT ID_FINDMSGSTRING;
 
+static DWORD wordWrap[2];
+static DWORD barState[2];
+static WPARAM fileFormat = SF_RTF;
+
+static WCHAR wszFileName[MAX_PATH];
 static WCHAR wszFilter[MAX_STRING_LEN*4+6*3+5];
 static WCHAR wszDefaultFileName[MAX_STRING_LEN];
 static WCHAR wszSaveChanges[MAX_STRING_LEN];
-static WCHAR wszPrintFilter[MAX_STRING_LEN*2+6+4+1];
 static WCHAR units_cmW[MAX_STRING_LEN];
 
 static char units_cmA[MAX_STRING_LEN];
@@ -95,7 +85,7 @@ static void DoLoadStrings(void)
     static const WCHAR files_rtf[] = {'*','.','r','t','f','\0'};
     static const WCHAR files_txt[] = {'*','.','t','x','t','\0'};
     static const WCHAR files_all[] = {'*','.','*','\0'};
-    static const WCHAR files_prn[] = {'*','.','P','R','N',0};
+
     HINSTANCE hInstance = (HINSTANCE)GetWindowLongPtr(hMainWnd, GWLP_HINSTANCE);
 
     LoadStringW(hInstance, STRING_RICHTEXT_FILES_RTF, p, MAX_STRING_LEN);
@@ -115,17 +105,6 @@ static void DoLoadStrings(void)
     lstrcpyW(p, files_all);
     p += lstrlenW(p) + 1;
     *p = '\0';
-
-    p = wszPrintFilter;
-    LoadStringW(hInstance, STRING_PRINTER_FILES_PRN, p, MAX_STRING_LEN);
-    p += lstrlenW(p) + 1;
-    lstrcpyW(p, files_prn);
-    p += lstrlenW(p) + 1;
-    LoadStringW(hInstance, STRING_ALL_FILES, p, MAX_STRING_LEN);
-    p += lstrlenW(p) + 1;
-    lstrcpyW(p, files_all);
-    p += lstrlenW(p) + 1;
-    *p = 0;
 
     p = wszDefaultFileName;
     LoadStringW(hInstance, STRING_DEFAULT_FILENAME, p, MAX_STRING_LEN);
@@ -149,36 +128,6 @@ static void AddButton(HWND hwndToolBar, int nImage, int nCommand)
     button.dwData = 0;
     button.iString = -1;
     SendMessageW(hwndToolBar, TB_ADDBUTTONSW, 1, (LPARAM)&button);
-}
-
-static void AddTextButton(HWND hWnd, int string, int command, int id)
-{
-    REBARBANDINFOW rb;
-    HINSTANCE hInstance = (HINSTANCE)GetWindowLongPtr(hMainWnd, GWLP_HINSTANCE);
-    static const WCHAR button[] = {'B','U','T','T','O','N',0};
-    WCHAR text[MAX_STRING_LEN];
-    HWND hButton;
-    RECT rc;
-
-    LoadStringW(hInstance, string, text, MAX_STRING_LEN);
-    hButton = CreateWindowW(button, text,
-                            WS_VISIBLE | WS_CHILD, 5, 5, 100, 15,
-                            hMainWnd, (HMENU)command, hInstance, NULL);
-
-    rb.cbSize = sizeof(rb);
-    rb.fMask = RBBIM_SIZE | RBBIM_CHILDSIZE | RBBIM_STYLE | RBBIM_CHILD | RBBIM_IDEALSIZE | RBBIM_ID;
-    rb.fStyle = RBBS_NOGRIPPER | RBBS_VARIABLEHEIGHT;
-    rb.hwndChild = hButton;
-    rb.cyChild = rb.cyMinChild = 22;
-    rb.cx = rb.cxMinChild = 90;
-    rb.cxIdeal = 100;
-    rb.wID = id;
-
-    rc.bottom = 22;
-    rc.right = 90;
-
-    SendMessageW(hWnd, RB_INSERTBAND, -1, (LPARAM)&rb);
-    SetWindowPos(hButton, 0, 0, 0, 90, 22, SWP_NOMOVE | SWP_NOOWNERZORDER | SWP_NOZORDER);
 }
 
 static void AddSeparator(HWND hwndToolBar)
@@ -224,8 +173,7 @@ static DWORD CALLBACK stream_out(DWORD_PTR cookie, LPBYTE buffer, LONG cb, LONG 
     return 0;
 }
 
-
-static LPWSTR file_basename(LPWSTR path)
+LPWSTR file_basename(LPWSTR path)
 {
     LPWSTR pos = path + lstrlenW(path);
 
@@ -240,9 +188,6 @@ static LPWSTR file_basename(LPWSTR path)
     }
     return pos;
 }
-
-static WCHAR wszFileName[MAX_PATH];
-static WPARAM fileFormat = SF_RTF;
 
 static void set_caption(LPCWSTR wszNewFileName)
 {
@@ -270,278 +215,6 @@ static void set_caption(LPCWSTR wszNewFileName)
     SetWindowTextW(hMainWnd, wszCaption);
 
     HeapFree(GetProcessHeap(), 0, wszCaption);
-}
-
-static LRESULT registry_get_handle(HKEY *hKey, LPDWORD action, LPCWSTR subKey)
-{
-    LONG ret;
-    static const WCHAR wszProgramKey[] = {'S','o','f','t','w','a','r','e','\\',
-        'M','i','c','r','o','s','o','f','t','\\',
-        'W','i','n','d','o','w','s','\\',
-        'C','u','r','r','e','n','t','V','e','r','s','i','o','n','\\',
-        'A','p','p','l','e','t','s','\\',
-        'W','o','r','d','p','a','d',0};
-    LPWSTR key = (LPWSTR)wszProgramKey;
-
-    if(subKey)
-    {
-        WCHAR backslash[] = {'\\',0};
-        key = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY,
-                        (lstrlenW(wszProgramKey)+lstrlenW(subKey)+lstrlenW(backslash)+1)
-                        *sizeof(WCHAR));
-
-        if(!key)
-            return 1;
-
-        lstrcpyW(key, wszProgramKey);
-        lstrcatW(key, backslash);
-        lstrcatW(key, subKey);
-    }
-
-    if(action)
-    {
-        ret = RegCreateKeyExW(HKEY_CURRENT_USER, key, 0, NULL, REG_OPTION_NON_VOLATILE,
-                              KEY_READ | KEY_WRITE, NULL, hKey, action);
-    } else
-    {
-        ret = RegOpenKeyExW(HKEY_CURRENT_USER, key, 0, KEY_READ | KEY_WRITE, hKey);
-    }
-
-    if(subKey)
-        HeapFree(GetProcessHeap(), 0, key);
-
-    return ret;
-}
-
-static RECT margins;
-
-static void registry_set_options(void)
-{
-    HKEY hKey;
-    DWORD action;
-
-    if(registry_get_handle(&hKey, &action, (LPWSTR)key_options) == ERROR_SUCCESS)
-    {
-        RECT rc;
-
-        GetWindowRect(hMainWnd, &rc);
-
-        RegSetValueExW(hKey, var_framerect, 0, REG_BINARY, (LPBYTE)&rc, sizeof(RECT));
-
-        RegSetValueExW(hKey, var_pagemargin, 0, REG_BINARY, (LPBYTE)&margins, sizeof(RECT));
-    }
-}
-
-static RECT registry_read_winrect(void)
-{
-    HKEY hKey;
-    RECT rc;
-    DWORD size = sizeof(RECT);
-
-    ZeroMemory(&rc, sizeof(RECT));
-    if(registry_get_handle(&hKey, 0, (LPWSTR)key_options) != ERROR_SUCCESS ||
-       RegQueryValueExW(hKey, var_framerect, 0, NULL, (LPBYTE)&rc, &size) !=
-       ERROR_SUCCESS || size != sizeof(RECT))
-    {
-        rc.top = 0;
-        rc.left = 0;
-        rc.bottom = 300;
-        rc.right = 600;
-    }
-
-    RegCloseKey(hKey);
-    return rc;
-}
-
-static void truncate_path(LPWSTR file, LPWSTR out, LPWSTR pos1, LPWSTR pos2)
-{
-    static const WCHAR dots[] = {'.','.','.',0};
-
-    *++pos1 = 0;
-
-    lstrcatW(out, file);
-    lstrcatW(out, dots);
-    lstrcatW(out, pos2);
-}
-
-static void format_filelist_filename(LPWSTR file, LPWSTR out)
-{
-    LPWSTR pos_basename;
-    LPWSTR truncpos1, truncpos2;
-    WCHAR myDocs[MAX_STRING_LEN];
-
-    SHGetFolderPathW(NULL, CSIDL_PERSONAL, NULL, SHGFP_TYPE_CURRENT, (LPWSTR)&myDocs);
-    pos_basename = file_basename(file);
-    truncpos1 = NULL;
-    truncpos2 = NULL;
-
-    *(pos_basename-1) = 0;
-    if(!lstrcmpiW(file, myDocs) || (lstrlenW(pos_basename) > FILELIST_ENTRY_LENGTH))
-    {
-        truncpos1 = pos_basename;
-        *(pos_basename-1) = '\\';
-    } else
-    {
-        LPWSTR pos;
-        BOOL morespace = FALSE;
-
-        *(pos_basename-1) = '\\';
-
-        for(pos = file; pos < pos_basename; pos++)
-        {
-            if(*pos == '\\' || *pos == '/')
-            {
-                if(truncpos1)
-                {
-                    if((pos - file + lstrlenW(pos_basename)) > FILELIST_ENTRY_LENGTH)
-                        break;
-
-                    truncpos1 = pos;
-                    morespace = TRUE;
-                    break;
-                }
-
-                if((pos - file + lstrlenW(pos_basename)) > FILELIST_ENTRY_LENGTH)
-                    break;
-
-                truncpos1 = pos;
-            }
-        }
-
-        if(morespace)
-        {
-            for(pos = pos_basename; pos >= truncpos1; pos--)
-            {
-                if(*pos == '\\' || *pos == '/')
-                {
-                    if((truncpos1 - file + lstrlenW(pos_basename) + pos_basename - pos) > FILELIST_ENTRY_LENGTH)
-                        break;
-
-                    truncpos2 = pos;
-                }
-            }
-        }
-    }
-
-    if(truncpos1 == pos_basename)
-        lstrcatW(out, pos_basename);
-    else if(truncpos1 == truncpos2 || !truncpos2)
-        lstrcatW(out, file);
-    else
-        truncate_path(file, out, truncpos1, truncpos2 ? truncpos2 : (pos_basename-1));
-}
-
-static void registry_read_filelist(HWND hMainWnd)
-{
-    HKEY hFileKey;
-
-    if(registry_get_handle(&hFileKey, 0, key_recentfiles) == ERROR_SUCCESS)
-    {
-        WCHAR itemText[MAX_PATH+3], buffer[MAX_PATH];
-        /* The menu item name is not the same as the file name, so we need to store
-           the file name here */
-        static WCHAR file1[MAX_PATH], file2[MAX_PATH], file3[MAX_PATH], file4[MAX_PATH];
-        WCHAR numFormat[] = {'&','%','d',' ',0};
-        LPWSTR pFile[] = {file1, file2, file3, file4};
-        DWORD pathSize = MAX_PATH*sizeof(WCHAR);
-        int i;
-        WCHAR key[6];
-        MENUITEMINFOW mi;
-        HMENU hMenu = GetMenu(hMainWnd);
-
-        mi.cbSize = sizeof(MENUITEMINFOW);
-        mi.fMask = MIIM_ID | MIIM_DATA | MIIM_STRING | MIIM_FTYPE;
-        mi.fType = MFT_STRING;
-        mi.dwTypeData = itemText;
-        mi.wID = ID_FILE_RECENT1;
-
-        RemoveMenu(hMenu, ID_FILE_RECENT_SEPARATOR, MF_BYCOMMAND);
-        for(i = 0; i < FILELIST_ENTRIES; i++)
-        {
-            wsprintfW(key, var_file, i+1);
-            RemoveMenu(hMenu, ID_FILE_RECENT1+i, MF_BYCOMMAND);
-            if(RegQueryValueExW(hFileKey, (LPWSTR)key, 0, NULL, (LPBYTE)pFile[i], &pathSize)
-               != ERROR_SUCCESS)
-                break;
-
-            mi.dwItemData = (DWORD)pFile[i];
-            wsprintfW(itemText, numFormat, i+1);
-
-            lstrcpyW(buffer, pFile[i]);
-
-            format_filelist_filename(buffer, itemText);
-
-            InsertMenuItemW(hMenu, ID_FILE_EXIT, FALSE, &mi);
-            mi.wID++;
-            pathSize = MAX_PATH*sizeof(WCHAR);
-        }
-        mi.fType = MFT_SEPARATOR;
-        mi.fMask = MIIM_FTYPE | MIIM_ID;
-        InsertMenuItemW(hMenu, ID_FILE_EXIT, FALSE, &mi);
-
-        RegCloseKey(hFileKey);
-    }
-}
-
-static void registry_set_filelist(LPCWSTR newFile)
-{
-    HKEY hKey;
-    DWORD action;
-
-    if(registry_get_handle(&hKey, &action, key_recentfiles) == ERROR_SUCCESS)
-    {
-        LPCWSTR pFiles[FILELIST_ENTRIES];
-        int i;
-        HMENU hMenu = GetMenu(hMainWnd);
-        MENUITEMINFOW mi;
-        WCHAR buffer[6];
-
-        mi.cbSize = sizeof(MENUITEMINFOW);
-        mi.fMask = MIIM_DATA;
-
-        for(i = 0; i < FILELIST_ENTRIES; i++)
-            pFiles[i] = NULL;
-
-        for(i = 0; GetMenuItemInfoW(hMenu, ID_FILE_RECENT1+i, FALSE, &mi); i++)
-            pFiles[i] = (LPWSTR)mi.dwItemData;
-
-        if(lstrcmpiW(newFile, pFiles[0]))
-        {
-            for(i = 0; pFiles[i] && i < FILELIST_ENTRIES; i++)
-            {
-                if(!lstrcmpiW(pFiles[i], newFile))
-                {
-                    int j;
-                    for(j = 0; pFiles[j] && j < i; j++)
-                    {
-                        pFiles[i-j] = pFiles[i-j-1];
-                    }
-                    pFiles[0] = NULL;
-                    break;
-                }
-            }
-
-            if(!pFiles[0])
-            {
-                pFiles[0] = newFile;
-            } else
-            {
-                for(i = 0; pFiles[i] && i < FILELIST_ENTRIES-1; i++)
-                    pFiles[FILELIST_ENTRIES-1-i] = pFiles[FILELIST_ENTRIES-2-i];
-
-                pFiles[0] = newFile;
-            }
-
-            for(i = 0; pFiles[i] && i < FILELIST_ENTRIES; i++)
-            {
-                wsprintfW(buffer, var_file, i+1);
-                RegSetValueExW(hKey, (LPWSTR)&buffer, 0, REG_SZ, (LPBYTE)pFiles[i],
-                               (lstrlenW(pFiles[i])+1)*sizeof(WCHAR));
-            }
-        }
-    }
-    RegCloseKey(hKey);
-    registry_read_filelist(hMainWnd);
 }
 
 static BOOL validate_endptr(LPCSTR endptr, BOOL units)
@@ -699,11 +372,6 @@ static void clear_formatting(void)
     SendMessageW(hEditorWnd, EM_SETPARAFORMAT, 0, (LPARAM)&pf);
 }
 
-static int reg_formatindex(WPARAM format)
-{
-    return (format & SF_TEXT) ? 1 : 0;
-}
-
 static int fileformat_number(WPARAM format)
 {
     int number = 0;
@@ -798,7 +466,7 @@ static void add_font(LPCWSTR fontName, DWORD fontType, HWND hListWnd, NEWTEXTMET
 
     cbItem.lParam = MAKELONG(fontType,fontHeight);
     SendMessageW(hListWnd, CBEM_INSERTITEMW, 0, (LPARAM)&cbItem);
-	HeapFree( GetProcessHeap(), 0, cbItem.pszText );
+    HeapFree( GetProcessHeap(), 0, cbItem.pszText );
 }
 
 static void dialog_choose_font(void)
@@ -893,9 +561,6 @@ static void update_window(void)
     (void) OnSize(hMainWnd, SIZE_RESTORED, MAKELONG(rect.bottom, rect.right));
 }
 
-static DWORD barState[2];
-static DWORD wordWrap[2];
-
 static BOOL is_bar_visible(int bandId)
 {
     return barState[reg_formatindex(fileFormat)] & (1 << bandId);
@@ -958,99 +623,21 @@ static void set_bar_states(void)
     update_window();
 }
 
-static HGLOBAL devMode;
-static HGLOBAL devNames;
-
-static HDC make_dc(void)
+static void preview_exit(HWND hMainWnd)
 {
-    if(devNames && devMode)
-    {
-        LPDEVNAMES dn = GlobalLock(devNames);
-        LPDEVMODEW dm = GlobalLock(devMode);
-        HDC ret;
+    HINSTANCE hInstance = (HINSTANCE)GetWindowLongPtr(hMainWnd, GWLP_HINSTANCE);
+    HMENU hMenu = LoadMenuW(hInstance, MAKEINTRESOURCEW(IDM_MAINMENU));
+    HWND hEditorWnd = GetDlgItem(hMainWnd, IDC_EDITOR);
 
-        ret = CreateDCW((LPWSTR)dn + dn->wDriverOffset,
-                        (LPWSTR)dn + dn->wDeviceOffset, 0, dm);
+    set_bar_states();
+    ShowWindow(hEditorWnd, TRUE);
 
-        GlobalUnlock(dn);
-        GlobalUnlock(dm);
+    close_preview(hMainWnd);
 
-        return ret;
-    } else
-    {
-        return 0;
-    }
-}
+    SetMenu(hMainWnd, hMenu);
+    registry_read_filelist(hMainWnd);
 
-static LONG twips_to_pixels(int twips, int dpi)
-{
-    float ret = ((float)twips / ((float)567 * 2.54)) * (float)dpi;
-    return (LONG)ret;
-}
-
-static LONG devunits_to_twips(int units, int dpi)
-{
-    float ret = ((float)units / (float)dpi) * (float)567 * 2.54;
-    return (LONG)ret;
-}
-
-static LONG centmm_to_twips(int mm)
-{
-    return MulDiv(mm, 567, 1000);
-}
-
-static LONG twips_to_centmm(int twips)
-{
-    return MulDiv(twips, 1000, 567);
-}
-
-static RECT get_print_rect(HDC hdc)
-{
-    RECT rc;
-    int width, height;
-
-    if(hdc)
-    {
-        int dpiY = GetDeviceCaps(hdc, LOGPIXELSY);
-        int dpiX = GetDeviceCaps(hdc, LOGPIXELSX);
-        width = devunits_to_twips(GetDeviceCaps(hdc, PHYSICALWIDTH), dpiX);
-        height = devunits_to_twips(GetDeviceCaps(hdc, PHYSICALHEIGHT), dpiY);
-    } else
-    {
-        width = centmm_to_twips(18500);
-        height = centmm_to_twips(27000);
-    }
-
-    rc.left = margins.left;
-    rc.right = width - margins.right;
-    rc.top = margins.top;
-    rc.bottom = height - margins.bottom;
-
-    return rc;
-}
-
-static void target_device(void)
-{
-    HDC hdc = make_dc();
-    int width = 0;
-    int index = reg_formatindex(fileFormat);
-
-    if(wordWrap[index] == ID_WORDWRAP_MARGIN)
-    {
-        RECT rc = get_print_rect(hdc);
-        width = rc.right;
-    }
-
-    if(!hdc)
-    {
-        HDC hMaindc = GetDC(hMainWnd);
-        hdc = CreateCompatibleDC(hMaindc);
-        ReleaseDC(hMainWnd, hMaindc);
-    }
-
-    SendMessageW(hEditorWnd, EM_SETTARGETDEVICE, (WPARAM)hdc, width);
-
-    DeleteDC(hdc);
+    update_window();
 }
 
 static void set_fileformat(WPARAM format)
@@ -1068,7 +655,7 @@ static void set_fileformat(WPARAM format)
 
     set_bar_states();
     set_default_font();
-    target_device();
+    target_device(hMainWnd, wordWrap[reg_formatindex(fileFormat)]);
 }
 
 static void DoOpenFile(LPCWSTR szOpenFileName)
@@ -1094,8 +681,17 @@ static void DoOpenFile(LPCWSTR szOpenFileName)
     } else if(readOut >= 5)
     {
         static const char header[] = "{\\rtf";
+        static const BYTE STG_magic[] = { 0xd0,0xcf,0x11,0xe0 };
+
         if(!memcmp(header, fileStart, 5))
             format = SF_RTF;
+        else if (!memcmp(STG_magic, fileStart, sizeof(STG_magic)))
+        {
+            CloseHandle(hFile);
+            MessageBoxW(hMainWnd, MAKEINTRESOURCEW(STRING_OLE_STORAGE_NOT_SUPPORTED), wszAppTitle,
+                        MB_OK | MB_ICONEXCLAMATION);
+            return;
+        }
     }
 
     es.dwCookie = (DWORD_PTR)hFile;
@@ -1113,7 +709,7 @@ static void DoOpenFile(LPCWSTR szOpenFileName)
 
     lstrcpyW(wszFileName, szOpenFileName);
     SendMessageW(hEditorWnd, EM_SETMODIFY, FALSE, 0);
-    registry_set_filelist(szOpenFileName);
+    registry_set_filelist(szOpenFileName, hMainWnd);
     update_font_list();
 }
 
@@ -1283,406 +879,6 @@ static void DialogOpenFile(void)
     }
 }
 
-static LPWSTR dialog_print_to_file(void)
-{
-    OPENFILENAMEW ofn;
-    static WCHAR file[MAX_PATH] = {'O','U','T','P','U','T','.','P','R','N',0};
-    static const WCHAR defExt[] = {'P','R','N',0};
-
-    ZeroMemory(&ofn, sizeof(ofn));
-
-    ofn.lStructSize = sizeof(ofn);
-    ofn.Flags = OFN_PATHMUSTEXIST | OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT;
-    ofn.hwndOwner = hMainWnd;
-    ofn.lpstrFilter = (LPWSTR)wszPrintFilter;
-    ofn.lpstrFile = (LPWSTR)file;
-    ofn.nMaxFile = MAX_PATH;
-    ofn.lpstrDefExt = (LPWSTR)defExt;
-
-    if(GetSaveFileNameW(&ofn))
-        return (LPWSTR)file;
-    else
-        return FALSE;
-}
-
-static int get_num_pages(FORMATRANGE fr)
-{
-    int page = 0;
-
-    do
-    {
-        page++;
-        fr.chrg.cpMin = SendMessageW(hEditorWnd, EM_FORMATRANGE, TRUE,
-                                     (LPARAM)&fr);
-    }
-    while(fr.chrg.cpMin && fr.chrg.cpMin < fr.chrg.cpMax);
-
-    return page;
-}
-
-static void char_from_pagenum(FORMATRANGE *fr, int page)
-{
-    int i;
-
-    for(i = 1; i <= page; i++)
-    {
-        if(i == page)
-            break;
-
-        fr->chrg.cpMin = SendMessageW(hEditorWnd, EM_FORMATRANGE, TRUE, (LPARAM)fr);
-    }
-}
-
-static void print(LPPRINTDLGW pd)
-{
-    FORMATRANGE fr;
-    DOCINFOW di;
-    int printedPages = 0;
-
-    fr.hdc = pd->hDC;
-    fr.hdcTarget = pd->hDC;
-
-    fr.rc = get_print_rect(fr.hdc);
-    fr.rcPage.left = 0;
-    fr.rcPage.right = fr.rc.right + margins.right;
-    fr.rcPage.top = 0;
-    fr.rcPage.bottom = fr.rc.bottom + margins.bottom;
-
-    ZeroMemory(&di, sizeof(di));
-    di.cbSize = sizeof(di);
-    di.lpszDocName = (LPWSTR)wszFileName;
-
-    if(pd->Flags & PD_PRINTTOFILE)
-    {
-        di.lpszOutput = dialog_print_to_file();
-        if(!di.lpszOutput)
-            return;
-    }
-
-    if(pd->Flags & PD_SELECTION)
-    {
-        SendMessageW(hEditorWnd, EM_EXGETSEL, 0, (LPARAM)&fr.chrg);
-    } else
-    {
-        GETTEXTLENGTHEX gt;
-        gt.flags = GTL_DEFAULT;
-        gt.codepage = 1200;
-        fr.chrg.cpMin = 0;
-        fr.chrg.cpMax = SendMessageW(hEditorWnd, EM_GETTEXTLENGTHEX, (WPARAM)&gt, 0);
-
-        if(pd->Flags & PD_PAGENUMS)
-            char_from_pagenum(&fr, pd->nToPage);
-    }
-
-    StartDocW(fr.hdc, &di);
-    do
-    {
-        if(StartPage(fr.hdc) <= 0)
-            break;
-
-        fr.chrg.cpMin = SendMessageW(hEditorWnd, EM_FORMATRANGE, TRUE, (LPARAM)&fr);
-
-        if(EndPage(fr.hdc) <= 0)
-            break;
-
-        printedPages++;
-        if((pd->Flags & PD_PAGENUMS) && (printedPages > (pd->nToPage - pd->nFromPage)))
-            break;
-    }
-    while(fr.chrg.cpMin && fr.chrg.cpMin < fr.chrg.cpMax);
-
-    EndDoc(fr.hdc);
-    SendMessageW(hEditorWnd, EM_FORMATRANGE, FALSE, 0);
-    target_device();
-}
-
-static void dialog_printsetup(void)
-{
-    PAGESETUPDLGW ps;
-
-    ZeroMemory(&ps, sizeof(ps));
-    ps.lStructSize = sizeof(ps);
-    ps.hwndOwner = hMainWnd;
-    ps.Flags = PSD_INHUNDREDTHSOFMILLIMETERS | PSD_MARGINS;
-    ps.rtMargin.left = twips_to_centmm(margins.left);
-    ps.rtMargin.right = twips_to_centmm(margins.right);
-    ps.rtMargin.top = twips_to_centmm(margins.top);
-    ps.rtMargin.bottom = twips_to_centmm(margins.bottom);
-    ps.hDevMode = devMode;
-    ps.hDevNames = devNames;
-
-    if(PageSetupDlgW(&ps))
-    {
-        margins.left = centmm_to_twips(ps.rtMargin.left);
-        margins.right = centmm_to_twips(ps.rtMargin.right);
-        margins.top = centmm_to_twips(ps.rtMargin.top);
-        margins.bottom = centmm_to_twips(ps.rtMargin.bottom);
-        devMode = ps.hDevMode;
-        devNames = ps.hDevNames;
-        target_device();
-    }
-}
-
-static void get_default_printer_opts(void)
-{
-    PRINTDLGW pd;
-    ZeroMemory(&pd, sizeof(pd));
-
-    ZeroMemory(&pd, sizeof(pd));
-    pd.lStructSize = sizeof(pd);
-    pd.Flags = PD_RETURNDC | PD_RETURNDEFAULT;
-    pd.hwndOwner = hMainWnd;
-    pd.hDevMode = devMode;
-
-    PrintDlgW(&pd);
-
-    devMode = pd.hDevMode;
-    devNames = pd.hDevNames;
-}
-
-static void print_quick(void)
-{
-    PRINTDLGW pd;
-
-    ZeroMemory(&pd, sizeof(pd));
-    pd.hDC = make_dc();
-
-    print(&pd);
-}
-
-static void dialog_print(void)
-{
-    PRINTDLGW pd;
-    int from = 0;
-    int to = 0;
-
-    ZeroMemory(&pd, sizeof(pd));
-    pd.lStructSize = sizeof(pd);
-    pd.hwndOwner = hMainWnd;
-    pd.Flags = PD_RETURNDC | PD_USEDEVMODECOPIESANDCOLLATE;
-    pd.nMinPage = 1;
-    pd.nMaxPage = -1;
-    pd.hDevMode = devMode;
-    pd.hDevNames = devNames;
-
-    SendMessageW(hEditorWnd, EM_GETSEL, (WPARAM)&from, (LPARAM)&to);
-    if(from == to)
-        pd.Flags |= PD_NOSELECTION;
-
-    if(PrintDlgW(&pd))
-    {
-        devMode = pd.hDevMode;
-        devNames = pd.hDevNames;
-        print(&pd);
-    }
-}
-
-typedef struct _previewinfo
-{
-    int page;
-    int pages;
-    HDC hdc;
-    HDC hdcSized;
-    RECT window;
-} previewinfo, *ppreviewinfo;
-
-static previewinfo preview;
-
-static void preview_bar_show(BOOL show)
-{
-    HWND hReBar = GetDlgItem(hMainWnd, IDC_REBAR);
-    int i;
-
-    if(show)
-    {
-        REBARBANDINFOW rb;
-
-        AddTextButton(hReBar, STRING_PREVIEW_PRINT, ID_PRINT, BANDID_PREVIEW_BTN1);
-        AddTextButton(hReBar, STRING_PREVIEW_NEXTPAGE, ID_PREVIEW_NEXTPAGE, BANDID_PREVIEW_BTN2);
-        AddTextButton(hReBar, STRING_PREVIEW_PREVPAGE, ID_PREVIEW_PREVPAGE, BANDID_PREVIEW_BTN3);
-        AddTextButton(hReBar, STRING_PREVIEW_CLOSE, ID_FILE_EXIT, BANDID_PREVIEW_BTN4);
-
-        rb.cbSize = sizeof(rb);
-        rb.fMask = RBBIM_SIZE | RBBIM_CHILDSIZE | RBBIM_STYLE | RBBIM_CHILD | RBBIM_IDEALSIZE | RBBIM_ID;
-        rb.fStyle = RBBS_NOGRIPPER | RBBS_VARIABLEHEIGHT;
-        rb.cyChild = rb.cyMinChild = 22;
-        rb.cx = rb.cxMinChild = 90;
-        rb.cxIdeal = 100;
-        rb.wID = BANDID_PREVIEW_BUFFER;
-
-        SendMessageW(hReBar, RB_INSERTBAND, -1, (LPARAM)&rb);
-    } else
-    {
-        for(i = 0; i <= PREVIEW_BUTTONS; i++)
-            SendMessageW(hReBar, RB_DELETEBAND, SendMessageW(hReBar, RB_IDTOINDEX, BANDID_PREVIEW_BTN1+i, 0), 0);
-    }
-}
-
-static void preview_exit(void)
-{
-    HINSTANCE hInstance = (HINSTANCE)GetWindowLongPtr(hMainWnd, GWLP_HINSTANCE);
-    HMENU hMenu = LoadMenuW(hInstance, xszMainMenu);
-
-    set_bar_states();
-    preview.window.right = 0;
-    preview.window.bottom = 0;
-    preview.page = 0;
-    preview.pages = 0;
-    ShowWindow(hEditorWnd, TRUE);
-
-    preview_bar_show(FALSE);
-
-    SetMenu(hMainWnd, hMenu);
-    registry_read_filelist(hMainWnd);
-
-    update_window();
-}
-
-static LRESULT print_preview(void)
-{
-    FORMATRANGE fr;
-    GETTEXTLENGTHEX gt;
-    HDC hdc;
-    RECT window, background;
-    HBITMAP hBitmapCapture, hBitmapScaled;
-    int bmWidth, bmHeight, bmNewWidth, bmNewHeight;
-    float ratioWidth, ratioHeight, ratio;
-    int xOffset, yOffset;
-    int barheight;
-    HWND hReBar = GetDlgItem(hMainWnd, IDC_REBAR);
-    PAINTSTRUCT ps;
-
-    hdc = BeginPaint(hMainWnd, &ps);
-    GetClientRect(hMainWnd, &window);
-
-    fr.hdcTarget = make_dc();
-    fr.rc = get_print_rect(fr.hdcTarget);
-    fr.rcPage.left = 0;
-    fr.rcPage.top = 0;
-    fr.rcPage.bottom = fr.rc.bottom + margins.bottom;
-    fr.rcPage.right = fr.rc.right + margins.right;
-
-    bmWidth = twips_to_pixels(fr.rcPage.right, GetDeviceCaps(hdc, LOGPIXELSX));
-    bmHeight = twips_to_pixels(fr.rcPage.bottom, GetDeviceCaps(hdc, LOGPIXELSY));
-
-    hBitmapCapture = CreateCompatibleBitmap(hdc, bmWidth, bmHeight);
-
-    if(!preview.hdc)
-    {
-        RECT paper;
-
-        preview.hdc = CreateCompatibleDC(hdc);
-        fr.hdc = preview.hdc;
-        gt.flags = GTL_DEFAULT;
-        gt.codepage = 1200;
-        fr.chrg.cpMin = 0;
-        fr.chrg.cpMax = SendMessageW(hEditorWnd, EM_GETTEXTLENGTHEX, (WPARAM)&gt, 0);
-
-        paper.left = 0;
-        paper.right = bmWidth;
-        paper.top = 0;
-        paper.bottom = bmHeight;
-
-        if(!preview.pages)
-            preview.pages = get_num_pages(fr);
-
-        SelectObject(preview.hdc, hBitmapCapture);
-
-        char_from_pagenum(&fr, preview.page);
-
-        FillRect(preview.hdc, &paper, GetStockObject(WHITE_BRUSH));
-        SendMessageW(hEditorWnd, EM_FORMATRANGE, TRUE, (LPARAM)&fr);
-        SendMessageW(hEditorWnd, EM_FORMATRANGE, FALSE, 0);
-
-        EnableWindow(GetDlgItem(hReBar, ID_PREVIEW_PREVPAGE), preview.page > 1);
-        EnableWindow(GetDlgItem(hReBar, ID_PREVIEW_NEXTPAGE), preview.page < preview.pages);
-    }
-
-    barheight = SendMessageW(hReBar, RB_GETBARHEIGHT, 0, 0);
-    ratioWidth = ((float)window.right - 20.0) / (float)bmHeight;
-    ratioHeight = ((float)window.bottom - 20.0 - (float)barheight) / (float)bmHeight;
-
-    if(ratioWidth > ratioHeight)
-        ratio = ratioHeight;
-    else
-        ratio = ratioWidth;
-
-    bmNewWidth = (int)((float)bmWidth * ratio);
-    bmNewHeight = (int)((float)bmHeight * ratio);
-    hBitmapScaled = CreateCompatibleBitmap(hdc, bmNewWidth, bmNewHeight);
-
-    xOffset = ((window.right - bmNewWidth) / 2);
-    yOffset = ((window.bottom - bmNewHeight + barheight) / 2);
-
-    if(window.right != preview.window.right || window.bottom != preview.window.bottom)
-    {
-        DeleteDC(preview.hdcSized),
-        preview.hdcSized = CreateCompatibleDC(hdc);
-        SelectObject(preview.hdcSized, hBitmapScaled);
-
-        StretchBlt(preview.hdcSized, 0, 0, bmNewWidth, bmNewHeight, preview.hdc, 0, 0, bmWidth, bmHeight, SRCCOPY);
-    }
-
-    window.top = barheight;
-    FillRect(hdc, &window, GetStockObject(GRAY_BRUSH));
-
-    SelectObject(hdc, hBitmapScaled);
-
-    background.left = xOffset - 2;
-    background.right = xOffset + bmNewWidth + 2;
-    background.top = yOffset - 2;
-    background.bottom = yOffset + bmNewHeight + 2;
-
-    FillRect(hdc, &background, GetStockObject(BLACK_BRUSH));
-
-    BitBlt(hdc, xOffset, yOffset, bmNewWidth, bmNewHeight, preview.hdcSized, 0, 0, SRCCOPY);
-
-    DeleteDC(fr.hdcTarget);
-    preview.window = window;
-
-    EndPaint(hMainWnd, &ps);
-
-    return 0;
-}
-
-static LRESULT preview_command(HWND hWnd, WPARAM wParam, LPARAM lParam)
-{
-    switch(LOWORD(wParam))
-    {
-        case ID_FILE_EXIT:
-            PostMessageW(hMainWnd, WM_CLOSE, 0, 0);
-            break;
-
-        case ID_PREVIEW_NEXTPAGE:
-        case ID_PREVIEW_PREVPAGE:
-            {
-                HWND hReBar = GetDlgItem(hMainWnd, IDC_REBAR);
-                RECT rc;
-
-                if(LOWORD(wParam) == ID_PREVIEW_NEXTPAGE)
-                    preview.page++;
-                else
-                    preview.page--;
-
-                preview.hdc = 0;
-                preview.window.right = 0;
-
-                GetClientRect(hMainWnd, &rc);
-                rc.top += SendMessageW(hReBar, RB_GETBARHEIGHT, 0, 0);
-                InvalidateRect(hMainWnd, &rc, TRUE);
-            }
-            break;
-
-        case ID_PRINT:
-            dialog_print();
-            preview_exit();
-            break;
-    }
-
-    return 0;
-}
-
-
 static void dialog_about(void)
 {
     HINSTANCE hInstance = (HINSTANCE)GetWindowLongPtr(hMainWnd, GWLP_HINSTANCE);
@@ -1818,7 +1014,7 @@ static void dialog_viewproperties(void)
         U2(psh).nStartPage = 0;
     PropertySheetW(&psh);
     set_bar_states();
-    target_device();
+    target_device(hMainWnd, wordWrap[reg_formatindex(fileFormat)]);
 }
 
 static void HandleCommandLine(LPWSTR cmdline)
@@ -1982,81 +1178,6 @@ static void dialog_find(LPFINDREPLACEW fr, BOOL replace)
         hFindWnd = ReplaceTextW(fr);
     else
         hFindWnd = FindTextW(fr);
-}
-
-static void registry_read_options(void)
-{
-    HKEY hKey;
-    DWORD size = sizeof(RECT);
-
-    if(registry_get_handle(&hKey, 0, key_options) != ERROR_SUCCESS ||
-       RegQueryValueExW(hKey, var_pagemargin, 0, NULL, (LPBYTE)&margins,
-                        &size) != ERROR_SUCCESS || size != sizeof(RECT))
-    {
-        margins.top = 1417;
-        margins.bottom = 1417;
-        margins.left = 1757;
-        margins.right = 1757;
-    }
-
-    RegCloseKey(hKey);
-}
-
-static void registry_read_formatopts(int index, LPCWSTR key)
-{
-    HKEY hKey;
-    DWORD action = 0;
-    BOOL fetched = FALSE;
-    barState[index] = 0;
-    wordWrap[index] = 0;
-
-    if(registry_get_handle(&hKey, &action, key) != ERROR_SUCCESS)
-        return;
-
-    if(action == REG_OPENED_EXISTING_KEY)
-    {
-        DWORD size = sizeof(DWORD);
-
-        if(RegQueryValueExW(hKey, var_barstate0, 0, NULL, (LPBYTE)&barState[index],
-                         &size) == ERROR_SUCCESS)
-            fetched = TRUE;
-    }
-
-    if(!fetched)
-        barState[index] = (1 << BANDID_TOOLBAR) | (1 << BANDID_FORMATBAR) | (1 << BANDID_RULER) | (1 << BANDID_STATUSBAR);
-
-    if(index == reg_formatindex(SF_RTF))
-        wordWrap[index] = ID_WORDWRAP_WINDOW;
-    else if(index == reg_formatindex(SF_TEXT))
-        wordWrap[index] = ID_WORDWRAP_WINDOW; /* FIXME: should be ID_WORDWRAP_NONE once we support it */
-
-    RegCloseKey(hKey);
-}
-
-static void registry_read_formatopts_all(void)
-{
-    registry_read_formatopts(reg_formatindex(SF_RTF), key_rtf);
-    registry_read_formatopts(reg_formatindex(SF_TEXT), key_text);
-}
-
-static void registry_set_formatopts(int index, LPCWSTR key)
-{
-    HKEY hKey;
-    DWORD action = 0;
-
-    if(registry_get_handle(&hKey, &action, key) == ERROR_SUCCESS)
-    {
-        RegSetValueExW(hKey, var_barstate0, 0, REG_DWORD, (LPBYTE)&barState[index],
-                       sizeof(DWORD));
-
-        RegCloseKey(hKey);
-    }
-}
-
-static void registry_set_formatopts_all(void)
-{
-    registry_set_formatopts(reg_formatindex(SF_RTF), key_rtf);
-    registry_set_formatopts(reg_formatindex(SF_TEXT), key_text);
 }
 
 static int current_units_to_twips(float number)
@@ -2562,7 +1683,7 @@ static LRESULT OnCreate( HWND hWnd, WPARAM wParam, LPARAM lParam)
     ID_FINDMSGSTRING = RegisterWindowMessageW(FINDMSGSTRINGW);
 
     registry_read_filelist(hWnd);
-    registry_read_formatopts_all();
+    registry_read_formatopts_all(barState, wordWrap);
     registry_read_options();
     DragAcceptFiles(hWnd, TRUE);
 
@@ -2777,11 +1898,13 @@ static LRESULT OnCommand( HWND hWnd, WPARAM wParam, LPARAM lParam)
         break;
 
     case ID_PRINT:
-        dialog_print();
+        dialog_print(hWnd, wszFileName);
+        target_device(hMainWnd, wordWrap[reg_formatindex(fileFormat)]);
         break;
 
     case ID_PRINT_QUICK:
-        print_quick();
+        print_quick(wszFileName);
+        target_device(hMainWnd, wordWrap[reg_formatindex(fileFormat)]);
         break;
 
     case ID_PREVIEW:
@@ -2792,17 +1915,17 @@ static LRESULT OnCommand( HWND hWnd, WPARAM wParam, LPARAM lParam)
             set_bar_states();
             barState[index] = tmp;
             ShowWindow(hEditorWnd, FALSE);
-            preview_bar_show(TRUE);
 
-            preview.page = 1;
-            preview.hdc = 0;
+            init_preview(hWnd, wszFileName);
+
             SetMenu(hWnd, NULL);
             InvalidateRect(0, 0, TRUE);
         }
         break;
 
     case ID_PRINTSETUP:
-        dialog_printsetup();
+        dialog_printsetup(hWnd);
+        target_device(hMainWnd, wordWrap[reg_formatindex(fileFormat)]);
         break;
 
     case ID_FORMAT_BOLD:
@@ -3171,23 +2294,25 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
         return OnNotify( hWnd, wParam, lParam );
 
     case WM_COMMAND:
-        if(preview.page)
+        if(preview_isactive())
+        {
             return preview_command( hWnd, wParam, lParam );
-        else
-            return OnCommand( hWnd, wParam, lParam );
+        }
+
+        return OnCommand( hWnd, wParam, lParam );
 
     case WM_DESTROY:
         PostQuitMessage(0);
         break;
 
     case WM_CLOSE:
-        if(preview.page)
+        if(preview_isactive())
         {
-            preview_exit();
+            preview_exit(hWnd);
         } else if(prompt_save_changes())
         {
-            registry_set_options();
-            registry_set_formatopts_all();
+            registry_set_options(hMainWnd);
+            registry_set_formatopts_all(barState);
             PostQuitMessage(0);
         }
         break;
@@ -3220,8 +2345,8 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
         }
         break;
     case WM_PAINT:
-        if(preview.page)
-            return print_preview();
+        if(preview_isactive())
+            return print_preview(hWnd);
         else
             return DefWindowProcW(hWnd, msg, wParam, lParam);
 
@@ -3254,11 +2379,11 @@ int CALLBACK wWinMain(HINSTANCE hInstance, HINSTANCE hOldInstance, LPWSTR szCmdP
     wc.hIcon = LoadIconW(hInstance, MAKEINTRESOURCEW(IDI_WORDPAD));
     wc.hCursor = LoadCursor(NULL, IDC_IBEAM);
     wc.hbrBackground = GetSysColorBrush(COLOR_WINDOW);
-    wc.lpszMenuName = xszMainMenu;
+    wc.lpszMenuName = MAKEINTRESOURCEW(IDM_MAINMENU);
     wc.lpszClassName = wszMainWndClass;
     RegisterClassW(&wc);
 
-    rc = registry_read_winrect();
+    registry_read_winrect(&rc);
     hMainWnd = CreateWindowExW(0, wszMainWndClass, wszAppTitle, WS_CLIPCHILDREN|WS_OVERLAPPEDWINDOW,
       rc.left, rc.top, rc.right-rc.left, rc.bottom-rc.top, NULL, NULL, hInstance, NULL);
     ShowWindow(hMainWnd, SW_SHOWDEFAULT);
@@ -3268,7 +2393,7 @@ int CALLBACK wWinMain(HINSTANCE hInstance, HINSTANCE hOldInstance, LPWSTR szCmdP
     set_fileformat(SF_RTF);
     hPopupMenu = LoadMenuW(hInstance, MAKEINTRESOURCEW(IDM_POPUP));
     get_default_printer_opts();
-    target_device();
+    target_device(hMainWnd, wordWrap[reg_formatindex(fileFormat)]);
 
     HandleCommandLine(GetCommandLineW());
 

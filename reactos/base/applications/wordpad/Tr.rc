@@ -20,7 +20,7 @@
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
-MAINMENU MENU DISCARDABLE
+IDM_MAINMENU MENU DISCARDABLE
 BEGIN
     POPUP "&Dosya"
     BEGIN
@@ -232,4 +232,5 @@ BEGIN
                                  "which will cause all formatting to be lost. " \
                                  "Are you sure that you wish to do this?"
     STRING_INVALID_NUMBER,       "Invalid number format"
+    STRING_OLE_STORAGE_NOT_SUPPORTED, "OLE storage documents are not supported"
 END

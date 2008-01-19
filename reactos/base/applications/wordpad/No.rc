@@ -18,7 +18,7 @@
 
 LANGUAGE LANG_NORWEGIAN, SUBLANG_NORWEGIAN_BOKMAL
 
-MAINMENU MENU DISCARDABLE
+IDM_MAINMENU MENU DISCARDABLE
 BEGIN
     POPUP "&Fil"
     BEGIN
@@ -229,4 +229,5 @@ BEGIN
                                  "vil føre til at all formatering går tapt. Er du " \
                                  "sikker på at du vil fortsette?"
     STRING_INVALID_NUMBER,       "Ugyldig tallformat"
+    STRING_OLE_STORAGE_NOT_SUPPORTED, "OLE storage documents are not supported"
 END
