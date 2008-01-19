@@ -21,6 +21,8 @@
 
 #define IOCTL_CONSOLE_DRAW                      CTL_CODE(FILE_DEVICE_SCREEN, 0x830, METHOD_IN_DIRECT, FILE_WRITE_ACCESS)
 
+#define IOCTL_CONSOLE_LOADFONT                  CTL_CODE(FILE_DEVICE_SCREEN, 0x840, METHOD_IN_DIRECT, FILE_WRITE_ACCESS)
+
 
 /* TYPEDEFS **************************************************************/
 
