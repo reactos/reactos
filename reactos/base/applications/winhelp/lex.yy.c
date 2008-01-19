@@ -417,7 +417,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(winhelp);
 static LPCSTR  macroptr;
 static LPSTR   strptr;
 static int     quote_stack[32];
-static int     quote_stk_idx = 0;
+static unsigned int quote_stk_idx = 0;
 struct lexret  yylval;
 
 #define YY_INPUT(buf,result,max_size)\
@@ -1689,8 +1689,8 @@ static int MACRO_CallBoolFunc(FARPROC fn, const char* args, void** ret);
  */
 static int MACRO_CheckArgs(void* pa[], unsigned max, const char* args)
 {
-    int         t;
-    int         len = 0, idx = 0;
+    int t;
+    unsigned int len = 0, idx = 0;
 
     WINE_TRACE("Checking %s\n", args);
 
@@ -1706,24 +1706,24 @@ static int MACRO_CheckArgs(void* pa[], unsigned max, const char* args)
 
             switch (*args)
             {
-            case 'S':
+            case 'S': 
                 if (t != STRING)
                 {WINE_WARN("missing S\n");return -1;}
-                pa[idx] = (void*)yylval.string;
+                pa[idx] = (void*)yylval.string;  
                 break;
             case 'U':
             case 'I':
                 if (t != INTEGER)
-                {WINE_WARN("missing U\n");return -1;}
-                pa[idx] = (void*)yylval.integer;
+                {WINE_WARN("missing U\n");return -1;}   
+                pa[idx] = (void*)yylval.integer; 
                 break;
             case 'B':
-                if (t != BOOL_FUNCTION)
-                {WINE_WARN("missing B\n");return -1;}
+                if (t != BOOL_FUNCTION) 
+                {WINE_WARN("missing B\n");return -1;}   
                 if (MACRO_CallBoolFunc(yylval.function, yylval.proto, &pa[idx]) == 0)
                     return -1;
                 break;
-            default:
+            default: 
                 WINE_WARN("unexpected %s while args is %c\n", ts(t), *args);
                 return -1;
             }
@@ -1802,7 +1802,7 @@ BOOL MACRO_ExecuteMacro(LPCSTR macro)
 {
     int t;
 
-    //WINE_TRACE("%s\n", wine_dbgstr_a(macro));
+    WINE_TRACE("%s\n", wine_dbgstr_a(macro));
 
     macroptr = macro;
 

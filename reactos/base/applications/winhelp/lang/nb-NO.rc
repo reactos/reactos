@@ -18,33 +18,27 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-LANGUAGE LANG_NORWEGIAN, SUBLANG_NEUTRAL
-
 /* Menu */
 
-MAIN_MENU MENU
-BEGIN
- POPUP "&Fil"
- BEGIN
+MAIN_MENU MENU LANGUAGE LANG_NORWEGIAN, SUBLANG_NORWEGIAN_BOKMAL
+{
+ POPUP "&Fil" {
   MENUITEM "&Åpne", MNID_FILE_OPEN
   MENUITEM SEPARATOR
   MENUITEM "Skriv &ut", MNID_FILE_PRINT
   MENUITEM "Opp&sett av skriveren . . .", MNID_FILE_SETUP
    MENUITEM SEPARATOR
   MENUITEM "&Avslutt", MNID_FILE_EXIT
- END
- POPUP "R&ediger"
- BEGIN
+ }
+ POPUP "R&ediger" {
    MENUITEM "&Kopier . . .", MNID_EDIT_COPYDLG
    MENUITEM SEPARATOR
    MENUITEM "K&ommenter . . .", MNID_EDIT_ANNOTATE
- END
- POPUP "&Bokmerke"
- BEGIN
+ }
+ POPUP "&Bokmerke" {
    MENUITEM "&Definer . . .", MNID_BKMK_DEFINE
- END
- POPUP "&Hjelp"
- BEGIN
+ }
+ POPUP "&Hjelp" {
    MENUITEM "&Hjelp til Hjelp", MNID_HELP_HELPON
    MENUITEM "All&tid øverst", MNID_HELP_HELPTOP
    MENUITEM SEPARATOR
@@ -52,12 +46,12 @@ BEGIN
 #ifdef WINELIB
    MENUITEM "&om WINE", MNID_HELP_WINE
 #endif
- END
-END
+ }
+}
 
 /* Strings */
-STRINGTABLE DISCARDABLE
-BEGIN
+STRINGTABLE DISCARDABLE LANGUAGE LANG_NORWEGIAN, SUBLANG_NORWEGIAN_BOKMAL
+{
 STID_WINE_HELP, 	"Hjelp"
 STID_WHERROR, 		"FEIL"
 STID_WARNING,  		"ADVARSEL"
@@ -72,4 +66,4 @@ STID_TOPICS,		"&Emner"
 STID_ALL_FILES, 	"Alle filer (*.*)"
 STID_HELP_FILES_HLP, 	"Hjelp-filer (*.hlp)"
 STID_FILE_NOT_FOUND_s	"Cannot find '%s'. Do you want to find this file yourself?"
-END
+}

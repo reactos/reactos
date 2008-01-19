@@ -6,7 +6,7 @@
  * Portuguese translation by Gustavo Junior Alves <alves@correionet.com.br>
  * Copyright 2002 Sylvain Petreolle <spetreolle@yahoo.fr>
  * Copyright 2003 Marcelo Duarte
- * Copyright 2004 Américo José Melo
+ * Copyright 2004,2007 Américo José Melo
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -28,28 +28,24 @@
 LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE_BRAZILIAN
 
 MAIN_MENU MENU
-BEGIN
- POPUP "&Arquivo"
- BEGIN
+{
+ POPUP "&Arquivo" {
   MENUITEM "&Abrir...", MNID_FILE_OPEN
   MENUITEM SEPARATOR
   MENUITEM "&Imprimir", MNID_FILE_PRINT
   MENUITEM "&Configurar Impressora...", MNID_FILE_SETUP
    MENUITEM SEPARATOR
   MENUITEM "Sai&r", MNID_FILE_EXIT
- END
- POPUP "&Editar"
- BEGIN
+ }
+ POPUP "&Editar" {
    MENUITEM "&Copiar...", MNID_EDIT_COPYDLG
    MENUITEM SEPARATOR
    MENUITEM "&Anotar...", MNID_EDIT_ANNOTATE
- END
- POPUP "In&dicador"
- BEGIN
+ }
+ POPUP "In&dicador" {
    MENUITEM "&Definir...", MNID_BKMK_DEFINE
- END
- POPUP "Aj&uda"
- BEGIN
+ }
+ POPUP "Aj&uda" {
    MENUITEM "Ajuda &na ajuda", MNID_HELP_HELPON
    MENUITEM "Sempre &visível", MNID_HELP_HELPTOP
    MENUITEM SEPARATOR
@@ -57,13 +53,46 @@ BEGIN
 #ifdef WINELIB
    MENUITEM "&Sobre WINE", MNID_HELP_WINE
 #endif
- END
-END
+ }
+}
+
+LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE
+
+MAIN_MENU MENU
+{
+ POPUP "&Ficheiro" {
+  MENUITEM "&Abrir...", MNID_FILE_OPEN
+  MENUITEM SEPARATOR
+  MENUITEM "&Imprimir", MNID_FILE_PRINT
+  MENUITEM "&Configurar Impressora...", MNID_FILE_SETUP
+   MENUITEM SEPARATOR
+  MENUITEM "Sai&r", MNID_FILE_EXIT
+ }
+ POPUP "&Editar" {
+   MENUITEM "&Copiar...", MNID_EDIT_COPYDLG
+   MENUITEM SEPARATOR
+   MENUITEM "&Anotar...", MNID_EDIT_ANNOTATE
+ }
+ POPUP "In&dicador" {
+   MENUITEM "&Definir...", MNID_BKMK_DEFINE
+ }
+ POPUP "Aj&uda" {
+   MENUITEM "Ajuda &na ajuda", MNID_HELP_HELPON
+   MENUITEM "Sempre &visível", MNID_HELP_HELPTOP
+   MENUITEM SEPARATOR
+   MENUITEM "&Informações...", MNID_HELP_ABOUT
+#ifdef WINELIB
+   MENUITEM "&Acerca do WINE", MNID_HELP_WINE
+#endif
+ }
+}
 
 /* Strings */
 
+LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE_BRAZILIAN
+
 STRINGTABLE DISCARDABLE
-BEGIN
+{
 STID_WINE_HELP, 	"Ajuda WINE"
 STID_WHERROR, 		"ERRO"
 STID_WARNING,  		"AVISO"
@@ -78,4 +107,24 @@ STID_TOPICS,		"&Tópicos"
 STID_ALL_FILES, 	"Todos os arquivos (*.*)"
 STID_HELP_FILES_HLP, 	"Arquivos de ajuda (*.hlp)"
 STID_FILE_NOT_FOUND_s   "Cannot find '%s'. Do you want to find this file yourself?"
-END
+}
+
+LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE
+
+STRINGTABLE DISCARDABLE
+{
+STID_WINE_HELP, 	"Ajuda WINE"
+STID_WHERROR, 		"ERRO"
+STID_WARNING,  		"AVISO"
+STID_INFO,  		"Informação"
+STID_NOT_IMPLEMENTED, 	"Não implementado"
+STID_HLPFILE_ERROR_s, 	"Erro encontrado na leitura do ficheiro de ajuda '%s'"
+STID_CONTENTS, 		"&Conteúdo"
+STID_SEARCH, 		"&Procurar"
+STID_BACK, 		"&Voltar"
+STID_HISTORY, 		"&Histórico"
+STID_TOPICS,		"&Tópicos"
+STID_ALL_FILES, 	"Todos os ficheiros (*.*)"
+STID_HELP_FILES_HLP, 	"Ficheiros de ajuda (*.hlp)"
+STID_FILE_NOT_FOUND_s	"Não é possível encontrar '%s'. Deseja procurar este ficheiro você mesmo?"
+}

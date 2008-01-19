@@ -4,6 +4,7 @@
  * Copyright 1996 Ulrich Schmid
  * Swedish language by Karl Backstrˆm <karl_b@geocities.com>
  * Copyright 2002 Sylvain Petreolle <spetreolle@yahoo.fr>
+ * Copyright 2007 Daniel Nylander
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -20,59 +21,52 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-LANGUAGE LANG_SWEDISH, SUBLANG_NEUTRAL
-
 /* Menu */
 
-MAIN_MENU MENU
-BEGIN
- POPUP "&Arkiv"
- BEGIN
-  MENUITEM "&÷ppna...", MNID_FILE_OPEN
+MAIN_MENU MENU LANGUAGE LANG_SWEDISH, SUBLANG_DEFAULT
+{
+ POPUP "&Arkiv" {
+  MENUITEM "&√ñppna", MNID_FILE_OPEN
   MENUITEM SEPARATOR
   MENUITEM "&Skriv ut", MNID_FILE_PRINT
-  MENUITEM "Skrivar &inst‰llningar...", MNID_FILE_SETUP
+  MENUITEM "Skrivar&konfiguration...", MNID_FILE_SETUP
    MENUITEM SEPARATOR
-  MENUITEM "&Avsluta", MNID_FILE_EXIT
- END
- POPUP "&Redigera"
- BEGIN
+  MENUITEM "A&vsluta", MNID_FILE_EXIT
+ }
+ POPUP "R&edigera" {
    MENUITEM "&Kopiera...", MNID_EDIT_COPYDLG
    MENUITEM SEPARATOR
-   MENUITEM "&Markera...", MNID_EDIT_ANNOTATE
- END
- POPUP "&Bokm‰rke"
- BEGIN
-   MENUITEM "&Defingera...", MNID_BKMK_DEFINE
- END
- POPUP "&Hj‰lp"
- BEGIN
-   MENUITEM "Anv‰ndningen &av hj‰lp", MNID_HELP_HELPON
-   MENUITEM "Alltid &ˆverst", MNID_HELP_HELPTOP
+   MENUITEM "&Kommentera...", MNID_EDIT_ANNOTATE
+ }
+ POPUP "&Bokm√§rke" {
+   MENUITEM "&Definiera...", MNID_BKMK_DEFINE
+ }
+ POPUP "&Hj√§lp" {
+   MENUITEM "Hj√§lp &f√∂r hj√§lp", MNID_HELP_HELPON
+   MENUITEM "Alltid &√∂verst", MNID_HELP_HELPTOP
    MENUITEM SEPARATOR
-   MENUITEM "&Information...", MNID_HELP_ABOUT
+   MENUITEM "&Info...", MNID_HELP_ABOUT
 #ifdef WINELIB
    MENUITEM "&Om WINE", MNID_HELP_WINE
 #endif
- END
-END
+ }
+}
 
 /* Strings */
-
-STRINGTABLE DISCARDABLE
-BEGIN
-STID_WINE_HELP, 	"WINE Hj‰lp"
+STRINGTABLE DISCARDABLE LANGUAGE LANG_SWEDISH, SUBLANG_DEFAULT
+{
+STID_WINE_HELP, 	"WINE Hj√§lp"
 STID_WHERROR, 		"FEL"
 STID_WARNING,  		"VARNING"
 STID_INFO,  		"Information"
-STID_NOT_IMPLEMENTED, 	"Ej implementererat"
-STID_HLPFILE_ERROR_s, 	"FEL vid l‰sning av hj‰lp filen `%s'"
-STID_CONTENTS, 		"&InnehÂll"
-STID_SEARCH, 		"&Sˆk"
-STID_BACK, 		"&Tillbaka"
-STID_HISTORY, 		"&÷versikt"
-STID_TOPICS,		"T&opics"
-STID_ALL_FILES, 	"Alla filer (*.*))"
-STID_HELP_FILES_HLP, 	"Hj‰lp filer (*.hlp)"
-STID_FILE_NOT_FOUND_s	"Cannot find '%s'. Do you want to find this file yourself?"
-END
+STID_NOT_IMPLEMENTED, 	"Inte implementerat"
+STID_HLPFILE_ERROR_s, 	"Fel vid l√§sning av hj√§lpfilen `%s'"
+STID_CONTENTS, 		"&Inneh√•ll"
+STID_SEARCH, 		"&S√∂k"
+STID_BACK, 		"&Bak√•t"
+STID_HISTORY, 		"&Historik"
+STID_TOPICS,		"&√Ñmnen"
+STID_ALL_FILES, 	"Alla filer (*.*)"
+STID_HELP_FILES_HLP, 	"Hj√§lpfiler (*.hlp)"
+STID_FILE_NOT_FOUND_s	"Kan inte hitta '%s'. Vill du s√∂ka efter denna fil?"
+}

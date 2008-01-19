@@ -20,33 +20,29 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-LANGUAGE LANG_WALON, SUBLANG_DEFAULT
+#ifdef LANG_WALON
 
 /* Menu */
 
-MAIN_MENU MENU
-BEGIN
- POPUP "&Fitchî"
- BEGIN
+MAIN_MENU MENU LANGUAGE LANG_WALON, SUBLANG_DEFAULT
+{
+ POPUP "&Fitchî" {
   MENUITEM "&Drovî...", MNID_FILE_OPEN
   MENUITEM SEPARATOR
   MENUITEM "&Rexhe", MNID_FILE_PRINT
   MENUITEM "&Apontiaedje del scrirece...", MNID_FILE_SETUP
    MENUITEM SEPARATOR
   MENUITEM "Moussî &Foû", MNID_FILE_EXIT
- END
- POPUP "&Candjî"
- BEGIN
+ }
+ POPUP "&Candjî" {
    MENUITEM "&Copyî...", MNID_EDIT_COPYDLG
    MENUITEM SEPARATOR
    MENUITEM "&Sicrîre...", MNID_EDIT_ANNOTATE
- END
- POPUP "&Rimårkes"
- BEGIN
+ }
+ POPUP "&Rimårkes" {
    MENUITEM "&Defini...", MNID_BKMK_DEFINE
- END
- POPUP "&Aide"
- BEGIN
+ }
+ POPUP "&Aide" {
    MENUITEM "&Aide so l' Aide", MNID_HELP_HELPON
    MENUITEM "Todi &Visibe", MNID_HELP_HELPTOP
    MENUITEM SEPARATOR
@@ -54,13 +50,13 @@ BEGIN
 #ifdef WINELIB
    MENUITEM "Å &dfait di WINEE", MNID_HELP_WINE
 #endif
- END
-END
+ }
+}
 
 /* Strings */
 
-STRINGTABLE DISCARDABLE
-BEGIN
+STRINGTABLE DISCARDABLE LANGUAGE LANG_WALON, SUBLANG_DEFAULT
+{
 STID_WINE_HELP, 	"Aidance di WINE"
 STID_WHERROR, 		"AROKE"
 STID_WARNING,  		"ADVERTIXHMINT"
@@ -75,4 +71,6 @@ STID_TOPICS,		"&Topics"
 STID_ALL_FILES, 	"Tos les fitchîs (*.*)"
 STID_HELP_FILES_HLP, 	"Fitchîs d' aide (*.hlp)"
 STID_FILE_NOT_FOUND_s	"Cannot find '%s'. Do you want to find this file yourself?"
-END
+}
+
+#endif  /* LANG_WALON */

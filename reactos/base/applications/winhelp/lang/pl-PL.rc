@@ -20,33 +20,27 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
-
 /* Menu */
 
-MAIN_MENU MENU
-BEGIN
- POPUP "&Plik"
- BEGIN
+MAIN_MENU MENU LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
+{
+ POPUP "&Plik" {
   MENUITEM "&Otwórz", MNID_FILE_OPEN
   MENUITEM SEPARATOR
   MENUITEM "&Drukuj", MNID_FILE_PRINT
   MENUITEM "&Ustawienia drukarki...", MNID_FILE_SETUP
    MENUITEM SEPARATOR
   MENUITEM "&Wyjœcie", MNID_FILE_EXIT
- END
- POPUP "&Edycja"
- BEGIN
+ }
+ POPUP "&Edycja" {
    MENUITEM "&Kopiuj...", MNID_EDIT_COPYDLG
    MENUITEM SEPARATOR
    MENUITEM "&Skomentuj...", MNID_EDIT_ANNOTATE
- END
- POPUP "&Zak³adka"
- BEGIN
+ }
+ POPUP "&Zak³adka" {
    MENUITEM "&Zdefiniuj...", MNID_BKMK_DEFINE
- END
- POPUP "Pomo&c"
- BEGIN
+ }
+ POPUP "Pomo&c" {
    MENUITEM "&Pomoc", MNID_HELP_HELPON
    MENUITEM "&Zawsze na wierzchu", MNID_HELP_HELPTOP
    MENUITEM SEPARATOR
@@ -54,12 +48,12 @@ BEGIN
 #ifdef WINELIB
    MENUITEM "&O programie WINE", MNID_HELP_WINE
 #endif
- END
-END
+ }
+}
 
 /* Strings */
-STRINGTABLE DISCARDABLE
-BEGIN
+STRINGTABLE DISCARDABLE LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
+{
 STID_WINE_HELP, 	"WINE - Pomoc"
 STID_WHERROR, 		"B£¥D"
 STID_WARNING,  		"OSTRZE¯ENIE"
@@ -73,5 +67,5 @@ STID_HISTORY, 		"&Historia"
 STID_TOPICS,		"&Tematy"
 STID_ALL_FILES, 	"Wszystkie pliki (*.*)"
 STID_HELP_FILES_HLP, 	"Pliki pomocy (*.hlp)"
-STID_FILE_NOT_FOUND_s	"Nie mo¿na odnaleŸæ pliku '%s'. Czy chcesz spróbowaæ zlokalizowaæ ten plik samodzielnie?"
-END
+STID_FILE_NOT_FOUND_s	"Cannot find '%s'. Do you want to find this file yourself?"
+}

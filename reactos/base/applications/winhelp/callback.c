@@ -39,7 +39,7 @@ static HANDLE CALLBACK WHD_Open(LPSTR name, BYTE flags)
 {
     unsigned    mode = 0;
 
-    //WINE_FIXME("(%s %x)\n", wine_dbgstr_a(name), flags);
+    WINE_FIXME("(%s %x)\n", wine_dbgstr_a(name), flags);
     switch (flags)
     {
     case 0: mode = GENERIC_READ | GENERIC_WRITE; break;
@@ -160,19 +160,19 @@ static LONG CALLBACK WHD_API(LPSTR x, WORD xx, DWORD xxx)
 
 FARPROC Callbacks[] =
 {
-    (FARPROC)WHD_GetFSError,
-    (FARPROC)WHD_Open,
-    (FARPROC)WHD_Close,
-    (FARPROC)WHD_OpenBag,
+    (FARPROC)WHD_GetFSError, 
+    (FARPROC)WHD_Open, 
+    (FARPROC)WHD_Close, 
+    (FARPROC)WHD_OpenBag, 
     (FARPROC)WHD_CloseBag,
     (FARPROC)WHD_ReadBag,
     (FARPROC)WHD_TellBag,
     (FARPROC)WHD_SeekBag,
-    (FARPROC)WHD_IsEofBag,
+    (FARPROC)WHD_IsEofBag, 
     (FARPROC)WHD_SizeBag,
     (FARPROC)WHD_Access,
-    (FARPROC)WHD_LLInfoFromBag,
-    (FARPROC)WHD_LLInfoFromFile,
+    (FARPROC)WHD_LLInfoFromBag, 
+    (FARPROC)WHD_LLInfoFromFile, 
     (FARPROC)WHD_Error,
     (FARPROC)WHD_ErrorString,
     (FARPROC)WHD_GetInfo,

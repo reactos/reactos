@@ -19,9 +19,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#ifndef __MACRO_H__
-#define __MACRO_H__
-
 #include <stdarg.h>
 
 #include "windef.h"
@@ -136,5 +133,3 @@ void CALLBACK MACRO_UpdateWindow(LPCSTR, LPCSTR);
 /* Local Variables:    */
 /* c-file-style: "GNU" */
 /* End:                */
-
-#endif /* __MACRO_H__ */

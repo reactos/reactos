@@ -23,33 +23,27 @@
 
 /* Czech strings in CP1250 */
 
-LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
-
 /* Menu */
 
-MAIN_MENU MENU
-BEGIN
- POPUP "&Soubor"
- BEGIN
+MAIN_MENU MENU LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
+{
+ POPUP "&Soubor" {
   MENUITEM "&Otevøít", MNID_FILE_OPEN
   MENUITEM SEPARATOR
   MENUITEM "&Tisk", MNID_FILE_PRINT
   MENUITEM "Na&stavení tisku...", MNID_FILE_SETUP
    MENUITEM SEPARATOR
   MENUITEM "&Konec", MNID_FILE_EXIT
- END
- POPUP "Úprav&y"
- BEGIN
+ }
+ POPUP "Úprav&y" {
    MENUITEM "&Kopírovat...", MNID_EDIT_COPYDLG
    MENUITEM SEPARATOR
    MENUITEM "P&oznamenat si...", MNID_EDIT_ANNOTATE
- END
- POPUP "&Záložka"
- BEGIN
+ }
+ POPUP "&Záložka" {
    MENUITEM "Pøi&dat...", MNID_BKMK_DEFINE
- END
- POPUP "&Nápovìda"
- BEGIN
+ }
+ POPUP "&Nápovìda" {
    MENUITEM "Náp&ovìda k nápovìdì", MNID_HELP_HELPON
    MENUITEM "Vždy na &vrchu", MNID_HELP_HELPTOP
    MENUITEM SEPARATOR
@@ -57,13 +51,12 @@ BEGIN
 #ifdef WINELIB
    MENUITEM "O &WINE", MNID_HELP_WINE
 #endif
- END
-END
+ }
+}
 
 /* Strings */
-
-STRINGTABLE DISCARDABLE
-BEGIN
+STRINGTABLE DISCARDABLE LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
+{
 STID_WINE_HELP, 	"Nápovìda WINE"
 STID_WHERROR, 		"CHYBA"
 STID_WARNING,  		"VAROVÁNÍ"
@@ -78,4 +71,4 @@ STID_TOPICS,		"&Témata"
 STID_ALL_FILES, 	"Všechny soubory (*.*)"
 STID_HELP_FILES_HLP, 	"Soubory nápovìdy (*.hlp)"
 STID_FILE_NOT_FOUND_s	"Cannot find '%s'. Do you want to find this file yourself?"
-END
+}

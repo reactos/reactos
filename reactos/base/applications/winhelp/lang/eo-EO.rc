@@ -21,33 +21,27 @@
 
 /* Cxapelitaj literoj estas en Latin-3 iso8859-3 */
 
-LANGUAGE LANG_ESPERANTO, SUBLANG_DEFAULT
-
 /* Menu */
 
-MAIN_MENU MENU
-BEGIN
- POPUP "&Dosiero"
- BEGIN
+MAIN_MENU MENU LANGUAGE LANG_ESPERANTO, SUBLANG_DEFAULT
+{
+ POPUP "&Dosiero" {
   MENUITEM "&Malfermu", MNID_FILE_OPEN
   MENUITEM SEPARATOR
   MENUITEM "&Presu", MNID_FILE_PRINT
   MENUITEM "&Impozu Printilon...", MNID_FILE_SETUP
    MENUITEM SEPARATOR
   MENUITEM "&Finu", MNID_FILE_EXIT
- END
- POPUP "&Redakto"
- BEGIN
+ }
+ POPUP "&Redakto" {
    MENUITEM "&Kopiu...", MNID_EDIT_COPYDLG
    MENUITEM SEPARATOR
    MENUITEM "&Notu...", MNID_EDIT_ANNOTATE
- END
- POPUP "&Legosigno"
- BEGIN
+ }
+ POPUP "&Legosigno" {
    MENUITEM "&Difinu...", MNID_BKMK_DEFINE
- END
- POPUP "&Helpo"
- BEGIN
+ }
+ POPUP "&Helpo" {
    MENUITEM "&Helpu pri helpo", MNID_HELP_HELPON
    MENUITEM "Æiam &supre", MNID_HELP_HELPTOP
    MENUITEM SEPARATOR
@@ -55,13 +49,12 @@ BEGIN
 #ifdef WINELIB
    MENUITEM "&Pri WINE", MNID_HELP_WINE
 #endif
- END
-END
+ }
+}
 
 /* Strings */
-
-STRINGTABLE DISCARDABLE
-BEGIN
+STRINGTABLE DISCARDABLE LANGUAGE LANG_ESPERANTO, SUBLANG_DEFAULT
+{
 STID_WINE_HELP, 	"WINE Helpanto"
 STID_WHERROR, 		"ERARO"
 STID_WARNING,  	"ATENTU"
@@ -76,4 +69,4 @@ STID_TOPICS,		"&Temoj"
 STID_ALL_FILES, 	"Tutaj dosieroj (*.*)"
 STID_HELP_FILES_HLP, 	"Helpaj dosieroj (*.hlp)"
 STID_FILE_NOT_FOUND_s	"Cannot find '%s'. Do you want to find this file yourself?"
-END
+}

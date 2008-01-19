@@ -18,33 +18,27 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
-
 /* Menu */
 
-MAIN_MENU MENU
-BEGIN
- POPUP "&Файл"
- BEGIN
+MAIN_MENU MENU LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
+{
+ POPUP "&Файл" {
   MENUITEM "&Открыть", MNID_FILE_OPEN
   MENUITEM SEPARATOR
   MENUITEM "&Печатать", MNID_FILE_PRINT
   MENUITEM "Настройка &принтера...", MNID_FILE_SETUP
    MENUITEM SEPARATOR
   MENUITEM "&Выход", MNID_FILE_EXIT
- END
- POPUP "&Правка"
- BEGIN
+ }
+ POPUP "&Правка" {
    MENUITEM "&Копировать...", MNID_EDIT_COPYDLG
    MENUITEM SEPARATOR
    MENUITEM "&Заметки...", MNID_EDIT_ANNOTATE
- END
- POPUP "&Закладка"
- BEGIN
+ }
+ POPUP "&Закладка" {
    MENUITEM "&Определить...", MNID_BKMK_DEFINE
- END
- POPUP "&Справка"
- BEGIN
+ }
+ POPUP "&Справка" {
    MENUITEM "Помощь &по помощи", MNID_HELP_HELPON
    MENUITEM "Всегда &сверху", MNID_HELP_HELPTOP
    MENUITEM SEPARATOR
@@ -52,12 +46,22 @@ BEGIN
 #ifdef WINELIB
    MENUITEM "&О Wine", MNID_HELP_WINE
 #endif
- END
-END
+ }
+}
+
+IDD_INDEX DIALOG DISCARDABLE 0, 0, 200, 190 LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
+STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "Указатель"
+{
+    LISTBOX IDC_INDEXLIST, 10, 10, 180, 150, LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_BORDER
+    PUSHBUTTON "&OK", IDOK, 40, 170, 50, 12
+    PUSHBUTTON "&Отмена", IDCANCEL, 120, 170, 50, 12
+}
 
 /* Strings */
-STRINGTABLE DISCARDABLE
-BEGIN
+STRINGTABLE DISCARDABLE LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
+{
 STID_WINE_HELP, 	"Справка WINE"
 STID_WHERROR, 		"ОШИБКА"
 STID_WARNING,  		"ВНИМАНИЕ"
@@ -72,4 +76,4 @@ STID_TOPICS,		"&Указатель"
 STID_ALL_FILES, 	"Все файлы (*.*)"
 STID_HELP_FILES_HLP, 	"Файлы справки (*.hlp)"
 STID_FILE_NOT_FOUND_s	"Не могу найти '%s'. Вы хотите найти этот файл самостоятельно?"
-END
+}

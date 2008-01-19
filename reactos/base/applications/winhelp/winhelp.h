@@ -20,9 +20,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#ifndef __WINHELP_H__
-#define __WINHELP_H__
-
 #define MAX_LANGUAGE_NUMBER     255
 #define MAX_STRING_LEN          255
 
@@ -175,8 +172,10 @@ extern FARPROC         Callbacks[];
 
 BOOL WINHELP_CreateHelpWindowByHash(HLPFILE*, LONG, HLPFILE_WINDOWINFO*, int);
 BOOL WINHELP_CreateHelpWindowByMap(HLPFILE*, LONG, HLPFILE_WINDOWINFO*, int);
+BOOL WINHELP_CreateHelpWindowByOffset(HLPFILE*, LONG, HLPFILE_WINDOWINFO*, int);
 BOOL WINHELP_CreateHelpWindow(HLPFILE_PAGE*, HLPFILE_WINDOWINFO*, int);
 BOOL WINHELP_GetOpenFileName(LPSTR, int);
+BOOL WINHELP_CreateIndexWindow(void);
 INT  WINHELP_MessageBoxIDS(UINT, UINT, WORD);
 INT  WINHELP_MessageBoxIDS_s(UINT, LPCSTR, UINT, WORD);
 HLPFILE* WINHELP_LookupHelpFile(LPCSTR lpszFile);
@@ -194,5 +193,3 @@ extern const char STRING_DIALOG_TEST[];
 
 /* Buttons */
 #define WH_FIRST_BUTTON     500
-
-#endif /* __WINHELP_H__ */

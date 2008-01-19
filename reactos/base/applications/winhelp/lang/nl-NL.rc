@@ -18,33 +18,27 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-LANGUAGE LANG_DUTCH, SUBLANG_NEUTRAL
-
 /* Menu */
 
-MAIN_MENU MENU
-BEGIN
- POPUP "&Bestand"
- BEGIN
+MAIN_MENU MENU LANGUAGE LANG_DUTCH, SUBLANG_NEUTRAL
+{
+ POPUP "&Bestand" {
   MENUITEM "&Openen", MNID_FILE_OPEN
   MENUITEM SEPARATOR
   MENUITEM "Af&drukken", MNID_FILE_PRINT
   MENUITEM "&Printerinstellingen...", MNID_FILE_SETUP
   MENUITEM SEPARATOR
   MENUITEM "&Afsluiten", MNID_FILE_EXIT
- END
- POPUP "&Bewerken"
- BEGIN
+ }
+ POPUP "&Bewerken" {
    MENUITEM "&Kopiëren...", MNID_EDIT_COPYDLG
    MENUITEM SEPARATOR
    MENUITEM "&Annoteren...", MNID_EDIT_ANNOTATE
- END
- POPUP "&Favorieten"
- BEGIN
+ }
+ POPUP "&Favorieten" {
    MENUITEM "&Aanmaken...", MNID_BKMK_DEFINE
- END
- POPUP "&Help"
- BEGIN
+ }
+ POPUP "&Help" {
    MENUITEM "Hulp &bij help", MNID_HELP_HELPON
    MENUITEM "Altijd &zichtbaar", MNID_HELP_HELPTOP
    MENUITEM SEPARATOR
@@ -52,12 +46,12 @@ BEGIN
 #ifdef WINELIB
    MENUITEM "&Over WINE", MNID_HELP_WINE
 #endif
- END
-END
+ }
+}
 
 /* Strings */
-STRINGTABLE DISCARDABLE
-BEGIN
+STRINGTABLE DISCARDABLE LANGUAGE LANG_DUTCH, SUBLANG_NEUTRAL
+{
 STID_WINE_HELP, 	"WINE Help"
 STID_WHERROR, 		"FOUT"
 STID_WARNING,  		"WAARSCHUWING"
@@ -72,4 +66,4 @@ STID_TOPICS,		"&Onderwerpen"
 STID_ALL_FILES, 	"Alle bestanden (*.*)"
 STID_HELP_FILES_HLP, 	"Helpbestanden (*.hlp)"
 STID_FILE_NOT_FOUND_s	"Cannot find '%s'. Do you want to find this file yourself?"
-END
+}

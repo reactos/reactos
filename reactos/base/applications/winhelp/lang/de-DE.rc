@@ -19,33 +19,27 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
-
 /* Menu */
 
-MAIN_MENU MENU
-BEGIN
- POPUP "&Datei"
- BEGIN
+MAIN_MENU MENU LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
+{
+ POPUP "&Datei" {
   MENUITEM "Ö&ffnen...", MNID_FILE_OPEN
   MENUITEM SEPARATOR
   MENUITEM "Thema &drucken", MNID_FILE_PRINT
   MENUITEM "Drucker&einrichtung...", MNID_FILE_SETUP
    MENUITEM SEPARATOR
   MENUITEM "&Beenden", MNID_FILE_EXIT
- END
- POPUP "&Bearbeiten"
- BEGIN
+ }
+ POPUP "&Bearbeiten" {
    MENUITEM "&Kopieren...", MNID_EDIT_COPYDLG
    MENUITEM SEPARATOR
    MENUITEM "&Anmerken...", MNID_EDIT_ANNOTATE
- END
- POPUP "&Lesezeichen"
- BEGIN
+ }
+ POPUP "&Lesezeichen" {
    MENUITEM "&Definieren...", MNID_BKMK_DEFINE
- END
- POPUP "&Hilfe"
- BEGIN
+ }
+ POPUP "&Hilfe" {
    MENUITEM "&Hilfe benutzen", MNID_HELP_HELPON
    MENUITEM "Immer im &Vordergrund", MNID_HELP_HELPTOP
    MENUITEM SEPARATOR
@@ -53,13 +47,13 @@ BEGIN
 #ifdef WINELIB
    MENUITEM "&Über WINE", MNID_HELP_WINE
 #endif
- END
-END
+ }
+}
 
 /* Strings */
 
-STRINGTABLE DISCARDABLE
-BEGIN
+STRINGTABLE DISCARDABLE LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
+{
 STID_WINE_HELP, 	"WINE Hilfe"
 STID_WHERROR, 		"FEHLER"
 STID_WARNING,  		"ACHTUNG"
@@ -73,5 +67,5 @@ STID_HISTORY, 		"&Bisher"
 STID_TOPICS, 		"&Topics"
 STID_ALL_FILES, 	"Alle Dateien (*.*)"
 STID_HELP_FILES_HLP, 	"Hilfe-Dateien (*.hlp)"
-STID_FILE_NOT_FOUND_s	"Kann %s' nicht finden. Wollen Sie nach der Datei suchen?"
-END
+STID_FILE_NOT_FOUND_s	"Cannot find '%s'. Do you want to find this file yourself?"
+}

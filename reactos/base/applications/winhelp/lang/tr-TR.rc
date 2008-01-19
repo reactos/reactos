@@ -18,33 +18,27 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
-
 /* Menu */
 
-MAIN_MENU MENU
-BEGIN
- POPUP "&Dosya"
- BEGIN
+MAIN_MENU MENU LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
+{
+ POPUP "&Dosya" {
   MENUITEM "&Aç", MNID_FILE_OPEN
   MENUITEM SEPARATOR
   MENUITEM "Ya&zdýr", MNID_FILE_PRINT
   MENUITEM "&Yazýcý ayarlarý...", MNID_FILE_SETUP
    MENUITEM SEPARATOR
   MENUITEM "&Çýkýþ", MNID_FILE_EXIT
- END
- POPUP "Dü&zen"
- BEGIN
+ }
+ POPUP "Dü&zen" {
    MENUITEM "K&opyala...", MNID_EDIT_COPYDLG
    MENUITEM SEPARATOR
    MENUITEM "&Annotate...", MNID_EDIT_ANNOTATE
- END
- POPUP "Yer Ý&mleri"
- BEGIN
+ }
+ POPUP "Yer Ý&mleri" {
    MENUITEM "&Tanýmla...", MNID_BKMK_DEFINE
- END
- POPUP "&Yardým"
- BEGIN
+ }
+ POPUP "&Yardým" {
    MENUITEM "&Yardým Kullanýmý", MNID_HELP_HELPON
    MENUITEM "&Her Zaman Üstte", MNID_HELP_HELPTOP
    MENUITEM SEPARATOR
@@ -52,12 +46,12 @@ BEGIN
 #ifdef WINELIB
    MENUITEM "WINE &Hakkýnda", MNID_HELP_WINE
 #endif
- END
-END
+ }
+}
 
 /* Strings */
-STRINGTABLE DISCARDABLE
-BEGIN
+STRINGTABLE DISCARDABLE LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
+{
 STID_WINE_HELP, 	"WINE Yardým"
 STID_WHERROR, 		"HATA"
 STID_WARNING,  		"UYARI"
@@ -72,4 +66,4 @@ STID_TOPICS,		"&Konular"
 STID_ALL_FILES, 	"Tüm dosyalar (*.*)"
 STID_HELP_FILES_HLP, 	"Yardým dosyalarý (*.hlp)"
 STID_FILE_NOT_FOUND_s	"Cannot find '%s'. Do you want to find this file yourself?"
-END
+}

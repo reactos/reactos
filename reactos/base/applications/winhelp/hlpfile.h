@@ -3,6 +3,7 @@
  *
  * Copyright    1996 Ulrich Schmid
  *              2002 Eric Pouech
+ *              2007 Kirill K. Smirnov
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -21,7 +22,7 @@
 
 struct tagHelpFile;
 
-typedef struct
+typedef struct 
 {
     char        type[10];
     char        name[9];
@@ -63,9 +64,9 @@ typedef struct tagHlpFileParagraph
         struct
         {
             unsigned                    pos;    /* 0: center, 1: left, 2: right */
-            union
+            union 
             {
-                struct
+                struct 
                 {
                     HBITMAP             hBitmap;
                 } bmp;
@@ -104,12 +105,6 @@ typedef struct tagHlpFilePage
 
 typedef struct
 {
-    LONG                        lHash;
-    unsigned long               offset;
-} HLPFILE_CONTEXT;
-
-typedef struct
-{
     LONG                        lMap;
     unsigned long               offset;
 } HLPFILE_MAP;
@@ -127,9 +122,11 @@ typedef struct tagHlpFileFile
     LPSTR                       lpszTitle;
     LPSTR                       lpszCopyright;
     HLPFILE_PAGE*               first_page;
+    HLPFILE_PAGE*               last_page;
     HLPFILE_MACRO*              first_macro;
-    unsigned                    wContextLen;
-    HLPFILE_CONTEXT*            Context;
+    BYTE*                       Context;
+    BYTE*                       kwbtree;
+    BYTE*                       kwdata;
     unsigned                    wMapLen;
     HLPFILE_MAP*                Map;
     unsigned long               contents_start;
@@ -141,7 +138,11 @@ typedef struct tagHlpFileFile
 
     unsigned short              version;
     unsigned short              flags;
-    unsigned                    hasPhrases; /* Phrases or PhrIndex/PhrImage */
+    unsigned short              tbsize;     /* topic block size */
+    unsigned short              dsize;      /* decompress size */
+    unsigned short              compressed;
+    unsigned                    hasPhrases;   /* file has |Phrases */
+    unsigned                    hasPhrases40; /* file has |PhrIndex/|PhrImage */
 
     unsigned                    numBmps;
     HBITMAP*                    bmps;
@@ -153,6 +154,28 @@ typedef struct tagHlpFileFile
     HLPFILE_WINDOWINFO*         windows;
 } HLPFILE;
 
+/*
+ * Compare function type for HLPFILE_BPTreeSearch function.
+ *
+ * PARAMS
+ *     p       [I] pointer to testing block (key + data)
+ *     key     [I] pointer to key value to look for
+ *     leaf    [I] whether this function called for index of leaf page
+ *     next    [O] pointer to pointer to next block
+ */
+typedef int (*HLPFILE_BPTreeCompare)(void *p, const void *key,
+                                     int leaf, void **next);
+
+/*
+ * Callback function type for HLPFILE_BPTreeEnum function.
+ *
+ * PARAMS
+ *     p       [I]  pointer to data block
+ *     next    [O]  pointer to pointer to next block
+ *     cookie  [IO] cookie data
+ */
+typedef void (*HLPFILE_BPTreeCallback)(void *p, void **next, void *cookie);
+
 HLPFILE*      HLPFILE_ReadHlpFile(LPCSTR lpszPath);
 HLPFILE_PAGE* HLPFILE_Contents(HLPFILE* hlpfile);
 HLPFILE_PAGE* HLPFILE_PageByHash(HLPFILE* hlpfile, LONG lHash);
@@ -161,3 +184,6 @@ HLPFILE_PAGE* HLPFILE_PageByOffset(HLPFILE* hlpfile, LONG offset);
 LONG          HLPFILE_Hash(LPCSTR lpszContext);
 void          HLPFILE_FreeLink(HLPFILE_LINK* link);
 void          HLPFILE_FreeHlpFile(HLPFILE*);
+
+void* HLPFILE_BPTreeSearch(BYTE*, const void*, HLPFILE_BPTreeCompare);
+void  HLPFILE_BPTreeEnum(BYTE*, HLPFILE_BPTreeCallback cb, void *cookie);

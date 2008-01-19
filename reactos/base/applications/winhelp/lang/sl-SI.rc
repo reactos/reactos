@@ -18,33 +18,27 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-LANGUAGE LANG_SLOVENIAN, SUBLANG_DEFAULT
-
 /* Menu */
 
-MAIN_MENU MENU
-BEGIN
- POPUP "&Datoteka"
- BEGIN
+MAIN_MENU MENU LANGUAGE LANG_SLOVENIAN, SUBLANG_DEFAULT
+{
+ POPUP "&Datoteka" {
   MENUITEM "&Odpri ...", MNID_FILE_OPEN
   MENUITEM SEPARATOR
   MENUITEM "Na&tisni temo ...", MNID_FILE_PRINT
   MENUITEM "&Priprava tiskalnika", MNID_FILE_SETUP
   MENUITEM SEPARATOR
   MENUITEM "Iz&hod", MNID_FILE_EXIT
- END
- POPUP "&Urejanje"
- BEGIN
+ }
+ POPUP "&Urejanje" {
    MENUITEM "&Kopiraj", MNID_EDIT_COPYDLG
    MENUITEM SEPARATOR
    MENUITEM "&Pripombe ...", MNID_EDIT_ANNOTATE
- END
- POPUP "&Zaznamek"
- BEGIN
+ }
+ POPUP "&Zaznamek" {
    MENUITEM "&Doloèi ...", MNID_BKMK_DEFINE
- END
- POPUP "&Pomoè"
- BEGIN
+ }
+ POPUP "&Pomoè" {
    MENUITEM "&O pomoèi", MNID_HELP_HELPON
    MENUITEM "Vedno na &vrhu", MNID_HELP_HELPTOP
    MENUITEM SEPARATOR
@@ -52,12 +46,12 @@ BEGIN
 #ifdef WINELIB
    MENUITEM "&O WINE", MNID_HELP_WINE
 #endif
- END
-END
+ }
+}
 
 /* Strings */
-STRINGTABLE DISCARDABLE
-BEGIN
+STRINGTABLE DISCARDABLE LANGUAGE LANG_SLOVENIAN, SUBLANG_DEFAULT
+{
 STID_WINE_HELP, 		"WINE Pomoè"
 STID_WHERROR, 		"NAPAKA"
 STID_WARNING,  		"OPOZORILO"
@@ -72,4 +66,4 @@ STID_TOPICS,		"&Vsebina"
 STID_ALL_FILES, 		"Vse datiteke (*.*)"
 STID_HELP_FILES_HLP, 	"Datoteke s pomoèjo (*.hlp)"
 STID_FILE_NOT_FOUND_s	"Cannot find '%s'. Do you want to find this file yourself?"
-END
+}
