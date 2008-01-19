@@ -186,6 +186,9 @@ VOID ExitBatch (LPTSTR msg)
 			bc->hBatchFile = INVALID_HANDLE_VALUE;
 		}
 
+		if (bc->raw_params)
+			cmd_free(bc->raw_params);
+
 		if (bc->params)
 			cmd_free(bc->params);
 
