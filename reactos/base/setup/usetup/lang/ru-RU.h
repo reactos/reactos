@@ -82,7 +82,7 @@ static MUI_ENTRY ruRUWelcomePageEntries[] =
     {
         8,
         17,
-        "\x07  Нажмите R для восстановления ReactOS.",
+        "\x07  Нажмите R дляявосстановления ReactOS.",
         TEXT_NORMAL
     },
     {
@@ -358,31 +358,31 @@ static MUI_ENTRY ruRUDevicePageEntries[] =
     {
         8,
         11,
-        "       Компьютер:",
+        "      Компьютер:",
         TEXT_NORMAL
     },
     {
         8,
         12,
-        "        Экран:",
+        "          Экран:",
         TEXT_NORMAL,
     },
     {
         8,
         13,
-        "       Клавиатура:",
+        "     Клавиатура:",
         TEXT_NORMAL
     },
     {
         8,
         14,
-        "Раскладка клавиатуры:",
+        "      Раскладка:",
         TEXT_NORMAL
     },
     {
         8,
         16,
-        "         Применить:",
+        "      Применить:",
         TEXT_NORMAL
     },
     {
@@ -411,13 +411,13 @@ static MUI_ENTRY ruRUDevicePageEntries[] =
     {
         6,
         23,
-        "Когда все параметры определены, выберите \"Применить данные параметры устройств\"",
+        "Когда все параметры определены, выберите \"Применить данные параметры",
         TEXT_NORMAL
     },
     {
         6,
         24,
-        "и нажмите ENTER.",
+        "устройств\" и нажмите ENTER.",
         TEXT_NORMAL
     },
     {
@@ -514,13 +514,13 @@ static MUI_ENTRY ruRUComputerPageEntries[] =
     {
         8,
         10,
-        "\x07  Нажмите клавишу ВВЕРХ или ВНИЗ для выбора предпочтительного типа компьютера.",
+        "\x07  Нажмите клавишу ВВЕРХ или ВНИЗ для выбора предпочтительного типа",
         TEXT_NORMAL
     },
     {
         8,
         11,
-        "   Затем нажмите ENTER.",
+        "   компьютера. Затем нажмите ENTER.",
         TEXT_NORMAL
     },
     {
@@ -790,13 +790,13 @@ static MUI_ENTRY ruRUSelectPartitionEntries[] =
     {
         6,
         8,
-        "В списке ниже показаны существующие разделы и неиспользуемое пространство",
+        "В списке ниже показаны существующие разделы и неиспользуемое",
         TEXT_NORMAL
     },
     {
         6,
         9,
-        "для нового раздела.",
+        "пространство для нового раздела.",
         TEXT_NORMAL
     },
     {
@@ -826,7 +826,7 @@ static MUI_ENTRY ruRUSelectPartitionEntries[] =
     {
         0,
         0,
-        "   Пожалуйста подождите...",
+        "   Please wait...",
         TEXT_STATUS
     },
     {
@@ -934,17 +934,17 @@ static MUI_ENTRY ruRUFileCopyEntries[] =
     {
         11,
         12,
-        "Пожалуйста подождите пока программа установки скопирует файлы ReactOS",
+        "Пожалуйста подождите пока программа установки скопирует файлы",
         TEXT_NORMAL
     },
     {
-        30,
+        11,
         13,
-        "в установочную директорию.",
+        "ReactOS в установочную директорию.",
         TEXT_NORMAL
     },
     {
-        20,
+        11,
         14,
         "Это может занять несколько минут.",
         TEXT_NORMAL
@@ -1078,13 +1078,13 @@ static MUI_ENTRY ruRULayoutSettingsEntries[] =
     {
         8,
         10,
-        "\x07  Нажмите ВВЕРХ или ВНИЗ для выбора нужной раскладки",
+        "\x07  Нажмите ВВЕРХ или ВНИЗ для выбора нужной раскладки клавиатуры.",
         TEXT_NORMAL
     },
     {
         8,
         11,
-        "    клавиатуры. Затем нажмите ENTER.",
+        "   Затем нажмите ENTER.",
         TEXT_NORMAL
     },
     {
@@ -1294,22 +1294,22 @@ MUI_ERROR ruRUErrorEntries[] =
     },
     {
         //ERROR_CORRUPT_TXTSETUPSIF
-        "Setup found a corrupt TXTSETUP.SIF.\n",
+        "Файл TXTSETUP.SIF поврежден.\n",
         "ENTER = Перезагрузка"
     },
     {
         //ERROR_SIGNATURE_TXTSETUPSIF,
-        "Setup found an invalid signature in TXTSETUP.SIF.\n",
+        "Обнаружена некорректная сигнатура в TXTSETUP.SIF.\n",
         "ENTER = Перезагрузка"
     },
     {
         //ERROR_DRIVE_INFORMATION
-        "Setup could not retrieve system drive information.\n",
+        "Не удалось получить информацию о системном диске.\n",
         "ENTER = Перезагрузка"
     },
     {
         //ERROR_WRITE_BOOT,
-        "Setup failed to install FAT bootcode on the system partition.",
+        "Не удалось установить загрузчик FAT на системный раздел.",
         "ENTER = Перезагрузка"
     },
     {
@@ -1334,10 +1334,10 @@ MUI_ERROR ruRUErrorEntries[] =
     },
     {
         //ERROR_WARN_PARTITION,
-        "Setup found that at least one harddisk contains an incompatible\n"
-        "partition table that can not be handled properly!\n"
+        "Найден по крайней мере один жесткий диск, который содержит раздел\n"
+        "неподдерживаемый ReactOS!\n"
         "\n"
-        "Creating or deleting partitions can destroy the partiton table.\n"
+        "Создание или удаление разделов может нарушить таблицу разделов.\n"
         "\n"
         "  \x07  Нажмите F3 для выхода из установки."
         "  \x07  Нажмите ENTER для продолжения.",
@@ -1345,22 +1345,22 @@ MUI_ERROR ruRUErrorEntries[] =
     },
     {
         //ERROR_NEW_PARTITION,
-        "You can not create a new Partition inside\n"
-        "of an already existing Partition!\n"
+        "Вы не можете создать новый раздел диска в\n"
+        "уже существующем разделе!\n"
         "\n"
         "  * Нажмите любую клавишу для продолжения.",
         NULL
     },
     {
         //ERROR_DELETE_SPACE,
-        "You can not delete unpartitioned disk space!\n"
+        "Вы не можете удалить неразделенное дисковое пространство!\n"
         "\n"
         "  * Нажмите любую клавишу для продолжения.",
         NULL
     },
     {
         //ERROR_INSTALL_BOOTCODE,
-        "Setup failed to install the FAT bootcode on the system partition.",
+        "Не удалось установить загрузчик FAT на системный раздел.",
         "ENTER = Перезагрузка"
     },
     {
@@ -1370,37 +1370,37 @@ MUI_ERROR ruRUErrorEntries[] =
     },
     {
         //ERROR_UPDATE_KBSETTINGS,
-        "Setup failed to update keyboard layout settings.",
+        "Не удалось обновить параметры раскладки клавиатуры.",
         "ENTER = Перезагрузка"
     },
     {
         //ERROR_UPDATE_DISPLAY_SETTINGS,
-        "Setup failed to update display registry settings.",
+        "Не удалось обновить параметры экрана в реестре.",
         "ENTER = Перезагрузка"
     },
     {
         //ERROR_IMPORT_HIVE,
-        "Setup failed to import a hive file.",
+        "Не удалось импортировать файлы кустов реестра.",
         "ENTER = Перезагрузка"
     },
     {
         //ERROR_FIND_REGISTRY
-        "Setup failed to find the registry data files.",
+        "Не удалось найти файлы системного реестра.",
         "ENTER = Перезагрузка"
     },
     {
         //ERROR_CREATE_HIVE,
-        "Setup failed to create the registry hives.",
+        "Не удалось создать кусты системного реестра.",
         "ENTER = Перезагрузка"
     },
     {
         //ERROR_INITIALIZE_REGISTRY,
-        "Setup failed to set the initialize the registry.",
+        "Не удалось инициализировать системный реестр.",
         "ENTER = Перезагрузка"
     },
     {
         //ERROR_INVALID_CABINET_INF,
-        "Cabinet has no valid inf file.\n",
+        "Cabinet не получил корректный inf-файл.\n",
         "ENTER = Перезагрузка"
     },
     {
@@ -1415,7 +1415,7 @@ MUI_ERROR ruRUErrorEntries[] =
     },
     {
         //ERROR_COPY_QUEUE,
-        "Setup failed to open the copy file queue.\n",
+        "Не удалось открыть очередь копирования файлов.\n",
         "ENTER = Перезагрузка"
     },
     {
@@ -1453,13 +1453,13 @@ MUI_ERROR ruRUErrorEntries[] =
     },
     {
         //ERROR_ADDING_CODEPAGE,
-        "Setup failed to add codepage to registry.\n"
-        "ENTER = Reboot computer"
+        "Не удалось добавить параметры кодировки в реестр.\n"
+        "ENTER = Перезагрузка"
     },
     {
         //ERROR_UPDATE_LOCALESETTINGS,
-        "Setup could not set the system locale.\n"
-        "ENTER = Reboot computer"
+        "Не удалось установить локаль системы.\n"
+        "ENTER = Перезагрузка"
     },
     {
         NULL,
