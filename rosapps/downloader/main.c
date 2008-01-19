@@ -654,7 +654,7 @@ struct Application* GetDependency(const WCHAR* Dependency)
 	{
 		while (Category->Apps)
 		{
-			if(StrCmpW(Category->Apps->Name, Dependency) == 0)
+			if(StrCmpW(Category->Apps->RegName, Dependency) == 0)
 				return Category->Apps;
 			Category->Apps = Category->Apps->Next;
 		}
@@ -721,16 +721,17 @@ WndProc (HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 						{
 							AppToInstall = SelectedApplication;
 							SelectedApplication = GetDependency(SelectedApplication->Depends);
-							if (!IsApplicationInstalled(SelectedApplication))
-							{
-								LoadString(GetModuleHandle(NULL), IDS_INSTALL_DEP, InstallDep, sizeof(InstallDep) / sizeof(WCHAR));
-								LoadString(GetModuleHandle(NULL), IDS_WINDOW_TITLE, Title, sizeof(Title) / sizeof(WCHAR));
-								_snwprintf(InstallDepBuffer, sizeof(InstallDepBuffer) / sizeof(WCHAR), InstallDep, SelectedApplication->Name, AppToInstall->Name, SelectedApplication->Name);
-								if (MessageBox(hwnd, InstallDepBuffer, Title, MB_YESNO | MB_ICONINFORMATION) == IDYES)
+							if (SelectedApplication)
+								if (!IsApplicationInstalled(SelectedApplication))
 								{
-									DialogBoxW(GetModuleHandle(NULL), MAKEINTRESOURCEW(IDD_DOWNLOAD), 0, DownloadProc);
+									LoadString(GetModuleHandle(NULL), IDS_INSTALL_DEP, InstallDep, sizeof(InstallDep) / sizeof(WCHAR));
+									LoadString(GetModuleHandle(NULL), IDS_WINDOW_TITLE, Title, sizeof(Title) / sizeof(WCHAR));
+									_snwprintf(InstallDepBuffer, sizeof(InstallDepBuffer) / sizeof(WCHAR), InstallDep, SelectedApplication->Name, AppToInstall->Name, SelectedApplication->Name);
+									if (MessageBox(hwnd, InstallDepBuffer, Title, MB_YESNO | MB_ICONINFORMATION) == IDYES)
+									{
+										DialogBoxW(GetModuleHandle(NULL), MAKEINTRESOURCEW(IDD_DOWNLOAD), 0, DownloadProc);
+									}
 								}
-							}
 							SelectedApplication = AppToInstall;
 						}
 
