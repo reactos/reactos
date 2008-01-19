@@ -54,7 +54,7 @@ BEGIN
   IDS_DOWNLOAD_FOLDER		"Downloader"
   IDS_UNABLECREATE_FOLDER	"Échec lors du répertoire avec ce nom !"
   IDS_UPDATE_URL		"http://svn.reactos.org"
-  IDS_INSTALL_DEP		"%s is required to run %s. Should %s be installed now?"
+  IDS_INSTALL_DEP		"%s est nécessaire pour lancer %s. Voulez-vous installer %s maintenant ?"
   TTT_HELPBUTTON, "Obtenez de l'aide à propros du téléchargeur"
   TTT_UPDATEBUTTON, "Pas encore disponible"
   TTT_PROFBUTTON, "Vous permet de configurer le téléchargeur"
