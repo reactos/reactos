@@ -44,6 +44,11 @@ CcMapData (IN PFILE_OBJECT FileObject,
 	 Length, Flags, pBcb, pBuffer);
 
   ReadOffset = (ULONG)FileOffset->QuadPart;
+
+  ASSERT(FileObject);
+  ASSERT(FileObject->SectionObjectPointer);
+  ASSERT(FileObject->SectionObjectPointer->SharedCacheMap);
+
   Bcb = FileObject->SectionObjectPointer->SharedCacheMap;
   ASSERT(Bcb);
 
