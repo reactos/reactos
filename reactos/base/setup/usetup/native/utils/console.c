@@ -484,4 +484,29 @@ SetConsoleTextAttribute(
 	return NT_SUCCESS(Status);
 }
 
+BOOL WINAPI
+SetConsoleOutputCP(
+	IN UINT wCodepage)
+{
+	HANDLE hConsoleOutput;
+	IO_STATUS_BLOCK IoStatusBlock;
+	NTSTATUS Status;
+
+	hConsoleOutput = GetStdHandle(STD_OUTPUT_HANDLE);
+
+	Status = NtDeviceIoControlFile(
+		hConsoleOutput,
+		NULL,
+		NULL,
+		NULL,
+		&IoStatusBlock,
+		IOCTL_CONSOLE_LOADFONT,
+		&wCodepage,
+		sizeof(ULONG),
+		NULL,
+		0);
+	return NT_SUCCESS(Status);
+}
+
+
 /* EOF */

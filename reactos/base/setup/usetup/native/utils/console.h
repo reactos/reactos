@@ -101,12 +101,17 @@ WriteConsoleOutputCharacterA(
 	OUT LPDWORD lpNumberOfCharsWritten);
 
 BOOL WINAPI
-WriteConsoleOutputCharacterA(
+WriteConsoleOutputCharacterW(
 	HANDLE hConsoleOutput,
 	IN LPCSTR lpCharacter,
 	IN DWORD nLength,
 	IN COORD dwWriteCoord,
 	OUT LPDWORD lpNumberOfCharsWritten);
+
+BOOL WINAPI
+SetConsoleOutputCP(
+	IN UINT wCodePageID
+);
 
 #endif /* _UTILS_CONSOLE_H_ */
 

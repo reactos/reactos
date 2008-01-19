@@ -20,6 +20,7 @@ typedef struct _SECURITY_ATTRIBUTES SECURITY_ATTRIBUTES, *PSECURITY_ATTRIBUTES;
 #include <blue/ntddblue.h>
 #include <ndk/inbvfuncs.h>
 //#include <intrin.h>
+#include "blue.h"
 
 #define NDEBUG
 #include <debug.h>
@@ -31,41 +32,6 @@ NTAPI
 HalQueryDisplayOwnership(
     VOID
 );
-
-/* DEFINITIONS ***************************************************************/
-
-#define VIDMEM_BASE        0xb8000
-
-#define CRTC_COMMAND       ((PUCHAR)0x3d4)
-#define CRTC_DATA          ((PUCHAR)0x3d5)
-
-#define CRTC_COLUMNS       0x01
-#define CRTC_OVERFLOW      0x07
-#define CRTC_ROWS          0x12
-#define CRTC_SCANLINES     0x09
-#define CRTC_CURSORSTART   0x0a
-#define CRTC_CURSOREND     0x0b
-#define CRTC_CURSORPOSHI   0x0e
-#define CRTC_CURSORPOSLO   0x0f
-
-#define ATTRC_WRITEREG     ((PUCHAR)0x3c0)
-#define ATTRC_READREG      ((PUCHAR)0x3c1)
-#define ATTRC_INPST1       ((PUCHAR)0x3da)
-
-#define TAB_WIDTH          8
-
-#define MISC         (PUCHAR)0x3c2
-#define SEQ          (PUCHAR)0x3c4
-#define SEQDATA      (PUCHAR)0x3c5
-#define CRTC         (PUCHAR)0x3d4
-#define CRTCDATA     (PUCHAR)0x3d5
-#define GRAPHICS     (PUCHAR)0x3ce
-#define GRAPHICSDATA (PUCHAR)0x3cf
-#define ATTRIB       (PUCHAR)0x3c0
-#define STATUS       (PUCHAR)0x3da
-#define PELMASK      (PUCHAR)0x3c6
-#define PELINDEX     (PUCHAR)0x3c8
-#define PELDATA      (PUCHAR)0x3c9
 
 /* NOTES ******************************************************************/
 /*
@@ -757,6 +723,23 @@ ScrIoControl(PDEVICE_OBJECT DeviceObject,
           Status = STATUS_SUCCESS;
         }
         break;
+
+      case IOCTL_CONSOLE_LOADFONT:
+          {
+              ULONG LangId = (ULONG)*(PULONG)Irp->AssociatedIrp.SystemBuffer;
+
+              // Upload the cyrillic font into the fontgenerator, if needed
+              if (LangId == MAKELANGID(LANG_BULGARIAN, SUBLANG_DEFAULT) ||
+                  LangId == MAKELANGID(LANG_RUSSIAN, SUBLANG_DEFAULT) ||
+                  LangId == MAKELANGID(LANG_UKRAINIAN, SUBLANG_DEFAULT))
+              {
+                  ScrLoadFontTable();
+              }
+
+              Irp->IoStatus.Information = 0;
+              Status = STATUS_SUCCESS;
+          }
+          break;
 
       default:
         Status = STATUS_NOT_IMPLEMENTED;

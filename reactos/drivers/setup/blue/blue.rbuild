@@ -6,5 +6,6 @@
 	<library>ntoskrnl</library>
 	<library>hal</library>
 	<file>blue.c</file>
+	<file>font.c</file>
 	<file>blue.rc</file>
 </module>
