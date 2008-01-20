@@ -272,6 +272,7 @@ BOOL Batch (LPTSTR fullname, LPTSTR firstword, LPTSTR param)
 	SetFilePointer (bc->hBatchFile, 0, NULL, FILE_BEGIN);
 	bc->bEcho = bEcho; /* Preserve echo across batch calls */
 	bc->shiftlevel = 0;
+	bc->bCmdBlock = FALSE;
 
 	bc->ffind = NULL;
 	bc->forvar = _T('\0');
@@ -452,6 +453,18 @@ LPTSTR ReadBatchLine (LPBOOL bLocalEcho)
 			;
 
 		*++ip = _T('\0');
+
+		/* cmd block over multiple lines (..) */
+		if (bc->bCmdBlock)
+		{
+			if (*first == _T(')'))
+			{
+				bc->bCmdBlock = FALSE;
+				continue;
+			}
+			if (!bc->bExecuteBlock)
+				continue;
+		}
 
 		/* ignore labels and empty lines */
 		if (*first == _T(':') || *first == 0)

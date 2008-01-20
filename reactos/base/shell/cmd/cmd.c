@@ -1140,20 +1140,49 @@ GetEnvVarOrSpecial ( LPCTSTR varName )
 	static LPTSTR ret = NULL;
 	static UINT retlen = 0;
 	UINT size;
+	TCHAR varNameFixed[MAX_PATH];
+	TCHAR ReturnValue[MAX_PATH];
+	LPTSTR position;
+	LPTSTR Token;
+	SIZE_T i = 0;
+	INT StringPart[1] = {0};
+	
+	position = _tcsstr(varName, _T(":~"));
+	if (position)
+		_tcsncpy(varNameFixed, varName, (int) (position - varName));
+	else
+		_tcscpy(varNameFixed, varName);
 
-	size = GetEnvironmentVariable ( varName, ret, retlen );
+	size = GetEnvironmentVariable ( varNameFixed, ret, retlen );
 	if ( size > retlen )
 	{
 		if ( !GrowIfNecessary ( size, &ret, &retlen ) )
 			return NULL;
-		size = GetEnvironmentVariable ( varName, ret, retlen );
+		size = GetEnvironmentVariable ( varNameFixed, ret, retlen );
 	}
 	if ( size )
-		return ret;
+	{
+		if (position)
+		{
+			position += 2;
+			Token = _tcstok(position, _T(","));
+			while ((Token != NULL) && (i < 2))
+			{
+				StringPart[i] = _ttoi(Token);
+				i++;
+				Token = _tcstok (NULL, _T(","));
+			}
+			_tcsncpy(ReturnValue, ret + (1 - StringPart[0]), StringPart[1]);
+			_tcscpy(ret, ReturnValue);
+			return ret;
+		}
+		else
+			return ret;
+	}
 
 	/* env var doesn't exist, look for a "special" one */
 	/* %CD% */
-	if (_tcsicmp(varName,_T("cd")) ==0)
+	if (_tcsicmp(varNameFixed,_T("cd")) ==0)
 	{
 		size = GetCurrentDirectory ( retlen, ret );
 		if ( size > retlen )
@@ -1167,7 +1196,7 @@ GetEnvVarOrSpecial ( LPCTSTR varName )
 		return ret;
 	}
 	/* %TIME% */
-	else if (_tcsicmp(varName,_T("time")) ==0)
+	else if (_tcsicmp(varNameFixed,_T("time")) ==0)
 	{
 		SYSTEMTIME t;
 		if ( !GrowIfNecessary ( MAX_PATH, &ret, &retlen ) )
@@ -1179,7 +1208,7 @@ GetEnvVarOrSpecial ( LPCTSTR varName )
 		return ret;
 	}
 	/* %DATE% */
-	else if (_tcsicmp(varName,_T("date")) ==0)
+	else if (_tcsicmp(varNameFixed,_T("date")) ==0)
 	{
 
 		if ( !GrowIfNecessary ( GetDateFormat(LOCALE_USER_DEFAULT, DATE_SHORTDATE, NULL, NULL, NULL, 0), &ret, &retlen ) )
@@ -1193,7 +1222,7 @@ GetEnvVarOrSpecial ( LPCTSTR varName )
 	}
 
 	/* %RANDOM% */
-	else if (_tcsicmp(varName,_T("random")) ==0)
+	else if (_tcsicmp(varNameFixed,_T("random")) ==0)
 	{
 		if ( !GrowIfNecessary ( MAX_PATH, &ret, &retlen ) )
 			return NULL;
@@ -1203,13 +1232,13 @@ GetEnvVarOrSpecial ( LPCTSTR varName )
 	}
 
 	/* %CMDCMDLINE% */
-	else if (_tcsicmp(varName,_T("cmdcmdline")) ==0)
+	else if (_tcsicmp(varNameFixed,_T("cmdcmdline")) ==0)
 	{
 		return GetCommandLine();
 	}
 
 	/* %CMDEXTVERSION% */
-	else if (_tcsicmp(varName,_T("cmdextversion")) ==0)
+	else if (_tcsicmp(varNameFixed,_T("cmdextversion")) ==0)
 	{
 		if ( !GrowIfNecessary ( MAX_PATH, &ret, &retlen ) )
 			return NULL;
@@ -1219,7 +1248,7 @@ GetEnvVarOrSpecial ( LPCTSTR varName )
 	}
 
 	/* %ERRORLEVEL% */
-	else if (_tcsicmp(varName,_T("errorlevel")) ==0)
+	else if (_tcsicmp(varNameFixed,_T("errorlevel")) ==0)
 	{
 		if ( !GrowIfNecessary ( MAX_PATH, &ret, &retlen ) )
 			return NULL;
@@ -1227,8 +1256,8 @@ GetEnvVarOrSpecial ( LPCTSTR varName )
 		return ret;
 	}
 
-	GrowIfNecessary(_tcslen(varName) + 3, &ret, &retlen);
-	_stprintf(ret,_T("%%%s%%"),varName);
+	GrowIfNecessary(_tcslen(varNameFixed) + 3, &ret, &retlen);
+	_stprintf(ret,_T("%%%s%%"),varNameFixed);
 	return ret; /* not found - return orginal string */
 }
 

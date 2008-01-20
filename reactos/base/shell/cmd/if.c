@@ -181,6 +181,18 @@ INT cmd_if (LPTSTR cmd, LPTSTR param)
 			x_flag ^= X_EXEC;
 		pp += p1len;
 
+		while (_istspace (*pp)) /* skip spaces */
+			pp++;
+
+		if (*pp == _T('('))
+		{
+			if (bc)
+			{
+				bc->bCmdBlock = TRUE;
+				bc->bExecuteBlock = x_flag & X_EXEC;
+			}
+		}
+
 		if ( x_flag )
 		{
 			x_flag |= X_EMPTY;

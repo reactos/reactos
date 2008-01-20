@@ -23,6 +23,8 @@ typedef struct tagBATCHCONTEXT
 	TCHAR Out[MAX_PATH];
 	TCHAR Err[MAX_PATH];
 	TCHAR forvar;
+	BOOL  bCmdBlock;
+	BOOL  bExecuteBlock;
 } BATCH_CONTEXT, *LPBATCH_CONTEXT;
 
 
