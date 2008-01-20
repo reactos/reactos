@@ -1172,7 +1172,7 @@ GetEnvVarOrSpecial ( LPCTSTR varName )
 				i++;
 				Token = _tcstok (NULL, _T(","));
 			}
-			_tcsncpy(ReturnValue, ret + (1 - StringPart[0]), StringPart[1]);
+			_tcsncpy(ReturnValue, ret + StringPart[0], StringPart[1]);
 			_tcscpy(ret, ReturnValue);
 			return ret;
 		}
