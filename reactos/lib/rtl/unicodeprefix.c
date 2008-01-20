@@ -155,6 +155,9 @@ RtlFindUnicodePrefix(PUNICODE_PREFIX_TABLE PrefixTable,
     PRTL_SPLAY_LINKS SplayLinks;
     RTL_GENERIC_COMPARE_RESULTS Result;
 
+    DPRINT("RtlFindUnicodePrefix(): Table %p, FullName %wZ, "
+        "CaseInsensitive %b\n", PrefixTable, FullName, CaseInsensitiveIndex);
+
     /* Find out how many names there are */
     NameCount = ComputeUnicodeNameLength(FullName);
 
@@ -279,6 +282,9 @@ VOID
 NTAPI
 RtlInitializeUnicodePrefix(PUNICODE_PREFIX_TABLE PrefixTable)
 {
+    DPRINT("RtlInitializeUnicodePrefix(): Table %p\n",
+        PrefixTable);
+
     /* Setup the table */
     PrefixTable->NameLength = 0;
     PrefixTable->LastNextEntry = NULL;
@@ -299,6 +305,9 @@ RtlInsertUnicodePrefix(PUNICODE_PREFIX_TABLE PrefixTable,
     ULONG NameCount;
     RTL_GENERIC_COMPARE_RESULTS Result;
     PRTL_SPLAY_LINKS SplayLinks;
+
+    DPRINT("RtlInsertUnicodePrefix(): Table %p, Prefix %wZ, "
+        "TableEntry %p\n", PrefixTable, Prefix, PrefixTableEntry);
 
     /* Find out how many names there are */
     NameCount = ComputeUnicodeNameLength(Prefix);
@@ -404,7 +413,7 @@ RtlInsertUnicodePrefix(PUNICODE_PREFIX_TABLE PrefixTable,
             if (RtlRightChild(&Entry->Links))
             {
                 /* We do, enter it and restart the loop */
-                SplayLinks = RtlLeftChild(&Entry->Links);
+                SplayLinks = RtlRightChild(&Entry->Links);
                 Entry = CONTAINING_RECORD(SplayLinks,
                                           UNICODE_PREFIX_TABLE_ENTRY,
                                           Links);
@@ -457,6 +466,9 @@ RtlNextUnicodePrefix(PUNICODE_PREFIX_TABLE PrefixTable,
 {
     PRTL_SPLAY_LINKS SplayLinks;
     PUNICODE_PREFIX_TABLE_ENTRY Entry, CaseMatchEntry;
+
+    DPRINT("RtlNextUnicodePrefix(): Table %p Restart %b\n",
+        PrefixTable, Restart);
 
     /* We might need this entry 2/3rd of the time, so cache it now */
     CaseMatchEntry = PrefixTable->LastNextEntry->CaseMatch;
@@ -528,6 +540,9 @@ RtlRemoveUnicodePrefix(PUNICODE_PREFIX_TABLE PrefixTable,
 {
     PUNICODE_PREFIX_TABLE_ENTRY Entry, RefEntry, NewEntry;
     PRTL_SPLAY_LINKS SplayLinks;
+
+    DPRINT("RtlRemoveUnicodePrefix(): Table %p, TableEntry %p\n",
+        PrefixTable, PrefixTableEntry);
 
     /* Erase the last entry */
     PrefixTable->LastNextEntry = NULL;
