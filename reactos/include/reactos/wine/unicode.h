@@ -44,7 +44,17 @@
 #define WINE_UNICODE_API __attribute__((dllimport))
 #endif
 
+#ifndef __VALIST
+#ifdef __GNUC__
+#define __VALIST __gnuc_va_list
+#else
+#define __VALIST char*
+#endif
+#endif /* defined __VALIST  */
+
 int __cdecl swprintf (wchar_t*, const wchar_t*, ...);
+int __cdecl _snwprintf (wchar_t*, size_t, const wchar_t*, ...);
+int __cdecl _vsnwprintf (wchar_t*, size_t, const wchar_t*, __VALIST);
 
 static __inline WCHAR *strpbrkW( const WCHAR *str, const WCHAR *accept )
 {
