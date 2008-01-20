@@ -284,7 +284,6 @@ BOOL Batch (LPTSTR fullname, LPTSTR firstword, LPTSTR param)
     bc->raw_params = (TCHAR*) cmd_alloc((_tcslen(param)+1) * sizeof(TCHAR));
     if (bc->raw_params != NULL)
     {
-        memset (bc->raw_params, 0, (_tcslen(param)+1) * sizeof(TCHAR));
         _tcscpy(bc->raw_params,param);
     }
     else
