@@ -32,7 +32,7 @@ CreateIoCompletionPort(
    FILE_COMPLETION_INFORMATION CompletionInformation;
    IO_STATUS_BLOCK IoStatusBlock;
 
-   if ( ExistingCompletionPort == NULL && FileHandle == INVALID_HANDLE_VALUE )
+   if ( FileHandle == INVALID_HANDLE_VALUE && ExistingCompletionPort != NULL )
    {
       SetLastError(ERROR_INVALID_PARAMETER);
       return FALSE;
