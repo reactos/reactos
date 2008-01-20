@@ -137,6 +137,8 @@ struct _FULL_PTR_XLAT_TABLES;
 struct NDR_ALLOC_ALL_NODES_CONTEXT;
 struct NDR_POINTER_QUEUE_STATE;
 
+typedef unsigned char *RPC_BUFPTR;
+typedef unsigned long RPC_LENGTH;
 typedef void (__RPC_USER *EXPR_EVAL)(struct _MIDL_STUB_MESSAGE *);
 typedef const unsigned char *PFORMAT_STRING;
 
@@ -453,6 +455,25 @@ typedef struct _SCONTEXT_QUEUE {
   NDR_SCONTEXT *ArrayOfObjects;
 } SCONTEXT_QUEUE, *PSCONTEXT_QUEUE;
 
+typedef struct _NDR_USER_MARSHAL_INFO_LEVEL1
+{
+    void *Buffer;
+    ULONG BufferSize;
+    void * (__RPC_API *pfnAllocate)(size_t);
+    void (__RPC_API *pfnFree)(void *);
+    struct IRpcChannelBuffer *pRpcChannelBuffer;
+    ULONG_PTR Reserved[5];
+} NDR_USER_MARSHAL_INFO_LEVEL1;
+
+typedef struct _NDR_USER_MARSHAL_INFO
+{
+    ULONG InformationLevel;
+    union
+    {
+        NDR_USER_MARSHAL_INFO_LEVEL1 Level1;
+    } DUMMYUNIONNAME1;
+} NDR_USER_MARSHAL_INFO;
+
 /* Context Handles */
 
 RPCRTAPI RPC_BINDING_HANDLE RPC_ENTRY
@@ -564,9 +585,32 @@ SIMPLE_TYPE_MARSHAL(NonConformantString)
 #undef SIMPLE_TYPE_MARSHAL
 
 RPCRTAPI void RPC_ENTRY
+  NdrCorrelationInitialize( PMIDL_STUB_MESSAGE pStubMsg, void *pMemory, ULONG CacheSize, ULONG flags );
+RPCRTAPI void RPC_ENTRY
+  NdrCorrelationPass( PMIDL_STUB_MESSAGE pStubMsg );
+RPCRTAPI void RPC_ENTRY
+  NdrCorrelationFree( PMIDL_STUB_MESSAGE pStubMsg );
+
+RPCRTAPI void RPC_ENTRY
   NdrConvert2( PMIDL_STUB_MESSAGE pStubMsg, PFORMAT_STRING pFormat, LONG NumberParams );
 RPCRTAPI void RPC_ENTRY
   NdrConvert( PMIDL_STUB_MESSAGE pStubMsg, PFORMAT_STRING pFormat );
+
+#define USER_MARSHAL_FC_BYTE    1
+#define USER_MARSHAL_FC_CHAR    2
+#define USER_MARSHAL_FC_SMALL   3
+#define USER_MARSHAL_FC_USMALL  4
+#define USER_MARSHAL_FC_WCHAR   5
+#define USER_MARSHAL_FC_SHORT   6
+#define USER_MARSHAL_FC_USHORT  7
+#define USER_MARSHAL_FC_LONG    8
+#define USER_MARSHAL_FC_ULONG   9
+#define USER_MARSHAL_FC_FLOAT   10
+#define USER_MARSHAL_FC_HYPER   11
+#define USER_MARSHAL_FC_DOUBLE  12
+
+RPCRTAPI unsigned char* RPC_ENTRY
+  NdrUserMarshalSimpleTypeConvert( ULONG *pFlags, unsigned char *pBuffer, unsigned char FormatChar );
 
 /* Note: this should return a CLIENT_CALL_RETURN, but calling convention for
  * returning structures/unions is different between Windows and gcc on i386. */
@@ -576,11 +620,15 @@ LONG_PTR RPC_VAR_ENTRY
   NdrClientCall( PMIDL_STUB_DESC pStubDescriptor, PFORMAT_STRING pFormat, ... );
 LONG_PTR RPC_VAR_ENTRY
   NdrAsyncClientCall( PMIDL_STUB_DESC pStubDescriptor, PFORMAT_STRING pFormat, ... );
+LONG_PTR RPC_VAR_ENTRY
+  NdrDcomAsyncClientCall( PMIDL_STUB_DESC pStubDescriptor, PFORMAT_STRING pFormat, ... );
 
 RPCRTAPI void RPC_ENTRY
   NdrServerCall2( PRPC_MESSAGE pRpcMsg );
 RPCRTAPI void RPC_ENTRY
   NdrServerCall( PRPC_MESSAGE pRpcMsg );
+RPCRTAPI void RPC_ENTRY
+  NdrAsyncServerCall( PRPC_MESSAGE pRpcMsg );
 
 RPCRTAPI LONG RPC_ENTRY
   NdrStubCall2( struct IRpcStubBuffer* pThis, struct IRpcChannelBuffer* pChannel, PRPC_MESSAGE pRpcMsg, DWORD * pdwStubPhase );
@@ -588,6 +636,8 @@ RPCRTAPI LONG RPC_ENTRY
   NdrStubCall( struct IRpcStubBuffer* pThis, struct IRpcChannelBuffer* pChannel, PRPC_MESSAGE pRpcMsg, DWORD * pdwStubPhase );
 RPCRTAPI LONG RPC_ENTRY
   NdrAsyncStubCall( struct IRpcStubBuffer* pThis, struct IRpcChannelBuffer* pChannel, PRPC_MESSAGE pRpcMsg, DWORD * pdwStubPhase );
+RPCRTAPI LONG RPC_ENTRY
+  NdrDcomAsyncStubCall( struct IRpcStubBuffer* pThis, struct IRpcChannelBuffer* pChannel, PRPC_MESSAGE pRpcMsg, DWORD * pdwStubPhase );
 
 RPCRTAPI void* RPC_ENTRY
   NdrAllocate( PMIDL_STUB_MESSAGE pStubMsg, size_t Len );
@@ -605,10 +655,25 @@ RPCRTAPI void RPC_ENTRY
   NdrOleFree( void* NodeToFree );
 
 RPCRTAPI void RPC_ENTRY
+  NdrClientInitialize( PRPC_MESSAGE pRpcMessage, PMIDL_STUB_MESSAGE pStubMsg,
+                       PMIDL_STUB_DESC pStubDesc, unsigned int ProcNum );
+RPCRTAPI void RPC_ENTRY
   NdrClientInitializeNew( PRPC_MESSAGE pRpcMessage, PMIDL_STUB_MESSAGE pStubMsg,
                           PMIDL_STUB_DESC pStubDesc, unsigned int ProcNum );
 RPCRTAPI unsigned char* RPC_ENTRY
+  NdrServerInitialize( PRPC_MESSAGE pRpcMsg, PMIDL_STUB_MESSAGE pStubMsg, PMIDL_STUB_DESC pStubDesc );
+RPCRTAPI unsigned char* RPC_ENTRY
   NdrServerInitializeNew( PRPC_MESSAGE pRpcMsg, PMIDL_STUB_MESSAGE pStubMsg, PMIDL_STUB_DESC pStubDesc );
+RPCRTAPI unsigned char* RPC_ENTRY
+  NdrServerInitializeUnmarshall( PMIDL_STUB_MESSAGE pStubMsg, PMIDL_STUB_DESC pStubDesc, PRPC_MESSAGE pRpcMsg );
+RPCRTAPI void RPC_ENTRY
+  NdrServerInitializeMarshall( PRPC_MESSAGE pRpcMsg, PMIDL_STUB_MESSAGE pStubMsg  );
+RPCRTAPI void RPC_ENTRY
+  NdrServerMarshall( struct IRpcStubBuffer *pThis, struct IRpcChannelBuffer *pChannel, PMIDL_STUB_MESSAGE pStubMsg, PFORMAT_STRING pFormat );
+RPCRTAPI void RPC_ENTRY
+  NdrServerUnmarshall( struct IRpcChannelBuffer *pChannel, PRPC_MESSAGE pRpcMsg,
+                       PMIDL_STUB_MESSAGE pStubMsg, PMIDL_STUB_DESC pStubDesc,
+                       PFORMAT_STRING pFormat, void *pParamList );
 RPCRTAPI unsigned char* RPC_ENTRY
   NdrGetBuffer( PMIDL_STUB_MESSAGE stubmsg, ULONG buflen, RPC_BINDING_HANDLE handle );
 RPCRTAPI void RPC_ENTRY
@@ -620,6 +685,9 @@ RPCRTAPI unsigned char * RPC_ENTRY
   NdrNsGetBuffer( PMIDL_STUB_MESSAGE pStubMsg, ULONG BufferLength, RPC_BINDING_HANDLE Handle );
 RPCRTAPI unsigned char * RPC_ENTRY
   NdrNsSendReceive( PMIDL_STUB_MESSAGE pStubMsg, unsigned char *pBufferEnd, RPC_BINDING_HANDLE *pAutoHandle );
+
+RPCRTAPI RPC_STATUS RPC_ENTRY
+  NdrGetDcomProtocolVersion( PMIDL_STUB_MESSAGE pStubMsg, RPC_VERSION *pVersion );
 
 RPCRTAPI PFULL_PTR_XLAT_TABLES RPC_ENTRY
   NdrFullPointerXlatInit( ULONG NumberOfPointers, XLAT_SIDE XlatSide );
@@ -651,12 +719,8 @@ RPCRTAPI void * RPC_ENTRY
 RPCRTAPI void RPC_ENTRY
   NdrRpcSsDefaultFree( void *NodeToFree );
 
-
-#define RPC_BAD_STUB_DATA_EXCEPTION_FILTER  \
-                 ( (RpcExceptionCode() == STATUS_ACCESS_VIOLATION)  || \
-                   (RpcExceptionCode() == STATUS_DATATYPE_MISALIGNMENT) || \
-                   (RpcExceptionCode() == RPC_X_BAD_STUB_DATA) || \
-                   (RpcExceptionCode() == RPC_S_INVALID_BOUND) )
+RPCRTAPI RPC_STATUS RPC_ENTRY
+  NdrGetUserMarshalInfo( ULONG *pFlags, ULONG InformationLevel, NDR_USER_MARSHAL_INFO *pMarshalInfo );
 
 #ifdef __cplusplus
 }
