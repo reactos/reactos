@@ -262,7 +262,10 @@ BOOL Batch (LPTSTR fullname, LPTSTR firstword, LPTSTR param)
 		/* Then we are transferring to another batch */
 		CloseHandle (bc->hBatchFile);
 		bc->hBatchFile = INVALID_HANDLE_VALUE;
-		cmd_free (bc->params);
+		if (bc->params)
+			cmd_free (bc->params);
+		if (bc->raw_params)
+			cmd_free (bc->raw_params);
 	}
 
 	bc->hBatchFile = hFile;
@@ -280,7 +283,7 @@ BOOL Batch (LPTSTR fullname, LPTSTR firstword, LPTSTR param)
     bc->raw_params = (TCHAR*) cmd_alloc((_tcslen(param)+1) * sizeof(TCHAR));
     if (bc->raw_params != NULL)
     {
-        memset (bc->raw_params, 0, _tcslen(bc->raw_params) * sizeof(TCHAR));
+        memset (bc->raw_params, 0, (_tcslen(param)+1) * sizeof(TCHAR));
         _tcscpy(bc->raw_params,param);
     }
     else
