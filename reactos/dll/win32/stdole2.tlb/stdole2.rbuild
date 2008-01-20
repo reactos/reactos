@@ -8,7 +8,7 @@
 	<define name="WINVER">0x501</define>
 	<file>std_ole_v2.idl</file>
 </module>
-<module name="stdole2" type="win32dll" extension=".tlb" installbase="system32" installname="stdole2.tlb">
+<module name="stdole2" type="win32dll" extension=".tlb" installbase="system32" installname="stdole2.tlb" entrypoint="0">
 	<importlibrary definition="stdole2.tlb.spec.def" />
 	<include base="stdole2">.</include>
 	<include base="stdole2" root="intermediate">.</include>
