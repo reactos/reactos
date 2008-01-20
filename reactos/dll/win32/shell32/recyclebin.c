@@ -35,6 +35,7 @@
 #include "shlwapi.h"
 #include "shlobj.h"
 #include "shresdef.h"
+#include "pidl.h"
 #include "wine/debug.h"
 
 #include "shell32_main.h"

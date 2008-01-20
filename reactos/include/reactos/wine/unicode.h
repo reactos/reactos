@@ -52,6 +52,8 @@
 #endif
 #endif /* defined __VALIST  */
 
+int __cdecl _wtoi (const wchar_t *);
+long __cdecl _wtol (const wchar_t *);
 int __cdecl swprintf (wchar_t*, const wchar_t*, ...);
 int __cdecl _snwprintf (wchar_t*, size_t, const wchar_t*, ...);
 int __cdecl _vsnwprintf (wchar_t*, size_t, const wchar_t*, __VALIST);
