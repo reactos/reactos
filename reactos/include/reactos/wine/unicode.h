@@ -44,6 +44,8 @@
 #define WINE_UNICODE_API __attribute__((dllimport))
 #endif
 
+int __cdecl swprintf (wchar_t*, const wchar_t*, ...);
+
 static __inline WCHAR *strpbrkW( const WCHAR *str, const WCHAR *accept )
 {
     for ( ; *str; str++) if (strchrW( accept, *str )) return (WCHAR *)str;
