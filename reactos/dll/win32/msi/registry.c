@@ -479,11 +479,19 @@ static UINT get_user_sid(LPWSTR *usersid)
 
     size = sizeof(buf);
     if (!GetTokenInformation(token, TokenUser, (void *)buf, size, &size))
+    {
+        CloseHandle(token);
         return ERROR_FUNCTION_FAILED;
+    }
 
     user = (PTOKEN_USER)buf;
     if (!ConvertSidToStringSidW(user->User.Sid, usersid))
+    {
+        CloseHandle(token);
         return ERROR_FUNCTION_FAILED;
+    }
+
+    CloseHandle(token);
 
     return ERROR_SUCCESS;
 }
