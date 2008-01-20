@@ -87,7 +87,7 @@ NTSTATUS ElfrDeregisterEventSource(
     /* [out][in] */ PLOGHANDLE Handle)
 {
     UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    return STATUS_SUCCESS;
 }
 
 
