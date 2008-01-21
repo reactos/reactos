@@ -8,6 +8,33 @@
 
 /* DEFINITIONS ***************************************************************/
 
+#define  BUFFER_SIZE 260
+
+#include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+#ifndef TAG
+#define TAG(A, B, C, D) (ULONG)(((A)<<0) + ((B)<<8) + ((C)<<16) + ((D)<<24))
+#endif
+
+#define TAG_BLUE TAG('B', 'L', 'U', 'E')
+
+#include <pshpack1.h>
+typedef struct {
+    short Version;
+    short GeneralPurposeBitFlag;
+    short CompressionMethod;
+    short LastModFileTime;
+    short LastModFileDate;
+    int CRC32;
+    int CompressedSize;
+    int UncompressedSize;
+    short FileNameLength;
+    short ExtraFieldLength;
+} ZIP_LOCAL_HEADER;
+#include <poppack.h>
+
 #define VIDMEM_BASE        0xb8000
 #define BITPLANE_BASE      0xa0000
 
@@ -59,3 +86,4 @@
 #define PELDATA      (PUCHAR)0x3c9
 
 void ScrLoadFontTable(UINT CodePage);
+NTSTATUS ExtractFont(UINT CodePage, PUCHAR FontBitField);
