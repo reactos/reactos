@@ -138,13 +138,13 @@ static const MUI_LANGUAGE LanguageList[] =
     },
     {
         L"00000408",
-        L"00000409",
+        L"00000408",
         L"1253",
         L"737",
         L"10006",
         L"Greek",
-        elGRPages,
-        elGRErrorEntries
+        enUSPages, //elGRPages,
+        enUSErrorEntries //elGRErrorEntries
     },
     {
         L"0000040D",
