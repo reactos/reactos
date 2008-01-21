@@ -197,19 +197,12 @@ ReLoadGeneralPage(PINFO pInfo)
 
 
 static VOID
-GeneralOnInit(HWND hwnd,
-              PINFO pInfo)
+GeneralOnInit(PINFO pInfo)
 {
-    SetWindowLongPtrW(hwnd,
-                      GWLP_USERDATA,
-                      (LONG_PTR)pInfo);
-
-    pInfo->hGeneralPage = hwnd;
-
     SetWindowPos(pInfo->hGeneralPage,
                  NULL,
-                 2,
-                 22,
+                 13,
+                 110,
                  0,
                  0,
                  SWP_NOACTIVATE | SWP_NOOWNERZORDER | SWP_NOSIZE | SWP_NOZORDER);
@@ -255,13 +248,14 @@ GeneralDlgProc(HWND hDlg,
                WPARAM wParam,
                LPARAM lParam)
 {
-    PINFO pInfo = (PINFO)GetWindowLongPtrW(hDlg,
+    PINFO pInfo = (PINFO)GetWindowLongPtrW(GetParent(hDlg),
                                            GWLP_USERDATA);
 
     switch (message)
     {
         case WM_INITDIALOG:
-            GeneralOnInit(hDlg, (PINFO)lParam);
+            pInfo->hGeneralPage = hDlg;
+            GeneralOnInit(pInfo);
             return TRUE;
 
         case WM_COMMAND:
@@ -745,23 +739,16 @@ ReLoadDisplayPage(PINFO pInfo)
 
 
 static VOID
-DisplayOnInit(HWND hwnd,
-              PINFO pInfo)
+DisplayOnInit(PINFO pInfo)
 {
     DISPLAY_DEVICEW displayDevice;
     DWORD iDevNum = 0;
     BOOL GotDev = FALSE;
 
-    SetWindowLongPtrW(hwnd,
-                      GWLP_USERDATA,
-                      (LONG_PTR)pInfo);
-
-    pInfo->hDisplayPage = hwnd;
-
     SetWindowPos(pInfo->hDisplayPage,
                  NULL,
-                 2,
-                 22,
+                 13,
+                 110,
                  0,
                  0,
                  SWP_NOACTIVATE | SWP_NOOWNERZORDER | SWP_NOSIZE | SWP_NOZORDER);
@@ -835,13 +822,14 @@ DisplayDlgProc(HWND hDlg,
                WPARAM wParam,
                LPARAM lParam)
 {
-    PINFO pInfo = (PINFO)GetWindowLongPtrW(hDlg,
+    PINFO pInfo = (PINFO)GetWindowLongPtrW(GetParent(hDlg),
                                            GWLP_USERDATA);
 
     switch (message)
     {
         case WM_INITDIALOG:
-            DisplayOnInit(hDlg, (PINFO)lParam);
+            pInfo->hDisplayPage = hDlg;
+            DisplayOnInit(pInfo);
             return TRUE;
 
         case WM_DRAWITEM:
@@ -983,11 +971,10 @@ OnMainCreate(HWND hwnd,
         pInfo->hTab = GetDlgItem(hwnd, IDC_TAB);
         if (pInfo->hTab)
         {
-            if (CreateDialogParamW(hInst,
-                                   MAKEINTRESOURCEW(IDD_GENERAL),
-                                   pInfo->hTab,
-                                   (DLGPROC)GeneralDlgProc,
-                                   (LPARAM)pInfo))
+            if (CreateDialogW(hInst,
+                              MAKEINTRESOURCEW(IDD_GENERAL),
+                              hwnd,
+                              (DLGPROC)GeneralDlgProc))
             {
                 WCHAR str[256];
                 ZeroMemory(&item, sizeof(TCITEM));
@@ -998,11 +985,10 @@ OnMainCreate(HWND hwnd,
                 (void)TabCtrl_InsertItem(pInfo->hTab, 0, &item);
             }
 
-            if (CreateDialogParamW(hInst,
-                                   MAKEINTRESOURCEW(IDD_DISPLAY),
-                                   pInfo->hTab,
-                                   (DLGPROC)DisplayDlgProc,
-                                   (LPARAM)pInfo))
+            if (CreateDialogW(hInst,
+                              MAKEINTRESOURCEW(IDD_DISPLAY),
+                              hwnd,
+                              (DLGPROC)DisplayDlgProc))
             {
                 WCHAR str[256];
                 ZeroMemory(&item, sizeof(TCITEM));
