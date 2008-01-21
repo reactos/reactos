@@ -82,7 +82,7 @@ static MUI_ENTRY ruRUWelcomePageEntries[] =
     {
         8,
         17,
-        "\x07  Нажмите R дляявосстановления ReactOS.",
+        "\x07  Нажмите R для востановления ReactOS.",
         TEXT_NORMAL
     },
     {

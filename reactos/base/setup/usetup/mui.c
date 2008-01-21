@@ -42,21 +42,7 @@
 #include "lang/ru-RU.h"
 #include "lang/sv-SE.h"
 #include "lang/uk-UA.h"
-#include "lang/ca-ES.h"
-#include "lang/da-DK.h"
-#include "lang/fi-FI.h"
-#include "lang/he-IL.h"
-#include "lang/hu-HU.h"
-#include "lang/ja-JP.h"
 #include "lang/lt-LT.h"
-#include "lang/nl-NL.h"
-#include "lang/pt-PT.h"
-#include "lang/sk-SK.h"
-#include "lang/nb-NO.h"
-#include "lang/zh-CN.h"
-#include "lang/th-TH.h"
-#include "lang/tr-TR.h"
-#include "lang/ko-KR.h"
 
 static const MUI_LANGUAGE LanguageList[] =
 {
@@ -87,8 +73,8 @@ static const MUI_LANGUAGE LanguageList[] =
         L"850",
         L"10000",
         L"Catalan",
-        caESPages,
-        caESErrorEntries
+        enUSPages,
+        enUSErrorEntries
     },
     {
         L"00000804",
@@ -97,8 +83,8 @@ static const MUI_LANGUAGE LanguageList[] =
         L"936",
         L"10008",
         L"Chinese (PRC)",
-        zhCNPages,
-        zhCNErrorEntries
+        enUSPages,
+        enUSErrorEntries
     },
     {
         L"00000406",
@@ -107,8 +93,8 @@ static const MUI_LANGUAGE LanguageList[] =
         L"850",
         L"10000",
         L"Danish",
-        daDKPages,
-        daDKErrorEntries
+        enUSPages,
+        enUSErrorEntries
     },
     {
         L"00000413",
@@ -117,8 +103,8 @@ static const MUI_LANGUAGE LanguageList[] =
         L"850",
         L"10000",
         L"Dutch",
-        nlNLPages,
-        nlNLErrorEntries
+        enUSPages,
+        enUSErrorEntries
     },
     {
         L"0000040B",
@@ -127,8 +113,8 @@ static const MUI_LANGUAGE LanguageList[] =
         L"850",
         L"10000",
         L"Finnish",
-        fiFIPages,
-        fiFIErrorEntries
+        enUSPages,
+        enUSErrorEntries
     },
     {
         L"0000040C",
@@ -167,8 +153,8 @@ static const MUI_LANGUAGE LanguageList[] =
         L"862",
         L"10005",
         L"Hebrew",
-        heILPages,
-        heILErrorEntries
+        enUSPages,
+        enUSErrorEntries
     },
     {
         L"0000040E",
@@ -177,8 +163,8 @@ static const MUI_LANGUAGE LanguageList[] =
         L"852",
         L"10029",
         L"Hungarian",
-        huHUPages,
-        huHUErrorEntries
+        enUSPages,
+        enUSErrorEntries
     },
     {
         L"00000410",
@@ -197,8 +183,8 @@ static const MUI_LANGUAGE LanguageList[] =
         L"932",
         L"10001",
         L"Japanese",
-        jaJPPages,
-        jaJPErrorEntries
+        enUSPages,
+        enUSErrorEntries
     },
     {
         L"00000412",
@@ -207,8 +193,8 @@ static const MUI_LANGUAGE LanguageList[] =
         L"949",
         L"10003",
         L"Korean",
-        koKRPages,
-        koKRErrorEntries
+        enUSPages,
+        enUSErrorEntries
     },
     {
         L"00000427",
@@ -227,8 +213,8 @@ static const MUI_LANGUAGE LanguageList[] =
         L"850",
         L"10000",
         L"Norwegian",
-        nbNOPages,
-        nbNOErrorEntries
+        enUSPages,
+        enUSErrorEntries
     },
     {
         L"00000419",
@@ -247,8 +233,8 @@ static const MUI_LANGUAGE LanguageList[] =
         L"852",
         L"10029",
         L"Slovak",
-        skSKPages,
-        skSKErrorEntries
+        enUSPages,
+        enUSErrorEntries
     },
     {
         L"0000040A",
@@ -277,8 +263,8 @@ static const MUI_LANGUAGE LanguageList[] =
         L"850",
         L"10000",
         L"Portuguese",
-        ptPTPages,
-        ptPTErrorEntries
+        enUSPages,
+        enUSErrorEntries
     },
     {
         L"0000041D",
@@ -297,8 +283,8 @@ static const MUI_LANGUAGE LanguageList[] =
         L"874",
         L"10021",
         L"Thai",
-        thTHPages,
-        thTHErrorEntries
+        enUSPages,
+        enUSErrorEntries
     },
     {
         L"0000041F",
@@ -307,8 +293,8 @@ static const MUI_LANGUAGE LanguageList[] =
         L"857",
         L"10081",
         L"Turkish",
-        trTRPages,
-        trTRErrorEntries
+        enUSPages,
+        enUSErrorEntries
     },
     {
         L"00000422",
