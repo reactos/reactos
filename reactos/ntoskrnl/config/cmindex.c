@@ -1019,7 +1019,7 @@ CmpAddToLeaf(IN PHHIVE Hive,
     /* Find the insertion point for our entry */
     i = CmpFindSubKeyInLeaf(Hive, Leaf, Name, &Child);
     if (i & 0x80000000) return HCELL_NIL;
-    ASSERT(Child == HCELL_NIL);
+    //ASSERT(Child == HCELL_NIL);
 
     /* Check if we're not last */
     if (i != Leaf->Count)
@@ -1031,7 +1031,7 @@ CmpAddToLeaf(IN PHHIVE Hive,
                                    Leaf,
                                    &Child);
         if (Result == 2) return HCELL_NIL;
-        ASSERT(Result != 0);
+        //ASSERT(Result != 0);
 
         /* Check if we come after */
         if (Result > 0)

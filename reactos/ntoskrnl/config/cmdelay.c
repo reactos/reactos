@@ -60,7 +60,7 @@ CmpDelayCloseWorker(IN PVOID Context)
     ASSERT(CmpDelayCloseWorkItemActive);
 
     /* FIXME: TODO */
-    ASSERT(FALSE);
+    //ASSERT(FALSE);
 }
 
 VOID
