@@ -160,7 +160,7 @@ DceAllocDCE(PWINDOW_OBJECT Window OPTIONAL, DCE_TYPE Type)
   return(pDce);
 }
 
-VOID static STDCALL
+static VOID STDCALL
 DceSetDrawable(PWINDOW_OBJECT Window OPTIONAL, HDC hDC, ULONG Flags,
                BOOL SetClipOrigin)
 {
