@@ -391,6 +391,12 @@ RaiseException(IN DWORD dwExceptionCode,
         }
     }
 
+    if (dwExceptionCode == 0xeedface)
+    {
+        DPRINT1("Delphi Exception at address: %p\n", ExceptionRecord.ExceptionInformation[0]);
+        DPRINT1("Exception-Object: %p\n", ExceptionRecord.ExceptionInformation[1]);
+    }
+
     /* Raise the exception */
     RtlRaiseException(&ExceptionRecord);
 }
