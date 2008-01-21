@@ -138,8 +138,8 @@ BEGIN
             MENUITEM "Valor &Alfanumérico",               ID_EDIT_NEW_STRINGVALUE
             MENUITEM "Valor &Binario",               ID_EDIT_NEW_BINARYVALUE
             MENUITEM "Valor &DWORD",                ID_EDIT_NEW_DWORDVALUE
-            MENUITEM "&Multi-String Value",         ID_EDIT_NEW_MULTISTRINGVALUE
-            MENUITEM "&Expandable String Value",    ID_EDIT_NEW_EXPANDABLESTRINGVALUE
+            MENUITEM "Valor de cadena-&múltiple",         ID_EDIT_NEW_MULTISTRINGVALUE
+            MENUITEM "Valor de cadena e&xpandible",    ID_EDIT_NEW_EXPANDABLESTRINGVALUE
         END
   END
   POPUP ""
@@ -152,8 +152,8 @@ BEGIN
             MENUITEM "Valor &Alfanumérico",              ID_EDIT_NEW_STRINGVALUE
             MENUITEM "Valor &Binario",               ID_EDIT_NEW_BINARYVALUE
             MENUITEM "Valor &DWORD",                ID_EDIT_NEW_DWORDVALUE
-            MENUITEM "&Multi-String Value",         ID_EDIT_NEW_MULTISTRINGVALUE
-            MENUITEM "&Expandable String Value",    ID_EDIT_NEW_EXPANDABLESTRINGVALUE
+            MENUITEM "Valor de cadena-&múltiple",         ID_EDIT_NEW_MULTISTRINGVALUE
+            MENUITEM "Valor de cadena e&xpandible",    ID_EDIT_NEW_EXPANDABLESTRINGVALUE
         END
         MENUITEM "&Buscar",                           ID_EDIT_FIND
         MENUITEM SEPARATOR

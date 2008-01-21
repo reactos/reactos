@@ -58,8 +58,8 @@ BEGIN
     IDS_TIMEZONETEXT "Zona horaria actual: %s"
     IDS_TIMEZONEINVALID "Invalido"
     IDS_TIMEZONEUNKNOWN "Desconocido"
-    IDS_INETTIMESUCSYNC "The time has been successfully synchronized with %s on %s at %s"
-    IDS_INETTIMENEXTSYNC "Next synchronization: %s at %s"
-    IDS_INETTIMESYNCING "Please wait while ReactOS synchronizes the time with %s"
-    IDS_INETTIMEERROR "An error occured while ReactOS was synchronizing with %s"
+    IDS_INETTIMESUCSYNC "La hora ha sido sincronizada satisfactoriamente con %s el %s a las %s"
+    IDS_INETTIMENEXTSYNC "Próxima sincronización: %s a las %s"
+    IDS_INETTIMESYNCING "Por favor espere mientras ReactOS sincroniza la hora con %s"
+    IDS_INETTIMEERROR "Ha ocurrido un error mientras ReactOS se sincronizaba con %s"
 END

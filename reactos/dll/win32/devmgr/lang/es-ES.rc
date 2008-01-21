@@ -9,7 +9,7 @@ BEGIN
     IDS_TYPE "Tipo"
     IDS_MANUFACTURER "Fabricante: %1"
     IDS_LOCATION "Localización: %1"
-    IDS_STATUS "Estatus de Dispositivo: %1"
+    IDS_STATUS "Estado del Dispositivo: %1"
     IDS_UNKNOWN "Desconocido"
     IDS_LOCATIONSTR "Localización %1!u! (%2)"
     IDS_DEVCODE " (Codigo %1!u!)"
@@ -25,9 +25,9 @@ BEGIN
     IDS_PROPERTIES "P&ropiedades"
     IDS_UPDATEDRV "Actualize controlador..."
     IDS_REBOOT "&Reiniciar equipo..."
-    IDS_NOTAVAILABLE "Not available"
-    IDS_NOTDIGITALLYSIGNED "Not digitally signed"
-    IDS_NODRIVERS "No driver files are required or have been loaded for this device."
+    IDS_NOTAVAILABLE "No disponible"
+    IDS_NOTDIGITALLYSIGNED "Sin Firma Digital"
+    IDS_NODRIVERS "Los controladores para este dispositivo o no son necesarios o ya han sido cargados."
 END
 
 /* error messages, source: http://www.z123.org/techsupport/medm.htm */
@@ -38,7 +38,7 @@ BEGIN
     IDS_DEV_DEVLOADER_FAILED "ReactOS no podría cargar el controlador para este dispositivo porque la computadora está reportando dos $1 tipos de Bus."
     IDS_DEV_DEVLOADER_FAILED2 "El cargador(es) de $1 no puede cargar el controlador del dispositivo."
     IDS_DEV_OUT_OF_MEMORY "El controlador para este dispositivo puede estar dañado, o su sistema puede estar bajo en memoria u otros recursos."
-    IDS_DEV_ENTRY_IS_WRONG_TYPE "Este dispositivo no está funcionando correctamente porque uno de sus controladors estan dañados, o su registro esta corrupto."
+    IDS_DEV_ENTRY_IS_WRONG_TYPE "Este dispositivo no está funcionando correctamente porque uno de sus controladores estan dañados, o su registro esta corrupto."
     IDS_DEV_LACKED_ARBITRATOR "El controlador para este dispositivo solicitó un recurso que ReactOS no sabe dirigir."
     IDS_DEV_BOOT_CONFIG_CONFLICT "Otro dispositivo está utilizando los recursos que necesita de este dispositivo."
     IDS_DEV_FAILED_FILTER "Los controladors para este dispositivo necesitan ser reinstalados."
@@ -92,7 +92,7 @@ BEGIN
     IDS_DEV_SETPROPERTIES_FAILED "ReactOS no fue capaz de cambiar las propiedades de este dispositivo."
 END
 
-IDD_HARDWARE DIALOG DISCARDABLE  0, 0, 300, 400
+IDD_HARDWARE DIALOGEX DISCARDABLE  0, 0, 300, 400
 STYLE DS_3DLOOK | DS_CONTROL | WS_CHILD | WS_VISIBLE | WS_CAPTION | DS_SHELLFONT
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -109,7 +109,7 @@ BEGIN
     PUSHBUTTON      "&Propiedades",IDC_PROPERTIES,146,140,50,14
 END
 
-IDD_DEVICEGENERAL DIALOG DISCARDABLE  0, 0, 252, 218
+IDD_DEVICEGENERAL DIALOGEX DISCARDABLE  0, 0, 252, 218
 STYLE WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "General"
 FONT 8, "MS Shell Dlg"
@@ -129,7 +129,7 @@ BEGIN
      COMBOBOX IDC_DEVUSAGE, 7, 198, 239, 40, CBS_DROPDOWNLIST | WS_VSCROLL | WS_DISABLED
 END
 
-IDD_DEVICEDRIVER DIALOG DISCARDABLE  0, 0, 252, 218
+IDD_DEVICEDRIVER DIALOGEX DISCARDABLE  0, 0, 252, 218
 STYLE WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Controlador"
 FONT 8, "MS Shell Dlg"
@@ -142,13 +142,13 @@ BEGIN
      EDITTEXT IDC_DRVDATE, 100, 53, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
      LTEXT "Versión del controlador:", -1, 37, 67, 60, 8, SS_NOPREFIX
      EDITTEXT IDC_DRVVERSION, 100, 67, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
-     LTEXT "Digital Signer:", -1, 37, 81, 60, 8, SS_NOPREFIX
+     LTEXT "Firma Digital:", -1, 37, 81, 60, 8, SS_NOPREFIX
      EDITTEXT IDC_DIGITALSIGNER, 100, 81, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
-     PUSHBUTTON "&Driver Details...", IDC_DRIVERDETAILS, 7, 106, 70, 15
-     LTEXT "To view details about the driver files.", -1, 91, 110, 154, 17, SS_NOPREFIX
+     PUSHBUTTON "&Detalles del controlador...", IDC_DRIVERDETAILS, 7, 106, 70, 15
+     LTEXT "Para ver detalles de los archivos del controlador.", -1, 91, 110, 154, 17, SS_NOPREFIX
 END
 
-IDD_DRIVERDETAILS DIALOG DISCARDABLE  0, 0, 224, 250
+IDD_DRIVERDETAILS DIALOGEX DISCARDABLE  0, 0, 224, 250
 STYLE DS_SETFONT | DS_MODALFRAME | DS_3DLOOK | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_DLGFRAME
 CAPTION "Detalles de archivo de controlador"
 FONT 8, "MS Shell Dlg"

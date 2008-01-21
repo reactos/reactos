@@ -55,31 +55,31 @@ BEGIN
 		MENUITEM SEPARATOR
 		MENUITEM "&Salir",                      CMD_EXIT
 	END
-	POPUP "&Editar"
+	POPUP "&Edición"
 	BEGIN
 		MENUITEM "&Deshacer\tCtrl+Z",         CMD_UNDO
 		MENUITEM SEPARATOR
 		MENUITEM "Cor&tar\tCtrl+X",           CMD_CUT
 		MENUITEM "&Copiar\tCtrl+C",           CMD_COPY
 		MENUITEM "&Pegar\tCtrl+V",            CMD_PASTE
-		MENUITEM "&Borrar\tDel",              CMD_DELETE
+		MENUITEM "&Eliminar\tDel",            CMD_DELETE
 		MENUITEM SEPARATOR
 		MENUITEM "&Buscar\tCtrl+F",       CMD_SEARCH
 		MENUITEM "Buscar &siguiente\tF3", CMD_SEARCH_NEXT
-		MENUITEM "Replace\tCtrl+H",   CMD_REPLACE
-		MENUITEM "Go To...\tCtrl+G",  CMD_GOTO
+		MENUITEM "Reemplazar\tCtrl+H",   CMD_REPLACE
+		MENUITEM "Ir a...\tCtrl+G",  CMD_GOTO
 		MENUITEM SEPARATOR
 		MENUITEM "Seleccionar t&odo\tCtrl+A", CMD_SELECT_ALL
 		MENUITEM "&Hora y fecha\tF5",         CMD_TIME_DATE
 	END
-	POPUP "F&ormat"
+	POPUP "F&ormato"
 	BEGIN
 		MENUITEM "&Ajuste de línea",          CMD_WRAP
 		MENUITEM "Tipo de &letra...",         CMD_FONT
 	END
-	POPUP "&View"
+	POPUP "&Ver"
 	BEGIN
-		MENUITEM "Status&bar",    CMD_STATUSBAR
+		MENUITEM "Barra d&e estado",    CMD_STATUSBAR
         END
 	POPUP "A&yuda"
 	BEGIN
@@ -87,7 +87,7 @@ BEGIN
 		MENUITEM "&Buscar...",            CMD_HELP_SEARCH
 		MENUITEM "A&yuda sobre la ayuda", CMD_HELP_ON_HELP
 		MENUITEM SEPARATOR
-		MENUITEM "&About"             CMD_ABOUT
+		MENUITEM "&Acerca de"             CMD_ABOUT
 		MENUITEM "&Información...",      CMD_ABOUT_WINE
 	END
 END
@@ -124,36 +124,36 @@ DIALOG_ENCODING DIALOGEX 0, 0, 256, 44
 STYLE DS_SETFONT | DS_FIXEDSYS | DS_CONTROL | WS_CHILD | WS_CLIPSIBLINGS |
     WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
-CAPTION "Encoding"
+CAPTION "Codificación"
 BEGIN
 COMBOBOX        ID_ENCODING,54,0,156,80,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-LTEXT           "Encoding:",0x155,5,2,41,12
+LTEXT           "Codificación:",0x155,5,2,41,12
 COMBOBOX        ID_EOLN,54,18,156,80,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-LTEXT           "Endlines:",0x156,5,20,41,12
+LTEXT           "Fin de línea:",0x156,5,20,41,12
 END
 
 /* Dialog 'Go To' */
 DIALOG_GOTO DIALOGEX 0,0,165,50
 STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
-CAPTION "Goto line"
+CAPTION "Ir a la línea"
 BEGIN
 EDITTEXT        ID_LINENUMBER,54,10,106,12,WS_CHILD | WS_BORDER | WS_TABSTOP
-LTEXT           "Line number:",0x155,5,12,41,12,WS_CHILD | WS_TABSTOP | ES_NUMBER
-DEFPUSHBUTTON   "OK", IDOK, 75, 30, 40, 15, WS_CHILD | WS_TABSTOP
-PUSHBUTTON      "Cancel", IDCANCEL, 120, 30, 40, 15, WS_CHILD | WS_TABSTOP
+LTEXT           "Número de línea:",0x155,5,12,41,12,WS_CHILD | WS_TABSTOP | ES_NUMBER
+DEFPUSHBUTTON   "Aceptar", IDOK, 75, 30, 40, 15, WS_CHILD | WS_TABSTOP
+PUSHBUTTON      "Cancelar", IDCANCEL, 120, 30, 40, 15, WS_CHILD | WS_TABSTOP
 END
 
 IDD_ABOUTBOX DIALOGEX DISCARDABLE  22,16,284,170
 STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-CAPTION "About ReactOS Notepad"
+CAPTION "Acerca de Bloc de notas de ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL         "ReactOS Notepad v1.0\r\nCopyright 1997,98 Marcel Baur <mbaur@g26.ethz.ch>\r\nCopyright 2000 Mike McCormack <Mike_McCormack@looksmart.com.au>\r\nCopyright 2002 Sylvain Petreolle <spetreolle@yahoo.fr>\r\nCopyright 2002 Andriy Palamarchuk\r\n",
+    CONTROL         "Bloc de notas de ReactOS v1.0\r\nCopyright 1997,98 Marcel Baur <mbaur@g26.ethz.ch>\r\nCopyright 2000 Mike McCormack <Mike_McCormack@looksmart.com.au>\r\nCopyright 2002 Sylvain Petreolle <spetreolle@yahoo.fr>\r\nCopyright 2002 Andriy Palamarchuk\r\n",
                     -1,"Static",SS_LEFTNOWORDWRAP | WS_GROUP,46,7,232,39
     CONTROL         " ",
                     -1,"Static",0x50000000,8,48,272,11
-    DEFPUSHBUTTON   "Close",IDOK,114,149,44,15,WS_GROUP
+    DEFPUSHBUTTON   "Cerrar",IDOK,114,149,44,15,WS_GROUP
     ICON            IDI_NPICON,-1,12,9,20,30
     EDITTEXT        IDC_LICENSE,8,64,272,81,ES_MULTILINE |
                     ES_READONLY | WS_VSCROLL

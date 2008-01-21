@@ -318,7 +318,7 @@ static MUI_ENTRY esESLicensePageEntries[] =
     {
         8,
         25,
-        "NO existe garantía; ni siquiera para MERCANTIBILIDAD",
+        "No existe garantía; ni siquiera para MERCANTIBILIDAD",
         TEXT_NORMAL
     },
     {
@@ -481,7 +481,7 @@ static MUI_ENTRY esESRepairPageEntries[] =
     {
         8,
         21,
-        "\x07  Presione ENTER para reiniciar su computadora.",
+        "\x07  Presione ENTER para reiniciar su equipo.",
         TEXT_NORMAL
     },
     {
@@ -566,7 +566,7 @@ static MUI_ENTRY esESFlushPageEntries[] =
     {
         10,
         8,
-        "Esto puede tardar un minuto",
+        "Esta operación puede durar varios minutos",
         TEXT_NORMAL
     },
     {
@@ -578,7 +578,7 @@ static MUI_ENTRY esESFlushPageEntries[] =
     {
         0,
         0,
-        "Vaciando el cache",
+        "Vaciando la cache",
         TEXT_STATUS
     },
     {
@@ -606,7 +606,7 @@ static MUI_ENTRY esESQuitPageEntries[] =
     {
         10,
         8,
-        "Quite el diskette de la unidad A: y",
+        "Retire el disco de la unidad A: y",
         TEXT_NORMAL
     },
     {
@@ -882,13 +882,13 @@ static MUI_ENTRY esESInstallDirectoryEntries[] =
     {
         6,
         8,
-        "El programa instalará los archivos de ReactOS en la partición seleccionada. Seleccione un",
+        "El programa instalará los archivos de ReactOS en la partición seleccionada. ",
         TEXT_NORMAL
     },
     {
         6,
         9,
-        "directorio donde quiere que sea instalado ReactOS:",
+        "Seleccione un directorio donde quiere que sea instalado ReactOS:",
         TEXT_NORMAL
     },
     {
@@ -934,19 +934,19 @@ static MUI_ENTRY esESFileCopyEntries[] =
     {
         11,
         12,
-        "Por favor espere mientras el Instalador de ReactOS copia archivos en su ",
+        "Por favor espere mientras el Instalador de ReactOS copia  ",
         TEXT_NORMAL
     },
     {
         30,
         13,
-        "carpeta de instalación de ReactOS.",
+        "archivos en su carpeta de instalación de ReactOS.",
         TEXT_NORMAL
     },
     {
         20,
         14,
-        "Puede durar varios minutos.",
+        "Esta operación puede durar varios minutos.",
         TEXT_NORMAL
     },
     {
@@ -1125,7 +1125,7 @@ static MUI_ENTRY esESPrepareCopyEntries[] =
     {
         6,
         8,
-        "El programa prepara su computadora para copiar los archivos de ReactOS. ",
+        "El programa prepara su equipo para copiar los archivos de ReactOS. ",
         TEXT_NORMAL
     },
     {
@@ -1241,19 +1241,19 @@ static MUI_ENTRY esESRegistryEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " Instalación de ReactOS " KERNEL_VERSION_STR " ",
         TEXT_UNDERLINE
     },
     {
         6,
         8,
-        "Setup is updating the system configuration. ",
+        "El instalador está actualizando la configuración del sistema. ",
         TEXT_NORMAL
     },
     {
         0,
         0,
-        "   Creating registry hives...",
+        "   Creando la estructura del registro...",
         TEXT_STATUS
     },
     {
@@ -1269,197 +1269,197 @@ MUI_ERROR esESErrorEntries[] =
 {
     {
         //ERROR_NOT_INSTALLED
-        "ReactOS is not completely installed on your\n"
-        "computer. If you quit Setup now, you will need to\n"
-        "run Setup again to install ReactOS.\n"
+        "ReactOS no está completamente instalado en su\n"
+        "equipo. Si cierra ahora el Instalador, necesitará\n"
+        "ejecutarlo otra vez para instalar ReactOS.\n"
         "\n"
-        "  \x07  Presione ENTER para continuar el Setup.\n"
-        "  \x07  Presione F3 para abandonar el Setup.",
+        "  \x07  Presione ENTER para continuar con el instalador.\n"
+        "  \x07  Presione F3 para abandonar el instalador.",
         "F3 = Salir  ENTER = Continuar"
     },
     {
         //ERROR_NO_HDD
-        "Setup could not find a harddisk.\n",
-        "ENTER = Reboot computer"
+        "El instalador no pudo encontrar un disco duro.\n",
+        "ENTER = Reiniciar el equipo"
     },
     {
         //ERROR_NO_SOURCE_DRIVE
-        "Setup could not find its source drive.\n",
-        "ENTER = Reboot computer"
+        "El instalador no pudo encontrar su unidad fuente.\n",
+        "ENTER = Reiniciar el equipo"
     },
     {
         //ERROR_LOAD_TXTSETUPSIF
-        "Setup failed to load the file TXTSETUP.SIF.\n",
-        "ENTER = Reboot computer"
+        "El instalador falló al cargar el archivo TXTSETUP.SIF.\n",
+        "ENTER = Reiniciar el equipo"
     },
     {
         //ERROR_CORRUPT_TXTSETUPSIF
-        "Setup found a corrupt TXTSETUP.SIF.\n",
-        "ENTER = Reboot computer"
+        "El instalador encontró un archivo TXTSETUP.SIF corrupto.\n",
+        "ENTER = Reiniciar el equipo"
     },
     {
         //ERROR_SIGNATURE_TXTSETUPSIF,
-        "Setup found an invalid signature in TXTSETUP.SIF.\n",
-        "ENTER = Reboot computer"
+        "El instalador encontró una firma incorrecta en TXTSETUP.SIF.\n",
+        "ENTER = Reiniciar el equipo"
     },
     {
         //ERROR_DRIVE_INFORMATION
-        "Setup could not retrieve system drive information.\n",
-        "ENTER = Reboot computer"
+        "El instalador no pudo recibir información del disco del sistema.\n",
+        "ENTER = Reiniciar el equipo"
     },
     {
         //ERROR_WRITE_BOOT,
-        "Setup failed to install FAT bootcode on the system partition.",
-        "ENTER = Reboot computer"
+        "El instalador falló al instalar el código de inicio FAT en la partición del sistema.",
+        "ENTER = Reiniciar el equipo"
     },
     {
         //ERROR_LOAD_COMPUTER,
-        "Setup failed to load the computer type list.\n",
-        "ENTER = Reboot computer"
+        "El instalador falló al cargar la lista de tipos de equipos.\n",
+        "ENTER = Reiniciar el equipo"
     },
     {
         //ERROR_LOAD_DISPLAY,
-        "Setup failed to load the display settings list.\n",
-        "ENTER = Reboot computer"
+        "El instalador falló al cargar la lista de resoluciones de pantalla.\n",
+        "ENTER = Reiniciar el equipo"
     },
     {
         //ERROR_LOAD_KEYBOARD,
-        "Setup failed to load the keyboard type list.\n",
-        "ENTER = Reboot computer"
+        "El instalador falló al cargar la lista de teclados.\n",
+        "ENTER = Reiniciar el equipo"
     },
     {
         //ERROR_LOAD_KBLAYOUT,
-        "Setup failed to load the keyboard layout list.\n",
-        "ENTER = Reboot computer"
+        "El instalador falló al cargar la lista de disposiciones teclados.\n",
+        "ENTER = Reiniciar el equipo"
     },
     {
         //ERROR_WARN_PARTITION,
-        "Setup found that at least one harddisk contains an incompatible\n"
-        "partition table that can not be handled properly!\n"
+        "¡El instalador encontró que al menos un disco duro contiene una tabla\n"
+        "de partición incompatible que no puede ser manejada correctamente!\n"
         "\n"
-        "Creating or deleting partitions can destroy the partiton table.\n"
+        "Crear o borrar particiones puede destruir la tabla de particiones.\n"
         "\n"
-        "  \x07  Press F3 to quit Setup."
-        "  \x07  Press ENTER to continue.",
-        "F3= Quit  ENTER = Continue"
+        "  \x07  Presione F3 para salir del instalador."
+        "  \x07  Presione ENTER para continuar.",
+        "F3= Salir  ENTER = Continuar"
     },
     {
         //ERROR_NEW_PARTITION,
-        "You can not create a new Partition inside\n"
-        "of an already existing Partition!\n"
+        "¡No puede crear una nueva partición dentro\n"
+        "de una partición existente!\n"
         "\n"
-        "  * Press any key to continue.",
+        "  * Presione cualquier tecla para continuar.",
         NULL
     },
     {
         //ERROR_DELETE_SPACE,
-        "You can not delete unpartitioned disk space!\n"
+        "¡No puede borrar un espacio de disco sin particionar!\n"
         "\n"
-        "  * Press any key to continue.",
+        "  * Presione cualquier tecla para continuar.",
         NULL
     },
     {
         //ERROR_INSTALL_BOOTCODE,
-        "Setup failed to install the FAT bootcode on the system partition.",
-        "ENTER = Reboot computer"
+        "El instalador falló al instalar el código de inicio FAT en la partición del sistema.",
+        "ENTER = Reiniciar el equipo"
     },
     {
         //ERROR_NO_FLOPPY,
-        "No disk in drive A:.",
-        "ENTER = Continue"
+        "No hay disco en la unidad A:.",
+        "ENTER = Continuar"
     },
     {
         //ERROR_UPDATE_KBSETTINGS,
-        "Setup failed to update keyboard layout settings.",
-        "ENTER = Reboot computer"
+        "El instalador falló al actualizar la configuración de disposición del teclado.",
+        "ENTER = Reiniciar el equipo"
     },
     {
         //ERROR_UPDATE_DISPLAY_SETTINGS,
-        "Setup failed to update display registry settings.",
-        "ENTER = Reboot computer"
+        "El instalador falló al actualizar la configuración de la pantalla.",
+        "ENTER = Reiniciar el equipo"
     },
     {
         //ERROR_IMPORT_HIVE,
-        "Setup failed to import a hive file.",
-        "ENTER = Reboot computer"
+        "El instalador falló al importar un archivo de la estructura.",
+        "ENTER = Reiniciar el equipo"
     },
     {
         //ERROR_FIND_REGISTRY
-        "Setup failed to find the registry data files.",
-        "ENTER = Reboot computer"
+        "El instalador falló al buscar los archivos de datos registrados.",
+        "ENTER = Reiniciar el equipo"
     },
     {
         //ERROR_CREATE_HIVE,
-        "Setup failed to create the registry hives.",
-        "ENTER = Reboot computer"
+        "El instalador falló al crear el registro de la estructura.",
+        "ENTER = Reiniciar el equipo"
     },
     {
         //ERROR_INITIALIZE_REGISTRY,
-        "Setup failed to set the initialize the registry.",
-        "ENTER = Reboot computer"
+        "El instalador falló al configurar el registro de inicio.",
+        "ENTER = Reiniciar el equipo"
     },
     {
         //ERROR_INVALID_CABINET_INF,
-        "Cabinet has no valid inf file.\n",
-        "ENTER = Reboot computer"
+        "Cabinet no tiene un archivo inf válido.\n",
+        "ENTER = Reiniciar el equipo"
     },
     {
         //ERROR_CABINET_MISSING,
-        "Cabinet not found.\n",
-        "ENTER = Reboot computer"
+        "Cabinet no encontrado.\n",
+        "ENTER = Reiniciar el equipo"
     },
     {
         //ERROR_CABINET_SCRIPT,
-        "Cabinet has no setup script.\n",
-        "ENTER = Reboot computer"
+        "Cabinet no tiene ningún script de instalación.\n",
+        "ENTER = Reiniciar el equipo"
     },
     {
         //ERROR_COPY_QUEUE,
-        "Setup failed to open the copy file queue.\n",
-        "ENTER = Reboot computer"
+        "El instalador falló al abrir la lista de archivos a copiar.\n",
+        "ENTER = Reiniciar el equipo"
     },
     {
         //ERROR_CREATE_DIR,
-        "Setup could not create install directories.",
-        "ENTER = Reboot computer"
+        "El instalador no puede crear los directorios de instalación.",
+        "ENTER = Reiniciar el equipo"
     },
     {
         //ERROR_TXTSETUP_SECTION,
-        "Setup failed to find the 'Directories' section\n"
-        "in TXTSETUP.SIF.\n",
-        "ENTER = Reboot computer"
+        "El instalador falló al buscar la sección 'Directorios'\n"
+        "en TXTSETUP.SIF.\n",
+        "ENTER = Reiniciar el equipo"
     },
     {
         //ERROR_CABINET_SECTION,
-        "Setup failed to find the 'Directories' section\n"
-        "in the cabinet.\n",
-        "ENTER = Reboot computer"
+        "El instalador falló al buscar la sección 'Directorios'\n"
+        "en el cabinet.\n",
+        "ENTER = Reiniciar el equipo"
     },
     {
         //ERROR_CREATE_INSTALL_DIR
-        "Setup could not create the install directory.",
-        "ENTER = Reboot computer"
+        "El instalador no puede crear el directorio de instalación.",
+        "ENTER = Reiniciar el equipo"
     },
     {
         //ERROR_FIND_SETUPDATA,
-        "Setup failed to find the 'SetupData' section\n"
-        "in TXTSETUP.SIF.\n",
-        "ENTER = Reboot computer"
+        "El instalador falló al buscar la sección 'SetupData'\n"
+        "en TXTSETUP.SIF.\n",
+        "ENTER = Reiniciar el equipo"
     },
     {
         //ERROR_WRITE_PTABLE,
-        "Setup failed to write partition tables.\n"
-        "ENTER = Reboot computer"
+        "El instalador falló al escribir la tabla de particiones.\n"
+        "ENTER = Reiniciar el equipo"
     },
     {
         //ERROR_ADDING_CODEPAGE,
-        "Setup failed to add codepage to registry.\n"
-        "ENTER = Reboot computer"
+        "El instalador falló al añadir el código de páginas al registro.\n"
+        "ENTER = Reiniciar el equipo"
     },
     {
         //ERROR_UPDATE_LOCALESETTINGS,
-        "Setup could not set the system locale.\n"
-        "ENTER = Reboot computer"
+        "El instalador no pudo configurar el idioma del sistema.\n"
+        "ENTER = Reiniciar el equipo"
     },
     {
         NULL,
@@ -1568,6 +1568,7 @@ MUI_PAGE esESPages[] =
 };
 
 #endif
+
 
 
 

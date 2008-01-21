@@ -9,7 +9,7 @@ BEGIN
     LTEXT           "Bienvenido",IDC_WELCOMETITLE,120,8,195,24
     LTEXT           "Este asistente lo ayudará a instalar un nuevo controlador de dispositivos para:",
                     IDC_STATIC,120,21,195,16
-    LTEXT           "Haga click en Siguiente para continuar.",IDC_STATIC,120,169,195,17
+    LTEXT           "Haga clic en Siguiente para continuar.",IDC_STATIC,120,169,195,17
     LTEXT           "DISPOSITIVO DESCONOCIDO",IDC_DEVICE,134,36,164,11
     LTEXT           "¡ADVERTENCIA! ¡INSTALAR UN DISPOSITIVO PUEDE RELENTIZAR SU EQUIPO O VOLVERLO INESTABLE!",IDC_STATIC,120,59,195,16
     CONTROL         "Instalar controlador automáticamente",IDC_RADIO_AUTO,"Button",
@@ -27,7 +27,7 @@ BEGIN
     LTEXT           "La instalación ha fallado",IDC_FINISHTITLE,120,8,195,24
     LTEXT           "El dispositivo no pudo ser instalado porque el controlador no fue encontrado.",
                     IDC_STATIC,120,40,195,19
-    LTEXT           "Haga click en Atrás si tiene un CDROM del controlador o conoce dónde encontrar el controlador.",
+    LTEXT           "Haga clic en Atrás si tiene un CDROM del controlador o conoce dónde encontrar el controlador.",
                     IDC_STATIC,120,98,181,24
     CONTROL         "No volver a mostrar esta ventana",IDC_DONOTSHOWDLG,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,120,170,180,11
@@ -88,7 +88,7 @@ BEGIN
     LTEXT           "Instalación completa",IDC_FINISHTITLE,120,8,195,11
     LTEXT           "Necesita reiniciar su equipo para finalizar la instalación de:",
                     IDC_STATIC,120,32,195,19
-    LTEXT           "Clic Finalizar para cerrar el asistente.",IDC_STATIC,120,174,
+    LTEXT           "Haga clic en Finalizar parar cerrar el asistente.",IDC_STATIC,120,174,
                     179,11
     LTEXT           "DISPOSITIVO DESCONOCIDO",IDC_DEVICE,148,53,147,12
 END
@@ -102,9 +102,10 @@ BEGIN
     LTEXT           "Instalación completa.",IDC_FINISHTITLE,120,8,195,11
     LTEXT           "El asistente ha finalizado la instalación del controlador para el dispositivo:",
                     IDC_STATIC,120,32,195,19
-    LTEXT           "Haga click en Finalizar parar cerrar el asistente.",IDC_STATIC,120,174,
+    LTEXT           "Haga clic en Finalizar parar cerrar el asistente.",IDC_STATIC,120,174,
                     179,11
     LTEXT           "DISPOSITIVO DESCONOCIDO",IDC_DEVICE,148,53,147,12
 END
+
 
 
