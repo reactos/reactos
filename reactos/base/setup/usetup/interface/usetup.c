@@ -597,8 +597,6 @@ UpdateKBLayout(VOID)
 static PAGE_NUMBER
 LanguagePage(PINPUT_RECORD Ir)
 {
-    DWORD LangId;
-
     /* Initialize the computer settings list */
     if (LanguageList == NULL)
     {
@@ -657,8 +655,7 @@ LanguagePage(PINPUT_RECORD Ir)
             }
 
             // Load the font
-            LangId = wcstoul(SelectedLanguageId, NULL, 16);
-            CONSOLE_SetFont(LangId);
+            SetConsoleCodePage();
 
             return INTRO_PAGE;
         }

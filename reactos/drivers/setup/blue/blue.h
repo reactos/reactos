@@ -58,4 +58,4 @@
 #define PELINDEX     (PUCHAR)0x3c8
 #define PELDATA      (PUCHAR)0x3c9
 
-VOID ScrLoadFontTable();
+void ScrLoadFontTable(UINT CodePage);

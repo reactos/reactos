@@ -94,10 +94,6 @@ CONSOLE_PrintTextXYN(
 	IN LPCSTR fmt, ...);
 
 VOID
-CONSOLE_SetFont(
-	IN ULONG LangId);
-
-VOID
 CONSOLE_SetCursorType(
 	IN BOOL bInsert,
 	IN BOOL bVisible);

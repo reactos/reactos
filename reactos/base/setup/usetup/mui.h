@@ -56,5 +56,7 @@ MUIDefaultKeyboardLayout(VOID);
 BOOLEAN
 AddCodePage(VOID);
 
+VOID
+SetConsoleCodePage(VOID);
 
 #endif

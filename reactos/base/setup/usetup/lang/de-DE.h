@@ -18,19 +18,19 @@ static MUI_ENTRY deDELanguagePageEntries[] =
     {
         8,
         10,
-        "\x07  Bitte waehlen Sie die Sprache, die Sie waehrend des Setups verwenden wollen.",
+        "\x07  Bitte wÑhlen Sie die Sprache, die Sie wÑhrend des Setups verwenden wollen.",
         TEXT_NORMAL
     },
     {
         8,
         11,
-        "   Dann druecken Sie ENTER.",
+        "   Dann drÅcken Sie ENTER.",
         TEXT_NORMAL
     },
     {
         8,
         13,
-        "\x07  Diese Sprache wird spaeter als Standardsprache im System verwendet.",
+        "\x07  Diese Sprache wird spÑter als Standardsprache im System verwendet.",
         TEXT_NORMAL
     },
     {
@@ -76,31 +76,31 @@ static MUI_ENTRY deDEWelcomePageEntries[] =
     {
         8,
         15,
-        "\x07  Druecken Sie ENTER, um ReactOS zu installieren.",
+        "\x07  DrÅcken Sie ENTER, um ReactOS zu installieren.",
         TEXT_NORMAL
     },
     {
         8,
         17,
-        "\x07  Druecken Sie R, um ReactOS zu reparieren.",
+        "\x07  DrÅcken Sie R, um ReactOS zu reparieren.",
         TEXT_NORMAL
     },
     {
         8,
         19,
-        "\x07  Druecken Sie L, um die Lizenzabkommen von ReactOS zu lesen.",
+        "\x07  DrÅcken Sie L, um die Lizenzabkommen von ReactOS zu lesen.",
         TEXT_NORMAL
     },
     {
         8,
         21,
-        "\x07  Druecken Sie F3, um das Setup zu beenden.",
+        "\x07  DrÅcken Sie F3, um das Setup zu beenden.",
         TEXT_NORMAL
     },
     {
         6,
         23,
-        "Fuer weitere Informationen, besuchen Sie bitte:",
+        "FÅr weitere Informationen, besuchen Sie bitte:",
         TEXT_NORMAL
     },
     {
@@ -140,31 +140,31 @@ static MUI_ENTRY deDEIntroPageEntries[] =
     {
         6,
         8,
-        "Das ReactOS Setup ist noch in einer fruehen Entwicklungsphase. Es unter-",
+        "Das ReactOS Setup ist noch in einer frÅhen Entwicklungsphase. Es unter-",
         TEXT_NORMAL
     },
     {
         6,
         9,
-        "stuetzt noch nicht alle Funktionen eines vollstaendig nutzbaren Setups.",
+        "stÅtzt noch nicht alle Funktionen eines vollstÑndig nutzbaren Setups.",
         TEXT_NORMAL
     },
     {
         6,
         12,
-        "Es gibt folgende Beschraenkungen:",
+        "Es gibt folgende BeschrÑnkungen:",
         TEXT_NORMAL
     },
     {
         8,
         13,
-        "- Setup kann nur eine primaere Partition auf einer HDD verwalten.",
+        "- Setup kann nur eine primÑre Partition auf einer HDD verwalten.",
         TEXT_NORMAL
     },
     {
         8,
         14,
-        "- Setup kann keine primaere Partition von einer HDD loeschen",
+        "- Setup kann keine primÑre Partition von einer HDD lîschen",
         TEXT_NORMAL
     },
     {
@@ -176,7 +176,7 @@ static MUI_ENTRY deDEIntroPageEntries[] =
     {
         8,
         16,
-        "- Setup kann die erste erweiterte Partition nicht von der HDD loeschen",
+        "- Setup kann die erste erweiterte Partition nicht von der HDD lîschen",
         TEXT_NORMAL
     },
     {
@@ -188,25 +188,25 @@ static MUI_ENTRY deDEIntroPageEntries[] =
     {
         8,
         18,
-        "- Setup unterstuetzt nur FAT Dateisysteme.",
+        "- Setup unterstÅtzt nur FAT Dateisysteme.",
         TEXT_NORMAL
     },
     {
         8,
         19,
-        "- Dateisystemueberpruefung ist noch nicht implementiert.",
+        "- DateisystemÅberprÅfung ist noch nicht implementiert.",
         TEXT_NORMAL
     },
     {
         8,
         23,
-        "\x07  Druecken Sie ENTER, um ReactOS zu installieren.",
+        "\x07  DrÅcken Sie ENTER, um ReactOS zu installieren.",
         TEXT_NORMAL
     },
     {
         8,
         25,
-        "\x07  Druecken Sie F3, um das Setup zu beenden.",
+        "\x07  DrÅcken Sie F3, um das Setup zu beenden.",
         TEXT_NORMAL
     },
     {
@@ -336,7 +336,7 @@ static MUI_ENTRY deDELicensePageEntries[] =
     {
         0,
         0,
-        "   ENTER = Zurueck",
+        "   ENTER = ZurÅck",
         TEXT_STATUS
     },
     {
@@ -358,7 +358,7 @@ static MUI_ENTRY deDEDevicePageEntries[] =
     {
         6,
         8,
-        "Die untere Liste zeigt die derzeitigen Geraeteeinstellungen.",
+        "Die untere Liste zeigt die derzeitigen GerÑteeinstellungen.",
         TEXT_NORMAL
     },
     {
@@ -393,19 +393,19 @@ static MUI_ENTRY deDEDevicePageEntries[] =
     },
     {
         25,
-        16, "Diese Geraeteeinstellungen akzeptieren",
+        16, "Diese GerÑteeinstellungen akzeptieren",
         TEXT_NORMAL
     },
     {
         6,
         19,
-        "Sie koennen die Einstellungen durch die Pfeiltasten auswaehlen.",
+        "Sie kînnen die Einstellungen durch die Pfeiltasten auswÑhlen.",
         TEXT_NORMAL
     },
     {
         6,
         20,
-        "Dann druecken Sie die Eingabetaste, um eine Einstellung abzuaendern.",
+        "Dann drÅcken Sie die Eingabetaste, um eine Einstellung abzuÑndern.",
         TEXT_NORMAL
     },
     {
@@ -417,13 +417,13 @@ static MUI_ENTRY deDEDevicePageEntries[] =
     {
         6,
         23,
-        "Wenn alle Einstellungen korrekt sind, waehlen Sie \"Diese Geraete-",
+        "Wenn alle Einstellungen korrekt sind, wÑhlen Sie \"Diese GerÑte-",
         TEXT_NORMAL
     },
     {
         6,
         24,
-        "einstellungen akzeptieren\" und druecken danach die Eingabetaste.",
+        "einstellungen akzeptieren\" und drÅcken danach die Eingabetaste.",
         TEXT_NORMAL
     },
     {
@@ -451,13 +451,13 @@ static MUI_ENTRY deDERepairPageEntries[] =
     {
         6,
         8,
-        "Das ReactOS Setup ist noch in einer fruehen Entwicklungsphase. Es unter-",
+        "Das ReactOS Setup ist noch in einer frÅhen Entwicklungsphase. Es unter-",
         TEXT_NORMAL
     },
     {
         6,
         9,
-        "stuetzt noch nicht alle Funktionen eines vollstaendig nutzbaren Setups.",
+        "stÅtzt noch nicht alle Funktionen eines vollstÑndig nutzbaren Setups.",
         TEXT_NORMAL
     },
     {
@@ -469,25 +469,25 @@ static MUI_ENTRY deDERepairPageEntries[] =
     {
         8,
         15,
-        "\x07  Druecken Sie U, um ReactOS zu aktualisieren.",
+        "\x07  DrÅcken Sie U, um ReactOS zu aktualisieren.",
         TEXT_NORMAL
     },
     {
         8,
         17,
-        "\x07  Druecken Sie R, fuer die Wiederherstellungskonsole.",
+        "\x07  DrÅcken Sie R, fÅr die Wiederherstellungskonsole.",
         TEXT_NORMAL
     },
     {
         8,
         19,
-        "\x07  Druecken Sie ESC, um zur Hauptseite zurueckzukehren.",
+        "\x07  DrÅcken Sie ESC, um zur Hauptseite zurÅckzukehren.",
         TEXT_NORMAL
     },
     {
         8,
         21,
-        "\x07  Druecken Sie ENTER, um den Computer neuzustarten.",
+        "\x07  DrÅcken Sie ENTER, um den Computer neuzustarten.",
         TEXT_NORMAL
     },
     {
@@ -514,31 +514,31 @@ static MUI_ENTRY deDEComputerPageEntries[] =
     {
         6,
         8,
-        "Sie wollen den Computertyp aendern, der installiert wird.",
+        "Sie wollen den Computertyp Ñndern, der installiert wird.",
         TEXT_NORMAL
     },
     {
         8,
         10,
-        "\x07  Druecken Sie die HOCH- oder RUNTER-Taste, um den gewuenschten",
+        "\x07  DrÅcken Sie die HOCH- oder RUNTER-Taste, um den gewÅnschten",
         TEXT_NORMAL
     },
     {
         8,
         11,
-        "   Typ zu waehlen. Dann druecken Sie ENTER.",
+        "   Typ zu wÑhlen. Dann drÅcken Sie ENTER.",
         TEXT_NORMAL
     },
     {
         8,
         13,
-        "\x07  Druecken Sie ESC, um zur vorherigen Seite zurueckzukehren,",
+        "\x07  DrÅcken Sie ESC, um zur vorherigen Seite zurÅckzukehren,",
         TEXT_NORMAL
     },
     {
         8,
         14,
-        "   ohne den Computertyp zu aendern.",
+        "   ohne den Computertyp zu Ñndern.",
         TEXT_NORMAL
     },
     {
@@ -606,7 +606,7 @@ static MUI_ENTRY deDEQuitPageEntries[] =
     {
         10,
         6,
-        "ReactOS wurde nicht vollstaendig installiert",
+        "ReactOS wurde nicht vollstÑndig installiert",
         TEXT_NORMAL
     },
     {
@@ -624,7 +624,7 @@ static MUI_ENTRY deDEQuitPageEntries[] =
     {
         10,
         11,
-        "Druecken Sie ENTER, um den Computer neuzustarten.",
+        "DrÅcken Sie ENTER, um den Computer neuzustarten.",
         TEXT_NORMAL
     },
     {
@@ -652,30 +652,30 @@ static MUI_ENTRY deDEDisplayPageEntries[] =
     {
         6,
         8,
-        "Sie wollen den Bildschirmtyp aendern, der installiert wird.",
+        "Sie wollen den Bildschirmtyp Ñndern, der installiert wird.",
         TEXT_NORMAL
     },
     {   8,
         10,
-        "\x07  Druecken Sie die HOCH- oder RUNTER-Taste, um den gewuenschten",
+        "\x07  DrÅcken Sie die HOCH- oder RUNTER-Taste, um den gewÅnschten",
          TEXT_NORMAL
     },
     {
         8,
         11,
-        "   Typ zu waehlen. Dann druecken Sie ENTER.",
+        "   Typ zu wÑhlen. Dann drÅcken Sie ENTER.",
         TEXT_NORMAL
     },
     {
         8,
         13,
-        "\x07  Druecken Sie ESC, um zur vorherigen Seite zurueckzukehren, ohne",
+        "\x07  DrÅcken Sie ESC, um zur vorherigen Seite zurÅckzukehren, ohne",
         TEXT_NORMAL
     },
     {
         8,
         14,
-        "   den Bildschirmtyp zu aendern.",
+        "   den Bildschirmtyp zu Ñndern.",
         TEXT_NORMAL
     },
     {
@@ -721,7 +721,7 @@ static MUI_ENTRY deDESuccessPageEntries[] =
     {
         10,
         11,
-        "Druecken Sie ENTER, um den Computer neuzustarten.",
+        "DrÅcken Sie ENTER, um den Computer neuzustarten.",
         TEXT_NORMAL
     },
     {
@@ -767,7 +767,7 @@ static MUI_ENTRY deDEBootPageEntries[] =
     {
         6,
         14,
-        "druecken Sie ENTER.",
+        "drÅcken Sie ENTER.",
         TEXT_NORMAL,
     },
     {
@@ -802,31 +802,31 @@ static MUI_ENTRY deDESelectPartitionEntries[] =
     {
         6,
         9,
-        "Speicherplatz fuer neue Partitionen.",
+        "Speicherplatz fÅr neue Partitionen.",
         TEXT_NORMAL
     },
     {
         8,
         11,
-        "\x07  Druecken Sie die Pfeiltasten, um eine Partition auszuwaehlen.",
+        "\x07  DrÅcken Sie die Pfeiltasten, um eine Partition auszuwÑhlen.",
         TEXT_NORMAL
     },
     {
         8,
         13,
-        "\x07  Druecken Sie die Eingabetaste, um die Auswahl zu bestaetigen.",
+        "\x07  DrÅcken Sie die Eingabetaste, um die Auswahl zu bestÑtigen.",
         TEXT_NORMAL
     },
     {
         8,
         15,
-        "\x07  Druecken Sie C, um eine neue Partition zu erstellen.",
+        "\x07  DrÅcken Sie C, um eine neue Partition zu erstellen.",
         TEXT_NORMAL
     },
     {
         8,
         17,
-        "\x07  Druecken Sie D, um eine vorhandene Partition zu loeschen.",
+        "\x07  DrÅcken Sie D, um eine vorhandene Partition zu lîschen.",
         TEXT_NORMAL
     },
     {
@@ -860,13 +860,13 @@ static MUI_ENTRY deDEFormatPartitionEntries[] =
     {
         6,
         10,
-        "Setup wird nun die gewuenschte Partition formatieren.",
+        "Setup wird nun die gewÅnschte Partition formatieren.",
         TEXT_NORMAL
     },
     {
         6,
         11,
-        "Druecken Sie die Eingabetaste, um fortzufahren.",
+        "DrÅcken Sie die Eingabetaste, um fortzufahren.",
         TEXT_NORMAL
     },
     {
@@ -894,25 +894,25 @@ static MUI_ENTRY deDEInstallDirectoryEntries[] =
     {
         6,
         8,
-        "Setup installiert die ReactOS Installationsdateien in die ausgewaehlte",
+        "Setup installiert die ReactOS Installationsdateien in die ausgewÑhlte",
         TEXT_NORMAL
     },
     {
         6,
         9,
-        "Partition. Waehlen Sie ein Installationsverzeichnis fuer ReactOS:",
+        "Partition. WÑhlen Sie ein Installationsverzeichnis fÅr ReactOS:",
         TEXT_NORMAL
     },
     {
         6,
         14,
-        "Um den Vorschlag zu aendern druecken sie die 'Entf' Taste um",
+        "Um den Vorschlag zu Ñndern drÅcken sie die 'Entf' Taste um",
         TEXT_NORMAL
     },
     {
         6,
         15,
-        "Zeichen zu loeschen und gegeben sie dann den Namen des Verzeichnis ein",
+        "Zeichen zu lîschen und gegeben sie dann den Namen des Verzeichnis ein",
         TEXT_NORMAL
     },
     {
@@ -940,7 +940,7 @@ static MUI_ENTRY deDEFileCopyEntries[] =
     {
         11,
         12,
-        "Bitte warten Sie waehrend ReactOS Setup die ReactOS Dateien",
+        "Bitte warten Sie wÑhrend ReactOS Setup die ReactOS Dateien",
         TEXT_NORMAL
     },
     {
@@ -1026,31 +1026,31 @@ static MUI_ENTRY deDEKeyboardSettingsEntries[] =
     {
         6,
         8,
-        "Sie wollen den Tastaturtyp aendern, der installiert wird.",
+        "Sie wollen den Tastaturtyp Ñndern, der installiert wird.",
         TEXT_NORMAL
     },
     {
         8,
         10,
-        "\x07  Druecken Sie die HOCH- oder RUNTER-Taste, um den gewuenschten",
+        "\x07  DrÅcken Sie die HOCH- oder RUNTER-Taste, um den gewÅnschten",
         TEXT_NORMAL
     },
     {
         8,
         11,
-        "   Typ zu waehlen. Dann druecken Sie ENTER.",
+        "   Typ zu wÑhlen. Dann drÅcken Sie ENTER.",
         TEXT_NORMAL
     },
     {
         8,
         13,
-        "\x07  Druecken Sie ESC, um zur vorherigen Seite zurueckzukehren,",
+        "\x07  DrÅcken Sie ESC, um zur vorherigen Seite zurÅckzukehren,",
         TEXT_NORMAL
     },
     {
         8,
         14,
-        "   ohne den Tastaturtyp zu aendern.",
+        "   ohne den Tastaturtyp zu Ñndern.",
         TEXT_NORMAL
     },
     {
@@ -1078,31 +1078,31 @@ static MUI_ENTRY deDELayoutSettingsEntries[] =
     {
         6,
         8,
-        "Sie wollen das Tastaturlayout aendern, der installiert wird.",
+        "Sie wollen das Tastaturlayout Ñndern, der installiert wird.",
         TEXT_NORMAL
     },
     {
         8,
         10,
-        "\x07  Druecken Sie die HOCH- oder RUNTER-Taste, um den gewuenschten",
+        "\x07  DrÅcken Sie die HOCH- oder RUNTER-Taste, um den gewÅnschten",
         TEXT_NORMAL
     },
     {
         8,
         11,
-        "   Typ zu waehlen. Dann druecken Sie ENTER.",
+        "   Typ zu wÑhlen. Dann drÅcken Sie ENTER.",
         TEXT_NORMAL
     },
     {
         8,
         13,
-        "\x07  Druecken Sie ESC, um zur vorherigen Seite zurueckzukehren,",
+        "\x07  DrÅcken Sie ESC, um zur vorherigen Seite zurÅckzukehren,",
         TEXT_NORMAL
     },
     {
         8,
         14,
-        "   ohne das Tastaturlayout zu aendern.",
+        "   ohne das Tastaturlayout zu Ñndern.",
         TEXT_NORMAL
     },
     {
@@ -1131,7 +1131,7 @@ static MUI_ENTRY deDEPrepareCopyEntries[] =
     {
         6,
         8,
-        "Setup bereitet ihren Computer fuer die Installation vor.",
+        "Setup bereitet ihren Computer fÅr die Installation vor.",
         TEXT_NORMAL
     },
     {
@@ -1160,25 +1160,25 @@ static MUI_ENTRY deDESelectFSEntries[] =
     {
         6,
         17,
-        "Waehlen Sie ein Dateisystem von der folgenden Liste.",
+        "WÑhlen Sie ein Dateisystem von der folgenden Liste.",
         0
     },
     {
         8,
         19,
-        "\x07  Druecken Sie die Pfeiltasten, um das Dateisystem zu aendern.",
+        "\x07  DrÅcken Sie die Pfeiltasten, um das Dateisystem zu Ñndern.",
         0
     },
     {
         8,
         21,
-        "\x07  Druecken Sie die Eingabetaste, um die Partition zu formatieren.",
+        "\x07  DrÅcken Sie die Eingabetaste, um die Partition zu formatieren.",
         0
     },
     {
         8,
         23,
-        "\x07  Druecken Sie ESC, um eine andere Partition auszuwaehlen.",
+        "\x07  DrÅcken Sie ESC, um eine andere Partition auszuwÑhlen.",
         0
     },
     {
@@ -1207,19 +1207,19 @@ static MUI_ENTRY deDEDeletePartitionEntries[] =
     {
         6,
         8,
-        "Sie haben sich entschieden diese Partition zu loeschen",
+        "Sie haben sich entschieden diese Partition zu lîschen",
         TEXT_NORMAL
     },
     {
         8,
         18,
-        "\x07  Druecken Sie D, um die Partition zu loeschen.",
+        "\x07  DrÅcken Sie D, um die Partition zu lîschen.",
         TEXT_NORMAL
     },
     {
         11,
         19,
-        "Warnung: Alle Daten auf dieser Partition werden geloescht!",
+        "Warnung: Alle Daten auf dieser Partition werden gelîscht!",
         TEXT_NORMAL
     },
     {
@@ -1231,7 +1231,7 @@ static MUI_ENTRY deDEDeletePartitionEntries[] =
     {
         0,
         0,
-        "   D = Loesche Partition   ESC = Abbrechen   F3 = Beenden",
+        "   D = Lîsche Partition   ESC = Abbrechen   F3 = Beenden",
         TEXT_STATUS
     },
     {
@@ -1275,12 +1275,12 @@ MUI_ERROR deDEErrorEntries[] =
 {
     {
         //ERROR_NOT_INSTALLED
-        "ReactOS ist nicht vollstaendig auf Ihrem System installiert.\n"
-        "Wenn Sie das Setup jetzt beenden, muessen Sie das\n"
+        "ReactOS ist nicht vollstÑndig auf Ihrem System installiert.\n"
+        "Wenn Sie das Setup jetzt beenden, mÅssen Sie das\n"
         "Setup erneut starten, um ROS zu installieren.\n"
         "\n"
-        "  \x07  Druecken Sie ENTER um das Setup Fortzusetzen.\n"
-        "  \x07  Druecken Sie F3 um das Setup zu beenden.",
+        "  \x07  DrÅcken Sie ENTER um das Setup Fortzusetzen.\n"
+        "  \x07  DrÅcken Sie F3 um das Setup zu beenden.",
         "F3 = Beenden  ENTER = Fortsetzen"
     },
     {
@@ -1305,7 +1305,7 @@ MUI_ERROR deDEErrorEntries[] =
     },
     {
         //ERROR_SIGNATURE_TXTSETUPSIF,
-        "Setup fand eine ungueltige Signatur in TXTSETUP.SIF.\n",
+        "Setup fand eine ungÅltige Signatur in TXTSETUP.SIF.\n",
         "ENTER = Computer neustarten"
     },
     {
@@ -1341,27 +1341,27 @@ MUI_ERROR deDEErrorEntries[] =
     {
         //ERROR_WARN_PARTITION,
         "Setup hat mindestens eine Festplatte mit einer inkompatiblen Partitionstabelle\n"
-        "welche nicht richtig verwendet werden koennen!\n"
+        "welche nicht richtig verwendet werden kînnen!\n"
         "\n"
-        "Partitionen zu erstellen/loeschen kann die Partitionstabelle zerstoeren.\n"
+        "Partitionen zu erstellen/lîschen kann die Partitionstabelle zerstîren.\n"
         "\n"
-        "  \x07  Druecken Sie F3, um das Setup zu beenden."
-        "  \x07  Druecken Sie ENTER, um das Setup Fortzusetzen.",
+        "  \x07  DrÅcken Sie F3, um das Setup zu beenden."
+        "  \x07  DrÅcken Sie ENTER, um das Setup Fortzusetzen.",
         "F3 = Beenden  ENTER = Fortsetzen"
     },
     {
         //ERROR_NEW_PARTITION,
-        "Sie koennen keine neue Partition in einer bereits\n"
+        "Sie kînnen keine neue Partition in einer bereits\n"
         "vohandenen Partition erstellen!\n"
         "\n"
-        "  * * Eine beliebige Taste zum Fortsetzen druecken.",
+        "  * * Eine beliebige Taste zum Fortsetzen drÅcken.",
         NULL
     },
     {
         //ERROR_DELETE_SPACE,
-        "Sie koennen unpartitionieren Speicher nicht loeschen!\n"
+        "Sie kînnen unpartitionieren Speicher nicht lîschen!\n"
         "\n"
-        "  * Eine beliebige Taste zum Fortsetzen druecken.",
+        "  * Eine beliebige Taste zum Fortsetzen drÅcken.",
         NULL
     },
     {
@@ -1406,7 +1406,7 @@ MUI_ERROR deDEErrorEntries[] =
     },
     {
         //ERROR_INVALID_CABINET_INF,
-        "Cabinet hat keine gueltige .inf Datei.\n",
+        "Cabinet hat keine gÅltige .inf Datei.\n",
         "ENTER = Computer neustarten"
     },
     {
@@ -1416,7 +1416,7 @@ MUI_ERROR deDEErrorEntries[] =
     },
     {
         //ERROR_CABINET_SCRIPT,
-        "Cabinet enth‰lt kein Setup Skript.\n",
+        "Cabinet enthÑlt kein Setup Skript.\n",
         "ENTER = Computer neustarten"
     },
     {
@@ -1459,7 +1459,7 @@ MUI_ERROR deDEErrorEntries[] =
     },
     {
         //ERROR_ADDING_CODEPAGE,
-        "Setup konnte den CodePage-Eintrag nicht hinzufuegen.\n"
+        "Setup konnte den CodePage-Eintrag nicht hinzufÅgen.\n"
         "ENTER = Computer neustarten"
     },
     {

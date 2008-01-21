@@ -520,13 +520,4 @@ CONSOLE_PrintTextXYN(
 	}
 }
 
-VOID
-CONSOLE_SetFont(
-	IN ULONG LangId)
-{
-	// It should look up what codepage should be used
-	// but for now we just pass the lang id there
-	SetConsoleOutputCP((UINT)LangId);
-}
-
 /* EOF */

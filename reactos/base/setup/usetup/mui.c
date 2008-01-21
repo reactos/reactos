@@ -568,4 +568,24 @@ AddCodePage(VOID)
     return FALSE;
 }
 
+VOID
+SetConsoleCodePage(VOID)
+{
+    ULONG lngIndex = 0;
+    UINT wCodePage;
+
+    do
+    {
+        if (_wcsicmp(LanguageList[lngIndex].LanguageID , SelectedLanguageId) == 0)
+        {
+            wCodePage = (UINT) wcstoul(LanguageList[lngIndex].OEMCPage, NULL, 10);
+            SetConsoleOutputCP(wCodePage);
+            return;
+        }
+
+        lngIndex++;
+    }
+    while (LanguageList[lngIndex].MuiPages != NULL);
+}
+
 /* EOF */

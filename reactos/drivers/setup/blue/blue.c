@@ -726,15 +726,10 @@ ScrIoControl(PDEVICE_OBJECT DeviceObject,
 
       case IOCTL_CONSOLE_LOADFONT:
           {
-              ULONG LangId = (ULONG)*(PULONG)Irp->AssociatedIrp.SystemBuffer;
+              UINT CodePage = (UINT)*(PULONG)Irp->AssociatedIrp.SystemBuffer;
 
-              // Upload the cyrillic font into the fontgenerator, if needed
-              if (LangId == MAKELANGID(LANG_BULGARIAN, SUBLANG_DEFAULT) ||
-                  LangId == MAKELANGID(LANG_RUSSIAN, SUBLANG_DEFAULT) ||
-                  LangId == MAKELANGID(LANG_UKRAINIAN, SUBLANG_DEFAULT))
-              {
-                  ScrLoadFontTable();
-              }
+              // Upload a font for the codepage if needed
+              ScrLoadFontTable(CodePage);
 
               Irp->IoStatus.Information = 0;
               Status = STATUS_SUCCESS;
