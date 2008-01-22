@@ -162,7 +162,8 @@ NTSTATUS ExtractFont(UINT CodePage, PUCHAR FontBitField)
                         if(strncmp(FileHeader, PsfHeader, 2) == 0)
                         {
                            /* only load fonts with a size of 8
-                              and filemode 0 (256 characters, no unicode_data) */
+                              and filemode 0 (256 characters, no unicode_data)
+                              or filemode  2 (256 characters, unicode_data is skipped) */
                             if ((FileHeader[3] == 8) && ((FileHeader[4] == 0) || (FileHeader[4] == 2)))
                             {
                                 Status = ZwReadFile(Handle, NULL, NULL, NULL, &IoStatusBlock,
