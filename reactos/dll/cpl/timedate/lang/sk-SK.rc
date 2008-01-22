@@ -8,7 +8,7 @@
 LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
 
 IDD_DATETIMEPAGE DIALOGEX 0, 0, 252, 146
-STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Dátum a èas"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
@@ -32,7 +32,7 @@ END
 
 
 IDD_TIMEZONEPAGE DIALOGEX 0, 0, 252, 146
-STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Èasové pásmo"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
@@ -45,7 +45,7 @@ END
 
 
 IDD_INETTIMEPAGE DIALOGEX 0, 0, 252, 146
-STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Internetový èas"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
@@ -67,8 +67,8 @@ BEGIN
     IDS_TIMEZONETEXT "Aktuálne èasové pásmo: %s"
     IDS_TIMEZONEINVALID "Neplatné"
     IDS_TIMEZONEUNKNOWN "Neznáme"
-    IDS_INETTIMESUCSYNC "Èas bol úspešnì synchronizovaný s %s dòa %s o %s"
+    IDS_INETTIMESUCSYNC "Èas bol úspešne synchronizovaný s %s dòa %s o %s"
     IDS_INETTIMENEXTSYNC "Ïalšia synchronizácia: %s o %s"
     IDS_INETTIMESYNCING "Poèkajte prosím, kým ReactOS zosynchronizuje èas s %s"
-    IDS_INETTIMEERROR "Poèas synchronizácie ReactOSu s %s sa vyskytla chyba."
+    IDS_INETTIMEERROR "Poèas synchronizácie systému ReactOS s %s sa vyskytla chyba."
 END

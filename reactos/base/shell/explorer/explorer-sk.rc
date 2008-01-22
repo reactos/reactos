@@ -1,8 +1,9 @@
 /*
 * FILE:        base/shell/explorer/explorer-sk.rc
-* PURPOSE:     Slovak Language File for winhelp
+* PURPOSE:     Slovak Language File for explorer
 * TRANSLATOR:  Kario (kario@szm.sk)
 * DATE OF TR:  08-08-2007
+* LAST CHANG:  22-01-2008
 * _______________________________________________
 * NOTE:        this file need to be fixed
 */
@@ -71,8 +72,8 @@ BEGIN
     END
     POPUP "&PomocnÌk"
     BEGIN
-        MENUITEM "Explorer &FAQ...",            ID_EXPLORER_FAQ
-        MENUITEM "&»o je Explorer...",          ID_ABOUT_EXPLORER
+        MENUITEM "&FAQ ku PrieskumnÌkovi...",            ID_EXPLORER_FAQ
+        MENUITEM "&»o je PrieskumnÌk...",          ID_ABOUT_EXPLORER
         MENUITEM "»&o je operaËn˝ systÈm...",     ID_ABOUT_WINDOWS
     END
 END
@@ -84,7 +85,7 @@ BEGIN
         MENUITEM "&Nastavenia...",              ID_DESKTOPBAR_SETTINGS
         MENUITEM "&Spr·vca ˙loh...",            ID_TASKMGR
         MENUITEM SEPARATOR
-        MENUITEM "»&o je Explorer...",          ID_ABOUT_EXPLORER
+        MENUITEM "»&o je PrieskumnÌk...",          ID_ABOUT_EXPLORER
     END
 END
 
@@ -106,7 +107,7 @@ BEGIN
         MENUITEM "&PrispÙsobiù oznamovanie...", ID_CONFIG_NOTIFYAREA
         MENUITEM "Upr&aviù d·tum a Ëas",        ID_CONFIG_TIME
         MENUITEM SEPARATOR
-        MENUITEM "»&o je Explorer...",          ID_ABOUT_EXPLORER
+        MENUITEM "»&o je PrieskumnÌk...",          ID_ABOUT_EXPLORER
     END
 END
 
@@ -134,8 +135,8 @@ BEGIN
     END
     POPUP "&PomocnÌk"
     BEGIN
-        MENUITEM "Explorer &FAQ...",            ID_EXPLORER_FAQ
-        MENUITEM "&»o je Explorer...",          ID_ABOUT_EXPLORER
+        MENUITEM "&FAQ ku PrieskumnÌkovi...",            ID_EXPLORER_FAQ
+        MENUITEM "&»o je PrieskumnÌk...",          ID_ABOUT_EXPLORER
         MENUITEM "»&o je operaËn˝ systÈm...",                ID_ABOUT_WINDOWS
     END
 END
@@ -182,7 +183,7 @@ STYLE WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Vlastnosti plochy"
 FONT 8, "MS Sans Serif"
 BEGIN
-    LTEXT           "Vyberte si uprednostÚovan˝ spÙsob zarovnania ikÛn:",
+    LTEXT           "Vyberte si uprednostÚovan˝ spÙsob zarovnania ikÙn:",
                     IDC_STATIC,7,7,166,8
     CONTROL         "zæava zhora dole",IDC_ICON_ALIGN_0,"Button",BS_OWNERDRAW |
                     BS_BOTTOM | WS_TABSTOP,7,25,46,44
@@ -236,7 +237,7 @@ IDD_NOTIFYAREA DIALOGEX 0, 0, 208, 174
 STYLE WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION |
     WS_SYSMENU | WS_THICKFRAME
 EXSTYLE WS_EX_APPWINDOW
-CAPTION "PrispÙsobenie oznamovacÌch ikÛn"
+CAPTION "PrispÙsobenie oznamovacÌch ikÙn"
 FONT 8, "MS Sans Serif", 0, 0, 0x1
 BEGIN
     CONTROL         "Tree1",IDC_NOTIFY_ICONS,"SysTreeView32",TVS_HASLINES |
@@ -281,7 +282,7 @@ BEGIN
     CONTROL         "Otv·raù prieËinky v samostatn˝ch &okn·ch",
                     IDC_SEPARATE_SUBFOLDERS,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,7,90,138,10
-    LTEXT           "Toto nastavenie sa v bud˙cnosti pouûije ako predvolenÈ pre vöetkÈ okn· PriezkumnÌka.",
+    LTEXT           "Toto nastavenie sa v bud˙cnosti pouûije ako predvolenÈ pre vöetke okn· PrieskumnÌka.",
                     IDC_STATIC,7,111,174,22
     DEFPUSHBUTTON   "&OK",IDOK,29,136,50,14,WS_GROUP
     PUSHBUTTON      "&Zruöiù",IDCANCEL,106,136,50,14
@@ -289,11 +290,11 @@ END
 
 IDD_ABOUT_EXPLORER DIALOG DISCARDABLE  0, 0, 199, 106
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "»o je ReactOS Explorer"
+CAPTION "»o je PrieskumnÌk systÈmu ReactOS"
 FONT 10, "MS Sans Serif"
 BEGIN
-    LTEXT           "ReactOS Explorer",IDC_ROS_EXPLORER,91,13,104,11
-    LTEXT           "V 0.9",IDC_VERSION_TXT,91,27,104,8
+    LTEXT           "PrieskumnÌk systÈmu ReactOS",IDC_ROS_EXPLORER,91,13,104,11
+    LTEXT           "Verzia 0.9",IDC_VERSION_TXT,91,27,104,8
     LTEXT           "(c) 2003-2005 Martin Fuchs",IDC_STATIC,91,42,104,8
     LTEXT           "",IDC_WIN_VERSION,91,58,98,22
     LTEXT           "http://www.sky.franken.de/explorer/",IDC_WWW,17,84,129,
@@ -336,11 +337,11 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_TITLE               "ReactOS Explorer"
+    IDS_TITLE               "PrieskumnÌk systÈmu ReactOS"
     IDS_START               "ätart"
     IDS_LOGOFF              "Odhl·siù..."
     IDS_SHUTDOWN            "Vypn˙ù..."
-    IDS_RESTART             "Restart..."
+    IDS_RESTART             "Reötart..."
     IDS_LAUNCH              "Spustiù..."
     IDS_START_HELP          "PomocnÌk"
     IDS_SEARCH_FILES        "Hæadaù..."
@@ -351,13 +352,13 @@ BEGIN
     IDS_EXPLORE             "Presk˙maù"
     IDS_EMPTY               "(Pr·zdne)"
     IDS_RECENT              "Ned·vne dokumenty"
-    IDS_ADMIN               "Administration"
+    IDS_ADMIN               "Administr·cia"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
     IDS_STARTMENU           "Ponuka ätart"
-    IDS_MINIMIZE_ALL        "minimalizovaù vöetkÈ okn·"
+    IDS_MINIMIZE_ALL        "minimalizovaù vöetke okn·"
     IDS_DESKTOP_NUM         "Pracovn· plocha %d"
     IDS_VOLUME              "Hlasitosù"
     IDS_ITEMS_CUR           "s˙ËasnÈ poloûky"
@@ -369,7 +370,7 @@ BEGIN
     IDS_NOTIFY_AUTOHIDE     "skryù automaticky"
     IDS_SHOW_HIDDEN_ICONS   "Zobraziù skrytÈ ikony"
     IDS_HIDE_ICONS          "Skryù ikony"
-    IDS_TERMINATE           "UkonËiù ReactOS Explorer"
+    IDS_TERMINATE           "UkonËiù PrieskumnÌka systÈmu ReactOS"
 END
 
 STRINGTABLE DISCARDABLE
@@ -385,9 +386,9 @@ BEGIN
     IDS_SEARCH_PRG          "Hæadaù program..."
     IDS_ALL_USERS           "All Users\\"
     IDS_SEARCH              "Hæadaù"
-    IDS_ABOUT_EXPLORER      "»&o je Explorer..."
+    IDS_ABOUT_EXPLORER      "»&o je PrieskumnÌk..."
     IDS_LAUNCH_MANY_PROGRAMS
-                            "Vybrali ste viac programov.\nPrajete si spustiù ich vöetky?"
+                            "Vybrali Ste viac programov.\nPrajete si ich vöetky spustiù?"
     IDS_DESKTOPBAR_SETTINGS "Nastavenia plochy"
     IDS_DESKTOP             "Pracovn· plocha"
     IDS_TASKBAR             "Panel ˙loh"
@@ -407,6 +408,7 @@ END
 
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
+
 
 
 

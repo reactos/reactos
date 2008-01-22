@@ -41,7 +41,7 @@ END
 IDD_ABOUTBOX DIALOGEX 22,16,190,182
 CAPTION "À propos du Gestionnaire de Périphériques"
 FONT 8,"MS Shell Dlg",0,0
-STYLE WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
+STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
 BEGIN
   LTEXT "Gestionnaire de Périphériques v0.1\nCopyright (C) 2006\npar Ged Murphy (gedmurphy@gmail.com)", IDC_STATIC, 48, 7, 130, 26
   PUSHBUTTON "Fermer", IDOK, 75, 162, 44, 15

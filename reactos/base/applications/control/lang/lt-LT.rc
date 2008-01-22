@@ -4,7 +4,7 @@
  * FILE:        base/applications/control/lang/lt-LT.rc
  * PURPOSE:     Lithuanian Language File
  * TRANSLATOR:  Vytis "CMan" Girdþijauskas (cman@cman.us)
- * DATE:        2007-09-23
+ * DATE:        2008-01-21
  */
 
 LANGUAGE LANG_LITHUANIAN, SUBLANG_DEFAULT
@@ -30,10 +30,10 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_WINDOW_TITLE "Control Panel"
-	IDS_ABOUT "Simple Control Panel (not Shell-namespace based)\rCopyright 2004 GkWare e.K.\rhttp://www.gkware.com\rReleased under the GPL"
-	IDS_ABOUT_TITLE "About the Control Panel"
-	IDS_NO_ITEMS "No Items in ListView"
-	IDS_NAME "Name"
-	IDS_COMMENT "Comment"
+  IDS_WINDOW_TITLE "Valdymo skydelis"
+	IDS_ABOUT "Paprastas valdymo skydelis (nepagrástas 'Shell-namespace')\rAutoriaus teisës 2004 GkWare e.K.\rhttp://www.gkware.com\rIðleista su GPL"
+	IDS_ABOUT_TITLE "Apie valdymo skydelá"
+	IDS_NO_ITEMS "Sàraðe nëra elementø"
+	IDS_NAME "Pavadinimas"
+	IDS_COMMENT "Komentaras"
 END

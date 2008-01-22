@@ -52,20 +52,20 @@ BEGIN
 		MENUITEM SEPARATOR
 		MENUITEM "&Hæadaù", CMD_SEARCH
 		MENUITEM "Hæa&daù Ôalej\tF3",	CMD_SEARCH_NEXT
-		MENUITEM "Replace\tCtrl+H",   CMD_REPLACE
-		MENUITEM "Go To...\tCtrl+G",  CMD_GOTO
+		MENUITEM "&Nahradiù\tCtrl+H",   CMD_REPLACE
+		MENUITEM "Pr&ejsù na...\tCtrl+G",  CMD_GOTO
 		MENUITEM SEPARATOR
 		MENUITEM "Vy&braù vöetko",	CMD_SELECT_ALL
 		MENUITEM "»as alebo d·tu&m\tF5",	CMD_TIME_DATE
 	END
-	POPUP "F&ormat"
+	POPUP "F&orm·t"
 	BEGIN
 		MENUITEM "&Zalomiù text",	CMD_WRAP
-		MENUITEM "&Font...",          CMD_FONT
+		MENUITEM "&PÌsmo...",          CMD_FONT
         END
-	POPUP "&View"
+	POPUP "&Zobraziù"
 	BEGIN
-		MENUITEM "Status&bar",    CMD_STATUSBAR
+		MENUITEM "Stavov˝ &riadok",    CMD_STATUSBAR
 	END
 	POPUP "&PomocnÌk"
 	BEGIN
@@ -82,7 +82,7 @@ BEGIN
 /* Dialog `Page setup' */
 
 DIALOG_PAGESETUP DIALOGEX 0, 0, 225, 95
-STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 CAPTION "Nastavenie strany"
 BEGIN
@@ -108,35 +108,35 @@ END
 
 /* Dialog `Encoding' */
 DIALOG_ENCODING DIALOGEX 0, 0, 256, 44
-STYLE DS_SETFONT | DS_FIXEDSYS | DS_CONTROL | WS_CHILD | WS_CLIPSIBLINGS |
+STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPSIBLINGS |
     WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
-CAPTION "Encoding"
+CAPTION "KÛdovanie"
 BEGIN
 COMBOBOX        ID_ENCODING,54,0,156,80,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-LTEXT           "Encoding:",0x155,5,2,41,12
+LTEXT           "KÛdovanie:",0x155,5,2,41,12
 COMBOBOX        ID_EOLN,54,18,156,80,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-LTEXT           "Endlines:",0x156,5,20,41,12
+LTEXT           "Koniec riadka:",0x156,5,20,41,12
 END
 
 /* Dialog 'Go To' */
 DIALOG_GOTO DIALOGEX 0,0,165,50
-STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
-CAPTION "Goto line"
+CAPTION "Riadok, na ktor˝ sa m· prejsù"
 BEGIN
 EDITTEXT        ID_LINENUMBER,54,10,106,12,WS_CHILD | WS_BORDER | WS_TABSTOP
-LTEXT           "Line number:",0x155,5,12,41,12,WS_CHILD | WS_TABSTOP | ES_NUMBER
+LTEXT           "»Ìslo riadka:",0x155,5,12,41,12,WS_CHILD | WS_TABSTOP | ES_NUMBER
 DEFPUSHBUTTON   "OK", IDOK, 75, 30, 40, 15, WS_CHILD | WS_TABSTOP
-PUSHBUTTON      "Cancel", IDCANCEL, 120, 30, 40, 15, WS_CHILD | WS_TABSTOP
+PUSHBUTTON      "Zruöiù", IDCANCEL, 120, 30, 40, 15, WS_CHILD | WS_TABSTOP
 END
 
 IDD_ABOUTBOX DIALOGEX DISCARDABLE  22,16,284,170
-STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-CAPTION "»o je Pozn·mkov˝ blok ReactOSu"
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+CAPTION "»o je Pozn·mkov˝ blok systÈmu ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL         "Pozn·mkov˝ blok ReactOSu v1.0\r\nCopyright 1997,98 Marcel Baur <mbaur@g26.ethz.ch>\r\nCopyright 2000 Mike McCormack <Mike_McCormack@looksmart.com.au>\r\nCopyright 2002 Sylvain Petreolle <spetreolle@yahoo.fr>\r\nCopyright 2002 Andriy Palamarchuk\r\nPreklad 2007 Kario <kario@szm.sk>\r\n ",
+    CONTROL         "Pozn·mkov˝ blok systÈmu ReactOS v1.0\r\nCopyright 1997,98 Marcel Baur <mbaur@g26.ethz.ch>\r\nCopyright 2000 Mike McCormack <Mike_McCormack@looksmart.com.au>\r\nCopyright 2002 Sylvain Petreolle <spetreolle@yahoo.fr>\r\nCopyright 2002 Andriy Palamarchuk\r\nPreklad 2007 Kario <kario@szm.sk>\r\n ",
                     -1,"Static",SS_LEFTNOWORDWRAP | WS_GROUP,46,7,232,39
     CONTROL         " ",
                     -1,"Static",0x50000000,8,48,272,11
@@ -148,19 +148,19 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  STRING_LICENSE, "This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.\r\n\r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.\r\n\r\nYou should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA."
+  STRING_LICENSE, "Tento program je voæn˝ softvÈr; mÙûete ho öÌriù a/alebo modifikovaù podæa podmienok GNU Vöeobecnej verejnej licencie (GNU General Public License) ako bola zverejnen· nad·ciou Free Software Foundation; buÔ verzie 2 tejto licencie, alebo (podæa V·öho uv·ûenia) niektorej neskoröej verzie.\r\n\r\nTento program je distribuovan˝ v n·deji, ûe bude uûitoËn˝, avöak BEZ AKEJKOºVEK Z¡RUKY; rovnako bez z·ruky PREDAJNOSTI alebo VHODNOSTI PRE UR»IT› ⁄»EL. Pre viac detailov si pozrite GNU Vöeobecn˙ verejn˙ licenciu (GNU General Public License).\r\n\r\nKÛpiu Vöeobecnej verejnej licencie GNU Ste mali dostaù spolu s t˝mto programom; ak nie, napÌöte si o Úu na Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA."
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
 STRING_PAGESETUP_HEADERVALUE,	"&n"        /* FIXME */
-STRING_PAGESETUP_FOOTERVALUE,	"Page &s"   /* FIXME */
+STRING_PAGESETUP_FOOTERVALUE,	"Strana &s"   /* FIXME */
 STRING_PAGESETUP_LEFTVALUE,		"20 mm"     /* FIXME */
 STRING_PAGESETUP_RIGHTVALUE,	"20 mm"     /* FIXME */
 STRING_PAGESETUP_TOPVALUE,		"25 mm"     /* FIXME */
 STRING_PAGESETUP_BOTTOMVALUE,	"25 mm"     /* FIXME */
 
-STRING_NOTEPAD,					"Pozn·vkov˝ blok"
+STRING_NOTEPAD,					"Pozn·mkov˝ blok"
 STRING_ERROR,					"CHYBA"
 STRING_WARNING,					"UPOZORNENIE"
 STRING_INFO,					"Inform·cie"
@@ -181,10 +181,10 @@ Chcete uloûiù zmeny?"
 STRING_NOTFOUND,					"Nie je moûnÈ n·jsù '%s' ."
 STRING_OUT_OF_MEMORY,			"Nedostatok pam‰te na dokonËenie tejto oper·cie. Zatvorte jednu \n \
 alebo viac aplik·ciÌ, aby sa uvoænila pam‰ù a sk˙ste to znova."
-STRING_CANNOTFIND                               "Cannot find '%s'"
+STRING_CANNOTFIND                               "Nemoûno n·jsù '%s'"
 STRING_ANSI,                                    "ANSI"
 STRING_UNICODE,                                 "Unicode"
-STRING_UNICODE_BE,                              "Unicode (big endian)"
+STRING_UNICODE_BE,                              "Unicode (veæk˝ indi·n)"
 STRING_UTF8,                                    "UTF-8"
 STRING_CRLF,                                    "Windows"
 STRING_LF,                                      "Unix"

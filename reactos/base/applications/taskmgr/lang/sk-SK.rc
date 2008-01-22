@@ -26,7 +26,7 @@ BEGIN
         , CHECKED
         MENUITEM "&Minimalizovaù pri pouûitÌ",            ID_OPTIONS_MINIMIZEONUSE
         , CHECKED
-        MENUITEM "&Skr˝ù pri minimalizovanÌ",        ID_OPTIONS_HIDEWHENMINIMIZED
+        MENUITEM "&Skryù pri minimalizovanÌ",        ID_OPTIONS_HIDEWHENMINIMIZED
         , CHECKED
         MENUITEM "&Zobraziù 16-bitovÈ ˙lohy",          ID_OPTIONS_SHOW16BITTASKS
         , CHECKED
@@ -47,7 +47,7 @@ BEGIN
         MENUITEM "&VeækÈ ikony",                ID_VIEW_LARGE
         MENUITEM "&MalÈ ikony",                ID_VIEW_SMALL
         MENUITEM "&Podrobnosti",                    ID_VIEW_DETAILS, CHECKED
-        MENUITEM "&Vybraù sÂpce...",          ID_VIEW_SELECTCOLUMNS
+        MENUITEM "&Vybraù stÂpce...",          ID_VIEW_SELECTCOLUMNS
         POPUP "&HistÛria procesora"
         BEGIN
             MENUITEM "&Jeden graf pre vöetky procesory",        ID_VIEW_CPUHISTORY_ONEGRAPHALL
@@ -161,7 +161,7 @@ END
 //
 
 IDD_ABOUTBOX DIALOGEX DISCARDABLE  22, 17, 259, 210
-STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 CAPTION "»o je Spr·vca ˙loh systÈmu ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -175,7 +175,7 @@ BEGIN
 END
 
 IDD_TASKMGR_DIALOG DIALOGEX DISCARDABLE  0, 0, 264, 246
-STYLE DS_CENTER | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP |
+STYLE DS_SHELLFONT | DS_CENTER | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP |
     WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_CAPTION | WS_SYSMENU |
     WS_THICKFRAME
 CAPTION "Spr·vca ˙loh systÈmu ReactOS"
@@ -186,7 +186,7 @@ BEGIN
 END
 
 IDD_APPLICATION_PAGE DIALOGEX DISCARDABLE  0, 0, 247, 210
-STYLE DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
+STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL         "List2",IDC_APPLIST,"SysListView32",LVS_REPORT |
@@ -197,7 +197,7 @@ BEGIN
 END
 
 IDD_PROCESS_PAGE DIALOGEX DISCARDABLE  0, 0, 247, 210
-STYLE DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
+STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL         "List2",IDC_PROCESSLIST,"SysListView32",LVS_REPORT |
@@ -210,7 +210,7 @@ END
 
 //IDD_PERFORMANCE_PAGE DIALOGEX 0, 0, 247, 210
 IDD_PERFORMANCE_PAGE DIALOGEX DISCARDABLE  0, 0, 247, 210
-STYLE DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
+STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX        "Procesor",IDC_CPU_USAGE_FRAME,5,5,60,54,WS_TABSTOP, WS_EX_TRANSPARENT
@@ -268,7 +268,7 @@ BEGIN
 END
 
 IDD_DEBUG_CHANNELS_DIALOG DIALOGEX DISCARDABLE  0, 0, 247, 210
-STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Kan·ly ladenia"
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -279,7 +279,7 @@ BEGIN
 END
 
 IDD_AFFINITY_DIALOG DIALOGEX DISCARDABLE  0, 0, 270, 154
-STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Afinita procesorov"
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -354,7 +354,7 @@ BEGIN
 END
 
 IDD_COLUMNS_DIALOG DIALOGEX DISCARDABLE  0, 0, 258, 199
-STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "V˝ber stÂpcov"
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -545,7 +545,7 @@ BEGIN
     ID_FILE_NEW             "SpustÌ nov˝ program."
     ID_OPTIONS_ALWAYSONTOP  "Ak Spr·vca ˙loh nie je minimalizovan˝, zost·va v popredÌ vöetk˝ch ostatn˝ch ˙loh."
     ID_OPTIONS_MINIMIZEONUSE
-                            "Spr·vce ˙loh se zminimalizuje po p¯epnutÌ na jinou ˙lohu"
+                            "Spr·vca ˙loh sa minimalizuje po prepnutÌ na in˙ ˙lohu"
     ID_OPTIONS_HIDEWHENMINIMIZED "Skryje Spr·vcu ˙loh pri minimalizovanÌ."
     ID_VIEW_REFRESH         "Spr·vca ˙loh sa aktualizuje ihneÔ bez ohæadu na nastavenie r˝chlosti aktualiz·cie."
     ID_VIEW_LARGE           "ZobrazÌ ˙lohy veæk˝mi ikonami."
@@ -572,7 +572,7 @@ BEGIN
     ID_OPTIONS_SHOW16BITTASKS
                             "ZobrazÌ 16-bitovÈ ˙lohy pod procesom ntvdm.exe."
     ID_VIEW_SELECTCOLUMNS   "Vyberte stÂpce, ktorÈ sa maj˙ zobraziù na karte procesov v Spr·vcovi ˙loh."
-    ID_VIEW_SHOWKERNELTIMES "ZobrazÌ Ëas j·dra na grafoch v˝konu."
+    ID_VIEW_SHOWKERNELTIMES "ZobrazÌ Ëas jadra na grafoch v˝konu."
     ID_VIEW_CPUHISTORY_ONEGRAPHALL
                             "Graf histÛrie zobrazuje celkovÈ vyuûitie procesora."
     ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU "Kaûd˝ procesor m· vlastn˝ graf histÛrie."
@@ -601,7 +601,7 @@ BEGIN
     ID_PROCESS_PAGE_SETPRIORITY_BELOWNORMAL
                             "ZaradÌ proces do triedy priorÌt ZNÕéEN¡."
     ID_PROCESS_PAGE_SETPRIORITY_LOW "ZaradÌ proces do triedy priorÌt NÕZKA."
-    IDS_LICENSE             "Tento program je voæn˝ softvÈr; mÙûete ho öÌriù a/alebo modifikovaù podæa podmienok GNU Menöej vöeobecnej verejnej licencie (GNU Lesser General Public License) ako bola zverejnen· nad·ciou Free Software Foundation; buÔ verzie 2.1 tejto licencie, alebo (podæa v·öho uv·ûenia) niektorej neskoröej verzie.\r\n\r\nTento program je distribuovan˝ v n·deji, ûe bude uûitoËn˝, avöak BEZ AKEJKOºVEK Z¡RUKY; rovnako bez z·ruky PREDAJNOSTI alebo VHODNOSTI PRE UR»IT› ⁄»EL. Pre viac detajlov si pozrite GNU Vöeobecn˙ verejn˙ licenciu (GNU General Public License).\r\n\r\nKÛpiu Vöeobecnej verejnej licencie GNU ste mali dostaù spolu s t˝mto programom; ak nie, napÌöte si o Úu na Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA."
+    IDS_LICENSE             "Tento program je voæn˝ softvÈr; mÙûete ho öÌriù a/alebo modifikovaù podæa podmienok GNU Menöej vöeobecnej verejnej licencie (GNU Lesser General Public License) ako bola zverejnen· nad·ciou Free Software Foundation; buÔ verzie 2.1 tejto licencie, alebo (podæa V·öho uv·ûenia) niektorej neskoröej verzie.\r\n\r\nTento program je distribuovan˝ v n·deji, ûe bude uûitoËn˝, avöak BEZ AKEJKOºVEK Z¡RUKY; rovnako bez z·ruky PREDAJNOSTI alebo VHODNOSTI PRE UR»IT› ⁄»EL. Pre viac detailov si pozrite GNU Vöeobecn˙ verejn˙ licenciu (GNU General Public License).\r\n\r\nKÛpiu Vöeobecnej verejnej licencie GNU Ste mali dostaù spolu s t˝mto programom; ak nie, napÌöte si o Úu na Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA."
 END
 
 
@@ -638,9 +638,9 @@ BEGIN
     IDS_TAB_IOWRITESBYTES         "Vstup a v˝stup - zapÌsanÈ bajty"
     IDS_TAB_IOOTHERBYTES          "Vstup a v˝stup - inÈ bajty"
     IDS_MENU_SELECTCOLUMNS        "&Vybraù stÂpce..."
-    IDS_MENU_16BITTASK            "&Zobrazit 16-bitovÈ ˙lohy"
+    IDS_MENU_16BITTASK            "&Zobraziù 16-bitovÈ ˙lohy"
     IDS_MENU_WINDOWS              "&Okna"
-    IDS_MENU_LARGEICONS           "&VelkÈ ikony"
+    IDS_MENU_LARGEICONS           "&VeækÈ ikony"
     IDS_MENU_SMALLICONS           "&MalÈ ikony"
     IDS_MENU_DETAILS              "&Podrobnosti"
     IDS_MENU_ONEGRAPHALLCPUS      "&Jeden graf pre vöetky procesory"
@@ -649,7 +649,7 @@ BEGIN
     IDS_MENU_SHOWKERNELTIMES      "&Zobraziù Ëasy jadra"
     IDS_CREATENEWTASK             "Vytvoriù nov˙ ˙lohu"
     IDS_CREATENEWTASK_DESC        "Zadajte n·zov programu, prieËinka, dokumentu alebo internetovÈho zdroja a systÈm ReactOS ho otvorÌ."
-    IDS_MSG_ACCESSPROCESSAFF      "NenÌ moûnÈ zp¯Ìstupnit afinitu procesu"
+    IDS_MSG_ACCESSPROCESSAFF      "Nie je moûnÈ sprÌstupniù afinitu procesu"
     IDS_MSG_PROCESSONEPRO         "Proces musÌ maù afinitu aspoÚ k jednÈmu procesoru."
     IDS_MSG_INVALIDOPTION         "Neplatn· moûnosù"
     IDS_MSG_UNABLEDEBUGPROCESS    "Ladiaci n·stroj sa nepodarilo pripojiù."

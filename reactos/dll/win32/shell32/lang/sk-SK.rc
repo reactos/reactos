@@ -50,7 +50,7 @@ BEGIN
 			MENUITEM "&N·zov",           0x30  /* column 0 */
 			MENUITEM "&Typ",             0x32  /* column 2 */
 			MENUITEM "&Veækosù",         0x31  /* ... */
-			MENUITEM "&ZmenÈ",           0x33
+			MENUITEM "&ZmenenÈ",         0x33
 			MENUITEM SEPARATOR
 			MENUITEM "Usporiadaù &automaticky",      FCIDM_SHVIEW_AUTOARRANGE
 		END
@@ -73,7 +73,7 @@ BEGIN
 		MENUITEM "&Presk˙maù",             FCIDM_SHVIEW_EXPLORE
 		MENUITEM "&Otvoriù",               FCIDM_SHVIEW_OPEN
 		MENUITEM SEPARATOR
-		MENUITEM "&Vstrihn˙ù",             FCIDM_SHVIEW_CUT
+		MENUITEM "&Vystrihn˙ù",            FCIDM_SHVIEW_CUT
 		MENUITEM "&KopÌrovaù",             FCIDM_SHVIEW_COPY
 		MENUITEM SEPARATOR
 		MENUITEM "Vytvoriù o&dkaz",        FCIDM_SHVIEW_CREATELINK
@@ -86,7 +86,7 @@ END
 
 SHBRSFORFOLDER_MSGBOX DIALOGEX LOADONCALL MOVEABLE DISCARDABLE 15, 40, 188, 192
 STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU | DS_MODALFRAME | DS_SETFONT | DS_3DLOOK
-CAPTION "Browse for Folder"
+CAPTION "Vyhæadaù prieËinok" //Browse for Folder
 FONT 8, "MS Shell Dlg"
 BEGIN
 	DEFPUSHBUTTON "OK", 1, 60, 175, 60, 15, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
@@ -98,7 +98,7 @@ END
 
 SHNEWBRSFORFOLDER_MSGBOX DIALOGEX LOADONCALL MOVEABLE DISCARDABLE 15, 40, 218, 196
 STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU | DS_MODALFRAME | DS_SETFONT | DS_3DLOOK
-CAPTION "Browse for Folder"
+CAPTION "Vyhæadaù prieËinok" //Browse for Folder
 FONT 8, "MS Shell Dlg"
 BEGIN
 	LTEXT "", IDD_TITLE, 10, 8, 198, 24
@@ -199,7 +199,7 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 	LTEXT "Vyberte rozöÌrenÈ vlastnosti urËenÈ pre tento odkaz.", -1, 5, 30, 210, 10
 	CHECKBOX "&Spustiù s in˝mi povereniami", 14000, 25, 50, 150, 10
-	LTEXT "T·to moûnosù umoûnuje spustiù tento odkaz ako in˝ pouûÌvateæ, alebo pokraËovaù so svojÌm pouûÌvateæsk˝m opr·vnenÌm, ale s ochranou poËÌtaËa a ˙dajov pred neopr·vnen˝mi aktivitami programu.", -1, 50, 60, 175, 40
+	LTEXT "T·to moûnosù umoûÚuje spustiù tento odkaz ako in˝ pouûÌvateæ, alebo pokraËovaù so svojÌm pouûÌvateæsk˝m opr·vnenÌm, ale s ochranou poËÌtaËa a ˙dajov pred neopr·vnen˝mi aktivitami programu.", -1, 50, 60, 175, 40
 	CHECKBOX "Spustiù v oddelenom pa&m‰ùovom priestore", 14001, 25, 100, 90, 10, WS_DISABLED
 	PUSHBUTTON "OK", 1, 63, 124, 50, 15, WS_VISIBLE
 	PUSHBUTTON "Preruöiù", 2, 120, 124, 50, 15, WS_VISIBLE
@@ -360,7 +360,7 @@ END
 
 FOLDER_OPTIONS_GENERAL_DLG DIALOGEX 0, 0, 264, 256
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_POPUP | WS_CAPTION
-CAPTION "General"
+CAPTION "VöeobecnÈ" //General
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 
@@ -383,7 +383,7 @@ END
 
 FOLDER_OPTIONS_VIEW_DLG DIALOGEX 0, 0, 264, 256
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_POPUP | WS_CAPTION
-CAPTION "View"
+CAPTION "Zobraziù"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 GROUPBOX "Folder views", -1, 7, 10, 249, 60
@@ -398,7 +398,7 @@ END
 
 FOLDER_OPTIONS_FILETYPES_DLG DIALOGEX 0, 0, 264, 256
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_POPUP | WS_CAPTION
-CAPTION "File Types"
+CAPTION "Typy s˙borov"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 LTEXT "Registered file &types:", -1, 7, 10, 70, 10
@@ -516,7 +516,7 @@ END
 
 SHUTDOWN_DLG DIALOGEX 0, 0, 211, 103
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Vypnutie sytÈmu ReactOS"
+CAPTION "Vypnutie systÈmu ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	ICON 8240, -1, 6, 6, 21, 20, SS_REALSIZECONTROL | WS_GROUP
@@ -544,7 +544,7 @@ BEGIN
 	COMBOBOX 28680, 7, 75, 170, 200, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
 	LTEXT "&N·zov zv‰zku", -1, 7, 93, 170, 9
 	EDITTEXT 28679, 7, 103, 170, 13, ES_AUTOHSCROLL
-	GROUPBOX "Moûnosùi &form·tovania", 4610, 7, 121, 170, 49
+	GROUPBOX "Moûnosti &form·tovania", 4610, 7, 121, 170, 49
 	AUTOCHECKBOX "&R˝chle form·tovanie", 28674, 16, 135, 155, 10
 	AUTOCHECKBOX "Z&apn˙ù kompresiu", 28675, 16, 152, 155, 10
 END

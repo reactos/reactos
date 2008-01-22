@@ -33,10 +33,10 @@ CACLS názov_súboru [/T] [/E] [/C] [/G pouívate¾:povolenia [...]]\n\
 Náhradné znaky sa dajú poui na špecifikovanie viacerıch súborov v jednom\n\
 príkaze. Rovnako môete špecifikova aj viacerıch pouívate¾ov v príkaze.\n\n\
 Skratky:\n\
-    CI - Kontajnérové dedenie.\n\
-         ACE budé zdedené po adresároch.\n\
+    CI - Kontajnerové dedenie.\n\
+         ACE bude zdedené po adresároch.\n\
     OI - Objektové dedenie.\n\
-         ACE budé zdedené po súboroch.\n\
+         ACE bude zdedené po súboroch.\n\
     IO - Iba zdedi.\n\
          ACE sa neaplikuje na aktuálny súbor alebo adresár.\n"
 
