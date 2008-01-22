@@ -12,25 +12,25 @@ static MUI_ENTRY frFRLanguagePageEntries[] =
     {
         6,
         8,
-        "Selection de la langue.",
+        "S‚lection de la langue.",
         TEXT_NORMAL
     },
     {
         8,
         10,
-        "\x07  Veuillez choisir la langue utilisee pour le processus d'installation",
+        "\x07  Veuiller choisir la langue utilis‚e pour le processus d'installation",
         TEXT_NORMAL
     },
     {
         8,
         11,
-        "   et appuyez sur ENTER.",
+        "   et appuyer sur ENTER.",
         TEXT_NORMAL
     },
     {
         8,
         13,
-        "\x07  Cette langue sera la langue par defaut pour le systeme final.",
+        "\x07  Cette langue sera la langue par d‚faut pour le systŠme final.",
         TEXT_NORMAL
     },
     {
@@ -58,49 +58,49 @@ static MUI_ENTRY frFRWelcomePageEntries[] =
     {
         6,
         8,
-        "Bienvenue a l'installation de ReactOS",
+        "Bienvenue … l'installation de ReactOS",
         TEXT_HIGHLIGHT
     },
     {
         6,
         11,
-        "Cette partie de l'installation copie le Systeme d'Exploitation ReactOS",
+        "Cette partie de l'installation copie le SystŠme d'Exploitation ReactOS",
         TEXT_NORMAL
     },
     {
         6,
         12,
-        "sur votre ordinateur et le prepare a la 2e partie de l'installation.",
+        "sur votre ordinateur et le pr‚pare … la 2e partie de l'installation.",
         TEXT_NORMAL
     },
     {
         8,
         15,
-        "\x07  Appuyez sur ENTER pour installer ReactOS.",
+        "\x07  Appuyer sur ENTER pour installer ReactOS.",
         TEXT_NORMAL
     },
     {
         8,
         17,
-        "\x07  Appuyez sur R pour reparer ReactOS.",
+        "\x07  Appuyer sur R pour r‚parer ReactOS.",
         TEXT_NORMAL
     },
     {
         8,
         19,
-        "\x07  Appuyez sur L pour les Termes et Conditions de Licence ReactOS",
+        "\x07  Appuyer sur L pour les Termes et Conditions de Licence ReactOS",
         TEXT_NORMAL
     },
     {
         8,
         21,
-        "\x07  Appuyez sur F3 pour quitter sans installer ReactOS.",
+        "\x07  Appuyer sur F3 pour quitter sans installer ReactOS.",
         TEXT_NORMAL
     },
     {
         6,
         23,
-        "Pour plus d'informations sur ReactOS, veuillez visiter :",
+        "Pour plus d'informations sur ReactOS, veuiller visiter :",
         TEXT_NORMAL
     },
     {
@@ -112,7 +112,7 @@ static MUI_ENTRY frFRWelcomePageEntries[] =
     {
         0,
         0,
-        "   ENTER = Continuer  R = Reparer F3 = Quitter",
+        "   ENTER = Continuer  R = R‚parer F3 = Quitter",
         TEXT_STATUS
     },
     {
@@ -134,7 +134,7 @@ static MUI_ENTRY frFRIntroPageEntries[] =
     {
         6,
         8,
-        "L'Installation de ReactOS est en phase de developpement.",
+        "L'Installation de ReactOS est en phase de d‚veloppement.",
         TEXT_NORMAL
     },
     {
@@ -146,7 +146,7 @@ static MUI_ENTRY frFRIntroPageEntries[] =
     {
         6,
         10,
-        " d'installation entierement utilisable.",
+        " d'installation entiŠrement utilisable.",
         TEXT_NORMAL
     },
     {
@@ -158,7 +158,7 @@ static MUI_ENTRY frFRIntroPageEntries[] =
     {
         8,
         13,
-        "- L'installation ne peut gerer plus d'une partition primaire par disque.",
+        "- L'installation ne peut g‚rer plus d'une partition primaire par disque.",
         TEXT_NORMAL
     },
     {
@@ -176,7 +176,7 @@ static MUI_ENTRY frFRIntroPageEntries[] =
     {
         8,
         16,
-        "- L'installation ne peut effacer la premiere partition secondaire",
+        "- L'installation ne peut effacer la premiŠre partition secondaire",
         TEXT_NORMAL
     },
     {
@@ -188,25 +188,25 @@ static MUI_ENTRY frFRIntroPageEntries[] =
     {
         8,
         18,
-        "- L'installation supporte uniquement le systeme de fichiers FAT.",
+        "- L'installation supporte uniquement le systŠme de fichiers FAT.",
         TEXT_NORMAL
     },
     {
         8,
         19,
-        "- Les verifications de systeme de fichers ne sont pas implementees.",
+        "- Les v‚rifications de systŠme de fichers ne sont pas impl‚ment‚es.",
         TEXT_NORMAL
     },
     {
         8,
         23,
-        "\x07  Appuyez sur ENTER pour installer ReactOS.",
+        "\x07  Appuyer sur ENTER pour installer ReactOS.",
         TEXT_NORMAL
     },
     {
         8,
         25,
-        "\x07  Appuyez sur F3 pour quitter sans installer ReactOS.",
+        "\x07  Appuyer sur F3 pour quitter sans installer ReactOS.",
         TEXT_NORMAL
     },
     {
@@ -358,7 +358,7 @@ static MUI_ENTRY frFRDevicePageEntries[] =
     {
         6,
         8,
-        "La liste ci-dessous montre les reglages materiels actuels.",
+        "La liste ci-dessous montre les r‚glages mat‚riels actuels.",
         TEXT_NORMAL
     },
     {
@@ -380,9 +380,9 @@ static MUI_ENTRY frFRDevicePageEntries[] =
         TEXT_NORMAL
     },
     {
-        4,
+        8,
         14,
-        "Disposition clavier :",
+        "R‚glage Clavier :",
         TEXT_NORMAL
     },
     {
@@ -393,37 +393,37 @@ static MUI_ENTRY frFRDevicePageEntries[] =
     },
     {
         25,
-        16, "Accepter ces reglages materiels",
+        16, "Accepter ces r‚glages mat‚riels",
         TEXT_NORMAL
     },
     {
         6,
         19,
-        "Vous pouvez changer les reglages materiels en appuyant sur HAUT ou BAS",
+        "Vous pouvez changer les r‚glages mat‚riels en appuyant sur HAUT ou BAS",
         TEXT_NORMAL
     },
     {
         6,
         20,
-        "pour selectionner une entree.",
+        "pour s‚lectionner une entr‚e.",
         TEXT_NORMAL
     },
     {
         6,
         21,
-        "Appuyez sur ENTER pour choisir un autre reglage.",
+        "Appuyer sur ENTER pour choisir un autre r‚glage.",
         TEXT_NORMAL
     },
     {
         6,
         23,
-        "Quand tous les reglages sont corrects, selectionner \"Accepter",
+        "Quand tous les r‚glages sont corrects, s‚lectionner \"Accepter",
         TEXT_NORMAL
     },
     {
         6,
         24,
-        "ces reglages materiels\" et appuyer sur ENTER.",
+        "ces r‚glages mat‚riels\" et appuyer sur ENTER.",
         TEXT_NORMAL
     },
     {
@@ -451,7 +451,7 @@ static MUI_ENTRY frFRRepairPageEntries[] =
     {
         6,
         8,
-        "L'Installation de ReactOS est en phase de developpement.",
+        "L'Installation de ReactOS est en phase de d‚veloppement.",
         TEXT_NORMAL
     },
     {
@@ -463,43 +463,43 @@ static MUI_ENTRY frFRRepairPageEntries[] =
     {
         6,
         10,
-        "d'installation entierement utilisable.",
+        "d'installation entiŠrement utilisable.",
         TEXT_NORMAL
     },
     {
         6,
         12,
-        "Les fonctions de reparation ne sont pas implementees pour l'instant.",
+        "Les fonctions de r‚paration ne sont pas impl‚ment‚es pour l'instant.",
         TEXT_NORMAL
     },
     {
         8,
         15,
-        "\x07  Appuyez sur U pour mettre a jour l'OS.",
+        "\x07  Appuyer sur U pour mettre … jour l'OS.",
         TEXT_NORMAL
     },
     {
         8,
         17,
-        "\x07  Appuyez sur R pour la Console de Reparation.",
+        "\x07  Appuyer sur R pour la Console de R‚paration.",
         TEXT_NORMAL
     },
     {
         8,
         19,
-        "\x07  Appuyez sur ESC pour retourner a la page principale.",
+        "\x07  Appuyer sur ESC pour retourner … la page principale.",
         TEXT_NORMAL
     },
     {
         8,
         21,
-        "\x07  Appuyez sur ENTER pour redemarrer votre ordinateur.",
+        "\x07  Appuyer sur ENTER pour red‚marrer votre ordinateur.",
         TEXT_NORMAL
     },
     {
         0,
         0,
-        "   ESC = Page principale  ENTER = Redemarrer",
+        "   ESC = Page principale  ENTER = Red‚marrer",
         TEXT_STATUS
     },
     {
@@ -520,25 +520,25 @@ static MUI_ENTRY frFRComputerPageEntries[] =
     {
         6,
         8,
-        "Vous voulez changer le type d'ordinateur installe.",
+        "Vous voulez changer le type d'ordinateur install‚.",
         TEXT_NORMAL
     },
     {
         8,
         10,
-        "\x07  Appuyez sur HAUT ou BAS pour selectionner le type d'ordinateur.",
+        "\x07  Appuyer sur HAUT ou BAS pour s‚lectionner le type d'ordinateur.",
         TEXT_NORMAL
     },
     {
         8,
         11,
-        "   Puis appuyez sur ENTER.",
+        "   Puis appuyer sur ENTER.",
         TEXT_NORMAL
     },
     {
         8,
         13,
-        "\x07  Appuyez sur ESC pour revenir a la page precedente sans changer",
+        "\x07  Appuyer sur ESC pour revenir … la page pr‚c‚dente sans changer",
         TEXT_NORMAL
     },
     {
@@ -572,7 +572,7 @@ static MUI_ENTRY frFRFlushPageEntries[] =
     {
         10,
         6,
-        "Le systeme s'assure que toutes les donnees sont ecrites sur le disque",
+        "Le systŠme s'assure que toutes les donn‚es sont ‚crites sur le disque",
         TEXT_NORMAL
     },
     {
@@ -584,7 +584,7 @@ static MUI_ENTRY frFRFlushPageEntries[] =
     {
         10,
         9,
-        "Quand cela sera fini, votre ordinateur redemarrera automatiquement",
+        "Quand cela sera fini, votre ordinateur red‚marrera automatiquement",
         TEXT_NORMAL
     },
     {
@@ -612,7 +612,7 @@ static MUI_ENTRY frFRQuitPageEntries[] =
     {
         10,
         6,
-        "ReactOS n'est pas completement installe",
+        "ReactOS n'est pas complŠtement install‚",
         TEXT_NORMAL
     },
     {
@@ -630,7 +630,7 @@ static MUI_ENTRY frFRQuitPageEntries[] =
     {
         10,
         11,
-        "Appuyez sur ENTER pour redemarrer votre ordinateur.",
+        "Appuyer sur ENTER pour red‚marrer votre ordinateur.",
         TEXT_NORMAL
     },
     {
@@ -658,30 +658,30 @@ static MUI_ENTRY frFRDisplayPageEntries[] =
     {
         6,
         8,
-        "Vous voulez changer le type d'ecran a installer.",
+        "Vous voulez changer le type d'‚cran … installer.",
         TEXT_NORMAL
     },
     {   8,
         10,
-         "\x07  Appuyez sur HAUT ou BAS pour selectionner le type d'ecran.",
+         "\x07  Appuyer sur HAUT ou BAS pour s‚lectionner le type d'‚cran.",
          TEXT_NORMAL
     },
     {
         8,
         11,
-        "   Appuez sur ENTER.",
+        "   Appuyer sur ENTER.",
         TEXT_NORMAL
     },
     {
         8,
         13,
-        "\x07  Appuyez sur ESC pour revenir a la page precedente sans changer",
+        "\x07  Appuyer sur ESC pour revenir … la page pr‚c‚dente sans changer",
         TEXT_NORMAL
     },
     {
         8,
         14,
-        "   le type d'ecran.",
+        "   le type d'‚cran.",
         TEXT_NORMAL
     },
     {
@@ -709,7 +709,7 @@ static MUI_ENTRY frFRSuccessPageEntries[] =
     {
         10,
         6,
-        "Les composants standards de ReactOS ont ete installes avec succes.",
+        "Les composants standards de ReactOS ont ‚t‚ install‚s avec succŠs.",
         TEXT_NORMAL
     },
     {
@@ -727,13 +727,13 @@ static MUI_ENTRY frFRSuccessPageEntries[] =
     {
         10,
         11,
-        "Appuyez sur ENTER pour redemarrer votre ordinateur.",
+        "Appuyer sur ENTER pour red‚marrer votre ordinateur.",
         TEXT_NORMAL
     },
     {
         0,
         0,
-        "   ENTER = Redemarrer l'ordinateur",
+        "   ENTER = Red‚marrer l'ordinateur",
         TEXT_STATUS
     },
     {
@@ -767,13 +767,13 @@ static MUI_ENTRY frFRBootPageEntries[] =
     {
         6,
         13,
-        "Veuillez inserer une disquette formatee dans le lecteur A: et",
+        "Veuillez ins‚rer une disquette format‚e dans le lecteur A: et",
         TEXT_NORMAL
     },
     {
         6,
         14,
-        "appuyez sur ENTER.",
+        "appuyer sur ENTER.",
         TEXT_NORMAL,
     },
     {
@@ -814,31 +814,31 @@ static MUI_ENTRY frFRSelectPartitionEntries[] =
     {
         8,
         11,
-        "\x07  Appuyez sur HAUT ou BAS pour selectionner une entree de la liste.",
+        "\x07  Appuyer sur HAUT ou BAS pour s‚lectionner une entree de la liste.",
         TEXT_NORMAL
     },
     {
         8,
         13,
-        "\x07  Appuyez sur ENTER pour installer ReactOS sur la partition choisie.",
+        "\x07  Appuyer sur ENTER pour installer ReactOS sur la partition choisie.",
         TEXT_NORMAL
     },
     {
         8,
         15,
-        "\x07  Appuyez sur C pour creer une nouvelle partition.",
+        "\x07  Appuyer sur C pour creer une nouvelle partition.",
         TEXT_NORMAL
     },
     {
         8,
         17,
-        "\x07  Appuyez sur D pour effacer une partition.",
+        "\x07  Appuyer sur D pour effacer une partition.",
         TEXT_NORMAL
     },
     {
         0,
         0,
-        "   Patientez...",
+        "   Patienter...",
         TEXT_STATUS
     },
     {
@@ -866,7 +866,7 @@ static MUI_ENTRY frFRFormatPartitionEntries[] =
     {
         6,
         10,
-        "Setup va formater la partition. Appuyez sur ENTER pour continuer.",
+        "Setup va formater la partition. Appuyer sur ENTER pour continuer.",
         TEXT_NORMAL
     },
     {
@@ -894,31 +894,31 @@ static MUI_ENTRY frFRInstallDirectoryEntries[] =
     {
         6,
         8,
-        "Setup installe les fichiers de ReactOS sur la partition selectionnee.",
+        "Setup installe les fichiers de ReactOS sur la partition s‚lectionn‚e.",
         TEXT_NORMAL
     },
     {
         6,
         9,
-        "Choisissez un repertoire ou vous voulez que ReactOS soit installe :",
+        "Choisissez un repertoire o— vous voulez que ReactOS soit install‚ :",
         TEXT_NORMAL
     },
     {
         6,
         14,
-        "Pour changer le repertoire propose, appuyez sur BACKSPACE pour effacer",
+        "Pour changer le r‚pertoire propos‚, appuyez sur BACKSPACE pour effacer",
         TEXT_NORMAL
     },
     {
         6,
         15,
-        "des caracteres et ensuite tapez le repertoire ou vous voulez que",
+        "des caractŠres et ensuite tapez le r‚pertoire ou vous voulez que",
         TEXT_NORMAL
     },
     {
         6,
         16,
-        "ReactOS soit installe",
+        "ReactOS soit install‚",
         TEXT_NORMAL
     },
     {
@@ -952,7 +952,7 @@ static MUI_ENTRY frFRFileCopyEntries[] =
     {
         15,
         13,
-        "dans le repertoire d'installation de ReactOS.",
+        "dans le r‚pertoire d'installation de ReactOS.",
         TEXT_NORMAL
     },
     {
@@ -986,25 +986,25 @@ static MUI_ENTRY frFRBootLoaderEntries[] =
     {
         6,
         8,
-        "Setup installe le chargeur de demarrage",
+        "Setup installe le chargeur de d‚marrage",
         TEXT_NORMAL
     },
     {
         8,
         12,
-        "Installer le chargeur de demarrage sur le disque dur (MBR).",
+        "Installer le chargeur de d‚marrage sur le disque dur (MBR).",
         TEXT_NORMAL
     },
     {
         8,
         13,
-        "Installer le chargeur de demarrage sur une disquette.",
+        "Installer le chargeur de d‚marrage sur une disquette.",
         TEXT_NORMAL
     },
     {
         8,
         14,
-        "Ne pas installer le chargeur de demarrage.",
+        "Ne pas installer le chargeur de d‚marrage.",
         TEXT_NORMAL
     },
     {
@@ -1032,13 +1032,13 @@ static MUI_ENTRY frFRKeyboardSettingsEntries[] =
     {
         6,
         8,
-        "Vous voulez changer le type de clavier a installer.",
+        "Vous voulez changer le type de clavier … installer.",
         TEXT_NORMAL
     },
     {
         8,
         10,
-        "\x07  Appuyez sur HAUT ou BAS pour selectionner le type de clavier,",
+        "\x07  Appuyez sur HAUT ou BAS pour s‚lectionner le type de clavier,",
         TEXT_NORMAL
     },
     {
@@ -1050,7 +1050,7 @@ static MUI_ENTRY frFRKeyboardSettingsEntries[] =
     {
         8,
         13,
-        "\x07  Appuyez sur ESC pour revenir a la page precedente sans changer",
+        "\x07  Appuyez sur ESC pour revenir a la page pr‚c‚dente sans changer",
         TEXT_NORMAL
     },
     {
@@ -1090,7 +1090,7 @@ static MUI_ENTRY frFRLayoutSettingsEntries[] =
     {
         8,
         10,
-        "\x07  Appuyez sur HAUT ou BAS pour selectionner la disposition",
+        "\x07  Appuyez sur HAUT ou BAS pour s‚lectionner la disposition",
         TEXT_NORMAL
     },
     {
@@ -1102,7 +1102,7 @@ static MUI_ENTRY frFRLayoutSettingsEntries[] =
     {
         8,
         13,
-        "\x07  Appuyez sur ESC pour revenir a la page precedente sans changer",
+        "\x07  Appuyez sur ESC pour revenir a la page pr‚c‚dente sans changer",
         TEXT_NORMAL
     },
     {
@@ -1137,13 +1137,13 @@ static MUI_ENTRY frFRPrepareCopyEntries[] =
     {
         6,
         8,
-        "Setup prepare votre ordinateur pour copier les fichiers de ReactOS. ",
+        "Setup pr‚pare votre ordinateur pour copier les fichiers de ReactOS. ",
         TEXT_NORMAL
     },
     {
         0,
         0,
-        "   Prepare la liste de fichiers a copier...",
+        "   Pr‚pare la liste de fichiers … copier...",
         TEXT_STATUS
     },
     {
@@ -1166,13 +1166,13 @@ static MUI_ENTRY frFRSelectFSEntries[] =
     {
         6,
         17,
-        "Selectionnez un systeme de fichiers dans la liste suivante.",
+        "S‚lectionnez un systŠme de fichiers dans la liste suivante.",
         0
     },
     {
         8,
         19,
-        "\x07  Appuyez sur HAUT ou BAS pour selectionner un systeme de fichiers.",
+        "\x07  Appuyez sur HAUT ou BAS pour s‚lectionner un systŠme de fichiers.",
         0
     },
     {
@@ -1184,7 +1184,7 @@ static MUI_ENTRY frFRSelectFSEntries[] =
     {
         8,
         23,
-        "\x07  Appuyez sur ESC pour selectionner une autre partition.",
+        "\x07  Appuyez sur ESC pour s‚lectionner une autre partition.",
         0
     },
     {
@@ -1225,7 +1225,7 @@ static MUI_ENTRY frFRDeletePartitionEntries[] =
     {
         11,
         19,
-        "ATTENTION: Toutes les donnees de cette partition seront perdues!",
+        "ATTENTION: Toutes les donne‚es de cette partition seront perdues!",
         TEXT_NORMAL
     },
     {
@@ -1259,13 +1259,13 @@ static MUI_ENTRY frFRRegistryEntries[] =
     {
         6,
         8,
-        "Setup is updating the system configuration. ",
+        "Setup met … jour la configuration du systŠme. ",
         TEXT_NORMAL
     },
     {
         0,
         0,
-        "   Creating registry hives...",
+        "   En train de cr‚er la base de registres...",
         TEXT_STATUS
     },
     {
@@ -1281,7 +1281,7 @@ MUI_ERROR frFRErrorEntries[] =
 {
     {
         //ERROR_NOT_INSTALLED
-        "ReactOS n'est pas completement installe sur votre\n"
+        "ReactOS n'est pas complŠtement install‚ sur votre\n"
         "ordinateur. Si vous quittez Setup maintenant, vous devrez\n"
         "lancer Setup de nouveau pour installer ReactOS.\n"
         "\n"
@@ -1292,64 +1292,64 @@ MUI_ERROR frFRErrorEntries[] =
     {
         //ERROR_NO_HDD
         "Setup n'a pu trouver un disque dur.\n",
-        "ENTER = Redemarrer l'ordinateur"
+        "ENTER = Red‚marrer l'ordinateur"
     },
     {
         //ERROR_NO_SOURCE_DRIVE
         "Setup n'a pu trouver son lecteur source.\n",
-        "ENTER = Redemarrer l'ordinateur"
+        "ENTER = Red‚marrer l'ordinateur"
     },
     {
         //ERROR_LOAD_TXTSETUPSIF
-        "Setup n'a pas reussi a charger le fichier TXTSETUP.SIF.\n",
-        "ENTER = Redemarrer l'ordinateur"
+        "Setup n'a pas r‚ussi … charger le fichier TXTSETUP.SIF.\n",
+        "ENTER = Red‚marrer l'ordinateur"
     },
     {
         //ERROR_CORRUPT_TXTSETUPSIF
-        "Setup a trouve un fichier TXTSETUP.SIF corrompu.\n",
-        "ENTER = Redemarrer l'ordinateur"
+        "Setup a trouv‚ un fichier TXTSETUP.SIF corrompu.\n",
+        "ENTER = Red‚marrer l'ordinateur"
     },
     {
         //ERROR_SIGNATURE_TXTSETUPSIF,
-        "Setup a trouve une signature invalide dans TXTSETUP.SIF.\n",
-        "ENTER = Redemarrer l'ordinateur"
+        "Setup a trouv‚ une signature invalide dans TXTSETUP.SIF.\n",
+        "ENTER = Red‚marrer l'ordinateur"
     },
     {
         //ERROR_DRIVE_INFORMATION
-        "Setup n'a pu recuperer les informations du disque système.\n",
-        "ENTER = Redemarrer l'ordinateur"
+        "Setup n'a pu r‚cup‚rer les informations du disque systŠme.\n",
+        "ENTER = Red‚marrer l'ordinateur"
     },
     {
         //ERROR_WRITE_BOOT,
-        "Echec de l'installation du code de démarrage FAT sur la partition systeme.",
-        "ENTER = Redemarrer l'ordinateur"
+        "Echec de l'installation du code de d‚marrage FAT sur la partition systŠme.",
+        "ENTER = Red‚marrer l'ordinateur"
     },
     {
         //ERROR_LOAD_COMPUTER,
         "Setup n'a pu charger la liste de type d'ordinateurs.\n",
-        "ENTER = Redemarrer l'ordinateur"
+        "ENTER = Red‚marrer l'ordinateur"
     },
     {
         //ERROR_LOAD_DISPLAY,
-        "Setup n'a pu charger la liste de réglages des écrans.\n",
-        "ENTER = Redemarrer l'ordinateur"
+        "Setup n'a pu charger la liste de r‚glages des ‚crans.\n",
+        "ENTER = Red‚marrer l'ordinateur"
     },
     {
         //ERROR_LOAD_KEYBOARD,
         "Setup n'a pu charger la liste de types de claviers.\n",
-        "ENTER = Redemarrer l'ordinateur"
+        "ENTER = Red‚marrer l'ordinateur"
     },
     {
         //ERROR_LOAD_KBLAYOUT,
         "Setup n'a pu charger la liste de dispositions de claviers.\n",
-        "ENTER = Redemarrer l'ordinateur"
+        "ENTER = Red‚marrer l'ordinateur"
     },
     {
         //ERROR_WARN_PARTITION,
-        "Setup a detecte qu'au moins un dique dur contient une table\n"
-        "de partition incompatible qui ne peut etre prise en compte!\n"
+        "Setup a d‚tect‚ qu'au moins un disque dur contient une table\n"
+        "de partition incompatible qui ne peut ˆtre prise en compte!\n"
         "\n"
-        "Creer ou effacer des partitions peut detruire la table de partition.\n"
+        "Cr‚er ou effacer des partitions peut d‚truire la table de partition.\n"
         "\n"
         "  \x07  Appuyer sur F3 pour quitter Setup."
         "  \x07  Appuyer sur ENTER pour continuer Setup.",
@@ -1357,23 +1357,23 @@ MUI_ERROR frFRErrorEntries[] =
     },
     {
         //ERROR_NEW_PARTITION,
-        "Vous ne pouvez creer une nouvelle Partition à l'interieur\n"
-        "d'une Partition deja existante!\n"
+        "Vous ne pouvez cr‚er une nouvelle Partition … l'int‚rieur\n"
+        "d'une Partition d‚j… existante!\n"
         "\n"
-        "  * Appuyez sur une touche pour continuer.",
+        "  * Appuyer sur une touche pour continuer.",
         NULL
     },
     {
         //ERROR_DELETE_SPACE,
-        "Vous ne pouvez supprimer de l'espace disque non partitionne!\n"
+        "Vous ne pouvez supprimer de l'espace disque non partitionn‚!\n"
         "\n"
-        "  * Appuyez sur une touche pour continuer.",
+        "  * Appuyer sur une touche pour continuer.",
         NULL
     },
     {
         //ERROR_INSTALL_BOOTCODE,
-        "Echec de l'installation du code de démarrage FAT sur la partition systeme.",
-        "ENTER = Redemarrer l'ordinateur"
+        "Echec de l'installation du code de d‚marrage FAT sur la partition systŠme.",
+        "ENTER = Red‚marrer l'ordinateur"
     },
     {
         //ERROR_NO_FLOPPY,
@@ -1382,96 +1382,96 @@ MUI_ERROR frFRErrorEntries[] =
     },
     {
         //ERROR_UPDATE_KBSETTINGS,
-        "Setup n'a pu mettre a jour les reglages de disposition du clavier.",
-        "ENTER = Redemarrer l'ordinateur"
+        "Setup n'a pu mettre … jour les r‚glages de disposition du clavier.",
+        "ENTER = Red‚marrer l'ordinateur"
     },
     {
         //ERROR_UPDATE_DISPLAY_SETTINGS,
-        "Setup n'a pu mettre a jour les reglages de l'ecran.",
-        "ENTER = Redemarrer l'ordinateur"
+        "Setup n'a pu mettre … jour les r‚glages de l'‚cran.",
+        "ENTER = Red‚marrer l'ordinateur"
     },
     {
         //ERROR_IMPORT_HIVE,
         "Setup n'a pu importer un fichier ruche.",
-        "ENTER = Redemarrer l'ordinateur"
+        "ENTER = Red‚marrer l'ordinateur"
     },
     {
         //ERROR_FIND_REGISTRY
         "Setup n'a pu trouver les fichiers de la base de registres.",
-        "ENTER = Redemarrer l'ordinateur"
+        "ENTER = Red‚marrer l'ordinateur"
     },
     {
         //ERROR_CREATE_HIVE,
-        "Setup n'a pu creer les ruches de la base de registres.",
-        "ENTER = Redemarrer l'ordinateur"
+        "Setup n'a pu cr‚er les ruches de la base de registres.",
+        "ENTER = Red‚marrer l'ordinateur"
     },
     {
         //ERROR_INITIALIZE_REGISTRY,
         "Setup n'a pu initialiser la base de registres.",
-        "ENTER = Redemarrer l'ordinateur"
+        "ENTER = Red‚marrer l'ordinateur"
     },
     {
         //ERROR_INVALID_CABINET_INF,
         "Le Cabinet n'a pas de fichier inf valide.\n",
-        "ENTER = Redemarrer l'ordinateur"
+        "ENTER = Red‚marrer l'ordinateur"
     },
     {
         //ERROR_CABINET_MISSING,
-        "Cabinet non trouve.\n",
-        "ENTER = Redemarrer l'ordinateur"
+        "Cabinet non trouv‚.\n",
+        "ENTER = Red‚marrer l'ordinateur"
     },
     {
         //ERROR_CABINET_SCRIPT,
         "Cabinet n'a pas de script de setup.\n",
-        "ENTER = Redemarrer l'ordinateur"
+        "ENTER = Red‚marrer l'ordinateur"
     },
     {
         //ERROR_COPY_QUEUE,
-        "Setup failed to open the copy file queue.\n",
-        "ENTER = Redemarrer l'ordinateur"
+        "Setup n'a pu ouvrir la file d'attente de copie de fichiers.\n",
+        "ENTER = Red‚marrer l'ordinateur"
     },
     {
         //ERROR_CREATE_DIR,
-        "Setup n'a pu creer les repertoires d'installation.",
-        "ENTER = Redemarrer l'ordinateur"
+        "Setup n'a pu cr‚er les r‚pertoires d'installation.",
+        "ENTER = Red‚marrer l'ordinateur"
     },
     {
         //ERROR_TXTSETUP_SECTION,
         "Setup n'a pu trouver la section 'Directories'\n"
         "dans TXTSETUP.SIF.\n",
-        "ENTER = Redemarrer l'ordinateur"
+        "ENTER = Red‚marrer l'ordinateur"
     },
     {
         //ERROR_CABINET_SECTION,
         "Setup n'a pu trouver la section 'Directories\n"
         "dans le cabinet.\n",
-        "ENTER = Redemarrer l'ordinateur"
+        "ENTER = Red‚marrer l'ordinateur"
     },
     {
         //ERROR_CREATE_INSTALL_DIR
-        "Setup n'a pu creer le repertoire d'installation.",
-        "ENTER = Redemarrer l'ordinateur"
+        "Setup n'a pu cr‚er le r‚pertoire d'installation.",
+        "ENTER = Red‚marrer l'ordinateur"
     },
     {
         //ERROR_FIND_SETUPDATA,
         "Setup n'a pu trouver la section 'SetupData'\n"
-        "in TXTSETUP.SIF.\n",
-        "ENTER = Redemarrer l'ordinateur"
+        "dans TXTSETUP.SIF.\n",
+        "ENTER = Red‚marrer l'ordinateur"
     },
     {
         //ERROR_WRITE_PTABLE,
-        "Setup n'a pu ecrire les tables de partition.\n"
-        "ENTER = Redemarrer l'ordinateur"
+        "Setup n'a pu ‚crire les tables de partition.\n"
+        "ENTER = Red‚marrer l'ordinateur"
     },
     {
         //ERROR_ADDING_CODEPAGE,
-        "Setup failed to add codepage to registry.\n"
-        "ENTER = Reboot computer"
+        "Setup n'a pu ajouter la page de codes … la base de registres.\n"
+        "ENTER = Red‚marrer l'ordinateur"
     },
     {
         //ERROR_UPDATE_LOCALESETTINGS,
-        "Setup could not set the system locale.\n"
-        "ENTER = Reboot computer"
+        "Setup n'a pu changer la langue systŠme.\n"
+        "ENTER = Red‚marrer l'ordinateur"
     },
     {
         NULL,
