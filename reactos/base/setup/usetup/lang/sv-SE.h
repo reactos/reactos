@@ -58,7 +58,7 @@ static MUI_ENTRY svSEWelcomePageEntries[] =
     {
         6,
         8,
-        "Välkommen till ReactOS Setup!",
+        "V„lkommen till ReactOS Setup!",
         TEXT_HIGHLIGHT
     },
     {
@@ -70,37 +70,37 @@ static MUI_ENTRY svSEWelcomePageEntries[] =
     {
         6,
         12,
-        "dator och förbereder den andra delen av installationen.",
+        "dator och f”rbereder den andra delen av installationen.",
         TEXT_NORMAL
     },
     {
         8,
         15,
-        "\x07  Tryck på ENTER för att installera ReactOS.",
+        "\x07  Tryck p† ENTER f”r att installera ReactOS.",
         TEXT_NORMAL
     },
     {
         8,
         17,
-        "\x07  Tryck på R för att reparera ReactOS.",
+        "\x07  Tryck p† R f”r att reparera ReactOS.",
         TEXT_NORMAL
     },
     {
         8,
         19,
-        "\x07  Tryck på L för att läsa licensavtalet till ReactOS.",
+        "\x07  Tryck p† L f”r att l„sa licensavtalet till ReactOS.",
         TEXT_NORMAL
     },
     {
         8,
         21,
-        "\x07  Tryck på F3 för att avbryta installationen av ReactOS.",
+        "\x07  Tryck p† F3 f”r att avbryta installationen av ReactOS.",
         TEXT_NORMAL
     },
     {
         6,
         23,
-        "För mer information om ReactOS, besök:",
+        "F”r mer information om ReactOS, bes”k:",
         TEXT_NORMAL
     },
     {
@@ -112,7 +112,7 @@ static MUI_ENTRY svSEWelcomePageEntries[] =
     {
         0,
         0,
-        "   ENTER = Fortsätt  R = Reparera F3 = Avbryt",
+        "   ENTER = Forts„tt  R = Reparera F3 = Avbryt",
         TEXT_STATUS
     },
     {
@@ -134,79 +134,79 @@ static MUI_ENTRY svSEIntroPageEntries[] =
     {
         6,
         8,
-        "ReactOS Setup är i en tidig utvecklingsfas och saknar därför ett antal",
+        "ReactOS Setup „r i en tidig utvecklingsfas och saknar d„rf”r ett antal",
         TEXT_NORMAL
     },
     {
         6,
         9,
-        "funktioner som kan förväntas av ett fullt användbart setup-program.",
+        "funktioner som kan f”rv„ntas av ett fullt anv„ndbart setup-program.",
         TEXT_NORMAL
     },
     {
         6,
         12,
-        "Följande begränsningar gäller:",
+        "F”ljande begr„nsningar g„ller:",
         TEXT_NORMAL
     },
     {
         8,
         13,
-        "- Setup kan ej hantera mer än 1 primär partition per hårddisk.",
+        "- Setup kan ej hantera mer „n 1 prim„r partition per h†rddisk.",
         TEXT_NORMAL
     },
     {
         8,
         14,
-        "- Setup kan ej radera en primär partition från en hårddisk",
+        "- Setup kan ej radera en prim„r partition fr†n en h†rddisk",
         TEXT_NORMAL
     },
     {
         8,
         15,
-        "  om utökade partitioner existerar på hårddisken.",
+        "  om ut”kade partitioner existerar p† h†rddisken.",
         TEXT_NORMAL
     },
     {
         8,
         16,
-        "- Setup kan ej radera den första utökade partitionen från en hårddisk",
+        "- Setup kan ej radera den f”rsta ut”kade partitionen fr†n en h†rddisk",
         TEXT_NORMAL
     },
     {
         8,
         17,
-        "  om andra utökade partitioner existerar på hårddisken.",
+        "  om andra ut”kade partitioner existerar p† h†rddisken.",
         TEXT_NORMAL
     },
     {
         8,
         18,
-        "- Setup stöder endast filsystem av typen FAT.",
+        "- Setup st”der endast filsystem av typen FAT.",
         TEXT_NORMAL
     },
     {
         8,
         19,
-        "- Kontrollering av hårddiskens filsystem stöds (ännu) ej.",
+        "- Kontrollering av h†rddiskens filsystem st”ds („nnu) ej.",
         TEXT_NORMAL
     },
     {
         8,
         23,
-        "\x07  Tryck på ENTER för att installera ReactOS.",
+        "\x07  Tryck p† ENTER f”r att installera ReactOS.",
         TEXT_NORMAL
     },
     {
         8,
         25,
-        "\x07  Tryck på F3 för att avbryta installationen.",
+        "\x07  Tryck p† F3 f”r att avbryta installationen.",
         TEXT_NORMAL
     },
     {
         0,
         0,
-        "   ENTER = Fortsätt   F3 = Avbryt",
+        "   ENTER = Forts„tt   F3 = Avbryt",
         TEXT_STATUS
     },
     {
@@ -234,67 +234,67 @@ static MUI_ENTRY svSELicensePageEntries[] =
     {
         8,
         8,
-        "ReactOS är licenserad under GNU GPL med delar",
+        "ReactOS „r licenserad under GNU GPL med delar",
         TEXT_NORMAL
     },
     {
         8,
         9,
-        "av den medföljande koden licenserad under GPL-förenliga",
+        "av den medf”ljande koden licenserad under GPL-f”renliga",
         TEXT_NORMAL
     },
     {
         8,
         10,
-        "licenser såsom X11-, BSD- och GNU LGPL-licenserna.",
+        "licenser s†som X11-, BSD- och GNU LGPL-licenserna.",
         TEXT_NORMAL
     },
     {
         8,
         11,
-        "All mjukvara som är del av ReactOS är publicerad",
+        "All mjukvara som „r del av ReactOS „r publicerad",
         TEXT_NORMAL
     },
     {
         8,
         12,
-        "under GNU GPL, men även den ursprungliga",
+        "under GNU GPL, men „ven den ursprungliga",
         TEXT_NORMAL
     },
     {
         8,
         13,
-        "licensen är upprätthållen.",
+        "licensen „r uppr„tth†llen.",
         TEXT_NORMAL
     },
     {
         8,
         15,
-        "Denna mjukvara har INGEN GARANTI eller begränsing på användning",
+        "Denna mjukvara har INGEN GARANTI eller begr„nsing p† anv„ndning",
         TEXT_NORMAL
     },
     {
         8,
         16,
-        "bortsett från tillämplig lokal och internationell lag. Licenseringen av",
+        "bortsett fr†n till„mplig lokal och internationell lag. Licenseringen av",
         TEXT_NORMAL
     },
     {
         8,
         17,
-        "ReactOS täcker endast distrubering till tredje part.",
+        "ReactOS t„cker endast distrubering till tredje part.",
         TEXT_NORMAL
     },
     {
         8,
         18,
-        "Om Ni av någon anledning ej fått en kopia av",
+        "Om Ni av n†gon anledning ej f†tt en kopia av",
         TEXT_NORMAL
     },
     {
         8,
         19,
-        "GNU General Public License med ReactOS, besök",
+        "GNU General Public License med ReactOS, bes”k",
         TEXT_NORMAL
     },
     {
@@ -312,25 +312,25 @@ static MUI_ENTRY svSELicensePageEntries[] =
     {
         8,
         24,
-        "Detta är gratis mjukvara; se källkoden för restriktioner angående kopiering.",
+        "Detta „r gratis mjukvara; se k„llkoden f”r restriktioner ang†ende kopiering.",
         TEXT_NORMAL
     },
     {
         8,
         25,
-        "INGEN GARANTI ges; inte ens för SÄLJBARHET eller PASSANDE FÖR ETT",
+        "INGEN GARANTI ges; inte ens f”r SLJBARHET eller PASSANDE F™R ETT",
         TEXT_NORMAL
     },
     {
         8,
         26,
-        "SPECIELLT SYFTE. ALL ANVÄNDNING SKER PÅ EGEN RISK!",
+        "SPECIELLT SYFTE. ALL ANVNDNING SKER P EGEN RISK!",
         TEXT_NORMAL
     },
     {
         0,
         0,
-        "   ENTER = Återvänd",
+        "   ENTER = terv„nd",
         TEXT_STATUS
     },
     {
@@ -352,7 +352,7 @@ static MUI_ENTRY svSEDevicePageEntries[] =
     {
         6,
         8,
-        "Listan nedanför visar inställningarna för maskinvaran.",
+        "Listan nedanf”r visar inst„llningarna f”r maskinvaran.",
         TEXT_NORMAL
     },
     {
@@ -364,7 +364,7 @@ static MUI_ENTRY svSEDevicePageEntries[] =
     {
         8,
         12,
-        "        Bildskärm:",
+        "        Bildsk„rm:",
         TEXT_NORMAL,
     },
     {
@@ -387,43 +387,43 @@ static MUI_ENTRY svSEDevicePageEntries[] =
     },
     {
         25,
-        16, "Acceptera dessa maskinvaruinställningar",
+        16, "Acceptera dessa maskinvaruinst„llningar",
         TEXT_NORMAL
     },
     {
         6,
         19,
-        "Ändra inställningarna genom att trycka på UPP- och NED-piltangenterna",
+        "ndra inst„llningarna genom att trycka p† UPP- och NED-piltangenterna",
         TEXT_NORMAL
     },
     {
         6,
         20,
-        "för att markera en inställning, och tryck på ENTER för att välja",
+        "f”r att markera en inst„llning, och tryck p† ENTER f”r att v„lja",
         TEXT_NORMAL
     },
     {
         6,
         21,
-        "inställningen.",
+        "inst„llningen.",
         TEXT_NORMAL
     },
     {
         6,
         23,
-        "När alla inställningar är korrekta, välj \"Acceptera dessa maskinvaruinställningar\"",
+        "N„r alla inst„llningar „r korrekta, v„lj \"Acceptera dessa maskinvaruinst„llningar\"",
         TEXT_NORMAL
     },
     {
         6,
         24,
-        "och tryck på ENTER.",
+        "och tryck p† ENTER.",
         TEXT_NORMAL
     },
     {
         0,
         0,
-        "   ENTER = Fortsätt   F3 = Avbryt",
+        "   ENTER = Forts„tt   F3 = Avbryt",
         TEXT_STATUS
     },
     {
@@ -445,13 +445,13 @@ static MUI_ENTRY svSERepairPageEntries[] =
     {
         6,
         8,
-        "ReactOS Setup är i en tidig utvecklingsfas och saknar därför ett antal",
+        "ReactOS Setup „r i en tidig utvecklingsfas och saknar d„rf”r ett antal",
         TEXT_NORMAL
     },
     {
         6,
         9,
-        "funktioner som kan förväntas av ett fullt användbart setup-program.",
+        "funktioner som kan f”rv„ntas av ett fullt anv„ndbart setup-program.",
         TEXT_NORMAL
     },
     {
@@ -463,31 +463,31 @@ static MUI_ENTRY svSERepairPageEntries[] =
     {
         8,
         15,
-        "\x07  Tryck på U för att uppdatera ReactOS.",
+        "\x07  Tryck p† U f”r att uppdatera ReactOS.",
         TEXT_NORMAL
     },
     {
         8,
         17,
-        "\x07  Tryck på R för Återställningskonsolen.",
+        "\x07  Tryck p† R f”r terst„llningskonsolen.",
         TEXT_NORMAL
     },
     {
         8,
         19,
-        "\x07  Tryck på ESC för att återvända till föregående sida.",
+        "\x07  Tryck p† ESC f”r att †terv„nda till f”reg†ende sida.",
         TEXT_NORMAL
     },
     {
         8,
         21,
-        "\x07  Tryck på ENTER för att starta om datorn.",
+        "\x07  Tryck p† ENTER f”r att starta om datorn.",
         TEXT_NORMAL
     },
     {
         0,
         0,
-        "   ESC = Gå till föregående sida  ENTER = Starta om datorn",
+        "   ESC = G† till f”reg†ende sida  ENTER = Starta om datorn",
         TEXT_STATUS
     },
     {
@@ -508,37 +508,37 @@ static MUI_ENTRY svSEComputerPageEntries[] =
     {
         6,
         8,
-        "Ändra vilken typ av dator som ska installeras.",
+        "ndra vilken typ av dator som ska installeras.",
         TEXT_NORMAL
     },
     {
         8,
         10,
-        "\x07  Använd UPP- och NED-piltangenterna för att välja önskad datortyp.",
+        "\x07  Anv„nd UPP- och NED-piltangenterna f”r att v„lja ”nskad datortyp.",
         TEXT_NORMAL
     },
     {
         8,
         11,
-        "   Tryck sen på ENTER.",
+        "   Tryck sen p† ENTER.",
         TEXT_NORMAL
     },
     {
         8,
         13,
-        "\x07  Tryck på ESC för att återvända till den föregående sidan utan",
+        "\x07  Tryck p† ESC f”r att †terv„nda till den f”reg†ende sidan utan",
         TEXT_NORMAL
     },
     {
         8,
         14,
-        "   att ändra datortypen.",
+        "   att „ndra datortypen.",
         TEXT_NORMAL
     },
     {
         0,
         0,
-        "   ENTER = Fortsätt   ESC = Återvänd   F3 = Avbryt",
+        "   ENTER = Forts„tt   ESC = terv„nd   F3 = Avbryt",
         TEXT_STATUS
     },
     {
@@ -560,7 +560,7 @@ static MUI_ENTRY svSEFlushPageEntries[] =
     {
         10,
         6,
-        "Datorn försäkrar sig om att all data är lagrad på hårdisken.",
+        "Datorn f”rs„krar sig om att all data „r lagrad p† h†rdisken.",
         TEXT_NORMAL
     },
     {
@@ -572,7 +572,7 @@ static MUI_ENTRY svSEFlushPageEntries[] =
     {
         10,
         9,
-        "När detta är färdigt kommer datorn att startas om automatiskt.",
+        "N„r detta „r f„rdigt kommer datorn att startas om automatiskt.",
         TEXT_NORMAL
     },
     {
@@ -600,31 +600,31 @@ static MUI_ENTRY svSEQuitPageEntries[] =
     {
         10,
         6,
-        "Installationen av ReactOS har inte slutförts.",
+        "Installationen av ReactOS har inte slutf”rts.",
         TEXT_NORMAL
     },
     {
         10,
         8,
-        "Se till att ingen floppy-disk finns i floppy-läsare A:",
+        "Se till att ingen floppy-disk finns i floppy-l„sare A:",
         TEXT_NORMAL
     },
     {
         10,
         9,
-        "och tag ur alla skivor från CD/DVD-läsarna.",
+        "och tag ur alla skivor fr†n CD/DVD-l„sarna.",
         TEXT_NORMAL
     },
     {
         10,
         11,
-        "Tryck på ENTER för att starta om datorn.",
+        "Tryck p† ENTER f”r att starta om datorn.",
         TEXT_NORMAL
     },
     {
         0,
         0,
-        "   Var god vänta ...",
+        "   Var god v„nta ...",
         TEXT_STATUS,
     },
     {
@@ -646,36 +646,36 @@ static MUI_ENTRY svSEDisplayPageEntries[] =
     {
         6,
         8,
-        "Ändra vilken typ av bildskärmsinställning som ska installeras.",
+        "ndra vilken typ av bildsk„rmsinst„llning som ska installeras.",
         TEXT_NORMAL
     },
     {   8,
         10,
-         "\x07  Använd UPP- och NED-piltangenterna för att välja önskad inställning.",
+         "\x07  Anv„nd UPP- och NED-piltangenterna f”r att v„lja ”nskad inst„llning.",
          TEXT_NORMAL
     },
     {
         8,
         11,
-        "   Tryck sedan på ENTER.",
+        "   Tryck sedan p† ENTER.",
         TEXT_NORMAL
     },
     {
         8,
         13,
-        "\x07  Tryck på ESC för att återvända till den föregående sidan utan",
+        "\x07  Tryck p† ESC f”r att †terv„nda till den f”reg†ende sidan utan",
         TEXT_NORMAL
     },
     {
         8,
         14,
-        "   att ändra bildskärmsinställningen.",
+        "   att „ndra bildsk„rmsinst„llningen.",
         TEXT_NORMAL
     },
     {
         0,
         0,
-        "   ENTER = Fortsätt   ESC = Återvänd   F3 = Avbryt",
+        "   ENTER = Forts„tt   ESC = terv„nd   F3 = Avbryt",
         TEXT_STATUS
     },
     {
@@ -697,25 +697,25 @@ static MUI_ENTRY svSESuccessPageEntries[] =
     {
         10,
         6,
-        "ReactOS har nu installerats på datorn.",
+        "ReactOS har nu installerats p† datorn.",
         TEXT_NORMAL
     },
     {
         10,
         8,
-        "Se till att ingen floppy-disk finns i floppy-läsare A:",
+        "Se till att ingen floppy-disk finns i floppy-l„sare A:",
         TEXT_NORMAL
     },
     {
         10,
         9,
-        "och tag ur alla skivor från CD/DVD-läsarna.",
+        "och tag ur alla skivor fr†n CD/DVD-l„sarna.",
         TEXT_NORMAL
     },
     {
         10,
         11,
-        "Tryck på ENTER för att starta om datorn.",
+        "Tryck p† ENTER f”r att starta om datorn.",
         TEXT_NORMAL
     },
     {
@@ -743,31 +743,31 @@ static MUI_ENTRY svSEBootPageEntries[] =
     {
         6,
         8,
-        "Setup misslyckades med att installera bootloadern på datorns",
+        "Setup misslyckades med att installera bootloadern p† datorns",
         TEXT_NORMAL
     },
     {
         6,
         9,
-        "hårddisk",
+        "h†rddisk",
         TEXT_NORMAL
     },
     {
         6,
         13,
-        "Var god sätt in en formatterad floppy-disk i läsare A: och",
+        "Var god s„tt in en formatterad floppy-disk i l„sare A: och",
         TEXT_NORMAL
     },
     {
         6,
         14,
-        "tryck på ENTER.",
+        "tryck p† ENTER.",
         TEXT_NORMAL,
     },
     {
         0,
         0,
-        "   ENTER = Fortsätt   F3 = Avbryt",
+        "   ENTER = Forts„tt   F3 = Avbryt",
         TEXT_STATUS
     },
     {
