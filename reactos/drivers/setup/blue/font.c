@@ -60,6 +60,7 @@ NTSTATUS ExtractFont(UINT CodePage, PUCHAR FontBitField)
     NTSTATUS           Status = STATUS_SUCCESS;
     CHAR               FileHeader[5];
     CHAR               Header[5];
+    CHAR               PsfHeader[3];
     CHAR               FileName[BUFFER_SIZE];
     ULONG              Length;
     IO_STATUS_BLOCK    IoStatusBlock;
@@ -75,6 +76,7 @@ NTSTATUS ExtractFont(UINT CodePage, PUCHAR FontBitField)
 
     RtlZeroMemory(FileHeader, sizeof(FileHeader));
     RtlZeroMemory(Header, sizeof(Header));
+    RtlZeroMemory(PsfHeader, sizeof(PsfHeader));
 
     RtlInitUnicodeString(&LinkName,
                          L"\\SystemRoot");
@@ -114,40 +116,71 @@ NTSTATUS ExtractFont(UINT CodePage, PUCHAR FontBitField)
                           FILE_OPEN, 
                           FILE_SYNCHRONOUS_IO_NONALERT,
                           NULL, 0);
-    if(NT_SUCCESS(Status)) {
+
+    ByteOffset.LowPart = ByteOffset.HighPart = 0;
+    if(NT_SUCCESS(Status))
+    {
         sprintf(Header, "PK%c%c", 3, 4);
-
         Status = ZwReadFile(Handle, NULL, NULL, NULL, &IoStatusBlock,
-                              FileHeader, 4, &ByteOffset, NULL);
+                            FileHeader, 4, &ByteOffset, NULL);
         ByteOffset.LowPart += 4;
-
         if(NT_SUCCESS(Status))
         {
             while(strcmp(FileHeader, Header) == 0)
             {
                 Status = ZwReadFile(Handle, NULL, NULL, NULL, &IoStatusBlock,
-                              &LocalHeader, sizeof(ZIP_LOCAL_HEADER), &ByteOffset, NULL);
+                                    &LocalHeader, sizeof(ZIP_LOCAL_HEADER), &ByteOffset, NULL);
                 ByteOffset.LowPart += sizeof(ZIP_LOCAL_HEADER);
+                /* DbgPrint("%ld\n", LocalHeader.FileNameLength); */
                 if (LocalHeader.FileNameLength < BUFFER_SIZE)
                 {
                     RtlZeroMemory(FileName, BUFFER_SIZE);
                     Status = ZwReadFile(Handle, NULL, NULL, NULL, &IoStatusBlock,
-                              FileName, LocalHeader.FileNameLength, &ByteOffset, NULL);
+                                        FileName, LocalHeader.FileNameLength, &ByteOffset, NULL);
                 }
                 ByteOffset.LowPart += LocalHeader.FileNameLength;
+                /* DbgPrint("%s\n", FileName); */
                 if (LocalHeader.ExtraFieldLength > 0)
                     ByteOffset.LowPart += LocalHeader.ExtraFieldLength;
                 if (atoi(FileName) == CodePage)
                 {
                     if (LocalHeader.CompressedSize == 2048)
+                    {
+                        /* we got it, raw font */
                         Status = ZwReadFile(Handle, NULL, NULL, NULL, &IoStatusBlock,
-                              FontBitField, LocalHeader.CompressedSize, &ByteOffset, NULL);
+                                            FontBitField, LocalHeader.CompressedSize, &ByteOffset, NULL);
+                        ZwClose(Handle);
+                        return STATUS_SUCCESS;
+                    }
+                    else if (LocalHeader.CompressedSize > 2048)
+                    {
+                        sprintf(PsfHeader, "%c%c", 0x36, 0x04); 
+                        /* maybe linux psf format */
+                        Status = ZwReadFile(Handle, NULL, NULL, NULL, &IoStatusBlock,
+                                            FileHeader, 4, &ByteOffset, NULL);
+                        ByteOffset.LowPart += 4;
+                        if(strncmp(FileHeader, PsfHeader, 2) == 0)
+                        {
+                           /* only load fonts with a size of 8
+                              and filemode 0 (256 characters, no unicode_data) */
+                            if ((FileHeader[3] == 8) && (FileHeader[4] == 0))
+                            {
+                                Status = ZwReadFile(Handle, NULL, NULL, NULL, &IoStatusBlock,
+                                                    FontBitField, 2048, &ByteOffset, NULL);
+                                ZwClose(Handle);
+                                return STATUS_SUCCESS;
+                            }
+                            else
+                                DbgPrint("Wrong fontsize or too many characters");
+                        }
+                    }
+                    /* invalid data */
                     ZwClose(Handle);
-                    return STATUS_SUCCESS;
+                    return STATUS_NO_MATCH;
                 }
                 ByteOffset.LowPart += LocalHeader.CompressedSize;
                 Status = ZwReadFile(Handle, NULL, NULL, NULL, &IoStatusBlock,
-                              FileHeader, 4, &ByteOffset, NULL);
+                                    FileHeader, 4, &ByteOffset, NULL);
                 ByteOffset.LowPart += 4;
                 DbgPrint("%s\n", FileHeader);
             }
