@@ -7,3 +7,4 @@ sources:
 http://opengrok.creo.hu/dragonfly/xref/src/share/syscons/fonts/cp850-8x8.fnt
 http://opengrok.creo.hu/dragonfly/xref/src/share/syscons/fonts/cp865-8x8.fnt
 http://opengrok.creo.hu/dragonfly/xref/src/share/syscons/fonts/cp866-8x8.fnt
+http://packages.debian.org/en/etch/console-data/gr8x8.psf
