@@ -140,7 +140,7 @@ static MUI_ENTRY itITIntroPageEntries[] =
     {
         6, 
         8, 
-        "Il setup di ReactOS è ancora in una fase preliminare.",
+        "Il setup di ReactOS Š ancora in una fase preliminare.",
         TEXT_NORMAL
     },
     {
@@ -158,13 +158,13 @@ static MUI_ENTRY itITIntroPageEntries[] =
     {
         8, 
         13,
-        "- Il setup non gestisce più di una partizione primaria per disco.",
+        "- Il setup non gestisce pi— di una partizione primaria per disco.",
         TEXT_NORMAL
     },
     {
         8,
         14,
-        "- Il setup non può eliminare una partizione primaria",
+        "- Il setup non pu• eliminare una partizione primaria",
         TEXT_NORMAL
     },
     {
@@ -176,7 +176,7 @@ static MUI_ENTRY itITIntroPageEntries[] =
     {
         8,
         16,
-        "- Il setup non può eliminare la prima partizione estesa",
+        "- Il setup non pu• eliminare la prima partizione estesa",
         TEXT_NORMAL
     },
     {
@@ -194,7 +194,7 @@ static MUI_ENTRY itITIntroPageEntries[] =
     {
         8, 
         19,
-        "- La verifica dei volumi non è stata ancora implementata.",
+        "- La verifica dei volumi non Š stata ancora implementata.",
         TEXT_NORMAL
     },
     {
@@ -318,13 +318,13 @@ static MUI_ENTRY itITLicensePageEntries[] =
     {           
         8,
         24,
-        "Questo software è libero; vedere il codice per le condizioni di copia.",
+        "Questo software Š libero; vedere il codice per le condizioni di copia.",
         TEXT_NORMAL
     },
     {           
         8,
         25,
-        "NON esiste garanzia; né di COMMERCIABILITÀ",
+        "NON esiste garanzia; n‚ di COMMERCIABILIT·",
         TEXT_NORMAL
     },
     {           
@@ -399,7 +399,7 @@ static MUI_ENTRY itITDevicePageEntries[] =
     {
         6,
         19,
-        "Può scegliere la configurazione con i tasti SU e GIÙ",
+        "Pu• scegliere la configurazione con i tasti SU e GIë",
         TEXT_NORMAL
     },
     {
@@ -451,7 +451,7 @@ static MUI_ENTRY itITRepairPageEntries[] =
     {
         6, 
         8,
-        "Il setup di ReactOS è ancora in una fase preliminare.",
+        "Il setup di ReactOS Š ancora in una fase preliminare.",
         TEXT_NORMAL
     },
     {
@@ -481,7 +481,7 @@ static MUI_ENTRY itITRepairPageEntries[] =
     {
         8, 
         19,
-        "\x07  Premere ESC tornare al menù principale.",
+        "\x07  Premere ESC tornare al men— principale.",
         TEXT_NORMAL
     },
     {
@@ -493,7 +493,7 @@ static MUI_ENTRY itITRepairPageEntries[] =
     {
         0, 
         0,
-        "ESC = Menù iniziale INVIO = Riavvio",
+        "ESC = Men— iniziale INVIO = Riavvio",
         TEXT_STATUS
     },
     {
@@ -520,7 +520,7 @@ static MUI_ENTRY itITComputerPageEntries[] =
     {
         8,
         10,
-        "\x07  Premere i tasti SU e GIÙ per scegliere il tipo.",
+        "\x07  Premere i tasti SU e GIë per scegliere il tipo.",
         TEXT_NORMAL
     },    
     {
@@ -578,7 +578,7 @@ static MUI_ENTRY itITFlushPageEntries[] =
     {
         10,
         9,
-        "Al termine, il computer verrà riavviato automaticamente",
+        "Al termine, il computer verr… riavviato automaticamente",
         TEXT_NORMAL
     },
     {
@@ -606,19 +606,19 @@ static MUI_ENTRY itITQuitPageEntries[] =
     {
         10,
         6,
-        "ReactOS non è stato installato completamente",
+        "ReactOS non Š stato installato completamente",
         TEXT_NORMAL
     },
     {
         10,
         8,
-        "Rimuovere il disco floppy dall'unità A: e",
+        "Rimuovere il disco floppy dall'unit… A: e",
         TEXT_NORMAL
     },
     {
         10,
         9,
-        "tutti i CD-ROMs dalle unità.",
+        "tutti i CD-ROMs dalle unit….",
         TEXT_NORMAL
     },
     {
@@ -657,7 +657,7 @@ static MUI_ENTRY itITDisplayPageEntries[] =
     },
     {   8,
         10,
-         "\x07  Premere i tasti SU e GIÙ per modificare il tipo.",
+         "\x07  Premere i tasti SU e GIë per modificare il tipo.",
          TEXT_NORMAL
     },
     {
@@ -709,13 +709,13 @@ static MUI_ENTRY itITSuccessPageEntries[] =
     {
         10,
         8,
-        "Rimuovere il disco dall'unità A: e",
+        "Rimuovere il disco dall'unit… A: e",
         TEXT_NORMAL
     },
     {
         10,
         9,
-        "tutti i CD-ROMs dalle unità.",
+        "tutti i CD-ROMs dalle unit….",
         TEXT_NORMAL
     },
     {
@@ -761,7 +761,7 @@ static MUI_ENTRY itITBootPageEntries[] =
     {
         6,
         13,
-        "Inserire un disco floppy formattato nell'unità A: e",
+        "Inserire un disco floppy formattato nell'unit… A: e",
         TEXT_NORMAL
     },
     {
@@ -888,13 +888,13 @@ static MUI_ENTRY itITInstallDirectoryEntries[] =
     {
         6,
         8,
-        "Setup installerà i file di ReactOS nella partizione selezionata. Scegliere una",
+        "Setup installer… i file di ReactOS nella partizione selezionata. Scegliere una",
         TEXT_NORMAL
     },
     {
         6,
         9,
-        "cartella dove volete che ReactOS verrà installato:",
+        "cartella dove volete che ReactOS verr… installato:",
         TEXT_NORMAL
     },
     {
@@ -1275,8 +1275,8 @@ MUI_ERROR itITErrorEntries[] =
 {
     {
         //ERROR_NOT_INSTALLED
-        "ReactOS non è installato completamente nel vostro\n"
-        "computer. Se esce adesso, dovrà eseguire il Setup\n"
+        "ReactOS non Š installato completamente nel vostro\n"
+        "computer. Se esce adesso, dovr… eseguire il Setup\n"
         "nuovamente per installare ReactOS.\n"
         "\n"
         "  \x07  Premere INVIO per continuare il setup.\n"
@@ -1290,7 +1290,7 @@ MUI_ERROR itITErrorEntries[] =
     },
     {
         //ERROR_NO_SOURCE_DRIVE
-        "Setup non ha trovato l'unità di origine.\n",
+        "Setup non ha trovato l'unit… di origine.\n",
         "INVIO = Riavviare il computer"
     },
     {
@@ -1310,7 +1310,7 @@ MUI_ERROR itITErrorEntries[] =
     },
     {
         //ERROR_DRIVE_INFORMATION
-        "Setup non ha potuto recuperare le informazioni dell'unità di sistema.\n",
+        "Setup non ha potuto recuperare le informazioni dell'unit… di sistema.\n",
         "INVIO = Riavviare il computer"
     },
     {
@@ -1341,9 +1341,9 @@ MUI_ERROR itITErrorEntries[] =
     {
         //ERROR_WARN_PARTITION,
         "Setup ha trovato che al meno un disco fisso contiene una tabella delle\n"
-        "partizioni incompatibile che non può essere gestita correttamente!\n"
+        "partizioni incompatibile che non pu• essere gestita correttamente!\n"
         "\n"
-        "Il creare o cancellare partizioni può distruggere la tabella delle partizioni.\n"
+        "Il creare o cancellare partizioni pu• distruggere la tabella delle partizioni.\n"
         "\n"
         "  \x07  Premere F3 per uscire dal Setup."
         "  \x07  Premere INVIO per continuare.",
@@ -1351,15 +1351,15 @@ MUI_ERROR itITErrorEntries[] =
     },
     {
         //ERROR_NEW_PARTITION,
-        "Non si può creare una nuova partizione all'interno\n"
-        "di una partizione già esistente!\n"
+        "Non si pu• creare una nuova partizione all'interno\n"
+        "di una partizione gi… esistente!\n"
         "\n"
         "  * Premere un tasto qualsiasi per continuare.",
         NULL
     },
     {
         //ERROR_DELETE_SPACE,
-        "Non si può cancellare spazio di disco non partizionato!\n"
+        "Non si pu• cancellare spazio di disco non partizionato!\n"
         "\n"
         "  * Premere un tasto qualsiasi per continuare.",
         NULL
@@ -1371,7 +1371,7 @@ MUI_ERROR itITErrorEntries[] =
     },
     {
         //ERROR_NO_FLOPPY,
-        "Non c'è un disco nell'unità A:.",
+        "Non c'Š un disco nell'unit… A:.",
         "ENTER = Continue"
     },
     {
