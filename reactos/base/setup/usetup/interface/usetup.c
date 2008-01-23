@@ -762,8 +762,7 @@ SetupStartPage(PINPUT_RECORD Ir)
     /* Start PnP thread */
     if (hPnpThread != INVALID_HANDLE_VALUE)
     {
-        //HACK: Commented out till the problem with CM is solved
-        //NtResumeThread(hPnpThread, NULL);
+        NtResumeThread(hPnpThread, NULL);
         hPnpThread = INVALID_HANDLE_VALUE;
     }
 
