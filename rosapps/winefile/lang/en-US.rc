@@ -18,12 +18,10 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
-#pragma code_page(850)
-
 
 /* Menu */
 
@@ -115,7 +113,7 @@ IDM_WINEFILE MENU FIXED IMPURE
 #endif
         MENUITEM SEPARATOR
         MENUITEM "&Minimize on run",            504
-        MENUITEM "&Save settings on exit",      511
+        MENUITEM "&Save settings on exit",      ID_VIEW_SAVESETTINGS
     }
 
 
@@ -137,7 +135,7 @@ IDM_WINEFILE MENU FIXED IMPURE
         MENUITEM "&Refresh\tF5",                ID_REFRESH
     }
 
-    POPUP "&?"  {
+    POPUP "&Help"  {
         MENUITEM "&Help Topics\tF1",            ID_HELP
         MENUITEM "Help &Search...\tF1",         ID_HELP
         MENUITEM "&Using Help\tF1",             ID_HELP_USING
@@ -180,7 +178,7 @@ FONT 8, "MS Shell Dlg"
 IDD_DIALOG_VIEW_TYPE DIALOG DISCARDABLE 15, 13, 161, 97
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "By File Type"
-FONT 8, "MS Shell Dlg"
+FONT 8, "MS Sans Serif"
 BEGIN
     LTEXT           "&Name:",-1,7,8,22,10
     EDITTEXT        IDC_VIEW_PATTERN,31,7,63,12,ES_AUTOHSCROLL
@@ -202,7 +200,7 @@ END
 IDD_DIALOG_PROPERTIES DIALOG DISCARDABLE  0, 0, 248, 215
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Properties for %s"
-FONT 8, "MS Shell Dlg"
+FONT 8, "MS Sans Serif"
 BEGIN
     DEFPUSHBUTTON   "OK",IDOK,191,7,50,14
     PUSHBUTTON      "Cancel",IDCANCEL,191,29,50,14
@@ -279,7 +277,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU \
 Lesser General Public License for more details.\n\
 You should have received a copy of the GNU Lesser General Public \
 License along with this library; if not, write to the Free Software \
-Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA"
+Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA"
 
 IDS_WARRANTY_CAPTION, "NO WARRANTY"
 IDS_WARRANTY,

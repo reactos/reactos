@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 
@@ -25,7 +25,7 @@
 #define IDI_WINEFILE                    100
 
 
-/* accellerators and menus */
+/* accelerators and menus */
 
 #define IDA_WINEFILE                    101
 #define IDM_WINEFILE                    102
@@ -63,6 +63,7 @@
 #define ID_VIEW_TOOL_BAR                508
 #define ID_VIEW_DRIVE_BAR               507
 #define ID_VIEW_STATUSBAR               503
+#define ID_VIEW_SAVESETTINGS            511
 
 #define ID_ABOUT                        1803
 #define ID_REFRESH                      1704
@@ -139,7 +140,6 @@
 #define IDS_LICENSE                     1301
 #define IDS_WARRANTY_CAPTION            1302
 #define IDS_WARRANTY                    1303
-
 
 /* range for drive bar command ids: 0x9000..0x90FF */
 

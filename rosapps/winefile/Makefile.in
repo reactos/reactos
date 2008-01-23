@@ -1,0 +1,19 @@
+EXTRADEFS = -D__WINE__ -DUNICODE
+TOPSRCDIR = @top_srcdir@
+TOPOBJDIR = ../..
+SRCDIR    = @srcdir@
+VPATH     = @srcdir@
+MODULE    = winefile.exe
+APPMODE   = -mwindows
+IMPORTS   = shell32 comdlg32 comctl32 ole32 mpr version user32 gdi32 advapi32 kernel32
+EXTRALIBS = -luuid
+
+C_SRCS = \
+	splitpath.c \
+	winefile.c
+
+RC_SRCS = rsrc.rc
+
+@MAKE_PROG_RULES@
+
+@DEPENDENCIES@  # everything below this line is overwritten by make depend

@@ -3,7 +3,7 @@
  * Portuguese Language Support
  *
  * Copyright 2003 Marcelo Duarte
- * Copyright 2004 Américo José Melo
+ * Copyright 2004,2007 Américo José Melo
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -17,13 +17,13 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 
 /* Menu */
 
-LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
+LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE_BRAZILIAN
 
 IDM_WINEFILE MENU FIXED IMPURE
 {
@@ -147,7 +147,6 @@ IDM_WINEFILE MENU FIXED IMPURE
     }
 }
 
-
 LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE
 
 IDM_WINEFILE MENU FIXED IMPURE
@@ -156,7 +155,7 @@ IDM_WINEFILE MENU FIXED IMPURE
         MENUITEM "A&brir\tEnter",               ID_ACTIVATE
         MENUITEM "&Mover...\tF7",               ID_FILE_MOVE
         MENUITEM "&Copiar...\tF8",              ID_FILE_COPY
-        MENUITEM "&Na Area de Transferencia...\tF9",        118
+        MENUITEM "&Na Area de Transferência...\tF9",        118
         MENUITEM "E&xcluir\tDel",               ID_FILE_DELETE
         MENUITEM "Re&nomear...",                109
         MENUITEM "&Propriedades...\tAlt+Enter", ID_EDIT_PROPERTIES
@@ -170,7 +169,7 @@ IDM_WINEFILE MENU FIXED IMPURE
         MENUITEM SEPARATOR
         MENUITEM "Cri&ar pasta...",             111
         MENUITEM "P&esquisar...",               104
-        MENUITEM "Selecionar fichei&ros...",    116
+        MENUITEM "Seleccionar fichei&ros...",    116
         MENUITEM SEPARATOR
 #ifndef _NO_EXTENSIONS
         MENUITEM "Sai&r\tAlt+X",                ID_FILE_EXIT
@@ -188,8 +187,8 @@ IDM_WINEFILE MENU FIXED IMPURE
         MENUITEM "&Gerar disco de sistema...", -1   /*TODO*/
 #endif
         MENUITEM SEPARATOR
-        MENUITEM "Conecta&r unidade de rede",   ID_CONNECT_NETWORK_DRIVE
-        MENUITEM "&Desconectar unidade de rede",ID_DISCONNECT_NETWORK_DRIVE
+        MENUITEM "Liga&r unidade de rede",   ID_CONNECT_NETWORK_DRIVE
+        MENUITEM "&Desligar unidade de rede",ID_DISCONNECT_NETWORK_DRIVE
         MENUITEM SEPARATOR
         MENUITEM "&Partilhar como...",          254
         MENUITEM "&Remover partilha...",        255
@@ -208,8 +207,8 @@ IDM_WINEFILE MENU FIXED IMPURE
 
     POPUP "&Exibir"  {
         MENUITEM "Á&rvore e pasta",             413
-        MENUITEM "S&omente árvore",             411
-        MENUITEM "So&mente pasta",              412
+        MENUITEM "A&penas árvore",             411
+        MENUITEM "Ap&enas pasta",              412
         MENUITEM SEPARATOR
         MENUITEM "&Dividir",                    ID_VIEW_SPLIT
         MENUITEM SEPARATOR
@@ -227,14 +226,14 @@ IDM_WINEFILE MENU FIXED IMPURE
 
     POPUP "&Opções"  {
         MENUITEM "&Confirmação...",             501
-        MENUITEM "&Fonte...",                   ID_SELECT_FONT
+        MENUITEM "&Tipo de Letra...",                   ID_SELECT_FONT
         MENUITEM "&Personalizar barra de ferramentas...", 512
         MENUITEM SEPARATOR
         MENUITEM "Barra d&e ferramentas",       ID_VIEW_TOOL_BAR, CHECKED
         MENUITEM "&Barra de unidades",          ID_VIEW_DRIVE_BAR, CHECKED
         MENUITEM "B&arra de e&stado",           ID_VIEW_STATUSBAR, CHECKED
 #ifndef _NO_EXTENSIONS
-        MENUITEM "Ecrã Complecto\tCtrl+Shift+S",    ID_VIEW_FULLSCREEN
+        MENUITEM "Ecrã Completo\tCtrl+Shift+S",    ID_VIEW_FULLSCREEN
 #endif
         MENUITEM SEPARATOR
         MENUITEM "&Minimizar durante o uso",    504
@@ -244,7 +243,7 @@ IDM_WINEFILE MENU FIXED IMPURE
 
     POPUP "&Segurança"  {
         MENUITEM "&Acesso...",                  605
-        MENUITEM "&Logging...",                 606
+        MENUITEM "&Autenticação...",                 606
         MENUITEM "&Dono...",                    607
     }
 
@@ -263,7 +262,7 @@ IDM_WINEFILE MENU FIXED IMPURE
     POPUP "Aj&uda"  {
         MENUITEM "&Tópicos da ajuda\tF1",       ID_HELP
         MENUITEM "Pesquisar...",                ID_HELP
-        MENUITEM "&Usando a ajuda",             ID_HELP_USING
+        MENUITEM "&Usar a ajuda",             ID_HELP_USING
         MENUITEM SEPARATOR
 #ifdef __WINE__
         MENUITEM "Acerca do &Wine...",          ID_ABOUT_WINE
@@ -272,7 +271,7 @@ IDM_WINEFILE MENU FIXED IMPURE
 }
 
 
-LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE
+LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
 
 IDD_EXECUTE DIALOG FIXED IMPURE 15, 13, 210, 63
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
@@ -288,6 +287,9 @@ FONT 8, "MS Shell Dlg"
     PUSHBUTTON      "&Ajuda", 254, 158, 43, 47, 14
 }
 
+
+LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE_BRAZILIAN
+
 IDD_SELECT_DESTINATION DIALOG FIXED IMPURE 15, 13, 210, 63
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Selecionar destino"
@@ -301,11 +303,40 @@ FONT 8, "MS Shell Dlg"
     PUSHBUTTON      "&Procurar", 254, 158, 43, 47, 14
 }
 
+LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE
+
+IDD_SELECT_DESTINATION DIALOG FIXED IMPURE 15, 13, 210, 63
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Selecionar destino"
+FONT 8, "MS Shell Dlg"
+{
+    CONTROL         "", 101, "Static", SS_SIMPLE|SS_NOPREFIX, 3, 6, 162, 10
+    CONTROL         "&Localização:", -1, "Static", SS_LEFTNOWORDWRAP|WS_GROUP, 3, 18, 60, 10
+    EDITTEXT        201, 3, 29, 134, 12, ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK", 1, 158, 6, 47, 14
+    PUSHBUTTON      "Cancelar", 2, 158, 23, 47, 14
+    PUSHBUTTON      "&Procurar", 254, 158, 43, 47, 14
+}
+
+
+LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE_BRAZILIAN
+
 STRINGTABLE
 {
     IDS_FONT_SEL_DLG_NAME   "Aplicando configurações de fonte"
     IDS_FONT_SEL_ERROR      "Erro enquanto seleciona nova fonte."
 }
+
+LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE
+
+STRINGTABLE
+{
+    IDS_FONT_SEL_DLG_NAME   "A aplicar configurações do tipo de letra"
+    IDS_FONT_SEL_ERROR      "Erro ao seleccionar novo tipo de letra."
+}
+
+
+LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE_BRAZILIAN
 
 STRINGTABLE
 {
@@ -321,6 +352,24 @@ STRINGTABLE
  IDS_WINE_FILE              "Wine File"
 }
 
+LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE
+
+STRINGTABLE
+{
+ IDS_WINEFILE               "Winefile"
+ IDS_ERROR                  "Erro"
+ IDS_ROOT_FS                "root fs"
+ IDS_UNIXFS                 "unixfs"
+ IDS_DESKTOP                "Ecrã"
+ IDS_SHELL                  "Linha de Comandos"
+ IDS_TITLEFMT               "%s - %s"
+ IDS_NO_IMPL                "Ainda não implementado"
+ IDS_WINE                   "WINE"
+ IDS_WINE_FILE              "Ficheiro Wine"
+}
+
+LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
+
 STRINGTABLE
 {
  IDS_COL_NAME               "Nome"
@@ -328,7 +377,7 @@ STRINGTABLE
  IDS_COL_CDATE              "CData"
  IDS_COL_ADATE              "AData"
  IDS_COL_MDATE              "MData"
- IDS_COL_IDX                "Index/Inode"
+ IDS_COL_IDX                "Índice/Inode"
  IDS_COL_LINKS              "Ligações"
  IDS_COL_ATTR               "Atributos"
  IDS_COL_SEC                "Segurança"

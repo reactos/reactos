@@ -6,7 +6,7 @@
  * Copyright 2002 Steven Edwards
  * Copyright 2002 Alexandre Julliard
  * Copyright 2003 Sylvain Petreolle
- * Copyright 2005 Jonathan Ernst
+ * Copyright 2005-2006 Jonathan Ernst
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -20,7 +20,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
@@ -137,14 +137,14 @@ IDM_WINEFILE MENU FIXED IMPURE
         MENUITEM "&Actualiser\tF5",             ID_REFRESH
     }
 
-    POPUP "&Aide"  {
+    POPUP "Aid&e"  {
         MENUITEM "&Sommaire de l'aide\tF1",     ID_HELP
         MENUITEM "&Rechercher dans l'aide\tF1", ID_HELP
         MENUITEM "&Utiliser l'aide\tF1",        ID_HELP_USING
         MENUITEM SEPARATOR
-        MENUITEM "&A propos de Winefile...",    ID_ABOUT
+        MENUITEM "À &propos de Winefile",    ID_ABOUT
 #ifdef __WINE__
-        MENUITEM "A propos de &Wine...",        ID_ABOUT_WINE
+        MENUITEM "À propos de &Wine",        ID_ABOUT_WINE
 #endif
     }
 }
@@ -161,7 +161,7 @@ FONT 8, "MS Shell Dlg"
     CONTROL         "Sous forme d'icône", 214, "Button", BS_AUTOCHECKBOX|WS_TABSTOP,3, 45, 71, 12
     DEFPUSHBUTTON   "OK", 1, 158, 6, 47, 14
     PUSHBUTTON      "Annuler", 2, 158, 23, 47, 14
-    PUSHBUTTON      "&Aide", 254, 158, 43, 47, 14
+    PUSHBUTTON      "Aid&e", 254, 158, 43, 47, 14
 }
 
 IDD_SELECT_DESTINATION DIALOG FIXED IMPURE 15, 13, 210, 63
@@ -170,17 +170,17 @@ CAPTION "Sélectionner la destination"
 FONT 8, "MS Shell Dlg"
 {
     CONTROL         "", 101, "Static", SS_SIMPLE|SS_NOPREFIX, 3, 6, 162, 10
-    CONTROL         "&Dossier:", -1, "Static", SS_LEFTNOWORDWRAP|WS_GROUP, 3, 18, 60, 10
+    CONTROL         "&Dossier :", -1, "Static", SS_LEFTNOWORDWRAP|WS_GROUP, 3, 18, 60, 10
     EDITTEXT        201, 3, 29, 134, 12, ES_AUTOHSCROLL
     DEFPUSHBUTTON   "OK", 1, 158, 6, 47, 14
     PUSHBUTTON      "Annuler", 2, 158, 23, 47, 14
-    PUSHBUTTON      "Pa&rcourir...", 254, 158, 43, 47, 14
+    PUSHBUTTON      "&Parcourir...", 254, 158, 43, 47, 14
 }
 
 IDD_DIALOG_VIEW_TYPE DIALOG DISCARDABLE 15, 13, 161, 97
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Par type de fichier"
-FONT 8, "MS Shell Dlg"
+FONT 8, "MS Sans Serif"
 BEGIN
     LTEXT           "&Name:",-1,7,8,22,10
     EDITTEXT        IDC_VIEW_PATTERN,31,7,63,12,ES_AUTOHSCROLL
@@ -202,21 +202,21 @@ END
 IDD_DIALOG_PROPERTIES DIALOG DISCARDABLE  0, 0, 248, 215
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Propriétés de %s"
-FONT 8, "MS Shell Dlg"
+FONT 8, "MS Sans Serif"
 BEGIN
     DEFPUSHBUTTON   "OK",IDOK,191,7,50,14
     PUSHBUTTON      "Annuler",IDCANCEL,191,29,50,14
-    LTEXT           "Nom du &fichier:",-1,7,7,59,9
+    LTEXT           "Nom du &fichier :",-1,7,7,59,9
     EDITTEXT        IDC_STATIC_PROP_FILENAME,71,7,120,9,ES_READONLY | NOT WS_BORDER | WS_TABSTOP
-    LTEXT           "Chemin com&plet:",-1,7,18,59,9
+    LTEXT           "Chemin com&plet :",-1,7,18,59,9
     EDITTEXT        IDC_STATIC_PROP_PATH,71,18,120,9, ES_READONLY | NOT WS_BORDER | WS_TABSTOP
-    LTEXT           "Modification:",-1,7,29,59,9
+    LTEXT           "Modification :",-1,7,29,59,9
     EDITTEXT        IDC_STATIC_PROP_LASTCHANGE,71,29,120,9,ES_READONLY | NOT WS_BORDER | WS_TABSTOP
-    LTEXT           "Version:",-1,7,40,59,9
+    LTEXT           "Version :",-1,7,40,59,9
     EDITTEXT        IDC_STATIC_PROP_VERSION,71,40,120,9,ES_READONLY | NOT WS_BORDER | WS_TABSTOP
     LTEXT           "Cop&yright:",-1,7,51,59,9
     EDITTEXT        IDC_STATIC_PROP_COPYRIGHT,71,51,120,9,ES_READONLY | NOT WS_BORDER | WS_TABSTOP
-    LTEXT           "Taille:",-1,7,62,59,9
+    LTEXT           "Taille :",-1,7,62,59,9
     EDITTEXT        IDC_STATIC_PROP_SIZE,71,62,120,9,ES_READONLY | NOT WS_BORDER | WS_TABSTOP
     GROUPBOX        "Attributs",-1,7,79,158,46
     CONTROL         "Lectu&re seule",IDC_CHECK_READONLY,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,17,91,68,9
@@ -242,7 +242,7 @@ STRINGTABLE
     IDS_ERROR               "Erreur"
     IDS_ROOT_FS             "root fs"
     IDS_UNIXFS              "unixfs"
-    IDS_DESKTOP             "Desktop"
+    IDS_DESKTOP             "Bureau"
     IDS_SHELL               "Shell"
     IDS_TITLEFMT            "%s - %s"
     IDS_NO_IMPL             "Pas encore implémenté"
@@ -263,4 +263,31 @@ STRINGTABLE
     IDS_COL_SEC             "Sécurité"
 
     IDS_FREE_SPACE_FMT      "%s sur %s libre"
+}
+
+STRINGTABLE
+{
+IDS_LICENSE_CAPTION,            "LICENCE"
+IDS_LICENSE,
+"Cette bibliothèque est libre, vous pouvez la redistribuer et/ou \
+la modifier selon les termes de la Licence Publique Générale GNU \
+Limitée publiée par la Free Software Foundation (version 2.1 ou \
+bien toute autre version ultérieure choisie par vous).\n\
+Cette bibliothèque est distribuée car potentiellement utile, \
+mais SANS AUCUNE GARANTIE, ni explicite ni implicite, y compris \
+les garanties de commercialisation ou d'adaptation dans un but \
+spécifique. Reportez-vous à la Licence Publique Générale GNU \
+Limitée pour plus de détails.\n\
+Vous devez avoir reçu une copie de la Licence Publique Générale \
+GNU Limitée en même temps que cette bibliothèque ; si ce n'est pas \
+le cas, écrivez à la Free Software Foundation, Inc., 51 Franklin St, \
+Fifth Floor, Boston, MA 02111-1301, États-Unis."
+
+IDS_WARRANTY_CAPTION, "AUCUNE GARANTIE"
+IDS_WARRANTY,
+"Cette bibliothèque est distribuée car potentiellement utile, \
+mais SANS AUCUNE GARANTIE, ni explicite ni implicite, y compris \
+les garanties de commercialisation ou d'adaptation dans un but \
+spécifique. Reportez-vous à la Licence Publique Générale GNU \
+Limitée pour plus de détails."
 }

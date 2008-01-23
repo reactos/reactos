@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #include "winefile.h"
@@ -33,18 +33,18 @@ void _wsplitpath(const WCHAR* path, WCHAR* drv, WCHAR* dir, WCHAR* name, WCHAR* 
 		if (drv) {
 			*drv++ = *path++;
 			*drv++ = *path++;
-			*drv = L'\0';
+			*drv = '\0';
 		}
 	} else if (drv)
-		*drv = L'\0';
+		*drv = '\0';
 
 	/* search for end of string or stream separator */
-	for(end=path; *end && *end!=L':'; )
+	for(end=path; *end && *end!=':'; )
 		end++;
 
 	/* search for begin of file extension */
-	for(p=end; p>path && *--p!=L'\\' && *p!=L'/'; )
-		if (*p == L'.') {
+	for(p=end; p>path && *--p!='\\' && *p!='/'; )
+		if (*p == '.') {
 			end = p;
 			break;
 		}
@@ -64,14 +64,14 @@ void _wsplitpath(const WCHAR* path, WCHAR* drv, WCHAR* dir, WCHAR* name, WCHAR* 
 		for(s=p; s<end; )
 			*name++ = *s++;
 
-		*name = L'\0';
+		*name = '\0';
 	}
 
 	if (dir) {
 		for(s=path; s<p; )
 			*dir++ = *s++;
 
-		*dir = L'\0';
+		*dir = '\0';
 	}
 }
 

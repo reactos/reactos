@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #define WIN32_LEAN_AND_MEAN
@@ -30,7 +30,6 @@
 
 #define NONAMELESSUNION
 #include <windows.h>
-#include <windowsx.h>
 #include <commctrl.h>
 #include <commdlg.h>
 
@@ -46,10 +45,6 @@
 
 #ifndef __WINE__
 #include <malloc.h> /* for alloca() */
-
- // ugly hack to use alloca() while keeping Wine's developers happy
-#define HeapAlloc(h,f,s) alloca(s)
-#define HeapFree(h,f,p)
 #endif
 
 #include <shellapi.h>   /* for ShellExecute() */
@@ -101,7 +96,6 @@ enum IMAGE {
 
 #define COLOR_COMPRESSED    RGB(0,0,255)
 #define COLOR_SELECTION     RGB(0,0,128)
-#define COLOR_SELECTION_TXT RGB(255,255,255)
 
 #ifdef _NO_EXTENSIONS
 #define COLOR_SPLITBAR      WHITE_BRUSH
@@ -110,8 +104,15 @@ enum IMAGE {
 #endif
 
 #define FRM_CALC_CLIENT     0xBF83
-#define Frame_CalcFrameClient(hwnd, prt) ((BOOL)SNDMSG(hwnd, FRM_CALC_CLIENT, 0, (LPARAM)(PRECT)prt))
+#define Frame_CalcFrameClient(hwnd, prt) (SendMessageW(hwnd, FRM_CALC_CLIENT, 0, (LPARAM)(PRECT)prt))
 
+typedef struct
+{
+  int       start_x;
+  int       start_y;
+  int       width;
+  int       height;
+} windowOptions;
 
 typedef struct
 {
@@ -137,7 +138,8 @@ typedef struct
 
   TCHAR     drives[BUFFER_LEN];
   BOOL      prescan_node;   /*TODO*/
-
+  BOOL      saveSettings;
+  
 #ifdef _SHELL_FOLDERS
   IShellFolder* iDesktop;
   IMalloc*      iMalloc;
