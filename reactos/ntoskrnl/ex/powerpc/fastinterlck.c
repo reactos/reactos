@@ -67,7 +67,7 @@ ExfInterlockedCompareExchange64(
   IN PLONGLONG  Exchange,
   IN PLONGLONG  Comperand)
 {
-    return 0ll;
+    return _InterlockedCompareExchange64(Destination, *Exchange, *Comperand);
 }
 
 NTKERNELAPI
@@ -78,7 +78,13 @@ ExfInterlockedInsertHeadList(
   IN PLIST_ENTRY  ListEntry,
   IN PKSPIN_LOCK  Lock)
 {
-    return NULL;
+    KIRQL OldIrql;
+    PLIST_ENTRY OldHead = NULL;
+    KeAcquireSpinLock(Lock, &OldIrql);
+    if (!IsListEmpty(ListHead)) OldHead = ListEntry->Flink;
+    InsertHeadList(ListHead, ListEntry);
+    KeReleaseSpinLock(Lock, OldIrql);
+    return OldHead;
 }
 
 NTKERNELAPI
@@ -89,7 +95,13 @@ ExfInterlockedInsertTailList(
   IN PLIST_ENTRY  ListEntry,
   IN PKSPIN_LOCK  Lock)
 {
-    return NULL;
+    KIRQL OldIrql;
+    PLIST_ENTRY OldHead = NULL;
+    KeAcquireSpinLock(Lock,&OldIrql);
+    if (!IsListEmpty(ListHead)) OldHead = ListEntry->Blink;
+    InsertTailList(ListHead, ListEntry);
+    KeReleaseSpinLock(Lock, OldIrql);
+    return OldHead;
 }
 
 NTKERNELAPI
@@ -129,7 +141,7 @@ FASTCALL
 Exfi386InterlockedIncrementLong(
   IN PLONG  Addend)
 {
-    return 0;
+    return InterlockedIncrement(Addend);
 }
 
 NTKERNELAPI
@@ -138,7 +150,7 @@ FASTCALL
 Exfi386InterlockedDecrementLong(
   IN PLONG  Addend)
 {
-    return 0;
+    return InterlockedDecrement(Addend);
 }
 
 NTKERNELAPI
@@ -148,7 +160,7 @@ Exfi386InterlockedExchangeUlong(
   IN PULONG  Target,
   IN ULONG  Value)
 {
-    return 0;
+    return (ULONG)_InterlockedExchange((PLONG)Target, Value);
 }
 
 NTKERNELAPI
@@ -159,9 +171,16 @@ ExInterlockedAddLargeInteger(
   IN LARGE_INTEGER  Increment,
   IN PKSPIN_LOCK  Lock)
 {
-    LARGE_INTEGER Result;
-    Result.QuadPart = 0;
-    return Result;
+    LARGE_INTEGER tmp, comp, outnum;
+
+    do {
+        tmp.QuadPart = Addend->QuadPart + Increment.QuadPart;
+        comp = *Addend;
+        outnum.QuadPart = _InterlockedCompareExchange64
+            (&Addend->QuadPart, tmp.QuadPart, comp.QuadPart);
+    } while(outnum.QuadPart != comp.QuadPart);
+
+    return outnum;
 }
 
 NTKERNELAPI
@@ -172,7 +191,7 @@ ExInterlockedAddUlong(
   IN ULONG  Increment,
   PKSPIN_LOCK  Lock)
 {
-    return 0;
+    return (ULONG)_InterlockedExchangeAdd((PLONG)Addend, Increment);
 }
 
 #undef ExInterlockedIncrementLong
@@ -183,7 +202,7 @@ ExInterlockedIncrementLong(
     IN PLONG  Addend,
     IN PKSPIN_LOCK Lock)
 {
-    return 0;
+    return _InterlockedIncrement(Addend);
 }
 
 #undef ExInterlockedDecrementLong
@@ -194,7 +213,7 @@ ExInterlockedDecrementLong(
     IN PLONG  Addend,
     IN PKSPIN_LOCK Lock)
 {
-    return 0;
+    return _InterlockedDecrement(Addend);
 }
 
 NTKERNELAPI
@@ -205,7 +224,7 @@ ExInterlockedExchangeUlong(
   IN ULONG  Value,
   IN PKSPIN_LOCK Lock)
 {
-    return 0;
+    return (ULONG)_InterlockedExchange((PLONG)Target, Value);
 }
 
 NTKERNELAPI
@@ -216,7 +235,13 @@ ExInterlockedInsertHeadList(
   IN PLIST_ENTRY  ListEntry,
   IN PKSPIN_LOCK  Lock)
 {
-    return NULL;
+    KIRQL OldIrql;
+    PLIST_ENTRY OldHead = NULL;
+    KeAcquireSpinLock(Lock,&OldIrql);
+    if (!IsListEmpty(ListHead)) OldHead = ListEntry->Flink;
+    InsertHeadList(ListHead, ListEntry);
+    KeReleaseSpinLock(Lock, OldIrql);
+    return OldHead;
 }
 
 NTKERNELAPI
@@ -227,7 +252,13 @@ ExInterlockedInsertTailList(
   IN PLIST_ENTRY  ListEntry,
   IN PKSPIN_LOCK  Lock)
 {
-    return NULL;
+    KIRQL OldIrql;
+    PLIST_ENTRY OldHead = NULL;
+    KeAcquireSpinLock(Lock,&OldIrql);
+    if (!IsListEmpty(ListHead)) OldHead = ListEntry->Blink;
+    InsertTailList(ListHead, ListEntry);
+    KeReleaseSpinLock(Lock, OldIrql);
+    return OldHead;
 }
 
 NTKERNELAPI
