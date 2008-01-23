@@ -659,6 +659,11 @@ LanguagePage(PINPUT_RECORD Ir)
 
             return INTRO_PAGE;
         }
+        else if ((Ir->Event.KeyEvent.uChar.AsciiChar > 0x60) && (Ir->Event.KeyEvent.uChar.AsciiChar < 0x7b))
+        {
+            /* a-z */
+            GenericListKeyPress (LanguageList, Ir->Event.KeyEvent.uChar.AsciiChar);
+        }
     }
 
     return INTRO_PAGE;

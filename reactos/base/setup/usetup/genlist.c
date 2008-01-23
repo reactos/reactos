@@ -312,6 +312,29 @@ ScrollUpGenericList (PGENERIC_LIST List)
     }
 }
 
+VOID
+GenericListKeyPress (PGENERIC_LIST GenericList, CHAR AsciChar)
+{
+  PGENERIC_LIST_ENTRY ListEntry;
+  PLIST_ENTRY Entry;
+
+  Entry = GenericList->ListHead.Flink;
+  while (Entry != &GenericList->ListHead)
+    {
+      ListEntry = CONTAINING_RECORD (Entry, GENERIC_LIST_ENTRY, Entry);
+      if (strlen(ListEntry->Text) > 0)
+        {
+          if (tolower(ListEntry->Text[0]) == AsciChar)
+            {
+              GenericList->CurrentEntry = CONTAINING_RECORD (Entry, GENERIC_LIST_ENTRY, Entry);
+              break;
+            }
+        }
+      Entry = Entry->Flink;
+    }
+  if (Entry)
+    DrawListEntries(GenericList);
+}
 
 PGENERIC_LIST_ENTRY
 GetGenericListEntry(PGENERIC_LIST List)
