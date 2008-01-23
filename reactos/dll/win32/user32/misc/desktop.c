@@ -413,11 +413,7 @@ SystemParametersInfoW(UINT uiAction,
 
       /* Set the wallpaper bitmap */
       if(!NtUserSystemParametersInfo(SPI_SETDESKWALLPAPER, 0, &hNewWallpaper, fWinIni & SPIF_SENDCHANGE))
-      {
-        if(hNewWallpaper != NULL)
-          DeleteObject(hNewWallpaper);
         return FALSE;
-      }
       /* Do not use the bitmap handle anymore, it doesn't belong to our process anymore! */
       Ret = TRUE;
       if(fWinIni & SPIF_UPDATEINIFILE)
