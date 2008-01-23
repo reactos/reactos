@@ -223,23 +223,8 @@ FrLdrStartup(ULONG Magic)
                     LdrPEFixupImports
                         ((PVOID)reactos_modules[i].ModStart,
                          (PCHAR)reactos_modules[i].String);
-                else
-                {
-                    printf("Module header for %s was [%x:%x]\n",
-                           reactos_modules[i].String,
-                           reactos_modules[i].ModStart,
-                           reactos_modules[i].ModEnd);
-                    reactos_modules[i].ModStart += 
-                        (KernelBase & 0xffffff) - (ULONG_PTR)KernelMemory;
-                    reactos_modules[i].ModEnd   += 
-                        (KernelBase & 0xffffff) - (ULONG_PTR)KernelMemory;
-                    printf("Module header for %s now [%x:%x]\n",
-                           reactos_modules[i].String,
-                           reactos_modules[i].ModStart,
-                           reactos_modules[i].ModEnd);
-                }
             }
-        }
+        }        
     }
 
     printf("Starting mmu\n");
@@ -263,7 +248,7 @@ FrLdrStartup(ULONG Magic)
         FrLdrAddPageMapping(&memmap, 1, i, 0);
     }
     
-    printf("Mapping %d Heap Pages\n", i);
+    printf("KernelBase %x\n", KernelBase);
 
     /* Heap pages -- this gets the entire freeldr heap */
     for( i = 0; i < NumberOfEntries; i++ ) {

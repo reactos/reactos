@@ -10,9 +10,10 @@
 /* INCLUDES ******************************************************************/
 
 #include <ntoskrnl.h>
-#define NDEBUG
+//#define NDEBUG
 #include <debug.h>
 #include <ndk/powerpc/ketypes.h>
+#include <ppcmmu/mmu.h>
 
 typedef struct _KSWITCHFRAME
 {
@@ -41,6 +42,7 @@ typedef struct _KKINIT_FRAME
 {
     KSWITCHFRAME CtxSwitchFrame;
     KSTART_FRAME StartFrame;
+    KTRAP_FRAME TrapFrame;
     FX_SAVE_AREA FxSaveArea;
 } KKINIT_FRAME, *PKKINIT_FRAME;
 
@@ -60,7 +62,17 @@ KePPCInitThreadWithContext(IN PKTHREAD Thread,
     PKTRAP_FRAME TrapFrame;
     CONTEXT LocalContext;
     PCONTEXT Context = NULL;
-    ULONG ContextFlags;
+    ppc_map_info_t pagemap[16];
+    PETHREAD EThread = (PETHREAD)Thread;
+    PEPROCESS Process = EThread->ThreadsProcess;
+    ULONG ContextFlags, i, pmsize = sizeof(pagemap) / sizeof(pagemap[0]);
+    
+    DPRINT("Thread: %08x ContextPointer: %08x SystemRoutine: %08x StartRoutine: %08x StartContext: %08x\n",
+           Thread,
+           ContextPointer,
+           SystemRoutine,
+           StartRoutine,
+           StartContext);
 
     /* Check if this is a With-Context Thread */
     if (ContextPointer)
@@ -110,6 +122,15 @@ KePPCInitThreadWithContext(IN PKTHREAD Thread,
 
         /* Tell KiThreadStartup of that too */
         StartFrame->UserThread = TRUE;
+
+        Thread->TrapFrame = TrapFrame;
+
+        DPRINT("Thread %08x Iar %08x Msr %08x Gpr1 %08x Gpr3 %08x\n",
+               Thread,
+               TrapFrame->Iar,
+               TrapFrame->Msr,
+               TrapFrame->Gpr1,
+               TrapFrame->Gpr3);
     }
     else
     {
@@ -131,6 +152,25 @@ KePPCInitThreadWithContext(IN PKTHREAD Thread,
 
         /* Tell KiThreadStartup of that too */
         StartFrame->UserThread = FALSE;
+
+        /* Setup the Trap Frame */
+        TrapFrame = &InitFrame->TrapFrame;
+        Thread->TrapFrame = TrapFrame;
+
+        TrapFrame->OldIrql = PASSIVE_LEVEL;
+        TrapFrame->Iar = (ULONG)SystemRoutine;
+        TrapFrame->Msr = 0xb030;
+        TrapFrame->Gpr1 = ((ULONG)&InitFrame->StartFrame) - 0x200;
+        TrapFrame->Gpr3 = (ULONG)StartRoutine;
+        TrapFrame->Gpr4 = (ULONG)StartContext;
+        __asm__("mr %0,13" : "=r" (((PULONG)&TrapFrame->Gpr0)[13]));
+
+        DPRINT("Thread %08x Iar %08x Msr %08x Gpr1 %08x Gpr3 %08x\n",
+               Thread,
+               TrapFrame->Iar,
+               TrapFrame->Msr,
+               TrapFrame->Gpr1,
+               TrapFrame->Gpr3);
     }
 
     /* Now setup the remaining data for KiThreadStartup */
@@ -145,6 +185,36 @@ KePPCInitThreadWithContext(IN PKTHREAD Thread,
 
     /* Save back the new value of the kernel stack. */
     Thread->KernelStack = (PVOID)CtxSwitchFrame;
+
+    /* If we're the first thread of the new process, copy the top 16 pages
+     * from process 0 */
+    if (Process && IsListEmpty(&Process->ThreadListHead))
+    {
+        DPRINT("First Thread in Process %x\n", Process);
+        MmuAllocVsid((ULONG)Process->UniqueProcessId, 0xff);
+        
+        for (i = 0; i < pmsize; i++)
+        {
+            pagemap[i].proc = 0;
+            pagemap[i].addr = 0x7fff0000 + (i * PAGE_SIZE);
+        }
+        
+        MmuInqPage(pagemap, pmsize);
+        
+        for (i = 0; i < pmsize; i++)
+        {
+            if (pagemap[i].phys)
+            {
+                pagemap[i].proc = (ULONG)Process->UniqueProcessId;
+                pagemap[i].phys = 0;
+                MmuMapPage(&pagemap[i], 1);
+                DPRINT("Added map to the new process: P %08x A %08x\n",
+                       pagemap[i].proc, pagemap[i].addr);
+            }
+        }
+        
+        DPRINT("Did additional aspace setup in the new process\n");
+    }
 }
 
 /* EOF */

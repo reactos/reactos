@@ -13,6 +13,7 @@
 #include <ntoskrnl.h>
 #define NDEBUG
 #include <debug.h>
+#include <ppcmmu/mmu.h>
 
 /*++
  * KiThreadStartup
@@ -53,7 +54,7 @@ KiThreadStartup(PKSYSTEM_ROUTINE SystemRoutine,
                 KTRAP_FRAME TrapFrame)
 {
     KeLowerIrql(APC_LEVEL);
-    __asm__("mr 8,%0\n\t"
+    __asm__("mr 0,%0\n\t"
             "mr 3,%1\n\t"
             "mr 4,%2\n\t"
             "mr 5,%3\n\t"
@@ -69,10 +70,55 @@ KiThreadStartup(PKSYSTEM_ROUTINE SystemRoutine,
 
 /* Take a decrementer trap, and prepare the given trap frame, swapping 
  * process and thread context as appropriate. */
+VOID KiDecrementerTrapFinish(PKTRAP_FRAME TrapFrame);
+
+VOID
+FASTCALL
+KiQueueReadyThread(IN PKTHREAD Thread,
+                   IN PKPRCB Prcb);
+
+PKTHREAD KiLastThread = NULL;
+PKTRAP_FRAME KiLastThreadTrapFrame = NULL;
+
 VOID
 STDCALL
 KiDecrementerTrap(PKTRAP_FRAME TrapFrame)
 {
-    DbgPrint("Decrementer Trap!\n");
-    __asm__("mtdec %0" : : "r" (0x10000)); // Reset the trap
+    KIRQL Irql;
+    PKPRCB Prcb = KeGetPcr()->Prcb;
+    if (!KiLastThread)
+        KiLastThread = KeGetCurrentThread();
+
+    if (KiLastThread->State == Running)
+        KiQueueReadyThread(KiLastThread, Prcb);
+
+    if (!KiLastThreadTrapFrame)
+        KiLastThreadTrapFrame = Prcb->IdleThread->TrapFrame;
+
+    TrapFrame->OldIrql = KeGetCurrentIrql();
+    *KiLastThreadTrapFrame = *TrapFrame;
+
+    if (Prcb->NextThread)
+    {
+        Prcb->CurrentThread = Prcb->NextThread;
+        Prcb->NextThread = NULL;
+    }
+    else
+        Prcb->CurrentThread = Prcb->IdleThread;
+
+    Prcb->CurrentThread->State = Running;
+
+    KiLastThreadTrapFrame = Prcb->CurrentThread->TrapFrame;
+    KiLastThread = Prcb->CurrentThread;
+
+    *TrapFrame = *KiLastThreadTrapFrame;
+    Irql = KeGetCurrentIrql();
+
+    if (Irql > TrapFrame->OldIrql)
+        KfRaiseIrql(Irql);
+    else if (Irql < TrapFrame->OldIrql)
+        KfLowerIrql(Irql);
+
+    /* When we return, we'll go through rfi and be in new thread land */
+    __asm__("mtdec %0" : : "r" (0x1000000)); // Reset the trap
 }

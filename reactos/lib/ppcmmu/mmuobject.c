@@ -40,6 +40,8 @@ Actions:
 11 revoke vsid
 */
 
+#define MMU_ADDR_RESERVED ((vaddr_t)-2)
+
 MmuTrapHandler callback[0x30];
 typedef struct _MmuFreePage {
     int page;
@@ -56,7 +58,7 @@ typedef struct _MmuVsidInfo {
     struct _MmuVsidInfo *next;
     MmuVsidTree *tree[256];
 } MmuVsidInfo;
-MmuFreePage *FreeList;
+MmuFreePage *FreeList = 0;
 // Pages are allocated one by one until NextPage == RamSize >> PPC_PAGE_SHIFT
 // Then we take only from the free list
 int Clock = 0, TreeAlloc = 0, GdbAttach = 0, Booted = 0, Vsid[16];
@@ -66,15 +68,21 @@ MmuFreeTree *FreeTree;
 MmuVsidInfo *Segs[16], *VsidHead = 0;
 
 extern void fmtout(const char *fmt, ...);
+extern char *serport;
 int ptegreload(ppc_trap_frame_t *frame, vaddr_t addr);
 void SerialSetUp(int deviceType, void *deviceAddr, int baud);
 int SerialInterrupt(int n, ppc_trap_frame_t *tf);
 void TakeException(int n, ppc_trap_frame_t *tf);
+int mmuisfreepage(paddr_t pageno);
+void copy(void *t, void *s, int b);
+paddr_t mmunewpage();
+void dumpmap();
+void trapcallback(int action, ppc_trap_frame_t *trap_frame);
 
 int _mmumain(int action, void *arg1, void *arg2, void *arg3, void *tf)
 {
     ppc_trap_frame_t *trap_frame = (action >= 0x100) ? tf : arg1;
-    int ret = 0, tmp;
+    int ret = 0, tmp, i;
 
     switch(action)
     {
@@ -82,26 +90,24 @@ int _mmumain(int action, void *arg1, void *arg2, void *arg3, void *tf)
     case 3:
 	if(!ptegreload(trap_frame, trap_frame->dar))
 	{
-	    __asm__("mfmsr 3\n\tori 3,3,0x30\n\tmtmsr 3\n\t");
-	    if (!callback[action](action,trap_frame)) TakeException(action, trap_frame);
-	}
+            trapcallback(action, trap_frame);
+        }
 	break;
     case 4:
 	if(!ptegreload(trap_frame, trap_frame->srr0))
-	{
-	    __asm__("mfmsr 3\n\tori 3,3,0x30\n\tmtmsr 3\n\t");
-	    if (!callback[action](action,trap_frame)) TakeException(action, trap_frame);
-	}
+        {
+            trapcallback(action, trap_frame);
+        }
 	break;
 
     case 5:
         /* EE -- Try to get a serial interrupt if debugging enabled, then fall
          * back to primary handler 
          */
-        if (!SerialInterrupt(action, trap_frame)) 
-            callback[action](action, trap_frame);
-        else
-            trap_frame->srr1 |= 0x8000;
+        if (!SerialInterrupt(action, trap_frame) && callback[action]) 
+        {
+            trapcallback(action, trap_frame);
+        }
         break;
     case 0:
     case 2:
@@ -112,7 +118,7 @@ int _mmumain(int action, void *arg1, void *arg2, void *arg3, void *tf)
     case 0xa:
     case 0xc:
     case 0x20:
-        if (!callback[action](action,trap_frame)) TakeException(action, trap_frame);
+        trapcallback(action, trap_frame);
         break;
 
         /* MMU Functions */
@@ -153,6 +159,17 @@ int _mmumain(int action, void *arg1, void *arg2, void *arg3, void *tf)
     case 0x10b:
 	mmufreevsid((int)arg1, (int)arg2);
 	break;
+    case 0x10c:
+        ret = mmunewpage();
+        break;
+    case 0x10d:
+        copy(trap_frame, (void *)0xf040, sizeof(*trap_frame));
+        __asm__("mr 1,%0\n\tb trap_finish_start" : : "r" 
+                (((int)trap_frame) - 16));
+        break;
+    case 0x10e:
+        dumpmap();
+        break;
 
     case 0x200:
         SerialSetUp((int)arg1, arg2, 9600);
@@ -172,9 +189,9 @@ int _mmumain(int action, void *arg1, void *arg2, void *arg3, void *tf)
      * We turn off mapping, restore bats, then let rfi switch us back to where
      * we came.
      */
-    if (action >= 0x100) {
-        int i;
 
+    if (action >= 0x100)
+    {
         __asm__("mfmsr %0" : "=r" (tmp));
         tmp &= ~0x30;
         __asm__("mtmsr %0" : : "r" (tmp));
@@ -188,9 +205,30 @@ int _mmumain(int action, void *arg1, void *arg2, void *arg3, void *tf)
     return ret;
 }
 
+void trapcallback(int action, ppc_trap_frame_t *trap_frame)
+{
+    if ((paddr_t)callback[action] < PAGETAB)
+        callback[action](action, trap_frame);
+    else
+    {
+        int framecopy = 0xf040;
+        copy((void *)framecopy, trap_frame, sizeof(*trap_frame));
+        trap_frame->srr0 = (int)callback[action];
+        trap_frame->srr1 &= 0x7fff;
+        trap_frame->gpr[3] = action;
+        trap_frame->gpr[4] = framecopy;
+        __asm__("mr 1,%0\n\tsubi 1,1,16\n\tb trap_finish_start" : : "r" (trap_frame));
+    }
+}
+
 void outchar(char c)
 {
     SetPhysByte(0x800003f8, c);
+}
+
+void copy(void *target, void *src, int bytes)
+{
+    while(bytes--) *((char *)target++) = *((char *)src++);
 }
 
 void outstr(const char *str)
@@ -252,7 +290,7 @@ void mmusetramsize(paddr_t ramsize)
     {
 	RamSize = ramsize;
 	FirstUsablePage = (paddr_t)last_map;
-	NextPage = PPC_PAGE_NUMBER(FirstUsablePage);
+	NextPage = PPC_PAGE_NUMBER(FirstUsablePage) + 1;
     }
 }
 
@@ -301,7 +339,7 @@ void initme()
     }
 
     /* Serial Interrupt */
-    callback[5] = SerialInterrupt;
+    callback[5] = 0; /* Do nothing until the user asks */
 
     /* Program Exception */
     callback[6] = (MmuTrapHandler)TakeException;
@@ -320,12 +358,40 @@ ppc_map_t *allocpage()
 {
     MmuFreePage *FreePage = 0;
 
-    if(NextPage < PPC_PAGE_NUMBER(RamSize)) {
-	return &PpcPageTable[NextPage++];
-    } else {
+    if (FreeList)
+    {
+        if ((void *)FreeList == (void *)PpcPageTable)
+        {
+            fmtout("Problem! FreeList: page 0 is free\n");
+            while(1);
+        }
+
 	FreePage = FreeList;
 	FreeList = FreeList->next;
+        ((ppc_map_t*)FreePage)->addr = MMU_ADDR_RESERVED;
 	return ((ppc_map_t*)FreePage);
+    }
+    else
+    {
+        while(!mmuisfreepage(NextPage) && NextPage < PPC_PAGE_NUMBER(RamSize))
+        {
+            NextPage++;
+        }
+        if (NextPage < PPC_PAGE_NUMBER(RamSize))
+        {
+            if (NextPage < 0x30)
+            {
+                fmtout("Problem! NextPage is low (%x)\n", NextPage);
+                while(1);
+            }
+            
+            PpcPageTable[NextPage].addr = MMU_ADDR_RESERVED;
+            return &PpcPageTable[NextPage++];
+        }
+        else
+        {
+            return NULL;
+        }
     }
 }
 
@@ -437,6 +503,9 @@ int mmuaddpage(ppc_map_info_t *info, int count)
 
     for(i = 0; i < count; i++)
     {
+        info[i].phys &= ~PPC_PAGE_MASK;
+        info[i].addr &= ~PPC_PAGE_MASK;
+
 	virt = info[i].addr;
 	vsid = ((info[i].addr >> 28) & 15) | (info[i].proc << 4);
 	VsidInfo = findvsid(vsid);
@@ -458,6 +527,15 @@ int mmuaddpage(ppc_map_info_t *info, int count)
 	phys = PPC_PAGE_ADDR((PagePtr - PpcPageTable));
 	ptelo = phys & ~PPC_PAGE_MASK;
 	
+        if (phys < 0x30000)
+        {
+            /* Should not be allocating physical */
+            fmtout("Allocated physical: %x, logical %x\n", phys, virt);
+            fmtout("PagePtr %x (page %d)\n", PagePtr, i);
+            fmtout("info [ %x %x %x %x ]\n", info[i].proc, info[i].addr, info[i].flags, info[i].phys);
+            while(1);
+        }
+
 	/* Update page data */
 	PagePtr->pte.pteh = ptehi;
 	PagePtr->pte.ptel = ptelo;
@@ -476,6 +554,13 @@ int mmuaddpage(ppc_map_info_t *info, int count)
 	__asm__("tlbie %0\n\tsync\n\tisync" : : "r" (iva));
     }
     return 1;
+}
+
+paddr_t mmunewpage()
+{
+    ppc_map_t *PagePtr = allocpage();
+    if (!PagePtr) return 0;
+    return PPC_PAGE_ADDR(PagePtr - PpcPageTable);
 }
 
 ppc_pteg_t *PtegFromPage(ppc_map_t *map, int hfun)
@@ -553,9 +638,9 @@ void mmugetpage(ppc_map_info_t *info, int count)
 	if(!info[i].addr && !info[i].proc)
 	{
 	    PagePtr = &((ppc_map_t*)PAGETAB)[info[i].phys];
-	    info[i].proc = PagePtr->proc;
-	    info[i].addr = PagePtr->addr;
-	    info[i].flags = MMU_ALL_RW;
+            info[i].proc = PagePtr->proc;
+            info[i].addr = PagePtr->addr;
+            info[i].flags = MMU_ALL_RW;
 	} else {
 	    vaddr_t addr = info[i].addr;
 	    int vsid = ((addr >> 28) & 15) | (info[i].proc << 4);
@@ -569,6 +654,12 @@ void mmugetpage(ppc_map_info_t *info, int count)
 	    }
 	}
     }
+}
+
+int mmuisfreepage(paddr_t pageno)
+{
+    ppc_map_t *PagePtr = PpcPageTable + pageno;
+    return !PagePtr->addr;
 }
 
 void mmusetvsid(int start, int end, int vsid)
@@ -601,6 +692,52 @@ int ptegreload(ppc_trap_frame_t *frame, vaddr_t addr)
     Clock++;
     __asm__("tlbie %0\n\tsync\n\tisync" : : "r" (addr));
     return 1;
+}
+
+void printmap(vaddr_t vaddr, ppc_map_t *map)
+{
+    fmtout("%x: proc %x addr %x\n", 
+           PPC_PAGE_ADDR(map - PpcPageTable), 
+           map->proc, vaddr);
+}
+
+void dumptree(vaddr_t vaddr, MmuVsidTree *tree)
+{
+    int j;
+
+    for (j = 0; j < 256; j++)
+    {
+        if (tree->leaves[j])
+        {
+            printmap(vaddr | (j << 12), tree->leaves[j]);
+        }
+    }
+}
+
+void dumpvsid(MmuVsidInfo *vsid)
+{
+    int i;
+
+    fmtout("vsid %d (%x):\n", vsid->vsid>>4, vsid->vsid<<28);
+    for (i = 0; i < 256; i++)
+    {
+        if (vsid->tree[i])
+        {
+            dumptree((vsid->vsid<<28) | i << 20, vsid->tree[i]);
+        }
+    }
+}
+
+void dumpmap()
+{
+    int i,j;
+    ppc_map_t *map;
+    MmuVsidInfo *vsid;
+    fmtout("Address spaces:\n");
+    for (vsid = VsidHead; vsid; vsid = vsid->next)
+    {
+        dumpvsid(vsid);
+    }
 }
 
 void callkernel(void *fun_ptr, void *arg)

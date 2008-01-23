@@ -47,14 +47,12 @@ mmumain:
 	stw 0,412(1)
 	mfctr 0
 	stw 0,416(1)
-	mfxer 0
-	stw 0,420(1)
-	/* xor 0,0,0 -- We can omit this since PPC doesn't have MQ */
-	stw 0,424(1)
 	mfdsisr 0
+	stw 0,420(1)
+	mfdar 0
+	stw 0,424(1)
+        mfxer 0
 	stw 0,428(1)
-        mfdar 0
-        stw 0,432(1)
         addi 7,1,16
         lis 8,_mmumain@ha
         addi 8,8,_mmumain@l
@@ -151,14 +149,12 @@ trap_start:
 	stw 0,412(1)
 	mfctr 0
 	stw 0,416(1)
-	mfxer 0
+        mfdsisr 0
 	stw 0,420(1)
-	/* xor 0,0,0 -- We can omit this since PPC doesn't have MQ */
-	stw 0,424(1)
-	mfdsisr 0
-	stw 0,428(1)
         mfdar 0
-        stw 0,432(1)
+	stw 0,424(1)
+	mfxer 0
+	stw 0,428(1)
         bl 1f
 1:      mflr 5
         addi 4,1,16
@@ -216,11 +212,11 @@ trap_finish_start:
         lwz 0,400(1)
         mtctr 0
         lwz 0,404(1)
-        mtxer 0
-        lwz 0,412(1)
         mtdsisr 0
-        lwz 0,416(1)
+        lwz 0,412(1)
         mtdar 0
+        lwz 0,416(1)
+        mtxer 0
         lwz 0,0(1)
 	lwz 1,4(1)
 	rfi

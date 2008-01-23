@@ -146,58 +146,63 @@ PPC_QUAL long _InterlockedXor(volatile long * const value, const long mask)
 
 PPC_QUAL char _InterlockedCompareExchange8(volatile char * const Destination, const char Exchange, const char Comperand)
 {
-	char retval = Comperand;
+        volatile long retval __asm__("r8") = 0;
 	__asm__ __volatile__ (
 	    "sync\n"
-	    "1: lbarx   %0,0,%1\n"
-	    "   subf.   %0,%2,%0\n"
-	    "   bne     2f\n"
-	    "   stbcx.  %3,0,%1\n"
+	    "1: lbarx   %0,0,%1\n" 
+            : "=r" (retval) : "r" (Destination));
+        __asm__ __volatile__ (
+	    "   cmpw    %3,%1\n"
+	    "   bne-    2f\n"
+	    "   stbcx.  %2,0,%0\n"
 	    "   bne-    1b\n"
 	    "2: isync"
-	    : "=b" (retval)
-	    : "b" (Destination), "r" (Comperand), "r" (Exchange)
-	    : "cr0", "memory");
+	    : 
+	    : "r" (Destination), "r" (Comperand), "r" (Exchange), "r" (retval));
 	return retval;
 }
 
 PPC_QUAL short _InterlockedCompareExchange16(volatile short * const Destination, const short Exchange, const short Comperand)
 {
-	short retval = Comperand;
+        volatile long retval __asm__("r8") = 0;
 	__asm__ __volatile__ (
 	    "sync\n"
-	    "1: lharx   %0,0,%1\n"
-	    "   subf.   %0,%2,%0\n"
-	    "   bne     2f\n"
-	    "   sthcx.  %3,0,%1\n"
+	    "1: lharx   %0,0,%1\n" 
+            : "=&r" (retval) : "r" (Destination));
+        __asm__ __volatile__ (
+	    "   cmpw    %3,%1\n"
+	    "   bne-    2f\n"
+	    "   sthcx.  %2,0,%0\n"
 	    "   bne-    1b\n"
 	    "2: isync"
-	    : "=r" (retval)
-	    : "r" (Destination), "r" (Comperand), "r" (Exchange)
-	    : "memory");
+	    : 
+	    : "r" (Destination), "r" (Comperand), "r" (Exchange), "r" (retval));
 	return retval;
 }
 
 PPC_QUAL long _InterlockedCompareExchange(volatile long * const Destination, const long Exchange, const long Comperand)
 {
-	short retval = Comperand;
+        volatile long retval __asm__("r8") = 0;
 	__asm__ __volatile__ (
 	    "sync\n"
-	    "1: lwarx   %0,0,%1\n"
-	    "   subf.   %0,%2,%0\n"
-	    "   bne     2f\n"
-	    "   stwcx.  %3,0,%1\n"
+	    "1: lwarx   %0,0,%1\n" 
+            : "=&r" (retval) : "r" (Destination));
+        __asm__ __volatile__ (
+	    "   cmpw    %3,%1\n"
+	    "   bne-    2f\n"
+	    "   stwcx.  %2,0,%0\n"
 	    "   bne-    1b\n"
 	    "2: isync"
-	    : "=r" (retval)
-	    : "r" (Destination), "r" (Comperand), "r" (Exchange)
-	    : "memory");
+	    : 
+	    : "r" (Destination), "r" (Comperand), "r" (Exchange), "r" (retval));
 	return retval;
 }
 
-PPC_QUAL long long _InterlockedCompareExchange64(volatile long long * const Destination, const long long Exchange, const long long Comperand)
+PPC_QUAL long long _InterlockedCompareExchange64(volatile long long * const Target, const long long Exchange, const long long Comperand)
 {
-    return 0;
+    long long capture = *Target;
+    if (*Target == Comperand) *Target = Exchange;
+    return capture;
 }
 
 PPC_QUAL void * _InterlockedCompareExchangePointer(void * volatile * const Destination, void * const Exchange, void * const Comperand)
@@ -208,199 +213,36 @@ PPC_QUAL void * _InterlockedCompareExchangePointer(void * volatile * const Desti
 
 PPC_QUAL long _InterlockedExchange(volatile long * const Target, const long Value)
 {
-        long retval;
-	__asm__ __volatile__ (
-	    "sync\n"
-	    "1: lwarx   %0,0,%1\n"
-	    "   stwcx.  %2,0,%1\n"
-	    "   bne-    1b\n"
-	    : "=b" (retval)
-	    : "b" (Target), "b" (Value)
-	    : "cr0", "memory");
-	return retval;
+    long retval __asm__("r8");
+    __asm__ __volatile__ (
+        "sync\n"
+        "1: lwarx   8,0,3\n"
+        "   stwcx.  4,0,3\n"
+        "   bne-    1b\n"
+        "   mr      3,8\n"
+        : "=b" (retval)
+        : "b" (Target), "b" (Value)
+        : "cr0", "memory");
+    return retval;
 }
 
 PPC_QUAL void * _InterlockedExchangePointer(void * volatile * const Target, void * const Value)
 {
-        void * retval;
-	__asm__ __volatile__ (
-	    "sync\n"
-	    "1: lwarx   %0,0,%1\n"
-	    "   stwcx.  %2,0,%1\n"
-	    "   bne-    1b\n"
-	    : "=b" (retval)
-	    : "b" (Target), "b" (Value)
-	    : "cr0", "memory");
-	return retval;
+    return (void *)_InterlockedExchange((long *)Target, (long)Value);
 }
 
-PPC_QUAL long _InterlockedExchangeAdd(volatile long * const Addend, const long Value)
-{
-        long x;
-	long y = *Addend;
-	long addend = y;
-
-	do
-	{
-	    x = y;
-	    y = _InterlockedCompareExchange(Addend, addend + Value, x);
-	}
-	while(y != x);
-
-	return y;
-}
-
-PPC_QUAL char _InterlockedAnd8(volatile char * const value, const char mask)
-{
-	char x;
-	char y;
-
-	y = *value;
-
-	do
-	{
-		x = y;
-		y = _InterlockedCompareExchange8(value, x & mask, x);
-	}
-	while(y != x);
-
-	return y;
-}
-
-PPC_QUAL short _InterlockedAnd16(volatile short * const value, const short mask)
-{
-	short x;
-	short y;
-
-	y = *value;
-
-	do
-	{
-		x = y;
-		y = _InterlockedCompareExchange16(value, x & mask, x);
-	}
-	while(y != x);
-
-	return y;
-}
-
-PPC_QUAL long _InterlockedAnd(volatile long * const value, const long mask)
-{
-	long x;
-	long y;
-
-	y = *value;
-
-	do
-	{
-		x = y;
-		y = _InterlockedCompareExchange(value, x & mask, x);
-	}
-	while(y != x);
-
-	return y;
-}
-
-PPC_QUAL char _InterlockedOr8(volatile char * const value, const char mask)
-{
-	char x;
-	char y;
-
-	y = *value;
-
-	do
-	{
-		x = y;
-		y = _InterlockedCompareExchange8(value, x | mask, x);
-	}
-	while(y != x);
-
-	return y;
-}
-
-PPC_QUAL short _InterlockedOr16(volatile short * const value, const short mask)
-{
-	short x;
-	short y;
-
-	y = *value;
-
-	do
-	{
-		x = y;
-		y = _InterlockedCompareExchange16(value, x | mask, x);
-	}
-	while(y != x);
-
-	return y;
-}
-
-PPC_QUAL long _InterlockedOr(volatile long * const value, const long mask)
-{
-	long x;
-	long y;
-
-	y = *value;
-
-	do
-	{
-		x = y;
-		y = _InterlockedCompareExchange(value, x | mask, x);
-	}
-	while(y != x);
-
-	return y;
-}
-
-PPC_QUAL char _InterlockedXor8(volatile char * const value, const char mask)
-{
-	char x;
-	char y;
-
-	y = *value;
-
-	do
-	{
-		x = y;
-		y = _InterlockedCompareExchange8(value, x ^ mask, x);
-	}
-	while(y != x);
-
-	return y;
-}
-
-PPC_QUAL short _InterlockedXor16(volatile short * const value, const short mask)
-{
-	short x;
-	short y;
-
-	y = *value;
-
-	do
-	{
-		x = y;
-		y = _InterlockedCompareExchange16(value, x ^ mask, x);
-	}
-	while(y != x);
-
-	return y;
-}
-
-PPC_QUAL long _InterlockedXor(volatile long * const value, const long mask)
-{
-	long x;
-	long y;
-
-	y = *value;
-
-	do
-	{
-		x = y;
-		y = _InterlockedCompareExchange(value, x ^ mask, x);
-	}
-	while(y != x);
-
-	return y;
+#define PPC_MakeInterlockedFunction(type,name,op,proto) \
+PPC_QUAL type name proto \
+{ \
+        long addend, y; \
+        do \
+        { \
+                addend = *value; \
+                y = _InterlockedCompareExchange(value, addend op modify, addend); \
+	} \
+	while(y != addend); \
+ \
+	return y; \
 }
 
 PPC_QUAL unsigned char _interlockedbittestandreset(volatile long * const a, const long b)
@@ -409,11 +251,9 @@ PPC_QUAL unsigned char _interlockedbittestandreset(volatile long * const a, cons
 	long y;
 	long mask = ~(1<<b);
 
-	y = *a;
-
 	do
 	{
-		x = y;
+		x = *a;
 		y = _InterlockedCompareExchange(a, x & mask, x);
 	}
 	while(y != x);
@@ -421,17 +261,26 @@ PPC_QUAL unsigned char _interlockedbittestandreset(volatile long * const a, cons
 	return (y & ~mask) != 0;
 }
 
+PPC_MakeInterlockedFunction(long,_InterlockedExchangeAdd,+,(volatile long * const value, const long modify))
+PPC_MakeInterlockedFunction(char,_InterlockedAnd8,&,(volatile char * const value, const char modify))
+PPC_MakeInterlockedFunction(short,_InterlockedAnd16,&,(volatile short * const value, const short modify))
+PPC_MakeInterlockedFunction(long,_InterlockedAnd,&,(volatile long * const value, const long modify))
+PPC_MakeInterlockedFunction(char,_InterlockedOr8,|,(volatile char * const value, const char modify))
+PPC_MakeInterlockedFunction(short,_InterlockedOr16,|,(volatile short * const value, const short modify))
+PPC_MakeInterlockedFunction(long,_InterlockedOr,|,(volatile long * const value, const long modify))
+PPC_MakeInterlockedFunction(char,_InterlockedXor8,^,(volatile char * const value, const char modify))
+PPC_MakeInterlockedFunction(short,_InterlockedXor16,^,(volatile short * const value, const short modify))
+PPC_MakeInterlockedFunction(long,_InterlockedXor,^,(volatile long * const value, const long modify))
+
 PPC_QUAL unsigned char _interlockedbittestandset(volatile long * const a, const long b)
 {
 	long x;
 	long y;
 	long mask = 1<<b;
 
-	y = *a;
-
 	do
 	{
-		x = y;
+                x = *a;
 		y = _InterlockedCompareExchange(a, x | mask, x);
 	}
 	while(y != x);

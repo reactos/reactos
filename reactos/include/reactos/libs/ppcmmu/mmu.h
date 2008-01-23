@@ -38,6 +38,12 @@
  * 106 -- Unit Test
  * 107 -- Turn on paging
  * 108 -- Unmap process
+ * 109 -- Get lowest unallocated page
+ * 10a -- Alloc vsid
+ * 10b -- Revoke vsid
+ * 10c -- Allocate a page and return it
+ * 10d -- Return from trap callback
+ * 10e -- Dump Map
  *
  * 2** -- Debug Stub and Interrupt Vectoring
  *
@@ -106,7 +112,7 @@ typedef struct _ppc_map_info_t {
 typedef struct _ppc_trap_frame_t {
     unsigned long gpr[32];
     unsigned long long fpr[32];
-    unsigned long srr0, srr1, cr, lr, ctr, xer, mq, dsisr, dar;
+    unsigned long srr0, srr1, cr, lr, ctr, dsisr, dar, xer;
 } ppc_trap_frame_t;
 
 typedef int (*MmuTrapHandler)(int trapid, ppc_trap_frame_t *trap);
@@ -188,9 +194,9 @@ static inline void _MmuInit(void *_start, void *_end)
     PPCMMU(0x100, 0, 0, 0);
 }
 
-static inline void MmuMapPage(ppc_map_info_t *info, int count)
+static inline int MmuMapPage(ppc_map_info_t *info, int count)
 {
-    PPCMMU(0x101, info, (void *)count, 0);
+    return PPCMMU(0x101, info, (void *)count, 0);
 }
 
 static inline void MmuUnmapPage(ppc_map_info_t *info, int count)
@@ -241,6 +247,21 @@ static inline void *MmuAllocVsid(int vsid, int mask)
 static inline void MmuRevokeVsid(int vsid, int mask)
 {
     PPCMMU(0x10b, (void *)vsid, (void *)mask, 0);
+}
+
+static inline paddr_t MmuGetPage()
+{
+    return PPCMMU(0x10c, 0,0,0);
+}
+
+static inline void MmuCallbackRet()
+{
+    PPCMMU(0x10d, 0,0,0);
+}
+
+static inline void MmuDumpMap()
+{
+    PPCMMU(0x10e, 0,0,0);
 }
 
 static inline void MmuDbgInit(int deviceType, int devicePort)

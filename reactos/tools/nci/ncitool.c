@@ -53,12 +53,12 @@
                             "    call *(%%ecx)\n" \
                             "    ret $0x%x\n\n"
 
-#define UserModeStub_ppc    "    mflr 0\n" \
-                            "    addi 1,1,-16\n" \
-                            "    li   0,%x\n" \
-                            "    stw  0,1(0)\n" \
+#define UserModeStub_ppc    "    stwu 1,-16(1)\n" \
+                            "    mflr 0\n\t" \
+                            "    stw  0,0(1)\n" \
+                            "    li   0,0x%x\n" \
                             "    sc\n" \
-                            "    lwz  0,1(0)\n" \
+                            "    lwz 0,0(1)\n" \
                             "    mtlr 0\n" \
                             "    addi 1,1,16\n" \
                             "    blr\n"
@@ -91,8 +91,8 @@
                             "    call _KiSystemService\n" \
                             "    ret $0x%x\n\n"
 
-#define KernelModeStub_ppc  "    bl KiSystemService\n" \
-                            "    rfi\n"
+/* For now, use the usermode stub.  We'll optimize later */
+#define KernelModeStub_ppc  UserModeStub_ppc
 
 #define KernelModeStub_mips "    j KiSystemService\n" \
                             "    nop\n"

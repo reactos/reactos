@@ -13,7 +13,7 @@
 
 #include <ntoskrnl.h>
 #include <ppcmmu/mmu.h>
-#define NDEBUG
+//#define NDEBUG
 #include <internal/debug.h>
 
 #if defined (ALLOC_PRAGMA)
@@ -136,9 +136,28 @@ MmDeletePageTable(PEPROCESS Process, PVOID Address)
 {
     PEPROCESS CurrentProcess = PsGetCurrentProcess();
 
-    if(!CurrentProcess) return;
+    DPRINT1("DeletePageTable: Process: %x CurrentProcess %x\n", 
+            Process, CurrentProcess);
 
-    MmuRevokeVsid((paddr_t)Process->UniqueProcessId, -1);
+    if (Process != NULL && Process != CurrentProcess)
+    {
+        KeAttachProcess(&Process->Pcb);
+    }
+    
+    if (Process)
+    {
+        DPRINT1("Revoking VSID %d\n", (paddr_t)Process->UniqueProcessId);
+        MmuRevokeVsid((paddr_t)Process->UniqueProcessId, -1);
+    }
+    else
+    {
+        DPRINT1("No vsid to revoke\n");
+    }
+    
+    if (Process != NULL && Process != CurrentProcess)
+    {
+        KeDetachProcess();
+    }    
 }
 
 VOID
@@ -412,7 +431,7 @@ MmCreateVirtualMappingUnsafe(PEPROCESS Process,
     ULONG Attributes;
     PVOID Addr;
     ULONG i;
-    ppc_map_info_t info;
+    ppc_map_info_t info = { 0 };
 
     DPRINT("MmCreateVirtualMappingUnsafe(%x, %x, %x, %x (%x), %d)\n",
 	   Process, Address, flProtect, Pages, *Pages, PageCount);
@@ -453,7 +472,8 @@ MmCreateVirtualMappingUnsafe(PEPROCESS Process,
     for (i = 0; i < PageCount; i++, Addr = (PVOID)((ULONG_PTR)Addr + PAGE_SIZE))
     {
 	Process = PsGetCurrentProcess();
-	info.proc = Process ? (int)Process->UniqueProcessId : 0;
+	info.proc = ((Addr < MmSystemRangeStart) && Process) ? 
+            (int)Process->UniqueProcessId : 0;
 	info.addr = (vaddr_t)Addr;
 	info.flags = Attributes;
 	MmuMapPage(&info, 1);
@@ -625,6 +645,25 @@ VOID
 NTAPI
 MmUpdatePageDir(PEPROCESS Process, PVOID Address, ULONG Size)
 {
+}
+
+/* Create a simple, primitive mapping at the specified address on a new page */
+NTSTATUS MmPPCCreatePrimitiveMapping(ULONG_PTR PageAddr)
+{
+    NTSTATUS result;
+    ppc_map_info_t info = { 0 };
+    info.flags = MMU_KRW;
+    info.addr = (vaddr_t)PageAddr;
+    result = MmuMapPage(&info, 1) ? STATUS_SUCCESS : STATUS_NO_MEMORY;
+    return result;
+}
+
+/* Use our primitive allocator */
+PFN_TYPE MmPPCPrimitiveAllocPage()
+{
+    paddr_t Result = MmuGetPage();
+    DbgPrint("Got Page %x\n", Result);
+    return Result / PAGE_SIZE;
 }
 
 /* EOF */

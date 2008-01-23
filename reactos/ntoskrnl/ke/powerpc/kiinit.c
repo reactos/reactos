@@ -11,7 +11,7 @@
 
 #include <ntoskrnl.h>
 
-#define NDEBUG
+//#define NDEBUG
 #include <debug.h>
 #include "ppcmmu/mmu.h"
 
@@ -30,28 +30,11 @@ extern ULONG KeMemoryMapRangeCount;
 extern ADDRESS_RANGE KeMemoryMap[64];
 
 /* FUNCTIONS *****************************************************************/
-
 /*
  * Trap frame:
  * r0 .. r32
  * lr, ctr, srr0, srr1, dsisr
  */
-__asm__(".text\n\t"
-	".globl syscall_start\n\t"
-	".globl syscall_end\n\t"
-	".globl KiSystemService\n\t"
-	"syscall_start:\n\t"
-	"mr 2,1\n\t"
-	"lis 1,KiSystemService1@ha\n\t"
-	"addi 1,1,KiSystemService1@l\n\t"
-	"mfsrr0 0\n\t"
-	"mtsrr0 1\n\t"
-	"lis 1,_kernel_trap_stack@ha\n\t"
-	"addi 1,1,_kernel_trap_stack@l\n\t"
-	"subi 1,1,0x100\n\t"
-	"rfi\n\t"
-	"syscall_end:\n\t"
-	".space 4");
 
 extern int syscall_start[], syscall_end, KiDecrementerTrapHandler[],
     KiDecrementerTrapHandlerEnd;
@@ -83,11 +66,14 @@ KiSetupDecrementerTrap()
         source++, handler_target += sizeof(int))
         SetPhys(handler_target, *source);
 
-    /* Enable interrupts! */
-    _enable();
+    DPRINT("CurrentThread %08x IdleThread %08x\n",
+           KeGetCurrentThread(), KeGetCurrentPrcb()->IdleThread);
 
     /* Kick decmrenter! */
     __asm__("mtdec %0" : : "r" (0));
+
+    /* Enable interrupts! */
+    _enable();
 }
 
 VOID
@@ -111,6 +97,7 @@ KiInitializePcr(IN ULONG ProcessorNumber,
     Pcr->PrcbData->BuildType = 0;
 #endif
     Pcr->PrcbData->DpcStack = DpcStack;
+    KeGetPcr()->Prcb = Pcr->PrcbData;
     KiProcessorBlock[ProcessorNumber] = Pcr->PrcbData;
 }
 
@@ -219,27 +206,22 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
             KeMemoryMapRangeCount,
             4096);
 
-    DPRINT1("\n");
     /* Initialize the Kernel Executive */
     ExpInitializeExecutive(0, LoaderBlock);
 
-    DPRINT1("\n");
     /* Only do this on the boot CPU */
     if (!Number)
     {
-        DPRINT1("\n");
         /* Calculate the time reciprocal */
         KiTimeIncrementReciprocal =
             KiComputeReciprocal(KeMaximumIncrement,
                                 &KiTimeIncrementShiftCount);
 
-        DPRINT1("\n");
         /* Update DPC Values in case they got updated by the executive */
         Prcb->MaximumDpcQueueDepth = KiMaximumDpcQueueDepth;
         Prcb->MinimumDpcRate = KiMinimumDpcRate;
         Prcb->AdjustDpcThreshold = KiAdjustDpcThreshold;
 
-        DPRINT1("\n");
         /* Allocate the DPC Stack */
         DpcStack = MmCreateKernelStack(FALSE, 0);
         if (!DpcStack) KeBugCheckEx(NO_PAGES_AVAILABLE, 1, 0, 0, 0);
@@ -249,21 +231,23 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
     /* Free Initial Memory */
     // MiFreeInitMemory();
 
-    DPRINT1("\n");
+    KfRaiseIrql(DISPATCH_LEVEL);
+    
+    KeSetPriorityThread(InitThread, 0);
     /* Setup decrementer exception */
     KiSetupDecrementerTrap();
 
-    DPRINT1("\n");
-    while (1)
+    KfLowerIrql(PASSIVE_LEVEL);
+
+    /* Should not return */
+    while(1)
     {
-        LARGE_INTEGER Timeout;
-        Timeout.QuadPart = 0x7fffffffffffffffLL;
-        DPRINT1("\n");
-        KeDelayExecutionThread(KernelMode, FALSE, &Timeout);
+        NtYieldExecution();
     }
 }
 
-extern int KiPageFaultHandler(int trap, ppc_trap_frame_t *frame);
+extern int KiPageFaultTrap();
+KTRAP_FRAME KiInitialTrapFrame;
 
 /* Use this for early boot additions to the page table */
 VOID
@@ -278,8 +262,8 @@ KiSystemStartup(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     __asm__("mr 13,%0" : : "r" (KPCR_BASE));
 
     /* Set the page fault handler to the kernel */
-    MmuSetTrapHandler(3,KiPageFaultHandler);
-    MmuSetTrapHandler(4,KiPageFaultHandler);
+    MmuSetTrapHandler(3,KiPageFaultTrap);
+    MmuSetTrapHandler(4,KiPageFaultTrap);
 
     // Make 0xf... special
     MmuAllocVsid(2, 0x8000);
@@ -323,6 +307,7 @@ KiSystemStartup(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 
     /* Set us as the current process */
     KiInitialThread.Tcb.ApcState.Process = &KiInitialProcess.Pcb;
+    KiInitialThread.Tcb.TrapFrame = &KiInitialTrapFrame;
 
     /* Setup CPU-related fields */
 AppCpuInit:

@@ -751,14 +751,18 @@ ULONG
 NTAPI
 KdpServiceDispatcher(ULONG Service, PCHAR Buffer, ULONG Length);
 
+typedef ULONG (*PSYSCALL_FUN)
+(ULONG,ULONG,ULONG,ULONG,ULONG,ULONG,ULONG,ULONG,ULONG,ULONG);
+
 VOID
 NTAPI
 KiSystemService(ppc_trap_frame_t *trap_frame)
 {
     int i;
     PKSYSTEM_ROUTINE SystemRoutine;
+    PSYSCALL_FUN SyscallFunction;
 
-    switch(trap_frame->gpr[8])
+    switch(trap_frame->gpr[0])
     {
     case 0x10000: /* DebugService */
 	for( i = 0; i < trap_frame->gpr[5]; i++ )
@@ -776,6 +780,24 @@ KiSystemService(ppc_trap_frame_t *trap_frame)
         SystemRoutine = (PKSYSTEM_ROUTINE)trap_frame->gpr[3];
         SystemRoutine((PKSTART_ROUTINE)trap_frame->gpr[4], 
                       (PVOID)trap_frame->gpr[5]);
+        break;
+
+        /* Handle a normal system call */
+    default:
+        SyscallFunction = 
+            ((PSYSCALL_FUN*)KeServiceDescriptorTable
+             [trap_frame->gpr[0] >> 12].Base)[trap_frame->gpr[0] & 0xfff];
+        trap_frame->gpr[3] = SyscallFunction
+            (trap_frame->gpr[3],
+             trap_frame->gpr[4],
+             trap_frame->gpr[5],
+             trap_frame->gpr[6],
+             trap_frame->gpr[7],
+             trap_frame->gpr[8],
+             trap_frame->gpr[9],
+             trap_frame->gpr[10],
+             trap_frame->gpr[11],
+             trap_frame->gpr[12]);
         break;
     }
 }
