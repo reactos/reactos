@@ -2639,9 +2639,10 @@ protected:
 			_out << _format._endl;
 
 		if (_format._pretty == PRETTY_INDENT)
+		{
 			for(size_t i=_stack.size(); --i>0; )
 				_out << XML_INDENT_SPACE;
-
+		}
 		_out << '<' << EncodeXMLString(entry._node_name);
 		//entry._state = PRE;
 	}
@@ -2670,9 +2671,10 @@ protected:
 				_out << _format._endl;
 
 			if (_format._pretty==PRETTY_INDENT && entry._content.empty())
+			{
 				for(size_t i=_stack.size(); --i>0; )
 					_out << XML_INDENT_SPACE;
-
+			}
 			_out << "</" << EncodeXMLString(entry._node_name) << ">";
 		} else {
 			_out << "/>";
