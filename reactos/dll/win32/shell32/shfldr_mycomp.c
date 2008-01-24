@@ -104,7 +104,7 @@ HRESULT WINAPI ISF_MyComputer_Constructor (IUnknown * pUnkOuter, REFIID riid, LP
 {
     IGenericSFImpl *sf;
     DWORD dwSize;
-    WCHAR szName[100];
+    WCHAR szName[MAX_PATH];
     TRACE ("unkOut=%p %s\n", pUnkOuter, shdebugstr_guid (riid));
 
     if (!ppv)
