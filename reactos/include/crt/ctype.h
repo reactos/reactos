@@ -106,7 +106,7 @@ _CRTIMP int __cdecl __MINGW_NOTHROW _toupper(int);
 #endif  	/*  __DECLSPEC_SUPPORTED */
 #endif  /* MB_CUR_MAX */
 
-
+#ifndef _WCTYPE_H_
 #ifdef __DECLSPEC_SUPPORTED
 # if __MSVCRT_VERSION__ <= 0x0700
   __MINGW_IMPORT unsigned short _ctype[];
@@ -131,6 +131,7 @@ _CRTIMP int __cdecl __MINGW_NOTHROW _toupper(int);
 # define _pctype (*_imp___pctype_dll)
 # endif /* CRTDLL */
 #endif		/*  __DECLSPEC_SUPPORTED */
+#endif
 
 /*
  * Use inlines here rather than macros, because macros will upset 
