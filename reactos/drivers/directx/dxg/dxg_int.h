@@ -64,9 +64,6 @@ typedef struct _EDD_SURFACE_LOCAL
      DD_SURFACE_LOCAL Surfacelcl;
 } EDD_SURFACE_LOCAL, *PEDD_SURFACE_LOCAL;
 
-
-
-
 /* exported functions */
 NTSTATUS DriverEntry(IN PVOID Context1, IN PVOID Context2);
 NTSTATUS GsDriverEntry(IN PVOID Context1, IN PVOID Context2);
@@ -85,21 +82,17 @@ extern VOID *gpDummyPage;
 extern PEPROCESS gpepSession;
 extern PLARGE_INTEGER gpLockShortDelay;
 
-
-
 /* Driver list export functions */
 DWORD STDCALL DxDxgGenericThunk(ULONG_PTR ulIndex, ULONG_PTR ulHandle, SIZE_T *pdwSizeOfPtr1, PVOID pvPtr1, SIZE_T *pdwSizeOfPtr2, PVOID pvPtr2);
 DWORD STDCALL DxDdIoctl(ULONG ulIoctl, PVOID pBuffer, ULONG ulBufferSize);
 PDD_SURFACE_LOCAL STDCALL DxDdLockDirectDrawSurface(HANDLE hDdSurface);
 BOOL STDCALL DxDdUnlockDirectDrawSurface(PDD_SURFACE_LOCAL pSurface);
 
-/* Internel functions */
+/* Internal functions */
 BOOL FASTCALL VerifyObjectOwner(PDD_ENTRY pEntry);
 BOOL FASTCALL DdHmgCreate();
 BOOL FASTCALL DdHmgDestroy();
 PVOID FASTCALL DdHmgLock( HANDLE DdHandle, UCHAR ObjectType,  BOOLEAN LockOwned);
-
-
 
 /* define stuff */
 #define drvDxEngLockDC          gpEngFuncs[DXENG_INDEX_DxEngLockDC]
