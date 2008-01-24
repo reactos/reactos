@@ -869,6 +869,7 @@ INT_PTR CALLBACK
 HexEditWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
   PHEXEDIT_DATA hed;
+  POINTS p;
 
   hed = (PHEXEDIT_DATA)(LONG_PTR)GetWindowLongPtr(hWnd, (DWORD_PTR)0);
   switch(uMsg)
@@ -889,7 +890,11 @@ HexEditWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
       return HEXEDIT_WM_SIZE(hed, (DWORD)wParam, LOWORD(lParam), HIWORD(lParam));
 
     case WM_LBUTTONDOWN:
-      return HEXEDIT_WM_LBUTTONDOWN(hed, (INT)wParam, MAKEPOINTS(lParam));
+    {
+      p.x = LOWORD(lParam);
+      p.y = HIWORD(lParam);
+      return HEXEDIT_WM_LBUTTONDOWN(hed, (INT)wParam, p);
+    }
 
     case WM_MOUSEWHEEL:
     {
@@ -900,7 +905,9 @@ HexEditWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
       delta -= (SHORT)HIWORD(wParam);
       if(abs(delta) >= WHEEL_DELTA && nScrollLines != 0)
       {
-        return HEXEDIT_WM_MOUSEWHEEL(hed, nScrollLines * (delta / WHEEL_DELTA), LOWORD(wParam), &MAKEPOINTS(lParam));
+        p.x = LOWORD(lParam);
+        p.y = HIWORD(lParam);
+        return HEXEDIT_WM_MOUSEWHEEL(hed, nScrollLines * (delta / WHEEL_DELTA), LOWORD(wParam), &p);
       }
       break;
     }
