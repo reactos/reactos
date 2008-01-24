@@ -269,7 +269,7 @@ VOID Hal_DirectDraw_Release (LPDIRECTDRAW7);
     if (firstcallxx) \
     { \
         char buffer[1024]; \
-        sprintf ( buffer, "Setmode have been req width=%d, height=%d bpp=%d freq = %d\n",width,height,bpp, freq); \
+        sprintf ( buffer, "Setmode have been req width=%ld, height=%ld bpp=%ld freq = %ld\n",width,height,bpp, freq); \
         OutputDebugStringA(buffer); \
         firstcallxx = TRUE; \
     }

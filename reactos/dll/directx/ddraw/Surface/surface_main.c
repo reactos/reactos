@@ -60,10 +60,10 @@ ULONG WINAPI Main_DDrawSurface_AddRef(LPDDRAWI_DDRAWSURFACE_INT This)
 HRESULT WINAPI
 Main_DDrawSurface_QueryInterface(LPDDRAWI_DDRAWSURFACE_INT This, REFIID riid, LPVOID* ppObj)
 {
-    DX_WINDBG_trace();
     HRESULT retVal = DD_OK;
     *ppObj = NULL;
 
+    DX_WINDBG_trace();
 
     _SEH_TRY
     {
@@ -394,7 +394,7 @@ Main_DDrawSurface_Lock (LPDDRAWI_DDRAWSURFACE_INT This, LPRECT prect,
 
     DX_WINDBG_trace();
 
-    DX_WINDBG_trace_res( This->lpLcl->lpGbl->wWidth, This->lpLcl->lpGbl->wHeight, This->lpLcl->lpGbl->lPitch, 0);
+    DX_WINDBG_trace_res( (DWORD)This->lpLcl->lpGbl->wWidth, (DWORD)This->lpLcl->lpGbl->wHeight, (DWORD)This->lpLcl->lpGbl->lPitch, (DWORD) 0);
 
     if (events != NULL)
     {
@@ -460,7 +460,7 @@ Main_DDrawSurface_Lock (LPDDRAWI_DDRAWSURFACE_INT This, LPRECT prect,
 
         pDDSD->lpSurface = (LPVOID)  mdLock.lpSurfData;
 
-        pDDSD->dwHeight =This->lpLcl->lpGbl->wHeight;
+        pDDSD->dwHeight = This->lpLcl->lpGbl->wHeight;
         pDDSD->dwWidth = This->lpLcl->lpGbl->wWidth;
 
         pDDSD->ddpfPixelFormat.dwRGBBitCount = This->lpLcl->lpGbl->lpDD->lpModeInfo->dwBPP;// .lpModeInfo->dwBPP; //This->lpLcl->lpGbl->lPitch/ 8;

@@ -474,7 +474,7 @@ HRESULT WINAPI
 Main_DirectDraw_CreateSurface4(LPDDRAWI_DIRECTDRAW_INT This, LPDDSURFACEDESC2 pDDSD,
                                LPDDRAWI_DDRAWSURFACE_INT *ppSurf, IUnknown *pUnkOuter)
 {
-    HRESULT ret;
+    HRESULT ret = DD_OK;
     DX_WINDBG_trace();
 
     EnterCriticalSection(&ddcs);
