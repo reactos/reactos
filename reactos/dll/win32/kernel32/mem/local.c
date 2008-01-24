@@ -254,8 +254,6 @@ LPVOID
 NTAPI
 LocalLock(HLOCAL hMem)
 {
-    /* This is the same as a GlobalLock, assuming these never change */
-    ASSERT(LMEM_LOCKCOUNT == GMEM_LOCKCOUNT);
     return GlobalLock(hMem);
 }
 
