@@ -299,10 +299,12 @@ void FileChildWindow::set_curdir(Entry* entry)
 		SetWindowText(_hwnd, _path);
 
 	if (_path[0])
+	{
 		if (SetCurrentDirectory(_path))
 			set_url(_path);	//set_url(FmtString(TEXT("file://%s"), _path));
 		else
 			_path[0] = TEXT('\0');
+	}
 }
 
 
@@ -508,8 +510,9 @@ LRESULT FileChildWindow::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 		case WM_CONTEXTMENU: {
 			 // first select the current item in the listbox
 			HWND hpanel = (HWND) wparam;
-			const POINTS& pos = MAKEPOINTS(lparam);
-			POINT pt; POINTSTOPOINT(pt, pos);
+			POINT pt;
+			pt.x = LOWORD(lparam);
+			pt.y = HIWORD(lparam);
 			POINT pt_screen = pt;
 			ScreenToClient(hpanel, &pt);
 			SendMessage(hpanel, WM_LBUTTONDOWN, 0, MAKELONG(pt.x, pt.y));

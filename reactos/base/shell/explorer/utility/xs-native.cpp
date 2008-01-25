@@ -361,6 +361,7 @@ bool XMLReaderBase::parse()
 			for(;;) {
 				 // check for the encoding of the first line end
 				if (!_endl_defined)
+				{
 					if (c == '\n') {
 						_format._endl = "\n";
 						_endl_defined = true;
@@ -368,7 +369,7 @@ bool XMLReaderBase::parse()
 						_format._endl = "\r\n";
 						_endl_defined = true;
 					}
-
+				}
 				c = get();
 
 				if (c == EOF)

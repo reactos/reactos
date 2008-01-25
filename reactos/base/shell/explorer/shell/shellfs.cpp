@@ -122,6 +122,7 @@ ShellPath ShellEntry::create_absolute_pidl() const
 	CONTEXT("ShellEntry::create_absolute_pidl()");
 
 	if (_up)
+	{
 		if (_up->_etype == ET_SHELL) {
 			ShellDirectory* dir = static_cast<ShellDirectory*>(_up);
 
@@ -129,7 +130,7 @@ ShellPath ShellEntry::create_absolute_pidl() const
 				return _pidl.create_absolute_pidl(dir->create_absolute_pidl());
 		} else
 			return _pidl.create_absolute_pidl(_up->create_absolute_pidl());
-
+	}
 	return _pidl;
 }
 

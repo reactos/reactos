@@ -377,12 +377,13 @@ void Pane::draw_item(LPDRAWITEMSTRUCT dis, Entry* entry, int calcWidthCol)
 							bool following_child = (up->_next->_data.dwFileAttributes&FILE_ATTRIBUTE_DIRECTORY)!=0;	// a directory?
 
 							if (!following_child)
+							{
 								for(Entry*n=up->_next; n; n=n->_next)
 									if (n->_down) {	// any file with NTFS sub-streams?
 										following_child = true;
 										break;
 									}
-
+							}
 							if (following_child)
 #endif
 							{
@@ -403,12 +404,13 @@ void Pane::draw_item(LPDRAWITEMSTRUCT dis, Entry* entry, int calcWidthCol)
 					bool following_child = (entry->_next->_data.dwFileAttributes&FILE_ATTRIBUTE_DIRECTORY)!=0;	// a directory?
 
 					if (!following_child)
+					{
 						for(Entry*n=entry->_next; n; n=n->_next)
 							if (n->_down) {	// any file with NTFS sub-streams?
 								following_child = true;
 								break;
 							}
-
+					}
 					if (following_child)
 #endif
 						LineTo(dis->hDC, x, dis->rcItem.bottom);

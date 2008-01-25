@@ -705,6 +705,7 @@ void XMLReaderBase::StartElementHandler(const XS_String& name, const XMLNode::At
 			break;
 
 	if (p != s)
+	{
 		if (_pos->_children.empty()) {	// no children in last node?
 			if (_last_tag == TAG_START)
 				_pos->_content.append(s, p-s);
@@ -714,7 +715,7 @@ void XMLReaderBase::StartElementHandler(const XS_String& name, const XMLNode::At
 				p = s;
 		} else
 			_pos->_children.back()->_trailing.append(s, p-s);
-
+	}
 	std::string leading;
 
 	if (p != e)
@@ -752,12 +753,14 @@ void XMLReaderBase::EndElementHandler()
 	}
 
 	if (p != s)
+	{
 		if (_pos->_children.empty())	// no children in current node?
 			_pos->_content.append(s, p-s);
 		else if (_last_tag == TAG_START)
 			_pos->_content.append(s, p-s);
 		else
 			_pos->_children.back()->_trailing.append(s, p-s);
+	}
 
 	if (p != e)
 		_pos->_end_leading.assign(p, e-p);

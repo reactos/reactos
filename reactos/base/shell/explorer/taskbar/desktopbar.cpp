@@ -314,9 +314,12 @@ LRESULT DesktopBar::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 		return ProcessCopyData((COPYDATASTRUCT*)lparam);
 
 	  case WM_CONTEXTMENU: {
+  		POINTS p;
+		p.x = LOWORD(lparam);
+		p.y = HIWORD(lparam);
 		PopupMenu menu(IDM_DESKTOPBAR);
 		SetMenuDefaultItem(menu, 0, MF_BYPOSITION);
-		menu.TrackPopupMenu(_hwnd, MAKEPOINTS(lparam));
+		menu.TrackPopupMenu(_hwnd, p);
 		break;}
 
 	  case PM_GET_LAST_ACTIVE:

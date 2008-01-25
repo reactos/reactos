@@ -311,7 +311,9 @@ LRESULT StartMenu::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 		break;
 
 	  case WM_MOVE: {
-		const POINTS& pos = MAKEPOINTS(lparam);
+		POINTS pos;
+		pos.x = LOWORD(lparam);
+		pos.y = HIWORD(lparam);
 
 		 // move open submenus of floating menus
 		if (_submenu) {
@@ -699,10 +701,12 @@ bool StartMenu::Navigate(int step)
 	int idx = GetSelectionIndex();
 
 	if (idx == -1)
+	{
 		if (step > 0)
 			idx = 0 - step;
 		else
 			idx = _buttons.size() - step;
+	}
 
 	for(;;) {
 		idx += step;
@@ -1067,10 +1071,12 @@ ShellEntryMap::iterator StartMenu::AddEntry(const String& title, ICON_ID icon_id
 {
 	 // search for an already existing subdirectory entry with the same name
 	if (entry->_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+	{
 		for(ShellEntryMap::iterator it=_entries.begin(); it!=_entries.end(); ++it) {
 			StartMenuEntry& sme = it->second;
 
 			if (!_tcsicmp(sme._title, title))	///@todo speed up by using a map indexed by name
+			{
 				for(ShellEntrySet::iterator it2=sme._entries.begin(); it2!=sme._entries.end(); ++it2) {
 					if ((*it2)->_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
 						 // merge the new shell entry with the existing of the same name
@@ -1079,7 +1085,9 @@ ShellEntryMap::iterator StartMenu::AddEntry(const String& title, ICON_ID icon_id
 						return it;
 					}
 				}
+			}
 		}
+	}
 
 	ShellEntryMap::iterator sme = AddEntry(title, icon_id);
 
