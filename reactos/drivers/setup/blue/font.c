@@ -183,7 +183,7 @@ NTSTATUS ExtractFont(UINT CodePage, PUCHAR FontBitField)
                 Status = ZwReadFile(Handle, NULL, NULL, NULL, &IoStatusBlock,
                                     FileHeader, 4, &ByteOffset, NULL);
                 ByteOffset.LowPart += 4;
-                DbgPrint("%s\n", FileHeader);
+                /* DbgPrint("%s\n", FileHeader); */
             }
         }
         ZwClose(Handle);
