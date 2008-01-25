@@ -677,12 +677,16 @@ struct PopupMenu
 	}
 
 	int PopupContextMenu(HWND hwnd, POINTS pos, UINT flags=TPM_LEFTBUTTON|TPM_RIGHTBUTTON) {
-	 POINT pt; POINTSTOPOINT(pt, pos);
+	 POINT pt;
+	 pt.x = pos.x;
+	 pt.y = pos.y;
 	 return TrackPopupMenuEx(_hmenu, flags, pt.x, pt.y, hwnd, NULL);
 	}
 
 	int TrackPopupMenu(HWND hwnd, POINTS pos, UINT flags=TPM_LEFTBUTTON|TPM_RIGHTBUTTON) {
-	 POINT pt; POINTSTOPOINT(pt, pos);
+	 POINT pt;
+	 pt.x = pos.x;
+	 pt.y = pos.y;
 	 ClientToScreen(hwnd, &pt);
 	 return TrackPopupMenuEx(_hmenu, flags, pt.x, pt.y, hwnd, NULL);
 	}

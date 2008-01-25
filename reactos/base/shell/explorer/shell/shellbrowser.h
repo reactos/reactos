@@ -28,6 +28,7 @@
 #include "../utility/treedroptarget.h"
 #include "../utility/shellbrowserimpl.h"
 
+#include <memory>
 
  /// information structure to hold current shell folder information
 struct ShellPathInfo
