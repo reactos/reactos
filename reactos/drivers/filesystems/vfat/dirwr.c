@@ -327,9 +327,9 @@ FATAddEntry (PDEVICE_EXTENSION DeviceExt,
   if (aName[i] == '.')
     {
       i++;
-      for (j = 8; j < 11 && aName[i]; j++, i++)
+      for (j = 0; j < 3 && aName[i]; j++, i++)
         {
-          DirContext.DirEntry.Fat.Ext[j - 8] = aName[i];
+          DirContext.DirEntry.Fat.Ext[j] = aName[i];
         }
     }
   if (DirContext.DirEntry.Fat.Filename[0] == 0xe5)
