@@ -34,7 +34,7 @@
 	</if>
 
 	<compilerflag>-mpreferred-stack-boundary=2</compilerflag>
-	<compilerflag>-Fno-strict-aliasing</compilerflag>
+	<compilerflag>-fno-strict-aliasing</compilerflag>
 	<compilerflag>-Wno-strict-aliasing</compilerflag>
 	<compilerflag>-Wpointer-arith</compilerflag>
 	<linkerflag>-enable-stdcall-fixup</linkerflag>
