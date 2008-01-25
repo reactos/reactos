@@ -395,6 +395,7 @@ RaiseException(IN DWORD dwExceptionCode,
     {
         DPRINT1("Delphi Exception at address: %p\n", ExceptionRecord.ExceptionInformation[0]);
         DPRINT1("Exception-Object: %p\n", ExceptionRecord.ExceptionInformation[1]);
+        DPRINT1("Exception text: %s\n", ExceptionRecord.ExceptionInformation[2]);        
     }
 
     /* Raise the exception */
