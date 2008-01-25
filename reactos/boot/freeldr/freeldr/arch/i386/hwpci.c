@@ -168,7 +168,7 @@ DetectPciIrqRoutingTable(PCONFIGURATION_COMPONENT_DATA BusKey)
                                   0xFFFFFFFF);
 
       /* Set 'Identifier' value */
-      FldrSetIdentifier(TableKey, L"PCI Real-mode IRQ Routing Table");
+      FldrSetIdentifier(TableKey, "PCI Real-mode IRQ Routing Table");
 
       /* Set 'Configuration Data' value */
       Size = FIELD_OFFSET(CM_PARTIAL_RESOURCE_LIST, PartialDescriptors) +
@@ -218,7 +218,7 @@ DetectPciBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
   ULONG Size;
   PCONFIGURATION_COMPONENT_DATA BusKey;
   ULONG i;
-  WCHAR szPci[] = L"PCI";
+  CHAR szPci[] = "PCI";
 
   /* Report the PCI BIOS */
   if (FindPciBios(&BusData))
@@ -241,7 +241,7 @@ DetectPciBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
       (*BusNumber)++;
 
       /* Set 'Identifier' value */
-      FldrSetIdentifier(BiosKey, L"PCI BIOS");
+      FldrSetIdentifier(BiosKey, "PCI BIOS");
 
       /* Set 'Configuration Data' value */
       Size = FIELD_OFFSET(CM_PARTIAL_RESOURCE_LIST,

@@ -71,21 +71,20 @@ FldrSetComponentInformation(IN PCONFIGURATION_COMPONENT_DATA ComponentData,
 VOID
 NTAPI
 FldrSetIdentifier(IN PCONFIGURATION_COMPONENT_DATA ComponentData,
-                  IN PWCHAR IdentifierString)
+                  IN PCHAR IdentifierString)
 {
     ULONG IdentifierLength;
     PCONFIGURATION_COMPONENT Component = &ComponentData->ComponentEntry;
     PCHAR Identifier;
     
     /* Allocate memory for the identifier */
-    /* WARNING: This should be ASCII data */
-    IdentifierLength = (wcslen(IdentifierString) + 1) * sizeof(WCHAR);
+    IdentifierLength = strlen(IdentifierString) + 1;
     Identifier = FldrpHwHeapAlloc(IdentifierLength);
     if (!Identifier) return;
-    
+
     /* Copy the identifier */
     RtlCopyMemory(Identifier, IdentifierString, IdentifierLength);
-    
+
     /* Set component information */
     Component->IdentifierLength = IdentifierLength;
     Component->Identifier = Identifier;

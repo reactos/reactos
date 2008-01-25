@@ -472,9 +472,9 @@ typedef struct _CM_PARSE_CONTEXT
 //
 typedef struct _CMP_MF_TYPE
 {
-    PWCHAR Identifier;
+    PCHAR Identifier;
     USHORT InterfaceType;
-    USHORT Count;    
+    USHORT Count;
 } CMP_MF_TYPE, *PCMP_MF_TYPE;
 
 //

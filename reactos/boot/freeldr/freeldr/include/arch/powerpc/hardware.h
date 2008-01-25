@@ -50,7 +50,7 @@ VOID
 NTAPI
 FldrSetIdentifier(
     IN PCONFIGURATION_COMPONENT_DATA ComponentKey,
-    IN PWCHAR Identifier
+    IN PCHAR Identifier
 );
 
 VOID

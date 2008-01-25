@@ -115,7 +115,6 @@ CmpInitializeRegistryNode(IN PCONFIGURATION_COMPONENT_DATA CurrentEntry,
         Status = RtlAnsiStringToUnicodeString(&ValueData,
                                               &TempString,
                                               TRUE);
-        RtlCreateUnicodeString(&ValueData, (PWCHAR)Component->Identifier);
         if (NT_SUCCESS(Status))
         {
             /* Save the identifier in the registry */
@@ -244,8 +243,8 @@ CmpSetupConfigurationTree(IN PCONFIGURATION_COMPONENT_DATA CurrentEntry,
                         for (i = 0; CmpMultifunctionTypes[i].Identifier; i++)
                         {
                             /* Check for a name match */
-                            if (!_wcsicmp(CmpMultifunctionTypes[i].Identifier,
-                                          (PWCHAR)Component->Identifier))
+                            if (!_stricmp(CmpMultifunctionTypes[i].Identifier,
+                                          Component->Identifier))
                             {
                                 /* Match found */
                                 break;

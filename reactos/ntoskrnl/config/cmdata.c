@@ -124,14 +124,14 @@ UNICODE_STRING CmTypeName[MaximumType + 1] =
 
 CMP_MF_TYPE CmpMultifunctionTypes[] =
 {
-    {L"ISA", Isa, 0},
-    {L"MCA", MicroChannel, 0},
-    {L"PCI", PCIBus, 0},
-    {L"VME", VMEBus, 0},
-    {L"PCMCIA", PCMCIABus, 0},
-    {L"CBUS", CBus, 0},
-    {L"MPIPI", MPIBus, 0},
-    {L"MPSA", MPSABus, 0},
+    {"ISA", Isa, 0},
+    {"MCA", MicroChannel, 0},
+    {"PCI", PCIBus, 0},
+    {"VME", VMEBus, 0},
+    {"PCMCIA", PCMCIABus, 0},
+    {"CBUS", CBus, 0},
+    {"MPIPI", MPIBus, 0},
+    {"MPSA", MPSABus, 0},
     {NULL, Internal, 0}
 };
 

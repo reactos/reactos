@@ -86,7 +86,7 @@ DetectAcpiBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
         (*BusNumber)++;
         
         /* Set 'Identifier' value */
-        FldrSetIdentifier(BiosKey, L"ACPI BIOS");
+        FldrSetIdentifier(BiosKey, "ACPI BIOS");
     }
     
     /* FIXME: Add congiguration data */

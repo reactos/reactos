@@ -79,7 +79,7 @@
 /* Timeout in ms for sending to keyboard controller. */
 #define CONTROLLER_TIMEOUT                              250
 
-static WCHAR Hex[] = L"0123456789ABCDEF";
+static CHAR Hex[] = "0123456789ABCDEF";
 static unsigned int delay_count = 1;
 
 extern ULONG reactos_disk_count;
@@ -252,7 +252,7 @@ DetectPnpBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
                                 0xFFFFFFFF);
     
     /* Set the identifier */
-    FldrSetIdentifier(BusKey, L"PNP BIOS");
+    FldrSetIdentifier(BusKey, "PNP BIOS");
 
     /* Set 'Configuration Data' value */
   Size = sizeof(CM_PARTIAL_RESOURCE_LIST) + (NodeSize * NodeCount);
@@ -405,7 +405,7 @@ SetHarddiskIdentifier(PCONFIGURATION_COMPONENT_DATA DiskKey,
   ULONG i;
   ULONG Checksum;
   ULONG Signature;
-  WCHAR Identifier[20];
+  CHAR Identifier[20];
   CHAR ArcName[256];
 
   /* Read the MBR */
@@ -448,7 +448,7 @@ SetHarddiskIdentifier(PCONFIGURATION_COMPONENT_DATA DiskKey,
   Identifier[5] = Hex[(Checksum >> 8) & 0x0F];
   Identifier[6] = Hex[(Checksum >> 4) & 0x0F];
   Identifier[7] = Hex[Checksum & 0x0F];
-  Identifier[8] = L'-';
+  Identifier[8] = '-';
   Identifier[9] = Hex[(Signature >> 28) & 0x0F];
   Identifier[10] = Hex[(Signature >> 24) & 0x0F];
   Identifier[11] = Hex[(Signature >> 20) & 0x0F];
@@ -457,10 +457,10 @@ SetHarddiskIdentifier(PCONFIGURATION_COMPONENT_DATA DiskKey,
   Identifier[14] = Hex[(Signature >> 8) & 0x0F];
   Identifier[15] = Hex[(Signature >> 4) & 0x0F];
   Identifier[16] = Hex[Signature & 0x0F];
-  Identifier[17] = L'-';
-  Identifier[18] = L'A';
+  Identifier[17] = '-';
+  Identifier[18] = 'A';
   Identifier[19] = 0;
-  DbgPrint((DPRINT_HWDETECT, "Identifier: %S\n", Identifier));
+  DbgPrint((DPRINT_HWDETECT, "Identifier: %s\n", Identifier));
 
   /* Set identifier */
   FldrSetIdentifier(DiskKey, Identifier);
@@ -511,7 +511,7 @@ DetectBiosFloppyPeripheral(PCONFIGURATION_COMPONENT_DATA ControllerKey)
   PCM_PARTIAL_RESOURCE_LIST PartialResourceList;
   PCM_PARTIAL_RESOURCE_DESCRIPTOR PartialDescriptor;
   PCM_FLOPPY_DEVICE_DATA FloppyData;
-  WCHAR Identifier[20];
+  CHAR Identifier[20];
   PCONFIGURATION_COMPONENT_DATA PeripheralKey;
   ULONG Size;
   ULONG FloppyNumber;
@@ -579,7 +579,7 @@ DetectBiosFloppyPeripheral(PCONFIGURATION_COMPONENT_DATA ControllerKey)
     MmHeapFree(PartialResourceList);
 
     /* Set 'Identifier' value */
-    swprintf(Identifier, L"FLOPPY%u", FloppyNumber + 1);
+    sprintf(Identifier, "FLOPPY%u", FloppyNumber + 1);
     FldrSetIdentifier(PeripheralKey, Identifier);
   }
 }
@@ -956,7 +956,7 @@ DetectSerialPointerPeripheral(PCONFIGURATION_COMPONENT_DATA ControllerKey,
 {
   CM_PARTIAL_RESOURCE_LIST PartialResourceList;
   char Buffer[256];
-  WCHAR Identifier[256];
+  CHAR Identifier[256];
   PCONFIGURATION_COMPONENT_DATA PeripheralKey;
   ULONG MouseType;
   ULONG Length;
@@ -1063,28 +1063,28 @@ DetectSerialPointerPeripheral(PCONFIGURATION_COMPONENT_DATA ControllerKey,
 	    }
 
 	  DbgPrint((DPRINT_HWDETECT,
-		    "Identifier string: %S\n",
+		    "Identifier string: %s\n",
 		    Identifier));
 	}
 
-      if (Length == 0 || wcslen(Identifier) < 11)
+      if (Length == 0 || strlen(Identifier) < 11)
 	{
 	  switch (MouseType)
 	    {
 	      case MOUSE_TYPE_LOGITECH:
-		wcscpy (Identifier,
-			L"LOGITECH SERIAL MOUSE");
+		strcpy (Identifier,
+			"LOGITECH SERIAL MOUSE");
 		break;
 
 	      case MOUSE_TYPE_WHEELZ:
-		wcscpy (Identifier,
-			L"MICROSOFT SERIAL MOUSE WITH WHEEL");
+		strcpy (Identifier,
+			"MICROSOFT SERIAL MOUSE WITH WHEEL");
 		break;
 
 	      case MOUSE_TYPE_MICROSOFT:
 	      default:
-		wcscpy (Identifier,
-			L"MICROSOFT SERIAL MOUSE");
+		strcpy (Identifier,
+			"MICROSOFT SERIAL MOUSE");
 		break;
 	    }
 	}
@@ -1130,7 +1130,7 @@ DetectSerialPorts(PCONFIGURATION_COMPONENT_DATA BusKey)
   PCM_SERIAL_DEVICE_DATA SerialDeviceData;
   ULONG Irq[4] = {4, 3, 4, 3};
   ULONG Base;
-  WCHAR Buffer[80];
+  CHAR Buffer[80];
   PUSHORT BasePtr;
   ULONG ControllerNumber = 0;
   PCONFIGURATION_COMPONENT_DATA ControllerKey;
@@ -1218,7 +1218,7 @@ DetectSerialPorts(PCONFIGURATION_COMPONENT_DATA BusKey)
       MmHeapFree(PartialResourceList);
 
       /* Set 'Identifier' value */
-      swprintf(Buffer, L"COM%u", i + 1);
+      sprintf(Buffer, "COM%u", i + 1);
       FldrSetIdentifier(ControllerKey, Buffer);
       DbgPrint((DPRINT_HWDETECT,
 		"Created value: Identifier %s\n",
@@ -1241,7 +1241,7 @@ DetectParallelPorts(PCONFIGURATION_COMPONENT_DATA BusKey)
   PCM_PARTIAL_RESOURCE_LIST PartialResourceList;
   PCM_PARTIAL_RESOURCE_DESCRIPTOR PartialDescriptor;
   ULONG Irq[3] = {7, 5, (ULONG)-1};
-  WCHAR Buffer[80];
+  CHAR Buffer[80];
   PCONFIGURATION_COMPONENT_DATA ControllerKey;
   PUSHORT BasePtr;
   ULONG Base;
@@ -1323,7 +1323,7 @@ DetectParallelPorts(PCONFIGURATION_COMPONENT_DATA BusKey)
       MmHeapFree(PartialResourceList);
 
       /* Set 'Identifier' value */
-      swprintf(Buffer, L"PARALLEL%u", i + 1);
+      sprintf(Buffer, "PARALLEL%u", i + 1);
       FldrSetIdentifier(ControllerKey, Buffer);
       DbgPrint((DPRINT_HWDETECT,
 		"Created value: Identifier %s\n",
@@ -1468,7 +1468,7 @@ DetectKeyboardPeripheral(PCONFIGURATION_COMPONENT_DATA ControllerKey)
     MmHeapFree(PartialResourceList);
 
     /* Set 'Identifier' value */
-    FldrSetIdentifier(PeripheralKey, L"PCAT_ENHANCED");
+    FldrSetIdentifier(PeripheralKey, "PCAT_ENHANCED");
   }
 }
 
@@ -1735,7 +1735,7 @@ DetectPS2Mouse(PCONFIGURATION_COMPONENT_DATA BusKey)
                                sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR));
 
 	  /* Set 'Identifier' value */
-      FldrSetIdentifier(PeripheralKey, L"MICROSOFT PS2 MOUSE");
+      FldrSetIdentifier(PeripheralKey, "MICROSOFT PS2 MOUSE");
     }
   }
 }
@@ -1744,7 +1744,7 @@ DetectPS2Mouse(PCONFIGURATION_COMPONENT_DATA BusKey)
 static VOID
 DetectDisplayController(PCONFIGURATION_COMPONENT_DATA BusKey)
 {
-  WCHAR Buffer[80];
+  CHAR Buffer[80];
   PCONFIGURATION_COMPONENT_DATA ControllerKey;
   USHORT VesaVersion;
 
@@ -1780,13 +1780,13 @@ DetectDisplayController(PCONFIGURATION_COMPONENT_DATA BusKey)
 
   if (VesaVersion >= 0x0200)
     {
-      wcscpy(Buffer,
-             L"VBE Display");
+      strcpy(Buffer,
+             "VBE Display");
     }
   else
     {
-      wcscpy(Buffer,
-             L"VGA Display");
+      strcpy(Buffer,
+             "VGA Display");
     }
 
   /* Set 'Identifier' value */
@@ -1821,7 +1821,7 @@ DetectIsaBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
   (*BusNumber)++;
 
   /* Set 'Identifier' value */
-  FldrSetIdentifier(BusKey, L"ISA");
+  FldrSetIdentifier(BusKey, "ISA");
 
   /* Set 'Configuration Data' value */
   Size = sizeof(CM_PARTIAL_RESOURCE_LIST) -

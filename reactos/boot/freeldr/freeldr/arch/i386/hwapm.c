@@ -89,7 +89,7 @@ DetectApmBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
         (*BusNumber)++;
 
         /* Set 'Identifier' value */
-        FldrSetIdentifier(BiosKey, L"APM");
+        FldrSetIdentifier(BiosKey, "APM");
     }
 
     /* FIXME: Add configuration data */

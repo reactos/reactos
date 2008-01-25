@@ -22,7 +22,7 @@
 #define NDEBUG
 #include <debug.h>
 
-static WCHAR Hex[] = L"0123456789ABCDEF";
+static CHAR Hex[] = "0123456789ABCDEF";
 //static unsigned int delay_count = 1;
 
 extern ULONG reactos_disk_count;
@@ -102,7 +102,7 @@ SetHarddiskIdentifier(PCONFIGURATION_COMPONENT_DATA DiskKey,
   ULONG i;
   ULONG Checksum;
   ULONG Signature;
-  WCHAR Identifier[20];
+  CHAR Identifier[20];
   CHAR ArcName[256];
 
   /* Read the MBR */
@@ -145,7 +145,7 @@ SetHarddiskIdentifier(PCONFIGURATION_COMPONENT_DATA DiskKey,
   Identifier[5] = Hex[(Checksum >> 8) & 0x0F];
   Identifier[6] = Hex[(Checksum >> 4) & 0x0F];
   Identifier[7] = Hex[Checksum & 0x0F];
-  Identifier[8] = L'-';
+  Identifier[8] = '-';
   Identifier[9] = Hex[(Signature >> 28) & 0x0F];
   Identifier[10] = Hex[(Signature >> 24) & 0x0F];
   Identifier[11] = Hex[(Signature >> 20) & 0x0F];
@@ -154,10 +154,10 @@ SetHarddiskIdentifier(PCONFIGURATION_COMPONENT_DATA DiskKey,
   Identifier[14] = Hex[(Signature >> 8) & 0x0F];
   Identifier[15] = Hex[(Signature >> 4) & 0x0F];
   Identifier[16] = Hex[Signature & 0x0F];
-  Identifier[17] = L'-';
-  Identifier[18] = L'A';
+  Identifier[17] = '-';
+  Identifier[18] = 'A';
   Identifier[19] = 0;
-  DbgPrint((DPRINT_HWDETECT, "Identifier: %S\n", Identifier));
+  DbgPrint((DPRINT_HWDETECT, "Identifier: %s\n", Identifier));
 
   /* Set identifier */
   FldrSetIdentifier(DiskKey, Identifier);
@@ -318,7 +318,7 @@ DetectIsaBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
   (*BusNumber)++;
 
   /* Set 'Identifier' value */
-  FldrSetIdentifier(BusKey, L"ISA");
+  FldrSetIdentifier(BusKey, "ISA");
 
   /* Set 'Configuration Data' value */
   Size = sizeof(CM_PARTIAL_RESOURCE_LIST) -
