@@ -111,15 +111,13 @@ static BOOL
 CreateLargeCell(PMAP infoPtr)
 {
     RECT rLarge;
-    POINT p;
 
     CopyRect(&rLarge,
              &infoPtr->pActiveCell->CellExt);
-    CopyMemory(&p, &rLarge, sizeof(POINT));
 
     MapWindowPoints(infoPtr->hMapWnd,
                     infoPtr->hParent,
-                    &p,
+                    (VOID*)&rLarge,
                     2);
 
     InflateRect(&rLarge,
@@ -149,15 +147,13 @@ static VOID
 MoveLargeCell(PMAP infoPtr)
 {
     RECT rLarge;
-    POINT p;
 
     CopyRect(&rLarge,
              &infoPtr->pActiveCell->CellExt);
-    CopyMemory(&p, &rLarge, sizeof(POINT));
 
     MapWindowPoints(infoPtr->hMapWnd,
                     infoPtr->hParent,
-                    &p,
+                    (VOID*)&rLarge,
                     2);
 
     InflateRect(&rLarge,
