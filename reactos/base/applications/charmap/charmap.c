@@ -190,6 +190,7 @@ DlgProc(HWND hDlg,
 {
     static HICON hSmIcon;
     static HICON hBgIcon;
+    LPWSTR lpAboutText = NULL;
 
     switch(Message)
     {
@@ -229,16 +230,13 @@ DlgProc(HWND hDlg,
                                               IDC_FONTCOMBO));
 
             ChangeMapFont(hDlg);
-
             hSysMenu = GetSystemMenu(hDlg,
                                      FALSE);
             if (hSysMenu != NULL)
             {
-                LPCWSTR lpAboutText = NULL;
-
                 if (LoadStringW(hInstance,
                                 IDS_ABOUT,
-                                (LPWSTR)&lpAboutText,
+                                lpAboutText,
                                 0))
                 {
                     AppendMenuW(hSysMenu,
