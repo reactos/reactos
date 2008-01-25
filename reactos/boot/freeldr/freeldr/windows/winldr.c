@@ -29,6 +29,8 @@ extern ULONG reactos_disk_count;
 extern ARC_DISK_SIGNATURE reactos_arc_disk_info[];
 extern char reactos_arc_strings[32][256];
 
+extern BOOLEAN UseRealHeap;
+
 BOOLEAN
 WinLdrCheckForLoadedDll(IN OUT PLOADER_PARAMETER_BLOCK WinLdrBlock,
                         IN PCH DllName,
@@ -429,6 +431,7 @@ LoadAndBootWindows(PCSTR OperatingSystemName, WORD OperatingSystemVersion)
 	AllocateAndInitLPB(&LoaderBlock);
 
 	/* Detect hardware */
+	UseRealHeap = TRUE;
 	LoaderBlock->ConfigurationRoot = MachHwDetect();
 
 	/* Load kernel */

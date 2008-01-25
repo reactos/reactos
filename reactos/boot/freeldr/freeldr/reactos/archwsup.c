@@ -18,6 +18,8 @@ extern CHAR reactos_arc_hardware_data[];
 ULONG FldrpHwHeapLocation;
 PCONFIGURATION_COMPONENT_DATA FldrArcHwTreeRoot;
 
+BOOLEAN UseRealHeap = FALSE;
+
 /* FUNCTIONS ******************************************************************/
 
 PVOID
@@ -25,13 +27,21 @@ NTAPI
 FldrpHwHeapAlloc(IN ULONG Size)
 {
     PVOID Buffer;
-    
-    /* Return a block of memory from the ARC Hardware Heap */
-    Buffer = &reactos_arc_hardware_data[FldrpHwHeapLocation];
-    
-    /* Increment the heap location */
-    FldrpHwHeapLocation += Size;
-    if (FldrpHwHeapLocation > HW_MAX_ARC_HEAP_SIZE) Buffer = NULL;
+
+    if (UseRealHeap)
+    {
+        /* Allocate memory from generic bootloader heap */
+        Buffer = MmHeapAlloc(Size);
+    }
+    else
+    {
+        /* Return a block of memory from the ARC Hardware Heap */
+        Buffer = &reactos_arc_hardware_data[FldrpHwHeapLocation];
+
+        /* Increment the heap location */
+        FldrpHwHeapLocation += Size;
+        if (FldrpHwHeapLocation > HW_MAX_ARC_HEAP_SIZE) Buffer = NULL;
+    }
 
     /* Clear it */
     if (Buffer)
