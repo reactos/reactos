@@ -1861,7 +1861,7 @@ DetectIsaBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
 }
 
 
-VOID
+PCONFIGURATION_COMPONENT_DATA
 PcHwDetect(VOID)
 {
   PCONFIGURATION_COMPONENT_DATA SystemKey;
@@ -1886,6 +1886,8 @@ PcHwDetect(VOID)
   DetectAcpiBios(SystemKey, &BusNumber);
   
   DbgPrint((DPRINT_HWDETECT, "DetectHardware() Done\n"));
+
+  return SystemKey;
 }
 
 /* EOF */

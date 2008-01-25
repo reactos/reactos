@@ -108,7 +108,7 @@ ULONG PpcPrepGetMemoryMap( PBIOS_MEMORY_MAP BiosMemoryMap,
 
 /* Most PReP hardware is in standard locations, based on the corresponding 
  * hardware on PCs. */
-VOID PpcPrepHwDetect() {
+PCONFIGURATION_COMPONENT_DATA PpcPrepHwDetect() {
   PCONFIGURATION_COMPONENT_DATA SystemKey;
 
   /* Create the 'System' key */
@@ -121,6 +121,7 @@ VOID PpcPrepHwDetect() {
                               0xFFFFFFFF);
   
   printf("DetectHardware() Done\n");
+  return SystemKey;
 }
 
 void PpcPrepInit()

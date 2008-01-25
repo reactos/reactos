@@ -446,7 +446,7 @@ VOID OfwCopyDeviceTree
     }
 }
 
-VOID PpcHwDetect() {
+PCONFIGURATION_COMPONENT_DATA PpcHwDetect() {
     PCONFIGURATION_COMPONENT_DATA RootKey;
     ULONG BusNumber = 0, DiskController = 0, DiskNumber = 0;
     int node = ofw_finddevice("/");
@@ -456,6 +456,7 @@ VOID PpcHwDetect() {
     FldrSetComponentInformation(RootKey, 0, 0, (ULONG)-1);
 
     OfwCopyDeviceTree(RootKey,"/",node,&BusNumber,&DiskController,&DiskNumber);
+    return RootKey;
 }
 
 BOOLEAN PpcDiskNormalizeSystemPath(char *SystemPath, unsigned Size) {

@@ -69,7 +69,7 @@ typedef struct tagMACHVTBL
 
   VOID (*RTCGetCurrentDateTime)(PULONG Year, PULONG Month, PULONG Day, PULONG Hour, PULONG Minute, PULONG Second);
 
-  VOID (*HwDetect)(VOID);
+  PCONFIGURATION_COMPONENT_DATA (*HwDetect)(VOID);
 } MACHVTBL, *PMACHVTBL;
 
 VOID MachInit(const char *CmdLine);

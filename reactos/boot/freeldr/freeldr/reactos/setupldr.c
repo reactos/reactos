@@ -187,7 +187,6 @@ VOID RunLoader(VOID)
   LoaderBlock.PageDirectoryEnd = (ULONG)&PageDirectoryEnd;
   LoaderBlock.ModsCount = 0;
   LoaderBlock.ModsAddr = reactos_modules;
-  LoaderBlock.ArchExtra = (ULONG)reactos_arc_hardware_data;
   LoaderBlock.MmapLength = (unsigned long)MachGetMemoryMap((PBIOS_MEMORY_MAP)reactos_memory_map, 32) * sizeof(memory_map_t);
   if (LoaderBlock.MmapLength)
   {
@@ -232,7 +231,7 @@ VOID RunLoader(VOID)
 
   /* Detect hardware */
   UiDrawStatusText("Detecting hardware...");
-  MachHwDetect();
+  LoaderBlock.ArchExtra = (ULONG)MachHwDetect();
   UiDrawStatusText("");
 
   /* set boot device */

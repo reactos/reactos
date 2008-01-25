@@ -349,7 +349,7 @@ DetectIsaBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
   /* FIXME: Detect more ISA devices */
 }
 
-VOID
+PCONFIGURATION_COMPONENT_DATA
 XboxHwDetect(VOID)
 {
   PCONFIGURATION_COMPONENT_DATA SystemKey;
@@ -370,6 +370,7 @@ XboxHwDetect(VOID)
   DetectIsaBios(SystemKey, &BusNumber);
 
   DbgPrint((DPRINT_HWDETECT, "DetectHardware() Done\n"));
+  return SystemKey;
 }
 
 /* EOF */

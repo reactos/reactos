@@ -58,7 +58,7 @@ ULONG XboxDiskGetCacheableBlockCount(ULONG DriveNumber);
 
 VOID XboxRTCGetCurrentDateTime(PULONG Year, PULONG Month, PULONG Day, PULONG Hour, PULONG Minute, PULONG Second);
 
-VOID XboxHwDetect(VOID);
+PCONFIGURATION_COMPONENT_DATA XboxHwDetect(VOID);
 
 VOID XboxSetLED(PCSTR Pattern);
 
