@@ -107,7 +107,7 @@ PUCHAR KernelPageTablesBuffer;
 ULONG PhysicalPageTables;
 ULONG KernelPageTables;
 
-MEMORY_ALLOCATION_DESCRIPTOR Mad[1024];
+MEMORY_ALLOCATION_DESCRIPTOR *Mad;
 ULONG MadCount = 0;
 
 
@@ -427,6 +427,9 @@ WinLdrTurnOnPaging(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 	// PDE and PTEs
 	if (MempAllocatePageTables() == FALSE)
 		return FALSE;
+
+	// Allocate memory for memory allocation descriptors
+	Mad = MmHeapAlloc(sizeof(MEMORY_ALLOCATION_DESCRIPTOR) * 1024);
 
 	// Setup an entry for each descriptor
 	MemoryMap = MmGetMemoryMap(&NoEntries);
