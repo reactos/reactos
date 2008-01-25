@@ -270,7 +270,7 @@ static const MUI_LANGUAGE LanguageList[] =
         L"0000041D",
         L"0000041D",
         L"1252",
-        L"865",
+        L"850",
         L"10000",
         L"Swedish",
         svSEPages,
