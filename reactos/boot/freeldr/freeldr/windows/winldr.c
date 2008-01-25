@@ -28,7 +28,6 @@
 extern ULONG reactos_disk_count;
 extern ARC_DISK_SIGNATURE reactos_arc_disk_info[];
 extern char reactos_arc_strings[32][256];
-extern char reactos_arc_hardware_data[HW_MAX_ARC_HEAP_SIZE];
 
 BOOLEAN
 WinLdrCheckForLoadedDll(IN OUT PLOADER_PARAMETER_BLOCK WinLdrBlock,
@@ -430,10 +429,7 @@ LoadAndBootWindows(PCSTR OperatingSystemName, WORD OperatingSystemVersion)
 	AllocateAndInitLPB(&LoaderBlock);
 
 	/* Detect hardware */
-	MachHwDetect();
-	LoaderBlock->ConfigurationRoot = MmHeapAlloc(16 * 1024);
-	RtlCopyMemory(LoaderBlock->ConfigurationRoot,
-		(PVOID)reactos_arc_hardware_data, 16 * 1024);
+	LoaderBlock->ConfigurationRoot = MachHwDetect();
 
 	/* Load kernel */
 	strcpy(FileName, BootPath);
@@ -495,7 +491,10 @@ LoadAndBootWindows(PCSTR OperatingSystemName, WORD OperatingSystemVersion)
 
 	/* "Stop all motors", change videomode */
 	DiskStopFloppyMotor();
-	MachVideoPrepareForReactOS(FALSE);
+	if (OperatingSystemVersion < _WIN32_WINNT_WIN2K)
+		MachVideoPrepareForReactOS(TRUE);
+	else
+		MachVideoPrepareForReactOS(FALSE);
 
 	/* Debugging... */
 	//DumpMemoryAllocMap();
