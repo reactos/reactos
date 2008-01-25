@@ -446,7 +446,7 @@ CmpInitializeMachineDependentConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBloc
                         }
 
                         /* Null-terminate it */
-                        CpuString[48] = ANSI_NULL;
+                        CpuString[47] = ANSI_NULL;
                     }
                 }
 
