@@ -126,7 +126,7 @@ StatusBarLoadAndFormatString(IN HWND hStatusBar,
                             lpFormat,
                             0,
                             0,
-                            (LPTSTR)&lpStr,
+                            (VOID*)&lpStr,
                             0,
                             &lArgs);
         va_end(lArgs);
@@ -189,10 +189,9 @@ GetTextFromEdit(OUT LPTSTR lpString,
     return len;
 }
 
-
 VOID GetError(VOID)
 {
-    LPVOID lpMsgBuf;
+    LPTSTR lpMsgBuf = NULL;
 
     FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER |
                   FORMAT_MESSAGE_FROM_SYSTEM |
@@ -200,11 +199,11 @@ VOID GetError(VOID)
                   NULL,
                   GetLastError(),
                   MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-                  (LPTSTR) &lpMsgBuf,
+                  (VOID*)&lpMsgBuf,
                   0,
                   NULL );
 
-    MessageBox(NULL, (LPCTSTR) lpMsgBuf, _T("Error!"), MB_OK | MB_ICONERROR);
+    MessageBox(NULL, lpMsgBuf, _T("Error!"), MB_OK | MB_ICONERROR);
 
     LocalFree(lpMsgBuf);
 }
