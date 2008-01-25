@@ -256,7 +256,7 @@ DetectPnpBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
 
     /* Set 'Configuration Data' value */
   Size = sizeof(CM_PARTIAL_RESOURCE_LIST) + (NodeSize * NodeCount);
-  PartialResourceList = MmAllocateMemory(Size);
+  PartialResourceList = MmHeapAlloc(Size);
   if (PartialResourceList == NULL)
     {
       DbgPrint((DPRINT_HWDETECT,
@@ -321,7 +321,7 @@ DetectPnpBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
   DbgPrint((DPRINT_HWDETECT, "Resource size: %u\n", Size));
   
     FldrSetConfigurationData(BusKey, PartialResourceList, Size);
-    MmFreeMemory(PartialResourceList);
+    MmHeapFree(PartialResourceList);
 }
 
 
@@ -339,7 +339,7 @@ SetHarddiskConfigurationData(PCONFIGURATION_COMPONENT_DATA DiskKey,
   /* Set 'Configuration Data' value */
   Size = sizeof(CM_PARTIAL_RESOURCE_LIST) +
 	 sizeof(CM_DISK_GEOMETRY_DEVICE_DATA);
-  PartialResourceList = MmAllocateMemory(Size);
+  PartialResourceList = MmHeapAlloc(Size);
   if (PartialResourceList == NULL)
     {
       DbgPrint((DPRINT_HWDETECT,
@@ -380,7 +380,7 @@ SetHarddiskConfigurationData(PCONFIGURATION_COMPONENT_DATA DiskKey,
   else
     {
       DbgPrint((DPRINT_HWDETECT, "Reading disk geometry failed\n"));
-      MmFreeMemory(PartialResourceList);
+      MmHeapFree(PartialResourceList);
       return;
     }
   DbgPrint((DPRINT_HWDETECT,
@@ -392,7 +392,7 @@ SetHarddiskConfigurationData(PCONFIGURATION_COMPONENT_DATA DiskKey,
 	   DiskGeometry->BytesPerSector));
 
   FldrSetConfigurationData(DiskKey, PartialResourceList, Size);
-  MmFreeMemory(PartialResourceList);
+  MmHeapFree(PartialResourceList);
 }
 
 
@@ -545,7 +545,7 @@ DetectBiosFloppyPeripheral(PCONFIGURATION_COMPONENT_DATA ControllerKey)
 
     Size = sizeof(CM_PARTIAL_RESOURCE_LIST) +
 	   sizeof(CM_FLOPPY_DEVICE_DATA);
-    PartialResourceList = MmAllocateMemory(Size);
+    PartialResourceList = MmHeapAlloc(Size);
     if (PartialResourceList == NULL)
     {
       DbgPrint((DPRINT_HWDETECT,
@@ -576,7 +576,7 @@ DetectBiosFloppyPeripheral(PCONFIGURATION_COMPONENT_DATA ControllerKey)
 
     /* Set 'Configuration Data' value */
     FldrSetConfigurationData(PeripheralKey, PartialResourceList, Size);
-    MmFreeMemory(PartialResourceList);
+    MmHeapFree(PartialResourceList);
 
     /* Set 'Identifier' value */
     swprintf(Identifier, L"FLOPPY%u", FloppyNumber + 1);
@@ -601,7 +601,7 @@ DetectBiosFloppyController(PCONFIGURATION_COMPONENT_DATA BusKey,
   
   Size = sizeof(CM_PARTIAL_RESOURCE_LIST) +
 	 2 * sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR);
-  PartialResourceList = MmAllocateMemory(Size);
+  PartialResourceList = MmHeapAlloc(Size);
   if (PartialResourceList == NULL)
     {
       DbgPrint((DPRINT_HWDETECT,
@@ -643,7 +643,7 @@ DetectBiosFloppyController(PCONFIGURATION_COMPONENT_DATA BusKey,
 
   /* Set 'Configuration Data' value */
   FldrSetConfigurationData(ControllerKey, PartialResourceList, Size);
-  MmFreeMemory(PartialResourceList);
+  MmHeapFree(PartialResourceList);
 
   if (FloppyCount) DetectBiosFloppyPeripheral(ControllerKey);
 }
@@ -710,7 +710,7 @@ DetectBiosDisks(PCONFIGURATION_COMPONENT_DATA SystemKey,
     /* Allocate resource descriptor */
     Size = sizeof(CM_PARTIAL_RESOURCE_LIST) +
         sizeof(CM_INT13_DRIVE_PARAMETER) * DiskCount;
-    PartialResourceList = MmAllocateMemory(Size);
+    PartialResourceList = MmHeapAlloc(Size);
     if (PartialResourceList == NULL)
     {
         DbgPrint((DPRINT_HWDETECT,
@@ -753,7 +753,7 @@ DetectBiosDisks(PCONFIGURATION_COMPONENT_DATA SystemKey,
     
     /* Set 'Configuration Data' value */
     FldrSetConfigurationData(SystemKey, PartialResourceList, Size);
-    MmFreeMemory(PartialResourceList);
+    MmHeapFree(PartialResourceList);
     
     /* Create and fill subkey for each harddisk */
     for (i = 0; i < DiskCount; i++)
@@ -1170,7 +1170,7 @@ DetectSerialPorts(PCONFIGURATION_COMPONENT_DATA BusKey)
       Size = sizeof(CM_PARTIAL_RESOURCE_LIST) +
 	     2 * sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR) +
 	     sizeof(CM_SERIAL_DEVICE_DATA);
-      PartialResourceList = MmAllocateMemory(Size);
+      PartialResourceList = MmHeapAlloc(Size);
       if (PartialResourceList == NULL)
 	{
 	  DbgPrint((DPRINT_HWDETECT,
@@ -1215,7 +1215,7 @@ DetectSerialPorts(PCONFIGURATION_COMPONENT_DATA BusKey)
 
       /* Set 'Configuration Data' value */
       FldrSetConfigurationData(ControllerKey, PartialResourceList, Size);
-      MmFreeMemory(PartialResourceList);
+      MmHeapFree(PartialResourceList);
 
       /* Set 'Identifier' value */
       swprintf(Buffer, L"COM%u", i + 1);
@@ -1283,7 +1283,7 @@ DetectParallelPorts(PCONFIGURATION_COMPONENT_DATA BusKey)
       if (Irq[i] != (ULONG)-1)
 	Size += sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR);
 
-      PartialResourceList = MmAllocateMemory(Size);
+      PartialResourceList = MmHeapAlloc(Size);
       if (PartialResourceList == NULL)
 	{
 	  DbgPrint((DPRINT_HWDETECT,
@@ -1320,7 +1320,7 @@ DetectParallelPorts(PCONFIGURATION_COMPONENT_DATA BusKey)
 
       /* Set 'Configuration Data' value */
       FldrSetConfigurationData(ControllerKey, PartialResourceList, Size);
-      MmFreeMemory(PartialResourceList);
+      MmHeapFree(PartialResourceList);
 
       /* Set 'Identifier' value */
       swprintf(Buffer, L"PARALLEL%u", i + 1);
@@ -1437,7 +1437,7 @@ DetectKeyboardPeripheral(PCONFIGURATION_COMPONENT_DATA ControllerKey)
     /* Set 'Configuration Data' value */
     Size = sizeof(CM_PARTIAL_RESOURCE_LIST) +
 	   sizeof(CM_KEYBOARD_DEVICE_DATA);
-    PartialResourceList = MmAllocateMemory(Size);
+    PartialResourceList = MmHeapAlloc(Size);
     if (PartialResourceList == NULL)
     {
       DbgPrint((DPRINT_HWDETECT,
@@ -1465,7 +1465,7 @@ DetectKeyboardPeripheral(PCONFIGURATION_COMPONENT_DATA ControllerKey)
 
     /* Set 'Configuration Data' value */
     FldrSetConfigurationData(PeripheralKey, PartialResourceList, Size);
-    MmFreeMemory(PartialResourceList);
+    MmHeapFree(PartialResourceList);
 
     /* Set 'Identifier' value */
     FldrSetIdentifier(PeripheralKey, L"PCAT_ENHANCED");
@@ -1499,7 +1499,7 @@ DetectKeyboardController(PCONFIGURATION_COMPONENT_DATA BusKey)
   /* Set 'Configuration Data' value */
   Size = sizeof(CM_PARTIAL_RESOURCE_LIST) +
 	  2 * sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR);
-  PartialResourceList = MmAllocateMemory(Size);
+  PartialResourceList = MmHeapAlloc(Size);
   if (PartialResourceList == NULL)
     {
       DbgPrint((DPRINT_HWDETECT,
@@ -1542,7 +1542,7 @@ DetectKeyboardController(PCONFIGURATION_COMPONENT_DATA BusKey)
 
   /* Set 'Configuration Data' value */
   FldrSetConfigurationData(ControllerKey, PartialResourceList, Size);
-  MmFreeMemory(PartialResourceList);
+  MmHeapFree(PartialResourceList);
  
   DetectKeyboardPeripheral(ControllerKey);
 }
@@ -1826,7 +1826,7 @@ DetectIsaBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
   /* Set 'Configuration Data' value */
   Size = sizeof(CM_PARTIAL_RESOURCE_LIST) -
 	 sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR);
-  PartialResourceList = MmAllocateMemory(Size);
+  PartialResourceList = MmHeapAlloc(Size);
   if (PartialResourceList == NULL)
     {
       DbgPrint((DPRINT_HWDETECT,
@@ -1842,7 +1842,7 @@ DetectIsaBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
 
   /* Set 'Configuration Data' value */
   FldrSetConfigurationData(BusKey, PartialResourceList, Size);
-  MmFreeMemory(PartialResourceList);
+  MmHeapFree(PartialResourceList);
 
   /* Detect ISA/BIOS devices */
   DetectBiosDisks(SystemKey, BusKey);
