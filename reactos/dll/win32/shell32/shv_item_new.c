@@ -55,7 +55,7 @@ typedef struct
 }INewMenuImpl;
 
 static const IContextMenu2Vtbl cmvt;
-static WCHAR szNew[100];
+static WCHAR szNew[MAX_PATH];
 
 
 static
@@ -207,7 +207,7 @@ LoadShellNewItems(INewMenuImpl * This)
   /* insert do new folder action */
   if (!LoadStringW(shell32_hInstance, FCIDM_SHVIEW_NEW, szNew, sizeof(szNew) / sizeof(WCHAR)))
       szNew[0] = 0;
-  szNew[199] = 0;
+  szNew[MAX_PATH-1] = 0;
 
   dwIndex = 0;
   do
@@ -259,7 +259,7 @@ InsertShellNewItems(HMENU hMenu, UINT idFirst, UINT idMenu, INewMenuImpl * This)
   MENUITEMINFOW mii;
   PSHELLNEW_ITEM pCurItem;
   UINT i;
-  WCHAR szBuffer[100];
+  WCHAR szBuffer[MAX_PATH];
 
   if (This->s_SnHead == NULL)
   {
@@ -273,7 +273,7 @@ InsertShellNewItems(HMENU hMenu, UINT idFirst, UINT idMenu, INewMenuImpl * This)
   /* insert do new shortcut action */
   if (!LoadStringW(shell32_hInstance, FCIDM_SHVIEW_NEWFOLDER, szBuffer, sizeof(szBuffer) / sizeof(szBuffer[0])))
       szBuffer[0] = 0;
-  szBuffer[199] = 0;
+  szBuffer[MAX_PATH-1] = 0;
   mii.fMask = MIIM_ID | MIIM_TYPE | MIIM_STATE | MIIM_DATA;
   mii.fType = MFT_STRING;
   mii.dwTypeData = szBuffer;
@@ -284,7 +284,7 @@ InsertShellNewItems(HMENU hMenu, UINT idFirst, UINT idMenu, INewMenuImpl * This)
   /* insert do new shortcut action */
   if (!LoadStringW(shell32_hInstance, FCIDM_SHVIEW_NEWLINK, szBuffer, sizeof(szBuffer) / sizeof(szBuffer[0])))
       szBuffer[0] = 0;
-  szBuffer[199] = 0;
+  szBuffer[MAX_PATH-1] = 0;
   mii.dwTypeData = szBuffer;
   mii.cch = strlenW(mii.dwTypeData);
   mii.wID = idFirst++;
