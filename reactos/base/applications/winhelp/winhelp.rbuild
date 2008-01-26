@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
-<module name="winhelp" type="win32gui" installbase="system32" installname="winhelp.exe" unicode="no">
+<module name="winhelp" type="win32gui" installbase="system32" installname="winhelp.exe" unicode="no" allowwarnings="true">
 	<include base="winhelp">.</include>
 	<define name="_WIN32_IE">0x0600</define>
 	<define name="_WIN32_WINNT">0x0501</define>
