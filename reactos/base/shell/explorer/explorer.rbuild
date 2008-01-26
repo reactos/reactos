@@ -3,6 +3,7 @@
 <group xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="explorer" type="win32gui" installname="explorer.exe" allowwarnings="true">
 	<linkerflag>-fexceptions</linkerflag>
+	<compilerflag compiler="cpp">-Wno-non-virtual-dtor</compilerflag>
 	<include base="explorer">.</include>
 	<define name="UNICODE" />
 	<define name="WIN32" />
