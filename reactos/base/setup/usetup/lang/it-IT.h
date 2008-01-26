@@ -30,7 +30,7 @@ static MUI_ENTRY itITLanguagePageEntries[] =
     {
         8,
         13,
-        "\x07  Questa lingua sara' quella predefinita per il sistema finale.",
+        "\x07  Questa lingua sarà quella predefinita per il sistema finale.",
         TEXT_NORMAL
     },
     {
@@ -958,7 +958,7 @@ static MUI_ENTRY itITFileCopyEntries[] =
     {
         0,
         0,
-        "                                                           \xB3 Please wait...    ",
+        "                                                           \xB3 Attendere prego...    ",
         TEXT_STATUS
     },
     {
@@ -1044,7 +1044,7 @@ static MUI_ENTRY itITKeyboardSettingsEntries[] =
     {
         8,
         13,
-        "\x07  Premere ESC per tornare allapagina precedente senza modificare",
+        "\x07  Premere ESC per tornare alla pagina precedente senza modificare",
         TEXT_NORMAL
     },
     {
@@ -1460,12 +1460,12 @@ MUI_ERROR itITErrorEntries[] =
     {
         //ERROR_ADDING_CODEPAGE,
         "Setup non ha potuto aggiungere la codepage al registry.\n"
-        "ENTER = Reboot computer"
+        "INVIO = Riavviare il computer"
     },
     {
         //ERROR_UPDATE_LOCALESETTINGS,
         "Setup non ha potuto impostare la regionalizzazione del sistema.\n"
-        "ENTER = Reboot computer"
+        "INVIO = Riavviare il computer"
     },
     {
         NULL,
@@ -1574,6 +1574,7 @@ MUI_PAGE itITPages[] =
 };
 
 #endif
+
 
 
 

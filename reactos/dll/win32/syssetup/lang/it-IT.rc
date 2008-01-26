@@ -176,8 +176,8 @@ BEGIN
     IDS_LOCALESUBTITLE   "È possibile personalizzare ReactOS per regioni e lingue differenti."
     IDS_DATETIMETITLE    "Data e ora"
     IDS_DATETIMESUBTITLE "Impostare la data e l'ora corrette per il proprio computer."
-    IDS_PROCESSTITLE     "Titolo della pagina di avanzamento"
-    IDS_PROCESSSUBTITLE  "Sottotitolo della pagina di avanzamento"
+    IDS_PROCESSTITLE     "Registrazione dei componenti"
+    IDS_PROCESSSUBTITLE  "Attendere prego..."
 END
 
 STRINGTABLE
@@ -197,7 +197,7 @@ BEGIN
     IDS_CMT_SCREENSHOT  "Salva una schermata"
     IDS_CMT_DEVMGMT     "Lancia la Gestione periferiche"
     IDS_CMT_SERVMAN     "Lancia la Gestione dei servizi"
-    IDS_CMT_RDESKTOP    "Launch Remote Desktop"
+    IDS_CMT_RDESKTOP    "Aviia il Desktop remoto"
 END
 
 STRINGTABLE
