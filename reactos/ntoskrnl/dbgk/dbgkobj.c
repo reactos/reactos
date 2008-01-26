@@ -1065,17 +1065,6 @@ DbgkpDeleteObject(IN PVOID DebugObject)
 
 VOID
 NTAPI
-DbgkpDelayedTerminateProcess(PVOID Arg)
-{
-    PWORK_QUEUE_ITEM WorkItem = (PWORK_QUEUE_ITEM)Arg;
-    PEPROCESS OwnerProcess = *((PEPROCESS *)&WorkItem[1]);
-    ExFreePool(WorkItem);
-    /* Terminate the process */
-    PsTerminateProcess(OwnerProcess, STATUS_DEBUGGER_INACTIVE);
-}
-
-VOID
-NTAPI
 DbgkpCloseObject(IN PEPROCESS OwnerProcess OPTIONAL,
                  IN PVOID ObjectBody,
                  IN ACCESS_MASK GrantedAccess,
@@ -1140,16 +1129,8 @@ DbgkpCloseObject(IN PEPROCESS OwnerProcess OPTIONAL,
                 /* Check if we terminate on exit */
                 if (DebugObject->KillProcessOnExit)
                 {
-                    PWORK_QUEUE_ITEM WorkItem =
-                        ExAllocatePool
-                        (NonPagedPool, 
-                         sizeof(WORK_QUEUE_ITEM) + sizeof(PVOID));
-                    ExInitializeWorkItem
-                        (WorkItem, 
-                         DbgkpDelayedTerminateProcess,
-                         WorkItem);
-                    *((PEPROCESS *)&WorkItem[1]) = OwnerProcess;
-                    ExQueueWorkItem(WorkItem, CriticalWorkQueue);
+                    /* Terminate the process */
+                    PsTerminateProcess(OwnerProcess, STATUS_DEBUGGER_INACTIVE);
                 }
 
                 /* Dereference the debug object */
