@@ -2159,7 +2159,7 @@ NtUserGetClassInfo(
    PUNICODE_STRING ClassName,
    LPWNDCLASSEXW lpWndClassEx,
    LPWSTR *ppszMenuName,
-   BOOL Ansi);
+   BOOL Ansi)
 {
     UNICODE_STRING CapturedClassName;
     PWINDOWCLASS Class;
