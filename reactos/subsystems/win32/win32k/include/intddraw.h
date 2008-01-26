@@ -109,16 +109,13 @@ typedef BOOL (NTAPI *PGD_ENGUNLOCKDIRECTDRAWSURFACE)(PDD_SURFACE_LOCAL);
 
 /* Standard macro */
 #define DXG_GET_INDEX_FUNCTION(INDEX, FUNCTION) \
-    if (gpDxFuncs) \
+    for (i = 0; i <= DXG_INDEX_DxDdIoctl; i++) \
     { \
-        for (i = 0; i <= DXG_INDEX_DxDdIoctl; i++) \
+        if (gpDxFuncs[i].iFunc == INDEX)  \
         { \
-            if (gpDxFuncs[i].iFunc == INDEX)  \
-            { \
-                FUNCTION = (VOID *)gpDxFuncs[i].pfn;  \
-                break;  \
-            }  \
-        } \
+            FUNCTION = (VOID *)gpDxFuncs[i].pfn;  \
+            break;  \
+        }  \
     }
 
 /* Gammaramp internal prototype */
