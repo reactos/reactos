@@ -63,6 +63,7 @@ GetClassInfoExA(
     Ret = NtUserGetClassInfo(hInstance,
                              &ClassName,
                              (LPWNDCLASSEXW)lpwcx,
+                             NULL,
                              TRUE);
 
     if (!IS_ATOM(lpszClass))
@@ -118,6 +119,7 @@ GetClassInfoExW(
     return NtUserGetClassInfo(hInstance,
                               &ClassName,
                               lpwcx,
+                              NULL,
                               FALSE);
 }
 
@@ -1226,7 +1228,8 @@ UnregisterClassA(
         ClassName.Buffer = (PWSTR)((ULONG_PTR)lpClassName);
 
     Ret = NtUserUnregisterClass(&ClassName,
-                                hInstance);
+                                hInstance,
+                                0);
 
     if (!IS_ATOM(lpClassName))
         RtlFreeUnicodeString(&ClassName);
@@ -1260,7 +1263,8 @@ UnregisterClassW(
         ClassName.Buffer = (PWSTR)((ULONG_PTR)lpClassName);
 
     return NtUserUnregisterClass(&ClassName,
-                                 hInstance);
+                                 hInstance,
+                                 0);
 }
 
 /* EOF */

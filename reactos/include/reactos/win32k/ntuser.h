@@ -1099,6 +1099,7 @@ BOOL NTAPI
 NtUserGetClassInfo(HINSTANCE hInstance,
 		   PUNICODE_STRING ClassName,
 		   LPWNDCLASSEXW wcex,
+		   LPWSTR *ppszMenuName,
 		   BOOL Ansi);
 
 INT
@@ -1496,7 +1497,8 @@ NtUserInitTask(
   DWORD Unknown7,
   DWORD Unknown8,
   DWORD Unknown9,
-  DWORD Unknown10);
+  DWORD Unknown10,
+  DWORD Unknown11);
 
 INT
 NTAPI
@@ -2422,7 +2424,8 @@ BOOL
 NTAPI
 NtUserUnregisterClass(
   PUNICODE_STRING ClassNameOrAtom,
-  HINSTANCE hInstance);
+  HINSTANCE hInstance,
+  DWORD Unknown);
 
 BOOL
 NTAPI

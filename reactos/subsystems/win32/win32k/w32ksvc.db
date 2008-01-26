@@ -391,8 +391,7 @@ NtUserGetAsyncKeyState                           1
 NtUserGetAtomName                                2
 NtUserGetCaretBlinkTime                          0
 NtUserGetCaretPos                                1
-# NtUserGetClassInfo                             5   Wrong number of param ?
-NtUserGetClassInfo                               4
+NtUserGetClassInfo                               5
 NtUserGetClassName                               3
 NtUserGetClipboardData                           2
 NtUserGetClipboardFormatName                     3
@@ -453,8 +452,7 @@ NtUserHiliteMenuItem                             4
 NtUserImpersonateDdeClientWindow                 2
 NtUserInitialize                                 3
 NtUserInitializeClientPfnArrays                  4
-# NtUserInitTask                                12 Wrong number of param ?
-NtUserInitTask                                  11
+NtUserInitTask                                  12
 NtUserInternalGetWindowText                      3
 NtUserInvalidateRect                             3
 NtUserInvalidateRgn                              3
@@ -580,8 +578,7 @@ NtUserUnhookWindowsHookEx                        1
 NtUserUnhookWinEvent                             1
 NtUserUnloadKeyboardLayout                       1
 NtUserUnlockWindowStation                        1
-# NtUserUnregisterClass                          3 Wrong number of param ?
-NtUserUnregisterClass                            2
+NtUserUnregisterClass                            3
 NtUserUnregisterUserApiHook                      0
 NtUserUnregisterHotKey                           2
 NtUserUpdateInputContext                         3

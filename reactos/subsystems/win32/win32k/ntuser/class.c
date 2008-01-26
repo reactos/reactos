@@ -2104,7 +2104,8 @@ NtUserSetClassWord(DWORD Unknown0,
 
 BOOL NTAPI
 NtUserUnregisterClass(IN PUNICODE_STRING ClassNameOrAtom,
-                      IN HINSTANCE hInstance)
+                      IN HINSTANCE hInstance,
+                      DWORD Unknown)
 {
     UNICODE_STRING CapturedClassName;
     BOOL Ret = FALSE;
@@ -2157,7 +2158,8 @@ NtUserGetClassInfo(
    HINSTANCE hInstance,
    PUNICODE_STRING ClassName,
    LPWNDCLASSEXW lpWndClassEx,
-   BOOL Ansi)
+   LPWSTR *ppszMenuName,
+   BOOL Ansi);
 {
     UNICODE_STRING CapturedClassName;
     PWINDOWCLASS Class;

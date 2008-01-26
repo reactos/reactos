@@ -414,7 +414,8 @@ NtUserInitTask(
    DWORD Unknown7,
    DWORD Unknown8,
    DWORD Unknown9,
-   DWORD Unknown10)
+   DWORD Unknown10,
+   DWORD Unknown11)
 {
    UNIMPLEMENTED
 
