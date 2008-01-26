@@ -126,6 +126,18 @@ typedef union _CDB {
     UCHAR  Control;
   } CDB12, *PCDB12;
 
+  struct _CDB16 {
+     UCHAR OperationCode;
+     UCHAR Reserved1        : 3;
+     UCHAR ForceUnitAccess  : 1;
+     UCHAR DisablePageOut   : 1;
+     UCHAR Protection       : 3;
+     UCHAR LogicalBlock[8];
+     UCHAR TransferLength[4];
+     UCHAR Reserved2;
+     UCHAR Control;
+  } CDB16, *PCDB16;
+
   struct _PAUSE_RESUME {
     UCHAR  OperationCode;
     UCHAR  Reserved1 : 5;
