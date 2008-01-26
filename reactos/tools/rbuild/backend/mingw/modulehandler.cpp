@@ -2133,6 +2133,10 @@ MingwModuleHandler::GenerateObjectFileTargets (
 		const FileLocation& baseHeaderFile = module.pch->file;
 		CLEAN_FILE ( *pchFilename );
 		string dependencies = backend->GetFullName ( baseHeaderFile );
+		string flags = cflagsMacro;
+		CompilerType type = module.cplusplus ? CompilerTypeCPP : CompilerTypeCC;
+		flags += " ";
+		flags += GenerateCompilerParametersFromVector ( module.non_if_data.compilerFlags , type );
 		/* WIDL generated headers may be used */
 		vector<FileLocation> rpcDependencies;
 		GetRpcHeaderDependencies ( rpcDependencies );
@@ -2147,7 +2151,7 @@ MingwModuleHandler::GenerateObjectFileTargets (
 		          "\t%s -o %s %s -g %s\n\n",
 		          module.cplusplus ? cppc.c_str() : cc.c_str(),
 		          backend->GetFullName ( *pchFilename ).c_str(),
-		          cflagsMacro.c_str(),
+		          flags.c_str(),
 		          backend->GetFullName ( baseHeaderFile ).c_str() );
 		delete pchFilename;
 	}
