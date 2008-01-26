@@ -1065,6 +1065,17 @@ DbgkpDeleteObject(IN PVOID DebugObject)
 
 VOID
 NTAPI
+DbgkpDelayedTerminateProcess(PVOID Arg)
+{
+    PWORK_QUEUE_ITEM WorkItem = (PWORK_QUEUE_ITEM)Arg;
+    PEPROCESS OwnerProcess = *((PEPROCESS *)&WorkItem[1]);
+    ExFreePool(WorkItem);
+    /* Terminate the process */
+    PsTerminateProcess(OwnerProcess, STATUS_DEBUGGER_INACTIVE);
+}
+
+VOID
+NTAPI
 DbgkpCloseObject(IN PEPROCESS OwnerProcess OPTIONAL,
                  IN PVOID ObjectBody,
                  IN ACCESS_MASK GrantedAccess,
@@ -1078,6 +1089,8 @@ DbgkpCloseObject(IN PEPROCESS OwnerProcess OPTIONAL,
     PDEBUG_EVENT DebugEvent;
     DBGKTRACE(DBGK_OBJECT_DEBUG, "OwnerProcess: %p DebugObject: %p\n",
               OwnerProcess, DebugObject);
+
+    DPRINT("APC DISABLE: %d\n", ((PETHREAD)KeGetCurrentThread())->Tcb.CombinedApcDisable);
 
     /* If this isn't the last handle, do nothing */
     if (SystemHandleCount > 1) return;
@@ -1127,8 +1140,16 @@ DbgkpCloseObject(IN PEPROCESS OwnerProcess OPTIONAL,
                 /* Check if we terminate on exit */
                 if (DebugObject->KillProcessOnExit)
                 {
-                    /* Terminate the process */
-                    PsTerminateProcess(OwnerProcess, STATUS_DEBUGGER_INACTIVE);
+                    PWORK_QUEUE_ITEM WorkItem =
+                        ExAllocatePool
+                        (NonPagedPool, 
+                         sizeof(WORK_QUEUE_ITEM) + sizeof(PVOID));
+                    ExInitializeWorkItem
+                        (WorkItem, 
+                         DbgkpDelayedTerminateProcess,
+                         WorkItem);
+                    *((PEPROCESS *)&WorkItem[1]) = OwnerProcess;
+                    ExQueueWorkItem(WorkItem, CriticalWorkQueue);
                 }
 
                 /* Dereference the debug object */
