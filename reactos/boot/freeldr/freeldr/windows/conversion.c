@@ -90,8 +90,8 @@ ConvertConfigToVA(PCONFIGURATION_COMPONENT_DATA Start)
 		if (Child->ComponentEntry.Identifier)
 			Child->ComponentEntry.Identifier = PaToVa(Child->ComponentEntry.Identifier);
 
-		DbgPrint((DPRINT_WINDOWS, "Device 0x%X class %d type %d id %p, parent %p\n", Child,
-			Child->ComponentEntry.Class, Child->ComponentEntry.Type, Child->ComponentEntry.Identifier, Child->Parent));
+		DbgPrint((DPRINT_WINDOWS, "Device 0x%X class %d type %d id '%s', parent %p\n", Child,
+			Child->ComponentEntry.Class, Child->ComponentEntry.Type, VaToPa(Child->ComponentEntry.Identifier), Child->Parent));
 
 		// Go through siblings list
 		Sibling = VaToPa(Child->Sibling);
@@ -112,8 +112,8 @@ ConvertConfigToVA(PCONFIGURATION_COMPONENT_DATA Start)
 			if (Sibling->ComponentEntry.Identifier)
 				Sibling->ComponentEntry.Identifier = PaToVa(Sibling->ComponentEntry.Identifier);
 
-			DbgPrint((DPRINT_WINDOWS, "Device 0x%X class %d type %d id %p, parent %p\n", Sibling,
-				Sibling->ComponentEntry.Class, Sibling->ComponentEntry.Type, Sibling->ComponentEntry.Identifier, Sibling->Parent));
+			DbgPrint((DPRINT_WINDOWS, "Device 0x%X class %d type %d id '%s', parent %p\n", Sibling,
+				Sibling->ComponentEntry.Class, Sibling->ComponentEntry.Type, VaToPa(Sibling->ComponentEntry.Identifier), Sibling->Parent));
 
 			// Recurse into the Child tree
 			if (VaToPa(Sibling->Child) != NULL)
