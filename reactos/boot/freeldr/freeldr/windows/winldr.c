@@ -190,6 +190,7 @@ WinLdrInitializePhase1(PLOADER_PARAMETER_BLOCK LoaderBlock,
 	Extension->Size = sizeof(LOADER_PARAMETER_EXTENSION);
 	Extension->MajorVersion = (VersionToBoot & 0xFF00) >> 8;
 	Extension->MinorVersion = VersionToBoot & 0xFF;
+	Extension->LoaderPagesSpanned = LOADER_HIGH_ZONE;
 
 
 	LoaderBlock->Extension = PaToVa(Extension);
