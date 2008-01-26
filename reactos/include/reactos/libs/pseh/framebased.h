@@ -23,6 +23,11 @@
 #ifndef KJK_PSEH_FRAMEBASED_H_
 #define KJK_PSEH_FRAMEBASED_H_
 
+#if ((__GNUC__ > 4) && (__GNUC_MINOR__ > 1))
+/* warning: this will hide uninitialized variable warnings in the following code */
+#  pragma GCC diagnostic ignored "-Wuninitialized"
+#endif
+
 #include <pseh/framebased/internal.h>
 #include <pseh/excpt.h>
 
