@@ -311,6 +311,13 @@ enum HostType
 	HostDontCare,
 };
 
+enum CompilerType
+{
+	CompilerTypeDontCare,
+	CompilerTypeCC,
+	CompilerTypeCPP,
+};
+
 class FileLocation
 {
 public:
@@ -592,6 +599,7 @@ public:
 	const Module* module;
 	const XMLElement& node;
 	std::string flag;
+	CompilerType compiler;
 
 	CompilerFlag ( const Project& project,
 	               const XMLElement& compilerFlagNode );

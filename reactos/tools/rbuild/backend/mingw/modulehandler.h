@@ -130,7 +130,7 @@ private:
 	std::string ConcatenatePaths ( const std::string& path1,
 	                               const std::string& path2 ) const;
 	std::string GenerateGccDefineParameters () const;
-	std::string GenerateCompilerParametersFromVector ( const std::vector<CompilerFlag*>& compilerFlags ) const;
+	std::string GenerateCompilerParametersFromVector ( const std::vector<CompilerFlag*>& compilerFlags, const CompilerType type ) const;
 	std::string GenerateLinkerParametersFromVector ( const std::vector<LinkerFlag*>& linkerFlags ) const;
 	std::string GenerateImportLibraryDependenciesFromVector ( const std::vector<Library*>& libraries );
 	std::string GenerateLinkerParameters () const;

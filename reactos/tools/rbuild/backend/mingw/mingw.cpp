@@ -448,10 +448,13 @@ MingwBackend::GenerateProjectGccOptionsMacro ( const char* assignmentOperation,
 
 	for ( i = 0; i < data.compilerFlags.size(); i++ )
 	{
-		fprintf (
-			fMakefile,
-			" %s",
-			data.compilerFlags[i]->flag.c_str() );
+		if ( data.compilerFlags[i]->compiler == CompilerTypeDontCare )
+		{
+			fprintf (
+				fMakefile,
+				" %s",
+				data.compilerFlags[i]->flag.c_str() );
+		}
 	}
 
 	fprintf ( fMakefile, "\n" );

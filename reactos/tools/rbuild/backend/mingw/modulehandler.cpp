@@ -764,15 +764,18 @@ MingwModuleHandler::GenerateGccIncludeParameters () const
 }
 
 string
-MingwModuleHandler::GenerateCompilerParametersFromVector ( const vector<CompilerFlag*>& compilerFlags ) const
+MingwModuleHandler::GenerateCompilerParametersFromVector ( const vector<CompilerFlag*>& compilerFlags, const CompilerType type ) const
 {
 	string parameters;
 	for ( size_t i = 0; i < compilerFlags.size (); i++ )
 	{
 		CompilerFlag& compilerFlag = *compilerFlags[i];
-		if ( parameters.length () > 0 )
-			parameters += " ";
-		parameters += compilerFlag.flag;
+		if ( compilerFlag.compiler == type )
+		{
+			if ( parameters.length () > 0 )
+				parameters += " ";
+			parameters += compilerFlag.flag;
+		}
 	}
 	return parameters;
 }
@@ -848,7 +851,7 @@ MingwModuleHandler::GenerateMacro (
 
 	if ( generatingCompilerMacro )
 	{
-		string compilerParameters = GenerateCompilerParametersFromVector ( data.compilerFlags );
+		string compilerParameters = GenerateCompilerParametersFromVector ( data.compilerFlags , CompilerTypeDontCare );
 		if ( compilerParameters.size () > 0 )
 		{
 			fprintf (
@@ -1719,21 +1722,25 @@ MingwModuleHandler::GenerateCommands (
 {
 	const FileLocation& sourceFile = compilationUnit.GetFilename ();
 	string extension = GetExtension ( sourceFile );
+	string flags = cflagsMacro;
+	flags += " ";
 	if ( extension == ".c" || extension == ".C" )
 	{
+		flags += GenerateCompilerParametersFromVector ( module.non_if_data.compilerFlags , CompilerTypeCC );
 		GenerateGccCommand ( &sourceFile,
 		                     GetCompilationUnitDependencies ( compilationUnit ) + extraDependencies,
 		                     cc,
-		                     cflagsMacro );
+		                     flags );
 	}
 	else if ( extension == ".cc" || extension == ".CC" ||
 	          extension == ".cpp" || extension == ".CPP" ||
 	          extension == ".cxx" || extension == ".CXX" )
 	{
+		flags += GenerateCompilerParametersFromVector ( module.non_if_data.compilerFlags , CompilerTypeCPP );
 		GenerateGccCommand ( &sourceFile,
 		                     GetCompilationUnitDependencies ( compilationUnit ) + extraDependencies,
 		                     cppc,
-		                     cflagsMacro );
+		                     flags );
 	}
 	else if ( extension == ".s" || extension == ".S" )
 	{
