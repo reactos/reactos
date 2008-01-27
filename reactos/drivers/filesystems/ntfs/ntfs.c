@@ -89,6 +89,8 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
     WARN_(NTFS, "IoCreateDevice failed with status: %lx\n", Status);
     goto ErrorEnd;
   }
+  
+  NtfsGlobalData->DeviceObject->Flags |= DO_DIRECT_IO;
 
   /* Register file system */
   IoRegisterFileSystem(NtfsGlobalData->DeviceObject);
