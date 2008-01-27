@@ -50,10 +50,10 @@ typedef struct
 //
 // This is the zone which is used by the OS loader
 //
-#define LOADER_HIGH_ZONE ((16*1024*1024) >> MM_PAGE_SHIFT) //16Mb page
+#define LOADER_HIGH_ZONE ((24*1024*1024) >> MM_PAGE_SHIFT) // 24Mb
 
 // HEAP and STACK size
-#define HEAP_PAGES	0x100//0x18
+#define HEAP_PAGES	0x400
 #define STACK_PAGES	0x00
 
 typedef struct

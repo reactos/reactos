@@ -100,7 +100,7 @@ extern ULONG_PTR i386AlignmentCheck; // exc 17
 /* GLOBALS ***************************************************************/
 
 PHARDWARE_PTE PDE;
-PHARDWARE_PTE HalPT;
+PHARDWARE_PTE HalPageTable;
 
 PUCHAR PhysicalPageTablesBuffer;
 PUCHAR KernelPageTablesBuffer;
@@ -151,10 +151,10 @@ MempAllocatePageTables()
 	PDE[HYPER_SPACE_ENTRY].Write = 1;
 
 	// The last PDE slot is allocated for HAL's memory mapping (Virtual Addresses 0xFFC00000 - 0xFFFFFFFF)
-	HalPT = (PHARDWARE_PTE)&Buffer[MM_PAGE_SIZE*1];
+	HalPageTable = (PHARDWARE_PTE)&Buffer[MM_PAGE_SIZE*1];
 
 	// Map it
-	PDE[1023].PageFrameNumber = (ULONG)HalPT >> MM_PAGE_SHIFT;
+	PDE[1023].PageFrameNumber = (ULONG)HalPageTable >> MM_PAGE_SHIFT;
 	PDE[1023].Valid = 1;
 	PDE[1023].Write = 1;
 
@@ -388,6 +388,52 @@ MempAddMemoryBlock(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 	}
 }
 
+#ifdef _M_IX86
+
+BOOLEAN LocalAPIC = FALSE;
+ULONG_PTR APICAddress = 0;
+
+VOID
+WinLdrpMapApic()
+{
+	/* Check if we have a local APIC */
+	asm(".intel_syntax noprefix\n");
+		asm("mov eax, 1\n");
+		asm("cpuid\n");
+		asm("shr edx, 9\n");
+		asm("and edx, 0x1\n");
+		asm("mov _LocalAPIC, edx\n");
+	asm(".att_syntax\n");
+
+	/* If there is no APIC, just return */
+	if (!LocalAPIC)
+		return;
+
+	asm(".intel_syntax noprefix\n");
+		asm("mov ecx, 0x1B\n");
+		asm("rdmsr\n");
+		asm("mov edx, eax\n");
+		asm("and edx, 0xFFFFF000\n");
+		asm("mov _APICAddress, edx");
+	asm(".att_syntax\n");
+
+	DbgPrint((DPRINT_WINDOWS, "Local APIC detected at address 0x%x\n",
+		APICAddress));
+
+	/* Map it */
+	HalPageTable[(APIC_BASE - 0xFFC00000) >> MM_PAGE_SHIFT].PageFrameNumber
+		= APICAddress >> MM_PAGE_SHIFT;
+	HalPageTable[(APIC_BASE - 0xFFC00000) >> MM_PAGE_SHIFT].Valid = 1;
+	HalPageTable[(APIC_BASE - 0xFFC00000) >> MM_PAGE_SHIFT].Write = 1;
+}
+#else
+VOID
+WinLdrpMapApic()
+{
+	/* Implement it for another arch */
+}
+#endif
+
 BOOLEAN
 WinLdrTurnOnPaging(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
                    ULONG PcrBasePage,
@@ -525,17 +571,20 @@ WinLdrTurnOnPaging(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 	}*/
 
 	//VideoDisplayString(L"Hello from VGA, going into the kernel\n");
-	DbgPrint((DPRINT_WINDOWS, "HalPT: 0x%X\n", HalPT));
+	DbgPrint((DPRINT_WINDOWS, "HalPageTable: 0x%X\n", HalPageTable));
 
 	// Page Tables have been setup, make special handling for PCR and TSS
 	// (which is done in BlSetupFotNt in usual ntldr)
-	HalPT[(KI_USER_SHARED_DATA - 0xFFC00000) >> MM_PAGE_SHIFT].PageFrameNumber = PcrBasePage+1;
-	HalPT[(KI_USER_SHARED_DATA - 0xFFC00000) >> MM_PAGE_SHIFT].Valid = 1;
-	HalPT[(KI_USER_SHARED_DATA - 0xFFC00000) >> MM_PAGE_SHIFT].Write = 1;
+	HalPageTable[(KI_USER_SHARED_DATA - 0xFFC00000) >> MM_PAGE_SHIFT].PageFrameNumber = PcrBasePage+1;
+	HalPageTable[(KI_USER_SHARED_DATA - 0xFFC00000) >> MM_PAGE_SHIFT].Valid = 1;
+	HalPageTable[(KI_USER_SHARED_DATA - 0xFFC00000) >> MM_PAGE_SHIFT].Write = 1;
 
-	HalPT[(KIP0PCRADDRESS - 0xFFC00000) >> MM_PAGE_SHIFT].PageFrameNumber = PcrBasePage;
-	HalPT[(KIP0PCRADDRESS - 0xFFC00000) >> MM_PAGE_SHIFT].Valid = 1;
-	HalPT[(KIP0PCRADDRESS - 0xFFC00000) >> MM_PAGE_SHIFT].Write = 1;
+	HalPageTable[(KIP0PCRADDRESS - 0xFFC00000) >> MM_PAGE_SHIFT].PageFrameNumber = PcrBasePage;
+	HalPageTable[(KIP0PCRADDRESS - 0xFFC00000) >> MM_PAGE_SHIFT].Valid = 1;
+	HalPageTable[(KIP0PCRADDRESS - 0xFFC00000) >> MM_PAGE_SHIFT].Write = 1;
+
+	// Map APIC
+	WinLdrpMapApic();
 
 	// Map VGA memory
 	//VideoMemoryBase = MmMapIoSpace(0xb8000, 4000, MmNonCached);
@@ -775,7 +824,7 @@ WinLdrSetProcessorContext(PVOID GdtIdt, IN ULONG Pcr, IN ULONG Tss)
 	pGdt[7].HighWord.Bytes.BaseHi	= 0;
 
 	//
-	// Some BIOS fuck (0x40)
+	// Some BIOS stuff (0x40)
 	//
 	pGdt[8].LimitLow				= 0xFFFF;
 	pGdt[8].BaseLow					= 0x400;
@@ -828,7 +877,7 @@ WinLdrSetProcessorContext(PVOID GdtIdt, IN ULONG Pcr, IN ULONG Tss)
 	// Video buffer Selector (0x68)
 	//
 	pGdt[13].LimitLow				= 0x3FFF;
-	pGdt[13].BaseLow				= 0x8000; //FIXME: I guess not correct for UGA
+	pGdt[13].BaseLow				= 0x8000;
 	pGdt[13].HighWord.Bytes.BaseMid	= 0x0B;
 	pGdt[13].HighWord.Bytes.Flags1	= 0x92;
 	pGdt[13].HighWord.Bytes.Flags2	= 0;
@@ -846,7 +895,7 @@ WinLdrSetProcessorContext(PVOID GdtIdt, IN ULONG Pcr, IN ULONG Tss)
 
 	//
 	// Some unused descriptors should go here
-	// ...
+	//
 
 	// Copy the old IDT
 	RtlCopyMemory(pIdt, (PVOID)OldIdt.Base, OldIdt.Limit);
