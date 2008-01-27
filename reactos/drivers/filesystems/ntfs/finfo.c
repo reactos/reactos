@@ -39,9 +39,9 @@
 
 static NTSTATUS
 NtfsGetStandardInformation(PFCB Fcb,
-			   PDEVICE_OBJECT DeviceObject,
-			   PFILE_STANDARD_INFORMATION StandardInfo,
-			   PULONG BufferLength)
+                           PDEVICE_OBJECT DeviceObject,
+                           PFILE_STANDARD_INFORMATION StandardInfo,
+                           PULONG BufferLength)
 /*
  * FUNCTION: Retrieve the standard file information
  */
@@ -56,7 +56,7 @@ NtfsGetStandardInformation(PFCB Fcb,
   ASSERT(Fcb != NULL);
 
   RtlZeroMemory(StandardInfo,
-		sizeof(FILE_STANDARD_INFORMATION));
+    sizeof(FILE_STANDARD_INFORMATION));
 
   StandardInfo->AllocationSize = Fcb->RFCB.AllocationSize;
   StandardInfo->EndOfFile = Fcb->RFCB.FileSize;
@@ -71,8 +71,8 @@ NtfsGetStandardInformation(PFCB Fcb,
 
 static NTSTATUS
 NtfsGetPositionInformation(PFILE_OBJECT FileObject,
-			   PFILE_POSITION_INFORMATION PositionInfo,
-			   PULONG BufferLength)
+                           PFILE_POSITION_INFORMATION PositionInfo,
+                           PULONG BufferLength)
 {
   DPRINT("NtfsGetPositionInformation() called\n");
 
@@ -84,7 +84,7 @@ NtfsGetPositionInformation(PFILE_OBJECT FileObject,
 //    FileObject->CurrentByteOffset.QuadPart;
 
   DPRINT("Getting position %I64x\n",
-	 PositionInfo->CurrentByteOffset.QuadPart);
+    PositionInfo->CurrentByteOffset.QuadPart);
 
   *BufferLength -= sizeof(FILE_POSITION_INFORMATION);
   return(STATUS_SUCCESS);
@@ -93,10 +93,10 @@ NtfsGetPositionInformation(PFILE_OBJECT FileObject,
 
 static NTSTATUS
 NtfsGetBasicInformation(PFILE_OBJECT FileObject,
-			PFCB Fcb,
-			PDEVICE_OBJECT DeviceObject,
-			PFILE_BASIC_INFORMATION BasicInfo,
-			PULONG BufferLength)
+                        PFCB Fcb,
+                        PDEVICE_OBJECT DeviceObject,
+                        PFILE_BASIC_INFORMATION BasicInfo,
+                        PULONG BufferLength)
 {
   DPRINT("NtfsGetBasicInformation() called\n");
 
@@ -125,10 +125,10 @@ NtfsGetBasicInformation(PFILE_OBJECT FileObject,
 
 static NTSTATUS
 NtfsGetNameInformation(PFILE_OBJECT FileObject,
-		       PFCB Fcb,
-		       PDEVICE_OBJECT DeviceObject,
-		       PFILE_NAME_INFORMATION NameInfo,
-		       PULONG BufferLength)
+                       PFCB Fcb,
+                       PDEVICE_OBJECT DeviceObject,
+                       PFILE_NAME_INFORMATION NameInfo,
+                       PULONG BufferLength)
 /*
  * FUNCTION: Retrieve the file name information
  */
@@ -147,8 +147,8 @@ NtfsGetNameInformation(PFILE_OBJECT FileObject,
 
   NameInfo->FileNameLength = NameLength;
   memcpy(NameInfo->FileName,
-	 Fcb->PathName,
-	 NameLength + sizeof(WCHAR));
+         Fcb->PathName,
+         NameLength + sizeof(WCHAR));
 //  wcscpy(NameInfo->FileName, L"\\");
 
   *BufferLength -=
@@ -160,8 +160,8 @@ NtfsGetNameInformation(PFILE_OBJECT FileObject,
 
 static NTSTATUS
 NtfsGetInternalInformation(PFCB Fcb,
-			   PFILE_INTERNAL_INFORMATION InternalInfo,
-			   PULONG BufferLength)
+                           PFILE_INTERNAL_INFORMATION InternalInfo,
+                           PULONG BufferLength)
 {
   DPRINT("NtfsGetInternalInformation() called\n");
 
@@ -182,7 +182,7 @@ NtfsGetInternalInformation(PFCB Fcb,
 
 NTSTATUS STDCALL
 NtfsQueryInformation(PDEVICE_OBJECT DeviceObject,
-		     PIRP Irp)
+                     PIRP Irp)
 /*
  * FUNCTION: Retrieve the specified file information
  */
@@ -207,51 +207,51 @@ NtfsQueryInformation(PDEVICE_OBJECT DeviceObject,
   BufferLength = Stack->Parameters.QueryFile.Length;
 
   switch (FileInformationClass)
-    {
-      case FileStandardInformation:
-	Status = NtfsGetStandardInformation(Fcb,
-					    DeviceObject,
-					    SystemBuffer,
-					    &BufferLength);
-	break;
+  {
+    case FileStandardInformation:
+      Status = NtfsGetStandardInformation(Fcb,
+                                          DeviceObject,
+                                          SystemBuffer,
+                                          &BufferLength);
+      break;
 
-      case FilePositionInformation:
-	Status = NtfsGetPositionInformation(FileObject,
-					    SystemBuffer,
-					    &BufferLength);
-	break;
+    case FilePositionInformation:
+      Status = NtfsGetPositionInformation(FileObject,
+                                          SystemBuffer,
+                                          &BufferLength);
+      break;
 
-      case FileBasicInformation:
-	Status = NtfsGetBasicInformation(FileObject,
-					 Fcb,
-					 DeviceObject,
-					 SystemBuffer,
-					 &BufferLength);
-	break;
+    case FileBasicInformation:
+      Status = NtfsGetBasicInformation(FileObject,
+                                       Fcb,
+                                       DeviceObject,
+                                       SystemBuffer,
+                                       &BufferLength);
+      break;
 
-      case FileNameInformation:
-	Status = NtfsGetNameInformation(FileObject,
-					Fcb,
-					DeviceObject,
-					SystemBuffer,
-					&BufferLength);
-	break;
+    case FileNameInformation:
+      Status = NtfsGetNameInformation(FileObject,
+                                      Fcb,
+                                      DeviceObject,
+                                      SystemBuffer,
+                                      &BufferLength);
+      break;
 
-      case FileInternalInformation:
-	Status = NtfsGetInternalInformation(Fcb,
-					    SystemBuffer,
-					    &BufferLength);
-	break;
+    case FileInternalInformation:
+      Status = NtfsGetInternalInformation(Fcb,
+                                          SystemBuffer,
+                                          &BufferLength);
+      break;
 
-      case FileAlternateNameInformation:
-      case FileAllInformation:
-	Status = STATUS_NOT_IMPLEMENTED;
-	break;
+    case FileAlternateNameInformation:
+    case FileAllInformation:
+      Status = STATUS_NOT_IMPLEMENTED;
+      break;
 
-      default:
-	DPRINT("Unimplemented information class %u\n", FileInformationClass);
-	Status = STATUS_NOT_SUPPORTED;
-    }
+    default:
+      DPRINT("Unimplemented information class %u\n", FileInformationClass);
+      Status = STATUS_NOT_SUPPORTED;
+  }
 
   Irp->IoStatus.Status = Status;
   if (NT_SUCCESS(Status))
