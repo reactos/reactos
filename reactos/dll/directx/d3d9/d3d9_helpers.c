@@ -43,25 +43,6 @@ BOOL ReadRegistryValue(IN DWORD ValueType, IN LPCSTR ValueName, OUT LPBYTE DataB
     return TRUE;
 }
 
-HRESULT FormatDebugString(IN OUT LPSTR Buffer, IN LONG BufferSize, IN LPCSTR FormatString, ... )
-{
-    int BytesWritten;
-    va_list vargs;
-
-    if (BufferSize == 0)
-        return DDERR_INVALIDPARAMS;
-
-    va_start(vargs, FormatString);
-    BytesWritten = _vsnprintf(Buffer, BufferSize-1, FormatString, vargs);
-
-    if (BytesWritten < BufferSize)
-        return DDERR_GENERIC;
-
-    Buffer[BufferSize-1] = '\0';
-
-    return 0;
-}
-
 HRESULT AlignedAlloc(IN OUT LPVOID *ppObject, IN SIZE_T dwSize)
 {
     ULONG AddressOffset;

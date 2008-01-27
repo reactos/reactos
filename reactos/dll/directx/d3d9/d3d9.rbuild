@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
-<module name="d3d9" type="win32dll" entrypoint="0" installbase="system32" installname="d3d9.dll">
+<module name="d3d9" type="win32dll" entrypoint="0" installbase="system32" installname="d3d9.dll" baseaddress="0x4fdd0000">
 	<importlibrary definition="d3d9.def" />
 
 	<library>advapi32</library>
@@ -9,6 +9,7 @@
 	<library>gdi32</library>
 	<library>uuid</library>
 	<library>dxguid</library>
+	<library>strsafe</library>
 
 	<file>d3d9.c</file>
 	<file>d3d9_helpers.c</file>

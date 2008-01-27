@@ -11,6 +11,6 @@
 #include "d3d9_private.h"
 
 /* Creates a Direct3D9 object */
-HRESULT CreateD3D9(OUT LPDIRECT3D9 *ppDirect3D9);
+HRESULT CreateD3D9(OUT LPDIRECT3D9 *ppDirect3D9, UINT SDKVersion);
 
 #endif // _D3D9_CREATE_H_

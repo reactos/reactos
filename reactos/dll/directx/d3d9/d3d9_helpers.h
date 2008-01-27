@@ -17,9 +17,6 @@ LPDIRECT3D9_INT impl_from_IDirect3D9(LPDIRECT3D9 iface);
 /* Reads a registry value if it's of the correct value type */
 BOOL ReadRegistryValue(IN DWORD ValueType, IN LPCSTR ValueName, OUT LPBYTE DataBuffer, IN OUT LPDWORD DataBufferSize);
 
-/* Formats debug strings */
-HRESULT FormatDebugString(IN OUT LPSTR Buffer, IN LONG BufferSize, IN LPCSTR FormatString, ... );
-
 /* Allocates memory and returns an aligned pointer */
 HRESULT AlignedAlloc(IN OUT LPVOID *ppObject, IN SIZE_T dwSize);
 

@@ -10,8 +10,8 @@
 #include <d3d9.h>
 #include "d3d9_helpers.h"
 #include "d3d9_create.h"
-
 #include <debug.h>
+#include <strsafe.h>
 
 #define DEBUG_MESSAGE_BUFFER_SIZE   512
 
@@ -87,14 +87,16 @@ IDirect3D9* WINAPI Direct3DCreate9(UINT SDKVersion)
     {
         if (SDKVersion & DX_D3D9_DEBUG)
         {
-            FormatDebugString(DebugMessageBuffer, DEBUG_MESSAGE_BUFFER_SIZE, D3dError_WrongSdkVersion, NoDebugSDKVersion, D3D_SDK_VERSION);
-            OutputDebugStringA(DebugMessageBuffer);
+            HRESULT hResult;
+            hResult = StringCbPrintfA(DebugMessageBuffer, DEBUG_MESSAGE_BUFFER_SIZE, D3dError_WrongSdkVersion, NoDebugSDKVersion, D3D_SDK_VERSION);
+            if (SUCCEEDED(hResult))
+                OutputDebugStringA(DebugMessageBuffer);
         }
 
         return NULL;
     }
 
-    CreateD3D9(&D3D9Obj);
+    CreateD3D9(&D3D9Obj, SDKVersion);
 
     return D3D9Obj;
 }
