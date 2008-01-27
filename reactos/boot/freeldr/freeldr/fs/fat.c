@@ -22,6 +22,8 @@
 #define NDEBUG
 #include <debug.h>
 
+#define CACHE_ENABLED
+
 ULONG			BytesPerSector;			/* Number of bytes per sector */
 ULONG			SectorsPerCluster;		/* Number of sectors per cluster */
 ULONG			FatVolumeStartSector;		/* Absolute starting sector of the partition */
@@ -334,6 +336,7 @@ BOOLEAN FatOpenVolume(UCHAR DriveNumber, ULONGLONG VolumeStartSector, ULONGLONG 
 	}
 	MmHeapFree(FatVolumeBootSector);
 
+#ifdef CACHE_ENABLED
 	//
 	// Initialize the disk cache for this drive
 	//
@@ -354,6 +357,20 @@ BOOLEAN FatOpenVolume(UCHAR DriveNumber, ULONGLONG VolumeStartSector, ULONGLONG 
 			return FALSE;
 		}
 	}
+#else
+	{
+		GEOMETRY DriveGeometry;
+		ULONG BlockSize;
+
+		// Initialize drive by getting its geometry
+		if (!MachDiskGetDriveGeometry(DriveNumber, &DriveGeometry))
+		{
+			return FALSE;
+		}
+
+		BlockSize = MachDiskGetCacheableBlockCount(DriveNumber);
+	}
+#endif
 
 	return TRUE;
 }
@@ -1405,7 +1422,21 @@ ULONG FatGetFilePointer(FILE *FileHandle)
 
 BOOLEAN FatReadVolumeSectors(ULONG DriveNumber, ULONG SectorNumber, ULONG SectorCount, PVOID Buffer)
 {
+#ifdef CACHE_ENABLED
 	return CacheReadDiskSectors(DriveNumber, SectorNumber + FatVolumeStartSector, SectorCount, Buffer);
+#else
+	// Now try to read in the block
+	if (!MachDiskReadLogicalSectors(DriveNumber, SectorNumber + FatVolumeStartSector, SectorCount, (PVOID)DISKREADBUFFER))
+	{
+		return FALSE;
+	}
+
+	// Copy data to the caller
+	RtlCopyMemory(Buffer, (PVOID)DISKREADBUFFER, SectorCount * BytesPerSector);
+
+	// Return success
+	return TRUE;
+#endif
 }
 
 const FS_VTBL FatVtbl = {
