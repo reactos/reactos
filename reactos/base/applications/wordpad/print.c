@@ -1,7 +1,7 @@
 /*
  * Wordpad implementation - Printing and print preview functions
  *
- * Copyright 2007 by Alexander N. Sørnes <alex@thehandofagony.com>
+ * Copyright 2007-2008 by Alexander N. Sørnes <alex@thehandofagony.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -130,23 +130,23 @@ static HDC make_dc(void)
 
 static LONG twips_to_centmm(int twips)
 {
-    return MulDiv(twips, 1000, 567);
+    return MulDiv(twips, 1000, TWIPS_PER_CM);
 }
 
 LONG centmm_to_twips(int mm)
 {
-    return MulDiv(mm, 567, 1000);
+    return MulDiv(mm, TWIPS_PER_CM, 1000);
 }
 
 static LONG twips_to_pixels(int twips, int dpi)
 {
-    float ret = ((float)twips / ((float)567 * 2.54)) * (float)dpi;
+    float ret = ((float)twips / ((float)TWIPS_PER_CM * 2.54)) * (float)dpi;
     return (LONG)ret;
 }
 
 static LONG devunits_to_twips(int units, int dpi)
 {
-    float ret = ((float)units / (float)dpi) * (float)567 * 2.54;
+    float ret = ((float)units / (float)dpi) * (float)TWIPS_PER_CM * 2.54;
     return (LONG)ret;
 }
 
@@ -254,6 +254,25 @@ static void char_from_pagenum(HWND hEditorWnd, FORMATRANGE *fr, int page)
     }
 }
 
+static HWND get_ruler_wnd(HWND hMainWnd)
+{
+    return GetDlgItem(GetDlgItem(hMainWnd, IDC_REBAR), IDC_RULER);
+}
+
+void redraw_ruler(HWND hRulerWnd)
+{
+    RECT rc;
+
+    GetClientRect(hRulerWnd, &rc);
+    InvalidateRect(hRulerWnd, &rc, TRUE);
+}
+
+static void update_ruler(HWND hRulerWnd)
+{
+     SendMessageW(hRulerWnd, WM_USER, 0, 0);
+     redraw_ruler(hRulerWnd);
+}
+
 static void print(LPPRINTDLGW pd, LPWSTR wszFileName)
 {
     FORMATRANGE fr;
@@ -340,6 +359,7 @@ void dialog_printsetup(HWND hMainWnd)
         margins.bottom = centmm_to_twips(ps.rtMargin.bottom);
         devMode = ps.hDevMode;
         devNames = ps.hDevNames;
+        update_ruler(get_ruler_wnd(hMainWnd));
     }
 }
 
@@ -394,6 +414,7 @@ void dialog_print(HWND hMainWnd, LPWSTR wszFileName)
         devMode = pd.hDevMode;
         devNames = pd.hDevNames;
         print(&pd, wszFileName);
+        update_ruler(get_ruler_wnd(hMainWnd));
     }
 }
 
@@ -454,6 +475,145 @@ void close_preview(HWND hMainWnd)
 BOOL preview_isactive(void)
 {
     return preview.page != 0;
+}
+
+static void add_ruler_units(HDC hdcRuler, RECT* drawRect, BOOL NewMetrics, long EditLeftmost)
+{
+    static HDC hdc;
+
+    if(NewMetrics)
+    {
+        static HBITMAP hBitmap;
+        int i, x, y, RulerTextEnd;
+        int CmPixels;
+        int QuarterCmPixels;
+        HFONT hFont;
+        WCHAR FontName[] = {'M','S',' ','S','a','n','s',' ','S','e','r','i','f',0};
+
+        if(hdc)
+        {
+            DeleteDC(hdc);
+            DeleteObject(hBitmap);
+        }
+
+        hdc =  CreateCompatibleDC(hdc);
+
+        CmPixels = twips_to_pixels(TWIPS_PER_CM, GetDeviceCaps(hdc, LOGPIXELSX));
+        QuarterCmPixels = (int)((float)CmPixels / 4.0);
+
+        hBitmap = CreateCompatibleBitmap(hdc, drawRect->right, drawRect->bottom);
+        SelectObject(hdc, hBitmap);
+        FillRect(hdc, drawRect, GetStockObject(WHITE_BRUSH));
+
+        hFont = CreateFontW(10, 6, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, FontName);
+
+        SelectObject(hdc, hFont);
+        SetBkMode(hdc, TRANSPARENT);
+        SetTextAlign(hdc, TA_CENTER);
+        y = (int)(((float)drawRect->bottom - (float)drawRect->top) / 2.0) + 1;
+        RulerTextEnd = drawRect->right - EditLeftmost + 1;
+        for(i = 1, x = EditLeftmost; x < (drawRect->right - EditLeftmost + 1); i ++)
+        {
+            WCHAR str[3];
+            WCHAR format[] = {'%','d',0};
+            int x2 = x;
+
+            x2 += QuarterCmPixels;
+            if(x2 > RulerTextEnd)
+                break;
+
+            MoveToEx(hdc, x2, y, NULL);
+            LineTo(hdc, x2, y+2);
+
+            x2 += QuarterCmPixels;
+            if(x2 > RulerTextEnd)
+                break;
+
+            MoveToEx(hdc, x2, y - 3, NULL);
+            LineTo(hdc, x2, y + 3);
+
+            x2 += QuarterCmPixels;
+            if(x2 > RulerTextEnd)
+                break;
+
+            MoveToEx(hdc, x2, y, NULL);
+            LineTo(hdc, x2, y+2);
+
+            x += CmPixels;
+            if(x > RulerTextEnd)
+                break;
+
+            wsprintfW(str, format, i);
+            TextOutW(hdc, x, 5, str, lstrlenW(str));
+        }
+        DeleteObject(hFont);
+    }
+
+    BitBlt(hdcRuler, 0, 0, drawRect->right, drawRect->bottom, hdc, 0, 0, SRCAND);
+}
+
+static void paint_ruler(HWND hWnd, long EditLeftmost, BOOL NewMetrics)
+{
+    PAINTSTRUCT ps;
+    HDC hdc = BeginPaint(hWnd, &ps);
+    HDC hdcPrint = make_dc();
+    RECT printRect = get_print_rect(hdcPrint);
+    RECT drawRect;
+    HBRUSH hBrush = CreateSolidBrush(GetSysColor(COLOR_MENU));
+
+    GetClientRect(hWnd, &drawRect);
+    FillRect(hdc, &drawRect, hBrush);
+
+    drawRect.top += 3;
+    drawRect.bottom -= 3;
+    drawRect.left = EditLeftmost;
+    drawRect.right = twips_to_pixels(printRect.right - margins.left, GetDeviceCaps(hdc, LOGPIXELSX));
+    FillRect(hdc, &drawRect, GetStockObject(WHITE_BRUSH));
+
+    drawRect.top--;
+    drawRect.bottom++;
+    DrawEdge(hdc, &drawRect, EDGE_SUNKEN, BF_RECT);
+
+    drawRect.left = drawRect.right - 1;
+    drawRect.right = twips_to_pixels(printRect.right + margins.right - margins.left, GetDeviceCaps(hdc, LOGPIXELSX));
+    DrawEdge(hdc, &drawRect, EDGE_ETCHED, BF_RECT);
+
+    drawRect.left = 0;
+    drawRect.top = 0;
+    add_ruler_units(hdc, &drawRect, NewMetrics, EditLeftmost);
+
+    SelectObject(hdc, GetStockObject(BLACK_BRUSH));
+    DeleteObject(hBrush);
+    DeleteDC(hdcPrint);
+    EndPaint(hWnd, &ps);
+}
+
+LRESULT CALLBACK ruler_proc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+    static WNDPROC pPrevRulerProc;
+    static long EditLeftmost;
+    static BOOL NewMetrics;
+
+    switch(msg)
+    {
+        case WM_USER:
+            if(wParam)
+            {
+                EditLeftmost = ((POINTL*)wParam)->x;
+                pPrevRulerProc = (WNDPROC)lParam;
+            }
+            NewMetrics = TRUE;
+            break;
+
+        case WM_PAINT:
+            paint_ruler(hWnd, EditLeftmost, NewMetrics);
+            break;
+
+        default:
+            return CallWindowProcW(pPrevRulerProc, hWnd, msg, wParam, lParam);
+    }
+
+    return 0;
 }
 
 LRESULT print_preview(HWND hMainWnd)
