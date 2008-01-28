@@ -79,7 +79,7 @@
 /* Timeout in ms for sending to keyboard controller. */
 #define CONTROLLER_TIMEOUT                              250
 
-static CHAR Hex[] = "0123456789ABCDEF";
+static CHAR Hex[] = "0123456789abcdef";
 static unsigned int delay_count = 1;
 
 extern ULONG reactos_disk_count;

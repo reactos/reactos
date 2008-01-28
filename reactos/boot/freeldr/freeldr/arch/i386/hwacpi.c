@@ -23,7 +23,7 @@
 
 BOOLEAN AcpiPresent = FALSE;
 
-static BOOLEAN
+static PRSDP_DESCRIPTOR
 FindAcpiBios(VOID)
 {
     PUCHAR Ptr;
@@ -36,7 +36,7 @@ FindAcpiBios(VOID)
         {
             DbgPrint((DPRINT_HWDETECT, "ACPI supported\n"));
 
-            return TRUE;
+            return (PRSDP_DESCRIPTOR)Ptr;
         }
 
         Ptr = (PUCHAR)((ULONG)Ptr + 0x10);
@@ -44,7 +44,7 @@ FindAcpiBios(VOID)
 
     DbgPrint((DPRINT_HWDETECT, "ACPI not supported\n"));
 
-    return FALSE;
+    return NULL;
 }
 
 
@@ -52,9 +52,16 @@ VOID
 DetectAcpiBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
 {
     PCONFIGURATION_COMPONENT_DATA BiosKey;
-    CM_PARTIAL_RESOURCE_LIST PartialResourceList;
+    PCM_PARTIAL_RESOURCE_LIST PartialResourceList;
+    PCM_PARTIAL_RESOURCE_DESCRIPTOR PartialDescriptor;
+    PRSDP_DESCRIPTOR Rsdp;
+    PACPI_BIOS_DATA AcpiBiosData;
+    BIOS_MEMORY_MAP BiosMemoryMap[32];
+    ULONG BiosMemoryMapEntryCount, TableSize;
 
-    if (FindAcpiBios())
+    Rsdp = FindAcpiBios();
+
+    if (Rsdp)
     {
         AcpiPresent = TRUE;
 
@@ -65,31 +72,57 @@ DetectAcpiBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
                                AdapterClass,
                                MultiFunctionAdapter,
                                &BiosKey);
-        
+
         /* Set 'Component Information' */
         FldrSetComponentInformation(BiosKey,
                                     0x0,
                                     0x0,
                                     0xFFFFFFFF);
-        
+
+        /* Get BIOS memory map */
+        RtlZeroMemory(BiosMemoryMap, sizeof(BIOS_MEMORY_MAP) * 32);
+        BiosMemoryMapEntryCount = MachGetMemoryMap(BiosMemoryMap,
+            sizeof(BiosMemoryMap) / sizeof(BIOS_MEMORY_MAP));
+
+        /* Calculate the table size */
+        TableSize = BiosMemoryMapEntryCount * sizeof(BIOS_MEMORY_MAP) +
+            sizeof(ACPI_BIOS_DATA) - sizeof(BIOS_MEMORY_MAP);
+
         /* Set 'Configuration Data' value */
-        memset(&PartialResourceList, 0, sizeof(CM_PARTIAL_RESOURCE_LIST));
-        PartialResourceList.Version = 0;
-        PartialResourceList.Revision = 0;
-        PartialResourceList.Count = 0;
+        PartialResourceList =
+            MmHeapAlloc(sizeof(CM_PARTIAL_RESOURCE_LIST) + TableSize);
+        memset(PartialResourceList, 0, sizeof(CM_PARTIAL_RESOURCE_LIST) + TableSize);
+        PartialResourceList->Version = 0;
+        PartialResourceList->Revision = 0;
+        PartialResourceList->Count = 1;
+
+        PartialDescriptor = &PartialResourceList->PartialDescriptors[0];
+        PartialDescriptor->Type = CmResourceTypeDeviceSpecific;
+        PartialDescriptor->ShareDisposition = CmResourceShareUndetermined;
+        PartialDescriptor->u.DeviceSpecificData.DataSize = TableSize;
+
+        /* Fill the table */
+        AcpiBiosData = (PACPI_BIOS_DATA)&PartialResourceList->PartialDescriptors[1];
+        AcpiBiosData->RSDTAddress.LowPart = Rsdp->rsdt_physical_address;
+        AcpiBiosData->Count = BiosMemoryMapEntryCount;
+        memcpy(AcpiBiosData->MemoryMap, BiosMemoryMap,
+            BiosMemoryMapEntryCount * sizeof(BIOS_MEMORY_MAP));
+
+        DbgPrint((DPRINT_HWDETECT, "RSDT %p, data size %x\n", Rsdp->rsdt_physical_address,
+            TableSize));
+
         FldrSetConfigurationData(BiosKey,
-                                 &PartialResourceList,
-                                 sizeof(CM_PARTIAL_RESOURCE_LIST) -
-                                 sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR));
+                                 PartialResourceList,
+                                 sizeof(CM_PARTIAL_RESOURCE_LIST) + TableSize
+                                 );
 
         /* Increment bus number */
         (*BusNumber)++;
-        
+
         /* Set 'Identifier' value */
         FldrSetIdentifier(BiosKey, "ACPI BIOS");
+        MmFreeMemory(PartialResourceList);
     }
-    
-    /* FIXME: Add congiguration data */
 }
 
 /* EOF */
