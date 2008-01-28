@@ -129,11 +129,23 @@ MempAllocatePageTables()
 
 	// Allocate memory block for all these things:
 	// PDE, HAL mapping page table, physical mapping, kernel mapping
-	// FIXME: PDE+HAL+KernelPTEs == FirmwarePermanent, Physical PTEs = FirmwareTemporary
 	TotalSize = (1+1+NumPageTables*2)*MM_PAGE_SIZE;
-	Buffer = MmAllocateMemoryWithType(TotalSize, LoaderFirmwarePermanent);
 
-	if (Buffer == NULL)
+	// Physical PTEs = FirmwareTemporary
+	PhysicalPageTablesBuffer = MmAllocateMemoryWithType(
+		NumPageTables*MM_PAGE_SIZE, LoaderFirmwareTemporary);
+
+	// PDE+HAL+KernelPTEs == MemoryData
+	Buffer = MmAllocateMemoryWithType(
+		TotalSize - NumPageTables*MM_PAGE_SIZE, LoaderMemoryData);
+
+	if (Buffer + (TotalSize - NumPageTables*MM_PAGE_SIZE) !=
+		PhysicalPageTablesBuffer)
+	{
+		DbgPrint((DPRINT_WINDOWS, "There was a problem allocating two adjacent blocks of memory!"));
+	}
+
+	if (Buffer == NULL || PhysicalPageTablesBuffer == NULL)
 	{
 		UiMessageBox("Impossible to allocate memory block for page tables!");
 		return FALSE;
@@ -158,12 +170,8 @@ MempAllocatePageTables()
 	PDE[1023].Valid = 1;
 	PDE[1023].Write = 1;
 
-	// Store pointers to the tables for easier access
-	PhysicalPageTablesBuffer = &Buffer[MM_PAGE_SIZE*2];
-	KernelPageTablesBuffer = PhysicalPageTablesBuffer + NumPageTables*MM_PAGE_SIZE;
-
-	// Mark physical PTE's buffer as FirmwareTemporary
-	//MmSetMemoryType(KernelPageTablesBuffer, NumPageTables*MM_PAGE_SIZE, LoaderFirmwareTemporary);
+	// Store pointer to the table for easier access
+	KernelPageTablesBuffer = &Buffer[MM_PAGE_SIZE*2];
 
 	// Zero counters of page tables used
 	PhysicalPageTables = 0;
