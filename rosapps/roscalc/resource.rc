@@ -30,8 +30,6 @@
 
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
-1 24 DISCARDABLE "manifest.xml"
-
 // Icons
 
 IDI_CALC_BIG            ICON    DISCARDABLE     "res/calc.ico"

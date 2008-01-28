@@ -7,6 +7,4 @@
 
 #include <reactos/version.rc>
 
-1 24 DISCARDABLE "manifest.xml"
-
 #include "rsrc.rc"
