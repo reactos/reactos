@@ -11,8 +11,6 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 #define REACTOS_STR_ORIGINAL_FILENAME	"powercfg.cpl\0"
 #include <reactos/version.rc>
 
-123 24 DISCARDABLE "manifest.xml"
-
 IDI_AC        ICON "resources/ac.ico"
 IDI_ACDC      ICON "resources/acdc.ico"
 IDI_DC        ICON "resources/dc.ico"

@@ -15,11 +15,6 @@ IDB_FACES BITMAP MOVEABLE "rc/faces.bmp"
 IDB_LEDS BITMAP MOVEABLE "rc/leds.bmp"
 IDB_MINES BITMAP MOVEABLE "rc/mines.bmp"
 
-// Common Controls 6.0 for GCC
-#if defined(__GNUC__)
-    1 24 "manifest.xml"
-#endif
-
 /* include localised resources */
 #include "lang/bg-BG.rc"
 #include "lang/ca-ES.rc"

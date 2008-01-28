@@ -13,8 +13,6 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 #include <reactos/version.rc>
 #endif
 
-123 24 DISCARDABLE "manifest.xml"
-
 IDI_KEYBOARD_ICO   ICON "resources/keyboard.ico"
 IDI_MARKER_ICO     ICON "resources/marker.ico"
 IDI_MIC_ICO        ICON "resources/microphone.ico"

@@ -9,8 +9,6 @@
 #define REACTOS_STR_ORIGINAL_FILENAME	"intl.cpl\0"
 #include <reactos/version.rc>
 
-123 24 DISCARDABLE "manifest.xml"
-
 IDC_CPLICON ICON "resources/applet.ico"
 
 #include "rsrc.rc"

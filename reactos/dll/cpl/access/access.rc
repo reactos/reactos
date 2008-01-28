@@ -9,8 +9,6 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 #define REACTOS_STR_ORIGINAL_FILENAME	"access.cpl\0"
 #include <reactos/version.rc>
 
-123 24 DISCARDABLE "manifest.xml"
-
 IDI_CPLACCESS ICON "resources/applet.ico"
 
 #include "rsrc.rc"

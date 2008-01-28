@@ -3,8 +3,6 @@
 
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
-1 24 DISCARDABLE "manifest.xml"
-
 IDI_MAINAPP ICON DISCARDABLE resources/sndvol32.ico
 
 #include "lang/bg-BG.rc"

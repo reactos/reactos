@@ -10,8 +10,6 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
 #include <reactos/version.rc>
 
-123 24 DISCARDABLE "manifest.xml"
-
 IDI_CPLICON ICON "resources/applet.ico"
 
 #include "rsrc.rc"

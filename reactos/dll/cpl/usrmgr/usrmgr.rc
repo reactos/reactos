@@ -9,8 +9,6 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 #define REACTOS_STR_ORIGINAL_FILENAME   "usrmgr.cpl\0"
 #include <reactos/version.rc>
 
-123 24 DISCARDABLE "manifest.xml"
-
 IDI_USRMGR_ICON ICON "resources/applet.ico"
 IDI_USRMGR_ICON2 ICON "resources/applet.ico"
 

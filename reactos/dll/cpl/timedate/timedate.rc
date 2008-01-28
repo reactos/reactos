@@ -10,8 +10,6 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 #define REACTOS_STR_ORIGINAL_FILENAME	"timedate.cpl\0"
 #include <reactos/version.rc>
 
-123 24 DISCARDABLE "manifest.xml"
-
 IDC_CPLICON ICON "resources/applet.ico"
 IDC_WORLD BITMAP "resources/world.bmp"
 

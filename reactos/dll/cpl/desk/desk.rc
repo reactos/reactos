@@ -10,8 +10,6 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 #define REACTOS_STR_ORIGINAL_FILENAME   "desk.cpl\0"
 #include <reactos/version.rc>
 
-123 24 DISCARDABLE "manifest.xml"
-
 IDC_DESK_ICON ICON "resources/applet.ico"
 IDC_DESK_ICON2 ICON "resources/applet.ico"
 IDC_MONITOR BITMAP "resources/monitor.bmp"

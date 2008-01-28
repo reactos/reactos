@@ -3,8 +3,6 @@
 
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
-1 24 DISCARDABLE "manifest.xml"
-
 IDI_SM_ICON ICON "res/system.ico"
 
 /* main toolbar icons */

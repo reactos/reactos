@@ -9,8 +9,6 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 #define REACTOS_STR_ORIGINAL_FILENAME	"mmsys.cpl\0"
 #include <reactos/version.rc>
 
-123 24 DISCARDABLE "manifest.xml"
-
 IDI_CPLICON ICON "resources/mmsys.ico"
 IDI_MUTED_ICON ICON "resources/muted.ico"
 IDI_MICROPHONE_ICON ICON "resources/microphone.ico"

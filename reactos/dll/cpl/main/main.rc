@@ -11,8 +11,6 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 #define REACTOS_STR_ORIGINAL_FILENAME	"main.cpl\0"
 #include <reactos/version.rc>
 
-123 24 DISCARDABLE "manifest.xml"
-
 IDC_CPLICON_1 ICON "resources/mouse.ico"
 IDC_CPLICON_2 ICON "resources/keyboard.ico"
 IDI_FOLDER_OPEN ICON "resources/folder_open.ico"
