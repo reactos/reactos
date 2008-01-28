@@ -185,7 +185,7 @@ void target_device(HWND hMainWnd, DWORD wordWrap)
     if(wordWrap == ID_WORDWRAP_MARGIN)
     {
         RECT rc = get_print_rect(hdc);
-        width = rc.right;
+        width = rc.right - rc.left;
     }
 
     if(!hdc)
