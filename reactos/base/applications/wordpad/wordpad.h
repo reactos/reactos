@@ -1,6 +1,6 @@
 /*
  * Copyright 2004 by Krzysztof Foltman
- * Copyright 2007 by Alexander N. Sørnes <alex@thehandofagony.com>
+ * Copyright 2007-2008 by Alexander N. Sørnes <alex@thehandofagony.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -18,6 +18,8 @@
  */
 
 #define MAX_STRING_LEN 255
+
+#define TWIPS_PER_CM 567
 
 #define ID_FILE_EXIT 1000
 #define ID_FILE_OPEN 1001
@@ -75,6 +77,7 @@
 #define ID_TOGGLE_TOOLBAR 1500
 #define ID_TOGGLE_FORMATBAR 1501
 #define ID_TOGGLE_STATUSBAR 1502
+#define ID_TOGGLE_RULER 1503
 
 #define PREVIEW_BUTTONS 4
 
@@ -106,10 +109,11 @@
 
 #define IDC_PAGEFMT_TB 100
 #define IDC_PAGEFMT_FB 101
-#define IDC_PAGEFMT_SB 102
-#define IDC_PAGEFMT_WW 103
-#define IDC_PAGEFMT_WM 104
-#define IDC_PAGEFMT_ID 105
+#define IDC_PAGEFMT_RU 102
+#define IDC_PAGEFMT_SB 103
+#define IDC_PAGEFMT_WW 104
+#define IDC_PAGEFMT_WM 105
+#define IDC_PAGEFMT_ID 106
 
 #define ID_DATETIME 1600
 #define ID_PARAFORMAT 1601
@@ -133,6 +137,7 @@
 #define IDC_TABSTOPS 2012
 #define IDC_FONTLIST 2013
 #define IDC_SIZELIST 2014
+#define IDC_RULER 2015
 
 #define IDD_DATETIME 2100
 #define IDD_NEWFILE 2101
@@ -199,6 +204,8 @@ LRESULT print_preview(HWND);
 void get_default_printer_opts(void);
 void registry_set_pagemargins(HKEY);
 void registry_read_pagemargins(HKEY);
+LRESULT CALLBACK ruler_proc(HWND, UINT, WPARAM, LPARAM);
+void redraw_ruler(HWND);
 
 int reg_formatindex(WPARAM);
 void registry_read_filelist(HWND);

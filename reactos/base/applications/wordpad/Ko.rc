@@ -66,6 +66,7 @@ BEGIN
     BEGIN
         MENUITEM "도구바(&T)",        ID_TOGGLE_TOOLBAR
         MENUITEM "형식바(&F)",      ID_TOGGLE_FORMATBAR
+        MENUITEM "&Ruler",          ID_TOGGLE_RULER
         MENUITEM "상태바(&S)",      ID_TOGGLE_STATUSBAR
         MENUITEM SEPARATOR
         MENUITEM " 옵션(&O) . . .",  ID_VIEWPROPERTIES
@@ -170,7 +171,8 @@ BEGIN
     GROUPBOX " 도구바", 0, 150, 10, 120, 85
     CHECKBOX "도구바(&T)", IDC_PAGEFMT_TB, 160, 20, 80, 15
     CHECKBOX "형식바(&F)", IDC_PAGEFMT_FB, 160, 38, 80, 15
-    CHECKBOX "상태바(&S)", IDC_PAGEFMT_SB, 160, 56, 80, 15
+    CHECKBOX "&Ruler", IDC_PAGEFMT_RU, 160, 56, 80, 15
+    CHECKBOX "상태바(&S)", IDC_PAGEFMT_SB, 160, 74, 80, 15
     LTEXT "", IDC_PAGEFMT_ID, 0,0,0,0
 END
 

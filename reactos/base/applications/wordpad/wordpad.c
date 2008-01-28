@@ -2,7 +2,7 @@
  * Wordpad implementation
  *
  * Copyright 2004 by Krzysztof Foltman
- * Copyright 2007 by Alexander N. Sørnes <alex@thehandofagony.com>
+ * Copyright 2007-2008 by Alexander N. Sørnes <alex@thehandofagony.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -600,7 +600,7 @@ static void set_toolbar_state(int bandId, BOOL show)
         SendMessageW(hwndReBar, RB_SETBANDINFO, index, (LPARAM)&rbbinfo);
     }
 
-    if(bandId == BANDID_TOOLBAR || bandId == BANDID_FORMATBAR)
+    if(bandId == BANDID_TOOLBAR || bandId == BANDID_FORMATBAR || bandId == BANDID_RULER)
         store_bar_state(bandId, show);
 }
 
@@ -618,6 +618,7 @@ static void set_bar_states(void)
     set_toolbar_state(BANDID_FONTLIST, is_bar_visible(BANDID_FORMATBAR));
     set_toolbar_state(BANDID_SIZELIST, is_bar_visible(BANDID_FORMATBAR));
     set_toolbar_state(BANDID_FORMATBAR, is_bar_visible(BANDID_FORMATBAR));
+    set_toolbar_state(BANDID_RULER, is_bar_visible(BANDID_RULER));
     set_statusbar_state(is_bar_visible(BANDID_STATUSBAR));
 
     update_window();
@@ -912,7 +913,9 @@ static INT_PTR CALLBACK formatopts_proc(HWND hWnd, UINT message, WPARAM wParam, 
                     CheckDlgButton(hWnd, IDC_PAGEFMT_TB, TRUE);
                 if(barState[ps->lParam] & (1 << BANDID_FORMATBAR))
                     CheckDlgButton(hWnd, IDC_PAGEFMT_FB, TRUE);
-                if(barState[ps->lParam] & (BANDID_STATUSBAR))
+                if(barState[ps->lParam] & (1 << BANDID_RULER))
+                    CheckDlgButton(hWnd, IDC_PAGEFMT_RU, TRUE);
+                if(barState[ps->lParam] & (1 << BANDID_STATUSBAR))
                     CheckDlgButton(hWnd, IDC_PAGEFMT_SB, TRUE);
             }
             break;
@@ -928,6 +931,7 @@ static INT_PTR CALLBACK formatopts_proc(HWND hWnd, UINT message, WPARAM wParam, 
 
                 case IDC_PAGEFMT_TB:
                 case IDC_PAGEFMT_FB:
+                case IDC_PAGEFMT_RU:
                 case IDC_PAGEFMT_SB:
                     CheckDlgButton(hWnd, LOWORD(wParam),
                                    !IsDlgButtonChecked(hWnd, LOWORD(wParam)));
@@ -959,6 +963,11 @@ static INT_PTR CALLBACK formatopts_proc(HWND hWnd, UINT message, WPARAM wParam, 
                         barState[id] |= (1 << BANDID_FORMATBAR);
                     else
                         barState[id] &= ~(1 << BANDID_FORMATBAR);
+
+                    if(IsDlgButtonChecked(hWnd, IDC_PAGEFMT_RU))
+                        barState[id] |= (1 << BANDID_RULER);
+                    else
+                        barState[id] &= ~(1 << BANDID_RULER);
 
                     if(IsDlgButtonChecked(hWnd, IDC_PAGEFMT_SB))
                         barState[id] |= (1 << BANDID_STATUSBAR);
@@ -1182,7 +1191,7 @@ static void dialog_find(LPFINDREPLACEW fr, BOOL replace)
 
 static int current_units_to_twips(float number)
 {
-    int twips = (int)(number * 567);
+    int twips = (int)(number * TWIPS_PER_CM);
     return twips;
 }
 
@@ -1195,7 +1204,7 @@ static void append_current_units(LPWSTR buffer)
 
 static void number_with_units(LPWSTR buffer, int number)
 {
-    float converted = (float)number / 567;
+    float converted = (float)number / TWIPS_PER_CM;
     char string[MAX_STRING_LEN];
 
     sprintf(string, "%.2f ", converted);
@@ -1547,7 +1556,7 @@ static int context_menu(LPARAM lParam)
 
 static LRESULT OnCreate( HWND hWnd, WPARAM wParam, LPARAM lParam)
 {
-    HWND hToolBarWnd, hFormatBarWnd,  hReBarWnd, hFontListWnd, hSizeListWnd;
+    HWND hToolBarWnd, hFormatBarWnd,  hReBarWnd, hFontListWnd, hSizeListWnd, hRulerWnd;
     HINSTANCE hInstance = (HINSTANCE)GetWindowLongPtr(hWnd, GWLP_HINSTANCE);
     HANDLE hDLL;
     TBADDBITMAP ab;
@@ -1648,6 +1657,16 @@ static LRESULT OnCreate( HWND hWnd, WPARAM wParam, LPARAM lParam)
 
     rbb.hwndChild = hFormatBarWnd;
     rbb.wID = BANDID_FORMATBAR;
+
+    SendMessageW(hReBarWnd, RB_INSERTBAND, -1, (LPARAM)&rbb);
+
+    hRulerWnd = CreateWindowExW(0, WC_STATICW, NULL, WS_VISIBLE | WS_CHILD,
+                                0, 0, 200, 10, hReBarWnd,  (HMENU)IDC_RULER, hInstance, NULL);
+
+
+    rbb.hwndChild = hRulerWnd;
+    rbb.wID = BANDID_RULER;
+    rbb.fStyle |= RBBS_BREAK;
 
     SendMessageW(hReBarWnd, RB_INSERTBAND, -1, (LPARAM)&rbb);
 
@@ -2133,6 +2152,11 @@ static LRESULT OnCommand( HWND hWnd, WPARAM wParam, LPARAM lParam)
         update_window();
         break;
 
+    case ID_TOGGLE_RULER:
+        set_toolbar_state(BANDID_RULER, !is_bar_visible(BANDID_RULER));
+        update_window();
+        break;
+
     case ID_DATETIME:
         {
         HINSTANCE hInstance = (HINSTANCE)GetWindowLongPtr(hWnd, GWLP_HINSTANCE);
@@ -2216,6 +2240,8 @@ static LRESULT OnInitPopupMenu( HWND hWnd, WPARAM wParam, LPARAM lParam )
     CheckMenuItem(hMenu, ID_TOGGLE_STATUSBAR, MF_BYCOMMAND|IsWindowVisible(hwndStatus) ?
             MF_CHECKED : MF_UNCHECKED);
 
+    CheckMenuItem(hMenu, ID_TOGGLE_RULER, MF_BYCOMMAND|(is_bar_visible(BANDID_RULER)) ? MF_CHECKED : MF_UNCHECKED);
+
     gt.flags = GTL_NUMCHARS;
     gt.codepage = 1200;
     textLength = SendMessageW(hEditorWnd, EM_GETTEXTLENGTHEX, (WPARAM)&gt, 0);
@@ -2241,6 +2267,7 @@ static LRESULT OnSize( HWND hWnd, WPARAM wParam, LPARAM lParam )
     HWND hwndEditor = GetDlgItem(hWnd, IDC_EDITOR);
     HWND hwndStatusBar = GetDlgItem(hWnd, IDC_STATUSBAR);
     HWND hwndReBar = GetDlgItem(hWnd, IDC_REBAR);
+    HWND hRulerWnd = GetDlgItem(hWnd, IDC_RULER);
     int rebarHeight = 0;
     int rebarRows = 2;
 
@@ -2273,6 +2300,8 @@ static LRESULT OnSize( HWND hWnd, WPARAM wParam, LPARAM lParam )
         GetClientRect(hWnd, &rc);
         MoveWindow(hwndEditor, 0, rebarHeight, rc.right, rc.bottom-nStatusSize-rebarHeight, TRUE);
     }
+
+    redraw_ruler(hRulerWnd);
 
     return DefWindowProcW(hWnd, WM_SIZE, wParam, lParam);
 }
@@ -2364,6 +2393,9 @@ int CALLBACK wWinMain(HINSTANCE hInstance, HINSTANCE hOldInstance, LPWSTR szCmdP
     WNDCLASSW wc;
     MSG msg;
     RECT rc;
+    UINT_PTR hPrevRulerProc;
+    HWND hRulerWnd;
+    POINTL EditPoint;
     static const WCHAR wszAccelTable[] = {'M','A','I','N','A','C','C','E','L',
                                           'T','A','B','L','E','\0'};
 
@@ -2394,6 +2426,11 @@ int CALLBACK wWinMain(HINSTANCE hInstance, HINSTANCE hOldInstance, LPWSTR szCmdP
     hPopupMenu = LoadMenuW(hInstance, MAKEINTRESOURCEW(IDM_POPUP));
     get_default_printer_opts();
     target_device(hMainWnd, wordWrap[reg_formatindex(fileFormat)]);
+
+    hRulerWnd = GetDlgItem(GetDlgItem(hMainWnd, IDC_REBAR), IDC_RULER);
+    SendMessageW(GetDlgItem(hMainWnd, IDC_EDITOR), EM_POSFROMCHAR, (WPARAM)&EditPoint, 0);
+    hPrevRulerProc = SetWindowLongPtrW(hRulerWnd, GWLP_WNDPROC, (UINT_PTR)ruler_proc);
+    SendMessageW(hRulerWnd, WM_USER, (WPARAM)&EditPoint, hPrevRulerProc);
 
     HandleCommandLine(GetCommandLineW());
 

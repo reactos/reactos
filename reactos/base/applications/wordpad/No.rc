@@ -1,5 +1,5 @@
 /*
- * Copyright 2006-2007 by Alexander N. Sørnes <alex@thehandofagony.com>
+ * Copyright 2006-2008 by Alexander N. Sørnes <alex@thehandofagony.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -64,6 +64,7 @@ BEGIN
     BEGIN
         MENUITEM "Verk&tøylinje",     ID_TOGGLE_TOOLBAR
         MENUITEM "&Formatlinje",      ID_TOGGLE_FORMATBAR
+        MENUITEM "&Linjal",           ID_TOGGLE_RULER
         MENUITEM "&Statuslinje",      ID_TOGGLE_STATUSBAR
         MENUITEM SEPARATOR
         MENUITEM "&Alternativer . . .", ID_VIEWPROPERTIES
@@ -168,7 +169,8 @@ BEGIN
     GROUPBOX "Verktøylinjer", 0, 150, 10, 120, 85
     CHECKBOX "&Verktøylinje", IDC_PAGEFMT_TB, 160, 20, 80, 15
     CHECKBOX "&Formatlinje", IDC_PAGEFMT_FB, 160, 38, 80, 15
-    CHECKBOX "&Statuslinje", IDC_PAGEFMT_SB, 160, 56, 80, 15
+    CHECKBOX "&Linjal", IDC_PAGEFMT_RU, 160, 56, 80, 15
+    CHECKBOX "&Statuslinje", IDC_PAGEFMT_SB, 160, 74, 80, 15
     LTEXT "", IDC_PAGEFMT_ID, 0,0,0,0
 END
 

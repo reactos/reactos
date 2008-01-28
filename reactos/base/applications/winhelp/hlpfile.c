@@ -119,7 +119,7 @@ static HLPFILE_PAGE *HLPFILE_PageByNumber(HLPFILE* hlpfile, UINT wNum)
  * As of today, we only return the page... we should also return
  * a paragraph, and then, while opening a new page, compute the
  * y-offset of the paragraph to be shown and scroll the window
- * accordinly
+ * accordingly
  */
 /******************************************************************
  *		HLPFILE_PageByOffset

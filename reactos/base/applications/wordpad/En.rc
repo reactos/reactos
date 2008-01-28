@@ -64,6 +64,7 @@ BEGIN
     BEGIN
         MENUITEM "&Toolbar",        ID_TOGGLE_TOOLBAR
         MENUITEM "&Formatbar",      ID_TOGGLE_FORMATBAR
+        MENUITEM "&Ruler",          ID_TOGGLE_RULER
         MENUITEM "&Statusbar",      ID_TOGGLE_STATUSBAR
         MENUITEM SEPARATOR
         MENUITEM "&Options . . .",  ID_VIEWPROPERTIES
@@ -168,7 +169,8 @@ BEGIN
     GROUPBOX "Toolbars", 0, 150, 10, 120, 85
     CHECKBOX "&Toolbar", IDC_PAGEFMT_TB, 160, 20, 80, 15
     CHECKBOX "&Formatbar", IDC_PAGEFMT_FB, 160, 38, 80, 15
-    CHECKBOX "&Statusbar", IDC_PAGEFMT_SB, 160, 56, 80, 15
+    CHECKBOX "&Ruler", IDC_PAGEFMT_RU, 160, 56, 80, 15
+    CHECKBOX "&Statusbar", IDC_PAGEFMT_SB, 160, 74, 80, 15
     LTEXT "", IDC_PAGEFMT_ID, 0,0,0,0
 END
 
