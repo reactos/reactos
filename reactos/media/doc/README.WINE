@@ -106,6 +106,7 @@ reactos/base/system/msiexec               # Synced to Wine-20080105
 reactos/base/applications/winhelp         # Synced to Wine-0_9_53
 reactos/base/applications/wordpad         # Synced to Wine-0_9_53
 reactos/modules/rosapps/winefile          # Synced to Wine-0_9_53
+reactos/base/applications/notepad         # Forked at Wine-20041201
 
 In addition the following libs, dlls and source files are mostly based on code ported
 from Winehq CVS. If you are looking to update something in these files
