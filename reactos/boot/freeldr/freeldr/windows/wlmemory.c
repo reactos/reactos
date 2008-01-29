@@ -363,9 +363,12 @@ MempAddMemoryBlock(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 	//
 	if (BasePage + PageCount > LOADER_HIGH_ZONE)
 	{
-		if (Mad[MadCount].MemoryType != LoaderSpecialMemory ||
-			Mad[MadCount].MemoryType != LoaderFirmwarePermanent)
+		if (Mad[MadCount].MemoryType != LoaderSpecialMemory &&
+			Mad[MadCount].MemoryType != LoaderFirmwarePermanent &&
+			Mad[MadCount].MemoryType != LoaderFree)
 		{
+			DbgPrint((DPRINT_WINDOWS, "Setting page %x %x to Temporary from %d\n",
+				BasePage, PageCount, Mad[MadCount].MemoryType));
 			Mad[MadCount].MemoryType = LoaderFirmwareTemporary;
 		}
 
@@ -466,7 +469,7 @@ WinLdrTurnOnPaging(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 	// 2) Memory descriptors must map *the whole* physical memory
 	//    showing any memory above 16/24/32 as FirmwareTemporary
 	//
-	// 3) Overall memory blocks count must not exceed 30
+	// 3) Overall memory blocks count must not exceed 30 (?? why?)
 	//
 
 	//
