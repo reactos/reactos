@@ -290,6 +290,31 @@ static VOID NOTEPAD_InitMenuPopup(HMENU menu, LPARAM index)
     DrawMenuBar(Globals.hMainWnd);
 }
 
+LRESULT CALLBACK EDIT_WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
+{ 
+    switch (msg)
+    {
+        case WM_KEYUP:
+        {
+            switch (wParam)
+            {
+                case VK_UP:
+                case VK_DOWN:
+                case VK_LEFT:
+                case VK_RIGHT:
+                    DIALOG_StatusBarUpdateCaretPos();
+                    break;
+            }
+        }
+        case WM_LBUTTONUP:
+        {
+            DIALOG_StatusBarUpdateCaretPos();
+            break;
+        }
+    }
+    return CallWindowProc( (WNDPROC)Globals.EditProc, hWnd, msg, wParam, lParam);
+}
+
 /***********************************************************************
  *
  *           NOTEPAD_WndProc
@@ -312,6 +337,9 @@ static LRESULT WINAPI NOTEPAD_WndProc(HWND hWnd, UINT msg, WPARAM wParam,
         SendMessage(Globals.hEdit, EM_LIMITTEXT, 0, 0);
         if (Globals.hFont)
             SendMessage(Globals.hEdit, WM_SETFONT, (WPARAM)Globals.hFont, (LPARAM)TRUE);
+
+        Globals.EditProc = (WNDPROC) SetWindowLongPtr(Globals.hEdit, GWLP_WNDPROC, (LONG_PTR)EDIT_WndProc);
+
         break;
     }
 
@@ -340,6 +368,7 @@ static LRESULT WINAPI NOTEPAD_WndProc(HWND hWnd, UINT msg, WPARAM wParam,
         break;
 
     case WM_DESTROY:
+        SetWindowLongPtr(Globals.hEdit, GWLP_WNDPROC, (LONG_PTR)Globals.EditProc);
         PostQuitMessage(0);
         break;
 
@@ -561,6 +590,8 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE prev, LPTSTR cmdline, int sh
     ShowWindow(Globals.hMainWnd, show);
     UpdateWindow(Globals.hMainWnd);
     DragAcceptFiles(Globals.hMainWnd, TRUE);
+
+    DIALOG_ViewStatusBar();
 
     HandleCommandLine(cmdline);
 

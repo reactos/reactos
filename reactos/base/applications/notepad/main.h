@@ -67,6 +67,7 @@ typedef struct
   int        iEoln;
 
   FINDREPLACE find;
+  WNDPROC    EditProc;
 } NOTEPAD_GLOBALS;
 
 extern NOTEPAD_GLOBALS Globals;
