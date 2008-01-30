@@ -429,7 +429,7 @@ WinLdrScanRegistry(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 {
 	LONG rc = 0;
 	FRLDRHKEY hGroupKey, hOrderKey, hServiceKey, hDriverKey;
-	WCHAR GroupNameBuffer[512];
+	LPWSTR GroupNameBuffer;
 	WCHAR ServiceName[256];
 	ULONG OrderList[128];
 	ULONG BufferSize;
@@ -480,7 +480,8 @@ WinLdrScanRegistry(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 	}
 
 	/* Get the Name Group */
-	BufferSize = sizeof(GroupNameBuffer);
+	BufferSize = 4096;
+	GroupNameBuffer = MmHeapAlloc(BufferSize);
 	rc = RegQueryValue(hGroupKey, L"List", NULL, (PUCHAR)GroupNameBuffer, &BufferSize);
 	DbgPrint((DPRINT_REACTOS, "RegQueryValue(): rc %d\n", (int)rc));
 	if (rc != ERROR_SUCCESS)
@@ -515,7 +516,10 @@ WinLdrScanRegistry(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 				if (rc == ERROR_NO_MORE_ITEMS)
 					break;
 				if (rc != ERROR_SUCCESS)
+				{
+					MmHeapFree(GroupNameBuffer);
 					return;
+				}
 				//DbgPrint((DPRINT_REACTOS, "Service %d: '%S'\n", (int)Index, ServiceName));
 
 				/* open driver Key */
@@ -591,7 +595,10 @@ WinLdrScanRegistry(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 			if (rc == ERROR_NO_MORE_ITEMS)
 				break;
 			if (rc != ERROR_SUCCESS)
+			{
+				MmHeapFree(GroupNameBuffer);
 				return;
+			}
 			//DbgPrint((DPRINT_REACTOS, "Service %d: '%S'\n", (int)Index, ServiceName));
 
 			/* open driver Key */
@@ -657,6 +664,9 @@ WinLdrScanRegistry(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 		/* Move to the next group name */
 		GroupName = GroupName + wcslen(GroupName) + 1;
 	}
+
+	/* Free allocated memory */
+	MmHeapFree(GroupNameBuffer);
 }
 
 BOOLEAN
