@@ -68,6 +68,7 @@ typedef struct
 
   FINDREPLACE find;
   WNDPROC    EditProc;
+  RECT       main_rect;
 } NOTEPAD_GLOBALS;
 
 extern NOTEPAD_GLOBALS Globals;

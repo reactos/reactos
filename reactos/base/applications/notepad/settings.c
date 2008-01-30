@@ -107,6 +107,14 @@ void LoadSettings(void)
 	HKEY hKey = NULL;
 	HFONT hFont;
 	DWORD dwPointSize = 0;
+	INT base_length, dx, dy;
+
+	base_length = (GetSystemMetrics(SM_CXSCREEN) > GetSystemMetrics(SM_CYSCREEN))?
+		GetSystemMetrics(SM_CYSCREEN) : GetSystemMetrics(SM_CXSCREEN);
+
+	dx = base_length * .95;
+	dy = dx * 3 / 4;
+	SetRect( &Globals.main_rect, 0, 0, dx, dy );
 
 	if (RegOpenKey(HKEY_CURRENT_USER, s_szRegistryKey, &hKey) == ERROR_SUCCESS)
 	{
@@ -125,6 +133,14 @@ void LoadSettings(void)
 		QueryDword(hKey,    _T("iPointSize"),       &dwPointSize);
 		QueryBool(hKey,     _T("fWrap"),            &Globals.bWrapLongLines);
 		QueryBool(hKey,     _T("fStatusBar"),       &Globals.bShowStatusBar);
+
+		QueryByte(hKey,    _T("iWindowPosX"),       (LPBYTE)&Globals.main_rect.left);
+		QueryByte(hKey,    _T("iWindowPosX"),       (LPBYTE)&Globals.main_rect.top);
+		QueryByte(hKey,    _T("iWindowPosDX"),      (LPBYTE)&dx);
+		QueryByte(hKey,    _T("iWindowPosDY"),      (LPBYTE)&dy);
+
+        Globals.main_rect.right = Globals.main_rect.left + dx;
+        Globals.main_rect.bottom = Globals.main_rect.top + dy;
 
 		Globals.bShowStatusBar = !Globals.bShowStatusBar; /* invert value becuase DIALOG_ViewStatusBar will be called to show it*/
 
@@ -158,6 +174,8 @@ void SaveSettings(void)
 	HKEY hKey;
 	DWORD dwDisposition;
 
+    GetWindowRect(Globals.hMainWnd, &Globals.main_rect);
+
 	if (RegCreateKeyEx(HKEY_CURRENT_USER, s_szRegistryKey, 0, NULL, 0, KEY_ALL_ACCESS, NULL, &hKey, &dwDisposition)
 		== ERROR_SUCCESS)
 	{
@@ -176,7 +194,10 @@ void SaveSettings(void)
 		SaveDword(hKey,     _T("iPointSize"),       PointSizeFromHeight(Globals.lfFont.lfHeight));
 		SaveDword(hKey,     _T("fWrap"),            Globals.bWrapLongLines ? 1 : 0);
 		SaveDword(hKey,     _T("fStatusBar"),       Globals.bShowStatusBar ? 1 : 0);
-
+		SaveDword(hKey,     _T("iWindowPosX"),      Globals.main_rect.left);
+		SaveDword(hKey,     _T("iWindowPosY"),      Globals.main_rect.top);
+		SaveDword(hKey,     _T("iWindowPosDX"),     Globals.main_rect.right - Globals.main_rect.left);
+		SaveDword(hKey,     _T("iWindowPosDY"),     Globals.main_rect.bottom - Globals.main_rect.top);
 		RegCloseKey(hKey);
 	}
 

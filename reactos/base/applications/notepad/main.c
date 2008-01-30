@@ -355,8 +355,8 @@ static LRESULT WINAPI NOTEPAD_WndProc(HWND hWnd, UINT msg, WPARAM wParam,
 
     case WM_CLOSE:
         if (DoCloseFile()) {
-			if (Globals.hFont)
-				DeleteObject(Globals.hFont);
+            if (Globals.hFont)
+                DeleteObject(Globals.hFont);
             DestroyWindow(hWnd);
         }
         break;
@@ -369,6 +369,7 @@ static LRESULT WINAPI NOTEPAD_WndProc(HWND hWnd, UINT msg, WPARAM wParam,
 
     case WM_DESTROY:
         SetWindowLongPtr(Globals.hEdit, GWLP_WNDPROC, (LONG_PTR)Globals.EditProc);
+        SaveSettings();
         PostQuitMessage(0);
         break;
 
@@ -544,9 +545,13 @@ static void HandleCommandLine(LPTSTR cmdline)
  */
 int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE prev, LPTSTR cmdline, int show)
 {
-    MSG        msg;
-    HACCEL     hAccel;
-    WNDCLASSEX wndclass;
+    MSG         msg;
+    HACCEL      hAccel;
+    WNDCLASSEX  wndclass;
+    HMONITOR    monitor;
+    MONITORINFO info;
+    INT         x, y;
+
     static const TCHAR className[] = _T("NPClass");
     static const TCHAR winName[]   = _T("Notepad");
 
@@ -574,9 +579,22 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE prev, LPTSTR cmdline, int sh
 
     /* Setup windows */
 
+    monitor = MonitorFromRect( &Globals.main_rect, MONITOR_DEFAULTTOPRIMARY );
+    info.cbSize = sizeof(info);
+    GetMonitorInfoW( monitor, &info );
+
+    x = Globals.main_rect.left;
+    y = Globals.main_rect.top;
+    if (Globals.main_rect.left >= info.rcWork.right ||
+        Globals.main_rect.top >= info.rcWork.bottom ||
+        Globals.main_rect.right < info.rcWork.left ||
+        Globals.main_rect.bottom < info.rcWork.top)
+        x = y = CW_USEDEFAULT;
+
     Globals.hMainWnd =
         CreateWindow(className, winName, WS_OVERLAPPEDWINDOW,
-                     CW_USEDEFAULT, 0, CW_USEDEFAULT, 0,
+                     x, y, Globals.main_rect.right - Globals.main_rect.left,
+                     Globals.main_rect.bottom - Globals.main_rect.top,
                      NULL, NULL, Globals.hInstance, NULL);
     if (!Globals.hMainWnd)
     {
@@ -606,6 +624,5 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE prev, LPTSTR cmdline, int sh
             DispatchMessage(&msg);
         }
     }
-    SaveSettings();
     return (int) msg.wParam;
 }
