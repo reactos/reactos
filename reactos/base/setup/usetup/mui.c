@@ -40,6 +40,7 @@
 #include "lang/it-IT.h"
 #include "lang/pl-PL.h"
 #include "lang/ru-RU.h"
+#include "lang/sk-SK.h"
 #include "lang/sv-SE.h"
 #include "lang/uk-UA.h"
 #include "lang/lt-LT.h"
@@ -233,8 +234,8 @@ static const MUI_LANGUAGE LanguageList[] =
         L"852",
         L"10029",
         L"Slovak",
-        enUSPages,
-        enUSErrorEntries
+        skSKPages,
+        skSKErrorEntries
     },
     {
         L"0000040A",
