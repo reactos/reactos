@@ -3,7 +3,7 @@
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        base/setup/usetup/lang/lt-LT.h
  * PURPOSE:     Lithuanian Language File
- * TRANSLATOR:  Vytis "CMan" Gird˛ijauskas (cman@cman.us)
+ * TRANSLATOR:  Vytis "CMan" Girdÿijauskas (cman@cman.us)
  * DATE:        2008-01-06
  */
 
@@ -15,37 +15,37 @@ static MUI_ENTRY ltLTLanguagePageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " ReactOS " KERNEL_VERSION_STR " diegimo programa ",
         TEXT_UNDERLINE
     },
     {
         6,
         8,
-        "Language Selection",
+        "Kalbos pasirinkimas",
         TEXT_NORMAL
     },
     {
         8,
         10,
-        "\x07  Please choose the language used for the installation process.",
+        "\x07  Pasirinkite kalb–, kuri bus naudojama diegimo proceso metu.",
         TEXT_NORMAL
     },
     {
         8,
         11,
-        "   Then press ENTER.",
+        "   Tuomet nuspauskite ENTER.",
         TEXT_NORMAL
     },
     {
         8,
         13,
-        "\x07  This Language will be the default language for the final system.",
+        "\x07  æi kalba bus nustatyta standartine ‘diegtoje sistemoje.",
         TEXT_NORMAL
     },
     {
         0,
         0,
-        "   ENTER = Testi  F3 = Baigti",
+        "   ENTER = T“sti  F3 = Baigti",
         TEXT_STATUS
     },
     {
@@ -61,55 +61,55 @@ static MUI_ENTRY ltLTWelcomePageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " ReactOS " KERNEL_VERSION_STR " diegimo programa ",
         TEXT_UNDERLINE
     },
     {
         6,
         8,
-        "Welcome to ReactOS Setup",
+        "Jus sveikina ReactOS diegimo programa",
         TEXT_HIGHLIGHT
     },
     {
         6,
         11,
-        "This part of the setup copies the ReactOS Operating System to your",
+        "æi diegimo dalis nukopijuos ReactOS operacin”s sistemos bylas ‘ j◊s÷",
         TEXT_NORMAL
     },
     {
         6,
         12,
-        "computer and prepares the second part of the setup.",
+        "kompiuter‘ ir paruo’ antr–j– diegimo dal‘.",
         TEXT_NORMAL
     },
     {
         8,
         15,
-        "\x07  Press ENTER to install ReactOS.",
+        "\x07  Spauskite ENTER, jei norite diegti ReactOS.",
         TEXT_NORMAL
     },
     {
         8,
         17,
-        "\x07  Press R to repair ReactOS.",
+        "\x07  Spauskite R, jei norite taisyti ReactOS.",
         TEXT_NORMAL
     },
     {
         8,
         19,
-        "\x07  Press L to view the ReactOS Licensing Terms and Conditions",
+        "\x07  Spauskite L, jei norite pamatyti ReactOS licencijos s–lygas.",
         TEXT_NORMAL
     },
     {
         8,
         21,
-        "\x07  Press F3 to quit without installing ReactOS.",
+        "\x07  Spauskite F3, jei norite uÿdaryti ReactOS diegimo program–.",
         TEXT_NORMAL
     },
     {
         6,
         23,
-        "For more information on ReactOS, please visit:",
+        "Nor”dami gauti daugiau informacijos apie ReactOS, aplankykite:",
         TEXT_NORMAL
     },
     {
@@ -121,7 +121,7 @@ static MUI_ENTRY ltLTWelcomePageEntries[] =
     {
         0,
         0,
-        "   ENTER = Testi  R = Repair F3 = Baigti",
+        "   ENTER = T“sti  R = Taisyti F3 = Baigti",
         TEXT_STATUS
     },
     {
@@ -137,7 +137,7 @@ static MUI_ENTRY ltLTIntroPageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " ReactOS " KERNEL_VERSION_STR " diegimo programa ",
         TEXT_UNDERLINE
     },
     {
@@ -215,7 +215,7 @@ static MUI_ENTRY ltLTIntroPageEntries[] =
     {
         0,
         0,
-        "   ENTER = Testi   F3 = Baigti",
+        "   ENTER = T“sti   F3 = Baigti",
         TEXT_STATUS
     },
     {
@@ -231,7 +231,7 @@ static MUI_ENTRY ltLTLicensePageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " ReactOS " KERNEL_VERSION_STR " diegimo programa ",
         TEXT_UNDERLINE
     },
     {
@@ -355,7 +355,7 @@ static MUI_ENTRY ltLTDevicePageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " ReactOS " KERNEL_VERSION_STR " diegimo programa ",
         TEXT_UNDERLINE
     },
     {
@@ -432,7 +432,7 @@ static MUI_ENTRY ltLTDevicePageEntries[] =
     {
         0,
         0,
-        "   ENTER = Testi   F3 = Baigti",
+        "   ENTER = T“sti   F3 = Baigti",
         TEXT_STATUS
     },
     {
@@ -448,7 +448,7 @@ static MUI_ENTRY ltLTRepairPageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " ReactOS " KERNEL_VERSION_STR " diegimo programa ",
         TEXT_UNDERLINE
     },
     {
@@ -511,7 +511,7 @@ static MUI_ENTRY ltLTComputerPageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " ReactOS " KERNEL_VERSION_STR " diegimo programa ",
         TEXT_UNDERLINE
     },
     {
@@ -547,7 +547,7 @@ static MUI_ENTRY ltLTComputerPageEntries[] =
     {
         0,
         0,
-        "   ENTER = Testi   ESC = Atsaukti   F3 = Baigti",
+        "   ENTER = T“sti   ESC = At’aukti   F3 = Baigti",
         TEXT_STATUS
     },
     {
@@ -563,7 +563,7 @@ static MUI_ENTRY ltLTFlushPageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " ReactOS " KERNEL_VERSION_STR " diegimo programa ",
         TEXT_UNDERLINE
     },
     {
@@ -603,7 +603,7 @@ static MUI_ENTRY ltLTQuitPageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " ReactOS " KERNEL_VERSION_STR " diegimo programa ",
         TEXT_UNDERLINE
     },
     {
@@ -649,7 +649,7 @@ static MUI_ENTRY ltLTDisplayPageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " ReactOS " KERNEL_VERSION_STR " diegimo programa ",
         TEXT_UNDERLINE
     },
     {
@@ -684,7 +684,7 @@ static MUI_ENTRY ltLTDisplayPageEntries[] =
     {
         0,
         0,
-        "   ENTER = Testi   ESC = Atsaukti   F3 = Baigti",
+        "   ENTER = T“sti   ESC = At’aukti   F3 = Baigti",
         TEXT_STATUS
     },
     {
@@ -700,7 +700,7 @@ static MUI_ENTRY ltLTSuccessPageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " ReactOS " KERNEL_VERSION_STR " diegimo programa ",
         TEXT_UNDERLINE
     },
     {
@@ -746,7 +746,7 @@ static MUI_ENTRY ltLTBootPageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " ReactOS " KERNEL_VERSION_STR " diegimo programa ",
         TEXT_UNDERLINE
     },
     {
@@ -776,7 +776,7 @@ static MUI_ENTRY ltLTBootPageEntries[] =
     {
         0,
         0,
-        "   ENTER = Testi   F3 = Baigti",
+        "   ENTER = T“sti   F3 = Baigti",
         TEXT_STATUS
     },
     {
@@ -793,7 +793,7 @@ static MUI_ENTRY ltLTSelectPartitionEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " ReactOS " KERNEL_VERSION_STR " diegimo programa ",
         TEXT_UNDERLINE
     },
     {
@@ -851,7 +851,7 @@ static MUI_ENTRY ltLTFormatPartitionEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " ReactOS " KERNEL_VERSION_STR " diegimo programa ",
         TEXT_UNDERLINE
     },
     {
@@ -869,7 +869,7 @@ static MUI_ENTRY ltLTFormatPartitionEntries[] =
     {
         0,
         0,
-        "   ENTER = Testi   F3 = Baigti",
+        "   ENTER = T“sti   F3 = Baigti",
         TEXT_STATUS
     },
     {
@@ -885,7 +885,7 @@ static MUI_ENTRY ltLTInstallDirectoryEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " ReactOS " KERNEL_VERSION_STR " diegimo programa ",
         TEXT_UNDERLINE
     },
     {
@@ -921,7 +921,7 @@ static MUI_ENTRY ltLTInstallDirectoryEntries[] =
     {
         0,
         0,
-        "   ENTER = Testi   F3 = Baigti",
+        "   ENTER = T“sti   F3 = Baigti",
         TEXT_STATUS
     },
     {
@@ -937,7 +937,7 @@ static MUI_ENTRY ltLTFileCopyEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " ReactOS " KERNEL_VERSION_STR " diegimo programa ",
         TEXT_UNDERLINE
     },
     {
@@ -977,7 +977,7 @@ static MUI_ENTRY ltLTBootLoaderEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " ReactOS " KERNEL_VERSION_STR " diegimo programa ",
         TEXT_UNDERLINE
     },
     {
@@ -1007,7 +1007,7 @@ static MUI_ENTRY ltLTBootLoaderEntries[] =
     {
         0,
         0,
-        "   ENTER = Testi   F3 = Baigti",
+        "   ENTER = T“sti   F3 = Baigti",
         TEXT_STATUS
     },
     {
@@ -1023,7 +1023,7 @@ static MUI_ENTRY ltLTKeyboardSettingsEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " ReactOS " KERNEL_VERSION_STR " diegimo programa ",
         TEXT_UNDERLINE
     },
     {
@@ -1059,7 +1059,7 @@ static MUI_ENTRY ltLTKeyboardSettingsEntries[] =
     {
         0,
         0,
-        "   ENTER = Testi   ESC = Atsaukti   F3 = Baigti",
+        "   ENTER = T“sti   ESC = At’aukti   F3 = Baigti",
         TEXT_STATUS
     },
     {
@@ -1075,7 +1075,7 @@ static MUI_ENTRY ltLTLayoutSettingsEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " ReactOS " KERNEL_VERSION_STR " diegimo programa ",
         TEXT_UNDERLINE
     },
     {
@@ -1111,7 +1111,7 @@ static MUI_ENTRY ltLTLayoutSettingsEntries[] =
     {
         0,
         0,
-        "   ENTER = Testi   ESC = Atsaukti   F3 = Baigti",
+        "   ENTER = T“sti   ESC = At’aukti   F3 = Baigti",
         TEXT_STATUS
     },
     {
@@ -1128,7 +1128,7 @@ static MUI_ENTRY ltLTPrepareCopyEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " ReactOS " KERNEL_VERSION_STR " diegimo programa ",
         TEXT_UNDERLINE
     },
     {
@@ -1157,7 +1157,7 @@ static MUI_ENTRY ltLTSelectFSEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " ReactOS " KERNEL_VERSION_STR " diegimo programa ",
         TEXT_UNDERLINE
     },
     {
@@ -1187,7 +1187,7 @@ static MUI_ENTRY ltLTSelectFSEntries[] =
     {
         0,
         0,
-        "   ENTER = Testi   ESC = Atsaukti   F3 = Baigti",
+        "   ENTER = T“sti   ESC = At’aukti   F3 = Baigti",
         TEXT_STATUS
     },
 
@@ -1204,7 +1204,7 @@ static MUI_ENTRY ltLTDeletePartitionEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " ReactOS " KERNEL_VERSION_STR " diegimo programa ",
         TEXT_UNDERLINE
     },
     {
@@ -1234,7 +1234,7 @@ static MUI_ENTRY ltLTDeletePartitionEntries[] =
     {
         0,
         0,
-        "   D = Delete Partition   ESC = Atsaukti   F3 = Baigti",
+        "   D = Delete Partition   ESC = At’aukti   F3 = Baigti",
         TEXT_STATUS
     },
     {
@@ -1250,7 +1250,7 @@ static MUI_ENTRY ltLTRegistryEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " ReactOS " KERNEL_VERSION_STR " diegimo programa ",
         TEXT_UNDERLINE
     },
     {

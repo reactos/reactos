@@ -20,31 +20,31 @@ static MUI_ENTRY plPLLanguagePageEntries[] =
     {
         6,
         8,
-        "WybÛr jÍzyka",
+        "Wyb¢r j©zyka",
         TEXT_NORMAL
     },
     {
         8,
         10,
-        "\x07  ProszÍ wybraÊ jÍzyk dla procesu instalacji systemu",
+        "\x07  Prosz© wybraÜ j©zyk dla procesu instalacji systemu",
         TEXT_NORMAL
     },
     {
         8,
         11,
-        "   i nacisnπÊ ENTER.",
+        "   i nacisn•Ü ENTER.",
         TEXT_NORMAL
     },
     {
         8,
         13,
-        "\x07  Wybrany jÍzyk bÍdzie domyúlnym dla zainstalowanego systemu.",
+        "\x07  Wybrany j©zyk b©dzie domyòlnym dla zainstalowanego systemu.",
         TEXT_NORMAL
     },
     {
         0,
         0,
-        "   ENTER = Kontynuacja  F3 = Wyjúcie",
+        "   ENTER = Kontynuacja  F3 = Wyjòcie",
         TEXT_STATUS
     },
     {
@@ -72,43 +72,43 @@ static MUI_ENTRY plPLWelcomePageEntries[] =
     {
         6,
         11,
-        "Na tym etapie, instalator skopiuje niezbÍdne pliki systemu operacyjnego",
+        " Na tym etapie, instalator skopiuje niezb©dne pliki systemu operacyjnego",
         TEXT_NORMAL
     },
     {
         6,
         12,
-        " na twÛj komputer i przygotuje kolejny etap procesu instalacji.",
+        "na tw¢j komputer i rozpocznie kolejny etap procesu instalacji.",
         TEXT_NORMAL
     },
     {
         8,
         15,
-        "\x07  Naciúnij ENTER aby zainstalowaÊ system ReactOS.",
+        "\x07  Naciònij ENTER, aby zainstalowaÜ system ReactOS.",
         TEXT_NORMAL
     },
     {
         8,
         17,
-        "\x07  Naciúnij R aby naprawiÊ zainstalowany system ReactOS.",
+        "\x07  Naciònij R, aby naprawiÜ zainstalowany system ReactOS.",
         TEXT_NORMAL
     },
     {
         8,
         19,
-        "\x07  Naciúnij L aby zapoznaÊ siÍ z licencjπ i warunkami korzystania z ReactOS",
+        "\x07  Naciònij L, aby zapoznaÜ si© z licencj• ReactOS",
         TEXT_NORMAL
     },
     {
         8,
         21,
-        "\x07  Naciúnij F3 aby wyjúÊ bez instalacji systemu ReactOS.",
+        "\x07  Naciònij F3 aby wyjòÜ bez instalacji systemu ReactOS.",
         TEXT_NORMAL
     },
     {
         6,
         23,
-        "WiÍcej informacji o systemie ReactOS, moøna znaleüÊ na stronie:",
+        "Wi©cej informacji o systemie ReactOS moæna znale´Ü na stronie:",
         TEXT_NORMAL
     },
     {
@@ -120,7 +120,7 @@ static MUI_ENTRY plPLWelcomePageEntries[] =
     {
         0,
         0,
-        "   ENTER = Kontynuacja  R = Naprawa F3 = Wyjúcie",
+        "   ENTER = Kontynuacja  R = Naprawa F3 = Wyjòcie",
         TEXT_STATUS
     },
     {
@@ -142,79 +142,79 @@ static MUI_ENTRY plPLIntroPageEntries[] =
     {
         6,
         8,
-        "Instalator ReactOS wciπø jest we wczesnej fazie rozwoju. Nadal nie",
+        "Instalator ReactOS wci•æ jest we wczesnej fazie rozwoju. Nadal nie",
         TEXT_NORMAL
     },
     {
         6,
         9,
-        "obs≥uguje wszystkich funkcji, niezbÍdnych dla programu instalacyjnego.",
+        "obsàuguje wszystkich funkcji, niezb©dnych dla programu instalacyjnego.",
         TEXT_NORMAL
     },
     {
         6,
         12,
-        "Najwaøniejsze ograniczenia:",
+        "Najwaæniejsze ograniczenia:",
         TEXT_NORMAL
     },
     {
         8,
         13,
-        "- Instalator nie obs≥uguje wiÍcej niø jednej partycji Podstawowej na dysku.",
+        "- Instalator obsàuguje jedn• partycj© Podstawow• na dysku.",
         TEXT_NORMAL
     },
     {
         8,
         14,
-        "- Instalator nie moøe skasowaÊ partycji podstawowej z dysku",
+        "- Instalator nie moæe skasowaÜ partycji podstawowej z dysku",
         TEXT_NORMAL
     },
     {
         8,
         15,
-        "  o ile nadal znajduje siÍ na nim takøe partycja Rozszerzona.",
+        "  o ile nadal znajduje si© na nim takæe partycja Rozszerzona.",
         TEXT_NORMAL
     },
     {
         8,
         16,
-        "- Instalator nie moøe skasowaÊ pierwszej partycji Rozszerzonej z dysku",
+        "- Instalator nie moæe skasowaÜ pierwszej partycji Rozszerzonej z dysku",
         TEXT_NORMAL
     },
     {
         8,
         17,
-        "  o ile nadal znajdujπ siÍ na nim kolejne partycje Rozszerzone.",
+        "  o ile nadal znajduj• si© na nim kolejne partycje Rozszerzone.",
         TEXT_NORMAL
     },
     {
         8,
         18,
-        "- Instalator obs≥uguje jedynie system plikÛw FAT.",
+        "- Instalator obsàuguje jedynie system plik¢w FAT.",
         TEXT_NORMAL
     },
     {
         8,
         19,
-        "- Brakuje sprawdzenia poprawnoúci systemu plikÛw.",
+        "- Brakuje sprawdzenia poprawnoòci systemu plik¢w.",
         TEXT_NORMAL
     },
     {
         8,
         23,
-        "\x07  Naciúnij ENTER aby zainstalowaÊ system ReactOS.",
+        "\x07  Naciònij ENTER aby zainstalowaÜ system ReactOS.",
         TEXT_NORMAL
     },
     {
         8,
         25,
-        "\x07  Naciúnij F3 aby wyjúÊ bez instalacji systemu ReactOS.",
+        "\x07  Naciònij F3 aby wyjòÜ bez instalacji systemu ReactOS.",
         TEXT_NORMAL
     },
     {
         0,
         0,
-        "   ENTER = Kontynuacja   F3 = Wyjúcie",
+        "   ENTER = Kontynuacja   F3 = Wyjòcie",
         TEXT_STATUS
     },
     {
@@ -248,19 +248,19 @@ static MUI_ENTRY plPLLicensePageEntries[] =
     {
         8,
         9,
-        "GNU GPL z elementami kodu pochodzπcego z kompatybilnych",
+        "GNU GPL z elementami kodu pochodz•cego z kompatybilnych",
         TEXT_NORMAL
     },
     {
         8,
         10,
-        "licencji, takich jak X11 czy BSD albo GNU LGPL. Ca≥e",
+        "licencji, takich jak X11 czy BSD albo GNU LGPL. Caàe",
         TEXT_NORMAL
     },
     {
         8,
         11,
-        "oprogramowanie, bÍdπce czÍsciπ system ReactOS podlega wiÍc",
+        "oprogramowanie, b©d•ce cz©sci• system ReactOS podlega wi©c",
         TEXT_NORMAL
     },
     {
@@ -278,31 +278,31 @@ static MUI_ENTRY plPLLicensePageEntries[] =
     {
         8,
         15,
-        "czy teø ograniczeÒ w uøyciu, poza przepisami prawa lokalnego",
+        "czy teæ ogranicze‰ w uæyciu, poza przepisami prawa lokalnego",
         TEXT_NORMAL
     },
     {
         8,
         16,
-        "bπdü miÍdzynarodowego. Licencja systemu ReactOS",
+        "b•d´ mi©dzynarodowego. Licencja systemu ReactOS",
         TEXT_NORMAL
     },
     {
         8,
         17,
-        "reguluje wy≥πcznie zasady dystrybucji dla osÛb trzecich.",
+        "reguluje wyà•cznie zasady dystrybucji dla os¢b trzecich.",
         TEXT_NORMAL
     },
     {
         8,
         18,
-        "Jeúli z jakiegoú powodu nie otrzyma≥eú kopii licencji",
+        "Jeòli z jakiegoò powodu nie otrzymaàeò kopii licencji",
         TEXT_NORMAL
     },
     {
         8,
         19,
-        "GNU GPL wraz z systemem ReactOS, prosimy odwiedziÊ stronÍ:",
+        "GNU GPL wraz z systemem ReactOS, prosimy odwiedziÜ stron©:",
         TEXT_NORMAL
     },
     {
@@ -320,25 +320,25 @@ static MUI_ENTRY plPLLicensePageEntries[] =
     {
         8,
         24,
-        "Niniejszy program jest wolnym oprogramowaniem; szczegÛ≥y",
+        "Niniejszy program jest wolnym oprogramowaniem; szczeg¢ày",
         TEXT_NORMAL
     },
     {
         8,
         25,
-        "dotyczπce kopiowania w ürÛd≥ach. Nie ma ØADNEJ gwarancji",
+        "dotycz•ce kopiowania w ´r¢dàach. Nie ma ØADNEJ gwarancji",
         TEXT_NORMAL
     },
     {
         8,
         26,
-        "PRZYDATNOåCI HANDLOWEJ LUB DO OKREåLONYCH ZASTOSOWA—",
+        "PRZYDATNOóCI HANDLOWEJ LUB DO OKREóLONYCH ZASTOSOWA„",
         TEXT_NORMAL
     },
     {
         0,
         0,
-        "   ENTER = PowrÛt",
+        "   ENTER = Powr¢t",
         TEXT_STATUS
     },
     {
@@ -360,7 +360,7 @@ static MUI_ENTRY plPLDevicePageEntries[] =
     {
         6,
         8,
-        "Poniøsza lista zawiera obecne ustawienia sprzÍtu.",
+        "Poniæsza lista zawiera obecne ustawienia sprz©tu.",
         TEXT_NORMAL
     },
     {
@@ -372,66 +372,66 @@ static MUI_ENTRY plPLDevicePageEntries[] =
     {
         8,
         12,
-        "        Ekran:",
+        "          Ekran:",
         TEXT_NORMAL,
     },
     {
         8,
         13,
-        "       Klawiatura:",
+        "     Klawiatura:",
         TEXT_NORMAL
     },
     {
         8,
         14,
-        "Uk≥ad klawiatury:",
+        "Ukà. klawiatury:",
         TEXT_NORMAL
     },
     {
         8,
         16,
-        "         Zaakceptuj:",
+        "         Zapisz:",
         TEXT_NORMAL
     },
     {
         25,
-        16, "Zaakceptuj te ustawienia sprzÍtu",
+        16, "Akceptuj ustawienia sprz©tu",
         TEXT_NORMAL
     },
     {
         6,
         19,
-        "Moøesz zmieniÊ poszczegÛlne ustawienia za pomocπ klawiszy G”RA i D”£",
+        "Moæesz zmieniÜ poszczeg¢lne ustawienia za pomoc• klawiszy G‡RA i D‡ù",
         TEXT_NORMAL
     },
     {
         6,
         20,
-        "aby wybraÊ kategoriÍ. Potem naciúnij ENTER by przejúÊ do menu z ",
+        "aby wybraÜ kategori©. Potem naciònij ENTER by przejòÜ do menu z ",
         TEXT_NORMAL
     },
     {
         6,
         21,
-        "ustawieniami szczegÛ≥owymi do wyboru.",
+        "ustawieniami szczeg¢àowymi do wyboru.",
         TEXT_NORMAL
     },
     {
         6,
         23,
-        "Kiedy wszystkie ustawienia sπ poprawne, wybierz \"Zaakceptuj te ustawienia sprzÍtu\"",
+        "Gdy wszystkie ustawienia s• poprawne, wybierz: ",
         TEXT_NORMAL
     },
     {
         6,
         24,
-        "i naciúnij ENTER.",
+        " \"Akceptuj ustawienia sprz©tu\" i naciònij ENTER.",
         TEXT_NORMAL
     },
     {
         0,
         0,
-        "   ENTER = Kontynuacja   F3 = Wyjúcie",
+        "   ENTER = Kontynuacja   F3 = Wyjòcie",
         TEXT_STATUS
     },
     {
@@ -453,49 +453,49 @@ static MUI_ENTRY plPLRepairPageEntries[] =
     {
         6,
         8,
-        "Instalator ReactOS wciπø jest we wczesnej fazie rozwoju. Nadal nie",
+        "Instalator ReactOS wci•æ jest we wczesnej fazie rozwoju. Nadal nie",
         TEXT_NORMAL
     },
     {
         6,
         9,
-        "obs≥uguje wszystkich funkcji, niezbÍdnych dla programu instalacyjnego.",
+        "obsàuguje wszystkich funkcji, niezb©dnych dla programu instalacyjnego.",
         TEXT_NORMAL
     },
     {
         6,
         12,
-        "Naprawa istniejπcej instalacji systemu nie jest jeszcze moøliwa.",
+        "Naprawa istniej•cej instalacji systemu nie jest jeszcze moæliwa.",
         TEXT_NORMAL
     },
     {
         8,
         15,
-        "\x07  Naciúnij U øeby uaktualniÊ system.",
+        "\x07  Naciònij U æeby uaktualniÜ system.",
         TEXT_NORMAL
     },
     {
         8,
         17,
-        "\x07  Naciúnij R by uruchomiÊ KonsolÍ Odtwarzania.",
+        "\x07  Naciònij R by uruchomiÜ Konsol© Odtwarzania.",
         TEXT_NORMAL
     },
     {
         8,
         19,
-        "\x07  Naciúnij ESC by powrÛciÊ do g≥Ûwnego menu.",
+        "\x07  Naciònij ESC by powr¢ciÜ do gà¢wnego menu.",
         TEXT_NORMAL
     },
     {
         8,
         21,
-        "\x07  Naciúnij ENTER by zrestartowaÊ komputer.",
+        "\x07  Naciònij ENTER by zrestartowaÜ komputer.",
         TEXT_NORMAL
     },
     {
         0,
         0,
-        "   ESC = Menu g≥Ûwne  ENTER = Restart",
+        "   ESC = Menu gà¢wne  ENTER = Restart",
         TEXT_STATUS
     },
     {
@@ -516,25 +516,25 @@ static MUI_ENTRY plPLComputerPageEntries[] =
     {
         6,
         8,
-        "Aby zmieniÊ typ komputera, na ktÛrym chcesz zainstalowaÊ",
+        "Aby zmieniÜ typ komputera, na kt¢rym chcesz zainstalowaÜ ReactOS",
         TEXT_NORMAL
     },
     {
         8,
         10,
-        "\x07  naciúnij klawisz G”RA albo D”£ by wybraÊ odpowiedni typ komputera.",
+        "\x07  naciònij klawisz G‡RA albo D‡ù by wybraÜ odpowiedni typ komputera.",
         TEXT_NORMAL
     },
     {
         8,
         11,
-        "   NastÍpnie naciúnij ENTER.",
+        "   a nast©pnie naciònij ENTER.",
         TEXT_NORMAL
     },
     {
         8,
         13,
-        "\x07  Naciúnij ESC key aby powrÛciÊ do poprzedniej strony bez zmiany",
+        "\x07  Naciònij klawisz ESC aby powr¢ciÜ do poprzedniej strony bez zmiany",
         TEXT_NORMAL
     },
     {
@@ -546,7 +546,7 @@ static MUI_ENTRY plPLComputerPageEntries[] =
     {
         0,
         0,
-        "   ENTER = Kontynuacja   ESC = Anulowanie   F3 = Wyjúcie",
+        "   ENTER = Kontynuacja   ESC = Anulowanie   F3 = Wyjòcie",
         TEXT_STATUS
     },
     {
@@ -568,25 +568,25 @@ static MUI_ENTRY plPLFlushPageEntries[] =
     {
         10,
         6,
-        "System obecnie sprawdza czy dane sπ poprawnie zapisane na dysku",
+        "System obecnie sprawdza czy dane s• poprawnie zapisane na dysku",
         TEXT_NORMAL
     },
     {
         10,
         8,
-        "To moøe zajπÊ minutÍ.",
+        "To moæe zaj•Ü minut©.",
         TEXT_NORMAL
     },
     {
         10,
         9,
-        "Po zakoÒczeniu, system zrestartuje komputer automatycznie.",
+        "Po zako‰czeniu, system zrestartuje komputer automatycznie.",
         TEXT_NORMAL
     },
     {
         0,
         0,
-        "   Czyszczenie pamieci Cache",
+        "   Czyszczenie pami©ci Cache",
         TEXT_STATUS
     },
     {
@@ -608,31 +608,31 @@ static MUI_ENTRY plPLQuitPageEntries[] =
     {
         10,
         6,
-        "ReactOS zosta≥ juø poprawnie zainstalowany",
+        "ReactOS zostaà juæ poprawnie zainstalowany",
         TEXT_NORMAL
     },
     {
         10,
         8,
-        "Upewnij siÍ ze w NapÍdzie A: nie ma dyskietki i",
+        "Upewnij si© ze w Nap©dzie A: nie ma dyskietki i",
         TEXT_NORMAL
     },
     {
         10,
         9,
-        "w napÍdach optycznych - øadnych CD-ROMÛw.",
+        "w nap©dach optycznych - æadnych CD-ROM¢w.",
         TEXT_NORMAL
     },
     {
         10,
         11,
-        "Naciúnij ENTER by zrestartowaÊ komputer.",
+        "Naciònij ENTER by zrestartowaÜ komputer.",
         TEXT_NORMAL
     },
     {
         0,
         0,
-        "   ProszÍ czekaÊ ...",
+        "   Prosz© czekaÜ ...",
         TEXT_STATUS,
     },
     {
@@ -654,36 +654,36 @@ static MUI_ENTRY plPLDisplayPageEntries[] =
     {
         6,
         8,
-        "Chcesz zmieniÊ rozdzielczoúÊ ekranu.",
+        "Chcesz zmieniÜ rozdzielczoòÜ ekranu.",
         TEXT_NORMAL
     },
     {   8,
         10,
-         "\x07  Naciúnij klawisz G”RA albo D”£ by wybraÊ odpowiedni typ komputera.",
+         "\x07  Naciònij klawisz G‡RA albo D‡ù by wybraÜ odpowiedni typ komputera",
          TEXT_NORMAL
     },
     {
         8,
         11,
-        "   NastÍpnie naciúnij ENTER.",
+        "   a nast©pnie naciònij ENTER.",
         TEXT_NORMAL
     },
     {
         8,
         13,
-        "\x07  Naciúnij ESC key aby powrÛciÊ do poprzedniej strony bez zmiany",
+        "\x07  Naciònij ESC key aby powr¢ciÜ do poprzedniej strony bez zmiany",
         TEXT_NORMAL
     },
     {
         8,
         14,
-        "   rodzaju ekranu.",
+        "   rozdzielczoòci czy iloòci kolor¢w.",
         TEXT_NORMAL
     },
     {
         0,
         0,
-        "   ENTER = Kontynuacja   ESC = Anulowanie   F3 = Wyjúcie",
+        "   ENTER = Kontynuacja   ESC = Anulowanie   F3 = Wyjòcie",
         TEXT_STATUS
     },
     {
@@ -705,25 +705,25 @@ static MUI_ENTRY plPLSuccessPageEntries[] =
     {
         10,
         6,
-        "Podstawowe sk≥adniki systemu ReactOS zosta≥y zainstalowane.",
+        "Podstawowe skàadniki systemu ReactOS zostaày zainstalowane.",
         TEXT_NORMAL
     },
     {
         10,
         8,
-        "Upewnij siÍ ze w NapÍdzie A: nie ma dyskietki i",
+        "Upewnij si© ze w Nap©dzie A: nie ma dyskietki i",
         TEXT_NORMAL
     },
     {
         10,
         9,
-        "w napÍdach optycznych - øadnych CD-ROMÛw.",
+        "w nap©dach optycznych - æadnych CD-ROM¢w.",
         TEXT_NORMAL
     },
     {
         10,
         11,
-        "Naciúnij ENTER by zrestartowaÊ komputer.",
+        "Naciònij ENTER by zrestartowaÜ komputer.",
         TEXT_NORMAL
     },
     {
@@ -751,7 +751,7 @@ static MUI_ENTRY plPLBootPageEntries[] =
     {
         6,
         8,
-        "Instalator ReactOS nie moøe wgraÊ bootloadera na twÛj",
+        "Instalator ReactOS nie moæe wgraÜ bootloadera na tw¢j",
         TEXT_NORMAL
     },
     {
@@ -763,19 +763,19 @@ static MUI_ENTRY plPLBootPageEntries[] =
     {
         6,
         13,
-        "ProszÍ umieúciÊ sformatowanπ dyskietkÍ w napÍdzie A:",
+        "Prosz© umieòciÜ sformatowan• dyskietk© w nap©dzie A:",
         TEXT_NORMAL
     },
     {
         6,
         14,
-        "i nacisnπÊ klawisz ENTER.",
+        "i nacisn•Ü klawisz ENTER.",
         TEXT_NORMAL,
     },
     {
         0,
         0,
-        "   ENTER = Kontynuacja   F3 = Wyjúcie",
+        "   ENTER = Kontynuacja   F3 = Wyjòcie",
         TEXT_STATUS
     },
     {
@@ -798,7 +798,7 @@ static MUI_ENTRY plPLSelectPartitionEntries[] =
     {
         6,
         8,
-        "Poniøsza lista pokazuje istniejπce partycje i puste",
+        "Poniæsza lista pokazuje istniej•ce partycje i puste",
         TEXT_NORMAL
     },
     {
@@ -810,31 +810,31 @@ static MUI_ENTRY plPLSelectPartitionEntries[] =
     {
         8,
         11,
-        "\x07  Naciúnij G”RA lub D”£ by wybraÊ pozycjÍ z listy.",
+        "\x07  Naciònij G‡RA lub D‡ù by wybraÜ pozycj© z listy.",
         TEXT_NORMAL
     },
     {
         8,
         13,
-        "\x07  Naciúnij ENTER by zainstalowaÊ ReactOS na wybranej partycji.",
+        "\x07  Naciònij ENTER by zainstalowaÜ ReactOS na wybranej partycji.",
         TEXT_NORMAL
     },
     {
         8,
         15,
-        "\x07  Naciúnij C by stworzyÊ nowπ partycjÍ.",
+        "\x07  Naciònij C by stworzyÜ now• partycj©.",
         TEXT_NORMAL
     },
     {
         8,
         17,
-        "\x07  Naciúnij D by skasowaÊ istniejπcπ partycjÍ.",
+        "\x07  Naciònij D by skasowaÜ istniej•c• partycj©.",
         TEXT_NORMAL
     },
     {
         0,
         0,
-        "   ProszÍ czekaÊ...",
+        "   Prosz© czekaÜ...",
         TEXT_STATUS
     },
     {
@@ -862,13 +862,13 @@ static MUI_ENTRY plPLFormatPartitionEntries[] =
     {
         6,
         10,
-        "Instalator sformatuje teraz partycjÍ. Naciúnij ENTER aby kontynuowaÊ.",
+        "Instalator sformatuje teraz partycj©. Naciònij ENTER aby kontynuowaÜ.",
         TEXT_NORMAL
     },
     {
         0,
         0,
-        "   ENTER = Kontynuacja   F3 = Wyjúcie",
+        "   ENTER = Kontynuacja   F3 = Wyjòcie",
         TEXT_STATUS
     },
     {
@@ -890,37 +890,37 @@ static MUI_ENTRY plPLInstallDirectoryEntries[] =
     {
         6,
         8,
-        "Instalator przegra pliki systemu na wybranπ partycjÍ. Wybierz",
+        "Instalator przegra pliki systemu na wybran• partycj©. Wybierz",
         TEXT_NORMAL
     },
     {
         6,
         9,
-        "katalog do ktÛrego chcesz zainstalowaÊ system ReactOS:",
+        "katalog do kt¢rego chcesz zainstalowaÜ system ReactOS:",
         TEXT_NORMAL
     },
     {
         6,
         14,
-        "Aby zmieniÊ domyúlny katalog, uøyj klawisza BACKSPACE by skasowaÊ",
+        "Aby zmieniÜ domyòlny katalog, uæyj klawisza BACKSPACE by skasowaÜ",
         TEXT_NORMAL
     },
     {
         6,
         15,
-        "a nastÍpnie wprowadü nowπ úcieøkÍ do katalogu, do ktÛrego system",
+        "a nast©pnie wprowad´ now• òcieæk© do katalogu, do kt¢rego system",
         TEXT_NORMAL
     },
     {
         6,
         16,
-        "ma zostaÊ zainstalowany.",
+        "ma zostaÜ zainstalowany.",
         TEXT_NORMAL
     },
     {
         0,
         0,
-        "   ENTER = Kontynuacja   F3 = Wyjúcie",
+        "   ENTER = Kontynuacja   F3 = Wyjòcie",
         TEXT_STATUS
     },
     {
@@ -942,7 +942,7 @@ static MUI_ENTRY plPLFileCopyEntries[] =
     {
         11,
         12,
-        "ProszÍ czekaÊ, Instalator ReactOS kopiuje pliki do wybranego",
+        "Prosz© czekaÜ, Instalator ReactOS kopiuje pliki do wybranego",
         TEXT_NORMAL
     },
     {
@@ -954,13 +954,13 @@ static MUI_ENTRY plPLFileCopyEntries[] =
     {
         20,
         14,
-        "To moøe zajπÊ kilka minut.",
+        "To moæe zaj•Ü kilka minut.",
         TEXT_NORMAL
     },
     {
         0,
         0,
-        "                                                           \xB3 ProszÍ czekaÊ...    ",
+        "                                                           \xB3 Prosz© czekaÜ...    ",
         TEXT_STATUS
     },
     {
@@ -982,31 +982,31 @@ static MUI_ENTRY plPLBootLoaderEntries[] =
     {
         6,
         8,
-        "Instalator musi teraz wgraÊ bootloader",
+        "Instalator musi teraz wgraÜ bootloader",
         TEXT_NORMAL
     },
     {
         8,
         12,
-        "Wgraj bootloader na dysk twardy (MBR).",
+        " Wgraj bootloader na dysk twardy (MBR).",
         TEXT_NORMAL
     },
     {
         8,
         13,
-        "Wgraj bootloader na dyskietkÍ.",
+        " Wgraj bootloader na dyskietk©.",
         TEXT_NORMAL
     },
     {
         8,
         14,
-        "PomiÒ wgrywanie bootloadera.",
+        " Pomi‰ wgrywanie bootloadera.",
         TEXT_NORMAL
     },
     {
         0,
         0,
-        "   ENTER = Kontynuacja   F3 = Wyjúcie",
+        "   ENTER = Kontynuacja   F3 = Wyjòcie",
         TEXT_STATUS
     },
     {
@@ -1028,25 +1028,25 @@ static MUI_ENTRY plPLKeyboardSettingsEntries[] =
     {
         6,
         8,
-        "Chcesz zmieniÊ typ klawiatury, jaki ma byÊ zainstalowany.",
+        "Chcesz zmieniÜ typ klawiatury, jaki ma byÜ zainstalowany.",
         TEXT_NORMAL
     },
     {
         8,
         10,
-        "\x07  Naciúnij klawisz G”RA albo D”£ by wybraÊ odpowiedni typ klawiatury.",
+        "\x07  Naciònij klawisz G‡RA albo D‡ù by wybraÜ odpowiedni typ klawiatury.",
         TEXT_NORMAL
     },
     {
         8,
         11,
-        "   NastÍpnie naciúnij ENTER.",
+        "   a nast©pnie naciònij ENTER.",
         TEXT_NORMAL
     },
     {
         8,
         13,
-        "\x07  Naciúnij ESC key aby powrÛciÊ do poprzedniej strony bez zmiany",
+        "\x07  Naciònij ESC key aby powr¢ciÜ do poprzedniej strony bez zmiany",
         TEXT_NORMAL
     },
     {
@@ -1058,7 +1058,7 @@ static MUI_ENTRY plPLKeyboardSettingsEntries[] =
     {
         0,
         0,
-        "   ENTER = Kontynuacja   ESC = Anulowanie   F3 = Wyjúcie",
+        "   ENTER = Kontynuacja   ESC = Anulowanie   F3 = Wyjòcie",
         TEXT_STATUS
     },
     {
@@ -1080,37 +1080,37 @@ static MUI_ENTRY plPLLayoutSettingsEntries[] =
     {
         6,
         8,
-        "Chcesz zmieniÊ uk≥ad klawiatury, jaki ma byÊ zainstalowany.",
+        "Chcesz zmieniÜ ukàad klawiatury, jaki ma byÜ zainstalowany.",
         TEXT_NORMAL
     },
     {
         8,
         10,
-        "\x07  Naciúnij klawisz G”RA albo D”£ by wybraÊ odpowiedni uk≥ad",
+        "\x07  Naciònij klawisz G‡RA albo D‡ù by wybraÜ odpowiedni ukàad",
         TEXT_NORMAL
     },
     {
         8,
         11,
-        "    klawiatury. NastÍpnie naciúnij ENTER.",
+        "    klawiatury. Nast©pnie naciònij ENTER.",
         TEXT_NORMAL
     },
     {
         8,
         13,
-        "\x07  Naciúnij ESC key aby powrÛciÊ do poprzedniej strony bez zmiany",
+        "\x07  Naciònij ESC key aby powr¢ciÜ do poprzedniej strony bez zmiany",
         TEXT_NORMAL
     },
     {
         8,
         14,
-        "   uk≥adu klawiatury.",
+        "   ukàadu klawiatury.",
         TEXT_NORMAL
     },
     {
         0,
         0,
-        "   ENTER = Kontynuacja   ESC = Anulowanie   F3 = Wyjúcie",
+        "   ENTER = Kontynuacja   ESC = Anulowanie   F3 = Wyjòcie",
         TEXT_STATUS
     },
     {
@@ -1133,13 +1133,13 @@ static MUI_ENTRY plPLPrepareCopyEntries[] =
     {
         6,
         8,
-        "Instalator przygotuje twÛj komputer do skopiowania plikÛw systemu. ",
+        "Instalator  tw¢j komputer do skopiowania plik¢w systemu. ",
         TEXT_NORMAL
     },
     {
         0,
         0,
-        "   Tworzenie listy plikÛw do skopiowania...",
+        "   Tworzenie listy plik¢w do skopiowania...",
         TEXT_STATUS
     },
     {
@@ -1162,31 +1162,31 @@ static MUI_ENTRY plPLSelectFSEntries[] =
     {
         6,
         17,
-        "Wybierz system plikÛw z listy poniøej.",
+        "Wybierz system plik¢w z listy poniæej.",
         0
     },
     {
         8,
         19,
-        "\x07  Naciúnij klawisz G”Ra alub D”£ by wybraÊ system plikÛw.",
+        "\x07  Naciònij klawisz G‡RA alub D‡ù by wybraÜ system plik¢w.",
         0
     },
     {
         8,
         21,
-        "\x07  Naciúnij ENTER aby sformatowaÊ partycjÍ.",
+        "\x07  Naciònij ENTER aby sformatowaÜ partycj©.",
         0
     },
     {
         8,
         23,
-        "\x07  Naciúnij ESC aby wybraÊ innπ partycjÍ.",
+        "\x07  Naciònij ESC aby wybraÜ inn• partycj©.",
         0
     },
     {
         0,
         0,
-        "   ENTER = Kontynuacja   ESC = Anulowanie   F3 = Wyjúcie",
+        "   ENTER = Kontynuacja   ESC = Anulowanie   F3 = Wyjòcie",
         TEXT_STATUS
     },
 
@@ -1209,31 +1209,31 @@ static MUI_ENTRY plPLDeletePartitionEntries[] =
     {
         6,
         8,
-        "Chcesz skasowaÊ wybranπ partycjÍ",
+        "Chcesz skasowaÜ wybran• partycj©",
         TEXT_NORMAL
     },
     {
         8,
         18,
-        "\x07  Naciúnij D by skasowaÊ partycjÍ.",
+        "\x07  Naciònij D by skasowaÜ partycj©.",
         TEXT_NORMAL
     },
     {
         11,
         19,
-        "UWAGA: Wszystkie dane, zapisane na tej partycji zostanπ skasowane!",
+        "UWAGA: Wszystkie dane, zapisane na tej partycji zostan• skasowane!",
         TEXT_NORMAL
     },
     {
         8,
         21,
-        "\x07  Naciúnij ESC aby anulowaÊ.",
+        "\x07  Naciònij ESC aby anulowaÜ.",
         TEXT_NORMAL
     },
     {
         0,
         0,
-        "   D = Skasowanie partycji   ESC = Anulowanie   F3 = Wyjúcie",
+        "   D = Skasowanie partycji   ESC = Anulowanie   F3 = Wyjòcie",
         TEXT_STATUS
     },
     {
@@ -1255,13 +1255,13 @@ static MUI_ENTRY plPLRegistryEntries[] =
     {
         6,
         8,
-        "Instalator uaktualnia w≥aúnie konfiguracjÍ systemu. ",
+        "Instalator uaktualnia wàaònie konfiguracj© systemu. ",
         TEXT_NORMAL
     },
     {
         0,
         0,
-        "   Tworzenie ga≥Ízi rejestru...",
+        "   Tworzenie gaà©zi rejestru...",
         TEXT_STATUS
     },
     {
@@ -1277,42 +1277,42 @@ MUI_ERROR plPLErrorEntries[] =
 {
     {
         //ERROR_NOT_INSTALLED
-        "ReactOS nie zosta≥ w pe≥ni zainstalowany na twoim\n"
-        "komputerze. Jeúli wyjdziesz teraz, trzeba bÍdzie\n"
-        "ponownie uruchomiÊ instalator by zainstalowaÊ ReactOS.\n"
+        "ReactOS nie zostaà w peàni zainstalowany na twoim\n"
+        "komputerze. Jeòli wyjdziesz teraz, trzeba b©dzie\n"
+        "ponownie uruchomiÜ instalator by zainstalowaÜ ReactOS.\n"
         "\n"
-        "  \x07  Naciúnij ENTER aby kontynuowaÊ instalacjÍ.\n"
-        "  \x07  Naciúnij F3 aby wyjúÊ z instalatora.",
-        "F3= Quit  ENTER = Continue"
+        "  \x07  Naciònij ENTER aby kontynuowaÜ instalacj©.\n"
+        "  \x07  Naciònij F3 aby wyjòÜ z instalatora.",
+        "F3= Wyjòcie  ENTER = Kontynuacja"
     },
     {
         //ERROR_NO_HDD
-        "Instalator nie znalaz≥ øadnego dysku twardego.\n",
+        "Instalator nie znalazà æadnego dysku twardego.\n",
         "ENTER = Restart komputera"
     },
     {
         //ERROR_NO_SOURCE_DRIVE
-        "Instalator nie znalaz≥ napÍdu ürÛd≥owego.\n",
+        "Instalator nie znalazà nap©du ´r¢dàowego.\n",
         "ENTER = Restart komputera"
     },
     {
         //ERROR_LOAD_TXTSETUPSIF
-        "Instalator nie mÛg≥ za≥adowaÊ pliku TXTSETUP.SIF.\n",
+        "Instalator nie m¢gà zaàadowaÜ pliku TXTSETUP.SIF.\n",
         "ENTER = Restart komputera"
     },
     {
         //ERROR_CORRUPT_TXTSETUPSIF
-        "Instalator znalaz≥ uszkodzony plik TXTSETUP.SIF.\n",
+        "Instalator znalazà uszkodzony plik TXTSETUP.SIF.\n",
         "ENTER = Restart komputera"
     },
     {
         //ERROR_SIGNATURE_TXTSETUPSIF,
-        "Instalator znalaz≥ nieprawid≥owy wpis w TXTSETUP.SIF.\n",
+        "Instalator znalazà nieprawidàowy wpis w TXTSETUP.SIF.\n",
         "ENTER = Restart komputera"
     },
     {
         //ERROR_DRIVE_INFORMATION
-        "Instalator nie mÛg≥ odczytaÊ informacji o napÍdzie.\n",
+        "Instalator nie m¢gà odczytaÜ informacji o nap©dzie.\n",
         "ENTER = Restart komputera"
     },
     {
@@ -1322,48 +1322,48 @@ MUI_ERROR plPLErrorEntries[] =
     },
     {
         //ERROR_LOAD_COMPUTER,
-        "Instalator failed to load the computer type list.\n",
+        "Instalator nie m¢gà zaàadowaÜ listy typ¢w komputea\ra.\n",
         "ENTER = Restart komputera"
     },
     {
         //ERROR_LOAD_DISPLAY,
-        "Instalator nie mÛg≥ za≥adowaÊ listy ustawieÒ ekranu.\n",
+        "Instalator nie m¢gà zaàadowaÜ listy ustawie‰ ekranu.\n",
         "ENTER = Restart komputera"
     },
     {
         //ERROR_LOAD_KEYBOARD,
-        "Instalator nie mÛg≥ za≥adowaÊ listy typÛw klawiatury.\n",
+        "Instalator nie m¢gà zaàadowaÜ listy typ¢w klawiatury.\n",
         "ENTER = Restart komputera"
     },
     {
         //ERROR_LOAD_KBLAYOUT,
-        "Instalator nie mÛg≥ za≥adowaÊ listy uk≥adÛw klawiatury.\n",
+        "Instalator nie m¢gà zaàadowaÜ listy ukàad¢w klawiatury.\n",
         "ENTER = Restart komputera"
     },
     {
         //ERROR_WARN_PARTITION,
-        "Instalator wykry≥, øe co najmniej jeden dysk twardy zawiera niekompatybilnπ \n"
-        "tablicÍ partycji, ktÛra nie bÍdzie poprawnie obs≥ugiwana!\n"
+        "Instalator wykryà, æe co najmniej jeden dysk twardy zawiera niekompatybiln• \n"
+        "tablic© partycji, kt¢ra nie b©dzie poprawnie obsàugiwana!\n"
         "\n"
-        "Tworzenie lub kasowanie partycji moøe zniszczyÊ ca≥π tablicÍ partycji.\n"
+        "Tworzenie lub kasowanie partycji moæe zniszczyÜ caà• tablic© partycji.\n"
         "\n"
-        "  \x07  Naciúnij F3 aby wyjúÊ z instalatora."
-        "  \x07  Naciúnij ENTER aby kontynuowaÊ.",
-        "F3= Wyjúcie  ENTER = Kontynuacja"
+        "  \x07  Naciònij F3 aby wyjòÜ z instalatora."
+        "  \x07  Naciònij ENTER aby kontynuowaÜ.",
+        "F3= Wyjòcie  ENTER = Kontynuacja"
     },
     {
         //ERROR_NEW_PARTITION,
-        "Nie moøesz stworzyÊ nowej partycji w miejscu juø\n"
-        "istniejπcej!\n"
+        "Nie moæesz stworzyÜ nowej partycji w miejscu juæ\n"
+        "istniej•cej!\n"
         "\n"
-        "  * Naciúnij dowolny klawisz aby kontynuowaÊ.",
+        "  * Naciònij dowolny klawisz aby kontynuowaÜ.",
         NULL
     },
     {
         //ERROR_DELETE_SPACE,
-        "Nie moøesz skasowaÊ pustej przestrzeni, gdzie nie ma øadnej partycji!\n"
+        "Nie moæesz skasowaÜ pustej przestrzeni, gdzie nie ma æadnej partycji!\n"
         "\n"
-        "  * Naciúnij dowolny klawisz aby kontynuowaÊ.",
+        "  * Naciònij dowolny klawisz aby kontynuowaÜ.",
         NULL
     },
     {
@@ -1373,47 +1373,47 @@ MUI_ERROR plPLErrorEntries[] =
     },
     {
         //ERROR_NO_FLOPPY,
-        "Brak dyskietki w napÍdzie A:.",
+        "Brak dyskietki w nap©dzie A:.",
         "ENTER = Kontynuacja"
     },
     {
         //ERROR_UPDATE_KBSETTINGS,
-        "Instalator nie mÛg≥ zmieniÊ uk≥adu klawiatury.",
+        "Instalator nie m¢gà zmieniÜ ukàadu klawiatury.",
         "ENTER = Restart komputera"
     },
     {
         //ERROR_UPDATE_DISPLAY_SETTINGS,
-        "Instalator nie mÛg≥ zmieniÊ ustawieÒ ekranu w rejestrze.",
+        "Instalator nie m¢gà zmieniÜ ustawie‰ ekranu w rejestrze.",
         "ENTER = Restart komputera"
     },
     {
         //ERROR_IMPORT_HIVE,
-        "Instalator nie by≥ w stanie zaimportowaÊ pliku ga≥Ízi rejestru.",
+        "Instalator nie byà w stanie zaimportowaÜ pliku gaà©zi rejestru.",
         "ENTER = Restart komputera"
     },
     {
         //ERROR_FIND_REGISTRY
-        "Instalator nie by≥ w stanie znaleüÊ plikÛw z danymi rejestru.",
+        "Instalator nie byà w stanie znale´Ü plik¢w z danymi rejestru.",
         "ENTER = Restart komputera"
     },
     {
         //ERROR_CREATE_HIVE,
-        "Instalator nie mÛg≥ stworzyÊ ga≥Ízi rejestru.",
+        "Instalator nie m¢gà stworzyÜ gaà©zi rejestru.",
         "ENTER = Restart komputera"
     },
     {
         //ERROR_INITIALIZE_REGISTRY,
-        "Instalator nie by≥ w stanie ustawic inicjalizacji rejestru.",
+        "Instalator nie byà w stanie ustawic inicjalizacji rejestru.",
         "ENTER = Restart komputera"
     },
     {
         //ERROR_INVALID_CABINET_INF,
-        "Cabinet nie zawiera prawid≥owego pliku inf.\n",
+        "Cabinet nie zawiera prawidàowego pliku inf.\n",
         "ENTER = Restart komputera"
     },
     {
         //ERROR_CABINET_MISSING,
-        "Cabinet nie zosta≥ znaleziony.\n",
+        "Cabinet nie zostaà znaleziony.\n",
         "ENTER = Restart komputera"
     },
     {
@@ -1423,51 +1423,51 @@ MUI_ERROR plPLErrorEntries[] =
     },
     {
         //ERROR_COPY_QUEUE,
-        "Instalator nie by≥ w stanie otworzyÊ kolejki kopiowania pliku.\n",
+        "Instalator nie byà w stanie otworzyÜ kolejki kopiowania pliku.\n",
         "ENTER = Restart komputera"
     },
     {
         //ERROR_CREATE_DIR,
-        "Instalator nie mÛg≥ stworzyÊ katalogÛw.",
+        "Instalator nie m¢gà stworzyÜ katalog¢w.",
         "ENTER = Restart komputera"
     },
     {
         //ERROR_TXTSETUP_SECTION,
-        "Instalator nie by≥ w stanie znaleüÊ sekcji 'Directories'\n"
+        "Instalator nie byà w stanie znale´Ü sekcji 'Directories'\n"
         "w pliku TXTSETUP.SIF.\n",
         "ENTER = Restart komputera"
     },
     {
         //ERROR_CABINET_SECTION,
-        "Instalator nie by≥ w stanie znaleüÊ sekcji 'Directories'\n"
+        "Instalator nie byà w stanie znale´Ü sekcji 'Directories'\n"
         "w pliku cabinet.\n",
         "ENTER = Restart komputera"
     },
     {
         //ERROR_CREATE_INSTALL_DIR
-        "Instalator nie mÛg≥ stworzyÊ katalogu instalacji.",
+        "Instalator nie m¢gà stworzyÜ katalogu instalacji.",
         "ENTER = Restart komputera"
     },
     {
         //ERROR_FIND_SETUPDATA,
-        "Instalator nie by≥ w stanie znaleüÊ sekcji 'SetupData'\n"
+        "Instalator nie byà w stanie znale´Ü sekcji 'SetupData'\n"
         "w pliku TXTSETUP.SIF.\n",
         "ENTER = Restart komputera"
     },
     {
         //ERROR_WRITE_PTABLE,
-        "Instalator nie mÛg≥ zapisaÊ zmian w tablicy partycji.\n"
+        "Instalator nie m¢gà zapisaÜ zmian w tablicy partycji.\n"
         "ENTER = Restart komputera"
     },
     {
         //ERROR_ADDING_CODEPAGE,
-        "Setup failed to add codepage to registry.\n"
-        "ENTER = Reboot computer"
+        "Instalator nie m¢gà dodaÜ strony kodowania do rejestru.\n"
+        "ENTER = Restart komputera"
     },
     {
         //ERROR_UPDATE_LOCALESETTINGS,
-        "Setup could not set the system locale.\n"
-        "ENTER = Reboot computer"
+        "Instalator nie m¢gà ustawiÜ wersji j©zykowej.\n"
+        "ENTER = Restart komputera"
     },
     {
         NULL,
