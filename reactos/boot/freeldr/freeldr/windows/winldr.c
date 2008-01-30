@@ -458,13 +458,13 @@ LoadAndBootWindows(PCSTR OperatingSystemName, WORD OperatingSystemVersion)
 
 	/* Allocate data table entries for above-loaded modules */
 	WinLdrAllocateDataTableEntry(LoaderBlock, "ntoskrnl.exe",
-		"WINNT\\SYSTEM32\\NTOSKRNL.EXE", NtosBase, &KernelDTE);
+		"WINDOWS\\SYSTEM32\\NTOSKRNL.EXE", NtosBase, &KernelDTE);
 	WinLdrAllocateDataTableEntry(LoaderBlock, "hal.dll",
-		"WINNT\\SYSTEM32\\HAL.DLL", HalBase, &HalDTE);
+		"WINDOWS\\SYSTEM32\\HAL.DLL", HalBase, &HalDTE);
 	if (OperatingSystemVersion > _WIN32_WINNT_WIN2K)
 	{
 		WinLdrAllocateDataTableEntry(LoaderBlock, "kdcom.dll",
-			"WINNT\\SYSTEM32\\KDCOM.DLL", KdComBase, &KdComDTE);
+			"WINDOWS\\SYSTEM32\\KDCOM.DLL", KdComBase, &KdComDTE);
 	}
 
 	/* Load all referenced DLLs for kernel, HAL and kdcom.dll */

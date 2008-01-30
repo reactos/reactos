@@ -97,7 +97,7 @@ BOOLEAN MmInitializeMemoryManager(VOID)
 	MmUpdateLastFreePageHint(PageLookupTableAddress, TotalPagesInLookupTable);
 
 	// Add machine-dependent stuff
-	// FIXME: this is only for i386
+#ifdef __i386__
 	MmMarkPagesInLookupTable(PageLookupTableAddress, 0x00, 1, LoaderFirmwarePermanent); // realmode int vectors
 	MmMarkPagesInLookupTable(PageLookupTableAddress, 0x01, 7, LoaderFirmwareTemporary); // freeldr stack + cmdline
 	MmMarkPagesInLookupTable(PageLookupTableAddress, 0x08, 0x70, LoaderLoadedProgram); // freeldr image (roughly max. 0x64 pages)
@@ -106,9 +106,7 @@ BOOLEAN MmInitializeMemoryManager(VOID)
 	MmMarkPagesInLookupTable(PageLookupTableAddress, 0x90, 0x10, LoaderOsloaderHeap); // Disk read buffer for int 13h. DISKREADBUFFER
 	MmMarkPagesInLookupTable(PageLookupTableAddress, 0xA0, 0x60, LoaderFirmwarePermanent); // ROM / Video
 	MmMarkPagesInLookupTable(PageLookupTableAddress, 0xFFF, 1, LoaderSpecialMemory); // unusable memory
-
-	// This one is strange, without it WinNT crashes with PHASE0_EXCEPTION
-	MmMarkPagesInLookupTable(PageLookupTableAddress, 0x59, 0x5, LoaderFirmwarePermanent);
+#endif
 
 	FreePagesInLookupTable = MmCountFreePagesInLookupTable(PageLookupTableAddress, TotalPagesInLookupTable);
 
@@ -305,15 +303,24 @@ VOID MmInitPageLookupTable(PVOID PageLookupTable, ULONG TotalPageCount, PBIOS_ME
 		MemoryMapStartPage = MmGetPageNumberFromAddress((PVOID)(ULONG)BiosMemoryMap[Index].BaseAddress);
 		MemoryMapEndPage = MmGetPageNumberFromAddress((PVOID)(ULONG)(BiosMemoryMap[Index].BaseAddress + BiosMemoryMap[Index].Length - 1));
 		MemoryMapPageCount = (MemoryMapEndPage - MemoryMapStartPage) + 1;
-		MemoryMapPageAllocated = (BiosMemoryMap[Index].Type == BiosMemoryUsable) ? LoaderFree : LoaderFirmwarePermanent;/*BiosMemoryMap[Index].Type*/;
+
+		switch (BiosMemoryMap[Index].Type)
+		{
+			case BiosMemoryUsable:
+				MemoryMapPageAllocated = LoaderFree;
+				break;
+
+			case BiosMemoryAcpiReclaim:
+			case BiosMemoryAcpiNvs:
+				MemoryMapPageAllocated = LoaderSpecialMemory;
+				break;
+
+			default:
+				MemoryMapPageAllocated = LoaderSpecialMemory;
+		}
 		DbgPrint((DPRINT_MEMORY, "Marking pages as type %d: StartPage: %d PageCount: %d\n", MemoryMapPageAllocated, MemoryMapStartPage, MemoryMapPageCount));
 		MmMarkPagesInLookupTable(PageLookupTable, MemoryMapStartPage, MemoryMapPageCount, MemoryMapPageAllocated);
 	}
-
-	// Mark the low memory region below 1MB as reserved (256 pages in region)
-	//FIXME: Not needed now since we mark low 1Mb with really used and free areas
-	//DbgPrint((DPRINT_MEMORY, "Marking the low 1MB region as reserved.\n"));
-	//MmMarkPagesInLookupTable(PageLookupTable, 0, 256, LoaderFirmwarePermanent);
 
 	// Mark the pages that the lookup table occupies as reserved
 	PageLookupTableStartPage = MmGetPageNumberFromAddress(PageLookupTable);
