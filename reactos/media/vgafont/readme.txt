@@ -7,4 +7,8 @@ sources:
 http://opengrok.creo.hu/dragonfly/xref/src/share/syscons/fonts/cp850-8x8.fnt
 http://opengrok.creo.hu/dragonfly/xref/src/share/syscons/fonts/cp865-8x8.fnt
 http://opengrok.creo.hu/dragonfly/xref/src/share/syscons/fonts/cp866-8x8.fnt
-http://packages.debian.org/en/etch/console-data/gr737-8x8.psf
+http://packages.debian.org/en/etch/all/console-data/ file: gr737-8x8.psf
+http://packages.debian.org/en/etch/all/console-data/ file: lat2-08.psf (as a base), remade several
+ glyphs (by GreatLord), corrected the aligning and cleaned up some of the fonts, finally changed from
+ ISO to DOS ASCII standard CP852 (by Caemyr)
+http://cman.us/files/cp775-8x8.zip
