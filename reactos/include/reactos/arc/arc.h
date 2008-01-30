@@ -83,6 +83,7 @@ typedef enum _TYPE_OF_MEMORY
     LoaderXIPRom,
     LoaderHALCachedMemory,
     LoaderLargePageFiller,
+    LoaderErrorLogMemory,
     LoaderMaximum
 } TYPE_OF_MEMORY;
 
@@ -317,6 +318,11 @@ typedef struct _LOADER_PARAMETER_EXTENSION
     LIST_ENTRY BootApplicationPersistentData;
     PVOID WmdTestResult;
     GUID BootIdentifier;
+    //
+    // NT 6
+    //
+    ULONG ResumePages;
+    PVOID DumpHeader;
 } LOADER_PARAMETER_EXTENSION, *PLOADER_PARAMETER_EXTENSION;
 
 //
@@ -344,6 +350,51 @@ typedef struct _PPC_LOADER_BLOCK
     PVOID BootInfo;
     ULONG MachineType;
 } PPC_LOADER_BLOCK, *PPPC_LOADER_BLOCK;
+
+//
+// Firmware information block (NT6+)
+//
+
+typedef struct _VIRTUAL_EFI_RUNTIME_SERVICES
+{
+    ULONG_PTR GetTime;
+    ULONG_PTR SetTime;
+    ULONG_PTR GetWakeupTime;
+    ULONG_PTR SetWakeupTime;
+    ULONG_PTR SetVirtualAddressMap;
+    ULONG_PTR ConvertPointer;
+    ULONG_PTR GetVariable;
+    ULONG_PTR GetNextVariableName;
+    ULONG_PTR SetVariable;
+    ULONG_PTR GetNextHighMonotonicCount;
+    ULONG_PTR ResetSystem;
+    ULONG_PTR UpdateCapsule;
+    ULONG_PTR QueryCapsuleCapabilities;
+    ULONG_PTR QueryVariableInfo;
+} VIRTUAL_EFI_RUNTIME_SERVICES, *PVIRTUAL_EFI_RUNTIME_SERVICES;
+
+typedef struct _EFI_FIRMWARE_INFORMATION
+{
+    ULONG FirmwareVersion;
+    PVIRTUAL_EFI_RUNTIME_SERVICES VirtualEfiRuntimeServices;
+    ULONG SetVirtualAddressMapStatus;
+    ULONG MissedMappingsCount;
+} EFI_FIRMWARE_INFORMATION, *PEFI_FIRMWARE_INFORMATION;
+
+typedef struct _PCAT_FIRMWARE_INFORMATION
+{
+    ULONG PlaceHolder;
+} PCAT_FIRMWARE_INFORMATION, *PPCAT_FIRMWARE_INFORMATION;
+
+typedef struct _FIRMWARE_INFORMATION_LOADER_BLOCK
+{
+    ULONG FirmwareTypeEfi:1;
+    ULONG Reserved:31;
+    union {
+        EFI_FIRMWARE_INFORMATION EfiInformation;
+        PCAT_FIRMWARE_INFORMATION PcatInformation;
+    } u;
+} FIRMWARE_INFORMATION_LOADER_BLOCK, *PFIRMWARE_INFORMATION_LOADER_BLOCK;
 
 //
 // Loader Parameter Block
@@ -377,6 +428,7 @@ typedef struct _LOADER_PARAMETER_BLOCK
         IA64_LOADER_BLOCK Ia64;
 	PPC_LOADER_BLOCK PowerPC;
     } u;
+    FIRMWARE_INFORMATION_LOADER_BLOCK FirmwareInformation;
 } LOADER_PARAMETER_BLOCK, *PLOADER_PARAMETER_BLOCK;
 
 #endif
