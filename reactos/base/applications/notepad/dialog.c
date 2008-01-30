@@ -320,16 +320,16 @@ void DoOpenFile(LPCTSTR szFileName)
      */
     if (GetWindowText(Globals.hEdit, log, SIZEOF(log)) && !_tcscmp(log, dotlog))
     {
-	static const TCHAR lf[] = _T("\r\n");
-	SendMessage(Globals.hEdit, EM_SETSEL, GetWindowTextLength(Globals.hEdit), -1);
-	SendMessage(Globals.hEdit, EM_REPLACESEL, TRUE, (LPARAM)lf);
-	DIALOG_EditTimeDate();
-	SendMessage(Globals.hEdit, EM_REPLACESEL, TRUE, (LPARAM)lf);
+        static const TCHAR lf[] = _T("\r\n");
+        SendMessage(Globals.hEdit, EM_SETSEL, GetWindowTextLength(Globals.hEdit), -1);
+        SendMessage(Globals.hEdit, EM_REPLACESEL, TRUE, (LPARAM)lf);
+        DIALOG_EditTimeDate();
+        SendMessage(Globals.hEdit, EM_REPLACESEL, TRUE, (LPARAM)lf);
     }
 
     SetFileName(szFileName);
     UpdateWindowCaption();
-
+    NOTEPAD_EnableSearchMenu();
 done:
     if (hFile != INVALID_HANDLE_VALUE)
         CloseHandle(hFile);
@@ -344,6 +344,7 @@ VOID DIALOG_FileNew(VOID)
         SetWindowText(Globals.hEdit, empty_str);
         SendMessage(Globals.hEdit, EM_EMPTYUNDOBUFFER, 0, 0);
         SetFocus(Globals.hEdit);
+        NOTEPAD_EnableSearchMenu();
     }
 }
 
@@ -783,6 +784,8 @@ VOID DIALOG_SearchNext(VOID)
 {
     if (Globals.find.lpstrFindWhat != NULL)
       NOTEPAD_FindNext(&Globals.find, FALSE, TRUE);
+    else
+      DIALOG_Search();
 }
 
 VOID DIALOG_Replace(VOID)

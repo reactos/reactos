@@ -85,3 +85,4 @@ void SaveSettings(void);
 
 /* from main.c */
 BOOL NOTEPAD_FindNext(FINDREPLACE *, BOOL , BOOL );
+VOID NOTEPAD_EnableSearchMenu(VOID);

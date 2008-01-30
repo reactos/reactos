@@ -27,6 +27,14 @@
 NOTEPAD_GLOBALS Globals;
 static ATOM aFINDMSGSTRING;
 
+VOID NOTEPAD_EnableSearchMenu()
+{
+    EnableMenuItem(GetMenu(Globals.hMainWnd), CMD_SEARCH,
+                   MF_BYCOMMAND | ((GetWindowTextLength(Globals.hEdit) == 0) ? MF_DISABLED | MF_GRAYED : MF_ENABLED));
+    EnableMenuItem(GetMenu(Globals.hMainWnd), CMD_SEARCH_NEXT,
+                   MF_BYCOMMAND | ((GetWindowTextLength(Globals.hEdit) == 0) ? MF_DISABLED | MF_GRAYED : MF_ENABLED));
+}
+
 /***********************************************************************
  *
  *           SetFileName
@@ -346,6 +354,8 @@ static LRESULT WINAPI NOTEPAD_WndProc(HWND hWnd, UINT msg, WPARAM wParam,
     case WM_COMMAND:
         if (HIWORD(wParam) == EN_CHANGE || HIWORD(wParam) == EN_HSCROLL || HIWORD(wParam) == EN_VSCROLL)
             DIALOG_StatusBarUpdateCaretPos();
+        if ((HIWORD(wParam) == EN_CHANGE))
+            NOTEPAD_EnableSearchMenu();
         NOTEPAD_MenuCommand(LOWORD(wParam));
         break;
 
