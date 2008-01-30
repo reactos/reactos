@@ -253,6 +253,7 @@ static BOOL WriteEncodedText(HANDLE hFile, LPCWSTR pszText, DWORD dwTextLen, int
 					buffer[i+0] = buffer[i+1];
 					buffer[i+1] = b;
 				}
+				pBytes = (LPBYTE) &buffer[dwPos];
 				dwPos += dwByteCount / sizeof(WCHAR);
 				break;
 
