@@ -51,14 +51,15 @@ GetRev(void)
 	static char Unknown[] = "UNKNOWN";
 	static char Revision[10]; /* 999999999 revisions should be enough for everyone... */
 
-	/* SVN 1.4.x */
+	/* SVN 1.4.x-1.5.x */
 	FILE *fp = NULL;
 	char ch;
 	size_t count = 0, chars = 0;
 	fp = fopen(".svn/entries", "r");
 	if (fp != NULL)
 	{
-		if (fgetc(fp) == 56) /* some kind of header? */
+		ch=fgetc(fp);
+		if (ch == 56 || ch == 57) /* some kind of header? */
 		{
 			while((ch=fgetc(fp)) != EOF)
 			{
