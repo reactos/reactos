@@ -1555,9 +1555,20 @@ NtQueryDirectoryFile(IN HANDLE FileHandle,
     }
     else if (DeviceObject->Flags & DO_DIRECT_IO)
     {
-        /* Allocate an MDL */
-        Mdl = IoAllocateMdl(FileInformation, Length, FALSE, TRUE, Irp);
-        MmProbeAndLockPages(Mdl, PreviousMode, IoWriteAccess);
+        _SEH_TRY
+        {
+            /* Allocate an MDL */
+            Mdl = IoAllocateMdl(FileInformation, Length, FALSE, TRUE, Irp);
+            MmProbeAndLockPages(Mdl, PreviousMode, IoWriteAccess);
+        }
+        _SEH_HANDLE
+        {
+            /* Allocating failed, clean up */
+            IopCleanupAfterException(FileObject, Irp, Event, NULL);
+            Status = _SEH_GetExceptionCode();
+            _SEH_YIELD(return Status);
+        }
+        _SEH_END;
     }
     else
     {
@@ -2119,9 +2130,21 @@ NtReadFile(IN HANDLE FileHandle,
         /* Check if we have a buffer length */
         if (Length)
         {
-            /* Allocate an MDL */
-            Mdl = IoAllocateMdl(Buffer, Length, FALSE, TRUE, Irp);
-            MmProbeAndLockPages(Mdl, PreviousMode, IoWriteAccess);
+            _SEH_TRY
+            {
+                /* Allocate an MDL */
+                Mdl = IoAllocateMdl(Buffer, Length, FALSE, TRUE, Irp);
+                MmProbeAndLockPages(Mdl, PreviousMode, IoWriteAccess);
+            }
+            _SEH_HANDLE
+            {
+                /* Allocating failed, clean up */
+                IopCleanupAfterException(FileObject, Irp, Event, NULL);
+                Status = _SEH_GetExceptionCode();
+                _SEH_YIELD(return Status);
+            }
+            _SEH_END;
+
         }
 
         /* No allocation flags */
@@ -2950,6 +2973,7 @@ NtWriteFile(IN HANDLE FileHandle,
                 /* Allocating failed, clean up */
                 IopCleanupAfterException(FileObject, Irp, Event, NULL);
                 Status = _SEH_GetExceptionCode();
+                _SEH_YIELD(return Status);
             }
             _SEH_END;
 
@@ -2967,9 +2991,20 @@ NtWriteFile(IN HANDLE FileHandle,
         /* Check if we have a buffer length */
         if (Length)
         {
-            /* Allocate an MDL */
-            Mdl = IoAllocateMdl(Buffer, Length, FALSE, TRUE, Irp);
-            MmProbeAndLockPages(Mdl, PreviousMode, IoReadAccess);
+            _SEH_TRY
+            {
+                /* Allocate an MDL */
+                Mdl = IoAllocateMdl(Buffer, Length, FALSE, TRUE, Irp);
+                MmProbeAndLockPages(Mdl, PreviousMode, IoReadAccess);
+            }
+            _SEH_HANDLE
+            {
+                /* Allocating failed, clean up */
+                IopCleanupAfterException(FileObject, Irp, Event, NULL);
+                Status = _SEH_GetExceptionCode();
+                _SEH_YIELD(return Status);
+            }
+            _SEH_END;
         }
 
         /* No allocation flags */
