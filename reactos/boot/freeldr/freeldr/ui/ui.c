@@ -95,7 +95,6 @@ BOOLEAN UiInitialize(BOOLEAN ShowGui)
 	}
 
 	DbgPrint((DPRINT_UI, "Initializing User Interface.\n"));
-
 	DbgPrint((DPRINT_UI, "Reading in UI settings from [Display] section.\n"));
 
 	DisplayModeText[0] = '\0';
@@ -107,14 +106,7 @@ BOOLEAN UiInitialize(BOOLEAN ShowGui)
 		}
 		if (IniReadSettingByName(SectionId, "MinimalUI", SettingText, sizeof(SettingText)))
 		{
-			if (_stricmp(SettingText, "Yes") == 0 && strlen(SettingText) == 3)
-			{
-				UiMinimal = TRUE;
-			}
-			else
-			{
-				UiMinimal = FALSE;
-			}
+			UiMinimal = (_stricmp(SettingText, "Yes") == 0 && strlen(SettingText) == 3);
 		}
 	}
 
@@ -208,47 +200,19 @@ BOOLEAN UiInitialize(BOOLEAN ShowGui)
 		}
 		if (IniReadSettingByName(SectionId, "SpecialEffects", SettingText, sizeof(SettingText)))
 		{
-			if (_stricmp(SettingText, "Yes") == 0 && strlen(SettingText) == 3)
-			{
-				UiUseSpecialEffects = TRUE;
-			}
-			else
-			{
-				UiUseSpecialEffects = FALSE;
-			}
+			UiUseSpecialEffects = (_stricmp(SettingText, "Yes") == 0 && strlen(SettingText) == 3);
 		}
 		if (IniReadSettingByName(SectionId, "ShowTime", SettingText, sizeof(SettingText)))
 		{
-			if (_stricmp(SettingText, "Yes") == 0 && strlen(SettingText) == 3)
-			{
-				UiDrawTime = TRUE;
-			}
-			else
-			{
-				UiDrawTime = FALSE;
-			}
+			UiDrawTime = (_stricmp(SettingText, "Yes") == 0 && strlen(SettingText) == 3);
 		}
 		if (IniReadSettingByName(SectionId, "MenuBox", SettingText, sizeof(SettingText)))
 		{
-			if (_stricmp(SettingText, "Yes") == 0 && strlen(SettingText) == 3)
-			{
-				UiMenuBox = TRUE;
-			}
-			else
-			{
-				UiMenuBox = FALSE;
-			}
+			UiMenuBox = (_stricmp(SettingText, "Yes") == 0 && strlen(SettingText) == 3);
 		}
 		if (IniReadSettingByName(SectionId, "CenterMenu", SettingText, sizeof(SettingText)))
 		{
-			if (_stricmp(SettingText, "Yes") == 0 && strlen(SettingText) == 3)
-			{
-				UiCenterMenu = TRUE;
-			}
-			else
-			{
-				UiCenterMenu = FALSE;
-			}
+			UiCenterMenu = (_stricmp(SettingText, "Yes") == 0 && strlen(SettingText) == 3);
 		}
 	}
 
