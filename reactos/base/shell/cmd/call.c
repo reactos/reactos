@@ -53,6 +53,13 @@ INT cmd_call (LPTSTR cmd, LPTSTR param)
 		return 0;
 	}
 
+	if (*param == _T(':') && (bc))
+	{
+		bc->lCallPosition = SetFilePointer(bc->hBatchFile, 0, &bc->lCallPositionHigh, FILE_CURRENT);
+		cmd_goto(_T("goto"), param);
+		return 0;
+	}
+
     nErrorLevel = 0;
 
 	n = (LPBATCH_CONTEXT)cmd_alloc (sizeof (BATCH_CONTEXT));

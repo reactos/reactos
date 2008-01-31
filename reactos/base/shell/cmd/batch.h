@@ -24,6 +24,8 @@ typedef struct tagBATCHCONTEXT
 	TCHAR forvar;
 	INT   bCmdBlock;
 	BOOL  bExecuteBlock[MAX_PATH];
+	LONG lCallPosition; /* store position where to return to after Call :Label */
+	LONG lCallPositionHigh;
 } BATCH_CONTEXT, *LPBATCH_CONTEXT;
 
 

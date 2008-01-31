@@ -273,6 +273,8 @@ BOOL Batch (LPTSTR fullname, LPTSTR firstword, LPTSTR param)
 	bc->bEcho = bEcho; /* Preserve echo across batch calls */
 	bc->shiftlevel = 0;
 	bc->bCmdBlock = -1;
+	bc->lCallPosition = 0;
+	bc->lCallPositionHigh = 0;
 	
 	bc->ffind = NULL;
 	bc->forvar = _T('\0');
