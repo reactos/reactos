@@ -1293,6 +1293,18 @@ GetParsedEnvVar ( LPCTSTR varName, UINT* varNameLen, BOOL ModeSetA )
 		return NULL;
 	switch ( *varName )
 	{
+	case _T('~'):
+		varName++;
+		if (_tcsncicmp(varName, _T("dp0"), 3) == 0)
+		{
+			if ( varNameLen )
+				*varNameLen = 4;
+			varName += 2;
+			if ( !GrowIfNecessary ( MAX_PATH, &ret, &retlen ) )
+				return NULL;
+			GetCurrentDirectory(MAX_PATH, ret);
+		}
+		return ret;
 	case _T('0'):
 	case _T('1'):
 	case _T('2'):
@@ -1411,7 +1423,7 @@ ProcessInput (BOOL bFlag)
 	LPCTSTR tmp;
 	BOOL bEchoThisLine;
 	BOOL bModeSetA;
-        BOOL bIsBatch;
+    BOOL bIsBatch;
 
 	do
 	{
