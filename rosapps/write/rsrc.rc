@@ -28,3 +28,4 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 #include "Fr.rc"
 #include "Ko.rc"
 #include "Uk.rc"
+#include "Sk.rc"

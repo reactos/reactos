@@ -1,0 +1,10 @@
+/* TRANSLATOR:  M·rio KaËm·r /Mario Kacmar/ aka Kario (kario@szm.sk)
+ * DATE OF TR:  30-01-2008
+ */
+
+LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_FAILED, "Nepodarilo sa spustiù Wordpad"
+END
