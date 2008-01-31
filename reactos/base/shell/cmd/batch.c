@@ -272,8 +272,8 @@ BOOL Batch (LPTSTR fullname, LPTSTR firstword, LPTSTR param)
 	SetFilePointer (bc->hBatchFile, 0, NULL, FILE_BEGIN);
 	bc->bEcho = bEcho; /* Preserve echo across batch calls */
 	bc->shiftlevel = 0;
-	bc->bCmdBlock = FALSE;
-
+	bc->bCmdBlock = -1;
+	
 	bc->ffind = NULL;
 	bc->forvar = _T('\0');
 	bc->forproto = NULL;
@@ -454,15 +454,25 @@ LPTSTR ReadBatchLine (LPBOOL bLocalEcho)
 		*++ip = _T('\0');
 
 		/* cmd block over multiple lines (..) */
-		if (bc->bCmdBlock)
+		if (bc->bCmdBlock >= 0)
 		{
 			if (*first == _T(')'))
 			{
-				bc->bCmdBlock = FALSE;
+				bc->bCmdBlock--;
 				continue;
 			}
-			if (!bc->bExecuteBlock)
-				continue;
+			if ((bc->bCmdBlock >= 0) && (bc->bCmdBlock < MAX_PATH))
+				if (!bc->bExecuteBlock[bc->bCmdBlock])
+				{
+					/* increase the bCmdBlock count when there is another conditon which opens a new bracket */
+					if ((_tcsncicmp (first, _T("if"), 2) == 0)  && _tcschr(first, _T('(')))
+					{
+						bc->bCmdBlock++;
+						if ((bc->bCmdBlock > 0) && (bc->bCmdBlock < MAX_PATH))
+							bc->bExecuteBlock[bc->bCmdBlock] = bc->bExecuteBlock[bc->bCmdBlock - 1];
+					}
+					continue;
+				}
 		}
 
 		/* ignore labels and empty lines */

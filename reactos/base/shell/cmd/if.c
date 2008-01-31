@@ -188,8 +188,13 @@ INT cmd_if (LPTSTR cmd, LPTSTR param)
 		{
 			if (bc)
 			{
-				bc->bCmdBlock = TRUE;
-				bc->bExecuteBlock = x_flag & X_EXEC;
+				pp++;
+				bc->bCmdBlock++;
+				if ((bc->bCmdBlock >= 0) && (bc->bCmdBlock < MAX_PATH))
+					bc->bExecuteBlock[bc->bCmdBlock] = x_flag & X_EXEC;
+				/* commands are in the next lines */
+				if (*pp == _T('\0'))
+					return 0;
 			}
 		}
 

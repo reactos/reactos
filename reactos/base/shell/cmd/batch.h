@@ -7,7 +7,6 @@
 #ifndef _BATCH_H_INCLUDED_
 #define _BATCH_H_INCLUDED_
 
-
 typedef struct tagBATCHCONTEXT
 {
 	struct tagBATCHCONTEXT *prev;
@@ -23,8 +22,8 @@ typedef struct tagBATCHCONTEXT
 	TCHAR Out[MAX_PATH];
 	TCHAR Err[MAX_PATH];
 	TCHAR forvar;
-	BOOL  bCmdBlock;
-	BOOL  bExecuteBlock;
+	INT   bCmdBlock;
+	BOOL  bExecuteBlock[MAX_PATH];
 } BATCH_CONTEXT, *LPBATCH_CONTEXT;
 
 
