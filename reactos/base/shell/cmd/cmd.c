@@ -811,9 +811,18 @@ VOID ParseCommandLine (LPTSTR cmd)
 		                    FILE_ATTRIBUTE_NORMAL, NULL);
 		if (hFile == INVALID_HANDLE_VALUE)
 		{
-			LoadString(CMD_ModuleHandle, STRING_CMD_ERROR1, szMsg, RC_STRING_MAX_SIZE);
-			ConErrPrintf(szMsg, in);
-			return;
+			if (bc)
+			{
+				/* will fail for windows gui apps */
+				num = 0;
+				bc->hBatchFile = INVALID_HANDLE_VALUE;
+			}
+			else
+			{
+				LoadString(CMD_ModuleHandle, STRING_CMD_ERROR1, szMsg, RC_STRING_MAX_SIZE);
+				ConErrPrintf(szMsg, in);
+				return;
+			}
 		}
 
 		if (!SetStdHandle (STD_INPUT_HANDLE, hFile))
@@ -892,7 +901,7 @@ VOID ParseCommandLine (LPTSTR cmd)
 
 	/* Now set up the end conditions... */
 	/* redirect STDOUT */
-	if (out[0])
+	if ((bc) && (bc->hBatchFile != INVALID_HANDLE_VALUE) && (out[0]))
 	{
 		/* Final output to here */
 		HANDLE hFile;
@@ -959,7 +968,7 @@ VOID ParseCommandLine (LPTSTR cmd)
 	}
 
 	/* redirect STDERR */
-	if (err[0])
+	if ((bc) && (bc->hBatchFile != INVALID_HANDLE_VALUE) && (err[0]))
 	{
 		/* Final output to here */
 		HANDLE hFile;
@@ -1165,15 +1174,23 @@ GetEnvVarOrSpecial ( LPCTSTR varName )
 		if (position)
 		{
 			position += 2;
-			Token = _tcstok(position, _T(","));
-			while ((Token != NULL) && (i < 2))
+			if (_tcschr(position, _T(',')) != NULL)
 			{
-				StringPart[i] = _ttoi(Token);
-				i++;
-				Token = _tcstok (NULL, _T(","));
+				Token = _tcstok(position, _T(","));
+				while ((Token != NULL) && (i < 2))
+				{
+					StringPart[i] = _ttoi(Token);
+					i++;
+					Token = _tcstok (NULL, _T(","));
+				}
+				if (i > 0)
+				{
+					if (StringPart[1] < 0)
+						StringPart[1] = _tcslen(ret + StringPart[0]) + StringPart[1];
+					_tcsncpy(ReturnValue, ret + StringPart[0], StringPart[1]);
+					_tcscpy(ret, ReturnValue);
+				}
 			}
-			_tcsncpy(ReturnValue, ret + StringPart[0], StringPart[1]);
-			_tcscpy(ret, ReturnValue);
 			return ret;
 		}
 		else

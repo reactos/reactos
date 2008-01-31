@@ -458,10 +458,21 @@ LPTSTR ReadBatchLine (LPBOOL bLocalEcho)
 		{
 			if (*first == _T(')'))
 			{
-				bc->bCmdBlock--;
+				first++;
+				/* Strip leading spaces and trailing space/control chars */
+				while(_istspace (*first))
+					first++;
+				if ((_tcsncicmp (first, _T("else"), 4) == 0) && (_tcschr(first, _T('('))))
+				{
+					bc->bExecuteBlock[bc->bCmdBlock] = !bc->bExecuteBlock[bc->bCmdBlock];
+				}
+				else
+				{
+					bc->bCmdBlock--;
+				}
 				continue;
 			}
-			if ((bc->bCmdBlock >= 0) && (bc->bCmdBlock < MAX_PATH))
+			if (bc->bCmdBlock < MAX_PATH)
 				if (!bc->bExecuteBlock[bc->bCmdBlock])
 				{
 					/* increase the bCmdBlock count when there is another conditon which opens a new bracket */
