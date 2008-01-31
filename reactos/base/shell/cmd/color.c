@@ -113,8 +113,11 @@ INT CommandColor (LPTSTR first, LPTSTR rest)
 		return 1;
 	}
 
-	LoadString(CMD_ModuleHandle, STRING_COLOR_ERROR3, szMsg, RC_STRING_MAX_SIZE);
-	ConErrPrintf(szMsg, wColor);
+	if (((bc) && (bc->bEcho)) || !bc)
+	{
+		LoadString(CMD_ModuleHandle, STRING_COLOR_ERROR3, szMsg, RC_STRING_MAX_SIZE);
+		ConErrPrintf(szMsg, wColor);
+	}
 
 	if ((wColor & 0xF) == (wColor &0xF0) >> 4)
 	{
