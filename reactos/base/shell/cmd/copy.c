@@ -539,17 +539,20 @@ INT cmd_copy (LPTSTR cmd, LPTSTR param)
         return 1;
     }
 
-    if(((_tcschr (arg[nSrc], _T('+')) != NULL) ||
-        (_tcschr (arg[nSrc], _T('*')) != NULL && _tcschr (arg[nDes], _T('*')) == NULL) ||
-        (IsExistingDirectory (arg[nSrc]) && (_tcschr (arg[nDes], _T('*')) == NULL && !IsExistingDirectory (arg[nDes])))
-        ))
+    if (nDes != -1) /* you can only append files when there is a destination */
     {
-        /* There is a + in the source filename, this means
-        that there is more then one file being put into
-        one file. */
-        bAppend = TRUE;
-        if(_tcschr (arg[nSrc], _T('+')) != NULL)
-            appendPointer = arg[nSrc];
+        if(((_tcschr (arg[nSrc], _T('+')) != NULL) ||
+            (_tcschr (arg[nSrc], _T('*')) != NULL && _tcschr (arg[nDes], _T('*')) == NULL) ||
+            (IsExistingDirectory (arg[nSrc]) && (_tcschr (arg[nDes], _T('*')) == NULL && !IsExistingDirectory (arg[nDes])))
+            ))
+        {
+            /* There is a + in the source filename, this means
+            that there is more then one file being put into
+            one file. */
+            bAppend = TRUE;
+            if(_tcschr (arg[nSrc], _T('+')) != NULL)
+                appendPointer = arg[nSrc];
+        }
     }
 
     /* Reusing the number of files variable */
