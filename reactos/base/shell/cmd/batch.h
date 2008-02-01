@@ -12,6 +12,7 @@ typedef struct tagBATCHCONTEXT
 	struct tagBATCHCONTEXT *prev;
 	LPWIN32_FIND_DATA ffind;
 	HANDLE hBatchFile;
+	TCHAR BatchFilePath[MAX_PATH];
 	LPTSTR forproto;
 	LPTSTR params;
     LPTSTR raw_params;  /* Holds the raw params given by the input */

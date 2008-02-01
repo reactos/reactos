@@ -220,6 +220,7 @@ VOID ExitBatch (LPTSTR msg)
 BOOL Batch (LPTSTR fullname, LPTSTR firstword, LPTSTR param)
 {
 	HANDLE hFile;
+	LPTSTR tmp;
 	SetLastError(0);
 	hFile = CreateFile (fullname, GENERIC_READ, FILE_SHARE_WRITE | FILE_SHARE_READ | FILE_SHARE_DELETE, NULL,
 			    OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL |
@@ -269,6 +270,8 @@ BOOL Batch (LPTSTR fullname, LPTSTR firstword, LPTSTR param)
 	}
 
 	bc->hBatchFile = hFile;
+	tmp = _tcsrchr(fullname, '\\');
+	_tcsncpy(bc->BatchFilePath, fullname, ((_tcslen(fullname) - _tcslen(tmp)) + 1));
 	SetFilePointer (bc->hBatchFile, 0, NULL, FILE_BEGIN);
 	bc->bEcho = bEcho; /* Preserve echo across batch calls */
 	bc->shiftlevel = 0;
