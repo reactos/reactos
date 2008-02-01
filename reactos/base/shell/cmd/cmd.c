@@ -1186,7 +1186,7 @@ GetEnvVarOrSpecial ( LPCTSTR varName )
 				if (i > 0)
 				{
 					if (StringPart[1] < 0)
-						StringPart[1] = _tcslen(ret + StringPart[0]) + StringPart[1];
+						StringPart[1] = _tcslen(ret + StringPart[0]) - 1 + StringPart[1];
 					_tcsncpy(ReturnValue, ret + StringPart[0], StringPart[1]);
 					_tcscpy(ret, ReturnValue);
 				}
@@ -1285,12 +1285,19 @@ GetParsedEnvVar ( LPCTSTR varName, UINT* varNameLen, BOOL ModeSetA )
 	static UINT retlen = 0;
 	LPTSTR p, tmp;
 	UINT size;
+	TCHAR c;
 
 	if ( varNameLen )
 		*varNameLen = 0;
 	SetLastError(0);
-	if ( *varName++ != '%' )
+	c = *varName;
+
+	if ( (*varName != '!') && (*varName++ != '%') )
 		return NULL;
+
+	if (c == _T('!'))
+		varName++;
+
 	switch ( *varName )
 	{
 	case _T('~'):
@@ -1388,7 +1395,7 @@ GetParsedEnvVar ( LPCTSTR varName, UINT* varNameLen, BOOL ModeSetA )
 			*varNameLen = 1;
 		return ret;
 	}
-	p = _tcschr ( varName, _T('%') );
+	p = _tcschr ( varName, c );
 	if ( !p )
 	{
 		SetLastError ( ERROR_INVALID_PARAMETER );
@@ -1448,7 +1455,7 @@ ProcessInput (BOOL bFlag)
 		bModeSetA = FALSE;
 		while (*ip)
 		{
-			if ( *ip == _T('%') )
+			if ( (*ip == _T('%')) || (*ip == _T('!')) )
 			{
 				UINT envNameLen;
 				LPCTSTR envVal = GetParsedEnvVar ( ip, &envNameLen, bModeSetA );
