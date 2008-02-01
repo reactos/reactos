@@ -54,6 +54,7 @@
 			<file>replace.c</file>
 			<file>screen.c</file>
 			<file>set.c</file>
+			<file>setlocal.c</file>
 			<file>shift.c</file>
 			<file>start.c</file>
 			<file>strtoclr.c</file>

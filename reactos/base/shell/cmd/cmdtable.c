@@ -100,6 +100,8 @@ COMMAND cmds[] =
 	{_T("echoerr."), CMD_HIDE, CommandEchoerr},
 	{_T("echoserr"), 0, CommandEchoserr},
 
+	{_T("endlocal"), 0, cmd_endlocal},
+
 #ifdef INCLUDE_CMD_DEL
 	{_T("erase"), 0, CommandDelete},
 #endif
@@ -191,6 +193,8 @@ COMMAND cmds[] =
 #ifdef INCLUDE_CMD_SET
 	{_T("set"), 0, cmd_set},
 #endif
+
+	{_T("setlocal"), 0, cmd_setlocal},
 
 	{_T("shift"), CMD_BATCHONLY, cmd_shift},
 

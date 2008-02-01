@@ -39,7 +39,7 @@
 INT cmd_goto (LPTSTR cmd, LPTSTR param)
 {
 	TCHAR szMsg[RC_STRING_MAX_SIZE];
-	LPTSTR tmp;
+	LPTSTR tmp, tmp2;
 	LONG   lNewPosHigh = 0;
 
 #ifdef _DEBUG
@@ -119,8 +119,9 @@ INT cmd_goto (LPTSTR cmd, LPTSTR param)
 			pos++;
 		}
 
+		tmp2 = param;
 		/* use whole label name */
-		if ((*tmp == _T(':')) && ((_tcsicmp (++tmp, param) == 0) || (_tcsicmp (tmp, ++param) == 0)))
+		if ((*tmp == _T(':')) && ((_tcsicmp (++tmp, param) == 0) || (_tcsicmp (tmp, ++tmp2) == 0)))
 			return 0;
 
 	}

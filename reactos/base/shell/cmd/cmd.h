@@ -361,6 +361,9 @@ INT CommandScreen (LPTSTR, LPTSTR);
 /* Prototypes for SET.C */
 INT cmd_set (LPTSTR, LPTSTR);
 
+/* Prototypes for SETLOCAL.C */
+INT cmd_setlocal (LPTSTR, LPTSTR);
+INT cmd_endlocal (LPTSTR, LPTSTR);
 
 /* Prototypes for START.C */
 INT cmd_start (LPTSTR, LPTSTR);
