@@ -45,8 +45,8 @@ CmpFree (PVOID Ptr, IN ULONG Quota)
 
 static BOOLEAN
 RegImportValue (PHHIVE Hive,
-		PCM_KEY_VALUE ValueCell,
-		FRLDRHKEY Key)
+        PCM_KEY_VALUE ValueCell,
+        FRLDRHKEY Key)
 {
   PVOID DataCell;
   PWCHAR wName;
@@ -73,8 +73,8 @@ RegImportValue (PHHIVE Hive,
     {
       wName = MmHeapAlloc (ValueCell->NameLength + sizeof(WCHAR));
       memcpy (wName,
-	      ValueCell->Name,
-	      ValueCell->NameLength);
+      ValueCell->Name,
+      ValueCell->NameLength);
       wName[ValueCell->NameLength / sizeof(WCHAR)] = 0;
     }
 
@@ -86,16 +86,16 @@ RegImportValue (PHHIVE Hive,
   if (DataLength <= sizeof(HCELL_INDEX) && (ValueCell->DataLength & REG_DATA_IN_OFFSET))
     {
       Error = RegSetValue(Key,
-			  wName,
-			  ValueCell->Type,
-			  (PCHAR)&ValueCell->Data,
-			  DataLength);
+                          wName,
+                          ValueCell->Type,
+                          (PCHAR)&ValueCell->Data,
+                          DataLength);
       if (Error != ERROR_SUCCESS)
-	{
-	  DbgPrint((DPRINT_REGISTRY, "RegSetValue() failed!\n"));
-	  MmHeapFree (wName);
-	  return FALSE;
-	}
+        {
+            DbgPrint((DPRINT_REGISTRY, "RegSetValue() failed!\n"));
+            MmHeapFree (wName);
+            return FALSE;
+        }
     }
   else
     {
@@ -103,17 +103,17 @@ RegImportValue (PHHIVE Hive,
       DbgPrint((DPRINT_REGISTRY, "DataCell: %x\n", DataCell));
 
       Error = RegSetValue (Key,
-			   wName,
-			   ValueCell->Type,
-			   DataCell,
-			   DataLength);
+                           wName,
+                           ValueCell->Type,
+                           DataCell,
+                           DataLength);
 
       if (Error != ERROR_SUCCESS)
-	{
-	  DbgPrint((DPRINT_REGISTRY, "RegSetValue() failed!\n"));
-	  MmHeapFree (wName);
-	  return FALSE;
-	}
+        {
+          DbgPrint((DPRINT_REGISTRY, "RegSetValue() failed!\n"));
+          MmHeapFree (wName);
+          return FALSE;
+        }
     }
 
   MmHeapFree (wName);
@@ -304,8 +304,8 @@ RegImportBinaryHive(PCHAR ChunkBase,
 
   /* Open 'System' key */
   Error = RegOpenKey(NULL,
-		     L"\\Registry\\Machine\\SYSTEM",
-		     &SystemKey);
+             L"\\Registry\\Machine\\SYSTEM",
+             &SystemKey);
   if (Error != ERROR_SUCCESS)
     {
       DbgPrint((DPRINT_REGISTRY, "Failed to open 'system' key!\n"));
@@ -320,16 +320,16 @@ RegImportBinaryHive(PCHAR ChunkBase,
       DbgPrint((DPRINT_REGISTRY, "SubKeyCounts: %x\n", KeyCell->SubKeyCounts[Stable]));
 
       for (i = 0; i < KeyCell->SubKeyCounts[Stable]; i++)
-	{
-	  DbgPrint((DPRINT_REGISTRY, "Cell[%d]: %x\n", i, HashCell->List[i].Cell));
+        {
+          DbgPrint((DPRINT_REGISTRY, "Cell[%d]: %x\n", i, HashCell->List[i].Cell));
 
-	  SubKeyCell = (PCM_KEY_NODE)HvGetCell (Hive, HashCell->List[i].Cell);
+          SubKeyCell = (PCM_KEY_NODE)HvGetCell (Hive, HashCell->List[i].Cell);
 
-	  DbgPrint((DPRINT_REGISTRY, "SubKeyCell[%d]: %x\n", i, SubKeyCell));
+          DbgPrint((DPRINT_REGISTRY, "SubKeyCell[%d]: %x\n", i, SubKeyCell));
 
-	  if (!RegImportSubKey(Hive, SubKeyCell, SystemKey))
-	    return FALSE;
-	}
+          if (!RegImportSubKey(Hive, SubKeyCell, SystemKey))
+            return FALSE;
+        }
     }
 
   return TRUE;
