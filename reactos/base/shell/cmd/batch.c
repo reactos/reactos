@@ -269,6 +269,7 @@ BOOL Batch (LPTSTR fullname, LPTSTR firstword, LPTSTR param)
 			cmd_free (bc->raw_params);
 	}
 
+	ZeroMemory(bc->BatchFilePath, sizeof(bc->BatchFilePath));
 	bc->hBatchFile = hFile;
 	tmp = _tcsrchr(fullname, '\\');
 	_tcsncpy(bc->BatchFilePath, fullname, ((_tcslen(fullname) - _tcslen(tmp)) + 1));
