@@ -121,103 +121,135 @@ RegImportValue (PHHIVE Hive,
   return TRUE;
 }
 
+static BOOLEAN
+RegImportSubKey(PHHIVE Hive,
+                PCM_KEY_NODE KeyCell,
+                FRLDRHKEY ParentKey);
+
+static BOOLEAN
+RegImportIndexSubKey(PHHIVE Hive,
+                PCM_KEY_INDEX IndexCell,
+                FRLDRHKEY ParentKey)
+{
+    ULONG i;
+
+    DbgPrint((DPRINT_REGISTRY, "IndexCell: %x\n", IndexCell));
+
+    /* Enumerate and add subkeys */
+    if (IndexCell->Signature == CM_KEY_INDEX_ROOT ||
+        IndexCell->Signature == CM_KEY_INDEX_LEAF)
+    {
+        for (i = 0; i < IndexCell->Count; i++)
+        {
+            PCM_KEY_INDEX SubIndexCell = HvGetCell(Hive, IndexCell->List[i]);
+            if (!RegImportIndexSubKey(Hive, SubIndexCell, ParentKey))
+                return FALSE;
+        }
+    }
+    else if (IndexCell->Signature == CM_KEY_FAST_LEAF ||
+        IndexCell->Signature == CM_KEY_HASH_LEAF)
+    {
+        PCM_KEY_FAST_INDEX HashCell = (PCM_KEY_FAST_INDEX)IndexCell;
+        for (i = 0; i < HashCell->Count; i++)
+        {
+            PCM_KEY_NODE SubKeyCell = HvGetCell(Hive, HashCell->List[i].Cell);
+            if (!RegImportSubKey(Hive, SubKeyCell, ParentKey))
+                return FALSE;
+        }
+    }
+    else
+    {
+        ASSERT(FALSE);
+    }
+
+    return TRUE;
+}
+
 
 static BOOLEAN
 RegImportSubKey(PHHIVE Hive,
-		PCM_KEY_NODE KeyCell,
-		FRLDRHKEY ParentKey)
+                PCM_KEY_NODE KeyCell,
+                FRLDRHKEY ParentKey)
 {
-  PCM_KEY_FAST_INDEX HashCell;
-  PCM_KEY_NODE SubKeyCell;
-  PVALUE_LIST_CELL ValueListCell;
-  PCM_KEY_VALUE ValueCell = NULL;
-  PWCHAR wName;
-  FRLDRHKEY SubKey;
-  LONG Error;
-  ULONG i;
+    PCM_KEY_INDEX IndexCell;
+    PVALUE_LIST_CELL ValueListCell;
+    PCM_KEY_VALUE ValueCell = NULL;
+    PWCHAR wName;
+    FRLDRHKEY SubKey;
+    LONG Error;
+    ULONG i;
 
 
-  DbgPrint((DPRINT_REGISTRY, "KeyCell: %x\n", KeyCell));
-  DbgPrint((DPRINT_REGISTRY, "KeyCell->Signature: %x\n", KeyCell->Signature));
-  if (KeyCell->Signature != CM_KEY_NODE_SIGNATURE)
+    DbgPrint((DPRINT_REGISTRY, "KeyCell: %x\n", KeyCell));
+    DbgPrint((DPRINT_REGISTRY, "KeyCell->Signature: %x\n", KeyCell->Signature));
+    if (KeyCell->Signature != CM_KEY_NODE_SIGNATURE)
     {
-      DbgPrint((DPRINT_REGISTRY, "Invalid key cell Signature!\n"));
-      return FALSE;
+        DbgPrint((DPRINT_REGISTRY, "Invalid key cell Signature!\n"));
+        return FALSE;
     }
 
-  if (KeyCell->Flags & KEY_COMP_NAME)
+    if (KeyCell->Flags & KEY_COMP_NAME)
     {
-      wName = MmHeapAlloc ((KeyCell->NameLength + 1) * sizeof(WCHAR));
-      for (i = 0; i < KeyCell->NameLength; i++)
+        wName = MmHeapAlloc ((KeyCell->NameLength + 1) * sizeof(WCHAR));
+        for (i = 0; i < KeyCell->NameLength; i++)
         {
-          wName[i] = ((PCHAR)KeyCell->Name)[i];
+            wName[i] = ((PCHAR)KeyCell->Name)[i];
         }
-      wName[KeyCell->NameLength] = 0;
+        wName[KeyCell->NameLength] = 0;
     }
-  else
+    else
     {
-      wName = MmHeapAlloc (KeyCell->NameLength + sizeof(WCHAR));
-      memcpy (wName,
-	      KeyCell->Name,
-	      KeyCell->NameLength);
-      wName[KeyCell->NameLength/sizeof(WCHAR)] = 0;
+        wName = MmHeapAlloc (KeyCell->NameLength + sizeof(WCHAR));
+        memcpy (wName,
+            KeyCell->Name,
+            KeyCell->NameLength);
+        wName[KeyCell->NameLength/sizeof(WCHAR)] = 0;
     }
 
-  DbgPrint((DPRINT_REGISTRY, "KeyName: '%S'\n", wName));
+    DbgPrint((DPRINT_REGISTRY, "KeyName: '%S'\n", wName));
 
-  /* Create new sub key */
-  Error = RegCreateKey (ParentKey,
-			wName,
-			&SubKey);
-  MmHeapFree (wName);
-  if (Error != ERROR_SUCCESS)
+    /* Create new sub key */
+    Error = RegCreateKey (ParentKey,
+        wName,
+        &SubKey);
+    MmHeapFree (wName);
+    if (Error != ERROR_SUCCESS)
     {
-      DbgPrint((DPRINT_REGISTRY, "RegCreateKey() failed!\n"));
-      return FALSE;
+        DbgPrint((DPRINT_REGISTRY, "RegCreateKey() failed!\n"));
+        return FALSE;
     }
-  DbgPrint((DPRINT_REGISTRY, "Subkeys: %u\n", KeyCell->SubKeyCounts));
-  DbgPrint((DPRINT_REGISTRY, "Values: %u\n", KeyCell->ValueList.Count));
+    DbgPrint((DPRINT_REGISTRY, "Subkeys: %u\n", KeyCell->SubKeyCounts));
+    DbgPrint((DPRINT_REGISTRY, "Values: %u\n", KeyCell->ValueList.Count));
 
-  /* Enumerate and add values */
-  if (KeyCell->ValueList.Count > 0)
+    /* Enumerate and add values */
+    if (KeyCell->ValueList.Count > 0)
     {
-      ValueListCell = (PVALUE_LIST_CELL) HvGetCell (Hive, KeyCell->ValueList.List);
-      DbgPrint((DPRINT_REGISTRY, "ValueListCell: %x\n", ValueListCell));
+        ValueListCell = (PVALUE_LIST_CELL) HvGetCell (Hive, KeyCell->ValueList.List);
+        DbgPrint((DPRINT_REGISTRY, "ValueListCell: %x\n", ValueListCell));
 
-      for (i = 0; i < KeyCell->ValueList.Count; i++)
-	{
-	  DbgPrint((DPRINT_REGISTRY, "ValueOffset[%d]: %x\n", i, ValueListCell->ValueOffset[i]));
+        for (i = 0; i < KeyCell->ValueList.Count; i++)
+        {
+            DbgPrint((DPRINT_REGISTRY, "ValueOffset[%d]: %x\n", i, ValueListCell->ValueOffset[i]));
 
-	  ValueCell = (PCM_KEY_VALUE) HvGetCell (Hive, ValueListCell->ValueOffset[i]);
+            ValueCell = (PCM_KEY_VALUE) HvGetCell (Hive, ValueListCell->ValueOffset[i]);
 
-	  DbgPrint((DPRINT_REGISTRY, "ValueCell[%d]: %x\n", i, ValueCell));
+            DbgPrint((DPRINT_REGISTRY, "ValueCell[%d]: %x\n", i, ValueCell));
 
-	  if (!RegImportValue(Hive, ValueCell, SubKey))
-	    return FALSE;
-	}
+            if (!RegImportValue(Hive, ValueCell, SubKey))
+                return FALSE;
+        }
     }
 
-  /* Enumerate and add subkeys */
-  if (KeyCell->SubKeyCounts[Stable] > 0)
+    /* Enumerate and add subkeys */
+    if (KeyCell->SubKeyCounts[Stable] > 0)
     {
-      HashCell = (PCM_KEY_FAST_INDEX) HvGetCell (Hive, KeyCell->SubKeyLists[Stable]);
-      DbgPrint((DPRINT_REGISTRY, "HashCell: %x\n", HashCell));
-      DbgPrint((DPRINT_REGISTRY, "SubKeyCounts: %x\n", KeyCell->SubKeyCounts));
+        IndexCell = HvGetCell (Hive, KeyCell->SubKeyLists[Stable]);
 
-      for (i = 0; i < KeyCell->SubKeyCounts[Stable]; i++)
-	{
-	  DbgPrint((DPRINT_REGISTRY, "Cell[%d]: %x\n", i, HashCell->List[i].Cell));
-
-	  SubKeyCell = (PCM_KEY_NODE) HvGetCell (Hive, HashCell->List[i].Cell);
-
-	  DbgPrint((DPRINT_REGISTRY, "SubKeyCell[%d]: %x\n", i, SubKeyCell));
-
-	  if (!RegImportSubKey(Hive, SubKeyCell, SubKey))
-	    return FALSE;
-	}
+        if (!RegImportIndexSubKey(Hive, IndexCell, SubKey))
+            return FALSE;
     }
 
-  return TRUE;
+    return TRUE;
 }
 
 

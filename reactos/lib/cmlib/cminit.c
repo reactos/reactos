@@ -65,11 +65,47 @@ CmCreateRootNode(
 static VOID CMAPI
 CmpPrepareKey(
    PHHIVE RegistryHive,
+   PCM_KEY_NODE KeyCell);
+
+static VOID CMAPI
+CmpPrepareIndexOfKeys(
+   PHHIVE RegistryHive,
+   PCM_KEY_INDEX IndexCell)
+{
+   ULONG i;
+
+   if (IndexCell->Signature == CM_KEY_INDEX_ROOT ||
+       IndexCell->Signature == CM_KEY_INDEX_LEAF)
+   {
+      for (i = 0; i < IndexCell->Count; i++)
+      {
+         PCM_KEY_INDEX SubIndexCell = HvGetCell(RegistryHive, IndexCell->List[i]);
+         CmpPrepareIndexOfKeys(RegistryHive, SubIndexCell);
+      }
+   }
+   else if (IndexCell->Signature == CM_KEY_FAST_LEAF ||
+            IndexCell->Signature == CM_KEY_HASH_LEAF)
+   {
+      PCM_KEY_FAST_INDEX HashCell = (PCM_KEY_FAST_INDEX)IndexCell;
+      for (i = 0; i < HashCell->Count; i++)
+      {
+         PCM_KEY_NODE SubKeyCell = HvGetCell(RegistryHive, HashCell->List[i].Cell);
+         CmpPrepareKey(RegistryHive, SubKeyCell);
+      }
+   }
+   else
+   {
+      DbgPrint("IndexCell->Signature %x\n", IndexCell->Signature);
+      ASSERT(FALSE);
+   }
+}
+
+static VOID CMAPI
+CmpPrepareKey(
+   PHHIVE RegistryHive,
    PCM_KEY_NODE KeyCell)
 {
-   PCM_KEY_NODE SubKeyCell;
-   PCM_KEY_FAST_INDEX HashCell;
-   ULONG i;
+   PCM_KEY_INDEX IndexCell;
 
    ASSERT(KeyCell->Signature == CM_KEY_NODE_SIGNATURE);
 
@@ -79,13 +115,8 @@ CmpPrepareKey(
    /* Enumerate and add subkeys */
    if (KeyCell->SubKeyCounts[Stable] > 0)
    {
-      HashCell = HvGetCell(RegistryHive, KeyCell->SubKeyLists[Stable]);
-
-      for (i = 0; i < KeyCell->SubKeyCounts[Stable]; i++)
-      {
-         SubKeyCell = HvGetCell(RegistryHive, HashCell->List[i].Cell);
-         CmpPrepareKey(RegistryHive, SubKeyCell);
-      }
+      IndexCell = HvGetCell(RegistryHive, KeyCell->SubKeyLists[Stable]);
+      CmpPrepareIndexOfKeys(RegistryHive, IndexCell);
    }
 }
 
