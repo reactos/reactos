@@ -29,7 +29,7 @@ static LONG _GetSizeOfFile(FILEHANDLE handle)
     return size;
 }
 #define ReadFileData(handle, buffer, size, bytesread) _ReadFileData(handle, buffer, size, bytesread)
-static bool _ReadFileData(FILEHANDLE handle, void* buffer, ULONG size, PULONG bytesread)
+static BOOL _ReadFileData(FILEHANDLE handle, void* buffer, ULONG size, PULONG bytesread)
 {
     return ReadFile(handle, buffer, size, (LPDWORD)bytesread, NULL);
 }

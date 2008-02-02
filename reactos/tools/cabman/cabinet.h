@@ -33,7 +33,9 @@
 #define DIR_SEPARATOR_CHAR '\\'
 #define DIR_SEPARATOR_STRING "\\"
 
-#define strcasecmp strcmpi
+#define strcasecmp _strcmpi
+#define strdup _strdup
+
 #define AllocateMemory(size) HeapAlloc(GetProcessHeap(), 0, size)
 #define FreeMemory(buffer) HeapFree(GetProcessHeap(), 0, buffer)
 #define FILEHANDLE HANDLE
