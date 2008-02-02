@@ -72,17 +72,14 @@ INT cmd_ver (LPTSTR cmd, LPTSTR param)
 	}
 
 	ShortVersion();
-	ConOutPuts (_T("Copyright (C) 1994-1998 Tim Norman and others."));
-	ConOutPuts (_T("Copyright (C) 1998-" COPYRIGHT_YEAR " ReactOS Team"));
 
 	/* Basic copyright notice */
-	if (param[0] == _T('\0'))
+	if (param[0] != _T('\0'))
 	{
-		ConOutResPuts (STRING_CMD_SHELLINFO );
-		ConOutResPuts(STRING_VERSION_HELP2);
-	}
-	else
-	{
+
+		ConOutPuts (_T("Copyright (C) 1994-1998 Tim Norman and others."));
+		ConOutPuts (_T("Copyright (C) 1998-" COPYRIGHT_YEAR " ReactOS Team")); 
+
 		for (i = 0; param[i]; i++)
 		{
 			/* skip spaces */
@@ -124,9 +121,8 @@ INT cmd_ver (LPTSTR cmd, LPTSTR param)
 				return 1;
 			}
 		}
+		ConOutResPuts(STRING_VERSION_HELP5);
 	}
-
-	ConOutResPuts(STRING_VERSION_HELP5);
 	return 0;
 }
 
