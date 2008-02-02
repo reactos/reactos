@@ -454,13 +454,12 @@ BOOL FileGetString (HANDLE hFile, LPTSTR lpBuffer, INT nBufferLength)
 	LPSTR lpString;
 	CHAR ch;
 	DWORD  dwRead;
-	INT len;
+	INT len = 0;
 #ifdef _UNICODE
 	lpString = cmd_alloc(nBufferLength);
 #else
 	lpString = lpBuffer;
 #endif
-	len = 0;
 	while ((--nBufferLength >  0) &&
 		   ReadFile(hFile, &ch, 1, &dwRead, NULL) && dwRead)
 	{
@@ -482,7 +481,7 @@ BOOL FileGetString (HANDLE hFile, LPTSTR lpBuffer, INT nBufferLength)
 
 	lpString[len++] = _T('\0');
 #ifdef _UNICODE
-	MultiByteToWideChar(CP_ACP, 0, lpString, len, lpBuffer, len);
+	MultiByteToWideChar(CP_ACP, 0, lpString, -1, lpBuffer, len);
 	cmd_free(lpString);
 #endif
 	return TRUE;

@@ -1465,7 +1465,7 @@ ProcessInput (BOOL bFlag)
 				}
 			}
 
-			if (_istcntrl (*ip))
+			if (*ip != _T('\0') && (_istcntrl (*ip)))
 				*ip = _T(' ');
 			*cp++ = *ip++;
 
