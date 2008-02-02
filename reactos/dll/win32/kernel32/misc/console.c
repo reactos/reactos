@@ -19,11 +19,22 @@
 #define NDEBUG
 #include <debug.h>
 
+typedef struct tagALIAS
+{
+	struct tagALIAS *next;
+	LPWSTR lpName;
+	LPWSTR lpSubst;
+	DWORD  dwUsed;
+} ALIAS, *LPALIAS;
+
+static LPALIAS lpFirst = NULL;
+static LPALIAS lpLast = NULL;
+
 extern BOOL WINAPI DefaultConsoleCtrlHandler(DWORD Event);
 extern __declspec(noreturn) VOID CALLBACK ConsoleControlDispatcher(DWORD CodeAndFlag);
 extern RTL_CRITICAL_SECTION ConsoleLock;
 extern BOOL WINAPI IsDebuggerPresent(VOID);
-
+static VOID partstrlwr (LPWSTR str);
 
 /* GLOBALS *******************************************************************/
 
@@ -32,6 +43,19 @@ static BOOL IgnoreCtrlEvents = FALSE;
 static PHANDLER_ROUTINE* CtrlHandlers = NULL;
 static ULONG NrCtrlHandlers = 0;
 static WCHAR InputExeName[MAX_PATH + 1] = L"";
+
+/* module internal functions */
+/* strlwr only for first word in string */
+static VOID
+partstrlwr (LPWSTR str)
+{
+	LPWSTR c = str;
+	while (*c && !iswspace (*c) && *c != L'=')
+	{
+		*c = towlower (*c);
+		c++;
+	}
+}
 
 /* Default Console Control Handler *******************************************/
 
@@ -141,16 +165,36 @@ SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_HIGHEST);
 /* FUNCTIONS *****************************************************************/
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL STDCALL
-AddConsoleAliasA (LPSTR Source,
-		  LPSTR Target,
-		  LPSTR ExeName)
+AddConsoleAliasA (LPCSTR lpSource,
+		  LPCSTR lpTarget,
+		  LPCSTR lpExeName)
 {
-  DPRINT1("AddConsoleAliasA(0x%x, 0x%x, 0x%x) UNIMPLEMENTED!\n", Source, Target, ExeName);
-  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-  return FALSE;
+    LPWSTR lpSourceW = NULL;
+	LPWSTR lpTargetW = NULL;
+	LPWSTR lpExeNameW = NULL;
+	BOOL bRetVal;
+
+	if (lpSource)
+		BasepAnsiStringToHeapUnicodeString(lpSource, (LPWSTR*) &lpSourceW);
+	if (lpTarget)
+		BasepAnsiStringToHeapUnicodeString(lpTarget, (LPWSTR*) &lpTargetW);
+	if (lpExeName)
+		BasepAnsiStringToHeapUnicodeString(lpExeName, (LPWSTR*) &lpExeNameW);
+
+	bRetVal = AddConsoleAliasW(lpSourceW, lpTargetW, lpExeNameW);
+	
+	/* Clean up */
+	if (lpSourceW)
+		RtlFreeHeap(GetProcessHeap(), 0, (LPWSTR*) lpSourceW);
+	if (lpTargetW)
+		RtlFreeHeap(GetProcessHeap(), 0, (LPWSTR*) lpTargetW);
+	if (lpExeNameW)
+		RtlFreeHeap(GetProcessHeap(), 0, (LPWSTR*) lpExeNameW);
+
+    return bRetVal;
 }
 
 
@@ -158,13 +202,129 @@ AddConsoleAliasA (LPSTR Source,
  * @unimplemented
  */
 BOOL STDCALL
-AddConsoleAliasW (LPWSTR Source,
-		  LPWSTR Target,
-		  LPWSTR ExeName)
+AddConsoleAliasW (LPCWSTR lpSource,
+		  LPCWSTR lpTarget,
+		  LPCWSTR lpExeName /* FIXME: currently ignored */)
 {
-  DPRINT1("AddConsoleAliasW(0x%x, 0x%x, 0x%x) UNIMPLEMENTED!\n", Source, Target, ExeName);
-  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-  return FALSE;
+	LPALIAS ptr = lpFirst;
+	LPALIAS prev = NULL;
+	LPALIAS entry = NULL;
+	LPWSTR s;
+
+	if (!lpTarget)
+	{
+		/* delete */
+		while (ptr)
+		{
+			if (!wcsicmp (ptr->lpName, lpSource))
+			{
+				if (prev)
+					prev->next = ptr->next;
+				else
+					lpFirst = ptr->next;
+				RtlFreeHeap (GetProcessHeap(), 0, ptr->lpName);
+				RtlFreeHeap (GetProcessHeap(), 0, ptr->lpSubst);
+				RtlFreeHeap (GetProcessHeap(), 0, ptr);
+				return TRUE;
+			}
+			prev = ptr;
+			ptr = ptr->next;
+		}
+	}
+	else
+	{
+		/* add */
+		while (ptr)
+		{
+			if (!wcsicmp (ptr->lpName, lpSource))
+			{
+				s = (LPWSTR) RtlAllocateHeap (GetProcessHeap(), 0, ((wcslen (lpTarget) + 1) * sizeof(WCHAR)));
+				if (!s)
+				{
+					return FALSE;
+				}
+
+				RtlFreeHeap (GetProcessHeap(), 0, ptr->lpSubst);
+				ptr->lpSubst = s;
+				wcscpy (ptr->lpSubst, lpTarget);
+				return TRUE;
+			}
+			ptr = ptr->next;
+		}
+
+		ptr = (LPALIAS) RtlAllocateHeap (GetProcessHeap(), 0, sizeof(ALIAS));
+		if (!ptr)
+			return FALSE;
+
+		ptr->next = 0;
+
+		ptr->lpName = (LPWSTR) RtlAllocateHeap (GetProcessHeap(), 0, ((wcslen (lpSource) + 1) * sizeof(WCHAR)));
+		if (!ptr->lpName)
+		{
+			RtlFreeHeap (GetProcessHeap(), 0, ptr);
+			return FALSE;
+		}
+		wcscpy (ptr->lpName, lpSource);
+
+		ptr->lpSubst = (LPWSTR) RtlAllocateHeap (GetProcessHeap(), 0, ((wcslen (lpTarget) + 1) * sizeof(WCHAR)));
+		if (!ptr->lpSubst)
+		{
+			RtlFreeHeap (GetProcessHeap(), 0, ptr->lpName);
+			RtlFreeHeap (GetProcessHeap(), 0, ptr);
+			return FALSE;
+		}
+		wcscpy (ptr->lpSubst, lpTarget);
+
+		/* it's necessary for recursive substitution */
+		partstrlwr (ptr->lpSubst);
+
+		ptr->dwUsed = 0;
+
+		/* Alias table must be sorted!
+		 * Here a little example:
+		 *   command line = "ls -c"
+		 * If the entries are
+		 *   ls=dir
+		 *   ls -c=ls /w
+		 * command line will be expanded to "dir -c" which is not correct.
+		 * If the entries are sortet as
+		 *   ls -c=ls /w
+		 *   ls=dir
+		 * it will be expanded to "dir /w" which is a valid DOS command.
+		 */
+		entry = lpFirst;
+		prev = 0;
+		while (entry)
+		{
+			if (wcsicmp (ptr->lpName, entry->lpName) > 0)
+
+			{
+				if (prev)
+				{
+					prev->next = ptr;
+					ptr->next = entry;
+				}
+				else
+				{
+					ptr->next = entry;
+					lpFirst = ptr;
+				}
+				return TRUE;
+			}
+			prev = entry;
+			entry = entry->next;
+		}
+
+		/* The new entry is the smallest (or the first) and must be
+		 * added to the end of the list.
+		 */
+		if (!lpFirst)
+			lpFirst = ptr;
+		else
+			lpLast->next = ptr;
+		lpLast = ptr;
+	}
+	return TRUE;
 }
 
 
@@ -252,20 +412,39 @@ ExpungeConsoleCommandHistoryA (DWORD	Unknown0)
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 DWORD STDCALL
 GetConsoleAliasW (LPWSTR	lpSource,
 		  LPWSTR	lpTargetBuffer,
 		  DWORD		TargetBufferLength,
-		  LPWSTR	lpExeName)
-     /*
-      * Undocumented
-      */
+		  LPWSTR	lpExeName) /* FIXME: currently ignored */
 {
-  DPRINT1("GetConsoleAliasW(0x%p, 0x%p, 0x%x, 0x%p) UNIMPLEMENTED!\n", lpSource, lpTargetBuffer, TargetBufferLength, lpExeName);
-  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-  return 0;
+	DWORD dwRet = 0;
+
+	if (!lpTargetBuffer)
+		return 0;
+
+	LPALIAS ptr = lpFirst;
+	while (ptr)
+	{
+		if (wcscmp(ptr->lpName, lpSource) == 0)
+		{
+			if (TargetBufferLength >= wcslen(ptr->lpSubst) +1)
+			{
+				wcscpy(lpTargetBuffer, ptr->lpSubst);
+				dwRet = wcslen(ptr->lpSubst);
+				break;
+			}
+			else
+			{
+				return 0;
+			}
+		}
+		ptr = ptr->next;
+	}
+
+	return dwRet;
 }
 
 
@@ -277,9 +456,6 @@ GetConsoleAliasA (LPSTR	lpSource,
 		  LPSTR	lpTargetBuffer,
 		  DWORD	TargetBufferLength,
 		  LPSTR	lpExeName)
-     /*
-      * Undocumented
-      */
 {
   DPRINT1("GetConsoleAliasA(0x%p, 0x%p, 0x%x, 0x%p) UNIMPLEMENTED!\n", lpSource, lpTargetBuffer, TargetBufferLength, lpExeName);
   SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
@@ -293,9 +469,6 @@ GetConsoleAliasA (LPSTR	lpSource,
 DWORD STDCALL
 GetConsoleAliasExesW (LPWSTR	lpExeNameBuffer,
 		      DWORD	ExeNameBufferLength)
-     /*
-      * Undocumented
-      */
 {
   DPRINT1("GetConsoleAliasExesW(0x%p, 0x%x) UNIMPLEMENTED!\n", lpExeNameBuffer, ExeNameBufferLength);
   SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
@@ -309,9 +482,6 @@ GetConsoleAliasExesW (LPWSTR	lpExeNameBuffer,
 DWORD STDCALL
 GetConsoleAliasExesA (LPSTR	lpExeNameBuffer,
 		      DWORD	ExeNameBufferLength)
-     /*
-      * Undocumented
-      */
 {
   DPRINT1("GetConsoleAliasExesA(0x%p, 0x%x) UNIMPLEMENTED!\n", lpExeNameBuffer, ExeNameBufferLength);
   SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
@@ -324,9 +494,6 @@ GetConsoleAliasExesA (LPSTR	lpExeNameBuffer,
  */
 DWORD STDCALL
 GetConsoleAliasExesLengthA (VOID)
-     /*
-      * Undocumented
-      */
 {
   DPRINT1("GetConsoleAliasExesLengthA() UNIMPLEMENTED!\n");
   SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
@@ -339,9 +506,6 @@ GetConsoleAliasExesLengthA (VOID)
  */
 DWORD STDCALL
 GetConsoleAliasExesLengthW (VOID)
-     /*
-      * Undocumented
-      */
 {
   DPRINT1("GetConsoleAliasExesLengthW() UNIMPLEMENTED!\n");
   SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
@@ -350,19 +514,35 @@ GetConsoleAliasExesLengthW (VOID)
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 DWORD STDCALL
 GetConsoleAliasesW (LPWSTR AliasBuffer,
 		    DWORD	AliasBufferLength,
-		    LPWSTR	ExeName)
-     /*
-      * Undocumented
-      */
+		    LPWSTR	ExeName)  /* FIXME: currently ignored */
 {
-  DPRINT1("GetConsoleAliasesW(0x%p, 0x%x, 0x%p) UNIMPLEMENTED!\n", AliasBuffer, AliasBufferLength, ExeName);
-  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-  return 0;
+	DWORD len;
+	WCHAR Buffer[MAX_PATH];
+	LPWSTR AliasPtr;
+
+	if (!AliasBuffer)
+		return 0;
+
+	AliasPtr = AliasBuffer;
+	len = GetConsoleAliasesLengthW (ExeName);
+	if (len > AliasBufferLength)
+		return 0;
+
+	LPALIAS ptr = lpFirst;
+	while (ptr)
+	{
+		swprintf(Buffer, L"%s=%s" , ptr->lpName, ptr->lpSubst);
+		wcscpy(AliasBuffer, Buffer);
+		AliasBuffer += wcslen(Buffer) + 1;
+		ptr = ptr->next;
+	}
+
+	return (INT) (AliasBuffer - AliasPtr);
 }
 
 
@@ -384,32 +564,43 @@ GetConsoleAliasesA (LPSTR AliasBuffer,
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 DWORD STDCALL
-GetConsoleAliasesLengthW (LPWSTR lpExeName)
-     /*
-      * Undocumented
-      */
+GetConsoleAliasesLengthW (LPWSTR lpExeName  /* FIXME: currently ignored */) 
 {
-  DPRINT1("GetConsoleAliasesLengthW(0x%p) UNIMPLEMENTED!\n", lpExeName);
-  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-  return 0;
+	DWORD len = 0;
+	LPALIAS ptr = lpFirst;
+	while (ptr)
+	{
+		len += wcslen(ptr->lpName) * sizeof(WCHAR);
+		len += wcslen(ptr->lpSubst) * sizeof(WCHAR);
+		len += 2 * sizeof(WCHAR); /* '=' + '\0' */
+		ptr = ptr->next;
+	}
+	return len; 
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 DWORD STDCALL
 GetConsoleAliasesLengthA (LPSTR lpExeName)
-     /*
-      * Undocumented
-      */
 {
-  DPRINT1("GetConsoleAliasesLengthA(0x%p) UNIMPLEMENTED!\n", lpExeName);
-  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-  return 0;
+	DWORD dwRetVal = 0;
+	LPWSTR lpExeNameW = NULL;
+
+	if (lpExeName)
+		BasepAnsiStringToHeapUnicodeString(lpExeName, (LPWSTR*) &lpExeNameW);
+
+	dwRetVal = (GetConsoleAliasesLengthW(lpExeNameW) / sizeof(WCHAR));
+	
+	/* Clean up */
+	if (lpExeNameW)
+		RtlFreeHeap(GetProcessHeap(), 0, (LPWSTR*) lpExeNameW);
+
+	return dwRetVal;
 }
 
 

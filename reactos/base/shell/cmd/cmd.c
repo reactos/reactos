@@ -790,7 +790,6 @@ VOID ParseCommandLine (LPTSTR cmd)
 		_tcscpy(err, bc->Err);
 	}
 
-
 	/* Set up the initial conditions ... */
 	/* preserve STDIN, STDOUT and STDERR handles */
 	hOldConIn  = GetStdHandle (STD_INPUT_HANDLE);
@@ -1774,10 +1773,6 @@ Initialize (int argc, const TCHAR* argv[])
 	InitLastPath ();
 #endif
 
-#ifdef FATURE_ALIASES
-	InitializeAlias ();
-#endif
-
 	if (argc >= 2)
 	{
 		for (i = 1; i < argc; i++)
@@ -1897,10 +1892,6 @@ static VOID Cleanup (int argc, const TCHAR *argv[])
 		ConErrResPuts (STRING_CMD_ERROR5);
 		ParseCommandLine (_T("\\cmdexit.bat"));
 	}
-
-#ifdef FEATURE_ALIASES
-	DestroyAlias ();
-#endif
 
 #ifdef FEATURE_DIECTORY_STACK
 	/* destroy directory stack */

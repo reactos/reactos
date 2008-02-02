@@ -67,11 +67,8 @@ extern OSVERSIONINFO osvi;
 
 
 /* Prototypes for ALIAS.C */
-VOID InitializeAlias (VOID);
-VOID DestroyAlias (VOID);
 VOID ExpandAlias (LPTSTR, INT);
 INT CommandAlias (LPTSTR, LPTSTR);
-
 
 /* Prototypes for ATTRIB.C */
 INT CommandAttrib (LPTSTR, LPTSTR);
@@ -130,6 +127,8 @@ extern COMMAND cmds[];		/* The internal command table */
 VOID PrintCommandList (VOID);
 VOID PrintCommandListDetail (VOID);
 
+
+LPCTSTR GetParsedEnvVar ( LPCTSTR varName, UINT* varNameLen, BOOL ModeSetA );
 
 /* Prototypes for COLOR.C */
 VOID SetScreenColor(WORD wArgColor, BOOL bFill);
