@@ -3,6 +3,17 @@
 #include <tchar.h>
 
 static VOID
+partstrlwr (LPTSTR str)
+{
+	LPTSTR c = str;
+	while (*c && !_istspace (*c) && *c != _T('='))
+	{
+		*c = _totlower (*c);
+		c++;
+	}
+}
+
+static VOID
 PrintAlias (VOID)
 {
 	LPTSTR Aliases;
@@ -34,6 +45,29 @@ PrintAlias (VOID)
 	HeapFree(GetProcessHeap(), 0 , ptr);
 }
 
+INT SetMacro (LPTSTR param)
+{
+	LPTSTR ptr;
+
+	/* error if no '=' found */
+	if ((ptr = _tcschr (param, _T('='))) == 0)
+	{
+		return 1;
+	}
+
+	/* Split rest into name and substitute */
+	*ptr++ = _T('\0');
+
+	partstrlwr (param);
+
+	if (ptr[0] == _T('\0'))
+		AddConsoleAlias(param, NULL, _T("cmd.exe"));
+	else
+		AddConsoleAlias(param, ptr, _T("cmd.exe"));
+
+	return 0;
+}
+
 int
 main (int argc, char **argv)
 {
@@ -48,7 +82,7 @@ main (int argc, char **argv)
 	}
 	else
 	{
-		/* FIXME */
+		SetMacro(argv[1]);
 	}
 
 	
