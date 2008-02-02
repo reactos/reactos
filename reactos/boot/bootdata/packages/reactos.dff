@@ -34,6 +34,7 @@ base\applications\cacls\cacls.exe                       1
 base\applications\calc\calc.exe                         1
 base\applications\charmap\charmap.exe                   1
 base\applications\cmdutils\dbgprint\dbgprint.exe        1
+base\applications\cmdutils\doskey\doskey.exe            1
 base\applications\cmdutils\find\find.exe                1
 base\applications\cmdutils\more\more.exe                1
 base\applications\cmdutils\xcopy\xcopy.exe              1
