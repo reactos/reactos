@@ -49,11 +49,17 @@ INT SetMacro (LPTSTR param)
 {
 	LPTSTR ptr;
 
+	while (*param == ' ')
+		param++;
+
 	/* error if no '=' found */
 	if ((ptr = _tcschr (param, _T('='))) == 0)
 	{
 		return 1;
 	}
+
+	while (*param == ' ')
+		param++;
 
 	/* Split rest into name and substitute */
 	*ptr++ = _T('\0');
@@ -68,6 +74,22 @@ INT SetMacro (LPTSTR param)
 	return 0;
 }
 
+static VOID ReadFromFile(LPTSTR param)
+{
+	FILE* fp;
+	char line[MAX_PATH];
+
+	/* FIXME */
+	param += 11;
+
+	fp = _tfopen(param,"r");
+	while ( fgets(line, MAX_PATH, fp) != NULL) 
+		SetMacro(line);
+
+	fclose(fp);
+	return;
+}
+
 int
 main (int argc, char **argv)
 {
@@ -77,6 +99,8 @@ main (int argc, char **argv)
 
 	if (argv[1][0] == '/')
 	{
+		if (strnicmp(argv[1], "/macrofile", 10) == 0)
+			ReadFromFile(argv[1]);
 		if (stricmp(argv[1], "/macros") == 0)
 			PrintAlias();
 	}
