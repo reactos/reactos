@@ -416,7 +416,7 @@ private:
     ULONG CommitDataBlocks(PCFFOLDER_NODE FolderNode);
     ULONG WriteDataBlock();
     ULONG GetAttributesOnFile(PCFFILE_NODE File);
-    ULONG SetAttributesOnFile(PCFFILE_NODE File);
+    ULONG SetAttributesOnFile(char* FileName, USHORT FileAttributes);
     ULONG GetFileTimes(FILEHANDLE FileHandle, PCFFILE_NODE File);
 #if !defined(WIN32)
     void ConvertDateAndTime(time_t* Time, PUSHORT DosDate, PUSHORT DosTime);

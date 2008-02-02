@@ -189,7 +189,7 @@ ULONG CCFDATAStorage::Truncate()
  */
 {
 #if defined(WIN32)
-    if (!SetFilePointer(FileHandle, 0, NULL, FILE_BEGIN))
+    if( SetFilePointer(FileHandle, 0, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER )
         return CAB_STATUS_FAILURE;
     if (!SetEndOfFile(FileHandle))
         return CAB_STATUS_FAILURE;
@@ -231,10 +231,10 @@ ULONG CCFDATAStorage::Seek(LONG Position)
  */
 {
 #if defined(WIN32)
-    if (SetFilePointer(FileHandle,
-        Position,
-        NULL,
-        FILE_BEGIN) == 0xFFFFFFFF)
+    if( SetFilePointer(FileHandle,
+                       Position,
+                       NULL,
+                       FILE_BEGIN) == INVALID_SET_FILE_POINTER )
         return CAB_STATUS_FAILURE;
     else
         return CAB_STATUS_SUCCESS;
@@ -712,10 +712,9 @@ ULONG CCabinet::Open()
             DataReserved    = (Size >> 24) & 0xFF;
 
 #if defined(WIN32)
-            SetFilePointer(FileHandle, CabinetReserved, NULL, FILE_CURRENT);
-            if (GetLastError() != NO_ERROR)
+            if (SetFilePointer(FileHandle, CabinetReserved, NULL, FILE_CURRENT) == INVALID_SET_FILE_POINTER)
             {
-                DPRINT(MIN_TRACE, ("SetFilePointer() failed.\n"));
+                DPRINT(MIN_TRACE, ("SetFilePointer() failed, error code is %u.\n", GetLastError()));
                 return CAB_STATUS_FAILURE;
             }
 #else
@@ -823,7 +822,7 @@ void CCabinet::Close()
 
 
 ULONG CCabinet::FindFirst(char* FileName,
-                             PCAB_SEARCH Search)
+                          PCAB_SEARCH Search)
 /*
  * FUNCTION: Finds the first file in the cabinet that matches a search criteria
  * ARGUMENTS:
@@ -1030,7 +1029,7 @@ ULONG CCabinet::ExtractFile(char* FileName)
 #else
     //DPRINT(MIN_TRACE, ("FIXME: DosDateTimeToFileTime\n"));
 #endif
-    SetAttributesOnFile(File);
+    SetAttributesOnFile(DestName, File->File.Attributes);
 
     Buffer = (unsigned char*)AllocateMemory(CAB_BLOCKSIZE + 12); // This should be enough
     if (!Buffer)
@@ -1049,9 +1048,9 @@ ULONG CCabinet::ExtractFile(char* FileName)
         File->DataBlock->AbsoluteOffset,
         NULL,
         FILE_BEGIN);
-    if (GetLastError() != NO_ERROR)
+    if (Offset == INVALID_SET_FILE_POINTER)
     {
-        DPRINT(MIN_TRACE, ("SetFilePointer() failed.\n"));
+        DPRINT(MIN_TRACE, ("SetFilePointer() failed, error code is %u.\n", GetLastError()));
         return CAB_STATUS_INVALID_CAB;
     }
 #else
@@ -1171,13 +1170,12 @@ ULONG CCabinet::ExtractFile(char* FileName)
 
                         /* Search to start of file */
 #if defined(WIN32)
-                        SetFilePointer(FileHandle,
-                            File->DataBlock->AbsoluteOffset,
-                            NULL,
-                            FILE_BEGIN);
-                        if (GetLastError() != NO_ERROR)
+                        if( SetFilePointer(FileHandle,
+                                           File->DataBlock->AbsoluteOffset,
+                                           NULL,
+                                           FILE_BEGIN) == INVALID_SET_FILE_POINTER )
                         {
-                            DPRINT(MIN_TRACE, ("SetFilePointer() failed.\n"));
+                            DPRINT(MIN_TRACE, ("SetFilePointer() failed, error code is %u.\n", GetLastError()));
                             return CAB_STATUS_INVALID_CAB;
                         }
 #else
@@ -1247,14 +1245,13 @@ ULONG CCabinet::ExtractFile(char* FileName)
 
                 /* Go to next data block */
 #if defined(WIN32)
-                SetFilePointer(FileHandle,
-                    CurrentDataNode->AbsoluteOffset + sizeof(CFDATA) +
-                    CurrentDataNode->Data.CompSize,
-                    NULL,
-                    FILE_BEGIN);
-                if (GetLastError() != NO_ERROR)
+                if( SetFilePointer(FileHandle,
+                                   CurrentDataNode->AbsoluteOffset + sizeof(CFDATA) +
+                                   CurrentDataNode->Data.CompSize,
+                                   NULL,
+                                   FILE_BEGIN) == INVALID_SET_FILE_POINTER )
                 {
-                    DPRINT(MIN_TRACE, ("SetFilePointer() failed.\n"));
+                    DPRINT(MIN_TRACE, ("SetFilePointer() failed, error code is %u.\n", GetLastError()));
                     return CAB_STATUS_INVALID_CAB;
                 }
 #else
@@ -2231,14 +2228,12 @@ ULONG CCabinet::ReadString(char* String, ULONG MaxLength)
     /* Back up some bytes */
     Size = (BytesRead - Size) - 1;
 #if defined(WIN32)
-    SetLastError(NO_ERROR);
-    (ULONG)SetFilePointer(FileHandle,
-        -(LONG)Size,
-        NULL,
-        FILE_CURRENT);
-    if (GetLastError() != NO_ERROR)
+    if( SetFilePointer(FileHandle,
+                       -(LONG)Size,
+                       NULL,
+                       FILE_CURRENT) == INVALID_SET_FILE_POINTER )
     {
-        DPRINT(MIN_TRACE, ("SetFilePointer() failed.\n"));
+        DPRINT(MIN_TRACE, ("SetFilePointer() failed, error code is %u.\n", GetLastError()));
         return CAB_STATUS_INVALID_CAB;
     }
 #else
@@ -2269,15 +2264,12 @@ ULONG CCabinet::ReadFileTable()
 
     /* Seek to file table */
 #if defined(WIN32)
-    SetLastError(NO_ERROR);
-    SetFilePointer(FileHandle,
-        CABHeader.FileTableOffset,
-        NULL,
-        FILE_BEGIN);
-    if (GetLastError() != NO_ERROR)
+    if( SetFilePointer(FileHandle,
+                       CABHeader.FileTableOffset,
+                       NULL,
+                       FILE_BEGIN) == INVALID_SET_FILE_POINTER )
     {
-        DPRINT(MIN_TRACE, ("SetFilePointer() failed.\n"));
-        DPRINT(MIN_TRACE, ("Error: %lu\n", GetLastError()));
+        DPRINT(MIN_TRACE, ("SetFilePointer() failed, error code is %u.\n", GetLastError()));
         return CAB_STATUS_INVALID_CAB;
     }
 #else
@@ -2360,14 +2352,12 @@ ULONG CCabinet::ReadDataBlocks(PCFFOLDER_NODE FolderNode)
 
         /* Seek to data block */
 #if defined(WIN32)
-        SetLastError(NO_ERROR);
-        SetFilePointer(FileHandle,
-            AbsoluteOffset,
-            NULL,
-            FILE_BEGIN);
-        if (GetLastError() != NO_ERROR)
+        if( SetFilePointer(FileHandle,
+                           AbsoluteOffset,
+                           NULL,
+                           FILE_BEGIN) == INVALID_SET_FILE_POINTER )
         {
-            DPRINT(MIN_TRACE, ("SetFilePointer() failed.\n"));
+            DPRINT(MIN_TRACE, ("SetFilePointer() failed, error code is %u.\n", GetLastError()));
             return CAB_STATUS_INVALID_CAB;
         }
 #else
@@ -3384,20 +3374,10 @@ ULONG CCabinet::GetAttributesOnFile(PCFFILE_NODE File)
     if (Attributes == -1)
         return CAB_STATUS_CANNOT_READ;
 
-    if (Attributes & FILE_ATTRIBUTE_READONLY)
-        File->File.Attributes |= CAB_ATTRIB_READONLY;
-
-    if (Attributes & FILE_ATTRIBUTE_HIDDEN)
-        File->File.Attributes |= CAB_ATTRIB_HIDDEN;
-
-    if (Attributes & FILE_ATTRIBUTE_SYSTEM)
-        File->File.Attributes |= CAB_ATTRIB_SYSTEM;
-
-    if (Attributes & FILE_ATTRIBUTE_DIRECTORY)
-        File->File.Attributes |= CAB_ATTRIB_DIRECTORY;
-
-    if (Attributes & FILE_ATTRIBUTE_ARCHIVE)
-        File->File.Attributes |= CAB_ATTRIB_ARCHIVE;
+    // 0x37 = READONLY | HIDDEN | SYSTEM | DIRECTORY | ARCHIVE
+    // The IDs for these attributes are the same in the CAB file and under Windows
+    // If the file has any other attributes, strip them off by the logical AND.
+    File->File.Attributes = (USHORT)(Attributes & 0x37);
 #else
     struct stat stbuf;
     char buf[MAX_PATH];
@@ -3431,34 +3411,21 @@ ULONG CCabinet::GetAttributesOnFile(PCFFILE_NODE File)
 }
 
 
-ULONG CCabinet::SetAttributesOnFile(PCFFILE_NODE File)
+ULONG CCabinet::SetAttributesOnFile(char* FileName, USHORT FileAttributes)
 /*
  * FUNCTION: Sets attributes on a file
  * ARGUMENTS:
- *      File = Pointer to CFFILE node for file
+ *      FileName       = File name with path
+ *      FileAttributes = Attributes of that file
  * RETURNS:
  *     Status of operation
  */
 {
 #if defined(WIN32)
-    ULONG Attributes = 0;
-
-    if (File->File.Attributes & CAB_ATTRIB_READONLY)
-        Attributes |= FILE_ATTRIBUTE_READONLY;
-
-    if (File->File.Attributes & CAB_ATTRIB_HIDDEN)
-        Attributes |= FILE_ATTRIBUTE_HIDDEN;
-
-    if (File->File.Attributes & CAB_ATTRIB_SYSTEM)
-        Attributes |= FILE_ATTRIBUTE_SYSTEM;
-
-    if (File->File.Attributes & CAB_ATTRIB_DIRECTORY)
-        Attributes |= FILE_ATTRIBUTE_DIRECTORY;
-
-    if (File->File.Attributes & CAB_ATTRIB_ARCHIVE)
-        Attributes |= FILE_ATTRIBUTE_ARCHIVE;
-
-    SetFileAttributes(File->FileName, Attributes);
+    // 0x37 = READONLY | HIDDEN | SYSTEM | DIRECTORY | ARCHIVE
+    // The IDs for these attributes are the same in the CAB file and under Windows
+    // If the file has any other attributes, strip them off by the logical AND.
+    SetFileAttributes(FileName, (DWORD)(FileAttributes & 0x37));
 
     return CAB_STATUS_SUCCESS;
 #else
