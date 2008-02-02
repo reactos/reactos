@@ -181,26 +181,26 @@ INT cmd_if (LPTSTR cmd, LPTSTR param)
 			x_flag ^= X_EXEC;
 		pp += p1len;
 
-		while (_istspace (*pp)) /* skip spaces */
-			pp++;
-
-		if (*pp == _T('('))
-		{
-			if (bc)
-			{
-				pp++;
-				bc->bCmdBlock++;
-				if ((bc->bCmdBlock >= 0) && (bc->bCmdBlock < MAX_PATH))
-					bc->bExecuteBlock[bc->bCmdBlock] = x_flag & X_EXEC;
-				/* commands are in the next lines */
-				if (*pp == _T('\0'))
-					return 0;
-			}
-		}
-
 		if ( x_flag )
 		{
 			x_flag |= X_EMPTY;
+		}
+	}
+
+	while (_istspace (*pp)) /* skip spaces */
+		pp++;
+
+	if (*pp == _T('('))
+	{
+		if (bc)
+		{
+			pp++;
+			bc->bCmdBlock++;
+			if ((bc->bCmdBlock >= 0) && (bc->bCmdBlock < MAX_PATH))
+				bc->bExecuteBlock[bc->bCmdBlock] = x_flag & X_EXEC;
+			/* commands are in the next lines */
+			if (*pp == _T('\0'))
+				return 0;
 		}
 	}
 
