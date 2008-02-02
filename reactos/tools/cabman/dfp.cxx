@@ -1367,7 +1367,7 @@ void CDFParser::NextToken()
             if (i > 0)
             {
                 CurrentString[i] = '\0';
-                CurrentInteger = atoi((char*)CurrentString);
+                CurrentInteger = atoi(CurrentString);
                 CurrentToken = TokenInteger;
                 CurrentChar += i;
                 return;

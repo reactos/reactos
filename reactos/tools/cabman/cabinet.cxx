@@ -320,9 +320,9 @@ CCabinet::CCabinet()
     FileListHead   = NULL;
     FileListTail   = NULL;
 
-    Codec         = new CRawCodec();
-    CodecId       = CAB_CODEC_RAW;
-    CodecSelected = true;
+    Codec          = NULL;
+    CodecId        = -1;
+    CodecSelected  = false;
 
     OutputBuffer = NULL;
     InputBuffer  = NULL;
@@ -359,7 +359,7 @@ bool CCabinet::IsSeparator(char Char)
  * ARGUMENTS:
  *     Char = Character to check
  * RETURNS:
- *     Wether it is a separator
+ *     Whether it is a separator
  */
 {
     if ((Char == '\\') || (Char == '/'))
@@ -511,6 +511,25 @@ void CCabinet::SetDestinationPath(char* DestinationPath)
         NormalizePath(DestPath, MAX_PATH);
 }
 
+bool CCabinet::SetCompressionCodec(char* CodecName)
+/*
+ * FUNCTION: Selects the codec to use for compression
+ * ARGUMENTS:
+ *    CodecName = Pointer to a string with the name of the codec
+ */
+{
+    if( !strcasecmp(CodecName, "raw") )
+        SelectCodec(CAB_CODEC_RAW);
+    else if( !strcasecmp(CodecName, "mszip") )
+        SelectCodec(CAB_CODEC_MSZIP);
+    else
+    {
+        printf("Invalid codec specified!\n");
+        return false;
+    }
+
+    return true;
+}
 
 char* CCabinet::GetDestinationPath()
 /*
@@ -1300,8 +1319,17 @@ ULONG CCabinet::ExtractFile(char* FileName)
     return CAB_STATUS_SUCCESS;
 }
 
+bool CCabinet::IsCodecSelected()
+/*
+ * FUNCTION: Returns the value of CodecSelected
+ * RETURNS:
+ *     Whether a codec is selected
+ */
+{
+    return CodecSelected;
+}
 
-void CCabinet::SelectCodec(ULONG Id)
+void CCabinet::SelectCodec(LONG Id)
 /*
  * FUNCTION: Selects codec engine to use
  * ARGUMENTS:
@@ -1320,9 +1348,7 @@ void CCabinet::SelectCodec(ULONG Id)
     switch (Id)
     {
         case CAB_CODEC_RAW:
-#if 0
             Codec = new CRawCodec();
-#endif
             break;
 
         case CAB_CODEC_MSZIP:
@@ -2080,7 +2106,7 @@ ULONG CCabinet::GetAbsoluteOffset(PCFFILE_NODE File)
     PCFDATA_NODE Node;
 
     DPRINT(MAX_TRACE, ("FileName '%s'  FileOffset (0x%lX)  FileSize (%lu).\n",
-        (char*)File->FileName,
+        File->FileName,
         (ULONG)File->File.FileOffset,
         (ULONG)File->File.FileSize));
 
@@ -2291,7 +2317,7 @@ ULONG CCabinet::ReadFileTable()
             return Status;
 
         DPRINT(MAX_TRACE, ("Found file '%s' at uncompressed offset (0x%lX).  Size (%lu bytes)  ControlId (0x%lX).\n",
-            (char*)File->FileName,
+            File->FileName,
             (ULONG)File->File.FileOffset,
             (ULONG)File->File.FileSize,
             (ULONG)File->File.FileControlID));

@@ -347,8 +347,12 @@ public:
     /* Extracts a file from the current cabinet file */
     ULONG ExtractFile(char* FileName);
     /* Select codec engine to use */
-    void SelectCodec(ULONG Id);
+    void SelectCodec(LONG Id);
+    /* Returns if a codec engine is selected */
+    bool IsCodecSelected();
 #ifndef CAB_READ_ONLY
+    /* Sets the codec to use for compression (based on a string value) */
+    bool SetCompressionCodec(char* CodecName);
     /* Creates a new cabinet file */
     ULONG NewCabinet();
     /* Forces a new disk to be created */
@@ -448,7 +452,7 @@ private:
     PCFFILE_NODE FileListHead;
     PCFFILE_NODE FileListTail;
     CCABCodec *Codec;
-    ULONG CodecId;
+    LONG CodecId;
     bool CodecSelected;
     void* InputBuffer;
     void* CurrentIBuffer;               // Current offset in input buffer

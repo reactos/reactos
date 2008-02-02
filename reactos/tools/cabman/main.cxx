@@ -26,9 +26,6 @@ ULONG DebugTraceLevel = MIN_TRACE;
 #endif /* DBG */
 
 
-#define CM_VERSION  "0.9"
-
-
 char* Pad(char* Str, char PadChar, ULONG Length)
 /*
  * FUNCTION: Pads a string with a character to make a given length
@@ -191,7 +188,7 @@ void CCABManager::Usage()
  * FUNCTION: Display usage information on screen
  */
 {
-    printf("ReactOS Cabinet Manager - Version %s\n\n", CM_VERSION);
+    printf("ReactOS Cabinet Manager\n\n");
     printf("CABMAN [-D | -E] [-A] [-L dir] cabinet [filename ...]\n");
     printf("CABMAN -C dirfile [-I] [-RC file] [-P dir]\n");
     printf("CABMAN -S cabinet filename\n");
@@ -210,6 +207,9 @@ void CCABManager::Usage()
     printf("  -I        Don't create the cabinet, only the .inf file.\n");
     printf("  -L dir    Location to place extracted or generated files\n");
     printf("            (default is current directory).\n");
+    printf("  -M        Specify the compression method to use\n");
+    printf("               raw    - No compression\n");
+    printf("               mszip  - MsZip compression (default)\n");
     printf("  -N        Don't create the .inf file, only the cabinet.\n");
     printf("  -RC       Specify file to put in cabinet reserved area\n");
     printf("            (size must be less than 64KB).\n");
@@ -269,10 +269,28 @@ bool CCABManager::ParseCmdline(int argc, char* argv[])
                     if (argv[i][2] == 0)
                     {
                         i++;
-                        SetDestinationPath((char*)&argv[i][0]);
+                        SetDestinationPath(&argv[i][0]);
                     }
                     else
-                        SetDestinationPath((char*)&argv[i][1]);
+                        SetDestinationPath(&argv[i][2]);
+
+                    break;
+
+                case 'm':
+                case 'M':
+                    // Set the compression codec (only affects compression, not decompression)
+                    if(argv[i][2] == 0)
+                    {
+                        i++;
+
+                        if( !SetCompressionCodec(&argv[i][0]) )
+                            return false;
+                    }
+                    else
+                    {
+                        if( !SetCompressionCodec(&argv[i][2]) )
+                            return false;
+                    }
 
                     break;
 
@@ -288,7 +306,7 @@ bool CCABManager::ParseCmdline(int argc, char* argv[])
                             if (argv[i][3] == 0)
                             {
                                 i++;
-                                if (!SetCabinetReservedFile((char*)&argv[i][0]))
+                                if (!SetCabinetReservedFile(&argv[i][0]))
                                 {
                                     printf("Cannot open cabinet reserved area file.\n");
                                     return false;
@@ -296,7 +314,7 @@ bool CCABManager::ParseCmdline(int argc, char* argv[])
                             }
                             else
                             {
-                                if (!SetCabinetReservedFile((char*)&argv[i][3]))
+                                if (!SetCabinetReservedFile(&argv[i][3]))
                                 {
                                     printf("Cannot open cabinet reserved area file.\n");
                                     return false;
@@ -319,10 +337,10 @@ bool CCABManager::ParseCmdline(int argc, char* argv[])
                     if (argv[i][2] == 0)
                     {
                         i++;
-                        SetFileRelativePath((char*)&argv[i][0]);
+                        SetFileRelativePath(&argv[i][0]);
                     }
                     else
-                        SetFileRelativePath((char*)&argv[i][1]);
+                        SetFileRelativePath(&argv[i][2]);
 
                     break;
 
@@ -336,7 +354,7 @@ bool CCABManager::ParseCmdline(int argc, char* argv[])
             if ((FoundCabinet) || (Mode == CM_MODE_CREATE))
             {
                 /* FIXME: There may be many of these if Mode != CM_MODE_CREATE */
-                strcpy((char*)FileName, argv[i]);
+                strcpy(FileName, argv[i]);
             }
             else
             {
@@ -352,8 +370,9 @@ bool CCABManager::ParseCmdline(int argc, char* argv[])
       return false;
     }
 
-    /* FIXME */
-    SelectCodec(CAB_CODEC_MSZIP);
+    // Select MsZip by default for creating cabinets
+    if( (Mode == CM_MODE_CREATE || Mode == CM_MODE_CREATE_SIMPLE) && !IsCodecSelected() )
+        SelectCodec(CAB_CODEC_MSZIP);
 
     return true;
 }
@@ -366,10 +385,10 @@ bool CCABManager::CreateCabinet()
 {
     ULONG Status;
 
-    Status = Load((char*)&FileName);
+    Status = Load(FileName);
     if (Status != CAB_STATUS_SUCCESS)
     {
-        printf("Specified directive file could not be found: %s.\n", (char*)&FileName);
+        printf("Specified directive file could not be found: %s.\n", FileName);
         return false;
     }
 
@@ -435,9 +454,9 @@ bool CCABManager::DisplayCabinet()
             {
                 if (Search.File->FileControlID != CAB_FILE_CONTINUED)
                 {
-                    printf("%s ", Date2Str((char*)&Str, Search.File->FileDate));
-                    printf("%s ", Time2Str((char*)&Str, Search.File->FileTime));
-                    printf("%s ", Attr2Str((char*)&Str, Search.File->Attributes));
+                    printf("%s ", Date2Str(Str, Search.File->FileDate));
+                    printf("%s ", Time2Str(Str, Search.File->FileTime));
+                    printf("%s ", Attr2Str(Str, Search.File->Attributes));
                     sprintf(Str, "%lu", Search.File->FileSize);
                     printf("%s ", Pad(Str, ' ', 13));
                     printf("%s\n", Search.FileName);
@@ -530,7 +549,7 @@ bool CCABManager::Run()
  * FUNCTION: Process cabinet
  */
 {
-    printf("ReactOS Cabinet Manager - Version %s\n\n", CM_VERSION);
+    printf("ReactOS Cabinet Manager\n\n");
 
     switch (Mode)
     {
