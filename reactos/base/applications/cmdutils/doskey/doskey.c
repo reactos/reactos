@@ -37,7 +37,7 @@ PrintAlias (VOID)
 	{
 		while (*Aliases != '\0')
 		{
-			printf(_T("%s\n"), Aliases);
+			_tprintf(_T("%s\n"), Aliases);
 			Aliases = Aliases + lstrlen(Aliases);
 			Aliases++;
 		}
@@ -49,22 +49,25 @@ INT SetMacro (LPTSTR param)
 {
 	LPTSTR ptr;
 
-	while (*param == ' ')
+	while (*param == _T(' '))
 		param++;
 
 	/* error if no '=' found */
 	if ((ptr = _tcschr (param, _T('='))) == 0)
-	{
 		return 1;
-	}
 
-	while (*param == ' ')
+	while (*param == _T(' '))
 		param++;
+
+	while (*ptr == _T(' '))
+		ptr--;
 
 	/* Split rest into name and substitute */
 	*ptr++ = _T('\0');
 
 	partstrlwr (param);
+
+	_tprintf(_T("%s, %s\n"), ptr, param);
 
 	if (ptr[0] == _T('\0'))
 		AddConsoleAlias(param, NULL, _T("cmd.exe"));
@@ -74,17 +77,27 @@ INT SetMacro (LPTSTR param)
 	return 0;
 }
 
-static VOID ReadFromFile(LPTSTR param)
+static VOID ReadFromFile(LPSTR param)
 {
 	FILE* fp;
 	char line[MAX_PATH];
+#ifdef UNICODE
+	WCHAR lineW[MAX_PATH];
+#endif
 
 	/* FIXME */
 	param += 11;
 
-	fp = _tfopen(param,"r");
+	fp = fopen(param,"r");
 	while ( fgets(line, MAX_PATH, fp) != NULL) 
+	{
+#ifdef UNICODE
+        MultiByteToWideChar(CP_ACP, 0, line, -1, lineW, MAX_PATH); 
+		SetMacro(lineW);
+#else
 		SetMacro(line);
+#endif
+	}
 
 	fclose(fp);
 	return;
@@ -93,7 +106,10 @@ static VOID ReadFromFile(LPTSTR param)
 int
 main (int argc, char **argv)
 {
-	
+#ifdef UNICODE
+	WCHAR lineW[MAX_PATH];
+#endif
+
 	if (argc < 2)
 		return 0;
 
@@ -106,10 +122,13 @@ main (int argc, char **argv)
 	}
 	else
 	{
+#ifdef UNICODE
+        MultiByteToWideChar(CP_ACP, 0, argv[1], -1, lineW, MAX_PATH); 
+		SetMacro(lineW);
+#else
 		SetMacro(argv[1]);
+#endif
 	}
-
-	
 
 	return 0;
 }
