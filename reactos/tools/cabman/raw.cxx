@@ -8,9 +8,7 @@
  * REVISIONS:
  *   CSH 21/03-2001 Created
  *   CSH 15/08-2003 Made it portable
- *   CF  04/05-2007 Reformatted the code to be more consistent and use TABs instead of spaces
  *   CF  04/05-2007 Made it compatible with 64-bit operating systems
- *   CF  18/08-2007 Use typedefs64.h and the Windows types for compatibility with 64-bit operating systems
  */
 #include "raw.h"
 
@@ -46,9 +44,9 @@ ULONG CRawCodec::Compress(void* OutputBuffer,
  *     OutputLength = Address of buffer to place size of compressed data
  */
 {
-	memcpy(OutputBuffer, InputBuffer, InputLength);
-	*OutputLength = InputLength;
-	return CS_SUCCESS;
+    memcpy(OutputBuffer, InputBuffer, InputLength);
+    *OutputLength = InputLength;
+    return CS_SUCCESS;
 }
 
 ULONG CRawCodec::Uncompress(void* OutputBuffer,
@@ -64,9 +62,9 @@ ULONG CRawCodec::Uncompress(void* OutputBuffer,
  *     OutputLength = Address of buffer to place size of uncompressed data
  */
 {
-	memcpy(OutputBuffer, InputBuffer, InputLength);
-	*OutputLength = InputLength;
-	return CS_SUCCESS;
+    memcpy(OutputBuffer, InputBuffer, InputLength);
+    *OutputLength = InputLength;
+    return CS_SUCCESS;
 }
 
 /* EOF */

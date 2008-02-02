@@ -17,23 +17,23 @@
 
 class CMSZipCodec : public CCABCodec {
 public:
-	/* Default constructor */
-	CMSZipCodec();
-	/* Default destructor */
-	virtual ~CMSZipCodec();
-	/* Compresses a data block */
-	virtual ULONG Compress(void* OutputBuffer,
-	                          void* InputBuffer,
-	                          ULONG InputLength,
-	                          PULONG OutputLength);
-	/* Uncompresses a data block */
-	virtual ULONG Uncompress(void* OutputBuffer,
-	                            void* InputBuffer,
-	                            ULONG InputLength,
-	                            PULONG OutputLength);
+    /* Default constructor */
+    CMSZipCodec();
+    /* Default destructor */
+    virtual ~CMSZipCodec();
+    /* Compresses a data block */
+    virtual ULONG Compress(void* OutputBuffer,
+                           void* InputBuffer,
+                           ULONG InputLength,
+                           PULONG OutputLength);
+    /* Uncompresses a data block */
+    virtual ULONG Uncompress(void* OutputBuffer,
+                             void* InputBuffer,
+                             ULONG InputLength,
+                             PULONG OutputLength);
 private:
-	int Status;
-	z_stream ZStream; /* Zlib stream */
+    int Status;
+    z_stream ZStream; /* Zlib stream */
 };
 
 #endif /* __MSZIP_H */
