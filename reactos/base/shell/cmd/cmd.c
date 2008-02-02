@@ -1305,8 +1305,7 @@ GetParsedEnvVar ( LPCTSTR varName, UINT* varNameLen, BOOL ModeSetA )
 		if (_tcsncicmp(varName, _T("dp0"), 3) == 0)
 		{
 			if ( varNameLen )
-				*varNameLen = 4;
-			varName += 2;
+				*varNameLen = 5;
 			return bc->BatchFilePath;
 		}
 	case _T('0'):
