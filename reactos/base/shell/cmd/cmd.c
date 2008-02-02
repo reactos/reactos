@@ -1186,7 +1186,7 @@ GetEnvVarOrSpecial ( LPCTSTR varName )
 				if (i > 0)
 				{
 					if (StringPart[1] < 0)
-						StringPart[1] = _tcslen(ret + StringPart[0]) - 1 + StringPart[1];
+						StringPart[1] = _tcslen(ret + StringPart[0]) + StringPart[1];
 					_tcsncpy(ReturnValue, ret + StringPart[0], StringPart[1]);
 					_tcscpy(ret, ReturnValue);
 				}
