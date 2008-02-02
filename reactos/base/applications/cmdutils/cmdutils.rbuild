@@ -4,6 +4,9 @@
 	<directory name="dbgprint">
 		<xi:include href="dbgprint/dbgprint.rbuild" />
 	</directory>
+	<directory name="doskey">
+		<xi:include href="doskey/doskey.rbuild" />
+	</directory>
 	<directory name="find">
 		<xi:include href="find/find.rbuild" />
 	</directory>
