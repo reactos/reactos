@@ -436,6 +436,8 @@ WinLdrpMapApic()
 		= APICAddress >> MM_PAGE_SHIFT;
 	HalPageTable[(APIC_BASE - 0xFFC00000) >> MM_PAGE_SHIFT].Valid = 1;
 	HalPageTable[(APIC_BASE - 0xFFC00000) >> MM_PAGE_SHIFT].Write = 1;
+	HalPageTable[(APIC_BASE - 0xFFC00000) >> MM_PAGE_SHIFT].WriteThrough = 1;
+	HalPageTable[(APIC_BASE - 0xFFC00000) >> MM_PAGE_SHIFT].CacheDisable = 1;
 }
 #else
 VOID
@@ -547,7 +549,7 @@ WinLdrTurnOnPaging(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 
 	// TEMP, DEBUG!
 	// adding special reserved memory zones for vmware workstation
-#if 0
+#if 1
 	{
 		Mad[MadCount].BasePage = 0xfec00;
 		Mad[MadCount].PageCount = 0x10;
