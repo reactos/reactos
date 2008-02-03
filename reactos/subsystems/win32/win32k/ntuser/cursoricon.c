@@ -1711,7 +1711,7 @@ UserDrawIconEx(
    Ret = TRUE;
 
 cleanup:
-   if(DoFlickerFree)
+   if(DoFlickerFree || bAlpha)
    {
       if(hOldOffBmp) NtGdiSelectBitmap(hdcOff, hOldOffBmp);
       if(hOldOffBrush) NtGdiSelectBrush(hdcOff, hOldOffBrush);
