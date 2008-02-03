@@ -549,7 +549,7 @@ WinLdrTurnOnPaging(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 
 	// TEMP, DEBUG!
 	// adding special reserved memory zones for vmware workstation
-#if 1
+#if 0
 	{
 		Mad[MadCount].BasePage = 0xfec00;
 		Mad[MadCount].PageCount = 0x10;
