@@ -490,7 +490,7 @@ ProcessRelocations(ULONG *ProcessedRelocsLength, void **ProcessedRelocs,
   *ProcessedRelocs = malloc(RelocSectionHeader->SizeOfRawData);
   if (NULL == *ProcessedRelocs)
     {
-      fprintf(stderr, "Failed to allocate %u bytes for relocations\n", (UINT)RelocSectionHeader->SizeOfRawData);
+      fprintf(stderr, "Failed to allocate %lu bytes for relocations\n", RelocSectionHeader->SizeOfRawData);
       return 1;
     }
   *ProcessedRelocsLength = 0;
@@ -566,7 +566,7 @@ CreateOutputFile(FILE *OutFile, void *InData,
   OutHeader = malloc(StartOfRawData);
   if (NULL == OutHeader)
     {
-      fprintf(stderr, "Failed to allocate %u bytes for output file header\n", (UINT)StartOfRawData);
+      fprintf(stderr, "Failed to allocate %lu bytes for output file header\n", StartOfRawData);
       return 1;
     }
   memset(OutHeader, '\0', StartOfRawData);
@@ -679,7 +679,7 @@ CreateOutputFile(FILE *OutFile, void *InData,
       PaddedRosSym = malloc(RosSymFileLength);
       if (NULL == PaddedRosSym)
         {
-          fprintf(stderr, "Failed to allocate %u bytes for padded .rossym\n", (UINT)RosSymFileLength);
+          fprintf(stderr, "Failed to allocate %lu bytes for padded .rossym\n", RosSymFileLength);
           return 1;
         }
       memcpy(PaddedRosSym, RosSymSection, RosSymLength);

@@ -10,7 +10,28 @@
 
 #define IMAGE_NUMBEROF_DIRECTORY_ENTRIES 16
 
-#include <host/typedefs.h>
+typedef unsigned char BYTE;
+typedef unsigned char UCHAR;
+typedef unsigned short WORD;
+typedef unsigned short USHORT;
+#if defined(__x86_64__) && defined(unix)
+typedef signed int LONG;
+typedef unsigned int ULONG;
+typedef unsigned int DWORD;
+#else
+typedef signed long LONG;
+typedef unsigned long ULONG;
+typedef unsigned long DWORD;
+#endif
+#if defined(_WIN64)
+typedef unsigned __int64 ULONG_PTR;
+#else
+#if defined(__x86_64__) && defined(unix)
+typedef  unsigned int  ULONG_PTR;
+#else
+typedef  unsigned long ULONG_PTR;
+#endif
+#endif
 
 #pragma pack(2)
 typedef struct _IMAGE_DOS_HEADER {
