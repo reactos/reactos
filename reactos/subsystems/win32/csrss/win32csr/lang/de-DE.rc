@@ -8,7 +8,7 @@ BEGIN
     LTEXT           "Programm wird beendet...",IDC_STATIC,7,7,186,11
     CONTROL         "Fortschritt",IDC_PROGRESS,"msctls_progress32",WS_BORDER,
                     7,20,186,13
-    LTEXT           "Wenn Sie das Program sofort beenden, werden sie eventuell ungespeicherte Daten verlieren. Um das Programm zu beenden, wählen Sie Jetzt beenden.",
+    LTEXT           "Wenn Sie das Programm sofort beenden, werden sie eventuell ungespeicherte Daten verlieren. Um das Programm zu beenden, wählen Sie Jetzt beenden.",
                     IDC_STATIC,7,40,186,26
     DEFPUSHBUTTON   "J&etzt beenden",IDC_END_NOW,150,71,43,17
 END
@@ -23,7 +23,7 @@ BEGIN
     LTEXT           "Das Programm reagiert nicht",IDC_STATIC,7,7,178,8
     LTEXT           "Um zu ReactOS zurückzukehren und den Status der Anwendung zu überprüfen, wählen Sie Abbrechen.",
                     IDC_STATIC,7,26,178,16
-    LTEXT           "Wenn Sie das Program sofort beenden, werden sie eventuell ungespeicherte Daten verlieren. Um das Programm zu beenden, wählen Sie Jetzt beenden.",
+    LTEXT           "Wenn Sie das Programm sofort beenden, werden sie eventuell ungespeicherte Daten verlieren. Um das Programm zu beenden, wählen Sie Jetzt beenden.",
                     IDC_STATIC,7,53,178,26
 END
 
@@ -38,11 +38,11 @@ BEGIN
   IDS_FIND "Suchen..."
   IDS_DEFAULTS "Standardwerte"
   IDS_PROPERTIES "Eigenschaften"
-  IDS_SCROLLHERE "Hier Scrollen"
-  IDS_SCROLLTOP "Ganz nach oben Scrollen"
-  IDS_SCROLLBOTTOM "Ganz nach unten Scrollen"
+  IDS_SCROLLHERE "Hier scrollen"
+  IDS_SCROLLTOP "Ganz nach oben scrollen"
+  IDS_SCROLLBOTTOM "Ganz nach unten scrollen"
   IDS_SCROLLPAGE_UP "Seite nach oben"
   IDS_SCROLLPAGE_DOWN "Seite nach unten"
-  IDS_SCROLLUP "Nach oben Scrollen"
-  IDS_SCROLLDOWN "Nach unten Scrollen"
+  IDS_SCROLLUP "Nach oben scrollen"
+  IDS_SCROLLDOWN "Nach unten scrollen"
 END

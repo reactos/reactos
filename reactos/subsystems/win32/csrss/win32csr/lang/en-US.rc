@@ -8,7 +8,7 @@ BEGIN
     LTEXT           "Ending Program... Please wait",IDC_STATIC,7,7,186,11
     CONTROL         "Progress",IDC_PROGRESS,"msctls_progress32",WS_BORDER,
                     7,20,186,13
-    LTEXT           "If you choose to end the program  immediately, you will lose any unsaved data. To end the program now, click End Now.",
+    LTEXT           "If you choose to end the program immediately, you will lose any unsaved data. To end the program now, click End Now.",
                     IDC_STATIC,7,40,186,26
     DEFPUSHBUTTON   "&End Now",IDC_END_NOW,150,71,43,17
 END
@@ -38,11 +38,11 @@ BEGIN
   IDS_FIND "Find..."
   IDS_DEFAULTS "Defaults"
   IDS_PROPERTIES "Properties"
-  IDS_SCROLLHERE "Scroll Here"
-  IDS_SCROLLTOP "Scroll Top"
-  IDS_SCROLLBOTTOM "Scroll Bottom"
-  IDS_SCROLLPAGE_UP "Page Up"
-  IDS_SCROLLPAGE_DOWN "Page Down"
-  IDS_SCROLLUP "Scroll Up"
-  IDS_SCROLLDOWN "Scroll Down"
+  IDS_SCROLLHERE "Scroll here"
+  IDS_SCROLLTOP "Scroll top"
+  IDS_SCROLLBOTTOM "Scroll bottom"
+  IDS_SCROLLPAGE_UP "Page up"
+  IDS_SCROLLPAGE_DOWN "Page down"
+  IDS_SCROLLUP "Scroll up"
+  IDS_SCROLLDOWN "Scroll down"
 END
