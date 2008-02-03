@@ -1105,8 +1105,8 @@ ULONG CCabinet::ExtractFile(char* FileName)
 
                     BytesToRead = CFData.CompSize;
 
-                    DPRINT(MAX_TRACE, ("Read: (0x%X,0x%X).\n",
-                        (UINT_PTR)CurrentBuffer, (UINT_PTR)Buffer));
+                    DPRINT(MAX_TRACE, ("Read: (0x%lX,0x%lX).\n",
+                        (_W64 unsigned long)CurrentBuffer, (_W64 unsigned long)Buffer));
 
                     if (((Status = ReadBlock(CurrentBuffer, BytesToRead, &BytesRead)) !=
                         CAB_STATUS_SUCCESS) || (BytesToRead != BytesRead))
@@ -1228,7 +1228,7 @@ ULONG CCabinet::ExtractFile(char* FileName)
                 BytesToWrite = BytesLeftInBlock;
 
                 DPRINT(MAX_TRACE, ("Seeking to absolute offset 0x%X.\n",
-                    (UINT)CurrentDataNode->AbsoluteOffset + sizeof(CFDATA) + CurrentDataNode->Data.CompSize));
+                    (UINT)(CurrentDataNode->AbsoluteOffset + sizeof(CFDATA) + CurrentDataNode->Data.CompSize)));
 
                 if (((Status = ReadBlock(&CFData, sizeof(CFDATA), &BytesRead)) !=
                     CAB_STATUS_SUCCESS) || (BytesRead != sizeof(CFDATA)))
