@@ -30,3 +30,4 @@ IDI_DOC                   ICON      "res/doc.ico"
 
 // Languages
 #include "lang/en-US.rc"
+#include "lang/de-DE.rc"
