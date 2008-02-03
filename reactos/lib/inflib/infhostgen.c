@@ -100,7 +100,7 @@ InfHostOpenFile(PHINF InfHandle,
   DPRINT("fopen() successful\n");
 
   /* Query file size */
-  if (fseek(File, 0, SEEK_END))
+  if (fseek(File, (size_t)0, SEEK_END))
     {
       DPRINT1("fseek() to EOF failed (errno %d)\n", errno);
       fclose(File);
@@ -114,10 +114,10 @@ InfHostOpenFile(PHINF InfHandle,
       fclose(File);
       return -1;
     }
-  DPRINT("File size: %lu\n", FileLength);
+  DPRINT("File size: %u\n", (UINT)FileLength);
 
   /* Rewind */
-  if (fseek(File, 0, SEEK_SET))
+  if (fseek(File, (size_t)0, SEEK_SET))
     {
       DPRINT1("fseek() to BOF failed (errno %d)\n", errno);
       fclose(File);
@@ -134,7 +134,7 @@ InfHostOpenFile(PHINF InfHandle,
     }
 
   /* Read file */
-  if (FileLength != fread(FileBuffer, 1, FileLength, File))
+  if (FileLength != fread(FileBuffer, (size_t)1, (size_t)FileLength, File))
     {
       DPRINT1("fread() failed (errno %d)\n", errno);
       fclose(File);

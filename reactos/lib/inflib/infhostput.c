@@ -43,7 +43,7 @@ InfHostWriteFile(HINF InfHandle, const CHAR *FileName,
       fprintf(File, "; %s\r\n\r\n", HeaderComment);
     }
 
-  if (BufferSize != fwrite(Buffer, 1, BufferSize, File))
+  if (BufferSize != fwrite(Buffer, (size_t)1, (size_t)BufferSize, File))
     {
       DPRINT1("fwrite() failed (errno %d)\n", errno);
       fclose(File);
