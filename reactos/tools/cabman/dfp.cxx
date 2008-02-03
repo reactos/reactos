@@ -159,14 +159,14 @@ void CDFParser::WriteInfLine(char* InfLine)
             NULL);                          // No attribute template
         if (InfFileHandle == INVALID_HANDLE_VALUE)
         {
-            DPRINT(MID_TRACE, ("Error creating '%lu'.\n", (ULONG)GetLastError()));
+            DPRINT(MID_TRACE, ("Error creating '%u'.\n", (UINT)GetLastError()));
             return;
         }
 #else /* !WIN32 */
         InfFileHandle = fopen(buf, "wb"); 
         if (InfFileHandle == NULL)
         {
-            DPRINT(MID_TRACE, ("Error creating '%lu'.\n", (ULONG)errno));
+            DPRINT(MID_TRACE, ("Error creating '%i'.\n", errno));
             return;
         }
 #endif
@@ -175,7 +175,7 @@ void CDFParser::WriteInfLine(char* InfLine)
 #if defined(WIN32)
     if (!WriteFile(InfFileHandle, InfLine, (DWORD)strlen(InfLine), (LPDWORD)&BytesWritten, NULL))
     {
-        DPRINT(MID_TRACE, ("ERROR WRITING '%lu'.\n", (ULONG)GetLastError()));
+        DPRINT(MID_TRACE, ("ERROR WRITING '%u'.\n", (UINT)GetLastError()));
         return;
     }
 #else
@@ -189,7 +189,7 @@ void CDFParser::WriteInfLine(char* InfLine)
 #if defined(WIN32)
     if (!WriteFile(InfFileHandle, eolbuf, sizeof(eolbuf), (LPDWORD)&BytesWritten, NULL))
     {
-        DPRINT(MID_TRACE, ("ERROR WRITING '%lu'.\n", (ULONG)GetLastError()));
+        DPRINT(MID_TRACE, ("ERROR WRITING '%u'.\n", (UINT)GetLastError()));
         return;
     }
 #else
@@ -259,7 +259,7 @@ ULONG CDFParser::Load(char* FileName)
 
     FileLoaded = true;
 
-    DPRINT(MAX_TRACE, ("File (%lu bytes)\n", FileBufferSize));
+    DPRINT(MAX_TRACE, ("File (%u bytes)\n", (UINT)FileBufferSize));
 
     return CAB_STATUS_SUCCESS;
 }
@@ -335,7 +335,7 @@ ULONG CDFParser::Parse()
                 switch (CurrentToken)
                 {
                     case TokenInteger:
-                        sprintf(CurrentString, "%lu", CurrentInteger);
+                        sprintf(CurrentString, "%u", (UINT)CurrentInteger);
                     case TokenIdentifier:
                     case TokenString:
                         if (Command)
@@ -345,7 +345,7 @@ ULONG CDFParser::Parse()
 
                             if (Status == CAB_STATUS_FAILURE)
                             {
-                                printf("Directive file contains errors at line %lu.\n", (ULONG)CurrentLine);
+                                printf("Directive file contains errors at line %u.\n", (UINT)CurrentLine);
                                 DPRINT(MID_TRACE, ("Error while executing command.\n"));
                             }
 
@@ -359,7 +359,7 @@ ULONG CDFParser::Parse()
 
                             if (Status != CAB_STATUS_SUCCESS)
                             {
-                                printf("Directive file contains errors at line %lu.\n", (ULONG)CurrentLine);
+                                printf("Directive file contains errors at line %u.\n", (UINT)CurrentLine);
                                 DPRINT(MID_TRACE, ("Error while copying file.\n"));
                             }
 
@@ -380,8 +380,8 @@ ULONG CDFParser::Parse()
                         break;
 
                     default:
-                        printf("Directive file contains errors at line %lu.\n", (ULONG)CurrentLine);
-                        DPRINT(MID_TRACE, ("Token is (%lu).\n", (ULONG)CurrentToken));
+                        printf("Directive file contains errors at line %u.\n", (UINT)CurrentLine);
+                        DPRINT(MID_TRACE, ("Token is (%u).\n", (UINT)CurrentToken));
                         return CAB_STATUS_SUCCESS;
                     }
                     NextToken();
@@ -400,7 +400,7 @@ ULONG CDFParser::Parse()
                 Status = CloseDisk();
             if (Status != CAB_STATUS_SUCCESS)
             {
-                DPRINT(MIN_TRACE, ("Cannot write disk (%lu).\n", (ULONG)Status));
+                DPRINT(MIN_TRACE, ("Cannot write disk (%u).\n", (UINT)Status));
                 return Status;
             }
         }
@@ -410,7 +410,7 @@ ULONG CDFParser::Parse()
             Status = CloseCabinet();
             if (Status != CAB_STATUS_SUCCESS)
             {
-                DPRINT(MIN_TRACE, ("Cannot close cabinet (%lu).\n", (ULONG)Status));
+                DPRINT(MIN_TRACE, ("Cannot close cabinet (%u).\n", (UINT)Status));
                 return Status;
             }
         }
@@ -453,7 +453,7 @@ bool CDFParser::OnDiskLabel(ULONG Number, char* Label)
 
     Number += 1;
 
-    DPRINT(MID_TRACE, ("Giving disk (%lu) a label...\n", (ULONG)Number));
+    DPRINT(MID_TRACE, ("Giving disk (%u) a label...\n", (UINT)Number));
 
     if (GetDiskName(&DiskLabel, Number, Label))
         return true;
@@ -467,7 +467,7 @@ bool CDFParser::OnDiskLabel(ULONG Number, char* Label)
             ch = DiskLabelTemplate[i];
             if (ch == '*')
             {
-                sprintf(Buffer, "%lu", Number);
+                sprintf(Buffer, "%u", (UINT)Number);
                 strcat(Label, Buffer);
                 j += (LONG)strlen(Buffer);
             }
@@ -505,7 +505,7 @@ bool CDFParser::OnCabinetName(ULONG Number, char* Name)
 
     Number += 1;
 
-    DPRINT(MID_TRACE, ("Giving cabinet (%lu) a name...\n", (ULONG)Number));
+    DPRINT(MID_TRACE, ("Giving cabinet (%u) a name...\n", (UINT)Number));
 
     if (GetDiskName(&CabinetName, Number, Buffer))
     {
@@ -523,7 +523,7 @@ bool CDFParser::OnCabinetName(ULONG Number, char* Name)
             ch = CabinetNameTemplate[i];
             if (ch == '*')
             {
-                sprintf(Buffer, "%lu", Number);
+                sprintf(Buffer, "%u", (UINT)Number);
                 strcat(Name, Buffer);
                 j += (LONG)strlen(Buffer);
             }
@@ -685,7 +685,7 @@ bool CDFParser::DoDiskLabel(ULONG Number, char* Label)
  *     false if there was not enough free memory available
  */
 {
-    DPRINT(MID_TRACE, ("Setting label of disk (%lu) to '%s'\n", (ULONG)Number, Label));
+    DPRINT(MID_TRACE, ("Setting label of disk (%u) to '%s'\n", (UINT)Number, Label));
 
     return SetDiskName(&DiskLabel, Number, Label);
 }
@@ -715,7 +715,7 @@ bool CDFParser::DoCabinetName(ULONG Number, char* Name)
  *     false if there was not enough free memory available
  */
 {
-    DPRINT(MID_TRACE, ("Setting name of cabinet (%lu) to '%s'\n", (ULONG)Number, Name));
+    DPRINT(MID_TRACE, ("Setting name of cabinet (%u) to '%s'\n", (UINT)Number, Name));
 
     return SetDiskName(&CabinetName, Number, Name);
 }
@@ -1002,7 +1002,7 @@ ULONG CDFParser::PerformNewCommand()
                     Status = CloseDisk();
                 if (Status != CAB_STATUS_SUCCESS)
                 {
-                    DPRINT(MIN_TRACE, ("Cannot write disk (%lu).\n", (ULONG)Status));
+                    DPRINT(MIN_TRACE, ("Cannot write disk (%u).\n", (UINT)Status));
                     return CAB_STATUS_SUCCESS;
                 }
                 DiskCreated = false;
@@ -1011,7 +1011,7 @@ ULONG CDFParser::PerformNewCommand()
             Status = NewDisk();
             if (Status != CAB_STATUS_SUCCESS)
             {
-                DPRINT(MIN_TRACE, ("Cannot create disk (%lu).\n", (ULONG)Status));
+                DPRINT(MIN_TRACE, ("Cannot create disk (%u).\n", (UINT)Status));
                 return CAB_STATUS_SUCCESS;
             }
             DiskCreated = true;
@@ -1026,7 +1026,7 @@ ULONG CDFParser::PerformNewCommand()
                     Status = CloseDisk();
                 if (Status != CAB_STATUS_SUCCESS)
                 {
-                    DPRINT(MIN_TRACE, ("Cannot write disk (%lu).\n", (ULONG)Status));
+                    DPRINT(MIN_TRACE, ("Cannot write disk (%u).\n", (UINT)Status));
                     return CAB_STATUS_SUCCESS;
                 }
                 DiskCreated = false;
@@ -1035,7 +1035,7 @@ ULONG CDFParser::PerformNewCommand()
             Status = NewCabinet();
             if (Status != CAB_STATUS_SUCCESS)
             {
-                DPRINT(MIN_TRACE, ("Cannot create cabinet (%lu).\n", (ULONG)Status));
+                DPRINT(MIN_TRACE, ("Cannot create cabinet (%u).\n", (UINT)Status));
                 return CAB_STATUS_SUCCESS;
             }
             DiskCreated = true;
@@ -1180,7 +1180,7 @@ ULONG CDFParser::PerformFileCopy()
         Status = NewCabinet();
         if (Status != CAB_STATUS_SUCCESS)
         {
-            DPRINT(MIN_TRACE, ("Cannot create cabinet (%lu).\n", (ULONG)Status));
+            DPRINT(MIN_TRACE, ("Cannot create cabinet (%u).\n", (UINT)Status));
             printf("Cannot create cabinet.\n");
             return CAB_STATUS_FAILURE;
         }
@@ -1191,7 +1191,7 @@ ULONG CDFParser::PerformFileCopy()
         Status = NewDisk();
         if (Status != CAB_STATUS_SUCCESS)
         {
-            DPRINT(MIN_TRACE, ("Cannot create disk (%lu).\n", (ULONG)Status));
+            DPRINT(MIN_TRACE, ("Cannot create disk (%u).\n", (UINT)Status));
             printf("Cannot create disk.\n");
             return CAB_STATUS_FAILURE;
         }
@@ -1231,7 +1231,7 @@ ULONG CDFParser::PerformFileCopy()
             break;
 
         default:
-            printf("Cannot add file: %s (%lu).\n", SrcName, Status);
+            printf("Cannot add file: %s (%u).\n", SrcName, (UINT)Status);
             break;
     }
     return Status;

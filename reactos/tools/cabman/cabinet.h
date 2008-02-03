@@ -66,6 +66,7 @@
 
 extern ULONG DebugTraceLevel;
 
+#undef DPRINT
 #define DPRINT(_t_, _x_) \
     if (((DebugTraceLevel & NORMAL_MASK) >= _t_) || \
         ((DebugTraceLevel & _t_) > NORMAL_MASK)) { \
@@ -73,6 +74,7 @@ extern ULONG DebugTraceLevel;
         printf _x_ ; \
     }
 
+#undef ASSERT
 #define ASSERT(_b_) { \
     if (!(_b_)) { \
         printf("(%s:%d)(%s) ASSERTION: ", __FILE__, __LINE__, __FUNCTION__); \
@@ -83,8 +85,10 @@ extern ULONG DebugTraceLevel;
 
 #else /* DBG */
 
+#undef DPRINT
 #define DPRINT(_t_, _x_)
 
+#undef ASSERT
 #define ASSERT(_x_)
 
 #endif /* DBG */

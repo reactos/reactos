@@ -408,14 +408,14 @@ bool CCABManager::CreateSimpleCabinet()
     Status = NewCabinet();
     if (Status != CAB_STATUS_SUCCESS)
     {
-        DPRINT(MIN_TRACE, ("Cannot create cabinet (%lu).\n", (ULONG)Status));
+        DPRINT(MIN_TRACE, ("Cannot create cabinet (%u).\n", (UINT)Status));
         return false;
     }
 
     Status = AddFile(FileName);
     if (Status != CAB_STATUS_SUCCESS)
     {
-        DPRINT(MIN_TRACE, ("Cannot add file to cabinet (%lu).\n", (ULONG)Status));
+        DPRINT(MIN_TRACE, ("Cannot add file to cabinet (%u).\n", (UINT)Status));
         return false;
     }
 
@@ -424,7 +424,7 @@ bool CCABManager::CreateSimpleCabinet()
         Status = CloseDisk();
     if (Status != CAB_STATUS_SUCCESS)
     {
-        DPRINT(MIN_TRACE, ("Cannot write disk (%lu).\n", (ULONG)Status));
+        DPRINT(MIN_TRACE, ("Cannot write disk (%u).\n", (UINT)Status));
         return false;
     }
 
@@ -457,7 +457,7 @@ bool CCABManager::DisplayCabinet()
                     printf("%s ", Date2Str(Str, Search.File->FileDate));
                     printf("%s ", Time2Str(Str, Search.File->FileTime));
                     printf("%s ", Attr2Str(Str, Search.File->Attributes));
-                    sprintf(Str, "%lu", Search.File->FileSize);
+                    sprintf(Str, "%u", (UINT)Search.File->FileSize);
                     printf("%s ", Pad(Str, ' ', 13));
                     printf("%s\n", Search.FileName);
 
@@ -472,7 +472,7 @@ bool CCABManager::DisplayCabinet()
                 printf("                 1 file    ");
             else
             {
-                sprintf(Str, "%lu", FileCount);
+                sprintf(Str, "%u", (UINT)FileCount);
                 printf("      %s files   ", Pad(Str, ' ', 12));
             }
 
@@ -480,7 +480,7 @@ bool CCABManager::DisplayCabinet()
                 printf("           1 byte\n");
             else
             {
-                sprintf(Str, "%lu", ByteCount);
+                sprintf(Str, "%u", (UINT)ByteCount);
                 printf("%s bytes\n", Pad(Str, ' ', 12));
             }
         }
@@ -531,7 +531,7 @@ bool CCABManager::ExtractFromCabinet()
                         return false;
 
                     default:
-                        printf("Unspecified error code (%lu).\n", (ULONG)Status);
+                        printf("Unspecified error code (%u).\n", (UINT)Status);
                         return false;
                 }
             } while (FindNext(&Search) == CAB_STATUS_SUCCESS);

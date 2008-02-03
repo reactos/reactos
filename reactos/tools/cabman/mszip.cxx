@@ -53,9 +53,9 @@ CMSZipCodec::~CMSZipCodec()
 
 
 ULONG CMSZipCodec::Compress(void* OutputBuffer,
-                               void* InputBuffer,
-                               ULONG InputLength,
-                               PULONG OutputLength)
+                            void* InputBuffer,
+                            ULONG InputLength,
+                            PULONG OutputLength)
 /*
  * FUNCTION: Compresses data in a buffer
  * ARGUMENTS:
@@ -67,7 +67,7 @@ ULONG CMSZipCodec::Compress(void* OutputBuffer,
 {
     PUSHORT Magic;
 
-    DPRINT(MAX_TRACE, ("InputLength (%lu).\n", InputLength));
+    DPRINT(MAX_TRACE, ("InputLength (%u).\n", (UINT)InputLength));
 
     Magic  = (PUSHORT)OutputBuffer;
     *Magic = MSZIP_MAGIC;
@@ -113,9 +113,9 @@ ULONG CMSZipCodec::Compress(void* OutputBuffer,
 
 
 ULONG CMSZipCodec::Uncompress(void* OutputBuffer,
-                                 void* InputBuffer,
-                                 ULONG InputLength,
-                                 PULONG OutputLength)
+                              void* InputBuffer,
+                              ULONG InputLength,
+                              PULONG OutputLength)
 /*
  * FUNCTION: Uncompresses data in a buffer
  * ARGUMENTS:
@@ -127,7 +127,7 @@ ULONG CMSZipCodec::Uncompress(void* OutputBuffer,
 {
     USHORT Magic;
 
-    DPRINT(MAX_TRACE, ("InputLength (%lu).\n", InputLength));
+    DPRINT(MAX_TRACE, ("InputLength (%u).\n", (UINT)InputLength));
 
     Magic = *((PUSHORT)InputBuffer);
 
