@@ -857,6 +857,12 @@ GDIOBJ_LockObj (PGDI_HANDLE_TABLE HandleTable, HGDIOBJ hObj, DWORD ExpectedType)
    /* Check for invalid owner. */
    if (ProcessId != HandleProcessId && HandleProcessId != NULL)
    {
+        DPRINT1("Tried to lock object (0x%p) of wrong owner! ProcessId = %p, HandleProcessId = %p\n", hObj, ProcessId, HandleProcessId);
+#ifdef GDI_DEBUG
+        KeRosDumpStackFrames(NULL, 20);
+//        DPRINT1("Handle allocator:\n");
+//        KeRosDumpStackFrames(GDIHandleAllocator[GDI_HANDLE_GET_INDEX(hObj)], GDI_STACK_LEVELS);
+#endif
       return NULL;
    }
 

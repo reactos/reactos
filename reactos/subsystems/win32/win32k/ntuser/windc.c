@@ -485,7 +485,7 @@ UserGetDCEx(PWINDOW_OBJECT Window OPTIONAL, HANDLE ClipRegion, ULONG Flags)
    else
    {
       Dce = Window->Dce;
-      if (NULL != Dce && Dce->hwndCurrent == (Window ? Window->hSelf : NULL))
+      if (Dce->hwndCurrent == Window->hSelf)
       {
          UpdateVisRgn = FALSE; /* updated automatically, via DCHook() */
       }
@@ -511,7 +511,7 @@ UserGetDCEx(PWINDOW_OBJECT Window OPTIONAL, HANDLE ClipRegion, ULONG Flags)
 
    if (0 == (Flags & (DCX_EXCLUDERGN | DCX_INTERSECTRGN)) && NULL != ClipRegion)
    {
-      if (Flags & DCX_KEEPCLIPRGN)
+      if (!(Flags & DCX_KEEPCLIPRGN))
          NtGdiDeleteObject(ClipRegion);
       ClipRegion = NULL;
    }
@@ -520,7 +520,6 @@ UserGetDCEx(PWINDOW_OBJECT Window OPTIONAL, HANDLE ClipRegion, ULONG Flags)
    if (NULL != Dce->hClipRgn)
    {
       DceDeleteClipRgn(Dce);
-      Dce->hClipRgn = NULL;
    }
 #endif
 
@@ -541,6 +540,7 @@ UserGetDCEx(PWINDOW_OBJECT Window OPTIONAL, HANDLE ClipRegion, ULONG Flags)
       {
          Dce->hClipRgn = UnsafeIntCreateRectRgnIndirect(&Window->Wnd->WindowRect);
       }
+      Dce->DCXFlags &= ~DCX_KEEPCLIPRGN;
    }
    else if (ClipRegion != NULL)
    {
@@ -715,8 +715,8 @@ DceResetActiveDCEs(PWINDOW_OBJECT Window)
             }
          }
 
-         dc = DC_LockDc(pDCE->hDC);
-         if (dc == NULL)
+         if (!GDIOBJ_ValidateHandle(pDCE->hDC, GDI_OBJECT_TYPE_DC) ||
+             (dc = DC_LockDc(pDCE->hDC)) == NULL)
          {
             pDCE = (PDCE) pDCE->List.Flink;
             continue;
