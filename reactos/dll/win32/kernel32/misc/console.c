@@ -19,14 +19,6 @@
 #define NDEBUG
 #include <debug.h>
 
-typedef struct tagALIAS
-{
-	struct tagALIAS *next;
-	LPWSTR lpName;
-	LPWSTR lpSubst;
-	DWORD  dwUsed;
-} ALIAS, *LPALIAS;
-
 extern BOOL WINAPI DefaultConsoleCtrlHandler(DWORD Event);
 extern __declspec(noreturn) VOID CALLBACK ConsoleControlDispatcher(DWORD CodeAndFlag);
 extern RTL_CRITICAL_SECTION ConsoleLock;
@@ -187,11 +179,11 @@ AddConsoleAliasA (LPCSTR lpSource,
 BOOL STDCALL
 AddConsoleAliasW (LPCWSTR lpSource,
 		  LPCWSTR lpTarget,
-		  LPCWSTR lpExeName /* FIXME: currently ignored */)
+		  LPCWSTR lpExeName)
 {
   CSR_API_MESSAGE Request; 
   ULONG CsrRequest;
-  NTSTATUS          Status;
+  NTSTATUS Status;
 
   CsrRequest = MAKE_CSR_API(ADD_CONSOLE_ALIAS, CSR_NATIVE);
 
@@ -308,7 +300,7 @@ GetConsoleAliasW (LPWSTR	lpSource,
 {
   CSR_API_MESSAGE Request; 
   ULONG CsrRequest;
-  NTSTATUS          Status;
+  NTSTATUS Status;
 
   CsrRequest = MAKE_CSR_API(GET_CONSOLE_ALIAS, CSR_NATIVE);
 
@@ -325,7 +317,7 @@ GetConsoleAliasW (LPWSTR	lpSource,
   if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Request.Status))
   {
     SetLastErrorByStatus(Status);
-    return FALSE;
+    return 0;
   }
 
   return Request.Data.GetConsoleAlias.BytesWritten / sizeof(WCHAR);
@@ -376,12 +368,12 @@ GetConsoleAliasA (LPSTR	lpSource,
  * @implemented
  */
 DWORD STDCALL
-GetConsoleAliasExesW (LPWSTR	lpExeNameBuffer,
+GetConsoleAliasExesW (LPWSTR lpExeNameBuffer,
 		      DWORD	ExeNameBufferLength)
 {
   CSR_API_MESSAGE Request; 
   ULONG CsrRequest;
-  NTSTATUS          Status;
+  NTSTATUS Status;
 
   CsrRequest = MAKE_CSR_API(GET_CONSOLE_ALIASES_EXES, CSR_NATIVE);
   Request.Data.GetConsoleAliasesExes.ExeNames = lpExeNameBuffer;
@@ -395,7 +387,7 @@ GetConsoleAliasExesW (LPWSTR	lpExeNameBuffer,
   if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Request.Status))
   {
     SetLastErrorByStatus(Status);
-    return FALSE;
+    return 0;
   }
 
   return Request.Data.GetConsoleAliasesExes.BytesWritten / sizeof(WCHAR);
@@ -445,7 +437,7 @@ GetConsoleAliasExesLengthW (VOID)
   if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Request.Status))
   {
     SetLastErrorByStatus(Status);
-    return FALSE;
+    return 0;
   }
 
   return Request.Data.GetConsoleAliasesExesLength.Length;
@@ -478,12 +470,12 @@ GetConsoleAliasesW (LPWSTR AliasBuffer,
 {
   CSR_API_MESSAGE Request; 
   ULONG CsrRequest;
-  NTSTATUS          Status;
+  NTSTATUS Status;
   DWORD dwLength;
 
   dwLength = GetConsoleAliasesLengthW(ExeName);
   if (!dwLength || dwLength > AliasBufferLength)
-      return FALSE;
+      return 0;
 
   CsrRequest = MAKE_CSR_API(GET_ALL_CONSOLE_ALIASES, CSR_NATIVE);
   Request.Data.GetAllConsoleAlias.AliasBuffer = AliasBuffer;
@@ -498,7 +490,7 @@ GetConsoleAliasesW (LPWSTR AliasBuffer,
   if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Request.Status))
   {
     SetLastErrorByStatus(Status);
-    return FALSE;
+    return 0;
   }
 
   return Request.Data.GetAllConsoleAlias.BytesWritten / sizeof(WCHAR);
@@ -557,7 +549,7 @@ GetConsoleAliasesLengthW (LPWSTR lpExeName)
   if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Request.Status))
   {
     SetLastErrorByStatus(Status);
-    return FALSE;
+    return 0;
   }
 
   return Request.Data.GetAllConsoleAliasesLength.Length;
