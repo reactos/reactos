@@ -149,6 +149,14 @@ CSR_API(CsrSetShutdownParameters);
 CSR_API(CsrSetLogonNotifyWindow);
 CSR_API(CsrRegisterLogonProcess);
 
+CSR_API(CsrAddConsoleAlias);
+CSR_API(CsrGetConsoleAlias);
+CSR_API(CsrGetAllConsoleAliases);
+CSR_API(CsrGetAllConsoleAliasesLength);
+CSR_API(CsrGetConsoleAliasesExes);
+CSR_API(CsrGetConsoleAliasesExesLength);
+
+
 #endif /* ndef API_H_INCLUDED */
 
 /* EOF */
