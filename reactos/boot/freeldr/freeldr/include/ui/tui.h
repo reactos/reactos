@@ -46,7 +46,7 @@ VOID	TuiMessageBoxCritical(PCSTR MessageText);				// Displays a message box on t
 VOID	TuiDrawProgressBarCenter(ULONG Position, ULONG Range, PCHAR ProgressText);			// Draws the progress bar showing nPos percent filled
 VOID	TuiDrawProgressBar(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, ULONG Position, ULONG Range, PCHAR ProgressText);			// Draws the progress bar showing nPos percent filled
 BOOLEAN	TuiEditBox(PCSTR MessageText, PCHAR EditTextBuffer, ULONG Length);
-
+int	TuiPrintf(const char *format, ... );
 UCHAR	TuiTextToColor(PCSTR ColorText);						// Converts the text color into it's equivalent color value
 UCHAR	TuiTextToFillStyle(PCSTR FillStyleText);				// Converts the text fill into it's equivalent fill value
 

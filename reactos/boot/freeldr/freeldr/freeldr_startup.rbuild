@@ -3,8 +3,6 @@
 <module name="freeldr_startup" type="objectlibrary">
 	<include base="freeldr_startup">include</include>
 	<include base="ntoskrnl">include</include>
-	<compilerflag>-ffreestanding</compilerflag>
-	<compilerflag>-fno-builtin</compilerflag>
 	<compilerflag>-fno-inline</compilerflag>
 	<compilerflag>-fno-zero-initialized-in-bss</compilerflag>
 	<directory name="arch">

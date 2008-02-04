@@ -91,7 +91,7 @@ VOID OptionMenuCustomBootDisk(VOID)
 
 	// Generate a unique section name
 	MachRTCGetCurrentDateTime(&Year, &Month, &Day, &Hour, &Minute, &Second);
-	sprintf(SectionName, "CustomBootDisk%d%d%d%d%d%d", Year, Day, Month, Hour, Minute, Second);
+	sprintf(SectionName, "CustomBootDisk%ld%ld%ld%ld%ld%ld", Year, Day, Month, Hour, Minute, Second);
 
 	// Add the section
 	if (!IniAddSection(SectionName, &SectionId))
@@ -140,7 +140,7 @@ VOID OptionMenuCustomBootPartition(VOID)
 
 	// Generate a unique section name
 	MachRTCGetCurrentDateTime(&Year, &Month, &Day, &Hour, &Minute, &Second);
-	sprintf(SectionName, "CustomBootPartition%d%d%d%d%d%d", Year, Day, Month, Hour, Minute, Second);
+	sprintf(SectionName, "CustomBootPartition%ld%ld%ld%ld%ld%ld", Year, Day, Month, Hour, Minute, Second);
 
 	// Add the section
 	if (!IniAddSection(SectionName, &SectionId))
@@ -202,7 +202,7 @@ VOID OptionMenuCustomBootBootSectorFile(VOID)
 
 	// Generate a unique section name
 	MachRTCGetCurrentDateTime(&Year, &Month, &Day, &Hour, &Minute, &Second);
-	sprintf(SectionName, "CustomBootSectorFile%d%d%d%d%d%d", Year, Day, Month, Hour, Minute, Second);
+	sprintf(SectionName, "CustomBootSectorFile%ld%ld%ld%ld%ld%ld", Year, Day, Month, Hour, Minute, Second);
 
 	// Add the section
 	if (!IniAddSection(SectionName, &SectionId))
@@ -278,7 +278,7 @@ VOID OptionMenuCustomBootReactOS(VOID)
 
 	// Generate a unique section name
 	MachRTCGetCurrentDateTime(&Year, &Month, &Day, &Hour, &Minute, &Second);
-	sprintf(SectionName, "CustomReactOS%d%d%d%d%d%d", Year, Day, Month, Hour, Minute, Second);
+	sprintf(SectionName, "CustomReactOS%ld%ld%ld%ld%ld%ld", Year, Day, Month, Hour, Minute, Second);
 
 	// Add the section
 	if (!IniAddSection(SectionName, &SectionId))
@@ -357,7 +357,7 @@ VOID OptionMenuCustomBootLinux(VOID)
 
 	// Generate a unique section name
 	MachRTCGetCurrentDateTime(&Year, &Month, &Day, &Hour, &Minute, &Second);
-	sprintf(SectionName, "CustomLinux%d%d%d%d%d%d", Year, Day, Month, Hour, Minute, Second);
+	sprintf(SectionName, "CustomLinux%ld%ld%ld%ld%ld%ld", Year, Day, Month, Hour, Minute, Second);
 
 	// Add the section
 	if (!IniAddSection(SectionName, &SectionId))

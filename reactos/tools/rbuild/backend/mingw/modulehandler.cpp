@@ -3547,11 +3547,11 @@ MingwBootLoaderModuleHandler::GenerateBootLoaderModuleTarget ()
 	fprintf ( fMakefile, "\t$(ECHO_LD)\n" );
 
 	fprintf ( fMakefile,
-	          "\t${ld} %s -N -Ttext=0x8000 -o %s %s %s\n",
-	          GetLinkerMacro ().c_str (),
+	          "\t${gcc} -Wl,--subsystem,native -Wl,-Ttext,0x8000 -o %s %s %s %s\n",
 	          backend->GetFullName ( junk_tmp ).c_str (),
 	          objectsMacro.c_str (),
-	          linkDepsMacro.c_str () );
+	          linkDepsMacro.c_str (),
+	          GetLinkerMacro ().c_str ());
 	fprintf ( fMakefile,
 	          "\t${objcopy} -O binary %s $@\n",
 	          backend->GetFullName ( junk_tmp ).c_str () );

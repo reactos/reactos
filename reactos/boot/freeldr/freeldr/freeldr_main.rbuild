@@ -4,11 +4,8 @@
 	<include base="freeldr_main">include</include>
 	<include base="ntoskrnl">include</include>
 	<define name="_NTHAL_" />
-	<compilerflag>-ffreestanding</compilerflag>
-	<compilerflag>-fno-builtin</compilerflag>
 	<compilerflag>-fno-inline</compilerflag>
 	<compilerflag>-fno-zero-initialized-in-bss</compilerflag>
-	<compilerflag>-Os</compilerflag>
 	<file>bootmgr.c</file>
 	<file>drivemap.c</file>
 	<file>miscboot.c</file>

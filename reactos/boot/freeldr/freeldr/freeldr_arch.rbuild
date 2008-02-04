@@ -8,11 +8,8 @@
 				<include base="freeldr_base">cache</include>
 				<include base="ntoskrnl">include</include>
 				<define name="_NTHAL_" />
-				<compilerflag>-ffreestanding</compilerflag>
-				<compilerflag>-fno-builtin</compilerflag>
 				<compilerflag>-fno-inline</compilerflag>
 				<compilerflag>-fno-zero-initialized-in-bss</compilerflag>
-				<compilerflag>-Os</compilerflag>
 				<file>_alloca.S</file>
 				<file>archmach.c</file>
 				<file>hardware.c</file>

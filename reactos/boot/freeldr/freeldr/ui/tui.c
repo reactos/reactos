@@ -25,7 +25,7 @@ PVOID	TextVideoBuffer = NULL;
  * printf() - prints formatted text to stdout
  * originally from GRUB
  */
-int printf(const char *format, ... )
+int TuiPrintf(const char *format, ... )
 {
 	va_list ap;
 	va_start(ap,format);

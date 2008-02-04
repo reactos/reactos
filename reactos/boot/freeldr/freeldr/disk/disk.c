@@ -41,7 +41,7 @@ VOID DiskError(PCSTR ErrorString, ULONG ErrorCode)
 	if (bReportError == FALSE)
 		return;
 
-	sprintf(ErrorCodeString, "%s\n\nError Code: 0x%x\nError: %s", ErrorString, ErrorCode, DiskGetErrorCodeString(ErrorCode));
+	sprintf(ErrorCodeString, "%s\n\nError Code: 0x%lx\nError: %s", ErrorString, ErrorCode, DiskGetErrorCodeString(ErrorCode));
 
 	DbgPrint((DPRINT_DISK, "%s\n", ErrorCodeString));
 

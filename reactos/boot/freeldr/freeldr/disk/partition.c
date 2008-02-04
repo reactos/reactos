@@ -230,7 +230,7 @@ BOOLEAN DiskReadBootRecord(ULONG DriveNumber, ULONGLONG LogicalSectorNumber, PMA
 	// Check the partition table magic value
 	if (BootRecord->MasterBootRecordMagic != 0xaa55)
 	{
-		sprintf(ErrMsg, "Invalid partition table magic 0x%x found on drive 0x%x",
+		sprintf(ErrMsg, "Invalid partition table magic 0x%x found on drive 0x%lx",
 		        BootRecord->MasterBootRecordMagic, DriveNumber);
 		DiskError(ErrMsg, 0);
 		return FALSE;

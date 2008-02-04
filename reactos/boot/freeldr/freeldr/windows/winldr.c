@@ -259,7 +259,7 @@ WinLdrLoadDeviceDriver(PLOADER_PARAMETER_BLOCK LoaderBlock,
 	PVOID DriverBase;
 
 	// Separate the path to file name and directory path
-	sprintf(DriverPath, "%wZ", FilePath);
+	sprintf(DriverPath, "%S", FilePath->Buffer);
 	DriverNamePos = strrchr(DriverPath, '\\');
 	if (DriverNamePos != NULL)
 	{
@@ -282,7 +282,7 @@ WinLdrLoadDeviceDriver(PLOADER_PARAMETER_BLOCK LoaderBlock,
 	}
 
 	// It's not loaded, we have to load it
-	sprintf(FullPath,"%s%wZ", BootPath, FilePath);
+	sprintf(FullPath,"%s%S", BootPath, FilePath->Buffer);
 	Status = WinLdrLoadImage(FullPath, LoaderBootDriver, &DriverBase);
 	if (!Status)
 		return FALSE;
@@ -585,4 +585,5 @@ WinLdrpDumpArcDisks(PLOADER_PARAMETER_BLOCK LoaderBlock)
 		NextBd = ArcDisk->ListEntry.Flink;
 	}
 }
+
 

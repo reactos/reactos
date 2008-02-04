@@ -579,7 +579,7 @@ DetectBiosFloppyPeripheral(PCONFIGURATION_COMPONENT_DATA ControllerKey)
     MmHeapFree(PartialResourceList);
 
     /* Set 'Identifier' value */
-    sprintf(Identifier, "FLOPPY%u", FloppyNumber + 1);
+    sprintf(Identifier, "FLOPPY%ld", FloppyNumber + 1);
     FldrSetIdentifier(PeripheralKey, Identifier);
   }
 }
@@ -1218,7 +1218,7 @@ DetectSerialPorts(PCONFIGURATION_COMPONENT_DATA BusKey)
       MmHeapFree(PartialResourceList);
 
       /* Set 'Identifier' value */
-      sprintf(Buffer, "COM%u", i + 1);
+      sprintf(Buffer, "COM%ld", i + 1);
       FldrSetIdentifier(ControllerKey, Buffer);
       DbgPrint((DPRINT_HWDETECT,
 		"Created value: Identifier %s\n",
@@ -1323,7 +1323,7 @@ DetectParallelPorts(PCONFIGURATION_COMPONENT_DATA BusKey)
       MmHeapFree(PartialResourceList);
 
       /* Set 'Identifier' value */
-      sprintf(Buffer, "PARALLEL%u", i + 1);
+      sprintf(Buffer, "PARALLEL%ld", i + 1);
       FldrSetIdentifier(ControllerKey, Buffer);
       DbgPrint((DPRINT_HWDETECT,
 		"Created value: Identifier %s\n",
