@@ -961,7 +961,7 @@ IntGdiDeleteDC(HDC hDC, BOOL Force)
     DC_SetNextDC (DCToDelete, DC_GetNextDC (savedDC));
     DCToDelete->saveLevel--;
     DC_UnlockDc( savedDC );
-    NtGdiDeleteObjectApp (savedHDC);
+    IntGdiDeleteDC(savedHDC, Force);
   }
 
   /*  Free GDI resources allocated to this DC  */
@@ -2475,7 +2475,7 @@ DC_AllocateDcAttr(HDC hDC)
   {
     INT Index = GDI_HANDLE_GET_INDEX((HGDIOBJ)hDC);
     PGDI_TABLE_ENTRY Entry = &GdiHandleTable->Entries[Index];
-
+    // FIXME: dc could have been deleted!!! use GDIOBJ_InsertUserData
     if (NT_SUCCESS(Status))
     {
       RtlZeroMemory(NewMem, MemSize);
