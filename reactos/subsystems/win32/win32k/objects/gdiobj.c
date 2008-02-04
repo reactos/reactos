@@ -28,12 +28,11 @@
 #include <debug.h>
 
 /* FIXME include right header for KeRosDumpStackFrames */
-VOID
-NTAPI
-KeRosDumpStackFrames(
-    PULONG Frame,
-    ULONG FrameCount
-);
+VOID NTAPI KeRosDumpStackFrames(PULONG, ULONG);
+
+#ifdef GDI_DEBUG
+BOOLEAN STDCALL KiRosPrintAddress(PVOID Address);
+#endif
 
 #define GDI_ENTRY_TO_INDEX(ht, e)                                              \
   (((ULONG_PTR)(e) - (ULONG_PTR)&((ht)->Entries[0])) / sizeof(GDI_TABLE_ENTRY))
@@ -108,11 +107,6 @@ static LARGE_INTEGER ShortDelay;
 #define DelayExecution() \
   DPRINT("%s:%i: Delay\n", __FILE__, __LINE__); \
   KeDelayExecutionThread(KernelMode, FALSE, &ShortDelay)
-
-#ifdef GDI_DEBUG
-BOOLEAN STDCALL KiRosPrintAddress(PVOID Address);
-VOID STDCALL KeRosDumpStackFrames(PULONG Frame, ULONG FrameCount);
-#endif
 
 /*!
  * Allocate GDI object table.
@@ -207,6 +201,7 @@ GetObjectSize(ULONG TypeIndex)
 static int leak_reported = 0;
 #define GDI_STACK_LEVELS 12
 static ULONG GDIHandleAllocator[GDI_HANDLE_COUNT][GDI_STACK_LEVELS];
+static ULONG GDIHandleLocker[GDI_HANDLE_COUNT][GDI_STACK_LEVELS];
 struct DbgOpenGDIHandle
 {
 	ULONG idx;
@@ -383,6 +378,23 @@ InterlockedPushFreeEntry(PGDI_HANDLE_TABLE HandleTable, ULONG idxToFree)
 }
 
 
+BOOL
+INTERNAL_CALL
+GDIOBJ_ValidateHandle(HGDIOBJ hObj, ULONG ObjectType)
+{
+  PGDI_TABLE_ENTRY Entry = GDI_HANDLE_GET_ENTRY(GdiHandleTable, hObj);
+  if((((ULONG_PTR)hObj & GDI_HANDLE_TYPE_MASK) == ObjectType) &&
+     (Entry->Type << GDI_ENTRY_UPPER_SHIFT) == GDI_HANDLE_GET_UPPER(hObj))
+  {
+    HANDLE pid = (HANDLE)((ULONG_PTR)Entry->ProcessId & ~0x1);
+    if(pid == NULL || pid == PsGetCurrentProcessId())
+    {
+      return TRUE;
+    }
+  }
+  return FALSE;
+}
+
 /*!
  * Allocate memory for GDI object and return handle to it.
  *
@@ -394,11 +406,7 @@ InterlockedPushFreeEntry(PGDI_HANDLE_TABLE HandleTable, ULONG idxToFree)
  * \todo return the object pointer and lock it by default.
 */
 HGDIOBJ INTERNAL_CALL
-#ifdef GDI_DEBUG
-GDIOBJ_AllocObjDbg(PGDI_HANDLE_TABLE HandleTable, const char* file, int line, ULONG ObjectType)
-#else /* !GDI_DEBUG */
 GDIOBJ_AllocObj(PGDI_HANDLE_TABLE HandleTable, ULONG ObjectType)
-#endif /* GDI_DEBUG */
 {
   PW32PROCESS W32Process;
   PGDIOBJHDR  newObject = NULL;
@@ -445,13 +453,6 @@ GDIOBJ_AllocObj(PGDI_HANDLE_TABLE HandleTable, ULONG ObjectType)
     newObject->LockingThread = NULL;
     newObject->Locks = 0;
 
-#ifdef GDI_DEBUG
-    newObject->createdfile = file;
-    newObject->createdline = line;
-    newObject->lockfile = NULL;
-    newObject->lockline = 0;
-#endif
-
     ObjectBody = GDIHdrToBdy(newObject);
 
     RtlZeroMemory(ObjectBody, GetObjectSize(TypeIndex));
@@ -487,8 +488,8 @@ LockHandle:
         (void)InterlockedExchangePointer(&Entry->ProcessId, CurrentProcessId);
 
 #ifdef GDI_DEBUG
-        memset ( GDIHandleAllocator[Index], 0xcd, GDI_STACK_LEVELS * sizeof(ULONG) );
-        RtlCaptureStackBackTrace(2, GDI_STACK_LEVELS, (PVOID*)GDIHandleAllocator[Index], NULL);
+        memset ( GDIHandleAllocator[Index], 0x00, GDI_STACK_LEVELS * sizeof(ULONG) );
+        RtlCaptureStackBackTrace(1, GDI_STACK_LEVELS, (PVOID*)GDIHandleAllocator[Index], NULL);
 #endif /* GDI_DEBUG */
 
         if(W32Process != NULL)
@@ -548,11 +549,7 @@ LockHandle:
  * to the calling process.
 */
 BOOL INTERNAL_CALL
-#ifdef GDI_DEBUG
-GDIOBJ_FreeObjDbg(PGDI_HANDLE_TABLE HandleTable, const char* file, int line, HGDIOBJ hObj, DWORD ExpectedType)
-#else /* !GDI_DEBUG */
 GDIOBJ_FreeObj(PGDI_HANDLE_TABLE HandleTable, HGDIOBJ hObj, DWORD ExpectedType)
-#endif /* GDI_DEBUG */
 {
   PGDI_TABLE_ENTRY Entry;
   PPAGED_LOOKASIDE_LIST LookasideList;
@@ -569,7 +566,8 @@ GDIOBJ_FreeObj(PGDI_HANDLE_TABLE HandleTable, HGDIOBJ hObj, DWORD ExpectedType)
   {
     DPRINT1("GDIOBJ_FreeObj() failed, can't delete stock object handle: 0x%x !!!\n", hObj);
 #ifdef GDI_DEBUG
-    DPRINT1("-> called from %s:%i\n", file, line);
+    DPRINT1("-> called from:\n");
+    KeRosDumpStackFrames(NULL, 20);
 #endif
     return FALSE;
   }
@@ -655,7 +653,8 @@ LockHandle:
          */
         DPRINT1("GdiHdr->Locks: %d\n", GdiHdr->Locks);
 #ifdef GDI_DEBUG
-        DPRINT1("Locked from: %s:%d\n", GdiHdr->lockfile, GdiHdr->lockline);
+//        DPRINT1("Locked from:\n");
+//        KeRosDumpStackFrames(GDIHandleLocker[GDI_HANDLE_GET_INDEX(hObj)], GDI_STACK_LEVELS);
 #endif
         ASSERT(FALSE);
       }
@@ -688,15 +687,16 @@ LockHandle:
       {
         DPRINT1("Attempted to free global gdi handle 0x%x, caller needs to get ownership first!!!\n", hObj);
         DPRINT1("Type = 0x%lx, KernelData = 0x%p, ProcessId = 0x%p\n", Entry->Type, Entry->KernelData, Entry->ProcessId);
-        KeRosDumpStackFrames(NULL, 20);
       }
       else
       {
         DPRINT1("Attempted to free foreign handle: 0x%x Owner: 0x%x from Caller: 0x%x\n", hObj, (ULONG_PTR)PrevProcId & ~0x1, (ULONG_PTR)ProcessId & ~0x1);
-      KeRosDumpStackFrames(NULL, 20);
       }
 #ifdef GDI_DEBUG
-      DPRINT1("-> called from %s:%i\n", file, line);
+      DPRINT1("-> called from:\n");
+      KeRosDumpStackFrames(NULL, 20);
+//      DPRINT1("Allocated from:\n");
+//      KeRosDumpStackFrames(GDIHandleAllocator[GDI_HANDLE_GET_INDEX(hObj)], GDI_STACK_LEVELS);
 #endif
     }
   }
@@ -818,11 +818,7 @@ GDI_CleanupForProcess (PGDI_HANDLE_TABLE HandleTable, struct _EPROCESS *Process)
  * \todo Get rid of the ExpectedType parameter!
 */
 PGDIOBJ INTERNAL_CALL
-#ifdef GDI_DEBUG
-GDIOBJ_LockObjDbg (PGDI_HANDLE_TABLE HandleTable, const char* file, int line, HGDIOBJ hObj, DWORD ExpectedType)
-#else /* !GDI_DEBUG */
 GDIOBJ_LockObj (PGDI_HANDLE_TABLE HandleTable, HGDIOBJ hObj, DWORD ExpectedType)
-#endif /* GDI_DEBUG */
 {
    ULONG HandleIndex;
    PGDI_TABLE_ENTRY Entry;
@@ -847,6 +843,11 @@ GDIOBJ_LockObj (PGDI_HANDLE_TABLE HandleTable, HGDIOBJ hObj, DWORD ExpectedType)
    {
       DPRINT1("Attempted to lock object 0x%x of wrong type (Handle: 0x%x, requested: 0x%x)\n",
               hObj, HandleType, ExpectedType);
+#ifdef GDI_DEBUG
+        KeRosDumpStackFrames(NULL, 20);
+//        DPRINT1("Allocated from:\n");
+//        KeRosDumpStackFrames(GDIHandleAllocator[GDI_HANDLE_GET_INDEX(hObj)], GDI_STACK_LEVELS);
+#endif
       return NULL;
    }
 
@@ -898,8 +899,8 @@ GDIOBJ_LockObj (PGDI_HANDLE_TABLE HandleTable, HGDIOBJ hObj, DWORD ExpectedType)
                GdiHdr->LockingThread = Thread;
                GdiHdr->Locks = 1;
 #ifdef GDI_DEBUG
-               GdiHdr->lockfile = file;
-               GdiHdr->lockline = line;
+               memset(GDIHandleLocker[GDI_HANDLE_GET_INDEX(hObj)], 0x00, GDI_STACK_LEVELS * sizeof(ULONG));
+               RtlCaptureStackBackTrace(1, GDI_STACK_LEVELS, (PVOID*)GDIHandleLocker[GDI_HANDLE_GET_INDEX(hObj)], NULL);
 #endif
                Object = Entry->KernelData;
             }
@@ -928,7 +929,8 @@ GDIOBJ_LockObj (PGDI_HANDLE_TABLE HandleTable, HGDIOBJ hObj, DWORD ExpectedType)
             LockErrorDebugOutput(hObj, Entry, "GDIOBJ_LockObj");
 
 #ifdef GDI_DEBUG
-            DPRINT1("-> called from %s:%i\n", file, line);
+            DPRINT1("-> called from:\n");
+            KeRosDumpStackFrames(NULL, 20);
 #endif
          }
 
@@ -966,11 +968,7 @@ GDIOBJ_LockObj (PGDI_HANDLE_TABLE HandleTable, HGDIOBJ hObj, DWORD ExpectedType)
  * \todo Get rid of the ExpectedType parameter!
 */
 PGDIOBJ INTERNAL_CALL
-#ifdef GDI_DEBUG
-GDIOBJ_ShareLockObjDbg (PGDI_HANDLE_TABLE HandleTable, const char* file, int line, HGDIOBJ hObj, DWORD ExpectedType)
-#else /* !GDI_DEBUG */
 GDIOBJ_ShareLockObj (PGDI_HANDLE_TABLE HandleTable, HGDIOBJ hObj, DWORD ExpectedType)
-#endif /* GDI_DEBUG */
 {
    ULONG HandleIndex;
    PGDI_TABLE_ENTRY Entry;
@@ -1043,8 +1041,8 @@ GDIOBJ_ShareLockObj (PGDI_HANDLE_TABLE HandleTable, HGDIOBJ hObj, DWORD Expected
 #ifdef GDI_DEBUG
             if (InterlockedIncrement((PLONG)&GdiHdr->Locks) == 1)
             {
-               GdiHdr->lockfile = file;
-               GdiHdr->lockline = line;
+                 memset(GDIHandleLocker[HandleIndex], 0x00, GDI_STACK_LEVELS * sizeof(ULONG));
+                 RtlCaptureStackBackTrace(1, GDI_STACK_LEVELS, (PVOID*)GDIHandleLocker[HandleIndex], NULL);
             }
 #else
             InterlockedIncrement((PLONG)&GdiHdr->Locks);
@@ -1060,7 +1058,8 @@ GDIOBJ_ShareLockObj (PGDI_HANDLE_TABLE HandleTable, HGDIOBJ hObj, DWORD Expected
             LockErrorDebugOutput(hObj, Entry, "GDIOBJ_ShareLockObj");
 
 #ifdef GDI_DEBUG
-            DPRINT1("-> called from %s:%i\n", file, line);
+            DPRINT1("-> called from:\n");
+            KeRosDumpStackFrames(NULL, 20);
 #endif
          }
 
@@ -1099,8 +1098,8 @@ GDIOBJ_UnlockObjByPtr(PGDI_HANDLE_TABLE HandleTable, PGDIOBJ Object)
 #ifdef GDI_DEBUG
    if (InterlockedDecrement((PLONG)&GdiHdr->Locks) == 0)
    {
-      GdiHdr->lockfile = NULL;
-      GdiHdr->lockline = 0;
+        memset(GDIHandleLocker[GDI_HANDLE_GET_INDEX(Object)], 0x00, GDI_STACK_LEVELS * sizeof(ULONG));
+        RtlCaptureStackBackTrace(1, GDI_STACK_LEVELS, (PVOID*)GDIHandleLocker[GDI_HANDLE_GET_INDEX(Object)], NULL);
    }
 #else
    if (InterlockedDecrement((PLONG)&GdiHdr->Locks) < 0)
@@ -1234,7 +1233,7 @@ LockHandle:
           {
             if(GdiHdr->lockfile != NULL)
             {
-              DPRINT1("[%d]Locked %s:%i by 0x%x (we're 0x%x)\n", Attempts, GdiHdr->lockfile, GdiHdr->lockline, PrevThread, Thread);
+              DPRINT1("[%d]Locked by 0x%x (we're 0x%x)\n", Attempts, PrevThread, Thread);
             }
           }
 #endif
@@ -1356,10 +1355,7 @@ LockHandle:
 #ifdef GDI_DEBUG
           if(++Attempts > 20)
           {
-            if(GdiHdr->lockfile != NULL)
-            {
-              DPRINT1("[%d]Locked from %s:%i by 0x%x (we're 0x%x)\n", Attempts, GdiHdr->lockfile, GdiHdr->lockline, PrevThread, Thread);
-            }
+            DPRINT1("[%d]Locked by 0x%x (we're 0x%x)\n", Attempts, PrevThread, Thread);
           }
 #endif
           /* WTF?! The object is already locked by a different thread!
@@ -1475,10 +1471,7 @@ LockHandleFrom:
 #ifdef GDI_DEBUG
           if(++Attempts > 20)
           {
-            if(GdiHdr->lockfile != NULL)
-            {
-              DPRINT1("[%d]Locked from %s:%i by 0x%x (we're 0x%x)\n", Attempts, GdiHdr->lockfile, GdiHdr->lockline, PrevThread, Thread);
-            }
+            DPRINT1("[%d]Locked by 0x%x (we're 0x%x)\n", Attempts, PrevThread, Thread);
           }
 #endif
           /* WTF?! The object is already locked by a different thread!

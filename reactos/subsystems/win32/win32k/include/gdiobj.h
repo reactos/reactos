@@ -72,27 +72,11 @@ VOID    INTERNAL_CALL GDIOBJ_UnlockObjByPtr(PGDI_HANDLE_TABLE HandleTable, PGDIO
 #define GDIOBJ_GetObjectType(Handle) \
   GDI_HANDLE_GET_TYPE(Handle)
 
-#ifdef GDI_DEBUG
-
-/* a couple macros for debugging GDIOBJ locking */
-#define GDIOBJ_AllocObj(ht,ty) GDIOBJ_AllocObjDbg(ht,__FILE__,__LINE__,ty)
-#define GDIOBJ_FreeObj(ht,obj,ty) GDIOBJ_FreeObjDbg(ht,__FILE__,__LINE__,obj,ty)
-#define GDIOBJ_LockObj(ht,obj,ty) GDIOBJ_LockObjDbg(ht,__FILE__,__LINE__,obj,ty)
-#define GDIOBJ_ShareLockObj(ht,obj,ty) GDIOBJ_ShareLockObjDbg(ht,__FILE__,__LINE__,obj,ty)
-
-HGDIOBJ INTERNAL_CALL GDIOBJ_AllocObjDbg(PGDI_HANDLE_TABLE HandleTable, const char* file, int line, ULONG ObjectType);
-BOOL    INTERNAL_CALL GDIOBJ_FreeObjDbg (PGDI_HANDLE_TABLE HandleTable, const char* file, int line, HGDIOBJ hObj, DWORD ObjectType);
-PGDIOBJ INTERNAL_CALL GDIOBJ_LockObjDbg (PGDI_HANDLE_TABLE HandleTable, const char* file, int line, HGDIOBJ hObj, DWORD ObjectType);
-PGDIOBJ INTERNAL_CALL GDIOBJ_ShareLockObjDbg (PGDI_HANDLE_TABLE HandleTable, const char* file, int line, HGDIOBJ hObj, DWORD ObjectType);
-
-#else /* !GDI_DEBUG */
-
+BOOL    INTERNAL_CALL GDIOBJ_ValidateHandle(HGDIOBJ hObj, ULONG ObjectType);
 HGDIOBJ INTERNAL_CALL GDIOBJ_AllocObj(PGDI_HANDLE_TABLE HandleTable, ULONG ObjectType);
 BOOL    INTERNAL_CALL GDIOBJ_FreeObj (PGDI_HANDLE_TABLE HandleTable, HGDIOBJ hObj, DWORD ObjectType);
 PGDIOBJ INTERNAL_CALL GDIOBJ_LockObj (PGDI_HANDLE_TABLE HandleTable, HGDIOBJ hObj, DWORD ObjectType);
 PGDIOBJ INTERNAL_CALL GDIOBJ_ShareLockObj (PGDI_HANDLE_TABLE HandleTable, HGDIOBJ hObj, DWORD ObjectType);
-
-#endif /* GDI_DEBUG */
 
 PVOID   INTERNAL_CALL GDI_MapHandleTable(PSECTION_OBJECT SectionObject, PEPROCESS Process);
 
