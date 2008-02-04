@@ -19,6 +19,10 @@
 #ifndef __WINE_RPCDCEP_H
 #define __WINE_RPCDCEP_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef struct _RPC_VERSION {
     unsigned short MajorVersion;
     unsigned short MinorVersion;
@@ -43,6 +47,9 @@ typedef struct _RPC_MESSAGE
     void* ImportContext;
     unsigned long RpcFlags;
 } RPC_MESSAGE, *PRPC_MESSAGE;
+
+/* or'd with ProcNum */
+#define RPC_FLAGS_VALID_BIT         0x00008000
 
 #define RPC_CONTEXT_HANDLE_DEFAULT_GUARD ((void *)0xfffff00d)
 
@@ -72,9 +79,8 @@ typedef struct _RPC_MESSAGE
 #define RPCFLG_ASYNCHRONOUS         0x40000000
 #define RPCFLG_NON_NDR              0x80000000
 
-#define RPC_FLAGS_VALID_BIT         0x00008000
-
 typedef void  (__RPC_STUB *RPC_DISPATCH_FUNCTION)(PRPC_MESSAGE Message);
+typedef RPC_STATUS (RPC_ENTRY *RPC_FORWARD_FUNCTION)(UUID *InterfaceId, RPC_VERSION *InterfaceVersion, UUID *ObjectId, unsigned char *Rpcpro, void **ppDestEndpoint);
 
 typedef struct
 {
@@ -124,6 +130,8 @@ typedef struct _RPC_CLIENT_INTERFACE
 #define TRANSPORT_TYPE_WMSG 0x08
 
 RPCRTAPI RPC_STATUS RPC_ENTRY
+  I_RpcNegotiateTransferSyntax( RPC_MESSAGE* Message );
+RPCRTAPI RPC_STATUS RPC_ENTRY
   I_RpcGetBuffer( RPC_MESSAGE* Message );
 RPCRTAPI RPC_STATUS RPC_ENTRY
   I_RpcGetBufferWithObject( RPC_MESSAGE* Message, UUID* ObjectUuid );
@@ -152,7 +160,7 @@ RPCRTAPI RPC_BINDING_HANDLE RPC_ENTRY
  * Note that the prototypes for I_RpcBindingSetAsync are different for each case.
  *
  * Wine defaults to the WinNT case and only defines these function is MSWMSG is
- *  defined. Defining the NT functions by default causes MIDL generated proxys
+ *  defined. Defining the NT functions by default causes MIDL generated proxies
  *  to not compile.
  */
 
@@ -180,9 +188,6 @@ RPCRTAPI UINT RPC_ENTRY
 RPCRTAPI RPC_STATUS RPC_ENTRY
   I_RpcSetWMsgEndpoint( WCHAR* Endpoint );
 
-RPCRTAPI RPC_STATUS RPC_ENTRY
-  I_RpcBindingInqTransportType( RPC_BINDING_HANDLE Binding, unsigned int* Type );
-
 #endif
 
 #else
@@ -205,6 +210,15 @@ RPCRTAPI RPC_STATUS RPC_ENTRY
 RPCRTAPI UINT RPC_ENTRY
   I_RpcWindowProc( void* hWnd, unsigned int Message, unsigned int wParam, unsigned long lParam );
 
+#endif
+
+RPCRTAPI RPC_STATUS RPC_ENTRY
+  I_RpcBindingInqTransportType( RPC_BINDING_HANDLE Binding, unsigned int* Type );
+
+RPCRTAPI LONG RPC_ENTRY I_RpcMapWin32Status(RPC_STATUS);
+
+#ifdef __cplusplus
+}
 #endif
 
 #endif /*__WINE_RPCDCEP_H */

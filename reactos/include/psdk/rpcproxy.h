@@ -33,6 +33,10 @@
 #include <rpc.h>
 #include <rpcndr.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef struct tagCInterfaceStubVtbl *PCInterfaceStubVtblList;
 typedef struct tagCInterfaceProxyVtbl *PCInterfaceProxyVtblList;
 typedef const char *PCInterfaceName;
@@ -355,6 +359,10 @@ RPCRTAPI HRESULT RPC_ENTRY
   CreateStubFromTypeInfo( LPTYPEINFO pTypeInfo, REFIID riid, LPUNKNOWN pUnkServer,
                           LPRPCSTUBBUFFER *ppStub );
 
+#endif
+
+#ifdef __cplusplus
+}
 #endif
 
 #endif /*__WINE_RPCDCE_H */

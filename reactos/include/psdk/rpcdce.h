@@ -32,6 +32,7 @@ extern "C" {
 #ifndef OPTIONAL
 #define OPTIONAL
 #endif
+
 #ifndef GUID_DEFINED
 #include <guiddef.h>
 #endif
@@ -288,7 +289,7 @@ RPC_STATUS RPC_ENTRY DceErrorInqTextA(RPC_STATUS e, RPC_CSTR buffer);
 RPC_STATUS RPC_ENTRY DceErrorInqTextW(RPC_STATUS e, RPC_WSTR buffer);
 #define              DceErrorInqText WINELIB_NAME_AW(DceErrorInqText)
 
-RPCRTAPI void RPC_ENTRY
+RPCRTAPI DECLSPEC_NORETURN void RPC_ENTRY
   RpcRaiseException( RPC_STATUS exception );
 
 RPCRTAPI RPC_STATUS RPC_ENTRY
@@ -365,6 +366,8 @@ RPCRTAPI RPC_STATUS RPC_ENTRY
 
 RPCRTAPI RPC_STATUS RPC_ENTRY
   RpcServerListen( unsigned int MinimumCallThreads, unsigned int MaxCalls, unsigned int DontWait );
+
+RPCRTAPI RPC_STATUS RPC_ENTRY RpcMgmtSetCancelTimeout(LONG);
 
 RPCRTAPI RPC_STATUS RPC_ENTRY
   RpcMgmtWaitServerListen( void );
@@ -464,6 +467,8 @@ RPCRTAPI RPC_STATUS RPC_ENTRY
   RpcBindingInqAuthInfoW( RPC_BINDING_HANDLE Binding, RPC_WSTR *ServerPrincName, ULONG *AuthnLevel,
                           ULONG *AuthnSvc, RPC_AUTH_IDENTITY_HANDLE *AuthIdentity, ULONG *AuthzSvc );
 #define RpcBindingInqAuthInfo WINELIB_NAME_AW(RpcBindingInqAuthInfo)
+
+RPCRTAPI RPC_STATUS RPC_ENTRY RpcCancelThread(void*);
 
 RPCRTAPI RPC_STATUS RPC_ENTRY
   RpcNetworkIsProtseqValidA( RPC_CSTR protseq );

@@ -91,10 +91,6 @@ typedef long RPC_STATUS;
     #define RPCNSAPI
 #endif
 
-#ifndef RPC_NO_WINDOWS_H
-#include <rpcasync.h>
-#endif
-
 #ifdef __RPC_MAC__
     #include <setjmp.h>
     #define RPCXCWORD (sizeof(jmp_buf)/sizeof(int))
@@ -165,6 +161,10 @@ typedef long RPC_STATUS;
 
 #if defined(__RPC_WIN64__)
     #include <poppack.h>
+#endif
+
+#ifndef RPC_NO_WINDOWS_H
+#include <rpcasync.h>
 #endif
 
 #ifdef __cplusplus
