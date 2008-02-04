@@ -391,7 +391,7 @@ ULONG CDFParser::Parse()
 
     if (!InfFileOnly)
     {
-          printf("\nWriting cabinet. This may take a while...\n\n");
+        printf("\nWriting cabinet. This may take a while...\n\n");
 
         if (DiskCreated)
         {

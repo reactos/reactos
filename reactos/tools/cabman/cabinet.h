@@ -224,13 +224,18 @@ typedef struct _CFFILE_NODE
     PCFFOLDER_NODE      FolderNode;     // Folder this file belong to
 } CFFILE_NODE, *PCFFILE_NODE;
 
+typedef struct _SEARCH_CRITERIA
+{
+    struct _SEARCH_CRITERIA  *Next;   // Pointer to next search criteria
+    struct _SEARCH_CRITERIA  *Prev;   // Pointer to previous search criteria
+    char*                    Search;  // The actual search criteria
+} SEARCH_CRITERIA, *PSEARCH_CRITERIA;
 
 typedef struct _CAB_SEARCH
 {
-    char        Search[MAX_PATH];   // Search criteria
-    PCFFILE_NODE Next;               // Pointer to next node
-    PCFFILE      File;               // Pointer to current CFFILE
-    char*        FileName;           // Current filename
+    PCFFILE_NODE      Next;      // Pointer to next node
+    PCFFILE           File;      // Pointer to current CFFILE
+    char*             FileName;  // Current filename
 } CAB_SEARCH, *PCAB_SEARCH;
 
 
@@ -345,16 +350,25 @@ public:
     /* Closes the current open cabinet file */
     void Close();
     /* Locates the first file in the current cabinet file that matches a search criteria */
-    ULONG FindFirst(char* FileName, PCAB_SEARCH Search);
+    ULONG FindFirst(PCAB_SEARCH Search);
     /* Locates the next file in the current cabinet file */
     ULONG FindNext(PCAB_SEARCH Search);
     /* Extracts a file from the current cabinet file */
     ULONG ExtractFile(char* FileName);
     /* Select codec engine to use */
     void SelectCodec(LONG Id);
-    /* Returns if a codec engine is selected */
+    /* Returns whether a codec engine is selected */
     bool IsCodecSelected();
+    /* Adds a search criteria for adding files to a simple cabinet, displaying files in a cabinet or extracting them */
+    ULONG AddSearchCriteria(char* SearchCriteria);
+    /* Destroys the search criteria list */
+    void DestroySearchCriteria();
+    /* Returns whether we have search criteria */
+    bool HasSearchCriteria();
+
 #ifndef CAB_READ_ONLY
+    /* Creates a simple cabinet based on the search criteria data */
+    bool CreateSimpleCabinet();
     /* Sets the codec to use for compression (based on a string value) */
     bool SetCompressionCodec(char* CodecName);
     /* Creates a new cabinet file */
@@ -412,6 +426,7 @@ private:
     void DestroyDeletedFolderNodes();
     ULONG ComputeChecksum(void* Buffer, ULONG Size, ULONG Seed);
     ULONG ReadBlock(void* Buffer, ULONG Size, PULONG BytesRead);
+    bool MatchFileNamePattern(char* FileName, char* Pattern);
 #ifndef CAB_READ_ONLY
     ULONG InitCabinetHeader();
     ULONG WriteCabinetHeader(bool MoreDisks);
@@ -455,6 +470,8 @@ private:
     PCFDATA_NODE CurrentDataNode;
     PCFFILE_NODE FileListHead;
     PCFFILE_NODE FileListTail;
+    PSEARCH_CRITERIA CriteriaListHead;
+    PSEARCH_CRITERIA CriteriaListTail;
     CCABCodec *Codec;
     LONG CodecId;
     bool CodecSelected;

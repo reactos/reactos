@@ -27,7 +27,6 @@ public:
 private:
     void Usage();
     bool CreateCabinet();
-    bool CreateSimpleCabinet();
     bool DisplayCabinet();
     bool ExtractFromCabinet();
     /* Event handlers */
@@ -39,7 +38,6 @@ private:
     bool ProcessAll;
     ULONG Mode;
     bool PromptOnOverwrite;
-    char Location[MAX_PATH];
     char FileName[MAX_PATH];
 };
 

@@ -172,6 +172,7 @@ CCABManager::CCABManager()
     ProcessAll = false;
     InfFileOnly = false;
     Mode = CM_MODE_DISPLAY;
+    FileName[0] = 0;
 }
 
 
@@ -190,8 +191,8 @@ void CCABManager::Usage()
 {
     printf("ReactOS Cabinet Manager\n\n");
     printf("CABMAN [-D | -E] [-A] [-L dir] cabinet [filename ...]\n");
-    printf("CABMAN -C dirfile [-I] [-RC file] [-P dir]\n");
-    printf("CABMAN -S cabinet filename\n");
+    printf("CABMAN [-M mode] -C dirfile [-I] [-RC file] [-P dir]\n");
+    printf("CABMAN [-M mode] -S cabinet filename ...\n");
     printf("  cabinet   Cabinet file.\n");
     printf("  filename  Name of the file to extract from the cabinet.\n");
     printf("            Wild cards and multiple filenames\n");
@@ -207,7 +208,7 @@ void CCABManager::Usage()
     printf("  -I        Don't create the cabinet, only the .inf file.\n");
     printf("  -L dir    Location to place extracted or generated files\n");
     printf("            (default is current directory).\n");
-    printf("  -M        Specify the compression method to use\n");
+    printf("  -M mode   Specify the compression method to use:\n");
     printf("               raw    - No compression\n");
     printf("               mszip  - MsZip compression (default)\n");
     printf("  -N        Don't create the .inf file, only the cabinet.\n");
@@ -351,10 +352,23 @@ bool CCABManager::ParseCmdline(int argc, char* argv[])
         }
         else
         {
-            if ((FoundCabinet) || (Mode == CM_MODE_CREATE))
+            if(Mode == CM_MODE_CREATE)
             {
-                /* FIXME: There may be many of these if Mode != CM_MODE_CREATE */
-                strcpy(FileName, argv[i]);
+                if(FileName[0])
+                {
+                    printf("You may only specify one directive file!\n");
+                    return false;
+                }
+                else
+                {
+                    // For creating cabinets, this argument is the path to the directive file
+                    strcpy(FileName, argv[i]);
+                }
+            }
+            else if(FoundCabinet)
+            {
+                // For creating simple cabinets, displaying or extracting them, add the argument as a search criteria
+                AddSearchCriteria(argv[i]);
             }
             else
             {
@@ -366,13 +380,20 @@ bool CCABManager::ParseCmdline(int argc, char* argv[])
 
     if (ShowUsage)
     {
-      Usage();
-      return false;
+        Usage();
+        return false;
     }
 
     // Select MsZip by default for creating cabinets
     if( (Mode == CM_MODE_CREATE || Mode == CM_MODE_CREATE_SIMPLE) && !IsCodecSelected() )
         SelectCodec(CAB_CODEC_MSZIP);
+
+    // Search criteria (= the filename argument) is necessary for creating a simple cabinet
+    if( Mode == CM_MODE_CREATE_SIMPLE && !HasSearchCriteria())
+    {
+        printf("You have to enter input file names!\n");
+        return false;
+    }
 
     return true;
 }
@@ -397,43 +418,6 @@ bool CCABManager::CreateCabinet()
     return (Status == CAB_STATUS_SUCCESS ? true : false);
 }
 
-
-bool CCABManager::CreateSimpleCabinet()
-/*
- * FUNCTION: Create cabinet
- */
-{
-    ULONG Status;
-
-    Status = NewCabinet();
-    if (Status != CAB_STATUS_SUCCESS)
-    {
-        DPRINT(MIN_TRACE, ("Cannot create cabinet (%u).\n", (UINT)Status));
-        return false;
-    }
-
-    Status = AddFile(FileName);
-    if (Status != CAB_STATUS_SUCCESS)
-    {
-        DPRINT(MIN_TRACE, ("Cannot add file to cabinet (%u).\n", (UINT)Status));
-        return false;
-    }
-
-    Status = WriteDisk(false);
-    if (Status == CAB_STATUS_SUCCESS)
-        Status = CloseDisk();
-    if (Status != CAB_STATUS_SUCCESS)
-    {
-        DPRINT(MIN_TRACE, ("Cannot write disk (%u).\n", (UINT)Status));
-        return false;
-    }
-
-    CloseCabinet();
-
-    return true;
-}
-
-
 bool CCABManager::DisplayCabinet()
 /*
  * FUNCTION: Display cabinet contents
@@ -448,7 +432,7 @@ bool CCABManager::DisplayCabinet()
     {
         printf("Cabinet %s\n\n", GetCabinetName());
 
-        if (FindFirst("", &Search) == CAB_STATUS_SUCCESS)
+        if (FindFirst(&Search) == CAB_STATUS_SUCCESS)
         {
             do
             {
@@ -466,6 +450,8 @@ bool CCABManager::DisplayCabinet()
                 }
             } while (FindNext(&Search) == CAB_STATUS_SUCCESS);
         }
+
+        DestroySearchCriteria();
 
         if (FileCount > 0) {
             if (FileCount == 1)
@@ -503,6 +489,7 @@ bool CCABManager::ExtractFromCabinet()
  * FUNCTION: Extract file(s) from cabinet
  */
 {
+    bool bRet = true;
     CAB_SEARCH Search;
     ULONG Status;
 
@@ -510,34 +497,46 @@ bool CCABManager::ExtractFromCabinet()
     {
         printf("Cabinet %s\n\n", GetCabinetName());
 
-        if (FindFirst("", &Search) == CAB_STATUS_SUCCESS)
+        if (FindFirst(&Search) == CAB_STATUS_SUCCESS)
         {
             do
             {
-                switch (Status = ExtractFile(Search.FileName)) {
+                switch (Status = ExtractFile(Search.FileName))
+                {
                     case CAB_STATUS_SUCCESS:
                         break;
 
                     case CAB_STATUS_INVALID_CAB:
                         printf("Cabinet contains errors.\n");
-                        return false;
+                        bRet = false;
+                        break;
 
                     case CAB_STATUS_UNSUPPCOMP:
                         printf("Cabinet uses unsupported compression type.\n");
-                        return false;
+                        bRet = false;
+                        break;
 
                     case CAB_STATUS_CANNOT_WRITE:
                         printf("You've run out of free space on the destination volume or the volume is damaged.\n");
-                        return false;
+                        bRet = false;
+                        break;
 
                     default:
                         printf("Unspecified error code (%u).\n", (UINT)Status);
-                        return false;
+                        bRet = false;
+                        break;
                 }
+
+                if(!bRet)
+                    break;
             } while (FindNext(&Search) == CAB_STATUS_SUCCESS);
+
+            DestroySearchCriteria();
         }
-        return true;
-    } else
+
+        return bRet;
+    }
+    else
         printf("Cannot open file: %s.\n", GetCabinetName());
 
     return false;
@@ -555,19 +554,15 @@ bool CCABManager::Run()
     {
         case CM_MODE_CREATE:
             return CreateCabinet();
-            break;
 
         case CM_MODE_DISPLAY:
             return DisplayCabinet();
-            break;
 
         case CM_MODE_EXTRACT:
             return ExtractFromCabinet();
-            break;
 
         case CM_MODE_CREATE_SIMPLE:
             return CreateSimpleCabinet();
-            break;
 
         default:
             break;

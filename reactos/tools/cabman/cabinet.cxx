@@ -18,6 +18,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#if !defined(WIN32)
+# include <dirent.h>
+#endif
 #if defined(__FreeBSD__) || defined(__APPLE__)
 # include <sys/stat.h>
 #endif // __FreeBSD__
@@ -315,10 +318,12 @@ CCabinet::CCabinet()
     CabinetReservedFileBuffer = NULL;
     CabinetReservedFileSize = 0;
 
-    FolderListHead = NULL;
-    FolderListTail = NULL;
-    FileListHead   = NULL;
-    FileListTail   = NULL;
+    FolderListHead   = NULL;
+    FolderListTail   = NULL;
+    FileListHead     = NULL;
+    FileListTail     = NULL;
+    CriteriaListHead = NULL;
+    CriteriaListTail = NULL;
 
     Codec          = NULL;
     CodecId        = -1;
@@ -509,6 +514,82 @@ void CCabinet::SetDestinationPath(char* DestinationPath)
     ConvertPath(DestPath, false);
     if (strlen(DestPath) > 0)
         NormalizePath(DestPath, MAX_PATH);
+}
+
+ULONG CCabinet::AddSearchCriteria(char* SearchCriteria)
+/*
+ * FUNCTION: Adds a criteria to the search criteria list
+ * ARGUMENTS:
+ *     SearchCriteria = String with the search criteria to add
+ * RETURNS:
+ *     Status of operation
+ */
+{
+    PSEARCH_CRITERIA Criteria;
+
+    // Add the criteria to the list of search criteria
+    Criteria = (PSEARCH_CRITERIA)AllocateMemory(sizeof(SEARCH_CRITERIA));
+    if(!Criteria)
+    {
+        DPRINT(MIN_TRACE, ("Insufficient memory.\n"));
+        return CAB_STATUS_NOMEMORY;
+    }
+
+    Criteria->Prev = CriteriaListTail;
+    Criteria->Next = NULL;
+
+    if(CriteriaListTail)
+        CriteriaListTail->Next = Criteria;
+    else
+        CriteriaListHead = Criteria;
+
+    CriteriaListTail = Criteria;
+
+    // Set the actual criteria string
+    Criteria->Search = (char*)AllocateMemory(strlen(SearchCriteria) + 1);
+    if (!Criteria->Search)
+    {
+        DPRINT(MIN_TRACE, ("Insufficient memory.\n"));
+        return CAB_STATUS_NOMEMORY;
+    }
+
+    strcpy(Criteria->Search, SearchCriteria);
+
+    return CAB_STATUS_SUCCESS;
+}
+
+void CCabinet::DestroySearchCriteria()
+/*
+ * FUNCTION: Destroys the list with the search criteria
+ */
+{
+    PSEARCH_CRITERIA Criteria;
+    PSEARCH_CRITERIA NextCriteria;
+
+    Criteria = CriteriaListHead;
+
+    while(Criteria)
+    {
+        NextCriteria = Criteria->Next;
+
+        FreeMemory(Criteria->Search);
+        FreeMemory(Criteria);
+
+        Criteria = NextCriteria;
+    }
+
+    CriteriaListHead = NULL;
+    CriteriaListTail = NULL;
+}
+
+bool CCabinet::HasSearchCriteria()
+/*
+ * FUNCTION: Returns whether we have search criteria
+ * RETURNS:
+ *    Whether we have search criteria or not.
+ */
+{
+    return (CriteriaListHead != NULL);
 }
 
 bool CCabinet::SetCompressionCodec(char* CodecName)
@@ -821,19 +902,16 @@ void CCabinet::Close()
 }
 
 
-ULONG CCabinet::FindFirst(char* FileName,
-                          PCAB_SEARCH Search)
+ULONG CCabinet::FindFirst(PCAB_SEARCH Search)
 /*
  * FUNCTION: Finds the first file in the cabinet that matches a search criteria
  * ARGUMENTS:
- *     FileName = Pointer to search criteria
  *     Search   = Pointer to search structure
  * RETURNS:
  *     Status of operation
  */
 {
     RestartSearch = false;
-    strncpy(Search->Search, FileName, MAX_PATH);
     Search->Next = FileListHead;
     return FindNext(Search);
 }
@@ -848,6 +926,8 @@ ULONG CCabinet::FindNext(PCAB_SEARCH Search)
  *     Status of operation
  */
 {
+    bool bFound = false;
+    PSEARCH_CRITERIA Criteria;
     ULONG Status;
 
     if (RestartSearch)
@@ -867,7 +947,32 @@ ULONG CCabinet::FindNext(PCAB_SEARCH Search)
         RestartSearch = false;
     }
 
-    /* FIXME: Check search criteria */
+    /* Check each search criteria against each file */
+    while(Search->Next)
+    {
+        // Some features (like displaying cabinets) don't require search criteria, so we can just break here.
+        // If a feature requires it, handle this in the ParseCmdline() function in "main.cxx".
+        if(!CriteriaListHead)
+            break;
+
+        Criteria = CriteriaListHead;
+
+        while(Criteria)
+        {
+            if(MatchFileNamePattern(Search->Next->FileName, Criteria->Search))
+            {
+                bFound = true;
+                break;
+            }
+
+            Criteria = Criteria->Next;
+        }
+
+        if(bFound)
+            break;
+
+        Search->Next = Search->Next->Next;
+    }
 
     if (!Search->Next)
     {
@@ -1960,6 +2065,151 @@ ULONG CCabinet::AddFile(char* FileName)
     return CAB_STATUS_SUCCESS;
 }
 
+bool CCabinet::CreateSimpleCabinet()
+/*
+ * FUNCTION: Create a simple cabinet based on the files in the criteria list
+ */
+{
+    bool bRet = false;
+    char* pszFile;
+    char szFilePath[MAX_PATH];
+    char szFile[MAX_PATH];
+    PSEARCH_CRITERIA Criteria;
+    ULONG Status;
+
+#if defined(WIN32)
+    HANDLE hFind;
+    WIN32_FIND_DATA FindFileData;
+#else
+    DIR* dirp;
+    struct dirent* dp;
+    struct stat stbuf;
+#endif
+
+    // Initialize a new cabinet
+    Status = NewCabinet();
+    if (Status != CAB_STATUS_SUCCESS)
+    {
+        DPRINT(MIN_TRACE, ("Cannot create cabinet (%u).\n", (UINT)Status));
+        goto cleanup;
+    }
+
+    // Add each file in the criteria list
+    Criteria = CriteriaListHead;
+
+    while(Criteria)
+    {
+        // Store the file path with a trailing slash in szFilePath
+        pszFile = strrchr(Criteria->Search, '/');
+        if(!pszFile)
+            pszFile = strrchr(Criteria->Search, '\\');
+
+        if(pszFile)
+        {
+            strncpy(szFilePath, Criteria->Search, pszFile - Criteria->Search + 1);
+            szFilePath[pszFile - Criteria->Search + 1] = 0;
+        }
+        else
+            szFilePath[0] = 0;
+
+#if defined(WIN32)
+        // Windows: Use the easy FindFirstFile/FindNextFile API for getting all files and checking them against the pattern
+        hFind = FindFirstFile(Criteria->Search, &FindFileData);
+
+        // Don't stop if a search criteria is not found
+        if(hFind == INVALID_HANDLE_VALUE && GetLastError() != ERROR_FILE_NOT_FOUND)
+        {
+            DPRINT(MIN_TRACE, ("FindFirstFile failed, Criteria: %s, error code is %u\n", Criteria->Search, (UINT)GetLastError()));
+            goto cleanup;
+        }
+
+        do
+        {
+            if(!(FindFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
+            {
+                strcpy(szFile, szFilePath);
+                strcat(szFile, FindFileData.cFileName);
+
+                Status = AddFile(szFile);
+
+                if(Status != CAB_STATUS_SUCCESS)
+                {
+                    DPRINT(MIN_TRACE, ("Cannot add file to cabinet (%u).\n", (UINT)Status));
+                    goto cleanup;
+                }
+            }
+        }
+        while(FindNextFile(hFind, &FindFileData));
+
+        FindClose(hFind);
+#else
+        // Unix: Use opendir/readdir to loop through all entries, stat to check if it's a file and MatchFileNamePattern to match the file against the pattern
+        if(szFilePath[0] == 0)
+            strcpy(szFilePath, "./");
+
+        dirp = opendir(szFilePath);
+
+        if(dirp)
+        {
+            while( (dp = readdir(dirp)) )
+            {
+                strcpy(szFile, szFilePath);
+                strcat(szFile, dp->d_name);
+
+                if(stat(szFile, &stbuf) == 0)
+                {
+                    if(stbuf.st_mode != S_IFDIR)
+                    {
+                        // As we added "./" to szFilePath above, szFile might contain "./test.txt" now and Criteria->Search "test.txt".
+                        // Therefore they won't match using MatchFileNamePattern. By using pszFile here, we can avoid this problem.
+                        if(szFile[0] == '.' && szFile[1] == '/')
+                            pszFile = szFile + 2;
+                        else
+                            pszFile = szFile;
+
+                        if(MatchFileNamePattern(pszFile, Criteria->Search))
+                        {
+                            Status = AddFile(szFile);
+
+                            if(Status != CAB_STATUS_SUCCESS)
+                            {
+                                DPRINT(MIN_TRACE, ("Cannot add file to cabinet (%u).\n", (UINT)Status));
+                                goto cleanup;
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    DPRINT(MIN_TRACE, ("stat failed, error code is %i\n", errno));
+                    goto cleanup;
+                }
+            }
+
+            closedir(dirp);
+        }
+
+#endif
+
+        Criteria = Criteria->Next;
+    }
+
+    Status = WriteDisk(false);
+    if (Status == CAB_STATUS_SUCCESS)
+        Status = CloseDisk();
+    if (Status != CAB_STATUS_SUCCESS)
+    {
+        DPRINT(MIN_TRACE, ("Cannot write disk (%u).\n", (UINT)Status));
+        goto cleanup;
+    }
+
+    CloseCabinet();
+    bRet = true;
+
+cleanup:
+    DestroySearchCriteria();
+    return bRet;
+}
 
 void CCabinet::SetMaxDiskSize(ULONG Size)
 /*
@@ -2509,8 +2759,6 @@ void CCabinet::DestroyDataNodes(PCFFOLDER_NODE FolderNode)
 void CCabinet::DestroyFileNodes()
 /*
  * FUNCTION: Destroys file nodes
- * ARGUMENTS:
- *     FolderNode = Pointer to folder node
  */
 {
     PCFFILE_NODE PrevNode;
@@ -2641,8 +2889,8 @@ void CCabinet::DestroyDeletedFolderNodes()
 
 
 ULONG CCabinet::ComputeChecksum(void* Buffer,
-                                   ULONG Size,
-                                   ULONG Seed)
+                                ULONG Size,
+                                ULONG Seed)
 /*
  * FUNCTION: Computes checksum for data block
  * ARGUMENTS:
@@ -2700,8 +2948,8 @@ ULONG CCabinet::ComputeChecksum(void* Buffer,
 
 
 ULONG CCabinet::ReadBlock(void* Buffer,
-                             ULONG Size,
-                             PULONG BytesRead)
+                          ULONG Size,
+                          PULONG BytesRead)
 /*
  * FUNCTION: Read a block of data from file
  * ARGUMENTS:
@@ -2716,6 +2964,67 @@ ULONG CCabinet::ReadBlock(void* Buffer,
     if (!ReadFileData(FileHandle, Buffer, Size, BytesRead))
         return CAB_STATUS_INVALID_CAB;
     return CAB_STATUS_SUCCESS;
+}
+
+bool CCabinet::MatchFileNamePattern(char* FileName, char* Pattern)
+/*
+ * FUNCTION: Matches a wildcard character pattern against a file
+ * ARGUMENTS:
+ *     FileName = The file name to check
+ *     Pattern  = The pattern
+ * RETURNS:
+ *     Whether the pattern matches the file
+ *
+ * COPYRIGHT:
+ *     This function is based on Busybox code, Copyright (C) 1998 by Erik Andersen, released under GPL2 or any later version.
+ *     Adapted from code written by Ingo Wilken.
+ *     Original location: http://www.busybox.net/cgi-bin/viewcvs.cgi/trunk/busybox/utility.c?rev=5&view=markup
+ */
+{
+    char* retryPattern = NULL;
+    char* retryFileName = NULL;
+    char  ch;
+
+    while (*FileName || *Pattern)
+    {
+        ch = *Pattern++;
+
+        switch (ch)
+        {
+            case '*':
+                retryPattern = Pattern;
+                retryFileName = FileName;
+                break;
+
+            case '?':  
+                if (*FileName++ == '\0')
+                    return false;
+
+                break;
+
+            default:
+                if (*FileName == ch)
+                {
+                    if (*FileName)
+                        FileName++;
+                    break;
+                }
+
+                if (*FileName)
+                {
+                    Pattern = retryPattern;
+                    FileName = ++retryFileName;
+                    break;
+                }
+
+                return false;
+        }
+
+        if (!Pattern)
+            return false;
+    }
+
+    return true;
 }
 
 #ifndef CAB_READ_ONLY
