@@ -364,15 +364,15 @@ CSR_API(CsrGetConsoleAlias)
     Header = IntFindAliasHeader(RootHeader, Request->Data.GetAllConsoleAlias.lpExeName);
     if (!Header)
     {
-        Request->Status = ERROR_NO_DATA; // FIXME
-        return ERROR_NO_DATA;
+        Request->Status = STATUS_INVALID_PARAMETER;
+        return STATUS_INVALID_PARAMETER;
     }
 
     Entry = IntGetAliasEntry(Header, Request->Data.GetConsoleAlias.lpSource);
     if (!Entry)
     {
-        Request->Status = ERROR_NO_DATA; // FIXME
-        return ERROR_NO_DATA;
+        Request->Status = STATUS_INVALID_PARAMETER;
+        return STATUS_INVALID_PARAMETER;
     }
 
     Length = (wcslen(Entry->lpTarget)+1) * sizeof(WCHAR);
@@ -401,8 +401,8 @@ CSR_API(CsrGetAllConsoleAliases)
     Header = IntFindAliasHeader(RootHeader, Request->Data.GetAllConsoleAlias.lpExeName);
     if (!Header)
     {
-        Request->Status = ERROR_NO_DATA; // FIXME
-        return ERROR_NO_DATA;
+        Request->Status = STATUS_INVALID_PARAMETER;
+        return STATUS_INVALID_PARAMETER;
     }
 
     if (IntGetAllConsoleAliasesLength(Header) > Request->Data.GetAllConsoleAlias.AliasBufferLength)
@@ -434,8 +434,8 @@ CSR_API(CsrGetAllConsoleAliasesLength)
     Header = IntFindAliasHeader(RootHeader, Request->Data.GetAllConsoleAliasesLength.lpExeName);
     if (!Header)
     {
-        Request->Status = ERROR_NO_DATA; // FIXME
-        return ERROR_NO_DATA;
+        Request->Status = STATUS_INVALID_PARAMETER;
+        return STATUS_INVALID_PARAMETER;
     }
 
     Length = IntGetAllConsoleAliasesLength(Header);
