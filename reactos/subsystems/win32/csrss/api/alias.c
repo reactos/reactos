@@ -106,6 +106,9 @@ IntInsertAliasHeader(PALIAS_HEADER * RootHeader, PALIAS_HEADER NewHeader)
 PALIAS_ENTRY
 IntGetAliasEntry(PALIAS_HEADER Header, LPCWSTR lpSrcName)
 {
+    if (Header == NULL)
+        return NULL;
+
     PALIAS_ENTRY RootHeader = Header->Data;
     while(RootHeader)
     {
@@ -303,7 +306,7 @@ CSR_API(CsrAddConsoleAlias)
     }
 
     Header = IntFindAliasHeader(RootHeader, Request->Data.AddConsoleAlias.lpExeName);
-    if (!Header)
+    if (!Header && Request->Data.AddConsoleAlias.lpTarget != NULL)
     {
         Header = IntCreateAliasHeader(Request->Data.AddConsoleAlias.lpExeName);
         if (!Header)
@@ -311,6 +314,7 @@ CSR_API(CsrAddConsoleAlias)
             Request->Status = STATUS_INSUFFICIENT_RESOURCES;
             return STATUS_INSUFFICIENT_RESOURCES;
         }
+        IntInsertAliasHeader(&RootHeader, Header);
     }
 
     if (Request->Data.AddConsoleAlias.lpTarget == NULL) // delete the entry
