@@ -27,14 +27,10 @@ typedef struct tagALIAS
 	DWORD  dwUsed;
 } ALIAS, *LPALIAS;
 
-static LPALIAS lpFirst = NULL;
-static LPALIAS lpLast = NULL;
-
 extern BOOL WINAPI DefaultConsoleCtrlHandler(DWORD Event);
 extern __declspec(noreturn) VOID CALLBACK ConsoleControlDispatcher(DWORD CodeAndFlag);
 extern RTL_CRITICAL_SECTION ConsoleLock;
 extern BOOL WINAPI IsDebuggerPresent(VOID);
-static VOID partstrlwr (LPWSTR str);
 
 /* GLOBALS *******************************************************************/
 
@@ -43,19 +39,6 @@ static BOOL IgnoreCtrlEvents = FALSE;
 static PHANDLER_ROUTINE* CtrlHandlers = NULL;
 static ULONG NrCtrlHandlers = 0;
 static WCHAR InputExeName[MAX_PATH + 1] = L"";
-
-/* module internal functions */
-/* strlwr only for first word in string */
-static VOID
-partstrlwr (LPWSTR str)
-{
-	LPWSTR c = str;
-	while (*c && !iswspace (*c) && *c != L'=')
-	{
-		*c = towlower (*c);
-		c++;
-	}
-}
 
 /* Default Console Control Handler *******************************************/
 
@@ -206,125 +189,28 @@ AddConsoleAliasW (LPCWSTR lpSource,
 		  LPCWSTR lpTarget,
 		  LPCWSTR lpExeName /* FIXME: currently ignored */)
 {
-	LPALIAS ptr = lpFirst;
-	LPALIAS prev = NULL;
-	LPALIAS entry = NULL;
-	LPWSTR s;
+  CSR_API_MESSAGE Request; 
+  ULONG CsrRequest;
+  NTSTATUS          Status;
 
-	if (!lpTarget)
-	{
-		/* delete */
-		while (ptr)
-		{
-			if (!wcsicmp (ptr->lpName, lpSource))
-			{
-				if (prev)
-					prev->next = ptr->next;
-				else
-					lpFirst = ptr->next;
-				RtlFreeHeap (GetProcessHeap(), 0, ptr->lpName);
-				RtlFreeHeap (GetProcessHeap(), 0, ptr->lpSubst);
-				RtlFreeHeap (GetProcessHeap(), 0, ptr);
-				return TRUE;
-			}
-			prev = ptr;
-			ptr = ptr->next;
-		}
-	}
-	else
-	{
-		/* add */
-		while (ptr)
-		{
-			if (!wcsicmp (ptr->lpName, lpSource))
-			{
-				s = (LPWSTR) RtlAllocateHeap (GetProcessHeap(), 0, ((wcslen (lpTarget) + 1) * sizeof(WCHAR)));
-				if (!s)
-				{
-					return FALSE;
-				}
+  CsrRequest = MAKE_CSR_API(ADD_CONSOLE_ALIAS, CSR_NATIVE);
 
-				RtlFreeHeap (GetProcessHeap(), 0, ptr->lpSubst);
-				ptr->lpSubst = s;
-				wcscpy (ptr->lpSubst, lpTarget);
-				return TRUE;
-			}
-			ptr = ptr->next;
-		}
+  Request.Data.AddConsoleAlias.lpExeName = lpExeName;
+  Request.Data.AddConsoleAlias.lpTarget = lpTarget;
+  Request.Data.AddConsoleAlias.lpSource = lpSource;
 
-		ptr = (LPALIAS) RtlAllocateHeap (GetProcessHeap(), 0, sizeof(ALIAS));
-		if (!ptr)
-			return FALSE;
+  Status = CsrClientCallServer(& Request,
+			       NULL,
+			       CsrRequest,
+			       sizeof(CSR_API_MESSAGE));
 
-		ptr->next = 0;
+  if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Request.Status))
+  {
+    SetLastErrorByStatus(Status);
+    return FALSE;
+  }
 
-		ptr->lpName = (LPWSTR) RtlAllocateHeap (GetProcessHeap(), 0, ((wcslen (lpSource) + 1) * sizeof(WCHAR)));
-		if (!ptr->lpName)
-		{
-			RtlFreeHeap (GetProcessHeap(), 0, ptr);
-			return FALSE;
-		}
-		wcscpy (ptr->lpName, lpSource);
-
-		ptr->lpSubst = (LPWSTR) RtlAllocateHeap (GetProcessHeap(), 0, ((wcslen (lpTarget) + 1) * sizeof(WCHAR)));
-		if (!ptr->lpSubst)
-		{
-			RtlFreeHeap (GetProcessHeap(), 0, ptr->lpName);
-			RtlFreeHeap (GetProcessHeap(), 0, ptr);
-			return FALSE;
-		}
-		wcscpy (ptr->lpSubst, lpTarget);
-
-		/* it's necessary for recursive substitution */
-		partstrlwr (ptr->lpSubst);
-
-		ptr->dwUsed = 0;
-
-		/* Alias table must be sorted!
-		 * Here a little example:
-		 *   command line = "ls -c"
-		 * If the entries are
-		 *   ls=dir
-		 *   ls -c=ls /w
-		 * command line will be expanded to "dir -c" which is not correct.
-		 * If the entries are sortet as
-		 *   ls -c=ls /w
-		 *   ls=dir
-		 * it will be expanded to "dir /w" which is a valid DOS command.
-		 */
-		entry = lpFirst;
-		prev = 0;
-		while (entry)
-		{
-			if (wcsicmp (ptr->lpName, entry->lpName) > 0)
-
-			{
-				if (prev)
-				{
-					prev->next = ptr;
-					ptr->next = entry;
-				}
-				else
-				{
-					ptr->next = entry;
-					lpFirst = ptr;
-				}
-				return TRUE;
-			}
-			prev = entry;
-			entry = entry->next;
-		}
-
-		/* The new entry is the smallest (or the first) and must be
-		 * added to the end of the list.
-		 */
-		if (!lpFirst)
-			lpFirst = ptr;
-		else
-			lpLast->next = ptr;
-		lpLast = ptr;
-	}
-	return TRUE;
+  return TRUE;
 }
 
 
@@ -418,38 +304,36 @@ DWORD STDCALL
 GetConsoleAliasW (LPWSTR	lpSource,
 		  LPWSTR	lpTargetBuffer,
 		  DWORD		TargetBufferLength,
-		  LPWSTR	lpExeName) /* FIXME: currently ignored */
+		  LPWSTR	lpExeName)
 {
-	DWORD dwRet = 0;
+  CSR_API_MESSAGE Request; 
+  ULONG CsrRequest;
+  NTSTATUS          Status;
 
-	if (!lpTargetBuffer)
-		return 0;
+  CsrRequest = MAKE_CSR_API(GET_CONSOLE_ALIAS, CSR_NATIVE);
 
-	LPALIAS ptr = lpFirst;
-	while (ptr)
-	{
-		if (wcscmp(ptr->lpName, lpSource) == 0)
-		{
-			if (TargetBufferLength >= wcslen(ptr->lpSubst) +1)
-			{
-				wcscpy(lpTargetBuffer, ptr->lpSubst);
-				dwRet = wcslen(ptr->lpSubst);
-				break;
-			}
-			else
-			{
-				return 0;
-			}
-		}
-		ptr = ptr->next;
-	}
+  Request.Data.GetConsoleAlias.lpExeName = lpExeName;
+  Request.Data.GetConsoleAlias.lpSource = lpSource;
+  Request.Data.GetConsoleAlias.TargetBuffer = lpTargetBuffer;
+  Request.Data.GetConsoleAlias.TargetBufferLength = TargetBufferLength;
 
-	return dwRet;
+  Status = CsrClientCallServer(& Request,
+			       NULL,
+			       CsrRequest,
+			       sizeof(CSR_API_MESSAGE));
+
+  if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Request.Status))
+  {
+    SetLastErrorByStatus(Status);
+    return FALSE;
+  }
+
+  return Request.Data.GetConsoleAlias.BytesWritten / sizeof(WCHAR);
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 DWORD STDCALL
 GetConsoleAliasA (LPSTR	lpSource,
@@ -457,59 +341,130 @@ GetConsoleAliasA (LPSTR	lpSource,
 		  DWORD	TargetBufferLength,
 		  LPSTR	lpExeName)
 {
-  DPRINT1("GetConsoleAliasA(0x%p, 0x%p, 0x%x, 0x%p) UNIMPLEMENTED!\n", lpSource, lpTargetBuffer, TargetBufferLength, lpExeName);
-  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-  return 0;
+  LPWSTR lpwSource;
+  LPWSTR lpwExeName;
+  LPWSTR lpwTargetBuffer;
+  UINT dwSourceSize;
+  UINT dwExeNameSize;
+  UINT dwResult;
+
+  dwSourceSize = (strlen(lpSource)+1) * sizeof(WCHAR);
+  lpwSource = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, dwSourceSize);
+  MultiByteToWideChar(CP_ACP, 0, lpSource, -1, lpwSource, dwSourceSize);
+
+  dwExeNameSize = (strlen(lpExeName)+1) * sizeof(WCHAR); 
+  lpwExeName = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, dwExeNameSize);
+  MultiByteToWideChar(CP_ACP, 0, lpExeName, -1, lpwExeName, dwExeNameSize);
+
+  lpwTargetBuffer = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, TargetBufferLength * sizeof(WCHAR));
+
+  dwResult = GetConsoleAliasW(lpwSource, lpwTargetBuffer, TargetBufferLength, lpwExeName);
+
+  HeapFree(GetProcessHeap(), 0, lpwSource);
+  HeapFree(GetProcessHeap(), 0, lpwExeName);
+
+  if (dwResult)
+     dwResult = WideCharToMultiByte(CP_ACP, 0, lpwTargetBuffer, dwResult, lpTargetBuffer, TargetBufferLength, NULL, NULL);
+
+  HeapFree(GetProcessHeap(), 0, lpwTargetBuffer);
+
+  return dwResult;
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 DWORD STDCALL
 GetConsoleAliasExesW (LPWSTR	lpExeNameBuffer,
 		      DWORD	ExeNameBufferLength)
 {
-  DPRINT1("GetConsoleAliasExesW(0x%p, 0x%x) UNIMPLEMENTED!\n", lpExeNameBuffer, ExeNameBufferLength);
-  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-  return 0;
+  CSR_API_MESSAGE Request; 
+  ULONG CsrRequest;
+  NTSTATUS          Status;
+
+  CsrRequest = MAKE_CSR_API(GET_CONSOLE_ALIASES_EXES, CSR_NATIVE);
+  Request.Data.GetConsoleAliasesExes.ExeNames = lpExeNameBuffer;
+  Request.Data.GetConsoleAliasesExes.Length = ExeNameBufferLength;
+
+  Status = CsrClientCallServer(& Request,
+			       NULL,
+			       CsrRequest,
+			       sizeof(CSR_API_MESSAGE));
+
+  if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Request.Status))
+  {
+    SetLastErrorByStatus(Status);
+    return FALSE;
+  }
+
+  return Request.Data.GetConsoleAliasesExes.BytesWritten / sizeof(WCHAR);
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 DWORD STDCALL
 GetConsoleAliasExesA (LPSTR	lpExeNameBuffer,
 		      DWORD	ExeNameBufferLength)
 {
-  DPRINT1("GetConsoleAliasExesA(0x%p, 0x%x) UNIMPLEMENTED!\n", lpExeNameBuffer, ExeNameBufferLength);
-  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-  return 0;
+  LPWSTR lpwExeNameBuffer;
+  DWORD dwResult;
+
+  lpwExeNameBuffer = HeapAlloc(GetProcessHeap(), 0, ExeNameBufferLength * sizeof(WCHAR));
+
+  dwResult = GetConsoleAliasExesW(lpwExeNameBuffer, ExeNameBufferLength);
+
+  if (dwResult)
+      dwResult = WideCharToMultiByte(CP_ACP, 0, lpwExeNameBuffer, dwResult, lpExeNameBuffer, ExeNameBufferLength, NULL, NULL);
+
+  HeapFree(GetProcessHeap(), 0, lpwExeNameBuffer);
+  return dwResult;
 }
 
-
 /*
- * @unimplemented
- */
-DWORD STDCALL
-GetConsoleAliasExesLengthA (VOID)
-{
-  DPRINT1("GetConsoleAliasExesLengthA() UNIMPLEMENTED!\n");
-  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-  return 0;
-}
-
-
-/*
- * @unimplemented
+ * @implemented
  */
 DWORD STDCALL
 GetConsoleAliasExesLengthW (VOID)
 {
-  DPRINT1("GetConsoleAliasExesLengthW() UNIMPLEMENTED!\n");
-  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-  return 0;
+  CSR_API_MESSAGE Request; 
+  ULONG CsrRequest;
+  NTSTATUS          Status;
+
+  CsrRequest = MAKE_CSR_API(GET_CONSOLE_ALIASES_EXES_LENGTH, CSR_NATIVE);
+  Request.Data.GetConsoleAliasesExesLength.Length = 0;
+
+
+  Status = CsrClientCallServer(& Request,
+			       NULL,
+			       CsrRequest,
+			       sizeof(CSR_API_MESSAGE));
+
+  if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Request.Status))
+  {
+    SetLastErrorByStatus(Status);
+    return FALSE;
+  }
+
+  return Request.Data.GetConsoleAliasesExesLength.Length;
+}
+
+/*
+ * @implemented
+ */
+DWORD STDCALL
+GetConsoleAliasExesLengthA (VOID)
+{
+  DWORD dwLength;
+
+  dwLength = GetConsoleAliasExesLengthW();
+
+  if (dwLength)
+      dwLength /= sizeof(WCHAR);
+
+  return dwLength;
 }
 
 
@@ -519,47 +474,34 @@ GetConsoleAliasExesLengthW (VOID)
 DWORD STDCALL
 GetConsoleAliasesW (LPWSTR AliasBuffer,
 		    DWORD	AliasBufferLength,
-		    LPWSTR	ExeName)  /* FIXME: currently ignored */
+		    LPWSTR	ExeName)
 {
-	DWORD len;
-	WCHAR Buffer[MAX_PATH];
-	LPWSTR AliasPtr;
+  CSR_API_MESSAGE Request; 
+  ULONG CsrRequest;
+  NTSTATUS          Status;
+  DWORD dwLength;
 
-	if (!AliasBuffer)
-		return 0;
+  dwLength = GetConsoleAliasesLengthW(ExeName);
+  if (!dwLength || dwLength > AliasBufferLength)
+      return FALSE;
 
-	AliasPtr = AliasBuffer;
-	len = GetConsoleAliasesLengthW (ExeName);
-	if (len > AliasBufferLength)
-		return 0;
+  CsrRequest = MAKE_CSR_API(GET_ALL_CONSOLE_ALIASES, CSR_NATIVE);
+  Request.Data.GetAllConsoleAlias.AliasBuffer = AliasBuffer;
+  Request.Data.GetAllConsoleAlias.AliasBufferLength = AliasBufferLength;
+  Request.Data.GetAllConsoleAlias.lpExeName = ExeName;
 
-	LPALIAS ptr = lpFirst;
-	while (ptr)
-	{
-		swprintf(Buffer, L"%s=%s" , ptr->lpName, ptr->lpSubst);
-		wcscpy(AliasBuffer, Buffer);
-		AliasBuffer += wcslen(Buffer) + 1;
-		ptr = ptr->next;
-	}
+  Status = CsrClientCallServer(& Request,
+			       NULL,
+			       CsrRequest,
+			       sizeof(CSR_API_MESSAGE));
 
-	return (INT) (AliasBuffer - AliasPtr);
-}
+  if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Request.Status))
+  {
+    SetLastErrorByStatus(Status);
+    return FALSE;
+  }
 
-
-/*
- * @unimplemented
- */
-DWORD STDCALL
-GetConsoleAliasesA (LPSTR AliasBuffer,
-		    DWORD	AliasBufferLength,
-		    LPSTR	ExeName)
-     /*
-      * Undocumented
-      */
-{
-  DPRINT1("GetConsoleAliasesA(0x%p, 0x%x, 0x%p) UNIMPLEMENTED!\n", AliasBuffer, AliasBufferLength, ExeName);
-  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-  return 0;
+  return Request.Data.GetAllConsoleAlias.BytesWritten / sizeof(WCHAR);
 }
 
 
@@ -567,18 +509,58 @@ GetConsoleAliasesA (LPSTR AliasBuffer,
  * @implemented
  */
 DWORD STDCALL
-GetConsoleAliasesLengthW (LPWSTR lpExeName  /* FIXME: currently ignored */) 
+GetConsoleAliasesA (LPSTR AliasBuffer,
+		    DWORD	AliasBufferLength,
+		    LPSTR	ExeName)
 {
-	DWORD len = 0;
-	LPALIAS ptr = lpFirst;
-	while (ptr)
-	{
-		len += wcslen(ptr->lpName) * sizeof(WCHAR);
-		len += wcslen(ptr->lpSubst) * sizeof(WCHAR);
-		len += 2 * sizeof(WCHAR); /* '=' + '\0' */
-		ptr = ptr->next;
-	}
-	return len; 
+  DWORD dwRetVal = 0;
+  LPWSTR lpwExeName = NULL;
+  LPWSTR lpwAliasBuffer;
+
+	if (ExeName)
+		BasepAnsiStringToHeapUnicodeString(ExeName, (LPWSTR*) &lpwExeName);
+
+    lpwAliasBuffer = HeapAlloc(GetProcessHeap(), 0, AliasBufferLength * sizeof(WCHAR));
+
+    dwRetVal = GetConsoleAliasesW(lpwAliasBuffer, AliasBufferLength, lpwExeName);
+
+	if (lpwExeName)
+		RtlFreeHeap(GetProcessHeap(), 0, (LPWSTR*) lpwExeName);
+
+    if (dwRetVal)
+        dwRetVal = WideCharToMultiByte(CP_ACP, 0, lpwAliasBuffer, dwRetVal, AliasBuffer, AliasBufferLength, NULL, NULL);
+    
+    HeapFree(GetProcessHeap(), 0, lpwAliasBuffer);
+    return dwRetVal;
+}
+
+
+/*
+ * @implemented
+ */
+DWORD STDCALL
+GetConsoleAliasesLengthW (LPWSTR lpExeName) 
+{
+  CSR_API_MESSAGE Request; 
+  ULONG CsrRequest;
+  NTSTATUS          Status;
+
+  CsrRequest = MAKE_CSR_API(GET_ALL_CONSOLE_ALIASES_LENGTH, CSR_NATIVE);
+  Request.Data.GetAllConsoleAliasesLength.lpExeName = lpExeName;
+  Request.Data.GetAllConsoleAliasesLength.Length = 0;
+
+  Status = CsrClientCallServer(&Request,
+			       NULL,
+			       CsrRequest,
+			       sizeof(CSR_API_MESSAGE));
+
+  if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Request.Status))
+  {
+    SetLastErrorByStatus(Status);
+    return FALSE;
+  }
+
+  return Request.Data.GetAllConsoleAliasesLength.Length;
 }
 
 
@@ -594,7 +576,9 @@ GetConsoleAliasesLengthA (LPSTR lpExeName)
 	if (lpExeName)
 		BasepAnsiStringToHeapUnicodeString(lpExeName, (LPWSTR*) &lpExeNameW);
 
-	dwRetVal = (GetConsoleAliasesLengthW(lpExeNameW) / sizeof(WCHAR));
+	dwRetVal = GetConsoleAliasesLengthW(lpExeNameW);
+    if (dwRetVal)
+        dwRetVal /= sizeof(WCHAR);
 	
 	/* Clean up */
 	if (lpExeNameW)
