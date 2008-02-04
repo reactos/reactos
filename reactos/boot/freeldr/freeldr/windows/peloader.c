@@ -323,9 +323,7 @@ WinLdrLoadImage(IN PCHAR FileName,
 	if (PhysicalBase == NULL)
 	{
 		/* It's ok, we don't panic - let's allocate again at any other "low" place */
-		//MmChangeAllocationPolicy(FALSE);
 		PhysicalBase = MmAllocateMemoryWithType(NtHeaders->OptionalHeader.SizeOfImage, MemoryType);
-		//MmChangeAllocationPolicy(TRUE);
 
 		if (PhysicalBase == NULL)
 		{

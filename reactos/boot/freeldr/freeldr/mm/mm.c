@@ -25,12 +25,7 @@ VOID		DumpMemoryAllocMap(VOID);
 VOID		MemAllocTest(VOID);
 #endif // DBG
 
-BOOLEAN AllocateFromEnd = TRUE;
-
-VOID MmChangeAllocationPolicy(BOOLEAN PolicyAllocatePagesFromEnd)
-{
-	AllocateFromEnd = PolicyAllocatePagesFromEnd;
-}
+ULONG LoaderPagesSpanned = 0;
 
 PVOID MmAllocateMemoryWithType(ULONG MemorySize, TYPE_OF_MEMORY MemoryType)
 {
@@ -60,9 +55,9 @@ PVOID MmAllocateMemoryWithType(ULONG MemorySize, TYPE_OF_MEMORY MemoryType)
 		return NULL;
 	}
 
-	FirstFreePageFromEnd = MmFindAvailablePages(PageLookupTableAddress, TotalPagesInLookupTable, PagesNeeded, AllocateFromEnd);
+	FirstFreePageFromEnd = MmFindAvailablePages(PageLookupTableAddress, TotalPagesInLookupTable, PagesNeeded, FALSE);
 
-	if (FirstFreePageFromEnd == (ULONG)-1)
+	if (FirstFreePageFromEnd == 0)
 	{
 		DbgPrint((DPRINT_MEMORY, "Memory allocation failed in MmAllocateMemory(). Not enough free memory to allocate %d bytes.\n", MemorySize));
 		UiMessageBoxCritical("Memory allocation failed: out of memory.");
@@ -78,6 +73,10 @@ PVOID MmAllocateMemoryWithType(ULONG MemorySize, TYPE_OF_MEMORY MemoryType)
 	DbgPrint((DPRINT_MEMORY, "Allocated %d bytes (%d pages) of memory starting at page %d.\n", MemorySize, PagesNeeded, FirstFreePageFromEnd));
 	DbgPrint((DPRINT_MEMORY, "Memory allocation pointer: 0x%x\n", MemPointer));
 #endif // DBG
+
+	// Update LoaderPagesSpanned count
+	if ((((ULONG_PTR)MemPointer + MemorySize) >> PAGE_SHIFT) > LoaderPagesSpanned)
+		LoaderPagesSpanned = (((ULONG_PTR)MemPointer + MemorySize) >> PAGE_SHIFT);
 
 	// Now return the pointer
 	return MemPointer;
@@ -175,6 +174,10 @@ PVOID MmAllocateMemoryAtAddress(ULONG MemorySize, PVOID DesiredAddress, TYPE_OF_
 	DbgPrint((DPRINT_MEMORY, "Memory allocation pointer: 0x%x\n", MemPointer));
 #endif // DBG
 
+	// Update LoaderPagesSpanned count
+	if ((((ULONG_PTR)MemPointer + MemorySize) >> PAGE_SHIFT) > LoaderPagesSpanned)
+		LoaderPagesSpanned = (((ULONG_PTR)MemPointer + MemorySize) >> PAGE_SHIFT);
+
 	// Now return the pointer
 	return MemPointer;
 }
@@ -227,6 +230,10 @@ PVOID MmAllocateHighestMemoryBelowAddress(ULONG MemorySize, PVOID DesiredAddress
 	DbgPrint((DPRINT_MEMORY, "Allocated %d bytes (%d pages) of memory starting at page %d.\n", MemorySize, PagesNeeded, FirstFreePageFromEnd));
 	DbgPrint((DPRINT_MEMORY, "Memory allocation pointer: 0x%x\n", MemPointer));
 #endif // DBG
+
+	// Update LoaderPagesSpanned count
+	if ((((ULONG_PTR)MemPointer + MemorySize) >> PAGE_SHIFT) > LoaderPagesSpanned)
+		LoaderPagesSpanned = (((ULONG_PTR)MemPointer + MemorySize) >> PAGE_SHIFT);
 
 	// Now return the pointer
 	return MemPointer;

@@ -47,10 +47,6 @@ typedef struct
 	( ((a) >> MM_PAGE_SHIFT) + ((a) & MM_PAGE_MASK ? 1 : 0) )
 
 #endif // defined __i386__ or _PPC_ or _MIPS_
-//
-// This is the zone which is used by the OS loader
-//
-#define LOADER_HIGH_ZONE ((24*1024*1024) >> MM_PAGE_SHIFT) // 24Mb
 
 // HEAP and STACK size
 #define HEAP_PAGES	0x400
@@ -105,9 +101,6 @@ VOID	MmInitializeHeap(PVOID PageLookupTable);
 PVOID	MmAllocateMemory(ULONG MemorySize);
 PVOID	MmAllocateMemoryWithType(ULONG MemorySize, TYPE_OF_MEMORY MemoryType);
 VOID	MmFreeMemory(PVOID MemoryPointer);
-VOID	MmChangeAllocationPolicy(BOOLEAN PolicyAllocatePagesFromEnd);
-//PVOID	MmAllocateLowMemory(ULONG MemorySize);
-//VOID	MmFreeLowMemory(PVOID MemoryPointer);
 PVOID	MmAllocateMemoryAtAddress(ULONG MemorySize, PVOID DesiredAddress, TYPE_OF_MEMORY MemoryType);
 PVOID	MmAllocateHighestMemoryBelowAddress(ULONG MemorySize, PVOID DesiredAddress, TYPE_OF_MEMORY MemoryType);
 

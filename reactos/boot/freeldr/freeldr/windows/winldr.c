@@ -30,6 +30,7 @@ extern ARC_DISK_SIGNATURE reactos_arc_disk_info[];
 extern char reactos_arc_strings[32][256];
 
 extern BOOLEAN UseRealHeap;
+extern ULONG LoaderPagesSpanned;
 
 BOOLEAN
 WinLdrCheckForLoadedDll(IN OUT PLOADER_PARAMETER_BLOCK WinLdrBlock,
@@ -186,12 +187,11 @@ WinLdrInitializePhase1(PLOADER_PARAMETER_BLOCK LoaderBlock,
 	}
 	RtlZeroMemory(Extension, sizeof(LOADER_PARAMETER_EXTENSION));
 
-	/* Save size and version information */
+	/* Fill LPB extension */
 	Extension->Size = sizeof(LOADER_PARAMETER_EXTENSION);
 	Extension->MajorVersion = (VersionToBoot & 0xFF00) >> 8;
 	Extension->MinorVersion = VersionToBoot & 0xFF;
-	Extension->LoaderPagesSpanned = LOADER_HIGH_ZONE;
-
+	Extension->Profile.Status = 2;
 
 	LoaderBlock->Extension = PaToVa(Extension);
 }
@@ -208,8 +208,8 @@ void WinLdrSetupForNt(PLOADER_PARAMETER_BLOCK LoaderBlock,
 	ULONG_PTR Tss = 0;
 	ULONG BlockSize, NumPages;
 
-	LoaderBlock->u.I386.CommonDataArea = NULL;//CommonDataArea;
-	//LoaderBlock->u.I386.MachineType = MachineType; //FIXME: MachineType?
+	LoaderBlock->u.I386.CommonDataArea = NULL; //CommonDataArea;
+	LoaderBlock->u.I386.MachineType = 0; // ntldr sets this to 0
 
 	/* Allocate 2 pages for PCR */
 	Pcr = (ULONG_PTR)MmAllocateMemoryWithType(2 * MM_PAGE_SIZE, LoaderStartupPcrPage);
@@ -483,11 +483,11 @@ LoadAndBootWindows(PCSTR OperatingSystemName, WORD OperatingSystemVersion)
 	Status = WinLdrLoadBootDrivers(LoaderBlock, BootPath);
 	DbgPrint((DPRINT_WINDOWS, "Boot drivers loaded with status %d\n", Status));
 
-	/* Initialize Phase 1 - no drivers loading anymore */
-	WinLdrInitializePhase1(LoaderBlock, BootOptions, SystemPath, OperatingSystemVersion);
-
 	/* Alloc PCR, TSS, do magic things with the GDT/IDT */
 	WinLdrSetupForNt(LoaderBlock, &GdtIdt, &PcrBasePage, &TssBasePage);
+
+	/* Initialize Phase 1 - no drivers loading anymore */
+	WinLdrInitializePhase1(LoaderBlock, BootOptions, SystemPath, OperatingSystemVersion);
 
 	/* Save entry-point pointer and Loader block VAs */
 	KiSystemStartup = (KERNEL_ENTRY_POINT)KernelDTE->EntryPoint;
@@ -505,6 +505,9 @@ LoadAndBootWindows(PCSTR OperatingSystemName, WORD OperatingSystemVersion)
 
 	/* Turn on paging mode of CPU*/
 	WinLdrTurnOnPaging(LoaderBlock, PcrBasePage, TssBasePage, GdtIdt);
+
+	/* Save final value of LoaderPagesSpanned */
+	LoaderBlock->Extension->LoaderPagesSpanned = LoaderPagesSpanned;
 
 	DbgPrint((DPRINT_WINDOWS, "Hello from paged mode, KiSystemStartup %p, LoaderBlockVA %p!\n",
 		KiSystemStartup, LoaderBlockVA));

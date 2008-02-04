@@ -70,7 +70,7 @@ BOOLEAN CacheInitializeDrive(ULONG DriveNumber)
 			                                   CACHE_BLOCK,
 			                                   ListEntry);
 
-			MmFreeMemory(NextCacheBlock->BlockData);
+			MmHeapFree(NextCacheBlock->BlockData);
 			MmHeapFree(NextCacheBlock);
 		}
 	}

@@ -582,7 +582,7 @@ FrLdrMapImage(IN FILE *Image,
     FsSetFilePointer(Image, 0);
 
     /* Allocate a temporary buffer for the read */
-    ReadBuffer = MmAllocateMemory(ImageSize);
+    ReadBuffer = MmHeapAlloc(ImageSize);
 
     /* Load the file image */
     FsReadFile(Image, ImageSize, NULL, ReadBuffer);
@@ -591,7 +591,7 @@ FrLdrMapImage(IN FILE *Image,
     ImageSize = FrLdrReMapImage(ReadBuffer, LoadBase);
 
     /* Free the temporary buffer */
-    MmFreeMemory(ReadBuffer);
+    MmHeapFree(ReadBuffer);
 
     /* Calculate Difference between Real Base and Compiled Base*/
     Status = LdrRelocateImageWithBias(LoadBase,

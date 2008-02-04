@@ -22,7 +22,7 @@
 #define NDEBUG
 #include <debug.h>
 
-BOOLEAN gCacheEnabled = TRUE;
+BOOLEAN gCacheEnabled = FALSE;
 
 ULONG			BytesPerSector;			/* Number of bytes per sector */
 ULONG			SectorsPerCluster;		/* Number of sectors per cluster */

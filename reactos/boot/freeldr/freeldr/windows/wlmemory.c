@@ -14,6 +14,7 @@
 #include <debug.h>
 
 extern ULONG TotalNLSSize;
+extern ULONG LoaderPagesSpanned;
 
 // This is needed because headers define wrong one for ReactOS
 #undef KIP0PCRADDRESS
@@ -131,13 +132,13 @@ MempAllocatePageTables()
 	// PDE, HAL mapping page table, physical mapping, kernel mapping
 	TotalSize = (1+1+NumPageTables*2)*MM_PAGE_SIZE;
 
-	// Physical PTEs = FirmwareTemporary
-	PhysicalPageTablesBuffer = MmAllocateMemoryWithType(
-		NumPageTables*MM_PAGE_SIZE, LoaderFirmwareTemporary);
-
 	// PDE+HAL+KernelPTEs == MemoryData
 	Buffer = MmAllocateMemoryWithType(
 		TotalSize - NumPageTables*MM_PAGE_SIZE, LoaderMemoryData);
+
+	// Physical PTEs = FirmwareTemporary
+	PhysicalPageTablesBuffer = MmAllocateMemoryWithType(
+		NumPageTables*MM_PAGE_SIZE, LoaderFirmwareTemporary);
 
 	if (Buffer + (TotalSize - NumPageTables*MM_PAGE_SIZE) !=
 		PhysicalPageTablesBuffer)
@@ -290,23 +291,22 @@ MempDisablePages()
 		if (Mad[i].MemoryType == LoaderFirmwarePermanent ||
 			Mad[i].MemoryType == LoaderSpecialMemory ||
 			Mad[i].MemoryType == LoaderFree ||
-			(Mad[i].MemoryType == LoaderFirmwareTemporary && EndPage <= LOADER_HIGH_ZONE) ||
+			(Mad[i].MemoryType == LoaderFirmwareTemporary && EndPage <= LoaderPagesSpanned) ||
 			Mad[i].MemoryType == LoaderOsloaderStack ||
 			Mad[i].MemoryType == LoaderLoadedProgram)
 		{
-
 			//
 			// But, the first megabyte of memory always stays!
 			// And, to tell the truth, we don't care about what's higher
-			// than LOADER_HIGH_ZONE
+			// than LoaderPagesSpanned
 			if (Mad[i].MemoryType == LoaderFirmwarePermanent ||
 				Mad[i].MemoryType == LoaderSpecialMemory)
 			{
 				if (StartPage < 0x100)
 					StartPage = 0x100;
 
-				if (EndPage > LOADER_HIGH_ZONE)
-					EndPage = LOADER_HIGH_ZONE;
+				if (EndPage > LoaderPagesSpanned)
+					EndPage = LoaderPagesSpanned;
 			}
 
 			for (Page = StartPage; Page < EndPage; Page++)
@@ -329,7 +329,6 @@ MempDisablePages()
 		}
 	}
 }
-
 
 VOID
 MempAddMemoryBlock(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
@@ -361,7 +360,7 @@ MempAddMemoryBlock(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 	// Check if it's more than the allowed for OS loader
 	// if yes - don't map the pages, just add as FirmwareTemporary
 	//
-	if (BasePage + PageCount > LOADER_HIGH_ZONE)
+	if (BasePage + PageCount > LoaderPagesSpanned)
 	{
 		if (Mad[MadCount].MemoryType != LoaderSpecialMemory &&
 			Mad[MadCount].MemoryType != LoaderFirmwarePermanent &&
