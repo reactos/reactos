@@ -445,7 +445,6 @@ typedef struct
 
 typedef struct
 {
-  BOOL Unicode;
   DWORD BytesWritten;
   DWORD Length;
   LPWSTR ExeNames;
@@ -453,7 +452,6 @@ typedef struct
 
 typedef struct
 {
-  BOOL Unicode;
   DWORD Length;
 } CSRSS_GET_CONSOLE_ALIASES_EXES_LENGTH, *PCSRSS_GET_CONSOLE_ALIASES_EXES_LENGTH;
 
