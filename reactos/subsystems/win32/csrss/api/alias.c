@@ -312,7 +312,7 @@ CSR_API(CsrAddConsoleAlias)
         if (!Header)
         {
             Request->Status = STATUS_INSUFFICIENT_RESOURCES;
-            return STATUS_INSUFFICIENT_RESOURCES;
+            return Request->Status;
         }
         IntInsertAliasHeader(&RootHeader, Header);
     }
@@ -339,7 +339,7 @@ CSR_API(CsrAddConsoleAlias)
     if (!Entry)
     {
         Request->Status = STATUS_INSUFFICIENT_RESOURCES;
-        return STATUS_INSUFFICIENT_RESOURCES;
+        return Request->Status;
     }
 
     IntInsertAliasEntry(Header, Entry);
@@ -365,26 +365,26 @@ CSR_API(CsrGetConsoleAlias)
     if (!Header)
     {
         Request->Status = STATUS_INVALID_PARAMETER;
-        return STATUS_INVALID_PARAMETER;
+        return Request->Status;
     }
 
     Entry = IntGetAliasEntry(Header, Request->Data.GetConsoleAlias.lpSource);
     if (!Entry)
     {
         Request->Status = STATUS_INVALID_PARAMETER;
-        return STATUS_INVALID_PARAMETER;
+        return Request->Status;
     }
 
     Length = (wcslen(Entry->lpTarget)+1) * sizeof(WCHAR);
     if (Length > Request->Data.GetConsoleAlias.TargetBufferLength)
     {
         Request->Status = ERROR_INSUFFICIENT_BUFFER;
-        return ERROR_INSUFFICIENT_BUFFER;        
+        return Request->Status;      
     }
     wcscpy(Request->Data.GetConsoleAlias.TargetBuffer, Entry->lpTarget);
     Request->Data.GetConsoleAlias.BytesWritten = Length;
     Request->Status = STATUS_SUCCESS;
-    return STATUS_SUCCESS;
+    return Request->Status;
 }
 
 CSR_API(CsrGetAllConsoleAliases)
@@ -402,13 +402,13 @@ CSR_API(CsrGetAllConsoleAliases)
     if (!Header)
     {
         Request->Status = STATUS_INVALID_PARAMETER;
-        return STATUS_INVALID_PARAMETER;
+        return Request->Status;
     }
 
     if (IntGetAllConsoleAliasesLength(Header) > Request->Data.GetAllConsoleAlias.AliasBufferLength)
     {
         Request->Status = ERROR_INSUFFICIENT_BUFFER;
-        return ERROR_INSUFFICIENT_BUFFER;
+        return Request->Status;
     }
 
     BytesWritten = IntGetAllConsoleAliases(Header, 
@@ -417,7 +417,7 @@ CSR_API(CsrGetAllConsoleAliases)
 
     Request->Data.GetAllConsoleAlias.BytesWritten = BytesWritten;
     Request->Status = STATUS_SUCCESS;
-    return STATUS_SUCCESS;
+    return Request->Status;
 }
 
 CSR_API(CsrGetAllConsoleAliasesLength)
@@ -435,13 +435,13 @@ CSR_API(CsrGetAllConsoleAliasesLength)
     if (!Header)
     {
         Request->Status = STATUS_INVALID_PARAMETER;
-        return STATUS_INVALID_PARAMETER;
+        return Request->Status;
     }
 
     Length = IntGetAllConsoleAliasesLength(Header);
     Request->Data.GetAllConsoleAliasesLength.Length = Length;
     Request->Status = STATUS_SUCCESS;
-    return STATUS_SUCCESS;
+    return Request->Status;
 
 }
 
@@ -453,7 +453,7 @@ CSR_API(CsrGetConsoleAliasesExes)
     if (ExesLength > Request->Data.GetConsoleAliasesExes.Length)
     {
         Request->Status = ERROR_INSUFFICIENT_BUFFER;
-        return ERROR_INSUFFICIENT_BUFFER;
+        return Request->Status;
     }
 
     if (Request->Data.GetConsoleAliasesExes.ExeNames == NULL)
@@ -475,5 +475,5 @@ CSR_API(CsrGetConsoleAliasesExesLength)
 {
     Request->Status = STATUS_SUCCESS;
     Request->Data.GetConsoleAliasesExesLength.Length = IntGetConsoleAliasesExesLength(RootHeader);
-    return STATUS_SUCCESS;
+    return Request->Status;
 }
