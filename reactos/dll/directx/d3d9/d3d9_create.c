@@ -46,31 +46,46 @@ static VOID SetAdapterInfo(IN OUT LPDIRECT3D9_DISPLAYADAPTER_INT pDisplayAdapter
     pDisplayAdapter->bInUseFlag = TRUE;
 }
 
+static BOOL GetDirect3DAdapterInfo(IN OUT LPDIRECT3D9_DISPLAYADAPTER_INT pDisplayAdapter)
+{
+    HDC hDC;
+
+    /* Check if minimum DirectDraw is supported */
+    if (IsDirectDrawSupported() == FALSE)
+        return FALSE;
+
+    /* Test DC creation for the display device */
+    if (NULL == (hDC = CreateDCA(NULL, pDisplayAdapter->szDeviceName, NULL, NULL)))
+        return FALSE;
+
+    DeleteDC(hDC);
+    return TRUE;
+}
+
 static BOOL GetDisplayDeviceInfo(IN OUT LPDIRECT3D9_INT pDirect3D9)
 {
     DISPLAY_DEVICEA DisplayDevice;
     DWORD AdapterIndex;
-    HDC hDC;
 
     memset(&DisplayDevice, 0, sizeof(DISPLAY_DEVICEA));
     DisplayDevice.cb = sizeof(DISPLAY_DEVICEA);   
 
-    pDirect3D9->dwNumDisplayAdapters = 0;
+    pDirect3D9->NumDisplayAdapters = 0;
     D3D9_PrimaryDeviceName[0] = '\0';
 
     AdapterIndex = 0;
     while (EnumDisplayDevicesA(NULL, AdapterIndex, &DisplayDevice, 0) == TRUE &&
-           pDirect3D9->dwNumDisplayAdapters < DX_D3D9_MAX_NUM_ADAPTERS)
+           pDirect3D9->NumDisplayAdapters < DX_D3D9_MAX_NUM_ADAPTERS)
     {
         if ((DisplayDevice.StateFlags & (DISPLAY_DEVICE_DISCONNECT | DISPLAY_DEVICE_MIRRORING_DRIVER)) == 0 &&
             (DisplayDevice.StateFlags & (DISPLAY_DEVICE_PRIMARY_DEVICE | DISPLAY_DEVICE_ATTACHED_TO_DESKTOP)) != 0)
         {
-            SetAdapterInfo(&pDirect3D9->DisplayAdapters[pDirect3D9->dwNumDisplayAdapters], &DisplayDevice);
+            SetAdapterInfo(&pDirect3D9->DisplayAdapters[pDirect3D9->NumDisplayAdapters], &DisplayDevice);
 
-            if (pDirect3D9->dwNumDisplayAdapters == 0)
+            if (pDirect3D9->NumDisplayAdapters == 0)
                 lstrcpynA(D3D9_PrimaryDeviceName, DisplayDevice.DeviceName, sizeof(D3D9_PrimaryDeviceName));
 
-            ++pDirect3D9->dwNumDisplayAdapters;
+            ++pDirect3D9->NumDisplayAdapters;
             break;
         }
 
@@ -79,27 +94,22 @@ static BOOL GetDisplayDeviceInfo(IN OUT LPDIRECT3D9_INT pDirect3D9)
 
     AdapterIndex = 0;
     while (EnumDisplayDevicesA(NULL, AdapterIndex, &DisplayDevice, 0) == TRUE &&
-           pDirect3D9->dwNumDisplayAdapters < DX_D3D9_MAX_NUM_ADAPTERS)
+           pDirect3D9->NumDisplayAdapters < DX_D3D9_MAX_NUM_ADAPTERS)
     {
         if ((DisplayDevice.StateFlags & DISPLAY_DEVICE_ATTACHED_TO_DESKTOP) != 0 &&
             (DisplayDevice.StateFlags & (DISPLAY_DEVICE_MIRRORING_DRIVER | DISPLAY_DEVICE_PRIMARY_DEVICE)) == 0)
         {
-            SetAdapterInfo(&pDirect3D9->DisplayAdapters[pDirect3D9->dwNumDisplayAdapters], &DisplayDevice);
-            ++pDirect3D9->dwNumDisplayAdapters;
+            SetAdapterInfo(&pDirect3D9->DisplayAdapters[pDirect3D9->NumDisplayAdapters], &DisplayDevice);
+            ++pDirect3D9->NumDisplayAdapters;
         }
 
         ++AdapterIndex;
     }
 
-    /* Check if minimum DirectDraw is supported */
-    if (IsDirectDrawSupported() == FALSE)
-        return FALSE;
-
-    /* Test DC creation for primary display device */
-    if (NULL == (hDC = CreateDCA(NULL, D3D9_PrimaryDeviceName, NULL, NULL)))
-        return FALSE;
-
-    DeleteDC(hDC);
+    for (AdapterIndex = 0; AdapterIndex < pDirect3D9->NumDisplayAdapters; AdapterIndex++)
+    {
+        GetDirect3DAdapterInfo(&pDirect3D9->DisplayAdapters[AdapterIndex]);
+    }
 
     return TRUE;
 }

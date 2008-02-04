@@ -27,10 +27,10 @@ BOOL ReadRegistryValue(IN DWORD ValueType, IN LPCSTR ValueName, OUT LPBYTE DataB
     DWORD Type;
     LONG Ret;
 
-    if (ERROR_SUCCESS != RegOpenKeyEx(HKEY_LOCAL_MACHINE, D3D9_DebugRegPath, 0, KEY_QUERY_VALUE, &hKey))
+    if (ERROR_SUCCESS != RegOpenKeyExA(HKEY_LOCAL_MACHINE, D3D9_DebugRegPath, 0, KEY_QUERY_VALUE, &hKey))
         return FALSE;
 
-    Ret = RegQueryValueEx(hKey, ValueName, 0, &Type, DataBuffer, DataBufferSize);
+    Ret = RegQueryValueExA(hKey, ValueName, 0, &Type, DataBuffer, DataBufferSize);
 
     RegCloseKey(hKey);
 

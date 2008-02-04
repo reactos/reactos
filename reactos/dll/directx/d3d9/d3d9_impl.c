@@ -8,8 +8,9 @@
 
 #include "d3d9_common.h"
 #include <d3d9.h>
-#include "d3d9_helpers.h"
 #include <debug.h>
+#include "d3d9_helpers.h"
+#include "adapter.h"
 
 /* IDirect3D9: IUnknown implementation */
 static HRESULT WINAPI IDirect3D9Impl_QueryInterface(LPDIRECT3D9 iface, REFIID riid, LPVOID* ppvObject)
@@ -59,17 +60,93 @@ static HRESULT WINAPI IDirect3D9Impl_RegisterSoftwareDevice(LPDIRECT3D9 iface, v
     return D3D_OK;
 }
 
+/*++
+* @name IDirect3D9::GetAdapterCount
+* @implemented
+*
+* The function IDirect3D9Impl_GetAdapterCount returns the number of adapters
+*
+* @param LPDIRECT3D iface
+* Pointer to the IDirect3D object returned from Direct3DCreate9()
+*
+* @return 
+* The number of display adapters on the system when Direct3DCreate9() was called.
+*
+*/
 static UINT WINAPI IDirect3D9Impl_GetAdapterCount(LPDIRECT3D9 iface)
 {
-    UNIMPLEMENTED
+    UINT NumDisplayAdapters;
 
-    return D3D_OK;
+    LPDIRECT3D9_INT This = impl_from_IDirect3D9(iface);
+    LOCK_D3D9();
+
+    NumDisplayAdapters = This->NumDisplayAdapters;
+
+    UNLOCK_D3D9();
+    return NumDisplayAdapters;
 }
 
-static HRESULT WINAPI IDirect3D9Impl_GetAdapterIdentifier(LPDIRECT3D9 iface, UINT Adapter, DWORD Flags,
+/*++
+* @name IDirect3D9::GetAdapterIdentifier
+* @implemented
+*
+* The function IDirect3D9Impl_GetAdapterIdentifier gathers information about
+* a specified display adapter and fills the pIdentifier argument with the available information.
+*
+* @param LPDIRECT3D iface
+* Pointer to the IDirect3D object returned from Direct3DCreate9()
+*
+* @param UINT Adapter
+* Adapter index to get information about. D3DADAPTER_DEFAULT is the primary display.
+* The maximum value for this is the value returned by IDirect3D::GetAdapterCount().
+*
+* @param DWORD Flags
+* Ignored at the moment, but the only valid flag is D3DENUM_WHQL_LEVEL
+*
+* @param D3DADAPTER_IDENTIFIER9* pIdentifier
+* Pointer to a D3DADAPTER_IDENTIFIER9 structure to be filled with the available information
+* about the display adapter.
+*
+* @return 
+* If the method successfully fills the pIdentified structure, the return value is D3D_OK.
+* If Adapter is out of range, Flags is invalid or pIdentifier is a bad pointer, the return value
+* will be D3DERR_INVALIDCALL.
+*
+*/
+HRESULT WINAPI IDirect3D9Impl_GetAdapterIdentifier(LPDIRECT3D9 iface, UINT Adapter, DWORD Flags,
                                                           D3DADAPTER_IDENTIFIER9* pIdentifier)
 {
-    UNIMPLEMENTED
+    LPDIRECT3D9_INT This = impl_from_IDirect3D9(iface);
+    LOCK_D3D9();
+
+    if (Adapter >= This->NumDisplayAdapters)
+    {
+        DPRINT1("Invalid Adapter number specified");
+        UNLOCK_D3D9();
+        return D3DERR_INVALIDCALL;
+    }
+
+    if (Flags & ~D3DENUM_WHQL_LEVEL)
+    {
+        DPRINT1("Invalid Flags specified");
+        UNLOCK_D3D9();
+        return D3DERR_INVALIDCALL;
+    }
+
+    if (IsBadWritePtr(pIdentifier, sizeof(D3DADAPTER_IDENTIFIER9)))
+    {
+        UNLOCK_D3D9();
+        return D3DERR_INVALIDCALL;
+    }
+
+    memset(pIdentifier, 0, sizeof(D3DADAPTER_IDENTIFIER9));
+
+    if (FALSE == GetAdapterInfo(This->DisplayAdapters[Adapter].szDeviceName, pIdentifier))
+    {
+        DPRINT1("Internal error: Couldn't get the adapter info for device (%d): %s", Adapter, This->DisplayAdapters[Adapter].szDeviceName);
+        UNLOCK_D3D9();
+        return D3DERR_INVALIDCALL;
+    }
 
     return D3D_OK;
 }
@@ -150,7 +227,7 @@ static HMONITOR WINAPI IDirect3D9Impl_GetAdapterMonitor(LPDIRECT3D9 iface, UINT 
 {
     UNIMPLEMENTED
 
-    return D3D_OK;
+    return NULL;
 }
 
 static HRESULT WINAPI IDirect3D9Impl_CreateDevice(LPDIRECT3D9 iface, UINT Adapter, D3DDEVTYPE DeviceType,
@@ -163,7 +240,7 @@ static HRESULT WINAPI IDirect3D9Impl_CreateDevice(LPDIRECT3D9 iface, UINT Adapte
     return D3D_OK;
 }
 
-const IDirect3D9Vtbl Direct3D9_Vtbl =
+IDirect3D9Vtbl Direct3D9_Vtbl =
 {
     /* IUnknown */
     IDirect3D9Impl_QueryInterface,

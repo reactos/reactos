@@ -26,7 +26,7 @@ typedef struct _tagDIRECT3D9DisplayAdapterInfo_
 /* 0x0130 */    DWORD unknown000007;
 /* 0x0134 */    DWORD unknown000008;
 /* 0x0138 */    DWORD unknown000009;
-/* 0x013c */    DWORD unknown000010;
+/* 0x013c */    DWORD unknown000010;    /* D3D9_DRIVERCAPS? */
 /* 0x0140 */    DWORD unknown000011;
 /* 0x0144 */    DWORD unknown000012;
 /* 0x0148 */    DWORD unknown000013;
@@ -126,13 +126,13 @@ typedef struct _tagDIRECT3D9DisplayAdapterInfo_
 
 typedef struct _tagDIRECT3D9_INT_
 {
-/* 0x0000 */    const struct IDirect3D9Vtbl *lpVtbl; /* LPDIRECTD3D9 functoions table */
+/* 0x0000 */    struct IDirect3D9Vtbl *lpVtbl; /* LPDIRECTD3D9 functoions table */
 /* 0x0004 */    CRITICAL_SECTION d3d9_cs;
 /* 0x001c */    DWORD unknown000007;    /* 0x00000001 */
 /* 0x0020 */    DWORD dwProcessId;
 /* 0x0024 */    struct _tagDIRECT3D9_INT_ *lpInt;
 /* 0x0028 */    LONG dwRefCnt;          /* Increases and decreases by AddRef() and Release() */
-/* 0x002c */    DWORD dwNumDisplayAdapters;
+/* 0x002c */    UINT NumDisplayAdapters;
 /* 0x0030 */    Direct3D9DisplayAdapterInfo_INT DisplayAdapters[DX_D3D9_MAX_NUM_ADAPTERS];
 /* 0x2100 */    DWORD unknown002112;
 /* 0x2104 */    DWORD unknown002113;
@@ -2543,7 +2543,7 @@ typedef struct _tagDIRECT3D9_INT_
 /* 0x4698 */    DWORD unknown004518;
 /* 0x469c */    DWORD unknown004519;
 /* 0x46a0 */    DWORD unknown004520;
-/* 0x46a4 */    DWORD unknown004521;
+/* 0x46a4 */    DWORD unknown004521;    // Software only
 /* 0x46a8 */    DWORD unknown004522;
 /* 0x46ac */    DWORD unknown004523;
 /* 0x46b0 */    DWORD unknown004524;

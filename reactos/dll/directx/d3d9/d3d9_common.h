@@ -14,6 +14,6 @@
 #define DLLAPI __declspec(dllexport)
 #define DX_D3D9_DEBUG 0x80000000
 
-extern const struct IDirect3D9Vtbl Direct3D9_Vtbl;
+extern struct IDirect3D9Vtbl Direct3D9_Vtbl;
 
 #endif // _D3D9_COMMON_H_
