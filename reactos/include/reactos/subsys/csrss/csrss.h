@@ -412,6 +412,53 @@ typedef struct
   HANDLE InputWaitHandle;
 } CSRSS_GET_INPUT_WAIT_HANDLE, *PCSRSS_GET_INPUT_WAIT_HANDLE;
 
+typedef struct
+{
+    LPCWSTR lpSource;
+    LPCWSTR lpTarget;
+    LPCWSTR lpExeName;
+} CSRSS_ADD_CONSOLE_ALIAS, *PCSRSS_ADD_CONSOLE_ALIAS;
+
+typedef struct
+{
+  LPWSTR lpSource;
+  LPWSTR lpExeName;
+  DWORD BytesWritten;
+  DWORD TargetBufferLength;
+  LPWSTR TargetBuffer;
+
+} CSRSS_GET_CONSOLE_ALIAS, *PCSRSS_GET_CONSOLE_ALIAS;
+
+typedef struct
+{
+  LPWSTR lpExeName;
+  DWORD BytesWritten;
+  DWORD AliasBufferLength;
+  LPWSTR AliasBuffer;
+} CSRSS_GET_ALL_CONSOLE_ALIAS, *PCSRSS_GET_ALL_CONSOLE_ALIAS;
+
+typedef struct
+{
+  LPWSTR lpExeName;
+  DWORD Length;
+} CSRSS_GET_ALL_CONSOLE_ALIASES_LENGTH, *PCSRSS_GET_ALL_CONSOLE_ALIASES_LENGTH;
+
+typedef struct
+{
+  BOOL Unicode;
+  DWORD BytesWritten;
+  DWORD Length;
+  LPWSTR ExeNames;
+}  CSRSS_GET_CONSOLE_ALIASES_EXES, *PCSRSS_GET_CONSOLE_ALIASES_EXES;
+
+typedef struct
+{
+  BOOL Unicode;
+  DWORD Length;
+} CSRSS_GET_CONSOLE_ALIASES_EXES_LENGTH, *PCSRSS_GET_CONSOLE_ALIASES_EXES_LENGTH;
+
+
+
 #define CSR_API_MESSAGE_HEADER_SIZE(Type)       (FIELD_OFFSET(CSR_API_MESSAGE, Data) + sizeof(Type))
 #define CSRSS_MAX_WRITE_CONSOLE                 (LPC_MAX_DATA_LENGTH - CSR_API_MESSAGE_HEADER_SIZE(CSRSS_WRITE_CONSOLE))
 #define CSRSS_MAX_WRITE_CONSOLE_OUTPUT_CHAR     (LPC_MAX_DATA_LENGTH - CSR_API_MESSAGE_HEADER_SIZE(CSRSS_WRITE_CONSOLE_OUTPUT_CHAR))
@@ -480,6 +527,12 @@ typedef struct
 #define GET_INPUT_WAIT_HANDLE	      (0x35)
 #define GET_PROCESS_LIST              (0x36)
 #define START_SCREEN_SAVER            (0x37)
+#define ADD_CONSOLE_ALIAS             (0x38)
+#define GET_CONSOLE_ALIAS             (0x39)
+#define GET_ALL_CONSOLE_ALIAS         (0x3A)
+#define GET_ALL_CONSOLE_ALIASES_LENGTH (0x3B)
+#define GET_CONSOLE_ALIASES_EXES      (0x3C)
+#define GET_CONSOLE_ALIASES_EXES_LENGTH (0x3D)
 
 /* Keep in sync with definition below. */
 #define CSRSS_HEADER_SIZE (sizeof(PORT_MESSAGE) + sizeof(ULONG) + sizeof(NTSTATUS))
@@ -545,6 +598,12 @@ typedef struct _CSR_API_MESSAGE
         CSRSS_SET_CONSOLE_OUTPUT_CP SetConsoleOutputCodePage;
         CSRSS_GET_INPUT_WAIT_HANDLE GetConsoleInputWaitHandle;
         CSRSS_GET_PROCESS_LIST GetProcessListRequest;
+        CSRSS_ADD_CONSOLE_ALIAS AddConsoleAlias;
+        CSRSS_GET_CONSOLE_ALIAS GetConsoleAlias;
+        CSRSS_GET_ALL_CONSOLE_ALIAS GetAllConsoleAlias;
+        CSRSS_GET_ALL_CONSOLE_ALIASES_LENGTH GetAllConsoleAliasesLength;
+        CSRSS_GET_CONSOLE_ALIASES_EXES GetConsoleAliasesExes;
+        CSRSS_GET_CONSOLE_ALIASES_EXES_LENGTH GetConsoleAliasesExesLength;
     } Data;
 } CSR_API_MESSAGE, *PCSR_API_MESSAGE;
 
