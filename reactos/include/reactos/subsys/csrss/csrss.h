@@ -435,7 +435,7 @@ typedef struct
   DWORD BytesWritten;
   DWORD AliasBufferLength;
   LPWSTR AliasBuffer;
-} CSRSS_GET_ALL_CONSOLE_ALIAS, *PCSRSS_GET_ALL_CONSOLE_ALIAS;
+} CSRSS_GET_ALL_CONSOLE_ALIASES, *PCSRSS_GET_ALL_CONSOLE_ALIAS;
 
 typedef struct
 {
@@ -529,7 +529,7 @@ typedef struct
 #define START_SCREEN_SAVER            (0x37)
 #define ADD_CONSOLE_ALIAS             (0x38)
 #define GET_CONSOLE_ALIAS             (0x39)
-#define GET_ALL_CONSOLE_ALIAS         (0x3A)
+#define GET_ALL_CONSOLE_ALIASES         (0x3A)
 #define GET_ALL_CONSOLE_ALIASES_LENGTH (0x3B)
 #define GET_CONSOLE_ALIASES_EXES      (0x3C)
 #define GET_CONSOLE_ALIASES_EXES_LENGTH (0x3D)
@@ -600,7 +600,7 @@ typedef struct _CSR_API_MESSAGE
         CSRSS_GET_PROCESS_LIST GetProcessListRequest;
         CSRSS_ADD_CONSOLE_ALIAS AddConsoleAlias;
         CSRSS_GET_CONSOLE_ALIAS GetConsoleAlias;
-        CSRSS_GET_ALL_CONSOLE_ALIAS GetAllConsoleAlias;
+        CSRSS_GET_ALL_CONSOLE_ALIASES GetAllConsoleAlias;
         CSRSS_GET_ALL_CONSOLE_ALIASES_LENGTH GetAllConsoleAliasesLength;
         CSRSS_GET_CONSOLE_ALIASES_EXES GetConsoleAliasesExes;
         CSRSS_GET_CONSOLE_ALIASES_EXES_LENGTH GetConsoleAliasesExesLength;
