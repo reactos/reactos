@@ -265,7 +265,7 @@ FILE* IsoOpenFile(PCSTR FileName)
 		return NULL;
 	}
 
-	FileHandle = MmAllocateMemory(sizeof(ISO_FILE_INFO));
+	FileHandle = MmHeapAlloc(sizeof(ISO_FILE_INFO));
 
 	if (FileHandle == NULL)
 	{

@@ -89,7 +89,7 @@ static PNTFS_ATTR_CONTEXT NtfsPrepareAttributeContext(PNTFS_ATTR_RECORD AttrReco
 {
     PNTFS_ATTR_CONTEXT Context;
 
-    Context = MmAllocateMemory(FIELD_OFFSET(NTFS_ATTR_CONTEXT, Record) + AttrRecord->Length);
+    Context = MmHeapAlloc(FIELD_OFFSET(NTFS_ATTR_CONTEXT, Record) + AttrRecord->Length);
     RtlCopyMemory(&Context->Record, AttrRecord, AttrRecord->Length);
     if (AttrRecord->IsNonResident)
     {
@@ -120,7 +120,7 @@ static PNTFS_ATTR_CONTEXT NtfsPrepareAttributeContext(PNTFS_ATTR_RECORD AttrReco
 
 static VOID NtfsReleaseAttributeContext(PNTFS_ATTR_CONTEXT Context)
 {
-    MmFreeMemory(Context);
+    MmHeapFree(Context);
 }
 
 /* FIXME: Optimize for multisector reads. */
@@ -338,7 +338,7 @@ static PNTFS_ATTR_CONTEXT NtfsFindAttributeHelper(PNTFS_ATTR_RECORD AttrRecord, 
             ListContext = NtfsPrepareAttributeContext(AttrRecord);
 
             ListSize = NtfsGetAttributeSize(&ListContext->Record);
-            ListBuffer = MmAllocateMemory(ListSize);
+            ListBuffer = MmHeapAlloc(ListSize);
 
             ListAttrRecord = (PNTFS_ATTR_RECORD)ListBuffer;
             ListAttrRecordEnd = (PNTFS_ATTR_RECORD)((PCHAR)ListBuffer + ListSize);
@@ -349,7 +349,7 @@ static PNTFS_ATTR_CONTEXT NtfsFindAttributeHelper(PNTFS_ATTR_RECORD AttrRecord, 
                                                   Type, Name, NameLength);
 
                 NtfsReleaseAttributeContext(ListContext);
-                MmFreeMemory(ListBuffer);
+                MmHeapFree(ListBuffer);
 
                 if (Context != NULL)
                     return Context;
@@ -495,7 +495,7 @@ static BOOLEAN NtfsFindMftRecord(ULONG MFTIndex, PCHAR FileName, ULONG *OutMFTIn
     ULONG RecordOffset;
     ULONG IndexBlockSize;
 
-    MftRecord = MmAllocateMemory(NtfsMftRecordSize);
+    MftRecord = MmHeapAlloc(NtfsMftRecordSize);
     if (MftRecord == NULL)
     {
         return FALSE;
@@ -508,14 +508,14 @@ static BOOLEAN NtfsFindMftRecord(ULONG MFTIndex, PCHAR FileName, ULONG *OutMFTIn
         IndexRootCtx = NtfsFindAttribute(MftRecord, NTFS_ATTR_TYPE_INDEX_ROOT, L"$I30");
         if (IndexRootCtx == NULL)
         {
-            MmFreeMemory(MftRecord);
+            MmHeapFree(MftRecord);
             return FALSE;
         }
 
-        IndexRecord = MmAllocateMemory(NtfsIndexRecordSize);
+        IndexRecord = MmHeapAlloc(NtfsIndexRecordSize);
         if (IndexRecord == NULL)
         {
-            MmFreeMemory(MftRecord);
+            MmHeapFree(MftRecord);
             return FALSE;
         }
 
@@ -534,8 +534,8 @@ static BOOLEAN NtfsFindMftRecord(ULONG MFTIndex, PCHAR FileName, ULONG *OutMFTIn
             if (NtfsCompareFileName(FileName, IndexEntry))
             {
                 *OutMFTIndex = IndexEntry->Data.Directory.IndexedFile;
-                MmFreeMemory(IndexRecord);
-                MmFreeMemory(MftRecord);
+                MmHeapFree(IndexRecord);
+                MmHeapFree(MftRecord);
                 return TRUE;
             }
 	    IndexEntry = (PNTFS_INDEX_ENTRY)((PCHAR)IndexEntry + IndexEntry->Length);
@@ -551,16 +551,16 @@ static BOOLEAN NtfsFindMftRecord(ULONG MFTIndex, PCHAR FileName, ULONG *OutMFTIn
             if (IndexBitmapCtx == NULL)
             {
                 DbgPrint((DPRINT_FILESYSTEM, "Corrupted filesystem!\n"));
-                MmFreeMemory(MftRecord);
+                MmHeapFree(MftRecord);
                 return FALSE;
             }
             BitmapDataSize = NtfsGetAttributeSize(&IndexBitmapCtx->Record);
             DbgPrint((DPRINT_FILESYSTEM, "BitmapDataSize: %x\n", BitmapDataSize));
-            BitmapData = MmAllocateMemory(BitmapDataSize);
+            BitmapData = MmHeapAlloc(BitmapDataSize);
             if (BitmapData == NULL)
             {
-                MmFreeMemory(IndexRecord);
-                MmFreeMemory(MftRecord);
+                MmHeapFree(IndexRecord);
+                MmHeapFree(MftRecord);
                 return FALSE;
             }
             NtfsReadAttribute(IndexBitmapCtx, 0, BitmapData, BitmapDataSize);
@@ -570,9 +570,9 @@ static BOOLEAN NtfsFindMftRecord(ULONG MFTIndex, PCHAR FileName, ULONG *OutMFTIn
             if (IndexAllocationCtx == NULL)
             {
                 DbgPrint((DPRINT_FILESYSTEM, "Corrupted filesystem!\n"));
-                MmFreeMemory(BitmapData);
-                MmFreeMemory(IndexRecord);
-                MmFreeMemory(MftRecord);
+                MmHeapFree(BitmapData);
+                MmHeapFree(IndexRecord);
+                MmHeapFree(MftRecord);
                 return FALSE;
             }
             IndexAllocationSize = NtfsGetAttributeSize(&IndexAllocationCtx->Record);
@@ -614,9 +614,9 @@ static BOOLEAN NtfsFindMftRecord(ULONG MFTIndex, PCHAR FileName, ULONG *OutMFTIn
                     {
                         DbgPrint((DPRINT_FILESYSTEM, "File found\n"));
                         *OutMFTIndex = IndexEntry->Data.Directory.IndexedFile;
-                        MmFreeMemory(BitmapData);
-                        MmFreeMemory(IndexRecord);
-                        MmFreeMemory(MftRecord);
+                        MmHeapFree(BitmapData);
+                        MmHeapFree(IndexRecord);
+                        MmHeapFree(MftRecord);
                         NtfsReleaseAttributeContext(IndexAllocationCtx);
                         return TRUE;
                     }
@@ -627,16 +627,16 @@ static BOOLEAN NtfsFindMftRecord(ULONG MFTIndex, PCHAR FileName, ULONG *OutMFTIn
             }
 
             NtfsReleaseAttributeContext(IndexAllocationCtx);
-            MmFreeMemory(BitmapData);
+            MmHeapFree(BitmapData);
         }
 
-        MmFreeMemory(IndexRecord);
+        MmHeapFree(IndexRecord);
     }
     else
     {
         DbgPrint((DPRINT_FILESYSTEM, "Can't read MFT record\n"));
     }
-    MmFreeMemory(MftRecord);
+    MmHeapFree(MftRecord);
 
     return FALSE;
 }
@@ -703,7 +703,7 @@ BOOLEAN NtfsOpenVolume(UCHAR DriveNumber, ULONGLONG VolumeStartSector, ULONGLONG
         return FALSE;
     }
 
-    NtfsBootSector = MmAllocateMemory(NtfsBootSector->BytesPerSector);
+    NtfsBootSector = MmHeapAlloc(NtfsBootSector->BytesPerSector);
     if (NtfsBootSector == NULL)
     {
         return FALSE;
@@ -740,10 +740,10 @@ BOOLEAN NtfsOpenVolume(UCHAR DriveNumber, ULONGLONG VolumeStartSector, ULONGLONG
         return FALSE;
     }
 
-    NtfsMasterFileTable = MmAllocateMemory(NtfsMftRecordSize);
+    NtfsMasterFileTable = MmHeapAlloc(NtfsMftRecordSize);
     if (NtfsMasterFileTable == NULL)
     {
-        MmFreeMemory(NtfsBootSector);
+        MmHeapFree(NtfsBootSector);
         return FALSE;
     }
 
@@ -765,7 +765,7 @@ FILE* NtfsOpenFile(PCSTR FileName)
     PNTFS_FILE_HANDLE FileHandle;
     PNTFS_MFT_RECORD MftRecord;
 
-    FileHandle = MmAllocateMemory(sizeof(NTFS_FILE_HANDLE) + NtfsMftRecordSize);
+    FileHandle = MmHeapAlloc(sizeof(NTFS_FILE_HANDLE) + NtfsMftRecordSize);
     if (FileHandle == NULL)
     {
         return NULL;
@@ -774,7 +774,7 @@ FILE* NtfsOpenFile(PCSTR FileName)
     MftRecord = (PNTFS_MFT_RECORD)(FileHandle + 1);
     if (!NtfsLookupFile(FileName, MftRecord, &FileHandle->DataContext))
     {
-        MmFreeMemory(FileHandle);
+        MmHeapFree(FileHandle);
         return NULL;
     }
 
@@ -787,7 +787,7 @@ VOID NtfsCloseFile(FILE *File)
 {
     PNTFS_FILE_HANDLE FileHandle = (PNTFS_FILE_HANDLE)File;
     NtfsReleaseAttributeContext(FileHandle->DataContext);
-    MmFreeMemory(FileHandle);
+    MmHeapFree(FileHandle);
 }
 
 BOOLEAN NtfsReadFile(FILE *File, ULONG BytesToRead, ULONG* BytesRead, PVOID Buffer)
