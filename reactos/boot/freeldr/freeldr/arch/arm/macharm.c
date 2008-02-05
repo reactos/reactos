@@ -15,7 +15,7 @@
 /* FUNCTIONS ******************************************************************/
 
 VOID
-ArmMachInit(const char *CmdLine)
+MachInit(IN PCCH CommandLine)
 {
     //
     // Setup ARM routines

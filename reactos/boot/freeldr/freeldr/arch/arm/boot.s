@@ -8,16 +8,14 @@
 
 /* INCLUDES *******************************************************************/
 
-//#include <ksarm.h>
 //#include <kxarm.h>
 
 /* GLOBALS ********************************************************************/
 
-.globl _start
-.globl _bss
+.global _start
+.section startup
     
 /* BOOT CODE ******************************************************************/
 
-.extern ArmInit
 _start:
 	b .

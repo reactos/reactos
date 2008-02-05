@@ -34,7 +34,8 @@
 #undef MachVideoSetPaletteColor
 #undef MachVideoGetPaletteColor
 #undef MachVideoSync
-#undef MachVideoPrepareForReactOS
+#undef MachBeep
+#undef MachPrepareForReactOS
 #undef MachGetMemoryMap
 #undef MachDiskGetBootVolume
 #undef MachDiskGetSystemVolume
@@ -142,9 +143,15 @@ MachVideoSync(VOID)
 }
 
 VOID
-MachVideoPrepareForReactOS(IN BOOLEAN Setup)
+MachBeep(VOID)
 {
-  MachVtbl.VideoPrepareForReactOS(Setup);
+  MachVtbl.Beep();
+}
+
+VOID
+MachPrepareForReactOS(IN BOOLEAN Setup)
+{
+  MachVtbl.PrepareForReactOS(Setup);
 }
 
 ULONG

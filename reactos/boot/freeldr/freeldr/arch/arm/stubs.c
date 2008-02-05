@@ -12,4 +12,14 @@
 
 /* GLOBALS ********************************************************************/
 
+ULONG PageDirectoryStart, PageDirectoryEnd;
+
 /* FUNCTIONS ******************************************************************/
+
+VOID
+FrLdrStartup(IN ULONG Magic)
+{
+    //
+    // Start the OS
+    //
+}

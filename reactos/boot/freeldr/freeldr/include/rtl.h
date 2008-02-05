@@ -25,7 +25,7 @@
 char *	convert_to_ascii(char *buf, int c, int num);
 char *	convert_i64_to_ascii(char *buf, int c, unsigned long long num);
 
-void	beep(void);
+void	PcBeep(void);
 void	delay(unsigned msec);
 void	sound(int freq);
 

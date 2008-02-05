@@ -63,7 +63,9 @@ DetectAcpiBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
 
     if (Rsdp)
     {
+        /* Set up the flag in the loader block */
         AcpiPresent = TRUE;
+        LoaderBlock.Flags |= MB_FLAGS_ACPI_TABLE;
 
         /* Create new bus key */
         FldrCreateComponentKey(SystemKey,

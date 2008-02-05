@@ -44,7 +44,8 @@ XboxMachInit(const char *CmdLine)
   MachVtbl.VideoSetPaletteColor = XboxVideoSetPaletteColor;
   MachVtbl.VideoGetPaletteColor = XboxVideoGetPaletteColor;
   MachVtbl.VideoSync = XboxVideoSync;
-  MachVtbl.VideoPrepareForReactOS = XboxVideoPrepareForReactOS;
+  MachVtbl.Beep = PcBeep;
+  MachVtbl.PrepareForReactOS = XboxPrepareForReactOS;
   MachVtbl.GetMemoryMap = XboxMemGetMemoryMap;
   MachVtbl.DiskGetBootVolume = i386DiskGetBootVolume;
   MachVtbl.DiskGetSystemVolume = i386DiskGetSystemVolume;
@@ -61,4 +62,14 @@ XboxMachInit(const char *CmdLine)
 
   /* Set LEDs to orange after init */
   XboxSetLED("oooo");
+}
+
+VOID
+XboxPrepareForReactOS(IN BOOLEAN Setup)
+{
+    //
+    // On XBOX, prepare video and turn off the floppy motor
+    //
+    XboxVideoPrepareForReactOS(Setup);
+    DiskStopFloppyMotor();
 }

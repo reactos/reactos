@@ -935,7 +935,7 @@ BOOLEAN TuiEditBox(PCSTR MessageText, PCHAR EditTextBuffer, ULONG Length)
 				}
 				else
 				{
-					beep();
+					MachBeep();
 				}
 			}
 			else // Add this key to the buffer
@@ -948,7 +948,7 @@ BOOLEAN TuiEditBox(PCSTR MessageText, PCHAR EditTextBuffer, ULONG Length)
 				}
 				else
 				{
-					beep();
+					MachBeep();
 				}
 			}
 		}

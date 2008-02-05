@@ -44,6 +44,7 @@
 		<file>archwsup.c</file>
 		<file>binhive.c</file>
 		<file>reactos.c</file>
+        <file>imageldr.c</file>
 	</directory>
 	<directory name="rtl">
 		<file>bget.c</file>

@@ -22,39 +22,49 @@
 VOID
 PcMachInit(const char *CmdLine)
 {
-  EnableA20();
-
-  /* Setup vtbl */
-  MachVtbl.ConsPutChar = PcConsPutChar;
-  MachVtbl.ConsKbHit = PcConsKbHit;
-  MachVtbl.ConsGetCh = PcConsGetCh;
-  MachVtbl.VideoClearScreen = PcVideoClearScreen;
-  MachVtbl.VideoSetDisplayMode = PcVideoSetDisplayMode;
-  MachVtbl.VideoGetDisplaySize = PcVideoGetDisplaySize;
-  MachVtbl.VideoGetBufferSize = PcVideoGetBufferSize;
-  MachVtbl.VideoSetTextCursorPosition = PcVideoSetTextCursorPosition;
-  MachVtbl.VideoSetTextCursorPosition = PcVideoSetTextCursorPosition;
-  MachVtbl.VideoHideShowTextCursor = PcVideoHideShowTextCursor;
-  MachVtbl.VideoPutChar = PcVideoPutChar;
-  MachVtbl.VideoCopyOffScreenBufferToVRAM = PcVideoCopyOffScreenBufferToVRAM;
-  MachVtbl.VideoIsPaletteFixed = PcVideoIsPaletteFixed;
-  MachVtbl.VideoSetPaletteColor = PcVideoSetPaletteColor;
-  MachVtbl.VideoGetPaletteColor = PcVideoGetPaletteColor;
-  MachVtbl.VideoSync = PcVideoSync;
-  MachVtbl.VideoPrepareForReactOS = PcVideoPrepareForReactOS;
-  MachVtbl.GetMemoryMap = PcMemGetMemoryMap;
-  MachVtbl.DiskGetBootVolume = i386DiskGetBootVolume;
-  MachVtbl.DiskGetSystemVolume = i386DiskGetSystemVolume;
-  MachVtbl.DiskGetBootPath = i386DiskGetBootPath;
-  MachVtbl.DiskGetBootDevice = i386DiskGetBootDevice;
-  MachVtbl.DiskBootingFromFloppy = i386DiskBootingFromFloppy;
-  MachVtbl.DiskNormalizeSystemPath = i386DiskNormalizeSystemPath;
-  MachVtbl.DiskReadLogicalSectors = PcDiskReadLogicalSectors;
-  MachVtbl.DiskGetPartitionEntry = PcDiskGetPartitionEntry;
-  MachVtbl.DiskGetDriveGeometry = PcDiskGetDriveGeometry;
-  MachVtbl.DiskGetCacheableBlockCount = PcDiskGetCacheableBlockCount;
-  MachVtbl.RTCGetCurrentDateTime = PcRTCGetCurrentDateTime;
-  MachVtbl.HwDetect = PcHwDetect;
+    EnableA20();
+    
+    /* Setup vtbl */
+    MachVtbl.ConsPutChar = PcConsPutChar;
+    MachVtbl.ConsKbHit = PcConsKbHit;
+    MachVtbl.ConsGetCh = PcConsGetCh;
+    MachVtbl.VideoClearScreen = PcVideoClearScreen;
+    MachVtbl.VideoSetDisplayMode = PcVideoSetDisplayMode;
+    MachVtbl.VideoGetDisplaySize = PcVideoGetDisplaySize;
+    MachVtbl.VideoGetBufferSize = PcVideoGetBufferSize;
+    MachVtbl.VideoSetTextCursorPosition = PcVideoSetTextCursorPosition;
+    MachVtbl.VideoSetTextCursorPosition = PcVideoSetTextCursorPosition;
+    MachVtbl.VideoHideShowTextCursor = PcVideoHideShowTextCursor;
+    MachVtbl.VideoPutChar = PcVideoPutChar;
+    MachVtbl.VideoCopyOffScreenBufferToVRAM = PcVideoCopyOffScreenBufferToVRAM;
+    MachVtbl.VideoIsPaletteFixed = PcVideoIsPaletteFixed;
+    MachVtbl.VideoSetPaletteColor = PcVideoSetPaletteColor;
+    MachVtbl.VideoGetPaletteColor = PcVideoGetPaletteColor;
+    MachVtbl.VideoSync = PcVideoSync;
+    MachVtbl.Beep = PcBeep;
+    MachVtbl.PrepareForReactOS = PcPrepareForReactOS;
+    MachVtbl.GetMemoryMap = PcMemGetMemoryMap;
+    MachVtbl.DiskGetBootVolume = i386DiskGetBootVolume;
+    MachVtbl.DiskGetSystemVolume = i386DiskGetSystemVolume;
+    MachVtbl.DiskGetBootPath = i386DiskGetBootPath;
+    MachVtbl.DiskGetBootDevice = i386DiskGetBootDevice;
+    MachVtbl.DiskBootingFromFloppy = i386DiskBootingFromFloppy;
+    MachVtbl.DiskNormalizeSystemPath = i386DiskNormalizeSystemPath;
+    MachVtbl.DiskReadLogicalSectors = PcDiskReadLogicalSectors;
+    MachVtbl.DiskGetPartitionEntry = PcDiskGetPartitionEntry;
+    MachVtbl.DiskGetDriveGeometry = PcDiskGetDriveGeometry;
+    MachVtbl.DiskGetCacheableBlockCount = PcDiskGetCacheableBlockCount;
+    MachVtbl.RTCGetCurrentDateTime = PcRTCGetCurrentDateTime;
+    MachVtbl.HwDetect = PcHwDetect;
 }
 
+VOID
+PcPrepareForReactOS(IN BOOLEAN Setup)
+{
+    //
+    // On PC, prepare video and turn off the floppy motor
+    //
+    PcVideoPrepareForReactOS(Setup);
+    DiskStopFloppyMotor();
+}
 /* EOF */

@@ -427,10 +427,15 @@ VOID RunLoader(VOID)
 
   UiUnInitialize("Booting ReactOS...");
 
-  /* Now boot the kernel */
-  DiskStopFloppyMotor();
-  MachVideoPrepareForReactOS(TRUE);
-  FrLdrStartup(0x2badb002);
+    //
+    // Perform architecture-specific pre-boot configuration
+    //
+    MachPrepareForReactOS(FALSE);
+    
+    //
+    // Setup paging and jump to kernel
+    //
+	FrLdrStartup(0x2badb002);
 }
 
 /* EOF */

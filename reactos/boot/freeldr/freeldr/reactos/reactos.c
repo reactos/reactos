@@ -42,8 +42,8 @@ CHAR szBootPath[255];
 CHAR SystemRoot[255];
 static CHAR szLoadingMsg[] = "Loading ReactOS...";
 BOOLEAN FrLdrBootType;
-extern ULONG_PTR KernelBase;
-extern ROS_KERNEL_ENTRY_POINT KernelEntryPoint;
+ULONG_PTR KernelBase;
+ROS_KERNEL_ENTRY_POINT KernelEntryPoint;
 
 BOOLEAN
 FrLdrLoadDriver(PCHAR szFileName,
@@ -574,11 +574,8 @@ LoadAndBootReactOS(PCSTR OperatingSystemName)
 	ULONG SectionId;
     PIMAGE_NT_HEADERS NtHeader;
     PVOID LoadBase;
-
 	ULONG_PTR Base;
 	ULONG Size;
-
-	extern BOOLEAN AcpiPresent;
 
 	//
 	// Open the operating system section
@@ -702,7 +699,6 @@ LoadAndBootReactOS(PCSTR OperatingSystemName)
 	LoaderBlock.ArchExtra = (ULONG)MachHwDetect();
     UiDrawProgressBarCenter(5, 100, szLoadingMsg);
 
-	if (AcpiPresent) LoaderBlock.Flags |= MB_FLAGS_ACPI_TABLE;
     LoaderBlock.DrivesCount = reactos_disk_count;
 
 	UiDrawStatusText("Loading...");
@@ -864,11 +860,14 @@ LoadAndBootReactOS(PCSTR OperatingSystemName)
 	FrLdrLoadBootDrivers(szBootPath, 40);
 	//UiUnInitialize("Booting ReactOS...");
 
-	/*
-	 * Now boot the kernel
-	 */
-	DiskStopFloppyMotor();
-	MachVideoPrepareForReactOS(FALSE);
+    //
+    // Perform architecture-specific pre-boot configuration
+    //
+    MachPrepareForReactOS(FALSE);
+
+    //
+    // Setup paging and jump to kernel
+    //
 	FrLdrStartup(0x2badb002);
 }
 

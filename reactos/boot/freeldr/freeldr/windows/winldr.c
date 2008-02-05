@@ -494,11 +494,10 @@ LoadAndBootWindows(PCSTR OperatingSystemName, WORD OperatingSystemVersion)
 	LoaderBlockVA = PaToVa(LoaderBlock);
 
 	/* "Stop all motors", change videomode */
-	DiskStopFloppyMotor();
 	if (OperatingSystemVersion < _WIN32_WINNT_WIN2K)
-		MachVideoPrepareForReactOS(TRUE);
+		MachPrepareForReactOS(TRUE);
 	else
-		MachVideoPrepareForReactOS(FALSE);
+		MachPrepareForReactOS(FALSE);
 
 	/* Debugging... */
 	//DumpMemoryAllocMap();
