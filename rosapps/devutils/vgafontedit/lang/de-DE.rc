@@ -11,7 +11,7 @@ LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
 
 IDD_ABOUT DIALOGEX 10, 10, 130, 62
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-CAPTION "Über"
+CAPTION "Info"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON           IDI_MAIN,                     IDC_STATIC, 10, 10, 20, 20
@@ -22,7 +22,7 @@ END
 
 IDD_EDITGLYPH DIALOGEX 10, 10, 246, 197
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Glyphen bearbeiten"
+CAPTION "Schriftzeichen bearbeiten"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDC_EDIT_GLYPH_TOOLBOX, TOOLBARCLASSNAMEA,          CCS_NODIVIDER | CCS_NORESIZE, 5, 5, 24, 82
@@ -39,7 +39,7 @@ BEGIN
     BEGIN
         MENUITEM "&Neu\tStrg+N", ID_FILE_NEW
         MENUITEM "&Öffnen...\tStrg+O", ID_FILE_OPEN
-        MENUITEM "Schliessen", ID_FILE_CLOSE
+        MENUITEM "Schließen", ID_FILE_CLOSE
         MENUITEM SEPARATOR
         MENUITEM "Speichern\tStrg+S", ID_FILE_SAVE
         MENUITEM "Speichern unter...", ID_FILE_SAVE_AS
@@ -59,19 +59,19 @@ BEGIN
 
     POPUP "&Hilfe"
     BEGIN
-        MENUITEM "&Über...", ID_HELP_ABOUT
+        MENUITEM "&Info...", ID_HELP_ABOUT
     END
 END
 
 STRINGTABLE
 BEGIN
-    IDS_OPENFILTER, "Alle unterstützten Formate (*.bin,*.psf)|*.bin;*.psf|Binary Font Files (*.bin)|*.bin|PC Screen Fonts Version 1 (*.psf)|*.psf|"
-    IDS_SAVEFILTER, "Binäre Font Dateien (*.bin)|*.bin|"
+    IDS_OPENFILTER, "Alle unterstützten Formate (*.bin,*.psf)|*.bin;*.psf|Binäre Schriftdateien (*.bin)|*.bin|PC Screen Fonts Version 1 (*.psf)|*.psf|"
+    IDS_SAVEFILTER, "Binäre Schriftdateien (*.bin)|*.bin|"
     IDS_OPENERROR, "Fehler beim Öffnen der Datei! (Fehlernummer %1!u!)"
     IDS_READERROR, "Fehler beim Lesen der Datei! (Fehlernummer %1!u!)"
     IDS_WRITEERROR, "Fehler beim Schreiben der Datei! (Fehlernummer %1!u!)"
     IDS_UNSUPPORTEDFORMAT, "Nicht unterstütztes Dateiformat!"
-    IDS_UNSUPPORTEDPSF, "Nicht unterstütztes PSF Font Format! Der Editor unterstützt nur Fonts im Format 8x8 ohne spezielle Modi."
+    IDS_UNSUPPORTEDPSF, "Nicht unterstütztes PSF-Format! Der Editor unterstützt nur Fonts im Format 8x8 ohne spezielle Modi."
     IDS_DOCNAME, "Font %1!u!"
     IDS_SAVEPROMPT, "Die Datei ""%1"" wurde geändert.\n\nMöchten Sie die Änderungen speichern?"
     IDS_APPTITLE, "ReactOS VGA Font Editor"
@@ -79,5 +79,5 @@ BEGIN
     IDS_TOOLTIP_NEW, "Neu"
     IDS_TOOLTIP_OPEN, "Öffnen"
     IDS_TOOLTIP_SAVE, "Speichern"
-    IDS_TOOLTIP_EDIT_GLYPH, "Glyphen bearbeiten"
+    IDS_TOOLTIP_EDIT_GLYPH, "Schriftzeichen bearbeiten"
 END

@@ -10,6 +10,7 @@
 
 HINSTANCE hInstance;
 HANDLE hProcessHeap;
+PWSTR szAppName;
 
 INT WINAPI
 wWinMain(HINSTANCE hInst, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nCmdShow)
@@ -24,6 +25,8 @@ wWinMain(HINSTANCE hInst, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nCmdSho
 
     hInstance = hInst;
     hProcessHeap = GetProcessHeap();
+
+    AllocAndLoadString(&szAppName, IDS_APPTITLE);
 
     hAccel = LoadAcceleratorsW( hInstance, MAKEINTRESOURCEW(IDA_MAINACCELERATORS) );
 
@@ -44,6 +47,8 @@ wWinMain(HINSTANCE hInst, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nCmdSho
             nRet = 0;
         }
     }
+
+    HeapFree(hProcessHeap, 0, szAppName);
 
     // Just unregister our window classes, don't care whether they were created or not
     UnInitEditGlyphWndClasses();
