@@ -430,7 +430,7 @@ VOID RunLoader(VOID)
     //
     // Perform architecture-specific pre-boot configuration
     //
-    MachPrepareForReactOS(FALSE);
+    MachPrepareForReactOS(TRUE);
     
     //
     // Setup paging and jump to kernel
