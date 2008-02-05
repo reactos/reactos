@@ -66,7 +66,9 @@ Author:
 // FIXME: mmtypes.h?
 //
 #define KIPCR                   0xFFFFF000
-#define PCR                     ((volatile KPCR * const)KIPCR)
+#define USPCR                   0x7FFF0000
+#define PCR                     ((volatile KPCR * const)USPCR)
+#define USERPCR                 ((volatile KPCR * const)KIPCR)
 
 //
 // Synchronization-level IRQL
@@ -104,34 +106,13 @@ typedef struct _KTRAP_FRAME
     ULONG FpExtra[8];
 } KTRAP_FRAME, *PKTRAP_FRAME;
 
-#ifndef NTOS_MODE_USER
-//
-// Stub
-//
-typedef struct _KFLOATING_SAVE
-{
-    ULONG Reserved;
-} KFLOATING_SAVE, *PKFLOATING_SAVE;
-
-//
-// Processor Region Control Block
-//
-typedef struct _KPRCB
-{
-    USHORT MinorVersion;
-    USHORT MajorVersion;
-    struct _KTHREAD *CurrentThread;
-    struct _KTHREAD *NextThread;
-    struct _KTHREAD *IdleThread;
-    UCHAR Number;
-    //
-    // TODO
-    //
-} KPRCB, *PKPRCB;
-
 //
 // Processor Control Region
+// On ARM, it's actually readable from user-mode, much like KUSER_SHARED_DATA
 //
+#ifdef NTOS_MODE_USER
+#define PKINTERRUPT_ROUTINE PVOID // Hack!
+#endif
 typedef struct _KPCR
 {
     ULONG MinorVersion;
@@ -185,6 +166,31 @@ typedef struct _KPCR
     PVOID StackLimit;
     ULONG QuantumEnd;
 } KPCR, *PKPCR;
+
+#ifndef NTOS_MODE_USER
+//
+// Stub
+//
+typedef struct _KFLOATING_SAVE
+{
+    ULONG Reserved;
+} KFLOATING_SAVE, *PKFLOATING_SAVE;
+
+//
+// Processor Region Control Block
+//
+typedef struct _KPRCB
+{
+    USHORT MinorVersion;
+    USHORT MajorVersion;
+    struct _KTHREAD *CurrentThread;
+    struct _KTHREAD *NextThread;
+    struct _KTHREAD *IdleThread;
+    UCHAR Number;
+    //
+    // TODO
+    //
+} KPRCB, *PKPRCB;
 
 //
 // Macro to get current KPRCB

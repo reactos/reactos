@@ -28,6 +28,11 @@
 		<file>rtlswap.s</file>
 		<file>thread.c</file>
 	</directory>
+   	</if>
+	<if property="ARCH" value="arm">
+		<directory name="arm">
+			<file>debug_asm.S</file>
+		</directory>
 	</if>
 	<directory name="austin">
 		<file>avl.c</file>
