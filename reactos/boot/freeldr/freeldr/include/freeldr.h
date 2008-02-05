@@ -73,6 +73,8 @@
 #include <internal/i386/ke.h>
 #elif defined(_M_PPC)
 #include <arch/powerpc/hardware.h>
+#elif defined(_M_ARM)
+#include <arch/arm/hardware.h>
 #elif defined(_M_MIPS)
 #include <arch/mips/arcbios.h>
 #endif

@@ -37,7 +37,7 @@ typedef struct
 	ULONG		Reserved;
 } PACKED BIOS_MEMORY_MAP, *PBIOS_MEMORY_MAP;
 
-#if  defined(__i386__) || defined(_PPC_) || defined(_MIPS_)
+#if  defined(__i386__) || defined(_PPC_) || defined(_MIPS_) || defined(_ARM_)
 
 #define MM_PAGE_SIZE	4096
 #define MM_PAGE_MASK	0xFFF

@@ -59,8 +59,8 @@
 				<file>ofw.c</file>
 				<file>ofw_util.s</file>
 				<file>ofw_calls.s</file>
-                                <file>ofwdisk.c</file>
-                                <file>ofw_method.c</file>
+                <file>ofwdisk.c</file>
+                <file>ofw_method.c</file>
 				<file>prep.c</file>
 				<file>prep_ide.c</file>
 				<file>prep_pci.c</file>
@@ -84,6 +84,25 @@
 				<file>mach.c</file>
 				<file>portio.c</file>
 				<file>video.c</file>
+			</module>
+		</if>
+	</directory>
+	<directory name="arm">
+		<if property="ARCH" value="arm">
+			<module name="freeldr_arch" type="objectlibrary">
+				<include base="freeldr_base">include</include>
+				<include base="freeldr_base">cache</include>
+				<include base="ntoskrnl">include</include>
+				<compilerflag>-ffreestanding</compilerflag>
+				<compilerflag>-fno-builtin</compilerflag>
+				<compilerflag>-fno-inline</compilerflag>
+				<compilerflag>-fno-zero-initialized-in-bss</compilerflag>
+				<compilerflag>-Os</compilerflag>
+				<define name="DEBUG" />
+				<define name="_NTHAL_" />
+				<file>boot.s</file>
+				<file>macharm.c</file>
+                <file>stubs.c</file>
 			</module>
 		</if>
 	</directory>
