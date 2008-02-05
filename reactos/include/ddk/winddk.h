@@ -228,7 +228,10 @@ typedef struct _ADAPTER_OBJECT *PADAPTER_OBJECT;
 #define ZwCurrentProcess() NtCurrentProcess()
 #define NtCurrentThread() ( (HANDLE)(LONG_PTR) -2 )
 #define ZwCurrentThread() NtCurrentThread()
+    
+#if (_M_IX86)
 #define KIP0PCRADDRESS                      0xffdff000
+#endif
 
 #define KERNEL_STACK_SIZE                   12288
 #define KERNEL_LARGE_STACK_SIZE             61440
@@ -5535,6 +5538,8 @@ KeGetCurrentProcessorNumber(VOID)
 
 #elif defined(_MIPS_)
 
+#error MIPS Headers are totally incorrect
+    
 typedef ULONG PFN_NUMBER, *PPFN_NUMBER;
 
 #define PASSIVE_LEVEL                      0
@@ -5562,10 +5567,17 @@ KeGetCurrentProcessorNumber(VOID)
     return 0;
 }
 
+#elif defined(_M_ARM)
+
+//
+// NT-ARM is not documented, need NDK
+//
+#include <arm/ketypes.h>
+        
 #else
 #error Unknown architecture
 #endif
-
+    
 #define PAGE_SIZE                         0x1000
 #define PAGE_SHIFT                        12L
 

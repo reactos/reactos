@@ -26,6 +26,8 @@ Author:
 #include <i386/ketypes.h>
 #elif defined(_M_PPC)
 #include <powerpc/ketypes.h>
+#elif defined(_M_ARM)
+#include <arm/ketypes.h>
 #else
 #error "Unknown processor"
 #endif

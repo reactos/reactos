@@ -4064,6 +4064,8 @@ static __inline__ PVOID GetCurrentFiber(void)
     );
     return ret;
 }
+#elif defined (_M_ARM)
+    PVOID WINAPI GetCurrentFiber(VOID);
 #else
 #if defined(_M_PPC)
 static __inline__ __attribute__((always_inline)) unsigned long __readfsdword_winnt(const unsigned long Offset)
@@ -4101,6 +4103,8 @@ static __inline__ struct _TEB * NtCurrentTeb(void)
 
     return ret;
 }
+#elif _M_ARM
+    struct _TEB* WINAPI NtCurrentTeb(VOID);
 #else
 static __inline__ struct _TEB * NtCurrentTeb(void)
 {
@@ -4235,6 +4239,8 @@ BitScanReverse(OUT ULONG *Index,
 #define YieldProcessor() __asm__ __volatile__("nop");
 #elif defined(_M_MIPS)
 #define YieldProcessor() __asm__ __volatile__("nop");
+#elif defined(_M_ARM)
+#define YieldProcessor()
 #else
 #error Unknown architecture
 #endif

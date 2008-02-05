@@ -24,6 +24,17 @@ Author:
 //
 
 //
+// KPCR Access for non-IA64 builds
+//
+#define K0IPCR                  ((ULONG_PTR)(KIP0PCRADDRESS))
+#define PCR                     ((volatile KPCR * const)K0IPCR)
+#if !defined(CONFIG_SMP) && !defined(NT_BUILD)
+#define KeGetPcr()              PCR
+#else
+#define KeGetPcr()              ((volatile KPCR * const)__readfsdword(0x1C))
+#endif
+
+//
 // Machine Types
 //
 #define MACHINE_TYPE_ISA        0x0000

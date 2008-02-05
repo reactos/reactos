@@ -535,12 +535,14 @@ typedef NTSTATUS
 //
 // Descriptor Table Entry Definition
 //
+#if (_M_IX86)
 #define _DESCRIPTOR_TABLE_ENTRY_DEFINED
 typedef struct _DESCRIPTOR_TABLE_ENTRY
 {
     ULONG Selector;
     LDT_ENTRY Descriptor;
 } DESCRIPTOR_TABLE_ENTRY, *PDESCRIPTOR_TABLE_ENTRY;
+#endif
 
 //
 // PEB Lock Routine

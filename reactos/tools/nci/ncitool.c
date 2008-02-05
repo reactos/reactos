@@ -68,6 +68,13 @@
                             "    j $8\n" \
                             "    nop\n"
 
+//
+// For now, only supports 0-4 arguments
+//
+#define UserModeStub_arm    "    mov r12, #0x%x\n" \
+                            "    swi #0x2E\n"      \
+                            "    bx lr\n\n"
+
 #elif defined(_MSC_VER)
 #define UserModeStub_x86    "    asm { \n" \
                             "        mov eax, %xh\n" \
@@ -96,6 +103,10 @@
 
 #define KernelModeStub_mips "    j KiSystemService\n" \
                             "    nop\n"
+
+#define KernelModeStub_arm  "    mov r12, #0x%x\n" \
+                            "    swi #0x2E\n"      \
+                            "    bx lr\n\n"
 
 #elif defined(_MSC_VER)
 #define KernelModeStub_x86  "    asm { \n" \
@@ -127,6 +138,8 @@ struct ncitool_data_t ncitool_data[] = {
 	  "\t.globl %s\n", "%s:\n" },
 	{ "mips", 4, KernelModeStub_mips, UserModeStub_mips,
 	  "\t.globl %s\n", "%s:\n" },
+	{ "arm", 4, KernelModeStub_arm, UserModeStub_arm,
+    "\t.globl %s\n", "%s:\n" },
 	{ 0, }
 };
 int arch_sel = 0;

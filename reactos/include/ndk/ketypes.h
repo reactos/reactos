@@ -104,17 +104,6 @@ Author:
 #define KI_EXCEPTION_ACCESS_VIOLATION   (KI_EXCEPTION_INTERNAL | 0x04)
 
 //
-// KPCR Access for non-IA64 builds
-//
-#define K0IPCR                          ((ULONG_PTR)(KIP0PCRADDRESS))
-#define PCR                             ((volatile KPCR * const)K0IPCR)
-#if !defined(CONFIG_SMP) && !defined(NT_BUILD)
-#define KeGetPcr()                      PCR
-#else
-#define KeGetPcr()                      ((volatile KPCR * const)__readfsdword(0x1C))
-#endif
-
-//
 // Number of dispatch codes supported by KINTERRUPT
 //
 #if (NTDDI_VERSION >= NTDDI_LONGHORN)

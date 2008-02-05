@@ -26,6 +26,8 @@ Author:
 #include <i386/mmtypes.h>
 #elif defined(_M_PPC)
 #include <powerpc/mmtypes.h>
+#elif defined(_M_ARM)
+#include <arm/mmtypes.h>
 #else
 #error "Unknown processor"
 #endif
