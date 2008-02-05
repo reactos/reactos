@@ -192,9 +192,9 @@ void CCABManager::Usage()
     printf("ReactOS Cabinet Manager\n\n");
     printf("CABMAN [-D | -E] [-A] [-L dir] cabinet [filename ...]\n");
     printf("CABMAN [-M mode] -C dirfile [-I] [-RC file] [-P dir]\n");
-    printf("CABMAN [-M mode] -S cabinet filename ...\n");
+    printf("CABMAN [-M mode] -S cabinet filename [...]\n");
     printf("  cabinet   Cabinet file.\n");
-    printf("  filename  Name of the file to extract from the cabinet.\n");
+    printf("  filename  Name of the file to add to or extract from the cabinet.\n");
     printf("            Wild cards and multiple filenames\n");
     printf("            (separated by blanks) may be used.\n\n");
 

@@ -375,10 +375,10 @@ bool CCabinet::IsSeparator(char Char)
 
 char* CCabinet::ConvertPath(char* Path, bool Allocate)
 /*
- * FUNCTION: Replaces \ or / with the one used be the host environment
+ * FUNCTION: Replaces \ or / with the one used by the host environment
  * ARGUMENTS:
  *     Path     = Pointer to string with pathname
- *     Allocate = Specifies wther to allocate memory for the new
+ *     Allocate = Specifies whether to allocate memory for the new
  *                string or to change the existing buffer
  * RETURNS:
  *     Pointer to new path
@@ -2100,17 +2100,33 @@ bool CCabinet::CreateSimpleCabinet()
     while(Criteria)
     {
         // Store the file path with a trailing slash in szFilePath
+        ConvertPath(Criteria->Search, false);
+
+#if defined(WIN32)
+        pszFile = strrchr(Criteria->Search, '\\');
+#else
         pszFile = strrchr(Criteria->Search, '/');
-        if(!pszFile)
-            pszFile = strrchr(Criteria->Search, '\\');
+#endif
 
         if(pszFile)
         {
-            strncpy(szFilePath, Criteria->Search, pszFile - Criteria->Search + 1);
-            szFilePath[pszFile - Criteria->Search + 1] = 0;
+            // Set the pointer to the start of the file name, not the slash
+            pszFile++;
+
+            strncpy(szFilePath, Criteria->Search, pszFile - Criteria->Search);
+            szFilePath[pszFile - Criteria->Search] = 0;
         }
         else
+        {
+            pszFile = Criteria->Search;
+
+#if defined(WIN32)
             szFilePath[0] = 0;
+#else
+            // needed for opendir()
+            strcpy(szFilePath, "./");
+#endif
+        }
 
 #if defined(WIN32)
         // Windows: Use the easy FindFirstFile/FindNextFile API for getting all files and checking them against the pattern
@@ -2144,9 +2160,6 @@ bool CCabinet::CreateSimpleCabinet()
         FindClose(hFind);
 #else
         // Unix: Use opendir/readdir to loop through all entries, stat to check if it's a file and MatchFileNamePattern to match the file against the pattern
-        if(szFilePath[0] == 0)
-            strcpy(szFilePath, "./");
-
         dirp = opendir(szFilePath);
 
         if(dirp)
@@ -2160,14 +2173,7 @@ bool CCabinet::CreateSimpleCabinet()
                 {
                     if(stbuf.st_mode != S_IFDIR)
                     {
-                        // As we added "./" to szFilePath above, szFile might contain "./test.txt" now and Criteria->Search "test.txt".
-                        // Therefore they won't match using MatchFileNamePattern. By using pszFile here, we can avoid this problem.
-                        if(szFile[0] == '.' && szFile[1] == '/')
-                            pszFile = szFile + 2;
-                        else
-                            pszFile = szFile;
-
-                        if(MatchFileNamePattern(pszFile, Criteria->Search))
+                        if(MatchFileNamePattern(dp->d_name, pszFile))
                         {
                             Status = AddFile(szFile);
 
@@ -2188,7 +2194,6 @@ bool CCabinet::CreateSimpleCabinet()
 
             closedir(dirp);
         }
-
 #endif
 
         Criteria = Criteria->Next;
