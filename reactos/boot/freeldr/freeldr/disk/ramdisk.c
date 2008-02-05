@@ -95,7 +95,7 @@ RamDiskCheckForVirtualFile(VOID)
         // Get the file size
         //
         gRamDiskSize = FsGetFileSize(RamFile);
-        TuiPrintf("Found virtual ramdisk (%dKB) \n", gRamDiskSize / 1024);
+        TuiPrintf("Found virtual ramdisk (%dKB)\n", gRamDiskSize / 1024);
         if (!gRamDiskSize) return;
         
         //
