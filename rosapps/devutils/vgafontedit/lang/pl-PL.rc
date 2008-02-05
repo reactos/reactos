@@ -74,6 +74,7 @@ BEGIN
     IDS_UNSUPPORTEDPSF, "Nieobs³ugiwana wersja PSF! Edytor obs³uguje wy³¹cznie czcionki rozmiaru 8x8, bez dodatków."
     IDS_DOCNAME, "Czcionka %1!u!"
     IDS_SAVEPROMPT, "Plik ""%1"" zosta³ zmieniony, ale nie zapisany.\n\nCzy chcesz zapisaæ zmiany?"
+    IDS_APPTITLE, "ReactOS VGA Font Editor"
 
     IDS_TOOLTIP_NEW, "Nowy"
     IDS_TOOLTIP_OPEN, "Otwórz"
