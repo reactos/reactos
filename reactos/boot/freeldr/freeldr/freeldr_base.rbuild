@@ -19,6 +19,7 @@
 	<directory name="disk">
 		<file>disk.c</file>
 		<file>partition.c</file>
+		<file>ramdisk.c</file>
 	</directory>
 	<directory name="fs">
 		<file>ext2.c</file>

@@ -26,6 +26,8 @@ VOID BootMain(LPSTR CmdLine)
 
 	MachInit(CmdLine);
 
+	RamDiskInit(CmdLine);
+
 	DebugInit();
 
 	DbgPrint((DPRINT_WARNING, "BootMain() called.\n"));

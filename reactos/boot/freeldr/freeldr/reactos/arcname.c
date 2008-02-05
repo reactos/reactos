@@ -25,6 +25,25 @@ BOOLEAN DissectArcPath(CHAR *ArcPath, CHAR *BootPath, ULONG* BootDrive, ULONG* B
 {
 	char *p;
 
+	//
+	// Detect ramdisk path
+	//
+	if (_strnicmp(ArcPath, "ramdisk(0)", 10) == 0)
+	{
+		//
+		// Magic value for ramdisks
+		//
+		*BootDrive = 0x49;
+		*BootPartition = 1;
+
+		//
+		// Get the path
+		//
+		p = ArcPath + 11;
+		strcpy(BootPath, p);
+		return TRUE;
+	}
+
 	if (_strnicmp(ArcPath, "multi(0)disk(0)", 15) != 0)
 		return FALSE;
 
