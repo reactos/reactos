@@ -18,6 +18,7 @@
 #include "en.rc"
 #include "es.rc"
 #include "fr.rc"
+#include "pl.rc"
 #include "ru.rc"
 #include "uk.rc"
 

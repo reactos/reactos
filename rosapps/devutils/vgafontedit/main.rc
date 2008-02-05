@@ -31,4 +31,6 @@ IDI_DOC                   ICON      "res/doc.ico"
 // Languages
 #include "lang/en-US.rc"
 #include "lang/de-DE.rc"
+#include "lang/uk-UA.rc"
+#include "lang/pl-PL.rc"
 #include "lang/ru-RU.rc"

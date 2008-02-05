@@ -65,5 +65,5 @@ BEGIN
     IDS_INSTALL_DEP           "%s потрібний щоб запустити %s. Встановити %s зараз?"
     TTT_HELPBUTTON            "Отримайти допомогу про завантажувач"
     TTT_UPDATEBUTTON          "Поки що не доступно"
-    TTT_PROFBUTTON            "Налаштувати downloader"
+    TTT_PROFBUTTON            "Налаштувати завантажувач"
 END
