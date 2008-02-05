@@ -152,7 +152,7 @@ static struct
  *  Data block read and write commands
  */
 #define IDEReadBlock(Address, Buffer, Count) \
-  (READ_PORT_BUFFER_USHORT((PUSHORT)((Address) + IDE_REG_DATA_PORT), (PUSHORT)(Buffer), (Count) / 2))
+  (__inwordstring(((Address) + IDE_REG_DATA_PORT), (PUSHORT)(Buffer), (Count) / 2))
 #define IDEWriteBlock(Address, Buffer, Count) \
   (WRITE_PORT_BUFFER_USHORT((PUSHORT)((Address) + IDE_REG_DATA_PORT), (PUSHORT)(Buffer), (Count) / 2))
 

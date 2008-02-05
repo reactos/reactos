@@ -28,6 +28,7 @@
 #define NTOSAPI
 #define printf TuiPrintf
 #include <ntddk.h>
+#include <ioaccess.h>
 #include <arc/arc.h>
 #include <ketypes.h>
 #include <mmtypes.h>
@@ -44,7 +45,6 @@
 #include <inifile.h>
 #include <inffile.h>
 #include <video.h>
-#include <portio.h>
 #include <ramdisk.h>
 /* NDK, needed for ReactOS/Windows loaders */
 #include <ndk/rtlfuncs.h>
