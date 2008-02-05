@@ -23,10 +23,10 @@
 
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
-#include "De.rc"
-#include "En.rc"
-#include "Fr.rc"
-#include "Ko.rc"
-#include "Pl.rc"
-#include "Sk.rc"
-#include "Uk.rc"
+#include "lang/de-DE.rc"
+#include "lang/en-US.rc"
+#include "lang/fr-FR.rc"
+#include "lang/ko-KO.rc"
+#include "lang/pl-PL.rc"
+#include "lang/sk-SK.rc"
+#include "lang/uk-UA.rc"

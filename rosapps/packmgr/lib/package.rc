@@ -10,13 +10,13 @@
 
 /* Language specific */
 
-#include "cz.rc"
-#include "de.rc"
-#include "en.rc"
-#include "es.rc"
-#include "fr.rc"
-#include "pl.rc"
-#include "ru.rc"
-#include "uk.rc"
+#include "lang/cs-CZ.rc"
+#include "lang/de-DE.rc"
+#include "lang/en-US.rc"
+#include "lang/es-ES.rc"
+#include "lang/fr-FR.rc"
+#include "lang/pl-PL.rc"
+#include "lang/ru-RU.rc"
+#include "lang/uk-UA.rc"
 
 /* EOF */
