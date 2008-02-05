@@ -433,6 +433,8 @@ CreateMainWindow(IN INT nCmdShow, OUT PMAIN_WND_INFO* Info)
     {
         (*Info)->nCmdShow = nCmdShow;
 
+        LoadString(hInstance, IDS_APPTITLE, szAppName, MAX_STRING);
+
         hMainWnd = CreateWindowExW(0,
                                    szMainWndClass,
                                    szAppName,

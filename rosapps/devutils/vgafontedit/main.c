@@ -8,8 +8,6 @@
 
 #include "precomp.h"
 
-const WCHAR szAppName[] = L"ReactOS VGA Font Editor";
-
 HINSTANCE hInstance;
 HANDLE hProcessHeap;
 

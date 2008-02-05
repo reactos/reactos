@@ -15,6 +15,8 @@
 #include "resource.h"
 #include "customwndclasses.h"
 
+#define MAX_STRING 128
+
 // Forward declarations
 typedef struct _FONT_WND_INFO FONT_WND_INFO, *PFONT_WND_INFO;
 
@@ -137,7 +139,7 @@ BOOL InitFontWndClass(VOID);
 VOID UnInitFontWndClass(VOID);
 
 // main.c
-extern const WCHAR szAppName[];
+WCHAR szAppName[MAX_STRING];
 extern HINSTANCE hInstance;
 extern HANDLE hProcessHeap;
 

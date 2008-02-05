@@ -74,6 +74,7 @@ BEGIN
     IDS_UNSUPPORTEDPSF, "Unsupported PSF font format! The editor only supports 8x8 fonts with no special modes."
     IDS_DOCNAME, "Font %1!u!"
     IDS_SAVEPROMPT, "The file ""%1"" was modified, but not saved.\n\nDo you want to save it?"
+    IDS_APPTITLE, "ReactOS VGA Font Editor"
 
     IDS_TOOLTIP_NEW, "New"
     IDS_TOOLTIP_OPEN, "Open"
