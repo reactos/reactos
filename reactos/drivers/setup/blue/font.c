@@ -43,7 +43,7 @@ ScrLoadFontTable(UINT CodePage)
         Status = ExtractFont(CodePage, FontBitfield);
         if (NT_SUCCESS(Status))
             LoadFont(Bitplane, FontBitfield);
-    
+
         MmUnmapIoSpace(Bitplane, 0xFFFF);
         ExFreePool(FontBitfield);
 
@@ -56,27 +56,22 @@ ScrLoadFontTable(UINT CodePage)
 
 NTSTATUS ExtractFont(UINT CodePage, PUCHAR FontBitField)
 {
+    BOOLEAN            bFoundFile = FALSE;
     HANDLE             Handle;
-    NTSTATUS           Status = STATUS_SUCCESS;
-    CHAR               FileHeader[5];
-    CHAR               Header[5];
-    CHAR               PsfHeader[3];
-    CHAR               FileName[BUFFER_SIZE];
-    ULONG              Length;
+    NTSTATUS           Status;
+    CHAR               FileName[20];
     IO_STATUS_BLOCK    IoStatusBlock;
     OBJECT_ATTRIBUTES  ObjectAttributes;
     UNICODE_STRING     LinkName;
     UNICODE_STRING     SourceName;
-    ZIP_LOCAL_HEADER   LocalHeader;
+    CFHEADER           CabFileHeader;
+    CFFILE             CabFile;
+    ULONG              CabFileOffset = 0;
     LARGE_INTEGER      ByteOffset;
     WCHAR              SourceBuffer[MAX_PATH] = {L'\0'};
 
     if(KeGetCurrentIrql() != PASSIVE_LEVEL)
-        return STATUS_INVALID_DEVICE_STATE; 
-
-    RtlZeroMemory(FileHeader, sizeof(FileHeader));
-    RtlZeroMemory(Header, sizeof(Header));
-    RtlZeroMemory(PsfHeader, sizeof(PsfHeader));
+        return STATUS_INVALID_DEVICE_STATE;
 
     RtlInitUnicodeString(&LinkName,
                          L"\\SystemRoot");
@@ -100,10 +95,10 @@ NTSTATUS ExtractFont(UINT CodePage, PUCHAR FontBitField)
 
     Status = ZwQuerySymbolicLinkObject(Handle,
                                       &SourceName,
-                                      &Length);
+                                      NULL);
     ZwClose(Handle);
 
-    Status = RtlAppendUnicodeToString(&SourceName, L"\\vgafont.bin");
+    Status = RtlAppendUnicodeToString(&SourceName, L"\\vgafonts.cab");
     InitializeObjectAttributes(&ObjectAttributes, &SourceName,
                                OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
                                NULL, NULL);
@@ -118,82 +113,78 @@ NTSTATUS ExtractFont(UINT CodePage, PUCHAR FontBitField)
                           NULL, 0);
 
     ByteOffset.LowPart = ByteOffset.HighPart = 0;
+
     if(NT_SUCCESS(Status))
     {
-        sprintf(Header, "PK%c%c", 3, 4);
         Status = ZwReadFile(Handle, NULL, NULL, NULL, &IoStatusBlock,
-                            FileHeader, 4, &ByteOffset, NULL);
-        ByteOffset.LowPart += 4;
+                            &CabFileHeader, sizeof(CabFileHeader), &ByteOffset, NULL);
+
         if(NT_SUCCESS(Status))
         {
-            while(strcmp(FileHeader, Header) == 0)
+            if(CabFileHeader.Signature == CAB_SIGNATURE)
             {
-                Status = ZwReadFile(Handle, NULL, NULL, NULL, &IoStatusBlock,
-                                    &LocalHeader, sizeof(ZIP_LOCAL_HEADER), &ByteOffset, NULL);
-                ByteOffset.LowPart += sizeof(ZIP_LOCAL_HEADER);
-                /* DbgPrint("%ld\n", LocalHeader.FileNameLength); */
-                if (LocalHeader.FileNameLength < BUFFER_SIZE)
+                // We have a valid CAB file!
+                // Read the file table now and decrement the file count on every file. When it's zero, we read the complete table.
+                ByteOffset.LowPart = CabFileHeader.FileTableOffset;
+
+                while(CabFileHeader.FileCount)
                 {
-                    RtlZeroMemory(FileName, BUFFER_SIZE);
                     Status = ZwReadFile(Handle, NULL, NULL, NULL, &IoStatusBlock,
-                                        FileName, LocalHeader.FileNameLength, &ByteOffset, NULL);
-                }
-                ByteOffset.LowPart += LocalHeader.FileNameLength;
-                /* DbgPrint("%s\n", FileName); */
-                if (LocalHeader.ExtraFieldLength > 0)
-                    ByteOffset.LowPart += LocalHeader.ExtraFieldLength;
-                if (atoi(FileName) == CodePage)
-                {
-                    if (LocalHeader.CompressedSize == 2048)
+                                        &CabFile, sizeof(CabFile), &ByteOffset, NULL);
+
+                    if(NT_SUCCESS(Status))
                     {
-                        /* we got it, raw font */
+                        ByteOffset.LowPart += sizeof(CabFile);
+
+                        // We assume here that the file name is max. 19 characters (+ 1 NULL character) long.
+                        // This should be enough for our purpose.
                         Status = ZwReadFile(Handle, NULL, NULL, NULL, &IoStatusBlock,
-                                            FontBitField, LocalHeader.CompressedSize, &ByteOffset, NULL);
-                        ZwClose(Handle);
-                        return STATUS_SUCCESS;
-                    }
-                    else if (LocalHeader.CompressedSize > 2048)
-                    {
-                        sprintf(PsfHeader, "%c%c", 0x36, 0x04); 
-                        /* maybe linux psf format */
-                        Status = ZwReadFile(Handle, NULL, NULL, NULL, &IoStatusBlock,
-                                            FileHeader, 4, &ByteOffset, NULL);
-                        ByteOffset.LowPart += 4;
-                        if(strncmp(FileHeader, PsfHeader, 2) == 0)
+                                            FileName, sizeof(FileName), &ByteOffset, NULL);
+
+                        if(NT_SUCCESS(Status))
                         {
-                           /* only load fonts with a size of 8
-                              and filemode 0 (256 characters, no unicode_data)
-                              or filemode  2 (256 characters, unicode_data is skipped) */
-                            if ((FileHeader[3] == 8) && ((FileHeader[4] == 0) || (FileHeader[4] == 2)))
+                            if(!bFoundFile && atoi(FileName) == CodePage)
                             {
-                                Status = ZwReadFile(Handle, NULL, NULL, NULL, &IoStatusBlock,
-                                                    FontBitField, 2048, &ByteOffset, NULL);
-                                ZwClose(Handle);
-                                return STATUS_SUCCESS;
+                                // We got the correct file.
+                                // Save the offset and loop through the rest of the file table to find the position, where the actual data starts.
+                                CabFileOffset = CabFile.FileOffset;
+                                bFoundFile = TRUE;
                             }
-                            else
-                                DbgPrint("Wrong fontsize or too many characters");
+
+                            ByteOffset.LowPart += strlen(FileName) + 1;
                         }
                     }
-                    /* invalid data */
-                    ZwClose(Handle);
-                    return STATUS_NO_MATCH;
+
+                    CabFileHeader.FileCount--;
                 }
-                ByteOffset.LowPart += LocalHeader.CompressedSize;
+
+                // 8 = Size of a CFFOLDER structure (see cabman). As we don't need the values of that structure, just increase the offset here.
+                ByteOffset.LowPart += 8;
+                ByteOffset.LowPart += CabFileOffset;
+
+                // ByteOffset now contains the offset of the actual data, so we can read the RAW font
                 Status = ZwReadFile(Handle, NULL, NULL, NULL, &IoStatusBlock,
-                                    FileHeader, 4, &ByteOffset, NULL);
-                ByteOffset.LowPart += 4;
-                /* DbgPrint("%s\n", FileHeader); */
+                                    FontBitField, 2048, &ByteOffset, NULL);
+                ZwClose(Handle);
+                return STATUS_SUCCESS;
+            }
+            else
+            {
+                DPRINT1("Error: CAB signature is missing!\n");
+                Status = STATUS_UNSUCCESSFUL;
             }
         }
+        else
+            DPRINT1("Error: Cannot read from file\n");
+
         ZwClose(Handle);
+        return Status;
     }
     else
     {
-        DbgPrint("Error: Can not open vgafont.bin\n");
+        DPRINT1("Error: Cannot open vgafonts.cab\n");
         return Status;
     }
-    return STATUS_NO_MATCH;
 }
 
 /* Font-load specific funcs */

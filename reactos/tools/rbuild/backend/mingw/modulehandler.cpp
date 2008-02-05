@@ -3851,6 +3851,13 @@ MingwIsoModuleHandler::GenerateIsoModuleTarget ()
 	FileLocation reactosInf ( bootcdReactos.directory,
 	                          bootcdReactos.relative_path,
 	                          "reactos.inf" );
+    FileLocation vgafontsCab( bootcdReactos.directory,
+                              bootcdReactos.relative_path,
+                              "vgafonts.cab");
+    FileLocation vgafontsDir( SourceDirectory,
+                              "media" + sSep + "vgafonts",
+                              "" );
+
 	vSourceFiles.push_back ( reactosDff );
 
 	string IsoName;
@@ -3879,6 +3886,10 @@ MingwIsoModuleHandler::GenerateIsoModuleTarget ()
 	          cdFiles.c_str (),
 	          cdDirectories.c_str () );
 	fprintf ( fMakefile, "\t$(ECHO_CABMAN)\n" );
+    fprintf ( fMakefile,
+              "\t$(Q)$(CABMAN_TARGET) -M raw -S %s %s\\*.bin\n",      // Escape the asterisk for Make
+              backend->GetFullName ( vgafontsCab ).c_str (),
+              backend->GetFullName ( vgafontsDir ).c_str ());
 	fprintf ( fMakefile,
 	          "\t$(Q)$(CABMAN_TARGET) -C %s -L %s -I -P $(OUTPUT)\n",
 	          backend->GetFullName ( reactosDff ).c_str (),

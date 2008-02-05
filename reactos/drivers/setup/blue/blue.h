@@ -8,8 +8,6 @@
 
 /* DEFINITIONS ***************************************************************/
 
-#define  BUFFER_SIZE 260
-
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -20,20 +18,34 @@
 
 #define TAG_BLUE TAG('B', 'L', 'U', 'E')
 
-#include <pshpack1.h>
-typedef struct {
-    short Version;
-    short GeneralPurposeBitFlag;
-    short CompressionMethod;
-    short LastModFileTime;
-    short LastModFileDate;
-    int CRC32;
-    int CompressedSize;
-    int UncompressedSize;
-    short FileNameLength;
-    short ExtraFieldLength;
-} ZIP_LOCAL_HEADER;
-#include <poppack.h>
+typedef struct _CFHEADER
+{
+    ULONG Signature;        // File signature 'MSCF' (CAB_SIGNATURE)
+    ULONG Reserved1;        // Reserved field
+    ULONG CabinetSize;      // Cabinet file size
+    ULONG Reserved2;        // Reserved field
+    ULONG FileTableOffset;  // Offset of first CFFILE
+    ULONG Reserved3;        // Reserved field
+    USHORT Version;          // Cabinet version (CAB_VERSION)
+    USHORT FolderCount;      // Number of folders
+    USHORT FileCount;        // Number of files
+    USHORT Flags;            // Cabinet flags (CAB_FLAG_*)
+    USHORT SetID;            // Cabinet set id
+    USHORT CabinetNumber;    // Zero-based cabinet number
+} CFHEADER, *PCFHEADER;
+
+typedef struct _CFFILE
+{
+    ULONG FileSize;         // Uncompressed file size in bytes
+    ULONG FileOffset;       // Uncompressed offset of file in the folder
+    USHORT FileControlID;    // File control ID (CAB_FILE_*)
+    USHORT FileDate;         // File date stamp, as used by DOS
+    USHORT FileTime;         // File time stamp, as used by DOS
+    USHORT Attributes;       // File attributes (CAB_ATTRIB_*)
+    /* After this is the NULL terminated filename */
+} CFFILE, *PCFFILE;
+
+#define CAB_SIGNATURE      0x4643534D // "MSCF"
 
 #define VIDMEM_BASE        0xb8000
 #define BITPLANE_BASE      0xa0000
