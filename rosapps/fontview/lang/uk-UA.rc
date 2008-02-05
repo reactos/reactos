@@ -19,5 +19,3 @@ BEGIN
 	IDS_ERROR_NOCLASS, "Неможливо ініціалізувати віконний клас."
 	IDS_ERROR_BADCMD, "Не вказаний файл шрифту.\nСинтаксис:\n  fontview.exe <файл шрифту>"
 END
-
-
