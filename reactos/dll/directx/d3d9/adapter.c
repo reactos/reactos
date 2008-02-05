@@ -136,6 +136,8 @@ BOOL GetAdapterInfo(LPCSTR lpszDeviceName, D3DADAPTER_IDENTIFIER9* pIdentifier)
             FoundDisplayDevice = TRUE;
             break;
         }
+
+        ++AdapterIndex;
     }
 
     /* No matching display device found? */
