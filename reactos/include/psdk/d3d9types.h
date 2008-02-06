@@ -21,6 +21,8 @@
 #ifndef __WINE_D3D9TYPES_H
 #define __WINE_D3D9TYPES_H
 
+#pragma pack(push, 4)
+
 /*****************************************************************************
  * Direct 3D v9 #defines
  */
@@ -1530,5 +1532,7 @@ typedef struct _D3DVOLUME_DESC {
     UINT                Height;
     UINT                Depth;
 } D3DVOLUME_DESC;
+
+#pragma pack(pop)
 
 #endif /* __WINE_D3D9TYPES_H */
