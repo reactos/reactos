@@ -346,7 +346,7 @@ IntCreateMenu(PHANDLE Handle, BOOL IsMenuBar)
    Menu->MenuInfo.fMask = 0; /* not used */
    Menu->MenuInfo.dwStyle = 0; /* FIXME */
    Menu->MenuInfo.cyMax = 0; /* default */
-   Menu->MenuInfo.hbrBack = IntGetSysColorBrush(COLOR_MENU);
+   Menu->MenuInfo.hbrBack = NULL; /* no brush */
    Menu->MenuInfo.dwContextHelpID = 0; /* default */
    Menu->MenuInfo.dwMenuData = 0; /* default */
    Menu->MenuInfo.Self = *Handle;
