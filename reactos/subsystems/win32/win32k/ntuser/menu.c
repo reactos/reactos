@@ -346,8 +346,7 @@ IntCreateMenu(PHANDLE Handle, BOOL IsMenuBar)
    Menu->MenuInfo.fMask = 0; /* not used */
    Menu->MenuInfo.dwStyle = 0; /* FIXME */
    Menu->MenuInfo.cyMax = 0; /* default */
-   Menu->MenuInfo.hbrBack =
-      NtGdiCreateSolidBrush(RGB(192, 192, 192), 0); /* FIXME: default background color */
+   Menu->MenuInfo.hbrBack = IntGetSysColorBrush(COLOR_MENU);
    Menu->MenuInfo.dwContextHelpID = 0; /* default */
    Menu->MenuInfo.dwMenuData = 0; /* default */
    Menu->MenuInfo.Self = *Handle;
@@ -1995,7 +1994,7 @@ NtUserGetMenuItemRect(
    Rect.top    += YMove;
    Rect.right  += XMove;
    Rect.bottom += YMove;
-   
+
    Status = MmCopyToCaller(lprcItem, &Rect, sizeof(RECT));
    if (! NT_SUCCESS(Status))
    {
