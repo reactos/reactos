@@ -22,6 +22,7 @@
  * FILE:            lib/cpl/mmsys/mmsys.c
  * PURPOSE:         ReactOS Multimedia Control Panel
  * PROGRAMMER:      Thoams Weidenmueller <w3seek@reactos.com>
+ *                  Dmitry Chapyshev <dmitry@reactos.org>
  * UPDATE HISTORY:
  *      2005/11/23  Created
  */
@@ -60,50 +61,12 @@ const APPLET Applets[NUM_APPLETS] =
   {IDI_CPLICON, IDS_CPLNAME, IDS_CPLDESCRIPTION, MmSysApplet},
 };
 
-/* Audio property page dialog callback */
-static INT_PTR CALLBACK
-AudioDlgProc(HWND hwndDlg,
-	        UINT uMsg,
-	        WPARAM wParam,
-	        LPARAM lParam)
-{
-    UNREFERENCED_PARAMETER(lParam);
-    UNREFERENCED_PARAMETER(wParam);
-    UNREFERENCED_PARAMETER(hwndDlg);
-    switch(uMsg)
-    {
-        case WM_INITDIALOG:
-        break;
-    }
-
-    return FALSE;
-}
-
-/* Voice property page dialog callback */
-static INT_PTR CALLBACK
-VoiceDlgProc(HWND hwndDlg,
-	        UINT uMsg,
-	        WPARAM wParam,
-	        LPARAM lParam)
-{
-    UNREFERENCED_PARAMETER(lParam);
-    UNREFERENCED_PARAMETER(wParam);
-    UNREFERENCED_PARAMETER(hwndDlg);
-    switch(uMsg)
-    {
-        case WM_INITDIALOG:
-        break;
-    }
-
-    return FALSE;
-}
-
 /* Hardware property page dialog callback */
 static INT_PTR CALLBACK
 HardwareDlgProc(HWND hwndDlg,
-	        UINT uMsg,
-	        WPARAM wParam,
-	        LPARAM lParam)
+                UINT uMsg,
+                WPARAM wParam,
+                LPARAM lParam)
 {
     UNREFERENCED_PARAMETER(lParam);
     UNREFERENCED_PARAMETER(wParam);
@@ -158,10 +121,10 @@ MmSysApplet(HWND hwnd,
     psh.nStartPage = 0;
     psh.ppsp = psp;
 
-	InitPropSheetPage(&psp[0], IDD_VOLUME,VolumeDlgProc);
-	InitPropSheetPage(&psp[1], IDD_SOUNDS,SoundsDlgProc);
-	InitPropSheetPage(&psp[2], IDD_AUDIO,AudioDlgProc);
-	InitPropSheetPage(&psp[3], IDD_VOICE,VoiceDlgProc);
+    InitPropSheetPage(&psp[0], IDD_VOLUME,VolumeDlgProc);
+    InitPropSheetPage(&psp[1], IDD_SOUNDS,SoundsDlgProc);
+    InitPropSheetPage(&psp[2], IDD_AUDIO,AudioDlgProc);
+    InitPropSheetPage(&psp[3], IDD_VOICE,VoiceDlgProc);
     InitPropSheetPage(&psp[4], IDD_HARDWARE,HardwareDlgProc);
 
     return (LONG)(PropertySheet(&psh) != -1);
@@ -184,9 +147,9 @@ InitPropSheetPage(PROPSHEETPAGE *psp,
 /* Control Panel Callback */
 LONG CALLBACK
 CPlApplet(HWND hwndCpl,
-	  UINT uMsg,
-	  LPARAM lParam1,
-	  LPARAM lParam2)
+          UINT uMsg,
+          LPARAM lParam1,
+          LPARAM lParam2)
 {
     switch(uMsg)
     {
@@ -225,8 +188,8 @@ CPlApplet(HWND hwndCpl,
 
 BOOL STDCALL
 DllMain(HINSTANCE hinstDLL,
-	DWORD dwReason,
-	LPVOID lpReserved)
+        DWORD dwReason,
+        LPVOID lpReserved)
 {
     UNREFERENCED_PARAMETER(lpReserved);
     switch(dwReason)

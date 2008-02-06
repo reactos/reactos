@@ -5,6 +5,7 @@
  * PURPOSE:         ReactOS Multimedia Control Panel
  * PROGRAMMER:      Thomas Weidenmueller <w3seek@reactos.com>
  *                  Johannes Anderwald <janderwald@reactos.com>
+ *                  Dmitry Chapyshev <dmitry@reactos.org>
  */
 
 #include <windows.h>
@@ -116,8 +117,6 @@ LoadEventLabel(HKEY hKey, TCHAR * szSubKey)
     return TRUE;
 }
 
-
-
 BOOL
 LoadEventLabels()
 {
@@ -178,9 +177,6 @@ PLABEL_MAP FindLabel(TCHAR * szName)
     }
     return NULL;
 }
-
-
-
 
 BOOL
 AddSoundProfile(HWND hwndDlg, HKEY hKey, TCHAR * szSubKey, BOOL SetDefault)
@@ -791,13 +787,29 @@ ShowSoundScheme(HWND hwndDlg)
 INT_PTR
 CALLBACK
 SoundsDlgProc(HWND hwndDlg,
-	        UINT uMsg,
-	        WPARAM wParam,
-	        LPARAM lParam)
+              UINT uMsg,
+              WPARAM wParam,
+              LPARAM lParam)
 {
     switch(uMsg)
     {
         case WM_INITDIALOG:
+        {
+            UINT NumWavOut;
+
+            NumWavOut = waveOutGetNumDevs();
+            if (!NumWavOut)
+            {
+                EnableWindow(GetDlgItem(hwndDlg, IDC_SOUND_SCHEME), FALSE);
+                EnableWindow(GetDlgItem(hwndDlg, IDC_SAVEAS_BTN),   FALSE);
+                EnableWindow(GetDlgItem(hwndDlg, IDC_DELETE_BTN),   FALSE);
+                EnableWindow(GetDlgItem(hwndDlg, IDC_SCHEME_LIST),  FALSE);
+            }
+
+            SendMessage(GetDlgItem(hwndDlg, IDC_PLAY_SOUND),
+                        BM_SETIMAGE,(WPARAM)IMAGE_ICON,
+                        (LPARAM)(HANDLE)LoadIcon(hApplet, MAKEINTRESOURCE(IDI_PLAY_ICON)));
+
             LoadEventLabels();
             LoadSoundProfiles(hwndDlg);
             LoadSoundFiles(hwndDlg);
@@ -806,6 +818,7 @@ SoundsDlgProc(HWND hwndDlg,
                 return TRUE;
             SetFocus(GetDlgItem(hwndDlg, IDC_SOUND_SCHEME));
             return FALSE;
+        }
         case WM_COMMAND:
         {
             switch(LOWORD(wParam))

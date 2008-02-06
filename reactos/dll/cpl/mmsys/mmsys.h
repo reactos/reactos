@@ -48,6 +48,21 @@ VolumeDlgProc(HWND hwndDlg,
 	        WPARAM wParam,
 	        LPARAM lParam);
 
+/* voice.c */
+
+INT_PTR CALLBACK
+VoiceDlgProc(HWND hwndDlg,
+             UINT uMsg,
+             WPARAM wParam,
+             LPARAM lParam);
+
+/* audio.c */
+
+INT_PTR CALLBACK
+AudioDlgProc(HWND hwndDlg,
+             UINT uMsg,
+             WPARAM wParam,
+             LPARAM lParam);
 
 #endif /* __CPL_MMSYS_H */
 

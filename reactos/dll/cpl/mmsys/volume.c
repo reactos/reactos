@@ -5,6 +5,7 @@
  * PURPOSE:         ReactOS Multimedia Control Panel
  * PROGRAMMER:      Thomas Weidenmueller <w3seek@reactos.com>
  *                  Johannes Anderwald <janderwald@reactos.com>
+ *                  Dmitry Chapyshev <dmitry@reactos.org>
  */
 
 #include <windows.h>
@@ -59,8 +60,13 @@ InitVolumeControls(HWND hwndDlg)
     NumWavOut = waveOutGetNumDevs();
     if (!NumWavOut)
     {
-        //FIXME
-        // deactivate all controls
+        EnableWindow(GetDlgItem(hwndDlg, IDC_VOLUME_TRACKBAR), FALSE);
+        EnableWindow(GetDlgItem(hwndDlg, IDC_MUTE_CHECKBOX),   FALSE);
+        EnableWindow(GetDlgItem(hwndDlg, IDC_ICON_IN_TASKBAR), FALSE);
+        EnableWindow(GetDlgItem(hwndDlg, IDC_ADVANCED_BTN),    FALSE);
+        EnableWindow(GetDlgItem(hwndDlg, IDC_SPEAKER_SET_BTN), FALSE);
+        EnableWindow(GetDlgItem(hwndDlg, IDC_SPEAKER_VOL_BTN), FALSE);
+        EnableWindow(GetDlgItem(hwndDlg, IDC_ADVANCED2_BTN),   FALSE);
         return;
     }
 
@@ -98,9 +104,9 @@ InitVolumeControls(HWND hwndDlg)
 //static INT_PTR CALLBACK
 INT_PTR CALLBACK
 VolumeDlgProc(HWND hwndDlg,
-	        UINT uMsg,
-	        WPARAM wParam,
-	        LPARAM lParam)
+            UINT uMsg,
+            WPARAM wParam,
+            LPARAM lParam)
 {
     static IMGINFO ImgInfo;
     UNREFERENCED_PARAMETER(lParam);

@@ -16,5 +16,7 @@
 	<file>mmsys.c</file>
 	<file>sounds.c</file>
 	<file>volume.c</file>
+	<file>audio.c</file>
+	<file>voice.c</file>
 	<file>mmsys.rc</file>
 </module>
