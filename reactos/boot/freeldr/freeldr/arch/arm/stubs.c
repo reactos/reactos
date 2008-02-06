@@ -3,7 +3,7 @@
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            boot/freeldr/arch/arm/stubs.c
  * PURPOSE:         Non-completed ARM hardware-specific routines
- * PROGRAMMERS:     alex@winsiderss.com
+ * PROGRAMMERS:     ReactOS Portable Systems Group
  */
 
 /* INCLUDES *******************************************************************/
@@ -22,26 +22,6 @@ FrLdrStartup(IN ULONG Magic)
     //
     // Start the OS
     //
-}
-
-VOID
-ArmConsPutChar(INT Char)
-{
-    while (TRUE);
-}
-
-BOOLEAN
-ArmConsKbHit(VOID)
-{
-    while (TRUE);
-    return FALSE;
-}
-
-INT
-ArmConsGetCh(VOID)
-{
-    while (TRUE);
-    return FALSE;
 }
 
 BOOLEAN
@@ -155,11 +135,31 @@ VOID
 MachInit(IN PCCH CommandLine)
 {
     //
-    // Setup ARM routines
+    // Setup board-specific ARM routines
     //
-    MachVtbl.ConsPutChar = ArmConsPutChar;
-    MachVtbl.ConsKbHit = ArmConsKbHit;
-    MachVtbl.ConsGetCh = ArmConsGetCh;
+    switch (ArmBoardBlock->BoardType)
+    {
+        //
+        // Check for Feroceon-base boards
+        //
+        case ARM_FEROCEON:
+            
+            //
+            // These boards use a UART16550. Set us up for 115200 bps
+            //
+            ArmFeroSerialInit(115200);
+            MachVtbl.ConsPutChar = ArmFeroPutChar;
+            MachVtbl.ConsKbHit = ArmFeroKbHit;
+            MachVtbl.ConsGetCh = ArmFeroGetCh;
+            break;
+            
+        default:
+            ASSERT(FALSE);
+    }
+    
+    //
+    // Setup generic ARM routines
+    //
     MachVtbl.PrepareForReactOS = ArmPrepareForReactOS;
     MachVtbl.GetMemoryMap = ArmMemGetMemoryMap;
     MachVtbl.DiskGetBootVolume = ArmDiskGetBootVolume;
@@ -173,4 +173,9 @@ MachInit(IN PCCH CommandLine)
     MachVtbl.DiskGetDriveGeometry = ArmDiskGetDriveGeometry;
     MachVtbl.DiskGetCacheableBlockCount = ArmDiskGetCacheableBlockCount;
     MachVtbl.HwDetect = ArmHwDetect;
+    
+    //
+    // We can now print to the console
+    //
+    TuiPrintf("%s for ARM\n", GetFreeLoaderVersionString());
 }

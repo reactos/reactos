@@ -3,7 +3,7 @@
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            boot/freeldr/include/ramdisk.h
  * PURPOSE:         Header file for ramdisk support
- * PROGRAMMERS:     alex@winsiderss.com
+ * PROGRAMMERS:     ReactOS Portable Systems Group
  */
 
 #ifndef _RAMDISK_

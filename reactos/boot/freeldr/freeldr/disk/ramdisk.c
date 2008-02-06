@@ -3,7 +3,7 @@
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            boot/freeldr/arch/i386/ramdisk.c
  * PURPOSE:         Implements routines to support booting from a RAM Disk
- * PROGRAMMERS:     alex@winsiderss.com
+ * PROGRAMMERS:     ReactOS Portable Systems Group
  */
 
 /* INCLUDES *******************************************************************/

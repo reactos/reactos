@@ -101,6 +101,7 @@
 				<define name="DEBUG" />
 				<define name="_NTHAL_" />
 				<file>boot.s</file>
+				<file>ferouart.c</file>
 				<file>macharm.c</file>
                 <file>stubs.c</file>
 			</module>

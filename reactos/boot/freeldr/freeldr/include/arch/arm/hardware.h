@@ -2,8 +2,8 @@
  * PROJECT:         ReactOS Boot Loader
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            boot/freeldr/include/arch/arm/hardware.h
- * PURPOSE:         Implements routines to support booting from a RAM Disk
- * PROGRAMMERS:     alex@winsiderss.com
+ * PURPOSE:         Header for ARC definitions (to be cleaned up)
+ * PROGRAMMERS:     ReactOS Portable Systems Group
  */
 
 #ifndef _ARM_HARDWARE_
@@ -12,6 +12,35 @@
 #ifndef __REGISTRY_H
 #include "../../reactos/registry.h"
 #endif
+
+//
+// The only things we support
+//
+typedef enum _ARM_BOARD_TYPE
+{
+    //
+    // Marvell Feroceon-based SoC:
+    // Buffalo Linkstation, KuroBox Pro, D-Link DS323 and others
+    //
+    ARM_FEROCEON = 1,
+} ARM_BOARD_TYPE;
+
+//
+// Compatible boot-loaders should return us this information
+//
+#define ARM_BOARD_CONFIGURATION_MAJOR_VERSION 1
+#define ARM_BOARD_CONFIGURATION_MINOR_VERSION 1
+typedef struct _ARM_BOARD_CONFIGURATION_BLOCK
+{
+    ULONG MajorVersion;
+    ULONG MinorVersion;
+    ARM_BOARD_TYPE BoardType;
+    ULONG ClockRate;
+    ULONG TimerRegisterBase;
+    ULONG UartRegisterBase;
+    PBIOS_MEMORY_MAP MemoryMap;
+    CHAR CommandLine[256];
+} ARM_BOARD_CONFIGURATION_BLOCK, *PARM_BOARD_CONFIGURATION_BLOCK;
 
 //
 // Static heap for ARC Hardware Component Tree
@@ -62,5 +91,19 @@ FldrSetConfigurationData(
     IN PCM_PARTIAL_RESOURCE_LIST ResourceList,
     IN ULONG Size
 );
+
+VOID
+ArmFeroSerialInit(IN ULONG Baudrate);
+
+VOID
+ArmFeroPutChar(IN INT Char);
+
+INT
+ArmFeroGetCh(VOID);
+
+BOOLEAN
+ArmFeroKbHit(VOID);
+
+extern PARM_BOARD_CONFIGURATION_BLOCK ArmBoardBlock;
 
 #endif

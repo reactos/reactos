@@ -2,8 +2,8 @@
  * PROJECT:         ReactOS Boot Loader
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            boot/freeldr/arch/arm/marcharm.c
- * PURPOSE:         Implements ARM-specific machine initialization
- * PROGRAMMERS:     alex@winsiderss.com
+ * PURPOSE:         Provides abstraction between the ARM Boot Loader and FreeLDR
+ * PROGRAMMERS:     ReactOS Portable Systems Group
  */
 
 /* INCLUDES *******************************************************************/
@@ -12,37 +12,9 @@
 
 /* GLOBALS ********************************************************************/
 
-//
-// The only things we support
-//
-typedef enum _ARM_BOARD_TYPE
-{
-    //
-    // Marvell Feroceon-based SoC:
-    // Buffalo Linkstation, KuroBox Pro, D-Link DS323 and others
-    //
-    ARM_FEROCEON = 1,
-} ARM_BOARD_TYPE;
-
-//
-// Compatible boot-loaders should return us this information
-//
-#define ARM_BOARD_CONFIGURATION_MAJOR_VERSION 1
-#define ARM_BOARD_CONFIGURATION_MINOR_VERSION 1
-typedef struct _ARM_BOARD_CONFIGURATION_BLOCK
-{
-    ULONG MajorVersion;
-    ULONG MinorVersion;
-    ARM_BOARD_TYPE BoardType;
-    ULONG TimerRegisterBase;
-    ULONG UartRegisterBase;
-    PBIOS_MEMORY_MAP MemoryMap;
-    CHAR CommandLine[256];
-} ARM_BOARD_CONFIGURATION_BLOCK, *PARM_BOARD_CONFIGURATION_BLOCK;
+PARM_BOARD_CONFIGURATION_BLOCK ArmBoardBlock;
 
 /* FUNCTIONS ******************************************************************/
-
-PARM_BOARD_CONFIGURATION_BLOCK ArmBoardBlock;
 
 VOID
 ArmInit(IN PARM_BOARD_CONFIGURATION_BLOCK BootContext)
