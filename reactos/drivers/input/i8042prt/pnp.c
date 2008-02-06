@@ -75,6 +75,7 @@ i8042BasicDetect(
 	IN PPORT_DEVICE_EXTENSION DeviceExtension)
 {
 	NTSTATUS Status;
+	ULONG ResendIterations;
 	UCHAR Value = 0;
 
 	/* Don't enable keyboard and mouse interrupts, disable keyboard/mouse */
@@ -83,23 +84,33 @@ i8042BasicDetect(
 
 	i8042Flush(DeviceExtension);
 
-	if (!i8042Write(DeviceExtension, DeviceExtension->ControlPort, CTRL_SELF_TEST))
+	ResendIterations = DeviceExtension->Settings.ResendIterations + 1;
+	while (ResendIterations--)
 	{
-		WARN_(I8042PRT, "Writing CTRL_SELF_TEST command failed\n");
-		return STATUS_IO_TIMEOUT;
-	}
+		if (!i8042Write(DeviceExtension, DeviceExtension->ControlPort, CTRL_SELF_TEST))
+		{
+			WARN_(I8042PRT, "Writing CTRL_SELF_TEST command failed\n");
+			return STATUS_IO_TIMEOUT;
+		}
 
-	Status = i8042ReadDataWait(DeviceExtension, &Value);
-	if (!NT_SUCCESS(Status))
-	{
-		WARN_(I8042PRT, "Failed to read CTRL_SELF_TEST response, status 0x%08lx\n", Status);
-		return Status;
-	}
+		Status = i8042ReadDataWait(DeviceExtension, &Value);
+		if (!NT_SUCCESS(Status))
+		{
+			WARN_(I8042PRT, "Failed to read CTRL_SELF_TEST response, status 0x%08lx\n", Status);
+			return Status;
+		}
 
-	if (Value != 0x55)
-	{
-		WARN_(I8042PRT, "Got 0x%02x instead of 0x55\n", Value);
-		return STATUS_IO_DEVICE_ERROR;
+		if (Value == KBD_RESEND)
+		{
+			TRACE_(I8042PRT, "Resending...\n", Value);
+			KeStallExecutionProcessor(50);
+			continue;
+		}
+		else if (Value != 0x55)
+		{
+			WARN_(I8042PRT, "Got 0x%02x instead of 0x55\n", Value);
+			return STATUS_IO_DEVICE_ERROR;
+		}
 	}
 
 	/*

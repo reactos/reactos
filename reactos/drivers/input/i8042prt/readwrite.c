@@ -21,8 +21,16 @@ i8042Flush(
 {
 	UCHAR Ignore;
 
-	while (NT_SUCCESS(i8042ReadData(DeviceExtension, KBD_OBF | MOU_OBF, &Ignore))) {
-		INFO_(I8042PRT, "Data flushed\n"); /* drop */
+	/* Flush output buffer */
+	while (NT_SUCCESS(i8042ReadData(DeviceExtension, KBD_OBF /* | MOU_OBF*/, &Ignore))) {
+		KeStallExecutionProcessor(50);
+		TRACE_(I8042PRT, "Output data flushed\n");
+	}
+
+	/* Flush input buffer */
+	while (NT_SUCCESS(i8042ReadData(DeviceExtension, KBD_IBF, &Ignore))) {
+		KeStallExecutionProcessor(50);
+		TRACE_(I8042PRT, "Input data flushed\n");
 	}
 }
 
@@ -189,20 +197,20 @@ i8042Write(
 	IN PUCHAR addr,
 	IN UCHAR data)
 {
-	ULONG ResendIterations;
+	ULONG Counter;
 
 	ASSERT(addr);
 	ASSERT(DeviceExtension->ControlPort != NULL);
 
-	ResendIterations = DeviceExtension->Settings.ResendIterations;
+	Counter = DeviceExtension->Settings.PollingIterations;
 
 	while ((KBD_IBF & READ_PORT_UCHAR(DeviceExtension->ControlPort)) &&
-	       (ResendIterations--))
+	       (Counter--))
 	{
 		KeStallExecutionProcessor(50);
 	}
 
-	if (ResendIterations)
+	if (Counter)
 	{
 		WRITE_PORT_UCHAR(addr, data);
 		INFO_(I8042PRT, "Sent 0x%x to port %p\n", data, addr);
