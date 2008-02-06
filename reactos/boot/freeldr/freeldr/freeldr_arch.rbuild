@@ -59,8 +59,8 @@
 				<file>ofw.c</file>
 				<file>ofw_util.s</file>
 				<file>ofw_calls.s</file>
-                <file>ofwdisk.c</file>
-                <file>ofw_method.c</file>
+				<file>ofwdisk.c</file>
+				<file>ofw_method.c</file>
 				<file>prep.c</file>
 				<file>prep_ide.c</file>
 				<file>prep_pci.c</file>
@@ -103,7 +103,7 @@
 				<file>boot.s</file>
 				<file>ferouart.c</file>
 				<file>macharm.c</file>
-                <file>stubs.c</file>
+				<file>stubs.c</file>
 			</module>
 		</if>
 	</directory>
