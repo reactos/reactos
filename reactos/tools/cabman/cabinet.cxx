@@ -1021,8 +1021,8 @@ ULONG CCabinet::ExtractFile(char* FileName)
     ULONG BytesToWrite;
     ULONG TotalBytesRead;
     ULONG CurrentOffset;
-    unsigned char* Buffer;
-    unsigned char* CurrentBuffer;
+    PUCHAR Buffer;
+    PUCHAR CurrentBuffer;
     FILEHANDLE DestFile;
     PCFFILE_NODE File;
     CFDATA CFData;
@@ -1031,8 +1031,8 @@ ULONG CCabinet::ExtractFile(char* FileName)
 #if defined(WIN32)
     FILETIME FileTime;
 #endif
-    char DestName[MAX_PATH];
-    char TempName[MAX_PATH];
+    CHAR DestName[MAX_PATH];
+    CHAR TempName[MAX_PATH];
 
     Status = LocateFile(FileName, &File);
     if (Status != CAB_STATUS_SUCCESS)
@@ -1136,7 +1136,7 @@ ULONG CCabinet::ExtractFile(char* FileName)
 #endif
     SetAttributesOnFile(DestName, File->File.Attributes);
 
-    Buffer = (unsigned char*)AllocateMemory(CAB_BLOCKSIZE + 12); // This should be enough
+    Buffer = (PUCHAR)AllocateMemory(CAB_BLOCKSIZE + 12); // This should be enough
     if (!Buffer)
     {
         CloseFile(DestFile);
@@ -1388,14 +1388,14 @@ ULONG CCabinet::ExtractFile(char* FileName)
                 (UINT)Size));
 
 #if defined(WIN32)
-            if (!WriteFile(DestFile, (void*)((unsigned long *)OutputBuffer + BytesSkipped),
+            if (!WriteFile(DestFile, (void*)((PUCHAR)OutputBuffer + BytesSkipped),
                 BytesToWrite, (LPDWORD)&BytesWritten, NULL) ||
                 (BytesToWrite != BytesWritten))
             {
                         DPRINT(MIN_TRACE, ("Status 0x%X.\n", (UINT)GetLastError()));
 #else
             BytesWritten = BytesToWrite;
-            if (fwrite((void*)((unsigned long *)OutputBuffer + BytesSkipped),
+            if (fwrite((void*)((PUCHAR)OutputBuffer + BytesSkipped),
                 BytesToWrite, 1, DestFile) < 1)
             {
 #endif
@@ -2101,12 +2101,7 @@ bool CCabinet::CreateSimpleCabinet()
     {
         // Store the file path with a trailing slash in szFilePath
         ConvertPath(Criteria->Search, false);
-
-#if defined(WIN32)
-        pszFile = strrchr(Criteria->Search, '\\');
-#else
-        pszFile = strrchr(Criteria->Search, '/');
-#endif
+        pszFile = strrchr(Criteria->Search, DIR_SEPARATOR_CHAR);
 
         if(pszFile)
         {
@@ -2387,7 +2382,7 @@ ULONG CCabinet::GetAbsoluteOffset(PCFFILE_NODE File)
 
 
 ULONG CCabinet::LocateFile(char* FileName,
-                              PCFFILE_NODE *File)
+                           PCFFILE_NODE *File)
 /*
  * FUNCTION: Locates a file in the cabinet
  * ARGUMENTS:
@@ -2431,7 +2426,7 @@ ULONG CCabinet::LocateFile(char* FileName,
 }
 
 
-ULONG CCabinet::ReadString(char* String, ULONG MaxLength)
+ULONG CCabinet::ReadString(char* String, LONG MaxLength)
 /*
  * FUNCTION: Reads a NULL-terminated string from the cabinet
  * ARGUMENTS:
@@ -2442,48 +2437,43 @@ ULONG CCabinet::ReadString(char* String, ULONG MaxLength)
  */
 {
     ULONG BytesRead;
-    ULONG Offset;
     ULONG Status;
-    ULONG Size;
+    LONG Size;
     bool Found;
 
-    Offset = 0;
     Found  = false;
-    do
+
+    Status = ReadBlock(String, MaxLength, &BytesRead);
+    if (Status != CAB_STATUS_SUCCESS)
     {
-        Size = ((Offset + 32) <= MaxLength)? 32 : MaxLength - Offset;
+        DPRINT(MIN_TRACE, ("Cannot read from file (%u).\n", (UINT)Status));
+        return CAB_STATUS_INVALID_CAB;
+    }
 
-        if (Size == 0)
+    // Find the terminating NULL character
+    for (Size = 0; Size < MaxLength; Size++)
+    {
+        if (String[Size] == '\0')
         {
-            DPRINT(MIN_TRACE, ("Too long a filename.\n"));
-            return CAB_STATUS_INVALID_CAB;
+            Found = true;
+            break;
         }
+    }
 
-        Status = ReadBlock(&String[Offset], Size, &BytesRead);
-        if ((Status != CAB_STATUS_SUCCESS) || (BytesRead != Size))
-        {
-            DPRINT(MIN_TRACE, ("Cannot read from file (%u).\n", (UINT)Status));
-            return CAB_STATUS_INVALID_CAB;
-        }
+    if (!Found)
+    {
+        DPRINT(MIN_TRACE, ("Filename in the cabinet file is too long.\n"));
+        return CAB_STATUS_INVALID_CAB;
+    }
 
-        for (Size = Offset; Size < Offset + BytesRead; Size++)
-        {
-            if (String[Size] == '\0')
-            {
-                Found = true;
-                break;
-            }
-        }
+    // Compute the offset of the next CFFILE.
+    // We have to subtract from the current offset here, because we read MaxLength characters above and most-probably the file name isn't MaxLength characters long.
+    // + 1 to skip the terminating NULL character as well.
+    Size = -(MaxLength - Size) + 1;
 
-        Offset += BytesRead;
-
-    } while (!Found);
-
-    /* Back up some bytes */
-    Size = (BytesRead - Size) - 1;
 #if defined(WIN32)
     if( SetFilePointer(FileHandle,
-                       -(LONG)Size,
+                       (LONG)Size,
                        NULL,
                        FILE_CURRENT) == INVALID_SET_FILE_POINTER )
     {
@@ -2491,7 +2481,7 @@ ULONG CCabinet::ReadString(char* String, ULONG MaxLength)
         return CAB_STATUS_INVALID_CAB;
     }
 #else
-    if (fseek(FileHandle, (off_t)(-(LONG)Size), SEEK_CUR) != 0)
+    if (fseek(FileHandle, (off_t)Size, SEEK_CUR) != 0)
     {
         DPRINT(MIN_TRACE, ("fseek() failed.\n"));
         return CAB_STATUS_INVALID_CAB;

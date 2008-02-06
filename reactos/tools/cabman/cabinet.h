@@ -413,7 +413,7 @@ private:
     PCFFOLDER_NODE LocateFolderNode(ULONG Index);
     ULONG GetAbsoluteOffset(PCFFILE_NODE File);
     ULONG LocateFile(char* FileName, PCFFILE_NODE *File);
-    ULONG ReadString(char* String, ULONG MaxLength);
+    ULONG ReadString(char* String, LONG MaxLength);
     ULONG ReadFileTable();
     ULONG ReadDataBlocks(PCFFOLDER_NODE FolderNode);
     PCFFOLDER_NODE NewFolderNode();
