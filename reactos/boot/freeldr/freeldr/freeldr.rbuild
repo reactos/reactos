@@ -13,8 +13,7 @@
 			<library>cmlib</library>
 			<library>rtl</library>
 			<library>libcntpr</library>
-			<linkerflag>-nostartfiles</linkerflag>
-			<linkerflag>-nostdlib</linkerflag>
+			<linkerflag>-static</linkerflag>
 			<linkerflag>-lgcc</linkerflag>
 		</module>
 	</if>
@@ -31,6 +30,7 @@
 			<library>rtl</library>
 			<library>libcntpr</library>
 			<linkerflag>-lgcc</linkerflag>
+			<linkerflag>-static</linkerflag>
 		</module>
 	</if>
 	<if property="ARCH" value="powerpc">
