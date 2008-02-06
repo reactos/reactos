@@ -168,9 +168,13 @@ VOID
 NTAPI
 RamDiskInit(IN PCHAR CmdLine)
 {
+    PCHAR Setting;
+
     //
     // Get RAM disk parameters
     //
-    gRamDiskBase = (PVOID)atoi(strstr(CmdLine, "rdbase="));
-    gRamDiskSize = atoi(strstr(CmdLine, "rdsize="));
+    Setting = strstr(CmdLine, "rdbase=");
+    if (Setting) gRamDiskBase = (PVOID)atoi(Setting);
+    Setting = strstr(CmdLine, "rdsize=");
+    if (Setting) gRamDiskSize = atoi(Setting);
 }
