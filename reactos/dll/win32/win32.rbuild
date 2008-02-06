@@ -13,6 +13,9 @@
 <directory name="advpack">
 	<xi:include href="advpack/advpack.rbuild" />
 </directory>
+<directory name="atl">
+	<xi:include href="atl/atl.rbuild" />
+</directory>
 <directory name="authz">
 	<xi:include href="authz/authz.rbuild" />
 </directory>

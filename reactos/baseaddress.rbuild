@@ -1,6 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE group SYSTEM "tools/rbuild/project.dtd">
 <group xmlns:xi="http://www.w3.org/2001/XInclude">
+  <property name="BASEADDRESS_ATL" value="0x76a80000" />
   <property name="BASEADDRESS_REGTESTS" value="0x07000000" />
   <property name="BASEADDRESS_NOTIFYHOOK" value="0x08000000" />
   <property name="BASEADDRESS_COMCAT" value="0x20A50000" />
