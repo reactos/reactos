@@ -414,19 +414,18 @@ typedef struct
 
 typedef struct
 {
-    LPCWSTR lpSource;
-    LPCWSTR lpTarget;
-    LPCWSTR lpExeName;
+    ULONG SourceLength;
+    ULONG ExeLength;
+    ULONG TargetLength;
 } CSRSS_ADD_CONSOLE_ALIAS, *PCSRSS_ADD_CONSOLE_ALIAS;
 
 typedef struct
 {
-  LPWSTR lpSource;
-  LPWSTR lpExeName;
-  DWORD BytesWritten;
-  DWORD TargetBufferLength;
-  LPWSTR TargetBuffer;
-
+    ULONG SourceLength;
+    ULONG ExeLength;
+    ULONG BytesWritten;
+    ULONG TargetBufferLength;
+    PVOID TargetBuffer;
 } CSRSS_GET_CONSOLE_ALIAS, *PCSRSS_GET_CONSOLE_ALIAS;
 
 typedef struct
@@ -468,6 +467,7 @@ typedef struct
 
 /* WCHARs, not bytes! */
 #define CSRSS_MAX_TITLE_LENGTH          80
+#define CSRSS_MAX_ALIAS_TARGET_LENGTH   80
 
 #define CREATE_PROCESS                (0x0)
 #define TERMINATE_PROCESS             (0x1)
