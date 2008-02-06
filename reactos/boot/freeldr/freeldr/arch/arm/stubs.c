@@ -35,10 +35,23 @@ ArmDiskGetBootVolume(IN PULONG DriveNumber,
     //
     ASSERT(gRamDiskBase);
     ASSERT(gRamDiskSize);
+
+    //
+    // Use magic ramdisk drive number and count the number of 512-byte sectors
+    //
     *DriveNumber = 0x49;
     *StartSector = 0;
     *SectorCount = gRamDiskSize * 512;
+
+    //
+    // Ramdisk support is FAT-only for now
+    //
     *FsType = FS_FAT;
+
+    //
+    // Now that ramdisk is enabled, use ramdisk routines
+    //
+    RamDiskSwitchFromBios();
     return TRUE;
 }
 
@@ -88,7 +101,7 @@ BOOLEAN
 ArmDiskGetDriveGeometry(IN ULONG DriveNumber,
                         OUT PGEOMETRY Geometry)
 {
-    while (TRUE);
+    ASSERT(FALSE);
     return FALSE;
 }
 
@@ -107,14 +120,14 @@ ArmDiskReadLogicalSectors(IN ULONG DriveNumber,
                           IN ULONG SectorCount,
                           IN PVOID Buffer)
 {
-    while (TRUE);
+    ASSERT(FALSE);
     return FALSE;
 }
 
 ULONG
 ArmDiskGetCacheableBlockCount(IN ULONG DriveNumber)
 {
-    while (TRUE);
+    ASSERT(FALSE);
     return FALSE;
 }
 
