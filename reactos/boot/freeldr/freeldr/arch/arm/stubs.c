@@ -127,8 +127,13 @@ ULONG
 ArmMemGetMemoryMap(OUT PBIOS_MEMORY_MAP BiosMemoryMap,
                    IN ULONG MaxMemoryMapSize)
 {
-    while (TRUE);
-    return FALSE;
+    //
+    // Return whatever the board returned to us (CS0 Base + Size and FLASH0)
+    //
+    RtlCopyMemory(BiosMemoryMap,
+                  ArmBoardBlock->MemoryMap,
+                  ArmBoardBlock->MemoryMapEntryCount * sizeof(BIOS_MEMORY_MAP));
+    return ArmBoardBlock->MemoryMapEntryCount;
 }
 
 VOID

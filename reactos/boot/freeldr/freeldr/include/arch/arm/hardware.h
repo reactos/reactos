@@ -38,6 +38,7 @@ typedef struct _ARM_BOARD_CONFIGURATION_BLOCK
     ULONG ClockRate;
     ULONG TimerRegisterBase;
     ULONG UartRegisterBase;
+    ULONG MemoryMapEntryCount;
     PBIOS_MEMORY_MAP MemoryMap;
     CHAR CommandLine[256];
 } ARM_BOARD_CONFIGURATION_BLOCK, *PARM_BOARD_CONFIGURATION_BLOCK;
