@@ -37,8 +37,8 @@ typedef unsigned long ULONG_PTR, *PULONG_PTR;
 #define RAS_MaxReplyMessage   1024
 #define RAS_MaxDnsSuffix      256
 #if (WINVER >= 0x501)
-#define RASCF_AllUsers		0x00000001
-#define RASCF_GlobalCreds	0x00000002
+#define RASCF_AllUsers      0x00000001
+#define RASCF_GlobalCreds   0x00000002
 #endif /*(WINVER >= 0x501)*/
 #define RDEOPT_UsePrefixSuffix           0x00000001
 #define RDEOPT_PausedStates              0x00000002
@@ -54,11 +54,11 @@ typedef unsigned long ULONG_PTR, *PULONG_PTR;
 #define RDEOPT_Router                    0x00000800
 #define REN_User                         0x00000000
 #define REN_AllUsers                     0x00000001
-#define VS_Default		                0
-#define VS_PptpOnly	                    1
-#define VS_PptpFirst	                2
-#define VS_L2tpOnly 	                3
-#define VS_L2tpFirst	                4
+#define VS_Default                      0
+#define VS_PptpOnly                     1
+#define VS_PptpFirst                    2
+#define VS_L2tpOnly                     3
+#define VS_L2tpFirst                    4
 #define RASDIALEVENT                    "RasDialEvent"
 #define WM_RASDIALEVENT                 0xCCCD
 #define RASEO_UseCountryAndAreaCodes    0x00000001
@@ -90,7 +90,7 @@ typedef unsigned long ULONG_PTR, *PULONG_PTR;
 #define RASDT_Vpn                       TEXT("vpn")
 #define RASDT_Pad                       TEXT("pad")
 #define RASDT_Generic                   TEXT("GENERIC")
-#define RASDT_Serial        		    TEXT("SERIAL")
+#define RASDT_Serial                    TEXT("SERIAL")
 #define RASDT_FrameRelay                TEXT("FRAMERELAY")
 #define RASDT_Atm                       TEXT("ATM")
 #define RASDT_Sonet                     TEXT("SONET")
@@ -578,14 +578,14 @@ typedef struct tagRASENTRYW {
     DWORD dwVpnStrategy;
 #endif
 #if (WINVER >= 0x501)
-	DWORD		dwfOptions2;
-	DWORD       dwfOptions3;
-	WCHAR		szDnsSuffix[RAS_MaxDnsSuffix];
-	DWORD       dwTcpWindowSize;
-	WCHAR       szPrerequisitePbk[MAX_PATH];
-	WCHAR       szPrerequisiteEntry[RAS_MaxEntryName + 1];
-	DWORD       dwRedialCount;
-	DWORD       dwRedialPause;
+    DWORD       dwfOptions2;
+    DWORD       dwfOptions3;
+    WCHAR       szDnsSuffix[RAS_MaxDnsSuffix];
+    DWORD       dwTcpWindowSize;
+    WCHAR       szPrerequisitePbk[MAX_PATH];
+    WCHAR       szPrerequisiteEntry[RAS_MaxEntryName + 1];
+    DWORD       dwRedialCount;
+    DWORD       dwRedialPause;
 #endif /*(WINVER >= 0x501)*/
 } RASENTRYW, *LPRASENTRYW;
 
@@ -635,14 +635,14 @@ typedef struct tagRASENTRYA {
     DWORD dwVpnStrategy;
 #endif
 #if (WINVER >= 0x501)
-	DWORD		dwfOptions2;
-	DWORD       dwfOptions3;
-	CHAR		szDnsSuffix[RAS_MaxDnsSuffix];
-	DWORD       dwTcpWindowSize;
-	CHAR        szPrerequisitePbk[MAX_PATH];
-	CHAR        szPrerequisiteEntry[RAS_MaxEntryName + 1];
-	DWORD       dwRedialCount;
-	DWORD       dwRedialPause;
+    DWORD       dwfOptions2;
+    DWORD       dwfOptions3;
+    CHAR        szDnsSuffix[RAS_MaxDnsSuffix];
+    DWORD       dwTcpWindowSize;
+    CHAR        szPrerequisitePbk[MAX_PATH];
+    CHAR        szPrerequisiteEntry[RAS_MaxEntryName + 1];
+    DWORD       dwRedialCount;
+    DWORD       dwRedialPause;
 #endif /*(WINVER >= 0x501)*/
 } RASENTRYA, *LPRASENTRYA;
 
@@ -822,32 +822,24 @@ typedef RASEAPUSERIDENTITYA RASEAPUSERIDENTITY, *LPRASEAPUSERIDENTITY;
 /* Callback prototypes */
 typedef BOOL (WINAPI * ORASADFUNC) (HWND, LPSTR, DWORD, LPDWORD); /* deprecated */
 typedef VOID (WINAPI * RASDIALFUNC) (UINT, RASCONNSTATE, DWORD);
-typedef VOID (WINAPI * RASDIALFUNC1) (HRASCONN, UINT, RASCONNSTATE, DWORD,
-					DWORD);
-typedef DWORD (WINAPI * RASDIALFUNC2) (ULONG_PTR, DWORD, HRASCONN, UINT,
-					RASCONNSTATE, DWORD, DWORD);
+typedef VOID (WINAPI * RASDIALFUNC1) (HRASCONN, UINT, RASCONNSTATE, DWORD, DWORD);
+typedef DWORD (WINAPI * RASDIALFUNC2) (ULONG_PTR, DWORD, HRASCONN, UINT, RASCONNSTATE, DWORD, DWORD);
 
 /* External functions */
-DWORD APIENTRY RasDialA (LPRASDIALEXTENSIONS, LPCSTR, LPRASDIALPARAMSA,
-	    		DWORD, LPVOID, LPHRASCONN);
-DWORD APIENTRY RasDialW (LPRASDIALEXTENSIONS, LPCWSTR, LPRASDIALPARAMSW,
-    	        DWORD, LPVOID, LPHRASCONN);
+DWORD APIENTRY RasDialA (LPRASDIALEXTENSIONS, LPCSTR, LPRASDIALPARAMSA, DWORD, LPVOID, LPHRASCONN);
+DWORD APIENTRY RasDialW (LPRASDIALEXTENSIONS, LPCWSTR, LPRASDIALPARAMSW, DWORD, LPVOID, LPHRASCONN);
 DWORD APIENTRY RasEnumConnectionsA (LPRASCONNA, LPDWORD, LPDWORD);
 DWORD APIENTRY RasEnumConnectionsW (LPRASCONNW, LPDWORD, LPDWORD);
-DWORD APIENTRY RasEnumEntriesA (LPCSTR, LPCSTR, LPRASENTRYNAMEA, LPDWORD,
-				LPDWORD);
-DWORD APIENTRY RasEnumEntriesW (LPCWSTR, LPCWSTR, LPRASENTRYNAMEW, LPDWORD,
-				LPDWORD);
+DWORD APIENTRY RasEnumEntriesA (LPCSTR, LPCSTR, LPRASENTRYNAMEA, LPDWORD, LPDWORD);
+DWORD APIENTRY RasEnumEntriesW (LPCWSTR, LPCWSTR, LPRASENTRYNAMEW, LPDWORD, LPDWORD);
 DWORD APIENTRY RasGetConnectStatusA (HRASCONN, LPRASCONNSTATUSA);
 DWORD APIENTRY RasGetConnectStatusW (HRASCONN, LPRASCONNSTATUSW);
 DWORD APIENTRY RasGetErrorStringA (UINT, LPSTR, DWORD);
 DWORD APIENTRY RasGetErrorStringW (UINT, LPWSTR, DWORD);
 DWORD APIENTRY RasHangUpA (HRASCONN);
 DWORD APIENTRY RasHangUpW (HRASCONN);
-DWORD APIENTRY RasGetProjectionInfoA (HRASCONN, RASPROJECTION, LPVOID,
- 				LPDWORD);
-DWORD APIENTRY RasGetProjectionInfoW (HRASCONN, RASPROJECTION, LPVOID,
-				LPDWORD);
+DWORD APIENTRY RasGetProjectionInfoA (HRASCONN, RASPROJECTION, LPVOID, LPDWORD);
+DWORD APIENTRY RasGetProjectionInfoW (HRASCONN, RASPROJECTION, LPVOID, LPDWORD);
 DWORD APIENTRY RasCreatePhonebookEntryA (HWND, LPCSTR);
 DWORD APIENTRY RasCreatePhonebookEntryW (HWND, LPCWSTR);
 DWORD APIENTRY RasEditPhonebookEntryA (HWND, LPCSTR, LPCSTR);
@@ -860,14 +852,10 @@ DWORD APIENTRY RasEnumDevicesA (LPRASDEVINFOA, LPDWORD, LPDWORD);
 DWORD APIENTRY RasEnumDevicesW (LPRASDEVINFOW, LPDWORD, LPDWORD);
 DWORD APIENTRY RasGetCountryInfoA (LPRASCTRYINFOA, LPDWORD);
 DWORD APIENTRY RasGetCountryInfoW (LPRASCTRYINFOW, LPDWORD);
-DWORD APIENTRY RasGetEntryPropertiesA (LPCSTR, LPCSTR, LPRASENTRYA, LPDWORD,
-				 LPBYTE, LPDWORD);
-DWORD APIENTRY RasGetEntryPropertiesW (LPCWSTR, LPCWSTR, LPRASENTRYW,
-				 LPDWORD, LPBYTE, LPDWORD);
-DWORD APIENTRY RasSetEntryPropertiesA (LPCSTR, LPCSTR, LPRASENTRYA, DWORD,
-				 LPBYTE, DWORD);
-DWORD APIENTRY RasSetEntryPropertiesW (LPCWSTR, LPCWSTR, LPRASENTRYW, DWORD,
-				 LPBYTE, DWORD);
+DWORD APIENTRY RasGetEntryPropertiesA (LPCSTR, LPCSTR, LPRASENTRYA, LPDWORD, LPBYTE, LPDWORD);
+DWORD APIENTRY RasGetEntryPropertiesW (LPCWSTR, LPCWSTR, LPRASENTRYW, LPDWORD, LPBYTE, LPDWORD);
+DWORD APIENTRY RasSetEntryPropertiesA (LPCSTR, LPCSTR, LPRASENTRYA, DWORD, LPBYTE, DWORD);
+DWORD APIENTRY RasSetEntryPropertiesW (LPCWSTR, LPCWSTR, LPRASENTRYW, DWORD, LPBYTE, DWORD);
 DWORD APIENTRY RasRenameEntryA (LPCSTR, LPCSTR, LPCSTR);
 DWORD APIENTRY RasRenameEntryW (LPCWSTR, LPCWSTR, LPCWSTR);
 DWORD APIENTRY RasDeleteEntryA (LPCSTR, LPCSTR);
@@ -888,21 +876,21 @@ DWORD APIENTRY RasSetCredentialsW (LPCWSTR, LPCWSTR, LPRASCREDENTIALSW, BOOL);
 DWORD APIENTRY RasConnectionNotificationA (HRASCONN, HANDLE, DWORD);
 DWORD APIENTRY RasConnectionNotificationW (HRASCONN, HANDLE, DWORD);
 DWORD APIENTRY RasGetSubEntryPropertiesA (LPCSTR, LPCSTR, DWORD,
-					LPRASSUBENTRYA, LPDWORD, LPBYTE, LPDWORD);
+                    LPRASSUBENTRYA, LPDWORD, LPBYTE, LPDWORD);
 DWORD APIENTRY RasGetSubEntryPropertiesW (LPCWSTR, LPCWSTR, DWORD,
-					LPRASSUBENTRYW, LPDWORD, LPBYTE, LPDWORD);
+                    LPRASSUBENTRYW, LPDWORD, LPBYTE, LPDWORD);
 DWORD APIENTRY RasSetSubEntryPropertiesA (LPCSTR, LPCSTR, DWORD,
-					LPRASSUBENTRYA, DWORD, LPBYTE, DWORD);
+                    LPRASSUBENTRYA, DWORD, LPBYTE, DWORD);
 DWORD APIENTRY RasSetSubEntryPropertiesW (LPCWSTR, LPCWSTR, DWORD,
-					LPRASSUBENTRYW, DWORD, LPBYTE, DWORD);
+                    LPRASSUBENTRYW, DWORD, LPBYTE, DWORD);
 DWORD APIENTRY RasGetAutodialAddressA (LPCSTR, LPDWORD, LPRASAUTODIALENTRYA,
-			        LPDWORD, LPDWORD);
+                    LPDWORD, LPDWORD);
 DWORD APIENTRY RasGetAutodialAddressW (LPCWSTR, LPDWORD,
-					LPRASAUTODIALENTRYW, LPDWORD, LPDWORD);
+                    LPRASAUTODIALENTRYW, LPDWORD, LPDWORD);
 DWORD APIENTRY RasSetAutodialAddressA (LPCSTR, DWORD, LPRASAUTODIALENTRYA,
-					DWORD, DWORD);
+                    DWORD, DWORD);
 DWORD APIENTRY RasSetAutodialAddressW (LPCWSTR, DWORD, LPRASAUTODIALENTRYW,
-					DWORD, DWORD);
+                    DWORD, DWORD);
 DWORD APIENTRY RasEnumAutodialAddressesA (LPSTR *, LPDWORD, LPDWORD);
 DWORD APIENTRY RasEnumAutodialAddressesW (LPWSTR *, LPDWORD, LPDWORD);
 DWORD APIENTRY RasGetAutodialEnableA (DWORD, LPBOOL);
@@ -917,9 +905,9 @@ DWORD APIENTRY RasSetAutodialParamW (DWORD, LPVOID, DWORD);
 
 #if (WINVER >= 0x500)
 typedef DWORD (WINAPI * RasCustomHangUpFn) (HRASCONN);
-typedef DWORD (WINAPI * RasCustomDeleteEntryNotifyFn) (LPCTSTR,	LPCTSTR, DWORD);
+typedef DWORD (WINAPI * RasCustomDeleteEntryNotifyFn) (LPCTSTR,    LPCTSTR, DWORD);
 typedef DWORD (WINAPI * RasCustomDialFn) (HINSTANCE, LPRASDIALEXTENSIONS,
-				LPCTSTR, LPRASDIALPARAMS, DWORD, LPVOID, LPHRASCONN, DWORD);
+               LPCTSTR, LPRASDIALPARAMS, DWORD, LPVOID, LPHRASCONN, DWORD);
 
 DWORD APIENTRY RasInvokeEapUI (HRASCONN, DWORD, LPRASDIALEXTENSIONS, HWND);
 DWORD APIENTRY RasGetLinkStatistics (HRASCONN, DWORD, RAS_STATS*);
@@ -930,9 +918,9 @@ DWORD APIENTRY RasGetEapUserDataA (HANDLE, LPCSTR, LPCSTR, BYTE*, DWORD*);
 DWORD APIENTRY RasGetEapUserDataW (HANDLE, LPCWSTR, LPCWSTR, BYTE*, DWORD*);
 DWORD APIENTRY RasSetEapUserDataA (HANDLE, LPCSTR, LPCSTR, BYTE*, DWORD);
 DWORD APIENTRY RasSetEapUserDataW (HANDLE, LPCWSTR, LPCWSTR, BYTE*, DWORD);
-DWORD APIENTRY RasGetCustomAuthDataA (LPCSTR,	LPCSTR,	BYTE*,	DWORD*);
+DWORD APIENTRY RasGetCustomAuthDataA (LPCSTR, LPCSTR, BYTE*, DWORD*);
 DWORD APIENTRY RasGetCustomAuthDataW (LPCWSTR, LPCWSTR, BYTE*, DWORD*);
-DWORD APIENTRY RasSetCustomAuthDataA (LPCSTR,	LPCSTR,	BYTE*,	DWORD);
+DWORD APIENTRY RasSetCustomAuthDataA (LPCSTR, LPCSTR, BYTE*, DWORD);
 DWORD APIENTRY RasSetCustomAuthDataW (LPCWSTR, LPCWSTR, BYTE*, DWORD);
 DWORD APIENTRY RasGetEapUserIdentityW (LPCWSTR, LPCWSTR, DWORD, HWND, LPRASEAPUSERIDENTITYW*);
 DWORD APIENTRY RasGetEapUserIdentityA (LPCSTR, LPCSTR, DWORD, HWND, LPRASEAPUSERIDENTITYA*);

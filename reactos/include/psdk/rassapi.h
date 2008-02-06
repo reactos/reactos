@@ -11,8 +11,8 @@ extern "C" {
 #include <lmcons.h>
 #endif
 #define RASSAPI_MAX_PHONENUMBER_SIZE    128
-#define RASSAPI_MAX_MEDIA_NAME	        16
-#define RASSAPI_MAX_PORT_NAME	        16
+#define RASSAPI_MAX_MEDIA_NAME          16
+#define RASSAPI_MAX_PORT_NAME           16
 #define RASSAPI_MAX_DEVICE_NAME         128
 #define RASSAPI_MAX_DEVICETYPE_NAME     16
 #define RASSAPI_MAX_PARAM_KEY_SIZE      32
@@ -23,18 +23,18 @@ extern "C" {
 #define RASPRIV_CallbackType (RASPRIV_AdminSetCallback \
                              | RASPRIV_CallerSetCallback \
                              | RASPRIV_NoCallback)
-#define	RAS_MODEM_OPERATIONAL	        1
+#define	RAS_MODEM_OPERATIONAL           1
 #define	RAS_MODEM_NOT_RESPONDING        2
 #define	RAS_MODEM_HARDWARE_FAILURE      3
 #define	RAS_MODEM_INCORRECT_RESPONSE    4
-#define	RAS_MODEM_UNKNOWN		5
+#define	RAS_MODEM_UNKNOWN               5
 #define	RAS_PORT_NON_OPERATIONAL        1
-#define	RAS_PORT_DISCONNECTED         	2
-#define	RAS_PORT_CALLING_BACK         	3
-#define	RAS_PORT_LISTENING            	4
+#define	RAS_PORT_DISCONNECTED           2
+#define	RAS_PORT_CALLING_BACK           3
+#define	RAS_PORT_LISTENING              4
 #define	RAS_PORT_AUTHENTICATING         5
-#define	RAS_PORT_AUTHENTICATED	        6
-#define	RAS_PORT_INITIALIZING	        7
+#define	RAS_PORT_AUTHENTICATED          6
+#define	RAS_PORT_INITIALIZING           7
 #define MEDIA_UNKNOWN                   0
 #define MEDIA_SERIAL                    1
 #define MEDIA_RAS10_SERIAL              2
@@ -59,17 +59,17 @@ typedef enum _RAS_PARAMS_FORMAT {
     ParamString = 1
 } RAS_PARAMS_FORMAT;
 typedef union RAS_PARAMS_VALUE {
-	DWORD	Number;
-	struct	{
-	    DWORD	Length;
-		PCHAR	Data;
-		} String;
+    DWORD Number;
+    struct {
+        DWORD Length;
+        PCHAR Data;
+    } String;
 } RAS_PARAMS_VALUE;
 typedef struct RAS_PARAMETERS {
-    CHAR	            P_Key [RASSAPI_MAX_PARAM_KEY_SIZE];
-    RAS_PARAMS_FORMAT	P_Type;
-    BYTE	            P_Attributes;
-    RAS_PARAMS_VALUE	P_Value;
+    CHAR                P_Key [RASSAPI_MAX_PARAM_KEY_SIZE];
+    RAS_PARAMS_FORMAT   P_Type;
+    BYTE                P_Attributes;
+    RAS_PARAMS_VALUE    P_Value;
 } RAS_PARAMETERS;
 typedef struct _RAS_USER_0 {
     BYTE    bfPrivilege;
