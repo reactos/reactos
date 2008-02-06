@@ -112,6 +112,7 @@ IntGetAliasEntry(PALIAS_HEADER Header, LPCWSTR lpSrcName)
     PALIAS_ENTRY RootHeader = Header->Data;
     while(RootHeader)
     {
+        DPRINT("IntGetAliasEntry>lpSource %S\n", RootHeader->lpSource);
         INT diff = _wcsicmp(RootHeader->lpSource, lpSrcName);
         if (!diff)
             return RootHeader;
@@ -136,6 +137,7 @@ IntInsertAliasEntry(PALIAS_HEADER Header, PALIAS_ENTRY NewEntry)
   if (!CurrentEntry)
   {
     Header->Data = NewEntry;
+    NewEntry->Next = NULL;
     return;
   }
 
@@ -235,10 +237,12 @@ IntGetAllConsoleAliasesLength(PALIAS_HEADER Header)
        Length += wcslen(CurEntry->lpTarget);
        Length += 2; // zero byte and '='
    }
-   if (Length)
-       Length++; // extra zero
 
-   return sizeof(WCHAR) * Length;
+   if (Length)
+   {
+       return (Length+1) * sizeof(WCHAR);
+   }
+   return 0;
 }
 UINT
 IntGetAllConsoleAliases(PALIAS_HEADER Header, LPWSTR TargetBuffer, UINT TargetBufferLength)
@@ -298,17 +302,31 @@ CSR_API(CsrAddConsoleAlias)
 {
     PALIAS_HEADER Header;
     PALIAS_ENTRY Entry;
+    WCHAR * lpExeName;
+    WCHAR * lpSource;
+    WCHAR * lpTarget;
+    ULONG TotalLength;
+    WCHAR * Ptr;
 
-    if (Request->Data.AddConsoleAlias.lpExeName == NULL || Request->Data.AddConsoleAlias.lpSource == NULL)
+    TotalLength = Request->Data.AddConsoleAlias.SourceLength + Request->Data.AddConsoleAlias.ExeLength + Request->Data.AddConsoleAlias.TargetLength;
+    Ptr = (WCHAR*)((ULONG_PTR)Request + sizeof(CSR_API_MESSAGE));
+
+    lpSource = (WCHAR*)((ULONG_PTR)Request + sizeof(CSR_API_MESSAGE));
+    lpExeName = (WCHAR*)((ULONG_PTR)Request + sizeof(CSR_API_MESSAGE) + Request->Data.AddConsoleAlias.SourceLength * sizeof(WCHAR));
+    lpTarget = (Request->Data.AddConsoleAlias.TargetLength != 0 ? lpExeName + Request->Data.AddConsoleAlias.ExeLength : NULL);
+
+    DPRINT("CsrAddConsoleAlias entered Request %p lpSource %p lpExeName %p lpTarget %p\n", Request, lpSource, lpExeName, lpTarget);
+
+    if (lpExeName == NULL || lpSource == NULL)
     {
         Request->Status = STATUS_INVALID_PARAMETER;
         return Request->Status;
     }
-
-    Header = IntFindAliasHeader(RootHeader, Request->Data.AddConsoleAlias.lpExeName);
-    if (!Header && Request->Data.AddConsoleAlias.lpTarget != NULL)
+    
+    Header = IntFindAliasHeader(RootHeader, lpExeName);
+    if (!Header && lpTarget != NULL)
     {
-        Header = IntCreateAliasHeader(Request->Data.AddConsoleAlias.lpExeName);
+        Header = IntCreateAliasHeader(lpExeName);
         if (!Header)
         {
             Request->Status = STATUS_INSUFFICIENT_RESOURCES;
@@ -317,9 +335,9 @@ CSR_API(CsrAddConsoleAlias)
         IntInsertAliasHeader(&RootHeader, Header);
     }
 
-    if (Request->Data.AddConsoleAlias.lpTarget == NULL) // delete the entry
+    if (lpTarget == NULL) // delete the entry
     {
-        Entry = IntGetAliasEntry(Header, Request->Data.AddConsoleAlias.lpSource);
+        Entry = IntGetAliasEntry(Header, lpSource);
         if (Entry)
         {
             IntDeleteAliasEntry(Header, Entry);
@@ -329,12 +347,10 @@ CSR_API(CsrAddConsoleAlias)
         {
             Request->Status = STATUS_INVALID_PARAMETER;
         }
-
         return Request->Status;
     }
 
-    Entry = IntCreateAliasEntry(Request->Data.AddConsoleAlias.lpSource,
-                Request->Data.AddConsoleAlias.lpTarget);
+    Entry = IntCreateAliasEntry(lpSource, lpTarget);
 
     if (!Entry)
     {
@@ -343,7 +359,6 @@ CSR_API(CsrAddConsoleAlias)
     }
 
     IntInsertAliasEntry(Header, Entry);
-
     Request->Status = STATUS_SUCCESS;
     return Request->Status;
 }
@@ -353,22 +368,33 @@ CSR_API(CsrGetConsoleAlias)
     PALIAS_HEADER Header;
     PALIAS_ENTRY Entry;
     UINT Length;
+    WCHAR * lpExeName;
+    WCHAR * lpSource;
+    WCHAR * lpTarget;
 
-    if (Request->Data.GetConsoleAlias.lpExeName == NULL || Request->Data.GetConsoleAlias.TargetBuffer == NULL || 
-        Request->Data.GetConsoleAlias.TargetBufferLength == 0 || Request->Data.GetConsoleAlias.lpSource == NULL)
+    lpSource = (LPWSTR)((ULONG_PTR)Request + sizeof(CSR_API_MESSAGE));
+    lpExeName = lpSource + Request->Data.GetConsoleAlias.SourceLength;
+    lpTarget = (LPWSTR)lpExeName + Request->Data.GetConsoleAlias.ExeLength;
+
+
+    DPRINT("CsrGetConsoleAlias entered lpExeName %p lpSource %p TargetBuffer %p TargetBufferLength %u\n", 
+        lpExeName, lpSource, lpTarget, Request->Data.GetConsoleAlias.TargetBufferLength);
+    
+    if (Request->Data.GetConsoleAlias.ExeLength == 0 || lpTarget == NULL || 
+        Request->Data.GetConsoleAlias.TargetBufferLength == 0 || Request->Data.GetConsoleAlias.SourceLength == 0)
     {
         Request->Status = STATUS_INVALID_PARAMETER;
         return Request->Status;
     }
 
-    Header = IntFindAliasHeader(RootHeader, Request->Data.GetAllConsoleAlias.lpExeName);
+    Header = IntFindAliasHeader(RootHeader, lpExeName);
     if (!Header)
     {
         Request->Status = STATUS_INVALID_PARAMETER;
         return Request->Status;
     }
 
-    Entry = IntGetAliasEntry(Header, Request->Data.GetConsoleAlias.lpSource);
+    Entry = IntGetAliasEntry(Header, lpSource);
     if (!Entry)
     {
         Request->Status = STATUS_INVALID_PARAMETER;
@@ -381,7 +407,20 @@ CSR_API(CsrGetConsoleAlias)
         Request->Status = ERROR_INSUFFICIENT_BUFFER;
         return Request->Status;      
     }
-    wcscpy(Request->Data.GetConsoleAlias.TargetBuffer, Entry->lpTarget);
+
+#if 0
+    if (((PVOID)lpTarget < ProcessData->CsrSectionViewBase)
+      || (((ULONG_PTR)lpTarget + Request->Data.GetConsoleAlias.TargetBufferLength) > ((ULONG_PTR)ProcessData->CsrSectionViewBase + ProcessData->CsrSectionViewSize)))
+    {
+        Request->Status = STATUS_ACCESS_VIOLATION;
+        DPRINT1("CsrGetConsoleAlias out of range lpTarget %p LowerViewBase %p UpperViewBase %p Size %p\n", lpTarget, 
+            ProcessData->CsrSectionViewBase, (ULONG_PTR)ProcessData->CsrSectionViewBase + ProcessData->CsrSectionViewSize, ProcessData->CsrSectionViewSize);
+        return Request->Status;
+    }
+#endif
+
+    wcscpy(lpTarget, Entry->lpTarget);
+    lpTarget[CSRSS_MAX_ALIAS_TARGET_LENGTH-1] = '\0';
     Request->Data.GetConsoleAlias.BytesWritten = Length;
     Request->Status = STATUS_SUCCESS;
     return Request->Status;
@@ -448,7 +487,11 @@ CSR_API(CsrGetAllConsoleAliasesLength)
 CSR_API(CsrGetConsoleAliasesExes)
 {
     UINT BytesWritten;
-    UINT ExesLength = IntGetConsoleAliasesExesLength(RootHeader);
+    UINT ExesLength;
+    
+    DPRINT("CsrGetConsoleAliasesExes entered\n");
+
+    ExesLength = IntGetConsoleAliasesExesLength(RootHeader);
     
     if (ExesLength > Request->Data.GetConsoleAliasesExes.Length)
     {
@@ -473,6 +516,8 @@ CSR_API(CsrGetConsoleAliasesExes)
 
 CSR_API(CsrGetConsoleAliasesExesLength)
 {
+    DPRINT("CsrGetConsoleAliasesExesLength entered\n");
+
     Request->Status = STATUS_SUCCESS;
     Request->Data.GetConsoleAliasesExesLength.Length = IntGetConsoleAliasesExesLength(RootHeader);
     return Request->Status;
