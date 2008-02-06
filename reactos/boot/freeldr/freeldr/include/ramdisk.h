@@ -14,12 +14,6 @@
 //
 VOID
 NTAPI
-RamDiskInit(
-    IN PCHAR CmdLine
-);
-
-VOID
-NTAPI
 RamDiskSwitchFromBios(
     VOID
 );
@@ -29,5 +23,8 @@ NTAPI
 RamDiskCheckForVirtualFile(
     VOID
 );
+
+extern PVOID gRamDiskBase;
+extern ULONG gRamDiskSize;
 
 #endif

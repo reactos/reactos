@@ -1,120 +1,91 @@
-/* $Id$
- *
- *  FreeLoader
- *  Copyright (C) 1998-2003  Brian Palmer  <brianp@sginet.com>
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+/*
+ * PROJECT:         ReactOS Boot Loader
+ * LICENSE:         GPL - See COPYING in the top level directory
+ * FILE:            boot/freeldr/cmdline.c
+ * PURPOSE:         FreeLDR Command Line Parsing
+ * PROGRAMMERS:     ReactOS Portable Systems Group
  */
+
+/* INCLUDES *******************************************************************/
 
 #include <freeldr.h>
 
-static CMDLINEINFO CmdLineInfo;
+/* GLOBALS ********************************************************************/
 
-static char *
-SkipWhitespace(char *s)
+CCHAR DefaultOs[256];
+CMDLINEINFO CmdLineInfo;
+
+/* FUNCTIONS ******************************************************************/
+
+VOID
+CmdLineParse(IN PCHAR CmdLine)
 {
-  while ('\0' != *s && isspace(*s))
-    {
-      s++;
-    }
+    PCHAR End, Setting;
+    ULONG Length;
 
-  return s;
+    //
+    // Set defaults
+    //
+    CmdLineInfo.DefaultOperatingSystem = NULL;
+    CmdLineInfo.TimeOut = -1;
+    
+    //
+    // Get timeout
+    //
+    Setting = strstr(CmdLine, "timeout=");
+    if (Setting) CmdLineInfo.TimeOut = atoi(Setting +
+                                            sizeof("timeout=") +
+                                            sizeof(ANSI_NULL));
+
+    //
+    // Get default OS
+    //
+    Setting = strstr(CmdLine, "defaultos=");
+    if (Setting)
+    {
+        //
+        // Check if there's more command-line parameters following
+        //
+        Setting += sizeof("defaultos=") + sizeof(ANSI_NULL);
+        End = strstr(Setting, " ");
+        if (End) Length = End - Setting; else Length = sizeof(DefaultOs);
+        
+        //
+        // Copy the default OS
+        //
+        strncpy(DefaultOs, Setting, Length);
+        CmdLineInfo.DefaultOperatingSystem = DefaultOs;
+    }
+    
+    //
+    // Get ramdisk base address
+    //
+    Setting = strstr(CmdLine, "rdbase=");
+    if (Setting) gRamDiskBase = (PVOID)strtoul(Setting +
+                                               sizeof("rdbase=") -
+                                               sizeof(ANSI_NULL),
+                                               NULL,
+                                               0);
+    
+    //
+    // Get ramdisk size
+    //
+    Setting = strstr(CmdLine, "rdsize=");
+    if (Setting) gRamDiskSize = strtoul(Setting +
+                                        sizeof("rdsize=") -
+                                        sizeof(ANSI_NULL),
+                                        NULL,
+                                        0);
 }
 
-void
-CmdLineParse(char *CmdLine)
+PCCH
+CmdLineGetDefaultOS(VOID)
 {
-  char *s;
-  char *Name;
-  char *Value;
-  char *End;
-
-  CmdLineInfo.DefaultOperatingSystem = NULL;
-  CmdLineInfo.TimeOut = -1;
-
-  if (NULL == CmdLine)
-    {
-      return;
-    }
-
-  /* Skip over "kernel name" */
-  s = CmdLine;
-  while ('\0' != *s && ! isspace(*s))
-    {
-      s++;
-    }
-  s = SkipWhitespace(s);
-
-  while ('\0' != *s)
-    {
-      Name = s;
-      while (! isspace(*s) && '=' != *s && '\0' != *s)
-        {
-          s++;
-        }
-      End = s;
-      s = SkipWhitespace(s);
-      if ('=' == *s)
-        {
-          s++;
-          *End = '\0';
-          s = SkipWhitespace(s);
-          if ('"' == *s)
-            {
-              s++;
-              Value = s;
-              while ('"' != *s && '\0' != *s)
-                {
-                  s++;
-                }
-            }
-          else
-            {
-              Value = s;
-              while (! isspace(*s) && '\0' != *s)
-                {
-                  s++;
-                }
-            }
-          if ('\0' != *s)
-            {
-              *s++ = '\0';
-            }
-          if (0 == _stricmp(Name, "defaultos"))
-            {
-              CmdLineInfo.DefaultOperatingSystem = Value;
-            }
-          else if (0 == _stricmp(Name, "timeout"))
-            {
-              CmdLineInfo.TimeOut = atoi(Value);
-            }
-        }
-    }
-}
-
-const char *
-CmdLineGetDefaultOS(void)
-{
-  return CmdLineInfo.DefaultOperatingSystem;
+    return CmdLineInfo.DefaultOperatingSystem;
 }
 
 LONG
-CmdLineGetTimeOut(void)
+CmdLineGetTimeOut(VOID)
 {
-  return CmdLineInfo.TimeOut;
+    return CmdLineInfo.TimeOut;
 }
-
-/* EOF */
-

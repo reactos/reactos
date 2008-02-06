@@ -30,8 +30,16 @@ ArmDiskGetBootVolume(IN PULONG DriveNumber,
                      IN PULONGLONG SectorCount, 
                      OUT PINT FsType)
 {
-    while (TRUE);
-    return FALSE;
+    //
+    // We only support RAM disk for now -- add support for NAND later
+    //
+    ASSERT(gRamDiskBase);
+    ASSERT(gRamDiskSize);
+    *DriveNumber = 0x49;
+    *StartSector = 0;
+    *SectorCount = gRamDiskSize * 512;
+    *FsType = FS_FAT;
+    return TRUE;
 }
 
 VOID
@@ -183,4 +191,5 @@ MachInit(IN PCCH CommandLine)
     // We can now print to the console
     //
     TuiPrintf("%s for ARM\n", GetFreeLoaderVersionString());
+    TuiPrintf("Bootargs: %s\n", CommandLine);
 }

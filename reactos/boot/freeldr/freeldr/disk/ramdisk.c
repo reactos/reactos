@@ -163,18 +163,3 @@ RamDiskSwitchFromBios(VOID)
         gCacheEnabled = FALSE;
     }
 }
-
-VOID
-NTAPI
-RamDiskInit(IN PCHAR CmdLine)
-{
-    PCHAR Setting;
-
-    //
-    // Get RAM disk parameters
-    //
-    Setting = strstr(CmdLine, "rdbase=");
-    if (Setting) gRamDiskBase = (PVOID)atoi(Setting);
-    Setting = strstr(CmdLine, "rdsize=");
-    if (Setting) gRamDiskSize = atoi(Setting);
-}
