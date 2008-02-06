@@ -24,6 +24,32 @@ FrLdrStartup(IN ULONG Magic)
     //
 }
 
+
+BOOLEAN
+ArmDiskGetDriveGeometry(IN ULONG DriveNumber,
+                        OUT PGEOMETRY Geometry)
+{
+    ASSERT(gRamDiskBase == NULL);
+    return FALSE;
+}
+
+BOOLEAN
+ArmDiskReadLogicalSectors(IN ULONG DriveNumber,
+                          IN ULONGLONG SectorNumber,
+                          IN ULONG SectorCount,
+                          IN PVOID Buffer)
+{
+    ASSERT(gRamDiskBase == NULL);
+    return FALSE;
+}
+
+ULONG
+ArmDiskGetCacheableBlockCount(IN ULONG DriveNumber)
+{
+    ASSERT(gRamDiskBase == NULL);
+    return FALSE;
+}
+
 BOOLEAN
 ArmDiskGetBootVolume(IN PULONG DriveNumber,
                      IN PULONGLONG StartSector,
@@ -55,19 +81,6 @@ ArmDiskGetBootVolume(IN PULONG DriveNumber,
     return TRUE;
 }
 
-VOID
-ArmDiskGetBootDevice(OUT PULONG BootDevice)
-{
-    while (TRUE);
-}
-
-BOOLEAN
-ArmDiskBootingFromFloppy(VOID)
-{
-    while (TRUE);
-    return FALSE;
-}
-
 BOOLEAN
 ArmDiskGetSystemVolume(IN PCHAR SystemPath,
                        OUT PCHAR RemainingPath,
@@ -82,52 +95,10 @@ ArmDiskGetSystemVolume(IN PCHAR SystemPath,
 }
 
 BOOLEAN
-ArmDiskGetBootPath(IN PCHAR BootPath,
-                   IN unsigned Size)
-{
-    while (TRUE);
-    return FALSE;
-}
-
-BOOLEAN
 ArmDiskNormalizeSystemPath(IN PCHAR SystemPath,
                            IN unsigned Size)
 {
     while (TRUE);
-    return FALSE;
-}
-
-BOOLEAN
-ArmDiskGetDriveGeometry(IN ULONG DriveNumber,
-                        OUT PGEOMETRY Geometry)
-{
-    ASSERT(FALSE);
-    return FALSE;
-}
-
-BOOLEAN
-ArmDiskGetPartitionEntry(IN ULONG DriveNumber,
-                         IN ULONG PartitionNumber,
-                         OUT PPARTITION_TABLE_ENTRY PartitionTableEntry)
-{
-    while (TRUE);
-    return FALSE;
-}
-
-BOOLEAN
-ArmDiskReadLogicalSectors(IN ULONG DriveNumber,
-                          IN ULONGLONG SectorNumber,
-                          IN ULONG SectorCount,
-                          IN PVOID Buffer)
-{
-    ASSERT(FALSE);
-    return FALSE;
-}
-
-ULONG
-ArmDiskGetCacheableBlockCount(IN ULONG DriveNumber)
-{
-    ASSERT(FALSE);
     return FALSE;
 }
 
@@ -190,12 +161,8 @@ MachInit(IN PCCH CommandLine)
     MachVtbl.GetMemoryMap = ArmMemGetMemoryMap;
     MachVtbl.DiskGetBootVolume = ArmDiskGetBootVolume;
     MachVtbl.DiskGetSystemVolume = ArmDiskGetSystemVolume;
-    MachVtbl.DiskGetBootPath = ArmDiskGetBootPath;
-    MachVtbl.DiskGetBootDevice = ArmDiskGetBootDevice;
-    MachVtbl.DiskBootingFromFloppy = ArmDiskBootingFromFloppy;
     MachVtbl.DiskNormalizeSystemPath = ArmDiskNormalizeSystemPath;
     MachVtbl.DiskReadLogicalSectors = ArmDiskReadLogicalSectors;
-    MachVtbl.DiskGetPartitionEntry = ArmDiskGetPartitionEntry;
     MachVtbl.DiskGetDriveGeometry = ArmDiskGetDriveGeometry;
     MachVtbl.DiskGetCacheableBlockCount = ArmDiskGetCacheableBlockCount;
     MachVtbl.HwDetect = ArmHwDetect;
