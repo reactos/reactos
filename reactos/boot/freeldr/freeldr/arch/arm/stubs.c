@@ -40,7 +40,7 @@ ArmDiskGetBootVolume(IN PULONG DriveNumber,
     // Use magic ramdisk drive number and count the number of 512-byte sectors
     //
     *DriveNumber = 0x49;
-    *StartSector = 0;
+    *StartSector = 63;
     *SectorCount = gRamDiskSize * 512;
 
     //

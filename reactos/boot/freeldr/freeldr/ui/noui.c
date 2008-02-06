@@ -43,6 +43,7 @@ VOID NoUiDrawCenteredText(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, PCST
 
 VOID NoUiDrawStatusText(PCSTR StatusText)
 {
+    printf("%s\n", StatusText);
 }
 
 VOID NoUiUpdateDateTime(VOID)
