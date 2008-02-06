@@ -256,6 +256,7 @@ dll\win32\smdll\smdll.dll                           1
 dll\win32\snmpapi\snmpapi.dll                       1
 dll\win32\stdole2.tlb\stdole2.tlb                   1
 dll\win32\syssetup\syssetup.dll                     1
+dll\win32\tapi32\tapi32.dll                         1
 dll\win32\tapiui\tapiui.dll                         1
 dll\win32\twain_32\twain_32.dll                     1
 dll\win32\ufat\ufat.dll                             1
