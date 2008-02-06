@@ -717,7 +717,7 @@ LoadAndBootReactOS(PCSTR OperatingSystemName)
 	 */
 	if (!FsOpenSystemVolume(SystemPath, szBootPath, &LoaderBlock.BootDevice))
 	{
-		UiMessageBox("Failed to open boot drive.");
+		UiMessageBox("Failed to open system drive.");
 		return;
 	}
 
