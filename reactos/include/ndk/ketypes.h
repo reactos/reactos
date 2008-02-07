@@ -112,6 +112,11 @@ Author:
 #define KINTERRUPT_DISPATCH_CODES       106
 #endif
 
+//
+// Get KPCR
+//
+#define KeGetPcr()                      PCR
+
 #ifdef NTOS_MODE_USER
 
 //

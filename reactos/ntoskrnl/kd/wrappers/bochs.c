@@ -12,7 +12,7 @@
 #include <internal/debug.h>
 
 /* bochs debug output */
-#define BOCHS_LOGGER_PORT (0xe9)
+#define BOCHS_LOGGER_PORT ((PVOID)0xe9)
 
 /* FUNCTIONS *****************************************************************/
 
@@ -27,9 +27,9 @@ KdpBochsDebugPrint(IN PCH Message,
     {
         if (*Message == '\n')
         {
-           __outbyte(BOCHS_LOGGER_PORT, '\r');
+           WRITE_PORT_UCHAR(BOCHS_LOGGER_PORT, '\r');
         }
-        __outbyte(BOCHS_LOGGER_PORT, *Message);
+        WRITE_PORT_UCHAR(BOCHS_LOGGER_PORT, *Message);
         Message++;
     }
 }
@@ -44,8 +44,8 @@ KdpBochsInit(PKD_DISPATCH_TABLE DispatchTable,
 
     if (BootPhase == 0)
     {
-        Value = __inbyte(BOCHS_LOGGER_PORT);
-        if (Value != BOCHS_LOGGER_PORT)
+        Value = READ_PORT_UCHAR(BOCHS_LOGGER_PORT);
+        if (Value != (ULONG)BOCHS_LOGGER_PORT)
         {
            KdpDebugMode.Bochs = FALSE;
            return;

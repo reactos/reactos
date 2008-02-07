@@ -972,6 +972,18 @@ KeReleaseQueuedSpinLockFromDpcLevel(
     IN OUT PKSPIN_LOCK_QUEUE LockQueue
 );
 
+VOID
+NTAPI
+KiRestoreProcessorControlState(
+    IN PKPROCESSOR_STATE ProcessorState
+);
+
+VOID
+NTAPI
+KiSaveProcessorControlState(
+    OUT PKPROCESSOR_STATE ProcessorState
+);
+
 #include "ke_x.h"
 
 #endif /* __NTOSKRNL_INCLUDE_INTERNAL_KE_H */

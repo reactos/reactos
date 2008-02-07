@@ -40,6 +40,11 @@ Author:
 #define PRCB_BUILD_UNIPROCESSOR 2
 
 //
+// No LDTs on ARM
+//
+#define LDT_ENTRY              ULONG
+
+//
 // HAL Variables
 //
 #define INITIAL_STALL_COUNT     0x64

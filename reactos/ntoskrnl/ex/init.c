@@ -1229,6 +1229,9 @@ ExpInitializeExecutive(IN ULONG Cpu,
 #elif defined(_MIPS_)
     SharedUserData->ImageNumberLow = IMAGE_FILE_MACHINE_R4000;
     SharedUserData->ImageNumberHigh = IMAGE_FILE_MACHINE_R4000;
+#elif defined(_ARM_)
+    SharedUserData->ImageNumberLow = IMAGE_FILE_MACHINE_ARM;
+    SharedUserData->ImageNumberHigh = IMAGE_FILE_MACHINE_ARM;
 #else
 #error "Unsupported ReactOS Target"
 #endif

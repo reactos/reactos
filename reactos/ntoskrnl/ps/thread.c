@@ -325,10 +325,14 @@ PspCreateThread(OUT PHANDLE ThreadHandle,
         Thread->StartAddress = (PVOID)ThreadContext->Eip;
         Thread->Win32StartAddress = (PVOID)ThreadContext->Eax;
 #elif defined(_M_PPC)
-	Thread->StartAddress = (PVOID)ThreadContext->Dr0;
-	Thread->Win32StartAddress = (PVOID)ThreadContext->Gpr3;
+        Thread->StartAddress = (PVOID)ThreadContext->Dr0;
+        Thread->Win32StartAddress = (PVOID)ThreadContext->Gpr3;
 #elif defined(_M_MIPS)
-        for (;;);
+        Thread->StartAddress = (PVOID)ThreadContext->Psr;
+        Thread->Win32StartAddress = (PVOID)ThreadContext->IntA0;
+#elif defined(_M_ARM)
+        Thread->StartAddress = (PVOID)ThreadContext->Pc;
+        Thread->Win32StartAddress = (PVOID)ThreadContext->R0;
 #else
 #error Unknown architecture
 #endif

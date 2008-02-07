@@ -457,7 +457,6 @@ NtSetIntervalProfile(
     IN KPROFILE_SOURCE ClockSource
 );
 
-#ifdef _M_IX86
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
@@ -467,7 +466,6 @@ NtSetLdtEntries(
     IN ULONG Selector2,
     IN LDT_ENTRY LdtEntry2
 );
-#endif
 
 NTSYSCALLAPI
 NTSTATUS
@@ -665,7 +663,6 @@ ZwSetIntervalProfile(
     IN KPROFILE_SOURCE ClockSource
 );
 
-#ifdef _M_IX86
 NTSYSAPI
 NTSTATUS
 NTAPI
@@ -675,7 +672,6 @@ ZwSetLdtEntries(
     IN ULONG Selector2,
     IN LDT_ENTRY LdtEntry2
 );
-#endif
 
 NTSYSAPI
 NTSTATUS

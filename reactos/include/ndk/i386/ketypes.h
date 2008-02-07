@@ -28,9 +28,8 @@ Author:
 //
 #define K0IPCR                  ((ULONG_PTR)(KIP0PCRADDRESS))
 #define PCR                     ((volatile KPCR * const)K0IPCR)
-#if !defined(CONFIG_SMP) && !defined(NT_BUILD)
-#define KeGetPcr()              PCR
-#else
+#if defined(CONFIG_SMP) || defined(NT_BUILD)
+#undef  KeGetPcr()
 #define KeGetPcr()              ((volatile KPCR * const)__readfsdword(0x1C))
 #endif
 

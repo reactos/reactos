@@ -26,9 +26,7 @@
 #elif defined(_M_MIPS)
 #include "../mips/intrin_i.h"
 #elif defined(_M_ARM)
-//
-// Not sure we'll need ARM internal intrinsics
-//
+#include "../arm/intrin_i.h"
 #else
 #error "Unknown processor"
 #endif

@@ -103,16 +103,12 @@ struct _TEB* NtCurrentTeb(VOID)
 //
 // IRQL Support on ARM is similar to MIPS/ALPHA
 //
-NTKERNELAPI
 KIRQL
-DDKAPI
 KeSwapIrql(
     IN KIRQL NewIrql
 );
 
-NTKERNELAPI
 KIRQL
-NTAPI
 KeRaiseIrqlToDpcLevel(
     VOID
 );

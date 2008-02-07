@@ -284,6 +284,8 @@ RtlWalkFrameChain(OUT PVOID *Callers,
         __asm__("move $sp, %0" : "=r" (Stack) : );
 #elif defined(_M_PPC)
     __asm__("mr %0,1" : "=r" (Stack) : );
+#elif defined(_M_ARM)
+    __asm__("mov sp, %0" : "=r"(Stack) : );
 #else
 #error Unknown architecture
 #endif

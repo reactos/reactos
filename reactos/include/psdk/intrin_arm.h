@@ -148,5 +148,25 @@ static __inline__ __attribute__((always_inline)) long _InterlockedIncrement16(vo
 	return _InterlockedExchangeAdd16(lpAddend, 1) + 1;
 }
 
+static __inline__ __attribute__((always_inline)) void _disable(void)
+{
+    __asm__ __volatile__
+    (
+     "mrs r1, cpsr;"
+     "orr r1, r1, #0x80;"
+     "msr cpsr, r1;"
+    );
+}
+
+static __inline__ __attribute__((always_inline)) void _enable(void)
+{
+    __asm__ __volatile__
+    (
+     "mrs r1, cpsr;"
+     "bic r1, r1, #0x80;"
+     "msr cpsr, r1;"
+    );
+}
+
 #endif
 /* EOF */

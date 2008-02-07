@@ -531,11 +531,11 @@ QSI_DEF(SystemProcessorInformation)
 		return (STATUS_INFO_LENGTH_MISMATCH);
 	}
 	Prcb = KeGetCurrentPrcb();
-	Spi->ProcessorArchitecture = 0; /* Intel Processor */
-	Spi->ProcessorLevel	   = Prcb->CpuType;
-	Spi->ProcessorRevision	   = Prcb->CpuStep;
+	Spi->ProcessorArchitecture = KeProcessorArchitecture;
+	Spi->ProcessorLevel	   = KeProcessorLevel;
+	Spi->ProcessorRevision	   = KeProcessorRevision;
 	Spi->Reserved 		   = 0;
-	Spi->ProcessorFeatureBits	   = Prcb->FeatureBits;
+	Spi->ProcessorFeatureBits	   = KeFeatureBits;
 
 	DPRINT("Arch %d Level %d Rev 0x%x\n", Spi->ProcessorArchitecture,
 		Spi->ProcessorLevel, Spi->ProcessorRevision);
@@ -1927,6 +1927,8 @@ NtFlushInstructionCache (
 #elif defined(_M_MIPS)
     DPRINT1("NtFlushInstructionCache() is not implemented\n");
     for (;;);
+#elif defined(_M_ARM)
+    __asm__ __volatile__("mov r1, #0; mcr p15, 0, r1, c7, c5, 0");
 #else
 #error Unknown architecture
 #endif
