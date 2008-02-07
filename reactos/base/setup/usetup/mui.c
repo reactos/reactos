@@ -47,273 +47,34 @@
 
 static const MUI_LANGUAGE LanguageList[] =
 {
-    {
-        L"00000409",        /* The Language ID */
-        L"00000409",        /* Default Keyboard Layout for this language */
-        L"1252",            /* ANSI Codepage */
-        L"437",             /* OEM Codepage */
-        L"10000",           /* MAC Codepage */
-        L"English",         /* Language Name , not used just to make things easier when updating this file */
-        enUSPages,          /* Translated page strings  */
-        enUSErrorEntries    /* Translated error strings */
-    },
-    {
-        L"00000402",
-        L"00000402",
-        L"1251",
-        L"866",
-        L"10007",
-        L"Bulgarian",
-        bgBGPages,
-        bgBGErrorEntries
-    },
-    {
-        L"00000403",
-        L"00000403",
-        L"1252",
-        L"850",
-        L"10000",
-        L"Catalan",
-        enUSPages,
-        enUSErrorEntries
-    },
-    {
-        L"00000804",
-        L"00000804",
-        L"936",
-        L"936",
-        L"10008",
-        L"Chinese (PRC)",
-        enUSPages,
-        enUSErrorEntries
-    },
-    {
-        L"00000406",
-        L"00000406",
-        L"1252",
-        L"850",
-        L"10000",
-        L"Danish",
-        enUSPages,
-        enUSErrorEntries
-    },
-    {
-        L"00000413",
-        L"00000813",
-        L"1252",
-        L"850",
-        L"10000",
-        L"Dutch",
-        enUSPages,
-        enUSErrorEntries
-    },
-    {
-        L"0000040B",
-        L"0000040B",
-        L"1252",
-        L"850",
-        L"10000",
-        L"Finnish",
-        enUSPages,
-        enUSErrorEntries
-    },
-    {
-        L"0000040C",
-        L"0000040C",
-        L"1252",
-        L"850",
-        L"10000",
-        L"French",
-        frFRPages,
-        frFRErrorEntries
-    },
-    {
-        L"00000407",
-        L"00000407",
-        L"1252",
-        L"850",
-        L"10000",
-        L"German",
-        deDEPages,
-        deDEErrorEntries
-    },
-    {
-        L"00000408",
-        L"00000408",
-        L"1253",
-        L"737",
-        L"10006",
-        L"Greek",
-        elGRPages,
-        elGRErrorEntries
-    },
-    {
-        L"0000040D",
-        L"0000040D",
-        L"1255",
-        L"862",
-        L"10005",
-        L"Hebrew",
-        enUSPages,
-        enUSErrorEntries
-    },
-    {
-        L"0000040E",
-        L"0000040E",
-        L"1250",
-        L"852",
-        L"10029",
-        L"Hungarian",
-        enUSPages,
-        enUSErrorEntries
-    },
-    {
-        L"00000410",
-        L"00000410",
-        L"1252",
-        L"850",
-        L"10000",
-        L"Italian",
-        itITPages,
-        itITErrorEntries
-    },
-    {
-        L"00000411",
-        L"00000411",
-        L"932",
-        L"932",
-        L"10001",
-        L"Japanese",
-        enUSPages,
-        enUSErrorEntries
-    },
-    {
-        L"00000412",
-        L"00000412",
-        L"949",
-        L"949",
-        L"10003",
-        L"Korean",
-        enUSPages,
-        enUSErrorEntries
-    },
-    {
-        L"00000427",
-        L"00000427",
-        L"1257",
-        L"775",
-        L"10029",
-        L"Lithuanian",
-        ltLTPages,
-        ltLTErrorEntries
-    },
-    {
-        L"00000414",
-        L"00000414",
-        L"1252",
-        L"850",
-        L"10000",
-        L"Norwegian",
-        enUSPages,
-        enUSErrorEntries
-    },
-    {
-        L"00000419",
-        L"00000419",
-        L"1251",
-        L"866",
-        L"10007",
-        L"Russian",
-        ruRUPages,
-        ruRUErrorEntries
-    },
-    {
-        L"0000041B",
-        L"0000041B",
-        L"1250",
-        L"852",
-        L"10029",
-        L"Slovak",
-        skSKPages,
-        skSKErrorEntries
-    },
-    {
-        L"0000040A",
-        L"0000040A",
-        L"1252",
-        L"850",
-        L"10000",
-        L"Spanish",
-        esESPages,
-        esESErrorEntries
-    },
-    {
-        L"00000415",
-        L"00000415",
-        L"1250",
-        L"852",
-        L"10029",
-        L"Polish",
-        plPLPages,
-        plPLErrorEntries
-    },
-    {
-        L"00000816",
-        L"00000816",
-        L"1252",
-        L"850",
-        L"10000",
-        L"Portuguese",
-        enUSPages,
-        enUSErrorEntries
-    },
-    {
-        L"0000041D",
-        L"0000041D",
-        L"1252",
-        L"850",
-        L"10000",
-        L"Swedish",
-        svSEPages,
-        svSEErrorEntries
-    },
-    {
-        L"0000041E",
-        L"0000041E",
-        L"874",
-        L"874",
-        L"10021",
-        L"Thai",
-        enUSPages,
-        enUSErrorEntries
-    },
-    {
-        L"0000041F",
-        L"0000041F",
-        L"1254",
-        L"857",
-        L"10081",
-        L"Turkish",
-        enUSPages,
-        enUSErrorEntries
-    },
-    {
-        L"00000422",
-        L"00000422",
-        L"1251",
-        L"866",
-        L"10017",
-        L"Ukrainian",
-        ukUAPages,
-        ukUAErrorEntries
-    },
-    {
-        NULL,
-        NULL,
-        NULL,
-        NULL,
-        NULL
-    }
+  /* Lang ID,   DefKbdLayout,ANSI CP, OEM CP, MAC CP,   Language Name,    page strgs,error strings */
+  {L"00000409", L"00000409", L"1252", L"437", L"10000", L"English",       enUSPages, enUSErrorEntries },
+  {L"00000402", L"00000402", L"1251", L"866", L"10007", L"Bulgarian",     bgBGPages, bgBGErrorEntries },
+  {L"00000403", L"00000403", L"1252", L"850", L"10000", L"Catalan",       enUSPages, enUSErrorEntries },
+  {L"00000804", L"00000804", L"936",  L"936", L"10008", L"Chinese (PRC)", enUSPages, enUSErrorEntries },
+  {L"00000406", L"00000406", L"1252", L"850", L"10000", L"Danish",        enUSPages, enUSErrorEntries },
+  {L"00000413", L"00000813", L"1252", L"850", L"10000", L"Dutch",         enUSPages, enUSErrorEntries },
+  {L"0000040B", L"0000040B", L"1252", L"850", L"10000", L"Finnish",       enUSPages, enUSErrorEntries },
+  {L"0000040C", L"0000040C", L"1252", L"850", L"10000", L"French",        frFRPages, frFRErrorEntries },
+  {L"00000407", L"00000407", L"1252", L"850", L"10000", L"German",        deDEPages, deDEErrorEntries },
+  {L"00000408", L"00000408", L"1253", L"737", L"10006", L"Greek",         elGRPages, elGRErrorEntries },
+  {L"0000040D", L"0000040D", L"1255", L"862", L"10005", L"Hebrew",        enUSPages, enUSErrorEntries },
+  {L"0000040E", L"0000040E", L"1250", L"852", L"10029", L"Hungarian",     enUSPages, enUSErrorEntries },
+  {L"00000410", L"00000410", L"1252", L"850", L"10000", L"Italian",       itITPages, itITErrorEntries },
+  {L"00000411", L"00000411", L"932",  L"932", L"10001", L"Japanese",      enUSPages, enUSErrorEntries },
+  {L"00000412", L"00000412", L"949",  L"949", L"10003", L"Korean",        enUSPages, enUSErrorEntries },
+  {L"00000427", L"00000427", L"1257", L"775", L"10029", L"Lithuanian",    ltLTPages, ltLTErrorEntries },
+  {L"00000414", L"00000414", L"1252", L"850", L"10000", L"Norwegian",     enUSPages, enUSErrorEntries },
+  {L"00000419", L"00000419", L"1251", L"866", L"10007", L"Russian",       ruRUPages, ruRUErrorEntries },
+  {L"0000041B", L"0000041B", L"1250", L"852", L"10029", L"Slovak",        skSKPages, skSKErrorEntries },
+  {L"0000040A", L"0000040A", L"1252", L"850", L"10000", L"Spanish",       esESPages, esESErrorEntries },
+  {L"00000415", L"00000415", L"1250", L"852", L"10029", L"Polish",        plPLPages, plPLErrorEntries },
+  {L"00000816", L"00000816", L"1252", L"850", L"10000", L"Portuguese",    enUSPages, enUSErrorEntries },
+  {L"0000041D", L"0000041D", L"1252", L"850", L"10000", L"Swedish",       svSEPages, svSEErrorEntries },
+  {L"0000041E", L"0000041E", L"874",  L"874", L"10021", L"Thai",          enUSPages, enUSErrorEntries },
+  {L"0000041F", L"0000041F", L"1254", L"857", L"10081", L"Turkish",       enUSPages, enUSErrorEntries },
+  {L"00000422", L"00000422", L"1251", L"866", L"10017", L"Ukrainian",     ukUAPages, ukUAErrorEntries },
+  {NULL, NULL, NULL, NULL, NULL}
 };
 
 extern
