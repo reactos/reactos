@@ -92,6 +92,8 @@ typedef ULONG HCELL_INDEX, *PHCELL_INDEX;
 
 #define HvGetCellType(Cell)             \
     ((ULONG)((Cell & HCELL_TYPE_MASK) >> HCELL_TYPE_SHIFT))
+#define HvGetCellBlock(Cell)            \
+    ((ULONG)((Cell & HCELL_BLOCK_MASK) >> HCELL_BLOCK_SHIFT))
 
 typedef enum
 {
