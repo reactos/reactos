@@ -140,7 +140,7 @@ Index: write_msft.c
      retval = TYPE_E_IOERROR;
  
 -    fd = creat(typelib->typelib->filename, 0666);
-+    fd = open(typelib->typelib->filename, O_CREAT | O_RDWR | O_BINARY, 0666);
++    fd = open(typelib->typelib->filename, O_CREAT | O_WRONLY | O_TRUNC | O_BINARY, 0666);
      if (fd == -1) return retval;
  
      filepos = sizeof(MSFT_Header) + sizeof(MSFT_SegDir);
