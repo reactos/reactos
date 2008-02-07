@@ -38,6 +38,7 @@ RamDiskGetCacheableBlockCount(IN ULONG Reserved)
     //
     // Allow 32KB transfers (64 sectors), emulating BIOS LBA
     //
+    ASSERT(Reserved == 0x49);
     return 64;
 }
 
@@ -48,6 +49,7 @@ RamDiskGetDriveGeometry(IN ULONG Reserved,
     //
     // Should never be called when the caller expects valid Geometry!
     //
+    ASSERT(Reserved == 0x49);
     return TRUE;
 }
 
@@ -59,7 +61,8 @@ RamDiskReadLogicalSectors(IN ULONG Reserved,
 {
     PVOID StartAddress;
     ULONG Length;
-        
+    ASSERT(Reserved == 0x49);
+
     //
     // Get actual pointers and lengths
     //
@@ -145,6 +148,8 @@ VOID
 NTAPI
 RamDiskSwitchFromBios(VOID)
 {
+    extern ULONG BootDrive, BootPartition;
+
     //
     // Check if we have a ramdisk, in which case we need to switch routines
     //
@@ -161,5 +166,11 @@ RamDiskSwitchFromBios(VOID)
         // Also disable cached FAT reads
         //
         gCacheEnabled = FALSE;
+        
+        //
+        // Switch to ramdisk boot partition
+        //
+        BootDrive = 0x49;
+        BootPartition = 0;
     }
 }

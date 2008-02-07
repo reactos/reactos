@@ -31,7 +31,7 @@ EXTERN(_ChainLoadBiosBootSectorCode)
 	.code16
 
 	/* Set the boot drive */
-	movb	(_i386BootDrive),%dl
+	movb	(_BootDrive),%dl
 
 	/* Load segment registers */
 	cli

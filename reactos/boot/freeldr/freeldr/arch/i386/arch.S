@@ -46,16 +46,16 @@ EXTERN(RealEntryPoint)
 
 	.code32
 
-	/* Zero i386BootDrive and i386BootPartition */
+	/* Zero BootDrive and BootPartition */
 	xorl	%eax,%eax
-	movl	%eax,(_i386BootDrive)
-	movl	%eax,(_i386BootPartition)
+	movl	%eax,(_BootDrive)
+	movl	%eax,(_BootPartition)
 
 	/* Store the boot drive */
-	movb	%dl,(_i386BootDrive)
+	movb	%dl,(_BootDrive)
 
 	/* Store the boot partition */
-	movb	%dh,(_i386BootPartition)
+	movb	%dh,(_BootPartition)
 
 	/* GO! */
 	pushl	%eax
@@ -395,12 +395,12 @@ mb4:
 	movl	MB_INFO_BOOT_DEVICE_OFFSET(%ebx),%eax
 	shrl	$16,%eax
 	incb	%al
-	movb	%al,_i386BootPartition
-	movb	%ah,_i386BootDrive
+	movb	%al,_BootPartition
+	movb	%ah,_BootDrive
 	jmp	mb6
 mb5:	/* No boot device known, assume first partition of first harddisk */
-	movb	$0x80,_i386BootDrive
-	movb	$1,_i386BootPartition
+	movb	$0x80,_BootDrive
+	movb	$1,_BootPartition
 mb6:
 	/* Check for command line */
 	mov	$cmdline,%eax
@@ -484,14 +484,14 @@ rmode_idtptr:
 	.word	0x3ff		/* Limit */
 	.long	0			/* Base Address */
 
-EXTERN(_i386BootDrive)
-	.long	0
-
-EXTERN(_i386BootPartition)
-	.long	0
-
 mb_info:
 	.fill	MB_INFO_SIZE, 1, 0
 
 cmdline:
 	.fill	CMDLINE_SIZE, 1, 0
+
+EXTERN(_BootDrive)
+    .long 0
+    
+EXTERN(_BootPartition)
+    .long 0

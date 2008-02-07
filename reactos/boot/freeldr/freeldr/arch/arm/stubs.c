@@ -24,7 +24,6 @@ FrLdrStartup(IN ULONG Magic)
     //
 }
 
-
 BOOLEAN
 ArmDiskGetDriveGeometry(IN ULONG DriveNumber,
                         OUT PGEOMETRY Geometry)
@@ -50,58 +49,6 @@ ArmDiskGetCacheableBlockCount(IN ULONG DriveNumber)
     return FALSE;
 }
 
-BOOLEAN
-ArmDiskGetBootVolume(IN PULONG DriveNumber,
-                     IN PULONGLONG StartSector,
-                     IN PULONGLONG SectorCount, 
-                     OUT PINT FsType)
-{
-    //
-    // We only support RAM disk for now -- add support for NAND later
-    //
-    ASSERT(gRamDiskBase);
-    ASSERT(gRamDiskSize);
-
-    //
-    // Use magic ramdisk drive number and count the number of 512-byte sectors
-    //
-    *DriveNumber = 0x49;
-    *StartSector = 63;
-    *SectorCount = gRamDiskSize * 512;
-
-    //
-    // Ramdisk support is FAT-only for now
-    //
-    *FsType = FS_FAT;
-
-    //
-    // Now that ramdisk is enabled, use ramdisk routines
-    //
-    RamDiskSwitchFromBios();
-    return TRUE;
-}
-
-BOOLEAN
-ArmDiskGetSystemVolume(IN PCHAR SystemPath,
-                       OUT PCHAR RemainingPath,
-                       OUT PULONG Device,
-                       OUT PULONG DriveNumber,
-                       OUT PULONGLONG StartSector,
-                       OUT PULONGLONG SectorCount,
-                       OUT PINT FsType)
-{
-    while (TRUE);
-    return FALSE;
-}
-
-BOOLEAN
-ArmDiskNormalizeSystemPath(IN PCHAR SystemPath,
-                           IN unsigned Size)
-{
-    while (TRUE);
-    return FALSE;
-}
-
 VOID
 ArmPrepareForReactOS(IN BOOLEAN Setup)
 {
@@ -111,8 +58,32 @@ ArmPrepareForReactOS(IN BOOLEAN Setup)
 PCONFIGURATION_COMPONENT_DATA
 ArmHwDetect(VOID)
 {
-    while (TRUE);
-    return NULL;
+    PCONFIGURATION_COMPONENT_DATA RootNode;
+    
+    //
+    // Create the root node
+    //
+    FldrCreateSystemKey(&RootNode);
+    
+    //
+    // Write null component information
+    //
+    FldrSetComponentInformation(RootNode,
+                                0x0,
+                                0x0,
+                                0xFFFFFFFF);
+    
+    //
+    // TODO:
+    // There's no such thing as "PnP" on embedded hardware.
+    // The boot loader will send us a device tree, similar to ACPI
+    // or OpenFirmware device trees, and we will convert it to ARC.
+    //
+
+    //
+    // Return the root node
+    //
+    return RootNode;
 }
 
 ULONG
@@ -155,18 +126,31 @@ MachInit(IN PCCH CommandLine)
     }
     
     //
-    // Setup generic ARM routines
+    // Setup generic ARM routines for all boards
     //
     MachVtbl.PrepareForReactOS = ArmPrepareForReactOS;
     MachVtbl.GetMemoryMap = ArmMemGetMemoryMap;
-    MachVtbl.DiskGetBootVolume = ArmDiskGetBootVolume;
-    MachVtbl.DiskGetSystemVolume = ArmDiskGetSystemVolume;
-    MachVtbl.DiskNormalizeSystemPath = ArmDiskNormalizeSystemPath;
+    MachVtbl.HwDetect = ArmHwDetect;
+
+    //
+    // Setup disk I/O routines, switch to ramdisk ones for non-NAND boot
+    //
     MachVtbl.DiskReadLogicalSectors = ArmDiskReadLogicalSectors;
     MachVtbl.DiskGetDriveGeometry = ArmDiskGetDriveGeometry;
     MachVtbl.DiskGetCacheableBlockCount = ArmDiskGetCacheableBlockCount;
-    MachVtbl.HwDetect = ArmHwDetect;
-    
+    RamDiskSwitchFromBios();
+
+    //
+    // Now set default disk handling routines -- we don't need to override
+    //
+    MachVtbl.DiskGetBootVolume = DiskGetBootVolume;
+    MachVtbl.DiskGetSystemVolume = DiskGetSystemVolume;
+    MachVtbl.DiskGetBootPath = DiskGetBootPath;
+    MachVtbl.DiskGetBootDevice = DiskGetBootDevice;
+    MachVtbl.DiskBootingFromFloppy = DiskBootingFromFloppy;
+    MachVtbl.DiskNormalizeSystemPath = DiskNormalizeSystemPath;
+    MachVtbl.DiskGetPartitionEntry = DiskGetPartitionEntry;
+
     //
     // We can now print to the console
     //

@@ -124,6 +124,20 @@ PCSTR	DiskGetErrorCodeString(ULONG ErrorCode);
 BOOLEAN	DiskReadLogicalSectors(ULONG DriveNumber, ULONGLONG SectorNumber, ULONG SectorCount, PVOID Buffer); // Implemented in i386disk.c
 BOOLEAN	DiskIsDriveRemovable(ULONG DriveNumber);
 VOID	DiskStopFloppyMotor(VOID);	// Implemented in i386disk.c
+extern ULONG BootDrive;
+extern ULONG BootPartition;
+
+BOOLEAN DiskGetBootVolume(PULONG DriveNumber, PULONGLONG StartSector,
+                          PULONGLONG SectorCount, int *FsType);
+BOOLEAN DiskGetSystemVolume(char *SystemPath, char *RemainingPath,
+                            PULONG Device, PULONG DriveNumber,
+                            PULONGLONG StartSector,
+                            PULONGLONG SectorCount, int *FsType);
+BOOLEAN DiskGetBootPath(char *BootPath, unsigned Size);
+VOID DiskGetBootDevice(PULONG BootDevice);
+BOOLEAN DiskBootingFromFloppy(VOID);
+BOOLEAN DiskNormalizeSystemPath(char *SystemPath, unsigned Size);
+
 
 ///////////////////////////////////////////////////////////////////////////////////////
 //

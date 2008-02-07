@@ -379,13 +379,6 @@ BOOLEAN PcDiskReadLogicalSectors(ULONG DriveNumber, ULONGLONG SectorNumber, ULON
 }
 
 BOOLEAN
-PcDiskGetPartitionEntry(ULONG DriveNumber, ULONG PartitionNumber, PPARTITION_TABLE_ENTRY PartitionTableEntry)
-{
-  /* Just use the standard routine */
-  return DiskGetPartitionEntry(DriveNumber, PartitionNumber, PartitionTableEntry);
-}
-
-BOOLEAN
 PcDiskGetDriveGeometry(ULONG DriveNumber, PGEOMETRY Geometry)
 {
   REGS RegsIn;
