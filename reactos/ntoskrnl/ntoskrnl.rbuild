@@ -363,7 +363,7 @@
 		<if property="_ELF_" value="1">
 			<file>elf32.c</file>
 			<file>elf64.c</file>
-        </if>
+		</if>
 	</directory>
 	<directory name="ob">
 		<file>obdir.c</file>
