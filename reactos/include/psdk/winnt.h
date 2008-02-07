@@ -4106,21 +4106,10 @@ static __inline__ struct _TEB * NtCurrentTeb(void)
 #elif _M_ARM
     
 //
-// NT-ARM is not documented, need NDK
+// NT-ARM is not documented
 //
-#define NTOS_MODE_USER
-#include <arm/ketypes.h>
+#include <armddk.h>
     
-//
-// FIXME: Move _M_ARM stuff away from here
-// *** AND NOT IN THE NDK! NDK IS ONLY FOR OFFICIALLY OBTAINABLE/EXISTING NT
-//
-FORCEINLINE
-struct _TEB* NtCurrentTeb(VOID)
-{
-    return (struct _TEB*)USERPCR->Teb;
-}
-
 #else
 static __inline__ struct _TEB * NtCurrentTeb(void)
 {

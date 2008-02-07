@@ -280,7 +280,7 @@ DefaultQueryInfoBufferCheck(ULONG Class,
  * Use IsPointerOffset to test whether a pointer should be interpreted as an offset
  * or as a pointer
  */
-#if defined(_X86_) || defined(_M_AMD64) || defined(_MIPS_) || defined(_PPC_)
+#if defined(_X86_) || defined(_M_AMD64) || defined(_MIPS_) || defined(_PPC_) || defined(_ARM_)
 
 /* for x86 and x86-64 the MSB is 1 so we can simply test on that */
 #define IsPointerOffset(Ptr) ((LONG_PTR)(Ptr) >= 0)
@@ -310,10 +310,10 @@ C_ASSERT(FIELD_OFFSET(KTHREAD, ApcState.Process) == KTHREAD_APCSTATE_PROCESS);
 C_ASSERT(FIELD_OFFSET(KPROCESS, DirectoryTableBase) == KPROCESS_DIRECTORY_TABLE_BASE);
 //C_ASSERT(FIELD_OFFSET(KPCR, Tib.ExceptionList) == KPCR_EXCEPTION_LIST);
 //C_ASSERT(FIELD_OFFSET(KPCR, Self) == KPCR_SELF);
+#ifdef _M_IX86
 C_ASSERT(FIELD_OFFSET(KPCR, IRR) == KPCR_IRR);
 C_ASSERT(FIELD_OFFSET(KPCR, IDR) == KPCR_IDR);
 C_ASSERT(FIELD_OFFSET(KPCR, Irql) == KPCR_IRQL);
-#ifdef _M_IX86
 C_ASSERT(FIELD_OFFSET(KIPCR, PrcbData) + FIELD_OFFSET(KPRCB, CurrentThread) == KPCR_CURRENT_THREAD);
 C_ASSERT(FIELD_OFFSET(KIPCR, PrcbData) + FIELD_OFFSET(KPRCB, NextThread) == KPCR_PRCB_NEXT_THREAD);
 C_ASSERT(FIELD_OFFSET(KIPCR, PrcbData) + FIELD_OFFSET(KPRCB, NpxThread) == KPCR_NPX_THREAD);

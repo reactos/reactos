@@ -5570,9 +5570,9 @@ KeGetCurrentProcessorNumber(VOID)
 #elif defined(_M_ARM)
 
 //
-// NT-ARM is not documented, need NDK
+// NT-ARM is not documented, need DDK-ARM
 //
-#include <arm/ketypes.h>
+#include <armddk.h>
         
 #else
 #error Unknown architecture

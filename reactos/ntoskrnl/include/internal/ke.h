@@ -837,11 +837,16 @@ KiInitializeMachineType(
     VOID
 );
 
+//
+// We need to do major portability work
+//
+#ifdef _M_IX86
 VOID
 NTAPI
 KiFlushNPXState(
     IN FLOATING_SAVE_AREA *SaveArea
 );
+#endif
 
 VOID
 NTAPI

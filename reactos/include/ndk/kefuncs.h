@@ -453,19 +453,21 @@ NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtSetIntervalProfile(
-    ULONG Interval,
-    KPROFILE_SOURCE ClockSource
+    IN ULONG Interval,
+    IN KPROFILE_SOURCE ClockSource
 );
 
+#ifdef _M_IX86
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtSetLdtEntries(
-    ULONG Selector1,
-    LDT_ENTRY LdtEntry1,
-    ULONG Selector2,
-    LDT_ENTRY LdtEntry2
+    IN ULONG Selector1,
+    IN LDT_ENTRY LdtEntry1,
+    IN ULONG Selector2,
+    IN LDT_ENTRY LdtEntry2
 );
+#endif
 
 NTSYSCALLAPI
 NTSTATUS
@@ -659,19 +661,21 @@ NTSYSAPI
 NTSTATUS
 NTAPI
 ZwSetIntervalProfile(
-    ULONG Interval,
-    KPROFILE_SOURCE ClockSource
+    IN ULONG Interval,
+    IN KPROFILE_SOURCE ClockSource
 );
 
+#ifdef _M_IX86
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwSetLdtEntries(
-    ULONG Selector1,
-    LDT_ENTRY LdtEntry1,
-    ULONG Selector2,
-    LDT_ENTRY LdtEntry2
+    IN ULONG Selector1,
+    IN LDT_ENTRY LdtEntry1,
+    IN ULONG Selector2,
+    IN LDT_ENTRY LdtEntry2
 );
+#endif
 
 NTSYSAPI
 NTSTATUS

@@ -25,6 +25,8 @@
 #include "../powerpc/ke.h"
 #elif defined(_M_MIPS)
 #include "../mips/ke.h"
+#elif defined(_M_ARM)
+#include "../arm/ke.h"
 #else
 #error "Unknown processor"
 #endif

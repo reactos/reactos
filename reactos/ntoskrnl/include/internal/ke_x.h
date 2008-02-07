@@ -350,6 +350,7 @@ FORCEINLINE
 VOID
 KiRundownThread(IN PKTHREAD Thread)
 {
+#if defined(_M_IX86) || defined(_M_AMD64)
     /* Check if this is the NPX Thread */
     if (KeGetCurrentPrcb()->NpxThread == Thread)
     {
@@ -357,6 +358,7 @@ KiRundownThread(IN PKTHREAD Thread)
         KeGetCurrentPrcb()->NpxThread = NULL;
         KeArchFnInit();
     }
+#endif
 }
 
 FORCEINLINE
@@ -1552,6 +1554,11 @@ KeFlushProcessTb(VOID)
     /* Flush the TLB by resetting CR3 */
 #ifdef _M_PPC
     __asm__("sync\n\tisync\n\t");
+#elif _M_ARM
+    //
+    // We need to implement this!
+    //
+    ASSERTMSG("Need ARM flush routine\n", FALSE);
 #else
     __writecr3(__readcr3());
 #endif

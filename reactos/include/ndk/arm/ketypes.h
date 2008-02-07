@@ -24,19 +24,6 @@ Author:
 //
 
 //
-// IRQLs
-//
-#define PASSIVE_LEVEL           0
-#define LOW_LEVEL               0
-#define APC_LEVEL               1
-#define DISPATCH_LEVEL          2
-#define IPI_LEVEL               7
-#define POWER_LEVEL             7
-#define PROFILE_LEVEL           8
-#define HIGH_LEVEL              8
-#define SYNCH_LEVEL             (IPI_LEVEL - 1)
-
-//
 // IPI Types
 //
 #define IPI_APC                 1
@@ -61,19 +48,6 @@ Author:
 // Static Kernel-Mode Address start (use MM_KSEG0_BASE for actual)
 //
 #define KSEG0_BASE              0x80000000
-
-//
-// FIXME: mmtypes.h?
-//
-#define KIPCR                   0xFFFFF000
-#define USPCR                   0x7FFF0000
-#define PCR                     ((volatile KPCR * const)USPCR)
-#define USERPCR                 ((volatile KPCR * const)KIPCR)
-
-//
-// Synchronization-level IRQL
-//
-#define SYNCH_LEVEL             DISPATCH_LEVEL
 
 //
 // Trap Frame Definition
@@ -106,75 +80,23 @@ typedef struct _KTRAP_FRAME
     ULONG FpExtra[8];
 } KTRAP_FRAME, *PKTRAP_FRAME;
 
-//
-// Processor Control Region
-// On ARM, it's actually readable from user-mode, much like KUSER_SHARED_DATA
-//
-#ifdef NTOS_MODE_USER
-#define PKINTERRUPT_ROUTINE PVOID // Hack!
-#endif
-typedef struct _KPCR
-{
-    ULONG MinorVersion;
-    ULONG MajorVersion;
-    PKINTERRUPT_ROUTINE InterruptRoutine[64];
-    PVOID XcodeDispatch;
-    ULONG FirstLevelDcacheSize;
-    ULONG FirstLevelDcacheFillSize;
-    ULONG FirstLevelIcacheSize;
-    ULONG FirstLevelIcacheFillSize;
-    ULONG SecondLevelDcacheSize;
-    ULONG SecondLevelDcacheFillSize;
-    ULONG SecondLevelIcacheSize;
-    ULONG SecondLevelIcacheFillSize;
-    struct _KPRCB *Prcb;
-    struct _TEB *Teb;
-    PVOID TlsArray;
-    ULONG DcacheFillSize;
-    ULONG IcacheAlignment;
-    ULONG IcacheFillSize;
-    ULONG ProcessorId;
-    ULONG ProfileInterval;
-    ULONG ProfileCount;
-    ULONG StallExecutionCount;
-    ULONG StallScaleFactor;
-    CCHAR Number;
-    PVOID DataBusError;
-    PVOID InstructionBusError;
-    ULONG CachePolicy;
-    UCHAR IrqlMask[64];
-    UCHAR IrqlTable[64];
-    UCHAR CurrentIrql;
-    KAFFINITY SetMember;
-    struct _KTHREAD *CurrentThread;
-    KAFFINITY NotMember;
-    ULONG SystemReserved[6];
-    ULONG DcacheAlignment;
-    ULONG HalReserved[64];
-    BOOLEAN FirstLevelActive;
-    BOOLEAN DpcRoutineActive;
-    ULONG CurrentPid;
-    BOOLEAN OnInterruptStack;
-    PVOID SavedInitialStack;
-    PVOID SavedStackLimit;
-    PVOID SystemServiceDispatchStart;
-    PVOID SystemServiceDispatchEnd;
-    PVOID InterruptStack;
-    PVOID PanicStack;
-    PVOID BadVaddr;
-    PVOID InitialStack;
-    PVOID StackLimit;
-    ULONG QuantumEnd;
-} KPCR, *PKPCR;
-
 #ifndef NTOS_MODE_USER
+
 //
-// Stub
+// Exception Frame Definition
 //
-typedef struct _KFLOATING_SAVE
+typedef struct _KEXCEPTION_FRAME
 {
-    ULONG Reserved;
-} KFLOATING_SAVE, *PKFLOATING_SAVE;
+    ULONG PlaceHolder;
+} KEXCEPTION_FRAME, *PKEXCEPTION_FRAME;
+
+//
+// Processor State
+//
+typedef struct _KPROCESSOR_STATE
+{
+    struct _CONTEXT ContextFrame;
+} KPROCESSOR_STATE, *PKPROCESSOR_STATE;
 
 //
 // Processor Region Control Block
@@ -187,9 +109,110 @@ typedef struct _KPRCB
     struct _KTHREAD *NextThread;
     struct _KTHREAD *IdleThread;
     UCHAR Number;
-    //
-    // TODO
-    //
+    UCHAR Reserved;
+    USHORT BuildType;
+    KAFFINITY SetMember;
+    KPROCESSOR_STATE ProcessorState;
+    ULONG KernelReserved[16];
+    ULONG HalReserved[16];
+    KSPIN_LOCK_QUEUE LockQueue[LockQueueMaximumLock];
+    struct _KTHREAD *NpxThread;
+    ULONG InterruptCount;
+    ULONG KernelTime;
+    ULONG UserTime;
+    ULONG DpcTime;
+    ULONG DebugDpcTime;
+    ULONG InterruptTime;
+    ULONG AdjustDpcThreshold;
+    ULONG PageColor;
+    UCHAR SkipTick;
+    UCHAR DebuggerSavedIRQL;
+    UCHAR NodeColor;
+    UCHAR Spare1;
+    ULONG NodeShiftedColor;
+    struct _KNODE *ParentNode;
+    ULONG MultiThreadProcessorSet;
+    struct _KPRCB *MultiThreadSetMaster;
+    ULONG SecondaryColorMask;
+    LONG Sleeping;
+    ULONG CcFastReadNoWait;
+    ULONG CcFastReadWait;
+    ULONG CcFastReadNotPossible;
+    ULONG CcCopyReadNoWait;
+    ULONG CcCopyReadWait;
+    ULONG CcCopyReadNoWaitMiss;
+    ULONG KeAlignmentFixupCount;
+    ULONG SpareCounter0;
+    ULONG KeDcacheFlushCount;
+    ULONG KeExceptionDispatchCount;
+    ULONG KeFirstLevelTbFills;
+    ULONG KeIcacheFlushCount;
+    ULONG KeSecondLevelTbFills;
+    ULONG KeSystemCalls;
+    volatile ULONG IoReadOperationCount;
+    volatile ULONG IoWriteOperationCount;
+    volatile ULONG IoOtherOperationCount;
+    LARGE_INTEGER IoReadTransferCount;
+    LARGE_INTEGER IoWriteTransferCount;
+    LARGE_INTEGER IoOtherTransferCount;
+    PP_LOOKASIDE_LIST PPLookasideList[16];
+    PP_LOOKASIDE_LIST PPNPagedLookasideList[32];
+    PP_LOOKASIDE_LIST PPPagedLookasideList[32];
+    volatile ULONG PacketBarrier;
+    volatile ULONG ReverseStall;
+    PVOID IpiFrame;
+    volatile PVOID CurrentPacket[3];
+    volatile ULONG TargetSet;
+    volatile PKIPI_WORKER WorkerRoutine;
+    volatile ULONG IpiFrozen;
+    volatile ULONG RequestSummary;
+    volatile struct _KPRCB *SignalDone;
+    struct _KDPC_DATA DpcData[2];
+    PVOID DpcStack;
+    ULONG MaximumDpcQueueDepth;
+    ULONG DpcRequestRate;
+    ULONG MinimumDpcRate;
+    volatile UCHAR DpcInterruptRequested;
+    volatile UCHAR DpcThreadRequested;
+    volatile UCHAR DpcRoutineActive;
+    volatile UCHAR DpcThreadActive;
+    ULONG PrcbLock;
+    ULONG DpcLastCount;
+    volatile ULONG TimerHand;
+    volatile ULONG TimerRequest;
+    PVOID DpcThread;
+    KEVENT DpcEvent;
+    UCHAR ThreadDpcEnable;
+    volatile BOOLEAN QuantumEnd;
+    volatile UCHAR IdleSchedule;
+    LONG DpcSetEventRequest;
+    LONG TickOffset;
+    KDPC CallDpc;
+    LIST_ENTRY WaitListHead;
+    ULONG ReadySummary;
+    ULONG QueueIndex;
+    LIST_ENTRY DispatcherReadyListHead[32];
+    SINGLE_LIST_ENTRY DeferredReadyListHead;
+    PVOID ChainedInterruptList;
+    LONG LookasideIrpFloat;
+    volatile LONG MmPageFaultCount;
+    volatile LONG MmCopyOnWriteCount;
+    volatile LONG MmTransitionCount;
+    volatile LONG MmCacheTransitionCount;
+    volatile LONG MmDemandZeroCount;
+    volatile LONG MmPageReadCount;
+    volatile LONG MmPageReadIoCount;
+    volatile LONG MmCacheReadCount;
+    volatile LONG MmCacheIoCount;
+    volatile LONG MmDirtyPagesWriteCount;
+    volatile LONG MmDirtyWriteIoCount;
+    volatile LONG MmMappedPagesWriteCount;
+    volatile LONG MmMappedWriteIoCount;
+    CHAR VendorString[13];
+    ULONG MHz;
+    ULONG FeatureBits;
+    volatile LARGE_INTEGER IsrTime;
+    PROCESSOR_POWER_STATE PowerState;
 } KPRCB, *PKPRCB;
 
 //
