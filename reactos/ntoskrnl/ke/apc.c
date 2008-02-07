@@ -35,13 +35,15 @@ VOID
 NTAPI
 KiCheckForKernelApcDelivery(VOID)
 {
+    KIRQL OldIrql;
+
     /* We should only deliver at passive */
     if (KeGetCurrentIrql() == PASSIVE_LEVEL)
     {
         /* Raise to APC and Deliver APCs, then lower back to Passive */
-        KfRaiseIrql(APC_LEVEL);
+        KeRaiseIrql(APC_LEVEL, &OldIrql);
         KiDeliverApc(KernelMode, 0, 0);
-        KfLowerIrql(PASSIVE_LEVEL);
+        KeLowerIrql(PASSIVE_LEVEL);
     }
     else
     {

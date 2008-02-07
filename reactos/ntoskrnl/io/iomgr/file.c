@@ -2748,7 +2748,7 @@ NtCancelIoFile(IN HANDLE FileHandle,
     if (!NT_SUCCESS(Status)) return Status;
 
     /* IRP cancellations are synchronized at APC_LEVEL. */
-    OldIrql = KfRaiseIrql(APC_LEVEL);
+    KeRaiseIrql(APC_LEVEL, &OldIrql);
 
     /* Get the current thread */
     Thread = PsGetCurrentThread();
@@ -2775,7 +2775,7 @@ NtCancelIoFile(IN HANDLE FileHandle,
     }
 
     /* Lower the IRQL */
-    KfLowerIrql(OldIrql);
+    KeLowerIrql(OldIrql);
 
     /* Check if we had found an IRP */
     if (OurIrpsInList)
@@ -2791,7 +2791,7 @@ NtCancelIoFile(IN HANDLE FileHandle,
             OurIrpsInList = FALSE;
 
             /* Raise IRQL */
-            OldIrql = KfRaiseIrql(APC_LEVEL);
+            KeRaiseIrql(APC_LEVEL, &OldIrql);
 
             /* Now loop the list again */
             NextEntry = ListHead->Flink;
@@ -2811,7 +2811,7 @@ NtCancelIoFile(IN HANDLE FileHandle,
             }
 
             /* Lower the IRQL */
-            KfLowerIrql(OldIrql);
+            KeLowerIrql(OldIrql);
         }
     }
 

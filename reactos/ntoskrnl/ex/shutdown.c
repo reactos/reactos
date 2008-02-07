@@ -29,13 +29,14 @@ KiHaltProcessorDpcRoutine(IN PKDPC Dpc,
 			  IN PVOID SystemArgument1,
 			  IN PVOID SystemArgument2)
 {
+   KIRQL OldIrql;
    if (DeferredContext)
      {
        ExFreePool(DeferredContext);
      }
    while (TRUE)
      {
-       KfRaiseIrql(SYNCH_LEVEL);
+       KeRaiseIrql(SYNCH_LEVEL, &OldIrql);
 #if defined(_M_X86)
        Ke386HaltProcessor();
 #else

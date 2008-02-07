@@ -100,4 +100,24 @@ struct _TEB* NtCurrentTeb(VOID)
     return (struct _TEB*)USERPCR->Teb;
 }
 
+//
+// IRQL Support on ARM is similar to MIPS/ALPHA
+//
+NTKERNELAPI
+KIRQL
+DDKAPI
+KeSwapIrql(
+    IN KIRQL NewIrql
+);
+
+NTKERNELAPI
+KIRQL
+NTAPI
+KeRaiseIrqlToDpcLevel(
+    VOID
+);
+
+#define KeLowerIrql(NewIrql) KeSwapIrql(NewIrql)
+#define KeRaiseIrql(NewIrql, OldIrql) *(OldIrql) = KeSwapIrql(NewIrql)
+
 #endif

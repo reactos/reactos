@@ -109,7 +109,7 @@ ExAcquireFastMutex(IN OUT PFAST_MUTEX FastMutex)
     ASSERT(KeGetCurrentIrql() <= APC_LEVEL);
 
     /* Raise IRQL to APC */
-    OldIrql = KfRaiseIrql(APC_LEVEL);
+    KeRaiseIrql(APC_LEVEL, &OldIrql);
 
     /* Decrease the count */
     if (InterlockedDecrement(&FastMutex->Count) != 0)
@@ -145,7 +145,7 @@ ExReleaseFastMutex(IN OUT PFAST_MUTEX FastMutex)
     }
 
     /* Lower IRQL back */
-    KfLowerIrql(OldIrql);
+    KeLowerIrql(OldIrql);
 }
 
 /*
@@ -181,7 +181,7 @@ ExTryToAcquireFastMutex(IN OUT PFAST_MUTEX FastMutex)
     ASSERT(KeGetCurrentIrql() <= APC_LEVEL);
 
     /* Raise to APC_LEVEL */
-    OldIrql = KfRaiseIrql(APC_LEVEL);
+    KeRaiseIrql(APC_LEVEL, &OldIrql);
 
     /* Check if we can quickly acquire it */
     if (InterlockedCompareExchange(&FastMutex->Count, 0, 1) == 1)
@@ -194,7 +194,7 @@ ExTryToAcquireFastMutex(IN OUT PFAST_MUTEX FastMutex)
     else
     {
         /* Acquire attempt failed */
-        KfLowerIrql(OldIrql);
+        KeLowerIrql(OldIrql);
         return FALSE;
     }
 }

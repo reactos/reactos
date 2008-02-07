@@ -145,17 +145,17 @@ KeIpiGenericCall(IN PKIPI_BROADCAST_WORKER Function,
 #error Not yet implemented!
 #else
     ULONG_PTR Status;
-    KIRQL OldIrql;
+    KIRQL OldIrql, OldIrql2;
 
     /* Raise to DPC level if required */
     OldIrql = KeGetCurrentIrql();
-    if (OldIrql < DISPATCH_LEVEL) OldIrql = KfRaiseIrql(DISPATCH_LEVEL);
+    if (OldIrql < DISPATCH_LEVEL) KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
 
     /* Acquire the IPI lock */
     KefAcquireSpinLockAtDpcLevel(&KiIpiLock);
 
     /* Raise to IPI level */
-    KfRaiseIrql(IPI_LEVEL);
+    KeRaiseIrql(IPI_LEVEL, &OldIrql2);
 
     /* Call the function */
     Status = Function(Argument);
@@ -164,7 +164,7 @@ KeIpiGenericCall(IN PKIPI_BROADCAST_WORKER Function,
     KefReleaseSpinLockFromDpcLevel(&KiIpiLock);
 
     /* Lower IRQL back */
-    KfLowerIrql(OldIrql);
+    KeLowerIrql(OldIrql);
     return Status;
 #endif
 }

@@ -9561,6 +9561,10 @@ KIRQL
 DDKAPI
 KeRaiseIrqlToSynchLevel(
     VOID);
+    
+#elif defined(_M_ARM)
+    
+#include <armddk.h>
 
 #else
 

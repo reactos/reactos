@@ -769,6 +769,7 @@ KeBugCheckWithTf(IN ULONG BugCheckCode,
     PVOID DriverBase;
     PLDR_DATA_TABLE_ENTRY LdrEntry;
     PULONG_PTR HardErrorParameters;
+    KIRQL OldIrql;
 #ifdef CONFIG_SMP
     LONG i = 0;
 #endif
@@ -1115,7 +1116,7 @@ KeBugCheckWithTf(IN ULONG BugCheckCode,
 
     /* Raise IRQL to HIGH_LEVEL */
     _disable();
-    KfRaiseIrql(HIGH_LEVEL);
+    KeRaiseIrql(HIGH_LEVEL, &OldIrql);
 
     /* Avoid recursion */
     if (!InterlockedDecrement((PLONG)&KeBugCheckCount))
@@ -1137,13 +1138,13 @@ KeBugCheckWithTf(IN ULONG BugCheckCode,
 #endif
 
         /* Display the BSOD */
-        KfLowerIrql(APC_LEVEL); // This is a nastier hack than any ever before
+        KeLowerIrql(APC_LEVEL); // This is a nastier hack than any ever before
         KiDisplayBlueScreen(MessageId,
                             IsHardError,
                             HardErrCaption,
                             HardErrMessage,
                             AnsiName);
-        KfRaiseIrql(HIGH_LEVEL);
+        KeRaiseIrql(HIGH_LEVEL, &OldIrql);
 
         /* Check if the debugger is disabled but we can enable it */
         if (!(KdDebuggerEnabled) && !(KdPitchDebugger))

@@ -1021,7 +1021,7 @@ IoCancelThreadIo(IN PETHREAD Thread)
             Thread);
 
     /* Raise to APC to protect the IrpList */
-    OldIrql = KfRaiseIrql(APC_LEVEL);
+    KeRaiseIrql(APC_LEVEL, &OldIrql);
 
     /* Start by cancelling all the IRPs in the current thread queue. */
     ListHead = &Thread->IrpList;
@@ -1045,7 +1045,7 @@ IoCancelThreadIo(IN PETHREAD Thread)
     while (!IsListEmpty(&Thread->IrpList))
     {
         /* Now we can lower */
-        KfLowerIrql(OldIrql);
+        KeLowerIrql(OldIrql);
 
         /* Wait a short while and then look if all our IRPs were completed. */
         KeDelayExecutionThread(KernelMode, FALSE, &Interval);
@@ -1057,11 +1057,11 @@ IoCancelThreadIo(IN PETHREAD Thread)
         if (!(Retries--)) IopRemoveThreadIrp();
 
         /* Raise the IRQL Again */
-        OldIrql = KfRaiseIrql(APC_LEVEL);
+        KeRaiseIrql(APC_LEVEL, &OldIrql);
     }
 
     /* We're done, lower the IRQL */
-    KfLowerIrql(OldIrql);
+    KeLowerIrql(OldIrql);
 }
 
 /*

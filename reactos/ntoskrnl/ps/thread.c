@@ -29,6 +29,7 @@ PspUserThreadStartup(IN PKSTART_ROUTINE StartRoutine,
     PETHREAD Thread;
     PTEB Teb;
     BOOLEAN DeadThread = FALSE;
+    KIRQL OldIrql;
     PAGED_CODE();
     PSTRACE(PS_THREAD_DEBUG,
             "StartRoutine: %p StartContext: %p\n", StartRoutine, StartContext);
@@ -68,7 +69,7 @@ PspUserThreadStartup(IN PKSTART_ROUTINE StartRoutine,
         }
 
         /* Raise to APC */
-        KfRaiseIrql(APC_LEVEL);
+        KeRaiseIrql(APC_LEVEL, &OldIrql);
 
         /* Queue the User APC */
         KiInitializeUserApc(NULL,

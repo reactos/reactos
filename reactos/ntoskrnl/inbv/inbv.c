@@ -157,7 +157,7 @@ InbvAcquireLock(VOID)
     if (InbvOldIrql < DISPATCH_LEVEL)
     {
         /* Raise IRQL to dispatch level */
-        InbvOldIrql = KfRaiseIrql(DISPATCH_LEVEL);
+        KeRaiseIrql(DISPATCH_LEVEL, &InbvOldIrql);
     }
 
     /* Acquire the lock */
@@ -172,7 +172,7 @@ InbvReleaseLock(VOID)
     KiReleaseSpinLock(&BootDriverLock);
 
     /* If we were below dispatch level, lower IRQL back */
-    if (InbvOldIrql < DISPATCH_LEVEL) KfLowerIrql(InbvOldIrql);
+    if (InbvOldIrql < DISPATCH_LEVEL) KeLowerIrql(InbvOldIrql);
 }
 
 VOID
