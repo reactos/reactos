@@ -29,6 +29,7 @@ IDI_MAIN                  ICON      "res/main.ico"
 IDI_DOC                   ICON      "res/doc.ico"
 
 // Languages
+#include "lang/bg-BG.rc"
 #include "lang/de-DE.rc"
 #include "lang/en-US.rc"
 #include "lang/pl-PL.rc"

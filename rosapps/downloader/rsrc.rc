@@ -24,6 +24,7 @@ IDB_TREEVIEW_ICON_12    BITMAP DISCARDABLE    "resources/12.bmp"
 IDB_TREEVIEW_ICON_13    BITMAP DISCARDABLE    "resources/13.bmp"
 
 
+#include "lang/bg-BG.rc"
 #include "lang/de-DE.rc"
 #include "lang/en-US.rc"
 #include "lang/es-ES.rc"
