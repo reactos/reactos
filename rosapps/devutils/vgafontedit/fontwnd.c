@@ -122,6 +122,19 @@ FontWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
             case WM_USER_APPCLOSE:
             case WM_CLOSE:
+                // The user has to close all open edit dialogs first
+                if(Info->FirstEditGlyphWnd)
+                {
+                    PWSTR pszMessage;
+
+                    AllocAndLoadString(&pszMessage, IDS_CLOSEEDIT);
+                    MessageBoxW(hwnd, pszMessage, szAppName, MB_OK | MB_ICONEXCLAMATION);
+                    HeapFree(hProcessHeap, 0, pszMessage);
+
+                    return 0;
+                }
+
+                // Prompt if the current file has been modified
                 if(Info->OpenInfo->bModified)
                 {
                     INT nMsgBoxResult;
@@ -164,25 +177,15 @@ FontWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
             case WM_DESTROY:
                 // Remove the window from the linked list
-                if(Info->MainWndInfo->FirstFontWnd == Info)
-                {
+                if(Info->PrevFontWnd)
+                    Info->PrevFontWnd->NextFontWnd = Info->NextFontWnd;
+                else
                     Info->MainWndInfo->FirstFontWnd = Info->NextFontWnd;
 
-                    if(Info->NextFontWnd)
-                        Info->NextFontWnd->PrevFontWnd = NULL;
-                }
-                else
-                    Info->PrevFontWnd->NextFontWnd = Info->NextFontWnd;
-
-                if(Info->MainWndInfo->LastFontWnd == Info)
-                {
-                    Info->MainWndInfo->LastFontWnd = Info->PrevFontWnd;
-
-                    if(Info->PrevFontWnd)
-                        Info->PrevFontWnd->NextFontWnd = NULL;
-                }
-                else
+                if(Info->NextFontWnd)
                     Info->NextFontWnd->PrevFontWnd = Info->PrevFontWnd;
+                else
+                    Info->MainWndInfo->LastFontWnd = Info->PrevFontWnd;
 
                 // Free memory
                 if(Info->Font)
@@ -394,17 +397,14 @@ CreateFontWindow(IN PMAIN_WND_INFO MainWndInfo, IN PFONT_OPEN_INFO OpenInfo)
             if(hFontWnd)
             {
                 // Add the new window to the linked list
+                Info->PrevFontWnd = Info->MainWndInfo->LastFontWnd;
+
                 if(Info->MainWndInfo->LastFontWnd)
-                {
-                    Info->PrevFontWnd = Info->MainWndInfo->LastFontWnd;
-                    Info->PrevFontWnd->NextFontWnd = Info;
-                    Info->MainWndInfo->LastFontWnd = Info;
-                }
+                    Info->MainWndInfo->LastFontWnd->NextFontWnd = Info;
                 else
-                {
                     Info->MainWndInfo->FirstFontWnd = Info;
-                    Info->MainWndInfo->LastFontWnd = Info;
-                }
+
+                Info->MainWndInfo->LastFontWnd = Info;
 
                 return TRUE;
             }

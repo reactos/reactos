@@ -17,6 +17,7 @@
 
 // Forward declarations
 typedef struct _FONT_WND_INFO FONT_WND_INFO, *PFONT_WND_INFO;
+typedef struct _EDIT_GLYPH_INFO EDIT_GLYPH_INFO, *PEDIT_GLYPH_INFO;
 
 // Structure declarations
 typedef struct _BITMAP_FONT
@@ -60,9 +61,12 @@ struct _FONT_WND_INFO
 
     PFONT_WND_INFO PrevFontWnd;
     PFONT_WND_INFO NextFontWnd;
+
+    PEDIT_GLYPH_INFO FirstEditGlyphWnd;
+    PEDIT_GLYPH_INFO LastEditGlyphWnd;
 };
 
-typedef struct _EDIT_GLYPH_INFO
+struct _EDIT_GLYPH_INFO
 {
     PFONT_WND_INFO FontWndInfo;
 
@@ -73,7 +77,10 @@ typedef struct _EDIT_GLYPH_INFO
     HWND hEdit;
     HWND hPreview;
     LONG lEditSpacing;
-} EDIT_GLYPH_INFO, *PEDIT_GLYPH_INFO;
+
+    PEDIT_GLYPH_INFO PrevEditGlyphWnd;
+    PEDIT_GLYPH_INFO NextEditGlyphWnd;
+};
 
 #define ID_MDI_FIRSTCHILD             50000
 

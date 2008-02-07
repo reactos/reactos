@@ -20,7 +20,7 @@ BEGIN
     DEFPUSHBUTTON  "OK",                              IDCANCEL,   40, 44, 55, 15
 END
 
-IDD_EDITGLYPH DIALOGEX 10, 10, 246, 197
+IDD_EDITGLYPH DIALOGEX 32768, 32768, 246, 197
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Редактирование символа"
 FONT 8, "MS Shell Dlg"
@@ -75,6 +75,7 @@ BEGIN
     IDS_DOCNAME, "Шрифт %1!u!"
     IDS_SAVEPROMPT, "Файл ""%1"" был изменен и изменения не были сохранены.\n\nСохранить?"
     IDS_APPTITLE, "Редактор VGA-шрифтов ReactOS"
+    IDS_CLOSEEDIT, "Please close all open Edit windows first!"
 
     IDS_TOOLTIP_NEW, "Новый"
     IDS_TOOLTIP_OPEN, "Открыть"

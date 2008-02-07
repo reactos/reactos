@@ -189,12 +189,41 @@ EditCurrentGlyph(PFONT_WND_INFO FontWndInfo)
 {
     PEDIT_GLYPH_INFO EditGlyphInfo;
 
+    // Has the window for this character already been opened?
+    EditGlyphInfo = FontWndInfo->FirstEditGlyphWnd;
+
+    while(EditGlyphInfo)
+    {
+        if(EditGlyphInfo->uCharacter == FontWndInfo->uSelectedCharacter)
+        {
+            // Yes, it has. Bring it to the front.
+            SetFocus(EditGlyphInfo->hSelf);
+            return;
+        }
+
+        EditGlyphInfo = EditGlyphInfo->NextEditGlyphWnd;
+    }
+
+    // No. Then create a new one
     EditGlyphInfo = (PEDIT_GLYPH_INFO) HeapAlloc( hProcessHeap, 0, sizeof(EDIT_GLYPH_INFO) );
     EditGlyphInfo->FontWndInfo = FontWndInfo;
     EditGlyphInfo->uCharacter = FontWndInfo->uSelectedCharacter;
     RtlCopyMemory( EditGlyphInfo->CharacterBits, FontWndInfo->Font->Bits + FontWndInfo->uSelectedCharacter * 8, sizeof(EditGlyphInfo->CharacterBits) );
 
-    DialogBoxParamW(hInstance, MAKEINTRESOURCEW(IDD_EDITGLYPH), FontWndInfo->hSelf, EditGlyphDlgProc, (LPARAM)EditGlyphInfo);
+    // Add the new window to the linked list
+    EditGlyphInfo->PrevEditGlyphWnd = FontWndInfo->LastEditGlyphWnd;
+    EditGlyphInfo->NextEditGlyphWnd = NULL;
+
+    if(FontWndInfo->LastEditGlyphWnd)
+        FontWndInfo->LastEditGlyphWnd->NextEditGlyphWnd = EditGlyphInfo;
+    else
+        FontWndInfo->FirstEditGlyphWnd = EditGlyphInfo;
+
+    FontWndInfo->LastEditGlyphWnd = EditGlyphInfo;
+
+    // Open the window as a modeless dialog, so people can edit several characters at the same time.
+    EditGlyphInfo->hSelf = CreateDialogParamW(hInstance, MAKEINTRESOURCEW(IDD_EDITGLYPH), FontWndInfo->hSelf, EditGlyphDlgProc, (LPARAM)EditGlyphInfo);
+    ShowWindow(EditGlyphInfo->hSelf, SW_SHOW);
 }
 
 VOID

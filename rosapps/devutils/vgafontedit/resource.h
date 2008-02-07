@@ -65,6 +65,7 @@
 #define IDS_DOCNAME               10008
 #define IDS_SAVEPROMPT            10009
 #define IDS_APPTITLE              10010
+#define IDS_CLOSEEDIT             10011
 
 #define IDS_TOOLTIP_NEW           11001
 #define IDS_TOOLTIP_OPEN          11002

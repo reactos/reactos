@@ -20,7 +20,7 @@ BEGIN
     DEFPUSHBUTTON  "OK",                         IDCANCEL,   40, 44, 55, 15
 END
 
-IDD_EDITGLYPH DIALOGEX 10, 10, 246, 197
+IDD_EDITGLYPH DIALOGEX 32768, 32768, 246, 197
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Edit Glyph"
 FONT 8, "MS Shell Dlg"
@@ -75,6 +75,7 @@ BEGIN
     IDS_DOCNAME, "Font %1!u!"
     IDS_SAVEPROMPT, "The file ""%1"" was modified, but not saved.\n\nDo you want to save it?"
     IDS_APPTITLE, "ReactOS VGA Font Editor"
+    IDS_CLOSEEDIT, "Please close all open Edit windows first!"
 
     IDS_TOOLTIP_NEW, "New"
     IDS_TOOLTIP_OPEN, "Open"

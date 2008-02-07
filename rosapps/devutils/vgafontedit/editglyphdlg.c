@@ -90,8 +90,26 @@ EditGlyphCommand(IN INT idCommand, IN PEDIT_GLYPH_INFO Info)
             // Fall through
         }
 
+        // This is the equivalent of WM_DESTROY for dialogs
         case IDCANCEL:
             EndDialog(Info->hSelf, 0);
+
+            // Remove the window from the linked list
+            if(Info->PrevEditGlyphWnd)
+                Info->PrevEditGlyphWnd->NextEditGlyphWnd = Info->NextEditGlyphWnd;
+            else
+                Info->FontWndInfo->FirstEditGlyphWnd = Info->NextEditGlyphWnd;
+
+            if(Info->NextEditGlyphWnd)
+                Info->NextEditGlyphWnd->PrevEditGlyphWnd = Info->PrevEditGlyphWnd;
+            else
+                Info->FontWndInfo->LastEditGlyphWnd = Info->PrevEditGlyphWnd;
+
+            SetWindowLongW(Info->hSelf, GWLP_USERDATA, 0);
+            SetWindowLongW(Info->hEdit, GWLP_USERDATA, 0);
+            SetWindowLongW(Info->hPreview, GWLP_USERDATA, 0 );
+
+            HeapFree(hProcessHeap, 0, Info);
             return TRUE;
     }
 
@@ -111,14 +129,6 @@ EditGlyphDlgProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         {
             case WM_COMMAND:
                 return EditGlyphCommand( LOWORD(wParam), Info );
-
-            case WM_DESTROY:
-                SetWindowLongW(hwnd, GWLP_USERDATA, 0);
-                SetWindowLongW(Info->hEdit, GWLP_USERDATA, 0);
-                SetWindowLongW(Info->hPreview, GWLP_USERDATA, 0 );
-
-                HeapFree(hProcessHeap, 0, Info);
-                return TRUE;
 
             case WM_INITDIALOG:
                 Info = (PEDIT_GLYPH_INFO) lParam;
