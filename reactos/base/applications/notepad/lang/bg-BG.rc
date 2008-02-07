@@ -127,7 +127,7 @@ BEGIN
 COMBOBOX        ID_ENCODING,56,0,154,80,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
 LTEXT           "Знаков набор:",0x155,5,2,51,12
 COMBOBOX        ID_EOLN,56,18,154,80,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-LTEXT           "Endlines:",0x156,5,20,51,12
+LTEXT           "Знак за нов ред:",0x156,5,20,51,12
 END
 
 /* Dialog 'Go To' */
@@ -183,13 +183,13 @@ STRING_ALL_FILES,                               "Всички файлове (*.*)"
 STRING_TEXT_FILES_TXT,                  "Словесни файлове (*.txt)"
 
 STRING_TOOLARGE,                                "Файлът '%s' е твърде голям за бележника.\n \
-Please use a different editor."
+Използвайте друг обработчик."
 STRING_NOTEXT,                                  "Не сте въвел текст. \
-\nPlease type something and try again"
+\nНапишете нещо и опитайте пак."
 STRING_DOESNOTEXIST,                            "Файлът '%s'\nне съществува\n\n \
-Do you want to create a new file ?"
+Искате ли да създадете нов файл?"
 STRING_NOTSAVED,                                "Файлът '%s'\nе бил променен\n\n \
-Would you like to save the changes ?"
+Искате ли да запишете промените?"
 STRING_NOTFOUND,                                        "'%s' не може да бъде открит."
 STRING_OUT_OF_MEMORY,                   "Няма достатъчно памет за приключване на\
 задачата. \nЗатворете едно или повече приложения,\n за да освободите памет."

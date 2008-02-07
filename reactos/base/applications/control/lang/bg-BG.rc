@@ -15,8 +15,8 @@ BEGIN
     END
     POPUP "Из&глед"
     BEGIN
-        MENUITEM "Големи значки",                 IDM_LARGEICONS
-        MENUITEM "Малки значки",                 IDM_SMALLICONS
+        MENUITEM "Големи значета",                 IDM_LARGEICONS
+        MENUITEM "Малки значета",                 IDM_SMALLICONS
         MENUITEM "Списък",                        IDM_LIST
         MENUITEM "Подробен",                     IDM_DETAILS
     END
@@ -28,10 +28,10 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_WINDOW_TITLE "Control Panel"
-	IDS_ABOUT "Simple Control Panel (not Shell-namespace based)\rCopyright 2004 GkWare e.K.\rhttp://www.gkware.com\rReleased under the GPL"
-	IDS_ABOUT_TITLE "About the Control Panel"
-	IDS_NO_ITEMS "No Items in ListView"
-	IDS_NAME "Name"
-	IDS_COMMENT "Comment"
+    IDS_WINDOW_TITLE "Крило за управление"
+	IDS_ABOUT "Простоп крило за управление (не е основано на именното пространство на обвивката)\rCopyright 2004 GkWare e.K.\rhttp://www.gkware.com\rИздадено под GPL"
+	IDS_ABOUT_TITLE "За крилото за управление"
+	IDS_NO_ITEMS "В списъка няма предмети"
+	IDS_NAME "Име"
+	IDS_COMMENT "Забележка"
 END
