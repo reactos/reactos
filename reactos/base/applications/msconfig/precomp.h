@@ -4,6 +4,8 @@
 #include <winuser.h>
 #include <tchar.h>
 #include <stdio.h>
+#include <shlwapi.h>
+#include <shlobj.h>
 
 #include "resource.h"
 #include "msconfig.h"

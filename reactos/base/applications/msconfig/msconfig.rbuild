@@ -12,6 +12,7 @@
 	<library>version</library>
 	<library>comctl32</library>
 	<library>shell32</library>
+	<library>shlwapi</library>
 	<compilationunit name="unit.c">
 		<file>toolspage.c</file>
 		<file>srvpage.c</file>

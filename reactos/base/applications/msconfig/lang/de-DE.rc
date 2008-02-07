@@ -158,7 +158,7 @@ BEGIN
 
     IDS_TOOLS_SYSDM_NAME     "Systemeigenschaften"
     IDS_TOOLS_SYSDM_DESCR    "Zeigt Informationen über diesen Rechner an."
-    IDS_TOOLS_SYSDM_CMD      "control"
+    IDS_TOOLS_SYSDM_CMD      "control.exe"
     IDS_TOOLS_SYSDM_PARAM    "sysdm.cpl"
 
     IDS_STARTUP_COLUMN_ELEMENT "Element"

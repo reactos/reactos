@@ -13,13 +13,14 @@ HWND hToolsPage;
 HWND hToolsListCtrl;
 HWND hToolsDialog;
 
-void AddItem ( DWORD, DWORD, DWORD, DWORD );
+void AddItem ( DWORD, DWORD, DWORD, DWORD, int );
 void FillListView ( void );
 
 DWORD ListItems_Cmds[20];
 DWORD ListItems_Params[20];
+DWORD ListItems_Locations[20];
 
-void AddItem ( DWORD name_id, DWORD descr_id, DWORD cmd_id , DWORD param_id ) {
+void AddItem ( DWORD name_id, DWORD descr_id, DWORD cmd_id , DWORD param_id, int csidl ) {
     TCHAR szTemp[256];
     LV_ITEM item;
 
@@ -34,6 +35,7 @@ void AddItem ( DWORD name_id, DWORD descr_id, DWORD cmd_id , DWORD param_id ) {
 
     ListItems_Cmds[item.iItem] = cmd_id;
     ListItems_Params[item.iItem] = param_id;
+    ListItems_Locations[item.iItem] = csidl;
 
     LoadString(hInst, descr_id, szTemp, 256);
     item.pszText = szTemp;
@@ -42,21 +44,24 @@ void AddItem ( DWORD name_id, DWORD descr_id, DWORD cmd_id , DWORD param_id ) {
 }
 
 void FillListView ( void ) {
-    AddItem(IDS_TOOLS_CMD_NAME, IDS_TOOLS_CMD_DESCR, IDS_TOOLS_CMD_CMD, IDS_TOOLS_CMD_PARAM);
-    AddItem(IDS_TOOLS_REGEDIT_NAME, IDS_TOOLS_REGEDIT_DESCR, IDS_TOOLS_REGEDIT_CMD,IDS_TOOLS_REGEDIT_PARAM);
-    AddItem(IDS_TOOLS_SYSDM_NAME, IDS_TOOLS_SYSDM_DESCR, IDS_TOOLS_SYSDM_CMD, IDS_TOOLS_SYSDM_PARAM);
-    AddItem(IDS_TOOLS_INFO_NAME, IDS_TOOLS_INFO_DESCR, IDS_TOOLS_INFO_CMD, IDS_TOOLS_INFO_PARAM);
+    AddItem(IDS_TOOLS_CMD_NAME, IDS_TOOLS_CMD_DESCR, IDS_TOOLS_CMD_CMD, IDS_TOOLS_CMD_PARAM, CSIDL_SYSTEM);
+    AddItem(IDS_TOOLS_REGEDIT_NAME, IDS_TOOLS_REGEDIT_DESCR, IDS_TOOLS_REGEDIT_CMD,IDS_TOOLS_REGEDIT_PARAM, CSIDL_WINDOWS);
+    AddItem(IDS_TOOLS_SYSDM_NAME, IDS_TOOLS_SYSDM_DESCR, IDS_TOOLS_SYSDM_CMD, IDS_TOOLS_SYSDM_PARAM, CSIDL_SYSTEM);
+    AddItem(IDS_TOOLS_INFO_NAME, IDS_TOOLS_INFO_DESCR, IDS_TOOLS_INFO_CMD, IDS_TOOLS_INFO_PARAM, CSIDL_SYSTEM);
 }
 
 INT_PTR CALLBACK
 ToolsPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
     LV_COLUMN   column;
-    TCHAR       szTemp[256];
+    TCHAR       szTemp[MAX_PATH*2];
     TCHAR       szTemp2[256];
+    TCHAR * Ptr = NULL;
     LPNMITEMACTIVATE lpnmitem;
     LPNMHDR nmh;
     DWORD dwStyle;
+    PROCESS_INFORMATION pi;
+    STARTUPINFO si;
 
     switch (message)
     {
@@ -96,9 +101,27 @@ ToolsPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
                 {
                     if (ListView_GetSelectionMark(hToolsListCtrl) != -1)
                     {
-                        LoadString(hInst, ListItems_Cmds[ListView_GetSelectionMark(hToolsListCtrl)], szTemp, 256);
+                        if (SHGetSpecialFolderPath(NULL, szTemp, ListItems_Locations[ListView_GetSelectionMark(hToolsListCtrl)], FALSE))
+                            Ptr = PathAddBackslash(szTemp);
+    
+                        if (!Ptr)
+                            Ptr = szTemp;
+
+                        szTemp2[0] = _T('\0');
+                        LoadString(hInst, ListItems_Cmds[ListView_GetSelectionMark(hToolsListCtrl)], Ptr, 256);
                         LoadString(hInst, ListItems_Params[ListView_GetSelectionMark(hToolsListCtrl)], szTemp2, 256);
-                        ShellExecute(0, _T("open"), szTemp, szTemp2, _T(""), SW_NORMAL);
+                        if (_tcslen(szTemp2))
+                        {
+                           _tcscat(szTemp, _T(" "));
+                           _tcscat(Ptr, szTemp2);
+                        }
+                        ZeroMemory(&si, sizeof(STARTUPINFO));
+                        si.cb = sizeof(STARTUPINFO);
+                        if (CreateProcess(NULL, szTemp, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi))
+                        {
+                            CloseHandle(pi.hThread);
+                            CloseHandle(pi.hProcess);
+                        }
                     }
                 }
             }
@@ -117,6 +140,7 @@ ToolsPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
                         if (lpnmitem->iItem > -1)
                         {
                             LoadString(hInst, ListItems_Cmds[lpnmitem->iItem], szTemp, 256);
+                            szTemp2[0] = _T('\0');
                             LoadString(hInst, ListItems_Params[lpnmitem->iItem], szTemp2, 256);
                             _tcscat(szTemp, _T(" "));
                             _tcscat(szTemp, szTemp2);
@@ -129,9 +153,27 @@ ToolsPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
                         lpnmitem = (LPNMITEMACTIVATE) lParam;
                         if (lpnmitem->iItem > -1)
                         {
-                            LoadString(hInst, ListItems_Cmds[lpnmitem->iItem], szTemp, 256);
+                            if (SHGetSpecialFolderPath(NULL, szTemp, ListItems_Locations[ListView_GetSelectionMark(hToolsListCtrl)], FALSE))
+                                Ptr = PathAddBackslash(szTemp);
+    
+                            if (!Ptr)
+                                Ptr = szTemp;
+
+                            szTemp2[0] = _T('\0');
+                            LoadString(hInst, ListItems_Cmds[lpnmitem->iItem], Ptr, 256);
                             LoadString(hInst, ListItems_Params[lpnmitem->iItem], szTemp2, 256);
-                            ShellExecute(0, _T("open"), szTemp, szTemp2, _T(""), SW_NORMAL);
+                            if (_tcslen(szTemp2))
+                            {
+                                _tcscat(szTemp, _T(" "));
+                                _tcscat(Ptr, szTemp2);
+                            }
+                            ZeroMemory(&si, sizeof(STARTUPINFO));
+                            si.cb = sizeof(STARTUPINFO);
+                            if (CreateProcess(NULL, szTemp, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi))
+                            {
+                                CloseHandle(pi.hThread);
+                                CloseHandle(pi.hProcess);
+                            }
                         }
                         break;
                     }
