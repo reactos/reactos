@@ -32,7 +32,7 @@ ntfs.sys=,,,,,,,,,,,,4
 pci.sys=,,,,,,,,,,,,4
 scsiport.sys=,,,,,,x,,,,,,4
 uniata.sys=,,,,,,,,,,,,4
-vfatfs.sys=,,,,,,,,,,,,4
+fastfat.sys=,,,,,,,,,,,,4
 
 [HardwareIdsDatabase]
 *PNP0C08 = acpi

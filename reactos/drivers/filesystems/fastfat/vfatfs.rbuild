@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
-<module name="vfatfs" type="kernelmodedriver" installbase="system32/drivers" installname="vfatfs.sys">
+<module name="fastfat" type="kernelmodedriver" installbase="system32/drivers" installname="fastfat.sys">
 	<bootstrap installbase="$(CDOUTPUT)" />
-	<include base="vfatfs">.</include>
+	<include base="fastfat">.</include>
 	<linkerflag>-lgcc</linkerflag>
 	<library>ntoskrnl</library>
 	<library>hal</library>

@@ -19,7 +19,7 @@
 <directory name="ntfs">
 	<xi:include href="ntfs/ntfs.rbuild" />
 </directory>
-<directory name="vfat">
-	<xi:include href="vfat/vfatfs.rbuild" />
+<directory name="fastfat">
+	<xi:include href="fastfat/vfatfs.rbuild" />
 </directory>
 </group>

@@ -400,8 +400,8 @@ VOID RunLoader(VOID)
       return;
     }
 
-  /* Load vfatfs.sys (could be loaded by the setup prog!) */
-  if (!LoadDriver(SourcePath, "vfatfs.sys"))
+  /* Load fastfat.sys (could be loaded by the setup prog!) */
+  if (!LoadDriver(SourcePath, "fastfat.sys"))
     return;
 
     /* Load additional files specified in txtsetup.inf */
