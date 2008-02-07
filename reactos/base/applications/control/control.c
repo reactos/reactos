@@ -404,6 +404,7 @@ int
 _tmain(int argc, const TCHAR *argv[])
 {
   STARTUPINFO si;
+  TCHAR * szExt;
 
   si.cb = sizeof(si);
   GetStartupInfo(&si);
@@ -435,6 +436,22 @@ _tmain(int argc, const TCHAR *argv[])
   else if (_tcsicmp(argv[1], _T("keyboard")) == 0)
     {
       return RunControlPanel(_T("main.cpl"), 1);
+    }
+  else if ((szExt = _tcsstr(argv[1], _T(".cpl"))))
+    {
+      TCHAR * szSep;
+      TCHAR szCPL[MAX_PATH];
+      UINT selPage = 0;    
+
+      _tcscpy(szCPL, argv[1]);
+      szSep = _tcsstr(szCPL, _T(".cpl,"));
+
+      if (szSep)
+        {
+          /* FIXME for now ignore page index */
+          szSep[4] = _T('\0');
+        }
+      return RunControlPanel(szCPL, selPage);
     }
 
   return 0;
