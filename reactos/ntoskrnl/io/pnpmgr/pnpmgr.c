@@ -1316,7 +1316,6 @@ IopAssignDeviceResources(
    }
 
    Size = sizeof(CM_RESOURCE_LIST) + ResourceList->Count * sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR);
-   *pRequiredSize = Size;
    DeviceNode->ResourceList = ExAllocatePool(PagedPool, Size);
    if (!DeviceNode->ResourceList)
    {
@@ -1454,6 +1453,7 @@ IopAssignDeviceResources(
 
    DeviceNode->ResourceList->List[0].PartialResourceList.Count = NumberOfResources;
 
+   *pRequiredSize = Size;
    return STATUS_SUCCESS;
 
 ByeBye:
@@ -1462,6 +1462,7 @@ ByeBye:
       ExFreePool(DeviceNode->ResourceList);
       DeviceNode->ResourceList = NULL;
    }
+   *pRequiredSize = 0;
    return Status;
 }
 
