@@ -13,6 +13,7 @@
 /* GLOBALS ********************************************************************/
 
 PARM_BOARD_CONFIGURATION_BLOCK ArmBoardBlock;
+ULONG BootDrive, BootPartition;
 
 /* FUNCTIONS ******************************************************************/
 

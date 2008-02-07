@@ -492,13 +492,18 @@ FrLdrMapImage(IN FILE *Image,
     
     /* Allocate a temporary buffer for the read */
     ReadBuffer = MmHeapAlloc(ImageSize);
-    
+
     /* Load the file image */
-    FsReadFile(Image, ImageSize, NULL, ReadBuffer);
-    
+    if (!FsReadFile(Image, ImageSize, NULL, ReadBuffer))
+    {
+        /* Fail */
+        DbgPrint("Failed to read image: %s\n", Name);
+        return NULL;
+    }
+
     /* Map it into virtual memory */
     ImageSize = FrLdrReMapImage(ReadBuffer, LoadBase);
-    
+
     /* Free the temporary buffer */
     MmHeapFree(ReadBuffer);
     
