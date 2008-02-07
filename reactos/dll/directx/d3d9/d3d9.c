@@ -72,7 +72,7 @@ IDirect3D9* WINAPI Direct3DCreate9(UINT SDKVersion)
     {
         if (0 != LoadDebugDll)
         {
-            hDebugDll = LoadLibrary("d3d9d.dll");
+            hDebugDll = LoadLibraryA("d3d9d.dll");
 
             if (0 != hDebugDll)
             {
