@@ -138,7 +138,7 @@ HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones","IndexMapping",0x
    "41b",  "95",\
    "81a",  "95",\
    "c1a",  "95",\
-   "402", "100",\
+   "402", "125",\
    "415", "100",\
   "1801", "100",\
    "41a", "100",\
