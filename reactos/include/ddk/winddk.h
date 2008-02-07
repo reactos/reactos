@@ -9495,6 +9495,12 @@ DDKAPI
 KeRaiseIrqlToDpcLevel(
   VOID);
 
+NTHALAPI
+KIRQL
+DDKAPI
+KeRaiseIrqlToSynchLevel(
+    VOID);
+
 #define KeLowerIrql(a) KfLowerIrql(a)
 #define KeRaiseIrql(a,b) *(b) = KfRaiseIrql(a)
 
@@ -9581,15 +9587,14 @@ NTAPI
 KeRaiseIrqlToDpcLevel(
   VOID);
 
-#endif
-    
 NTKERNELAPI
 KIRQL
 DDKAPI
 KeRaiseIrqlToSynchLevel(
     VOID);
 
-    
+#endif
+
 /** Memory manager routines **/
 
 NTKERNELAPI
