@@ -13,6 +13,9 @@
 	<if property="_WINKD_" value="1">
 		<define name="_WINKD_" />
 	</if>
+	<if property="_ELF" value="1">
+		<define name="_ELF_" />
+	</if>
 	<include base="cmlib">.</include>
 	<include base="ntoskrnl">include</include>
 	<include base="ntoskrnl" root="intermediate"></include>
@@ -357,8 +360,10 @@
 		<file>verifier.c</file>
 		<file>virtual.c</file>
 		<file>wset.c</file>
-		<file>elf32.c</file>
-		<file>elf64.c</file>
+		<if property="_ELF_" value="1">
+			<file>elf32.c</file>
+			<file>elf64.c</file>
+        </if>
 	</directory>
 	<directory name="ob">
 		<file>obdir.c</file>
