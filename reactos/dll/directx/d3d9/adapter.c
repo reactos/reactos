@@ -10,10 +10,19 @@
 #include <d3d9.h>
 #include <ddraw.h>
 #include <strsafe.h>
+#include "adapter.h"
 
 typedef BOOL (WINAPI *LPFN_ISWOW64PROCESS) (HANDLE, PBOOL);
 typedef BOOL (WINAPI *LPFN_DISABLEWOW64FSREDIRECTION) (PVOID*);
 typedef BOOL (WINAPI *LPFN_REVERTWOW64FSREDIRECTION) (PVOID);
+
+
+typedef struct _ADAPTERMONITOR
+{
+    LPCSTR lpszDeviceName;
+    HMONITOR hMonitor;
+} ADAPTERMONITOR, *LPADAPTERMONITOR;
+
 
 static BOOL GetDriverName(LPDISPLAY_DEVICEA pDisplayDevice, D3DADAPTER_IDENTIFIER9* pIdentifier)
 {
@@ -155,4 +164,34 @@ BOOL GetAdapterInfo(LPCSTR lpszDeviceName, D3DADAPTER_IDENTIFIER9* pIdentifier)
     GenerateDeviceIdentifier(pIdentifier);
 
     return TRUE;
+}
+
+static BOOL CALLBACK AdapterMonitorEnumProc(HMONITOR hMonitor, HDC hdcMonitor, LPRECT lprcMonitor, LPARAM dwData)
+{
+    MONITORINFOEXA MonitorInfoEx;
+    LPADAPTERMONITOR lpAdapterMonitor = (LPADAPTERMONITOR)dwData;
+
+    memset(&MonitorInfoEx, 0, sizeof(MONITORINFOEXA));
+    MonitorInfoEx.cbSize = sizeof(MONITORINFOEXA);
+
+    GetMonitorInfoA(hMonitor, (LPMONITORINFO)&MonitorInfoEx);
+
+    if (_stricmp(lpAdapterMonitor->lpszDeviceName, MonitorInfoEx.szDevice) == 0)
+    {
+        lpAdapterMonitor->hMonitor = hMonitor;
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+HMONITOR GetAdapterMonitor(LPCSTR lpszDeviceName)
+{
+    ADAPTERMONITOR AdapterMonitor;
+    AdapterMonitor.lpszDeviceName = lpszDeviceName;
+    AdapterMonitor.hMonitor = NULL;
+
+    EnumDisplayMonitors(NULL, NULL, AdapterMonitorEnumProc, (LPARAM)&AdapterMonitor);
+
+    return AdapterMonitor.hMonitor;
 }

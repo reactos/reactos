@@ -11,4 +11,6 @@
 
 BOOL GetAdapterInfo(LPCSTR lpszDeviceName, D3DADAPTER_IDENTIFIER9* pIdentifier);
 
+HMONITOR GetAdapterMonitor(LPCSTR lpszDeviceName);
+
 #endif

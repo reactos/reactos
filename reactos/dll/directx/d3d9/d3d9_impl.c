@@ -69,7 +69,7 @@ static HRESULT WINAPI IDirect3D9Impl_RegisterSoftwareDevice(LPDIRECT3D9 iface, v
 * @param LPDIRECT3D iface
 * Pointer to the IDirect3D object returned from Direct3DCreate9()
 *
-* @return 
+* @return UINT
 * The number of display adapters on the system when Direct3DCreate9() was called.
 *
 */
@@ -107,7 +107,7 @@ static UINT WINAPI IDirect3D9Impl_GetAdapterCount(LPDIRECT3D9 iface)
 * Pointer to a D3DADAPTER_IDENTIFIER9 structure to be filled with the available information
 * about the display adapter.
 *
-* @return 
+* @return HRESULT
 * If the method successfully fills the pIdentified structure, the return value is D3D_OK.
 * If Adapter is out of range, Flags is invalid or pIdentifier is a bad pointer, the return value
 * will be D3DERR_INVALIDCALL.
@@ -148,6 +148,7 @@ HRESULT WINAPI IDirect3D9Impl_GetAdapterIdentifier(LPDIRECT3D9 iface, UINT Adapt
         return D3DERR_INVALIDCALL;
     }
 
+    UNLOCK_D3D9();
     return D3D_OK;
 }
 
@@ -223,11 +224,43 @@ static HRESULT WINAPI IDirect3D9Impl_GetDeviceCaps(LPDIRECT3D9 iface, UINT Adapt
     return D3D_OK;
 }
 
+/*++
+* @name IDirect3D9::GetAdapterMonitor
+* @implemented
+*
+* The function IDirect3D9Impl_GetAdapterMonitor returns the monitor associated
+* with the specified display adapter.
+*
+* @param LPDIRECT3D iface
+* Pointer to the IDirect3D object returned from Direct3DCreate9()
+*
+* @param UINT Adapter
+* Adapter index to get information about. D3DADAPTER_DEFAULT is the primary display.
+* The maximum value for this is the value returned by IDirect3D::GetAdapterCount().
+*
+* @return HMONITOR
+* If the method successfully it returns the HMONITOR belonging to the specified adapter.
+* If the method fails, the return value is NULL.
+*
+*/
 static HMONITOR WINAPI IDirect3D9Impl_GetAdapterMonitor(LPDIRECT3D9 iface, UINT Adapter)
 {
-    UNIMPLEMENTED
+    HMONITOR hAdapterMonitor = NULL;
 
-    return NULL;
+    LPDIRECT3D9_INT This = impl_from_IDirect3D9(iface);
+    LOCK_D3D9();
+
+    if (Adapter < This->NumDisplayAdapters)
+    {
+        hAdapterMonitor = GetAdapterMonitor(This->DisplayAdapters[Adapter].szDeviceName);
+    }
+    else
+    {
+        DPRINT1("Invalid Adapter number specified");
+    }
+
+    UNLOCK_D3D9();
+    return hAdapterMonitor;
 }
 
 static HRESULT WINAPI IDirect3D9Impl_CreateDevice(LPDIRECT3D9 iface, UINT Adapter, D3DDEVTYPE DeviceType,
