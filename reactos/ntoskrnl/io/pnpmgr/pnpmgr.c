@@ -1270,6 +1270,7 @@ IopAssignDeviceResources(
    {
       /* No resource needed for this device */
       DeviceNode->ResourceList = NULL;
+      *pRequiredSize = 0;
       return STATUS_SUCCESS;
    }
 
