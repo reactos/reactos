@@ -176,7 +176,7 @@ CmiAddKeyToHashTable(
 	{
 		RtlMoveMemory(HashCell->List + i + 1,
 		              HashCell->List + i,
-		              (HashCell->Count - 1 - i) *
+		              (HashCell->Count - i) *
 		              sizeof(HashCell->List[0]));
 	}
 
