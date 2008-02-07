@@ -151,13 +151,12 @@ static NTSTATUS
 CmiAddKeyToHashTable(
 	IN PCMHIVE RegistryHive,
 	IN OUT PCM_KEY_FAST_INDEX HashCell,
-	IN PCM_KEY_NODE KeyCell,
-	IN HSTORAGE_TYPE StorageType,
+   IN HCELL_INDEX HashCellIndex,
 	IN PCM_KEY_NODE NewKeyCell,
 	IN HCELL_INDEX NKBOffset)
 {
-	ULONG i = KeyCell->SubKeyCounts[StorageType];
-	ULONG HashKey;
+	ULONG i;
+	ULONG HashKey = 0;
 
 	if (NewKeyCell->Flags & KEY_COMP_NAME)
 	{
@@ -167,13 +166,13 @@ CmiAddKeyToHashTable(
 			min(NewKeyCell->NameLength, sizeof(ULONG)));
 	}
 
-	for (i = 0; i < KeyCell->SubKeyCounts[StorageType]; i++)
+	for (i = 0; i < HashCell->Count; i++)
 	{
 		if (HashCell->List[i].HashKey > HashKey)
 			break;
 	}
 
-	if (i < KeyCell->SubKeyCounts[StorageType])
+	if (i < HashCell->Count)
 	{
 		RtlMoveMemory(HashCell->List + i + 1,
 		              HashCell->List + i,
@@ -183,7 +182,8 @@ CmiAddKeyToHashTable(
 
 	HashCell->List[i].Cell = NKBOffset;
 	HashCell->List[i].HashKey = HashKey;
-	HvMarkCellDirty(&RegistryHive->Hive, KeyCell->SubKeyLists[StorageType], FALSE);
+   HashCell->Count++;
+	HvMarkCellDirty(&RegistryHive->Hive, HashCellIndex, FALSE);
 	return STATUS_SUCCESS;
 }
 
@@ -211,10 +211,9 @@ CmiAllocateHashTableCell (
 	}
 	else
 	{
-		ASSERT(SubKeyCount <= USHORT_MAX);
 		NewHashBlock = (PCM_KEY_FAST_INDEX)HvGetCell (&RegistryHive->Hive, *HBOffset);
 		NewHashBlock->Signature = CM_KEY_FAST_LEAF;
-		NewHashBlock->Count = SubKeyCount;
+		NewHashBlock->Count = 0;
 		*HashBlock = NewHashBlock;
 	}
 
@@ -353,7 +352,8 @@ CmiAddSubKey(
 			ParentKeyCell->SubKeyLists[Storage]);
 		ASSERT(HashBlock->Signature == CM_KEY_FAST_LEAF);
 
-		if (((ParentKeyCell->SubKeyCounts[Storage] + 1) >= HashBlock->Count))
+		if (HashBlock->Count ==
+		    ((HvGetCellSize(&RegistryHive->Hive, HashBlock) - FIELD_OFFSET(CM_KEY_FAST_INDEX, List)) / sizeof(CM_INDEX)))
 		{
 			PCM_KEY_FAST_INDEX NewHashBlock;
 			HCELL_INDEX HTOffset;
@@ -370,14 +370,11 @@ CmiAddSubKey(
 			{
 				return Status;
 			}
-
-			RtlZeroMemory(
-				&NewHashBlock->List[0],
-				sizeof(NewHashBlock->List[0]) * NewHashBlock->Count);
 			RtlCopyMemory(
 				&NewHashBlock->List[0],
 				&HashBlock->List[0],
 				sizeof(NewHashBlock->List[0]) * HashBlock->Count);
+         NewHashBlock->Count = HashBlock->Count;
 			HvFreeCell (&RegistryHive->Hive, ParentKeyCell->SubKeyLists[Storage]);
 			ParentKeyCell->SubKeyLists[Storage] = HTOffset;
 			HashBlock = NewHashBlock;
@@ -387,8 +384,7 @@ CmiAddSubKey(
 	Status = CmiAddKeyToHashTable(
 		RegistryHive,
 		HashBlock,
-		ParentKeyCell,
-		Storage,
+      ParentKeyCell->SubKeyLists[Storage],
 		NewKeyCell,
 		NKBOffset);
 	if (NT_SUCCESS(Status))
@@ -635,7 +631,6 @@ CmiAllocateValueCell(
 	}
 	else
 	{
-		ASSERT(NameLength <= USHORT_MAX);
 		NewValueCell = (PCM_KEY_VALUE)HvGetCell (&RegistryHive->Hive, *VBOffset);
 		NewValueCell->Signature = CM_KEY_VALUE_SIGNATURE;
 		NewValueCell->NameLength = (USHORT)NameLength;
