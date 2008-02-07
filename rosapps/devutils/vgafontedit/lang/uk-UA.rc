@@ -15,7 +15,7 @@ CAPTION "Про програму"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON           IDI_MAIN,                     IDC_STATIC, 10, 10, 20, 20
-    LTEXT          "ReactOS VGA Font Editor",    IDC_STATIC, 37, 10, 93, 10
+    LTEXT          "Редактор VGA-шрифтів ReactOS",    IDC_STATIC, 37, 10, 93, 10
     LTEXT          "Copyright 2008 Colin Finck", IDC_STATIC, 37, 20, 93, 10
     DEFPUSHBUTTON  "OK",                         IDCANCEL,   40, 44, 55, 15
 END
@@ -65,8 +65,8 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_OPENFILTER, "Всі підтримувані формати (*.bin,*.psf)|*.bin;*.psf|Файли двійкових шрифтів (*.bin)|*.bin|Екранні Шрифти ПК Версії 1 (*.psf)|*.psf|"
-    IDS_SAVEFILTER, "Файли двійкових шрифтів (*.bin)|*.bin|"
+    IDS_OPENFILTER, "Всі підтримувані формати (*.bin,*.psf)|*.bin;*.psf|Двійкові файли шрифтів (*.bin)|*.bin|Екранні шрифти ПК версії 1 (*.psf)|*.psf|"
+    IDS_SAVEFILTER, "Двійкові файли шрифтів (*.bin)|*.bin|"
     IDS_OPENERROR, "Помилка при відкритті файлу! (Номер помилки %1!u!)"
     IDS_READERROR, "Помилка при читанні файлу! (Номер помилки %1!u!)"
     IDS_WRITEERROR, "Помилка при запису файлу! (Номер помилки %1!u!)"
@@ -74,7 +74,7 @@ BEGIN
     IDS_UNSUPPORTEDPSF, "Непідтримуваний формат PSF шрифта! Редактор підтримує тільки шрифти 8x8 без спеціальних режимів."
     IDS_DOCNAME, "Шрифт %1!u!"
     IDS_SAVEPROMPT, "Файл ""%1"" був змінений, але не збережений.\n\nЗберегти його?"
-    IDS_APPTITLE, "ReactOS VGA Font Editor"
+    IDS_APPTITLE, "Редактор VGA-шрифтів ReactOS"
     IDS_CLOSEEDIT, "Please close all open Edit windows first!"
 
     IDS_TOOLTIP_NEW, "Створити"
