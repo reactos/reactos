@@ -86,6 +86,10 @@ LsaClose(LSA_HANDLE ObjectHandle)
 {
     TRACE("LsaClose(0x%p) called\n", ObjectHandle);
 
+    /* This is our fake handle, don't go too much long way */
+    if (ObjectHandle == (LSA_HANDLE)0xcafe)
+        return STATUS_SUCCESS;
+
     LSAHandleBind();
 
     return LsarClose(LSABindingHandle,
@@ -276,7 +280,9 @@ LsaLookupNames2(
     PLSA_REFERENCED_DOMAIN_LIST *ReferencedDomains,
     PLSA_TRANSLATED_SID2 *Sids)
 {
-  return STATUS_NOT_IMPLEMENTED;
+    FIXME("(%p,0x%08x,0x%08x,%p,%p,%p) stub\n", PolicyHandle, Flags,
+        Count, Names, ReferencedDomains, Sids);
+    return STATUS_NONE_MAPPED;
 }
 
 /*
@@ -345,18 +351,20 @@ LsaNtStatusToWinError(NTSTATUS Status)
  *
  * @unimplemented
  */
-NTSTATUS STDCALL
-LsaOpenPolicy(PLSA_UNICODE_STRING lsaucs,
-	      PLSA_OBJECT_ATTRIBUTES lsaoa,
-	      ACCESS_MASK access,
-	      PLSA_HANDLE PolicyHandle)
+NTSTATUS
+STDCALL
+LsaOpenPolicy(
+    IN PLSA_UNICODE_STRING SystemName,
+    IN PLSA_OBJECT_ATTRIBUTES ObjectAttributes,
+    IN ACCESS_MASK DesiredAccess,
+    IN OUT PLSA_HANDLE PolicyHandle)
 {
-  static int count = 0;
-  if (count++ < 20)
-  {
-     FIXME("%s() not implemented!\n", __FUNCTION__);
-  }
-  return STATUS_SUCCESS;
+    FIXME("(%s,%p,0x%08x,%p) stub\n",
+          SystemName?debugstr_w(SystemName->Buffer):"(null)",
+          ObjectAttributes, DesiredAccess, PolicyHandle);
+
+    if(PolicyHandle) *PolicyHandle = (LSA_HANDLE)0xcafe;
+    return STATUS_SUCCESS;
 }
 
 /*
