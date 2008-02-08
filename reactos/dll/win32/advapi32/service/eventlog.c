@@ -22,9 +22,10 @@
  */
 
 #include <advapi32.h>
-#define NDEBUG
-#include <debug.h>
+#include "wine/debug.h"
 
+WINE_DEFAULT_DEBUG_CHANNEL(advapi);
+WINE_DECLARE_DEBUG_CHANNEL(eventlog);
 
 typedef struct _LOG_INFO
 {
@@ -45,7 +46,7 @@ BackupEventLogA(
     NTSTATUS Status;
     ANSI_STRING BackupFileName;
 
-    DPRINT("%p, %s\n", hEventLog, lpBackupFileName);
+    TRACE("%p, %s\n", hEventLog, lpBackupFileName);
 
     RtlInitAnsiString(&BackupFileName, lpBackupFileName);
 
@@ -84,7 +85,7 @@ BackupEventLogW(
     NTSTATUS Status;
     UNICODE_STRING BackupFileName;
 
-    DPRINT("%p, %s\n", hEventLog, lpBackupFileName);
+    TRACE("%p, %s\n", hEventLog, lpBackupFileName);
 
     RtlInitUnicodeString(&BackupFileName, lpBackupFileName);
 
@@ -120,7 +121,7 @@ ClearEventLogA(
     NTSTATUS Status;
     ANSI_STRING BackupFileName;
 
-    DPRINT("%p, %s\n", hEventLog, lpBackupFileName);
+    TRACE("%p, %s\n", hEventLog, lpBackupFileName);
 
     RtlInitAnsiString(&BackupFileName, lpBackupFileName);
 
@@ -156,7 +157,7 @@ ClearEventLogW(
     NTSTATUS Status;
     UNICODE_STRING BackupFileName;
 
-    DPRINT("%p, %s\n", hEventLog, lpBackupFileName);
+    TRACE("%p, %s\n", hEventLog, lpBackupFileName);
 
     RtlInitUnicodeString(&BackupFileName, lpBackupFileName);
 
@@ -190,7 +191,7 @@ CloseEventLog(
     PLOG_INFO pLog;
     NTSTATUS Status;
 
-    DPRINT("%p", hEventLog);
+    TRACE("%p", hEventLog);
 
     pLog = (PLOG_INFO)hEventLog;
     if (!pLog)
@@ -238,7 +239,7 @@ DeregisterEventSource(
     PLOG_INFO pLog;
     NTSTATUS Status;
 
-    DPRINT("%p\n", hEventLog);
+    TRACE("%p\n", hEventLog);
 
     pLog = (PLOG_INFO)hEventLog;
     if (!pLog)
@@ -272,7 +273,7 @@ GetNumberOfEventLogRecords(
     NTSTATUS Status;
     long Records;
 
-    DPRINT("%p, %p\n", hEventLog, NumberOfRecords);
+    TRACE("%p, %p\n", hEventLog, NumberOfRecords);
 
     pLog = (PLOG_INFO)hEventLog;
     if (!pLog)
@@ -311,7 +312,7 @@ GetOldestEventLogRecord(
     NTSTATUS Status;
     long Oldest;
 
-    DPRINT("%p, %p\n", hEventLog, OldestRecord);
+    TRACE("%p, %p\n", hEventLog, OldestRecord);
 
     pLog = (PLOG_INFO)hEventLog;
     if (!pLog)
@@ -365,7 +366,7 @@ OpenBackupEventLogA(
     UNICODE_STRING FileName;
     HANDLE Handle;
 
-    DPRINT("%s, %s\n", lpUNCServerName, lpFileName);
+    TRACE("%s, %s\n", lpUNCServerName, lpFileName);
 
     if (!RtlCreateUnicodeStringFromAsciiz(&UNCServerName, lpUNCServerName))
     {
@@ -407,7 +408,7 @@ OpenBackupEventLogW(
     UNICODE_STRING UNCServerName;
     UNICODE_STRING FileName;
 
-    DPRINT("%s, %s\n", lpUNCServerName, lpFileName);
+    TRACE("%s, %s\n", lpUNCServerName, lpFileName);
 
     RtlInitUnicodeString(&UNCServerName, lpUNCServerName);
     RtlInitUnicodeString(&FileName, lpFileName);
@@ -511,7 +512,7 @@ OpenEventLogW(
     UNICODE_STRING UNCServerName;
     UNICODE_STRING SourceName;
 
-    DPRINT("%s, %s\n", lpUNCServerName, lpSourceName);
+    TRACE("%s, %s\n", lpUNCServerName, lpSourceName);
 
     RtlInitUnicodeString(&UNCServerName, lpUNCServerName);
     RtlInitUnicodeString(&SourceName, lpSourceName);
@@ -583,7 +584,7 @@ ReadEventLogA(
     NTSTATUS Status;
     long bytesRead, minNumberOfBytesNeeded;
 
-    DPRINT("%p, %lu, %lu, %p, %lu, %p, %p\n",
+    TRACE("%p, %lu, %lu, %p, %lu, %p, %p\n",
         hEventLog, dwReadFlags, dwRecordOffset, lpBuffer,
         nNumberOfBytesToRead, pnBytesRead, pnMinNumberOfBytesNeeded);
 
@@ -640,7 +641,7 @@ ReadEventLogW(
     NTSTATUS Status;
     long bytesRead, minNumberOfBytesNeeded;
 
-    DPRINT("%p, %lu, %lu, %p, %lu, %p, %p\n",
+    TRACE("%p, %lu, %lu, %p, %lu, %p, %p\n",
         hEventLog, dwReadFlags, dwRecordOffset, lpBuffer,
         nNumberOfBytesToRead, pnBytesRead, pnMinNumberOfBytesNeeded);
 
@@ -683,7 +684,7 @@ RegisterEventSourceA(
     UNICODE_STRING SourceName;
     HANDLE Handle;
 
-    DPRINT("%s, %s\n", lpUNCServerName, lpSourceName);
+    TRACE("%s, %s\n", lpUNCServerName, lpSourceName);
 
     if (!RtlCreateUnicodeStringFromAsciiz(&UNCServerName, lpUNCServerName))
     {
@@ -728,7 +729,7 @@ RegisterEventSourceW(
     UNICODE_STRING UNCServerName;
     UNICODE_STRING SourceName;
 
-    DPRINT("%s, %s\n", lpUNCServerName, lpSourceName);
+    TRACE("%s, %s\n", lpUNCServerName, lpSourceName);
 
     RtlInitUnicodeString(&UNCServerName, lpUNCServerName);
     RtlInitUnicodeString(&SourceName, lpSourceName);
@@ -892,7 +893,7 @@ ReportEventW(
     UNICODE_STRING *Strings;
     WORD i;
 
-    DPRINT("%p, %u, %u, %lu, %p, %u, %lu, %p, %p\n",
+    TRACE("%p, %u, %u, %lu, %p, %u, %lu, %p, %p\n",
         hEventLog, wType, wCategory, dwEventID, lpUserSid,
         wNumStrings, dwDataSize, lpStrings, lpRawData);
 
@@ -955,23 +956,23 @@ ReportEventW(
       switch (wType)
         {
         case EVENTLOG_SUCCESS:
-            DPRINT1("Success: %S\n", lpStrings[i]);
+            TRACE_(eventlog)("Success: %S\n", lpStrings[i]);
             break;
 
         case EVENTLOG_ERROR_TYPE:
-            DPRINT1("Error: %S\n", lpStrings[i]);
+            ERR_(eventlog)("Error: %S\n", lpStrings[i]);
             break;
 
         case EVENTLOG_WARNING_TYPE:
-            DPRINT1("Warning: %S\n", lpStrings[i]);
+            WARN_(eventlog)("Warning: %S\n", lpStrings[i]);
             break;
 
         case EVENTLOG_INFORMATION_TYPE:
-            DPRINT1("Info: %S\n", lpStrings[i]);
+            TRACE_(eventlog)("Info: %S\n", lpStrings[i]);
             break;
 
         default:
-            DPRINT1("Type %hu: %S\n", wType, lpStrings[i]);
+            TRACE_(eventlog)("Type %hu: %S\n", wType, lpStrings[i]);
             break;
         }
     }

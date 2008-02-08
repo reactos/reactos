@@ -13,9 +13,9 @@
 /* INCLUDES ******************************************************************/
 
 #include <advapi32.h>
+#include "wine/debug.h"
 
-#define NDEBUG
-#include <debug.h>
+WINE_DEFAULT_DEBUG_CHANNEL(advapi);
 
 
 /* TYPES *********************************************************************/
@@ -79,19 +79,19 @@ ScServiceMainStub(LPVOID Context)
 
     lpService = (PACTIVE_SERVICE)Context;
 
-    DPRINT("ScServiceMainStub() called\n");
+    TRACE("ScServiceMainStub() called\n");
 
     /* Count arguments */
     lpPtr = lpService->Arguments;
     while (*lpPtr)
     {
-        DPRINT("arg: %S\n", lpPtr);
+        TRACE("arg: %S\n", lpPtr);
         dwLen = wcslen(lpPtr) + 1;
         dwArgCount++;
         dwLength += dwLen;
         lpPtr += dwLen;
     }
-    DPRINT("dwArgCount: %ld\ndwLength: %ld\n", dwArgCount, dwLength);
+    TRACE("dwArgCount: %ld\ndwLength: %ld\n", dwArgCount, dwLength);
 
     /* Build the argument vector and call the main service routine */
     if (lpService->bUnicode)
@@ -219,7 +219,7 @@ ScConnectControlPipe(HANDLE *hPipe)
 
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("RtlQueryRegistryValues() failed (Status %lx)\n", Status);
+        ERR("RtlQueryRegistryValues() failed (Status %lx)\n", Status);
         return RtlNtStatusToDosError(Status);
     }
 
@@ -227,7 +227,7 @@ ScConnectControlPipe(HANDLE *hPipe)
 
     if (!WaitNamedPipeW(NtControlPipeName, 15000))
     {
-        DPRINT1("WaitNamedPipe(%S) failed (Error %lu)\n", NtControlPipeName, GetLastError());
+        ERR("WaitNamedPipe(%S) failed (Error %lu)\n", NtControlPipeName, GetLastError());
         return ERROR_FAILED_SERVICE_CONTROLLER_CONNECT;
     }
 
@@ -240,7 +240,7 @@ ScConnectControlPipe(HANDLE *hPipe)
                          NULL);
     if (*hPipe == INVALID_HANDLE_VALUE)
     {
-        DPRINT1("CreateFileW() failed (Error %lu)\n", GetLastError());
+        ERR("CreateFileW() failed (Error %lu)\n", GetLastError());
         return ERROR_FAILED_SERVICE_CONTROLLER_CONNECT;
     }
 
@@ -259,7 +259,7 @@ ScConnectControlPipe(HANDLE *hPipe)
               &dwBytesWritten,
               NULL);
 
-    DPRINT("Sent SERVICE_HANDLE %lu\n", lpActiveServices->hService);
+    TRACE("Sent SERVICE_HANDLE %lu\n", lpActiveServices->hService);
 
     return ERROR_SUCCESS;
 }
@@ -272,15 +272,15 @@ ScStartService(PSCM_CONTROL_PACKET ControlPacket)
     HANDLE ThreadHandle;
     DWORD ThreadId;
 
-    DPRINT("ScStartService() called\n");
-    DPRINT("client handle: %lu\n", ControlPacket->hClient);
-    DPRINT("Size: %lu\n", ControlPacket->dwSize);
-    DPRINT("Service: %S\n", &ControlPacket->szArguments[0]);
+    TRACE("ScStartService() called\n");
+    TRACE("client handle: %lu\n", ControlPacket->hClient);
+    TRACE("Size: %lu\n", ControlPacket->dwSize);
+    TRACE("Service: %S\n", &ControlPacket->szArguments[0]);
 
     lpService = (PACTIVE_SERVICE)ControlPacket->hClient;
     if (lpService == NULL)
     {
-        DPRINT1("Service not found\n");
+        TRACE("Service not found\n");
         return ERROR_SERVICE_DOES_NOT_EXIST;
     }
 
@@ -316,14 +316,14 @@ ScControlService(PSCM_CONTROL_PACKET ControlPacket)
 {
     PACTIVE_SERVICE lpService;
 
-    DPRINT("ScControlService() called\n");
-    DPRINT("Size: %lu\n", ControlPacket->dwSize);
-    DPRINT("Service: %S\n", &ControlPacket->szArguments[0]);
+    TRACE("ScControlService() called\n");
+    TRACE("Size: %lu\n", ControlPacket->dwSize);
+    TRACE("Service: %S\n", &ControlPacket->szArguments[0]);
 
     lpService = (PACTIVE_SERVICE)ControlPacket->hClient;
     if (lpService == NULL)
     {
-        DPRINT1("Service not found\n");
+        TRACE("Service not found\n");
         return ERROR_SERVICE_DOES_NOT_EXIST;
     }
 
@@ -344,7 +344,7 @@ ScControlService(PSCM_CONTROL_PACKET ControlPacket)
                  lpService->Arguments);
     }
 
-    DPRINT("ScControlService() done\n");
+    TRACE("ScControlService() done\n");
 
     return ERROR_SUCCESS;
 }
@@ -360,7 +360,7 @@ ScServiceDispatcher(HANDLE hPipe,
     BOOL bResult;
     DWORD dwRunningServices = 0;
 
-    DPRINT("ScDispatcherLoop() called\n");
+    TRACE("ScDispatcherLoop() called\n");
 
     ControlPacket = HeapAlloc(GetProcessHeap(),
                               HEAP_ZERO_MEMORY,
@@ -378,7 +378,7 @@ ScServiceDispatcher(HANDLE hPipe,
                            NULL);
         if (bResult == FALSE)
         {
-            DPRINT1("Pipe read failed (Error: %lu)\n", GetLastError());
+            ERR("Pipe read failed (Error: %lu)\n", GetLastError());
             return FALSE;
         }
 
@@ -386,19 +386,19 @@ ScServiceDispatcher(HANDLE hPipe,
         switch (ControlPacket->dwControl)
         {
             case SERVICE_CONTROL_START:
-                DPRINT("Start command - recieved SERVICE_CONTROL_START\n");
+                TRACE("Start command - recieved SERVICE_CONTROL_START\n");
                 if (ScStartService(ControlPacket) == ERROR_SUCCESS)
                     dwRunningServices++;
                 break;
 
             case SERVICE_CONTROL_STOP:
-                DPRINT("Stop command - recieved SERVICE_CONTROL_STOP\n");
+                TRACE("Stop command - recieved SERVICE_CONTROL_STOP\n");
                 if (ScControlService(ControlPacket) == ERROR_SUCCESS)
                     dwRunningServices--;
                 break;
 
             default:
-                DPRINT("Unknown command %lu", ControlPacket->dwControl);
+                TRACE("Unknown command %lu", ControlPacket->dwControl);
                 continue;
         }
 
@@ -463,7 +463,7 @@ RegisterServiceCtrlHandlerW(LPCWSTR lpServiceName,
     Service->HandlerFunction = lpHandlerProc;
     Service->HandlerFunctionEx = NULL;
 
-    DPRINT("RegisterServiceCtrlHandler returning %lu\n", Service->hService);
+    TRACE("RegisterServiceCtrlHandler returning %lu\n", Service->hService);
 
     return (SERVICE_STATUS_HANDLE)Service->hService;
 }
@@ -522,7 +522,7 @@ RegisterServiceCtrlHandlerExW(LPCWSTR lpServiceName,
     Service->HandlerFunctionEx = lpHandlerProc;
     Service->HandlerContext = lpContext;
 
-    DPRINT("RegisterServiceCtrlHandlerEx returning %lu", Service->hService);
+    TRACE("RegisterServiceCtrlHandlerEx returning %lu", Service->hService);
 
     return (SERVICE_STATUS_HANDLE)Service->hService;
 }
@@ -555,8 +555,8 @@ SetServiceStatus(SERVICE_STATUS_HANDLE hServiceStatus,
 {
     DWORD dwError;
 
-    DPRINT("SetServiceStatus() called\n");
-    DPRINT("hServiceStatus %lu\n", hServiceStatus);
+    TRACE("SetServiceStatus() called\n");
+    TRACE("hServiceStatus %lu\n", hServiceStatus);
 
     HandleBind();
 
@@ -566,12 +566,12 @@ SetServiceStatus(SERVICE_STATUS_HANDLE hServiceStatus,
                                    lpServiceStatus);
     if (dwError != ERROR_SUCCESS)
     {
-        DPRINT1("ScmrSetServiceStatus() failed (Error %lu)\n", dwError);
+        ERR("ScmrSetServiceStatus() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
         return FALSE;
     }
 
-    DPRINT("SetServiceStatus() done (ret %lu)\n", dwError);
+    TRACE("SetServiceStatus() done (ret %lu)\n", dwError);
 
     return TRUE;
 }
@@ -590,7 +590,7 @@ StartServiceCtrlDispatcherA(LPSERVICE_TABLE_ENTRYA lpServiceStartTable)
     DWORD dwError;
     PUCHAR lpMessageBuffer;
 
-    DPRINT("StartServiceCtrlDispatcherA() called\n");
+    TRACE("StartServiceCtrlDispatcherA() called\n");
 
     i = 0;
     while (lpServiceStartTable[i].lpServiceProc != NULL)
@@ -668,7 +668,7 @@ StartServiceCtrlDispatcherW(LPSERVICE_TABLE_ENTRYW lpServiceStartTable)
     DWORD dwError;
     PUCHAR lpMessageBuffer;
 
-    DPRINT("StartServiceCtrlDispatcherW() called\n");
+    TRACE("StartServiceCtrlDispatcherW() called\n");
 
     i = 0;
     while (lpServiceStartTable[i].lpServiceProc != NULL)

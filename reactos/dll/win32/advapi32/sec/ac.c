@@ -7,9 +7,9 @@
  */
 
 #include <advapi32.h>
+#include <wine/debug.h>
 
-#define NDEBUG
-#include <debug.h>
+WINE_DEFAULT_DEBUG_CHANNEL(advapi);
 
 /* --- ACL --- */
 
@@ -1078,7 +1078,7 @@ GetEffectiveRightsFromAclW(IN PACL pacl,
                            IN PTRUSTEE_W pTrustee,
                            OUT PACCESS_MASK pAccessRights)
 {
-	DPRINT1("%s() not implemented!\n", __FUNCTION__);
+	FIXME("%s() not implemented!\n", __FUNCTION__);
 	return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
@@ -1123,7 +1123,7 @@ GetAuditedPermissionsFromAclW(IN PACL pacl,
                               OUT PACCESS_MASK pSuccessfulAuditedRights,
                               OUT PACCESS_MASK pFailedAuditRights)
 {
-	DPRINT1("%s() not implemented!\n", __FUNCTION__);
+	FIXME("%s() not implemented!\n", __FUNCTION__);
 	return ERROR_CALL_NOT_IMPLEMENTED;
 }
 

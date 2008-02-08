@@ -9,9 +9,9 @@
  */
 
 #include <advapi32.h>
+#include "wine/debug.h"
 
-#define NDEBUG
-#include <debug.h>
+WINE_DEFAULT_DEBUG_CHANNEL(advapi);
 
 /*
  * @implemented
@@ -381,7 +381,7 @@ CheckTokenMembership(IN HANDLE ExistingTokenHandle,
 
                 if (!DupRet)
                 {
-                    DPRINT1("Failed to duplicate the primary token!\n");
+                    WARN("Failed to duplicate the primary token!\n");
                     return FALSE;
                 }
 
@@ -669,4 +669,5 @@ GetSiteSidFromToken(IN HANDLE TokenHandle)
     RtlFreeHeap(RtlGetProcessHeap(), 0, RestrictedSids);
     return PSiteSid;
 }
+
 

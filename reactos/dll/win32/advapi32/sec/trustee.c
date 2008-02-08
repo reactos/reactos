@@ -8,8 +8,9 @@
 
 #include <advapi32.h>
 
-#define NDEBUG
-#include <debug.h>
+#include "wine/debug.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(advapi);
 
 
 /******************************************************************************
@@ -132,7 +133,7 @@ BuildImpersonateExplicitAccessWithNameW(PEXPLICIT_ACCESS_W pExplicitAccess,
 VOID WINAPI
 BuildTrusteeWithSidA(PTRUSTEE_A pTrustee, PSID pSid)
 {
-    DPRINT("%p %p\n", pTrustee, pSid);
+    TRACE("%p %p\n", pTrustee, pSid);
 
     pTrustee->pMultipleTrustee = NULL;
     pTrustee->MultipleTrusteeOperation = NO_MULTIPLE_TRUSTEE;
@@ -148,7 +149,7 @@ BuildTrusteeWithSidA(PTRUSTEE_A pTrustee, PSID pSid)
 VOID WINAPI
 BuildTrusteeWithSidW(PTRUSTEE_W pTrustee, PSID pSid)
 {
-    DPRINT("%p %p\n", pTrustee, pSid);
+    TRACE("%p %p\n", pTrustee, pSid);
 
     pTrustee->pMultipleTrustee = NULL;
     pTrustee->MultipleTrusteeOperation = NO_MULTIPLE_TRUSTEE;
@@ -164,7 +165,7 @@ BuildTrusteeWithSidW(PTRUSTEE_W pTrustee, PSID pSid)
 VOID WINAPI
 BuildTrusteeWithNameA(PTRUSTEE_A pTrustee, LPSTR name)
 {
-    DPRINT("%p %s\n", pTrustee, name);
+    TRACE("%p %s\n", pTrustee, name);
 
     pTrustee->pMultipleTrustee = NULL;
     pTrustee->MultipleTrusteeOperation = NO_MULTIPLE_TRUSTEE;
@@ -180,7 +181,7 @@ BuildTrusteeWithNameA(PTRUSTEE_A pTrustee, LPSTR name)
 VOID WINAPI
 BuildTrusteeWithNameW(PTRUSTEE_W pTrustee, LPWSTR name)
 {
-    DPRINT("%p %s\n", pTrustee, name);
+    TRACE("%p %s\n", pTrustee, name);
 
     pTrustee->pMultipleTrustee = NULL;
     pTrustee->MultipleTrusteeOperation = NO_MULTIPLE_TRUSTEE;
@@ -200,7 +201,7 @@ BuildTrusteeWithObjectsAndNameA(PTRUSTEEA pTrustee, POBJECTS_AND_NAME_A pObjName
 {
     DWORD ObjectsPresent = 0;
 
-    DPRINT("%p %p 0x%08x %p %p %s\n", pTrustee, pObjName,
+    TRACE("%p %p 0x%08x %p %p %s\n", pTrustee, pObjName,
            ObjectType, ObjectTypeName, InheritedObjectTypeName, Name);
 
     /* Fill the OBJECTS_AND_NAME structure */
@@ -238,7 +239,7 @@ BuildTrusteeWithObjectsAndNameW(PTRUSTEEW pTrustee, POBJECTS_AND_NAME_W pObjName
 {
     DWORD ObjectsPresent = 0;
 
-    DPRINT("%p %p 0x%08x %p %p %s\n", pTrustee, pObjName,
+    TRACE("%p %p 0x%08x %p %p %s\n", pTrustee, pObjName,
            ObjectType, ObjectTypeName, InheritedObjectTypeName, Name);
 
     /* Fill the OBJECTS_AND_NAME structure */
@@ -275,7 +276,7 @@ BuildTrusteeWithObjectsAndSidA(PTRUSTEEA pTrustee, POBJECTS_AND_SID pObjSid,
 {
     DWORD ObjectsPresent = 0;
 
-    DPRINT("%p %p %p %p %p\n", pTrustee, pObjSid, pObjectGuid, pInheritedObjectGuid, pSid);
+    TRACE("%p %p %p %p %p\n", pTrustee, pObjSid, pObjectGuid, pInheritedObjectGuid, pSid);
 
     /* Fill the OBJECTS_AND_SID structure */
     if (pObjectGuid != NULL)
@@ -321,7 +322,7 @@ BuildTrusteeWithObjectsAndSidW(PTRUSTEEW pTrustee, POBJECTS_AND_SID pObjSid,
 {
     DWORD ObjectsPresent = 0;
 
-    DPRINT("%p %p %p %p %p\n", pTrustee, pObjSid, pObjectGuid, pInheritedObjectGuid, pSid);
+    TRACE("%p %p %p %p %p\n", pTrustee, pObjSid, pObjectGuid, pInheritedObjectGuid, pSid);
 
     /* Fill the OBJECTS_AND_SID structure */
     if (pObjectGuid != NULL)

@@ -14,8 +14,10 @@
 
 #include <advapi32.h>
 
-#define NDEBUG
-#include <debug.h>
+#include "wine/debug.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(advapi);
+
 
 /* FUNCTIONS *****************************************************************/
 
@@ -38,7 +40,7 @@ HandleBind(VOID)
                                       &pszStringBinding);
     if (status)
     {
-        DPRINT1("RpcStringBindingCompose returned 0x%x\n", status);
+        TRACE("RpcStringBindingCompose returned 0x%x\n", status);
         return;
     }
 
@@ -47,13 +49,13 @@ HandleBind(VOID)
                                           &BindingHandle);
     if (status)
     {
-        DPRINT1("RpcBindingFromStringBinding returned 0x%x\n", status);
+        TRACE("RpcBindingFromStringBinding returned 0x%x\n", status);
     }
 
     status = RpcStringFreeW(&pszStringBinding);
     if (status)
     {
-        DPRINT1("RpcStringFree returned 0x%x\n", status);
+        TRACE("RpcStringFree returned 0x%x\n", status);
     }
 }
 
@@ -70,7 +72,7 @@ HandleUnbind(VOID)
     status = RpcBindingFree(&BindingHandle);
     if (status)
     {
-        DPRINT1("RpcBindingFree returned 0x%x\n", status);
+        TRACE("RpcBindingFree returned 0x%x\n", status);
     }
 }
 #endif
@@ -89,7 +91,7 @@ ChangeServiceConfig2A(SC_HANDLE hService,
     DWORD lpInfoSize;
     DWORD dwError;
 
-    DPRINT("ChangeServiceConfig2A() called\n");
+    TRACE("ChangeServiceConfig2A() called\n");
 
     /* Determine the length of the lpInfo parameter */
     switch (dwInfoLevel)
@@ -103,7 +105,7 @@ ChangeServiceConfig2A(SC_HANDLE hService,
             break;
 
         default:
-            DPRINT1("Unknown info level 0x%lx\n", dwInfoLevel);
+            WARN("Unknown info level 0x%lx\n", dwInfoLevel);
             SetLastError(ERROR_INVALID_PARAMETER);
             return FALSE;
     }
@@ -120,7 +122,7 @@ ChangeServiceConfig2A(SC_HANDLE hService,
                                         lpInfoSize);
     if (dwError != ERROR_SUCCESS)
     {
-        DPRINT1("ScmrChangeServiceConfig2A() failed (Error %lu)\n", dwError);
+        ERR("ScmrChangeServiceConfig2A() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
         return FALSE;
     }
@@ -143,7 +145,7 @@ ChangeServiceConfig2W(SC_HANDLE hService,
     DWORD dwInfoSize;
     DWORD dwError;
 
-    DPRINT("ChangeServiceConfig2W() called\n");
+    TRACE("ChangeServiceConfig2W() called\n");
 
     switch (dwInfoLevel)
     {
@@ -178,7 +180,7 @@ ChangeServiceConfig2W(SC_HANDLE hService,
             break;
 
         default:
-            DPRINT1("Unknown info level 0x%lx\n", dwInfoLevel);
+            WARN("Unknown info level 0x%lx\n", dwInfoLevel);
             SetLastError(ERROR_INVALID_PARAMETER);
             return FALSE;
     }
@@ -195,7 +197,7 @@ ChangeServiceConfig2W(SC_HANDLE hService,
                                         dwInfoSize);
     if (dwError != ERROR_SUCCESS)
     {
-        DPRINT1("ScmrChangeServiceConfig2W() failed (Error %lu)\n", dwError);
+        ERR("ScmrChangeServiceConfig2W() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
         return FALSE;
     }
@@ -204,7 +206,7 @@ done:
     if (lpSendData != NULL)
         HeapFree(GetProcessHeap(), 0, lpSendData);
 
-    DPRINT("ChangeServiceConfig2W() done\n");
+    TRACE("ChangeServiceConfig2W() done\n");
 
     return TRUE;
 }
@@ -233,7 +235,7 @@ ChangeServiceConfigA(SC_HANDLE hService,
     DWORD dwLength;
     LPSTR lpStr;
 
-    DPRINT("ChangeServiceConfigA() called\n");
+    TRACE("ChangeServiceConfigA() called\n");
 
     /* Calculate the Dependencies length*/
     if (lpDependencies != NULL)
@@ -269,7 +271,7 @@ ChangeServiceConfigA(SC_HANDLE hService,
                                        (LPSTR)lpDisplayName);
     if (dwError != ERROR_SUCCESS)
     {
-        DPRINT1("ScmrChangeServiceConfigA() failed (Error %lu)\n", dwError);
+        ERR("ScmrChangeServiceConfigA() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
         return FALSE;
     }
@@ -301,7 +303,7 @@ ChangeServiceConfigW(SC_HANDLE hService,
     DWORD dwLength;
     LPWSTR lpStr;
 
-    DPRINT("ChangeServiceConfigW() called\n");
+    TRACE("ChangeServiceConfigW() called\n");
 
     /* Calculate the Dependencies length*/
     if (lpDependencies != NULL)
@@ -337,7 +339,7 @@ ChangeServiceConfigW(SC_HANDLE hService,
                                        (LPWSTR)lpDisplayName);
     if (dwError != ERROR_SUCCESS)
     {
-        DPRINT1("ScmrChangeServiceConfigW() failed (Error %lu)\n", dwError);
+        ERR("ScmrChangeServiceConfigW() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
         return FALSE;
     }
@@ -356,7 +358,7 @@ CloseServiceHandle(SC_HANDLE hSCObject)
 {
     DWORD dwError;
 
-    DPRINT("CloseServiceHandle() called\n");
+    TRACE("CloseServiceHandle() called\n");
 
     HandleBind();
 
@@ -365,12 +367,12 @@ CloseServiceHandle(SC_HANDLE hSCObject)
                                      (unsigned int)hSCObject);
     if (dwError)
     {
-        DPRINT1("ScmrCloseServiceHandle() failed (Error %lu)\n", dwError);
+        ERR("ScmrCloseServiceHandle() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
         return FALSE;
     }
 
-    DPRINT("CloseServiceHandle() done\n");
+    TRACE("CloseServiceHandle() done\n");
 
     return TRUE;
 }
@@ -388,7 +390,7 @@ ControlService(SC_HANDLE hService,
 {
     DWORD dwError;
 
-    DPRINT("ControlService(%x, %x, %p)\n",
+    TRACE("ControlService(%x, %x, %p)\n",
            hService, dwControl, lpServiceStatus);
 
     HandleBind();
@@ -400,12 +402,12 @@ ControlService(SC_HANDLE hService,
                                  lpServiceStatus);
     if (dwError != ERROR_SUCCESS)
     {
-        DPRINT1("ScmrControlService() failed (Error %lu)\n", dwError);
+        ERR("ScmrControlService() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
         return FALSE;
     }
 
-    DPRINT("ControlService() done\n");
+    TRACE("ControlService() done\n");
 
     return TRUE;
 }
@@ -422,7 +424,7 @@ ControlServiceEx(IN SC_HANDLE hService,
                  IN DWORD dwInfoLevel,
                  IN OUT PVOID pControlParams)
 {
-    DPRINT1("ControlServiceEx(0x%p, 0x%x, 0x%x, 0x%p) UNIMPLEMENTED!\n",
+    FIXME("ControlServiceEx(0x%p, 0x%x, 0x%x, 0x%p) UNIMPLEMENTED!\n",
             hService, dwControl, dwInfoLevel, pControlParams);
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return FALSE;
@@ -621,7 +623,7 @@ CreateServiceW(SC_HANDLE hSCManager,
     DWORD dwLength;
     LPWSTR lpStr;
 
-    DPRINT("CreateServiceW() called\n");
+    TRACE("CreateServiceW() called\n");
 
     /* Calculate the Dependencies length*/
     if (lpDependencies != NULL)
@@ -660,7 +662,7 @@ CreateServiceW(SC_HANDLE hSCManager,
                                  (unsigned long *)&hService);
     if (dwError != ERROR_SUCCESS)
     {
-        DPRINT("ScmrCreateServiceW() failed (Error %lu)\n", dwError);
+        ERR("ScmrCreateServiceW() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
         return NULL;
     }
@@ -679,7 +681,7 @@ DeleteService(SC_HANDLE hService)
 {
     DWORD dwError;
 
-    DPRINT("DeleteService(%x)\n", hService);
+    TRACE("DeleteService(%x)\n", hService);
 
     HandleBind();
 
@@ -688,7 +690,7 @@ DeleteService(SC_HANDLE hService)
                                 (unsigned int)hService);
     if (dwError != ERROR_SUCCESS)
     {
-        DPRINT1("ScmrDeleteService() failed (Error %lu)\n", dwError);
+        ERR("ScmrDeleteService() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
         return FALSE;
     }
@@ -714,7 +716,7 @@ EnumDependentServicesA(SC_HANDLE hService,
     DWORD dwError = ERROR_SUCCESS;
     DWORD dwCount;
 
-    DPRINT("EnumServicesStatusA() called\n");
+    TRACE("EnumServicesStatusA() called\n");
 
     HandleBind();
 
@@ -742,12 +744,12 @@ EnumDependentServicesA(SC_HANDLE hService,
 
     if (dwError != ERROR_SUCCESS)
     {
-        DPRINT("ScmrEnumDependentServicesA() failed (Error %lu)\n", dwError);
+        ERR("ScmrEnumDependentServicesA() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
         return FALSE;
     }
 
-    DPRINT("EnumDependentServicesA() done\n");
+    TRACE("EnumDependentServicesA() done\n");
 
     return TRUE;
 }
@@ -770,7 +772,7 @@ EnumDependentServicesW(SC_HANDLE hService,
     DWORD dwError = ERROR_SUCCESS;
     DWORD dwCount;
 
-    DPRINT("EnumServicesStatusW() called\n");
+    TRACE("EnumServicesStatusW() called\n");
 
     HandleBind();
 
@@ -798,12 +800,12 @@ EnumDependentServicesW(SC_HANDLE hService,
 
     if (dwError != ERROR_SUCCESS)
     {
-        DPRINT("ScmrEnumDependentServicesW() failed (Error %lu)\n", dwError);
+        ERR("ScmrEnumDependentServicesW() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
         return FALSE;
     }
 
-    DPRINT("EnumDependentServicesW() done\n");
+    TRACE("EnumDependentServicesW() done\n");
 
     return TRUE;
 }
@@ -827,7 +829,7 @@ EnumServiceGroupW(
     LPDWORD                 lpResumeHandle,
     LPCWSTR                 lpGroup)
 {
-    DPRINT1("EnumServiceGroupW is unimplemented\n");
+    FIXME("EnumServiceGroupW is unimplemented\n");
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return FALSE;
 }
@@ -852,7 +854,7 @@ EnumServicesStatusA(SC_HANDLE hSCManager,
     DWORD dwError = ERROR_SUCCESS;
     DWORD dwCount;
 
-    DPRINT("EnumServicesStatusA() called\n");
+    TRACE("EnumServicesStatusA() called\n");
 
     HandleBind();
 
@@ -882,12 +884,12 @@ EnumServicesStatusA(SC_HANDLE hSCManager,
 
     if (dwError != ERROR_SUCCESS)
     {
-        DPRINT("ScmrEnumServicesStatusA() failed (Error %lu)\n", dwError);
+        ERR("ScmrEnumServicesStatusA() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
         return FALSE;
     }
 
-    DPRINT("EnumServicesStatusA() done\n");
+    TRACE("EnumServicesStatusA() done\n");
 
     return TRUE;
 }
@@ -912,7 +914,7 @@ EnumServicesStatusW(SC_HANDLE hSCManager,
     DWORD dwError = ERROR_SUCCESS;
     DWORD dwCount;
 
-    DPRINT("EnumServicesStatusW() called\n");
+    TRACE("EnumServicesStatusW() called\n");
 
     HandleBind();
 
@@ -942,12 +944,12 @@ EnumServicesStatusW(SC_HANDLE hSCManager,
 
     if (dwError != ERROR_SUCCESS)
     {
-        DPRINT("ScmrEnumServicesStatusW() failed (Error %lu)\n", dwError);
+        ERR("ScmrEnumServicesStatusW() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
         return FALSE;
     }
 
-    DPRINT("EnumServicesStatusW() done\n");
+    TRACE("EnumServicesStatusW() done\n");
 
     return TRUE;
 }
@@ -974,7 +976,7 @@ EnumServicesStatusExA(SC_HANDLE hSCManager,
     DWORD dwError = ERROR_SUCCESS;
     DWORD dwCount;
 
-    DPRINT("EnumServicesStatusExA() called\n");
+    TRACE("EnumServicesStatusExA() called\n");
 
     HandleBind();
 
@@ -992,7 +994,7 @@ EnumServicesStatusExA(SC_HANDLE hSCManager,
 
     if (dwError == ERROR_MORE_DATA)
     {
-        DPRINT("Required buffer size %ul\n", *pcbBytesNeeded);
+        WARN("Required buffer size %ul\n", *pcbBytesNeeded);
         SetLastError(dwError);
         return FALSE;
     }
@@ -1014,12 +1016,12 @@ EnumServicesStatusExA(SC_HANDLE hSCManager,
     }
     else
     {
-        DPRINT1("ScmrEnumServicesStatusExA() failed (Error %lu)\n", dwError);
+        ERR("ScmrEnumServicesStatusExA() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
         return FALSE;
     }
 
-    DPRINT("EnumServicesStatusExA() done\n");
+    TRACE("EnumServicesStatusExA() done\n");
 
     return TRUE;
 }
@@ -1046,7 +1048,7 @@ EnumServicesStatusExW(SC_HANDLE hSCManager,
     DWORD dwError = ERROR_SUCCESS;
     DWORD dwCount;
 
-    DPRINT("EnumServicesStatusExW() called\n");
+    TRACE("EnumServicesStatusExW() called\n");
 
     HandleBind();
 
@@ -1064,7 +1066,7 @@ EnumServicesStatusExW(SC_HANDLE hSCManager,
 
     if (dwError == ERROR_MORE_DATA)
     {
-        DPRINT("Required buffer size %ul\n", *pcbBytesNeeded);
+        WARN("Required buffer size %ul\n", *pcbBytesNeeded);
         SetLastError(dwError);
         return FALSE;
     }
@@ -1086,12 +1088,12 @@ EnumServicesStatusExW(SC_HANDLE hSCManager,
     }
     else
     {
-        DPRINT1("ScmrEnumServicesStatusExW() failed (Error %lu)\n", dwError);
+        ERR("ScmrEnumServicesStatusExW() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
         return FALSE;
     }
 
-    DPRINT("EnumServicesStatusExW() done\n");
+    TRACE("EnumServicesStatusExW() done\n");
 
     return TRUE;
 }
@@ -1110,7 +1112,7 @@ GetServiceDisplayNameA(SC_HANDLE hSCManager,
 {
     DWORD dwError;
 
-    DPRINT("GetServiceDisplayNameA() called\n");
+    TRACE("GetServiceDisplayNameA() called\n");
 
     HandleBind();
 
@@ -1121,7 +1123,7 @@ GetServiceDisplayNameA(SC_HANDLE hSCManager,
                                          lpcchBuffer);
     if (dwError != ERROR_SUCCESS)
     {
-        DPRINT1("ScmrGetServiceDisplayNameA() failed (Error %lu)\n", dwError);
+        ERR("ScmrGetServiceDisplayNameA() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
         return FALSE;
     }
@@ -1145,7 +1147,7 @@ GetServiceDisplayNameW(SC_HANDLE hSCManager,
 {
     DWORD dwError;
 
-    DPRINT("GetServiceDisplayNameW() called\n");
+    TRACE("GetServiceDisplayNameW() called\n");
 
     HandleBind();
 
@@ -1156,7 +1158,7 @@ GetServiceDisplayNameW(SC_HANDLE hSCManager,
                                          lpcchBuffer);
     if (dwError != ERROR_SUCCESS)
     {
-        DPRINT1("ScmrGetServiceDisplayNameW() failed (Error %lu)\n", dwError);
+        ERR("ScmrGetServiceDisplayNameW() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
         return FALSE;
     }
@@ -1180,7 +1182,7 @@ GetServiceKeyNameA(SC_HANDLE hSCManager,
 {
     DWORD dwError;
 
-    DPRINT("GetServiceKeyNameA() called\n");
+    TRACE("GetServiceKeyNameA() called\n");
 
     HandleBind();
 
@@ -1191,7 +1193,7 @@ GetServiceKeyNameA(SC_HANDLE hSCManager,
                                      lpcchBuffer);
     if (dwError != ERROR_SUCCESS)
     {
-        DPRINT1("ScmrGetServiceKeyNameA() failed (Error %lu)\n", dwError);
+        ERR("ScmrGetServiceKeyNameA() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
         return FALSE;
     }
@@ -1215,7 +1217,7 @@ GetServiceKeyNameW(SC_HANDLE hSCManager,
 {
     DWORD dwError;
 
-    DPRINT("GetServiceKeyNameW() called\n");
+    TRACE("GetServiceKeyNameW() called\n");
 
     HandleBind();
 
@@ -1226,7 +1228,7 @@ GetServiceKeyNameW(SC_HANDLE hSCManager,
                                      lpcchBuffer);
     if (dwError != ERROR_SUCCESS)
     {
-        DPRINT1("ScmrGetServiceKeyNameW() failed (Error %lu)\n", dwError);
+        ERR("ScmrGetServiceKeyNameW() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
         return FALSE;
     }
@@ -1248,7 +1250,7 @@ LockServiceDatabase(SC_HANDLE hSCManager)
     SC_LOCK hLock;
     DWORD dwError;
 
-    DPRINT("LockServiceDatabase(%x)\n", hSCManager);
+    TRACE("LockServiceDatabase(%x)\n", hSCManager);
 
     HandleBind();
 
@@ -1258,12 +1260,12 @@ LockServiceDatabase(SC_HANDLE hSCManager)
                                       (unsigned int *)&hLock);
     if (dwError != ERROR_SUCCESS)
     {
-        DPRINT1("ScmrLockServiceDatabase() failed (Error %lu)\n", dwError);
+        ERR("ScmrLockServiceDatabase() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
         return NULL;
     }
 
-    DPRINT("hLock = %p\n", hLock);
+    TRACE("hLock = %p\n", hLock);
 
     return hLock;
 }
@@ -1274,7 +1276,7 @@ WaitForSCManager(VOID)
 {
     HANDLE hEvent;
 
-    DPRINT("WaitForSCManager() called\n");
+    TRACE("WaitForSCManager() called\n");
 
     /* Try to open the existing event */
     hEvent = OpenEventW(SYNCHRONIZE,
@@ -1305,7 +1307,7 @@ WaitForSCManager(VOID)
     WaitForSingleObject(hEvent, 180000);
     CloseHandle(hEvent);
 
-    DPRINT("ScmWaitForSCManager() done\n");
+    TRACE("ScmWaitForSCManager() done\n");
 }
 
 
@@ -1322,7 +1324,7 @@ OpenSCManagerA(LPCSTR lpMachineName,
     SC_HANDLE hScm = NULL;
     DWORD dwError;
 
-    DPRINT("OpenSCManagerA(%s, %s, %lx)\n",
+    TRACE("OpenSCManagerA(%s, %s, %lx)\n",
            lpMachineName, lpDatabaseName, dwDesiredAccess);
 
     WaitForSCManager();
@@ -1337,12 +1339,12 @@ OpenSCManagerA(LPCSTR lpMachineName,
                                  (unsigned long*)&hScm);
     if (dwError != ERROR_SUCCESS)
     {
-        DPRINT1("ScmrOpenSCManagerA() failed (Error %lu)\n", dwError);
+        ERR("ScmrOpenSCManagerA() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
         return NULL;
     }
 
-    DPRINT("hScm = %p\n", hScm);
+    TRACE("hScm = %p\n", hScm);
 
     return hScm;
 }
@@ -1361,7 +1363,7 @@ OpenSCManagerW(LPCWSTR lpMachineName,
     SC_HANDLE hScm = NULL;
     DWORD dwError;
 
-    DPRINT("OpenSCManagerW(%S, %S, %lx)\n",
+    TRACE("OpenSCManagerW(%S, %S, %lx)\n",
            lpMachineName, lpDatabaseName, dwDesiredAccess);
 
     WaitForSCManager();
@@ -1376,12 +1378,12 @@ OpenSCManagerW(LPCWSTR lpMachineName,
                                  (unsigned long*)&hScm);
     if (dwError != ERROR_SUCCESS)
     {
-        DPRINT1("ScmrOpenSCManagerW() failed (Error %lu)\n", dwError);
+        ERR("ScmrOpenSCManagerW() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
         return NULL;
     }
 
-    DPRINT("hScm = %p\n", hScm);
+    TRACE("hScm = %p\n", hScm);
 
     return hScm;
 }
@@ -1400,7 +1402,7 @@ OpenServiceA(SC_HANDLE hSCManager,
     SC_HANDLE hService = NULL;
     DWORD dwError;
 
-    DPRINT("OpenServiceA(%p, %s, %lx)\n",
+    TRACE("OpenServiceA(%p, %s, %lx)\n",
            hSCManager, lpServiceName, dwDesiredAccess);
 
     HandleBind();
@@ -1413,12 +1415,12 @@ OpenServiceA(SC_HANDLE hSCManager,
                                (unsigned long*)&hService);
     if (dwError != ERROR_SUCCESS)
     {
-        DPRINT1("ScmrOpenServiceA() failed (Error %lu)\n", dwError);
+        ERR("ScmrOpenServiceA() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
         return NULL;
     }
 
-    DPRINT("hService = %p\n", hService);
+    TRACE("hService = %p\n", hService);
 
     return hService;
 }
@@ -1437,7 +1439,7 @@ OpenServiceW(SC_HANDLE hSCManager,
     SC_HANDLE hService = NULL;
     DWORD dwError;
 
-    DPRINT("OpenServiceW(%p, %S, %lx)\n",
+    TRACE("OpenServiceW(%p, %S, %lx)\n",
            hSCManager, lpServiceName, dwDesiredAccess);
 
     HandleBind();
@@ -1450,12 +1452,12 @@ OpenServiceW(SC_HANDLE hSCManager,
                                (unsigned long*)&hService);
     if (dwError != ERROR_SUCCESS)
     {
-        DPRINT("ScmrOpenServiceW() failed (Error %lu)\n", dwError);
+        ERR("ScmrOpenServiceW() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
         return NULL;
     }
 
-    DPRINT("hService = %p\n", hService);
+    TRACE("hService = %p\n", hService);
 
     return hService;
 }
@@ -1474,7 +1476,7 @@ QueryServiceConfigA(SC_HANDLE hService,
 {
     DWORD dwError;
 
-    DPRINT("QueryServiceConfigA(%p, %p, %lu, %p)\n",
+    TRACE("QueryServiceConfigA(%p, %p, %lu, %p)\n",
            hService, lpServiceConfig, cbBufSize, pcbBytesNeeded);
 
     HandleBind();
@@ -1487,7 +1489,7 @@ QueryServiceConfigA(SC_HANDLE hService,
                                       pcbBytesNeeded);
     if (dwError != ERROR_SUCCESS)
     {
-        DPRINT("ScmrQueryServiceConfigA() failed (Error %lu)\n", dwError);
+        ERR("ScmrQueryServiceConfigA() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
         return FALSE;
     }
@@ -1518,7 +1520,7 @@ QueryServiceConfigA(SC_HANDLE hService,
            (LPSTR)((ULONG_PTR)lpServiceConfig +
                    (ULONG_PTR)lpServiceConfig->lpDisplayName);
 
-    DPRINT("QueryServiceConfigA() done\n");
+    TRACE("QueryServiceConfigA() done\n");
 
     return TRUE;
 }
@@ -1537,7 +1539,7 @@ QueryServiceConfigW(SC_HANDLE hService,
 {
     DWORD dwError;
 
-    DPRINT("QueryServiceConfigW(%p, %p, %lu, %p)\n",
+    TRACE("QueryServiceConfigW(%p, %p, %lu, %p)\n",
            hService, lpServiceConfig, cbBufSize, pcbBytesNeeded);
 
     HandleBind();
@@ -1550,7 +1552,7 @@ QueryServiceConfigW(SC_HANDLE hService,
                                       pcbBytesNeeded);
     if (dwError != ERROR_SUCCESS)
     {
-        DPRINT("ScmrQueryServiceConfigW() failed (Error %lu)\n", dwError);
+        ERR("ScmrQueryServiceConfigW() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
         return FALSE;
     }
@@ -1581,7 +1583,7 @@ QueryServiceConfigW(SC_HANDLE hService,
            (LPWSTR)((ULONG_PTR)lpServiceConfig +
                     (ULONG_PTR)lpServiceConfig->lpDisplayName);
 
-    DPRINT("QueryServiceConfigW() done\n");
+    TRACE("QueryServiceConfigW() done\n");
 
     return TRUE;
 }
@@ -1601,7 +1603,7 @@ QueryServiceConfig2A(SC_HANDLE hService,
 {
     DWORD dwError;
 
-    DPRINT("QueryServiceConfig2A(%p, %lu, %p, %lu, %p)\n",
+    TRACE("QueryServiceConfig2A(%p, %lu, %p, %lu, %p)\n",
            hService, dwInfoLevel, lpBuffer, cbBufSize, pcbBytesNeeded);
 
     HandleBind();
@@ -1615,7 +1617,7 @@ QueryServiceConfig2A(SC_HANDLE hService,
                                        pcbBytesNeeded);
     if (dwError != ERROR_SUCCESS)
     {
-        DPRINT("ScmrQueryServiceConfig2A() failed (Error %lu)\n", dwError);
+        ERR("ScmrQueryServiceConfig2A() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
         return FALSE;
     }
@@ -1651,12 +1653,12 @@ QueryServiceConfig2A(SC_HANDLE hService,
             break;
 
         default:
-            DPRINT1("Unknown info level 0x%lx\n", dwInfoLevel);
+            ERR("Unknown info level 0x%lx\n", dwInfoLevel);
             SetLastError(ERROR_INVALID_PARAMETER);
             return FALSE;
     }
 
-    DPRINT("QueryServiceConfig2A() done\n");
+    TRACE("QueryServiceConfig2A() done\n");
 
     return TRUE;
 }
@@ -1676,7 +1678,7 @@ QueryServiceConfig2W(SC_HANDLE hService,
 {
     DWORD dwError;
 
-    DPRINT("QueryServiceConfig2W(%p, %lu, %p, %lu, %p)\n",
+    TRACE("QueryServiceConfig2W(%p, %lu, %p, %lu, %p)\n",
            hService, dwInfoLevel, lpBuffer, cbBufSize, pcbBytesNeeded);
 
     HandleBind();
@@ -1690,7 +1692,7 @@ QueryServiceConfig2W(SC_HANDLE hService,
                                        pcbBytesNeeded);
     if (dwError != ERROR_SUCCESS)
     {
-        DPRINT("ScmrQueryServiceConfig2W() failed (Error %lu)\n", dwError);
+        ERR("ScmrQueryServiceConfig2W() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
         return FALSE;
     }
@@ -1726,12 +1728,12 @@ QueryServiceConfig2W(SC_HANDLE hService,
             break;
 
         default:
-            DPRINT1("Unknown info level 0x%lx\n", dwInfoLevel);
+            WARN("Unknown info level 0x%lx\n", dwInfoLevel);
             SetLastError(ERROR_INVALID_PARAMETER);
             return FALSE;
     }
 
-    DPRINT("QueryServiceConfig2W() done\n");
+    TRACE("QueryServiceConfig2W() done\n");
 
     return TRUE;
 }
@@ -1750,7 +1752,7 @@ QueryServiceLockStatusA(SC_HANDLE hSCManager,
 {
     DWORD dwError;
 
-    DPRINT("QueryServiceLockStatusA() called\n");
+    TRACE("QueryServiceLockStatusA() called\n");
 
     HandleBind();
 
@@ -1762,7 +1764,7 @@ QueryServiceLockStatusA(SC_HANDLE hSCManager,
                                           pcbBytesNeeded);
     if (dwError != ERROR_SUCCESS)
     {
-        DPRINT("ScmrQueryServiceLockStatusA() failed (Error %lu)\n", dwError);
+        ERR("ScmrQueryServiceLockStatusA() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
         return FALSE;
     }
@@ -1773,7 +1775,7 @@ QueryServiceLockStatusA(SC_HANDLE hSCManager,
             (LPSTR)((UINT_PTR)lpLockStatus + (UINT_PTR)lpLockStatus->lpLockOwner);
     }
 
-    DPRINT("QueryServiceLockStatusA() done\n");
+    TRACE("QueryServiceLockStatusA() done\n");
 
     return TRUE;
 }
@@ -1792,7 +1794,7 @@ QueryServiceLockStatusW(SC_HANDLE hSCManager,
 {
     DWORD dwError;
 
-    DPRINT("QueryServiceLockStatusW() called\n");
+    TRACE("QueryServiceLockStatusW() called\n");
 
     HandleBind();
 
@@ -1804,7 +1806,7 @@ QueryServiceLockStatusW(SC_HANDLE hSCManager,
                                           pcbBytesNeeded);
     if (dwError != ERROR_SUCCESS)
     {
-        DPRINT("ScmrQueryServiceLockStatusW() failed (Error %lu)\n", dwError);
+        ERR("ScmrQueryServiceLockStatusW() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
         return FALSE;
     }
@@ -1815,7 +1817,7 @@ QueryServiceLockStatusW(SC_HANDLE hSCManager,
             (LPWSTR)((UINT_PTR)lpLockStatus + (UINT_PTR)lpLockStatus->lpLockOwner);
     }
 
-    DPRINT("QueryServiceLockStatusW() done\n");
+    TRACE("QueryServiceLockStatusW() done\n");
 
     return TRUE;
 }
@@ -1835,7 +1837,7 @@ QueryServiceObjectSecurity(SC_HANDLE hService,
 {
     DWORD dwError;
 
-    DPRINT("QueryServiceObjectSecurity(%p, %lu, %p)\n",
+    TRACE("QueryServiceObjectSecurity(%p, %lu, %p)\n",
            hService, dwSecurityInformation, lpSecurityDescriptor);
 
     HandleBind();
@@ -1849,7 +1851,7 @@ QueryServiceObjectSecurity(SC_HANDLE hService,
                                              pcbBytesNeeded);
     if (dwError != ERROR_SUCCESS)
     {
-        DPRINT1("QueryServiceObjectSecurity() failed (Error %lu)\n", dwError);
+        ERR("QueryServiceObjectSecurity() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
         return FALSE;
     }
@@ -1912,7 +1914,7 @@ SetServiceObjectSecurity(SC_HANDLE hService,
 
     if (dwError != ERROR_SUCCESS)
     {
-        DPRINT1("ScmrServiceObjectSecurity() failed (Error %lu)\n", dwError);
+        ERR("ScmrServiceObjectSecurity() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
         return FALSE;
     }
@@ -1932,7 +1934,7 @@ QueryServiceStatus(SC_HANDLE hService,
 {
     DWORD dwError;
 
-    DPRINT("QueryServiceStatus(%p, %p)\n",
+    TRACE("QueryServiceStatus(%p, %p)\n",
            hService, lpServiceStatus);
 
     HandleBind();
@@ -1943,7 +1945,7 @@ QueryServiceStatus(SC_HANDLE hService,
                                      lpServiceStatus);
     if (dwError != ERROR_SUCCESS)
     {
-        DPRINT1("ScmrQueryServiceStatus() failed (Error %lu)\n", dwError);
+        ERR("ScmrQueryServiceStatus() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
         return FALSE;
     }
@@ -1966,7 +1968,7 @@ QueryServiceStatusEx(SC_HANDLE hService,
 {
     DWORD dwError;
 
-    DPRINT("QueryServiceStatusEx() called\n");
+    TRACE("QueryServiceStatusEx() called\n");
 
     HandleBind();
 
@@ -1979,7 +1981,7 @@ QueryServiceStatusEx(SC_HANDLE hService,
                                        pcbBytesNeeded);
     if (dwError != ERROR_SUCCESS)
     {
-        DPRINT("ScmrQueryServiceStatusEx() failed (Error %lu)\n", dwError);
+        ERR("ScmrQueryServiceStatusEx() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
         return FALSE;
     }
@@ -2011,7 +2013,7 @@ StartServiceA(SC_HANDLE hService,
             dwBufSize += (strlen(lpServiceArgVectors[i]) + 1);
         }
         dwBufSize++;
-        DPRINT1("dwBufSize: %lu\n", dwBufSize);
+        TRACE("dwBufSize: %lu\n", dwBufSize);
 
         lpBuffer = HeapAlloc(GetProcessHeap(), 0, dwBufSize);
         if (lpBuffer == NULL)
@@ -2040,7 +2042,7 @@ StartServiceA(SC_HANDLE hService,
 
     if (dwError != ERROR_SUCCESS)
     {
-        DPRINT1("ScmrStartServiceA() failed (Error %lu)\n", dwError);
+        ERR("ScmrStartServiceA() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
         return FALSE;
     }
@@ -2071,7 +2073,7 @@ StartServiceW(SC_HANDLE hService,
         dwBufSize += ((wcslen(lpServiceArgVectors[i]) + 1) * sizeof(WCHAR));
     }
     dwBufSize += sizeof(WCHAR);
-    DPRINT("dwBufSize: %lu\n", dwBufSize);
+    TRACE("dwBufSize: %lu\n", dwBufSize);
 
     lpBuffer = HeapAlloc(GetProcessHeap(), 0, dwBufSize);
     if (lpBuffer == NULL)
@@ -2098,7 +2100,7 @@ StartServiceW(SC_HANDLE hService,
 
     if (dwError != ERROR_SUCCESS)
     {
-        DPRINT1("ScmrStartServiceW() failed (Error %lu)\n", dwError);
+        ERR("ScmrStartServiceW() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
         return FALSE;
     }
@@ -2117,7 +2119,7 @@ UnlockServiceDatabase(SC_LOCK ScLock)
 {
     DWORD dwError;
 
-    DPRINT("UnlockServiceDatabase(%x)\n", ScLock);
+    TRACE("UnlockServiceDatabase(%x)\n", ScLock);
 
     HandleBind();
 
@@ -2126,7 +2128,7 @@ UnlockServiceDatabase(SC_LOCK ScLock)
                                         (unsigned int)ScLock);
     if (dwError != ERROR_SUCCESS)
     {
-        DPRINT1("ScmrUnlockServiceDatabase() failed (Error %lu)\n", dwError);
+        ERR("ScmrUnlockServiceDatabase() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
         return FALSE;
     }
@@ -2145,7 +2147,7 @@ NotifyBootConfigStatus(BOOL BootAcceptable)
 {
     DWORD dwError;
 
-    DPRINT1("NotifyBootConfigStatus()\n");
+    TRACE("NotifyBootConfigStatus()\n");
 
     HandleBind();
 
@@ -2154,7 +2156,7 @@ NotifyBootConfigStatus(BOOL BootAcceptable)
                                          BootAcceptable);
     if (dwError != ERROR_SUCCESS)
     {
-        DPRINT1("NotifyBootConfigStatus() failed (Error %lu)\n", dwError);
+        ERR("NotifyBootConfigStatus() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
         return FALSE;
     }

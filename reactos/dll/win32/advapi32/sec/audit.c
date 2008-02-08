@@ -12,9 +12,9 @@
 /* INCLUDES *****************************************************************/
 
 #include <advapi32.h>
+#include <wine/debug.h>
 
-#define NDEBUG
-#include <debug.h>
+WINE_DEFAULT_DEBUG_CHANNEL(advapi);
 
 /* FUNCTIONS ****************************************************************/
 
@@ -530,7 +530,7 @@ AccessCheckByTypeResultListAndAuditAlarmByHandleW(IN LPCWSTR SubsystemName,
                                                   OUT LPDWORD AccessStatusList,
                                                   OUT LPBOOL pfGenerateOnClose)
 {
-	DPRINT1("%s() not implemented!\n", __FUNCTION__);
+	FIXME("%s() not implemented!\n", __FUNCTION__);
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
 }
@@ -558,7 +558,7 @@ AccessCheckByTypeResultListAndAuditAlarmByHandleA(IN LPCSTR SubsystemName,
                                                   OUT LPDWORD AccessStatusList,
                                                   OUT LPBOOL pfGenerateOnClose)
 {
-	DPRINT1("%s() not implemented!\n", __FUNCTION__);
+	FIXME("%s() not implemented!\n", __FUNCTION__);
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
 }
@@ -585,7 +585,7 @@ AccessCheckByTypeResultListAndAuditAlarmW(IN LPCWSTR SubsystemName,
                                           OUT LPDWORD AccessStatusList,
                                           OUT LPBOOL pfGenerateOnClose)
 {
-	DPRINT1("%s() not implemented!\n", __FUNCTION__);
+	FIXME("%s() not implemented!\n", __FUNCTION__);
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
 }
@@ -612,7 +612,7 @@ AccessCheckByTypeResultListAndAuditAlarmA(IN LPCSTR SubsystemName,
                                           OUT LPDWORD AccessStatusList,
                                           OUT LPBOOL pfGenerateOnClose)
 {
-	DPRINT1("%s() not implemented!\n", __FUNCTION__);
+	FIXME("%s() not implemented!\n", __FUNCTION__);
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
 }
@@ -639,7 +639,7 @@ AccessCheckByTypeAndAuditAlarmW(IN LPCWSTR SubsystemName,
                                 OUT LPBOOL AccessStatus,
                                 OUT LPBOOL pfGenerateOnClose)
 {
-	DPRINT1("%s() not implemented!\n", __FUNCTION__);
+	FIXME("%s() not implemented!\n", __FUNCTION__);
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
 }
@@ -666,7 +666,7 @@ AccessCheckByTypeAndAuditAlarmA(IN LPCSTR SubsystemName,
                                 OUT LPBOOL AccessStatus,
                                 OUT LPBOOL pfGenerateOnClose)
 {
-	DPRINT1("%s() not implemented!\n", __FUNCTION__);
+	FIXME("%s() not implemented!\n", __FUNCTION__);
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
 }

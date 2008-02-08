@@ -6,9 +6,9 @@
  */
 
 #include <advapi32.h>
+#include "wine/debug.h"
 
-#define NDEBUG
-#include <debug.h>
+WINE_DEFAULT_DEBUG_CHANNEL(advapi);
 
 /* Needed for LookupAccountNameW implementation from Wine */
 
@@ -208,7 +208,7 @@ CheckNtMartaPresent(VOID)
 #if DBG
         else
         {
-            DPRINT1("Failed to initialize ntmarta.dll! Error: 0x%x", ErrorCode);
+            ERR("Failed to initialize ntmarta.dll! Error: 0x%x", ErrorCode);
         }
 #endif
     }
@@ -326,7 +326,7 @@ GetFileSecurityW(LPCWSTR lpFileName,
   HANDLE FileHandle;
   NTSTATUS Status;
 
-  DPRINT("GetFileSecurityW() called\n");
+  TRACE("GetFileSecurityW() called\n");
 
   if (RequestedInformation &
       (OWNER_SECURITY_INFORMATION | GROUP_SECURITY_INFORMATION | DACL_SECURITY_INFORMATION))
@@ -344,7 +344,7 @@ GetFileSecurityW(LPCWSTR lpFileName,
 				    NULL,
 				    NULL))
     {
-      DPRINT("Invalid path\n");
+      ERR("Invalid path\n");
       SetLastError(ERROR_INVALID_NAME);
       return FALSE;
     }
@@ -368,7 +368,7 @@ GetFileSecurityW(LPCWSTR lpFileName,
 
   if (!NT_SUCCESS(Status))
     {
-      DPRINT("NtOpenFile() failed (Status %lx)\n", Status);
+      ERR("NtOpenFile() failed (Status %lx)\n", Status);
       SetLastError(RtlNtStatusToDosError(Status));
       return FALSE;
     }
@@ -382,7 +382,7 @@ GetFileSecurityW(LPCWSTR lpFileName,
 
   if (!NT_SUCCESS(Status))
     {
-      DPRINT("NtQuerySecurityObject() failed (Status %lx)\n", Status);
+      ERR("NtQuerySecurityObject() failed (Status %lx)\n", Status);
       SetLastError(RtlNtStatusToDosError(Status));
       return FALSE;
     }
@@ -468,7 +468,7 @@ SetFileSecurityW (LPCWSTR lpFileName,
   HANDLE FileHandle;
   NTSTATUS Status;
 
-  DPRINT("SetFileSecurityW() called\n");
+  TRACE("SetFileSecurityW() called\n");
 
   if (SecurityInformation &
       (OWNER_SECURITY_INFORMATION | GROUP_SECURITY_INFORMATION))
@@ -491,7 +491,7 @@ SetFileSecurityW (LPCWSTR lpFileName,
 				    NULL,
 				    NULL))
     {
-      DPRINT("Invalid path\n");
+      ERR("Invalid path\n");
       SetLastError(ERROR_INVALID_NAME);
       return FALSE;
     }
@@ -515,7 +515,7 @@ SetFileSecurityW (LPCWSTR lpFileName,
 
   if (!NT_SUCCESS(Status))
     {
-      DPRINT("NtOpenFile() failed (Status %lx)\n", Status);
+      ERR("NtOpenFile() failed (Status %lx)\n", Status);
       SetLastError(RtlNtStatusToDosError(Status));
       return FALSE;
     }
@@ -527,7 +527,7 @@ SetFileSecurityW (LPCWSTR lpFileName,
 
   if (!NT_SUCCESS(Status))
     {
-      DPRINT("NtSetSecurityObject() failed (Status %lx)\n", Status);
+      ERR("NtSetSecurityObject() failed (Status %lx)\n", Status);
       SetLastError(RtlNtStatusToDosError(Status));
       return FALSE;
     }
@@ -1155,7 +1155,7 @@ BOOL WINAPI LookupAccountNameW(LPCWSTR lpSystemName, LPCWSTR lpAccountName, PSID
     static const WCHAR dm[] = {'D','O','M','A','I','N',0};
     unsigned int i;
 
-    DPRINT("%s %s %p %p %p %p %p - stub\n", lpSystemName, lpAccountName,
+    TRACE("%s %s %p %p %p %p %p - stub\n", lpSystemName, lpAccountName,
           Sid, cbSid, ReferencedDomainName, cchReferencedDomainName, peUse);
 
     for (i = 0; i < (sizeof(ACCOUNT_SIDS) / sizeof(ACCOUNT_SIDS[0])); i++)
@@ -1306,7 +1306,7 @@ LookupPrivilegeValueW (LPCWSTR SystemName,
 
   if (NULL != SystemName && L'\0' != *SystemName)
     {
-      DPRINT1("LookupPrivilegeValueW: not implemented for remote system\n");
+      FIXME("LookupPrivilegeValueW: not implemented for remote system\n");
       SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
       return FALSE;
     }
@@ -1321,7 +1321,7 @@ LookupPrivilegeValueW (LPCWSTR SystemName,
         }
     }
 
-  DPRINT1("LookupPrivilegeValueW: no such privilege %S\n", PrivName);
+  WARN("LookupPrivilegeValueW: no such privilege %S\n", PrivName);
   SetLastError(ERROR_NO_SUCH_PRIVILEGE);
   return FALSE;
 }
@@ -1339,7 +1339,7 @@ LookupPrivilegeDisplayNameA (LPCSTR lpSystemName,
 			     LPDWORD cbDisplayName,
 			     LPDWORD lpLanguageId)
 {
-  DPRINT1("LookupPrivilegeDisplayNameA: stub\n");
+  FIXME("%s() not implemented!\n", __FUNCTION__);
   SetLastError (ERROR_CALL_NOT_IMPLEMENTED);
   return FALSE;
 }
@@ -1357,7 +1357,7 @@ LookupPrivilegeDisplayNameW (LPCWSTR lpSystemName,
 			     LPDWORD cbDisplayName,
 			     LPDWORD lpLanguageId)
 {
-  DPRINT1("LookupPrivilegeDisplayNameW: stub\n");
+  FIXME("%s() not implemented!\n", __FUNCTION__);
   SetLastError (ERROR_CALL_NOT_IMPLEMENTED);
   return FALSE;
 }
@@ -1374,7 +1374,7 @@ LookupPrivilegeNameA (LPCSTR lpSystemName,
 		      LPSTR lpName,
 		      LPDWORD cbName)
 {
-  DPRINT1("LookupPrivilegeNameA: stub\n");
+  FIXME("%s() not implemented!\n", __FUNCTION__);
   SetLastError (ERROR_CALL_NOT_IMPLEMENTED);
   return FALSE;
 }
@@ -1391,7 +1391,7 @@ LookupPrivilegeNameW (LPCWSTR lpSystemName,
 		      LPWSTR lpName,
 		      LPDWORD cbName)
 {
-  DPRINT1("LookupPrivilegeNameW: stub\n");
+  FIXME("%s() not implemented!\n", __FUNCTION__);
   SetLastError (ERROR_CALL_NOT_IMPLEMENTED);
   return FALSE;
 }
@@ -1863,7 +1863,7 @@ DWORD WINAPI GetSecurityInfoExA(
    LPSTR *lppGroup
    )
 {
-  DPRINT1("GetSecurityInfoExA stub!\n");
+  FIXME("%s() not implemented!\n", __FUNCTION__);
   return ERROR_BAD_PROVIDER;
 }
 
@@ -1883,7 +1883,7 @@ DWORD WINAPI GetSecurityInfoExW(
    LPWSTR *lppGroup
    )
 {
-  DPRINT1("GetSecurityInfoExW stub!\n");
+  FIXME("%s() not implemented!\n", __FUNCTION__);
   return ERROR_BAD_PROVIDER;
 }
 
@@ -1899,7 +1899,7 @@ ImpersonateNamedPipeClient(HANDLE hNamedPipe)
   IO_STATUS_BLOCK StatusBlock;
   NTSTATUS Status;
 
-  DPRINT("ImpersonateNamedPipeClient() called\n");
+  TRACE("ImpersonateNamedPipeClient() called\n");
 
   Status = NtFsControlFile(hNamedPipe,
 			   NULL,
@@ -1963,7 +1963,7 @@ CreatePrivateObjectSecurityEx(PSECURITY_DESCRIPTOR ParentDescriptor,
                               HANDLE Token,
                               PGENERIC_MAPPING GenericMapping)
 {
-    DPRINT1("%s() not implemented!\n", __FUNCTION__);
+    FIXME("%s() not implemented!\n", __FUNCTION__);
     return FALSE;
 }
 
@@ -1982,7 +1982,7 @@ CreatePrivateObjectSecurityWithMultipleInheritance(PSECURITY_DESCRIPTOR ParentDe
                                                    HANDLE Token,
                                                    PGENERIC_MAPPING GenericMapping)
 {
-    DPRINT1("%s() not implemented!\n", __FUNCTION__);
+    FIXME("%s() not implemented!\n", __FUNCTION__);
     return FALSE;
 }
 

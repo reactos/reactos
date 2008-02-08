@@ -12,9 +12,9 @@
  */
 
 #include <advapi32.h>
+#include "wine/debug.h"
 
-#define NDEBUG
-#include <debug.h>
+WINE_DEFAULT_DEBUG_CHANNEL(advapi);
 
 /*
  * @implemented
@@ -569,7 +569,7 @@ BuildSecurityDescriptorA(IN PTRUSTEE_A pOwner  OPTIONAL,
  */
 BOOL WINAPI DecryptFileW(LPCWSTR lpFileName, DWORD dwReserved)
 {
-    DPRINT1("%s(%S) not implemented!\n", __FUNCTION__, lpFileName);
+    FIXME("%s(%S) not implemented!\n", __FUNCTION__, lpFileName);
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return FALSE;
 }
@@ -602,7 +602,7 @@ BOOL WINAPI DecryptFileA(LPCSTR lpFileName, DWORD dwReserved)
  */
 BOOL WINAPI EncryptFileW(LPCWSTR lpFileName)
 {
-    DPRINT1("%s() not implemented!\n", __FUNCTION__);
+    FIXME("%s() not implemented!\n", __FUNCTION__);
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return FALSE;
 }
@@ -637,7 +637,7 @@ BOOL WINAPI ConvertSecurityDescriptorToStringSecurityDescriptorW(
     LPWSTR* lpwstr,
     PULONG pulong)
 {
-    DPRINT1("%s() not implemented!\n", __FUNCTION__);
+    FIXME("%s() not implemented!\n", __FUNCTION__);
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return FALSE;
 }
@@ -649,7 +649,7 @@ BOOL WINAPI ConvertSecurityDescriptorToStringSecurityDescriptorA(
     LPSTR* lpstr,
     PULONG pulong)
 {
-    DPRINT1("%s() not implemented!\n", __FUNCTION__);
+    FIXME("%s() not implemented!\n", __FUNCTION__);
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return FALSE;
 }

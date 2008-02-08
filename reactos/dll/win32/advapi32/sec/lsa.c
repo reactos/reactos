@@ -12,9 +12,9 @@
  */
 
 #include <advapi32.h>
+#include "wine/debug.h"
 
-#define NDEBUG
-#include <debug.h>
+WINE_DEFAULT_DEBUG_CHANNEL(advapi);
 
 static handle_t LSABindingHandle = NULL;
 
@@ -29,7 +29,7 @@ LSAHandleUnbind(handle_t *Handle)
     status = RpcBindingFree(Handle);
     if (status)
     {
-        DPRINT1("RpcBindingFree returned 0x%x\n", status);
+        TRACE("RpcBindingFree returned 0x%x\n", status);
     }
 }
 
@@ -51,7 +51,7 @@ LSAHandleBind(VOID)
                                       &pszStringBinding);
     if (status)
     {
-        DPRINT1("RpcStringBindingCompose returned 0x%x\n", status);
+        TRACE("RpcStringBindingCompose returned 0x%x\n", status);
         return;
     }
 
@@ -60,13 +60,13 @@ LSAHandleBind(VOID)
                                           &Handle);
     if (status)
     {
-        DPRINT1("RpcBindingFromStringBinding returned 0x%x\n", status);
+        TRACE("RpcBindingFromStringBinding returned 0x%x\n", status);
     }
 
     status = RpcStringFreeW(&pszStringBinding);
     if (status)
     {
-        DPRINT1("RpcStringFree returned 0x%x\n", status);
+        TRACE("RpcStringFree returned 0x%x\n", status);
     }
 
     if (InterlockedCompareExchangePointer(&LSABindingHandle,
@@ -84,7 +84,7 @@ LSAHandleBind(VOID)
 NTSTATUS STDCALL
 LsaClose(LSA_HANDLE ObjectHandle)
 {
-    DPRINT("LsaClose(0x%p) called\n", ObjectHandle);
+    TRACE("LsaClose(0x%p) called\n", ObjectHandle);
 
     LSAHandleBind();
 
@@ -99,7 +99,7 @@ LsaClose(LSA_HANDLE ObjectHandle)
 NTSTATUS STDCALL
 LsaDelete(LSA_HANDLE ObjectHandle)
 {
-    DPRINT("LsaDelete(0x%p) called\n", ObjectHandle);
+    TRACE("LsaDelete(0x%p) called\n", ObjectHandle);
 
     LSAHandleBind();
 
@@ -295,7 +295,7 @@ LsaLookupSids(
     PLSA_REFERENCED_DOMAIN_LIST LocalDomains;
     PLSA_TRANSLATED_NAME LocalNames;
 
-    DPRINT("LsaLookupSids(): stub. Always returning 'Administrator'\n");
+    WARN("LsaLookupSids(): stub. Always returning 'Administrator'\n");
     if (Count != 1)
         return STATUS_NONE_MAPPED;
     LocalDomains = RtlAllocateHeap(RtlGetProcessHeap(), 0, sizeof(LSA_TRANSLATED_SID));
@@ -354,7 +354,7 @@ LsaOpenPolicy(PLSA_UNICODE_STRING lsaucs,
   static int count = 0;
   if (count++ < 20)
   {
-     DPRINT("LsaOpenPolicy - stub\n");
+     FIXME("%s() not implemented!\n", __FUNCTION__);
   }
   return STATUS_SUCCESS;
 }
@@ -407,7 +407,7 @@ LsaQueryInformationPolicy(LSA_HANDLE PolicyHandle,
 			  POLICY_INFORMATION_CLASS pic,
 			  PVOID *Buffer)
 {
-  DPRINT1("(%p,0x%08x,%p):LsaQueryInformationPolicy stub\n",
+  TRACE("(%p,0x%08x,%p):LsaQueryInformationPolicy stub\n",
           PolicyHandle, pic, Buffer);
 
   if (!Buffer)
@@ -464,7 +464,7 @@ LsaQueryInformationPolicy(LSA_HANDLE PolicyHandle,
               }
               if (useDefault)
                   RtlCreateUnicodeStringFromAsciiz(&(xdi->ppdi.Name), "DOMAIN");
-              DPRINT1("setting domain to \n");
+              TRACE("setting domain to \n");
 
 	      xdi->ppdi.Sid = &(xdi->sid);
 	      xdi->sid.Revision = SID_REVISION;
@@ -485,7 +485,7 @@ LsaQueryInformationPolicy(LSA_HANDLE PolicyHandle,
 	  case PolicyDnsDomainInformation:
 	  case PolicyEfsInformation:
 	    {
-	      DPRINT1("category not implemented\n");
+	      FIXME("category not implemented\n");
 	      return FALSE;
 	    }
 	}
@@ -639,7 +639,7 @@ LsaGetUserName(
     PUNICODE_STRING *UserName,
     PUNICODE_STRING *DomainName)
 {
-  DPRINT1("LsaGetUserName not implemented\n");
+  FIXME("%s() not implemented!\n", __FUNCTION__);
 
   return STATUS_NOT_IMPLEMENTED;
 }
@@ -653,7 +653,7 @@ LsaQueryInfoTrustedDomain (DWORD Unknonw0,
 			   DWORD Unknonw1,
 			   DWORD Unknonw2)
 {
-  DPRINT1("LsaQueryInfoTrustedDomain not implemented\n");
+  FIXME("%s() not implemented!\n", __FUNCTION__);;
 
   return STATUS_NOT_IMPLEMENTED;
 }

@@ -7,8 +7,9 @@
  */
 
 #include <advapi32.h>
-#define NDEBUG
-#include <debug.h>
+
+#include <wine/debug.h>
+WINE_DEFAULT_DEBUG_CHANNEL(advapi);
 
 
 /* FUNCTIONS ***************************************************************/
@@ -216,7 +217,7 @@ SamGetUserSid (LPCWSTR UserName,
 		     KEY_READ,
 		     &hUsersKey))
     {
-      DPRINT1 ("Failed to open Users key! (Error %lu)\n", GetLastError());
+      ERR("Failed to open Users key! (Error %lu)\n", GetLastError());
       return FALSE;
     }
 
@@ -229,12 +230,12 @@ SamGetUserSid (LPCWSTR UserName,
     {
       if (GetLastError () == ERROR_FILE_NOT_FOUND)
 	{
-	  DPRINT1 ("Invalid user name!\n");
+	  ERR("Invalid user name!\n");
 	  SetLastError (ERROR_NO_SUCH_USER);
 	}
       else
 	{
-	  DPRINT1 ("Failed to open user key! (Error %lu)\n", GetLastError());
+	  ERR("Failed to open user key! (Error %lu)\n", GetLastError());
 	}
 
       RegCloseKey (hUsersKey);
@@ -252,19 +253,19 @@ SamGetUserSid (LPCWSTR UserName,
 			NULL,
 			&dwLength))
     {
-      DPRINT1 ("Failed to read the SID size! (Error %lu)\n", GetLastError());
+      ERR("Failed to read the SID size! (Error %lu)\n", GetLastError());
       RegCloseKey (hUserKey);
       return FALSE;
     }
 
   /* Allocate sid buffer */
-  DPRINT ("Required SID buffer size: %lu\n", dwLength);
+  TRACE("Required SID buffer size: %lu\n", dwLength);
   lpSid = (PSID)RtlAllocateHeap (RtlGetProcessHeap (),
 				 0,
 				 dwLength);
   if (lpSid == NULL)
     {
-      DPRINT1 ("Failed to allocate SID buffer!\n");
+      ERR("Failed to allocate SID buffer!\n");
       RegCloseKey (hUserKey);
       return FALSE;
     }
@@ -277,7 +278,7 @@ SamGetUserSid (LPCWSTR UserName,
 			(LPBYTE)lpSid,
 			&dwLength))
     {
-      DPRINT1 ("Failed to read the SID! (Error %lu)\n", GetLastError());
+      ERR("Failed to read the SID! (Error %lu)\n", GetLastError());
       RtlFreeHeap (RtlGetProcessHeap (),
 		   0,
 		   lpSid);
@@ -300,7 +301,7 @@ SamGetDomainSid(PSID *Sid)
   DWORD dwLength;
   HKEY hDomainKey;
 
-  DPRINT("SamGetDomainSid() called\n");
+  TRACE("SamGetDomainSid() called\n");
 
   if (Sid != NULL)
     *Sid = NULL;
@@ -312,7 +313,7 @@ SamGetDomainSid(PSID *Sid)
 		    KEY_READ,
 		    &hDomainKey))
     {
-      DPRINT1("Failed to open the account domain key! (Error %lu)\n", GetLastError());
+      ERR("Failed to open the account domain key! (Error %lu)\n", GetLastError());
       return FALSE;
     }
 
@@ -325,19 +326,19 @@ SamGetDomainSid(PSID *Sid)
 		       NULL,
 		       &dwLength))
     {
-      DPRINT1("Failed to read the SID size! (Error %lu)\n", GetLastError());
+      ERR("Failed to read the SID size! (Error %lu)\n", GetLastError());
       RegCloseKey(hDomainKey);
       return FALSE;
     }
 
   /* Allocate sid buffer */
-  DPRINT("Required SID buffer size: %lu\n", dwLength);
+  TRACE("Required SID buffer size: %lu\n", dwLength);
   lpSid = (PSID)RtlAllocateHeap(RtlGetProcessHeap(),
 				0,
 				dwLength);
   if (lpSid == NULL)
     {
-      DPRINT1("Failed to allocate SID buffer!\n");
+      ERR("Failed to allocate SID buffer!\n");
       RegCloseKey(hDomainKey);
       return FALSE;
     }
@@ -350,7 +351,7 @@ SamGetDomainSid(PSID *Sid)
 		       (LPBYTE)lpSid,
 		       &dwLength))
     {
-      DPRINT1("Failed to read the SID! (Error %lu)\n", GetLastError());
+      ERR("Failed to read the SID! (Error %lu)\n", GetLastError());
       RtlFreeHeap(RtlGetProcessHeap(),
 		  0,
 		  lpSid);
@@ -362,7 +363,7 @@ SamGetDomainSid(PSID *Sid)
 
   *Sid = lpSid;
 
-  DPRINT("SamGetDomainSid() done\n");
+  TRACE("SamGetDomainSid() done\n");
 
   return TRUE;
 }
@@ -480,7 +481,7 @@ AllocateGroupSids(
     TokenGroups->Groups[GroupCount].Attributes = SE_GROUP_ENABLED | SE_GROUP_ENABLED_BY_DEFAULT | SE_GROUP_MANDATORY;
     GroupCount++;
 #else
-    DPRINT1("Not adding user to Administrators group\n");
+    TRACE("Not adding user to Administrators group\n");
 #endif
 
     /* Member of 'Users' */
@@ -674,7 +675,7 @@ LogonUserW (LPWSTR lpszUsername,
   /* Get the user SID from the registry */
   if (!SamGetUserSid (lpszUsername, &UserSid))
     {
-      DPRINT1 ("SamGetUserSid() failed\n");
+      ERR("SamGetUserSid() failed\n");
       return FALSE;
     }
 
@@ -710,7 +711,7 @@ LogonUserW (LPWSTR lpszUsername,
       if (! LookupPrivilegeValueW(NULL, DefaultPrivs[i].PrivName,
                                   &TokenPrivileges->Privileges[TokenPrivileges->PrivilegeCount].Luid))
         {
-          DPRINT1("Can't set privilege %S\n", DefaultPrivs[i].PrivName);
+          WARN("Can't set privilege %S\n", DefaultPrivs[i].PrivName);
         }
       else
         {

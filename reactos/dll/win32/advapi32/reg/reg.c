@@ -14,10 +14,9 @@
 /* INCLUDES *****************************************************************/
 
 #include <advapi32.h>
-#define NDEBUG
 #include <wine/debug.h>
 
-WINE_DEFAULT_DEBUG_CHANNEL(advapi32);
+WINE_DEFAULT_DEBUG_CHANNEL(reg);
 
 /* DEFINES ******************************************************************/
 

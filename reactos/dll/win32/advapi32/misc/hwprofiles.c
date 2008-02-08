@@ -10,7 +10,8 @@
  */
 
 #include <advapi32.h>
-#include <debug.h>
+#include <wine/debug.h>
+WINE_DEFAULT_DEBUG_CHANNEL(advapi);
 
 /******************************************************************************
  * GetCurrentHwProfileA [ADVAPI32.@]
@@ -35,7 +36,7 @@ GetCurrentHwProfileA(LPHW_PROFILE_INFOA lpHwProfileInfo)
   BOOL bResult;
   NTSTATUS Status;
 
-  DPRINT("GetCurrentHwProfileA() called\n");
+  TRACE("GetCurrentHwProfileA() called\n");
 
   bResult = GetCurrentHwProfileW(&ProfileInfo);
   if (bResult == FALSE)
@@ -91,7 +92,7 @@ GetCurrentHwProfileW(LPHW_PROFILE_INFOW lpHwProfileInfo)
   DWORD dwLength;
   DWORD dwConfigId;
 
-  DPRINT("GetCurrentHwProfileW() called\n");
+  TRACE("GetCurrentHwProfileW() called\n");
 
   if (lpHwProfileInfo == NULL)
     {
