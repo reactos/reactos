@@ -1,4 +1,4 @@
-/* TRANSLATOR:  M·rio KaËm·r /Mario Kacmar/ aka Kario (kario@szm.sk)
+/* TRANSLATOR:  M†rio Kaäm†r /Mario Kacmar/ aka Kario (kario@szm.sk)
  * DATE OF TR:  22-01-2008
  */
 
@@ -10,37 +10,37 @@ static MUI_ENTRY skSKLanguagePageEntries[] =
     {
         4,
         3,
-         " Inötal·tor systÈmu ReactOS " KERNEL_VERSION_STR,
+         " Instal†tor systÇmu ReactOS " KERNEL_VERSION_STR,
         TEXT_UNDERLINE
     },
     {
         6,
         8,
-        "V˝ber jazyka.",
+        "VÏber jazyka.",
         TEXT_NORMAL
     },
     {
         8,
         10,
-        "\x07  Zvoæte si jazyk, ktor˝ sa pouûije poËas inötal·cie.",
+        "\x07  ZvoÛte si jazyk, ktorÏ sa pouzije poäas instal†cie.",
         TEXT_NORMAL
     },
     {
         8,
         11,
-        "   Potom stlaËte ENTER.",
+        "   Potom stlaäte ENTER.",
         TEXT_NORMAL
     },
     {
         8,
         13,
-        "\x07  Tento jazyk bude predvolen˝m jazykom nainötalovanÈho systÈmu.",
+        "\x07  Tento jazyk bude predvolenÏm jazykom nainstalovanÇho systÇmu.",
         TEXT_NORMAL
     },
     {
         0,
         0,
-        "   ENTER = PokraËovaù   F3 = SkonËiù",
+        "   ENTER = Pokraäova_   F3 = Skonäi_",
         TEXT_STATUS
     },
     {
@@ -56,55 +56,55 @@ static MUI_ENTRY skSKWelcomePageEntries[] =
     {
         4,
         3,
-         " Inötal·tor systÈmu ReactOS " KERNEL_VERSION_STR,
+         " Instal†tor systÇmu ReactOS " KERNEL_VERSION_STR,
         TEXT_UNDERLINE
     },
     {
         6,
         8,
-        "VÌta V·s Inötal·tor systÈmu ReactOS",
+        "V°ta V†s Instal†tor systÇmu ReactOS",
         TEXT_HIGHLIGHT
     },
     {
         6,
         11,
-        "Tento stupeÚ Inötal·tora skopÌruje operaËn˝ systÈm ReactOS na V·ö",
+        "Tento stupeï Instal†tora skop°ruje operaänÏ systÇm ReactOS na V†s",
         TEXT_NORMAL
     },
     {
         6,
         12,
-        "poËÌtaË a pripravÌ druh˝ stupeÚ Inötal·tora.",
+        "poä°taä a priprav° druhÏ stupeï Instal†tora.",
         TEXT_NORMAL
     },
     {
         8,
         15,
-        "\x07  StlaËte ENTER pre nainötalovanie systÈmu ReactOS.",
+        "\x07  Stlaäte ENTER pre nainstalovanie systÇmu ReactOS.",
         TEXT_NORMAL
     },
     {
         8,
         17,
-        "\x07  StlaËte R pre opravu systÈmu ReactOS.",
+        "\x07  Stlaäte R pre opravu systÇmu ReactOS.",
         TEXT_NORMAL
     },
     {
         8,
         19,
-        "\x07  StlaËte L, ak chcete zobraziù licenËnÈ podmienky systÈmu ReactOS.",
+        "\x07  Stlaäte L, ak chcete zobrazi_ licenänÇ podmienky systÇmu ReactOS.",
         TEXT_NORMAL
     },
     {
         8,
         21,
-        "\x07  StlaËte F3 pre skonËenie inötal·cie bez nainötalovania systÈmu ReactOS.",
+        "\x07  Stlaäte F3 pre skonäenie instal†cie bez nainstalovania systÇmu ReactOS.",
         TEXT_NORMAL
     },
     {
         6,
         23,
-        "Pre viac inform·ciÌ o systÈme ReactOS, navötÌvte prosÌm:",
+        "Pre viac inform†ci° o systÇme ReactOS, navst°vte pros°m:",
         TEXT_NORMAL
     },
     {
@@ -116,7 +116,7 @@ static MUI_ENTRY skSKWelcomePageEntries[] =
     {
         0,
         0,
-        "   ENTER = PokraËovaù   R = Opraviù   F3 = SkonËiù",
+        "   ENTER = Pokraäova_   R = Opravi_   F3 = Skonäi_",
         TEXT_STATUS
     },
     {
@@ -132,85 +132,85 @@ static MUI_ENTRY skSKIntroPageEntries[] =
     {
         4,
         3,
-        " Inötal·tor systÈmu ReactOS " KERNEL_VERSION_STR,
+        " Instal†tor systÇmu ReactOS " KERNEL_VERSION_STR,
         TEXT_UNDERLINE
     },
     {
         6,
         8,
-        "Inötal·tor systÈmu ReactOS je v zaËiatoËnom öt·diu v˝voja. Zatiaæ",
+        "Instal†tor systÇmu ReactOS je v zaäiatoänom st†diu vÏvoja. ZatiaÛ",
         TEXT_NORMAL
     },
     {
         6,
         9,
-        "nepodporuje vöetky funkcie plne vyuûÌvaj˙ce program Inötal·tor.",
+        "nepodporuje vsetky funkcie plne vyuz°vaj£ce program Instal†tor.",
         TEXT_NORMAL
     },
     {
         6,
         12,
-        "M· nasleduj˙ce obmedzenia:",
+        "M† nasleduj£ce obmedzenia:",
         TEXT_NORMAL
     },
     {
         8,
         13,
-        "- Inötal·tor nepracuje s viac ako 1 prim·rnou oblasùou na 1 disk.",
+        "- Instal†tor nepracuje s viac ako 1 prim†rnou oblas_ou na 1 disk.",
         TEXT_NORMAL
     },
     {
         8,
         14,
-        "- Inötal·tor nevie odstr·niù prim·rnu oblasù z disku,",
+        "- Instal†tor nevie odstr†ni_ prim†rnu oblas_ z disku,",
         TEXT_NORMAL
     },
     {
         8,
         15,
-        "  pokiaæ existuj˙ rozöÌrenÈ oblasti na disku.",
+        "  pokiaÛ existuj£ rozs°renÇ oblasti na disku.",
         TEXT_NORMAL
     },
     {
         8,
         16,
-        "- Inötal·tor nevie odstr·niù prv˙ rozöÌren˙ oblasù z disku,",
+        "- Instal†tor nevie odstr†ni_ prv£ rozs°ren£ oblas_ z disku,",
         TEXT_NORMAL
     },
     {
         8,
         17,
-        "  pokiaæ existuj˙ inÈ rozöÌrenÈ oblasti na disku.",
+        "  pokiaÛ existuj£ inÇ rozs°renÇ oblasti na disku.",
         TEXT_NORMAL
     },
     {
         8,
         18,
-        "- Inötal·tor podporuje iba s˙borov˝ systÈm FAT.",
+        "- Instal†tor podporuje iba s£borovÏ systÇm FAT.",
         TEXT_NORMAL
     },
     {
         8,
         19,
-        "- Kontrola s˙borovÈho systÈmu zatiaæ nie je implementovan·.",
+        "- Kontrola s£borovÇho systÇmu zatiaÛ nie je implementovan†.",
         TEXT_NORMAL
     },
     {
         8,
         23,
-        "\x07  StlaËte ENTER pre nainötalovanie systÈmu ReactOS.",
+        "\x07  Stlaäte ENTER pre nainstalovanie systÇmu ReactOS.",
         TEXT_NORMAL
     },
     {
         8,
         25,
-        "\x07  StlaËte F3 pre skonËenie inötal·cie bez nainötalovania systÈmu ReactOS.",
+        "\x07  Stlaäte F3 pre skonäenie instal†cie bez nainstalovania systÇmu ReactOS.",
         TEXT_NORMAL
     },
     {
         0,
         0,
-        "   ENTER = PokraËovaù   F3 = SkonËiù",
+        "   ENTER = Pokraäova_   F3 = Skonäi_",
         TEXT_STATUS
     },
     {
@@ -226,7 +226,7 @@ static MUI_ENTRY skSKLicensePageEntries[] =
     {
         4,
         3,
-        " Inötal·tor systÈmu ReactOS " KERNEL_VERSION_STR,
+        " Instal†tor systÇmu ReactOS " KERNEL_VERSION_STR,
         TEXT_UNDERLINE
     },
     {
@@ -310,7 +310,7 @@ static MUI_ENTRY skSKLicensePageEntries[] =
     {
         8,
         22,
-        "Z·ruka:",
+        "Z†ruka:",
         TEXT_HIGHLIGHT
     },
     {
@@ -334,7 +334,7 @@ static MUI_ENTRY skSKLicensePageEntries[] =
     {
         0,
         0,
-        "   ENTER = N·vrat",
+        "   ENTER = N†vrat",
         TEXT_STATUS
     },
     {
@@ -350,19 +350,19 @@ static MUI_ENTRY skSKDevicePageEntries[] =
     {
         4,
         3,
-        " Inötal·tor systÈmu ReactOS " KERNEL_VERSION_STR,
+        " Instal†tor systÇmu ReactOS " KERNEL_VERSION_STR,
         TEXT_UNDERLINE
     },
     {
         6,
         8,
-        "Zoznam niûöie, zobrazuje s˙ËasnÈ nastavenia zariadenÌ.",
+        "Zoznam nizsie, zobrazuje s£äasnÇ nastavenia zariaden°.",
         TEXT_NORMAL
     },
     {
         8,
         11,
-        "        PoËÌtaË:",
+        "        Poä°taä:",
         TEXT_NORMAL
     },
     {
@@ -374,60 +374,60 @@ static MUI_ENTRY skSKDevicePageEntries[] =
     {
         8,
         13,
-        "     Kl·vesnica:",
+        "     Kl†vesnica:",
         TEXT_NORMAL
     },
     {
         8,
         14,
-        " Rozloûenie kl.:",
+        " Rozlozenie kl.:",
         TEXT_NORMAL
     },
     {
         8,
         16,
-        "     Akceptovaù:",
+        "     Akceptova_:",
         TEXT_NORMAL
     },
     {
         25,
-        16, "Akceptovaù tieto nastavenia zariadenÌ",
+        16, "Akceptova_ tieto nastavenia zariaden°",
         TEXT_NORMAL
     },
     {
         6,
         19,
-        "MÙûete zmeniù hardvÈrovÈ nastavenia stlaËenÌm kl·vesov HORE alebo DOLE",
+        "Mìzete zmeni_ hardvÇrovÇ nastavenia stlaäen°m kl†vesov HORE alebo DOLE",
         TEXT_NORMAL
     },
     {
         6,
         20,
-        "pre v˝ber poloûky. Potom stlaËte kl·ves ENTER pre v˝ber alternatÌvnych",
+        "pre vÏber polozky. Potom stlaäte kl†ves ENTER pre vÏber alternat°vnych",
         TEXT_NORMAL
     },
     {
         6,
         21,
-        "nastavenÌ.",
+        "nastaven°.",
         TEXT_NORMAL
     },
     {
         6,
         23,
-        "Ak s˙ vöetky nastavenia spr·vne, vyberte \"Akceptovaù tieto nastavenia zariadenÌ\"",
+        "Ak s£ vsetky nastavenia spr†vne, vyberte \"Akceptova_ tieto nastavenia zariaden°\"",
         TEXT_NORMAL
     },
     {
         6,
         24,
-        "a stlaËte ENTER.",
+        "a stlaäte ENTER.",
         TEXT_NORMAL
     },
     {
         0,
         0,
-        "   ENTER = PokraËovaù   F3 = SkonËiù",
+        "   ENTER = Pokraäova_   F3 = Skonäi_",
         TEXT_STATUS
     },
     {
@@ -443,55 +443,55 @@ static MUI_ENTRY skSKRepairPageEntries[] =
     {
         4,
         3,
-        " Inötal·tor systÈmu ReactOS " KERNEL_VERSION_STR,
+        " Instal†tor systÇmu ReactOS " KERNEL_VERSION_STR,
         TEXT_UNDERLINE
     },
     {
         6,
         8,
-        "Inötal·tor systÈmu ReactOS je v zaËiatoËnom öt·diu v˝voja. Zatiaæ",
+        "Instal†tor systÇmu ReactOS je v zaäiatoänom st†diu vÏvoja. ZatiaÛ",
         TEXT_NORMAL
     },
     {
         6,
         9,
-        "nepodporuje vöetky funkcie plne vyuûÌvaj˙ce program Inötal·tor.",
+        "nepodporuje vsetky funkcie plne vyuz°vaj£ce program Instal†tor.",
         TEXT_NORMAL
     },
     {
         6,
         12,
-        "Funkcie na opravu systÈmu zatiaæ nie s˙ implementovanÈ.",
+        "Funkcie na opravu systÇmu zatiaÛ nie s£ implementovanÇ.",
         TEXT_NORMAL
     },
     {
         8,
         15,
-        "\x07  StlaËte U pre aktualiz·ciu OS.",
+        "\x07  Stlaäte U pre aktualiz†ciu OS.",
         TEXT_NORMAL
     },
     {
         8,
         17,
-        "\x07  StlaËte R pre z·chrann˙ konzolu.",
+        "\x07  Stlaäte R pre z†chrann£ konzolu.",
         TEXT_NORMAL
     },
     {
         8,
         19,
-        "\x07  StlaËte ESC pre n·vrat na hlavn˙ str·nku.",
+        "\x07  Stlaäte ESC pre n†vrat na hlavn£ str†nku.",
         TEXT_NORMAL
     },
     {
         8,
         21,
-        "\x07  StlaËte ENTER pre reötart poËÌtaËa.",
+        "\x07  Stlaäte ENTER pre restart poä°taäa.",
         TEXT_NORMAL
     },
     {
         0,
         0,
-        "   ESC = Hlavn· str·nka  ENTER = Reötart",
+        "   ESC = Hlavn† str†nka  ENTER = Restart",
         TEXT_STATUS
     },
     {
@@ -506,43 +506,43 @@ static MUI_ENTRY skSKComputerPageEntries[] =
     {
         4,
         3,
-        " Inötal·tor systÈmu ReactOS " KERNEL_VERSION_STR,
+        " Instal†tor systÇmu ReactOS " KERNEL_VERSION_STR,
         TEXT_UNDERLINE
     },
     {
         6,
         8,
-        "Chcete zmeniù typ poËÌtaËa, ktor˝ m· byù nainötalovan˝.",
+        "Chcete zmeni_ typ poä°taäa, ktorÏ m† by_ nainstalovanÏ.",
         TEXT_NORMAL
     },
     {
         8,
         10,
-        "\x07  StlaËte kl·ves HORE alebo DOLE pre v˝ber poûadovanÈho typu poËÌtaËa.",
+        "\x07  Stlaäte kl†ves HORE alebo DOLE pre vÏber pozadovanÇho typu poä°taäa.",
         TEXT_NORMAL
     },
     {
         8,
         11,
-        "   Potom stlaËte ENTER.",
+        "   Potom stlaäte ENTER.",
         TEXT_NORMAL
     },
     {
         8,
         13,
-        "\x07  StlaËte kl·ves ESC pre n·vrat na predch·dzaj˙cu str·nku bez zmeny",
+        "\x07  Stlaäte kl†ves ESC pre n†vrat na predch†dzaj£cu str†nku bez zmeny",
         TEXT_NORMAL
     },
     {
         8,
         14,
-        "   typu poËÌtaËa.",
+        "   typu poä°taäa.",
         TEXT_NORMAL
     },
     {
         0,
         0,
-        "   ENTER = PokraËovaù   ESC = Zruöiù   F3 = SkonËiù",
+        "   ENTER = Pokraäova_   ESC = Zrusi_   F3 = Skonäi_",
         TEXT_STATUS
     },
     {
@@ -558,25 +558,25 @@ static MUI_ENTRY skSKFlushPageEntries[] =
     {
         4,
         3,
-        " Inötal·tor systÈmu ReactOS " KERNEL_VERSION_STR,
+        " Instal†tor systÇmu ReactOS " KERNEL_VERSION_STR,
         TEXT_UNDERLINE
     },
     {
         10,
         6,
-        "SystÈm pr·ve overuje vöetky uloûenÈ ˙daje na Vaöom disku",
+        "SystÇm pr†ve overuje vsetky ulozenÇ £daje na Vasom disku",
         TEXT_NORMAL
     },
     {
         10,
         8,
-        "To mÙûe trvaù niekoæko min˙t",
+        "To mìze trva_ niekoÛko min£t",
         TEXT_NORMAL
     },
     {
         10,
         9,
-        "KeÔ skonËÌ, poËÌtaË sa automaticky reötartuje",
+        "Keã skonä°, poä°taä sa automaticky restartuje",
         TEXT_NORMAL
     },
     {
@@ -598,13 +598,13 @@ static MUI_ENTRY skSKQuitPageEntries[] =
     {
         4,
         3,
-        " Inötal·tor systÈmu ReactOS " KERNEL_VERSION_STR,
+        " Instal†tor systÇmu ReactOS " KERNEL_VERSION_STR,
         TEXT_UNDERLINE
     },
     {
         10,
         6,
-        "SystÈm ReactOS nie je nainötalovan˝ kompletne",
+        "SystÇm ReactOS nie je nainstalovanÏ kompletne",
         TEXT_NORMAL
     },
     {
@@ -616,19 +616,19 @@ static MUI_ENTRY skSKQuitPageEntries[] =
     {
         10,
         9,
-        "vöetky mÈdi· CD-ROM z CD mechanÌk.",
+        "vsetky mÇdi† CD-ROM z CD mechan°k.",
         TEXT_NORMAL
     },
     {
         10,
         11,
-        "StlaËte ENTER pre reötart poËÌtaËa.",
+        "Stlaäte ENTER pre restart poä°taäa.",
         TEXT_NORMAL
     },
     {
         0,
         0,
-        "   PoËkajte, prosÌm ...",
+        "   Poäkajte, pros°m ...",
         TEXT_STATUS,
     },
     {
@@ -644,30 +644,30 @@ static MUI_ENTRY skSKDisplayPageEntries[] =
     {
         4,
         3,
-        " Inötal·tor systÈmu ReactOS " KERNEL_VERSION_STR,
+        " Instal†tor systÇmu ReactOS " KERNEL_VERSION_STR,
         TEXT_UNDERLINE
     },
     {
         6,
         8,
-        "Chcete zmeniù typ monitora, ktor˝ m· byù nainötalovan˝.",
+        "Chcete zmeni_ typ monitora, ktorÏ m† by_ nainstalovanÏ.",
         TEXT_NORMAL
     },
     {   8,
         10,
-         "\x07  StlaËte kl·ves HORE alebo DOLE pre v˝ber poûadovanÈho typu monitora.",
+         "\x07  Stlaäte kl†ves HORE alebo DOLE pre vÏber pozadovanÇho typu monitora.",
          TEXT_NORMAL
     },
     {
         8,
         11,
-        "   Potom stlaËte ENTER.",
+        "   Potom stlaäte ENTER.",
         TEXT_NORMAL
     },
     {
         8,
         13,
-        "\x07  StlaËte kl·ves ESC pre n·vrat na predch·dzaj˙cu str·nku bez zmeny",
+        "\x07  Stlaäte kl†ves ESC pre n†vrat na predch†dzaj£cu str†nku bez zmeny",
         TEXT_NORMAL
     },
     {
@@ -679,7 +679,7 @@ static MUI_ENTRY skSKDisplayPageEntries[] =
     {
         0,
         0,
-        "   ENTER = PokraËovaù   ESC = Zruöiù   F3 = SkonËiù",
+        "   ENTER = Pokraäova_   ESC = Zrusi_   F3 = Skonäi_",
         TEXT_STATUS
     },
     {
@@ -695,13 +695,13 @@ static MUI_ENTRY skSKSuccessPageEntries[] =
     {
         4,
         3,
-        " Inötal·tor systÈmu ReactOS " KERNEL_VERSION_STR,
+        " Instal†tor systÇmu ReactOS " KERNEL_VERSION_STR,
         TEXT_UNDERLINE
     },
     {
         10,
         6,
-        "Z·kladnÈ s˙ËastÌ systÈmu ReactOS boli ˙speöne nainötalovanÈ.",
+        "Z†kladnÇ s£äast° systÇmu ReactOS boli £spesne nainstalovanÇ.",
         TEXT_NORMAL
     },
     {
@@ -713,19 +713,19 @@ static MUI_ENTRY skSKSuccessPageEntries[] =
     {
         10,
         9,
-        "vöetky mÈdi· CD-ROM z CD mechanÌk.",
+        "vsetky mÇdi† CD-ROM z CD mechan°k.",
         TEXT_NORMAL
     },
     {
         10,
         11,
-        "StlaËte ENTER pre reötart poËÌtaËa.",
+        "Stlaäte ENTER pre restart poä°taäa.",
         TEXT_NORMAL
     },
     {
         0,
         0,
-        "   ENTER = Reötart poËÌtaËa",
+        "   ENTER = Restart poä°taäa",
         TEXT_STATUS
     },
     {
@@ -741,37 +741,37 @@ static MUI_ENTRY skSKBootPageEntries[] =
     {
         4,
         3,
-        " Inötal·tor systÈmu ReactOS " KERNEL_VERSION_STR,
+        " Instal†tor systÇmu ReactOS " KERNEL_VERSION_STR,
         TEXT_UNDERLINE
     },
     {
         6,
         8,
-        "Inötal·tor nemÙûe nainötalovaù zav·dzaË systÈmu na pevn˝ disk V·öho", //bootloader = zav·dzaË systÈmu
+        "Instal†tor nemìze nainstalova_ zav†dzaä systÇmu na pevnÏ disk V†sho", //bootloader = zav†dzaä systÇmu
         TEXT_NORMAL
     },
     {
         6,
         9,
-        "poËÌtaËa",
+        "poä°taäa",
         TEXT_NORMAL
     },
     {
         6,
         13,
-        "Vloûte prosÌm, naform·tovan˙ disketu do mechaniky A:",
+        "Vlozte pros°m, naform†tovan£ disketu do mechaniky A:",
         TEXT_NORMAL
     },
     {
         6,
         14,
-        "a stlaËte ENTER.",
+        "a stlaäte ENTER.",
         TEXT_NORMAL,
     },
     {
         0,
         0,
-        "   ENTER = PokraËovaù   F3 = SkonËiù",
+        "   ENTER = Pokraäova_   F3 = Skonäi_",
         TEXT_STATUS
     },
     {
@@ -788,7 +788,7 @@ static MUI_ENTRY skSKSelectPartitionEntries[] =
     {
         4,
         3,
-        " Inötal·tor systÈmu ReactOS " KERNEL_VERSION_STR,
+        " Instal†tor systÇmu ReactOS " KERNEL_VERSION_STR,
         TEXT_UNDERLINE
     },
     {
@@ -806,31 +806,31 @@ static MUI_ENTRY skSKSelectPartitionEntries[] =
     {
         8,
         11,
-        "\x07  StlaËte HORE alebo DOLE pre v˝ber zo zoznamu poloûiek.",
+        "\x07  Stlaäte HORE alebo DOLE pre vÏber zo zoznamu poloziek.",
         TEXT_NORMAL
     },
     {
         8,
         13,
-        "\x07  StlaËte ENTER to install ReactOS onto the selected partition.",
+        "\x07  Stlaäte ENTER to install ReactOS onto the selected partition.",
         TEXT_NORMAL
     },
     {
         8,
         15,
-        "\x07  StlaËte C pre vytvorenie novej oblasti.",
+        "\x07  Stlaäte C pre vytvorenie novej oblasti.",
         TEXT_NORMAL
     },
     {
         8,
         17,
-        "\x07  StlaËte D pre vymazanie existuj˙cej oblasti.",
+        "\x07  Stlaäte D pre vymazanie existuj£cej oblasti.",
         TEXT_NORMAL
     },
     {
         0,
         0,
-        "   PoËkajte, prosÌm ...",
+        "   Poäkajte, pros°m ...",
         TEXT_STATUS
     },
     {
@@ -846,25 +846,25 @@ static MUI_ENTRY skSKFormatPartitionEntries[] =
     {
         4,
         3,
-        " Inötal·tor systÈmu ReactOS " KERNEL_VERSION_STR,
+        " Instal†tor systÇmu ReactOS " KERNEL_VERSION_STR,
         TEXT_UNDERLINE
     },
     {
         6,
         8,
-        "Form·tovanie oblasti",
+        "Form†tovanie oblasti",
         TEXT_NORMAL
     },
     {
         6,
         10,
-        "Inötal·tor teraz naform·tuje oblasù. StlaËte ENTER pre pokraËovanie.",
+        "Instal†tor teraz naform†tuje oblas_. Stlaäte ENTER pre pokraäovanie.",
         TEXT_NORMAL
     },
     {
         0,
         0,
-        "   ENTER = PokraËovaù   F3 = SkonËiù",
+        "   ENTER = Pokraäova_   F3 = Skonäi_",
         TEXT_STATUS
     },
     {
@@ -880,19 +880,19 @@ static MUI_ENTRY skSKInstallDirectoryEntries[] =
     {
         4,
         3,
-        " Inötal·tor systÈmu ReactOS " KERNEL_VERSION_STR,
+        " Instal†tor systÇmu ReactOS " KERNEL_VERSION_STR,
         TEXT_UNDERLINE
     },
     {
         6,
         8,
-        "Inötal·tor inötaluje s˙bory systÈmu ReactOS na zvolen˙ oblasù.",
+        "Instal†tor instaluje s£bory systÇmu ReactOS na zvolen£ oblas_.",
         TEXT_NORMAL
     },
     {
         6,
         9,
-        "Vyberte adres·r kam chcete nainötalovaù systÈm ReactOS:",
+        "Vyberte adres†r kam chcete nainstalova_ systÇm ReactOS:",
         TEXT_NORMAL
     },
     {
@@ -916,7 +916,7 @@ static MUI_ENTRY skSKInstallDirectoryEntries[] =
     {
         0,
         0,
-        "   ENTER = PokraËovaù   F3 = SkonËiù",
+        "   ENTER = Pokraäova_   F3 = Skonäi_",
         TEXT_STATUS
     },
     {
@@ -932,31 +932,31 @@ static MUI_ENTRY skSKFileCopyEntries[] =
     {
         4,
         3,
-        " Inötal·tor systÈmu ReactOS " KERNEL_VERSION_STR,
+        " Instal†tor systÇmu ReactOS " KERNEL_VERSION_STR,
         TEXT_UNDERLINE
     },
     {
         11,
         12,
-        "PoËkajte, prosÌm, k˝m Inötal·tor systÈmu ReactOS skopÌruje s˙bory",
+        "Poäkajte, pros°m, kÏm Instal†tor systÇmu ReactOS skop°ruje s£bory",
         TEXT_NORMAL
     },
     {
         30,
         13,
-        "do V·öho inötalaËnÈho prieËinka pre ReactOS.",
+        "do V†sho instalaänÇho prieäinka pre ReactOS.",
         TEXT_NORMAL
     },
     {
         20,
         14,
-        "DokonËenie mÙûe trvaù niekoæko min˙t.",
+        "Dokonäenie mìze trva_ niekoÛko min£t.",
         TEXT_NORMAL
     },
     {
         0,
         0,
-        "                                                           \xB3 PoËkajte, prosÌm ...    ",
+        "                                                           \xB3 Poäkajte, pros°m ...    ",
         TEXT_STATUS
     },
     {
@@ -972,37 +972,37 @@ static MUI_ENTRY skSKBootLoaderEntries[] =
     {
         4,
         3,
-        " Inötal·tor systÈmu ReactOS " KERNEL_VERSION_STR,
+        " Instal†tor systÇmu ReactOS " KERNEL_VERSION_STR,
         TEXT_UNDERLINE
     },
     {
         6,
         8,
-        "Inötal·tor inötaluje zav·dzaË operaËnÈho systÈmu",
+        "Instal†tor instaluje zav†dzaä operaänÇho systÇmu",
         TEXT_NORMAL
     },
     {
         8,
         12,
-        "Nainötalovaù zav·dzaË systÈmu na pevn˝ disk (MBR).",
+        "Nainstalova_ zav†dzaä systÇmu na pevnÏ disk (MBR).",
         TEXT_NORMAL
     },
     {
         8,
         13,
-        "Nainötalovaù zav·dzaË systÈmu na disketu.",
+        "Nainstalova_ zav†dzaä systÇmu na disketu.",
         TEXT_NORMAL
     },
     {
         8,
         14,
-        "PreskoËiù inötal·ciu zav·dzaËa systÈmu.",
+        "Preskoäi_ instal†ciu zav†dzaäa systÇmu.",
         TEXT_NORMAL
     },
     {
         0,
         0,
-        "   ENTER = PokraËovaù   F3 = SkonËiù",
+        "   ENTER = Pokraäova_   F3 = Skonäi_",
         TEXT_STATUS
     },
     {
@@ -1018,43 +1018,43 @@ static MUI_ENTRY skSKKeyboardSettingsEntries[] =
     {
         4,
         3,
-        " Inötal·tor systÈmu ReactOS " KERNEL_VERSION_STR,
+        " Instal†tor systÇmu ReactOS " KERNEL_VERSION_STR,
         TEXT_UNDERLINE
     },
     {
         6,
         8,
-        "Chcete zmeniù typ kl·vesnice, ktor˝ m· byù nainötalovan˝.",
+        "Chcete zmeni_ typ kl†vesnice, ktorÏ m† by_ nainstalovanÏ.",
         TEXT_NORMAL
     },
     {
         8,
         10,
-        "\x07  StlaËte kl·ves HORE alebo DOLE pre v˝ber poûadovanÈho typu kl·vesnice.",
+        "\x07  Stlaäte kl†ves HORE alebo DOLE pre vÏber pozadovanÇho typu kl†vesnice.",
         TEXT_NORMAL
     },
     {
         8,
         11,
-        "   Potom stlaËte ENTER.",
+        "   Potom stlaäte ENTER.",
         TEXT_NORMAL
     },
     {
         8,
         13,
-        "\x07  StlaËte kl·ves ESC pre n·vrat na predch·dzaj˙cu str·nku bez zmeny",
+        "\x07  Stlaäte kl†ves ESC pre n†vrat na predch†dzaj£cu str†nku bez zmeny",
         TEXT_NORMAL
     },
     {
         8,
         14,
-        "   typu kl·vesnice.",
+        "   typu kl†vesnice.",
         TEXT_NORMAL
     },
     {
         0,
         0,
-        "   ENTER = PokraËovaù   ESC = Zruöiù   F3 = SkonËiù",
+        "   ENTER = Pokraäova_   ESC = Zrusi_   F3 = Skonäi_",
         TEXT_STATUS
     },
     {
@@ -1070,43 +1070,43 @@ static MUI_ENTRY skSKLayoutSettingsEntries[] =
     {
         4,
         3,
-        " Inötal·tor systÈmu ReactOS " KERNEL_VERSION_STR,
+        " Instal†tor systÇmu ReactOS " KERNEL_VERSION_STR,
         TEXT_UNDERLINE
     },
     {
         6,
         8,
-        "Chcete zmeniù rozloûenie kl·vesnice, ktorÈ m· byù nainötalovanÈ.",
+        "Chcete zmeni_ rozlozenie kl†vesnice, ktorÇ m† by_ nainstalovanÇ.",
         TEXT_NORMAL
     },
     {
         8,
         10,
-        "\x07  StlaËte kl·ves HORE alebo DOLE pre v˝ber poûadovanÈho rozloûenia",
+        "\x07  Stlaäte kl†ves HORE alebo DOLE pre vÏber pozadovanÇho rozlozenia",
         TEXT_NORMAL
     },
     {
         8,
         11,
-        "    kl·vesnice. Potom stlaËte ENTER.",
+        "    kl†vesnice. Potom stlaäte ENTER.",
         TEXT_NORMAL
     },
     {
         8,
         13,
-        "\x07  StlaËte kl·ves ESC pre n·vrat na predch·dzaj˙cu str·nku bez zmeny",
+        "\x07  Stlaäte kl†ves ESC pre n†vrat na predch†dzaj£cu str†nku bez zmeny",
         TEXT_NORMAL
     },
     {
         8,
         14,
-        "   rozloûenia kl·vesnice.",
+        "   rozlozenia kl†vesnice.",
         TEXT_NORMAL
     },
     {
         0,
         0,
-        "   ENTER = PokraËovaù   ESC = Zruöiù   F3 = SkonËiù",
+        "   ENTER = Pokraäova_   ESC = Zrusi_   F3 = Skonäi_",
         TEXT_STATUS
     },
     {
@@ -1123,19 +1123,19 @@ static MUI_ENTRY skSKPrepareCopyEntries[] =
     {
         4,
         3,
-        " Inötal·tor systÈmu ReactOS " KERNEL_VERSION_STR,
+        " Instal†tor systÇmu ReactOS " KERNEL_VERSION_STR,
         TEXT_UNDERLINE
     },
     {
         6,
         8,
-        "Pripravuje sa kopÌrovanie s˙borov systÈmu ReactOS. ",
+        "Pripravuje sa kop°rovanie s£borov systÇmu ReactOS. ",
         TEXT_NORMAL
     },
     {
         0,
         0,
-        "   Vytv·ra sa zoznam potrebn˝ch s˙borov ...",
+        "   Vytv†ra sa zoznam potrebnÏch s£borov ...",
         TEXT_STATUS
     },
     {
@@ -1152,37 +1152,37 @@ static MUI_ENTRY skSKSelectFSEntries[] =
     {
         4,
         3,
-        " Inötal·tor systÈmu ReactOS " KERNEL_VERSION_STR,
+        " Instal†tor systÇmu ReactOS " KERNEL_VERSION_STR,
         TEXT_UNDERLINE
     },
     {
         6,
         17,
-        "Vyberte systÈm s˙borov zo zoznamu uvedenÈho niûöie.",
+        "Vyberte systÇm s£borov zo zoznamu uvedenÇho nizsie.",
         0
     },
     {
         8,
         19,
-        "\x07  StlaËte HORE alebo DOLE pre v˝ber systÈmu s˙borov.",
+        "\x07  Stlaäte HORE alebo DOLE pre vÏber systÇmu s£borov.",
         0
     },
     {
         8,
         21,
-        "\x07  StlaËte ENTER pre form·tovanie oblasti.",
+        "\x07  Stlaäte ENTER pre form†tovanie oblasti.",
         0
     },
     {
         8,
         23,
-        "\x07  StlaËte ESC pre v˝ber inej oblasti.",
+        "\x07  Stlaäte ESC pre vÏber inej oblasti.",
         0
     },
     {
         0,
         0,
-        "   ENTER = PokraËovaù   ESC = Zruöiù   F3 = SkonËiù",
+        "   ENTER = Pokraäova_   ESC = Zrusi_   F3 = Skonäi_",
         TEXT_STATUS
     },
 
@@ -1199,37 +1199,37 @@ static MUI_ENTRY skSKDeletePartitionEntries[] =
     {
         4,
         3,
-        " Inötal·tor systÈmu ReactOS " KERNEL_VERSION_STR,
+        " Instal†tor systÇmu ReactOS " KERNEL_VERSION_STR,
         TEXT_UNDERLINE
     },
     {
         6,
         8,
-        "Vybrali Ste si odstr·nenie oblasti",
+        "Vybrali Ste si odstr†nenie oblasti",
         TEXT_NORMAL
     },
     {
         8,
         18,
-        "\x07  StlaËte D pre odstr·nenie oblasti.",
+        "\x07  Stlaäte D pre odstr†nenie oblasti.",
         TEXT_NORMAL
     },
     {
         11,
         19,
-        "UPOZORNENIE: Vöetky ˙daje na tejto oblasti sa nen·vratne stratia!",
+        "UPOZORNENIE: Vsetky £daje na tejto oblasti sa nen†vratne stratia!",
         TEXT_NORMAL
     },
     {
         8,
         21,
-        "\x07  StlaËte ESC pre zruöenie.",
+        "\x07  Stlaäte ESC pre zrusenie.",
         TEXT_NORMAL
     },
     {
         0,
         0,
-        "   D = Odstr·niù oblasù   ESC = Zruöiù   F3 = SkonËiù",
+        "   D = Odstr†ni_ oblas_   ESC = Zrusi_   F3 = Skonäi_",
         TEXT_STATUS
     },
     {
@@ -1245,19 +1245,19 @@ static MUI_ENTRY skSKRegistryEntries[] =
     {
         4,
         3,
-        " Inötal·tor systÈmu ReactOS " KERNEL_VERSION_STR,
+        " Instal†tor systÇmu ReactOS " KERNEL_VERSION_STR,
         TEXT_UNDERLINE
     },
     {
         6,
         8,
-        "Aktualizuj˙ sa systÈmovÈ nastavenia.",
+        "Aktualizuj£ sa systÇmovÇ nastavenia.",
         TEXT_NORMAL
     },
     {
         0,
         0,
-        "   Vytv·raj˙ sa poloûky registrov ...", //registry hives
+        "   Vytv†raj£ sa polozky registrov ...", //registry hives
         TEXT_STATUS
     },
     {
@@ -1273,197 +1273,197 @@ MUI_ERROR skSKErrorEntries[] =
 {
     {
         //ERROR_NOT_INSTALLED
-        "SystÈm ReactOS nie je kompletne nainötalovan˝ na V·ö\n"
-        "poËÌtaË. Ak teraz preruöÌte inötal·ciu, budete musieù\n"
-        "spustiù Inötal·tor znova, aby sa systÈm ReactOS nainötaloval.\n"
+        "SystÇm ReactOS nie je kompletne nainstalovanÏ na V†s\n"
+        "poä°taä. Ak teraz prerus°te instal†ciu, budete musie_\n"
+        "spusti_ Instal†tor znova, aby sa systÇm ReactOS nainstaloval.\n"
         "\n"
-        "  \x07  StlaËte ENTER pre pokraËovanie v inötal·cii.\n"
-        "  \x07  StlaËte F3 pre skonËenie inötal·cie.",
-        "F3 = SkonËiù  ENTER = PokraËovaù"
+        "  \x07  Stlaäte ENTER pre pokraäovanie v instal†cii.\n"
+        "  \x07  Stlaäte F3 pre skonäenie instal†cie.",
+        "F3 = Skonäi_  ENTER = Pokraäova_"
     },
     {
         //ERROR_NO_HDD
-        "Inötal·toru sa nepodarilo n·jsù pevn˝ disk.\n",
-        "ENTER = Reötart poËÌtaËa"
+        "Instal†toru sa nepodarilo n†js_ pevnÏ disk.\n",
+        "ENTER = Restart poä°taäa"
     },
     {
         //ERROR_NO_SOURCE_DRIVE
-        "Inötal·toru sa nepodarilo n·jsù jej zdrojov˙ mechaniku.\n",
-        "ENTER = Reötart poËÌtaËa"
+        "Instal†toru sa nepodarilo n†js_ jej zdrojov£ mechaniku.\n",
+        "ENTER = Restart poä°taäa"
     },
     {
         //ERROR_LOAD_TXTSETUPSIF
-        "Inötal·tor zlyhal pri nahr·vanÌ s˙boru TXTSETUP.SIF.\n",
-        "ENTER = Reötart poËÌtaËa"
+        "Instal†tor zlyhal pri nahr†van° s£boru TXTSETUP.SIF.\n",
+        "ENTER = Restart poä°taäa"
     },
     {
         //ERROR_CORRUPT_TXTSETUPSIF
-        "Inötal·tor naöiel poökoden˝ s˙bor TXTSETUP.SIF.\n",
-        "ENTER = Reötart poËÌtaËa"
+        "Instal†tor nasiel poskodenÏ s£bor TXTSETUP.SIF.\n",
+        "ENTER = Restart poä°taäa"
     },
     {
         //ERROR_SIGNATURE_TXTSETUPSIF,
-        "Setup found an invalid signature in TXTSETUP.SIF.\n", //chybn˝ (neplatn˝) podpis (znak, znaËka, öifra)
-        "ENTER = Reötart poËÌtaËa"
+        "Setup found an invalid signature in TXTSETUP.SIF.\n", //chybnÏ (neplatnÏ) podpis (znak, znaäka, sifra)
+        "ENTER = Restart poä°taäa"
     },
     {
         //ERROR_DRIVE_INFORMATION
         "Setup could not retrieve system drive information.\n",
-        "ENTER = Reötart poËÌtaËa"
+        "ENTER = Restart poä°taäa"
     },
     {
         //ERROR_WRITE_BOOT,
         "Setup failed to install FAT bootcode on the system partition.",
-        "ENTER = Reötart poËÌtaËa"
+        "ENTER = Restart poä°taäa"
     },
     {
         //ERROR_LOAD_COMPUTER,
-        "Inötal·tor zlyhal pri nahr·vanÌ zoznamu typov poËÌtaËov.\n",
-        "ENTER = Reötart poËÌtaËa"
+        "Instal†tor zlyhal pri nahr†van° zoznamu typov poä°taäov.\n",
+        "ENTER = Restart poä°taäa"
     },
     {
         //ERROR_LOAD_DISPLAY,
-        "Inötal·tor zlyhal pri nahr·vanÌ zoznamu nastavenÌ monitora.\n",
-        "ENTER = Reötart poËÌtaËa"
+        "Instal†tor zlyhal pri nahr†van° zoznamu nastaven° monitora.\n",
+        "ENTER = Restart poä°taäa"
     },
     {
         //ERROR_LOAD_KEYBOARD,
-        "Inötal·tor zlyhal pri nahr·vanÌ zoznamu typov kl·vesnÌc.\n",
-        "ENTER = Reötart poËÌtaËa"
+        "Instal†tor zlyhal pri nahr†van° zoznamu typov kl†vesn°c.\n",
+        "ENTER = Restart poä°taäa"
     },
     {
         //ERROR_LOAD_KBLAYOUT,
-        "Inötal·tor zlyhal pri nahr·vanÌ zoznamu rozloûenia kl·vesnÌc.\n",
-        "ENTER = Reötart poËÌtaËa"
+        "Instal†tor zlyhal pri nahr†van° zoznamu rozlozenia kl†vesn°c.\n",
+        "ENTER = Restart poä°taäa"
     },
     {
         //ERROR_WARN_PARTITION,
           "Setup found that at least one harddisk contains an incompatible\n"
           "partition table that can not be handled properly!\n"
           "\n"
-          "Vytvorenie alebo odstr·nenie oblastÌ mÙûe zniËiù tabuæku oblastÌ.\n"
+          "Vytvorenie alebo odstr†nenie oblast° mìze zniäi_ tabuÛku oblast°.\n"
           "\n"
-          "  \x07  StlaËte F3 pre skonËenie inötal·cie."
-          "  \x07  StlaËte ENTER pre pokraËovanie.",
-          "F3 = SkonËiù  ENTER = PokraËovaù"
+          "  \x07  Stlaäte F3 pre skonäenie instal†cie."
+          "  \x07  Stlaäte ENTER pre pokraäovanie.",
+          "F3 = Skonäi_  ENTER = Pokraäova_"
     },
     {
         //ERROR_NEW_PARTITION,
-        "NemÙûete vytvoriù nov˙ oblasù\n"
-        "vo vn˙tri uû existuj˙cej oblasti!\n"
+        "Nemìzete vytvori_ nov£ oblas_\n"
+        "vo vn£tri uz existuj£cej oblasti!\n"
         "\n"
-        "  * PokraËujte stlaËenÌm æubovoænÈho kl·vesu.",
+        "  * Pokraäujte stlaäen°m ÛubovoÛnÇho kl†vesu.",
         NULL
     },
     {
         //ERROR_DELETE_SPACE,
-        "NemÙûete odstr·niù miesto na disku, ktorÈ nie je oblasùou!\n"
+        "Nemìzete odstr†ni_ miesto na disku, ktorÇ nie je oblas_ou!\n"
         "\n"
-        "  * PokraËujte stlaËenÌm æubovoænÈho kl·vesu.",
+        "  * Pokraäujte stlaäen°m ÛubovoÛnÇho kl†vesu.",
         NULL
     },
     {
         //ERROR_INSTALL_BOOTCODE,
         "Setup failed to install the FAT bootcode on the system partition.",
-        "ENTER = Reötart poËÌtaËa"
+        "ENTER = Restart poä°taäa"
     },
     {
         //ERROR_NO_FLOPPY,
         "V mechanike A: nie je disketa.",
-        "ENTER = PokraËovaù"
+        "ENTER = Pokraäova_"
     },
     {
         //ERROR_UPDATE_KBSETTINGS,
         "Setup failed to update keyboard layout settings.",
-        "ENTER = Reötart poËÌtaËa"
+        "ENTER = Restart poä°taäa"
     },
     {
         //ERROR_UPDATE_DISPLAY_SETTINGS,
         "Setup failed to update display registry settings.",
-        "ENTER = Reötart poËÌtaËa"
+        "ENTER = Restart poä°taäa"
     },
     {
         //ERROR_IMPORT_HIVE,
         "Setup failed to import a hive file.",
-        "ENTER = Reötart poËÌtaËa"
+        "ENTER = Restart poä°taäa"
     },
     {
         //ERROR_FIND_REGISTRY
         "Setup failed to find the registry data files.",
-        "ENTER = Reötart poËÌtaËa"
+        "ENTER = Restart poä°taäa"
     },
     {
         //ERROR_CREATE_HIVE,
         "Setup failed to create the registry hives.",
-        "ENTER = Reötart poËÌtaËa"
+        "ENTER = Restart poä°taäa"
     },
     {
         //ERROR_INITIALIZE_REGISTRY,
         "Setup failed to set the initialize the registry.",
-        "ENTER = Reötart poËÌtaËa"
+        "ENTER = Restart poä°taäa"
     },
     {
         //ERROR_INVALID_CABINET_INF,
         "Cabinet has no valid inf file.\n",
-        "ENTER = Reötart poËÌtaËa"
+        "ENTER = Restart poä°taäa"
     },
     {
         //ERROR_CABINET_MISSING,
         "Cabinet not found.\n",
-        "ENTER = Reötart poËÌtaËa"
+        "ENTER = Restart poä°taäa"
     },
     {
         //ERROR_CABINET_SCRIPT,
         "Cabinet has no setup script.\n",
-        "ENTER = Reötart poËÌtaËa"
+        "ENTER = Restart poä°taäa"
     },
     {
         //ERROR_COPY_QUEUE,
         "Setup failed to open the copy file queue.\n",
-        "ENTER = Reötart poËÌtaËa"
+        "ENTER = Restart poä°taäa"
     },
     {
         //ERROR_CREATE_DIR,
         "Setup could not create install directories.",
-        "ENTER = Reötart poËÌtaËa"
+        "ENTER = Restart poä°taäa"
     },
     {
         //ERROR_TXTSETUP_SECTION,
         "Setup failed to find the 'Directories' section\n"
         "in TXTSETUP.SIF.\n",
-        "ENTER = Reötart poËÌtaËa"
+        "ENTER = Restart poä°taäa"
     },
     {
         //ERROR_CABINET_SECTION,
         "Setup failed to find the 'Directories' section\n"
         "in the cabinet.\n",
-        "ENTER = Reötart poËÌtaËa"
+        "ENTER = Restart poä°taäa"
     },
     {
         //ERROR_CREATE_INSTALL_DIR
         "Setup could not create the install directory.",
-        "ENTER = Reötart poËÌtaËa"
+        "ENTER = Restart poä°taäa"
     },
     {
         //ERROR_FIND_SETUPDATA,
-        "Inötal·tor zlyhal pri hæadanÌ sekcie 'SetupData'\n"
-        "v s˙bore TXTSETUP.SIF.\n",
-        "ENTER = Reötart poËÌtaËa"
+        "Instal†tor zlyhal pri hÛadan° sekcie 'SetupData'\n"
+        "v s£bore TXTSETUP.SIF.\n",
+        "ENTER = Restart poä°taäa"
     },
     {
         //ERROR_WRITE_PTABLE,
-        "Inötal·tor zlyhal pri z·pise do tabuliek oblastÌ.\n"
-        "ENTER = Reötart poËÌtaËa"
+        "Instal†tor zlyhal pri z†pise do tabuliek oblast°.\n"
+        "ENTER = Restart poä°taäa"
     },
     {
         //ERROR_ADDING_CODEPAGE,
         "Setup failed to add codepage to registry.\n"
-        "ENTER = Reötart poËÌtaËa"
+        "ENTER = Restart poä°taäa"
     },
     {
         //ERROR_UPDATE_LOCALESETTINGS,
         "Setup could not set the system locale.\n"
-        "ENTER = Reötart poËÌtaËa"
+        "ENTER = Restart poä°taäa"
     },
     {
         NULL,
