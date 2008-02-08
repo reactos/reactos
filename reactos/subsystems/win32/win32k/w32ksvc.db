@@ -680,8 +680,10 @@ NtGdiSetViewportOrgEx                   4
 NtGdiSetWindowExtEx                     4
 NtGdiSetWindowOrgEx                     4
 NtGdiStretchDIBits                      13
+NtUserAcquireOrReleaseInputOwnership    1
 NtUserBuildMenuItemList                 4
 NtUserCreateCursorIconHandle            2
+NtUserDereferenceWndProcHandle          2
 NtUserEnumClipboardFormats              1
 NtUserGetActiveWindow                   0
 NtUserGetCapture                        0
@@ -689,16 +691,22 @@ NtUserGetClassLong                      3
 NtUserGetClientOrigin                   2
 NtUserGetClientRect                     2
 NtUserGetMenuDefaultItem                3
+NtUserGetLastActivePopup                1
 NtUserGetLastInputInfo                  1
 NtUserGetMinMaxInfo                     3
 NtUserGetMonitorInfo                    2
 NtUserGetProp                           2
+NtUserGetQueueStatus                    1
 NtUserGetScrollInfo                     3
+NtUserGetShellWindow                    0
 NtUserGetSystemMetrics                  1
+NtUserGetWindow                         2
 NtUserGetWindowLong                     3
 NtUserGetWindowRect                     2
+NtUserGetWindowThreadProcessId          2
 NtUserInsertMenuItem                    4
 NtUserKillSystemTimer                   2
+NtUserManualGuiCheck                    1
 NtUserMenuInfo                          3
 NtUserMenuItemInfo                      5
 NtUserMonitorFromPoint                  3
@@ -711,21 +719,9 @@ NtUserSendMessageCallback               6
 NtUserSendMessageTimeout                8
 NtUserSendNotifyMessage                 4
 NtUserSetScrollBarInfo                  3
-NtUserGetDesktopWindow                  0
 NtGdiAddFontResource                    2
 NtGdiCreateDIBitmap                     6
 NtGdiGetAspectRatioFilterEx             2
 NtGdiGetFontFamilyInfo                  4
 NtGdiOffsetViewportOrgEx                4
 NtGdiOffsetWindowOrgEx                  4
-#
-# ReactOS only system calls
-NtUserAcquireOrReleaseInputOwnership    1
-NtUserGetWindowThreadProcessId          2
-NtUserGetQueueStatus                    1
-NtUserGetParent                         1
-NtUserGetWindow                         2
-NtUserGetLastActivePopup                1
-NtUserGetShellWindow                    0
-NtUserDereferenceWndProcHandle          2
-NtUserManualGuiCheck                    1

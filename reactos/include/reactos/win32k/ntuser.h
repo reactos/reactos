@@ -476,9 +476,6 @@ NtUserGetProp(HWND hWnd, ATOM Atom);
 BOOL NTAPI
 NtUserGetClientOrigin(HWND hWnd, LPPOINT Point);
 
-HWND NTAPI
-NtUserGetDesktopWindow();
-
 NTSTATUS
 NTAPI
 NtUserAcquireOrReleaseInputOwnership(
@@ -2543,9 +2540,6 @@ NtUserGetWindowThreadProcessId(HWND hWnd, LPDWORD UnsafePid);
 
 DWORD NTAPI
 NtUserGetQueueStatus(BOOL ClearChanges);
-
-HWND NTAPI
-NtUserGetParent(HWND hWnd);
 
 HWND NTAPI
 NtUserGetWindow(HWND hWnd, UINT Relationship);

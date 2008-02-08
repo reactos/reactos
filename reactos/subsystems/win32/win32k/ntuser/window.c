@@ -2963,26 +2963,6 @@ CLEANUP:
 
 
 /*
- * @implemented
- */
-HWND STDCALL
-NtUserGetDesktopWindow()
-{
-   DECLARE_RETURN(HWND);
-
-   DPRINT("Enter NtUserGetDesktopWindow\n");
-   UserEnterShared();
-
-   RETURN( IntGetDesktopWindow());
-
-CLEANUP:
-   DPRINT("Leave NtUserGetDesktopWindow, ret=%i\n",_ret_);
-   UserLeave();
-   END_CLEANUP;
-}
-
-
-/*
  * @unimplemented
  */
 DWORD STDCALL
@@ -3049,52 +3029,6 @@ CLEANUP:
    UserLeave();
    END_CLEANUP;   
 }
-
-
-/*
- * NtUserGetParent
- *
- * The NtUserGetParent function retrieves a handle to the specified window's
- * parent or owner.
- *
- * Remarks
- *    Note that, despite its name, this function can return an owner window
- *    instead of a parent window.
- *
- * Status
- *    @implemented
- */
-
-HWND STDCALL
-NtUserGetParent(HWND hWnd)
-{
-   PWINDOW_OBJECT Wnd, WndParent;
-   HWND hWndParent = NULL;
-   DECLARE_RETURN(HWND);
-
-   DPRINT("Enter NtUserGetParent\n");
-   UserEnterExclusive();
-
-   if (!(Wnd = UserGetWindowObject(hWnd)))
-   {
-      RETURN( NULL);
-   }
-
-   WndParent = IntGetParent(Wnd);
-   if (WndParent)
-   {
-      hWndParent = WndParent->hSelf;
-   }
-
-   RETURN( hWndParent);
-
-CLEANUP:
-   DPRINT("Leave NtUserGetParent, ret=%i\n",_ret_);
-   UserLeave();
-   END_CLEANUP;
-}
-
-
 
 
 HWND FASTCALL
