@@ -12,6 +12,7 @@
 	<define name="_ARM_" />
 	<define name="__arm__" />
 
+	<property name="WINEBUILD_FLAGS" value="--kill-at"/>
 	<property name="NTOSKRNL_SHARED" value="-Wl,--file-alignment,0x1000 -Wl,--section-alignment,0x1000 -nostartfiles -shared"/>
 
 	<if property="OPTIMIZE" value="1">
