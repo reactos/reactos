@@ -319,8 +319,31 @@ MmInit1(ULONG_PTR FirstKrnlPhysAddr,
 
        /* Get the addresses */
        FirstKrnlPhysAddr = (ULONG_PTR)LdrEntry->DllBase - KSEG0_BASE;
+   }
 
-       /* FIXME: How do we get the last address? */
+   /* Get the last kernel address */
+   if (!LastKrnlPhysAddr)
+   {
+        PLIST_ENTRY NextEntry;
+        PMEMORY_ALLOCATION_DESCRIPTOR Md;
+
+        for (NextEntry = KeLoaderBlock->MemoryDescriptorListHead.Flink;
+             NextEntry != &KeLoaderBlock->MemoryDescriptorListHead;
+             NextEntry = NextEntry->Flink)
+        {
+            Md = CONTAINING_RECORD(NextEntry, MEMORY_ALLOCATION_DESCRIPTOR, ListEntry);
+            if (Md->MemoryType == LoaderBootDriver ||
+                Md->MemoryType == LoaderSystemCode ||
+                Md->MemoryType == LoaderHalCode)
+            {
+                if (Md->BasePage+Md->PageCount > LastKrnlPhysAddr)
+                    LastKrnlPhysAddr = Md->BasePage+Md->PageCount;
+            }
+        }
+
+        /* Convert to a physical address */
+        LastKrnlPhysAddr = LastKrnlPhysAddr << PAGE_SHIFT;
+        LastKernelAddress = LastKrnlPhysAddr | KSEG0_BASE;
    }
 
    /* Set memory limits */
