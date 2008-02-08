@@ -200,6 +200,7 @@ RBUILD_BACKEND_MINGW_BASE_SOURCES = $(addprefix $(RBUILD_MINGW_BASE_), \
 	mingw.cpp \
 	modulehandler.cpp \
 	proxymakefile.cpp \
+	rule.cpp \
 	)
 
 RBUILD_BACKEND_DEVCPP_BASE_SOURCES = $(addprefix $(RBUILD_DEVCPP_BASE_), \
@@ -239,7 +240,7 @@ RBUILD_BACKEND_SOURCES = \
 	$(RBUILD_BACKEND_MSBUILD_BASE_SOURCES) \
 	$(RBUILD_BACKEND_BASE_)backend.cpp
 
-RBUILD_COMMON_SOURCES = \
+RBUILD_SOURCES = \
 	$(RBUILD_BACKEND_SOURCES) \
 	$(addprefix $(RBUILD_BASE_), \
 		global.cpp \
@@ -261,28 +262,18 @@ RBUILD_COMMON_SOURCES = \
 		linkerscript.cpp \
 		module.cpp \
 		project.cpp \
+		rbuild.cpp \
 		stubbedcomponent.cpp \
 		syssetupgenerator.cpp \
 		testsupportcode.cpp \
 		xmlnode.cpp \
 		)
 
-RBUILD_SPECIAL_SOURCES = \
-	$(RBUILD_BASE_)rbuild.cpp
-
-RBUILD_SOURCES = \
-	$(RBUILD_COMMON_SOURCES) \
-	$(RBUILD_SPECIAL_SOURCES)
-
-RBUILD_COMMON_OBJECTS = \
-	$(addprefix $(INTERMEDIATE_), $(RBUILD_COMMON_SOURCES:.cpp=.o))
-
 RBUILD_SPECIAL_OBJECTS = \
 	$(addprefix $(INTERMEDIATE_), $(RBUILD_SPECIAL_SOURCES:.cpp=.o))
 
 RBUILD_OBJECTS = \
-	$(RBUILD_COMMON_OBJECTS) \
-	$(RBUILD_SPECIAL_OBJECTS)
+	$(addprefix $(INTERMEDIATE_), $(RBUILD_SOURCES:.cpp=.o))
 
 RBUILD_BACKEND_DEVCPP_HEADERS = \
 	devcpp.h
@@ -304,7 +295,8 @@ RBUILD_BACKEND_MSBUILD_HEADERS = \
 
 RBUILD_BACKEND_MINGW_HEADERS = \
 	mingw.h \
-	modulehandler.h
+	modulehandler.h \
+	rule.h
 
 RBUILD_BACKEND_HEADERS = \
 	backend.h \
@@ -447,6 +439,10 @@ $(RBUILD_INT_)rbuild.o: $(RBUILD_BASE_)rbuild.cpp $(RBUILD_HEADERS) | $(RBUILD_I
 	$(ECHO_CC)
 	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
 
+$(RBUILD_INT_)rule.o: $(RBUILD_BASE_)rule.cpp $(RBUILD_HEADERS) | $(RBUILD_INT)
+	$(ECHO_CC)
+	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
+
 $(RBUILD_INT_)stubbedcomponent.o: $(RBUILD_BASE_)stubbedcomponent.cpp $(RBUILD_HEADERS) | $(RBUILD_INT)
 	$(ECHO_CC)
 	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
@@ -480,6 +476,10 @@ $(RBUILD_MINGW_INT_)modulehandler.o: $(RBUILD_MINGW_BASE_)modulehandler.cpp $(RB
 	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
 
 $(RBUILD_MINGW_INT_)proxymakefile.o: $(RBUILD_MINGW_BASE_)proxymakefile.cpp $(RBUILD_HEADERS) | $(RBUILD_MINGW_INT)
+	$(ECHO_CC)
+	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
+
+$(RBUILD_MINGW_INT_)rule.o: $(RBUILD_MINGW_BASE_)rule.cpp $(RBUILD_HEADERS) | $(RBUILD_MINGW_INT)
 	$(ECHO_CC)
 	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
 

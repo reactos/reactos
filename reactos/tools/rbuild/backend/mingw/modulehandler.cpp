@@ -22,6 +22,7 @@
 #include "../../rbuild.h"
 #include "mingw.h"
 #include "modulehandler.h"
+#include "rule.h"
 
 using std::set;
 using std::string;
@@ -1245,6 +1246,43 @@ MingwModuleHandler::GetPrecompiledHeaderFilename () const
 	                          ReplaceExtension ( module.pch->file.name, "_" + module.name + ".gch" ) );
 }
 
+Rule gasRule ( "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).o: $(source) $(module_rbuild) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
+               "\t$(ECHO_GAS)\n"
+               "\t${gcc} -x assembler-with-cpp -c $< -o $@ -D__ASM__ $($(module_name)_CFLAGS)\n",
+               "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).o",
+               "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)", NULL );
+Rule bootRule ( "$(module_output): $(source) $(module_rbuild) | $(OUTPUT)$(SEP)$(source_dir)\n"
+                "\t$(ECHO_NASM)\n"
+                "\t$(Q)${nasm} -f win32 $< -o $@ $($(module_name)_NASMFLAGS)\n",
+                "$(OUTPUT)$(SEP)$(source_dir)$(SEP)", NULL );
+Rule nasmRule ( "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).o: $(source) $(module_rbuild) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
+                "\t$(ECHO_NASM)\n"
+                "\t$(Q)${nasm} -f win32 $< -o $@ $($(module_name)_NASMFLAGS)\n",
+                "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).o",
+                "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)", NULL );
+Rule windresRule ( "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).coff: $(source) $(module_rbuild) $(WRC_TARGET) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
+                   "\t$(ECHO_WRC)\n"
+                   "\t${gcc} -xc -E -DRC_INVOKED ${$(module_name)_RCFLAGS} $(source) > $(TEMPORARY)$(SEP)$(module_name).$(source_name_noext).rci.tmp\n"
+                   "\t$(Q)$(WRC_TARGET) ${$(module_name)_RCFLAGS} $(TEMPORARY)$(SEP)$(module_name).$(source_name_noext).rci.tmp $(TEMPORARY)$(SEP)$(module_name).$(source_name_noext).res.tmp\n"
+                   "\t-@${rm} $(TEMPORARY)$(SEP)$(module_name).$(source_name_noext).rci.tmp 2>$(NUL)\n"
+                   "\t${windres} $(TEMPORARY)$(SEP)$(module_name).$(source_name_noext).res.tmp -o $@\n"
+                   "\t-@${rm} $(TEMPORARY)$(SEP)$(module_name).$(source_name_noext).res.tmp 2>$(NUL)\n",
+                   "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).coff",
+                   "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)", NULL );
+Rule wmcRule ( "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).rc $(INTERMEDIATE)$(SEP)include$(SEP)reactos$(SEP)$(source_name_noext).h: $(WMC_TARGET) $(source)\n"
+               "\t$(ECHO_WMC)\n"
+               "\t$(Q)$(WMC_TARGET) -i -H $(INTERMEDIATE)$(SEP)include$(SEP)reactos$(SEP)$(source_name_noext).h -o $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).rc $(source)\n",
+               "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).rc", "$(INTERMEDIATE)$(SEP)include$(SEP)reactos$(SEP)$(source_name_noext).h", NULL );
+Rule winebuildRule ( "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).spec.def: $(source) $(module_rbuild) $(WINEBUILD_TARGET) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
+                     "\t$(ECHO_WINEBLD)\n"
+                     "\t$(Q)$(WINEBUILD_TARGET) -o $(INTERMEDIATE)$(SEP)$(source_path)$(SEP)$(source_name_noext).spec.def --def -E $(source_path)$(SEP)$(source_name_noext).spec\n"
+                     "$(INTERMEDIATE)$(SEP)$(source_path)$(SEP)$(source_name_noext).stubs.c: $(source_path)$(SEP)$(source_name_noext).spec $(WINEBUILD_TARGET)\n"
+                     "\t$(ECHO_WINEBLD)\n"
+                     "\t$(Q)$(WINEBUILD_TARGET) -o $(INTERMEDIATE)$(SEP)$(source_path)$(SEP)$(source_name_noext).stubs.c --pedll $(source_path)$(SEP)$(source_name_noext).spec\n",
+                     "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).spec.def",
+                     "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).stubs.c",
+                     "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)", NULL );
+
 void
 MingwModuleHandler::GenerateGccCommand (
 	const FileLocation* sourceFile,
@@ -1286,175 +1324,7 @@ MingwModuleHandler::GenerateGccCommand (
 		delete pchFilename;
 }
 
-void
-MingwModuleHandler::GenerateGccAssemblerCommand (
-	const FileLocation* sourceFile,
-	const string& cc,
-	const string& cflagsMacro )
-{
-	string dependencies = backend->GetFullName ( *sourceFile );
-	dependencies += " " + NormalizeFilename ( module.xmlbuildFile );
-
-	const FileLocation *objectFilename = GetObjectFilename (
-		sourceFile, module, &clean_files );
-	fprintf ( fMakefile,
-	          "%s: %s | %s\n",
-	          backend->GetFullName ( *objectFilename ).c_str (),
-	          dependencies.c_str (),
-	          backend->GetFullPath ( *objectFilename ).c_str () );
-	fprintf ( fMakefile, "\t$(ECHO_GAS)\n" );
-	fprintf ( fMakefile,
-	          "\t%s -x assembler-with-cpp -c $< -o $@ -D__ASM__ %s\n",
-	          cc.c_str (),
-	          cflagsMacro.c_str () );
-
-	delete objectFilename;
-}
-
-void
-MingwModuleHandler::GenerateNasmCommand (
-	const FileLocation* sourceFile,
-	const string& nasmflagsMacro )
-{
-	string dependencies = backend->GetFullName ( *sourceFile );
-	dependencies += " " + NormalizeFilename ( module.xmlbuildFile );
-
-	const FileLocation *objectFilename = GetObjectFilename (
-		sourceFile, module, &clean_files );
-	fprintf ( fMakefile,
-	          "%s: %s | %s\n",
-	          backend->GetFullName ( *objectFilename ).c_str (),
-	          dependencies.c_str (),
-	          backend->GetFullPath ( *objectFilename ).c_str () );
-	fprintf ( fMakefile, "\t$(ECHO_NASM)\n" );
-	fprintf ( fMakefile,
-	          "\t%s -f win32 $< -o $@ %s\n",
-	          "$(Q)${nasm}",
-	          nasmflagsMacro.c_str () );
-
-	delete objectFilename;
-}
-
-void
-MingwModuleHandler::GenerateWindresCommand (
-	const FileLocation* sourceFile,
-	const string& windresflagsMacro )
-{
-	string dependencies = backend->GetFullName ( *sourceFile );
-	dependencies += " " + NormalizeFilename ( module.xmlbuildFile );
-
-	const FileLocation *objectFilename = GetObjectFilename ( sourceFile, module, &clean_files );
-
-	string sourceFilenamePart = module.name + "." + ReplaceExtension ( sourceFile->name, "" );
-	FileLocation rciFilename ( TemporaryDirectory,
-	                           "",
-	                           sourceFilenamePart + ".rci.tmp" );
-	FileLocation resFilename ( TemporaryDirectory,
-	                           "",
-	                           sourceFilenamePart + ".res.tmp" );
-
-	fprintf ( fMakefile,
-	          "%s: %s $(WRC_TARGET) | %s\n",
-	          backend->GetFullName ( *objectFilename ).c_str (),
-	          dependencies.c_str (),
-	          backend->GetFullPath ( *objectFilename ).c_str () );
-	fprintf ( fMakefile, "\t$(ECHO_WRC)\n" );
-	fprintf ( fMakefile,
-	         "\t${gcc} -xc -E -DRC_INVOKED ${%s} %s > %s\n",
-	         windresflagsMacro.c_str (),
-	         backend->GetFullName ( *sourceFile ).c_str (),
-	         backend->GetFullName ( rciFilename ).c_str () );
-	fprintf ( fMakefile,
-	         "\t$(Q)$(WRC_TARGET) ${%s} %s %s\n",
-	         windresflagsMacro.c_str (),
-	         backend->GetFullName ( rciFilename ).c_str (),
-	         backend->GetFullName ( resFilename ).c_str () );
-	fprintf ( fMakefile,
-	         "\t-@${rm} %s 2>$(NUL)\n",
-	         backend->GetFullName ( rciFilename ).c_str () );
-	fprintf ( fMakefile,
-	         "\t${windres} %s -o $@\n",
-	         backend->GetFullName ( resFilename ).c_str () );
-	fprintf ( fMakefile,
-	         "\t-@${rm} %s 2>$(NUL)\n",
-	         backend->GetFullName ( resFilename ).c_str () );
-
-	delete objectFilename;
-}
-
-void
-MingwModuleHandler::GenerateWinebuildCommands (
-	const FileLocation* sourceFile )
-{
-	string dependencies = backend->GetFullName ( *sourceFile );
-	dependencies += " " + NormalizeFilename ( module.xmlbuildFile );
-
-	string basename = GetBasename ( sourceFile->name );
-	FileLocation def_file ( IntermediateDirectory,
-	                        sourceFile->relative_path,
-	                        basename + ".spec.def" );
-	CLEAN_FILE ( def_file );
-
-	const FileLocation *stub_file = GetActualSourceFilename ( sourceFile );
-	CLEAN_FILE ( *stub_file );
-
-	fprintf ( fMakefile,
-	          "%s: %s $(WINEBUILD_TARGET) | %s\n",
-	          backend->GetFullName ( def_file ).c_str (),
-	          dependencies.c_str (),
-	          backend->GetFullPath ( def_file ).c_str () );
-	fprintf ( fMakefile, "\t$(ECHO_WINEBLD)\n" );
-	fprintf ( fMakefile,
-	          "\t%s -o %s --def -E %s\n",
-	          "$(Q)$(WINEBUILD_TARGET)",
-	          backend->GetFullName ( def_file ).c_str (),
-	          backend->GetFullName ( *sourceFile ).c_str () );
-	fprintf ( fMakefile,
-	          "%s: %s $(WINEBUILD_TARGET)\n",
-	          backend->GetFullName ( *stub_file ).c_str (),
-	          backend->GetFullName ( *sourceFile ).c_str () );
-	fprintf ( fMakefile, "\t$(ECHO_WINEBLD)\n" );
-	fprintf ( fMakefile,
-	          "\t%s -o %s --pedll %s\n",
-	          "$(Q)$(WINEBUILD_TARGET)",
-	          backend->GetFullName ( *stub_file ).c_str (),
-	          backend->GetFullName ( *sourceFile ).c_str () );
-
-	delete stub_file;
-}
-
-void
-MingwModuleHandler::GenerateWmcCommands (
-	const FileLocation* sourceFile )
-{
-	string dependencies = backend->GetFullName ( *sourceFile );
-	dependencies += " " + NormalizeFilename ( module.xmlbuildFile );
-
-	string basename = GetBasename ( sourceFile->name );
-	FileLocation rc_file ( IntermediateDirectory,
-	                        sourceFile->relative_path,
-	                        basename + ".rc" );
-	FileLocation h_file ( IntermediateDirectory,
-	                        "include/reactos",
-	                        basename + ".h" );
-	CLEAN_FILE ( rc_file );
-	CLEAN_FILE ( h_file );
-
-	fprintf ( fMakefile,
-	          "%s %s: $(WMC_TARGET) %s\n",
-	          backend->GetFullName ( rc_file ).c_str (),
-			  backend->GetFullName ( h_file ).c_str (),
-	          backend->GetFullName ( *sourceFile ).c_str () );
-	fprintf ( fMakefile, "\t$(ECHO_WMC)\n" );
-	fprintf ( fMakefile,
-	          "\t%s -i -H %s -o %s %s\n",
-	          "$(Q)$(WMC_TARGET)",
-	          backend->GetFullName ( h_file ).c_str (),
-			  backend->GetFullName ( rc_file ).c_str (),
-	          backend->GetFullName ( *sourceFile ).c_str () );
-}
-
-string
+const std::string&
 MingwModuleHandler::GetWidlFlags ( const CompilationUnit& compilationUnit )
 {
 	return compilationUnit.GetSwitches ();
@@ -1722,9 +1592,43 @@ MingwModuleHandler::GenerateCommands (
 {
 	const FileLocation& sourceFile = compilationUnit.GetFilename ();
 	string extension = GetExtension ( sourceFile );
+	std::transform ( extension.begin (), extension.end (), extension.begin (), tolower );
+
+	struct
+	{
+		HostType host;
+		ModuleType type;
+		string extension;
+		Rule* rule;
+	} rules[] = {
+		{ HostDontCare, TypeDontCare, ".s", &gasRule },
+		{ HostDontCare, BootSector, ".asm", &bootRule },
+		{ HostDontCare, TypeDontCare, ".asm", &nasmRule },
+		{ HostDontCare, TypeDontCare, ".rc", &windresRule },
+		{ HostDontCare, TypeDontCare, ".mc", &wmcRule },
+		{ HostDontCare, TypeDontCare, ".spec", &winebuildRule },
+	};
+	size_t i;
+	Rule *customRule = NULL;
+
+	for ( i = 0; i < sizeof ( rules ) / sizeof ( rules[0] ); i++ )
+	{
+		if ( rules[i].host != HostDontCare && rules[i].host != module.host )
+			continue;
+		if ( rules[i].type != TypeDontCare && rules[i].type != module.type )
+			continue;
+		if ( rules[i].extension != extension )
+			continue;
+		customRule = rules[i].rule;
+		break;
+	}
+
+	if ( customRule )
+		customRule->Execute ( fMakefile, backend, module, &sourceFile, clean_files );
+
 	string flags = cflagsMacro;
 	flags += " ";
-	if ( extension == ".c" || extension == ".C" )
+	if ( extension == ".c" )
 	{
 		flags += GenerateCompilerParametersFromVector ( module.non_if_data.compilerFlags , CompilerTypeCC );
 		GenerateGccCommand ( &sourceFile,
@@ -1732,9 +1636,9 @@ MingwModuleHandler::GenerateCommands (
 		                     cc,
 		                     flags );
 	}
-	else if ( extension == ".cc" || extension == ".CC" ||
-	          extension == ".cpp" || extension == ".CPP" ||
-	          extension == ".cxx" || extension == ".CXX" )
+	else if ( extension == ".cc" ||
+	          extension == ".cpp" || 
+	          extension == ".cxx" )
 	{
 		flags += GenerateCompilerParametersFromVector ( module.non_if_data.compilerFlags , CompilerTypeCPP );
 		GenerateGccCommand ( &sourceFile,
@@ -1742,35 +1646,14 @@ MingwModuleHandler::GenerateCommands (
 		                     cppc,
 		                     flags );
 	}
-	else if ( extension == ".s" || extension == ".S" )
+	else if ( extension == ".spec" )
 	{
-		GenerateGccAssemblerCommand ( &sourceFile,
-		                              cc,
-		                              cflagsMacro );
-	}
-	else if ( extension == ".asm" || extension == ".ASM" )
-	{
-		GenerateNasmCommand ( &sourceFile,
-		                      nasmflagsMacro );
-	}
-	else if ( extension == ".rc" || extension == ".RC" )
-	{
-		GenerateWindresCommand ( &sourceFile,
-		                         windresflagsMacro );
-	}
-	else if ( extension == ".mc" || extension == ".MC" )
-	{
-		GenerateWmcCommands ( &sourceFile );
-	}
-	else if ( extension == ".spec" || extension == ".SPEC" )
-	{
-		GenerateWinebuildCommands ( &sourceFile );
 		GenerateGccCommand ( &sourceFile,
 		                     extraDependencies,
 		                     cc,
 		                     cflagsMacro );
 	}
-	else if ( extension == ".idl" || extension == ".IDL" )
+	else if ( extension == ".idl" )
 	{
 		GenerateWidlCommands ( compilationUnit,
 		                       widlflagsMacro );
@@ -1782,7 +1665,7 @@ MingwModuleHandler::GenerateCommands (
 			                     cflagsMacro );
 		}
 	}
-	else
+	else if ( !customRule )
 	{
 		throw InvalidOperationException ( __FILE__,
 		                                  __LINE__,

@@ -155,16 +155,7 @@ private:
 	                          const std::string& extraDependencies,
 	                          const std::string& cc,
 	                          const std::string& cflagsMacro );
-	void GenerateGccAssemblerCommand ( const FileLocation* sourceFile,
-	                                   const std::string& cc,
-	                                   const std::string& cflagsMacro );
-	void GenerateNasmCommand ( const FileLocation* sourceFile,
-	                           const std::string& nasmflagsMacro );
-	void GenerateWindresCommand ( const FileLocation* sourceFile,
-	                              const std::string& windresflagsMacro );
-	void GenerateWinebuildCommands ( const FileLocation* sourceFile );
-	void GenerateWmcCommands ( const FileLocation* sourceFile);
-	std::string GetWidlFlags ( const CompilationUnit& compilationUnit );
+	const std::string& GetWidlFlags ( const CompilationUnit& compilationUnit );
 	void GenerateWidlCommandsServer (
 		const CompilationUnit& compilationUnit,
 		const std::string& widlflagsMacro );
