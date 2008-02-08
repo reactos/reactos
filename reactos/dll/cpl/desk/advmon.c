@@ -48,31 +48,6 @@ InitPropSheetPage(PROPSHEETHEADER *ppsh, WORD idDlg, DLGPROC DlgProc, LPARAM lPa
     return FALSE;
 }
 
-static INT_PTR CALLBACK
-AdvGeneralPageProc(HWND hwndDlg,
-                   UINT uMsg,
-                   WPARAM wParam,
-                   LPARAM lParam)
-{
-    PDISPLAY_DEVICE_ENTRY DispDevice = NULL;
-    INT_PTR Ret = 0;
-
-    if (uMsg != WM_INITDIALOG)
-        DispDevice = (PDISPLAY_DEVICE_ENTRY)GetWindowLongPtr(hwndDlg, DWLP_USER);
-
-    switch (uMsg)
-    {
-        case WM_INITDIALOG:
-            DispDevice = (PDISPLAY_DEVICE_ENTRY)(((LPPROPSHEETPAGE)lParam)->lParam);
-            SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)DispDevice);
-
-            Ret = TRUE;
-            break;
-    }
-
-    return Ret;
-}
-
 static VOID
 BuildAdvPropTitle(IDataObject *pdo, LPTSTR lpBuffer, DWORD dwBufferLen)
 {

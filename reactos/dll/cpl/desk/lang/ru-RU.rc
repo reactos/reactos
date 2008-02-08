@@ -28,20 +28,20 @@ BEGIN
                     70, 10, 105, 70, WS_EX_STATICEDGE
     GROUPBOX        "&Заставка",IDC_SCREENS_DUMMY, 7, 92, 231, 52
     COMBOBOX        IDC_SCREENS_LIST, 14, 104, 100, 100, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON      "&Параметры",IDC_SCREENS_SETTINGS, 120, 103, 50, 13, WS_GROUP
-    PUSHBUTTON      "П&росмотр",IDC_SCREENS_TESTSC, 175, 103, 50, 13
-    LTEXT           "И&нтервал:",IDC_WAITTEXT, 14, 125, 36, 9
+    PUSHBUTTON      "&Параметры",IDC_SCREENS_SETTINGS, 120, 104, 50, 14, WS_GROUP
+    PUSHBUTTON      "П&росмотр",IDC_SCREENS_TESTSC, 175, 104, 50, 14
+    LTEXT           "И&нтервал:",IDC_WAITTEXT, 14, 124, 40, 10
     EDITTEXT        IDC_SCREENS_TIMEDELAY, 55, 121, 32, 13, ES_RIGHT | WS_GROUP
     CONTROL         "",IDC_SCREENS_TIME ,UPDOWN_CLASS,UDS_SETBUDDYINT |
                     UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS |
                     WS_BORDER | WS_GROUP, 54, 123, 12, 13
-    LTEXT           "мин.", IDC_MINTEXT, 90, 125, 20, 9
+    LTEXT           "мин.", IDC_MINTEXT, 90, 124, 19, 10
     CONTROL         "На&чинать с экрана приветствия",IDC_SCREENS_USEPASSCHK,"button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP, 109, 118, 122, 23
-    GROUPBOX        "&Энергосбережение", IDC_SCREENS_DUMMY2, 6, 155, 232, 41
+                    BS_AUTOCHECKBOX | WS_TABSTOP, 110, 124, 124, 12
+    GROUPBOX        "&Энергосбережение", IDC_SCREENS_DUMMY2, 6, 155, 232, 37
     LTEXT           "Для изменения параметров питания монитора нажмите кнопку ""Питание"".",
                     IDC_STATIC, 14, 166, 146 ,20
-    PUSHBUTTON      "П&итание...", IDC_SCREENS_POWER_BUTTON, 176, 171, 50, 13
+    PUSHBUTTON      "П&итание...", IDC_SCREENS_POWER_BUTTON, 171, 168, 55, 14
 END
 
 IDD_APPEARANCE DIALOGEX DISCARDABLE  0, 0, 246, 228
@@ -51,9 +51,9 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL         "", IDC_APPEARANCE_PREVIEW, "PreviewWndClass",
                     WS_VISIBLE | WS_BORDER, 7, 7, 232, 120
-    LTEXT           "Цветовая схема", IDC_STATIC, 7, 140, 64, 7
-    COMBOBOX        IDC_APPEARANCE_COLORSCHEME, 7, 150, 134, 90 , CBS_DROPDOWNLIST | CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON      "Дополнительно", IDC_APPEARANCE_ADVANCED, 178, 150, 60, 15
+    LTEXT           "Цветовая схема:", IDC_STATIC, 7, 139, 154, 10
+    COMBOBOX        IDC_APPEARANCE_COLORSCHEME, 7, 150, 155, 90 , CBS_DROPDOWNLIST | CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "Дополнительно", IDC_APPEARANCE_ADVANCED, 168, 150, 70, 14
 END
 
 IDD_ADVAPPEARANCE DIALOGEX DISCARDABLE 0, 0, 250, 239
@@ -94,33 +94,42 @@ BEGIN
     DEFPUSHBUTTON "OK", IDOK, 137, 220, 50, 14
 END
 
-IDD_SETTINGS DIALOGEX DISCARDABLE  0, 0, 246, 188
+IDD_SETTINGS DIALOGEX DISCARDABLE  0, 0, 249, 197
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Параметры"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "Drag the monitor icons to match the physical arrangement of your monitors.",-1,3,3,240,10
-    CONTROL         "",IDC_SETTINGS_MONSEL,"MONITORSELWNDCLASS",WS_CHILD|WS_VISIBLE|WS_TABSTOP,3,16,240,82,WS_EX_CLIENTEDGE
-    LTEXT           "&Дисплей:",1820,3,100,30,8
-    LTEXT           "<нет>",IDC_SETTINGS_DEVICE,9,109,224,8
-    GROUPBOX        "&Разрешение экрана",1818,3,120,119,43
+    LTEXT           "Разместите значки мониторов в соответствии с их расположением.",-1,3,7,244,17
+    CONTROL         "",IDC_SETTINGS_MONSEL,"MONITORSELWNDCLASS",WS_CHILD|WS_VISIBLE|WS_TABSTOP,3,21,240,82,WS_EX_CLIENTEDGE
+    LTEXT           "&Дисплей:",1820,3,105,40,8
+    LTEXT           "<нет>",IDC_SETTINGS_DEVICE,9,115,224,8
+    GROUPBOX        "&Разрешение экрана",1818,3,129,119,46
     CONTROL         "",IDC_SETTINGS_RESOLUTION,"msctls_trackbar32",
-                    TBS_AUTOTICKS | WS_TABSTOP,33,130,58,17
-    LTEXT           "Меньше",1815,6,130,29,8,NOT WS_GROUP
-    LTEXT           "Больше",1816,91,130,27,8,NOT WS_GROUP
-    LTEXT           "",IDC_SETTINGS_RESOLUTION_TEXT,10,150,100,10,NOT WS_GROUP | SS_CENTER
-    GROUPBOX        "&Качество цветопередачи",1817,125,120,115,43
-    COMBOBOX        IDC_SETTINGS_BPP,131,130,103,80,CBS_DROPDOWNLIST | CBS_AUTOHSCROLL |
+                    TBS_AUTOTICKS | WS_TABSTOP,33,141,58,17
+    LTEXT           "мен.",1815,12,146,21,8,NOT WS_GROUP
+    LTEXT           "бол.",1816,94,146,21,8,NOT WS_GROUP
+    LTEXT           "",IDC_SETTINGS_RESOLUTION_TEXT,10,161,105,10,NOT WS_GROUP | SS_CENTER
+    GROUPBOX        "&Качество цветопередачи",1817,129,129,115,46
+    COMBOBOX        IDC_SETTINGS_BPP,135,141,103,80,CBS_DROPDOWNLIST | CBS_AUTOHSCROLL |
                     WS_VSCROLL | WS_TABSTOP
-    CONTROL         "",IDC_SETTINGS_SPECTRUM,"Static",SS_OWNERDRAW | SS_SUNKEN,131,148,103,9
-    PUSHBUTTON      "До&полнительно",IDC_SETTINGS_ADVANCED,170,165,70,14
+    CONTROL         "",IDC_SETTINGS_SPECTRUM,"Static",SS_OWNERDRAW | SS_SUNKEN,135,161,103,9
+    PUSHBUTTON      "До&полнительно",IDC_SETTINGS_ADVANCED,173,182,70,14
 END
 
-IDD_ADVANCED_GENERAL DIALOGEX DISCARDABLE 0, 0, 246, 204
+IDD_ADVANCED_GENERAL DIALOGEX DISCARDABLE 0, 0, 253, 204
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "General"
+CAPTION "Общие"
 FONT 8, "MS Shell Dlg"
 BEGIN
+    GROUPBOX "Экран", -1, 7, 6, 237, 56, WS_GROUP
+    LTEXT "Размер шрифта:", -1, 14, 20, 222, 8
+    COMBOBOX IDC_FONTSIZE_COMBO, 14, 30, 223, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT "", IDC_FONTSIZE_COSTOM, 14, 46, 223, 12
+    GROUPBOX "Совместимость", -1, 7, 67, 237, 97
+    LTEXT "Некоторые программы могут работать неправильно, если вы не перезагрузите компьютер после изменения параметров экрана.\r\n\nПосле изменения параметров экрана следует:", -1, 12, 78, 228, 34
+    AUTORADIOBUTTON "Пере&загрузить компьютер с новыми параметрами экрана", IDC_RESTART_RB, 14, 116, 224, 10
+    AUTORADIOBUTTON "&Применить новые параметры экрана без перезагрузки", IDC_WITHOUTREBOOT_RB, 14, 131, 224, 10
+    AUTORADIOBUTTON "З&апросить перед применением новых параметров экрана", IDC_ASKME_RB, 14, 146, 224, 10
 END
 
 IDR_PREVIEW_MENU MENU
@@ -138,15 +147,15 @@ BEGIN
         MENUITEM "&Primary",    ID_MENU_PRIMARY
         MENUITEM SEPARATOR
         MENUITEM "&Identify",   ID_MENU_IDENTIFY
-        MENUITEM "P&roperties", ID_MENU_PROPERTIES
+        MENUITEM "&Свойства", ID_MENU_PROPERTIES
     END
 END
 
 STRINGTABLE
 BEGIN
-    IDS_MULTIPLEMONITORS "(Multiple Monitors)"
-    IDS_UNKNOWNMONITOR "(Unknown Monitor)"
-    IDS_ADVANCEDTITLEFMT "%s and %s"
+    IDS_MULTIPLEMONITORS "(Несколько экранов)"
+    IDS_UNKNOWNMONITOR "(Неизвестный экран)"
+    IDS_ADVANCEDTITLEFMT "%s и %s"
 END
 
 STRINGTABLE
@@ -171,7 +180,7 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_BACKGROUND_COMDLG_FILTER "Картинки (*.bmp;*.dib)\000*.bmp;*.dib"
+    IDS_BACKGROUND_COMDLG_FILTER "Изображения (*.bmp;*.dib)\000*.bmp;*.dib"
     IDS_SUPPORTED_EXT       "*.bmp;*.dib"
 END
 
