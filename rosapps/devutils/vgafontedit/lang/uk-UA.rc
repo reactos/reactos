@@ -22,7 +22,7 @@ END
 
 IDD_EDITGLYPH DIALOGEX 32768, 32768, 246, 197
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Edit Glyph"
+CAPTION "Редагування символа"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDC_EDIT_GLYPH_TOOLBOX, TOOLBARCLASSNAMEA,          CCS_NODIVIDER | CCS_NORESIZE, 5, 5, 24, 82
@@ -75,7 +75,7 @@ BEGIN
     IDS_DOCNAME, "Шрифт %1!u!"
     IDS_SAVEPROMPT, "Файл ""%1"" був змінений, але не збережений.\n\nЗберегти його?"
     IDS_APPTITLE, "Редактор VGA-шрифтів ReactOS"
-    IDS_CLOSEEDIT, "Please close all open Edit windows first!"
+    IDS_CLOSEEDIT, "Будь ласка закрийте всі відкриті вікна Редагування спочатку!"
 
     IDS_TOOLTIP_NEW, "Створити"
     IDS_TOOLTIP_OPEN, "Відкрити"
