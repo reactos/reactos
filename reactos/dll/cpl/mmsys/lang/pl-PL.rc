@@ -1,5 +1,5 @@
 /*
- * translated by Caemyr - Olaf Siejka (Jan, 2008)
+ * translated by Caemyr - Olaf Siejka (Jan-Feb, 2008)
  * Use ReactOS forum PM or IRC to contact me
  * http://www.reactos.org
  * IRC: irc.freenode.net #reactos-pl;
@@ -108,89 +108,89 @@ END
 
 IDD_SAVE_SCHEME_AS DIALOG 9, 23, 225, 54
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "Save Scheme As"
+CAPTION "Zapisz schemat jako..."
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "&Save this sound scheme as:", -1, 7, 7, 212, 9
+    LTEXT "&Zapisz bierz¹cy schemat dzwiêkowy jako:", -1, 7, 7, 212, 9
     EDITTEXT 8960, 7, 17, 211, 14, ES_AUTOHSCROLL
     DEFPUSHBUTTON "OK", IDOK, 93, 36, 60, 14
-    PUSHBUTTON "Cancel", IDCANCEL, 157, 36, 60, 14
+    PUSHBUTTON "Anuluj", IDCANCEL, 157, 36, 60, 14
 END
 
 IDD_SPEAKERS DIALOG 0, 0, 257, 204
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Speakers"
+CAPTION "G³oœniki"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON 4379, -1, 7, 8, 20, 20
-    LTEXT "Select the speaker setup that is most like the setup you have on your computer.", -1, 36, 8, 215, 27
+    LTEXT "Wybierz takie ustawienie g³oœników, które najbardziej odpowiada rzeczywistemu.", -1, 36, 8, 215, 27
     CONTROL 110, 5376, "STATIC", SS_BITMAP | SS_CENTERIMAGE, 37, 40, 209, 112, WS_EX_TRANSPARENT
-    LTEXT "S&peaker setup:", 8502, 53, 169, 55, 10
+    LTEXT "&Ustawienie g³oœników:", 8502, 53, 169, 55, 10
     COMBOBOX 5401, 52, 182, 170, 200, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
 END
 
 IDD_PERFORMANCE1 DIALOG 0, 0, 257, 218
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Performance"
+CAPTION "Wydajnoœæ"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "These settings control how ReactOS plays audio. They can help you troubleshoot audio-related problems.", 8492, 34, 7, 218, 23
-    GROUPBOX "Audio playback", 8494, 7, 32, 243, 152
+    LTEXT "Niniejsze ustawienia maj¹ wp³yw na dŸwiêk, odtwarzany przez ReactOS. Mo¿esz, dziêki nim, zdiagnozowaæ niektóre problemy z dzwiêkiem.", 8492, 34, 7, 218, 23
+    GROUPBOX "Odtwarzanie", 8494, 7, 32, 243, 152
     ICON 4379, 8512, 8, 8, 20, 20
-    LTEXT "&Hardware acceleration:", 8495, 13, 56, 111, 14
+    LTEXT "&Przyspieszanie sprzêtowe:", 8495, 13, 56, 111, 14
     CONTROL "Slider1", 5395, "MSCTLS_TRACKBAR32", WS_GROUP | WS_TABSTOP | 0x00000401, 150, 54, 62, 18
-    LTEXT "&Sample rate conversion quality:", 8496, 13, 123, 103, 14
+    LTEXT "&Jakoœæ próbkowania dŸwiêku:", 8496, 13, 123, 103, 14
     CONTROL "Slider1", 5396, "MSCTLS_TRACKBAR32", WS_TABSTOP | 0x00000401, 150, 121, 62, 18
-    PUSHBUTTON "&Restore Defaults", 5400, 7, 191, 110, 14
-    LTEXT "None", 8497, 128, 56, 21, 10
-    LTEXT "Full", 8498, 214, 56, 21, 9
-    LTEXT "Good", 8499, 128, 123, 21, 10
-    LTEXT "Best", 8500, 214, 123, 23, 9
-    LTEXT "This string describes the hardware setting for the capture device", 5399, 13, 145, 227, 21
-    LTEXT "This string describes the hardware setting for the render device", 5398, 13, 78, 227, 22
+    PUSHBUTTON "&Odtwórz domyœlne", 5400, 7, 191, 110, 14
+    LTEXT "Brak", 8497, 128, 56, 21, 10
+    LTEXT "Pe³ne", 8498, 214, 56, 21, 9
+    LTEXT "S³aba", 8499, 128, 123, 21, 10
+    LTEXT "Najlepsza", 8500, 214, 123, 23, 9
+    LTEXT "Ustawienia sprzêtowe urz¹dzenia nagrywania", 5399, 13, 145, 227, 21
+    LTEXT "Ustawienia sprzêtowe urz¹dzenia odtwarzania", 5398, 13, 78, 227, 22
 END
 
 IDD_PERFORMANCE2 DIALOG 0, 0, 257, 218
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Performance"
+CAPTION "Wydajnoœæ"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "These settings control how ReactOS records audio. They can help you troubleshoot audio-related problems.", 8492, 34, 7, 217, 20
-    GROUPBOX "Audio recording", 8494, 7, 29, 242, 122
+    LTEXT "Niniejsze ustawienia maj¹ wp³yw na dŸwiêk, odtwarzany przez ReactOS. Mo¿esz, dziêki nim, zdiagnozowaæ niektóre problemy z dzwiêkiem.", 8492, 34, 7, 217, 20
+    GROUPBOX "Nagrywanie", 8494, 7, 29, 242, 122
     ICON 4380, 8512, 8, 7, 20, 20
-    LTEXT "&Hardware acceleration:", 8495, 13, 46, 103, 17
+    LTEXT "&Przyspieszanie sprzêtowe:", 8495, 13, 46, 103, 17
     CONTROL "Slider1", 5395, "MSCTLS_TRACKBAR32", WS_GROUP | WS_TABSTOP | 0x00000401, 150, 43, 62, 18
-    LTEXT "&Sample rate conversion quality:", 8496, 13, 103, 103, 17
+    LTEXT "&Jakoœæ próbkowania dŸwiêku:", 8496, 13, 103, 103, 17
     CONTROL "Slider1", 5396, "MSCTLS_TRACKBAR32", WS_TABSTOP | 0x00000401, 150, 101, 62, 18
-    PUSHBUTTON "&Restore Defaults", 5400, 9, 158, 110, 14
-    LTEXT "None", 8497, 125, 46, 24, 10
-    LTEXT "Full", 8498, 217, 46, 19, 9
-    LTEXT "Good", 8499, 125, 103, 24, 10
-    LTEXT "Best", 8500, 217, 103, 19, 9
-    LTEXT "This string describes the hardware setting for the capture device", 5399, 13, 125, 222, 21
-    LTEXT "This string describes the hardware setting for the render device", 5398, 13, 68, 218, 24
+    PUSHBUTTON "&Odtwórz domyœlne", 5400, 9, 158, 110, 14
+    LTEXT "Brak", 8497, 125, 46, 24, 10
+    LTEXT "Pe³ne", 8498, 217, 46, 19, 9
+    LTEXT "S³aba", 8499, 125, 103, 24, 10
+    LTEXT "Najlepsza", 8500, 217, 103, 19, 9
+    LTEXT "Ustawienia sprzêtowe urz¹dzenia nagrywania", 5399, 13, 125, 222, 21
+    LTEXT "Ustawienia sprzêtowe urz¹dzenia odtwarzania", 5398, 13, 68, 218, 24
 END
 
 IDD_SETUP1 DIALOG 0, 0, 227, 206
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "Setup"
+CAPTION "Konfiguracja"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "ReactOS Audio", 10243, 7, 5, 213, 192
+    GROUPBOX "Us³uga ReactOS Audio", 10243, 7, 5, 213, 192
     ICON 4393, 10241, 26, 26, 20, 20
-    LTEXT "This computer cannot play audio because the ReactOS Audio service is not enabled.", 10245, 60, 25, 150, 40
-    AUTOCHECKBOX "&Enable ReactOS Audio", 10253, 60, 68, 150, 9
-    LTEXT "Notes", 10246, 58, 87, 150, 11
-    LTEXT "1. You must be an administrator to enable this service. If you are not logged on as administrator, you will be prompted for an administrator name and password.", 10247, 60, 100, 150, 40
-    LTEXT "2. After you enable ReactOS Audio you will have to restart the computer.", 10248, 60, 140, 150, 40
+    LTEXT "Ten komputer nie mo¿e odtwarzaæ dŸwiêku, poniewa¿ us³uga ReactOS Audio nie zosta³a w³¹czona.", 10245, 60, 25, 150, 40
+    AUTOCHECKBOX "&W³¹cz ReactOS Audio", 10253, 60, 68, 150, 9
+    LTEXT "Uwagi", 10246, 58, 87, 150, 11
+    LTEXT "1. Musisz mieæ uprawnienia administratora, by w³¹czyæ t¹ us³ugê. Jeœli nie masz uprawnieñ, konieczne bêdzie przelogowanie siê na konto administratora.", 10247, 60, 100, 150, 40
+    LTEXT "2. Po w³¹czeniu us³ugi ReactOS Audio konieczne bêdzie zrestartowanie komputera.", 10248, 60, 140, 150, 40
 END
 
 IDD_MULTICHANNEL DIALOG 0, 0, 227, 218
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "Multichannel"
+CAPTION "Dzwiêk wielokana³owy"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Description goes here.", 9506, 8, 4, 212, 24
+    LTEXT "Opis ma byæ tutaj.", 9506, 8, 4, 212, 24
     LTEXT "Low", 9473, 65, 31, 14, 8
     LTEXT "", 9472, 5, 31, 55, 8
     CONTROL "Slider1", 9475, "MSCTLS_TRACKBAR32", WS_TABSTOP | 0x00000401, 87, 29, 108, 17
@@ -223,20 +223,20 @@ BEGIN
     LTEXT "", 9500, 5, 164, 55, 8
     CONTROL "Slider1", 9503, "MSCTLS_TRACKBAR32", WS_TABSTOP | 0x00000401, 87, 162, 108, 17
     LTEXT "High", 9502, 202, 164, 17, 8
-    AUTOCHECKBOX "&Move all slide indicators at the same time", 9504, 5, 185, 216, 9
-    PUSHBUTTON "Restore &Defaults", 9505, 110, 199, 110, 14
+    AUTOCHECKBOX "&Po³¹cz wszystkie suwaki", 9504, 5, 185, 216, 9
+    PUSHBUTTON "Odtwórz &domyœlne", 9505, 110, 199, 110, 14
 END
 
 IDD_SETUP2 DIALOG 0, 0, 227, 206
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "Setup"
+CAPTION "Konfiguracja"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "ReactOS Audio", 10259, 7, 5, 213, 192
+    GROUPBOX "Us³uga ReactOS Audio", 10259, 7, 5, 213, 192
     ICON 4394, 10257, 25, 25, 20, 20
-    LTEXT "The ReactOS Audio service is now enabled. However, audio may not function properly until you restart ReactOS. If you want to restart now, first save your work and close all programs.", 10261, 60, 25, 150, 50
-    LTEXT "To restart ReactOS, click OK.", 10262, 60, 75, 150, 20
-    LTEXT "If you Cancel, you will need to restart later for ReactOS Audio to function properly.", 10263, 60, 100, 150, 40
+    LTEXT "Us³uga ReactOS Audio zosta³a pomyœlnie w³¹czona. Jednak¿e dŸwiêk mo¿e nie byæ poprawnie odtwarzany, dopóki nie zrestartujesz systemu. Przed restartem upewnij siê, czy wszystkie twoje dokumenty zosta³y zapisane.", 10261, 60, 25, 150, 50
+    LTEXT "Aby zrestartowaæ ReactOS, naciœnij OK.", 10262, 60, 75, 150, 20
+    LTEXT "Jeœli wciœniesz Anuluj, konieczny bêdzie pózniejszy restart systemu aby us³uga ReactOS Audio zadzia³a³a prawid³owo.", 10263, 60, 100, 150, 40
 END
 
 STRINGTABLE
@@ -245,33 +245,33 @@ BEGIN
     IDS_CPLDESCRIPTION "Zmieñ schemat dŸwiêkowy dla tego komputera lub skonfiguruj ustawienia g³oœników i urz¹dzeñ nagrywaj¹cych."
     IDS_NO_SOUND "(Brak)"
 
-    5825 "Program error"
-    5826 "Close program"
-    5827 "Critical Battery Alarm"
-    5828 "Device Connect"
-    5829 "Device Disconnect"
-    5830 "Device Failed to Connect"
-    5831 "Empty Recycle Bin"
-    5832 "Low Battery Alarm"
-    5833 "Maximize"
-    5834 "Menu command"
-    5835 "Menu popup"
-    5836 "Minimize"
-    5837 "New Mail Notification"
+    5825 "B³¹d programu"
+    5826 "Zamknij program"
+    5827 "Krytyczny stan baterii"
+    5828 "Urz¹dzenie pod³¹czone"
+    5829 "Urz¹dzenie od³¹czone"
+    5830 "B³¹d podczas pod³¹czania urz¹dzenia"
+    5831 "Opró¿nianie kosza"
+    5832 "Niski stan baterii"
+    5833 "Pe³en ekran"
+    5834 "Polecenie Menu"
+    5835 "Wywo³anie Menu"
+    5836 "Minimalizuj"
+    5837 "Powiadomienie o nowej poczcie"
     5838 "Start Navigation"
-    5839 "Open program"
-    5840 "Print Complete"
+    5839 "Uruchomienie programu"
+    5840 "Zakoñczenie programu"
     5841 "Restore Down"
     5842 "Restore Up"
     5843 "Asterisk"
-    5844 "Default sound"
-    5845 "Exclamation"
-    5846 "Exit ReactOS"
-    5847 "Critical Stop"
-    5848 "System Notification"
-    5849 "Question"
-    5850 "Start ReactOS"
+    5844 "DŸwiêk domyœlny"
+    5845 "Wykrzyknik"
+    5846 "Zamkniêcie ReactOS"
+    5847 "B³¹d krytyczny"
+    5848 "Powiadomienie systemowe"
+    5849 "Znak zapytania"
+    5850 "Uruchomienie ReactOS"
     5851 "Start Menu"
-    5852 "ReactOS Logoff"
-    5853 "ReactOS Logon"
+    5852 "Wylogowanie z ReactOS"
+    5853 "Logowanie do ReactOS"
 END
