@@ -826,7 +826,7 @@ static MUI_ENTRY ruRUSelectPartitionEntries[] =
     {
         0,
         0,
-        "   Пожалуйста, подождите...",
+        "   Please wait...",
         TEXT_STATUS
     },
     {
@@ -1566,6 +1566,33 @@ MUI_PAGE ruRUPages[] =
         -1,
         NULL
     }
+};
+
+MUI_STRING ruRUStrings[] =
+{
+    {STRING_INSTALLCREATEPARTITION,
+     "   ENTER = Установить   C = Создать раздел   F3 = Выход"},
+    {STRING_INSTALLDELETEPARTITION,
+     "   ENTER = Установить   D = Удалить раздел   F3 = Выход"},
+    {STRING_PARTITIONSIZE,
+     "Размер нового раздела:"},
+    {STRING_PLEASEWAIT,
+     "   Пожалуйста, подождите..."},
+    {STRING_CHOOSENEWPARTITION,
+     "Вы хотите создать новый раздел на"},
+    {STRING_CREATEPARTITION,
+     "   ENTER = Создать раздел   ESC = Отмена   F3 = Выход"},
+    {STRING_COPYING,
+     "                                                   \xB3 Копирование: %S"},
+    {STRING_SETUPCOPYINGFILES,
+     "Программа установки копирует файлы..."},
+    {STRING_PAGEDMEM,
+     " Страничная"},
+    {STRING_NONPAGEDMEM,
+     " Нестраничная"},
+    {STRING_FREEMEM,
+     "Свободная память"},
+    {0, 0}
 };
 
 #endif
