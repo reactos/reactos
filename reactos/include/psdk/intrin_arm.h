@@ -72,6 +72,17 @@ static __inline__ __attribute__((always_inline)) long _InterlockedExchangeAdd(vo
 	return a;
 }
 
+static __inline__ __attribute__((always_inline)) long _InterlockedExchange(volatile long * const dest, const long exch)
+{
+	long a;
+    
+	__asm__ __volatile__ (  "swp %0, %2, [%1]"
+                          : "=&r" (a)
+                          : "r" (dest), "r" (exch));
+    
+	return a;
+}
+
 static __inline__ __attribute__((always_inline)) char _InterlockedAnd8(volatile char * const value, const char mask)
 {
 	char x;

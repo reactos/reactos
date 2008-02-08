@@ -33,4 +33,7 @@
 
 	<compilerflag>-Wno-attributes</compilerflag>
 	<compilerflag>-fno-strict-aliasing</compilerflag>
+	<linkerflag>-s</linkerflag>
+    <linkerflag>-lgcc</linkerflag>
+    <linkerflag>-static</linkerflag>
 </project>

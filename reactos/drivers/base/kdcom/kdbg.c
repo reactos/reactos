@@ -59,6 +59,8 @@ const ULONG BaseArray[5] = {0, 0x3F8, 0x2F8, 0x3E8, 0x2E8};
 const ULONG BaseArray[2] = {0, 0x800003f8};
 #elif defined(_M_MIPS)
 const ULONG BaseArray[3] = {0, 0x80006000, 0x80007000};
+#elif defined(_M_ARM)
+const ULONG BaseArray[2] = {0, 0xF1012000};
 #else
 #error Unknown architecture
 #endif
