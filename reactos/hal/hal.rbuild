@@ -14,4 +14,9 @@
 			<xi:include href="halppc/directory.rbuild" />
 		</directory>
 	</if>
+	<if property="ARCH" value="arm">
+		<directory name="halarm">
+			<xi:include href="halarm/directory.rbuild" />
+		</directory>
+	</if>
 </group>

@@ -1,0 +1,29 @@
+; $Id: class2.def 26227 2007-04-01 16:29:16Z fireball $
+;
+; class2.def - export definition file for scsi class driver
+;
+LIBRARY CLASS2.SYS
+EXPORTS
+ScsiClassAsynchronousCompletion
+ScsiClassBuildRequest
+ScsiClassClaimDevice
+ScsiClassCreateDeviceObject
+ScsiClassDeviceControl
+ScsiClassFindModePage
+ScsiClassFindUnclaimedDevices
+ScsiClassGetCapabilities
+ScsiClassGetInquiryData
+ScsiClassInitialize
+ScsiClassInitializeSrbLookasideList
+ScsiClassInternalIoControl
+ScsiClassInterpretSenseInfo
+ScsiClassIoComplete
+ScsiClassIoCompleteAssociated
+ScsiClassModeSense
+ScsiClassQueryTimeOutRegistryValue
+ScsiClassReadDriveCapacity
+ScsiClassReleaseQueue
+ScsiClassSendSrbAsynchronous
+ScsiClassSendSrbSynchronous
+ScsiClassSplitRequest
+;EOF

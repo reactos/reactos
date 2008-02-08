@@ -1,7 +1,6 @@
 #include <internal/arm/asmmacro.S>
 
 GENERATE_ARM_STUB KiSwapContext
-GENERATE_ARM_STUB KeSwapIrql
 GENERATE_ARM_STUB DbgBreakPointWithStatus 
 GENERATE_ARM_STUB ExInterlockedAddLargeInteger 
 GENERATE_ARM_STUB ExInterlockedAddLargeStatistic 
