@@ -1568,4 +1568,31 @@ MUI_PAGE enUSPages[] =
     }
 };
 
+MUI_STRING enUSStrings[] =
+{
+    {STRING_INSTALLCREATEPARTITION,
+     "   ENTER = Install   C = Create Partition   F3 = Quit"},
+    {STRING_INSTALLDELETEPARTITION,
+     "   ENTER = Install   D = Delete Partition   F3 = Quit"},
+    {STRING_PARTITIONSIZE,
+     "Size of new partition:"},
+    {STRING_PLEASEWAIT,
+     "   Please wait..."},
+    {STRING_CHOOSENEWPARTITION,
+     "You have chosen to create a new partition on"},
+    {STRING_CREATEPARTITION,
+     "   ENTER = Create Partition   ESC = Cancel   F3 = Quit"},
+    {STRING_COPYING,
+     "                                                   \xB3 Copying file: %S"},
+    {STRING_SETUPCOPYINGFILES,
+     "Setup is copying files..."},
+    {STRING_PAGEDMEM,
+     "Paged Memory"},
+    {STRING_NONPAGEDMEM,
+     "Nonpaged Memory"},
+    {STRING_FREEMEM,
+     "Free Memory"},
+    {0, 0}
+};
+
 #endif

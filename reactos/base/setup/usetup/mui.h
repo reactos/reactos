@@ -23,6 +23,12 @@ typedef struct
 
 typedef struct
 {
+    LONG Number;
+    LPSTR String;
+} MUI_STRING;
+
+typedef struct
+{
     PWCHAR LanguageID;
     PWCHAR LanguageKeyboardLayoutID;
     PWCHAR ACPage;
@@ -31,6 +37,7 @@ typedef struct
     PWCHAR LanguageDescriptor;
     const MUI_PAGE * MuiPages;
     const MUI_ERROR * MuiErrors;
+    const MUI_STRING * MuiStrings;
 }MUI_LANGUAGE;
 
 
@@ -58,5 +65,21 @@ AddCodePage(VOID);
 
 VOID
 SetConsoleCodePage(VOID);
+
+LPSTR
+MUIGetString(ULONG Number);
+
+#define STRING_INSTALLCREATEPARTITION 1
+#define STRING_INSTALLDELETEPARTITION 2
+#define STRING_CREATEPARTITION 3
+#define STRING_PARTITIONSIZE 4
+#define STRING_PLEASEWAIT 5
+#define STRING_CHOOSENEWPARTITION 6
+#define STRING_COPYING 7
+#define STRING_SETUPCOPYINGFILES 8
+#define STRING_PAGEDMEM 9
+#define STRING_NONPAGEDMEM 10
+#define STRING_FREEMEM 11
+
 
 #endif

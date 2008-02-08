@@ -1574,4 +1574,31 @@ MUI_PAGE deDEPages[] =
     }
 };
 
+MUI_STRING deDEStrings[] =
+{
+    {STRING_INSTALLCREATEPARTITION,
+     "   ENTER = Installieren   C = Partition erstellen  F3 = Beenden"},
+    {STRING_INSTALLDELETEPARTITION,
+     "   ENTER = Installieren   D = Partition löschen    F3 = Beenden"},
+    {STRING_PARTITIONSIZE,
+     "Größe der neuen Partition:"},
+    {STRING_PLEASEWAIT,
+     "   Bitte warten..."},
+    {STRING_CHOOSENEWPARTITION,
+     "Sie haben beschlossen eine neue Partition zu erstellen auf"},
+    {STRING_CREATEPARTITION,
+     "   ENTER = Partition erstelln   ESC = Abbruch   F3 = Beenden"},
+    {STRING_COPYING,
+     "                                                   \xB3 Kopiere Datei: %S"},
+    {STRING_SETUPCOPYINGFILES,
+     "Setup kopiert Dateien..."},
+    {STRING_PAGEDMEM,
+     "Paged Memory"},
+    {STRING_NONPAGEDMEM,
+     "Nonpaged Memory"},
+    {STRING_FREEMEM,
+     "Free Memory"},
+    {0, 0}
+};
+
 #endif

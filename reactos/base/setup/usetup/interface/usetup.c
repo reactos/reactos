@@ -1370,11 +1370,11 @@ SelectPartitionPage(PINPUT_RECORD Ir)
         if (PartitionList->CurrentPartition == NULL ||
             PartitionList->CurrentPartition->Unpartitioned == TRUE)
         {
-            CONSOLE_SetStatusText ("   ENTER = Install   C = Create Partition   F3 = Quit");
+            CONSOLE_SetStatusText (MUIGetString(STRING_INSTALLCREATEPARTITION));
         }
         else
         {
-            CONSOLE_SetStatusText ("   ENTER = Install   D = Delete Partition   F3 = Quit");
+            CONSOLE_SetStatusText (MUIGetString(STRING_INSTALLDELETEPARTITION));
         }
 
         CONSOLE_ConInKey(Ir);
@@ -1495,7 +1495,7 @@ ShowPartitionSizeInputBox(SHORT Left,
     /* Print message */
     coPos.X = Left + 2;
     coPos.Y = Top + 2;
-    strcpy (Buffer, "Size of new partition:");
+    strcpy (Buffer, MUIGetString(STRING_PARTITIONSIZE));
     iLeft = coPos.X + strlen (Buffer) + 1;
     iTop = coPos.Y;
 
@@ -1604,9 +1604,9 @@ CreatePartitionPage (PINPUT_RECORD Ir)
     DiskEntry = PartitionList->CurrentDisk;
     PartEntry = PartitionList->CurrentPartition;
 
-    CONSOLE_SetStatusText ("   Please wait...");
+    CONSOLE_SetStatusText (MUIGetString(STRING_PLEASEWAIT));
 
-    CONSOLE_SetTextXY (6, 8, "You have chosen to create a new partition on");
+    CONSOLE_SetTextXY (6, 8, MUIGetString(STRING_CHOOSENEWPARTITION));
 
 #if 0
     if (DiskEntry->DiskSize >= 0x280000000ULL) /* 10 GB */
@@ -1656,7 +1656,7 @@ CreatePartitionPage (PINPUT_RECORD Ir)
                          PartitionList->CurrentPartition->UnpartitionedLength / (1024*1024));
 #endif
 
-    CONSOLE_SetStatusText ("   ENTER = Create Partition   ESC = Cancel   F3 = Quit");
+    CONSOLE_SetStatusText (MUIGetString(STRING_CREATEPARTITION));
 
     PartEntry = PartitionList->CurrentPartition;
     while (TRUE)
@@ -2785,7 +2785,7 @@ PrepareCopyPageInfFile(HINF InfFile,
         {
             MUIDisplayError(ERROR_TXTSETUP_SECTION, Ir, POPUP_WAIT_ENTER);
         }
-        
+
         return FALSE;
     }
 
@@ -2979,7 +2979,7 @@ FileCopyCallback(PVOID Context,
 
         case SPFILENOTIFY_STARTCOPY:
             /* Display copy message */
-            CONSOLE_SetStatusText("                                                   \xB3 Copying file: %S", (PWSTR)Param1);
+            CONSOLE_SetStatusText(MUIGetString(STRING_COPYING), (PWSTR)Param1);
             SetupUpdateMemoryInfo(CopyContext, FALSE);
             break;
 
@@ -3015,7 +3015,7 @@ FileCopyPage(PINPUT_RECORD Ir)
                                                 10,
                                                 24,
                                                 TRUE,
-                                                "Setup is copying files...");
+                                                MUIGetString(STRING_SETUPCOPYINGFILES));
 
     /* Create the paged pool progress bar */
     CopyContext.MemoryBars[0] = CreateProgressBar(13,
@@ -3025,7 +3025,7 @@ FileCopyPage(PINPUT_RECORD Ir)
                                                   10,
                                                   44,
                                                   FALSE,
-                                                  "Paged Memory");
+                                                  MUIGetString(STRING_PAGEDMEM));
 
     /* Create the non paged pool progress bar */
     CopyContext.MemoryBars[1] = CreateProgressBar(28,
@@ -3035,7 +3035,7 @@ FileCopyPage(PINPUT_RECORD Ir)
                                                   24,
                                                   44,
                                                   FALSE,
-                                                  "Nonpaged Memory");
+                                                  MUIGetString(STRING_NONPAGEDMEM));
 
     /* Create the global memory progress bar */
     CopyContext.MemoryBars[2] = CreateProgressBar(43,
@@ -3045,7 +3045,7 @@ FileCopyPage(PINPUT_RECORD Ir)
                                                   40,
                                                   44,
                                                   FALSE,
-                                                  "Free Memory");
+                                                  MUIGetString(STRING_FREEMEM));
 
     /* Do the file copying */
     SetupCommitFileQueueW(NULL,
