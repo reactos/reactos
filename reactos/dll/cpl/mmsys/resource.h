@@ -63,6 +63,7 @@
 
 #define IDB_SPEAKIMG               4624
 #define IDC_SPEAKIMG               4625
+#define IDC_MUTE_ICON              4626
 
 /* Strings */
 #define IDS_CPLNAME                1000
