@@ -648,10 +648,25 @@ void BuildDef32File( DLLSPEC *spec )
  */
 void BuildPedllFile( DLLSPEC *spec )
 {
-    int nr_exports;
+    int i, has_stubs = 0;
 
-    nr_exports = spec->base <= spec->limit ? spec->limit - spec->base + 1 : 0;
     output_standard_file_header();
+
+    for (i = 0; i < spec->nb_entry_points; i++)
+    {
+        const ORDDEF *odp = &spec->entry_points[i];
+        if (odp->type == TYPE_STUB)
+        {
+            has_stubs = 1;
+            break;
+        }
+    }
+
+    if (!has_stubs)
+    {
+        output( "/* This file is intentionally left blank */\n");
+        return;
+    }
 
     output( "#include <stdarg.h>\n");
     output( "#include \"windef.h\"\n");
@@ -670,10 +685,6 @@ void BuildPedllFile( DLLSPEC *spec )
 
     output( "static const char __wine_spec_file_name[] = \"%s\";\n\n", spec->file_name );
 
-    if (nr_exports)
-    {
-        /* Output the stub functions */
-
-        output_stub_funcs( spec );
-    }
+    /* Output the stub functions */
+    output_stub_funcs( spec );
 }
