@@ -14,6 +14,13 @@
 			<description>The most popular and one of the best free Web Browsers out there.</description>
 			<location>http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/2.0.0.11/win32/en-US/Firefox%20Setup%202.0.0.11.exe</location>
 		</application>
+		<application name="Opera">
+			<regname>Opera</regname>
+			<licence>Freeware</licence>
+			<version>9.24</version>
+			<description>The most popular and one of the best free Web Browsers out there.</description>
+			<location>http://mirror.nwps.ws/opera/win/924/en/Opera_9.24_Classic_Setup.exe</location>
+		</application>
 		<application name="Thunderbird 1.5">
 			<regname>Mozilla Thunderbird (1.5)</regname>
 			<licence>MPL/GPL/LGPL</licence>
@@ -173,6 +180,13 @@
 			<version>1.0.6</version>
 			<description>Atomix Clone using SDL libs.</description>
 			<location>http://ovh.dl.sourceforge.net/sourceforge/lgames/lmarbles-1.0.6-win32.exe</location>
+		</application>
+		<application name="WinBoard">
+			<regname>WinBoard 4.2.6</regname>
+			<version>4.2.6</version>
+			<licence>GPL 3</licence>
+			<description>WinBoard is a graphical chessboard for the Windows/ReactOS that can serve as a user interface for GNU Chess, Crafty, and other chess engines, for the Internet Chess Servers, and for electronic mail correspondence chess.</description>
+			<location>http://ftp.gnu.org/gnu/winboard/winboard-4_2_6.exe</location>
 		</application>
 	</category>
 	<category name="Science" icon="11">
