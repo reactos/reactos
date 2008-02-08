@@ -109,6 +109,11 @@ KeSwapIrql(
 );
 
 KIRQL
+KeRaiseIrqlToSynchLevel(
+    VOID
+);
+
+KIRQL
 KeRaiseIrqlToDpcLevel(
     VOID
 );

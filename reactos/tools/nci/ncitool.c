@@ -104,7 +104,7 @@
 #define KernelModeStub_mips "    j KiSystemService\n" \
                             "    nop\n"
 
-#define KernelModeStub_arm  "    ldr r12, =x%x\n" \
+#define KernelModeStub_arm  "    ldr r12, =0x%x\n" \
                             "    swi #0x2E\n"      \
                             "    bx lr\n\n"
 

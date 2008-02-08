@@ -2,7 +2,7 @@
 <!DOCTYPE module SYSTEM "../tools/rbuild/project.dtd">
 <module name="ntoskrnl" type="kernel" installbase="system32" installname="ntoskrnl.exe">
 	<bootstrap installbase="$(CDOUTPUT)" />
-	<importlibrary definition="ntoskrnl.def" />
+	<importlibrary definition="ntoskrnl_$(ARCH).def" />
 	<define name="_DISABLE_TIDENTS" />
 	<define name="__NTOSKRNL__" />
 	<define name="_NTOSKRNL_" />
@@ -55,6 +55,12 @@
 				<file>usercall.c</file>
 				<file>v86vdm.c</file>
 				<file>v86m_sup.S</file>
+			</directory>
+		</if>
+		<if property="ARCH" value="arm">
+			<directory name="arm">
+                <file>stubs_asm.s</file>
+				<file>stubs.c</file>
 			</directory>
 		</if>
 		<if property="ARCH" value="powerpc">

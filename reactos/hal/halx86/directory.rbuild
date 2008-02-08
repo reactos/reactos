@@ -6,7 +6,7 @@
 	</directory>
 
 	<module name="halup" type="kernelmodedll" entrypoint="0">
-		<importlibrary definition="../hal/hal.def" />
+		<importlibrary definition="../hal/hal_i386.def" />
 		<bootstrap installbase="$(CDOUTPUT)" nameoncd="hal.dll" />
 		<include>include</include>
 		<include base="ntoskrnl">include</include>
@@ -22,7 +22,7 @@
 		</directory>
 	</module>
 	<module name="halmp" type="kernelmodedll" entrypoint="0">
-		<importlibrary definition="../hal/hal.def" />
+		<importlibrary definition="../hal/hal_i386.def" />
 		<bootstrap installbase="$(CDOUTPUT)" />
 		<include>include</include>
 		<include base="ntoskrnl">include</include>
@@ -47,7 +47,7 @@
 		</directory>
 	</module>
 	<module name="halxbox" type="kernelmodedll" entrypoint="0" allowwarnings="true">
-		<importlibrary definition="../hal/hal.def" />
+		<importlibrary definition="../hal/hal_i386.def" />
 		<include>include</include>
 		<include base="ntoskrnl">include</include>
 		<define name="_DISABLE_TIDENTS" />
