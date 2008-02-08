@@ -32,7 +32,6 @@ typedef struct _BIOS_MEMORY_DESCRIPTOR
 /* FreeLDR Memory Data */
 ULONG_PTR MmFreeLdrFirstKrnlPhysAddr, MmFreeLdrLastKrnlPhysAddr;
 ULONG_PTR MmFreeLdrLastKernelAddress;
-ULONG MmFreeLdrMemHigher;
 ULONG MmFreeLdrPageDirectoryEnd;
 
 /* FreeLDR Loader Data */
@@ -926,7 +925,6 @@ KiRosFrldrLpbToNtLpb(IN PROS_LOADER_PARAMETER_BLOCK RosLoaderBlock,
 
     /* First get some kernel-loader globals */
     AcpiTableDetected = (RosLoaderBlock->Flags & MB_FLAGS_ACPI_TABLE) ? TRUE : FALSE;
-    MmFreeLdrMemHigher = RosLoaderBlock->MemHigher;
     MmFreeLdrPageDirectoryEnd = RosLoaderBlock->PageDirectoryEnd;
     if (!MmFreeLdrPageDirectoryEnd) MmFreeLdrPageDirectoryEnd = 0x40000;
 

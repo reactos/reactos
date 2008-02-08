@@ -205,6 +205,35 @@ MmInitVirtualMemory(ULONG_PTR LastKernelAddress,
    MmInitializeMemoryConsumer(MC_USER, MmTrimUserMemory);
 }
 
+ULONG
+NTAPI
+MiCountFreePagesInLoaderBlock(PLOADER_PARAMETER_BLOCK LoaderBlock)
+{
+    PLIST_ENTRY NextEntry;
+    PMEMORY_ALLOCATION_DESCRIPTOR Md;
+    ULONG TotalPages = 0;
+
+    for (NextEntry = KeLoaderBlock->MemoryDescriptorListHead.Flink;
+        NextEntry != &KeLoaderBlock->MemoryDescriptorListHead;
+        NextEntry = NextEntry->Flink)
+    {
+        Md = CONTAINING_RECORD(NextEntry, MEMORY_ALLOCATION_DESCRIPTOR, ListEntry);
+
+        if (Md->MemoryType == LoaderBad ||
+            Md->MemoryType == LoaderFirmwarePermanent ||
+            Md->MemoryType == LoaderSpecialMemory ||
+            Md->MemoryType == LoaderBBTMemory)
+        {
+            /* Don't count these blocks */
+            continue;
+        }
+
+        TotalPages += Md->PageCount;
+    }
+
+    return TotalPages;
+}
+
 PCHAR
 MemType[]  = {
     "ExceptionBlock    ", // ?
@@ -247,7 +276,6 @@ MmInit1(ULONG_PTR FirstKrnlPhysAddr,
  * FUNCTION: Initalize memory managment
  */
 {
-   ULONG i;
    ULONG kernel_len;
    ULONG_PTR MappingAddress;
    PLDR_DATA_TABLE_ENTRY LdrEntry;
@@ -280,26 +308,7 @@ MmInit1(ULONG_PTR FirstKrnlPhysAddr,
    DPRINT("CurrentProcess: %x\n", PsGetCurrentProcess());
    PsGetCurrentProcess()->Pcb.DirectoryTableBase.LowPart = (ULONG)MmGetPageDirectory();
 
-   if ((BIOSMemoryMap != NULL) && (AddressRangeCount > 0))
-   {
-      // If we have a bios memory map, recalulate the memory size
-      ULONG last = 0;
-      for (i = 0; i < AddressRangeCount; i++)
-      {
-         if (BIOSMemoryMap[i].Type == 1
-               && (BIOSMemoryMap[i].BaseAddrLow + BIOSMemoryMap[i].LengthLow + PAGE_SIZE -1) / PAGE_SIZE > last)
-         {
-            last = (BIOSMemoryMap[i].BaseAddrLow + BIOSMemoryMap[i].LengthLow + PAGE_SIZE -1) / PAGE_SIZE;
-         }
-      }
-      if ((last - 256) * 4 > MmFreeLdrMemHigher)
-      {
-         MmFreeLdrMemHigher = (last - 256) * 4;
-      }
-   }
-
    /* NTLDR Hacks */
-   if (!MmFreeLdrMemHigher) MmFreeLdrMemHigher = 65536;
    if (!MmFreeLdrPageDirectoryEnd) MmFreeLdrPageDirectoryEnd = 0x40000;
    if (!FirstKrnlPhysAddr)
    {
@@ -312,11 +321,6 @@ MmInit1(ULONG_PTR FirstKrnlPhysAddr,
        FirstKrnlPhysAddr = (ULONG_PTR)LdrEntry->DllBase - KSEG0_BASE;
 
        /* FIXME: How do we get the last address? */
-   }
-
-   if (MmFreeLdrMemHigher >= (MaxMem - 1) * 1024)
-   {
-      MmFreeLdrMemHigher = (MaxMem - 1) * 1024;
    }
 
    /* Set memory limits */
@@ -346,13 +350,13 @@ MmInit1(ULONG_PTR FirstKrnlPhysAddr,
     * (we assume the kernel occupies a continuous range of physical
     * memory)
     */
-   DPRINT("first krnl %x\nlast krnl %x\n",FirstKrnlPhysAddr,
+   DPRINT("first krnl %x, last krnl %x\n",FirstKrnlPhysAddr,
           LastKrnlPhysAddr);
 
    /*
     * Free physical memory not used by the kernel
     */
-   MmStats.NrTotalPages = MmFreeLdrMemHigher/4;
+   MmStats.NrTotalPages = MiCountFreePagesInLoaderBlock(KeLoaderBlock);
    MmNumberOfPhysicalPages = MmStats.NrTotalPages;
    if (!MmStats.NrTotalPages)
    {
@@ -361,12 +365,9 @@ MmInit1(ULONG_PTR FirstKrnlPhysAddr,
    }
    else
    {
-      /* add 1MB for standard memory (not extended) */
+      /* HACK: add 1MB for standard memory (not extended). Why? */
       MmStats.NrTotalPages += 256;
    }
-#ifdef BIOS_MEM_FIX
-   MmStats.NrTotalPages += 16;
-#endif
 
    /*
     * Initialize the kernel address space
