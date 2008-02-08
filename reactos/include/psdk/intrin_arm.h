@@ -34,98 +34,195 @@
 
 #define _ReadWriteBarrier() __sync_synchronize()
 
-FORCEINLINE char _InterlockedCompareExchange8(volatile char * const Destination, const char Exchange, const char Comperand)
+static __inline__ __attribute__((always_inline)) long _InterlockedCompareExchange(volatile long * const dest, const long exch, const long comp)
 {
-	return __sync_val_compare_and_swap(Destination, Comperand, Exchange);
+	long a, b;
+    
+	__asm__ __volatile__ (    "0:\n\t"
+                          "ldr %1, [%2]\n\t"
+                          "cmp %1, %4\n\t"
+                          "bne 1f\n\t"
+                          "swp %0, %3, [%2]\n\t"
+                          "cmp %0, %1\n\t"
+                          "swpne %3, %0, [%2]\n\t"
+                          "bne 0b\n\t"
+                          "1:"
+                          : "=&r" (a), "=&r" (b)
+                          : "r" (dest), "r" (exch), "r" (comp)
+                          : "cc", "memory");
+    
+	return a;
 }
 
-FORCEINLINE short _InterlockedCompareExchange16(volatile short * const Destination, const short Exchange, const short Comperand)
+static __inline__ __attribute__((always_inline)) long _InterlockedExchangeAdd(volatile long * const dest, const long add)
 {
-	return __sync_val_compare_and_swap(Destination, Comperand, Exchange);
+	long a, b, c;
+    
+	__asm__ __volatile__ (  "0:\n\t"
+                          "ldr %0, [%3]\n\t"
+                          "add %1, %0, %4\n\t"
+                          "swp %2, %1, [%3]\n\t"
+                          "cmp %0, %2\n\t"
+                          "swpne %1, %2, [%3]\n\t"
+                          "bne 0b"
+                          : "=&r" (a), "=&r" (b), "=&r" (c)
+                          : "r" (dest), "r" (add)
+                          : "cc", "memory");
+    
+	return a;
 }
 
-FORCEINLINE long _InterlockedCompareExchange(volatile long * const Destination, const long Exchange, const long Comperand)
+static __inline__ __attribute__((always_inline)) char _InterlockedAnd8(volatile char * const value, const char mask)
 {
-	return __sync_val_compare_and_swap(Destination, Comperand, Exchange);
+	char x;
+	char y;
+    
+	y = *value;
+    
+	do
+	{
+		x = y;
+		y = _InterlockedCompareExchange8(value, x & mask, x);
+	}
+	while(y != x);
+    
+	return y;
 }
 
-FORCEINLINE long long _InterlockedCompareExchange64(volatile long long * const Destination, const long long Exchange, const long long Comperand)
+static __inline__ __attribute__((always_inline)) short _InterlockedAnd16(volatile short * const value, const short mask)
 {
-	return __sync_val_compare_and_swap(Destination, Comperand, Exchange);
+	short x;
+	short y;
+    
+	y = *value;
+    
+	do
+	{
+		x = y;
+		y = _InterlockedCompareExchange16(value, x & mask, x);
+	}
+	while(y != x);
+    
+	return y;
 }
 
-FORCEINLINE void * _InterlockedCompareExchangePointer(void * volatile * const Destination, void * const Exchange, void * const Comperand)
+static __inline__ __attribute__((always_inline)) long _InterlockedAnd(volatile long * const value, const long mask)
 {
-	return __sync_val_compare_and_swap(Destination, Comperand, Exchange);
+	long x;
+	long y;
+    
+	y = *value;
+    
+	do
+	{
+		x = y;
+		y = _InterlockedCompareExchange(value, x & mask, x);
+	}
+	while(y != x);
+    
+	return y;
 }
 
-FORCEINLINE long _InterlockedExchange(volatile long * const Target, const long Value)
+static __inline__ __attribute__((always_inline)) char _InterlockedOr8(volatile char * const value, const char mask)
 {
-	/* NOTE: __sync_lock_test_and_set would be an acquire barrier, so we force a full barrier */
-	__sync_synchronize();
-	return __sync_lock_test_and_set(Target, Value);
+	char x;
+	char y;
+    
+	y = *value;
+    
+	do
+	{
+		x = y;
+		y = _InterlockedCompareExchange8(value, x | mask, x);
+	}
+	while(y != x);
+    
+	return y;
 }
 
-FORCEINLINE void * _InterlockedExchangePointer(void * volatile * const Target, void * const Value)
+static __inline__ __attribute__((always_inline)) short _InterlockedOr16(volatile short * const value, const short mask)
 {
-	/* NOTE: ditto */
-	__sync_synchronize();
-	return __sync_lock_test_and_set(Target, Value);
+	short x;
+	short y;
+    
+	y = *value;
+    
+	do
+	{
+		x = y;
+		y = _InterlockedCompareExchange16(value, x | mask, x);
+	}
+	while(y != x);
+    
+	return y;
 }
 
-static __inline__ __attribute__((always_inline)) long _InterlockedExchangeAdd16(volatile short * const Addend, const short Value)
+static __inline__ __attribute__((always_inline)) long _InterlockedOr(volatile long * const value, const long mask)
 {
-	return __sync_fetch_and_add(Addend, Value);
+	long x;
+	long y;
+    
+	y = *value;
+    
+	do
+	{
+		x = y;
+		y = _InterlockedCompareExchange(value, x | mask, x);
+	}
+	while(y != x);
+    
+	return y;
 }
 
-FORCEINLINE long _InterlockedExchangeAdd(volatile long * const Addend, const long Value)
+static __inline__ __attribute__((always_inline)) char _InterlockedXor8(volatile char * const value, const char mask)
 {
-	return __sync_fetch_and_add(Addend, Value);
+	char x;
+	char y;
+    
+	y = *value;
+    
+	do
+	{
+		x = y;
+		y = _InterlockedCompareExchange8(value, x ^ mask, x);
+	}
+	while(y != x);
+    
+	return y;
 }
 
-FORCEINLINE char _InterlockedAnd8(volatile char * const value, const char mask)
+static __inline__ __attribute__((always_inline)) short _InterlockedXor16(volatile short * const value, const short mask)
 {
-	return __sync_fetch_and_and(value, mask);
+	short x;
+	short y;
+    
+	y = *value;
+    
+	do
+	{
+		x = y;
+		y = _InterlockedCompareExchange16(value, x ^ mask, x);
+	}
+	while(y != x);
+    
+	return y;
 }
 
-FORCEINLINE short _InterlockedAnd16(volatile short * const value, const short mask)
+static __inline__ __attribute__((always_inline)) long _InterlockedXor(volatile long * const value, const long mask)
 {
-	return __sync_fetch_and_and(value, mask);
-}
-
-FORCEINLINE long _InterlockedAnd(volatile long * const value, const long mask)
-{
-	return __sync_fetch_and_and(value, mask);
-}
-
-FORCEINLINE char _InterlockedOr8(volatile char * const value, const char mask)
-{
-	return __sync_fetch_and_or(value, mask);
-}
-
-FORCEINLINE short _InterlockedOr16(volatile short * const value, const short mask)
-{
-	return __sync_fetch_and_or(value, mask);
-}
-
-FORCEINLINE long _InterlockedOr(volatile long * const value, const long mask)
-{
-	return __sync_fetch_and_or(value, mask);
-}
-
-FORCEINLINE char _InterlockedXor8(volatile char * const value, const char mask)
-{
-	return __sync_fetch_and_xor(value, mask);
-}
-
-FORCEINLINE short _InterlockedXor16(volatile short * const value, const short mask)
-{
-	return __sync_fetch_and_xor(value, mask);
-}
-
-FORCEINLINE long _InterlockedXor(volatile long * const value, const long mask)
-{
-	return __sync_fetch_and_xor(value, mask);
+	long x;
+	long y;
+    
+	y = *value;
+    
+	do
+	{
+		x = y;
+		y = _InterlockedCompareExchange(value, x ^ mask, x);
+	}
+	while(y != x);
+    
+	return y;
 }
 
 static __inline__ __attribute__((always_inline)) long _InterlockedDecrement(volatile long * const lpAddend)
