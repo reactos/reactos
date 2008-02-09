@@ -11,7 +11,7 @@ static MUI_ENTRY skSKLanguagePageEntries[] =
     {
         4,
         3,
-         " Inçtal tor syst‚mu ReactOS " KERNEL_VERSION_STR,
+         " Inçtal tor syst‚mu ReactOS " KERNEL_VERSION_STR " ",
         TEXT_UNDERLINE
     },
     {
@@ -57,7 +57,7 @@ static MUI_ENTRY skSKWelcomePageEntries[] =
     {
         4,
         3,
-         " Inçtal tor syst‚mu ReactOS " KERNEL_VERSION_STR,
+         " Inçtal tor syst‚mu ReactOS " KERNEL_VERSION_STR " ",
         TEXT_UNDERLINE
     },
     {
@@ -133,7 +133,7 @@ static MUI_ENTRY skSKIntroPageEntries[] =
     {
         4,
         3,
-        " Inçtal tor syst‚mu ReactOS " KERNEL_VERSION_STR,
+        " Inçtal tor syst‚mu ReactOS " KERNEL_VERSION_STR " ",
         TEXT_UNDERLINE
     },
     {
@@ -157,7 +157,7 @@ static MUI_ENTRY skSKIntroPageEntries[] =
     {
         8,
         13,
-        "- Inçtal tor nepracuje s viac ako 1 prim rnou oblasœou na 1 disk.",
+        "- Inçtal tor nepracuje s viac ako 1 prim rnou oblasœou na 1 disku.",
         TEXT_NORMAL
     },
     {
@@ -227,7 +227,7 @@ static MUI_ENTRY skSKLicensePageEntries[] =
     {
         4,
         3,
-        " Inçtal tor syst‚mu ReactOS " KERNEL_VERSION_STR,
+        " Inçtal tor syst‚mu ReactOS " KERNEL_VERSION_STR " ",
         TEXT_UNDERLINE
     },
     {
@@ -351,7 +351,7 @@ static MUI_ENTRY skSKDevicePageEntries[] =
     {
         4,
         3,
-        " Inçtal tor syst‚mu ReactOS " KERNEL_VERSION_STR,
+        " Inçtal tor syst‚mu ReactOS " KERNEL_VERSION_STR " ",
         TEXT_UNDERLINE
     },
     {
@@ -416,13 +416,13 @@ static MUI_ENTRY skSKDevicePageEntries[] =
     {
         6,
         23,
-        "Ak s£ vçetky nastavenia spr vne, vyberte \"Akceptovaœ tieto nastavenia zariaden¡\"",
+        "Ak s£ vçetky nastavenia spr vne, vyberte polo§ku",
         TEXT_NORMAL
     },
     {
         6,
         24,
-        "a stlaŸte ENTER.",
+        "\"Akceptovaœ tieto nastavenia zariaden¡\" a stlaŸte ENTER.",
         TEXT_NORMAL
     },
     {
@@ -444,7 +444,7 @@ static MUI_ENTRY skSKRepairPageEntries[] =
     {
         4,
         3,
-        " Inçtal tor syst‚mu ReactOS " KERNEL_VERSION_STR,
+        " Inçtal tor syst‚mu ReactOS " KERNEL_VERSION_STR " ",
         TEXT_UNDERLINE
     },
     {
@@ -507,7 +507,7 @@ static MUI_ENTRY skSKComputerPageEntries[] =
     {
         4,
         3,
-        " Inçtal tor syst‚mu ReactOS " KERNEL_VERSION_STR,
+        " Inçtal tor syst‚mu ReactOS " KERNEL_VERSION_STR " ",
         TEXT_UNDERLINE
     },
     {
@@ -559,7 +559,7 @@ static MUI_ENTRY skSKFlushPageEntries[] =
     {
         4,
         3,
-        " Inçtal tor syst‚mu ReactOS " KERNEL_VERSION_STR,
+        " Inçtal tor syst‚mu ReactOS " KERNEL_VERSION_STR " ",
         TEXT_UNDERLINE
     },
     {
@@ -599,7 +599,7 @@ static MUI_ENTRY skSKQuitPageEntries[] =
     {
         4,
         3,
-        " Inçtal tor syst‚mu ReactOS " KERNEL_VERSION_STR,
+        " Inçtal tor syst‚mu ReactOS " KERNEL_VERSION_STR " ",
         TEXT_UNDERLINE
     },
     {
@@ -645,7 +645,7 @@ static MUI_ENTRY skSKDisplayPageEntries[] =
     {
         4,
         3,
-        " Inçtal tor syst‚mu ReactOS " KERNEL_VERSION_STR,
+        " Inçtal tor syst‚mu ReactOS " KERNEL_VERSION_STR " ",
         TEXT_UNDERLINE
     },
     {
@@ -696,7 +696,7 @@ static MUI_ENTRY skSKSuccessPageEntries[] =
     {
         4,
         3,
-        " Inçtal tor syst‚mu ReactOS " KERNEL_VERSION_STR,
+        " Inçtal tor syst‚mu ReactOS " KERNEL_VERSION_STR " ",
         TEXT_UNDERLINE
     },
     {
@@ -742,7 +742,7 @@ static MUI_ENTRY skSKBootPageEntries[] =
     {
         4,
         3,
-        " Inçtal tor syst‚mu ReactOS " KERNEL_VERSION_STR,
+        " Inçtal tor syst‚mu ReactOS " KERNEL_VERSION_STR " ",
         TEXT_UNDERLINE
     },
     {
@@ -789,7 +789,7 @@ static MUI_ENTRY skSKSelectPartitionEntries[] =
     {
         4,
         3,
-        " Inçtal tor syst‚mu ReactOS " KERNEL_VERSION_STR,
+        " Inçtal tor syst‚mu ReactOS " KERNEL_VERSION_STR " ",
         TEXT_UNDERLINE
     },
     {
@@ -847,7 +847,7 @@ static MUI_ENTRY skSKFormatPartitionEntries[] =
     {
         4,
         3,
-        " Inçtal tor syst‚mu ReactOS " KERNEL_VERSION_STR,
+        " Inçtal tor syst‚mu ReactOS " KERNEL_VERSION_STR " ",
         TEXT_UNDERLINE
     },
     {
@@ -881,13 +881,13 @@ static MUI_ENTRY skSKInstallDirectoryEntries[] =
     {
         4,
         3,
-        " Inçtal tor syst‚mu ReactOS " KERNEL_VERSION_STR,
+        " Inçtal tor syst‚mu ReactOS " KERNEL_VERSION_STR " ",
         TEXT_UNDERLINE
     },
     {
         6,
         8,
-        "Inçtal tor inçtaluje s£bory syst‚mu ReactOS na zvolen£ oblasœ.",
+        "Inçtal tor nainçtaluje s£bory syst‚mu ReactOS na zvolen£ oblasœ.",
         TEXT_NORMAL
     },
     {
@@ -933,19 +933,19 @@ static MUI_ENTRY skSKFileCopyEntries[] =
     {
         4,
         3,
-        " Inçtal tor syst‚mu ReactOS " KERNEL_VERSION_STR,
+        " Inçtal tor syst‚mu ReactOS " KERNEL_VERSION_STR " ",
         TEXT_UNDERLINE
     },
     {
         11,
         12,
-        "PoŸkajte, pros¡m, kìm Inçtal tor syst‚mu ReactOS skop¡ruje s£bory",
+        "PoŸkajte, pros¡m, kìm Inçtal tor skop¡ruje s£bory do inçtalaŸn‚ho",
         TEXT_NORMAL
     },
     {
         30,
         13,
-        "do V çho inçtalaŸn‚ho prieŸinka pre ReactOS.",
+        "prieŸinka pre ReactOS.",
         TEXT_NORMAL
     },
     {
@@ -957,7 +957,7 @@ static MUI_ENTRY skSKFileCopyEntries[] =
     {
         0,
         0,
-        "                                                           \xB3 PoŸkajte, pros¡m ...    ",
+        "                                                     \xB3 PoŸkajte, pros¡m ...    ",
         TEXT_STATUS
     },
     {
@@ -973,7 +973,7 @@ static MUI_ENTRY skSKBootLoaderEntries[] =
     {
         4,
         3,
-        " Inçtal tor syst‚mu ReactOS " KERNEL_VERSION_STR,
+        " Inçtal tor syst‚mu ReactOS " KERNEL_VERSION_STR " ",
         TEXT_UNDERLINE
     },
     {
@@ -1019,7 +1019,7 @@ static MUI_ENTRY skSKKeyboardSettingsEntries[] =
     {
         4,
         3,
-        " Inçtal tor syst‚mu ReactOS " KERNEL_VERSION_STR,
+        " Inçtal tor syst‚mu ReactOS " KERNEL_VERSION_STR " ",
         TEXT_UNDERLINE
     },
     {
@@ -1031,7 +1031,7 @@ static MUI_ENTRY skSKKeyboardSettingsEntries[] =
     {
         8,
         10,
-        "\x07  StlaŸte kl ves HORE alebo DOLE pre vìber po§adovan‚ho typu kl vesnice.",
+        "\x07  StlaŸte kl ves HORE alebo DOLE a vyberte po§adovanì typ kl vesnice.",
         TEXT_NORMAL
     },
     {
@@ -1071,7 +1071,7 @@ static MUI_ENTRY skSKLayoutSettingsEntries[] =
     {
         4,
         3,
-        " Inçtal tor syst‚mu ReactOS " KERNEL_VERSION_STR,
+        " Inçtal tor syst‚mu ReactOS " KERNEL_VERSION_STR " ",
         TEXT_UNDERLINE
     },
     {
@@ -1089,7 +1089,7 @@ static MUI_ENTRY skSKLayoutSettingsEntries[] =
     {
         8,
         11,
-        "    kl vesnice. Potom stlaŸte ENTER.",
+        "   kl vesnice. Potom stlaŸte ENTER.",
         TEXT_NORMAL
     },
     {
@@ -1124,7 +1124,7 @@ static MUI_ENTRY skSKPrepareCopyEntries[] =
     {
         4,
         3,
-        " Inçtal tor syst‚mu ReactOS " KERNEL_VERSION_STR,
+        " Inçtal tor syst‚mu ReactOS " KERNEL_VERSION_STR " ",
         TEXT_UNDERLINE
     },
     {
@@ -1153,7 +1153,7 @@ static MUI_ENTRY skSKSelectFSEntries[] =
     {
         4,
         3,
-        " Inçtal tor syst‚mu ReactOS " KERNEL_VERSION_STR,
+        " Inçtal tor syst‚mu ReactOS " KERNEL_VERSION_STR " ",
         TEXT_UNDERLINE
     },
     {
@@ -1200,7 +1200,7 @@ static MUI_ENTRY skSKDeletePartitionEntries[] =
     {
         4,
         3,
-        " Inçtal tor syst‚mu ReactOS " KERNEL_VERSION_STR,
+        " Inçtal tor syst‚mu ReactOS " KERNEL_VERSION_STR " ",
         TEXT_UNDERLINE
     },
     {
@@ -1246,7 +1246,7 @@ static MUI_ENTRY skSKRegistryEntries[] =
     {
         4,
         3,
-        " Inçtal tor syst‚mu ReactOS " KERNEL_VERSION_STR,
+        " Inçtal tor syst‚mu ReactOS " KERNEL_VERSION_STR " ",
         TEXT_UNDERLINE
     },
     {
@@ -1274,8 +1274,8 @@ MUI_ERROR skSKErrorEntries[] =
 {
     {
         //ERROR_NOT_INSTALLED
-        "Syst‚m ReactOS nie je kompletne nainçtalovanì na V ç\n"
-        "poŸ¡taŸ. Ak teraz preruç¡te inçtal ciu, budete musieœ\n"
+        "Syst‚m ReactOS nie je kompletne nainçtalovanì na V çom\n"
+        "poŸ¡taŸi. Ak teraz preruç¡te inçtal ciu, budete musieœ\n"
         "spustiœ Inçtal tor znova, aby sa syst‚m ReactOS nainçtaloval.\n"
         "\n"
         "  \x07  StlaŸte ENTER pre pokraŸovanie v inçtal cii.\n"
@@ -1571,6 +1571,33 @@ MUI_PAGE skSKPages[] =
         -1,
         NULL
     }
+};
+
+MUI_STRING skSKStrings[] =
+{
+    {STRING_INSTALLCREATEPARTITION,
+     "   ENTER = Inçtalovaœ   C = Vytvoriœ oblasœ   F3 = SkonŸiœ"},
+    {STRING_INSTALLDELETEPARTITION,
+     "   ENTER = Inçtalovaœ   D = Odstr niœ oblasœ   F3 = SkonŸiœ"},
+    {STRING_PARTITIONSIZE,
+     "Ve–kosœ novej oblasti:"},
+    {STRING_PLEASEWAIT,
+     "   PoŸkajte, pros¡m ..."},
+    {STRING_CHOOSENEWPARTITION,
+     "Zvolili Ste vytvorenie novej oblasti na"},
+    {STRING_CREATEPARTITION,
+     "   ENTER = Vytvoriœ oblasœ   ESC = Zruçiœ   F3 = SkonŸiœ"},
+    {STRING_COPYING,
+     "                                              \xB3 Kop¡ruje sa s£bor: %S"},
+    {STRING_SETUPCOPYINGFILES,
+     "Inçtal tor kop¡ruje s£bory..."},
+    {STRING_PAGEDMEM,
+     "Str nkovan  pam„œ"},
+    {STRING_NONPAGEDMEM,
+     "Nestr nkovan  pam„œ"},
+    {STRING_FREEMEM,
+     "Vo–n  pam„œ"},
+    {0, 0}
 };
 
 #endif

@@ -66,7 +66,7 @@ static const MUI_LANGUAGE LanguageList[] =
   {L"00000427", L"00000427", L"1257", L"775", L"10029", L"Lithuanian",    ltLTPages, ltLTErrorEntries, enUSStrings },
   {L"00000414", L"00000414", L"1252", L"850", L"10000", L"Norwegian",     enUSPages, enUSErrorEntries, enUSStrings },
   {L"00000419", L"00000419", L"1251", L"866", L"10007", L"Russian",       ruRUPages, ruRUErrorEntries, enUSStrings },
-  {L"0000041B", L"0000041B", L"1250", L"852", L"10029", L"Slovak",        skSKPages, skSKErrorEntries, enUSStrings },
+  {L"0000041B", L"0000041B", L"1250", L"852", L"10029", L"Slovak",        skSKPages, skSKErrorEntries, skSKStrings },
   {L"0000040A", L"0000040A", L"1252", L"850", L"10000", L"Spanish",       esESPages, esESErrorEntries, enUSStrings },
   {L"00000415", L"00000415", L"1250", L"852", L"10029", L"Polish",        plPLPages, plPLErrorEntries, enUSStrings },
   {L"00000816", L"00000816", L"1252", L"850", L"10000", L"Portuguese",    enUSPages, enUSErrorEntries, enUSStrings },
