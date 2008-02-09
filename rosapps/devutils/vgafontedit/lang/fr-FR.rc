@@ -1,10 +1,10 @@
 /*
  * PROJECT:     ReactOS VGA Font Editor
  * LICENSE:     GNU General Public License Version 2.0 or any later version
- * FILE:        devutils/vgafontedit/lang/en-US.rc
+ * FILE:        devutils/vgafontedit/lang/fr-FR.rc
  * PURPOSE:     French resource file
  * COPYRIGHT:   Copyright 2008 Colin Finck <mail@colinfinck.de>
- * TRANSLATOR:  Pierre Schweitzer
+ * TRANSLATOR:  Pierre Schweitzer <heis_spiter@hotmail.com>
  */
 
 LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
