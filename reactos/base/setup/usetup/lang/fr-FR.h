@@ -1580,4 +1580,31 @@ MUI_PAGE frFRPages[] =
     }
 };
 
+MUI_STRING frFRStrings[] =
+{
+    {STRING_INSTALLCREATEPARTITION,
+     "   ENTER = Installer   C = Créer Partition   F3 = Quitter"},
+    {STRING_INSTALLDELETEPARTITION,
+     "   ENTER = Installer   D = Supprimer Partition   F3 = Quitter"},
+    {STRING_PARTITIONSIZE,
+     "Taille de la nouvelle partition :"},
+    {STRING_PLEASEWAIT,
+     "   Veuillez patienter..."},
+    {STRING_CHOOSENEWPARTITION,
+     "Vous avez choisi de créer une nouvelle partition sur"},
+    {STRING_CREATEPARTITION,
+     "   ENTER = Créer Partition   ESC = Annuler   F3 = Quitter"},
+    {STRING_COPYING,
+     "                                                   \xB3 Copie du fichier: %S"},
+    {STRING_SETUPCOPYINGFILES,
+     "Setup copie les fichiers..."},
+    {STRING_PAGEDMEM,
+     "Mémoire paginée"},
+    {STRING_NONPAGEDMEM,
+     "Mémoire non paginée"},
+    {STRING_FREEMEM,
+     "Mémoire libre"},
+    {0, 0}
+};
+
 #endif
