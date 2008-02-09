@@ -23,6 +23,11 @@
 #define USERPCR                 ((volatile KPCR * const)KIPCR)
 
 //
+// Just read it from the PCR
+//
+#define KeGetCurrentProcessorNumber() ((ULONG)(PCR->Number))
+
+//
 // Stub
 //
 typedef struct _KFLOATING_SAVE

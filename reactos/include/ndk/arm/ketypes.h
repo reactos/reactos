@@ -230,16 +230,5 @@ KeGetCurrentPrcb(VOID)
     return PCR->Prcb;
 }
 
-//
-// Macro to get current CPU
-//
-FORCEINLINE
-ULONG
-DDKAPI
-KeGetCurrentProcessorNumber(VOID)
-{
-    return PCR->Number;
-}
-
 #endif
 #endif
