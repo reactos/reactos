@@ -1576,4 +1576,31 @@ MUI_PAGE plPLPages[] =
     }
 };
 
+MUI_STRING plPLStrings[] =
+{
+    {STRING_INSTALLCREATEPARTITION,
+     "   ENTER = Instalacja   C = Utworzenie Partycji   F3 = Wyj˜cie"},
+    {STRING_INSTALLDELETEPARTITION,
+     "   ENTER = Instalacja   D = Skasowanie Partycji   F3 = Wyj˜cie"},
+    {STRING_PARTITIONSIZE,
+     "Rozmiar nowej partycji:"},
+    {STRING_PLEASEWAIT,
+     "   Prosz© czeka†..."},
+    {STRING_CHOOSENEWPARTITION,
+     "Wybrane: utworzenie nowej partycji na"},
+    {STRING_CREATEPARTITION,
+     "   ENTER = Utworzenie Partycji   ESC = Anulowanie   F3 = Wyj˜cie"},
+    {STRING_COPYING,
+     "                                                   \xB3 Kopiowanie plik¢w: %S"},
+    {STRING_SETUPCOPYINGFILES,
+     "Instalator kopiuje pliki..."},
+    {STRING_PAGEDMEM,
+     "Stronicowanej"},
+    {STRING_NONPAGEDMEM,
+     "Niestronicowanej"},
+    {STRING_FREEMEM,
+     "Dost©pnej"},
+    {0, 0}
+};
+
 #endif
