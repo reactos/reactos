@@ -1442,6 +1442,21 @@ DEFINE_KSPROPERTY_TABLE(PinSet) {\
         };
     } KSPIN_DESCRIPTOR, *PKSPIN_DESCRIPTOR, *PCKSPIN_DESCRIPTOR;
 
+    typedef struct
+    {
+        GUID ProtocolId;
+        PVOID Argument1;
+        PVOID Argument2;
+    } KSHANDSHAKE, *PKSHANDSHAKE;
+
+    typedef struct _KSGATE  KSGATE, *PKSGATE;
+
+    struct _KSGATE 
+    {
+        LONG Count;
+        PKSGATE NextGate;
+    };
+
     #define DEFINE_KSPIN_DESCRIPTOR_TABLE(tablename) const KSPIN_DESCRIPTOR tablename[] =
 
     #define DEFINE_KSPIN_DESCRIPTOR_ITEM\
@@ -1862,6 +1877,7 @@ DEFINE_KSMETHOD_TABLE(AllocatorSet) { DEFINE_KSMETHOD_ITEM_STREAMALLOCATOR_ALLOC
         PKSOBJECT_CREATE_ITEM CreateItemsList;
     } KSOBJECT_CREATE, *PKSOBJECT_CREATE;
 
+    /* Dispatch Table http://www.osronline.com/DDKx/stream/ks-struct_494j.htm */
     typedef struct
     {
         PDRIVER_DISPATCH DeviceIoControl;
@@ -1883,12 +1899,6 @@ DEFINE_KSMETHOD_TABLE(AllocatorSet) { DEFINE_KSMETHOD_ITEM_STREAMALLOCATOR_ALLOC
         PFNDEREFERENCEDEVICEOBJECT DereferenceDeviceObject;
         PFNQUERYREFERENCESTRING QueryReferenceString;
     } BUS_INTERFACE_REFERENCE, *PBUS_INTERFACE_REFERENCE;
-
-    typedef struct
-    {
-        INTERFACE Interface;
-        PFNQUERYMEDIUMSLIST QueryMediumsList;
-    } BUS_INTERFACE_MEDIUMS, *PBUS_INTERFACE_MEDIUMS;
 
     typedef NTSTATUS (*PFNKSADDEVENT)(IN PIRP Irp, IN PKSEVENTDATA EventData, IN struct _KSEVENT_ENTRY* EventEntry);
     typedef VOID (*PFNKSREMOVEEVENT)(IN PFILE_OBJECT FileObject, IN struct _KSEVENT_ENTRY* EventEntry );
@@ -2009,6 +2019,400 @@ typedef struct
     ULONG Id;
     ULONG PropertyLength;
 } KSPROPERTY_SERIAL, *PKSPROPERTY_SERIAL;
+
+
+
+#if defined(_NTDDK_)
+
+    typedef PVOID KSOBJECT_BAG;
+    typedef BOOLEAN (*PFNKSGENERATEEVENTCALLBACK)(IN PVOID Context, IN PKSEVENT_ENTRY EventEntry);
+    typedef void (*PFNKSDEVICEIRPVOID)(IN PKSDEVICE Device, IN PIRP Irp);
+    typedef void (*PFNKSDEVICESETPOWER)( IN PKSDEVICE Device, IN PIRP Irp, IN DEVICE_POWER_STATE To, IN DEVICE_POWER_STATE From);
+    typedef NTSTATUS (*PFNKSDEVICECREATE)(IN PKSDEVICE Device);
+    typedef NTSTATUS (*PFNKSDEVICEQUERYCAPABILITIES)( IN PKSDEVICE Device, IN PIRP Irp, IN OUT PDEVICE_CAPABILITIES Capabilities);
+    typedef void (*PFNKSFILTERPOWER)(IN PKSFILTER Filter, IN DEVICE_POWER_STATE State);
+    typedef NTSTATUS (*PFNKSPINIRP)( IN PKSPIN Pin, IN PIRP Irp);
+    typedef NTSTATUS (*PFNKSDEVICE)(IN PKSDEVICE Device);
+    typedef NTSTATUS (*PFNKSDEVICEIRP)(IN PKSDEVICE Device, IN PIRP Irp);
+    typedef NTSTATUS (*PFNKSPINHANDSHAKE)( IN PKSPIN Pin, IN PKSHANDSHAKE In, IN PKSHANDSHAKE Out);
+    typedef NTSTATUS (*PFNKSPIN)(IN PKSPIN Pin);
+    typedef void (*PFNKSPINVOID)(IN PKSPIN Pin);
+    typedef void (*PFNKSPINPOWER)(IN PKSPIN Pin, IN DEVICE_POWER_STATE State);
+    typedef NTSTATUS (*PFNKSPINSETDEVICESTATE)( IN PKSPIN Pin, IN KSSTATE ToState, IN KSSTATE FromState);
+    typedef NTSTATUS (*PFNKSFILTERFACTORYVOID)(IN PKSFILTERFACTORY FilterFactory);
+    typedef void (*PFNKSFILTERFACTORYPOWER)(IN PKSFILTERFACTORY FilterFactory, IN DEVICE_POWER_STATE State);
+    typedef NTSTATUS (*PFNKSFILTERIRP)(IN PKSFILTER Filter, IN PIRP Irp);
+    typedef NTSTATUS (*PFNKSFILTERPROCESS)(IN PKSFILTER Filter, IN PKSPROCESSPIN_INDEXENTRY Index);
+    typedef NTSTATUS (*PFNKSFILTERVOID)(IN PKSFILTER Filter);
+    typedef BOOLEAN (*PFNKSPINSETTIMER)(IN PKSPIN Pin, IN PKTIMER Timer, IN LARGE_INTEGER DueTime, IN PKDPC Dpc);
+    typedef BOOLEAN (*PFNKSPINCANCELTIMER)(IN PKSPIN Pin, IN PKTIMER Timer);
+    typedef LONGLONG (FASTCALL *PFNKSPINCORRELATEDTIME)(IN PKSPIN Pin, OUT PLONGLONG SystemTime);
+    typedef void (*PFNKSPINRESOLUTION)(IN PKSPIN Pin, OUT PKSRESOLUTION Resolution);
+    typedef NTSTATUS (*PFNKSPININITIALIZEALLOCATOR)(IN PKSPIN Pin, IN PKSALLOCATOR_FRAMING AllocatorFraming, OUT PVOID* Context);
+    typedef void (*PFNKSSTREAMPOINTER)(IN PKSSTREAM_POINTER StreamPointer);
+
+
+    typedef NTSTATUS (*PFNKSDEVICEPNPSTART)(IN PKSDEVICE Device, IN PIRP Irp, IN PCM_RESOURCE_LIST TranslatedResourceList OPTIONAL, 
+                                            IN PCM_RESOURCE_LIST UntranslatedResourceList OPTIONAL);
+
+    typedef NTSTATUS (*PFNKSDEVICEQUERYPOWER)(IN PKSDEVICE Device, IN PIRP Irp, IN DEVICE_POWER_STATE DeviceTo, IN DEVICE_POWER_STATE DeviceFrom,
+                                              IN SYSTEM_POWER_STATE SystemTo, IN SYSTEM_POWER_STATE SystemFrom, IN POWER_ACTION Action);
+
+
+    typedef NTSTATUS (*PFNKSPINSETDATAFORMAT)(IN PKSPIN Pin, IN PKSDATAFORMAT OldFormat OPTIONAL, IN PKSMULTIPLE_ITEM OldAttributeList OPTIONAL,
+                                              IN const KSDATARANGE* DataRange, IN const KSATTRIBUTE_LIST* AttributeRange OPTIONAL);
+
+
+
+    #ifndef _NTOS_
+
+    void __inline KsGateTurnInputOn(IN PKSGATE Gate OPTIONAL)
+    {
+        while (Gate && (InterlockedIncrement(&Gate->Count) == 1))
+        {
+            Gate = Gate->NextGate;
+        }
+    }
+
+    void __inline KsGateTurnInputOff(IN PKSGATE Gate OPTIONAL)
+    {
+        while (Gate && (InterlockedDecrement(&Gate->Count) == 0))
+        {
+            Gate = Gate->NextGate;
+        }
+    }
+
+    BOOLEAN __inline KsGateGetStateUnsafe(IN PKSGATE Gate)
+    {
+        ASSERT(Gate);
+        return((BOOLEAN)(Gate->Count > 0));
+    }
+
+    BOOLEAN __inline KsGateCaptureThreshold(IN PKSGATE Gate)
+    {
+        BOOLEAN captured;
+        ASSERT(Gate);
+
+        captured = (BOOLEAN)(InterlockedCompareExchange(&Gate->Count,0,1) == 1);
+        if (captured)
+        {
+            KsGateTurnInputOff(Gate->NextGate);
+        }
+        return captured;
+    }
+
+    void __inline KsGateInitialize( IN PKSGATE Gate, IN LONG InitialCount, IN PKSGATE NextGate OPTIONAL, IN BOOLEAN StateToPropagate)
+    {
+        ASSERT(Gate);
+        Gate->Count = InitialCount;
+        Gate->NextGate = NextGate;
+
+        if (NextGate)
+        {
+            if (InitialCount > 0)
+            {
+                if (StateToPropagate)
+                {
+                    KsGateTurnInputOn(NextGate);
+                }
+            }
+            else
+            {
+                if (! StateToPropagate)
+                {
+                    KsGateTurnInputOff(NextGate);
+                }
+            }
+        }
+    }
+
+    void __inline KsGateInitializeAnd( IN PKSGATE AndGate, IN PKSGATE NextOrGate OPTIONAL)
+    { 
+        KsGateInitialize(AndGate,1,NextOrGate,TRUE);
+    }
+
+    void __inline KsGateInitializeOr(IN PKSGATE OrGate, IN PKSGATE NextAndGate OPTIONAL)
+    {
+        KsGateInitialize(OrGate,0,NextAndGate,FALSE);
+    }
+
+    void __inline KsGateAddOnInputToAnd(IN PKSGATE AndGate) { UNREFERENCED_PARAMETER (AndGate); }
+    void __inline KsGateRemoveOnInputFromAnd(IN PKSGATE AndGate) { UNREFERENCED_PARAMETER (AndGate); }
+    void __inline KsGateRemoveOnInputFromOr(IN PKSGATE OrGate) { KsGateTurnInputOff(OrGate); }
+    void __inline KsGateRemoveOffInputFromOr(IN PKSGATE OrGate) { UNREFERENCED_PARAMETER (OrGate); }
+    void __inline KsGateAddOnInputToOr(IN PKSGATE OrGate) { KsGateTurnInputOn(OrGate); }
+    void __inline KsGateRemoveOffInputFromAnd(IN PKSGATE AndGate) { KsGateTurnInputOn(AndGate); }
+    void __inline KsGateAddOffInputToOr(IN PKSGATE OrGate) { UNREFERENCED_PARAMETER (OrGate); }
+    void __inline KsGateAddOffInputToAnd(IN PKSGATE AndGate) { KsGateTurnInputOff(AndGate); }
+
+    void __inline KsGateTerminateOr(IN PKSGATE OrGate)
+    {
+        ASSERT(OrGate);
+        if (KsGateGetStateUnsafe(OrGate))
+        {
+            KsGateRemoveOnInputFromAnd(OrGate->NextGate);
+        }
+        else
+        {
+            KsGateRemoveOffInputFromAnd(OrGate->NextGate);
+        }
+    }
+
+    void __inline KsGateTerminateAnd( IN PKSGATE AndGate)
+    {
+        ASSERT(AndGate);
+        if (KsGateGetStateUnsafe(AndGate))
+        {
+            KsGateRemoveOnInputFromOr(AndGate->NextGate);
+        }
+        else
+        {
+            KsGateRemoveOffInputFromOr(AndGate->NextGate);
+        }
+    }
+    #endif
+
+
+
+    typedef struct
+    {
+        INTERFACE Interface;
+        PFNQUERYMEDIUMSLIST QueryMediumsList;
+    } BUS_INTERFACE_MEDIUMS, *PBUS_INTERFACE_MEDIUMS;
+
+    struct KSAUTOMATION_TABLE_
+    {
+        ULONG PropertySetsCount;
+        ULONG PropertyItemSize;
+        const KSPROPERTY_SET* PropertySets;
+        ULONG MethodSetsCount;
+        ULONG MethodItemSize;
+        const KSMETHOD_SET* MethodSets;
+        ULONG EventSetsCount;
+        ULONG EventItemSize;
+        const KSEVENT_SET* EventSets;
+        #if !defined(_WIN64)
+            PVOID Alignment;
+        #endif
+    } KSAUTOMATION_TABLE, *PKSAUTOMATION_TABLE;
+
+    struct _KSDEVICE_DISPATCH
+    {
+        PFNKSDEVICECREATE Add;
+        PFNKSDEVICEPNPSTART Start;
+        PFNKSDEVICE PostStart;
+        PFNKSDEVICEIRP QueryStop;
+        PFNKSDEVICEIRPVOID CancelStop;
+        PFNKSDEVICEIRPVOID Stop;
+        PFNKSDEVICEIRP QueryRemove;
+        PFNKSDEVICEIRPVOID CancelRemove;
+        PFNKSDEVICEIRPVOID Remove;
+        PFNKSDEVICEQUERYCAPABILITIES QueryCapabilities;
+        PFNKSDEVICEIRPVOID SurpriseRemoval;
+        PFNKSDEVICEQUERYPOWER QueryPower;
+        PFNKSDEVICESETPOWER SetPower;
+        PFNKSDEVICEIRP QueryInterface; 
+    };
+
+    struct _KSFILTER_DISPATCH
+    {
+        PFNKSFILTERIRP Create;
+        PFNKSFILTERIRP Close;
+        PFNKSFILTERPROCESS Process;
+        PFNKSFILTERVOID Reset;
+    };
+
+    struct _KSPIN_DISPATCH
+    {
+        PFNKSPINIRP Create;
+        PFNKSPINIRP Close;
+        PFNKSPIN Process;
+        PFNKSPINVOID Reset;
+        PFNKSPINSETDATAFORMAT SetDataFormat;
+        PFNKSPINSETDEVICESTATE SetDeviceState;
+        PFNKSPIN Connect;
+        PFNKSPINVOID Disconnect;
+        const KSCLOCK_DISPATCH* Clock;
+        const KSALLOCATOR_DISPATCH* Allocator;
+    };
+
+    struct _KSCLOCK_DISPATCH
+    {
+        PFNKSPINSETTIMER SetTimer;
+        PFNKSPINCANCELTIMER CancelTimer;
+        PFNKSPINCORRELATEDTIME CorrelatedTime;
+        PFNKSPINRESOLUTION Resolution;
+    };
+
+    struct _KSALLOCATOR_DISPATCH
+    {
+        PFNKSPININITIALIZEALLOCATOR InitializeAllocator;
+        PFNKSDELETEALLOCATOR DeleteAllocator;
+        PFNKSDEFAULTALLOCATE Allocate;
+        PFNKSDEFAULTFREE Free;
+    };
+
+    struct _KSDEVICE_DESCRIPTOR
+    {
+        const KSDEVICE_DISPATCH* Dispatch;
+        ULONG FilterDescriptorsCount;
+        const KSFILTER_DESCRIPTOR*const* FilterDescriptors;
+        ULONG Version;
+    };
+
+    struct _KSFILTER_DESCRIPTOR
+    {
+        const KSFILTER_DISPATCH* Dispatch;
+        const KSAUTOMATION_TABLE* AutomationTable;
+        ULONG Version;
+        ULONG Flags;
+        const GUID* ReferenceGuid;
+        ULONG PinDescriptorsCount;
+        ULONG PinDescriptorSize;
+        const KSPIN_DESCRIPTOR_EX* PinDescriptors;
+        ULONG CategoriesCount;
+        const GUID* Categories;
+        ULONG NodeDescriptorsCount;
+        ULONG NodeDescriptorSize;
+        const KSNODE_DESCRIPTOR* NodeDescriptors;
+        ULONG ConnectionsCount;
+        const KSTOPOLOGY_CONNECTION* Connections;
+        const KSCOMPONENTID* ComponentId;
+    };
+
+    struct _KSPIN_DESCRIPTOR_EX
+    {
+        const KSPIN_DISPATCH* Dispatch;
+        const KSAUTOMATION_TABLE* AutomationTable;
+        KSPIN_DESCRIPTOR PinDescriptor;
+        ULONG Flags;
+        ULONG InstancesPossible;
+        ULONG InstancesNecessary;
+        const KSALLOCATOR_FRAMING_EX* AllocatorFraming;
+        PFNKSINTERSECTHANDLEREX IntersectHandler;
+    };
+
+    struct _KSNODE_DESCRIPTOR
+    {
+        const KSAUTOMATION_TABLE* AutomationTable;
+        const GUID* Type;
+        const GUID* Name;
+        #if !defined(_WIN64)
+            PVOID Alignment;
+        #endif
+    };
+
+    struct _KSDEVICE
+    {
+        const KSDEVICE_DESCRIPTOR* Descriptor;
+        KSOBJECT_BAG Bag;
+        PVOID Context;
+        PDEVICE_OBJECT FunctionalDeviceObject;
+        PDEVICE_OBJECT PhysicalDeviceObject;
+        PDEVICE_OBJECT NextDeviceObject;
+        BOOLEAN Started;
+        SYSTEM_POWER_STATE SystemPowerState;
+        DEVICE_POWER_STATE DevicePowerState;
+    };
+
+    struct _KSFILTERFACTORY
+    {
+        const KSFILTER_DESCRIPTOR* FilterDescriptor;
+        KSOBJECT_BAG Bag;
+        PVOID Context;
+    };
+
+    struct _KSFILTER
+    {
+        const KSFILTER_DESCRIPTOR* Descriptor;
+        KSOBJECT_BAG Bag;
+        PVOID Context;
+    };
+
+    struct _KSPIN
+    {
+        const KSPIN_DESCRIPTOR_EX* Descriptor;
+        KSOBJECT_BAG Bag;
+        PVOID Context;
+        ULONG Id;
+        KSPIN_COMMUNICATION Communication;
+        BOOLEAN ConnectionIsExternal;
+        KSPIN_INTERFACE ConnectionInterface;
+        KSPIN_MEDIUM ConnectionMedium;
+        KSPRIORITY ConnectionPriority;
+        PKSDATAFORMAT ConnectionFormat;
+        PKSMULTIPLE_ITEM AttributeList;
+        ULONG StreamHeaderSize;
+        KSPIN_DATAFLOW DataFlow;
+        KSSTATE DeviceState;
+        KSRESET ResetState;
+        KSSTATE ClientState;
+    };
+
+    #define DEFINE_KSAUTOMATION_TABLE(table)        const KSAUTOMATION_TABLE table =
+    #define DEFINE_KSAUTOMATION_PROPERTIES(table)   SIZEOF_ARRAY(table), sizeof(KSPROPERTY_ITEM), table
+    #define DEFINE_KSAUTOMATION_METHODS(table)      SIZEOF_ARRAY(table), sizeof(KSMETHOD_ITEM), table
+    #define DEFINE_KSAUTOMATION_EVENTS(table)       SIZEOF_ARRAY(table), sizeof(KSEVENT_ITEM), table
+    #define DEFINE_KSAUTOMATION_PROPERTIES_NULL     0, sizeof(KSPROPERTY_ITEM), NULL
+    #define DEFINE_KSAUTOMATION_METHODS_NULL        0, sizeof(KSMETHOD_ITEM), NULL
+    #define DEFINE_KSAUTOMATION_EVENTS_NULL         0, sizeof(KSEVENT_ITEM), NULL
+    #define MIN_DEV_VER_FOR_QI                      (0x100)
+    #define KSDEVICE_DESCRIPTOR_VERSION             (0x100)
+    #define KSFILTER_FLAG_DISPATCH_LEVEL_PROCESSING 0x00000001
+    #define KSFILTER_FLAG_CRITICAL_PROCESSING 0x00000002
+    #define KSFILTER_FLAG_HYPERCRITICAL_PROCESSING 0x00000004
+    #define KSFILTER_FLAG_RECEIVE_ZERO_LENGTH_SAMPLES 0x00000008
+    #define KSFILTER_FLAG_DENY_USERMODE_ACCESS 0x80000000
+    #define KSFILTER_DESCRIPTOR_VERSION ((ULONG)-1)
+
+    #define DEFINE_KSFILTER_DESCRIPTOR(descriptor) const KSFILTER_DESCRIPTOR descriptor =
+    #define DEFINE_KSFILTER_PIN_DESCRIPTORS(table) SIZEOF_ARRAY(table), sizeof(table[0]), table
+    #define DEFINE_KSFILTER_CATEGORIES(table) SIZEOF_ARRAY(table), table
+    #define DEFINE_KSFILTER_CATEGORY(category) 1, &(category)
+    #define DEFINE_KSFILTER_CATEGORIES_NULL 0, NULL
+    #define DEFINE_KSFILTER_NODE_DESCRIPTORS(table) SIZEOF_ARRAY(table), sizeof(table[0]), table
+    #define DEFINE_KSFILTER_NODE_DESCRIPTORS_NULL 0, sizeof(KSNODE_DESCRIPTOR), NULL
+    #define DEFINE_KSFILTER_CONNECTIONS(table) SIZEOF_ARRAY(table), table
+    #define DEFINE_KSFILTER_DEFAULT_CONNECTIONS 0, NULL
+    #define DEFINE_KSFILTER_DESCRIPTOR_TABLE(table) const KSFILTER_DESCRIPTOR*const table[] =
+    #define KSPIN_FLAG_DISPATCH_LEVEL_PROCESSING KSFILTER_FLAG_DISPATCH_LEVEL_PROCESSING
+    #define KSPIN_FLAG_CRITICAL_PROCESSING KSFILTER_FLAG_CRITICAL_PROCESSING
+    #define KSPIN_FLAG_HYPERCRITICAL_PROCESSING KSFILTER_FLAG_HYPERCRITICAL_PROCESSING
+    #define KSPIN_FLAG_ASYNCHRONOUS_PROCESSING 0x00000008
+    #define KSPIN_FLAG_DO_NOT_INITIATE_PROCESSING 0x00000010
+    #define KSPIN_FLAG_INITIATE_PROCESSING_ON_EVERY_ARRIVAL 0x00000020
+    #define KSPIN_FLAG_FRAMES_NOT_REQUIRED_FOR_PROCESSING 0x00000040
+    #define KSPIN_FLAG_ENFORCE_FIFO 0x00000080
+    #define KSPIN_FLAG_GENERATE_MAPPINGS 0x00000100
+    #define KSPIN_FLAG_DISTINCT_TRAILING_EDGE 0x00000200
+    #define KSPIN_FLAG_PROCESS_IN_RUN_STATE_ONLY 0x00010000
+    #define KSPIN_FLAG_SPLITTER 0x00020000
+    #define KSPIN_FLAG_USE_STANDARD_TRANSPORT 0x00040000
+    #define KSPIN_FLAG_DO_NOT_USE_STANDARD_TRANSPORT 0x00080000
+    #define KSPIN_FLAG_FIXED_FORMAT 0x00100000
+    #define KSPIN_FLAG_GENERATE_EOS_EVENTS 0x00200000
+    #define KSPIN_FLAG_RENDERER (KSPIN_FLAG_PROCESS_IN_RUN_STATE_ONLY|KSPIN_FLAG_GENERATE_EOS_EVENTS)
+    #define KSPIN_FLAG_IMPLEMENT_CLOCK 0x00400000
+    #define KSPIN_FLAG_SOME_FRAMES_REQUIRED_FOR_PROCESSING 0x00800000
+    #define KSPIN_FLAG_PROCESS_IF_ANY_IN_RUN_STATE 0x01000000
+    #define KSPIN_FLAG_DENY_USERMODE_ACCESS 0x80000000
+    #define DEFINE_KSPIN_DEFAULT_INTERFACES 0, NULL
+    #define DEFINE_KSPIN_DEFAULT_MEDIUMS 0, NULL
+
+#endif
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
