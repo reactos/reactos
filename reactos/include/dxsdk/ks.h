@@ -1199,18 +1199,20 @@ typedef struct {
     WCHAR SymbolicLinkName[1];
 } KSPIN_PHYSICALCONNECTION, *PKSPIN_PHYSICALCONNECTION;
 
-typedef struct
+typedef union
 {
-    ULONG   FormatSize;
-    ULONG   Flags;
-    ULONG   SampleSize;
-    ULONG   Reserved;
-    GUID    MajorFormat;
-    GUID    SubFormat;
-    GUID    Specifier;
-    
+    struct
+    {
+        ULONG FormatSize;
+        ULONG Flags;
+        ULONG SampleSize;
+        ULONG Reserved;
+        GUID MajorFormat;
+        GUID SubFormat;
+        GUID Specifier;
+    };
+    LONGLONG Alignment;
 } KSDATAFORMAT, *PKSDATAFORMAT, KSDATARANGE, *PKSDATARANGE;
-/* Note : KSDATAFORMAT exists a no ms_ver of this struct it contain  LONGLONG Alignment; see ms dx sdk 2004 dec month for the no ms_ver version */
 
 typedef struct
 {
@@ -2050,7 +2052,9 @@ typedef struct
     typedef void (*PFNKSPINRESOLUTION)(IN PKSPIN Pin, OUT PKSRESOLUTION Resolution);
     typedef NTSTATUS (*PFNKSPININITIALIZEALLOCATOR)(IN PKSPIN Pin, IN PKSALLOCATOR_FRAMING AllocatorFraming, OUT PVOID* Context);
     typedef void (*PFNKSSTREAMPOINTER)(IN PKSSTREAM_POINTER StreamPointer);
-
+    typedef void (*PFNKSFREE)(IN PVOID Data);
+    typedef void (*PFNKSPINFRAMERETURN)( IN PKSPIN Pin, IN PVOID Data OPTIONAL, IN ULONG Size OPTIONAL, IN PMDL Mdl OPTIONAL, IN PVOID Context OPTIONAL, IN NTSTATUS Status);
+    typedef void (*PFNKSPINIRPCOMPLETION)(IN PKSPIN Pin, IN PIRP Irp);
 
     typedef NTSTATUS (*PFNKSDEVICEPNPSTART)(IN PKSDEVICE Device, IN PIRP Irp, IN PCM_RESOURCE_LIST TranslatedResourceList OPTIONAL, 
                                             IN PCM_RESOURCE_LIST UntranslatedResourceList OPTIONAL);
@@ -2061,8 +2065,6 @@ typedef struct
 
     typedef NTSTATUS (*PFNKSPINSETDATAFORMAT)(IN PKSPIN Pin, IN PKSDATAFORMAT OldFormat OPTIONAL, IN PKSMULTIPLE_ITEM OldAttributeList OPTIONAL,
                                               IN const KSDATARANGE* DataRange, IN const KSATTRIBUTE_LIST* AttributeRange OPTIONAL);
-
-
 
     #ifndef _NTOS_
 
@@ -2399,21 +2401,126 @@ typedef struct
     #define DEFINE_KSPIN_DEFAULT_INTERFACES 0, NULL
     #define DEFINE_KSPIN_DEFAULT_MEDIUMS 0, NULL
 
-#endif
+    #if !defined(_WIN64)
+        #define DEFINE_NODE_DESCRIPTOR(automation,type,name)  { (automation), (type), (name), NULL }
+    #else
+        #define DEFINE_NODE_DESCRIPTOR(automation,type,name)  { (automation), (type), (name) }
+    #endif
 
 
+    struct _KSMAPPING
+    {
+        PHYSICAL_ADDRESS PhysicalAddress;
+        ULONG ByteCount;
+        ULONG Alignment;
+    };
 
+    struct _KSSTREAM_POINTER_OFFSET
+    {
+        union
+        {
+            PUCHAR Data;
+            PKSMAPPING Mappings;
+        };
+        #if !defined(_WIN64)
+            PVOID Alignment;
+        #endif 
+        ULONG Count;
+        ULONG Remaining;
+    };
 
+    struct _KSSTREAM_POINTER
+    {
+        PVOID Context;
+        PKSPIN Pin;
+        PKSSTREAM_HEADER StreamHeader;
+        PKSSTREAM_POINTER_OFFSET Offset;
+        KSSTREAM_POINTER_OFFSET OffsetIn;
+        KSSTREAM_POINTER_OFFSET OffsetOut;
+    };
 
+    struct _KSPROCESSPIN
+    {
+        PKSPIN Pin;
+        PKSSTREAM_POINTER StreamPointer;
+        PKSPROCESSPIN InPlaceCounterpart;
+        PKSPROCESSPIN DelegateBranch;
+        PKSPROCESSPIN CopySource;
+        PVOID Data;
+        ULONG BytesAvailable;
+        ULONG BytesUsed;
+        ULONG Flags;
+        BOOLEAN Terminate;
+    };
 
+    struct _KSPROCESSPIN_INDEXENTRY
+    {
+        PKSPROCESSPIN *Pins;
+        ULONG Count;
+    };
 
+    #if defined(_UNKNOWN_H_) || defined(__IUnknown_INTERFACE_DEFINED__)
+        #if !defined(_IKsControl_)
 
+            #define _IKsControl_
+            typedef interface IKsControl* PIKSCONTROL;
 
+            #if !defined(DEFINE_ABSTRACT_UNKNOWN)
+                #define DEFINE_ABSTRACT_UNKNOWN()                               \
+                    STDMETHOD_(NTSTATUS, QueryInterface)(THIS_ REFIID InterfaceId, PVOID* Interface) PURE; \
+                    STDMETHOD_(ULONG,AddRef)(THIS) PURE;                        \
+                    STDMETHOD_(ULONG,Release)(THIS) PURE;
+                #endif
 
+            #undef INTERFACE
 
+            #define INTERFACE IKsControl
+            DECLARE_INTERFACE_(IKsControl,IUnknown)
+            {
+                DEFINE_ABSTRACT_UNKNOWN()
 
+                STDMETHOD_(NTSTATUS, KsProperty)(THIS_ IN PKSPROPERTY Property, IN ULONG PropertyLength, 
+                                                   IN OUT PVOID PropertyData, IN ULONG DataLength, OUT ULONG* BytesReturned) PURE;
 
+                STDMETHOD_(NTSTATUS, KsMethod)(THIS_ IN PKSMETHOD Method, IN ULONG MethodLength, IN OUT PVOID MethodData,
+                                                 IN ULONG DataLength, OUT ULONG* BytesReturned) PURE;
 
+                STDMETHOD_(NTSTATUS, KsEvent)(THIS_ IN PKSEVENT Event OPTIONAL, IN ULONG EventLength, IN OUT PVOID EventData,
+                                                IN ULONG DataLength, OUT ULONG* BytesReturned) PURE;
+            };
+
+            typedef interface IKsReferenceClock* PIKSREFERENCECLOCK;
+
+            #undef INTERFACE
+            #define INTERFACE IKsReferenceClock
+            DECLARE_INTERFACE_(IKsReferenceClock,IUnknown)
+            {
+                DEFINE_ABSTRACT_UNKNOWN()
+
+                STDMETHOD_(LONGLONG,GetTime)(THIS) PURE;
+                STDMETHOD_(LONGLONG,GetPhysicalTime)(THIS) PURE;
+                STDMETHOD_(LONGLONG,GetCorrelatedTime)(THIS_ OUT PLONGLONG SystemTime) PURE;
+                STDMETHOD_(LONGLONG,GetCorrelatedPhysicalTime)(THIS_ OUT PLONGLONG SystemTime) PURE;
+                STDMETHOD_(NTSTATUS, GetResolution)(THIS_ OUT PKSRESOLUTION Resolution) PURE;
+                STDMETHOD_(NTSTATUS, GetState)(THIS_ OUT PKSSTATE State) PURE;
+            };
+            #undef INTERFACE
+
+            #define STATIC_IID_IKsControl   0x28F54685L, 0x06FD, 0x11D2, 0xB2, 0x7A, 0x00, 0xA0, 0xC9, 0x22, 0x31, 0x96
+            DEFINE_GUID(IID_IKsControl, 0x28F54685L, 0x06FD, 0x11D2, 0xB2, 0x7A, 0x00, 0xA0, 0xC9, 0x22, 0x31, 0x96);
+
+            #if defined(__cplusplus) 
+                struct __declspec(uuid("28F54685-06FD-11D2-B27A-00A0C9223196")) IKsControl;
+            #endif
+
+            #define STATIC_IID_IKsFastClock  0xC9902485, 0xC180, 0x11D2, 0x84, 0x73, 0xD4, 0x23, 0x94, 0x45, 0x9E, 0x5E
+                DEFINE_GUID(IID_IKsFastClock, 0xC9902485, 0xC180, 0x11D2, 0x84, 0x73, 0xD4, 0x23, 0x94, 0x45, 0x9E, 0x5E);
+            #if defined(__cplusplus)
+                struct __declspec(uuid("C9902485-C180-11d2-8473-D42394459E5E")) IKsFastClock;
+            #endif
+        #endif
+    #endif 
+#endif // end ntddk
 
 
 #if defined(__cplusplus)
@@ -2426,7 +2533,205 @@ extern "C" {
     #define KSDDKAPI    DECLSPEC_IMPORT
 #endif
 
+#if defined(_NTDDK_)
 
+    KSDDKAPI NTSTATUS NTAPI 
+    KsCreateDefaultAllocator(IN PIRP Irp);
+
+    KSDDKAPI NTSTATUS NTAPI
+    KsCreateDefaultAllocatorEx(IN PIRP Irp,
+                               IN PVOID InitializeContext OPTIONAL,
+                               IN PFNKSDEFAULTALLOCATE DefaultAllocate OPTIONAL,
+                               IN PFNKSDEFAULTFREE DefaultFree OPTIONAL,
+                               IN PFNKSINITIALIZEALLOCATOR InitializeAllocator OPTIONAL,
+                               IN PFNKSDELETEALLOCATOR DeleteAllocator OPTIONAL);
+
+    KSDDKAPI NTSTATUS NTAPI
+    KsCreateAllocator(IN HANDLE ConnectionHandle, IN PKSALLOCATOR_FRAMING AllocatorFraming, OUT PHANDLE AllocatorHandle);
+
+    KSDDKAPI NTSTATUS NTAPI 
+    KsDisableEvent(IN PIRP Irp, 
+                   IN OUT PLIST_ENTRY EventsList,
+                   IN KSEVENTS_LOCKTYPE EventsFlags,
+                   IN PVOID EventsLock);
+
+    KSDDKAPI VOID NTAPI
+    KsDiscardEvent(IN PKSEVENT_ENTRY EventEntry);
+
+    KSDDKAPI NTSTATUS NTAPI 
+    KsEnableEvent(IN PIRP Irp,
+                  IN ULONG EventSetsCount,
+                  IN const KSEVENT_SET* EventSet,
+                  IN OUT PLIST_ENTRY EventsList OPTIONAL,
+                  IN KSEVENTS_LOCKTYPE EventsFlags OPTIONAL,
+                  IN PVOID EventsLock OPTIONAL);
+
+    KSDDKAPI NTSTATUS NTAPI
+    KsEnableEventWithAllocator(IN PIRP Irp,
+                               IN ULONG EventSetsCount,
+                               IN const KSEVENT_SET* EventSet,
+                               IN OUT PLIST_ENTRY EventsList OPTIONAL,
+                               IN KSEVENTS_LOCKTYPE EventsFlags OPTIONAL,
+                               IN PVOID EventsLock OPTIONAL,
+                               IN PFNKSALLOCATOR Allocator OPTIONAL,
+                               IN ULONG EventItemSize OPTIONAL);
+
+    KSDDKAPI BOOLEAN NTAPI
+    KsFastPropertyHandler(IN PFILE_OBJECT FileObject,
+                          IN PKSPROPERTY Property,
+                          IN ULONG PropertyLength,
+                          IN OUT PVOID Data,
+                          IN ULONG DataLength,
+                          OUT PIO_STATUS_BLOCK IoStatus,
+                          IN ULONG PropertySetsCount,
+                          IN const KSPROPERTY_SET* PropertySet);
+
+    KSDDKAPI BOOLEAN NTAPI
+    KsFastMethodHandler(IN PFILE_OBJECT FileObject,
+                        IN PKSMETHOD Method,
+                        IN ULONG MethodLength,
+                        IN OUT PVOID Data,
+                        IN ULONG DataLength,
+                        OUT PIO_STATUS_BLOCK IoStatus,
+                        IN ULONG MethodSetsCount,
+                        IN const KSMETHOD_SET* MethodSet);
+
+    KSDDKAPI VOID NTAPI
+    KsFreeEventList(IN PFILE_OBJECT FileObject,
+                    IN OUT PLIST_ENTRY EventsList,
+                    IN KSEVENTS_LOCKTYPE EventsFlags,
+                    IN PVOID EventsLock);
+
+    KSDDKAPI NTSTATUS NTAPI 
+    KsGenerateEvent(IN PKSEVENT_ENTRY EventEntry);
+
+    KSDDKAPI NTSTATUS NTAPI
+    KsGenerateDataEvent(IN PKSEVENT_ENTRY EventEntry,
+                        IN ULONG DataSize,
+                        IN PVOID Data);
+
+    KSDDKAPI VOID NTAPI 
+    KsGenerateEventList(IN GUID* Set OPTIONAL,
+                        IN ULONG EventId,
+                        IN PLIST_ENTRY EventsList,
+                        IN KSEVENTS_LOCKTYPE EventsFlags,
+                        IN PVOID EventsLock);
+
+    KSDDKAPI NTSTATUS NTAPI 
+    KsMethodHandler(IN PIRP Irp,
+                    IN ULONG MethodSetsCount,
+                    IN const KSMETHOD_SET* MethodSet);
+
+    KSDDKAPI NTSTATUS NTAPI
+    KsMethodHandlerWithAllocator(IN PIRP Irp,
+                                 IN ULONG MethodSetsCount,
+                                 IN const KSMETHOD_SET* MethodSet,
+                                 IN PFNKSALLOCATOR Allocator OPTIONAL,
+                                 IN ULONG MethodItemSize OPTIONAL);
+
+    KSDDKAPI NTSTATUS NTAPI
+    KsPropertyHandler(IN PIRP Irp,
+                      IN ULONG PropertySetsCount,
+                      IN const KSPROPERTY_SET* PropertySet);
+
+    KSDDKAPI NTSTATUS NTAPI
+    KsPropertyHandlerWithAllocator(IN PIRP Irp,
+                                   IN ULONG PropertySetsCount,
+                                   IN const KSPROPERTY_SET* PropertySet,
+                                   IN PFNKSALLOCATOR Allocator OPTIONAL,
+                                   IN ULONG PropertyItemSize OPTIONAL);
+
+    KSDDKAPI NTSTATUS NTAPI
+    KsValidateAllocatorCreateRequest(IN PIRP Irp, OUT PKSALLOCATOR_FRAMING* AllocatorFraming);
+
+    KSDDKAPI NTSTATUS NTAPI
+    KsValidateAllocatorFramingEx(IN PKSALLOCATOR_FRAMING_EX Framing, IN ULONG BufferSize, IN const KSALLOCATOR_FRAMING_EX *PinFraming);
+
+    KSDDKAPI NTSTATUS NTAPI
+    KsAllocateDefaultClock(OUT PKSDEFAULTCLOCK* DefaultClock);
+
+    KSDDKAPI NTSTATUS NTAPI 
+    KsAllocateDefaultClockEx(OUT PKSDEFAULTCLOCK* DefaultClock, 
+                             IN PVOID Context OPTIONAL,
+                             IN PFNKSSETTIMER SetTimer OPTIONAL,
+                             IN PFNKSCANCELTIMER CancelTimer OPTIONAL,
+                             IN PFNKSCORRELATEDTIME CorrelatedTime OPTIONAL,
+                             IN const KSRESOLUTION* Resolution OPTIONAL,
+                             IN ULONG Flags);
+
+    KSDDKAPI VOID NTAPI
+    KsFreeDefaultClock(IN PKSDEFAULTCLOCK DefaultClock);
+
+    KSDDKAPI NTSTATUS NTAPI
+    KsCreateDefaultClock(IN PIRP Irp,
+                         IN PKSDEFAULTCLOCK DefaultClock);
+
+    KSDDKAPI NTSTATUS NTAPI
+    KsCreateClock(IN HANDLE ConnectionHandle,
+                  IN PKSCLOCK_CREATE ClockCreate,
+                  OUT PHANDLE ClockHandle);
+
+    KSDDKAPI NTSTATUS NTAPI
+    KsValidateClockCreateRequest(IN PIRP Irp,
+                                 OUT PKSCLOCK_CREATE* ClockCreate);
+
+    KSDDKAPI KSSTATE NTAPI
+    KsGetDefaultClockState(IN PKSDEFAULTCLOCK DefaultClock);
+
+    KSDDKAPI VOID NTAPI
+    KsSetDefaultClockState(IN PKSDEFAULTCLOCK DefaultClock,
+                           IN KSSTATE State);
+
+    KSDDKAPI LONGLONG NTAPI 
+    KsGetDefaultClockTime(IN PKSDEFAULTCLOCK DefaultClock);
+
+    KSDDKAPI VOID NTAPI
+    KsSetDefaultClockTime(IN PKSDEFAULTCLOCK DefaultClock,
+                          IN LONGLONG Time);
+
+    KSDDKAPI NTSTATUS NTAPI
+    KsCreatePin(IN HANDLE FilterHandle,
+                IN PKSPIN_CONNECT Connect,
+                IN ACCESS_MASK DesiredAccess,
+                OUT PHANDLE ConnectionHandle);
+
+    KSDDKAPI NTSTATUS NTAPI
+    KsValidateConnectRequest(IN PIRP Irp,
+                             IN ULONG DescriptorsCount,
+                             IN const KSPIN_DESCRIPTOR* Descriptor,
+                             OUT PKSPIN_CONNECT* Connect);
+
+    KSDDKAPI NTSTATUS NTAPI
+    KsPinPropertyHandler(IN PIRP Irp,
+                         IN PKSPROPERTY Property,
+                         IN OUT PVOID Data,
+                         IN ULONG DescriptorsCount,
+                         IN const KSPIN_DESCRIPTOR* Descriptor);
+
+    KSDDKAPI NTSTATUS NTAPI
+    KsPinDataIntersection(IN PIRP Irp,
+                          IN PKSP_PIN Pin,
+                          OUT PVOID Data OPTIONAL,
+                          IN ULONG DescriptorsCount,
+                          IN const KSPIN_DESCRIPTOR* Descriptor,
+                          IN PFNKSINTERSECTHANDLER IntersectHandler);
+
+    KSDDKAPI NTSTATUS NTAPI
+    KsPinDataIntersectionEx(IN PIRP Irp,
+                            IN PKSP_PIN Pin,
+                            OUT PVOID Data,
+                            IN ULONG DescriptorsCount,
+                            IN const KSPIN_DESCRIPTOR* Descriptor,
+                            IN ULONG DescriptorSize,
+                            IN PFNKSINTERSECTHANDLEREX IntersectHandler OPTIONAL,
+                            IN PVOID HandlerContext OPTIONAL);
+
+    KSDDKAPI NTSTATUS NTAPI
+    KsHandleSizedListQuery(IN PIRP Irp,
+                           IN ULONG DataItemsCount,
+                           IN ULONG DataItemSize,
+                           IN const VOID* DataItems);
+#endif
 
 
 
