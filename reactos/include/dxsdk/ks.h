@@ -543,7 +543,6 @@ DEFINE_GUIDSTRUCT("9F564180-704C-11D0-A5D6-28DB04C10000", KSDEGRADESETID_Standar
             VT_TYPEMASK = 0xfff
         };
     #endif
-////////////////////////////////////////////////////////////////////////////
     typedef struct _KSDEVICE KSDEVICE, *PKSDEVICE;
     typedef PVOID KSDEVICE_HEADER, KSOBJECT_HEADER;
     typedef struct _KSDEVICE_DESCRIPTOR KSDEVICE_DESCRIPTOR, *PKSDEVICE_DESCRIPTOR;
@@ -563,6 +562,31 @@ DEFINE_GUIDSTRUCT("9F564180-704C-11D0-A5D6-28DB04C10000", KSDEGRADESETID_Standar
     typedef struct _KSMAPPING KSMAPPING, *PKSMAPPING;
     typedef struct _KSPROCESSPIN KSPROCESSPIN, *PKSPROCESSPIN;
     typedef struct _KSPROCESSPIN_INDEXENTRY KSPROCESSPIN_INDEXENTRY, *PKSPROCESSPIN_INDEXENTRY;
+
+    typedef VOID (*PFNKSGRAPHMANAGER_NOTIFY)(IN PFILE_OBJECT GraphManager,
+                                             IN ULONG EventId,
+                                             IN PVOID Filter,
+                                             IN PVOID Pin,
+                                             IN PVOID Frame,
+                                             IN ULONG Duration);
+
+    typedef struct KSGRAPHMANAGER_FUNCTIONTABLE
+    {
+        PFNKSGRAPHMANAGER_NOTIFY NotifyEvent;
+    } KSGRAPHMANAGER_FUNCTIONTABLE, PKSGRAPHMANAGER_FUNCTIONTABLE;
+
+    typedef struct _KSPROPERTY_GRAPHMANAGER_INTERFACE
+    {
+        PFILE_OBJECT GraphManager;
+        KSGRAPHMANAGER_FUNCTIONTABLE FunctionTable;
+    } KSPROPERTY_GRAPHMANAGER_INTERFACE, *PKSPROPERTY_GRAPHMANAGER_INTERFACE;
+
+    typedef struct
+    {
+        ULONG Count;
+        PKSATTRIBUTE* Attributes;
+    } KSATTRIBUTE_LIST, *PKSATTRIBUTE_LIST;
+
 #endif // DDK
 
 typedef PVOID PKSWORKER;
@@ -1364,6 +1388,18 @@ DEFINE_KSPROPERTY_TABLE(PinSet) {\
 
 #define DEFINE_KSPROPERTY_ITEM_CONNECTION_STARTAT(Handler)\
     DEFINE_KSPROPERTY_ITEM(KSPROPERTY_CONNECTION_STARTAT, NULL, sizeof(KSPROPERTY), sizeof(KSRELATIVEEVENT), (Handler), NULL, 0, NULL, NULL, 0)
+
+
+
+
+#if defined(_NTDDK_)
+typedef NTSTATUS (*PFNKSINTERSECTHANDLER)(IN PIRP Irp, IN PKSP_PIN Pin, IN PKSDATARANGE DataRange, OUT PVOID Data OPTIONAL);
+typedef NTSTATUS (*PFNKSINTERSECTHANDLEREX)(IN PVOID Context, IN PIRP Irp,
+                                            IN PKSP_PIN Pin, IN PKSDATARANGE DataRange,
+                                            IN PKSDATARANGE MatchingDataRange, IN ULONG DataBufferSize, 
+                                            OUT PVOID Data OPTIONAL, OUT PULONG DataSize);
+#endif
+
 
 
 #if defined(__cplusplus)
