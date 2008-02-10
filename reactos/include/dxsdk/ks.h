@@ -562,7 +562,6 @@ DEFINE_GUIDSTRUCT("9F564180-704C-11D0-A5D6-28DB04C10000", KSDEGRADESETID_Standar
             VT_ILLEGALMASKED = 0xfff,
             VT_TYPEMASK = 0xfff
         };
-        #endif
     #endif
     typedef struct _KSDEVICE KSDEVICE, *PKSDEVICE;
     typedef PVOID KSDEVICE_HEADER, KSOBJECT_HEADER;
