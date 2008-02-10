@@ -1235,7 +1235,7 @@ SetupDiCreateDeviceInfoListExA(const GUID *ClassGuid,
     {
         MachineNameW = MultiByteToUnicode(MachineName, CP_ACP);
         if (MachineNameW == NULL)
-            return (HDEVINFO)INVALID_HANDLE_VALUE;
+            return INVALID_HANDLE_VALUE;
     }
 
     hDevInfo = SetupDiCreateDeviceInfoListExW(ClassGuid, hwndParent,
@@ -1273,7 +1273,7 @@ SetupDiCreateDeviceInfoListExW(const GUID *ClassGuid,
     DWORD size = FIELD_OFFSET(struct DeviceInfoSet, szData);
     DWORD rc;
     CONFIGRET cr;
-    HDEVINFO ret = (HDEVINFO)INVALID_HANDLE_VALUE;
+    HDEVINFO ret = INVALID_HANDLE_VALUE;
 
     TRACE("%s %p %s %p\n", debugstr_guid(ClassGuid), hwndParent,
       debugstr_w(MachineName), Reserved);
@@ -1292,14 +1292,14 @@ SetupDiCreateDeviceInfoListExW(const GUID *ClassGuid,
     if (Reserved != NULL)
     {
         SetLastError(ERROR_INVALID_PARAMETER);
-        return (HDEVINFO)INVALID_HANDLE_VALUE;
+        return INVALID_HANDLE_VALUE;
     }
 
     list = MyMalloc(size);
     if (!list)
     {
         SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-        return (HDEVINFO)INVALID_HANDLE_VALUE;
+        return INVALID_HANDLE_VALUE;
     }
     ZeroMemory(list, FIELD_OFFSET(struct DeviceInfoSet, szData));
 
@@ -1413,7 +1413,7 @@ HKEY WINAPI SetupDiCreateDevRegKeyW(
     TRACE("%p %p %lu %lu %lu %p %s\n", DeviceInfoSet, DeviceInfoData, Scope,
             HwProfile, KeyType, InfHandle, debugstr_w(InfSectionName));
 
-    if (!DeviceInfoSet || DeviceInfoSet == (HDEVINFO)INVALID_HANDLE_VALUE)
+    if (!DeviceInfoSet || DeviceInfoSet == INVALID_HANDLE_VALUE)
     {
         SetLastError(ERROR_INVALID_HANDLE);
         return INVALID_HANDLE_VALUE;
@@ -1680,7 +1680,7 @@ BOOL WINAPI SetupDiCreateDeviceInfoW(
         SetLastError(ERROR_INVALID_DEVINST_NAME);
         return FALSE;
     }
-    if (!DeviceInfoSet || DeviceInfoSet == (HDEVINFO)INVALID_HANDLE_VALUE)
+    if (!DeviceInfoSet || DeviceInfoSet == INVALID_HANDLE_VALUE)
     {
         SetLastError(ERROR_INVALID_HANDLE);
         return FALSE;
@@ -1784,7 +1784,7 @@ BOOL WINAPI SetupDiRegisterDeviceInfo(
     TRACE("%p %p %08x %p %p %p\n", DeviceInfoSet, DeviceInfoData, Flags,
             CompareProc, CompareContext, DupDeviceInfoData);
 
-    if (!DeviceInfoSet || DeviceInfoSet == (HDEVINFO)INVALID_HANDLE_VALUE)
+    if (!DeviceInfoSet || DeviceInfoSet == INVALID_HANDLE_VALUE)
     {
         SetLastError(ERROR_INVALID_HANDLE);
         return FALSE;
@@ -1823,7 +1823,7 @@ BOOL WINAPI SetupDiEnumDeviceInfo(
         SetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
     }
-    if (devinfo && devinfo != (HDEVINFO)INVALID_HANDLE_VALUE)
+    if (devinfo && devinfo != INVALID_HANDLE_VALUE)
     {
         struct DeviceInfoSet *list = (struct DeviceInfoSet *)devinfo;
         if (list->magic == SETUP_DEVICE_INFO_SET_MAGIC)
@@ -1887,7 +1887,7 @@ BOOL WINAPI SetupDiGetDeviceInstanceIdA(
                                 &size);
     if (!ret && GetLastError() != ERROR_INSUFFICIENT_BUFFER)
         return FALSE;
-    instanceId = MyMalloc(DeviceInstanceIdSize * sizeof(WCHAR));
+    instanceId = MyMalloc(size * sizeof(WCHAR));
     if (instanceId)
     {
         ret = SetupDiGetDeviceInstanceIdW(DeviceInfoSet,
@@ -2275,7 +2275,7 @@ HDEVINFO WINAPI SetupDiGetClassDevsExA(
         enumstrW = MultiByteToUnicode(enumstr, CP_ACP);
         if (!enumstrW)
         {
-            ret = (HDEVINFO)INVALID_HANDLE_VALUE;
+            ret = INVALID_HANDLE_VALUE;
             goto end;
         }
     }
@@ -2285,7 +2285,7 @@ HDEVINFO WINAPI SetupDiGetClassDevsExA(
         if (!machineW)
         {
             MyFree(enumstrW);
-            ret = (HDEVINFO)INVALID_HANDLE_VALUE;
+            ret = INVALID_HANDLE_VALUE;
             goto end;
         }
     }
@@ -2446,7 +2446,7 @@ BOOL WINAPI SetupDiGetDeviceInfoListDetailA(
 
     TRACE("%p %p\n", DeviceInfoSet, DevInfoData);
 
-    if (!DeviceInfoSet || DeviceInfoSet == (HDEVINFO)INVALID_HANDLE_VALUE)
+    if (!DeviceInfoSet || DeviceInfoSet == INVALID_HANDLE_VALUE)
     {
         SetLastError(ERROR_INVALID_HANDLE);
         return FALSE;
@@ -2487,7 +2487,7 @@ BOOL WINAPI SetupDiGetDeviceInfoListDetailW(
 
     TRACE("%p %p\n", DeviceInfoSet, DevInfoData);
 
-    if (!DeviceInfoSet || DeviceInfoSet == (HDEVINFO)INVALID_HANDLE_VALUE)
+    if (!DeviceInfoSet || DeviceInfoSet == INVALID_HANDLE_VALUE)
     {
         SetLastError(ERROR_INVALID_HANDLE);
         return FALSE;
@@ -2562,7 +2562,7 @@ BOOL WINAPI SetupDiCreateDeviceInterfaceW(
             debugstr_guid(InterfaceClassGuid), debugstr_w(ReferenceString),
             CreationFlags, DeviceInterfaceData);
 
-    if (!DeviceInfoSet || DeviceInfoSet == (HDEVINFO)INVALID_HANDLE_VALUE)
+    if (!DeviceInfoSet || DeviceInfoSet == INVALID_HANDLE_VALUE)
     {
         SetLastError(ERROR_INVALID_HANDLE);
         return FALSE;
@@ -2640,7 +2640,7 @@ HKEY WINAPI SetupDiCreateDeviceInterfaceRegKeyW(
     TRACE("%p %p %d %08x %p %p\n", DeviceInfoSet, DeviceInterfaceData, Reserved,
             samDesired, InfHandle, InfSectionName);
 
-    if (!DeviceInfoSet || DeviceInfoSet == (HDEVINFO)INVALID_HANDLE_VALUE ||
+    if (!DeviceInfoSet || DeviceInfoSet == INVALID_HANDLE_VALUE ||
             set->magic != SETUP_DEVICE_INFO_SET_MAGIC)
     {
         SetLastError(ERROR_INVALID_HANDLE);
@@ -2678,7 +2678,7 @@ BOOL WINAPI SetupDiDeleteDeviceInterfaceRegKey(
 
     TRACE("%p %p %d\n", DeviceInfoSet, DeviceInterfaceData, Reserved);
 
-    if (!DeviceInfoSet || DeviceInfoSet == (HDEVINFO)INVALID_HANDLE_VALUE ||
+    if (!DeviceInfoSet || DeviceInfoSet == INVALID_HANDLE_VALUE ||
             set->magic != SETUP_DEVICE_INFO_SET_MAGIC)
     {
         SetLastError(ERROR_INVALID_HANDLE);
@@ -2733,7 +2733,7 @@ BOOL WINAPI SetupDiEnumDeviceInterfaces(
     TRACE("%p, %p, %s, %d, %p\n", DeviceInfoSet, DeviceInfoData,
      debugstr_guid(InterfaceClassGuid), MemberIndex, DeviceInterfaceData);
 
-    if (!DeviceInfoSet || DeviceInfoSet == (HDEVINFO)INVALID_HANDLE_VALUE ||
+    if (!DeviceInfoSet || DeviceInfoSet == INVALID_HANDLE_VALUE ||
             set->magic != SETUP_DEVICE_INFO_SET_MAGIC)
     {
         SetLastError(ERROR_INVALID_HANDLE);
@@ -2838,7 +2838,7 @@ BOOL WINAPI SetupDiDestroyDeviceInfoList(HDEVINFO devinfo)
     BOOL ret = FALSE;
 
     TRACE("%p\n", devinfo);
-    if (devinfo && devinfo != (HDEVINFO)INVALID_HANDLE_VALUE)
+    if (devinfo && devinfo != INVALID_HANDLE_VALUE)
     {
         struct DeviceInfoSet *list = (struct DeviceInfoSet *)devinfo;
 
@@ -2874,7 +2874,7 @@ BOOL WINAPI SetupDiGetDeviceInterfaceDetailA(
      DeviceInterfaceData, DeviceInterfaceDetailData,
      DeviceInterfaceDetailDataSize, RequiredSize, DeviceInfoData);
 
-    if (!DeviceInfoSet || DeviceInfoSet == (HDEVINFO)INVALID_HANDLE_VALUE ||
+    if (!DeviceInfoSet || DeviceInfoSet == INVALID_HANDLE_VALUE ||
             set->magic != SETUP_DEVICE_INFO_SET_MAGIC)
     {
         SetLastError(ERROR_INVALID_HANDLE);
@@ -2960,7 +2960,7 @@ BOOL WINAPI SetupDiGetDeviceInterfaceDetailW(
      DeviceInterfaceData, DeviceInterfaceDetailData,
      DeviceInterfaceDetailDataSize, RequiredSize, DeviceInfoData);
 
-    if (!DeviceInfoSet || DeviceInfoSet == (HDEVINFO)INVALID_HANDLE_VALUE ||
+    if (!DeviceInfoSet || DeviceInfoSet == INVALID_HANDLE_VALUE ||
             set->magic != SETUP_DEVICE_INFO_SET_MAGIC)
     {
         SetLastError(ERROR_INVALID_HANDLE);
@@ -3023,6 +3023,51 @@ BOOL WINAPI SetupDiGetDeviceInterfaceDetailW(
     }
     return ret;
 }
+
+struct PropertyMapEntry
+{
+    DWORD   regType;
+    LPCSTR  nameA;
+    LPCWSTR nameW;
+};
+
+static struct PropertyMapEntry PropertyMap[] = {
+    { REG_SZ, "DeviceDesc", REGSTR_VAL_DEVDESC },
+    { REG_MULTI_SZ, "HardwareId", REGSTR_VAL_HARDWAREID },
+    { REG_MULTI_SZ, "CompatibleIDs", REGSTR_VAL_COMPATIBLEIDS },
+    { 0, NULL, NULL }, /* SPDRP_UNUSED0 */
+    { REG_SZ, "Service", REGSTR_VAL_SERVICE },
+    { 0, NULL, NULL }, /* SPDRP_UNUSED1 */
+    { 0, NULL, NULL }, /* SPDRP_UNUSED2 */
+    { REG_SZ, "Class", REGSTR_VAL_CLASS },
+    { REG_SZ, "ClassGUID", REGSTR_VAL_CLASSGUID },
+    { REG_SZ, "Driver", REGSTR_VAL_DRIVER },
+    { REG_DWORD, "ConfigFlags", REGSTR_VAL_CONFIGFLAGS },
+    { REG_SZ, "Mfg", REGSTR_VAL_MFG },
+    { REG_SZ, "FriendlyName", REGSTR_VAL_FRIENDLYNAME },
+    { REG_SZ, "LocationInformation", REGSTR_VAL_LOCATION_INFORMATION },
+    { 0, NULL, NULL }, /* SPDRP_PHYSICAL_DEVICE_OBJECT_NAME */
+    { REG_DWORD, "Capabilities", REGSTR_VAL_CAPABILITIES },
+    { REG_DWORD, "UINumber", REGSTR_VAL_UI_NUMBER },
+    { REG_MULTI_SZ, "UpperFilters", REGSTR_VAL_UPPERFILTERS },
+    { REG_MULTI_SZ, "LowerFilters", REGSTR_VAL_LOWERFILTERS },
+    { 0, NULL, NULL }, /* SPDRP_BUSTYPEGUID */
+    { 0, NULL, NULL }, /* SPDRP_LEGACYBUSTYPE */
+    { 0, NULL, NULL }, /* SPDRP_BUSNUMBER */
+    { 0, NULL, NULL }, /* SPDRP_ENUMERATOR_NAME */
+    { REG_BINARY, "Security", REGSTR_SECURITY },
+    { 0, NULL, NULL }, /* SPDRP_SECURITY_SDS */
+    { 0, NULL, NULL }, /* SPDRP_DEVTYPE */
+    { 0, NULL, NULL }, /* SPDRP_EXCLUSIVE */
+    { 0, NULL, NULL }, /* SPDRP_CHARACTERISTICS */
+    { 0, NULL, NULL }, /* SPDRP_ADDRESS */
+    { REG_SZ, "UINumberDescFormat", REGSTR_UI_NUMBER_DESC_FORMAT },
+    { 0, NULL, NULL }, /* SPDRP_DEVICE_POWER_DATA */
+    { 0, NULL, NULL }, /* SPDRP_REMOVAL_POLICY */
+    { 0, NULL, NULL }, /* SPDRP_REMOVAL_POLICY_HW_DEFAULT */
+    { 0, NULL, NULL }, /* SPDRP_REMOVAL_POLICY_OVERRIDE */
+    { 0, NULL, NULL }, /* SPDRP_INSTALL_STATE */
+};
 
 /***********************************************************************
  *		SetupDiGetDeviceRegistryPropertyA (SETUPAPI.@)
@@ -3122,8 +3167,6 @@ BOOL WINAPI SetupDiGetDeviceRegistryPropertyW(
         DWORD   PropertyBufferSize,
         PDWORD  RequiredSize)
 {
-    HKEY hEnumKey, hKey;
-    DWORD rc;
     BOOL ret = FALSE;
     struct DeviceInfoSet *set = (struct DeviceInfoSet *)DeviceInfoSet;
     struct DeviceInfo *devInfo;
@@ -3148,171 +3191,56 @@ BOOL WINAPI SetupDiGetDeviceRegistryPropertyW(
         SetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
     }
-    if (Property >= SPDRP_MAXIMUM_PROPERTY)
-    {
-        SetLastError(ERROR_INVALID_PARAMETER);
-        return FALSE;
-    }
-    
     devInfo = (struct DeviceInfo *)DeviceInfoData->Reserved;
+    if (Property < sizeof(PropertyMap) / sizeof(PropertyMap[0])
+        && PropertyMap[Property].nameW)
     {
-        switch (Property)
-        {
-            case SPDRP_CAPABILITIES:
-            case SPDRP_CLASS:
-            case SPDRP_CLASSGUID:
-            case SPDRP_COMPATIBLEIDS:
-            case SPDRP_CONFIGFLAGS:
-            case SPDRP_DEVICEDESC:
-            case SPDRP_DRIVER:
-            case SPDRP_FRIENDLYNAME:
-            case SPDRP_HARDWAREID:
-            case SPDRP_LOCATION_INFORMATION:
-            case SPDRP_LOWERFILTERS:
-            case SPDRP_MFG:
-            case SPDRP_SECURITY:
-            case SPDRP_SERVICE:
-            case SPDRP_UI_NUMBER:
-            case SPDRP_UI_NUMBER_DESC_FORMAT:
-            case SPDRP_UPPERFILTERS:
-            {
-                LPCWSTR RegistryPropertyName;
-                DWORD BufferSize;
+        DWORD size = PropertyBufferSize;
+        HKEY hKey;
+        LONG l;
+        hKey = SetupDiOpenDevRegKey(DeviceInfoSet, DeviceInfoData, DICS_FLAG_GLOBAL, 0, DIREG_DEV, KEY_QUERY_VALUE);
+        if (hKey == INVALID_HANDLE_VALUE)
+            return FALSE;
+        l = RegQueryValueExW(hKey, PropertyMap[Property].nameW,
+                NULL, PropertyRegDataType, PropertyBuffer, &size);
+        RegCloseKey(hKey);
 
-                switch (Property)
-                {
-                    case SPDRP_CAPABILITIES:
-                        RegistryPropertyName = REGSTR_VAL_CAPABILITIES; break;
-                    case SPDRP_CLASS:
-                        RegistryPropertyName = REGSTR_VAL_CLASS; break;
-                    case SPDRP_CLASSGUID:
-                        RegistryPropertyName = REGSTR_VAL_CLASSGUID; break;
-                    case SPDRP_COMPATIBLEIDS:
-                        RegistryPropertyName = REGSTR_VAL_COMPATIBLEIDS; break;
-                    case SPDRP_CONFIGFLAGS:
-                        RegistryPropertyName = REGSTR_VAL_CONFIGFLAGS; break;
-                    case SPDRP_DEVICEDESC:
-                        RegistryPropertyName = REGSTR_VAL_DEVDESC; break;
-                    case SPDRP_DRIVER:
-                        RegistryPropertyName = REGSTR_VAL_DRIVER; break;
-                    case SPDRP_FRIENDLYNAME:
-                        RegistryPropertyName = REGSTR_VAL_FRIENDLYNAME; break;
-                    case SPDRP_HARDWAREID:
-                        RegistryPropertyName = REGSTR_VAL_HARDWAREID; break;
-                    case SPDRP_LOCATION_INFORMATION:
-                        RegistryPropertyName = REGSTR_VAL_LOCATION_INFORMATION; break;
-                    case SPDRP_LOWERFILTERS:
-                        RegistryPropertyName = REGSTR_VAL_LOWERFILTERS; break;
-                    case SPDRP_MFG:
-                        RegistryPropertyName = REGSTR_VAL_MFG; break;
-                    case SPDRP_SECURITY:
-                        RegistryPropertyName = REGSTR_SECURITY; break;
-                    case SPDRP_SERVICE:
-                        RegistryPropertyName = REGSTR_VAL_SERVICE; break;
-                    case SPDRP_UI_NUMBER:
-                        RegistryPropertyName = REGSTR_VAL_UI_NUMBER; break;
-                    case SPDRP_UI_NUMBER_DESC_FORMAT:
-                        RegistryPropertyName = REGSTR_UI_NUMBER_DESC_FORMAT; break;
-                    case SPDRP_UPPERFILTERS:
-                        RegistryPropertyName = REGSTR_VAL_UPPERFILTERS; break;
-                    default:
-                        /* Should not happen */
-                        RegistryPropertyName = NULL; break;
-                }
-
-                /* Open registry key name */
-                rc = RegOpenKeyExW(
-                    set->HKLM,
-                    REGSTR_PATH_SYSTEMENUM,
-                    0, /* Options */
-                    0,
-                    &hEnumKey);
-                if (rc != ERROR_SUCCESS)
-                {
-                    SetLastError(rc);
-                    break;
-                }
-                rc = RegOpenKeyExW(
-                    hEnumKey,
-                    devInfo->Data,
-                    0, /* Options */
-                    KEY_QUERY_VALUE,
-                    &hKey);
-                RegCloseKey(hEnumKey);
-                if (rc != ERROR_SUCCESS)
-                {
-                    SetLastError(rc);
-                    break;
-                }
-                /* Read registry entry */
-                BufferSize = PropertyBufferSize;
-                rc = RegQueryValueExW(
-                    hKey,
-                    RegistryPropertyName,
-                    NULL, /* Reserved */
-                    PropertyRegDataType,
-                    PropertyBuffer,
-                    &BufferSize);
-                if (RequiredSize)
-                    *RequiredSize = BufferSize;
-                switch(rc) {
-                    case ERROR_SUCCESS:
-                        if (PropertyBuffer != NULL || BufferSize == 0)
-                            ret = TRUE;
-                        else
-                            SetLastError(ERROR_INSUFFICIENT_BUFFER);
-                        break;
-                    case ERROR_MORE_DATA:
-                        SetLastError(ERROR_INSUFFICIENT_BUFFER);
-                        break;
-                    default:
-                        SetLastError(rc);
-                }
-                RegCloseKey(hKey);
-                break;
-            }
-
-            case SPDRP_PHYSICAL_DEVICE_OBJECT_NAME:
-            {
-                DWORD required = (strlenW(devInfo->Data) + 1) * sizeof(WCHAR);
-
-                if (PropertyRegDataType)
-                    *PropertyRegDataType = REG_SZ;
-                if (RequiredSize)
-                    *RequiredSize = required;
-                if (PropertyBufferSize >= required)
-                {
-                    strcpyW((LPWSTR)PropertyBuffer, devInfo->Data);
+        if (RequiredSize)
+            *RequiredSize = size;
+        switch(l) {
+            case ERROR_SUCCESS:
+                if (PropertyBuffer != NULL || size == 0)
                     ret = TRUE;
-                }
                 else
                     SetLastError(ERROR_INSUFFICIENT_BUFFER);
                 break;
-            }
-
-            /*case SPDRP_BUSTYPEGUID:
-            case SPDRP_LEGACYBUSTYPE:
-            case SPDRP_BUSNUMBER:
-            case SPDRP_ENUMERATOR_NAME:
-            case SPDRP_SECURITY_SDS:
-            case SPDRP_DEVTYPE:
-            case SPDRP_EXCLUSIVE:
-            case SPDRP_CHARACTERISTICS:
-            case SPDRP_ADDRESS:
-            case SPDRP_DEVICE_POWER_DATA:*/
-#if (WINVER >= 0x501)
-            /*case SPDRP_REMOVAL_POLICY:
-            case SPDRP_REMOVAL_POLICY_HW_DEFAULT:
-            case SPDRP_REMOVAL_POLICY_OVERRIDE:
-            case SPDRP_INSTALL_STATE:*/
-#endif
-
+            case ERROR_MORE_DATA:
+                SetLastError(ERROR_INSUFFICIENT_BUFFER);
+                break;
             default:
-            {
-                ERR("Property 0x%lx not implemented\n", Property);
-                SetLastError(ERROR_NOT_SUPPORTED);
-            }
+                SetLastError(l);
         }
+    }
+    else if (Property == SPDRP_PHYSICAL_DEVICE_OBJECT_NAME)
+    {
+        DWORD required = (strlenW(devInfo->Data) + 1) * sizeof(WCHAR);
+
+        if (PropertyRegDataType)
+            *PropertyRegDataType = REG_SZ;
+        if (RequiredSize)
+            *RequiredSize = required;
+        if (PropertyBufferSize >= required)
+        {
+            strcpyW((LPWSTR)PropertyBuffer, devInfo->Data);
+            ret = TRUE;
+        }
+        else
+            SetLastError(ERROR_INSUFFICIENT_BUFFER);
+    }
+    else
+    {
+        ERR("Property 0x%lx not implemented\n", Property);
+        SetLastError(ERROR_NOT_SUPPORTED);
     }
     return ret;
 }
@@ -3388,107 +3316,29 @@ BOOL WINAPI SetupDiSetDeviceRegistryPropertyW(
         SetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
     }
-
-    switch (Property)
+    if (Property < sizeof(PropertyMap) / sizeof(PropertyMap[0])
+        && PropertyMap[Property].nameW)
     {
-        case SPDRP_COMPATIBLEIDS:
-        case SPDRP_CONFIGFLAGS:
-        case SPDRP_FRIENDLYNAME:
-        case SPDRP_HARDWAREID:
-        case SPDRP_LOCATION_INFORMATION:
-        case SPDRP_LOWERFILTERS:
-        case SPDRP_SECURITY:
-        case SPDRP_SERVICE:
-        case SPDRP_UI_NUMBER_DESC_FORMAT:
-        case SPDRP_UPPERFILTERS:
-        {
-            LPCWSTR RegistryPropertyName;
-            DWORD RegistryDataType;
-            HKEY hKey;
-            LONG rc;
-
-            switch (Property)
-            {
-                case SPDRP_COMPATIBLEIDS:
-                    RegistryPropertyName = REGSTR_VAL_COMPATIBLEIDS;
-                    RegistryDataType = REG_MULTI_SZ;
-                    break;
-                case SPDRP_CONFIGFLAGS:
-                    RegistryPropertyName = REGSTR_VAL_CONFIGFLAGS;
-                    RegistryDataType = REG_DWORD;
-                    break;
-                case SPDRP_FRIENDLYNAME:
-                    RegistryPropertyName = REGSTR_VAL_FRIENDLYNAME;
-                    RegistryDataType = REG_SZ;
-                    break;
-                case SPDRP_HARDWAREID:
-                    RegistryPropertyName = REGSTR_VAL_HARDWAREID;
-                    RegistryDataType = REG_MULTI_SZ;
-                    break;
-                case SPDRP_LOCATION_INFORMATION:
-                    RegistryPropertyName = REGSTR_VAL_LOCATION_INFORMATION;
-                    RegistryDataType = REG_SZ;
-                    break;
-                case SPDRP_LOWERFILTERS:
-                    RegistryPropertyName = REGSTR_VAL_LOWERFILTERS;
-                    RegistryDataType = REG_MULTI_SZ;
-                    break;
-                case SPDRP_SECURITY:
-                    RegistryPropertyName = REGSTR_SECURITY;
-                    RegistryDataType = REG_BINARY;
-                    break;
-                case SPDRP_SERVICE:
-                    RegistryPropertyName = REGSTR_VAL_SERVICE;
-                    RegistryDataType = REG_SZ;
-                    break;
-                case SPDRP_UI_NUMBER_DESC_FORMAT:
-                    RegistryPropertyName = REGSTR_UI_NUMBER_DESC_FORMAT;
-                    RegistryDataType = REG_SZ;
-                    break;
-                case SPDRP_UPPERFILTERS:
-                    RegistryPropertyName = REGSTR_VAL_UPPERFILTERS;
-                    RegistryDataType = REG_MULTI_SZ;
-                    break;
-                default:
-                    /* Should not happen */
-                    RegistryPropertyName = NULL;
-                    RegistryDataType = REG_BINARY;
-                    break;
-            }
-            /* Open device registry key */
-            hKey = SetupDiOpenDevRegKey(DeviceInfoSet, DeviceInfoData, DICS_FLAG_GLOBAL, 0, DIREG_DEV, KEY_SET_VALUE);
-            if (hKey != INVALID_HANDLE_VALUE)
-            {
-                /* Write new data */
-                rc = RegSetValueExW(
-                    hKey,
-                    RegistryPropertyName,
-                    0, /* Reserved */
-                    RegistryDataType,
-                    PropertyBuffer,
-                    PropertyBufferSize);
-                if (rc == ERROR_SUCCESS)
-                    ret = TRUE;
-                else
-                    SetLastError(rc);
-                RegCloseKey(hKey);
-            }
-            break;
-        }
-
-        /*case SPDRP_CHARACTERISTICS:
-        case SPDRP_DEVTYPE:
-        case SPDRP_EXCLUSIVE:*/
-#if (WINVER >= 0x501)
-        //case SPDRP_REMOVAL_POLICY_OVERRIDE:
-#endif
-        //case SPDRP_SECURITY_SDS:
-
-        default:
-        {
-            ERR("Property 0x%lx not implemented\n", Property);
-            SetLastError(ERROR_NOT_SUPPORTED);
-        }
+    	HKEY hKey;
+    	LONG l;
+        hKey = SetupDiOpenDevRegKey(DeviceInfoSet, DeviceInfoData, DICS_FLAG_GLOBAL, 0, DIREG_DEV, KEY_SET_VALUE);
+        if (hKey == INVALID_HANDLE_VALUE)
+            return FALSE;
+        /* Write new data */
+        l = RegSetValueExW(
+            hKey, PropertyMap[Property].nameW, 0,
+                PropertyMap[Property].regType, PropertyBuffer,
+                PropertyBufferSize);
+        if (!l)
+            ret = TRUE;
+        else
+            SetLastError(l);
+        RegCloseKey(hKey);
+    }
+    else
+    {
+        ERR("Property 0x%lx not implemented\n", Property);
+        SetLastError(ERROR_NOT_SUPPORTED);
     }
 
     TRACE("Returning %d\n", ret);
@@ -5457,7 +5307,7 @@ HKEY WINAPI SetupDiOpenDevRegKey(
     TRACE("%p %p %d %d %d %x\n", DeviceInfoSet, DeviceInfoData,
           Scope, HwProfile, KeyType, samDesired);
 
-    if (!DeviceInfoSet || DeviceInfoSet == (HDEVINFO)INVALID_HANDLE_VALUE)
+    if (!DeviceInfoSet || DeviceInfoSet == INVALID_HANDLE_VALUE)
     {
         SetLastError(ERROR_INVALID_HANDLE);
         return INVALID_HANDLE_VALUE;
@@ -5543,7 +5393,7 @@ BOOL WINAPI SetupDiDeleteDevRegKey(
     TRACE("%p %p %d %d %d\n", DeviceInfoSet, DeviceInfoData, Scope, HwProfile,
             KeyType);
 
-    if (!DeviceInfoSet || DeviceInfoSet == (HDEVINFO)INVALID_HANDLE_VALUE)
+    if (!DeviceInfoSet || DeviceInfoSet == INVALID_HANDLE_VALUE)
     {
         SetLastError(ERROR_INVALID_HANDLE);
         return FALSE;
