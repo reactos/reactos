@@ -10,10 +10,12 @@
 	<file>close.c</file>
 	<file>create.c</file>
 	<file>dirctl.c</file>
+	<file>dispatch.c</file>
 	<file>fcb.c</file>
 	<file>finfo.c</file>
 	<file>fsctl.c</file>
 	<file>mft.c</file>
+	<file>misc.c</file>
 	<file>ntfs.c</file>
 	<file>rw.c</file>
 	<file>volinfo.c</file>

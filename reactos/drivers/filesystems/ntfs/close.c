@@ -15,12 +15,10 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- */
-/* $Id$
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
- * FILE:             services/fs/ntfs/close.c
+ * FILE:             drivers/filesystem/ntfs/close.c
  * PURPOSE:          NTFS filesystem driver
  * PROGRAMMER:       Art Yerkes
  * UPDATE HISTORY:
@@ -79,8 +77,8 @@ NtfsCloseFile(PDEVICE_EXTENSION DeviceExt,
 }
 
 
-NTSTATUS STDCALL
-NtfsClose(PDEVICE_OBJECT DeviceObject,
+NTSTATUS NTAPI
+NtfsFsdClose(PDEVICE_OBJECT DeviceObject,
 	  PIRP Irp)
 {
   PDEVICE_EXTENSION DeviceExtension;

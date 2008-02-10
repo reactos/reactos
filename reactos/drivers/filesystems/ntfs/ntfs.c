@@ -15,12 +15,10 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- */
-/* $Id$
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
- * FILE:             services/fs/ntfs/ntfs.c
+ * FILE:             drivers/filesystem/ntfs/ntfs.c
  * PURPOSE:          NTFS filesystem driver
  * PROGRAMMER:       Eric Kohl
  *                   Pierre Schweitzer 
@@ -42,7 +40,7 @@ PNTFS_GLOBAL_DATA NtfsGlobalData = NULL;
 
 NTSTATUS NTAPI
 DriverEntry(PDRIVER_OBJECT DriverObject,
-	    PUNICODE_STRING RegistryPath)
+            PUNICODE_STRING RegistryPath)
 /*
  * FUNCTION: Called by the system to initalize the driver
  * ARGUMENTS:
@@ -120,15 +118,15 @@ NtfsInitializeFunctionPointers(PDRIVER_OBJECT DriverObject)
  * RETURNS: Nothing
  */
 {
-  DriverObject->MajorFunction[IRP_MJ_CLOSE]                    = NtfsClose;
-  DriverObject->MajorFunction[IRP_MJ_CREATE]                   = NtfsCreate;
-  DriverObject->MajorFunction[IRP_MJ_READ]                     = NtfsRead;
-  DriverObject->MajorFunction[IRP_MJ_WRITE]                    = NtfsWrite;
-  DriverObject->MajorFunction[IRP_MJ_FILE_SYSTEM_CONTROL]      = NtfsFileSystemControl;
-  DriverObject->MajorFunction[IRP_MJ_DIRECTORY_CONTROL]        = NtfsDirectoryControl;
-  DriverObject->MajorFunction[IRP_MJ_QUERY_INFORMATION]        = NtfsQueryInformation;
-  DriverObject->MajorFunction[IRP_MJ_QUERY_VOLUME_INFORMATION] = NtfsQueryVolumeInformation;
-  DriverObject->MajorFunction[IRP_MJ_SET_VOLUME_INFORMATION]   = NtfsSetVolumeInformation;
+  DriverObject->MajorFunction[IRP_MJ_CREATE]                   = NtfsFsdCreate;
+  DriverObject->MajorFunction[IRP_MJ_CLOSE]                    = NtfsFsdClose;
+  DriverObject->MajorFunction[IRP_MJ_READ]                     = NtfsFsdRead;
+  DriverObject->MajorFunction[IRP_MJ_WRITE]                    = NtfsFsdWrite;
+  DriverObject->MajorFunction[IRP_MJ_QUERY_INFORMATION]        = NtfsFsdQueryInformation;
+  DriverObject->MajorFunction[IRP_MJ_QUERY_VOLUME_INFORMATION] = NtfsFsdDispatch;
+  DriverObject->MajorFunction[IRP_MJ_SET_VOLUME_INFORMATION]   = NtfsFsdDispatch;
+  DriverObject->MajorFunction[IRP_MJ_DIRECTORY_CONTROL]        = NtfsFsdDirectoryControl;
+  DriverObject->MajorFunction[IRP_MJ_FILE_SYSTEM_CONTROL]      = NtfsFsdFileSystemControl;
     
   return;
 }

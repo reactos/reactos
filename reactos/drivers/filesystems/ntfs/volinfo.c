@@ -15,12 +15,10 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- */
-/* $Id$
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
- * FILE:             services/fs/ntfs/volume.c
+ * FILE:             drivers/filesystem/ntfs/volume.c
  * PURPOSE:          NTFS filesystem driver
  * PROGRAMMER:       Eric Kohl
  */
@@ -165,10 +163,11 @@ NtfsGetFsDeviceInformation(PFILE_FS_DEVICE_INFORMATION FsDeviceInfo,
 
 
 
-NTSTATUS STDCALL
-NtfsQueryVolumeInformation(PDEVICE_OBJECT DeviceObject,
-                           PIRP Irp)
+NTSTATUS
+NtfsQueryVolumeInformation(PNTFS_IRP_CONTEXT IrpContext)
 {
+  PIRP Irp;
+  PDEVICE_OBJECT DeviceObject;
   FS_INFORMATION_CLASS FsInformationClass;
   PIO_STACK_LOCATION Stack;
   NTSTATUS Status = STATUS_SUCCESS;
@@ -177,6 +176,10 @@ NtfsQueryVolumeInformation(PDEVICE_OBJECT DeviceObject,
 
   DPRINT("NtfsQueryVolumeInformation() called\n");
 
+  ASSERT(IrpContext);
+
+  Irp = IrpContext->Irp;
+  DeviceObject = IrpContext->DeviceObject;
   Stack = IoGetCurrentIrpStackLocation(Irp);
   FsInformationClass = Stack->Parameters.QueryVolume.FsInformationClass;
   BufferLength = Stack->Parameters.QueryVolume.Length;
@@ -215,29 +218,30 @@ NtfsQueryVolumeInformation(PDEVICE_OBJECT DeviceObject,
       Status = STATUS_NOT_SUPPORTED;
   }
 
-  Irp->IoStatus.Status = Status;
   if (NT_SUCCESS(Status))
     Irp->IoStatus.Information =
       Stack->Parameters.QueryVolume.Length - BufferLength;
   else
     Irp->IoStatus.Information = 0;
-  IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
-  return(Status);
+  return Status;
 }
 
 
-NTSTATUS STDCALL
-NtfsSetVolumeInformation(PDEVICE_OBJECT DeviceObject,
-                         PIRP Irp)
+NTSTATUS
+NtfsSetVolumeInformation(PNTFS_IRP_CONTEXT IrpContext)
 {
+  PIRP Irp;
+  
   DPRINT("NtfsSetVolumeInformation() called\n");
 
+  ASSERT(IrpContext);
+
+  Irp = IrpContext->Irp;
   Irp->IoStatus.Status = STATUS_NOT_SUPPORTED;
   Irp->IoStatus.Information = 0;
-  IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
-  return(STATUS_NOT_SUPPORTED);
+  return STATUS_NOT_SUPPORTED;
 }
 
 /* EOF */

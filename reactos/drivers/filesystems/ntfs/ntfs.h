@@ -153,6 +153,7 @@ typedef struct _CCB
 
 #define TAG_CCB TAG('I', 'C', 'C', 'B')
 
+#define NTFS_TYPE_IRP_CONTEST TAG('F','S',0,6)
 #define NTFS_TYPE_GLOBAL_DATA TAG('F','S',0,7)
 
 typedef struct
@@ -317,6 +318,19 @@ typedef struct
   ULONG Unknown2;
 } VOLINFO_ATTRIBUTE, *PVOLINFO_ATTRIBUTE;
 
+typedef struct
+{
+  NTFSIDENTIFIER Identifier;
+  ULONG Flags;
+  UCHAR MajorFunction;
+  UCHAR MinorFunction;
+  WORK_QUEUE_ITEM	WorkQueueItem;
+  PIRP Irp;
+  BOOLEAN IsTopLevel;
+  PDEVICE_OBJECT DeviceObject;
+  NTSTATUS SavedExceptionCode;
+} NTFS_IRP_CONTEXT, *PNTFS_IRP_CONTEXT;
+
 
 extern PNTFS_GLOBAL_DATA NtfsGlobalData;
 
@@ -363,25 +377,31 @@ NtfsDeviceIoControl(IN PDEVICE_OBJECT DeviceObject,
 
 /* close.c */
 
-DRIVER_DISPATCH NtfsClose;
-NTSTATUS STDCALL
-NtfsClose(PDEVICE_OBJECT DeviceObject,
+DRIVER_DISPATCH NtfsFsdClose;
+NTSTATUS NTAPI
+NtfsFsdClose(PDEVICE_OBJECT DeviceObject,
 	  PIRP Irp);
 
 /* create.c */
 
-DRIVER_DISPATCH NtfsCreate;
-NTSTATUS STDCALL
-NtfsCreate(PDEVICE_OBJECT DeviceObject,
+DRIVER_DISPATCH NtfsFsdCreate;
+NTSTATUS NTAPI
+NtfsFsdCreate(PDEVICE_OBJECT DeviceObject,
 	   PIRP Irp);
 
 
 /* dirctl.c */
 
-DRIVER_DISPATCH NtfsDirectoryControl;
-NTSTATUS STDCALL
-NtfsDirectoryControl(PDEVICE_OBJECT DeviceObject,
+DRIVER_DISPATCH NtfsFsdDirectoryControl;
+NTSTATUS NTAPI
+NtfsFsdDirectoryControl(PDEVICE_OBJECT DeviceObject,
 		     PIRP Irp);
+
+/* dispatch.c */
+DRIVER_DISPATCH NtfsFsdDispatch;
+NTSTATUS NTAPI
+NtfsFsdDispatch(PDEVICE_OBJECT DeviceObject,
+                PIRP Irp);
 
 /* fcb.c */
 
@@ -437,17 +457,17 @@ NtfsGetFCBForFile(PDEVICE_EXTENSION Vcb,
 
 /* finfo.c */
 
-DRIVER_DISPATCH NtfsQueryInformation;
-NTSTATUS STDCALL
-NtfsQueryInformation(PDEVICE_OBJECT DeviceObject,
+DRIVER_DISPATCH NtfsFsdQueryInformation;
+NTSTATUS NTAPI
+NtfsFsdQueryInformation(PDEVICE_OBJECT DeviceObject,
 		     PIRP Irp);
 
 
 /* fsctl.c */
 
-DRIVER_DISPATCH NtfsFileSystemControl;
-NTSTATUS STDCALL
-NtfsFileSystemControl(PDEVICE_OBJECT DeviceObject,
+DRIVER_DISPATCH NtfsFsdFileSystemControl;
+NTSTATUS NTAPI
+NtfsFsdFileSystemControl(PDEVICE_OBJECT DeviceObject,
 		      PIRP Irp);
 
 
@@ -510,9 +530,15 @@ EnumerAttribute(PFILE_RECORD_HEADER file,
 		PDEVICE_EXTENSION Vcb,
 		PDEVICE_OBJECT DeviceObject);
 
-#if 0
 /* misc.c */
+BOOLEAN
+NtfsIsIrpTopLevel(PIRP Irp);
 
+PNTFS_IRP_CONTEXT
+NtfsAllocateIrpContext(PDEVICE_OBJECT DeviceObject,
+                       PIRP Irp);
+
+#if 0
 BOOLEAN
 wstrcmpjoki(PWSTR s1, PWSTR s2);
 
@@ -532,28 +558,24 @@ CdfsFileFlagsToAttributes(PFCB Fcb,
 
 /* rw.c */
 
-DRIVER_DISPATCH NtfsRead;
-NTSTATUS STDCALL
-NtfsRead(PDEVICE_OBJECT DeviceObject,
+DRIVER_DISPATCH NtfsFsdRead;
+NTSTATUS NTAPI
+NtfsFsdRead(PDEVICE_OBJECT DeviceObject,
 	PIRP Irp);
 
-DRIVER_DISPATCH NtfsWrite;
-NTSTATUS STDCALL
-NtfsWrite(PDEVICE_OBJECT DeviceObject,
+DRIVER_DISPATCH NtfsFsdWrite;
+NTSTATUS NTAPI
+NtfsFsdWrite(PDEVICE_OBJECT DeviceObject,
 	  PIRP Irp);
 
 
 /* volinfo.c */
 
-DRIVER_DISPATCH NtfsQueryVolumeInformation;
-NTSTATUS STDCALL
-NtfsQueryVolumeInformation(PDEVICE_OBJECT DeviceObject,
-			   PIRP Irp);
+NTSTATUS
+NtfsQueryVolumeInformation(PNTFS_IRP_CONTEXT IrpContext);
 
-DRIVER_DISPATCH NtfsSetVolumeInformation;
-NTSTATUS STDCALL
-NtfsSetVolumeInformation(PDEVICE_OBJECT DeviceObject,
-			 PIRP Irp);
+NTSTATUS
+NtfsSetVolumeInformation(PNTFS_IRP_CONTEXT IrpContext);
 
 /* ntfs.c */
 

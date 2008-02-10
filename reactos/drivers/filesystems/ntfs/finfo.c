@@ -15,12 +15,10 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- */
-/* $Id$
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
- * FILE:             services/fs/ntfs/dirctl.c
+ * FILE:             drivers/filesystem/ntfs/dirctl.c
  * PURPOSE:          NTFS filesystem driver
  * PROGRAMMER:       Eric Kohl
  */
@@ -147,8 +145,8 @@ NtfsGetNameInformation(PFILE_OBJECT FileObject,
 
   NameInfo->FileNameLength = NameLength;
   memcpy(NameInfo->FileName,
-         Fcb->PathName,
-         NameLength + sizeof(WCHAR));
+          Fcb->PathName,
+          NameLength + sizeof(WCHAR));
 //  wcscpy(NameInfo->FileName, L"\\");
 
   *BufferLength -=
@@ -180,8 +178,8 @@ NtfsGetInternalInformation(PFCB Fcb,
 }
 
 
-NTSTATUS STDCALL
-NtfsQueryInformation(PDEVICE_OBJECT DeviceObject,
+NTSTATUS NTAPI
+NtfsFsdQueryInformation(PDEVICE_OBJECT DeviceObject,
                      PIRP Irp)
 /*
  * FUNCTION: Retrieve the specified file information
