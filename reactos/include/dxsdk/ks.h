@@ -1870,7 +1870,9 @@ DEFINE_KSMETHOD_TABLE(AllocatorSet) { DEFINE_KSMETHOD_ITEM_STREAMALLOCATOR_ALLOC
         ULONG SemaphoreAdjustment;
         ULONG Reserved;
         ULONG Flags;
-    } KSEVENT_ENTRY, *PKSEVENT_ENTRY;
+    } KSEVENT_ENTRY;
+
+    typedef struct _KSEVENT_ENTRY *PKSEVENT_ENTRY;
 
     typedef struct
     {
@@ -1913,9 +1915,7 @@ DEFINE_KSMETHOD_TABLE(AllocatorSet) { DEFINE_KSMETHOD_ITEM_STREAMALLOCATOR_ALLOC
         PFNDEREFERENCEDEVICEOBJECT DereferenceDeviceObject;
         PFNQUERYREFERENCESTRING QueryReferenceString;
     } BUS_INTERFACE_REFERENCE, *PBUS_INTERFACE_REFERENCE;
-
-    
-   
+       
     typedef VOID (*PFNKSITEMFREECALLBACK)( IN PKSOBJECT_CREATE_ITEM CreateItem );
     typedef NTSTATUS (*PFNKSIRPLISTCALLBACK)( IN PIRP Irp, IN PVOID Context );            
     typedef NTSTATUS (*PFNQUERYMEDIUMSLIST)( IN PVOID Context, OUT ULONG* MediumsCount, OUT PKSPIN_MEDIUM* MediumList);
@@ -2183,14 +2183,11 @@ typedef struct
     }
     #endif
 
-
-
     typedef struct
     {
         INTERFACE Interface;
         PFNQUERYMEDIUMSLIST QueryMediumsList;
     } BUS_INTERFACE_MEDIUMS, *PBUS_INTERFACE_MEDIUMS;
-
     
     struct KSAUTOMATION_TABLE_
     {
@@ -2533,13 +2530,14 @@ typedef struct
     #endif 
 #endif // end ntddk
 
-
 #if defined(__cplusplus)
 extern "C" {
 #endif 
 
 #ifdef _KSDDK_
     #define KSDDKAPI    DECLSPEC_EXPORT
+    #undef NTAPI
+    #define NTAPI
 #else
     #define KSDDKAPI    DECLSPEC_IMPORT
 #endif
@@ -3670,9 +3668,6 @@ extern "C" {
                                  OUT PHANDLE NodeHandle);    
         #endif
 #endif
-
-
-
 
 #if defined(__cplusplus)
 }
