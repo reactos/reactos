@@ -70,22 +70,21 @@ IntGdiCreateBitmap(
       return 0;
    }
 
+   PBITMAPOBJ bmp = BITMAPOBJ_LockBitmap( hBitmap );
+   if (bmp == NULL)
+   {
+      NtGdiDeleteObject(hBitmap);
+      return NULL;
+   }
+
+   bmp->flFlags = BITMAPOBJ_IS_APIBITMAP;
+
    if (NULL != pBits)
    {
-       PBITMAPOBJ bmp = BITMAPOBJ_LockBitmap( hBitmap );
-       if (bmp == NULL)
-       {
-          NtGdiDeleteObject(hBitmap);
-          return NULL;
-       }
-
-       bmp->flFlags = BITMAPOBJ_IS_APIBITMAP;
-
        IntSetBitmapBits(bmp, bmp->SurfObj.cjBits, pBits);
-
-
-       BITMAPOBJ_UnlockBitmap( bmp );
    }
+
+   BITMAPOBJ_UnlockBitmap( bmp );
 
    DPRINT("IntGdiCreateBitmap : %dx%d, %d BPP colors, topdown %d, returning %08x\n",
           Size.cx, Size.cy, BitsPixel, (Height < 0 ? 1 : 0), hBitmap);

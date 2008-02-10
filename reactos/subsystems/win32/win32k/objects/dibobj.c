@@ -809,11 +809,8 @@ IntCreateDIBitmap(PDC Dc, const BITMAPINFOHEADER *header,
   LONG compr;
   LONG dibsize;
   BOOL fColor;
-  SIZEL size;
-
 
   if (DIB_GetBitmapInfo( header, &width, &height, &planes, &bpp, &compr, &dibsize ) == -1) return 0;
-
 
   // Check if we should create a monochrome or color bitmap. We create a monochrome bitmap only if it has exactly 2
   // colors, which are black followed by white, nothing else. In all other cases, we create a color bitmap.
@@ -866,12 +863,11 @@ IntCreateDIBitmap(PDC Dc, const BITMAPINFOHEADER *header,
   }
   else
   {
-    size.cx = width;
-    size.cy = abs(height);
-
-    handle = IntCreateBitmap(size, DIB_GetDIBWidthBytes(width, 1), BMF_1BPP,
-                             (height < 0 ? BMF_TOPDOWN : 0) | BMF_NOZEROINIT,
-                             NULL);
+    handle = IntGdiCreateBitmap(width,
+                                height,
+                                1,
+                                1,
+                                NULL);
   }
 
   if (height < 0)
