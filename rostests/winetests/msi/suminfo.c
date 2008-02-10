@@ -24,6 +24,7 @@
 #include <windows.h>
 #include <msi.h>
 #include <msiquery.h>
+#include <objidl.h>
 
 #include "wine/test.h"
 
@@ -62,7 +63,7 @@
 #define PID_MSISOURCE PID_WORDCOUNT
 #define PID_MSIRESTRICT PID_CHARCOUNT
 
-START_TEST(suminfo)
+static void test_suminfo(void)
 {
     const char *msifile = "winetest.msi";
     MSIHANDLE hdb = 0, hsuminfo;
@@ -97,6 +98,12 @@ START_TEST(suminfo)
 
     r = MsiSummaryInfoGetProperty(hsuminfo, 0, NULL, NULL, NULL, 0, NULL);
     ok(r == ERROR_SUCCESS, "getpropcount failed\n");
+
+    r = MsiSummaryInfoGetProperty(hsuminfo, -1, NULL, NULL, NULL, 0, NULL);
+    ok(r == ERROR_UNKNOWN_PROPERTY, "MsiSummaryInfoGetProperty wrong error\n");
+
+    r = MsiSummaryInfoGetProperty(hsuminfo, PID_SECURITY+1, NULL, NULL, NULL, 0, NULL);
+    ok(r == ERROR_UNKNOWN_PROPERTY, "MsiSummaryInfoGetProperty wrong error\n");
 
     type = -1;
     r = MsiSummaryInfoGetProperty(hsuminfo, 0, &type, NULL, NULL, 0, NULL);
@@ -234,4 +241,181 @@ START_TEST(suminfo)
 
     r = DeleteFile(msifile);
     ok(r, "DeleteFile failed\n");
+}
+
+static const WCHAR tb[] = { 0x4840, 0x3f7f, 0x4164, 0x422f, 0x4836, 0 }; /* _Tables */
+static const WCHAR sd[] = { 0x4840, 0x3f3f, 0x4577, 0x446c, 0x3b6a, 0x45e4, 0x4824, 0 }; /* _StringData */
+static const WCHAR sp[] = { 0x4840, 0x3f3f, 0x4577, 0x446c, 0x3e6a, 0x44b2, 0x482f, 0 }; /* _StringPool */
+
+#define LOSE_CONST(x) ((LPSTR)(UINT_PTR)(x))
+
+static void test_create_database_binary(void)
+{
+    static const CLSID CLSID_MsiDatabase =
+        { 0xc1084, 0, 0, {0xc0, 0, 0, 0, 0, 0, 0, 0x46 } };
+    static const CLSID IID_IPropertySetStorage =
+        { 0x13a, 0, 0, {0xc0, 0, 0, 0, 0, 0, 0, 0x46 } };
+    static const CLSID FMTID_SummaryInformation =
+        { 0xf29f85e0, 0x4ff9, 0x1068, {0xab, 0x91, 0x08, 0x00, 0x2b, 0x27, 0xb3, 0xd9}};
+    DWORD mode = STGM_CREATE | STGM_READWRITE | STGM_DIRECT | STGM_SHARE_EXCLUSIVE;
+    static const WCHAR msifile[] = {
+        'w','i','n','e','t','e','s','t','.','m','s','i',0 };
+    IPropertySetStorage *pss = NULL;
+    IPropertyStorage *ps = NULL;
+    IStorage *stg = NULL;
+    IStream *stm = NULL;
+    HRESULT r;
+    PROPSPEC propspec[10];
+    PROPVARIANT propvar[10];
+    USHORT data[2] = { 0, 0 };
+
+    r = StgCreateDocfile( msifile, mode, 0, &stg );
+    ok( r == S_OK, "failed to create database\n");
+
+    r = IStorage_SetClass( stg, &CLSID_MsiDatabase );
+    ok( r == S_OK, "failed to set clsid\n");
+
+    /* create the _StringData stream */
+    r = IStorage_CreateStream( stg, sd, STGM_WRITE | STGM_SHARE_EXCLUSIVE, 0, 0, &stm );
+    ok( r == S_OK, "failed to create stream\n");
+
+    IStream_Release( stm );
+
+    /* create the _StringPool stream */
+    r = IStorage_CreateStream( stg, sp, STGM_WRITE | STGM_SHARE_EXCLUSIVE, 0, 0, &stm );
+    ok( r == S_OK, "failed to create stream\n");
+
+    r = IStream_Write( stm, data, sizeof data, NULL );
+    ok( r == S_OK, "failed to write stream\n");
+
+    IStream_Release( stm );
+
+    /* create the _Tables stream */
+    r = IStorage_CreateStream( stg, tb, STGM_WRITE | STGM_SHARE_EXCLUSIVE, 0, 0, &stm );
+    ok( r == S_OK, "failed to create stream\n");
+
+    IStream_Release( stm );
+
+    r = IStorage_QueryInterface( stg, &IID_IPropertySetStorage, (void**) &pss );
+    ok( r == S_OK, "failed to set clsid\n");
+
+    r = IPropertySetStorage_Create( pss, &FMTID_SummaryInformation, NULL, 0, mode, &ps );
+    ok( r == S_OK, "failed to create property set\n");
+
+    r = IPropertyStorage_SetClass( ps, &FMTID_SummaryInformation );
+    ok( r == S_OK, "failed to set class\n");
+
+    propspec[0].ulKind = PRSPEC_PROPID;
+    U(propspec[0]).propid = PID_TITLE;
+    propvar[0].vt = VT_LPSTR;
+    U(propvar[0]).pszVal = LOSE_CONST("test title");
+
+    propspec[1].ulKind = PRSPEC_PROPID;
+    U(propspec[1]).propid = PID_SUBJECT;
+    propvar[1].vt = VT_LPSTR;
+    U(propvar[1]).pszVal = LOSE_CONST("msi suminfo / property storage test");
+
+    propspec[2].ulKind = PRSPEC_PROPID;
+    U(propspec[2]).propid = PID_AUTHOR;
+    propvar[2].vt = VT_LPSTR;
+    U(propvar[2]).pszVal = LOSE_CONST("mike_m");
+
+    propspec[3].ulKind = PRSPEC_PROPID;
+    U(propspec[3]).propid = PID_TEMPLATE;
+    propvar[3].vt = VT_LPSTR;
+    U(propvar[3]).pszVal = LOSE_CONST(";1033");  /* actually the string table's codepage */
+
+    propspec[4].ulKind = PRSPEC_PROPID;
+    U(propspec[4]).propid = PID_REVNUMBER;
+    propvar[4].vt = VT_LPSTR;
+    U(propvar[4]).pszVal = LOSE_CONST("{913B8D18-FBB6-4CAC-A239-C74C11E3FA74}");
+
+    propspec[5].ulKind = PRSPEC_PROPID;
+    U(propspec[5]).propid = PID_PAGECOUNT;
+    propvar[5].vt = VT_I4;
+    U(propvar[5]).lVal = 100;
+
+    propspec[6].ulKind = PRSPEC_PROPID;
+    U(propspec[6]).propid = PID_WORDCOUNT;
+    propvar[6].vt = VT_I4;
+    U(propvar[6]).lVal = 0;
+
+    /* MSDN says that PID_LASTPRINTED should be a VT_FILETIME... */
+    propspec[7].ulKind = PRSPEC_PROPID;
+    U(propspec[7]).propid = PID_LASTPRINTED;
+    propvar[7].vt = VT_LPSTR;
+    U(propvar[7]).pszVal = LOSE_CONST("7/1/1999 5:17");
+
+    r = IPropertyStorage_WriteMultiple( ps, 8, propspec, propvar, PID_FIRST_USABLE );
+    ok( r == S_OK, "failed to write properties\n");
+
+    IPropertyStorage_Commit( ps, STGC_DEFAULT );
+
+    IPropertyStorage_Release( ps );
+    IPropertySetStorage_Release( pss );
+
+    IStorage_Commit( stg, STGC_DEFAULT );
+    IStorage_Release( stg );
+}
+
+static void test_summary_binary(void)
+{
+    const char *msifile = "winetest.msi";
+    MSIHANDLE hdb = 0, hsuminfo = 0;
+    UINT r, type, count;
+    INT ival;
+    DWORD sz;
+    char sval[20];
+
+    DeleteFile( msifile );
+
+    test_create_database_binary();
+
+    ok( INVALID_FILE_ATTRIBUTES != GetFileAttributes(msifile), "file doesn't exist!\n");
+
+    /* just MsiOpenDatabase should not create a file */
+    r = MsiOpenDatabase(msifile, MSIDBOPEN_READONLY, &hdb);
+    ok(r == ERROR_SUCCESS, "MsiOpenDatabase failed\n");
+
+    r = MsiGetSummaryInformation(hdb, NULL, 0, &hsuminfo);
+    ok(r == ERROR_SUCCESS, "MsiGetSummaryInformation failed\n");
+
+    /*
+     * Check what reading PID_LASTPRINTED does...
+     * The string value is written to the msi file
+     * but it appears that we're not allowed to read it back again.
+     * We can still read its type though...?
+     */
+    sz = sizeof sval;
+    sval[0] = 0;
+    type = 0;
+    r = MsiSummaryInfoGetProperty(hsuminfo, PID_LASTPRINTED, &type, NULL, NULL, sval, &sz);
+    ok(r == ERROR_SUCCESS, "MsiSummaryInfoGetProperty failed\n");
+    ok(!strcmp(sval, ""), "Expected empty string, got %s\n", sval);
+    todo_wine {
+    ok(type == VT_LPSTR, "Expected VT_LPSTR, got %d\n", type);
+    ok(sz == 0, "Expected 0, got %d\n", sz);
+    }
+
+    ival = -1;
+    r = MsiSummaryInfoGetProperty(hsuminfo, PID_WORDCOUNT, &type, &ival, NULL, NULL, NULL);
+    ok(r == ERROR_SUCCESS, "MsiSummaryInfoGetProperty failed\n");
+    todo_wine ok( ival == 0, "value incorrect\n");
+
+    /* looks like msi adds some of its own values in here */
+    count = 0;
+    r = MsiSummaryInfoGetPropertyCount( hsuminfo, &count );
+    ok(r == ERROR_SUCCESS, "getpropcount failed\n");
+    todo_wine ok(count == 10, "prop count incorrect\n");
+
+    MsiCloseHandle( hsuminfo );
+    MsiCloseHandle( hdb );
+
+    DeleteFile( msifile );
+}
+
+START_TEST(suminfo)
+{
+    test_suminfo();
+    test_summary_binary();
 }

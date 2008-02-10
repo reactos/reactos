@@ -30,11 +30,11 @@ static BOOL create_temp_file(char *name)
     unsigned char buffer[26], i;
     DWORD sz;
     HANDLE handle;
-
+    
     r = GetTempFileName(".", "msitest",0,name);
     if(!r)
         return r;
-    handle = CreateFile(name, GENERIC_READ|GENERIC_WRITE,
+    handle = CreateFile(name, GENERIC_READ|GENERIC_WRITE, 
         0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     if(handle==INVALID_HANDLE_VALUE)
         return 0;
@@ -234,10 +234,26 @@ static void test_msirecord(void)
     ok(i == ERROR_SUCCESS, "Failed to set string at 0\n");
     i = MsiRecordGetInteger(h, 0);
     ok(i == 1, "should get one\n");
+    i = MsiRecordSetString(h,0,"foo");
+    ok(i == ERROR_SUCCESS, "Failed to set string at 0\n");
+    i = MsiRecordGetInteger(h, 0);
+    ok(i == MSI_NULL_INTEGER, "should get zero\n");
+    i = MsiRecordSetString(h,0,"");
+    ok(i == ERROR_SUCCESS, "Failed to set string at 0\n");
+    i = MsiRecordGetInteger(h, 0);
+    ok(i == MSI_NULL_INTEGER, "should get zero\n");
+    i = MsiRecordSetString(h,0,"+1");
+    ok(i == ERROR_SUCCESS, "Failed to set string at 0\n");
+    i = MsiRecordGetInteger(h, 0);
+    ok(i == MSI_NULL_INTEGER, "should get zero\n");
 
     /* same record, try converting integers to strings */
     r = MsiRecordSetInteger(h, 0, 32);
     ok(r == ERROR_SUCCESS, "Failed to set integer at 0 to 32\n");
+    sz = 1;
+    r = MsiRecordGetString(h, 0, NULL, &sz);
+    ok(r == ERROR_SUCCESS, "failed to get string from integer\n");
+    ok(sz == 2, "length wrong\n");
     buf[0]=0;
     sz = sizeof buf;
     r = MsiRecordGetString(h, 0, buf, &sz);
@@ -246,10 +262,15 @@ static void test_msirecord(void)
     r = MsiRecordSetInteger(h, 0, -32);
     ok(r == ERROR_SUCCESS, "Failed to set integer at 0 to 32\n");
     buf[0]=0;
+    sz = 1;
+    r = MsiRecordGetString(h, 0, NULL, &sz);
+    ok(r == ERROR_SUCCESS, "failed to get string from integer\n");
+    ok(sz == 3, "length wrong\n");
     sz = sizeof buf;
     r = MsiRecordGetString(h, 0, buf, &sz);
     ok(r == ERROR_SUCCESS, "failed to get string from integer\n");
     ok(0==strcmp(buf,"-32"), "failed to get string from integer\n");
+    buf[0]=0;
 
     /* same record, now try streams */
     r = MsiRecordSetStream(h, 0, NULL);
@@ -268,7 +289,7 @@ static void test_msirecord(void)
     ok(r == ERROR_SUCCESS, "Failed to close handle\n");
 
     /* now try streams in a new record - need to create a file to play with */
-    r = create_temp_file(filename);
+    r = create_temp_file(filename); 
     if(!r)
         return;
 
