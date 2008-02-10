@@ -1,5 +1,5 @@
-#ifndef _UNKNOWN_H_
-#define _UNKNOWN_H_
+#ifndef __unknwn_h__
+#define __unknwn_h__
 
 #ifdef __cplusplus
 extern "C" {
@@ -51,5 +51,6 @@ HRESULT
   IN  PUNKNOWN    OuterUnknown,
   IN  POOL_TYPE   PoolType
 );
+
 #endif
 
