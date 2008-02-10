@@ -35,7 +35,7 @@ Cleanup(LPDDRAWI_DIRECTDRAW_INT This)
     DdDeleteDirectDrawObject(&ddgbl);
 
     /*
-       are it any more I forget to release ?
+       anything else to release?
     */
 
     /* release the linked interface */
