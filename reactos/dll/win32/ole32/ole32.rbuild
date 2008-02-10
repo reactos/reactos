@@ -44,6 +44,7 @@
 	<file>ole32_main.c</file>
 	<file>oleobj.c</file>
 	<file>oleproxy.c</file>
+	<file>pointermoniker.c</file>
 	<file>regsvr.c</file>
 	<file>rpc.c</file>
 	<file>stg_bigblockfile.c</file>

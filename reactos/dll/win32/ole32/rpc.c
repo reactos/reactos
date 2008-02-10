@@ -893,12 +893,8 @@ static HRESULT WINAPI ClientRpcChannelBuffer_SendReceive(LPRPCCHANNELBUFFER ifac
     orpcthat.flags = ORPCF_NULL;
     orpcthat.extensions = NULL;
 
-    /* for normal RPC calls, faults are returned in first 4 bytes of the
-     * buffer */
     TRACE("RPC call status: 0x%lx\n", status);
-    if (status == RPC_S_CALL_FAILED)
-        hrFault = *(HRESULT *)olemsg->Buffer;
-    else if (status != RPC_S_OK)
+    if (status != RPC_S_OK)
         hr = HRESULT_FROM_WIN32(status);
 
     TRACE("hrFault = 0x%08x\n", hrFault);

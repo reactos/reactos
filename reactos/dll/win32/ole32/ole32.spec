@@ -92,7 +92,7 @@
 @ stdcall CreateItemMoniker(wstr wstr ptr)
 @ stub CreateObjrefMoniker
 @ stdcall CreateOleAdviseHolder(ptr)
-@ stub CreatePointerMoniker       #@ stdcall (ptr ptr) return 0,ERR_NOTIMPLEMENTED
+@ stdcall CreatePointerMoniker(ptr ptr)
 @ stdcall CreateStreamOnHGlobal(ptr long ptr)
 @ stdcall DllDebugObjectRPCHook(long ptr)
 @ stdcall -private DllGetClassObject (ptr ptr ptr)
