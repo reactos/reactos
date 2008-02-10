@@ -997,9 +997,7 @@ IntGdiDeleteDC(HDC hDC, BOOL Force)
   {
     NtGdiDeleteObject (DCToDelete->w.hGCClipRgn);
   }
-#if 0 /* FIXME */
   PATH_DestroyGdiPath (&DCToDelete->w.path);
-#endif
 
   DC_UnlockDc( DCToDelete );
   DC_FreeDC ( hDC );
