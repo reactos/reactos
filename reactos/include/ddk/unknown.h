@@ -1,7 +1,5 @@
-#ifndef _UNKNOWN_H_
-#define _UNKNOWN_H_
-#ifndef __WIDL_UNKNWN_H
-#define __WIDL_UNKNWN_H  /* hack if psdk unknown.h have been included */
+#ifndef __unknwn_h__
+#define __unknwn_h__
 
 #ifdef __cplusplus
 extern "C" {
@@ -54,6 +52,5 @@ HRESULT
   IN  POOL_TYPE   PoolType
 );
 
-#endif // __WIDL_UNKNWN_H  /* hack if psdk unknown.h have been included */
 #endif
 
