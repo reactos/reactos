@@ -10,6 +10,7 @@
 #include <d3d9.h>
 #include <ddraw.h>
 #include <strsafe.h>
+#include <debug.h>
 #include "adapter.h"
 
 typedef BOOL (WINAPI *LPFN_ISWOW64PROCESS) (HANDLE, PBOOL);
@@ -166,6 +167,8 @@ BOOL GetAdapterInfo(LPCSTR lpszDeviceName, D3DADAPTER_IDENTIFIER9* pIdentifier)
     return TRUE;
 }
 
+
+
 static BOOL CALLBACK AdapterMonitorEnumProc(HMONITOR hMonitor, HDC hdcMonitor, LPRECT lprcMonitor, LPARAM dwData)
 {
     MONITORINFOEXA MonitorInfoEx;
@@ -194,4 +197,50 @@ HMONITOR GetAdapterMonitor(LPCSTR lpszDeviceName)
     EnumDisplayMonitors(NULL, NULL, AdapterMonitorEnumProc, (LPARAM)&AdapterMonitor);
 
     return AdapterMonitor.hMonitor;
+}
+
+
+
+UINT GetDisplayFormatCount(D3DFORMAT Format, const D3DDISPLAYMODE* pSupportedDisplayModes, UINT NumDisplayModes)
+{
+    UINT DisplayModeIndex;
+    UINT FormatIndex = 0;
+
+    for (DisplayModeIndex = 0; DisplayModeIndex < NumDisplayModes; DisplayModeIndex++)
+    {
+        if (pSupportedDisplayModes[DisplayModeIndex].Format == Format)
+        {
+            ++FormatIndex;
+        }
+    }
+
+    return FormatIndex;
+}
+
+const D3DDISPLAYMODE* FindDisplayFormat(D3DFORMAT Format, UINT ModeIndex, const D3DDISPLAYMODE* pSupportedDisplayModes, UINT NumDisplayModes)
+{
+    UINT DisplayModeIndex;
+    UINT FormatIndex = 0;
+
+    for (DisplayModeIndex = 0; DisplayModeIndex < NumDisplayModes; DisplayModeIndex++)
+    {
+        if (pSupportedDisplayModes[DisplayModeIndex].Format == Format)
+        {
+            if (ModeIndex == FormatIndex)
+                return &pSupportedDisplayModes[DisplayModeIndex];
+
+            ++FormatIndex;
+        }
+    }
+
+    if (FormatIndex == 0)
+    {
+        DPRINT1("No modes with the specified format found");
+    }
+    else if (FormatIndex < ModeIndex)
+    {
+        DPRINT1("Invalid mode index");
+    }
+
+    return NULL;
 }

@@ -135,6 +135,7 @@ HRESULT WINAPI IDirect3D9Impl_GetAdapterIdentifier(LPDIRECT3D9 iface, UINT Adapt
 
     if (IsBadWritePtr(pIdentifier, sizeof(D3DADAPTER_IDENTIFIER9)))
     {
+        DPRINT1("Invalid pIdentifier parameter specified");
         UNLOCK_D3D9();
         return D3DERR_INVALIDCALL;
     }
@@ -152,17 +153,140 @@ HRESULT WINAPI IDirect3D9Impl_GetAdapterIdentifier(LPDIRECT3D9 iface, UINT Adapt
     return D3D_OK;
 }
 
+/*++
+* @name IDirect3D9::GetAdapterModeCount
+* @implemented
+*
+* The function IDirect3D9Impl_GetAdapterModeCount looks if the specified display adapter supports
+* a specific pixel format and counts the available display modes for that format.
+*
+* @param LPDIRECT3D iface
+* Pointer to the IDirect3D object returned from Direct3DCreate9()
+*
+* @param UINT Adapter
+* Adapter index to get information about. D3DADAPTER_DEFAULT is the primary display.
+* The maximum value for this is the value returned by IDirect3D::GetAdapterCount().
+*
+* @param D3DFORMAT Format
+* The pixel format to search for
+*
+* @return HRESULT
+* If the method is successfull it returns the number of display modes with the specified Format.
+* If Adapter is out of range, the return value will be 0.
+*
+*/
 static UINT WINAPI IDirect3D9Impl_GetAdapterModeCount(LPDIRECT3D9 iface, UINT Adapter, D3DFORMAT Format)
 {
-    UNIMPLEMENTED
+    UINT AdapterModeCount;
 
-    return D3D_OK;
+    LPDIRECT3D9_INT This = impl_from_IDirect3D9(iface);
+    LOCK_D3D9();
+
+    if (Adapter >= This->NumDisplayAdapters)
+    {
+        DPRINT1("Invalid Adapter number specified");
+        UNLOCK_D3D9();
+        return D3DERR_INVALIDCALL;
+    }
+
+    if (Format != D3DFMT_R5G6B5)
+    {
+        AdapterModeCount = GetDisplayFormatCount(
+            Format,
+            This->DisplayAdapters[Adapter].pSupportedD3DFormats,
+            This->DisplayAdapters[Adapter].NumSupportedD3DFormats);
+    }
+    else
+    {
+        AdapterModeCount = GetDisplayFormatCount(
+            Format,
+            This->DisplayAdapters[Adapter].pSupportedD3DExtendedFormats,
+            This->DisplayAdapters[Adapter].NumSupportedD3DExtendedFormats);
+    }
+
+    UNLOCK_D3D9();
+    return AdapterModeCount;
 }
 
+/*++
+* @name IDirect3D9::EnumAdapterModes
+* @implemented
+*
+* The function IDirect3D9Impl_EnumAdapterModes looks if the specified display adapter supports
+* a specific pixel format and fills the pMode argument with the available display modes for that format.
+* This function is often used in a loop to enumerate all the display modes the adapter supports.
+*
+* @param LPDIRECT3D iface
+* Pointer to the IDirect3D object returned from Direct3DCreate9()
+*
+* @param UINT Adapter
+* Adapter index to get information about. D3DADAPTER_DEFAULT is the primary display.
+* The maximum value for this is the value returned by IDirect3D::GetAdapterCount().
+*
+* @param D3DFORMAT Format
+* The pixel format to search for
+*
+* @param UINT Mode
+* Index within the pixel format to be returned.
+* The maximym value for this is the value returned by IDirect3D9::GetAdapterModeCount().
+*
+* @param D3DDISPLAYMODE* pMode
+* Pointer to a D3DDISPLAYMODE structure to be filled with the display mode information
+* for the specified format.
+*
+* @return HRESULT
+* If the method successfully fills the pMode structure, the return value is D3D_OK.
+* If Adapter is out of range, pMode is a bad pointer or, no modes for the specified
+* format was found or the mode parameter was invalid - the return value will be D3DERR_INVALIDCALL.
+*
+*/
 static HRESULT WINAPI IDirect3D9Impl_EnumAdapterModes(LPDIRECT3D9 iface, UINT Adapter, D3DFORMAT Format,
                                                       UINT Mode, D3DDISPLAYMODE* pMode)
 {
-    UNIMPLEMENTED
+    const D3DDISPLAYMODE* pMatchingDisplayFormat;
+    LPDIRECT3D9_INT This = impl_from_IDirect3D9(iface);
+    LOCK_D3D9();
+
+    if (Adapter >= This->NumDisplayAdapters)
+    {
+        DPRINT1("Invalid Adapter number specified");
+        UNLOCK_D3D9();
+        return D3DERR_INVALIDCALL;
+    }
+
+    if (IsBadWritePtr(pMode, sizeof(D3DDISPLAYMODE)))
+    {
+        DPRINT1("Invalid pMode parameter specified");
+        UNLOCK_D3D9();
+        return D3DERR_INVALIDCALL;
+    }
+
+    if (Format != D3DFMT_R5G6B5)
+    {
+        pMatchingDisplayFormat = FindDisplayFormat(
+            Format,
+            Mode,
+            This->DisplayAdapters[Adapter].pSupportedD3DFormats,
+            This->DisplayAdapters[Adapter].NumSupportedD3DFormats);
+    }
+    else
+    {
+        pMatchingDisplayFormat = FindDisplayFormat(
+            Format,
+            Mode,
+            This->DisplayAdapters[Adapter].pSupportedD3DExtendedFormats,
+            This->DisplayAdapters[Adapter].NumSupportedD3DExtendedFormats);
+    }
+
+    if (pMatchingDisplayFormat != NULL)
+    {
+        *pMode = *pMatchingDisplayFormat;
+    }
+    UNLOCK_D3D9();
+
+
+    if (pMatchingDisplayFormat == NULL)
+        return D3DERR_INVALIDCALL;
 
     return D3D_OK;
 }

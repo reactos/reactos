@@ -21,10 +21,10 @@ typedef struct _tagDIRECT3D9DisplayAdapterInfo_
 /* 0x011c */    DWORD unknown000002;
 /* 0x0120 */    DWORD unknown000003;
 /* 0x0124 */    DWORD unknown000004;    /* 0x00000001 */
-/* 0x0128 */    DWORD unknown000005;
-/* 0x012c */    DWORD unknown000006;
-/* 0x0130 */    DWORD unknown000007;
-/* 0x0134 */    DWORD unknown000008;
+/* 0x0128 */    DWORD NumSupportedD3DFormats;
+/* 0x012c */    DWORD NumSupportedD3DExtendedFormats;
+/* 0x0130 */    D3DDISPLAYMODE* pSupportedD3DFormats;
+/* 0x0134 */    D3DDISPLAYMODE* pSupportedD3DExtendedFormats;
 /* 0x0138 */    DWORD unknown000009;
 /* 0x013c */    DWORD unknown000010;    /* D3D9_DRIVERCAPS? */
 /* 0x0140 */    DWORD unknown000011;
