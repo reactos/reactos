@@ -1507,17 +1507,19 @@ typedef struct
 
 typedef struct
 {
+    ULONG MinFrameSize;
+    ULONG MaxFrameSize;
+    ULONG Stepping;
+} KS_FRAMING_RANGE, *PKS_FRAMING_RANGE;
+
+typedef struct
+{
     KS_FRAMING_RANGE Range;
     ULONG InPlaceWeight;
     ULONG NotInPlaceWeight;
 } KS_FRAMING_RANGE_WEIGHTED, *PKS_FRAMING_RANGE_WEIGHTED;
 
-typedef struct
-{
-    ULONG MinFrameSize;
-    ULONG MaxFrameSize;
-    ULONG Stepping;
-} KS_FRAMING_RANGE, *PKS_FRAMING_RANGE;
+
 
 typedef struct
 {
@@ -1542,6 +1544,15 @@ typedef struct
     ULONG PinWeight;
     KS_FRAMING_ITEM FramingItem[1]; 
 } KSALLOCATOR_FRAMING_EX, *PKSALLOCATOR_FRAMING_EX;
+
+typedef struct
+{
+    LONGLONG PresentationStart;
+    LONGLONG Duration;
+    KSPIN_INTERFACE Interface;
+    LONG Rate;
+    ULONG Flags;
+} KSRATE, *PKSRATE;
 
 typedef struct
 {
@@ -1597,14 +1608,7 @@ typedef struct
     ULONG Reserved;
 } KSFRAMETIME, *PKSFRAMETIME;
 
-typedef struct
-{
-    LONGLONG PresentationStart;
-    LONGLONG Duration;
-    KSPIN_INTERFACE Interface;
-    LONG Rate;
-    ULONG Flags;
-} KSRATE, *PKSRATE;
+
 
 typedef struct
 {
