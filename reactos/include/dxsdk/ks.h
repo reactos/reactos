@@ -3281,6 +3281,204 @@ extern "C" {
 
     KSDDKAPI KSOBJECTTYPE NTAPI
     KsGetObjectTypeFromFileObject(IN PFILE_OBJECT FileObject);
+    
+    KSDDKAPI PKSGATE NTAPI
+    KsFilterGetAndGate(IN PKSFILTER Filter);
+
+    KSDDKAPI void NTAPI
+    KsFilterAcquireProcessingMutex(IN PKSFILTER Filter);
+
+    KSDDKAPI void NTAPI
+    KsFilterReleaseProcessingMutex(IN PKSFILTER Filter);
+
+    KSDDKAPI void NTAPI 
+    KsFilterAttemptProcessing(IN PKSFILTER Filter,
+                              IN BOOLEAN Asynchronous);
+
+    KSDDKAPI PKSGATE NTAPI
+    KsPinGetAndGate(IN PKSPIN Pin);
+
+    KSDDKAPI void NTAPI
+    KsPinAttachAndGate(IN PKSPIN Pin,
+                       IN PKSGATE AndGate OPTIONAL);
+
+    KSDDKAPI void NTAPI
+    KsPinAttachOrGate(IN PKSPIN Pin,
+                      IN PKSGATE OrGate OPTIONAL);
+
+    KSDDKAPI void NTAPI
+    KsPinAcquireProcessingMutex(IN PKSPIN Pin);
+
+    KSDDKAPI void NTAPI
+    KsPinReleaseProcessingMutex(IN PKSPIN Pin);
+
+    KSDDKAPI BOOLEAN NTAPI
+    KsProcessPinUpdate(IN PKSPROCESSPIN ProcessPin);
+
+    KSDDKAPI void NTAPI
+    KsPinGetCopyRelationships(IN PKSPIN Pin,
+                              OUT PKSPIN* CopySource,
+                              OUT PKSPIN* DelegateBranch);
+
+    KSDDKAPI void NTAPI 
+    KsPinAttemptProcessing(IN PKSPIN Pin,
+                           IN BOOLEAN Asynchronous);
+
+    KSDDKAPI PVOID NTAPI
+    KsGetParent(IN PVOID Object);
+
+    KSDDKAPI PKSFILTER NTAPI
+    KsPinGetParentFilter(IN PKSPIN Pin);
+
+    KSDDKAPI PVOID NTAPI
+    KsGetFirstChild(IN PVOID Object);
+
+    KSDDKAPI ULONG NTAPI
+    KsFilterGetChildPinCount(IN PKSFILTER Filter,
+                             IN ULONG PinId);
+
+    KSDDKAPI PKSPIN NTAPI
+    KsFilterGetFirstChildPin(IN PKSFILTER Filter,
+                             IN ULONG PinId);
+
+    KSDDKAPI PVOID NTAPI
+    KsGetNextSibling(IN PVOID Object);
+
+    KSDDKAPI PKSPIN NTAPI
+    KsPinGetNextSiblingPin(IN PKSPIN Pin);
+
+    KSDDKAPI PKSDEVICE NTAPI
+    KsGetDevice(IN PVOID Object);
+
+    KSDDKAPI PKSFILTER NTAPI
+    KsGetFilterFromIrp(IN PIRP Irp);
+
+    KSDDKAPI PKSPIN NTAPI
+    KsGetPinFromIrp(IN PIRP Irp);
+
+    KSDDKAPI ULONG NTAPI
+    KsGetNodeIdFromIrp(IN PIRP Irp);
+
+    KSDDKAPI void NTAPI
+    KsAcquireControl(IN PVOID Object);
+
+    KSDDKAPI void NTAPI
+    KsReleaseControl(IN PVOID Object);
+
+    KSDDKAPI NTSTATUS NTAPI
+    KsAddItemToObjectBag(IN KSOBJECT_BAG ObjectBag,
+                         IN PVOID Item, 
+                         IN PFNKSFREE Free OPTIONAL);
+
+    KSDDKAPI ULONG NTAPI
+    KsRemoveItemFromObjectBag(IN KSOBJECT_BAG ObjectBag,
+                              IN PVOID Item,
+                              IN BOOLEAN Free);
+
+    KSDDKAPI NTSTATUS NTAPI
+    KsAllocateObjectBag(IN PKSDEVICE Device,
+                        OUT KSOBJECT_BAG* ObjectBag);
+
+    KSDDKAPI void NTAPI
+    KsFreeObjectBag(IN KSOBJECT_BAG ObjectBag);
+
+    KSDDKAPI NTSTATUS NTAPI
+    KsCopyObjectBagItems(IN KSOBJECT_BAG ObjectBagDestination,
+                         IN KSOBJECT_BAG ObjectBagSource);
+
+    KSDDKAPI NTSTATUS NTAPI
+    _KsEdit(IN KSOBJECT_BAG ObjectBag,
+            IN OUT PVOID* PointerToPointerToItem,
+            IN ULONG NewSize,
+            IN ULONG OldSize,
+            IN ULONG Tag);
+
+    KSDDKAPI NTSTATUS NTAPI
+    KsRegisterFilterWithNoKSPins(IN PDEVICE_OBJECT DeviceObject,
+                                 IN const GUID * InterfaceClassGUID,
+                                 IN ULONG PinCount,
+                                 IN BOOL * PinDirection,
+                                 IN KSPIN_MEDIUM * MediumList,
+                                 IN OPTIONAL GUID * CategoryList);
+
+    KSDDKAPI NTSTATUS NTAPI
+    KsFilterCreatePinFactory (IN PKSFILTER Filter,
+                              IN const KSPIN_DESCRIPTOR_EX *const PinDescriptor,
+                              OUT PULONG PinID);
+
+    KSDDKAPI NTSTATUS NTAPI
+    KsFilterCreateNode (IN PKSFILTER Filter,
+                        IN const KSNODE_DESCRIPTOR *const NodeDescriptor,
+                        OUT PULONG NodeID);
+
+    KSDDKAPI NTSTATUS NTAPI 
+    KsFilterAddTopologyConnections (IN PKSFILTER Filter,
+                                    IN ULONG NewConnectionsCount,
+                                    IN const KSTOPOLOGY_CONNECTION *const NewTopologyConnections);
+
+    KSDDKAPI NTSTATUS NTAPI
+    KsPinGetConnectedPinInterface(IN PKSPIN Pin,
+                                  IN const GUID* InterfaceId,
+                                  OUT PVOID* Interface);
+
+    KSDDKAPI PFILE_OBJECT NTAPI
+    KsPinGetConnectedPinFileObject(IN PKSPIN Pin);
+
+    KSDDKAPI PDEVICE_OBJECT NTAPI
+    KsPinGetConnectedPinDeviceObject(IN PKSPIN Pin);
+
+    KSDDKAPI NTSTATUS NTAPI
+    KsPinGetConnectedFilterInterface(IN PKSPIN Pin,
+                                     IN const GUID* InterfaceId,
+                                     OUT PVOID* Interface);
+    
+    KSDDKAPI VOID NTAPI
+    KsPinSetPinClockTime(IN PKSPIN Pin,
+                         IN LONGLONG Time);
+
+    KSDDKAPI NTSTATUS NTAPI
+    KsPinSubmitFrame(IN PKSPIN Pin,
+                     IN PVOID Data OPTIONAL,
+                     IN ULONG Size OPTIONAL,
+                     IN PKSSTREAM_HEADER StreamHeader OPTIONAL,
+                     IN PVOID Context OPTIONAL);
+
+    KSDDKAPI NTSTATUS NTAPI
+    KsPinSubmitFrameMdl(IN PKSPIN Pin,
+                        IN PMDL Mdl OPTIONAL,
+                        IN PKSSTREAM_HEADER StreamHeader OPTIONAL,
+                        IN PVOID Context OPTIONAL);
+
+    KSDDKAPI void NTAPI
+    KsPinRegisterFrameReturnCallback(IN PKSPIN Pin,
+                                     IN PFNKSPINFRAMERETURN FrameReturn);
+
+    KSDDKAPI void NTAPI
+    KsPinRegisterIrpCompletionCallback(IN PKSPIN Pin,
+                                       IN PFNKSPINIRPCOMPLETION IrpCompletion);
+
+    KSDDKAPI void NTAPI
+    KsPinRegisterHandshakeCallback(IN PKSPIN Pin,
+                                   IN PFNKSPINHANDSHAKE Handshake);
+
+    KSDDKAPI void NTAPI 
+    KsFilterRegisterPowerCallbacks(IN PKSFILTER Filter,
+                                   IN PFNKSFILTERPOWER Sleep OPTIONAL,
+                                   IN PFNKSFILTERPOWER Wake OPTIONAL);
+
+    KSDDKAPI void NTAPI
+    KsPinRegisterPowerCallbacks(IN PKSPIN Pin,
+                                IN PFNKSPINPOWER Sleep OPTIONAL,
+                                IN PFNKSPINPOWER Wake OPTIONAL);
+
+    #define KsDispatchFastWriteFailure KsDispatchFastReadFailure
+    #define KsDeleteFilterFactory(FilterFactory) KsFreeObjectCreateItemsByContext(\
+        *(KSDEVICE_HEADER *)(KsFilterFactoryGetParentDevice(FilterFactory)->FunctionalDeviceObject->DeviceExtension), FilterFactory)
+
+    #define KsEdit(Object,PointerToPointer,Tag)     _KsEdit((Object)->Bag, (PVOID*)(PointerToPointer), sizeof(**(PointerToPointer)), sizeof(**(PointerToPointer)), (Tag))
+    #define KsEditSized(Object,PointerToPointer,NewSize,OldSize,Tag)    _KsEdit((Object)->Bag,(PVOID*)(PointerToPointer),(NewSize),(OldSize),(Tag))
+
+    #define KsDiscard(Object,Pointer)  KsRemoveItemFromObjectBag((Object)->Bag, (PVOID)(Pointer), TRUE)
 
     void _inline
     KsFilterAddEvent(IN PKSFILTER Filter, IN PKSEVENT_ENTRY EventEntry)
@@ -3306,18 +3504,160 @@ extern "C" {
         KsGenerateEvents(Pin, EventSet, EventId, DataSize, Data, CallBack, CallBackContext);
     }
 
+    PKSFILTER __inline KsGetFilterFromFileObject(IN PFILE_OBJECT FileObject)
+    {
+        return (PKSFILTER) KsGetObjectFromFileObject(FileObject);
+    }
+
+    PKSPIN __inline KsGetPinFromFileObject(IN PFILE_OBJECT FileObject)
+    {
+        return (PKSPIN) KsGetObjectFromFileObject(FileObject);
+    }    
+
+    PKSDEVICE __inline KsFilterFactoryGetParentDevice(IN PKSFILTERFACTORY FilterFactory)
+    {
+        return (PKSDEVICE) KsGetParent((PVOID) FilterFactory);
+    }
+
+    PKSFILTERFACTORY __inline KsFilterGetParentFilterFactory(IN PKSFILTER Filter)
+    {
+        return (PKSFILTERFACTORY) KsGetParent((PVOID) Filter);
+    }
+
+    PKSFILTERFACTORY __inline KsDeviceGetFirstChildFilterFactory(IN PKSDEVICE Device)
+    {
+        return (PKSFILTERFACTORY) KsGetFirstChild((PVOID) Device);
+    }
+
+    PKSFILTER __inline KsFilterFactoryGetFirstChildFilter(IN PKSFILTERFACTORY FilterFactory)
+    {
+        return (PKSFILTER) KsGetFirstChild((PVOID) FilterFactory);
+    }
 
 
+    PKSFILTERFACTORY __inline KsFilterFactoryGetNextSiblingFilterFactory(IN PKSFILTERFACTORY FilterFactory)
+    {
+        return (PKSFILTERFACTORY) KsGetNextSibling((PVOID) FilterFactory);
+    }
 
+    PKSFILTER __inline KsFilterGetNextSiblingFilter(IN PKSFILTER Filter)
+    {
+        return (PKSFILTER) KsGetNextSibling((PVOID) Filter);
+    }
 
+    PKSDEVICE __inline KsFilterFactoryGetDevice(IN PKSFILTERFACTORY FilterFactory)
+    {
+        return KsGetDevice((PVOID) FilterFactory);
+    }
 
+    PKSDEVICE __inline KsFilterGetDevice(IN PKSFILTER Filter)
+    {
+        return KsGetDevice((PVOID) Filter);
+    }
 
+    PKSDEVICE __inline KsPinGetDevice(IN PKSPIN Pin)
+    {
+        return KsGetDevice((PVOID) Pin);
+    }
 
+    void __inline KsFilterAcquireControl(IN PKSFILTER Filter)
+    {
+        KsAcquireControl((PVOID) Filter);
+    }
 
-#define KsDispatchFastWriteFailure KsDispatchFastReadFailure
-#define KsDeleteFilterFactory(FilterFactory) KsFreeObjectCreateItemsByContext(\
-        *(KSDEVICE_HEADER *)(KsFilterFactoryGetParentDevice(FilterFactory)->FunctionalDeviceObject->DeviceExtension), FilterFactory)
+    void __inline KsFilterReleaseControl(IN PKSFILTER Filter)
+    {
+        KsReleaseControl((PVOID) Filter);
+    }
 
+    void __inline KsPinAcquireControl(IN PKSPIN Pin)
+    {
+        KsAcquireControl((PVOID) Pin);
+    }
+
+    void __inline KsPinReleaseControl(IN PKSPIN Pin)
+    {
+        KsReleaseControl((PVOID) Pin);
+    }
+
+    #if defined(_UNKNOWN_H_) || defined(__IUnknown_INTERFACE_DEFINED__)
+
+        KSDDKAPI NTSTATUS NTAPI
+        KsPinGetReferenceClockInterface(IN PKSPIN Pin,
+                                        OUT PIKSREFERENCECLOCK* Interface);
+
+        KSDDKAPI PUNKNOWN NTAPI
+        KsRegisterAggregatedClientUnknown(IN PVOID Object,
+                                          IN PUNKNOWN ClientUnknown);
+
+        KSDDKAPI PUNKNOWN NTAPI
+        KsGetOuterUnknown(IN PVOID Object);
+
+        PUNKNOWN __inline KsDeviceRegisterAggregatedClientUnknown(IN PKSDEVICE Device, IN PUNKNOWN ClientUnknown)
+        {
+            return KsRegisterAggregatedClientUnknown((PVOID) Device,ClientUnknown);
+        }
+
+        PUNKNOWN __inline KsDeviceGetOuterUnknown(IN PKSDEVICE Device)
+        {
+            return KsGetOuterUnknown((PVOID) Device);
+        }
+
+        PUNKNOWN __inline KsFilterFactoryRegisterAggregatedClientUnknown(IN PKSFILTERFACTORY FilterFactory, IN PUNKNOWN ClientUnknown)
+        {
+            return KsRegisterAggregatedClientUnknown((PVOID) FilterFactory,ClientUnknown);
+        }
+
+        PUNKNOWN __inline KsFilterFactoryGetOuterUnknown(IN PKSFILTERFACTORY FilterFactory)
+        {
+            return KsGetOuterUnknown((PVOID) FilterFactory);
+        }
+
+        PUNKNOWN __inline KsFilterRegisterAggregatedClientUnknown(IN PKSFILTER Filter, IN PUNKNOWN ClientUnknown)
+        {
+            return KsRegisterAggregatedClientUnknown((PVOID) Filter,ClientUnknown);
+        }
+
+        PUNKNOWN __inline KsFilterGetOuterUnknown(IN PKSFILTER Filter)
+        {
+            return KsGetOuterUnknown((PVOID) Filter);
+        }
+
+        PUNKNOWN __inline KsPinRegisterAggregatedClientUnknown(IN PKSPIN Pin, IN PUNKNOWN ClientUnknown )
+        {
+            return KsRegisterAggregatedClientUnknown((PVOID) Pin,ClientUnknown);
+        }
+
+        PUNKNOWN __inline KsPinGetOuterUnknown(IN PKSPIN Pin)
+        {
+            return KsGetOuterUnknown((PVOID) Pin);
+        }
+    #endif
+#else
+        #if !defined( KS_NO_CREATE_FUNCTIONS )
+
+            KSDDKAPI DWORD WINAPI
+            KsCreateAllocator(IN HANDLE ConnectionHandle,
+                              IN PKSALLOCATOR_FRAMING AllocatorFraming,
+                              OUT PHANDLE AllocatorHandle);
+
+            KSDDKAPI DWORD NTAPI
+            KsCreateClock(IN HANDLE ConnectionHandle,
+                          IN PKSCLOCK_CREATE ClockCreate,
+                          OUT PHANDLE ClockHandle);
+
+            KSDDKAPI DWORD WINAPI
+            KsCreatePin(IN HANDLE FilterHandle,
+                        IN PKSPIN_CONNECT Connect,
+                        IN ACCESS_MASK DesiredAccess,
+                        OUT PHANDLE ConnectionHandle);
+
+            KSDDKAPI DWORD WINAPI
+            KsCreateTopologyNode(IN HANDLE ParentHandle,
+                                 IN PKSNODE_CREATE NodeCreate,
+                                 IN ACCESS_MASK DesiredAccess,
+                                 OUT PHANDLE NodeHandle);    
+        #endif
 #endif
 
 
@@ -3326,5 +3666,9 @@ extern "C" {
 #if defined(__cplusplus)
 }
 #endif
+
+#define DENY_USERMODE_ACCESS( pIrp, CompleteRequest ) if ( pIrp->RequestorMode != KernelMode ) { pIrp->IoStatus.Information = 0; \
+    pIrp->IoStatus.Status = STATUS_INVALID_DEVICE_REQUEST; if ( CompleteRequest ) IoCompleteRequest ( pIrp, IO_NO_INCREMENT ); \
+    return STATUS_INVALID_DEVICE_REQUEST; }
 
 #endif // _KS_
