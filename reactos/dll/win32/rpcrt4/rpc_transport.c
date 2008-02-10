@@ -434,6 +434,12 @@ static void rpcrt4_conn_np_cancel_call(RpcConnection *Connection)
     /* FIXME: implement when named pipe writes use overlapped I/O */
 }
 
+static int rpcrt4_conn_np_wait_for_incoming_data(RpcConnection *Connection)
+{
+    /* FIXME: implement when named pipe writes use overlapped I/O */
+    return -1;
+}
+
 static size_t rpcrt4_ncacn_np_get_top_of_tower(unsigned char *tower_data,
                                                const char *networkaddr,
                                                const char *endpoint)
@@ -1076,6 +1082,32 @@ static void rpcrt4_conn_tcp_cancel_call(RpcConnection *Connection)
     write(tcpc->cancel_fds[1], &dummy, 1);
 }
 
+static int rpcrt4_conn_tcp_wait_for_incoming_data(RpcConnection *Connection)
+{
+    RpcConnection_tcp *tcpc = (RpcConnection_tcp *) Connection;
+    struct pollfd pfds[2];
+
+    TRACE("%p\n", Connection);
+
+    pfds[0].fd = tcpc->sock;
+    pfds[0].events = POLLIN;
+    pfds[1].fd = tcpc->cancel_fds[0];
+    pfds[1].events = POLLIN;
+    if (poll(pfds, 2, -1 /* infinite */) == -1 && errno != EINTR)
+    {
+      ERR("poll() failed: %s\n", strerror(errno));
+      return -1;
+    }
+    if (pfds[1].revents & POLLIN) /* canceled */
+    {
+      char dummy;
+      read(pfds[1].fd, &dummy, sizeof(dummy));
+      return -1;
+    }
+
+    return 0;
+}
+
 static size_t rpcrt4_ncacn_ip_tcp_get_top_of_tower(unsigned char *tower_data,
                                                    const char *networkaddr,
                                                    const char *endpoint)
@@ -1361,6 +1393,7 @@ static const struct connection_ops conn_protseq_list[] = {
     rpcrt4_conn_np_write,
     rpcrt4_conn_np_close,
     rpcrt4_conn_np_cancel_call,
+    rpcrt4_conn_np_wait_for_incoming_data,
     rpcrt4_ncacn_np_get_top_of_tower,
     rpcrt4_ncacn_np_parse_top_of_tower,
   },
@@ -1373,6 +1406,7 @@ static const struct connection_ops conn_protseq_list[] = {
     rpcrt4_conn_np_write,
     rpcrt4_conn_np_close,
     rpcrt4_conn_np_cancel_call,
+    rpcrt4_conn_np_wait_for_incoming_data,
     rpcrt4_ncalrpc_get_top_of_tower,
     rpcrt4_ncalrpc_parse_top_of_tower,
   },
@@ -1385,6 +1419,7 @@ static const struct connection_ops conn_protseq_list[] = {
     rpcrt4_conn_tcp_write,
     rpcrt4_conn_tcp_close,
     rpcrt4_conn_tcp_cancel_call,
+    rpcrt4_conn_tcp_wait_for_incoming_data,
     rpcrt4_ncacn_ip_tcp_get_top_of_tower,
     rpcrt4_ncacn_ip_tcp_parse_top_of_tower,
   }
@@ -1501,6 +1536,7 @@ RPC_STATUS RPCRT4_CreateConnection(RpcConnection** Connection, BOOL server,
   NewConnection->QOS = QOS;
 
   list_init(&NewConnection->conn_pool_entry);
+  NewConnection->async_state = NULL;
 
   TRACE("connection: %p\n", NewConnection);
   *Connection = NewConnection;

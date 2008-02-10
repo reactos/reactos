@@ -21,7 +21,6 @@
 @ stdcall I_RpcAbortAsyncCall(ptr long) I_RpcAsyncAbortCall
 @ stdcall I_RpcAllocate(long)
 @ stdcall I_RpcAsyncAbortCall(ptr long)
-@ stub I_RpcAsyncSendReceive # NT4
 @ stdcall I_RpcAsyncSetHandle(ptr ptr)
 @ stub I_RpcBCacheAllocate
 @ stub I_RpcBCacheFree
@@ -39,7 +38,6 @@
 @ stdcall I_RpcBindingSetAsync(ptr ptr)
 @ stub I_RpcBindingToStaticStringBindingW
 @ stub I_RpcClearMutex
-@ stub I_RpcConnectionInqSockBuffSize2
 @ stub I_RpcConnectionInqSockBuffSize
 @ stub I_RpcConnectionSetSockBuffSize
 @ stub I_RpcDeleteMutex
@@ -48,19 +46,13 @@
 @ stdcall I_RpcFree(ptr)
 @ stdcall I_RpcFreeBuffer(ptr)
 @ stub I_RpcFreePipeBuffer
-@ stub I_RpcGetAssociationContext
 @ stdcall I_RpcGetBuffer(ptr)
 @ stub I_RpcGetBufferWithObject
 @ stdcall I_RpcGetCurrentCallHandle()
 @ stub I_RpcGetExtendedError
-@ stub I_RpcGetServerContextList
-@ stub I_RpcGetThreadEvent # win9x
-@ stub I_RpcGetThreadWindowHandle # win9x
 @ stub I_RpcIfInqTransferSyntaxes
-@ stub I_RpcLaunchDatagramReceiveThread # win9x
 @ stub I_RpcLogEvent
 @ stdcall I_RpcMapWin32Status(long)
-@ stub I_RpcMonitorAssociation
 @ stub I_RpcNegotiateTransferSyntax # wxp
 @ stub I_RpcNsBindingSetEntryName
 @ stub I_RpcNsBindingSetEntryNameA
@@ -83,46 +75,24 @@
 @ stub I_RpcServerSetAddressChangeFn
 @ stdcall I_RpcServerStartListening(ptr) # win9x
 @ stdcall I_RpcServerStopListening() # win9x
-@ stub I_RpcServerUnregisterEndpointA # win9x
-@ stub I_RpcServerUnregisterEndpointW # win9x
 @ stub I_RpcServerUseProtseq2A
 @ stub I_RpcServerUseProtseq2W
 @ stub I_RpcServerUseProtseqEp2A
 @ stub I_RpcServerUseProtseqEp2W
-@ stub I_RpcSetAssociationContext # win9x
 @ stub I_RpcSetAsyncHandle
-@ stub I_RpcSetServerContextList
-@ stub I_RpcSetThreadParams # win9x
-@ stub I_RpcSetWMsgEndpoint # NT4
 @ stub I_RpcSsDontSerializeContext
-@ stub I_RpcStopMonitorAssociation
 @ stub I_RpcSystemFunction001 # wxp (oh, brother!)
-@ stub I_RpcTransCancelMigration # win9x
-@ stub I_RpcTransClientMaxFrag # win9x
-@ stub I_RpcTransClientReallocBuffer # win9x
 @ stub I_RpcTransConnectionAllocatePacket
 @ stub I_RpcTransConnectionFreePacket
 @ stub I_RpcTransConnectionReallocPacket
 @ stub I_RpcTransDatagramAllocate2
 @ stub I_RpcTransDatagramAllocate
 @ stub I_RpcTransDatagramFree
-@ stub I_RpcTransGetAddressList
 @ stub I_RpcTransGetThreadEvent
 @ stub I_RpcTransIoCancelled
-@ stub I_RpcTransMaybeMakeReceiveAny # win9x
-@ stub I_RpcTransMaybeMakeReceiveDirect # win9x
-@ stub I_RpcTransPingServer # win9x
-@ stub I_RpcTransServerFindConnection # win9x
-@ stub I_RpcTransServerFreeBuffer # win9x
-@ stub I_RpcTransServerMaxFrag # win9x
 @ stub I_RpcTransServerNewConnection
-@ stub I_RpcTransServerProtectThread # win9x
-@ stub I_RpcTransServerReallocBuffer # win9x
-@ stub I_RpcTransServerReceiveDirectReady # win9x
-@ stub I_RpcTransServerUnprotectThread # win9x
 @ stub I_RpcTurnOnEEInfoPropagation # wxp
 @ stdcall I_RpcWindowProc(ptr long long long) # win9x
-@ stub I_RpcltDebugSetPDUFilter
 @ stub I_UuidCreate
 @ stub MIDL_wchar_strcpy
 @ stub MIDL_wchar_strlen
@@ -135,8 +105,6 @@
 @ stub MesHandleFree
 @ stub MesIncrementalHandleReset
 @ stub MesInqProcEncodingId
-@ stub MqGetContext # win9x
-@ stub MqRegisterQueue # win9x
 @ stdcall NDRCContextBinding(ptr)
 @ stdcall NDRCContextMarshall(ptr ptr)
 @ stdcall NDRCContextUnmarshall(ptr ptr ptr long)
@@ -361,7 +329,6 @@
 @ stub NdrpReleaseTypeGenCookie # wxp
 @ stub NdrpSetRpcSsDefaults
 @ stub NdrpVarVtOfTypeDesc # wxp
-@ stub PerformRpcInitialization
 @ stdcall RpcAbortAsyncCall(ptr long) RpcAsyncAbortCall
 @ stdcall RpcAsyncAbortCall(ptr long)
 @ stdcall RpcAsyncCancelCall(ptr long)
@@ -421,8 +388,6 @@
 @ stub RpcIfInqId
 @ stdcall RpcImpersonateClient(ptr)
 @ stdcall RpcInitializeAsyncHandle(ptr long) RpcAsyncInitializeHandle
-@ stub RpcMgmtBindingInqParameter # win9x
-@ stub RpcMgmtBindingSetParameter # win9x
 @ stdcall RpcMgmtEnableIdleCleanup()
 @ stdcall RpcMgmtEpEltInqBegin(ptr long ptr long ptr ptr)
 @ stub RpcMgmtEpEltInqDone
@@ -432,7 +397,6 @@
 @ stub RpcMgmtInqComTimeout
 @ stub RpcMgmtInqDefaultProtectLevel
 @ stdcall RpcMgmtInqIfIds(ptr ptr)
-@ stub RpcMgmtInqParameter # win9x
 @ stub RpcMgmtInqServerPrincNameA
 @ stub RpcMgmtInqServerPrincNameW
 @ stub RpcMgmtInqStats
@@ -440,7 +404,6 @@
 @ stub RpcMgmtSetAuthorizationFn
 @ stdcall RpcMgmtSetCancelTimeout(long)
 @ stdcall RpcMgmtSetComTimeout(ptr long)
-@ stub RpcMgmtSetParameter # win9x
 @ stdcall RpcMgmtSetServerStackSize(long)
 @ stub RpcMgmtStatsVectorFree
 @ stdcall RpcMgmtStopServerListening(ptr)
@@ -526,7 +489,6 @@
 @ stub SimpleTypeAlignment # wxp
 @ stub SimpleTypeBufferSize # wxp
 @ stub SimpleTypeMemorySize # wxp
-@ stub StartServiceIfNecessary # win9x
 @ stdcall TowerConstruct(ptr ptr ptr ptr ptr ptr)
 @ stdcall TowerExplode(ptr ptr ptr ptr ptr ptr)
 @ stdcall UuidCompare(ptr ptr ptr)
