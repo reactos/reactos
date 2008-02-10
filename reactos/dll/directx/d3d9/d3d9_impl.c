@@ -189,7 +189,7 @@ static UINT WINAPI IDirect3D9Impl_GetAdapterModeCount(LPDIRECT3D9 iface, UINT Ad
         return D3DERR_INVALIDCALL;
     }
 
-    if (Format != D3DFMT_R5G6B5)
+    if (Format != D3DFMT_A2R10G10B10)
     {
         AdapterModeCount = GetDisplayFormatCount(
             Format,
@@ -261,7 +261,7 @@ static HRESULT WINAPI IDirect3D9Impl_EnumAdapterModes(LPDIRECT3D9 iface, UINT Ad
         return D3DERR_INVALIDCALL;
     }
 
-    if (Format != D3DFMT_R5G6B5)
+    if (Format != D3DFMT_A2R10G10B10)
     {
         pMatchingDisplayFormat = FindDisplayFormat(
             Format,
