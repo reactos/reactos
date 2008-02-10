@@ -54,6 +54,7 @@ extern "C" {
 
 #ifndef RC_INVOKED
 typedef ACCESS_MASK REGSAM;
+typedef LONG LSTATUS;
 typedef struct value_entA {
 	LPSTR ve_valuename;
 	DWORD ve_valuelen;
