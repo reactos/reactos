@@ -578,23 +578,21 @@ static void write_method_macro(const type_t *iface, const char *name)
     var_t *def = cur->def;
     if (!is_callas(def->attrs)) {
       const var_t *arg;
-      int argc = 0;
-      int c;
-
-      if (cur->args) LIST_FOR_EACH_ENTRY( arg, cur->args, const var_t, entry ) argc++;
 
       fprintf(header, "#define %s_", name);
       write_name(header,def);
-      fprintf(header, "(p");
-      for (c=0; c<argc; c++)
-	fprintf(header, ",%c", c+'a');
+      fprintf(header, "(This");
+      if (cur->args)
+          LIST_FOR_EACH_ENTRY( arg, cur->args, const var_t, entry )
+              fprintf(header, ",%s", arg->name);
       fprintf(header, ") ");
 
-      fprintf(header, "(p)->lpVtbl->");
+      fprintf(header, "(This)->lpVtbl->");
       write_name(header, def);
-      fprintf(header, "(p");
-      for (c=0; c<argc; c++)
-	fprintf(header, ",%c", c+'a');
+      fprintf(header, "(This");
+      if (cur->args)
+          LIST_FOR_EACH_ENTRY( arg, cur->args, const var_t, entry )
+              fprintf(header, ",%s", arg->name);
       fprintf(header, ")\n");
     }
   }

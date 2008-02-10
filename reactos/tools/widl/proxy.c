@@ -254,6 +254,7 @@ static void gen_proxy(type_t *iface, const func_t *cur, int idx,
 {
   var_t *def = cur->def;
   int has_ret = !is_void(def->type);
+  int has_full_pointer = is_full_pointer_function(cur);
 
   indent = 0;
   write_type_decl_left(proxy, def->type);
@@ -278,6 +279,9 @@ static void gen_proxy(type_t *iface, const func_t *cur, int idx,
                  "_RetVal", "_RetVal");
   }
   print_proxy( "\n");
+
+  if (has_full_pointer)
+    write_full_pointer_init(proxy, indent, cur, FALSE);
 
   /* FIXME: trace */
   clear_output_vars( cur->args );
@@ -325,6 +329,8 @@ static void gen_proxy(type_t *iface, const func_t *cur, int idx,
   print_proxy( "RpcFinally\n" );
   print_proxy( "{\n" );
   indent++;
+  if (has_full_pointer)
+    write_full_pointer_free(proxy, indent, cur);
   print_proxy( "NdrProxyFreeBuffer(This, &_StubMsg);\n" );
   indent--;
   print_proxy( "}\n");
@@ -356,6 +362,7 @@ static void gen_stub(type_t *iface, const func_t *cur, const char *cas,
   var_t *def = cur->def;
   const var_t *arg;
   int has_ret = !is_void(def->type);
+  int has_full_pointer = is_full_pointer_function(cur);
 
   indent = 0;
   print_proxy( "void __RPC_STUB %s_", iface->name);
@@ -384,6 +391,8 @@ static void gen_stub(type_t *iface, const func_t *cur, const char *cas,
   print_proxy("RpcTryFinally\n");
   print_proxy("{\n");
   indent++;
+  if (has_full_pointer)
+    write_full_pointer_init(proxy, indent, cur, TRUE);
   print_proxy("if ((_pRpcMessage->DataRepresentation & 0xffff) != NDR_LOCAL_DATA_REPRESENTATION)\n");
   indent++;
   print_proxy("NdrConvert( &_StubMsg, &__MIDL_ProcFormatString.Format[%u]);\n", proc_offset );
@@ -438,6 +447,9 @@ static void gen_stub(type_t *iface, const func_t *cur, const char *cas,
   print_proxy("{\n");
 
   write_remoting_arguments(proxy, indent+1, cur, PASS_OUT, PHASE_FREE);
+
+  if (has_full_pointer)
+    write_full_pointer_free(proxy, indent, cur);
 
   print_proxy("}\n");
   print_proxy("RpcEndFinally\n");

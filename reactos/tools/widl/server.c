@@ -62,6 +62,7 @@ static void write_function_stubs(type_t *iface, unsigned int *proc_offset)
     LIST_FOR_EACH_ENTRY( func, iface->funcs, const func_t, entry )
     {
         const var_t *def = func->def;
+        int has_full_pointer = is_full_pointer_function(func);
 
         /* check for a defined binding handle */
         explicit_handle_var = get_explicit_handle_var(func);
@@ -125,6 +126,9 @@ static void write_function_stubs(type_t *iface, unsigned int *proc_offset)
         print_server("RpcTryExcept\n");
         print_server("{\n");
         indent++;
+
+        if (has_full_pointer)
+            write_full_pointer_init(server, indent, func, TRUE);
 
         if (func->args)
         {
@@ -235,6 +239,9 @@ static void write_function_stubs(type_t *iface, unsigned int *proc_offset)
         indent++;
 
         write_remoting_arguments(server, indent, func, PASS_OUT, PHASE_FREE);
+
+        if (has_full_pointer)
+            write_full_pointer_free(server, indent, func);
 
         indent--;
         print_server("}\n");

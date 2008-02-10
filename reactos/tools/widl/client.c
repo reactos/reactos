@@ -85,6 +85,7 @@ static void write_function_stubs(type_t *iface, unsigned int *proc_offset)
     {
         const var_t *def = func->def;
         const var_t* explicit_handle_var;
+        int has_full_pointer = is_full_pointer_function(func);
 
         /* check for a defined binding handle */
         explicit_handle_var = get_explicit_handle_var(func);
@@ -141,6 +142,9 @@ static void write_function_stubs(type_t *iface, unsigned int *proc_offset)
                          "_RetVal", "_RetVal");
         }
         fprintf(client, "\n");
+
+        if (has_full_pointer)
+            write_full_pointer_init(client, indent, func, FALSE);
 
         /* check pointers */
         check_pointers(func);
@@ -244,6 +248,9 @@ static void write_function_stubs(type_t *iface, unsigned int *proc_offset)
 
 
         /* FIXME: emit client finally code */
+
+        if (has_full_pointer)
+            write_full_pointer_free(client, indent, func);
 
         print_client("NdrFreeBuffer((PMIDL_STUB_MESSAGE)&_StubMsg);\n");
 

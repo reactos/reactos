@@ -60,34 +60,6 @@ Index: typelib.c
  
  #include "widl.h"
  #include "utils.h"
-Index: utils.c
-===================================================================
---- utils.c	(revision 32187)
-+++ utils.c	(working copy)
-@@ -136,6 +136,9 @@
- 		name = "widl.tab";
- 
- 	slash = strrchr(name, '/');
-+	if (!slash)
-+		slash = strrchr(name, '\\');
-+
- 	if (slash)
- 		name = slash + 1;
- 
-Index: widl.c
-===================================================================
---- widl.c	(revision 32187)
-+++ widl.c	(working copy)
-@@ -166,6 +166,9 @@
-   int i;
- 
-   slash = strrchr(name, '/');
-+  if(!slash)
-+    slash = strrchr(name, '\\');
-+
-   if (slash) name = slash + 1;
- 
-   token = xstrdup(name);
 Index: widltypes.h
 ===================================================================
 --- widltypes.h	(revision 32187)
@@ -123,12 +95,3 @@ Index: write_msft.c
  
  #include "widltypes.h"
  #include "typelib.h"
-@@ -2415,7 +2413,7 @@
- 
-     retval = TYPE_E_IOERROR;
- 
--    fd = creat(typelib->typelib->filename, 0666);
-+    fd = open(typelib->typelib->filename, O_CREAT | O_WRONLY | O_TRUNC | O_BINARY, 0666);
-     if (fd == -1) return retval;
- 
-     filepos = sizeof(MSFT_Header) + sizeof(MSFT_SegDir);

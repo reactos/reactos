@@ -414,7 +414,11 @@ int do_import(char *fname)
 	import->next = first_import;
 	first_import = import;
 
-        if (!(path = wpp_find_include( fname, input_name )))
+        /* don't search for a file name with a path in the include directories,
+         * for compatibility with MIDL */
+        if (strchr( fname, '/' ) || strchr( fname, '\\' ))
+            path = strdup( fname );
+        else if (!(path = wpp_find_include( fname, input_name )))
             error_loc("Unable to open include file %s\n", fname);
 
 	import_stack[ptr].temp_name = temp_name;
