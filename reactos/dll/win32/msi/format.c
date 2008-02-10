@@ -19,10 +19,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-/*
-http://msdn.microsoft.com/library/default.asp?url=/library/en-us/msi/setup/msiformatrecord.asp 
- */
-
 #include <stdarg.h>
 #include <stdio.h>
 
@@ -43,11 +39,288 @@ http://msdn.microsoft.com/library/default.asp?url=/library/en-us/msi/setup/msifo
 
 WINE_DEFAULT_DEBUG_CHANNEL(msi);
 
+/* types arranged by precedence */
+#define FORMAT_NULL         0x0001
+#define FORMAT_LITERAL      0x0002
+#define FORMAT_NUMBER       0x0004
+#define FORMAT_LBRACK       0x0010
+#define FORMAT_LBRACE       0x0020
+#define FORMAT_RBRACK       0x0011
+#define FORMAT_RBRACE       0x0021
+#define FORMAT_ESCAPE       0x0040
+#define FORMAT_PROPNULL     0x0080
+#define FORMAT_ERROR        0x1000
+#define FORMAT_FAIL         0x2000
 
-static DWORD deformat_string_internal(MSIPACKAGE *package, LPCWSTR ptr, 
-                                     WCHAR** data, DWORD len, MSIRECORD* record,
-                                     BOOL* in_group);
+#define left_type(x) (x & 0xF0)
 
+typedef struct _tagFORMAT
+{
+    MSIPACKAGE *package;
+    MSIRECORD *record;
+    LPWSTR deformatted;
+    int len;
+    int n;
+    BOOL propfailed;
+    BOOL groupfailed;
+    int groups;
+} FORMAT;
+
+typedef struct _tagFORMSTR
+{
+    struct list entry;
+    int n;
+    int len;
+    int type;
+    BOOL propfound;
+    BOOL nonprop;
+} FORMSTR;
+
+typedef struct _tagSTACK
+{
+    struct list items;
+} STACK;
+
+static STACK *create_stack(void)
+{
+    STACK *stack = msi_alloc(sizeof(STACK));
+    list_init(&stack->items);
+    return stack;
+}
+
+static void free_stack(STACK *stack)
+{
+    while (!list_empty(&stack->items))
+    {
+        FORMSTR *str = LIST_ENTRY(list_head(&stack->items), FORMSTR, entry);
+        list_remove(&str->entry);
+        msi_free(str);
+    }
+
+    msi_free(stack);
+}
+
+static void stack_push(STACK *stack, FORMSTR *str)
+{
+    list_add_head(&stack->items, &str->entry);
+}
+
+static FORMSTR *stack_pop(STACK *stack)
+{
+    FORMSTR *ret;
+
+    if (list_empty(&stack->items))
+        return NULL;
+
+    ret = LIST_ENTRY(list_head(&stack->items), FORMSTR, entry);
+    list_remove(&ret->entry);
+    return ret;
+}
+
+static FORMSTR *stack_find(STACK *stack, int type)
+{
+    FORMSTR *str;
+
+    LIST_FOR_EACH_ENTRY(str, &stack->items, FORMSTR, entry)
+    {
+        if (str->type == type)
+            return str;
+    }
+
+    return NULL;
+}
+
+static FORMSTR *stack_peek(STACK *stack)
+{
+    return LIST_ENTRY(list_head(&stack->items), FORMSTR, entry);
+}
+
+static LPCWSTR get_formstr_data(FORMAT *format, FORMSTR *str)
+{
+    return &format->deformatted[str->n];
+}
+
+static LPWSTR dup_formstr(FORMAT *format, FORMSTR *str)
+{
+    LPWSTR val;
+    LPCWSTR data;
+
+    if (str->len == 0)
+        return NULL;
+
+    val = msi_alloc((str->len + 1) * sizeof(WCHAR));
+    data = get_formstr_data(format, str);
+    lstrcpynW(val, data, str->len + 1);
+
+    return val;
+}
+
+static LPWSTR deformat_index(FORMAT *format, FORMSTR *str)
+{
+    LPWSTR val, ret;
+
+    val = msi_alloc((str->len + 1) * sizeof(WCHAR));
+    lstrcpynW(val, get_formstr_data(format, str), str->len + 1);
+
+    ret = msi_dup_record_field(format->record, atoiW(val));
+
+    msi_free(val);
+    return ret;
+}
+
+static LPWSTR deformat_property(FORMAT *format, FORMSTR *str)
+{
+    LPWSTR val, ret;
+
+    val = msi_alloc((str->len + 1) * sizeof(WCHAR));
+    lstrcpynW(val, get_formstr_data(format, str), str->len + 1);
+
+    ret = msi_dup_property(format->package, val);
+
+    msi_free(val);
+    return ret;
+}
+
+static LPWSTR deformat_component(FORMAT *format, FORMSTR *str)
+{
+    LPWSTR key, ret = NULL;
+    MSICOMPONENT *comp;
+    BOOL source;
+
+    key = msi_alloc((str->len + 1) * sizeof(WCHAR));
+    lstrcpynW(key, get_formstr_data(format, str), str->len + 1);
+
+    comp = get_loaded_component(format->package, key);
+    if (!comp)
+        goto done;
+
+    source = (comp->Action == INSTALLSTATE_SOURCE) ? TRUE : FALSE;
+    ret = resolve_folder(format->package, comp->Directory, source, FALSE, TRUE, NULL);
+
+done:
+    msi_free(key);
+    return ret;
+}
+
+static LPWSTR deformat_file(FORMAT *format, FORMSTR *str, BOOL shortname)
+{
+    LPWSTR key, ret = NULL;
+    MSIFILE *file;
+    DWORD size;
+
+    key = msi_alloc((str->len + 1) * sizeof(WCHAR));
+    lstrcpynW(key, get_formstr_data(format, str), str->len + 1);
+
+    file = get_loaded_file(format->package, key);
+    if (!file)
+        goto done;
+
+    if (!shortname)
+    {
+        ret = strdupW(file->TargetPath);
+        goto done;
+    }
+
+    size = GetShortPathNameW(file->TargetPath, NULL, 0);
+    if (size <= 0)
+    {
+        ret = strdupW(file->TargetPath);
+        goto done;
+    }
+
+    size++;
+    ret = msi_alloc(size * sizeof(WCHAR));
+    GetShortPathNameW(file->TargetPath, ret, size);
+
+done:
+    msi_free(key);
+    return ret;
+}
+
+static LPWSTR deformat_environment(FORMAT *format, FORMSTR *str)
+{
+    LPWSTR key, ret = NULL;
+    DWORD sz;
+
+    key = msi_alloc((str->len + 1) * sizeof(WCHAR));
+    lstrcpynW(key, get_formstr_data(format, str), str->len + 1);
+
+    sz  = GetEnvironmentVariableW(key, NULL ,0);
+    if (sz <= 0)
+        goto done;
+
+    sz++;
+    ret = msi_alloc(sz * sizeof(WCHAR));
+    GetEnvironmentVariableW(key, ret, sz);
+
+done:
+    msi_free(key);
+    return ret;
+}
+
+static LPWSTR deformat_literal(FORMAT *format, FORMSTR *str, BOOL *propfound,
+                               BOOL *nonprop, int *type)
+{
+    LPCWSTR data = get_formstr_data(format, str);
+    LPWSTR replaced = NULL;
+    char ch = data[0];
+
+    if (ch == '\\')
+    {
+        str->n++;
+        if (str->len == 1)
+        {
+            str->len = 0;
+            replaced = NULL;
+        }
+        else
+        {
+            str->len = 1;
+            replaced = dup_formstr(format, str);
+        }
+    }
+    else if (ch == '~')
+    {
+        if (str->len != 1)
+            replaced = NULL;
+        else
+        {
+            replaced = msi_alloc(sizeof(WCHAR));
+            *replaced = '\0';
+        }
+    }
+    else if (ch == '%' || ch == '#' || ch == '!' || ch == '$')
+    {
+        str->n++;
+        str->len--;
+
+        switch (ch)
+        {
+        case '%':
+            replaced = deformat_environment(format, str); break;
+        case '#':
+            replaced = deformat_file(format, str, FALSE); break;
+        case '!':
+            replaced = deformat_file(format, str, TRUE); break;
+        case '$':
+            replaced = deformat_component(format, str); break;
+        }
+
+        *type = FORMAT_LITERAL;
+    }
+    else
+    {
+        replaced = deformat_property(format, str);
+        *type = FORMAT_LITERAL;
+
+        if (replaced)
+            *propfound = TRUE;
+        else
+            format->propfailed = TRUE;
+    }
+
+    return replaced;
+}
 
 static LPWSTR build_default_format(const MSIRECORD* record)
 {
@@ -70,7 +343,7 @@ static LPWSTR build_default_format(const MSIRECORD* record)
     size = 1;
     for (i = 1; i <= count; i++)
     {
-        sprintfW(index,fmt_index,i);
+        sprintfW(index, fmt_index, i);
         str = MSI_RecordGetString(record, i);
         len = (str) ? lstrlenW(str) : 0;
         len += (sizeof(fmt_null) - 3) + lstrlenW(index);
@@ -84,9 +357,9 @@ static LPWSTR build_default_format(const MSIRECORD* record)
         }
 
         if (str)
-            sprintfW(buf,fmt,i,str);
+            sprintfW(buf, fmt, i, str);
         else
-            sprintfW(buf,fmt_null,i);
+            sprintfW(buf, fmt_null, i);
 
         if (!rc)
         {
@@ -99,516 +372,493 @@ static LPWSTR build_default_format(const MSIRECORD* record)
             lstrcatW(rc, buf);
         }
     }
+
     msi_free(buf);
     return rc;
 }
 
-static const WCHAR* scanW(LPCWSTR buf, WCHAR token, DWORD len)
+static BOOL format_is_number(WCHAR x)
 {
-    DWORD i;
-    for (i = 0; i < len; i++)
-        if (buf[i] == token)
-            return &buf[i];
-    return NULL;
+    return ((x >= '0') && (x <= '9'));
 }
 
-/* break out helper functions for deformating */
-static LPWSTR deformat_component(MSIPACKAGE* package, LPCWSTR key, DWORD* sz)
+static BOOL format_str_is_number(LPWSTR str)
 {
-    LPWSTR value = NULL;
-    MSICOMPONENT *comp;
-    BOOL source;
+    LPWSTR ptr;
 
-    *sz = 0;
-    if (!package)
-        return NULL;
+    for (ptr = str; *ptr; ptr++)
+        if (!format_is_number(*ptr))
+            return FALSE;
 
-    comp = get_loaded_component(package,key);
-    if (comp)
-    {
-        source = (comp->Action == INSTALLSTATE_SOURCE) ? TRUE : FALSE;
-        value = resolve_folder(package, comp->Directory, source, FALSE, TRUE, NULL);
-        *sz = (strlenW(value)) * sizeof(WCHAR);
-    }
-
-    return value;
-}
-
-static LPWSTR deformat_file(MSIPACKAGE* package, LPCWSTR key, DWORD* sz, 
-                            BOOL shortname)
-{
-    LPWSTR value = NULL;
-    MSIFILE *file;
-
-    *sz = 0;
-
-    if (!package)
-        return NULL;
-
-    file = get_loaded_file( package, key );
-    if (file)
-    {
-        if (!shortname)
-        {
-            value = strdupW( file->TargetPath );
-            *sz = (strlenW(value)) * sizeof(WCHAR);
-        }
-        else
-        {
-            DWORD size = 0;
-            size = GetShortPathNameW( file->TargetPath, NULL, 0 );
-
-            if (size > 0)
-            {
-                *sz = (size-1) * sizeof (WCHAR);
-                size ++;
-                value = msi_alloc(size * sizeof(WCHAR));
-                GetShortPathNameW( file->TargetPath, value, size );
-            }
-            else
-            {
-                value = strdupW( file->TargetPath );
-                *sz = (lstrlenW(value)) * sizeof(WCHAR);
-            }
-        }
-    }
-
-    return value;
-}
-
-static LPWSTR deformat_environment(MSIPACKAGE* package, LPCWSTR key, 
-                                   DWORD* chunk)
-{
-    LPWSTR value = NULL;
-    DWORD sz;
-
-    sz  = GetEnvironmentVariableW(key,NULL,0);
-    if (sz > 0)
-    {
-        sz++;
-        value = msi_alloc(sz * sizeof(WCHAR));
-        GetEnvironmentVariableW(key,value,sz);
-        *chunk = (strlenW(value)) * sizeof(WCHAR);
-    }
-    else
-    {
-        WARN("Unknown environment variable %s\n", debugstr_w(key));
-        *chunk = 0;
-        value = NULL;
-    }
-    return value;
-}
-
- 
-static LPWSTR deformat_NULL(DWORD* chunk)
-{
-    LPWSTR value;
-
-    value = msi_alloc(sizeof(WCHAR)*2);
-    value[0] =  0;
-    *chunk = sizeof(WCHAR);
-    return value;
-}
-
-static LPWSTR deformat_escape(LPCWSTR key, DWORD* chunk)
-{
-    LPWSTR value;
-
-    value = msi_alloc(sizeof(WCHAR)*2);
-    value[0] =  key[0];
-    *chunk = sizeof(WCHAR);
-
-    return value;
-}
-
-
-static BOOL is_key_number(LPCWSTR key)
-{
-    INT index = 0;
-    if (key[0] == 0)
-        return FALSE;
-
-    while (isdigitW(key[index])) index++;
-    if (key[index] == 0)
-        return TRUE;
-    else
-        return FALSE;
-}
-
-static LPWSTR deformat_index(MSIRECORD* record, LPCWSTR key, DWORD* chunk )
-{
-    INT index;
-    LPWSTR value; 
-
-    index = atoiW(key);
-    TRACE("record index %i\n",index);
-    value = msi_dup_record_field(record,index);
-    if (value)
-        *chunk = strlenW(value) * sizeof(WCHAR);
-    else
-    {
-        value = NULL;
-        *chunk = 0;
-    }
-    return value;
-}
-
-static LPWSTR deformat_property(MSIPACKAGE* package, LPCWSTR key, DWORD* chunk)
-{
-    LPWSTR value;
-
-    if (!package)
-        return NULL;
-
-    value = msi_dup_property( package, key );
-
-    if (value)
-        *chunk = (strlenW(value)) * sizeof(WCHAR);
-
-    return value;
-}
-
-/*
- * Groups cannot be nested. They are just treated as from { to next } 
- */
-static BOOL find_next_group(LPCWSTR source, DWORD len_remaining,
-                                    LPWSTR *group, LPCWSTR *mark, 
-                                    LPCWSTR* mark2)
-{
-    int i;
-    BOOL found = FALSE;
-
-    *mark = scanW(source,'{',len_remaining);
-    if (!*mark)
-        return FALSE;
-
-    for (i = 1; (*mark - source) + i < len_remaining; i++)
-    {
-        if ((*mark)[i] == '}')
-        {
-            found = TRUE;
-            break;
-        }
-    }
-    if (! found)
-        return FALSE;
-
-    *mark2 = &(*mark)[i]; 
-
-    i = *mark2 - *mark;
-    *group = msi_alloc(i*sizeof(WCHAR));
-
-    i -= 1;
-    memcpy(*group,&(*mark)[1],i*sizeof(WCHAR));
-    (*group)[i] = 0;
-
-    TRACE("Found group %s\n",debugstr_w(*group));
     return TRUE;
 }
 
-
-static BOOL find_next_outermost_key(LPCWSTR source, DWORD len_remaining,
-                                    LPWSTR *key, LPCWSTR *mark, LPCWSTR* mark2, 
-                                    BOOL *nested)
+static BOOL format_is_alpha(WCHAR x)
 {
-    INT count = 0;
-    INT total_count = 0;
-    int i;
+    return (!format_is_number(x) && x != '\0' &&
+            x != '[' && x != ']' && x != '{' && x != '}');
+}
 
-    *nested = FALSE;
-    *mark = scanW(source,'[',len_remaining);
-    if (!*mark)
-        return FALSE;
+static BOOL format_is_literal(WCHAR x)
+{
+    return (format_is_alpha(x) || format_is_number(x));
+}
 
-    count = 1;
-    total_count = 1;
-    for (i = 1; (*mark - source) + i < len_remaining && count > 0; i++)
+static int format_lex(FORMAT *format, FORMSTR **out)
+{
+    int type, len = 1;
+    FORMSTR *str;
+    LPCWSTR data;
+    WCHAR ch;
+
+    *out = NULL;
+
+    if (!format->deformatted)
+        return FORMAT_NULL;
+
+    *out = msi_alloc_zero(sizeof(FORMSTR));
+    if (!*out)
+        return FORMAT_FAIL;
+
+    str = *out;
+    str->n = format->n;
+    str->len = 1;
+    data = get_formstr_data(format, str);
+
+    ch = data[0];
+    switch (ch)
     {
-        if ((*mark)[i] == '[' && (*mark)[i-1] != '\\')
+        case '{': type = FORMAT_LBRACE; break;
+        case '}': type = FORMAT_RBRACE; break;
+        case '[': type = FORMAT_LBRACK; break;
+        case ']': type = FORMAT_RBRACK; break;
+        case '~': type = FORMAT_PROPNULL; break;
+        case '\0': type = FORMAT_NULL; break;
+
+        default:
+            type = 0;
+    }
+
+    if (type)
+    {
+        str->type = type;
+        format->n++;
+        return type;
+    }
+
+    if (ch == '\\')
+    {
+        while (data[len] && data[len] != ']')
+            len++;
+
+        type = FORMAT_ESCAPE;
+    }
+    else if (format_is_alpha(ch))
+    {
+        while (format_is_literal(data[len]))
+            len++;
+
+        type = FORMAT_LITERAL;
+    }
+    else if (format_is_number(ch))
+    {
+        while (format_is_number(data[len]))
+            len++;
+
+        type = FORMAT_NUMBER;
+
+        if (data[len] != ']')
         {
-            count ++;
-            total_count ++;
-            *nested = TRUE;
+            while (format_is_literal(data[len]))
+                len++;
+
+            type = FORMAT_LITERAL;
         }
-        else if ((*mark)[i] == ']' && (*mark)[i-1] != '\\')
+    }
+    else
+    {
+        ERR("Got unknown character %c(%x)\n", ch, ch);
+        return FORMAT_ERROR;
+    }
+
+    format->n += len;
+    str->len = len;
+    str->type = type;
+
+    return type;
+}
+
+static FORMSTR *format_replace(FORMAT *format, BOOL propfound, BOOL nonprop,
+                               int oldsize, int type, LPWSTR replace)
+{
+    FORMSTR *ret;
+    LPWSTR str, ptr;
+    DWORD size = 0;
+    int n;
+
+    if (replace)
+    {
+        if (!*replace)
+            size = 1;
+        else
+            size = lstrlenW(replace);
+    }
+
+    size -= oldsize;
+    size = format->len + size + 1;
+
+    if (size <= 1)
+    {
+        msi_free(format->deformatted);
+        format->deformatted = NULL;
+        format->len = 0;
+        return NULL;
+    }
+
+    str = msi_alloc(size * sizeof(WCHAR));
+    if (!str)
+        return NULL;
+
+    str[0] = '\0';
+    memcpy(str, format->deformatted, format->n * sizeof(WCHAR));
+    n = format->n;
+
+    if (replace)
+    {
+        if (!*replace)
         {
-            count --;
+            str[n] = '\0';
+            n++;
         }
+        else
+        {
+            lstrcpyW(&str[n], replace);
+            n += lstrlenW(replace);
+        }
+    }
+
+    ptr = &format->deformatted[format->n + oldsize];
+    memcpy(&str[n], ptr, (lstrlenW(ptr) + 1) * sizeof(WCHAR));
+
+    msi_free(format->deformatted);
+    format->deformatted = str;
+    format->len = size - 1;
+
+    if (!replace)
+        return NULL;
+
+    ret = msi_alloc_zero(sizeof(FORMSTR));
+    if (!ret)
+        return NULL;
+
+    ret->len = lstrlenW(replace);
+    ret->type = type;
+    ret->n = format->n;
+    ret->propfound = propfound;
+    ret->nonprop = nonprop;
+
+    return ret;
+}
+
+static LPWSTR replace_stack_group(FORMAT *format, STACK *values,
+                                  BOOL *propfound, BOOL *nonprop,
+                                  int *oldsize, int *type)
+{
+    LPWSTR replaced = NULL;
+    FORMSTR *content;
+    FORMSTR *node;
+    int n;
+
+    *nonprop = FALSE;
+    *propfound = FALSE;
+
+    node = stack_pop(values);
+    n = node->n;
+    *oldsize = node->len;
+    msi_free(node);
+
+    while ((node = stack_pop(values)))
+    {
+        *oldsize += node->len;
+
+        if (node->nonprop)
+            *nonprop = TRUE;
+
+        if (node->propfound)
+            *propfound = TRUE;
+
+        msi_free(node);
+    }
+
+    content = msi_alloc_zero(sizeof(FORMSTR));
+    content->n = n;
+    content->len = *oldsize;
+    content->type = FORMAT_LITERAL;
+
+    if (!format->groupfailed && (*oldsize == 2 ||
+        (format->propfailed && !*nonprop)))
+    {
+        msi_free(content);
+        return NULL;
+    }
+    else if (format->deformatted[content->n + 1] == '{' &&
+             format->deformatted[content->n + content->len - 2] == '}')
+    {
+        format->groupfailed = FALSE;
+        content->len = 0;
+    }
+    else if (*propfound && !*nonprop &&
+             !format->groupfailed && format->groups == 0)
+    {
+        content->n++;
+        content->len -= 2;
+    }
+    else
+    {
+        if (format->groups != 0)
+            format->groupfailed = TRUE;
+
+        *nonprop = TRUE;
+    }
+
+    replaced = dup_formstr(format, content);
+    *type = content->type;
+    msi_free(content);
+
+    if (format->groups == 0)
+        format->propfailed = FALSE;
+
+    return replaced;
+}
+
+static LPWSTR replace_stack_prop(FORMAT *format, STACK *values,
+                                 BOOL *propfound, BOOL *nonprop,
+                                 int *oldsize, int *type)
+{
+    LPWSTR replaced = NULL;
+    FORMSTR *content;
+    FORMSTR *node;
+    int n;
+
+    *propfound = FALSE;
+    *nonprop = FALSE;
+
+    node = stack_pop(values);
+    n = node->n;
+    *oldsize = node->len;
+    *type = stack_peek(values)->type;
+    msi_free(node);
+
+    while ((node = stack_pop(values)))
+    {
+        *oldsize += node->len;
+
+        if (*type != FORMAT_ESCAPE &&
+            stack_peek(values) && node->type != *type)
+            *type = FORMAT_LITERAL;
+
+        msi_free(node);
+    }
+
+    content = msi_alloc_zero(sizeof(FORMSTR));
+    content->n = n + 1;
+    content->len = *oldsize - 2;
+    content->type = *type;
+
+    if (*type == FORMAT_NUMBER)
+    {
+        replaced = deformat_index(format, content);
+        if (replaced)
+            *propfound = TRUE;
+        else
+            format->propfailed = TRUE;
+
+        if (replaced)
+            *type = format_str_is_number(replaced) ?
+                FORMAT_NUMBER : FORMAT_LITERAL;
+    }
+    else if (format->package)
+    {
+        replaced = deformat_literal(format, content, propfound, nonprop, type);
+    }
+    else
+    {
+        *nonprop = TRUE;
+        content->n--;
+        content->len += 2;
+        replaced = dup_formstr(format, content);
+    }
+
+    msi_free(content);
+    return replaced;
+}
+
+static UINT replace_stack(FORMAT *format, STACK *stack, STACK *values)
+{
+    LPWSTR replaced = NULL;
+    FORMSTR *beg;
+    FORMSTR *top;
+    FORMSTR *node;
+    BOOL propfound = FALSE;
+    BOOL nonprop = FALSE;
+    BOOL group = FALSE;
+    int oldsize = 0;
+    int type, n;
+
+    node = stack_peek(values);
+    type = node->type;
+    n = node->n;
+
+    if (type == FORMAT_LBRACK)
+        replaced = replace_stack_prop(format, values, &propfound,
+                                      &nonprop, &oldsize, &type);
+    else if (type == FORMAT_LBRACE)
+    {
+        replaced = replace_stack_group(format, values, &propfound,
+                                       &nonprop, &oldsize, &type);
+        group = TRUE;
+    }
+
+    format->n = n;
+    beg = format_replace(format, propfound, nonprop, oldsize, type, replaced);
+    if (!beg)
+        return ERROR_SUCCESS;
+
+    msi_free(replaced);
+    format->n = beg->n + beg->len;
+
+    if (type == FORMAT_PROPNULL)
+        format->n++;
+
+    top = stack_peek(stack);
+    if (top)
+    {
+        type = top->type;
+
+        if ((type == FORMAT_LITERAL || type == FORMAT_NUMBER) &&
+            type == beg->type)
+        {
+            top->len += beg->len;
+
+            if (group)
+                top->nonprop = FALSE;
+
+            if (type == FORMAT_LITERAL)
+                top->nonprop = beg->nonprop;
+
+            if (beg->propfound)
+                top->propfound = TRUE;
+
+            msi_free(beg);
+            return ERROR_SUCCESS;
+        }
+    }
+
+    stack_push(stack, beg);
+    return ERROR_SUCCESS;
+}
+
+static BOOL verify_format(LPWSTR data)
+{
+    int count = 0;
+
+    while (*data)
+    {
+        if (*data == '[' && *(data - 1) != '\\')
+            count++;
+        else if (*data == ']')
+            count--;
+
+        data++;
     }
 
     if (count > 0)
         return FALSE;
 
-    *mark2 = &(*mark)[i-1]; 
-
-    i = *mark2 - *mark;
-    *key = msi_alloc(i*sizeof(WCHAR));
-    /* do not have the [] in the key */
-    i -= 1;
-    memcpy(*key,&(*mark)[1],i*sizeof(WCHAR));
-    (*key)[i] = 0;
-
-    TRACE("Found Key %s\n",debugstr_w(*key));
     return TRUE;
 }
 
-static LPWSTR deformat_group(MSIPACKAGE* package, LPWSTR group, DWORD len, 
-                      MSIRECORD* record, DWORD* size)
-{
-    LPWSTR value = NULL;
-    LPCWSTR mark, mark2;
-    LPWSTR key;
-    BOOL nested;
-    INT failcount;
-    static const WCHAR fmt[] = {'{','%','s','}',0};
-    UINT sz;
-
-    if (!group || group[0] == 0) 
-    {
-        *size = 0;
-        return NULL;
-    }
-    /* if no [] then group is returned as is */
-
-     if (!find_next_outermost_key(group, len, &key, &mark, &mark2, &nested))
-     {
-         *size = (len+2)*sizeof(WCHAR);
-         value = msi_alloc(*size);
-         sprintfW(value,fmt,group);
-         /* do not return size of the null at the end */
-         *size = (len+1)*sizeof(WCHAR);
-         return value;
-     }
-
-     msi_free(key);
-     failcount = 0;
-     sz = deformat_string_internal(package, group, &value, strlenW(group),
-                                     record, &failcount);
-     if (failcount==0)
-     {
-        *size = sz * sizeof(WCHAR);
-        return value;
-     }
-     else if (failcount < 0)
-     {
-         LPWSTR v2;
-
-         v2 = msi_alloc((sz+2)*sizeof(WCHAR));
-         v2[0] = '{';
-         memcpy(&v2[1],value,sz*sizeof(WCHAR));
-         v2[sz+1]='}';
-         msi_free(value);
-
-         *size = (sz+2)*sizeof(WCHAR);
-         return v2;
-     }
-     else
-     {
-         msi_free(value);
-         *size = 0;
-         return NULL;
-     }
-}
-
-
-/*
- * len is in WCHARs
- * return is also in WCHARs
- */
 static DWORD deformat_string_internal(MSIPACKAGE *package, LPCWSTR ptr, 
-                                     WCHAR** data, DWORD len, MSIRECORD* record,
-                                     INT* failcount)
+                                      WCHAR** data, DWORD *len,
+                                      MSIRECORD* record, INT* failcount)
 {
-    LPCWSTR mark = NULL;
-    LPCWSTR mark2 = NULL;
-    DWORD size=0;
-    DWORD chunk=0;
-    LPWSTR key;
-    LPWSTR value = NULL;
-    DWORD sz;
-    LPBYTE newdata = NULL;
-    const WCHAR* progress = NULL;
-    BOOL nested = FALSE;
+    FORMAT format;
+    FORMSTR *str = NULL;
+    STACK *stack, *temp;
+    FORMSTR *node;
+    int type;
 
-    if (ptr==NULL)
+    if (!ptr)
     {
-        TRACE("Deformatting NULL string\n");
         *data = NULL;
-        return 0;
+        *len = 0;
+        return ERROR_SUCCESS;
     }
 
-    TRACE("Starting with %s\n",debugstr_wn(ptr,len));
+    *data = strdupW(ptr);
+    *len = lstrlenW(ptr);
 
-    /* scan for special characters... fast exit */
-    if ((!scanW(ptr,'[',len) || (scanW(ptr,'[',len) && !scanW(ptr,']',len))) && 
-        (scanW(ptr,'{',len) && !scanW(ptr,'}',len)))
+    ZeroMemory(&format, sizeof(FORMAT));
+    format.package = package;
+    format.record = record;
+    format.deformatted = *data;
+    format.len = *len;
+
+    stack = create_stack();
+    temp = create_stack();
+
+    if (!verify_format(*data))
+        return ERROR_SUCCESS;
+
+    while ((type = format_lex(&format, &str)) != FORMAT_NULL)
     {
-        /* not formatted */
-        *data = msi_alloc((len*sizeof(WCHAR)));
-        memcpy(*data,ptr,len*sizeof(WCHAR));
-        TRACE("Returning %s\n",debugstr_wn(*data,len));
-        return len;
-    }
-  
-    progress = ptr;
-
-    while (progress - ptr < len)
-    {
-        /* seek out first group if existing */
-        if (find_next_group(progress, len - (progress - ptr), &key,
-                                &mark, &mark2))
+        if (type == FORMAT_LBRACK || type == FORMAT_LBRACE ||
+            type == FORMAT_LITERAL || type == FORMAT_NUMBER ||
+            type == FORMAT_ESCAPE || type == FORMAT_PROPNULL)
         {
-            value = deformat_group(package, key, strlenW(key)+1, record, 
-                            &chunk);
-            msi_free( key );
-            key = NULL;
-            nested = FALSE;
-        }
-        /* formatted string located */
-        else if (!find_next_outermost_key(progress, len - (progress - ptr), 
-                                &key, &mark, &mark2, &nested))
-        {
-            LPBYTE nd2;
-
-            TRACE("after value %s\n", debugstr_wn((LPWSTR)newdata,
-                                    size/sizeof(WCHAR)));
-            chunk = (len - (progress - ptr)) * sizeof(WCHAR);
-            TRACE("after chunk is %i + %i\n",size,chunk);
-            if (size)
-                nd2 = msi_realloc(newdata,(size+chunk));
-            else
-                nd2 = msi_alloc(chunk);
-
-            newdata = nd2;
-            memcpy(&newdata[size],progress,chunk);
-            size+=chunk;
-            break;
-        }
-
-        if (mark != progress)
-        {
-            LPBYTE tgt;
-            DWORD old_size = size;
-            INT cnt = (mark - progress);
-            TRACE("%i  (%i) characters before marker\n",cnt,(mark-progress));
-            size += cnt * sizeof(WCHAR);
-            if (!old_size)
-                tgt = msi_alloc(size);
-            else
-                tgt = msi_realloc(newdata,size);
-            newdata  = tgt;
-            memcpy(&newdata[old_size],progress,(cnt * sizeof(WCHAR)));  
-        }
-
-        progress = mark;
-
-        if (nested)
-        {
-            TRACE("Nested key... %s\n",debugstr_w(key));
-            deformat_string_internal(package, key, &value, strlenW(key)+1,
-                                     record, failcount);
-
-            msi_free(key);
-            key = value;
-        }
-
-        TRACE("Current %s .. %s\n",debugstr_wn((LPWSTR)newdata, 
-                                size/sizeof(WCHAR)),debugstr_w(key));
-
-        if (!package)
-        {
-            /* only deformat number indexs */
-            if (key && is_key_number(key))
+            if (type == FORMAT_LBRACE)
             {
-                value = deformat_index(record,key,&chunk);  
-                if (!chunk && failcount && *failcount >= 0)
-                    (*failcount)++;
+                format.propfailed = FALSE;
+                format.groups++;
             }
-            else
+            else if (type == FORMAT_ESCAPE &&
+                     !stack_find(stack, FORMAT_LBRACK))
             {
-                if (failcount)
-                    *failcount = -1;
-                if(key)
+                format.n -= str->len - 1;
+                str->len = 1;
+            }
+
+            stack_push(stack, str);
+        }
+        else if (type == FORMAT_RBRACK || type == FORMAT_RBRACE)
+        {
+            if (type == FORMAT_RBRACE)
+                format.groups--;
+
+            stack_push(stack, str);
+
+            if (stack_find(stack, left_type(type)))
+            {
+                do
                 {
-                    DWORD keylen = strlenW(key);
-                    chunk = (keylen + 2)*sizeof(WCHAR);
-                    value = msi_alloc(chunk);
-                    value[0] = '[';
-                    memcpy(&value[1],key,keylen*sizeof(WCHAR));
-                    value[1+keylen] = ']';
-                }
+                    node = stack_pop(stack);
+                    stack_push(temp, node);
+                } while (node->type != left_type(type));
+
+                replace_stack(&format, stack, temp);
             }
         }
-        else
-        {
-            sz = 0;
-            if (key) switch (key[0])
-            {
-                case '~':
-                    value = deformat_NULL(&chunk);
-                break;
-                case '$':
-                    value = deformat_component(package,&key[1],&chunk);
-                break;
-                case '#':
-                    value = deformat_file(package,&key[1], &chunk, FALSE);
-                break;
-                case '!': /* should be short path */
-                    value = deformat_file(package,&key[1], &chunk, TRUE);
-                break;
-                case '\\':
-                    value = deformat_escape(&key[1],&chunk);
-                break;
-                case '%':
-                    value = deformat_environment(package,&key[1],&chunk);
-                break;
-                default:
-                    /* index keys cannot be nested */
-                    if (is_key_number(key))
-                        if (!nested)
-                            value = deformat_index(record,key,&chunk);
-                        else
-                        {
-                            static const WCHAR fmt[] = {'[','%','s',']',0};
-                            value = msi_alloc(10);
-                            sprintfW(value,fmt,key);
-                            chunk = strlenW(value)*sizeof(WCHAR);
-                        }
-                    else
-                        value = deformat_property(package,key,&chunk);
-                break;      
-            }
-        }
-
-        msi_free(key);
-
-        if (value!=NULL)
-        {
-            LPBYTE nd2;
-            TRACE("value %s, chunk %i size %i\n",debugstr_w(value),
-                    chunk, size);
-            if (size)
-                nd2= msi_realloc(newdata,(size + chunk));
-            else
-                nd2= msi_alloc(chunk);
-            newdata = nd2;
-            memcpy(&newdata[size],value,chunk);
-            size+=chunk;   
-            msi_free(value);
-        }
-        else if (failcount && *failcount >=0 )
-            (*failcount)++;
-
-        progress = mark2+1;
     }
 
-    TRACE("after everything %s\n",debugstr_wn((LPWSTR)newdata, 
-                            size/sizeof(WCHAR)));
+    *data = format.deformatted;
+    *len = format.len;
 
-    *data = (LPWSTR)newdata;
-    return size / sizeof(WCHAR);
+    msi_free(str);
+    free_stack(stack);
+    free_stack(temp);
+
+    return ERROR_SUCCESS;
 }
-
 
 UINT MSI_FormatRecordW( MSIPACKAGE* package, MSIRECORD* record, LPWSTR buffer,
                         LPDWORD size )
@@ -626,9 +876,7 @@ UINT MSI_FormatRecordW( MSIPACKAGE* package, MSIRECORD* record, LPWSTR buffer,
 
     TRACE("(%s)\n",debugstr_w(rec));
 
-    len = deformat_string_internal(package,rec,&deformated,
-                                   rec ? strlenW(rec) : 0, record, NULL);
-
+    deformat_string_internal(package, rec, &deformated, &len, record, NULL);
     if (buffer)
     {
         if (*size>len)
@@ -770,8 +1018,8 @@ UINT WINAPI MsiFormatRecordA( MSIHANDLE hInstall, MSIHANDLE hRecord,
         goto done;
 
     save = len + 1;
-    len = WideCharToMultiByte(CP_ACP, 0, value, -1, NULL, 0, NULL, NULL);
-    WideCharToMultiByte(CP_ACP, 0, value, -1, szResult, *sz, NULL, NULL);
+    len = WideCharToMultiByte(CP_ACP, 0, value, len + 1, NULL, 0, NULL, NULL);
+    WideCharToMultiByte(CP_ACP, 0, value, len, szResult, *sz, NULL, NULL);
 
     if (szResult && len > *sz)
     {

@@ -478,21 +478,17 @@ static UINT get_user_sid(LPWSTR *usersid)
         return ERROR_FUNCTION_FAILED;
 
     size = sizeof(buf);
-    if (!GetTokenInformation(token, TokenUser, (void *)buf, size, &size))
-    {
+    if (!GetTokenInformation(token, TokenUser, (void *)buf, size, &size)) {
         CloseHandle(token);
         return ERROR_FUNCTION_FAILED;
     }
 
     user = (PTOKEN_USER)buf;
-    if (!ConvertSidToStringSidW(user->User.Sid, usersid))
-    {
+    if (!ConvertSidToStringSidW(user->User.Sid, usersid)) {
         CloseHandle(token);
         return ERROR_FUNCTION_FAILED;
     }
-
     CloseHandle(token);
-
     return ERROR_SUCCESS;
 }
 
@@ -666,7 +662,7 @@ UINT MSIREG_OpenUserDataFeaturesKey(LPCWSTR szProduct, HKEY *key, BOOL create)
     else
         rc = RegOpenKeyW(HKEY_LOCAL_MACHINE, keypath, key);
 
-    msi_free(usersid);
+    LocalFree(usersid);
     return rc;
 }
 
@@ -743,7 +739,7 @@ UINT MSIREG_OpenUserDataComponentKey(LPCWSTR szComponent, HKEY *key, BOOL create
     else
         rc = RegOpenKeyW(HKEY_LOCAL_MACHINE, keypath, key);
 
-    msi_free(usersid);
+    LocalFree(usersid);
     return rc;
 }
 
@@ -768,7 +764,7 @@ UINT MSIREG_DeleteUserDataComponentKey(LPCWSTR szComponent)
 
     sprintfW(keypath, szUserDataComp_fmt, usersid, comp);
 
-    msi_free(usersid);
+    LocalFree(usersid);
     return RegDeleteTreeW(HKEY_LOCAL_MACHINE, keypath);
 }
 
@@ -798,7 +794,7 @@ UINT MSIREG_OpenUserDataProductKey(LPCWSTR szProduct, HKEY *key, BOOL create)
     else
         rc = RegOpenKeyW(HKEY_LOCAL_MACHINE, keypath, key);
 
-    msi_free(usersid);
+    LocalFree(usersid);
     return rc;
 }
 
@@ -828,7 +824,7 @@ UINT MSIREG_OpenInstallPropertiesKey(LPCWSTR szProduct, HKEY *key, BOOL create)
     else
         rc = RegOpenKeyW(HKEY_LOCAL_MACHINE, keypath, key);
 
-    msi_free(usersid);
+    LocalFree(usersid);
     return rc;
 }
 
@@ -853,7 +849,7 @@ UINT MSIREG_DeleteUserDataProductKey(LPCWSTR szProduct)
 
     sprintfW(keypath, szUserDataProd_fmt, usersid, squished_pc);
 
-    msi_free(usersid);
+    LocalFree(usersid);
     return RegDeleteTreeW(HKEY_LOCAL_MACHINE, keypath);
 }
 
@@ -1043,7 +1039,7 @@ UINT MSIREG_OpenLocalManagedProductKey(LPCWSTR szProductCode, HKEY *key, BOOL cr
     }
 
     sprintfW(keypath, szInstaller_LocalManagedProd_fmt, usersid, squished_pc);
-    msi_free(usersid);
+    LocalFree(usersid);
 
     if (create)
         return RegCreateKeyW(HKEY_LOCAL_MACHINE, keypath, key);

@@ -408,6 +408,10 @@ static LPWSTR msi_build_createsql_columns(LPWSTR *columns_data, LPWSTR *types, D
                 else
                     type = type_long;
                 break;
+            default:
+                ERR("Unknown type: %c\n", types[i][0]);
+                msi_free(columns);
+                return NULL;
         }
 
         sprintfW(expanded, column_fmt, columns_data[i], type, size, extra, comma);

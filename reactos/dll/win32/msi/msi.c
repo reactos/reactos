@@ -1519,6 +1519,10 @@ UINT WINAPI MsiGetFileVersionA(LPCSTR szFilePath, LPSTR lpVersionBuf,
     LPWSTR szwFilePath = NULL, lpwVersionBuff = NULL, lpwLangBuff = NULL;
     UINT ret = ERROR_OUTOFMEMORY;
 
+    if ((lpVersionBuf && !pcchVersionBuf) ||
+        (lpLangBuf && !pcchLangBuf))
+        return ERROR_INVALID_PARAMETER;
+
     if( szFilePath )
     {
         szwFilePath = strdupAtoW( szFilePath );
@@ -1543,12 +1547,12 @@ UINT WINAPI MsiGetFileVersionA(LPCSTR szFilePath, LPSTR lpVersionBuf,
     ret = MsiGetFileVersionW(szwFilePath, lpwVersionBuff, pcchVersionBuf,
                              lpwLangBuff, pcchLangBuf);
 
-    if( lpwVersionBuff )
+    if( (ret == ERROR_SUCCESS || ret == ERROR_MORE_DATA) && lpwVersionBuff )
         WideCharToMultiByte(CP_ACP, 0, lpwVersionBuff, -1,
-                            lpVersionBuf, *pcchVersionBuf, NULL, NULL);
-    if( lpwLangBuff )
+                            lpVersionBuf, *pcchVersionBuf + 1, NULL, NULL);
+    if( (ret == ERROR_SUCCESS || ret == ERROR_MORE_DATA) && lpwLangBuff )
         WideCharToMultiByte(CP_ACP, 0, lpwLangBuff, -1,
-                            lpLangBuf, *pcchLangBuf, NULL, NULL);
+                            lpLangBuf, *pcchLangBuf + 1, NULL, NULL);
 
 end:
     msi_free(szwFilePath);
@@ -1569,7 +1573,7 @@ UINT WINAPI MsiGetFileVersionW(LPCWSTR szFilePath, LPWSTR lpVersionBuf,
         '%','d','.','%','d','.','%','d','.','%','d',0};
     static const WCHAR szLangFormat[] = {'%','d',0};
     UINT ret = 0;
-    DWORD dwVerLen;
+    DWORD dwVerLen, gle;
     LPVOID lpVer = NULL;
     VS_FIXEDFILEINFO *ffi;
     UINT puLen;
@@ -1579,9 +1583,21 @@ UINT WINAPI MsiGetFileVersionW(LPCWSTR szFilePath, LPWSTR lpVersionBuf,
           lpVersionBuf, pcchVersionBuf?*pcchVersionBuf:0,
           lpLangBuf, pcchLangBuf?*pcchLangBuf:0);
 
+    if ((lpVersionBuf && !pcchVersionBuf) ||
+        (lpLangBuf && !pcchLangBuf))
+        return ERROR_INVALID_PARAMETER;
+
     dwVerLen = GetFileVersionInfoSizeW(szFilePath, NULL);
     if( !dwVerLen )
-        return GetLastError();
+    {
+        gle = GetLastError();
+        if (gle == ERROR_BAD_PATHNAME)
+            return ERROR_FILE_NOT_FOUND;
+        else if (gle == ERROR_RESOURCE_DATA_NOT_FOUND)
+            return ERROR_FILE_INVALID;
+
+        return gle;
+    }
 
     lpVer = msi_alloc(dwVerLen);
     if( !lpVer )
@@ -1595,7 +1611,8 @@ UINT WINAPI MsiGetFileVersionW(LPCWSTR szFilePath, LPWSTR lpVersionBuf,
         ret = GetLastError();
         goto end;
     }
-    if( lpVersionBuf && pcchVersionBuf && *pcchVersionBuf )
+
+    if (pcchVersionBuf)
     {
         if( VerQueryValueW(lpVer, szVersionResource, (LPVOID*)&ffi, &puLen) &&
             (puLen > 0) )
@@ -1603,24 +1620,32 @@ UINT WINAPI MsiGetFileVersionW(LPCWSTR szFilePath, LPWSTR lpVersionBuf,
             wsprintfW(tmp, szVersionFormat,
                   HIWORD(ffi->dwFileVersionMS), LOWORD(ffi->dwFileVersionMS),
                   HIWORD(ffi->dwFileVersionLS), LOWORD(ffi->dwFileVersionLS));
-            lstrcpynW(lpVersionBuf, tmp, *pcchVersionBuf);
-            *pcchVersionBuf = lstrlenW(lpVersionBuf);
+            if (lpVersionBuf) lstrcpynW(lpVersionBuf, tmp, *pcchVersionBuf);
+
+            if (lstrlenW(tmp) >= *pcchVersionBuf)
+                ret = ERROR_MORE_DATA;
+
+            *pcchVersionBuf = lstrlenW(tmp);
         }
         else
         {
-            *lpVersionBuf = 0;
+            if (lpVersionBuf) *lpVersionBuf = 0;
             *pcchVersionBuf = 0;
         }
     }
 
-    if( lpLangBuf && pcchLangBuf && *pcchLangBuf )
+    if (pcchLangBuf)
     {
         DWORD lang = GetUserDefaultLangID();
 
         FIXME("Retrieve language from file\n");
         wsprintfW(tmp, szLangFormat, lang);
-        lstrcpynW(lpLangBuf, tmp, *pcchLangBuf);
-        *pcchLangBuf = lstrlenW(lpLangBuf);
+        if (lpLangBuf) lstrcpynW(lpLangBuf, tmp, *pcchLangBuf);
+
+        if (lstrlenW(tmp) >= *pcchLangBuf)
+            ret = ERROR_MORE_DATA;
+
+        *pcchLangBuf = lstrlenW(tmp);
     }
 
 end:

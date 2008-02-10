@@ -901,12 +901,10 @@ static UINT ITERATE_DuplicateFiles(MSIRECORD *row, LPVOID param)
     }
 
     dest = build_directory_name(2, dest_path, dest_name);
-    create_full_pathW(dest);
+    create_full_pathW(dest_path);
 
     TRACE("Duplicating file %s to %s\n",debugstr_w(file->TargetPath),
                     debugstr_w(dest)); 
-
-    CreateDirectoryW(dest_path, NULL);
 
     if (strcmpW(file->TargetPath,dest))
         rc = !CopyFileW(file->TargetPath,dest,TRUE);

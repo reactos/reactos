@@ -2240,6 +2240,7 @@ static LPSTR parse_value(MSIPACKAGE *package, LPCWSTR value, DWORD *type,
                          DWORD *size)
 {
     LPSTR data = NULL;
+
     if (value[0]=='#' && value[1]!='#' && value[1]!='%')
     {
         if (value[1]=='x')
@@ -2321,6 +2322,7 @@ static LPSTR parse_value(MSIPACKAGE *package, LPCWSTR value, DWORD *type,
     {
         static const WCHAR szMulti[] = {'[','~',']',0};
         LPCWSTR ptr;
+        LPWSTR newdata;
         *type=REG_SZ;
 
         if (value[0]=='#')
@@ -2339,7 +2341,29 @@ static LPSTR parse_value(MSIPACKAGE *package, LPCWSTR value, DWORD *type,
         if (strstrW(value,szMulti))
             *type = REG_MULTI_SZ;
 
+        /* remove initial delimiter */
+        if (!strncmpW(value, szMulti, 3))
+            ptr = value + 3;
+
         *size = deformat_string(package, ptr,(LPWSTR*)&data);
+
+        /* add double NULL terminator */
+        if (*type == REG_MULTI_SZ)
+        {
+            *size += sizeof(WCHAR);
+            newdata = msi_alloc(*size);
+            if (!newdata)
+            {
+                msi_free(data);
+                return NULL;
+            }
+
+            memcpy(newdata, data, *size - 1);
+            newdata[*size] = '\0';
+
+            msi_free(data);
+            data = (LPSTR)newdata;
+        }
     }
     return data;
 }
