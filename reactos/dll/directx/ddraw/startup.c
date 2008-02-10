@@ -9,7 +9,6 @@
  */
 
 #include "rosdraw.h"
-#include "ddrawgdi.h"
 
 DDRAWI_DIRECTDRAW_GBL ddgbl;
 DDRAWI_DDRAWSURFACE_GBL ddSurfGbl;

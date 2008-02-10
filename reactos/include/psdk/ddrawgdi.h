@@ -19,7 +19,6 @@
 
 #ifndef _DDRAWGDI_
 #define _DDRAWGDI_
-#include <d3dhal.h>
 
 /* Define the real export names */
 #define DdCreateDirectDrawObject            GdiEntry1
@@ -39,6 +38,15 @@
 #define DdSetGammaRamp                      GdiEntry15
 #define DdSwapTextureHandles                GdiEntry16
 
+#ifndef D3DHAL_CALLBACKS_DEFINED
+typedef struct _D3DHAL_CALLBACKS FAR *LPD3DHAL_CALLBACKS;
+#define D3DHAL_CALLBACKS_DEFINED
+#endif
+
+#ifndef D3DHAL_GLOBALDRIVERDATA_DEFINED
+typedef struct _D3DHAL_GLOBALDRIVERDATA FAR *LPD3DHAL_GLOBALDRIVERDATA;
+#define D3DHAL_GLOBALDRIVERDATA_DEFINED
+#endif
 
 BOOL
 STDCALL
