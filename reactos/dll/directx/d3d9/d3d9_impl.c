@@ -171,7 +171,7 @@ HRESULT WINAPI IDirect3D9Impl_GetAdapterIdentifier(LPDIRECT3D9 iface, UINT Adapt
 * The pixel format to search for
 *
 * @return HRESULT
-* If the method is successfull it returns the number of display modes with the specified Format.
+* If the method is successful it returns the number of display modes with the specified Format.
 * If Adapter is out of range, the return value will be 0.
 *
 */
