@@ -29,6 +29,9 @@ import "guiddef.h";
 
 interface IWinTypes
 {
+cpp_quote("#ifndef __wtypes_h__ ") /* fix compatible issue with VC and dxsdk use same name as ms __wtypes_h__*/
+cpp_quote("#define __wtypes_h__ ") /* fix compatible issue with VC and dxsdk use same name as ms __wtypes_h__*/
+
 
 /******************** BASIC WIN32 TYPES ********************/
 cpp_quote("#if 0 /* winnt.h */") /* don't redefine these */
@@ -812,4 +815,5 @@ typedef union switch(DWORD tyspec)
         } ByObjectId;
 } uCLSSPEC;
 
+cpp_quote("#endif") /* fix compatible issue with VC and dxsdk use same name as ms __wtypes_h__*/
 } /* interface IWinTypes */
