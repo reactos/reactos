@@ -1831,15 +1831,19 @@ static LRESULT CALLBACK window_proc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM l
     }
 }
 
-static void test_message_reentrancy(void)
+static void register_test_window(void)
 {
     WNDCLASS wndclass;
-    MSG msg;
 
     memset(&wndclass, 0, sizeof(wndclass));
     wndclass.lpfnWndProc = window_proc;
     wndclass.lpszClassName = "WineCOMTest";
     RegisterClass(&wndclass);
+}
+
+static void test_message_reentrancy(void)
+{
+    MSG msg;
 
     hwnd_app = CreateWindow("WineCOMTest", NULL, 0, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, NULL, NULL, NULL, 0);
     ok(hwnd_app != NULL, "Window creation failed\n");
@@ -1852,6 +1856,7 @@ static void test_message_reentrancy(void)
         TranslateMessage(&msg);
         DispatchMessage(&msg);
     }
+    DestroyWindow(hwnd_app);
 }
 
 static HRESULT WINAPI TestMsg_IClassFactory_CreateInstance(
@@ -1917,6 +1922,7 @@ static void test_call_from_message(void)
         TranslateMessage(&msg);
         DispatchMessage(&msg);
     }
+    DestroyWindow(hwnd_app);
 }
 
 static void test_WM_QUIT_handling(void)
@@ -2569,7 +2575,7 @@ static void test_local_server(void)
     quit_event = CreateEvent(NULL, FALSE, FALSE, "Wine COM Test Quit Event");
     SetEvent(quit_event);
 
-    WaitForSingleObject(process, INFINITE);
+    winetest_wait_child_process( process );
     CloseHandle(quit_event);
     CloseHandle(process);
 }
@@ -2873,7 +2879,6 @@ static void test_channel_hook(void)
 
 START_TEST(marshal)
 {
-    WNDCLASS wndclass;
     HMODULE hOle32 = GetModuleHandle("ole32");
     int argc;
     char **argv;
@@ -2890,11 +2895,7 @@ START_TEST(marshal)
         return;
     }
 
-    /* register a window class used in several tests */
-    memset(&wndclass, 0, sizeof(wndclass));
-    wndclass.lpfnWndProc = window_proc;
-    wndclass.lpszClassName = "WineCOMTest";
-    RegisterClass(&wndclass);
+    register_test_window();
 
     test_cocreateinstance_proxy();
 

@@ -1311,7 +1311,7 @@ static void test_class_moniker(void)
     ok(hr == MK_E_UNAVAILABLE, "IMoniker_GetTimeOfLastChange should return MK_E_UNAVAILABLE, not 0x%08x\n", hr);
 
     hr = IMoniker_BindToObject(moniker, bindctx, NULL, &IID_IUnknown, (void **)&unknown);
-    ok_ole_success(hr, IMoniker_BindToStorage);
+    ok_ole_success(hr, IMoniker_BindToObject);
     IUnknown_Release(unknown);
 
     hr = IMoniker_BindToStorage(moniker, bindctx, NULL, &IID_IUnknown, (void **)&unknown);
@@ -1589,6 +1589,113 @@ static void test_generic_composite_moniker(void)
     IMoniker_Release(moniker);
 }
 
+static void test_pointer_moniker(void)
+{
+    HRESULT hr;
+    IMoniker *moniker;
+    DWORD moniker_type;
+    DWORD hash;
+    IBindCtx *bindctx;
+    FILETIME filetime;
+    IMoniker *inverse;
+    IUnknown *unknown;
+    IStream *stream;
+    IROTData *rotdata;
+    LPOLESTR display_name;
+
+    cLocks = 0;
+
+    hr = CreatePointerMoniker((IUnknown *)&Test_ClassFactory, NULL);
+    ok(hr == E_INVALIDARG, "CreatePointerMoniker(x, NULL) should have returned E_INVALIDARG instead of 0x%08x\n", hr);
+
+    hr = CreatePointerMoniker((IUnknown *)&Test_ClassFactory, &moniker);
+    ok_ole_success(hr, CreatePointerMoniker);
+    if (!moniker) return;
+
+    ok_more_than_one_lock();
+
+    /* Display Name */
+
+    hr = CreateBindCtx(0, &bindctx);
+    ok_ole_success(hr, CreateBindCtx);
+
+    hr = IMoniker_GetDisplayName(moniker, bindctx, NULL, &display_name);
+    ok(hr == E_NOTIMPL, "IMoniker_GetDisplayName should have returned E_NOTIMPL instead of 0x%08x\n", hr);
+
+    IBindCtx_Release(bindctx);
+
+    hr = IMoniker_IsDirty(moniker);
+    ok(hr == S_FALSE, "IMoniker_IsDirty should return S_FALSE, not 0x%08x\n", hr);
+
+    /* IROTData::GetComparisonData test */
+
+    hr = IMoniker_QueryInterface(moniker, &IID_IROTData, (void **)&rotdata);
+    ok(hr == E_NOINTERFACE, "IMoniker_QueryInterface(IID_IROTData) should have returned E_NOINTERFACE instead of 0x%08x\n", hr);
+
+    /* Saving */
+
+    hr = CreateStreamOnHGlobal(NULL, TRUE, &stream);
+    ok_ole_success(hr, CreateStreamOnHGlobal);
+
+    hr = IMoniker_Save(moniker, stream, TRUE);
+    ok(hr == E_NOTIMPL, "IMoniker_Save should have returned E_NOTIMPL instead of 0x%08x\n", hr);
+
+    IStream_Release(stream);
+
+    /* Hashing */
+    hr = IMoniker_Hash(moniker, &hash);
+    ok_ole_success(hr, IMoniker_Hash);
+    ok(hash == (DWORD)&Test_ClassFactory,
+        "Hash value should have been 0x%08x, instead of 0x%08x\n",
+        (DWORD)&Test_ClassFactory, hash);
+
+    /* IsSystemMoniker test */
+    hr = IMoniker_IsSystemMoniker(moniker, &moniker_type);
+    ok_ole_success(hr, IMoniker_IsSystemMoniker);
+    ok(moniker_type == MKSYS_POINTERMONIKER,
+        "dwMkSys != MKSYS_POINTERMONIKER, instead was 0x%08x\n",
+        moniker_type);
+
+    hr = IMoniker_Inverse(moniker, &inverse);
+    ok_ole_success(hr, IMoniker_Inverse);
+    IMoniker_Release(inverse);
+
+    hr = CreateBindCtx(0, &bindctx);
+    ok_ole_success(hr, CreateBindCtx);
+
+    /* IsRunning test */
+    hr = IMoniker_IsRunning(moniker, bindctx, NULL, NULL);
+    ok(hr == S_OK, "IMoniker_IsRunning should return S_OK, not 0x%08x\n", hr);
+
+    hr = IMoniker_GetTimeOfLastChange(moniker, bindctx, NULL, &filetime);
+    ok(hr == E_NOTIMPL, "IMoniker_GetTimeOfLastChange should return E_NOTIMPL, not 0x%08x\n", hr);
+
+    hr = IMoniker_BindToObject(moniker, bindctx, NULL, &IID_IUnknown, (void **)&unknown);
+    ok_ole_success(hr, IMoniker_BindToObject);
+    IUnknown_Release(unknown);
+
+    hr = IMoniker_BindToStorage(moniker, bindctx, NULL, &IID_IUnknown, (void **)&unknown);
+    ok_ole_success(hr, IMoniker_BindToStorage);
+    IUnknown_Release(unknown);
+
+    IMoniker_Release(moniker);
+
+    ok_no_locks();
+
+    hr = CreatePointerMoniker(NULL, &moniker);
+    ok_ole_success(hr, CreatePointerMoniker);
+
+    hr = IMoniker_BindToObject(moniker, bindctx, NULL, &IID_IUnknown, (void **)&unknown);
+    ok(hr == E_UNEXPECTED, "IMoniker_BindToObject should have returned E_UNEXPECTED instead of 0x%08x\n", hr);
+
+    hr = IMoniker_BindToStorage(moniker, bindctx, NULL, &IID_IUnknown, (void **)&unknown);
+    ok(hr == E_UNEXPECTED, "IMoniker_BindToStorage should have returned E_UNEXPECTED instead of 0x%08x\n", hr);
+
+    IBindCtx_Release(bindctx);
+
+    IMoniker_Release(moniker);
+}
+
 static void test_bind_context(void)
 {
     HRESULT hr;
@@ -1700,6 +1807,7 @@ START_TEST(moniker)
     test_item_moniker();
     test_anti_moniker();
     test_generic_composite_moniker();
+    test_pointer_moniker();
 
     /* FIXME: test moniker creation funcs and parsing other moniker formats */
 
