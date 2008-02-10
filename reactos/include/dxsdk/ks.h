@@ -511,7 +511,7 @@ DEFINE_GUIDSTRUCT("9F564180-704C-11D0-A5D6-28DB04C10000", KSDEGRADESETID_Standar
         KSEVENTS_ERESOURCE
     } KSEVENTS_LOCKTYPE;
 
-    #if !defined(__wtypes_h__)
+    #if !defined(__WIDL_WTYPES_H)
         enum VARENUM
         {
             VT_EMPTY = 0,
@@ -562,6 +562,7 @@ DEFINE_GUIDSTRUCT("9F564180-704C-11D0-A5D6-28DB04C10000", KSDEGRADESETID_Standar
             VT_ILLEGALMASKED = 0xfff,
             VT_TYPEMASK = 0xfff
         };
+        #endif
     #endif
     typedef struct _KSDEVICE KSDEVICE, *PKSDEVICE;
     typedef PVOID KSDEVICE_HEADER, KSOBJECT_HEADER;
@@ -2203,7 +2204,11 @@ typedef struct
         #if !defined(_WIN64)
             PVOID Alignment;
         #endif
-    } KSAUTOMATION_TABLE, *PKSAUTOMATION_TABLE;
+    };
+
+    typedef struct KSAUTOMATION_TABLE_ KSAUTOMATION_TABLE;
+    typedef struct KSAUTOMATION_TABLE_ *PKSAUTOMATION_TABLE;
+
     #define DEFINE_KSAUTOMATION_TABLE(table)        const KSAUTOMATION_TABLE table =
 
     struct _KSDEVICE_DISPATCH
@@ -3489,25 +3494,25 @@ extern "C" {
 
     #define KsDiscard(Object,Pointer)  KsRemoveItemFromObjectBag((Object)->Bag, (PVOID)(Pointer), TRUE)
 
-    void _inline
+    void __inline
     KsFilterAddEvent(IN PKSFILTER Filter, IN PKSEVENT_ENTRY EventEntry)
     {
         KsAddEvent(Filter,EventEntry);
     }
 
-    void _inline KsPinAddEvent(IN PKSPIN Pin, IN PKSEVENT_ENTRY EventEntry)
+    void __inline KsPinAddEvent(IN PKSPIN Pin, IN PKSEVENT_ENTRY EventEntry)
     {
         KsAddEvent(Pin,EventEntry);
     }
 
-    void _inline KsFilterGenerateEvents(IN PKSFILTER Filter, IN const GUID* EventSet OPTIONAL,
+    void __inline KsFilterGenerateEvents(IN PKSFILTER Filter, IN const GUID* EventSet OPTIONAL,
                                         IN ULONG EventId, IN ULONG DataSize, IN PVOID Data OPTIONAL,
                                         IN PFNKSGENERATEEVENTCALLBACK CallBack OPTIONAL, IN PVOID CallBackContext OPTIONAL)
     {
         KsGenerateEvents(Filter, EventSet, EventId, DataSize, Data, CallBack, CallBackContext);
     }
 
-    void _inline KsPinGenerateEvents(IN PKSPIN Pin, IN const GUID* EventSet OPTIONAL, IN ULONG EventId, IN ULONG DataSize,
+    void __inline KsPinGenerateEvents(IN PKSPIN Pin, IN const GUID* EventSet OPTIONAL, IN ULONG EventId, IN ULONG DataSize,
                                      IN PVOID Data OPTIONAL, IN PFNKSGENERATEEVENTCALLBACK CallBack OPTIONAL,IN PVOID CallBackContext OPTIONAL)
     {
         KsGenerateEvents(Pin, EventSet, EventId, DataSize, Data, CallBack, CallBackContext);
@@ -3589,7 +3594,11 @@ extern "C" {
         KsReleaseControl((PVOID) Pin);
     }
 
-    #if defined(_UNKNOWN_H_) || defined(__IUnknown_INTERFACE_DEFINED__)
+    #if defined(_UNKNOWN_H_) || defined(__IUnknown_FWD_DEFINED__)
+
+        #ifndef PUNKNOWN 
+            typedef IUnknown *PUNKNOWN;
+        #endif
 
         KSDDKAPI NTSTATUS NTAPI
         KsPinGetReferenceClockInterface(IN PKSPIN Pin,
