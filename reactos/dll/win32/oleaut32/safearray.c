@@ -805,7 +805,7 @@ HRESULT WINAPI SafeArrayUnlock(SAFEARRAY *psa)
   if (!psa)
     return E_INVALIDARG;
 
-  if ((LONG)InterlockedDecrement( (LONG*) &psa->cLocks) < 0)
+  if (InterlockedDecrement( (LONG*) &psa->cLocks) < 0)
   {
     WARN("Unlocked but no lock held!\n");
     InterlockedIncrement( (LONG*) &psa->cLocks);

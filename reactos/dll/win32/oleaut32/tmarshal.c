@@ -1468,6 +1468,7 @@ xCall(LPVOID retptr, int method, TMProxyImpl *tpinfo /*, args */)
     hres = remoteresult;
 
 exit:
+    IRpcChannelBuffer_FreeBuffer(chanbuf,&msg);
     for (i = 0; i < nrofnames; i++)
         SysFreeString(names[i]);
     HeapFree(GetProcessHeap(),0,buf.base);

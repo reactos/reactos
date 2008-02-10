@@ -2587,7 +2587,7 @@ static ITypeLib2* ITypeLib2_Constructor_MSFT(LPVOID pLib, DWORD dwTLBLength)
         ITypeInfoImpl **ppTI = &(pTypeLibImpl->pTypeInfo);
         int i;
 
-        for(i = 0; i<(int)tlbHeader.nrtypeinfos; i++)
+        for(i = 0; i < tlbHeader.nrtypeinfos; i++)
         {
             *ppTI = MSFT_DoTypeInfo(&cx, i, pTypeLibImpl);
 
@@ -6249,7 +6249,7 @@ static HRESULT WINAPI ITypeInfo_fnGetRefTypeInfo(
                 if(ref_type->pImpTLInfo->pImpTypeLib) {
 		    TRACE("typeinfo in imported typelib that is already loaded\n");
                     pTLib = (ITypeLib*)ref_type->pImpTLInfo->pImpTypeLib;
-		    ITypeLib2_AddRef((ITypeLib*) pTLib);
+		    ITypeLib2_AddRef(pTLib);
 		    result = S_OK;
 		} else {
 		    TRACE("typeinfo in imported typelib that isn't already loaded\n");

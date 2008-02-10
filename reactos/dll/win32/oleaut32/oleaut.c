@@ -837,7 +837,7 @@ BOOL WINAPI DllMain(HINSTANCE hInstDll, DWORD fdwReason, LPVOID lpvReserved)
   switch (fdwReason) {
   case DLL_PROCESS_ATTACH:
     DisableThreadLibraryCalls(hInstDll);
-    OLEAUT32_hModule = (HMODULE)hInstDll;
+    OLEAUT32_hModule = hInstDll;
     break;
   case DLL_PROCESS_DETACH:
     break;

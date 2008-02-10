@@ -1215,6 +1215,7 @@ static HRESULT WINAPI OLEFontImpl_GetTypeInfo(
     return hres;
   }
   hres = ITypeLib_GetTypeInfoOfGuid(tl, &IID_IFontDisp, ppTInfo);
+  ITypeLib_Release(tl);
   if (FAILED(hres)) {
     FIXME("Did not IDispatch typeinfo from typelib, hres %x\n",hres);
   }

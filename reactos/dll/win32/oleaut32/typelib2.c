@@ -1225,7 +1225,7 @@ static HRESULT WINAPI ICreateTypeInfo2_fnSetTypeFlags(ICreateTypeInfo2 *iface, U
 
     This->typeinfo->flags = uTypeFlags;
 
-    if (uTypeFlags & 0x1000) {
+    if (uTypeFlags & TYPEFLAG_FDISPATCHABLE) {
 	MSFT_GuidEntry foo;
 	int guidoffset;
 	int fileoffset;

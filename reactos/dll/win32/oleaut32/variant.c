@@ -2654,7 +2654,7 @@ static HRESULT _VarChangeTypeExWrap (VARIANTARG* pvargDest,
  *  left    [I] First variant
  *  right   [I] Second variant
  *  lcid    [I] LCID (locale identifier) for the comparison
- *  flags   [I] Flags to be used in the comparision:
+ *  flags   [I] Flags to be used in the comparison:
  *              NORM_IGNORECASE, NORM_IGNORENONSPACE, NORM_IGNORESYMBOLS,
  *              NORM_IGNOREWIDTH, NORM_IGNOREKANATYPE, NORM_IGNOREKASHIDA
  *
@@ -2677,9 +2677,9 @@ static HRESULT _VarChangeTypeExWrap (VARIANTARG* pvargDest,
  *  is not an EMPTY variant. All four VT_RESERVED combinations have a
  *  different meaning:
  *   - BSTR and other: BSTR is always greater than the other variant.
- *   - BSTR|VT_RESERVED and other: a string comparision is performed.
+ *   - BSTR|VT_RESERVED and other: a string comparison is performed.
  *   - BSTR and other|VT_RESERVED: If the BSTR is a number a numeric
- *     comparision will take place else the BSTR is always greater.
+ *     comparison will take place else the BSTR is always greater.
  *   - BSTR|VT_RESERVED and other|VT_RESERVED: It seems that the other
  *     variant is ignored and the return value depends only on the sign
  *     of the BSTR if it is a number else the BSTR is always greater. A
@@ -2763,7 +2763,7 @@ HRESULT WINAPI VarCmp(LPVARIANT left, LPVARIANT right, LCID lcid, DWORD flags)
                 /* No VT_RESERVED set ==> BSTR always greater */
                 rc = VARCMP_GT;
             else if (breserv && !nreserv) {
-                /* BSTR has VT_RESERVED set. Do a string comparision */
+                /* BSTR has VT_RESERVED set. Do a string comparison */
                 rc = VariantChangeTypeEx(&rv,nonbv,lcid,0,VT_BSTR);
                 if (FAILED(rc))
                     return rc;
@@ -2780,7 +2780,7 @@ HRESULT WINAPI VarCmp(LPVARIANT left, LPVARIANT right, LCID lcid, DWORD flags)
                        the BSTR number */
                     rc = (V_R8(&lv) >= 0) ? VARCMP_GT : VARCMP_LT;
                 else
-                    /* Numeric comparision, will be handled below.
+                    /* Numeric comparison, will be handled below.
                        VARCMP_NULL used only to break out. */
                     rc = VARCMP_NULL;
             VariantClear(&lv);

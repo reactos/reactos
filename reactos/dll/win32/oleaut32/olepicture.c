@@ -1237,6 +1237,7 @@ static HRESULT OLEPictureImpl_LoadGif(OLEPictureImpl *This, BYTE *xbuf, ULONG xr
     This->desc.picType = PICTYPE_BITMAP;
     OLEPictureImpl_SetBitmap(This);
     DGifCloseFile(gif);
+    HeapFree(GetProcessHeap(),0,bmi);
     HeapFree(GetProcessHeap(),0,bytes);
     return S_OK;
 }
@@ -1277,7 +1278,7 @@ static HRESULT OLEPictureImpl_LoadJpeg(OLEPictureImpl *This, BYTE *xbuf, ULONG x
     jd.err = pjpeg_std_error(&jerr);
     /* jpeg_create_decompress is a macro that expands to jpeg_CreateDecompress - see jpeglib.h
      * jpeg_create_decompress(&jd); */
-    pjpeg_CreateDecompress(&jd, JPEG_LIB_VERSION, (size_t) sizeof(struct jpeg_decompress_struct));
+    pjpeg_CreateDecompress(&jd, JPEG_LIB_VERSION, sizeof(struct jpeg_decompress_struct));
     jd.src = &xjsm;
     ret=pjpeg_read_header(&jd,TRUE);
     jd.out_color_space = JCS_RGB;

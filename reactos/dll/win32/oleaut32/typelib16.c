@@ -91,7 +91,7 @@ QueryPathOfRegTypeLib16(
                      wMaj,wMin,lcid);
 	} else {
 		sprintf(xguid,"<guid 0x%08x>",(DWORD)guid);
-		FIXME("(%s,%d,%d,0x%04x,%p),can't handle non-string guids.\n",xguid,wMaj,wMin,(DWORD)lcid,path);
+		FIXME("(%s,%d,%d,0x%04x,%p),can't handle non-string guids.\n",xguid,wMaj,wMin,lcid,path);
 		return E_FAIL;
 	}
 	plen = sizeof(pathname);
