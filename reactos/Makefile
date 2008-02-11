@@ -365,15 +365,22 @@ INSTALL_ := $(INSTALL)$(SEP)
 RBUILD_FLAGS := -rReactOS-$(ARCH).rbuild -DARCH=$(ARCH)
 
 $(INTERMEDIATE):
+	$(ECHO_MKDIR)
 	${mkdir} $@
 
 ifneq ($(INTERMEDIATE),$(OUTPUT))
 $(OUTPUT):
+	$(ECHO_MKDIR)
 	${mkdir} $@
 endif
 
+ifneq ($(TEMPORARY),$(INTERMEDIATE))
+ifneq ($(TEMPORARY),$(OUTPUT))
 $(TEMPORARY):
+	$(ECHO_MKDIR)
 	${mkdir} $@
+endif
+endif
 
 BUILDNO_H = $(INTERMEDIATE_)include$(SEP)reactos$(SEP)buildno.h
 
