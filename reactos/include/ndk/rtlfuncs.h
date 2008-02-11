@@ -3050,7 +3050,7 @@ RtlTimeFieldsToTime(
 );
 
 NTSYSAPI
-VOID
+BOOLEAN
 NTAPI
 RtlTimeToSecondsSince1970(
     PLARGE_INTEGER Time,
