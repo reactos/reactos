@@ -356,7 +356,6 @@ FdoStartDevice(
   IN PDEVICE_OBJECT DeviceObject,
   IN PIRP Irp)
 {
-  static BOOLEAN FoundBuggyAllocatedResourcesList = FALSE;
   PFDO_DEVICE_EXTENSION DeviceExtension;
   PCM_RESOURCE_LIST AllocatedResources;
   PCM_PARTIAL_RESOURCE_DESCRIPTOR ResourceDescriptor;
@@ -384,6 +383,9 @@ FdoStartDevice(
 
   ASSERT(DeviceExtension->State == dsStopped);
 
+  /* By default, use the bus number in the resource list header */
+  DeviceExtension->BusNumber = AllocatedResources->List[0].BusNumber;
+
   for (i = 0; i < AllocatedResources->List[0].PartialResourceList.Count; i++)
   {
     ResourceDescriptor = &AllocatedResources->List[0].PartialResourceList.PartialDescriptors[i];
@@ -393,6 +395,8 @@ FdoStartDevice(
       {
         if (FoundBusNumber || ResourceDescriptor->u.BusNumber.Length != 1)
           return STATUS_INVALID_PARAMETER;
+        /* Use this one instead */
+        ASSERT(AllocatedResources->List[0].BusNumber == ResourceDescriptor->u.BusNumber.Start);
         DeviceExtension->BusNumber = ResourceDescriptor->u.BusNumber.Start;
         DPRINT("Found bus number resource: %lu\n", DeviceExtension->BusNumber);
         FoundBusNumber = TRUE;
@@ -402,22 +406,7 @@ FdoStartDevice(
         DPRINT("Unknown resource descriptor type 0x%x\n", ResourceDescriptor->Type);
     }
   }
-  /* HACK due to a bug in ACPI driver, which doesn't report the bus number */
-  if (!FoundBuggyAllocatedResourcesList && !FoundBusNumber)
-  {
-    FoundBuggyAllocatedResourcesList = TRUE;
-    DPRINT1("No bus number resource found (bug in acpi.sys?), assuming bus number #0\n");
-    DeviceExtension->BusNumber = 0;
-    goto next;
-  }
-  /* END HACK */
-  if (!FoundBusNumber)
-  {
-    DPRINT("Some required resources were not found in allocated resources list\n");
-    return STATUS_INSUFFICIENT_RESOURCES;
-  }
 
-next:
   InitializeListHead(&DeviceExtension->DeviceListHead);
   KeInitializeSpinLock(&DeviceExtension->DeviceListLock);
   DeviceExtension->DeviceListCount = 0;
