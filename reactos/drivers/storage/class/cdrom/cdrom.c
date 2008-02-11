@@ -765,7 +765,7 @@ Return Value:
 
 --*/
 {
-    UCHAR ntNameBuffer[64];
+    CHAR ntNameBuffer[64];
     UNICODE_STRING ntUnicodeString;
     NTSTATUS status;
     BOOLEAN changerDevice;
@@ -2835,7 +2835,7 @@ Return Value:
     }
 
     if ((startingOffset.QuadPart > deviceExtension->PartitionLength.QuadPart) ||
-        (transferByteCount & deviceExtension->DiskGeometry->BytesPerSector - 1)) {
+        (transferByteCount & (deviceExtension->DiskGeometry->BytesPerSector - 1))) {
 
         DebugPrint((1,"ScsiCdRomRead: Invalid I/O parameters\n"));
         DebugPrint((1, "\toffset %x:%x, Length %x:%x\n",
@@ -4871,8 +4871,8 @@ Return Value:
     // to get this cdrom drive to work on scsi adapters that use PIO.
     //
 
-    if ((strncmp(InquiryData->VendorId, "HITACHI CDR-1750S", strlen("HITACHI CDR-1750S")) == 0 ||
-        strncmp(InquiryData->VendorId, "HITACHI CDR-3650/1650S", strlen("HITACHI CDR-3650/1650S")) == 0)
+    if ((strncmp((PCHAR)InquiryData->VendorId, "HITACHI CDR-1750S", strlen("HITACHI CDR-1750S")) == 0 ||
+        strncmp((PCHAR)InquiryData->VendorId, "HITACHI CDR-3650/1650S", strlen("HITACHI CDR-3650/1650S")) == 0)
         && PortCapabilities->AdapterUsesPio) {
 
         DebugPrint((1, "CdRom ScanForSpecial:  Found Hitachi CDR-1750S.\n"));
@@ -5993,7 +5993,7 @@ Return Value:
     LONG              tmp = 0;
     LONG              doRun = 0;
 
-    UCHAR             buf[32];
+    CHAR              buf[32];
     ANSI_STRING       paramNum;
 
     UNICODE_STRING    paramStr;
