@@ -10,18 +10,16 @@
 
 #include "npfs.h"
 
-//#define NDEBUG
-#include <debug.h>
-
 /* FUNCTIONS *****************************************************************/
 
 #ifndef NDEBUG
-VOID HexDump(PUCHAR Buffer, ULONG Length)
+VOID HexDump(IN PUCHAR Buffer,
+             IN SIZE_T Length)
 {
 	CHAR Line[65];
 	UCHAR ch;
 	const char Hex[] = "0123456789ABCDEF";
-	int i, j;
+	ULONG i, j;
 
 	DbgPrint("---------------\n");
 
@@ -44,13 +42,14 @@ VOID HexDump(PUCHAR Buffer, ULONG Length)
 #endif
 
 NTSTATUS NTAPI
-NpfsRead(PDEVICE_OBJECT DeviceObject, PIRP Irp)
+NpfsRead(IN PDEVICE_OBJECT DeviceObject,
+         IN PIRP Irp)
 {
+	TRACE_(NPFS, "NpfsRead()\n");
+
 	FsRtlEnterFileSystem();
 
-	NpfsDbgPrint(NPFS_DL_API_TRACE, "NpfsRead()\n");
-
-	/* TODO: Implement */
+	UNIMPLEMENTED;
 	IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
 	FsRtlExitFileSystem();
@@ -59,13 +58,14 @@ NpfsRead(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 }
 
 NTSTATUS NTAPI
-NpfsWrite(PDEVICE_OBJECT DeviceObject, PIRP Irp)
+NpfsWrite(IN PDEVICE_OBJECT DeviceObject,
+          IN PIRP Irp)
 {
+	TRACE_(NPFS, "NpfsWrite()\n");
+
 	FsRtlEnterFileSystem();
 
-	NpfsDbgPrint(NPFS_DL_API_TRACE, "NpfsWrite()\n");
-
-	/* TODO: Implement */
+	UNIMPLEMENTED;
 	IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
 	FsRtlExitFileSystem();
@@ -74,13 +74,14 @@ NpfsWrite(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 }
 
 NTSTATUS NTAPI
-NpfsFlushBuffers(PDEVICE_OBJECT DeviceObject, PIRP Irp)
+NpfsFlushBuffers(IN PDEVICE_OBJECT DeviceObject,
+                 IN PIRP Irp)
 {
+	TRACE_(NPFS, "NpfsFlushBuffers()\n");
+
 	FsRtlEnterFileSystem();
 
-	NpfsDbgPrint(NPFS_DL_API_TRACE, "NpfsFlushBuffers()\n");
-
-	/* TODO: Implement */
+	UNIMPLEMENTED;
 	IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
 	FsRtlExitFileSystem();

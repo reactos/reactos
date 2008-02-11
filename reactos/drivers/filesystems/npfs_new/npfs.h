@@ -6,10 +6,9 @@
 
 #include <stdarg.h>
 #include <stdio.h>
+#include <debug.h>
 
-/* Debug Levels */
-#define NPFS_DL_NONE      0x00000000
-#define NPFS_DL_API_TRACE 0x00000001
+#define DPFLTR_NPFS_ID DPFLTR_FASTFAT_ID
 
 /* Node type codes for NPFS */
 #define NPFS_NODETYPE_VCB 0x401
@@ -125,29 +124,24 @@ extern NPAGED_LOOKASIDE_LIST NpfsPipeDataLookasideList;
 
 #define PAGE_ROUND_UP(x) ( (((ULONG_PTR)x)%PAGE_SIZE) ? ((((ULONG_PTR)x)&(~(PAGE_SIZE-1)))+PAGE_SIZE) : ((ULONG_PTR)x) )
 
-NTSTATUS NTAPI NpfsCreate(PDEVICE_OBJECT DeviceObject, PIRP Irp);
-NTSTATUS NTAPI NpfsCreateNamedPipe(PDEVICE_OBJECT DeviceObject, PIRP Irp);
-NTSTATUS NTAPI NpfsCleanup(PDEVICE_OBJECT DeviceObject, PIRP Irp);
-NTSTATUS NTAPI NpfsClose(PDEVICE_OBJECT DeviceObject, PIRP Irp);
+DRIVER_DISPATCH NpfsCreate;
+DRIVER_DISPATCH NpfsCreateNamedPipe;
+DRIVER_DISPATCH NpfsCleanup;
+DRIVER_DISPATCH NpfsClose;
 
-NTSTATUS NTAPI NpfsRead(PDEVICE_OBJECT DeviceObject, PIRP Irp);
-NTSTATUS NTAPI NpfsWrite(PDEVICE_OBJECT DeviceObject, PIRP Irp);
+DRIVER_DISPATCH NpfsRead;
+DRIVER_DISPATCH NpfsWrite;
 
-NTSTATUS NTAPI NpfsFlushBuffers(PDEVICE_OBJECT DeviceObject, PIRP Irp);
+DRIVER_DISPATCH NpfsFlushBuffers;
 
-NTSTATUS NTAPI NpfsFileSystemControl(PDEVICE_OBJECT DeviceObject, PIRP Irp);
-NTSTATUS NTAPI NpfsDirectoryControl(PDEVICE_OBJECT DeviceObject, PIRP Irp);
+DRIVER_DISPATCH NpfsFileSystemControl;
+DRIVER_DISPATCH NpfsDirectoryControl;
 
-NTSTATUS NTAPI NpfsQueryInformation(PDEVICE_OBJECT DeviceObject, PIRP Irp);
-NTSTATUS NTAPI NpfsSetInformation(PDEVICE_OBJECT DeviceObject, PIRP Irp);
+DRIVER_DISPATCH NpfsQueryInformation;
+DRIVER_DISPATCH NpfsSetInformation;
 
-NTSTATUS NTAPI NpfsQueryVolumeInformation (PDEVICE_OBJECT DeviceObject, PIRP Irp);
+DRIVER_DISPATCH NpfsQueryVolumeInformation;
 
-NTSTATUS NTAPI
-DriverEntry(PDRIVER_OBJECT DriverObject,
-			PUNICODE_STRING RegistryPath);
-
-VOID NTAPI
-NpfsDbgPrint(ULONG Level, char *fmt, ...);
+DRIVER_INITIALIZE DriverEntry;
 
 #endif /* __DRIVERS_FS_NP_NPFS_H */

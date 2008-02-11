@@ -1,7 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="npfs" type="kernelmodedriver" installbase="system32/drivers" installname="npfs.sys">
-	<include base="npfs">.</include>
 	<define name="__NO_CTYPE_INLINES" />
 	<library>ntoskrnl</library>
 	<library>hal</library>

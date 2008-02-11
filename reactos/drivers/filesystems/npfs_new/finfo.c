@@ -10,19 +10,17 @@
 
 #include "npfs.h"
 
-//#define NDEBUG
-#include <debug.h>
-
 /* FUNCTIONS *****************************************************************/
 
 NTSTATUS NTAPI
-NpfsQueryInformation(PDEVICE_OBJECT DeviceObject, PIRP Irp)
+NpfsQueryInformation(IN PDEVICE_OBJECT DeviceObject,
+                     IN PIRP Irp)
 {
+	TRACE_(NPFS, "NpfsQueryInformation()\n");
+
 	FsRtlEnterFileSystem();
 
-	NpfsDbgPrint(NPFS_DL_API_TRACE, "NpfsQueryInformation()\n");
-
-	/* TODO: Implement */
+	UNIMPLEMENTED;
 	IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
 	FsRtlExitFileSystem();
@@ -31,13 +29,14 @@ NpfsQueryInformation(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 }
 
 NTSTATUS NTAPI
-NpfsSetInformation(PDEVICE_OBJECT DeviceObject, PIRP Irp)
+NpfsSetInformation(IN PDEVICE_OBJECT DeviceObject,
+                   IN PIRP Irp)
 {
+	TRACE_(NPFS, "NpfsSetInformation()\n");
+
 	FsRtlEnterFileSystem();
 
-	NpfsDbgPrint(NPFS_DL_API_TRACE, "NpfsSetInformation()\n");
-
-	/* TODO: Implement */
+	UNIMPLEMENTED;
 	IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
 	FsRtlExitFileSystem();

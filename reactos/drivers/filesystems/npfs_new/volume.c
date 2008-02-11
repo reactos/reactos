@@ -10,19 +10,17 @@
 
 #include "npfs.h"
 
-//#define NDEBUG
-#include <debug.h>
-
 /* FUNCTIONS ****************************************************************/
 
 NTSTATUS NTAPI
-NpfsQueryVolumeInformation(PDEVICE_OBJECT DeviceObject, PIRP Irp)
+NpfsQueryVolumeInformation(IN PDEVICE_OBJECT DeviceObject,
+                           IN PIRP Irp)
 {
+	TRACE_(NPFS, "NpfsQueryVolumeInformation()\n");
+
 	FsRtlEnterFileSystem();
 
-	NpfsDbgPrint(NPFS_DL_API_TRACE, "NpfsQueryVolumeInformation()\n");
-
-	/* TODO: Implement */
+	UNIMPLEMENTED;
 	IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
 	FsRtlExitFileSystem();

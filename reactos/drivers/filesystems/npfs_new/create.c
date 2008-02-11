@@ -10,42 +10,43 @@
 
 #include "npfs.h"
 
-//#define NDEBUG
-#include <debug.h>
-
 /* FUNCTIONS *****************************************************************/
 
 NTSTATUS NTAPI
-NpfsCreate(PDEVICE_OBJECT DeviceObject, PIRP Irp)
+NpfsCreate(IN PDEVICE_OBJECT DeviceObject,
+           IN PIRP Irp)
 {
-	NpfsDbgPrint(NPFS_DL_API_TRACE, "IRP_MJ_CREATE\n");
+	TRACE_(NPFS, "IRP_MJ_CREATE\n");
 
 	IoCompleteRequest(Irp, IO_NO_INCREMENT);
 	return STATUS_SUCCESS;
 }
 
 NTSTATUS NTAPI
-NpfsCreateNamedPipe(PDEVICE_OBJECT DeviceObject, PIRP Irp)
+NpfsCreateNamedPipe(IN PDEVICE_OBJECT DeviceObject,
+                    IN PIRP Irp)
 {
-	NpfsDbgPrint(NPFS_DL_API_TRACE, "IRP_MJ_CREATE Named Pipe\n");
+	TRACE_(NPFS, "IRP_MJ_CREATE Named Pipe\n");
 
 	IoCompleteRequest(Irp, IO_NO_INCREMENT);
 	return STATUS_SUCCESS;
 }
 
 NTSTATUS NTAPI
-NpfsCleanup(PDEVICE_OBJECT DeviceObject, PIRP Irp)
+NpfsCleanup(IN PDEVICE_OBJECT DeviceObject,
+            IN PIRP Irp)
 {
-	NpfsDbgPrint(NPFS_DL_API_TRACE, "Cleanup\n");
+	TRACE_(NPFS, "Cleanup\n");
 
 	IoCompleteRequest(Irp, IO_NO_INCREMENT);
 	return STATUS_SUCCESS;
 }
 
 NTSTATUS NTAPI
-NpfsClose(PDEVICE_OBJECT DeviceObject, PIRP Irp)
+NpfsClose(IN PDEVICE_OBJECT DeviceObject,
+          IN PIRP Irp)
 {
-	NpfsDbgPrint(NPFS_DL_API_TRACE, "IRP_MJ_CLOSE\n");
+	TRACE_(NPFS, "IRP_MJ_CLOSE\n");
 
 	IoCompleteRequest(Irp, IO_NO_INCREMENT);
 	return STATUS_SUCCESS;

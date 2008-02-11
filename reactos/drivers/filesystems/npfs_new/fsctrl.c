@@ -10,19 +10,17 @@
 
 #include "npfs.h"
 
-//#define NDEBUG
-#include <debug.h>
-
 /* FUNCTIONS *****************************************************************/
 
 NTSTATUS NTAPI
-NpfsDirectoryControl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
+NpfsDirectoryControl(IN PDEVICE_OBJECT DeviceObject,
+                     IN PIRP Irp)
 {
+	TRACE_(NPFS, "NpfsDirectoryControl()\n");
+
 	FsRtlEnterFileSystem();
 
-	NpfsDbgPrint(NPFS_DL_API_TRACE, "NpfsDirectoryControl()\n");
-
-	/* TODO: Implement */
+	UNIMPLEMENTED;
 	IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
 	FsRtlExitFileSystem();
@@ -31,13 +29,14 @@ NpfsDirectoryControl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 }
 
 NTSTATUS NTAPI
-NpfsFileSystemControl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
+NpfsFileSystemControl(IN PDEVICE_OBJECT DeviceObject,
+                      IN PIRP Irp)
 {
+	TRACE_(NPFS, "NpfsFileSystemControl()\n");
+
 	FsRtlEnterFileSystem();
 
-	NpfsDbgPrint(NPFS_DL_API_TRACE, "NpfsFileSystemControl()\n");
-
-	/* TODO: Implement */
+	UNIMPLEMENTED;
 	IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
 	FsRtlExitFileSystem();

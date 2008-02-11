@@ -10,25 +10,34 @@
 
 #include "npfs.h"
 
-//#define NDEBUG
-#include <debug.h>
-
-ULONG NpfsDebugLevel = NPFS_DL_API_TRACE;
-
-static VOID NpfsInitializeVcb(PNPFS_VCB Vcb);
-
 /* FUNCTIONS *****************************************************************/
 
+static VOID
+NpfsInitializeVcb(OUT PNPFS_VCB Vcb)
+{
+	/* Initialize Volume Control Block, it's one per whole named pipe
+	   file system. */
+
+	TRACE_(NPFS, "NpfsInitializeVcb(), Vcb = %p\n", Vcb);
+
+	/* Zero-init whole VCB */
+	RtlZeroMemory(Vcb, sizeof(NPFS_VCB));
+
+	/* Initialize the common header */
+	Vcb->NodeTypeCode = NPFS_NODETYPE_VCB;
+	Vcb->NodeByteSize = sizeof(NPFS_VCB);
+}
+
 NTSTATUS NTAPI
-DriverEntry(PDRIVER_OBJECT DriverObject,
-			PUNICODE_STRING RegistryPath)
+DriverEntry(IN PDRIVER_OBJECT DriverObject,
+            IN PUNICODE_STRING RegistryPath)
 {
 	PNPFS_DEVICE_EXTENSION DeviceExtension;
 	PDEVICE_OBJECT DeviceObject;
-	UNICODE_STRING DeviceName;
+	UNICODE_STRING DeviceName = RTL_CONSTANT_STRING(L"\\Device\\NamedPipe");
 	NTSTATUS Status;
 
-	DPRINT("Named Pipe File System Driver v0.1\n");
+	TRACE_(NPFS, "DriverEntry(%p, %wZ)", DriverObject, RegistryPath);
 
 	ASSERT (sizeof(NPFS_CONTEXT) <= FIELD_OFFSET(IRP, Tail.Overlay.DriverContext));
 	ASSERT (sizeof(NPFS_WAITER_ENTRY) <= FIELD_OFFSET(IRP, Tail.Overlay.DriverContext));
@@ -50,7 +59,6 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
 
 	DriverObject->DriverUnload = NULL;
 
-	RtlInitUnicodeString(&DeviceName, L"\\Device\\NamedPipe");
 	Status = IoCreateDevice(DriverObject,
 		sizeof(NPFS_DEVICE_EXTENSION),
 		&DeviceName,
@@ -60,7 +68,7 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
 		&DeviceObject);
 	if (!NT_SUCCESS(Status))
 	{
-		DPRINT("Failed to create named pipe device! (Status %x)\n", Status);
+		WARN_(NPFS, "Failed to create named pipe device! (Status 0x%08x)\n", Status);
 		return Status;
 	}
 
@@ -84,37 +92,5 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
 
 	return STATUS_SUCCESS;
 }
-
-static VOID
-NpfsInitializeVcb(PNPFS_VCB Vcb)
-{
-	/* Initialize Volume Control Block, it's one per whole named pipe
-	   file system. */
-
-	NpfsDbgPrint(NPFS_DL_API_TRACE, "NpfsInitializeVcb(), Vcb = %p\n", Vcb);
-
-	/* Zero-init whole VCB */
-	RtlZeroMemory(Vcb, sizeof(NPFS_VCB));
-
-	/* Initialize the common header */
-	Vcb->NodeTypeCode = NPFS_NODETYPE_VCB;
-	Vcb->NodeByteSize = sizeof(NPFS_VCB);
-}
-
-VOID NTAPI
-NpfsDbgPrint(ULONG Level, char *fmt, ...)
-{
-	va_list args;
-	char str[300];
-
-	if (!(NpfsDebugLevel & Level))
-		return;
-
-	va_start(args, fmt);
-	vsnprintf(str, sizeof(str), fmt, args);
-	va_end(args);
-	DbgPrint ("%4.4d: NPFS %s", PsGetCurrentProcessId(), str);
-}
-
 
 /* EOF */
