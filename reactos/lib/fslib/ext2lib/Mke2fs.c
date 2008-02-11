@@ -796,13 +796,14 @@ Ext2TotalBlocks(PEXT2_FILESYS Ext2Sys, ULONG DataBlocks)
 }
 
 
-NTSTATUS
-Ext2Format(PUNICODE_STRING DriveRoot,
-	   ULONG MediaFlag,
-	   PUNICODE_STRING Label,
-	   BOOLEAN QuickFormat,
-	   ULONG ClusterSize,
-	   PFMIFSCALLBACK Callback)
+NTSTATUS NTAPI
+Ext2Format(
+	IN PUNICODE_STRING DriveRoot,
+	IN FMIFS_MEDIA_FLAG MediaFlag,
+	IN PUNICODE_STRING Label,
+	IN BOOLEAN QuickFormat,
+	IN ULONG ClusterSize,
+	IN PFMIFSCALLBACK Callback)
 {
     BOOLEAN    bRet = FALSE;
     NTSTATUS   Status = STATUS_UNSUCCESSFUL;
@@ -1007,4 +1008,17 @@ clean_up:
     CHECKPOINT;
 
     return Status;
+}
+
+NTSTATUS WINAPI
+Ext2Chkdsk(
+	IN PUNICODE_STRING DriveRoot,
+	IN BOOLEAN FixErrors,
+	IN BOOLEAN Verbose,
+	IN BOOLEAN CheckOnlyIfDirty,
+	IN BOOLEAN ScanDrive,
+	IN PFMIFSCALLBACK Callback)
+{
+	UNIMPLEMENTED;
+	return STATUS_SUCCESS;
 }

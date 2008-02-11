@@ -7,20 +7,24 @@
 #ifndef __EXT2LIB_H
 #define __EXT2LIB_H
 
-#include <fmifs.h>
+#include <fmifs/fmifs.h>
 
-NTSTATUS
-Ext2Initialize (VOID);
+NTSTATUS NTAPI
+Ext2Chkdsk(
+	IN PUNICODE_STRING DriveRoot,
+	IN BOOLEAN FixErrors,
+	IN BOOLEAN Verbose,
+	IN BOOLEAN CheckOnlyIfDirty,
+	IN BOOLEAN ScanDrive,
+	IN PFMIFSCALLBACK Callback);
 
-NTSTATUS
-Ext2Cleanup (VOID);
-
-NTSTATUS
-Ext2Format (PUNICODE_STRING DriveRoot,
-	    ULONG MediaFlag,
-	    PUNICODE_STRING Label,
-	    BOOLEAN QuickFormat,
-	    ULONG ClusterSize,
-	    PFMIFSCALLBACK Callback);
+NTSTATUS NTAPI
+Ext2Format(
+	IN PUNICODE_STRING DriveRoot,
+	IN FMIFS_MEDIA_FLAG MediaFlag,
+	IN PUNICODE_STRING Label,
+	IN BOOLEAN QuickFormat,
+	IN ULONG ClusterSize,
+	IN PFMIFSCALLBACK Callback);
 
 #endif /*__EXT2LIB_H */
