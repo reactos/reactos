@@ -31,6 +31,7 @@
 			<library>libcntpr</library>
 			<linkerflag>-lgcc</linkerflag>
 			<linkerflag>-static</linkerflag>
+			<linkerflag>-Wl,--section-start,pagedata=0x50000</linkerflag>
 		</module>
 	</if>
 	<if property="ARCH" value="powerpc">

@@ -23,6 +23,7 @@
 /* GLOBALS ********************************************************************/
 
 .global _start
+.global ArmTranslationTable
 .section startup
    
 /* BOOT CODE ******************************************************************/
@@ -42,11 +43,12 @@ _start:
     msr cpsr, r1
     
     //
-    // Turn off caches
+    // Turn off caches and the MMU
     //
     mrc p15, 0, r1, c1, c0, 0
     bic r1, r1, #C1_DCACHE_CONTROL
     bic r1, r1, #C1_ICACHE_CONTROL
+    bic r1, r1, #C1_MMU_CONTROL
     mcr p15, 0, r1, c1, c0, 0
     
     //
@@ -65,6 +67,8 @@ _start:
     // r0 contains the ARM_BOARD_CONFIGURATION_DATA structure
     //
     bx lr
+    
+/* BOOT STACK *****************************************************************/
 
 L_BootStackEnd:
     .long BootStackEnd
@@ -77,3 +81,9 @@ BootStack:
 	.space 0x4000
 BootStackEnd:
     .long 0
+    
+/* INITIAL PAGE TABLE *********************************************************/
+
+.section pagedata
+ArmTranslationTable:
+    .space 0x4000
