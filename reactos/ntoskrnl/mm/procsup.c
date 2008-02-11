@@ -636,7 +636,7 @@ MmInitializeProcessAddressSpace(IN PEPROCESS Process,
         szDest = Process->ImageFileName;
         lnFName = min(lnFName, sizeof(Process->ImageFileName) - 1);
         while (lnFName--) *szDest++ = (UCHAR)*szSrc++;
-        *szDest = UNICODE_NULL;
+        *szDest = ANSI_NULL;
 
         /* Check if caller wants an audit name */
         if (AuditName)

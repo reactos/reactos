@@ -542,10 +542,6 @@ NtAllocateVirtualMemory(IN     HANDLE ProcessHandle,
  *                PAGE_EXECUTE_READ, PAGE_EXECUTE_READWRITE, PAGE_GUARD,
  *                PAGE_NOACCESS
  * RETURNS: Status
- * NOTES: Must run at IRQL PASSIVE_LEVEL? (or is APC_LEVEL cool too?)
- *        MSDN states that ZwAllocateVirtualMemory IRQL must be PASSIVE_LEVEL,
- *        but why wouldn't APC_LEVEL be valid (or is that only for the Zw* version
- *        and Nt* can indeed run at APC_LEVEL?)
  */
 {
    PEPROCESS Process;
@@ -561,10 +557,7 @@ NtAllocateVirtualMemory(IN     HANDLE ProcessHandle,
    PHYSICAL_ADDRESS BoundaryAddressMultiple;
    KPROCESSOR_MODE PreviousMode;
 
-   // TMN: Someone Pick one of these. Until it's clear which
-   // level is allowed, I play it safe and check for <= APC_LEVEL
    PAGED_CODE();
-//   ASSERT(KeGetCurrentIrql() == PASSIVE_LEVEL);
 
    DPRINT("NtAllocateVirtualMemory(*UBaseAddress %x, "
           "ZeroBits %d, *URegionSize %x, AllocationType %x, Protect %x)\n",
