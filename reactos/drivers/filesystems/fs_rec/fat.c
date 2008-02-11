@@ -15,7 +15,7 @@
 
 /* FUNCTIONS ****************************************************************/
 
-NTSTATUS
+BOOLEAN
 NTAPI
 FsRecIsFatVolume(IN PPACKED_BOOT_SECTOR PackedBootSector)
 {
@@ -163,7 +163,7 @@ FsRecVfatFsControl(IN PDEVICE_OBJECT DeviceObject,
 
             /* Load the file system */
             Status = FsRecLoadFileSystem(DeviceObject,
-                                         L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\Vfatfs");
+                                         L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\fastfat");
             break;
 
         default:

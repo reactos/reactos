@@ -180,7 +180,8 @@ typedef enum _FILE_SYSTEM_TYPE
     FS_TYPE_VFAT,
     FS_TYPE_NTFS,
     FS_TYPE_CDFS,
-    FS_TYPE_UDFS
+    FS_TYPE_UDFS,
+    FS_TYPE_EXT2,
 } FILE_SYSTEM_TYPE, *PFILE_SYSTEM_TYPE;
 
 //
@@ -230,6 +231,13 @@ FsRecNtfsFsControl(
 NTSTATUS
 NTAPI
 FsRecUdfsFsControl(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PIRP Irp
+);
+
+NTSTATUS
+NTAPI
+FsRecExt2FsControl(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp
 );
