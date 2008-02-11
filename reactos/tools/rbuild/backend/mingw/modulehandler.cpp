@@ -1282,33 +1282,33 @@ Rule winebuildRule ( "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noex
                      "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).spec.def",
                      "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).stubs.c",
                      "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)", NULL );
-Rule widlHeaderRule ( "$(INTERMEDIATE)\\$(source_dir)\\$(source_name_noext).h: $(source) $(module_rbuild) $(WIDL_TARGET) | $(INTERMEDIATE)\\$(source_dir)\n"
+Rule widlHeaderRule ( "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).h: $(source) $(module_rbuild) $(WIDL_TARGET) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
                       "\t$(ECHO_WIDL)\n"
-                      "\t$(Q)$(WIDL_TARGET)  $($(module_name)_WIDLFLAGS) -h -H $(INTERMEDIATE)\\$(source_dir)\\$(source_name_noext).h $(source)\n",
-                      "$(INTERMEDIATE)\\$(source_dir)\\$(source_name_noext).h",
-                      "$(INTERMEDIATE)\\$(source_dir)\\", NULL );
-Rule widlServerRule ( "$(INTERMEDIATE)\\$(source_dir)\\$(source_name_noext)_s.c $(INTERMEDIATE)\\$(source_dir)\\$(source_name_noext)_s.h: $(source) $(module_rbuild) $(WIDL_TARGET) | $(INTERMEDIATE)\\$(source_dir)\n"
+                      "\t$(Q)$(WIDL_TARGET)  $($(module_name)_WIDLFLAGS) -h -H $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).h $(source)\n",
+                      "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).h",
+                      "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)", NULL );
+Rule widlServerRule ( "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_s.c $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_s.h: $(source) $(module_rbuild) $(WIDL_TARGET) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
                       "\t$(ECHO_WIDL)\n"
-                      "\t$(Q)$(WIDL_TARGET) $($(module_name)_WIDLFLAGS) -h -H $(INTERMEDIATE)\\$(source_dir)\\$(source_name_noext)_s.h -s -S $(INTERMEDIATE)\\$(source_dir)\\$(source_name_noext)_s.c $(source)\n",
-                      "$(INTERMEDIATE)\\$(source_dir)\\$(source_name_noext)_s.h",
-                      "$(INTERMEDIATE)\\$(source_dir)\\$(source_name_noext)_s.c",
-                      "$(INTERMEDIATE)\\$(source_dir)\\", NULL );
-Rule widlClientRule ( "$(INTERMEDIATE)\\$(source_dir)\\$(source_name_noext)_c.c $(INTERMEDIATE)\\$(source_dir)\\$(source_name_noext)_c.h: $(source) $(module_rbuild) $(WIDL_TARGET) | $(INTERMEDIATE)\\$(source_dir)\n"
+                      "\t$(Q)$(WIDL_TARGET) $($(module_name)_WIDLFLAGS) -h -H $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_s.h -s -S $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_s.c $(source)\n",
+                      "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_s.h",
+                      "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_s.c",
+                      "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)", NULL );
+Rule widlClientRule ( "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_c.c $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_c.h: $(source) $(module_rbuild) $(WIDL_TARGET) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
                       "\t$(ECHO_WIDL)\n"
-                      "\t$(Q)$(WIDL_TARGET) $($(module_name)_WIDLFLAGS) -h -H $(INTERMEDIATE)\\$(source_dir)\\$(source_name_noext)_c.h -c -C $(INTERMEDIATE)\\$(source_dir)\\$(source_name_noext)_c.c $(source)\n",
-                      "$(INTERMEDIATE)\\$(source_dir)\\$(source_name_noext)_c.h",
-                      "$(INTERMEDIATE)\\$(source_dir)\\$(source_name_noext)_c.c",
-                      "$(INTERMEDIATE)\\$(source_dir)\\", NULL );
-Rule widlProxyRule ( "$(INTERMEDIATE)\\$(source_dir)\\$(source_name_noext)_p.c $(INTERMEDIATE)\\$(source_dir)\\$(source_name_noext)_p.h: $(source) $(module_rbuild) $(WIDL_TARGET) | $(INTERMEDIATE)\\$(source_dir)\n"
+                      "\t$(Q)$(WIDL_TARGET) $($(module_name)_WIDLFLAGS) -h -H $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_c.h -c -C $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_c.c $(source)\n",
+                      "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_c.h",
+                      "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_c.c",
+                      "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)", NULL );
+Rule widlProxyRule ( "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_p.c $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_p.h: $(source) $(module_rbuild) $(WIDL_TARGET) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
                      "\t$(ECHO_WIDL)\n"
-                     "\t$(Q)$(WIDL_TARGET)  $($(module_name)_WIDLFLAGS) -h -H $(INTERMEDIATE)\\$(source_dir)\\$(source_name_noext)_p.h -p -P $(INTERMEDIATE)\\$(source_dir)\\$(source_name_noext)_p.c $(source)\n",
-                     "$(INTERMEDIATE)\\$(source_dir)\\$(source_name_noext)_p.h",
-                     "$(INTERMEDIATE)\\$(source_dir)\\$(source_name_noext)_p.c",
-                     "$(INTERMEDIATE)\\$(source_dir)\\", NULL );
-Rule widlTlbRule ( "$(OUTPUT)\\$(source_dir)\\$(module_name).tlb: $(source) $(module_rbuild) $(WIDL_TARGET) | $(INTERMEDIATE)\\$(source_dir)\n"
+                     "\t$(Q)$(WIDL_TARGET)  $($(module_name)_WIDLFLAGS) -h -H $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_p.h -p -P $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_p.c $(source)\n",
+                     "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_p.h",
+                     "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_p.c",
+                     "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)", NULL );
+Rule widlTlbRule ( "$(OUTPUT)$(SEP)$(source_dir)$(SEP)$(module_name).tlb: $(source) $(module_rbuild) $(WIDL_TARGET) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
                    "\t$(ECHO_WIDL)\n"
-                   "\t$(Q)$(WIDL_TARGET)  $($(module_name)_WIDLFLAGS) -t -T $(INTERMEDIATE)\\$(source_dir)\\$(source_name_noext).tlb $(source)\n",
-                   "$(INTERMEDIATE)\\$(source_dir)\\", NULL );
+                   "\t$(Q)$(WIDL_TARGET)  $($(module_name)_WIDLFLAGS) -t -T $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).tlb $(source)\n",
+                   "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)", NULL );
 
 void
 MingwModuleHandler::GenerateGccCommand (
