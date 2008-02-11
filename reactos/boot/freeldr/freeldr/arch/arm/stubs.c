@@ -191,6 +191,7 @@ ULONG PageDirectoryStart, PageDirectoryEnd;
 LOADER_PARAMETER_BLOCK ArmLoaderBlock;
 LOADER_PARAMETER_EXTENSION ArmExtension;
 extern ARM_TRANSLATION_TABLE ArmTranslationTable;
+extern ROS_KERNEL_ENTRY_POINT KernelEntryPoint;
 
 /* FUNCTIONS ******************************************************************/
 
@@ -232,7 +233,7 @@ VOID
 FORCEINLINE
 ArmControlRegisterSet(IN ARM_CONTROL_REGISTER ControlRegister)
 {
-    __asm__ __volatile__ ("mcr p15, 0, %0, c1, c0, 0; b ." : : "r"(ControlRegister.AsUlong) : "cc");    
+    __asm__ __volatile__ ("mcr p15, 0, %0, c1, c0, 0" : : "r"(ControlRegister.AsUlong) : "cc");    
 }
 
 VOID
@@ -271,7 +272,6 @@ ArmSetupPageDirectory(VOID)
     //
     TtbRegister.AsUlong = (ULONG)TranslationTable;
     ASSERT(TtbRegister.Reserved == 0);
-    TuiPrintf("CP15 C2: %x\n", TtbRegister);
     ArmMmuTtbSet(TtbRegister);
     
     //
@@ -279,7 +279,6 @@ ArmSetupPageDirectory(VOID)
     //
     DomainRegister.AsUlong = 0;
     DomainRegister.Domain0 = ClientDomain;
-    TuiPrintf("CP15 C3: %x\n", DomainRegister);
     ArmMmuDomainRegisterSet(DomainRegister);
     
     //
@@ -296,29 +295,26 @@ ArmSetupPageDirectory(VOID)
     Pte.L1.Section.Reserved = 1; // ARM926EJ-S manual recommends setting to 1
     Pte.L1.Section.Domain = Domain0;
     Pte.L1.Section.Access = SupervisorAccess;
-    Pte.L1.Section.BaseAddress = KSEG0_BASE >> TTB_SHIFT;
+    Pte.L1.Section.BaseAddress = 0;
     Pte.L1.Section.Ignored = Pte.L1.Section.Ignored1 = 0;
-    TuiPrintf("Template PTE: %x\n", Pte.AsUlong);
-    TuiPrintf("Base: %x %x\n", KSEG0_BASE, Pte.L1.Section.BaseAddress);
     
     //
-    // Map KSEG0 (0x80000000 - 0xA0000000)
+    // Map KSEG0 (0x80000000 - 0xA0000000) to 0x00000000 - 0x80000000
+    // In this way, the KERNEL_PHYS_ADDR (0x800000) becomes 0x80800000
+    // which is the entrypoint, just like on x86.
     //
-    TuiPrintf("First PTE Index: %x\n", KSEG0_BASE >> TTB_SHIFT);
-    TuiPrintf("Last PTE Index: %x\n", ((KSEG0_BASE + 0x20000000) >> TTB_SHIFT));
     for (i = (KSEG0_BASE >> TTB_SHIFT); i < ((KSEG0_BASE + 0x20000000) >> TTB_SHIFT); i++)
     {
         //
-        // Update the PTE base address (next MB)
+        // Write PTE and update the base address (next MB) for the next one
         //
-        Pte.L1.Section.BaseAddress++;
         TranslationTable->Pte[i] = Pte;
+        Pte.L1.Section.BaseAddress++;
     }
     
     //
-    // Identity map the first MB of memory
+    // Identity map the first MB of memory as well
     //
-    TuiPrintf("Last KSEG0 PTE: %x %x\n", i, Pte.AsUlong);
     Pte.L1.Section.BaseAddress = 0;
     TranslationTable->Pte[0] = Pte;
 }
@@ -329,28 +325,18 @@ ArmSetupPagingAndJump(IN ULONG Magic)
     ARM_CONTROL_REGISTER ControlRegister;
     
     //
-    // This is it! Once we enable the MMU we're in a totally different universe.
-    // Cross our fingers: We mapped the bottom 1MB of memory, so FreeLDR and
-    // boot-data is still there. We also mapped the kernel, and made our
-    // allocations | KSEG0_BASE. If any of this isn't true, we're dead.
-    //
-    TuiPrintf("Crossing the Rubicon!\n");
-    
-    //
     // Enable MMU, DCache and ICache
     //
     ControlRegister = ArmControlRegisterGet();
-    TuiPrintf("CP15 C1: %x\n", ControlRegister);
     ControlRegister.MmuEnabled = TRUE;
     ControlRegister.ICacheEnabled = TRUE;
     ControlRegister.DCacheEnabled = TRUE;
-    TuiPrintf("CP15 C1: %x\n", ControlRegister);
     ArmControlRegisterSet(ControlRegister);
     
     //
-    // Are we still alive?
+    // Jump to Kernel
     //
-    while (TRUE);
+    (*KernelEntryPoint)(Magic, (PVOID)&ArmLoaderBlock);
 }
 
 VOID
