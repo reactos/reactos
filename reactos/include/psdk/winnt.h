@@ -84,7 +84,7 @@ extern "C" {
 #elif (_MSC_VER)
 #define FORCEINLINE __inline
 #else
-#define FORCEINLINE static __inline
+#define FORCEINLINE static __inline__ __attribute__((always_inline))
 #endif
 #endif
 
