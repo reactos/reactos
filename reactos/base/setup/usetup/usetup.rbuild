@@ -12,6 +12,7 @@
 	<linkerflag>-lgcc</linkerflag>
 	<library>zlib</library>
 	<library>inflib</library>
+	<library>ext2lib</library>
 	<library>vfatlib</library>
 	<library>ntdll</library>
 	<directory name="interface">

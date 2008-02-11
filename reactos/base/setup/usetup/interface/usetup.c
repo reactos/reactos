@@ -1766,6 +1766,10 @@ DeletePartitionPage (PINPUT_RECORD Ir)
         {
             PartType = "FAT32";
         }
+        else if (PartEntry->PartInfo[0].PartitionType == PARTITION_EXT2)
+        {
+            PartType = "EXT2";
+        }
         else if (PartEntry->PartInfo[0].PartitionType == PARTITION_IFS)
         {
             PartType = "NTFS"; /* FIXME: Not quite correct! */
@@ -1941,6 +1945,10 @@ SelectFileSystemPage (PINPUT_RECORD Ir)
              (PartEntry->PartInfo[0].PartitionType == PARTITION_FAT32_XINT13))
     {
         PartType = "FAT32";
+    }
+    else if (PartEntry->PartInfo[0].PartitionType == PARTITION_EXT2)
+    {
+        PartType = "EXT2";
     }
     else if (PartEntry->PartInfo[0].PartitionType == PARTITION_IFS)
     {
@@ -2191,6 +2199,8 @@ FormatPartitionPage (PINPUT_RECORD Ir)
                         }
                     }
                 }
+                else if (wcscmp(FileSystemList->Selected->FileSystem, L"EXT2") == 0)
+                    PartEntry->PartInfo[0].PartitionType = PARTITION_EXT2;
                 else if (!FileSystemList->Selected->FormatFunc)
                     return QUIT_PAGE;
             }
@@ -2324,6 +2334,25 @@ FormatPartitionPage (PINPUT_RECORD Ir)
                         FileSystemList = NULL;
                         return QUIT_PAGE;
                     }
+                }
+            }
+            else if (wcscmp(FileSystemList->Selected->FileSystem, L"EXT2") == 0)
+            {
+                wcscpy(PathBuffer, SourceRootPath.Buffer);
+                wcscat(PathBuffer, L"\\loader\\ext2.bin");
+
+                DPRINT("Install EXT2 bootcode: %S ==> %S\n", PathBuffer,
+                    DestinationRootPath.Buffer);
+                Status = InstallFat32BootCodeToDisk(PathBuffer,
+                    DestinationRootPath.Buffer);
+
+                if (!NT_SUCCESS(Status))
+                {
+                    DPRINT1("InstallFat32BootCodeToDisk() failed with status 0x%08lx\n", Status);
+                    /* FIXME: show an error dialog */
+                    DestroyFileSystemList(FileSystemList);
+                    FileSystemList = NULL;
+                    return QUIT_PAGE;
                 }
             }
             else if (FileSystemList->Selected->FormatFunc)
