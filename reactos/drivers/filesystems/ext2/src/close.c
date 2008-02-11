@@ -38,7 +38,7 @@
 * Return Value: Does not matter!
 *
 *************************************************************************/
-NTSTATUS Ext2Close(
+NTSTATUS NTAPI Ext2Close(
 PDEVICE_OBJECT		DeviceObject,		// the logical volume device object
 PIRP					Irp)					// I/O Request Packet
 {
@@ -102,7 +102,7 @@ PIRP					Irp)					// I/O Request Packet
 * Return Value: Does not matter!
 *
 *************************************************************************/
-NTSTATUS	Ext2CommonClose(
+NTSTATUS NTAPI Ext2CommonClose(
 PtrExt2IrpContext			PtrIrpContext,
 PIRP						PtrIrp,
 BOOLEAN						FirstAttempt )

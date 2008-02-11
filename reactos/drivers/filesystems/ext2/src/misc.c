@@ -34,7 +34,7 @@
 * Return Value: STATUS_SUCCESS/Error
 *
 *************************************************************************/
-NTSTATUS Ext2InitializeZones(
+NTSTATUS NTAPI Ext2InitializeZones(
 void)
 {
 	NTSTATUS			RC = STATUS_SUCCESS;
@@ -186,7 +186,7 @@ void)
 * Return Value: None
 *
 *************************************************************************/
-void Ext2DestroyZones(
+void NTAPI Ext2DestroyZones(
 void)
 {
 	try {
@@ -238,7 +238,7 @@ void)
 * Return Value: TRUE/FALSE (TRUE if top level was NULL when routine invoked)
 *
 *************************************************************************/
-BOOLEAN Ext2IsIrpTopLevel(
+BOOLEAN NTAPI Ext2IsIrpTopLevel(
 PIRP			Irp)			// the IRP sent to our dispatch routine
 {
 	BOOLEAN			ReturnCode = FALSE;
@@ -278,7 +278,7 @@ PIRP			Irp)			// the IRP sent to our dispatch routine
 * Return Value: EXCEPTION_EXECUTE_HANDLER/EXECEPTION_CONTINUE_SEARCH
 *
 *************************************************************************/
-long Ext2ExceptionFilter(
+long NTAPI Ext2ExceptionFilter(
 PtrExt2IrpContext			PtrIrpContext,
 PEXCEPTION_POINTERS			PtrExceptionPointers )
 {
@@ -341,7 +341,7 @@ PEXCEPTION_POINTERS			PtrExceptionPointers )
 * Return Value: Error code
 *
 *************************************************************************/
-NTSTATUS Ext2ExceptionHandler(
+NTSTATUS NTAPI Ext2ExceptionHandler(
 PtrExt2IrpContext				PtrIrpContext,
 PIRP								Irp)
 {
@@ -387,7 +387,7 @@ PIRP								Irp)
 * Return Value: None
 *
 *************************************************************************/
-void Ext2LogEvent(
+void NTAPI Ext2LogEvent(
 NTSTATUS					Ext2EventLogId,		// the Ext2 private message id
 NTSTATUS					RC)						// any NT error code we wish to log ...
 {
@@ -424,7 +424,7 @@ NTSTATUS					RC)						// any NT error code we wish to log ...
 * Return Value: A pointer to the ObjectName structure OR NULL.
 *
 *************************************************************************/
-PtrExt2ObjectName Ext2AllocateObjectName(
+PtrExt2ObjectName NTAPI Ext2AllocateObjectName(
 void)
 {
 	PtrExt2ObjectName			PtrObjectName = NULL;
@@ -488,7 +488,7 @@ void)
 * Return Value: None
 *
 *************************************************************************/
-void Ext2ReleaseObjectName(
+void NTAPI Ext2ReleaseObjectName(
 PtrExt2ObjectName				PtrObjectName)
 {
 	KIRQL							CurrentIrql;
@@ -535,7 +535,7 @@ PtrExt2ObjectName				PtrObjectName)
 * Return Value: A pointer to the CCB structure OR NULL.
 *
 *************************************************************************/
-PtrExt2CCB Ext2AllocateCCB(
+PtrExt2CCB NTAPI Ext2AllocateCCB(
 void)
 {
 	PtrExt2CCB					PtrCCB = NULL;
@@ -605,7 +605,7 @@ void)
 * Return Value: None
 *
 *************************************************************************/
-void Ext2ReleaseCCB(
+void NTAPI Ext2ReleaseCCB(
 PtrExt2CCB						PtrCCB)
 {
 	KIRQL							CurrentIrql;
@@ -660,7 +660,7 @@ PtrExt2CCB						PtrCCB)
 * Return Value: A pointer to the FCB structure OR NULL.
 *
 *************************************************************************/
-PtrExt2FCB Ext2AllocateFCB(
+PtrExt2FCB NTAPI Ext2AllocateFCB(
 void)
 {
 	PtrExt2FCB					PtrFCB = NULL;
@@ -735,7 +735,7 @@ void)
 * Return Value: A pointer to the FCB structure OR NULL.
 *
 *************************************************************************/
-NTSTATUS Ext2CreateNewFCB(
+NTSTATUS NTAPI Ext2CreateNewFCB(
 PtrExt2FCB				*ReturnedFCB,
 LARGE_INTEGER			AllocationSize,
 LARGE_INTEGER			EndOfFile,
@@ -859,7 +859,7 @@ PtrExt2ObjectName		PtrObjectName)
 * Return Value: None
 *
 *************************************************************************/
-void Ext2ReleaseFCB(
+void NTAPI Ext2ReleaseFCB(
 PtrExt2FCB						PtrFCB)
 {
 	KIRQL							CurrentIrql;
@@ -919,7 +919,7 @@ PtrExt2FCB						PtrFCB)
 * Return Value: A pointer to the Ext2ByteLocks structure OR NULL.
 *
 *************************************************************************/
-PtrExt2FileLockInfo Ext2AllocateByteLocks(
+PtrExt2FileLockInfo NTAPI Ext2AllocateByteLocks(
 void)
 {
 	PtrExt2FileLockInfo		PtrByteLocks = NULL;
@@ -978,7 +978,7 @@ void)
 * Return Value: None
 *
 *************************************************************************/
-void Ext2ReleaseByteLocks(
+void NTAPI Ext2ReleaseByteLocks(
 PtrExt2FileLockInfo					PtrByteLocks)
 {
 	KIRQL							CurrentIrql;
@@ -1019,7 +1019,7 @@ PtrExt2FileLockInfo					PtrByteLocks)
 * Return Value: A pointer to the IrpContext structure OR NULL.
 *
 *************************************************************************/
-PtrExt2IrpContext Ext2AllocateIrpContext(
+PtrExt2IrpContext NTAPI Ext2AllocateIrpContext(
 PIRP					Irp,
 PDEVICE_OBJECT		PtrTargetDeviceObject)
 {
@@ -1136,7 +1136,7 @@ PDEVICE_OBJECT		PtrTargetDeviceObject)
 * Return Value: None
 *
 *************************************************************************/
-void Ext2ReleaseIrpContext(
+void NTAPI Ext2ReleaseIrpContext(
 PtrExt2IrpContext					PtrIrpContext)
 {
 	KIRQL							CurrentIrql;
@@ -1178,7 +1178,7 @@ PtrExt2IrpContext					PtrIrpContext)
 * Return Value: STATUS_PENDING
 *
 *************************************************************************/
-NTSTATUS Ext2PostRequest(
+NTSTATUS NTAPI Ext2PostRequest(
 PtrExt2IrpContext			PtrIrpContext,
 PIRP							PtrIrp)
 {
@@ -1226,7 +1226,7 @@ PIRP							PtrIrp)
 * Return Value: None
 *
 *************************************************************************/
-void Ext2CommonDispatch(
+void NTAPI Ext2CommonDispatch(
 			void		*Context )	// actually an IRPContext structure
 {
 	NTSTATUS						RC = STATUS_SUCCESS;
@@ -1345,7 +1345,7 @@ void Ext2CommonDispatch(
 * Return Value: None
 *
 *************************************************************************/
-void Ext2InitializeVCB(
+void NTAPI Ext2InitializeVCB(
 PDEVICE_OBJECT			PtrVolumeDeviceObject,
 PDEVICE_OBJECT			PtrTargetDeviceObject,
 PVPB					PtrVPB,
@@ -1466,7 +1466,7 @@ PLARGE_INTEGER			AllocationSize )
 * Return Value: none
 *
 *************************************************************************/
-void Ext2CompleteRequest(
+void NTAPI Ext2CompleteRequest(
     IN PIRP Irp OPTIONAL,
     IN NTSTATUS Status
     )
@@ -1512,7 +1512,7 @@ void Ext2CompleteRequest(
 * Return Value: A pointer to the CCB structure OR NULL.
 *
 *************************************************************************/
-NTSTATUS Ext2CreateNewCCB(
+NTSTATUS NTAPI Ext2CreateNewCCB(
 	PtrExt2CCB				*ReturnedCCB,
 	PtrExt2FCB				PtrFCB,
 	PFILE_OBJECT			PtrFileObject )
@@ -1575,7 +1575,7 @@ NTSTATUS Ext2CreateNewCCB(
 * Return Value: NTSTATUS - STATUS_ACCESS_DENIED (always)
 *
 *************************************************************************/
-NTSTATUS Ext2DenyAccess( IN PIRP Irp )
+NTSTATUS NTAPI Ext2DenyAccess( IN PIRP Irp )
 {
     ASSERT( Irp );
 
@@ -1605,7 +1605,7 @@ NTSTATUS Ext2DenyAccess( IN PIRP Irp )
 * Return Value: NTSTATUS - STATUS_SUCCESS(always)
 *
 *************************************************************************/
-NTSTATUS Ext2GetFCB_CCB_VCB_FromFileObject (
+NTSTATUS NTAPI Ext2GetFCB_CCB_VCB_FromFileObject (
 	IN PFILE_OBJECT			PtrFileObject,
 	OUT PtrExt2FCB				*PPtrFCB,
 	OUT PtrExt2CCB				*PPtrCCB,
@@ -1669,7 +1669,7 @@ NTSTATUS Ext2GetFCB_CCB_VCB_FromFileObject (
 }
 
 
-void Ext2CopyUnicodeString( PUNICODE_STRING  PtrDestinationString, PUNICODE_STRING PtrSourceString )
+void NTAPI Ext2CopyUnicodeString( PUNICODE_STRING  PtrDestinationString, PUNICODE_STRING PtrSourceString )
 {
 	int Count;
 	//	Allcating space for Destination...
@@ -1687,7 +1687,7 @@ void Ext2CopyUnicodeString( PUNICODE_STRING  PtrDestinationString, PUNICODE_STRI
 
 }
 
-void Ext2CopyWideCharToUnicodeString( 
+void NTAPI Ext2CopyWideCharToUnicodeString( 
 	PUNICODE_STRING  PtrDestinationString, 
 	PCWSTR PtrSourceString )
 {
@@ -1712,7 +1712,7 @@ void Ext2CopyWideCharToUnicodeString(
 }
 
 
-void Ext2CopyCharToUnicodeString( 
+void NTAPI Ext2CopyCharToUnicodeString( 
 	PUNICODE_STRING  PtrDestinationString, 
 	PCSTR PtrSourceString,
 	USHORT SourceStringLength )
@@ -1732,7 +1732,7 @@ void Ext2CopyCharToUnicodeString(
 
 }
 
-void Ext2CopyZCharToUnicodeString( PUNICODE_STRING  PtrDestinationString, PCSTR PtrSourceString )
+void NTAPI Ext2CopyZCharToUnicodeString( PUNICODE_STRING  PtrDestinationString, PCSTR PtrSourceString )
 {
 	
 	int Count; 
@@ -1754,14 +1754,14 @@ void Ext2CopyZCharToUnicodeString( PUNICODE_STRING  PtrDestinationString, PCSTR 
 	}
 }
 
-void Ext2ZerooutUnicodeString( PUNICODE_STRING PtrUnicodeString )
+void NTAPI Ext2ZerooutUnicodeString( PUNICODE_STRING PtrUnicodeString )
 {
 	PtrUnicodeString->Length = 0;
 	PtrUnicodeString->MaximumLength =0;
 	PtrUnicodeString->Buffer = 0;
 }
 
-void Ext2DeallocateUnicodeString( PUNICODE_STRING PtrUnicodeString )
+void NTAPI Ext2DeallocateUnicodeString( PUNICODE_STRING PtrUnicodeString )
 {
 	if( PtrUnicodeString && PtrUnicodeString->Buffer )
 	{
@@ -1773,7 +1773,7 @@ void Ext2DeallocateUnicodeString( PUNICODE_STRING PtrUnicodeString )
 	PtrUnicodeString->Buffer = 0;
 }
 
-PtrExt2FCB Ext2GetUsedFCB( 
+PtrExt2FCB NTAPI Ext2GetUsedFCB( 
 	PtrExt2VCB	PtrVCB )
 {
 
@@ -1838,7 +1838,7 @@ PtrExt2FCB Ext2GetUsedFCB(
 	return PtrFCB;
 }
 
-BOOLEAN Ext2CloseClosableFCB( 
+BOOLEAN NTAPI Ext2CloseClosableFCB( 
 	PtrExt2FCB		PtrFCB)
 {
 	KIRQL			Irql = 0;
@@ -1917,7 +1917,7 @@ BOOLEAN Ext2CloseClosableFCB(
 }
 
 
-BOOLEAN Ext2SaveBCB(
+BOOLEAN NTAPI Ext2SaveBCB(
 	PtrExt2IrpContext	PtrIrpContext,
 	PBCB				PtrBCB,
 	PFILE_OBJECT		PtrFileObject)
@@ -1984,7 +1984,7 @@ BOOLEAN Ext2SaveBCB(
 }
 
 
-BOOLEAN Ext2FlushSavedBCBs(
+BOOLEAN NTAPI Ext2FlushSavedBCBs(
 	PtrExt2IrpContext	PtrIrpContext )
 {
 	
@@ -2045,7 +2045,7 @@ BOOLEAN Ext2FlushSavedBCBs(
 	return RC;
 }
 
-BOOLEAN AssertBCB( PBCB	PtrBCB )
+BOOLEAN NTAPI AssertBCB( PBCB	PtrBCB )
 {
 	PFILE_OBJECT		PtrFileObject = NULL;
 	
@@ -2069,7 +2069,7 @@ BOOLEAN AssertBCB( PBCB	PtrBCB )
 	}
 
 
-ULONG Ext2Align( ULONG NumberToBeAligned, ULONG Alignment )
+ULONG NTAPI Ext2Align( ULONG NumberToBeAligned, ULONG Alignment )
 {
 	if( Alignment & ( Alignment - 1 ) )
 	{
@@ -2087,7 +2087,7 @@ ULONG Ext2Align( ULONG NumberToBeAligned, ULONG Alignment )
 	return NumberToBeAligned;
 }
 
-LONGLONG Ext2Align64( LONGLONG NumberToBeAligned, LONGLONG Alignment )
+LONGLONG NTAPI Ext2Align64( LONGLONG NumberToBeAligned, LONGLONG Alignment )
 {
 	if( Alignment & ( Alignment - 1 ) )
 	{

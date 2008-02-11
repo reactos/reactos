@@ -52,7 +52,7 @@ typedef struct _QUERY_PATH_RESPONSE
 * Return Value: STATUS_SUCCESS/Error
 *
 *************************************************************************/
-NTSTATUS Ext2DeviceControl(
+NTSTATUS NTAPI Ext2DeviceControl(
 PDEVICE_OBJECT		DeviceObject,		// the logical volume device object
 PIRP					Irp)					// I/O Request Packet
 {
@@ -113,7 +113,7 @@ PIRP					Irp)					// I/O Request Packet
 * Return Value: STATUS_SUCCESS/Error
 *
 *************************************************************************/
-NTSTATUS	Ext2CommonDeviceControl(
+NTSTATUS NTAPI Ext2CommonDeviceControl(
 PtrExt2IrpContext			PtrIrpContext,
 PIRP							PtrIrp)
 {
@@ -197,7 +197,7 @@ PIRP							PtrIrp)
 * Return Value: STATUS_SUCCESS
 *
 *************************************************************************/
-NTSTATUS Ext2DevIoctlCompletion(
+NTSTATUS NTAPI Ext2DevIoctlCompletion(
 PDEVICE_OBJECT			PtrDeviceObject,
 PIRP						PtrIrp,
 void						*Context)

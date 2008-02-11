@@ -43,7 +43,7 @@ Ext2Data					Ext2GlobalData;
 * Return Value: STATUS_SUCCESS/Error (will cause driver to be unloaded).
 *
 *************************************************************************/
-NTSTATUS DriverEntry(
+NTSTATUS NTAPI DriverEntry(
 PDRIVER_OBJECT		DriverObject,		// created by the I/O sub-system
 PUNICODE_STRING	RegistryPath)		// path to the registry key
 {
@@ -232,7 +232,7 @@ PUNICODE_STRING	RegistryPath)		// path to the registry key
 * Return Value: None
 *
 *************************************************************************/
-void Ext2FsdInitializeFunctionPointers(
+void NTAPI Ext2FsdInitializeFunctionPointers(
 PDRIVER_OBJECT		DriverObject)		// created by the I/O sub-system
 {
    PFAST_IO_DISPATCH	PtrFastIoDispatch = NULL;
@@ -347,7 +347,7 @@ PDRIVER_OBJECT		DriverObject)		// created by the I/O sub-system
 }
 
 
-VOID Ext2QueueHandlerThread( 
+VOID NTAPI Ext2QueueHandlerThread( 
 	IN PVOID StartContext )
 {		
 		

@@ -36,7 +36,7 @@
 * Return Value: STATUS_SUCCESS/Error
 *
 *************************************************************************/
-NTSTATUS Ext2DirControl(
+NTSTATUS NTAPI Ext2DirControl(
 PDEVICE_OBJECT		DeviceObject,		// the logical volume device object
 PIRP					Irp)					// I/O Request Packet
 {
@@ -100,7 +100,7 @@ PIRP					Irp)					// I/O Request Packet
 * Return Value: STATUS_SUCCESS/Error
 *
 *************************************************************************/
-NTSTATUS	Ext2CommonDirControl(
+NTSTATUS NTAPI Ext2CommonDirControl(
 PtrExt2IrpContext			PtrIrpContext,
 PIRP							PtrIrp)
 {
@@ -176,7 +176,7 @@ PIRP							PtrIrp)
 * Return Value: STATUS_SUCCESS/Error
 *
 *************************************************************************/
-NTSTATUS	Ext2QueryDirectory(
+NTSTATUS NTAPI Ext2QueryDirectory(
 PtrExt2IrpContext			PtrIrpContext,
 PIRP						PtrIrp,
 #ifdef _GNU_NTIFS_
@@ -814,7 +814,7 @@ PtrExt2CCB					PtrCCB)
 * Return Value: STATUS_SUCCESS/Error
 *
 *************************************************************************/
-NTSTATUS	Ext2NotifyChangeDirectory(
+NTSTATUS NTAPI Ext2NotifyChangeDirectory(
 PtrExt2IrpContext			PtrIrpContext,
 PIRP							PtrIrp,
 #ifdef _GNU_NTIFS_

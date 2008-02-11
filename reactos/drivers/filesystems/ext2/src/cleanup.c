@@ -37,7 +37,7 @@
 * Return Value: Does not matter!
 *
 *************************************************************************/
-NTSTATUS Ext2Cleanup(
+NTSTATUS NTAPI Ext2Cleanup(
 PDEVICE_OBJECT		DeviceObject,		// the logical volume device object
 PIRP					Irp)					// I/O Request Packet
 {
@@ -99,7 +99,7 @@ PIRP					Irp)					// I/O Request Packet
 * Return Value: Does not matter!
 *
 *************************************************************************/
-NTSTATUS	Ext2CommonCleanup(
+NTSTATUS NTAPI Ext2CommonCleanup(
 PtrExt2IrpContext			PtrIrpContext,
 PIRP						PtrIrp,
 BOOLEAN						FirstAttempt )

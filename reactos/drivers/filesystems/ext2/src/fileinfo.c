@@ -36,7 +36,7 @@
 * Return Value: STATUS_SUCCESS/Error
 *
 *************************************************************************/
-NTSTATUS Ext2FileInfo(
+NTSTATUS NTAPI Ext2FileInfo(
 PDEVICE_OBJECT		DeviceObject,		// the logical volume device object
 PIRP					Irp)					// I/O Request Packet
 {
@@ -101,7 +101,7 @@ PIRP					Irp)					// I/O Request Packet
 * Return Value: STATUS_SUCCESS/Error
 *
 *************************************************************************/
-NTSTATUS	Ext2CommonFileInfo(
+NTSTATUS NTAPI Ext2CommonFileInfo(
 PtrExt2IrpContext			PtrIrpContext,
 PIRP							PtrIrp)
 {
@@ -586,7 +586,7 @@ PIRP							PtrIrp)
 * Return Value: STATUS_SUCCESS/Error
 *
 *************************************************************************/
-NTSTATUS	Ext2GetBasicInformation(
+NTSTATUS NTAPI Ext2GetBasicInformation(
 PtrExt2FCB					PtrFCB,
 PFILE_BASIC_INFORMATION		PtrBuffer,
 long						*PtrReturnedLength )
@@ -646,7 +646,7 @@ long						*PtrReturnedLength )
 	return(RC);
 }
 
-NTSTATUS	Ext2GetStandardInformation(
+NTSTATUS NTAPI Ext2GetStandardInformation(
 PtrExt2FCB					PtrFCB,
 
 PFILE_STANDARD_INFORMATION	PtrStdInformation,
@@ -686,7 +686,7 @@ long						*PtrReturnedLength )
 	return(RC);
 }
 
-NTSTATUS Ext2GetNetworkOpenInformation(
+NTSTATUS NTAPI Ext2GetNetworkOpenInformation(
 	PtrExt2FCB						PtrFCB,
 	PFILE_NETWORK_OPEN_INFORMATION	PtrNetworkOpenInformation,
 	long							*PtrReturnedLength )
@@ -748,7 +748,7 @@ NTSTATUS Ext2GetNetworkOpenInformation(
 }
 
 
-NTSTATUS	Ext2GetFullNameInformation(
+NTSTATUS NTAPI Ext2GetFullNameInformation(
 	PtrExt2FCB				PtrFCB,
 	PtrExt2CCB				PtrCCB,
 	PFILE_NAME_INFORMATION	PtrNameInformation,
@@ -811,7 +811,7 @@ NTSTATUS	Ext2GetFullNameInformation(
 * Return Value: STATUS_SUCCESS/Error
 *
 *************************************************************************/
-NTSTATUS	Ext2SetBasicInformation(
+NTSTATUS NTAPI Ext2SetBasicInformation(
 	PtrExt2IrpContext			PtrIrpContext,
 	PtrExt2FCB					PtrFCB,
 	PFILE_OBJECT				PtrFileObject,
@@ -919,7 +919,7 @@ NTSTATUS	Ext2SetBasicInformation(
 * Return Value: STATUS_SUCCESS/Error
 *
 *************************************************************************/
-NTSTATUS	Ext2SetDispositionInformation(
+NTSTATUS NTAPI Ext2SetDispositionInformation(
 PtrExt2FCB					PtrFCB,
 PtrExt2CCB					PtrCCB,
 PtrExt2VCB					PtrVCB,
@@ -1011,7 +1011,7 @@ PFILE_DISPOSITION_INFORMATION	PtrBuffer)
 * Return Value: STATUS_SUCCESS/Error
 *
 *************************************************************************/
-NTSTATUS	Ext2SetAllocationInformation(
+NTSTATUS NTAPI Ext2SetAllocationInformation(
 PtrExt2FCB					PtrFCB,
 PtrExt2CCB					PtrCCB,
 PtrExt2VCB					PtrVCB,

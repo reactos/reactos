@@ -36,7 +36,7 @@
 * Return Value: STATUS_SUCCESS/Error
 *
 *************************************************************************/
-NTSTATUS Ext2Create(
+NTSTATUS NTAPI Ext2Create(
 PDEVICE_OBJECT		DeviceObject,		// the logical volume device object
 PIRP					Irp)					// I/O Request Packet
 {
@@ -124,7 +124,7 @@ PIRP					Irp)					// I/O Request Packet
 * Return Value: STATUS_SUCCESS/Error
 *
 *************************************************************************/
-NTSTATUS Ext2CommonCreate(
+NTSTATUS NTAPI Ext2CommonCreate(
 PtrExt2IrpContext			PtrIrpContext,
 PIRP						PtrIrp,
 BOOLEAN						FirstAttempt)
@@ -986,7 +986,7 @@ BOOLEAN						FirstAttempt)
 * Return Value: STATUS_SUCCESS/Error
 *
 *************************************************************************/
-NTSTATUS Ext2OpenVolume(
+NTSTATUS NTAPI Ext2OpenVolume(
 PtrExt2VCB				PtrVCB,					// volume to be opened
 PtrExt2IrpContext		PtrIrpContext,			// IRP context
 PIRP						PtrIrp,					// original/user IRP
@@ -1121,7 +1121,7 @@ PFILE_OBJECT			PtrFileObject)	// optional file object to be initialized
 * Return Value: None
 *
 *************************************************************************/
-NTSTATUS Ext2OpenRootDirectory(
+NTSTATUS NTAPI Ext2OpenRootDirectory(
 	PtrExt2VCB				PtrVCB,					// volume 
 	PtrExt2IrpContext		PtrIrpContext,			// IRP context
 	PIRP					PtrIrp,					// original/user IRP
@@ -1156,7 +1156,7 @@ NTSTATUS Ext2OpenRootDirectory(
 
 
 
-PtrExt2FCB Ext2LocateChildFCBInCore(
+PtrExt2FCB NTAPI Ext2LocateChildFCBInCore(
 	PtrExt2VCB				PtrVCB,	
 	PUNICODE_STRING			PtrName, 
 	ULONG					ParentInodeNo )
@@ -1187,7 +1187,7 @@ PtrExt2FCB Ext2LocateChildFCBInCore(
 	return NULL;
 }
 
-PtrExt2FCB	Ext2LocateFCBInCore(
+PtrExt2FCB NTAPI Ext2LocateFCBInCore(
 	PtrExt2VCB				PtrVCB,	
 	ULONG					InodeNo )
 {
@@ -1215,7 +1215,7 @@ PtrExt2FCB	Ext2LocateFCBInCore(
 }
 
 
-ULONG Ext2LocateFileInDisk (
+ULONG NTAPI Ext2LocateFileInDisk (
 	PtrExt2VCB				PtrVCB,
 	PUNICODE_STRING			PtrCurrentName, 
 	PtrExt2FCB				PtrParentFCB,
@@ -1439,7 +1439,7 @@ ULONG Ext2LocateFileInDisk (
 * Return Value: None
 *
 *************************************************************************/
-ULONG Ext2CreateFile( 
+ULONG NTAPI Ext2CreateFile( 
 	PtrExt2IrpContext		PtrIrpContext,
 	PtrExt2VCB				PtrVCB,
 	PUNICODE_STRING			PtrName, 
@@ -1568,7 +1568,7 @@ ULONG Ext2CreateFile(
 * Return Value: None
 *
 *************************************************************************/
-BOOLEAN Ext2OverwriteFile(
+BOOLEAN NTAPI Ext2OverwriteFile(
 	PtrExt2FCB			PtrFCB,
 	PtrExt2IrpContext	PtrIrpContext)
 {
@@ -1631,7 +1631,7 @@ BOOLEAN Ext2OverwriteFile(
 * Return Value: None
 *
 *************************************************************************/
-BOOLEAN Ext2SupersedeFile(
+BOOLEAN NTAPI Ext2SupersedeFile(
 	PtrExt2FCB			PtrFCB,
 	PtrExt2IrpContext	PtrIrpContext)
 {

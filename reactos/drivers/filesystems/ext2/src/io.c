@@ -31,7 +31,7 @@
 * Return Value: STATUS_SUCCESS / STATUS_PENDING / Error
 *
 *************************************************************************/
-NTSTATUS Ext2PassDownMultiReadWriteIRP( 
+NTSTATUS NTAPI Ext2PassDownMultiReadWriteIRP( 
 	PEXT2_IO_RUN			PtrIoRuns, 
 	UINT					Count, 
 	ULONG					TotalReadWriteLength,
@@ -230,7 +230,7 @@ NTSTATUS Ext2PassDownMultiReadWriteIRP(
 	return(RC);
 }
 
-NTSTATUS Ext2PassDownSingleReadWriteIRP(
+NTSTATUS NTAPI Ext2PassDownSingleReadWriteIRP(
 	PtrExt2IrpContext	PtrIrpContext,
 	PIRP				PtrIrp, 
 	PtrExt2VCB			PtrVCB,
@@ -374,7 +374,7 @@ NTSTATUS Ext2PassDownSingleReadWriteIRP(
 * Return Value: NTSTATUS - STATUS_SUCCESS(always)
 *
 *************************************************************************/
-NTSTATUS Ext2SingleSyncCompletionRoutine(
+NTSTATUS NTAPI Ext2SingleSyncCompletionRoutine(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp,
     IN PVOID Contxt
@@ -409,7 +409,7 @@ NTSTATUS Ext2SingleSyncCompletionRoutine(
 * Return Value: NTSTATUS - STATUS_SUCCESS(always)
 *
 *************************************************************************/
-NTSTATUS Ext2SingleAsyncCompletionRoutine(
+NTSTATUS NTAPI Ext2SingleAsyncCompletionRoutine(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp,
     IN PVOID Contxt
@@ -443,7 +443,7 @@ NTSTATUS Ext2SingleAsyncCompletionRoutine(
 * Return Value: NTSTATUS - STATUS_SUCCESS(always)
 *
 *************************************************************************/
-NTSTATUS Ext2MultiSyncCompletionRoutine (
+NTSTATUS NTAPI Ext2MultiSyncCompletionRoutine (
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp,
     IN PVOID Contxt
@@ -500,7 +500,7 @@ NTSTATUS Ext2MultiSyncCompletionRoutine (
 * Return Value: NTSTATUS - STATUS_SUCCESS(always)
 *
 *************************************************************************/
-NTSTATUS Ext2MultiAsyncCompletionRoutine (
+NTSTATUS NTAPI Ext2MultiAsyncCompletionRoutine (
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp,
     IN PVOID Contxt

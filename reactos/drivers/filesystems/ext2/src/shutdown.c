@@ -40,7 +40,7 @@
 * Return Value: Irrelevant.
 *
 *************************************************************************/
-NTSTATUS Ext2Shutdown(
+NTSTATUS NTAPI Ext2Shutdown(
 	PDEVICE_OBJECT		DeviceObject,		// the logical volume device object
 	PIRP				Irp)					// I/O Request Packet
 {
@@ -102,7 +102,7 @@ NTSTATUS Ext2Shutdown(
 * Return Value: Irrelevant
 *
 *************************************************************************/
-NTSTATUS	Ext2CommonShutdown(
+NTSTATUS NTAPI Ext2CommonShutdown(
 PtrExt2IrpContext			PtrIrpContext,
 PIRP							PtrIrp)
 {

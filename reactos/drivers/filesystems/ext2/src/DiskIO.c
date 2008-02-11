@@ -38,7 +38,7 @@
 * Return Value: The Status of the Read IO
 *
 *************************************************************************/
-NTSTATUS Ext2ReadLogicalBlocks (
+NTSTATUS NTAPI Ext2ReadLogicalBlocks (
 	PDEVICE_OBJECT		PtrTargetDeviceObject,	//	the Target Device Object
 	VOID				*Buffer,				//	The Buffer that takes the data read in
 	LARGE_INTEGER		StartLogicalBlock,		//	The logical block from which reading is to start
@@ -108,7 +108,7 @@ NTSTATUS Ext2ReadLogicalBlocks (
 * Return Value: The Status of the Read IO
 *
 *************************************************************************/
-NTSTATUS Ext2ReadPhysicalBlocks (
+NTSTATUS NTAPI Ext2ReadPhysicalBlocks (
 	PDEVICE_OBJECT		PtrTargetDeviceObject,	//	the Target Device Object
 	VOID				*Buffer,				//	The Buffer that takes the data read in
 	LARGE_INTEGER		StartPhysicalBlock,		//	The block from which reading is to start

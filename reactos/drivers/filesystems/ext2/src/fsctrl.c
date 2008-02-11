@@ -79,7 +79,7 @@ NTSTATUS Ext2UserFileSystemRequest(
 *    NTSTATUS - The FSD status for the IRP
 *
 *************************************************************************/
-NTSTATUS 
+NTSTATUS NTAPI
 Ext2FileSystemControl(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp
@@ -907,7 +907,7 @@ NTSTATUS Ext2UserFileSystemRequest (
 
 
 
-NTSTATUS Ext2VerifyVolume (
+NTSTATUS NTAPI Ext2VerifyVolume (
 	IN PIRP Irp,
 	IN PIO_STACK_LOCATION IrpSp )
 {

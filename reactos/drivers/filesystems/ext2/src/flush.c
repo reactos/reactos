@@ -36,7 +36,7 @@
 * Return Value: STATUS_SUCCESS/Error
 *
 *************************************************************************/
-NTSTATUS Ext2Flush(
+NTSTATUS NTAPI Ext2Flush(
 	PDEVICE_OBJECT		DeviceObject,		//	the logical volume device object
 	PIRP				Irp)				//	I/O Request Packet
 {
@@ -98,7 +98,7 @@ NTSTATUS Ext2Flush(
 * Return Value: STATUS_SUCCESS/Error
 *
 *************************************************************************/
-NTSTATUS	Ext2CommonFlush(
+NTSTATUS NTAPI Ext2CommonFlush(
 PtrExt2IrpContext			PtrIrpContext,
 PIRP							PtrIrp)
 {
@@ -254,7 +254,7 @@ PIRP							PtrIrp)
 * Return Value: None
 *
 *************************************************************************/
-void Ext2FlushAFile(
+void NTAPI Ext2FlushAFile(
 PtrExt2NTRequiredFCB	PtrReqdFCB,
 PIO_STATUS_BLOCK		PtrIoStatus)
 {
@@ -276,7 +276,7 @@ PIO_STATUS_BLOCK		PtrIoStatus)
 * Return Value: None
 *
 *************************************************************************/
-void Ext2FlushLogicalVolume(
+void NTAPI Ext2FlushLogicalVolume(
 PtrExt2IrpContext			PtrIrpContext,
 PIRP							PtrIrp,
 PtrExt2VCB					PtrVCB)
@@ -330,7 +330,7 @@ PtrExt2VCB					PtrVCB)
 * Return Value: None
 *
 *************************************************************************/
-NTSTATUS Ext2FlushCompletion(
+NTSTATUS NTAPI Ext2FlushCompletion(
 PDEVICE_OBJECT	PtrDeviceObject,
 PIRP				PtrIrp,
 PVOID				Context)

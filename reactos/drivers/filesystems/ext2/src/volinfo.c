@@ -49,7 +49,7 @@
 *    NTSTATUS - The FSD status for the IRP
 *
 *************************************************************************/
-NTSTATUS Ext2QueryVolInfo (
+NTSTATUS NTAPI Ext2QueryVolInfo (
 	IN PDEVICE_OBJECT	DeviceObject,
 	IN PIRP Irp)
 {
@@ -192,7 +192,7 @@ NTSTATUS Ext2QueryVolInfo (
 
 
 
-NTSTATUS Ext2SetVolInfo(
+NTSTATUS NTAPI Ext2SetVolInfo(
 	IN PDEVICE_OBJECT	DeviceObject,
 	IN PIRP Irp)
 {

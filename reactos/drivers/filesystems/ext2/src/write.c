@@ -36,7 +36,7 @@
 * Return Value: STATUS_SUCCESS/Error
 *
 *************************************************************************/
-NTSTATUS Ext2Write(
+NTSTATUS NTAPI Ext2Write(
 PDEVICE_OBJECT		DeviceObject,		// the logical volume device object
 PIRP					Irp)					// I/O Request Packet
 {
@@ -97,7 +97,7 @@ PIRP					Irp)					// I/O Request Packet
 * Return Value: STATUS_SUCCESS/Error
 *
 *************************************************************************/
-NTSTATUS	Ext2CommonWrite(
+NTSTATUS NTAPI Ext2CommonWrite(
 	PtrExt2IrpContext			PtrIrpContext,
 	PIRP						PtrIrp)
 {
@@ -1471,7 +1471,7 @@ NTSTATUS	Ext2CommonWrite(
 * Return Value: None
 *
 *************************************************************************/
-void Ext2DeferredWriteCallBack (
+void NTAPI Ext2DeferredWriteCallBack (
 void			*Context1,			// Should be PtrIrpContext
 void			*Context2 )			// Should be PtrIrp
 {

@@ -42,7 +42,7 @@ extern	Ext2Data					Ext2GlobalData;
 *
 *************************************************************************/
 
-NTSTATUS Ext2ReadInode (
+NTSTATUS NTAPI Ext2ReadInode (
 	PtrExt2VCB		PtrVcb,			//	the Volume Control Block
 	uint32			InodeNo,		//	The Inode no
 	PEXT2_INODE		PtrInode		//	The Inode Buffer
@@ -174,7 +174,7 @@ NTSTATUS Ext2ReadInode (
 * Return Value: None
 *
 *************************************************************************/
-void Ext2InitializeFCBInodeInfo (
+void NTAPI Ext2InitializeFCBInodeInfo (
 	PtrExt2FCB	PtrFCB )
 {
 	PtrExt2VCB			PtrVCB = NULL;
@@ -262,7 +262,7 @@ void Ext2InitializeFCBInodeInfo (
 * Return Value: The new i-node no or zero
 *
 *************************************************************************/
-ULONG Ext2AllocInode( 
+ULONG NTAPI Ext2AllocInode( 
 	PtrExt2IrpContext	PtrIrpContext,
 	PtrExt2VCB			PtrVCB,
 	ULONG				ParentINodeNo )
@@ -502,7 +502,7 @@ ULONG Ext2AllocInode(
 * Return Value: Success / Failure...
 *
 *************************************************************************/
-BOOLEAN Ext2DeallocInode( 
+BOOLEAN NTAPI Ext2DeallocInode( 
 	PtrExt2IrpContext	PtrIrpContext,
 	PtrExt2VCB			PtrVCB,
 	ULONG				INodeNo )
@@ -701,7 +701,7 @@ BOOLEAN Ext2DeallocInode(
 * Return Value: Success / Failure...
 *
 *************************************************************************/
-NTSTATUS Ext2WriteInode(
+NTSTATUS NTAPI Ext2WriteInode(
 	PtrExt2IrpContext	PtrIrpContext,
 	PtrExt2VCB			PtrVcb,			//	the Volume Control Block
 	uint32				InodeNo,		//	The Inode no
@@ -823,7 +823,7 @@ NTSTATUS Ext2WriteInode(
 * Return Value: Success / Failure...
 *
 *************************************************************************/
-BOOLEAN Ext2MakeNewDirectoryEntry(
+BOOLEAN NTAPI Ext2MakeNewDirectoryEntry(
 	PtrExt2IrpContext		PtrIrpContext,	//	The Irp context
 	PtrExt2FCB				PtrParentFCB,	//	Parent Folder FCB
 	PFILE_OBJECT			PtrFileObject,	//	Parent Folder Object
@@ -1062,7 +1062,7 @@ BOOLEAN Ext2MakeNewDirectoryEntry(
 }
 
 
-BOOLEAN Ext2FreeDirectoryEntry(
+BOOLEAN NTAPI Ext2FreeDirectoryEntry(
 	PtrExt2IrpContext		PtrIrpContext,
 	PtrExt2FCB				PtrParentFCB,
 	PUNICODE_STRING			PtrName)
@@ -1193,7 +1193,7 @@ BOOLEAN Ext2FreeDirectoryEntry(
 * Return Value: Success / Failure...
 *
 *************************************************************************/
-BOOLEAN Ext2AddBlockToFile(
+BOOLEAN NTAPI Ext2AddBlockToFile(
 	PtrExt2IrpContext	PtrIrpContext,
 	PtrExt2VCB			PtrVCB,
 	PtrExt2FCB			PtrFCB,
@@ -1664,7 +1664,7 @@ BOOLEAN Ext2AddBlockToFile(
 * Return Value: Success / Failure...
 *
 *************************************************************************/
-ULONG Ext2AllocBlock( 
+ULONG NTAPI Ext2AllocBlock( 
 	PtrExt2IrpContext	PtrIrpContext,
 	PtrExt2VCB			PtrVCB,
 	ULONG				Count)
@@ -1895,7 +1895,7 @@ ULONG Ext2AllocBlock(
 * Return Value: Success / Failure...
 *
 *************************************************************************/
-BOOLEAN Ext2DeallocBlock( 
+BOOLEAN NTAPI Ext2DeallocBlock( 
 	PtrExt2IrpContext	PtrIrpContext,
 	PtrExt2VCB			PtrVCB,
 	ULONG				BlockNo )
@@ -2076,7 +2076,7 @@ BOOLEAN Ext2DeallocBlock(
 	return RC;
 }
 
-BOOLEAN Ext2UpdateFileSize(	
+BOOLEAN NTAPI Ext2UpdateFileSize(	
 	PtrExt2IrpContext	PtrIrpContext,
 	PFILE_OBJECT		PtrFileObject,
 	PtrExt2FCB			PtrFCB)
@@ -2122,7 +2122,7 @@ BOOLEAN Ext2UpdateFileSize(
 * Return Value: Success / Failure...
 *
 *************************************************************************/
-BOOLEAN Ext2DeleteFile(
+BOOLEAN NTAPI Ext2DeleteFile(
 	PtrExt2FCB			PtrFCB,
 	PtrExt2IrpContext	PtrIrpContext)
 {
@@ -2208,7 +2208,7 @@ BOOLEAN Ext2DeleteFile(
 * Return Value: Success / Failure...
 *
 *************************************************************************/
-BOOLEAN Ext2ReleaseDataBlocks(
+BOOLEAN NTAPI Ext2ReleaseDataBlocks(
 	PtrExt2FCB			PtrFCB,
 	PtrExt2IrpContext	PtrIrpContext)
 {
@@ -2440,7 +2440,7 @@ BOOLEAN Ext2ReleaseDataBlocks(
 }
 
 
-BOOLEAN Ext2TruncateFileAllocationSize(
+BOOLEAN NTAPI Ext2TruncateFileAllocationSize(
 	PtrExt2IrpContext	PtrIrpContext,
 	PtrExt2FCB			PtrFCB,
 	PFILE_OBJECT		PtrFileObject,
@@ -2550,7 +2550,7 @@ BOOLEAN Ext2TruncateFileAllocationSize(
 	return TRUE;
 }
 
-BOOLEAN Ext2IsDirectoryEmpty(
+BOOLEAN NTAPI Ext2IsDirectoryEmpty(
 	PtrExt2FCB			PtrFCB,
 	PtrExt2CCB			PtrCCB,
 	PtrExt2IrpContext	PtrIrpContext)
@@ -2650,7 +2650,7 @@ BOOLEAN Ext2IsDirectoryEmpty(
 }
 
 
-NTSTATUS Ext2RenameOrLinkFile( 
+NTSTATUS NTAPI Ext2RenameOrLinkFile( 
 	PtrExt2FCB					PtrSourceFCB, 
 	PFILE_OBJECT				PtrSourceFileObject,	
 	PtrExt2IrpContext			PtrIrpContext,

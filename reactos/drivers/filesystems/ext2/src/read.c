@@ -36,7 +36,7 @@
 * Return Value: STATUS_SUCCESS/Error
 *
 *************************************************************************/
-NTSTATUS Ext2Read(
+NTSTATUS NTAPI Ext2Read(
 PDEVICE_OBJECT		DeviceObject,		// the logical volume device object
 PIRP					Irp)					// I/O Request Packet
 {
@@ -101,7 +101,7 @@ PIRP					Irp)					// I/O Request Packet
 * Return Value: STATUS_SUCCESS/Error
 *
 *************************************************************************/
-NTSTATUS	Ext2CommonRead(
+NTSTATUS NTAPI Ext2CommonRead(
 PtrExt2IrpContext			PtrIrpContext,
 PIRP						PtrIrp,
 BOOLEAN						FirstAttempt )
@@ -1329,7 +1329,7 @@ BOOLEAN						FirstAttempt )
 * Return Value: STATUS_SUCCESS/Error
 *
 *************************************************************************/
-void * Ext2GetCallersBuffer (
+void * NTAPI Ext2GetCallersBuffer (
 		PIRP  PtrIrp )
 {
 	void	* ReturnedBuffer = NULL;
@@ -1363,7 +1363,7 @@ void * Ext2GetCallersBuffer (
 * Return Value: STATUS_SUCCESS/Error
 *
 *************************************************************************/
-NTSTATUS Ext2LockCallersBuffer(
+NTSTATUS NTAPI Ext2LockCallersBuffer(
 PIRP				PtrIrp,
 BOOLEAN			IsReadOperation,
 uint32			Length)
@@ -1436,7 +1436,7 @@ uint32			Length)
 * Return Value: None.
 *
 *************************************************************************/
-void Ext2MdlComplete(
+void NTAPI Ext2MdlComplete(
 	PtrExt2IrpContext			PtrIrpContext,
 	PIRP						PtrIrp,
 	PIO_STACK_LOCATION			PtrIoStackLocation,

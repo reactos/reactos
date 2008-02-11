@@ -21,24 +21,22 @@
 /**************************************************************************
 	some useful definitions
 **************************************************************************/
-#ifdef	_CPU_X86_
-typedef	char					int8;
-typedef	short					int16;
-typedef	int						int32;
+typedef CHAR int8;
+typedef SHORT int16;
+typedef LONG int32;
 
-typedef	unsigned char			uint8;
-typedef	unsigned short			uint16;
-typedef	unsigned int			uint32;
+typedef UCHAR uint8;
+typedef USHORT uint16;
+typedef ULONG uint32;
 
-typedef PVOID					PBCB;
+typedef PVOID PBCB;
+
+#define try if (1)
+#define except(x) if (0 && (x))
+#define finally if (1)
+#define GetExceptionInformation() 0
 
 // we will use the LARGE_INTEGER structure as defined by NT
-
-#else		// Please define appropriate types here
-
-!!!! You must define your types here for compilation to proceed !!!!
-
-#endif	// if _CPU_X86_
 
 /**************************************************************************
 	some empty typedefs defined here so we can reference them easily

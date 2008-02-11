@@ -35,7 +35,7 @@
 * Return Value: TRUE/FALSE
 *
 *************************************************************************/
-BOOLEAN Ext2FastIoCheckIfPossible(
+BOOLEAN NTAPI Ext2FastIoCheckIfPossible(
 IN PFILE_OBJECT				FileObject,
 IN PLARGE_INTEGER				FileOffset,
 IN ULONG							Length,
@@ -134,7 +134,7 @@ IN PDEVICE_OBJECT				DeviceObject)
 * Return Value: TRUE/FALSE
 *
 *************************************************************************/
-BOOLEAN Ext2FastIoRead(
+BOOLEAN NTAPI Ext2FastIoRead(
 IN PFILE_OBJECT				FileObject,
 IN PLARGE_INTEGER				FileOffset,
 IN ULONG							Length,
@@ -218,7 +218,7 @@ IN PDEVICE_OBJECT				DeviceObject)
 * Return Value: TRUE/FALSE
 *
 *************************************************************************/
-BOOLEAN Ext2FastIoWrite(
+BOOLEAN NTAPI Ext2FastIoWrite(
 IN PFILE_OBJECT				FileObject,
 IN PLARGE_INTEGER				FileOffset,
 IN ULONG							Length,
@@ -287,7 +287,7 @@ IN PDEVICE_OBJECT				DeviceObject)
 * Return Value: TRUE/FALSE
 *
 *************************************************************************/
-BOOLEAN Ext2FastIoQueryBasicInfo(
+BOOLEAN NTAPI Ext2FastIoQueryBasicInfo(
 IN PFILE_OBJECT					FileObject,
 IN BOOLEAN							Wait,
 OUT PFILE_BASIC_INFORMATION	Buffer,
@@ -350,7 +350,7 @@ IN PDEVICE_OBJECT					DeviceObject)
 * Return Value: TRUE/FALSE
 *
 *************************************************************************/
-BOOLEAN Ext2FastIoQueryStdInfo(
+BOOLEAN NTAPI Ext2FastIoQueryStdInfo(
 IN PFILE_OBJECT						FileObject,
 IN BOOLEAN							Wait,
 OUT PFILE_STANDARD_INFORMATION 		Buffer,
@@ -413,7 +413,7 @@ IN PDEVICE_OBJECT					DeviceObject)
 * Return Value: TRUE/FALSE
 *
 *************************************************************************/
-BOOLEAN Ext2FastIoLock(
+BOOLEAN NTAPI Ext2FastIoLock(
 IN PFILE_OBJECT				FileObject,
 IN PLARGE_INTEGER				FileOffset,
 IN PLARGE_INTEGER				Length,
@@ -482,7 +482,7 @@ IN PDEVICE_OBJECT				DeviceObject)
 * Return Value: TRUE/FALSE
 *
 *************************************************************************/
-BOOLEAN Ext2FastIoUnlockSingle(
+BOOLEAN NTAPI Ext2FastIoUnlockSingle(
 IN PFILE_OBJECT				FileObject,
 IN PLARGE_INTEGER				FileOffset,
 IN PLARGE_INTEGER				Length,
@@ -549,7 +549,7 @@ IN PDEVICE_OBJECT				DeviceObject)
 * Return Value: TRUE/FALSE
 *
 *************************************************************************/
-BOOLEAN Ext2FastIoUnlockAll(
+BOOLEAN NTAPI Ext2FastIoUnlockAll(
 IN PFILE_OBJECT				FileObject,
 PEPROCESS						ProcessId,
 OUT PIO_STATUS_BLOCK			IoStatus,
@@ -612,7 +612,7 @@ IN PDEVICE_OBJECT				DeviceObject)
 * Return Value: TRUE/FALSE
 *
 *************************************************************************/
-BOOLEAN Ext2FastIoUnlockAllByKey(
+BOOLEAN NTAPI Ext2FastIoUnlockAllByKey(
 IN PFILE_OBJECT				FileObject,
 PEPROCESS						ProcessId,
 ULONG								Key,
@@ -676,7 +676,7 @@ IN PDEVICE_OBJECT				DeviceObject)
 * Return Value: None (we must be prepared to handle VMM initiated calls)
 *
 *************************************************************************/
-void Ext2FastIoAcqCreateSec(
+void NTAPI Ext2FastIoAcqCreateSec(
 IN PFILE_OBJECT			FileObject)
 {
 	PtrExt2FCB			PtrFCB = NULL;
@@ -745,7 +745,7 @@ IN PFILE_OBJECT			FileObject)
 * Return Value: None
 *
 *************************************************************************/
-void Ext2FastIoRelCreateSec(
+void NTAPI Ext2FastIoRelCreateSec(
 IN PFILE_OBJECT			FileObject)
 {
 
@@ -813,7 +813,7 @@ IN PFILE_OBJECT			FileObject)
 * Return Value: TRUE/FALSE (Cache Manager does not tolerate FALSE well)
 *
 *************************************************************************/
-BOOLEAN Ext2AcqLazyWrite(
+BOOLEAN NTAPI Ext2AcqLazyWrite(
 IN PVOID						Context,
 IN BOOLEAN						Wait)
 {
@@ -927,7 +927,7 @@ IN BOOLEAN						Wait)
 * Return Value: None
 *
 *************************************************************************/
-void Ext2RelLazyWrite(
+void NTAPI Ext2RelLazyWrite(
 IN PVOID							Context)
 {
 
@@ -1024,7 +1024,7 @@ IN PVOID							Context)
 * Return Value: TRUE/FALSE (Cache Manager does not tolerate FALSE well)
 *
 *************************************************************************/
-BOOLEAN Ext2AcqReadAhead(
+BOOLEAN NTAPI Ext2AcqReadAhead(
 IN PVOID						Context,
 IN BOOLEAN						Wait)
 {
@@ -1102,7 +1102,7 @@ IN BOOLEAN						Wait)
 * Return Value: None
 *
 *************************************************************************/
-void Ext2RelReadAhead(
+void NTAPI Ext2RelReadAhead(
 IN PVOID							Context)
 {
 	BOOLEAN				ReturnedStatus = TRUE;
@@ -1175,7 +1175,7 @@ IN PVOID							Context)
 * Return Value: TRUE/FALSE
 *
 *************************************************************************/
-BOOLEAN Ext2FastIoQueryNetInfo(
+BOOLEAN NTAPI Ext2FastIoQueryNetInfo(
 IN PFILE_OBJECT									FileObject,
 IN BOOLEAN											Wait,
 OUT PFILE_NETWORK_OPEN_INFORMATION 			Buffer,
@@ -1240,7 +1240,7 @@ IN PDEVICE_OBJECT									DeviceObject)
 * Return Value: TRUE/FALSE
 *
 *************************************************************************/
-BOOLEAN Ext2FastIoMdlRead(
+BOOLEAN NTAPI Ext2FastIoMdlRead(
 IN PFILE_OBJECT				FileObject,
 IN PLARGE_INTEGER				FileOffset,
 IN ULONG							Length,
@@ -1309,7 +1309,7 @@ IN PDEVICE_OBJECT				DeviceObject)
 * Return Value: TRUE/FALSE
 *
 *************************************************************************/
-BOOLEAN Ext2FastIoMdlReadComplete(
+BOOLEAN NTAPI Ext2FastIoMdlReadComplete(
 IN PFILE_OBJECT				FileObject,
 OUT PMDL							MdlChain,
 IN PDEVICE_OBJECT				DeviceObject)
@@ -1374,7 +1374,7 @@ IN PDEVICE_OBJECT				DeviceObject)
 * Return Value: TRUE/FALSE
 *
 *************************************************************************/
-BOOLEAN Ext2FastIoPrepareMdlWrite(
+BOOLEAN NTAPI Ext2FastIoPrepareMdlWrite(
 IN PFILE_OBJECT				FileObject,
 IN PLARGE_INTEGER				FileOffset,
 IN ULONG							Length,
@@ -1442,7 +1442,7 @@ IN PDEVICE_OBJECT				DeviceObject)
 * Return Value: TRUE/FALSE
 *
 *************************************************************************/
-BOOLEAN Ext2FastIoMdlWriteComplete(
+BOOLEAN NTAPI Ext2FastIoMdlWriteComplete(
 IN PFILE_OBJECT				FileObject,
 IN PLARGE_INTEGER				FileOffset,
 OUT PMDL							MdlChain,
@@ -1506,7 +1506,7 @@ IN PDEVICE_OBJECT				DeviceObject)
 * Return Value: STATUS_SUCCESS/Error (try not to return an error, will 'ya ? :-)
 *
 *************************************************************************/
-NTSTATUS Ext2FastIoAcqModWrite(
+NTSTATUS NTAPI Ext2FastIoAcqModWrite(
 IN PFILE_OBJECT					FileObject,
 IN PLARGE_INTEGER					EndingOffset,
 OUT PERESOURCE						*ResourceToRelease,
@@ -1586,7 +1586,7 @@ IN PDEVICE_OBJECT					DeviceObject)
 * Return Value: STATUS_SUCCESS/Error (an error returned here is really not expected!)
 *
 *************************************************************************/
-NTSTATUS Ext2FastIoRelModWrite(
+NTSTATUS NTAPI Ext2FastIoRelModWrite(
 IN PFILE_OBJECT				FileObject,
 IN PERESOURCE					ResourceToRelease,
 IN PDEVICE_OBJECT				DeviceObject)
@@ -1652,7 +1652,7 @@ IN PDEVICE_OBJECT				DeviceObject)
 * Return Value: STATUS_SUCCESS/Error
 *
 *************************************************************************/
-NTSTATUS Ext2FastIoAcqCcFlush(
+NTSTATUS NTAPI Ext2FastIoAcqCcFlush(
 IN PFILE_OBJECT			FileObject,
 IN PDEVICE_OBJECT			DeviceObject)
 {
@@ -1712,7 +1712,7 @@ IN PDEVICE_OBJECT			DeviceObject)
 * Return Value: STATUS_SUCCESS/Error
 *
 *************************************************************************/
-NTSTATUS Ext2FastIoRelCcFlush(
+NTSTATUS NTAPI Ext2FastIoRelCcFlush(
 IN PFILE_OBJECT			FileObject,
 IN PDEVICE_OBJECT			DeviceObject)
 {
