@@ -514,7 +514,10 @@ IntPrepareDriver()
          DPRINT1("WARNING!!! Need to Alloc DMW !!!!!!\n");
       }
       // Dont remove until we finish testing other drivers.
-      DPRINT1("DMW extra %x !!!!!!\n",PrimarySurface.DMW.dmDriverExtra);
+      if (PrimarySurface.DMW.dmDriverExtra != 0)
+      {
+          DPRINT1("**** DMW extra = %u bytes. Please report to ros-dev@reactos.org ****\n", PrimarySurface.DMW.dmDriverExtra);
+      }
 
       if (0 == PrimarySurface.GDIInfo.ulLogPixelsX)
       {
