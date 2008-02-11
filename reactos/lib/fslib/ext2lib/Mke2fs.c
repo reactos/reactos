@@ -8,7 +8,7 @@
 /* INCLUDES **************************************************************/
 
 #include "Mke2fs.h"
-#include <fmifs.h>
+#include <debug.h>
 
 /* GLOBALS ***************************************************************/
 
@@ -126,7 +126,7 @@ bool zero_blocks(PEXT2_FILESYS fs, ULONG blk, ULONG num,
     {
         if (buf)
         {
-            RtlFreeHeap(GetProcessHeap(), 0, buf);
+            RtlFreeHeap(RtlGetProcessHeap(), 0, buf);
             buf = 0;
         }
         return true;
@@ -138,10 +138,10 @@ bool zero_blocks(PEXT2_FILESYS fs, ULONG blk, ULONG num,
     if (!buf)
     {
         buf = (unsigned char *)
-            RtlAllocateHeap(GetProcessHeap(), 0, fs->blocksize * STRIDE_LENGTH);
+            RtlAllocateHeap(RtlGetProcessHeap(), 0, fs->blocksize * STRIDE_LENGTH);
         if (!buf)
         {
-            KdPrint(("Mke2fs: while allocating zeroizing buffer"));
+            DPRINT1("Mke2fs: while allocating zeroizing buffer");
             return false;
         }
         memset(buf, 0, fs->blocksize * STRIDE_LENGTH);
@@ -188,11 +188,11 @@ bool zap_sector(PEXT2_FILESYS Ext2Sys, int sect, int nsect)
     ULONG         *magic;  
 
     buf = (unsigned char *)
-        RtlAllocateHeap(GetProcessHeap(), 0, SECTOR_SIZE*nsect);
+        RtlAllocateHeap(RtlGetProcessHeap(), 0, SECTOR_SIZE*nsect);
     if (!buf)
     {
-        KdPrint(("Mke2fs: Out of memory erasing sectors %d-%d\n",
-                sect, sect + nsect - 1));
+        DPRINT1("Mke2fs: Out of memory erasing sectors %d-%d\n",
+                sect, sect + nsect - 1);
         return false;
     }
 
@@ -223,7 +223,7 @@ bool zap_sector(PEXT2_FILESYS Ext2Sys, int sect, int nsect)
 
 clean_up:
 
-    RtlFreeHeap(GetProcessHeap(), 0, buf);
+    RtlFreeHeap(RtlGetProcessHeap(), 0, buf);
     
     return true;
 }
@@ -352,7 +352,7 @@ cleanup:
 
     if (block)
     {
-        RtlFreeHeap(GetProcessHeap(), 0, block);
+        RtlFreeHeap(RtlGetProcessHeap(), 0, block);
         block = NULL;
     }
 
@@ -368,7 +368,7 @@ bool create_root_dir(PEXT2_FILESYS fs)
     
     if (!retval)
     {
-        KdPrint(("Mke2fs: while creating root dir"));
+        DPRINT1("Mke2fs: while creating root dir");
         return false;
     }
 
@@ -379,7 +379,7 @@ bool create_root_dir(PEXT2_FILESYS fs)
         retval = ext2_save_inode(fs, EXT2_ROOT_INO, &inode);
         if (!retval)
         {
-            KdPrint(("Mke2fs: while setting root inode ownership"));
+            DPRINT1("Mke2fs: while setting root inode ownership");
             return false;
         }
     }
@@ -401,7 +401,7 @@ bool create_lost_and_found(PEXT2_FILESYS Ext2Sys)
 
     char *      buf;
 
-    buf = (char *)RtlAllocateHeap(GetProcessHeap(), 0, Ext2Sys->blocksize);
+    buf = (char *)RtlAllocateHeap(RtlGetProcessHeap(), 0, Ext2Sys->blocksize);
     if (!buf)
     {
         bExt = FALSE;
@@ -419,7 +419,7 @@ bool create_lost_and_found(PEXT2_FILESYS Ext2Sys)
     
     if (!retval)
     {
-        KdPrint(("Mke2fs: while creating /lost+found.\n"));
+        DPRINT1("Mke2fs: while creating /lost+found.\n");
         return false;
     }
 
@@ -437,14 +437,14 @@ bool create_lost_and_found(PEXT2_FILESYS Ext2Sys)
 
         if (! retval)
         {
-            KdPrint(("Mke2fs: create_lost_and_found: error alloc block.\n"));
+            DPRINT1("Mke2fs: create_lost_and_found: error alloc block.\n");
             break;
         }
 
         retval = ext2_expand_inode(Ext2Sys, &inode, dwBlk);
         if (!retval)
         {
-            KdPrint(("Mke2fs: errors when expanding /lost+found.\n"));
+            DPRINT1("Mke2fs: errors when expanding /lost+found.\n");
             break;
         }
 
@@ -471,7 +471,7 @@ errorout:
 
     if (buf)
     {
-        RtlFreeHeap(GetProcessHeap(), 0, buf);
+        RtlFreeHeap(RtlGetProcessHeap(), 0, buf);
     }
 
     return true;
@@ -658,11 +658,11 @@ bool create_journal_dev(PEXT2_FILESYS fs)
 
     if (!retval)
     {
-        KdPrint(("Mke2fs: ext2_create_journal_dev: while initializing journal superblock.\n"));
+        DPRINT1("Mke2fs: ext2_create_journal_dev: while initializing journal superblock.\n");
         return false;
     }
 
-    KdPrint(("Mke2fs: Zeroing journal device: \n"));
+    DPRINT("Mke2fs: Zeroing journal device: \n");
 
     retval = zero_blocks(fs, 0, fs->ext2_sb->s_blocks_count,
                  &blk, &count);
@@ -671,8 +671,8 @@ bool create_journal_dev(PEXT2_FILESYS fs)
 
     if (!retval)
     {
-        KdPrint(("Mke2fs: create_journal_dev: while zeroing journal device (block %lu, count %lu).\n",
-            blk, count));
+        DPRINT1("Mke2fs: create_journal_dev: while zeroing journal device (block %lu, count %lu).\n",
+            blk, count);
         return false;
     }
 
@@ -683,7 +683,7 @@ bool create_journal_dev(PEXT2_FILESYS fs)
 
     if (!retval)
     {
-        KdPrint(("Mke2fs: create_journal_dev: while writing journal superblock.\n"));
+        DPRINT1("Mke2fs: create_journal_dev: while writing journal superblock.\n");
         return false;
     }
 
@@ -812,29 +812,29 @@ Ext2Format(PUNICODE_STRING DriveRoot,
     EXT2_FILESYS     FileSys;
     ULONG Percent;
 
-    KdPrint(("%s:%d\n", __FILE__, __LINE__));
+    CHECKPOINT;
 
     Callback(PROGRESS, 0, (PVOID)&Percent);
-    
-    KdPrint(("%s:%d\n", __FILE__, __LINE__));
+
+    CHECKPOINT;
 
     RtlZeroMemory(&Ext2Sb, sizeof(EXT2_SUPER_BLOCK));
     RtlZeroMemory(&FileSys, sizeof(EXT2_FILESYS));
     FileSys.ext2_sb = &Ext2Sb;
 
-    KdPrint(("%s:%d\n", __FILE__, __LINE__));
+    CHECKPOINT;
 
     if (!NT_SUCCESS(Ext2OpenDevice(&FileSys, DriveRoot)))
     {
-        KdPrint(("Mke2fs: Volume %wZ does not exist, ...\n", DriveRoot));
+        DPRINT1("Mke2fs: Volume %wZ does not exist, ...\n", DriveRoot);
         goto clean_up;
     }
 
-    KdPrint(("%s:%d\n", __FILE__, __LINE__));
+    CHECKPOINT;
 
     if (!NT_SUCCESS(Ext2GetMediaInfo(&FileSys)))
     {
-        KdPrint(("Mke2fs: Can't get media information\n"));
+        DPRINT1("Mke2fs: Can't get media information\n");
         goto clean_up;
     }
 
@@ -843,7 +843,7 @@ Ext2Format(PUNICODE_STRING DriveRoot,
     Ext2Sb.s_blocks_count = FileSys.PartInfo.PartitionLength.QuadPart /
                             EXT2_BLOCK_SIZE(&Ext2Sb);
 
-    KdPrint(("%s:%d\n", __FILE__, __LINE__));
+    CHECKPOINT;
 
     /*
      * Calculate number of inodes based on the inode ratio
@@ -856,7 +856,7 @@ Ext2Format(PUNICODE_STRING DriveRoot,
      */
     Ext2Sb.s_r_blocks_count = (Ext2Sb.s_blocks_count * 5) / 100;
 
-    KdPrint(("%s:%d\n", __FILE__, __LINE__));
+    CHECKPOINT;
 
     Status = Ext2LockVolume(&FileSys);
     if (NT_SUCCESS(Status))
@@ -864,16 +864,16 @@ Ext2Format(PUNICODE_STRING DriveRoot,
         bLocked = TRUE;
     }
 
-    KdPrint(("%s:%d\n", __FILE__, __LINE__));
+    CHECKPOINT;
 
     // Initialize 
     if (!ext2_initialize_sb(&FileSys))
     {
-        KdPrint(("Mke2fs: error...\n"));
+        DPRINT1("Mke2fs: error...\n");
         goto clean_up;
     }
 
-    KdPrint(("%s:%d\n", __FILE__, __LINE__));
+    CHECKPOINT;
 
     zap_sector(&FileSys, 2, 6);
 
@@ -946,7 +946,7 @@ Ext2Format(PUNICODE_STRING DriveRoot,
 
     if (!bRet)
     {
-        KdPrint(("Mke2fs: zeroing block %lu at end of filesystem", ret_blk));
+        DPRINT1("Mke2fs: zeroing block %lu at end of filesystem", ret_blk);
         goto clean_up;
     }
 
@@ -959,21 +959,21 @@ Ext2Format(PUNICODE_STRING DriveRoot,
 
     create_bad_block_inode(&FileSys, NULL);
 
-    KdPrint(("Mke2fs: Writing superblocks and filesystem accounting information ... \n"));
+    DPRINT("Mke2fs: Writing superblocks and filesystem accounting information ... \n");
 
     if (!QuickFormat)
     {
-        KdPrint(("Mke2fs: Slow format not supported yet\n"));
+        DPRINT1("Mke2fs: Slow format not supported yet\n");
     }
 
     if (!ext2_flush(&FileSys))
     {
         bRet = false;
-        KdPrint(("Mke2fs: Warning, had trouble writing out superblocks.\n"));
+        DPRINT1("Mke2fs: Warning, had trouble writing out superblocks.\n");
         goto clean_up;
     }
 
-    KdPrint(("Mke2fs: Writing superblocks and filesystem accounting information done!\n"));
+    DPRINT("Mke2fs: Writing superblocks and filesystem accounting information done!\n");
 
     bRet = true;
     Status = STATUS_SUCCESS;
@@ -998,13 +998,13 @@ clean_up:
         }
     }
 
-    KdPrint(("%s:%d\n", __FILE__, __LINE__));
+    CHECKPOINT;
     Ext2CloseDevice(&FileSys);
-    KdPrint(("%s:%d\n", __FILE__, __LINE__));
+    CHECKPOINT;
 
-    KdPrint(("%s:%d\n", __FILE__, __LINE__));
+    CHECKPOINT;
     Callback(DONE, 0, (PVOID)&bRet);
-    KdPrint(("%s:%d\n", __FILE__, __LINE__));
+    CHECKPOINT;
 
     return Status;
 }

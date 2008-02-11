@@ -8,6 +8,7 @@
 /* INCLUDES **************************************************************/
 
 #include "Mke2fs.h"
+#include <debug.h>
 
 /* DEFINITIONS ***********************************************************/
 
@@ -23,8 +24,8 @@ bool ext2_get_inode_lba(PEXT2_FILESYS Ext2Sys, ULONG no, LONGLONG *offset)
 
     if (no < 1 || no > pExt2Sb->s_inodes_count)
     {
-        KdPrint(("Mke2fs: Inode value %lu was out of range in load_inode.(1-%ld)\n",
-            no, pExt2Sb->s_inodes_count));
+        DPRINT1("Mke2fs: Inode value %lu was out of range in load_inode.(1-%ld)\n",
+            no, pExt2Sb->s_inodes_count);
         *offset = 0;
         return false;
     }
@@ -138,7 +139,7 @@ bool ext2_expand_block( PEXT2_FILESYS Ext2Sys, PEXT2_INODE Inode,
 
     PEXT2_SUPER_BLOCK pExt2Sb = Ext2Sys->ext2_sb;
  
-    pData = (ULONG *)RtlAllocateHeap(GetProcessHeap(), 0, Ext2Sys->blocksize);
+    pData = (ULONG *)RtlAllocateHeap(RtlGetProcessHeap(), 0, Ext2Sys->blocksize);
     
     if (!pData)
     {
@@ -186,7 +187,7 @@ bool ext2_expand_block( PEXT2_FILESYS Ext2Sys, PEXT2_INODE Inode,
         if (!ext2_expand_block(Ext2Sys, Inode, dwBlk, j, layer - 1, bDirty, &dwNewBlk, &Offset))
         {
             bRet = false;
-            KdPrint(("Mke2fs: ext2_expand_block: ... error recuise...\n"));
+            DPRINT1("Mke2fs: ext2_expand_block: ... error recuise...\n");
             goto errorout;
         }
     }
@@ -200,7 +201,7 @@ bool ext2_expand_block( PEXT2_FILESYS Ext2Sys, PEXT2_INODE Inode,
 errorout:
 
     if (pData)
-        RtlFreeHeap(GetProcessHeap(), 0, pData);
+        RtlFreeHeap(RtlGetProcessHeap(), 0, pData);
 
     if (bRet && dwRet)
         *dwRet = dwNewBlk;
@@ -233,7 +234,7 @@ bool ext2_expand_inode( PEXT2_FILESYS Ext2Sys,
 
     if (Index >= dwTotal)
     {
-        KdPrint(("Mke2fs: ext2_expand_inode: beyond the maxinum size of an inode.\n"));
+        DPRINT1("Mke2fs: ext2_expand_inode: beyond the maxinum size of an inode.\n");
         return false;
     }
 
@@ -300,7 +301,7 @@ bool ext2_get_block(PEXT2_FILESYS Ext2Sys, ULONG dwContent, ULONG Index, int lay
     Offset = (LONGLONG) dwContent;
     Offset = Offset * Ext2Sys->blocksize;
 
-    pData = (ULONG *)RtlAllocateHeap(GetProcessHeap(), 0, Ext2Sys->blocksize);
+    pData = (ULONG *)RtlAllocateHeap(RtlGetProcessHeap(), 0, Ext2Sys->blocksize);
 
     if (!pData)
     {
@@ -329,7 +330,7 @@ bool ext2_get_block(PEXT2_FILESYS Ext2Sys, ULONG dwContent, ULONG Index, int lay
         if (!ext2_get_block(Ext2Sys, pData[i], j, layer - 1, &dwBlk))
         {
             bRet = false;
-            KdPrint(("Mke2fs: ext2_get_block: ... error recuise...\n"));
+            DPRINT1("Mke2fs: ext2_get_block: ... error recuise...\n");
             goto errorout;
         }
     }
@@ -337,7 +338,7 @@ bool ext2_get_block(PEXT2_FILESYS Ext2Sys, ULONG dwContent, ULONG Index, int lay
 errorout:
 
     if (pData)
-        RtlFreeHeap(GetProcessHeap(), 0, pData);
+        RtlFreeHeap(RtlGetProcessHeap(), 0, pData);
 
     if (bRet && dwRet)
         *dwRet = dwBlk;
@@ -363,7 +364,7 @@ bool ext2_block_map(PEXT2_FILESYS Ext2Sys, PEXT2_INODE inode, ULONG block, ULONG
 
     if (Index >= inode->i_blocks / (Ext2Sys->blocksize / SECTOR_SIZE))
     {
-        KdPrint(("Mke2fs: ext2_block_map: beyond the size of the inode.\n"));
+        DPRINT1("Mke2fs: ext2_block_map: beyond the size of the inode.\n");
         return false;
     }
 
@@ -409,7 +410,7 @@ ULONG ext2_build_bdl(PEXT2_FILESYS Ext2Sys,
 
     if (offset >= ext2_inode->i_size)
     {
-        KdPrint(("Mke2fs: ext2_build_bdl: beyond the file range.\n"));
+        DPRINT1("Mke2fs: ext2_build_bdl: beyond the file range.\n");
         return 0;
     }
 
@@ -428,7 +429,7 @@ ULONG ext2_build_bdl(PEXT2_FILESYS Ext2Sys,
     if (nBlocks > 0)
     {
         ext2bdl = (PEXT2_BDL)
-            RtlAllocateHeap(GetProcessHeap(), 0, sizeof(EXT2_BDL) * nBlocks);
+            RtlAllocateHeap(RtlGetProcessHeap(), 0, sizeof(EXT2_BDL) * nBlocks);
 
         if (ext2bdl)
         {
@@ -486,7 +487,7 @@ ULONG ext2_build_bdl(PEXT2_FILESYS Ext2Sys,
 fail:
 
     if (ext2bdl)
-        RtlFreeHeap(GetProcessHeap(), 0, ext2bdl);
+        RtlFreeHeap(RtlGetProcessHeap(), 0, ext2bdl);
 
     // Error
     return 0;
@@ -534,7 +535,7 @@ bool ext2_read_inode(PEXT2_FILESYS Ext2Sys,
     *dwReturn = dwTotal;
 
     if (ext2_bdl)
-        RtlFreeHeap(GetProcessHeap(), 0, ext2_bdl);
+        RtlFreeHeap(RtlGetProcessHeap(), 0, ext2_bdl);
 
     return bRet;
 }
@@ -612,7 +613,7 @@ bool ext2_write_inode (PEXT2_FILESYS Ext2Sys,
 errorout:
    
     if (ext2_bdl)
-        RtlFreeHeap(GetProcessHeap(), 0, ext2_bdl);
+        RtlFreeHeap(RtlGetProcessHeap(), 0, ext2_bdl);
 
     return bRet;
 }
@@ -636,7 +637,7 @@ ext2_add_entry( PEXT2_FILESYS Ext2Sys,
         return false;
     }
 
-    buf = (char *)RtlAllocateHeap(GetProcessHeap(), 0, parent_inode.i_size);
+    buf = (char *)RtlAllocateHeap(RtlGetProcessHeap(), 0, parent_inode.i_size);
 
     if (!ext2_read_inode(Ext2Sys, parent, 0, buf, parent_inode.i_size, &dwRet))
     {

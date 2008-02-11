@@ -47,7 +47,7 @@ bool ext2_allocate_group_desc(PEXT2_FILESYS Ext2Sys)
     size = Ext2Sys->desc_blocks * Ext2Sys->blocksize;
 
     Ext2Sys->group_desc =
-        (PEXT2_GROUP_DESC)RtlAllocateHeap(GetProcessHeap(), 0, size);
+        (PEXT2_GROUP_DESC)RtlAllocateHeap(RtlGetProcessHeap(), 0, size);
 
     if (Ext2Sys->group_desc)
     {
@@ -62,7 +62,7 @@ void ext2_free_group_desc(PEXT2_FILESYS Ext2Sys)
 {
     if (Ext2Sys->group_desc)
     {
-        RtlFreeHeap(GetProcessHeap(), 0, Ext2Sys->group_desc);
+        RtlFreeHeap(RtlGetProcessHeap(), 0, Ext2Sys->group_desc);
         Ext2Sys->group_desc = NULL;
     }
 }

@@ -8,6 +8,7 @@
 /* INCLUDES **************************************************************/
 
 #include "Mke2fs.h"
+#include <debug.h>
 
 /* DEFINITIONS ***********************************************************/
 
@@ -20,50 +21,49 @@ void ext2_print_super(PEXT2_SUPER_BLOCK pExt2Sb)
 {
     int i;
 
-    KdPrint(("\nExt2 Super Block Details ...\n\n"));
-    KdPrint(("     Inode Count: %lu\n", pExt2Sb->s_inodes_count));
-    KdPrint(("     Block Count: %lu\n", pExt2Sb->s_blocks_count));
-    KdPrint(("     Reserved Block Count: %lu\n", pExt2Sb->s_r_blocks_count));
-    KdPrint(("     Free Blocks: %lu\n", pExt2Sb->s_free_blocks_count));
-    KdPrint(("     Free Inodes: %lu\n", pExt2Sb->s_free_inodes_count));
-    KdPrint(("     First Data Block: %lu\n", pExt2Sb->s_first_data_block));
-    KdPrint(("     Log Block Size: %lu\n", pExt2Sb->s_log_block_size));
-    KdPrint(("     Log Frag Size: %ld\n", pExt2Sb->s_log_frag_size));
-    KdPrint(("     Blocks per Group: %lu\n", pExt2Sb->s_blocks_per_group));
-    KdPrint(("     Fragments per Group: %lu\n", pExt2Sb->s_frags_per_group));
-    KdPrint(("     Inodes per Group: %lu\n", pExt2Sb->s_inodes_per_group));
-//    KdPrint(("     Mount Time: %s", ctime((time_t *) & (pExt2Sb->s_mtime))));
-//    KdPrint(("     Write Time: %s", ctime((time_t *) & (pExt2Sb->s_wtime))));
-    KdPrint(("     Mount Count: %u\n", pExt2Sb->s_mnt_count));
-    KdPrint(("     Max Mount Count: %d\n", pExt2Sb->s_max_mnt_count));
-    KdPrint(("     Magic Number: %X  (%s)\n", pExt2Sb->s_magic,
-        pExt2Sb->s_magic == EXT2_SUPER_MAGIC ? "OK" : "BAD"));
-    KdPrint(("     File System State: %X\n", pExt2Sb->s_state));
-    KdPrint(("     Error Behaviour: %X\n", pExt2Sb->s_errors));
-    KdPrint(("     Minor rev: %u\n", pExt2Sb->s_minor_rev_level));
-//    KdPrint(("     Last Check: %s", ctime((time_t *) & (pExt2Sb->s_lastcheck))));
-    KdPrint(("     Check Interval: %lu\n", pExt2Sb->s_checkinterval));
-    KdPrint(("     Creator OS: %lu\n", pExt2Sb->s_creator_os));
-    KdPrint(("     Revision Level: %lu\n", pExt2Sb->s_rev_level));
-    KdPrint(("     Reserved Block Default UID: %u\n", pExt2Sb->s_def_resuid));
-    KdPrint(("     Reserved Block Default GID: %u\n", pExt2Sb->s_def_resgid)); 
-    KdPrint(("     uuid = "));
+    DPRINT("\nExt2 Super Block Details ...\n\n");
+    DPRINT("     Inode Count: %lu\n", pExt2Sb->s_inodes_count);
+    DPRINT("     Block Count: %lu\n", pExt2Sb->s_blocks_count);
+    DPRINT("     Reserved Block Count: %lu\n", pExt2Sb->s_r_blocks_count);
+    DPRINT("     Free Blocks: %lu\n", pExt2Sb->s_free_blocks_count);
+    DPRINT("     Free Inodes: %lu\n", pExt2Sb->s_free_inodes_count);
+    DPRINT("     First Data Block: %lu\n", pExt2Sb->s_first_data_block);
+    DPRINT("     Log Block Size: %lu\n", pExt2Sb->s_log_block_size);
+    DPRINT("     Log Frag Size: %ld\n", pExt2Sb->s_log_frag_size);
+    DPRINT("     Blocks per Group: %lu\n", pExt2Sb->s_blocks_per_group);
+    DPRINT("     Fragments per Group: %lu\n", pExt2Sb->s_frags_per_group);
+    DPRINT("     Inodes per Group: %lu\n", pExt2Sb->s_inodes_per_group);
+//    DPRINT("     Mount Time: %s", ctime((time_t *) & (pExt2Sb->s_mtime)));
+//    DPRINT("     Write Time: %s", ctime((time_t *) & (pExt2Sb->s_wtime)));
+    DPRINT("     Mount Count: %u\n", pExt2Sb->s_mnt_count);
+    DPRINT("     Max Mount Count: %d\n", pExt2Sb->s_max_mnt_count);
+    DPRINT("     Magic Number: %X  (%s)\n", pExt2Sb->s_magic,
+        pExt2Sb->s_magic == EXT2_SUPER_MAGIC ? "OK" : "BAD");
+    DPRINT("     File System State: %X\n", pExt2Sb->s_state);
+    DPRINT("     Error Behaviour: %X\n", pExt2Sb->s_errors);
+    DPRINT("     Minor rev: %u\n", pExt2Sb->s_minor_rev_level);
+//    DPRINT("     Last Check: %s", ctime((time_t *) & (pExt2Sb->s_lastcheck)));
+    DPRINT("     Check Interval: %lu\n", pExt2Sb->s_checkinterval);
+    DPRINT("     Creator OS: %lu\n", pExt2Sb->s_creator_os);
+    DPRINT("     Revision Level: %lu\n", pExt2Sb->s_rev_level);
+    DPRINT("     Reserved Block Default UID: %u\n", pExt2Sb->s_def_resuid);
+    DPRINT("     Reserved Block Default GID: %u\n", pExt2Sb->s_def_resgid); 
+    DPRINT("     uuid = ");
     for (i=0; i < 16; i++)
-        KdPrint(("%x ", pExt2Sb->s_uuid[i]));
-    KdPrint(("\n"));
+        DbgPrint("%x ", pExt2Sb->s_uuid[i]);
+    DbgPrint("\n");
 
-    KdPrint(("     volume label name: "));
+    DPRINT("     volume label name: ");
     for (i=0; i < 16; i++)
     {
         if (pExt2Sb->s_volume_name[i] == 0)
             break;
-        KdPrint(("%c", pExt2Sb->s_volume_name[i]));
+        DbgPrint("%c", pExt2Sb->s_volume_name[i]);
     }
-    KdPrint(("\n"));
+    DbgPrint("\n");
 
-    KdPrint(("\n\n")); 
+    DPRINT("\n\n");
 }
-    
 
 #define set_field(field, default) if (!pExt2Sb->field) pExt2Sb->field = (default);
 

@@ -8,6 +8,7 @@
 /* INCLUDES **************************************************************/
 
 #include "Mke2fs.h"
+#include <debug.h>
 
 /* DEFINITIONS ***********************************************************/
 
@@ -102,11 +103,11 @@ bool ext2_allocate_block_bitmap(PEXT2_FILESYS Ext2Sys)
 
     PEXT2_SUPER_BLOCK pExt2Sb = Ext2Sys->ext2_sb;
     Ext2Sys->block_map = (PEXT2_BLOCK_BITMAP)
-        RtlAllocateHeap(GetProcessHeap(), 0, sizeof(EXT2_BLOCK_BITMAP));
+        RtlAllocateHeap(RtlGetProcessHeap(), 0, sizeof(EXT2_BLOCK_BITMAP));
 
     if (!Ext2Sys->block_map)
     {
-        KdPrint(("Mke2fs: error allocating block bitmap...\n"));
+        DPRINT1("Mke2fs: error allocating block bitmap...\n");
         return false;
     }
 
@@ -120,13 +121,13 @@ bool ext2_allocate_block_bitmap(PEXT2_FILESYS Ext2Sys)
     size = (((Ext2Sys->block_map->real_end - Ext2Sys->block_map->start) / 8) + 1);
 
     Ext2Sys->block_map->bitmap =
-        (char *)RtlAllocateHeap(GetProcessHeap(), 0, size);
+        (char *)RtlAllocateHeap(RtlGetProcessHeap(), 0, size);
 
     if (!Ext2Sys->block_map->bitmap)
     {
-        RtlFreeHeap(GetProcessHeap(), 0, Ext2Sys->block_map);
+        RtlFreeHeap(RtlGetProcessHeap(), 0, Ext2Sys->block_map);
         Ext2Sys->block_map = NULL;
-        KdPrint(("Mke2fs: error allocating block bitmap...\n"));
+        DPRINT1("Mke2fs: error allocating block bitmap...\n");
         return false;
     }
 
@@ -143,11 +144,11 @@ bool ext2_allocate_inode_bitmap(PEXT2_FILESYS Ext2Sys)
     PEXT2_SUPER_BLOCK pExt2Sb = Ext2Sys->ext2_sb;
 
     Ext2Sys->inode_map = (PEXT2_INODE_BITMAP)
-        RtlAllocateHeap(GetProcessHeap(), 0, sizeof(EXT2_INODE_BITMAP));
+        RtlAllocateHeap(RtlGetProcessHeap(), 0, sizeof(EXT2_INODE_BITMAP));
 
     if (!Ext2Sys->inode_map)
     {
-        KdPrint(("Mke2fs: error allocating inode bitmap...\n"));
+        DPRINT1("Mke2fs: error allocating inode bitmap...\n");
         return false;
     }
 
@@ -161,13 +162,13 @@ bool ext2_allocate_inode_bitmap(PEXT2_FILESYS Ext2Sys)
     size = (((Ext2Sys->inode_map->real_end - Ext2Sys->inode_map->start) / 8) + 1);
 
     Ext2Sys->inode_map->bitmap =
-        (char *)RtlAllocateHeap(GetProcessHeap(), 0, size);
+        (char *)RtlAllocateHeap(RtlGetProcessHeap(), 0, size);
 
     if (!Ext2Sys->inode_map->bitmap)
     {
-        RtlFreeHeap(GetProcessHeap(), 0, Ext2Sys->inode_map);
+        RtlFreeHeap(RtlGetProcessHeap(), 0, Ext2Sys->inode_map);
         Ext2Sys->inode_map = NULL;
-        KdPrint(("Mke2fs: error allocating block bitmap...\n"));
+        DPRINT1("Mke2fs: error allocating block bitmap...\n");
         return false;
     }
 
@@ -183,11 +184,11 @@ void ext2_free_generic_bitmap(PEXT2_GENERIC_BITMAP bitmap)
 
     if (bitmap->bitmap)
     {
-        RtlFreeHeap(GetProcessHeap(), 0, bitmap->bitmap);
+        RtlFreeHeap(RtlGetProcessHeap(), 0, bitmap->bitmap);
         bitmap->bitmap = 0;
     }
 
-    RtlFreeHeap(GetProcessHeap(), 0, bitmap);
+    RtlFreeHeap(RtlGetProcessHeap(), 0, bitmap);
 }
 
 void ext2_free_inode_bitmap(PEXT2_FILESYS Ext2Sys)
@@ -226,7 +227,7 @@ bool ext2_write_inode_bitmap(PEXT2_FILESYS fs)
 
     nbytes = (size_t) ((EXT2_INODES_PER_GROUP(fs->ext2_sb)+7) / 8);
     
-    bitmap_block = (char *)RtlAllocateHeap(GetProcessHeap(), 0, fs->blocksize);
+    bitmap_block = (char *)RtlAllocateHeap(RtlGetProcessHeap(), 0, fs->blocksize);
     if (!bitmap_block) return false;
 
     memset(bitmap_block, 0xff, fs->blocksize);
@@ -253,7 +254,7 @@ bool ext2_write_inode_bitmap(PEXT2_FILESYS fs)
 
             if (!retval)
             {
-                RtlFreeHeap(GetProcessHeap(), 0, bitmap_block);
+                RtlFreeHeap(RtlGetProcessHeap(), 0, bitmap_block);
                 return false;
             }
         }
@@ -261,7 +262,7 @@ bool ext2_write_inode_bitmap(PEXT2_FILESYS fs)
         inode_bitmap += nbytes;
     }
 
-    RtlFreeHeap(GetProcessHeap(), 0, bitmap_block);
+    RtlFreeHeap(RtlGetProcessHeap(), 0, bitmap_block);
 
     return true;
 }
@@ -282,7 +283,7 @@ bool ext2_write_block_bitmap (PEXT2_FILESYS fs)
 
     nbytes = EXT2_BLOCKS_PER_GROUP(fs->ext2_sb) / 8;
 
-    bitmap_block = (char *)RtlAllocateHeap(GetProcessHeap(), 0, fs->blocksize);
+    bitmap_block = (char *)RtlAllocateHeap(RtlGetProcessHeap(), 0, fs->blocksize);
     if (!bitmap_block)
         return false;
 
@@ -325,7 +326,7 @@ bool ext2_write_block_bitmap (PEXT2_FILESYS fs)
 
             if (!retval)
             {
-                RtlFreeHeap(GetProcessHeap(), 0, bitmap_block);
+                RtlFreeHeap(RtlGetProcessHeap(), 0, bitmap_block);
                 return false;
             }
         }
@@ -333,7 +334,7 @@ bool ext2_write_block_bitmap (PEXT2_FILESYS fs)
         block_bitmap += nbytes;
     }
 
-    RtlFreeHeap(GetProcessHeap(), 0, bitmap_block);
+    RtlFreeHeap(RtlGetProcessHeap(), 0, bitmap_block);
 
     return true;
 }
@@ -465,13 +466,13 @@ cleanup:
 
     if (do_block)
     {
-        RtlFreeHeap(GetProcessHeap(), 0, fs->block_map);
+        RtlFreeHeap(RtlGetProcessHeap(), 0, fs->block_map);
         fs->block_map = NULL;
     }
 
     if (do_inode)
     {
-        RtlFreeHeap(GetProcessHeap(), 0, fs->inode_map);
+        RtlFreeHeap(RtlGetProcessHeap(), 0, fs->inode_map);
         fs->inode_map = 0;
     }
 

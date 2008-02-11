@@ -8,6 +8,7 @@
 /* INCLUDES **************************************************************/
 
 #include "Mke2fs.h"
+#include <debug.h>
 
 /* DEFINITIONS ***********************************************************/
 
@@ -232,9 +233,9 @@ bool write_inode_tables(PEXT2_FILESYS fs)
         retval = zero_blocks(fs, blk, num, &blk, &num);
         if (!retval)
         {
-            KdPrint(("\nMke2fs: Could not write %lu blocks "
+            DPRINT1("\nMke2fs: Could not write %lu blocks "
                 "in inode table starting at %lu.\n",
-                num, blk));
+                num, blk);
 
             zero_blocks(0, 0, 0, 0, 0);
             return false;
@@ -296,7 +297,7 @@ bool ext2_alloc_block(PEXT2_FILESYS fs, ULONG goal, ULONG *ret)
     ULONG       block;
     char        *buf = NULL;
 
-    buf = (char *)RtlAllocateHeap(GetProcessHeap(), HEAP_ZERO_MEMORY, fs->blocksize);
+    buf = (char *)RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, fs->blocksize);
     if (!buf)
         return false;
 
@@ -327,7 +328,7 @@ bool ext2_alloc_block(PEXT2_FILESYS fs, ULONG goal, ULONG *ret)
 
     if (buf)
     {
-        RtlFreeHeap(GetProcessHeap(), 0, buf);
+        RtlFreeHeap(RtlGetProcessHeap(), 0, buf);
     }
 
     return true;
@@ -336,7 +337,7 @@ fail:
 
     if (buf)
     {
-        RtlFreeHeap(GetProcessHeap(), 0, buf);
+        RtlFreeHeap(RtlGetProcessHeap(), 0, buf);
     }
 
     return false;
@@ -354,7 +355,7 @@ bool ext2_new_dir_block(PEXT2_FILESYS fs, ULONG dir_ino,
     int         rec_len;
     int         filetype = 0;
 
-    buf = (char *)RtlAllocateHeap(GetProcessHeap(), HEAP_ZERO_MEMORY, fs->blocksize);
+    buf = (char *)RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, fs->blocksize);
     if (!buf)
         return false;
 

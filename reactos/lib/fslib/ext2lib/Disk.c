@@ -8,6 +8,7 @@
 /* INCLUDES **************************************************************/
 
 #include "Mke2fs.h"
+#include <debug.h>
 
 /* DEFINITIONS ***********************************************************/
 
@@ -15,7 +16,7 @@
 
 /* FUNCTIONS *************************************************************/
 
-PUCHAR
+PCCHAR
 Ext2StatusToString ( IN NTSTATUS Status )
 {
     switch (Status)
@@ -1001,7 +1002,7 @@ Ext2ReadDisk( PEXT2_FILESYS  Ext2Sys,
         AlignedLength += ((ULONG)(Offset - Address.QuadPart) + SECTOR_SIZE - 1)
                          & (~(SECTOR_SIZE - 1));
 
-        NonPagedBuffer = RtlAllocateHeap(GetProcessHeap(), 0, AlignedLength);
+        NonPagedBuffer = RtlAllocateHeap(RtlGetProcessHeap(), 0, AlignedLength);
         if (!NonPagedBuffer)
         {
             Status = STATUS_INSUFFICIENT_RESOURCES;
@@ -1031,7 +1032,7 @@ Ext2ReadDisk( PEXT2_FILESYS  Ext2Sys,
 errorout:
 
     if (NonPagedBuffer)
-        RtlFreeHeap(GetProcessHeap(), 0, NonPagedBuffer);
+        RtlFreeHeap(RtlGetProcessHeap(), 0, NonPagedBuffer);
 
     return Status;
 }
@@ -1096,7 +1097,7 @@ Ext2WriteDisk( PEXT2_FILESYS  Ext2Sys,
         AlignedLength += ((ULONG)(Offset - Address.QuadPart) + SECTOR_SIZE - 1)
                          & (~(SECTOR_SIZE - 1));
 
-        NonPagedBuffer = RtlAllocateHeap(GetProcessHeap(), 0, AlignedLength);
+        NonPagedBuffer = RtlAllocateHeap(RtlGetProcessHeap(), 0, AlignedLength);
         if (!NonPagedBuffer)
         {
             Status = STATUS_INSUFFICIENT_RESOURCES;
@@ -1138,7 +1139,7 @@ Ext2WriteDisk( PEXT2_FILESYS  Ext2Sys,
 errorout:
 
     if (NonPagedBuffer)
-        RtlFreeHeap(GetProcessHeap(), 0, NonPagedBuffer);
+        RtlFreeHeap(RtlGetProcessHeap(), 0, NonPagedBuffer);
 
     return Status;
 }
@@ -1221,8 +1222,8 @@ Ext2LockVolume( PEXT2_FILESYS Ext2Sys )
 
     if (!NT_SUCCESS(Status))
     {
-        KdPrint(("Mke2fs: Error when locking volume: Status = %lxh %s...\n",
-                Status, Ext2StatusToString(Status)));
+        DPRINT1("Mke2fs: Error when locking volume: Status = %lxh %s...\n",
+                Status, Ext2StatusToString(Status));
 
         goto errorout;
     }
@@ -1246,7 +1247,7 @@ Ext2UnLockVolume( PEXT2_FILESYS Ext2Sys )
 
     if (!NT_SUCCESS(Status))
     {
-        KdPrint(("Mke2fs: Error when unlocking volume ...\n"));
+        DPRINT1("Mke2fs: Error when unlocking volume ...\n");
         goto errorout;
     }
 
@@ -1269,7 +1270,7 @@ Ext2DisMountVolume( PEXT2_FILESYS Ext2Sys )
 
     if (!NT_SUCCESS(Status))
     {
-        KdPrint(("Mke2fs: Error when dismounting volume ...\n"));
+        DPRINT1("Mke2fs: Error when dismounting volume ...\n");
         goto errorout;
     }
 
@@ -1318,7 +1319,7 @@ Ext2OpenDevice(  PEXT2_FILESYS Ext2Sys,
     //
     if( !NT_SUCCESS(Status) )
     {
-        KdPrint(("Mke2fs: Create system service failed status = 0x%lx\n", Status));
+        DPRINT1("Mke2fs: Create system service failed status = 0x%lx\n", Status);
         return Status;
     }
 
@@ -1328,7 +1329,7 @@ Ext2OpenDevice(  PEXT2_FILESYS Ext2Sys,
     //
     if(!NT_SUCCESS(Iosb.Status) )
     {
-        KdPrint(("Mke2fs: Create failed with status = 0x%lx\n",Iosb.Status));
+        DPRINT1("Mke2fs: Create failed with status = 0x%lx\n",Iosb.Status);
         return Status;
     }
 
