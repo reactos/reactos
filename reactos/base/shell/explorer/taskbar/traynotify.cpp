@@ -420,8 +420,8 @@ LRESULT NotifyArea::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 	  case WM_CONTEXTMENU: {
 		Point pt(lparam);
 		POINTS p;
-		p.x = pt.x;
-		p.y = pt.y;
+		p.x = (SHORT) pt.x;
+		p.y = (SHORT) pt.y;
 		ScreenToClient(_hwnd, &pt);
 
 		if (IconHitTest(pt) == _sorted_icons.end()) { // display menu only when no icon clicked
