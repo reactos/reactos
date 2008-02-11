@@ -199,7 +199,7 @@ FsRtlDeleteKeyFromTunnelCache
 FsRtlDeleteTunnelCache
 FsRtlDeregisterUncProvider
 FsRtlDissectDbcs
-FsRtlDissectName
+FsRtlDissectName@16
 FsRtlDoesDbcsContainWildCards
 FsRtlDoesNameContainWildCards@4
 FsRtlFastCheckLockForRead
@@ -230,7 +230,7 @@ FsRtlIsDbcsInExpression
 FsRtlIsFatDbcsLegal
 FsRtlIsHpfsDbcsLegal
 FsRtlIsNameInExpression@16
-FsRtlIsNtstatusExpected
+FsRtlIsNtstatusExpected@4
 FsRtlIsPagingFile
 FsRtlIsTotalDeviceFailure
 FsRtlLegalAnsiCharacterArray=_FsRtlLegalAnsiCharacterArray
@@ -255,7 +255,7 @@ FsRtlNotifyChangeDirectory
 FsRtlNotifyCleanup
 FsRtlNotifyFilterChangeDirectory
 FsRtlNotifyFilterReportChange
-FsRtlNotifyFullChangeDirectory
+FsRtlNotifyFullChangeDirectory@40
 FsRtlNotifyFullReportChange
 FsRtlNotifyInitializeSync
 FsRtlNotifyReportChange
