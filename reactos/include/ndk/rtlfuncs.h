@@ -3052,6 +3052,14 @@ RtlTimeFieldsToTime(
 NTSYSAPI
 VOID
 NTAPI
+RtlTimeToSecondsSince1970(
+    PLARGE_INTEGER Time,
+    OUT PULONG SecondsSince1970
+);
+
+NTSYSAPI
+VOID
+NTAPI
 RtlTimeToTimeFields(
     PLARGE_INTEGER Time,
     PTIME_FIELDS TimeFields
