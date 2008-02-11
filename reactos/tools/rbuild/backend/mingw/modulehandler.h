@@ -155,24 +155,6 @@ private:
 	                          const std::string& extraDependencies,
 	                          const std::string& cc,
 	                          const std::string& cflagsMacro );
-	const std::string& GetWidlFlags ( const CompilationUnit& compilationUnit );
-	void GenerateWidlCommandsServer (
-		const CompilationUnit& compilationUnit,
-		const std::string& widlflagsMacro );
-	void GenerateWidlCommandsClient (
-		const CompilationUnit& compilationUnit,
-		const std::string& widlflagsMacro );
-	void GenerateWidlCommandsProxy (
-		const CompilationUnit& compilationUnit,
-		const std::string& widlflagsMacro );
-	void GenerateWidlCommandsIdlHeader (
-		const CompilationUnit& compilationUnit,
-		const std::string& widlflagsMacro );
-	void GenerateWidlCommandsEmbeddedTypeLib (
-		const CompilationUnit& compilationUnit,
-		const std::string& widlflagsMacro );
-	void GenerateWidlCommands ( const CompilationUnit& compilationUnit,
-	                            const std::string& widlflagsMacro );
 	void GenerateCommands ( const CompilationUnit& compilationUnit,
 	                        const std::string& extraDependencies,
 	                        const std::string& cc,

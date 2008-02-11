@@ -1282,6 +1282,33 @@ Rule winebuildRule ( "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noex
                      "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).spec.def",
                      "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).stubs.c",
                      "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)", NULL );
+Rule widlHeaderRule ( "$(INTERMEDIATE)\\$(source_dir)\\$(source_name_noext).h: $(source) $(module_rbuild) $(WIDL_TARGET) | $(INTERMEDIATE)\\$(source_dir)\n"
+                      "\t$(ECHO_WIDL)\n"
+                      "\t$(Q)$(WIDL_TARGET)  $($(module_name)_WIDLFLAGS) -h -H $(INTERMEDIATE)\\$(source_dir)\\$(source_name_noext).h $(source)\n",
+                      "$(INTERMEDIATE)\\$(source_dir)\\$(source_name_noext).h",
+                      "$(INTERMEDIATE)\\$(source_dir)\\", NULL );
+Rule widlServerRule ( "$(INTERMEDIATE)\\$(source_dir)\\$(source_name_noext)_s.c $(INTERMEDIATE)\\$(source_dir)\\$(source_name_noext)_s.h: $(source) $(module_rbuild) $(WIDL_TARGET) | $(INTERMEDIATE)\\$(source_dir)\n"
+                      "\t$(ECHO_WIDL)\n"
+                      "\t$(Q)$(WIDL_TARGET) $($(module_name)_WIDLFLAGS) -h -H $(INTERMEDIATE)\\$(source_dir)\\$(source_name_noext)_s.h -s -S $(INTERMEDIATE)\\$(source_dir)\\$(source_name_noext)_s.c $(source)\n",
+                      "$(INTERMEDIATE)\\$(source_dir)\\$(source_name_noext)_s.h",
+                      "$(INTERMEDIATE)\\$(source_dir)\\$(source_name_noext)_s.c",
+                      "$(INTERMEDIATE)\\$(source_dir)\\", NULL );
+Rule widlClientRule ( "$(INTERMEDIATE)\\$(source_dir)\\$(source_name_noext)_c.c $(INTERMEDIATE)\\$(source_dir)\\$(source_name_noext)_c.h: $(source) $(module_rbuild) $(WIDL_TARGET) | $(INTERMEDIATE)\\$(source_dir)\n"
+                      "\t$(ECHO_WIDL)\n"
+                      "\t$(Q)$(WIDL_TARGET) $($(module_name)_WIDLFLAGS) -h -H $(INTERMEDIATE)\\$(source_dir)\\$(source_name_noext)_c.h -c -C $(INTERMEDIATE)\\$(source_dir)\\$(source_name_noext)_c.c $(source)\n",
+                      "$(INTERMEDIATE)\\$(source_dir)\\$(source_name_noext)_c.h",
+                      "$(INTERMEDIATE)\\$(source_dir)\\$(source_name_noext)_c.c",
+                      "$(INTERMEDIATE)\\$(source_dir)\\", NULL );
+Rule widlProxyRule ( "$(INTERMEDIATE)\\$(source_dir)\\$(source_name_noext)_p.c $(INTERMEDIATE)\\$(source_dir)\\$(source_name_noext)_p.h: $(source) $(module_rbuild) $(WIDL_TARGET) | $(INTERMEDIATE)\\$(source_dir)\n"
+                     "\t$(ECHO_WIDL)\n"
+                     "\t$(Q)$(WIDL_TARGET)  $($(module_name)_WIDLFLAGS) -h -H $(INTERMEDIATE)\\$(source_dir)\\$(source_name_noext)_p.h -p -P $(INTERMEDIATE)\\$(source_dir)\\$(source_name_noext)_p.c $(source)\n",
+                     "$(INTERMEDIATE)\\$(source_dir)\\$(source_name_noext)_p.h",
+                     "$(INTERMEDIATE)\\$(source_dir)\\$(source_name_noext)_p.c",
+                     "$(INTERMEDIATE)\\$(source_dir)\\", NULL );
+Rule widlTlbRule ( "$(OUTPUT)\\$(source_dir)\\$(module_name).tlb: $(source) $(module_rbuild) $(WIDL_TARGET) | $(INTERMEDIATE)\\$(source_dir)\n"
+                   "\t$(ECHO_WIDL)\n"
+                   "\t$(Q)$(WIDL_TARGET)  $($(module_name)_WIDLFLAGS) -t -T $(INTERMEDIATE)\\$(source_dir)\\$(source_name_noext).tlb $(source)\n",
+                   "$(INTERMEDIATE)\\$(source_dir)\\", NULL );
 
 void
 MingwModuleHandler::GenerateGccCommand (
@@ -1324,12 +1351,6 @@ MingwModuleHandler::GenerateGccCommand (
 		delete pchFilename;
 }
 
-const std::string&
-MingwModuleHandler::GetWidlFlags ( const CompilationUnit& compilationUnit )
-{
-	return compilationUnit.GetSwitches ();
-}
-
 string
 MingwModuleHandler::GetPropertyValue ( const Module& module, const std::string& name )
 {
@@ -1348,44 +1369,6 @@ MingwModuleHandler::GetRpcServerHeaderFilename ( const FileLocation *base ) cons
 {
 	string newname = GetBasename ( base->name ) + "_s.h";
 	return new FileLocation ( IntermediateDirectory, base->relative_path, newname );
-}
-
-void
-MingwModuleHandler::GenerateWidlCommandsServer (
-	const CompilationUnit& compilationUnit,
-	const string& widlflagsMacro )
-{
-	const FileLocation& sourceFile = compilationUnit.GetFilename ();
-	string dependencies = backend->GetFullName ( sourceFile );
-	dependencies += " " + NormalizeFilename ( module.xmlbuildFile );
-
-	string basename = GetBasename ( sourceFile.name );
-
-	const FileLocation *generatedHeaderFilename = GetRpcServerHeaderFilename ( &sourceFile );
-	CLEAN_FILE ( *generatedHeaderFilename );
-
-	FileLocation generatedServerFilename ( IntermediateDirectory,
-	                                       sourceFile.relative_path,
-	                                       basename + "_s.c" );
-	CLEAN_FILE ( generatedServerFilename );
-
-	fprintf ( fMakefile,
-	          "%s %s: %s $(WIDL_TARGET) | %s\n",
-	          backend->GetFullName ( generatedServerFilename ).c_str (),
-	          backend->GetFullName ( *generatedHeaderFilename ).c_str (),
-	          dependencies.c_str (),
-	          backend->GetFullPath ( generatedServerFilename ).c_str () );
-	fprintf ( fMakefile, "\t$(ECHO_WIDL)\n" );
-	fprintf ( fMakefile,
-	          "\t%s %s %s -h -H %s -s -S %s %s\n",
-	          "$(Q)$(WIDL_TARGET)",
-	          GetWidlFlags ( compilationUnit ).c_str (),
-	          widlflagsMacro.c_str (),
-	          backend->GetFullName ( *generatedHeaderFilename ).c_str (),
-	          backend->GetFullName ( generatedServerFilename ).c_str (),
-	          backend->GetFullName ( sourceFile ).c_str () );
-
-	delete generatedHeaderFilename;
 }
 
 /* caller needs to delete the returned object */
@@ -1421,165 +1404,6 @@ MingwModuleHandler::GetMcHeaderFilename ( const FileLocation *base ) const
 }
 
 void
-MingwModuleHandler::GenerateWidlCommandsEmbeddedTypeLib (
-	const CompilationUnit& compilationUnit,
-	const string& widlflagsMacro )
-{
-	const FileLocation& sourceFile = compilationUnit.GetFilename ();
-	string dependencies = backend->GetFullName ( sourceFile );
-	dependencies += " " + NormalizeFilename ( module.xmlbuildFile );
-
-	string basename = GetBasename ( sourceFile.name );
-
-	FileLocation EmbeddedTypeLibFilename ( IntermediateDirectory,
-	                                       sourceFile.relative_path,
-	                                       basename + ".tlb" );
-
-	fprintf ( fMakefile,
-	          "%s: %s $(WIDL_TARGET) | %s\n",
-	          GetTargetMacro ( module ).c_str (),
-	          dependencies.c_str (),
-	          backend->GetFullPath ( EmbeddedTypeLibFilename ).c_str () );
-	fprintf ( fMakefile, "\t$(ECHO_WIDL)\n" );
-	fprintf ( fMakefile,
-	          "\t%s %s %s -t -T %s %s\n",
-	          "$(Q)$(WIDL_TARGET)",
-	          GetWidlFlags ( compilationUnit ).c_str (),
-	          widlflagsMacro.c_str (),
-	          backend->GetFullName ( EmbeddedTypeLibFilename ).c_str(),
-	          backend->GetFullName ( sourceFile ).c_str () );
-}
-
-void
-MingwModuleHandler::GenerateWidlCommandsClient (
-	const CompilationUnit& compilationUnit,
-	const string& widlflagsMacro )
-{
-	const FileLocation& sourceFile = compilationUnit.GetFilename ();
-	string dependencies = backend->GetFullName ( sourceFile );
-	dependencies += " " + NormalizeFilename ( module.xmlbuildFile );
-
-	string basename = GetBasename ( sourceFile.name );
-
-	const FileLocation *generatedHeaderFilename = GetRpcClientHeaderFilename ( &sourceFile );
-	CLEAN_FILE ( *generatedHeaderFilename );
-
-	FileLocation generatedClientFilename ( IntermediateDirectory,
-	                                       sourceFile.relative_path,
-	                                       basename + "_c.c" );
-	CLEAN_FILE ( generatedClientFilename );
-
-	fprintf ( fMakefile,
-	          "%s %s: %s $(WIDL_TARGET) | %s\n",
-	          backend->GetFullName ( generatedClientFilename ).c_str (),
-	          backend->GetFullName ( *generatedHeaderFilename ).c_str (),
-	          dependencies.c_str (),
-	          backend->GetFullPath ( generatedClientFilename ).c_str () );
-	fprintf ( fMakefile, "\t$(ECHO_WIDL)\n" );
-	fprintf ( fMakefile,
-	          "\t%s %s %s -h -H %s -c -C %s %s\n",
-	          "$(Q)$(WIDL_TARGET)",
-	          GetWidlFlags ( compilationUnit ).c_str (),
-	          widlflagsMacro.c_str (),
-	          backend->GetFullName ( *generatedHeaderFilename ).c_str (),
-	          backend->GetFullName ( generatedClientFilename ).c_str (),
-	          backend->GetFullName ( sourceFile ).c_str () );
-
-	delete generatedHeaderFilename;
-}
-
-void
-MingwModuleHandler::GenerateWidlCommandsProxy (
-	const CompilationUnit& compilationUnit,
-	const string& widlflagsMacro )
-{
-	const FileLocation& sourceFile = compilationUnit.GetFilename ();
-	string dependencies = backend->GetFullName ( sourceFile );
-	dependencies += " " + NormalizeFilename ( module.xmlbuildFile );
-
-	string basename = GetBasename ( sourceFile.name );
-
-	const FileLocation *generatedHeaderFilename = GetRpcProxyHeaderFilename ( &sourceFile );
-	CLEAN_FILE ( *generatedHeaderFilename );
-
-	FileLocation generatedProxyFilename ( IntermediateDirectory,
-	                                      sourceFile.relative_path,
-	                                      basename + "_p.c" );
-	CLEAN_FILE ( generatedProxyFilename );
-
-	fprintf ( fMakefile,
-	          "%s %s: %s $(WIDL_TARGET) | %s\n",
-	          backend->GetFullName ( generatedProxyFilename ).c_str (),
-	          backend->GetFullName ( *generatedHeaderFilename ).c_str (),
-	          dependencies.c_str (),
-	          backend->GetFullPath ( generatedProxyFilename ).c_str () );
-	fprintf ( fMakefile, "\t$(ECHO_WIDL)\n" );
-	fprintf ( fMakefile,
-	          "\t%s %s %s -h -H %s -p -P %s %s\n",
-	          "$(Q)$(WIDL_TARGET)",
-	          GetWidlFlags ( compilationUnit ).c_str (),
-	          widlflagsMacro.c_str (),
-	          backend->GetFullName ( *generatedHeaderFilename ).c_str (),
-	          backend->GetFullName ( generatedProxyFilename ).c_str (),
-	          backend->GetFullName ( sourceFile ).c_str () );
-
-	delete generatedHeaderFilename;
-}
-
-void
-MingwModuleHandler::GenerateWidlCommandsIdlHeader (
-	const CompilationUnit& compilationUnit,
-	const string& widlflagsMacro )
-{
-	const FileLocation& sourceFile = compilationUnit.GetFilename ();
-	string dependencies = backend->GetFullName ( sourceFile );
-	dependencies += " " + NormalizeFilename ( module.xmlbuildFile );
-
-	string basename = GetBasename ( sourceFile.name );
-
-	const FileLocation *generatedHeader = GetIdlHeaderFilename ( &sourceFile );
-	CLEAN_FILE ( *generatedHeader );
-
-	fprintf ( fMakefile,
-	          "%s: %s $(WIDL_TARGET) | %s\n",
-	          backend->GetFullName( *generatedHeader ).c_str (),
-	          dependencies.c_str (),
-	          backend->GetFullPath ( *generatedHeader ).c_str () );
-	fprintf ( fMakefile, "\t$(ECHO_WIDL)\n" );
-	fprintf ( fMakefile,
-	          "\t%s %s %s -h -H %s %s\n",
-	          "$(Q)$(WIDL_TARGET)",
-	          GetWidlFlags ( compilationUnit ).c_str (),
-	          widlflagsMacro.c_str (),
-	          backend->GetFullName ( *generatedHeader ).c_str (),
-	          backend->GetFullName ( sourceFile ).c_str () );
-
-	delete generatedHeader;
-}
-
-void
-MingwModuleHandler::GenerateWidlCommands (
-	const CompilationUnit& compilationUnit,
-	const string& widlflagsMacro )
-{
-	if ( module.type == RpcServer )
-		GenerateWidlCommandsServer ( compilationUnit,
-		                             widlflagsMacro );
-	else if ( module.type == RpcClient )
-		GenerateWidlCommandsClient ( compilationUnit,
-		                             widlflagsMacro );
-	else if ( module.type == RpcProxy )
-		GenerateWidlCommandsProxy ( compilationUnit,
-		                            widlflagsMacro );
-	else if ( module.type == EmbeddedTypeLib )
-		GenerateWidlCommandsEmbeddedTypeLib ( compilationUnit,
-		                                      widlflagsMacro );
-	else // applies also for other module.types which include idl files
-		GenerateWidlCommandsIdlHeader ( compilationUnit,
-		                                widlflagsMacro );
-}
-
-void
 MingwModuleHandler::GenerateCommands (
 	const CompilationUnit& compilationUnit,
 	const string& extraDependencies,
@@ -1607,6 +1431,11 @@ MingwModuleHandler::GenerateCommands (
 		{ HostDontCare, TypeDontCare, ".rc", &windresRule },
 		{ HostDontCare, TypeDontCare, ".mc", &wmcRule },
 		{ HostDontCare, TypeDontCare, ".spec", &winebuildRule },
+		{ HostDontCare, RpcServer, ".idl", &widlServerRule },
+		{ HostDontCare, RpcClient, ".idl", &widlClientRule },
+		{ HostDontCare, RpcProxy, ".idl", &widlProxyRule },
+		{ HostDontCare, EmbeddedTypeLib, ".idl", &widlTlbRule },
+		{ HostDontCare, TypeDontCare, ".idl", &widlHeaderRule },
 	};
 	size_t i;
 	Rule *customRule = NULL;
@@ -1653,17 +1482,13 @@ MingwModuleHandler::GenerateCommands (
 		                     cc,
 		                     cflagsMacro );
 	}
-	else if ( extension == ".idl" )
+	else if ( extension == ".idl" &&
+		(module.type == RpcServer) || (module.type == RpcClient) || (module.type == RpcProxy) )
 	{
-		GenerateWidlCommands ( compilationUnit,
-		                       widlflagsMacro );
-		if ( (module.type == RpcServer) || (module.type == RpcClient) || (module.type == RpcProxy) )
-		{
-			GenerateGccCommand ( &sourceFile,
+		GenerateGccCommand ( &sourceFile,
 			                     GetExtraDependencies ( &sourceFile ),
 			                     cc,
 			                     cflagsMacro );
-		}
 	}
 	else if ( !customRule )
 	{
