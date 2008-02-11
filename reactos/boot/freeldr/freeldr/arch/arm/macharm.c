@@ -34,7 +34,8 @@ ArmInit(IN PARM_BOARD_CONFIGURATION_BLOCK BootContext)
     //
     // This should probably go away once we support more boards
     //
-    ASSERT(ArmBoardBlock->BoardType == ARM_FEROCEON);
+    ASSERT((ArmBoardBlock->BoardType == MACH_TYPE_FEROCEON) ||
+           (ArmBoardBlock->BoardType == MACH_TYPE_VERSATILE_PB));
 
     //
     // Call FreeLDR's portable entrypoint with our command-line

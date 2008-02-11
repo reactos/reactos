@@ -351,6 +351,28 @@ typedef struct _PPC_LOADER_BLOCK
     ULONG MachineType;
 } PPC_LOADER_BLOCK, *PPPC_LOADER_BLOCK;
 
+typedef struct _ARM_LOADER_BLOCK
+{
+#ifdef _ARM_
+    ULONG InterruptStack;
+    ULONG FirstLevelDcacheSize;
+    ULONG FirstLevelDcacheFillSize;
+    ULONG FirstLevelIcacheSize;
+    ULONG FirstLevelIcacheFillSize;
+    ULONG GpBase;
+    ULONG PanicStack;
+    ULONG PcrPage;
+    ULONG PdrPage;
+    ULONG SecondLevelDcacheSize;
+    ULONG SecondLevelDcacheFillSize;
+    ULONG SecondLevelIcacheSize;
+    ULONG SecondLevelIcacheFillSize;
+    ULONG PcrPage2;
+#else
+    ULONG PlaceHolder;
+#endif
+} ARM_LOADER_BLOCK, *PARM_LOADER_BLOCK;
+
 //
 // Firmware information block (NT6+)
 //
@@ -426,7 +448,8 @@ typedef struct _LOADER_PARAMETER_BLOCK
         I386_LOADER_BLOCK I386;
         ALPHA_LOADER_BLOCK Alpha;
         IA64_LOADER_BLOCK Ia64;
-	PPC_LOADER_BLOCK PowerPC;
+        PPC_LOADER_BLOCK PowerPC;
+        ARM_LOADER_BLOCK Arm;
     } u;
     FIRMWARE_INFORMATION_LOADER_BLOCK FirmwareInformation;
 } LOADER_PARAMETER_BLOCK, *PLOADER_PARAMETER_BLOCK;

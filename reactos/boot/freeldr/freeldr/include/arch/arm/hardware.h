@@ -14,16 +14,16 @@
 #endif
 
 //
-// The only things we support
+// Marvell Feroceon-based SoC:
+// Buffalo Linkstation, KuroBox Pro, D-Link DS323 and others
 //
-typedef enum _ARM_BOARD_TYPE
-{
-    //
-    // Marvell Feroceon-based SoC:
-    // Buffalo Linkstation, KuroBox Pro, D-Link DS323 and others
-    //
-    ARM_FEROCEON = 1,
-} ARM_BOARD_TYPE;
+#define MACH_TYPE_FEROCEON     526
+
+//
+// ARM Versatile PB:
+// qemu-system-arm -M versatilepb, RealView Development Boards and others
+//
+#define MACH_TYPE_VERSATILE_PB 387
 
 //
 // Compatible boot-loaders should return us this information
@@ -34,7 +34,7 @@ typedef struct _ARM_BOARD_CONFIGURATION_BLOCK
 {
     ULONG MajorVersion;
     ULONG MinorVersion;
-    ARM_BOARD_TYPE BoardType;
+    ULONG BoardType;
     ULONG ClockRate;
     ULONG TimerRegisterBase;
     ULONG UartRegisterBase;
@@ -104,6 +104,18 @@ ArmFeroGetCh(VOID);
 
 BOOLEAN
 ArmFeroKbHit(VOID);
+
+VOID
+ArmVersaSerialInit(IN ULONG Baudrate);
+
+VOID
+ArmVersaPutChar(IN INT Char);
+
+INT
+ArmVersaGetCh(VOID);
+
+BOOLEAN
+ArmVersaKbHit(VOID);
 
 extern PARM_BOARD_CONFIGURATION_BLOCK ArmBoardBlock;
 

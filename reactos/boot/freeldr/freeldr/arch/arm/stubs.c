@@ -16,14 +16,6 @@ ULONG PageDirectoryStart, PageDirectoryEnd;
 
 /* FUNCTIONS ******************************************************************/
 
-VOID
-FrLdrStartup(IN ULONG Magic)
-{
-    //
-    // Start the OS
-    //
-}
-
 BOOLEAN
 ArmDiskGetDriveGeometry(IN ULONG DriveNumber,
                         OUT PGEOMETRY Geometry)
@@ -110,7 +102,7 @@ MachInit(IN PCCH CommandLine)
         //
         // Check for Feroceon-base boards
         //
-        case ARM_FEROCEON:
+        case MACH_TYPE_FEROCEON:
             
             //
             // These boards use a UART16550. Set us up for 115200 bps
@@ -119,6 +111,20 @@ MachInit(IN PCCH CommandLine)
             MachVtbl.ConsPutChar = ArmFeroPutChar;
             MachVtbl.ConsKbHit = ArmFeroKbHit;
             MachVtbl.ConsGetCh = ArmFeroGetCh;
+            break;
+            
+        //
+        // Check for ARM Versatile PB boards
+        //
+        case MACH_TYPE_VERSATILE_PB:
+            
+            //
+            // These boards use a PrimeCell UART (PL011)
+            //
+            ArmVersaSerialInit(115200);
+            MachVtbl.ConsPutChar = ArmVersaPutChar;
+            MachVtbl.ConsKbHit = ArmVersaKbHit;
+            MachVtbl.ConsGetCh = ArmVersaGetCh;
             break;
             
         default:
@@ -156,4 +162,10 @@ MachInit(IN PCCH CommandLine)
     //
     TuiPrintf("%s for ARM\n", GetFreeLoaderVersionString());
     TuiPrintf("Bootargs: %s\n", CommandLine);
+}
+
+VOID
+FrLdrStartup(IN ULONG Magic)
+{
+    while (TRUE);
 }
