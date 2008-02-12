@@ -15,8 +15,13 @@
     PROLOG_END KiSystemStartup
     
     //
-    // Do stuff!
+    // Switch to boot kernel stack
     //
-    b .
+    ldr sp, [a2, #LpbKernelStack]
+    
+    //
+    // Go to C code
+    //
+    b KiInitializeSystem
     
     ENTRY_END KiSystemStartup

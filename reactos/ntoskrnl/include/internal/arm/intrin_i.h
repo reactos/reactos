@@ -29,6 +29,15 @@ KeArmIdCodeRegisterGet(VOID)
     return Value;
 }
 
+FORCEINLINE
+ARM_LOCKDOWN_REGISTER
+KeArmLockdownRegisterGet(VOID)
+{
+    ARM_LOCKDOWN_REGISTER Value;
+    __asm__ __volatile__ ("mrc p15, 0, %0, c10, c0, 0" : "=r"(Value.AsUlong) : : "cc");
+    return Value;
+}
+
 
 FORCEINLINE
 ARM_CACHE_REGISTER
@@ -60,5 +69,27 @@ KeArmDomainRegisterSet(IN ARM_DOMAIN_REGISTER DomainRegister)
 {
     __asm__ __volatile__ ("mcr p15, 0, %0, c3, c0, 0" : : "r"(DomainRegister.AsUlong) : "cc");
 }
+
+FORCEINLINE
+VOID
+KeArmLockdownRegisterSet(IN ARM_LOCKDOWN_REGISTER LockdownRegister)
+{
+    __asm__ __volatile__ ("mcr p15, 0, %0, c10, c0, 0" : : "r"(LockdownRegister.AsUlong) : "cc");
+}
+
+FORCEINLINE
+VOID
+KeArmFlushTlb(VOID)
+{
+    __asm__ __volatile__ ("mcr p15, 0, %0, c8, c7, 0" : : "r"(0) : "cc");
+}
+
+FORCEINLINE
+VOID
+KeArmInvalidateTlbEntry(IN PVOID Address)
+{
+    __asm__ __volatile__ ("mcr p15, 0, %0, c8, c7, 1" : : "r"(Address) : "cc");
+}
+
 
 #endif

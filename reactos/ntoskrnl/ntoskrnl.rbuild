@@ -60,6 +60,7 @@
 		<if property="ARCH" value="arm">
 			<directory name="arm">
 				<file first="true">boot.s</file>
+				<file>kiinit.c</file>
 				<file>stubs_asm.s</file>
 				<file>stubs.c</file>
 			</directory>

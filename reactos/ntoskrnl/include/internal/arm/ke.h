@@ -99,6 +99,18 @@ typedef union _ARM_CACHE_REGISTER
     ULONG AsUlong;
 } ARM_CACHE_REGISTER, *PARM_CACHE_REGISTER;
 
+typedef union _ARM_LOCKDOWN_REGISTER
+{
+    struct
+    {
+        ULONG Preserve:1;
+        ULONG Ignored:25;
+        ULONG Victim:3;
+        ULONG Reserved:3;
+    };
+    ULONG AsUlong;
+} ARM_LOCKDOWN_REGISTER, *PARM_LOCKDOWN_REGISTER;
+
 typedef enum _ARM_DOMAINS
 {
     Domain0,
