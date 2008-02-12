@@ -1033,7 +1033,7 @@ Module::GetDefaultModuleEntrypoint () const
 	switch ( type )
 	{
 		case Kernel:
-			return "KiSystemStartup";
+			return "NtProcessStartup";
 		case KernelModeDLL:
 		case KernelModeDriver:
 			return "DriverEntry@8";
