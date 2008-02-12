@@ -61,6 +61,7 @@
 			<directory name="arm">
 				<file first="true">boot.s</file>
 				<file>arm_kprintf.c</file>
+				<file>cpu.c</file>
 				<file>kiinit.c</file>
 				<file>stubs_asm.s</file>
 				<file>stubs.c</file>

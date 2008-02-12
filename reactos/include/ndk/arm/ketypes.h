@@ -135,6 +135,7 @@ typedef struct _KPRCB
     UCHAR NodeColor;
     UCHAR Spare1;
     ULONG NodeShiftedColor;
+    ULONG PcrPage;
     struct _KNODE *ParentNode;
     ULONG MultiThreadProcessorSet;
     struct _KPRCB *MultiThreadSetMaster;

@@ -148,6 +148,31 @@ KeArmInitThreadWithContext(
     IN PCONTEXT Context
 );
 
+VOID
+KiPassiveRelease(
+    VOID
+
+);
+
+VOID
+KiApcInterrupt(
+    VOID                 
+);
+
+#include "mm.h"
+
+VOID
+KeFillFixedEntryTb(
+    IN ARM_PTE Pte,
+    IN PVOID Virtual,
+    IN ULONG Index
+);
+
+VOID
+KeFlushTb(
+    VOID
+);
+
 #define KeArchInitThreadWithContext KeArmInitThreadWithContext
 
 #endif

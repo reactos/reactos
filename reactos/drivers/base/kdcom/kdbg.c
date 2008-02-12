@@ -250,6 +250,11 @@ KdPortInitializeEx(
     ULONG divisor;
     UCHAR lcr;
 
+#ifdef _ARM_
+    UNIMPLEMENTED;
+    while (TRUE);
+#endif
+
     if (PortInformation->BaudRate == 0)
         PortInformation->BaudRate = DEFAULT_BAUD_RATE;
 

@@ -14,14 +14,10 @@
 
 /* GLOBALS ********************************************************************/
 
+KINTERRUPT KxUnexpectedInterrupt;
 BOOLEAN KeIsArmV6;
-ULONG KeFixedTbEntries;
 ULONG KeNumberProcessIds;
 ULONG KeNumberTbEntries;
-
-VOID HalSweepDcache(VOID);
-VOID HalSweepIcache(VOID);
-
 #define __ARMV6__ KeIsArmV6
 
 //
@@ -45,103 +41,6 @@ DebugService(IN ULONG ServiceType,
 }
 
 VOID
-KiFlushSingleTb(IN BOOLEAN Invalid,
-                IN PVOID Virtual)
-{
-    //
-    // Just invalidate it
-    //
-    KeArmInvalidateTlbEntry(Virtual);
-}
-
-VOID
-KeFillFixedEntryTb(IN ARM_PTE Pte,
-                   IN PVOID Virtual,
-                   IN ULONG Index)
-{
-    ARM_LOCKDOWN_REGISTER LockdownRegister;
-    ULONG OldVictimCount;
-    volatile unsigned long Temp;
-    PARM_TRANSLATION_TABLE TranslationTable;
-    
-    //
-    // Hack for 1MB Section Entries
-    //
-    Virtual = (PVOID)((ULONG)Virtual & 0xFFF00000);
-    
-    //
-    // On ARM, we can't set the index ourselves, so make sure that we are not
-    // locking down more than 8 entries.
-    //
-    UNREFERENCED_PARAMETER(Index);
-    KeFixedTbEntries++;
-    ASSERT(KeFixedTbEntries <= 8);
-    
-    //
-    // Flush the address
-    //
-    KiFlushSingleTb(TRUE, Virtual);
-    
-    //
-    // Read lockdown register and set the preserve bit
-    //
-    LockdownRegister = KeArmLockdownRegisterGet();
-    LockdownRegister.Preserve = TRUE;
-    OldVictimCount = LockdownRegister.Victim;
-    KeArmLockdownRegisterSet(LockdownRegister);
-    
-    //
-    // Map the PTE for this virtual address
-    //
-    TranslationTable = (PVOID)KeArmTranslationTableRegisterGet().AsUlong;
-    TranslationTable->Pte[(ULONG)Virtual >> TTB_SHIFT] = Pte;
-    
-    //
-    // Now force a miss
-    //
-    Temp = *(PULONG)Virtual;
-    
-    //
-    // Read lockdown register 
-    //
-    LockdownRegister = KeArmLockdownRegisterGet();
-    if (LockdownRegister.Victim == 0)
-    {
-        //
-        // This can only happen on QEMU or broken CPUs since there *has*
-        // to have been at least a miss since the system started. For example,
-        // QEMU doesn't support TLB lockdown.
-        //
-        // On these systems, we'll just keep the PTE mapped
-        //
-        DPRINT1("TLB Lockdown Failure (%p). Running on QEMU?\n", Virtual);
-    }
-    else
-    {
-        //
-        // Clear the preserve bits
-        //
-        LockdownRegister.Preserve = FALSE;
-        ASSERT(LockdownRegister.Victim == OldVictimCount + 1);
-        KeArmLockdownRegisterSet(LockdownRegister);
-        
-        //
-        // Clear the PTE
-        //
-        TranslationTable->Pte[(ULONG)Virtual >> TTB_SHIFT].AsUlong = 0;
-    }
-}
-
-VOID
-KeFlushTb(VOID)
-{
-    //
-    // Flush the entire TLB
-    //
-    KeArmFlushTlb();
-}
-
-VOID
 NTAPI
 KiInitializeKernel(IN PKPROCESS InitProcess,
                    IN PKTHREAD InitThread,
@@ -151,34 +50,164 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
                    IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
     LARGE_INTEGER PageDirectory;
-    PVOID DpcStack;
+    PKPCR Pcr;
+    ULONG i;
     DPRINT1("%s Process: %p Thread: %p Stack: %p PRCB: %p Number: %d LoaderBlock: %p\n",
             __FUNCTION__, InitProcess, InitThread, IdleStack, Prcb, Number, LoaderBlock);
 
-    /* Initialize the Power Management Support for this PRCB */
-    PoInitializePrcb(Prcb);
+    //
+    // Initialize the platform
+    //
+    HalInitializeProcessor(Number, LoaderBlock);
     
-    /* Save CPU state */
-    KiSaveProcessorControlState(&Prcb->ProcessorState);
-    
-    /* Initialize spinlocks and DPC data */
+    //
+    // Save loader block
+    //
+    KeLoaderBlock = LoaderBlock;
+
+    //
+    // Setup KPRCB
+    //
+    Prcb->MajorVersion = 1;
+    Prcb->MinorVersion = 1;
+    Prcb->BuildType = 0;
+#ifndef CONFIG_SMP
+    Prcb->BuildType |= PRCB_BUILD_UNIPROCESSOR;
+#endif
+#ifdef DBG
+    Prcb->BuildType |= PRCB_BUILD_DEBUG;
+#endif
+    Prcb->CurrentThread = InitThread;
+    Prcb->NextThread = NULL;
+    Prcb->IdleThread = InitThread;
+    Prcb->Number = Number;
+    Prcb->SetMember = 1 << Number;
+    Prcb->PcrPage = LoaderBlock->u.Arm.PcrPage;
+
+    //
+    // Initialize spinlocks and DPC data
+    //
     KiInitSpinLocks(Prcb, Number);
-    
-    /* Check if this is the Boot CPU */
+
+    //
+    // Set the PRCB in the processor block
+    //
+    KiProcessorBlock[(ULONG)Number] = Prcb;
+    Pcr = (PKPCR)KeGetPcr();
+
+    //
+    // Set processor information
+    //
+    KeProcessorArchitecture = PROCESSOR_ARCHITECTURE_ARM;
+    KeFeatureBits = 0;
+    KeProcessorLevel = (USHORT)(Pcr->ProcessorId >> 8);
+    KeProcessorRevision = (USHORT)(Pcr->ProcessorId & 0xFF);
+
+    //
+    // Set stack pointers
+    //
+    Pcr->InitialStack = IdleStack;
+    Pcr->StackLimit = (PVOID)((ULONG_PTR)IdleStack - KERNEL_STACK_SIZE);
+
+    //
+    // Check if this is the Boot CPU
+    //
     if (!Number)
     {
-        /* Set Node Data */
-        KeNodeBlock[0] = &KiNode0;
-        Prcb->ParentNode = KeNodeBlock[0];
-        KeNodeBlock[0]->ProcessorMask = Prcb->SetMember;
-          
-        /* Lower to APC_LEVEL */
-        KeLowerIrql(APC_LEVEL);
+        //
+        // Setup the unexpected interrupt
+        //
+        KxUnexpectedInterrupt.DispatchAddress = KiUnexpectedInterrupt;
+        for (i = 0; i < 4; i++)
+        {
+            //
+            // Copy the template code
+            //
+            KxUnexpectedInterrupt.DispatchCode[i] = KiInterruptTemplate[i];
+        }
         
-        /* Initialize portable parts of the OS */
+        //
+        // Set DMA coherency
+        //
+        KiDmaIoCoherency = 0;
+        
+        //
+        // Sweep D-Cache
+        //
+        HalSweepDcache();
+    }
+    
+    //
+    // Set all interrupt routines to unexpected interrupts as well
+    //
+    for (i = 0; i < MAXIMUM_VECTOR; i++)
+    {
+        //
+        // Point to the same template
+        //
+        Pcr->InterruptRoutine[i] = &KxUnexpectedInterrupt.DispatchCode;
+    }
+    
+    //
+    // Setup profiling
+    //
+    Pcr->ProfileCount = 0;
+    Pcr->ProfileInterval = 0x200000;
+    Pcr->StallScaleFactor = 50;
+    
+    //
+    // Setup software interrupts
+    //
+    Pcr->InterruptRoutine[PASSIVE_LEVEL] = KiPassiveRelease;
+    Pcr->InterruptRoutine[APC_LEVEL] = KiApcInterrupt;
+    Pcr->InterruptRoutine[DISPATCH_LEVEL] = KiDispatchInterrupt;
+    Pcr->ReservedVectors = (1 << PASSIVE_LEVEL) |
+                           (1 << APC_LEVEL) |
+                           (1 << DISPATCH_LEVEL) |
+                           (1 << IPI_LEVEL);
+
+    //
+    // Set IRQL and prcessor member/number
+    //
+    Pcr->CurrentIrql = APC_LEVEL;
+    Pcr->SetMember = 1 << Number;
+    Pcr->NotMember = -Pcr->SetMember;
+    Pcr->Number = Number;
+
+    //
+    // Remember our parent
+    //
+    InitThread->ApcState.Process = InitProcess;
+
+    //
+    // Setup the active processor numbers
+    //
+    KeActiveProcessors |= 1 << Number;
+    KeNumberProcessors = Number + 1;
+
+    //
+    // Check if this is the boot CPU
+    //
+    if (!Number)
+    {
+        //
+        // Setup KD
+        //
+        KdInitSystem(0, LoaderBlock);
+
+        //
+        // Cleanup the rest of the processor block array
+        //
+        for (i = 1; i < MAXIMUM_PROCESSORS; i++) KiProcessorBlock[i] = NULL;
+
+        //
+        // Initialize portable parts of the OS
+        //
         KiInitSystem();
-        
-        /* Initialize the Idle Process and the Process Listhead */
+
+        //
+        // Initialize the Idle Process and the Process Listhead
+        //
         InitializeListHead(&KiProcessListHead);
         PageDirectory.QuadPart = 0;
         KeInitializeProcess(InitProcess,
@@ -190,11 +219,15 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
     }
     else
     {
-        /* FIXME */
-        DPRINT1("SMP Boot support not yet present\n");
+        //
+        // FIXME
+        //
+        DPRINT1("ARM MPCore not supported\n");
     }
     
-    /* Setup the Idle Thread */
+    //
+    // Setup the Idle Thread
+    //
     KeInitializeThread(InitProcess,
                        InitThread,
                        NULL,
@@ -209,61 +242,68 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
     InitThread->Affinity = 1 << Number;
     InitThread->WaitIrql = DISPATCH_LEVEL;
     InitProcess->ActiveProcessors = 1 << Number;
-    
-    /* HACK for MmUpdatePageDir */
+
+    //
+    // HACK for MmUpdatePageDir
+    //
     ((PETHREAD)InitThread)->ThreadsProcess = (PEPROCESS)InitProcess;
-    
-    /* Initialize Kernel Memory Address Space */
+
+    //
+    // Initialize Kernel Memory Address Space
+    //
     MmInit1(MmFreeLdrFirstKrnlPhysAddr,
             MmFreeLdrLastKrnlPhysAddr,
             MmFreeLdrLastKernelAddress,
             NULL,
             0,
             4096);
-    
-    /* Set basic CPU Features that user mode can read */
-    
-    /* Set up the thread-related fields in the PRCB */
-    Prcb->CurrentThread = InitThread;
-    Prcb->NextThread = NULL;
-    Prcb->IdleThread = InitThread;
-    
-    /* Initialize the Kernel Executive */
+
+    //
+    // Initialize the Kernel Executive
+    //
     ExpInitializeExecutive(Number, LoaderBlock);
     
-    /* Only do this on the boot CPU */
+    //
+    // Only do this on the boot CPU
+    //
     if (!Number)
     {
-        /* Calculate the time reciprocal */
+        //
+        // Calculate the time reciprocal
+        //
         KiTimeIncrementReciprocal =
         KiComputeReciprocal(KeMaximumIncrement,
                             &KiTimeIncrementShiftCount);
         
-        /* Update DPC Values in case they got updated by the executive */
+        //
+        // Update DPC Values in case they got updated by the executive
+        //
         Prcb->MaximumDpcQueueDepth = KiMaximumDpcQueueDepth;
         Prcb->MinimumDpcRate = KiMinimumDpcRate;
         Prcb->AdjustDpcThreshold = KiAdjustDpcThreshold;
-        
-        /* Allocate the DPC Stack */
-        DpcStack = MmCreateKernelStack(FALSE, 0);
-        if (!DpcStack) KeBugCheckEx(NO_PAGES_AVAILABLE, 1, 0, 0, 0);
-        Prcb->DpcStack = DpcStack;
     }
     
-    /* Raise to Dispatch */
+    //
+    // Raise to Dispatch
+    //
     KeSwapIrql(DISPATCH_LEVEL);
     
-    /* Set the Idle Priority to 0. This will jump into Phase 1 */
+    //
+    // Set the Idle Priority to 0. This will jump into Phase 1
+    //
     KeSetPriorityThread(InitThread, 0);
     
-    /* If there's no thread scheduled, put this CPU in the Idle summary */
+    //
+    // If there's no thread scheduled, put this CPU in the Idle summary
+    //
     KiAcquirePrcbLock(Prcb);
     if (!Prcb->NextThread) KiIdleSummary |= 1 << Number;
     KiReleasePrcbLock(Prcb);
     
-    /* Raise back to HIGH_LEVEL and clear the PRCB for the loader block */
+    //
+    // Raise back to HIGH_LEVEL
+    //
     KeSwapIrql(HIGH_LEVEL);
-    LoaderBlock->Prcb = 0;
 }
 
 VOID

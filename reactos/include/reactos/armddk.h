@@ -23,6 +23,11 @@
 #define USERPCR                 ((volatile KPCR * const)KIPCR)
 
 //
+// Maximum IRQs
+//
+#define MAXIMUM_VECTOR          16
+
+//
 // Just read it from the PCR
 //
 #define KeGetCurrentProcessorNumber() ((ULONG)(PCR->Number))
@@ -46,7 +51,7 @@ typedef struct _KPCR
 {
     ULONG MinorVersion;
     ULONG MajorVersion;
-    PKINTERRUPT_ROUTINE InterruptRoutine[16];
+    PKINTERRUPT_ROUTINE InterruptRoutine[MAXIMUM_VECTOR];
     PVOID XcodeDispatch;
     ULONG FirstLevelDcacheSize;
     ULONG FirstLevelDcacheFillSize;
@@ -77,6 +82,7 @@ typedef struct _KPCR
     UCHAR CurrentIrql;
     KAFFINITY SetMember;
     struct _KTHREAD *CurrentThread;
+    ULONG ReservedVectors;
     KAFFINITY NotMember;
     ULONG SystemReserved[6];
     ULONG DcacheAlignment;
@@ -126,5 +132,18 @@ KeRaiseIrqlToDpcLevel(
 
 #define KeLowerIrql(NewIrql) KeSwapIrql(NewIrql)
 #define KeRaiseIrql(NewIrql, OldIrql) *(OldIrql) = KeSwapIrql(NewIrql)
+
+//
+// Cache clean and flush
+//
+VOID
+HalSweepDcache(
+    VOID
+);
+
+VOID
+HalSweepIcache(
+    VOID
+);
 
 #endif

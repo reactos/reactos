@@ -62,6 +62,9 @@ GENERATE_ARM_STUB KeUserModeCallback
 GENERATE_ARM_STUB Kei386EoiHelper 
 GENERATE_ARM_STUB KiCoprocessorError 
 GENERATE_ARM_STUB KiDispatchInterrupt 
+GENERATE_ARM_STUB KiApcInterrupt 
+GENERATE_ARM_STUB KiPassiveRelease 
+GENERATE_ARM_STUB KiInterruptTemplate 
 GENERATE_ARM_STUB KiUnexpectedInterrupt  
 GENERATE_ARM_STUB MmGetPhysicalAddress 
 GENERATE_ARM_STUB NtVdmControl 
@@ -122,7 +125,6 @@ GENERATE_ARM_STUB MmGetPfnForProcess
 GENERATE_ARM_STUB MmCreateVirtualMapping
 GENERATE_ARM_STUB CmpInitializeMachineDependentConfiguration
 GENERATE_ARM_STUB KeI386VdmInitialize
-GENERATE_ARM_STUB KdDebuggerInitialize1
 GENERATE_ARM_STUB MmSetDirtyPage
 GENERATE_ARM_STUB MmSetCleanPage
 GENERATE_ARM_STUB MmIsDirtyPage
@@ -146,8 +148,6 @@ GENERATE_ARM_STUB RtlInitializeContext
 GENERATE_ARM_STUB RtlpGetExceptionAddress
 GENERATE_ARM_STUB RtlDispatchException
 GENERATE_ARM_STUB DebugService2
-GENERATE_ARM_STUB KdPortPutByteEx
-GENERATE_ARM_STUB KdPortInitializeEx
 GENERATE_ARM_STUB KdpGdbStubInit
 GENERATE_ARM_STUB KeSwitchKernelStack
 GENERATE_ARM_STUB MiInitPageDirectoryMap
