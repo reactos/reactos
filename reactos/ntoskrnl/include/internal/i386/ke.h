@@ -45,6 +45,8 @@
 
 #ifndef __ASM__
 
+#include "intrin_i.h"
+
 #define KeArchFnInit() Ke386FnInit()
 #define KeArchHaltProcessor() Ke386HaltProcessor()
 
