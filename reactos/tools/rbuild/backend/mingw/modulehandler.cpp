@@ -2623,9 +2623,10 @@ MingwKernelModuleHandler::GenerateKernelModuleTarget ()
 
 		string dependencies = linkDepsMacro + " " + objectsMacro;
 
-		string linkerParameters = ssprintf ( "-Wl,--subsystem,native -Wl,--entry,%s -Wl,--image-base,%s",
-		                                     module.GetEntryPoint(true).c_str (),
-		                                     module.baseaddress.c_str () );
+        string linkerParameters = ssprintf ( "-Wl,--subsystem,native -Wl,--entry,%s -Wl,--image-base,%s",
+                                            module.GetEntryPoint(!(Environment::GetArch() == "arm")).c_str (),
+                                            module.baseaddress.c_str () );
+        
 		GenerateLinkerCommand ( dependencies,
 					"${gcc}",
 					linkerParameters + " $(NTOSKRNL_SHARED)",
