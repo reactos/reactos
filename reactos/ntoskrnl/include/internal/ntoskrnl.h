@@ -22,7 +22,6 @@
 #undef  PsGetCurrentProcess
 #define PsGetCurrentProcess _PsGetCurrentProcess
 
-#include "arch/intrin_i.h"
 #include "ke.h"
 #include "i386/mm.h"
 #include "i386/fpu.h"
@@ -54,6 +53,7 @@
 #include "inbv.h"
 #include "vdm.h"
 #include "hal.h"
+#include "arch/intrin_i.h"
 
 //
 // We are very lazy on ARM -- we just import intrinsics
