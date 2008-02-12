@@ -18,6 +18,7 @@
 #include "arc/arc.h"
 #include "windbgkd.h"
 #include <kddll.h>
+#include <ioaccess.h> /* port intrinsics */
 
 typedef struct _KD_PORT_INFORMATION
 {

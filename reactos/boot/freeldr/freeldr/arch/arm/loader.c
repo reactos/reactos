@@ -47,6 +47,11 @@ ULONG LenBits[] =
     8        // 8 words per line (32 bytes)
 };
 
+//
+// Where to map the serial port
+//
+#define UART_VIRTUAL 0xC0000000
+
 /* FUNCTIONS ******************************************************************/
 
 VOID
@@ -116,6 +121,12 @@ ArmSetupPageDirectory(VOID)
     //
     Pte.L1.Section.BaseAddress = 0;
     TranslationTable->Pte[0] = Pte;
+
+    //
+    // Map the page in MMIO space that contains the serial port into virtual memory
+    //
+    Pte.L1.Section.BaseAddress = ArmBoardBlock->UartRegisterBase >> TTB_SHIFT;
+    TranslationTable->Pte[UART_VIRTUAL >> TTB_SHIFT] = Pte;
 }
 
 VOID
@@ -132,6 +143,9 @@ ArmSetupPagingAndJump(IN ULONG Magic)
     ControlRegister.DCacheEnabled = TRUE;
     KeArmControlRegisterSet(ControlRegister);
     
+	ArmBoardBlock->UartRegisterBase = UART_VIRTUAL | (ArmBoardBlock->UartRegisterBase & ((1<<TTB_SHIFT)-1));
+    TuiPrintf("Mapped serial port to 0x%x\n", ArmBoardBlock->UartRegisterBase);
+	
     //
     // Jump to Kernel
     //

@@ -1,0 +1,24 @@
+LIBRARY kdcom.dll
+EXPORTS
+
+; Old KD
+KdPortGetByte
+KdPortGetByteEx
+KdPortInitialize
+KdPortInitializeEx
+KdPortPollByte
+KdPortPollByteEx
+KdPortPutByte
+KdPortPutByteEx
+KdPortRestore
+KdPortSave
+KdPortDisableInterrupts
+KdPortEnableInterrupts
+
+; New KD
+KdDebuggerInitialize0
+KdDebuggerInitialize1
+KdSave
+KdRestore
+KdReceivePacket
+KdSendPacket

@@ -12,6 +12,8 @@
 #define NDEBUG
 #include <debug.h>
 
+void arm_kprintf(const char *fmt, ...);
+
 /* GLOBALS ********************************************************************/
 
 BOOLEAN KeIsArmV6;
@@ -91,6 +93,7 @@ VOID
 KiInitializeSystem(IN ULONG Magic,
                    IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
+	arm_kprintf("%s:%i\n", __func__, __LINE__);
     //
     // Detect ARM version (Architecture 6 is the ARMv5TE-J, go figure!)
     //
