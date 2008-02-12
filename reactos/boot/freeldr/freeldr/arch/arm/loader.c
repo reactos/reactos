@@ -72,7 +72,7 @@ ArmSetupPageDirectory(VOID)
     Pte.L1.Section.Ignored = Pte.L1.Section.Ignored1 = 0;
     
     //
-    // Map KSEG0 (0x80000000 - 0xA0000000) to 0x00000000 - 0x80000000
+    // Map KSEG0 (0x80000000 - 0xA0000000) to 0x00000000 - 0x20000000
     // In this way, the KERNEL_PHYS_ADDR (0x800000) becomes 0x80800000
     // which is the entrypoint, just like on x86.
     //
