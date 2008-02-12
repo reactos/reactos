@@ -203,7 +203,6 @@ RtlStringCopyWorkerA(OUT PCHAR Destination,
 
 /* PUBLIC FUNCTIONS **********************************************************/
 
-FORCEINLINE
 NTSTATUS
 NTAPI
 RtlStringCbPrintfA(OUT PCHAR Destination,
@@ -233,7 +232,6 @@ RtlStringCbPrintfA(OUT PCHAR Destination,
     return Status;
 }
 
-FORCEINLINE
 NTSTATUS
 NTAPI
 RtlStringCbPrintfExA(OUT PCHAR Destination,
