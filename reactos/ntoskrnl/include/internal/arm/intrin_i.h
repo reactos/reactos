@@ -38,6 +38,14 @@ KeArmLockdownRegisterGet(VOID)
     return Value;
 }
 
+FORCEINLINE
+ARM_TTB_REGISTER
+KeArmTranslationTableRegisterGet(VOID)
+{
+    ARM_TTB_REGISTER Value;
+    __asm__ __volatile__ ("mrc p15, 0, %0, c2, c0, 0" : "=r"(Value.AsUlong) : : "cc");
+    return Value;
+}
 
 FORCEINLINE
 ARM_CACHE_REGISTER

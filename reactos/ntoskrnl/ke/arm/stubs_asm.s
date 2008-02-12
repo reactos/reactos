@@ -146,7 +146,6 @@ GENERATE_ARM_STUB RtlInitializeContext
 GENERATE_ARM_STUB RtlpGetExceptionAddress
 GENERATE_ARM_STUB RtlDispatchException
 GENERATE_ARM_STUB DebugService2
-GENERATE_ARM_STUB DebugService
 GENERATE_ARM_STUB KdPortPutByteEx
 GENERATE_ARM_STUB KdPortInitializeEx
 GENERATE_ARM_STUB KdpGdbStubInit

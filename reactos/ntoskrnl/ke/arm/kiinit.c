@@ -12,8 +12,6 @@
 #define NDEBUG
 #include <debug.h>
 
-void arm_kprintf(const char *fmt, ...);
-
 /* GLOBALS ********************************************************************/
 
 BOOLEAN KeIsArmV6;
@@ -23,7 +21,25 @@ ULONG KeNumberTbEntries;
 
 #define __ARMV6__ KeIsArmV6
 
+//
+// METAFIXME: We need to stop using 1MB Section Entry TTEs!
+//
+
 /* FUNCTIONS ******************************************************************/
+
+VOID
+DebugService(IN ULONG ServiceType,
+             IN PCHAR Buffer,
+             IN ULONG Length,
+             IN ULONG Component,
+             IN ULONG Level)
+{
+    //
+    // ARM Bring-up Hack
+    //
+    void arm_kprintf(const char *fmt, ...);
+    arm_kprintf("%s", Buffer);
+}
 
 VOID
 KiFlushSingleTb(IN BOOLEAN Invalid,
@@ -42,14 +58,19 @@ KeFillFixedEntryTb(IN ARM_PTE Pte,
 {
     ARM_LOCKDOWN_REGISTER LockdownRegister;
     ULONG OldVictimCount;
-    ULONG Temp;
-    UNREFERENCED_PARAMETER(Pte);
-    UNREFERENCED_PARAMETER(Index);
+    volatile unsigned long Temp;
+    PARM_TRANSLATION_TABLE TranslationTable;
+    
+    //
+    // Hack for 1MB Section Entries
+    //
+    Virtual = (PVOID)((ULONG)Virtual & 0xFFF00000);
     
     //
     // On ARM, we can't set the index ourselves, so make sure that we are not
     // locking down more than 8 entries.
     //
+    UNREFERENCED_PARAMETER(Index);
     KeFixedTbEntries++;
     ASSERT(KeFixedTbEntries <= 8);
     
@@ -67,6 +88,12 @@ KeFillFixedEntryTb(IN ARM_PTE Pte,
     KeArmLockdownRegisterSet(LockdownRegister);
     
     //
+    // Map the PTE for this virtual address
+    //
+    TranslationTable = (PVOID)KeArmTranslationTableRegisterGet().AsUlong;
+    TranslationTable->Pte[(ULONG)Virtual >> TTB_SHIFT] = Pte;
+    
+    //
     // Now force a miss
     //
     Temp = *(PULONG)Virtual;
@@ -78,6 +105,11 @@ KeFillFixedEntryTb(IN ARM_PTE Pte,
     LockdownRegister.Preserve = FALSE;
     ASSERT(LockdownRegister.Victim == OldVictimCount + 1);
     KeArmLockdownRegisterSet(LockdownRegister);
+    
+    //
+    // Clear the PTE
+    //
+    TranslationTable->Pte[(ULONG)Virtual >> TTB_SHIFT].AsUlong = 0;
 }
 
 VOID
@@ -93,7 +125,16 @@ VOID
 KiInitializeSystem(IN ULONG Magic,
                    IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
-	arm_kprintf("%s:%i\n", __func__, __LINE__);
+    ARM_PTE Pte;
+    PKPCR Pcr;
+    DPRINT1("-----------------------------------------------------\n");
+    DPRINT1("ReactOS-ARM "KERNEL_VERSION_STR" (Build "KERNEL_VERSION_BUILD_STR")\n");
+    DPRINT1("Command Line: %s\n", LoaderBlock->LoadOptions);
+    DPRINT1("ARC Paths: %s %s %s %s\n", LoaderBlock->ArcBootDeviceName,
+            LoaderBlock->NtHalPathName,
+            LoaderBlock->ArcHalDeviceName,
+            LoaderBlock->NtBootPathName);
+
     //
     // Detect ARM version (Architecture 6 is the ARMv5TE-J, go figure!)
     //
@@ -124,8 +165,33 @@ KiInitializeSystem(IN ULONG Magic,
     KeFlushTb();
     
     //
+    // Build the KIPCR pte
     //
+    Pte.L1.Section.Type = SectionPte;
+    Pte.L1.Section.Buffered = FALSE;
+    Pte.L1.Section.Cached = FALSE;
+    Pte.L1.Section.Reserved = 1; // ARM926EJ-S manual recommends setting to 1
+    Pte.L1.Section.Domain = Domain0;
+    Pte.L1.Section.Access = SupervisorAccess;
+    Pte.L1.Section.BaseAddress = LoaderBlock->u.Arm.PcrPage;
+    Pte.L1.Section.Ignored = Pte.L1.Section.Ignored1 = 0;
+    
     //
+    // Map it into kernel address space by locking it into the TLB
+    //
+    KeFillFixedEntryTb(Pte, (PVOID)KIPCR, PCR_ENTRY);
 
+    //
+    // Now map the PCR into user address space as well (read-only)
+    //
+    Pte.L1.Section.Access = SharedAccess;
+    KeFillFixedEntryTb(Pte, (PVOID)USPCR, PCR_ENTRY + 1);
+    
+    //
+    // Now we should be able to use the PCR... set the cache policies
+    //
+    Pcr = (PKPCR)KeGetPcr();
+    Pcr->CachePolicy = 0;
+    Pcr->AlignedCachePolicy = 0;
     while (TRUE);
 }

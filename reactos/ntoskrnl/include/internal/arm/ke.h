@@ -9,8 +9,8 @@
 //
 //Lockdown TLB entries
 //
-#define PCR_ENTRY,            0
-#define PDR_ENTRY,            2
+#define PCR_ENTRY            0
+#define PDR_ENTRY            2
 
 #define KeArchHaltProcessor() KeArmHaltProcessor()
 

@@ -17,6 +17,11 @@
 
 ULONG PageDirectoryStart, PageDirectoryEnd;
 LOADER_PARAMETER_BLOCK ArmLoaderBlock;
+CHAR ArmCommandLine[256];
+CHAR ArmArcBootPath[64];
+CHAR ArmArcHalPath[64];
+CHAR ArmNtHalPath[64];
+CHAR ArmNtBootPath[64];
 LOADER_PARAMETER_EXTENSION ArmExtension;
 extern ARM_TRANSLATION_TABLE ArmTranslationTable;
 extern ROS_KERNEL_ENTRY_POINT KernelEntryPoint;
@@ -142,8 +147,13 @@ ArmSetupPagingAndJump(IN ULONG Magic)
     ControlRegister.ICacheEnabled = TRUE;
     ControlRegister.DCacheEnabled = TRUE;
     KeArmControlRegisterSet(ControlRegister);
-    
-	ArmBoardBlock->UartRegisterBase = UART_VIRTUAL | (ArmBoardBlock->UartRegisterBase & ((1<<TTB_SHIFT)-1));
+
+    //
+    // Reconfigure UART0
+    //
+	ArmBoardBlock->UartRegisterBase = UART_VIRTUAL |
+                                      (ArmBoardBlock->UartRegisterBase &
+                                       ((1 << TTB_SHIFT) - 1));
     TuiPrintf("Mapped serial port to 0x%x\n", ArmBoardBlock->UartRegisterBase);
 	
     //
@@ -157,7 +167,8 @@ ArmPrepareForReactOS(IN BOOLEAN Setup)
 {   
     ARM_CACHE_REGISTER CacheReg;
     PVOID Base;
-
+    PCHAR BootPath, HalPath;
+    
     //
     // Initialize the loader block
     //
@@ -196,10 +207,48 @@ ArmPrepareForReactOS(IN BOOLEAN Setup)
     //
     
     //
-    // Send the command line
+    // Make a copy of the command line
     //
-    ArmLoaderBlock.LoadOptions = reactos_kernel_cmdline;
+    ArmLoaderBlock.LoadOptions = ArmCommandLine;
+    strcpy(ArmCommandLine, reactos_kernel_cmdline);
     
+    //
+    // Find the first \, separating the ARC path from NT path
+    //
+    BootPath = strchr(ArmCommandLine, '\\');
+    *BootPath = ANSI_NULL;
+    
+    //
+    // Set the ARC Boot Path
+    //
+    strncpy(ArmArcBootPath, ArmCommandLine, 63);
+    ArmLoaderBlock.ArcBootDeviceName = ArmArcBootPath;
+    
+    //
+    // The rest of the string is the NT path
+    //
+    HalPath = strchr(BootPath + 1, ' ');
+    *HalPath = ANSI_NULL;
+    ArmNtBootPath[0] = '\\';
+    strncat(ArmNtBootPath, BootPath + 1, 63);
+    strcat(ArmNtBootPath,"\\");
+    ArmLoaderBlock.NtBootPathName = ArmNtBootPath;
+    
+    //
+    // Set the HAL paths
+    //
+    strncpy(ArmArcHalPath, ArmArcBootPath, 63);
+    ArmLoaderBlock.ArcHalDeviceName = ArmArcHalPath;
+    strcpy(ArmNtHalPath, "\\");
+    ArmLoaderBlock.NtHalPathName = ArmNtHalPath;
+    
+    /* Use this new command line */
+    strncpy(ArmLoaderBlock.LoadOptions, HalPath + 2, 255);
+    
+    /* Parse it and change every slash to a space */
+    BootPath = ArmLoaderBlock.LoadOptions;
+    do {if (*BootPath == '/') *BootPath = ' ';} while (*BootPath++);
+
     //
     // Setup cache information
     //
@@ -234,16 +283,17 @@ ArmPrepareForReactOS(IN BOOLEAN Setup)
     ArmLoaderBlock.u.Arm.PanicStack = KSEG0_BASE | (ULONG)Base;
 
     //
-    // Allocate the PCRs (1MB each for now!)
+    // Allocate the PCR page -- align it to 1MB (we only need 4KB)
     //
     Base = MmAllocateMemoryWithType(2 * 1024 * 1024, LoaderStartupPcrPage);
+    Base = (PVOID)ROUND_UP(Base, 1 * 1024 * 1024);
     ArmLoaderBlock.u.Arm.PcrPage = (ULONG)Base >> TTB_SHIFT;
-    ArmLoaderBlock.u.Arm.PcrPage2 = ArmLoaderBlock.u.Arm.PcrPage + 1;
 
     //
-    // Allocate PDR pages
+    // Allocate PDR pages -- align them to 1MB (we only need 3xKB)
     //
-    Base = MmAllocateMemoryWithType(3 * 1024 * 1024, LoaderStartupPdrPage);
+    Base = MmAllocateMemoryWithType(4 * 1024 * 1024, LoaderStartupPdrPage);
+    Base = (PVOID)ROUND_UP(Base, 1 * 1024 * 1024);
     ArmLoaderBlock.u.Arm.PdrPage = (ULONG)Base >> TTB_SHIFT;
     
     //
@@ -274,6 +324,5 @@ FrLdrStartup(IN ULONG Magic)
     //
     // Initialize paging and load NTOSKRNL
     //
-    TuiPrintf("Kernel Command Line: %s\n", ArmLoaderBlock.LoadOptions);
     ArmSetupPagingAndJump(Magic);
 }

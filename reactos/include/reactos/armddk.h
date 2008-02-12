@@ -46,7 +46,7 @@ typedef struct _KPCR
 {
     ULONG MinorVersion;
     ULONG MajorVersion;
-    PKINTERRUPT_ROUTINE InterruptRoutine[64];
+    PKINTERRUPT_ROUTINE InterruptRoutine[16];
     PVOID XcodeDispatch;
     ULONG FirstLevelDcacheSize;
     ULONG FirstLevelDcacheFillSize;
@@ -71,6 +71,7 @@ typedef struct _KPCR
     PVOID DataBusError;
     PVOID InstructionBusError;
     ULONG CachePolicy;
+    ULONG AlignedCachePolicy;
     UCHAR IrqlMask[64];
     UCHAR IrqlTable[64];
     UCHAR CurrentIrql;
