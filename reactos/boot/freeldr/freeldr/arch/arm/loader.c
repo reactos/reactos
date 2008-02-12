@@ -21,6 +21,32 @@ LOADER_PARAMETER_EXTENSION ArmExtension;
 extern ARM_TRANSLATION_TABLE ArmTranslationTable;
 extern ROS_KERNEL_ENTRY_POINT KernelEntryPoint;
 
+ULONG SizeBits[] =
+{
+    -1,      // INVALID
+    -1,      // INVALID
+    1 << 12, // 4KB
+    1 << 13, // 8KB
+    1 << 14, // 16KB
+    1 << 15, // 32KB
+    1 << 16, // 64KB
+    1 << 17  // 128KB
+};
+
+ULONG AssocBits[] =
+{
+    -1,      // INVALID
+    -1,      // INVALID
+    4        // 4-way associative
+};
+
+ULONG LenBits[] =
+{
+    -1,      // INVALID
+    -1,      // INVALID
+    8        // 8 words per line (32 bytes)
+};
+
 /* FUNCTIONS ******************************************************************/
 
 VOID
@@ -115,6 +141,9 @@ ArmSetupPagingAndJump(IN ULONG Magic)
 VOID
 ArmPrepareForReactOS(IN BOOLEAN Setup)
 {   
+    ARM_CACHE_REGISTER CacheReg;
+    PVOID Base;
+
     //
     // Initialize the loader block
     //
@@ -153,8 +182,63 @@ ArmPrepareForReactOS(IN BOOLEAN Setup)
     //
     
     //
-    // TODO: Setup ARM-specific block
+    // Send the command line
     //
+    ArmLoaderBlock.LoadOptions = reactos_kernel_cmdline;
+    
+    //
+    // Setup cache information
+    //
+    CacheReg = KeArmCacheRegisterGet();   
+    ArmLoaderBlock.u.Arm.FirstLevelDcacheSize = SizeBits[CacheReg.DSize];
+    ArmLoaderBlock.u.Arm.FirstLevelDcacheFillSize = LenBits[CacheReg.DLength];
+    ArmLoaderBlock.u.Arm.FirstLevelDcacheFillSize <<= 2;
+    ArmLoaderBlock.u.Arm.FirstLevelIcacheSize = SizeBits[CacheReg.ISize];
+    ArmLoaderBlock.u.Arm.FirstLevelIcacheFillSize = LenBits[CacheReg.ILength];
+    ArmLoaderBlock.u.Arm.FirstLevelIcacheFillSize <<= 2;
+    ArmLoaderBlock.u.Arm.SecondLevelDcacheSize =
+    ArmLoaderBlock.u.Arm.SecondLevelDcacheFillSize =
+    ArmLoaderBlock.u.Arm.SecondLevelIcacheSize =
+    ArmLoaderBlock.u.Arm.SecondLevelIcacheFillSize = 0;
+    
+    //
+    // Allocate the Interrupt stack
+    //
+    Base = MmAllocateMemoryWithType(KERNEL_STACK_SIZE, LoaderStartupDpcStack);
+    ArmLoaderBlock.u.Arm.InterruptStack = KSEG0_BASE | (ULONG)Base;
+    
+    //
+    // Allocate the Kernel Boot stack
+    //
+    Base = MmAllocateMemoryWithType(KERNEL_STACK_SIZE, LoaderStartupKernelStack);
+    ArmLoaderBlock.KernelStack = KSEG0_BASE | (ULONG)Base;
+    
+    //
+    // Allocate the Abort stack
+    //
+    Base = MmAllocateMemoryWithType(KERNEL_STACK_SIZE, LoaderStartupPanicStack);
+    ArmLoaderBlock.u.Arm.PanicStack = KSEG0_BASE | (ULONG)Base;
+
+    //
+    // Allocate the PCRs (1MB each for now!)
+    //
+    Base = MmAllocateMemoryWithType(2 * 1024 * 1024, LoaderStartupPcrPage);
+    ArmLoaderBlock.u.Arm.PcrPage = (ULONG)Base >> TTB_SHIFT;
+    ArmLoaderBlock.u.Arm.PcrPage2 = ArmLoaderBlock.u.Arm.PcrPage + 1;
+
+    //
+    // Allocate PDR pages
+    //
+    Base = MmAllocateMemoryWithType(3 * 1024 * 1024, LoaderStartupPdrPage);
+    ArmLoaderBlock.u.Arm.PdrPage = (ULONG)Base >> TTB_SHIFT;
+    
+    //
+    // Set initial PRCB, Thread and Process on the last PDR page
+    //
+    Base = (PVOID)((ULONG)Base + 2 * 1024 * 1024);
+    ArmLoaderBlock.Prcb = KSEG0_BASE | (ULONG)Base;
+    ArmLoaderBlock.Process = ArmLoaderBlock.Prcb + sizeof(KPRCB);
+    ArmLoaderBlock.Thread = ArmLoaderBlock.Process + sizeof(EPROCESS);
 }
 
 VOID
@@ -176,5 +260,6 @@ FrLdrStartup(IN ULONG Magic)
     //
     // Initialize paging and load NTOSKRNL
     //
+    TuiPrintf("Kernel Command Line: %s\n", ArmLoaderBlock.LoadOptions);
     ArmSetupPagingAndJump(Magic);
 }

@@ -65,6 +65,40 @@ typedef union _ARM_CONTROL_REGISTER
     ULONG AsUlong;
 } ARM_CONTROL_REGISTER, *PARM_CONTROL_REGISTER;
 
+typedef union _ARM_ID_CODE_REGISTER
+{
+    struct
+    {
+        ULONG Revision:4;
+        ULONG PartNumber:12;
+        ULONG Architecture:4;
+        ULONG Variant:4;
+        ULONG Identifier:8;
+    };
+    ULONG AsUlong;
+} ARM_ID_CODE_REGISTER, *PARM_ID_CODE_REGISTER;
+
+typedef union _ARM_CACHE_REGISTER
+{
+    struct
+    {
+        ULONG ILength:2;
+        ULONG IMultipler:1;
+        ULONG IAssociativty:3;
+        ULONG ISize:4;
+        ULONG IReserved:2;
+        ULONG DLength:2;
+        ULONG DMultipler:1;
+        ULONG DAssociativty:3;
+        ULONG DSize:4;
+        ULONG DReserved:2;  
+        ULONG Separate:1;
+        ULONG CType:4;
+        ULONG Reserved:3;
+    };
+    ULONG AsUlong;
+} ARM_CACHE_REGISTER, *PARM_CACHE_REGISTER;
+
 typedef enum _ARM_DOMAINS
 {
     Domain0,

@@ -21,6 +21,26 @@ KeArmControlRegisterGet(VOID)
 }
 
 FORCEINLINE
+ARM_ID_CODE_REGISTER
+KeArmIdCodeRegisterGet(VOID)
+{
+    ARM_ID_CODE_REGISTER Value;
+    __asm__ __volatile__ ("mrc p15, 0, %0, c0, c0, 0" : "=r"(Value.AsUlong) : : "cc");
+    return Value;
+}
+
+
+FORCEINLINE
+ARM_CACHE_REGISTER
+KeArmCacheRegisterGet(VOID)
+{
+    ARM_CACHE_REGISTER Value;
+    __asm__ __volatile__ ("mrc p15, 0, %0, c0, c0, 1" : "=r"(Value.AsUlong) : : "cc");
+    return Value;
+}
+
+
+FORCEINLINE
 VOID
 KeArmControlRegisterSet(IN ARM_CONTROL_REGISTER ControlRegister)
 {
