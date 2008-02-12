@@ -837,11 +837,11 @@ void DesktopShellView::PositionIcons(int dir)
 
 	 // use a little trick to get the icons where we want them to be...
 
-	for(IconMap::const_iterator it=pos_idx.end(); --it!=pos_idx.begin(); ) {
-		const IconPos& pos = it->first;
+	//for(IconMap::const_iterator it=pos_idx.end(); --it!=pos_idx.begin(); ) {
+	//	const IconPos& pos = it->first;
 
-		ListView_SetItemPosition32(_hwndListView, it->second, pos.second, pos.first);
-	}
+	//	ListView_SetItemPosition32(_hwndListView, it->second, pos.second, pos.first);
+	//}
 
 	for(IconMap::const_iterator it=pos_idx.begin(); it!=pos_idx.end(); ++it) {
 		const IconPos& pos = it->first;

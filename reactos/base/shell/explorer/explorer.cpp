@@ -227,6 +227,10 @@ LPCTSTR FileTypeManager::set_type(Entry* entry, bool dont_hide_ext)
 		 // hide some file extensions
 		if (type._neverShowExt && !dont_hide_ext) {
 			int len = ext - entry->_data.cFileName;
+
+			if (entry->_display_name != entry->_data.cFileName)
+				free(entry->_display_name);
+
 			entry->_display_name = (LPTSTR) malloc((len+1)*sizeof(TCHAR));
 			lstrcpyn(entry->_display_name, entry->_data.cFileName, len + 1);
 		}
@@ -625,6 +629,26 @@ const Icon&	IconCache::add(int sys_idx/*, ICON_TYPE type=IT_SYSCACHE*/)
 const Icon& IconCache::get_icon(int id)
 {
 	return _icons[id];
+}
+
+IconCache::~IconCache()
+{
+	for (int index = s_next_id; index >= 0; index--)
+	{
+		IconMap::iterator found = _icons.find(index);
+
+		if (found != _icons.end()) 
+		{
+			Icon& icon = found->second;
+
+			if ((icon.get_icontype() == IT_DYNAMIC) || 
+				(icon.get_icontype() == IT_CACHED)) 
+			{
+				DestroyIcon(icon.get_hicon());
+				_icons.erase(found);
+			}
+		}
+	}
 }
 
 void IconCache::free_icon(int icon_id)

@@ -107,6 +107,9 @@ Entry::~Entry()
 
 	if (_content)
 		free(_content);
+
+	if (_down)
+		delete _down;
 }
 
 
