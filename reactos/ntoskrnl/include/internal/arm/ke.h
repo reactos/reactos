@@ -5,6 +5,8 @@
 #pragma GCC system_header
 #endif
 
+#define KeArchHaltProcessor() KeArmHaltProcessor()
+
 typedef union _ARM_TTB_REGISTER
 {
     struct

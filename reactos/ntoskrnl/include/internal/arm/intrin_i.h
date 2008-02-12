@@ -41,5 +41,4 @@ KeArmDomainRegisterSet(IN ARM_DOMAIN_REGISTER DomainRegister)
     __asm__ __volatile__ ("mcr p15, 0, %0, c3, c0, 0" : : "r"(DomainRegister.AsUlong) : "cc");
 }
 
-#define KeArchHaltProcessor KeArmHaltProcessor
 #endif

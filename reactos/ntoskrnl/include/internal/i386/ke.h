@@ -45,6 +45,9 @@
 
 #ifndef __ASM__
 
+#define KeArchFnInit() Ke386FnInit()
+#define KeArchHaltProcessor() Ke386HaltProcessor()
+
 extern ULONG Ke386CacheAlignment;
 
 struct _KPCR;
