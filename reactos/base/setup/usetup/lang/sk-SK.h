@@ -1643,6 +1643,8 @@ MUI_STRING skSKStrings[] =
     " Format partition as %S file system (quick format) "},
     {STRING_FORMATDISK2,
     " Format partition as %S file system "},
+    {STRING_KEEPFORMAT,
+    " Keep current file system (no changes) "},
     {0, 0}
 };
 

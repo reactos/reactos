@@ -1609,9 +1609,9 @@ MUI_STRING deDEStrings[] =
     {STRING_SETUPCOPYINGFILES,
      "Setup kopiert Dateien..."},
     {STRING_PAGEDMEM,
-     "Ausgel. Speicher"},
+     "Ausg. Speicher"},
     {STRING_NONPAGEDMEM,
-     "Nicht ausgel. Speicher"},
+     "Nicht ausg. Speich."},
     {STRING_FREEMEM,
      "Freier Speicher"},
     {STRING_REGHIVEUPDATE,
@@ -1644,6 +1644,8 @@ MUI_STRING deDEStrings[] =
     " Formatiere Partition als %S Dateisystem (Schnell) "},
     {STRING_FORMATDISK2,
     " Formatiere Partition als %S Dateisystem "},
+    {STRING_KEEPFORMAT,
+    " Dateisystem beibehalten (Keine Ver„nderungen) "},
     {0, 0}
 };
 
