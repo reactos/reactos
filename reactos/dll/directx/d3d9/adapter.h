@@ -11,6 +11,8 @@
 
 BOOL GetAdapterInfo(LPCSTR lpszDeviceName, D3DADAPTER_IDENTIFIER9* pIdentifier);
 
+BOOL GetAdapterMode(LPCSTR lpszDeviceName, D3DDISPLAYMODE* pMode);
+
 HMONITOR GetAdapterMonitor(LPCSTR lpszDeviceName);
 
 UINT GetDisplayFormatCount(D3DFORMAT Format, const D3DDISPLAYMODE* pSupportedDisplayModes, UINT NumDisplayModes);

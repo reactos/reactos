@@ -169,6 +169,96 @@ BOOL GetAdapterInfo(LPCSTR lpszDeviceName, D3DADAPTER_IDENTIFIER9* pIdentifier)
 
 
 
+static D3DFORMAT Get16BitD3DFormat(LPCSTR lpszDeviceName)
+{
+    HDC hDC;
+    HBITMAP hBitmap;
+    LPBITMAPINFO pBitmapInfo;
+    D3DFORMAT Format = D3DFMT_R5G6B5;
+
+    if (NULL == (hDC = CreateDCA(NULL, lpszDeviceName, NULL, NULL)))
+    {
+        return Format;
+    }
+
+    if (NULL == (hBitmap = CreateCompatibleBitmap(hDC, 1, 1)))
+    {
+        DeleteDC(hDC);
+        return Format;
+    }
+
+    pBitmapInfo = LocalAlloc(LMEM_ZEROINIT, sizeof(BITMAPINFOHEADER) + 4 * sizeof(RGBQUAD));
+    if (NULL == pBitmapInfo)
+    {
+        DeleteObject(hBitmap);
+        DeleteDC(hDC);
+        return Format;
+    }
+
+    pBitmapInfo->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+    if (GetDIBits(hDC, hBitmap, 0, 0, NULL, pBitmapInfo, DIB_RGB_COLORS) > 0)
+    {
+        if (pBitmapInfo->bmiHeader.biCompression == BI_BITFIELDS)
+        {
+            if (GetDIBits(hDC, hBitmap, 0, pBitmapInfo->bmiHeader.biHeight, NULL, pBitmapInfo, DIB_RGB_COLORS) > 0)
+            {
+                /* Check if the green field is 6 bits long */
+                if (*(DWORD*)(&pBitmapInfo->bmiColors[1]) == 0x000003E0)
+                {
+                    Format = D3DFMT_X1R5G5B5;
+                }
+            }
+        }
+    }
+
+    LocalFree(pBitmapInfo);
+    DeleteObject(hBitmap);
+    DeleteDC(hDC);
+
+    return Format;
+}
+
+BOOL GetAdapterMode(LPCSTR lpszDeviceName, D3DDISPLAYMODE* pMode)
+{
+    DEVMODEA DevMode;
+    
+    memset(&DevMode, 0, sizeof(DEVMODEA));
+    DevMode.dmSize = sizeof(DEVMODEA);
+    if (FALSE == EnumDisplaySettingsA(lpszDeviceName, ENUM_CURRENT_SETTINGS, &DevMode))
+        return FALSE;
+
+    pMode->Width = DevMode.dmPelsWidth;
+    pMode->Height = DevMode.dmPelsHeight;
+    pMode->RefreshRate = DevMode.dmDisplayFrequency;
+    
+    switch (DevMode.dmBitsPerPel)
+    {
+    case 8:
+        pMode->Format = D3DFMT_P8;
+        break;
+
+    case 16:
+        pMode->Format = Get16BitD3DFormat(lpszDeviceName);
+        break;
+
+    case 24:
+        pMode->Format = D3DFMT_R8G8B8;
+        break;
+
+    case 32:
+        pMode->Format = D3DFMT_X8R8G8B8;
+        break;
+
+    default:
+        pMode->Format = D3DFMT_UNKNOWN;
+        break;
+    }
+
+    return TRUE;
+}
+
+
+
 static BOOL CALLBACK AdapterMonitorEnumProc(HMONITOR hMonitor, HDC hdcMonitor, LPRECT lprcMonitor, LPARAM dwData)
 {
     MONITORINFOEXA MonitorInfoEx;

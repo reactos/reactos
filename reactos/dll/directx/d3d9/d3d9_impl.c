@@ -291,10 +291,51 @@ static HRESULT WINAPI IDirect3D9Impl_EnumAdapterModes(LPDIRECT3D9 iface, UINT Ad
     return D3D_OK;
 }
 
-static HRESULT WINAPI IDirect3D9Impl_GetAdapterDisplayMode(LPDIRECT3D9 iface, UINT Adapter, D3DDISPLAYMODE* pMode)
+/*++
+* @name IDirect3D9::GetAdapterDisplayMode
+* @implemented
+*
+* The function IDirect3D9Impl_GetAdapterDisplayMode fills the pMode argument with the
+* currently set display mode.
+*
+* @param LPDIRECT3D iface
+* Pointer to the IDirect3D object returned from Direct3DCreate9()
+*
+* @param UINT Adapter
+* Adapter index to get information about. D3DADAPTER_DEFAULT is the primary display.
+* The maximum value for this is the value returned by IDirect3D::GetAdapterCount().
+*
+* @param D3DDISPLAYMODE* pMode
+* Pointer to a D3DDISPLAYMODE structure to be filled with the current display mode information.
+*
+* @return HRESULT
+* If the method successfully fills the pMode structure, the return value is D3D_OK.
+* If Adapter is out of range or pMode is a bad pointer, the return value will be D3DERR_INVALIDCALL.
+*
+*/static HRESULT WINAPI IDirect3D9Impl_GetAdapterDisplayMode(LPDIRECT3D9 iface, UINT Adapter, D3DDISPLAYMODE* pMode)
 {
-    UNIMPLEMENTED
+    LPDIRECT3D9_INT This = impl_from_IDirect3D9(iface);
+    LOCK_D3D9();
 
+    if (Adapter >= This->NumDisplayAdapters)
+    {
+        DPRINT1("Invalid Adapter number specified");
+        UNLOCK_D3D9();
+        return D3DERR_INVALIDCALL;
+    }
+
+    if (IsBadWritePtr(pMode, sizeof(D3DDISPLAYMODE)))
+    {
+        DPRINT1("Invalid pMode parameter specified");
+        UNLOCK_D3D9();
+        return D3DERR_INVALIDCALL;
+    }
+
+    /* TODO: Handle (This->DisplayAdapters[Adapter].bInUseFlag == FALSE) */
+    if (FALSE == GetAdapterMode(This->DisplayAdapters[Adapter].szDeviceName, pMode))
+        DPRINT1("Internal error, GetAdapterMode() failed.");
+
+    UNLOCK_D3D9();
     return D3D_OK;
 }
 

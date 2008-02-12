@@ -102,11 +102,11 @@ typedef struct _tagDIRECT3D9DisplayAdapterInfo_
 /* 0x0260 */    DWORD unknown000083;
 /* 0x0264 */    DWORD unknown000084;
 /* 0x0268 */    DWORD unknown000085;
-/* 0x026c */    DWORD dwDisplayWidth; /* Current display res */
-/* 0x0270 */    DWORD dwDisplayHeight; /* Current display res */
-/* 0x0274 */    DWORD unknown000088;
-/* 0x0278 */    DWORD unknown000089;
-/* 0x027c */    DWORD unknown000090;
+/* 0x026c */    DWORD dwDisplayWidth;   /* Current display res */
+/* 0x0270 */    DWORD dwDisplayHeight;  /* Current display res */
+/* 0x0274 */    DWORD unknown000088;    /* Current D3DFORMAT */
+/* 0x0278 */    DWORD unknown000089;    /* Current D3DFORMAT - duplicate? */
+/* 0x027c */    DWORD MonitorFrequency; /* Current monitor frequency */
 /* 0x0280 */    DWORD unknown000091;
 /* 0x0284 */    DWORD unknown000092;
 /* 0x0288 */    DWORD unknown000093;
