@@ -6,29 +6,14 @@
  * PROGRAMMERS:     ReactOS Portable Systems Group
  */
 
-/* INCLUDES *******************************************************************/
+    .title "ARM FreeLDR Entry Point"
+    .include "ntoskrnl/include/internal/arm/kxarm.h"
+    .include "ntoskrnl/include/internal/arm/ksarm.h"
 
-//#include <kxarm.h>
-
-#define CPSR_IRQ_DISABLE        0x80
-#define CPSR_FIQ_DISABLE        0x40
-#define CPSR_THUMB_ENABLE       0x20
-
-#define C1_MMU_CONTROL          0x01
-#define C1_ALIGNMENT_CONTROL    0x02
-#define C1_DCACHE_CONTROL       0x04
-#define C1_ICACHE_CONTROL       0x1000
-#define C1_VECTOR_CONTROL       0x2000
-
-/* GLOBALS ********************************************************************/
-
-.global _start
-.global ArmTranslationTable
-.section startup
-   
-/* BOOT CODE ******************************************************************/
-   
-_start:
+    .section startup
+    NESTED_ENTRY _start
+    PROLOG_END _start
+    
     //
     // C entrypoint
     //
@@ -67,8 +52,7 @@ _start:
     // r0 contains the ARM_BOARD_CONFIGURATION_DATA structure
     //
     bx lr
-    
-/* BOOT STACK *****************************************************************/
+    ENTRY_END _start
 
 L_BootStackEnd:
     .long BootStackEnd
@@ -81,9 +65,8 @@ BootStack:
 	.space 0x4000
 BootStackEnd:
     .long 0
-    
-/* INITIAL PAGE TABLE *********************************************************/
 
 .section pagedata
+.global ArmTranslationTable
 ArmTranslationTable:
     .space 0x4000

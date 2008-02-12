@@ -111,7 +111,6 @@ GENERATE_ARM_STUB KiInitializeUserApc
 GENERATE_ARM_STUB KeDisableInterrupts
 GENERATE_ARM_STUB KeContextToTrapFrame
 GENERATE_ARM_STUB KiDispatchException
-GENERATE_ARM_STUB KiSystemStartup
 GENERATE_ARM_STUB NtSetLdtEntries
 GENERATE_ARM_STUB NtRaiseException
 GENERATE_ARM_STUB NtCallbackReturn

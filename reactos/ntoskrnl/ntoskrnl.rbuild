@@ -59,7 +59,8 @@
 		</if>
 		<if property="ARCH" value="arm">
 			<directory name="arm">
-                <file>stubs_asm.s</file>
+				<file first="true">boot.s</file>
+				<file>stubs_asm.s</file>
 				<file>stubs.c</file>
 			</directory>
 		</if>
