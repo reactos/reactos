@@ -5,6 +5,13 @@
 #pragma GCC system_header
 #endif
 
+
+//
+//Lockdown TLB entries
+//
+#define PCR_ENTRY,            0
+#define PDR_ENTRY,            2
+
 #define KeArchHaltProcessor() KeArmHaltProcessor()
 
 typedef union _ARM_TTB_REGISTER
