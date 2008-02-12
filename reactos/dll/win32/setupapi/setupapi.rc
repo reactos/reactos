@@ -42,6 +42,7 @@
 #include "lang/pl-PL.rc"
 #include "lang/pt-PT.rc"
 #include "lang/ru-RU.rc"
+#include "lang/sk-SK.rc"
 #include "lang/sv-SE.rc"
 #include "lang/th-TH.rc"
 #include "lang/tr-TR.rc"

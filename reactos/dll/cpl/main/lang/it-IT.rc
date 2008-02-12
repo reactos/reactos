@@ -9,16 +9,16 @@ FONT 8, "MS Shell Dlg"
 BEGIN
   GROUPBOX "Ripetizione caratteri", -1, 5, 5, 230, 130
   ICON -1, IDC_ICON_REPEAT_DELAY, 15, 15, 15, 15
-  LTEXT "Ritardo della ripetizione", -1, 40, 15, 50, 10
+  LTEXT "Ritardo della ripetizione", -1, 40, 15, 150, 10
   LTEXT "Lungo", -1, 40, 30, 20, 10
   LTEXT "Corto", -1, 200, 30, 20, 10
   CONTROL "",IDC_SLIDER_REPEAT_DELAY, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 65, 30, 130, 17
   ICON -1, IDC_ICON_REPEAT_RATE, 15, 70, 15, 15
-  LTEXT "&Frequenza ripetizione", -1, 40, 70, 50, 10
-  LTEXT "Lenta", -1, 40, 85, 20, 10
-  LTEXT "Veloce", -1, 200, 85, 20, 10
-  CONTROL "",IDC_SLIDER_REPEAT_RATE, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 65, 85, 130, 17
-  LTEXT "Clicca qui e tieni premuto un tasto per provare la frequenza di ripetizione:", -1, 15, 105, 150, 10
+  LTEXT "&Frequenza ripetizione", -1, 40, 60, 150, 10
+  LTEXT "Lenta", -1, 40, 75, 20, 10
+  LTEXT "Veloce", -1, 200, 75, 20, 10
+  CONTROL "",IDC_SLIDER_REPEAT_RATE, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 65, 75, 130, 17
+  LTEXT "Clicca qui e tieni premuto un tasto per provare la frequenza di ripetizione:", -1, 15, 105, 200, 20
   EDITTEXT IDC_EDIT_REPEAT_RATE, 15, 115, 200, 15, WS_CHILD | WS_VISIBLE | WS_GROUP
   GROUPBOX "Frequenza di lampeggio del Cursore:", -1, 5, 145, 230, 50
   LTEXT "", IDC_TEXT_CURSOR_BLINK, 20, 165, 1, 8
@@ -59,7 +59,7 @@ BEGIN
   LTEXT "Assegna al tasto destro del mouse le funzioni principali come ad esempio la selezione e il trascinamento", -1, 10, 30, 150, 30
   GROUPBOX "Velocità del doppio clic", -1, 5, 75, 230, 70
   LTEXT "Fai doppio clic sulla cartella per verificare le impostazioni. Se la cartella non si apre o chiude, prova a usare una velocità minore.", -1, 10, 85, 150, 30
-  LTEXT "Velocità:   Lenta", -1, 10, 120, 90, 8
+  LTEXT "Velocità:  Lenta", -1, 10, 120, 90, 8
   LTEXT "Veloce", -1, 140, 120, 30, 8
   CONTROL "",IDC_SLIDER_DOUBLE_CLICK_SPEED, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 60, 120, 70, 17
   CONTROL "", IDC_IMAGE_DOUBLE_CLICK_SPEED, "Static", SS_ICON | SS_NOTIFY | SS_CENTERIMAGE | WS_VISIBLE, 165, 85, 65, 57, WS_EX_STATICEDGE
