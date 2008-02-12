@@ -410,8 +410,8 @@ PdoQueryResourceRequirements(
   RtlZeroMemory(ResourceList, ListSize);
   ResourceList->ListSize = ListSize;
   ResourceList->InterfaceType = PCIBus;
-  ResourceList->BusNumber = DeviceExtension->PciDevice->BusNumber;
-  ResourceList->SlotNumber = DeviceExtension->PciDevice->SlotNumber.u.AsULONG;
+  ResourceList->BusNumber = 0;
+  ResourceList->SlotNumber = 0;
   ResourceList->AlternativeLists = 1;
 
   ResourceList->List[0].Version = 1;
@@ -591,6 +591,7 @@ PdoQueryResourceRequirements(
       Descriptor->Type = CmResourceTypeBusNumber;
       Descriptor->ShareDisposition = CmResourceShareDeviceExclusive;
 
+      ResourceList->BusNumber =
       Descriptor->u.BusNumber.MinBusNumber =
       Descriptor->u.BusNumber.MaxBusNumber = DeviceExtension->PciDevice->PciConfig.u.type1.SecondaryBus;
       Descriptor->u.BusNumber.Length = 1;
@@ -712,7 +713,7 @@ PdoQueryResources(
   RtlZeroMemory(ResourceList, ListSize);
   ResourceList->Count = 1;
   ResourceList->List[0].InterfaceType = PCIBus;
-  ResourceList->List[0].BusNumber = DeviceExtension->PciDevice->BusNumber;
+  ResourceList->List[0].BusNumber = 0;
 
   PartialList = &ResourceList->List[0].PartialResourceList;
   PartialList->Version = 1;
@@ -820,6 +821,7 @@ PdoQueryResources(
       Descriptor->Type = CmResourceTypeBusNumber;
       Descriptor->ShareDisposition = CmResourceShareDeviceExclusive;
 
+      ResourceList->List[0].BusNumber =
       Descriptor->u.BusNumber.Start = DeviceExtension->PciDevice->PciConfig.u.type1.SecondaryBus;
       Descriptor->u.BusNumber.Length = 1;
       Descriptor->u.BusNumber.Reserved = 0;
