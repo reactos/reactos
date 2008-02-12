@@ -17,6 +17,8 @@
 #include <ndk/halfuncs.h>
 #include <ndk/iofuncs.h>
 #include <ndk/kdfuncs.h>
+#include <internal/arm/ke.h>
+#include <internal/arm/intrin_i.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -1090,16 +1092,66 @@ KeSwapIrql(IN KIRQL Irql)
     return 0;
 }
 
+BOOLEAN HalpProcessorIdentified;
+BOOLEAN HalpTestCleanSupported;
+
+VOID
+HalpIdentifyProcessor(VOID)
+{
+    ARM_ID_CODE_REGISTER IdRegister;
+
+    //
+    // Don't do it again
+    //
+    HalpProcessorIdentified = TRUE;
+    
+    //
+    // Read the ID Code
+    //
+    IdRegister = KeArmIdCodeRegisterGet();
+    
+    //
+    // Architecture "6" CPUs support test-and-clean (926EJ-S and 1026EJ-S)
+    //
+    HalpTestCleanSupported = (IdRegister.Architecture == 6);
+}
+
+
 VOID
 HalSweepDcache(VOID)
 {
-    UNIMPLEMENTED;
+    //
+    // We get called very early on, before HalInitSystem or any of the Hal*
+    // processor routines, so we need to figure out what CPU we're on.
+    //
+    if (!HalpProcessorIdentified) HalpIdentifyProcessor();
+    
+    //
+    // Check if we can do it the ARMv5TE-J way
+    //
+    if (HalpTestCleanSupported)
+    {
+        //
+        // Test, clean, flush D-Cache
+        //
+        __asm__ __volatile__ ("1: mrc p15, 0, pc, c7, c14, 3; bne 1b");
+    }
+    else
+    {
+        //
+        // We need to do it it by set/way
+        //
+        UNIMPLEMENTED;
+    }
 }
 
 VOID
 HalSweepIcache(VOID)
 {
-    UNIMPLEMENTED;
+    //
+    // All ARM cores support the same Icache flush command, no need for HAL work
+    //
+    KeArmFlushIcache();
 }
 
 /* EOF */

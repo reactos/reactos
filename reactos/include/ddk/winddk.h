@@ -5368,7 +5368,9 @@ typedef VOID
 /*
 ** Architecture specific structures
 */
-
+#define PCR_MINOR_VERSION 1
+#define PCR_MAJOR_VERSION 1
+    
 #ifdef _X86_
 
 typedef ULONG PFN_NUMBER, *PPFN_NUMBER;
@@ -5396,9 +5398,6 @@ typedef struct _KPCR_TIB {
   PVOID  ArbitraryUserPointer;  /* 14 */
   struct _KPCR_TIB *Self;       /* 18 */
 } KPCR_TIB, *PKPCR_TIB;         /* 1C */
-
-#define PCR_MINOR_VERSION 1
-#define PCR_MAJOR_VERSION 1
 
 typedef struct _KPCR {
   KPCR_TIB  Tib;                /* 00 */

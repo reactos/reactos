@@ -99,5 +99,12 @@ KeArmInvalidateTlbEntry(IN PVOID Address)
     __asm__ __volatile__ ("mcr p15, 0, %0, c8, c7, 1" : : "r"(Address) : "cc");
 }
 
+FORCEINLINE
+VOID
+KeArmFlushIcache(VOID)
+{
+    __asm__ __volatile__ ("mcr p15, 0, %0, c7, c5, 0" : : "r"(0) : "cc");
+}
+
 
 #endif

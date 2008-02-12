@@ -142,6 +142,131 @@ KeFlushTb(VOID)
 }
 
 VOID
+NTAPI
+KiInitializeKernel(IN PKPROCESS InitProcess,
+                   IN PKTHREAD InitThread,
+                   IN PVOID IdleStack,
+                   IN PKPRCB Prcb,
+                   IN CCHAR Number,
+                   IN PLOADER_PARAMETER_BLOCK LoaderBlock)
+{
+    LARGE_INTEGER PageDirectory;
+    PVOID DpcStack;
+    DPRINT1("%s Process: %p Thread: %p Stack: %p PRCB: %p Number: %d LoaderBlock: %p\n",
+            __FUNCTION__, InitProcess, InitThread, IdleStack, Prcb, Number, LoaderBlock);
+
+    /* Initialize the Power Management Support for this PRCB */
+    PoInitializePrcb(Prcb);
+    
+    /* Save CPU state */
+    KiSaveProcessorControlState(&Prcb->ProcessorState);
+    
+    /* Initialize spinlocks and DPC data */
+    KiInitSpinLocks(Prcb, Number);
+    
+    /* Check if this is the Boot CPU */
+    if (!Number)
+    {
+        /* Set Node Data */
+        KeNodeBlock[0] = &KiNode0;
+        Prcb->ParentNode = KeNodeBlock[0];
+        KeNodeBlock[0]->ProcessorMask = Prcb->SetMember;
+          
+        /* Lower to APC_LEVEL */
+        KeLowerIrql(APC_LEVEL);
+        
+        /* Initialize portable parts of the OS */
+        KiInitSystem();
+        
+        /* Initialize the Idle Process and the Process Listhead */
+        InitializeListHead(&KiProcessListHead);
+        PageDirectory.QuadPart = 0;
+        KeInitializeProcess(InitProcess,
+                            0,
+                            0xFFFFFFFF,
+                            &PageDirectory,
+                            FALSE);
+        InitProcess->QuantumReset = MAXCHAR;
+    }
+    else
+    {
+        /* FIXME */
+        DPRINT1("SMP Boot support not yet present\n");
+    }
+    
+    /* Setup the Idle Thread */
+    KeInitializeThread(InitProcess,
+                       InitThread,
+                       NULL,
+                       NULL,
+                       NULL,
+                       NULL,
+                       NULL,
+                       IdleStack);
+    InitThread->NextProcessor = Number;
+    InitThread->Priority = HIGH_PRIORITY;
+    InitThread->State = Running;
+    InitThread->Affinity = 1 << Number;
+    InitThread->WaitIrql = DISPATCH_LEVEL;
+    InitProcess->ActiveProcessors = 1 << Number;
+    
+    /* HACK for MmUpdatePageDir */
+    ((PETHREAD)InitThread)->ThreadsProcess = (PEPROCESS)InitProcess;
+    
+    /* Initialize Kernel Memory Address Space */
+    MmInit1(MmFreeLdrFirstKrnlPhysAddr,
+            MmFreeLdrLastKrnlPhysAddr,
+            MmFreeLdrLastKernelAddress,
+            NULL,
+            0,
+            4096);
+    
+    /* Set basic CPU Features that user mode can read */
+    
+    /* Set up the thread-related fields in the PRCB */
+    Prcb->CurrentThread = InitThread;
+    Prcb->NextThread = NULL;
+    Prcb->IdleThread = InitThread;
+    
+    /* Initialize the Kernel Executive */
+    ExpInitializeExecutive(Number, LoaderBlock);
+    
+    /* Only do this on the boot CPU */
+    if (!Number)
+    {
+        /* Calculate the time reciprocal */
+        KiTimeIncrementReciprocal =
+        KiComputeReciprocal(KeMaximumIncrement,
+                            &KiTimeIncrementShiftCount);
+        
+        /* Update DPC Values in case they got updated by the executive */
+        Prcb->MaximumDpcQueueDepth = KiMaximumDpcQueueDepth;
+        Prcb->MinimumDpcRate = KiMinimumDpcRate;
+        Prcb->AdjustDpcThreshold = KiAdjustDpcThreshold;
+        
+        /* Allocate the DPC Stack */
+        DpcStack = MmCreateKernelStack(FALSE, 0);
+        if (!DpcStack) KeBugCheckEx(NO_PAGES_AVAILABLE, 1, 0, 0, 0);
+        Prcb->DpcStack = DpcStack;
+    }
+    
+    /* Raise to Dispatch */
+    KeSwapIrql(DISPATCH_LEVEL);
+    
+    /* Set the Idle Priority to 0. This will jump into Phase 1 */
+    KeSetPriorityThread(InitThread, 0);
+    
+    /* If there's no thread scheduled, put this CPU in the Idle summary */
+    KiAcquirePrcbLock(Prcb);
+    if (!Prcb->NextThread) KiIdleSummary |= 1 << Number;
+    KiReleasePrcbLock(Prcb);
+    
+    /* Raise back to HIGH_LEVEL and clear the PRCB for the loader block */
+    KeSwapIrql(HIGH_LEVEL);
+    LoaderBlock->Prcb = 0;
+}
+
+VOID
 KiInitializeSystem(IN ULONG Magic,
                    IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
@@ -281,5 +406,54 @@ KiInitializeSystem(IN ULONG Magic,
     //
     HalSweepIcache();
     HalSweepDcache();
+    
+    //
+    // Set PCR version
+    //
+    Pcr->MinorVersion = PCR_MINOR_VERSION;
+    Pcr->MajorVersion = PCR_MAJOR_VERSION;
+    
+    //
+    // Set boot PRCB
+    //
+    Pcr->Prcb = (PKPRCB)LoaderBlock->Prcb;
+    
+    //
+    // Set the different stacks
+    //
+    Pcr->InitialStack = (PVOID)LoaderBlock->KernelStack;
+    Pcr->PanicStack = (PVOID)LoaderBlock->u.Arm.PanicStack;
+    Pcr->InterruptStack = (PVOID)LoaderBlock->u.Arm.InterruptStack;
+    
+    //
+    // Set the current thread
+    //
+    Pcr->CurrentThread = (PKTHREAD)LoaderBlock->Thread;
+    
+    //
+    // Set the current IRQL to high
+    //
+    Pcr->CurrentIrql = HIGH_LEVEL;
+    
+    //
+    // Set processor information
+    //
+    Pcr->ProcessorId = KeArmIdCodeRegisterGet().AsUlong;
+    Pcr->SystemReserved[0] = KeArmControlRegisterGet().AsUlong;
+    
+    //
+    // Initialize the rest of the kernel now
+    //
+    KiInitializeKernel((PKPROCESS)LoaderBlock->Process,
+                       (PKTHREAD)LoaderBlock->Thread,
+                       (PVOID)LoaderBlock->KernelStack,
+                       (PKPRCB)LoaderBlock->Prcb,
+                       Pcr->Prcb->Number,
+                       LoaderBlock);
+    
+    
+    //
+    // Jump to idle loop
+    //
     while (TRUE);
 }
