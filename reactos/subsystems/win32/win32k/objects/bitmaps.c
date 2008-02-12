@@ -664,12 +664,20 @@ BITMAPOBJ_CopyBitmap(HBITMAP  hBitmap)
 			if (buf == NULL)
 			{
 				GDIOBJ_UnlockObjByPtr(GdiHandleTable, resBitmap);
+				GDIOBJ_UnlockObjByPtr(GdiHandleTable, Bitmap);
+				NtGdiDeleteObject(res);
 				return 0;
 			}
 			IntGetBitmapBits (Bitmap, bm.bmWidthBytes * abs(bm.bmHeight), buf);
 			IntSetBitmapBits (resBitmap, bm.bmWidthBytes * abs(bm.bmHeight), buf);
 			ExFreePool (buf);
+			resBitmap->flFlags = Bitmap->flFlags;
 			GDIOBJ_UnlockObjByPtr(GdiHandleTable, resBitmap);
+		}
+		else
+		{
+			NtGdiDeleteObject(res);
+			res = NULL;
 		}
 	}
 
