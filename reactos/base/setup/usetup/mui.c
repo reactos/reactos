@@ -84,6 +84,31 @@ PopupError(IN PCCH Text,
            IN PINPUT_RECORD Ir,
            IN ULONG WaitEvent);
 
+static 
+ULONG
+FindLanguageIndex()
+{
+    ULONG lngIndex = 0;
+
+    if (SelectedLanguageId == NULL)
+    {
+        return -1;
+    } 
+
+    do
+    {
+        if (_wcsicmp(LanguageList[lngIndex].LanguageID , SelectedLanguageId) == 0)
+        {
+            return lngIndex;
+        }
+
+        lngIndex++;
+    }while (LanguageList[lngIndex].MuiPages != NULL);
+
+    return -1;
+}
+
+
 static
 const MUI_ENTRY *
 FindMUIEntriesOfPage(IN ULONG PageNumber)
@@ -145,6 +170,15 @@ const MUI_STRING *
 FindMUIStringEntries(VOID)
 {
     ULONG lngIndex = 0;
+    
+    if (SelectedLanguageId == NULL)
+    {
+        /* language has not yet been selected
+         * default to english
+         */
+        ASSERT(!_wcsicmp(LanguageList[lngIndex].LanguageDescriptor, L"English"));
+        return LanguageList[lngIndex].MuiStrings;
+    }
 
     do
     {
@@ -261,6 +295,7 @@ MUIGetString(ULONG Number)
 {
     ULONG i;
     const MUI_STRING * entry;
+    CHAR szErr[100];
 
     entry = FindMUIStringEntries();
     if (entry)
@@ -274,7 +309,9 @@ MUIGetString(ULONG Number)
         }
     }
 
-    PopupError("Error: Failed to find translated string",
+    sprintf(szErr, "Error: failed find string id %lu for language index %lu\n", Number, FindLanguageIndex());
+
+    PopupError(szErr,
                 NULL,
                 NULL,
                 POPUP_WAIT_NONE);

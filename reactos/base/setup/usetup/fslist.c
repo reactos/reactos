@@ -163,9 +163,9 @@ DrawFileSystemList(
         if (Item->FileSystem)
         {
             if (Item->QuickFormat)
-                sprintf(Buffer, " Format partition as %S file system (quick format) ", Item->FileSystem);
+                sprintf(Buffer, MUIGetString(STRING_FORMATDISK1), Item->FileSystem);
             else
-                sprintf(Buffer, " Format partition as %S file system ", Item->FileSystem);
+                sprintf(Buffer, MUIGetString(STRING_FORMATDISK2), Item->FileSystem);
         }
         else
             sprintf(Buffer, " Keep current file system (no changes) ");
