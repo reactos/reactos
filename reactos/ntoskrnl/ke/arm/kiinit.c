@@ -19,6 +19,9 @@ ULONG KeFixedTbEntries;
 ULONG KeNumberProcessIds;
 ULONG KeNumberTbEntries;
 
+VOID HalSweepDcache(VOID);
+VOID HalSweepIcache(VOID);
+
 #define __ARMV6__ KeIsArmV6
 
 //
@@ -99,17 +102,34 @@ KeFillFixedEntryTb(IN ARM_PTE Pte,
     Temp = *(PULONG)Virtual;
     
     //
-    // Read lockdown register and clear the preserve bit
+    // Read lockdown register 
     //
     LockdownRegister = KeArmLockdownRegisterGet();
-    LockdownRegister.Preserve = FALSE;
-    ASSERT(LockdownRegister.Victim == OldVictimCount + 1);
-    KeArmLockdownRegisterSet(LockdownRegister);
-    
-    //
-    // Clear the PTE
-    //
-    TranslationTable->Pte[(ULONG)Virtual >> TTB_SHIFT].AsUlong = 0;
+    if (LockdownRegister.Victim == 0)
+    {
+        //
+        // This can only happen on QEMU or broken CPUs since there *has*
+        // to have been at least a miss since the system started. For example,
+        // QEMU doesn't support TLB lockdown.
+        //
+        // On these systems, we'll just keep the PTE mapped
+        //
+        DPRINT1("TLB Lockdown Failure (%p). Running on QEMU?\n", Virtual);
+    }
+    else
+    {
+        //
+        // Clear the preserve bits
+        //
+        LockdownRegister.Preserve = FALSE;
+        ASSERT(LockdownRegister.Victim == OldVictimCount + 1);
+        KeArmLockdownRegisterSet(LockdownRegister);
+        
+        //
+        // Clear the PTE
+        //
+        TranslationTable->Pte[(ULONG)Virtual >> TTB_SHIFT].AsUlong = 0;
+    }
 }
 
 VOID
@@ -188,10 +208,78 @@ KiInitializeSystem(IN ULONG Magic,
     KeFillFixedEntryTb(Pte, (PVOID)USPCR, PCR_ENTRY + 1);
     
     //
-    // Now we should be able to use the PCR... set the cache policies
+    // Now we should be able to use the PCR...
     //
     Pcr = (PKPCR)KeGetPcr();
+    
+    //
+    // Set the cache policy (HACK)
+    //
     Pcr->CachePolicy = 0;
     Pcr->AlignedCachePolicy = 0;
+    
+    //
+    // Copy cache information from the loader block
+    //
+    Pcr->FirstLevelDcacheSize = LoaderBlock->u.Arm.FirstLevelDcacheSize;
+    Pcr->SecondLevelDcacheSize = LoaderBlock->u.Arm.SecondLevelDcacheSize;
+    Pcr->FirstLevelIcacheSize = LoaderBlock->u.Arm.FirstLevelIcacheSize;
+    Pcr->SecondLevelIcacheSize = LoaderBlock->u.Arm.SecondLevelIcacheSize;
+    Pcr->FirstLevelDcacheFillSize = LoaderBlock->u.Arm.FirstLevelDcacheFillSize;
+    Pcr->SecondLevelDcacheFillSize = LoaderBlock->u.Arm.SecondLevelDcacheFillSize;
+    Pcr->FirstLevelIcacheFillSize = LoaderBlock->u.Arm.FirstLevelIcacheFillSize;
+    Pcr->SecondLevelIcacheFillSize = LoaderBlock->u.Arm.SecondLevelIcacheFillSize;
+
+    //
+    // Set global d-cache fill and alignment values
+    //
+    if (Pcr->SecondLevelDcacheSize)
+    {
+        //
+        // Use the first level
+        //
+        Pcr->DcacheFillSize = Pcr->SecondLevelDcacheSize;
+    }
+    else
+    {
+        //
+        // Use the second level
+        //
+        Pcr->DcacheFillSize = Pcr->SecondLevelDcacheSize;
+    }
+    
+    //
+    // Set the alignment
+    //
+    Pcr->DcacheAlignment = Pcr->DcacheFillSize - 1;
+    
+    //
+    // Set global i-cache fill and alignment values
+    //
+    if (Pcr->SecondLevelIcacheSize)
+    {
+        //
+        // Use the first level
+        //
+        Pcr->IcacheFillSize = Pcr->SecondLevelIcacheSize;
+    }
+    else
+    {
+        //
+        // Use the second level
+        //
+        Pcr->IcacheFillSize = Pcr->SecondLevelIcacheSize;
+    }
+    
+    //
+    // Set the alignment
+    //
+    Pcr->IcacheAlignment = Pcr->IcacheFillSize - 1;
+    
+    //
+    // Now sweep caches
+    //
+    HalSweepIcache();
+    HalSweepDcache();
     while (TRUE);
 }

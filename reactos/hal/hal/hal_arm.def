@@ -64,6 +64,8 @@ HalSetTimeIncrement
 HalStartNextProcessor
 HalStartProfileInterrupt
 HalStopProfileInterrupt
+HalSweepIcache
+HalSweepDcache
 HalTranslateBusAddress
 IoAssignDriveLetters=HalpAssignDriveLetters
 IoFlushAdapterBuffers

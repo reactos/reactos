@@ -1089,4 +1089,17 @@ KeSwapIrql(IN KIRQL Irql)
     UNIMPLEMENTED;
     return 0;
 }
+
+VOID
+HalSweepDcache(VOID)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+HalSweepIcache(VOID)
+{
+    UNIMPLEMENTED;
+}
+
 /* EOF */
