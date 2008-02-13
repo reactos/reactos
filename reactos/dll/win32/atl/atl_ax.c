@@ -343,9 +343,9 @@ static HRESULT WINAPI OleInPlaceSiteWindowless_GetWindowContext(IOleInPlaceSiteW
     TRACE("(%p,%p,%p,%p,%p,%p)\n", This, ppFrame, ppDoc, lprcPosRect, lprcClipRect, lpFrameInfo);
 
     if ( lprcClipRect )
-        memcpy(lprcClipRect, &This->size, sizeof(RECT));
+        *lprcClipRect = This->size;
     if ( lprcPosRect )
-        memcpy(lprcPosRect, &This->size, sizeof(RECT));
+        *lprcPosRect = This->size;
 
     if ( ppFrame )
     {
@@ -958,7 +958,7 @@ HRESULT WINAPI AtlAxCreateControlEx(LPCOLESTR lpszName, HWND hWnd,
     else {
         /* FIXME - check for MSHTML: prefix! */
         content = IsURL;
-        memcpy( &controlId, &CLSID_WebBrowser, sizeof(controlId) );
+        controlId = CLSID_WebBrowser;
     }
 
     hRes = CoCreateInstance( &controlId, 0, CLSCTX_ALL, &IID_IOleObject, 
