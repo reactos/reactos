@@ -145,39 +145,6 @@ GENERATE_ARM_STUB KiInitMachineDependent
 GENERATE_ARM_STUB KiComputeTimerTableIndex
 GENERATE_ARM_STUB CmpInitializeMachineDependentConfiguration
 
-
-//
-// Memory Manager Arch-Specific
-//
-GENERATE_ARM_STUB MmGetPhysicalAddress 
-GENERATE_ARM_STUB MmSetDirtyPage
-GENERATE_ARM_STUB MmSetCleanPage
-GENERATE_ARM_STUB MmIsDirtyPage
-GENERATE_ARM_STUB MmEnableVirtualMapping
-GENERATE_ARM_STUB MmCreatePageFileMapping
-GENERATE_ARM_STUB MmDeleteVirtualMapping
-GENERATE_ARM_STUB MmDisableVirtualMapping
-GENERATE_ARM_STUB MmIsPageSwapEntry
-GENERATE_ARM_STUB MmSetPageProtect
-GENERATE_ARM_STUB MmIsPagePresent
-GENERATE_ARM_STUB MmCreateHyperspaceMapping
-GENERATE_ARM_STUB MmDeleteHyperspaceMapping
-GENERATE_ARM_STUB MmDeletePageFileMapping
-GENERATE_ARM_STUB MmRawDeleteVirtualMapping
-GENERATE_ARM_STUB MmCreateVirtualMappingUnsafe
-GENERATE_ARM_STUB MmInitializeHandBuiltProcess
-GENERATE_ARM_STUB MmCreateProcessAddressSpace
-GENERATE_ARM_STUB Mmi386ReleaseMmInfo
-GENERATE_ARM_STUB MmGetPfnForProcess
-GENERATE_ARM_STUB MmCreateVirtualMapping
-GENERATE_ARM_STUB MiInitPageDirectoryMap
-GENERATE_ARM_STUB MmGetPageDirectory
-GENERATE_ARM_STUB MmInitGlobalKernelPageDirectory
-GENERATE_ARM_STUB MmDeletePageTable
-GENERATE_ARM_STUB MmGetPageProtect
-GENERATE_ARM_STUB MmCreateVirtualMappingForKernel
-GENERATE_ARM_STUB MiGetUserPageDirectoryCount
-
 //
 // Traps, Debugging and Execeptions
 //
