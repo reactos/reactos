@@ -92,7 +92,19 @@ typedef struct _KTRAP_FRAME
 //
 typedef struct _KEXCEPTION_FRAME
 {
-    ULONG PlaceHolder;
+    ULONG R4;
+    ULONG R5;
+    ULONG R6;
+    ULONG R7;
+    ULONG R8;
+    ULONG R9;
+    ULONG R10;
+    ULONG R11;
+    ULONG R12;
+//    ULONG Sp;
+//    ULONG Psr;
+    ULONG Lr;
+    ULONG SwapReturn;
 } KEXCEPTION_FRAME, *PKEXCEPTION_FRAME;
 
 //
