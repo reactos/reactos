@@ -62,9 +62,11 @@
 				<file first="true">boot.s</file>
 				<file>arm_kprintf.c</file>
 				<file>cpu.c</file>
+				<file>exp.c</file>
 				<file>kiinit.c</file>
 				<file>stubs_asm.s</file>
 				<file>stubs.c</file>
+				<file>thrdini.c</file>
 			</directory>
 		</if>
 		<if property="ARCH" value="powerpc">
@@ -330,6 +332,11 @@
 		<if property="ARCH" value="i386">
 			<directory name="i386">
 				<file>page.c</file>
+			</directory>
+		</if>
+		<if property="ARCH" value="arm">
+			<directory name="arm">
+				<file>stubs.c</file>
 			</directory>
 		</if>
 		<if property="ARCH" value="powerpc">
