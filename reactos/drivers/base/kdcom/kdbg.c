@@ -252,7 +252,7 @@ KdPortInitializeEx(
 
 #ifdef _ARM_
     UNIMPLEMENTED;
-    while (TRUE);
+    return FALSE;
 #endif
 
     if (PortInformation->BaudRate == 0)
