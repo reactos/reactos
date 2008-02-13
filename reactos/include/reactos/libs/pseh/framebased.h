@@ -172,6 +172,74 @@ static _SEHPortableTryLevel_t * const _SEHPortableTryLevel = 0;
 		STMT_; \
 	}
 
+#ifdef _ARM_
+
+#define _SEH_TRY \
+	for(;;) \
+	{ \
+		 \
+		{ \
+	\
+			for(;;) \
+			{ \
+				if(1) \
+				{ \
+					for(;;) \
+					{ \
+						{
+
+#define _SEH_EXCEPT(FILTER_) \
+						} \
+	\
+						break; \
+					} \
+	\
+					break; \
+				} \
+				else \
+				{ \
+					{ \
+						break; \
+					} \
+				} \
+	\
+				break; \
+			} \
+	\
+	\
+			if(0) \
+			{
+
+#define _SEH_FINALLY(FINALLY_) \
+						} \
+	\
+						break; \
+					} \
+	\
+					break; \
+				} \
+				else \
+				{ \
+				} \
+	\
+				break; \
+			} \
+	\
+			(FINALLY_)(&_SEHFrame.SEH_Header); \
+	\
+			if(0) \
+			{
+
+#define _SEH_END \
+			} \
+		} \
+	\
+	\
+		break; \
+	}
+
+#else
+
 #define _SEH_TRY \
 	for(;;) \
 	{ \
@@ -295,6 +363,8 @@ static _SEHPortableTryLevel_t * const _SEHPortableTryLevel = 0;
 	\
 		break; \
 	}
+
+#endif
 
 #define _SEH_HANDLE _SEH_EXCEPT(_SEH_STATIC_FILTER(_SEH_EXECUTE_HANDLER))
 
