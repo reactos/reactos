@@ -18,7 +18,7 @@ InitFontSizeList(HWND hWnd)
 
     hFontSize = GetDlgItem(hWnd, IDC_FONTSIZE_COMBO);
 
-    hInf = SetupOpenInfFile(L"font.inf", NULL,
+    hInf = SetupOpenInfFile(_T("font.inf"), NULL,
                             INF_STYLE_WIN4, NULL);
 
     if (hInf != INVALID_HANDLE_VALUE)
