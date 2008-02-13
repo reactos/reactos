@@ -23,9 +23,9 @@ InitFontSizeList(HWND hWnd)
 
     if (hInf != INVALID_HANDLE_VALUE)
     {
-        if (SetupFindFirstLine(hInf, L"Font Sizes", NULL, &Context))
+        if (SetupFindFirstLine(hInf, _T("Font Sizes"), NULL, &Context))
         {
-            if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\FontDPI",
+            if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, _T("SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\FontDPI"),
                              0, KEY_READ, &hKey) == ERROR_SUCCESS)
             for (;;)
             {
@@ -34,14 +34,14 @@ InitFontSizeList(HWND hWnd)
                 if (SetupGetStringField(&Context, 0, Desc, sizeof(Desc), NULL) &&
                     SetupGetIntField(&Context, 1, &ci))
                 {
-                    _stprintf(Desc, L"%s (%d DPI)", Desc, ci);
+                    _stprintf(Desc, _T("%s (%d DPI)"), Desc, ci);
                     i = SendMessage(hFontSize, CB_ADDSTRING, 0, (LPARAM)Desc);
                     if (i != CB_ERR)
                         SendMessage(hFontSize, CB_SETITEMDATA, (WPARAM)i, (LPARAM)ci);
 
                     DWORD dwSize = MAX_PATH, dwValue, dwType = REG_DWORD;
 
-                    if (RegQueryValueEx(hKey, L"LogPixels", NULL,
+                    if (RegQueryValueEx(hKey, _T("LogPixels"), NULL,
                                         &dwType, (LPBYTE)&dwValue, &dwSize) == ERROR_SUCCESS)
                     {
                         if ((int)dwValue == ci)
@@ -69,13 +69,13 @@ InitRadioButtons(HWND hWnd)
 {
     HKEY hKey;
 	
-	if (RegOpenKeyEx(HKEY_CURRENT_USER, L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Controls Folder\\Display",
+	if (RegOpenKeyEx(HKEY_CURRENT_USER, _T("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Controls Folder\\Display"),
 	                 0, KEY_READ, &hKey) == ERROR_SUCCESS)
 	{
 		TCHAR szBuf[64];
         DWORD dwSize = 64;
 
-        if (RegQueryValueEx(hKey, L"DynaSettingsChange", 0, NULL,
+        if (RegQueryValueEx(hKey, _T("DynaSettingsChange"), 0, NULL,
                             (LPBYTE)szBuf, &dwSize) == ERROR_SUCCESS);
 
 		switch (_ttoi(szBuf))

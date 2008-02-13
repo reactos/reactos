@@ -52,7 +52,7 @@ BEGIN
     CONTROL         "", IDC_APPEARANCE_PREVIEW, "PreviewWndClass",
                     WS_VISIBLE | WS_BORDER, 7, 7, 232, 120
     LTEXT           "Цветовая схема:", IDC_STATIC, 7, 139, 154, 10
-    COMBOBOX        IDC_APPEARANCE_COLORSCHEME, 7, 150, 155, 90 , CBS_DROPDOWNLIST | CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_APPEARANCE_COLORSCHEME, 7, 150, 155, 200 , CBS_DROPDOWNLIST | CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON      "Дополнительно", IDC_APPEARANCE_ADVANCED, 168, 150, 70, 14
 END
 
@@ -66,7 +66,7 @@ BEGIN
                     WS_VISIBLE | WS_BORDER, 7, 7, 232, 120
 
     LTEXT "Элемент:", 8, 5, 160, 50, 9
-    COMBOBOX IDC_ADVAPPEARANCE_ELEMENT, 5, 170, 130, 90, CBS_DROPDOWNLIST | CBS_HASSTRINGS | CBS_SORT | WS_CHILD | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX IDC_ADVAPPEARANCE_ELEMENT, 5, 170, 130, 200, CBS_DROPDOWNLIST | CBS_HASSTRINGS | CBS_SORT | WS_CHILD | WS_VSCROLL | WS_TABSTOP
 
     LTEXT "&Размер:", IDC_ADVAPPEARANCE_SIZE_T, 142, 160, 39, 9
     EDITTEXT IDC_ADVAPPEARANCE_SIZE_E, 142, 170, 38, 13, ES_RIGHT | WS_GROUP
@@ -143,19 +143,19 @@ IDM_MONITOR_MENU MENU
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "&Attached",   ID_MENU_ATTACHED
-        MENUITEM "&Primary",    ID_MENU_PRIMARY
+        MENUITEM "&Присоединенный",   ID_MENU_ATTACHED
+        MENUITEM "&Основной",         ID_MENU_PRIMARY
         MENUITEM SEPARATOR
-        MENUITEM "&Identify",   ID_MENU_IDENTIFY
-        MENUITEM "&Свойства", ID_MENU_PROPERTIES
+        MENUITEM "Опр&еделение",      ID_MENU_IDENTIFY
+        MENUITEM "Сво&йства",         ID_MENU_PROPERTIES
     END
 END
 
 STRINGTABLE
 BEGIN
-    IDS_MULTIPLEMONITORS "(Несколько экранов)"
-    IDS_UNKNOWNMONITOR "(Неизвестный экран)"
-    IDS_ADVANCEDTITLEFMT "%s и %s"
+    IDS_MULTIPLEMONITORS    "(несколько экранов)"
+    IDS_UNKNOWNMONITOR      "(неизвестный экран)"
+    IDS_ADVANCEDTITLEFMT    "%s и %s"
 END
 
 STRINGTABLE
@@ -181,7 +181,7 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
     IDS_BACKGROUND_COMDLG_FILTER "Изображения (*.bmp;*.dib)\000*.bmp;*.dib"
-    IDS_SUPPORTED_EXT       "*.bmp;*.dib"
+    IDS_SUPPORTED_EXT            "*.bmp;*.dib"
 END
 
 STRINGTABLE DISCARDABLE
@@ -197,25 +197,25 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
     IDS_ELEMENT_1 "Рабочий стол"
-    IDS_ELEMENT_2 "Заголовок активного окна"
-    IDS_ELEMENT_3 "Граница неактивного окна"
-    IDS_ELEMENT_4 "Граница активного окна"
-    IDS_ELEMENT_5 "Граница активного окна"
+    IDS_ELEMENT_2 "Заголовок неактивных окон"
+    IDS_ELEMENT_3 "Граница неактивных окон"
+    IDS_ELEMENT_4 "Заголовок активных окон"
+    IDS_ELEMENT_5 "Граница активных окон"
     IDS_ELEMENT_6 "Меню"
-    IDS_ELEMENT_7 "Всплывающая подсказка"
+    IDS_ELEMENT_7 "Выледенные элементы"
     IDS_ELEMENT_8 "Окна"
     IDS_ELEMENT_9 "Полоса прокрутки"
     IDS_ELEMENT_10 "Рельефные объекты"
     IDS_ELEMENT_11 "Цвет заголовка"
-    IDS_ELEMENT_12 "Значок заголовка"
-    IDS_ELEMENT_13 "Captionbar"
-    IDS_ELEMENT_14 "Выделенный пункт меню"
+    IDS_ELEMENT_12 "Иконка заголовка"
+    IDS_ELEMENT_13 "Строка заголовка"
+    IDS_ELEMENT_14 "Неактивные пункты меню"
     IDS_ELEMENT_15 "Диалог"
     IDS_ELEMENT_16 "Scrollbar controls"
     IDS_ELEMENT_17 "Рабочая область приложения"
     IDS_ELEMENT_18 "Small captionbar"
     IDS_ELEMENT_19 "Интервал между значками (гор.)"
     IDS_ELEMENT_20 "Интервал между значками (верт.)"
-    IDS_ELEMENT_21 "Quickinfo"
+    IDS_ELEMENT_21 "Всплывающая подсказка"
     IDS_ELEMENT_22 "Значок"
 END
