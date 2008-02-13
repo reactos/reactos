@@ -1,5 +1,5 @@
 #include <windows.h>
-#include <WinFax.h>
+#include <winfax.h>
 
 /* INTERNAL *******************************************************************/
 
