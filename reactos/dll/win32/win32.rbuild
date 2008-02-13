@@ -322,6 +322,12 @@
 <directory name="version">
 	<xi:include href="version/version.rbuild" />
 </directory>
+<directory name="winfax">
+	<xi:include href="winfax/winfax.rbuild" />
+</directory>
+<directory name="winhttp">
+	<xi:include href="winhttp/winhttp.rbuild" />
+</directory>
 <directory name="wininet">
 	<xi:include href="wininet/wininet.rbuild" />
 </directory>

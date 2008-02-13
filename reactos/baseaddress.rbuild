@@ -163,4 +163,5 @@
   <property name="BASEADDRESS_BEEPMIDI" value="0x7ef0000" />
   <property name="BASEADDRESS_FREETYPE" value="0x7f000000" />
   <property name="BASEADDRESS_MSCOREE" value="0x79000000" />
+  <property name="BASEADDRESS_WINHTTP" value="0x70c60000" />
 </group>
