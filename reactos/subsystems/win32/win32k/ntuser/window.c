@@ -414,7 +414,7 @@ static LRESULT co_UserFreeWindow(PWINDOW_OBJECT Window,
             else
                co_UserFreeWindow(Child, ProcessData, ThreadData, SendMessages);
 
-            UserDerefObject(Child);
+            UserDereferenceObject(Child);
          }
       }
       ExFreePool(Children);
@@ -491,8 +491,8 @@ static LRESULT co_UserFreeWindow(PWINDOW_OBJECT Window,
 
    IntUnlinkWindow(Window);
 
-   UserRefObject(Window);
-   ObmDeleteObject(Window->hSelf, otWindow);
+   UserReferenceObject(Window);
+   UserDeleteObject(Window->hSelf, otWindow);
 
    IntDestroyScrollBars(Window);
 
@@ -510,7 +510,7 @@ static LRESULT co_UserFreeWindow(PWINDOW_OBJECT Window,
    ASSERT(Window->Wnd != NULL);
    UserFreeWindowInfo(Window->ti, Window);
 
-   UserDerefObject(Window);
+   UserDereferenceObject(Window);
 
    IntClipboardFreeWindow(Window);
 
@@ -989,7 +989,7 @@ IntSetOwner(HWND hWnd, HWND hWndNewOwner)
    if (WndOldOwner)
    {
       ret = WndOldOwner->hSelf;
-      UserDerefObject(WndOldOwner);
+      UserDereferenceObject(WndOldOwner);
    }
    else
    {
@@ -1007,7 +1007,7 @@ IntSetOwner(HWND hWnd, HWND hWndNewOwner)
       Wnd->Wnd->Owner = NULL;
    }
 
-   UserDerefObject(Wnd);
+   UserDereferenceObject(Wnd);
    return ret;
 }
 
@@ -1042,7 +1042,7 @@ co_IntSetParent(PWINDOW_OBJECT Wnd, PWINDOW_OBJECT WndNewParent)
 
    WndOldParent = Wnd->Parent;
 
-   if (WndOldParent) UserRefObject(WndOldParent); /* caller must deref */
+   if (WndOldParent) UserReferenceObject(WndOldParent); /* caller must deref */
 
    if (WndNewParent != WndOldParent)
    {
@@ -1064,9 +1064,9 @@ co_IntSetParent(PWINDOW_OBJECT Wnd, PWINDOW_OBJECT WndNewParent)
       }
       else
       {
-//         UserRefObject(InsertAfter);
+//         UserReferenceObject(InsertAfter);
          IntLinkWindow(Wnd, WndNewParent, InsertAfter /*prev sibling*/);
-//         UserDerefObject(InsertAfter);
+//         UserDereferenceObject(InsertAfter);
       }
    }
 
@@ -1092,7 +1092,7 @@ co_IntSetParent(PWINDOW_OBJECT Wnd, PWINDOW_OBJECT WndNewParent)
 //   {
 //      if(!IntIsWindow(WndOldParent->hSelf))
 //      {
-//         UserDerefObject(WndOldParent);
+//         UserDereferenceObject(WndOldParent);
 //         return NULL;
 //      }
 
@@ -1607,7 +1607,7 @@ co_IntCreateWindowEx(DWORD dwExStyle,
 
    /* Create the window object. */
    Window = (PWINDOW_OBJECT)
-            ObmCreateObject(gHandleTable, (PHANDLE)&hWnd,
+            UserCreateObject(gHandleTable, (PHANDLE)&hWnd,
                             otWindow, sizeof(WINDOW_OBJECT));
    if (Window)
    {
@@ -1982,7 +1982,7 @@ AllocErr:
    if (!Result)
    {
       /* FIXME: Cleanup. */
-      DPRINT("IntCreateWindowEx(): NCCREATE message failed.\n");
+      DPRINT1("IntCreateWindowEx(): NCCREATE message failed. No cleanup performed!\n");
       RETURN((HWND)0);
    }
 
@@ -2046,7 +2046,7 @@ AllocErr:
    if (Result == (LRESULT)-1)
    {
       /* FIXME: Cleanup. */
-      DPRINT("IntCreateWindowEx(): send CREATE message failed.\n");
+      DPRINT1("IntCreateWindowEx(): send CREATE message failed. No cleanup performed!\n");
       RETURN((HWND)0);
    }
 
@@ -2166,7 +2166,11 @@ AllocErr:
 CLEANUP:
    if (!_ret_ && Window && Window->Wnd && ti)
        UserFreeWindowInfo(ti, Window);
-   if (Window) UserDerefObjectCo(Window);
+   if (Window)
+   {
+      UserDerefObjectCo(Window);
+      UserDereferenceObject(Window);
+   }
    if (ParentWindow) UserDerefObjectCo(ParentWindow);
    if (!_ret_ && ti != NULL)
    {
@@ -2834,7 +2838,7 @@ PWINDOW_OBJECT FASTCALL UserGetAncestor(PWINDOW_OBJECT Wnd, UINT Type)
                }
 
                //temp hack
-//               UserDerefObject(Parent);
+//               UserDereferenceObject(Parent);
 
                WndAncestor = Parent;
             }
@@ -2935,7 +2939,7 @@ NtUserGetComboBoxInfo(
    if (!(Wnd = UserGetWindowObject(hWnd)))
    {
       RETURN( FALSE );
-   }   
+   }
    _SEH_TRY
    {
        if(pcbi)
@@ -2958,7 +2962,7 @@ NtUserGetComboBoxInfo(
 CLEANUP:
    DPRINT("Leave NtUserGetComboBoxInfo, ret=%i\n",_ret_);
    UserLeave();
-   END_CLEANUP;   
+   END_CLEANUP;
 }
 
 
@@ -3013,21 +3017,21 @@ NtUserGetListBoxInfo(
 {
    PWINDOW_OBJECT Wnd;
    DECLARE_RETURN(DWORD);
-   
+
    DPRINT("Enter NtUserGetListBoxInfo\n");
    UserEnterShared();
 
    if (!(Wnd = UserGetWindowObject(hWnd)))
    {
       RETURN( 0 );
-   }   
+   }
 
    RETURN( (DWORD) co_IntSendMessage( Wnd->hSelf, LB_GETLISTBOXINFO, 0, 0 ));
 
 CLEANUP:
    DPRINT("Leave NtUserGetListBoxInfo, ret=%i\n",_ret_);
    UserLeave();
-   END_CLEANUP;   
+   END_CLEANUP;
 }
 
 
@@ -3081,7 +3085,7 @@ co_UserSetParent(HWND hWndChild, HWND hWndNewParent)
    if (WndOldParent)
    {
       hWndOldParent = WndOldParent->hSelf;
-      UserDerefObject(WndOldParent);
+      UserDereferenceObject(WndOldParent);
    }
 
    return( hWndOldParent);
@@ -4599,7 +4603,7 @@ NtUserWindowFromPoint(LONG X, LONG Y)
    RETURN( NULL);
 
 CLEANUP:
-   if (Window) UserDerefObject(Window);
+   if (Window) UserDereferenceObject(Window);
    if (DesktopWindow) UserDerefObjectCo(DesktopWindow);
 
    DPRINT("Leave NtUserWindowFromPoint, ret=%i\n",_ret_);

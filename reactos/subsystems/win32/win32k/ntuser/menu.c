@@ -238,6 +238,7 @@ IntFreeMenuItem(PMENU_OBJECT Menu, PMENU_ITEM MenuItem,
    }
 
    /* Free memory */
+   ExFreePool(MenuItem->Text.Buffer);
    ExFreePool(MenuItem);
 
    return TRUE;
@@ -317,9 +318,10 @@ IntDestroyMenuObject(PMENU_OBJECT Menu,
                Window->Wnd->IDMenu = 0;
             }
          }
-         ObmDeleteObject(Menu->MenuInfo.Self, otMenu);
+//         UserDereferenceObject(Menu);
+         BOOL ret = UserDeleteObject(Menu->MenuInfo.Self, otMenu);
          ObDereferenceObject(WindowStation);
-         return TRUE;
+         return ret;
       }
    }
    return FALSE;
@@ -330,7 +332,7 @@ IntCreateMenu(PHANDLE Handle, BOOL IsMenuBar)
 {
    PMENU_OBJECT Menu;
 
-   Menu = (PMENU_OBJECT)ObmCreateObject(
+   Menu = (PMENU_OBJECT)UserCreateObject(
              gHandleTable, Handle,
              otMenu, sizeof(MENU_OBJECT));
 
@@ -438,7 +440,7 @@ IntCloneMenu(PMENU_OBJECT Source)
    if(!Source)
       return NULL;
 
-   Menu = (PMENU_OBJECT)ObmCreateObject(
+   Menu = (PMENU_OBJECT)UserCreateObject(
              gHandleTable, &hMenu,
              otMenu, sizeof(MENU_OBJECT));
 
@@ -1457,6 +1459,7 @@ HMENU FASTCALL UserCreateMenu(BOOL PopupMenu)
 {
    PWINSTATION_OBJECT WinStaObject;
    HANDLE Handle;
+   PMENU_OBJECT Menu;
    NTSTATUS Status;
    PEPROCESS CurrentProcess = PsGetCurrentProcess();
 
@@ -1479,12 +1482,14 @@ HMENU FASTCALL UserCreateMenu(BOOL PopupMenu)
           SetLastNtError(Status);
           return (HMENU)0;
        }
-       IntCreateMenu(&Handle, !PopupMenu);
+       Menu = IntCreateMenu(&Handle, !PopupMenu);
+       UserDereferenceObject(Menu);
        ObDereferenceObject(WinStaObject);
    }
    else
    {
-       IntCreateMenu(&Handle, !PopupMenu);
+       Menu = IntCreateMenu(&Handle, !PopupMenu);
+       UserDereferenceObject(Menu);
    }
 
    return (HMENU)Handle;
@@ -1566,7 +1571,7 @@ NtUserDestroyMenu(
       RETURN( FALSE);
    }
 
-   RETURN( IntDestroyMenuObject(Menu, FALSE, TRUE));
+   RETURN( IntDestroyMenuObject(Menu, TRUE, TRUE));
 
 CLEANUP:
    DPRINT("Leave NtUserDestroyMenu, ret=%i\n",_ret_);

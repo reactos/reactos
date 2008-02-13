@@ -282,7 +282,7 @@ co_MsqTranslateMouseMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd, UINT Fi
       if(Msg == WM_MOUSEWHEEL)
       {
          Window = UserGetWindowObject(IntGetFocusWindow());
-         if (Window) UserRefObject(Window);
+         if (Window) UserReferenceObject(Window);
       }
       else
       {
@@ -290,7 +290,7 @@ co_MsqTranslateMouseMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd, UINT Fi
          if(Window == NULL)
          {
             Window = ScopeWin;
-            if (Window) UserRefObject(Window);
+            if (Window) UserReferenceObject(Window);
          }
          else
          {
@@ -304,7 +304,7 @@ co_MsqTranslateMouseMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd, UINT Fi
       /* FIXME - window messages should go to the right window if no buttons are
                  pressed */
       Window = UserGetWindowObject(hCaptureWin);
-      if (Window) UserRefObject(Window);
+      if (Window) UserReferenceObject(Window);
    }
 
 
@@ -377,7 +377,7 @@ co_MsqTranslateMouseMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd, UINT Fi
       IntUnLockHardwareMessageQueue(Window->MessageQueue);
 
       *Freed = FALSE;
-      UserDerefObject(Window);
+      UserDereferenceObject(Window);
       return(FALSE);
    }
 
@@ -420,7 +420,7 @@ co_MsqTranslateMouseMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd, UINT Fi
          IntUnLockHardwareMessageQueue(Window->MessageQueue);
       }
 
-      UserDerefObject(Window);
+      UserDereferenceObject(Window);
       *Freed = FALSE;
       return(FALSE);
    }
@@ -459,7 +459,7 @@ co_MsqTranslateMouseMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd, UINT Fi
       }
    }
 
-   UserDerefObject(Window);
+   UserDereferenceObject(Window);
    *Freed = FALSE;
    return(TRUE);
 }
@@ -783,7 +783,7 @@ MsqPostHotKeyMessage(PVOID Thread, HWND hWnd, WPARAM wParam, LPARAM lParam)
    Mesg.time = MsqCalculateMessageTime(&LargeTickCount);
    IntGetCursorLocation(WinSta, &Mesg.pt);
    MsqPostMessage(Window->MessageQueue, &Mesg, FALSE, QS_HOTKEY);
-   ObmDereferenceObject(Window);
+   UserDereferenceObject(Window);
    ObDereferenceObject (Thread);
 
    //  InsertHeadList(&pThread->MessageQueue->PostedMessagesListHead,

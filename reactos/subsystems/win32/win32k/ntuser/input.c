@@ -1058,7 +1058,7 @@ IntMouseInput(MOUSEINPUT *mi)
             MousePos.x = DesktopWindow->Wnd->ClientRect.right - 1;
          if(MousePos.y >= DesktopWindow->Wnd->ClientRect.bottom)
             MousePos.y = DesktopWindow->Wnd->ClientRect.bottom - 1;
-         ObmDereferenceObject(DesktopWindow);
+         UserDereferenceObject(DesktopWindow);
       }
 
       if(MousePos.x < 0)

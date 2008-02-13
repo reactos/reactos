@@ -102,8 +102,20 @@ UserAssertLastRef(PVOID obj, const char *file, int line)
 
 #undef USER_ASSERT
 
-VOID FASTCALL ObmReferenceObject(PVOID obj);
-BOOL FASTCALL ObmDereferenceObject2(PVOID obj);
+extern PUSER_HANDLE_TABLE gHandleTable;
+VOID FASTCALL UserReferenceObject(PVOID obj);
+PVOID FASTCALL UserReferenceObjectByHandle(HANDLE handle, USER_OBJECT_TYPE type);
+BOOL FASTCALL UserDereferenceObject(PVOID obj);
+PVOID FASTCALL UserCreateObject(PUSER_HANDLE_TABLE ht, HANDLE* h,USER_OBJECT_TYPE type , ULONG size);
+BOOL FASTCALL UserDeleteObject(HANDLE h, USER_OBJECT_TYPE type );
+PVOID UserGetObject(PUSER_HANDLE_TABLE ht, HANDLE handle, USER_OBJECT_TYPE type );
+HANDLE UserAllocHandle(PUSER_HANDLE_TABLE ht, PVOID object, USER_OBJECT_TYPE type );
+BOOL UserFreeHandle(PUSER_HANDLE_TABLE ht, HANDLE handle );
+PVOID UserGetNextHandle(PUSER_HANDLE_TABLE ht, HANDLE* handle, USER_OBJECT_TYPE type );
+PUSER_HANDLE_ENTRY handle_to_entry(PUSER_HANDLE_TABLE ht, HANDLE handle );
+BOOL FASTCALL UserCreateHandleTable();
+VOID UserInitHandleTable(PUSER_HANDLE_TABLE ht, PVOID mem, ULONG bytes);
+
 
 static __inline VOID
 UserRefObjectCo(PVOID obj, PUSER_REFERENCE_ENTRY UserReferenceEntry)
@@ -114,7 +126,7 @@ UserRefObjectCo(PVOID obj, PUSER_REFERENCE_ENTRY UserReferenceEntry)
     ASSERT(W32Thread != NULL);
     ASSERT(UserReferenceEntry != NULL);
     UserReferenceEntry->obj = obj;
-    ObmReferenceObject(obj);
+    UserReferenceObject(obj);
     PushEntryList(&W32Thread->ReferencesList, &UserReferenceEntry->Entry);
 }
 
@@ -134,10 +146,10 @@ UserDerefObjectCo(PVOID obj)
     ASSERT(UserReferenceEntry != NULL);
 
     ASSERT(obj == UserReferenceEntry->obj);
-    ObmDereferenceObject2(obj);
+    UserDereferenceObject(obj);
 }
 
-HANDLE FASTCALL ObmObjectToHandle(PVOID obj);
+HANDLE FASTCALL UserObjectToHandle(PVOID obj);
 
 VOID  FASTCALL CreateStockObjects (VOID);
 VOID  FASTCALL CreateSysColorObjects (VOID);

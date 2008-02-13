@@ -112,7 +112,7 @@ IntAddHook(PETHREAD Thread, int HookId, BOOLEAN Global, PWINSTATION_OBJECT WinSt
       }
    }
 
-   Hook = ObmCreateObject(gHandleTable, &Handle, otHook, sizeof(HOOK));
+   Hook = UserCreateObject(gHandleTable, &Handle, otHook, sizeof(HOOK));
    if (NULL == Hook)
    {
       return NULL;
@@ -215,7 +215,7 @@ IntFreeHook(PHOOKTABLE Table, PHOOK Hook, PWINSTATION_OBJECT WinStaObj)
    }
 
    /* Close handle */
-   ObmDeleteObject(Hook->Self, otHook);
+   UserDeleteObject(Hook->Self, otHook);
 }
 
 /* remove a hook, freeing it if the chain is not in use */
@@ -441,7 +441,7 @@ NtUserCallNextHookEx(
       RETURN( FALSE);
    }
 
-   //Status = ObmReferenceObjectByHandle(gHandleTable, Hook,
+   //Status = UserReferenceObjectByHandle(gHandleTable, Hook,
    //                             otHookProc, (PVOID *) &HookObj);
    ObDereferenceObject(WinStaObj);
 
@@ -462,13 +462,13 @@ NtUserCallNextHookEx(
    if (NULL != HookObj->Thread && (HookObj->Thread != PsGetCurrentThread()))
    {
       DPRINT1("Thread mismatch\n");
-      ObmDereferenceObject(HookObj);
+      UserDereferenceObject(HookObj);
       SetLastWin32Error(ERROR_INVALID_HANDLE);
       RETURN( 0);
    }
 
    NextObj = IntGetNextHook(HookObj);
-   ObmDereferenceObject(HookObj);
+   UserDereferenceObject(HookObj);
    if (NULL != NextObj)
    {
       DPRINT1("Calling next hook not implemented\n");
@@ -637,7 +637,7 @@ NtUserSetWindowsHookEx(
       Status = MmCopyFromCaller(&ModuleName, UnsafeModuleName, sizeof(UNICODE_STRING));
       if (! NT_SUCCESS(Status))
       {
-         ObmDereferenceObject(Hook);
+         UserDereferenceObject(Hook);
          IntRemoveHook(Hook, WinStaObj, FALSE);
          if (NULL != Thread)
          {
@@ -652,7 +652,7 @@ NtUserSetWindowsHookEx(
                                 TAG_HOOK);
       if (NULL == Hook->ModuleName.Buffer)
       {
-         ObmDereferenceObject(Hook);
+         UserDereferenceObject(Hook);
          IntRemoveHook(Hook, WinStaObj, FALSE);
          if (NULL != Thread)
          {
@@ -669,7 +669,7 @@ NtUserSetWindowsHookEx(
       if (! NT_SUCCESS(Status))
       {
 	     ExFreePool(Hook->ModuleName.Buffer);
-         ObmDereferenceObject(Hook);
+         UserDereferenceObject(Hook);
          IntRemoveHook(Hook, WinStaObj, FALSE);
          if (NULL != Thread)
          {
@@ -686,7 +686,7 @@ NtUserSetWindowsHookEx(
    Hook->Ansi = Ansi;
    Handle = Hook->Self;
 
-   ObmDereferenceObject(Hook);
+   UserDereferenceObject(Hook);
    ObDereferenceObject(WinStaObj);
 
    RETURN( Handle);
@@ -738,7 +738,7 @@ NtUserUnhookWindowsHookEx(
       RETURN( FALSE);
    }
 
-   //  Status = ObmReferenceObjectByHandle(gHandleTable, Hook,
+   //  Status = UserReferenceObjectByHandle(gHandleTable, Hook,
    //                                      otHookProc, (PVOID *) &HookObj);
    if (!(HookObj = IntGetHookObject(Hook)))
    {
@@ -751,7 +751,7 @@ NtUserUnhookWindowsHookEx(
 
    IntRemoveHook(HookObj, WinStaObj, FALSE);
 
-   ObmDereferenceObject(HookObj);
+   UserDereferenceObject(HookObj);
    ObDereferenceObject(WinStaObj);
 
    RETURN( TRUE);

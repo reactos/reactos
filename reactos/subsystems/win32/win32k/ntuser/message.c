@@ -582,12 +582,12 @@ co_IntTranslateMouseMessage(PUSER_MESSAGE_QUEUE ThreadQueue, LPMSG Msg, USHORT *
                   }
 
                   /* eat the message */
-                  UserDerefObject(Wnd);
+                  UserDereferenceObject(Wnd);
                   UserDerefObjectCo(DesktopWindow);
                   UserDerefObjectCo(Window);
                   return TRUE;
                }
-               UserDerefObject(Wnd);
+               UserDereferenceObject(Wnd);
             }
 
             UserDerefObjectCo(DesktopWindow);
@@ -800,7 +800,7 @@ MessageFound:
 
 //         if(MsgWindow)
 //         {
-//            UserDerefObject(MsgWindow);
+//            UserDereferenceObject(MsgWindow);
 //         }
 
          return TRUE;
@@ -1584,7 +1584,7 @@ co_IntDoSendMessage(HWND hWnd,
       /* Must be handled by other thread */
 //      if (HWND_BROADCAST != hWnd)
 //      {
-//         UserDerefObject(Window);
+//         UserDereferenceObject(Window);
 //      }
       Info.HandledByKernel = TRUE;
       UserModeMsg.hwnd = hWnd;

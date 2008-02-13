@@ -81,7 +81,7 @@ PCURICON_OBJECT FASTCALL UserGetCurIconObject(HCURSOR hCurIcon);
   (PSYSTEM_CURSORINFO)((WinStaObj)->SystemCursor)
 
 #define IntReleaseCurIconObject(CurIconObj) \
-  ObmDereferenceObject(CurIconObj)
+  UserDereferenceObject(CurIconObj)
 
 #endif /* _WIN32K_CURSORICON_H */
 

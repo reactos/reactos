@@ -348,7 +348,7 @@ NtUserCreateAcceleratorTable(
       RETURN( (HACCEL) 0 );
    }
 
-   Accel = ObmCreateObject(gHandleTable, (PHANDLE)&hAccel, otAccel, sizeof(ACCELERATOR_TABLE));
+   Accel = UserCreateObject(gHandleTable, (PHANDLE)&hAccel, otAccel, sizeof(ACCELERATOR_TABLE));
 
    if (Accel == NULL)
    {
@@ -362,7 +362,8 @@ NtUserCreateAcceleratorTable(
       Accel->Table = ExAllocatePoolWithTag(PagedPool, EntriesCount * sizeof(ACCEL), TAG_ACCEL);
       if (Accel->Table == NULL)
       {
-         ObmDeleteObject(hAccel, otAccel);
+         UserDereferenceObject(Accel);
+         UserDeleteObject(hAccel, otAccel);
          SetLastNtError(STATUS_NO_MEMORY);
          RETURN( (HACCEL) 0);
       }
@@ -371,7 +372,8 @@ NtUserCreateAcceleratorTable(
       if (!NT_SUCCESS(Status))
       {
          ExFreePool(Accel->Table);
-         ObmDeleteObject(hAccel, otAccel);
+         UserDereferenceObject(Accel);
+         UserDeleteObject(hAccel, otAccel);
          SetLastNtError(Status);
          RETURN((HACCEL) 0);
       }
@@ -411,12 +413,13 @@ NtUserDestroyAcceleratorTable(
       RETURN( FALSE);
    }
 
-   ObmDeleteObject(hAccel, otAccel);
-
    if (Accel->Table != NULL)
    {
       ExFreePool(Accel->Table);
+      Accel->Table = NULL;
    }
+
+   UserDeleteObject(hAccel, otAccel);
 
    RETURN( TRUE);
 

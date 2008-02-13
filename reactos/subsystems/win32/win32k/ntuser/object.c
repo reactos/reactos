@@ -69,7 +69,7 @@ __inline static PUSER_HANDLE_ENTRY alloc_user_entry(PUSER_HANDLE_TABLE ht)
    if (ht->nb_handles >= ht->allocated_handles)  /* need to grow the array */
    {
 /**/
-      int i, iFree = 0, iWindow = 0, iMenu = 0, iCursorIcon = 0, 
+      int i, iFree = 0, iWindow = 0, iMenu = 0, iCursorIcon = 0,
           iHook = 0, iCallProc = 0, iAccel = 0, iMonitor = 0;
  /**/
       DPRINT1("Out of user handles! Used -> %i, NM_Handle -> %d\n", usedHandles, ht->nb_handles);
@@ -108,7 +108,7 @@ __inline static PUSER_HANDLE_ENTRY alloc_user_entry(PUSER_HANDLE_TABLE ht)
       }
       DPRINT1("Handle Count by Type:\n Free = %d Window = %d Menu = %d CursorIcon = %d Hook = %d\n CallProc = %d Accel = %d Monitor = %d\n",
       iFree, iWindow, iMenu, iCursorIcon, iHook, iCallProc, iAccel, iMonitor );
-//#endif      
+//#endif
       return NULL;
 #if 0
       PUSER_HANDLE_ENTRY new_handles;
@@ -198,6 +198,10 @@ HANDLE UserAllocHandle(PUSER_HANDLE_TABLE ht, PVOID object, USER_OBJECT_TYPE typ
    entry->pi = UserHandleOwnerByType(type);
    if (++entry->generation >= 0xffff)
       entry->generation = 1;
+
+   /* We have created a handle, which is a reference! */
+   UserReferenceObject(object);
+
    return entry_to_handle(ht, entry );
 }
 
@@ -241,18 +245,24 @@ void *get_user_object_handle(PUSER_HANDLE_TABLE ht,  HANDLE* handle, USER_OBJECT
    return entry->ptr;
 }
 
-/* free a user handle and return a pointer to the object */
-PVOID UserFreeHandle(PUSER_HANDLE_TABLE ht,  HANDLE handle )
+/* free a user handle */
+BOOL UserFreeHandle(PUSER_HANDLE_TABLE ht,  HANDLE handle )
 {
    PUSER_HANDLE_ENTRY entry;
+   PVOID object;
 
    if (!(entry = handle_to_entry( ht, handle )))
    {
       SetLastNtError( STATUS_INVALID_HANDLE );
-      return NULL;
+      return FALSE;
    }
 
-   return free_user_entry(ht, entry );
+   object = free_user_entry(ht, entry );
+
+   /* We removed the handle, which was a reference! */
+   return UserDereferenceObject(object);
+
+   return TRUE;
 }
 
 /* return the next user handle after 'handle' that is of a given type */
@@ -284,7 +294,7 @@ PVOID UserGetNextHandle(PUSER_HANDLE_TABLE ht, HANDLE* handle, USER_OBJECT_TYPE 
 
 
 PVOID FASTCALL
-ObmCreateObject(PUSER_HANDLE_TABLE ht, HANDLE* h,USER_OBJECT_TYPE type , ULONG size)
+UserCreateObject(PUSER_HANDLE_TABLE ht, HANDLE* h,USER_OBJECT_TYPE type , ULONG size)
 {
 
    HANDLE hi;
@@ -303,7 +313,7 @@ ObmCreateObject(PUSER_HANDLE_TABLE ht, HANDLE* h,USER_OBJECT_TYPE type , ULONG s
 
    RtlZeroMemory(hdr, size + sizeof(USER_OBJECT_HEADER));
    hdr->hSelf = hi;
-   hdr->RefCount++; //temp hack!
+   hdr->RefCount = 2; // we need this, because we create 2 refs: handle and pointer!
 
    if (h)
       *h = hi;
@@ -311,7 +321,7 @@ ObmCreateObject(PUSER_HANDLE_TABLE ht, HANDLE* h,USER_OBJECT_TYPE type , ULONG s
 }
 
 BOOL FASTCALL
-ObmDeleteObject(HANDLE h, USER_OBJECT_TYPE type )
+UserDeleteObject(HANDLE h, USER_OBJECT_TYPE type )
 {
    PUSER_OBJECT_HEADER hdr;
    PVOID body = UserGetObject(gHandleTable, h, type);
@@ -319,26 +329,14 @@ ObmDeleteObject(HANDLE h, USER_OBJECT_TYPE type )
       return FALSE;
 
    hdr = USER_BODY_TO_HEADER(body);
-   ASSERT(hdr->RefCount >= 0);
+   ASSERT(hdr->RefCount >= 1);
 
    hdr->destroyed = TRUE;
-   if (hdr->RefCount == 0)
-   {
-      UserFreeHandle(gHandleTable, h);
-
-      memset(hdr, 0x55, sizeof(USER_OBJECT_HEADER));
-
-      UserHeapFree(hdr);
-      //ExFreePool(hdr);
-      return TRUE;
-   }
-
-//   DPRINT1("info: something not destroyed bcause refs still left, inuse %i\n",usedHandles);
-   return FALSE;
+   return UserFreeHandle(gHandleTable, h);
 }
 
 
-VOID FASTCALL ObmReferenceObject(PVOID obj)
+VOID FASTCALL UserReferenceObject(PVOID obj)
 {
    PUSER_OBJECT_HEADER hdr = USER_BODY_TO_HEADER(obj);
 
@@ -347,14 +345,29 @@ VOID FASTCALL ObmReferenceObject(PVOID obj)
    hdr->RefCount++;
 }
 
-HANDLE FASTCALL ObmObjectToHandle(PVOID obj)
+
+PVOID FASTCALL UserReferenceObjectByHandle(HANDLE handle, USER_OBJECT_TYPE type)
+{
+    PVOID object;
+
+    object = UserGetObject(gHandleTable, handle, type);
+    if(object)
+    {
+        UserReferenceObject(object);
+    }
+
+    return object;
+}
+
+
+HANDLE FASTCALL UserObjectToHandle(PVOID obj)
 {
     PUSER_OBJECT_HEADER hdr = USER_BODY_TO_HEADER(obj);
     return hdr->hSelf;
 }
 
 
-BOOL FASTCALL ObmDereferenceObject2(PVOID obj)
+BOOL FASTCALL UserDereferenceObject(PVOID obj)
 {
    PUSER_OBJECT_HEADER hdr = USER_BODY_TO_HEADER(obj);
 
@@ -363,17 +376,19 @@ BOOL FASTCALL ObmDereferenceObject2(PVOID obj)
    hdr->RefCount--;
 
    // You can not have a zero here!
-   if (!hdr->destroyed && hdr->RefCount == 0) hdr->RefCount++; // BOUNCE!!!!!
+   if (!hdr->destroyed && hdr->RefCount == 0)
+   {
+      hdr->RefCount++; // BOUNCE!!!!!
+      DPRINT1("warning! Dereference to zero without deleting!\n");
+   }
 
    if (hdr->RefCount == 0 && hdr->destroyed)
    {
 //      DPRINT1("info: something destroyed bcaise of deref, in use=%i\n",usedHandles);
 
-      UserFreeHandle(gHandleTable, hdr->hSelf);
-
       memset(hdr, 0x55, sizeof(USER_OBJECT_HEADER));
 
-      UserHeapFree(hdr);
+      return UserHeapFree(hdr);
       //ExFreePool(hdr);
 
       return TRUE;
@@ -384,7 +399,7 @@ BOOL FASTCALL ObmDereferenceObject2(PVOID obj)
 
 
 
-BOOL FASTCALL ObmCreateHandleTable()
+BOOL FASTCALL UserCreateHandleTable()
 {
 
    PVOID mem;

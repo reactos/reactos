@@ -289,7 +289,7 @@ Win32kThreadCallback(struct _ETHREAD *Thread,
       {
          PUSER_REFERENCE_ENTRY ref = CONTAINING_RECORD(e, USER_REFERENCE_ENTRY, Entry);
          DPRINT("thread clean: remove reference obj 0x%x\n",ref->obj);
-         ObmDereferenceObject(ref->obj);
+         UserDereferenceObject(ref->obj);
 
          e = PopEntryList(&Win32Thread->ReferencesList);
       }

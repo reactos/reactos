@@ -1005,14 +1005,14 @@ co_WinPosSetWindowPos(
             }
             if (NULL != InsertAfterWindow)
             {
-               UserRefObject(InsertAfterWindow);
+               UserReferenceObject(InsertAfterWindow);
             }
          }
          else if (WinPos.hwndInsertAfter == HWND_BOTTOM)
          {
             if(ParentWindow->LastChild)
             {
-               UserRefObject(ParentWindow->LastChild);
+               UserReferenceObject(ParentWindow->LastChild);
                InsertAfterWindow = ParentWindow->LastChild;
             }
             else
@@ -1028,7 +1028,7 @@ co_WinPosSetWindowPos(
             IntLinkWindow(Window, ParentWindow, InsertAfterWindow);
          }
          if (InsertAfterWindow != NULL)
-            UserDerefObject(InsertAfterWindow);
+            UserDereferenceObject(InsertAfterWindow);
          if ((HWND_TOPMOST == WinPos.hwndInsertAfter)
                || (0 != (Window->Wnd->ExStyle & WS_EX_TOPMOST)
                    && NULL != Window->PrevSibling
@@ -1588,9 +1588,9 @@ co_WinPosSearchChildren(
              continue;
          }
 
-         if (*Window) UserDerefObject(*Window);
+         if (*Window) UserDereferenceObject(*Window);
          *Window = Current;
-         UserRefObject(*Window);
+         UserReferenceObject(*Window);
 
          if (CurrentWnd->Style & WS_MINIMIZE)
          {

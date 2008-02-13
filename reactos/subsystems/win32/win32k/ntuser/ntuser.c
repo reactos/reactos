@@ -44,7 +44,7 @@ NTSTATUS FASTCALL InitUserImpl(VOID)
 
    ExInitializeResourceLite(&UserLock);
 
-   if (!ObmCreateHandleTable())
+   if (!UserCreateHandleTable())
    {
       DPRINT1("Failed creating handle table\n");
       return STATUS_INSUFFICIENT_RESOURCES;

@@ -47,7 +47,7 @@ PMENU_OBJECT FASTCALL
 IntGetMenuObject(HMENU hMenu);
 
 #define IntReleaseMenuObject(MenuObj) \
-  ObmDereferenceObject(MenuObj)
+  UserDereferenceObject(MenuObj)
 
 BOOL FASTCALL
 IntFreeMenuItem(PMENU_OBJECT MenuObject, PMENU_ITEM MenuItem,

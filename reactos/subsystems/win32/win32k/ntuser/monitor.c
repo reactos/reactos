@@ -89,7 +89,7 @@ IntCreateMonitorObject()
    HANDLE Handle;
    PMONITOR_OBJECT Monitor;
 
-   Monitor = ObmCreateObject(gHandleTable, &Handle, otMonitor, sizeof (MONITOR_OBJECT));
+   Monitor = UserCreateObject(gHandleTable, &Handle, otMonitor, sizeof (MONITOR_OBJECT));
    if (Monitor == NULL)
    {
       return NULL;
@@ -116,7 +116,7 @@ void
 IntDestroyMonitorObject(IN PMONITOR_OBJECT pMonitor)
 {
    RtlFreeUnicodeString(&pMonitor->DeviceName);
-   ObmDereferenceObject(pMonitor);
+   UserDereferenceObject(pMonitor);
 }
 
 
@@ -178,6 +178,8 @@ IntAttachMonitor(IN GDIDEVICE *pGdiDevice,
    if (!RtlCreateUnicodeString(&Monitor->DeviceName, Buffer))
    {
       DPRINT("Couldn't duplicate monitor name!\n");
+      UserDereferenceObject(Monitor);
+      UserDeleteObject(Monitor->Handle, otMonitor);
       return STATUS_INSUFFICIENT_RESOURCES;
    }
 
@@ -199,6 +201,7 @@ IntAttachMonitor(IN GDIDEVICE *pGdiDevice,
       }
       Monitor->Prev = p;
    }
+   UserDereferenceObject(Monitor);
 
    return STATUS_SUCCESS;
 }

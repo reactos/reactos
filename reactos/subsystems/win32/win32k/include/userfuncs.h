@@ -7,22 +7,6 @@
 
 PMENU_OBJECT FASTCALL UserGetMenuObject(HMENU hMenu);
 
-
-#if 0
-#define ObmDereferenceObject(_obj_) \
-{ \
-   DPRINT1("obj 0x%x dereffed to %i refs\n",_obj_, USER_BODY_TO_HEADER(_obj_)->RefCount-1); \
-   ObmDereferenceObject2(_obj_); \
-}
-
-#endif
-
-#define ObmDereferenceObject(_obj_) ObmDereferenceObject2(_obj_)
-
-
-
-
-
 #define ASSERT_REFS_CO(_obj_) \
 { \
    LONG ref = USER_BODY_TO_HEADER(_obj_)->RefCount;\
@@ -56,33 +40,7 @@ PMENU_OBJECT FASTCALL UserGetMenuObject(HMENU hMenu);
 
 #define DUMP_REFS(obj) DPRINT1("obj 0x%x, refs %i\n",obj, USER_BODY_TO_HEADER(obj)->RefCount)
 
-
-
-
-VOID FASTCALL ObmReferenceObject(PVOID obj);
-BOOL FASTCALL ObmDereferenceObject2(PVOID obj);
-
 PWINDOW_OBJECT FASTCALL IntGetWindowObject(HWND hWnd);
-PVOID FASTCALL
-ObmCreateObject(PUSER_HANDLE_TABLE ht, HANDLE* h,USER_OBJECT_TYPE type , ULONG size);
-
-BOOL FASTCALL
-ObmDeleteObject(HANDLE h, USER_OBJECT_TYPE type );
-
-#define UserRefObject(o) ObmReferenceObject(o)
-#define UserDerefObject(o) ObmDereferenceObject(o)
-BOOL FASTCALL ObmCreateHandleTable();
-
-/******************** HANDLE.C ***************/
-
-extern PUSER_HANDLE_TABLE gHandleTable;
-
-PUSER_HANDLE_ENTRY handle_to_entry(PUSER_HANDLE_TABLE ht, HANDLE handle );
-VOID UserInitHandleTable(PUSER_HANDLE_TABLE ht, PVOID mem, ULONG bytes);
-HANDLE UserAllocHandle(PUSER_HANDLE_TABLE ht, PVOID object, USER_OBJECT_TYPE type );
-PVOID UserGetObject(PUSER_HANDLE_TABLE ht, HANDLE handle, USER_OBJECT_TYPE type );
-PVOID UserFreeHandle(PUSER_HANDLE_TABLE ht, HANDLE handle );
-PVOID UserGetNextHandle(PUSER_HANDLE_TABLE ht, HANDLE* handle, USER_OBJECT_TYPE type );
 
 /*************** WINSTA.C ***************/
 

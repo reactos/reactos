@@ -71,7 +71,7 @@ IntGetCursorLocation(PWINSTATION_OBJECT WinSta, POINT *loc)
    return TRUE;
 }
 
-
+/* This function creates a reference for the object! */
 PCURICON_OBJECT FASTCALL UserGetCurIconObject(HCURSOR hCurIcon)
 {
    PCURICON_OBJECT CurIcon;
@@ -82,7 +82,7 @@ PCURICON_OBJECT FASTCALL UserGetCurIconObject(HCURSOR hCurIcon)
       return NULL;
    }
 
-   CurIcon = (PCURICON_OBJECT)UserGetObject(gHandleTable, hCurIcon, otCursorIcon);
+   CurIcon = (PCURICON_OBJECT)UserReferenceObjectByHandle(hCurIcon, otCursorIcon);
    if (!CurIcon)
    {
       /* we never set ERROR_INVALID_ICON_HANDLE. lets hope noone ever checks for it */
@@ -90,7 +90,7 @@ PCURICON_OBJECT FASTCALL UserGetCurIconObject(HCURSOR hCurIcon)
       return NULL;
    }
 
-   ASSERT(USER_BODY_TO_HEADER(CurIcon)->RefCount >= 0);
+   ASSERT(USER_BODY_TO_HEADER(CurIcon)->RefCount >= 1);
    return CurIcon;
 }
 
@@ -151,10 +151,14 @@ IntSetCursor(PWINSTATION_OBJECT WinSta, PCURICON_OBJECT NewCursor,
 
    if (!NewCursor && (CurInfo->CurrentCursorObject || ForceChange))
    {
-      if (NULL != CurInfo->CurrentCursorObject && CurInfo->ShowingCursor)
+      if (NULL != CurInfo->CurrentCursorObject)
       {
-         /* Remove the cursor if it was displayed */
-         IntEngMovePointer(SurfObj, -1, -1, &GDIDEV(SurfObj)->Pointer.Exclude);
+         UserDereferenceObject(CurInfo->CurrentCursorObject);
+         if (CurInfo->ShowingCursor)
+         {
+            /* Remove the cursor if it was displayed */
+            IntEngMovePointer(SurfObj, -1, -1, &GDIDEV(SurfObj)->Pointer.Exclude);
+         }
       }
 
       GDIDEV(SurfObj)->Pointer.Status = SPS_ACCEPT_NOEXCLUDE;
@@ -239,6 +243,7 @@ IntSetCursor(PWINSTATION_OBJECT WinSta, PCURICON_OBJECT NewCursor,
       }
       CurInfo->ShowingCursor = CURSOR_SHOWING;
       CurInfo->CurrentCursorObject = NewCursor;
+      UserReferenceObject(NewCursor);
    }
    else
    {
@@ -365,14 +370,14 @@ IntFindExistingCurIconObject(PWINSTATION_OBJECT WinSta, HMODULE hModule,
    LIST_FOR_EACH(CurIcon, &gCurIconList, CURICON_OBJECT, ListEntry)
    {
 
-      //    if(NT_SUCCESS(ObmReferenceObjectByPointer(Object, otCursorIcon))) //<- huh????
-//      ObmReferenceObject(  CurIcon);
+      //    if(NT_SUCCESS(UserReferenceObjectByPointer(Object, otCursorIcon))) //<- huh????
+//      UserReferenceObject(  CurIcon);
 //      {
       if((CurIcon->hModule == hModule) && (CurIcon->hRsrc == hRsrc))
       {
          if(cx && ((cx != CurIcon->Size.cx) || (cy != CurIcon->Size.cy)))
          {
-//               ObmDereferenceObject(CurIcon);
+//               UserDereferenceObject(CurIcon);
             continue;
          }
          if (! ReferenceCurIconByProcess(CurIcon))
@@ -383,7 +388,7 @@ IntFindExistingCurIconObject(PWINSTATION_OBJECT WinSta, HMODULE hModule,
          return CurIcon;
       }
 //      }
-//      ObmDereferenceObject(CurIcon);
+//      UserDereferenceObject(CurIcon);
 
    }
 
@@ -396,7 +401,7 @@ IntCreateCurIconHandle(PWINSTATION_OBJECT WinSta)
    PCURICON_OBJECT CurIcon;
    HANDLE hCurIcon;
 
-   CurIcon = ObmCreateObject(gHandleTable, &hCurIcon, otCursorIcon, sizeof(CURICON_OBJECT));
+   CurIcon = UserCreateObject(gHandleTable, &hCurIcon, otCursorIcon, sizeof(CURICON_OBJECT));
 
    if(!CurIcon)
    {
@@ -410,14 +415,12 @@ IntCreateCurIconHandle(PWINSTATION_OBJECT WinSta)
    if (! ReferenceCurIconByProcess(CurIcon))
    {
       DPRINT1("Failed to add process\n");
-      ObmDeleteObject(hCurIcon, otCursorIcon);
-      ObmDereferenceObject(CurIcon);
+      UserDeleteObject(hCurIcon, otCursorIcon);
+      UserDereferenceObject(CurIcon);
       return NULL;
    }
 
    InsertHeadList(&gCurIconList, &CurIcon->ListEntry);
-
-   ObmDereferenceObject(CurIcon);
 
    return CurIcon;
 }
@@ -484,19 +487,23 @@ IntDestroyCurIconObject(PWINSTATION_OBJECT WinSta, PCURICON_OBJECT CurIcon, BOOL
    bmpMask = CurIcon->IconInfo.hbmMask;
    bmpColor = CurIcon->IconInfo.hbmColor;
 
-   Ret = ObmDeleteObject(CurIcon->Self, otCursorIcon);
-
    /* delete bitmaps */
    if(bmpMask)
    {
       GDIOBJ_SetOwnership(GdiHandleTable, bmpMask, PsGetCurrentProcess());
       NtGdiDeleteObject(bmpMask);
+      CurIcon->IconInfo.hbmMask = NULL;
    }
    if(bmpColor)
    {
       GDIOBJ_SetOwnership(GdiHandleTable, bmpColor, PsGetCurrentProcess());
       NtGdiDeleteObject(bmpColor);
+      CurIcon->IconInfo.hbmColor = NULL;
    }
+
+   /* We were given a pointer, no need to keep the reference anylonger! */
+   UserDereferenceObject(CurIcon);
+   Ret = UserDeleteObject(CurIcon->Self, otCursorIcon);
 
    return Ret;
 }
@@ -516,8 +523,8 @@ IntCleanupCurIcons(struct _EPROCESS *Process, PW32PROCESS Win32Process)
 
    LIST_FOR_EACH_SAFE(CurIcon, tmp, &gCurIconList, CURICON_OBJECT, ListEntry)
    {
-//      ObmReferenceObject(CurIcon);
-      //    if(NT_SUCCESS(ObmReferenceObjectByPointer(Object, otCursorIcon)))
+//      UserReferenceObject(CurIcon);
+      //    if(NT_SUCCESS(UserReferenceObjectByPointer(Object, otCursorIcon)))
       {
          LIST_FOR_EACH(ProcessData, &CurIcon->ProcessList, CURICON_PROCESS, ListEntry)
          {
@@ -529,7 +536,7 @@ IntCleanupCurIcons(struct _EPROCESS *Process, PW32PROCESS Win32Process)
             }
          }
 
-//         ObmDereferenceObject(Object);
+//         UserDereferenceObject(Object);
       }
 
 
@@ -607,6 +614,7 @@ NtUserCreateCursorIconHandle(PICONINFO IconInfo OPTIONAL, BOOL Indirect)
       }
    }
 
+   UserDereferenceObject(CurIcon);
    ObDereferenceObject(WinSta);
    RETURN( Ret);
 
@@ -698,6 +706,7 @@ NtUserGetIconInfo(
    else
       SetLastNtError(Status);
 
+   UserDereferenceObject(CurIcon);
    ObDereferenceObject(WinSta);
    RETURN( Ret);
 
@@ -748,6 +757,8 @@ NtUserGetIconSize(
       bRet = TRUE;
    else
       SetLastNtError(Status); // maybe not, test this
+
+   UserDereferenceObject(CurIcon);
 
 cleanup:
    DPRINT("Leave NtUserGetIconSize, ret=%i\n", bRet);
@@ -950,6 +961,7 @@ NtUserDestroyCursor(
    }
 
    ret = IntDestroyCurIconObject(WinSta, CurIcon, FALSE);
+   /* Note: IntDestroyCurIconObject will remove our reference for us! */
 
    ObDereferenceObject(WinSta);
    RETURN(ret);
@@ -1099,6 +1111,7 @@ NtUserSetCursor(
 
    OldCursor = IntSetCursor(WinSta, CurIcon, FALSE);
 
+   UserDereferenceObject(CurIcon);
    ObDereferenceObject(WinSta);
 
    RETURN(OldCursor);
@@ -1117,9 +1130,10 @@ BOOL
 STDCALL
 NtUserSetCursorContents(
    HANDLE hCurIcon,
-   PICONINFO IconInfo)
+   PICONINFO UnsafeIconInfo)
 {
    PCURICON_OBJECT CurIcon;
+   ICONINFO IconInfo;
    PBITMAPOBJ bmp;
    PWINSTATION_OBJECT WinSta;
    NTSTATUS Status;
@@ -1142,12 +1156,25 @@ NtUserSetCursorContents(
    }
 
    /* Copy fields */
-   Status = MmCopyFromCaller(&CurIcon->IconInfo, IconInfo, sizeof(ICONINFO));
+   Status = MmCopyFromCaller(&IconInfo, UnsafeIconInfo, sizeof(ICONINFO));
    if(!NT_SUCCESS(Status))
    {
       SetLastNtError(Status);
       goto done;
    }
+
+   /* Delete old bitmaps */
+   if (CurIcon->IconInfo.hbmColor != IconInfo.hbmColor)
+   {
+      NtGdiDeleteObject(CurIcon->IconInfo.hbmColor);
+   }
+   if (CurIcon->IconInfo.hbmMask != IconInfo.hbmMask)
+   {
+      NtGdiDeleteObject(CurIcon->IconInfo.hbmMask);
+   }
+
+   /* Copy new IconInfo field */
+   CurIcon->IconInfo = IconInfo;
 
    bmp = BITMAPOBJ_LockBitmap(CurIcon->IconInfo.hbmColor);
    if(bmp)
@@ -1174,6 +1201,10 @@ NtUserSetCursorContents(
 
 done:
 
+   if (CurIcon)
+   {
+      UserDereferenceObject(CurIcon);
+   }
    ObDereferenceObject(WinSta);
    RETURN( Ret);
 
@@ -1265,6 +1296,7 @@ NtUserSetCursorIconData(
    else
       Ret = TRUE;
 
+   UserDereferenceObject(CurIcon);
    ObDereferenceObject(WinSta);
    RETURN( Ret);
 
@@ -1346,6 +1378,7 @@ NtUserSetCursorIconData(
    }
 
 done:
+   UserDereferenceObject(CurIcon);
    ObDereferenceObject(WinSta);
    RETURN( Ret);
 
@@ -1763,6 +1796,8 @@ NtUserDrawIconEx(
       istepIfAniCur,
       hbrFlickerFreeDraw,
       diFlags);
+
+   UserDereferenceObject(pIcon);
 
    UserLeave();
    return Ret;

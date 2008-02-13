@@ -39,7 +39,7 @@ WNDPROC
 GetCallProcHandle(IN PCALLPROC CallProc)
 {
     /* FIXME - check for 64 bit architectures... */
-    return (WNDPROC)((ULONG_PTR)ObmObjectToHandle(CallProc) | 0xFFFF0000);
+    return (WNDPROC)((ULONG_PTR)UserObjectToHandle(CallProc) | 0xFFFF0000);
 }
 
 VOID
@@ -47,9 +47,9 @@ DestroyCallProc(IN PDESKTOP Desktop,
                 IN OUT PCALLPROC CallProc)
 {
     /* FIXME - use new object manager! */
-    HANDLE Handle = ObmObjectToHandle(CallProc);
+    HANDLE Handle = UserObjectToHandle(CallProc);
 
-    ObmDeleteObject(Handle,
+    UserDeleteObject(Handle,
                     otCallProc);
 }
 
@@ -61,7 +61,7 @@ CloneCallProc(IN PDESKTOP Desktop,
     HANDLE Handle;
 
     /* FIXME - use new object manager! */
-    NewCallProc = (PCALLPROC)ObmCreateObject(gHandleTable,
+    NewCallProc = (PCALLPROC)UserCreateObject(gHandleTable,
                                              &Handle,
                                              otCallProc,
                                              sizeof(CALLPROC));
@@ -87,7 +87,7 @@ CreateCallProc(IN PDESKTOP Desktop,
     HANDLE Handle;
 
     /* FIXME - use new object manager! */
-    NewCallProc = (PCALLPROC)ObmCreateObject(gHandleTable,
+    NewCallProc = (PCALLPROC)UserCreateObject(gHandleTable,
                                              &Handle,
                                              otCallProc,
                                              sizeof(CALLPROC));
