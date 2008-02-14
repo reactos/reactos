@@ -30,8 +30,8 @@ STRINGTABLE
 BEGIN
     IDS_WINDOW_TITLE "Ovládací panel"
 	IDS_ABOUT "Jednoduchý ovládací panel (not Shell-namespace based)\rCopyright 2004 GkWare e.K.\rhttp://www.gkware.com\rVydané pod GPL licenciou"
-	IDS_ABOUT_TITLE "È&o je Ovládací panel"
-	IDS_NO_ITEMS "No Items in ListView"
+	IDS_ABOUT_TITLE "Èo je Ovládací panel"
+	IDS_NO_ITEMS "Žiadne položky v zozname"
 	IDS_NAME "Názov"
 	IDS_COMMENT "Komentár" //Comment
 END

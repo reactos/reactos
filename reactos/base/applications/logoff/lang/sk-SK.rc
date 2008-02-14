@@ -10,13 +10,13 @@ LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
 STRINGTABLE DISCARDABLE
 BEGIN
 
-IDS_USAGE, "Ukonèí sedenie.\n\n\
-  /v\t\tZobrazí informácie o prebiehajúcich akciách.\n\
-  /?\t\tUkáže túto informáciu.\n\n"
+IDS_USAGE, "UkonŸ¡ sedenie.\n\n\
+  /v\t\tZobraz¡ inform cie o prebiehaj£cich akci ch.\n\
+  /?\t\tUk §e t£to inform ciu.\n\n"
 
-IDS_LOGOFF_REMOTE, "Ukonèovanie sedenia na vzdialenom poèítaèi."
-IDS_LOGOFF_LOCAL, "Ukonèovanie aktuálneho sedenia na tomto poèítaèi."
+IDS_LOGOFF_REMOTE, "UkonŸovanie sedenia na vzdialenom poŸ¡taŸi."
+IDS_LOGOFF_LOCAL, "UkonŸovanie aktu lneho sedenia na tomto poŸ¡taŸi."
 
-IDS_ILLEGAL_PARAM, "Neplatný(é) parameter(e)\n"
+IDS_ILLEGAL_PARAM, "Neplatnì(‚) parameter(e)\n"
 END
 /* EOF */

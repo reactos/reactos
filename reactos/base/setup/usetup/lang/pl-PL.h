@@ -1,5 +1,5 @@
 /*
- *      translated by Caemyr (Jan,2008)
+ *      translated by Caemyr (Jan-Feb, 2008)
  *      Use ReactOS forum PM or IRC to contact me
  *      http://www.reactos.org
  *      IRC: irc.freenode.net #reactos-pl;
@@ -425,7 +425,7 @@ static MUI_ENTRY plPLDevicePageEntries[] =
     {
         6,
         24,
-        " \"Akceptuj ustawienia sprz©tu\" i naciònij ENTER.",
+        "\"Akceptuj ustawienia sprz©tu\" i naciònij ENTER.",
         TEXT_NORMAL
     },
     {
@@ -522,7 +522,7 @@ static MUI_ENTRY plPLComputerPageEntries[] =
     {
         8,
         10,
-        "\x07  naciònij klawisz G‡RA albo D‡ù by wybraÜ odpowiedni typ komputera.",
+        "\x07  Naciònij klawisz G‡RA albo D‡ù by wybraÜ odpowiedni typ komputera.",
         TEXT_NORMAL
     },
     {
@@ -659,13 +659,13 @@ static MUI_ENTRY plPLDisplayPageEntries[] =
     },
     {   8,
         10,
-         "\x07  Naciònij klawisz G‡RA albo D‡ù by wybraÜ odpowiedni typ komputera",
+         "\x07  Naciònij klawisz G‡RA albo D‡ù by wybraÜ rozdzielczoòÜ i liczb©",
          TEXT_NORMAL
     },
     {
         8,
         11,
-        "   a nast©pnie naciònij ENTER.",
+        "   kolor¢w a nast©pnie naciònij ENTER.",
         TEXT_NORMAL
     },
     {
@@ -1092,7 +1092,7 @@ static MUI_ENTRY plPLLayoutSettingsEntries[] =
     {
         8,
         11,
-        "    klawiatury. Nast©pnie naciònij ENTER.",
+        "   klawiatury. Nast©pnie naciònij ENTER.",
         TEXT_NORMAL
     },
     {
@@ -1589,25 +1589,25 @@ MUI_STRING plPLStrings[] =
     {STRING_CHOOSENEWPARTITION,
      "Wybrane: utworzenie nowej partycji na"},
     {STRING_HDDSIZE,
-    "Please enter the size of the new partition in megabytes."},
+    "Prosz© wprowadziÜ rozmiar nowej partycji, w megabajtach."},
     {STRING_CREATEPARTITION,
      "   ENTER = Utworzenie Partycji   ESC = Anulowanie   F3 = Wyjòcie"},
     {STRING_PARTFORMAT,
-    "This Partition will be formatted next."},
+    "Nast©puj•ca partycja zostanie sformatowana."},
     {STRING_NONFORMATTEDPART,
-    "You chose to install ReactOS on a new or unformatted Partition."},
+    "Moæesz zainstalowaÜ ReactOS na nowej lub niesformatowanej partycji."},
     {STRING_INSTALLONPART,
-    "Setup install ReactOS onto Partition"},
+    "Instalator kopiuje pliki systemu na wybran• partycj©."},
     {STRING_CHECKINGPART,
-    "Setup is now checking the selected partition."},
+    "Instalator sprawdza wybran• partycj©."},
     {STRING_QUITCONTINUE,
-    "F3= Quit  ENTER = Continue"},
+    "F3= Wyjòcie  ENTER = Kontynuacja"},
     {STRING_REBOOTCOMPUTER,
-    "ENTER = Reboot computer"},
+    "ENTER = Restart komputera"},
     {STRING_TXTSETUPFAILED,
-    "Setup failed to find the '%S' section\nin TXTSETUP.SIF.\n"},
+    "Instalator nie byà w stanie odnale´Ü sekji '%S'\nw pliku TXTSETUP.SIF.\n"},
     {STRING_COPYING,
-     "                                                   \xB3 Kopiowanie plik¢w: %S"},
+     "                                              \xB3 Kopiowanie plik¢w: %S"},
     {STRING_SETUPCOPYINGFILES,
      "Instalator kopiuje pliki..."},
     {STRING_PAGEDMEM,
@@ -1615,39 +1615,39 @@ MUI_STRING plPLStrings[] =
     {STRING_NONPAGEDMEM,
      "Niestronicowanej"},
     {STRING_FREEMEM,
-     "Dost©pnej"},
+     " Dost©pnej"},
     {STRING_REGHIVEUPDATE,
-    "   Updating registry hives..."},
+    "   Uaktualnianie..."},
     {STRING_IMPORTFILE,
-    "   Importing %S..."},
+    "   Importowanie %S..."},
     {STRING_DISPLAYETTINGSUPDATE,
-    "   Updating display registry settings..."},
+    "   Zmiana ustawie‰ ekranu w rejestrze..."},
     {STRING_LOCALESETTINGSUPDATE,
-    "   Updating locale settings..."},
+    "   Zmiana wersji j©zykowej..."},
     {STRING_KEYBOARDSETTINGSUPDATE,
-    "   Updating keyboard layout settings..."},
+    "   Zmiana ukàadu klawiatury..."},
     {STRING_CODEPAGEINFOUPDATE,
-    "   Adding codepage information to registry..."},
+    "   Dodawanie informacji o stronie kodowej do rejestru..."},
     {STRING_DONE,
-    "   Done..."},
+    "   UkoÒczone..."},
     {STRING_REBOOTCOMPUTER2,
-    "   ENTER = Reboot computer"},
+    "   ENTER = Restart komputera"},
     {STRING_CONSOLEFAIL1,
-    "Unable to open the console\n\n"},
+    "Otwarcie konsoli nieudane\n\n"},
     {STRING_CONSOLEFAIL2,
-    "The most common cause of this is using an USB keyboard\n"},
+    "Najcz©stsz• tego przyczyn• jest uæycie klawiatury USB,\n"},
     {STRING_CONSOLEFAIL3,
-    "USB keyboards are not fully supported yet\n"},
+    "kt¢re nie s• w peàni obsàugiwane.\n"},
     {STRING_FORMATTINGDISK,
-    "Setup is formatting your disk"},
+    "Instalator formatuje tw¢j dysk"},
     {STRING_CHECKINGDISK,
-    "Setup is checking your disk"},
+    "Instalator sprawdza tw¢j dysk"},
     {STRING_FORMATDISK1,
-    " Format partition as %S file system (quick format) "},
+    " Sformatuj partycj© z systemem plik¢w %S (szybkie formatowanie) "},
     {STRING_FORMATDISK2,
-    " Format partition as %S file system "},
+    " Sformatuj partycj© z systemem plik¢w %S "},
     {STRING_KEEPFORMAT,
-    " Keep current file system (no changes) "},
+    " Zachowaj obecny system plik¢w (bez zmian) "},
     {0, 0}
 };
 

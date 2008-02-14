@@ -1,44 +1,44 @@
-//Slovak language file by Mário Kaèmár aka Kario (kario@szm.sk) 16-01-2008
+//Slovak language file by M rio KaŸm r aka Kario (kario@szm.sk) 16-01-2008
 
 LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
 
 STRINGTABLE DISCARDABLE
 BEGIN
 
-IDS_HELP, "Zobrazí alebo zmení zoznamy prístupovıch práv (Access Control List) súborov.\n\n\
-CACLS názov_súboru [/T] [/E] [/C] [/G pouívate¾:povolenia [...]]\n\
-                   [/R pouívate¾ [...]] [/P pouívate¾:povolenia [...]]\n\
-                   [/D pouívate¾ [...]]\n\
-    názov_súboru   Zobrazí zoznamy ACL.\n\
-    /T             Zmení zoznamy ACL špecifikovanıch súborov\n\
-                   v aktuálnom adresári a vo všetkıch podadresároch.\n\
-    /E             Upraví zoznam ACL namiesto jeho nahradenia.\n\
-    /C             Pokraèovanie pri chybách odmietnutia prístupu.\n\
-    /G pouívate¾:povolenia\n\
-                   Udelí špecifikovanému pouívate¾ovi prístupové práva.\n\
-                   Povolenia môu by: R  èítanie\n\
-                                       W  zápis\n\
-                                       C  zmena (zápis)\n\
-                                       F  úplnı prístup\n\
-    /R pouívate¾  Odoberie špecifikovanım pouívate¾om prístupové práva\n\
-                   (platné iba s prepínaèom /E).\n\
-    /P pouívate¾:povolenia\n\
-                   Nahradí špecifikovanım pouívate¾om prístupové práva.\n\
-                   Povolenia môu by: N  iadne\n\
-                                       R  èítanie\n\
-                                       W  zápis\n\
-                                       C  zmena (zápis)\n\
-                                       F  úplnı prístup\n\
-    /D pouívate¾  Odoprie špecifikovanému pouívate¾ovi prístup.\n\
-Náhradné znaky sa dajú poui na špecifikovanie viacerıch súborov v jednom\n\
-príkaze. Rovnako môete špecifikova aj viacerıch pouívate¾ov v príkaze.\n\n\
+IDS_HELP, "Zobraz¡ alebo zmen¡ zoznamy pr¡stupovìch pr v (Access Control List) s£borov.\n\n\
+CACLS n zov_s£boru [/T] [/E] [/C] [/G pou§¡vate–:povolenia [...]]\n\
+                   [/R pou§¡vate– [...]] [/P pou§¡vate–:povolenia [...]]\n\
+                   [/D pou§¡vate– [...]]\n\
+    n zov_s£boru   Zobraz¡ zoznamy ACL.\n\
+    /T             Zmen¡ zoznamy ACL çpecifikovanìch s£borov\n\
+                   v aktu lnom adres ri a vo vçetkìch podadres roch.\n\
+    /E             Uprav¡ zoznam ACL namiesto jeho nahradenia.\n\
+    /C             PokraŸovanie pri chyb ch odmietnutia pr¡stupu.\n\
+    /G pou§¡vate–:povolenia\n\
+                   Udel¡ çpecifikovan‚mu pou§¡vate–ovi pr¡stupov‚ pr va.\n\
+                   Povolenia m“§u byœ: R  Ÿ¡tanie\n\
+                                       W  z pis\n\
+                                       C  zmena (z pis)\n\
+                                       F  £plnì pr¡stup\n\
+    /R pou§¡vate–  Odoberie çpecifikovanìm pou§¡vate–om pr¡stupov‚ pr va\n\
+                   (platn‚ iba s prep¡naŸom /E).\n\
+    /P pou§¡vate–:povolenia\n\
+                   Nahrad¡ çpecifikovanìm pou§¡vate–om pr¡stupov‚ pr va.\n\
+                   Povolenia m“§u byœ: N  §iadne\n\
+                                       R  Ÿ¡tanie\n\
+                                       W  z pis\n\
+                                       C  zmena (z pis)\n\
+                                       F  £plnì pr¡stup\n\
+    /D pou§¡vate–  Odoprie çpecifikovan‚mu pou§¡vate–ovi pr¡stup.\n\
+N hradn‚ znaky sa daj£ pou§iœ na çpecifikovanie viacerìch s£borov v jednom\n\
+pr¡kaze. Rovnako m“§ete çpecifikovaœ aj viacerìch pou§¡vate–ov v pr¡kaze.\n\n\
 Skratky:\n\
-    CI - Kontajnerové dedenie.\n\
-         ACE bude zdedené po adresároch.\n\
-    OI - Objektové dedenie.\n\
-         ACE bude zdedené po súboroch.\n\
-    IO - Iba zdedi.\n\
-         ACE sa neaplikuje na aktuálny súbor alebo adresár.\n"
+    CI - Kontajnerov‚ dedenie.\n\
+         ACE bude zdeden‚ po adres roch.\n\
+    OI - Objektov‚ dedenie.\n\
+         ACE bude zdeden‚ po s£boroch.\n\
+    IO - Iba zdediœ.\n\
+         ACE sa neaplikuje na aktu lny s£bor alebo adres r.\n"
 
 IDS_ABBR_CI, "(CI)"
 IDS_ABBR_OI, "(OI)"
@@ -50,7 +50,7 @@ IDS_ABBR_CHANGE, "C"
 IDS_ABBR_NONE, "N"
 IDS_ALLOW, ""
 IDS_DENY, "(DENY)"
-IDS_SPECIAL_ACCESS, "(špeciálny prístup:)"
+IDS_SPECIAL_ACCESS, "(çpeci lny pr¡stup:)"
 IDS_GENERIC_READ, "GENERIC_READ"
 IDS_GENERIC_WRITE, "GENERIC_WRITE"
 IDS_GENERIC_EXECUTE, "GENERIC_EXECUTE"
