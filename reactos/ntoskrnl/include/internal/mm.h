@@ -252,7 +252,6 @@ typedef struct
 {
     ULONG NrTotalPages;
     ULONG NrSystemPages;
-    ULONG NrReservedPages;
     ULONG NrUserPages;
     ULONG NrFreePages;
     ULONG NrDirtyPages;

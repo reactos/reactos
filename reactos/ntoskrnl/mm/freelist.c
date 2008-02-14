@@ -317,12 +317,12 @@ MmInitializePageList(IN ULONG_PTR FirstPhysKernelAddress,
     ULONG Reserved;
     NTSTATUS Status;
     PFN_TYPE Pfn = 0;
-    ULONG PdeStart = PsGetCurrentProcess()->Pcb.DirectoryTableBase.LowPart;
     PHYSICAL_PAGE UsedPage;
+    extern PMEMORY_ALLOCATION_DESCRIPTOR MiFreeDescriptor;
+    ULONG PdeStart = PsGetCurrentProcess()->Pcb.DirectoryTableBase.LowPart;
     ULONG PdePageStart, PdePageEnd;
     ULONG VideoPageStart, VideoPageEnd;
     ULONG KernelPageStart, KernelPageEnd;
-    extern PMEMORY_ALLOCATION_DESCRIPTOR MiFreeDescriptor;
 
     /* Initialize the page lists */
     KeInitializeSpinLock(&PageListLock);
@@ -398,25 +398,25 @@ MmInitializePageList(IN ULONG_PTR FirstPhysKernelAddress,
             {
                 /* Page 0 is reserved for the IVT */
                 MmPageArray[i] = UsedPage;
-                MmStats.NrReservedPages++;
+                MmStats.NrSystemPages++;
             }
             else if (i == 1)
             {
                 /* Page 1 is reserved for the PCR */
                 MmPageArray[i] = UsedPage;
-                MmStats.NrReservedPages++;
+                MmStats.NrSystemPages++;
             }
             else if (i == 2)
             {
                 /* Page 2 is reserved for the KUSER_SHARED_DATA */
                 MmPageArray[i] = UsedPage;
-                MmStats.NrReservedPages++;
+                MmStats.NrSystemPages++;
             }
             else if ((i >= PdePageStart) && (i < PdePageEnd))
             {
                 /* These pages contain the initial FreeLDR PDEs */
                 MmPageArray[i] = UsedPage;
-                MmStats.NrReservedPages++;
+                MmStats.NrSystemPages++;
             }
             else if ((i >= VideoPageStart) && (i < VideoPageEnd))
             {
@@ -428,7 +428,7 @@ MmInitializePageList(IN ULONG_PTR FirstPhysKernelAddress,
                  */
                 MmPageArray[i].Flags.Type = MM_PHYSICAL_PAGE_BIOS;
                 MmPageArray[i].Flags.Consumer = MC_NPPOOL;
-                MmStats.NrReservedPages++;
+                MmStats.NrSystemPages++;
             }
             else if ((i >= KernelPageStart) && (i < KernelPageEnd))
             {
@@ -462,14 +462,14 @@ MmInitializePageList(IN ULONG_PTR FirstPhysKernelAddress,
             /* These are pages reserved by the BIOS/ROMs */
             MmPageArray[i].Flags.Type = MM_PHYSICAL_PAGE_BIOS;
             MmPageArray[i].Flags.Consumer = MC_NPPOOL;
-            MmStats.NrReservedPages++;
+            MmStats.NrSystemPages++;
         }
     }
     
     KeInitializeEvent(&ZeroPageThreadEvent, NotificationEvent, TRUE);
     
-    MmStats.NrTotalPages = MmStats.NrFreePages + MmStats.NrSystemPages + MmStats.NrReservedPages + MmStats.NrUserPages;
-    MmInitializeBalancer(MmStats.NrFreePages, MmStats.NrSystemPages + MmStats.NrReservedPages);
+    MmStats.NrTotalPages = MmStats.NrFreePages + MmStats.NrSystemPages + MmStats.NrUserPages;
+    MmInitializeBalancer(MmStats.NrFreePages, MmStats.NrSystemPages);
     return((PVOID)LastKernelAddress);
 }
 
