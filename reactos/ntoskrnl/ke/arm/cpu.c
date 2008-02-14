@@ -40,7 +40,7 @@ KeFillFixedEntryTb(IN ARM_PTE Pte,
     PARM_TRANSLATION_TABLE TranslationTable;
     
     //
-    // Hack for 1MB Section Entries
+    // Fixed TB entries must be section entries
     //
     Virtual = (PVOID)((ULONG)Virtual & 0xFFF00000);
     
@@ -69,7 +69,7 @@ KeFillFixedEntryTb(IN ARM_PTE Pte,
     // Map the PTE for this virtual address
     //
     TranslationTable = (PVOID)KeArmTranslationTableRegisterGet().AsUlong;
-    TranslationTable->Pte[(ULONG)Virtual >> TTB_SHIFT] = Pte;
+    TranslationTable->Pte[(ULONG)Virtual >> PDE_SHIFT] = Pte;
     
     //
     // Now force a miss
@@ -103,7 +103,7 @@ KeFillFixedEntryTb(IN ARM_PTE Pte,
         //
         // Clear the PTE
         //
-        TranslationTable->Pte[(ULONG)Virtual >> TTB_SHIFT].AsUlong = 0;
+        TranslationTable->Pte[(ULONG)Virtual >> PDE_SHIFT].AsUlong = 0;
     }
 }
 

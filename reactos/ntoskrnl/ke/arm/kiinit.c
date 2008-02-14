@@ -20,10 +20,6 @@ ULONG KeNumberProcessIds;
 ULONG KeNumberTbEntries;
 #define __ARMV6__ KeIsArmV6
 
-//
-// METAFIXME: We need to stop using 1MB Section Entry TTEs!
-//
-
 /* FUNCTIONS ******************************************************************/
 
 VOID

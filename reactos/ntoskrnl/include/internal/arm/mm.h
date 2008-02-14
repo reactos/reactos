@@ -5,7 +5,23 @@
 #pragma GCC system_header
 #endif
 
-#define TTB_SHIFT 20
+//
+// Number of bits corresponding to the area that a PDE entry represents (1MB)
+//
+#define PDE_SHIFT 20
+#define PDE_SIZE  (1 << PDE_SHIFT)
+
+//
+// Number of bits corresponding to the area that a coarse page table entry represents (4KB)
+//
+#define PTE_SHIFT 12
+#define PAGE_SIZE (1 << PTE_SHIFT)
+
+//
+// Number of bits corresponding to the area that a coarse page table occupies (1KB)
+//
+#define CPT_SHIFT 10
+#define CPT_SIZE  (1 << CPT_SHIFT)
 
 typedef union _ARM_PTE
 {
@@ -19,9 +35,10 @@ typedef union _ARM_PTE
         struct
         {
             ULONG Type:2;
-            ULONG Reserved:3;
+            ULONG Ignored:2;
+            ULONG Reserved:1;
             ULONG Domain:4;
-            ULONG Ignored:1;
+            ULONG Ignored1:1;
             ULONG BaseAddress:22;
         } Coarse;
         struct
@@ -93,6 +110,11 @@ typedef struct _ARM_TRANSLATION_TABLE
     ARM_PTE Pte[4096];
 } ARM_TRANSLATION_TABLE, *PARM_TRANSLATION_TABLE;
 
+typedef struct _ARM_COARSE_PAGE_TABLE
+{
+    ARM_PTE Pte[256];
+} ARM_COARSE_PAGE_TABLE, *PARM_COARSE_PAGE_TABLE;
+
 typedef enum _ARM_L1_PTE_TYPE
 {
     FaultPte,
@@ -100,6 +122,13 @@ typedef enum _ARM_L1_PTE_TYPE
     SectionPte,
     FinePte
 } ARM_L1_PTE_TYPE;
+
+typedef enum _ARM_L2_PTE_TYPE
+{
+    LargePte = 1,
+    SmallPte,
+    TinyPte
+} ARM_L2_PTE_TYPE;
 
 typedef enum _ARM_PTE_ACCESS
 {
