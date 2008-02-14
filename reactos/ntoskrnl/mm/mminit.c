@@ -1,81 +1,71 @@
-/* $Id$
- *
- * COPYRIGHT:       See COPYING in the top directory
- * PROJECT:         ReactOS kernel
+/*
+ * PROJECT:         ReactOS Kernel
+ * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            ntoskrnl/mm/mminit.c
- * PURPOSE:         Kernel memory managment initialization functions
- *
- * PROGRAMMERS:     David Welch (welch@cwcom.net)
+ * PURPOSE:         Memory Manager Initialization
+ * PROGRAMMERS:     
  */
 
-/* INCLUDES *****************************************************************/
+/* INCLUDES ******************************************************************/
 
 #include <ntoskrnl.h>
 #define NDEBUG
 #include <internal/debug.h>
 
-/* GLOBALS *****************************************************************/
+/* GLOBALS *******************************************************************/
 
-/*
- * Compiler defined symbols
- */
-#if 0
-extern unsigned int _image_base__;
-extern unsigned int _text_start__;
-extern unsigned int _text_end__;
+PCHAR
+MemType[] =
+{
+    "ExceptionBlock    ",
+    "SystemBlock       ",
+    "Free              ",
+    "Bad               ",
+    "LoadedProgram     ",
+    "FirmwareTemporary ",
+    "FirmwarePermanent ",
+    "OsloaderHeap      ",
+    "OsloaderStack     ",
+    "SystemCode        ",
+    "HalCode           ",
+    "BootDriver        ",
+    "ConsoleInDriver   ",
+    "ConsoleOutDriver  ",
+    "StartupDpcStack   ",
+    "StartupKernelStack",
+    "StartupPanicStack ",
+    "StartupPcrPage    ",
+    "StartupPdrPage    ",
+    "RegistryData      ",
+    "MemoryData        ",
+    "NlsData           ",
+    "SpecialMemory     ",
+    "BBTMemory         ",
+    "LoaderReserve     "
+};
 
-extern unsigned int _init_start__;
-extern unsigned int _init_end__;
-
-extern unsigned int _bss_end__;
-#endif
-
-static BOOLEAN IsThisAnNtAsSystem = FALSE;
+BOOLEAN IsThisAnNtAsSystem = FALSE;
 MM_SYSTEMSIZE MmSystemSize = MmSmallSystem;
-
 PHYSICAL_ADDRESS MmSharedDataPagePhysicalAddress;
-
 PVOID MiNonPagedPoolStart;
 ULONG MiNonPagedPoolLength;
-
 ULONG MmNumberOfPhysicalPages;
+extern KMUTANT MmSystemLoadLock;
 
-VOID INIT_FUNCTION NTAPI MmInitVirtualMemory(ULONG_PTR LastKernelAddress, ULONG KernelLength);
-
-/* FUNCTIONS ****************************************************************/
-
-/*
- * @implemented
- */
-BOOLEAN STDCALL MmIsThisAnNtAsSystem(VOID)
-{
-   return(IsThisAnNtAsSystem);
-}
-
-/*
- * @implemented
- */
-MM_SYSTEMSIZE STDCALL MmQuerySystemSize(VOID)
-{
-   return(MmSystemSize);
-}
+/* PRIVATE FUNCTIONS *********************************************************/
 
 VOID
 NTAPI
 MiShutdownMemoryManager(VOID)
-{}
+{
+
+}
 
 VOID
 INIT_FUNCTION
 NTAPI
 MmInitVirtualMemory(ULONG_PTR LastKernelAddress,
                     ULONG KernelLength)
-/*
- * FUNCTION: Intialize the memory areas list
- * ARGUMENTS:
- *           bp = Pointer to the boot parameters
- *           kernel_len = Length of the kernel
- */
 {
    PVOID BaseAddress;
    ULONG Length;
@@ -234,35 +224,6 @@ MiCountFreePagesInLoaderBlock(PLOADER_PARAMETER_BLOCK LoaderBlock)
     return TotalPages;
 }
 
-PCHAR
-MemType[]  = {
-    "ExceptionBlock    ", // ?
-   "SystemBlock       ", // ?
-   "Free              ",
-   "Bad               ", // used
-   "LoadedProgram     ", // == Free
-   "FirmwareTemporary ", // == Free
-   "FirmwarePermanent ", // == Bad
-   "OsloaderHeap      ", // used
-   "OsloaderStack     ", // == Free
-   "SystemCode        ",
-   "HalCode           ",
-   "BootDriver        ", // not used
-   "ConsoleInDriver   ", // ?
-   "ConsoleOutDriver  ", // ?
-   "StartupDpcStack   ", // ?
-   "StartupKernelStack", // ?
-   "StartupPanicStack ", // ?
-   "StartupPcrPage    ", // ?
-   "StartupPdrPage    ", // ?
-   "RegistryData      ", // used
-   "MemoryData        ", // not used
-   "NlsData           ", // used
-   "SpecialMemory     ", // == Bad
-   "BBTMemory         ",
-   "LoaderReserve     "// == Bad
-};
-
 VOID
 INIT_FUNCTION
 NTAPI
@@ -413,24 +374,7 @@ MmInit1(ULONG_PTR FirstKrnlPhysAddr,
    /*
     * Unmap low memory
     */
-#ifdef CONFIG_SMP
-   /* In SMP mode we unmap the low memory pagetable in MmInit3.
-      The APIC needs the mapping of the first pages
-      while the processors are starting up.
-      We unmap all pages except page 2 and 3. */
-   for (MappingAddress = 0;
-        MappingAddress < 1024 * PAGE_SIZE;
-        MappingAddress += PAGE_SIZE)
-   {
-      if (MappingAddress != 2 * PAGE_SIZE &&
-          MappingAddress != 3 * PAGE_SIZE)
-      {
-         MmRawDeleteVirtualMapping((PVOID)MappingAddress);
-      }
-   }
-#else
    MmDeletePageTable(NULL, 0);
-#endif
 
    DPRINT("Invalidating between %x and %x\n",
           LastKernelAddress, KSEG0_BASE + 0x00600000);
@@ -449,9 +393,6 @@ MmInit1(ULONG_PTR FirstKrnlPhysAddr,
 
    MmInitializeMdlImplementation();
 }
-
-BOOLEAN RmapReady, PageOpReady, SectionsReady, PagingReady;
-extern KMUTANT MmSystemLoadLock;
 
 BOOLEAN
 NTAPI
@@ -483,13 +424,9 @@ MmInitSystem(IN ULONG Phase,
     else if (Phase == 1)
     {
         MmInitializeRmapList();
-        RmapReady = TRUE;
         MmInitializePageOp();
-        PageOpReady = TRUE;
         MmInitSectionImplementation();
-        SectionsReady = TRUE;
         MmInitPagingFile();
-        PagingReady = TRUE;
         MmCreatePhysicalMemorySection();
 
         /* Setup shared user data settings that NT does as well */
@@ -521,29 +458,25 @@ MmInitSystem(IN ULONG Phase,
     return TRUE;
 }
 
-#if 0
 
-VOID static
-MiFreeInitMemoryPage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address,
-                     PFN_TYPE Page, SWAPENTRY SwapEntry,
-                     BOOLEAN Dirty)
-{
-   ASSERT(SwapEntry == 0);
-   if (Page != 0)
-   {
-      MmReleasePageMemoryConsumer(MC_NPPOOL, Page);
-   }
-}
+/* PUBLIC FUNCTIONS **********************************************************/
 
-VOID
+/*
+ * @implemented
+ */
+BOOLEAN
 NTAPI
-MiFreeInitMemory(VOID)
+MmIsThisAnNtAsSystem(VOID)
 {
-   MmLockAddressSpace(MmGetKernelAddressSpace());
-   MmFreeMemoryAreaByPtr(MmGetKernelAddressSpace(),
-                         (PVOID)&_init_start__,
-                         MiFreeInitMemoryPage,
-                         NULL);
-   MmUnlockAddressSpace(MmGetKernelAddressSpace());
+   return IsThisAnNtAsSystem;
 }
-#endif
+
+/*
+ * @implemented
+ */
+MM_SYSTEMSIZE
+NTAPI
+MmQuerySystemSize(VOID)
+{
+   return MmSystemSize;
+}

@@ -379,8 +379,6 @@ MmIsDirtyPageRmap(PFN_TYPE Page)
    return(FALSE);
 }
 
-extern BOOLEAN RmapReady, PageOpReady, SectionsReady, PagingReady;
-
 VOID
 NTAPI
 MmInsertRmap(PFN_TYPE Page, PEPROCESS Process,
@@ -389,12 +387,6 @@ MmInsertRmap(PFN_TYPE Page, PEPROCESS Process,
    PMM_RMAP_ENTRY current_entry;
    PMM_RMAP_ENTRY new_entry;
    ULONG PrevSize;
-
-   if (!RmapReady)
-   {
-       DPRINT1("RMAPS USED TOO SOON!!!\n");
-       while (TRUE);
-   }
 
    Address = (PVOID)PAGE_ROUND_DOWN(Address);
 
@@ -467,12 +459,6 @@ MmDeleteAllRmaps(PFN_TYPE Page, PVOID Context,
    PMM_RMAP_ENTRY previous_entry;
    PEPROCESS Process;
 
-   if (!RmapReady)
-   {
-       DPRINT1("RMAPS USED TOO SOON!!!\n");
-       while (TRUE);
-   }
-
    ExAcquireFastMutex(&RmapListLock);
    current_entry = MmGetRmapListHeadPage(Page);
    if (current_entry == NULL)
@@ -510,12 +496,6 @@ MmDeleteRmap(PFN_TYPE Page, PEPROCESS Process,
              PVOID Address)
 {
    PMM_RMAP_ENTRY current_entry, previous_entry;
-
-   if (!RmapReady)
-   {
-       DPRINT1("RMAPS USED TOO SOON!!!\n");
-       while (TRUE);
-   }
 
    ExAcquireFastMutex(&RmapListLock);
    previous_entry = NULL;
