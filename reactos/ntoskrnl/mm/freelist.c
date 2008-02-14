@@ -292,7 +292,10 @@ MmInitializePageList(ULONG_PTR FirstPhysKernelAddress,
     NTSTATUS Status;
     PFN_TYPE LastPage, Pfn;
     ULONG PdeStart = PsGetCurrentProcess()->Pcb.DirectoryTableBase.LowPart;
-    
+    ULONG PdePageStart, PdePageEnd;
+    ULONG VideoPageStart, VideoPageEnd;
+    ULONG KernelPageStart, KernelPageEnd;
+
     /* Initialize the page lists */
     KeInitializeSpinLock(&PageListLock);
     InitializeListHead(&UserPageListHead);
@@ -341,133 +344,119 @@ MmInitializePageList(ULONG_PTR FirstPhysKernelAddress,
         }
     }
     
-    /* Now loop every PFN database page again */
-    for (i = 0; i < Reserved; i++)
-    {
-        PVOID Address = (char*)MmPageArray + (i * PAGE_SIZE);
-        ULONG j, start, end;
-        ULONG PdePageStart, PdePageEnd;
-        ULONG VideoPageStart, VideoPageEnd;
-        ULONG KernelPageStart, KernelPageEnd;
-        
-        /* Clear the page array entry */
-        memset(Address, 0, PAGE_SIZE);
-        
-        /* Do the next page'ss worth of entries */
-        start = ((ULONG_PTR)Address - (ULONG_PTR)MmPageArray) / sizeof(PHYSICAL_PAGE);
-        end = ((ULONG_PTR)Address - (ULONG_PTR)MmPageArray + PAGE_SIZE) / sizeof(PHYSICAL_PAGE);
-        
-        /* We'll be applying a bunch of hacks -- precompute some static values */
-        PdePageStart = PdeStart / PAGE_SIZE;
-        PdePageEnd = MmFreeLdrPageDirectoryEnd / PAGE_SIZE;
-        VideoPageStart = 0xA0000 / PAGE_SIZE;
-        VideoPageEnd = 0x100000 / PAGE_SIZE;
-        KernelPageStart = FirstPhysKernelAddress / PAGE_SIZE;
-        KernelPageEnd = LastPhysKernelAddress / PAGE_SIZE;
-        
-        /* Loop each page in this chunk */
-        for (j = start; j < end; j++)
+    /* Clear the PFN database */
+    RtlZeroMemory(MmPageArray, MmPageArraySize * sizeof(PHYSICAL_PAGE));
+    
+    /* We'll be applying a bunch of hacks -- precompute some static values */
+    PdePageStart = PdeStart / PAGE_SIZE;
+    PdePageEnd = MmFreeLdrPageDirectoryEnd / PAGE_SIZE;
+    VideoPageStart = 0xA0000 / PAGE_SIZE;
+    VideoPageEnd = 0x100000 / PAGE_SIZE;
+    KernelPageStart = FirstPhysKernelAddress / PAGE_SIZE;
+    KernelPageEnd = LastPhysKernelAddress / PAGE_SIZE;
+    
+    /* Loop every page on the system */
+    for (i = 0; i < MmPageArraySize; i++)
+    {                
+        /* Check if it's part of RAM */
+        if (MiIsPfnRam(BIOSMemoryMap, AddressRangeCount, i))
         {
-            /* Check if it's part of RAM */
-            if (MiIsPfnRam(BIOSMemoryMap, AddressRangeCount, j))
+            /* Apply assumptions that all computers are built the same way */
+            if (i == 0)
             {
-                /* Apply assumptions that all computers are built the same way */
-                if (j == 0)
-                {
-                    /* Page 0 is reserved for the IVT */
-                    MmPageArray[0].Flags.Type = MM_PHYSICAL_PAGE_BIOS;
-                    MmPageArray[0].Flags.Consumer = MC_NPPOOL;
-                    MmPageArray[0].Flags.Zero = 0;
-                    MmPageArray[0].ReferenceCount = 0;
-                    MmStats.NrReservedPages++;
-                }
-                else if (j == 1)
-                {
-                    /* Page 1 is reserved for the PCR */
-                    MmPageArray[1].Flags.Type = MM_PHYSICAL_PAGE_BIOS;
-                    MmPageArray[1].Flags.Consumer = MC_NPPOOL;
-                    MmPageArray[1].Flags.Zero = 0;
-                    MmPageArray[1].ReferenceCount = 1;
-                    MmStats.NrReservedPages++;
-                }
-                else if (j == 2)
-                {
-                    /* Page 2 is reserved for the KUSER_SHARED_DATA */
-                    MmPageArray[2].Flags.Type = MM_PHYSICAL_PAGE_BIOS;
-                    MmPageArray[2].Flags.Consumer = MC_NPPOOL;
-                    MmPageArray[2].Flags.Zero = 0;
-                    MmPageArray[2].ReferenceCount = 1;
-                    MmStats.NrReservedPages++;
-                }
-                else if ((j >= PdePageStart) && (j < PdePageEnd))
-                {
-                    /* These pages contain the initial FreeLDR PDEs */
-                    MmPageArray[j].Flags.Type = MM_PHYSICAL_PAGE_BIOS;
-                    MmPageArray[j].Flags.Zero = 0;
-                    MmPageArray[j].Flags.Consumer = MC_NPPOOL;
-                    MmPageArray[j].ReferenceCount = 1;
-                    MmStats.NrReservedPages++;
-                }
-                else if ((j >= VideoPageStart) && (j < VideoPageEnd))
-                {
-                    /*
-                     * These pages are usually for the Video ROM BIOS.
-                     * Supposedly anyway. We'll simply ignore the fact that
-                     * many systems have this area somewhere else entirely
-                     * (which we'll assume to be "free" a couple of lines below)
-                     */
-                    MmPageArray[j].Flags.Type = MM_PHYSICAL_PAGE_BIOS;
-                    MmPageArray[j].Flags.Zero = 0;
-                    MmPageArray[j].Flags.Consumer = MC_NPPOOL;
-                    MmPageArray[j].ReferenceCount = 1;
-                    MmStats.NrReservedPages++;
-                }
-                else if ((j >= KernelPageStart) && (j < KernelPageEnd))
-                {
-                    /* These are pages beloning to the kernel */
-                    MmPageArray[j].Flags.Type = MM_PHYSICAL_PAGE_USED;
-                    MmPageArray[j].Flags.Zero = 0;
-                    MmPageArray[j].Flags.Consumer = MC_NPPOOL;
-                    MmPageArray[j].ReferenceCount = 2;
-                    MmPageArray[j].MapCount = 1;
-                    MmStats.NrSystemPages++;
-                }
-                else if (j > LastPage)
-                {
-                    /* These are pages we allocated above to hold the PFN DB */
-                    MmPageArray[j].Flags.Type = MM_PHYSICAL_PAGE_USED;
-                    MmPageArray[j].Flags.Zero = 0;
-                    MmPageArray[j].Flags.Consumer = MC_NPPOOL;
-                    MmPageArray[j].ReferenceCount = 2;
-                    MmPageArray[j].MapCount = 1;
-                    MmStats.NrSystemPages++;
-                }
-                else
-                {
-                    /*
-                     * These are supposedly free pages.
-                     * By the way, not all of them are, some contain vital
-                     * FreeLDR data, but since we choose to ignore the Memory
-                     * Descriptor List, why bother, right?
-                     */
-                    MmPageArray[j].Flags.Type = MM_PHYSICAL_PAGE_FREE;
-                    MmPageArray[j].Flags.Zero = 0;
-                    MmPageArray[j].ReferenceCount = 0;
-                    InsertTailList(&FreeUnzeroedPageListHead,
-                                   &MmPageArray[j].ListEntry);
-                    UnzeroedPageCount++;
-                    MmStats.NrFreePages++;
-                }
+                /* Page 0 is reserved for the IVT */
+                MmPageArray[i].Flags.Type = MM_PHYSICAL_PAGE_BIOS;
+                MmPageArray[i].Flags.Consumer = MC_NPPOOL;
+                MmPageArray[i].Flags.Zero = 0;
+                MmPageArray[i].ReferenceCount = 0;
+                MmStats.NrReservedPages++;
+            }
+            else if (i == 1)
+            {
+                /* Page 1 is reserved for the PCR */
+                MmPageArray[i].Flags.Type = MM_PHYSICAL_PAGE_BIOS;
+                MmPageArray[i].Flags.Consumer = MC_NPPOOL;
+                MmPageArray[i].Flags.Zero = 0;
+                MmPageArray[i].ReferenceCount = 1;
+                MmStats.NrReservedPages++;
+            }
+            else if (i == 2)
+            {
+                /* Page 2 is reserved for the KUSER_SHARED_DATA */
+                MmPageArray[i].Flags.Type = MM_PHYSICAL_PAGE_BIOS;
+                MmPageArray[i].Flags.Consumer = MC_NPPOOL;
+                MmPageArray[i].Flags.Zero = 0;
+                MmPageArray[i].ReferenceCount = 1;
+                MmStats.NrReservedPages++;
+            }
+            else if ((i >= PdePageStart) && (i < PdePageEnd))
+            {
+                /* These pages contain the initial FreeLDR PDEs */
+                MmPageArray[i].Flags.Type = MM_PHYSICAL_PAGE_BIOS;
+                MmPageArray[i].Flags.Zero = 0;
+                MmPageArray[i].Flags.Consumer = MC_NPPOOL;
+                MmPageArray[i].ReferenceCount = 1;
+                MmStats.NrReservedPages++;
+            }
+            else if ((i >= VideoPageStart) && (i < VideoPageEnd))
+            {
+                /*
+                 * These pages are usually for the Video ROM BIOS.
+                 * Supposedly anyway. We'll simply ignore the fact that
+                 * many systems have this area somewhere else entirely
+                 * (which we'll assume to be "free" a couple of lines below)
+                 */
+                MmPageArray[i].Flags.Type = MM_PHYSICAL_PAGE_BIOS;
+                MmPageArray[i].Flags.Zero = 0;
+                MmPageArray[i].Flags.Consumer = MC_NPPOOL;
+                MmPageArray[i].ReferenceCount = 1;
+                MmStats.NrReservedPages++;
+            }
+            else if ((i >= KernelPageStart) && (i < KernelPageEnd))
+            {
+                /* These are pages beloning to the kernel */
+                MmPageArray[i].Flags.Type = MM_PHYSICAL_PAGE_USED;
+                MmPageArray[i].Flags.Zero = 0;
+                MmPageArray[i].Flags.Consumer = MC_NPPOOL;
+                MmPageArray[i].ReferenceCount = 2;
+                MmPageArray[i].MapCount = 1;
+                MmStats.NrSystemPages++;
+            }
+            else if (i > LastPage)
+            {
+                /* These are pages we allocated above to hold the PFN DB */
+                MmPageArray[i].Flags.Type = MM_PHYSICAL_PAGE_USED;
+                MmPageArray[i].Flags.Zero = 0;
+                MmPageArray[i].Flags.Consumer = MC_NPPOOL;
+                MmPageArray[i].ReferenceCount = 2;
+                MmPageArray[i].MapCount = 1;
+                MmStats.NrSystemPages++;
             }
             else
             {
-                /* These are pages reserved by the BIOS/ROMs */
-                MmPageArray[j].Flags.Type = MM_PHYSICAL_PAGE_BIOS;
-                MmPageArray[j].Flags.Consumer = MC_NPPOOL;
-                MmPageArray[j].Flags.Zero = 0;
-                MmPageArray[j].ReferenceCount = 0;
-                MmStats.NrReservedPages++;
+                /*
+                 * These are supposedly free pages.
+                 * By the way, not all of them are, some contain vital
+                 * FreeLDR data, but since we choose to ignore the Memory
+                 * Descriptor List, why bother, right?
+                 */
+                MmPageArray[i].Flags.Type = MM_PHYSICAL_PAGE_FREE;
+                MmPageArray[i].Flags.Zero = 0;
+                MmPageArray[i].ReferenceCount = 0;
+                InsertTailList(&FreeUnzeroedPageListHead,
+                               &MmPageArray[i].ListEntry);
+                UnzeroedPageCount++;
+                MmStats.NrFreePages++;
             }
+        }
+        else
+        {
+            /* These are pages reserved by the BIOS/ROMs */
+            MmPageArray[i].Flags.Type = MM_PHYSICAL_PAGE_BIOS;
+            MmPageArray[i].Flags.Consumer = MC_NPPOOL;
+            MmPageArray[i].Flags.Zero = 0;
+            MmPageArray[i].ReferenceCount = 0;
+            MmStats.NrReservedPages++;
         }
     }
     
