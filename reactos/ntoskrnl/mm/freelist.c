@@ -354,7 +354,7 @@ MmInitializePageList(IN ULONG_PTR FirstPhysKernelAddress,
     KernelPageEnd = LastPhysKernelAddress / PAGE_SIZE;
     
     /* Loop every page on the system */
-    for (i = 0; i < MmPageArraySize; i++)
+    for (i = 0; i <= MmPageArraySize; i++)
     {                
         /* Check if it's part of RAM */
         if (MiIsPfnRam(BIOSMemoryMap, AddressRangeCount, i))
@@ -417,7 +417,7 @@ MmInitializePageList(IN ULONG_PTR FirstPhysKernelAddress,
                 MmPageArray[i].MapCount = 1;
                 MmStats.NrSystemPages++;
             }
-            else if (i > (MiFreeDescriptor->BasePage + MiFreeDescriptor->PageCount - 1))
+            else if (i >= (MiFreeDescriptor->BasePage + MiFreeDescriptor->PageCount))
             {
                 /* These are pages we allocated above to hold the PFN DB */
                 MmPageArray[i].Flags.Type = MM_PHYSICAL_PAGE_USED;
