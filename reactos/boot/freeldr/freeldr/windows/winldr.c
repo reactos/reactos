@@ -76,6 +76,7 @@ VOID
 WinLdrInitializePhase1(PLOADER_PARAMETER_BLOCK LoaderBlock,
                        PCHAR Options,
                        PCHAR SystemPath,
+                       PCHAR BootPath,
                        WORD VersionToBoot)
 {
 	/* Examples of correct options and paths */
@@ -87,6 +88,7 @@ WinLdrInitializePhase1(PLOADER_PARAMETER_BLOCK LoaderBlock,
 	CHAR	HalPath[] = "\\";
 	CHAR	SystemRoot[256];
 	CHAR	ArcBoot[256];
+	CHAR	MiscFiles[256];
 	ULONG i, PathSeparator;
 	PLOADER_PARAMETER_EXTENSION Extension;
 
@@ -192,6 +194,12 @@ WinLdrInitializePhase1(PLOADER_PARAMETER_BLOCK LoaderBlock,
 	Extension->MajorVersion = (VersionToBoot & 0xFF00) >> 8;
 	Extension->MinorVersion = VersionToBoot & 0xFF;
 	Extension->Profile.Status = 2;
+
+	/* Load drivers database */
+	strcpy(MiscFiles, BootPath);
+	strcat(MiscFiles, "AppPatch\\drvmain.sdb");
+	Extension->DrvDBImage = PaToVa(WinLdrLoadModule(MiscFiles,
+		&Extension->DrvDBSize, LoaderRegistryData));
 
 	LoaderBlock->Extension = PaToVa(Extension);
 }
@@ -353,6 +361,61 @@ WinLdrLoadBootDrivers(PLOADER_PARAMETER_BLOCK LoaderBlock,
 	return TRUE;
 }
 
+PVOID WinLdrLoadModule(PCSTR ModuleName, ULONG *Size,
+					   TYPE_OF_MEMORY MemoryType)
+{
+	PFILE FileHandle;
+	PVOID PhysicalBase;
+	ULONG FileSize;
+	BOOLEAN Status;
+
+	//CHAR ProgressString[256];
+
+	/* Inform user we are loading files */
+	//sprintf(ProgressString, "Loading %s...", FileName);
+	//UiDrawProgressBarCenter(1, 100, ProgressString);
+
+	DbgPrint((DPRINT_WINDOWS, "Loading module %s\n", ModuleName));
+	*Size = 0;
+
+	/* Open the image file */
+	FileHandle = FsOpenFile(ModuleName);
+
+	if (FileHandle == NULL)
+	{
+		/* In case of errors, we just return, without complaining to the user */
+		return NULL;
+	}
+
+	/* Get this file's size */
+	FileSize = FsGetFileSize(FileHandle);
+	*Size = FileSize;
+
+	/* Allocate memory */
+	PhysicalBase = MmAllocateMemoryWithType(FileSize, MemoryType);
+	if (PhysicalBase == NULL)
+	{
+		FsCloseFile(FileHandle);
+		return NULL;
+	}
+
+	/* Load whole file */
+	Status = FsReadFile(FileHandle, FileSize, NULL, PhysicalBase);
+	if (!Status)
+	{
+		FsCloseFile(FileHandle);
+		return NULL;
+	}
+
+	DbgPrint((DPRINT_WINDOWS, "Loaded %s at 0x%x with size 0x%x\n", ModuleName, PhysicalBase, FileSize));
+
+	/* We are done with the file - close it */
+	FsCloseFile(FileHandle);
+
+	return PhysicalBase;
+}
+
+
 VOID
 LoadAndBootWindows(PCSTR OperatingSystemName, WORD OperatingSystemVersion)
 {
@@ -487,7 +550,7 @@ LoadAndBootWindows(PCSTR OperatingSystemName, WORD OperatingSystemVersion)
 	WinLdrSetupForNt(LoaderBlock, &GdtIdt, &PcrBasePage, &TssBasePage);
 
 	/* Initialize Phase 1 - no drivers loading anymore */
-	WinLdrInitializePhase1(LoaderBlock, BootOptions, SystemPath, OperatingSystemVersion);
+	WinLdrInitializePhase1(LoaderBlock, BootOptions, SystemPath, BootPath, OperatingSystemVersion);
 
 	/* Save entry-point pointer and Loader block VAs */
 	KiSystemStartup = (KERNEL_ENTRY_POINT)KernelDTE->EntryPoint;

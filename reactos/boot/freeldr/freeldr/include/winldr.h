@@ -68,6 +68,10 @@ WinLdrScanImportDescriptorTable(IN OUT PLOADER_PARAMETER_BLOCK WinLdrBlock,
                                 IN PCCH DirectoryPath,
                                 IN PLDR_DATA_TABLE_ENTRY ScanDTE);
 
+// winldr.c
+PVOID WinLdrLoadModule(PCSTR ModuleName, ULONG *Size,
+                       TYPE_OF_MEMORY MemoryType);
+
 // wlmemory.c
 BOOLEAN
 WinLdrTurnOnPaging(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
