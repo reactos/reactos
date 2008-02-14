@@ -290,7 +290,7 @@ MmInitializePageList(ULONG_PTR FirstPhysKernelAddress,
     ULONG i;
     ULONG Reserved;
     NTSTATUS Status;
-    PFN_TYPE LastPage, Pfn;
+    PFN_TYPE LastPage, Pfn = 0;
     ULONG PdeStart = PsGetCurrentProcess()->Pcb.DirectoryTableBase.LowPart;
     ULONG PdePageStart, PdePageEnd;
     ULONG VideoPageStart, VideoPageEnd;

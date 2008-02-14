@@ -49,7 +49,7 @@ MM_SYSTEMSIZE MmSystemSize = MmSmallSystem;
 PHYSICAL_ADDRESS MmSharedDataPagePhysicalAddress;
 PVOID MiNonPagedPoolStart;
 ULONG MiNonPagedPoolLength;
-ULONG MmNumberOfPhysicalPages;
+ULONG MmNumberOfPhysicalPages, MmHighestPhysicalPage, MmLowestPhysicalPage;
 extern KMUTANT MmSystemLoadLock;
 BOOLEAN MiDbgEnableMdDump =
 #ifdef _ARM_
@@ -201,13 +201,12 @@ MmInitVirtualMemory(ULONG_PTR LastKernelAddress,
    MmInitializeMemoryConsumer(MC_USER, MmTrimUserMemory);
 }
 
-ULONG
+VOID
 NTAPI
 MiCountFreePagesInLoaderBlock(PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
     PLIST_ENTRY NextEntry;
     PMEMORY_ALLOCATION_DESCRIPTOR Md;
-    ULONG TotalPages = 0;
 
     for (NextEntry = KeLoaderBlock->MemoryDescriptorListHead.Flink;
         NextEntry != &KeLoaderBlock->MemoryDescriptorListHead;
@@ -215,19 +214,51 @@ MiCountFreePagesInLoaderBlock(PLOADER_PARAMETER_BLOCK LoaderBlock)
     {
         Md = CONTAINING_RECORD(NextEntry, MEMORY_ALLOCATION_DESCRIPTOR, ListEntry);
 
-        if (Md->MemoryType == LoaderBad ||
-            Md->MemoryType == LoaderFirmwarePermanent ||
-            Md->MemoryType == LoaderSpecialMemory ||
-            Md->MemoryType == LoaderBBTMemory)
+        /* Skip invisible memory */
+        if ((Md->MemoryType != LoaderFirmwarePermanent) &&
+            (Md->MemoryType != LoaderSpecialMemory) &&
+            (Md->MemoryType != LoaderHALCachedMemory) &&
+            (Md->MemoryType != LoaderBBTMemory))
         {
-            /* Don't count these blocks */
-            continue;
+            /* Check if BURNMEM was used */
+            if (Md->MemoryType != LoaderBad)
+            {
+                /* Count this in the total of pages */
+                MmNumberOfPhysicalPages += Md->PageCount;
+            }
+            
+            /* Check if this is the new lowest page */
+            if (Md->BasePage < MmLowestPhysicalPage)
+            {
+                /* Update the lowest page */
+                MmLowestPhysicalPage = Md->BasePage;
+            }
+            
+            /* Check if this is the new highest page */
+            if ((Md->BasePage + Md->PageCount) > MmHighestPhysicalPage)
+            {
+                /* Update the highest page */
+                MmHighestPhysicalPage = Md->BasePage + Md->PageCount - 1;
+            }
         }
-
-        TotalPages += Md->PageCount;
     }
+}
 
-    return TotalPages;
+VOID
+NTAPI
+MiDbgDumpBiosMap(IN PADDRESS_RANGE BIOSMemoryMap,
+                 IN ULONG AddressRangeCount)
+{
+    ULONG i;
+    
+    DPRINT1("Base\t\tLength\t\tType\n");
+    for (i = 0; i < AddressRangeCount; i++)
+    {
+        DPRINT1("%08lX\t%08lX\t%d\n",
+                BIOSMemoryMap[i].BaseAddrLow,
+                BIOSMemoryMap[i].LengthLow,
+                BIOSMemoryMap[i].Type);
+    }
 }
 
 VOID
@@ -269,8 +300,7 @@ MiGetLastKernelAddress(VOID)
             Md->MemoryType == LoaderHalCode)
         {
             if (Md->BasePage+Md->PageCount > LastKrnlPhysAddr)
-                LastKrnlPhysAddr = Md->BasePage+Md->PageCount;
-            
+                LastKrnlPhysAddr = Md->BasePage+Md->PageCount;   
         }
     }
 
@@ -293,6 +323,7 @@ MmInit1(ULONG_PTR FirstKrnlPhysAddr,
 
     /* Dump memory descriptors */
     if (MiDbgEnableMdDump) MiDbgDumpMemoryDescriptors();
+    if (MiDbgEnableMdDump) MiDbgDumpBiosMap(BIOSMemoryMap, AddressRangeCount);
 
     /* Set the page directory */
     PsGetCurrentProcess()->Pcb.DirectoryTableBase.LowPart = (ULONG)MmGetPageDirectory();
@@ -322,19 +353,9 @@ MmInit1(ULONG_PTR FirstKrnlPhysAddr,
     RtlZeroMemory(&MmStats, sizeof(MmStats));
     
     /* Count RAM */
-    MmStats.NrTotalPages = MiCountFreePagesInLoaderBlock(KeLoaderBlock);
-    MmNumberOfPhysicalPages = MmStats.NrTotalPages;
-    if (!MmStats.NrTotalPages)
-    {
-        DbgPrint("Memory not detected, default to 8 MB\n");
-        MmStats.NrTotalPages = 2048;
-    }
-    else
-    {
-        /* HACK: add 1MB for standard memory (not extended). Why? */
-        DbgPrint("Used memory %dKb\n", (MmStats.NrTotalPages * PAGE_SIZE) / 1024);
-        MmStats.NrTotalPages += 256;
-    }
+    MiCountFreePagesInLoaderBlock(KeLoaderBlock);
+    MmStats.NrTotalPages = MmNumberOfPhysicalPages;
+    DbgPrint("Used memory %dKb\n", (MmStats.NrTotalPages * PAGE_SIZE) / 1024);
     
     /* Initialize the kernel address space */
     MmInitializeKernelAddressSpace();
@@ -343,7 +364,7 @@ MmInit1(ULONG_PTR FirstKrnlPhysAddr,
     /* Initialize the page list */
     LastKernelAddress = (ULONG_PTR)MmInitializePageList(FirstKrnlPhysAddr,
                                                         LastKrnlPhysAddr,
-                                                        MmStats.NrTotalPages,
+                                                        MmHighestPhysicalPage,
                                                         PAGE_ROUND_UP(LastKernelAddress),
                                                         BIOSMemoryMap,
                                                         AddressRangeCount);
