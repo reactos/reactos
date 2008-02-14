@@ -289,7 +289,6 @@ MmInit1(ULONG_PTR FirstKrnlPhysAddr,
         ULONG MaxMem)
 {
     ULONG kernel_len;
-    ULONG_PTR MappingAddress;
     PLDR_DATA_TABLE_ENTRY LdrEntry;
 
     /* Dump memory descriptors */
@@ -352,15 +351,6 @@ MmInit1(ULONG_PTR FirstKrnlPhysAddr,
     
     /* Unmap low memory */
     MmDeletePageTable(NULL, 0);
-
-    /* Unmap FreeLDR's 6MB allocation */
-    DPRINT("Invalidating between %p and %p\n", LastKernelAddress, KSEG0_BASE + 0x00600000);
-    for (MappingAddress = LastKernelAddress;
-         MappingAddress < KSEG0_BASE + 0x00600000;
-         MappingAddress += PAGE_SIZE)
-    {
-        MmRawDeleteVirtualMapping((PVOID)MappingAddress);
-    }
 
     /* Intialize memory areas */
     MmInitVirtualMemory(LastKernelAddress, kernel_len);
