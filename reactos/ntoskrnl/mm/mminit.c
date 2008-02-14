@@ -51,6 +51,12 @@ PVOID MiNonPagedPoolStart;
 ULONG MiNonPagedPoolLength;
 ULONG MmNumberOfPhysicalPages;
 extern KMUTANT MmSystemLoadLock;
+BOOLEAN MiDbgEnableMdDump =
+#ifdef _ARM_
+TRUE;
+#else
+FALSE;
+#endif
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
@@ -225,6 +231,54 @@ MiCountFreePagesInLoaderBlock(PLOADER_PARAMETER_BLOCK LoaderBlock)
 }
 
 VOID
+NTAPI
+MiDbgDumpMemoryDescriptors(VOID)
+{
+    PLIST_ENTRY NextEntry;
+    PMEMORY_ALLOCATION_DESCRIPTOR Md;
+    ULONG TotalPages = 0;
+    
+    DPRINT1("Base\t\tLength\t\tType\n");
+    for (NextEntry = KeLoaderBlock->MemoryDescriptorListHead.Flink;
+         NextEntry != &KeLoaderBlock->MemoryDescriptorListHead;
+         NextEntry = NextEntry->Flink)
+    {
+        Md = CONTAINING_RECORD(NextEntry, MEMORY_ALLOCATION_DESCRIPTOR, ListEntry);
+        DPRINT1("%08lX\t%08lX\t%s\n", Md->BasePage, Md->PageCount, MemType[Md->MemoryType]);
+        TotalPages += Md->PageCount;
+    }
+
+    DPRINT1("Total: %08lX (%d MB)\n", TotalPages, (TotalPages * PAGE_SIZE) / 1024 / 1024);
+}
+
+ULONG_PTR
+NTAPI
+MiGetLastKernelAddress(VOID)
+{
+    PLIST_ENTRY NextEntry;
+    PMEMORY_ALLOCATION_DESCRIPTOR Md;
+    ULONG_PTR LastKrnlPhysAddr = 0;
+        
+    for (NextEntry = KeLoaderBlock->MemoryDescriptorListHead.Flink;
+         NextEntry != &KeLoaderBlock->MemoryDescriptorListHead;
+         NextEntry = NextEntry->Flink)
+    {
+        Md = CONTAINING_RECORD(NextEntry, MEMORY_ALLOCATION_DESCRIPTOR, ListEntry);
+        if (Md->MemoryType == LoaderBootDriver ||
+            Md->MemoryType == LoaderSystemCode ||
+            Md->MemoryType == LoaderHalCode)
+        {
+            if (Md->BasePage+Md->PageCount > LastKrnlPhysAddr)
+                LastKrnlPhysAddr = Md->BasePage+Md->PageCount;
+            
+        }
+    }
+
+    /* Convert to a physical address */
+    return LastKrnlPhysAddr << PAGE_SHIFT;
+}
+
+VOID
 INIT_FUNCTION
 NTAPI
 MmInit1(ULONG_PTR FirstKrnlPhysAddr,
@@ -233,165 +287,86 @@ MmInit1(ULONG_PTR FirstKrnlPhysAddr,
         PADDRESS_RANGE BIOSMemoryMap,
         ULONG AddressRangeCount,
         ULONG MaxMem)
-/*
- * FUNCTION: Initalize memory managment
- */
 {
-   ULONG kernel_len;
-   ULONG_PTR MappingAddress;
-   PLDR_DATA_TABLE_ENTRY LdrEntry;
-
-   DPRINT("MmInit1(FirstKrnlPhysAddr, %p, LastKrnlPhysAddr %p, LastKernelAddress %p)\n",
-          FirstKrnlPhysAddr,
-          LastKrnlPhysAddr,
-          LastKernelAddress);
+    ULONG kernel_len;
+    ULONG_PTR MappingAddress;
+    PLDR_DATA_TABLE_ENTRY LdrEntry;
 
     /* Dump memory descriptors */
+    if (MiDbgEnableMdDump) MiDbgDumpMemoryDescriptors();
+
+    /* Set the page directory */
+    PsGetCurrentProcess()->Pcb.DirectoryTableBase.LowPart = (ULONG)MmGetPageDirectory();
+
+    /* NTLDR Hacks */
+    if (!MmFreeLdrPageDirectoryEnd) MmFreeLdrPageDirectoryEnd = 0x40000;
+
+    /* Get the first physical address */
+    LdrEntry = CONTAINING_RECORD(KeLoaderBlock->LoadOrderListHead.Flink,
+                                 LDR_DATA_TABLE_ENTRY,
+                                 InLoadOrderLinks);
+    FirstKrnlPhysAddr = (ULONG_PTR)LdrEntry->DllBase - KSEG0_BASE;
+
+    /* Get the last kernel address */ 
+    LastKrnlPhysAddr = MiGetLastKernelAddress();
+    LastKernelAddress = LastKrnlPhysAddr | KSEG0_BASE;
+
+    /* Set memory limits */
+    MmSystemRangeStart = (PVOID)KSEG0_BASE;
+    MmUserProbeAddress = (ULONG_PTR)MmSystemRangeStart - 0x10000;
+    MmHighestUserAddress = (PVOID)(MmUserProbeAddress - 1);
+    DPRINT("MmSystemRangeStart:  %08x\n", MmSystemRangeStart);
+    DPRINT("MmUserProbeAddress:  %08x\n", MmUserProbeAddress);
+    DPRINT("MmHighestUserAddress:%08x\n", MmHighestUserAddress);
+
+    /* Initialize memory managment statistics */
+    RtlZeroMemory(&MmStats, sizeof(MmStats));
+    
+    /* Count RAM */
+    MmStats.NrTotalPages = MiCountFreePagesInLoaderBlock(KeLoaderBlock);
+    MmNumberOfPhysicalPages = MmStats.NrTotalPages;
+    if (!MmStats.NrTotalPages)
     {
-        PLIST_ENTRY NextEntry;
-        PMEMORY_ALLOCATION_DESCRIPTOR Md;
-        ULONG TotalPages = 0;
+        DbgPrint("Memory not detected, default to 8 MB\n");
+        MmStats.NrTotalPages = 2048;
+    }
+    else
+    {
+        /* HACK: add 1MB for standard memory (not extended). Why? */
+        DbgPrint("Used memory %dKb\n", (MmStats.NrTotalPages * PAGE_SIZE) / 1024);
+        MmStats.NrTotalPages += 256;
+    }
+    
+    /* Initialize the kernel address space */
+    MmInitializeKernelAddressSpace();
+    MmInitGlobalKernelPageDirectory();
 
-        DPRINT("Base\t\tLength\t\tType\n");
-        for (NextEntry = KeLoaderBlock->MemoryDescriptorListHead.Flink;
-             NextEntry != &KeLoaderBlock->MemoryDescriptorListHead;
-             NextEntry = NextEntry->Flink)
-        {
-            Md = CONTAINING_RECORD(NextEntry, MEMORY_ALLOCATION_DESCRIPTOR, ListEntry);
-            DPRINT("%08lX\t%08lX\t%s\n", Md->BasePage, Md->PageCount, MemType[Md->MemoryType]);
-            TotalPages += Md->PageCount;
-        }
+    /* Initialize the page list */
+    LastKernelAddress = (ULONG_PTR)MmInitializePageList(FirstKrnlPhysAddr,
+                                                        LastKrnlPhysAddr,
+                                                        MmStats.NrTotalPages,
+                                                        PAGE_ROUND_UP(LastKernelAddress),
+                                                        BIOSMemoryMap,
+                                                        AddressRangeCount);
+    kernel_len = LastKrnlPhysAddr - FirstKrnlPhysAddr;
+    
+    /* Unmap low memory */
+    MmDeletePageTable(NULL, 0);
 
-        DPRINT("Total: %08lX (%d MB)\n", TotalPages, (TotalPages * PAGE_SIZE) / 1024 / 1024);
+    /* Unmap FreeLDR's 6MB allocation */
+    DPRINT("Invalidating between %p and %p\n", LastKernelAddress, KSEG0_BASE + 0x00600000);
+    for (MappingAddress = LastKernelAddress;
+         MappingAddress < KSEG0_BASE + 0x00600000;
+         MappingAddress += PAGE_SIZE)
+    {
+        MmRawDeleteVirtualMapping((PVOID)MappingAddress);
     }
 
-   /* Set the page directory */
-   DPRINT("CurrentProcess: %x\n", PsGetCurrentProcess());
-   PsGetCurrentProcess()->Pcb.DirectoryTableBase.LowPart = (ULONG)MmGetPageDirectory();
+    /* Intialize memory areas */
+    MmInitVirtualMemory(LastKernelAddress, kernel_len);
 
-   /* NTLDR Hacks */
-   if (!MmFreeLdrPageDirectoryEnd) MmFreeLdrPageDirectoryEnd = 0x40000;
-   if (!FirstKrnlPhysAddr)
-   {
-       /* Get the kernel entry */
-       LdrEntry = CONTAINING_RECORD(KeLoaderBlock->LoadOrderListHead.Flink,
-                                    LDR_DATA_TABLE_ENTRY,
-                                    InLoadOrderLinks);
-
-       /* Get the addresses */
-       FirstKrnlPhysAddr = (ULONG_PTR)LdrEntry->DllBase - KSEG0_BASE;
-   }
-
-   /* Get the last kernel address */
-   if (!LastKrnlPhysAddr)
-   {
-        PLIST_ENTRY NextEntry;
-        PMEMORY_ALLOCATION_DESCRIPTOR Md;
-
-        for (NextEntry = KeLoaderBlock->MemoryDescriptorListHead.Flink;
-             NextEntry != &KeLoaderBlock->MemoryDescriptorListHead;
-             NextEntry = NextEntry->Flink)
-        {
-            Md = CONTAINING_RECORD(NextEntry, MEMORY_ALLOCATION_DESCRIPTOR, ListEntry);
-            if (Md->MemoryType == LoaderBootDriver ||
-                Md->MemoryType == LoaderSystemCode ||
-                Md->MemoryType == LoaderHalCode)
-            {
-                if (Md->BasePage+Md->PageCount > LastKrnlPhysAddr)
-                    LastKrnlPhysAddr = Md->BasePage+Md->PageCount;
-            }
-        }
-
-        /* Convert to a physical address */
-        LastKrnlPhysAddr = LastKrnlPhysAddr << PAGE_SHIFT;
-        LastKernelAddress = LastKrnlPhysAddr | KSEG0_BASE;
-   }
-
-   /* Set memory limits */
-   MmSystemRangeStart = (PVOID)KSEG0_BASE;
-   MmUserProbeAddress = (ULONG_PTR)MmSystemRangeStart - 0x10000;
-   MmHighestUserAddress = (PVOID)(MmUserProbeAddress - 1);
-   DPRINT("MmSystemRangeStart:  %08x\n", MmSystemRangeStart);
-   DPRINT("MmUserProbeAddress:  %08x\n", MmUserProbeAddress);
-   DPRINT("MmHighestUserAddress:%08x\n", MmHighestUserAddress);
-
-   /*
-    * Initialize memory managment statistics
-    */
-   MmStats.NrTotalPages = 0;
-   MmStats.NrSystemPages = 0;
-   MmStats.NrUserPages = 0;
-   MmStats.NrReservedPages = 0;
-   MmStats.NrUserPages = 0;
-   MmStats.NrFreePages = 0;
-   MmStats.NrLockedPages = 0;
-   MmStats.PagingRequestsInLastMinute = 0;
-   MmStats.PagingRequestsInLastFiveMinutes = 0;
-   MmStats.PagingRequestsInLastFifteenMinutes = 0;
-
-   /*
-    * Free all pages not used for kernel memory
-    * (we assume the kernel occupies a continuous range of physical
-    * memory)
-    */
-   DPRINT("first krnl %x, last krnl %x\n",FirstKrnlPhysAddr,
-          LastKrnlPhysAddr);
-
-   /*
-    * Free physical memory not used by the kernel
-    */
-   MmStats.NrTotalPages = MiCountFreePagesInLoaderBlock(KeLoaderBlock);
-   MmNumberOfPhysicalPages = MmStats.NrTotalPages;
-   if (!MmStats.NrTotalPages)
-   {
-      DbgPrint("Memory not detected, default to 8 MB\n");
-      MmStats.NrTotalPages = 2048;
-   }
-   else
-   {
-      /* HACK: add 1MB for standard memory (not extended). Why? */
-      MmStats.NrTotalPages += 256;
-   }
-
-   /*
-    * Initialize the kernel address space
-    */
-   MmInitializeKernelAddressSpace();
-
-   MmInitGlobalKernelPageDirectory();
-
-   DbgPrint("Used memory %dKb\n", (MmStats.NrTotalPages * PAGE_SIZE) / 1024);
-
-   LastKernelAddress = (ULONG_PTR)MmInitializePageList(
-                       FirstKrnlPhysAddr,
-                       LastKrnlPhysAddr,
-                       MmStats.NrTotalPages,
-                       PAGE_ROUND_UP(LastKernelAddress),
-                       BIOSMemoryMap,
-                       AddressRangeCount);
-   kernel_len = LastKrnlPhysAddr - FirstKrnlPhysAddr;
-
-   /*
-    * Unmap low memory
-    */
-   MmDeletePageTable(NULL, 0);
-
-   DPRINT("Invalidating between %x and %x\n",
-          LastKernelAddress, KSEG0_BASE + 0x00600000);
-   for (MappingAddress = LastKernelAddress;
-        MappingAddress < KSEG0_BASE + 0x00600000;
-        MappingAddress += PAGE_SIZE)
-   {
-      MmRawDeleteVirtualMapping((PVOID)MappingAddress);
-   }
-
-   DPRINT("Almost done MmInit()\n");
-   /*
-    * Intialize memory areas
-    */
-   MmInitVirtualMemory(LastKernelAddress, kernel_len);
-
-   MmInitializeMdlImplementation();
+    /* Initialize MDLs */
+    MmInitializeMdlImplementation();
 }
 
 BOOLEAN
