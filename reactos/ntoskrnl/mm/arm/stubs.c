@@ -13,9 +13,12 @@
 #include <debug.h>
 /* GLOBALS ********************************************************************/
 
-//
-// METAFIXME: We need to stop using 1MB Section Entry TTEs!
-//
+#undef UNIMPLEMENTED
+#define UNIMPLEMENTED \
+{ \
+    DPRINT1("[ARM Mm Bringup]: %s is unimplemented!\n", __FUNCTION__); \
+    while (TRUE); \
+}
 
 /* FUNCTIONS ******************************************************************/
 
@@ -28,7 +31,6 @@ MmUpdatePageDir(IN PEPROCESS Process,
     //
     // Nothing to do
     //
-    UNIMPLEMENTED;
     return;
 }
 

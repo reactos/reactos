@@ -374,18 +374,21 @@ ArmPrepareForReactOS(IN BOOLEAN Setup)
     //
     Base = MmAllocateMemoryWithType(KERNEL_STACK_SIZE, LoaderStartupDpcStack);
     ArmLoaderBlock->u.Arm.InterruptStack = KSEG0_BASE | (ULONG)Base;
+    ArmLoaderBlock->u.Arm.InterruptStack += KERNEL_STACK_SIZE;
     
     //
     // Allocate the Kernel Boot stack
     //
     Base = MmAllocateMemoryWithType(KERNEL_STACK_SIZE, LoaderStartupKernelStack);
     ArmLoaderBlock->KernelStack = KSEG0_BASE | (ULONG)Base;
+    ArmLoaderBlock->KernelStack += KERNEL_STACK_SIZE;
     
     //
     // Allocate the Abort stack
     //
     Base = MmAllocateMemoryWithType(KERNEL_STACK_SIZE, LoaderStartupPanicStack);
     ArmLoaderBlock->u.Arm.PanicStack = KSEG0_BASE | (ULONG)Base;
+    ArmLoaderBlock->u.Arm.PanicStack += KERNEL_STACK_SIZE;
 
     //
     // Allocate the PCR page -- align it to 1MB (we only need 4KB)
