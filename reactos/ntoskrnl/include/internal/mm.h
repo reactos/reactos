@@ -1145,7 +1145,7 @@ MmGetReferenceCountPage(PFN_TYPE Page);
 
 BOOLEAN
 NTAPI
-MmIsUsablePage(PFN_TYPE Page);
+MmIsPageInUse(PFN_TYPE Page);
 
 VOID
 NTAPI

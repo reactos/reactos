@@ -640,23 +640,17 @@ MmGetReferenceCountPage(PFN_TYPE Pfn)
 
 BOOLEAN
 NTAPI
-MmIsUsablePage(PFN_TYPE Pfn)
+MmIsPageInUse(PFN_TYPE Pfn)
 {
 
-   DPRINT("MmIsUsablePage(PhysicalAddress %x)\n", Pfn << PAGE_SHIFT);
+   DPRINT("MmIsPageInUse(PhysicalAddress %x)\n", Pfn << PAGE_SHIFT);
 
    if (Pfn == 0 || Pfn >= MmPageArraySize)
    {
       KEBUGCHECK(0);
    }
-
-   if (MmPageArray[Pfn].Flags.Type != MM_PHYSICAL_PAGE_USED &&
-         MmPageArray[Pfn].Flags.Type != MM_PHYSICAL_PAGE_BIOS)
-   {
-      return(FALSE);
-   }
-
-   return(TRUE);
+    
+   return (MmPageArray[Pfn].Flags.Type == MM_PHYSICAL_PAGE_USED);
 }
 
 VOID
