@@ -280,21 +280,22 @@ MiIsPfnRam(PADDRESS_RANGE BIOSMemoryMap,
 PVOID
 INIT_FUNCTION
 NTAPI
-MmInitializePageList(ULONG_PTR FirstPhysKernelAddress,
-                     ULONG_PTR LastPhysKernelAddress,
-                     ULONG MemorySizeInPages,
-                     ULONG_PTR LastKernelAddress,
-                     PADDRESS_RANGE BIOSMemoryMap,
-                     ULONG AddressRangeCount)
+MmInitializePageList(IN ULONG_PTR FirstPhysKernelAddress,
+                     IN ULONG_PTR LastPhysKernelAddress,
+                     IN ULONG HighestPage,
+                     IN ULONG_PTR LastKernelAddress,
+                     IN PADDRESS_RANGE BIOSMemoryMap,
+                     IN ULONG AddressRangeCount)
 {
     ULONG i;
     ULONG Reserved;
     NTSTATUS Status;
-    PFN_TYPE LastPage, Pfn = 0;
+    PFN_TYPE Pfn = 0;
     ULONG PdeStart = PsGetCurrentProcess()->Pcb.DirectoryTableBase.LowPart;
     ULONG PdePageStart, PdePageEnd;
     ULONG VideoPageStart, VideoPageEnd;
     ULONG KernelPageStart, KernelPageEnd;
+    extern PMEMORY_ALLOCATION_DESCRIPTOR MiFreeDescriptor;
 
     /* Initialize the page lists */
     KeInitializeSpinLock(&PageListLock);
@@ -303,17 +304,13 @@ MmInitializePageList(ULONG_PTR FirstPhysKernelAddress,
     InitializeListHead(&FreeZeroedPageListHead);
  
     /* Set the size and start of the PFN Database */
-    MmPageArraySize = MemorySizeInPages;
+    MmPageArraySize = HighestPage;
     MmPageArray = (PHYSICAL_PAGE *)LastKernelAddress;
     Reserved = PAGE_ROUND_UP((MmPageArraySize * sizeof(PHYSICAL_PAGE))) / PAGE_SIZE;
     
     /* Update the last kernel address pointers */
     LastKernelAddress = ((ULONG_PTR)LastKernelAddress + (Reserved * PAGE_SIZE));
     LastPhysKernelAddress = (ULONG_PTR)LastPhysKernelAddress + (Reserved * PAGE_SIZE);
-
-    /* Find the highest usable page */
-    LastPage = MmPageArraySize;
-    while (TRUE) if (MiIsPfnRam(BIOSMemoryMap, AddressRangeCount, --LastPage)) break;
 
     /* Loop every page required to hold the PFN database */
     for (i = 0; i < Reserved; i++)
@@ -324,7 +321,8 @@ MmInitializePageList(ULONG_PTR FirstPhysKernelAddress,
         if (!MmIsPagePresent(NULL, Address))
         {
             /* Use one of our highest usable pages */
-            Pfn = LastPage--;
+            Pfn = MiFreeDescriptor->BasePage + MiFreeDescriptor->PageCount - 1;
+            MiFreeDescriptor->PageCount--;
             
             /* Set the PFN */
             Status = MmCreateVirtualMappingForKernel(Address,
@@ -422,7 +420,7 @@ MmInitializePageList(ULONG_PTR FirstPhysKernelAddress,
                 MmPageArray[i].MapCount = 1;
                 MmStats.NrSystemPages++;
             }
-            else if (i > LastPage)
+            else if (i > (MiFreeDescriptor->BasePage + MiFreeDescriptor->PageCount - 1))
             {
                 /* These are pages we allocated above to hold the PFN DB */
                 MmPageArray[i].Flags.Type = MM_PHYSICAL_PAGE_USED;

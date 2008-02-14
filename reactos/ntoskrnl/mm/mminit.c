@@ -50,6 +50,7 @@ PHYSICAL_ADDRESS MmSharedDataPagePhysicalAddress;
 PVOID MiNonPagedPoolStart;
 ULONG MiNonPagedPoolLength;
 ULONG MmNumberOfPhysicalPages, MmHighestPhysicalPage, MmLowestPhysicalPage;
+PMEMORY_ALLOCATION_DESCRIPTOR MiFreeDescriptor;
 extern KMUTANT MmSystemLoadLock;
 BOOLEAN MiDbgEnableMdDump =
 #ifdef _ARM_
@@ -207,6 +208,7 @@ MiCountFreePagesInLoaderBlock(PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
     PLIST_ENTRY NextEntry;
     PMEMORY_ALLOCATION_DESCRIPTOR Md;
+    ULONG FreePages = 0;
 
     for (NextEntry = KeLoaderBlock->MemoryDescriptorListHead.Flink;
         NextEntry != &KeLoaderBlock->MemoryDescriptorListHead;
@@ -239,6 +241,21 @@ MiCountFreePagesInLoaderBlock(PLOADER_PARAMETER_BLOCK LoaderBlock)
             {
                 /* Update the highest page */
                 MmHighestPhysicalPage = Md->BasePage + Md->PageCount - 1;
+            }
+
+            /* Check if this is free memory */
+            if ((Md->MemoryType == LoaderFree) ||
+                (Md->MemoryType == LoaderLoadedProgram) ||
+                (Md->MemoryType == LoaderFirmwareTemporary) ||
+                (Md->MemoryType == LoaderOsloaderStack))
+            {
+                /* Check if this is the largest memory descriptor */
+                if (Md->PageCount > FreePages)
+                {
+                    /* For now, it is */
+                    FreePages = Md->PageCount;
+                    MiFreeDescriptor = Md;
+                }
             }
         }
     }
