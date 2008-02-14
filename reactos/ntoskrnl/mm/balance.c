@@ -263,7 +263,7 @@ MmRequestPageMemoryConsumer(ULONG Consumer, BOOLEAN CanWait,
       {
          KEBUGCHECK(NO_PAGES_AVAILABLE);
       }
-      MmTransferOwnershipPage(Page, Consumer);
+      MmSetLRULastPage(Page);
       *AllocatedPage = Page;
       (void)InterlockedDecrementUL(&MiPagesRequired);
       return(STATUS_SUCCESS);
