@@ -307,7 +307,7 @@ MmInit1(ULONG_PTR FirstKrnlPhysAddr,
     FirstKrnlPhysAddr = (ULONG_PTR)LdrEntry->DllBase - KSEG0_BASE;
 
     /* Get the last kernel address */ 
-    LastKrnlPhysAddr = MiGetLastKernelAddress();
+    LastKrnlPhysAddr = PAGE_ROUND_UP(MiGetLastKernelAddress());
     LastKernelAddress = LastKrnlPhysAddr | KSEG0_BASE;
 
     /* Set memory limits */
