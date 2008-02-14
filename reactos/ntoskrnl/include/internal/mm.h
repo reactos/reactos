@@ -18,6 +18,11 @@ extern ULONG MmNumberOfPhysicalPages;
 extern PVOID MmPagedPoolBase;
 extern ULONG MmPagedPoolSize;
 
+extern PMEMORY_ALLOCATION_DESCRIPTOR MiFreeDescriptor;
+extern ULONG MmHighestPhysicalPage;
+extern PVOID MmPfnDatabase;
+extern ULONG_PTR MiKSeg0Start, MiKSeg0End;
+
 struct _KTRAP_FRAME;
 struct _EPROCESS;
 struct _MM_RMAP_ENTRY;
@@ -260,6 +265,29 @@ typedef struct
     ULONG PagingRequestsInLastFiveMinutes;
     ULONG PagingRequestsInLastFifteenMinutes;
 } MM_STATS;
+
+typedef struct _PHYSICAL_PAGE
+{
+    union
+    {
+        struct
+        {
+            ULONG Type: 2;
+            ULONG Consumer: 3;
+            ULONG Zero: 1;
+        }
+        Flags;
+        ULONG AllFlags;
+    };
+    
+    LIST_ENTRY ListEntry;
+    ULONG ReferenceCount;
+    SWAPENTRY SavedSwapEntry;
+    ULONG LockCount;
+    ULONG MapCount;
+    struct _MM_RMAP_ENTRY* RmapListHead;
+}
+PHYSICAL_PAGE, *PPHYSICAL_PAGE;
 
 extern MM_STATS MmStats;
 
@@ -532,12 +560,8 @@ MiShutdownMemoryManager(VOID);
 VOID
 NTAPI
 MmInit1(
-    ULONG_PTR FirstKernelPhysAddress,
-    ULONG_PTR LastKernelPhysAddress,
-    ULONG_PTR LastKernelAddress,
     PADDRESS_RANGE BIOSMemoryMap,
-    ULONG AddressRangeCount,
-    ULONG MaxMemInMeg
+    ULONG AddressRangeCount
 );
 
 BOOLEAN
@@ -941,13 +965,9 @@ ULONG
 NTAPI
 MmGetLockCountPage(PFN_TYPE Page);
 
-PVOID
+VOID
 NTAPI
 MmInitializePageList(
-    ULONG_PTR FirstPhysKernelAddress,
-    ULONG_PTR LastPhysKernelAddress,
-    ULONG MemorySizeInPages,
-    ULONG_PTR LastKernelBase,
     PADDRESS_RANGE BIOSMemoryMap,
     ULONG AddressRangeCount
 );

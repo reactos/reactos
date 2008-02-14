@@ -26,29 +26,6 @@
 #define MM_PHYSICAL_PAGE_USED    (0x2)
 #define MM_PHYSICAL_PAGE_BIOS    (0x3)
 
-typedef struct _PHYSICAL_PAGE
-{
-   union
-   {
-      struct
-      {
-        ULONG Type: 2;
-        ULONG Consumer: 3;
-	ULONG Zero: 1;
-      }
-      Flags;
-      ULONG AllFlags;
-   };
-
-   LIST_ENTRY ListEntry;
-   ULONG ReferenceCount;
-   SWAPENTRY SavedSwapEntry;
-   ULONG LockCount;
-   ULONG MapCount;
-   struct _MM_RMAP_ENTRY* RmapListHead;
-}
-PHYSICAL_PAGE, *PPHYSICAL_PAGE;
-
 
 #define ASSERT_PFN(x) ASSERT((x)->Flags.Type != 0)
 
@@ -302,15 +279,9 @@ MiIsPfnRam(PADDRESS_RANGE BIOSMemoryMap,
    return TRUE;
 }
 
-
-PVOID
-INIT_FUNCTION
+VOID
 NTAPI
-MmInitializePageList(IN ULONG_PTR FirstPhysKernelAddress,
-                     IN ULONG_PTR LastPhysKernelAddress,
-                     IN ULONG HighestPage,
-                     IN ULONG_PTR LastKernelAddress,
-                     IN PADDRESS_RANGE BIOSMemoryMap,
+MmInitializePageList(IN PADDRESS_RANGE BIOSMemoryMap,
                      IN ULONG AddressRangeCount)
 {
     ULONG i;
@@ -318,11 +289,11 @@ MmInitializePageList(IN ULONG_PTR FirstPhysKernelAddress,
     NTSTATUS Status;
     PFN_TYPE Pfn = 0;
     PHYSICAL_PAGE UsedPage;
-    extern PMEMORY_ALLOCATION_DESCRIPTOR MiFreeDescriptor;
     ULONG PdeStart = PsGetCurrentProcess()->Pcb.DirectoryTableBase.LowPart;
     ULONG PdePageStart, PdePageEnd;
     ULONG VideoPageStart, VideoPageEnd;
     ULONG KernelPageStart, KernelPageEnd;
+    ULONG_PTR KernelStart, KernelEnd;
 
     /* Initialize the page lists */
     KeInitializeSpinLock(&PageListLock);
@@ -331,13 +302,9 @@ MmInitializePageList(IN ULONG_PTR FirstPhysKernelAddress,
     InitializeListHead(&FreeZeroedPageListHead);
  
     /* Set the size and start of the PFN Database */
-    MmPageArraySize = HighestPage;
-    MmPageArray = (PHYSICAL_PAGE *)LastKernelAddress;
+    MmPageArray = (PHYSICAL_PAGE *)MmPfnDatabase;
+    MmPageArraySize = MmHighestPhysicalPage;
     Reserved = PAGE_ROUND_UP((MmPageArraySize * sizeof(PHYSICAL_PAGE))) / PAGE_SIZE;
-    
-    /* Update the last kernel address pointers */
-    LastKernelAddress = ((ULONG_PTR)LastKernelAddress + (Reserved * PAGE_SIZE));
-    LastPhysKernelAddress = (ULONG_PTR)LastPhysKernelAddress + (Reserved * PAGE_SIZE);
 
     /* Loop every page required to hold the PFN database */
     for (i = 0; i < Reserved; i++)
@@ -380,12 +347,14 @@ MmInitializePageList(IN ULONG_PTR FirstPhysKernelAddress,
     UsedPage.MapCount = 1;
 
     /* We'll be applying a bunch of hacks -- precompute some static values */
+    KernelStart = MiKSeg0Start - KSEG0_BASE;
+    KernelEnd = MiKSeg0End - KSEG0_BASE;
     PdePageStart = PdeStart / PAGE_SIZE;
     PdePageEnd = MmFreeLdrPageDirectoryEnd / PAGE_SIZE;
     VideoPageStart = 0xA0000 / PAGE_SIZE;
     VideoPageEnd = 0x100000 / PAGE_SIZE;
-    KernelPageStart = FirstPhysKernelAddress / PAGE_SIZE;
-    KernelPageEnd = LastPhysKernelAddress / PAGE_SIZE;
+    KernelPageStart = KernelStart / PAGE_SIZE;
+    KernelPageEnd = KernelEnd / PAGE_SIZE;
     
     /* Loop every page on the system */
     for (i = 0; i <= MmPageArraySize; i++)
@@ -470,7 +439,6 @@ MmInitializePageList(IN ULONG_PTR FirstPhysKernelAddress,
     
     MmStats.NrTotalPages = MmStats.NrFreePages + MmStats.NrSystemPages + MmStats.NrUserPages;
     MmInitializeBalancer(MmStats.NrFreePages, MmStats.NrSystemPages);
-    return((PVOID)LastKernelAddress);
 }
 
 VOID

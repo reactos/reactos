@@ -49,7 +49,10 @@ MM_SYSTEMSIZE MmSystemSize = MmSmallSystem;
 PHYSICAL_ADDRESS MmSharedDataPagePhysicalAddress;
 PVOID MiNonPagedPoolStart;
 ULONG MiNonPagedPoolLength;
+ULONG MmBootImageSize;
 ULONG MmNumberOfPhysicalPages, MmHighestPhysicalPage, MmLowestPhysicalPage;
+ULONG_PTR MiKSeg0Start, MiKSeg0End;
+PVOID MmPfnDatabase;
 PMEMORY_ALLOCATION_DESCRIPTOR MiFreeDescriptor;
 extern KMUTANT MmSystemLoadLock;
 BOOLEAN MiDbgEnableMdDump =
@@ -71,8 +74,7 @@ MiShutdownMemoryManager(VOID)
 VOID
 INIT_FUNCTION
 NTAPI
-MmInitVirtualMemory(ULONG_PTR LastKernelAddress,
-                    ULONG KernelLength)
+MmInitVirtualMemory()
 {
    PVOID BaseAddress;
    ULONG Length;
@@ -80,24 +82,9 @@ MmInitVirtualMemory(ULONG_PTR LastKernelAddress,
    PHYSICAL_ADDRESS BoundaryAddressMultiple;
    PMEMORY_AREA MArea;
 
-   DPRINT("MmInitVirtualMemory(%x, %x)\n",LastKernelAddress, KernelLength);
-
    BoundaryAddressMultiple.QuadPart = 0;
-   LastKernelAddress = PAGE_ROUND_UP(LastKernelAddress);
 
    MmInitMemoryAreas();
-
-   /*
-    * FreeLDR Marks 6MB "in use" at the start of the kernel base,
-    * so start the non-paged pool at a boundary of 6MB from where
-    * the last driver was loaded. This should be the end of the
-    * FreeLDR-marked region.
-    */
-   MiNonPagedPoolStart = (PVOID)ROUND_UP((ULONG_PTR)LastKernelAddress + PAGE_SIZE, 0x600000);
-   MiNonPagedPoolLength = MM_NONPAGED_POOL_SIZE;
-
-   MmPagedPoolBase = (PVOID)ROUND_UP((ULONG_PTR)MiNonPagedPoolStart + MiNonPagedPoolLength + PAGE_SIZE, 0x400000);
-   MmPagedPoolSize = MM_PAGED_POOL_SIZE;
 
    DPRINT("NonPagedPool %x - %x, PagedPool %x - %x\n", MiNonPagedPoolStart, (ULONG_PTR)MiNonPagedPoolStart + MiNonPagedPoolLength - 1,
            MmPagedPoolBase, (ULONG_PTR)MmPagedPoolBase + MmPagedPoolSize - 1);
@@ -263,6 +250,32 @@ MiCountFreePagesInLoaderBlock(PLOADER_PARAMETER_BLOCK LoaderBlock)
 
 VOID
 NTAPI
+MiDbgKernelLayout(VOID)
+{
+    DPRINT1("%8s%12s\t\t%s\n", "Start", "End", "Type");
+    DPRINT1("0x%p - 0x%p\t%s\n",
+            KSEG0_BASE, MiKSeg0Start,
+            "Undefined region");
+    DPRINT1("0x%p - 0x%p\t%s\n",
+            MiKSeg0Start, MmPfnDatabase,
+            "FreeLDR Kernel mapping region");
+    DPRINT1("0x%p - 0x%p\t%s\n",
+            MmPfnDatabase, MiKSeg0End,
+            "PFN Database region");
+    if (MiKSeg0End != (ULONG_PTR)MiNonPagedPoolStart)
+    DPRINT1("0x%p - 0x%p\t%s\n",
+            MiKSeg0End, MiNonPagedPoolStart,
+            "Remaining FreeLDR mapping");
+    DPRINT1("0x%p - 0x%p\t%s\n",
+             MiNonPagedPoolStart, (ULONG_PTR)MiNonPagedPoolStart + MiNonPagedPoolLength,
+            "Non paged pool region");
+    DPRINT1("0x%p - 0x%p\t%s\n",
+            MmPagedPoolBase, (ULONG_PTR)MmPagedPoolBase + MmPagedPoolSize,
+            "Paged pool region");
+}
+
+VOID
+NTAPI
 MiDbgDumpBiosMap(IN PADDRESS_RANGE BIOSMemoryMap,
                  IN ULONG AddressRangeCount)
 {
@@ -306,7 +319,7 @@ MiGetLastKernelAddress(VOID)
     PLIST_ENTRY NextEntry;
     PMEMORY_ALLOCATION_DESCRIPTOR Md;
     ULONG_PTR LastKrnlPhysAddr = 0;
-        
+    
     for (NextEntry = KeLoaderBlock->MemoryDescriptorListHead.Flink;
          NextEntry != &KeLoaderBlock->MemoryDescriptorListHead;
          NextEntry = NextEntry->Flink)
@@ -320,7 +333,7 @@ MiGetLastKernelAddress(VOID)
                 LastKrnlPhysAddr = Md->BasePage+Md->PageCount;   
         }
     }
-
+    
     /* Convert to a physical address */
     return LastKrnlPhysAddr << PAGE_SHIFT;
 }
@@ -328,16 +341,11 @@ MiGetLastKernelAddress(VOID)
 VOID
 INIT_FUNCTION
 NTAPI
-MmInit1(ULONG_PTR FirstKrnlPhysAddr,
-        ULONG_PTR LastKrnlPhysAddr,
-        ULONG_PTR LastKernelAddress,
-        PADDRESS_RANGE BIOSMemoryMap,
-        ULONG AddressRangeCount,
-        ULONG MaxMem)
+MmInit1(IN PADDRESS_RANGE BIOSMemoryMap,
+        IN ULONG AddressRangeCount)
 {
-    ULONG kernel_len;
     PLDR_DATA_TABLE_ENTRY LdrEntry;
-
+    
     /* Dump memory descriptors */
     if (MiDbgEnableMdDump) MiDbgDumpMemoryDescriptors();
     if (MiDbgEnableMdDump) MiDbgDumpBiosMap(BIOSMemoryMap, AddressRangeCount);
@@ -345,18 +353,9 @@ MmInit1(ULONG_PTR FirstKrnlPhysAddr,
     /* Set the page directory */
     PsGetCurrentProcess()->Pcb.DirectoryTableBase.LowPart = (ULONG)MmGetPageDirectory();
 
-    /* NTLDR Hacks */
-    if (!MmFreeLdrPageDirectoryEnd) MmFreeLdrPageDirectoryEnd = 0x40000;
-
-    /* Get the first physical address */
-    LdrEntry = CONTAINING_RECORD(KeLoaderBlock->LoadOrderListHead.Flink,
-                                 LDR_DATA_TABLE_ENTRY,
-                                 InLoadOrderLinks);
-    FirstKrnlPhysAddr = (ULONG_PTR)LdrEntry->DllBase - KSEG0_BASE;
-
-    /* Get the last kernel address */ 
-    LastKrnlPhysAddr = PAGE_ROUND_UP(MiGetLastKernelAddress());
-    LastKernelAddress = LastKrnlPhysAddr | KSEG0_BASE;
+    /* Get the size of FreeLDR's image allocations */
+    MmBootImageSize = KeLoaderBlock->Extension->LoaderPagesSpanned;
+    MmBootImageSize *= PAGE_SIZE;
 
     /* Set memory limits */
     MmSystemRangeStart = (PVOID)KSEG0_BASE;
@@ -377,21 +376,55 @@ MmInit1(ULONG_PTR FirstKrnlPhysAddr,
     /* Initialize the kernel address space */
     MmInitializeKernelAddressSpace();
     MmInitGlobalKernelPageDirectory();
+    
+    /* Get kernel address boundaries */
+    LdrEntry = CONTAINING_RECORD(KeLoaderBlock->LoadOrderListHead.Flink,
+                                 LDR_DATA_TABLE_ENTRY,
+                                 InLoadOrderLinks);
+    MiKSeg0Start = (ULONG_PTR)LdrEntry->DllBase | KSEG0_BASE;
+    MiKSeg0End = PAGE_ROUND_UP(MiGetLastKernelAddress()  | KSEG0_BASE);
 
+    /* We'll put the PFN array right after the loaded modules */
+    MmPfnDatabase = (PVOID)MiKSeg0End;
+    MiKSeg0End += MmHighestPhysicalPage * sizeof(PHYSICAL_PAGE);
+    MiKSeg0End = PAGE_ROUND_UP(MiKSeg0End);
+    
+    /*
+     * FreeLDR maps 6MB starting at the kernel base address, followed by the
+     * PFN database. If the PFN database doesn't go over the FreeLDR allocation
+     * then choose the end of the FreeLDR block. If it does go past the FreeLDR
+     * allocation, then choose the next PAGE_SIZE boundary.
+     */
+    if (MiKSeg0End < (MiKSeg0Start + 0x600000))
+    {
+        /* Use the first memory following FreeLDR's 6MB mapping */
+        MiNonPagedPoolStart = (PVOID)PAGE_ROUND_UP(MiKSeg0Start + 0x600000);
+    }
+    else
+    {
+        /* Use the next free available page */
+        MiNonPagedPoolStart = (PVOID)MiKSeg0End;
+    }
+    
+    /* Length of non-paged pool */
+    MiNonPagedPoolLength = MM_NONPAGED_POOL_SIZE;
+
+    /* Put the paged pool after the non-paged pool */
+    MmPagedPoolBase = (PVOID)PAGE_ROUND_UP((ULONG_PTR)MiNonPagedPoolStart +
+                                           MiNonPagedPoolLength);
+    MmPagedPoolSize = MM_PAGED_POOL_SIZE;
+    
+    /* Dump kernel memory layout */
+    MiDbgKernelLayout();
+    
     /* Initialize the page list */
-    LastKernelAddress = (ULONG_PTR)MmInitializePageList(FirstKrnlPhysAddr,
-                                                        LastKrnlPhysAddr,
-                                                        MmHighestPhysicalPage,
-                                                        PAGE_ROUND_UP(LastKernelAddress),
-                                                        BIOSMemoryMap,
-                                                        AddressRangeCount);
-    kernel_len = LastKrnlPhysAddr - FirstKrnlPhysAddr;
+    MmInitializePageList(BIOSMemoryMap, AddressRangeCount);
     
     /* Unmap low memory */
     MmDeletePageTable(NULL, 0);
 
     /* Intialize memory areas */
-    MmInitVirtualMemory(LastKernelAddress, kernel_len);
+    MmInitVirtualMemory();
 
     /* Initialize MDLs */
     MmInitializeMdlImplementation();
