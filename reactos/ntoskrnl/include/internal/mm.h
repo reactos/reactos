@@ -21,7 +21,6 @@ extern ULONG MmPagedPoolSize;
 extern PMEMORY_ALLOCATION_DESCRIPTOR MiFreeDescriptor;
 extern ULONG MmHighestPhysicalPage;
 extern PVOID MmPfnDatabase;
-extern ULONG_PTR MiKSeg0Start, MiKSeg0End;
 
 struct _KTRAP_FRAME;
 struct _EPROCESS;
@@ -560,8 +559,7 @@ MiShutdownMemoryManager(VOID);
 VOID
 NTAPI
 MmInit1(
-    PADDRESS_RANGE BIOSMemoryMap,
-    ULONG AddressRangeCount
+    VOID
 );
 
 BOOLEAN
@@ -968,8 +966,7 @@ MmGetLockCountPage(PFN_TYPE Page);
 VOID
 NTAPI
 MmInitializePageList(
-    PADDRESS_RANGE BIOSMemoryMap,
-    ULONG AddressRangeCount
+    VOID
 );
 
 PFN_TYPE

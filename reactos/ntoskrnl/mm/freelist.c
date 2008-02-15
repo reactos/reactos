@@ -237,63 +237,17 @@ MmGetContinuousPages(ULONG NumberOfBytes,
    return 0;
 }
 
-
-BOOLEAN
-NTAPI
-MiIsPfnRam(PADDRESS_RANGE BIOSMemoryMap,
-           ULONG AddressRangeCount,
-	   PFN_TYPE Pfn)
-{
-   BOOLEAN IsUsable;
-   LARGE_INTEGER BaseAddress;
-   LARGE_INTEGER EndAddress;
-   ULONG i;
-   if (BIOSMemoryMap != NULL && AddressRangeCount > 0)
-   {
-      IsUsable = FALSE;
-      for (i = 0; i < AddressRangeCount; i++)
-      {
-	 BaseAddress.u.LowPart = BIOSMemoryMap[i].BaseAddrLow;
-	 BaseAddress.u.HighPart = BIOSMemoryMap[i].BaseAddrHigh;
-	 EndAddress.u.LowPart = BIOSMemoryMap[i].LengthLow;
-	 EndAddress.u.HighPart = BIOSMemoryMap[i].LengthHigh;
-	 EndAddress.QuadPart += BaseAddress.QuadPart;
-	 BaseAddress.QuadPart = PAGE_ROUND_DOWN(BaseAddress.QuadPart);
-         EndAddress.QuadPart = PAGE_ROUND_UP(EndAddress.QuadPart);
-
-	 if ((BaseAddress.QuadPart >> PAGE_SHIFT) <= Pfn &&
-	     Pfn < (EndAddress.QuadPart >> PAGE_SHIFT))
-	 {
-	    if (BIOSMemoryMap[i].Type == 1)
-	    {
-	       IsUsable = TRUE;
-	    }
-	    else
-	    {
-	       return FALSE;
-	    }
-	 }
-      }
-      return IsUsable;
-   }
-   return TRUE;
-}
-
 VOID
 NTAPI
-MmInitializePageList(IN PADDRESS_RANGE BIOSMemoryMap,
-                     IN ULONG AddressRangeCount)
+MmInitializePageList(VOID)
 {
     ULONG i;
     ULONG Reserved;
     NTSTATUS Status;
     PFN_TYPE Pfn = 0;
     PHYSICAL_PAGE UsedPage;
-    ULONG PdeStart = PsGetCurrentProcess()->Pcb.DirectoryTableBase.LowPart;
-    ULONG PdePageStart, PdePageEnd;
-    ULONG VideoPageStart, VideoPageEnd;
-    ULONG KernelPageStart, KernelPageEnd;
-    ULONG_PTR KernelStart, KernelEnd;
+    PLIST_ENTRY NextEntry;
+    PMEMORY_ALLOCATION_DESCRIPTOR Md;
 
     /* Initialize the page lists */
     KeInitializeSpinLock(&PageListLock);
@@ -345,113 +299,73 @@ MmInitializePageList(IN PADDRESS_RANGE BIOSMemoryMap,
     UsedPage.Flags.Consumer = MC_NPPOOL;
     UsedPage.ReferenceCount = 2;
     UsedPage.MapCount = 1;
-
-    /* We'll be applying a bunch of hacks -- precompute some static values */
-    KernelStart = MiKSeg0Start - KSEG0_BASE;
-    KernelEnd = MiKSeg0End - KSEG0_BASE;
-    PdePageStart = PdeStart / PAGE_SIZE;
-    PdePageEnd = MmFreeLdrPageDirectoryEnd / PAGE_SIZE;
-    VideoPageStart = 0xA0000 / PAGE_SIZE;
-    VideoPageEnd = 0x100000 / PAGE_SIZE;
-    KernelPageStart = KernelStart / PAGE_SIZE;
-    KernelPageEnd = KernelEnd / PAGE_SIZE;
     
-    // Glorious Hack:
-    // The kernel seems to crash if the region of memory that FreeLDR maps 
-    // (those evil 6MB) is not *entirely* marked "in use", even though only
-    // 3 or 4MB of it may actually be in use.
-    // This wasn't noticed before, because the PFN database pages which are
-    // *VIRTUALLY* continous after the kernel end were also marked as
-    // *PHYSICALLY* continous (even though they were allocated at the very far
-    // end of physical memory).
-    // 
-    // So we'll simply gobble up whatever is left of what FreeLDR mapped.
-    //
-    // PS. This is really sinister
-    //
-    KernelEnd += (KernelStart + 0x600000) - KernelEnd;
-    KernelPageEnd = KernelEnd / PAGE_SIZE;
-    
-    /* Loop every page on the system */
-    for (i = 0; i <= MmPageArraySize; i++)
-    {                
-        /* Check if it's part of RAM */
-        if (MiIsPfnRam(BIOSMemoryMap, AddressRangeCount, i))
+    /* Loop the memory descriptors */   
+    for (NextEntry = KeLoaderBlock->MemoryDescriptorListHead.Flink;
+         NextEntry != &KeLoaderBlock->MemoryDescriptorListHead;
+         NextEntry = NextEntry->Flink)
+    {
+        /* Get the descriptor */
+        Md = CONTAINING_RECORD(NextEntry,
+                               MEMORY_ALLOCATION_DESCRIPTOR,
+                               ListEntry);
+        
+        /* Skip bad memory */
+        if ((Md->MemoryType == LoaderFirmwarePermanent) ||
+            (Md->MemoryType == LoaderBBTMemory) ||
+            (Md->MemoryType == LoaderSpecialMemory) ||
+            (Md->MemoryType == LoaderBad))
         {
-            /* Apply assumptions that all computers are built the same way */
-            if (i == 0)
+            /* Loop every page part of the block but valid in the database */
+            for (i = 0; i < Md->PageCount; i++)
             {
-                /* Page 0 is reserved for the IVT */
-                MmPageArray[i] = UsedPage;
+                /* Skip memory we ignore completely */
+                if ((Md->BasePage + i) > MmPageArraySize) break;
+                
+                /* These are pages reserved by the BIOS/ROMs */
+                MmPageArray[Md->BasePage + i].Flags.Type = MM_PHYSICAL_PAGE_BIOS;
+                MmPageArray[Md->BasePage + i].Flags.Consumer = MC_NPPOOL;
                 MmStats.NrSystemPages++;
             }
-            else if (i == 1)
+        }
+        else if ((Md->MemoryType == LoaderFree) ||
+                 (Md->MemoryType == LoaderLoadedProgram) ||
+                 (Md->MemoryType == LoaderFirmwareTemporary) ||
+                 (Md->MemoryType == LoaderOsloaderStack))
+        {
+            /* Loop every page part of the block */
+            for (i = 0; i < Md->PageCount; i++)
             {
-                /* Page 1 is reserved for the PCR */
-                MmPageArray[i] = UsedPage;
-                MmStats.NrSystemPages++;
-            }
-            else if (i == 2)
-            {
-                /* Page 2 is reserved for the KUSER_SHARED_DATA */
-                MmPageArray[i] = UsedPage;
-                MmStats.NrSystemPages++;
-            }
-            else if ((i >= PdePageStart) && (i < PdePageEnd))
-            {
-                /* These pages contain the initial FreeLDR PDEs */
-                MmPageArray[i] = UsedPage;
-                MmStats.NrSystemPages++;
-            }
-            else if ((i >= VideoPageStart) && (i < VideoPageEnd))
-            {
-                /*
-                 * These pages are usually for the Video ROM BIOS.
-                 * Supposedly anyway. We'll simply ignore the fact that
-                 * many systems have this area somewhere else entirely
-                 * (which we'll assume to be "free" a couple of lines below)
-                 */
-                MmPageArray[i].Flags.Type = MM_PHYSICAL_PAGE_BIOS;
-                MmPageArray[i].Flags.Consumer = MC_NPPOOL;
-                MmStats.NrSystemPages++;
-            }
-            else if ((i >= KernelPageStart) && (i < KernelPageEnd))
-            {
-                /* These are pages beloning to the kernel */
-                MmPageArray[i] = UsedPage;
-                MmStats.NrSystemPages++;
-            }
-            else if (i >= (MiFreeDescriptor->BasePage + MiFreeDescriptor->PageCount))
-            {
-                /* These are pages we allocated above to hold the PFN DB */
-                MmPageArray[i] = UsedPage;
-                MmStats.NrSystemPages++;
-            }
-            else
-            {
-                /*
-                 * These are supposedly free pages.
-                 * By the way, not all of them are, some contain vital
-                 * FreeLDR data, but since we choose to ignore the Memory
-                 * Descriptor List, why bother, right?
-                 */
-                MmPageArray[i].Flags.Type = MM_PHYSICAL_PAGE_FREE;
-                MmPageArray[i].ReferenceCount = 0;
+                /* Mark it as a free page */
+                MmPageArray[Md->BasePage + i].Flags.Type = MM_PHYSICAL_PAGE_FREE;
                 InsertTailList(&FreeUnzeroedPageListHead,
-                               &MmPageArray[i].ListEntry);
+                               &MmPageArray[Md->BasePage + i].ListEntry);
                 UnzeroedPageCount++;
-                MmStats.NrFreePages++;
+                MmStats.NrFreePages++;   
             }
         }
         else
         {
-            /* These are pages reserved by the BIOS/ROMs */
-            MmPageArray[i].Flags.Type = MM_PHYSICAL_PAGE_BIOS;
-            MmPageArray[i].Flags.Consumer = MC_NPPOOL;
-            MmStats.NrSystemPages++;
+            /* Loop every page part of the block */
+            for (i = 0; i < Md->PageCount; i++)
+            {
+                /* Everything else is used memory */
+                MmPageArray[Md->BasePage + i] = UsedPage;
+                MmStats.NrSystemPages++;
+            }
         }
     }
     
+    /* Finally handle the pages describing the PFN database themselves */
+    for (i = (MiFreeDescriptor->BasePage + MiFreeDescriptor->PageCount);
+         i <= MmPageArraySize;
+         i++)
+    {
+        /* Mark them as used kernel memory */
+        MmPageArray[i] = UsedPage;
+        MmStats.NrSystemPages++;
+    }
+
     KeInitializeEvent(&ZeroPageThreadEvent, NotificationEvent, TRUE);
     
     DPRINT("Pages: %x %x\n", MmStats.NrFreePages, MmStats.NrSystemPages);

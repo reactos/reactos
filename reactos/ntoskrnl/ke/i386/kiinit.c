@@ -537,7 +537,7 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
     ((PETHREAD)InitThread)->ThreadsProcess = (PEPROCESS)InitProcess;
 
     /* Initialize Kernel Memory Address Space */
-    MmInit1(KeMemoryMap, KeMemoryMapRangeCount);
+    MmInit1();
 
     /* Set basic CPU Features that user mode can read */
     SharedUserData->ProcessorFeatures[PF_MMX_INSTRUCTIONS_AVAILABLE] =

@@ -29,11 +29,6 @@ typedef struct _BIOS_MEMORY_DESCRIPTOR
 
 /* GLOBALS *******************************************************************/
 
-/* FreeLDR Memory Data */
-ULONG_PTR MmFreeLdrFirstKrnlPhysAddr, MmFreeLdrLastKrnlPhysAddr;
-ULONG_PTR MmFreeLdrLastKernelAddress;
-ULONG MmFreeLdrPageDirectoryEnd;
-
 /* FreeLDR Loader Data */
 PROS_LOADER_PARAMETER_BLOCK KeRosLoaderBlock;
 BOOLEAN AcpiTableDetected;
@@ -925,8 +920,6 @@ KiRosFrldrLpbToNtLpb(IN PROS_LOADER_PARAMETER_BLOCK RosLoaderBlock,
 
     /* First get some kernel-loader globals */
     AcpiTableDetected = (RosLoaderBlock->Flags & MB_FLAGS_ACPI_TABLE) ? TRUE : FALSE;
-    MmFreeLdrPageDirectoryEnd = RosLoaderBlock->PageDirectoryEnd;
-    if (!MmFreeLdrPageDirectoryEnd) MmFreeLdrPageDirectoryEnd = 0x40000;
 
     /* Set the NT Loader block and initialize it */
     *NtLoaderBlock = KeLoaderBlock = LoaderBlock = &BldrLoaderBlock;
@@ -1288,22 +1281,6 @@ KiRosPrepareForSystemStartup(IN ULONG Dummy,
 
     /* Save pointer to ROS Block */
     KeRosLoaderBlock = LoaderBlock;
-    MmFreeLdrLastKernelAddress = PAGE_ROUND_UP(KeRosLoaderBlock->
-                                               ModsAddr[KeRosLoaderBlock->
-                                                        ModsCount - 1].
-                                               ModEnd);
-#if defined(_M_PPC)
-    MmFreeLdrFirstKrnlPhysAddr = KeRosLoaderBlock->ModsAddr[0].ModStart;
-    MmFreeLdrLastKrnlPhysAddr = MmFreeLdrLastKernelAddress;
-    MmFreeLdrLastKernelAddress = 0x80800000 + KeRosLoaderBlock->ModsAddr[KeRosLoaderBlock->ModsCount - 1].ModEnd - MmFreeLdrFirstKrnlPhysAddr;
-    DbgPrint("kernel phys = %08x-%08x\n", 
-             MmFreeLdrFirstKrnlPhysAddr,
-             MmFreeLdrLastKrnlPhysAddr);
-#else
-    MmFreeLdrFirstKrnlPhysAddr = KeRosLoaderBlock->ModsAddr[0].ModStart -
-                                 KSEG0_BASE;
-    MmFreeLdrLastKrnlPhysAddr = MmFreeLdrLastKernelAddress - KSEG0_BASE;
-#endif
 
     /* Save memory manager data */
     KeMemoryMapRangeCount = 0;

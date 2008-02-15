@@ -277,23 +277,6 @@ MiDbgKernelLayout(VOID)
 
 VOID
 NTAPI
-MiDbgDumpBiosMap(IN PADDRESS_RANGE BIOSMemoryMap,
-                 IN ULONG AddressRangeCount)
-{
-    ULONG i;
-    
-    DPRINT1("Base\t\tLength\t\tType\n");
-    for (i = 0; i < AddressRangeCount; i++)
-    {
-        DPRINT1("%08lX\t%08lX\t%d\n",
-                BIOSMemoryMap[i].BaseAddrLow,
-                BIOSMemoryMap[i].LengthLow,
-                BIOSMemoryMap[i].Type);
-    }
-}
-
-VOID
-NTAPI
 MiDbgDumpMemoryDescriptors(VOID)
 {
     PLIST_ENTRY NextEntry;
@@ -342,14 +325,12 @@ MiGetLastKernelAddress(VOID)
 VOID
 INIT_FUNCTION
 NTAPI
-MmInit1(IN PADDRESS_RANGE BIOSMemoryMap,
-        IN ULONG AddressRangeCount)
+MmInit1(VOID)
 {
     PLDR_DATA_TABLE_ENTRY LdrEntry;
     
     /* Dump memory descriptors */
     if (MiDbgEnableMdDump) MiDbgDumpMemoryDescriptors();
-    if (MiDbgEnableMdDump) MiDbgDumpBiosMap(BIOSMemoryMap, AddressRangeCount);
 
     /* Set the page directory */
     PsGetCurrentProcess()->Pcb.DirectoryTableBase.LowPart = (ULONG)MmGetPageDirectory();
@@ -419,7 +400,7 @@ MmInit1(IN PADDRESS_RANGE BIOSMemoryMap,
     MiDbgKernelLayout();
     
     /* Initialize the page list */
-    MmInitializePageList(BIOSMemoryMap, AddressRangeCount);
+    MmInitializePageList();
     
     /* Unmap low memory */
     MmDeletePageTable(NULL, 0);
