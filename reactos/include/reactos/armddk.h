@@ -18,6 +18,7 @@
 // FIXME: mmtypes.h?
 //
 #define KIPCR                   0xFFFFF000
+#define KI_USER_SHARED_DATA     0xFFFFE000
 #define USPCR                   0x7FFF0000
 #define PCR                     ((volatile KPCR * const)USPCR)
 #define USERPCR                 ((volatile KPCR * const)KIPCR)
@@ -30,7 +31,12 @@
 //
 // Just read it from the PCR
 //
-#define KeGetCurrentProcessorNumber() ((ULONG)(PCR->Number))
+#define KeGetCurrentProcessorNumber()  PCR->Number
+#define KeGetCurrentIrql()             PCR->CurrentIrql
+#define _KeGetCurrentThread()           PCR->CurrentThread
+#define _KeGetPreviousMode()            PCR->CurrentThread->PreviousMode
+#define _KeIsExecutingDpc()             (PCR->DpcRoutineActive != 0)
+#define KeGetDcacheFillSize()          PCR->DcacheFillSize
 
 //
 // Stub

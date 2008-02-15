@@ -56,11 +56,6 @@ Author:
 #define THREAD_ALERT_INCREMENT          2
 
 //
-// User Shared Data in Kernel-Mode
-//
-#define KI_USER_SHARED_DATA             0xffdf0000
-
-//
 // Physical memory offset of KUSER_SHARED_DATA
 //
 #define KI_USER_SHARED_DATA_PHYSICAL    0x41000

@@ -16,7 +16,7 @@ LdrPEGetExportByName(
 );
 
 extern BOOLEAN FrLdrLoadDriver(PCHAR szFileName, INT nPos);
-PVOID AnsiData, OemData, UnicodeData;
+PVOID AnsiData, OemData, UnicodeData, RegistryData;
 /* MODULE MANAGEMENT **********************************************************/
 
 PLOADER_MODULE
@@ -109,6 +109,11 @@ FrLdrLoadModule(FILE *ModuleImage,
     else if (!_stricmp(NameBuffer, "casemap.nls"))
     {
         UnicodeData = (PVOID)NextModuleBase;
+    }
+    else if (!(_stricmp(NameBuffer, "system")) ||
+             !(_stricmp(NameBuffer, "system.hiv")))
+    {
+        RegistryData = (PVOID)NextModuleBase;
     }
 
     /* Load the file image */

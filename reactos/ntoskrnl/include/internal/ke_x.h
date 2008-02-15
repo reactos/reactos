@@ -1526,6 +1526,7 @@ KiComputeNewPriority(IN PKTHREAD Thread,
     return Priority;
 }
 
+#ifndef _M_ARM
 PRKTHREAD
 FORCEINLINE
 KeGetCurrentThread(VOID)
@@ -1546,6 +1547,7 @@ KeGetPreviousMode(VOID)
     /* Return the current mode */
     return KeGetCurrentThread()->PreviousMode;
 }
+#endif
 
 VOID
 FORCEINLINE

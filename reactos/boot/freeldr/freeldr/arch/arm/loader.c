@@ -28,7 +28,7 @@ extern ARM_TRANSLATION_TABLE ArmTranslationTable;
 extern ARM_COARSE_PAGE_TABLE BootTranslationTable, KernelTranslationTable;
 extern ROS_KERNEL_ENTRY_POINT KernelEntryPoint;
 extern ULONG_PTR KernelBase;
-extern ULONG_PTR AnsiData, OemData, UnicodeData;
+extern ULONG_PTR AnsiData, OemData, UnicodeData, RegistryData;
 
 ULONG SizeBits[] =
 {
@@ -290,8 +290,9 @@ ArmPrepareForReactOS(IN BOOLEAN Setup)
     //
     
     //
-    // TODO: Setup registry data
+    // Setup registry data
     //
+    ArmLoaderBlock->RegistryBase = (PVOID)((ULONG_PTR)RegistryData | KSEG0_BASE);
     
     //
     // TODO: Setup ARC Hardware tree data

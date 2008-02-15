@@ -753,33 +753,39 @@ KeAcquireSpinLockRaiseToSynch(
 }
 
 
+/*
+ * @implemented
+ */
 VOID
 FASTCALL
-KeAcquireInStackQueuedSpinLock(
-    IN PKSPIN_LOCK SpinLock,
-    IN PKLOCK_QUEUE_HANDLE LockHandle
-    )
+KeAcquireInStackQueuedSpinLock(IN PKSPIN_LOCK SpinLock,
+                               IN PKLOCK_QUEUE_HANDLE LockHandle)
 {
-  UNIMPLEMENTED;
+    /* Simply raise to dispatch */
+    LockHandle->OldIrql = KeSwapIrql(DISPATCH_LEVEL);
 }
 
+/*
+ * @implemented
+ */
 VOID
 FASTCALL
-KeAcquireInStackQueuedSpinLockRaiseToSynch(
-    IN PKSPIN_LOCK SpinLock,
-    IN PKLOCK_QUEUE_HANDLE LockHandle
-    )
+KeAcquireInStackQueuedSpinLockRaiseToSynch(IN PKSPIN_LOCK SpinLock,
+                                           IN PKLOCK_QUEUE_HANDLE LockHandle)
 {
-   UNIMPLEMENTED;
+    /* Simply raise to synch */
+    LockHandle->OldIrql = KeSwapIrql(SYNCH_LEVEL);
 }
 
+/*
+ * @implemented
+ */
 VOID
 FASTCALL
-KeReleaseInStackQueuedSpinLock(
-    IN PKLOCK_QUEUE_HANDLE LockHandle
-    )
+KeReleaseInStackQueuedSpinLock(IN PKLOCK_QUEUE_HANDLE LockHandle)
 {
-  UNIMPLEMENTED;
+    /* Simply lower IRQL back */
+    KeSwapIrql(LockHandle->OldIrql);
 }
 
 VOID

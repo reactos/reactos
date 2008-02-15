@@ -5459,6 +5459,20 @@ KeGetCurrentProcessorNumber(VOID)
 #error Unknown compiler
 #endif
 }
+    
+NTHALAPI
+KIRQL
+DDKAPI
+KeGetCurrentIrql(
+    VOID);
+    
+NTKERNELAPI
+PRKTHREAD
+NTAPI
+KeGetCurrentThread(
+    VOID);
+    
+#define KI_USER_SHARED_DATA               0xffdf0000
 
 #elif defined(__x86_64__)
 
@@ -5580,6 +5594,8 @@ KeGetCurrentProcessorNumber(VOID)
 #define PAGE_SIZE                         0x1000
 #define PAGE_SHIFT                        12L
 
+#define SharedUserData                    ((KUSER_SHARED_DATA * CONST) KI_USER_SHARED_DATA)
+    
 extern NTKERNELAPI PVOID MmHighestUserAddress;
 extern NTKERNELAPI PVOID MmSystemRangeStart;
 extern NTKERNELAPI ULONG_PTR MmUserProbeAddress;
@@ -5593,8 +5609,6 @@ extern NTKERNELAPI ULONG_PTR MmUserProbeAddress;
 #define MM_KSEG0_BASE       MM_SYSTEM_RANGE_START
 #define MM_SYSTEM_SPACE_END 0xFFFFFFFF
 
-#define KI_USER_SHARED_DATA               0xffdf0000
-#define SharedUserData                    ((KUSER_SHARED_DATA * CONST) KI_USER_SHARED_DATA)
 
 #define EFLAG_SIGN                        0x8000
 #define EFLAG_ZERO                        0x4000
@@ -5651,11 +5665,7 @@ typedef struct _PCIBUSDATA
     PVOID Reserved[4];
 } PCIBUSDATA, *PPCIBUSDATA;
 
-NTHALAPI
-KIRQL
-DDKAPI
-KeGetCurrentIrql(
-  VOID);
+
 
 #if !defined(__INTERLOCKED_DECLARED)
 #define __INTERLOCKED_DECLARED
@@ -9086,12 +9096,6 @@ NTHALAPI
 VOID
 NTAPI
 KeFlushWriteBuffer(VOID);
-
-NTKERNELAPI
-PRKTHREAD
-NTAPI
-KeGetCurrentThread(
-  VOID);
 
 NTKERNELAPI
 ULONG
