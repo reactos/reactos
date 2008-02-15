@@ -348,7 +348,7 @@ MmInit1(IN PADDRESS_RANGE BIOSMemoryMap,
     PLDR_DATA_TABLE_ENTRY LdrEntry;
     
     /* Dump memory descriptors */
-    if (TRUE) MiDbgDumpMemoryDescriptors();
+    if (MiDbgEnableMdDump) MiDbgDumpMemoryDescriptors();
     if (MiDbgEnableMdDump) MiDbgDumpBiosMap(BIOSMemoryMap, AddressRangeCount);
 
     /* Set the page directory */

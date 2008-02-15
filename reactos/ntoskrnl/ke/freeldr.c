@@ -906,7 +906,7 @@ KiRosFrldrLpbToNtLpb(IN PROS_LOADER_PARAMETER_BLOCK RosLoaderBlock,
 {
     PLOADER_PARAMETER_BLOCK LoaderBlock;
     PLDR_DATA_TABLE_ENTRY LdrEntry;
-    PLOADER_MODULE RosEntry;
+    PLOADER_MODULE RosEntry = NULL;
     ULONG i, j, ModSize;
     PVOID ModStart;
     PCHAR DriverName;
@@ -1147,6 +1147,14 @@ KiRosFrldrLpbToNtLpb(IN PROS_LOADER_PARAMETER_BLOCK RosLoaderBlock,
         InsertTailList(&LoaderBlock->LoadOrderListHead,
                        &LdrEntry->InLoadOrderLinks);
     }
+    
+    /* Now mark the remainder of the FreeLDR 6MB area as "in use" */
+    KiRosAllocateNtDescriptor(LoaderMemoryData,
+                              KERNEL_DESCRIPTOR_PAGE(RosEntry->ModEnd),
+                              KERNEL_DESCRIPTOR_PAGE((0x80800000 + 0x600000)) -
+                              KERNEL_DESCRIPTOR_PAGE(RosEntry->ModEnd),
+                              0,
+                              &Base);
 
     /* Setup command line */
     LoaderBlock->LoadOptions = BldrCommandLine;
