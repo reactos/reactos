@@ -53,6 +53,7 @@ ULONG MmBootImageSize;
 ULONG MmNumberOfPhysicalPages, MmHighestPhysicalPage, MmLowestPhysicalPage;
 ULONG_PTR MiKSeg0Start, MiKSeg0End;
 PVOID MmPfnDatabase;
+ULONG_PTR MmPfnDatabaseEnd;
 PMEMORY_ALLOCATION_DESCRIPTOR MiFreeDescriptor;
 extern KMUTANT MmSystemLoadLock;
 BOOLEAN MiDbgEnableMdDump =
@@ -257,14 +258,14 @@ MiDbgKernelLayout(VOID)
             KSEG0_BASE, MiKSeg0Start,
             "Undefined region");
     DPRINT1("0x%p - 0x%p\t%s\n",
-            MiKSeg0Start, MmPfnDatabase,
+            MiKSeg0Start, MiKSeg0End,
             "FreeLDR Kernel mapping region");
     DPRINT1("0x%p - 0x%p\t%s\n",
-            MmPfnDatabase, MiKSeg0End,
+            MmPfnDatabase, MmPfnDatabaseEnd,
             "PFN Database region");
-    if (MiKSeg0End != (ULONG_PTR)MiNonPagedPoolStart)
+    if (MmPfnDatabaseEnd != (ULONG_PTR)MiNonPagedPoolStart)
     DPRINT1("0x%p - 0x%p\t%s\n",
-            MiKSeg0End, MiNonPagedPoolStart,
+            MmPfnDatabaseEnd, MiNonPagedPoolStart,
             "Remaining FreeLDR mapping");
     DPRINT1("0x%p - 0x%p\t%s\n",
              MiNonPagedPoolStart, (ULONG_PTR)MiNonPagedPoolStart + MiNonPagedPoolLength,
@@ -347,7 +348,7 @@ MmInit1(IN PADDRESS_RANGE BIOSMemoryMap,
     PLDR_DATA_TABLE_ENTRY LdrEntry;
     
     /* Dump memory descriptors */
-    if (MiDbgEnableMdDump) MiDbgDumpMemoryDescriptors();
+    if (TRUE) MiDbgDumpMemoryDescriptors();
     if (MiDbgEnableMdDump) MiDbgDumpBiosMap(BIOSMemoryMap, AddressRangeCount);
 
     /* Set the page directory */
@@ -386,8 +387,8 @@ MmInit1(IN PADDRESS_RANGE BIOSMemoryMap,
 
     /* We'll put the PFN array right after the loaded modules */
     MmPfnDatabase = (PVOID)MiKSeg0End;
-    MiKSeg0End += MmHighestPhysicalPage * sizeof(PHYSICAL_PAGE);
-    MiKSeg0End = PAGE_ROUND_UP(MiKSeg0End);
+    MmPfnDatabaseEnd = (ULONG_PTR)MmPfnDatabase + (MmHighestPhysicalPage * sizeof(PHYSICAL_PAGE));
+    MmPfnDatabaseEnd = PAGE_ROUND_UP(MmPfnDatabaseEnd);
     
     /*
      * FreeLDR maps 6MB starting at the kernel base address, followed by the
@@ -395,15 +396,15 @@ MmInit1(IN PADDRESS_RANGE BIOSMemoryMap,
      * then choose the end of the FreeLDR block. If it does go past the FreeLDR
      * allocation, then choose the next PAGE_SIZE boundary.
      */
-    if (MiKSeg0End < (MiKSeg0Start + 0x600000))
+    if ((ULONG_PTR)MmPfnDatabaseEnd < (MiKSeg0Start + 0x600000))
     {
         /* Use the first memory following FreeLDR's 6MB mapping */
-        MiNonPagedPoolStart = (PVOID)PAGE_ROUND_UP(MiKSeg0Start + 0x600000);
+        MiNonPagedPoolStart = (PVOID)((ULONG_PTR)MiKSeg0Start + 0x600000);
     }
     else
     {
         /* Use the next free available page */
-        MiNonPagedPoolStart = (PVOID)MiKSeg0End;
+        MiNonPagedPoolStart = (PVOID)MmPfnDatabaseEnd;
     }
     
     /* Length of non-paged pool */

@@ -356,6 +356,22 @@ MmInitializePageList(IN PADDRESS_RANGE BIOSMemoryMap,
     KernelPageStart = KernelStart / PAGE_SIZE;
     KernelPageEnd = KernelEnd / PAGE_SIZE;
     
+    // Glorious Hack:
+    // The kernel seems to crash if the region of memory that FreeLDR maps 
+    // (those evil 6MB) is not *entirely* marked "in use", even though only
+    // 3 or 4MB of it may actually be in use.
+    // This wasn't noticed before, because the PFN database pages which are
+    // *VIRTUALLY* continous after the kernel end were also marked as
+    // *PHYSICALLY* continous (even though they were allocated at the very far
+    // end of physical memory).
+    // 
+    // So we'll simply gobble up whatever is left of what FreeLDR mapped.
+    //
+    // PS. This is really sinister
+    //
+    KernelEnd += (KernelStart + 0x600000) - KernelEnd;
+    KernelPageEnd = KernelEnd / PAGE_SIZE;
+    
     /* Loop every page on the system */
     for (i = 0; i <= MmPageArraySize; i++)
     {                
@@ -437,6 +453,7 @@ MmInitializePageList(IN PADDRESS_RANGE BIOSMemoryMap,
     
     KeInitializeEvent(&ZeroPageThreadEvent, NotificationEvent, TRUE);
     
+    DPRINT("Pages: %x %x\n", MmStats.NrFreePages, MmStats.NrSystemPages);
     MmStats.NrTotalPages = MmStats.NrFreePages + MmStats.NrSystemPages + MmStats.NrUserPages;
     MmInitializeBalancer(MmStats.NrFreePages, MmStats.NrSystemPages);
 }
