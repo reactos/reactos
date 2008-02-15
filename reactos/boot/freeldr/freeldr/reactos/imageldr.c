@@ -16,7 +16,7 @@ LdrPEGetExportByName(
 );
 
 extern BOOLEAN FrLdrLoadDriver(PCHAR szFileName, INT nPos);
-
+PVOID AnsiData, OemData, UnicodeData;
 /* MODULE MANAGEMENT **********************************************************/
 
 PLOADER_MODULE
@@ -97,6 +97,20 @@ FrLdrLoadModule(FILE *ModuleImage,
     strcpy(NameBuffer, ModuleName);
     ModuleData->String = (ULONG_PTR)NameBuffer;
     
+    /* NLS detection for NT Loader Block */
+    if (!_stricmp(NameBuffer, "ansi.nls"))
+    {
+        AnsiData = (PVOID)NextModuleBase;
+    }
+    else if (!_stricmp(NameBuffer, "oem.nls"))
+    {
+        OemData = (PVOID)NextModuleBase;
+    }
+    else if (!_stricmp(NameBuffer, "casemap.nls"))
+    {
+        UnicodeData = (PVOID)NextModuleBase;
+    }
+
     /* Load the file image */
     FsReadFile(ModuleImage, LocalModuleSize, NULL, (PVOID)NextModuleBase);
     

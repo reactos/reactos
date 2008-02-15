@@ -22,11 +22,13 @@ CHAR ArmArcBootPath[64];
 CHAR ArmArcHalPath[64];
 CHAR ArmNtHalPath[64];
 CHAR ArmNtBootPath[64];
+PNLS_DATA_BLOCK ArmNlsDataBlock;
 PLOADER_PARAMETER_EXTENSION ArmExtension;
 extern ARM_TRANSLATION_TABLE ArmTranslationTable;
 extern ARM_COARSE_PAGE_TABLE BootTranslationTable, KernelTranslationTable;
 extern ROS_KERNEL_ENTRY_POINT KernelEntryPoint;
 extern ULONG_PTR KernelBase;
+extern ULONG_PTR AnsiData, OemData, UnicodeData;
 
 ULONG SizeBits[] =
 {
@@ -142,8 +144,6 @@ ArmSetupPageDirectory(VOID)
     // Now create the template PTE for the coarse page tables for the next 6MB
     //
     Pte.L1.Coarse.BaseAddress = (ULONG)KernelTable >> CPT_SHIFT;
-    TuiPrintf("Coarse Table at: %x\n", KernelTable);
-    TuiPrintf("Coarse Table at: %x\n", Pte.L1.Coarse.BaseAddress);
 
     //
     // Map 0x00800000 - 0x00DFFFFF to 0x80800000 - 0x80DFFFFF
@@ -200,7 +200,6 @@ ArmSetupPageDirectory(VOID)
     // Now create the template PTE for the pages mapping the next 6MB
     //
     Pte.L2.Small.BaseAddress = (ULONG)KERNEL_BASE_PHYS >> PTE_SHIFT;
-    TuiPrintf("First Kernel PFN at: %x\n", Pte.L2.Small.BaseAddress);
     
     //
     // Loop each kernel coarse page table (i).
@@ -225,7 +224,6 @@ ArmSetupPageDirectory(VOID)
         // Next iteration
         //
         KernelTable++;
-        TuiPrintf("Coarse Table at: %x\n", KernelTable);
     }
 }
 
@@ -300,16 +298,26 @@ ArmPrepareForReactOS(IN BOOLEAN Setup)
     //
     
     //
-    // TODO: Setup NLS data
+    // Setup NLS data
     //
+    ArmNlsDataBlock = MmAllocateMemoryWithType(sizeof(NLS_DATA_BLOCK),
+                                               LoaderOsloaderHeap);
+    ArmLoaderBlock->NlsData = ArmNlsDataBlock;
+    ArmLoaderBlock->NlsData->AnsiCodePageData = (PVOID)(AnsiData | KSEG0_BASE);
+    ArmLoaderBlock->NlsData->OemCodePageData = (PVOID)(OemData | KSEG0_BASE);
+    ArmLoaderBlock->NlsData->UnicodeCodePageData = (PVOID)(UnicodeData | KSEG0_BASE);
+    ArmLoaderBlock->NlsData = (PVOID)((ULONG_PTR)ArmLoaderBlock->NlsData | KSEG0_BASE);
     
     //
     // TODO: Setup boot-driver data
     //
     
     //
-    // TODO: Setup extension parameters
+    // Setup extension parameters
     //
+    ArmExtension->Size = sizeof(LOADER_PARAMETER_EXTENSION);
+    ArmExtension->MajorVersion = 5;
+    ArmExtension->MinorVersion = 2;
     
     //
     // Make a copy of the command line
