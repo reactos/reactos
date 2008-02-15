@@ -237,6 +237,20 @@ MmGetContinuousPages(ULONG NumberOfBytes,
    return 0;
 }
 
+PFN_TYPE
+NTAPI
+MmAllocEarlyPage(VOID)
+{
+    PFN_TYPE Pfn;
+    
+    /* Use one of our highest usable pages */
+    Pfn = MiFreeDescriptor->BasePage + MiFreeDescriptor->PageCount - 1;
+    MiFreeDescriptor->PageCount--;
+    
+    /* Return it */
+    return Pfn;
+}
+
 VOID
 NTAPI
 MmInitializePageList(VOID)
@@ -269,8 +283,7 @@ MmInitializePageList(VOID)
         if (!MmIsPagePresent(NULL, Address))
         {
             /* Use one of our highest usable pages */
-            Pfn = MiFreeDescriptor->BasePage + MiFreeDescriptor->PageCount - 1;
-            MiFreeDescriptor->PageCount--;
+            Pfn = MmAllocEarlyPage();
             
             /* Set the PFN */
             Status = MmCreateVirtualMappingForKernel(Address,
@@ -733,6 +746,14 @@ MmAllocPage(ULONG Consumer, SWAPENTRY SavedSwapEntry)
    {
       if (IsListEmpty(&FreeUnzeroedPageListHead))
       {
+         /* Check if this allocation is for the PFN DB itself */
+         if (MmStats.NrTotalPages == 0) 
+         {
+             /* Allocate an early page -- we'll account for it later */
+             KeReleaseSpinLock(&PageListLock, oldIrql);
+             return MmAllocEarlyPage();
+         }
+          
          DPRINT1("MmAllocPage(): Out of memory\n");
          KeReleaseSpinLock(&PageListLock, oldIrql);
          return 0;

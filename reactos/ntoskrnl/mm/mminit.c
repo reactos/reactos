@@ -351,8 +351,7 @@ MmInit1(VOID)
     
     /* Count RAM */
     MiCountFreePagesInLoaderBlock(KeLoaderBlock);
-    MmStats.NrTotalPages = MmNumberOfPhysicalPages;
-    DbgPrint("Used memory %dKb\n", (MmStats.NrTotalPages * PAGE_SIZE) / 1024);
+    DbgPrint("Used memory %dKb\n", (MmNumberOfPhysicalPages * PAGE_SIZE) / 1024);
     
     /* Initialize the kernel address space */
     MmInitializeKernelAddressSpace();
