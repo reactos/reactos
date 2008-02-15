@@ -34,11 +34,8 @@ INT_PTR CALLBACK    ApplicationPageWndProc(HWND hDlg, UINT message, WPARAM wPara
 void                RefreshApplicationPage(void);
 void                UpdateApplicationListControlViewSetting(void);
 
-void                ApplicationPage_OnViewLargeIcons(void);
-void                ApplicationPage_OnViewSmallIcons(void);
-void                ApplicationPage_OnViewDetails(void);
-void                ApplicationPage_OnWindowsTileHorizontally(void);
-void                ApplicationPage_OnWindowsTileVertically(void);
+void                ApplicationPage_OnView(DWORD);
+void                ApplicationPage_OnWindowsTile(DWORD);
 void                ApplicationPage_OnWindowsMinimize(void);
 void                ApplicationPage_OnWindowsMaximize(void);
 void                ApplicationPage_OnWindowsCascade(void);

@@ -413,7 +413,6 @@ void ProcessPageShowContextMenu(DWORD dwProcessId)
     WCHAR        strDebugger[260];
     DWORD        dwDebuggerSize;
     HKEY         hKey;
-    UINT         Idx;
 
     memset(&si, 0, sizeof(SYSTEM_INFO));
 
@@ -460,9 +459,7 @@ void ProcessPageShowContextMenu(DWORD dwProcessId)
         dwDebuggerSize = 260;
         if (RegQueryValueExW(hKey, L"Debugger", NULL, NULL, (LPBYTE)strDebugger, &dwDebuggerSize) == ERROR_SUCCESS)
         {
-            for (Idx=0; Idx<wcslen(strDebugger); Idx++)
-                strDebugger[Idx] = toupper(strDebugger[Idx]);
-
+            CharUpper(strDebugger);
             if (wcsstr(strDebugger, L"DRWTSN32"))
                 EnableMenuItem(hSubMenu, ID_PROCESS_PAGE_DEBUG, MF_BYCOMMAND|MF_DISABLED|MF_GRAYED);
         }

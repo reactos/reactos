@@ -137,13 +137,9 @@ TaskManagerWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
             TaskManager_OnRestoreMainWindow();
             break;
         case ID_VIEW_LARGE:
-            ApplicationPage_OnViewLargeIcons();
-            break;
         case ID_VIEW_SMALL:
-            ApplicationPage_OnViewSmallIcons();
-            break;
         case ID_VIEW_DETAILS:
-            ApplicationPage_OnViewDetails();
+            ApplicationPage_OnView(LOWORD(wParam));
             break;
         case ID_VIEW_SHOWKERNELTIMES:
             PerformancePage_OnViewShowKernelTimes();
@@ -155,16 +151,10 @@ TaskManagerWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
             PerformancePage_OnViewCPUHistoryOneGraphPerCPU();
             break;
         case ID_VIEW_UPDATESPEED_HIGH:
-            TaskManager_OnViewUpdateSpeedHigh();
-            break;
         case ID_VIEW_UPDATESPEED_NORMAL:
-            TaskManager_OnViewUpdateSpeedNormal();
-            break;
         case ID_VIEW_UPDATESPEED_LOW:
-            TaskManager_OnViewUpdateSpeedLow();
-            break;
         case ID_VIEW_UPDATESPEED_PAUSED:
-            TaskManager_OnViewUpdateSpeedPaused();
+            TaskManager_OnViewUpdateSpeed(LOWORD(wParam));
             break;
         case ID_VIEW_SELECTCOLUMNS:
             ProcessPage_OnViewSelectColumns();
@@ -173,10 +163,10 @@ TaskManagerWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
             PostMessageW(hDlg, WM_TIMER, 0, 0);
             break;
         case ID_WINDOWS_TILEHORIZONTALLY:
-            ApplicationPage_OnWindowsTileHorizontally();
+            ApplicationPage_OnWindowsTile(MDITILE_HORIZONTAL);
             break;
         case ID_WINDOWS_TILEVERTICALLY:
-            ApplicationPage_OnWindowsTileVertically();
+            ApplicationPage_OnWindowsTile(MDITILE_VERTICAL);
             break;
         case ID_WINDOWS_MINIMIZE:
             ApplicationPage_OnWindowsMinimize();
@@ -413,6 +403,22 @@ void Draw3dRect2(HDC hDC, LPRECT lpRect, COLORREF clrTopLeft, COLORREF clrBottom
         lpRect->bottom - lpRect->top, clrTopLeft, clrBottomRight);
 }
 
+static void SetUpdateSpeed(HWND hWnd)
+{
+    /* Setup update speed (pause=fall down) */
+    switch (TaskManagerSettings.UpdateSpeed) {
+    case ID_VIEW_UPDATESPEED_HIGH:
+        SetTimer(hWnd, 1, 1000, NULL);
+        break;
+    case ID_VIEW_UPDATESPEED_NORMAL:
+        SetTimer(hWnd, 1, 2000, NULL);
+        break;
+    case ID_VIEW_UPDATESPEED_LOW:
+        SetTimer(hWnd, 1, 4000, NULL);
+        break;
+    }
+}
+
 BOOL OnCreate(HWND hWnd)
 {
     HMENU   hMenu;
@@ -537,26 +543,15 @@ BOOL OnCreate(HWND hWnd)
     else
         CheckMenuItem(hEditMenu, ID_OPTIONS_SHOW16BITTASKS, MF_BYCOMMAND|MF_UNCHECKED);
 
-    if (TaskManagerSettings.View_LargeIcons)
-        CheckMenuRadioItem(hViewMenu, ID_VIEW_LARGE, ID_VIEW_DETAILS, ID_VIEW_LARGE, MF_BYCOMMAND);
-    else if (TaskManagerSettings.View_SmallIcons)
-        CheckMenuRadioItem(hViewMenu, ID_VIEW_LARGE, ID_VIEW_DETAILS, ID_VIEW_SMALL, MF_BYCOMMAND);
-    else
-        CheckMenuRadioItem(hViewMenu, ID_VIEW_LARGE, ID_VIEW_DETAILS, ID_VIEW_DETAILS, MF_BYCOMMAND);
+    /* Set the view mode */
+    CheckMenuRadioItem(hViewMenu, ID_VIEW_LARGE, ID_VIEW_DETAILS, TaskManagerSettings.ViewMode, MF_BYCOMMAND);
 
     if (TaskManagerSettings.ShowKernelTimes)
         CheckMenuItem(hViewMenu, ID_VIEW_SHOWKERNELTIMES, MF_BYCOMMAND|MF_CHECKED);
     else
         CheckMenuItem(hViewMenu, ID_VIEW_SHOWKERNELTIMES, MF_BYCOMMAND|MF_UNCHECKED);
 
-    if (TaskManagerSettings.UpdateSpeed == 1)
-        CheckMenuRadioItem(hUpdateSpeedMenu, ID_VIEW_UPDATESPEED_HIGH, ID_VIEW_UPDATESPEED_PAUSED, ID_VIEW_UPDATESPEED_HIGH, MF_BYCOMMAND);
-    else if (TaskManagerSettings.UpdateSpeed == 2)
-        CheckMenuRadioItem(hUpdateSpeedMenu, ID_VIEW_UPDATESPEED_HIGH, ID_VIEW_UPDATESPEED_PAUSED, ID_VIEW_UPDATESPEED_NORMAL, MF_BYCOMMAND);
-    else if (TaskManagerSettings.UpdateSpeed == 4)
-        CheckMenuRadioItem(hUpdateSpeedMenu, ID_VIEW_UPDATESPEED_HIGH, ID_VIEW_UPDATESPEED_PAUSED, ID_VIEW_UPDATESPEED_LOW, MF_BYCOMMAND);
-    else
-        CheckMenuRadioItem(hUpdateSpeedMenu, ID_VIEW_UPDATESPEED_HIGH, ID_VIEW_UPDATESPEED_PAUSED, ID_VIEW_UPDATESPEED_PAUSED, MF_BYCOMMAND);
+    CheckMenuRadioItem(hUpdateSpeedMenu, ID_VIEW_UPDATESPEED_HIGH, ID_VIEW_UPDATESPEED_PAUSED, TaskManagerSettings.UpdateSpeed, MF_BYCOMMAND);
 
     if (TaskManagerSettings.CPUHistory_OneGraphPerCPU)
         CheckMenuRadioItem(hCPUHistoryMenu, ID_VIEW_CPUHISTORY_ONEGRAPHALL, ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU, ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU, MF_BYCOMMAND);
@@ -569,12 +564,8 @@ BOOL OnCreate(HWND hWnd)
     TabCtrl_SetCurFocus/*Sel*/(hTabWnd, 2);
     TabCtrl_SetCurFocus/*Sel*/(hTabWnd, nActivePage);
 
-    if (TaskManagerSettings.UpdateSpeed == 1)
-        SetTimer(hWnd, 1, 1000, NULL);
-    else if (TaskManagerSettings.UpdateSpeed == 2)
-        SetTimer(hWnd, 1, 2000, NULL);
-    else if (TaskManagerSettings.UpdateSpeed == 4)
-        SetTimer(hWnd, 1, 4000, NULL);
+    /* Setup update speed */
+    SetUpdateSpeed(hWnd);
 
     /*
      * Refresh the performance data
@@ -669,7 +660,7 @@ void OnSize( WPARAM nType, int cx, int cy )
 void LoadSettings(void)
 {
     HKEY   hKey;
-    WCHAR  szSubKey[] = L"Software\\ReactWare\\TaskManager";
+    WCHAR  szSubKey[] = L"Software\\ReactOS\\TaskManager";
     int    i;
     DWORD  dwSize;
 
@@ -690,12 +681,10 @@ void LoadSettings(void)
     TaskManagerSettings.Show16BitTasks = TRUE;
 
     /* Update speed settings */
-    TaskManagerSettings.UpdateSpeed = 2;
+    TaskManagerSettings.UpdateSpeed = ID_VIEW_UPDATESPEED_NORMAL;
 
     /* Applications page settings */
-    TaskManagerSettings.View_LargeIcons = FALSE;
-    TaskManagerSettings.View_SmallIcons = FALSE;
-    TaskManagerSettings.View_Details = TRUE;
+    TaskManagerSettings.ViewMode = ID_VIEW_DETAILS;
 
     /* Processes page settings */
     TaskManagerSettings.ShowProcessesFromAllUsers = FALSE; /* Server-only? */
@@ -735,8 +724,8 @@ void SaveSettings(void)
 {
     HKEY hKey;
     WCHAR szSubKey1[] = L"Software";
-    WCHAR szSubKey2[] = L"Software\\ReactWare";
-    WCHAR szSubKey3[] = L"Software\\ReactWare\\TaskManager";
+    WCHAR szSubKey2[] = L"Software\\ReactOS";
+    WCHAR szSubKey3[] = L"Software\\ReactOS\\TaskManager";
 
     /* Open (or create) the key */
     hKey = NULL;
@@ -819,7 +808,7 @@ void TaskManager_OnMenuSelect(HWND hWnd, UINT nItemID, UINT nFlags, HMENU hSysMe
     SendMessageW(hStatusWnd, SB_SETTEXT, 0, (LPARAM)str);
 }
 
-void TaskManager_OnViewUpdateSpeedHigh(void)
+void TaskManager_OnViewUpdateSpeed(DWORD dwSpeed)
 {
     HMENU  hMenu;
     HMENU  hViewMenu;
@@ -829,64 +818,17 @@ void TaskManager_OnViewUpdateSpeedHigh(void)
     hViewMenu = GetSubMenu(hMenu, 2);
     hUpdateSpeedMenu = GetSubMenu(hViewMenu, 1);
 
-    TaskManagerSettings.UpdateSpeed = 1;
-    CheckMenuRadioItem(hUpdateSpeedMenu, ID_VIEW_UPDATESPEED_HIGH, ID_VIEW_UPDATESPEED_PAUSED, ID_VIEW_UPDATESPEED_HIGH, MF_BYCOMMAND);
+    TaskManagerSettings.UpdateSpeed = dwSpeed;
+    CheckMenuRadioItem(hUpdateSpeedMenu, ID_VIEW_UPDATESPEED_HIGH, ID_VIEW_UPDATESPEED_PAUSED, dwSpeed, MF_BYCOMMAND);
 
     KillTimer(hMainWnd, 1);
-    SetTimer(hMainWnd, 1, 500, NULL);
-}
 
-void TaskManager_OnViewUpdateSpeedNormal(void)
-{
-    HMENU  hMenu;
-    HMENU  hViewMenu;
-    HMENU  hUpdateSpeedMenu;
-
-    hMenu = GetMenu(hMainWnd);
-    hViewMenu = GetSubMenu(hMenu, 2);
-    hUpdateSpeedMenu = GetSubMenu(hViewMenu, 1);
-
-    TaskManagerSettings.UpdateSpeed = 2;
-    CheckMenuRadioItem(hUpdateSpeedMenu, ID_VIEW_UPDATESPEED_HIGH, ID_VIEW_UPDATESPEED_PAUSED, ID_VIEW_UPDATESPEED_NORMAL, MF_BYCOMMAND);
-
-    KillTimer(hMainWnd, 1);
-    SetTimer(hMainWnd, 1, 2000, NULL);
-}
-
-void TaskManager_OnViewUpdateSpeedLow(void)
-{
-    HMENU  hMenu;
-    HMENU  hViewMenu;
-    HMENU  hUpdateSpeedMenu;
-
-    hMenu = GetMenu(hMainWnd);
-    hViewMenu = GetSubMenu(hMenu, 2);
-    hUpdateSpeedMenu = GetSubMenu(hViewMenu, 1);
-
-    TaskManagerSettings.UpdateSpeed = 4;
-    CheckMenuRadioItem(hUpdateSpeedMenu, ID_VIEW_UPDATESPEED_HIGH, ID_VIEW_UPDATESPEED_PAUSED, ID_VIEW_UPDATESPEED_LOW, MF_BYCOMMAND);
-
-    KillTimer(hMainWnd, 1);
-    SetTimer(hMainWnd, 1, 4000, NULL);
+    SetUpdateSpeed(hMainWnd);
 }
 
 void TaskManager_OnViewRefresh(void)
 {
     PostMessageW(hMainWnd, WM_TIMER, 0, 0);
-}
-
-void TaskManager_OnViewUpdateSpeedPaused(void)
-{
-    HMENU  hMenu;
-    HMENU  hViewMenu;
-    HMENU  hUpdateSpeedMenu;
-
-    hMenu = GetMenu(hMainWnd);
-    hViewMenu = GetSubMenu(hMenu, 2);
-    hUpdateSpeedMenu = GetSubMenu(hViewMenu, 1);
-    TaskManagerSettings.UpdateSpeed = 0;
-    CheckMenuRadioItem(hUpdateSpeedMenu, ID_VIEW_UPDATESPEED_HIGH, ID_VIEW_UPDATESPEED_PAUSED, ID_VIEW_UPDATESPEED_PAUSED, MF_BYCOMMAND);
-    KillTimer(hMainWnd, 1);
 }
 
 void TaskManager_OnTabWndSelChange(void)
@@ -933,12 +875,8 @@ void TaskManager_OnTabWndSelChange(void)
 
             DrawMenuBar(hMainWnd);
         }
-        if (TaskManagerSettings.View_LargeIcons)
-            CheckMenuRadioItem(hViewMenu, ID_VIEW_LARGE, ID_VIEW_DETAILS, ID_VIEW_LARGE, MF_BYCOMMAND);
-        else if (TaskManagerSettings.View_SmallIcons)
-            CheckMenuRadioItem(hViewMenu, ID_VIEW_LARGE, ID_VIEW_DETAILS, ID_VIEW_SMALL, MF_BYCOMMAND);
-        else
-            CheckMenuRadioItem(hViewMenu, ID_VIEW_LARGE, ID_VIEW_DETAILS, ID_VIEW_DETAILS, MF_BYCOMMAND);
+        CheckMenuRadioItem(hViewMenu, ID_VIEW_LARGE, ID_VIEW_DETAILS, TaskManagerSettings.ViewMode, MF_BYCOMMAND);
+
         /*
          * Give the application list control focus
          */

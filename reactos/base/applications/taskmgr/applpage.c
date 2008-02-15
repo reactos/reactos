@@ -1,7 +1,7 @@
 /*
  *  ReactOS Task Manager
  *
- *  applicationpage.cpp
+ *  applpage.c
  *
  *  Copyright (C) 1999 - 2001  Brian Palmer  <brianp@reactos.org>
  *                2005         Klemens Friedl <frik85@reactos.at>
@@ -196,18 +196,13 @@ void UpdateApplicationListControlViewSetting(void)
 {
     DWORD  dwStyle = GetWindowLongW(hApplicationPageListCtrl, GWL_STYLE);
 
-    dwStyle &= ~LVS_REPORT;
-    dwStyle &= ~LVS_ICON;
-    dwStyle &= ~LVS_LIST;
-    dwStyle &= ~LVS_SMALLICON;
+    dwStyle &= ~(LVS_REPORT | LVS_ICON | LVS_LIST | LVS_SMALLICON);
 
-    if (TaskManagerSettings.View_LargeIcons)
-        dwStyle |= LVS_ICON;
-    else if (TaskManagerSettings.View_SmallIcons)
-        dwStyle |= LVS_SMALLICON;
-    else
-        dwStyle |= LVS_REPORT;
-
+    switch (TaskManagerSettings.ViewMode) {
+    case ID_VIEW_LARGE:   dwStyle |= LVS_ICON; break;
+    case ID_VIEW_SMALL:   dwStyle |= LVS_SMALLICON; break;
+    case ID_VIEW_DETAILS: dwStyle |= LVS_REPORT; break;
+    }
     SetWindowLongW(hApplicationPageListCtrl, GWL_STYLE, dwStyle);
 
     RefreshApplicationPage();
@@ -265,7 +260,7 @@ BOOL CALLBACK EnumWindowsProc(HWND hWnd, LPARAM lParam)
     if (hWnd == hMainWnd)
         return TRUE;
 
-    bLargeIcon = TaskManagerSettings.View_LargeIcons ? TRUE : FALSE;
+    bLargeIcon = (TaskManagerSettings.ViewMode == ID_VIEW_LARGE);
 
     GetWindowTextW(hWnd, szText, 260); /* Get the window text */
 
@@ -521,13 +516,12 @@ void ApplicationPageOnNotify(WPARAM wParam, LPARAM lParam)
                 if (pAPLI->bHung)
                 {
                     LoadStringW( GetModuleHandleW(NULL), IDS_Not_Responding , szMsg, sizeof(szMsg) / sizeof(szMsg[0]));
-                    wcsncpy(pnmdi->item.pszText, szMsg, pnmdi->item.cchTextMax);
                 }
                 else
                 {
                     LoadStringW( GetModuleHandleW(NULL), IDS_Running, (LPWSTR) szMsg, sizeof(szMsg) / sizeof(szMsg[0]));
-                    wcsncpy(pnmdi->item.pszText, szMsg, pnmdi->item.cchTextMax);
                 }
+                wcsncpy(pnmdi->item.pszText, szMsg, pnmdi->item.cchTextMax);
             }
 
             break;
@@ -591,12 +585,7 @@ void ApplicationPageShowContextMenu1(void)
     hMenu = LoadMenuW(hInst, MAKEINTRESOURCEW(IDR_APPLICATION_PAGE_CONTEXT1));
     hSubMenu = GetSubMenu(hMenu, 0);
 
-    if (TaskManagerSettings.View_LargeIcons)
-        CheckMenuRadioItem(hSubMenu, ID_VIEW_LARGE, ID_VIEW_DETAILS, ID_VIEW_LARGE, MF_BYCOMMAND);
-    else if (TaskManagerSettings.View_SmallIcons)
-        CheckMenuRadioItem(hSubMenu, ID_VIEW_LARGE, ID_VIEW_DETAILS, ID_VIEW_SMALL, MF_BYCOMMAND);
-    else
-        CheckMenuRadioItem(hSubMenu, ID_VIEW_LARGE, ID_VIEW_DETAILS, ID_VIEW_DETAILS, MF_BYCOMMAND);
+    CheckMenuRadioItem(hSubMenu, ID_VIEW_LARGE, ID_VIEW_DETAILS, TaskManagerSettings.ViewMode, MF_BYCOMMAND);
 
     TrackPopupMenu(hSubMenu, TPM_LEFTALIGN|TPM_TOPALIGN|TPM_LEFTBUTTON, pt.x, pt.y, 0, hMainWnd, NULL);
 
@@ -649,7 +638,7 @@ void ApplicationPageShowContextMenu2(void)
     DestroyMenu(hMenu);
 }
 
-void ApplicationPage_OnViewLargeIcons(void)
+void ApplicationPage_OnView(DWORD dwMode)
 {
     HMENU  hMenu;
     HMENU  hViewMenu;
@@ -657,78 +646,13 @@ void ApplicationPage_OnViewLargeIcons(void)
     hMenu = GetMenu(hMainWnd);
     hViewMenu = GetSubMenu(hMenu, 2);
 
-    TaskManagerSettings.View_LargeIcons = TRUE;
-    TaskManagerSettings.View_SmallIcons = FALSE;
-    TaskManagerSettings.View_Details = FALSE;
-    CheckMenuRadioItem(hViewMenu, ID_VIEW_LARGE, ID_VIEW_DETAILS, ID_VIEW_LARGE, MF_BYCOMMAND);
+    TaskManagerSettings.ViewMode = dwMode;
+    CheckMenuRadioItem(hViewMenu, ID_VIEW_LARGE, ID_VIEW_DETAILS, dwMode, MF_BYCOMMAND);
 
     UpdateApplicationListControlViewSetting();
 }
 
-void ApplicationPage_OnViewSmallIcons(void)
-{
-    HMENU  hMenu;
-    HMENU  hViewMenu;
-
-    hMenu = GetMenu(hMainWnd);
-    hViewMenu = GetSubMenu(hMenu, 2);
-
-    TaskManagerSettings.View_LargeIcons = FALSE;
-    TaskManagerSettings.View_SmallIcons = TRUE;
-    TaskManagerSettings.View_Details = FALSE;
-    CheckMenuRadioItem(hViewMenu, ID_VIEW_LARGE, ID_VIEW_DETAILS, ID_VIEW_SMALL, MF_BYCOMMAND);
-
-    UpdateApplicationListControlViewSetting();
-}
-
-void ApplicationPage_OnViewDetails(void)
-{
-    HMENU  hMenu;
-    HMENU  hViewMenu;
-
-    hMenu = GetMenu(hMainWnd);
-    hViewMenu = GetSubMenu(hMenu, 2);
-
-    TaskManagerSettings.View_LargeIcons = FALSE;
-    TaskManagerSettings.View_SmallIcons = FALSE;
-    TaskManagerSettings.View_Details = TRUE;
-    CheckMenuRadioItem(hViewMenu, ID_VIEW_LARGE, ID_VIEW_DETAILS, ID_VIEW_DETAILS, MF_BYCOMMAND);
-
-    UpdateApplicationListControlViewSetting();
-}
-
-void ApplicationPage_OnWindowsTileHorizontally(void)
-{
-    LPAPPLICATION_PAGE_LIST_ITEM  pAPLI = NULL;
-    LV_ITEM                       item;
-    int                           i;
-    HWND*                         hWndArray;
-    int                           nWndCount;
-
-    hWndArray = (HWND*)HeapAlloc(GetProcessHeap(), 0, sizeof(HWND) * ListView_GetItemCount(hApplicationPageListCtrl));
-    nWndCount = 0;
-
-    for (i=0; i<ListView_GetItemCount(hApplicationPageListCtrl); i++) {
-        memset(&item, 0, sizeof(LV_ITEM));
-        item.mask = LVIF_STATE|LVIF_PARAM;
-        item.iItem = i;
-        item.stateMask = (UINT)-1;
-        (void)ListView_GetItem(hApplicationPageListCtrl, &item);
-
-        if (item.state & LVIS_SELECTED) {
-            pAPLI = (LPAPPLICATION_PAGE_LIST_ITEM)item.lParam;
-
-            if (pAPLI) {
-                hWndArray[nWndCount] = pAPLI->hWnd;
-                nWndCount++;
-            }
-        }
-    }
-    TileWindows(NULL, MDITILE_HORIZONTAL, NULL, nWndCount, hWndArray);
-    HeapFree(GetProcessHeap(), 0, hWndArray);
-}
-
-void ApplicationPage_OnWindowsTileVertically(void)
+void ApplicationPage_OnWindowsTile(DWORD dwMode)
 {
     LPAPPLICATION_PAGE_LIST_ITEM  pAPLI = NULL;
     LV_ITEM                       item;
@@ -755,7 +679,7 @@ void ApplicationPage_OnWindowsTileVertically(void)
         }
     }
 
-    TileWindows(NULL, MDITILE_VERTICAL, NULL, nWndCount, hWndArray);
+    TileWindows(NULL, dwMode, NULL, nWndCount, hWndArray);
     HeapFree(GetProcessHeap(), 0, hWndArray);
 }
 
