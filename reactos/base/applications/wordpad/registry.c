@@ -187,7 +187,7 @@ static void format_filelist_filename(LPWSTR file, LPWSTR out)
     else if(truncpos1 == truncpos2 || !truncpos2)
         lstrcatW(out, file);
     else
-        truncate_path(file, out, truncpos1, truncpos2 ? truncpos2 : (pos_basename-1));
+        truncate_path(file, out, truncpos1, truncpos2);
 }
 
 void registry_read_filelist(HWND hMainWnd)
