@@ -337,7 +337,7 @@ MmInitializePageList(IN PADDRESS_RANGE BIOSMemoryMap,
     }
     
     /* Clear the PFN database */
-    RtlZeroMemory(MmPageArray, MmPageArraySize * sizeof(PHYSICAL_PAGE));
+    RtlZeroMemory(MmPageArray, (MmPageArraySize + 1) * sizeof(PHYSICAL_PAGE));
 
     /* This is what a used page looks like */
     RtlZeroMemory(&UsedPage, sizeof(UsedPage));
@@ -436,6 +436,7 @@ MmInitializePageList(IN PADDRESS_RANGE BIOSMemoryMap,
                  * Descriptor List, why bother, right?
                  */
                 MmPageArray[i].Flags.Type = MM_PHYSICAL_PAGE_FREE;
+                MmPageArray[i].ReferenceCount = 0;
                 InsertTailList(&FreeUnzeroedPageListHead,
                                &MmPageArray[i].ListEntry);
                 UnzeroedPageCount++;
@@ -501,7 +502,7 @@ MmMarkPageMapped(PFN_TYPE Pfn)
    KIRQL oldIrql;
    PPHYSICAL_PAGE Page;
 
-   if (Pfn < MmPageArraySize)
+   if (Pfn <= MmPageArraySize)
    {
       KeAcquireSpinLock(&PageListLock, &oldIrql);
       Page = MiGetPfnEntry(Pfn);
@@ -523,7 +524,7 @@ MmMarkPageUnmapped(PFN_TYPE Pfn)
    KIRQL oldIrql;
    PPHYSICAL_PAGE Page;
 
-   if (Pfn < MmPageArraySize)
+   if (Pfn <= MmPageArraySize)
    {
       KeAcquireSpinLock(&PageListLock, &oldIrql);
       Page = MiGetPfnEntry(Pfn);
@@ -592,7 +593,7 @@ MmReferencePageUnsafe(PFN_TYPE Pfn)
 
    DPRINT("MmReferencePageUnsafe(PysicalAddress %x)\n", Pfn << PAGE_SHIFT);
 
-   if (Pfn == 0 || Pfn >= MmPageArraySize)
+   if (Pfn == 0 || Pfn > MmPageArraySize)
    {
       return;
    }
@@ -616,11 +617,6 @@ MmReferencePage(PFN_TYPE Pfn)
 {
    DPRINT("MmReferencePage(PysicalAddress %x)\n", Pfn << PAGE_SHIFT);
 
-   if (Pfn == 0 || Pfn >= MmPageArraySize)
-   {
-      KEBUGCHECK(0);
-   }
-
    MmReferencePageUnsafe(Pfn);
 }
 
@@ -633,11 +629,6 @@ MmGetReferenceCountPage(PFN_TYPE Pfn)
    PPHYSICAL_PAGE Page;
 
    DPRINT("MmGetReferenceCountPage(PhysicalAddress %x)\n", Pfn << PAGE_SHIFT);
-
-   if (Pfn == 0 || Pfn >= MmPageArraySize)
-   {
-      KEBUGCHECK(0);
-   }
 
    KeAcquireSpinLock(&PageListLock, &oldIrql);
    Page = MiGetPfnEntry(Pfn);
