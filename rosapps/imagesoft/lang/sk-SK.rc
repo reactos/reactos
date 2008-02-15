@@ -163,7 +163,7 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_LICENSE           "This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.\r\n\r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.\r\n\r\nYou should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA."
+  IDS_LICENSE           "Tento program je voæn˝ softvÈr; mÙûete ho öÌriù a/alebo modifikovaù podæa podmienok GNU Vöeobecnej verejnej licencie (GNU General Public License) ako bola zverejnen· nad·ciou Free Software Foundation; buÔ verzie 2 tejto licencie, alebo (podæa V·öho uv·ûenia) niektorej neskoröej verzie.\r\n\r\nTento program je distribuovan˝ v n·deji, ûe bude uûitoËn˝, avöak BEZ AKEJKOºVEK Z¡RUKY; rovnako bez z·ruky PREDAJNOSTI alebo VHODNOSTI PRE UR»IT› ⁄»EL. Pre viac detailov si pozrite GNU Vöeobecn˙ verejn˙ licenciu (GNU General Public License).\r\n\r\nKÛpiu Vöeobecnej verejnej licencie GNU Ste mali dostaù spolu s t˝mto programom; ak nie, napÌöte si o Úu na Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA."
   IDS_READY             " Hotovo."
   IDS_TOOLBAR_STANDARD  "Standard"
   IDS_TOOLBAR_TEST      "Test"
@@ -210,16 +210,16 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
   IDS_HINT_BLANK        " "
-  IDS_HINT_NEW          " Creates a new document."
-  IDS_HINT_OPEN         " Opens an existing document."
-  IDS_HINT_CLOSE        " Closes this window."
-  IDS_HINT_CLOSEALL     " Closes all windows."
-  IDS_HINT_SAVE         " Saves the active document."
-  IDS_HINT_SAVEAS       " Saves the active document with a new name."
-  IDS_HINT_PRINTPRE     " Previews the printed document."
-  IDS_HINT_PRINT        " Prints the active document."
-  IDS_HINT_PROP         " Shows the properties of the active image."
-  IDS_HINT_EXIT         " Exits this application."
+  IDS_HINT_NEW          " VytvorÌ nov˝ dokument."
+  IDS_HINT_OPEN         " OtvorÌ existuj˙ci dokument."
+  IDS_HINT_CLOSE        " ZatvorÌ toto okno."
+  IDS_HINT_CLOSEALL     " ZatvorÌ vöetke okn·."
+  IDS_HINT_SAVE         " UloûÌ aktÌvny dokument."
+  IDS_HINT_SAVEAS       " UloûÌ aktÌvny dokument pod nov˝m n·zvom."
+  IDS_HINT_PRINTPRE     " ZobrazÌ n·hæad dokumentu pred tlaËou."
+  IDS_HINT_PRINT        " VytlaËÌ aktÌvny dokument."
+  IDS_HINT_PROP         " ZobrazÌ vlastnosti aktÌvneho obr·zka."
+  IDS_HINT_EXIT         " UkonËÌ program."
 
   IDS_HINT_TOOLS        " Shows or hides the tools floating window."
   IDS_HINT_COLORS       " Shows or hides the colors floating window."
