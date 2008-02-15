@@ -1,40 +1,25 @@
-/*
- * Copyright (C) 2004 Filip Navara
- *               2007 Kamil Hornicek
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+/* TRANSLATOR:  M·rio KaËm·r /Mario Kacmar/ aka Kario (kario@szm.sk)
+ * DATE OF TR:  09-02-2008
  */
 
-LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
+LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
 
 IDD_WELCOMEPAGE DIALOGEX DISCARDABLE  0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS Instal·tor"
+CAPTION "Inötal·tor systÈmu ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "VÌtejte v pr˘vodci instalace systÈmu ReactOS.", IDC_WELCOMETITLE, 115, 9, 189, 31
-    LTEXT "Tento pr˘vodce nainstaluje systÈm ReactOS na V·ö poËÌtaË. Pr˘vodce "\
-          "pot¯ebuje zÌskat nÏkterÈ informace o V·s a Vaöem poËÌtaËi "\
-          "aby mohl systÈm spr·vnÏ nastavit.", IDC_STATIC, 115, 50, 189, 100
-    LTEXT "KliknutÌm na DalöÌ pokraËujte v instalaci.", IDC_STATIC, 115, 160, 189, 31
+    LTEXT "Vitajte v sprievodcovi inötal·cie systÈmu ReactOS.", IDC_WELCOMETITLE, 115, 9, 189, 31
+    LTEXT "Tento sprievodca nainötaluje systÈm ReactOS na V·ö poËÌtaË. Sprievodca "\
+          "potrebuje zÌskaù niektorÈ inform·cie o V·s a Vaöom poËÌtaËi "\
+          "aby mohol systÈm ReactOS spr·vne nastaviù.", IDC_STATIC, 115, 50, 189, 100
+    LTEXT "KliknutÌm na œalej pokraËujte v inötal·cii.", IDC_STATIC, 115, 160, 189, 31
 END
 
 
 IDD_ACKPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS Instal·tor"
+CAPTION "Inötal·tor systÈmu ReactOS"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LTEXT           "V˝voj·¯i systÈmu ReactOS by r·di zmÌnili n·sledujÌcÌ Open Source projekty."\
@@ -42,18 +27,18 @@ BEGIN
                     IDC_STATIC,15,7,286,19
     LISTBOX         IDC_PROJECTS,15,30,286,75,LBS_NOSEL | LBS_HASSTRINGS |
                     LBS_NOINTEGRALHEIGHT | WS_VSCROLL
-    LTEXT           "ReactOS je licencov·n pod GPL. Pokud chcete systÈm (nebo jeho Ë·sti) pouûÌt "\
-                    "nebo redistribuovat, musÌte respektovat GPL",
+    LTEXT           "SystÈm ReactOS je vydan˝ pod liceniou GPL. Pokiaæ chcete systÈm (alebo jeho Ëasti) pouûÌù "\
+                    "alebo redistribuovaù, musÌte reöpektovaù GPL",
                     IDC_STATIC,15,110,227,19
-    PUSHBUTTON      "&Zobrazit GPL...",IDC_VIEWGPL,251,110,50,19
-    LTEXT           "KliknutÌm na DalöÌ pokraËujte v instalaci.",IDC_STATIC,15,136,
+    PUSHBUTTON      "&Zobraziù GPL...",IDC_VIEWGPL,251,110,50,19
+    LTEXT           "KliknutÌm na œalej pokraËujte v inötal·cii.",IDC_STATIC,15,136,
                     195,17
 END
 
 
 IDD_OWNERPAGE DIALOGEX DISCARDABLE  0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS Instal·tor"
+CAPTION "Inötal·tor systÈmu ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Napiöte celÈ svÈ jmÈno a jmÈno firmy nebo organizace.",
@@ -67,7 +52,7 @@ END
 
 IDD_COMPUTERPAGE DIALOGEX DISCARDABLE  0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS Instal·tor"
+CAPTION "Inötal·tor systÈmu ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Napiöte jmÈno Vaöeho poËÌtaËe o dÈlce 63 znak˘ nebo mÈnÏ. "\
@@ -82,38 +67,38 @@ BEGIN
           IDC_STATIC, 54, 87, 250, 8
     LTEXT "&Heslo:", IDC_STATIC, 54, 104, 75, 8
     EDITTEXT IDC_ADMINPASSWORD1, 132, 101, 172, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
-    LTEXT "&Potvrdit heslo:", IDC_STATIC, 54, 123, 75, 8
+    LTEXT "&Potvrdiù heslo:", IDC_STATIC, 54, 123, 75, 8
     EDITTEXT IDC_ADMINPASSWORD2, 132, 120, 172, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
 END
 
 
 IDD_LOCALEPAGE DIALOGEX DISCARDABLE  0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS Instal·tor"
+CAPTION "Inötal·tor systÈmu ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Lokalizace systÈmu by mÏla souhlasit s jazykem aplikacÌ, "\
           "kterÈ chcete pouûÌvat. Localizace urËÌ jak budou zobrazena "\
           "ËÌsla, mÏny a kalend·¯nÌ data.", IDC_STATIC, 53, 7, 253, 20
     LTEXT "<locale text>", IDC_LOCALETEXT, 53, 29, 250, 16
-    LTEXT "Pro zmÏnu lokalizace systÈmu kliknÏte na ZmÏnit.",
+    LTEXT "Pre zmenu lokaliz·cie systÈmu kliknite na Zmeniù.",
           IDC_STATIC, 53, 60, 184, 8
-    PUSHBUTTON "&ZmÏnit...", IDC_CUSTOMLOCALE, 245, 57, 50, 14
+    PUSHBUTTON "&Zmeniù...", IDC_CUSTOMLOCALE, 245, 57, 50, 14
     LTEXT "RozloûenÌ kl·ves urËÌ znaky, kterÈ se zobrazÌ, kdyû pÌöete.",
           IDC_STATIC, 53, 86, 253, 8
     LTEXT "<layout text>", IDC_LAYOUTTEXT, 53, 100, 250, 16
-    LTEXT "Pro zmÏnu rozloûenÌ kl·ves, kliknÏte na ZmÏnit.",
+    LTEXT "Pre zmenu rozloûenia kl·ves, kliknite na Zmeniù.",
           IDC_STATIC, 53, 126, 184, 8
-    PUSHBUTTON "Z&mÏnit...", IDC_CUSTOMLAYOUT, 245, 122, 50, 14
+    PUSHBUTTON "Z&meniù...", IDC_CUSTOMLAYOUT, 245, 122, 50, 14
 END
 
 
 IDD_DATETIMEPAGE DIALOGEX DISCARDABLE  0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS Instal·tor"
+CAPTION "Inötal·tor systÈmu ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Datum a Ëas", IDC_STATIC, 53, 7, 253, 8
+    LTEXT "D·tum a Ëas", IDC_STATIC, 53, 7, 253, 8
     CONTROL "", IDC_DATEPICKER, "SysDateTimePick32",
             DTS_LONGDATEFORMAT | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 53, 17, 137, 14
     CONTROL "", IDC_TIMEPICKER, "SysDateTimePick32",
@@ -128,7 +113,7 @@ END
 
 IDD_PROCESSPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS Instal·tor"
+CAPTION "Inötal·tor systÈmu ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "", IDC_ACTIVITY, 53, 7, 253, 20
@@ -139,7 +124,7 @@ END
 
 IDD_FINISHPAGE DIALOGEX DISCARDABLE  0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "DokonËenÌ instalace systÈmu ReactOS"
+CAPTION "DokonËenie inötal·cie systÈmu ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "DokonËenÌ pr˘vodce instalacÌ systÈmu ReactOS",IDC_FINISHTITLE,115,9,195,37
@@ -164,7 +149,7 @@ END
 
 IDD_STATUSWINDOW_DLG DIALOGEX 0,0,274,26
 STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP
-CAPTION "ProsÌm Ëekejte..."
+CAPTION "PoËkajte, prosÌm ..."
 FONT 8,"MS Shell Dlg 2",400,0,1
 BEGIN
     LTEXT           "",IDC_STATUSLABEL,7,8,234,12,SS_WORDELLIPSIS
@@ -173,101 +158,101 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_ACKTITLE         "PodÏkov·nÌ"
-    IDS_ACKSUBTITLE      "O systÈmu ReactOS a licenËnÌ informace"
-    IDS_OWNERTITLE       "P¯izp˘sobte si software"
-    IDS_OWNERSUBTITLE    "Instal·tor pouûije tyto informace pro p¯izp˘sobenÌ systÈmu ReactOS."
-    IDS_COMPUTERTITLE    "N·zev poËÌtaËe a heslo ˙Ëtu Administrator."
-    IDS_COMPUTERSUBTITLE "Zadejte jmÈno a heslo pro ˙Ëet Administrator."
-    IDS_LOCALETITLE      "Region·lnÌ nastavenÌ"
-    IDS_LOCALESUBTITLE   "SystÈm ReactOS m˘ûete p¯izp˘sobit r˘zn˝m region˘m a jazyk˘m."
-    IDS_DATETIMETITLE    "Datum a Ëas"
-    IDS_DATETIMESUBTITLE "Nastavte spr·vn˝ Ëas pro V·ö poËÌtaË."
-    IDS_PROCESSTITLE     "Registrace souË·stÌ"
-    IDS_PROCESSSUBTITLE  "ProsÌm Ëekejte..."
+    IDS_ACKTITLE         "PoÔakovanie"
+    IDS_ACKSUBTITLE      "»o je systÈm ReactOS a inform·cie o licencii"
+    IDS_OWNERTITLE       "PrispÙsobte si softvÈr"
+    IDS_OWNERSUBTITLE    "Inötal·tor pouûije tieto inform·cie pre prispÙsobenie systÈmu ReactOS."
+    IDS_COMPUTERTITLE    "N·zov poËÌtaËa a heslo ˙Ëtu Administrator."
+    IDS_COMPUTERSUBTITLE "Zadajte meno a heslo pre ˙Ëet Administrator."
+    IDS_LOCALETITLE      "Region·lne nastavenia"
+    IDS_LOCALESUBTITLE   "SystÈm ReactOS mÙûete prispÙsobiù rÙznym regiÛnom a jazykom."
+    IDS_DATETIMETITLE    "D·tum a Ëas"
+    IDS_DATETIMESUBTITLE "Nastavte spr·vny Ëas pre V·ö poËÌtaË."
+    IDS_PROCESSTITLE     "Registr·cia s˙ËastÌ"
+    IDS_PROCESSSUBTITLE  "PoËkajte, prosÌm ..."
 END
 
 STRINGTABLE
 BEGIN
-    IDS_CMT_DOWNLOADER  "St·hnout a nainstalovat dalöÌ aplikace"
+    IDS_CMT_DOWNLOADER  "Stiahnuù a nainötalovaù Ôalöie aplik·cie"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_ACCESSORIES     "P¯ÌsluöenstvÌ"
-    IDS_CMT_CALC        "Spustit KalkulaËku"
-    IDS_CMT_CMD         "Otev¯Ìt P¯Ìkazov˝ ¯·dek"
-    IDS_CMT_EXPLORER    "Spustit Explorer"
-    IDS_CMT_NOTEPAD     "spustit Textov˝ editor"
-    IDS_CMT_REGEDIT     "Spustit Editor registru"
-    IDS_CMT_WORDPAD     "Spustit Editor dokument˘"
-    IDS_CMT_SCREENSHOT  "Sejmout obrazovku"
-    IDS_CMT_DEVMGMT     "Spustit Spr·vce za¯ÌzenÌ"
-    IDS_CMT_SERVMAN     "Spustit Spr·vce sluûeb"
-    IDS_CMT_RDESKTOP    "Launch Remote Desktop"
+    IDS_ACCESSORIES     "PrÌsluöenstvo"
+    IDS_CMT_CALC        "Spustiù KalkulaËku"
+    IDS_CMT_CMD         "Otvoriù PrÌkazov˝ riadok"
+    IDS_CMT_EXPLORER    "Spustiù PrieskumnÌka"
+    IDS_CMT_NOTEPAD     "Spustiù Textov˝ editor"
+    IDS_CMT_REGEDIT     "Spustiù Editor registrov"
+    IDS_CMT_WORDPAD     "Spustiù Editor dokumentov"
+    IDS_CMT_SCREENSHOT  "Uloûiù obrazovku"
+    IDS_CMT_DEVMGMT     "Spustiù Spr·vcu zariadenÌ"
+    IDS_CMT_SERVMAN     "Spustiù Spr·vcu sluûieb"
+    IDS_CMT_RDESKTOP    "Spustiù Vzdialen˙ pracovn˙ plochu"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_GAMES		    "Hry"
-    IDS_CMT_SOLITAIRE	"Solitaire"
-    IDS_CMT_WINEMINE	"WineMine"
+    IDS_GAMES		"Hry"
+    IDS_CMT_SOLITAIRE	"SolitÈr"
+    IDS_CMT_WINEMINE	"MÌny"
 END
 
 STRINGTABLE
 BEGIN
-	IDS_SYS_TOOLS        "System Tools"
-	IDS_CMT_CHARMAP      "CharMap"
+	IDS_SYS_TOOLS        "SystÈmovÈ n·stroje"
+	IDS_CMT_CHARMAP      "Mapa znakov"
 END
 
 
 STRINGTABLE
 BEGIN
 	IDS_SYS_ACCESSIBILITY        "Accessibility"
-	IDS_CMT_MAGNIFY      	     "Magnify"
+	IDS_CMT_MAGNIFY      	     "Lupa"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_REACTOS_SETUP		    "ReactOS Instal·tor"
-    IDS_UNKNOWN_ERROR           "Nezn·m· chyba"
-    IDS_REGISTERING_COMPONENTS  "Registruji souË·sti..."
-    IDS_LOADLIBRARY_FAILED	    "LoadLibrary failed: "
-    IDS_GETPROCADDR_FAILED	    "GetProcAddr failed: "
-    IDS_REGSVR_FAILED           "DllRegisterServer failed: "
-    IDS_DLLINSTALL_FAILED	    "DllInstall failed: "
-    IDS_TIMEOUT			        "Vypröel Ëasov˝ limit registrace"
+    IDS_REACTOS_SETUP		    "Inötal·tor systÈmu ReactOS"
+    IDS_UNKNOWN_ERROR           "Nezn·ma chyba"
+    IDS_REGISTERING_COMPONENTS  "Registrujem s˙Ëasti..."
+    IDS_LOADLIBRARY_FAILED	    "LoadLibrary zlyhal: "
+    IDS_GETPROCADDR_FAILED	    "GetProcAddr zlyhal: "
+    IDS_REGSVR_FAILED           "DllRegisterServer zlyhal: "
+    IDS_DLLINSTALL_FAILED	    "DllInstall zlyhal: "
+    IDS_TIMEOUT			        "Vypröal Ëasov˝ limit registr·cie"
     IDS_REASON_UNKNOWN          ""
 END
 
 STRINGTABLE
 BEGIN
-    IDS_SHORT_CMD        "P¯Ìkazov˝ ¯·dek.lnk"
-    IDS_SHORT_EXPLORER   "ReactOS Explorer.lnk"
-    IDS_SHORT_DOWNLOADER "Download !.lnk"
-    IDS_SHORT_SERVICE    "Spr·vce sluûeb.lnk"
-    IDS_SHORT_DEVICE     "Spr·vce za¯ÌzenÌ.lnk"
+    IDS_SHORT_CMD        "PrÌkazov˝ riadok.lnk"
+    IDS_SHORT_EXPLORER   "PrieskumnÌk systÈmu ReactOS.lnk"
+    IDS_SHORT_DOWNLOADER "çahaj!.lnk"
+    IDS_SHORT_SERVICE    "Spr·vca sluûieb.lnk"
+    IDS_SHORT_DEVICE     "Spr·vca zariadenÌ.lnk"
     IDS_SHORT_CALC       "KalkulaËka.lnk"
-    IDS_SHORT_REGEDIT    "Regedit.lnk"
-    IDS_SHORT_NOTEPAD    "Notepad.lnk"
+    IDS_SHORT_REGEDIT    "Editor registrov.lnk"
+    IDS_SHORT_NOTEPAD    "Pozn·mkov˝ blok.lnk"
     IDS_SHORT_WORDPAD    "WordPad.lnk"
     IDS_SHORT_SNAP       "SnapShot.lnk"
-    IDS_SHORT_SOLITAIRE  "Solitaire.lnk"
-    IDS_SHORT_WINEMINE   "WineMine.lnk"
-	IDS_SHORT_CHARMAP    "CharMap.lnk"
-	IDS_SHORT_MAGNIFY    "Magnify.lnk"
-    IDS_SHORT_RDESKTOP   "Remote Desktop.lnk"
+    IDS_SHORT_SOLITAIRE  "SolitÈr.lnk"
+    IDS_SHORT_WINEMINE   "MÌny.lnk"
+    IDS_SHORT_CHARMAP    "Mapa znakov.lnk"
+    IDS_SHORT_MAGNIFY    "Lupa.lnk"
+    IDS_SHORT_RDESKTOP   "Vzdialen· pracovn· plocha.lnk"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_WZD_NAME         "Instalace nem˘ûe pokraËovat, dokud nezad·te svÈ jmÈno."
-    IDS_WZD_SETCOMPUTERNAME  "Instal·tor nedok·zal nastavit jmÈno poËÌtaËe."
-    IDS_WZD_COMPUTERNAME  "Instalace nem˘ûe pokraËovat, dokud nezad·te jmÈno poËÌtaËe."
-    IDS_WZD_PASSWORDEMPTY  "MusÌte zadat heslo!"
-    IDS_WZD_PASSWORDMATCH  "Zadan· hesla nesouhlasÌ. Zadejte poûadovanÈ heslo znovu."
-    IDS_WZD_PASSWORDCHAR  "ZadanÈ heslo obsahuje nepovolenÈ znaky. Zadejte upravenÈ heslo."
-    IDS_WZD_LOCALTIME    "Instal·tor nedok·zal nastavit Ëas."
+    IDS_WZD_NAME         "Inötal·cia nemÙûe pokraËovaù, k˝m nezad·te svoje meno."
+    IDS_WZD_SETCOMPUTERNAME  "Inötal·tor nedok·zal nastaviù n·zov poËÌtaËa."
+    IDS_WZD_COMPUTERNAME  "Inötal·cia nemÙûe pokraËovaù, k˝m nezad·te n·zov poËÌtaËa."
+    IDS_WZD_PASSWORDEMPTY  "MusÌte zadaù heslo!"
+    IDS_WZD_PASSWORDMATCH  "ZadanÈ hesl· nes˙hlasia. Zadajte poûadovanÈ heslo znovu."
+    IDS_WZD_PASSWORDCHAR  "ZadanÈ heslo obsahuje nepovolenÈ znaky. Zadajte upravenÈ heslo."
+    IDS_WZD_LOCALTIME    "Inötal·tor nedok·zal nastaviù Ëas."
 END
 
 STRINGTABLE

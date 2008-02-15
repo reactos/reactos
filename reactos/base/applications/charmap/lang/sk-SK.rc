@@ -2,7 +2,7 @@
  * PROJECT:     Character Map
  * FILE:        base/applications/charmap/lang/sk-SK.rc
  * PURPOSE:     Slovak Language File for charmap
- * TRANSLATOR:  Kario (kario@szm.sk)
+ * TRANSLATOR:  Kario (kario@szm.sk) /M·rio KaËm·r/
  * DATE OF TR:  24-07-2007
  */
 
@@ -38,6 +38,6 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_LICENSE   "This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.\r\n\r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.\r\n\r\nYou should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA."
+  IDS_LICENSE,  "Tento program je voæn˝ softvÈr; mÙûete ho öÌriù a/alebo modifikovaù podæa podmienok GNU Vöeobecnej verejnej licencie (GNU General Public License) ako bola zverejnen· nad·ciou Free Software Foundation; buÔ verzie 2 tejto licencie, alebo (podæa V·öho uv·ûenia) niektorej neskoröej verzie.\r\n\r\nTento program je distribuovan˝ v n·deji, ûe bude uûitoËn˝, avöak BEZ AKEJKOºVEK Z¡RUKY; rovnako bez z·ruky PREDAJNOSTI alebo VHODNOSTI PRE UR»IT› ⁄»EL. Pre viac detailov si pozrite GNU Vöeobecn˙ verejn˙ licenciu (GNU General Public License).\r\n\r\nKÛpiu Vöeobecnej verejnej licencie GNU Ste mali dostaù spolu s t˝mto programom; ak nie, napÌöte si o Úu na Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA."
   IDS_ABOUT     "»&o je Mapa znakov"
 END

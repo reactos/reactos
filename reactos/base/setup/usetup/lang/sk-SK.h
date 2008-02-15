@@ -99,7 +99,7 @@ static MUI_ENTRY skSKWelcomePageEntries[] =
     {
         8,
         21,
-        "\x07  StlaŸte F3 pre skonŸenie inçtal cie bez nainçtalovania syst‚mu ReactOS.",
+        "\x07  StlaŸte F3 pre skonŸenie inçtal cie, syst‚m ReactOS sa nenainçtaluje.",
         TEXT_NORMAL
     },
     {
@@ -205,7 +205,7 @@ static MUI_ENTRY skSKIntroPageEntries[] =
     {
         8,
         25,
-        "\x07  StlaŸte F3 pre skonŸenie inçtal cie bez nainçtalovania syst‚mu ReactOS.",
+        "\x07  StlaŸte F3 pre skonŸenie inçtal cie, syst‚m ReactOS sa nenainçtaluje.",
         TEXT_NORMAL
     },
     {
@@ -583,7 +583,7 @@ static MUI_ENTRY skSKFlushPageEntries[] =
     {
         0,
         0,
-        "   Flushing cache",
+        "   Vypr zdåujem cache", //Flushing cache (zapisuje sa na disk obsah cache)
         TEXT_STATUS
     },
     {
@@ -795,13 +795,13 @@ static MUI_ENTRY skSKSelectPartitionEntries[] =
     {
         6,
         8,
-        "The list below shows existing partitions and unused disk",
+        "Zoznam ni§çie, zobrazuje existuj£ce oblasti a nevyu§it‚ miesto",
         TEXT_NORMAL
     },
     {
         6,
         9,
-        "space for new partitions.",
+        "na disku vhodn‚ pre nov‚ oblasti.",
         TEXT_NORMAL
     },
     {
@@ -813,7 +813,7 @@ static MUI_ENTRY skSKSelectPartitionEntries[] =
     {
         8,
         13,
-        "\x07  StlaŸte ENTER to install ReactOS onto the selected partition.",
+        "\x07  StlaŸte ENTER pre inçtal ciu syst‚mu ReactOS na vybran£ oblasœ.",
         TEXT_NORMAL
     },
     {
@@ -899,19 +899,19 @@ static MUI_ENTRY skSKInstallDirectoryEntries[] =
     {
         6,
         14,
-        "To change the suggested directory, press BACKSPACE to delete",
+        "Ak chcete zmeniœ odpor£Ÿanì adres r, stlaŸte BACKSPACE a vyma§te",
         TEXT_NORMAL
     },
     {
         6,
         15,
-        "characters and then type the directory where you want ReactOS to",
+        "znaky. Potom nap¡çte n zov adres ra, v ktor‚ho chcete aby bol",
         TEXT_NORMAL
     },
     {
         6,
         16,
-        "be installed.",
+        "syst‚m ReactOS nainçtalovanì.",
         TEXT_NORMAL
     },
     {
@@ -1375,7 +1375,7 @@ MUI_ERROR skSKErrorEntries[] =
     },
     {
         //ERROR_UPDATE_KBSETTINGS,
-        "Setup failed to update keyboard layout settings.",
+        "Inçtal tor zlyhal pri aktualiz cii nastaven¡ rozlo§enia kl vesnice.",
         "ENTER = Reçtart poŸ¡taŸa"
     },
     {
@@ -1586,23 +1586,23 @@ MUI_STRING skSKStrings[] =
     {STRING_CHOOSENEWPARTITION,
      "Zvolili Ste vytvorenie novej oblasti na"},
     {STRING_HDDSIZE,
-    "Please enter the size of the new partition in megabytes."},
+    "Zadajte, pros¡m, ve–kosœ novej oblasti v megabajtoch."},
     {STRING_CREATEPARTITION,
      "   ENTER = Vytvoriœ oblasœ   ESC = Zruçiœ   F3 = SkonŸiœ"},
     {STRING_PARTFORMAT,
     "This Partition will be formatted next."},
     {STRING_NONFORMATTEDPART,
-    "You chose to install ReactOS on a new or unformatted Partition."},
+    "Zvolili Ste inçtal ciu syst‚mu ReactOS na nov£ alebo nenaform tovan£ oblasœ."},
     {STRING_INSTALLONPART,
-    "Setup install ReactOS onto Partition"},
+    "Inçtal tor nainçtaluje syst‚m ReactOS na oblasœ"},
     {STRING_CHECKINGPART,
-    "Setup is now checking the selected partition."},
+    "Inçtal tor teraz skontroluje vybran£ oblasœ."},
     {STRING_QUITCONTINUE,
     "F3= SkonŸiœ  ENTER = PokraŸovaœ"},
     {STRING_REBOOTCOMPUTER,
     "ENTER = Reçtart poŸ¡taŸa"},
     {STRING_TXTSETUPFAILED,
-    "Setup failed to find the '%S' section\nin TXTSETUP.SIF.\n"},
+    "Inçtal tor zlyhal pri h–adan¡ sekcie '%S'\nv s£bore TXTSETUP.SIF.\n"},
     {STRING_COPYING,
      "                                              \xB3 Kop¡ruje sa s£bor: %S"},
     {STRING_SETUPCOPYINGFILES,
@@ -1620,9 +1620,9 @@ MUI_STRING skSKStrings[] =
     {STRING_DISPLAYETTINGSUPDATE,
     "   Updating display registry settings..."},
     {STRING_LOCALESETTINGSUPDATE,
-    "   Updating locale settings..."},
+    "   Aktualizujem miestne nastavenia..."},
     {STRING_KEYBOARDSETTINGSUPDATE,
-    "   Updating keyboard layout settings..."},
+    "   Aktualizujem nastavenia rozlo§enia kl vesnice..."},
     {STRING_CODEPAGEINFOUPDATE,
     "   Adding codepage information to registry..."},
     {STRING_DONE,

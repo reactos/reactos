@@ -48,8 +48,8 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_SOL_NAME    "Solitaire"
-    IDS_SOL_ABOUT   "Solitaire od J Brown\n\nCardLib verzia 1.0"
+    IDS_SOL_NAME    "SolitÈr"
+    IDS_SOL_ABOUT   "SolitÈr od J Brown\n\nCardLib verzia 1.0"
     IDS_SOL_QUIT    "Naozaj chcete skonËiù aktu·lnu hru?"
     IDS_SOL_WIN     "Blahoûel·m, vyhrali ste!"
 END
@@ -71,7 +71,7 @@ BEGIN
     POPUP "&PomocnÌk"
     BEGIN
         MENUITEM "&Obsah\tF1",                   IDM_HELP_CONTENTS
-        MENUITEM "&»o je Solitaire",             IDM_HELP_ABOUT
+        MENUITEM "&»o je SolitÈr",             IDM_HELP_ABOUT
     END
 END
 

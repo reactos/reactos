@@ -10,7 +10,7 @@ STRINGTABLE
 BEGIN
 	IDS_SECONDS, "sek."
 	IDS_NOBODY,  "Nikto" //windows = Anonym
-	IDS_ABOUT,   "od Joshua Thielen a vývojárov ReactOS-u"
+	IDS_ABOUT,   "od Joshua Thielen a vývojárov systému ReactOS"
 END
 
 IDM_WINEMINE MENU DISCARDABLE

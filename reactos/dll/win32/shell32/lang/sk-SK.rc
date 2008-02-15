@@ -364,7 +364,7 @@ CAPTION "VöeobecnÈ" //General
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 
-GROUPBOX "Tasks", -1, 7, 10, 249, 45
+GROUPBOX "⁄lohy", -1, 7, 10, 249, 45
 //ICON
 AUTORADIOBUTTON "Show common tasks in &folders", 14001, 40, 25, 120, 10, WS_TABSTOP
 AUTORADIOBUTTON "Use ReactOS class&ic folders", 14002, 40, 37, 120, 10, WS_TABSTOP
@@ -437,23 +437,23 @@ END
 
 LOGOFF_DLG DIALOGEX 0, 0, 190, 60
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Log Off ReactOS"
+CAPTION "Odhl·siù ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	ICON 45, 14344, 10, 10, 21, 20, SS_REALSIZECONTROL
-	LTEXT "Are you sure you want to log off?", -1, 43, 11, 140, 22
-	DEFPUSHBUTTON "&Log Off", IDOK, 57, 40, 60, 14
+	LTEXT "Ste si ist˝, ûe sa chcete odhl·siù?", -1, 43, 11, 140, 22
+	DEFPUSHBUTTON "O&dhl·siù", IDOK, 57, 40, 60, 14
 	PUSHBUTTON "Zruöiù", IDCANCEL, 122, 40, 60, 14
 END
 
 DISCONNECT_DLG DIALOGEX 0, 0, 190, 60
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Disconnect ReactOS"
+CAPTION "Odpojiù ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	ICON 49, 14346, 10, 10, 21, 20, SS_REALSIZECONTROL
-	LTEXT "Are you sure you want to disconnect?", -1, 49, 12, 137, 23
-	DEFPUSHBUTTON "&Disconnect", IDOK, 57, 40, 60, 14
+	LTEXT "UrËite chcete odpojiù?", -1, 49, 12, 137, 23
+	DEFPUSHBUTTON "&Odpojiù", IDOK, 57, 40, 60, 14
 	PUSHBUTTON "Zruöiù", IDCANCEL, 123, 40, 60, 14
 END
 
@@ -473,7 +473,7 @@ END
 
 MIXED_CONTENT1_DLG DIALOGEX 0, 0, 227, 207
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CAPTION
-CAPTION "Mixed Content"
+CAPTION "Zmieöan˝ obsah"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	ICON "", 1000, 5, 7, 21, 20
@@ -486,7 +486,7 @@ END
 
 MIXED_CONTENT2_DLG DIALOGEX 0, 0, 227, 206
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CAPTION
-CAPTION "Mixed Content"
+CAPTION "Zmieöan˝ obsah"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	ICON "", 1000, 5, 7, 21, 20
@@ -632,7 +632,7 @@ BEGIN
 	IDS_COMMON_PICTURES         "Documents\\My Pictures"
 	IDS_COMMON_VIDEO            "Documents\\My Videos"
 	IDS_CDBURN_AREA             "Local Settings\\Application Data\\Microsoft\\CD Burning"
-	IDS_NETWORKPLACE            "My Network Place"
+	IDS_NETWORKPLACE            "Miesta v sieti"
 
 	IDS_NEWFOLDER               "Nov˝ prieËinok"
 
