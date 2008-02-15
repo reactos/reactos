@@ -278,6 +278,7 @@ void Draw(HDC aDc)
 	SelectObject (HdcStrech, hOld);
 	DeleteObject (HbmpStrech);
 	DeleteDC (HdcStrech);
+    ReleaseDC(hDesktopWindow, desktopHdc);
 }
 
 //

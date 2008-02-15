@@ -20,17 +20,17 @@
 
 //////////////////////////////////////////////////////////////////
 
-int iZoom;
+extern int iZoom;
 
-BOOL bShowWarning;
+extern BOOL bShowWarning;
 
-BOOL bFollowMouse;
-BOOL bFollowFocus;
-BOOL bFollowCaret;
+extern BOOL bFollowMouse;
+extern BOOL bFollowFocus;
+extern BOOL bFollowCaret;
 
-BOOL bInvertColors;
-BOOL bStartMinimized;
-BOOL bShowMagnifier;
+extern BOOL bInvertColors;
+extern BOOL bStartMinimized;
+extern BOOL bShowMagnifier;
 
 void LoadSettings();
 void SaveSettings();
