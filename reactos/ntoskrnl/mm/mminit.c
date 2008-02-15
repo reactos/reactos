@@ -182,7 +182,6 @@ MmInitVirtualMemory()
                       0,
                       BoundaryAddressMultiple);
    MmSharedDataPagePhysicalAddress.QuadPart = 2 << PAGE_SHIFT;
-   RtlZeroMemory(BaseAddress, Length);
 
    /*
     *
@@ -420,6 +419,9 @@ MmInitSystem(IN ULONG Phase,
     ULONG Flags = 0;
     if (Phase == 0)
     {
+        /* Initialize Mm bootstrap */
+        MmInit1();
+
         /* Initialize the Loader Lock */
         KeInitializeMutant(&MmSystemLoadLock, FALSE);
 

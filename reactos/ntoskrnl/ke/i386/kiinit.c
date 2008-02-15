@@ -536,9 +536,6 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
     /* HACK for MmUpdatePageDir */
     ((PETHREAD)InitThread)->ThreadsProcess = (PEPROCESS)InitProcess;
 
-    /* Initialize Kernel Memory Address Space */
-    MmInit1();
-
     /* Set basic CPU Features that user mode can read */
     SharedUserData->ProcessorFeatures[PF_MMX_INSTRUCTIONS_AVAILABLE] =
         (KeFeatureBits & KF_MMX) ? TRUE: FALSE;
