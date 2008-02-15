@@ -245,16 +245,6 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
     ((PETHREAD)InitThread)->ThreadsProcess = (PEPROCESS)InitProcess;
 
     //
-    // Initialize Kernel Memory Address Space
-    //
-    MmInit1(MmFreeLdrFirstKrnlPhysAddr,
-            MmFreeLdrLastKrnlPhysAddr,
-            MmFreeLdrLastKernelAddress,
-            NULL,
-            0,
-            4096);
-
-    //
     // Initialize the Kernel Executive
     //
     ExpInitializeExecutive(Number, LoaderBlock);
