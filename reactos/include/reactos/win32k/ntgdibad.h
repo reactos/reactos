@@ -59,14 +59,6 @@ NtGdiGetFontFamilyInfo(
     DWORD Size
 );
 
-
-/* Use NtGdiAddFontResourceW */
-int
-STDCALL
-NtGdiAddFontResource(PUNICODE_STRING Filename,
-					 DWORD fl);
-
-
 /* Use NtGdiCreateDIBitmapInternal */
 HBITMAP
 STDCALL
@@ -168,25 +160,6 @@ NtGdiSetWindowOrgEx (
 	int	X,
 	int	Y,
 	LPPOINT	Point
-	);
-
-/* Use NtGdiStretchDIBitsInternal. */
-INT
-STDCALL
-NtGdiStretchDIBits (
-	HDC			hDC,
-	INT			XDest,
-	INT			YDest,
-	INT			DestWidth,
-	INT			DestHeight,
-	INT			XSrc,
-	INT			YSrc,
-	INT			SrcWidth,
-	INT			SrcHeight,
-	CONST VOID		* Bits,
-	CONST BITMAPINFO	* BitsInfo,
-	UINT			Usage,
-	DWORD			ROP
 	);
 
 

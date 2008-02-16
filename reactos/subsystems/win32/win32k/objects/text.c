@@ -436,22 +436,23 @@ IntGetFontRenderMode(LOGFONTW *logfont)
   return FT_RENDER_MODE_NORMAL;
 }
 
-int
-STDCALL
-NtGdiAddFontResource(PUNICODE_STRING Filename, DWORD fl)
+INT
+APIENTRY
+NtGdiAddFontResourceW(
+    IN WCHAR *pwszFiles,
+    IN ULONG cwc,
+    IN ULONG cFiles,
+    IN FLONG fl,
+    IN DWORD dwPidTid,
+    IN OPTIONAL DESIGNVECTOR *pdv)
 {
   UNICODE_STRING SafeFileName;
   PWSTR src;
   NTSTATUS Status;
   int Ret;
 
-  /* Copy the UNICODE_STRING structure */
-  Status = MmCopyFromCaller(&SafeFileName, Filename, sizeof(UNICODE_STRING));
-  if(!NT_SUCCESS(Status))
-  {
-    SetLastNtError(Status);
-    return 0;
-  }
+  /* FIXME - Protect with SEH? */
+  RtlInitUnicodeString(&SafeFileName, pwszFiles);
 
   /* Reserve for prepending '\??\' */
   SafeFileName.Length += 4 * sizeof(WCHAR);
@@ -476,7 +477,7 @@ NtGdiAddFontResource(PUNICODE_STRING Filename, DWORD fl)
     return 0;
   }
 
-  Ret = IntGdiAddFontResource(&SafeFileName, fl);
+  Ret = IntGdiAddFontResource(&SafeFileName, (DWORD)fl);
 
   ExFreePool(SafeFileName.Buffer);
   return Ret;

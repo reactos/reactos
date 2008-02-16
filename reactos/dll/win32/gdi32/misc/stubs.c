@@ -42,8 +42,8 @@ StretchDIBits(HDC hdc,
 
 {
     /* FIXME share memory */
-    return NtGdiStretchDIBits(hdc, XDest, YDest, nDestWidth, nDestHeight, XSrc, YSrc,
-                              nSrcWidth, nSrcHeight, lpBits, lpBitsInfo, iUsage, dwRop);
+    return NtGdiStretchDIBitsInternal(hdc, XDest, YDest, nDestWidth, nDestHeight, XSrc, YSrc,
+                              nSrcWidth, nSrcHeight, (LPBYTE)lpBits, (LPBITMAPINFO)lpBitsInfo, (DWORD)iUsage, dwRop, 0, 0, NULL);
 }
 
 /*

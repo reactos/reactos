@@ -722,19 +722,25 @@ cleanup:
     return Result;
 }
 
-INT STDCALL NtGdiStretchDIBits(HDC  hDC,
-                               INT  XDest,
-                               INT  YDest,
-                               INT  DestWidth,
-                               INT  DestHeight,
-                               INT  XSrc,
-                               INT  YSrc,
-                               INT  SrcWidth,
-                               INT  SrcHeight,
-                               CONST VOID *Bits,
-                               CONST BITMAPINFO *BitsInfo,
-                               UINT  Usage,
-                               DWORD  ROP)
+INT
+APIENTRY
+NtGdiStretchDIBitsInternal(
+    HDC  hDC,
+    INT  XDest,
+    INT  YDest,
+    INT  DestWidth,
+    INT  DestHeight,
+    INT  XSrc,
+    INT  YSrc,
+    INT  SrcWidth,
+    INT  SrcHeight,
+    LPBYTE Bits,
+    LPBITMAPINFO BitsInfo,
+    DWORD  Usage,
+    DWORD  ROP,
+    UINT cjMaxInfo,
+    UINT cjMaxBits,
+    HANDLE hcmXform)
 {
    HBITMAP hBitmap, hOldBitmap;
    HDC hdcMem;
@@ -771,7 +777,7 @@ INT STDCALL NtGdiStretchDIBits(HDC  hDC,
    }
 
    NtGdiSetDIBits(hdcMem, hBitmap, 0, BitsInfo->bmiHeader.biHeight, Bits,
-                  BitsInfo, Usage);
+                  BitsInfo, (UINT)Usage);
 
    /* Origin for DIBitmap may be bottom left (positive biHeight) or top
       left (negative biHeight) */

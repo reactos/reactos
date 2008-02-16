@@ -1558,26 +1558,6 @@ NtGdiFONTOBJ_cGetGlyphs(IN FONTOBJ *FontObj,
     return 0;
 }
 
-
-
-/*
- * @unimplemented
- */
-INT
-APIENTRY
-NtGdiAddFontResourceW(
-    IN WCHAR *pwszFiles,
-    IN ULONG cwc,
-    IN ULONG cFiles,
-    IN FLONG f,
-    IN DWORD dwPidTid,
-    IN OPTIONAL DESIGNVECTOR *pdv)
-{
-    UNIMPLEMENTED;
-    return 0;
-}
-
-
 /*
  * @unimplemented
  */
@@ -2979,33 +2959,6 @@ NtGdiSetMagicColors(
 {
     UNIMPLEMENTED;
     return FALSE;
-}
-
- /*
- * @unimplemented
- */
-INT
-APIENTRY
-NtGdiStretchDIBitsInternal(
-    IN HDC hdc,
-    IN INT xDst,
-    IN INT yDst,
-    IN INT cxDst,
-    IN INT cyDst,
-    IN INT xSrc,
-    IN INT ySrc,
-    IN INT cxSrc,
-    IN INT cySrc,
-    IN OPTIONAL LPBYTE pjInit,
-    IN LPBITMAPINFO pbmi,
-    IN DWORD dwUsage,
-    IN DWORD dwRop4,
-    IN UINT cjMaxInfo,
-    IN UINT cjMaxBits,
-    IN HANDLE hcmXform)
-{
-    UNIMPLEMENTED;
-    return 0;
 }
 
  /*
