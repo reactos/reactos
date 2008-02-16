@@ -256,7 +256,7 @@ BEGIN
     EDITTEXT        IDC_KERNEL_MEMORY_NONPAGED,185,193,48,8,ES_RIGHT |
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER
     GROUPBOX        "Хронология загрузки ЦП",IDC_CPU_USAGE_HISTORY_FRAME,74,5,168,54,0,WS_EX_TRANSPARENT
-    GROUPBOX        "Хронология использования памяти",IDC_MEMORY_USAGE_HISTORY_FRAME,74,63,168,54,0,WS_EX_TRANSPARENT
+    GROUPBOX        "Хронология использования файла подкачки",IDC_MEMORY_USAGE_HISTORY_FRAME,74,63,168,54,0,WS_EX_TRANSPARENT
     PUSHBUTTON      "Отображение загрузки ЦП",IDC_CPU_USAGE_GRAPH,12,17,47,37,0,
 		    WS_EX_CLIENTEDGE
     PUSHBUTTON      "Отображение использования памяти",IDC_MEM_USAGE_GRAPH,12,75,47,37,0,
@@ -609,16 +609,16 @@ STRINGTABLE DISCARDABLE
 BEGIN
     IDS_TAB_APPS                  "Приложения"
     IDS_TAB_PROCESSES             "Процессы"
-    IDS_TAB_PERFORMANCE           "Производительность"
+    IDS_TAB_PERFORMANCE           "Быстродействие"
     IDS_TAB_TASK                  "Задача"
-    IDS_TAB_STATUS                "Статус"
+    IDS_TAB_STATUS                "Состояние"
     IDS_TAB_IMAGENAME             "Имя образа"
     IDS_TAB_PID                   "PID"
     IDS_TAB_USERNAME              "Имя пользователя"
     IDS_TAB_SESSIONID             "Код сеанса"
     IDS_TAB_CPU                   "ЦП"
     IDS_TAB_CPUTIME               "Время ЦП"
-    IDS_TAB_MEMUSAGE              "Использование памяти"
+    IDS_TAB_MEMUSAGE              "Память"
     IDS_TAB_PEAKMEMUSAGE          "Память - максимум"
     IDS_TAB_MEMDELTA              "Память - изменение"
     IDS_TAB_PAGEFAULT             "Ошибок страницы"
@@ -659,9 +659,9 @@ BEGIN
     IDS_MSG_UNABLETERMINATEPRO    "Не удалось завершить процесс"
     IDS_MSG_UNABLECHANGEPRIORITY  "Не удалось изменить приоритет"
     IDS_MSG_WARNINGCHANGEPRIORITY "ВНИМАНИЕ: Изменение приоритета может повлеч неустойчивую работу и потерю данных.\nВы уверены, что можно продолжать?"
-    IDS_MSG_TRAYICONCPUUSAGE      "Использование ЦП: %d%%"
-    IDS_STATUS_MEMUSAGE           "Использование памяти: %dK / %dK"
-    IDS_STATUS_CPUUSAGE           "Использование ЦП: %3d%%"
+    IDS_MSG_TRAYICONCPUUSAGE      "Загрузка ЦП: %d%%"
+    IDS_STATUS_MEMUSAGE           "Выделение памяти: %dK / %dK"
+    IDS_STATUS_CPUUSAGE           "Загрузка ЦП: %3d%%"
     IDS_STATUS_PROCESSES          "Процессов: %d"
     IDS_Not_Responding            "Не отвечает"
     IDS_Running                   "Работает"
