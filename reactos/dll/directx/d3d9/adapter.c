@@ -6,12 +6,24 @@
  * PROGRAMERS:      Gregor Brunmar <gregor (dot) brunmar (at) home (dot) se>
  */
 
+#define _WIN32_WINNT    0x0502
 #include "d3d9_common.h"
 #include <d3d9.h>
 #include <ddraw.h>
 #include <strsafe.h>
 #include <debug.h>
+#include "d3d9_private.h"
 #include "adapter.h"
+
+#define D3D9_CAPS1              (D3DCAPS_READ_SCANLINE)
+#define D3D9_PRE_XP_CAPS2       (D3DCAPS2_CANAUTOGENMIPMAP | D3DCAPS2_DYNAMICTEXTURES | D3DCAPS2_RESERVED | D3DCAPS2_FULLSCREENGAMMA)
+#define D3D9_XP_OR_LATER_CAPS2  (D3D9_PRE_XP_CAPS2 | D3DCAPS2_CANMANAGERESOURCE)
+#define D3D9_CAPS3              (D3DCAPS3_ALPHA_FULLSCREEN_FLIP_OR_DISCARD | D3DCAPS3_LINEAR_TO_SRGB_PRESENTATION | D3DCAPS3_COPY_TO_VIDMEM | D3DCAPS3_COPY_TO_SYSTEMMEM)
+
+#define D3DCAPS2_PRESENT_INTERVAL_SEVERAL       0x00200000
+#define D3DCAPS2_PRESENT_INTERVAL_IMMEDIATE     0x00400000
+
+#define D3DVTXPCAPS_FOGVERTEX                   0x00000004
 
 typedef BOOL (WINAPI *LPFN_ISWOW64PROCESS) (HANDLE, PBOOL);
 typedef BOOL (WINAPI *LPFN_DISABLEWOW64FSREDIRECTION) (PVOID*);
@@ -165,6 +177,98 @@ BOOL GetAdapterInfo(LPCSTR lpszDeviceName, D3DADAPTER_IDENTIFIER9* pIdentifier)
     GenerateDeviceIdentifier(pIdentifier);
 
     return TRUE;
+}
+
+
+
+static BOOL IsWindowsXPorLaterCompatible()
+{
+    OSVERSIONINFOA osvi;
+
+    ZeroMemory(&osvi, sizeof(OSVERSIONINFOA));
+    osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFOA);
+
+    if (GetVersionExA(&osvi) != 0)
+    {
+        return ( (osvi.dwMajorVersion > 5) ||
+               ( (osvi.dwMajorVersion == 5) && (osvi.dwMinorVersion >= 1) ));
+    }
+
+    return FALSE;
+}
+
+static void CopyDriverCaps(const D3DCAPS9* pSrcCaps, D3DCAPS9* pDstCaps)
+{
+    *pDstCaps = *pSrcCaps;
+
+    pDstCaps->Caps = pSrcCaps->Caps & D3D9_CAPS1;
+
+    /* TODO: Fit in D3DCAPS2_CANCALIBRATEGAMMA somewhere here */
+    if (IsWindowsXPorLaterCompatible())
+        pDstCaps->Caps2 = pSrcCaps->Caps2 & D3D9_XP_OR_LATER_CAPS2;
+    else
+        pDstCaps->Caps2 = pSrcCaps->Caps2 & D3D9_PRE_XP_CAPS2;
+
+    pDstCaps->Caps3 = pSrcCaps->Caps3 & D3D9_CAPS3;
+
+    pDstCaps->PresentationIntervals = D3DPRESENT_INTERVAL_ONE;
+    if (pSrcCaps->Caps2 & D3DCAPS2_PRESENT_INTERVAL_SEVERAL)
+        pDstCaps->PresentationIntervals |= (D3DPRESENT_INTERVAL_TWO | D3DPRESENT_INTERVAL_THREE | D3DPRESENT_INTERVAL_FOUR);
+    if (pSrcCaps->Caps2 & D3DCAPS2_PRESENT_INTERVAL_IMMEDIATE)
+        pDstCaps->PresentationIntervals |= D3DPRESENT_INTERVAL_IMMEDIATE;
+
+    pDstCaps->PrimitiveMiscCaps = pSrcCaps->PrimitiveMiscCaps & ~D3DPMISCCAPS_SEPERATEFVFFOG;
+
+    if (pSrcCaps->VertexProcessingCaps & D3DVTXPCAPS_FOGVERTEX)
+    {
+        pDstCaps->RasterCaps |= D3DPRASTERCAPS_FOGVERTEX;
+        pDstCaps->VertexProcessingCaps &= ~D3DVTXPCAPS_FOGVERTEX;
+    }
+
+    if (pSrcCaps->MaxPointSize < 0.0f)
+        pDstCaps->MaxPointSize = 1.0f;
+}
+
+HRESULT GetAdapterCaps(const LPDIRECT3D9_DISPLAYADAPTER_INT pDisplayAdapter, D3DDEVTYPE DeviceType, D3DCAPS9* pDstCaps)
+{
+    HRESULT hResult = D3DERR_INVALIDDEVICE;
+    LPD3D9_DRIVERCAPS pDriverCaps = NULL;
+
+    ZeroMemory(pDstCaps, sizeof(D3DCAPS9));
+
+    switch (DeviceType)
+    {
+    case D3DDEVTYPE_HAL:
+        pDriverCaps = &pDisplayAdapter->DriverCaps;
+        hResult = D3D_OK;
+        break;
+
+    case D3DDEVTYPE_REF:
+    case D3DDEVTYPE_SW:
+    case D3DDEVTYPE_NULLREF:
+        UNIMPLEMENTED;
+        hResult = D3D_OK;
+        break;
+
+    default:
+        DPRINT1("Unknown DeviceType argument");
+        break;
+    }
+
+    if (pDriverCaps != NULL)
+    {
+        CopyDriverCaps(&pDriverCaps->DriverCaps, pDstCaps);
+    }
+
+    if (SUCCEEDED(hResult))
+    {
+        pDstCaps->DeviceType = DeviceType;
+        pDstCaps->MasterAdapterOrdinal = pDisplayAdapter->MasterAdapterIndex;
+        pDstCaps->AdapterOrdinalInGroup = pDisplayAdapter->AdapterIndexInGroup;
+        pDstCaps->NumberOfAdaptersInGroup = pDisplayAdapter->NumAdaptersInGroup;
+    }
+
+    return hResult;
 }
 
 

@@ -312,7 +312,8 @@ static HRESULT WINAPI IDirect3D9Impl_EnumAdapterModes(LPDIRECT3D9 iface, UINT Ad
 * If the method successfully fills the pMode structure, the return value is D3D_OK.
 * If Adapter is out of range or pMode is a bad pointer, the return value will be D3DERR_INVALIDCALL.
 *
-*/static HRESULT WINAPI IDirect3D9Impl_GetAdapterDisplayMode(LPDIRECT3D9 iface, UINT Adapter, D3DDISPLAYMODE* pMode)
+*/
+static HRESULT WINAPI IDirect3D9Impl_GetAdapterDisplayMode(LPDIRECT3D9 iface, UINT Adapter, D3DDISPLAYMODE* pMode)
 {
     LPDIRECT3D9_INT This = impl_from_IDirect3D9(iface);
     LOCK_D3D9();
@@ -382,11 +383,58 @@ static HRESULT WINAPI IDirect3D9Impl_CheckDeviceFormatConversion(LPDIRECT3D9 ifa
     return D3D_OK;
 }
 
+
+/*++
+* @name IDirect3D9::GetDeviceCaps
+* @implemented
+*
+* The function IDirect3D9Impl_GetDeviceCaps fills the pCaps argument with the
+* capabilities of the specified adapter and device type.
+*
+* @param LPDIRECT3D iface
+* Pointer to the IDirect3D object returned from Direct3DCreate9()
+*
+* @param UINT Adapter
+* Adapter index to get information about. D3DADAPTER_DEFAULT is the primary display.
+* The maximum value for this is the value returned by IDirect3D::GetAdapterCount().
+*
+* @param D3DDEVTYPE DeviceType
+* One of the D3DDEVTYPE enum members.
+* NOTE: Currently only D3DDEVTYPE_HAL is implemented.
+*
+* @param D3DCAPS9* pCaps
+* Pointer to a D3DCAPS9 structure to be filled with the adapter's device type capabilities.
+*
+* @return HRESULT
+* If the method successfully fills the pCaps structure, the return value is D3D_OK.
+* If Adapter is out of range or pCaps is a bad pointer, the return value will be D3DERR_INVALIDCALL.
+* If DeviceType is invalid, the return value will be D3DERR_INVALIDDEVICE.
+*
+*/
 static HRESULT WINAPI IDirect3D9Impl_GetDeviceCaps(LPDIRECT3D9 iface, UINT Adapter, D3DDEVTYPE DeviceType, D3DCAPS9* pCaps)
 {
-    UNIMPLEMENTED
+    HRESULT hResult;
+    LPDIRECT3D9_INT This = impl_from_IDirect3D9(iface);
+    LOCK_D3D9();
 
-    return D3D_OK;
+    if (Adapter >= This->NumDisplayAdapters)
+    {
+        DPRINT1("Invalid Adapter number specified");
+        UNLOCK_D3D9();
+        return D3DERR_INVALIDCALL;
+    }
+
+    if (IsBadWritePtr(pCaps, sizeof(D3DCAPS9)))
+    {
+        DPRINT1("Invalid pCaps parameter specified");
+        UNLOCK_D3D9();
+        return D3DERR_INVALIDCALL;
+    }
+
+    hResult = GetAdapterCaps(&This->DisplayAdapters[Adapter], DeviceType, pCaps);
+
+    UNLOCK_D3D9();
+    return hResult;
 }
 
 /*++

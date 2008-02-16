@@ -6,8 +6,7 @@
  * PROGRAMERS:      Gregor Brunmar <gregor (dot) brunmar (at) home (dot) se>
  */
 
-typedef struct IDirect3D9 *LPDIRECT3D9;
-
+#include <d3d9.h>
 #include "d3d9_create.h"
 #include "d3d9_helpers.h"
 #include <debug.h>

@@ -12,96 +12,26 @@
 
 #define DX_D3D9_MAX_NUM_ADAPTERS    12
 
+typedef struct _tagD3D9_DRIVERCAPS
+{
+    D3DCAPS9 DriverCaps;
+} D3D9_DRIVERCAPS, FAR* LPD3D9_DRIVERCAPS;
+
 typedef struct _tagDIRECT3D9DisplayAdapterInfo_
 {
 /* 0x0000 */    GUID DisplayGuid;
 /* 0x0010 */    CHAR szDeviceName[MAX_PATH];
 /* 0x0114 */    DWORD dwStateFlags;
 /* 0x0118 */    BOOL bInUseFlag;
-/* 0x011c */    DWORD unknown000002;
-/* 0x0120 */    DWORD unknown000003;
-/* 0x0124 */    DWORD unknown000004;    /* 0x00000001 */
+/* 0x011c */    DWORD MasterAdapterIndex;
+/* 0x0120 */    DWORD AdapterIndexInGroup;
+/* 0x0124 */    DWORD NumAdaptersInGroup;    /* 0x00000001 */
 /* 0x0128 */    DWORD NumSupportedD3DFormats;
 /* 0x012c */    DWORD NumSupportedD3DExtendedFormats;
 /* 0x0130 */    D3DDISPLAYMODE* pSupportedD3DFormats;
 /* 0x0134 */    D3DDISPLAYMODE* pSupportedD3DExtendedFormats;
 /* 0x0138 */    DWORD unknown000009;
-/* 0x013c */    DWORD unknown000010;    /* D3D9_DRIVERCAPS? */
-/* 0x0140 */    DWORD unknown000011;
-/* 0x0144 */    DWORD unknown000012;
-/* 0x0148 */    DWORD unknown000013;
-/* 0x014c */    DWORD unknown000014;
-/* 0x0150 */    DWORD unknown000015;
-/* 0x0154 */    DWORD unknown000016;
-/* 0x0158 */    DWORD unknown000017;
-/* 0x015c */    DWORD unknown000018;
-/* 0x0160 */    DWORD unknown000019;
-/* 0x0164 */    DWORD unknown000020;
-/* 0x0168 */    DWORD unknown000021;
-/* 0x016c */    DWORD unknown000022;
-/* 0x0170 */    DWORD unknown000023;
-/* 0x0174 */    DWORD unknown000024;
-/* 0x0178 */    DWORD unknown000025;
-/* 0x017c */    DWORD unknown000026;
-/* 0x0180 */    DWORD unknown000027;
-/* 0x0184 */    DWORD unknown000028;
-/* 0x0188 */    DWORD unknown000029;
-/* 0x018c */    DWORD unknown000030;
-/* 0x0190 */    DWORD unknown000031;
-/* 0x0194 */    DWORD unknown000032;
-/* 0x0198 */    DWORD unknown000033;
-/* 0x019c */    DWORD unknown000034;
-/* 0x01a0 */    DWORD unknown000035;
-/* 0x01a4 */    DWORD unknown000036;
-/* 0x01a8 */    DWORD unknown000037;
-/* 0x01ac */    DWORD unknown000038;
-/* 0x01b0 */    DWORD unknown000039;
-/* 0x01b4 */    DWORD unknown000040;
-/* 0x01b8 */    DWORD unknown000041;
-/* 0x01bc */    DWORD unknown000042;
-/* 0x01c0 */    DWORD unknown000043;
-/* 0x01c4 */    DWORD unknown000044;
-/* 0x01c8 */    DWORD unknown000045;
-/* 0x01cc */    DWORD unknown000046;
-/* 0x01d0 */    DWORD unknown000047;
-/* 0x01d4 */    DWORD unknown000048;
-/* 0x01d8 */    DWORD unknown000049;
-/* 0x01dc */    DWORD unknown000050;
-/* 0x01e0 */    DWORD unknown000051;
-/* 0x01e4 */    DWORD unknown000052;
-/* 0x01e8 */    DWORD unknown000053;
-/* 0x01ec */    DWORD unknown000054;
-/* 0x01f0 */    DWORD unknown000055;
-/* 0x01f4 */    DWORD unknown000056;
-/* 0x01f8 */    DWORD unknown000057;
-/* 0x01fc */    DWORD unknown000058;
-/* 0x0200 */    DWORD unknown000059;
-/* 0x0204 */    DWORD unknown000060;
-/* 0x0208 */    DWORD unknown000061;
-/* 0x020c */    DWORD unknown000062;
-/* 0x0210 */    DWORD unknown000063;
-/* 0x0214 */    DWORD unknown000064;
-/* 0x0218 */    DWORD unknown000065;
-/* 0x021c */    DWORD unknown000066;
-/* 0x0220 */    DWORD unknown000067;
-/* 0x0224 */    DWORD unknown000068;
-/* 0x0228 */    DWORD unknown000069;
-/* 0x022c */    DWORD unknown000070;
-/* 0x0230 */    DWORD unknown000071;
-/* 0x0234 */    DWORD unknown000072;
-/* 0x0238 */    DWORD unknown000073;
-/* 0x023c */    DWORD unknown000074;
-/* 0x0240 */    DWORD unknown000075;
-/* 0x0244 */    DWORD unknown000076;
-/* 0x0248 */    DWORD unknown000077;
-/* 0x024c */    DWORD unknown000078;
-/* 0x0250 */    DWORD unknown000079;
-/* 0x0254 */    DWORD unknown000080;
-/* 0x0258 */    DWORD unknown000081;
-/* 0x025c */    DWORD unknown000082;
-/* 0x0260 */    DWORD unknown000083;
-/* 0x0264 */    DWORD unknown000084;
-/* 0x0268 */    DWORD unknown000085;
+/* 0x013c */    D3D9_DRIVERCAPS DriverCaps;
 /* 0x026c */    DWORD dwDisplayWidth;   /* Current display res */
 /* 0x0270 */    DWORD dwDisplayHeight;  /* Current display res */
 /* 0x0274 */    DWORD unknown000088;    /* Current D3DFORMAT */
@@ -119,10 +49,10 @@ typedef struct _tagDIRECT3D9DisplayAdapterInfo_
 /* 0x02a4 */    DWORD unknown000100;
 /* 0x02a8 */    DWORD unknown000101;    /*? 0xf7627000 */
 /* 0x02ac */    DWORD unknown000102;    /*? 0x00000002 */
-/* 0x02b0 */    DWORD unknown000103;    /*? 0x001552A0 */
+/* 0x02b0 */    LPDWORD unknown000103;    /*? 0x001552A0 */
 /* 0x02b4 */    DWORD unknown000104;
 /* 0x02b8 */    DWORD unknown000105;
-} Direct3D9DisplayAdapterInfo_INT, *LPDIRECT3D9_DISPLAYADAPTER_INT;
+} Direct3D9DisplayAdapterInfo_INT, FAR* LPDIRECT3D9_DISPLAYADAPTER_INT;
 
 typedef struct _tagDIRECT3D9_INT_
 {
