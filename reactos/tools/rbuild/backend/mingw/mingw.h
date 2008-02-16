@@ -133,10 +133,11 @@ public:
 	~ProxyMakefile ();
 	void GenerateProxyMakefiles ( bool verbose,
                                       std::string outputTree );
+	static bool GenerateProxyMakefile ( const Module& module );
+
 private:
 	std::string GeneratePathToParentDirectory ( int numberOfParentDirectories );
 	std::string GetPathToTopDirectory ( Module& module );
-	bool GenerateProxyMakefile ( Module& module );
 	void GenerateProxyMakefileForModule ( Module& module,
                                               bool verbose,
                                               std::string outputTree );

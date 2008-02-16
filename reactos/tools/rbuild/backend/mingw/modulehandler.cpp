@@ -18,6 +18,7 @@
  */
 #include "../../pch.h"
 #include <assert.h>
+#include <algorithm>
 
 #include "../../rbuild.h"
 #include "mingw.h"
@@ -615,13 +616,15 @@ MingwModuleHandler::GenerateCleanTarget () const
 	}
 	fprintf ( fMakefile, " 2>$(NUL)\n" );
 
-	if ( module.name != "zlib" ) /* Avoid make warning */
+    if( ProxyMakefile::GenerateProxyMakefile(module) )
 	{
 		DirectoryLocation root;
+
 		if ( backend->configuration.GenerateProxyMakefilesInSourceTree )
 			root = SourceDirectory;
 		else
 			root = OutputDirectory;
+
 		FileLocation proxyMakefile ( root,
 		                             module.output->relative_path,
 		                            "GNUmakefile" );

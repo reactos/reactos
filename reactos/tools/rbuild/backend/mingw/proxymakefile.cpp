@@ -33,7 +33,7 @@ ProxyMakefile::~ProxyMakefile ()
 }
 
 bool
-ProxyMakefile::GenerateProxyMakefile ( Module& module )
+ProxyMakefile::GenerateProxyMakefile ( const Module& module )
 {
 	return module.output->directory == OutputDirectory;
 }
