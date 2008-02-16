@@ -47,11 +47,13 @@
 
 static const MUI_LANGUAGE LanguageList[] =
 {
-  /* Lang ID,   DefKbdLayout,ANSI CP, OEM CP, MAC CP,   Language Name,    page strgs,error strings */
+  /* Lang ID,   DefKbdLayout,ANSI CP, OEM CP, MAC CP,   Language Name,    page strgs,error strings,    other strings */
   {L"00000409", L"00000409", L"1252", L"437", L"10000", L"English",       enUSPages, enUSErrorEntries, enUSStrings },
+  {L"00000401", L"00000401", L"1256", L"720", L"10004", L"Arabic",        enUSPages, enUSErrorEntries, enUSStrings },
   {L"00000402", L"00000402", L"1251", L"866", L"10007", L"Bulgarian",     bgBGPages, bgBGErrorEntries, enUSStrings },
   {L"00000403", L"00000403", L"1252", L"850", L"10000", L"Catalan",       enUSPages, enUSErrorEntries, enUSStrings },
   {L"00000804", L"00000804", L"936",  L"936", L"10008", L"Chinese (PRC)", enUSPages, enUSErrorEntries, enUSStrings },
+  {L"00000405", L"00000405", L"1250", L"852", L"10029", L"Czech",         enUSPages, enUSErrorEntries, enUSStrings },
   {L"00000406", L"00000406", L"1252", L"850", L"10000", L"Danish",        enUSPages, enUSErrorEntries, enUSStrings },
   {L"00000413", L"00000813", L"1252", L"850", L"10000", L"Dutch",         enUSPages, enUSErrorEntries, enUSStrings },
   {L"0000040B", L"0000040B", L"1252", L"850", L"10000", L"Finnish",       enUSPages, enUSErrorEntries, enUSStrings },
@@ -65,7 +67,7 @@ static const MUI_LANGUAGE LanguageList[] =
   {L"00000412", L"00000412", L"949",  L"949", L"10003", L"Korean",        enUSPages, enUSErrorEntries, enUSStrings },
   {L"00000427", L"00000427", L"1257", L"775", L"10029", L"Lithuanian",    ltLTPages, ltLTErrorEntries, enUSStrings },
   {L"00000414", L"00000414", L"1252", L"850", L"10000", L"Norwegian",     enUSPages, enUSErrorEntries, enUSStrings },
-  {L"00000419", L"00000419", L"1251", L"866", L"10007", L"Russian",       ruRUPages, ruRUErrorEntries, enUSStrings },
+  {L"00000419", L"00000419", L"1251", L"866", L"10007", L"Russian",       ruRUPages, ruRUErrorEntries, ruRUStrings },
   {L"0000041B", L"0000041B", L"1250", L"852", L"10029", L"Slovak",        skSKPages, skSKErrorEntries, skSKStrings },
   {L"0000040A", L"0000040A", L"1252", L"850", L"10000", L"Spanish",       esESPages, esESErrorEntries, enUSStrings },
   {L"00000415", L"00000415", L"1250", L"852", L"10029", L"Polski",        plPLPages, plPLErrorEntries, plPLStrings },

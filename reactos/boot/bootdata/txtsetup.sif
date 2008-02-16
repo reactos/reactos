@@ -100,9 +100,11 @@ vbe = "VBE Display"
 Default = "XT-, AT- or extended keyboard (83-105 keys)"
 
 [Language]
+00000401 = "Arabic"
 00000402 = "Bulgarian"
 00000403 = "Catalan"
 00000804 = "Chinese (PRC)"
+00000405 = "Czech"
 00000406 = "Danish"
 00000413 = "Dutch"
 00000409 = "English"
