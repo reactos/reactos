@@ -21,6 +21,8 @@
 #define KERNEL_DESCRIPTOR_PAGE(x) (((ULONG_PTR)x &~ KSEG0_BASE) >> PAGE_SHIFT)
 #endif
 
+ULONG MmFreeLdrPageDirectoryEnd;
+
 typedef struct _BIOS_MEMORY_DESCRIPTOR
 {
     ULONG BlockBase;
@@ -920,6 +922,8 @@ KiRosFrldrLpbToNtLpb(IN PROS_LOADER_PARAMETER_BLOCK RosLoaderBlock,
 
     /* First get some kernel-loader globals */
     AcpiTableDetected = (RosLoaderBlock->Flags & MB_FLAGS_ACPI_TABLE) ? TRUE : FALSE;
+    MmFreeLdrPageDirectoryEnd = RosLoaderBlock->PageDirectoryEnd;
+    if (!MmFreeLdrPageDirectoryEnd) MmFreeLdrPageDirectoryEnd = 0x40000;
 
     /* Set the NT Loader block and initialize it */
     *NtLoaderBlock = KeLoaderBlock = LoaderBlock = &BldrLoaderBlock;
