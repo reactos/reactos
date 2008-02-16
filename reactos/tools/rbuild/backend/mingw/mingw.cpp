@@ -349,6 +349,7 @@ MingwBackend::ProcessNormal ()
 	GenerateModulesManifests();
 	GenerateProxyMakefiles ();
     GenerateCreditsFile();
+    GenerateArchitectureHeader();
 	CheckAutomaticDependencies ();
 	CloseMakefile ();
 }
@@ -781,6 +782,15 @@ MingwBackend::GenerateCreditsFile ()
 	CreditsGenerator creditsGenerator ( ProjectNode );
 	creditsGenerator.Generate ();
 	printf ( "done\n" );
+}
+
+void
+MingwBackend::GenerateArchitectureHeader ()
+{
+    printf ( "Generating architecture header file..." );
+    ArchitectureHeaderGenerator archHeaderGenerator ( ProjectNode );
+    archHeaderGenerator.Generate ();
+    printf ( "done\n" );
 }
 
 string

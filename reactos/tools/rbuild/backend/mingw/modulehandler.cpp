@@ -3698,7 +3698,7 @@ void
 MingwLiveIsoModuleHandler::GenerateLiveIsoModuleTarget ()
 {
     string livecdRootDirectory = module.name;
-    string livecdArchDirectory = module.name + sSep + Environment::GetArchCdPath( module.project );
+    string livecdArchDirectory = module.name + sSep + Environment::GetArchCdRoot( module.project );
 	FileLocation livecd ( OutputDirectory, livecdRootDirectory, "" );
 
 	string bootloader;

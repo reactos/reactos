@@ -211,7 +211,7 @@ class Environment
 public:
 	static std::string GetVariable ( const std::string& name );
 	static std::string GetArchName ();
-    static std::string GetArchCdPath ( const Project& project );
+    static std::string GetArchCdRoot ( const Project& project );
 	static std::string GetIntermediatePath ();
 	static std::string GetOutputPath ();
 	static std::string GetCdOutputPath ();
@@ -266,6 +266,7 @@ public:
 
 enum ArchitectureType
 {
+    ARM,
 	I386,
 	PowerPC
 };
@@ -1255,6 +1256,16 @@ public:
     void Generate();
 	void GenerateTxt();
     void GenerateHeader ();
+private:
+};
+
+class ArchitectureHeaderGenerator
+{
+public:
+    const Project& project;
+    ArchitectureHeaderGenerator ( const Project& project );
+    ~ArchitectureHeaderGenerator ();
+    void Generate();
 private:
 };
 

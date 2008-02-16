@@ -88,6 +88,7 @@ private:
 	void GenerateModulesResources();
 	void GenerateModulesManifests();
     void GenerateCreditsFile ();
+    void GenerateArchitectureHeader ();
 	std::string GetProxyMakefileTree () const;
 	void GenerateProxyMakefiles ();
 	void CheckAutomaticDependencies ();

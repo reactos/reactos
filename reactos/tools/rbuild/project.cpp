@@ -78,10 +78,11 @@ Environment::GetArchName ()
 }
 
 string
-Environment::GetArchCdPath ( const Project& project )
+Environment::GetArchCdRoot ( const Project& project )
 {
     switch( project.architectureType )
     {
+        case ARM:     return "ARM";
         case I386:    return "I386";
         case PowerPC: return "PPC";
     }
@@ -149,7 +150,7 @@ Environment::GetCdOutputPath ()
 Environment::GetBootstrapCdOutputPath ( const Project& project )
 {
 	return GetEnvironmentVariablePathOrDefault ( "ROS_CDBOOTSTRAPOUTPUT",
-	                                             GetArchCdPath(project) );
+	                                             GetArchCdRoot(project) );
 }
 
 /* static */ string
