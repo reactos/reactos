@@ -1210,8 +1210,8 @@ ULONG CCabinet::ExtractFile(char* FileName)
 
                     BytesToRead = CFData.CompSize;
 
-                    DPRINT(MAX_TRACE, ("Read: (0x%X,0x%X).\n",
-                        (UINT)CurrentBuffer, (UINT)Buffer));
+                    DPRINT(MAX_TRACE, ("Read: (0x%lX,0x%lX).\n",
+                        (unsigned long)CurrentBuffer, (unsigned long)Buffer));
 
                     if (((Status = ReadBlock(CurrentBuffer, BytesToRead, &BytesRead)) !=
                         CAB_STATUS_SUCCESS) || (BytesToRead != BytesRead))
