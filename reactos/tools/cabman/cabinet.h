@@ -21,10 +21,6 @@
 #endif
 #endif
 
-#ifndef _W64
-#define _W64
-#endif
-
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
