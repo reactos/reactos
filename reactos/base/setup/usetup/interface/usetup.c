@@ -1628,7 +1628,7 @@ CreatePartitionPage (PINPUT_RECORD Ir)
     if (DiskEntry->DriverName.Length > 0)
     {
         CONSOLE_PrintTextXY(6, 10,
-                             "%I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) on %wZ.",
+                             MUIGetString(STRING_HDDINFO1),
                              DiskSize,
                              Unit,
                              DiskEntry->DiskNumber,
@@ -1640,7 +1640,7 @@ CreatePartitionPage (PINPUT_RECORD Ir)
     else
     {
         CONSOLE_PrintTextXY(6, 10,
-                             "%I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu).",
+                             MUIGetString(STRING_HDDINFO2),
                              DiskSize,
                              Unit,
                              DiskEntry->DiskNumber,
@@ -1798,7 +1798,7 @@ DeletePartitionPage (PINPUT_RECORD Ir)
     if (PartType == NULL)
     {
         CONSOLE_PrintTextXY(6, 10,
-                             "   %c%c  Type %lu    %I64u %s",
+                             MUIGetString(STRING_HDDINFO3),
                              (PartEntry->DriveLetter == 0) ? '-' : PartEntry->DriveLetter,
                              (PartEntry->DriveLetter == 0) ? '-' : ':',
                              PartEntry->PartInfo[0].PartitionType,
@@ -1836,7 +1836,7 @@ DeletePartitionPage (PINPUT_RECORD Ir)
     if (DiskEntry->DriverName.Length > 0)
     {
         CONSOLE_PrintTextXY(6, 12,
-                             "on %I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) on %wZ.",
+                             MUIGetString(STRING_HDDINFO4),
                              DiskSize,
                              Unit,
                              DiskEntry->DiskNumber,
@@ -1848,7 +1848,7 @@ DeletePartitionPage (PINPUT_RECORD Ir)
     else
     {
         CONSOLE_PrintTextXY(6, 12,
-                             "on %I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu).",
+                             MUIGetString(STRING_HDDINFO5),
                              DiskSize,
                              Unit,
                              DiskEntry->DiskNumber,
@@ -1965,7 +1965,7 @@ SelectFileSystemPage (PINPUT_RECORD Ir)
 
     if (PartEntry->AutoCreate == TRUE)
     {
-        CONSOLE_SetTextXY(6, 8, "Setup created a new partition on");
+        CONSOLE_SetTextXY(6, 8, MUIGetString(STRING_NEWPARTITION));
 
 #if 0
         CONSOLE_PrintTextXY(8, 10, "Partition %lu (%I64u %s) %s of",
@@ -1975,7 +1975,7 @@ SelectFileSystemPage (PINPUT_RECORD Ir)
                             PartType);
 #endif
 
-        CONSOLE_PrintTextXY(8, 10, "Harddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ).",
+        CONSOLE_PrintTextXY(8, 10, MUIGetString(STRING_HDDINFO6),
                             DiskEntry->DiskNumber,
                             DiskSize,
                             DiskUnit,
@@ -2001,7 +2001,7 @@ SelectFileSystemPage (PINPUT_RECORD Ir)
         if (PartType == NULL)
         {
             CONSOLE_PrintTextXY(8, 10,
-                                 "%c%c  Type %lu    %I64u %s",
+                                 MUIGetString(STRING_HDDINFO7),
                                  (PartEntry->DriveLetter == 0) ? '-' : PartEntry->DriveLetter,
                                  (PartEntry->DriveLetter == 0) ? '-' : ':',
                                  PartEntry->PartInfo[0].PartitionType,
@@ -2019,7 +2019,7 @@ SelectFileSystemPage (PINPUT_RECORD Ir)
                                 PartUnit);
         }
 
-        CONSOLE_PrintTextXY(6, 12, "on Harddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ).",
+        CONSOLE_PrintTextXY(6, 12, MUIGetString(STRING_HDDINFO8),
                             DiskEntry->DiskNumber,
                             DiskSize,
                             DiskUnit,

@@ -1136,7 +1136,7 @@ PrintPartitionData (PPARTLIST List,
       }
 
       sprintf (LineBuffer,
-               "    Unpartitioned space              %6lu %s",
+               MUIGetString(STRING_UNPSPACE),
                PartSize.u.LowPart,
                Unit);
   }
@@ -1194,7 +1194,7 @@ PrintPartitionData (PPARTLIST List,
     if (PartType == NULL)
     {
       sprintf (LineBuffer,
-               "%c%c  Type %-3u                         %6lu %s",
+               MUIGetString(STRING_HDDINFO9),
                (PartEntry->DriveLetter == 0) ? '-' : PartEntry->DriveLetter,
                (PartEntry->DriveLetter == 0) ? '-' : ':',
                PartEntry->PartInfo[0].PartitionType,
@@ -1288,7 +1288,7 @@ PrintDiskData (PPARTLIST List,
   if (DiskEntry->DriverName.Length > 0)
   {
     sprintf (LineBuffer,
-             "%6lu %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) on %S",
+             MUIGetString(STRING_HDDINFO10),
              DiskSize.u.LowPart,
              Unit,
              DiskEntry->DiskNumber,
@@ -1300,7 +1300,7 @@ PrintDiskData (PPARTLIST List,
   else
   {
     sprintf (LineBuffer,
-             "%6lu %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu)",
+             MUIGetString(STRING_HDDINFO11),
              DiskSize.u.LowPart,
              Unit,
              DiskEntry->DiskNumber,
