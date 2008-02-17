@@ -57,7 +57,10 @@ extern "C" {
 #define MAKE_HRESULT(sev,fac,code) ((HRESULT) (((unsigned long)(sev)<<31) | ((unsigned long)(fac)<<16) | ((unsigned long)(code))) )
 #endif
 
+#ifndef FLATPTR_DEFINED
 typedef ULONG_PTR FLATPTR;
+#define FLATPTR_DEFINED
+#endif
 
 typedef struct _DD_VIDEOPORT_LOCAL   *PDD_VIDEOPORT_LOCAL;
 
