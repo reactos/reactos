@@ -1667,6 +1667,8 @@ MUI_STRING skSKStrings[] =
     "%6lu %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) on %S"},
     {STRING_HDDINFOUNK6,
     "%6lu %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu)"},
+    {STRING_NEWPARTITION,
+    "Setup created a new partition on"},
     {STRING_UNPSPACE,
     "    Unpartitioned space              %6lu %s"},
     {0, 0}
