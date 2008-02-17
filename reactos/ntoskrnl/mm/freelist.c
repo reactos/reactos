@@ -251,7 +251,6 @@ MmAllocEarlyPage(VOID)
     return Pfn;
 }
 
-#if 0
 VOID
 NTAPI
 MmInitializePageList(VOID)
@@ -375,7 +374,15 @@ MmInitializePageList(VOID)
          i <= MmPageArraySize;
          i++)
     {
-        /* Mark them as used kernel memory */
+        /* If this page was marked as free it should be removed from
+           the unzeroed free pages list */
+        if (MmPageArray[i].Flags.Type == MM_PHYSICAL_PAGE_FREE)
+        {
+            RemoveEntryList(&MmPageArray[i].ListEntry);
+            UnzeroedPageCount--;
+        }
+
+        /* Mark it as used kernel memory */
         MmPageArray[i] = UsedPage;
         MmStats.NrSystemPages++;
     }
@@ -386,198 +393,6 @@ MmInitializePageList(VOID)
     MmStats.NrTotalPages = MmStats.NrFreePages + MmStats.NrSystemPages + MmStats.NrUserPages;
     MmInitializeBalancer(MmStats.NrFreePages, MmStats.NrSystemPages);
 }
-#else
-VOID
-NTAPI
-MmInitializePageList()
-{
-    ULONG i;
-    ULONG Reserved;
-    NTSTATUS Status;
-    PFN_TYPE Pfn = 0;
-    PHYSICAL_PAGE UsedPage;
-    ULONG PdeStart = PsGetCurrentProcess()->Pcb.DirectoryTableBase.LowPart;
-    ULONG PdePageStart, PdePageEnd;
-    ULONG VideoPageStart, VideoPageEnd;
-    ULONG KernelPageStart, KernelPageEnd;
-    ULONG_PTR KernelStart, KernelEnd;
-    extern ULONG MiKSeg0Start, MiKSeg0End, MmFreeLdrPageDirectoryEnd;
-
-    /* Initialize the page lists */
-    KeInitializeSpinLock(&PageListLock);
-    InitializeListHead(&UserPageListHead);
-    InitializeListHead(&FreeUnzeroedPageListHead);
-    InitializeListHead(&FreeZeroedPageListHead);
-
-    DPRINT1("HACK: Using old incorrect MmInitializePageList(). "
-        "Please bugfix the new version and delete this one\n");
-
-    /* Set the size and start of the PFN Database */
-    MmPageArray = (PHYSICAL_PAGE *)MmPfnDatabase;
-    MmPageArraySize = MmHighestPhysicalPage;
-    Reserved = PAGE_ROUND_UP((MmPageArraySize * sizeof(PHYSICAL_PAGE))) / PAGE_SIZE;
-
-    /* Loop every page required to hold the PFN database */
-    for (i = 0; i < Reserved; i++)
-    {
-        PVOID Address = (char*)MmPageArray + (i * PAGE_SIZE);
-
-        /* Check if FreeLDR has already allocated it for us */
-        if (!MmIsPagePresent(NULL, Address))
-        {
-            /* Use one of our highest usable pages */
-            Pfn = MmAllocEarlyPage();
-
-            /* Set the PFN */
-            Status = MmCreateVirtualMappingForKernel(Address,
-                                                     PAGE_READWRITE,
-                                                     &Pfn,
-                                                     1);
-            if (!NT_SUCCESS(Status))
-            {
-                DPRINT1("Unable to create virtual mapping\n");
-                KEBUGCHECK(0);
-            }
-        }
-        else
-        {
-            /* Setting the page protection is necessary to set the global bit */
-            MmSetPageProtect(NULL, Address, PAGE_READWRITE);
-        }
-    }
-
-    /* Clear the PFN database */
-    RtlZeroMemory(MmPageArray, (MmPageArraySize + 1) * sizeof(PHYSICAL_PAGE));
-
-    /* This is what a used page looks like */
-    RtlZeroMemory(&UsedPage, sizeof(UsedPage));
-    UsedPage.Flags.Type = MM_PHYSICAL_PAGE_USED;
-    UsedPage.Flags.Consumer = MC_NPPOOL;
-    UsedPage.ReferenceCount = 2;
-    UsedPage.MapCount = 1;
-
-    /* We'll be applying a bunch of hacks -- precompute some static values */
-    KernelStart = MiKSeg0Start - KSEG0_BASE;
-    KernelEnd = MiKSeg0End - KSEG0_BASE;
-    PdePageStart = PdeStart / PAGE_SIZE;
-    PdePageEnd = MmFreeLdrPageDirectoryEnd / PAGE_SIZE;
-    VideoPageStart = 0xA0000 / PAGE_SIZE;
-    VideoPageEnd = 0x100000 / PAGE_SIZE;
-    KernelPageStart = KernelStart / PAGE_SIZE;
-    KernelPageEnd = KernelEnd / PAGE_SIZE;
-    
-    // Glorious Hack:
-    // The kernel seems to crash if the region of memory that FreeLDR maps 
-    // (those evil 6MB) is not *entirely* marked "in use", even though only
-    // 3 or 4MB of it may actually be in use.
-    // This wasn't noticed before, because the PFN database pages which are
-    // *VIRTUALLY* continous after the kernel end were also marked as
-    // *PHYSICALLY* continous (even though they were allocated at the very far
-    // end of physical memory).
-    // 
-    // So we'll simply gobble up whatever is left of what FreeLDR mapped.
-    //
-    // PS. This is really sinister
-    //
-    KernelEnd += (KernelStart + 0x600000) - KernelEnd;
-    KernelPageEnd = KernelEnd / PAGE_SIZE;
-    
-    /* Loop every page on the system */
-    for (i = 0; i <= MmPageArraySize; i++)
-    {
-        /* Check if it's part of RAM */
-        if (/*MiIsPfnRam(BIOSMemoryMap, AddressRangeCount, i)*/TRUE)
-        {
-            /* Apply assumptions that all computers are built the same way */
-            if (i == 0)
-            {
-                /* Page 0 is reserved for the IVT */
-                MmPageArray[i] = UsedPage;
-                MmStats.NrSystemPages++;
-            }
-            else if (i == 1)
-            {
-                /* Page 1 is reserved for the PCR */
-                MmPageArray[i] = UsedPage;
-                MmStats.NrSystemPages++;
-            }
-            else if (i == 2)
-            {
-                /* Page 2 is reserved for the KUSER_SHARED_DATA */
-                MmPageArray[i] = UsedPage;
-                MmStats.NrSystemPages++;
-            }
-            else if ((i >= PdePageStart) && (i < PdePageEnd))
-            {
-                /* These pages contain the initial FreeLDR PDEs */
-                MmPageArray[i] = UsedPage;
-                MmStats.NrSystemPages++;
-            }
-            else if ((i >= VideoPageStart) && (i < VideoPageEnd))
-            {
-                /*
-                 * These pages are usually for the Video ROM BIOS.
-                 * Supposedly anyway. We'll simply ignore the fact that
-                 * many systems have this area somewhere else entirely
-                 * (which we'll assume to be "free" a couple of lines below)
-                 */
-                MmPageArray[i].Flags.Type = MM_PHYSICAL_PAGE_BIOS;
-                MmPageArray[i].Flags.Consumer = MC_NPPOOL;
-                MmStats.NrSystemPages++;
-            }
-            else if ((i >= KernelPageStart) && (i < KernelPageEnd))
-            {
-                /* These are pages beloning to the kernel */
-                MmPageArray[i] = UsedPage;
-                MmStats.NrSystemPages++;
-            }
-            else if (i >= (MiFreeDescriptor->BasePage + MiFreeDescriptor->PageCount))
-            {
-                /* These are pages we allocated above to hold the PFN DB */
-                MmPageArray[i] = UsedPage;
-                MmStats.NrSystemPages++;
-            }
-            else
-            {
-                /*
-                 * These are supposedly free pages.
-                 * By the way, not all of them are, some contain vital
-                 * FreeLDR data, but since we choose to ignore the Memory
-                 * Descriptor List, why bother, right?
-                 */
-                MmPageArray[i].Flags.Type = MM_PHYSICAL_PAGE_FREE;
-                MmPageArray[i].ReferenceCount = 0;
-                InsertTailList(&FreeUnzeroedPageListHead,
-                               &MmPageArray[i].ListEntry);
-                UnzeroedPageCount++;
-                MmStats.NrFreePages++;
-            }
-        }
-        else
-        {
-            /* These are pages reserved by the BIOS/ROMs */
-            MmPageArray[i].Flags.Type = MM_PHYSICAL_PAGE_BIOS;
-            MmPageArray[i].Flags.Consumer = MC_NPPOOL;
-            MmStats.NrSystemPages++;
-        }
-    }
-
-    KeInitializeEvent(&ZeroPageThreadEvent, NotificationEvent, TRUE);
-    DPRINT("Pages: %x %x\n", MmStats.NrFreePages, MmStats.NrSystemPages);
-    /*
-    DPRINT1("Unzeroed pages: %x\n", UnzeroedPageCount);
-    {
-        ULONG j = 0;
-        for (j=0; j<=MmPageArraySize; j++)
-        {
-            if (j % 0x10 == 0) DbgPrint ("\n0x%x\t", j);
-            DbgPrint("0x%x\t", MmPageArray[j].AllFlags);
-        }
-    }*/
-    MmStats.NrTotalPages = MmStats.NrFreePages + MmStats.NrSystemPages + MmStats.NrUserPages;
-    MmInitializeBalancer(MmStats.NrFreePages, MmStats.NrSystemPages);
-}
-#endif
 
 VOID
 NTAPI
