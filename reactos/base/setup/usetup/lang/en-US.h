@@ -1395,7 +1395,7 @@ MUI_ERROR enUSErrorEntries[] =
     },
     {
         //ERROR_INITIALIZE_REGISTRY,
-        "Setup failed to set the initialize the registry.",
+        "Setup failed to initialize the registry.",
         "ENTER = Reboot computer"
     },
     {
@@ -1589,7 +1589,7 @@ MUI_STRING enUSStrings[] =
     {STRING_NONFORMATTEDPART,
     "You chose to install ReactOS on a new or unformatted Partition."},
     {STRING_INSTALLONPART,
-    "Setup install ReactOS onto Partition"},
+    "Setup installs ReactOS onto Partition"},
     {STRING_CHECKINGPART,
     "Setup is now checking the selected partition."},
     {STRING_QUITCONTINUE,
