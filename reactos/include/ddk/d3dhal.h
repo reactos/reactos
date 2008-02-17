@@ -26,7 +26,25 @@
 extern "C" {
 #endif
 
+#include <ddraw.h>
+#include <d3dtypes.h>
+#include <d3dcaps.h>
 #include <d3d.h>
+
+#if (DIRECT3D_VERSION >= 0x0900)
+#include <d3d9.h>
+#endif
+
+#ifndef DDRAWI_DIRECTDRAW_DEFINED
+typedef struct _DDRAWI_DIRECTDRAW_GBL FAR *LPDDRAWI_DIRECTDRAW_GBL;
+typedef struct _DDRAWI_DIRECTDRAW_LCL FAR *LPDDRAWI_DIRECTDRAW_LCL;
+#define DDRAWI_DIRECTDRAW_DEFINED
+#endif
+
+#ifndef DDRAWI_DDRAWSURFACE_DEFINED
+typedef struct _DDRAWI_DDRAWSURFACE_LCL FAR *LPDDRAWI_DDRAWSURFACE_LCL;
+#define DDRAWI_DDRAWSURFACE_DEFINED
+#endif
 
 #define D3DERR_COMMAND_UNPARSED 0x88760BB8;
 
@@ -578,6 +596,155 @@ typedef struct _D3DHAL_DP2SETTEXLOD {
   DWORD dwDDSurface;
   DWORD dwLOD;
 } D3DHAL_DP2SETTEXLOD,*LPD3DHAL_DP2SETTEXLOD;
+
+
+#if (DIRECT3D_VERSION >= 0x0900)
+
+#define DX9_DDI_VERSION     4
+
+#ifndef D3DVTXPCAPS_NO_VSDT_UBYTE4
+#define D3DVTXPCAPS_NO_VSDT_UBYTE4          0x00000080
+#endif
+
+#define D3DPMISCCAPS_LINEPATTERNREP         0x00000004
+
+#define D3DDEVCAPS_HWVERTEXBUFFER           0x02000000
+#define D3DDEVCAPS_HWINDEXBUFFER            0x04000000
+#define D3DDEVCAPS_SUBVOLUMELOCK            0x08000000
+
+#ifndef D3DPMISCCAPS_FOGINFVF
+#define D3DPMISCCAPS_FOGINFVF               0x00002000
+#endif
+
+#ifndef D3DFVF_FOG
+#define D3DFVF_FOG                          0x00002000
+#endif
+
+typedef struct _DD_GETDRIVERINFO2DATA
+{
+    DWORD       dwReserved;
+    DWORD       dwMagic;
+    DWORD       dwType;
+    DWORD       dwExpectedSize;
+} DD_GETDRIVERINFO2DATA;
+
+/**
+ * A driver must check DD_GETDRIVERINFO2DATA.dwHeight for
+ * D3DGDI2_MAGIC to see if the passed GUID is GUID_GetDriverInfo2
+ * or a GUID_DDStereoMode.
+ */
+#define GUID_GetDriverInfo2                         GUID_DDStereoMode
+
+/**
+ * Magic number used in DD_GETDRIVERINFO2DATA.dwHeight when
+ * GUID_GetDriverInfo2/GUID_DDStereoMode is specified in a
+ * GetDriverInfo call.
+ */
+#define D3DGDI2_MAGIC                               0xFFFFFFFF
+
+#define D3DGDI2_TYPE_GETD3DCAPS8                    0x00000001
+#define D3DGDI2_TYPE_GETFORMATCOUNT                 0x00000002
+#define D3DGDI2_TYPE_GETFORMAT                      0x00000003
+#define D3DGDI2_TYPE_DXVERSION                      0x00000004  /* Make driver aware of currently used DirectX version */
+#define D3DGDI2_TYPE_GETD3DCAPS9                    0x00000010
+#define D3DGDI2_TYPE_GETEXTENDEDMODECOUNT           0x00000011
+#define D3DGDI2_TYPE_GETEXTENDEDMODE                0x00000012
+#define D3DGDI2_TYPE_GETADAPTERGROUP                0x00000013
+#define D3DGDI2_TYPE_GETMULTISAMPLEQUALITYLEVELS    0x00000016
+#define D3DGDI2_TYPE_DEFERRED_AGP_AWARE             0x00000018
+#define D3DGDI2_TYPE_FREE_DEFERRED_AGP              0x00000019
+#define D3DGDI2_TYPE_DEFER_AGP_FREES                0x00000020
+#define D3DGDI2_TYPE_GETD3DQUERYCOUNT               0x00000021
+#define D3DGDI2_TYPE_GETD3DQUERY                    0x00000022
+#define D3DGDI2_TYPE_GETDDIVERSION                  0x00000023  /* Returns DX9_DDI_VERSION, used to check which DDK version the driver is compiled against */
+
+typedef struct _DD_GETFORMATCOUNTDATA
+{
+    DD_GETDRIVERINFO2DATA gdi2;
+    DWORD dwFormatCount;
+    DWORD dwReserved;
+} DD_GETFORMATCOUNTDATA;
+
+typedef struct _DD_GETFORMATDATA
+{
+    DD_GETDRIVERINFO2DATA gdi2;
+    DWORD dwFormatIndex;
+    DDPIXELFORMAT format;
+} DD_GETFORMATDATA;
+
+typedef struct _DD_DXVERSION
+{
+    DD_GETDRIVERINFO2DATA gdi2;
+    DWORD dwDXVersion;
+    DWORD dwReserved;
+} DD_DXVERSION;
+
+typedef struct _DD_DEFERRED_AGP_AWARE_DATA
+{
+    DD_GETDRIVERINFO2DATA gdi2;
+} DD_DEFERRED_AGP_AWARE_DATA;
+
+typedef struct _DD_FREE_DEFERRED_AGP_DATA
+{
+    DD_GETDRIVERINFO2DATA gdi2;
+    DWORD dwProcessId;
+} DD_FREE_DEFERRED_AGP_DATA;
+
+typedef struct _DD_GETEXTENDEDMODECOUNTDATA
+{
+    DD_GETDRIVERINFO2DATA gdi2;
+    DWORD dwModeCount;
+    DWORD dwReserved;
+} DD_GETEXTENDEDMODECOUNTDATA;
+
+typedef struct _DD_GETEXTENDEDMODEDATA
+{
+    DD_GETDRIVERINFO2DATA gdi2;
+    DWORD                 dwModeIndex;
+    D3DDISPLAYMODE        mode;
+} DD_GETEXTENDEDMODEDATA;
+
+typedef struct _DD_GETADAPTERGROUPDATA
+{
+    DD_GETDRIVERINFO2DATA gdi2;
+    ULONG_PTR ulUniqueAdapterGroupId;
+    DWORD dwReserved1;
+    DWORD dwReserved2;
+} DD_GETADAPTERGROUPDATA;
+
+typedef struct _DD_MULTISAMPLEQUALITYLEVELSDATA
+{
+    DD_GETDRIVERINFO2DATA gdi2;
+    D3DFORMAT Format;
+    BOOL                    bFlip  :  1;
+    D3DMULTISAMPLE_TYPE     MSType : 31;
+    DWORD QualityLevels;
+} DD_MULTISAMPLEQUALITYLEVELSDATA;
+
+typedef struct _DD_GETD3DQUERYCOUNTDATA
+{
+    DD_GETDRIVERINFO2DATA gdi2;
+    DWORD dwNumQueries;
+} DD_GETD3DQUERYCOUNTDATA;
+
+typedef struct _DD_GETD3DQUERYDATA
+{
+    DD_GETDRIVERINFO2DATA gdi2;
+    union
+    {
+        DWORD dwQueryIndex;
+        D3DQUERYTYPE QueryType;
+    };
+} DD_GETD3DQUERYDATA;
+
+typedef struct _DD_GETDDIVERSIONDATA
+{
+    DD_GETDRIVERINFO2DATA gdi2;
+    DWORD dwDXVersion;
+    DWORD dwDDIVersion;
+} DD_GETDDIVERSIONDATA;
+
+#endif /* (DIRECT3D_VERSION >= 0x0900) */
 
 #ifdef __cplusplus
 } /* extern "C" */
