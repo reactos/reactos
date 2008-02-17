@@ -25,6 +25,16 @@ DWORD STDCALL OsThunkD3dContextDestroyAll(
     LPD3DNTHAL_CONTEXTDESTROYDATA pContextDestroyData
 );
 
+DWORD STDCALL OsThunkD3dDrawPrimitives2(
+    HANDLE hCmdBuf,
+    HANDLE hVBuf,
+    LPD3DNTHAL_DRAWPRIMITIVES2DATA pded,
+    FLATPTR *pfpVidMemCmd,
+    DWORD *pdwSizeCmd,
+    FLATPTR *pfpVidMemVtx,
+    DWORD *pdwSizeVtx
+);
+
 DWORD STDCALL OsThunkD3dValidateTextureStageState(
     LPD3DNTHAL_VALIDATETEXTURESTAGESTATEDATA pData
 );
