@@ -126,6 +126,20 @@ typedef struct _VMEMHEAP
     DWORD dwAgpCommitMaskSize;
 } VMEMHEAP, *LPVMEMHEAP;
 
+typedef struct _DD_GETHEAPALIGNMENTDATA
+{
+    ULONG_PTR dwInstance;
+    DWORD dwHeap;
+    HRESULT ddRVal;
+    VOID* GetHeapAlignment;
+    HEAPALIGNMENT Alignment;
+} DD_GETHEAPALIGNMENTDATA;
+
+#ifndef DD_GETHEAPALIGNMENTDATA_DECLARED
+typedef DD_GETHEAPALIGNMENTDATA *PDD_GETHEAPALIGNMENTDATA;
+#define DD_GETHEAPALIGNMENTDATA_DECLARED
+#endif
+
 extern void WINAPI VidMemFree( LPVMEMHEAP pvmh, FLATPTR ptr);
 extern FLATPTR WINAPI VidMemAlloc( LPVMEMHEAP pvmh, DWORD width, DWORD height);
 

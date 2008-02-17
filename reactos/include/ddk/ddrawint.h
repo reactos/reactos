@@ -68,7 +68,10 @@ typedef struct _DD_VIDEOPORT_LOCAL   *PDD_VIDEOPORT_LOCAL;
 /* _DD_GETHEAPALIGNMENTDATA is defined in dmemmgr.h                     */
  /************************************************************************/
 struct _DD_GETHEAPALIGNMENTDATA;
+#ifndef DD_GETHEAPALIGNMENTDATA_DECLARED
 typedef struct _DD_GETHEAPALIGNMENTDATA *PDD_GETHEAPALIGNMENTDATA;
+#define DD_GETHEAPALIGNMENTDATA_DECLARED
+#endif
 
 /************************************************************************/
 /* Video memory info structures                                         */
