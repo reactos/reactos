@@ -242,11 +242,11 @@ NTAPI
 MmAllocEarlyPage(VOID)
 {
     PFN_TYPE Pfn;
-    
+
     /* Use one of our highest usable pages */
     Pfn = MiFreeDescriptor->BasePage + MiFreeDescriptor->PageCount - 1;
     MiFreeDescriptor->PageCount--;
-    
+
     /* Return it */
     return Pfn;
 }
@@ -285,7 +285,7 @@ MmInitializePageList(VOID)
         {
             /* Use one of our highest usable pages */
             Pfn = MmAllocEarlyPage();
-            
+
             /* Set the PFN */
             Status = MmCreateVirtualMappingForKernel(Address,
                                                      PAGE_READWRITE,
@@ -303,7 +303,7 @@ MmInitializePageList(VOID)
             MmSetPageProtect(NULL, Address, PAGE_READWRITE);
         }
     }
-    
+
     /* Clear the PFN database */
     RtlZeroMemory(MmPageArray, (MmPageArraySize + 1) * sizeof(PHYSICAL_PAGE));
 
@@ -386,8 +386,7 @@ MmInitializePageList(VOID)
     MmStats.NrTotalPages = MmStats.NrFreePages + MmStats.NrSystemPages + MmStats.NrUserPages;
     MmInitializeBalancer(MmStats.NrFreePages, MmStats.NrSystemPages);
 }
-#endif
-
+#else
 VOID
 NTAPI
 MmInitializePageList()
@@ -427,9 +426,8 @@ MmInitializePageList()
         if (!MmIsPagePresent(NULL, Address))
         {
             /* Use one of our highest usable pages */
-            Pfn = MiFreeDescriptor->BasePage + MiFreeDescriptor->PageCount - 1;
-            MiFreeDescriptor->PageCount--;
-            
+            Pfn = MmAllocEarlyPage();
+
             /* Set the PFN */
             Status = MmCreateVirtualMappingForKernel(Address,
                                                      PAGE_READWRITE,
@@ -579,6 +577,7 @@ MmInitializePageList()
     MmStats.NrTotalPages = MmStats.NrFreePages + MmStats.NrSystemPages + MmStats.NrUserPages;
     MmInitializeBalancer(MmStats.NrFreePages, MmStats.NrSystemPages);
 }
+#endif
 
 VOID
 NTAPI
@@ -945,7 +944,9 @@ MmAllocPage(ULONG Consumer, SWAPENTRY SavedSwapEntry)
          {
              /* Allocate an early page -- we'll account for it later */
              KeReleaseSpinLock(&PageListLock, oldIrql);
-             return MmAllocEarlyPage();
+             PfnOffset = MmAllocEarlyPage();
+             MiZeroPage(PfnOffset);
+             return PfnOffset;
          }
           
          DPRINT1("MmAllocPage(): Out of memory\n");
