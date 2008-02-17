@@ -1628,7 +1628,7 @@ CreatePartitionPage (PINPUT_RECORD Ir)
     if (DiskEntry->DriverName.Length > 0)
     {
         CONSOLE_PrintTextXY(6, 10,
-                             MUIGetString(STRING_HDDINFO1),
+                             MUIGetString(STRING_HDINFOPARTCREATE),
                              DiskSize,
                              Unit,
                              DiskEntry->DiskNumber,
@@ -1640,7 +1640,7 @@ CreatePartitionPage (PINPUT_RECORD Ir)
     else
     {
         CONSOLE_PrintTextXY(6, 10,
-                             MUIGetString(STRING_HDDINFO2),
+                             MUIGetString(STRING_HDDINFOUNK1),
                              DiskSize,
                              Unit,
                              DiskEntry->DiskNumber,
@@ -1798,7 +1798,7 @@ DeletePartitionPage (PINPUT_RECORD Ir)
     if (PartType == NULL)
     {
         CONSOLE_PrintTextXY(6, 10,
-                             MUIGetString(STRING_HDDINFO3),
+                             MUIGetString(STRING_HDDINFOUNK2),
                              (PartEntry->DriveLetter == 0) ? '-' : PartEntry->DriveLetter,
                              (PartEntry->DriveLetter == 0) ? '-' : ':',
                              PartEntry->PartInfo[0].PartitionType,
@@ -1836,7 +1836,7 @@ DeletePartitionPage (PINPUT_RECORD Ir)
     if (DiskEntry->DriverName.Length > 0)
     {
         CONSOLE_PrintTextXY(6, 12,
-                             MUIGetString(STRING_HDDINFO4),
+                             MUIGetString(STRING_HDINFOPARTDELETE),
                              DiskSize,
                              Unit,
                              DiskEntry->DiskNumber,
@@ -1848,7 +1848,7 @@ DeletePartitionPage (PINPUT_RECORD Ir)
     else
     {
         CONSOLE_PrintTextXY(6, 12,
-                             MUIGetString(STRING_HDDINFO5),
+                             MUIGetString(STRING_HDDINFOUNK3),
                              DiskSize,
                              Unit,
                              DiskEntry->DiskNumber,
@@ -1975,7 +1975,7 @@ SelectFileSystemPage (PINPUT_RECORD Ir)
                             PartType);
 #endif
 
-        CONSOLE_PrintTextXY(8, 10, MUIGetString(STRING_HDDINFO6),
+        CONSOLE_PrintTextXY(8, 10, MUIGetString(STRING_HDINFOPARTZEROED),
                             DiskEntry->DiskNumber,
                             DiskSize,
                             DiskUnit,
@@ -2001,7 +2001,7 @@ SelectFileSystemPage (PINPUT_RECORD Ir)
         if (PartType == NULL)
         {
             CONSOLE_PrintTextXY(8, 10,
-                                 MUIGetString(STRING_HDDINFO7),
+                                 MUIGetString(STRING_HDDINFOUNK4),
                                  (PartEntry->DriveLetter == 0) ? '-' : PartEntry->DriveLetter,
                                  (PartEntry->DriveLetter == 0) ? '-' : ':',
                                  PartEntry->PartInfo[0].PartitionType,
@@ -2019,7 +2019,7 @@ SelectFileSystemPage (PINPUT_RECORD Ir)
                                 PartUnit);
         }
 
-        CONSOLE_PrintTextXY(6, 12, MUIGetString(STRING_HDDINFO8),
+        CONSOLE_PrintTextXY(6, 12, MUIGetString(STRING_HDINFOPARTEXISTS),
                             DiskEntry->DiskNumber,
                             DiskSize,
                             DiskUnit,

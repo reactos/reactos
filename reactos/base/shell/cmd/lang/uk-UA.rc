@@ -27,23 +27,23 @@ ATTRIB [+R | -R] [+A | -A] [+S | -S] [+H | -H] файл ...\n\
   /D  Обробка також і папок\n\n\
 Введіть ATTRIB без параметра, щоб вивести атрибути всіх файлів.\n"
 
-STRING_ALIAS_HELP,  "Sets, removes or shows aliases.\n\n\
-ALIAS [alias=[command]]\n\n\
-  alias    Name for an alias.\n\
-  command  Text to be substituted for an alias.\n\n\
-To list all aliases:\n\
+STRING_ALIAS_HELP,  "Встановлення, видалення або показ псевдонімів.\n\n\
+ALIAS [псевдонім=[команда]]\n\n\
+  псевдонім    Ім'я псевдоніма.\n\
+  команда      Текст, що підставляється замість псевдоніма.\n\n\
+Виведення списку всіх псевдонімів:\n\
   ALIAS\n\n\
-To set a new or replace an existing alias:\n\
+Встановлення або зміна існуючого псевдоніма:\n\
   ALIAS da=dir a:\n\n\
-To remove an alias from the alias list:\n\
+Видалення псевдоніма зі списку:\n\
   ALIAS da="
 
-STRING_BEEP_HELP, "Beep the speaker.\n\nBEEP\n"
+STRING_BEEP_HELP, "Звуковий сигнал спікера.\n\nBEEP\n"
 
-STRING_CALL_HELP, "Calls one batch program from another.\n\n\
-CALL [drive:][path]filename [batch-parameter]\n\n\
-  batch-parameter  Specifies any command-line information required by the\n\
-                   batch program."
+STRING_CALL_HELP, "Виклик однієї пакетної програми з іншої.\n\n\
+CALL [диск:][шлях]ім'я_файла [параметри]\n\n\
+  параметри  Набір параметрів командного рядка, необхідних для пакетного\n\
+             файлу."
 
 STRING_CD_HELP,      "Changes the current directory or displays it's name\n\n\
 CHDIR [/D][drive:][path]\n\

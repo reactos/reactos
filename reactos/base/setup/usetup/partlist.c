@@ -1194,7 +1194,7 @@ PrintPartitionData (PPARTLIST List,
     if (PartType == NULL)
     {
       sprintf (LineBuffer,
-               MUIGetString(STRING_HDDINFO9),
+               MUIGetString(STRING_HDDINFOUNK5),
                (PartEntry->DriveLetter == 0) ? '-' : PartEntry->DriveLetter,
                (PartEntry->DriveLetter == 0) ? '-' : ':',
                PartEntry->PartInfo[0].PartitionType,
@@ -1288,7 +1288,7 @@ PrintDiskData (PPARTLIST List,
   if (DiskEntry->DriverName.Length > 0)
   {
     sprintf (LineBuffer,
-             MUIGetString(STRING_HDDINFO10),
+             MUIGetString(STRING_HDINFOPARTSELECT),
              DiskSize.u.LowPart,
              Unit,
              DiskEntry->DiskNumber,
@@ -1300,7 +1300,7 @@ PrintDiskData (PPARTLIST List,
   else
   {
     sprintf (LineBuffer,
-             MUIGetString(STRING_HDDINFO11),
+             MUIGetString(STRING_HDDINFOUNK6),
              DiskSize.u.LowPart,
              Unit,
              DiskEntry->DiskNumber,

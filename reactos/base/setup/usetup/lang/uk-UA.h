@@ -82,7 +82,7 @@ static MUI_ENTRY ukUAWelcomePageEntries[] =
     {
         8,
         17,
-        "\x07  Натиснiть <R> щоб в_дновити ReactOS.",
+        "\x07  Натиснiть <R> щоб вiдновити ReactOS.",
         TEXT_NORMAL
     },
     {
@@ -1241,7 +1241,7 @@ static MUI_ENTRY ukUARegistryEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " Установка ReactOS " KERNEL_VERSION_STR " ",
         TEXT_UNDERLINE
     },
     {
@@ -1275,7 +1275,7 @@ MUI_ERROR ukUAErrorEntries[] =
         "\n"
         "  \x07  Press ENTER to continue Setup.\n"
         "  \x07  Press F3 to quit Setup.",
-        "F3= Quit  ENTER = Continue"
+        "F3 = Quit  ENTER = Continue"
     },
     {
         //ERROR_NO_HDD
@@ -1334,14 +1334,14 @@ MUI_ERROR ukUAErrorEntries[] =
     },
     {
         //ERROR_WARN_PARTITION,
-        "Setup found that at least one harddisk contains an incompatible\n"
-        "partition table that can not be handled properly!\n"
-        "\n"
-        "Creating or deleting partitions can destroy the partiton table.\n"
-        "\n"
-        "  \x07  Press F3 to quit Setup."
-        "  \x07  Press ENTER to continue.",
-        "F3= Quit  ENTER = Continue"
+          "Setup found that at least one harddisk contains an incompatible\n"
+          "partition table that can not be handled properly!\n"
+          "\n"
+          "Creating or deleting partitions can destroy the partition table.\n"
+          "\n"
+          "  \x07  Press F3 to quit Setup."
+          "  \x07  Press ENTER to continue.",
+          "F3= Quit  ENTER = Continue"
     },
     {
         //ERROR_NEW_PARTITION,
@@ -1475,8 +1475,8 @@ MUI_PAGE ukUAPages[] =
         ukUALanguagePageEntries
     },
     {
-       START_PAGE,
-       ukUAWelcomePageEntries
+        START_PAGE,
+        ukUAWelcomePageEntries
     },
     {
         INSTALL_INTRO_PAGE,
@@ -1566,6 +1566,107 @@ MUI_PAGE ukUAPages[] =
         -1,
         NULL
     }
+};
+
+MUI_STRING ukUAStrings[] =
+{
+    {STRING_PLEASEWAIT,
+     "   Please wait..."},
+    {STRING_INSTALLCREATEPARTITION,
+     "   ENTER = Install   C = Create Partition   F3 = Quit"},
+    {STRING_INSTALLDELETEPARTITION,
+     "   ENTER = Install   D = Delete Partition   F3 = Quit"},
+    {STRING_PARTITIONSIZE,
+     "Size of new partition:"},
+    {STRING_CHOOSENEWPARTITION,
+     "You have chosen to create a new partition on"},
+    {STRING_HDDSIZE,
+    "Please enter the size of the new partition in megabytes."},
+    {STRING_CREATEPARTITION,
+     "   ENTER = Create Partition   ESC = Cancel   F3 = Quit"},
+    {STRING_PARTFORMAT,
+    "This Partition will be formatted next."},
+    {STRING_NONFORMATTEDPART,
+    "You chose to install ReactOS on a new or unformatted Partition."},
+    {STRING_INSTALLONPART,
+    "Setup install ReactOS onto Partition"},
+    {STRING_CHECKINGPART,
+    "Setup is now checking the selected partition."},
+    {STRING_QUITCONTINUE,
+    "F3= Quit  ENTER = Continue"},
+    {STRING_REBOOTCOMPUTER,
+    "ENTER = Reboot computer"},
+    {STRING_TXTSETUPFAILED,
+    "Setup failed to find the '%S' section\nin TXTSETUP.SIF.\n"},
+    {STRING_COPYING,
+     "                                                   \xB3 Copying file: %S"},
+    {STRING_SETUPCOPYINGFILES,
+     "Setup is copying files..."},
+    {STRING_PAGEDMEM,
+     "Paged Memory"},
+    {STRING_NONPAGEDMEM,
+     "Nonpaged Memory"},
+    {STRING_FREEMEM,
+     "Free Memory"},
+    {STRING_REGHIVEUPDATE,
+    "   Updating registry hives..."},
+    {STRING_IMPORTFILE,
+    "   Importing %S..."},
+    {STRING_DISPLAYETTINGSUPDATE,
+    "   Updating display registry settings..."},
+    {STRING_LOCALESETTINGSUPDATE,
+    "   Updating locale settings..."},
+    {STRING_KEYBOARDSETTINGSUPDATE,
+    "   Updating keyboard layout settings..."},
+    {STRING_CODEPAGEINFOUPDATE,
+    "   Adding codepage information to registry..."},
+    {STRING_DONE,
+    "   Done..."},
+    {STRING_REBOOTCOMPUTER2,
+    "   ENTER = Reboot computer"},
+    {STRING_CONSOLEFAIL1,
+    "Unable to open the console\n\n"},
+    {STRING_CONSOLEFAIL2,
+    "The most common cause of this is using an USB keyboard\n"},
+    {STRING_CONSOLEFAIL3,
+    "USB keyboards are not fully supported yet\n"},
+    {STRING_FORMATTINGDISK,
+    "Setup is formatting your disk"},
+    {STRING_CHECKINGDISK,
+    "Setup is checking your disk"},
+    {STRING_FORMATDISK1,
+    " Format partition as %S file system (quick format) "},
+    {STRING_FORMATDISK2,
+    " Format partition as %S file system "},
+    {STRING_KEEPFORMAT,
+    " Keep current file system (no changes) "},
+    {STRING_HDINFOPARTCREATE,
+    "%I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) on %wZ."},
+    {STRING_HDDINFOUNK1,
+    "%I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu)."},
+    {STRING_HDDINFOUNK2,
+    "   %c%c  Type %lu    %I64u %s"},
+    {STRING_HDINFOPARTDELETE,
+    "on %I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) on %wZ."},
+    {STRING_HDDINFOUNK3,
+    "on %I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu)."},
+    {STRING_HDINFOPARTZEROED,
+    "Harddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ)."},
+    {STRING_HDDINFOUNK4,
+    "%c%c  Type %lu    %I64u %s"},
+    {STRING_HDINFOPARTEXISTS,
+    "on Harddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ)."},
+    {STRING_HDDINFOUNK5,
+    "%c%c  Type %-3u                         %6lu %s"},
+    {STRING_HDINFOPARTSELECT,
+    "%6lu %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) on %S"},
+    {STRING_HDDINFOUNK6,
+    "%6lu %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu)"},
+    {STRING_NEWPARTITION,
+    "Setup created a new partition on"},
+    {STRING_UNPSPACE,
+    "    Unpartitioned space              %6lu %s"},
+    {0, 0}
 };
 
 #endif

@@ -112,7 +112,7 @@ static MUI_ENTRY itITWelcomePageEntries[] =
     {
         0,
         0,
-        "   INVIO = Continuare  R = Riparare F3 = Termina",
+        "   INVIO = Continua  R = Ripara F3 = Termina",
         TEXT_STATUS
     },
     {
@@ -193,12 +193,6 @@ static MUI_ENTRY itITIntroPageEntries[] =
     },
     {
         8, 
-        19,
-        "- La verifica dei volumi non Š stata ancora implementata.",
-        TEXT_NORMAL
-    },
-    {
-        8, 
         23, 
         "\x07  Premere INVIO per installare ReactOS.",
         TEXT_NORMAL
@@ -212,7 +206,7 @@ static MUI_ENTRY itITIntroPageEntries[] =
     {
         0,
         0, 
-        "   INVIO = Continuare   F3 = Termina",
+        "   INVIO = Continua   F3 = Termina",
         TEXT_STATUS
     },
     {
@@ -336,7 +330,7 @@ static MUI_ENTRY itITLicensePageEntries[] =
     {           
         0,
         0,
-        "   INVIO = Ritornare",
+        "   INVIO = Ritorna",
         TEXT_STATUS
     },
     {           
@@ -405,31 +399,31 @@ static MUI_ENTRY itITDevicePageEntries[] =
     {
         6, 
         20, 
-        "Premere INVIO per modificare la configurazione",
+        "Premere INVIO per modificare la configurazione alternativa.",
         TEXT_NORMAL
     },
     {
         6, 
         21,
-        "alternativa.",
+        " ",
         TEXT_NORMAL
     },
     {
         6, 
         23, 
-        "Quando le impostazioni saranno corrette, scegliere \"Accettare la configurazione",
+        "Quando le impostazioni saranno corrette, selezionare",
         TEXT_NORMAL
     },
     {
         6, 
         24,
-        "delle periferiche\" e premere INVIO.",
+        "\"Accettare la configurazione delle periferiche\" e premere INVIO.",
         TEXT_NORMAL
     },
     {
         0,
         0,
-        "   INVIO = Continuare   F3 = Termina",
+        "   INVIO = Continua   F3 = Termina",
         TEXT_STATUS
     },
     {
@@ -544,7 +538,7 @@ static MUI_ENTRY itITComputerPageEntries[] =
     {
         0,
         0,
-        "   INVIO = Continuare   ESC = Annulla   F3 = Termina",
+        "   INVIO = Continua   ESC = Annulla   F3 = Termina",
         TEXT_STATUS
     },
     {
@@ -681,7 +675,7 @@ static MUI_ENTRY itITDisplayPageEntries[] =
     {
         0,
         0,
-        "   INVIO = Continuare   ESC = Annullare   F3 = Termina",
+        "   INVIO = Continua   ESC = Annulla   F3 = Termina",
         TEXT_STATUS
     },
     {
@@ -727,7 +721,7 @@ static MUI_ENTRY itITSuccessPageEntries[] =
     {
         0,
         0,
-        "   INVIO = Riavviare il computer",
+        "   INVIO = Riavvia il computer",
         TEXT_STATUS
     },
     {
@@ -773,7 +767,7 @@ static MUI_ENTRY itITBootPageEntries[] =
     {
         0,
         0,
-        "   INVIO = Continuare   F3 = Termina",
+        "   INVIO = Continua   F3 = Termina",
         TEXT_STATUS
     },
     {
@@ -888,31 +882,31 @@ static MUI_ENTRY itITInstallDirectoryEntries[] =
     {
         6,
         8,
-        "Setup installer… i file di ReactOS nella partizione selezionata. Scegliere una",
+        "Setup installer… i file di ReactOS nella partizione selezionata.",
         TEXT_NORMAL
     },
     {
         6,
         9,
-        "cartella dove volete che ReactOS verr… installato:",
+        "Scegliere una cartella dove volete che ReactOS verr… installato:",
         TEXT_NORMAL
     },
     {
         6,
         14,
-        "Per modificare la cartella suggerita premere CANC",
+        "Per modificare la cartella suggerita premere CANC e poi digitate",
         TEXT_NORMAL
     },
     {
         6,
         15,
-        "e poi digitate la cartella dove volete che ReactOS sia",
+        "la cartella dove volete che ReactOS sia installato.",
         TEXT_NORMAL
     },
     {
         6,
         16,
-        "installato.",
+        " ",
         TEXT_NORMAL
     },
     {
@@ -940,13 +934,13 @@ static MUI_ENTRY itITFileCopyEntries[] =
     {
         11,
         12,
-        "Attendere mentre il setup di ReactOS copia i file nella cartella di",
+        "Attendere mentre il setup di ReactOS copia i file nella",
         TEXT_NORMAL
     },
     {
-        30,
+        18,
         13,
-        "installazione di ReactOS.",
+        "cartella di installazione di ReactOS.",
         TEXT_NORMAL
     },
     {
@@ -1473,6 +1467,7 @@ MUI_ERROR itITErrorEntries[] =
     }
 };
 
+
 MUI_PAGE itITPages[] =
 {
     {
@@ -1571,6 +1566,107 @@ MUI_PAGE itITPages[] =
         -1,
         NULL
     }
+};
+
+MUI_STRING itITStrings[] =
+{
+    {STRING_PLEASEWAIT,
+     "   Attendere..."},
+    {STRING_INSTALLCREATEPARTITION,
+     "   INVIO = Installa   C = Crea Partizione   F3 = Esci"},
+    {STRING_INSTALLDELETEPARTITION,
+     "   INVIO = Installa   D = Rimuovi Partizione   F3 = Esci"},
+    {STRING_PARTITIONSIZE,
+     "Dimensione della nuova partizione:"},
+    {STRING_CHOOSENEWPARTITION,
+     "Avete scelto di creare una nuova partizione su"},
+    {STRING_HDDSIZE,
+    "Indicare la dimensione della nuova partizione in megabyte."},
+    {STRING_CREATEPARTITION,
+     "   INVIO = Creare la partizione   ESC = Annulla   F3 = Esci"},
+    {STRING_PARTFORMAT,
+    "Questa partizione verrà formattata successivamente."},
+    {STRING_NONFORMATTEDPART,
+    "Avete scelto di installare ReactOS su una partizione nuova o non formattata."},
+    {STRING_INSTALLONPART,
+    "Setup installerà ReactOS sulla partitione"},
+    {STRING_CHECKINGPART,
+    "Setup sta controllando la partizione selezionata."},
+    {STRING_QUITCONTINUE,
+    "F3= Esci  INVIO = Continua"},
+    {STRING_REBOOTCOMPUTER,
+    "INVIO = Riavvia il computer"},
+    {STRING_TXTSETUPFAILED,
+    "Setup non ha trovato la sezione '%S' \nin TXTSETUP.SIF.\n"},
+    {STRING_COPYING,
+     "                                                   \xB3 Copia di: %S"},
+    {STRING_SETUPCOPYINGFILES,
+     "Copia dei file in corso..."},
+    {STRING_PAGEDMEM,
+     "Memoria paginata"},
+    {STRING_NONPAGEDMEM,
+     "Memoria non paginata"},
+    {STRING_FREEMEM,
+     "Memoria libera"},
+    {STRING_REGHIVEUPDATE,
+    "   Aggiornamento del registry hives..."},
+    {STRING_IMPORTFILE,
+    "   Importazione di %S..."},
+    {STRING_DISPLAYETTINGSUPDATE,
+    "   Aggiornamento delle impostazioni del display nel registry..."},
+    {STRING_LOCALESETTINGSUPDATE,
+    "   Aggiornamento delle impostazioni di regionalizzazione..."},
+    {STRING_KEYBOARDSETTINGSUPDATE,
+    "   Aggiornamento delle impostazioni della tastiera..."},
+    {STRING_CODEPAGEINFOUPDATE,
+    "   Aggiunta delle informazioni di codepage al registry..."},
+    {STRING_DONE,
+    "   Fatto..."},
+    {STRING_REBOOTCOMPUTER2,
+    "   INVIO = Riavvia il computer"},
+    {STRING_CONSOLEFAIL1,
+    "Impossibile aprire la console\n\n"},
+    {STRING_CONSOLEFAIL2,
+    "La causa piu' frequente di questo e' l'uso di una tastiera USB\n"},
+    {STRING_CONSOLEFAIL3,
+    "le tastiere USB non sono ancora supportate per intero\n"},
+    {STRING_FORMATTINGDISK,
+    "Setup sta formattando il disco"},
+    {STRING_CHECKINGDISK,
+    "Setup sta controllando il disco"},
+    {STRING_FORMATDISK1,
+    " Formatta la partizione con file system %S (formattazione rapida) "},
+    {STRING_FORMATDISK2,
+    " Formatta la partizione con file system %S "},
+    {STRING_KEEPFORMAT,
+    " Mantieni il file system attuale (nessuna modifica) "},
+    {STRING_HDINFOPARTCREATE,
+    "%I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) su %wZ."},
+    {STRING_HDDINFOUNK1,
+    "%I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu)."},
+    {STRING_HDDINFOUNK2,
+    "   %c%c  Tipo %lu    %I64u %s"},
+    {STRING_HDINFOPARTDELETE,
+    "su %I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) su %wZ."},
+    {STRING_HDDINFOUNK3,
+    "su %I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu)."},
+    {STRING_HDINFOPARTZEROED,
+    "Harddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ)."},
+    {STRING_HDDINFOUNK4,
+    "%c%c  Tipo %lu    %I64u %s"},
+    {STRING_HDINFOPARTEXISTS,
+    "su Harddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ)."},
+    {STRING_HDDINFOUNK5,
+    "%c%c  Tipo %-3u                         %6lu %s"},
+    {STRING_HDINFOPARTSELECT,
+    "%6lu %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) su %S"},
+    {STRING_HDDINFOUNK6,
+    "%6lu %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu)"},
+    {STRING_NEWPARTITION,
+    "Setup ha creato una nuova partizione su"},
+    {STRING_UNPSPACE,
+    "    Spazio non partizionato               %6lu %s"},
+    {0, 0}
 };
 
 #endif
