@@ -10,7 +10,7 @@ BEGIN
 
 IDS_Copy, "ReactOS Utilidad de Descompresión de Archivos Versión 1.0\n\
 Copyright Victor Schneider 1997\n\n\
-Usage: %s archivo entrada [archivo salida]\n"
+Utilización: %s archivo entrada [archivo salida]\n"
 
 IDS_FAILS "LZCopy falló: el resultado es %ld\n"
 END

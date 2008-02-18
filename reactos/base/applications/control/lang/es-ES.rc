@@ -17,7 +17,7 @@ BEGIN
     BEGIN
         MENUITEM "&Cerrar",                      IDM_CLOSE
     END
-    POPUP "&View"
+    POPUP "&Ver"
     BEGIN
         MENUITEM "Iconos Grandes",               IDM_LARGEICONS
         MENUITEM "Iconos Pequeños",              IDM_SMALLICONS
@@ -26,16 +26,16 @@ BEGIN
     END
     POPUP "Ayuda"
     BEGIN
-        MENUITEM "Sobre",                       IDM_ABOUT
+        MENUITEM "Acerca de",                       IDM_ABOUT
     END
 END
 
 STRINGTABLE
 BEGIN
-    IDS_WINDOW_TITLE "Control Panel"
-	IDS_ABOUT "Simple Control Panel (not Shell-namespace based)\rCopyright 2004 GkWare e.K.\rhttp://www.gkware.com\rReleased under the GPL"
-	IDS_ABOUT_TITLE "About the Control Panel"
-	IDS_NO_ITEMS "No Items in ListView"
-	IDS_NAME "Name"
-	IDS_COMMENT "Comment"
+    IDS_WINDOW_TITLE "Panel de Control"
+	IDS_ABOUT "Panel de Control Simple (not Shell-namespace based)\rCopyright 2004 GkWare e.K.\rhttp://www.gkware.com\rReleased under the GPL"
+	IDS_ABOUT_TITLE "Acerca del Panel de Control"
+	IDS_NO_ITEMS "Sin elementos en la lista"
+	IDS_NAME "Nombre"
+	IDS_COMMENT "Comentario"
 END

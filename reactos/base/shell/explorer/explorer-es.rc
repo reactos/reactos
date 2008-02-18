@@ -71,7 +71,7 @@ IDM_DESKTOPBAR MENU DISCARDABLE
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "&Configuracion...",           ID_DESKTOPBAR_SETTINGS
+        MENUITEM "&Configuración...",           ID_DESKTOPBAR_SETTINGS
         MENUITEM "&Administrador de Tareas...", ID_TASKMGR
         MENUITEM SEPARATOR
         MENUITEM "&Acerca de Explorer...",      ID_ABOUT_EXPLORER
@@ -124,7 +124,7 @@ BEGIN
     END
     POPUP "&Ayuda"
     BEGIN
-        MENUITEM "Explorer &FAQ...",            ID_EXPLORER_FAQ
+        MENUITEM "Preguntas &Frecuentes...",            ID_EXPLORER_FAQ
         MENUITEM "&Acerca de Explorer...",      ID_ABOUT_EXPLORER
         MENUITEM "Acerca de &OS...",            ID_ABOUT_WINDOWS
     END
@@ -231,13 +231,13 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     CONTROL         "Tree1",IDC_NOTIFY_ICONS,"SysTreeView32",TVS_HASLINES |
                     TVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP,7,7,194,31
-    LTEXT           "&Texto de Info:",IDC_LABEL1,8,44,51,8
+    LTEXT           "&Texto de Información:",IDC_LABEL1,8,44,51,8
     EDITTEXT        IDC_NOTIFY_TOOLTIP,82,42,117,14,ES_AUTOHSCROLL
     LTEXT           "Título de la V&entana:",IDC_LABEL2,8,63,70,8
     EDITTEXT        IDC_NOTIFY_TITLE,82,60,117,14,ES_AUTOHSCROLL
     LTEXT           "&Parche del Módulo:",IDC_LABEL3,8,81,65,8
     EDITTEXT        IDC_NOTIFY_MODULE,82,78,117,14,ES_AUTOHSCROLL
-    GROUPBOX        "Modo de &Display",IDC_LABEL4,7,96,157,28
+    GROUPBOX        "Modo de &Visualización",IDC_LABEL4,7,96,157,28
     CONTROL         "&Mostrar",IDC_NOTIFY_SHOW,"Button",BS_AUTORADIOBUTTON |
                     WS_TABSTOP,15,108,38,10
     CONTROL         "&Ocultar",IDC_NOTIFY_HIDE,"Button",BS_AUTORADIOBUTTON,
@@ -262,13 +262,13 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     LTEXT           "Por favor, seleccione su interfaz de usuario preferida para el explorador:",
                     IDC_STATIC,7,7,170,18
-    CONTROL         "&MDI (Multiple Document Interface)",IDC_MDI,"Button",
+    CONTROL         "&MDI (Interface de Multiples Documentos)",IDC_MDI,"Button",
                     BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,7,31,123,10
-    CONTROL         "&SDI (Single Document Interface)",IDC_SDI,"Button",
+    CONTROL         "&SDI (Interface de Ún Documento)",IDC_SDI,"Button",
                     BS_AUTORADIOBUTTON,7,62,116,10
     CONTROL         170,IDC_STATIC,"Static",SS_BITMAP,145,23,15,13
     CONTROL         171,IDC_STATIC,"Static",SS_BITMAP,145,57,15,13
-    CONTROL         "Open Subfolders in s&eparate windows",
+    CONTROL         "Abrir Subcarpetas en ventanas s&eparadas",
                     IDC_SEPARATE_SUBFOLDERS,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,7,90,135,10
     LTEXT           "Esta configuración se usará por defecto y apartir de ahora para todas las ventanas del explorador.",
@@ -277,6 +277,20 @@ BEGIN
     PUSHBUTTON      "&Cancelar",IDCANCEL,106,136,50,14
 END
 
+IDD_ABOUT_EXPLORER DIALOGEX DISCARDABLE  0, 0, 199, 106
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Acerca de Explorador de ReactOS"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Explorador de ReactOS",IDC_ROS_EXPLORER,91,13,104,11
+    LTEXT           "V 0.9",IDC_VERSION_TXT,91,27,104,8
+    LTEXT           "(c) 2003-2005 Martin Fuchs",IDC_STATIC,91,42,104,8
+    LTEXT           "",IDC_WIN_VERSION,91,58,98,22
+    LTEXT           "http://www.sky.franken.de/explorer/",IDC_WWW,17,84,129,
+                    8
+    CONTROL         "&Aceptar",IDOK,"Button",BS_OWNERDRAW | BS_FLAT | WS_GROUP,
+                    154,90,38,12
+END
 
 #ifdef APSTUDIO_INVOKED
 /////////////////////////////////////////////////////////////////////////////
@@ -382,6 +396,7 @@ END
 
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
+
 
 
 
