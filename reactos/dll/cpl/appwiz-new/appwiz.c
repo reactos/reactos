@@ -419,12 +419,12 @@ FillSoftwareList(INT ShowMode)
 static BOOL
 GetAppString(LPCWSTR lpKeyName, LPWSTR lpString)
 {
-	HKEY hKey;
-	INT nIndex;
+    HKEY hKey;
+    INT nIndex;
 
-	nIndex = (INT)SendMessage(hAppList,LVM_GETNEXTITEM,-1,LVNI_FOCUSED);
-	if (nIndex != -1)
-	{
+    nIndex = (INT)SendMessage(hAppList,LVM_GETNEXTITEM,-1,LVNI_FOCUSED);
+    if (nIndex != -1)
+    {
         LVITEM item;
 
         ZeroMemory(&item, sizeof(LVITEM));
@@ -433,14 +433,14 @@ GetAppString(LPCWSTR lpKeyName, LPWSTR lpString)
         (VOID) ListView_GetItem(hAppList,&item);
         hKey = (HKEY)item.lParam;
 
-		DWORD dwSize, dwType = REG_SZ;
-		if (RegQueryValueEx(hKey, lpKeyName, NULL, &dwType,
+        DWORD dwSize, dwType = REG_SZ;
+        if (RegQueryValueEx(hKey, lpKeyName, NULL, &dwType,
                             (LPBYTE)lpString, &dwSize) == ERROR_SUCCESS)
-		{
-			return TRUE;
-		}
-	}
-	return FALSE;
+        {
+            return TRUE;
+        }
+    }
+    return FALSE;
 }
 
 static VOID
@@ -860,9 +860,9 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
                     {
                         if (-1 != (INT) SendMessage(hAppList, LVM_GETNEXTITEM, -1, LVNI_FOCUSED))
                         {
-							EnableWindow(hRemoveBtn, TRUE);
-							if (GetAppString(L"ModifyPath", NULL))
-								EnableWindow(hModifyBtn, TRUE);
+                            EnableWindow(hRemoveBtn, TRUE);
+                            if (GetAppString(L"ModifyPath", NULL))
+                                EnableWindow(hModifyBtn, TRUE);
                         }
                         ShowAppInfo();
                     }

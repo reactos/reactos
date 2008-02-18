@@ -52,12 +52,12 @@ typedef struct
 
 typedef struct
 {
-	DWORD Size;
-	BOOL Maximized;
-	INT Left;
-	INT	Top;
-	INT	Right;
-	INT	Bottom;
+    DWORD Size;
+    BOOL Maximized;
+    INT Left;
+    INT Top;
+    INT Right;
+    INT Bottom;
 } APPWIZSETTINGS;
 
 /* appwiz.c */
@@ -65,8 +65,8 @@ HINSTANCE hApplet; // Main applet instance
 HWND hMainWnd,     // Main window
      hActList,     // Actions list
      hAppList,     // Programs list
-	 hSearch,      //Search line
-	 hRemoveBtn,   // Remove button
+     hSearch,      //Search line
+     hRemoveBtn,   // Remove button
      hModifyBtn;   // Modify button
 
 APPWIZSETTINGS AppWizSettings;
