@@ -12,7 +12,6 @@
 /* menu items */
 #define ID_APP_REMOVE                  14100
 #define ID_APP_MODIFY                  14101
-#define ID_APP_REPAIR                  14102
 
 /* icons */
 #define IDI_CPLSYSTEM                  1500

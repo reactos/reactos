@@ -6,7 +6,6 @@ BEGIN
     BEGIN
         MENUITEM "&Remove",  ID_APP_REMOVE
         MENUITEM "&Modify",  ID_APP_MODIFY, GRAYED
-        MENUITEM "R&epair",  ID_APP_REPAIR, GRAYED
     END
 END
 
