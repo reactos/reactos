@@ -68,37 +68,37 @@ typedef struct
 static const
 OBJ_TYPE_INFO ObjTypeInfo[] =
 {
-  {0, 0,                     0,                       NULL},             /* 00 reserved entry */
-  {1, sizeof(DC),            GDI_OBJECT_TAG_DC,       DC_Cleanup},       /* 01 DC */
-  {1, 0,                     0,                       0},                /* 02 DD_DDRAW, should be moved away from gdi objects */
-  {1, 0,                     0,                       0},                /* 03 DD_SURFACE, should be moved away from gdi objects */
-  {1, sizeof(ROSRGNDATA),    GDI_OBJECT_TAG_REGION,   RGNDATA_Cleanup},  /* 04 REGION */
-  {1, sizeof(BITMAPOBJ),     GDI_OBJECT_TAG_BITMAP,   BITMAP_Cleanup},   /* 05 BITMAP */
-  {0, sizeof(DC),            GDI_OBJECT_TAG_CLIOBJ,   GDI_CleanupDummy}, /* 06 CLIOBJ: METADC,... FIXME: don't use DC struct */
-  {0, 0,                     GDI_OBJECT_TAG_PATH,     NULL},             /* 07 PATH, unused */
-  {1, sizeof(PALGDI),        GDI_OBJECT_TAG_PALETTE,  PALETTE_Cleanup},  /* 08 PALETTE */
-  {0, 0,                     GDI_OBJECT_TAG_COLSPC,   NULL},             /* 09 COLORSPACE, unused */
-  {1, sizeof(TEXTOBJ),       GDI_OBJECT_TAG_FONT,     GDI_CleanupDummy}, /* 0a FONT */
-  {0, 0,                     0,                       NULL},             /* 0b RFONT, unused */
-  {0, 0,                     0,                       NULL},             /* 0c PFE, unused */
-  {0, 0,                     0,                       NULL},             /* 0d PFT, unused */
-  {0, 0,                     0,                       NULL},             /* 0e ICMCXF, unused */
-  {0, 0,                     0,                       NULL},             /* 0f ICMDLL, unused */
-  {1, sizeof(GDIBRUSHOBJ),   GDI_OBJECT_TAG_BRUSH,    BRUSH_Cleanup},    /* 10 BRUSH, PEN, EXTPEN */
-  {0, 0,                     0,                       NULL},             /* 11 D3D_HANDLE, unused */
-  {0, 0,                     0,                       NULL},             /* 12 DD_VPORT, unused */
-  {0, 0,                     0,                       NULL},             /* 13 SPACE, unused */
-  {0, 0,                     0,                       NULL},             /* 14 DD_MOTION, unused */
-  {0, 0,                     0,                       NULL},             /* 15 META, unused */
-  {0, 0,                     0,                       NULL},             /* 16 ENUMFONT, unused */
-  {0, 0,                     0,                       NULL},             /* 17 BMFD, unused */
-  {0, 0,                     0,                       NULL},             /* 18 VTFD, unused */
-  {0, 0,                     0,                       NULL},             /* 19 TTFD, unused */
-  {0, 0,                     0,                       NULL},             /* 1a RC, unused */
-  {0, 0,                     0,                       NULL},             /* 1b TEMP, unused */
-  {0, 0,                     0,                       NULL},             /* 1c DRVOBJ, unused */
-  {0, 0,                     0,                       NULL},             /* 1d DCIOBJ, unused */
-  {0, 0,                     0,                       NULL},             /* 1e SPOOL, unused */
+  {0, 0,                     0,                NULL},             /* 00 reserved entry */
+  {1, sizeof(DC),            TAG_DC,           DC_Cleanup},       /* 01 DC */
+  {1, 0,                     0,                NULL},             /* 02 UNUSED1 */
+  {1, 0,                     0,                NULL},             /* 03 UNUSED2 */
+  {1, sizeof(ROSRGNDATA),    TAG_REGION,       RGNDATA_Cleanup},  /* 04 RGN */
+  {1, sizeof(BITMAPOBJ),     TAG_SURFACE,      BITMAP_Cleanup},   /* 05 SURFACE */
+  {0, sizeof(DC),            TAG_CLIENTOBJ,    GDI_CleanupDummy}, /* 06 CLIENTOBJ: METADC,... FIXME: don't use DC struct */
+  {0, 0,                     TAG_PATH,         NULL},             /* 07 PATH, unused */
+  {1, sizeof(PALGDI),        TAG_PALETTE,      PALETTE_Cleanup},  /* 08 PAL */
+  {0, 0,                     TAG_ICMLCS,       NULL},             /* 09 ICMLCS, unused */
+  {1, sizeof(TEXTOBJ),       TAG_LFONT,        GDI_CleanupDummy}, /* 0a LFONT */
+  {0, 0,                     TAG_RFONT,        NULL},             /* 0b RFONT, unused */
+  {0, 0,                     TAG_PFE,          NULL},             /* 0c PFE, unused */
+  {0, 0,                     TAG_PFT,          NULL},             /* 0d PFT, unused */
+  {0, 0,                     TAG_ICMCXF,       NULL},             /* 0e ICMCXF, unused */
+  {0, 0,                     TAG_SPRITE,       NULL},             /* 0f SPRITE, unused */
+  {1, sizeof(GDIBRUSHOBJ),   TAG_BRUSH,        BRUSH_Cleanup},    /* 10 BRUSH, PEN, EXTPEN */
+  {0, 0,                     TAG_UMPD,         NULL},             /* 11 UMPD, unused */
+  {0, 0,                     0,                NULL},             /* 12 UNUSED4 */
+  {0, 0,                     TAG_SPACE,        NULL},             /* 13 SPACE, unused */
+  {0, 0,                     0,                NULL},             /* 14 UNUSED5 */
+  {0, 0,                     TAG_META,         NULL},             /* 15 META, unused */
+  {0, 0,                     TAG_EFSTATE,      NULL},             /* 16 EFSTATE, unused */
+  {0, 0,                     TAG_BMFD,         NULL},             /* 17 BMFD, unused */
+  {0, 0,                     TAG_TTFD,         NULL},             /* 18 VTFD, unused */
+  {0, 0,                     TAG_TTFD,         NULL},             /* 19 TTFD, unused */
+  {0, 0,                     TAG_RC,           NULL},             /* 1a RC, unused */
+  {0, 0,                     TAG_TEMP,         NULL},             /* 1b TEMP, unused */
+  {0, 0,                     TAG_DRVOBJ,       NULL},             /* 1c DRVOBJ, unused */
+  {0, 0,                     TAG_DCIOBJ,       NULL},             /* 1d DCIOBJ, unused */
+  {0, 0,                     TAG_SPOOL,        NULL},             /* 1e SPOOL, unused */
 };
 
 #define BASE_OBJTYPE_COUNT (sizeof(ObjTypeInfo) / sizeof(ObjTypeInfo[0]))

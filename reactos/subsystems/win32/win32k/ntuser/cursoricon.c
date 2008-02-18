@@ -1622,10 +1622,10 @@ UserDrawIconEx(
       goto cleanup;
    }
 
-   nStretchMode = NtGdiSetStretchBltMode(hdcOff, STRETCH_DELETESCANS);
+   nStretchMode = IntGdiSetStretchBltMode(hdcOff, STRETCH_DELETESCANS);
 
-   oldFg = NtGdiSetTextColor(hdcOff, RGB(0, 0, 0));
-   oldBg = NtGdiSetBkColor(hdcOff, RGB(255, 255, 255));
+   oldFg = IntGdiSetTextColor(hdcOff, RGB(0, 0, 0));
+   oldBg = IntGdiSetBkColor(hdcOff, RGB(255, 255, 255));
 
    if (diFlags & DI_MASK)
    {
@@ -1737,9 +1737,9 @@ UserDrawIconEx(
                     cyHeight, hdcOff, 0, 0, SRCCOPY, 0, 0);
     }
 
-   NtGdiSetTextColor(hdcOff, oldFg);
-   NtGdiSetBkColor(hdcOff, oldBg);
-   NtGdiSetStretchBltMode(hdcOff, nStretchMode);
+   IntGdiSetTextColor(hdcOff, oldFg);
+   IntGdiSetBkColor(hdcOff, oldBg);
+   IntGdiSetStretchBltMode(hdcOff, nStretchMode);
 
    Ret = TRUE;
 

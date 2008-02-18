@@ -1,8 +1,9 @@
-
 #ifndef __WIN32K_DC_H
 #define __WIN32K_DC_H
 
 #include "driver.h"
+
+/* Constants ******************************************************************/
 
 // Get/SetBounds/Rect support.
 #define DCB_WINDOWMGR 0x8000 // Queries the Windows bounding rectangle instead of the application's
@@ -29,7 +30,43 @@
 #define PDEV_DRIVER_PUNTED_CALL  0x00040000 // Driver calls back to GDI engine
 #define PDEV_CLONE_DEVICE        0x00080000
 
-// Graphics Device structure.
+/* Type definitions ***********************************************************/
+
+/* The DC object structure */
+typedef struct _DC
+{
+  BASEOBJECT  BaseObject;
+
+  DHPDEV      PDev;   // <- GDIDEVICE.hPDev DHPDEV for device.
+  INT         DC_Type;
+  INT         DC_Flags;
+  PVOID       pPDev;  // PGDIDEVICE
+  PVOID       hSem;   // PERESOURCE
+  FLONG       flGraphics;
+  FLONG       flGraphics2;
+  PDC_ATTR    pDc_Attr;
+  WIN_DC_INFO w;
+  DC_ATTR     Dc_Attr;
+  HDC         hNext;
+  HDC         hPrev;
+  RECTL       erclClip;
+  RECTL       erclWindow;
+  RECTL       erclBounds;
+  HRGN        hprgnAPI;
+  HRGN        hprgnVis;
+
+  CLIPOBJ     *CombinedClip;
+  XLATEOBJ    *XlateBrush;
+  XLATEOBJ    *XlatePen;
+
+  INT         saveLevel; // DCLEVEL lSaveDepth
+  HDC         hSelf;  // DCLEVEL hdcSave Used only for MemoryDC & SaveDC.
+
+  HPALETTE    PalIndexed;
+
+  UNICODE_STRING    DriverName;
+} DC, *PDC;
+
 typedef struct _GRAPHICS_DEVICE
 {
   CHAR szNtDeviceName[CCHDEVICENAME];           // Yes char AscII
@@ -59,10 +96,7 @@ typedef struct _GDIPOINTER /* should stay private to ENG? No, part of GDIDEVICE 
 
 typedef struct _GDIDEVICE
 {
-  HANDLE        hHmgr;
-  ULONG         csCount;
-  ULONG         lucExcLock;
-  PVOID         Tid;
+  BASEOBJECT  BaseObject;
 
   struct _GDIDEVICE *ppdevNext;
   INT           cPdevRefs;
@@ -103,7 +137,15 @@ typedef struct _GDIDEVICE
   struct _EDD_DIRECTDRAW_GLOBAL * pEDDgpl;
 } GDIDEVICE, *PGDIDEVICE;
 
-/*  Internal functions  */
+/* For Metafile and MetaEnhFile not in windows this struct taken from wine cvs 15/9-2006*/
+typedef struct
+{
+  LPENHMETAHEADER  emh;
+  BOOL    on_disk;   /* true if metafile is on disk */
+} DD_ENHMETAFILEOBJ, *PDD_ENHMETAFILEOBJ;
+
+
+/* Internal functions *********************************************************/
 
 #define  DC_LockDc(hDC)  \
   ((PDC) GDIOBJ_LockObj (GdiHandleTable, (HGDIOBJ) hDC, GDI_OBJECT_TYPE_DC))
@@ -111,7 +153,6 @@ typedef struct _GDIDEVICE
   GDIOBJ_UnlockObjByPtr (GdiHandleTable, pDC)
 
 NTSTATUS FASTCALL InitDcImpl(VOID);
-HDC  FASTCALL RetrieveDisplayHDC(VOID);
 PGDIDEVICE FASTCALL IntEnumHDev(VOID);
 HDC  FASTCALL DC_AllocDC(PUNICODE_STRING  Driver);
 VOID FASTCALL DC_InitDC(HDC  DCToInit);
@@ -141,23 +182,14 @@ VOID FASTCALL IntGetViewportOrgEx(PDC dc, LPPOINT pt);
 VOID FASTCALL IntGetWindowExtEx(PDC dc, LPSIZE pt);
 VOID FASTCALL IntGetWindowOrgEx(PDC dc, LPPOINT pt);
 
-NTSTATUS STDCALL NtGdiFlushUserBatch(VOID);
+COLORREF FASTCALL IntGdiSetBkColor (HDC hDC, COLORREF Color);
+INT FASTCALL IntGdiSetBkMode(HDC  hDC, INT  backgroundMode);
+COLORREF STDCALL  IntGdiGetBkColor(HDC  hDC);
+INT STDCALL  IntGdiGetBkMode(HDC  hDC);
+COLORREF FASTCALL  IntGdiSetTextColor(HDC hDC, COLORREF color);
+UINT FASTCALL IntGdiSetTextAlign(HDC  hDC, UINT  Mode);
+UINT STDCALL  IntGdiGetTextAlign(HDC  hDC);
+COLORREF STDCALL  IntGdiGetTextColor(HDC  hDC);
+INT STDCALL  IntGdiSetStretchBltMode(HDC  hDC, INT  stretchBltMode);
 
-COLORREF FASTCALL NtGdiSetBkColor (HDC hDC, COLORREF Color);
-INT FASTCALL NtGdiSetBkMode(HDC  hDC, INT  backgroundMode);
-COLORREF STDCALL  NtGdiGetBkColor(HDC  hDC);
-INT STDCALL  NtGdiGetBkMode(HDC  hDC);
-COLORREF FASTCALL  NtGdiSetTextColor(HDC hDC, COLORREF color);
-UINT FASTCALL NtGdiSetTextAlign(HDC  hDC, UINT  Mode);
-UINT STDCALL  NtGdiGetTextAlign(HDC  hDC);
-COLORREF STDCALL  NtGdiGetTextColor(HDC  hDC);
-INT STDCALL  NtGdiSetStretchBltMode(HDC  hDC, INT  stretchBltMode);
-
-/* For Metafile and MetaEnhFile not in windows this struct taken from wine cvs 15/9-2006*/
-typedef struct
-{
-  LPENHMETAHEADER  emh;
-  BOOL    on_disk;   /* true if metafile is on disk */
-} DD_ENHMETAFILEOBJ, *PDD_ENHMETAFILEOBJ;
-
-#endif /* __WIN32K_DC_H */
+#endif /* not __WIN32K_DC_H */

@@ -43,7 +43,7 @@ IntGdiArcInternal(
     HWND hWnd;
     PWINDOW_OBJECT Window;
 
-    hWnd = IntWindowFromDC((HDC) dc->hHmgr);
+    hWnd = IntWindowFromDC((HDC) dc->BaseObject.hHmgr);
     Window = UserGetWindowObject(hWnd);
     if(!Window) return FALSE;
 

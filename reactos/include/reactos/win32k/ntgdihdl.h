@@ -41,21 +41,6 @@
 #define GDI_ENTRY_REUSECNT_SHIFT 8
 #define GDI_ENTRY_UPPER_SHIFT 16
 
-#define GDI_OBJECT_TAG_DC       TAG('G', 'l', 'a', '1')
-#define GDI_OBJECT_TAG_REGION   TAG('G', 'l', 'a', '4')
-#define GDI_OBJECT_TAG_BITMAP   TAG('G', 'l', 'a', '5')
-#define GDI_OBJECT_TAG_CLIOBJ   TAG('G', 'h', '0', '6')
-#define GDI_OBJECT_TAG_PATH     TAG('G', 'h', '0', '7')
-#define GDI_OBJECT_TAG_PALETTE  TAG('G', 'l', 'a', '8')
-#define GDI_OBJECT_TAG_COLSPC   TAG('G', 'h', '0', '9')
-#define GDI_OBJECT_TAG_FONT     TAG('G', 'l', 'a', ':')
-#define GDI_OBJECT_TAG_PFE      TAG('G', 'h', '0', '<')
-#define GDI_OBJECT_TAG_BRUSH    TAG('G', 'l', 'a', '@')
-#define GDI_OBJECT_TAG_ENUMFONT TAG('G', 'h', '0', 'F')
-
-#define GDI_OBJECT_TAG_DDRAW    TAG('D', 'h', ' ', '1')
-#define GDI_OBJECT_TAG_DDSURF   TAG('D', 'h', ' ', '2')
-
 /*! \defgroup GDI object types
  *
  *  GDI object types
@@ -368,42 +353,5 @@ typedef struct _WIN_DC_INFO
   XFORM  xformVport2World;  /* Inverse of the above transformation */
   BOOL  vport2WorldValid;  /* Is xformVport2World valid? */
 } WIN_DC_INFO;
-
-typedef struct _DC
-{
-  HGDIOBJ     hHmgr;  // Handle for this DC object.
-  ULONG       Count;
-  ULONG       lucExcLock;
-  PVOID       Tid;
-
-  DHPDEV      PDev;   // <- GDIDEVICE.hPDev DHPDEV for device.
-  INT         DC_Type;
-  INT         DC_Flags;
-  PVOID       pPDev;  // PGDIDEVICE
-  PVOID       hSem;   // PERESOURCE
-  FLONG       flGraphics;
-  FLONG       flGraphics2;
-  PDC_ATTR    pDc_Attr;
-  WIN_DC_INFO w;
-  DC_ATTR     Dc_Attr;
-  HDC         hNext;
-  HDC         hPrev;
-  RECTL       erclClip;
-  RECTL       erclWindow;
-  RECTL       erclBounds;
-  HRGN        hprgnAPI; 
-  HRGN        hprgnVis;
-
-  CLIPOBJ     *CombinedClip;
-  XLATEOBJ    *XlateBrush;
-  XLATEOBJ    *XlatePen;
-
-  INT         saveLevel; // DCLEVEL lSaveDepth
-  HDC         hSelf;  // DCLEVEL hdcSave Used only for MemoryDC & SaveDC.
-
-  HPALETTE    PalIndexed;
-
-  UNICODE_STRING    DriverName;
-} DC, *PDC;
 
 #endif

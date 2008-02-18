@@ -838,10 +838,10 @@ IntGdiCreateDC(PUNICODE_STRING Driver,
 
     /*  Initialize the DC state  */
     DC_InitDC(hNewDC);
-    NtGdiSetTextColor(hNewDC, RGB(0, 0, 0));
-    NtGdiSetTextAlign(hNewDC, TA_TOP);
-    NtGdiSetBkColor(hNewDC, RGB(255, 255, 255));
-    NtGdiSetBkMode(hNewDC, OPAQUE);
+    IntGdiSetTextColor(hNewDC, RGB(0, 0, 0));
+    IntGdiSetTextAlign(hNewDC, TA_TOP);
+    IntGdiSetBkColor(hNewDC, RGB(255, 255, 255));
+    IntGdiSetBkMode(hNewDC, OPAQUE);
   }
   else
   {
@@ -1356,8 +1356,8 @@ IntGdiCopyFromSaveState(PDC dc, PDC dcs, HDC hDC)
   NtGdiSelectFont( hDC, sDc_Attr->hlfntNew );
   NtGdiSelectPen( hDC, sDc_Attr->hpen );
 
-  NtGdiSetBkColor( hDC, sDc_Attr->crBackgroundClr);
-  NtGdiSetTextColor( hDC, sDc_Attr->crForegroundClr);
+  IntGdiSetBkColor( hDC, sDc_Attr->crBackgroundClr);
+  IntGdiSetTextColor( hDC, sDc_Attr->crForegroundClr);
 
   NtUserSelectPalette( hDC, dcs->w.hPalette, FALSE );
 
@@ -2385,7 +2385,7 @@ DC_AllocDC(PUNICODE_STRING Driver)
   Dc_Attr = NewDC->pDc_Attr;
   if(!Dc_Attr) Dc_Attr = &NewDC->Dc_Attr;
 
-  NewDC->hHmgr = (HGDIOBJ) hDC; // Save the handle for this DC object.
+  NewDC->BaseObject.hHmgr = (HGDIOBJ) hDC; // Save the handle for this DC object.
   NewDC->w.xformWorld2Wnd.eM11 = 1.0f;
   NewDC->w.xformWorld2Wnd.eM12 = 0.0f;
   NewDC->w.xformWorld2Wnd.eM21 = 0.0f;

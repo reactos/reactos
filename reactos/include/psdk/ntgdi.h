@@ -1696,6 +1696,11 @@ NtGdiFlattenPath(
 );
 
 W32KAPI
+NTSTATUS
+APIENTRY
+NtGdiFlushUserBatch(VOID);
+
+W32KAPI
 HRGN
 APIENTRY
 NtGdiPathToRegion(

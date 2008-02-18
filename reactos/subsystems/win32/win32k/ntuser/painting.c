@@ -1581,7 +1581,7 @@ UserDrawCaptionText(HDC hDc,
       return FALSE;
    }
 
-   NtGdiSetBkMode(hDc, TRANSPARENT);
+   IntGdiSetBkMode(hDc, TRANSPARENT);
 
    if(uFlags & DC_SMALLCAP)
       Status = TextIntCreateFontIndirect(&nclm.lfSmCaptionFont, &hFont);
@@ -1603,8 +1603,8 @@ UserDrawCaptionText(HDC hDc,
    }
 
    if(uFlags & DC_INBUTTON)
-      OldTextColor = NtGdiSetTextColor(hDc, IntGetSysColor(COLOR_BTNTEXT));
-   else OldTextColor = NtGdiSetTextColor(hDc, IntGetSysColor(uFlags & DC_ACTIVE
+      OldTextColor = IntGdiSetTextColor(hDc, IntGetSysColor(COLOR_BTNTEXT));
+   else OldTextColor = IntGdiSetTextColor(hDc, IntGetSysColor(uFlags & DC_ACTIVE
          ? COLOR_CAPTIONTEXT : COLOR_INACTIVECAPTIONTEXT));
 
    //FIXME: If string doesn't fit to rc, truncate it and add ellipsis.
@@ -1613,7 +1613,7 @@ UserDrawCaptionText(HDC hDc,
       lpRc->top, 0, NULL, Text->Buffer,
       Text->Length/sizeof(WCHAR), NULL, 0);
 
-   NtGdiSetTextColor(hDc, OldTextColor);
+   IntGdiSetTextColor(hDc, OldTextColor);
    NtGdiSelectFont(hDc, hOldFont);
    NtGdiDeleteObject(hFont);
 

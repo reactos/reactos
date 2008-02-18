@@ -36,7 +36,7 @@ typedef PVOID PGDIOBJ;
 typedef BOOL (INTERNAL_CALL *GDICLEANUPPROC)(PVOID ObjectBody);
 
 /*!
- * GDI object header. This is a part of any GDI object
+ * GDI object header. This is a part of any GDI object. ROS specific header!
 */
 typedef struct _GDIOBJHDR
 {
@@ -55,13 +55,14 @@ typedef struct _GDIOBJHDR
 // It's for thread locking.
 // This header is standalone, used only in gdiobj.c.
 //
-typedef struct _GDIOBJEMPTYHDR
+typedef struct _BASEOBJECT
 {
   HGDIOBJ     hHmgr;
-  ULONG       Count;
-  ULONG       lucExcLock;
+  ULONG       ulShareCount;
+  USHORT      cExclusiveLock;
+  USHORT      BaseFlags;
   PW32THREAD  Tid;
-} GDIOBJEMPTYHDR, *PGDIOBJEMPTYHDR;
+} BASEOBJECT, *POBJ;
 
 BOOL    INTERNAL_CALL GDIOBJ_OwnedByCurrentProcess(PGDI_HANDLE_TABLE HandleTable, HGDIOBJ ObjectHandle);
 void    INTERNAL_CALL GDIOBJ_SetOwnership(PGDI_HANDLE_TABLE HandleTable, HGDIOBJ ObjectHandle, PEPROCESS Owner);

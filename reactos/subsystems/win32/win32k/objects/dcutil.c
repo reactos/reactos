@@ -41,7 +41,9 @@ VOID FASTCALL Int##FuncName ( PDC dc, LP##type pt) \
   if (!Dc_Attr) Dc_Attr = &dc->Dc_Attr; \
   pt->ax = Dc_Attr->ret_x; \
   pt->ay = Dc_Attr->ret_y; \
-} \
+}
+
+#if 0
 BOOL STDCALL NtGdi##FuncName ( HDC hdc, LP##type pt ) \
 { \
   NTSTATUS Status = STATUS_SUCCESS; \
@@ -78,6 +80,7 @@ BOOL STDCALL NtGdi##FuncName ( HDC hdc, LP##type pt ) \
   } \
   return TRUE; \
 }
+#endif
 
 #define DC_SET_MODE( func_name, dc_field, min_val, max_val ) \
 INT STDCALL  func_name( HDC hdc, INT mode ) \
@@ -123,7 +126,7 @@ DCU_SyncDcAttrtoUser(PDC dc)
   PDC_ATTR Dc_Attr = dc->pDc_Attr;
 
   if (Dc_Attr == ((PDC_ATTR)&dc->Dc_Attr)) return TRUE; // No need to copy self.
-  
+
   if (!Dc_Attr) return FALSE;
   else
     CopytoUserDcAttr( dc, Dc_Attr);
@@ -143,28 +146,28 @@ DCU_SynchDcAttrtoUser(HDC hDC)
 }
 
 
-DC_GET_VAL( INT, NtGdiGetMapMode, iMapMode )
-DC_GET_VAL( INT, NtGdiGetPolyFillMode, jFillMode )
-DC_GET_VAL( COLORREF, NtGdiGetBkColor, crBackgroundClr )
-DC_GET_VAL( INT, NtGdiGetBkMode, jBkMode )
-DC_GET_VAL( INT, NtGdiGetROP2, jROP2 )
-DC_GET_VAL( INT, NtGdiGetStretchBltMode, jStretchBltMode )
-DC_GET_VAL( UINT, NtGdiGetTextAlign, lTextAlign )
-DC_GET_VAL( COLORREF, NtGdiGetTextColor, crForegroundClr )
+DC_GET_VAL( INT, IntGdiGetMapMode, iMapMode )
+DC_GET_VAL( INT, IntGdiGetPolyFillMode, jFillMode )
+DC_GET_VAL( COLORREF, IntGdiGetBkColor, crBackgroundClr )
+DC_GET_VAL( INT, IntGdiGetBkMode, jBkMode )
+DC_GET_VAL( INT, IntGdiGetROP2, jROP2 )
+DC_GET_VAL( INT, IntGdiGetStretchBltMode, jStretchBltMode )
+DC_GET_VAL( UINT, IntGdiGetTextAlign, lTextAlign )
+DC_GET_VAL( COLORREF, IntGdiGetTextColor, crForegroundClr )
 
 DC_GET_VAL_EX( GetViewportExtEx, szlViewportExt.cx, szlViewportExt.cy, SIZE, cx, cy )
 DC_GET_VAL_EX( GetViewportOrgEx, ptlViewportOrg.x, ptlViewportOrg.y, POINT, x, y )
 DC_GET_VAL_EX( GetWindowExtEx, szlWindowExt.cx, szlWindowExt.cy, SIZE, cx, cy )
 DC_GET_VAL_EX( GetWindowOrgEx, ptlWindowOrg.x, ptlWindowOrg.y, POINT, x, y )
 
-DC_SET_MODE( NtGdiSetPolyFillMode, jFillMode, ALTERNATE, WINDING )
-DC_SET_MODE( NtGdiSetROP2, jROP2, R2_BLACK, R2_WHITE )
-DC_SET_MODE( NtGdiSetStretchBltMode, jStretchBltMode, BLACKONWHITE, HALFTONE )
+DC_SET_MODE( IntGdiSetPolyFillMode, jFillMode, ALTERNATE, WINDING )
+DC_SET_MODE( IntGdiSetROP2, jROP2, R2_BLACK, R2_WHITE )
+DC_SET_MODE( IntGdiSetStretchBltMode, jStretchBltMode, BLACKONWHITE, HALFTONE )
 
 
 
 COLORREF FASTCALL
-NtGdiSetBkColor(HDC hDC, COLORREF color)
+IntGdiSetBkColor(HDC hDC, COLORREF color)
 {
   COLORREF oldColor;
   PDC dc;
@@ -189,7 +192,7 @@ NtGdiSetBkColor(HDC hDC, COLORREF color)
 }
 
 INT FASTCALL
-NtGdiSetBkMode(HDC hDC, INT Mode)
+IntGdiSetBkMode(HDC hDC, INT Mode)
 {
   COLORREF oldMode;
   PDC dc;
@@ -211,7 +214,7 @@ NtGdiSetBkMode(HDC hDC, INT Mode)
 
 UINT
 FASTCALL
-NtGdiSetTextAlign(HDC  hDC,
+IntGdiSetTextAlign(HDC  hDC,
                        UINT  Mode)
 {
   UINT prevAlign;
@@ -234,7 +237,7 @@ NtGdiSetTextAlign(HDC  hDC,
 
 COLORREF
 FASTCALL
-NtGdiSetTextColor(HDC hDC,
+IntGdiSetTextColor(HDC hDC,
                  COLORREF color)
 {
   COLORREF  oldColor;

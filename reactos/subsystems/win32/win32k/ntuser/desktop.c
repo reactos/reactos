@@ -1505,15 +1505,15 @@ NtUserPaintDesktop(HDC hDC)
             rect.bottom = UserGetSystemMetrics(SM_CYSCREEN);
          }
 
-         color_old = NtGdiSetTextColor(hDC, RGB(255,255,255));
-         align_old = NtGdiSetTextAlign(hDC, TA_RIGHT);
-         mode_old = NtGdiSetBkMode(hDC, TRANSPARENT);
+         color_old = IntGdiSetTextColor(hDC, RGB(255,255,255));
+         align_old = IntGdiSetTextAlign(hDC, TA_RIGHT);
+         mode_old = IntGdiSetBkMode(hDC, TRANSPARENT);
 
          NtGdiExtTextOutW(hDC, rect.right-16, rect.bottom-48, 0, NULL, s_wszVersion, len, NULL, 0);
 
-         NtGdiSetBkMode(hDC, mode_old);
-         NtGdiSetTextAlign(hDC, align_old);
-         NtGdiSetTextColor(hDC, color_old);
+         IntGdiSetBkMode(hDC, mode_old);
+         IntGdiSetTextAlign(hDC, align_old);
+         IntGdiSetTextColor(hDC, color_old);
       }
    }
 
