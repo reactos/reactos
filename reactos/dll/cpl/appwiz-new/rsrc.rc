@@ -1,0 +1,4 @@
+#include "resource.h"
+#include <windows.h>
+
+#include "lang/en-US.rc"

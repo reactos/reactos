@@ -7,6 +7,9 @@
 <directory name="appwiz">
 	<xi:include href="appwiz/appwiz.rbuild" />
 </directory>
+<directory name="appwiz-new">
+	<xi:include href="appwiz-new/appwiz.rbuild" />
+</directory>
 <directory name="desk">
 	<xi:include href="desk/desk.rbuild" />
 </directory>
