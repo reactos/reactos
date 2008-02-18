@@ -195,5 +195,5 @@ BEGIN
     IDS_INF_PRODUCT_UPD          "Product Updates: "
     IDS_INF_README               "Readme: "
     IDS_INF_COMMENTS             "Comments: "
-	IDS_NO_INFORMATION           "No information about this program."
+    IDS_NO_INFORMATION           "No information about this program."
 END
