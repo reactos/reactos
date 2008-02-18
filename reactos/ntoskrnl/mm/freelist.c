@@ -380,6 +380,7 @@ MmInitializePageList(VOID)
         {
             RemoveEntryList(&MmPageArray[i].ListEntry);
             UnzeroedPageCount--;
+            MmStats.NrFreePages--;
         }
 
         /* Mark it as used kernel memory */
