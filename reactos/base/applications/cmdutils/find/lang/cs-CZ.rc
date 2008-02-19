@@ -1,0 +1,26 @@
+/*
+ * PROJECT:     ReactOS FIND
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * FILE:        applications/cmdutils/find/lang/cs-CZ.rc
+ * PURPOSE:     Czech Language File for PROJECT
+ * TRANSLATOR:  Radek Liska aka Black_Fox (radekliska at gmail dot com)
+ * UPDATED:     2008-02-17
+ */
+
+LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
+
+STRINGTABLE DISCARDABLE
+BEGIN
+
+IDS_USAGE, "FIND: Zobrazí všechny øádky souboru obsahující hledaný øetìzec.\n\n\
+  FIND [ /C ] [ /I ] [ /N ] [ /V ] \"øetìzec\" [ soubor... ]\n\
+    /C  Zobrazí poèet øádkù obsahující øetìzec.\n\
+    /I  Ignoruje velikost písmen.\n\
+    /N  Èísluje zobrazené øádky, zaèíná od 1.\n\
+    /V  Zobrazí všechny øádky, které NEobsahují zadaný øetìžec."
+
+IDS_NO_SUCH_FILE, "FIND: Soubor %s nebyl nalezen.\n"
+
+IDS_CANNOT_OPEN, "FIND: Soubor %s nelze otevøít!\n"
+
+END
