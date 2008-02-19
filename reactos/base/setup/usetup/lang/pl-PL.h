@@ -1674,6 +1674,14 @@ MUI_STRING plPLStrings[] =
     "Instalator utworzyˆ now¥ partycj©"},
     {STRING_UNPSPACE,
     "    Miejsce poza partycjami              %6lu %s"},
+    {STRING_MAXSIZE,
+    "MB (max. %lu MB)"},
+    {STRING_UNFORMATTED,
+    "New (Unformatted)"},
+    {STRING_FORMATUNUSED,
+    "Unused"},
+    {STRING_FORMATUNKNOWN,
+    "Unknown"},
     {0, 0}
 };
 

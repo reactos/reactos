@@ -1678,6 +1678,14 @@ MUI_STRING frFRStrings[] =
     "Setup a cr‚‚ une nouvelle partition sur"},
     {STRING_UNPSPACE,
     "    Espace non partitionn‚              %6lu %s"},
+    {STRING_MAXSIZE,
+    "MB (max. %lu MB)"},
+    {STRING_UNFORMATTED,
+    "New (Unformatted)"},
+    {STRING_FORMATUNUSED,
+    "Unused"},
+    {STRING_FORMATUNKNOWN,
+    "Unknown"},
     {0, 0}
 };
 

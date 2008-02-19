@@ -1599,7 +1599,7 @@ MUI_STRING itITStrings[] =
     {STRING_TXTSETUPFAILED,
     "Setup non ha trovato la sezione '%S' \nin TXTSETUP.SIF.\n"},
     {STRING_COPYING,
-     "                                                   \xB3 Copia di: %S"},
+     "                                          \xB3 Copia di: %S"},
     {STRING_SETUPCOPYINGFILES,
      "Copia dei file in corso..."},
     {STRING_PAGEDMEM,
@@ -1666,6 +1666,14 @@ MUI_STRING itITStrings[] =
     "Setup ha creato una nuova partizione su"},
     {STRING_UNPSPACE,
     "    Spazio non partizionato               %6lu %s"},
+    {STRING_MAXSIZE,
+    "MB (max. %lu MB)"},
+    {STRING_UNFORMATTED,
+    "New (Unformatted)"},
+    {STRING_FORMATUNUSED,
+    "Unused"},
+    {STRING_FORMATUNKNOWN,
+    "Unknown"},
     {0, 0}
 };
 

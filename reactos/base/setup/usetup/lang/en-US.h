@@ -1666,6 +1666,14 @@ MUI_STRING enUSStrings[] =
     "Setup created a new partition on"},
     {STRING_UNPSPACE,
     "    Unpartitioned space              %6lu %s"},
+    {STRING_MAXSIZE,
+    "MB (max. %lu MB)"},
+    {STRING_UNFORMATTED,
+    "New (Unformatted)"},
+    {STRING_FORMATUNUSED,
+    "Unused"},
+    {STRING_FORMATUNKNOWN,
+    "Unknown"},
     {0, 0}
 };
 

@@ -1598,7 +1598,7 @@ MUI_STRING esESStrings[] =
     {STRING_TXTSETUPFAILED,
     "Setup failed to find the '%S' section\nin TXTSETUP.SIF.\n"},
     {STRING_COPYING,
-     "                                                   \xB3 Copying file: %S"},
+     "                                          \xB3 Copying file: %S"},
     {STRING_SETUPCOPYINGFILES,
      "Setup is copying files..."},
     {STRING_PAGEDMEM,
@@ -1665,6 +1665,14 @@ MUI_STRING esESStrings[] =
     "Setup created a new partition on"},
     {STRING_UNPSPACE,
     "    Unpartitioned space              %6lu %s"},
+    {STRING_MAXSIZE,
+    "MB (max. %lu MB)"},
+    {STRING_UNFORMATTED,
+    "New (Unformatted)"},
+    {STRING_FORMATUNUSED,
+    "Unused"},
+    {STRING_FORMATUNKNOWN,
+    "Unknown"},
     {0, 0}
 };
 

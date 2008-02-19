@@ -1605,7 +1605,7 @@ MUI_STRING deDEStrings[] =
     {STRING_TXTSETUPFAILED,
     "Setup konnte die '%S' Sektion\nin TXTSETUP.SIF nicht finden.\n"},
     {STRING_COPYING,
-     "                                                   \xB3 Kopiere Datei: %S"},
+     "                                          \xB3 Kopiere Datei: %S"},
     {STRING_SETUPCOPYINGFILES,
      "Setup kopiert Dateien..."},
     {STRING_PAGEDMEM,
@@ -1672,6 +1672,14 @@ MUI_STRING deDEStrings[] =
     "Setup erstellte eine neue Partition auf"},
     {STRING_UNPSPACE,
     "    Unpartitionierter Speicher       %6lu %s"},
+    {STRING_MAXSIZE,
+    "MB (max. %lu MB)"},
+    {STRING_UNFORMATTED,
+    "Neu (Unformatiert)"},
+    {STRING_FORMATUNUSED,
+    "Ungenutzt"},
+    {STRING_FORMATUNKNOWN,
+    "Unbekannt"},
     {0, 0}
 };
 

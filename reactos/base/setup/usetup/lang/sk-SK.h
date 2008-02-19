@@ -1604,7 +1604,7 @@ MUI_STRING skSKStrings[] =
     {STRING_TXTSETUPFAILED,
     "Inçtal tor zlyhal pri h–adan¡ sekcie '%S'\nv s£bore TXTSETUP.SIF.\n"},
     {STRING_COPYING,
-     "                                              \xB3 Kop¡ruje sa s£bor: %S"},
+     "                                          \xB3 Kop¡ruje sa s£bor: %S"},
     {STRING_SETUPCOPYINGFILES,
      "Inçtal tor kop¡ruje s£bory..."},
     {STRING_PAGEDMEM,
@@ -1671,6 +1671,14 @@ MUI_STRING skSKStrings[] =
     "Setup created a new partition on"},
     {STRING_UNPSPACE,
     "    Unpartitioned space              %6lu %s"},
+    {STRING_MAXSIZE,
+    "MB (max. %lu MB)"},
+    {STRING_UNFORMATTED,
+    "New (Unformatted)"},
+    {STRING_FORMATUNUSED,
+    "Unused"},
+    {STRING_FORMATUNKNOWN,
+    "Unknown"},
     {0, 0}
 };
 

@@ -1505,7 +1505,7 @@ ShowPartitionSizeInputBox(SHORT Left,
                                  coPos,
                                  &Written);
 
-    sprintf (Buffer, "MB (max. %lu MB)", MaxSize);
+    sprintf (Buffer, MUIGetString(STRING_MAXSIZE), MaxSize);
     coPos.X = iLeft + PARTITION_SIZE_INPUT_FIELD_LENGTH + 1;
     coPos.Y = iTop;
     WriteConsoleOutputCharacterA(StdOutput,
@@ -1750,7 +1750,7 @@ DeletePartitionPage (PINPUT_RECORD Ir)
     PartType = NULL;
     if (PartEntry->New == TRUE)
     {
-        PartType = "New (Unformatted)";
+        PartType = MUIGetString(STRING_UNFORMATTED);
     }
     else if (PartEntry->Unpartitioned == FALSE)
     {
@@ -1956,11 +1956,11 @@ SelectFileSystemPage (PINPUT_RECORD Ir)
     }
     else if (PartEntry->PartInfo[0].PartitionType == PARTITION_ENTRY_UNUSED)
     {
-        PartType = "Unused";
+        PartType = MUIGetString(STRING_FORMATUNUSED);
     }
     else
     {
-        PartType = "Unknown";
+        PartType = MUIGetString(STRING_FORMATUNKNOWN);
     }
 
     if (PartEntry->AutoCreate == TRUE)

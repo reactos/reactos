@@ -1146,7 +1146,7 @@ PrintPartitionData (PPARTLIST List,
     PartType = NULL;
     if (PartEntry->New == TRUE)
     {
-      PartType = "New (Unformatted)";
+      PartType = MUIGetString(STRING_UNFORMATTED);
     }
     else if (PartEntry->Unpartitioned == FALSE)
     {

@@ -1599,7 +1599,7 @@ MUI_STRING ruRUStrings[] =
     {STRING_TXTSETUPFAILED,
     "Программа установки не смогла найти секцию '%S'\nв файле TXTSETUP.SIF.\n"},
     {STRING_COPYING,
-     "                                                   \xB3 Копирование: %S"},
+     "                                          \xB3 Копирование: %S"},
     {STRING_SETUPCOPYINGFILES,
      "Программа установки копирует файлы..."},
     {STRING_PAGEDMEM,
@@ -1666,6 +1666,14 @@ MUI_STRING ruRUStrings[] =
     "Программа установки создала новый раздел на:"},
     {STRING_UNPSPACE,
     "    Неразмеченное пространство              %6lu %s"},
+    {STRING_MAXSIZE,
+    "MB (max. %lu MB)"},
+    {STRING_UNFORMATTED,
+    "New (Unformatted)"},
+    {STRING_FORMATUNUSED,
+    "Unused"},
+    {STRING_FORMATUNKNOWN,
+    "Unknown"},
     {0, 0}
 };
 
