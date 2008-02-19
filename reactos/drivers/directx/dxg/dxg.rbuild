@@ -1,10 +1,12 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../../tools/rbuild/project.dtd">
-<module name="dxg" type="kernelmodedriver"
-installbase="system32/drivers" installname="dxg.sys">
+<module name="dxg" type="kernelmodedriver" installbase="system32/drivers" installname="dxg.sys">
 	<importlibrary definition="dxg.def" />
 	<include base="dxg">.</include>
-	<define name="__USE_W32API" />
+	<include base="dxg">include</include>
+	<include base="ReactOS">subsystems/win32/win32k/include</include>
+	<define name="_WIN32_WINNT">0x0501</define>
+	<define name="WINVER">0x600</define>
 	<library>dxgthk</library>
 	<library>ntoskrnl</library>
 	<file>main.c</file>

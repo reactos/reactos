@@ -6,6 +6,7 @@
 #include <ddk/tvout.h>
 #include <ndk/ntndk.h>
 
+/* Win32 Headers */
 #define WINBASEAPI
 #define STARTF_USESIZE 2
 #define STARTF_USEPOSITION 4
@@ -21,13 +22,19 @@
 #include <dde.h>
 #include <wincon.h>
 
-#include <reactos/drivers/directx/directxint.h>
+/* Public Win32K Headers */
+#include <win32k/ntusrtyp.h>
+#include <win32k/ntuser.h>
+#include <win32k/ntgdityp.h>
+#include <win32k/ntgdihdl.h>
+#include <win32.h>
+#include <gdiobj.h>
+#include <dc.h>
 
-#include <reactos/win32k/ntgdityp.h>
-#include <reactos/win32k/ntgdihdl.h>
+#include <drivers/directx/directxint.h>
 
-#include <reactos/drivers/directx/dxg.h>
-#include <reactos/drivers/directx/dxeng.h>
+#include <drivers/directx/dxg.h>
+#include <drivers/directx/dxeng.h>
 
 #include "tags.h"
 
