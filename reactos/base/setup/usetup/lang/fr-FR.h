@@ -1611,7 +1611,7 @@ MUI_STRING frFRStrings[] =
     {STRING_TXTSETUPFAILED,
     "Setup n'a pu trouver la section '%S'\ndans TXTSETUP.SIF.\n"},
     {STRING_COPYING,
-     "                                       \xB3 Copie du fichier: %S"},
+     "                                      \xB3 Copie du fichier: %S"},
     {STRING_SETUPCOPYINGFILES,
      "Setup copie les fichiers..."},
     {STRING_PAGEDMEM,
@@ -1679,13 +1679,13 @@ MUI_STRING frFRStrings[] =
     {STRING_UNPSPACE,
     "    Espace non partitionn‚              %6lu %s"},
     {STRING_MAXSIZE,
-    "MB (max. %lu MB)"},
+    "Mo (max. %lu Mo)"},
     {STRING_UNFORMATTED,
-    "New (Unformatted)"},
+    "Nouveau (non format‚)"},
     {STRING_FORMATUNUSED,
-    "Unused"},
+    "Non utilis‚"},
     {STRING_FORMATUNKNOWN,
-    "Unknown"},
+    "Inconnu"},
     {0, 0}
 };
 
