@@ -1686,6 +1686,12 @@ MUI_STRING frFRStrings[] =
     "Non utilis‚"},
     {STRING_FORMATUNKNOWN,
     "Inconnu"},
+    {STRING_KB,
+    "Ko"},
+    {STRING_MB,
+    "Mo"},
+    {STRING_GB,
+    "Go"},
     {0, 0}
 };
 

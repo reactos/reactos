@@ -1673,6 +1673,12 @@ MUI_STRING esESStrings[] =
     "Unused"},
     {STRING_FORMATUNKNOWN,
     "Unknown"},
+    {STRING_KB,
+    "KB"},
+    {STRING_MB,
+    "MB"},
+    {STRING_GB,
+    "GB"},
     {0, 0}
 };
 

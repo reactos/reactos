@@ -121,4 +121,7 @@ MUIGetString(ULONG Number);
 #define STRING_UNFORMATTED 50
 #define STRING_FORMATUNUSED 51
 #define STRING_FORMATUNKNOWN 52
+#define STRING_KB 53
+#define STRING_MB 54
+#define STRING_GB 55
 #endif

@@ -1612,7 +1612,7 @@ CreatePartitionPage (PINPUT_RECORD Ir)
     if (DiskEntry->DiskSize >= 0x280000000ULL) /* 10 GB */
     {
         DiskSize = (DiskEntry->DiskSize + (1 << 29)) >> 30;
-        Unit = "GB";
+        Unit = MUIGetString(STRING_GB);
     }
     else
 #endif
@@ -1622,7 +1622,7 @@ CreatePartitionPage (PINPUT_RECORD Ir)
         if (DiskSize == 0)
             DiskSize = 1;
 
-        Unit = "MB";
+        Unit = MUIGetString(STRING_MB);
     }
 
     if (DiskEntry->DriverName.Length > 0)
@@ -1780,19 +1780,19 @@ DeletePartitionPage (PINPUT_RECORD Ir)
     if (PartEntry->PartInfo[0].PartitionLength.QuadPart >= 0x280000000LL) /* 10 GB */
     {
         PartSize = (PartEntry->PartInfo[0].PartitionLength.QuadPart + (1 << 29)) >> 30;
-        Unit = "GB";
+        Unit = MUIGetString(STRING_GB);
     }
     else
 #endif
     if (PartEntry->PartInfo[0].PartitionLength.QuadPart >= 0xA00000LL) /* 10 MB */
     {
         PartSize = (PartEntry->PartInfo[0].PartitionLength.QuadPart + (1 << 19)) >> 20;
-        Unit = "MB";
+        Unit = MUIGetString(STRING_MB);
     }
     else
     {
         PartSize = (PartEntry->PartInfo[0].PartitionLength.QuadPart + (1 << 9)) >> 10;
-        Unit = "KB";
+        Unit = MUIGetString(STRING_KB);
     }
 
     if (PartType == NULL)
@@ -1820,7 +1820,7 @@ DeletePartitionPage (PINPUT_RECORD Ir)
     if (DiskEntry->DiskSize >= 0x280000000ULL) /* 10 GB */
     {
         DiskSize = (DiskEntry->DiskSize + (1 << 29)) >> 30;
-        Unit = "GB";
+        Unit = MUIGetString(STRING_GB);
     }
     else
 #endif
@@ -1830,7 +1830,7 @@ DeletePartitionPage (PINPUT_RECORD Ir)
         if (DiskSize == 0)
             DiskSize = 1;
 
-        Unit = "MB";
+        Unit = MUIGetString(STRING_MB);
     }
 
     if (DiskEntry->DriverName.Length > 0)
@@ -1913,24 +1913,24 @@ SelectFileSystemPage (PINPUT_RECORD Ir)
     if (DiskEntry->DiskSize >= 0x280000000ULL) /* 10 GB */
     {
         DiskSize = (DiskEntry->DiskSize + (1 << 29)) >> 30;
-        DiskUnit = "GB";
+        DiskUnit = MUIGetString(STRING_GB);
     }
     else
     {
         DiskSize = (DiskEntry->DiskSize + (1 << 19)) >> 20;
-        DiskUnit = "MB";
+        DiskUnit = MUIGetString(STRING_MB);
     }
 
     /* adjust partition size */
     if (PartEntry->PartInfo[0].PartitionLength.QuadPart >= 0x280000000LL) /* 10 GB */
     {
         PartSize = (PartEntry->PartInfo[0].PartitionLength.QuadPart + (1 << 29)) >> 30;
-        PartUnit = "GB";
+        PartUnit = MUIGetString(STRING_GB);
     }
     else
     {
         PartSize = (PartEntry->PartInfo[0].PartitionLength.QuadPart + (1 << 19)) >> 20;
-        PartUnit = "MB";
+        PartUnit = MUIGetString(STRING_MB);
     }
 
     /* adjust partition type */

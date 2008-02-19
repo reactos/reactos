@@ -1120,19 +1120,19 @@ PrintPartitionData (PPARTLIST List,
     if (PartEntry->UnpartitionledLength >= 0x280000000ULL) /* 10 GB */
     {
       PartSize.QuadPart = (PartEntry->UnpartitionedLength + (1 << 29)) >> 30;
-      Unit = "GB";
+      Unit = MUIGetString(STRING_GB);
     }
     else
 #endif
       if (PartEntry->UnpartitionedLength >= 0xA00000ULL) /* 10 MB */
       {
         PartSize.QuadPart = (PartEntry->UnpartitionedLength + (1 << 19)) >> 20;
-        Unit = "MB";
+        Unit = MUIGetString(STRING_MB);
       }
       else
       {
         PartSize.QuadPart = (PartEntry->UnpartitionedLength + (1 << 9)) >> 10;
-        Unit = "KB";
+        Unit = MUIGetString(STRING_KB);
       }
 
       sprintf (LineBuffer,
@@ -1176,19 +1176,19 @@ PrintPartitionData (PPARTLIST List,
     if (PartEntry->PartInfo[0].PartitionLength.QuadPart >= 0x280000000LL) /* 10 GB */
     {
       PartSize.QuadPart = (PartEntry->PartInfo[0].PartitionLength.QuadPart + (1 << 29)) >> 30;
-      Unit = "GB";
+      Unit = MUIGetString(STRING_GB);
     }
     else
 #endif
     if (PartEntry->PartInfo[0].PartitionLength.QuadPart >= 0xA00000LL) /* 10 MB */
     {
       PartSize.QuadPart = (PartEntry->PartInfo[0].PartitionLength.QuadPart + (1 << 19)) >> 20;
-      Unit = "MB";
+      Unit = MUIGetString(STRING_MB);
     }
     else
     {
       PartSize.QuadPart = (PartEntry->PartInfo[0].PartitionLength.QuadPart + (1 << 9)) >> 10;
-      Unit = "KB";
+      Unit = MUIGetString(STRING_KB);
     }
 
     if (PartType == NULL)
@@ -1274,7 +1274,7 @@ PrintDiskData (PPARTLIST List,
   if (DiskEntry->DiskSize >= 0x280000000ULL) /* 10 GB */
   {
     DiskSize.QuadPart = (DiskEntry->DiskSize + (1 << 29)) >> 30;
-    Unit = "GB";
+    Unit = MUIGetString(STRING_GB);
   }
   else
 #endif
@@ -1282,7 +1282,7 @@ PrintDiskData (PPARTLIST List,
     DiskSize.QuadPart = (DiskEntry->DiskSize + (1 << 19)) >> 20;
     if (DiskSize.QuadPart == 0)
       DiskSize.QuadPart = 1;
-    Unit = "MB";
+    Unit = MUIGetString(STRING_MB);
   }
 
   if (DiskEntry->DriverName.Length > 0)

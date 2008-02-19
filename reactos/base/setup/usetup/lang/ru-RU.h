@@ -1674,6 +1674,12 @@ MUI_STRING ruRUStrings[] =
     "Не использовано"},
     {STRING_FORMATUNKNOWN,
     "Неизвестный"},
+    {STRING_KB,
+    "KB"},
+    {STRING_MB,
+    "MB"},
+    {STRING_GB,
+    "GB"},
     {0, 0}
 };
 

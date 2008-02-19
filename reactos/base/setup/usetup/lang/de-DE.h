@@ -1680,6 +1680,12 @@ MUI_STRING deDEStrings[] =
     "Ungenutzt"},
     {STRING_FORMATUNKNOWN,
     "Unbekannt"},
+    {STRING_KB,
+    "KB"},
+    {STRING_MB,
+    "MB"},
+    {STRING_GB,
+    "GB"},
     {0, 0}
 };
 
