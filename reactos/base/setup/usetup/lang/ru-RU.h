@@ -1667,13 +1667,13 @@ MUI_STRING ruRUStrings[] =
     {STRING_UNPSPACE,
     "    Неразмеченное пространство              %6lu %s"},
     {STRING_MAXSIZE,
-    "MB (max. %lu MB)"},
+    "МБ (макс. %lu МБ)"},
     {STRING_UNFORMATTED,
-    "New (Unformatted)"},
+    "Новый (неотформатированный)"},
     {STRING_FORMATUNUSED,
-    "Unused"},
+    "Не использовано"},
     {STRING_FORMATUNKNOWN,
-    "Unknown"},
+    "Неизвестный"},
     {0, 0}
 };
 
