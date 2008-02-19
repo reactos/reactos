@@ -25,11 +25,11 @@
 
 BOOL STDCALL
 IntEngEnter(PINTENG_ENTER_LEAVE EnterLeave,
-            SURFOBJ *DestObj,
+            SURFOBJ *DestSurf,
             RECTL *DestRect,
             BOOL ReadOnly,
             POINTL *Translate,
-            SURFOBJ **OutputObj)
+            SURFOBJ **OutputSurf)
 {
   LONG Exchange;
   SIZEL BitmapSize;
@@ -51,22 +51,22 @@ IntEngEnter(PINTENG_ENTER_LEAVE EnterLeave,
     DestRect->bottom = Exchange;
     }
 
-  if (NULL != DestObj && STYPE_BITMAP != DestObj->iType &&
-      (NULL == DestObj->pvScan0 || 0 == DestObj->lDelta))
+  if (NULL != DestSurf && STYPE_BITMAP != DestSurf->iType &&
+      (NULL == DestSurf->pvScan0 || 0 == DestSurf->lDelta))
     {
     /* Driver needs to support DrvCopyBits, else we can't do anything */
-    /* FIXME: Remove typecast! */
-    if (!(((BITMAPOBJ*)DestObj)->flHooks & HOOK_COPYBITS))
-      {
+    BITMAPOBJ *DestBmp = CONTAINING_RECORD(DestSurf, BITMAPOBJ, SurfObj);
+    if (!(DestBmp->flHooks & HOOK_COPYBITS))
+    {
       return FALSE;
-      }
+    }
 
     /* Allocate a temporary bitmap */
     BitmapSize.cx = DestRect->right - DestRect->left;
     BitmapSize.cy = DestRect->bottom - DestRect->top;
-    Width = DIB_GetDIBWidthBytes(BitmapSize.cx, BitsPerFormat(DestObj->iBitmapFormat));
+    Width = DIB_GetDIBWidthBytes(BitmapSize.cx, BitsPerFormat(DestSurf->iBitmapFormat));
     EnterLeave->OutputBitmap = EngCreateBitmap(BitmapSize, Width,
-                                               DestObj->iBitmapFormat,
+                                               DestSurf->iBitmapFormat,
                                                BMF_TOPDOWN | BMF_NOZEROINIT, NULL);
 
     if (!EnterLeave->OutputBitmap)
@@ -75,7 +75,7 @@ IntEngEnter(PINTENG_ENTER_LEAVE EnterLeave,
       return FALSE;
       }
 
-    *OutputObj = EngLockSurface((HSURF)EnterLeave->OutputBitmap);
+    *OutputSurf = EngLockSurface((HSURF)EnterLeave->OutputBitmap);
 
     EnterLeave->DestRect.left = 0;
     EnterLeave->DestRect.top = 0;
@@ -89,35 +89,35 @@ IntEngEnter(PINTENG_ENTER_LEAVE EnterLeave,
         ClippedDestRect.left -= SrcPoint.x;
         SrcPoint.x = 0;
       }
-    if (DestObj->sizlBitmap.cx < SrcPoint.x + ClippedDestRect.right - ClippedDestRect.left)
+    if (DestSurf->sizlBitmap.cx < SrcPoint.x + ClippedDestRect.right - ClippedDestRect.left)
       {
-        ClippedDestRect.right = ClippedDestRect.left + DestObj->sizlBitmap.cx - SrcPoint.x;
+        ClippedDestRect.right = ClippedDestRect.left + DestSurf->sizlBitmap.cx - SrcPoint.x;
       }
     if (SrcPoint.y < 0)
       {
         ClippedDestRect.top -= SrcPoint.y;
         SrcPoint.y = 0;
       }
-    if (DestObj->sizlBitmap.cy < SrcPoint.y + ClippedDestRect.bottom - ClippedDestRect.top)
+    if (DestSurf->sizlBitmap.cy < SrcPoint.y + ClippedDestRect.bottom - ClippedDestRect.top)
       {
-        ClippedDestRect.bottom = ClippedDestRect.top + DestObj->sizlBitmap.cy - SrcPoint.y;
+        ClippedDestRect.bottom = ClippedDestRect.top + DestSurf->sizlBitmap.cy - SrcPoint.y;
       }
     EnterLeave->TrivialClipObj = EngCreateClip();
     EnterLeave->TrivialClipObj->iDComplexity = DC_TRIVIAL;
-    if (ClippedDestRect.left < (*OutputObj)->sizlBitmap.cx &&
+    if (ClippedDestRect.left < (*OutputSurf)->sizlBitmap.cx &&
         0 <= ClippedDestRect.right &&
-        SrcPoint.x < DestObj->sizlBitmap.cx &&
-        ClippedDestRect.top <= (*OutputObj)->sizlBitmap.cy &&
+        SrcPoint.x < DestSurf->sizlBitmap.cx &&
+        ClippedDestRect.top <= (*OutputSurf)->sizlBitmap.cy &&
         0 <= ClippedDestRect.bottom &&
-        SrcPoint.y < DestObj->sizlBitmap.cy &&
-        ! GDIDEVFUNCS(DestObj).CopyBits(
-                                        *OutputObj, DestObj,
+        SrcPoint.y < DestSurf->sizlBitmap.cy &&
+        ! GDIDEVFUNCS(DestSurf).CopyBits(
+                                        *OutputSurf, DestSurf,
                                         EnterLeave->TrivialClipObj, NULL,
                                         &ClippedDestRect, &SrcPoint))
       {
       EngDeleteClip(EnterLeave->TrivialClipObj);
-      EngFreeMem((*OutputObj)->pvBits);
-      EngUnlockSurface(*OutputObj);
+      EngFreeMem((*OutputSurf)->pvBits);
+      EngUnlockSurface(*OutputSurf);
       EngDeleteSurface((HSURF)EnterLeave->OutputBitmap);
       return FALSE;
       }
@@ -132,25 +132,28 @@ IntEngEnter(PINTENG_ENTER_LEAVE EnterLeave,
     {
     Translate->x = 0;
     Translate->y = 0;
-    *OutputObj = DestObj;
+    *OutputSurf = DestSurf;
     }
 
-  if (NULL != *OutputObj
-      && 0 != (((BITMAPOBJ*) *OutputObj)->flHooks & HOOK_SYNCHRONIZE))
+  if (NULL != *OutputSurf)
+  {
+    BITMAPOBJ* OutputBmp = CONTAINING_RECORD(*OutputSurf, BITMAPOBJ, SurfObj);
+    if (0 != (OutputBmp->flHooks & HOOK_SYNCHRONIZE))
     {
-      if (NULL != GDIDEVFUNCS(*OutputObj).SynchronizeSurface)
+      if (NULL != GDIDEVFUNCS(*OutputSurf).SynchronizeSurface)
         {
-          GDIDEVFUNCS(*OutputObj).SynchronizeSurface(*OutputObj, DestRect, 0);
+          GDIDEVFUNCS(*OutputSurf).SynchronizeSurface(*OutputSurf, DestRect, 0);
         }
-      else if (STYPE_BITMAP == (*OutputObj)->iType
-               && NULL != GDIDEVFUNCS(*OutputObj).Synchronize)
+      else if (STYPE_BITMAP == (*OutputSurf)->iType
+               && NULL != GDIDEVFUNCS(*OutputSurf).Synchronize)
         {
-          GDIDEVFUNCS(*OutputObj).Synchronize((*OutputObj)->dhpdev, DestRect);
+          GDIDEVFUNCS(*OutputSurf).Synchronize((*OutputSurf)->dhpdev, DestRect);
         }
     }
+  }
 
-  EnterLeave->DestObj = DestObj;
-  EnterLeave->OutputObj = *OutputObj;
+  EnterLeave->DestObj = DestSurf;
+  EnterLeave->OutputObj = *OutputSurf;
   EnterLeave->ReadOnly = ReadOnly;
 
   return TRUE;

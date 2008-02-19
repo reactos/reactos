@@ -575,7 +575,10 @@ VOID STDCALL
 EngUnlockSurface(IN SURFOBJ *Surface)
 {
    if (Surface != NULL)
-      GDIOBJ_UnlockObjByPtr(GdiHandleTable, Surface);
+   {
+      BITMAPOBJ *bmp = CONTAINING_RECORD(Surface, BITMAPOBJ, SurfObj);
+      GDIOBJ_UnlockObjByPtr(GdiHandleTable, bmp);
+   }
 }
 
 

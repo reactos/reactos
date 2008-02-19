@@ -5,10 +5,7 @@
 /* GDI logical bitmap object */
 typedef struct _BITMAPOBJ
 {
-//  HGDIOBJ     hHmgr;
-//  PVOID       pvEntry;
-//  ULONG       lucExcLock;
-//  ULONG       Tid;
+  BASEOBJECT  BaseObject;
 
   SURFOBJ     SurfObj;
   FLONG	      flHooks;
@@ -34,8 +31,11 @@ typedef struct _BITMAPOBJ
 #define  BITMAPOBJ_FreeBitmap(hBMObj)  \
   GDIOBJ_FreeObj(GdiHandleTable, (HGDIOBJ) hBMObj, GDI_OBJECT_TYPE_BITMAP)
 /* NOTE: Use shared locks! */
-#define  BITMAPOBJ_LockBitmap(hBMObj) (PBITMAPOBJ)EngLockSurface((HSURF)hBMObj)
-#define  BITMAPOBJ_UnlockBitmap(pBMObj) EngUnlockSurface(&pBMObj->SurfObj)
+#define  BITMAPOBJ_LockBitmap(hBMObj) \
+  ((PBITMAPOBJ) GDIOBJ_ShareLockObj (GdiHandleTable, (HGDIOBJ) hBMObj, GDI_OBJECT_TYPE_BITMAP))
+#define  BITMAPOBJ_UnlockBitmap(pBMObj)  \
+  GDIOBJ_UnlockObjByPtr (GdiHandleTable, pBMObj)
+
 BOOL INTERNAL_CALL BITMAP_Cleanup(PVOID ObjectBody);
 
 BOOL INTERNAL_CALL BITMAPOBJ_InitBitsLock(BITMAPOBJ *pBMObj);

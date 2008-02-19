@@ -928,7 +928,6 @@ GDIOBJ_LockObj (PGDI_HANDLE_TABLE HandleTable, HGDIOBJ hObj, DWORD ExpectedType)
 #ifdef GDI_DEBUG
                CaptureStackBackTace((PVOID*)GDIHandleLocker[GDI_HANDLE_GET_INDEX(hObj)], GDI_STACK_LEVELS);
 #endif
-               Object = Entry->KernelData;
             }
             else
             {
@@ -943,8 +942,8 @@ GDIOBJ_LockObj (PGDI_HANDLE_TABLE HandleTable, HGDIOBJ hObj, DWORD ExpectedType)
                   DelayExecution();
                   continue;
                }
-               Object = Entry->KernelData;
             }
+            Object = Entry->KernelData;
          }
          else
          {

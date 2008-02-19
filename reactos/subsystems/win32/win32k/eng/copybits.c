@@ -47,7 +47,7 @@ EngCopyBits(SURFOBJ *Dest,
   RECT_ENUM RectEnum;
   BOOL      EnumMore;
   BLTINFO   BltInfo;
-  BITMAPOBJ *DestObj = NULL;
+  BITMAPOBJ *DestObj;
   BITMAPOBJ *SourceObj;
 
   ASSERT(Dest != NULL && Source != NULL && DestRect != NULL && SourcePoint != NULL);
@@ -57,11 +57,13 @@ EngCopyBits(SURFOBJ *Dest,
   MouseSafetyOnDrawStart(Source, SourcePoint->x, SourcePoint->y,
                          (SourcePoint->x + abs(DestRect->right - DestRect->left)),
                          (SourcePoint->y + abs(DestRect->bottom - DestRect->top)));
+
+  DestObj = CONTAINING_RECORD(Dest, BITMAPOBJ, SurfObj);
   if (Dest != Source)
-    {
-    DestObj = CONTAINING_RECORD(Dest, BITMAPOBJ, SurfObj);
+  {
     BITMAPOBJ_LockBitmapBits(DestObj);
-    }
+  }
+
   MouseSafetyOnDrawStart(Dest, DestRect->left, DestRect->top, DestRect->right, DestRect->bottom);
 
   // FIXME: Don't punt to the driver's DrvCopyBits immediately. Instead,
@@ -76,17 +78,16 @@ EngCopyBits(SURFOBJ *Dest,
     if(Dest->iType!=STYPE_BITMAP)
     {
       /* FIXME: Eng* functions shouldn't call Drv* functions. ? */
-      /* FIXME: Remove typecast. */
-      if (((BITMAPOBJ*)Dest)->flHooks & HOOK_COPYBITS)
+      if (DestObj->flHooks & HOOK_COPYBITS)
       {
         ret = GDIDEVFUNCS(Dest).CopyBits(
           Dest, Source, Clip, ColorTranslation, DestRect, SourcePoint);
 
         MouseSafetyOnDrawEnd(Dest);
         if (Dest != Source)
-          {
+        {
           BITMAPOBJ_UnlockBitmapBits(DestObj);
-          }
+        }
         MouseSafetyOnDrawEnd(Source);
         BITMAPOBJ_UnlockBitmapBits(SourceObj);
 
@@ -98,17 +99,16 @@ EngCopyBits(SURFOBJ *Dest,
     if(Source->iType!=STYPE_BITMAP)
     {
       /* FIXME: Eng* functions shouldn't call Drv* functions. ? */
-      /* FIXME: Remove typecast. */
-      if (((BITMAPOBJ*)Source)->flHooks & HOOK_COPYBITS)
+      if (SourceObj->flHooks & HOOK_COPYBITS)
       {
         ret = GDIDEVFUNCS(Source).CopyBits(
           Dest, Source, Clip, ColorTranslation, DestRect, SourcePoint);
 
         MouseSafetyOnDrawEnd(Dest);
         if (Dest != Source)
-          {
+        {
           BITMAPOBJ_UnlockBitmapBits(DestObj);
-          }
+        }
         MouseSafetyOnDrawEnd(Source);
         BITMAPOBJ_UnlockBitmapBits(SourceObj);
 
@@ -123,9 +123,9 @@ EngCopyBits(SURFOBJ *Dest,
 
     MouseSafetyOnDrawEnd(Dest);
     if (Dest != Source)
-      {
+    {
       BITMAPOBJ_UnlockBitmapBits(DestObj);
-      }
+    }
     MouseSafetyOnDrawEnd(Source);
     BITMAPOBJ_UnlockBitmapBits(SourceObj);
 
@@ -157,9 +157,9 @@ EngCopyBits(SURFOBJ *Dest,
 
         MouseSafetyOnDrawEnd(Dest);
         if (Dest != Source)
-          {
+        {
           BITMAPOBJ_UnlockBitmapBits(DestObj);
-          }
+        }
         MouseSafetyOnDrawEnd(Source);
         BITMAPOBJ_UnlockBitmapBits(SourceObj);
 
@@ -176,9 +176,9 @@ EngCopyBits(SURFOBJ *Dest,
 
         MouseSafetyOnDrawEnd(Dest);
         if (Dest != Source)
-          {
+        {
           BITMAPOBJ_UnlockBitmapBits(DestObj);
-          }
+        }
         MouseSafetyOnDrawEnd(Source);
         BITMAPOBJ_UnlockBitmapBits(SourceObj);
 
@@ -214,9 +214,9 @@ EngCopyBits(SURFOBJ *Dest,
 
           MouseSafetyOnDrawEnd(Dest);
           if (Dest != Source)
-            {
+          {
             BITMAPOBJ_UnlockBitmapBits(DestObj);
-            }
+          }
           MouseSafetyOnDrawEnd(Source);
           BITMAPOBJ_UnlockBitmapBits(SourceObj);
 
@@ -225,9 +225,9 @@ EngCopyBits(SURFOBJ *Dest,
 
   MouseSafetyOnDrawEnd(Dest);
   if (Dest != Source)
-    {
+  {
     BITMAPOBJ_UnlockBitmapBits(DestObj);
-    }
+  }
   MouseSafetyOnDrawEnd(Source);
   BITMAPOBJ_UnlockBitmapBits(SourceObj);
 
