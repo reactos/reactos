@@ -78,7 +78,6 @@ int FitName (wchar_t *destination, const wchar_t *path, const wchar_t *filename,
 	return (1);
 }
 
-
 Defragment::Defragment (wstring Name, DefragType DefragMethod)
 {
     Method = DefragMethod;
@@ -245,7 +244,7 @@ void Defragment::Start (void)
 
             Info = Volume.GetDBFile (j);
 
-            Report.FilesFragments += max (1, Info.Fragments.size()); // add 1 fragment even for 0 bytes/0 cluster files
+            Report.FilesFragments += max ((size_t)1, Info.Fragments.size()); // add 1 fragment even for 0 bytes/0 cluster files
 
             if (Info.Attributes.Process == 0)
                 continue;

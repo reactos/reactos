@@ -21,7 +21,7 @@ LRESULT PriBelowNormID;
 LRESULT PriIdleID;
 
 
-void             InitDialog       (HWND Dlg);
+static void             InitDialog       (HWND Dlg);
 void             UpdateDefragInfo (HWND Dlg);
 void             UpdatePriority   (HWND Dlg);
 wstring           GetDefaultTitle  (void);
@@ -35,7 +35,7 @@ static void InitDialog (HWND Dlg)
     // Make internal list
     DWORD DriveMask;
     HWND  DlgItem;
-    int d;
+    size_t d;
 
     // Clear out wisecracks line for now
     SetDlgItemText (Dlg, IDC_WISECRACKS, L"\"Defrag, baby!\"");

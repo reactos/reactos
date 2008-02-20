@@ -49,7 +49,7 @@ wchar_t *AddCommas (wchar_t *Result, uint64 Number)
 {
 	wchar_t  Temp[128];
 	int   TempLen;
-	wchar_t *p = NULL;
+	//wchar_t *p = NULL;
 	int   AddCommas = 0;
 	wchar_t *StrPosResult = NULL;
 	wchar_t *StrPosOrig = NULL;

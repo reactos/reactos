@@ -10,8 +10,9 @@
 
 
 // Blah blah blah your template name is too long ... SO WHAT
+#ifdef _MSC_VER
 #pragma warning (disable: 4786)
-
+#endif
 
 // I forget what this disables
 #ifdef __ICL
@@ -20,17 +21,19 @@
 
 
 // Hello Mr. Platform SDK, please let us use Windows 2000 only features
+#if 0
 #ifndef WINVER
 #define WINVER 0x0500
 #define _WIN32_WINNT 0x0500
 #endif
-
+#endif
 
 #include <windows.h>
 #include <string>
 #include <stdio.h>
 #include <stdlib.h>
-
+//#include <initguid.h>
+#include <winioctl.h>
 
 #define APPNAME_CLI   L"Unfrag"
 #define APPNAME_GUI   L"Fraginator"

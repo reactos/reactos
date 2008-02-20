@@ -55,7 +55,7 @@ bool DriveVolume::Open (wstring Name)
         FILE_SHARE_READ | FILE_SHARE_WRITE,       // share type
         NULL,                                     // security descriptor
         OPEN_EXISTING,                            // open type
-        NULL,                                     // attributes (none)
+        0,                                     // attributes (none)
         NULL                                      // template
     );
 
@@ -222,7 +222,7 @@ bool DriveVolume::GetBitmap (void)
         NULL
     );
 
-    DWORD LastError = GetLastError ();
+    //DWORD LastError = GetLastError ();
 
     if (Result == FALSE)
     {
@@ -422,7 +422,7 @@ bool DriveVolume::ScanDirectory (wstring DirPrefix, ScanCallback Callback, void 
         {
             uint64 TotalClusters = 0;
 
-            for (int i = 0; i < Info.Fragments.size(); i++)
+            for (size_t i = 0; i < Info.Fragments.size(); i++)
             {
                 TotalClusters += Info.Fragments[i].Length;
             }
@@ -597,9 +597,9 @@ bool DriveVolume::GetClusterInfo (FileInfo &Info, HANDLE &HandleResult)
     Extents = Retrieval->ExtentCount;
 
     // Ok, we have the info. Now translate it. hrmrmr
-    int i;
+    
     Info.Fragments.clear ();
-    for (i = 0; i < Extents; i++)
+    for (uint64 i = 0; i < Extents; i++)
     {
         Extent Add;
 

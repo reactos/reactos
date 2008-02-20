@@ -4,6 +4,7 @@
 
 *****************************************************************************/
 
+#define NDEBUG
 
 #include "Fraginator.h"
 #include "Mutex.h"
@@ -11,14 +12,15 @@
 #include "Defragment.h"
 #include "MainDialog.h"
 #include "resource.h"
+#ifdef _MSC_VER
 #include <crtdbg.h>
-
+#endif
 
 HINSTANCE   GlobalHInstance = NULL;
 Defragment *Defrag = NULL;
 
-
-int WINAPI WinMain (HINSTANCE HInstance, HINSTANCE HPrevInstance, LPSTR CmdLine, int ShowCmd)
+INT WINAPI
+wWinMain (HINSTANCE HInstance, HINSTANCE HPrevInstance, LPCWSTR CmdLine, INT ShowCmd)
 {
     INITCOMMONCONTROLSEX InitControls;
 
@@ -56,3 +58,4 @@ int WINAPI WinMain (HINSTANCE HInstance, HINSTANCE HPrevInstance, LPSTR CmdLine,
 
     return (0);
 }
+
