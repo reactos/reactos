@@ -47,20 +47,41 @@ StretchDIBits(HDC hdc,
 }
 
 /*
- * @unimplemented
+ * @implemented
+ *
  */
-int
+INT
 STDCALL
-SetDIBits(HDC hdc,
-          HBITMAP hbmp,
-          UINT uStartScan,
-          UINT cScanLines,
-          CONST VOID *lpvBits,
-          CONST BITMAPINFO *lpbmi,
-          UINT fuColorUse)
+SetDIBitsToDevice(
+    HDC hDC,
+    int XDest,
+    int YDest,
+    DWORD Width,
+    DWORD Height,
+    int XSrc,
+    int YSrc,
+    UINT StartScan,
+    UINT ScanLines,
+    CONST VOID *Bits,
+    CONST BITMAPINFO *lpbmi,
+    UINT ColorUse)
 {
-    /* FIXME share memory */
-    return NtGdiSetDIBits(hdc, hbmp, uStartScan, cScanLines, lpvBits, lpbmi, fuColorUse);
+    return NtGdiSetDIBitsToDeviceInternal(hDC,
+                                          XDest,
+                                          YDest,
+                                          Width,
+                                          Height,
+                                          XSrc,
+                                          YSrc,
+                                          StartScan,
+                                          ScanLines,
+                                          (LPBYTE)Bits,
+                                          (LPBITMAPINFO)lpbmi,
+                                          ColorUse,
+                                          lpbmi->bmiHeader.biSizeImage,
+                                          lpbmi->bmiHeader.biSize,
+                                          FALSE,
+                                          NULL);
 }
 
 /*
@@ -1769,17 +1790,6 @@ GdiResetDCEMF(HANDLE SpoolFileHandle,
     return 0;
 }
 
-
-HBITMAP
-STDCALL
-CreateDIBitmap(HDC hDc,
-               const BITMAPINFOHEADER *Header,
-               DWORD Init, LPCVOID Bits, const BITMAPINFO *Data,
-               UINT ColorUse)
-{
-    /* FIMXE we need do more thing in user mode */
-    return NtGdiCreateDIBitmap(hDc, Header, Init, Bits, Data,  ColorUse);
-}
 
 /*
  * @unimplemented

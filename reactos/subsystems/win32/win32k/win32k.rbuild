@@ -170,7 +170,6 @@
 	</directory>
 	<directory name="stubs">
 		<file>stubs.c</file>
-		<file>xpstubs.c</file>
 	</directory>
 </module>
 <module name="win32k" type="kernelmodedriver" installbase="system32" installname="win32k.sys" allowwarnings="true">

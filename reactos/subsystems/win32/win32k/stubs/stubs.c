@@ -2986,4 +2986,12 @@ NtGdiUnmapMemFont(
     return FALSE;
 }
 
-
+BOOL
+STDCALL
+EngControlSprites(
+  IN WNDOBJ  *pwo,
+  IN FLONG  fl)
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
