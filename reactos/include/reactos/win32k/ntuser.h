@@ -249,14 +249,6 @@ NtUserBuildHimcList(
 
 DWORD
 NTAPI
-NtUserBuildMenuItemList(
- HMENU hMenu,
- PVOID Buffer,
- ULONG nBufSize,
- DWORD Reserved);
-
-DWORD
-NTAPI
 NtUserCalcMenuBar(
     DWORD dwUnknown1,
     DWORD dwUnknown2,
@@ -306,28 +298,9 @@ NtUserEnableMenuItem(
   UINT uIDEnableItem,
   UINT uEnable);
 
-UINT
-NTAPI
-NtUserEnumClipboardFormats(
-  UINT format);
-
-DWORD
-NTAPI
-NtUserInsertMenuItem(
-  HMENU hMenu,
-  UINT uItem,
-  BOOL fByPosition,
-  LPCMENUITEMINFOW lpmii);
-
 BOOL
 NTAPI
 NtUserEndMenu(VOID);
-
-UINT NTAPI
-NtUserGetMenuDefaultItem(
-  HMENU hMenu,
-  UINT fByPos,
-  UINT gmdiFlags);
 
 BOOL
 NTAPI
@@ -365,14 +338,6 @@ NtUserHiliteMenuItem(
   UINT uItemHilite,
   UINT uHilite);
 
-BOOL
-NTAPI
-NtUserMenuInfo(
- HMENU hmenu,
- PROSMENUINFO lpmi,
- BOOL fsog
-);
-
 int
 NTAPI
 NtUserMenuItemFromPoint(
@@ -380,16 +345,6 @@ NtUserMenuItemFromPoint(
   HMENU hMenu,
   DWORD X,
   DWORD Y);
-
-BOOL
-NTAPI
-NtUserMenuItemInfo(
- HMENU hMenu,
- UINT uItem,
- BOOL fByPosition,
- PROSMENUITEMINFO lpmii,
- BOOL fsog
-);
 
 BOOL
 NTAPI
@@ -454,32 +409,6 @@ NtUserTrackPopupMenuEx(
   int y,
   HWND hwnd,
   LPTPMPARAMS lptpm);
-
-ULONG NTAPI
-NtUserGetSystemMetrics(ULONG Index);
-
-ULONG_PTR NTAPI
-NtUserGetClassLong(HWND hWnd, INT Offset, BOOL Ansi);
-
-LONG NTAPI
-NtUserGetWindowLong(HWND hWnd, DWORD Index, BOOL Ansi);
-
-BOOL NTAPI
-NtUserGetWindowRect(HWND hWnd, LPRECT Rect);
-
-BOOL NTAPI
-NtUserGetClientRect(HWND hWnd, LPRECT Rect);
-
-HANDLE NTAPI
-NtUserGetProp(HWND hWnd, ATOM Atom);
-
-BOOL NTAPI
-NtUserGetClientOrigin(HWND hWnd, LPPOINT Point);
-
-NTSTATUS
-NTAPI
-NtUserAcquireOrReleaseInputOwnership(
-  BOOLEAN Release);
 
 HKL
 NTAPI
@@ -771,12 +700,6 @@ NtUserCreateCaret(
   int nWidth,
   int nHeight);
 
-HANDLE
-NTAPI
-NtUserCreateCursorIconHandle(
-  PICONINFO IconInfo,
-  BOOL Indirect);
-
 HDESK
 NTAPI
 NtUserCreateDesktop(
@@ -993,7 +916,7 @@ NtUserEnumDisplayMonitors (
   LPCRECT lprcClip,
   MONITORENUMPROC lpfnEnum,
   LPARAM dwData );*/
-
+/* FIXME:  The call below is ros-specific and should be rewritten to use the same params as the correct call above.  */ 
 INT
 NTAPI
 NtUserEnumDisplayMonitors(
@@ -1282,11 +1205,6 @@ NTAPI
 NtUserGetKeyState(
   DWORD Unknown0);
 
-BOOL
-NTAPI
-NtUserGetLastInputInfo(
-    PLASTINPUTINFO plii);
-
 DWORD
 NTAPI
 NtUserGetLayeredWindowAttributes(
@@ -1313,12 +1231,6 @@ NtUserGetMessage(
   HWND hWnd,
   UINT wMsgFilterMin,
   UINT wMsgFilterMax);
-
-BOOL
-NTAPI
-NtUserGetMonitorInfo(
-  IN HMONITOR hMonitor,
-  OUT LPMONITORINFO pMonitorInfo);
 
 DWORD
 NTAPI
@@ -1396,13 +1308,6 @@ NtUserGetScrollBarInfo(
   HWND hWnd,
   LONG idObject,
   PSCROLLBARINFO psbi);
-
-BOOL
-NTAPI
-NtUserGetScrollInfo(
-  HWND hwnd,
-  int fnBar,
-  LPSCROLLINFO lpsi);
 
 HDESK
 NTAPI
@@ -1525,14 +1430,6 @@ NtUserIsClipboardFormatAvailable(
 
 BOOL
 NTAPI
-NtUserKillSystemTimer
-(
- HWND hWnd,
- UINT_PTR uIDEvent
-);
-
-BOOL
-NTAPI
 NtUserKillTimer
 (
  HWND hWnd,
@@ -1589,13 +1486,6 @@ NtUserMinMaximize(
     DWORD dwUnknown2,
     DWORD dwUnknown3);
 
-BOOL
-NTAPI
-NtUserGetMinMaxInfo(
-  HWND hwnd,
-  MINMAXINFO *MinMaxInfo,
-  BOOL SendMessage);
-
 DWORD
 NTAPI
 NtUserMNDragLeave(VOID);
@@ -1611,25 +1501,6 @@ NTAPI
 NtUserModifyUserStartupInfoFlags(
   DWORD Unknown0,
   DWORD Unknown1);
-
-HMONITOR
-NTAPI
-NtUserMonitorFromPoint(
-  IN POINT point,
-  IN DWORD dwFlags);
-
-HMONITOR
-NTAPI
-NtUserMonitorFromRect(
-  IN LPCRECT pRect,
-  IN DWORD dwFlags);
-
-HMONITOR
-NTAPI
-NtUserMonitorFromWindow(
-  IN HWND hWnd,
-  IN DWORD dwFlags);
-
 
 BOOL
 NTAPI
@@ -1844,24 +1715,6 @@ NtUserRegisterUserApiHook(
     DWORD dwUnknown1,
     DWORD dwUnknown2);
 
-/* FIXME: These flag constans aren't what Windows uses. */
-#define REGISTERCLASS_ANSI	2
-#define REGISTERCLASS_ALL	(REGISTERCLASS_ANSI)
-
-RTL_ATOM NTAPI
-NtUserRegisterClassEx(
-   CONST WNDCLASSEXW* lpwcx,
-   PUNICODE_STRING ClassName,
-   PUNICODE_STRING MenuName,
-   WNDPROC wpExtra,
-   DWORD Flags,
-   HMENU hMenu);
-
-UINT
-NTAPI
-NtUserRegisterClipboardFormat(
-    PUNICODE_STRING format);
-
 BOOL
 NTAPI
 NtUserRegisterHotKey(HWND hWnd,
@@ -1951,53 +1804,8 @@ NtUserSendInput(
   LPINPUT pInput,
   INT cbSize);
 
-typedef struct tagNTUSERSENDMESSAGEINFO
-{
-  BOOL HandledByKernel;
-  BOOL Ansi;
-  WNDPROC Proc;
-} NTUSERSENDMESSAGEINFO, *PNTUSERSENDMESSAGEINFO;
-
-LRESULT NTAPI
-NtUserSendMessage(HWND hWnd,
-		  UINT Msg,
-		  WPARAM wParam,
-		  LPARAM lParam,
-                  PNTUSERSENDMESSAGEINFO Info);
-
-BOOL
-NTAPI
-NtUserSendMessageCallback(
-  HWND hWnd,
-  UINT Msg,
-  WPARAM wParam,
-  LPARAM lParam,
-  SENDASYNCPROC lpCallBack,
-  ULONG_PTR dwData);
-
-LRESULT NTAPI
-NtUserSendMessageTimeout(HWND hWnd,
-			 UINT Msg,
-			 WPARAM wParam,
-			 LPARAM lParam,
-			 UINT uFlags,
-			 UINT uTimeout,
-			 ULONG_PTR *uResult,
-             PNTUSERSENDMESSAGEINFO Info);
-
-BOOL
-NTAPI
-NtUserSendNotifyMessage(
-  HWND hWnd,
-  UINT Msg,
-  WPARAM wParam,
-  LPARAM lParam);
-
 HWND NTAPI
 NtUserSetActiveWindow(HWND Wnd);
-
-HWND NTAPI
-NtUserGetActiveWindow(VOID);
 
 DWORD
 NTAPI
@@ -2007,9 +1815,6 @@ NtUserSetAppImeLevel(
 
 HWND NTAPI
 NtUserSetCapture(HWND Wnd);
-
-HWND NTAPI
-NtUserGetCapture(VOID);
 
 ULONG_PTR NTAPI
 NtUserSetClassLong(
@@ -2186,10 +1991,6 @@ NTAPI
 NtUserSetShellWindowEx(
   HWND hwndShell,
   HWND hwndShellListView);
-
-HWND
-NTAPI
-NtUserGetShellWindow();
 
 DWORD
 NTAPI
@@ -2535,30 +2336,6 @@ DWORD
 NTAPI
 NtUserYieldTask(VOID);
 
-DWORD NTAPI
-NtUserGetWindowThreadProcessId(HWND hWnd, LPDWORD UnsafePid);
-
-DWORD NTAPI
-NtUserGetQueueStatus(BOOL ClearChanges);
-
-HWND NTAPI
-NtUserGetWindow(HWND hWnd, UINT Relationship);
-
-HWND NTAPI
-NtUserGetLastActivePopup(HWND hWnd);
-
-typedef struct _WNDPROC_INFO
-{
-    WNDPROC WindowProc;
-    BOOL IsUnicode;
-} WNDPROC_INFO, *PWNDPROC_INFO;
-
-BOOL NTAPI
-NtUserDereferenceWndProcHandle(IN HANDLE wpHandle, OUT PWNDPROC_INFO wpInfo);
-
-VOID NTAPI
-NtUserManualGuiCheck(LONG Check);
-
 #define NtUserGetDCBrushColor(hbr) \
   (COLORREF)NtUserCallTwoParam((DWORD)(hbr), OBJ_BRUSH, TWOPARAM_ROUTINE_GETDCCOLOR)
 
@@ -2570,20 +2347,6 @@ NtUserManualGuiCheck(LONG Check);
 
 #define NtUserSetDCPenColor(hbr, crColor) \
   (COLORREF)NtUserCallTwoParam((DWORD)(hbr), (DWORD)crColor, TWOPARAM_ROUTINE_SETDCPENCOLOR)
-
-typedef struct _SETSCROLLBARINFO
-{
-  int nTrackPos;
-  int reserved;
-  DWORD rgstate[CCHILDREN_SCROLLBAR+1];
-} SETSCROLLBARINFO, *PSETSCROLLBARINFO;
-
-BOOL
-NTAPI
-NtUserSetScrollBarInfo(
-  HWND hwnd,
-  LONG idObject,
-  SETSCROLLBARINFO *info);
 
 /* lParam of DDE messages */
 typedef struct tagKMDDEEXECUTEDATA
@@ -2606,6 +2369,273 @@ typedef struct tagKMDDELPARAM
       LPARAM Unpacked;
     } Value;
 } KMDDELPARAM, *PKMDDELPARAM;
+
+
+
+
+
+/* NtUserBad
+*   ReactOS-specific NtUser calls which shouldn't exist.
+ */
+
+
+NTSTATUS
+NTAPI
+NtUserAcquireOrReleaseInputOwnership(
+  BOOLEAN Release);
+
+DWORD
+NTAPI
+NtUserBuildMenuItemList(
+ HMENU hMenu,
+ PVOID Buffer,
+ ULONG nBufSize,
+ DWORD Reserved); 
+
+HANDLE
+NTAPI
+NtUserCreateCursorIconHandle(
+  PICONINFO IconInfo,
+  BOOL Indirect); 
+
+
+typedef struct _WNDPROC_INFO
+{
+    WNDPROC WindowProc;
+    BOOL IsUnicode;
+} WNDPROC_INFO, *PWNDPROC_INFO;
+
+BOOL
+NTAPI
+NtUserDereferenceWndProcHandle(IN HANDLE wpHandle, OUT PWNDPROC_INFO wpInfo);
+
+
+UINT
+NTAPI
+NtUserEnumClipboardFormats(
+  UINT format);
+
+HWND
+NTAPI
+NtUserGetActiveWindow(VOID);
+
+HWND
+NTAPI
+NtUserGetCapture(VOID);
+
+ULONG_PTR
+NTAPI
+NtUserGetClassLong(HWND hWnd, INT Offset, BOOL Ansi);
+
+BOOL
+NTAPI
+NtUserGetClientOrigin(HWND hWnd, LPPOINT Point);
+
+BOOL
+NTAPI
+NtUserGetClientRect(HWND hWnd, LPRECT Rect);
+
+UINT
+NTAPI
+NtUserGetMenuDefaultItem(
+  HMENU hMenu,
+  UINT fByPos,
+  UINT gmdiFlags);
+
+HWND
+NTAPI
+NtUserGetLastActivePopup(HWND hWnd);
+
+BOOL
+NTAPI
+NtUserGetLastInputInfo(
+    PLASTINPUTINFO plii);
+
+BOOL
+NTAPI
+NtUserGetMinMaxInfo(
+  HWND hwnd,
+  MINMAXINFO *MinMaxInfo,
+  BOOL SendMessage);
+
+BOOL
+NTAPI
+NtUserGetMonitorInfo(
+  IN HMONITOR hMonitor,
+  OUT LPMONITORINFO pMonitorInfo);
+
+HANDLE
+NTAPI
+NtUserGetProp(HWND hWnd, ATOM Atom);
+
+DWORD
+NTAPI
+NtUserGetQueueStatus(BOOL ClearChanges);
+
+BOOL
+NTAPI
+NtUserGetScrollInfo(
+  HWND hwnd,
+  int fnBar,
+  LPSCROLLINFO lpsi);
+
+HWND
+NTAPI
+NtUserGetShellWindow();
+
+ULONG
+NTAPI
+NtUserGetSystemMetrics(ULONG Index);
+
+HWND
+NTAPI
+NtUserGetWindow(HWND hWnd, UINT Relationship);
+
+LONG
+NTAPI
+NtUserGetWindowLong(HWND hWnd, DWORD Index, BOOL Ansi);
+
+BOOL
+NTAPI
+NtUserGetWindowRect(HWND hWnd, LPRECT Rect);
+
+DWORD
+NTAPI
+NtUserGetWindowThreadProcessId(HWND hWnd, LPDWORD UnsafePid);
+
+DWORD
+NTAPI
+NtUserInsertMenuItem(
+  HMENU hMenu,
+  UINT uItem,
+  BOOL fByPosition,
+  LPCMENUITEMINFOW lpmii);
+
+BOOL
+NTAPI
+NtUserKillSystemTimer(HWND hWnd, UINT_PTR uIDEvent);
+
+VOID
+NTAPI
+NtUserManualGuiCheck(LONG Check);
+
+BOOL
+NTAPI
+NtUserMenuInfo(
+ HMENU hmenu,
+ PROSMENUINFO lpmi,
+ BOOL fsog
+);
+
+BOOL
+NTAPI
+NtUserMenuItemInfo(
+ HMENU hMenu,
+ UINT uItem,
+ BOOL fByPosition,
+ PROSMENUITEMINFO lpmii,
+ BOOL fsog
+);
+
+HMONITOR
+NTAPI
+NtUserMonitorFromPoint(
+  IN POINT point,
+  IN DWORD dwFlags);
+
+HMONITOR
+NTAPI
+NtUserMonitorFromRect(
+  IN LPCRECT pRect,
+  IN DWORD dwFlags);
+
+HMONITOR
+NTAPI
+NtUserMonitorFromWindow(
+  IN HWND hWnd,
+  IN DWORD dwFlags);
+
+
+/* FIXME: These flag constans aren't what Windows uses. */
+#define REGISTERCLASS_ANSI	2
+#define REGISTERCLASS_ALL	(REGISTERCLASS_ANSI)
+
+RTL_ATOM
+NTAPI
+NtUserRegisterClassEx(
+   CONST WNDCLASSEXW* lpwcx,
+   PUNICODE_STRING ClassName,
+   PUNICODE_STRING MenuName,
+   WNDPROC wpExtra,
+   DWORD Flags,
+   HMENU hMenu);
+
+
+UINT
+NTAPI
+NtUserRegisterClipboardFormat(
+    PUNICODE_STRING format);
+
+
+typedef struct tagNTUSERSENDMESSAGEINFO
+{
+  BOOL HandledByKernel;
+  BOOL Ansi;
+  WNDPROC Proc;
+} NTUSERSENDMESSAGEINFO, *PNTUSERSENDMESSAGEINFO;
+
+LRESULT NTAPI
+NtUserSendMessage(HWND hWnd,
+		  UINT Msg,
+		  WPARAM wParam,
+		  LPARAM lParam,
+          PNTUSERSENDMESSAGEINFO Info);
+
+BOOL
+NTAPI
+NtUserSendMessageCallback(
+  HWND hWnd,
+  UINT Msg,
+  WPARAM wParam,
+  LPARAM lParam,
+  SENDASYNCPROC lpCallBack,
+  ULONG_PTR dwData);
+
+LRESULT NTAPI
+NtUserSendMessageTimeout(HWND hWnd,
+			 UINT Msg,
+			 WPARAM wParam,
+			 LPARAM lParam,
+			 UINT uFlags,
+			 UINT uTimeout,
+			 ULONG_PTR *uResult,
+             PNTUSERSENDMESSAGEINFO Info);
+
+
+BOOL
+NTAPI
+NtUserSendNotifyMessage(
+  HWND hWnd,
+  UINT Msg,
+  WPARAM wParam,
+  LPARAM lParam);
+
+
+typedef struct _SETSCROLLBARINFO
+{
+  int nTrackPos;
+  int reserved;
+  DWORD rgstate[CCHILDREN_SCROLLBAR+1];
+} SETSCROLLBARINFO, *PSETSCROLLBARINFO;
+
+BOOL
+NTAPI
+NtUserSetScrollBarInfo(
+  HWND hwnd,
+  LONG idObject,
+  SETSCROLLBARINFO *info);
+
+
 
 #endif /* __WIN32K_NTUSER_H */
 

@@ -1111,6 +1111,14 @@ IntGdiGetDCOrgEx(DC *dc, LPPOINT  Point)
   return  TRUE;
 }
 
+BOOL FASTCALL
+IntGetAspectRatioFilter(PDC pDC,
+                        LPSIZE AspectRatio)
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
 BOOL STDCALL
 NtGdiGetDCPoint( HDC hDC, UINT iPoint, PPOINTL Point)
 {
@@ -1157,6 +1165,10 @@ NtGdiGetDCPoint( HDC hDC, UINT iPoint, PPOINTL Point)
       Ret = IntGdiGetDCOrgEx(dc, &SafePoint);
       break;
     case GdiGetAspectRatioFilter:
+      Ret = IntGetAspectRatioFilter(dc, &Size);
+      SafePoint.x = Size.cx;
+      SafePoint.y = Size.cy;
+      break;
     default:
       SetLastWin32Error(ERROR_INVALID_PARAMETER);
       Ret = FALSE;
@@ -3337,15 +3349,6 @@ NtGdiSetBoundsRect(
 {
   DPRINT1("stub");
   return  DCB_DISABLE;   /* bounding rectangle always empty */
-}
-
-BOOL
-STDCALL
-NtGdiGetAspectRatioFilterEx(HDC  hDC,
-                                 LPSIZE  AspectRatio)
-{
-  UNIMPLEMENTED;
-  return FALSE;
 }
 
 /*

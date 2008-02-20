@@ -527,11 +527,4 @@ DriverEntry (
   return STATUS_SUCCESS;
 }
 
-
-BOOLEAN STDCALL
-Win32kInitialize (VOID)
-{
-  return TRUE;
-}
-
 /* EOF */

@@ -71,12 +71,6 @@ NtGdiCreateDIBitmap (
 	UINT			Usage
 	);
 
-/* Should be done in user-mode. */
-BOOL
-STDCALL
-NtGdiGetAspectRatioFilterEx(HDC  hDC,
-                                 LPSIZE  AspectRatio);
-
 /* Use NtGdiGetDCPoint with GdiGetViewPortExt */
 BOOL STDCALL  NtGdiGetViewportExtEx(HDC  hDC, LPSIZE viewportExt);
 
