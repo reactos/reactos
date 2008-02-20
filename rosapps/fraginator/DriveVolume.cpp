@@ -48,7 +48,7 @@ bool DriveVolume::Open (wstring Name)
     RootPath = Name.c_str();
     RootPath += L"\\";
 
-    Handle = CreateFile
+    Handle = CreateFileW
     (
         FileName,
         MAXIMUM_ALLOWED,                          // access
@@ -71,7 +71,7 @@ bool DriveVolume::Open (wstring Name)
         BOOL  Result;
 
         ReturnVal = true;
-        Result = GetVolumeInformation
+        Result = GetVolumeInformationW
         (
             RootPath.c_str(),
             VolName,
@@ -140,7 +140,7 @@ bool DriveVolume::ObtainInfo (void)
     DWORD FreeClusters;
     DWORD TotalClusters;
 
-    Result = GetDiskFreeSpace
+    Result = GetDiskFreeSpaceW
     (
         RootPath.c_str(),
         &SectorsPerCluster,
@@ -155,7 +155,7 @@ bool DriveVolume::ObtainInfo (void)
 
     VolInfo.ClusterSize = SectorsPerCluster * BytesPerSector;
 
-    Result = GetDiskFreeSpaceEx
+    Result = GetDiskFreeSpaceExW
     (
         RootPath.c_str(),
         (PULARGE_INTEGER)&nan,
@@ -367,7 +367,7 @@ uint32 DriveVolume::RemoveDBFile (uint32 Indice)
 
 bool DriveVolume::ScanDirectory (wstring DirPrefix, ScanCallback Callback, void *UserData)
 {
-    WIN32_FIND_DATA FindData;
+    WIN32_FIND_DATAW FindData;
     HANDLE          FindHandle;
     wstring          SearchString;
     uint32          DirIndice;
@@ -377,7 +377,7 @@ bool DriveVolume::ScanDirectory (wstring DirPrefix, ScanCallback Callback, void 
     SearchString = DirPrefix;
     SearchString += L"*.*";
     ZeroMemory (&FindData, sizeof (FindData));
-    FindHandle = FindFirstFile (SearchString.c_str(), &FindData);
+    FindHandle = FindFirstFileW (SearchString.c_str(), &FindData);
 
     if (FindHandle == INVALID_HANDLE_VALUE)
         return (false);
@@ -460,7 +460,7 @@ bool DriveVolume::ScanDirectory (wstring DirPrefix, ScanCallback Callback, void 
             ScanDirectory (Dir, Callback, UserData);
         }
 
-    } while (FindNextFile (FindHandle, &FindData) == TRUE);
+    } while (FindNextFileW (FindHandle, &FindData) == TRUE);
 
     FindClose (FindHandle);
     return (false);
@@ -497,7 +497,7 @@ bool DriveVolume::GetClusterInfo (FileInfo &Info, HANDLE &HandleResult)
 
     FullName = GetDBDir (Info.DirIndice) + Info.Name;
 
-    Handle = CreateFile
+    Handle = CreateFileW
     (
         FullName.c_str(),
         0, //GENERIC_READ,
@@ -688,7 +688,7 @@ bool DriveVolume::MoveFileDumb (uint32 FileIndice, uint64 NewLCN)
     */
 
     // Open file
-    FileHandle = CreateFile
+    FileHandle = CreateFileW
     (
         FullName.c_str (),
         GENERIC_READ,
