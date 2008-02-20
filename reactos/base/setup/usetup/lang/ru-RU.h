@@ -1675,11 +1675,11 @@ MUI_STRING ruRUStrings[] =
     {STRING_FORMATUNKNOWN,
     "¥¨§Ά¥αβ­λ©"},
     {STRING_KB,
-    "KB"},
+    ""},
     {STRING_MB,
-    "MB"},
+    ""},
     {STRING_GB,
-    "GB"},
+    "ƒ"},
     {0, 0}
 };
 
