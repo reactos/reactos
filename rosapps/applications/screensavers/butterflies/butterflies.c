@@ -1,5 +1,6 @@
 #include <windows.h>
 #include <scrnsave.h>
+#include <tchar.h>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -12,7 +13,7 @@ HINSTANCE		hInstance;			// Holds The Instance Of The Application
 
 GLuint texture[3];	                //stores texture objects and display list
 
-LPCTSTR registryPath = ("Software\\Microsoft\\ScreenSavers\\Butterflies");
+LPCTSTR registryPath = _T("Software\\Microsoft\\ScreenSavers\\Butterflies");
 BOOL dRotate;
 
 
@@ -50,7 +51,7 @@ void ReadRegistry(){
 
 	valsize=sizeof(val);
 
-	result = RegQueryValueEx(skey, "Rotate", 0, &valtype, (LPBYTE)&val, &valsize);
+	result = RegQueryValueEx(skey, _T("Rotate"), 0, &valtype, (LPBYTE)&val, &valsize);
 	if(result == ERROR_SUCCESS)
 		dRotate = val;
 	RegCloseKey(skey);
@@ -66,7 +67,7 @@ void WriteRegistry(){
 		return;
 
 	val = dRotate;
-	RegSetValueEx(skey, "Rotate", 0, REG_DWORD, (CONST BYTE*)&val, sizeof(val));
+	RegSetValueEx(skey, _T("Rotate"), 0, REG_DWORD, (CONST BYTE*)&val, sizeof(val));
 
 	RegCloseKey(skey);
 }
@@ -246,10 +247,10 @@ BOOL AboutProc(HWND hdlg, UINT msg, WPARAM wpm, LPARAM lpm){
 			EndDialog(hdlg, LOWORD(wpm));
 			break;
 		case WEBPAGE1:
-			ShellExecute(NULL, "open", "http://nehe.gamedev.net", NULL, NULL, SW_SHOWNORMAL);
+			ShellExecute(NULL, _T("open"), _T("http://nehe.gamedev.net"), NULL, NULL, SW_SHOWNORMAL);
 			break;
 		case WEBPAGE2:
-			ShellExecute(NULL, "open", "http://www.thaputer.com", NULL, NULL, SW_SHOWNORMAL);
+			ShellExecute(NULL, _T("open"), _T("http://www.thaputer.com"), NULL, NULL, SW_SHOWNORMAL);
 			break;
 		}
 	}
