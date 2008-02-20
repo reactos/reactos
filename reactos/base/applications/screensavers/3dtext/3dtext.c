@@ -19,6 +19,7 @@
  */
 
 #include <windows.h>
+#include <scrnsave.h>
 #include <math.h>
 #include <GL/gl.h>
 #include <GL/glu.h>
@@ -27,11 +28,11 @@
 #include "resource.h"
 #include "3dtext.h"
 
-static HGLRC hRC;		// Permanent Rendering Context
-static HDC hDC;		// Private GDI Device Context
+static HGLRC hRC;       // Permanent Rendering Context
+static HDC hDC;         // Private GDI Device Context
 
-GLuint base;			// Base Display List For The Font Set
-GLfloat rot;			// Used To Rotate The Text
+GLuint base;            // Base Display List For The Font Set
+GLfloat rot;            // Used To Rotate The Text
 GLfloat extentX = 0.0f;
 GLfloat extentY = 0.0f;
 
@@ -47,7 +48,7 @@ GLvoid BuildFont(GLvoid)
     GLYPHMETRICSFLOAT gmf[256];
     // Windows Font Handle
     HFONT font;
-    int i;
+    size_t i;
     TCHAR c;
     GLfloat cellOriginX = 0.0f;
     GLfloat stringOriginX;
@@ -58,31 +59,31 @@ GLvoid BuildFont(GLvoid)
     base = glGenLists(256);
 
     font = CreateFont(-12,
-                      0,				// Width Of Font
-                      0,				// Angle Of Escapement
-                      0,				// Orientation Angle
-                      FW_BOLD,				// Font Weight
-                      FALSE,				// Italic
-                      FALSE,				// Underline
-                      FALSE,				// Strikeout
-                      DEFAULT_CHARSET,			// Character Set Identifier
-                      OUT_TT_PRECIS,			// Output Precision
-                      CLIP_DEFAULT_PRECIS,		// Clipping Precision
-                      ANTIALIASED_QUALITY,		// Output Quality
-                      FF_DONTCARE|DEFAULT_PITCH,	// Family And Pitch
-                      _T("Tahoma"));			// Font Name
+                      0,                            // Width Of Font
+                      0,                            // Angle Of Escapement
+                      0,                            // Orientation Angle
+                      FW_BOLD,                      // Font Weight
+                      FALSE,                        // Italic
+                      FALSE,                        // Underline
+                      FALSE,                        // Strikeout
+                      DEFAULT_CHARSET,              // Character Set Identifier
+                      OUT_TT_PRECIS,                // Output Precision
+                      CLIP_DEFAULT_PRECIS,          // Clipping Precision
+                      ANTIALIASED_QUALITY,          // Output Quality
+                      FF_DONTCARE|DEFAULT_PITCH,    // Family And Pitch
+                      _T("Tahoma"));                // Font Name
 
     // Selects The Font We Created
     SelectObject(hDC, font);
 
-    wglUseFontOutlines(hDC,				// Select The Current DC
-                       0,				// Starting Character
-                       255,				// Number Of Display Lists To Build
-                       base,				// Starting Display Lists
-                       0.0f,				// Deviation From The True Outlines
-                       0.2f,				// Font Thickness In The Z Direction
-                       WGL_FONT_POLYGONS,		// Use Polygons, Not Lines
-                       gmf);				// Address Of Buffer To Recieve Data
+    wglUseFontOutlines(hDC,                     // Select The Current DC
+                       0,                       // Starting Character
+                       255,                     // Number Of Display Lists To Build
+                       base,                    // Starting Display Lists
+                       0.0f,                    // Deviation From The True Outlines
+                       0.2f,                    // Font Thickness In The Z Direction
+                       WGL_FONT_POLYGONS,       // Use Polygons, Not Lines
+                       gmf);                    // Address Of Buffer To Recieve Data
 
     // Calculate the string extent
     for (i = 0; i < _tcslen(m_Text); i++)
@@ -231,9 +232,9 @@ GLvoid DrawGLScene(GLvoid)
                  0.0f);
 
     // Pulsing Colors Based On The Rotation
-    glColor3f((1.0f * (cos(rot / 20.0f))),
-              (1.0f * (sin(rot / 25.0f))),
-              (1.0f - 0.5f * (cos(rot / 17.0f))));
+    glColor3f((1.0f * (GLfloat)(cos(rot / 20.0f))),
+              (1.0f * (GLfloat)(sin(rot / 25.0f))),
+              (1.0f - 0.5f * (GLfloat)(cos(rot / 17.0f))));
 
     // Print GL Text To The Screen
     glPrint(m_Text);
@@ -246,41 +247,37 @@ GLvoid DrawGLScene(GLvoid)
 }
 
 LRESULT CALLBACK
-WndProc(HWND hWnd,
-        UINT message,
-        WPARAM wParam,
-        LPARAM lParam)
+ScreenSaverProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    static POINT ptLast;
-    static POINT ptCursor;
-    static BOOL  fFirstTime = TRUE;
-    RECT Screen;							// Used Later On To Get The Size Of The Window
-    GLuint PixelFormat;					// Pixel Format Storage
-    static PIXELFORMATDESCRIPTOR pfd=		// Pixel Format Descriptor
+    RECT Screen;                            // Used Later On To Get The Size Of The Window
+    GLuint PixelFormat;                     // Pixel Format Storage
+    static PIXELFORMATDESCRIPTOR pfd=       // Pixel Format Descriptor
     {
-        sizeof(PIXELFORMATDESCRIPTOR),		// Size Of This Pixel Format Descriptor
-        1,									// Version Number (?)
-        PFD_DRAW_TO_WINDOW |				// Format Must Support Window
-        PFD_SUPPORT_OPENGL |				// Format Must Support OpenGL
-        PFD_DOUBLEBUFFER,					// Must Support Double Buffering
-        PFD_TYPE_RGBA,						// Request An RGBA Format
-        16,									// Select A 16Bit Color Depth
-        0, 0, 0, 0, 0, 0,					// Color Bits Ignored (?)
-        0,									// No Alpha Buffer
-        0,									// Shift Bit Ignored (?)
-        0,									// No Accumulation Buffer
-        0, 0, 0, 0,							// Accumulation Bits Ignored (?)
-        16,									// 16Bit Z-Buffer (Depth Buffer)  
-        0,									// No Stencil Buffer
-        0,									// No Auxiliary Buffer (?)
-        PFD_MAIN_PLANE,						// Main Drawing Layer
-        0,									// Reserved (?)
-        0, 0, 0								// Layer Masks Ignored (?)
+        sizeof(PIXELFORMATDESCRIPTOR),      // Size Of This Pixel Format Descriptor
+        1,                                  // Version Number (?)
+        PFD_DRAW_TO_WINDOW |                // Format Must Support Window
+        PFD_SUPPORT_OPENGL |                // Format Must Support OpenGL
+        PFD_DOUBLEBUFFER,                   // Must Support Double Buffering
+        PFD_TYPE_RGBA,                      // Request An RGBA Format
+        16,                                 // Select A 16Bit Color Depth
+        0, 0, 0, 0, 0, 0,                   // Color Bits Ignored (?)
+        0,                                  // No Alpha Buffer
+        0,                                  // Shift Bit Ignored (?)
+        0,                                  // No Accumulation Buffer
+        0, 0, 0, 0,                         // Accumulation Bits Ignored (?)
+        16,                                 // 16Bit Z-Buffer (Depth Buffer)
+        0,                                  // No Stencil Buffer
+        0,                                  // No Auxiliary Buffer (?)
+        PFD_MAIN_PLANE,                     // Main Drawing Layer
+        0,                                  // Reserved (?)
+        0, 0, 0                             // Layer Masks Ignored (?)
     };
 
     switch (message)
     {
         case WM_CREATE:
+            LoadSettings();
+
             // Gets A Device Context For The Window
             hDC = GetDC(hWnd);
 
@@ -338,7 +335,6 @@ WndProc(HWND hWnd,
             break;
 
         case WM_DESTROY:
-        case WM_CLOSE:
             // Disable Fullscreen Mode
             ChangeDisplaySettings(NULL, 0);
 
@@ -353,9 +349,6 @@ WndProc(HWND hWnd,
 
             // Free The DC
             ReleaseDC(hWnd, hDC);
-
-            // Quit The Program
-            PostQuitMessage(0);
             break;
 
         case WM_PAINT:
@@ -363,157 +356,48 @@ WndProc(HWND hWnd,
             SwapBuffers(hDC);
             break;
 
-        case WM_NOTIFY:
-        case WM_SYSKEYDOWN:
-            PostMessage(hWnd, WM_CLOSE, 0, 0);
-            break;
-
-        case WM_LBUTTONDOWN:
-        case WM_LBUTTONUP:
-        case WM_RBUTTONDOWN:
-        case WM_RBUTTONUP:
-        case WM_MBUTTONDOWN:
-        case WM_MBUTTONUP:
-        case WM_MOUSEMOVE:
-            // If we've got a parent then we must be a preview
-            if (GetParent(hWnd) != 0)
-                return 0;
-
-            if (fFirstTime)
-            {
-                GetCursorPos(&ptLast);
-                fFirstTime = FALSE;
-            }
-
-            GetCursorPos(&ptCursor);
-
-            // if the mouse has moved more than 3 pixels then exit
-            if (abs(ptCursor.x - ptLast.x) >= 3 || abs(ptCursor.y - ptLast.y) >= 3)
-                PostMessage(hWnd, WM_CLOSE, 0, 0);
-
-            ptLast = ptCursor;
-            return 0;
-
         case WM_SIZE: // Resizing The Screen
             // Resize To The New Window Size
             ReSizeGLScene(LOWORD(lParam), HIWORD(lParam));
             break;
 
         default:
-            // Pass Windows Messages
-            return DefWindowProc(hWnd, message, wParam, lParam);
+            // Pass Windows Messages to the default screensaver window procedure
+            return DefScreenSaverProc(hWnd, message, wParam, lParam);
     }
 
     return 0;
 }
 
-VOID InitSaver(HWND hwndParent)
-{
-    WNDCLASS wc;
-
-    ZeroMemory(&wc, sizeof(wc));
-    wc.style            = CS_HREDRAW | CS_VREDRAW;
-    wc.lpfnWndProc      = WndProc;
-    wc.lpszClassName    = APPNAME;
-    RegisterClass(&wc);
-
-    if (hwndParent != 0)
-    {
-        RECT rect;
-
-        GetClientRect(hwndParent, &rect);
-        CreateWindow(APPNAME, APPNAME,
-                     WS_VISIBLE | WS_CHILD,
-                     0, 0,
-                     rect.right,
-                     rect.bottom,
-                     hwndParent, 0,
-                     hInstance, NULL);
-        fullscreen = FALSE;
-    }
-    else
-    {
-        HWND hwnd;
-        hwnd = CreateWindow(APPNAME, APPNAME,
-                            WS_VISIBLE | WS_POPUP | WS_EX_TOPMOST,
-                            0, 0,
-                            GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN),
-                            HWND_DESKTOP, 0,
-                            hInstance, NULL);
-        ShowWindow(hwnd, SW_SHOWMAXIMIZED);
-        ShowCursor(FALSE);
-        fullscreen = TRUE;
-    }
-}
-
-//
-// Look for any options Windows has passed to us:
-//
-//  -a <hwnd>   (set password)
-//  -s          (screensave)
-//  -p <hwnd>   (preview)
-//  -c <hwnd>   (configure)
-//
-VOID ParseCommandLine(LPTSTR szCmdLine, UCHAR *chOption, HWND *hwndParent)
-{
-    TCHAR ch = *szCmdLine++;
-
-    if (ch == _T('-') || ch == _T('/'))
-        ch = *szCmdLine++;
-
-    //convert to lower case
-    if (ch >= _T('A') && ch <= _T('Z'))
-        ch += _T('a') - _T('A');
-
-    *chOption = ch;
-    ch = *szCmdLine++;
-
-    if (ch == _T(':'))
-        ch = *szCmdLine++;
-
-    while (ch == _T(' ') || ch == _T('\t'))
-        ch = *szCmdLine++;
-
-    if (_istdigit(ch))
-    {
-        unsigned int i = _ttoi(szCmdLine - 1);
-        *hwndParent = (HWND)i;
-    }
-    else
-    {
-        *hwndParent = NULL;
-    }
-}
-
-
 //
 // Dialogbox procedure for Configuration window
 //
-BOOL CALLBACK ConfigDlgProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+BOOL CALLBACK ScreenSaverConfigureDialog(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     switch (uMsg)
     {
         case WM_INITDIALOG:
-            SetDlgItemText(hwnd, IDC_MESSAGE_TEXT, m_Text);
+            LoadSettings();
+            SetDlgItemText(hDlg, IDC_MESSAGE_TEXT, m_Text);
             return TRUE;
 
         case WM_COMMAND:
             switch (LOWORD(wParam))
             {
                 case IDOK:
-                    GetDlgItemText(hwnd, IDC_MESSAGE_TEXT, m_Text, MAX_PATH);
+                    GetDlgItemText(hDlg, IDC_MESSAGE_TEXT, m_Text, MAX_PATH);
                     SaveSettings();
-                    EndDialog(hwnd, IDOK);
-                    break;
+
+                    /* Fall through */
 
                 case IDCANCEL:
-                    EndDialog(hwnd, IDCANCEL);
+                    EndDialog(hDlg, IDCANCEL);
                     break;
             }
             return FALSE;
 
         case WM_CLOSE:
-            EndDialog(hwnd, 0);
+            EndDialog(hDlg, 0);
             break;
 
         default:
@@ -523,46 +407,7 @@ BOOL CALLBACK ConfigDlgProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     return TRUE;
 }
 
-VOID Configure(VOID)
+BOOL WINAPI RegisterDialogClasses(HANDLE hInst)
 {
-    DialogBox(hInstance, MAKEINTRESOURCE(IDD_CONFIG), NULL , (DLGPROC)ConfigDlgProc);
+    return TRUE;
 }
-
-INT CALLBACK
-_tWinMain(HINSTANCE hInst,
-          HINSTANCE hPrev,
-          LPTSTR lpCmdLine,
-          INT iCmdShow)
-{
-    HWND hwndParent = 0;
-    UCHAR chOption;
-    MSG Message;
-
-    hInstance = hInst;
-
-    ParseCommandLine(lpCmdLine, &chOption, &hwndParent);
-
-    LoadSettings();
-
-    switch (chOption)
-    {
-        case _T('s'):
-            InitSaver(0);
-            break;
-
-        case _T('p'):
-            InitSaver(hwndParent);
-            break;
-
-        case _T('c'):
-        default:
-            Configure();
-            return 0;
-    }
-
-    while (GetMessage(&Message, 0, 0, 0))
-        DispatchMessage(&Message);
-
-    return Message.wParam;
-}
-

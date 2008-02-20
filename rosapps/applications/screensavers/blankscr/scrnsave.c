@@ -21,38 +21,27 @@
 #include <scrnsave.h>
 #include "resource.h"
 
-LRESULT WINAPI ScreenSaverProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
-{ 
-    static HDC  hdc;
-    static RECT rc;
-
-    switch(message)
-    {
-        case WM_CREATE:
-            break;
-        case WM_DESTROY:
-            PostQuitMessage(0);
-            break;
-        case WM_ERASEBKGND:
-            hdc = GetDC(hwnd);
-            GetClientRect (hwnd, &rc);
-            FillRect (hdc, &rc, GetStockObject(BLACK_BRUSH));
-            ReleaseDC(hwnd,hdc);
-            break;
-       case WM_PAINT:
-            break;
-       default:
-            return DefScreenSaverProc(hwnd, message, wParam, lParam);
-    }
-    return 0;
+LRESULT WINAPI ScreenSaverProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    return DefScreenSaverProc(hwnd, uMsg, wParam, lParam);
 }
 
-BOOL WINAPI ScreenSaverConfigureDialog(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
+BOOL WINAPI ScreenSaverConfigureDialog(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     return FALSE;
 }
 
+// This function is only called one time before opening the configuration dialog.
+// Use it to show a message that no configuration is necesssary and return FALSE to indicate that no configuration dialog shall be opened.
 BOOL WINAPI RegisterDialogClasses(HANDLE hInst)
 {
-	return TRUE;
+    TCHAR szMessage[256];
+    TCHAR szTitle[25];
+
+    LoadString(hInst, IDS_TEXT, szMessage, sizeof(szMessage) / sizeof(TCHAR));
+    LoadString(hInst, IDS_DESCRIPTION, szTitle, sizeof(szTitle) / sizeof(TCHAR));
+
+    MessageBox(NULL, szMessage, szTitle, MB_OK | MB_ICONEXCLAMATION);
+
+    return FALSE;
 }
