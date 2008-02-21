@@ -504,6 +504,15 @@ Project::ProcessXML ( const string& path )
 			non_if_data.defines.push_back ( pDefine );
 		}
 		break;
+		case ARM:
+		{
+			Define* pDefine = new Define (*this, "_ARM_" );
+			non_if_data.defines.push_back ( pDefine );
+
+			pDefine = new Define (*this, "__arm__" );
+			non_if_data.defines.push_back ( pDefine );
+		}
+		break;
 	}
 }
 
@@ -514,6 +523,8 @@ Project::GetArchitectureType ( const string& location, const XMLAttribute& attri
 		return I386;
 	if ( attribute.value == "powerpc" )
 		return PowerPC;
+	if ( attribute.value == "arm" )
+		return ARM;
 	throw InvalidAttributeValueException ( location,
 	                                       attribute.name,
 	                                       attribute.value );
