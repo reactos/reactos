@@ -359,7 +359,8 @@ enum ModuleType
 	IsoRegTest = 24,
 	LiveIsoRegTest = 25,
 	EmbeddedTypeLib = 26,
-	ElfExecutable = 27
+	ElfExecutable = 27,
+    Package = 28
 };
 
 enum HostType
@@ -427,6 +428,7 @@ public:
 	std::vector<CompilerFlag*> compilerFlags;
 	std::vector<LinkerFlag*> linkerFlags;
 	std::vector<StubbedComponent*> stubbedComponents;
+    std::vector<InstallFile*> installfiles;
 	LinkerScript* linkerScript;
 	PchFile* pch;
 	bool cplusplus;

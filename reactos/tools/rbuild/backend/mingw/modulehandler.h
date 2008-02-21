@@ -488,6 +488,14 @@ public:
 	virtual void Process ();
 };
 
+class MingwPackageModuleHandler : public MingwModuleHandler
+{
+public:
+	MingwPackageModuleHandler ( const Module& module );
+	virtual HostType DefaultHost() { return HostFalse; }
+	virtual void Process ();
+};
+
 class MingwAliasModuleHandler : public MingwModuleHandler
 {
 public:

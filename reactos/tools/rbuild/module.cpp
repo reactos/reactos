@@ -688,6 +688,12 @@ Module::ProcessXMLSubElement ( const XMLElement& e,
 			non_if_data.defines.push_back ( pDefine );
 		subs_invalid = true;
 	}
+    else if ( e.name == "installfile" )
+	{
+		InstallFile* installfile = new InstallFile ( project, e, relative_path );
+		installfiles.push_back ( installfile ); /* add the file to project for now */
+		subs_invalid = true;
+	}
 	else if ( e.name == "family" )
 	{
 		if ( parseContext.ifData )
@@ -1073,6 +1079,8 @@ Module::GetModuleType ( const string& location, const XMLAttribute& attribute )
 		return EmbeddedTypeLib;
 	if ( attribute.value == "elfexecutable" )
 		return ElfExecutable;
+    if ( attribute.value == "package" )
+        return Package;
 	throw InvalidAttributeValueException ( location,
 	                                       attribute.name,
 	                                       attribute.value );
@@ -1110,6 +1118,7 @@ Module::GetTargetDirectoryTree () const
 		case RpcServer:
 		case RpcClient:
 		case Alias:
+        case Package:
 		case IdlHeader:
 			return IntermediateDirectory;
 	}
@@ -1161,6 +1170,7 @@ Module::GetDefaultModuleExtension () const
 			return ".o";
 		case RpcClient:
 			return ".o";
+        case Package:
 		case Alias:
 		case ElfExecutable:
 		case IdlHeader:
@@ -1213,6 +1223,7 @@ Module::GetDefaultModuleEntrypoint () const
 		case RpcServer:
 		case RpcClient:
 		case Alias:
+        case Package:
 		case BootProgram:
 		case IdlHeader:
 		case ElfExecutable:
@@ -1258,6 +1269,7 @@ Module::GetDefaultModuleBaseaddress () const
 		case RpcServer:
 		case RpcClient:
 		case Alias:
+        case Package:
 		case BootProgram:
 		case IdlHeader:
 		case EmbeddedTypeLib:
@@ -1303,6 +1315,7 @@ Module::IsDLL () const
 		case RpcServer:
 		case RpcClient:
 		case Alias:
+        case Package:
 		case IdlHeader:
 		case EmbeddedTypeLib:
 		case ElfExecutable:

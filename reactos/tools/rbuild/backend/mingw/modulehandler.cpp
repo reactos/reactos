@@ -237,6 +237,9 @@ MingwModuleHandler::InstanciateHandler (
 		case ElfExecutable:
 			handler = new MingwElfExecutableModuleHandler ( module );
 			break;
+        case Package:
+            handler = new MingwAliasModuleHandler ( module );
+            break;
 		default:
 			throw UnknownModuleTypeException (
 				module.node.location,
@@ -3654,6 +3657,21 @@ MingwLiveIsoModuleHandler::OutputNonModuleCopyCommands ( string& livecdReactosDi
 		                      installfile.target->name );
 		OutputCopyCommand ( *installfile.source, target );
 	}
+
+    for ( size_t j = 0; j < module.project.modules.size (); j++ )
+	{
+        const Module& mdl = *module.project.modules[j];
+	    for ( size_t i = 0; i < mdl.installfiles.size (); i++ )
+	    {
+		    const InstallFile& installfile = *mdl.installfiles[i];
+		    FileLocation target ( OutputDirectory,
+		                          installfile.target->relative_path.length () > 0
+		                              ? livecdReactosDirectory + sSep + installfile.target->relative_path
+		                              : livecdReactosDirectory,
+		                          installfile.target->name );
+		    OutputCopyCommand ( *installfile.source, target );
+	    }
+    }
 }
 
 void
@@ -3843,6 +3861,18 @@ MingwAliasModuleHandler::MingwAliasModuleHandler (
 
 void
 MingwAliasModuleHandler::Process ()
+{
+}
+
+MingwPackageModuleHandler::MingwPackageModuleHandler (
+	const Module& module_ )
+
+	: MingwModuleHandler ( module_ )
+{
+}
+
+void
+MingwPackageModuleHandler::Process ()
 {
 }
 

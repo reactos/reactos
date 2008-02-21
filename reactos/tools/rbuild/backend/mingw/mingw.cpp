@@ -556,6 +556,8 @@ MingwBackend::IncludeInAllTarget ( const Module& module ) const
 		return false;
 	if ( module.type == Alias )
 		return false;
+	if ( module.type == Package )
+		return false;
 	return true;
 }
 
@@ -1210,10 +1212,21 @@ void
 MingwBackend::GetNonModuleInstallTargetFiles (
 	vector<FileLocation>& out ) const
 {
+    /* Project install files */
 	for ( size_t i = 0; i < ProjectNode.installfiles.size (); i++ )
 	{
 		const InstallFile& installfile = *ProjectNode.installfiles[i];
 		out.push_back ( *installfile.target );
+	}
+
+    for ( size_t i = 0; i < ProjectNode.modules.size (); i++ )
+	{
+        const Module& module = *ProjectNode.modules[i];
+	    for ( size_t j = 0; j < module.installfiles.size (); j++ )
+	    {
+		    const InstallFile& installfile = *module.installfiles[j];
+		    out.push_back ( *installfile.target );
+	    }
 	}
 }
 
@@ -1263,6 +1276,16 @@ MingwBackend::OutputNonModuleInstallTargets ()
 	{
 		const InstallFile& installfile = *ProjectNode.installfiles[i];
 		OutputInstallTarget ( *installfile.source, *installfile.target );
+	}
+
+    for ( size_t i = 0; i < ProjectNode.modules.size (); i++ )
+	{
+        const Module& module = *ProjectNode.modules[i];
+	    for ( size_t j = 0; j < module.installfiles.size (); j++ )
+	    {
+		    const InstallFile& installfile = *module.installfiles[j];
+		    OutputInstallTarget ( *installfile.source, *installfile.target );
+	    }
 	}
 }
 
