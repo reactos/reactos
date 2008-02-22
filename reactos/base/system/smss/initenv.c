@@ -54,11 +54,9 @@ SmpSetEnvironmentVariable(IN PVOID Context,
                          ValueName);
     RtlInitUnicodeString(&EnvValue,
                          (PWSTR)ValueData);
-    RtlSetEnvironmentVariable(Context,
+    return RtlSetEnvironmentVariable(Context,
                               &EnvVariable,
                               &EnvValue);
-
-    return STATUS_SUCCESS;
 }
 
 
