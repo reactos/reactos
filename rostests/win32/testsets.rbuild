@@ -13,7 +13,7 @@
 <directory name="user32">
 	<xi:include href="user32/user32.rbuild" />
 </directory>
-<directory name="win32k">
+<!--directory name="win32k">
 	<xi:include href="win32k/win32k.rbuild" />
-</directory>
+</directory-->
 </group>
