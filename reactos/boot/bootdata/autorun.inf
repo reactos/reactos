@@ -1,4 +1,19 @@
 [autorun]
 
-open=reactos\welcome.exe
+open=i386\welcome.exe
+icon=icon.ico
+
+[autorun.mips]
+
+open=mips\welcome.exe
+icon=icon.ico
+
+[autorun.alpha]
+
+open=alpha\welcome.exe
+icon=icon.ico
+
+[autorun.ppc]
+
+open=ppc\welcome.exe
 icon=icon.ico
