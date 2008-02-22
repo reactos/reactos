@@ -29,12 +29,12 @@ _KiDoubleFaultStack:
 /* FUNCTIONS *****************************************************************/
 
 .text
-.func NtProcessStartup
-_NtProcessStartup:
+.func KiSystemStartup
+_KiSystemStartup:
 
     /* NTLDR Boot: Call the main kernel initialization */
     test dword ptr [esp+4], 0x80000000
-    jnz _KiSystemStartup@4
+    jnz _KiSystemStartupReal@4
 
     /* FREELDR Boot: Cal the FreeLDR wrapper */
     jmp @KiRosPrepareForSystemStartup@8

@@ -33,12 +33,11 @@ _kernel_trap_stack_top:
 KiDoubleFaultStack:	
 	
 	.text
-	.globl NtProcessStartup
 	.globl KiSystemStartup
 	.globl KiRosPrepareForSystemStartup
 	.globl DrawNumber
 	
-NtProcessStartup:
+KiSystemStartup:
     /*
      * Set a normal MSR value
      */

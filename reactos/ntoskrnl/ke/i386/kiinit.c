@@ -646,7 +646,7 @@ KiGetMachineBootPointers(IN PKGDTENTRY *Gdt,
 
 VOID
 NTAPI
-KiSystemStartup(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
+KiSystemStartupReal(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
     ULONG Cpu;
     PKTHREAD InitialThread;

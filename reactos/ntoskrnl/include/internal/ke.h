@@ -697,7 +697,7 @@ KiInitializeBugCheck(VOID);
 
 VOID
 NTAPI
-KiSystemStartup(
+KiSystemStartupReal(
     IN PLOADER_PARAMETER_BLOCK LoaderBlock
 );
 

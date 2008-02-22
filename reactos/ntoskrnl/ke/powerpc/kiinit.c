@@ -252,7 +252,7 @@ KTRAP_FRAME KiInitialTrapFrame;
 /* Use this for early boot additions to the page table */
 VOID
 NTAPI
-KiSystemStartup(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
+KiSystemStartupReal(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
     ULONG Cpu;
     ppc_map_info_t info[4];

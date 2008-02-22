@@ -1330,7 +1330,7 @@ KiRosPrepareForSystemStartup(IN ULONG Dummy,
 #endif
 
     /* Do general System Startup */
-    KiSystemStartup(NtLoaderBlock);
+    KiSystemStartupReal(NtLoaderBlock);
 }
 
 /* EOF */
