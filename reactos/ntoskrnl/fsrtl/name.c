@@ -150,7 +150,7 @@ FsRtlDissectName(IN UNICODE_STRING Name,
     for (i = 0; i < Name.Length / sizeof(WCHAR); i++)
     {
         /* If we found one... */
-        if (Name.Buffer[i] == '\\')
+        if (Name.Buffer[i] == L'\\')
         {
             /* If it begins string, just notice it and continue */
             if (i == 0)
