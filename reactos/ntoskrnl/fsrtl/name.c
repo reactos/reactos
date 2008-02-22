@@ -139,7 +139,45 @@ FsRtlDissectName(IN UNICODE_STRING Name,
                  OUT PUNICODE_STRING FirstPart,
                  OUT PUNICODE_STRING RemainingPart)
 {
-    KEBUGCHECK(0);
+    ULONG FirstPosition, i;
+    ULONG SkipFirstSlash = 0;
+
+    /* Just quit if the string is empty */
+    if (!Name.Length) return;
+
+    /* Find first backslash */
+    FirstPosition = Name.Length / sizeof(WCHAR) ;
+    for (i = 0; i < Name.Length / sizeof(WCHAR); i++)
+    {
+        /* If we found one... */
+        if (Name.Buffer[i] == '\\')
+        {
+            /* If it begins string, just notice it and continue */
+            if (i == 0)
+            {
+                SkipFirstSlash = 1;
+            }
+            else
+            {
+                /* Else, save its position and break out of the loop */
+                FirstPosition = i;
+                break;
+            }
+        }
+    }
+
+    /* Set up the first result string */
+    FirstPart->Buffer = Name.Buffer + SkipFirstSlash;
+    FirstPart->Length = (FirstPosition - SkipFirstSlash) * sizeof(WCHAR);
+    FirstPart->MaximumLength = Name.MaximumLength - FirstPart->Length;
+
+    /* And second one, if necessary */
+    if (FirstPosition < (Name.Length / sizeof(WCHAR)))
+    {
+        RemainingPart->Buffer = Name.Buffer + FirstPosition + 1;
+        RemainingPart->Length = (Name.Length - FirstPosition) * sizeof(WCHAR);
+        RemainingPart->MaximumLength = Name.MaximumLength - RemainingPart->Length;
+    }
 }
 
 /*++
