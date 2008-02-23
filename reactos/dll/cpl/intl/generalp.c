@@ -147,91 +147,91 @@ CreateLanguagesList(HWND hwnd)
 VOID
 SetNewLocale(LCID lcid)
 {
-	// HKCU\\Control Panel\\International\\Locale = 0409 (type=0)
-	// HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language","Default",0x00000000,"0409" (type=0)
-	// HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language","InstallLanguage",0x00000000,"0409" (type=0)
+    // HKCU\\Control Panel\\International\\Locale = 0409 (type=0)
+    // HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language","Default",0x00000000,"0409" (type=0)
+    // HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language","InstallLanguage",0x00000000,"0409" (type=0)
 
-	// Set locale
-	HKEY localeKey;
-	HKEY langKey;
-	DWORD ret;
-	TCHAR value[9];
-	DWORD valuesize;
-	TCHAR ACPPage[9];
-	TCHAR OEMPage[9];
+    // Set locale
+    HKEY localeKey;
+    HKEY langKey;
+    DWORD ret;
+    TCHAR value[9];
+    DWORD valuesize;
+    TCHAR ACPPage[9];
+    TCHAR OEMPage[9];
 
-	ret = GetLocaleInfo(MAKELCID(lcid, SORT_DEFAULT), LOCALE_IDEFAULTCODEPAGE, (WORD*)OEMPage, sizeof(OEMPage));
-	if (ret == 0)
-	{
-		MessageBox(NULL, _T("Problem reading OEM code page"), _T("Big Problem"), MB_OK);
-		return;
-	}
+    ret = GetLocaleInfo(MAKELCID(lcid, SORT_DEFAULT), LOCALE_IDEFAULTCODEPAGE, (WORD*)OEMPage, sizeof(OEMPage));
+    if (ret == 0)
+    {
+        MessageBox(NULL, _T("Problem reading OEM code page"), _T("Big Problem"), MB_OK);
+        return;
+    }
 
-	GetLocaleInfo(MAKELCID(lcid, SORT_DEFAULT), LOCALE_IDEFAULTANSICODEPAGE, (WORD*)ACPPage, sizeof(ACPPage));
-	if (ret == 0)
-	{
-		MessageBox(NULL, _T("Problem reading ANSI code page"), _T("Big Problem"), MB_OK);
-		return;
-	}
+    GetLocaleInfo(MAKELCID(lcid, SORT_DEFAULT), LOCALE_IDEFAULTANSICODEPAGE, (WORD*)ACPPage, sizeof(ACPPage));
+    if (ret == 0)
+    {
+        MessageBox(NULL, _T("Problem reading ANSI code page"), _T("Big Problem"), MB_OK);
+        return;
+    }
 
-	ret = RegOpenKey(HKEY_CURRENT_USER, _T("Control Panel\\International"), &localeKey);
-	if (ret != ERROR_SUCCESS)
-	{
-		// some serious error
-		MessageBox(NULL, _T("Problem opening HKCU\\Control Panel\\International key"),
-		           _T("Big Problem"), MB_OK);
-		return;
-	}
+    ret = RegOpenKey(HKEY_CURRENT_USER, _T("Control Panel\\International"), &localeKey);
+    if (ret != ERROR_SUCCESS)
+    {
+        // some serious error
+        MessageBox(NULL, _T("Problem opening HKCU\\Control Panel\\International key"),
+                   _T("Big Problem"), MB_OK);
+        return;
+    }
 
-	wsprintf(value, _T("%04X"), (DWORD)lcid);
-	valuesize = (_tcslen(value) + 1) * sizeof(TCHAR);
+    wsprintf(value, _T("%04X"), (DWORD)lcid);
+    valuesize = (_tcslen(value) + 1) * sizeof(TCHAR);
 
-	RegSetValueEx(localeKey, _T("Locale"), 0, REG_SZ, (LPBYTE)value, valuesize);
-	RegCloseKey(localeKey);
+    RegSetValueEx(localeKey, _T("Locale"), 0, REG_SZ, (LPBYTE)value, valuesize);
+    RegCloseKey(localeKey);
 
-	ret = RegOpenKey(HKEY_USERS, _T(".DEFAULT\\Control Panel\\International"), &localeKey);
-	if (ret != ERROR_SUCCESS)
-	{
-		// some serious error
-		MessageBox(NULL, _T("Problem opening HKU\\.DEFAULT\\Control Panel\\International key"),
-		           _T("Big Problem"), MB_OK);
-		return;
-	}
+    ret = RegOpenKey(HKEY_USERS, _T(".DEFAULT\\Control Panel\\International"), &localeKey);
+    if (ret != ERROR_SUCCESS)
+    {
+        // some serious error
+        MessageBox(NULL, _T("Problem opening HKU\\.DEFAULT\\Control Panel\\International key"),
+                   _T("Big Problem"), MB_OK);
+        return;
+    }
 
-	wsprintf(value, _T("%04X"), (DWORD)lcid);
-	valuesize = (_tcslen(value) + 1) * sizeof(TCHAR);
+    wsprintf(value, _T("%04X"), (DWORD)lcid);
+    valuesize = (_tcslen(value) + 1) * sizeof(TCHAR);
 
-	RegSetValueEx(localeKey, _T("Locale"), 0, REG_SZ, (BYTE *)value, valuesize);
-	RegCloseKey(localeKey);
+    RegSetValueEx(localeKey, _T("Locale"), 0, REG_SZ, (BYTE *)value, valuesize);
+    RegCloseKey(localeKey);
 
-	// Set language
-	ret = RegOpenKey(HKEY_LOCAL_MACHINE, _T("SYSTEM\\CurrentControlSet\\Control\\NLS\\Language"), &langKey);
-	if (ret != ERROR_SUCCESS)
-	{
-		MessageBoxW(NULL, _T("Problem opening HKLM\\SYSTEM\\CurrentControlSet\\Control\\NLS\\Language key"),
-		            _T("Big Problem"), MB_OK);
-		return;
-	}
+    // Set language
+    ret = RegOpenKey(HKEY_LOCAL_MACHINE, _T("SYSTEM\\CurrentControlSet\\Control\\NLS\\Language"), &langKey);
+    if (ret != ERROR_SUCCESS)
+    {
+        MessageBoxW(NULL, _T("Problem opening HKLM\\SYSTEM\\CurrentControlSet\\Control\\NLS\\Language key"),
+                    _T("Big Problem"), MB_OK);
+        return;
+    }
 
-	RegSetValueEx(langKey, _T("Default"), 0, REG_SZ, (BYTE *)value, valuesize );
-	RegSetValueEx(langKey, _T("InstallLanguage"), 0, REG_SZ, (BYTE *)value, valuesize );
+    RegSetValueEx(langKey, _T("Default"), 0, REG_SZ, (BYTE *)value, valuesize );
+    RegSetValueEx(langKey, _T("InstallLanguage"), 0, REG_SZ, (BYTE *)value, valuesize );
 
-	RegCloseKey(langKey);
+    RegCloseKey(langKey);
 
 
-	/* Set language */
-	ret = RegOpenKey(HKEY_LOCAL_MACHINE, _T("SYSTEM\\CurrentControlSet\\Control\\NLS\\CodePage"), &langKey);
-	if (ret != ERROR_SUCCESS)
-	{
-		MessageBox(NULL, _T("Problem opening HKLM\\SYSTEM\\CurrentControlSet\\Control\\NLS\\CodePage key"),
-		           _T("Big Problem"), MB_OK);
-		return;
-	}
+    /* Set language */
+    ret = RegOpenKey(HKEY_LOCAL_MACHINE, _T("SYSTEM\\CurrentControlSet\\Control\\NLS\\CodePage"), &langKey);
+    if (ret != ERROR_SUCCESS)
+    {
+        MessageBox(NULL, _T("Problem opening HKLM\\SYSTEM\\CurrentControlSet\\Control\\NLS\\CodePage key"),
+                   _T("Big Problem"), MB_OK);
+        return;
+    }
 
-	RegSetValueExW(langKey, _T("OEMCP"), 0, REG_SZ, (BYTE *)OEMPage, (_tcslen(OEMPage) +1 ) * sizeof(TCHAR));
-	RegSetValueExW(langKey, _T("ACP"), 0, REG_SZ, (BYTE *)ACPPage, (_tcslen(ACPPage) +1 ) * sizeof(TCHAR));
+    RegSetValueExW(langKey, _T("OEMCP"), 0, REG_SZ, (BYTE *)OEMPage, (_tcslen(OEMPage) +1 ) * sizeof(TCHAR));
+    RegSetValueExW(langKey, _T("ACP"), 0, REG_SZ, (BYTE *)ACPPage, (_tcslen(ACPPage) +1 ) * sizeof(TCHAR));
 
-	RegCloseKey(langKey);
+    RegCloseKey(langKey);
 }
 
 /* Location enumerate procedure */

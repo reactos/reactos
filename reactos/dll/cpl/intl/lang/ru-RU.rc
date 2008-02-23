@@ -5,25 +5,25 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Региональные параметры"
 FONT 8, "MS Shell Dlg"
 BEGIN
-  GROUPBOX "Языковые стандарты и форматы", -1, 5, 5, 234, 162
-  LTEXT "Этот параметр влияет на способ отображения некоторыми программами чисел, денежных сумм, дат и времени.", -1, 14, 17, 220, 25
-  LTEXT "Выберите элемент из списка или нажмите кнопку ""Настройка"" для того, чтобы задать форматы самостоятельно:", -1, 14, 37, 220, 22
-  COMBOBOX IDC_LANGUAGELIST, 14, 56, 160, 83, CBS_DROPDOWNLIST | CBS_SORT | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-  PUSHBUTTON "Настро&йка...", IDC_SETUP_BUTTON, 178, 56, 52, 13
-  LTEXT "Образцы", -1, 14, 73, 70, 10
-  LTEXT "Число:", -1, 16, 86, 48, 10
-  LTEXT "Сумма денег:", -1, 16, 101, 48, 10
-  LTEXT "Время:", -1, 16, 116, 48, 10
-  LTEXT "Короткая дата:", -1, 16, 131, 55, 10
-  LTEXT "Полная дата:", -1, 16, 146, 48, 10
-  EDITTEXT IDC_NUMSAMPLE_EDIT, 89, 86, 140, 12, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP
-  EDITTEXT IDC_MONEYSAMPLE_EDIT, 89, 101, 140, 12, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP
-  EDITTEXT IDC_TIMESAMPLE_EDIT, 89, 116, 140, 12, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP
-  EDITTEXT IDC_SHORTTIMESAMPLE_EDIT, 89, 131, 140, 12, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP
-  EDITTEXT IDC_FULLTIMESAMPLE_EDIT, 89, 146, 140, 12, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP
-  GROUPBOX "Географического расположение", -1, 5, 172, 234, 55
-  LTEXT "&Укажите ваше расположение для того, чтобы службы могли снабжать вас местной информацией, например, новостями и сводками погоды:", -1, 14, 184, 210, 24
-  COMBOBOX IDC_LOCATION_COMBO, 14, 207, 217, 40, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL |
+    GROUPBOX "Языковые стандарты и форматы", -1, 5, 5, 234, 162
+    LTEXT "Этот параметр влияет на способ отображения некоторыми программами чисел, денежных сумм, дат и времени.", -1, 14, 17, 220, 25
+    LTEXT "Выберите элемент из списка или нажмите кнопку ""Настройка"" для того, чтобы задать форматы самостоятельно:", -1, 14, 37, 220, 22
+    COMBOBOX IDC_LANGUAGELIST, 14, 56, 160, 83, CBS_DROPDOWNLIST | CBS_SORT | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
+    PUSHBUTTON "Настро&йка...", IDC_SETUP_BUTTON, 178, 56, 52, 13
+    LTEXT "Образцы", -1, 14, 73, 70, 10
+    LTEXT "Число:", -1, 16, 86, 48, 10
+    LTEXT "Сумма денег:", -1, 16, 101, 48, 10
+    LTEXT "Время:", -1, 16, 116, 48, 10
+    LTEXT "Короткая дата:", -1, 16, 131, 55, 10
+    LTEXT "Полная дата:", -1, 16, 146, 48, 10
+    EDITTEXT IDC_NUMSAMPLE_EDIT, 89, 86, 140, 12, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP
+    EDITTEXT IDC_MONEYSAMPLE_EDIT, 89, 101, 140, 12, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP
+    EDITTEXT IDC_TIMESAMPLE_EDIT, 89, 116, 140, 12, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP
+    EDITTEXT IDC_SHORTTIMESAMPLE_EDIT, 89, 131, 140, 12, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP
+    EDITTEXT IDC_FULLTIMESAMPLE_EDIT, 89, 146, 140, 12, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP
+    GROUPBOX "Географического расположение", -1, 5, 171, 234, 55
+    LTEXT "&Укажите ваше расположение для того, чтобы службы могли снабжать вас местной информацией, например, новостями и сводками погоды:", -1, 14, 180, 217, 24
+    COMBOBOX IDC_LOCATION_COMBO, 14, 207, 217, 40, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL |
              WS_VSCROLL | WS_TABSTOP | CBS_SORT
 END
 
@@ -35,10 +35,10 @@ BEGIN
     GROUPBOX "Языки и службы текстового ввода", IDC_GROUPBOX, 5, 5, 234, 52
     LTEXT "Чтобы просмотреть или изменить язык или метод ввода текста, нажмите кнопку ""Подробнее""", -1, 12, 15, 220, 18
     PUSHBUTTON "&Подробнее...", IDC_DETAIL_BUTTON, 177, 34, 54, 14
-    GROUPBOX "Дополнительная языковая поддержка", IDC_GROUPBOX, 5, 62, 234, 82
-    LTEXT "Поддержка большинства языков устанавливается по умолчанию. Чтобы установить дополнительную поддержку языков с особыми способами письма, установите соответствующие флажки.", -1, 12, 72, 220, 28
-    CHECKBOX "&Установить поддержку языков с письмом справа налево и сложным письмом", IDC_INST_FILES_FOR_RTOL_LANG, 12, 100, 215, 22
-    CHECKBOX "Ус&тановить поддержку языков с письмом иероглифами", IDC_INST_FILES_FOR_ASIAN, 12, 114, 215, 22
+    GROUPBOX "Дополнительная языковая поддержка", IDC_GROUPBOX, 5, 61, 234, 90
+    LTEXT "Поддержка большинства языков устанавливается по умолчанию. Чтобы установить дополнительную поддержку языков с особыми способами письма, установите соответствующие флажки.", -1, 12, 72, 220, 32
+    CHECKBOX "&Установить поддержку языков с письмом справа налево и сложным письмом", IDC_INST_FILES_FOR_RTOL_LANG, 12, 108, 215, 18, BS_MULTILINE
+    CHECKBOX "Ус&тановить поддержку языков с письмом иероглифами", IDC_INST_FILES_FOR_ASIAN, 12, 129, 215, 15, BS_MULTILINE
 END
 
 IDD_ADVANCEDPAGE DIALOGEX 0, 0, 246, 230
@@ -53,7 +53,7 @@ BEGIN
     GROUPBOX "Кодовые страницы таблиц преобразования", -1, 5, 101, 234, 88
     LISTBOX IDC_CONV_TABLES, 14, 114, 217, 70, LBS_STANDARD
     GROUPBOX "Параметры для стандартной учетной записи", -1, 5, 193, 234, 30
-    CHECKBOX "Применить эти параметры для текущей учетной записи и для стандартного профиля", IDC_APPLY_CUR_USER_DEF_PROFILE, 12, 200, 220, 22
+    CHECKBOX "Применить эти параметры для текущей учетной записи и для стандартного профиля", IDC_APPLY_CUR_USER_DEF_PROFILE, 12, 200, 220, 22, BS_MULTILINE
 END
 
 IDD_NUMBERSPAGE DIALOGEX 0, 0, 246, 234
@@ -61,77 +61,75 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Числа"
 FONT 8, "MS Shell Dlg"
 BEGIN
-  GROUPBOX "Образцы", -1, 7, 7, 230, 53, WS_CHILD | WS_VISIBLE
-  LTEXT "Полож.:", -1, 13, 21, 31, 10, WS_CHILD |WS_VISIBLE | WS_GROUP
-  EDITTEXT IDC_NUMBERSPOSSAMPLE, 43, 19, 72, 14, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP
-  LTEXT "Отриц.:", -1, 123, 21, 31, 10, WS_CHILD |WS_VISIBLE | WS_GROUP
-  EDITTEXT IDC_NUMBERSNEGSAMPLE, 154, 19, 72, 14, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP
-  LTEXT "&Раздел. целой и дробной части:", -1, 8, 67, 125, 10, WS_CHILD |WS_VISIBLE | WS_GROUP
-  COMBOBOX IDC_NUMBERDSYMBOL, 137, 65, 100, 83, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-  LTEXT "&Количество дробных знаков:", -1, 8, 83, 125, 10, WS_CHILD |WS_VISIBLE | WS_GROUP
-  COMBOBOX IDC_NUMBERSNDIGDEC, 137, 81, 100, 83, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-  LTEXT "Разделитель &групп разрядов:", -1, 8, 100, 125, 10, WS_CHILD |WS_VISIBLE | WS_GROUP
-  COMBOBOX IDC_NUMBERSDIGITGRSYM, 137, 97, 100, 83, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-  LTEXT "Количество &цифр в группе:", -1, 8, 117, 96, 10, WS_CHILD |WS_VISIBLE | WS_GROUP
-  COMBOBOX IDC_NUMBERSDGROUPING, 137, 113, 100, 83, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-  LTEXT "&Признак отрицательного числа:", -1, 8, 134, 125, 10, WS_CHILD |WS_VISIBLE | WS_GROUP
-  COMBOBOX IDC_NUMBERSNSIGNSYM, 137, 129, 100, 83, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-  LTEXT "&Формат отрицательного числа:", -1, 8, 149, 125, 10, WS_CHILD |WS_VISIBLE | WS_GROUP
-  COMBOBOX IDC_NUMBERSNNUMFORMAT, 137, 145, 100, 83, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-  LTEXT "&Вывод нулей в начале числа:", -1, 8, 166, 125, 10, WS_CHILD |WS_VISIBLE | WS_GROUP
-  COMBOBOX IDC_NUMBERSDISPLEADZER, 137, 161, 100, 83, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-  LTEXT "Разделитель &элементов списка:", -1, 8, 181, 125, 10, WS_CHILD |WS_VISIBLE | WS_GROUP
-  COMBOBOX IDC_NUMBERSLSEP, 137, 177, 100, 83, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-  LTEXT "&Система едениц:", -1, 8, 197, 96, 10, WS_CHILD |WS_VISIBLE | WS_GROUP
-  COMBOBOX IDC_NUMBERSMEASSYS, 137, 193, 100, 83, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
+    GROUPBOX "Образцы", -1, 7, 7, 230, 53, WS_CHILD | WS_VISIBLE
+    LTEXT "Полож.:", -1, 13, 21, 31, 10, WS_CHILD |WS_VISIBLE | WS_GROUP
+    EDITTEXT IDC_NUMBERSPOSSAMPLE, 43, 19, 72, 14, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "Отриц.:", -1, 123, 21, 31, 10, WS_CHILD |WS_VISIBLE | WS_GROUP
+    EDITTEXT IDC_NUMBERSNEGSAMPLE, 154, 19, 72, 14, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "&Раздел. целой и дробной части:", -1, 8, 67, 125, 10, WS_CHILD |WS_VISIBLE | WS_GROUP
+    COMBOBOX IDC_NUMBERDSYMBOL, 137, 65, 100, 83, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
+    LTEXT "&Количество дробных знаков:", -1, 8, 83, 125, 10, WS_CHILD |WS_VISIBLE | WS_GROUP
+    COMBOBOX IDC_NUMBERSNDIGDEC, 137, 81, 100, 83, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
+    LTEXT "Разделитель &групп разрядов:", -1, 8, 100, 125, 10, WS_CHILD |WS_VISIBLE | WS_GROUP
+    COMBOBOX IDC_NUMBERSDIGITGRSYM, 137, 97, 100, 83, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
+    LTEXT "Количество &цифр в группе:", -1, 8, 117, 96, 10, WS_CHILD |WS_VISIBLE | WS_GROUP
+    COMBOBOX IDC_NUMBERSDGROUPING, 137, 113, 100, 83, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
+    LTEXT "&Признак отрицательного числа:", -1, 8, 134, 125, 10, WS_CHILD |WS_VISIBLE | WS_GROUP
+    COMBOBOX IDC_NUMBERSNSIGNSYM, 137, 129, 100, 83, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
+    LTEXT "&Формат отрицательного числа:", -1, 8, 149, 125, 10, WS_CHILD |WS_VISIBLE | WS_GROUP
+    COMBOBOX IDC_NUMBERSNNUMFORMAT, 137, 145, 100, 83, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
+    LTEXT "&Вывод нулей в начале числа:", -1, 8, 166, 125, 10, WS_CHILD |WS_VISIBLE | WS_GROUP
+    COMBOBOX IDC_NUMBERSDISPLEADZER, 137, 161, 100, 83, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
+    LTEXT "Разделитель &элементов списка:", -1, 8, 181, 125, 10, WS_CHILD |WS_VISIBLE | WS_GROUP
+    COMBOBOX IDC_NUMBERSLSEP, 137, 177, 100, 83, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
+    LTEXT "&Система едениц:", -1, 8, 197, 96, 10, WS_CHILD |WS_VISIBLE | WS_GROUP
+    COMBOBOX IDC_NUMBERSMEASSYS, 137, 193, 100, 83, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
 END
-
 
 IDD_CURRENCYPAGE DIALOGEX 0, 0, 246, 234
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Денежная единица"
 FONT 8, "MS Shell Dlg"
 BEGIN
-  GROUPBOX "Образцы", -1, 7, 7, 230, 33, WS_CHILD | WS_VISIBLE
-  LTEXT "Полож.:", -1, 13, 21, 31, 10, WS_CHILD |WS_VISIBLE | WS_GROUP
-  EDITTEXT IDC_CURRENCYPOSSAMPLE, 43, 19, 72, 14, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP
-  LTEXT "Отриц.:", -1, 123, 21, 31, 10, WS_CHILD |WS_VISIBLE | WS_GROUP
-  EDITTEXT IDC_CURRENCYNEGSAMPLE, 154, 19, 72, 14, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP
-  LTEXT "О&бозначение денежной еденицы:", -1, 8, 51, 125, 10, WS_CHILD |WS_VISIBLE | WS_GROUP
-  COMBOBOX IDC_CURRENCYSYMBOL, 134, 49, 100, 83, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-  LTEXT "Формат &полож. денежных сумм:", -1, 8, 68, 125, 10, WS_CHILD |WS_VISIBLE | WS_GROUP
-  COMBOBOX IDC_CURRENCYPOSVALUE, 134, 66, 100, 83, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-  LTEXT "Формат &отриц. денежных сумм:", -1, 8, 85, 125, 10, WS_CHILD |WS_VISIBLE | WS_GROUP
-  COMBOBOX IDC_CURRENCYNEGVALUE, 134, 83, 100, 83, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-  LTEXT "&Раздел. целой и дробной части:", -1, 8, 111, 125, 10, WS_CHILD |WS_VISIBLE | WS_GROUP
-  COMBOBOX IDC_CURRENCYDECSEP, 134, 109, 100, 83, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-  LTEXT "&Количество дробных знаков:", -1, 8, 128, 110, 10, WS_CHILD |WS_VISIBLE | WS_GROUP
-  COMBOBOX IDC_CURRENCYDECNUM, 134, 126, 100, 83, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-  LTEXT "Разделитель &групп разрядов:", -1, 8, 156, 110, 10, WS_CHILD |WS_VISIBLE | WS_GROUP
-  COMBOBOX IDC_CURRENCYGRPSEP, 134, 154, 100, 83, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-  LTEXT "Количество &цифр в группе:", -1, 8, 173, 96, 10, WS_CHILD |WS_VISIBLE | WS_GROUP
-  COMBOBOX IDC_CURRENCYGRPNUM, 134, 171, 100, 83, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
+    GROUPBOX "Образцы", -1, 7, 7, 230, 33, WS_CHILD | WS_VISIBLE
+    LTEXT "Полож.:", -1, 13, 21, 31, 10, WS_CHILD |WS_VISIBLE | WS_GROUP
+    EDITTEXT IDC_CURRENCYPOSSAMPLE, 43, 19, 72, 14, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "Отриц.:", -1, 123, 21, 31, 10, WS_CHILD |WS_VISIBLE | WS_GROUP
+    EDITTEXT IDC_CURRENCYNEGSAMPLE, 154, 19, 72, 14, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "О&бозначение денежной еденицы:", -1, 8, 51, 125, 10, WS_CHILD |WS_VISIBLE | WS_GROUP
+    COMBOBOX IDC_CURRENCYSYMBOL, 134, 49, 100, 83, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
+    LTEXT "Формат &полож. денежных сумм:", -1, 8, 68, 125, 10, WS_CHILD |WS_VISIBLE | WS_GROUP
+    COMBOBOX IDC_CURRENCYPOSVALUE, 134, 66, 100, 83, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
+    LTEXT "Формат &отриц. денежных сумм:", -1, 8, 85, 125, 10, WS_CHILD |WS_VISIBLE | WS_GROUP
+    COMBOBOX IDC_CURRENCYNEGVALUE, 134, 83, 100, 83, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
+    LTEXT "&Раздел. целой и дробной части:", -1, 8, 111, 125, 10, WS_CHILD |WS_VISIBLE | WS_GROUP
+    COMBOBOX IDC_CURRENCYDECSEP, 134, 109, 100, 83, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
+    LTEXT "&Количество дробных знаков:", -1, 8, 128, 110, 10, WS_CHILD |WS_VISIBLE | WS_GROUP
+    COMBOBOX IDC_CURRENCYDECNUM, 134, 126, 100, 83, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
+    LTEXT "Разделитель &групп разрядов:", -1, 8, 156, 110, 10, WS_CHILD |WS_VISIBLE | WS_GROUP
+    COMBOBOX IDC_CURRENCYGRPSEP, 134, 154, 100, 83, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
+    LTEXT "Количество &цифр в группе:", -1, 8, 173, 96, 10, WS_CHILD |WS_VISIBLE | WS_GROUP
+    COMBOBOX IDC_CURRENCYGRPNUM, 134, 171, 100, 83, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
 END
-
 
 IDD_TIMEPAGE DIALOGEX 0, 0, 246, 234
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Время"
 FONT 8, "MS Shell Dlg"
 BEGIN
-  GROUPBOX "Образцы", -1, 7, 7, 230, 33, WS_CHILD | WS_VISIBLE
-  LTEXT "Образец:", -1, 13, 21, 54, 10, WS_CHILD |WS_VISIBLE | WS_GROUP
-  EDITTEXT IDC_TIMESAMPLE, 68, 19, 84, 14, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP
-  LTEXT "&Формат времени:", -1, 13, 52, 70, 10, WS_CHILD |WS_VISIBLE | WS_GROUP
-  COMBOBOX IDC_TIMEFORMAT, 130, 50, 84, 100, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP
-  LTEXT "&Раздел. компонентов времени:", -1, 13, 70, 110, 10, WS_VISIBLE | WS_GROUP
-  COMBOBOX IDC_TIMESEPARATOR, 130, 68, 84, 100, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP
-  LTEXT "&Обозн. времени до полудня (AM):", -1, 13, 88, 130, 10, WS_VISIBLE | WS_GROUP
-  COMBOBOX IDC_TIMEAMSYMBOL, 130, 86, 84, 100, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP
-  LTEXT "О&бозн. времени после полудня (PM):", -1, 13, 106, 130, 10, WS_VISIBLE | WS_GROUP
-  COMBOBOX IDC_TIMEPMSYMBOL, 130, 104, 84, 100, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP
-  GROUPBOX "", -1, 7, 140, 230, 80, WS_VISIBLE
-  LTEXT "Обозначение формата времени\n\n\
+    GROUPBOX "Образцы", -1, 7, 7, 230, 33, WS_CHILD | WS_VISIBLE
+    LTEXT "Образец:", -1, 13, 21, 54, 10, WS_CHILD |WS_VISIBLE | WS_GROUP
+    EDITTEXT IDC_TIMESAMPLE, 68, 19, 84, 14, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "&Формат времени:", -1, 13, 52, 135, 10, WS_CHILD |WS_VISIBLE | WS_GROUP
+    COMBOBOX IDC_TIMEFORMAT, 152, 50, 84, 100, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    LTEXT "&Раздел. компонентов времени:", -1, 13, 70, 135, 10, WS_VISIBLE | WS_GROUP
+    COMBOBOX IDC_TIMESEPARATOR, 152, 68, 84, 100, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    LTEXT "&Обозн. времени до полудня (AM):", -1, 13, 88, 135, 10, WS_VISIBLE | WS_GROUP
+    COMBOBOX IDC_TIMEAMSYMBOL, 152, 86, 84, 100, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    LTEXT "О&бозн. времени после полудня (PM):", -1, 13, 106, 135, 10, WS_VISIBLE | WS_GROUP
+    COMBOBOX IDC_TIMEPMSYMBOL, 152, 104, 84, 100, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    GROUPBOX "", -1, 7, 140, 230, 80, WS_VISIBLE
+    LTEXT "Обозначение формата времени\n\n\
 h = час    m = минута    s = секунда    t = am или pm\n\n\
 h = 12-часовой формат суток\n\
 H = 24-часовой формат суток\n\
@@ -139,7 +137,6 @@ hh, mm, ss = с выводом нулей в начале\n\
 h, m, s = без вывода нулей",
         -1, 13, 150, 214, 50, WS_CHILD |WS_VISIBLE | WS_GROUP
 END
-
 
 IDD_DATEPAGE DIALOGEX 0, 0, 246, 234
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
@@ -174,23 +171,21 @@ BEGIN
     COMBOBOX IDC_LONGDATEFMT_COMBO, 77, 213, 153, 100, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | WS_VISIBLE
 END
 
-
 IDD_SORTPAGE DIALOGEX 0, 0, 246, 234
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Sorting"
+CAPTION "Сортировка"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Sorting", -1, 7, 7, 230, 74
-    LTEXT "Sorting methods define the sorting order of characters, words, files and folders.", -1, 14, 17, 220, 25
-    LTEXT "Select a sorting method for your language:", -1, 14, 37, 220, 22
+    GROUPBOX "Сортировка", -1, 7, 7, 230, 74
+    LTEXT "Методы сортировки влияют на порядок сортировки символов, слов, имен файлов и папок.", -1, 14, 17, 220, 25
+    LTEXT "&Выбрать метод сортировки для этого языка:", -1, 14, 37, 220, 22
     COMBOBOX IDC_SORTLIST_COMBO, 14, 56, 217, 83, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
 END
-
 
 STRINGTABLE
 BEGIN
     IDS_CUSTOMIZE_TITLE "Настройка региональных параметров"
-    IDS_SPAIN "Spanish (Spain)"
+    IDS_SPAIN "Испанский (Испания)"
 END
 
 STRINGTABLE
