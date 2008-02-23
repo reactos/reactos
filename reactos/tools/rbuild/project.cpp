@@ -477,43 +477,6 @@ Project::ProcessXML ( const string& path )
 		cdfiles[i]->ProcessXML ();
 	for ( i = 0; i < installfiles.size (); i++ )
 		installfiles[i]->ProcessXML ();
-
-	switch (architectureType)
-	{
-		case I386:
-		{
-			Define* pDefine = new Define (*this, "_M_IX86" );
-			non_if_data.defines.push_back ( pDefine );
-
-			pDefine = new Define (*this, "_X86_" );
-			non_if_data.defines.push_back ( pDefine );
-			
-			pDefine = new Define (*this, "__i386__" );
-			non_if_data.defines.push_back ( pDefine );
-		}
-		break;
-		case PowerPC:
-		{
-			Define* pDefine = new Define (*this, "_M_PPC" );
-			non_if_data.defines.push_back ( pDefine );
-
-			pDefine = new Define (*this, "_PPC_" );
-			non_if_data.defines.push_back ( pDefine );
-
-			pDefine = new Define (*this, "__PowerPC__" );
-			non_if_data.defines.push_back ( pDefine );
-		}
-		break;
-		case ARM:
-		{
-			Define* pDefine = new Define (*this, "_ARM_" );
-			non_if_data.defines.push_back ( pDefine );
-
-			pDefine = new Define (*this, "__arm__" );
-			non_if_data.defines.push_back ( pDefine );
-		}
-		break;
-	}
 }
 
 ArchitectureType

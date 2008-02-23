@@ -9,6 +9,10 @@
 
 	<xi:include href="ReactOS-generic.rbuild" />
 
+	<define name="_M_PPC" />
+	<define name="_PPC_" />
+	<define name="__PowerPC__" />
+
 	<property name="MKHIVE_OPTIONS" value="-be" />
 	<property name="OFWLDR_LINKFORMAT" value="-L$(INTERMEDIATE)/lib/ppcmmu -lppcmmu_code -nostdlib -nostartfiles -lgcc -Wl,-e,__start -Wl,-Ttext,0xe00000 -N"/>
 	<property name="NTOSKRNL_SHARED" value="-Wl,--file-alignment,0x1000 -Wl,--section-alignment,0x1000 -nostartfiles"/>
