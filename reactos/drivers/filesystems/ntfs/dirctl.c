@@ -514,55 +514,55 @@ NtfsQueryDirectory(PDEVICE_OBJECT DeviceObject,
 
 
   if (SearchPattern != NULL)
-    {
-      if (!Ccb->DirectorySearchPattern)
-	{
-	  First = TRUE;
-	  Ccb->DirectorySearchPattern =
-	    ExAllocatePoolWithTag(NonPagedPool, SearchPattern->Length + sizeof(WCHAR), TAG_NTFS);
-	  if (!Ccb->DirectorySearchPattern)
-	    {
-	      return(STATUS_INSUFFICIENT_RESOURCES);
-	    }
-
-	  memcpy(Ccb->DirectorySearchPattern,
-		 SearchPattern->Buffer,
-		 SearchPattern->Length);
-	  Ccb->DirectorySearchPattern[SearchPattern->Length / sizeof(WCHAR)] = 0;
-	}
-    }
-  else if (!Ccb->DirectorySearchPattern)
+  {
+    if (!Ccb->DirectorySearchPattern)
     {
       First = TRUE;
-      Ccb->DirectorySearchPattern = ExAllocatePoolWithTag(NonPagedPool, 2 * sizeof(WCHAR), TAG_NTFS);
+      Ccb->DirectorySearchPattern =
+        ExAllocatePoolWithTag(NonPagedPool, SearchPattern->Length + sizeof(WCHAR), TAG_NTFS);
       if (!Ccb->DirectorySearchPattern)
-	{
-	  return(STATUS_INSUFFICIENT_RESOURCES);
-	}
-      Ccb->DirectorySearchPattern[0] = L'*';
-      Ccb->DirectorySearchPattern[1] = 0;
+      {
+        return(STATUS_INSUFFICIENT_RESOURCES);
+      }
+
+      memcpy(Ccb->DirectorySearchPattern,
+             SearchPattern->Buffer,
+             SearchPattern->Length);
+      Ccb->DirectorySearchPattern[SearchPattern->Length / sizeof(WCHAR)] = 0;
     }
+  }
+  else if (!Ccb->DirectorySearchPattern)
+  {
+    First = TRUE;
+    Ccb->DirectorySearchPattern = ExAllocatePoolWithTag(NonPagedPool, 2 * sizeof(WCHAR), TAG_NTFS);
+    if (!Ccb->DirectorySearchPattern)
+    {
+      return(STATUS_INSUFFICIENT_RESOURCES);
+    }
+    Ccb->DirectorySearchPattern[0] = L'*';
+    Ccb->DirectorySearchPattern[1] = 0;
+  }
   DPRINT("Search pattern '%S'\n", Ccb->DirectorySearchPattern);
 
   /* Determine directory index */
   if (Stack->Flags & SL_INDEX_SPECIFIED)
-    {
-      Ccb->Entry = Ccb->CurrentByteOffset.u.LowPart;
-    }
+  {
+    Ccb->Entry = Ccb->CurrentByteOffset.u.LowPart;
+  }
   else if (First || (Stack->Flags & SL_RESTART_SCAN))
-    {
-      Ccb->Entry = 0;
-    }
+  {
+    Ccb->Entry = 0;
+  }
 
   /* Determine Buffer for result */
   if (Irp->MdlAddress)
-    {
-      Buffer = MmGetSystemAddressForMdl(Irp->MdlAddress);
-    }
+  {
+    Buffer = MmGetSystemAddressForMdl(Irp->MdlAddress);
+  }
   else
-    {
-      Buffer = Irp->UserBuffer;
-    }
+  {
+    Buffer = Irp->UserBuffer;
+  }
   DPRINT("Buffer=%p tofind=%S\n", Buffer, Ccb->DirectorySearchPattern);
 #if 0
   TempFcb.ObjectName = TempFcb.PathName;
@@ -653,14 +653,14 @@ NtfsQueryDirectory(PDEVICE_OBJECT DeviceObject,
 #endif
 
   if (Buffer0)
-    {
-      Buffer0->NextEntryOffset = 0;
-    }
+  {
+    Buffer0->NextEntryOffset = 0;
+  }
 
   if (FileIndex > 0)
-    {
-      Status = STATUS_SUCCESS;
-    }
+  {
+    Status = STATUS_SUCCESS;
+  }
 
 //  return(Status);
   return(STATUS_NO_MORE_FILES);
@@ -670,7 +670,7 @@ NtfsQueryDirectory(PDEVICE_OBJECT DeviceObject,
 
 NTSTATUS NTAPI
 NtfsFsdDirectoryControl(PDEVICE_OBJECT DeviceObject,
-		     PIRP Irp)
+                        PIRP Irp)
 {
   PIO_STACK_LOCATION Stack;
   NTSTATUS Status;
@@ -680,22 +680,22 @@ NtfsFsdDirectoryControl(PDEVICE_OBJECT DeviceObject,
   Stack = IoGetCurrentIrpStackLocation(Irp);
 
   switch (Stack->MinorFunction)
-    {
-      case IRP_MN_QUERY_DIRECTORY:
-	Status = NtfsQueryDirectory(DeviceObject,
-				    Irp);
-	break;
+  {
+    case IRP_MN_QUERY_DIRECTORY:
+      Status = NtfsQueryDirectory(DeviceObject,
+                                  Irp);
+      break;
 
-      case IRP_MN_NOTIFY_CHANGE_DIRECTORY:
-	DPRINT1("IRP_MN_NOTIFY_CHANGE_DIRECTORY\n");
-	Status = STATUS_NOT_IMPLEMENTED;
-	break;
+    case IRP_MN_NOTIFY_CHANGE_DIRECTORY:
+      DPRINT1("IRP_MN_NOTIFY_CHANGE_DIRECTORY\n");
+      Status = STATUS_NOT_IMPLEMENTED;
+      break;
 
-      default:
-	DPRINT1("NTFS: MinorFunction %d\n", Stack->MinorFunction);
-	Status = STATUS_INVALID_DEVICE_REQUEST;
-	break;
-    }
+    default:
+      DPRINT1("NTFS: MinorFunction %d\n", Stack->MinorFunction);
+      Status = STATUS_INVALID_DEVICE_REQUEST;
+      break;
+  }
 
   Irp->IoStatus.Status = Status;
   Irp->IoStatus.Information = 0;
