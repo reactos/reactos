@@ -2,18 +2,28 @@
 
 open=i386\welcome.exe
 icon=icon.ico
-
-[autorun.mips]
-
-open=mips\welcome.exe
-icon=icon.ico
-
-[autorun.alpha]
-
-open=alpha\welcome.exe
-icon=icon.ico
+label=ReactOS
 
 [autorun.ppc]
 
 open=ppc\welcome.exe
 icon=icon.ico
+label=ReactOS
+
+[autorun.arm]
+
+open=arm\welcome.exe
+icon=icon.ico
+label=ReactOS
+
+[autorun.mips]
+
+ShellExecute=readme.txt
+icon=icon.ico
+label=ReactOS
+
+[autorun.alpha]
+
+ShellExecute=readme.txt
+icon=icon.ico
+label=ReactOS
