@@ -38,7 +38,7 @@ BEGIN
   IDS_MARK "Marcar"
   IDS_COPY "Copiar\tIntroducir"
   IDS_PASTE "Pegar"
-  IDS_SELECTALL "Select All"
+  IDS_SELECTALL "Seleccionar Todo"
   IDS_SCROLL "Desplazar"
   IDS_FIND "Buscar..."
   IDS_DEFAULTS "Por defecto"

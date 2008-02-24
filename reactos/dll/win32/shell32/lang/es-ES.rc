@@ -130,7 +130,7 @@ BEGIN
 	LTEXT "Versión " KERNEL_VERSION_STR " (" KERNEL_VERSION_BUILD_STR ")", IDC_STATIC, 35, 65, 235, 10
 	LTEXT REACTOS_DEFAULT_STR_LEGAL_COPYRIGHT, IDC_STATIC, 35, 75, 210, 10
 	LTEXT "", IDC_SHELL_ABOUT_OTHERSTUFF, 35, 90, 180, 20
-	LTEXT "This ReactOS version is registered to:", IDC_STATIC, 35, 115, 180, 10
+	LTEXT "Esta versión de ReactOS está registrada a:", IDC_STATIC, 35, 115, 180, 10
 	LTEXT "", IDC_SHELL_ABOUT_REG_USERNAME, 45, 125, 180, 10
 	LTEXT "", IDC_SHELL_ABOUT_REG_ORGNAME, 45, 135, 180, 10
 	LTEXT "", IDC_STATIC, 35, 147, 235, 1, SS_ETCHEDHORZ
@@ -165,7 +165,7 @@ END
 
 SHELL_GENERAL_SHORTCUT_DLG DIALOGEX 0, 0, 235, 215
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Accesso directo"
+CAPTION "Acceso directo"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 	ICON "", 14000, 10, 4, 30, 30, WS_VISIBLE
@@ -368,12 +368,12 @@ GROUPBOX "Examinar carpetas", -1, 7, 60, 249, 45, WS_TABSTOP
 //ICON
 AUTORADIOBUTTON "Abrir todas las carpetas en la &misma ventana", 14004, 40, 70, 140, 10, WS_TABSTOP
 AUTORADIOBUTTON "Abrir cada carpeta ventanas di&ferentes", 14005, 40, 82, 140, 10, WS_TABSTOP
-GROUPBOX "Click items as follows", -1, 7, 110, 249, 60
+GROUPBOX "Hacer clic en los elementos como se indica", -1, 7, 110, 249, 60
 //ICON
 AUTORADIOBUTTON "&Un solo clic para abrir elemento (seleccionar al señalar)", 14007, 40, 120, 170, 10, WS_TABSTOP
 AUTORADIOBUTTON "Subrayar los títulos de iconos que coincidan con el e&xplorador", 14008, 50, 132, 170, 10, WS_TABSTOP
 AUTORADIOBUTTON "Subrayar &los títulos de iconos cuando yo los señale", 14009, 50, 144, 170, 10, WS_TABSTOP
-AUTORADIOBUTTON "&Double clic para abrir elemento (seleccionar con un clic)", 14010, 40, 156, 170, 10, WS_TABSTOP
+AUTORADIOBUTTON "&Doble clic para abrir elemento (seleccionar con un clic)", 14010, 40, 156, 170, 10, WS_TABSTOP
 PUSHBUTTON "&Restaurar valores predeterminados", 14011, 180, 180, 60, 14, WS_TABSTOP
 END
 
