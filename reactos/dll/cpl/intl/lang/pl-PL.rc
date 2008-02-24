@@ -57,7 +57,7 @@ BEGIN
     LTEXT "Te ustawienia umo¿liwiaj¹ programom bez standardu Unicode wyœwietlaæ menu i dialogi w odpowiednich jêzykach. Nie ma to wp³ywu na programy Unicode ale dotyczy profili domyœlnych.", -1, 14, 18, 223, 33
     LTEXT "Wybierz taki jêzyk, który ma byæ u¿ywany przez programy bez Unicode:", -1, 14, 55, 223, 18
     GROUPBOX "Tablice konwersji stron kodowych", -1, 5, 101, 234, 88
-    LISTBOX IDC_CONV_TABLES, 14, 114, 217, 77, LBS_STANDARD
+    CONTROL "", IDC_CONV_TABLES, "SysListView32", LVS_REPORT | LVS_SORTASCENDING | LVS_NOCOLUMNHEADER | WS_BORDER | WS_TABSTOP, 14, 114, 217, 70
     GROUPBOX "Ustawienia domyœlne u¿ytkownika", -1, 5, 193, 234, 30
     CHECKBOX "Zastosuj ustawienia dla obecnego konta jak i dla profilu domyœlnego.", IDC_APPLY_CUR_USER_DEF_PROFILE, 12, 200, 220, 22, BS_MULTILINE
 END

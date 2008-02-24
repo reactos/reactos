@@ -50,7 +50,7 @@ BEGIN
     LTEXT "Diese Einstellung ermöglicht es Unicode-Inkompatiblen Programmen, Menüs und Dialoge in der örtlichen Sprache darzustellen. Dies beeinflusst Unicode-Kompatible Programme nicht, wird aber für alle Nutzer des Computers angewendet.", -1, 14, 18, 223, 33
     LTEXT "Wählen Sie eine Sprache aus, die der Sprachversion des Programmes entspricht, dass Sie nutzen wollen:", -1, 14, 55, 223, 18
     GROUPBOX "Codepage Konvertierungstabellen", -1, 5, 101, 234, 88
-    LISTBOX IDC_CONV_TABLES, 14, 114, 217, 77, LBS_STANDARD
+    CONTROL "", IDC_CONV_TABLES, "SysListView32", LVS_REPORT | LVS_SORTASCENDING | LVS_NOCOLUMNHEADER | WS_BORDER | WS_TABSTOP, 14, 114, 217, 70
     GROUPBOX "Standardeinstellungen für Benutzerkonten", -1, 5, 193, 234, 30
     CHECKBOX "Einstellungen &auf das aktive und Standardkonto anwenden.", IDC_APPLY_CUR_USER_DEF_PROFILE, 12, 200, 220, 22, BS_MULTILINE
 END

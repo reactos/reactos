@@ -52,7 +52,7 @@ BEGIN
     LTEXT "In base a questa impostazione di sistema è possibile visualizzare menù e finestre di dialogo di programmi non Unicode nella lingua di origine. I programmi Unicode resteranno invariati, ma l'impostazione verrà applicata per tutti gli utenti che utilizzano il computer.", -1, 14, 18, 223, 33
     LTEXT "Selezionare una lingua per i programmi non Unicode da utilizzare:", -1, 14, 55, 223, 18
     GROUPBOX "Tabella di conversione di tabelle codici", -1, 5, 101, 234, 88
-    LISTBOX IDC_CONV_TABLES, 14, 114, 217, 77, LBS_STANDARD
+    CONTROL "", IDC_CONV_TABLES, "SysListView32", LVS_REPORT | LVS_SORTASCENDING | LVS_NOCOLUMNHEADER | WS_BORDER | WS_TABSTOP, 14, 114, 217, 70
     GROUPBOX "Impostazioni account utente predefinito", -1, 5, 193, 234, 30
     CHECKBOX "Appli&ca tutte le impostazioni all'account utente corrente e al profilo utente predefinito", IDC_APPLY_CUR_USER_DEF_PROFILE, 12, 200, 220, 22, BS_MULTILINE
 END
