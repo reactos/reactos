@@ -38,7 +38,7 @@ typedef struct _BIOS_PARAMETERS_BLOCK
 
 typedef struct _EXTENDED_BIOS_PARAMETERS_BLOCK
 {
-  UCHAR     Unknown[4];				// 0x24, always 80 00 80 00
+  USHORT    Unknown[2];				// 0x24, always 80 00 80 00
   ULONGLONG SectorCount;			// 0x28
   ULONGLONG MftLocation;			// 0x30
   ULONGLONG MftMirrLocation;		// 0x38

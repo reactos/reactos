@@ -21,7 +21,8 @@
  * FILE:             drivers/filesystems/ntfs/fsctl.c
  * PURPOSE:          NTFS filesystem driver
  * PROGRAMMER:       Eric Kohl
- * Updated by Valentin Verkhovsky  2003/09/12
+ *                   Valentin Verkhovsky
+ *                   Pierre Schweitzer 
  */
 
 /* INCLUDES *****************************************************************/
@@ -44,9 +45,9 @@ NtfsHasFileSystem(PDEVICE_OBJECT DeviceToMount)
 {
   PARTITION_INFORMATION PartitionInfo;
   DISK_GEOMETRY DiskGeometry;
-  ULONG Size;
   PBOOT_SECTOR BootSector;
   NTSTATUS Status;
+  ULONG Size, k;
 
   DPRINT1("NtfsHasFileSystem() called\n");
 
@@ -102,18 +103,45 @@ NtfsHasFileSystem(PDEVICE_OBJECT DeviceToMount)
                             DiskGeometry.BytesPerSector,
                             (PVOID)BootSector,
                             TRUE);
-  if (NT_SUCCESS(Status))
+  if (!NT_SUCCESS(Status))
   {
-    DPRINT1("NTFS-identifier: [%.8s]\n", BootSector->OEMID);
-    if (RtlCompareMemory(BootSector->OEMID, "NTFS    ", 8) != 8)
+    goto ByeBye;
+  }
+  
+  /* Check values of different fields. If those fields have not expected
+   * values, we fail, to avoid mounting partitions that Windows won't mount.
+   */
+  /* OEMID: this field must be NTFS */
+  if (RtlCompareMemory(BootSector->OEMID, "NTFS    ", 8) != 8)
+  {
+    DPRINT1("Failed with NTFS-identifier: [%.8s]\n", BootSector->OEMID);
+    Status = STATUS_UNRECOGNIZED_VOLUME;
+    goto ByeBye;
+  }
+  /* Unused0: this field must be COMPLETELY null */
+  for (k=0; k<7; k++)
+  {
+    if (BootSector->BPB.Unused0[k] != 0)
     {
+      DPRINT1("Failed in field Unused0: [%.7s]\n", BootSector->BPB.Unused0);
       Status = STATUS_UNRECOGNIZED_VOLUME;
+      goto ByeBye;
+    }
+  }
+  /* Unused3: this field must be COMPLETELY null */
+  for (k=0; k<4; k++)
+  {
+    if (BootSector->BPB.Unused3[k] != 0)
+    {
+      DPRINT1("Failed in field Unused3: [%.4s]\n", BootSector->BPB.Unused3);
+      Status = STATUS_UNRECOGNIZED_VOLUME;
+      goto ByeBye;
     }
   }
 
+ByeBye:
   ExFreePool(BootSector);
-
-  return(Status);
+  return Status;
 }
 
 
@@ -181,21 +209,15 @@ NtfsGetVolumeData(PDEVICE_OBJECT DeviceObject,
   else
     NtfsInfo->BytesPerFileRecord = 1 << (-BootSector->EBPB.ClustersPerMftRecord);
 
-//#ifndef NDEBUG
-  DbgPrint("Boot sector information:\n");
-  DbgPrint("  BytesPerSector:         %hu\n", BootSector->BPB.BytesPerSector);
-  DbgPrint("  SectorsPerCluster:      %hu\n", BootSector->BPB.SectorsPerCluster);
-
-  DbgPrint("  SectorCount:            %I64u\n", BootSector->EBPB.SectorCount);
-
-  DbgPrint("  MftStart:               %I64u\n", BootSector->EBPB.MftLocation);
-  DbgPrint("  MftMirrStart:           %I64u\n", BootSector->EBPB.MftMirrLocation);
-
-  DbgPrint("  ClustersPerMftRecord:   %lx\n", BootSector->EBPB.ClustersPerMftRecord);
-  DbgPrint("  ClustersPerIndexRecord: %lx\n", BootSector->EBPB.ClustersPerIndexRecord);
-
-  DbgPrint("  SerialNumber:           %I64x\n", BootSector->EBPB.SerialNumber);
-//#endif
+  DPRINT("Boot sector information:\n");
+  DPRINT("  BytesPerSector:         %hu\n", BootSector->BPB.BytesPerSector);
+  DPRINT("  SectorsPerCluster:      %hu\n", BootSector->BPB.SectorsPerCluster);
+  DPRINT("  SectorCount:            %I64u\n", BootSector->EBPB.SectorCount);
+  DPRINT("  MftStart:               %I64u\n", BootSector->EBPB.MftLocation);
+  DPRINT("  MftMirrStart:           %I64u\n", BootSector->EBPB.MftMirrLocation);
+  DPRINT("  ClustersPerMftRecord:   %lx\n", BootSector->EBPB.ClustersPerMftRecord);
+  DPRINT("  ClustersPerIndexRecord: %lx\n", BootSector->EBPB.ClustersPerIndexRecord);
+  DPRINT("  SerialNumber:           %I64x\n", BootSector->EBPB.SerialNumber);
 
   ExFreePool(BootSector);
 
@@ -234,17 +256,11 @@ NtfsGetVolumeData(PDEVICE_OBJECT DeviceObject,
     return Status;
   }
 
-#ifndef NDEBUG
-  DbgPrint("\n\n");
   /* Enumerate attributes */
   NtfsDumpFileAttributes (MftRecord);
-  DbgPrint("\n\n");
 
-  DbgPrint("\n\n");
   /* Enumerate attributes */
   NtfsDumpFileAttributes (VolumeRecord);
-  DbgPrint("\n\n");
-#endif
 
   /* Get volume name */
   Attribute = FindAttribute (VolumeRecord, AttributeVolumeName, NULL);
