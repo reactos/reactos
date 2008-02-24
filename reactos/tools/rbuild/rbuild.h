@@ -107,7 +107,6 @@ class CompilationUnit;
 class FileLocation;
 class AutoRegister;
 class ModulesResourceGenerator;
-class ModulesResourceGenerator;
 class CreditsGenerator;
 class SourceFileTest;
 class Metadata;
@@ -732,6 +731,7 @@ public:
     std::string city;
     std::string country;
     std::string website;
+    std::string ircnick;
     bool active;
 
     Contributor ( const XMLElement& _node);
@@ -1051,9 +1051,6 @@ public:
 private:
 	bool IsSupportedModuleType ( ModuleType type );
 	void Initialize();
-	//static std::string ReplaceVariable ( const std::string& name,
-	//                                     const std::string& value,
-	//                                     std::string path );
 };
 
 
@@ -1066,10 +1063,6 @@ public:
 	CDFile ( const Project& project,
 	         const XMLElement& bootstrapNode,
 	         const std::string& path );
-//private:
-//	static std::string ReplaceVariable ( const std::string& name,
-//	                                     const std::string& value,
-//	                                     std::string path );
 };
 
 class BootstrapFile : public XmlNode
@@ -1081,10 +1074,6 @@ public:
 	BootstrapFile ( const Project& project,
 	         const XMLElement& bootstrapNode,
 	         const std::string& path );
-//private:
-//	static std::string ReplaceVariable ( const std::string& name,
-//	                                     const std::string& value,
-//	                                     std::string path );
 };
 
 class InstallFile : public XmlNode

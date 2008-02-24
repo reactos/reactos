@@ -36,7 +36,6 @@ ModulesResourceGenerator::Generate ()
 	for ( size_t i = 0; i < project.modules.size (); i++ )
 	{
 		Module& module = *project.modules[i];
-
 		if (module.autoResource != NULL)
 		{
 			WriteResourceFile (module);

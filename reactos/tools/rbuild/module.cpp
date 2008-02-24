@@ -1779,6 +1779,7 @@ Contributor::ProcessXML()
         alias = "";
 
     att = node.GetAttribute ( "firstname", true );
+	assert(att);
 	if (att != NULL)
 		firstName = att->value;
 	else
@@ -1813,6 +1814,12 @@ Contributor::ProcessXML()
 		website = att->value;
 	else
 		website = "";
+
+    att = node.GetAttribute ( "ircnick", false );
+	if (att != NULL)
+		ircnick = att->value;
+	else
+		ircnick = "";
 }
 
 Author::Author ( const XMLElement& _node , const Module& module_ , AuthorRole role_ , const string& alias_)

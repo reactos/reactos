@@ -36,7 +36,6 @@ ModulesManifestGenerator::Generate ()
 	for ( size_t i = 0; i < project.modules.size (); i++ )
 	{
 		Module& module = *project.modules[i];
-
 		if (module.autoManifest != NULL)
 		{
 			WriteManifestFile (module);
@@ -55,37 +54,37 @@ ModulesManifestGenerator::WriteManifestFile ( Module& module )
 		throw OutOfMemoryException ();
 	
 	s = buf;
-	s = s + sprintf ( s, "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>");
-	s = s + sprintf ( s, "<assembly xmlns=\"urn:schemas-microsoft-com:asm.v1\" manifestVersion=\"1.0\">");
-	s = s + sprintf ( s, " <assemblyIdentity");
-	s = s + sprintf ( s, "  version=\"1.0.0.0\"");
-	s = s + sprintf ( s, "  processorArchitecture=\"x86\"");
-	s = s + sprintf ( s, "  name=\"ReactOS.System.Module\"");
-	s = s + sprintf ( s, "  type=\"win32\"");
-	s = s + sprintf ( s, " />");
+	s = s + sprintf ( s, "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n");
+	s = s + sprintf ( s, "<assembly xmlns=\"urn:schemas-microsoft-com:asm.v1\" manifestVersion=\"1.0\">\n");
+	s = s + sprintf ( s, " <assemblyIdentity\n");
+	s = s + sprintf ( s, "  version=\"1.0.0.0\"\n");
+	s = s + sprintf ( s, "  processorArchitecture=\"x86\"\n");
+	s = s + sprintf ( s, "  name=\"ReactOS.System.Module\"\n");
+	s = s + sprintf ( s, "  type=\"win32\"\n");
+	s = s + sprintf ( s, " />\n");
 	
 	if (module.metadata != NULL)
 	{
-		s = s + sprintf ( s, " <description>%s</description>" , module.metadata->description.c_str());
+		s = s + sprintf ( s, " <description>%s</description>\n" , module.metadata->description.c_str());
 	}
 	else
 	{
-		s = s + sprintf ( s, " <description>%s<description>" , module.name.c_str());
+		s = s + sprintf ( s, " <description>%s<description>\n" , module.name.c_str());
 	}
 	
-	s = s + sprintf ( s, " <dependency>");
-	s = s + sprintf ( s, "  <dependentAssembly>");
- 	s = s + sprintf ( s, "  <assemblyIdentity");
- 	s = s + sprintf ( s, "   type=\"win32\"");
- 	s = s + sprintf ( s, "   name=\"Microsoft.Windows.Common-Controls\"");
- 	s = s + sprintf ( s, "   version=\"6.0.0.0\"");
- 	s = s + sprintf ( s, "   processorArchitecture=\"x86\"");
- 	s = s + sprintf ( s, "   publicKeyToken=\"6595b64144ccf1df\"");
- 	s = s + sprintf ( s, "   language=\"*\"");
-	s = s + sprintf ( s, "   />");
-	s = s + sprintf ( s, "  </dependentAssembly>");
-	s = s + sprintf ( s, " </dependency>");
-	s = s + sprintf ( s, "</assembly>");
+	s = s + sprintf ( s, " <dependency>\n");
+	s = s + sprintf ( s, "  <dependentAssembly>\n");
+ 	s = s + sprintf ( s, "  <assemblyIdentity\n");
+ 	s = s + sprintf ( s, "   type=\"win32\"\n");
+ 	s = s + sprintf ( s, "   name=\"Microsoft.Windows.Common-Controls\"\n");
+ 	s = s + sprintf ( s, "   version=\"6.0.0.0\"\n");
+ 	s = s + sprintf ( s, "   processorArchitecture=\"x86\"\n");
+ 	s = s + sprintf ( s, "   publicKeyToken=\"6595b64144ccf1df\"\n");
+ 	s = s + sprintf ( s, "   language=\"*\"\n");
+	s = s + sprintf ( s, "   />\n");
+	s = s + sprintf ( s, "  </dependentAssembly>\n");
+	s = s + sprintf ( s, " </dependency>\n");
+	s = s + sprintf ( s, "</assembly>\n");
 
 	FileSupportCode::WriteIfChanged ( buf, NormalizeFilename ( Environment::GetIntermediatePath () + sSep + module.output->relative_path + sSep + "manifest.xml" ) );
 
