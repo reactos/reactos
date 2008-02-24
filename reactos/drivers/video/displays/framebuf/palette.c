@@ -121,7 +121,6 @@ IntSetPalette(
    pClut->FirstEntry = iStart;
    pClut->NumEntries = cColors;
    memcpy(&pClut->LookupTable[0].RgbLong, ppalent, sizeof(ULONG) * cColors);
-   EngFreeMem(ppalent);
 
    if (((PPDEV)dhpdev)->PaletteShift)
    {
@@ -193,5 +192,7 @@ DrvSetPalette(
       return FALSE;
    }
 
-   return IntSetPalette(dhpdev, PaletteEntries, iStart, cColors);
+   BOOL bRet = IntSetPalette(dhpdev, PaletteEntries, iStart, cColors);
+   EngFreeMem(PaletteEntries);
+   return bRet;
 }
