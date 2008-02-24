@@ -477,7 +477,7 @@ KiRosBuildOsMemoryMap(VOID)
 #endif
 
     /* Build an entry for the KPCR and KUSER_SHARED_DATA */
-    Status = KiRosAllocateArcDescriptor(1, 3, LoaderMemoryData);
+    Status = KiRosAllocateArcDescriptor(1, 3, LoaderStartupPcrPage);
     if (Status != STATUS_SUCCESS) return Status;
 
     /* Build an entry for the PDE and return the status */
