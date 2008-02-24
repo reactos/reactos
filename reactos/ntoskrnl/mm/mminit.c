@@ -182,7 +182,10 @@ MmInitVirtualMemory()
                       TRUE,
                       0,
                       BoundaryAddressMultiple);
-   MmSharedDataPagePhysicalAddress.QuadPart = 2 << PAGE_SHIFT;
+
+   /* Shared data are always located the next page after PCR */
+   MmSharedDataPagePhysicalAddress = MmGetPhysicalAddress((PVOID)PCR);
+   MmSharedDataPagePhysicalAddress.QuadPart += PAGE_SIZE;
 
    /*
     *
