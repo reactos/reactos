@@ -239,27 +239,33 @@ ExpInitNls(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         if (!ExpNlsTableBase) KeBugCheck(PHASE0_INITIALIZATION_FAILED);
 
         /* Copy the codepage data in its new location. */
-        //RtlCopyMemory(ExpNlsTableBase,
-        //              LoaderBlock->NlsData->AnsiCodePageData,
-        //              ExpNlsTableSize);
+        if (NlsTablesEncountered == 1)
+        {
+            /* Ntldr-way boot process */
+            RtlCopyMemory(ExpNlsTableBase,
+                          LoaderBlock->NlsData->AnsiCodePageData,
+                          ExpNlsTableSize);
+        }
+        else
+        {
+            /*
+            * In NT, the memory blocks are contiguous, but in ReactOS they aren't,
+            * so unless someone fixes FreeLdr, we'll have to use this icky hack.
+            */
+            RtlCopyMemory(ExpNlsTableBase,
+                          LoaderBlock->NlsData->AnsiCodePageData,
+                          NlsTableSizes[0]);
 
-        /*
-         * In NT, the memory blocks are contiguous, but in ReactOS they aren't,
-         * so unless someone fixes FreeLdr, we'll have to use this icky hack.
-         */
-        RtlCopyMemory(ExpNlsTableBase,
-                      LoaderBlock->NlsData->AnsiCodePageData,
-                      NlsTableSizes[0]);
+            RtlCopyMemory((PVOID)((ULONG_PTR)ExpNlsTableBase + NlsTableSizes[0]),
+                          LoaderBlock->NlsData->OemCodePageData,
+                          NlsTableSizes[1]);
 
-        RtlCopyMemory((PVOID)((ULONG_PTR)ExpNlsTableBase + NlsTableSizes[0]),
-                      LoaderBlock->NlsData->OemCodePageData,
-                      NlsTableSizes[1]);
-
-        RtlCopyMemory((PVOID)((ULONG_PTR)ExpNlsTableBase + NlsTableSizes[0] +
-                      NlsTableSizes[1]),
-                      LoaderBlock->NlsData->UnicodeCodePageData,
-                      NlsTableSizes[2]);
-        /* End of Hack */
+            RtlCopyMemory((PVOID)((ULONG_PTR)ExpNlsTableBase + NlsTableSizes[0] +
+                          NlsTableSizes[1]),
+                          LoaderBlock->NlsData->UnicodeCodePageData,
+                          NlsTableSizes[2]);
+            /* End of Hack */
+        }
 
         /* Initialize and reset the NLS TAbles */
         RtlInitNlsTables((PVOID)((ULONG_PTR)ExpNlsTableBase +
