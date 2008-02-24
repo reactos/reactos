@@ -175,6 +175,7 @@ DrvSetPalette(
    IN ULONG cColors)
 {
    PPALETTEENTRY PaletteEntries;
+   BOOL bRet;
 
    if (cColors == 0)
        return FALSE;
@@ -192,7 +193,7 @@ DrvSetPalette(
       return FALSE;
    }
 
-   BOOL bRet = IntSetPalette(dhpdev, PaletteEntries, iStart, cColors);
+   bRet = IntSetPalette(dhpdev, PaletteEntries, iStart, cColors);
    EngFreeMem(PaletteEntries);
    return bRet;
 }
