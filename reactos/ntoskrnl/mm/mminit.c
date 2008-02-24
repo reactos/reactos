@@ -55,6 +55,7 @@ ULONG_PTR MiKSeg0Start, MiKSeg0End;
 PVOID MmPfnDatabase;
 ULONG_PTR MmPfnDatabaseEnd;
 PMEMORY_ALLOCATION_DESCRIPTOR MiFreeDescriptor;
+MEMORY_ALLOCATION_DESCRIPTOR MiFreeDescriptorOrg;
 extern KMUTANT MmSystemLoadLock;
 BOOLEAN MiDbgEnableMdDump =
 #ifdef _ARM_
@@ -246,6 +247,10 @@ MiCountFreePagesInLoaderBlock(PLOADER_PARAMETER_BLOCK LoaderBlock)
             }
         }
     }
+
+    /* Save original values of the free descriptor, since it'll be
+       altered by early allocations */
+    MiFreeDescriptorOrg = *MiFreeDescriptor;
 }
 
 VOID

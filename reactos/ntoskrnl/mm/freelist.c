@@ -54,13 +54,13 @@ MiGetPfnEntry(IN PFN_TYPE Pfn)
 
     /* Make sure the PFN number is valid */
     ASSERT(Pfn <= MmPageArraySize);
-    
+
     /* Get the entry */
     Page = &MmPageArray[Pfn];
-    
+
     /* Make sure it's valid */
     ASSERT_PFN(Page);
-    
+
     /* Return it */
     return Page;
 }
@@ -368,20 +368,14 @@ MmInitializePageList(VOID)
             }
         }
     }
-    
+
     /* Finally handle the pages describing the PFN database themselves */
     for (i = (MiFreeDescriptor->BasePage + MiFreeDescriptor->PageCount);
-         i <= MmPageArraySize;
+         i < (MiFreeDescriptorOrg.BasePage + MiFreeDescriptorOrg.PageCount);
          i++)
     {
-        /* If this page was marked as free it should be removed from
-           the unzeroed free pages list */
-        if (MmPageArray[i].Flags.Type == MM_PHYSICAL_PAGE_FREE)
-        {
-            RemoveEntryList(&MmPageArray[i].ListEntry);
-            UnzeroedPageCount--;
-            MmStats.NrFreePages--;
-        }
+        /* Ensure this page was not added previously */
+        ASSERT(MmPageArray[i].Flags.Type == 0);
 
         /* Mark it as used kernel memory */
         MmPageArray[i] = UsedPage;
@@ -764,7 +758,7 @@ MmAllocPage(ULONG Consumer, SWAPENTRY SavedSwapEntry)
              MiZeroPage(PfnOffset);
              return PfnOffset;
          }
-          
+
          DPRINT1("MmAllocPage(): Out of memory\n");
          KeReleaseSpinLock(&PageListLock, oldIrql);
          return 0;

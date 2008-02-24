@@ -19,6 +19,7 @@ extern PVOID MmPagedPoolBase;
 extern ULONG MmPagedPoolSize;
 
 extern PMEMORY_ALLOCATION_DESCRIPTOR MiFreeDescriptor;
+extern MEMORY_ALLOCATION_DESCRIPTOR MiFreeDescriptorOrg;
 extern ULONG MmHighestPhysicalPage;
 extern PVOID MmPfnDatabase;
 
