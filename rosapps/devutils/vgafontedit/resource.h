@@ -43,6 +43,8 @@
 #define ID_FILE_EXIT              1006
 
 #define ID_EDIT_GLYPH             2001
+#define ID_EDIT_COPY              2002
+#define ID_EDIT_PASTE             2003
 
 #define ID_WINDOW_TILE_HORZ       3001
 #define ID_WINDOW_TILE_VERT       3002
@@ -71,5 +73,7 @@
 #define IDS_TOOLTIP_OPEN          11002
 #define IDS_TOOLTIP_SAVE          11003
 #define IDS_TOOLTIP_EDIT_GLYPH    11004
+#define IDS_TOOLTIP_COPY          11005
+#define IDS_TOOLTIP_PASTE         11006
 
 #endif

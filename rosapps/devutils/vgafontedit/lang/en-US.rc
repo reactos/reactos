@@ -47,6 +47,14 @@ BEGIN
         MENUITEM "Exit\tAlt+F4", ID_FILE_EXIT
     END
 
+    POPUP "&Edit"
+    BEGIN
+        MENUITEM "Copy\tCtrl+C", ID_EDIT_COPY
+        MENUITEM "Paste\tCtrl+V", ID_EDIT_PASTE
+        MENUITEM SEPARATOR
+        MENUITEM "Edit Glyph...", ID_EDIT_GLYPH
+    END
+
     POPUP "&Window"
     BEGIN
         MENUITEM "&Cascade", ID_WINDOW_CASCADE
@@ -81,4 +89,6 @@ BEGIN
     IDS_TOOLTIP_OPEN, "Open"
     IDS_TOOLTIP_SAVE, "Save"
     IDS_TOOLTIP_EDIT_GLYPH, "Edit Glyph"
+    IDS_TOOLTIP_COPY, "Copy"
+    IDS_TOOLTIP_PASTE, "Paste"
 END

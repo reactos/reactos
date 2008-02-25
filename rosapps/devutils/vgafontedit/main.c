@@ -8,9 +8,12 @@
 
 #include "precomp.h"
 
+static const WCHAR szCharacterClipboardFormat[] = L"RosVgaFontChar";
+
 HINSTANCE hInstance;
 HANDLE hProcessHeap;
 PWSTR szAppName;
+UINT uCharacterClipboardFormat;
 
 INT WINAPI
 wWinMain(HINSTANCE hInst, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nCmdShow)
@@ -29,6 +32,10 @@ wWinMain(HINSTANCE hInst, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nCmdSho
     AllocAndLoadString(&szAppName, IDS_APPTITLE);
 
     hAccel = LoadAcceleratorsW( hInstance, MAKEINTRESOURCEW(IDA_MAINACCELERATORS) );
+
+    uCharacterClipboardFormat = RegisterClipboardFormatW(szCharacterClipboardFormat);
+    if(!uCharacterClipboardFormat)
+        return 1;
 
     if( InitMainWndClass() && InitFontWndClass() && InitFontBoxesWndClass() && InitEditGlyphWndClasses() )
     {

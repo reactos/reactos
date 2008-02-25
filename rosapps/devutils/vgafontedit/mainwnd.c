@@ -88,6 +88,7 @@ SetToolbarFileButtonState(IN PMAIN_WND_INFO Info, BOOL bEnabled)
 {
     SetToolbarButtonState(Info, ID_FILE_SAVE, bEnabled);
     SetToolbarButtonState(Info, ID_EDIT_GLYPH, bEnabled);
+    SetToolbarButtonState(Info, ID_EDIT_COPY, bEnabled);
 }
 
 static VOID
@@ -143,11 +144,15 @@ InitMainWnd(IN PMAIN_WND_INFO Info)
     AddToolbarButton(Info, iStandardBitmaps + STD_FILESAVE, ID_FILE_SAVE, IDS_TOOLTIP_SAVE);
     AddToolbarSeparator(Info);
     AddToolbarButton(Info, iCustomBitmaps + TOOLBAR_EDIT_GLYPH, ID_EDIT_GLYPH, IDS_TOOLTIP_EDIT_GLYPH);
+    AddToolbarSeparator(Info);
+    AddToolbarButton(Info, iStandardBitmaps + STD_COPY, ID_EDIT_COPY, IDS_TOOLTIP_COPY);
+    AddToolbarButton(Info, iStandardBitmaps + STD_PASTE, ID_EDIT_PASTE, IDS_TOOLTIP_PASTE);
 
     SetToolbarFileButtonState(Info, FALSE);
+    SetPasteButtonState(Info);
 
     // Add the MDI client area
-    ccs.hWindowMenu = GetSubMenu(Info->hMenu, 1);
+    ccs.hWindowMenu = GetSubMenu(Info->hMenu, 2);
     ccs.idFirstChild = ID_MDI_FIRSTCHILD;
 
     Info->hMdiClient = CreateWindowExW(WS_EX_CLIENTEDGE,
@@ -172,11 +177,17 @@ InitMenuPopup(IN PMAIN_WND_INFO Info)
 {
     UINT uState;
 
-    uState = MF_BYCOMMAND | (Info->CurrentFontWnd == NULL);
+    uState = MF_BYCOMMAND | !(Info->CurrentFontWnd);
 
     EnableMenuItem(Info->hMenu, ID_FILE_CLOSE, uState);
     EnableMenuItem(Info->hMenu, ID_FILE_SAVE, uState);
     EnableMenuItem(Info->hMenu, ID_FILE_SAVE_AS, uState);
+
+    EnableMenuItem(Info->hMenu, ID_EDIT_COPY, uState);
+    EnableMenuItem(Info->hMenu, ID_EDIT_GLYPH, uState);
+
+    uState = MF_BYCOMMAND | !(Info->CurrentFontWnd && IsClipboardFormatAvailable(uCharacterClipboardFormat));
+    EnableMenuItem(Info->hMenu, ID_EDIT_PASTE, uState);
 }
 
 static VOID
@@ -248,6 +259,72 @@ DoFileSave(IN PMAIN_WND_INFO Info, IN BOOL bSaveAs)
     CloseHandle(hFile);
 }
 
+static VOID
+CopyCurrentGlyph(IN PFONT_WND_INFO FontWndInfo)
+{
+    HGLOBAL hMem;
+    PUCHAR pCharacterBits;
+
+    if(!OpenClipboard(NULL))
+        return;
+
+    EmptyClipboard();
+
+    hMem = GlobalAlloc(GMEM_MOVEABLE, 8);
+    pCharacterBits = GlobalLock(hMem);
+    RtlCopyMemory(pCharacterBits, FontWndInfo->Font->Bits + FontWndInfo->uSelectedCharacter * 8, 8);
+    GlobalUnlock(hMem);
+
+    SetClipboardData(uCharacterClipboardFormat, hMem);
+
+    CloseClipboard();
+}
+
+static VOID
+PasteIntoCurrentGlyph(IN PFONT_WND_INFO FontWndInfo)
+{
+    HGLOBAL hMem;
+
+    if(!IsClipboardFormatAvailable(uCharacterClipboardFormat))
+        return;
+
+    if(!OpenClipboard(NULL))
+        return;
+
+    hMem = GetClipboardData(uCharacterClipboardFormat);
+    if(hMem)
+    {
+        PUCHAR pCharacterBits;
+
+        pCharacterBits = GlobalLock(hMem);
+        if(pCharacterBits)
+        {
+            RECT CharacterRect;
+            UINT uFontRow;
+            UINT uFontColumn;
+
+            RtlCopyMemory(FontWndInfo->Font->Bits + FontWndInfo->uSelectedCharacter * 8, pCharacterBits, 8);
+            GlobalUnlock(hMem);
+
+            FontWndInfo->OpenInfo->bModified = TRUE;
+
+            GetCharacterPosition(FontWndInfo->uSelectedCharacter, &uFontRow, &uFontColumn);
+            GetCharacterRect(uFontRow, uFontColumn, &CharacterRect);
+            InvalidateRect(FontWndInfo->hFontBoxesWnd, &CharacterRect, FALSE);
+        }
+    }
+
+    CloseClipboard();
+}
+
+VOID
+SetPasteButtonState(IN PMAIN_WND_INFO Info)
+{
+    SetToolbarButtonState(Info,
+                          ID_EDIT_PASTE,
+                          (Info->CurrentFontWnd && IsClipboardFormatAvailable(uCharacterClipboardFormat)));
+}
+
 static BOOL
 MenuCommand(IN INT nMenuItemID, IN PMAIN_WND_INFO Info)
 {
@@ -278,9 +355,17 @@ MenuCommand(IN INT nMenuItemID, IN PMAIN_WND_INFO Info)
             PostMessage(Info->hMainWnd, WM_CLOSE, 0, 0);
             return TRUE;
 
-        // "Edit Glyph" toolbar button
+        // Edit Menu
         case ID_EDIT_GLYPH:
             EditCurrentGlyph(Info->CurrentFontWnd);
+            return TRUE;
+
+        case ID_EDIT_COPY:
+            CopyCurrentGlyph(Info->CurrentFontWnd);
+            return TRUE;
+
+        case ID_EDIT_PASTE:
+            PasteIntoCurrentGlyph(Info->CurrentFontWnd);
             return TRUE;
 
         // Window Menu
@@ -349,6 +434,8 @@ MainWndSize(PMAIN_WND_INFO Info, INT cx, INT cy)
 static LRESULT CALLBACK
 MainWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
+    static HWND hNextClipboardViewer;
+
     PMAIN_WND_INFO Info;
 
     Info = (PMAIN_WND_INFO) GetWindowLongW(hwnd, GWLP_USERDATA);
@@ -362,6 +449,14 @@ MainWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                     return 0;
 
                 break;
+
+            case WM_CHANGECBCHAIN:
+                if((HWND)wParam == hNextClipboardViewer)
+                    hNextClipboardViewer = (HWND)lParam;
+                else
+                    SendMessage(hNextClipboardViewer, uMsg, wParam, lParam);
+
+                return 0;
 
             case WM_CLOSE:
                 if(Info->FirstFontWnd)
@@ -392,6 +487,8 @@ MainWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 Info->hMenu = GetMenu(hwnd);
                 SetWindowLongW(hwnd, GWLP_USERDATA, (LONG)Info);
 
+                hNextClipboardViewer = SetClipboardViewer(hwnd);
+
                 InitMainWnd(Info);
                 InitResources(Info);
 
@@ -404,6 +501,13 @@ MainWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 HeapFree(hProcessHeap, 0, Info);
                 SetWindowLongW(hwnd, GWLP_USERDATA, 0);
                 PostQuitMessage(0);
+                return 0;
+
+            case WM_DRAWCLIPBOARD:
+                SetPasteButtonState(Info);
+
+                // Pass the message to the next clipboard window in the chain
+                SendMessage(hNextClipboardViewer, uMsg, wParam, lParam);
                 return 0;
 
             case WM_INITMENUPOPUP:

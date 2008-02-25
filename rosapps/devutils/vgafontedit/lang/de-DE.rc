@@ -47,6 +47,14 @@ BEGIN
         MENUITEM "Beenden\tAlt+F4", ID_FILE_EXIT
     END
 
+    POPUP "&Bearbeiten"
+    BEGIN
+        MENUITEM "Kopieren\tStrg+C", ID_EDIT_COPY
+        MENUITEM "Einfügen\tStrg+V", ID_EDIT_PASTE
+        MENUITEM SEPARATOR
+        MENUITEM "Schriftzeichen bearbeiten...", ID_EDIT_GLYPH
+    END
+
     POPUP "&Fenster"
     BEGIN
         MENUITEM "&Überlappend", ID_WINDOW_CASCADE
@@ -81,4 +89,6 @@ BEGIN
     IDS_TOOLTIP_OPEN, "Öffnen"
     IDS_TOOLTIP_SAVE, "Speichern"
     IDS_TOOLTIP_EDIT_GLYPH, "Schriftzeichen bearbeiten"
+    IDS_TOOLTIP_COPY, "Kopieren"
+    IDS_TOOLTIP_PASTE, "Einfügen"
 END

@@ -108,6 +108,7 @@ FontWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             case WM_CHILDACTIVATE:
                 Info->MainWndInfo->CurrentFontWnd = Info;
                 SetToolbarFileButtonState(Info->MainWndInfo, TRUE);
+                SetPasteButtonState(Info->MainWndInfo);
                 break;
 
             case WM_CREATE:
@@ -165,6 +166,7 @@ FontWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 // Otherwise CurrentFontWnd will stay NULL, so the main window knows that no more childs are opened.
                 Info->MainWndInfo->CurrentFontWnd = NULL;
                 SetToolbarFileButtonState(Info->MainWndInfo, FALSE);
+                SetPasteButtonState(Info->MainWndInfo);
 
                 if(uMsg == WM_USER_APPCLOSE)
                 {

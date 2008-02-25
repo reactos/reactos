@@ -147,6 +147,7 @@ VOID UnInitFontWndClass(VOID);
 extern PWSTR szAppName;
 extern HINSTANCE hInstance;
 extern HANDLE hProcessHeap;
+extern UINT uCharacterClipboardFormat;
 
 // mainwnd.c
 BOOL CreateMainWindow(IN INT nCmdShow, OUT PMAIN_WND_INFO* Info);
@@ -154,6 +155,7 @@ BOOL InitMainWndClass(VOID);
 VOID UnInitMainWndClass(VOID);
 VOID DoFileSave(IN PMAIN_WND_INFO Info, IN BOOL bSaveAs);
 VOID SetToolbarFileButtonState(IN PMAIN_WND_INFO Info, BOOL bEnabled);
+VOID SetPasteButtonState(IN PMAIN_WND_INFO Info);
 
 // misc.c
 INT AllocAndLoadString(OUT PWSTR *lpTarget, IN UINT uID);
