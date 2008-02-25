@@ -161,7 +161,7 @@ IntInt10CallBios(
     /* Clear the context */
     RtlZeroMemory(&BiosContext, sizeof(CONTEXT));
 
-    /* Fil out the bios arguments */
+    /* Fill out the bios arguments */
     BiosContext.Eax = BiosArguments->Eax;
     BiosContext.Ebx = BiosArguments->Ebx;
     BiosContext.Ecx = BiosArguments->Ecx;
