@@ -523,7 +523,7 @@ IntCleanupCurIcons(struct _EPROCESS *Process, PW32PROCESS Win32Process)
 
    LIST_FOR_EACH_SAFE(CurIcon, tmp, &gCurIconList, CURICON_OBJECT, ListEntry)
    {
-//      UserReferenceObject(CurIcon);
+      UserReferenceObject(CurIcon);
       //    if(NT_SUCCESS(UserReferenceObjectByPointer(Object, otCursorIcon)))
       {
          LIST_FOR_EACH(ProcessData, &CurIcon->ProcessList, CURICON_PROCESS, ListEntry)
@@ -532,6 +532,7 @@ IntCleanupCurIcons(struct _EPROCESS *Process, PW32PROCESS Win32Process)
             {
                RemoveEntryList(&CurIcon->ListEntry);
                IntDestroyCurIconObject(WinSta, CurIcon, TRUE);
+               CurIcon = NULL;
                break;
             }
          }
@@ -539,7 +540,10 @@ IntCleanupCurIcons(struct _EPROCESS *Process, PW32PROCESS Win32Process)
 //         UserDereferenceObject(Object);
       }
 
-
+      if (CurIcon)
+      {
+         UserDereferenceObject(CurIcon);
+      }
    }
 
    ObDereferenceObject(WinSta);

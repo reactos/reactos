@@ -506,6 +506,13 @@ UserGetDCEx(PWINDOW_OBJECT Window OPTIONAL, HANDLE ClipRegion, ULONG Flags)
       return(NULL);
    }
 
+   if (!GDIOBJ_ValidateHandle(Dce->hDC, GDI_OBJECT_TYPE_DC))
+   {
+      DPRINT1("FIXME: Got DCE with invalid hDC!\n");
+      Dce->hDC = DceCreateDisplayDC();
+      /* FIXME: Handle error */
+   }
+
    Dce->hwndCurrent = (Window ? Window->hSelf : NULL);
    Dce->DCXFlags = Flags | DCX_DCEBUSY;
 
@@ -597,7 +604,7 @@ DceFreeDCE(PDCE pdce, BOOLEAN Force)
   }
 
   if (!Hit) IntGdiDeleteDC(pdce->hDC, TRUE);
-   
+
   if (pdce->hClipRgn && ! (pdce->DCXFlags & DCX_KEEPCLIPRGN))
   {
       NtGdiDeleteObject(pdce->hClipRgn);
@@ -762,7 +769,7 @@ DceResetActiveDCEs(PWINDOW_OBJECT Window)
    } while (pDCE != FirstDce);
 }
 
-HDC 
+HDC
 FASTCALL
 IntGetDC(PWINDOW_OBJECT Window)
 {
@@ -811,7 +818,7 @@ UserReleaseDC(PWINDOW_OBJECT Window, HDC hDc, BOOL EndPaint)
   KeEnterCriticalRegion();
   do
   {
-     if (dce->hDC == hDc) 
+     if (dce->hDC == hDc)
      {
         Hit = TRUE;
         break;
@@ -821,7 +828,7 @@ UserReleaseDC(PWINDOW_OBJECT Window, HDC hDc, BOOL EndPaint)
   }
   while (dce != FirstDce );
   KeLeaveCriticalRegion();
-   
+
   if ( Hit && (dce->DCXFlags & DCX_DCEBUSY))
   {
      nRet = DceReleaseDC(dce, EndPaint);

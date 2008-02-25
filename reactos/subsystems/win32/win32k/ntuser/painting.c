@@ -696,6 +696,8 @@ IntGetPaintMessage(HWND hWnd, UINT MsgFilterMin, UINT MsgFilterMax,
    if (Message->hwnd == NULL)
    {
       DPRINT1("PAINTING BUG: Thread marked as containing dirty windows, but no dirty windows found!\n");
+      /* Hack to stop spamming the debuglog ! */
+      MessageQueue->PaintCount = 0;
       return FALSE;
    }
 
