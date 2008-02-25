@@ -58,7 +58,7 @@ GetSupportedCP(VOID)
             }
 
             TCHAR Section[MAX_PATH];
-            _stprintf(Section, TEXT("%s%d"), _T("CODEPAGE_REMOVE_"), uiCPage);
+            _stprintf(Section, _T("%s%d"), _T("CODEPAGE_REMOVE_"), uiCPage);
             if ((uiCPage == GetACP()) || (uiCPage == GetOEMCP()) || 
                 (!SetupFindFirstLine(hIntlInf, Section, _T("AddReg"), &infCont)))
             {
