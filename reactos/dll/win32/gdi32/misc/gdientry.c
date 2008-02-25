@@ -25,6 +25,7 @@ ULONG gcDirectDraw;
 #define GetDdHandle(Handle) ((HANDLE)Handle ? (HANDLE)Handle : ghDirectDraw)
 
 
+
 /* CALLBACKS *****************************************************************/
 
 /*
@@ -40,6 +41,11 @@ DdAddAttachedSurface(LPDDHAL_ADDATTACHEDSURFACEDATA Attach)
                                       (PDD_ADDATTACHEDSURFACEDATA)Attach);
 }
 
+/*
+ * @implemented
+ *
+ * DdBlt
+ */
 DWORD
 WINAPI
 DdBlt(LPDDHAL_BLTDATA Blt)
@@ -53,59 +59,89 @@ DdBlt(LPDDHAL_BLTDATA Blt)
     return NtGdiDdBlt((HANDLE)Blt->lpDDDestSurface->hDDSurface, Surface, (PDD_BLTDATA)Blt);
 }
 
+/*
+ * @implemented
+ *
+ * DdDestroySurface
+ */
 DWORD
-APIENTRY
+WINAPI
 DdDestroySurface(LPDDHAL_DESTROYSURFACEDATA pDestroySurface)
 {
     DWORD Return = DDHAL_DRIVER_NOTHANDLED;
-    BOOL RealDestroy = TRUE;
-    LPDDRAWI_DDRAWSURFACE_LCL pSurfaceLocal;
+    BOOL RealDestroy;
 
-    /* Get the local surface */
-    pSurfaceLocal = pDestroySurface->lpDDSurface;
-
-    /* Make sure there's a surface */
-    if (pSurfaceLocal->hDDSurface)
+    if (pDestroySurface->lpDDSurface->hDDSurface)
     {
         /* Check if we shoudl really destroy it */
-        if ((pSurfaceLocal->dwFlags & DDRAWISURF_DRIVERMANAGED) &&
-            (pSurfaceLocal->dwFlags & DDRAWISURF_INVALID))
-        {
-            RealDestroy = FALSE;
-        }
+        RealDestroy = !(pDestroySurface->lpDDSurface->dwFlags & DDRAWISURF_DRIVERMANAGED) || 
+                      !(pDestroySurface->lpDDSurface->dwFlags & DDRAWISURF_INVALID);            
 
-        /* Call win32k */
-        Return = NtGdiDdDestroySurface((HANDLE)pSurfaceLocal->hDDSurface,
-                                       RealDestroy);
+         /* Call win32k */
+        Return = NtGdiDdDestroySurface((HANDLE)pDestroySurface->lpDDSurface->hDDSurface, RealDestroy);
     }
 
     return Return;
 }
 
+/*
+ * @implemented
+ *
+ * DdFlip
+ */
 DWORD
 WINAPI
 DdFlip(LPDDHAL_FLIPDATA Flip)
 {
-    /* Call win32k */
+    /* Note :
+    * See http://msdn2.microsoft.com/en-us/library/ms794213.aspx and
+    * http://msdn2.microsoft.com/en-us/library/ms792675.aspx 
+    */
 
-    return NtGdiDdFlip( (HANDLE)Flip->lpSurfCurr->hDDSurface,
-                        (HANDLE)Flip->lpSurfTarg->hDDSurface,
-   /* FIXME  the two last should be current left handler */
-						(HANDLE)Flip->lpSurfCurr->hDDSurface,
-                        (HANDLE)Flip->lpSurfTarg->hDDSurface,
-                        (PDD_FLIPDATA)Flip);
+    HANDLE hSurfaceCurrentLeft = NULL;
+    HANDLE hSurfaceTargetLeft = NULL;
+   
+    /* Auto flip off or on */
+    if (Flip->dwFlags & DDFLIP_STEREO )
+    {      
+        if ( (Flip->lpSurfTargLeft) &&
+             (Flip->lpSurfCurrLeft))
+        {         
+            /* Auto flip on */
+            hSurfaceTargetLeft = (HANDLE) Flip->lpSurfTargLeft->hDDSurface;
+            hSurfaceCurrentLeft = (HANDLE) Flip->lpSurfCurrLeft->hDDSurface;
+        }
+    }
+
+    /* Call win32k */
+    return NtGdiDdFlip( (HANDLE) Flip->lpSurfCurr->hDDSurface,
+                        (HANDLE) Flip->lpSurfTarg->hDDSurface,
+                        hSurfaceCurrentLeft,
+                        hSurfaceTargetLeft,
+                        (PDD_FLIPDATA) Flip);
 }
 
+/*
+ * @implemented
+ *
+ * DdLock
+ */
 DWORD
 WINAPI
 DdLock(LPDDHAL_LOCKDATA Lock)
 {
+
     /* Call win32k */
     return NtGdiDdLock((HANDLE)Lock->lpDDSurface->hDDSurface,
                         (PDD_LOCKDATA)Lock,
 						(HANDLE)Lock->lpDDSurface->hDC);
 }
 
+/*
+ * @implemented
+ *
+ * DdUnlock
+ */
 DWORD
 WINAPI
 DdUnlock(LPDDHAL_UNLOCKDATA Unlock)
@@ -115,6 +151,11 @@ DdUnlock(LPDDHAL_UNLOCKDATA Unlock)
                           (PDD_UNLOCKDATA)Unlock);
 }
 
+/*
+ * @implemented
+ *
+ * DdGetBltStatus
+ */
 DWORD
 WINAPI
 DdGetBltStatus(LPDDHAL_GETBLTSTATUSDATA GetBltStatus)
@@ -124,6 +165,11 @@ DdGetBltStatus(LPDDHAL_GETBLTSTATUSDATA GetBltStatus)
                                 (PDD_GETBLTSTATUSDATA)GetBltStatus);
 }
 
+/*
+ * @implemented
+ *
+ * DdGetBltStatus
+ */
 DWORD
 WINAPI
 DdGetFlipStatus(LPDDHAL_GETFLIPSTATUSDATA GetFlipStatus)
@@ -133,10 +179,16 @@ DdGetFlipStatus(LPDDHAL_GETFLIPSTATUSDATA GetFlipStatus)
                                  (PDD_GETFLIPSTATUSDATA)GetFlipStatus);
 }
 
+/*
+ * @implemented
+ *
+ * DdUpdateOverlay
+ */
 DWORD
-APIENTRY
+WINAPI
 DdUpdateOverlay(LPDDHAL_UPDATEOVERLAYDATA UpdateOverlay)
 {
+
     /* We have to handle this manually here */
     if (UpdateOverlay->dwFlags & DDOVER_KEYDEST)
     {
@@ -165,21 +217,25 @@ DdUpdateOverlay(LPDDHAL_UPDATEOVERLAYDATA UpdateOverlay)
                                  (PDD_UPDATEOVERLAYDATA)UpdateOverlay);
 }
 
+/*
+ * @implemented
+ *
+ * DdSetOverlayPosition
+ */
 DWORD
-APIENTRY
+WINAPI
 DdSetOverlayPosition(LPDDHAL_SETOVERLAYPOSITIONDATA SetOverlayPosition)
 {
     /* Call win32k */
-    return NtGdiDdSetOverlayPosition((HANDLE)SetOverlayPosition->
-                                      lpDDSrcSurface->hDDSurface,
-                                      (HANDLE)SetOverlayPosition->
-                                      lpDDDestSurface->hDDSurface,
-                                      (PDD_SETOVERLAYPOSITIONDATA)
-                                      SetOverlayPosition);
+    return NtGdiDdSetOverlayPosition( (HANDLE)SetOverlayPosition->lpDDSrcSurface->hDDSurface,
+                                      (HANDLE)SetOverlayPosition->lpDDDestSurface->hDDSurface,
+                                      (PDD_SETOVERLAYPOSITIONDATA) SetOverlayPosition);
 }
 
 /*
- * Dd Callbacks
+ * @implemented
+ *
+ * DdWaitForVerticalBlank
  */
 DWORD
 WINAPI
@@ -192,17 +248,29 @@ DdWaitForVerticalBlank(LPDDHAL_WAITFORVERTICALBLANKDATA WaitForVerticalBlank)
                                        WaitForVerticalBlank);
 }
 
+/*
+ * @implemented
+ *
+ * DdCanCreateSurface
+ */
 DWORD
 WINAPI
 DdCanCreateSurface(LPDDHAL_CANCREATESURFACEDATA CanCreateSurface)
 {
+    /* 
+     * Note : This functions are basic same, in win32k 
+     * NtGdiDdCanCreateD3DBuffer and  NtGdiDdCanCreateSurface are mergs 
+     * toghter in win32k at end and retrurn same data, it is still sepreated 
+     * at user mode but in kmode it is not. 
+     */
+
     /* Call win32k */
     return NtGdiDdCanCreateSurface(GetDdHandle(CanCreateSurface->lpDD->hDD),
                                    (PDD_CANCREATESURFACEDATA)CanCreateSurface);
 }
 
 DWORD
-APIENTRY
+WINAPI
 DdCreateSurface(LPDDHAL_CREATESURFACEDATA pCreateSurface)
 {
     DWORD Return = DDHAL_DRIVER_NOTHANDLED;
@@ -388,8 +456,13 @@ DdCreateSurface(LPDDHAL_CREATESURFACEDATA pCreateSurface)
     return Return;
 }
 
+/*
+ * @implemented
+ *
+ * DdSetColorKey
+ */
 DWORD
-APIENTRY
+WINAPI
 DdSetColorKey(LPDDHAL_SETCOLORKEYDATA pSetColorKey)
 {
     /* Call win32k */
@@ -397,14 +470,246 @@ DdSetColorKey(LPDDHAL_SETCOLORKEYDATA pSetColorKey)
                                (PDD_SETCOLORKEYDATA)pSetColorKey);
 }
 
+/*
+ * @implemented
+ *
+ * DdGetScanLine
+ */
 DWORD
-APIENTRY
+WINAPI
 DdGetScanLine(LPDDHAL_GETSCANLINEDATA pGetScanLine)
 {
     /* Call win32k */
     return NtGdiDdGetScanLine(GetDdHandle(pGetScanLine->lpDD->hDD),
                                (PDD_GETSCANLINEDATA)pGetScanLine);
 }
+
+DWORD
+WINAPI
+DdGetDriverInfo(LPDDHAL_GETDRIVERINFODATA pData)
+{
+    HANDLE hDD = GetDdHandle(pData->dwContext);
+
+    /* Get videoport callbacks */
+    if (IsEqualGUID(&pData->guidInfo, &GUID_VideoPortCallbacks))
+    {
+        DDHAL_GETDRIVERINFODATA pDvdPortInfo;
+        DDHAL_DDVIDEOPORTCALLBACKS  pDvdPort;
+        DDHAL_DDVIDEOPORTCALLBACKS* pUserDvdPort = (DDHAL_DDVIDEOPORTCALLBACKS *)pData->lpvData;
+        DWORD retValue;
+        
+        /* Clear user out buffer */
+        RtlZeroMemory(pUserDvdPort, DDVIDEOPORTCALLBACKSSIZE);        
+
+        /* Clear internal out buffer and set it up*/
+        RtlZeroMemory(&pDvdPort, DDVIDEOPORTCALLBACKSSIZE);
+        pDvdPort.dwSize = DDVIDEOPORTCALLBACKSSIZE;
+
+        /* Clear internal in buffer and set it up*/
+        RtlZeroMemory(&pDvdPortInfo, sizeof (DDHAL_GETDRIVERINFODATA));                      
+        pDvdPortInfo.dwSize = sizeof (DDHAL_GETDRIVERINFODATA);
+        pDvdPortInfo.guidInfo = GUID_VideoPortCallbacks;
+        pDvdPortInfo.lpvData = (PVOID)&pDvdPort;
+        pDvdPortInfo.ddRVal = DDERR_GENERIC;
+        pDvdPortInfo.dwExpectedSize = DDVIDEOPORTCALLBACKSSIZE ;  
+        pDvdPortInfo.dwContext = (ULONG_PTR) hDD;
+        
+        /* Call win32k */
+        retValue = NtGdiDdGetDriverInfo(hDD, (PDD_GETDRIVERINFODATA)&pDvdPortInfo);
+
+        /* Setup user out buffer and convert kmode callbacks to user mode */
+        pUserDvdPort->dwSize = DDVIDEOPORTCALLBACKSSIZE;      
+
+        // FIXME setup the flags 
+        // pUserDvdPort->dwFlags = eax; 
+        pData->dwActualSize = DDVIDEOPORTCALLBACKSSIZE; 
+        pUserDvdPort->CreateVideoPort = (LPDDHALVPORTCB_CREATEVIDEOPORT) NULL; // FIXME : DvpCreateVideoPort
+        pUserDvdPort->FlipVideoPort = (LPDDHALVPORTCB_FLIP) NULL; // FIXME : DvpFlipVideoPort
+        pUserDvdPort->DestroyVideoPort = (LPDDHALVPORTCB_DESTROYVPORT) NULL; // FIXME : DvpDestroyVideoPort
+        pUserDvdPort->UpdateVideoPort = (LPDDHALVPORTCB_UPDATE) NULL; // FIXME : DvpUpdateVideoPort
+
+        if (pDvdPort.CanCreateVideoPort)
+        {
+             pUserDvdPort->CanCreateVideoPort = (LPDDHALVPORTCB_CANCREATEVIDEOPORT) NULL; // FIXME : DvpCanCreateVideoPort
+        }
+
+        if (pDvdPort.GetVideoPortBandwidth)
+        {
+            pUserDvdPort->GetVideoPortBandwidth = (LPDDHALVPORTCB_GETBANDWIDTH) NULL; // FIXME : DvpGetVideoPortBandwidth
+        }
+
+        if (pDvdPort.GetVideoPortInputFormats)
+        {
+            pUserDvdPort->GetVideoPortInputFormats = (LPDDHALVPORTCB_GETINPUTFORMATS) NULL; // FIXME : DvpGetVideoPortInputFormats
+        }
+
+        if (pDvdPort.GetVideoPortOutputFormats)
+        {
+            pUserDvdPort->GetVideoPortOutputFormats = (LPDDHALVPORTCB_GETOUTPUTFORMATS) NULL; // FIXME : DvpGetVideoPortInputFormats
+        }
+
+        if (pDvdPort.GetVideoPortField)
+        {
+            pUserDvdPort->GetVideoPortField = (LPDDHALVPORTCB_GETFIELD) NULL; // FIXME : DvpGetVideoPortField 
+        }
+
+        if (pDvdPort.GetVideoPortLine)
+        {
+            pUserDvdPort->GetVideoPortLine = (LPDDHALVPORTCB_GETLINE) NULL; // FIXME : DvpGetVideoPortLine
+        }
+
+        if (pDvdPort.GetVideoPortConnectInfo)
+        {
+            pUserDvdPort->GetVideoPortConnectInfo = (LPDDHALVPORTCB_GETVPORTCONNECT) NULL; // FIXME : DvpGetVideoPortConnectInfo
+        }
+
+        if (pDvdPort.GetVideoPortFlipStatus)
+        {
+            pUserDvdPort->GetVideoPortFlipStatus = (LPDDHALVPORTCB_GETFLIPSTATUS) NULL; // FIXME : DvpGetVideoPortFlipStatus
+        }
+        
+        if (pDvdPort.WaitForVideoPortSync)
+        {
+            /* Note Windows XP does not have a user mode version of WaitForVideoPortSync  */
+            pUserDvdPort->WaitForVideoPortSync = (LPDDHALVPORTCB_WAITFORSYNC) NULL; 
+        }
+
+        if (pDvdPort.GetVideoSignalStatus)
+        {
+            pUserDvdPort->GetVideoSignalStatus = (LPDDHALVPORTCB_GETSIGNALSTATUS) NULL; // FIXME : DvpGetVideoSignalStatus
+        }
+
+        if (pDvdPort.ColorControl)
+        {
+            pUserDvdPort->ColorControl = (LPDDHALVPORTCB_COLORCONTROL) NULL; // FIXME : DvpColorControl
+        }
+
+        /* Windows XP never repot back the true return value, 
+         *  it only report back if we have a driver or not
+         *  ReactOS keep this behoir to be compatible with
+         *  Windows XP
+         */
+        pData->ddRVal = retValue;
+        return retValue;
+    }
+
+    /* FIXME adding rest of the GUID */
+
+    /* FIXME not supported yet */
+    return 0;
+}
+
+
+/*
+ * @implemented
+ *
+ * D3dContextCreate
+ */
+BOOL 
+WINAPI 
+D3dContextCreate(LPD3DHAL_CONTEXTCREATEDATA pdcci)
+{
+    HANDLE hSurfZ = NULL;
+
+    if (pdcci->lpDDSZLcl)
+    {
+        hSurfZ = (HANDLE)pdcci->lpDDSZLcl->hDDSurface;
+    }
+   
+    return  NtGdiD3dContextCreate(GetDdHandle(pdcci->lpDDLcl->hDD), 
+                                  (HANDLE)pdcci->lpDDSLcl->hDDSurface,
+                                  hSurfZ,                           
+                                  (D3DNTHAL_CONTEXTCREATEI *)pdcci);    
+}
+
+
+/*
+ * @implemented
+ *
+ * DdCanCreateD3DBuffer
+ */
+DWORD
+WINAPI
+DdCanCreateD3DBuffer(LPDDHAL_CANCREATESURFACEDATA CanCreateD3DBuffer)
+{
+    /* 
+     * Note : This functions are basic same, in win32k 
+     * NtGdiDdCanCreateD3DBuffer and  NtGdiDdCanCreateSurface are mergs 
+     * toghter in win32k at end and retrurn same data, it is still sepreated 
+     * at user mode but in kmode it is not. 
+     */
+
+    /* Call win32k */
+    return NtGdiDdCanCreateD3DBuffer(GetDdHandle(CanCreateD3DBuffer->lpDD->hDD),
+                                   (PDD_CANCREATESURFACEDATA)CanCreateD3DBuffer);
+}
+
+
+DWORD
+WINAPI
+DdCreateD3DBuffer(LPDDHAL_CREATESURFACEDATA pCreateSurface)
+{
+
+    DD_SURFACE_GLOBAL puSurfaceGlobalData;
+    DD_SURFACE_MORE puSurfaceMoreData;
+    DD_SURFACE_LOCAL puSurfaceLocalData;
+        
+    memset(&puSurfaceGlobalData, 0, sizeof(DD_SURFACE_GLOBAL) );
+    memset(&puSurfaceMoreData, 0,  sizeof(DD_SURFACE_MORE) ) ;
+    memset(&puSurfaceLocalData, 0, sizeof(DD_SURFACE_LOCAL) );
+   
+    /* FIXME convert the struct to right ones and setup for syscall, then retranslated the info back to pCreateSurface */
+
+    /* FIXME not supported yet */
+    return 0;
+}
+
+/*
+ * @implemented
+ *
+ * DdDestroyD3DBuffer
+ */
+DWORD
+WINAPI
+DdDestroyD3DBuffer(LPDDHAL_DESTROYSURFACEDATA pDestroySurface)
+{
+    DWORD retValue = 0;
+    if ( pDestroySurface->lpDDSurface->hDDSurface)
+    {
+        retValue = NtGdiDdDestroyD3DBuffer((HANDLE)pDestroySurface->lpDDSurface->hDDSurface);
+    }
+
+    return retValue;
+}
+
+/*
+ * @implemented
+ *
+ * DdLockD3D
+ */
+DWORD
+WINAPI
+DdLockD3D(LPDDHAL_LOCKDATA Lock)
+{
+
+    /* Call win32k */
+    return NtGdiDdLockD3D((HANDLE)Lock->lpDDSurface->hDDSurface, (PDD_LOCKDATA)Lock);
+}
+
+/*
+ * @implemented
+ *
+ * DdUnlockD3D
+ */
+DWORD
+WINAPI
+DdUnlockD3D(LPDDHAL_UNLOCKDATA Unlock)
+{
+    /* Call win32k */
+    return NtGdiDdUnlock((HANDLE)Unlock->lpDDSurface->hDDSurface,
+                          (PDD_UNLOCKDATA)Unlock);
+}
+
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
@@ -480,7 +785,7 @@ DdCreateDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
 
     /* Check if the global hDC (hdc == 0) is being used */
     if (!hdc)
-  {
+    {
         /* We'll only allow this if the global object doesn't exist yet */
         if (!ghDirectDraw)
         {
@@ -491,7 +796,7 @@ DdCreateDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
                 ghDirectDraw = NtGdiDdCreateDirectDrawObject(hdc);
 
                 /* Delete our DC */
-                NtGdiDeleteObjectApp(hdc);
+                DeleteDC(hdc);
             }
         }
 
@@ -546,6 +851,7 @@ DdQueryDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
     DWORD CallbackFlags[3];
     DWORD dwNumHeaps=0, FourCCs=0;
     DWORD Flags;
+    BOOL retVal = TRUE;
 
     /* Clear the structures */
     RtlZeroMemory(&HalInfo, sizeof(DD_HALINFO));
@@ -554,7 +860,13 @@ DdQueryDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
     RtlZeroMemory(&D3dBufferCallbacks, sizeof(DD_D3DBUFCALLBACKS));
     RtlZeroMemory(CallbackFlags, sizeof(DWORD)*3);
 
-    pvmList = NULL;
+    /* Note : XP always alloc 24*sizeof(VIDEOMEMORY) of pvmlist so we change it to it */
+    if ( (pvmList != NULL) &&
+         (pHalInfo->vmiData.dwNumHeaps != 0) )
+    {
+        VidMemList = (PVIDEOMEMORY) HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, (sizeof(VIDEOMEMORY) * 24 ) * pHalInfo->vmiData.dwNumHeaps);       
+    }
+
 
     /* Do the query */
     if (!NtGdiDdQueryDirectDrawObject(GetDdHandle(pDirectDrawGlobal->hDD),
@@ -570,7 +882,8 @@ DdQueryDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
                                       pdwFourCC))
     {
         /* We failed, free the memory and return */
-        return FALSE;
+        retVal = FALSE;
+        goto cleanup;
     }
 
     /* Clear the incoming pointer */
@@ -583,7 +896,8 @@ DdQueryDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
     pHalInfo->lpDDPaletteCallbacks = pDDPaletteCallbacks;
 
     /* Check for NT5+ D3D Data */
-    if (D3dCallbacks.dwSize && D3dDriverData.dwSize)
+    if ( (D3dCallbacks.dwSize != 0) &&
+         (D3dDriverData.dwSize != 0) )
     {
         /* Write these down */
         pHalInfo->lpD3DGlobalDriverData = (ULONG_PTR)pD3dDriverData;
@@ -611,39 +925,53 @@ DdQueryDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
     pHalInfo->vmiData.dwOffscreenAlign = HalInfo.vmiData.dwOffscreenAlign;
     pHalInfo->vmiData.dwOverlayAlign = HalInfo.vmiData.dwOverlayAlign;
     pHalInfo->vmiData.dwTextureAlign = HalInfo.vmiData.dwTextureAlign;
-    pHalInfo->vmiData.dwZBufferAlign = HalInfo.vmiData.dwZBufferAlign;
+     pHalInfo->vmiData.dwZBufferAlign = HalInfo.vmiData.dwZBufferAlign;
     pHalInfo->vmiData.dwAlphaAlign = HalInfo.vmiData.dwAlphaAlign;
-    pHalInfo->vmiData.dwNumHeaps = 0;
+
+    pHalInfo->vmiData.dwNumHeaps = dwNumHeaps;
     pHalInfo->vmiData.pvmList = pvmList;
 
-    RtlCopyMemory( &pHalInfo->ddCaps, &HalInfo.ddCaps,sizeof(DDCORECAPS ));
+    RtlCopyMemory( &pHalInfo->ddCaps, 
+                   &HalInfo.ddCaps,
+                   sizeof(DDCORECAPS ));
 
     pHalInfo->ddCaps.dwNumFourCCCodes = FourCCs;
     pHalInfo->lpdwFourCC = pdwFourCC;
-    pHalInfo->ddCaps.dwRops[6] = 0x1000;
+    
+    /* always force rope 0x1000 for hal it mean only source copy is supported */
+    pHalInfo->ddCaps.dwRops[6] = 0x1000; 
 
-    /* FIXME implement DdGetDriverInfo */
-    //  pHalInfo->dwFlags = HalInfo.dwFlags | DDHALINFO_GETDRIVERINFOSET;
-    //  pHalInfo->GetDriverInfo = DdGetDriverInfo;
+    /* Set the HAL flags what ReactX got from the driver 
+     * Windows XP force setting DDHALINFO_GETDRIVERINFOSET if the driver does not set it 
+     * and ReactX doing same to keep compatible with drivers, but the driver are 
+     * force support DdGetDriverInfo acoriding MSDN but it seam some driver do not set 
+     * this flag even it is being supported. that is mean. It is small hack to keep
+     * bad driver working, that trust this is always being setting by it self at end
+     */
+    pHalInfo->dwFlags = (HalInfo.dwFlags & ~DDHALINFO_GETDRIVERINFOSET) | DDHALINFO_GETDRIVERINFOSET;   
+    pHalInfo->GetDriverInfo = (LPDDHAL_GETDRIVERINFO) DdGetDriverInfo;
 
     /* Now check if we got any DD callbacks */
     if (pDDCallbacks)
     {
         /* Zero the structure */
         RtlZeroMemory(pDDCallbacks, sizeof(DDHAL_DDCALLBACKS));
-
-        /* Set the flags for this structure */
-        Flags = CallbackFlags[0];
-
-        /* Write the header */
         pDDCallbacks->dwSize = sizeof(DDHAL_DDCALLBACKS);
+
+        /* Set the flags for this structure 
+         * Windows XP force setting DDHAL_CB32_CREATESURFACE if the driver does not set it 
+         * and ReactX doing same to keep compatible with drivers, but the driver are 
+         * force support pDDCallbacks acoriding MSDN but it seam some driver do not set 
+         * this flag even it is being supported. that is mean. It is small hack to keep
+         * bad driver working, that trust this is always being setting by it self at end
+        */
+        Flags = (CallbackFlags[0] & ~DDHAL_CB32_CREATESURFACE) | DDHAL_CB32_CREATESURFACE;
         pDDCallbacks->dwFlags = Flags;
+        
+        /* Write the always-on functions */
+        pDDCallbacks->CreateSurface = DdCreateSurface;
 
         /* Now write the pointers, if applicable */
-        if (Flags & DDHAL_CB32_CREATESURFACE)
-        {
-            pDDCallbacks->CreateSurface = DdCreateSurface;
-        }
         if (Flags & DDHAL_CB32_WAITFORVERTICALBLANK)
         {
             pDDCallbacks->WaitForVerticalBlank = DdWaitForVerticalBlank;
@@ -659,25 +987,29 @@ DdQueryDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
     }
 
     /* Check for DD Surface Callbacks */
-    if (pDDSurfaceCallbacks)
+    if (pDDSurfaceCallbacks) 
     {
         /* Zero the structures */
         RtlZeroMemory(pDDSurfaceCallbacks, sizeof(DDHAL_DDSURFACECALLBACKS));
-
-        /* Set the flags for this one */
-        Flags = CallbackFlags[1];
-
-        /* Write the header, note that some functions are always exposed */
         pDDSurfaceCallbacks->dwSize  = sizeof(DDHAL_DDSURFACECALLBACKS);
 
-        pDDSurfaceCallbacks->dwFlags = Flags;
-        /*
-        pDDSurfaceCallBacks->dwFlags = (DDHAL_SURFCB32_LOCK |
-                                        DDHAL_SURFCB32_UNLOCK |
-                                        DDHAL_SURFCB32_SETCOLORKEY |
-                                        DDHAL_SURFCB32_DESTROYSURFACE) | Flags;
-        */
+        /* Set the flags for this structure 
+         * Windows XP force setting DDHAL_SURFCB32_LOCK, DDHAL_SURFCB32_UNLOCK, 
+         * DDHAL_SURFCB32_SETCOLORKEY, DDHAL_SURFCB32_DESTROYSURFACE if the driver 
+         * does not set it and ReactX doing same to keep compatible with drivers, 
+         * but the driver are force support pDDSurfaceCallbacks acoriding MSDN but it seam 
+         * some driver do not set this flag even it is being supported. that is mean. 
+         * It is small hack to keep bad driver working, that trust this is always being 
+         * setting by it self at end
+         */
 
+        Flags = (CallbackFlags[1] & ~(DDHAL_SURFCB32_LOCK | DDHAL_SURFCB32_UNLOCK |
+                                      DDHAL_SURFCB32_SETCOLORKEY | DDHAL_SURFCB32_DESTROYSURFACE)) |
+                                     (DDHAL_SURFCB32_LOCK | DDHAL_SURFCB32_UNLOCK |
+                                      DDHAL_SURFCB32_SETCOLORKEY | DDHAL_SURFCB32_DESTROYSURFACE);
+                                     
+        pDDSurfaceCallbacks->dwFlags = Flags;
+        
         /* Write the always-on functions */
         pDDSurfaceCallbacks->Lock = DdLock;
         pDDSurfaceCallbacks->Unlock = DdUnlock;
@@ -715,38 +1047,34 @@ DdQueryDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
         }
     }
 
-    /* Check for DD Palette Callbacks */
+    /* Check for DD Palette Callbacks, This interface are dead for user mode, 
+     * only what it can support are being report back.  
+     */
     if (pDDPaletteCallbacks)
     {
         /* Zero the struct */
         RtlZeroMemory(pDDPaletteCallbacks, sizeof(DDHAL_DDPALETTECALLBACKS));
 
-        /* Get the flags for this one */
-        Flags = CallbackFlags[2];
-
         /* Write the header */
         pDDPaletteCallbacks->dwSize  = sizeof(DDHAL_DDPALETTECALLBACKS);
-        pDDPaletteCallbacks->dwFlags = Flags;
+        pDDPaletteCallbacks->dwFlags = CallbackFlags[2];
     }
 
-    /* Check for D3D Callbacks */
     if (pD3dCallbacks)
     {
         /* Zero the struct */
-        RtlZeroMemory(pD3dCallbacks, sizeof(D3DHAL_CALLBACKS));
+        RtlZeroMemory(pD3dCallbacks, sizeof(DDHAL_DDEXEBUFCALLBACKS));
 
         /* Check if we have one */
         if (D3dCallbacks.dwSize)
         {
             /* Write the header */
-            pD3dCallbacks->dwSize  = sizeof(D3DHAL_CALLBACKS);
+            pD3dCallbacks->dwSize = sizeof(DDHAL_DDEXEBUFCALLBACKS);
 
             /* Now check for each callback */
             if (D3dCallbacks.ContextCreate)
             {
-                /* FIXME
-                 pD3dCallbacks->ContextCreate = D3dContextCreate;
-                 */
+                pD3dCallbacks->ContextCreate = (LPD3DHAL_CONTEXTCREATECB) D3dContextCreate;
             }
             if (D3dCallbacks.ContextDestroy)
             {
@@ -754,9 +1082,7 @@ DdQueryDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
             }
             if (D3dCallbacks.ContextDestroyAll)
             {
-                /* FIXME
                 pD3dCallbacks->ContextDestroyAll = (LPD3DHAL_CONTEXTDESTROYALLCB) NtGdiD3dContextDestroyAll;
-                */
             }
         }
     }
@@ -765,17 +1091,60 @@ DdQueryDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
     if (pD3dDriverData)
     {
         /* Copy the struct */
-        RtlMoveMemory(pD3dDriverData,
-                      &D3dDriverData,
-                      sizeof(D3DHAL_GLOBALDRIVERDATA));
+        RtlMoveMemory(pD3dDriverData, &D3dDriverData, sizeof(D3DHAL_GLOBALDRIVERDATA));
 
         /* Write the pointer to the texture formats */
         pD3dDriverData->lpTextureFormats = pD3dTextureFormats;
     }
 
-    /* FIXME: Check for D3D Buffer Callbacks */
+    /* Check for D3D Buffer Callbacks */
+    if (pD3dBufferCallbacks)
+    {
+        /* Zero the struct */
+        RtlZeroMemory(pD3dBufferCallbacks, sizeof(DDHAL_DDEXEBUFCALLBACKS));
+       
+        if ( D3dBufferCallbacks.dwSize)
+        {
+            pD3dBufferCallbacks->dwSize = D3dBufferCallbacks.dwSize;
 
-  return TRUE;
+            pD3dBufferCallbacks->dwFlags = D3dBufferCallbacks.dwFlags;
+            if ( D3dBufferCallbacks.CanCreateD3DBuffer)
+            {
+                pD3dBufferCallbacks->CanCreateExecuteBuffer = (LPDDHALEXEBUFCB_CANCREATEEXEBUF)DdCanCreateD3DBuffer;
+            }
+
+            if ( D3dBufferCallbacks.CanCreateD3DBuffer)
+            {
+                pD3dBufferCallbacks->CreateExecuteBuffer = (LPDDHALEXEBUFCB_CREATEEXEBUF) DdCreateD3DBuffer;
+            }
+
+            if ( D3dBufferCallbacks.DestroyD3DBuffer )
+            {
+                pD3dBufferCallbacks->DestroyExecuteBuffer = (LPDDHALEXEBUFCB_DESTROYEXEBUF) NULL; //DdDestroyD3DBuffer;
+            }
+
+            if ( D3dBufferCallbacks.LockD3DBuffer )
+            {
+                pD3dBufferCallbacks->LockExecuteBuffer = (LPDDHALEXEBUFCB_LOCKEXEBUF) DdLockD3D;
+            }
+
+            if ( D3dBufferCallbacks.UnlockD3DBuffer )
+            {
+                pD3dBufferCallbacks->UnlockExecuteBuffer = (LPDDHALEXEBUFCB_UNLOCKEXEBUF) NULL; //DdUnlockD3D;
+            }
+            
+        }        
+    }
+
+    /* FIXME VidMemList */
+
+cleanup:
+    if (VidMemList)
+    {
+        HeapFree(GetProcessHeap(), 0, VidMemList);
+    }
+
+  return retVal;
 }
 
 /*
