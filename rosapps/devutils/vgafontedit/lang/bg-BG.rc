@@ -75,7 +75,7 @@ BEGIN
     IDS_DOCNAME, "Шрифт %1!u!"
     IDS_SAVEPROMPT, "Файлът ""%1"" е променен, но не е съхранен.\n\nискате ли да го съхрнаите?"
     IDS_APPTITLE, "Обработчикът на РеактОС за VGA шрифтове"
-    IDS_CLOSEEDIT, "Please close all open Edit windows first!"
+    IDS_CLOSEEDIT, "Първо затворете всички прозорци за обработка!"
 
     IDS_TOOLTIP_NEW, "Нов"
     IDS_TOOLTIP_OPEN, "Отваряне"
