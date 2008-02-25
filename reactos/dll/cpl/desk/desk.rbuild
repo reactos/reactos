@@ -38,7 +38,6 @@
 	<file>desk.rc</file>
 
 	<!-- Auto generated stuff -->
-	<automanifest>manifest.xml</automanifest>
 	<autoresource>auto.rc</autoresource>
 
 	<!-- Authors -->
