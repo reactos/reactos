@@ -33,14 +33,7 @@ ModulesManifestGenerator::~ModulesManifestGenerator ()
 void
 ModulesManifestGenerator::Generate ()
 {
-	for ( size_t i = 0; i < project.modules.size (); i++ )
-	{
-		Module& module = *project.modules[i];
-		if (module.autoManifest != NULL)
-		{
-			WriteManifestFile (module);
-		}
-	}
+    /* Don't do anything for now */
 }
 
 void

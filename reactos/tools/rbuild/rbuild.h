@@ -114,7 +114,6 @@ class Language;
 class Contributor;
 class Localization;
 class Author;
-class AutoManifest;
 class AutoResource;
 class InstallComponent;
 class InstallFolder;
@@ -440,7 +439,6 @@ public:
 	FileLocation *output; // "path/foo.exe"
 	FileLocation *dependency; // "path/foo.exe" or "path/libfoo.a"
 	FileLocation *install;
-	AutoManifest* autoManifest;	
 	AutoResource* autoResource;
     InstallComponent* installComponent;
 
@@ -652,20 +650,6 @@ public:
     bool IsSupportedModuleType ( ModuleType type );
 	Family ( const XMLElement& node ,
 	             const Module& _module );
-
-	void ProcessXML();
-};
-
-class AutoManifest
-{
-	const XMLElement& node;
-public:
-	const Module& module;
-	FileLocation file;
-
-	AutoManifest ( const XMLElement& node,
-	               const Module& module,
-	               const FileLocation& file );
 
 	void ProcessXML();
 };

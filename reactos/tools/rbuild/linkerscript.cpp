@@ -48,18 +48,6 @@ AutoResource::ProcessXML()
 {
 }
 
-AutoManifest::AutoManifest ( const XMLElement& node_,
-                             const Module& module_,
-                             const FileLocation& file_ )
-	: node(node_), module(module_), file(file_)
-{
-}
-
-void
-AutoManifest::ProcessXML()
-{
-}
-
 InstallComponent::InstallComponent ( const XMLElement& node_,
                              const Module& module_,
                              const FileLocation& file_ )

@@ -248,7 +248,6 @@ Module::Module ( const Project& project,
 	  pch (NULL),
 	  cplusplus (false),
 	  host (HostDefault),
-	  autoManifest (NULL),
 	  autoResource (NULL),
       installComponent (NULL)
 {
@@ -763,35 +762,6 @@ Module::ProcessXMLSubElement ( const XMLElement& e,
 			string dir = e.value.substr ( 0, pos );
 			string name = e.value.substr ( pos + 1);
 			autoResource = new AutoResource (
-				e, *this, FileLocation ( SourceDirectory, relative_path + sSep + dir, name, &e ) );
-		}
-		subs_invalid = true;
-	}
-	else if ( e.name == "automanifest" )
-	{
-		if ( parseContext.ifData )
-		{
-			throw XMLInvalidBuildFileException (
-				e.location,
-				"<automanifest> is not a valid sub-element of <if>" );
-		}
-		if ( autoManifest )
-		{
-			throw XMLInvalidBuildFileException (
-				e.location,
-				"Only one <automanifest> is valid per module" );
-		}
-		size_t pos = e.value.find_last_of ( "/\\" );
-		if ( pos == string::npos )
-		{
-			autoManifest = new AutoManifest (
-				e, *this, FileLocation ( SourceDirectory, relative_path, e.value, &e ) );
-		}
-		else
-		{
-			string dir = e.value.substr ( 0, pos );
-			string name = e.value.substr ( pos + 1);
-			autoManifest = new AutoManifest (
 				e, *this, FileLocation ( SourceDirectory, relative_path + sSep + dir, name, &e ) );
 		}
 		subs_invalid = true;

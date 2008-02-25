@@ -77,11 +77,13 @@ ModulesResourceGenerator::WriteResourceFile ( Module& module )
 	s = s + sprintf ( s, "#include <reactos/version.rc>\n");
 	s = s + sprintf ( s, "\n" );
 
-	if (module.autoManifest != NULL)
+    /*
+    if (module.visualStyles != NULL)
 	{
 		s = s + sprintf ( s, "1 24 DISCARDABLE \"manifest.xml\"\n");
 		s = s + sprintf ( s, "\n" );
 	}
+    */
 
 	/* Include resources for module localizations */
 	for ( size_t i = 0; i < module.localizations.size (); i++ )
