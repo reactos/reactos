@@ -279,7 +279,7 @@ ROSDATA VK_TO_WCHARS5 key_to_chars_5mod[] = {
   { '3',   NOCAPS, {'3', '#', WCH_NONE, 0x2116, 0x2116} }, //3#¹¹
   { '6',   NOCAPS, {'6', '^', WCH_NONE, 0x20AC,0x20AC } }, //6^ˆˆ
   { '7',   NOCAPS, {'7', '&', WCH_NONE, 0xA7, 0xA7} }, //7&§§
-  { VK_OEM_7,    NOCAPS, {'\'','\"', WCH_NONE, 0x201e, 0x201d } }, //'"„”
+  { VK_OEM_7,    NOCAPS, {'\'','\"', WCH_NONE, 0x201e, 0x201C } }, //'"„“
   { 0, 0 }
 };
 

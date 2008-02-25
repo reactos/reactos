@@ -176,7 +176,7 @@ static MUI_ENTRY bgBGIntroPageEntries[] =
     {
         8,
         16,
-        "- Настройвачът не може да изтрие първия разширен дял от диска",
+        "- Настройвачът не може да изтрие първия разширен дял от диска, ",
         TEXT_NORMAL
     },
     {
@@ -194,7 +194,7 @@ static MUI_ENTRY bgBGIntroPageEntries[] =
     {
         8,
         19,
-        "- Проверката на файловата уредба все не е готова.",
+        "- Проверката на файловата уредба все още не е готова.",
         TEXT_NORMAL
     },
     {
@@ -538,7 +538,7 @@ static MUI_ENTRY bgBGComputerPageEntries[] =
     {
         8,
         14,
-        "   вида на компютъра.",
+        "   сменяте вида на компютъра.",
         TEXT_NORMAL
     },
     {
@@ -675,7 +675,7 @@ static MUI_ENTRY bgBGDisplayPageEntries[] =
     {
         8,
         14,
-        "   вида на екрана.",
+        "   сменяте вида на екрана.",
         TEXT_NORMAL
     },
     {
@@ -727,7 +727,7 @@ static MUI_ENTRY bgBGSuccessPageEntries[] =
     {
         0,
         0,
-        "   ENTER = презапускане на компютъра",
+        "   ENTER = Презапускане на компютъра",
         TEXT_STATUS
     },
     {
@@ -808,7 +808,7 @@ static MUI_ENTRY bgBGSelectPartitionEntries[] =
     {
         8,
         11,
-        "\x07  Изполвайте стрелките за избор от списъка.",
+        "\x07  Използвайте стрелките за избор от списъка.",
         TEXT_NORMAL
     },
     {
@@ -860,7 +860,7 @@ static MUI_ENTRY bgBGFormatPartitionEntries[] =
     {
         6,
         10,
-        "Настройката ще форматира дяла. Натиснете ENTER за продължаване.",
+        "Дялът ще бъде форматиран. Натиснете ENTER за продължаване.",
         TEXT_NORMAL
     },
     {
@@ -1051,7 +1051,7 @@ static MUI_ENTRY bgBGKeyboardSettingsEntries[] =
     {
         8,
         14,
-        "   вида на клавиатурата.",
+        "   сменяте вида на клавиатурата.",
         TEXT_NORMAL
     },
     {
@@ -1103,7 +1103,7 @@ static MUI_ENTRY bgBGLayoutSettingsEntries[] =
     {
         8,
         14,
-        "   клавиатурната подредба.",
+        "   сменяте клавиатурната подредба.",
         TEXT_NORMAL
     },
     {
@@ -1226,13 +1226,13 @@ static MUI_ENTRY bgBGDeletePartitionEntries[] =
     {
         8,
         21,
-        "\x07  Натиснете ESC за да се откажете.",
+        "\x07  Натиснете ESC, за да се откажете.",
         TEXT_NORMAL
     },
     {
         0,
         0,
-        "   D = изтриване на дяла, ESC = Отказ    F3 = Изход",
+        "   D = Изтриване на дяла, ESC = Отказ    F3 = Изход",
         TEXT_STATUS
     },
     {
@@ -1316,7 +1316,7 @@ MUI_ERROR bgBGErrorEntries[] =
     },
     {
         //ERROR_WRITE_BOOT,
-        "Setup failed to install FAT bootcode on the system partition.",
+        "Неуспешно слагане на означаваш запис (bootcode) за FAT в системния дял.",
         "ENTER = Презапускане на компютъра"
     },
     {
@@ -1404,22 +1404,22 @@ MUI_ERROR bgBGErrorEntries[] =
     {
         //ERROR_INITIALIZE_REGISTRY,
         //There is something wrong with this line.
-        "Setup failed to set the initialize the registry.",
+        "Неуспешно означаване на регистъра.",
         "ENTER = Презапускане на компютъра"
     },
     {
         //ERROR_INVALID_CABINET_INF,
-        "Cabinet has no valid inf file.\n",
+        "Cab файлът няма правилен inf файл.\n",
         "ENTER = Презапускане на компютъра"
     },
     {
         //ERROR_CABINET_MISSING,
-        "Cabinet not found.\n",
+        "Cab файлът не е открит.\n",
         "ENTER = Презапускане на компютъра"
     },
     {
         //ERROR_CABINET_SCRIPT,
-        "Cabinet has no setup script.\n",
+        "Cab файлът няма настроечно писание.\n",
         "ENTER = Презапускане на компютъра"
     },
     {
@@ -1440,8 +1440,8 @@ MUI_ERROR bgBGErrorEntries[] =
     },
     {
         //ERROR_CABINET_SECTION,
-        "Setup failed to find the 'Directories' section\n"
-        "in the cabinet.\n",
+        "Разделът 'Directories' не бе открит\n"
+        "в cab файла.\n",
         "ENTER = Презапускане на компютъра"
     },
     {
@@ -1467,7 +1467,7 @@ MUI_ERROR bgBGErrorEntries[] =
     },
     {
         //ERROR_UPDATE_LOCALESETTINGS,
-        "Setup could not set the system locale.\n"
+        "Неуспешно установяване на местните настройки.\n"
         "ENTER = Презапускане на компютъра"
     },
     {
@@ -1580,115 +1580,115 @@ MUI_PAGE bgBGPages[] =
 MUI_STRING bgBGStrings[] =
 {
     {STRING_PLEASEWAIT,
-     "   Please wait..."},
+     "   Почакайте..."},
     {STRING_INSTALLCREATEPARTITION,
-     "   ENTER = Install   C = Create Partition   F3 = Quit"},
+     "   ENTER = Слагане   C = Създаване на дял   F3 = Изход"},
     {STRING_INSTALLDELETEPARTITION,
-     "   ENTER = Install   D = Delete Partition   F3 = Quit"},
+     "   ENTER = Слагане   D = Изтриване на дял   F3 = Изход"},
     {STRING_PARTITIONSIZE,
-     "Size of new partition:"},
+     "Размер на новия дял:"},
     {STRING_CHOOSENEWPARTITION,
-     "You have chosen to create a new partition on"},
+     "Избрали сте да създадете нов дял на"},
     {STRING_HDDSIZE,
-    "Please enter the size of the new partition in megabytes."},
+    "Въведете размера на новия дял (в мегабайти)."},
     {STRING_CREATEPARTITION,
-     "   ENTER = Create Partition   ESC = Cancel   F3 = Quit"},
+     "   ENTER = Създаване на дял   ESC = Отказ   F3 = Изход"},
     {STRING_PARTFORMAT,
-    "This Partition will be formatted next."},
+    "Предстои форматиране на дяла."},
     {STRING_NONFORMATTEDPART,
-    "You chose to install ReactOS on a new or unformatted Partition."},
+    "Избрали сте да сложите РеактОС на нов или неразпределен дял."},
     {STRING_INSTALLONPART,
     "Setup install ReactOS onto Partition"},
     {STRING_CHECKINGPART,
-    "Setup is now checking the selected partition."},
+    "Тече проверка на избрания дял."},
     {STRING_QUITCONTINUE,
-    "F3= Quit  ENTER = Continue"},
+    "F3= Изход  ENTER = Продължаване"},
     {STRING_REBOOTCOMPUTER,
-    "ENTER = Reboot computer"},
+    "ENTER = Презапускане на компютъра"},
     {STRING_TXTSETUPFAILED,
-    "Setup failed to find the '%S' section\nin TXTSETUP.SIF.\n"},
+    "Не бе намерен раздел '%S'\nв TXTSETUP.SIF.\n"},
     {STRING_COPYING,
-     "                                          \xB3 Copying file: %S"},
+     "                                         \xB3 Запис на файл: %S"},
     {STRING_SETUPCOPYINGFILES,
-     "Setup is copying files..."},
+     "Тече записване на файловете..."},
     {STRING_PAGEDMEM,
-     "Paged Memory"},
+     "Странирана"},
     {STRING_NONPAGEDMEM,
-     "Nonpaged Memory"},
+     "Нестранирана"},
     {STRING_FREEMEM,
-     "Free Memory"},
+     "Свободна памет"},
     {STRING_REGHIVEUPDATE,
-    "   Updating registry hives..."},
+    "   Осъвременяване на регистърните роеве..."},
     {STRING_IMPORTFILE,
-    "   Importing %S..."},
+    "   Внасяне на %S..."},
     {STRING_DISPLAYETTINGSUPDATE,
-    "   Updating display registry settings..."},
+    "   Осъвременяване регистровите настройки на екрана..."},
     {STRING_LOCALESETTINGSUPDATE,
-    "   Updating locale settings..."},
+    "   Осъвременяване на местните настройки..."},
     {STRING_KEYBOARDSETTINGSUPDATE,
-    "   Updating keyboard layout settings..."},
+    "   Осъвременяване настройките на клавиатурните подредби..."},
     {STRING_CODEPAGEINFOUPDATE,
-    "   Adding codepage information to registry..."},
+    "   Добавяне в регистъра на сведения за знаковия набор..."},
     {STRING_DONE,
-    "   Done..."},
+    "   Готово..."},
     {STRING_REBOOTCOMPUTER2,
-    "   ENTER = Reboot computer"},
+    "   ENTER = Презапускане на компютъра"},
     {STRING_CONSOLEFAIL1,
-    "Unable to open the console\n\n"},
+    "Отварянето на конзолата е невъзможно\n\n"},
     {STRING_CONSOLEFAIL2,
-    "The most common cause of this is using an USB keyboard\n"},
+    "Това се случва най- често при употреба на USB клавиатура\n"},
     {STRING_CONSOLEFAIL3,
-    "USB keyboards are not fully supported yet\n"},
+    "Поддръжката на USB е все още непълна\n"},
     {STRING_FORMATTINGDISK,
-    "Setup is formatting your disk"},
+    "Тече форматиране на диска"},
     {STRING_CHECKINGDISK,
-    "Setup is checking your disk"},
+    "Тече проверка на диска"},
     {STRING_FORMATDISK1,
-    " Format partition as %S file system (quick format) "},
+    " Форматиране на дяла като %S файлова уредба (бързо форматиране) "},
     {STRING_FORMATDISK2,
-    " Format partition as %S file system "},
+    " Форматиране на дяла като %S файлова уредба "},
     {STRING_KEEPFORMAT,
-    " Keep current file system (no changes) "},
+    " Запазване на файловата уредба (без промени) "},
     {STRING_HDINFOPARTCREATE,
-    "%I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) on %wZ."},
+    "%I64u %s  твърд диск %lu  (Извод=%hu, Шина=%hu, ОУ=%hu) на %wZ."},
     {STRING_HDDINFOUNK1,
-    "%I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu)."},
+    "%I64u %s  твърд диск %lu  (Извод=%hu, Шина=%hu, ОУ=%hu)."},
     {STRING_HDDINFOUNK2,
-    "   %c%c  Type %lu    %I64u %s"},
+    "   %c%c  вид %lu    %I64u %s"},
     {STRING_HDINFOPARTDELETE,
-    "on %I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) on %wZ."},
+    "на %I64u %s  твърд диск %lu  (Извод=%hu, Шина=%hu, ОУ=%hu) на %wZ."},
     {STRING_HDDINFOUNK3,
-    "on %I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu)."},
+    "на %I64u %s  твърд диск %lu  (Извод=%hu, Шина=%hu, ОУ=%hu)."},
     {STRING_HDINFOPARTZEROED,
-    "Harddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ)."},
+    "твърд диск %lu (%I64u %s), Извод=%hu, Шина=%hu, ОУ=%hu (%wZ)."},
     {STRING_HDDINFOUNK4,
-    "%c%c  Type %lu    %I64u %s"},
+    "%c%c  вид %lu    %I64u %s"},
     {STRING_HDINFOPARTEXISTS,
-    "on Harddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ)."},
+    "на твърд диск %lu (%I64u %s), Извод=%hu, Шина=%hu, ОУ=%hu (%wZ)."},
     {STRING_HDDINFOUNK5,
-    "%c%c  Type %-3u                         %6lu %s"},
+    "%c%c  вид %-3u                         %6lu %s"},
     {STRING_HDINFOPARTSELECT,
-    "%6lu %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) on %S"},
+    "%6lu %s  твърд диск %lu  (Извод=%hu, Шина=%hu, ОУ=%hu) на %S"},
     {STRING_HDDINFOUNK6,
-    "%6lu %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu)"},
+    "%6lu %s  твърд диск %lu  (Извод=%hu, Шина=%hu, ОУ=%hu)"},
     {STRING_NEWPARTITION,
-    "Setup created a new partition on"},
+    "Бе създаден нов дял на"},
     {STRING_UNPSPACE,
-    "    Unpartitioned space              %6lu %s"},
+    "    Неразпределено място              %6lu %s"},
     {STRING_MAXSIZE,
-    "MB (max. %lu MB)"},
+    "МБ (до %lu МБ)"},
     {STRING_UNFORMATTED,
-    "New (Unformatted)"},
+    "Нов (Неформатиран)"},
     {STRING_FORMATUNUSED,
-    "Unused"},
+    "Неизползван"},
     {STRING_FORMATUNKNOWN,
-    "Unknown"},
+    "Неизвестен"},
     {STRING_KB,
-    "KB"},
+    "КБ"},
     {STRING_MB,
-    "MB"},
+    "МБ"},
     {STRING_GB,
-    "GB"},
+    "ГБ"},
     {0, 0}
 };
 
