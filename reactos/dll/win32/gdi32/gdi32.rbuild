@@ -11,8 +11,8 @@
 	<library>advapi32</library>
 	<library>win32ksys</library>
 	<library>pseh</library>
-    <library>dxguid</library>
-    
+	<library>dxguid</library>
+
 	<directory name="include">
 		<pch>precomp.h</pch>
 	</directory>
