@@ -398,10 +398,12 @@ StartProcedure(
 		}
 		TRACE_(I8042PRT, "Detecting keyboard\n");
 		if (!i8042DetectKeyboard(DeviceExtension))
-			return STATUS_UNSUCCESSFUL;
+			INFO_(I8042PRT, "No keyboard detected!\n");
+
 		TRACE_(I8042PRT, "Detecting mouse\n");
 		if (!i8042DetectMouse(DeviceExtension))
-			return STATUS_UNSUCCESSFUL;
+			INFO_(I8042PRT, "No mouse detected!\n");
+
 		INFO_(I8042PRT, "Keyboard present: %s\n", DeviceExtension->Flags & KEYBOARD_PRESENT ? "YES" : "NO");
 		INFO_(I8042PRT, "Mouse present   : %s\n", DeviceExtension->Flags & MOUSE_PRESENT ? "YES" : "NO");
 	}
