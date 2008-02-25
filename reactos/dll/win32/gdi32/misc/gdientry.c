@@ -484,6 +484,51 @@ DdGetScanLine(LPDDHAL_GETSCANLINEDATA pGetScanLine)
                                (PDD_GETSCANLINEDATA)pGetScanLine);
 }
 
+
+/*
+ * @implemented
+ *
+ * DvpCreateVideoPort
+ */
+BOOL
+WINAPI
+DvpCreateVideoPort(LPDDHAL_CREATEVPORTDATA pDvdCreatePort)
+{    
+    pDvdCreatePort->lpVideoPort->hDDVideoPort = 
+        NtGdiDvpCreateVideoPort(GetDdHandle(pDvdCreatePort->lpDD->lpGbl->hDD), 
+                               (PDD_CREATEVPORTDATA) pDvdCreatePort);
+    
+    return TRUE;
+}
+
+/*
+ * @implemented
+ *
+ * DvpCreateVideoPort
+ */
+DWORD
+WINAPI
+DvpDestroyVideoPort(LPDDHAL_DESTROYVPORTDATA pDvdDestoryPort)
+{
+  return NtGdiDvpDestroyVideoPort(pDvdDestoryPort->lpVideoPort->hDDVideoPort, (PDD_DESTROYVPORTDATA)pDvdDestoryPort);
+}
+
+/*
+ * @implemented
+ *
+ * DvpCreateVideoPort
+ */
+DWORD
+WINAPI
+DvpFlipVideoPort(LPDDHAL_FLIPVPORTDATA pDvdPortFlip)
+{
+    return NtGdiDvpFlipVideoPort(pDvdPortFlip->lpVideoPort->hDDVideoPort,
+                                 (HANDLE)pDvdPortFlip->lpSurfCurr->hDDSurface,
+                                 (HANDLE)pDvdPortFlip->lpSurfTarg->hDDSurface,
+                                 (PDD_FLIPVPORTDATA) pDvdPortFlip);
+}
+
+
 DWORD
 WINAPI
 DdGetDriverInfo(LPDDHAL_GETDRIVERINFODATA pData)
@@ -519,13 +564,16 @@ DdGetDriverInfo(LPDDHAL_GETDRIVERINFODATA pData)
 
         /* Setup user out buffer and convert kmode callbacks to user mode */
         pUserDvdPort->dwSize = DDVIDEOPORTCALLBACKSSIZE;      
+       
+        pUserDvdPort->dwFlags = (pDvdPortInfo.dwFlags & ~(DDHAL_VPORT32_CREATEVIDEOPORT | DDHAL_VPORT32_FLIP |
+                                                          DDHAL_VPORT32_DESTROY | DDHAL_VPORT32_UPDATE | DDHAL_VPORT32_WAITFORSYNC)) |
+                                                         (DDHAL_VPORT32_CREATEVIDEOPORT | DDHAL_VPORT32_FLIP |
+                                                          DDHAL_VPORT32_DESTROY | DDHAL_VPORT32_UPDATE);
 
-        // FIXME setup the flags 
-        // pUserDvdPort->dwFlags = eax; 
         pData->dwActualSize = DDVIDEOPORTCALLBACKSSIZE; 
-        pUserDvdPort->CreateVideoPort = (LPDDHALVPORTCB_CREATEVIDEOPORT) NULL; // FIXME : DvpCreateVideoPort
-        pUserDvdPort->FlipVideoPort = (LPDDHALVPORTCB_FLIP) NULL; // FIXME : DvpFlipVideoPort
-        pUserDvdPort->DestroyVideoPort = (LPDDHALVPORTCB_DESTROYVPORT) NULL; // FIXME : DvpDestroyVideoPort
+        pUserDvdPort->CreateVideoPort = (LPDDHALVPORTCB_CREATEVIDEOPORT) DvpCreateVideoPort;
+        pUserDvdPort->FlipVideoPort = (LPDDHALVPORTCB_FLIP) DvpFlipVideoPort;
+        pUserDvdPort->DestroyVideoPort = (LPDDHALVPORTCB_DESTROYVPORT) DvpDestroyVideoPort;
         pUserDvdPort->UpdateVideoPort = (LPDDHALVPORTCB_UPDATE) NULL; // FIXME : DvpUpdateVideoPort
 
         if (pDvdPort.CanCreateVideoPort)
@@ -1120,7 +1168,7 @@ DdQueryDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
 
             if ( D3dBufferCallbacks.DestroyD3DBuffer )
             {
-                pD3dBufferCallbacks->DestroyExecuteBuffer = (LPDDHALEXEBUFCB_DESTROYEXEBUF) NULL; //DdDestroyD3DBuffer;
+                pD3dBufferCallbacks->DestroyExecuteBuffer = (LPDDHALEXEBUFCB_DESTROYEXEBUF) DdDestroyD3DBuffer;
             }
 
             if ( D3dBufferCallbacks.LockD3DBuffer )
@@ -1130,7 +1178,7 @@ DdQueryDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
 
             if ( D3dBufferCallbacks.UnlockD3DBuffer )
             {
-                pD3dBufferCallbacks->UnlockExecuteBuffer = (LPDDHALEXEBUFCB_UNLOCKEXEBUF) NULL; //DdUnlockD3D;
+                pD3dBufferCallbacks->UnlockExecuteBuffer = (LPDDHALEXEBUFCB_UNLOCKEXEBUF) DdUnlockD3D;
             }
             
         }        
