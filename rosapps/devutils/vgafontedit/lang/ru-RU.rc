@@ -47,12 +47,12 @@ BEGIN
         MENUITEM "Выход\tAlt+F4",       ID_FILE_EXIT
     END
 
-    POPUP "&Edit"
+    POPUP "&Правка"
     BEGIN
-        MENUITEM "Copy\tCtrl+C", ID_EDIT_COPY
-        MENUITEM "Paste\tCtrl+V", ID_EDIT_PASTE
+        MENUITEM "Копировать\tCtrl+C",  ID_EDIT_COPY
+        MENUITEM "Вставить\tCtrl+V",    ID_EDIT_PASTE
         MENUITEM SEPARATOR
-        MENUITEM "Edit Glyph...", ID_EDIT_GLYPH
+        MENUITEM "Изменить символ...",  ID_EDIT_GLYPH
     END
 
     POPUP "&Окна"
@@ -83,12 +83,12 @@ BEGIN
     IDS_DOCNAME, "Шрифт %1!u!"
     IDS_SAVEPROMPT, "Файл ""%1"" был изменен и изменения не были сохранены.\n\nСохранить?"
     IDS_APPTITLE, "Редактор VGA-шрифтов ReactOS"
-    IDS_CLOSEEDIT, "Please close all open Edit windows first!"
+    IDS_CLOSEEDIT, "Пожалуйста, закройте сначала все открытые окна редактирования!"
 
     IDS_TOOLTIP_NEW, "Новый"
     IDS_TOOLTIP_OPEN, "Открыть"
     IDS_TOOLTIP_SAVE, "Сохранить"
     IDS_TOOLTIP_EDIT_GLYPH, "Редактировать символ"
-    IDS_TOOLTIP_COPY, "Copy"
-    IDS_TOOLTIP_PASTE, "Paste"
+    IDS_TOOLTIP_COPY, "Копировать"
+    IDS_TOOLTIP_PASTE, "Вставить"
 END
