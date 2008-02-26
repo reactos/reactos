@@ -332,7 +332,7 @@ VOID PRINT_RECORD(PEVENTLOGRECORD pRec)
             DPRINT("EventType = EVENTLOG_AUDIT_FAILURE\n");
             break;
         default:
-            DPRINT("EventType = %x\n");
+            DPRINT("EventType = %d\n", pRec->EventType);
     }
 
     DPRINT("NumStrings = %d\n", pRec->NumStrings);

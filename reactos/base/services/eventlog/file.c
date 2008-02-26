@@ -205,7 +205,7 @@ BOOL LogfInitializeExisting(PLOGFILE LogFile)
 
         if (*pdwRecSize2 != dwRecSize)
         {
-            DPRINT1("Invalid size2 of record %d (%x) in %s\n",
+            DPRINT1("Invalid size2 of record %d (%x) in %S\n",
                     dwRecordsNumber, *pdwRecSize2, LogFile->LogName);
             HeapFree(MyHeap, 0, RecBuf);
             break;
