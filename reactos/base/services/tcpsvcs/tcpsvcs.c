@@ -37,7 +37,7 @@ LogEvent(LPCTSTR UserMessage,
 {
 #ifdef DEBUG
     DWORD eMsgLen;
-    DWORD ErrNum = GetLastError();
+    DWORD ErrNum;
     LPTSTR lpvSysMsg;
     TCHAR MessageBuffer[512];
     FILE *hLogFile = NULL;
@@ -47,6 +47,7 @@ LogEvent(LPCTSTR UserMessage,
 
     if (PrintErrorMsg)
     {
+        ErrNum = GetLastError();
         eMsgLen = FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
                                 NULL,
                                 ErrNum,
