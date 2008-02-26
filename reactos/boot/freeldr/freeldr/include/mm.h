@@ -29,13 +29,15 @@ typedef enum
 	BiosMemoryAcpiNvs
 } BIOS_MEMORY_TYPE;
 
+#include <pshpack1.h>
 typedef struct
 {
 	ULONGLONG		BaseAddress;
 	ULONGLONG		Length;
 	ULONG		Type;
 	ULONG		Reserved;
-} PACKED BIOS_MEMORY_MAP, *PBIOS_MEMORY_MAP;
+} BIOS_MEMORY_MAP, *PBIOS_MEMORY_MAP;
+#include <poppack.h>
 
 #if  defined(__i386__) || defined(_PPC_) || defined(_MIPS_) || defined(_ARM_)
 
@@ -52,11 +54,13 @@ typedef struct
 #define HEAP_PAGES	0x400
 #define STACK_PAGES	0x00
 
+#include <pshpack1.h>
 typedef struct
 {
 	TYPE_OF_MEMORY	PageAllocated;					// Type of allocated memory (LoaderFree if this memory is free)
 	ULONG			PageAllocationLength;			// Number of pages allocated (or zero if this isn't the first page in the chain)
-} PACKED PAGE_LOOKUP_TABLE_ITEM, *PPAGE_LOOKUP_TABLE_ITEM;
+} PAGE_LOOKUP_TABLE_ITEM, *PPAGE_LOOKUP_TABLE_ITEM;
+#include <poppack.h>
 
 //
 // Define this to 1 if you want the entire contents

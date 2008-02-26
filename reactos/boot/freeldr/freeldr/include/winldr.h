@@ -30,10 +30,7 @@
 VOID LoadAndBootWindows(PCSTR OperatingSystemName, WORD OperatingSystemVersion);
 
 /* Entry-point to kernel */
-typedef
-VOID
-NTAPI
-(*KERNEL_ENTRY_POINT) (PLOADER_PARAMETER_BLOCK LoaderBlock);
+typedef VOID (NTAPI *KERNEL_ENTRY_POINT) (PLOADER_PARAMETER_BLOCK LoaderBlock);
 
 
 // Some definitions

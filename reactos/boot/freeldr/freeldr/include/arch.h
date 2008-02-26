@@ -54,7 +54,7 @@ extern PVOID FsStaticBufferDisk, FsStaticBufferData;
 
 #ifndef ASM
 
-
+#include <pshpack1.h>
 typedef struct
 {
 	unsigned long	eax;
@@ -72,7 +72,7 @@ typedef struct
 
 	unsigned long	eflags;
 
-} PACKED DWORDREGS;
+} DWORDREGS;
 
 typedef struct
 {
@@ -91,7 +91,7 @@ typedef struct
 
 	unsigned short	flags, _upper_flags;
 
-} PACKED WORDREGS;
+} WORDREGS;
 
 typedef struct
 {
@@ -118,7 +118,8 @@ typedef struct
 
 	unsigned short	flags, _upper_flags;
 
-} PACKED BYTEREGS;
+} BYTEREGS;
+
 
 typedef union
 {
@@ -127,6 +128,7 @@ typedef union
 	WORDREGS	w;
 	BYTEREGS	b;
 } REGS;
+#include <poppack.h>
 
 // Int386()
 //

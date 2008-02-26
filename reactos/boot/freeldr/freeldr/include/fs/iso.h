@@ -20,7 +20,7 @@
 #ifndef __ISO_H
 #define __ISO_H
 
-
+#include <pshpack1.h>
 struct _DIR_RECORD
 {
   UCHAR  RecordLength;			// 1
@@ -42,11 +42,8 @@ struct _DIR_RECORD
   ULONG  VolumeSequenceNumber;		// 29-32
   UCHAR  FileIdLength;			// 33
   UCHAR  FileId[1];			// 34
-} __attribute__((packed));
-
+};
 typedef struct _DIR_RECORD DIR_RECORD, *PDIR_RECORD;
-
-
 
 
 /* Volume Descriptor header*/
@@ -55,10 +52,8 @@ struct _VD_HEADER
   UCHAR  VdType;			// 1
   UCHAR  StandardId[5];			// 2-6
   UCHAR  VdVersion;			// 7
-} __attribute__((packed));
-
+};
 typedef struct _VD_HEADER VD_HEADER, *PVD_HEADER;
-
 
 
 /* Primary Volume Descriptor */
@@ -89,8 +84,8 @@ struct _PVD
 
   /* more data ... */
 
-} __attribute__((packed));
-
+};
+#include <poppack.h>
 typedef struct _PVD PVD, *PPVD;
 
 

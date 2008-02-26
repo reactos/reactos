@@ -73,7 +73,11 @@
 		printk (KERN_DEBUG f, ## a);				\
 	} while (0)
 #else
-#define ext3_debug(f, a...)	do {} while (0)
+	#ifdef __GNUC__
+		#define ext3_debug(f, a...)	do {} while (0)
+	#else
+		#define ext3_debug
+	#endif
 #endif
 
 /*

@@ -43,6 +43,7 @@
 
 #define LINUX_MAX_INITRD_ADDRESS		0x38000000
 
+#include <pshpack1.h>
 typedef struct
 {
 	UCHAR		BootCode1[0x20];
@@ -61,7 +62,7 @@ typedef struct
 	USHORT		RootDevice;
 	USHORT		BootFlag;			// 0xAA55
 
-} PACKED LINUX_BOOTSECTOR, *PLINUX_BOOTSECTOR;
+} LINUX_BOOTSECTOR, *PLINUX_BOOTSECTOR;
 
 typedef struct
 {
@@ -122,7 +123,8 @@ typedef struct
 	ULONG		InitrdAddressMax;		// Highest legal initrd address
 
 
-} PACKED LINUX_SETUPSECTOR, *PLINUX_SETUPSECTOR;
+} LINUX_SETUPSECTOR, *PLINUX_SETUPSECTOR;
+#include <poppack.h>
 
 VOID	BootNewLinuxKernel(VOID);				// Implemented in linux.S
 VOID	BootOldLinuxKernel(ULONG KernelSize);		// Implemented in linux.S

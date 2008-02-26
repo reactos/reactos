@@ -20,6 +20,7 @@
 #ifndef __FAT_H
 #define __FAT_H
 
+#include <pshpack1.h>
 typedef struct _FAT_BOOTSECTOR
 {
 	UCHAR		JumpBoot[3];				// Jump instruction to boot code
@@ -47,7 +48,7 @@ typedef struct _FAT_BOOTSECTOR
 
 	USHORT		BootSectorMagic;			// 0xAA55
 
-} PACKED FAT_BOOTSECTOR, *PFAT_BOOTSECTOR;
+} FAT_BOOTSECTOR, *PFAT_BOOTSECTOR;
 
 typedef struct _FAT32_BOOTSECTOR
 {
@@ -83,7 +84,7 @@ typedef struct _FAT32_BOOTSECTOR
 
 	USHORT		BootSectorMagic;			// 0xAA55
 
-} PACKED FAT32_BOOTSECTOR, *PFAT32_BOOTSECTOR;
+} FAT32_BOOTSECTOR, *PFAT32_BOOTSECTOR;
 
 typedef struct _FATX_BOOTSECTOR
 {
@@ -94,7 +95,7 @@ typedef struct _FATX_BOOTSECTOR
 	ULONG		Unknown;				/* Always 0? */
 	UCHAR		Unused[494];				/* Actually size should be 4078 (boot block is 4096 bytes) */
 
-} PACKED FATX_BOOTSECTOR, *PFATX_BOOTSECTOR;
+} FATX_BOOTSECTOR, *PFATX_BOOTSECTOR;
 
 /*
  * Structure of MSDOS directory entry
@@ -113,7 +114,7 @@ typedef struct //_DIRENTRY
 	USHORT	Date;		/* Date last modified */
 	USHORT	ClusterLow;	/* First cluster number low word */
 	ULONG	Size;		/* File size */
-} PACKED DIRENTRY, * PDIRENTRY;
+} DIRENTRY, * PDIRENTRY;
 
 typedef struct
 {
@@ -125,7 +126,7 @@ typedef struct
 	WCHAR	Name5_10[6];		/* 6 more characters in name */
 	USHORT	StartCluster;		/* Starting cluster number */
 	WCHAR	Name11_12[2];		/* Last 2 characters in name */
-} PACKED LFN_DIRENTRY, * PLFN_DIRENTRY;
+} LFN_DIRENTRY, * PLFN_DIRENTRY;
 
 typedef struct
 {
@@ -140,7 +141,8 @@ typedef struct
 	USHORT	CreateDate;	/* Date file was created */
 	USHORT	LastAccessTime;	/* Time file was last accessed */
 	USHORT	LastAccessDate;	/* Date file was last accessed */
-} PACKED FATX_DIRENTRY, * PFATX_DIRENTRY;
+} FATX_DIRENTRY, * PFATX_DIRENTRY;
+#include <poppack.h>
 
 typedef struct
 {

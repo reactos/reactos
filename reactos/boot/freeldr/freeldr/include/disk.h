@@ -33,6 +33,7 @@ typedef struct _GEOMETRY
 //
 // Extended disk geometry (Int13 / ah=48h)
 //
+#include <pshpack1.h>
 typedef struct _EXTENDED_GEOMETRY
 {
 	USHORT		Size;
@@ -43,7 +44,7 @@ typedef struct _EXTENDED_GEOMETRY
 	ULONGLONG		Sectors;
 	USHORT		BytesPerSector;
 	ULONG		PDPTE;
-} __attribute__((packed)) EXTENDED_GEOMETRY, *PEXTENDED_GEOMETRY;
+} EXTENDED_GEOMETRY, *PEXTENDED_GEOMETRY;
 
 //
 // Define the structure of a partition table entry
@@ -61,7 +62,7 @@ typedef struct _PARTITION_TABLE_ENTRY
 	ULONG		SectorCountBeforePartition;		// Number of sectors preceding the partition
 	ULONG		PartitionSectorCount;			// Number of sectors in the partition
 
-} PACKED PARTITION_TABLE_ENTRY, *PPARTITION_TABLE_ENTRY;
+} PARTITION_TABLE_ENTRY, *PPARTITION_TABLE_ENTRY;
 
 //
 // Define the structure of the master boot record
@@ -74,7 +75,8 @@ typedef struct _MASTER_BOOT_RECORD
 	PARTITION_TABLE_ENTRY	PartitionTable[4];			/* 0x1BE */
 	USHORT			MasterBootRecordMagic;			/* 0x1FE */
 
-} PACKED MASTER_BOOT_RECORD, *PMASTER_BOOT_RECORD;
+} MASTER_BOOT_RECORD, *PMASTER_BOOT_RECORD;
+#include <poppack.h>
 
 //
 // Partition type defines
