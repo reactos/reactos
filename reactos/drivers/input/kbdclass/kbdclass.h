@@ -3,6 +3,8 @@
 #include <ntddkbd.h>
 #include <stdio.h>
 #include <pseh/pseh.h>
+
+#define NDEBUG
 #include <debug.h>
 
 #define MAX_PATH 260
