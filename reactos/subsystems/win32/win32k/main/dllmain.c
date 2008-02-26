@@ -28,7 +28,7 @@
 #include <debug.h>
 
 PGDI_HANDLE_TABLE INTERNAL_CALL GDIOBJ_iAllocHandleTable(OUT PSECTION_OBJECT *SectionObject);
-BOOL INTERNAL_CALL GDI_CleanupForProcess (PGDI_HANDLE_TABLE HandleTable, struct _EPROCESS *Process);
+BOOL INTERNAL_CALL GDI_CleanupForProcess (struct _EPROCESS *Process);
 /* FIXME */
 PGDI_HANDLE_TABLE GdiHandleTable = NULL;
 PSECTION_OBJECT GdiTableSection = NULL;
@@ -136,7 +136,7 @@ Win32kProcessCallback(struct _EPROCESS *Process,
       /* no process windows should exist at this point, or the function will assert! */
       DestroyProcessClasses(Win32Process);
 
-      GDI_CleanupForProcess(GdiHandleTable, Process);
+      GDI_CleanupForProcess(Process);
 
       co_IntGraphicsCheck(FALSE);
 

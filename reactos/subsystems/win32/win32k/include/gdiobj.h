@@ -35,26 +35,8 @@ typedef PVOID PGDIOBJ;
 
 typedef BOOL (INTERNAL_CALL *GDICLEANUPPROC)(PVOID ObjectBody);
 
-/*!
- * GDI object header. This is a part of any GDI object. ROS specific header!
-*/
-typedef struct _GDIOBJHDR
-{
-  PETHREAD LockingThread; /* only assigned if a thread is holding the lock! */
-  ULONG Locks;
-#ifdef GDI_DEBUG
-  const char* createdfile;
-  int createdline;
-  const char* lockfile;
-  int lockline;
-#endif
-} GDIOBJHDR, *PGDIOBJHDR;
-
-//
-// Every GDI Object must have this standard type of header.
-// It's for thread locking.
-// This header is standalone, used only in gdiobj.c.
-//
+/* Every GDI Object must have this standard type of header.
+ * It's for thread locking. */
 typedef struct _BASEOBJECT
 {
   HGDIOBJ     hHmgr;
@@ -64,22 +46,22 @@ typedef struct _BASEOBJECT
   PW32THREAD  Tid;
 } BASEOBJECT, *POBJ;
 
-BOOL    INTERNAL_CALL GDIOBJ_OwnedByCurrentProcess(PGDI_HANDLE_TABLE HandleTable, HGDIOBJ ObjectHandle);
-void    INTERNAL_CALL GDIOBJ_SetOwnership(PGDI_HANDLE_TABLE HandleTable, HGDIOBJ ObjectHandle, PEPROCESS Owner);
-void    INTERNAL_CALL GDIOBJ_CopyOwnership(PGDI_HANDLE_TABLE HandleTable, HGDIOBJ CopyFrom, HGDIOBJ CopyTo);
-BOOL    INTERNAL_CALL GDIOBJ_ConvertToStockObj(PGDI_HANDLE_TABLE HandleTable, HGDIOBJ *hObj);
-VOID    INTERNAL_CALL GDIOBJ_UnlockObjByPtr(PGDI_HANDLE_TABLE HandleTable, PGDIOBJ Object);
+BOOL    INTERNAL_CALL GDIOBJ_OwnedByCurrentProcess(HGDIOBJ ObjectHandle);
+VOID    INTERNAL_CALL GDIOBJ_SetOwnership(HGDIOBJ ObjectHandle, PEPROCESS Owner);
+VOID    INTERNAL_CALL GDIOBJ_CopyOwnership(HGDIOBJ CopyFrom, HGDIOBJ CopyTo);
+BOOL    INTERNAL_CALL GDIOBJ_ConvertToStockObj(HGDIOBJ *hObj);
+VOID    INTERNAL_CALL GDIOBJ_UnlockObjByPtr(POBJ Object);
+VOID    INTERNAL_CALL GDIOBJ_ShareUnlockObjByPtr(POBJ Object);
+BOOL    INTERNAL_CALL GDIOBJ_ValidateHandle(HGDIOBJ hObj, ULONG ObjectType);
+HGDIOBJ INTERNAL_CALL GDIOBJ_AllocObj(ULONG ObjectType);
+BOOL    INTERNAL_CALL GDIOBJ_FreeObj (HGDIOBJ hObj, DWORD ObjectType);
+PGDIOBJ INTERNAL_CALL GDIOBJ_LockObj (HGDIOBJ hObj, DWORD ObjectType);
+PGDIOBJ INTERNAL_CALL GDIOBJ_ShareLockObj (HGDIOBJ hObj, DWORD ObjectType);
+
+PVOID   INTERNAL_CALL GDI_MapHandleTable(PSECTION_OBJECT SectionObject, PEPROCESS Process);
 
 #define GDIOBJ_GetObjectType(Handle) \
   GDI_HANDLE_GET_TYPE(Handle)
-
-BOOL    INTERNAL_CALL GDIOBJ_ValidateHandle(HGDIOBJ hObj, ULONG ObjectType);
-HGDIOBJ INTERNAL_CALL GDIOBJ_AllocObj(PGDI_HANDLE_TABLE HandleTable, ULONG ObjectType);
-BOOL    INTERNAL_CALL GDIOBJ_FreeObj (PGDI_HANDLE_TABLE HandleTable, HGDIOBJ hObj, DWORD ObjectType);
-PGDIOBJ INTERNAL_CALL GDIOBJ_LockObj (PGDI_HANDLE_TABLE HandleTable, HGDIOBJ hObj, DWORD ObjectType);
-PGDIOBJ INTERNAL_CALL GDIOBJ_ShareLockObj (PGDI_HANDLE_TABLE HandleTable, HGDIOBJ hObj, DWORD ObjectType);
-
-PVOID   INTERNAL_CALL GDI_MapHandleTable(PSECTION_OBJECT SectionObject, PEPROCESS Process);
 
 #define GDIOBJFLAG_DEFAULT	(0x0)
 #define GDIOBJFLAG_IGNOREPID 	(0x1)

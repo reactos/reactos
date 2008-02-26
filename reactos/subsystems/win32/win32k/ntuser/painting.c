@@ -211,7 +211,7 @@ IntGetNCUpdateRgn(PWINDOW_OBJECT Window, BOOL Validate)
          if (NtGdiCombineRgn(Window->UpdateRegion, Window->UpdateRegion,
                              hRgnWindow, RGN_AND) == NULLREGION)
          {
-            GDIOBJ_SetOwnership(GdiHandleTable, Window->UpdateRegion, PsGetCurrentProcess());
+            GDIOBJ_SetOwnership(Window->UpdateRegion, PsGetCurrentProcess());
             NtGdiDeleteObject(Window->UpdateRegion);
             Window->UpdateRegion = NULL;
             if (!(Window->Flags & WINDOWOBJECT_NEED_INTERNALPAINT))
@@ -272,7 +272,7 @@ co_IntPaintWindows(PWINDOW_OBJECT Window, ULONG Flags, BOOL Recurse)
             if ((HANDLE) 1 != TempRegion && NULL != TempRegion)
             {
                /* NOTE: The region can already be deleted! */
-               GDIOBJ_FreeObj(GdiHandleTable, TempRegion, GDI_OBJECT_TYPE_REGION | GDI_OBJECT_TYPE_SILENT);
+               GDIOBJ_FreeObj(TempRegion, GDI_OBJECT_TYPE_REGION | GDI_OBJECT_TYPE_SILENT);
             }
          }
 
@@ -398,13 +398,13 @@ IntInvalidateWindows(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags)
       if (Window->UpdateRegion == NULL)
       {
          Window->UpdateRegion = NtGdiCreateRectRgn(0, 0, 0, 0);
-         GDIOBJ_SetOwnership(GdiHandleTable, Window->UpdateRegion, NULL);
+         GDIOBJ_SetOwnership(Window->UpdateRegion, NULL);
       }
 
       if (NtGdiCombineRgn(Window->UpdateRegion, Window->UpdateRegion,
                           hRgn, RGN_OR) == NULLREGION)
       {
-         GDIOBJ_SetOwnership(GdiHandleTable, Window->UpdateRegion, PsGetCurrentProcess());
+         GDIOBJ_SetOwnership(Window->UpdateRegion, PsGetCurrentProcess());
          NtGdiDeleteObject(Window->UpdateRegion);
          Window->UpdateRegion = NULL;
       }
@@ -424,7 +424,7 @@ IntInvalidateWindows(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags)
          if (NtGdiCombineRgn(Window->UpdateRegion, Window->UpdateRegion,
                              hRgn, RGN_DIFF) == NULLREGION)
          {
-            GDIOBJ_SetOwnership(GdiHandleTable, Window->UpdateRegion, PsGetCurrentProcess());
+            GDIOBJ_SetOwnership(Window->UpdateRegion, PsGetCurrentProcess());
             NtGdiDeleteObject(Window->UpdateRegion);
             Window->UpdateRegion = NULL;
          }
@@ -801,7 +801,7 @@ NtUserBeginPaint(HWND hWnd, PAINTSTRUCT* UnsafePs)
       if (hRgn != (HANDLE)1 && hRgn != NULL)
       {
          /* NOTE: The region can already by deleted! */
-         GDIOBJ_FreeObj(GdiHandleTable, hRgn, GDI_OBJECT_TYPE_REGION | GDI_OBJECT_TYPE_SILENT);
+         GDIOBJ_FreeObj(hRgn, GDI_OBJECT_TYPE_REGION | GDI_OBJECT_TYPE_SILENT);
       }
    }
 
@@ -833,7 +833,7 @@ NtUserBeginPaint(HWND hWnd, PAINTSTRUCT* UnsafePs)
       {
          IntGetClientRect(Window, &Ps.rcPaint);
       }
-      GDIOBJ_SetOwnership(GdiHandleTable, Window->UpdateRegion, PsGetCurrentProcess());
+      GDIOBJ_SetOwnership(Window->UpdateRegion, PsGetCurrentProcess());
       /* The region is part of the dc now and belongs to the process! */
       Window->UpdateRegion = NULL;
    }

@@ -490,13 +490,13 @@ IntDestroyCurIconObject(PWINSTATION_OBJECT WinSta, PCURICON_OBJECT CurIcon, BOOL
    /* delete bitmaps */
    if(bmpMask)
    {
-      GDIOBJ_SetOwnership(GdiHandleTable, bmpMask, PsGetCurrentProcess());
+      GDIOBJ_SetOwnership(bmpMask, PsGetCurrentProcess());
       NtGdiDeleteObject(bmpMask);
       CurIcon->IconInfo.hbmMask = NULL;
    }
    if(bmpColor)
    {
-      GDIOBJ_SetOwnership(GdiHandleTable, bmpColor, PsGetCurrentProcess());
+      GDIOBJ_SetOwnership(bmpColor, PsGetCurrentProcess());
       NtGdiDeleteObject(bmpColor);
       CurIcon->IconInfo.hbmColor = NULL;
    }
@@ -597,7 +597,7 @@ NtUserCreateCursorIconHandle(PICONINFO IconInfo OPTIONAL, BOOL Indirect)
             CurIcon->Size.cx = bmp->SurfObj.sizlBitmap.cx;
             CurIcon->Size.cy = bmp->SurfObj.sizlBitmap.cy;
             BITMAPOBJ_UnlockBitmap(bmp);
-            GDIOBJ_SetOwnership(GdiHandleTable, CurIcon->IconInfo.hbmColor, NULL);
+            GDIOBJ_SetOwnership(CurIcon->IconInfo.hbmColor, NULL);
          }
          if(CurIcon->IconInfo.hbmMask &&
                (bmp = BITMAPOBJ_LockBitmap(CurIcon->IconInfo.hbmMask)))
@@ -608,7 +608,7 @@ NtUserCreateCursorIconHandle(PICONINFO IconInfo OPTIONAL, BOOL Indirect)
                CurIcon->Size.cy = bmp->SurfObj.sizlBitmap.cy / 2;
             }
             BITMAPOBJ_UnlockBitmap(bmp);
-            GDIOBJ_SetOwnership(GdiHandleTable, CurIcon->IconInfo.hbmMask, NULL);
+            GDIOBJ_SetOwnership(CurIcon->IconInfo.hbmMask, NULL);
          }
       }
       else
@@ -1186,7 +1186,7 @@ NtUserSetCursorContents(
       CurIcon->Size.cx = bmp->SurfObj.sizlBitmap.cx;
       CurIcon->Size.cy = bmp->SurfObj.sizlBitmap.cy;
       BITMAPOBJ_UnlockBitmap(bmp);
-      GDIOBJ_SetOwnership(GdiHandleTable, CurIcon->IconInfo.hbmColor, NULL);
+      GDIOBJ_SetOwnership(CurIcon->IconInfo.hbmColor, NULL);
    }
    else
    {
@@ -1198,7 +1198,7 @@ NtUserSetCursorContents(
       CurIcon->Size.cy = bmp->SurfObj.sizlBitmap.cy / 2;
 
       BITMAPOBJ_UnlockBitmap(bmp);
-      GDIOBJ_SetOwnership(GdiHandleTable, CurIcon->IconInfo.hbmMask, NULL);
+      GDIOBJ_SetOwnership(CurIcon->IconInfo.hbmMask, NULL);
    }
 
    Ret = TRUE;

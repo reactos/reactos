@@ -706,7 +706,7 @@ BOOL STDCALL
 NtGdiUnrealizeObject(HGDIOBJ hgdiobj)
 {
 
-   GDIOBJHDR * ptr;
+   POBJ pObject;
    DWORD objectType;
    BOOL Ret = FALSE;
 
@@ -714,15 +714,15 @@ NtGdiUnrealizeObject(HGDIOBJ hgdiobj)
    if(!hgdiobj)
      return Ret;
 
-   ptr = GDIOBJ_LockObj(GdiHandleTable, hgdiobj, GDI_OBJECT_TYPE_DONTCARE);
-   if (ptr == 0)
-     {
-        SetLastWin32Error(ERROR_INVALID_HANDLE);
-        return Ret;
-     }
+   pObject = GDIOBJ_LockObj(hgdiobj, GDI_OBJECT_TYPE_DONTCARE);
+   if (pObject == NULL)
+   {
+      SetLastWin32Error(ERROR_INVALID_HANDLE);
+      return Ret;
+   }
    objectType = GDIOBJ_GetObjectType(hgdiobj);
    switch(objectType)
-     {
+   {
 /*
     msdn.microsoft.com,
     "Windows 2000/XP: If hgdiobj is a brush, UnrealizeObject does nothing,
@@ -738,9 +738,9 @@ NtGdiUnrealizeObject(HGDIOBJ hgdiobj)
          default:
            DPRINT1("Magic 0x%08x not implemented\n", objectType);
            break;
-     }
+   }
 
-   GDIOBJ_UnlockObjByPtr(GdiHandleTable, ptr);
+   GDIOBJ_UnlockObjByPtr(pObject);
    return Ret;
 }
 

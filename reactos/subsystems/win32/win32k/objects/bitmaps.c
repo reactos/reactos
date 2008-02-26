@@ -634,7 +634,7 @@ BITMAPOBJ_CopyBitmap(HBITMAP  hBitmap)
 		return 0;
 	}
 
-	Bitmap = GDIOBJ_LockObj(GdiHandleTable, hBitmap, GDI_OBJECT_TYPE_BITMAP);
+	Bitmap = GDIOBJ_LockObj(hBitmap, GDI_OBJECT_TYPE_BITMAP);
 	if (Bitmap == NULL)
 	{
 		return 0;
@@ -657,14 +657,14 @@ BITMAPOBJ_CopyBitmap(HBITMAP  hBitmap)
 	{
 		PBYTE buf;
 
-		resBitmap = GDIOBJ_LockObj(GdiHandleTable, res, GDI_OBJECT_TYPE_BITMAP);
+		resBitmap = GDIOBJ_LockObj(res, GDI_OBJECT_TYPE_BITMAP);
 		if (resBitmap)
 		{
 			buf = ExAllocatePoolWithTag (PagedPool, bm.bmWidthBytes * abs(bm.bmHeight), TAG_BITMAP);
 			if (buf == NULL)
 			{
-				GDIOBJ_UnlockObjByPtr(GdiHandleTable, resBitmap);
-				GDIOBJ_UnlockObjByPtr(GdiHandleTable, Bitmap);
+				GDIOBJ_UnlockObjByPtr((POBJ)resBitmap);
+				GDIOBJ_UnlockObjByPtr((POBJ)Bitmap);
 				NtGdiDeleteObject(res);
 				return 0;
 			}
@@ -672,7 +672,7 @@ BITMAPOBJ_CopyBitmap(HBITMAP  hBitmap)
 			IntSetBitmapBits (resBitmap, bm.bmWidthBytes * abs(bm.bmHeight), buf);
 			ExFreePool (buf);
 			resBitmap->flFlags = Bitmap->flFlags;
-			GDIOBJ_UnlockObjByPtr(GdiHandleTable, resBitmap);
+			GDIOBJ_UnlockObjByPtr((POBJ)resBitmap);
 		}
 		else
 		{
@@ -681,7 +681,7 @@ BITMAPOBJ_CopyBitmap(HBITMAP  hBitmap)
 		}
 	}
 
-	GDIOBJ_UnlockObjByPtr(GdiHandleTable, Bitmap);
+	GDIOBJ_UnlockObjByPtr((POBJ)Bitmap);
 
 	return  res;
 }

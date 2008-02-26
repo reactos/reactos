@@ -21,9 +21,9 @@ typedef struct _ROSRGNDATA
 
 /* Functions ******************************************************************/
 
-#define  RGNDATA_FreeRgn(hRgn)  GDIOBJ_FreeObj(GdiHandleTable, (HGDIOBJ)hRgn, GDI_OBJECT_TYPE_REGION)
-#define  RGNDATA_LockRgn(hRgn) ((PROSRGNDATA)GDIOBJ_LockObj(GdiHandleTable, (HGDIOBJ)hRgn, GDI_OBJECT_TYPE_REGION))
-#define  RGNDATA_UnlockRgn(pRgn) GDIOBJ_UnlockObjByPtr(GdiHandleTable, pRgn)
+#define  RGNDATA_FreeRgn(hRgn)  GDIOBJ_FreeObj((HGDIOBJ)hRgn, GDI_OBJECT_TYPE_REGION)
+#define  RGNDATA_LockRgn(hRgn) ((PROSRGNDATA)GDIOBJ_LockObj((HGDIOBJ)hRgn, GDI_OBJECT_TYPE_REGION))
+#define  RGNDATA_UnlockRgn(pRgn) GDIOBJ_UnlockObjByPtr((POBJ)pRgn)
 
 HRGN FASTCALL RGNDATA_AllocRgn(INT n);
 BOOL INTERNAL_CALL RGNDATA_Cleanup(PVOID ObjectBody);

@@ -81,7 +81,7 @@ IntGdiSelectVisRgn(HDC hdc, HRGN hrgn)
   if (dc->w.hVisRgn == NULL)
   {
     dc->w.hVisRgn = NtGdiCreateRectRgn(0, 0, 0, 0);
-    GDIOBJ_CopyOwnership(GdiHandleTable, hdc, dc->w.hVisRgn);
+    GDIOBJ_CopyOwnership(hdc, dc->w.hVisRgn);
   }
 
   retval = NtGdiCombineRgn(dc->w.hVisRgn, hrgn, 0, RGN_COPY);

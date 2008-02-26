@@ -27,14 +27,14 @@ typedef struct _BITMAPOBJ
 /*  Internal interface  */
 
 #define  BITMAPOBJ_AllocBitmap()  \
-  ((HBITMAP) GDIOBJ_AllocObj (GdiHandleTable, GDI_OBJECT_TYPE_BITMAP))
+  ((HBITMAP) GDIOBJ_AllocObj (GDI_OBJECT_TYPE_BITMAP))
 #define  BITMAPOBJ_FreeBitmap(hBMObj)  \
-  GDIOBJ_FreeObj(GdiHandleTable, (HGDIOBJ) hBMObj, GDI_OBJECT_TYPE_BITMAP)
+  GDIOBJ_FreeObj((HGDIOBJ) hBMObj, GDI_OBJECT_TYPE_BITMAP)
 /* NOTE: Use shared locks! */
 #define  BITMAPOBJ_LockBitmap(hBMObj) \
-  ((PBITMAPOBJ) GDIOBJ_ShareLockObj (GdiHandleTable, (HGDIOBJ) hBMObj, GDI_OBJECT_TYPE_BITMAP))
+  ((PBITMAPOBJ) GDIOBJ_ShareLockObj ((HGDIOBJ) hBMObj, GDI_OBJECT_TYPE_BITMAP))
 #define  BITMAPOBJ_UnlockBitmap(pBMObj)  \
-  GDIOBJ_UnlockObjByPtr (GdiHandleTable, pBMObj)
+  GDIOBJ_ShareUnlockObjByPtr ((POBJ)pBMObj)
 
 BOOL INTERNAL_CALL BITMAP_Cleanup(PVOID ObjectBody);
 

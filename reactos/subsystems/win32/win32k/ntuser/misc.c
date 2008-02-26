@@ -1277,7 +1277,7 @@ IntSystemParametersInfo(
                         BITMAPOBJ_UnlockBitmap(bmp);
 
                         /* change the bitmap's ownership */
-                        GDIOBJ_SetOwnership(GdiHandleTable, hNewBitmap, NULL);
+                        GDIOBJ_SetOwnership(hNewBitmap, NULL);
                      }
                      hOldBitmap = (HBITMAP)InterlockedExchange((LONG*)&WinStaObject->hbmWallpaper, (LONG)hNewBitmap);
                      if(hOldBitmap != NULL)

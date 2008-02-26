@@ -379,7 +379,7 @@ EngCreateBitmap(IN SIZEL Size,
   if ( !NewBitmap )
 	  return 0;
 
-  GDIOBJ_SetOwnership(GdiHandleTable, NewBitmap, NULL);
+  GDIOBJ_SetOwnership(NewBitmap, NULL);
 
   return NewBitmap;
 }
@@ -400,7 +400,7 @@ EngCreateDeviceSurface(IN DHSURF dhsurf,
   if (NewSurface == NULL)
 	return 0;
 
-  GDIOBJ_SetOwnership(GdiHandleTable, NewSurface, NULL);
+  GDIOBJ_SetOwnership(NewSurface, NULL);
 
   BitmapObj = BITMAPOBJ_LockBitmap(NewSurface);
   if (! BITMAPOBJ_InitBitsLock(BitmapObj))
@@ -512,7 +512,7 @@ EngModifySurface(
 BOOL STDCALL
 EngDeleteSurface(IN HSURF Surface)
 {
-   GDIOBJ_SetOwnership(GdiHandleTable, Surface, PsGetCurrentProcess());
+   GDIOBJ_SetOwnership(Surface, PsGetCurrentProcess());
    BITMAPOBJ_FreeBitmap(Surface);
    return TRUE;
 }
@@ -550,7 +550,7 @@ NtGdiEngLockSurface(IN HSURF Surface)
 SURFOBJ * STDCALL
 EngLockSurface(IN HSURF Surface)
 {
-   BITMAPOBJ *bmp = GDIOBJ_ShareLockObj(GdiHandleTable, Surface, GDI_OBJECT_TYPE_BITMAP);
+   BITMAPOBJ *bmp = GDIOBJ_ShareLockObj(Surface, GDI_OBJECT_TYPE_BITMAP);
 
    if (bmp != NULL)
       return &bmp->SurfObj;
@@ -577,7 +577,7 @@ EngUnlockSurface(IN SURFOBJ *Surface)
    if (Surface != NULL)
    {
       BITMAPOBJ *bmp = CONTAINING_RECORD(Surface, BITMAPOBJ, SurfObj);
-      GDIOBJ_UnlockObjByPtr(GdiHandleTable, bmp);
+      GDIOBJ_ShareUnlockObjByPtr((POBJ)bmp);
    }
 }
 

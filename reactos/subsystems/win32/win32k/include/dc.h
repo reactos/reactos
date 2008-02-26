@@ -150,9 +150,9 @@ typedef struct
 /* Internal functions *********************************************************/
 
 #define  DC_LockDc(hDC)  \
-  ((PDC) GDIOBJ_LockObj (GdiHandleTable, (HGDIOBJ) hDC, GDI_OBJECT_TYPE_DC))
+  ((PDC) GDIOBJ_LockObj ((HGDIOBJ) hDC, GDI_OBJECT_TYPE_DC))
 #define  DC_UnlockDc(pDC)  \
-  GDIOBJ_UnlockObjByPtr (GdiHandleTable, pDC)
+  GDIOBJ_UnlockObjByPtr ((POBJ)pDC)
 
 NTSTATUS FASTCALL InitDcImpl(VOID);
 PGDIDEVICE FASTCALL IntEnumHDev(VOID);

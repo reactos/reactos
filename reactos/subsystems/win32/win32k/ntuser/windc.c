@@ -590,7 +590,7 @@ DceFreeDCE(PDCE pdce, BOOLEAN Force)
   SetDCHook(pdce->hDC, NULL, 0L);
 #endif
 
-  if (Force && !GDIOBJ_OwnedByCurrentProcess(GdiHandleTable, pdce->hDC))
+  if (Force && !GDIOBJ_OwnedByCurrentProcess(pdce->hDC))
   {
      DPRINT1("Change ownership for DCE!\n");
 
