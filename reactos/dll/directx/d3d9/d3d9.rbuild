@@ -11,11 +11,13 @@
 	<library>dxguid</library>
 	<library>strsafe</library>
 	<library>version</library>
+	<library>d3d8thk</library>
 
 	<file>d3d9.c</file>
 	<file>d3d9_helpers.c</file>
 	<file>d3d9_impl.c</file>
 	<file>d3d9_create.c</file>
 	<file>adapter.c</file>
+	<file>format.c</file>
 	<file>d3d9.rc</file>
 </module>

@@ -45,17 +45,50 @@ static VOID SetAdapterInfo(IN OUT LPDIRECT3D9_DISPLAYADAPTER_INT pDisplayAdapter
     pDisplayAdapter->bInUseFlag = TRUE;
 }
 
+static BOOL IsGDIDriver(HDC hDC)
+{
+    COLORREF NearestBlack = GetNearestColor(hDC, RGB(0, 0, 0));
+    COLORREF NearestWhite = GetNearestColor(hDC, RGB(255, 255, 255));
+
+    if (NearestBlack != RGB(0, 0, 0) || NearestWhite != RGB(255, 255, 255))
+        return TRUE;
+
+    return FALSE;
+}
+
 static BOOL GetDirect3DAdapterInfo(IN OUT LPDIRECT3D9_DISPLAYADAPTER_INT pDisplayAdapter)
 {
     HDC hDC;
-
-    /* Check if minimum DirectDraw is supported */
-    if (IsDirectDrawSupported() == FALSE)
-        return FALSE;
+    LPD3D9_DEVICEDATA pDeviceData;
 
     /* Test DC creation for the display device */
     if (NULL == (hDC = CreateDCA(NULL, pDisplayAdapter->szDeviceName, NULL, NULL)))
         return FALSE;
+
+    pDeviceData = LocalAlloc(LMEM_ZEROINIT, sizeof(D3D9_DEVICEDATA));
+    if (NULL == pDeviceData)
+    {
+        DPRINT1("Out of memory, could not initialize Direct3D adapter");
+        DeleteDC(hDC);
+        return FALSE;
+    }
+
+    pDeviceData->hDC = hDC;
+    pDeviceData->DisplayGuid = pDisplayAdapter->DisplayGuid;
+    pDeviceData->DeviceType = D3DDEVTYPE_HAL;
+    lstrcpynA(pDeviceData->szDeviceName, pDisplayAdapter->szDeviceName, CCHDEVICENAME);
+    pDeviceData->szDeviceName[CCHDEVICENAME-1] = '\0';
+
+    if (pDisplayAdapter->bInUseFlag)
+    {
+        pDeviceData->_UnknownA8h.DeviceType = D3DDEVTYPE_HAL;
+    }
+    else if (IsGDIDriver(hDC))
+    {
+        pDeviceData->_UnknownA8h.DeviceType = D3DDEVTYPE_REF;
+    }
+
+    //GetDeviceData(pDeviceData);
 
     DeleteDC(hDC);
     return TRUE;
@@ -104,6 +137,10 @@ static BOOL GetDisplayDeviceInfo(IN OUT LPDIRECT3D9_INT pDirect3D9)
 
         ++AdapterIndex;
     }
+
+    /* Check if minimum DirectDraw is supported */
+    if (IsDirectDrawSupported() == FALSE)
+        return FALSE;
 
     for (AdapterIndex = 0; AdapterIndex < pDirect3D9->NumDisplayAdapters; AdapterIndex++)
     {

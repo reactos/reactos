@@ -9,13 +9,91 @@
 #define _D3D9_PRIVATE_H_
 
 #include <windows.h>
+#include <ddraw.h>
 
 #define DX_D3D9_MAX_NUM_ADAPTERS    12
 
 typedef struct _tagD3D9_DRIVERCAPS
 {
-    D3DCAPS9 DriverCaps;
-} D3D9_DRIVERCAPS, FAR* LPD3D9_DRIVERCAPS;
+/* 0x0000 */    D3DCAPS9 DriverCaps9;
+/* 0x0130 */    DWORD dwDisplayWidth;
+/* 0x0134 */    DWORD dwDisplayHeight;
+/* 0x0138 */    D3DFORMAT RawDisplayFormat;
+/* 0x013c */    D3DFORMAT DisplayFormat;
+/* 0x0140 */    DWORD dwRefreshRate;
+/* 0x0144 */    DWORD unknown0081;
+/* 0x0148 */    DWORD dwSVBCaps;
+/* 0x014c */    DWORD dwVSBCaps;
+/* 0x0150 */    DWORD dwSVBCaps2;
+/* 0x0154 */    DWORD unknown0085;
+/* 0x0158 */    DWORD NumSupportedFormatOps;
+/* 0x015c */    LPDDSURFACEDESC pSupportedFormatOps;
+/* 0x0160 */    DWORD unknown0088;
+/* 0x0164 */    DWORD NumSupportedExtendedModes;
+/* 0x0168 */    D3DDISPLAYMODE* pSupportedExtendedModes;
+/* 0x016c */    ULONG_PTR ulUniqueAdapterGroupId;
+/* 0x0170 */    DWORD NumSupportedQueries;
+/* 0x0174 */    D3DQUERYTYPE* pSupportedQueriesList;
+} D3D9_DRIVERCAPS, FAR *LPD3D9_DRIVERCAPS;
+
+typedef struct _tagUnknownA8h
+{
+/* 0x0000 */    DWORD DdCreateSurface;
+/* 0x0004 */    DWORD DdDestroySurface;
+/* 0x0008 */    DWORD DdLock;
+/* 0x000c */    DWORD DdUnlock;
+/* 0x0010 */    DWORD D3dContextCreate;
+/* 0x0014 */    DWORD D3dContextDestroy;
+/* 0x0018 */    DWORD unknown0100;
+/* 0x001c */    DWORD unknown0101;
+/* 0x0020 */    DWORD unknown0102;
+/* 0x0024 */    DWORD D3dDrawPrimitives2;
+/* 0x0028 */    DWORD DdGetDriverState;
+/* 0x002c */    DWORD D3dValidateTextureStageState;
+/* 0x0030 */    DWORD unknown0106;
+/* 0x0034 */    DWORD unknown0107;
+/* 0x0038 */    DWORD DdBlt;
+/* 0x003c */    DWORD DdGetScanLine;
+/* 0x0040 */    DWORD DdWaitForVerticalBlank;
+/* 0x0044 */    DWORD DdFlip;
+/* 0x0048 */    DWORD DdGetBltStatus;
+/* 0x004c */    DWORD DdGetFlipStatus;
+/* 0x0050 */    DWORD DdGetAvailDriverMemory;
+/* 0x0054 */    DWORD unknown0115;
+/* 0x0058 */    DWORD DdSetMode;
+/* 0x005c */    DWORD DdSetExclusiveMode;
+/* 0x0060 */    DWORD DdFlipToGDISurface;
+/* 0x0064 */    DWORD unknown0119;
+/* 0x0068 */    DWORD unknown0120;
+/* 0x006c */    DWORD unknown0121;
+/* 0x0070 */    DWORD unknown0122;
+/* 0x0074 */    DWORD unknown0123;
+/* 0x0078 */    DWORD unknown0124;
+/* 0x007c */    DWORD DXVAGetGuids;
+/* 0x0080 */    DWORD DXVAGetCompressedBufferInfo;
+/* 0x0084 */    DWORD DXVAGetUncompressedFormats;
+/* 0x0088 */    DWORD DXVAGetInternalInfo;
+/* 0x008c */    DWORD DXVACreate;
+/* 0x0090 */    DWORD DXVADestroy;
+/* 0x0094 */    DWORD DXVABeginFrame;
+/* 0x0098 */    DWORD DXVAEndFrame;
+/* 0x009c */    DWORD DXVAExecute;
+/* 0x00a0 */    DWORD DXVAQueryStatus;
+/* 0x00a4 */    D3DDEVTYPE DeviceType;
+} D3D9_UnknownA8h_INT;
+
+typedef struct _tagD3D9_DEVICEDATA
+{
+/* 0x0000 */    D3D9_DRIVERCAPS DriverCaps;
+/* 0x0178 */    D3D9_UnknownA8h_INT _UnknownA8h;
+/* 0x0220 */    CHAR szDeviceName[CCHDEVICENAME];
+/* 0x0240 */    HDC hDC;
+/* 0x0244 */    GUID DisplayGuid;
+/* 0x0254 */    LPDWORD pUnknown0254; //D3D9_Unknown6BC_INT* pUnknown6BC;  // hDirectDrawLocal 
+/* 0x0258 */    D3DDEVTYPE DeviceType;
+/* 0x025c */    HMODULE hD3DRefDll;
+/* 0x0260 */    DWORD unknown0152;
+} D3D9_DEVICEDATA, FAR *LPD3D9_DEVICEDATA;
 
 typedef struct _tagDIRECT3D9DisplayAdapterInfo_
 {
@@ -32,24 +110,6 @@ typedef struct _tagDIRECT3D9DisplayAdapterInfo_
 /* 0x0134 */    D3DDISPLAYMODE* pSupportedD3DExtendedFormats;
 /* 0x0138 */    DWORD unknown000009;
 /* 0x013c */    D3D9_DRIVERCAPS DriverCaps;
-/* 0x026c */    DWORD dwDisplayWidth;   /* Current display res */
-/* 0x0270 */    DWORD dwDisplayHeight;  /* Current display res */
-/* 0x0274 */    DWORD unknown000088;    /* Current D3DFORMAT */
-/* 0x0278 */    DWORD unknown000089;    /* Current D3DFORMAT - duplicate? */
-/* 0x027c */    DWORD MonitorFrequency; /* Current monitor frequency */
-/* 0x0280 */    DWORD unknown000091;
-/* 0x0284 */    DWORD unknown000092;
-/* 0x0288 */    DWORD unknown000093;
-/* 0x028c */    DWORD unknown000094;
-/* 0x0290 */    DWORD unknown000095;
-/* 0x0294 */    DWORD unknown000096;
-/* 0x0298 */    DWORD unknown000097;
-/* 0x029c */    DWORD unknown000098;
-/* 0x02a0 */    DWORD unknown000099;
-/* 0x02a4 */    DWORD unknown000100;
-/* 0x02a8 */    DWORD unknown000101;    /*? 0xf7627000 */
-/* 0x02ac */    DWORD unknown000102;    /*? 0x00000002 */
-/* 0x02b0 */    LPDWORD unknown000103;    /*? 0x001552A0 */
 /* 0x02b4 */    DWORD unknown000104;
 /* 0x02b8 */    DWORD unknown000105;
 } Direct3D9DisplayAdapterInfo_INT, FAR* LPDIRECT3D9_DISPLAYADAPTER_INT;

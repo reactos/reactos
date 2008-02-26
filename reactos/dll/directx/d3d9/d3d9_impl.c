@@ -11,6 +11,7 @@
 #include <debug.h>
 #include "d3d9_helpers.h"
 #include "adapter.h"
+#include "format.h"
 
 /* IDirect3D9: IUnknown implementation */
 static HRESULT WINAPI IDirect3D9Impl_QueryInterface(LPDIRECT3D9 iface, REFIID riid, LPVOID* ppvObject)
@@ -340,12 +341,95 @@ static HRESULT WINAPI IDirect3D9Impl_GetAdapterDisplayMode(LPDIRECT3D9 iface, UI
     return D3D_OK;
 }
 
-static HRESULT WINAPI IDirect3D9Impl_CheckDeviceType(LPDIRECT3D9 iface, UINT Adapter, D3DDEVTYPE CheckType,
+
+/*++
+* @name IDirect3D9::CheckDeviceType
+* @implemented
+*
+* The function IDirect3D9Impl_CheckDeviceType checks if a specific D3DFORMAT is hardware accelerated
+* on the specified display adapter.
+*
+* @param LPDIRECT3D iface
+* Pointer to the IDirect3D object returned from Direct3DCreate9()
+*
+* @param UINT Adapter
+* Adapter index to get information about. D3DADAPTER_DEFAULT is the primary display.
+* The maximum value for this is the value returned by IDirect3D::GetAdapterCount().
+*
+* @param D3DDEVTYPE DeviceType
+* One of the D3DDEVTYPE enum members.
+*
+* @param D3DFORMAT DisplayFormat
+* One of the D3DFORMAT enum members except D3DFMT_UNKNOWN for the display adapter mode to be checked.
+*
+* @param D3DFORMAT BackBufferFormat
+* One of the D3DFORMAT enum membersfor the render target mode to be checked. D3DFMT_UNKNOWN is only allowed in windowed mode.
+*
+* @param BOOL Windowed
+* If this value is TRUE, the D3DFORMAT check will be done for windowed mode and FALSE equals fullscreen mode.
+*
+* @return HRESULT
+* If the format is hardware accelerated, the method returns D3D_OK.
+* If the format isn't hardware accelerated or unsupported - the return value will be D3DERR_NOTAVAILABLE.
+* If Adapter is out of range, DeviceType is invalid,
+* DisplayFormat or BackBufferFormat is invalid - the return value will be D3DERR_INVALIDCALL.
+*
+*/
+static HRESULT WINAPI IDirect3D9Impl_CheckDeviceType(LPDIRECT3D9 iface, UINT Adapter, D3DDEVTYPE DeviceType,
                                                      D3DFORMAT DisplayFormat, D3DFORMAT BackBufferFormat, BOOL Windowed)
 {
-    UNIMPLEMENTED
+    HRESULT hResult;
 
-    return D3D_OK;
+    LPDIRECT3D9_INT This = impl_from_IDirect3D9(iface);
+    LOCK_D3D9();
+
+    if (Adapter >= This->NumDisplayAdapters)
+    {
+        DPRINT1("Invalid Adapter number specified");
+        UNLOCK_D3D9();
+        return D3DERR_INVALIDCALL;
+    }
+
+    if (DeviceType != D3DDEVTYPE_HAL &&
+        DeviceType != D3DDEVTYPE_REF &&
+        DeviceType != D3DDEVTYPE_SW)
+    {
+        DPRINT1("Invalid DeviceType specified");
+        UNLOCK_D3D9();
+        return D3DERR_INVALIDCALL;
+    }
+
+    if (BackBufferFormat == D3DFMT_UNKNOWN &&
+        Windowed == TRUE)
+    {
+        BackBufferFormat = DisplayFormat;
+    }
+
+    if (DisplayFormat == D3DFMT_UNKNOWN && BackBufferFormat == D3DFMT_UNKNOWN)
+    {
+        DPRINT1("Invalid D3DFORMAT specified");
+        UNLOCK_D3D9();
+        return D3DERR_INVALIDCALL;
+    }
+
+    if (FALSE == IsBackBufferFormat(BackBufferFormat))
+    {
+        DPRINT1("Invalid D3DFORMAT specified");
+        UNLOCK_D3D9();
+        return D3DERR_NOTAVAILABLE;
+    }
+
+    if (TRUE == Windowed && TRUE == IsExtendedFormat(DisplayFormat))
+    {
+        DPRINT1("Extended diplay modes can only be used in fullscreen mode");
+        UNLOCK_D3D9();
+        return D3DERR_NOTAVAILABLE;
+    }
+
+    hResult = CheckDeviceFormat(&This->DisplayAdapters[Adapter].DriverCaps, DisplayFormat, BackBufferFormat, Windowed);
+
+    UNLOCK_D3D9();
+    return hResult;
 }
 
 static HRESULT WINAPI IDirect3D9Impl_CheckDeviceFormat(LPDIRECT3D9 iface, UINT Adapter, D3DDEVTYPE DeviceType,

@@ -12,6 +12,7 @@
 #include <ddraw.h>
 #include <strsafe.h>
 #include <debug.h>
+#include <d3dhal.h>
 #include "d3d9_private.h"
 #include "adapter.h"
 
@@ -217,7 +218,7 @@ static void CopyDriverCaps(const D3DCAPS9* pSrcCaps, D3DCAPS9* pDstCaps)
     if (pSrcCaps->Caps2 & D3DCAPS2_PRESENT_INTERVAL_IMMEDIATE)
         pDstCaps->PresentationIntervals |= D3DPRESENT_INTERVAL_IMMEDIATE;
 
-    pDstCaps->PrimitiveMiscCaps = pSrcCaps->PrimitiveMiscCaps & ~D3DPMISCCAPS_SEPERATEFVFFOG;
+    pDstCaps->PrimitiveMiscCaps = pSrcCaps->PrimitiveMiscCaps & ~D3DPMISCCAPS_FOGINFVF;
 
     if (pSrcCaps->VertexProcessingCaps & D3DVTXPCAPS_FOGVERTEX)
     {
@@ -232,14 +233,14 @@ static void CopyDriverCaps(const D3DCAPS9* pSrcCaps, D3DCAPS9* pDstCaps)
 HRESULT GetAdapterCaps(const LPDIRECT3D9_DISPLAYADAPTER_INT pDisplayAdapter, D3DDEVTYPE DeviceType, D3DCAPS9* pDstCaps)
 {
     HRESULT hResult = D3DERR_INVALIDDEVICE;
-    LPD3D9_DRIVERCAPS pDriverCaps = NULL;
+    D3DCAPS9* pDriverCaps = NULL;
 
     ZeroMemory(pDstCaps, sizeof(D3DCAPS9));
 
     switch (DeviceType)
     {
     case D3DDEVTYPE_HAL:
-        pDriverCaps = &pDisplayAdapter->DriverCaps;
+        pDriverCaps = &pDisplayAdapter->DriverCaps.DriverCaps9;
         hResult = D3D_OK;
         break;
 
@@ -257,7 +258,7 @@ HRESULT GetAdapterCaps(const LPDIRECT3D9_DISPLAYADAPTER_INT pDisplayAdapter, D3D
 
     if (pDriverCaps != NULL)
     {
-        CopyDriverCaps(&pDriverCaps->DriverCaps, pDstCaps);
+        CopyDriverCaps(pDriverCaps, pDstCaps);
     }
 
     if (SUCCEEDED(hResult))
