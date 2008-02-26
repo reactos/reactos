@@ -93,10 +93,11 @@ AcceptConnections(SOCKET ListeningSocket,
 							"the %s server....\n"), Name);
 						LogEvent(buf, 0, TRUE);
 					}
-
-					WaitForSingleObject(hThread, INFINITE);
-
-					CloseHandle(hThread);
+					else
+					{
+						WaitForSingleObject(hThread, INFINITE);
+						CloseHandle(hThread);
+					}
 				}
 				else
 				{

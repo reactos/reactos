@@ -239,7 +239,8 @@ CreateServers()
 
     for(i = 0; i < NUM_SERVICES; i++)
     {
-        CloseHandle(hThread[i]);
+        if (hThread[i] != NULL)
+            CloseHandle(hThread[i]);
     }
 
     LogEvent(_T("Detaching Winsock2"), 0, FALSE);
