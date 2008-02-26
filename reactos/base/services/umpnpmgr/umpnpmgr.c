@@ -1740,7 +1740,8 @@ PnpEventThread(LPVOID lpParameter)
         if (Status == STATUS_BUFFER_TOO_SMALL)
         {
             PnpEventSize += 0x400;
-            PnpEvent = HeapReAlloc(GetProcessHeap(), 0, PnpEvent, PnpEventSize);
+			HeapFree(GetProcessHeap(), 0, PnpEvent);
+			PnpEvent = HeapAlloc(GetProcessHeap(), 0, PnpEventSize);
             if (PnpEvent == NULL)
                 return ERROR_OUTOFMEMORY;
             continue;
