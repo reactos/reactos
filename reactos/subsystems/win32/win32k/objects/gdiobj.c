@@ -311,7 +311,7 @@ CaptureStackBackTace(PVOID* pFrames, ULONG nFramesToCapture)
 static void FASTCALL
 LockErrorDebugOutput(HGDIOBJ hObj, PGDI_TABLE_ENTRY Entry, LPSTR Function)
 {
-    if (Entry->KernelData == NULL)
+    if ((Entry->Type & GDI_ENTRY_BASETYPE_MASK) == 0)
     {
         DPRINT1("%s: Attempted to lock object 0x%x that is deleted!\n", Function, hObj);
     }

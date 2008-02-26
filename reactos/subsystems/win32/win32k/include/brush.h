@@ -23,10 +23,9 @@ typedef struct
 
 typedef struct
 {
-//   HGDIOBJ     hHmgr;
-//   PVOID       pvEntry;
-//   ULONG       lucExcLock;
-//   ULONG       Tid;
+  /* Header for all gdi objects in the handle table.
+     Do not (re)move this. */
+   BASEOBJECT    BaseObject;
 
    ULONG ulStyle;
    HBITMAP hbmPattern;

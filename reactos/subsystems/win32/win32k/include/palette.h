@@ -31,17 +31,18 @@
 #define PAL_RGB16_565       0x00400000 // 16-bit RGB in 565 format
 #define PAL_GAMMACORRECTION 0x00800000 // Correct colors
 
-typedef struct {
+typedef struct
+{
     int shift;
     int scale;
     int max;
 } ColorShifts;
 
-typedef struct _PALGDI {
-//  HGDIOBJ     hHmgr;
-//  PVOID       pvEntry;
-//  ULONG       lucExcLock;
-//  ULONG       Tid;
+typedef struct _PALGDI
+{
+  /* Header for all gdi objects in the handle table.
+     Do not (re)move this. */
+  BASEOBJECT    BaseObject;
 
   PALOBJ PalObj;
   XLATEOBJ *logicalToSystem;
@@ -79,4 +80,4 @@ INT FASTCALL PALETTE_GetObject(PPALGDI pGdiObject, INT cbCount, LPLOGBRUSH lpBuf
 
 PPALETTEENTRY FASTCALL ReturnSystemPalette (VOID);
 
-#endif /* _WIN32K_PALETTE_H */
+#endif /* not _WIN32K_PALETTE_H */

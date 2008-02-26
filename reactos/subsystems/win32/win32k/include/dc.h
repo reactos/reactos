@@ -35,6 +35,8 @@
 /* The DC object structure */
 typedef struct _DC
 {
+  /* Header for all gdi objects in the handle table.
+     Do not (re)move this. */
   BASEOBJECT  BaseObject;
 
   DHPDEV      PDev;   // <- GDIDEVICE.hPDev DHPDEV for device.

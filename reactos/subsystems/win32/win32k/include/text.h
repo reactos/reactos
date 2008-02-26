@@ -20,7 +20,7 @@
 #define TO_SYS_PARTITION    0x1000
 //
 // Extended STROBJ
-// 
+//
 typedef struct _STRGDI
 {
   STROBJ    StrObj; // Text string object header.
@@ -51,12 +51,16 @@ typedef struct _STRGDI
   INT       cDefGlyphs;
   INT       cNumFaceNameGlyphs;
   PVOID     pacFaceNameGlyphs;
-  ULONG     acFaceNameGlyphs[8];    
+  ULONG     acFaceNameGlyphs[8];
 } STRGDI, *PSTRGDI;
 
 /* GDI logical font object */
 typedef struct
 {
+  /* Header for all gdi objects in the handle table.
+     Do not (re)move this. */
+   BASEOBJECT    BaseObject;
+
    ENUMLOGFONTEXDVW logfont;  //LOGFONTW   logfont;
    FONTOBJ    *Font;
    BOOLEAN Initialized; /* Don't reinitialize for each DC */
