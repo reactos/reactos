@@ -1058,7 +1058,7 @@ GDIOBJ_ShareLockObj (HGDIOBJ hObj, DWORD ExpectedType)
                  RtlCaptureStackBackTrace(1, GDI_STACK_LEVELS, (PVOID*)GDIHandleLocker[HandleIndex], NULL);
             }
 #else
-            _InterlockedIncrement(Object->ulShareCount);
+            _InterlockedIncrement((PLONG)&Object->ulShareCount);
 #endif
          }
          else
