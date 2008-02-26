@@ -59,53 +59,53 @@ AcceptConnections(SOCKET ListeningSocket,
 
     while (!bShutDown)
     {
-		INT SelRet = 0;
+        INT SelRet = 0;
 
-		FD_ZERO(&ReadFDS);
-		FD_SET(ListeningSocket, &ReadFDS);
+        FD_ZERO(&ReadFDS);
+        FD_SET(ListeningSocket, &ReadFDS);
 
-		SelRet = select(0, &ReadFDS, NULL, NULL, &TimeVal);
+        SelRet = select(0, &ReadFDS, NULL, NULL, &TimeVal);
         if (SelRet == SOCKET_ERROR)
         {
             LogEvent(_T("select failed\n"), 0, TRUE);
             return;
         }
-		else if (SelRet > 0)
-		{
-			/* don't call FD_ISSET if bShutDown flag is set */
-			if ((! bShutDown) || (FD_ISSET(ListeningSocket, &ReadFDS)))
-			{
-				Sock = accept(ListeningSocket, (SOCKADDR*)&Client, &nAddrSize);
-				if (Sock != INVALID_SOCKET)
-				{
-					_stprintf(buf, _T("Accepted connection to %s server from %s:%d\n"),
-						Name, inet_ntoa(Client.sin_addr), ntohs(Client.sin_port));
-					LogEvent(buf, 0, FALSE);
-					_stprintf(buf, _T("Creating new thread for %s\n"), Name);
-					LogEvent(buf, 0, FALSE);
+        else if (SelRet > 0)
+        {
+            /* don't call FD_ISSET if bShutDown flag is set */
+            if ((! bShutDown) || (FD_ISSET(ListeningSocket, &ReadFDS)))
+            {
+                Sock = accept(ListeningSocket, (SOCKADDR*)&Client, &nAddrSize);
+                if (Sock != INVALID_SOCKET)
+                {
+                    _stprintf(buf, _T("Accepted connection to %s server from %s:%d\n"),
+                        Name, inet_ntoa(Client.sin_addr), ntohs(Client.sin_port));
+                    LogEvent(buf, 0, FALSE);
+                    _stprintf(buf, _T("Creating new thread for %s\n"), Name);
+                    LogEvent(buf, 0, FALSE);
 
-					hThread = CreateThread(0, 0, Service, (void*)Sock, 0, &ThreadID);
+                    hThread = CreateThread(0, 0, Service, (void*)Sock, 0, &ThreadID);
 
-					/* Check the return value for success. */
-					if (hThread == NULL)
-					{
-						_stprintf(buf, _T("Failed to start worker thread for "
-							"the %s server....\n"), Name);
-						LogEvent(buf, 0, TRUE);
-					}
-					else
-					{
-						WaitForSingleObject(hThread, INFINITE);
-						CloseHandle(hThread);
-					}
-				}
-				else
-				{
-					LogEvent(_T("accept failed\n"), 0, TRUE);
-					return;
-				}
-			}
-		}
+                    /* Check the return value for success. */
+                    if (hThread == NULL)
+                    {
+                        _stprintf(buf, _T("Failed to start worker thread for "
+                            "the %s server....\n"), Name);
+                        LogEvent(buf, 0, TRUE);
+                    }
+                    else
+                    {
+                        WaitForSingleObject(hThread, INFINITE);
+                        CloseHandle(hThread);
+                    }
+                }
+                else
+                {
+                    LogEvent(_T("accept failed\n"), 0, TRUE);
+                    return;
+                }
+            }
+        }
     }
 }
 
