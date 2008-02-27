@@ -47,12 +47,12 @@ BEGIN
         MENUITEM "В&ихід\tAlt+F4", ID_FILE_EXIT
     END
 
-    POPUP "&Edit"
+    POPUP "&Правка"
     BEGIN
-        MENUITEM "Copy\tCtrl+C", ID_EDIT_COPY
-        MENUITEM "Paste\tCtrl+V", ID_EDIT_PASTE
+        MENUITEM "Копіювати\tCtrl+C", ID_EDIT_COPY
+        MENUITEM "Вставити\tCtrl+V", ID_EDIT_PASTE
         MENUITEM SEPARATOR
-        MENUITEM "Edit Glyph...", ID_EDIT_GLYPH
+        MENUITEM "Редагувати символ...", ID_EDIT_GLYPH
     END
 
     POPUP "&Вікно"
@@ -89,6 +89,6 @@ BEGIN
     IDS_TOOLTIP_OPEN, "Відкрити"
     IDS_TOOLTIP_SAVE, "Зберегти"
     IDS_TOOLTIP_EDIT_GLYPH, "Редагувати символ"
-    IDS_TOOLTIP_COPY, "Copy"
-    IDS_TOOLTIP_PASTE, "Paste"
+    IDS_TOOLTIP_COPY, "Копіювати"
+    IDS_TOOLTIP_PASTE, "Вставити"
 END
