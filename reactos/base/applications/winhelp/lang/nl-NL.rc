@@ -2,6 +2,7 @@
  * Help Viewer (Dutch resources)
  *
  * Copyright 2003 Hans Leidekker
+ * Copyright 2008 Frans Kool
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -49,6 +50,16 @@ MAIN_MENU MENU LANGUAGE LANG_DUTCH, SUBLANG_NEUTRAL
  }
 }
 
+IDD_INDEX DIALOG DISCARDABLE 0, 0, 200, 190 LANGUAGE LANG_DUTCH, SUBLANG_NEUTRAL
+STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "Index"
+{
+    LISTBOX IDC_INDEXLIST, 10, 10, 180, 150, LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_BORDER
+    PUSHBUTTON "&OK", IDOK, 40, 170, 50, 12
+    PUSHBUTTON "&Annuleren", IDCANCEL, 120, 170, 50, 12
+}
+
 /* Strings */
 STRINGTABLE DISCARDABLE LANGUAGE LANG_DUTCH, SUBLANG_NEUTRAL
 {
@@ -65,5 +76,5 @@ STID_HISTORY, 		"&Geschiedenis"
 STID_TOPICS,		"&Onderwerpen"
 STID_ALL_FILES, 	"Alle bestanden (*.*)"
 STID_HELP_FILES_HLP, 	"Helpbestanden (*.hlp)"
-STID_FILE_NOT_FOUND_s	"Cannot find '%s'. Do you want to find this file yourself?"
+STID_FILE_NOT_FOUND_s	"Kan '%s' niet openen. Wilt u zelf dit bestand zoeken?"
 }

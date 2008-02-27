@@ -22,7 +22,7 @@ IDM_MAINMENU MENU DISCARDABLE
 BEGIN
     POPUP "&Файл"
     BEGIN
-        MENUITEM "Созд&ать\tCtrl+N",   ID_FILE_NEW
+        MENUITEM "Созд&ать...\tCtrl+N",ID_FILE_NEW
         MENUITEM "&Открыть...\tCtrl+O",ID_FILE_OPEN
         MENUITEM "&Сохранить\tCtrl+S", ID_FILE_SAVE
         MENUITEM "Сохранить &как...",  ID_FILE_SAVEAS

@@ -22,7 +22,7 @@ IDM_MAINMENU MENU DISCARDABLE
 BEGIN
     POPUP "&File"
     BEGIN
-        MENUITEM "&New\tCtrl+N",          ID_FILE_NEW
+        MENUITEM "&New . . .\tCtrl+N",          ID_FILE_NEW
         MENUITEM "&Open . . .\tCtrl+O",   ID_FILE_OPEN
         MENUITEM "&Save\tCtrl+S",         ID_FILE_SAVE
         MENUITEM "Save &as . . .",        ID_FILE_SAVEAS

@@ -1,4 +1,4 @@
-%{
+%{ /* -*-C-*- */
 /*
  * Help Viewer
  *
@@ -23,7 +23,13 @@
 %option nounput interactive 8bit
 %x quote
 %{
+#include "config.h"
 #include <assert.h>
+
+#ifndef HAVE_UNISTD_H
+#define YY_NO_UNISTD_H
+#endif
+
 #include "macro.h"
 
 #include "wine/debug.h"

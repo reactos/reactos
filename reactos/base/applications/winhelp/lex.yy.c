@@ -407,7 +407,13 @@ char *yytext;
 #define quote 1
 
 #line 26 "macro.lex.l"
+#include "config.h"
 #include <assert.h>
+
+#ifndef HAVE_UNISTD_H
+#define YY_NO_UNISTD_H
+#endif
+
 #include "macro.h"
 
 #include "wine/debug.h"
@@ -423,7 +429,7 @@ struct lexret  yylval;
 #define YY_INPUT(buf,result,max_size)\
   if ((result = *macroptr ? 1 : 0)) buf[0] = *macroptr++;
 
-#line 427 "lex.yy.c"
+#line 433 "lex.yy.c"
 
 /* Macros after this point can all be overridden by user definitions in
  * section 1.
@@ -574,10 +580,10 @@ YY_DECL
 	register char *yy_cp, *yy_bp;
 	register int yy_act;
 
-#line 43 "macro.lex.l"
+#line 49 "macro.lex.l"
 
 
-#line 581 "lex.yy.c"
+#line 587 "lex.yy.c"
 
 	if ( yy_init )
 		{
@@ -662,32 +668,32 @@ do_action:	/* This label is used only to access EOF actions. */
 
 case 1:
 YY_RULE_SETUP
-#line 45 "macro.lex.l"
+#line 51 "macro.lex.l"
 yylval.integer = strtol(yytext, NULL, 10);	return INTEGER;
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
-#line 46 "macro.lex.l"
+#line 52 "macro.lex.l"
 yylval.integer = strtol(yytext, NULL, 16);	return INTEGER;
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 48 "macro.lex.l"
+#line 54 "macro.lex.l"
 return MACRO_Lookup(yytext, &yylval);
 	YY_BREAK
 case 4:
-#line 51 "macro.lex.l"
+#line 57 "macro.lex.l"
 case 5:
-#line 52 "macro.lex.l"
+#line 58 "macro.lex.l"
 case 6:
-#line 53 "macro.lex.l"
+#line 59 "macro.lex.l"
 case 7:
-#line 54 "macro.lex.l"
+#line 60 "macro.lex.l"
 case 8:
-#line 55 "macro.lex.l"
+#line 61 "macro.lex.l"
 case 9:
 YY_RULE_SETUP
-#line 55 "macro.lex.l"
+#line 61 "macro.lex.l"
 {
     if (quote_stk_idx == 0 ||
         (yytext[0] == '\"' && quote_stack[quote_stk_idx - 1] != '\"') ||
@@ -720,34 +726,34 @@ YY_RULE_SETUP
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 85 "macro.lex.l"
+#line 91 "macro.lex.l"
 *strptr++ = yytext[0];
 	YY_BREAK
 case 11:
 YY_RULE_SETUP
-#line 86 "macro.lex.l"
+#line 92 "macro.lex.l"
 *strptr++ = yytext[1];
 	YY_BREAK
 case YY_STATE_EOF(quote):
-#line 87 "macro.lex.l"
+#line 93 "macro.lex.l"
 return 0;
 	YY_BREAK
 case 12:
 YY_RULE_SETUP
-#line 89 "macro.lex.l"
+#line 95 "macro.lex.l"
 
 	YY_BREAK
 case 13:
 YY_RULE_SETUP
-#line 90 "macro.lex.l"
+#line 96 "macro.lex.l"
 return yytext[0];
 	YY_BREAK
 case 14:
 YY_RULE_SETUP
-#line 91 "macro.lex.l"
+#line 97 "macro.lex.l"
 ECHO;
 	YY_BREAK
-#line 751 "lex.yy.c"
+#line 757 "lex.yy.c"
 case YY_STATE_EOF(INITIAL):
 	yyterminate();
 
@@ -1633,7 +1639,7 @@ int main()
 	return 0;
 	}
 #endif
-#line 91 "macro.lex.l"
+#line 97 "macro.lex.l"
 
 
 #if 0

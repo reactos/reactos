@@ -22,7 +22,7 @@ IDM_MAINMENU MENU DISCARDABLE
 BEGIN
     POPUP "&Fájl"
     BEGIN
-        MENUITEM "&Új\tCtrl+N",           ID_FILE_NEW
+        MENUITEM "&Új...\tCtrl+N",           ID_FILE_NEW
         MENUITEM "&Megnyitás...\tCtrl+O", ID_FILE_OPEN
         MENUITEM "M&entés\tCtrl+S",       ID_FILE_SAVE
         MENUITEM "Mentés má&sként...",        ID_FILE_SAVEAS
