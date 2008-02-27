@@ -274,6 +274,9 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 	{
 		intermediatedir = module.output->relative_path + vcdir;
 		importLib = _strip_gcc_deffile(module.importLibrary->source->name, module.importLibrary->source->relative_path, intermediatedir);
+		importLib = Path::RelativeFromDirectory (
+				importLib,
+				module.output->relative_path );
 	}
 
 	fprintf ( OUT, "\t<Configurations>\r\n" );
@@ -854,8 +857,8 @@ MSVCBackend::_strip_gcc_deffile(std::string Filename, std::string sourcedir, std
 	NewFilename = _replace_str(NewFilename, "_msvc.de", "_msvc.def");
 	Filename = sourcedir + "\\" + Filename;
 
-    Directory dir(objdir);
-    dir.GenerateTree(IntermediateDirectory, false);
+	Directory dir(objdir);
+	dir.GenerateTree(IntermediateDirectory, false);
 
 	std::fstream in_file(Filename.c_str(), std::ios::in);
 	std::fstream out_file(NewFilename.c_str(), std::ios::out);
