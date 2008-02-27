@@ -20,5 +20,7 @@ typedef int CM_RESOURCE_TYPE;
 #define CmResourceTypePcCardConfig	130
 #define CmResourceTypeMfCardConfig	131
 
+extern ULONG NtGlobalFlag;
+
 #endif
 
