@@ -29,7 +29,9 @@ ULONG gcDirectDraw;
 /* CALLBACKS *****************************************************************/
 
 /*
- * Dd Surface Callbacks
+ * @implemented
+ *
+ * DdAddAttachedSurface
  */
 DWORD
 WINAPI
@@ -53,7 +55,10 @@ DdBlt(LPDDHAL_BLTDATA Blt)
     HANDLE Surface = 0;
 
     /* Use the right surface */
-    if (Blt->lpDDSrcSurface) Surface = (HANDLE)Blt->lpDDSrcSurface->hDDSurface;
+    if (Blt->lpDDSrcSurface) 
+    {
+        Surface = (HANDLE)Blt->lpDDSrcSurface->hDDSurface;
+    }
 
     /* Call win32k */
     return NtGdiDdBlt((HANDLE)Blt->lpDDDestSurface->hDDSurface, Surface, (PDD_BLTDATA)Blt);
@@ -269,6 +274,7 @@ DdCanCreateSurface(LPDDHAL_CANCREATESURFACEDATA CanCreateSurface)
                                    (PDD_CANCREATESURFACEDATA)CanCreateSurface);
 }
 
+/* TODO : finish all fixme */ 
 DWORD
 WINAPI
 DdCreateSurface(LPDDHAL_CREATESURFACEDATA pCreateSurface)
@@ -528,6 +534,143 @@ DvpFlipVideoPort(LPDDHAL_FLIPVPORTDATA pDvdPortFlip)
                                  (PDD_FLIPVPORTDATA) pDvdPortFlip);
 }
 
+/*
+ * @implemented
+ *
+ * DvpGetVideoPortBandwidth
+ */
+DWORD
+WINAPI
+DvpGetVideoPortBandwidth(LPDDHAL_GETVPORTBANDWIDTHDATA pDvdPortBandWidth)
+{
+    return NtGdiDvpGetVideoPortBandwidth(pDvdPortBandWidth->lpVideoPort->hDDVideoPort, (PDD_GETVPORTBANDWIDTHDATA)pDvdPortBandWidth);
+}
+
+/*
+ * @implemented
+ *
+ * DvpColorControl
+ */
+DWORD
+WINAPI
+DvpColorControl(LPDDHAL_VPORTCOLORDATA pDvdPortColorControl)
+{
+    return NtGdiDvpColorControl(pDvdPortColorControl->lpVideoPort->hDDVideoPort, (PDD_VPORTCOLORDATA) pDvdPortColorControl);
+}
+
+/*
+ * @implemented
+ *
+ * DvpGetVideoSignalStatus
+ */
+DWORD
+WINAPI
+DvpGetVideoSignalStatus(LPDDHAL_GETVPORTSIGNALDATA pDvdPortVideoSignalStatus)
+{
+    return NtGdiDvpGetVideoSignalStatus(pDvdPortVideoSignalStatus->lpVideoPort->hDDVideoPort, (PDD_GETVPORTSIGNALDATA) pDvdPortVideoSignalStatus);
+}
+
+/*
+ * @implemented
+ *
+ * DvpGetVideoPortFlipStatus
+ */
+DWORD
+WINAPI
+DvpGetVideoPortFlipStatus(LPDDHAL_GETVPORTFLIPSTATUSDATA pDvdPortVideoPortFlipStatus)
+{
+    return NtGdiDvpGetVideoPortFlipStatus(GetDdHandle(pDvdPortVideoPortFlipStatus->lpDD->lpGbl->hDD), (PDD_GETVPORTFLIPSTATUSDATA) pDvdPortVideoPortFlipStatus);
+
+}
+
+/*
+ * @implemented
+ *
+ * DvpCanCreateVideoPort
+ */
+DWORD
+WINAPI
+DvpCanCreateVideoPort(LPDDHAL_CANCREATEVPORTDATA pDvdCanCreateVideoPort)
+{
+    return NtGdiDvpCanCreateVideoPort(GetDdHandle(pDvdCanCreateVideoPort->lpDD->lpGbl->hDD), (PDD_CANCREATEVPORTDATA) pDvdCanCreateVideoPort);
+}
+/*
+ * @implemented
+ *
+ * DvpWaitForVideoPortSync
+ */
+DWORD
+WINAPI
+DvpWaitForVideoPortSync(LPDDHAL_WAITFORVPORTSYNCDATA pDvdWaitForVideoPortSync)
+{
+    return NtGdiDvpWaitForVideoPortSync(pDvdWaitForVideoPortSync->lpVideoPort->hDDVideoPort, (PDD_WAITFORVPORTSYNCDATA) pDvdWaitForVideoPortSync);
+}
+
+/*
+ * @implemented
+ *
+ * DvpUpdateVideoPort
+ */
+DWORD
+WINAPI
+DvpUpdateVideoPort(LPDDHAL_UPDATEVPORTDATA pDvdUpdateVideoPort)
+{
+    /*
+     * Windows XP limit to max 10 handles of videoport surface and Vbi 
+     * ReactOS doing same to keep compatible, if it is more that 10 
+     * videoport surface or vbi the stack will be curpted in windows xp
+     * ReactOS safe guard againts that
+     *
+     */
+
+    HANDLE phSurfaceVideo[10];
+    HANDLE phSurfaceVbi[10]; 
+    
+    if (pDvdUpdateVideoPort->dwFlags != DDRAWI_VPORTSTOP)
+    {
+        DWORD dwNumAutoflip;
+        DWORD dwNumVBIAutoflip;
+
+        /* Take copy of lplpDDSurface for the handle value will be modify in dxg */
+        dwNumAutoflip = pDvdUpdateVideoPort->dwNumAutoflip;
+        if ((dwNumAutoflip == 0) &&
+           (pDvdUpdateVideoPort->lplpDDSurface == 0))
+        {           
+                dwNumAutoflip++;
+        }
+        
+        if (dwNumAutoflip != 0)
+        {                   
+            if (dwNumAutoflip>10)
+            {
+                dwNumAutoflip = 10;
+            }
+            memcpy(phSurfaceVideo,pDvdUpdateVideoPort->lplpDDSurface,dwNumAutoflip*sizeof(HANDLE));         
+        }
+        
+        /* Take copy of lplpDDVBISurface for the handle value will be modify in dxg */
+        dwNumVBIAutoflip = pDvdUpdateVideoPort->dwNumVBIAutoflip;        
+        if ( (dwNumVBIAutoflip == 0) &&
+              (pDvdUpdateVideoPort->lplpDDVBISurface == 0) )
+        {
+            dwNumVBIAutoflip++;
+        }
+       
+        if (dwNumVBIAutoflip != 0)
+        {
+            if (dwNumVBIAutoflip>10)
+            {
+                dwNumVBIAutoflip = 10;
+            }
+            memcpy(phSurfaceVbi,pDvdUpdateVideoPort->lplpDDVBISurface,dwNumVBIAutoflip*sizeof(HANDLE));         
+        }    
+    }
+
+    /* Call Win32k */
+    return NtGdiDvpUpdateVideoPort(pDvdUpdateVideoPort->lpVideoPort->hDDVideoPort,phSurfaceVideo,phSurfaceVbi, (PDD_UPDATEVPORTDATA)pDvdUpdateVideoPort);
+}
+
+/* TODO */
 
 DWORD
 WINAPI
@@ -566,7 +709,7 @@ DdGetDriverInfo(LPDDHAL_GETDRIVERINFODATA pData)
         pUserDvdPort->dwSize = DDVIDEOPORTCALLBACKSSIZE;      
        
         pUserDvdPort->dwFlags = (pDvdPortInfo.dwFlags & ~(DDHAL_VPORT32_CREATEVIDEOPORT | DDHAL_VPORT32_FLIP |
-                                                          DDHAL_VPORT32_DESTROY | DDHAL_VPORT32_UPDATE | DDHAL_VPORT32_WAITFORSYNC)) |
+                                                          DDHAL_VPORT32_DESTROY | DDHAL_VPORT32_UPDATE )) |
                                                          (DDHAL_VPORT32_CREATEVIDEOPORT | DDHAL_VPORT32_FLIP |
                                                           DDHAL_VPORT32_DESTROY | DDHAL_VPORT32_UPDATE);
 
@@ -574,16 +717,16 @@ DdGetDriverInfo(LPDDHAL_GETDRIVERINFODATA pData)
         pUserDvdPort->CreateVideoPort = (LPDDHALVPORTCB_CREATEVIDEOPORT) DvpCreateVideoPort;
         pUserDvdPort->FlipVideoPort = (LPDDHALVPORTCB_FLIP) DvpFlipVideoPort;
         pUserDvdPort->DestroyVideoPort = (LPDDHALVPORTCB_DESTROYVPORT) DvpDestroyVideoPort;
-        pUserDvdPort->UpdateVideoPort = (LPDDHALVPORTCB_UPDATE) NULL; // FIXME : DvpUpdateVideoPort
+        pUserDvdPort->UpdateVideoPort = (LPDDHALVPORTCB_UPDATE) DvpUpdateVideoPort;
 
         if (pDvdPort.CanCreateVideoPort)
         {
-             pUserDvdPort->CanCreateVideoPort = (LPDDHALVPORTCB_CANCREATEVIDEOPORT) NULL; // FIXME : DvpCanCreateVideoPort
+             pUserDvdPort->CanCreateVideoPort = (LPDDHALVPORTCB_CANCREATEVIDEOPORT) DvpCanCreateVideoPort;
         }
 
         if (pDvdPort.GetVideoPortBandwidth)
         {
-            pUserDvdPort->GetVideoPortBandwidth = (LPDDHALVPORTCB_GETBANDWIDTH) NULL; // FIXME : DvpGetVideoPortBandwidth
+            pUserDvdPort->GetVideoPortBandwidth = (LPDDHALVPORTCB_GETBANDWIDTH) DvpGetVideoPortBandwidth;
         }
 
         if (pDvdPort.GetVideoPortInputFormats)
@@ -613,23 +756,22 @@ DdGetDriverInfo(LPDDHAL_GETDRIVERINFODATA pData)
 
         if (pDvdPort.GetVideoPortFlipStatus)
         {
-            pUserDvdPort->GetVideoPortFlipStatus = (LPDDHALVPORTCB_GETFLIPSTATUS) NULL; // FIXME : DvpGetVideoPortFlipStatus
+            pUserDvdPort->GetVideoPortFlipStatus = (LPDDHALVPORTCB_GETFLIPSTATUS) DvpGetVideoPortFlipStatus;
         }
         
         if (pDvdPort.WaitForVideoPortSync)
         {
-            /* Note Windows XP does not have a user mode version of WaitForVideoPortSync  */
-            pUserDvdPort->WaitForVideoPortSync = (LPDDHALVPORTCB_WAITFORSYNC) NULL; 
+            pUserDvdPort->WaitForVideoPortSync = (LPDDHALVPORTCB_WAITFORSYNC) DvpWaitForVideoPortSync; 
         }
 
         if (pDvdPort.GetVideoSignalStatus)
         {
-            pUserDvdPort->GetVideoSignalStatus = (LPDDHALVPORTCB_GETSIGNALSTATUS) NULL; // FIXME : DvpGetVideoSignalStatus
+            pUserDvdPort->GetVideoSignalStatus = (LPDDHALVPORTCB_GETSIGNALSTATUS) DvpGetVideoSignalStatus;
         }
 
         if (pDvdPort.ColorControl)
         {
-            pUserDvdPort->ColorControl = (LPDDHALVPORTCB_COLORCONTROL) NULL; // FIXME : DvpColorControl
+            pUserDvdPort->ColorControl = (LPDDHALVPORTCB_COLORCONTROL) DvpColorControl;
         }
 
         /* Windows XP never repot back the true return value, 
@@ -640,8 +782,6 @@ DdGetDriverInfo(LPDDHAL_GETDRIVERINFODATA pData)
         pData->ddRVal = retValue;
         return retValue;
     }
-
-    /* FIXME adding rest of the GUID */
 
     /* FIXME not supported yet */
     return 0;
@@ -693,6 +833,7 @@ DdCanCreateD3DBuffer(LPDDHAL_CANCREATESURFACEDATA CanCreateD3DBuffer)
 }
 
 
+/* TODO : finish all fixme */ 
 DWORD
 WINAPI
 DdCreateD3DBuffer(LPDDHAL_CREATESURFACEDATA pCreateSurface)
@@ -1449,7 +1590,6 @@ DdSetGammaRamp(LPDDRAWI_DIRECTDRAW_LCL pDDraw,
                                hdc,
                                lpGammaRamp);
 }
-
 
 
 
