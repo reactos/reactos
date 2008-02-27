@@ -280,7 +280,10 @@ IopLoadServiceModule(
 
    /* FIXME: This check may be removed once the bug is fixed */
    if (ServiceName->Buffer == NULL)
+   {
+       DPRINT1("If you see this, please report to Fireball or hpoussin!\n");
       return STATUS_UNSUCCESSFUL;
+   }
 
    /* Open CurrentControlSet */
    RtlInitUnicodeString(&CCSName,
