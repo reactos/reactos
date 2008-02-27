@@ -105,7 +105,7 @@ CAPTION "Conclusione della installazione come amministratore"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDB_WATERMARK, "STATIC", SS_BITMAP | SS_REALSIZEIMAGE, 0, 0, WATERMARK_WIDTH, SHORTCUTDLG_HEIGHT
-    LTEXT "Cliccando fine verranno ripristinate le mappature di \"ini\".", IDC_HEADTEXT, 98, 7, 196, 40
+    LTEXT "Cliccando fine verranno ripristinate le mappature di ""ini.""", IDC_HEADTEXT, 98, 7, 196, 40
 END
 
 IDD_AFTERINST DIALOG 0, 0, SHORTCUTDLG_WIDTH, SHORTCUTDLG_HEIGHT
