@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <commctrl.h>
 #include "resource.h"
+#include <stdlib.h>
 
 #define XCELLS 20
 #define YCELLS 10
