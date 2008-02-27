@@ -380,6 +380,13 @@ CreateFreeLoaderIniForReactos(PWCHAR IniPath,
 		    L"ReactOS_Debug",
 		    L"\"ReactOS (Debug)\"");
 
+  /* ReactOS_WinLdr="ReactOS (WinLdr)" */
+  IniCacheInsertKey(IniSection,
+		    NULL,
+		    INSERT_LAST,
+		    L"ReactOS_WinLdr",
+		    L"\"ReactOS (WinLdr)\"");
+
   /* Create "ReactOS" section */
   IniSection = IniCacheAppendSection(IniCache,
 				     L"ReactOS");
@@ -415,6 +422,31 @@ CreateFreeLoaderIniForReactos(PWCHAR IniPath,
 		    INSERT_LAST,
 		    L"BootType",
 		    L"ReactOS");
+
+  /* SystemPath=<ArcPath> */
+  IniCacheInsertKey(IniSection,
+		    NULL,
+		    INSERT_LAST,
+		    L"SystemPath",
+		    ArcPath);
+
+  /* Options=/DEBUG /DEBUGPORT=COM1 /BAUDRATE=115200 /SOS*/
+  IniCacheInsertKey(IniSection,
+		    NULL,
+		    INSERT_LAST,
+		    L"Options",
+		    L"/DEBUG /DEBUGPORT=COM1 /BAUDRATE=115200 /SOS");
+
+  /* Create "ReactOS_WinLdr" section */
+  IniSection = IniCacheAppendSection(IniCache,
+				     L"ReactOS_WinLdr");
+
+  /* BootType=ReactOS */
+  IniCacheInsertKey(IniSection,
+		    NULL,
+		    INSERT_LAST,
+		    L"BootType",
+		    L"Windows2003");
 
   /* SystemPath=<ArcPath> */
   IniCacheInsertKey(IniSection,
