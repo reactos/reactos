@@ -35,10 +35,7 @@ LRESULT CALLBACK	WndProc(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK	About(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK	ConnectionDialogProc(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK	CaptureDialogProc(HWND, UINT, WPARAM, LPARAM);
-VOID				EnableConnectMenuItem(BOOL Enable);
-VOID				EnableDisconnectMenuItem(BOOL Enable);
-VOID				EnableStartCaptureMenuItem(BOOL Enable);
-VOID				EnableStopCaptureMenuItem(BOOL Enable);
+VOID				EnableFileMenuItemByID(UINT Id, BOOL Enable);
 VOID				CheckLocalEchoMenuItem(BOOL Checked);
 VOID				Rs232Thread(VOID* Parameter);
 
@@ -231,8 +228,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				if (DialogBox(hInst, (LPCTSTR)IDD_CONNECTION, hWnd, (DLGPROC)ConnectionDialogProc) == IDOK)
 				{
 					bConnected = TRUE;
-					EnableDisconnectMenuItem(TRUE);
-					EnableConnectMenuItem(FALSE);
+					EnableFileMenuItemByID(IDM_FILE_DISCONNECT, TRUE);
+					EnableFileMenuItemByID(IDM_FILE_CONNECT, FALSE);
 					_beginthread(Rs232Thread, 0, NULL);
 				}
 			}
@@ -241,8 +238,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			if (bConnected)
 			{
 				bConnected = FALSE;
-				EnableDisconnectMenuItem(FALSE);
-				EnableConnectMenuItem(TRUE);
+				EnableFileMenuItemByID(IDM_FILE_DISCONNECT, FALSE);
+				EnableFileMenuItemByID(IDM_FILE_CONNECT, TRUE);
 			}
 			else
 			{
@@ -253,8 +250,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			if (DialogBox(hInst, (LPCTSTR)IDD_CAPTURE, hWnd, (DLGPROC)CaptureDialogProc) == IDOK)
 			{
 				bCapturing = TRUE;
-				EnableStopCaptureMenuItem(TRUE);
-				EnableStartCaptureMenuItem(FALSE);
+				EnableFileMenuItemByID(IDM_FILE_STOPCAPTURE, TRUE);
+				EnableFileMenuItemByID(IDM_FILE_STARTCAPTURE, FALSE);
 				hCaptureFile = CreateFile(strCaptureFileName, FILE_APPEND_DATA, FILE_SHARE_READ|FILE_SHARE_WRITE, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
 			}
 			break;
@@ -262,8 +259,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			if (bCapturing)
 			{
 				bCapturing = FALSE;
-				EnableStopCaptureMenuItem(FALSE);
-				EnableStartCaptureMenuItem(TRUE);
+				EnableFileMenuItemByID(IDM_FILE_STOPCAPTURE, FALSE);
+				EnableFileMenuItemByID(IDM_FILE_STARTCAPTURE, TRUE);
 				CloseHandle(hCaptureFile);
 				hCaptureFile = NULL;
 			}
@@ -419,76 +416,14 @@ LRESULT CALLBACK CaptureDialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARA
     return FALSE;
 }
 
-VOID EnableConnectMenuItem(BOOL Enable)
+VOID EnableFileMenuItemByID(UINT Id, BOOL Enable)
 {
 	HMENU	hMenuBar;
 	HMENU	hFileMenu;
 
 	hMenuBar = GetMenu(hMainWnd);
 	hFileMenu = GetSubMenu(hMenuBar, 0);
-
-	if (Enable)
-	{
-		EnableMenuItem(hFileMenu, IDM_FILE_CONNECT, MF_BYCOMMAND|MF_ENABLED);
-	}
-	else
-	{
-		EnableMenuItem(hFileMenu, IDM_FILE_CONNECT, MF_BYCOMMAND|MF_GRAYED);
-	}
-}
-
-VOID EnableDisconnectMenuItem(BOOL Enable)
-{
-	HMENU	hMenuBar;
-	HMENU	hFileMenu;
-
-	hMenuBar = GetMenu(hMainWnd);
-	hFileMenu = GetSubMenu(hMenuBar, 0);
-
-	if (Enable)
-	{
-		EnableMenuItem(hFileMenu, IDM_FILE_DISCONNECT, MF_BYCOMMAND|MF_ENABLED);
-	}
-	else
-	{
-		EnableMenuItem(hFileMenu, IDM_FILE_DISCONNECT, MF_BYCOMMAND|MF_GRAYED);
-	}
-}
-
-VOID EnableStartCaptureMenuItem(BOOL Enable)
-{
-	HMENU	hMenuBar;
-	HMENU	hFileMenu;
-
-	hMenuBar = GetMenu(hMainWnd);
-	hFileMenu = GetSubMenu(hMenuBar, 0);
-
-	if (Enable)
-	{
-		EnableMenuItem(hFileMenu, IDM_FILE_STARTCAPTURE, MF_BYCOMMAND|MF_ENABLED);
-	}
-	else
-	{
-		EnableMenuItem(hFileMenu, IDM_FILE_STARTCAPTURE, MF_BYCOMMAND|MF_GRAYED);
-	}
-}
-
-VOID EnableStopCaptureMenuItem(BOOL Enable)
-{
-	HMENU	hMenuBar;
-	HMENU	hFileMenu;
-
-	hMenuBar = GetMenu(hMainWnd);
-	hFileMenu = GetSubMenu(hMenuBar, 0);
-
-	if (Enable)
-	{
-		EnableMenuItem(hFileMenu, IDM_FILE_STOPCAPTURE, MF_BYCOMMAND|MF_ENABLED);
-	}
-	else
-	{
-		EnableMenuItem(hFileMenu, IDM_FILE_STOPCAPTURE, MF_BYCOMMAND|MF_GRAYED);
-	}
+	EnableMenuItem(hFileMenu, Id, MF_BYCOMMAND|(Enable ? MF_ENABLED : MF_GRAYED));
 }
 
 VOID CheckLocalEchoMenuItem(BOOL Checked)
@@ -498,15 +433,7 @@ VOID CheckLocalEchoMenuItem(BOOL Checked)
 
 	hMenuBar = GetMenu(hMainWnd);
 	hFileMenu = GetSubMenu(hMenuBar, 0);
-
-	if (Checked)
-	{
-		CheckMenuItem(hFileMenu, IDM_FILE_LOCALECHO, MF_BYCOMMAND|MF_CHECKED);
-	}
-	else
-	{
-		CheckMenuItem(hFileMenu, IDM_FILE_LOCALECHO, MF_BYCOMMAND|MF_UNCHECKED);
-	}
+	CheckMenuItem(hFileMenu, IDM_FILE_LOCALECHO, MF_BYCOMMAND|(Checked ? MF_CHECKED : MF_UNCHECKED));
 }
 
 VOID Rs232Thread(VOID* Parameter)
