@@ -1,12 +1,11 @@
-/* $Id$
- *
+/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ex/sysinfo.c
  * PURPOSE:         System information functions
  *
  * PROGRAMMERS:     David Welch (welch@mcmail.com)
- *                  Aleksey Bragin (aleksey@studiocerebral.com)
+ *                  Aleksey Bragin (aleksey@reactos.org)
  */
 
 /* INCLUDES *****************************************************************/
@@ -14,10 +13,6 @@
 #include <ntoskrnl.h>
 #define NDEBUG
 #include <internal/debug.h>
-
-extern PEPROCESS PsIdleProcess;
-extern ULONG NtGlobalFlag; /* FIXME: it should go in a ddk/?.h */
-ULONGLONG STDCALL KeQueryInterruptTime(VOID);
 
 VOID MmPrintMemoryStatistic(VOID);
 
@@ -159,10 +154,8 @@ ExGetPreviousMode (VOID)
  * @implemented
  */
 VOID
-STDCALL
-ExGetCurrentProcessorCpuUsage (
-	PULONG	CpuUsage
-	)
+NTAPI
+ExGetCurrentProcessorCpuUsage(PULONG CpuUsage)
 {
 	PKPRCB Prcb;
 	ULONG TotalTime;
@@ -182,12 +175,10 @@ ExGetCurrentProcessorCpuUsage (
  * @implemented
  */
 VOID
-STDCALL
-ExGetCurrentProcessorCounts (
-	PULONG	ThreadKernelTime,
-	PULONG	TotalCpuTime,
-	PULONG	ProcessorNumber
-	)
+NTAPI
+ExGetCurrentProcessorCounts(PULONG ThreadKernelTime,
+                            PULONG TotalCpuTime,
+                            PULONG ProcessorNumber)
 {
 	PKPRCB Prcb;
 
@@ -202,7 +193,7 @@ ExGetCurrentProcessorCounts (
  * @implemented
  */
 BOOLEAN
-STDCALL
+NTAPI
 ExIsProcessorFeaturePresent(IN ULONG ProcessorFeature)
 {
     /* Quick check to see if it exists at all */
@@ -216,14 +207,15 @@ ExIsProcessorFeaturePresent(IN ULONG ProcessorFeature)
  * @implemented
  */
 BOOLEAN
-STDCALL
+NTAPI
 ExVerifySuite(SUITE_TYPE SuiteType)
 {
     if (SuiteType == Personal) return TRUE;
     return FALSE;
 }
 
-NTSTATUS STDCALL
+NTSTATUS
+NTAPI
 NtQuerySystemEnvironmentValue (IN	PUNICODE_STRING	VariableName,
 			       OUT	PWSTR		ValueBuffer,
 			       IN	ULONG		ValueBufferLength,
@@ -372,7 +364,7 @@ NtQuerySystemEnvironmentValue (IN	PUNICODE_STRING	VariableName,
 }
 
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 NtSetSystemEnvironmentValue (IN	PUNICODE_STRING	VariableName,
 			     IN	PUNICODE_STRING	Value)
 {
@@ -1797,7 +1789,7 @@ CallQS [] =
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 NtQuerySystemInformation (IN SYSTEM_INFORMATION_CLASS SystemInformationClass,
 			  OUT PVOID SystemInformation,
 			  IN ULONG Length,
@@ -1861,7 +1853,7 @@ NtQuerySystemInformation (IN SYSTEM_INFORMATION_CLASS SystemInformationClass,
 
 
 NTSTATUS
-STDCALL
+NTAPI
 NtSetSystemInformation (
 	IN	SYSTEM_INFORMATION_CLASS	SystemInformationClass,
 	IN	PVOID				SystemInformation,
@@ -1911,7 +1903,7 @@ NtSetSystemInformation (
 
 
 NTSTATUS
-STDCALL
+NTAPI
 NtFlushInstructionCache (
 	IN	HANDLE	ProcessHandle,
 	IN	PVOID	BaseAddress,
