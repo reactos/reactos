@@ -1,7 +1,9 @@
 #ifndef __CHARMAP_PRECOMP_H
 #define __CHARMAP_PRECOMP_H
-#include <windows.h>
+
 #include <stdio.h>
+#include <stdlib.h>
+#include <windows.h>
 #include <commctrl.h>
 #include "resource.h"
 

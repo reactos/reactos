@@ -160,21 +160,14 @@ extern "C" {
 #endif
 #endif
 
-#if defined(_MSC_VER) && defined(__cplusplus)
+#ifndef NOMINMAX
+    #ifndef max
+        #define max(a,b) ((a)>(b)?(a):(b))
+    #endif
 
-#include <stdlib.h>
-#define min __min
-#define max __max
-
-#elif !defined(_MSC_VER) && !defined(NOMINMAX)
-
-#ifndef max
-#define max(a,b) ((a)>(b)?(a):(b))
-#endif
-#ifndef min
-#define min(a,b) ((a)<(b)?(a):(b))
-#endif
-
+    #ifndef min
+        #define min(a,b) ((a)<(b)?(a):(b))
+    #endif
 #endif
 
 #define UNREFERENCED_PARAMETER(P) {(P)=(P);}
