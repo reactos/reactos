@@ -123,6 +123,12 @@
 #ifndef PORTCLS_H
 #define PORTCLS_H
 
+//#include <windef.h>
+#include <ks.h>
+#include <punknown.h>
+#include <ntddk.h>
+#include <drmk.h>
+
 #ifdef __cplusplus
 extern "C"
 {
@@ -131,12 +137,6 @@ extern "C"
 #else
     #include <wdm.h>
 #endif
-
-//#include <windef.h>
-#include <ks.h>
-#include <punknown.h>
-#include <ntddk.h>
-#include <drmk.h>
 
 #ifndef PC_NO_IMPORTS
 #define PORTCLASSAPI EXTERN_C __declspec(dllimport)
