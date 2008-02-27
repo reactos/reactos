@@ -20,6 +20,10 @@ HFONT      hMainFont;
 HIMAGELIST hImageAppList;     // Image list for programs list
 BOOL       bAscending = TRUE; // Sorting programs list
 
+HDC BackbufferHdc = NULL;
+HBITMAP BackbufferBmp = NULL;
+
+
 VOID
 ShowMessage(WCHAR* title, WCHAR* message)
 {
@@ -119,6 +123,7 @@ AddTreeViewItems(VOID)
     HIMAGELIST hImageList;
     WCHAR szBuf[1024];
     int Index[2];
+    TV_INSERTSTRUCTW Insert;
 
     hImageList = ImageList_Create(16, 16, ILC_COLORDDB, 1, 1);
     SendMessageW(hActList, TVM_SETIMAGELIST, TVSIL_NORMAL, (LPARAM)(HIMAGELIST)hImageList);
@@ -127,8 +132,6 @@ AddTreeViewItems(VOID)
     Index[1] = ImageList_Add(hImageList, LoadBitmap(hApplet, MAKEINTRESOURCE(IDB_ICON)), NULL);
 
     // Insert items to Actions List
-    TV_INSERTSTRUCTW Insert;
-
     ZeroMemory(&Insert, sizeof(TV_INSERTSTRUCT));
     Insert.item.mask = TVIF_TEXT|TVIF_PARAM|TVIF_IMAGE|TVIF_SELECTEDIMAGE;
     Insert.hInsertAfter = TVI_LAST;
@@ -273,6 +276,7 @@ AddItemToList(LPARAM hSubKey, LPWSTR szDisplayName, INT ItemIndex, LPWSTR AppNam
     HICON hIcon = NULL;
     LV_ITEM listItem;
     WCHAR IconPath[MAX_PATH], AppSize[256], LastUsed[256];
+    int iIndex;
 
     GetARPInfo(AppName, IconPath, AppSize, LastUsed);
 
@@ -295,7 +299,6 @@ AddItemToList(LPARAM hSubKey, LPWSTR szDisplayName, INT ItemIndex, LPWSTR AppNam
     listItem.lParam     = (LPARAM)hSubKey;
     listItem.iItem      = (int)ItemIndex;
     listItem.iImage     = index;
-    int iIndex;
     iIndex = ListView_InsertItem(hAppList, &listItem);
     ListView_SetItemText(hAppList, iIndex, 1, LastUsed);
     ListView_SetItemText(hAppList, iIndex, 2, AppSize);
@@ -322,13 +325,12 @@ FillSoftwareList(INT ShowMode)
     BOOL bIsUpdate = FALSE;
     BOOL bIsSystemComponent = FALSE;
     INT ItemIndex = 0;
-
-    (VOID) ImageList_Destroy(hImageAppList);
-    (VOID) ListView_DeleteAllItems(hAppList);
-    
     DEVMODE pDevMode;
     int ColorDepth;
 
+    (VOID) ImageList_Destroy(hImageAppList);
+    (VOID) ListView_DeleteAllItems(hAppList);
+  
     pDevMode.dmSize = sizeof(DEVMODE);
     pDevMode.dmDriverExtra = 0;
     EnumDisplaySettings(NULL, ENUM_CURRENT_SETTINGS, &pDevMode);
@@ -421,6 +423,8 @@ GetAppString(LPCWSTR lpKeyName, LPWSTR lpString)
 {
     HKEY hKey;
     INT nIndex;
+    DWORD dwSize;
+    DWORD dwType = REG_SZ;
 
     nIndex = (INT)SendMessage(hAppList,LVM_GETNEXTITEM,-1,LVNI_FOCUSED);
     if (nIndex != -1)
@@ -433,7 +437,6 @@ GetAppString(LPCWSTR lpKeyName, LPWSTR lpString)
         (VOID) ListView_GetItem(hAppList,&item);
         hKey = (HKEY)item.lParam;
 
-        DWORD dwSize, dwType = REG_SZ;
         if (RegQueryValueEx(hKey, lpKeyName, NULL, &dwType,
                             (LPBYTE)lpString, &dwSize) == ERROR_SUCCESS)
         {
@@ -689,10 +692,7 @@ CompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
             Size2 = _wtoi(szItem2);
             if (Size1 < Size2)
             {
-                if(bAscending == TRUE)
-                    return -1;
-                else
-                    return 1;
+                return (bAscending ? -1 : 1);
             }
             else if (Size1 == Size2)
             {
@@ -700,10 +700,7 @@ CompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
             }
             else if (Size1 > Size2)
             {
-                if(bAscending == TRUE)
-                    return 1;
-                else
-                    return -1;
+                return (bAscending ? 1 : -1);
             }
         }
     }
@@ -723,10 +720,7 @@ LoadSettings(VOID)
         dwSize = sizeof(APPWIZSETTINGS);
         if (RegQueryValueEx(hKey, L"Settings", NULL, NULL, (LPBYTE)&AppWizSettings, &dwSize) == ERROR_SUCCESS)
         {
-            if (AppWizSettings.Size == sizeof(APPWIZSETTINGS))
-                Ret = TRUE;
-            else
-                Ret = FALSE;
+            Ret = (AppWizSettings.Size == sizeof(APPWIZSETTINGS));
         }
         else Ret = FALSE;
     }
@@ -746,10 +740,7 @@ SaveSettings(VOID)
         REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, &hKey, NULL) == ERROR_SUCCESS)
     {
         AppWizSettings.Size = sizeof(APPWIZSETTINGS);
-        if (RegSetValueEx(hKey, L"Settings", 0, REG_BINARY, (LPBYTE)&AppWizSettings, sizeof(APPWIZSETTINGS)) == ERROR_SUCCESS)
-            Ret = TRUE;
-        else
-            Ret = FALSE;
+        Ret = (RegSetValueEx(hKey, L"Settings", 0, REG_BINARY, (LPBYTE)&AppWizSettings, sizeof(APPWIZSETTINGS)) == ERROR_SUCCESS);
     }
     else Ret = FALSE;
 
@@ -757,10 +748,31 @@ SaveSettings(VOID)
     return Ret;
 }
 
+static void UpdateBitmap(HWND hWnd, RECT WndRect, RECT DescriptionRect)
+{
+    HDC hdc = GetDC(hWnd);
+
+    if (!BackbufferHdc)
+        BackbufferHdc = CreateCompatibleDC(hdc);
+
+    if (BackbufferBmp)
+        DeleteObject(BackbufferBmp);
+
+    BackbufferBmp = CreateCompatibleBitmap(hdc, WndRect.right, WndRect.bottom);
+
+    SelectObject(BackbufferHdc, BackbufferBmp);
+    FillRect(BackbufferHdc, &WndRect, (HBRUSH)COLOR_APPWORKSPACE);
+    DrawIconEx(BackbufferHdc, 153, 1, hSearchIcon, 24, 24, 0, NULL, DI_NORMAL|DI_COMPAT);
+    DrawDescription(BackbufferHdc, DescriptionRect);
+	
+    ReleaseDC(hWnd, hdc);
+}
+
 static LRESULT CALLBACK
 WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 {
     static RECT DescriptionRect;
+    static RECT AppRect;
     WCHAR szBuf[1024];
 
     switch (Message)
@@ -824,16 +836,7 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
         {
             PAINTSTRUCT ps;
             HDC hdc = BeginPaint(hwnd, &ps);
-            HDC BackbufferHdc = CreateCompatibleDC(hdc);
-            HBITMAP BackbufferBmp = CreateCompatibleBitmap(hdc, ps.rcPaint.right, ps.rcPaint.bottom);
-
-            SelectObject(BackbufferHdc, BackbufferBmp);
-            FillRect(BackbufferHdc, &ps.rcPaint, (HBRUSH)COLOR_APPWORKSPACE);
-            DrawIconEx(BackbufferHdc, 153, 1, hSearchIcon, 24, 24, 0, NULL, DI_NORMAL|DI_COMPAT);
-            DrawDescription(BackbufferHdc, DescriptionRect);
             BitBlt(hdc, 0, 0, ps.rcPaint.right, ps.rcPaint.bottom, BackbufferHdc, 0, 0, SRCCOPY);
-            DeleteObject(BackbufferBmp);
-            DeleteDC(BackbufferHdc);
             EndPaint(hwnd, &ps);
         }
         break;
@@ -865,6 +868,8 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
                                 EnableWindow(hModifyBtn, TRUE);
                         }
                         ShowAppInfo();
+                        UpdateBitmap(hwnd, AppRect, DescriptionRect);
+                        InvalidateRect(hwnd, &DescriptionRect, FALSE);
                     }
                 break;
                 case NM_DBLCLK:
@@ -879,16 +884,8 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
                 case LVN_COLUMNCLICK:
                 {
                     LPNMLISTVIEW pnmv = (LPNMLISTVIEW) lParam;
-
                     (VOID) ListView_SortItems(hAppList, CompareFunc, pnmv->iSubItem);
-                    if (bAscending == TRUE)
-                    {
-                        bAscending = FALSE;
-                    }
-                    else
-                    {
-                        bAscending = TRUE;
-                    }
+                    bAscending = !bAscending;
                 }
                 break;
             }
@@ -906,6 +903,10 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
         break;
         case WM_SIZE:
         {    
+            RECT Rect = {1, HIWORD(lParam)-178, LOWORD(lParam)-1, HIWORD(lParam)-1};
+            SetRect(&AppRect, 0, 0, LOWORD(lParam)-1, HIWORD(lParam)-1);
+            DescriptionRect = Rect;
+
             // Actions list
             ResizeControl(hActList, 0, 1, 150, HIWORD(lParam)-180);
 
@@ -915,9 +916,6 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
             // Search Edit
             ResizeControl(hSearch, 180, 1, LOWORD(lParam), 25);
 
-            RECT Rect = {1, HIWORD(lParam)-178, LOWORD(lParam)-1, HIWORD(lParam)-1};
-            DescriptionRect = Rect;
-
             // Buttons
             MoveWindow(hRemoveBtn, LOWORD(lParam)-105, HIWORD(lParam)-30, 100, 25, TRUE); // Remove button
             MoveWindow(hModifyBtn, LOWORD(lParam)-208, HIWORD(lParam)-30, 100, 25, TRUE); // Modify button
@@ -926,6 +924,8 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
             
             // Update title and info
             ShowAppInfo();
+            UpdateBitmap(hwnd, AppRect, DescriptionRect);
+            InvalidateRect(hwnd, &DescriptionRect, FALSE);
         }
         break;
         case WM_ACTIVATEAPP:
@@ -949,12 +949,13 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
             AppWizSettings.Top    = wp.rcNormalPosition.top;
             AppWizSettings.Right  = wp.rcNormalPosition.right;
             AppWizSettings.Bottom = wp.rcNormalPosition.bottom;
-            if (IsZoomed(hMainWnd) || (wp.flags & WPF_RESTORETOMAXIMIZED))
-                AppWizSettings.Maximized = TRUE;
-            else
-                AppWizSettings.Maximized = FALSE;
+            AppWizSettings.Maximized = (IsZoomed(hMainWnd) || (wp.flags & WPF_RESTORETOMAXIMIZED));
             SaveSettings();
             // Destroy all and quit
+            if (BackbufferHdc)
+                DeleteDC(BackbufferHdc);
+            if (BackbufferBmp)
+                DeleteObject(BackbufferBmp);
             DeleteObject(hMainFont);
             DeleteObject(hSearchIcon);
             PostQuitMessage(0);
