@@ -20,7 +20,39 @@ SXS=0x15:FACILITY_SXS_ERROR_CODE
 )
 LanguageNames=(English=0x409:MSG00409)
 
+;#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)
+MessageId=0x00
+Severity=Success
+Facility=System
+SymbolicName=STATUS_WAIT_0 
+Language=English
+STATUS_WAIT_0
 
+.
+MessageId=0x01
+Severity=Success
+Facility=System
+SymbolicName=STATUS_WAIT_1 
+Language=English
+STATUS_WAIT_1
+
+.
+MessageId=0x02
+Severity=Success
+Facility=System
+SymbolicName=STATUS_WAIT_2 
+Language=English
+STATUS_WAIT_2
+
+.
+MessageId=0x03
+Severity=Success
+Facility=System
+SymbolicName=STATUS_WAIT_3 
+Language=English
+STATUS_WAIT_3
+
+.
 MessageId=0x80
 Severity=Success
 Facility=System
@@ -245,23 +277,6 @@ Facility=System
 SymbolicName=STATUS_PROCESS_IN_JOB 
 Language=English
 The specified process is part of a job.
-
-.
-MessageId=0x125
-Severity=Success
-Facility=System
-SymbolicName=STATUS_SPECIAL_GROUP 
-Language=English
-{Volume Shadow Copy Service}
-The system is now ready for hibernation.
-
-.
-MessageId=0x126
-Severity=Success
-Facility=System
-SymbolicName=STATUS_SPECIAL_USER 
-Language=English
-A file system or file system filter driver has successfully completed an FsFilter operation.
 
 .
 MessageId=0x367
@@ -1870,6 +1885,14 @@ Language=English
 When a block of memory is allotted for future updates, such as the memory allocated to hold discretionary access control and primary group information, successive updates may exceed the amount of memory originally allotted.
 Since quota may already have been charged to several processes which have handles to the object, it is not reasonable to alter the size of the allocated memory.
 Instead, a request that requires more memory than has been allotted must fail and the STATUS_ALLOTED_SPACE_EXCEEDED error returned.
+
+.
+MessageId=0x9a
+Severity=Error
+Facility=System
+SymbolicName=STATUS_INSUFFICIENT_RESOURCES
+Language=English
+Insufficient system resources exist to complete this API.
 
 .
 MessageId=0x9c
