@@ -185,15 +185,14 @@ extern Ext2Data				Ext2GlobalData;
 {																			\
 	if( ( TYPE ) & ( PERMITTED_DEBUG_TRACE_TYPES ) )						\
 	{																		\
-  		DbgPrint("    ");													\
+		if( ( DEBUG_TRACE_LINENO ) & ( PERMITTED_DEBUG_TRACE_TYPES ) )		\
+		{																	\
+			DbgPrint("(%s:%ld) ", __FILE__, __LINE__ );						\
+		}																	\
 		DbgPrint(X,Y);														\
 		if( ( DEBUG_TRACE_IRQL ) & ( PERMITTED_DEBUG_TRACE_TYPES ) )		\
 		{																	\
-			DbgPrint( "  IRQL = %d ", KeGetCurrentIrql( ) );				\
-		}																	\
-		if( ( DEBUG_TRACE_LINENO ) & ( PERMITTED_DEBUG_TRACE_TYPES ) )		\
-		{																	\
-			DbgPrint( "   [%s] Line No = %ld", __FILE__, __LINE__ );		\
+			DbgPrint( ",IRQL = %d ", KeGetCurrentIrql( ) );					\
 		}																	\
 		DbgPrint("\n");														\
 	}																		\
