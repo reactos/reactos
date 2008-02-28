@@ -315,7 +315,7 @@ LsaLookupSids(
     PLSA_REFERENCED_DOMAIN_LIST LocalDomains;
     PLSA_TRANSLATED_NAME LocalNames;
 
-    FIXME("(%p,%u,%p,%p,%p) stub\n", PolicyHandle, Count, Sids,
+    TRACE("(%p,%u,%p,%p,%p) stub\n", PolicyHandle, Count, Sids,
           ReferencedDomains, Names);
 
     WARN("LsaLookupSids(): stub. Always returning 'Administrator'\n");
@@ -377,7 +377,7 @@ LsaOpenPolicy(
     IN ACCESS_MASK DesiredAccess,
     IN OUT PLSA_HANDLE PolicyHandle)
 {
-    FIXME("(%s,%p,0x%08x,%p) stub\n",
+    TRACE("(%s,%p,0x%08x,%p) stub\n",
           SystemName?debugstr_w(SystemName->Buffer):"(null)",
           ObjectAttributes, DesiredAccess, PolicyHandle);
 
