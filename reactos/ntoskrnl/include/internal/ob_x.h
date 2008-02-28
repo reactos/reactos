@@ -290,6 +290,12 @@ ObpFreeCapturedAttributes(IN PVOID Buffer,
             List->L.FreeMisses++;
             List->L.Free(Buffer);
         }
+        else
+        {
+            /* The free was within the Depth */
+            InterlockedPushEntrySList(&List->L.ListHead,
+                                      (PSINGLE_LIST_ENTRY)Buffer);
+        }
     }
     else
     {
