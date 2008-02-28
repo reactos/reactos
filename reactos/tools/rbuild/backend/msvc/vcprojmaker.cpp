@@ -350,12 +350,36 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 				multiple_includes = true;
 			}
 		}
+		else
+		{
+			// Add WDK or PSDK paths, if user provides them
+			if (getenv ( "BASEDIR" ) != NULL &&
+				(module.type == Kernel ||
+				 module.type == KernelModeDLL ||
+				 module.type == KernelModeDriver))
+			{
+				string WdkBase, SdkPath, CrtPath, DdkPath;
+				WdkBase = getenv ( "BASEDIR" );
+				SdkPath = WdkBase + "\\inc\\api";
+				CrtPath = WdkBase + "\\inc\\crt";
+				DdkPath = WdkBase + "\\inc\\ddk";
+
+				if ( multiple_includes )
+					fprintf ( OUT, ";" );
+
+				fprintf ( OUT, "%s;", SdkPath.c_str() );
+				fprintf ( OUT, "%s;", CrtPath.c_str() );
+				fprintf ( OUT, "%s", DdkPath.c_str() );
+				multiple_includes = true;
+			}
+		}
 		fprintf ( OUT, "\"\r\n" );
 
 		StringSet defines = common_defines;
 
-        // Always add _CRT_SECURE_NO_WARNINGS to disable warnings about not using the safe functions introduced in MSVC8.
-        defines.insert ( "_CRT_SECURE_NO_WARNINGS" );
+		// Always add _CRT_SECURE_NO_WARNINGS to disable warnings about not
+		// using the safe functions introduced in MSVC8.
+		defines.insert ( "_CRT_SECURE_NO_WARNINGS" );
 
 		if ( debug )
 		{
@@ -485,6 +509,26 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 			fprintf ( OUT, "\"\r\n" );
 
 			fprintf ( OUT, "\t\t\t\tAdditionalLibraryDirectories=\"" );
+
+			// Add WDK libs paths, if needed
+			if (getenv ( "BASEDIR" ) != NULL &&
+				(module.type == Kernel ||
+				 module.type == KernelModeDLL ||
+				 module.type == KernelModeDriver))
+			{
+				string WdkBase, CrtPath, DdkPath;
+				WdkBase = getenv ( "BASEDIR" );
+				CrtPath = WdkBase + "\\lib\\crt\\i386";
+				DdkPath = WdkBase + "\\lib\\wnet\\i386";
+
+				fprintf ( OUT, "%s;", CrtPath.c_str() );
+				fprintf ( OUT, "%s", DdkPath.c_str() );
+
+				if (libraries.size () > 0)
+					fprintf ( OUT, ";" );
+			}
+
+			// Add conventional libraries dirs
 			for (i = 0; i < libraries.size (); i++)
 			{
 				if ( i > 0 )
@@ -495,6 +539,7 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 				libpath = libpath.substr (0, libpath.find_last_of ("\\") );
 				fprintf ( OUT, "%s", libpath.c_str() );
 			}
+
 			fprintf ( OUT, "\"\r\n" );
 
 			fprintf ( OUT, "\t\t\t\tOutputFile=\"$(OutDir)/%s%s\"\r\n", module.name.c_str(), module_type.c_str() );
