@@ -1250,21 +1250,21 @@ Rule arRule1 ( "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).a: 
 Rule arRule2 ( "\t$(ECHO_AR)\n"
               "\t${ar} -rc $@ $($(module_name)_OBJS)\n",
               NULL );
-Rule gasRule ( "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).o: $(source) $(module_rbuild) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
+Rule gasRule ( "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).o: $(source) $(dependencies) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
                "\t$(ECHO_GAS)\n"
                "\t${gcc} -x assembler-with-cpp -c $< -o $@ -D__ASM__ $($(module_name)_CFLAGS)\n",
                "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).o",
                "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)", NULL );
-Rule bootRule ( "$(module_output): $(source) $(module_rbuild) | $(OUTPUT)$(SEP)$(source_dir)\n"
+Rule bootRule ( "$(module_output): $(source) $(dependencies) | $(OUTPUT)$(SEP)$(source_dir)\n"
                 "\t$(ECHO_NASM)\n"
                 "\t$(Q)${nasm} -f win32 $< -o $@ $($(module_name)_NASMFLAGS)\n",
                 "$(OUTPUT)$(SEP)$(source_dir)$(SEP)", NULL );
-Rule nasmRule ( "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).o: $(source) $(module_rbuild) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
+Rule nasmRule ( "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).o: $(source) $(dependencies) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
                 "\t$(ECHO_NASM)\n"
                 "\t$(Q)${nasm} -f win32 $< -o $@ $($(module_name)_NASMFLAGS)\n",
                 "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).o",
                 "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)", NULL );
-Rule windresRule ( "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).coff: $(source) $(module_rbuild) $(WRC_TARGET) | $(INTERMEDIATE)$(SEP)$(source_dir) $(TEMPORARY)\n"
+Rule windresRule ( "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).coff: $(source) $(dependencies) $(WRC_TARGET) | $(INTERMEDIATE)$(SEP)$(source_dir) $(TEMPORARY)\n"
                    "\t$(ECHO_WRC)\n"
                    "\t${gcc} -xc -E -DRC_INVOKED ${$(module_name)_RCFLAGS} $(source) > $(TEMPORARY)$(SEP)$(module_name).$(source_name_noext).rci.tmp\n"
                    "\t$(Q)$(WRC_TARGET) ${$(module_name)_RCFLAGS} $(TEMPORARY)$(SEP)$(module_name).$(source_name_noext).rci.tmp $(TEMPORARY)$(SEP)$(module_name).$(source_name_noext).res.tmp\n"
@@ -1277,73 +1277,98 @@ Rule wmcRule ( "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).rc 
                "\t$(ECHO_WMC)\n"
                "\t$(Q)$(WMC_TARGET) -i -H $(INTERMEDIATE)$(SEP)include$(SEP)reactos$(SEP)$(source_name_noext).h -o $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).rc $(source)\n",
                "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).rc", "$(INTERMEDIATE)$(SEP)include$(SEP)reactos$(SEP)$(source_name_noext).h", NULL );
-Rule winebuildRule ( "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).spec.def: $(source) $(module_rbuild) $(WINEBUILD_TARGET) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
+Rule winebuildRule ( "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).spec.def: $(source) $(dependencies) $(WINEBUILD_TARGET) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
                      "\t$(ECHO_WINEBLD)\n"
                      "\t$(Q)$(WINEBUILD_TARGET) $(WINEBUILD_FLAGS) -o $(INTERMEDIATE)$(SEP)$(source_path)$(SEP)$(source_name_noext).spec.def --def -E $(source_path)$(SEP)$(source_name_noext).spec\n"
                      "$(INTERMEDIATE)$(SEP)$(source_path)$(SEP)$(source_name_noext).stubs.c: $(source_path)$(SEP)$(source_name_noext).spec $(WINEBUILD_TARGET)\n"
                      "\t$(ECHO_WINEBLD)\n"
-                     "\t$(Q)$(WINEBUILD_TARGET) $(WINEBUILD_FLAGS) -o $(INTERMEDIATE)$(SEP)$(source_path)$(SEP)$(source_name_noext).stubs.c --pedll $(source_path)$(SEP)$(source_name_noext).spec\n",
+                     "\t$(Q)$(WINEBUILD_TARGET) $(WINEBUILD_FLAGS) -o $(INTERMEDIATE)$(SEP)$(source_path)$(SEP)$(source_name_noext).stubs.c --pedll $(source_path)$(SEP)$(source_name_noext).spec\n"
+                     "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).stubs.o: $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).stubs.c $(dependencies) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
+                     "\t$(ECHO_CC)\n"
+                     "\t${gcc} -c $< -o $@ $($(module_name)_CFLAGS)$(compiler_flags)\n",
                      "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).spec.def",
                      "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).stubs.c",
+                     "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).stubs.o",
                      "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)", NULL );
-Rule widlHeaderRule ( "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).h: $(source) $(module_rbuild) $(WIDL_TARGET) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
+Rule widlHeaderRule ( "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).h: $(source) $(dependencies) $(WIDL_TARGET) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
                       "\t$(ECHO_WIDL)\n"
                       "\t$(Q)$(WIDL_TARGET)  $($(module_name)_WIDLFLAGS) -h -H $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).h $(source)\n",
                       "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).h",
                       "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)", NULL );
-Rule widlServerRule ( "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_s.c $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_s.h: $(source) $(module_rbuild) $(WIDL_TARGET) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
+Rule widlServerRule ( "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_s.c $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_s.h: $(source) $(dependencies) $(WIDL_TARGET) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
                       "\t$(ECHO_WIDL)\n"
-                      "\t$(Q)$(WIDL_TARGET) $($(module_name)_WIDLFLAGS) -h -H $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_s.h -s -S $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_s.c $(source)\n",
+                      "\t$(Q)$(WIDL_TARGET) $($(module_name)_WIDLFLAGS) -h -H $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_s.h -s -S $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_s.c $(source)\n"
+                      "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_s.o: $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_s.c $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_s.h $(dependencies) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
+                      "\t$(ECHO_CC)\n"
+                      "\t${gcc} -c $< -o $@ $($(module_name)_CFLAGS)$(compiler_flags)\n",
                       "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_s.h",
                       "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_s.c",
+                      "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_s.o",
                       "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)", NULL );
-Rule widlClientRule ( "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_c.c $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_c.h: $(source) $(module_rbuild) $(WIDL_TARGET) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
+Rule widlClientRule ( "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_c.c $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_c.h: $(source) $(dependencies) $(WIDL_TARGET) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
                       "\t$(ECHO_WIDL)\n"
-                      "\t$(Q)$(WIDL_TARGET) $($(module_name)_WIDLFLAGS) -h -H $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_c.h -c -C $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_c.c $(source)\n",
+                      "\t$(Q)$(WIDL_TARGET) $($(module_name)_WIDLFLAGS) -h -H $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_c.h -c -C $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_c.c $(source)\n"
+                      "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_c.o: $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_c.c $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_c.h $(dependencies) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
+                      "\t$(ECHO_CC)\n"
+                      "\t${gcc} -c $< -o $@ $($(module_name)_CFLAGS)$(compiler_flags)\n",
                       "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_c.h",
                       "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_c.c",
+                      "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_c.o",
                       "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)", NULL );
-Rule widlProxyRule ( "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_p.c $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_p.h: $(source) $(module_rbuild) $(WIDL_TARGET) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
+Rule widlProxyRule ( "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_p.c $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_p.h: $(source) $(dependencies) $(WIDL_TARGET) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
                      "\t$(ECHO_WIDL)\n"
-                     "\t$(Q)$(WIDL_TARGET)  $($(module_name)_WIDLFLAGS) -h -H $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_p.h -p -P $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_p.c $(source)\n",
+                     "\t$(Q)$(WIDL_TARGET)  $($(module_name)_WIDLFLAGS) -h -H $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_p.h -p -P $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_p.c $(source)\n"
+                     "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_p.o: $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_p.c $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_p.h $(dependencies) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
+                      "\t$(ECHO_CC)\n"
+                      "\t${gcc} -c $< -o $@ $($(module_name)_CFLAGS)$(compiler_flags)\n",
                      "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_p.h",
                      "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_p.c",
+                     "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_p.o",
                      "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)", NULL );
-Rule widlTlbRule ( "$(OUTPUT)$(SEP)$(source_dir)$(SEP)$(module_name).tlb: $(source) $(module_rbuild) $(WIDL_TARGET) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
+Rule widlTlbRule ( "$(OUTPUT)$(SEP)$(source_dir)$(SEP)$(module_name).tlb: $(source) $(dependencies) $(WIDL_TARGET) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
                    "\t$(ECHO_WIDL)\n"
                    "\t$(Q)$(WIDL_TARGET)  $($(module_name)_WIDLFLAGS) -t -T $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).tlb $(source)\n",
                    "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)", NULL );
+Rule gccRule ( "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).o: $(source) $(dependencies) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
+               "\t$(ECHO_CC)\n"
+               "\t${gcc} -c $< -o $@ $($(module_name)_CFLAGS)$(compiler_flags)\n",
+               "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).o", NULL );
+Rule gccHostRule ( "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).o: $(source) $(dependencies) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
+                   "\t$(ECHO_CC)\n"
+                   "\t${host_gcc} -c $< -o $@ $($(module_name)_CFLAGS)$(compiler_flags)\n",
+                   "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).o", NULL );
+Rule gppRule ( "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).o: $(source) $(dependencies) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
+               "\t$(ECHO_CC)\n"
+               "\t${gpp} -c $< -o $@ $($(module_name)_CFLAGS)$(compiler_flags)\n",
+               "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).o", NULL );
+Rule gppHostRule ( "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).o: $(source) $(dependencies) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
+                   "\t$(ECHO_CC)\n"
+                   "\t${host_gpp} -c $< -o $@ $($(module_name)_CFLAGS)$(compiler_flags)\n",
+                   "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).o", NULL );
 
 void
 MingwModuleHandler::GenerateGccCommand (
 	const FileLocation* sourceFile,
+	const Rule *rule,
 	const string& extraDependencies )
 {
 	const FileLocation *generatedSourceFileName = GetActualSourceFilename ( sourceFile );
 	const FileLocation *pchFilename = GetPrecompiledHeaderFilename ();
-	string dependencies = backend->GetFullName ( *generatedSourceFileName );
-	delete generatedSourceFileName;
+	string dependencies = extraDependencies;
 
-	string cc;
-	CompilerType type;
+	string flags;
 	string extension = GetExtension ( *sourceFile );
 	if ( extension == ".cc" || extension == ".cpp" || extension == ".cxx" )
 	{
-		cc = ( module.host == HostTrue ? "${host_gpp}" : "${gpp}" );
-		type = CompilerTypeCPP;
+		flags = GenerateCompilerParametersFromVector ( module.non_if_data.compilerFlags, CompilerTypeCPP );
 	}
 	else
 	{
-		cc = ( module.host == HostTrue ? "${host_gcc}" : "${gcc}" );
-		type = CompilerTypeCC;
+		flags = GenerateCompilerParametersFromVector ( module.non_if_data.compilerFlags, CompilerTypeCC );
 	}
-	string flags = GenerateCompilerParametersFromVector ( module.non_if_data.compilerFlags, type );
 	if ( flags != "" )
-		flags = cflagsMacro + " " + flags;
-	else
-		flags = cflagsMacro;
+		flags = " " + flags;
 
-	dependencies += extraDependencies;
 	if ( pchFilename )
 	{
 		dependencies += " " + backend->GetFullName ( *pchFilename );
@@ -1354,22 +1379,10 @@ MingwModuleHandler::GenerateGccCommand (
 	vector<FileLocation> rpcDependencies;
 	GetRpcHeaderDependencies ( rpcDependencies );
 	dependencies += " " + v2s ( backend, rpcDependencies, 5 );
-	dependencies += " " + NormalizeFilename ( module.xmlbuildFile );
 
-	const FileLocation *objectFilename = GetObjectFilename (
-		sourceFile, module );
-	fprintf ( fMakefile,
-	          "%s: %s | %s\n",
-	          backend->GetFullName ( *objectFilename ).c_str (),
-	          dependencies.c_str (),
-	          backend->GetFullPath ( *objectFilename ).c_str () );
-	delete objectFilename;
+	rule->Execute ( fMakefile, backend, module, generatedSourceFileName, clean_files, dependencies, flags );
 
-	fprintf ( fMakefile, "\t$(ECHO_CC)\n" );
-	fprintf ( fMakefile,
-	         "\t%s -c $< -o $@ %s\n",
-	         cc.c_str (),
-	         flags.c_str () );
+	delete generatedSourceFileName;
 }
 
 string
@@ -1451,6 +1464,14 @@ MingwModuleHandler::GenerateCommands (
 		{ HostDontCare, RpcProxy, ".idl", &widlProxyRule },
 		{ HostDontCare, EmbeddedTypeLib, ".idl", &widlTlbRule },
 		{ HostDontCare, TypeDontCare, ".idl", &widlHeaderRule },
+		{ HostTrue, TypeDontCare, ".c", &gccHostRule },
+		{ HostTrue, TypeDontCare, ".cc", &gppHostRule },
+		{ HostTrue, TypeDontCare, ".cpp", &gppHostRule },
+		{ HostTrue, TypeDontCare, ".cxx", &gppHostRule },
+		{ HostFalse, TypeDontCare, ".c", &gccRule },
+		{ HostFalse, TypeDontCare, ".cc", &gppRule },
+		{ HostFalse, TypeDontCare, ".cpp", &gppRule },
+		{ HostFalse, TypeDontCare, ".cxx", &gppRule },
 	};
 	size_t i;
 	Rule *customRule = NULL;
@@ -1467,23 +1488,15 @@ MingwModuleHandler::GenerateCommands (
 		break;
 	}
 
-	if ( customRule )
-		customRule->Execute ( fMakefile, backend, module, &sourceFile, clean_files );
-
-	if ( extension == ".c" || extension == ".cc" || extension == ".cpp" || extension == ".cxx" ||
-	     extension == ".spec" ||
-	     ( extension == ".idl" &&
-	       ( module.type == RpcServer ) || ( module.type == RpcClient ) || ( module.type == RpcProxy ) ) )
+	if ( extension == ".c" || extension == ".cc" || extension == ".cpp" || extension == ".cxx"  )
 	{
-		const FileLocation *objectFilename = GetObjectFilename (
-			&sourceFile, module );
-		CLEAN_FILE ( *objectFilename );
-		delete objectFilename;
-
 		GenerateGccCommand ( &sourceFile,
+		                     customRule,
 		                     GetCompilationUnitDependencies ( compilationUnit ) + GetExtraDependencies ( &sourceFile ) + extraDependencies );
 	}
-	else if ( !customRule )
+	else if ( customRule )
+		customRule->Execute ( fMakefile, backend, module, &sourceFile, clean_files );
+	else
 	{
 		throw InvalidOperationException ( __FILE__,
 		                                  __LINE__,

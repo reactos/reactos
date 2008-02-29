@@ -36,9 +36,15 @@ ReplaceVariable( string& str,
 }
 
 static std::string
-FixString ( const string& str, Backend *backend, const Module& module, const FileLocation *source )
+FixString ( const string& str, Backend *backend, const Module& module, const FileLocation *source,
+            const std::string& additional_dependencies, const std::string& compiler_flags )
 {
 	string ret = str;
+	string dep = "";
+
+	if ( additional_dependencies.length () > 0 )
+		dep += additional_dependencies;
+	dep += " " + module.xmlbuildFile;
 
 	if ( source )
 	{
@@ -49,10 +55,12 @@ FixString ( const string& str, Backend *backend, const Module& module, const Fil
 		ReplaceVariable ( ret, "$(source_name_noext)", ReplaceExtension ( source->name , "" ) );
 		ReplaceVariable ( ret, "$(source_path)", backend->GetFullPath ( *source ) );
 	}
+	ReplaceVariable ( ret, "$(dependencies)", dep );
 	ReplaceVariable ( ret, "$(module_name)", module.name );
-	ReplaceVariable ( ret, "$(module_rbuild)", module.xmlbuildFile );
 	ReplaceVariable ( ret, "$(module_output)", GetTargetMacro ( module, true ) );
 	ReplaceVariable ( ret, "$(SEP)", sSep );
+
+	ReplaceVariable ( ret, "$(compiler_flags)", compiler_flags );
 
 	return ret;
 }
@@ -78,15 +86,17 @@ void Rule::Execute ( FILE *outputFile,
                      MingwBackend *backend,
                      const Module& module,
                      const FileLocation *source,
-                     string_list& clean_files )
+                     string_list& clean_files,
+                     const std::string& additional_dependencies,
+                     const std::string& compiler_flags ) const
 {
-	string cmd = FixString ( command, backend, module, source );
+	string cmd = FixString ( command, backend, module, source, additional_dependencies, compiler_flags );
 
 	fprintf ( outputFile, "%s", cmd.c_str () );
 
 	for ( size_t i = 0; i < generatedFiles.size (); i++ )
 	{
-		string file = FixString ( generatedFiles[i], backend, module, source );
+		string file = FixString ( generatedFiles[i], backend, module, source, "", "" );
 		if ( file[file.length () - 1] != cSep )
 		{
 			clean_files.push_back ( file );

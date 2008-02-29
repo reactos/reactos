@@ -29,7 +29,9 @@ public:
 	               MingwBackend *backend,
 	               const Module& module,
 	               const FileLocation *source,
-	               string_list& clean_files );
+	               string_list& clean_files,
+	               const std::string& additional_dependencies = "",
+	               const std::string& compiler_flags = "" ) const;
 private:
 	const std::string command;
 	string_list generatedFiles;

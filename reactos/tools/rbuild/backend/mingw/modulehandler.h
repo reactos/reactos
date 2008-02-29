@@ -22,6 +22,7 @@
 #include "mingw.h"
 
 class MingwBackend;
+class Rule;
 
 extern std::string
 GetTargetMacro ( const Module&, bool with_dollar = true );
@@ -148,6 +149,7 @@ private:
 	std::string GenerateNasmParameters () const;
 	const FileLocation* GetPrecompiledHeaderFilename () const;
 	void GenerateGccCommand ( const FileLocation* sourceFile,
+	                          const Rule *rule,
 	                          const std::string& extraDependencies );
 	void GenerateCommands ( const CompilationUnit& compilationUnit,
 	                        const std::string& extraDependencies );
