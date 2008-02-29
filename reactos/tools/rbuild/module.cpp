@@ -486,6 +486,10 @@ Module::~Module ()
 		delete linkerScript;
 	if ( pch )
 		delete pch;
+	if ( install )
+		delete install;
+	if ( output )
+		delete output;
 }
 
 void
