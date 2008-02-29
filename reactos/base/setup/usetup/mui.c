@@ -94,7 +94,8 @@ FindLanguageIndex()
 
     if (SelectedLanguageId == NULL)
     {
-        return -1;
+        /* default to english */
+        return 0;
     } 
 
     do
@@ -107,7 +108,7 @@ FindLanguageIndex()
         lngIndex++;
     }while (LanguageList[lngIndex].MuiPages != NULL);
 
-    return -1;
+    return 0;
 }
 
 
@@ -116,31 +117,19 @@ const MUI_ENTRY *
 FindMUIEntriesOfPage(IN ULONG PageNumber)
 {
     ULONG muiIndex = 0;
-    ULONG lngIndex = 0;
+    ULONG lngIndex;
     const MUI_PAGE * Pages = NULL;
+
+    lngIndex = max(FindLanguageIndex(), 0);
+    Pages = LanguageList[lngIndex].MuiPages;
 
     do
     {
-        /* First we search the language list till we find current selected language messages */
-        if (_wcsicmp(LanguageList[lngIndex].LanguageID , SelectedLanguageId) == 0)
-        {
-            /* Get all available pages for this language */
-            Pages = LanguageList[lngIndex].MuiPages;
+         if (Pages[muiIndex].Number == PageNumber)
+             return Pages[muiIndex].MuiEntry;
 
-            do
-            {
-                /* Get page messages */
-                if (Pages[muiIndex].Number == PageNumber)
-                    return Pages[muiIndex].MuiEntry;
-
-                muiIndex++;
-            }
-            while (Pages[muiIndex].MuiEntry != NULL);
-        }
-
-        lngIndex++;
-    }
-    while (LanguageList[lngIndex].MuiPages != NULL);
+         muiIndex++;
+    }while (Pages[muiIndex].MuiEntry != NULL);
 
     return NULL;
 }
@@ -149,73 +138,23 @@ static
 const MUI_ERROR *
 FindMUIErrorEntries(VOID)
 {
-    ULONG lngIndex = 0;
-
-    do
-    {
-        /* First we search the language list till we find current selected language messages */
-        if (_wcsicmp(LanguageList[lngIndex].LanguageID , SelectedLanguageId) == 0)
-        {
-            /* Get all available error messages for this language */
-            return LanguageList[lngIndex].MuiErrors;
-        }
-
-        lngIndex++;
-    }
-    while (LanguageList[lngIndex].MuiPages != NULL);
-
-    return NULL;
+    ULONG lngIndex = max(FindLanguageIndex(), 0);
+    return LanguageList[lngIndex].MuiErrors;
 }
 
 static
 const MUI_STRING *
 FindMUIStringEntries(VOID)
 {
-    ULONG lngIndex = 0;
-    
-    if (SelectedLanguageId == NULL)
-    {
-        /* language has not yet been selected
-         * default to english
-         */
-        ASSERT(!_wcsicmp(LanguageList[lngIndex].LanguageDescriptor, L"English"));
-        return LanguageList[lngIndex].MuiStrings;
-    }
-
-    do
-    {
-        /* First we search the language list till we find current selected language messages */
-        if (_wcsicmp(LanguageList[lngIndex].LanguageID , SelectedLanguageId) == 0)
-        {
-            /* Get all available strings for this language */
-            return LanguageList[lngIndex].MuiStrings;
-        }
-
-        lngIndex++;
-    }
-    while (LanguageList[lngIndex].MuiPages != NULL);
-
-    return NULL;
+    ULONG lngIndex = max(FindLanguageIndex(), 0);
+    return LanguageList[lngIndex].MuiStrings;
 }
 
 LPCWSTR
 MUIDefaultKeyboardLayout(VOID)
 {
-    ULONG lngIndex = 0;
-    do
-    {
-        /* First we search the language list till we find current selected language messages */
-        if (_wcsicmp(LanguageList[lngIndex].LanguageID , SelectedLanguageId) == 0)
-        {
-            /* Return default keyboard layout */
-            return LanguageList[lngIndex].LanguageKeyboardLayoutID;
-        }
-
-        lngIndex++;
-    }
-    while (LanguageList[lngIndex].MuiPages != NULL);
-
-    return NULL;
+    ULONG lngIndex = max(FindLanguageIndex(), 0);
+    return LanguageList[lngIndex].LanguageKeyboardLayoutID;
 }
 
 VOID
