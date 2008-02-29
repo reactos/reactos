@@ -37,8 +37,8 @@ CDFile::ReplaceVariable ( const string& name,
 CDFile::~CDFile ()
 {
 	if ( source )
-		delete target;
-	if ( source )
+		delete source;
+	if ( target )
 		delete target;
 }
 
