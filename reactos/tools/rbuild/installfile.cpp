@@ -24,11 +24,8 @@ using std::string;
 
 InstallFile::~InstallFile()
 {
-	if ( source )
-		delete source;
-
-	if ( target )
-		delete source;
+	delete source;
+	delete target;
 }
 
 InstallFile::InstallFile ( const Project& project,

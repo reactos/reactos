@@ -488,14 +488,13 @@ Module::~Module ()
 		delete pch;
 	if ( install )
 		delete install;
-	if ( output )
-		delete output;
 	if ( metadata )
 		delete metadata;
 	if ( bootstrap )
 		delete bootstrap;
 	if ( importLibrary )
 		delete importLibrary;
+	delete output;
 }
 
 void
@@ -1598,8 +1597,7 @@ Metadata::Metadata ( const XMLElement& _node,
 
 ImportLibrary::~ImportLibrary ()
 {
-	if ( source )
-		delete source;
+	delete source;
 }
 
 
