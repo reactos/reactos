@@ -53,6 +53,8 @@ Include::Include ( const Project& project,
 
 Include::~Include()
 {
+	if ( directory )
+		delete directory;
 }
 
 void

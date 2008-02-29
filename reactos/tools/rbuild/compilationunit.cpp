@@ -58,6 +58,9 @@ CompilationUnit::~CompilationUnit ()
 	size_t i;
 	for ( i = 0; i < files.size (); i++ )
 		delete files[i];
+
+	if ( default_name )
+		delete default_name;
 }
 
 void

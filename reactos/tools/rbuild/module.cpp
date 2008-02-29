@@ -490,6 +490,12 @@ Module::~Module ()
 		delete install;
 	if ( output )
 		delete output;
+	if ( metadata )
+		delete metadata;
+	if ( bootstrap )
+		delete bootstrap;
+	if ( importLibrary )
+		delete importLibrary;
 }
 
 void
@@ -1587,6 +1593,13 @@ Metadata::Metadata ( const XMLElement& _node,
 		owner = att->value;
 	else
 		owner = "ReactOS";
+}
+
+
+ImportLibrary::~ImportLibrary ()
+{
+	if ( source )
+		delete source;
 }
 
 

@@ -34,6 +34,14 @@ CDFile::ReplaceVariable ( const string& name,
 		return path;
 }
 
+CDFile::~CDFile ()
+{
+	if ( source )
+		delete target;
+	if ( source )
+		delete target;
+}
+
 CDFile::CDFile ( const Project& project,
                  const XMLElement& cdfileNode,
                  const string& path )

@@ -569,6 +569,7 @@ public:
 	ImportLibrary ( const Project& project,
 	                const XMLElement& node,
 	                const Module& module );
+	~ImportLibrary ();
 };
 
 
@@ -816,6 +817,7 @@ public:
 	CDFile ( const Project& project,
 	         const XMLElement& bootstrapNode,
 	         const std::string& path );
+	~CDFile ();
 private:
 	static std::string ReplaceVariable ( const std::string& name,
 	                                     const std::string& value,
@@ -832,6 +834,7 @@ public:
 	InstallFile ( const Project& project,
 	              const XMLElement& bootstrapNode,
 	              const std::string& path );
+	~InstallFile ();
 };
 
 
