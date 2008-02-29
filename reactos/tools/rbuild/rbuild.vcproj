@@ -423,6 +423,14 @@
 						/>
 					</FileConfiguration>
 				</File>
+				<File
+					RelativePath=".\backend\mingw\rule.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\backend\mingw\rule.h"
+					>
+				</File>
 			</Filter>
 			<Filter
 				Name="backend_sources"
