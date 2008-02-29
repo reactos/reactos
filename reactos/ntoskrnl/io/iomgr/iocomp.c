@@ -88,6 +88,7 @@ IopFreeIoCompletionPacket(PIO_COMPLETION_PACKET Packet)
             /* All lists failed, use the pool */
             List->L.FreeMisses++;
             ExFreePool(Packet);
+            return;
         }
     }
 
