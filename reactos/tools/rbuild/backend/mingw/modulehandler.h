@@ -152,32 +152,12 @@ private:
 	std::string GenerateNasmParameters () const;
 	const FileLocation* GetPrecompiledHeaderFilename () const;
 	void GenerateGccCommand ( const FileLocation* sourceFile,
-	                          const std::string& extraDependencies,
-	                          const std::string& cc,
-	                          const std::string& cflagsMacro );
+	                          const std::string& extraDependencies );
 	void GenerateCommands ( const CompilationUnit& compilationUnit,
-	                        const std::string& extraDependencies,
-	                        const std::string& cc,
-	                        const std::string& cppc,
-	                        const std::string& cflagsMacro,
-	                        const std::string& nasmflagsMacro,
-	                        const std::string& windresflagsMacro,
-	                        const std::string& widlflagsMacro );
-	void GenerateObjectFileTargets ( const IfableData& data,
-	                                 const std::string& cc,
-	                                 const std::string& cppc,
-	                                 const std::string& cflagsMacro,
-	                                 const std::string& nasmflagsMacro,
-	                                 const std::string& windresflagsMacro,
-	                                 const std::string& widlflagsMacro );
-	void GenerateObjectFileTargets ( const std::string& cc,
-	                                 const std::string& cppc,
-	                                 const std::string& cflagsMacro,
-	                                 const std::string& nasmflagsMacro,
-	                                 const std::string& windresflagsMacro,
-	                                 const std::string& widlflagsMacro );
-	const FileLocation* GenerateArchiveTarget ( const std::string& ar,
-	                                            const std::string& objs_macro ) const;
+	                        const std::string& extraDependencies );
+	void GenerateObjectFileTargets ( const IfableData& data );
+	void GenerateObjectFileTargets ();
+	const FileLocation* GenerateArchiveTarget ();
 	void GetMcObjectDependencies   ( std::vector<FileLocation>& dependencies,
 	                                 const FileLocation *file ) const;
 	void GetSpecObjectDependencies ( std::vector<FileLocation>& dependencies,
