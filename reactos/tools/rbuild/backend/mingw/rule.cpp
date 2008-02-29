@@ -40,10 +40,8 @@ FixString ( const string& str, Backend *backend, const Module& module, const Fil
             const std::string& additional_dependencies, const std::string& compiler_flags )
 {
 	string ret = str;
-	string dep = "";
+	string dep = additional_dependencies;
 
-	if ( additional_dependencies.length () > 0 )
-		dep += additional_dependencies;
 	dep += " " + module.xmlbuildFile;
 
 	if ( source )

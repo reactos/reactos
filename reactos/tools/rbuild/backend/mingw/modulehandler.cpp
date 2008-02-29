@@ -611,7 +611,7 @@ MingwModuleHandler::GenerateCleanTarget () const
 	}
 	fprintf ( fMakefile, " 2>$(NUL)\n" );
 
-    if( ProxyMakefile::GenerateProxyMakefile(module) )
+	if( ProxyMakefile::GenerateProxyMakefile(module) )
 	{
 		DirectoryLocation root;
 
@@ -770,11 +770,7 @@ MingwModuleHandler::GenerateCompilerParametersFromVector ( const vector<Compiler
 	{
 		CompilerFlag& compilerFlag = *compilerFlags[i];
 		if ( compilerFlag.compiler == type )
-		{
-			if ( parameters.length () > 0 )
-				parameters += " ";
-			parameters += compilerFlag.flag;
-		}
+			parameters += " " + compilerFlag.flag;
 	}
 	return parameters;
 }
@@ -855,7 +851,7 @@ MingwModuleHandler::GenerateMacro (
 		{
 			fprintf (
 				fMakefile,
-				" %s",
+				"%s",
 				compilerParameters.c_str () );
 		}
 	}
@@ -1250,21 +1246,21 @@ Rule arRule1 ( "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).a: 
 Rule arRule2 ( "\t$(ECHO_AR)\n"
               "\t${ar} -rc $@ $($(module_name)_OBJS)\n",
               NULL );
-Rule gasRule ( "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).o: $(source) $(dependencies) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
+Rule gasRule ( "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).o: $(source)$(dependencies) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
                "\t$(ECHO_GAS)\n"
                "\t${gcc} -x assembler-with-cpp -c $< -o $@ -D__ASM__ $($(module_name)_CFLAGS)\n",
                "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).o",
                "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)", NULL );
-Rule bootRule ( "$(module_output): $(source) $(dependencies) | $(OUTPUT)$(SEP)$(source_dir)\n"
+Rule bootRule ( "$(module_output): $(source)$(dependencies) | $(OUTPUT)$(SEP)$(source_dir)\n"
                 "\t$(ECHO_NASM)\n"
                 "\t$(Q)${nasm} -f win32 $< -o $@ $($(module_name)_NASMFLAGS)\n",
                 "$(OUTPUT)$(SEP)$(source_dir)$(SEP)", NULL );
-Rule nasmRule ( "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).o: $(source) $(dependencies) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
+Rule nasmRule ( "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).o: $(source)$(dependencies) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
                 "\t$(ECHO_NASM)\n"
                 "\t$(Q)${nasm} -f win32 $< -o $@ $($(module_name)_NASMFLAGS)\n",
                 "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).o",
                 "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)", NULL );
-Rule windresRule ( "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).coff: $(source) $(dependencies) $(WRC_TARGET) | $(INTERMEDIATE)$(SEP)$(source_dir) $(TEMPORARY)\n"
+Rule windresRule ( "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).coff: $(source)$(dependencies) $(WRC_TARGET) | $(INTERMEDIATE)$(SEP)$(source_dir) $(TEMPORARY)\n"
                    "\t$(ECHO_WRC)\n"
                    "\t${gcc} -xc -E -DRC_INVOKED ${$(module_name)_RCFLAGS} $(source) > $(TEMPORARY)$(SEP)$(module_name).$(source_name_noext).rci.tmp\n"
                    "\t$(Q)$(WRC_TARGET) ${$(module_name)_RCFLAGS} $(TEMPORARY)$(SEP)$(module_name).$(source_name_noext).rci.tmp $(TEMPORARY)$(SEP)$(module_name).$(source_name_noext).res.tmp\n"
@@ -1277,71 +1273,71 @@ Rule wmcRule ( "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).rc 
                "\t$(ECHO_WMC)\n"
                "\t$(Q)$(WMC_TARGET) -i -H $(INTERMEDIATE)$(SEP)include$(SEP)reactos$(SEP)$(source_name_noext).h -o $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).rc $(source)\n",
                "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).rc", "$(INTERMEDIATE)$(SEP)include$(SEP)reactos$(SEP)$(source_name_noext).h", NULL );
-Rule winebuildRule ( "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).spec.def: $(source) $(dependencies) $(WINEBUILD_TARGET) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
+Rule winebuildRule ( "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).spec.def: $(source)$(dependencies) $(WINEBUILD_TARGET) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
                      "\t$(ECHO_WINEBLD)\n"
                      "\t$(Q)$(WINEBUILD_TARGET) $(WINEBUILD_FLAGS) -o $(INTERMEDIATE)$(SEP)$(source_path)$(SEP)$(source_name_noext).spec.def --def -E $(source_path)$(SEP)$(source_name_noext).spec\n"
                      "$(INTERMEDIATE)$(SEP)$(source_path)$(SEP)$(source_name_noext).stubs.c: $(source_path)$(SEP)$(source_name_noext).spec $(WINEBUILD_TARGET)\n"
                      "\t$(ECHO_WINEBLD)\n"
                      "\t$(Q)$(WINEBUILD_TARGET) $(WINEBUILD_FLAGS) -o $(INTERMEDIATE)$(SEP)$(source_path)$(SEP)$(source_name_noext).stubs.c --pedll $(source_path)$(SEP)$(source_name_noext).spec\n"
-                     "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).stubs.o: $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).stubs.c $(dependencies) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
+                     "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).stubs.o: $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).stubs.c$(dependencies) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
                      "\t$(ECHO_CC)\n"
                      "\t${gcc} -c $< -o $@ $($(module_name)_CFLAGS)$(compiler_flags)\n",
                      "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).spec.def",
                      "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).stubs.c",
                      "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).stubs.o",
                      "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)", NULL );
-Rule widlHeaderRule ( "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).h: $(source) $(dependencies) $(WIDL_TARGET) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
+Rule widlHeaderRule ( "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).h: $(source)$(dependencies) $(WIDL_TARGET) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
                       "\t$(ECHO_WIDL)\n"
-                      "\t$(Q)$(WIDL_TARGET)  $($(module_name)_WIDLFLAGS) -h -H $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).h $(source)\n",
+                      "\t$(Q)$(WIDL_TARGET) $($(module_name)_WIDLFLAGS) -h -H $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).h $(source)\n",
                       "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).h",
                       "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)", NULL );
-Rule widlServerRule ( "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_s.c $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_s.h: $(source) $(dependencies) $(WIDL_TARGET) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
+Rule widlServerRule ( "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_s.c $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_s.h: $(source)$(dependencies) $(WIDL_TARGET) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
                       "\t$(ECHO_WIDL)\n"
                       "\t$(Q)$(WIDL_TARGET) $($(module_name)_WIDLFLAGS) -h -H $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_s.h -s -S $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_s.c $(source)\n"
-                      "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_s.o: $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_s.c $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_s.h $(dependencies) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
+                      "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_s.o: $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_s.c $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_s.h$(dependencies) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
                       "\t$(ECHO_CC)\n"
                       "\t${gcc} -c $< -o $@ $($(module_name)_CFLAGS)$(compiler_flags)\n",
                       "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_s.h",
                       "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_s.c",
                       "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_s.o",
                       "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)", NULL );
-Rule widlClientRule ( "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_c.c $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_c.h: $(source) $(dependencies) $(WIDL_TARGET) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
+Rule widlClientRule ( "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_c.c $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_c.h: $(source)$(dependencies) $(WIDL_TARGET) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
                       "\t$(ECHO_WIDL)\n"
                       "\t$(Q)$(WIDL_TARGET) $($(module_name)_WIDLFLAGS) -h -H $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_c.h -c -C $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_c.c $(source)\n"
-                      "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_c.o: $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_c.c $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_c.h $(dependencies) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
+                      "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_c.o: $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_c.c $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_c.h$(dependencies) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
                       "\t$(ECHO_CC)\n"
                       "\t${gcc} -c $< -o $@ $($(module_name)_CFLAGS)$(compiler_flags)\n",
                       "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_c.h",
                       "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_c.c",
                       "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_c.o",
                       "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)", NULL );
-Rule widlProxyRule ( "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_p.c $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_p.h: $(source) $(dependencies) $(WIDL_TARGET) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
+Rule widlProxyRule ( "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_p.c $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_p.h: $(source)$(dependencies) $(WIDL_TARGET) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
                      "\t$(ECHO_WIDL)\n"
-                     "\t$(Q)$(WIDL_TARGET)  $($(module_name)_WIDLFLAGS) -h -H $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_p.h -p -P $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_p.c $(source)\n"
-                     "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_p.o: $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_p.c $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_p.h $(dependencies) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
+                     "\t$(Q)$(WIDL_TARGET) $($(module_name)_WIDLFLAGS) -h -H $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_p.h -p -P $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_p.c $(source)\n"
+                     "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_p.o: $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_p.c $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_p.h$(dependencies) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
                       "\t$(ECHO_CC)\n"
                       "\t${gcc} -c $< -o $@ $($(module_name)_CFLAGS)$(compiler_flags)\n",
                      "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_p.h",
                      "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_p.c",
                      "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_p.o",
                      "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)", NULL );
-Rule widlTlbRule ( "$(OUTPUT)$(SEP)$(source_dir)$(SEP)$(module_name).tlb: $(source) $(dependencies) $(WIDL_TARGET) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
+Rule widlTlbRule ( "$(OUTPUT)$(SEP)$(source_dir)$(SEP)$(module_name).tlb: $(source)$(dependencies) $(WIDL_TARGET) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
                    "\t$(ECHO_WIDL)\n"
-                   "\t$(Q)$(WIDL_TARGET)  $($(module_name)_WIDLFLAGS) -t -T $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).tlb $(source)\n",
+                   "\t$(Q)$(WIDL_TARGET) $($(module_name)_WIDLFLAGS) -t -T $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).tlb $(source)\n",
                    "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)", NULL );
-Rule gccRule ( "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).o: $(source) $(dependencies) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
+Rule gccRule ( "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).o: $(source)$(dependencies) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
                "\t$(ECHO_CC)\n"
                "\t${gcc} -c $< -o $@ $($(module_name)_CFLAGS)$(compiler_flags)\n",
                "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).o", NULL );
-Rule gccHostRule ( "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).o: $(source) $(dependencies) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
+Rule gccHostRule ( "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).o: $(source)$(dependencies) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
                    "\t$(ECHO_CC)\n"
                    "\t${host_gcc} -c $< -o $@ $($(module_name)_CFLAGS)$(compiler_flags)\n",
                    "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).o", NULL );
-Rule gppRule ( "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).o: $(source) $(dependencies) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
+Rule gppRule ( "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).o: $(source)$(dependencies) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
                "\t$(ECHO_CC)\n"
                "\t${gpp} -c $< -o $@ $($(module_name)_CFLAGS)$(compiler_flags)\n",
                "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).o", NULL );
-Rule gppHostRule ( "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).o: $(source) $(dependencies) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
+Rule gppHostRule ( "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).o: $(source)$(dependencies) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
                    "\t$(ECHO_CC)\n"
                    "\t${host_gpp} -c $< -o $@ $($(module_name)_CFLAGS)$(compiler_flags)\n",
                    "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).o", NULL );
@@ -1359,15 +1355,9 @@ MingwModuleHandler::GenerateGccCommand (
 	string flags;
 	string extension = GetExtension ( *sourceFile );
 	if ( extension == ".cc" || extension == ".cpp" || extension == ".cxx" )
-	{
 		flags = GenerateCompilerParametersFromVector ( module.non_if_data.compilerFlags, CompilerTypeCPP );
-	}
 	else
-	{
 		flags = GenerateCompilerParametersFromVector ( module.non_if_data.compilerFlags, CompilerTypeCC );
-	}
-	if ( flags != "" )
-		flags = " " + flags;
 
 	if ( pchFilename )
 	{
@@ -1378,7 +1368,8 @@ MingwModuleHandler::GenerateGccCommand (
 	/* WIDL generated headers may be used */
 	vector<FileLocation> rpcDependencies;
 	GetRpcHeaderDependencies ( rpcDependencies );
-	dependencies += " " + v2s ( backend, rpcDependencies, 5 );
+	if ( rpcDependencies.size () > 0 )
+		dependencies += " " + v2s ( backend, rpcDependencies, 5 );
 
 	rule->Execute ( fMakefile, backend, module, generatedSourceFileName, clean_files, dependencies, flags );
 
@@ -1488,7 +1479,7 @@ MingwModuleHandler::GenerateCommands (
 		break;
 	}
 
-	if ( extension == ".c" || extension == ".cc" || extension == ".cpp" || extension == ".cxx"  )
+	if ( extension == ".c" || extension == ".cc" || extension == ".cpp" || extension == ".cxx" )
 	{
 		GenerateGccCommand ( &sourceFile,
 		                     customRule,
@@ -1658,7 +1649,7 @@ MingwModuleHandler::GenerateLinkerCommand (
 
 	string linkerScriptArgument;
 	if ( module.linkerScript != NULL )
-		linkerScriptArgument = ssprintf ( "-Wl,-T,%s", backend->GetFullName ( module.linkerScript->file ).c_str () );
+		linkerScriptArgument = ssprintf ( " -Wl,-T,%s", backend->GetFullName ( module.linkerScript->file ).c_str () );
 	else
 		linkerScriptArgument = "";
 
@@ -1674,7 +1665,7 @@ MingwModuleHandler::GenerateLinkerCommand (
 	if ( !module.IsDLL () )
 	{
 		fprintf ( fMakefile,
-		          "\t%s %s %s -o %s %s %s %s\n",
+		          "\t%s %s%s -o %s %s %s %s\n",
 		          linker.c_str (),
 		          linkerParameters.c_str (),
 		          linkerScriptArgument.c_str (),
@@ -1691,15 +1682,15 @@ MingwModuleHandler::GenerateLinkerCommand (
 		CLEAN_FILE ( temp_exp );
 
 		fprintf ( fMakefile,
-		          "\t${dlltool} --dllname %s --def %s --output-exp %s %s %s\n",
+		          "\t${dlltool} --dllname %s --def %s --output-exp %s%s%s\n",
 		          targetName.c_str (),
 		          backend->GetFullName ( *definitionFilename ).c_str (),
 		          backend->GetFullName ( temp_exp ).c_str (),
-		          module.mangledSymbols ? "" : "--kill-at",
-		          module.underscoreSymbols ? "--add-underscore" : "" );
+		          module.mangledSymbols ? "" : " --kill-at",
+		          module.underscoreSymbols ? " --add-underscore" : "" );
 
 		fprintf ( fMakefile,
-		          "\t%s %s %s %s -o %s %s %s %s\n",
+		          "\t%s %s%s %s -o %s %s %s %s\n",
 		          linker.c_str (),
 		          linkerParameters.c_str (),
 		          linkerScriptArgument.c_str (),
@@ -1710,7 +1701,7 @@ MingwModuleHandler::GenerateLinkerCommand (
 		          GetLinkerMacro ().c_str () );
 
 		fprintf ( fMakefile,
-		          "\t$(Q)$(PEFIXUP_TARGET) %s -exports %s\n",
+		          "\t$(Q)$(PEFIXUP_TARGET) %s -exports%s\n",
 		          target_macro.c_str (),
 		          pefixupParameters.c_str() );
 
@@ -1727,7 +1718,7 @@ MingwModuleHandler::GenerateLinkerCommand (
 		//printf ( "%s will have all its functions exported\n",
 		//         module.target->name.c_str () );
 		fprintf ( fMakefile,
-		          "\t%s %s %s -o %s %s %s %s\n",
+		          "\t%s %s%s -o %s %s %s %s\n",
 		          linker.c_str (),
 		          linkerParameters.c_str (),
 		          linkerScriptArgument.c_str (),
@@ -1822,7 +1813,8 @@ MingwModuleHandler::GenerateObjectFileTargets ()
 		/* WIDL generated headers may be used */
 		vector<FileLocation> rpcDependencies;
 		GetRpcHeaderDependencies ( rpcDependencies );
-		dependencies += " " + v2s ( backend, rpcDependencies, 5 );
+		if ( rpcDependencies.size () > 0 )
+			dependencies += " " + v2s ( backend, rpcDependencies, 5 );
 		fprintf ( fMakefile,
 		          "%s: %s | %s\n",
 		          backend->GetFullName ( *pchFilename ).c_str(),
@@ -1855,11 +1847,11 @@ MingwModuleHandler::GenerateArchiveTarget ()
 		const FileLocation *definitionFilename = GetDefinitionFilename ();
 
 		fprintf ( fMakefile,
-		          "\t${dlltool} --dllname %s --def %s --output-lib $@ %s %s\n",
+		          "\t${dlltool} --dllname %s --def %s --output-lib $@%s%s\n",
 		          module.importLibrary->dllname.c_str (),
 		          backend->GetFullName ( *definitionFilename ).c_str (),
-		          module.mangledSymbols ? "" : "--kill-at",
-		          module.underscoreSymbols ? "--add-underscore" : "" );
+		          module.mangledSymbols ? "" : " --kill-at",
+		          module.underscoreSymbols ? " --add-underscore" : "" );
 
 		delete definitionFilename;
 	}
@@ -2284,7 +2276,7 @@ MingwModuleHandler::GetDefaultDependencies (
 			string extension = GetExtension ( sourceFile );
 			if (extension == ".mc" || extension == ".MC" )
 			{
-				string dependency = ssprintf ( " $(%s_MCHEADERS)", m.name.c_str () );
+				string dependency = ssprintf ( "$(%s_MCHEADERS)", m.name.c_str () );
 				dependencies.push_back ( dependency );
 			}
 		}
@@ -2383,12 +2375,12 @@ MingwModuleHandler::GenerateImportLibraryTargetIfNeeded ()
 		fprintf ( fMakefile, "\t$(ECHO_DLLTOOL)\n" );
 
 		fprintf ( fMakefile,
-		          "\t${dlltool} --dllname %s --def %s --output-lib %s %s %s\n\n",
+		          "\t${dlltool} --dllname %s --def %s --output-lib %s%s%s\n\n",
 		          module.output->name.c_str (),
 		          backend->GetFullName ( *defFilename ).c_str (),
 		          backend->GetFullName ( *library_target ).c_str (),
-		          module.mangledSymbols ? "" : "--kill-at",
-		          module.underscoreSymbols ? "--add-underscore" : "" );
+		          module.mangledSymbols ? "" : " --kill-at",
+		          module.underscoreSymbols ? " --add-underscore" : "" );
 
 		delete defFilename;
 		delete library_target;
@@ -2575,7 +2567,7 @@ MingwKernelModuleHandler::GenerateKernelModuleTarget ()
 
 		GenerateLinkerCommand ( dependencies,
 		                        linkerParameters + " $(NTOSKRNL_SHARED)",
-		                        "-sections" );
+		                        " -sections" );
 	}
 	else
 	{
@@ -2677,7 +2669,7 @@ MingwKernelModeDLLModuleHandler::GenerateKernelModeDLLModuleTarget ()
 		                                     module.baseaddress.c_str () );
 		GenerateLinkerCommand ( dependencies,
 		                        linkerParameters,
-		                        "-sections" );
+		                        " -sections" );
 	}
 	else
 	{
@@ -2726,7 +2718,7 @@ MingwKernelModeDriverModuleHandler::GenerateKernelModeDriverModuleTarget ()
 		                                     module.baseaddress.c_str () );
 		GenerateLinkerCommand ( dependencies,
 		                        linkerParameters,
-		                        "-sections" );
+		                        " -sections" );
 	}
 	else
 	{
@@ -3134,24 +3126,24 @@ MingwBootLoaderModuleHandler::GenerateBootLoaderModuleTarget ()
 
 	fprintf ( fMakefile, "\t$(ECHO_LD)\n" );
 
-    if (Environment::GetArch() == "arm")
-    {
-        fprintf ( fMakefile,
-                 "\t${gcc} -Wl,--subsystem,native -Wl,--section-start,startup=0x8000 -o %s %s %s %s\n",
-                 backend->GetFullName ( junk_tmp ).c_str (),
-                 objectsMacro.c_str (),
-                 linkDepsMacro.c_str (),
-                 GetLinkerMacro ().c_str ());
-    }
-    else
-    {
-        fprintf ( fMakefile,
-                 "\t${gcc} -Wl,--subsystem,native -Wl,-Ttext,0x8000 -o %s %s %s %s\n",
-                 backend->GetFullName ( junk_tmp ).c_str (),
-                 objectsMacro.c_str (),
-                 linkDepsMacro.c_str (),
-                 GetLinkerMacro ().c_str ());
-    }
+	if (Environment::GetArch() == "arm")
+	{
+		fprintf ( fMakefile,
+		         "\t${gcc} -Wl,--subsystem,native -Wl,--section-start,startup=0x8000 -o %s %s %s %s\n",
+		         backend->GetFullName ( junk_tmp ).c_str (),
+		         objectsMacro.c_str (),
+		         linkDepsMacro.c_str (),
+		         GetLinkerMacro ().c_str ());
+	}
+	else
+	{
+		fprintf ( fMakefile,
+		         "\t${gcc} -Wl,--subsystem,native -Wl,-Ttext,0x8000 -o %s %s %s %s\n",
+		         backend->GetFullName ( junk_tmp ).c_str (),
+		         objectsMacro.c_str (),
+		         linkDepsMacro.c_str (),
+		         GetLinkerMacro ().c_str ());
+	}
 	fprintf ( fMakefile,
 	          "\t${objcopy} -O binary %s $@\n",
 	          backend->GetFullName ( junk_tmp ).c_str () );
@@ -3439,12 +3431,12 @@ MingwIsoModuleHandler::GenerateIsoModuleTarget ()
 	FileLocation reactosInf ( bootcdReactos.directory,
 	                          bootcdReactos.relative_path,
 	                          "reactos.inf" );
-    FileLocation vgafontsCab( bootcdReactos.directory,
-                              bootcdReactos.relative_path,
-                              "vgafonts.cab");
-    FileLocation vgafontsDir( SourceDirectory,
-                              "media" + sSep + "vgafonts",
-                              "" );
+	FileLocation vgafontsCab( bootcdReactos.directory,
+	                      bootcdReactos.relative_path,
+	                      "vgafonts.cab");
+	FileLocation vgafontsDir( SourceDirectory,
+	                      "media" + sSep + "vgafonts",
+	                      "" );
 
 	vSourceFiles.push_back ( reactosDff );
 
@@ -3474,10 +3466,10 @@ MingwIsoModuleHandler::GenerateIsoModuleTarget ()
 	          cdFiles.c_str (),
 	          cdDirectories.c_str () );
 	fprintf ( fMakefile, "\t$(ECHO_CABMAN)\n" );
-    fprintf ( fMakefile,
-              "\t$(Q)$(CABMAN_TARGET) -M raw -S %s %s\\*.bin\n",      // Escape the asterisk for Make
-              backend->GetFullName ( vgafontsCab ).c_str (),
-              backend->GetFullName ( vgafontsDir ).c_str ());
+	fprintf ( fMakefile,
+	          "\t$(Q)$(CABMAN_TARGET) -M raw -S %s %s\\*.bin\n",      // Escape the asterisk for Make
+	          backend->GetFullName ( vgafontsCab ).c_str (),
+	          backend->GetFullName ( vgafontsDir ).c_str ());
 	fprintf ( fMakefile,
 	          "\t$(Q)$(CABMAN_TARGET) -C %s -L %s -I -P $(OUTPUT)\n",
 	          backend->GetFullName ( reactosDff ).c_str (),
