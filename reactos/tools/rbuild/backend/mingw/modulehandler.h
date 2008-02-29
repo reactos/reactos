@@ -97,8 +97,7 @@ protected:
 	                          bool includeGeneratedFiles ) const;
 	void GetSourceFilenamesWithoutGeneratedFiles ( std::vector<FileLocation>& list ) const;
 	const FileLocation* GetObjectFilename ( const FileLocation* sourceFile,
-	                                        const Module& module,
-	                                        string_list* pclean_files ) const;
+	                                        const Module& module ) const;
 
 	std::string GetObjectFilenames ();
 

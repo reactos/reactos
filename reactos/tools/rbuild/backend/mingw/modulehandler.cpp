@@ -280,7 +280,7 @@ MingwModuleHandler::GetActualSourceFilename (
 	string extension = GetExtension ( *file );
 	if ( extension == ".spec" || extension == ".SPEC" )
 	{
-		const FileLocation *objectFile = GetObjectFilename ( file, module, NULL );
+		const FileLocation *objectFile = GetObjectFilename ( file, module );
 		FileLocation *sourceFile = new FileLocation (
 			objectFile->directory,
 			objectFile->relative_path,
@@ -291,7 +291,7 @@ MingwModuleHandler::GetActualSourceFilename (
 	else if ( ( extension == ".idl" || extension == ".IDL" ) &&
 	          ( module.type == RpcServer || module.type == RpcClient || module.type == RpcProxy ) )
 	{
-		const FileLocation *objectFile = GetObjectFilename ( file, module, NULL );
+		const FileLocation *objectFile = GetObjectFilename ( file, module );
 		FileLocation *sourceFile = new FileLocation (
 			objectFile->directory,
 			objectFile->relative_path,
@@ -301,7 +301,7 @@ MingwModuleHandler::GetActualSourceFilename (
 	}
 	else if ( extension == ".mc" || extension == ".MC" )
 	{
-		const FileLocation *objectFile = GetObjectFilename ( file, module, NULL );
+		const FileLocation *objectFile = GetObjectFilename ( file, module );
 		FileLocation *sourceFile = new FileLocation (
 			objectFile->directory,
 			objectFile->relative_path,
@@ -417,7 +417,7 @@ MingwModuleHandler::GetImportLibraryDependency (
 		{
 			CompilationUnit& compilationUnit = *compilationUnits[i];
 			const FileLocation& compilationName = compilationUnit.GetFilename ();
-			const FileLocation *objectFilename = GetObjectFilename ( &compilationName, importedModule, NULL );
+			const FileLocation *objectFilename = GetObjectFilename ( &compilationName, importedModule );
 			if ( GetExtension ( *objectFilename ) == ".h" )
 				dep += ssprintf ( " $(%s_HEADERS)", importedModule.name.c_str () );
 			else if ( GetExtension ( *objectFilename ) == ".rc" )
@@ -529,8 +529,7 @@ MingwModuleHandler::GetSourceFilenamesWithoutGeneratedFiles (
 const FileLocation*
 MingwModuleHandler::GetObjectFilename (
 	const FileLocation* sourceFile,
-	const Module& module,
-	string_list* pclean_files ) const
+	const Module& module ) const
 {
 	DirectoryLocation destination_directory;
 	string newExtension;
@@ -567,12 +566,8 @@ MingwModuleHandler::GetObjectFilename (
 		destination_directory,
 		sourceFile->relative_path,
 		ReplaceExtension ( sourceFile->name, newExtension ) );
+	PassThruCacheDirectory ( obj_file );
 
-	if ( pclean_files )
-	{
-		string_list& clean_files = *pclean_files;
-		CLEAN_FILE ( *obj_file );
-	}
 	return obj_file;
 }
 
@@ -676,7 +671,7 @@ MingwModuleHandler::GetObjectFilenames ()
 		if ( objectFilenames.size () > 0 )
 			objectFilenames += " ";
 		const FileLocation& compilationName = compilationUnits[i]->GetFilename ();
-		const FileLocation *object_file = GetObjectFilename ( &compilationName, module, NULL );
+		const FileLocation *object_file = GetObjectFilename ( &compilationName, module );
 		objectFilenames += backend->GetFullName ( *object_file );
 		delete object_file;
 	}
@@ -1097,7 +1092,7 @@ MingwModuleHandler::GenerateObjectMacros (
 			if ( compilationUnit.IsFirstFile () )
 			{
 				const FileLocation& compilationName = compilationUnit.GetFilename ();
-				const FileLocation *object_file = GetObjectFilename ( &compilationName, module, NULL );
+				const FileLocation *object_file = GetObjectFilename ( &compilationName, module );
 				fprintf ( fMakefile,
 					"%s := %s $(%s)\n",
 					objectsMacro.c_str(),
@@ -1117,7 +1112,7 @@ MingwModuleHandler::GenerateObjectMacros (
 			if ( !compilationUnit.IsFirstFile () )
 			{
 				const FileLocation& compilationName = compilationUnit.GetFilename ();
-				const FileLocation *objectFilename = GetObjectFilename ( &compilationName, module, NULL );
+				const FileLocation *objectFilename = GetObjectFilename ( &compilationName, module );
 				if ( GetExtension ( *objectFilename ) == ".h" )
 					headers.push_back ( objectFilename );
 				else if ( GetExtension ( *objectFilename ) == ".rc" )
@@ -1227,7 +1222,7 @@ MingwModuleHandler::GenerateObjectMacros (
 	for ( i = 0; i < sourceCompilationUnits.size (); i++ )
 	{
 		const FileLocation& compilationName = sourceCompilationUnits[i]->GetFilename ();
-		const FileLocation *object_file = GetObjectFilename ( &compilationName, module, NULL );
+		const FileLocation *object_file = GetObjectFilename ( &compilationName, module );
 		fprintf (
 			fMakefile,
 			"%s += %s\n",
@@ -1290,6 +1285,7 @@ Rule winebuildRule ( "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noex
                      "\t$(Q)$(WINEBUILD_TARGET) $(WINEBUILD_FLAGS) -o $(INTERMEDIATE)$(SEP)$(source_path)$(SEP)$(source_name_noext).stubs.c --pedll $(source_path)$(SEP)$(source_name_noext).spec\n",
                      "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).spec.def",
                      "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).stubs.c",
+                     "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).stubs.o",
                      "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)", NULL );
 Rule widlHeaderRule ( "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).h: $(source) $(module_rbuild) $(WIDL_TARGET) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
                       "\t$(ECHO_WIDL)\n"
@@ -1301,18 +1297,21 @@ Rule widlServerRule ( "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noe
                       "\t$(Q)$(WIDL_TARGET) $($(module_name)_WIDLFLAGS) -h -H $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_s.h -s -S $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_s.c $(source)\n",
                       "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_s.h",
                       "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_s.c",
+                      "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_s.o",
                       "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)", NULL );
 Rule widlClientRule ( "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_c.c $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_c.h: $(source) $(module_rbuild) $(WIDL_TARGET) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
                       "\t$(ECHO_WIDL)\n"
                       "\t$(Q)$(WIDL_TARGET) $($(module_name)_WIDLFLAGS) -h -H $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_c.h -c -C $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_c.c $(source)\n",
                       "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_c.h",
                       "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_c.c",
+                      "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_c.o",
                       "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)", NULL );
 Rule widlProxyRule ( "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_p.c $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_p.h: $(source) $(module_rbuild) $(WIDL_TARGET) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
                      "\t$(ECHO_WIDL)\n"
                      "\t$(Q)$(WIDL_TARGET)  $($(module_name)_WIDLFLAGS) -h -H $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_p.h -p -P $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_p.c $(source)\n",
                      "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_p.h",
                      "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_p.c",
+                     "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_p.o",
                      "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)", NULL );
 Rule widlTlbRule ( "$(OUTPUT)$(SEP)$(source_dir)$(SEP)$(module_name).tlb: $(source) $(module_rbuild) $(WIDL_TARGET) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
                    "\t$(ECHO_WIDL)\n"
@@ -1363,13 +1362,12 @@ MingwModuleHandler::GenerateGccCommand (
 	dependencies += " " + NormalizeFilename ( module.xmlbuildFile );
 
 	const FileLocation *objectFilename = GetObjectFilename (
-		sourceFile, module, NULL );
+		sourceFile, module );
 	fprintf ( fMakefile,
 	          "%s: %s | %s\n",
 	          backend->GetFullName ( *objectFilename ).c_str (),
 	          dependencies.c_str (),
 	          backend->GetFullPath ( *objectFilename ).c_str () );
-	CLEAN_FILE(*objectFilename);
 	delete objectFilename;
 
 	fprintf ( fMakefile, "\t$(ECHO_CC)\n" );
@@ -1479,6 +1477,11 @@ MingwModuleHandler::GenerateCommands (
 
 	if ( extension == ".c" || extension == ".cc" || extension == ".cpp" || extension == ".cxx" )
 	{
+		const FileLocation *objectFilename = GetObjectFilename (
+			&sourceFile, module );
+		CLEAN_FILE ( *objectFilename );
+		delete objectFilename;
+
 		GenerateGccCommand ( &sourceFile,
 		                     GetCompilationUnitDependencies ( compilationUnit ) + extraDependencies );
 	}
@@ -1589,7 +1592,7 @@ MingwModuleHandler::GetObjectsVector ( const IfableData& data,
 	{
 		CompilationUnit& compilationUnit = *data.compilationUnits[i];
 		const FileLocation& compilationName = compilationUnit.GetFilename ();
-		const FileLocation *object_file = GetObjectFilename ( &compilationName, module, NULL );
+		const FileLocation *object_file = GetObjectFilename ( &compilationName, module );
 		objectFiles.push_back ( *object_file );
 		delete object_file;
 	}
@@ -1771,7 +1774,7 @@ MingwModuleHandler::GenerateObjectFileTargets ( const IfableData& data )
 	{
 		CompilationUnit& compilationUnit = *compilationUnits[i];
 		const FileLocation& compilationName = compilationUnit.GetFilename ();
-		const FileLocation *objectFilename = GetObjectFilename ( &compilationName, module, NULL );
+		const FileLocation *objectFilename = GetObjectFilename ( &compilationName, module );
 		if ( GetExtension ( *objectFilename ) == ".h" )
 			moduleDependencies += ssprintf ( " $(%s_HEADERS)", module.name.c_str () );
 		else if ( GetExtension ( *objectFilename ) == ".rc" )
