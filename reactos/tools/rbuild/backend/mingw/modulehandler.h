@@ -111,10 +111,7 @@ protected:
 	void GenerateRunRsymCode () const;
 	void GenerateRunStripCode () const;
 	void GenerateLinkerCommand ( const std::string& dependencies,
-	                             const std::string& linker,
 	                             const std::string& linkerParameters,
-	                             const std::string& objectsMacro,
-	                             const std::string& libsMacro,
 	                             const std::string& pefixupParameters );
 	void GeneratePhonyTarget() const;
 	void GenerateBuildMapCode ( const FileLocation *mapTarget = NULL );

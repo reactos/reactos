@@ -334,7 +334,7 @@ MingwModuleHandler::GetExtraDependencies (
 
 		string dependencies = backend->GetFullName ( *header );
 		delete header;
-		return dependencies;
+		return " " + dependencies;
 	}
 	else
 		return "";
@@ -352,7 +352,7 @@ MingwModuleHandler::GetCompilationUnitDependencies (
 		const File& file = *compilationUnit.GetFiles ()[i];
 		sourceFiles.push_back ( backend->GetFullName ( file.file ) );
 	}
-	return v2s ( sourceFiles, 10 );
+	return string ( " " ) + v2s ( sourceFiles, 10 );
 }
 
 /* caller needs to delete the returned object */
@@ -1285,7 +1285,6 @@ Rule winebuildRule ( "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noex
                      "\t$(Q)$(WINEBUILD_TARGET) $(WINEBUILD_FLAGS) -o $(INTERMEDIATE)$(SEP)$(source_path)$(SEP)$(source_name_noext).stubs.c --pedll $(source_path)$(SEP)$(source_name_noext).spec\n",
                      "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).spec.def",
                      "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).stubs.c",
-                     "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).stubs.o",
                      "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)", NULL );
 Rule widlHeaderRule ( "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).h: $(source) $(module_rbuild) $(WIDL_TARGET) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
                       "\t$(ECHO_WIDL)\n"
@@ -1297,21 +1296,18 @@ Rule widlServerRule ( "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noe
                       "\t$(Q)$(WIDL_TARGET) $($(module_name)_WIDLFLAGS) -h -H $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_s.h -s -S $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_s.c $(source)\n",
                       "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_s.h",
                       "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_s.c",
-                      "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_s.o",
                       "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)", NULL );
 Rule widlClientRule ( "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_c.c $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_c.h: $(source) $(module_rbuild) $(WIDL_TARGET) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
                       "\t$(ECHO_WIDL)\n"
                       "\t$(Q)$(WIDL_TARGET) $($(module_name)_WIDLFLAGS) -h -H $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_c.h -c -C $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_c.c $(source)\n",
                       "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_c.h",
                       "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_c.c",
-                      "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_c.o",
                       "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)", NULL );
 Rule widlProxyRule ( "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_p.c $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_p.h: $(source) $(module_rbuild) $(WIDL_TARGET) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
                      "\t$(ECHO_WIDL)\n"
                      "\t$(Q)$(WIDL_TARGET)  $($(module_name)_WIDLFLAGS) -h -H $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_p.h -p -P $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_p.c $(source)\n",
                      "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_p.h",
                      "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_p.c",
-                     "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_p.o",
                      "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)", NULL );
 Rule widlTlbRule ( "$(OUTPUT)$(SEP)$(source_dir)$(SEP)$(module_name).tlb: $(source) $(module_rbuild) $(WIDL_TARGET) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
                    "\t$(ECHO_WIDL)\n"
@@ -1347,8 +1343,7 @@ MingwModuleHandler::GenerateGccCommand (
 	else
 		flags = cflagsMacro;
 
-	if ( extraDependencies != "" )
-		dependencies += " " + extraDependencies;
+	dependencies += extraDependencies;
 	if ( pchFilename )
 	{
 		dependencies += " " + backend->GetFullName ( *pchFilename );
@@ -1475,7 +1470,10 @@ MingwModuleHandler::GenerateCommands (
 	if ( customRule )
 		customRule->Execute ( fMakefile, backend, module, &sourceFile, clean_files );
 
-	if ( extension == ".c" || extension == ".cc" || extension == ".cpp" || extension == ".cxx" )
+	if ( extension == ".c" || extension == ".cc" || extension == ".cpp" || extension == ".cxx" ||
+	     extension == ".spec" ||
+	     ( extension == ".idl" &&
+	       ( module.type == RpcServer ) || ( module.type == RpcClient ) || ( module.type == RpcProxy ) ) )
 	{
 		const FileLocation *objectFilename = GetObjectFilename (
 			&sourceFile, module );
@@ -1483,18 +1481,7 @@ MingwModuleHandler::GenerateCommands (
 		delete objectFilename;
 
 		GenerateGccCommand ( &sourceFile,
-		                     GetCompilationUnitDependencies ( compilationUnit ) + extraDependencies );
-	}
-	else if ( extension == ".spec" )
-	{
-		GenerateGccCommand ( &sourceFile,
-		                     extraDependencies );
-	}
-	else if ( extension == ".idl" &&
-		( module.type == RpcServer ) || ( module.type == RpcClient ) || ( module.type == RpcProxy ) )
-	{
-		GenerateGccCommand ( &sourceFile,
-		                     GetExtraDependencies ( &sourceFile ) );
+		                     GetCompilationUnitDependencies ( compilationUnit ) + GetExtraDependencies ( &sourceFile ) + extraDependencies );
 	}
 	else if ( !customRule )
 	{
@@ -1644,14 +1631,14 @@ MingwModuleHandler::GenerateRunStripCode () const
 void
 MingwModuleHandler::GenerateLinkerCommand (
 	const string& dependencies,
-	const string& linker,
 	const string& linkerParameters,
-	const string& objectsMacro,
-	const string& libsMacro,
 	const string& pefixupParameters )
 {
 	const FileLocation *target_file = GetTargetFilename ( module, NULL );
 	const FileLocation *definitionFilename = GetDefinitionFilename ();
+	string linker = module.cplusplus ? "${gpp}" : "${gcc}";
+	string objectsMacro = GetObjectsMacro ( module );
+	string libsMacro = GetLibsMacro ();
 
 	string target_macro ( GetTargetMacro ( module ) );
 	string target_folder ( backend->GetFullPath ( *target_file ) );
@@ -2559,9 +2546,7 @@ MingwKernelModuleHandler::GenerateKernelModuleTarget ()
 {
 	string targetMacro ( GetTargetMacro ( module ) );
 	string workingDirectory = GetWorkingDirectory ( );
-	string objectsMacro = GetObjectsMacro ( module );
 	string linkDepsMacro = GetLinkingDependenciesMacro ();
-	string libsMacro = GetLibsMacro ();
 
 	GenerateImportLibraryTargetIfNeeded ();
 
@@ -2571,16 +2556,13 @@ MingwKernelModuleHandler::GenerateKernelModuleTarget ()
 
 		string dependencies = linkDepsMacro + " " + objectsMacro;
 
-        string linkerParameters = ssprintf ( "-Wl,--subsystem,native -Wl,--entry,%s -Wl,--image-base,%s",
-                                            module.GetEntryPoint(!(Environment::GetArch() == "arm")).c_str (),
-                                            module.baseaddress.c_str () );
-        
+		string linkerParameters = ssprintf ( "-Wl,--subsystem,native -Wl,--entry,%s -Wl,--image-base,%s",
+		                                     module.GetEntryPoint(!(Environment::GetArch() == "arm")).c_str (),
+		                                     module.baseaddress.c_str () );
+
 		GenerateLinkerCommand ( dependencies,
-					"${gcc}",
-					linkerParameters + " $(NTOSKRNL_SHARED)",
-					objectsMacro,
-					libsMacro,
-					"-sections" );
+		                        linkerParameters + " $(NTOSKRNL_SHARED)",
+		                        "-sections" );
 	}
 	else
 	{
@@ -2667,9 +2649,7 @@ MingwKernelModeDLLModuleHandler::GenerateKernelModeDLLModuleTarget ()
 {
 	string targetMacro ( GetTargetMacro ( module ) );
 	string workingDirectory = GetWorkingDirectory ( );
-	string objectsMacro = GetObjectsMacro ( module );
 	string linkDepsMacro = GetLinkingDependenciesMacro ();
-	string libsMacro = GetLibsMacro ();
 
 	GenerateImportLibraryTargetIfNeeded ();
 
@@ -2683,10 +2663,7 @@ MingwKernelModeDLLModuleHandler::GenerateKernelModeDLLModuleTarget ()
 		                                     module.GetEntryPoint(true).c_str (),
 		                                     module.baseaddress.c_str () );
 		GenerateLinkerCommand ( dependencies,
-		                        "${gcc}",
 		                        linkerParameters,
-		                        objectsMacro,
-		                        libsMacro,
 		                        "-sections" );
 	}
 	else
@@ -2721,9 +2698,7 @@ MingwKernelModeDriverModuleHandler::GenerateKernelModeDriverModuleTarget ()
 {
 	string targetMacro ( GetTargetMacro (module) );
 	string workingDirectory = GetWorkingDirectory ();
-	string objectsMacro = GetObjectsMacro ( module );
 	string linkDepsMacro = GetLinkingDependenciesMacro ();
-	string libsMacro = GetLibsMacro ();
 
 	GenerateImportLibraryTargetIfNeeded ();
 
@@ -2737,10 +2712,7 @@ MingwKernelModeDriverModuleHandler::GenerateKernelModeDriverModuleTarget ()
 		                                     module.GetEntryPoint(true).c_str (),
 		                                     module.baseaddress.c_str () );
 		GenerateLinkerCommand ( dependencies,
-		                        "${gcc}",
 		                        linkerParameters,
-		                        objectsMacro,
-		                        libsMacro,
 		                        "-sections" );
 	}
 	else
@@ -2774,9 +2746,7 @@ MingwNativeDLLModuleHandler::GenerateNativeDLLModuleTarget ()
 {
 	string targetMacro ( GetTargetMacro (module) );
 	string workingDirectory = GetWorkingDirectory ( );
-	string objectsMacro = GetObjectsMacro ( module );
 	string linkDepsMacro = GetLinkingDependenciesMacro ();
-	string libsMacro = GetLibsMacro ();
 
 	GenerateImportLibraryTargetIfNeeded ();
 
@@ -2790,10 +2760,7 @@ MingwNativeDLLModuleHandler::GenerateNativeDLLModuleTarget ()
 		                                     module.GetEntryPoint(true).c_str (),
 		                                     module.baseaddress.c_str () );
 		GenerateLinkerCommand ( dependencies,
-		                        "${gcc}",
 		                        linkerParameters,
-		                        objectsMacro,
-		                        libsMacro,
 		                        "" );
 	}
 	else
@@ -2827,9 +2794,7 @@ MingwNativeCUIModuleHandler::GenerateNativeCUIModuleTarget ()
 {
 	string targetMacro ( GetTargetMacro (module) );
 	string workingDirectory = GetWorkingDirectory ( );
-	string objectsMacro = GetObjectsMacro ( module );
 	string linkDepsMacro = GetLinkingDependenciesMacro ();
-	string libsMacro = GetLibsMacro ();
 
 	GenerateImportLibraryTargetIfNeeded ();
 
@@ -2843,10 +2808,7 @@ MingwNativeCUIModuleHandler::GenerateNativeCUIModuleTarget ()
 		                                     module.GetEntryPoint(true).c_str (),
 		                                     module.baseaddress.c_str () );
 		GenerateLinkerCommand ( dependencies,
-		                        "${gcc}",
 		                        linkerParameters,
-		                        objectsMacro,
-		                        libsMacro,
 		                        "" );
 	}
 	else
@@ -2957,9 +2919,7 @@ MingwWin32DLLModuleHandler::GenerateWin32DLLModuleTarget ()
 {
 	string targetMacro ( GetTargetMacro (module) );
 	string workingDirectory = GetWorkingDirectory ( );
-	string objectsMacro = GetObjectsMacro ( module );
 	string linkDepsMacro = GetLinkingDependenciesMacro ();
-	string libsMacro = GetLibsMacro ();
 
 	GenerateImportLibraryTargetIfNeeded ();
 
@@ -2969,20 +2929,11 @@ MingwWin32DLLModuleHandler::GenerateWin32DLLModuleTarget ()
 
 		string dependencies = linkDepsMacro + " " + objectsMacro;
 
-		string linker;
-		if ( module.cplusplus )
-			linker = "${gpp}";
-		else
-			linker = "${gcc}";
-
 		string linkerParameters = ssprintf ( "-Wl,--subsystem,console -Wl,--entry,%s -Wl,--image-base,%s -Wl,--file-alignment,0x1000 -Wl,--section-alignment,0x1000 -shared",
 		                                     module.GetEntryPoint(true).c_str (),
 		                                     module.baseaddress.c_str () );
 		GenerateLinkerCommand ( dependencies,
-		                        linker,
 		                        linkerParameters,
-		                        objectsMacro,
-		                        libsMacro,
 		                        "" );
 	}
 	else
@@ -3010,9 +2961,7 @@ MingwWin32OCXModuleHandler::GenerateWin32OCXModuleTarget ()
 {
 	string targetMacro ( GetTargetMacro (module) );
 	string workingDirectory = GetWorkingDirectory ( );
-	string objectsMacro = GetObjectsMacro ( module );
 	string linkDepsMacro = GetLinkingDependenciesMacro ();
-	string libsMacro = GetLibsMacro ();
 
 	GenerateImportLibraryTargetIfNeeded ();
 
@@ -3022,20 +2971,11 @@ MingwWin32OCXModuleHandler::GenerateWin32OCXModuleTarget ()
 
 		string dependencies = linkDepsMacro + " " + objectsMacro;
 
-		string linker;
-		if ( module.cplusplus )
-			linker = "${gpp}";
-		else
-			linker = "${gcc}";
-
 		string linkerParameters = ssprintf ( "-Wl,--subsystem,console -Wl,--entry,%s -Wl,--image-base,%s -Wl,--file-alignment,0x1000 -Wl,--section-alignment,0x1000 -shared",
 		                                     module.GetEntryPoint(true).c_str (),
 		                                     module.baseaddress.c_str () );
 		GenerateLinkerCommand ( dependencies,
-		                        linker,
 		                        linkerParameters,
-		                        objectsMacro,
-		                        libsMacro,
 		                        "" );
 	}
 	else
@@ -3070,9 +3010,7 @@ MingwWin32CUIModuleHandler::GenerateWin32CUIModuleTarget ()
 {
 	string targetMacro ( GetTargetMacro (module) );
 	string workingDirectory = GetWorkingDirectory ( );
-	string objectsMacro = GetObjectsMacro ( module );
 	string linkDepsMacro = GetLinkingDependenciesMacro ();
-	string libsMacro = GetLibsMacro ();
 
 	GenerateImportLibraryTargetIfNeeded ();
 
@@ -3082,20 +3020,11 @@ MingwWin32CUIModuleHandler::GenerateWin32CUIModuleTarget ()
 
 		string dependencies = linkDepsMacro + " " + objectsMacro;
 
-		string linker;
-		if ( module.cplusplus )
-			linker = "${gpp}";
-		else
-			linker = "${gcc}";
-
 		string linkerParameters = ssprintf ( "-Wl,--subsystem,console -Wl,--entry,%s -Wl,--image-base,%s -Wl,--file-alignment,0x1000 -Wl,--section-alignment,0x1000",
 		                                     module.GetEntryPoint(true).c_str (),
 		                                     module.baseaddress.c_str () );
 		GenerateLinkerCommand ( dependencies,
-		                        linker,
 		                        linkerParameters,
-		                        objectsMacro,
-		                        libsMacro,
 		                        "" );
 	}
 	else
@@ -3130,9 +3059,7 @@ MingwWin32GUIModuleHandler::GenerateWin32GUIModuleTarget ()
 {
 	string targetMacro ( GetTargetMacro (module) );
 	string workingDirectory = GetWorkingDirectory ( );
-	string objectsMacro = GetObjectsMacro ( module );
 	string linkDepsMacro = GetLinkingDependenciesMacro ();
-	string libsMacro = GetLibsMacro ();
 
 	GenerateImportLibraryTargetIfNeeded ();
 
@@ -3142,20 +3069,11 @@ MingwWin32GUIModuleHandler::GenerateWin32GUIModuleTarget ()
 
 		string dependencies = linkDepsMacro + " " + objectsMacro;
 
-		string linker;
-		if ( module.cplusplus )
-			linker = "${gpp}";
-		else
-			linker = "${gcc}";
-
 		string linkerParameters = ssprintf ( "-Wl,--subsystem,windows -Wl,--entry,%s -Wl,--image-base,%s -Wl,--file-alignment,0x1000 -Wl,--section-alignment,0x1000",
 		                                     module.GetEntryPoint(true).c_str (),
 		                                     module.baseaddress.c_str () );
 		GenerateLinkerCommand ( dependencies,
-		                        linker,
 		                        linkerParameters,
-		                        objectsMacro,
-		                        libsMacro,
 		                        "" );
 	}
 	else
@@ -3761,9 +3679,7 @@ MingwTestModuleHandler::GenerateTestModuleTarget ()
 {
 	string targetMacro ( GetTargetMacro ( module ) );
 	string workingDirectory = GetWorkingDirectory ( );
-	string objectsMacro = GetObjectsMacro ( module );
 	string linkDepsMacro = GetLinkingDependenciesMacro ();
-	string libsMacro = GetLibsMacro ();
 
 	GenerateImportLibraryTargetIfNeeded ();
 
@@ -3773,20 +3689,11 @@ MingwTestModuleHandler::GenerateTestModuleTarget ()
 
 		string dependencies = linkDepsMacro + " " + objectsMacro;
 
-		string linker;
-		if ( module.cplusplus )
-			linker = "${gpp}";
-		else
-			linker = "${gcc}";
-
 		string linkerParameters = ssprintf ( "-Wl,--subsystem,console -Wl,--entry,%s -Wl,--image-base,%s -Wl,--file-alignment,0x1000 -Wl,--section-alignment,0x1000",
 		                                     module.GetEntryPoint(true).c_str (),
 		                                     module.baseaddress.c_str () );
 		GenerateLinkerCommand ( dependencies,
-		                        linker,
 		                        linkerParameters,
-		                        objectsMacro,
-		                        libsMacro,
 		                        "" );
 	}
 	else
