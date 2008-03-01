@@ -603,7 +603,7 @@ DWORD
 WINAPI
 DvpWaitForVideoPortSync(LPDDHAL_WAITFORVPORTSYNCDATA pDvdWaitForVideoPortSync)
 {
-    return NtGdiDvpWaitForVideoPortSync(pDvdWaitForVideoPortSync->lpVideoPort->hDDVideoPort, (PDD_WAITFORVPORTSYNCDATA) pDvdWaitForVideoPortSync);
+    return NtGdiDvpWaitForVideoPortSync(pDvdWaitForVideoPortSync->lpVideoPort->hDDVideoPort,  (PDD_WAITFORVPORTSYNCDATA) pDvdWaitForVideoPortSync);
 }
 
 /*
@@ -670,121 +670,485 @@ DvpUpdateVideoPort(LPDDHAL_UPDATEVPORTDATA pDvdUpdateVideoPort)
     return NtGdiDvpUpdateVideoPort(pDvdUpdateVideoPort->lpVideoPort->hDDVideoPort,phSurfaceVideo,phSurfaceVbi, (PDD_UPDATEVPORTDATA)pDvdUpdateVideoPort);
 }
 
-/* TODO */
+/*
+ * @implemented
+ *
+ * DvpWaitForVideoPortSync
+ */
+DWORD
+WINAPI
+DvpGetVideoPortField(LPDDHAL_FLIPVPORTDATA pDvdGetVideoPortField)
+{
+    return NtGdiDvpGetVideoPortField(pDvdGetVideoPortField->lpVideoPort->hDDVideoPort, (PDD_GETVPORTFIELDDATA)pDvdGetVideoPortField);
+}
 
+/*
+ * @implemented
+ *
+ * DvpWaitForVideoPortSync
+ */
+DWORD
+WINAPI
+DvpGetVideoPortInputFormats(LPDDHAL_GETVPORTINPUTFORMATDATA pDvdGetVideoPortInputFormat)
+{
+    return NtGdiDvpGetVideoPortInputFormats(pDvdGetVideoPortInputFormat->lpVideoPort->hDDVideoPort, (PDD_GETVPORTINPUTFORMATDATA) pDvdGetVideoPortInputFormat);
+}
+
+
+/*
+ * @implemented
+ *
+ * DvpGetVideoPortLine
+ */
+DWORD
+WINAPI
+DvpGetVideoPortLine(LPDDHAL_GETVPORTLINEDATA pDvdGetVideoPortLine)
+{
+    return NtGdiDvpGetVideoPortLine(pDvdGetVideoPortLine->lpVideoPort->hDDVideoPort, (PDD_GETVPORTLINEDATA)pDvdGetVideoPortLine);
+}
+
+/*
+ * @implemented
+ *
+ * DvpGetVideoPortOutputFormats
+ */
+DWORD
+WINAPI
+DvpGetVideoPortOutputFormats(LPDDHAL_GETVPORTLINEDATA pDvdGetVideoPortOutputFormat)
+{
+    return NtGdiDvpGetVideoPortLine(pDvdGetVideoPortOutputFormat->lpVideoPort->hDDVideoPort, (PDD_GETVPORTLINEDATA)pDvdGetVideoPortOutputFormat);
+}
+
+
+/*
+ * @implemented
+ *
+ * DvpGetVideoPortConnectInfo
+ */
+DWORD
+WINAPI
+DvpGetVideoPortConnectInfo(LPDDHAL_GETVPORTCONNECTDATA pDvdGetVideoPortInfo)
+{
+    return NtGdiDvpGetVideoPortConnectInfo( GetDdHandle( pDvdGetVideoPortInfo->lpDD->lpGbl->hDD) , (PDD_GETVPORTCONNECTDATA) pDvdGetVideoPortInfo);
+}
+
+/*
+ * @implemented
+ *
+ * DdGetAvailDriverMemory
+ */
+DWORD
+WINAPI
+DdGetAvailDriverMemory(LPDDHAL_GETAVAILDRIVERMEMORYDATA pDdGetAvailDriverMemory)
+{
+  return NtGdiDdGetAvailDriverMemory(GetDdHandle( pDdGetAvailDriverMemory->lpDD->hDD), (PDD_GETAVAILDRIVERMEMORYDATA) pDdGetAvailDriverMemory);
+}
+
+/*
+ * @implemented
+ *
+ * DdAlphaBlt
+ */
+DWORD
+WINAPI
+DdAlphaBlt(LPDDHAL_BLTDATA pDdAlphaBlt)
+{
+    HANDLE hDDSrcSurface = 0; 
+
+    if (pDdAlphaBlt->lpDDSrcSurface != 0)
+    {
+        hDDSrcSurface = (HANDLE) pDdAlphaBlt->lpDDSrcSurface->hDDSurface;        
+    }
+    
+    return NtGdiDdAlphaBlt((HANDLE)pDdAlphaBlt->lpDDDestSurface->hDDSurface, hDDSrcSurface, (PDD_BLTDATA)&pDdAlphaBlt);
+}
+
+/*
+ * @implemented
+ *
+ * DdCreateSurfaceEx
+ */
+DWORD
+WINAPI
+DdCreateSurfaceEx(LPDDHAL_CREATESURFACEEXDATA pDdCreateSurfaceEx)
+{
+    pDdCreateSurfaceEx->ddRVal = NtGdiDdCreateSurfaceEx( GetDdHandle(pDdCreateSurfaceEx->lpDDLcl->lpGbl->hDD),
+                                                         (HANDLE)pDdCreateSurfaceEx->lpDDSLcl->hDDSurface, 
+                                                         pDdCreateSurfaceEx->lpDDSLcl->lpSurfMore->dwSurfaceHandle);    
+    return TRUE;
+}
+
+/*
+ * @implemented
+ *
+ * DdColorControl
+ */
+DWORD
+WINAPI
+DdColorControl(LPDDHAL_COLORCONTROLDATA pDdColorControl)
+{
+    return NtGdiDdColorControl( (HANDLE) pDdColorControl->lpDDSurface->hDDSurface, (PDD_COLORCONTROLDATA) &pDdColorControl);
+}
+
+
+/*
+ * @implemented
+ *
+ * DdSetExclusiveMode
+ */
+DWORD
+WINAPI
+DdSetExclusiveMode(LPDDHAL_SETEXCLUSIVEMODEDATA pDdSetExclusiveMode)
+{
+    return NtGdiDdSetExclusiveMode( GetDdHandle(pDdSetExclusiveMode->lpDD->hDD), (PDD_SETEXCLUSIVEMODEDATA) &pDdSetExclusiveMode);
+}
+
+/*
+ * @implemented
+ *
+ * DdFlipToGDISurface
+ */
+DWORD
+WINAPI
+DdFlipToGDISurface(LPDDHAL_FLIPTOGDISURFACEDATA pDdFlipToGDISurface)
+{
+    return NtGdiDdFlipToGDISurface( GetDdHandle(pDdFlipToGDISurface->lpDD->hDD), (PDD_FLIPTOGDISURFACEDATA) &pDdFlipToGDISurface);
+}
+
+
+
+
+/* TODO */
 DWORD
 WINAPI
 DdGetDriverInfo(LPDDHAL_GETDRIVERINFODATA pData)
-{
-    HANDLE hDD = GetDdHandle(pData->dwContext);
+{    
+    DDHAL_GETDRIVERINFODATA pDrvInfoData;
+    DWORD retValue = DDHAL_DRIVER_NOTHANDLED;
+    HANDLE hDD;
 
-    /* Get videoport callbacks */
-    if (IsEqualGUID(&pData->guidInfo, &GUID_VideoPortCallbacks))
-    {
-        DDHAL_GETDRIVERINFODATA pDvdPortInfo;
-        DDHAL_DDVIDEOPORTCALLBACKS  pDvdPort;
-        DDHAL_DDVIDEOPORTCALLBACKS* pUserDvdPort = (DDHAL_DDVIDEOPORTCALLBACKS *)pData->lpvData;
-        DWORD retValue;
+    /* FIXME add SEH around this functions */
+
+        RtlZeroMemory(&pDrvInfoData, sizeof (DDHAL_GETDRIVERINFODATA));        
+        RtlCopyMemory(&pDrvInfoData.guidInfo, &pData->guidInfo, sizeof(GUID));
+    
+        hDD = GetDdHandle(pData->dwContext);
+
+        pDrvInfoData.dwSize = sizeof (DDHAL_GETDRIVERINFODATA);
+        pDrvInfoData.ddRVal = DDERR_GENERIC;    
+        pDrvInfoData.dwContext = (ULONG_PTR)hDD;
         
-        /* Clear user out buffer */
-        RtlZeroMemory(pUserDvdPort, DDVIDEOPORTCALLBACKSSIZE);        
+      
+        /* Videoport Callbacks check and setup for DirectX/ ReactX */
+        if (IsEqualGUID(&pData->guidInfo, &GUID_VideoPortCallbacks))
+        {        
+            DDHAL_DDVIDEOPORTCALLBACKS  pDvdPort;
+            DDHAL_DDVIDEOPORTCALLBACKS* pUserDvdPort = (DDHAL_DDVIDEOPORTCALLBACKS *)pData->lpvData;                
 
-        /* Clear internal out buffer and set it up*/
-        RtlZeroMemory(&pDvdPort, DDVIDEOPORTCALLBACKSSIZE);
-        pDvdPort.dwSize = DDVIDEOPORTCALLBACKSSIZE;
+            /* Clear internal out buffer and set it up*/
+            RtlZeroMemory(&pDvdPort, DDVIDEOPORTCALLBACKSSIZE);
+            pDvdPort.dwSize = DDVIDEOPORTCALLBACKSSIZE;
 
-        /* Clear internal in buffer and set it up*/
-        RtlZeroMemory(&pDvdPortInfo, sizeof (DDHAL_GETDRIVERINFODATA));                      
-        pDvdPortInfo.dwSize = sizeof (DDHAL_GETDRIVERINFODATA);
-        pDvdPortInfo.guidInfo = GUID_VideoPortCallbacks;
-        pDvdPortInfo.lpvData = (PVOID)&pDvdPort;
-        pDvdPortInfo.ddRVal = DDERR_GENERIC;
-        pDvdPortInfo.dwExpectedSize = DDVIDEOPORTCALLBACKSSIZE ;  
-        pDvdPortInfo.dwContext = (ULONG_PTR) hDD;
-        
-        /* Call win32k */
-        retValue = NtGdiDdGetDriverInfo(hDD, (PDD_GETDRIVERINFODATA)&pDvdPortInfo);
+            /* set up internal buffer */                                                  
+            pDrvInfoData.lpvData = (PVOID)&pDvdPort;        
+            pDrvInfoData.dwExpectedSize = DDVIDEOPORTCALLBACKSSIZE ;  
+                
+            /* Call win32k */
+            retValue = NtGdiDdGetDriverInfo(hDD, (PDD_GETDRIVERINFODATA)&pDrvInfoData);
 
-        /* Setup user out buffer and convert kmode callbacks to user mode */
-        pUserDvdPort->dwSize = DDVIDEOPORTCALLBACKSSIZE;      
+            /* Setup user out buffer and convert kmode callbacks to user mode */
+            pUserDvdPort->dwSize = DDVIDEOPORTCALLBACKSSIZE;      
+            pUserDvdPort->dwFlags = pDrvInfoData.dwFlags =  0;
        
-        pUserDvdPort->dwFlags = (pDvdPortInfo.dwFlags & ~(DDHAL_VPORT32_CREATEVIDEOPORT | DDHAL_VPORT32_FLIP |
-                                                          DDHAL_VPORT32_DESTROY | DDHAL_VPORT32_UPDATE )) |
-                                                         (DDHAL_VPORT32_CREATEVIDEOPORT | DDHAL_VPORT32_FLIP |
-                                                          DDHAL_VPORT32_DESTROY | DDHAL_VPORT32_UPDATE);
+            pUserDvdPort->dwFlags = (pDrvInfoData.dwFlags & ~(DDHAL_VPORT32_CREATEVIDEOPORT | DDHAL_VPORT32_FLIP |
+                                                              DDHAL_VPORT32_DESTROY | DDHAL_VPORT32_UPDATE | DDHAL_VPORT32_WAITFORSYNC)) |
+                                                             (DDHAL_VPORT32_CREATEVIDEOPORT | DDHAL_VPORT32_FLIP |
+                                                              DDHAL_VPORT32_DESTROY | DDHAL_VPORT32_UPDATE);
 
-        pData->dwActualSize = DDVIDEOPORTCALLBACKSSIZE; 
-        pUserDvdPort->CreateVideoPort = (LPDDHALVPORTCB_CREATEVIDEOPORT) DvpCreateVideoPort;
-        pUserDvdPort->FlipVideoPort = (LPDDHALVPORTCB_FLIP) DvpFlipVideoPort;
-        pUserDvdPort->DestroyVideoPort = (LPDDHALVPORTCB_DESTROYVPORT) DvpDestroyVideoPort;
-        pUserDvdPort->UpdateVideoPort = (LPDDHALVPORTCB_UPDATE) DvpUpdateVideoPort;
+            pData->dwActualSize = DDVIDEOPORTCALLBACKSSIZE; 
+            pUserDvdPort->CreateVideoPort = (LPDDHALVPORTCB_CREATEVIDEOPORT) DvpCreateVideoPort;
+            pUserDvdPort->FlipVideoPort = (LPDDHALVPORTCB_FLIP) DvpFlipVideoPort;
+            pUserDvdPort->DestroyVideoPort = (LPDDHALVPORTCB_DESTROYVPORT) DvpDestroyVideoPort;
+            pUserDvdPort->UpdateVideoPort = (LPDDHALVPORTCB_UPDATE) DvpUpdateVideoPort;
 
-        if (pDvdPort.CanCreateVideoPort)
-        {
-             pUserDvdPort->CanCreateVideoPort = (LPDDHALVPORTCB_CANCREATEVIDEOPORT) DvpCanCreateVideoPort;
-        }
+            if (pDvdPort.CanCreateVideoPort)
+            {
+                pUserDvdPort->CanCreateVideoPort = (LPDDHALVPORTCB_CANCREATEVIDEOPORT) DvpCanCreateVideoPort;
+            }
 
-        if (pDvdPort.GetVideoPortBandwidth)
-        {
-            pUserDvdPort->GetVideoPortBandwidth = (LPDDHALVPORTCB_GETBANDWIDTH) DvpGetVideoPortBandwidth;
-        }
+            if (pDvdPort.GetVideoPortBandwidth)
+            {
+                pUserDvdPort->GetVideoPortBandwidth = (LPDDHALVPORTCB_GETBANDWIDTH) DvpGetVideoPortBandwidth;
+            }
 
-        if (pDvdPort.GetVideoPortInputFormats)
-        {
-            pUserDvdPort->GetVideoPortInputFormats = (LPDDHALVPORTCB_GETINPUTFORMATS) NULL; // FIXME : DvpGetVideoPortInputFormats
-        }
+            if (pDvdPort.GetVideoPortInputFormats)
+            {
+                pUserDvdPort->GetVideoPortInputFormats = (LPDDHALVPORTCB_GETINPUTFORMATS) DvpGetVideoPortInputFormats;
+            }
 
-        if (pDvdPort.GetVideoPortOutputFormats)
-        {
-            pUserDvdPort->GetVideoPortOutputFormats = (LPDDHALVPORTCB_GETOUTPUTFORMATS) NULL; // FIXME : DvpGetVideoPortInputFormats
-        }
+            if (pDvdPort.GetVideoPortOutputFormats)
+            {
+                pUserDvdPort->GetVideoPortOutputFormats = (LPDDHALVPORTCB_GETOUTPUTFORMATS) DvpGetVideoPortOutputFormats;
+            }
 
-        if (pDvdPort.GetVideoPortField)
-        {
-            pUserDvdPort->GetVideoPortField = (LPDDHALVPORTCB_GETFIELD) NULL; // FIXME : DvpGetVideoPortField 
-        }
+            if (pDvdPort.GetVideoPortField)
+            {
+                pUserDvdPort->GetVideoPortField = (LPDDHALVPORTCB_GETFIELD) DvpGetVideoPortField; 
+            }
 
-        if (pDvdPort.GetVideoPortLine)
-        {
-            pUserDvdPort->GetVideoPortLine = (LPDDHALVPORTCB_GETLINE) NULL; // FIXME : DvpGetVideoPortLine
-        }
+            if (pDvdPort.GetVideoPortLine)
+            {
+                pUserDvdPort->GetVideoPortLine = (LPDDHALVPORTCB_GETLINE) DvpGetVideoPortLine;
+            }
 
-        if (pDvdPort.GetVideoPortConnectInfo)
-        {
-            pUserDvdPort->GetVideoPortConnectInfo = (LPDDHALVPORTCB_GETVPORTCONNECT) NULL; // FIXME : DvpGetVideoPortConnectInfo
-        }
+            if (pDvdPort.GetVideoPortConnectInfo)
+            {
+                pUserDvdPort->GetVideoPortConnectInfo = (LPDDHALVPORTCB_GETVPORTCONNECT) DvpGetVideoPortConnectInfo;
+            }
 
-        if (pDvdPort.GetVideoPortFlipStatus)
-        {
-            pUserDvdPort->GetVideoPortFlipStatus = (LPDDHALVPORTCB_GETFLIPSTATUS) DvpGetVideoPortFlipStatus;
-        }
+            if (pDvdPort.GetVideoPortFlipStatus)
+            {
+                pUserDvdPort->GetVideoPortFlipStatus = (LPDDHALVPORTCB_GETFLIPSTATUS) DvpGetVideoPortFlipStatus;
+            }
         
-        if (pDvdPort.WaitForVideoPortSync)
-        {
-            pUserDvdPort->WaitForVideoPortSync = (LPDDHALVPORTCB_WAITFORSYNC) DvpWaitForVideoPortSync; 
+            if (pDvdPort.WaitForVideoPortSync)
+            {
+                pUserDvdPort->WaitForVideoPortSync = (LPDDHALVPORTCB_WAITFORSYNC) DvpWaitForVideoPortSync; 
+            }
+
+            if (pDvdPort.GetVideoSignalStatus)
+            {
+                pUserDvdPort->GetVideoSignalStatus = (LPDDHALVPORTCB_GETSIGNALSTATUS) DvpGetVideoSignalStatus;
+            }
+
+            if (pDvdPort.ColorControl)
+            {
+                pUserDvdPort->ColorControl = (LPDDHALVPORTCB_COLORCONTROL) DvpColorControl;
+            }
+
+            /* Windows XP never repot back the true return value, 
+             *  it only report back if we have a driver or not
+             *  ReactOS keep this behoir to be compatible with
+             *  Windows XP
+             */
+            pData->ddRVal = retValue;
         }
 
-        if (pDvdPort.GetVideoSignalStatus)
+        /* Color Control Callbacks check and setup for DirectX/ ReactX */
+        if (IsEqualGUID(&pData->guidInfo, &GUID_ColorControlCallbacks))
         {
-            pUserDvdPort->GetVideoSignalStatus = (LPDDHALVPORTCB_GETSIGNALSTATUS) DvpGetVideoSignalStatus;
+            DDHAL_DDCOLORCONTROLCALLBACKS  pColorControl;
+            DDHAL_DDCOLORCONTROLCALLBACKS* pUserColorControl = (DDHAL_DDCOLORCONTROLCALLBACKS *)pData->lpvData;
+                             
+            /* Clear internal out buffer and set it up*/
+            RtlZeroMemory(&pColorControl, DDCOLORCONTROLCALLBACKSSIZE);
+            pColorControl.dwSize = DDCOLORCONTROLCALLBACKSSIZE;
+
+            /* set up internal buffer */                                                  
+            pDrvInfoData.lpvData = (PVOID)&pColorControl;        
+            pDrvInfoData.dwExpectedSize = DDCOLORCONTROLCALLBACKSSIZE ;  
+                
+            /* Call win32k */
+            retValue = NtGdiDdGetDriverInfo(hDD, (PDD_GETDRIVERINFODATA)&pDrvInfoData);
+                        
+            pData->dwActualSize = DDCOLORCONTROLCALLBACKSSIZE;
+            pData->dwFlags = pDrvInfoData.dwFlags;
+
+            pUserColorControl->dwSize = DDCOLORCONTROLCALLBACKSSIZE;
+            pUserColorControl->dwFlags = pUserColorControl->dwFlags;
+                       
+            if (pColorControl.ColorControl != NULL)
+            {
+                pUserColorControl->ColorControl = (LPDDHALCOLORCB_COLORCONTROL) DdColorControl;
+            }
+
+            /* Windows XP never repot back the true return value, 
+             *  it only report back if we have a driver or not
+             *  ReactOS keep this behoir to be compatible with
+             *  Windows XP
+             */
+            pData->ddRVal = retValue;
         }
 
-        if (pDvdPort.ColorControl)
+        /* Misc Callbacks check and setup for DirectX/ ReactX */
+        else if (IsEqualGUID(&pData->guidInfo, &GUID_MiscellaneousCallbacks))
         {
-            pUserDvdPort->ColorControl = (LPDDHALVPORTCB_COLORCONTROL) DvpColorControl;
+            DDHAL_DDMISCELLANEOUSCALLBACKS  pMisc;
+            DDHAL_DDMISCELLANEOUSCALLBACKS* pUserMisc = (DDHAL_DDMISCELLANEOUSCALLBACKS *)pData->lpvData;
+                
+            /* Clear internal out buffer and set it up*/
+            RtlZeroMemory(&pMisc, DDMISCELLANEOUSCALLBACKSSIZE);
+            pMisc.dwSize = DDMISCELLANEOUSCALLBACKSSIZE;
+
+            /* set up internal buffer */                                                  
+            pDrvInfoData.lpvData = (PVOID)&pMisc;        
+            pDrvInfoData.dwExpectedSize = DDMISCELLANEOUSCALLBACKSSIZE ;  
+                
+            /* Call win32k */
+            retValue = NtGdiDdGetDriverInfo(hDD, (PDD_GETDRIVERINFODATA)&pDrvInfoData);
+
+            pData->dwActualSize = DDMISCELLANEOUSCALLBACKSSIZE;
+
+            /* Only one callbacks are supported */            
+            pUserMisc->dwFlags = pMisc.dwFlags & DDHAL_MISCCB32_GETAVAILDRIVERMEMORY;
+            pUserMisc->GetAvailDriverMemory = (LPDDHAL_GETAVAILDRIVERMEMORY) DdGetAvailDriverMemory;
+
+            /* This callbacks are only for win9x and theirfor it is not longer use in NT or ReactOS
+             * pUserMisc->UpdateNonLocalHeap;
+             * pUserMisc->GetHeapAlignment;
+             * pUserMisc->GetSysmemBltStatus; */
+
+            /* Windows XP never repot back the true return value, 
+             *  it only report back if we have a driver or not
+             *  ReactOS keep this behoir to be compatible with
+             *  Windows XP
+             */
+            pData->ddRVal = retValue;
         }
 
-        /* Windows XP never repot back the true return value, 
-         *  it only report back if we have a driver or not
-         *  ReactOS keep this behoir to be compatible with
-         *  Windows XP
-         */
-        pData->ddRVal = retValue;
-        return retValue;
-    }
+        /* Misc 2 Callbacks check and setup for DirectX/ ReactX */
+        else if (IsEqualGUID(&pData->guidInfo, &GUID_Miscellaneous2Callbacks))
+        {
+            DDHAL_DDMISCELLANEOUS2CALLBACKS  pMisc;
+            DDHAL_DDMISCELLANEOUS2CALLBACKS* pUserMisc = (DDHAL_DDMISCELLANEOUS2CALLBACKS *)pData->lpvData;
+                
+            /* Clear internal out buffer and set it up*/
+            RtlZeroMemory(&pMisc, DDMISCELLANEOUS2CALLBACKSSIZE);
+            pMisc.dwSize = DDMISCELLANEOUS2CALLBACKSSIZE;
 
-    /* FIXME not supported yet */
-    return 0;
+            /* set up internal buffer */                                                  
+            pDrvInfoData.lpvData = (PVOID)&pMisc;        
+            pDrvInfoData.dwExpectedSize = DDMISCELLANEOUS2CALLBACKSSIZE ;  
+                
+            /* Call win32k */
+            retValue = NtGdiDdGetDriverInfo(hDD, (PDD_GETDRIVERINFODATA)&pDrvInfoData);
+
+            pData->dwActualSize = DDMISCELLANEOUS2CALLBACKSSIZE;
+
+            pUserMisc->dwFlags = pMisc.dwFlags;
+
+            /* This functions are not documneted in MSDN for this struct, here is directx/reactx alpha blend */ 
+            if ( pMisc.Reserved )
+            {
+                pUserMisc->Reserved = (LPVOID) DdAlphaBlt;
+            }
+
+            if ( pMisc.CreateSurfaceEx )
+            {
+                pUserMisc->CreateSurfaceEx = (LPDDHAL_CREATESURFACEEX) DdCreateSurfaceEx;
+            }
+
+            if ( pMisc.GetDriverState )
+            {
+                pUserMisc->GetDriverState = (LPDDHAL_GETDRIVERSTATE) NtGdiDdGetDriverState;
+            }
+
+            /* NOTE : pUserMisc->DestroyDDLocal is outdated and are not beign tuch */
+
+            /* Windows XP never repot back the true return value, 
+             *  it only report back if we have a driver or not
+             *  ReactOS keep this behoir to be compatible with
+             *  Windows XP
+             */
+            pData->ddRVal = retValue;
+        }
+
+        /* NT Callbacks check and setup for DirectX/ ReactX */
+        else if (IsEqualGUID(&pData->guidInfo, &GUID_NTCallbacks))
+        {
+            /* MS does not have DHAL_* version of this callbacks 
+             * so we are force using PDD_* callbacks here 
+             */
+            DD_NTCALLBACKS  pNtKernel;
+            PDD_NTCALLBACKS pUserNtKernel = (PDD_NTCALLBACKS)pData->lpvData;
+                
+            /* Clear internal out buffer and set it up*/
+            RtlZeroMemory(&pNtKernel, sizeof(DD_NTCALLBACKS));
+            pNtKernel.dwSize = sizeof(DD_NTCALLBACKS);
+
+            /* set up internal buffer */                                                  
+            pDrvInfoData.lpvData = (PVOID)&pNtKernel;        
+            pDrvInfoData.dwExpectedSize = sizeof(DD_NTCALLBACKS) ;  
+                
+            /* Call win32k */
+            retValue = NtGdiDdGetDriverInfo(hDD, (PDD_GETDRIVERINFODATA)&pDrvInfoData);
+
+            pData->dwActualSize = sizeof(DD_NTCALLBACKS);
+
+            pUserNtKernel->dwSize = sizeof(DD_NTCALLBACKS);
+            pUserNtKernel->dwFlags = pNtKernel.dwFlags;  
+            pUserNtKernel->FreeDriverMemory = 0;
+           
+            if (pNtKernel.SetExclusiveMode)
+            {                
+                pUserNtKernel->SetExclusiveMode = (PDD_SETEXCLUSIVEMODE) DdSetExclusiveMode;  
+            }
+
+            if (pNtKernel.FlipToGDISurface)
+            {
+                pUserNtKernel->FlipToGDISurface = (PDD_FLIPTOGDISURFACE) DdFlipToGDISurface;
+            }
+
+            /* Windows XP never repot back the true return value, 
+             *  it only report back if we have a driver or not
+             *  ReactOS keep this behoir to be compatible with
+             *  Windows XP
+             */
+            pData->ddRVal = retValue;
+           
+
+        }
+
+        /* D3D Callbacks version 2 check and setup for DirectX/ ReactX */
+        else if (IsEqualGUID(&pData->guidInfo, &GUID_D3DCallbacks2))
+        {
+            // FIXME GUID_D3DCallbacks2
+        }
+
+        /* D3D Callbacks version 3 check and setup for DirectX/ ReactX */
+        else if (IsEqualGUID(&pData->guidInfo, &GUID_D3DCallbacks3))
+        {
+            // FIXME GUID_D3DCallbacks3
+        }
+
+        /* D3DParseUnknownCommand Callbacks check and setup for DirectX/ ReactX */
+        else if (IsEqualGUID(&pData->guidInfo, &GUID_D3DParseUnknownCommandCallback))
+        {
+            // FIXME GUID_D3DParseUnknownCommandCallback
+        }
+
+        /* MotionComp Callbacks check and setup for DirectX/ ReactX */
+        else if (IsEqualGUID(&pData->guidInfo, &GUID_MotionCompCallbacks))
+        {
+            // FIXME GUID_MotionCompCallbacks
+        }
+
+        /* FIXME VPE2 Callbacks check and setup for DirectX/ ReactX */
+        //else if (IsEqualGUID(&pData->guidInfo, &GUID_VPE2Callbacks))
+        //{
+            // FIXME GUID_VPE2Callbacks
+        //}
+        else
+        {
+            /* set up internal buffer */ 
+            pDrvInfoData.dwExpectedSize = pData->dwExpectedSize;        
+            pDrvInfoData.lpvData = pData->lpvData;
+
+            /* We do not cover all callbacks for user mode, they are only cover by kmode */
+            retValue = NtGdiDdGetDriverInfo(hDD, (PDD_GETDRIVERINFODATA)&pDrvInfoData);
+
+            /* Setup return data */            
+            pData->dwActualSize = pDrvInfoData.dwActualSize;
+            pData->lpvData = pDrvInfoData.lpvData;         
+            /* Windows XP never repot back the true return value, 
+             *  it only report back if we have a driver or not
+             *  ReactOS keep this behoir to be compatible with
+             *  Windows XP
+             */
+            pData->ddRVal = retValue;
+        }
+
+    return retValue;
 }
 
 
@@ -1590,6 +1954,7 @@ DdSetGammaRamp(LPDDRAWI_DIRECTDRAW_LCL pDDraw,
                                hdc,
                                lpGammaRamp);
 }
+
 
 
 
