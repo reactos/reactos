@@ -274,11 +274,11 @@ DdCanCreateSurface(LPDDHAL_CANCREATESURFACEDATA CanCreateSurface)
                                    (PDD_CANCREATESURFACEDATA)CanCreateSurface);
 }
 
-
-
-
-
-/* TODO : finish all fixme */ 
+/*
+ * @implemented
+ *
+ * DdCreateSurface
+ */
 DWORD
 WINAPI
 DdCreateSurface(LPDDHAL_CREATESURFACEDATA pCreateSurface)
@@ -301,6 +301,24 @@ DdCreateSurface(LPDDHAL_CREATESURFACEDATA pCreateSurface)
     PHANDLE phSurface = NULL, puhSurface = NULL;
     ULONG i;
     LPDDSURFACEDESC pSurfaceDesc = NULL;
+
+    /* TODO : Speed optimze, most games/dx apps/program does not want 1 surface, they want lest 2
+     * so we need incress the stack so it can contain 2 surface instead of one, this will incress 
+     * the speed of the apps when it trying alloc buffer. How to incress the surface stack space
+     * we need create a own struct for DD_SURFACE_LOCAL DdSurfaceLocal, DD_SURFACE_MORE DdSurfaceMore
+     * DD_SURFACE_GLOBAL DdSurfaceGlobal. HANDLE hPrevSurface, hSurface. like
+     * struct { DD_SURFACE_LOCAL DdSurfaceLocal1, DD_SURFACE_LOCAL DdSurfaceLocal2 }
+     * lest so it contain two surface. maybe 4. we need watch what is most common here before 
+     * we create the size activate  this IF when you start doing the optimze and please also
+     * take report from user which value they got here
+     */ 
+#if 0
+    {
+        char buffer[1024]; \
+        sprintf ( buffer, "Function %s : Optimze max to %d Surface ? (%s:%d)\n", __FUNCTION__,SurfaceCount,__FILE__,__LINE__ );
+        OutputDebugStringA(buffer);
+    }
+#endif
 
     /* Check how many surfaces there are */
     if (SurfaceCount != 1)
@@ -475,12 +493,11 @@ DdCreateSurface(LPDDHAL_CREATESURFACEDATA pCreateSurface)
                 lcl->lpSurfMore->ddsCapsEx.dwCaps3 = ptmpDdSurfaceMore->ddsCapsEx.dwCaps3;
                 lcl->lpSurfMore->ddsCapsEx.dwCaps4 = ptmpDdSurfaceMore->ddsCapsEx.dwCaps4;
             }
-            /* FIXME count to next SurfaceCount for
-               ptmpDdSurfaceGlobal = pDdSurfaceGlobal;
-               ptmpDdSurfaceLocal = pDdSurfaceLocal;
-               ptmpDdSurfaceMore = pDdSurfaceMore;
-               we only support one surface create at moment
-             */
+
+            /* count to next SurfaceCount */
+            ptmpDdSurfaceGlobal = (PDD_SURFACE_GLOBAL) (((PBYTE) ((ULONG_PTR) ptmpDdSurfaceGlobal)) + sizeof(DD_SURFACE_GLOBAL));
+            ptmpDdSurfaceLocal = (PDD_SURFACE_LOCAL) (((PBYTE) ((ULONG_PTR) ptmpDdSurfaceLocal)) + sizeof(DD_SURFACE_LOCAL));
+            ptmpDdSurfaceMore = (PDD_SURFACE_MORE) (((PBYTE) ((ULONG_PTR) ptmpDdSurfaceMore)) + sizeof(DD_SURFACE_MORE));
         }
     }
 
