@@ -274,6 +274,10 @@ DdCanCreateSurface(LPDDHAL_CANCREATESURFACEDATA CanCreateSurface)
                                    (PDD_CANCREATESURFACEDATA)CanCreateSurface);
 }
 
+
+
+
+
 /* TODO : finish all fixme */ 
 DWORD
 WINAPI
@@ -286,7 +290,6 @@ DdCreateSurface(LPDDHAL_CREATESURFACEDATA pCreateSurface)
     DD_SURFACE_GLOBAL DdSurfaceGlobal;
 
     HANDLE hPrevSurface, hSurface;
-
 
     PDD_SURFACE_LOCAL pDdSurfaceLocal = NULL;
     PDD_SURFACE_MORE pDdSurfaceMore = NULL;
@@ -302,8 +305,40 @@ DdCreateSurface(LPDDHAL_CREATESURFACEDATA pCreateSurface)
     /* Check how many surfaces there are */
     if (SurfaceCount != 1)
     {
-        /* We'll have to allocate more data, our stack isn't big enough */
+        /* We got more that one surface so we need alloc memory for them */
+        pDdSurfaceLocal = (PDD_SURFACE_LOCAL) HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, (sizeof(DD_SURFACE_LOCAL) * SurfaceCount ));
+        pDdSurfaceMore = (PDD_SURFACE_MORE) HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, (sizeof(DD_SURFACE_MORE) * SurfaceCount ));
+        pDdSurfaceGlobal = (PDD_SURFACE_GLOBAL)  HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, (sizeof(DD_SURFACE_GLOBAL) * SurfaceCount ));
+        phSurface = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, (sizeof(HANDLE) * SurfaceCount ));
+        puhSurface = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, (sizeof(HANDLE) * SurfaceCount ));
 
+        /* check if we sueese alloc all memory we need */
+        if ((pDdSurfaceLocal == NULL) || (pDdSurfaceMore == NULL) || (pDdSurfaceGlobal == NULL) || (phSurface == NULL) || (puhSurface == NULL))
+        {
+            pCreateSurface->ddRVal = DDERR_OUTOFMEMORY;
+
+            if ( pDdSurfaceLocal != NULL )
+            {
+                HeapFree(GetProcessHeap(), 0, pDdSurfaceLocal);
+            }
+
+            if ( pDdSurfaceMore != NULL )
+            {
+                HeapFree(GetProcessHeap(), 0, pDdSurfaceMore);
+            }
+
+            if ( phSurface != NULL )
+            {
+                HeapFree(GetProcessHeap(), 0, phSurface);
+            }
+
+            if ( puhSurface != NULL )
+            {
+                HeapFree(GetProcessHeap(), 0, puhSurface);
+            }
+
+            return DDHAL_DRIVER_HANDLED;
+        }
     }
     else
     {
@@ -455,7 +490,25 @@ DdCreateSurface(LPDDHAL_CREATESURFACEDATA pCreateSurface)
     /* Check if we have to free all our local allocations */
     if (SurfaceCount > 1)
     {
-        /* FIXME: */
+        if ( pDdSurfaceLocal != NULL )
+        {
+            HeapFree(GetProcessHeap(), 0, pDdSurfaceLocal);
+        }
+
+        if ( pDdSurfaceMore != NULL )
+        {
+            HeapFree(GetProcessHeap(), 0, pDdSurfaceMore);
+        }
+
+        if ( phSurface != NULL )
+        {
+            HeapFree(GetProcessHeap(), 0, phSurface);
+        }
+
+        if ( puhSurface != NULL )
+        {
+            HeapFree(GetProcessHeap(), 0, puhSurface);
+        }
     }
 
     /* Return */
@@ -1094,9 +1147,7 @@ DdGetDriverInfo(LPDDHAL_GETDRIVERINFODATA pData)
              *  ReactOS keep this behoir to be compatible with
              *  Windows XP
              */
-            pData->ddRVal = retValue;
-           
-
+            pData->ddRVal = retValue;           
         }
 
         /* D3D Callbacks version 2 check and setup for DirectX/ ReactX */
