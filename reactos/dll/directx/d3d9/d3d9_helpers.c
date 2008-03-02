@@ -64,7 +64,7 @@ HRESULT AlignedAlloc(IN OUT LPVOID *ppObject, IN SIZE_T dwSize)
 
     dwSize += MEM_ALIGNMENT;
 
-    AlignedPtr = (CHAR *)LocalAlloc(LMEM_ZEROINIT, dwSize);
+    AlignedPtr = (CHAR *)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, dwSize);
 
     if (AlignedPtr == 0)
         return DDERR_OUTOFMEMORY;
@@ -91,5 +91,5 @@ VOID AlignedFree(IN OUT LPVOID pObject)
 
     NonAlignedPtr -= *(AlignedPtr - 1);
 
-    LocalFree(NonAlignedPtr);
+    HeapFree(GetProcessHeap(), 0, NonAlignedPtr);
 }

@@ -33,6 +33,20 @@ BOOL IsMultiElementFormat(D3DFORMAT Format)
     return (Format == D3DFMT_MULTI2_ARGB8);
 }
 
+BOOL IsFourCCFormat(D3DFORMAT Format)
+{
+    CHAR* cFormat = (CHAR*)&Format;
+    if (isalnum(cFormat[0]) &&
+        isalnum(cFormat[1]) &&
+        isalnum(cFormat[2]) &&
+        isalnum(cFormat[3]))
+    {
+        return TRUE;
+    }
+
+    return FALSE;
+}
+
 BOOL IsSupportedFormatOp(LPD3D9_DRIVERCAPS pDriverCaps, D3DFORMAT DisplayFormat, DWORD FormatOp)
 {
     const DWORD NumFormatOps = pDriverCaps->NumSupportedFormatOps;
@@ -320,4 +334,48 @@ HRESULT CheckDeviceFormat(LPD3D9_DRIVERCAPS pDriverCaps, D3DFORMAT AdapterFormat
         return D3DOK_NOAUTOGEN;
 
     return D3DERR_NOTAVAILABLE;
+}
+
+HRESULT CheckDeviceFormatConversion(LPD3D9_DRIVERCAPS pDriverCaps, D3DFORMAT SourceFormat, D3DFORMAT TargetFormat)
+{
+    D3DFORMAT NonAlphaSourceFormat;
+    D3DFORMAT NonAlphaTargetFormat;
+
+    NonAlphaSourceFormat = RemoveAlphaChannel(SourceFormat);
+    NonAlphaTargetFormat = RemoveAlphaChannel(TargetFormat);
+
+    if (NonAlphaSourceFormat == NonAlphaTargetFormat)
+    {
+        return D3D_OK;
+    }
+
+    if (FALSE == IsFourCCFormat(SourceFormat))
+    {
+        switch (SourceFormat)
+        {
+        case D3DFMT_A8R8G8B8:
+        case D3DFMT_X8R8G8B8:
+        case D3DFMT_R5G6B5:
+        case D3DFMT_X1R5G5B5:
+        case D3DFMT_A1R5G5B5:
+        case D3DFMT_A2R10G10B10:
+            /* Do nothing, valid SourceFormat */
+            break;
+
+        default:
+            return D3DERR_NOTAVAILABLE;
+        }
+    }
+    else if (pDriverCaps->DriverCaps9.DevCaps2 == 0)
+    {
+        return D3D_OK;
+    }
+
+    if (FALSE == IsSupportedFormatOp(pDriverCaps, SourceFormat, D3DFORMAT_OP_CONVERT_TO_ARGB) ||
+        FALSE == IsSupportedFormatOp(pDriverCaps, TargetFormat, D3DFORMAT_MEMBEROFGROUP_ARGB))
+    {
+        return D3DERR_NOTAVAILABLE;
+    }
+
+    return D3D_OK;
 }

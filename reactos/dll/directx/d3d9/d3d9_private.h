@@ -89,7 +89,7 @@ typedef struct _tagD3D9_DEVICEDATA
 /* 0x0220 */    CHAR szDeviceName[CCHDEVICENAME];
 /* 0x0240 */    HDC hDC;
 /* 0x0244 */    GUID DisplayGuid;
-/* 0x0254 */    LPDWORD pUnknown0254; //D3D9_Unknown6BC_INT* pUnknown6BC;  // hDirectDrawLocal 
+/* 0x0254 */    LPDWORD pUnknown0254; //D3D9_Unknown6BC_INT* pUnknown6BC;
 /* 0x0258 */    D3DDEVTYPE DeviceType;
 /* 0x025c */    HMODULE hD3DRefDll;
 /* 0x0260 */    DWORD unknown0152;
@@ -103,7 +103,7 @@ typedef struct _tagDIRECT3D9DisplayAdapterInfo_
 /* 0x0118 */    BOOL bInUseFlag;
 /* 0x011c */    DWORD MasterAdapterIndex;
 /* 0x0120 */    DWORD AdapterIndexInGroup;
-/* 0x0124 */    DWORD NumAdaptersInGroup;    /* 0x00000001 */
+/* 0x0124 */    DWORD NumAdaptersInGroup;
 /* 0x0128 */    DWORD NumSupportedD3DFormats;
 /* 0x012c */    DWORD NumSupportedD3DExtendedFormats;
 /* 0x0130 */    D3DDISPLAYMODE* pSupportedD3DFormats;
@@ -116,7 +116,7 @@ typedef struct _tagDIRECT3D9DisplayAdapterInfo_
 
 typedef struct _tagDIRECT3D9_INT_
 {
-/* 0x0000 */    struct IDirect3D9Vtbl *lpVtbl; /* LPDIRECTD3D9 functoions table */
+/* 0x0000 */    struct IDirect3D9Vtbl *lpVtbl; /* LPDIRECTD3D9 function table */
 /* 0x0004 */    CRITICAL_SECTION d3d9_cs;
 /* 0x001c */    DWORD unknown000007;    /* 0x00000001 */
 /* 0x0020 */    DWORD dwProcessId;

@@ -86,7 +86,7 @@ static void GetDriverVersion(LPDISPLAY_DEVICEA pDisplayDevice, D3DADAPTER_IDENTI
     if (DriverFileSize > 0)
     {
         VS_FIXEDFILEINFO* FixedFileInfo = NULL;
-        LPVOID pBlock = LocalAlloc(LMEM_ZEROINIT, DriverFileSize);
+        LPVOID pBlock = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, DriverFileSize);
 
         if (TRUE == GetFileVersionInfoA(pIdentifier->Driver, 0, DriverFileSize, pBlock))
         {
@@ -97,7 +97,7 @@ static void GetDriverVersion(LPDISPLAY_DEVICEA pDisplayDevice, D3DADAPTER_IDENTI
             }
         }
 
-        LocalFree(pBlock);
+        HeapFree(GetProcessHeap(), 0, pBlock);
     }
 
     if (bIsWow64)
@@ -292,7 +292,7 @@ static D3DFORMAT Get16BitD3DFormat(LPCSTR lpszDeviceName)
         return Format;
     }
 
-    pBitmapInfo = LocalAlloc(LMEM_ZEROINIT, sizeof(BITMAPINFOHEADER) + 4 * sizeof(RGBQUAD));
+    pBitmapInfo = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(BITMAPINFOHEADER) + 4 * sizeof(RGBQUAD));
     if (NULL == pBitmapInfo)
     {
         DeleteObject(hBitmap);
@@ -316,7 +316,7 @@ static D3DFORMAT Get16BitD3DFormat(LPCSTR lpszDeviceName)
         }
     }
 
-    LocalFree(pBitmapInfo);
+    HeapFree(GetProcessHeap(), 0, pBitmapInfo);
     DeleteObject(hBitmap);
     DeleteDC(hDC);
 

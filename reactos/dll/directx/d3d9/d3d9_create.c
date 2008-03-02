@@ -65,7 +65,7 @@ static BOOL GetDirect3DAdapterInfo(IN OUT LPDIRECT3D9_DISPLAYADAPTER_INT pDispla
     if (NULL == (hDC = CreateDCA(NULL, pDisplayAdapter->szDeviceName, NULL, NULL)))
         return FALSE;
 
-    pDeviceData = LocalAlloc(LMEM_ZEROINIT, sizeof(D3D9_DEVICEDATA));
+    pDeviceData = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(D3D9_DEVICEDATA));
     if (NULL == pDeviceData)
     {
         DPRINT1("Out of memory, could not initialize Direct3D adapter");

@@ -640,12 +640,79 @@ static HRESULT WINAPI IDirect3D9Impl_CheckDepthStencilMatch(LPDIRECT3D9 iface, U
     return D3D_OK;
 }
 
+
+/*++
+* @name IDirect3D9::CheckDeviceFormatConversion
+* @implemented
+*
+* The function IDirect3D9Impl_CheckDeviceFormatConversion checks if a specific D3DFORMAT
+* can be converted to another on the specified display adapter.
+*
+* @param LPDIRECT3D iface
+* Pointer to the IDirect3D object returned from Direct3DCreate9()
+*
+* @param UINT Adapter
+* Adapter index to get information about. D3DADAPTER_DEFAULT is the primary display.
+* The maximum value for this is the value returned by IDirect3D::GetAdapterCount().
+*
+* @param D3DDEVTYPE DeviceType
+* One of the D3DDEVTYPE enum members. Only D3DDEVTYPE_HAL can potentially return D3D_OK.
+*
+* @param D3DFORMAT SourceFormat
+* One of the D3DFORMAT enum members except D3DFMT_UNKNOWN for the display adapter mode to be converted from.
+*
+* @param D3DFORMAT TargetFormat
+* One of the D3DFORMAT enum members except D3DFMT_UNKNOWN for the display adapter mode to be converted to.
+*
+* @return HRESULT
+* If the SourceFormat can be converted to the TargetFormat, the method returns D3D_OK.
+* If the SourceFormat can NOT be converted to the TargetFormat, the method returns D3DERR_NOTAVAILABLE.
+* If Adapter is out of range, DeviceType is invalid,
+* SourceFormat or TargetFormat is invalid, the method returns D3DERR_INVALIDCALL.
+*
+*/
 static HRESULT WINAPI IDirect3D9Impl_CheckDeviceFormatConversion(LPDIRECT3D9 iface, UINT Adapter, D3DDEVTYPE DeviceType,
                                                                  D3DFORMAT SourceFormat, D3DFORMAT TargetFormat)
 {
-    UNIMPLEMENTED
+    HRESULT hResult;
+    LPDIRECT3D9_INT This = impl_from_IDirect3D9(iface);
+    LOCK_D3D9();
 
-    return D3D_OK;
+    if (Adapter >= This->NumDisplayAdapters)
+    {
+        DPRINT1("Invalid Adapter number specified");
+        UNLOCK_D3D9();
+        return D3DERR_INVALIDCALL;
+    }
+
+    if (DeviceType != D3DDEVTYPE_HAL &&
+        DeviceType != D3DDEVTYPE_REF &&
+        DeviceType != D3DDEVTYPE_SW)
+    {
+        DPRINT1("Invalid DeviceType specified");
+        UNLOCK_D3D9();
+        return D3DERR_INVALIDCALL;
+    }
+
+    if (SourceFormat == D3DFMT_UNKNOWN ||
+        TargetFormat == D3DFMT_UNKNOWN)
+    {
+        DPRINT1("Invalid D3DFORMAT specified");
+        UNLOCK_D3D9();
+        return D3DERR_NOTAVAILABLE;
+    }
+
+    if (DeviceType == D3DDEVTYPE_HAL)
+    {
+        hResult = CheckDeviceFormatConversion(&This->DisplayAdapters[Adapter].DriverCaps, SourceFormat, TargetFormat);
+    }
+    else
+    {
+        hResult = D3DERR_NOTAVAILABLE;
+    }
+
+    UNLOCK_D3D9();
+    return hResult;
 }
 
 
