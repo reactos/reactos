@@ -12,12 +12,25 @@
 #include <d3d9.h>
 #include "d3d9_private.h"
 
+#define D3DFORMAT_OP_DMAP                   0x00020000L
+
+/* MSVC compile fix */
+#ifndef D3DFORMAT_OP_NOTEXCOORDWRAPNORMIP
+#define D3DFORMAT_OP_NOTEXCOORDWRAPNORMIP   0x01000000L
+#endif
+
 BOOL IsBackBufferFormat(D3DFORMAT Format);
 
 BOOL IsExtendedFormat(D3DFORMAT Format);
 
+BOOL IsZBufferFormat(D3DFORMAT Format);
+
+BOOL IsMultiElementFormat(D3DFORMAT Format);
+
 BOOL IsSupportedFormatOp(LPD3D9_DRIVERCAPS pDriverCaps, D3DFORMAT DisplayFormat, DWORD FormatOp);
 
-HRESULT CheckDeviceFormat(LPD3D9_DRIVERCAPS pDriverCaps, D3DFORMAT DisplayFormat, D3DFORMAT BackBufferFormat, BOOL Windowed);
+HRESULT CheckDeviceType(LPD3D9_DRIVERCAPS pDriverCaps, D3DFORMAT DisplayFormat, D3DFORMAT BackBufferFormat, BOOL Windowed);
+
+HRESULT CheckDeviceFormat(LPD3D9_DRIVERCAPS pDriverCaps, D3DFORMAT AdapterFormat, DWORD Usage, D3DRESOURCETYPE RType, D3DFORMAT CheckFormat);
 
 #endif // _FORMAT_H_

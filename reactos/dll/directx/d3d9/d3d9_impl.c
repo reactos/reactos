@@ -363,7 +363,7 @@ static HRESULT WINAPI IDirect3D9Impl_GetAdapterDisplayMode(LPDIRECT3D9 iface, UI
 * One of the D3DFORMAT enum members except D3DFMT_UNKNOWN for the display adapter mode to be checked.
 *
 * @param D3DFORMAT BackBufferFormat
-* One of the D3DFORMAT enum membersfor the render target mode to be checked. D3DFMT_UNKNOWN is only allowed in windowed mode.
+* One of the D3DFORMAT enum members for the render target mode to be checked. D3DFMT_UNKNOWN is only allowed in windowed mode.
 *
 * @param BOOL Windowed
 * If this value is TRUE, the D3DFORMAT check will be done for windowed mode and FALSE equals fullscreen mode.
@@ -426,19 +426,200 @@ static HRESULT WINAPI IDirect3D9Impl_CheckDeviceType(LPDIRECT3D9 iface, UINT Ada
         return D3DERR_NOTAVAILABLE;
     }
 
-    hResult = CheckDeviceFormat(&This->DisplayAdapters[Adapter].DriverCaps, DisplayFormat, BackBufferFormat, Windowed);
+    hResult = CheckDeviceType(&This->DisplayAdapters[Adapter].DriverCaps, DisplayFormat, BackBufferFormat, Windowed);
 
     UNLOCK_D3D9();
     return hResult;
 }
 
+
+/*++
+* @name IDirect3D9::CheckDeviceFormat
+* @implemented
+*
+* The function IDirect3D9Impl_CheckDeviceFormat checks if a specific D3DFORMAT
+* can be used for a specific purpose like texture, depth/stencil buffer or as a render target
+* on the specified display adapter.
+*
+* @param LPDIRECT3D iface
+* Pointer to the IDirect3D object returned from Direct3DCreate9()
+*
+* @param UINT Adapter
+* Adapter index to get information about. D3DADAPTER_DEFAULT is the primary display.
+* The maximum value for this is the value returned by IDirect3D::GetAdapterCount().
+*
+* @param D3DDEVTYPE DeviceType
+* One of the D3DDEVTYPE enum members.
+*
+* @param D3DFORMAT AdapterFormat
+* One of the D3DFORMAT enum members except D3DFMT_UNKNOWN for the display adapter mode to be checked.
+*
+* @param DWORD Usage
+* Valid values are any of the D3DUSAGE_QUERY constants or any of these D3DUSAGE constants:
+* D3DUSAGE_AUTOGENMIPMAP, D3DUSAGE_DEPTHSTENCIL, D3DUSAGE_DMAP, D3DUSAGE_DYNAMIC,
+* D3DUSAGE_NONSECURE, D3DUSAGE_RENDERTARGET and D3DUSAGE_SOFTWAREPROCESSING.
+*
+* @param D3DRESOURCETYPE RType
+* One of the D3DRESOURCETYPE enum members. Specifies what format will be used for.
+*
+* @param D3DFORMAT CheckFormat
+* One of the D3DFORMAT enum members for the surface format to be checked.
+*
+* @return HRESULT
+* If the format is compatible with the specified usage and resource type, the method returns D3D_OK.
+* If the format isn't compatible with the specified usage and resource type - the return value will be D3DERR_NOTAVAILABLE.
+* If Adapter is out of range, DeviceType is invalid, AdapterFormat or CheckFormat is invalid,
+* Usage and RType isn't compatible - the return value will be D3DERR_INVALIDCALL.
+*
+*/
 static HRESULT WINAPI IDirect3D9Impl_CheckDeviceFormat(LPDIRECT3D9 iface, UINT Adapter, D3DDEVTYPE DeviceType,
                                                        D3DFORMAT AdapterFormat, DWORD Usage, D3DRESOURCETYPE RType,
                                                        D3DFORMAT CheckFormat)
 {
-    UNIMPLEMENTED
+    LPD3D9_DRIVERCAPS pDriverCaps;
+    BOOL bIsTextureRType = FALSE;
+    HRESULT hResult;
 
-    return D3D_OK;
+    LPDIRECT3D9_INT This = impl_from_IDirect3D9(iface);
+    LOCK_D3D9();
+
+    if (Adapter >= This->NumDisplayAdapters)
+    {
+        DPRINT1("Invalid Adapter number specified");
+        UNLOCK_D3D9();
+        return D3DERR_INVALIDCALL;
+    }
+
+    if (DeviceType != D3DDEVTYPE_HAL &&
+        DeviceType != D3DDEVTYPE_REF &&
+        DeviceType != D3DDEVTYPE_SW)
+    {
+        DPRINT1("Invalid DeviceType specified");
+        UNLOCK_D3D9();
+        return D3DERR_INVALIDCALL;
+    }
+
+    if (AdapterFormat == D3DFMT_UNKNOWN ||
+        CheckFormat == D3DFMT_UNKNOWN)
+    {
+        DPRINT1("Invalid D3DFORMAT specified");
+        UNLOCK_D3D9();
+        return D3DERR_NOTAVAILABLE;
+    }
+
+    if ((Usage & (D3DUSAGE_DONOTCLIP | D3DUSAGE_NPATCHES | D3DUSAGE_POINTS | D3DUSAGE_RTPATCHES | D3DUSAGE_TEXTAPI | D3DUSAGE_WRITEONLY)) != 0)
+    {
+        DPRINT1("Invalid Usage specified");
+        UNLOCK_D3D9();
+        return D3DERR_INVALIDCALL;
+    }
+
+    if (RType == D3DRTYPE_TEXTURE ||
+        RType == D3DRTYPE_VOLUMETEXTURE ||
+        RType == D3DRTYPE_CUBETEXTURE)
+    {
+        bIsTextureRType = TRUE;
+    }
+    else if (RType == D3DRTYPE_SURFACE &&
+            (Usage & (D3DUSAGE_DEPTHSTENCIL | D3DUSAGE_RENDERTARGET)) == 0 &&
+            Usage != 0)
+    {
+        DPRINT1("When RType is set to D3DRTYPE_SURFACE, Usage must be 0 or have set D3DUSAGE_DEPTHSTENCIL or D3DUSAGE_RENDERTARGET");
+        UNLOCK_D3D9();
+        return D3DERR_INVALIDCALL;
+    }
+
+    if ((Usage & D3DUSAGE_DEPTHSTENCIL) != 0)
+    {
+        if (FALSE == IsZBufferFormat(CheckFormat))
+        {
+            DPRINT1("Invalid CheckFormat Z-Buffer format");
+            UNLOCK_D3D9();
+            return D3DERR_INVALIDCALL;
+        }
+
+        if ((Usage & D3DUSAGE_AUTOGENMIPMAP) != 0)
+        {
+            DPRINT1("Invalid Usage specified, D3DUSAGE_DEPTHSTENCIL and D3DUSAGE_AUTOGENMIPMAP can't be combined.");
+            UNLOCK_D3D9();
+            return D3DERR_INVALIDCALL;
+        }
+    }
+
+    if (FALSE == bIsTextureRType &&
+        RType != D3DRTYPE_SURFACE &&
+        RType != D3DRTYPE_VOLUME)
+    {
+        DPRINT1("Invalid RType specified");
+        UNLOCK_D3D9();
+        return D3DERR_INVALIDCALL;
+    }
+
+    if ((Usage & (D3DUSAGE_AUTOGENMIPMAP | D3DUSAGE_DEPTHSTENCIL | D3DUSAGE_RENDERTARGET)) != 0)
+    {
+        if (RType == D3DRTYPE_VOLUME || RType == D3DRTYPE_VOLUMETEXTURE)
+        {
+            DPRINT1("Invalid Usage specified, D3DUSAGE_AUTOGENMIPMAP, D3DUSAGE_DEPTHSTENCIL and D3DUSAGE_RENDERTARGET can't be combined with RType D3DRTYPE_VOLUME or D3DRTYPE_VOLUMETEXTURE");
+            UNLOCK_D3D9();
+            return D3DERR_INVALIDCALL;
+        }
+    }
+
+    if (FALSE == bIsTextureRType &&
+        (Usage & D3DUSAGE_QUERY_VERTEXTEXTURE) != 0)
+    {
+        DPRINT1("Invalid Usage specified, D3DUSAGE_QUERY_VERTEXTEXTURE can only be used with a texture RType");
+        UNLOCK_D3D9();
+        return D3DERR_INVALIDCALL;
+    }
+
+    if ((Usage & D3DUSAGE_AUTOGENMIPMAP) != 0 &&
+        TRUE == IsMultiElementFormat(CheckFormat))
+    {
+        DPRINT1("Invalid Usage specified, D3DUSAGE_AUTOGENMIPMAP can't be used with a multi-element format");
+        UNLOCK_D3D9();
+        return D3DERR_INVALIDCALL;
+    }
+
+    pDriverCaps = &This->DisplayAdapters[Adapter].DriverCaps;
+    if ((Usage & D3DUSAGE_DYNAMIC) != 0 && bIsTextureRType == TRUE)
+    {
+        if ((pDriverCaps->DriverCaps9.Caps2 & D3DCAPS2_DYNAMICTEXTURES) == 0)
+        {
+            DPRINT1("Driver doesn't support dynamic textures");
+            UNLOCK_D3D9();
+            return D3DERR_NOTAVAILABLE;
+        }
+
+        if ((Usage & (D3DUSAGE_DEPTHSTENCIL | D3DUSAGE_RENDERTARGET)) != 0)
+        {
+            DPRINT1("Invalid Usage specified, D3DUSAGE_DEPTHSTENCIL and D3DUSAGE_RENDERTARGET can't be combined with D3DUSAGE_DYNAMIC and a texture RType");
+            UNLOCK_D3D9();
+            return D3DERR_INVALIDCALL;
+        }
+    }
+
+    if ((Usage & D3DUSAGE_DMAP) != 0)
+    {
+        if ((pDriverCaps->DriverCaps9.DevCaps2 & (D3DDEVCAPS2_PRESAMPLEDDMAPNPATCH | D3DDEVCAPS2_DMAPNPATCH)) == 0)
+        {
+            DPRINT1("Driver doesn't support displacement mapping");
+            UNLOCK_D3D9();
+            return D3DERR_NOTAVAILABLE;
+        }
+
+        if (RType != D3DRTYPE_TEXTURE)
+        {
+            DPRINT1("Invalid Usage speficied, D3DUSAGE_DMAP must be combined with RType D3DRTYPE_TEXTURE");
+            UNLOCK_D3D9();
+            return D3DERR_INVALIDCALL;
+        }
+    }
+
+    hResult = CheckDeviceFormat(pDriverCaps, AdapterFormat, Usage, RType, CheckFormat);
+
+    UNLOCK_D3D9();
+    return hResult;
 }
 
 static HRESULT WINAPI IDirect3D9Impl_CheckDeviceMultiSampleType(LPDIRECT3D9 iface, UINT Adapter, D3DDEVTYPE DeviceType,

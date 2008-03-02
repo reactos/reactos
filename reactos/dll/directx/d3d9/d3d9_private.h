@@ -222,8 +222,8 @@ typedef struct _tagDIRECT3D9_INT_
 /* 0x227c */    DWORD unknown002207;
 /* 0x2280 */    DWORD unknown002208;
 /* 0x2284 */    DWORD unknown002209;
-/* 0x2288 */    DWORD unknown002210;
-/* 0x228c */    DWORD unknown002211;
+/* 0x2288 */    DWORD NumSupportedRefFormatOps;
+/* 0x228c */    LPDDSURFACEDESC pSupportedRefFormatOps;
 /* 0x2290 */    DWORD unknown002212;
 /* 0x2294 */    DWORD unknown002213;
 /* 0x2298 */    DWORD unknown002214;
@@ -1286,8 +1286,8 @@ typedef struct _tagDIRECT3D9_INT_
 /* 0x331c */    DWORD unknown003271;
 /* 0x3320 */    DWORD unknown003272;
 /* 0x3324 */    DWORD unknown003273;
-/* 0x3328 */    DWORD unknown003274;
-/* 0x332c */    DWORD unknown003275;
+/* 0x3328 */    DWORD NumSupportedSoftwareFormatOps;
+/* 0x332c */    LPDDSURFACEDESC pSupportedSoftwareFormatOps;
 /* 0x3330 */    DWORD unknown003276;
 /* 0x3334 */    DWORD unknown003277;
 /* 0x3338 */    DWORD unknown003278;
