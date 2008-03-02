@@ -202,5 +202,8 @@ FrLdrSetupPageDirectory(VOID)
     PageDir->Pde[0x1FF].Valid = 1;
     PageDir->Pde[0x1FF].Write = 1;
     PageDir->Pde[0x1FF].PageFrameNumber = 1;
+
+    /* Zero shared data */
+    RtlZeroMemory((PVOID)(2 << MM_PAGE_SHIFT), PAGE_SIZE);
 }
 
