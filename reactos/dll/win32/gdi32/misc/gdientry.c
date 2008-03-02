@@ -409,13 +409,10 @@ DdCreateSurface(LPDDHAL_CREATESURFACEDATA pCreateSurface)
                 ptmpDdSurfaceMore->dwSurfaceHandle = (DWORD) pCreateSurface->lplpSList[i]->dbnOverlayNode.object_int;
             }
 
-            /* FIXME count to next SurfaceCount for
-               ptmpDdSurfaceGlobal = pDdSurfaceGlobal;
-               ptmpDdSurfaceLocal = pDdSurfaceLocal;
-               ptmpDdSurfaceMore = pDdSurfaceMore;
-
-               we only support one surface create at moment
-             */
+            /* count to next SurfaceCount */
+            ptmpDdSurfaceGlobal = (PDD_SURFACE_GLOBAL) (((PBYTE) ((ULONG_PTR) ptmpDdSurfaceGlobal)) + sizeof(DD_SURFACE_GLOBAL));
+            ptmpDdSurfaceLocal = (PDD_SURFACE_LOCAL) (((PBYTE) ((ULONG_PTR) ptmpDdSurfaceLocal)) + sizeof(DD_SURFACE_LOCAL));
+            ptmpDdSurfaceMore = (PDD_SURFACE_MORE) (((PBYTE) ((ULONG_PTR) ptmpDdSurfaceMore)) + sizeof(DD_SURFACE_MORE));
         }
     }
 
