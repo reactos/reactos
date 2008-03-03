@@ -139,7 +139,7 @@ DdLock(LPDDHAL_LOCKDATA Lock)
     /* Call win32k */
     return NtGdiDdLock((HANDLE)Lock->lpDDSurface->hDDSurface,
                         (PDD_LOCKDATA)Lock,
-						(HANDLE)Lock->lpDDSurface->hDC);
+                        (HANDLE)Lock->lpDDSurface->hDC);
 }
 
 /*
@@ -312,10 +312,10 @@ DdCreateSurface(LPDDHAL_CREATESURFACEDATA pCreateSurface)
      * we create the size activate  this IF when you start doing the optimze and please also
      * take report from user which value they got here
      */ 
-#if 0
+#if 1
     {
         char buffer[1024]; \
-        sprintf ( buffer, "Function %s : Optimze max to %d Surface ? (%s:%d)\n", __FUNCTION__,SurfaceCount,__FILE__,__LINE__ );
+        sprintf ( buffer, "Function %s : Optimze max to %d Surface ? (%s:%d)\n", __FUNCTION__, (int)SurfaceCount,__FILE__,__LINE__ );
         OutputDebugStringA(buffer);
     }
 #endif
@@ -691,7 +691,7 @@ DvpUpdateVideoPort(LPDDHAL_UPDATEVPORTDATA pDvdUpdateVideoPort)
      */
 
     HANDLE phSurfaceVideo[10];
-    HANDLE phSurfaceVbi[10]; 
+    HANDLE phSurfaceVbi[10];
     
     if (pDvdUpdateVideoPort->dwFlags != DDRAWI_VPORTSTOP)
     {
@@ -729,7 +729,7 @@ DvpUpdateVideoPort(LPDDHAL_UPDATEVPORTDATA pDvdUpdateVideoPort)
             {
                 dwNumVBIAutoflip = 10;
             }
-            memcpy(phSurfaceVbi,pDvdUpdateVideoPort->lplpDDVBISurface,dwNumVBIAutoflip*sizeof(HANDLE));         
+            memcpy(phSurfaceVbi,pDvdUpdateVideoPort->lplpDDVBISurface,dwNumVBIAutoflip*sizeof(HANDLE));
         }    
     }
 
@@ -761,7 +761,6 @@ DvpGetVideoPortInputFormats(LPDDHAL_GETVPORTINPUTFORMATDATA pDvdGetVideoPortInpu
     return NtGdiDvpGetVideoPortInputFormats(pDvdGetVideoPortInputFormat->lpVideoPort->hDDVideoPort, (PDD_GETVPORTINPUTFORMATDATA) pDvdGetVideoPortInputFormat);
 }
 
-
 /*
  * @implemented
  *
@@ -785,7 +784,6 @@ DvpGetVideoPortOutputFormats(LPDDHAL_GETVPORTLINEDATA pDvdGetVideoPortOutputForm
 {
     return NtGdiDvpGetVideoPortLine(pDvdGetVideoPortOutputFormat->lpVideoPort->hDDVideoPort, (PDD_GETVPORTLINEDATA)pDvdGetVideoPortOutputFormat);
 }
-
 
 /*
  * @implemented
@@ -824,7 +822,7 @@ DdAlphaBlt(LPDDHAL_BLTDATA pDdAlphaBlt)
 
     if (pDdAlphaBlt->lpDDSrcSurface != 0)
     {
-        hDDSrcSurface = (HANDLE) pDdAlphaBlt->lpDDSrcSurface->hDDSurface;        
+        hDDSrcSurface = (HANDLE) pDdAlphaBlt->lpDDSrcSurface->hDDSurface;
     }
     
     return NtGdiDdAlphaBlt((HANDLE)pDdAlphaBlt->lpDDDestSurface->hDDSurface, hDDSrcSurface, (PDD_BLTDATA)&pDdAlphaBlt);
@@ -841,7 +839,7 @@ DdCreateSurfaceEx(LPDDHAL_CREATESURFACEEXDATA pDdCreateSurfaceEx)
 {
     pDdCreateSurfaceEx->ddRVal = NtGdiDdCreateSurfaceEx( GetDdHandle(pDdCreateSurfaceEx->lpDDLcl->lpGbl->hDD),
                                                          (HANDLE)pDdCreateSurfaceEx->lpDDSLcl->hDDSurface, 
-                                                         pDdCreateSurfaceEx->lpDDSLcl->lpSurfMore->dwSurfaceHandle);    
+                                                         pDdCreateSurfaceEx->lpDDSLcl->lpSurfMore->dwSurfaceHandle);
     return TRUE;
 }
 
@@ -856,7 +854,6 @@ DdColorControl(LPDDHAL_COLORCONTROLDATA pDdColorControl)
 {
     return NtGdiDdColorControl( (HANDLE) pDdColorControl->lpDDSurface->hDDSurface, (PDD_COLORCONTROLDATA) &pDdColorControl);
 }
-
 
 /*
  * @implemented
@@ -882,9 +879,6 @@ DdFlipToGDISurface(LPDDHAL_FLIPTOGDISURFACEDATA pDdFlipToGDISurface)
     return NtGdiDdFlipToGDISurface( GetDdHandle(pDdFlipToGDISurface->lpDD->hDD), (PDD_FLIPTOGDISURFACEDATA) &pDdFlipToGDISurface);
 }
 
-
-
-
 /* TODO */
 DWORD
 WINAPI
@@ -896,7 +890,7 @@ DdGetDriverInfo(LPDDHAL_GETDRIVERINFODATA pData)
 
     /* FIXME add SEH around this functions */
 
-        RtlZeroMemory(&pDrvInfoData, sizeof (DDHAL_GETDRIVERINFODATA));        
+        RtlZeroMemory(&pDrvInfoData, sizeof (DDHAL_GETDRIVERINFODATA));
         RtlCopyMemory(&pDrvInfoData.guidInfo, &pData->guidInfo, sizeof(GUID));
     
         hDD = GetDdHandle(pData->dwContext);
@@ -910,15 +904,15 @@ DdGetDriverInfo(LPDDHAL_GETDRIVERINFODATA pData)
         if (IsEqualGUID(&pData->guidInfo, &GUID_VideoPortCallbacks))
         {        
             DDHAL_DDVIDEOPORTCALLBACKS  pDvdPort;
-            DDHAL_DDVIDEOPORTCALLBACKS* pUserDvdPort = (DDHAL_DDVIDEOPORTCALLBACKS *)pData->lpvData;                
+            DDHAL_DDVIDEOPORTCALLBACKS* pUserDvdPort = (DDHAL_DDVIDEOPORTCALLBACKS *)pData->lpvData;
 
             /* Clear internal out buffer and set it up*/
             RtlZeroMemory(&pDvdPort, DDVIDEOPORTCALLBACKSSIZE);
             pDvdPort.dwSize = DDVIDEOPORTCALLBACKSSIZE;
 
-            /* set up internal buffer */                                                  
-            pDrvInfoData.lpvData = (PVOID)&pDvdPort;        
-            pDrvInfoData.dwExpectedSize = DDVIDEOPORTCALLBACKSSIZE ;  
+            /* set up internal buffer */
+            pDrvInfoData.lpvData = (PVOID)&pDvdPort;
+            pDrvInfoData.dwExpectedSize = DDVIDEOPORTCALLBACKSSIZE ;
                 
             /* Call win32k */
             retValue = NtGdiDdGetDriverInfo(hDD, (PDD_GETDRIVERINFODATA)&pDrvInfoData);
@@ -1011,19 +1005,19 @@ DdGetDriverInfo(LPDDHAL_GETDRIVERINFODATA pData)
             RtlZeroMemory(&pColorControl, DDCOLORCONTROLCALLBACKSSIZE);
             pColorControl.dwSize = DDCOLORCONTROLCALLBACKSSIZE;
 
-            /* set up internal buffer */                                                  
-            pDrvInfoData.lpvData = (PVOID)&pColorControl;        
-            pDrvInfoData.dwExpectedSize = DDCOLORCONTROLCALLBACKSSIZE ;  
-                
+            /* set up internal buffer */
+            pDrvInfoData.lpvData = (PVOID)&pColorControl;
+            pDrvInfoData.dwExpectedSize = DDCOLORCONTROLCALLBACKSSIZE ;
+
             /* Call win32k */
             retValue = NtGdiDdGetDriverInfo(hDD, (PDD_GETDRIVERINFODATA)&pDrvInfoData);
-                        
+
             pData->dwActualSize = DDCOLORCONTROLCALLBACKSSIZE;
             pData->dwFlags = pDrvInfoData.dwFlags;
 
             pUserColorControl->dwSize = DDCOLORCONTROLCALLBACKSSIZE;
             pUserColorControl->dwFlags = pUserColorControl->dwFlags;
-                       
+
             if (pColorControl.ColorControl != NULL)
             {
                 pUserColorControl->ColorControl = (LPDDHALCOLORCB_COLORCONTROL) DdColorControl;
@@ -1042,15 +1036,15 @@ DdGetDriverInfo(LPDDHAL_GETDRIVERINFODATA pData)
         {
             DDHAL_DDMISCELLANEOUSCALLBACKS  pMisc;
             DDHAL_DDMISCELLANEOUSCALLBACKS* pUserMisc = (DDHAL_DDMISCELLANEOUSCALLBACKS *)pData->lpvData;
-                
+
             /* Clear internal out buffer and set it up*/
             RtlZeroMemory(&pMisc, DDMISCELLANEOUSCALLBACKSSIZE);
             pMisc.dwSize = DDMISCELLANEOUSCALLBACKSSIZE;
 
-            /* set up internal buffer */                                                  
-            pDrvInfoData.lpvData = (PVOID)&pMisc;        
-            pDrvInfoData.dwExpectedSize = DDMISCELLANEOUSCALLBACKSSIZE ;  
-                
+            /* set up internal buffer */
+            pDrvInfoData.lpvData = (PVOID)&pMisc;
+            pDrvInfoData.dwExpectedSize = DDMISCELLANEOUSCALLBACKSSIZE ;
+
             /* Call win32k */
             retValue = NtGdiDdGetDriverInfo(hDD, (PDD_GETDRIVERINFODATA)&pDrvInfoData);
 
@@ -1083,9 +1077,9 @@ DdGetDriverInfo(LPDDHAL_GETDRIVERINFODATA pData)
             RtlZeroMemory(&pMisc, DDMISCELLANEOUS2CALLBACKSSIZE);
             pMisc.dwSize = DDMISCELLANEOUS2CALLBACKSSIZE;
 
-            /* set up internal buffer */                                                  
-            pDrvInfoData.lpvData = (PVOID)&pMisc;        
-            pDrvInfoData.dwExpectedSize = DDMISCELLANEOUS2CALLBACKSSIZE ;  
+            /* set up internal buffer */
+            pDrvInfoData.lpvData = (PVOID)&pMisc;
+            pDrvInfoData.dwExpectedSize = DDMISCELLANEOUS2CALLBACKSSIZE ;
                 
             /* Call win32k */
             retValue = NtGdiDdGetDriverInfo(hDD, (PDD_GETDRIVERINFODATA)&pDrvInfoData);
@@ -1133,9 +1127,9 @@ DdGetDriverInfo(LPDDHAL_GETDRIVERINFODATA pData)
             RtlZeroMemory(&pNtKernel, sizeof(DD_NTCALLBACKS));
             pNtKernel.dwSize = sizeof(DD_NTCALLBACKS);
 
-            /* set up internal buffer */                                                  
-            pDrvInfoData.lpvData = (PVOID)&pNtKernel;        
-            pDrvInfoData.dwExpectedSize = sizeof(DD_NTCALLBACKS) ;  
+            /* set up internal buffer */
+            pDrvInfoData.lpvData = (PVOID)&pNtKernel;
+            pDrvInfoData.dwExpectedSize = sizeof(DD_NTCALLBACKS) ;
                 
             /* Call win32k */
             retValue = NtGdiDdGetDriverInfo(hDD, (PDD_GETDRIVERINFODATA)&pDrvInfoData);
@@ -1143,11 +1137,11 @@ DdGetDriverInfo(LPDDHAL_GETDRIVERINFODATA pData)
             pData->dwActualSize = sizeof(DD_NTCALLBACKS);
 
             pUserNtKernel->dwSize = sizeof(DD_NTCALLBACKS);
-            pUserNtKernel->dwFlags = pNtKernel.dwFlags;  
+            pUserNtKernel->dwFlags = pNtKernel.dwFlags;
             pUserNtKernel->FreeDriverMemory = 0;
-           
+
             if (pNtKernel.SetExclusiveMode)
-            {                
+            {
                 pUserNtKernel->SetExclusiveMode = (PDD_SETEXCLUSIVEMODE) DdSetExclusiveMode;  
             }
 
@@ -1161,7 +1155,7 @@ DdGetDriverInfo(LPDDHAL_GETDRIVERINFODATA pData)
              *  ReactOS keep this behoir to be compatible with
              *  Windows XP
              */
-            pData->ddRVal = retValue;           
+            pData->ddRVal = retValue;
         }
 
         /* D3D Callbacks version 2 check and setup for DirectX/ ReactX */
@@ -1196,15 +1190,15 @@ DdGetDriverInfo(LPDDHAL_GETDRIVERINFODATA pData)
         else
         {
             /* set up internal buffer */ 
-            pDrvInfoData.dwExpectedSize = pData->dwExpectedSize;        
+            pDrvInfoData.dwExpectedSize = pData->dwExpectedSize;
             pDrvInfoData.lpvData = pData->lpvData;
 
             /* We do not cover all callbacks for user mode, they are only cover by kmode */
             retValue = NtGdiDdGetDriverInfo(hDD, (PDD_GETDRIVERINFODATA)&pDrvInfoData);
 
-            /* Setup return data */            
+            /* Setup return data */
             pData->dwActualSize = pDrvInfoData.dwActualSize;
-            pData->lpvData = pDrvInfoData.lpvData;         
+            pData->lpvData = pDrvInfoData.lpvData;
             /* Windows XP never repot back the true return value, 
              *  it only report back if we have a driver or not
              *  ReactOS keep this behoir to be compatible with
@@ -1235,10 +1229,9 @@ D3dContextCreate(LPD3DHAL_CONTEXTCREATEDATA pdcci)
    
     return  NtGdiD3dContextCreate(GetDdHandle(pdcci->lpDDLcl->hDD), 
                                   (HANDLE)pdcci->lpDDSLcl->hDDSurface,
-                                  hSurfZ,                           
-                                  (D3DNTHAL_CONTEXTCREATEI *)pdcci);    
+                                  hSurfZ,
+                                  (D3DNTHAL_CONTEXTCREATEI *)pdcci);
 }
-
 
 /*
  * @implemented
@@ -1262,24 +1255,73 @@ DdCanCreateD3DBuffer(LPDDHAL_CANCREATESURFACEDATA CanCreateD3DBuffer)
 }
 
 
-/* TODO : finish all fixme */ 
+/*
+ * @implemented
+ *
+ * DdCreateD3DBuffer
+ */
 DWORD
 WINAPI
 DdCreateD3DBuffer(LPDDHAL_CREATESURFACEDATA pCreateSurface)
 {
-
+    HANDLE puhSurface = 0;
+    DDRAWI_DDRAWSURFACE_GBL *pSurfGBL;
+    DDRAWI_DDRAWSURFACE_LCL *pSurfLcl;
     DD_SURFACE_GLOBAL puSurfaceGlobalData;
     DD_SURFACE_MORE puSurfaceMoreData;
     DD_SURFACE_LOCAL puSurfaceLocalData;
-        
-    memset(&puSurfaceGlobalData, 0, sizeof(DD_SURFACE_GLOBAL) );
-    memset(&puSurfaceMoreData, 0,  sizeof(DD_SURFACE_MORE) ) ;
-    memset(&puSurfaceLocalData, 0, sizeof(DD_SURFACE_LOCAL) );
-   
-    /* FIXME convert the struct to right ones and setup for syscall, then retranslated the info back to pCreateSurface */
+    DWORD retValue;
 
-    /* FIXME not supported yet */
-    return 0;
+    /* Zero all local memory pointer */
+    RtlZeroMemory(&puSurfaceGlobalData, sizeof(DD_SURFACE_GLOBAL) );
+    RtlZeroMemory(&puSurfaceMoreData, sizeof(DD_SURFACE_MORE) ) ;
+    RtlZeroMemory(&puSurfaceLocalData, sizeof(DD_SURFACE_LOCAL) );
+
+    pCreateSurface->dwSCnt = 1;
+    pSurfLcl = pCreateSurface->lplpSList[0];
+    pSurfGBL = pSurfLcl->lpGbl;
+
+    /* Convert DDRAWI_DDRAWSURFACE_GBL to DD_SURFACE_GLOBAL */
+    puSurfaceGlobalData.wWidth = pSurfGBL->wWidth;
+    puSurfaceGlobalData.wHeight = pSurfGBL->wHeight;
+    puSurfaceGlobalData.dwLinearSize = pSurfGBL->dwLinearSize;
+    puSurfaceGlobalData.fpVidMem = pSurfGBL->fpVidMem;
+    puSurfaceGlobalData.dwBlockSizeX = pSurfGBL->dwBlockSizeX;
+    puSurfaceGlobalData.dwBlockSizeY = pSurfGBL->dwBlockSizeY;
+
+    /* Convert DDRAWI_DDRAWSURFACE_MORE to DD_SURFACE_MORE */
+    puSurfaceMoreData.dwSurfaceHandle = pSurfLcl->lpSurfMore->dwSurfaceHandle;
+    puSurfaceMoreData.ddsCapsEx.dwCaps2 = pSurfLcl->lpSurfMore->ddsCapsEx.dwCaps2;
+    puSurfaceMoreData.ddsCapsEx.dwCaps3 = pSurfLcl->lpSurfMore->ddsCapsEx.dwCaps3;
+    puSurfaceMoreData.ddsCapsEx.dwCaps4 = pSurfLcl->lpSurfMore->ddsCapsEx.dwCaps4;
+
+    /* Convert DDRAWI_DDRAWSURFACE_LCL to DD_SURFACE_LOCAL */
+    puSurfaceLocalData.dwFlags = pSurfLcl->dwFlags;
+    puSurfaceLocalData.ddsCaps.dwCaps = pSurfLcl->ddsCaps.dwCaps;
+
+    /* Call win32k */
+    retValue = NtGdiDdCreateD3DBuffer( GetDdHandle(pCreateSurface->lpDD->hDD),
+                                       (HANDLE*)&pSurfLcl->hDDSurface,
+                                       pCreateSurface->lpDDSurfaceDesc,
+                                       &puSurfaceGlobalData,
+                                       &puSurfaceLocalData,
+                                       &puSurfaceMoreData,
+                                       (DD_CREATESURFACEDATA *) pCreateSurface,
+                                       &puhSurface);
+
+    /* Setup surface handle if we got one back  */
+    if ( puhSurface != NULL )
+    {
+        pCreateSurface->lplpSList[0]->hDDSurface = (ULONG_PTR)puhSurface;
+    }
+
+    /* Convert DD_SURFACE_GLOBAL to DDRAWI_DDRAWSURFACE_GBL */
+    pSurfGBL->dwLinearSize = puSurfaceGlobalData.dwLinearSize;
+    pSurfGBL->fpVidMem = puSurfaceGlobalData.fpVidMem;
+    pSurfGBL->dwBlockSizeX = puSurfaceGlobalData.dwBlockSizeX;
+    pSurfGBL->dwBlockSizeY = puSurfaceGlobalData.dwBlockSizeY;
+
+    return retValue;
 }
 
 /*
@@ -1294,6 +1336,7 @@ DdDestroyD3DBuffer(LPDDHAL_DESTROYSURFACEDATA pDestroySurface)
     DWORD retValue = 0;
     if ( pDestroySurface->lpDDSurface->hDDSurface)
     {
+        /* Call win32k */
         retValue = NtGdiDdDestroyD3DBuffer((HANDLE)pDestroySurface->lpDDSurface->hDDSurface);
     }
 
