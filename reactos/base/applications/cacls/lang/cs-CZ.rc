@@ -1,10 +1,6 @@
-/*
- * PROJECT:     ReactOS CACLS
- * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        applications/cacls/lang/cs-CZ.rc
- * PURPOSE:     Czech Language File for PROJECT
+/* FILE:        applications/cacls/lang/cs-CZ.rc
  * TRANSLATOR:  Radek Liska aka Black_Fox (radekliska at gmail dot com)
- * UPDATED:     2008-02-17
+ * UPDATED:     2008-02-29
  */
 
 LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
@@ -19,7 +15,7 @@ CACLS názvu [/T] [/E] [/C] [/G uživatel:oprávnìní [...]] [/R uživatel [...]]\n\
    /T            Zmìní ACL urèených souborù\n\
                  v aktuálním adresáøi a všech podadresáøích.\n\
    /E            Místo nahrazení ACL jej upraví.\n\
-   /C            Pøi chybých odmítnutí pøístupu pokraèuje.\n\
+   /C            Pøi chybách odmítnutí pøístupu pokraèuje.\n\
    /G uživatel:oprávnìní  Udìlí urèenému uživateli pøístupová oprávnìní.\n\
                  Oprávnìní mùže být: R  Èíst\n\
                                      W  Zapisovat\n\

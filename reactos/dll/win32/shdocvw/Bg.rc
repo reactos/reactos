@@ -31,6 +31,6 @@ FONT 8, "MS Shell Dlg"
 STRINGTABLE
 BEGIN
  1001	"Приложението изисква ActiveX обект на обзорника\n" \
-        "но джаджата Mozilla Active X не е сложена." \
+        "но джаджата Mozilla Active X не е сложена.\n" \
         "Искате ли да я свалите и да я сложите?"
 END

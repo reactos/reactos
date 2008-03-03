@@ -32,6 +32,6 @@ FONT 8, "MS Shell Dlg"
 STRINGTABLE
 BEGIN
  1001	"Ez az alkalmazás ActiveX támogatást igényel, de nincs \n" \
-        "feltelepítve a Mozilla Active X vezérlõ." \
+        "feltelepítve a Mozilla Active X vezérlõ.\n" \
         "Szeretnéd letölteni és telepíteni?"
 END

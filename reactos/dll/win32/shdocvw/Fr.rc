@@ -31,6 +31,6 @@ FONT 8, "MS Shell Dlg"
 STRINGTABLE
 BEGIN
  1001	"Cette application requiert un object navigateur ActiveX\n" \
-        "mais le contrôle Active X de Mozilla n'est pas installé." \
+        "mais le contrôle Active X de Mozilla n'est pas installé.\n" \
         "Souhaitez-vous le télécharger et l'installer ?"
 END

@@ -1,10 +1,7 @@
-/*
- * PROJECT:     ReactOS MORE
- * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        applications/cmdutils/more/lang/cs-CZ.rc
- * PURPOSE:     Czech Language File for PROJECT
+/* FILE:        applications/cmdutils/more/lang/cs-CZ.rc
  * TRANSLATOR:  Radek Liska aka Black_Fox (radekliska at gmail dot com)
- * UPDATED:     2008-02-17
+ * THANKS TO:   Mario Kacmar aka Kario (kario@szm.sk)
+ * UPDATED:     2008-02-29
  */
 
 LANGUAGE LANG_CZECH, SUBLANG_DEFAULT

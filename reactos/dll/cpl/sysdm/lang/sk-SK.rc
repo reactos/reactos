@@ -3,8 +3,6 @@
  * PURPOSE:     Slovak Language File for sysdm
  * TRANSLATOR:  Kario <kario@szm.sk>
  * DATE OF TR.: 20-09-2007
- * ______________________________________________
- * NOTE:        this file is not fully translated
  */
 
 LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
@@ -60,7 +58,7 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LTEXT       "Na vykonanie v‰Ëöiny z t˝chto zmien s˙ potrebnÈ privilÈgia spr·vcu.", IDC_STATIC, 12, 5, 236, 8
     GROUPBOX    "V˝kon", IDC_STATIC, 6, 18, 244, 50
-    LTEXT       "Performance options control how applications use memory, which affects the speed of your computer.", IDC_STATIC, 16, 29, 210, 17
+    LTEXT       "NastavenÌm moûnostÌ v˝konu mÙûete kontrolovaù, ako maj˙ aplik·cie vyuûÌvaù pam‰ù. Tieto nastavenia ovplyvÚuj˙ r˝chlosù pr·ce poËÌtaËa.", IDC_STATIC, 16, 29, 210, 24
     PUSHBUTTON  "&Nastavenie", IDC_PERFOR, 194, 48, 50, 14
 
     GROUPBOX    "PouûÌvateæskÈ profily", IDC_STATIC, 6,75,244,48
@@ -68,7 +66,7 @@ BEGIN
     PUSHBUTTON  "Nastav&enie", IDC_USERPROFILE, 194, 103, 50, 14
 
     GROUPBOX    "Sp˙öùanie a obnovovanie", IDC_STATIC, 6, 131, 244, 52
-    LTEXT       "Startup and recovery options tell your computer how to start and what to do if an error causes your computer to stop.", IDC_STATIC, 16, 144, 210, 19
+    LTEXT       "Moûnosti spustenia a obnovenia systÈmu upravuj˙, ako m· byù poËÌtaË spusten˝ a Ëo m· urobiù, ak nejak· chyba zaprÌËinÌ zlyhanie systÈmu.", IDC_STATIC, 16, 144, 210, 27
     PUSHBUTTON  "Na&stavenie", IDC_STAREC, 194, 162, 50, 14
 
     PUSHBUTTON  "&PremennÈ prostredia", IDC_ENVVAR, 84, 192, 80, 14
@@ -150,15 +148,15 @@ BEGIN
     GROUPBOX    "Spustenie systÈmu", IDC_STATIC, 7, 12, 238, 95
     LTEXT       "Predvolen˝ operaËn˝ &systÈm:", IDC_STATIC, 14, 26, 100, 8
     COMBOBOX    IDC_STRECOSCOMBO, 14, 37, 224, 46, CBS_DROPDOWNLIST
-    AUTOCHECKBOX "&Time to display list of operating systems:", IDC_STRECLIST, 14, 56, 150, 8
+    AUTOCHECKBOX "&Zobraziù zoznam operaËn˝ch systÈmov na:", IDC_STRECLIST, 14, 56, 150, 8
     EDITTEXT    IDC_STRRECLISTEDIT, 179, 54, 30, 12
     CONTROL     "", IDC_STRRECLISTUPDWN, "msctls_updown32", UDS_WRAP | UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | UDS_NOTHOUSANDS | WS_CHILD | WS_VISIBLE, 0, 0, 8, 13
-    LTEXT       "seconds", IDC_STATIC, 215, 56, 25, 8
-    AUTOCHECKBOX "Time to &display recovery options when needed:", IDC_STRRECREC, 14, 70, 163, 8
+    LTEXT       "sek˙nd", IDC_STATIC, 215, 56, 25, 8
+    AUTOCHECKBOX "Ak s˙ &potrebnÈ moûnosti obnovenia, zobraziù ich na:", IDC_STRRECREC, 14, 70, 163, 8
     EDITTEXT    IDC_STRRECRECEDIT, 179, 68, 30, 12
     CONTROL     "", IDC_STRRECRECUPDWN, "msctls_updown32", UDS_WRAP | UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | UDS_NOTHOUSANDS | WS_CHILD | WS_VISIBLE, 0, 0, 8, 13
-    LTEXT       "seconds", IDC_STATIC, 215, 70, 25, 8
-    LTEXT       "To edit the startup options file manually, click Edit.", IDC_STATIC, 14, 89, 187, 8
+    LTEXT       "sek˙nd", IDC_STATIC, 215, 70, 25, 8
+    LTEXT       "Ak chcete manu·lne upraviù s˙bor s moûnosùami spustenia systÈmu, kliknite na tlaËidlo Upraviù.", IDC_STATIC, 14, 89, 187, 8
     PUSHBUTTON  "Upr&aviù", IDC_STRRECEDIT, 188, 87, 50, 14
 
     GROUPBOX    "Zlyhanie systÈmu", IDC_STATIC, 7, 111, 238, 140

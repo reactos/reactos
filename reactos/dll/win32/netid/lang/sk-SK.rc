@@ -73,9 +73,9 @@ BEGIN
     6 "Doména:"
     22 "Vitajte v pracovnej skupine %1."
     23 "Vitajte v doméne %1."
-    24 "You must restart this computer for the changes to take effect."
-    1021 "Note: Only Administrators can change the identification of this computer."
-    1022 "Note: The identification of the computer cannot be changed because:"
+    24 "Aby sa prejavili vykonané zmeny, musíte reštartova poèítaè."
+    1021 "Poznámka: Iba správcovia môžu zmeni identifikáciu tohto poèítaèa."
+    1022 "Poznámka: Identifikácia poèítaèa nemôže by zmenená, lebo:"
     3210 "&Podrobnosti >>"
     3220 "<< &Podrobnosti"
 END

@@ -7,6 +7,7 @@ IDI_ICON ICON "res/charmap.ico"
 
 #include "lang/bg-BG.rc"
 #include "lang/ca-ES.rc"
+#include "lang/cs-CZ.rc"
 #include "lang/en-US.rc"
 #include "lang/de-DE.rc"
 #include "lang/es-ES.rc"

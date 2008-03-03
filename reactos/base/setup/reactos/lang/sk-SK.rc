@@ -6,7 +6,7 @@ LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
 STRINGTABLE DISCARDABLE
 BEGIN
     IDS_CAPTION  "Inštalácia systému ReactOS"
-    IDS_TEXT     "Systém ReactOS sa z tohto CD nedá nainštalova ihneï!\n\n\Reštartujte, prosím, poèítaè a inštalaèné CD nechajte\n\vloené, aby sa mohol systém ReactOS nainštalova."
+    IDS_TEXT     "Systém ReactOS sa z tohto CD nedá nainštalova ihneï!\n\n\Reštartujte, prosím, poèítaè a inštalaèné CD nechajte\nvloené, aby sa mohol systém ReactOS nainštalova."
 END
 
 /* EOF */

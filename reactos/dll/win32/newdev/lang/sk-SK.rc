@@ -92,7 +92,7 @@ BEGIN
     LTEXT           "Inötal·cia dokonËen·",IDC_FINISHTITLE,120,8,195,11
     LTEXT           "You need to reboot to finish the install of:",
                     IDC_STATIC,120,32,195,19
-    LTEXT           "Click Finish to close the wizard.",IDC_STATIC,120,174,
+    LTEXT           "KliknutÌm na tlaËidlo DokonËiù zavriete sprievodcu",IDC_STATIC,120,174,
                     179,11
     LTEXT           "NEZN¡ME ZARIADENIE",IDC_DEVICE,148,53,147,12
 END
@@ -106,8 +106,9 @@ BEGIN
     LTEXT           "Inötal·cia dokonËen·",IDC_FINISHTITLE,120,8,195,11
     LTEXT           "Sprievodca dokonËil inötal·ciu ovl·daËa pre:",
                     IDC_STATIC,120,32,195,19
-    LTEXT           "Click Finish to close the wizard.",IDC_STATIC,120,174,
+    LTEXT           "KliknutÌm na tlaËidlo DokonËiù zavriete sprievodcu.",IDC_STATIC,120,174,
                     179,11
     LTEXT           "NEZN¡ME ZARIADENIE",IDC_DEVICE,148,53,147,12
 END
+
 

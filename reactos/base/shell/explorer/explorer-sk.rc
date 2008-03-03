@@ -185,23 +185,23 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT           "Vyberte si uprednostòovaný spôsob zarovnania ikôn:",
                     IDC_STATIC,7,7,166,8
-    CONTROL         "z¾ava zhora dole",IDC_ICON_ALIGN_0,"Button",BS_OWNERDRAW |
+    CONTROL         "z¾ava zhora\ndole",IDC_ICON_ALIGN_0,"Button",BS_OWNERDRAW |
                     BS_BOTTOM | WS_TABSTOP,7,25,46,44
-    CONTROL         "z¾ava zhora vpravo",IDC_ICON_ALIGN_1,"Button",BS_OWNERDRAW |
+    CONTROL         "z¾ava zhora\nvpravo",IDC_ICON_ALIGN_1,"Button",BS_OWNERDRAW |
                     BS_BOTTOM | WS_TABSTOP,57,25,46,44
-    CONTROL         "zprava zhora v¾avo",IDC_ICON_ALIGN_2,"Button",BS_OWNERDRAW |
+    CONTROL         "zprava zhora\nv¾avo",IDC_ICON_ALIGN_2,"Button",BS_OWNERDRAW |
                     BS_BOTTOM | WS_TABSTOP,110,25,46,44
-    CONTROL         "zprava zhora dole",IDC_ICON_ALIGN_3,"Button",BS_OWNERDRAW |
+    CONTROL         "zprava zhora\ndole",IDC_ICON_ALIGN_3,"Button",BS_OWNERDRAW |
                     BS_BOTTOM | WS_TABSTOP,159,25,46,44
-    CONTROL         "z¾ava zdola hore",IDC_ICON_ALIGN_4,"Button",BS_OWNERDRAW |
+    CONTROL         "z¾ava zdola\nhore",IDC_ICON_ALIGN_4,"Button",BS_OWNERDRAW |
                     BS_BOTTOM | WS_TABSTOP,7,73,46,44
-    CONTROL         "z¾ava zdola vpravo",IDC_ICON_ALIGN_5,"Button",BS_OWNERDRAW |
+    CONTROL         "z¾ava zdola\nvpravo",IDC_ICON_ALIGN_5,"Button",BS_OWNERDRAW |
                     BS_BOTTOM | WS_TABSTOP,57,73,46,44
-    CONTROL         "zprava zdola v¾avo",IDC_ICON_ALIGN_6,"Button",BS_OWNERDRAW |
+    CONTROL         "zprava zdola\nv¾avo",IDC_ICON_ALIGN_6,"Button",BS_OWNERDRAW |
                     BS_BOTTOM | WS_TABSTOP,110,73,46,44
-    CONTROL         "zprava zdola hore",IDC_ICON_ALIGN_7,"Button",BS_OWNERDRAW |
+    CONTROL         "zprava zdola\nhore",IDC_ICON_ALIGN_7,"Button",BS_OWNERDRAW |
                     BS_BOTTOM | WS_TABSTOP,159,73,46,44
-    CONTROL         "po okrajoch dole",IDC_ICON_ALIGN_8,"Button",BS_OWNERDRAW |
+    CONTROL         "po okrajoch\ndole",IDC_ICON_ALIGN_8,"Button",BS_OWNERDRAW |
                     BS_BOTTOM | WS_TABSTOP,7,121,46,44
     CONTROL         "po okrajoch H/V",IDC_ICON_ALIGN_9,"Button",BS_OWNERDRAW |
                     BS_BOTTOM | WS_TABSTOP,57,121,46,44
@@ -408,6 +408,7 @@ END
 
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
+
 
 
 

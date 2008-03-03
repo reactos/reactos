@@ -31,6 +31,6 @@ FONT 8, "MS Shell Dlg"
 STRINGTABLE
 BEGIN
  1001	"Ta aplikacja wywo³uje obiekt ActiveX przegl¹darki,\n" \
-        "ale kontrolka Mozilla Active X nie jest zainstalowana." \
+        "ale kontrolka Mozilla Active X nie jest zainstalowana.\n" \
         "Czy chcesz j¹ pobraæ i zainstalowaæ?"
 END

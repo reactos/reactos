@@ -31,6 +31,6 @@ FONT 8, "MS Shell Dlg"
 STRINGTABLE
 BEGIN
  1001	"Tämä sovellus vaatii ActiveX selainkomponentin,\n" \
-        "mutta Mozilla Active X -komponenttia ei ole vielä asennettu." \
+        "mutta Mozilla Active X -komponenttia ei ole vielä asennettu.\n" \
         "Haluatko ladata ja asentaa sen?"
 END

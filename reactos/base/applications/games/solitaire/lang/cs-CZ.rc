@@ -1,12 +1,9 @@
-/*
- * PROJECT:     Solitaire
- * LICENSE:     Freeware, permission to use under Public Domain
- * FILE:        base/applications/games/solitaire/lang/cs-CZ.rc
- * PURPOSE:     Czech Language File for Solitaire
- * TRANSLATOR:  Black_Fox <radekliska at gmail dot com>
- * DATE OF TR.: 13-07-2007 
- * PROGRAMMERS: Daniel "EmuandCo" Reimer (reimer.daniel@freenet.de)
+/* FILE:        applications/games/solitaire/lang/cs-CZ.rc
+ * PURPOSE:     Czech Language File
+ * TRANSLATOR:  Radek Liska aka Black_Fox (radekliska at gmail dot com)
+ * UPDATED:     2008-02-29
  */
+
 #include "resource.h"
 
 LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
@@ -19,11 +16,11 @@ STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_SHELLFONT
 CAPTION "Možnosti"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX        "Obrátit", -1, 7, 7, 65, 40
-    AUTORADIOBUTTON "&Jednu kartu", IDC_OPT_DRAWONE, 14, 19, 52, 10, WS_GROUP | WS_TABSTOP
-    AUTORADIOBUTTON "&Tøi karty", IDC_OPT_DRAWTHREE, 14, 32, 52, 10
+    GROUPBOX        "Karty", -1, 7, 7, 65, 40
+    AUTORADIOBUTTON "Sejmout &jednu", IDC_OPT_DRAWONE, 14, 19, 52, 10, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "Sejmout &tøi", IDC_OPT_DRAWTHREE, 14, 32, 52, 10
 
-    AUTOCHECKBOX    "È&asovì neomezená hra", IDC_OPT_SHOWTIME, 7 ,51 ,65 ,10, WS_TABSTOP | WS_DISABLED
+    AUTOCHECKBOX    "Zobrazit è&as", IDC_OPT_SHOWTIME, 7 ,51 ,65 ,10, WS_TABSTOP | WS_DISABLED
     AUTOCHECKBOX    "Stavový øád&ek", IDC_OPT_STATUSBAR, 7, 66, 64, 10, WS_TABSTOP
 
     DEFPUSHBUTTON   "OK", IDOK, 35, 97, 50, 14

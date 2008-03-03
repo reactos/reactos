@@ -5,6 +5,7 @@
  *  Proofread 1998 by David Lee Lambert
  *  Copyright 2002 Sylvain Petreolle
  *  Copyright 2004 David Kredba
+ *  Copyright 2008 Radek Liska 
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -76,9 +77,9 @@ BEGIN
 		MENUITEM "Zalo&mit dlouhé øádky",  CMD_WRAP
 		MENUITEM "&Písmo...",              CMD_FONT
 	END
-	POPUP "&View"
+	POPUP "&Zobrazit"
 	BEGIN
-		MENUITEM "Status&bar",    CMD_STATUSBAR
+		MENUITEM "&Stavový øádek",    CMD_STATUSBAR
 	END
 	POPUP "&Nápovìda"
 	BEGIN
@@ -123,24 +124,24 @@ DIALOG_ENCODING DIALOGEX 0, 0, 256, 44
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPSIBLINGS |
     WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
-CAPTION "Encoding"
+CAPTION "Kódování"
 BEGIN
 COMBOBOX        ID_ENCODING,54,0,156,80,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-LTEXT           "Encoding:",0x155,5,2,41,12
+LTEXT           "Kódování:",0x155,5,2,41,12
 COMBOBOX        ID_EOLN,54,18,156,80,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-LTEXT           "Endlines:",0x156,5,20,41,12
+LTEXT           "Odøádkování:",0x156,5,20,41,12
 END
 
 /* Dialog 'Go To' */
 DIALOG_GOTO DIALOGEX 0,0,165,50
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
-CAPTION "Goto line"
+CAPTION "Jít na øádek"
 BEGIN
 EDITTEXT        ID_LINENUMBER,54,10,106,12,WS_CHILD | WS_BORDER | WS_TABSTOP
-LTEXT           "Line number:",0x155,5,12,41,12,WS_CHILD | WS_TABSTOP | ES_NUMBER
+LTEXT           "Èíslo øádku:",0x155,5,12,41,12,WS_CHILD | WS_TABSTOP | ES_NUMBER
 DEFPUSHBUTTON   "OK", IDOK, 75, 30, 40, 15, WS_CHILD | WS_TABSTOP
-PUSHBUTTON      "Cancel", IDCANCEL, 120, 30, 40, 15, WS_CHILD | WS_TABSTOP
+PUSHBUTTON      "Storno", IDCANCEL, 120, 30, 40, 15, WS_CHILD | WS_TABSTOP
 END
 
 IDD_ABOUTBOX DIALOGEX DISCARDABLE  22,16,284,170
@@ -182,7 +183,7 @@ STRING_UNTITLED,                                "(bez názvu)"
 STRING_ALL_FILES,                               "Všechny soubory (*.*)"
 STRING_TEXT_FILES_TXT,                  "Textové soubory (*.txt)"
 
-STRING_TOOLARGE,                                "Soubor '%s' je pro notepad pøíliž velký.\n \
+STRING_TOOLARGE,                                "Soubor '%s' je pro notepad pøíliš velký.\n \
 Použijte jiný editor, prosím."
 STRING_NOTEXT,                                  "Nebyl zadán žádný text. \
 \nVložte nìjaký text a zkuste to znovu."
@@ -194,7 +195,7 @@ STRING_NOTFOUND,                                        "'%s' nebyl nalezen."
 STRING_OUT_OF_MEMORY,                   "Není dost pamìti na dokonèení této úlohy. \
 \nUzavøete jednu èi více aplikací, abyste získali více  \nvolné \
 pamìti."
-STRING_CANNOTFIND                               "Cannot find '%s'"
+STRING_CANNOTFIND                               "Nelze nalézt '%s'"
 STRING_ANSI,                                    "ANSI"
 STRING_UNICODE,                                 "Unicode"
 STRING_UNICODE_BE,                              "Unicode (big endian)"

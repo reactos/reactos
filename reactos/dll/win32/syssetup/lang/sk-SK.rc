@@ -1,5 +1,6 @@
 /* TRANSLATOR:  Mário Kaèmár /Mario Kacmar/ aka Kario (kario@szm.sk)
  * DATE OF TR:  09-02-2008
+ * THANKS TO :  Filip Navara and Kamil Hornicek
  */
 
 LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
@@ -22,12 +23,12 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Inštalátor systému ReactOS"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT           "Vıvojáøi systému ReactOS by rádi zmínili následující Open Source projekty."\
-                    "Tyto projekty (nebo jejich èásti) byly pouity pøi vıvoji systému ReactOS:",
+    LTEXT           "Vıvojári systému ReactOS by sa chceli poïakova nasledujúcim Open Source projektom,"\
+                    "ktoré (alebo èasti ktorıch) boli pouité pri vıvoji systému ReactOS:",
                     IDC_STATIC,15,7,286,19
     LISTBOX         IDC_PROJECTS,15,30,286,75,LBS_NOSEL | LBS_HASSTRINGS |
                     LBS_NOINTEGRALHEIGHT | WS_VSCROLL
-    LTEXT           "Systém ReactOS je vydanı pod liceniou GPL. Pokia¾ chcete systém (alebo jeho èasti) pouí "\
+    LTEXT           "Systém ReactOS je vydanı pod licenciou GPL. Pokia¾ chcete systém (alebo jeho èasti) poui "\
                     "alebo redistribuova, musíte rešpektova GPL",
                     IDC_STATIC,15,110,227,19
     PUSHBUTTON      "&Zobrazi GPL...",IDC_VIEWGPL,251,110,50,19
@@ -41,11 +42,11 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Inštalátor systému ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Napište celé své jméno a jméno firmy nebo organizace.",
+    LTEXT "Napíšte Vaše celé meno a názov Vašej firmy alebo organizácie.",
           IDC_STATIC, 54, 7, 242, 21
-    LTEXT "J&méno:", IDC_STATIC, 54, 37, 44, 8
+    LTEXT "&Meno:", IDC_STATIC, 54, 37, 44, 8
     EDITTEXT IDC_OWNERNAME, 132, 35, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "&Organizace:", IDC_STATIC, 54, 57, 44, 8
+    LTEXT "&Organizácia:", IDC_STATIC, 54, 57, 44, 8
     EDITTEXT IDC_OWNERORGANIZATION, 132, 55, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL
 END
 
@@ -55,15 +56,15 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Inštalátor systému ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Napište jméno Vašeho poèítaèe o délce 63 znakù nebo ménì. "\
-          "Pokud je poèítaè pøipojen k síti, musí bıt jeho jméno unikátní.",
+    LTEXT "Napíšte názov Vášho poèítaèa v dåke 63 znakov alebo menej. "\
+          "Ak je poèítaè pripojenı k sieti, musí bı jeho názov unikátny.",
           IDC_STATIC, 54, 7, 250, 24
-    LTEXT "&Jméno poèítaèe:", IDC_STATIC, 54, 38, 75, 8
+    LTEXT "&Názov poèítaèa:", IDC_STATIC, 54, 38, 75, 8
     EDITTEXT IDC_COMPUTERNAME, 132, 35, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL | ES_UPPERCASE
-    LTEXT "Instalátor vytvoøí uivatelskı úèet nazvanı Administrator. "\
-          "Mùete tento úèet pouít, pokud budete potøebovat úplnı pøístup k Vašemu poèítaèi.",
+    LTEXT "Inštalátor vytvorí na poèítaèi pouívate¾skı úèet nazvanı Administrator. "\
+          "Tento úèet môete poui, keï budete potrebova plnı prístup k Vášmu poèítaèu.",
           IDC_STATIC, 54, 57, 250, 25
-    LTEXT "Zadejte heslo úètu Administrator o délce 14 znakù nebo ménì.",
+    LTEXT "Zadajte heslo úètu Administrator v dåke 14 znakov alebo menej.",
           IDC_STATIC, 54, 87, 250, 8
     LTEXT "&Heslo:", IDC_STATIC, 54, 104, 75, 8
     EDITTEXT IDC_ADMINPASSWORD1, 132, 101, 172, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
@@ -106,7 +107,7 @@ BEGIN
     LTEXT "Èasové pásmo", IDC_STATIC, 53, 42, 253, 8
     COMBOBOX IDC_TIMEZONELIST, 53, 52, 201, 93,
              CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    AUTOCHECKBOX "Automaticky nastavit hodiny pøi pøechodu na &letní èas a zpìt",
+    AUTOCHECKBOX "Automaticky posunú hodiny pri prechode na &letnı èas a spä",
                  IDC_AUTODAYLIGHT, 53, 124, 201, 10
 END
 
@@ -208,20 +209,20 @@ END
 
 STRINGTABLE
 BEGIN
-	IDS_SYS_ACCESSIBILITY        "Accessibility"
+	IDS_SYS_ACCESSIBILITY        "Zjednodušenie ovládania" //Accessibility
 	IDS_CMT_MAGNIFY      	     "Lupa"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_REACTOS_SETUP		    "Inštalátor systému ReactOS"
+    IDS_REACTOS_SETUP	        "Inštalátor systému ReactOS"
     IDS_UNKNOWN_ERROR           "Neznáma chyba"
     IDS_REGISTERING_COMPONENTS  "Registrujem súèasti..."
-    IDS_LOADLIBRARY_FAILED	    "LoadLibrary zlyhal: "
-    IDS_GETPROCADDR_FAILED	    "GetProcAddr zlyhal: "
+    IDS_LOADLIBRARY_FAILED      "LoadLibrary zlyhal: "
+    IDS_GETPROCADDR_FAILED      "GetProcAddr zlyhal: "
     IDS_REGSVR_FAILED           "DllRegisterServer zlyhal: "
-    IDS_DLLINSTALL_FAILED	    "DllInstall zlyhal: "
-    IDS_TIMEOUT			        "Vypršal èasovı limit registrácie"
+    IDS_DLLINSTALL_FAILED       "DllInstall zlyhal: "
+    IDS_TIMEOUT		        "Vypršal èasovı limit registrácie"
     IDS_REASON_UNKNOWN          ""
 END
 
@@ -236,7 +237,7 @@ BEGIN
     IDS_SHORT_REGEDIT    "Editor registrov.lnk"
     IDS_SHORT_NOTEPAD    "Poznámkovı blok.lnk"
     IDS_SHORT_WORDPAD    "WordPad.lnk"
-    IDS_SHORT_SNAP       "SnapShot.lnk"
+    IDS_SHORT_SNAP       "Momentka.lnk" //SnapShot
     IDS_SHORT_SOLITAIRE  "Solitér.lnk"
     IDS_SHORT_WINEMINE   "Míny.lnk"
     IDS_SHORT_CHARMAP    "Mapa znakov.lnk"
@@ -246,18 +247,18 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_WZD_NAME         "Inštalácia nemôe pokraèova, kım nezadáte svoje meno."
+    IDS_WZD_NAME             "Inštalácia nemôe pokraèova, kım nezadáte svoje meno."
     IDS_WZD_SETCOMPUTERNAME  "Inštalátor nedokázal nastavi názov poèítaèa."
-    IDS_WZD_COMPUTERNAME  "Inštalácia nemôe pokraèova, kım nezadáte názov poèítaèa."
-    IDS_WZD_PASSWORDEMPTY  "Musíte zada heslo!"
-    IDS_WZD_PASSWORDMATCH  "Zadané heslá nesúhlasia. Zadajte poadované heslo znovu."
-    IDS_WZD_PASSWORDCHAR  "Zadané heslo obsahuje nepovolené znaky. Zadajte upravené heslo."
-    IDS_WZD_LOCALTIME    "Inštalátor nedokázal nastavi èas."
+    IDS_WZD_COMPUTERNAME     "Inštalácia nemôe pokraèova, kım nezadáte názov poèítaèa."
+    IDS_WZD_PASSWORDEMPTY    "Musíte zada heslo!"
+    IDS_WZD_PASSWORDMATCH    "Zadané heslá nesúhlasia. Zadajte poadované heslo znovu."
+    IDS_WZD_PASSWORDCHAR     "Zadané heslo obsahuje nepovolené znaky. Zadajte upravené heslo."
+    IDS_WZD_LOCALTIME        "Inštalátor nedokázal nastavi èas."
 END
 
 STRINGTABLE
 BEGIN
-    IDS_STATUS_INSTALL_DEV "Instaluji zaøízení..."
+    IDS_STATUS_INSTALL_DEV   "Inštalujem zariadenia..."
 END
 
 /* EOF */

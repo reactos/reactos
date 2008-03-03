@@ -54,14 +54,14 @@ BEGIN
 			MENUITEM SEPARATOR
 			MENUITEM "Usporiadaù &automaticky",      FCIDM_SHVIEW_AUTOARRANGE
 		END
-		MENUITEM "Zarovnaù ikony",        FCIDM_SHVIEW_SNAPTOGRID
+		MENUITEM "Zarovnaù ikony",         FCIDM_SHVIEW_SNAPTOGRID
 		MENUITEM SEPARATOR
-		MENUITEM "Obnoviù",               FCIDM_SHVIEW_REFRESH
+		MENUITEM "Obnoviù",                FCIDM_SHVIEW_REFRESH
 		MENUITEM SEPARATOR
-		MENUITEM "&Prilepiù",                FCIDM_SHVIEW_INSERT
-		MENUITEM "Prilepiù od&kaz",      FCIDM_SHVIEW_INSERTLINK
+		MENUITEM "&Prilepiù",              FCIDM_SHVIEW_INSERT
+		MENUITEM "Prilepiù od&kaz",        FCIDM_SHVIEW_INSERTLINK
 		MENUITEM SEPARATOR
-		MENUITEM "Vlastnosti",            FCIDM_SHVIEW_PROPERTIES
+		MENUITEM "Vlastnosti",             FCIDM_SHVIEW_PROPERTIES
 	END
 END
 
@@ -416,7 +416,7 @@ END
 
 CONFIRM_FILE_REPLACE_DLG DIALOGEX 0, 0, 282, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_SETFOREGROUND | DS_CENTER | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "Potvrdenie odstr·nenia s˙boru"
+CAPTION "Potvrdenie nahradenia s˙boru"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	DEFPUSHBUTTON "¡n&o", IDYES, 20, 122, 60, 14
@@ -424,14 +424,14 @@ BEGIN
 	PUSHBUTTON "&Nie", IDNO, 150, 122, 60, 14
 	PUSHBUTTON "&Zruöiù", IDCANCEL, 215, 122, 60, 14
 	ICON 146, -1, 11, 10, 21, 20, SS_REALSIZECONTROL
-	LTEXT "This folder already contains a file named '%2'.", 12291, 44, 10, 231, 22, SS_NOPREFIX
-	LTEXT "This folder already contains a read-only file named '%2'.", 12292, 41, 10, 222, 22, SS_NOPREFIX
-	LTEXT "This folder already contains a system file named '%2'.", 12293, 41, 10, 222, 22, SS_NOPREFIX
-	LTEXT "Would you like to replace the existing file", -1, 44, 35, 228, 10, SS_NOPREFIX
-	LTEXT "(unknown date and size)", 12302, 79, 51, 198, 20, SS_NOPREFIX
+	LTEXT "Tento prieËinok uû obsahuje s˙bor s n·zvom '%2'.", 12291, 44, 10, 231, 22, SS_NOPREFIX
+	LTEXT "Tento prieËinok uû obsahuje s˙bor s n·zvom '%2', ktor˝ je urËen˝ iba na ËÌtanie.", 12292, 41, 10, 222, 22, SS_NOPREFIX
+	LTEXT "Tento prieËinok uû obsahuje systÈmov˝ s˙bor s n·zvom '%2'.", 12293, 41, 10, 222, 22, SS_NOPREFIX
+	LTEXT "Chcete nahradiù existuj˙ci s˙bor", -1, 44, 35, 228, 10, SS_NOPREFIX
+	LTEXT "(nezn·my d·tum a veækosù)", 12302, 79, 51, 198, 20, SS_NOPREFIX
 	ICON "", 12300, 50, 49, 21, 20, SS_REALSIZECONTROL
-	LTEXT "with this one?", -1, 44, 75, 228, 10, SS_NOPREFIX
-	LTEXT "(unknown date and size)", 12303, 79, 91, 198, 20, SS_NOPREFIX
+	LTEXT "t˝mto s˙borom?", -1, 44, 75, 228, 10, SS_NOPREFIX
+	LTEXT "(nezn·my d·tum a veækosù)", 12303, 79, 91, 198, 20, SS_NOPREFIX
 	ICON "", 12301, 50, 89, 21, 20, SS_REALSIZECONTROL
 END
 

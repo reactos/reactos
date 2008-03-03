@@ -31,6 +31,6 @@ FONT 8, "MS Shell Dlg"
 STRINGTABLE
 BEGIN
  1001	"Dette programmet ber om et Active X-nettleserobjekt,\n" \
-        "men Mozilla Active X-kontrolleren er ikke installert." \
+        "men Mozilla Active X-kontrolleren er ikke installert.\n" \
         "Vil du laste den ned og installere den?"
 END

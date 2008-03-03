@@ -31,6 +31,6 @@ FONT 8, "MS Shell Dlg"
 STRINGTABLE
 BEGIN
  1001	"Deze applicatie heeft een ActiveX browserobject nodig\n" \
-        "maar de Mozilla ActiveX control is niet geïnstalleerd." \
+        "maar de Mozilla ActiveX control is niet geïnstalleerd.\n" \
         "Wilt u deze downloaden en installeren?"
 END

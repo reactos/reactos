@@ -16,7 +16,7 @@ FONT 8, "MS Shell Dlg"
 
 STRINGTABLE
 BEGIN
- 1001	"Táto aplikácia je vyadovaná na prehliadanie objektov ActiveX\n" \
-        "ale ovládanie Mozilla Active X nie je v súèasnosti nainštalované." \
+ 1001	"Táto aplikácia sa doaduje prehliadania objektu ActiveX\n" \
+        "ale ovládanie Mozilla Active X nie je v súèasnosti nainštalované.\n" \
         "eláte si ho stiahnu a nainštalova?"
 END
