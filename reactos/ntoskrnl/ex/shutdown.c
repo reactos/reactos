@@ -167,12 +167,11 @@ ShutdownThreadMain(PVOID Context)
      }
 
    PspShutdownProcessManager();
-   
+
    CmShutdownSystem();
+   MiShutdownMemoryManager();
    IoShutdownRegisteredFileSystems();
    IoShutdownRegisteredDevices();
-
-   MiShutdownMemoryManager();
 
    if (Action == ShutdownNoReboot)
      {

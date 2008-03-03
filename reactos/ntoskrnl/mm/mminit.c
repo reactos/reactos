@@ -57,6 +57,9 @@ ULONG_PTR MmPfnDatabaseEnd;
 PMEMORY_ALLOCATION_DESCRIPTOR MiFreeDescriptor;
 MEMORY_ALLOCATION_DESCRIPTOR MiFreeDescriptorOrg;
 extern KMUTANT MmSystemLoadLock;
+extern HANDLE MpwThreadHandle;
+extern BOOLEAN MpwThreadShouldTerminate;
+extern KEVENT MpwThreadEvent;
 BOOLEAN MiDbgEnableMdDump =
 #ifdef _ARM_
 TRUE;
@@ -70,7 +73,33 @@ VOID
 NTAPI
 MiShutdownMemoryManager(VOID)
 {
+    ULONG PagesWritten;
+    PETHREAD Thread;
 
+    /* Ask MPW thread to shutdown */
+    MpwThreadShouldTerminate = TRUE;
+    KeSetEvent(&MpwThreadEvent, IO_NO_INCREMENT, FALSE);
+
+    /* Wait for it */
+    ObReferenceObjectByHandle(MpwThreadHandle,
+                              THREAD_ALL_ACCESS,
+                              PsThreadType,
+                              KernelMode,
+                              (PVOID*)&Thread,
+                              NULL);
+
+    KeWaitForSingleObject(Thread,
+                          Executive,
+                          KernelMode,
+                          FALSE,
+                          NULL);
+
+    ObDereferenceObject(Thread);
+
+    /* Check if there are any dirty pages, and flush them.
+       There will be no other chance to do this later, since filesystems
+       are going to be shut down. */
+    CcRosFlushDirtyPages(128, &PagesWritten);
 }
 
 VOID
@@ -401,13 +430,10 @@ MmInit1(VOID)
     MmPagedPoolBase = (PVOID)PAGE_ROUND_UP((ULONG_PTR)MiNonPagedPoolStart +
                                            MiNonPagedPoolLength);
     MmPagedPoolSize = MM_PAGED_POOL_SIZE;
-    
     /* Dump kernel memory layout */
     MiDbgKernelLayout();
-    
     /* Initialize the page list */
     MmInitializePageList();
-    
     /* Unmap low memory */
     MmDeletePageTable(NULL, 0);
 

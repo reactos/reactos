@@ -17,10 +17,10 @@
 
 /* GLOBALS *******************************************************************/
 
-static HANDLE MpwThreadHandle;
+HANDLE MpwThreadHandle;
 static CLIENT_ID MpwThreadId;
-static KEVENT MpwThreadEvent;
-static volatile BOOLEAN MpwThreadShouldTerminate;
+KEVENT MpwThreadEvent;
+BOOLEAN MpwThreadShouldTerminate;
 
 /* FUNCTIONS *****************************************************************/
 
