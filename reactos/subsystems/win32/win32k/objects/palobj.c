@@ -233,7 +233,7 @@ INT STDCALL PALETTE_SetMapping(PALOBJ *palPtr, UINT uStart, UINT uNum, BOOL mapO
   int *mapping;
   HPALETTE hSysPal = NtGdiGetStockObject(DEFAULT_PALETTE);
   PPALGDI pSysPal = PALETTE_LockPalette(hSysPal);
-  PPALGDI palGDI = (PPALGDI) palPtr;
+  PPALGDI palGDI = CONTAINING_RECORD(palPtr,PALGDI,PalObj);
   /* FIXME - handle pSysPal == NULL!!!!!!! */
 
   COLOR_sysPal = pSysPal->IndexedColors;
