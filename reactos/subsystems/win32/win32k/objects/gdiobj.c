@@ -304,6 +304,33 @@ CaptureStackBackTace(PVOID* pFrames, ULONG nFramesToCapture)
 
     return nFrameCount;
 }
+
+#define GDIDBG_TRACECALLER() \
+  DPRINT1("-> called from:\n"); \
+  KeRosDumpStackFrames(NULL, 20);
+#define GDIDBG_TRACEALLOCATOR(index)
+//  DPRINT1("-> allocated from:\n");
+//  KeRosDumpStackFrames(GDIHandleAllocator[index], GDI_STACK_LEVELS);
+#define GDIDBG_TRACELOCKER(index)
+//  DPRINT1("-> locked from:\n");
+//  KeRosDumpStackFrames(GDIHandleLocker[index], GDI_STACK_LEVELS);
+#define GDIDBG_CAPTUREALLOCATOR(index) \
+  CaptureStackBackTace((PVOID*)GDIHandleAllocator[index], GDI_STACK_LEVELS);
+#define GDIDBG_CAPTURELOCKER(index) \
+  CaptureStackBackTace((PVOID*)GDIHandleLocker[index], GDI_STACK_LEVELS);
+
+#define GDIDBG_DUMPHANDLETABLE() \
+  IntDumpHandleTable(GdiHandleTable)
+
+#else
+
+#define GDIDBG_TRACECALLER()
+#define GDIDBG_TRACEALLOCATOR(index)
+#define GDIDBG_TRACELOCKER(index)
+#define GDIDBG_CAPTUREALLOCATOR(index)
+#define GDIDBG_CAPTURELOCKER(index)
+#define GDIDBG_DUMPHANDLETABLE()
+
 #endif /* GDI_DEBUG */
 
 
@@ -501,9 +528,7 @@ LockHandle:
         /* unlock the entry */
         (void)_InterlockedExchangePointer((PVOID*)&Entry->ProcessId, CurrentProcessId);
 
-#ifdef GDI_DEBUG
-        CaptureStackBackTace((PVOID*)GDIHandleAllocator[Index], GDI_STACK_LEVELS);
-#endif /* GDI_DEBUG */
+        GDIDBG_CAPTUREALLOCATOR(Index);
 
         if(W32Process != NULL)
         {
@@ -540,9 +565,7 @@ LockHandle:
       ExFreePool(newObject);
     }
     DPRINT1("Failed to insert gdi object into the handle table, no handles left!\n");
-#ifdef GDI_DEBUG
-    IntDumpHandleTable(GdiHandleTable);
-#endif /* GDI_DEBUG */
+    GDIDBG_DUMPHANDLETABLE();
   }
   else
   {
@@ -578,10 +601,7 @@ GDIOBJ_FreeObj(HGDIOBJ hObj, DWORD ExpectedType)
   if(GDI_HANDLE_IS_STOCKOBJ(hObj))
   {
     DPRINT1("GDIOBJ_FreeObj() failed, can't delete stock object handle: 0x%x !!!\n", hObj);
-#ifdef GDI_DEBUG
-    DPRINT1("-> called from:\n");
-    KeRosDumpStackFrames(NULL, 20);
-#endif
+    GDIDBG_TRACECALLER();
     return FALSE;
   }
 
@@ -601,11 +621,8 @@ GDIOBJ_FreeObj(HGDIOBJ hObj, DWORD ExpectedType)
   {
     DPRINT1("Attempted to free object 0x%x of wrong type (Handle: 0x%x, expected: 0x%x)\n",
             hObj, HandleType, ExpectedType);
-#ifdef GDI_DEBUG
-    DPRINT1("-> called from:\n");
-    KeRosDumpStackFrames(NULL, 20);
-#endif
-     return FALSE;
+    GDIDBG_TRACECALLER();
+    return FALSE;
   }
 
   Entry = GDI_HANDLE_GET_ENTRY(GdiHandleTable, hObj);
@@ -669,10 +686,7 @@ LockHandle:
          * The object is currently locked, so freeing is forbidden!
          */
         DPRINT1("Object->cExclusiveLock = %d\n", Object->cExclusiveLock);
-#ifdef GDI_DEBUG
-//        DPRINT1("Locked from:\n");
-//        KeRosDumpStackFrames(GDIHandleLocker[GDI_HANDLE_GET_INDEX(hObj)], GDI_STACK_LEVELS);
-#endif
+        GDIDBG_TRACELOCKER(GDI_HANDLE_GET_INDEX(hObj));
         ASSERT(FALSE);
       }
     }
@@ -709,12 +723,8 @@ LockHandle:
       {
         DPRINT1("Attempted to free foreign handle: 0x%x Owner: 0x%x from Caller: 0x%x\n", hObj, (ULONG_PTR)PrevProcId & ~0x1, (ULONG_PTR)ProcessId & ~0x1);
       }
-#ifdef GDI_DEBUG
-      DPRINT1("-> called from:\n");
-      KeRosDumpStackFrames(NULL, 20);
-//      DPRINT1("Allocated from:\n");
-//      KeRosDumpStackFrames(GDIHandleAllocator[GDI_HANDLE_GET_INDEX(hObj)], GDI_STACK_LEVELS);
-#endif
+      GDIDBG_TRACECALLER();
+      GDIDBG_TRACEALLOCATOR(GDI_HANDLE_GET_INDEX(hObj));
     }
   }
 
@@ -860,11 +870,8 @@ GDIOBJ_LockObj (HGDIOBJ hObj, DWORD ExpectedType)
    {
       DPRINT1("Attempted to lock object 0x%x of wrong type (Handle: 0x%x, requested: 0x%x)\n",
               hObj, HandleType, ExpectedType);
-#ifdef GDI_DEBUG
-        KeRosDumpStackFrames(NULL, 20);
-//        DPRINT1("Allocated from:\n");
-//        KeRosDumpStackFrames(GDIHandleAllocator[GDI_HANDLE_GET_INDEX(hObj)], GDI_STACK_LEVELS);
-#endif
+      GDIDBG_TRACECALLER();
+      GDIDBG_TRACEALLOCATOR(GDI_HANDLE_GET_INDEX(hObj));
       return NULL;
    }
 
@@ -874,12 +881,9 @@ GDIOBJ_LockObj (HGDIOBJ hObj, DWORD ExpectedType)
    /* Check for invalid owner. */
    if (ProcessId != HandleProcessId && HandleProcessId != NULL)
    {
-        DPRINT1("Tried to lock object (0x%p) of wrong owner! ProcessId = %p, HandleProcessId = %p\n", hObj, ProcessId, HandleProcessId);
-#ifdef GDI_DEBUG
-        KeRosDumpStackFrames(NULL, 20);
-//        DPRINT1("Handle allocator:\n");
-//        KeRosDumpStackFrames(GDIHandleAllocator[GDI_HANDLE_GET_INDEX(hObj)], GDI_STACK_LEVELS);
-#endif
+      DPRINT1("Tried to lock object (0x%p) of wrong owner! ProcessId = %p, HandleProcessId = %p\n", hObj, ProcessId, HandleProcessId);
+      GDIDBG_TRACECALLER();
+      GDIDBG_TRACEALLOCATOR(GDI_HANDLE_GET_INDEX(hObj));
       return NULL;
    }
 
@@ -921,9 +925,7 @@ GDIOBJ_LockObj (HGDIOBJ hObj, DWORD ExpectedType)
             {
                Object->Tid = Thread;
                Object->cExclusiveLock = 1;
-#ifdef GDI_DEBUG
-               CaptureStackBackTace((PVOID*)GDIHandleLocker[GDI_HANDLE_GET_INDEX(hObj)], GDI_STACK_LEVELS);
-#endif
+               GDIDBG_CAPTURELOCKER(GDI_HANDLE_GET_INDEX(hObj))
             }
             else
             {
