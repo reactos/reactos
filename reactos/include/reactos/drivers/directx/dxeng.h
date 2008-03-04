@@ -87,14 +87,15 @@ BOOLEAN DxEngCleanDC(HDC hdc);
 DWORD DxEngGetHdevData(HDEV, DXEGSHDEVDATA);
 BOOLEAN DxEngSetHdevData(HDEV, DXEGSHDEVDATA, DWORD);
 BOOLEAN DxEngIncDispUniq();
+BOOLEAN DxEngLockHdev(HDEV hdev);
+BOOLEAN DxEngUnlockHdev(HDEV hdev);
 
 /* prototypes are not done yet, I need gather all my notes
  * to make them correct
  */
 DWORD DxEngCreateMemoryDC(DWORD x1);
 DWORD DxEngScreenAccessCheck();
-DWORD DxEngLockHdev(DWORD x1);
-DWORD DxEngUnlockHdev(DWORD x1);
+
 DWORD DxEngReferenceHdev(DWORD x1);
 DWORD DxEngIsHdevLockedByCurrentThread(DWORD x1);
 DWORD DxEngUnreferenceHdev(DWORD x1);

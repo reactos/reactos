@@ -465,6 +465,67 @@ DxEngIncDispUniq()
     return TRUE;
 }
 
+/*++
+* @name DxEngLockHdev
+* @implemented
+*
+* The function DxEngLockHdev lock the internal PDEV
+*
+* @param HDEV type
+* it is a pointer to win32k internal pdev struct known as PGDIDEVICE
+
+* @return
+* This function returns TRUE no matter what.
+*
+* @remarks.
+* none
+*
+*--*/
+BOOLEAN 
+DxEngLockHdev(HDEV hDev)
+{
+    PGDIDEVICE pPDev = (PGDIDEVICE)hDev;
+    PERESOURCE Resource = pPDev->hsemDevLock;
+
+    if (Resource)
+    {
+        KeEnterCriticalRegion();
+        ExAcquireResourceExclusiveLite( Resource , TRUE); // Lock monitor.
+    }
+    return TRUE;
+}
+
+/*++
+* @name DxEngUnlockHdev
+* @implemented
+*
+* The function DxEngUnlockHdev unlock the internal PDEV
+*
+* @param HDEV type
+* it is a pointer to win32k internal pdev struct known as PGDIDEVICE
+
+* @return
+* This function returns TRUE no matter what.
+*
+* @remarks.
+* none
+*
+*--*/
+BOOLEAN 
+DxEngUnlockHdev(HDEV hDev)
+{
+    PGDIDEVICE pPDev = (PGDIDEVICE)hDev;
+    PERESOURCE Resource = pPDev->hsemDevLock;
+
+    if (Resource)
+    {
+        ExReleaseResourceLite( Resource );
+        KeLeaveCriticalRegion();
+    }
+    return TRUE;
+}
+
+
 /************************************************************************/
 /* DxEngNUIsTermSrv                                                     */
 /************************************************************************/
@@ -532,23 +593,7 @@ DWORD DxEngScreenAccessCheck()
     return FALSE;
 }
 
-/************************************************************************/
-/* DxEngLockHdev                                                        */
-/************************************************************************/
-DWORD DxEngLockHdev(DWORD x1)
-{
-    UNIMPLEMENTED;
-    return FALSE;
-}
 
-/************************************************************************/
-/* DxEngUnlockHdev                                                      */
-/************************************************************************/
-DWORD DxEngUnlockHdev(DWORD x1)
-{
-    UNIMPLEMENTED;
-    return FALSE;
-}
 
 /************************************************************************/
 /* DxEngReferenceHdev                                                   */
