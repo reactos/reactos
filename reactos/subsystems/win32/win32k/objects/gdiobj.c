@@ -361,10 +361,7 @@ LockErrorDebugOutput(HGDIOBJ hObj, PGDI_TABLE_ENTRY Entry, LPSTR Function)
         DPRINT1("%s: Attempted to lock object 0x%x, something went wrong, typeinfo = 0x%x\n",
                 Function, hObj, Entry->Type);
     }
-#ifdef GDI_DEBUG
-    DPRINT1("-> called from:\n");
-    KeRosDumpStackFrames(NULL, 20);
-#endif
+    GDIDBG_TRACECALLER();
 }
 
 ULONG
