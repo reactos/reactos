@@ -184,13 +184,20 @@ MsConfigWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
             break;
 
         case WM_DESTROY:
-            DestroyWindow(hToolsPage);
-            DestroyWindow(hGeneralPage);
-            DestroyWindow(hServicesPage);
-            DestroyWindow(hStartupPage);
-            DestroyWindow(hFreeLdrPage);
-            DestroyWindow(hSystemPage);
-			DestroyIcon(hIcon);
+            if (hToolsPage)
+                DestroyWindow(hToolsPage);
+            if (hGeneralPage)
+                DestroyWindow(hGeneralPage);
+            if (hServicesPage)
+                DestroyWindow(hServicesPage);
+            if (hStartupPage)
+                DestroyWindow(hStartupPage);
+            if (hFreeLdrPage)
+                DestroyWindow(hFreeLdrPage);
+            if (hSystemPage)
+                DestroyWindow(hSystemPage);
+            if (hIcon)
+                DestroyIcon(hIcon);
             return DefWindowProc(hDlg, message, wParam, lParam);
     }
 
