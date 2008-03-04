@@ -47,6 +47,161 @@ BOOL IsFourCCFormat(D3DFORMAT Format)
     return FALSE;
 }
 
+BOOL IsStencilFormat(D3DFORMAT Format)
+{
+    switch (Format)
+    {
+    case D3DFMT_D15S1:
+    case D3DFMT_D24S8:
+    case D3DFMT_D24X4S4:
+    case D3DFMT_D24FS8:
+        return TRUE;
+
+    default:
+        return FALSE;
+    }
+}
+
+DWORD GetBytesPerPixel(D3DFORMAT Format)
+{
+    switch (Format)
+    {
+    case D3DFMT_R3G3B2:
+    case D3DFMT_A8:
+        return 1;
+
+    case D3DFMT_R5G6B5:
+    case D3DFMT_X1R5G5B5:
+    case D3DFMT_A1R5G5B5:
+    case D3DFMT_A4R4G4B4:
+    case D3DFMT_A8R3G3B2:
+    case D3DFMT_X4R4G4B4:
+        return 2;
+
+    case D3DFMT_R8G8B8:
+        return 3;
+
+    case D3DFMT_A8R8G8B8:
+    case D3DFMT_X8R8G8B8:
+    case D3DFMT_A2B10G10R10:
+    case D3DFMT_A8B8G8R8:
+    case D3DFMT_X8B8G8R8:
+    case D3DFMT_G16R16:
+    case D3DFMT_A2R10G10B10:
+        return 4;
+
+    case D3DFMT_A16B16G16R16:
+        return 8;
+
+
+    case D3DFMT_P8:
+    case D3DFMT_L8:
+    case D3DFMT_A4L4:
+        return 1;
+
+    case D3DFMT_A8P8:
+    case D3DFMT_A8L8:
+        return 2;
+
+
+    case D3DFMT_V8U8:
+    case D3DFMT_L6V5U5:
+        return 2;
+
+    case D3DFMT_X8L8V8U8:
+    case D3DFMT_Q8W8V8U8:
+    case D3DFMT_V16U16:
+    case D3DFMT_A2W10V10U10:
+        return 4;
+
+
+    case D3DFMT_S8_LOCKABLE:
+        return 1;
+
+    case D3DFMT_D16_LOCKABLE:
+    case D3DFMT_D15S1:
+    case D3DFMT_D16:
+        return 2;
+
+    case D3DFMT_D32:
+    case D3DFMT_D24S8:
+    case D3DFMT_D24X8:
+    case D3DFMT_D24X4S4:
+    case D3DFMT_D32F_LOCKABLE:
+    case D3DFMT_D24FS8:
+    case D3DFMT_D32_LOCKABLE:
+        return 4;
+
+
+    case D3DFMT_L16:
+        return 2;
+
+    /* TODO: Handle D3DFMT_VERTEXDATA? */
+    case D3DFMT_INDEX16:
+        return 2;
+    case D3DFMT_INDEX32:
+        return 4;
+
+
+    case D3DFMT_Q16W16V16U16:
+        return 8;
+
+
+    case D3DFMT_R16F:
+        return 2;
+    case D3DFMT_G16R16F:
+        return 4;
+    case D3DFMT_A16B16G16R16F:
+        return 8;
+
+
+    case D3DFMT_R32F:
+        return 4;
+    case D3DFMT_G32R32F:
+        return 8;
+    case D3DFMT_A32B32G32R32F:
+        return 16;
+
+    case D3DFMT_CxV8U8:
+        return 2;
+
+
+    /* Known FourCC formats */
+    case D3DFMT_UYVY:
+    case D3DFMT_R8G8_B8G8:
+    case D3DFMT_YUY2:
+    case D3DFMT_G8R8_G8B8:
+        return 2;
+
+    case D3DFMT_DXT1:
+        return 0xFFFFFFF8;
+
+    case D3DFMT_DXT2:
+    case D3DFMT_DXT3:
+    case D3DFMT_DXT4:
+    case D3DFMT_DXT5:
+        return 0xFFFFFFF0;
+
+    case D3DFMT_MULTI2_ARGB8:
+        return 8;
+
+    default:
+        return 0;
+    }
+}
+
+DWORD GetPixelStride(D3DFORMAT Format)
+{
+    DWORD Bpp = GetBytesPerPixel(Format);
+
+    if (0 == Bpp)
+    {
+        /* TODO: Handle unknown formats here */
+    }
+
+    return Bpp;
+}
+
 BOOL IsSupportedFormatOp(LPD3D9_DRIVERCAPS pDriverCaps, D3DFORMAT DisplayFormat, DWORD FormatOp)
 {
     const DWORD NumFormatOps = pDriverCaps->NumSupportedFormatOps;
@@ -375,6 +530,77 @@ HRESULT CheckDeviceFormatConversion(LPD3D9_DRIVERCAPS pDriverCaps, D3DFORMAT Sou
         FALSE == IsSupportedFormatOp(pDriverCaps, TargetFormat, D3DFORMAT_MEMBEROFGROUP_ARGB))
     {
         return D3DERR_NOTAVAILABLE;
+    }
+
+    return D3D_OK;
+}
+
+HRESULT CheckDepthStencilMatch(LPD3D9_DRIVERCAPS pDriverCaps, D3DFORMAT AdapterFormat, D3DFORMAT RenderTargetFormat, D3DFORMAT DepthStencilFormat)
+{
+    const DWORD NumFormatOps = pDriverCaps->NumSupportedFormatOps;
+    BOOL bRenderTargetAvailable = FALSE;
+    BOOL bDepthStencilAvailable = FALSE;
+    BOOL bForceSameDepthStencilBits = FALSE;
+    DWORD FormatIndex;
+
+    if (FALSE == IsSupportedFormatOp(pDriverCaps, AdapterFormat, D3DFORMAT_OP_DISPLAYMODE | D3DFORMAT_OP_3DACCELERATION))
+    {
+        return D3DERR_NOTAVAILABLE;
+    }
+   
+    if (DepthStencilFormat != D3DFMT_D16_LOCKABLE &&
+        DepthStencilFormat != D3DFMT_D32F_LOCKABLE)
+    {
+        if (TRUE == IsStencilFormat(DepthStencilFormat))
+        {
+            bForceSameDepthStencilBits = TRUE;
+        }
+    }
+
+    if (FALSE == bForceSameDepthStencilBits &&
+        (DepthStencilFormat == D3DFMT_D32 || DepthStencilFormat == D3DFMT_D24X8))
+    {
+        bForceSameDepthStencilBits = TRUE;
+    }
+
+    DepthStencilFormat = GetStencilFormat(pDriverCaps, DepthStencilFormat);
+
+    /* Observe the multiple conditions */
+    for (FormatIndex = 0; FormatIndex < NumFormatOps && (bRenderTargetAvailable == FALSE || bDepthStencilAvailable == FALSE); FormatIndex++)
+    {
+        const LPDDSURFACEDESC pSurfaceDesc = &pDriverCaps->pSupportedFormatOps[FormatIndex];
+        const DWORD FourCC = pSurfaceDesc->ddpfPixelFormat.dwFourCC;
+        const DWORD FormatOperations = pSurfaceDesc->ddpfPixelFormat.dwOperations;
+
+        if (FALSE == bRenderTargetAvailable &&
+            FourCC == RenderTargetFormat &&
+            (FormatOperations & D3DFORMAT_OP_SAME_FORMAT_RENDERTARGET) != 0)
+        {
+            bRenderTargetAvailable = TRUE;
+        }
+
+        if (FALSE == bDepthStencilAvailable &&
+            FourCC == DepthStencilFormat &&
+            (FormatOperations & D3DFORMAT_OP_ZSTENCIL) != 0)
+        {
+            bDepthStencilAvailable = TRUE;
+
+            if ((FormatOperations & D3DFORMAT_OP_ZSTENCIL_WITH_ARBITRARY_COLOR_DEPTH) != 0)
+            {
+                bForceSameDepthStencilBits = FALSE;
+            }
+        }
+    }
+
+    if (FALSE == bRenderTargetAvailable || FALSE == bDepthStencilAvailable)
+    {
+        return D3DERR_INVALIDCALL;
+    }
+
+    if (TRUE == bForceSameDepthStencilBits)
+    {
+        if (GetPixelStride(RenderTargetFormat) != GetPixelStride(DepthStencilFormat))
+            return D3DERR_NOTAVAILABLE;
     }
 
     return D3D_OK;

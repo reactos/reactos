@@ -504,7 +504,7 @@ static HRESULT WINAPI IDirect3D9Impl_CheckDeviceFormat(LPDIRECT3D9 iface, UINT A
     {
         DPRINT1("Invalid D3DFORMAT specified");
         UNLOCK_D3D9();
-        return D3DERR_NOTAVAILABLE;
+        return D3DERR_INVALIDCALL;
     }
 
     if ((Usage & (D3DUSAGE_DONOTCLIP | D3DUSAGE_NPATCHES | D3DUSAGE_POINTS | D3DUSAGE_RTPATCHES | D3DUSAGE_TEXTAPI | D3DUSAGE_WRITEONLY)) != 0)
@@ -631,13 +631,81 @@ static HRESULT WINAPI IDirect3D9Impl_CheckDeviceMultiSampleType(LPDIRECT3D9 ifac
     return D3D_OK;
 }
 
+
+/*++
+* @name IDirect3D9::CheckDepthStencilMatch
+* @implemented
+*
+* The function IDirect3D9Impl_CheckDepthStencilMatch checks if a specific combination
+* of a render target D3DFORMAT and a depth-stencil D3DFORMAT can be used with a specified
+* D3DFORMAT on the specified display adapter.
+*
+* @param LPDIRECT3D iface
+* Pointer to the IDirect3D object returned from Direct3DCreate9()
+*
+* @param UINT Adapter
+* Adapter index to get information about. D3DADAPTER_DEFAULT is the primary display.
+* The maximum value for this is the value returned by IDirect3D::GetAdapterCount().
+*
+* @param D3DDEVTYPE DeviceType
+* One of the D3DDEVTYPE enum members.
+*
+* @param D3DFORMAT AdapterFormat
+* One of the D3DFORMAT enum members except D3DFMT_UNKNOWN that the display adapter mode where the test should occurr.
+*
+* @param D3DFORMAT RenderTargetFormat
+* One of the D3DFORMAT enum members except D3DFMT_UNKNOWN for the display adapter mode's render target format to be tested.
+*
+* @param D3DFORMAT DepthStencilFormat
+* One of the D3DFORMAT enum members except D3DFMT_UNKNOWN for the display adapter mode's depth-stencil format to be tested.
+*
+* @return HRESULT
+* If the DepthStencilFormat can be used with the RenderTargetFormat under the specified AdapterFormat,
+* the method returns D3D_OK.
+* If the DepthStencilFormat can NOT used with the RenderTargetFormat under the specified AdapterFormat,
+* the method returns D3DERR_NOTAVAILABLE.
+* If Adapter is out of range, DeviceType is invalid,
+* AdapterFormat, RenderTargetFormat or DepthStencilFormat is invalid, the method returns D3DERR_INVALIDCALL.
+*
+*/
 static HRESULT WINAPI IDirect3D9Impl_CheckDepthStencilMatch(LPDIRECT3D9 iface, UINT Adapter, D3DDEVTYPE DeviceType,
                                                             D3DFORMAT AdapterFormat, D3DFORMAT RenderTargetFormat,
                                                             D3DFORMAT DepthStencilFormat)
 {
-    UNIMPLEMENTED
+    HRESULT hResult;
 
-    return D3D_OK;
+    LPDIRECT3D9_INT This = impl_from_IDirect3D9(iface);
+    LOCK_D3D9();
+
+    if (Adapter >= This->NumDisplayAdapters)
+    {
+        DPRINT1("Invalid Adapter number specified");
+        UNLOCK_D3D9();
+        return D3DERR_INVALIDCALL;
+    }
+
+    if (DeviceType != D3DDEVTYPE_HAL &&
+        DeviceType != D3DDEVTYPE_REF &&
+        DeviceType != D3DDEVTYPE_SW)
+    {
+        DPRINT1("Invalid DeviceType specified");
+        UNLOCK_D3D9();
+        return D3DERR_INVALIDCALL;
+    }
+
+    if (AdapterFormat == D3DFMT_UNKNOWN ||
+        RenderTargetFormat == D3DFMT_UNKNOWN ||
+        DepthStencilFormat == D3DFMT_UNKNOWN)
+    {
+        DPRINT1("Invalid D3DFORMAT specified");
+        UNLOCK_D3D9();
+        return D3DERR_INVALIDCALL;
+    }
+
+    hResult = CheckDepthStencilMatch(&This->DisplayAdapters[Adapter].DriverCaps, AdapterFormat, RenderTargetFormat, DepthStencilFormat);
+
+    UNLOCK_D3D9();
+    return hResult;
 }
 
 

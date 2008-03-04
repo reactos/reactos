@@ -35,4 +35,6 @@ HRESULT CheckDeviceFormat(LPD3D9_DRIVERCAPS pDriverCaps, D3DFORMAT AdapterFormat
 
 HRESULT CheckDeviceFormatConversion(LPD3D9_DRIVERCAPS pDriverCaps, D3DFORMAT SourceFormat, D3DFORMAT TargetFormat);
 
+HRESULT CheckDepthStencilMatch(LPD3D9_DRIVERCAPS pDriverCaps, D3DFORMAT AdapterFormat, D3DFORMAT RenderTargetFormat, D3DFORMAT DepthStencilFormat);
+
 #endif // _FORMAT_H_
