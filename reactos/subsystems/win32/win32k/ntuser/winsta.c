@@ -965,19 +965,22 @@ PWINSTATION_OBJECT FASTCALL
 IntGetWinStaObj(VOID)
 {
    PWINSTATION_OBJECT WinStaObj;
+   PW32THREAD Win32Thread;
+   PEPROCESS CurrentProcess;
 
    /*
     * just a temporary hack, this will be gone soon
     */
 
-   if(PsGetCurrentThreadWin32Thread() != NULL && PsGetCurrentThreadWin32Thread()->Desktop != NULL)
+   Win32Thread = PsGetCurrentThreadWin32Thread();
+   if(Win32Thread != NULL && Win32Thread->Desktop != NULL)
    {
-      WinStaObj = PsGetCurrentThreadWin32Thread()->Desktop->WindowStation;
+      WinStaObj = Win32Thread->Desktop->WindowStation;
       ObReferenceObjectByPointer(WinStaObj, KernelMode, ExWindowStationObjectType, 0);
    }
-   else if(PsGetCurrentProcess() != CsrProcess)
+   else if((CurrentProcess = PsGetCurrentProcess()) != CsrProcess)
    {
-      NTSTATUS Status = IntValidateWindowStationHandle(PsGetCurrentProcess()->Win32WindowStation,
+      NTSTATUS Status = IntValidateWindowStationHandle(CurrentProcess->Win32WindowStation,
                         KernelMode,
                         0,
                         &WinStaObj);
