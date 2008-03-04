@@ -108,10 +108,10 @@ DdFlip(LPDDHAL_FLIPDATA Flip)
    
     /* Auto flip off or on */
     if (Flip->dwFlags & DDFLIP_STEREO )
-    {      
+    {
         if ( (Flip->lpSurfTargLeft) &&
              (Flip->lpSurfCurrLeft))
-        {         
+        {
             /* Auto flip on */
             hSurfaceTargetLeft = (HANDLE) Flip->lpSurfTargLeft->hDDSurface;
             hSurfaceCurrentLeft = (HANDLE) Flip->lpSurfCurrLeft->hDDSurface;
@@ -419,13 +419,18 @@ DdCreateSurface(LPDDHAL_CREATESURFACEDATA pCreateSurface)
                                sizeof(DDPIXELFORMAT));
             }
 
+            /* Note if lcl->lpSurfMore is NULL zero out 
+             * ptmpDdSurfaceMore->ddsCapsEx.dwCaps2,
+             * dwCaps3, dwCaps4, ptmpDdSurfaceMore->dwSurfaceHandle 
+             */
             if (lcl->lpSurfMore)
             {
                 ptmpDdSurfaceMore->ddsCapsEx.dwCaps2 = lcl->lpSurfMore->ddsCapsEx.dwCaps2;
                 ptmpDdSurfaceMore->ddsCapsEx.dwCaps3 = lcl->lpSurfMore->ddsCapsEx.dwCaps3;
                 ptmpDdSurfaceMore->ddsCapsEx.dwCaps4 = lcl->lpSurfMore->ddsCapsEx.dwCaps4;
-                ptmpDdSurfaceMore->dwSurfaceHandle = (DWORD) pCreateSurface->lplpSList[i]->dbnOverlayNode.object_int;
+                ptmpDdSurfaceMore->dwSurfaceHandle = lcl->lpSurfMore->dwSurfaceHandle;
             }
+
 
             /* count to next SurfaceCount */
             ptmpDdSurfaceGlobal = (PDD_SURFACE_GLOBAL) (((PBYTE) ((ULONG_PTR) ptmpDdSurfaceGlobal)) + sizeof(DD_SURFACE_GLOBAL));
