@@ -28,7 +28,6 @@
 #include <arc/arc.h>
 #include <iotypes.h>
 #include <kefuncs.h>
-#include <intrin.h>
 #include <halfuncs.h>
 #include <iofuncs.h>
 #include <ldrtypes.h>
