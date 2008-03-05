@@ -780,7 +780,9 @@
 /* #undef HAVE_UNICODE_UBIDI_H */
 
 /* Define to 1 if you have the <unistd.h> header file. */
+#if !defined(_MSC_VER)
 #define HAVE_UNISTD_H 1
+#endif
 
 /* Define to 1 if you have the `usleep' function. */
 /* #undef HAVE_USLEEP */

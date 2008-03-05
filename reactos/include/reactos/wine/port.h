@@ -49,6 +49,14 @@
  * Type definitions
  */
 
+#if !defined(_MSC_VER) && !defined(__int64)
+#  if defined(__x86_64__) || defined(_WIN64)
+#    define __int64 long
+#  else
+#    define __int64 long long
+#  endif
+#endif
+
 #ifndef HAVE_MODE_T
 typedef int mode_t;
 #endif
