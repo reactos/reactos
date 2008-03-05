@@ -629,12 +629,12 @@ static void LISTBOX_PaintItem( LB_DESCR *descr, HDC hdc,
         dis.hDC          = hdc;
         dis.itemID       = index;
         dis.itemState    = 0;
-        if (item && item->selected) dis.itemState |= ODS_SELECTED;
+        if (item->selected) dis.itemState |= ODS_SELECTED;
         if (!ignoreFocus && (descr->focus_item == index) &&
             (descr->caret_on) &&
             (descr->in_focus)) dis.itemState |= ODS_FOCUS;
         if (!IsWindowEnabled(descr->self)) dis.itemState |= ODS_DISABLED;
-        dis.itemData     = item ? item->data : 0;
+        dis.itemData     = item->data;
         dis.rcItem       = *rect;
         TRACE("[%p]: drawitem %d (%s) action=%02x state=%02x rect=%ld,%ld-%ld,%ld\n",
               descr->self, index, item ? debugstr_w(item->str) : "", action,
@@ -827,7 +827,7 @@ static BOOL LISTBOX_SetTabStops( LB_DESCR *descr, INT count, LPINT tabs, BOOL sh
         return TRUE;
     }
     if (!(descr->tabs = HeapAlloc( GetProcessHeap(), 0,
-                                   descr->nb_tabs * sizeof(INT) )))
+                                            descr->nb_tabs * sizeof(INT) )))
         return FALSE;
 #ifndef __REACTOS__
     if (short_ints)
@@ -838,9 +838,9 @@ static BOOL LISTBOX_SetTabStops( LB_DESCR *descr, INT count, LPINT tabs, BOOL sh
         TRACE("[%p]: settabstops ", hwnd );
         for (i = 0; i < descr->nb_tabs; i++) {
 	    descr->tabs[i] = *p++<<1; /* FIXME */
-            if (TRACE_ON(listbox)) TRACE("%hd ", descr->tabs[i]);
+            TRACE("%hd ", descr->tabs[i]);
 	}
-        if (TRACE_ON(listbox)) TRACE("\n");
+        TRACE("\n");
     }
     else memcpy( descr->tabs, tabs, descr->nb_tabs * sizeof(INT) );
 #else

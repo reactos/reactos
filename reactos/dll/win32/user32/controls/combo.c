@@ -15,17 +15,17 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  *
  * NOTES
  *
  * This code was audited for completeness against the documented features
  * of Comctl32.dll version 6.0 on Oct. 4, 2004, by Dimitrie O. Paun.
- *
+ * 
  * Unless otherwise noted, we believe this code to be complete, as per
  * the specification mentioned above.
  * If you discover missing features, or bugs, please note them below.
- *
+ * 
  * TODO:
  *   - ComboBox_[GS]etMinVisible()
  *   - CB_GETMINVISIBLE, CB_SETMINVISIBLE
@@ -107,7 +107,7 @@ const struct builtin_class_descr COMBO_builtin_class =
  *
  * Load combo button bitmap.
  */
-static BOOL COMBO_Init()
+static BOOL COMBO_Init(void)
 {
   HDC		hDC;
 
@@ -260,7 +260,7 @@ static INT CBGetTextAreaHeight(
     MEASUREITEMSTRUCT measureItem;
     RECT              clientRect;
     INT               originalItemHeight = iTextItemHeight;
-    UINT id = GetWindowLongPtrW( lphc->self, GWLP_ID );
+    UINT id = (UINT)GetWindowLongPtrW( lphc->self, GWLP_ID );
 
     /*
      * We use the client rect for the width of the item.
@@ -441,8 +441,8 @@ static void CBCalcPlacement(
   }
 
   /* don't allow negative window width */
-    if (lprEdit->right < lprEdit->left)
-        lprEdit->right = lprEdit->left;
+  if (lprEdit->right < lprEdit->left)
+    lprEdit->right = lprEdit->left;
 
   TRACE("\ttext\t= (%ld,%ld-%ld,%ld)\n",
 	lprEdit->left, lprEdit->top, lprEdit->right, lprEdit->bottom);
@@ -846,9 +846,9 @@ static void CBPaintText(
  *           CBPaintBorder
  */
 static void CBPaintBorder(
-  HWND        hwnd,
-  LPHEADCOMBO lphc,
-  HDC         hdc)
+  HWND            hwnd,
+  const HEADCOMBO *lphc,
+  HDC             hdc)
 {
   RECT clientRect;
 
@@ -1041,9 +1041,12 @@ static void CBUpdateEdit( LPHEADCOMBO lphc , INT index )
        }
    }
 
-   lphc->wState |= (CBF_NOEDITNOTIFY | CBF_NOLBSELECT);
-   SendMessageW(lphc->hWndEdit, WM_SETTEXT, 0, pText ? (LPARAM)pText : (LPARAM)empty_stringW);
-   lphc->wState &= ~(CBF_NOEDITNOTIFY | CBF_NOLBSELECT);
+   if( CB_HASSTRINGS(lphc) )
+   {
+      lphc->wState |= (CBF_NOEDITNOTIFY | CBF_NOLBSELECT);
+      SendMessageW(lphc->hWndEdit, WM_SETTEXT, 0, pText ? (LPARAM)pText : (LPARAM)empty_stringW);
+      lphc->wState &= ~(CBF_NOEDITNOTIFY | CBF_NOLBSELECT);
+   }
 
    if( lphc->wState & CBF_FOCUSED )
       SendMessageW(lphc->hWndEdit, EM_SETSEL, 0, (LPARAM)(-1));
@@ -1121,7 +1124,7 @@ static void CBDropDown( LPHEADCOMBO lphc )
       if (nHeight < nDroppedHeight - COMBO_YBORDERSIZE())
          nDroppedHeight = nHeight + COMBO_YBORDERSIZE();
 
-      if (nDroppedHeight < nIHeight)
+      if (nDroppedHeight < nHeight)
       {
             if (nItems < 5)
                 nDroppedHeight = (nItems+1)*nIHeight;
@@ -1135,7 +1138,7 @@ static void CBDropDown( LPHEADCOMBO lphc )
    mon_info.cbSize = sizeof(mon_info);
    GetMonitorInfoW( monitor, &mon_info );
 
-   if( (rect.bottom + nDroppedHeight) >= GetSystemMetrics( SM_CYSCREEN ) )
+   if( (rect.bottom + nDroppedHeight) >= mon_info.rcWork.bottom )
       rect.bottom = rect.top - nDroppedHeight;
 
    SetWindowPos( lphc->hWndLBox, HWND_TOP, rect.left, rect.bottom,
@@ -1163,7 +1166,7 @@ static void CBRollUp( LPHEADCOMBO lphc, BOOL ok, BOOL bButton )
    HWND	hWnd = lphc->self;
 
    TRACE("[%p]: sel ok? [%i] dropped? [%i]\n",
-	 lphc->self, (INT)ok, (INT)(lphc->wState & CBF_DROPPED));
+	 lphc->self, ok, (INT)(lphc->wState & CBF_DROPPED));
 
    CB_NOTIFY( lphc, (ok) ? CBN_SELENDOK : CBN_SELENDCANCEL );
 
@@ -1319,7 +1322,7 @@ static LRESULT COMBO_Command( LPHEADCOMBO lphc, WPARAM wParam, HWND hWnd )
 	   case (EN_CHANGE >> 8):
 	       /*
 	        * In some circumstances (when the selection of the combobox
-		* is changed for example) we don't wans the EN_CHANGE notification
+		* is changed for example) we don't want the EN_CHANGE notification
 		* to be forwarded to the parent of the combobox. This code
 		* checks a flag that is set in these occasions and ignores the
 		* notification.
@@ -1361,7 +1364,7 @@ static LRESULT COMBO_Command( LPHEADCOMBO lphc, WPARAM wParam, HWND hWnd )
 	   case LBN_SELCHANGE:
 	   case LBN_SELCANCEL:
 
-               TRACE("[%p]: lbox selection change [%x]\n", lphc->self, lphc->wState );
+                TRACE("[%p]: lbox selection change [%x]\n", lphc->self, lphc->wState );
 
                 CB_NOTIFY( lphc, CBN_SELCHANGE );
 
@@ -1554,8 +1557,8 @@ static LRESULT COMBO_GetTextA( LPHEADCOMBO lphc, INT count, LPSTR buf )
  */
 static void CBResetPos(
   LPHEADCOMBO lphc,
-  LPRECT      rectEdit,
-  LPRECT      rectLB,
+  const RECT  *rectEdit,
+  const RECT  *rectLB,
   BOOL        bRedraw)
 {
    BOOL	bDrop = (CB_GETTYPE(lphc) != CBS_SIMPLE);
@@ -1711,8 +1714,8 @@ static void COMBO_LButtonDown( LPHEADCOMBO lphc, LPARAM lParam )
    BOOL      bButton;
    HWND      hWnd = lphc->self;
 
-   pt.x = LOWORD(lParam);
-   pt.y = HIWORD(lParam);
+   pt.x = (short)LOWORD(lParam);
+   pt.y = (short)HIWORD(lParam);
    bButton = PtInRect(&lphc->buttonRect, pt);
 
    if( (CB_GETTYPE(lphc) == CBS_DROPDOWNLIST) ||
@@ -1788,8 +1791,8 @@ static void COMBO_MouseMove( LPHEADCOMBO lphc, WPARAM wParam, LPARAM lParam )
    POINT  pt;
    RECT   lbRect;
 
-   pt.x = LOWORD(lParam);
-   pt.y = HIWORD(lParam);
+   pt.x = (short)LOWORD(lParam);
+   pt.y = (short)HIWORD(lParam);
 
    if( lphc->wState & CBF_BUTTONDOWN )
    {
@@ -1817,7 +1820,7 @@ static void COMBO_MouseMove( LPHEADCOMBO lphc, WPARAM wParam, LPARAM lParam )
    }
 }
 
-static LRESULT COMBO_GetComboBoxInfo(LPHEADCOMBO lphc, COMBOBOXINFO *pcbi)
+static LRESULT COMBO_GetComboBoxInfo(const HEADCOMBO *lphc, COMBOBOXINFO *pcbi)
 {
     if (!pcbi || (pcbi->cbSize < sizeof(COMBOBOXINFO)))
         return FALSE;
@@ -1851,14 +1854,14 @@ static char *strdupA(LPCSTR str)
 /***********************************************************************
  *           ComboWndProc_common
  *
- * http://www.microsoft.com/msdn/sdk/platforms/doc/sdk/win32/ctrl/src/combobox_15.htm
+ * http://msdn.microsoft.com/library/default.asp?url=/library/en-us/shellcc/platform/commctls/comboboxes/comboboxes.asp
  */
 static LRESULT ComboWndProc_common( HWND hwnd, UINT message,
                                     WPARAM wParam, LPARAM lParam, BOOL unicode )
 {
       LPHEADCOMBO lphc = (LPHEADCOMBO)GetWindowLongPtrW( hwnd, 0 );
 
-      TRACE("[%p]: msg %s wp %08x lp %08lx\n",
+      TRACE("[%p]: msg %s wp %08lx lp %08lx\n",
             hwnd, SPY_GetMsgName(message, hwnd), wParam, lParam );
 
       if( lphc || message == WM_NCCREATE )
@@ -2128,6 +2131,7 @@ static LRESULT ComboWndProc_common( HWND hwnd, UINT message,
                         CharLowerA((LPSTR)lParam);
                     else if( lphc->dwStyle & CBS_UPPERCASE )
                         CharUpperA((LPSTR)lParam);
+
                     return SendMessageA(lphc->hWndLBox, LB_INSERTSTRING, wParam, lParam);
                 }
 #ifndef __REACTOS__
@@ -2368,7 +2372,7 @@ static LRESULT ComboWndProc_common( HWND hwnd, UINT message,
 
 	default:
 		if (message >= WM_USER)
-		    WARN("unknown msg WM_USER+%04x wp=%04x lp=%08lx\n",
+		    WARN("unknown msg WM_USER+%04x wp=%04lx lp=%08lx\n",
 			message - WM_USER, wParam, lParam );
 		break;
       }
