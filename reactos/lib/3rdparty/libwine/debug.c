@@ -35,9 +35,6 @@
 #include <rtlfuncs.h>
 #include <cmfuncs.h>
 
-#define KEY_QUERY_VALUE 1
-#define REG_SZ          1
-
 ULONG
 __cdecl
 DbgPrint(
@@ -57,7 +54,7 @@ static struct __wine_debug_functions funcs;
 
 static void debug_init(void);
 
-static int cmp_name( const void *p1, const void *p2 )
+static int __cdecl cmp_name( const void *p1, const void *p2 )
 {
     const char *name = p1;
     const struct __wine_debug_channel *chan = p2;
