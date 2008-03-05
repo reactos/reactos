@@ -78,6 +78,7 @@ DRVFN gaEngFuncs [] =
 ULONG
 DxEngDispUniq()
 {
+    DPRINT1("ReactX Calling : DxEngDispUniq\n");
     return GdiHandleTable->flDeviceUniq;
 }
 
@@ -103,6 +104,7 @@ DxEngDispUniq()
 BOOL
 DxEngGetDeviceGammaRamp(HDEV hPDev, PGAMMARAMP Ramp)
 {
+    DPRINT1("ReactX Calling : DxEngGetDeviceGammaRamp\n");
     return IntGetDeviceGammaRamp(hPDev, Ramp);
 }
 
@@ -126,6 +128,7 @@ DxEngGetDeviceGammaRamp(HDEV hPDev, PGAMMARAMP Ramp)
 PDC
 DxEngLockDC(HDC hDC)
 {
+    DPRINT1("ReactX Calling : DxEngLockDC\n");
     return DC_LockDc(hDC);
 }
 
@@ -149,6 +152,7 @@ DxEngLockDC(HDC hDC)
 BOOL
 DxEngUnlockDC(PDC pDC)
 {
+    DPRINT1("ReactX Calling : DxEngUnlockDC\n");
     DC_UnlockDc(pDC);
     return TRUE;
 }
@@ -172,6 +176,7 @@ BOOLEAN
 DxEngLockShareSem()
 {
     BOOLEAN retVal = 0;
+    DPRINT1("ReactX Calling : DxEngLockShareSem\n");
 
     if (ExIsResourceAcquiredExclusiveLite(&ghsemShareDevLock) == FALSE)
     {
@@ -198,6 +203,7 @@ DxEngLockShareSem()
 BOOLEAN
 DxEngUnlockShareSem()
 {
+    DPRINT1("ReactX Calling : DxEngUnlockShareSem\n");
     if (ExIsResourceAcquiredExclusiveLite(&ghsemShareDevLock) == TRUE)
     {
         ExReleaseResourceLite(&ghsemShareDevLock);
@@ -231,7 +237,8 @@ DxEngUnlockShareSem()
 BOOL
 DxEngSetDeviceGammaRamp(HDEV hPDev, PGAMMARAMP Ramp, BOOL Test)
 {
-   return IntSetDeviceGammaRamp(hPDev, Ramp, Test);
+    DPRINT1("ReactX Calling : DxEngSetDeviceGammaRamp\n");
+    return IntSetDeviceGammaRamp(hPDev, Ramp, Test);
 }
 
 /*++
@@ -277,8 +284,10 @@ DWORD
 DxEngGetHdevData(HDEV hDev,
                  DXEGSHDEVDATA Type)
 {
-  DWORD retVal = 0;
-  PGDIDEVICE PDev = (PGDIDEVICE)hDev;
+    DWORD retVal = 0;
+    PGDIDEVICE PDev = (PGDIDEVICE)hDev;
+
+    DPRINT1("ReactX Calling : DxEngGetHdevData DXEGSHDEVDATA : %ld\n", Type);
 
     switch ( Type )
     {
@@ -376,14 +385,16 @@ DxEngSetHdevData(HDEV hDev,
                  DXEGSHDEVDATA Type,
                  DWORD Data)
 {
-  BOOL retVal = FALSE; // Default, no set.
+    BOOLEAN retVal = FALSE; // Default, no set.
 
-  if ( Type == DxEGShDevData_dd_nCount )
-  {
-     ((PGDIDEVICE)hDev)->DxDd_nCount = Data;
-     retVal = TRUE; // Set
-  }
-  return retVal;
+    DPRINT1("ReactX Calling : DxEngSetHdevData DXEGSHDEVDATA : %ld\n", Type);
+
+    if ( Type == DxEGShDevData_dd_nCount )
+    {
+        ((PGDIDEVICE)hDev)->DxDd_nCount = Data;
+        retVal = TRUE; // Set
+    }
+    return retVal;
 }
 
 /*++
@@ -417,6 +428,8 @@ DxEngGetDCState(HDC hDC,
 {
     PDC pDC = DC_LockDc(hDC);
     DWORD retVal = 0;
+
+    DPRINT1("ReactX Calling : DxEngGetDCState type : %ld\n", type);
 
     if (pDC)
     {
@@ -461,6 +474,8 @@ DxEngGetDCState(HDC hDC,
 BOOLEAN
 DxEngIncDispUniq()
 {
+    DPRINT1("ReactX Calling : DxEngIncDispUniq \n");
+
     InterlockedIncrement((LONG*)&GdiHandleTable->flDeviceUniq);
     return TRUE;
 }
@@ -486,6 +501,8 @@ DxEngLockHdev(HDEV hDev)
 {
     PGDIDEVICE pPDev = (PGDIDEVICE)hDev;
     PERESOURCE Resource = pPDev->hsemDevLock;
+
+    DPRINT1("ReactX Calling : DxEngLockHdev \n");
 
     if (Resource)
     {
@@ -516,6 +533,8 @@ DxEngUnlockHdev(HDEV hDev)
 {
     PGDIDEVICE pPDev = (PGDIDEVICE)hDev;
     PERESOURCE Resource = pPDev->hsemDevLock;
+
+    DPRINT1("ReactX Calling : DxEngUnlockHdev \n");
 
     if (Resource)
     {
@@ -560,6 +579,8 @@ ULONG gulVisRgnUniqueness; // Increase count everytime client region is updated.
 ULONG
 DxEngVisRgnUniq()
 {
+    DPRINT1("ReactX Calling : DxEngVisRgnUniq \n");
+
     return gulVisRgnUniqueness;
 }
 
