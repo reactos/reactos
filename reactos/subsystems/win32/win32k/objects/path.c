@@ -492,8 +492,8 @@ PATH_DestroyGdiPath ( GdiPath *pPath )
 {
   ASSERT(pPath!=NULL);
 
-  ExFreePool(pPath->pPoints);
-  ExFreePool(pPath->pFlags);
+  if (pPath->pPoints) ExFreePool(pPath->pPoints);
+  if (pPath->pFlags) ExFreePool(pPath->pFlags);
 }
 
 /* PATH_AssignGdiPath

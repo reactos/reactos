@@ -238,7 +238,7 @@ IntFreeMenuItem(PMENU_OBJECT Menu, PMENU_ITEM MenuItem,
    }
 
    /* Free memory */
-   ExFreePool(MenuItem->Text.Buffer);
+   if (MenuItem->Text.Buffer) ExFreePool(MenuItem->Text.Buffer);
    ExFreePool(MenuItem);
 
    return TRUE;
