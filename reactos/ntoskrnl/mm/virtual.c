@@ -963,7 +963,7 @@ MmSecureVirtualMemory(PVOID  Address,
                       ULONG  Mode)
 {
     /* Only works for user space */
-    if (((ULONG_PTR)Address > (ULONG_PTR)Address + Length) ||
+    if (((ULONG_PTR)Address >= (ULONG_PTR)Address + Length) ||
         ((ULONG_PTR)MmHighestUserAddress < (ULONG_PTR)Address + Length))
     {
         return NULL;
