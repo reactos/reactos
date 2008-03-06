@@ -50,7 +50,7 @@ typedef struct tagbrowse_info
 typedef struct tagTV_ITEMDATA
 {
    LPSHELLFOLDER lpsfParent; /* IShellFolder of the parent */
-   LPITEMIDLIST  lpi;        /* PIDL relativ to parent */
+   LPITEMIDLIST  lpi;        /* PIDL relative to parent */
    LPITEMIDLIST  lpifq;      /* Fully qualified PIDL */
    IEnumIDList*  pEnumIL;    /* Children iterator */
 } TV_ITEMDATA, *LPTV_ITEMDATA;
@@ -245,7 +245,7 @@ static BOOL GetName(LPSHELLFOLDER lpsf, LPCITEMIDLIST lpi, DWORD dwFlags, LPWSTR
  * PARAMS
  *  info       [I] data for the dialog
  *  lpsf       [I] IShellFolder interface of the item's parent shell folder
- *  pidl       [I] ITEMIDLIST of the child to insert, relativ to parent
+ *  pidl       [I] ITEMIDLIST of the child to insert, relative to parent
  *  pidlParent [I] ITEMIDLIST of the parent shell folder
  *  pEnumIL    [I] Iterator for the children of the item to be inserted
  *  hParent    [I] The treeview-item that represents the parent shell folder

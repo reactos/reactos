@@ -85,7 +85,6 @@ extern const char * const SHELL_Authors[];
 LPWSTR* WINAPI CommandLineToArgvW(LPCWSTR lpCmdline, int* numargs)
 {
     DWORD argc;
-    HGLOBAL hargv;
     LPWSTR  *argv;
     LPCWSTR cs;
     LPWSTR arg,s,d;
@@ -97,20 +96,18 @@ LPWSTR* WINAPI CommandLineToArgvW(LPCWSTR lpCmdline, int* numargs)
         /* Return the path to the executable */
         DWORD len, size=16;
 
-        hargv=GlobalAlloc(GMEM_FIXED, size);
-        argv=GlobalLock(hargv);
+        argv=LocalAlloc(LMEM_FIXED, size);
         for (;;)
         {
             len = GetModuleFileNameW(0, (LPWSTR)(argv+1), (size-sizeof(LPWSTR))/sizeof(WCHAR));
             if (!len)
             {
-                GlobalFree(hargv);
+                LocalFree(argv);
                 return NULL;
             }
             if (len < size) break;
             size*=2;
-            hargv=GlobalReAlloc(hargv, size, 0);
-            argv=GlobalLock(hargv);
+            argv=LocalReAlloc(argv, size, 0);
         }
         argv[0]=(LPWSTR)(argv+1);
         if (numargs)
@@ -160,8 +157,7 @@ LPWSTR* WINAPI CommandLineToArgvW(LPCWSTR lpCmdline, int* numargs)
     /* Allocate in a single lump, the string array, and the strings that go with it.
      * This way the caller can make a single GlobalFree call to free both, as per MSDN.
      */
-    hargv=GlobalAlloc(0, argc*sizeof(LPWSTR)+(strlenW(lpCmdline)+1)*sizeof(WCHAR));
-    argv=GlobalLock(hargv);
+    argv=LocalAlloc(LMEM_FIXED, argc*sizeof(LPWSTR)+(strlenW(lpCmdline)+1)*sizeof(WCHAR));
     if (!argv)
         return NULL;
     cmdline=(LPWSTR)(argv+argc);
@@ -860,11 +856,15 @@ typedef struct
 /*************************************************************************
  * SHAppBarMessage            [SHELL32.@]
  */
-UINT WINAPI SHAppBarMessage(DWORD msg, PAPPBARDATA data)
+UINT_PTR WINAPI SHAppBarMessage(DWORD msg, PAPPBARDATA data)
 {
     int width=data->rc.right - data->rc.left;
     int height=data->rc.bottom - data->rc.top;
     RECT rec=data->rc;
+
+    TRACE("msg=%d, data={cb=%d, hwnd=%p, callback=%x, edge=%d, rc=%s, lparam=%lx}\n",
+          msg, data->cbSize, data->hWnd, data->uCallbackMessage, data->uEdge,
+          wine_dbgstr_rect(&data->rc), data->lParam);
 
     switch (msg)
     {
@@ -878,8 +878,7 @@ UINT WINAPI SHAppBarMessage(DWORD msg, PAPPBARDATA data)
         SetActiveWindow(data->hWnd);
         return TRUE;
     case ABM_GETAUTOHIDEBAR:
-        data->hWnd=GetActiveWindow();
-        return TRUE;
+        return 0; /* pretend there is no autohide bar */
     case ABM_NEW:
         /* cbSize, hWnd, and uCallbackMessage are used. All other ignored */
         SetWindowPos(data->hWnd,HWND_TOP,0,0,0,0,SWP_SHOWWINDOW|SWP_NOMOVE|SWP_NOSIZE);

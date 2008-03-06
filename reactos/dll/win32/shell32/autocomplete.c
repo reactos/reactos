@@ -507,7 +507,7 @@ static LRESULT APIENTRY ACEditSubclassProc(HWND hwnd, UINT uMsg, WPARAM wParam, 
 		    if ( (This->options & (ACO_AUTOSUGGEST | ACO_UPDOWNKEYDROPSLIST))
 			 && (!IsWindowVisible(This->hwndListBox) && (! *hwndText)) )
 		    {
-			 /* We must dispays all the entries */
+			 /* We must display all the entries */
 			 displayall = TRUE;
 		    } else {
 			if (IsWindowVisible(This->hwndListBox)) {
