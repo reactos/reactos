@@ -201,7 +201,6 @@ IntAttachMonitor(IN GDIDEVICE *pGdiDevice,
       }
       Monitor->Prev = p;
    }
-   UserDereferenceObject(Monitor);
 
    return STATUS_SUCCESS;
 }
