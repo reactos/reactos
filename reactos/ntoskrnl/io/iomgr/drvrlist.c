@@ -372,8 +372,10 @@ IoDestroyDriverList(VOID)
     {
       ExFreePool(CurrentService->ServiceName.Buffer);
       ExFreePool(CurrentService->RegistryPath.Buffer);
-      ExFreePool(CurrentService->ServiceGroup.Buffer);
-      ExFreePool(CurrentService->ImagePath.Buffer);
+      if (CurrentService->ServiceGroup.Buffer)
+        ExFreePool(CurrentService->ServiceGroup.Buffer);
+      if (CurrentService->ImagePath.Buffer)
+        ExFreePool(CurrentService->ImagePath.Buffer);
       RemoveEntryList(&CurrentService->ServiceListEntry);
       ExFreePool(CurrentService);
     }
