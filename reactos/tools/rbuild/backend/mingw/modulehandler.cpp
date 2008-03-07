@@ -1820,9 +1820,10 @@ MingwModuleHandler::GenerateObjectFileTargets ()
 		if ( rpcDependencies.size () > 0 )
 			dependencies += " " + v2s ( backend, rpcDependencies, 5 );
 		fprintf ( fMakefile,
-		          "%s: %s | %s\n",
+		          "%s: %s ${%s_precondition} | %s\n",
 		          backend->GetFullName ( *pchFilename ).c_str(),
 		          dependencies.c_str(),
+		          module.name.c_str (),
 		          backend->GetFullPath ( *pchFilename ).c_str() );
 		fprintf ( fMakefile, "\t$(ECHO_PCH)\n" );
 		fprintf ( fMakefile,
