@@ -7,7 +7,6 @@
 	<include base="ReactOS">include/reactos/wine</include>
 	<include base="ReactOS">include/reactos</include>
 	<include base="ReactOS">include</include>
-	<include base="ReactOS">include/psdk</include>
 	<include base="ReactOS" root="intermediate">include</include>
 	<library>wpp</library>
 	<file>client.c</file>
