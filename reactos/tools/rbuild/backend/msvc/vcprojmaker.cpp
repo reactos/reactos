@@ -427,7 +427,7 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 		{
 			fprintf ( OUT, "\t\t\t\tUsePrecompiledHeader=\"2\"\r\n" );
 			string pch_path = Path::RelativeFromDirectory (
-				module.pch->file.name,
+				module.pch->file->name,
 				module.output->relative_path );
 			string::size_type pos = pch_path.find_last_of ("/");
 			if ( pos != string::npos )

@@ -779,14 +779,14 @@ Module::ProcessXMLSubElement ( const XMLElement& e,
 		if ( pos == string::npos )
 		{
 			linkerScript = new LinkerScript (
-				e, *this, FileLocation ( SourceDirectory, relative_path, e.value, &e ) );
+				e, *this, new FileLocation ( SourceDirectory, relative_path, e.value, &e ) );
 		}
 		else
 		{
 			string dir = e.value.substr ( 0, pos );
 			string name = e.value.substr ( pos + 1);
 			linkerScript = new LinkerScript (
-				e, *this, FileLocation ( SourceDirectory, relative_path + sSep + dir, name, &e ) );
+				e, *this, new FileLocation ( SourceDirectory, relative_path + sSep + dir, name, &e ) );
 		}
 		subs_invalid = true;
 	}
@@ -824,14 +824,14 @@ Module::ProcessXMLSubElement ( const XMLElement& e,
 		if ( pos == string::npos )
 		{
 			pch = new PchFile (
-				e, *this, FileLocation ( SourceDirectory, relative_path, e.value, &e ) );
+				e, *this, new FileLocation ( SourceDirectory, relative_path, e.value, &e ) );
 		}
 		else
 		{
 			string dir = e.value.substr ( 0, pos );
 			string name = e.value.substr ( pos + 1);
 			pch = new PchFile (
-				e, *this, FileLocation ( SourceDirectory, relative_path + sSep + dir, name, &e ) );
+				e, *this, new FileLocation ( SourceDirectory, relative_path + sSep + dir, name, &e ) );
 		}
 		subs_invalid = true;
 	}
@@ -1704,9 +1704,14 @@ Property::ProcessXML()
 PchFile::PchFile (
 	const XMLElement& node_,
 	const Module& module_,
-	const FileLocation& file_ )
+	const FileLocation *file_ )
 	: node(node_), module(module_), file(file_)
 {
+}
+
+PchFile::~PchFile()
+{
+	delete file;
 }
 
 void

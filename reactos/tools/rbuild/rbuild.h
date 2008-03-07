@@ -639,11 +639,11 @@ class LinkerScript
 public:
 	const XMLElement& node;
 	const Module& module;
-	FileLocation file;
+	const FileLocation *file;
 
 	LinkerScript ( const XMLElement& node,
 	               const Module& module,
-	               const FileLocation& file );
+	               const FileLocation *file );
 	~LinkerScript ();
 	void ProcessXML();
 };
@@ -843,12 +843,13 @@ class PchFile
 public:
 	const XMLElement& node;
 	const Module& module;
-	FileLocation file;
+	const FileLocation *file;
 
 	PchFile (
 		const XMLElement& node,
 		const Module& module,
-		const FileLocation& file );
+		const FileLocation *file );
+	~PchFile();
 	void ProcessXML();
 };
 

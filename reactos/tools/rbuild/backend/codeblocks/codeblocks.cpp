@@ -399,7 +399,7 @@ CBBackend::_generate_cbproj ( const Module& module )
 	if ( module.pch != NULL )
 	{
 		string pch_path = Path::RelativeFromDirectory (
-					module.pch->file.name,
+					module.pch->file->name,
 					module.output->relative_path );
 
 		header_files.push_back ( pch_path );

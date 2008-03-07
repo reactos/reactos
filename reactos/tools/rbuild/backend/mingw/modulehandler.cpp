@@ -1236,8 +1236,8 @@ MingwModuleHandler::GetPrecompiledHeaderFilename () const
 	if ( !module.pch || !use_pch )
 		return NULL;
 	return new FileLocation ( IntermediateDirectory,
-	                          module.pch->file.relative_path,
-	                          ReplaceExtension ( module.pch->file.name, "_" + module.name + ".gch" ) );
+	                          module.pch->file->relative_path,
+	                          ReplaceExtension ( module.pch->file->name, "_" + module.name + ".gch" ) );
 }
 
 Rule arRule1 ( "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).a: $($(module_name)_OBJS) | $(INTERMEDIATE)$(SEP)$(source_dir)\n",
@@ -1649,7 +1649,7 @@ MingwModuleHandler::GenerateLinkerCommand (
 
 	string linkerScriptArgument;
 	if ( module.linkerScript != NULL )
-		linkerScriptArgument = ssprintf ( " -Wl,-T,%s", backend->GetFullName ( module.linkerScript->file ).c_str () );
+		linkerScriptArgument = ssprintf ( " -Wl,-T,%s", backend->GetFullName ( *module.linkerScript->file ).c_str () );
 	else
 		linkerScriptArgument = "";
 
@@ -1807,7 +1807,7 @@ MingwModuleHandler::GenerateObjectFileTargets ()
 		string cc = ( module.host == HostTrue ? "${host_gcc}" : "${gcc}" );
 		string cppc = ( module.host == HostTrue ? "${host_gpp}" : "${gpp}" );
 
-		const FileLocation& baseHeaderFile = module.pch->file;
+		const FileLocation& baseHeaderFile = *module.pch->file;
 		CLEAN_FILE ( *pchFilename );
 		string dependencies = backend->GetFullName ( baseHeaderFile );
 		/* WIDL generated headers may be used */

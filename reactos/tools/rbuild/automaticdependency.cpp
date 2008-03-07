@@ -301,7 +301,7 @@ AutomaticDependency::GetModuleFiles ( const Module& module,
 
 	if ( module.pch != NULL )
 	{
-		const FileLocation& pch = module.pch->file;
+		const FileLocation& pch = *module.pch->file;
 		File *file = new File ( pch.directory, pch.relative_path, pch.name , false, "", true );
 		files.push_back ( file );
 	}
