@@ -42,22 +42,12 @@ $(TOOLS_INT_)xml.o: $(TOOLS_BASE_)xml.cpp $(XML_SSPRINTF_HEADERS) | $(TOOLS_INT)
 
 include tools/bin2c.mak
 include tools/buildno/buildno.mak
-include tools/cabman/cabman.mak
 include tools/gendib/gendib.mak
 ifeq ($(ARCH),powerpc)
 include tools/ofw_interface/ofw_interface.mak
 endif
-include tools/mkhive/mkhive.mak
 include tools/nci/nci.mak
 include tools/pefixup.mak
 include tools/raddr2line.mak
 include tools/rbuild/rbuild.mak
-include tools/rgenstat/rgenstat.mak
 include tools/rsym.mak
-include tools/sysreg/sysreg.mak
-include tools/unicode/unicode.mak
-include tools/wpp/wpp.mak
-include tools/widl/widl.mak
-include tools/winebuild/winebuild.mak
-include tools/wmc/wmc.mak
-include tools/wrc/wrc.mak
