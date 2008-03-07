@@ -1318,6 +1318,16 @@ LockHandle:
             {
                 POBJ Object = Entry->KernelData;
 
+                /* HACK: Introduced very recently, probably by Timo's changes */
+                if ((ULONG_PTR)Object < 0x80000000)
+                {
+                    DPRINT1("KernelData is invalid (%p) for Entry %p!!!\n",
+                        Object, Entry);
+
+                    /* Hopefully someone is going to solve this issue */
+                    return;
+                }
+
                 PrevThread = Object->Tid;
                 if (Object->cExclusiveLock == 0 || PrevThread == Thread)
                 {
