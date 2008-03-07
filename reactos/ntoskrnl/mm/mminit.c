@@ -73,6 +73,7 @@ VOID
 NTAPI
 MiShutdownMemoryManager(VOID)
 {
+#if 0
     ULONG PagesWritten;
     PETHREAD Thread;
 
@@ -100,6 +101,7 @@ MiShutdownMemoryManager(VOID)
        There will be no other chance to do this later, since filesystems
        are going to be shut down. */
     CcRosFlushDirtyPages(128, &PagesWritten);
+#endif
 }
 
 VOID
