@@ -211,18 +211,22 @@ Directory::CreateRule ( FILE* f,
 
 	if ( escapedName.size() > 0 )
 	{
-		fprintf ( f,
-			"%s%c%s: | %s\n",
-			parent.c_str (),
-			cSep,
-			escapedName.c_str (),
-			parent.c_str () );
+		if ( ! (escapedName == "tools" &&
+		     ( parent == "$(OUTPUT)" || parent == "$(INTERMEDIATE)" ) ) )
+		{
+			fprintf ( f,
+				"%s%c%s: | %s\n",
+				parent.c_str (),
+				cSep,
+				escapedName.c_str (),
+				parent.c_str () );
 
-		fprintf ( f,
-			"\t$(ECHO_MKDIR)\n" );
+			fprintf ( f,
+				"\t$(ECHO_MKDIR)\n" );
 
-		fprintf ( f,
-			"\t${mkdir} $@\n" );
+			fprintf ( f,
+				"\t${mkdir} $@\n" );
+		}
 
 		path = parent + sSep + escapedName;
 	}

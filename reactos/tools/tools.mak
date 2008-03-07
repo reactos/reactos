@@ -43,7 +43,6 @@ $(TOOLS_INT_)xml.o: $(TOOLS_BASE_)xml.cpp $(XML_SSPRINTF_HEADERS) | $(TOOLS_INT)
 include tools/bin2c.mak
 include tools/buildno/buildno.mak
 include tools/cabman/cabman.mak
-include tools/cdmake/cdmake.mak
 include tools/gendib/gendib.mak
 ifeq ($(ARCH),powerpc)
 include tools/ofw_interface/ofw_interface.mak

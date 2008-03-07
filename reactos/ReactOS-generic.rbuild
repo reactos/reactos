@@ -63,5 +63,8 @@
 	<directory name="subsystems">
 		<xi:include href="subsystems/subsystems.rbuild" />
 	</directory>
+	<directory name="tools">
+		<xi:include href="tools/tools.rbuild" />
+	</directory>
 
 </group>
