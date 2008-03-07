@@ -87,7 +87,12 @@ CcInitializeCacheMap (
 	IN	PVOID				LazyWriterContext
 	)
 {
-    CcRosInitializeFileCache(FileObject, VACB_MAPPING_GRANULARITY);
+    ASSERT(FileObject);
+    ASSERT(FileSizes);
+
+    /* Call old ROS cache init function */
+    CcRosInitializeFileCache(FileObject,
+        PAGE_SIZE/*VACB_MAPPING_GRANULARITY*/);
 }
 
 /*

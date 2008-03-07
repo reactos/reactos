@@ -241,22 +241,12 @@ CdfsFCBInitializeCache(PVCB Vcb,
   Fcb->FileObject = FileObject;
   Fcb->DevExt = Vcb;
 
-#ifdef USE_ROS_AND_FS
-  Status = CcRosInitializeFileCache(FileObject,
-                                    PAGE_SIZE);
-  if (!NT_SUCCESS(Status))
-    {
-      DbgPrint("CcRosInitializeFileCache failed\n");
-      KEBUGCHECK(0);
-    }
-#else
   Status = STATUS_SUCCESS;
   CcInitializeCacheMap(FileObject,
                        (PCC_FILE_SIZES)(&Fcb->RFCB.AllocationSize),
                        FALSE,
                        NULL,
                        NULL);
-#endif
 
   ObDereferenceObject(FileObject);
   Fcb->Flags |= FCB_CACHE_INITIALIZED;
@@ -437,22 +427,11 @@ CdfsAttachFCBToFileObject(PDEVICE_EXTENSION Vcb,
 
   if (CdfsFCBIsDirectory(Fcb))
     {
-#ifdef USE_ROS_CC_AND_FS
-      NTSTATUS Status;
-      Status = CcRosInitializeFileCache(FileObject,
-                                        PAGE_SIZE);
-      if (!NT_SUCCESS(Status))
-        {
-          DbgPrint("CcRosInitializeFileCache failed\n");
-          KEBUGCHECK(0);
-        }
-#else
   CcInitializeCacheMap(FileObject,
                        (PCC_FILE_SIZES)(&Fcb->RFCB.AllocationSize),
                        FALSE,
                        NULL,
                        NULL);
-#endif
       Fcb->Flags |= FCB_CACHE_INITIALIZED;
     }
 
