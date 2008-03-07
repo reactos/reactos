@@ -226,6 +226,17 @@ private:
 };
 
 
+class MingwHostStaticLibraryModuleHandler : public MingwModuleHandler
+{
+public:
+	MingwHostStaticLibraryModuleHandler ( const Module& module );
+	virtual HostType DefaultHost() { return HostTrue; }
+	virtual void Process ();
+private:
+	void GenerateHostStaticLibraryModuleTarget ();
+};
+
+
 class MingwObjectLibraryModuleHandler : public MingwModuleHandler
 {
 public:

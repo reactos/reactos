@@ -37,6 +37,7 @@ using std::ifstream;
 #undef OUT
 #endif//OUT
 
+#define IsStaticLibrary( module ) ( ( module.type == StaticLibrary ) || ( module.type == HostStaticLibrary ) )
 
 static class CBFactory : public Backend::Factory
 {
@@ -497,7 +498,7 @@ CBBackend::_generate_cbproj ( const Module& module )
 	if ( !module.allowWarnings )
 		compiler_flags.push_back ( "-Werror" );
 
-	if ( module.type == StaticLibrary && module.isStartupLib )
+	if ( IsStaticLibrary ( module ) && module.isStartupLib )
 		compiler_flags.push_back ( "-Wno-main" );
 
 
@@ -524,7 +525,7 @@ CBBackend::_generate_cbproj ( const Module& module )
 
 		if ( configuration.UseConfigurationInPath )
 		{
-			if ( module.type == StaticLibrary ||module.type == ObjectLibrary )
+			if ( IsStaticLibrary ( module ) ||module.type == ObjectLibrary )
 				fprintf ( OUT, "\t\t\t\t<Option output=\"%s\\%s%s\\%s%s\" prefix_auto=\"0\" extension_auto=\"0\" />\r\n", intdir.c_str (), module.output->relative_path.c_str (), cfg.name.c_str(), module.name.c_str(), module_type.c_str());
 			else
 				fprintf ( OUT, "\t\t\t\t<Option output=\"%s\\%s%s\\%s%s\" prefix_auto=\"0\" extension_auto=\"0\" />\r\n", outdir.c_str (), module.output->relative_path.c_str (), cfg.name.c_str(), module.name.c_str(), module_type.c_str());
@@ -532,7 +533,7 @@ CBBackend::_generate_cbproj ( const Module& module )
 		}
 		else
 		{
-			if ( module.type == StaticLibrary || module.type == ObjectLibrary )
+			if ( IsStaticLibrary ( module ) || module.type == ObjectLibrary )
 				fprintf ( OUT, "\t\t\t\t<Option output=\"%s\\%s\\%s%s\" prefix_auto=\"0\" extension_auto=\"0\" />\r\n", intdir.c_str (), module.output->relative_path.c_str (), module.name.c_str(), module_type.c_str() );
 			else
 				fprintf ( OUT, "\t\t\t\t<Option output=\"%s\\%s\\%s%s\" prefix_auto=\"0\" extension_auto=\"0\" />\r\n", outdir.c_str (), module.output->relative_path.c_str (), module.name.c_str(), module_type.c_str() );
@@ -672,7 +673,7 @@ CBBackend::_generate_cbproj ( const Module& module )
 		fprintf ( OUT, "\t\t\t\t<ExtraCommands>\r\n" );
 
 #if 0
-		if ( module.type == StaticLibrary && module.importLibrary )
+		if ( IsStaticLibrary ( module ) && module.importLibrary )
 			fprintf ( OUT, "\t\t\t\t\t<Add after=\"dlltool --dllname %s --def %s --output-lib $exe_output; %s -U\" />\r\n", module.importLibrary->dllname.c_str (), module.importLibrary->definition.c_str(), module.mangledSymbols ? "" : "--kill-at" );
 		else if ( module.importLibrary != NULL )
 			fprintf ( OUT, "\t\t\t\t\t<Add after=\"dlltool --dllname %s --def %s --output-lib &quot;$(TARGET_OBJECT_DIR)lib$(TARGET_OUTPUT_BASENAME).a&quot; %s\" />\r\n", module.GetTargetName ().c_str(), module.importLibrary->definition.c_str(), module.mangledSymbols ? "" : "--kill-at" );

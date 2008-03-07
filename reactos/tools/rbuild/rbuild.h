@@ -300,6 +300,7 @@ enum ModuleType
 	EmbeddedTypeLib = 26,
 	ElfExecutable = 27,
 	RpcProxy,
+	HostStaticLibrary,
 	TypeDontCare,
 };
 

@@ -30,6 +30,7 @@ using std::string;
 using std::vector;
 
 #define CLEAN_FILE(f) clean_files.push_back ( (f).name.length () > 0 ? backend->GetFullName ( f ) : backend->GetFullPath ( f ) );
+#define IsStaticLibrary( module ) ( ( module.type == StaticLibrary ) || ( module.type == HostStaticLibrary ) )
 
 MingwBackend*
 MingwModuleHandler::backend = NULL;
@@ -169,6 +170,9 @@ MingwModuleHandler::InstanciateHandler (
 			break;
 		case StaticLibrary:
 			handler = new MingwStaticLibraryModuleHandler ( module );
+			break;
+		case HostStaticLibrary:
+			handler = new MingwHostStaticLibraryModuleHandler ( module );
 			break;
 		case ObjectLibrary:
 			handler = new MingwObjectLibraryModuleHandler ( module );
@@ -359,7 +363,7 @@ MingwModuleHandler::GetCompilationUnitDependencies (
 const FileLocation*
 MingwModuleHandler::GetModuleArchiveFilename () const
 {
-	if ( module.type == StaticLibrary )
+	if ( IsStaticLibrary ( module ) )
 		return GetTargetFilename ( module, NULL );
 	return new FileLocation ( IntermediateDirectory,
 	                          module.output->relative_path,
@@ -1842,7 +1846,7 @@ MingwModuleHandler::GenerateArchiveTarget ()
 
 	arRule1.Execute ( fMakefile, backend, module, archiveFilename, clean_files );
 
-	if ( module.type == StaticLibrary && module.importLibrary )
+	if ( IsStaticLibrary ( module ) && module.importLibrary )
 	{
 		const FileLocation *definitionFilename = GetDefinitionFilename ();
 
@@ -2016,11 +2020,14 @@ MingwModuleHandler::GenerateOtherMacros ()
 		&module.linkerFlags,
 		used_defs );
 
-	GenerateMacros (
-		"+=",
-		module.project.non_if_data,
-		NULL,
-		used_defs );
+	if ( module.host == HostFalse )
+	{
+		GenerateMacros (
+			"+=",
+			module.project.non_if_data,
+			NULL,
+			used_defs );
+	}
 
 	vector<FileLocation> s;
 	if ( module.importLibrary )
@@ -2048,7 +2055,12 @@ MingwModuleHandler::GenerateOtherMacros ()
 		fprintf ( fMakefile, "\n" );
 	}
 
-	string globalCflags = "-g";
+	string globalCflags = "";
+	if ( module.host == HostFalse )
+		globalCflags += " $(PROJECT_CFLAGS)";
+	else
+		globalCflags += " -Wall -Wpointer-arith -D__REACTOS__";
+	globalCflags += " -g";
 	if ( backend->usePipe )
 		globalCflags += " -pipe";
 	if ( !module.allowWarnings )
@@ -2058,7 +2070,7 @@ MingwModuleHandler::GenerateOtherMacros ()
 		if ( module.cplusplus )
 			globalCflags += " $(HOST_CPPFLAGS)";
 		else
-			globalCflags += " $(HOST_CFLAGS)";
+			globalCflags += " -Wno-strict-aliasing $(HOST_CFLAGS)";
 	}
 	else
 	{
@@ -2077,25 +2089,35 @@ MingwModuleHandler::GenerateOtherMacros ()
 
 	fprintf (
 		fMakefile,
-		"%s += $(PROJECT_CFLAGS) %s\n",
+		"%s +=%s\n",
 		cflagsMacro.c_str (),
 		globalCflags.c_str () );
 
-	fprintf (
-		fMakefile,
-		"%s += $(PROJECT_RCFLAGS)\n",
-		windresflagsMacro.c_str () );
+	if ( module.host == HostFalse )
+	{
+		fprintf (
+			fMakefile,
+			"%s += $(PROJECT_RCFLAGS)\n",
+			windresflagsMacro.c_str () );
 
-	fprintf (
-		fMakefile,
-		"%s += $(PROJECT_WIDLFLAGS) -I%s\n",
-		widlflagsMacro.c_str (),
-		module.output->relative_path.c_str () );
+		fprintf (
+			fMakefile,
+			"%s += $(PROJECT_WIDLFLAGS) -I%s\n",
+			widlflagsMacro.c_str (),
+			module.output->relative_path.c_str () );
 
-	fprintf (
-		fMakefile,
-		"%s_LFLAGS += $(PROJECT_LFLAGS) -g\n",
-		module.name.c_str () );
+		fprintf (
+			fMakefile,
+			"%s_LFLAGS += $(PROJECT_LFLAGS) -g\n",
+			module.name.c_str () );
+	}
+	else
+	{
+		fprintf (
+			fMakefile,
+			"%s_LFLAGS += $(HOST_LFLAGS)\n",
+			module.name.c_str () );
+	}
 
 	fprintf (
 		fMakefile,
@@ -2130,7 +2152,7 @@ MingwModuleHandler::GenerateOtherMacros ()
 		          linkerflags.c_str () );
 	}
 
-	if ( module.type == StaticLibrary && module.isStartupLib )
+	if ( IsStaticLibrary ( module ) && module.isStartupLib )
 	{
 		fprintf ( fMakefile,
 		          "%s += -Wno-main\n\n",
@@ -2591,6 +2613,26 @@ MingwStaticLibraryModuleHandler::Process ()
 
 void
 MingwStaticLibraryModuleHandler::GenerateStaticLibraryModuleTarget ()
+{
+	GenerateRules ();
+}
+
+
+MingwHostStaticLibraryModuleHandler::MingwHostStaticLibraryModuleHandler (
+	const Module& module_ )
+
+	: MingwModuleHandler ( module_ )
+{
+}
+
+void
+MingwHostStaticLibraryModuleHandler::Process ()
+{
+	GenerateHostStaticLibraryModuleTarget ();
+}
+
+void
+MingwHostStaticLibraryModuleHandler::GenerateHostStaticLibraryModuleTarget ()
 {
 	GenerateRules ();
 }

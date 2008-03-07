@@ -880,6 +880,8 @@ Module::GetModuleType ( const string& location, const XMLAttribute& attribute )
 		return BuildTool;
 	if ( attribute.value == "staticlibrary" )
 		return StaticLibrary;
+	if ( attribute.value == "hoststaticlibrary" )
+		return HostStaticLibrary;
 	if ( attribute.value == "objectlibrary" )
 		return ObjectLibrary;
 	if ( attribute.value == "kernel" )
@@ -965,6 +967,7 @@ Module::GetTargetDirectoryTree () const
 		case ElfExecutable:
 			return OutputDirectory;
 		case StaticLibrary:
+		case HostStaticLibrary:
 		case ObjectLibrary:
 		case RpcServer:
 		case RpcClient:
@@ -990,6 +993,7 @@ Module::GetDefaultModuleExtension () const
 			return ExePostfix;
 		case BootProgram:
 		case StaticLibrary:
+		case HostStaticLibrary:
 			return ".a";
 		case ObjectLibrary:
 			return ".o";
@@ -1067,6 +1071,7 @@ Module::GetDefaultModuleEntrypoint () const
 				return "WinMainCRTStartup";
 		case BuildTool:
 		case StaticLibrary:
+		case HostStaticLibrary:
 		case ObjectLibrary:
 		case BootLoader:
 		case BootSector:
@@ -1115,6 +1120,7 @@ Module::GetDefaultModuleBaseaddress () const
 			return "0xe00000";
 		case BuildTool:
 		case StaticLibrary:
+		case HostStaticLibrary:
 		case ObjectLibrary:
 		case BootLoader:
 		case BootSector:
@@ -1140,7 +1146,7 @@ Module::GetDefaultModuleBaseaddress () const
 bool
 Module::HasImportLibrary () const
 {
-	return importLibrary != NULL && type != StaticLibrary;
+	return importLibrary != NULL && type != StaticLibrary && type != HostStaticLibrary;
 }
 
 bool
@@ -1162,6 +1168,7 @@ Module::IsDLL () const
 		case Win32GUI:
 		case BuildTool:
 		case StaticLibrary:
+		case HostStaticLibrary:
 		case ObjectLibrary:
 		case BootLoader:
 		case BootSector:
@@ -1613,7 +1620,7 @@ ImportLibrary::ImportLibrary ( const Project& project,
 
 	if ( dllname )
 		this->dllname = dllname->value;
-	else if ( module.type == StaticLibrary )
+	else if ( module.type == StaticLibrary || module.type == HostStaticLibrary )
 		throw XMLInvalidBuildFileException (
 		    node.location,
 		    "<importlibrary> dllname attribute required." );

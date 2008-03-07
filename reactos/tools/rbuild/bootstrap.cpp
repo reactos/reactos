@@ -57,6 +57,7 @@ Bootstrap::IsSupportedModuleType ( ModuleType type )
 			return true;
 		case BuildTool:
 		case StaticLibrary:
+		case HostStaticLibrary:
 		case ObjectLibrary:
 		case Iso:
 		case LiveIso:
