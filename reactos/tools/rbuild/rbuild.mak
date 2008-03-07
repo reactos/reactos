@@ -269,9 +269,6 @@ RBUILD_SOURCES = \
 		xmlnode.cpp \
 		)
 
-RBUILD_SPECIAL_OBJECTS = \
-	$(addprefix $(INTERMEDIATE_), $(RBUILD_SPECIAL_SOURCES:.cpp=.o))
-
 RBUILD_OBJECTS = \
 	$(addprefix $(INTERMEDIATE_), $(RBUILD_SOURCES:.cpp=.o))
 
