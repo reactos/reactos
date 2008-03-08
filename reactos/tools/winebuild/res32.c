@@ -207,7 +207,7 @@ static void load_next_resource( DLLSPEC *spec )
     res->data = file_pos - 2*sizeof(DWORD) + hdr_size;
     get_string( &res->type );
     get_string( &res->name );
-    if ((UINT_PTR)file_pos & 2) get_word();  /* align to dword boundary */
+    if ((ULONG_PTR)file_pos & 2) get_word();  /* align to dword boundary */
     get_dword();                        /* skip data version */
     get_word();                         /* skip mem options */
     res->lang = get_word();
