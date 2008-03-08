@@ -47,12 +47,12 @@ BEGIN
         MENUITEM "Quitter\tAlt+F4", ID_FILE_EXIT
     END
 
-    POPUP "&Edit"
+    POPUP "&Édition"
     BEGIN
-        MENUITEM "Copy\tCtrl+C", ID_EDIT_COPY
-        MENUITEM "Paste\tCtrl+V", ID_EDIT_PASTE
+        MENUITEM "Copier\tCtrl+C", ID_EDIT_COPY
+        MENUITEM "Coller\tCtrl+V", ID_EDIT_PASTE
         MENUITEM SEPARATOR
-        MENUITEM "Edit Glyph...", ID_EDIT_GLYPH
+        MENUITEM "Éditer le glyphe...", ID_EDIT_GLYPH
     END
 
     POPUP "Fenêtres"
