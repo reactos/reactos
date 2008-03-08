@@ -2,8 +2,11 @@
 #define __INCLUDE_DDK_NTIFS_H
 
 NTSTATUS NTAPI
-CcRosInitializeFileCache (PFILE_OBJECT	FileObject,
-		          ULONG		CacheSegmentSize);
+CcRosInitializeFileCache(PFILE_OBJECT FileObject,
+                         ULONG CacheSegmentSize,
+                         PCACHE_MANAGER_CALLBACKS CallBacks,
+                         PVOID LazyWriterContext);
+
 NTSTATUS NTAPI
 CcRosReleaseFileCache (PFILE_OBJECT	FileObject);
 
