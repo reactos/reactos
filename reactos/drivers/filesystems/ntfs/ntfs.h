@@ -166,6 +166,7 @@ typedef struct
   ERESOURCE      Resource;
   PDRIVER_OBJECT DriverObject;
   PDEVICE_OBJECT DeviceObject;
+  CACHE_MANAGER_CALLBACKS CacheMgrCallbacks;
   ULONG Flags;
 } NTFS_GLOBAL_DATA, *PNTFS_GLOBAL_DATA;
 
@@ -400,6 +401,21 @@ DRIVER_DISPATCH NtfsFsdDispatch;
 NTSTATUS NTAPI
 NtfsFsdDispatch(PDEVICE_OBJECT DeviceObject,
                 PIRP Irp);
+
+/* fastio.c */
+BOOLEAN NTAPI
+NtfsAcqLazyWrite(PVOID Context,
+                 BOOLEAN Wait);
+
+VOID NTAPI
+NtfsRelLazyWrite(PVOID Context);
+
+BOOLEAN NTAPI
+NtfsAcqReadAhead(PVOID Context,
+                 BOOLEAN Wait);
+
+VOID NTAPI
+NtfsRelReadAhead(PVOID Context);
 
 /* fcb.c */
 

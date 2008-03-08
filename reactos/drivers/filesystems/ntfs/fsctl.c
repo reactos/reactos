@@ -404,8 +404,8 @@ NtfsMountVolume(PDEVICE_OBJECT DeviceObject,
   CcInitializeCacheMap(DeviceExt->StreamFileObject,
                        (PCC_FILE_SIZES)(&Fcb->RFCB.AllocationSize),
                        FALSE,
-                       NULL,
-                       NULL);
+                       &(NtfsGlobalData->CacheMgrCallbacks),
+                       Fcb);
 
   ExInitializeResourceLite(&DeviceExt->DirResource);
 //  ExInitializeResourceLite(&DeviceExt->FatResource);

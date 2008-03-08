@@ -72,6 +72,13 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
 
   /* Initialize IRP functions array */
   NtfsInitializeFunctionPointers(DriverObject);
+  
+  /* Initialize CC functions array */
+  NtfsGlobalData->CacheMgrCallbacks.AcquireForLazyWrite = NtfsAcqLazyWrite; 
+  NtfsGlobalData->CacheMgrCallbacks.ReleaseFromLazyWrite = NtfsRelLazyWrite; 
+  NtfsGlobalData->CacheMgrCallbacks.AcquireForReadAhead = NtfsAcqReadAhead; 
+  NtfsGlobalData->CacheMgrCallbacks.ReleaseFromReadAhead = NtfsRelReadAhead; 
+
   /* Driver can't be unloaded */
   DriverObject->DriverUnload = NULL;
 

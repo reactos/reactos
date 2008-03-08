@@ -11,6 +11,7 @@
 	<file>create.c</file>
 	<file>dirctl.c</file>
 	<file>dispatch.c</file>
+	<file>fastio.c</file>
 	<file>fcb.c</file>
 	<file>finfo.c</file>
 	<file>fsctl.c</file>

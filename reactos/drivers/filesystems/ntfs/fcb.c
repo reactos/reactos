@@ -243,8 +243,8 @@ NtfsFCBInitializeCache(PVCB Vcb,
   CcInitializeCacheMap(FileObject,
                        (PCC_FILE_SIZES)(&Fcb->RFCB.AllocationSize),
                        FALSE,
-                       NULL,
-                       NULL);
+                       &(NtfsGlobalData->CacheMgrCallbacks),
+                       Fcb);
 
   ObDereferenceObject(FileObject);
   Fcb->Flags |= FCB_CACHE_INITIALIZED;
