@@ -78,11 +78,7 @@ VfatCleanupFile(PVFAT_IRP_CONTEXT IrpContext)
             if (tmpFileObject != NULL)
             {
                 pFcb->FileObject = NULL;
-#ifdef USE_ROS_CC_AND_FS
-                CcRosReleaseFileCache(tmpFileObject);
-#else
                 CcUninitializeCacheMap(tmpFileObject, NULL, NULL);
-#endif
                 ObDereferenceObject(tmpFileObject);
            }
 
@@ -94,14 +90,10 @@ VfatCleanupFile(PVFAT_IRP_CONTEXT IrpContext)
 #endif
         }
         /* Uninitialize file cache if. */
-#ifdef USE_ROS_CC_AND_FS
-        CcRosReleaseFileCache (FileObject);
-#else
         if (FileObject->SectionObjectPointer->SharedCacheMap)
         {
             CcUninitializeCacheMap (FileObject, &pFcb->RFCB.FileSize, NULL);
         }
-#endif
         if (pFcb->OpenHandleCount != 0)
         {
             IoRemoveShareAccess(FileObject, &pFcb->FCBShareAccess);

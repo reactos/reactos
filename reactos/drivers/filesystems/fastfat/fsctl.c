@@ -534,28 +534,13 @@ VfatMount (PVFAT_IRP_CONTEXT IrpContext)
    Fcb->RFCB.ValidDataLength = Fcb->RFCB.FileSize;
    Fcb->RFCB.AllocationSize = Fcb->RFCB.FileSize;
 
-#ifdef USE_ROS_CC_AND_FS
-   if (DeviceExt->FatInfo.FatType != FAT12)
-   {
-      Status = CcRosInitializeFileCache(DeviceExt->FATFileObject, CACHEPAGESIZE(DeviceExt));
-   }
-   else
-   {
-      Status = CcRosInitializeFileCache(DeviceExt->FATFileObject, 2 * PAGE_SIZE);
-   }
-   if (!NT_SUCCESS (Status))
-   {
-      DPRINT1 ("CcRosInitializeFileCache failed\n");
-      goto ByeBye;
-   }
-#else
    /* FIXME: Guard by SEH. */
    CcInitializeCacheMap(DeviceExt->FATFileObject,
                         (PCC_FILE_SIZES)(&Fcb->RFCB.AllocationSize),
                         FALSE,
                         &VfatGlobalData->CacheMgrCallbacks,
                         Fcb);
-#endif
+
    DeviceExt->LastAvailableCluster = 2;
    ExInitializeResourceLite(&DeviceExt->DirResource);
    ExInitializeResourceLite(&DeviceExt->FatResource);

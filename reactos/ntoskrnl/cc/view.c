@@ -238,23 +238,19 @@ CcRosFlushDirtyPages(ULONG Target, PULONG Count)
                                     DirtySegmentListEntry);
         current_entry = current_entry->Flink;
 
-        /* This Ros-specific function needs FileObject to be referenced,
-           ohterwise it may be deleted while this function still works
-           with it */
-        ObReferenceObject(current->Bcb->FileObject);
-
-        Locked = ExTryToAcquireResourceExclusiveLite(((FSRTL_COMMON_FCB_HEADER*)(current->Bcb->FileObject->FsContext))->Resource);
+        Locked = current->Bcb->Callbacks->AcquireForLazyWrite(
+            current->Bcb->LazyWriteContext, FALSE);
         if (!Locked)
         {
-            ObDereferenceObject(current->Bcb->FileObject);
             continue;
         }
         
         Locked = ExTryToAcquirePushLockExclusive(&current->Lock);
         if (!Locked)
         {
-            ExReleaseResourceLite(((FSRTL_COMMON_FCB_HEADER*)(current->Bcb->FileObject->FsContext))->Resource);
-            ObDereferenceObject(current->Bcb->FileObject);
+            current->Bcb->Callbacks->ReleaseFromLazyWrite(
+                current->Bcb->LazyWriteContext);
+
             continue;
         }
         
@@ -262,20 +258,20 @@ CcRosFlushDirtyPages(ULONG Target, PULONG Count)
         if (current->ReferenceCount > 1)
         {
             ExReleasePushLock(&current->Lock);
-            ExReleaseResourceLite(((FSRTL_COMMON_FCB_HEADER*)(current->Bcb->FileObject->FsContext))->Resource);
-            ObDereferenceObject(current->Bcb->FileObject);
+            current->Bcb->Callbacks->ReleaseFromLazyWrite(
+                current->Bcb->LazyWriteContext);
             continue;
         }
         
         PagesPerSegment = current->Bcb->CacheSegmentSize / PAGE_SIZE;
 
         KeReleaseGuardedMutex(&ViewLock);
-        
+
         Status = CcRosFlushCacheSegment(current);
 
         ExReleasePushLock(&current->Lock);
-        ExReleaseResourceLite(((FSRTL_COMMON_FCB_HEADER*)(current->Bcb->FileObject->FsContext))->Resource);
-        ObDereferenceObject(current->Bcb->FileObject);
+        current->Bcb->Callbacks->ReleaseFromLazyWrite(
+            current->Bcb->LazyWriteContext);
 
         if (!NT_SUCCESS(Status) &&  (Status != STATUS_END_OF_FILE))
         {
@@ -711,7 +707,7 @@ CcRosCreateCacheSegment(PBCB Bcb,
      KEBUGCHECKCC;
   }
 #endif
-  Pfn = alloca(sizeof(PFN_TYPE) * (Bcb->CacheSegmentSize / PAGE_SIZE));
+  Pfn = alloca(sizeof(PFN_TYPE) * ((Bcb->CacheSegmentSize / PAGE_SIZE)));
   for (i = 0; i < (Bcb->CacheSegmentSize / PAGE_SIZE); i++)
   {
      Status = MmRequestPageMemoryConsumer(MC_CACHE, TRUE, &Pfn[i]);
@@ -729,6 +725,7 @@ CcRosCreateCacheSegment(PBCB Bcb,
   {
     KEBUGCHECKCC;
   }
+
   return(STATUS_SUCCESS);
 }
 
@@ -1259,9 +1256,11 @@ CcTryToInitializeFileCache(PFILE_OBJECT FileObject)
 }
 
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 CcRosInitializeFileCache(PFILE_OBJECT FileObject,
-			 ULONG CacheSegmentSize)
+                         ULONG CacheSegmentSize,
+                         PCACHE_MANAGER_CALLBACKS CallBacks,
+                         PVOID LazyWriterContext)
 /*
  * FUNCTION: Initializes a BCB for a file object
  */
@@ -1275,39 +1274,41 @@ CcRosInitializeFileCache(PFILE_OBJECT FileObject,
    KeAcquireGuardedMutex(&ViewLock);
    if (Bcb == NULL)
    {
-      Bcb = ExAllocateFromNPagedLookasideList(&BcbLookasideList);
-      if (Bcb == NULL)
-      {
-        KeReleaseGuardedMutex(&ViewLock);
-	return(STATUS_UNSUCCESSFUL);
-      }
-      memset(Bcb, 0, sizeof(BCB));
-      ObReferenceObjectByPointer(FileObject,
-			         FILE_ALL_ACCESS,
-			         NULL,
-			         KernelMode);
-      Bcb->FileObject = FileObject;
-      Bcb->CacheSegmentSize = CacheSegmentSize;
-      if (FileObject->FsContext)
-      {
-         Bcb->AllocationSize =
-	   ((PFSRTL_COMMON_FCB_HEADER)FileObject->FsContext)->AllocationSize;
-         Bcb->FileSize =
-	   ((PFSRTL_COMMON_FCB_HEADER)FileObject->FsContext)->FileSize;
-      }
-      KeInitializeSpinLock(&Bcb->BcbLock);
-      InitializeListHead(&Bcb->BcbSegmentListHead);
-      FileObject->SectionObjectPointer->SharedCacheMap = Bcb;
+       Bcb = ExAllocateFromNPagedLookasideList(&BcbLookasideList);
+       if (Bcb == NULL)
+       {
+           KeReleaseGuardedMutex(&ViewLock);
+           return(STATUS_UNSUCCESSFUL);
+       }
+       memset(Bcb, 0, sizeof(BCB));
+       ObReferenceObjectByPointer(FileObject,
+           FILE_ALL_ACCESS,
+           NULL,
+           KernelMode);
+       Bcb->FileObject = FileObject;
+       Bcb->CacheSegmentSize = CacheSegmentSize;
+       Bcb->Callbacks = CallBacks;
+       Bcb->LazyWriteContext = LazyWriterContext;
+       if (FileObject->FsContext)
+       {
+           Bcb->AllocationSize =
+               ((PFSRTL_COMMON_FCB_HEADER)FileObject->FsContext)->AllocationSize;
+           Bcb->FileSize =
+               ((PFSRTL_COMMON_FCB_HEADER)FileObject->FsContext)->FileSize;
+       }
+       KeInitializeSpinLock(&Bcb->BcbLock);
+       InitializeListHead(&Bcb->BcbSegmentListHead);
+       FileObject->SectionObjectPointer->SharedCacheMap = Bcb;
    }
    if (FileObject->PrivateCacheMap == NULL)
    {
-      FileObject->PrivateCacheMap = Bcb;
-      Bcb->RefCount++;
+       FileObject->PrivateCacheMap = Bcb;
+       Bcb->RefCount++;
    }
    if (Bcb->BcbRemoveListEntry.Flink != NULL)
    {
-      RemoveEntryList(&Bcb->BcbRemoveListEntry);
-      Bcb->BcbRemoveListEntry.Flink = NULL;
+       RemoveEntryList(&Bcb->BcbRemoveListEntry);
+       Bcb->BcbRemoveListEntry.Flink = NULL;
    }
    KeReleaseGuardedMutex(&ViewLock);
 

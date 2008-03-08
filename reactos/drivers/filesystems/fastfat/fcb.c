@@ -314,10 +314,6 @@ vfatGrabFCBFromTable(PDEVICE_EXTENSION  pVCB, PUNICODE_STRING  PathNameU)
 static NTSTATUS
 vfatFCBInitializeCacheFromVolume (PVCB  vcb, PVFATFCB  fcb)
 {
-#ifdef USE_ROS_CC_AND_FS
-	NTSTATUS  status;
-	ULONG  fileCacheQuantum;
-#endif
 	PFILE_OBJECT  fileObject;
 	PVFATCCB  newCCB;
 
@@ -336,25 +332,12 @@ vfatFCBInitializeCacheFromVolume (PVCB  vcb, PVFATFCB  fcb)
 	fcb->FileObject = fileObject;
 	fcb->RefCount++;
 
-#ifdef USE_ROS_CC_AND_FS
-	fileCacheQuantum = (vcb->FatInfo.BytesPerCluster >= PAGE_SIZE) ?
-		vcb->FatInfo.BytesPerCluster : PAGE_SIZE;
-
-	status = CcRosInitializeFileCache (fileObject,
-		fileCacheQuantum);
-	if (!NT_SUCCESS (status))
-	{
-		DbgPrint ("CcRosInitializeFileCache failed\n");
-		KEBUGCHECK (0);
-	}
-#else
 	/* FIXME: Guard by SEH. */
 	CcInitializeCacheMap(fileObject,
 		(PCC_FILE_SIZES)(&fcb->RFCB.AllocationSize),
 		FALSE,
 		&VfatGlobalData->CacheMgrCallbacks,
 		fcb);
-#endif
 
 	fcb->Flags |= FCB_CACHE_INITIALIZED;
 	return STATUS_SUCCESS;

@@ -671,19 +671,12 @@ VfatRead(PVFAT_IRP_CONTEXT IrpContext)
       CHECKPOINT;
       if (IrpContext->FileObject->PrivateCacheMap == NULL)
       {
-#ifdef USE_ROS_CC_AND_FS
-        ULONG CacheSize;
-        CacheSize = max(IrpContext->DeviceExt->FatInfo.BytesPerCluster,
-                        8 * PAGE_SIZE);
-        CcRosInitializeFileCache(IrpContext->FileObject, CacheSize);
-#else
         /* FIXME: Guard by SEH. */
         CcInitializeCacheMap(IrpContext->FileObject,
                              (PCC_FILE_SIZES)(&Fcb->RFCB.AllocationSize),
                              FALSE,
                              &(VfatGlobalData->CacheMgrCallbacks),
                              Fcb);
-#endif
       }
       if (!CcCopyRead(IrpContext->FileObject, &ByteOffset, Length,
                       (BOOLEAN)(IrpContext->Flags & IRPCONTEXT_CANWAIT), Buffer,
@@ -972,19 +965,12 @@ NTSTATUS VfatWrite (PVFAT_IRP_CONTEXT IrpContext)
 
       if (IrpContext->FileObject->PrivateCacheMap == NULL)
       {
-#ifdef USE_ROS_CC_AND_FS
-         ULONG CacheSize;
-         CacheSize = max(IrpContext->DeviceExt->FatInfo.BytesPerCluster,
-                         8 * PAGE_SIZE);
-	 CcRosInitializeFileCache(IrpContext->FileObject, CacheSize);
-#else
          /* FIXME: Guard by SEH. */
          CcInitializeCacheMap(IrpContext->FileObject,
                               (PCC_FILE_SIZES)(&Fcb->RFCB.AllocationSize),
                               FALSE,
                               &VfatGlobalData->CacheMgrCallbacks,
                               Fcb);
-#endif
       }
       if (ByteOffset.QuadPart > OldFileSize.QuadPart)
       {

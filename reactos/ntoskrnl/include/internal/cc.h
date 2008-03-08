@@ -112,6 +112,8 @@ typedef struct _BCB
     ULONG CacheSegmentSize;
     LARGE_INTEGER AllocationSize;
     LARGE_INTEGER FileSize;
+    PCACHE_MANAGER_CALLBACKS Callbacks;
+    PVOID LazyWriteContext;
     KSPIN_LOCK BcbLock;
     ULONG RefCount;
 #if defined(DBG) || defined(KDBG)

@@ -92,7 +92,8 @@ CcInitializeCacheMap (
 
     /* Call old ROS cache init function */
     CcRosInitializeFileCache(FileObject,
-        PAGE_SIZE/*VACB_MAPPING_GRANULARITY*/);
+        /*PAGE_SIZE*/ VACB_MAPPING_GRANULARITY, CallBacks,
+        LazyWriterContext);
 }
 
 /*
