@@ -400,21 +400,13 @@ NtfsMountVolume(PDEVICE_OBJECT DeviceObject,
 
 //  Fcb->Entry.ExtentLocationL = 0;
 //  Fcb->Entry.DataLengthL = DeviceExt->CdInfo.VolumeSpaceSize * BLOCKSIZE;
-#ifdef ROS_USE_CC_AND_FS
-  Status = CcRosInitializeFileCache(DeviceExt->StreamFileObject,
-                                    CACHEPAGESIZE(DeviceExt));
-  if (!NT_SUCCESS (Status))
-  {
-    DbgPrint("CcRosInitializeFileCache() failed (Status %lx)\n", Status);
-    goto ByeBye;
-  }
-#else
+
   CcInitializeCacheMap(DeviceExt->StreamFileObject,
                        (PCC_FILE_SIZES)(&Fcb->RFCB.AllocationSize),
                        FALSE,
                        NULL,
                        NULL);
-#endif
+
   ExInitializeResourceLite(&DeviceExt->DirResource);
 //  ExInitializeResourceLite(&DeviceExt->FatResource);
 

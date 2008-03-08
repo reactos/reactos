@@ -6,8 +6,6 @@
 #include <ntdddisk.h>
 #include <ccros.h>
 
-#define USE_ROS_CC_AND_FS
-
 #define CACHEPAGESIZE(pDeviceExt) \
 	((pDeviceExt)->NtfsInfo.UCHARsPerCluster > PAGE_SIZE ? \
 	 (pDeviceExt)->NtfsInfo.UCHARsPerCluster : PAGE_SIZE)

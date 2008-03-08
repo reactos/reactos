@@ -152,11 +152,7 @@ NtfsReleaseFCB(PDEVICE_EXTENSION Vcb,
   if (Fcb->RefCount <= 0 && !NtfsFCBIsDirectory(Fcb))
     {
       RemoveEntryList(&Fcb->FcbListEntry);
-#ifdef USE_ROS_CC_AND_FS
-      CcRosReleaseFileCache(Fcb->FileObject);
-#else
       CcUninitializeCacheMap (Fcb->FileObject, NULL, NULL);
-#endif
       NtfsDestroyFCB(Fcb);
     }
   KeReleaseSpinLock(&Vcb->FcbListLock, oldIrql);
@@ -242,22 +238,14 @@ NtfsFCBInitializeCache(PVCB Vcb,
   newCCB->PtrFileObject = FileObject;
   Fcb->FileObject = FileObject;
   Fcb->DevExt = Vcb;
-#ifdef ROS_USE_CC_AND_FS
-  Status = CcRosInitializeFileCache(FileObject,
-				    CACHEPAGESIZE(Vcb));
-  if (!NT_SUCCESS(Status))
-    {
-      DbgPrint("CcRosInitializeFileCache failed\n");
-      KEBUGCHECK(0);
-    }
-#else
+
   Status = STATUS_SUCCESS;
   CcInitializeCacheMap(FileObject,
                        (PCC_FILE_SIZES)(&Fcb->RFCB.AllocationSize),
                        FALSE,
                        NULL,
                        NULL);
-#endif
+
   ObDereferenceObject(FileObject);
   Fcb->Flags |= FCB_CACHE_INITIALIZED;
 
@@ -419,22 +407,12 @@ NtfsAttachFCBToFileObject(PDEVICE_EXTENSION Vcb,
 
   if (!(Fcb->Flags & FCB_CACHE_INITIALIZED))
     {
-#ifdef ROS_USE_CC_AND_FS
-      NTSTATUS Status;
-      Status = CcRosInitializeFileCache(FileObject,
-					CACHEPAGESIZE(Vcb));
-      if (!NT_SUCCESS(Status))
-	{
-	  DbgPrint("CcRosInitializeFileCache failed\n");
-	  KEBUGCHECK(0);
-	}
-#else
-  CcInitializeCacheMap(FileObject,
-                       (PCC_FILE_SIZES)(&Fcb->RFCB.AllocationSize),
-                       FALSE,
-                       NULL,
-                       NULL);
-#endif
+      CcInitializeCacheMap(FileObject,
+                           (PCC_FILE_SIZES)(&Fcb->RFCB.AllocationSize),
+                           FALSE,
+                           NULL,
+                           NULL);
+
       Fcb->Flags |= FCB_CACHE_INITIALIZED;
     }
 
