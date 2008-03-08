@@ -47,7 +47,7 @@
     <Compile Include="ErrorCommand.cs" />
     <Compile Include="HelpCommand.cs" />
     <Compile Include="HresultCommand.cs" />
-    <Compile Include="ICommand.cs" />
+    <Compile Include="Command.cs" />
     <Compile Include="IrcService.cs" />
     <Compile Include="MessageContext.cs" />
     <Compile Include="NtStatusCommand.cs" />
