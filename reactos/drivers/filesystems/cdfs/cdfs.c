@@ -33,7 +33,7 @@
 #define NDEBUG
 #include <debug.h>
 
-/* FUNCTIONS ****************************************************************/
+/* GLOBALS ******************************************************************/
 
 PCDFS_GLOBAL_DATA CdfsGlobalData;
 
@@ -98,9 +98,41 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
 
   DriverObject->DriverUnload = NULL;
 
+   /* Cache manager */
+  CdfsGlobalData->CacheMgrCallbacks.AcquireForLazyWrite = CdfsAcquireForLazyWrite;
+  CdfsGlobalData->CacheMgrCallbacks.ReleaseFromLazyWrite = CdfsReleaseFromLazyWrite;
+  CdfsGlobalData->CacheMgrCallbacks.AcquireForReadAhead = CdfsAcquireForLazyWrite;
+  CdfsGlobalData->CacheMgrCallbacks.ReleaseFromReadAhead = CdfsReleaseFromLazyWrite;
+
   IoRegisterFileSystem(DeviceObject);
   DeviceObject->Flags &= ~DO_DEVICE_INITIALIZING;
 
   return(STATUS_SUCCESS);
 }
 
+
+BOOLEAN NTAPI
+CdfsAcquireForLazyWrite(IN PVOID Context,
+                        IN BOOLEAN Wait)
+{
+	PFCB Fcb = (PFCB)Context;
+	ASSERT(Fcb);
+	DPRINT("CdfsAcquireForLazyWrite(): Fcb %p\n", Fcb);
+
+	if (!ExAcquireResourceExclusiveLite(&(Fcb->MainResource), Wait))
+	{
+		DPRINT("CdfsAcquireForLazyWrite(): ExReleaseResourceLite failed.\n");
+		return FALSE;
+	}
+	return TRUE;
+}
+
+VOID NTAPI
+CdfsReleaseFromLazyWrite(IN PVOID Context)
+{
+	PFCB Fcb = (PFCB)Context;
+	ASSERT(Fcb);
+	DPRINT("CdfsReleaseFromLazyWrite(): Fcb %p\n", Fcb);
+
+	ExReleaseResourceLite(&(Fcb->MainResource));
+}

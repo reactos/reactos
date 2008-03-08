@@ -245,8 +245,8 @@ CdfsFCBInitializeCache(PVCB Vcb,
   CcInitializeCacheMap(FileObject,
                        (PCC_FILE_SIZES)(&Fcb->RFCB.AllocationSize),
                        FALSE,
-                       NULL,
-                       NULL);
+                       &(CdfsGlobalData->CacheMgrCallbacks),
+                       Fcb);
 
   ObDereferenceObject(FileObject);
   Fcb->Flags |= FCB_CACHE_INITIALIZED;
@@ -430,8 +430,8 @@ CdfsAttachFCBToFileObject(PDEVICE_EXTENSION Vcb,
   CcInitializeCacheMap(FileObject,
                        (PCC_FILE_SIZES)(&Fcb->RFCB.AllocationSize),
                        FALSE,
-                       NULL,
-                       NULL);
+                       &(CdfsGlobalData->CacheMgrCallbacks),
+                       Fcb);
       Fcb->Flags |= FCB_CACHE_INITIALIZED;
     }
 

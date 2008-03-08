@@ -85,8 +85,8 @@ CdfsReadFile(PDEVICE_EXTENSION DeviceExt,
           CcInitializeCacheMap(FileObject,
                                (PCC_FILE_SIZES)(&Fcb->RFCB.AllocationSize),
 		               FALSE,
-		               NULL,
-		               NULL);
+		               &(CdfsGlobalData->CacheMgrCallbacks),
+		               Fcb);
 	}
 
       FileOffset.QuadPart = (LONGLONG)ReadOffset;

@@ -402,8 +402,8 @@ CdfsMountVolume(PDEVICE_OBJECT DeviceObject,
   CcInitializeCacheMap(DeviceExt->StreamFileObject,
                        (PCC_FILE_SIZES)(&Fcb->RFCB.AllocationSize),
 		       TRUE,
-		       NULL,
-		       NULL);
+		       &(CdfsGlobalData->CacheMgrCallbacks),
+		       Fcb);
 
   ExInitializeResourceLite(&DeviceExt->VcbResource);
   ExInitializeResourceLite(&DeviceExt->DirResource);

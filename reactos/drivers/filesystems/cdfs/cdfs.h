@@ -178,6 +178,7 @@ typedef struct _FCB
 {
   FSRTL_COMMON_FCB_HEADER RFCB;
   SECTION_OBJECT_POINTERS SectionObjectPointers;
+  ERESOURCE MainResource;
   ERESOURCE PagingIoResource;
 
   PFILE_OBJECT FileObject;
@@ -188,8 +189,6 @@ typedef struct _FCB
   WCHAR *ObjectName;		/* point on filename (250 chars max) in PathName */
   WCHAR PathName[MAX_PATH];	/* path+filename 260 max */
   WCHAR ShortNameBuffer[13];
-
-  ERESOURCE MainResource;
 
   LIST_ENTRY FcbListEntry;
   struct _FCB* ParentFcb;
@@ -233,6 +232,7 @@ typedef struct
   PDRIVER_OBJECT DriverObject;
   PDEVICE_OBJECT DeviceObject;
   ULONG Flags;
+  CACHE_MANAGER_CALLBACKS CacheMgrCallbacks;
 } CDFS_GLOBAL_DATA, *PCDFS_GLOBAL_DATA;
 
 extern PCDFS_GLOBAL_DATA CdfsGlobalData;
@@ -417,5 +417,12 @@ CdfsSetVolumeInformation(PDEVICE_OBJECT DeviceObject,
 NTSTATUS STDCALL
 DriverEntry(PDRIVER_OBJECT DriverObject,
 	    PUNICODE_STRING RegistryPath);
+
+BOOLEAN NTAPI
+CdfsAcquireForLazyWrite(IN PVOID Context,
+                        IN BOOLEAN Wait);
+
+VOID NTAPI
+CdfsReleaseFromLazyWrite(IN PVOID Context);
 
 #endif //CDFS_H
