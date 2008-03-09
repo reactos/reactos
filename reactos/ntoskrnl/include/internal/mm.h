@@ -56,6 +56,12 @@ typedef ULONG PFN_TYPE, *PPFN_TYPE;
 #define MM_PAGEOP_PAGESYNCH                 (3)
 #define MM_PAGEOP_ACCESSFAULT               (4)
 
+/* Number of list heads to use */
+#define MI_FREE_POOL_LISTS 4
+
+/* Signature of free pool blocks */
+#define MM_FREE_POOL_TAG    TAG('F', 'r', 'p', 'l')
+
 #define PAGE_TO_SECTION_PAGE_DIRECTORY_OFFSET(x) \
     ((x) / (4*1024*1024))
 
@@ -275,6 +281,8 @@ typedef struct _PHYSICAL_PAGE
             ULONG Type: 2;
             ULONG Consumer: 3;
             ULONG Zero: 1;
+            ULONG StartOfAllocation: 1;
+            ULONG EndOfAllocation: 1;
         }
         Flags;
         ULONG AllFlags;
@@ -336,6 +344,28 @@ typedef struct _MM_REGION
     ULONG Length;
     LIST_ENTRY RegionListEntry;
 } MM_REGION, *PMM_REGION;
+
+/* Entry describing free pool memory */
+typedef struct _MMFREE_POOL_ENTRY
+{
+    LIST_ENTRY List;
+    PFN_NUMBER Size;
+    ULONG Signature;
+    struct _MMFREE_POOL_ENTRY *Owner;
+} MMFREE_POOL_ENTRY, *PMMFREE_POOL_ENTRY;
+
+/* Paged pool information */
+typedef struct _MM_PAGED_POOL_INFO
+{  
+    PRTL_BITMAP PagedPoolAllocationMap;
+    PRTL_BITMAP EndOfPagedPoolBitmap;
+    PMMPTE FirstPteForPagedPool;
+    PMMPTE LastPteForPagedPool;
+    PMMPTE NextPdeForPagedPoolExpansion;
+    ULONG PagedPoolHint;
+    SIZE_T PagedPoolCommit;
+    SIZE_T AllocatedPagedPool;
+} MM_PAGED_POOL_INFO, *PMM_PAGED_POOL_INFO;
 
 extern MM_MEMORY_CONSUMER MiMemoryConsumers[MC_MAXIMUM];
 
@@ -486,6 +516,25 @@ MiDebugDumpNonPagedPoolStats(BOOLEAN NewOnly);
 VOID
 NTAPI
 MiInitializeNonPagedPool(VOID);
+
+PVOID
+NTAPI
+MiAllocatePoolPages(
+    IN POOL_TYPE PoolType,
+    IN SIZE_T SizeInBytes
+);
+
+POOL_TYPE
+NTAPI
+MmDeterminePoolType(
+    IN PVOID VirtualAddress
+);
+
+ULONG
+NTAPI
+MiFreePoolPages(
+    IN PVOID StartingAddress
+);
 
 PVOID
 NTAPI
@@ -935,6 +984,29 @@ NTAPI
 MmPageOutPhysicalAddress(PFN_TYPE Page);
 
 /* freelist.c **********************************************************/
+
+#define ASSERT_PFN(x) ASSERT((x)->Flags.Type != 0)
+
+FORCEINLINE
+PPHYSICAL_PAGE
+MiGetPfnEntry(IN PFN_TYPE Pfn)
+{
+    PPHYSICAL_PAGE Page;
+    extern PPHYSICAL_PAGE MmPageArray;
+    extern ULONG MmPageArraySize;
+
+    /* Make sure the PFN number is valid */
+    ASSERT(Pfn <= MmPageArraySize);
+
+    /* Get the entry */
+    Page = &MmPageArray[Pfn];
+
+    /* Make sure it's valid */
+    ASSERT_PFN(Page);
+
+    /* Return it */
+    return Page;
+};
 
 PFN_TYPE
 NTAPI

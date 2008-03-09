@@ -25,12 +25,9 @@
 #define MM_PHYSICAL_PAGE_USED    (0x2)
 #define MM_PHYSICAL_PAGE_BIOS    (0x3)
 
-
-#define ASSERT_PFN(x) ASSERT((x)->Flags.Type != 0)
-
 /* GLOBALS ****************************************************************/
 
-static PPHYSICAL_PAGE MmPageArray;
+PPHYSICAL_PAGE MmPageArray;
 ULONG MmPageArraySize;
 
 static KSPIN_LOCK PageListLock;
@@ -44,25 +41,6 @@ static BOOLEAN ZeroPageThreadShouldTerminate = FALSE;
 static ULONG UnzeroedPageCount = 0;
 
 /* FUNCTIONS *************************************************************/
-
-FORCEINLINE
-PPHYSICAL_PAGE
-MiGetPfnEntry(IN PFN_TYPE Pfn)
-{
-    PPHYSICAL_PAGE Page;
-
-    /* Make sure the PFN number is valid */
-    ASSERT(Pfn <= MmPageArraySize);
-
-    /* Get the entry */
-    Page = &MmPageArray[Pfn];
-
-    /* Make sure it's valid */
-    ASSERT_PFN(Page);
-
-    /* Return it */
-    return Page;
-}
 
 PFN_TYPE
 NTAPI
