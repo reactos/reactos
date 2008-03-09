@@ -619,9 +619,8 @@ AbortDoc(
 int
 STDCALL
 SetAbortProc(
-	HDC		hdc,
-	ABORTPROC	a1
-	)
+	HDC hdc,
+	ABORTPROC lpAbortProc)
 {
 	UNIMPLEMENTED;
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
@@ -1519,7 +1518,7 @@ Escape(HDC hdc, INT nEscape, INT cbInput, LPCSTR lpvInData, LPVOID lpvOutData)
     {
         switch (nEscape)
         {
-            case ABORTDOC:                
+            case ABORTDOC:        
                 /* Note Winodws check see if the handle have any user data for ABORTDOC command 
                  * ReactOS copy this behoir to be compatible with windows 2003 
                  */
@@ -1535,7 +1534,35 @@ Escape(HDC hdc, INT nEscape, INT cbInput, LPCSTR lpvInData, LPVOID lpvOutData)
                  }
                 break;
 
-            case GETCOLORTABLE:            
+            case DRAFTMODE:
+            case FLUSHOUTPUT:
+            case SETCOLORTABLE:
+                /* Note 1: DRAFTMODE, FLUSHOUTPUT, SETCOLORTABLE is outdated and been replace with other api */
+                /* Note 2: Winodws check see if the handle have any user data for DRAFTMODE, FLUSHOUTPUT, SETCOLORTABLE command 
+                 * ReactOS copy this behoir to be compatible with windows 2003 
+                 */
+                if ( (!GdiGetHandleUserData(hObject, (DWORD)Type, (PVOID) &pUserData)) ||  
+                     (pUserData == NULL) ) 
+                {
+                    GdiSetLastError(ERROR_INVALID_HANDLE);
+                }
+                retValue = FALSE;
+                break;
+
+            case SETABORTPROC:
+                /* Note : Winodws check see if the handle have any user data for DRAFTMODE, FLUSHOUTPUT, SETCOLORTABLE command 
+                 * ReactOS copy this behoir to be compatible with windows 2003 
+                 */
+                if ( (!GdiGetHandleUserData(hObject, (DWORD)Type, (PVOID) &pUserData)) ||  
+                     (pUserData == NULL) ) 
+                {
+                    GdiSetLastError(ERROR_INVALID_HANDLE);
+                    retValue = FALSE;
+                }
+                retValue = SetAbortProc(hdc, (ABORTPROC)lpvInData);
+                break;
+
+            case GETCOLORTABLE:
                 retValue = GetSystemPaletteEntries(hdc, (UINT)*lpvInData, 1, (LPPALETTEENTRY)lpvOutData);
                 if ( !retValue )
                 {
@@ -1543,11 +1570,7 @@ Escape(HDC hdc, INT nEscape, INT cbInput, LPCSTR lpvInData, LPVOID lpvOutData)
                 }            
                 break;
 
-            case GETEXTENDEDTEXTMETRICS:
-                retValue = (int) GetETM( hdc, (EXTTEXTMETRIC *) lpvOutData) != 0;
-                break;
-                
-            case GETSCALINGFACTOR:       
+            case GETSCALINGFACTOR:
                 /* Note GETSCALINGFACTOR is outdated have been replace by GetDeviceCaps */
                 if ( Type == GDI_OBJECT_TYPE_DC )
                 {                
@@ -1560,6 +1583,13 @@ Escape(HDC hdc, INT nEscape, INT cbInput, LPCSTR lpvInData, LPVOID lpvOutData)
                 }                                
                 retValue = FALSE;
                 break;
+
+            case GETEXTENDEDTEXTMETRICS:
+                retValue = (int) GetETM( hdc, (EXTTEXTMETRIC *) lpvOutData) != 0;
+                break;
+                
+            
+
 
             default:
                 UNIMPLEMENTED;
