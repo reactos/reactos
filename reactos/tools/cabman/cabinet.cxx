@@ -116,7 +116,7 @@ CCFDATAStorage::~CCFDATAStorage()
 }
 
 
-ULONG CCFDATAStorage::Create(char* FileName)
+ULONG CCFDATAStorage::Create(const char* FileName)
 /*
  * FUNCTION: Creates the file
  * ARGUMENTS:
@@ -1477,6 +1477,7 @@ ULONG CCabinet::NewCabinet()
  */
 {
     ULONG Status;
+	CHAR const TempName[9] = { '~', 'C', 'A', 'B', '.', 't', 'm', 'p', '0' };
 
     CurrentDiskNumber = 0;
 
@@ -1528,7 +1529,7 @@ ULONG CCabinet::NewCabinet()
         return CAB_STATUS_NOMEMORY;
     }
 
-    Status = ScratchFile->Create("~CAB.tmp");
+    Status = ScratchFile->Create(TempName);
 
     CreateNewFolder = false;
 
