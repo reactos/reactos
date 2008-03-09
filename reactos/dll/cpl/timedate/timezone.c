@@ -89,7 +89,7 @@ CreateTimeZoneList(VOID)
                                NULL,
                                NULL,
                                NULL);
-        if (lError != ERROR_SUCCESS && lError != ERROR_MORE_DATA)
+        if (lError == ERROR_NO_MORE_ITEMS)
             break;
 
         if (RegOpenKeyEx (hZonesKey,
@@ -107,15 +107,18 @@ CreateTimeZoneList(VOID)
         }
 
         dwValueSize = 64 * sizeof(WCHAR);
-        if (RegQueryValueExW(hZoneKey,
+        lError = RegQueryValueExW(hZoneKey,
                              L"Display",
                              NULL,
                              NULL,
                              (LPBYTE)&Entry->Description,
-                             &dwValueSize))
+                             &dwValueSize);
+        if (lError != ERROR_SUCCESS)
         {
             RegCloseKey(hZoneKey);
-            break;
+            dwIndex++;
+            HeapFree(GetProcessHeap(), 0, Entry);
+            continue;
         }
 
         dwValueSize = 33 * sizeof(WCHAR);
