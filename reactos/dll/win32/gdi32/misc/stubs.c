@@ -1502,35 +1502,54 @@ int
 STDCALL
 Escape(HDC hdc, INT nEscape, INT cbInput, LPCSTR lpvInData, LPVOID lpvOutData)
 {
-    int retValue = -1;
+    int retValue = -1;    
+    HGDIOBJ hObject = hdc;
+    UINT Type = 0;
 
-    /* FIXME gdi share memory */
+    Type = GDI_HANDLE_GET_TYPE(hObject);
 
-    if (nEscape == GETCOLORTABLE)
+    if (Type == GDI_OBJECT_TYPE_METADC)
     {
-        retValue = GetSystemPaletteEntries(hdc, (UINT)*lpvInData, 1, (LPPALETTEENTRY)lpvOutData);
-        if ( !retValue )
+        /* FIXME we do not support metafile */
+        UNIMPLEMENTED;
+        SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    }
+    else
+    {
+        switch (nEscape)
         {
-            retValue = -1;        
+            case GETCOLORTABLE:            
+                retValue = GetSystemPaletteEntries(hdc, (UINT)*lpvInData, 1, (LPPALETTEENTRY)lpvOutData);
+                if ( !retValue )
+                {
+                    retValue = -1;        
+                }            
+                break;
+
+            case GETEXTENDEDTEXTMETRICS:
+                retValue = (int) GetETM( hdc, (EXTTEXTMETRIC *) lpvOutData) != 0;
+                break;
+                
+            case GETSCALINGFACTOR:       
+                /* Note GETSCALINGFACTOR is outdated have been replace by GetDeviceCaps */
+                if ( Type == GDI_OBJECT_TYPE_DC )
+                {                
+                    if ( lpvOutData )
+                    {
+                        PPOINT ptr = (PPOINT) lpvOutData;
+                        ptr->x = 0;
+                        ptr->y = 0;                            
+                    }
+                }                                
+                retValue = 0;
+                break;
+
+            default:
+                UNIMPLEMENTED;
+                SetLastError(ERROR_CALL_NOT_IMPLEMENTED);                
         }
-
-        /* FIXME tempary until Escape are completed */
-        return retValue;
     }
-    else if (nEscape == GETEXTENDEDTEXTMETRICS)
-    {
-        retValue = (int) GetETM( hdc, (EXTTEXTMETRIC *) lpvOutData) != 0;
-
-        /* FIXME tempary until Escape are completed */
-        return retValue;
-    }
-    else if ( nEscape != QUERYESCSUPPORT )
-    {
     
-    }
-
-    UNIMPLEMENTED;
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return retValue;
 }
 
