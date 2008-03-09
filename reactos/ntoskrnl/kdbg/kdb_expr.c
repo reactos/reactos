@@ -16,8 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id$
- *
+/*
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/dbg/kdb_expr.c
  * PURPOSE:         Kernel debugger expression evaluation

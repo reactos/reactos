@@ -1,5 +1,4 @@
-/* $Id: pfault.c 24443 2006-10-08 10:01:27Z arty $
- *
+/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/powerpc/pfault.c

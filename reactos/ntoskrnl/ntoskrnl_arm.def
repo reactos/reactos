@@ -1,5 +1,3 @@
-; $Id: ntoskrnl.def 31476 2007-12-28 14:39:43Z hpoussin $
-;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
 ; ReactOS Operating System

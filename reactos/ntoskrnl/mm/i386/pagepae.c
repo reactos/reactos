@@ -1,5 +1,4 @@
-/* $Id: page.c 32364 2008-02-14 20:30:31Z ros-arm-bringup $
- *
+/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/i386/page.c

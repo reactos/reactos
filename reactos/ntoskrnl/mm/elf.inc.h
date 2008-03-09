@@ -1,6 +1,3 @@
-/* $Id$
-*/
-
 #define NDEBUG
 #include <internal/debug.h>
 

@@ -1,5 +1,4 @@
-/* $Id: page.c 23907 2006-09-04 05:52:23Z arty $
- *
+/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/i386/page.c
