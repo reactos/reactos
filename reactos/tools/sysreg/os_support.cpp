@@ -246,7 +246,7 @@ __inline int gettimeofday(struct timeval *tv, struct timezone *tz)
 	struct sigaction OsSupport::s_sact;
 
 
-	OsSupport::ProcessID OsSupport::createProcess(char *procname, int procargsnum, char **procargs, bool bWait)
+	OsSupport::ProcessID OsSupport::createProcess(const char *procname, int procargsnum, const char **procargs, bool bWait)
 	{
 		ProcessID pid;
 
