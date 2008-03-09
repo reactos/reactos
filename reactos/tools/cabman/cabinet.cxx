@@ -1477,7 +1477,6 @@ ULONG CCabinet::NewCabinet()
  */
 {
     ULONG Status;
-	CHAR const TempName[9] = { '~', 'C', 'A', 'B', '.', 't', 'm', 'p', '0' };
 
     CurrentDiskNumber = 0;
 
@@ -1529,7 +1528,7 @@ ULONG CCabinet::NewCabinet()
         return CAB_STATUS_NOMEMORY;
     }
 
-    Status = ScratchFile->Create(TempName);
+    Status = ScratchFile->Create("~CAB.tmp");
 
     CreateNewFolder = false;
 

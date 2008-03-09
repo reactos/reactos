@@ -85,7 +85,7 @@ namespace Sysreg_
     bool RosBootTest::executeBootCmd()
     {
         int numargs = 0;
-        char * args[128];
+        const char * args[128];
         char * pBuf;
         char szBuffer[128];
 
@@ -191,25 +191,25 @@ namespace Sysreg_
         }
        remove(image.c_str ());
 
-        char * options[] = {NULL,
-                             "create",
-                             "-f",
+        const char * options[] = {NULL,
+                                  "create",
+                                  "-f",
 #ifdef __LINUX__
-                            "raw",
+                                  "raw",
 #else
-                            "vmdk",
+                                  "vmdk",
 #endif
-                            NULL,
-                            "100M",
-                            NULL
-                            };
+                                  NULL,
+                                  "100M",
+                                  NULL
+                                  };
 
 
-        options[0] = (char*)qemuimgdir.c_str();
-        options[4] = (char*)image.c_str();
+        options[0] = qemuimgdir.c_str();
+        options[4] = image.c_str();
 
         cerr << "Creating HDD Image ..." << image << endl;
-        OsSupport::createProcess ((char*)qemuimgdir.c_str(), 6, options, true);
+        OsSupport::createProcess (qemuimgdir.c_str(), 6, options, true);
         if (isFileExisting(image))
         {
             m_HDDImage = image;

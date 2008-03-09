@@ -69,7 +69,7 @@ namespace System_
 ///
 ///
 
-		static ProcessID createProcess(char * procname, int procargsnum, char ** procargs, bool wait);
+		static ProcessID createProcess(const char * procname, int procargsnum, const char ** procargs, bool wait);
 
 //---------------------------------------------------------------------------------------
 ///

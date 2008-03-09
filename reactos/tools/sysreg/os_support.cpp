@@ -122,7 +122,7 @@ __inline int gettimeofday(struct timeval *tv, struct timezone *tz)
 		return ret;
 	}
 
-	OsSupport::ProcessID OsSupport::createProcess(char *procname, int procargsnum, char **procargs, bool wait)
+	OsSupport::ProcessID OsSupport::createProcess(const char *procname, int procargsnum, const char **procargs, bool wait)
 	{
 		STARTUPINFO siStartInfo;
 		PROCESS_INFORMATION piProcInfo;
