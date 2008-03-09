@@ -1250,6 +1250,9 @@ Rule arRule1 ( "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).a: 
 Rule arRule2 ( "\t$(ECHO_AR)\n"
               "\t${ar} -rc $@ $($(module_name)_OBJS)\n",
               NULL );
+Rule arHostRule2 ( "\t$(ECHO_AR)\n"
+                   "\t${host_ar} -rc $@ $($(module_name)_OBJS)\n",
+                   NULL );
 Rule gasRule ( "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).o: $(source) ${$(module_name)_precondition}$(dependencies) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
                "\t$(ECHO_GAS)\n"
                "\t${gcc} -x assembler-with-cpp -c $< -o $@ -D__ASM__ $($(module_name)_CFLAGS)\n",
@@ -1861,7 +1864,10 @@ MingwModuleHandler::GenerateArchiveTarget ()
 		delete definitionFilename;
 	}
 
-	arRule2.Execute ( fMakefile, backend, module, archiveFilename, clean_files );
+    if(module.type == HostStaticLibrary)
+        arHostRule2.Execute ( fMakefile, backend, module, archiveFilename, clean_files );
+    else
+        arRule2.Execute ( fMakefile, backend, module, archiveFilename, clean_files );
 
 	GenerateCleanObjectsAsYouGoCode ();
 
