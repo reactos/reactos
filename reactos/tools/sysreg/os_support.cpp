@@ -257,7 +257,7 @@ __inline int gettimeofday(struct timeval *tv, struct timezone *tz)
 		}
 		if (pid == 0)
 		{
-			execv(procname, procargs);
+			execv(procname, (char* const*)procargs);
 			return 0;
 		}
         else
