@@ -5,29 +5,27 @@
 #ifndef __NTOSKRNL_INCLUDE_INTERNAL_I386_MM_H
 #define __NTOSKRNL_INCLUDE_INTERNAL_I386_MM_H
 
-#if 0
-/*
- * Page access attributes (or these together)
- */
-#define PA_READ            (1<<0)
-#define PA_WRITE           ((1<<0)+(1<<1))
-#define PA_EXECUTE         PA_READ
-#define PA_PCD             (1<<4)
-#define PA_PWT             (1<<3)
-
-/*
- * Page attributes
- */
-#define PA_USER            (1<<2)
-#define PA_SYSTEM          (0)
-#endif
-
 struct _EPROCESS;
 PULONG MmGetPageDirectory(VOID);
 
-
-
 #define PAGE_MASK(x)		((x)&(~0xfff))
 #define PAE_PAGE_MASK(x)	((x)&(~0xfffLL))
+
+/* Base addresses of PTE and PDE */
+#define PAGETABLE_MAP       (0xc0000000)
+#define PAGEDIRECTORY_MAP   (0xc0000000 + (PAGETABLE_MAP / (1024)))
+
+/* Converting address to a corresponding PDE or PTE entry */
+#define MiAddressToPde(x) \
+    ((PMMPTE)(((((ULONG)(x)) >> 22) << 2) + PAGEDIRECTORY_MAP))
+#define MiAddressToPte(x) \
+    ((PMMPTE)(((((ULONG)(x)) >> 12) << 2) + PAGETABLE_MAP))
+
+#define ADDR_TO_PAGE_TABLE(v) (((ULONG)(v)) / (1024 * PAGE_SIZE))
+#define ADDR_TO_PDE_OFFSET(v) ((((ULONG)(v)) / (1024 * PAGE_SIZE)))
+#define ADDR_TO_PTE_OFFSET(v)  ((((ULONG)(v)) % (1024 * PAGE_SIZE)) / PAGE_SIZE)
+
+/* Easy accessing PFN in PTE */
+#define PFN_FROM_PTE(v) ((v)->u.Hard.PageFrameNumber)
 
 #endif /* __NTOSKRNL_INCLUDE_INTERNAL_I386_MM_H */

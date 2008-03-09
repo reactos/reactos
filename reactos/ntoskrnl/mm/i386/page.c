@@ -39,9 +39,6 @@
 #define PA_ACCESSED  (1 << PA_BIT_ACCESSED)
 #define PA_GLOBAL    (1 << PA_BIT_GLOBAL)
 
-#define PAGETABLE_MAP		(0xc0000000)
-#define PAGEDIRECTORY_MAP	(0xc0000000 + (PAGETABLE_MAP / (1024)))
-
 #define HYPERSPACE		(0xc0400000)
 #define IS_HYPERSPACE(v)	(((ULONG)(v) >= HYPERSPACE && (ULONG)(v) < HYPERSPACE + 0x400000))
 
@@ -141,17 +138,6 @@ ProtectToPTE(ULONG flProtect)
    }
    return(Attributes);
 }
-
-#define ADDR_TO_PAGE_TABLE(v) (((ULONG)(v)) / (1024 * PAGE_SIZE))
-
-#define ADDR_TO_PDE(v) (PULONG)(PAGEDIRECTORY_MAP + \
-                                ((((ULONG)(v)) / (1024 * 1024))&(~0x3)))
-#define ADDR_TO_PTE(v) (PULONG)(PAGETABLE_MAP + ((((ULONG)(v) / 1024))&(~0x3)))
-
-#define ADDR_TO_PDE_OFFSET(v) ((((ULONG)(v)) / (1024 * PAGE_SIZE)))
-
-#define ADDR_TO_PTE_OFFSET(v)  ((((ULONG)(v)) % (1024 * PAGE_SIZE)) / PAGE_SIZE)
-
 
 NTSTATUS
 NTAPI
@@ -294,8 +280,9 @@ MmDeletePageTable(PEPROCESS Process, PVOID Address)
       KeAttachProcess(&Process->Pcb);
    }
 
-      *(ADDR_TO_PDE(Address)) = 0;
-      MiFlushTlb(ADDR_TO_PDE(Address), ADDR_TO_PTE(Address));
+      MiAddressToPde(Address)->u.Long = 0;
+      MiFlushTlb((PULONG)MiAddressToPde(Address),
+          MiAddressToPte(Address));
 
    if (Address >= MmSystemRangeStart)
    {
@@ -323,7 +310,7 @@ MmFreePageTable(PEPROCESS Process, PVOID Address)
       KeAttachProcess(&Process->Pcb);
    }
 
-      PageTable = (PULONG)PAGE_ROUND_DOWN((PVOID)ADDR_TO_PTE(Address));
+      PageTable = (PULONG)PAGE_ROUND_DOWN((PVOID)MiAddressToPte(Address));
       for (i = 0; i < 1024; i++)
       {
          if (PageTable[i] != 0)
@@ -333,9 +320,9 @@ MmFreePageTable(PEPROCESS Process, PVOID Address)
             KEBUGCHECK(0);
          }
       }
-      Pfn = PTE_TO_PFN(*(ADDR_TO_PDE(Address)));
-      *(ADDR_TO_PDE(Address)) = 0;
-      MiFlushTlb(ADDR_TO_PDE(Address), ADDR_TO_PTE(Address));
+      Pfn = MiAddressToPde(Address)->u.Hard.PageFrameNumber;
+      MiAddressToPde(Address)->u.Long = 0;
+      MiFlushTlb((PULONG)MiAddressToPde(Address), MiAddressToPte(Address));
 
    if (Address >= MmSystemRangeStart)
    {
@@ -399,7 +386,7 @@ MmGetPageTableForProcess(PEPROCESS Process, PVOID Address, BOOLEAN Create)
       }
       return Pt + ADDR_TO_PTE_OFFSET(Address);
    }
-   PageDir = ADDR_TO_PDE(Address);
+   PageDir = (PULONG)MiAddressToPde(Address);
    if (0 == InterlockedCompareExchangeUL(PageDir, 0, 0))
    {
       if (Address >= MmSystemRangeStart)
@@ -445,7 +432,7 @@ MmGetPageTableForProcess(PEPROCESS Process, PVOID Address, BOOLEAN Create)
 	 }
       }
    }
-   return (PULONG)ADDR_TO_PTE(Address);
+   return (PULONG)MiAddressToPte(Address);
 }
 
 BOOLEAN MmUnmapPageTable(PULONG Pt)
@@ -693,7 +680,7 @@ BOOLEAN
 Mmi386MakeKernelPageTableGlobal(PVOID PAddress)
 {
       PULONG Pt, Pde;
-      Pde = ADDR_TO_PDE(PAddress);
+      Pde = (PULONG)MiAddressToPde(PAddress);
       if (*Pde == 0)
       {
          Pt = MmGetPageTableForProcess(NULL, PAddress, FALSE);
@@ -1274,7 +1261,7 @@ MmCreateHyperspaceMapping(PFN_TYPE Page)
       ULONG Entry;
       PULONG Pte;
       Entry = PFN_TO_PTE(Page) | PA_PRESENT | PA_READWRITE;
-      Pte = ADDR_TO_PTE(HYPERSPACE) + Page % 1024;
+      Pte = (PULONG)MiAddressToPte(HYPERSPACE) + Page % 1024;
       if (Page & 1024)
       {
          for (i = Page % 1024; i < 1024; i++, Pte++)
@@ -1286,7 +1273,7 @@ MmCreateHyperspaceMapping(PFN_TYPE Page)
          }
          if (i >= 1024)
          {
-            Pte = ADDR_TO_PTE(HYPERSPACE);
+            Pte = (PULONG)MiAddressToPte(HYPERSPACE);
             for (i = 0; i < Page % 1024; i++, Pte++)
             {
                if (0 == InterlockedCompareExchange((PLONG)Pte, (LONG)Entry, 0))
@@ -1311,7 +1298,7 @@ MmCreateHyperspaceMapping(PFN_TYPE Page)
          }
          if ((LONG)i < 0)
          {
-            Pte = ADDR_TO_PTE(HYPERSPACE) + 1023;
+            Pte = (PULONG)MiAddressToPte(HYPERSPACE) + 1023;
             for (i = 1023; i > Page % 1024; i--, Pte--)
             {
                if (0 == InterlockedCompareExchange((PLONG)Pte, (LONG)Entry, 0))
@@ -1339,7 +1326,7 @@ MmChangeHyperspaceMapping(PVOID Address, PFN_TYPE NewPage)
 
    ASSERT (IS_HYPERSPACE(Address));
 
-      Entry = InterlockedExchange((PLONG)ADDR_TO_PTE(Address), PFN_TO_PTE(NewPage) | PA_PRESENT | PA_READWRITE);
+      Entry = InterlockedExchange((PLONG)MiAddressToPte(Address), PFN_TO_PTE(NewPage) | PA_PRESENT | PA_READWRITE);
       Pfn = PTE_TO_PFN(Entry);
 
    __invlpg(Address);
@@ -1355,7 +1342,7 @@ MmDeleteHyperspaceMapping(PVOID Address)
 
    ASSERT (IS_HYPERSPACE(Address));
 
-      Entry = InterlockedExchange((PLONG)ADDR_TO_PTE(Address), 0);
+      Entry = InterlockedExchange((PLONG)MiAddressToPte(Address), 0);
       Pfn = PTE_TO_PFN(Entry);
 
    __invlpg(Address);
