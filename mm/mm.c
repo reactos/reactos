@@ -1,5 +1,4 @@
-/* $Id$
- *
+/*
  * COPYRIGHT:       See COPYING in the top directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/mm.c

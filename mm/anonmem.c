@@ -1,5 +1,4 @@
-/* $Id$
- *
+/*
  * Copyright (C) 2002-2005 ReactOS Team (and the authors from the programmers section)
  *
  * This program is free software; you can redistribute it and/or
