@@ -1505,6 +1505,7 @@ Escape(HDC hdc, INT nEscape, INT cbInput, LPCSTR lpvInData, LPVOID lpvOutData)
     int retValue = -1;    
     HGDIOBJ hObject = hdc;
     UINT Type = 0;
+    LPVOID pUserData = NULL;
 
     Type = GDI_HANDLE_GET_TYPE(hObject);
 
@@ -1518,6 +1519,22 @@ Escape(HDC hdc, INT nEscape, INT cbInput, LPCSTR lpvInData, LPVOID lpvOutData)
     {
         switch (nEscape)
         {
+            case ABORTDOC:                
+                /* Note Winodws check see if the handle have any user data for ABORTDOC command 
+                 * ReactOS copy this behoir to be compatible with windows 2003 
+                 */
+                if ( (!GdiGetHandleUserData(hObject, (DWORD)Type, (PVOID) &pUserData)) ||  
+                      (pUserData == NULL) ) 
+                 {
+                     GdiSetLastError(ERROR_INVALID_HANDLE);
+                     retValue = FALSE;
+                 }
+                 else
+                 {
+                    retValue = AbortDoc(hdc);
+                 }
+                break;
+
             case GETCOLORTABLE:            
                 retValue = GetSystemPaletteEntries(hdc, (UINT)*lpvInData, 1, (LPPALETTEENTRY)lpvOutData);
                 if ( !retValue )
@@ -1541,7 +1558,7 @@ Escape(HDC hdc, INT nEscape, INT cbInput, LPCSTR lpvInData, LPVOID lpvOutData)
                         ptr->y = 0;                            
                     }
                 }                                
-                retValue = 0;
+                retValue = FALSE;
                 break;
 
             default:
