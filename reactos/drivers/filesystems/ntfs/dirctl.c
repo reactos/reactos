@@ -477,10 +477,11 @@ CdfsGetBothDirectoryInformation(PFCB Fcb,
 }
 #endif
 
-static NTSTATUS
-NtfsQueryDirectory(PDEVICE_OBJECT DeviceObject,
-		   PIRP Irp)
+NTSTATUS
+NtfsQueryDirectory(PNTFS_IRP_CONTEXT IrpContext)
 {
+  PIRP Irp;
+  PDEVICE_OBJECT DeviceObject;
   PDEVICE_EXTENSION DeviceExtension;
   LONG BufferLength = 0;
   PUNICODE_STRING SearchPattern = NULL;
@@ -497,6 +498,10 @@ NtfsQueryDirectory(PDEVICE_OBJECT DeviceObject,
   NTSTATUS Status = STATUS_SUCCESS;
 
   DPRINT1("NtfsQueryDirectory() called\n");
+
+  ASSERT(IrpContext);
+  Irp = IrpContext->Irp;
+  DeviceObject = IrpContext->DeviceObject;
 
   DeviceExtension = DeviceObject->DeviceExtension;
   Stack = IoGetCurrentIrpStackLocation(Irp);
@@ -672,37 +677,49 @@ NTSTATUS NTAPI
 NtfsFsdDirectoryControl(PDEVICE_OBJECT DeviceObject,
                         PIRP Irp)
 {
-  PIO_STACK_LOCATION Stack;
-  NTSTATUS Status;
+  PNTFS_IRP_CONTEXT IrpContext = NULL;
+  NTSTATUS Status = STATUS_UNSUCCESSFUL;
 
   DPRINT1("NtfsDirectoryControl() called\n");
 
-  Stack = IoGetCurrentIrpStackLocation(Irp);
+  FsRtlEnterFileSystem();
+  ASSERT(DeviceObject);
+  ASSERT(Irp);
 
-  switch (Stack->MinorFunction)
+  NtfsIsIrpTopLevel(Irp);
+
+  IrpContext = NtfsAllocateIrpContext(DeviceObject, Irp);
+  if (IrpContext)
   {
-    case IRP_MN_QUERY_DIRECTORY:
-      Status = NtfsQueryDirectory(DeviceObject,
-                                  Irp);
-      break;
-
-    case IRP_MN_NOTIFY_CHANGE_DIRECTORY:
-      DPRINT1("IRP_MN_NOTIFY_CHANGE_DIRECTORY\n");
-      Status = STATUS_NOT_IMPLEMENTED;
-      break;
-
-    default:
-      DPRINT1("NTFS: MinorFunction %d\n", Stack->MinorFunction);
-      Status = STATUS_INVALID_DEVICE_REQUEST;
-      break;
+    switch (IrpContext->MinorFunction)
+    {
+      case IRP_MN_QUERY_DIRECTORY:
+        Status = NtfsQueryDirectory(IrpContext);
+        break;
+      
+      case IRP_MN_NOTIFY_CHANGE_DIRECTORY:
+        DPRINT1("IRP_MN_NOTIFY_CHANGE_DIRECTORY\n");
+        Status = STATUS_NOT_IMPLEMENTED;
+        break;
+        
+      default:
+        Status = STATUS_INVALID_DEVICE_REQUEST;
+        break;
+    }
   }
-
+  else
+    Status = STATUS_INSUFFICIENT_RESOURCES;
+  
   Irp->IoStatus.Status = Status;
   Irp->IoStatus.Information = 0;
-
   IoCompleteRequest(Irp, IO_NO_INCREMENT);
-
-  return(Status);
+  
+  if (IrpContext)
+    ExFreePoolWithTag(IrpContext, TAG('N', 'I', 'R', 'P'));
+  
+  IoSetTopLevelIrp(NULL);
+  FsRtlExitFileSystem();
+  return Status;
 }
 
 /* EOF */

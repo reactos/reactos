@@ -74,20 +74,24 @@ NtfsAllocateIrpContext(PDEVICE_OBJECT DeviceObject,
   
   TRACE_(NTFS, "NtfsAllocateIrpContext()\n");
   
-  IoStackLocation = IoGetCurrentIrpStackLocation(Irp);
-  
   IrpContext = (PNTFS_IRP_CONTEXT)ExAllocatePoolWithTag(NonPagedPool, sizeof(NTFS_IRP_CONTEXT), TAG('N', 'I', 'R', 'P'));
   if (IrpContext == NULL)
     return NULL;
-    
   RtlZeroMemory(IrpContext, sizeof(NTFS_IRP_CONTEXT));
+
   IrpContext->Identifier.Type = NTFS_TYPE_IRP_CONTEST;
   IrpContext->Identifier.Size = sizeof(NTFS_IRP_CONTEXT);
   IrpContext->Irp = Irp;
-  IrpContext->MajorFunction = IoStackLocation->MajorFunction;
-  IrpContext->MinorFunction = IoStackLocation->MinorFunction;
   IrpContext->DeviceObject = DeviceObject;
-  IrpContext->IsTopLevel = (IoGetTopLevelIrp() == Irp);
+  if (Irp)
+  {
+    IoStackLocation = IoGetCurrentIrpStackLocation(Irp);
+    ASSERT(IoStackLocation);
+
+    IrpContext->MajorFunction = IoStackLocation->MajorFunction;
+    IrpContext->MinorFunction = IoStackLocation->MinorFunction;
+    IrpContext->IsTopLevel = (IoGetTopLevelIrp() == Irp);
+  }
   
   return IrpContext;
 }
