@@ -178,17 +178,7 @@ EnumObjects(HDC hdc,
     return 0;
 }
 
-/*
- * @unimplemented
- */
-int
-STDCALL
-Escape(HDC hdc, INT escape, INT in_count, LPCSTR in_data, LPVOID out_data)
-{
-        UNIMPLEMENTED;
-        SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-        return 0;
-}
+
 
 /*
  * @implemented
@@ -1503,6 +1493,45 @@ GetETM(HDC hdc,
     petm->emKernPairs = GetKerningPairsA(hdc, 0, 0);
 
   return Ret;
+}
+
+/*
+ * @unimplemented
+ */
+int
+STDCALL
+Escape(HDC hdc, INT nEscape, INT cbInput, LPCSTR lpvInData, LPVOID lpvOutData)
+{
+    int retValue = -1;
+
+    /* FIXME gdi share memory */
+
+    if (nEscape == GETCOLORTABLE)
+    {
+        retValue = GetSystemPaletteEntries(hdc, (UINT)*lpvInData, 1, (LPPALETTEENTRY)lpvOutData);
+        if ( !retValue )
+        {
+            retValue = -1;        
+        }
+
+        /* FIXME tempary until Escape are completed */
+        return retValue;
+    }
+    else if (nEscape == GETEXTENDEDTEXTMETRICS)
+    {
+        retValue = (int) GetETM( hdc, (EXTTEXTMETRIC *) lpvOutData) != 0;
+
+        /* FIXME tempary until Escape are completed */
+        return retValue;
+    }
+    else if ( nEscape != QUERYESCSUPPORT )
+    {
+    
+    }
+
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return retValue;
 }
 
 /*
