@@ -13,6 +13,45 @@
 
 #define DX_D3D9_MAX_NUM_ADAPTERS    12
 
+typedef struct _D3D9Unknown6BC_INT_
+{
+/* 0x0000 */    HANDLE hDD;
+/* 0x0004 */    LPDWORD pUnknown0004;
+/* 0x0008 */
+/* 0x000c */    CHAR szDeviceName[CCHDEVICENAME];
+/* 0x002c */    HLOCAL swDDICreateDirectDrawObject;
+
+/* 0x0030 */    DWORD dwUnknown0030;
+
+/* 0x0034 */    ULONG DeviceUniq;
+
+/* 0x0040 */    D3DFORMAT RawDisplayFormat;
+/* 0x0044 */    D3DFORMAT DisplayFormat;
+/* 0x0048 */    LONG lDisplayPitch;
+/* 0x004c */    DWORD MajorDxVersion;
+/* 0x0050 */    RECT DeviceRect;
+/* 0x0060 */
+/* 0x0064 */    DWORD unknown0064;  // = 0
+/* 0x0068 */    BOOL bIsXPorLater;
+/* 0x006c */    DWORD DevVenId;     // DeviceId << 10 | VendorId
+#ifdef _WIN32
+/* 0x0070 */    LARGE_INTEGER   DriverVersion;
+#else
+/* 0x0070 */    DWORD           DriverVersionLowPart;
+/* 0x0074 */    DWORD           DriverVersionHighPart;
+#endif
+/* 0x0078 */    DWORD bForceDriverFlagsOn;
+/* 0x007c */    DWORD bForceDriverFlagsOff;
+
+/* 0x0084 */    DWORD dwCaps;
+/* 0x0088 */    DWORD dwSVBCaps;
+/* 0x008c */    HMODULE _unknown0151;
+
+/* 0x0094 */    D3DDEVTYPE DeviceType;
+
+/* 0x00BC */    DDGAMMARAMP lpGammaRamp;
+} D3D9_Unknown6BC_INT;
+
 typedef struct _tagD3D9_DRIVERCAPS
 {
 /* 0x0000 */    D3DCAPS9 DriverCaps9;
@@ -31,7 +70,7 @@ typedef struct _tagD3D9_DRIVERCAPS
 /* 0x0160 */    DWORD unknown0088;
 /* 0x0164 */    DWORD NumSupportedExtendedModes;
 /* 0x0168 */    D3DDISPLAYMODE* pSupportedExtendedModes;
-/* 0x016c */    ULONG_PTR ulUniqueAdapterGroupId;
+/* 0x016c */    ULONG ulUniqueAdapterGroupId;
 /* 0x0170 */    DWORD NumSupportedQueries;
 /* 0x0174 */    D3DQUERYTYPE* pSupportedQueriesList;
 } D3D9_DRIVERCAPS, FAR *LPD3D9_DRIVERCAPS;
@@ -89,7 +128,7 @@ typedef struct _tagD3D9_DEVICEDATA
 /* 0x0220 */    CHAR szDeviceName[CCHDEVICENAME];
 /* 0x0240 */    HDC hDC;
 /* 0x0244 */    GUID DisplayGuid;
-/* 0x0254 */    LPDWORD pUnknown0254; //D3D9_Unknown6BC_INT* pUnknown6BC;
+/* 0x0254 */    D3D9_Unknown6BC_INT* pUnknown6BC;
 /* 0x0258 */    D3DDEVTYPE DeviceType;
 /* 0x025c */    HMODULE hD3DRefDll;
 /* 0x0260 */    DWORD unknown0152;
@@ -108,7 +147,7 @@ typedef struct _tagDIRECT3D9DisplayAdapterInfo_
 /* 0x012c */    DWORD NumSupportedD3DExtendedFormats;
 /* 0x0130 */    D3DDISPLAYMODE* pSupportedD3DFormats;
 /* 0x0134 */    D3DDISPLAYMODE* pSupportedD3DExtendedFormats;
-/* 0x0138 */    DWORD unknown000009;
+/* 0x0138 */    D3DFORMAT Supported16bitFormat;
 /* 0x013c */    D3D9_DRIVERCAPS DriverCaps;
 /* 0x02b4 */    DWORD unknown000104;
 /* 0x02b8 */    DWORD unknown000105;

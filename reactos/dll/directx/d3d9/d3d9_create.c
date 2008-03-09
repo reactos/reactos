@@ -9,6 +9,7 @@
 #include <d3d9.h>
 #include "d3d9_create.h"
 #include "d3d9_helpers.h"
+#include "d3d9_caps.h"
 #include <debug.h>
 #include <ddrawi.h>
 #include <ddrawgdi.h>
@@ -56,10 +57,67 @@ static BOOL IsGDIDriver(HDC hDC)
     return FALSE;
 }
 
-static BOOL GetDirect3DAdapterInfo(IN OUT LPDIRECT3D9_DISPLAYADAPTER_INT pDisplayAdapter)
+void GetDisplayAdapterFromDevice(IN OUT LPDIRECT3D9_DISPLAYADAPTER_INT pDisplayAdapters, IN DWORD AdapterIndex, IN LPD3D9_DEVICEDATA pDeviceData)
+{
+    LPDIRECT3D9_DISPLAYADAPTER_INT pDisplayAdapter = &pDisplayAdapters[AdapterIndex];
+    DWORD FormatOpIndex;
+    DWORD AdapterGroupId;
+    DWORD NumAdaptersInGroup;
+    DWORD Index;
+
+    memcpy(&pDisplayAdapter->DriverCaps, &pDeviceData->DriverCaps, sizeof(D3D9_DRIVERCAPS));
+
+    for (FormatOpIndex = 0; FormatOpIndex < pDeviceData->DriverCaps.NumSupportedFormatOps; FormatOpIndex++)
+    {
+        LPDDSURFACEDESC pSurfaceDesc = &pDeviceData->DriverCaps.pSupportedFormatOps[FormatOpIndex];
+        D3DFORMAT Format = pSurfaceDesc->ddpfPixelFormat.dwFourCC;
+
+        if ((pSurfaceDesc->ddpfPixelFormat.dwOperations & D3DFORMAT_OP_DISPLAYMODE) != 0 &&
+            (Format == D3DFMT_R5G6B5 || Format == D3DFMT_X1R5G5B5))
+        {
+            pDisplayAdapter->Supported16bitFormat = Format;
+            break;
+        }
+    }
+
+    NumAdaptersInGroup = 0;
+    AdapterGroupId = pDeviceData->DriverCaps.ulUniqueAdapterGroupId;
+    for (Index = 0; Index < AdapterIndex; Index++)
+    {
+        if (AdapterGroupId == pDisplayAdapters[Index].DriverCaps.ulUniqueAdapterGroupId)
+            ++NumAdaptersInGroup;
+    }
+    pDisplayAdapter->MasterAdapterIndex = AdapterIndex;
+    pDisplayAdapter->NumAdaptersInGroup = NumAdaptersInGroup + 1;   /* Add self */
+    pDisplayAdapter->AdapterIndexInGroup = NumAdaptersInGroup;
+
+    CreateDisplayModeList(
+        pDisplayAdapter->szDeviceName,
+        NULL,
+        &pDisplayAdapter->NumSupportedD3DFormats,
+        pDisplayAdapter->Supported16bitFormat,
+        pDeviceData->pUnknown6BC
+        );
+
+    if (pDisplayAdapter->NumSupportedD3DFormats > 0)
+    {
+        pDisplayAdapter->pSupportedD3DFormats = HeapAlloc(GetProcessHeap(), 0, pDisplayAdapter->NumSupportedD3DFormats * sizeof(D3DDISPLAYMODE));
+
+        CreateDisplayModeList(
+            pDisplayAdapter->szDeviceName,
+            pDisplayAdapter->pSupportedD3DFormats,
+            &pDisplayAdapter->NumSupportedD3DFormats,
+            pDisplayAdapter->Supported16bitFormat,
+            pDeviceData->pUnknown6BC
+            );
+    }
+}
+
+static BOOL GetDirect3D9AdapterInfo(IN OUT LPDIRECT3D9_DISPLAYADAPTER_INT pDisplayAdapters, IN DWORD AdapterIndex)
 {
     HDC hDC;
     LPD3D9_DEVICEDATA pDeviceData;
+    LPDIRECT3D9_DISPLAYADAPTER_INT pDisplayAdapter = &pDisplayAdapters[AdapterIndex];
 
     /* Test DC creation for the display device */
     if (NULL == (hDC = CreateDCA(NULL, pDisplayAdapter->szDeviceName, NULL, NULL)))
@@ -88,9 +146,21 @@ static BOOL GetDirect3DAdapterInfo(IN OUT LPDIRECT3D9_DISPLAYADAPTER_INT pDispla
         pDeviceData->_UnknownA8h.DeviceType = D3DDEVTYPE_REF;
     }
 
-    //GetDeviceData(pDeviceData);
+    if (FALSE == GetDeviceData(pDeviceData))
+    {
+        DeleteDC(hDC);
+        HeapFree(GetProcessHeap(), 0, pDeviceData->pUnknown6BC);
+        HeapFree(GetProcessHeap(), 0, pDeviceData);
+        return FALSE;
+    }
 
     DeleteDC(hDC);
+
+    GetDisplayAdapterFromDevice(pDisplayAdapters, AdapterIndex, pDeviceData);
+
+    HeapFree(GetProcessHeap(), 0, pDeviceData->pUnknown6BC);
+    HeapFree(GetProcessHeap(), 0, pDeviceData);
+
     return TRUE;
 }
 
@@ -144,7 +214,7 @@ static BOOL GetDisplayDeviceInfo(IN OUT LPDIRECT3D9_INT pDirect3D9)
 
     for (AdapterIndex = 0; AdapterIndex < pDirect3D9->NumDisplayAdapters; AdapterIndex++)
     {
-        GetDirect3DAdapterInfo(&pDirect3D9->DisplayAdapters[AdapterIndex]);
+        GetDirect3D9AdapterInfo(pDirect3D9->DisplayAdapters, AdapterIndex);
     }
 
     return TRUE;
@@ -191,3 +261,4 @@ HRESULT CreateD3D9(OUT LPDIRECT3D9 *ppDirect3D9, UINT SDKVersion)
 
     return ERROR_SUCCESS;
 }
+
