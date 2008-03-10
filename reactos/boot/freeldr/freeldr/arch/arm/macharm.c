@@ -15,12 +15,16 @@
 PARM_BOARD_CONFIGURATION_BLOCK ArmBoardBlock;
 ULONG BootDrive, BootPartition;
 VOID ArmPrepareForReactOS(IN BOOLEAN Setup);
+ADDRESS_RANGE ArmBoardMemoryMap[16];
+ULONG ArmBoardMemoryMapRangeCount;
 
 /* FUNCTIONS ******************************************************************/
 
 VOID
 ArmInit(IN PARM_BOARD_CONFIGURATION_BLOCK BootContext)
 {
+    ULONG i;
+
     //
     // Remember the pointer
     //
@@ -37,6 +41,22 @@ ArmInit(IN PARM_BOARD_CONFIGURATION_BLOCK BootContext)
     //
     ASSERT((ArmBoardBlock->BoardType == MACH_TYPE_FEROCEON) ||
            (ArmBoardBlock->BoardType == MACH_TYPE_VERSATILE_PB));
+
+    //
+    // Save data required for memory initialization
+    //
+    ArmBoardMemoryMapRangeCount = ArmBoardBlock->MemoryMapEntryCount;
+    ASSERT(ArmBoardMemoryMapRangeCount != 0);
+    ASSERT(ArmBoardMemoryMapRangeCount < 16);
+    for (i = 0; i < ArmBoardMemoryMapRangeCount; i++)
+    {
+        //
+        // Copy each entry
+        //
+        RtlCopyMemory(&ArmBoardMemoryMap[i],
+                      &ArmBoardBlock->MemoryMap[i],
+                      sizeof(ADDRESS_RANGE));
+    }
 
     //
     // Call FreeLDR's portable entrypoint with our command-line

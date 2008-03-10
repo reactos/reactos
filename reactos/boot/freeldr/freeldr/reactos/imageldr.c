@@ -16,7 +16,10 @@ LdrPEGetExportByName(
 );
 
 extern BOOLEAN FrLdrLoadDriver(PCHAR szFileName, INT nPos);
-PVOID AnsiData, OemData, UnicodeData, RegistryData;
+ULONG Drivers;
+PVOID AnsiData, OemData, UnicodeData, RegistryData, KernelData, HalData, DriverData[16];
+ULONG RegistrySize, AnsiSize, OemSize, UnicodeSize, KernelSize, HalSize, DriverSize[16];
+
 /* MODULE MANAGEMENT **********************************************************/
 
 PLOADER_MODULE
@@ -101,19 +104,23 @@ FrLdrLoadModule(FILE *ModuleImage,
     if (!_stricmp(NameBuffer, "ansi.nls"))
     {
         AnsiData = (PVOID)NextModuleBase;
+        AnsiSize = LocalModuleSize;
     }
     else if (!_stricmp(NameBuffer, "oem.nls"))
     {
         OemData = (PVOID)NextModuleBase;
+        OemSize = LocalModuleSize;
     }
     else if (!_stricmp(NameBuffer, "casemap.nls"))
     {
         UnicodeData = (PVOID)NextModuleBase;
+        UnicodeSize = LocalModuleSize;
     }
     else if (!(_stricmp(NameBuffer, "system")) ||
              !(_stricmp(NameBuffer, "system.hiv")))
     {
         RegistryData = (PVOID)NextModuleBase;
+        RegistrySize = LocalModuleSize;
     }
 
     /* Load the file image */
@@ -547,6 +554,24 @@ FrLdrMapImage(IN FILE *Image,
     strcpy(reactos_module_strings[ImageId], Name);
     reactos_modules[ImageId].String = (ULONG_PTR)reactos_module_strings[ImageId];
     LoaderBlock.ModsCount++;
+    
+    /* Detect kernel or HAL */
+    if (!_stricmp(Name, "ntoskrnl.exe"))
+    {
+        KernelData = (PVOID)NextModuleBase;
+        KernelSize = ImageSize;
+    }
+    else if (!_stricmp(Name, "hal.dll"))
+    {
+        HalData = (PVOID)NextModuleBase;
+        HalSize = ImageSize;
+    }
+    else
+    {
+        DriverData[Drivers] = (PVOID)NextModuleBase;
+        DriverSize[Drivers] = ImageSize;
+        Drivers++;
+    }
     
     /* Increase the next Load Base */
     NextModuleBase = ROUND_UP(NextModuleBase + ImageSize, PAGE_SIZE);

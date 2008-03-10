@@ -174,5 +174,6 @@ KeFlushTb(
 );
 
 #define KeArchInitThreadWithContext KeArmInitThreadWithContext
+#define KiSystemStartupReal KiSystemStartup
 
 #endif

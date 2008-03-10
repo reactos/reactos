@@ -17,7 +17,7 @@
 //
 // UART Registers
 //
-#define UART_BASE (void*)0xc00f1000 /* HACK: freeldr mapped it here */
+#define UART_BASE (void*)0xe00f1000 /* HACK: freeldr mapped it here */
 
 #define UART_PL01x_DR            (UART_BASE + 0x00)
 #define UART_PL01x_RSR           (UART_BASE + 0x04)

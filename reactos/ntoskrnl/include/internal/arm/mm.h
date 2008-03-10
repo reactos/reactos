@@ -113,6 +113,7 @@ typedef struct _ARM_TRANSLATION_TABLE
 typedef struct _ARM_COARSE_PAGE_TABLE
 {
     ARM_PTE Pte[256];
+    ULONG Padding[768];
 } ARM_COARSE_PAGE_TABLE, *PARM_COARSE_PAGE_TABLE;
 
 typedef enum _ARM_L1_PTE_TYPE

@@ -347,9 +347,7 @@ MiGetLastKernelAddress(VOID)
          NextEntry = NextEntry->Flink)
     {
         Md = CONTAINING_RECORD(NextEntry, MEMORY_ALLOCATION_DESCRIPTOR, ListEntry);
-        if (Md->MemoryType == LoaderBootDriver ||
-            Md->MemoryType == LoaderSystemCode ||
-            Md->MemoryType == LoaderHalCode)
+        if (Md->MemoryType != LoaderFree)
         {
             if (Md->BasePage+Md->PageCount > LastKrnlPhysAddr)
                 LastKrnlPhysAddr = Md->BasePage+Md->PageCount;   
@@ -432,10 +430,13 @@ MmInit1(VOID)
     MmPagedPoolBase = (PVOID)PAGE_ROUND_UP((ULONG_PTR)MiNonPagedPoolStart +
                                            MiNonPagedPoolLength);
     MmPagedPoolSize = MM_PAGED_POOL_SIZE;
+    
     /* Dump kernel memory layout */
     MiDbgKernelLayout();
+    
     /* Initialize the page list */
     MmInitializePageList();
+    
     /* Unmap low memory */
     MmDeletePageTable(NULL, 0);
 

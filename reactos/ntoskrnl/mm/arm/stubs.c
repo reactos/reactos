@@ -20,6 +20,29 @@
     while (TRUE); \
 }
 
+//
+// Take 0x80812345 and extract:
+// PTE_BASE[0x808][0x12]
+//
+#define MiGetPteAddress(x)         \
+    (PMMPTE)(PTE_BASE + (((ULONG)(x) >> 20) << 12) + ((((ULONG)(x) >> 12) & 0xFF) << 2))
+
+#define MiGetPdeAddress(x)         \
+    (PMMPTE)(PDE_BASE + (((ULONG)(x) >> 20) << 2))
+
+#define MiGetPdeOffset(x) (((ULONG)(x)) >> 22)
+
+#define PTE_BASE    0xC0000000
+#define PDE_BASE    0xC1000000
+#define HYPER_SPACE ((PVOID)0xC1100000)
+
+ULONG MmGlobalKernelPageDirectory[1024];
+MMPTE MiArmTemplatePte, MiArmTemplatePde;
+
+VOID
+KiFlushSingleTb(IN BOOLEAN Invalid,
+                IN PVOID Virtual);
+
 /* FUNCTIONS ******************************************************************/
 
 VOID
@@ -71,10 +94,9 @@ PULONG
 MmGetPageDirectory(VOID)
 {
     //
-    // TODO
+    // Return the TTB
     //
-    UNIMPLEMENTED;
-    return 0;
+    return (PULONG)KeArmTranslationTableRegisterGet().AsUlong;
 }
 
 
@@ -96,10 +118,65 @@ NTAPI
 MmDeletePageTable(IN PEPROCESS Process,
                   IN PVOID Address)
 {
+    PMMPTE PointerPde;
+    
     //
-    // TODO
+    // Not valid for kernel addresses
     //
-    UNIMPLEMENTED;
+    DPRINT1("MmDeletePageTable(%p, %p)\n", Process, Address);
+    ASSERT(Address < MmSystemRangeStart);
+    
+    //
+    // Check if this is for a different process
+    //
+    if ((Process) && (Process != PsGetCurrentProcess()))
+    {
+        //
+        // TODO
+        //
+        UNIMPLEMENTED;
+        return;
+    }
+       
+    //
+    // Get the PDE
+    //
+    PointerPde = MiGetPdeAddress(Address);
+
+    //
+    // On ARM, we use a section mapping for the original low-memory mapping
+    //
+    if ((Address) || (PointerPde->u.Hard.L1.Section.Type != SectionPte))
+    {
+        //
+        // Make sure it's valid
+        //
+        ASSERT(PointerPde->u.Hard.L1.Coarse.Type == CoarsePte);
+    }
+    
+    //
+    // Clear the PDE
+    //
+    PointerPde->u.Hard.AsUlong = 0;
+    ASSERT(PointerPde->u.Hard.L1.Fault.Type == FaultPte);
+    
+    //
+    // Check if this is a kernel PDE
+    //
+    if ((PointerPde >= (PMMPTE)PTE_BASE) && (PointerPde < (PMMPTE)PTE_BASE + (1024 * 1024)))
+    {
+        //
+        // Invalidate the TLB entry
+        //
+        KiFlushSingleTb(TRUE, Address);
+    }
+    else
+    {
+        //
+        // Process PDE, unmap it from hyperspace (will also invalidate TLB entry)
+        //
+        MmDeleteHyperspaceMapping((PVOID)PAGE_ROUND_DOWN(PointerPde));
+    }
 }
 
 PFN_TYPE
@@ -215,11 +292,38 @@ NTAPI
 MmIsPagePresent(IN PEPROCESS Process,
                 IN PVOID Address)
 {
+    PMMPTE Pte;
+    
     //
-    // TODO
+    // Check if this is for a different process
     //
-    UNIMPLEMENTED;
-    return 0;
+    if ((Process) && (Process != PsGetCurrentProcess()))
+    {
+        //
+        // TODO
+        //
+        UNIMPLEMENTED;
+        return 0;
+    }
+
+    //
+    // Get the PDE
+    //
+    Pte = MiGetPdeAddress(Address);
+    if (Pte->u.Hard.L1.Fault.Type != FaultPte)
+    {
+        //
+        // Get the PTE
+        //
+        Pte = MiGetPteAddress(Address);
+    }
+    
+    //
+    // Return whether or not it's valid
+    //
+    return (Pte->u.Hard.L1.Fault.Type != FaultPte);
+    
+    
 }
 
 BOOLEAN
@@ -237,15 +341,107 @@ MmIsPageSwapEntry(IN PEPROCESS Process,
 NTSTATUS
 NTAPI
 MmCreateVirtualMappingForKernel(IN PVOID Address,
-                                IN ULONG flProtect,
-                                IN PPFN_TYPE Pages,
+                                IN ULONG Protection,
+                                IN PPFN_NUMBER Pages,
                                 IN ULONG PageCount)
 {
+    PMMPTE PointerPte, LastPte, PointerPde, LastPde;
+    MMPTE TempPte, TempPde;
+    NTSTATUS Status;
+    PFN_NUMBER Pfn;
+    DPRINT1("MmCreateVirtualMappingForKernel(%x, %x, %x, %d)\n",
+            Address, Protection, *Pages, PageCount);
+    ASSERT(Address >= MmSystemRangeStart);
+
     //
-    // TODO
+    // Get our templates
     //
-    UNIMPLEMENTED;
-    return 0;
+    TempPte = MiArmTemplatePte;
+    TempPde = MiArmTemplatePde;
+
+    //
+    // Check if we have PDEs for this region
+    //
+    PointerPde = MiGetPdeAddress(Address);
+    LastPde = PointerPde + (PageCount / 256);
+    while (PointerPde <= LastPde)
+    {
+        //
+        // Check if we need to allocate the PDE
+        //
+        if (PointerPde->u.Hard.L1.Fault.Type == FaultPte)
+        {
+            //
+            // Request a page
+            //
+            Status = MmRequestPageMemoryConsumer(MC_NPPOOL, FALSE, &Pfn);
+            if (!NT_SUCCESS(Status)) return Status;
+            
+            //
+            // Setup the PFN
+            //
+            TempPde.u.Hard.L1.Coarse.BaseAddress = (Pfn << PAGE_SHIFT) >> CPT_SHIFT;
+            
+            //
+            // Write the PDE
+            //
+            ASSERT(PointerPde->u.Hard.L1.Fault.Type == FaultPte);
+            ASSERT(TempPde.u.Hard.L1.Coarse.Type == CoarsePte);
+            *PointerPde = TempPde;
+            
+            //
+            // Get the PTE for this 1MB region
+            //
+            PointerPte = MiGetPteAddress(MiGetPteAddress(Address));
+            
+            //
+            // Write the PFN of the PDE
+            //
+            TempPte.u.Hard.L2.Small.BaseAddress = Pfn;
+
+            //
+            // Write the PTE
+            //
+            ASSERT(PointerPte->u.Hard.L2.Fault.Type == FaultPte);
+            ASSERT(TempPte.u.Hard.L2.Small.Type == SmallPte);
+            *PointerPte = TempPte;
+        }
+        
+        //
+        // Next
+        //
+        PointerPde++;
+    }
+    
+    //
+    // Get start and end address and loop each PTE
+    //
+    PointerPte = MiGetPteAddress(Address);
+    LastPte = PointerPte + PageCount - 1;
+    while (PointerPte <= LastPte)
+    {
+        //
+        // Set the PFN
+        //
+        TempPte.u.Hard.L2.Small.BaseAddress = *Pages++;
+        
+        //
+        // Write the PTE
+        //
+        ASSERT(PointerPte->u.Hard.L2.Fault.Type == FaultPte);
+        ASSERT(TempPte.u.Hard.L2.Small.Type == SmallPte);
+        *PointerPte = TempPte;
+        
+        //
+        // Next
+        //
+        PointerPte++;
+    }
+    
+    //
+    // All done
+    //
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
@@ -265,10 +461,27 @@ NTSTATUS
 NTAPI
 MmCreateVirtualMappingUnsafe(IN PEPROCESS Process,
                              IN PVOID Address,
-                             IN ULONG flProtect,
+                             IN ULONG Protection,
                              IN PPFN_TYPE Pages,
                              IN ULONG PageCount)
 {
+    DPRINT1("MmCreateVirtualMappingUnsafe(%p %x, %x, %x, %d)\n",
+            Process, Address, Protection, *Pages, PageCount);
+    
+    //
+    // Are we only handling the kernel?
+    //
+    if (!Process)
+    {
+        //
+        // Call the kernel version
+        //
+        return MmCreateVirtualMappingForKernel(Address,
+                                               Protection,
+                                               Pages,
+                                               PageCount);
+    }
+    
     //
     // TODO
     //
@@ -280,15 +493,33 @@ NTSTATUS
 NTAPI
 MmCreateVirtualMapping(IN PEPROCESS Process,
                        IN PVOID Address,
-                       IN ULONG flProtect,
+                       IN ULONG Protection,
                        IN PPFN_TYPE Pages,
                        IN ULONG PageCount)
 {
+    ULONG i;
+    DPRINT1("MmCreateVirtualMapping(%p %x, %x, %x, %d)\n",
+            Process, Address, Protection, *Pages, PageCount);
+    
     //
-    // TODO
+    // Loop each page
     //
-    UNIMPLEMENTED;
-    return 0;
+    for (i = 0; i < PageCount; i++)
+    {
+        //
+        // Make sure the page is marked as in use
+        //
+        ASSERT(MmIsPageInUse(Pages[i]));
+    }
+    
+    //
+    // Call the unsafe version
+    //
+    return MmCreateVirtualMappingUnsafe(Process,
+                                        Address,
+                                        Protection,
+                                        Pages,
+                                        PageCount);
 }
 
 ULONG
@@ -307,12 +538,12 @@ VOID
 NTAPI
 MmSetPageProtect(IN PEPROCESS Process,
                  IN PVOID Address,
-                 IN ULONG flProtect)
+                 IN ULONG Protection)
 {
     //
-    // TODO
+    // We don't enforce any protection on the pages -- they are all RWX
     //
-    UNIMPLEMENTED;
+    return;
 }
 
 /*
@@ -335,34 +566,124 @@ PVOID
 NTAPI
 MmCreateHyperspaceMapping(IN PFN_TYPE Page)
 {
+    PMMPTE PointerPte, FirstPte, LastPte;
+    MMPTE TempPte;
+    PVOID Address;
+    DPRINT1("MmCreateHyperspaceMapping(%lx)\n", Page);
+
     //
-    // TODO
+    // Loop hyperspace PTEs (1MB)
     //
-    UNIMPLEMENTED;
-    return 0;
+    FirstPte = PointerPte = MiGetPteAddress(HYPER_SPACE);
+    LastPte = PointerPte + 256;
+    while (PointerPte <= LastPte)
+    {
+        //
+        // Find a free slot
+        //
+        if (PointerPte->u.Hard.L2.Fault.Type == FaultPte)
+        {
+            //
+            // Use this entry
+            //
+            break;
+        }
+        
+        //
+        // Try the next one
+        //
+        PointerPte++;
+    }
+    
+    //
+    // Check if we didn't find anything
+    //
+    if (PointerPte > LastPte) return NULL;
+    
+    //
+    // Create the mapping
+    //
+    TempPte = MiArmTemplatePte;
+    TempPte.u.Hard.L2.Small.BaseAddress = Page;
+    ASSERT(PointerPte->u.Hard.L2.Fault.Type == FaultPte);
+    ASSERT(TempPte.u.Hard.L2.Small.Type == SmallPte);
+    *PointerPte = TempPte;
+
+    //
+    // Return the address
+    //
+    Address = HYPER_SPACE + ((PointerPte - FirstPte) * PAGE_SIZE);
+    KiFlushSingleTb(FALSE, Address);
+    DPRINT1("MmCreateHyperspaceMapping(%lx)\n", Address);
+    return Address;
 }
 
 PFN_TYPE
 NTAPI
 MmDeleteHyperspaceMapping(IN PVOID Address)
 {
-    PFN_TYPE Pfn = {0};
-      
+    PFN_TYPE Pfn;
+    PMMPTE PointerPte;
+    DPRINT1("MmDeleteHyperspaceMapping(%lx)\n", Address);
+    
     //
-    // TODO
+    // Get the PTE
     //
-    UNIMPLEMENTED;
+    PointerPte = MiGetPteAddress(Address);
+    ASSERT(PointerPte->u.Hard.L2.Small.Type == SmallPte);
+    
+    //
+    // Save the PFN
+    //
+    Pfn = PointerPte->u.Hard.L2.Small.BaseAddress;
+    
+    //
+    // Destroy the PTE
+    //
+    PointerPte->u.Hard.AsUlong = 0;
+    ASSERT(PointerPte->u.Hard.L2.Fault.Type == FaultPte);
+    
+    //
+    // Flush the TLB entry and return the PFN
+    //
+    KiFlushSingleTb(TRUE, Address);
     return Pfn;
+    
 }
 
 VOID
 NTAPI
 MmInitGlobalKernelPageDirectory(VOID)
 {
+    ULONG i;
+    PULONG CurrentPageDirectory = (PULONG)PDE_BASE;
+    
     //
-    // TODO
+    // Good place to setup template PTE/PDEs.
+    // We are lazy and pick a known-good PTE
     //
-    UNIMPLEMENTED;
+    MiArmTemplatePte = *MiGetPteAddress(0x80000000);
+    MiArmTemplatePde = *MiGetPdeAddress(0x80000000);
+
+    //
+    // Loop the 2GB of address space which belong to the kernel
+    //
+    for (i = MiGetPdeOffset(MmSystemRangeStart); i < 1024; i++)
+    {
+        //
+        // Check if we have an entry for this already
+        //
+        if ((i != MiGetPdeOffset(PTE_BASE)) &&
+            (i != MiGetPdeOffset(HYPER_SPACE)) &&
+            (!MmGlobalKernelPageDirectory[i]) &&
+            (CurrentPageDirectory[i]))
+        {
+            //
+            // We don't, link it in our global page directory
+            //
+            MmGlobalKernelPageDirectory[i] = CurrentPageDirectory[i];
+        }
+    }
 }
 
 ULONG
@@ -380,8 +701,55 @@ VOID
 NTAPI
 MiInitPageDirectoryMap(VOID)
 {
+    MEMORY_AREA* MemoryArea = NULL;
+    PHYSICAL_ADDRESS BoundaryAddressMultiple;
+    PVOID BaseAddress;
+    NTSTATUS Status;
+    DPRINT1("MiInitPageDirectoryMap()\n");
+
     //
-    // TODO
+    // Create memory area for the PTE area
     //
-    UNIMPLEMENTED;
+    BoundaryAddressMultiple.QuadPart = 0;
+    BaseAddress = (PVOID)PTE_BASE;
+    Status = MmCreateMemoryArea(MmGetKernelAddressSpace(),
+                                MEMORY_AREA_SYSTEM,
+                                &BaseAddress,
+                                0x1000000,
+                                PAGE_READWRITE,
+                                &MemoryArea,
+                                TRUE,
+                                0,
+                                BoundaryAddressMultiple);
+    ASSERT(NT_SUCCESS(Status));
+
+    //
+    // Create memory area for the PDE area
+    //
+    BaseAddress = (PVOID)PDE_BASE;
+    Status = MmCreateMemoryArea(MmGetKernelAddressSpace(),
+                                MEMORY_AREA_SYSTEM,
+                                &BaseAddress,
+                                0x100000,
+                                PAGE_READWRITE,
+                                &MemoryArea,
+                                TRUE,
+                                0,
+                                BoundaryAddressMultiple);
+    ASSERT(NT_SUCCESS(Status));
+    
+    //
+    // And finally, hyperspace
+    //
+    BaseAddress = (PVOID)HYPER_SPACE;
+    Status = MmCreateMemoryArea(MmGetKernelAddressSpace(),
+                                MEMORY_AREA_SYSTEM,
+                                &BaseAddress,
+                                PAGE_SIZE,
+                                PAGE_READWRITE,
+                                &MemoryArea,
+                                TRUE,
+                                0,
+                                BoundaryAddressMultiple);
+    ASSERT(NT_SUCCESS(Status));
 }

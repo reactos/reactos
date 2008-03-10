@@ -47,19 +47,87 @@ C_ASSERT(MM_ALLOCATION_GRANULARITY >= PAGE_SIZE);
 //
 typedef struct _HARDWARE_PTE_ARM
 {
-    ULONG Valid:1;
-    ULONG Write:1;
-    ULONG Owner:1;
-    ULONG WriteThrough:1;
-    ULONG CacheDisable:1;
-    ULONG Accessed:1;
-    ULONG Dirty:1;
-    ULONG LargePage:1;
-    ULONG Global:1;
-    ULONG CopyOnWrite:1;
-    ULONG Prototype: 1;
-    ULONG reserved: 1;
-    ULONG PageFrameNumber:20;
+    union
+    {
+        union
+        {
+            struct
+            {
+                ULONG Type:2;
+                ULONG Unused:30;
+            } Fault;
+            struct
+            {
+                ULONG Type:2;
+                ULONG Ignored:2;
+                ULONG Reserved:1;
+                ULONG Domain:4;
+                ULONG Ignored1:1;
+                ULONG BaseAddress:22;
+            } Coarse;
+            struct
+            {
+                ULONG Type:2;
+                ULONG Buffered:1;
+                ULONG Cached:1;
+                ULONG Reserved:1;
+                ULONG Domain:4;
+                ULONG Ignored:1;
+                ULONG Access:2;
+                ULONG Ignored1:8;
+                ULONG BaseAddress:12;
+            } Section;
+            struct
+            {
+                ULONG Type:2;
+                ULONG Reserved:3;
+                ULONG Domain:4;
+                ULONG Ignored:3;
+                ULONG BaseAddress:20;
+            } Fine;
+        } L1;
+        union
+        {
+            struct
+            {
+                ULONG Type:2;
+                ULONG Unused:30;
+            } Fault;
+            struct
+            {
+                ULONG Type:2;
+                ULONG Buffered:1;
+                ULONG Cached:1;
+                ULONG Access0:2;
+                ULONG Access1:2;
+                ULONG Access2:2;
+                ULONG Access3:2;
+                ULONG Ignored:4;
+                ULONG BaseAddress:16;
+            } Large;
+            struct
+            {
+                ULONG Type:2;
+                ULONG Buffered:1;
+                ULONG Cached:1;
+                ULONG Access0:2;
+                ULONG Access1:2;
+                ULONG Access2:2;
+                ULONG Access3:2;
+                ULONG BaseAddress:20;
+            } Small;
+            struct
+            {
+                ULONG Type:2;
+                ULONG Buffered:1;
+                ULONG Cached:1;
+                ULONG Access0:2;
+                ULONG Ignored:4;
+                ULONG BaseAddress:22;
+            } Tiny; 
+        } L2;
+        ULONG AsUlong;
+    };
 } HARDWARE_PTE_ARM, *PHARDWARE_PTE_ARM;
 
 typedef struct _MMPTE_SOFTWARE
@@ -117,19 +185,87 @@ typedef struct _MMPTE_LIST
 
 typedef struct _MMPTE_HARDWARE
 {
-    ULONG Valid:1;
-    ULONG Write:1;
-    ULONG Owner:1;
-    ULONG WriteThrough:1;
-    ULONG CacheDisable:1;
-    ULONG Accessed:1;
-    ULONG Dirty:1;
-    ULONG LargePage:1;
-    ULONG Global:1;
-    ULONG CopyOnWrite:1;
-    ULONG Prototype:1;
-    ULONG reserved:1;
-    ULONG PageFrameNumber:20;
+    union
+    {
+        union
+        {
+            struct
+            {
+                ULONG Type:2;
+                ULONG Unused:30;
+            } Fault;
+            struct
+            {
+                ULONG Type:2;
+                ULONG Ignored:2;
+                ULONG Reserved:1;
+                ULONG Domain:4;
+                ULONG Ignored1:1;
+                ULONG BaseAddress:22;
+            } Coarse;
+            struct
+            {
+                ULONG Type:2;
+                ULONG Buffered:1;
+                ULONG Cached:1;
+                ULONG Reserved:1;
+                ULONG Domain:4;
+                ULONG Ignored:1;
+                ULONG Access:2;
+                ULONG Ignored1:8;
+                ULONG BaseAddress:12;
+            } Section;
+            struct
+            {
+                ULONG Type:2;
+                ULONG Reserved:3;
+                ULONG Domain:4;
+                ULONG Ignored:3;
+                ULONG BaseAddress:20;
+            } Fine;
+        } L1;
+        union
+        {
+            struct
+            {
+                ULONG Type:2;
+                ULONG Unused:30;
+            } Fault;
+            struct
+            {
+                ULONG Type:2;
+                ULONG Buffered:1;
+                ULONG Cached:1;
+                ULONG Access0:2;
+                ULONG Access1:2;
+                ULONG Access2:2;
+                ULONG Access3:2;
+                ULONG Ignored:4;
+                ULONG BaseAddress:16;
+            } Large;
+            struct
+            {
+                ULONG Type:2;
+                ULONG Buffered:1;
+                ULONG Cached:1;
+                ULONG Access0:2;
+                ULONG Access1:2;
+                ULONG Access2:2;
+                ULONG Access3:2;
+                ULONG BaseAddress:20;
+            } Small;
+            struct
+            {
+                ULONG Type:2;
+                ULONG Buffered:1;
+                ULONG Cached:1;
+                ULONG Access0:2;
+                ULONG Ignored:4;
+                ULONG BaseAddress:22;
+            } Tiny; 
+        } L2;
+        ULONG AsUlong;
+    };
 } MMPTE_HARDWARE, *PMMPTE_HARDWARE;
 
 //

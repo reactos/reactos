@@ -771,7 +771,7 @@ KiRosAllocateNtDescriptor(IN TYPE_OF_MEMORY MemoryType,
         if (MdBlock)
         {
             /* If it contains our limit as well, break out early */
-            if ((MdBlock->PageCount + MdBlock->BasePage) > AlignedLimit) break;
+            if ((MdBlock->PageCount + MdBlock->BasePage) >= AlignedLimit) break;
         }
 
         /* Loop the memory list */
