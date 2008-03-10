@@ -1500,7 +1500,7 @@ int
 STDCALL
 Escape(HDC hdc, INT nEscape, INT cbInput, LPCSTR lpvInData, LPVOID lpvOutData)
 {
-    int retValue = -1;    
+    int retValue = SP_ERROR;    
     HGDIOBJ hObject = hdc;
     UINT Type = 0;
     LPVOID pUserData = NULL;
@@ -1565,7 +1565,7 @@ Escape(HDC hdc, INT nEscape, INT cbInput, LPCSTR lpvInData, LPVOID lpvOutData)
                 retValue = GetSystemPaletteEntries(hdc, (UINT)*lpvInData, 1, (LPPALETTEENTRY)lpvOutData);
                 if ( !retValue )
                 {
-                    retValue = -1;        
+                    retValue = SP_ERROR;        
                 }            
                 break;
 
@@ -1599,6 +1599,72 @@ Escape(HDC hdc, INT nEscape, INT cbInput, LPCSTR lpvInData, LPVOID lpvOutData)
 
             case GETEXTENDEDTEXTMETRICS:
                 retValue = (int) GetETM( hdc, (EXTTEXTMETRIC *) lpvOutData) != 0;
+                break;
+
+            case  STARTDOC:
+                {
+                    DOCINFOA *pUserDatalpdi;
+                    DOCINFOA lpdi;
+
+                    /* Note : Winodws check see if the handle have any user data for STARTDOC command 
+                     * ReactOS copy this behavior to be compatible with windows 2003 
+                     */
+                    if ( (!GdiGetHandleUserData(hObject, (DWORD)Type, (PVOID) &pUserDatalpdi)) ||  
+                         (pUserData == NULL) ) 
+                    {
+                        GdiSetLastError(ERROR_INVALID_HANDLE);
+                        retValue = FALSE;
+                    }
+
+                    lpdi.cbSize = sizeof(DOCINFOA);
+
+                    /* NOTE lpszOutput will be store in handle userdata */
+                    lpdi.lpszOutput = 0;
+
+                    lpdi.lpszDatatype = 0;
+                    lpdi.fwType = 0;
+                    lpdi.lpszDocName = lpvInData;
+
+                    /* NOTE : doc for StartDocA/W at msdn http://msdn2.microsoft.com/en-us/library/ms535793(VS.85).aspx */
+                    retValue = StartDocA(hdc, &lpdi);  
+
+                    /* StartDocA fail */
+                    if (retValue < 0)
+                    {                                        
+                        /* check see if outbuffer contain any data, if it does abort */ 
+                        if  ( (pUserDatalpdi->lpszOutput != 0) && 
+                              ( (*(WCHAR *)pUserDatalpdi->lpszOutput) != UNICODE_NULL) )
+                        {
+                            retValue = SP_APPABORT;
+                        }
+                        else
+                        {
+                            retValue = GetLastError();
+                         
+                            /* Translate StartDocA error code to STARTDOC error code 
+                             * see msdn http://msdn2.microsoft.com/en-us/library/ms535472.aspx 
+                             */
+                            switch(retValue)
+                            {
+                                case ERROR_NOT_ENOUGH_MEMORY:
+                                    retValue = SP_OUTOFMEMORY;
+                                    break;
+
+                                case ERROR_PRINT_CANCELLED:
+                                    retValue = SP_USERABORT;
+                                    break;
+
+                                case ERROR_DISK_FULL:
+                                    retValue = SP_OUTOFDISK;
+                                    break;
+
+                                default:
+                                    retValue = SP_ERROR;
+                                    break;
+                            }                         
+                        }                                                  
+                    }
+                }
                 break;
                 
             
