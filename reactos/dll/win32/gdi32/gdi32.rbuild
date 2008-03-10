@@ -5,6 +5,7 @@
 	<define name="UNICODE" />
 	<define name="WINVER">0x0600</define>
 	<define name="_WIN32_WINNT">0x0501</define>
+	<define name="LANGPACK" />
 	<library>ntdll</library>
 	<library>user32</library>
 	<library>kernel32</library>

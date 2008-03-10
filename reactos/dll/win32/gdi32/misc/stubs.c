@@ -1473,9 +1473,8 @@ STDCALL
 GdiRealizationInfo(HDC hdc,
                    PREALIZATION_INFO pri)
 {
-    UNIMPLEMENTED;
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
+    // ATM we do not support local font data and Language Pack.
+    return NtGdiGetRealizationInfo(hdc, pri, (HFONT) NULL);
 }
 
 /*
@@ -1520,7 +1519,7 @@ Escape(HDC hdc, INT nEscape, INT cbInput, LPCSTR lpvInData, LPVOID lpvOutData)
         {
             case ABORTDOC:        
                 /* Note Winodws check see if the handle have any user data for ABORTDOC command 
-                 * ReactOS copy this behoir to be compatible with windows 2003 
+                 * ReactOS copy this behavior to be compatible with windows 2003 
                  */
                 if ( (!GdiGetHandleUserData(hObject, (DWORD)Type, (PVOID) &pUserData)) ||  
                       (pUserData == NULL) ) 
@@ -1539,7 +1538,7 @@ Escape(HDC hdc, INT nEscape, INT cbInput, LPCSTR lpvInData, LPVOID lpvOutData)
             case SETCOLORTABLE:
                 /* Note 1: DRAFTMODE, FLUSHOUTPUT, SETCOLORTABLE is outdated and been replace with other api */
                 /* Note 2: Winodws check see if the handle have any user data for DRAFTMODE, FLUSHOUTPUT, SETCOLORTABLE command 
-                 * ReactOS copy this behoir to be compatible with windows 2003 
+                 * ReactOS copy this behavior to be compatible with windows 2003 
                  */
                 if ( (!GdiGetHandleUserData(hObject, (DWORD)Type, (PVOID) &pUserData)) ||  
                      (pUserData == NULL) ) 
@@ -1551,7 +1550,7 @@ Escape(HDC hdc, INT nEscape, INT cbInput, LPCSTR lpvInData, LPVOID lpvOutData)
 
             case SETABORTPROC:
                 /* Note : Winodws check see if the handle have any user data for DRAFTMODE, FLUSHOUTPUT, SETCOLORTABLE command 
-                 * ReactOS copy this behoir to be compatible with windows 2003 
+                 * ReactOS copy this behavior to be compatible with windows 2003 
                  */
                 if ( (!GdiGetHandleUserData(hObject, (DWORD)Type, (PVOID) &pUserData)) ||  
                      (pUserData == NULL) ) 
@@ -1572,7 +1571,7 @@ Escape(HDC hdc, INT nEscape, INT cbInput, LPCSTR lpvInData, LPVOID lpvOutData)
 
             case ENDDOC:
                 /* Note : Winodws check see if the handle have any user data for DRAFTMODE, FLUSHOUTPUT, SETCOLORTABLE command 
-                 * ReactOS copy this behoir to be compatible with windows 2003 
+                 * ReactOS copy this behavior to be compatible with windows 2003 
                  */
                 if ( (!GdiGetHandleUserData(hObject, (DWORD)Type, (PVOID) &pUserData)) ||  
                      (pUserData == NULL) ) 
