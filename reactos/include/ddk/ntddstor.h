@@ -308,7 +308,11 @@ typedef struct _STORAGE_PREDICT_FAILURE {
 typedef enum _STORAGE_PROPERTY_ID {
   StorageDeviceProperty = 0,
   StorageAdapterProperty,
-  StorageDeviceIdProperty
+  StorageDeviceIdProperty,
+  StorageDeviceUniqueIdProperty,
+  StorageDeviceWriteCacheProperty,
+  StorageMiniportProperty,
+  StorageAccessAlignmentProperty
 } STORAGE_PROPERTY_ID, *PSTORAGE_PROPERTY_ID;
 
 typedef enum _STORAGE_QUERY_TYPE {
