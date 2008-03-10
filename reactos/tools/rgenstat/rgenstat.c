@@ -17,7 +17,9 @@
 int __cdecl strcasecmp (const char * __sz1, const char * __sz2)
 	{return _stricmp (__sz1, __sz2);}
 #else
+#if !(defined(__FreeBSD__) && defined(__APPLE__))
 #include <sys/io.h>
+#endif
 #include <errno.h>
 #include <sys/types.h>
 #include <dirent.h>
