@@ -1570,6 +1570,20 @@ Escape(HDC hdc, INT nEscape, INT cbInput, LPCSTR lpvInData, LPVOID lpvOutData)
                 }            
                 break;
 
+            case ENDDOC:
+                /* Note : Winodws check see if the handle have any user data for DRAFTMODE, FLUSHOUTPUT, SETCOLORTABLE command 
+                 * ReactOS copy this behoir to be compatible with windows 2003 
+                 */
+                if ( (!GdiGetHandleUserData(hObject, (DWORD)Type, (PVOID) &pUserData)) ||  
+                     (pUserData == NULL) ) 
+                {
+                    GdiSetLastError(ERROR_INVALID_HANDLE);
+                    retValue = FALSE;
+                }
+                retValue = EndDoc(hdc);
+                break;
+
+
             case GETSCALINGFACTOR:
                 /* Note GETSCALINGFACTOR is outdated have been replace by GetDeviceCaps */
                 if ( Type == GDI_OBJECT_TYPE_DC )

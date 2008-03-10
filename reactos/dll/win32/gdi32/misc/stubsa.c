@@ -43,7 +43,7 @@ int
 STDCALL
 StartDocA(
 	HDC		hdc,
-	CONST DOCINFOA	*a1
+	CONST DOCINFOA	*lpdi
 	)
 {
 	UNIMPLEMENTED;
