@@ -16,6 +16,10 @@
 #include <vector>
 #ifdef __LINUX__
 #include <unistd.h>
+#include <sys/types.h>
+#if defined(__FreeBSD__) || defined(__APPLE__)
+# include <sys/stat.h>
+#endif // __FreeBSD__
 #endif
 
 namespace Sysreg_
