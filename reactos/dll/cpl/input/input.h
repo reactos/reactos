@@ -23,9 +23,6 @@ typedef struct
 
 extern HINSTANCE hApplet;
 
-#define BEGIN_LAYOUT 5000
-#define END_LAYOUT   5135
-
 /* input.c */
 VOID
 InitPropSheetPage(PROPSHEETPAGE *psp, WORD idDlg, DLGPROC DlgProc);
@@ -33,14 +30,8 @@ InitPropSheetPage(PROPSHEETPAGE *psp, WORD idDlg, DLGPROC DlgProc);
 /* settings.c */
 INT_PTR CALLBACK
 SettingPageProc(HWND hwndDlg,UINT uMsg,WPARAM wParam,LPARAM lParam);
-
-/* advanced.c */
-INT_PTR CALLBACK
-AdvancedPageProc(HWND hwndDlg,UINT uMsg,WPARAM wParam,LPARAM lParam);
-
-/* langbar.c */
-INT_PTR CALLBACK
-LangBarDlgProc(HWND hDlg,UINT message,WPARAM wParam,LPARAM lParam);
+BOOL
+GetLayoutName(LPCTSTR lcid, LPTSTR name);
 
 /* keysettings.c */
 INT_PTR CALLBACK
@@ -49,6 +40,8 @@ KeySettingsDlgProc(HWND hDlg,UINT message,WPARAM wParam,LPARAM lParam);
 /* add.c */
 INT_PTR CALLBACK
 AddDlgProc(HWND hDlg,UINT message,WPARAM wParam,LPARAM lParam);
+VOID
+CreateKeyboardLayoutList(VOID);
 
 /* changekeyseq.c */
 INT_PTR CALLBACK
@@ -57,10 +50,6 @@ ChangeKeySeqDlgProc(HWND hDlg,UINT message,WPARAM wParam,LPARAM lParam);
 /* inputlangprop.c */
 INT_PTR CALLBACK
 InputLangPropDlgProc(HWND hDlg,UINT message,WPARAM wParam,LPARAM lParam);
-
-/* misc.c */
-VOID
-CreateKeyboardLayoutList(HWND hWnd);
 
 void ShowLastWin32Error(HWND hWndOwner);
 

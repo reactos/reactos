@@ -45,7 +45,7 @@ KeySettingsDlgProc(HWND hDlg,
         case WM_COMMAND:
             switch (LOWORD(wParam))
             {
-                case IDC_CHANGE_KEY_SEQ_BUTTON:
+                case IDC_CHANGE_KEY_SEQ_BTN:
                     DialogBox(hApplet,
                               MAKEINTRESOURCE(IDD_CHANGE_KEY_SEQ),
                               hDlg,

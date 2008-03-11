@@ -29,18 +29,6 @@
 #include "resource.h"
 #include "input.h"
 
-static
-VOID
-SelectKeyboardLayout(HWND hWnd)
-{
-    TCHAR Layout[256];
-
-    SendMessage(hWnd,
-                CB_SELECTSTRING,
-                (WPARAM) -1,
-                (LPARAM)Layout);
-}
-
 INT_PTR CALLBACK
 InputLangPropDlgProc(HWND hDlg,
                UINT message,
@@ -52,8 +40,7 @@ InputLangPropDlgProc(HWND hDlg,
     switch (message)
     {
         case WM_INITDIALOG:
-            CreateKeyboardLayoutList(GetDlgItem(hDlg, IDC_KEYBOARD_LAYOUT_IME_COMBO));
-            SelectKeyboardLayout(GetDlgItem(hDlg, IDC_KEYBOARD_LAYOUT_IME_COMBO));
+            CreateKeyboardLayoutList();
             break;
 
         case WM_COMMAND:

@@ -58,7 +58,7 @@ InitPropSheetPage(PROPSHEETPAGE *psp, WORD idDlg, DLGPROC DlgProc)
 LONG CALLBACK
 SystemApplet(VOID)
 {
-    PROPSHEETPAGE psp[2];
+    PROPSHEETPAGE psp[1];
     PROPSHEETHEADER psh;
     TCHAR Caption[1024];
 
@@ -77,7 +77,6 @@ SystemApplet(VOID)
     psh.pfnCallback = NULL;
 
     InitPropSheetPage(&psp[0], IDD_PROPPAGESETTINGS, (DLGPROC) SettingPageProc);
-    InitPropSheetPage(&psp[1], IDD_PROPPAGEADVANCED, (DLGPROC) AdvancedPageProc);
 
     return (LONG)(PropertySheet(&psh) != -1);
 }
