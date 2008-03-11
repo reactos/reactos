@@ -1308,7 +1308,8 @@ typedef struct _FSRTL_ADVANCED_FCB_HEADER {
     UCHAR           Flags;
     UCHAR           IsFastIoPossible;
     UCHAR           Flags2;
-    UCHAR           Reserved;
+    UCHAR           Reserved: 4;
+    UCHAR           Version: 4;
     PERESOURCE      Resource;
     PERESOURCE      PagingIoResource;
     LARGE_INTEGER   AllocationSize;
@@ -1316,6 +1317,8 @@ typedef struct _FSRTL_ADVANCED_FCB_HEADER {
     LARGE_INTEGER   ValidDataLength;
     PFAST_MUTEX     FastMutex;
     LIST_ENTRY      FilterContexts;
+    EX_PUSH_LOCK    PushLock;
+    PVOID           *FileContextSupportPointer;
 } FSRTL_ADVANCED_FCB_HEADER, *PFSRTL_ADVANCED_FCB_HEADER;
 
 typedef struct _FSRTL_PER_STREAM_CONTEXT {
