@@ -133,7 +133,7 @@ static BOOL UserLoadKbdDll(WCHAR *wsKLID,
    UNICODE_STRING klid;
    WCHAR LayoutPathBuffer[MAX_PATH] = L"\\SystemRoot\\System32\\";
    WCHAR KeyNameBuffer[MAX_PATH] = L"\\REGISTRY\\Machine\\SYSTEM\\"
-                   L"CurrentControlSet\\Control\\KeyboardLayouts\\";
+                   L"CurrentControlSet\\Control\\Keyboard Layouts\\";
 
    RtlInitUnicodeString(&klid, wsKLID);
    RtlInitUnicodeString(&LayoutValueName,L"Layout File");
