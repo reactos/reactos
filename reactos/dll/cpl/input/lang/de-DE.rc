@@ -2,17 +2,17 @@ LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
 
 IDD_PROPPAGESETTINGS DIALOGEX 0, 0, 254, 228
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Settings"
+CAPTION "Einstellungen"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Select the services that you want for each input language shown in the list.\nUse the Add and Remove buttons to modify this list.", -1, 9, 6, 238, 17
+    LTEXT "Wählen Sie die Dienste, die Sie für die Eingabesprachen in der Liste verwenden wollen.\nVerwenden Sie Hinzufügen und Entfernen, um die Liste zu bearbeiten.", -1, 9, 6, 238, 17
     CONTROL "TEXT", IDC_KEYLAYOUT_LIST, "SYSLISTVIEW32", WS_BORDER | WS_VSCROLL | WS_TABSTOP | LVS_SORTASCENDING | LVS_REPORT | 0x0000808D, 8, 28, 237, 109
-    PUSHBUTTON "&Set Default", IDC_SET_DEFAULT, 101, 159, 144, 14
-    PUSHBUTTON "A&dd...", IDC_ADD_BUTTON, 27, 142, 70, 14
-    PUSHBUTTON "&Remove...", IDC_REMOVE_BUTTON, 101, 142, 70, 14
-    PUSHBUTTON "&Properties...", IDC_PROP_BUTTON, 175, 142, 70, 14
-    GROUPBOX "Preferences", -1, 7, 185, 240, 36
-    PUSHBUTTON "&Key Settings...", IDC_KEY_SET_BTN, 14, 198, 110, 14
+    PUSHBUTTON "&Als Standard", IDC_SET_DEFAULT, 101, 159, 144, 14
+    PUSHBUTTON "&Hinzufügen...", IDC_ADD_BUTTON, 27, 142, 70, 14
+    PUSHBUTTON "Ent&fernen...", IDC_REMOVE_BUTTON, 101, 142, 70, 14
+    PUSHBUTTON "&Eigenschaften...", IDC_PROP_BUTTON, 175, 142, 70, 14
+    GROUPBOX "Einstellungen", -1, 7, 185, 240, 36
+    PUSHBUTTON "&Tasteneinstellungen...", IDC_KEY_SET_BTN, 14, 198, 110, 14
 END
 
 IDD_KEYSETTINGS DIALOGEX 0, 0, 272, 163
@@ -47,18 +47,18 @@ END
 
 IDD_CHANGE_KEY_SEQ DIALOGEX 5, 100, 194, 89
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "Change Key Sequence"
+CAPTION "Tastenkombination ändern"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "", 1240, 4, 5, 186, 10
     GROUPBOX "", -1, 7, 16, 179, 48
-    AUTOCHECKBOX "S&witch keyboard layouts", IDC_USE_SK, 12, 17, 135, 8
+    AUTOCHECKBOX "Tastaturlayout &wechseln", IDC_USE_SK, 12, 17, 135, 8
     CTEXT "SHIFT", -1, 68, 37, 27, 12
     CTEXT "+", -1, 57, 37, 8, 9
-    AUTORADIOBUTTON "&CTRL", -1, 24, 31, 30, 11, WS_GROUP
-    AUTORADIOBUTTON "Left A&LT", -1, 24, 45, 50, 12, NOT WS_TABSTOP
+    AUTORADIOBUTTON "&STRG", -1, 24, 31, 30, 11, WS_GROUP
+    AUTORADIOBUTTON "A&LT links", -1, 24, 45, 50, 12, NOT WS_TABSTOP
     DEFPUSHBUTTON "OK", IDOK, 83, 70, 50, 14
-    PUSHBUTTON "Cancel", IDCANCEL, 136, 70, 50, 14
+    PUSHBUTTON "Abbrechen", IDCANCEL, 136, 70, 50, 14
 END
 
 IDD_INPUT_LANG_PROP DIALOGEX 20, 20, 227, 75
@@ -84,8 +84,8 @@ BEGIN
 	IDS_UNKNOWN              "(Unbekannt)"
 	IDS_RESTART              "Wollen Sie Ihren Computer nun neustarten?"
 	IDS_WHATS_THIS           "Was ist das?"
-	IDS_LANGUAGE             "Language"
-	IDS_LAYOUT               "Keyboard Layout"
+	IDS_LANGUAGE             "Sprache"
+	IDS_LAYOUT               "Tastaturlayout"
 END
 
 STRINGTABLE
