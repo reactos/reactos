@@ -181,6 +181,7 @@
 		<file>efi.c</file>
 		<file>event.c</file>
 		<file>evtpair.c</file>
+		<file>exintrin.c</file>
 		<file>fmutex.c</file>
 		<file>handle.c</file>
 		<file>harderr.c</file>

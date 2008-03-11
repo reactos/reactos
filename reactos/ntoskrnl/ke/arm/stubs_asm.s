@@ -31,11 +31,6 @@ GENERATE_ARM_STUB Exfi386InterlockedIncrementLong
 GENERATE_ARM_STUB Exi386InterlockedDecrementLong 
 GENERATE_ARM_STUB Exi386InterlockedExchangeUlong 
 GENERATE_ARM_STUB Exi386InterlockedIncrementLong 
-GENERATE_ARM_STUB InterlockedCompareExchange 
-GENERATE_ARM_STUB InterlockedDecrement 
-GENERATE_ARM_STUB InterlockedExchange 
-GENERATE_ARM_STUB InterlockedExchangeAdd 
-GENERATE_ARM_STUB InterlockedIncrement 
 GENERATE_ARM_STUB InterlockedPopEntrySList 
 GENERATE_ARM_STUB InterlockedPushEntrySList 
 

@@ -558,54 +558,6 @@ _ExpInterlockedPopEntrySListEnd@0:
     /* Return */
     ret
 
-/*ULONG
- *FASTCALL
- *InterlockedIncrement(IN PLONG Addend)
- */
-.global @InterlockedIncrement@4
-@InterlockedIncrement@4:
-
-    /* Do the op */
-    mov eax, 1
-    LOCK xadd dword ptr [ecx], eax
-
-    /* Return */
-    inc eax
-    ret
-
-/*ULONG
- *FASTCALL
- *InterlockedDecrement(IN PLONG Addend)
- */
-.global @InterlockedDecrement@4
-@InterlockedDecrement@4:
-
-    /* Do the op */
-    mov eax, -1
-    LOCK xadd dword ptr [ecx], eax
-
-    /* Return */
-    dec eax
-    ret
-
-/*PVOID
- *FASTCALL
- *InterlockedCompareExchange(IN OUT PVOID *Destination,
- *                           IN PVOID Exchange,
- *                           IN PVOID Comperand)
- */
-.global @InterlockedCompareExchange@12
-@InterlockedCompareExchange@12:
-
-    /* Get comperand */
-    mov eax, [esp+4]
-
-    /* Do the op */
-    LOCK cmpxchg dword ptr [ecx], edx
-
-    /* Return */
-    ret 4
-
 /*PVOID
  *FASTCALL
  *ExfInterlockedCompareExchange64(IN PLONGLONG Destination,
@@ -668,21 +620,6 @@ _ExpInterlockedPopEntrySListEnd@0:
 
     /* Return */
     ret 8
-
-/*PVOID
- *FASTCALL
- *InterlockedExchangeAdd(IN OUT PLONG Addend,
- *                       IN LONG Increment)
- */
-.global @InterlockedExchangeAdd@8
-@InterlockedExchangeAdd@8:
-
-    /* Do the op */
-    LOCK xadd dword ptr [ecx], edx
-
-    /* Return */
-    mov eax, edx
-    ret
 
 /*** Non-586 functions ***/
 

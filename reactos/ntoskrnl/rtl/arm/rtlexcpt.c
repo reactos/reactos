@@ -1,17 +1,16 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS kernel
- * FILE:            ntoskrnl/rtl/libsupp.c
- * PURPOSE:         RTL Support Routines
- * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
- *                  Gunnar Dalsnes
+ * PROJECT:         ReactOS Kernel
+ * LICENSE:         GPL - See COPYING in the top level directory
+ * FILE:            ntoskrnl/rtl/arm/rtlexcpt.c
+ * PURPOSE:         ARM Exception Helper Routines for Stack Walking
+ * PROGRAMMERS:     ReactOS Portable Systems Group
  */
 
-/* INCLUDES ******************************************************************/
+/* INCLUDES *******************************************************************/
 
 #include <ntoskrnl.h>
 #define NDEBUG
-#include <internal/debug.h>
+#include <debug.h>
 
 /* FUNCTIONS *****************************************************************/
 

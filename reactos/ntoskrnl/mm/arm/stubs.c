@@ -11,6 +11,7 @@
 #include <ntoskrnl.h>
 #define NDEBUG
 #include <debug.h>
+
 /* GLOBALS ********************************************************************/
 
 #undef UNIMPLEMENTED
@@ -551,15 +552,50 @@ MmSetPageProtect(IN PEPROCESS Process,
  */
 PHYSICAL_ADDRESS
 NTAPI
-MmGetPhysicalAddress(IN PVOID vaddr)
+MmGetPhysicalAddress(IN PVOID Address)
 {
-    PHYSICAL_ADDRESS p;
+    PHYSICAL_ADDRESS PhysicalAddress = {{0}};
+    PMMPTE PointerPte;
+    DPRINT1("MmGetPhysicalAddress(%lx)\n", Address);
 
     //
-    // TODO
+    // Early boot PCR check
     //
-    UNIMPLEMENTED;
-    return p;
+    if (Address == PCR)
+    {
+        //
+        // ARM Hack while we still use a section PTE
+        //
+        PointerPte = MiGetPdeAddress(PCR);
+        ASSERT(PointerPte->u.Hard.L1.Section.Type == SectionPte);
+        PhysicalAddress.QuadPart = PointerPte->u.Hard.L1.Section.BaseAddress;
+        PhysicalAddress.QuadPart <<= CPT_SHIFT;
+        DPRINT1("Base: %p\n", PhysicalAddress.LowPart);
+        PhysicalAddress.LowPart += BYTE_OFFSET(Address);
+        return PhysicalAddress;
+    }
+    
+    //
+    // Get the PTE
+    //
+    PointerPte = MiGetPteAddress(Address);
+    if (PointerPte->u.Hard.L1.Fault.Type == FaultPte)
+    {
+        //
+        // Invalid address
+        //
+        DPRINT1("Address invalid: %p\n", Address);
+        return PhysicalAddress;
+    }
+
+    //
+    // Return the information
+    //
+    ASSERT(PointerPte->u.Hard.L2.Small.Type != SmallPte);
+    PhysicalAddress.QuadPart = PointerPte->u.Hard.L2.Small.BaseAddress;
+    PhysicalAddress.QuadPart <<= PAGE_SHIFT;
+    PhysicalAddress.LowPart += BYTE_OFFSET(Address);
+    return PhysicalAddress;
 }
 
 PVOID
@@ -691,10 +727,9 @@ NTAPI
 MiGetUserPageDirectoryCount(VOID)
 {
     //
-    // TODO
+    // Return the index
     //
-    UNIMPLEMENTED;
-    return 0;
+    return MiGetPdeOffset(MmSystemRangeStart);
 }
 
 VOID

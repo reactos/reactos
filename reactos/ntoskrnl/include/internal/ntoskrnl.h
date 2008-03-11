@@ -22,6 +22,16 @@
 #undef  PsGetCurrentProcess
 #define PsGetCurrentProcess _PsGetCurrentProcess
 
+//
+// We are very lazy on ARM -- we just import intrinsics
+// Question: Why wasn't this done for x86 too? (see fastintrlck.asm)
+//
+#define InterlockedDecrement        _InterlockedDecrement
+#define InterlockedIncrement        _InterlockedIncrement
+#define InterlockedCompareExchange  _InterlockedCompareExchange
+#define InterlockedExchange         _InterlockedExchange
+#define InterlockedExchangeAdd      _InterlockedExchangeAdd
+
 #include "ke.h"
 #include "i386/mm.h"
 #include "i386/fpu.h"
@@ -54,15 +64,6 @@
 #include "vdm.h"
 #include "hal.h"
 #include "arch/intrin_i.h"
-
-//
-// We are very lazy on ARM -- we just import intrinsics
-// Question: Why wasn't this done for x86 too? (see fastintrlck.asm)
-//
-#define InterlockedDecrement        _InterlockedDecrement
-#define InterlockedIncrement        _InterlockedIncrement
-#define InterlockedCompareExchange  _InterlockedCompareExchange
-#define InterlockedExchangeAdd      _InterlockedExchangeAdd
 
 #include <pshpack1.h>
 /*
