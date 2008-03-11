@@ -20,8 +20,8 @@
 #define KIPCR                   0xFFFFF000
 #define KI_USER_SHARED_DATA     0xFFFFE000
 #define USPCR                   0x7FFF0000
-#define PCR                     ((volatile KPCR * const)USPCR)
-#define USERPCR                 ((volatile KPCR * const)KIPCR)
+#define PCR                     ((volatile KPCR * const)KIPCR)
+#define USERPCR                 ((volatile KPCR * const)USPCR)
 
 //
 // Maximum IRQs

@@ -211,6 +211,8 @@ RtlpHandleDpcStackException(IN PEXCEPTION_REGISTRATION_RECORD RegistrationFrame,
     return FALSE;
 }
 
+#ifndef _ARM_
+
 BOOLEAN
 NTAPI
 RtlpCaptureStackLimits(IN ULONG_PTR Ebp,
@@ -399,6 +401,8 @@ RtlWalkFrameChain(OUT PVOID *Callers,
     /* Return frames parsed */
     return i;
 }
+
+#endif
 
 /* RTL Atom Tables ************************************************************/
 

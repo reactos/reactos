@@ -55,7 +55,7 @@ typedef union _ARM_CONTROL_REGISTER
         ULONG MmuEnabled:1;
         ULONG AlignmentFaultsEnabled:1;
         ULONG DCacheEnabled:1;
-        ULONG Sbo:3;
+        ULONG Sbo:4;
         ULONG BigEndianEnabled:1;
         ULONG System:1;
         ULONG Rom:1;

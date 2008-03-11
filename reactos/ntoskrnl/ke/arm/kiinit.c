@@ -18,6 +18,7 @@ KINTERRUPT KxUnexpectedInterrupt;
 BOOLEAN KeIsArmV6;
 ULONG KeNumberProcessIds;
 ULONG KeNumberTbEntries;
+extern PVOID KiArmVectorTable;
 #define __ARMV6__ KeIsArmV6
 
 /* FUNCTIONS ******************************************************************/
@@ -298,6 +299,7 @@ KiInitializeSystem(IN ULONG Magic,
 {
     ARM_PTE Pte;
     PKPCR Pcr;
+    ARM_CONTROL_REGISTER ControlRegister;
     DPRINT1("-----------------------------------------------------\n");
     DPRINT1("ReactOS-ARM "KERNEL_VERSION_STR" (Build "KERNEL_VERSION_BUILD_STR")\n");
     DPRINT1("Command Line: %s\n", LoaderBlock->LoadOptions);
@@ -467,6 +469,18 @@ KiInitializeSystem(IN ULONG Magic,
     Pcr->ProcessorId = KeArmIdCodeRegisterGet().AsUlong;
     Pcr->SystemReserved[0] = KeArmControlRegisterGet().AsUlong;
     
+    //
+    // Set the exception address to high
+    //
+    ControlRegister = KeArmControlRegisterGet();
+    ControlRegister.HighVectors = TRUE;
+    KeArmControlRegisterSet(ControlRegister);
+    
+    //
+    // Setup the exception vector table
+    //
+    RtlCopyMemory((PVOID)0xFFFF0000, &KiArmVectorTable, 14 * sizeof(PVOID));
+
     //
     // Initialize the rest of the kernel now
     //

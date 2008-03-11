@@ -67,6 +67,8 @@
 				<file>stubs_asm.s</file>
 				<file>stubs.c</file>
 				<file>thrdini.c</file>
+				<file>trap.s</file>
+				<file>trapc.c</file>
 			</directory>
 		</if>
 		<if property="ARCH" value="powerpc">
@@ -413,6 +415,11 @@
 		<file>win32.c</file>
 	</directory>
 	<directory name="rtl">
+		<if property="ARCH" value="arm">
+			<directory name="arm">
+				<file>rtlexcpt.c</file>
+			</directory>
+		</if>
 		<file>libsupp.c</file>
 		<file>misc.c</file>
 		<file>strtok.c</file>
