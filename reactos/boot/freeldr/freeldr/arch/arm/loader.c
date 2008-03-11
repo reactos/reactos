@@ -30,6 +30,7 @@ CHAR ArmArcBootPath[64];
 CHAR ArmArcHalPath[64];
 CHAR ArmNtHalPath[64];
 CHAR ArmNtBootPath[64];
+WCHAR ArmModuleName[64];
 PNLS_DATA_BLOCK ArmNlsDataBlock;
 PLOADER_PARAMETER_EXTENSION ArmExtension;
 BIOS_MEMORY_DESCRIPTOR ArmBoardMemoryDescriptors[16] = {{0}};
@@ -1042,7 +1043,7 @@ ArmSetupPagingAndJump(IN ULONG Magic)
     //
     // Jump to Kernel
     //
-    (*KernelEntryPoint)(Magic, (PVOID)ArmLoaderBlock);
+    (*KernelEntryPoint)(Magic, (PVOID)((ULONG_PTR)ArmLoaderBlock | KSEG0_BASE));
 }
 
 VOID
@@ -1054,6 +1055,7 @@ ArmPrepareForReactOS(IN BOOLEAN Setup)
     NTSTATUS Status;
     ULONG Dummy, i;
     PLDR_DATA_TABLE_ENTRY LdrEntry;
+    PLIST_ENTRY NextEntry, OldEntry;
     
     //
     // Allocate the ARM Shared Heap
@@ -1080,7 +1082,7 @@ ArmPrepareForReactOS(IN BOOLEAN Setup)
     //
     // Setup the extension and setup block
     //
-    ArmLoaderBlock->Extension = ArmExtension;
+    ArmLoaderBlock->Extension = (PVOID)((ULONG_PTR)ArmExtension | KSEG0_BASE);
     ArmLoaderBlock->SetupLdrBlock = NULL;
     
     //
@@ -1223,6 +1225,7 @@ ArmPrepareForReactOS(IN BOOLEAN Setup)
     //
     // Setup loader entry for the kernel
     //
+    wcscpy(ArmModuleName, L"ntoskrnl.exe");
     LdrEntry = ArmAllocateFromSharedHeap(sizeof(LDR_DATA_TABLE_ENTRY));
     RtlZeroMemory(LdrEntry, sizeof(LDR_DATA_TABLE_ENTRY));
     LdrEntry->DllBase = (PVOID)KernelBase;
@@ -1230,6 +1233,10 @@ ArmPrepareForReactOS(IN BOOLEAN Setup)
     LdrEntry->EntryPoint = KernelEntryPoint;
     LdrEntry->LoadCount = 1;
     LdrEntry->Flags = LDRP_IMAGE_DLL | LDRP_ENTRY_PROCESSED;
+    RtlInitUnicodeString(&LdrEntry->FullDllName, ArmModuleName);
+    RtlInitUnicodeString(&LdrEntry->BaseDllName, ArmModuleName);
+    LdrEntry->FullDllName.Buffer = (PVOID)((ULONG_PTR)LdrEntry->FullDllName.Buffer | KSEG0_BASE);
+    LdrEntry->BaseDllName.Buffer = (PVOID)((ULONG_PTR)LdrEntry->BaseDllName.Buffer | KSEG0_BASE);
     InsertTailList(&ArmLoaderBlock->LoadOrderListHead, &LdrEntry->InLoadOrderLinks);
     
     //
@@ -1252,6 +1259,36 @@ ArmPrepareForReactOS(IN BOOLEAN Setup)
                                            &Dummy);
         if (Status != STATUS_SUCCESS) return;
     }
+    
+    
+    //
+    // Loop driver list
+    //    
+    NextEntry = ArmLoaderBlock->LoadOrderListHead.Flink;
+    while (NextEntry != &ArmLoaderBlock->LoadOrderListHead)
+    {
+        //
+        // Remember the physical entry
+        //
+        OldEntry = NextEntry->Flink;
+        
+        //
+        // Edit the data
+        //
+        NextEntry->Flink = (PVOID)((ULONG_PTR)NextEntry->Flink | KSEG0_BASE);
+        NextEntry->Blink = (PVOID)((ULONG_PTR)NextEntry->Blink | KSEG0_BASE);
+        
+        //
+        // Keep looping
+        //
+        NextEntry = OldEntry;
+    }
+
+    //
+    // Now edit the root itself
+    //
+    NextEntry->Flink = (PVOID)((ULONG_PTR)NextEntry->Flink | KSEG0_BASE);
+    NextEntry->Blink = (PVOID)((ULONG_PTR)NextEntry->Blink | KSEG0_BASE);
     
     //
     // Setup extension parameters
@@ -1276,7 +1313,7 @@ ArmPrepareForReactOS(IN BOOLEAN Setup)
     // Set the ARC Boot Path
     //
     strncpy(ArmArcBootPath, ArmCommandLine, 63);
-    ArmLoaderBlock->ArcBootDeviceName = ArmArcBootPath;
+    ArmLoaderBlock->ArcBootDeviceName = (PVOID)((ULONG_PTR)ArmArcBootPath | KSEG0_BASE);
     
     //
     // The rest of the string is the NT path
@@ -1286,22 +1323,31 @@ ArmPrepareForReactOS(IN BOOLEAN Setup)
     ArmNtBootPath[0] = '\\';
     strncat(ArmNtBootPath, BootPath + 1, 63);
     strcat(ArmNtBootPath,"\\");
-    ArmLoaderBlock->NtBootPathName = ArmNtBootPath;
+    ArmLoaderBlock->NtBootPathName = (PVOID)((ULONG_PTR)ArmNtBootPath | KSEG0_BASE);
     
     //
     // Set the HAL paths
     //
     strncpy(ArmArcHalPath, ArmArcBootPath, 63);
-    ArmLoaderBlock->ArcHalDeviceName = ArmArcHalPath;
+    ArmLoaderBlock->ArcHalDeviceName = (PVOID)((ULONG_PTR)ArmArcHalPath | KSEG0_BASE);
     strcpy(ArmNtHalPath, "\\");
-    ArmLoaderBlock->NtHalPathName = ArmNtHalPath;
+    ArmLoaderBlock->NtHalPathName = (PVOID)((ULONG_PTR)ArmNtHalPath | KSEG0_BASE);
     
-    /* Use this new command line */
+    //
+    // Use this new command line
+    //
     strncpy(ArmLoaderBlock->LoadOptions, HalPath + 2, 255);
     
-    /* Parse it and change every slash to a space */
+    //
+    // Parse it and change every slash to a space
+    //
     BootPath = ArmLoaderBlock->LoadOptions;
     do {if (*BootPath == '/') *BootPath = ' ';} while (*BootPath++);
+
+    //
+    // Fixup command-line pointer
+    //
+    ArmLoaderBlock->LoadOptions = (PVOID)((ULONG_PTR)ArmLoaderBlock->LoadOptions | KSEG0_BASE);
 
     //
     // Setup cache information
@@ -1412,6 +1458,35 @@ ArmPrepareForReactOS(IN BOOLEAN Setup)
     ArmLoaderBlock->Prcb = KSEG0_BASE | (ULONG)Base;
     ArmLoaderBlock->Process = ArmLoaderBlock->Prcb + sizeof(KPRCB);
     ArmLoaderBlock->Thread = ArmLoaderBlock->Process + sizeof(EPROCESS);
+    
+    //
+    // Loop memory list
+    //    
+    NextEntry = ArmLoaderBlock->MemoryDescriptorListHead.Flink;
+    while (NextEntry != &ArmLoaderBlock->MemoryDescriptorListHead)
+    {
+        //
+        // Remember the physical entry
+        //
+        OldEntry = NextEntry->Flink;
+        
+        //
+        // Edit the data
+        //
+        NextEntry->Flink = (PVOID)((ULONG_PTR)NextEntry->Flink | KSEG0_BASE);
+        NextEntry->Blink = (PVOID)((ULONG_PTR)NextEntry->Blink | KSEG0_BASE);
+        
+        //
+        // Keep looping
+        //
+        NextEntry = OldEntry;
+    }
+    
+    //
+    // Now edit the root itself
+    //
+    NextEntry->Flink = (PVOID)((ULONG_PTR)NextEntry->Flink | KSEG0_BASE);
+    NextEntry->Blink = (PVOID)((ULONG_PTR)NextEntry->Blink | KSEG0_BASE);
 }
 
 VOID

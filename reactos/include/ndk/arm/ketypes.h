@@ -59,6 +59,7 @@ Author:
 //
 typedef struct _KTRAP_FRAME
 {
+    ULONG Spsr;
     ULONG R0;
     ULONG R1;
     ULONG R2;
@@ -72,17 +73,17 @@ typedef struct _KTRAP_FRAME
     ULONG R10;
     ULONG R11;
     ULONG R12;
-    ULONG Sp;
-    ULONG Lr;
+    ULONG UserSp;
+    ULONG UserLr;
+    ULONG SvcSp;
+    ULONG SvcLr;
     ULONG Pc;
-    ULONG Psr;   
-    UCHAR ExceptionRecord[(sizeof(EXCEPTION_RECORD) + 7) & (~7)];
-    UCHAR OldIrql;
-    UCHAR PreviousMode;
-    ULONG Fpscr;
-    ULONG FpExc;
-    ULONG S[33];
-    ULONG FpExtra[8];
+//    UCHAR OldIrql;
+//    UCHAR PreviousMode;
+//    ULONG Fpscr;
+//    ULONG FpExc;
+//    ULONG S[33];
+//    ULONG FpExtra[8];
 } KTRAP_FRAME, *PKTRAP_FRAME;
 
 #ifndef NTOS_MODE_USER

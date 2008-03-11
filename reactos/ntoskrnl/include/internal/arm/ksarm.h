@@ -9,6 +9,7 @@
 .equ CPSR_SVC_MODE,        0x13
 .equ CPSR_ABORT_MODE,      0x17
 .equ CPSR_UND_MODE,        0x1B
+.equ CPSR_MODES,           0x1F
 
 
 /*

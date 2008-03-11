@@ -62,32 +62,107 @@
 
     NESTED_ENTRY KiDataAbortException
     PROLOG_END KiDataAbortException
-
-    //
-    // Save space for trap frame
-    //
-    sub sp, #TrapFrameLength
     
     //
-    // Build the register part of the trap frame
+    // Fixup lr
     //
-    stm sp, {r0-r15}
-
-    //
-    // TOOD: We'll worry about the rest later...
-    //
+    sub lr, lr, #8
     
+    //
+    // Save the bottom 4 registers
+    //
+    stmdb sp, {r0-r3}
+    
+    //
+    // Save the abort lr, sp, spsr, cpsr
+    //
+    mov r0, lr
+    mov r1, sp
+    mrs r2, cpsr
+    mrs r3, spsr
+    
+    //
+    // Switch to SVC mode
+    //
+    bic r2, r2, #CPSR_MODES
+    orr r2, r2, #CPSR_SVC_MODE
+    msr cpsr_c, r2
+    
+    //
+    // Save the SVC sp before we modify it
+    //
+    mov r2, sp
+    
+    //
+    // Save the abort lr
+    //
+    str r0, [sp, #-4]!
+    
+    //
+    // Save the SVC lr and sp
+    //
+    str lr, [sp, #-4]!
+    str r2, [sp, #-4]!
+    
+    //
+    // Restore the saved SPSR
+    //
+    msr spsr_all, r3
+    
+    //
+    // Restore our 4 registers
+    //
+    ldmdb r1, {r0-r3}
+    
+    //
+    // Make space for the trap frame
+    //
+    sub sp, sp, #(4*15) // TrapFrameLength
+    
+    //
+    // Save user-mode registers
+    //
+    stmia sp, {r0-r12}
+    add r0, sp, #(4*13)
+    stmia r0, {r13-r14}^
+    
+    //
+    // Save SPSR
+    //
+    mrs r0, spsr_all
+    str r0, [sp, #-4]!
+
     //
     // Call the C handler
     //
-    mov a1, sp
-    b KiDataAbortHandler
+    adr lr, AbortExit
+    mov r0, sp
+    ldr pc, =KiDataAbortHandler
+
+AbortExit:
 
     //
-    // Restore state
+    // Get the SPSR and restore it
     //
-    b .
+    ldr r0, [sp], #4
+    msr spsr_all, r0
     
+    //
+    // Restore the registers
+    //
+    ldmia sp, {r0-r14}^
+    mov r0, r0
+    
+    //
+    // Advance in the trap frame
+    //
+    add sp, sp, #(4*15)
+    
+    //
+    // Restore program execution state
+    //
+    ldmia sp, {sp, lr, pc}^
+    b .
     ENTRY_END KiDataAbortException
 
     NESTED_ENTRY KiInterruptException

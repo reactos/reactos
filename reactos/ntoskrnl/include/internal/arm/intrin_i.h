@@ -30,6 +30,24 @@ KeArmIdCodeRegisterGet(VOID)
 }
 
 FORCEINLINE
+ULONG
+KeArmFaultStatusRegisterGet(VOID)
+{
+    ULONG Value;
+    __asm__ __volatile__ ("mrc p15, 0, %0, c5, c0, 0" : "=r"(Value) : : "cc");
+    return Value;
+}
+
+FORCEINLINE
+ULONG
+KeArmFaultAddressRegisterGet(VOID)
+{
+    ULONG Value;
+    __asm__ __volatile__ ("mrc p15, 0, %0, c6, c0, 0" : "=r"(Value) : : "cc");
+    return Value;
+}
+
+FORCEINLINE
 ARM_LOCKDOWN_REGISTER
 KeArmLockdownRegisterGet(VOID)
 {
