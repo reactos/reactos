@@ -881,6 +881,55 @@ static HRESULT WINAPI IDirect3D9Impl_CreateDevice(LPDIRECT3D9 iface, UINT Adapte
                                                   D3DPRESENT_PARAMETERS* pPresentationParameters,
                                                   struct IDirect3DDevice9** ppReturnedDeviceInterface)
 {
+    DWORD NumAdaptersToCreate;
+
+    LPDIRECT3D9_INT This = impl_from_IDirect3D9(iface);
+    LOCK_D3D9();
+
+    if (Adapter >= This->NumDisplayAdapters)
+    {
+        DPRINT1("Invalid Adapter number specified");
+        UNLOCK_D3D9();
+        return D3DERR_INVALIDCALL;
+    }
+
+    if (DeviceType != D3DDEVTYPE_HAL &&
+        DeviceType != D3DDEVTYPE_REF &&
+        DeviceType != D3DDEVTYPE_SW)
+    {
+        DPRINT1("Invalid DeviceType specified");
+        UNLOCK_D3D9();
+        return D3DERR_INVALIDCALL;
+    }
+
+    if (DeviceType != D3DDEVTYPE_HAL)
+    {
+        UNIMPLEMENTED
+        DPRINT1("Sorry, only D3DDEVTYPE_HAL is implemented at this time...");
+        return D3DERR_INVALIDCALL;
+    }
+
+    if (hFocusWindow != NULL && FALSE == IsWindow(hFocusWindow))
+    {
+        DPRINT1("Invalid hFocusWindow parameter specified");
+        UNLOCK_D3D9();
+        return D3DERR_INVALIDCALL;
+    }
+
+    if (IsBadWritePtr(ppReturnedDeviceInterface, sizeof(IDirect3DDevice9*)))
+    {
+        DPRINT1("Invalid ppReturnedDeviceInterface parameter specified");
+        UNLOCK_D3D9();
+        return D3DERR_INVALIDCALL;
+    }
+
+    if ((BehaviourFlags & D3DCREATE_ADAPTERGROUP_DEVICE) != 0)
+        NumAdaptersToCreate = This->DisplayAdapters[Adapter].NumAdaptersInGroup;
+    else
+        NumAdaptersToCreate = 1;
+
+    *ppReturnedDeviceInterface = 0;
+
     UNIMPLEMENTED
 
     return D3D_OK;

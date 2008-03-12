@@ -177,7 +177,7 @@ static BOOL GetDisplayDeviceInfo(IN OUT LPDIRECT3D9_INT pDirect3D9)
 
     AdapterIndex = 0;
     while (EnumDisplayDevicesA(NULL, AdapterIndex, &DisplayDevice, 0) == TRUE &&
-           pDirect3D9->NumDisplayAdapters < DX_D3D9_MAX_NUM_ADAPTERS)
+           pDirect3D9->NumDisplayAdapters < D3D9_INT_MAX_NUM_ADAPTERS)
     {
         if ((DisplayDevice.StateFlags & (DISPLAY_DEVICE_DISCONNECT | DISPLAY_DEVICE_MIRRORING_DRIVER)) == 0 &&
             (DisplayDevice.StateFlags & (DISPLAY_DEVICE_PRIMARY_DEVICE | DISPLAY_DEVICE_ATTACHED_TO_DESKTOP)) != 0)
@@ -196,7 +196,7 @@ static BOOL GetDisplayDeviceInfo(IN OUT LPDIRECT3D9_INT pDirect3D9)
 
     AdapterIndex = 0;
     while (EnumDisplayDevicesA(NULL, AdapterIndex, &DisplayDevice, 0) == TRUE &&
-           pDirect3D9->NumDisplayAdapters < DX_D3D9_MAX_NUM_ADAPTERS)
+           pDirect3D9->NumDisplayAdapters < D3D9_INT_MAX_NUM_ADAPTERS)
     {
         if ((DisplayDevice.StateFlags & DISPLAY_DEVICE_ATTACHED_TO_DESKTOP) != 0 &&
             (DisplayDevice.StateFlags & (DISPLAY_DEVICE_MIRRORING_DRIVER | DISPLAY_DEVICE_PRIMARY_DEVICE)) == 0)
@@ -240,13 +240,6 @@ HRESULT CreateD3D9(OUT LPDIRECT3D9 *ppDirect3D9, UINT SDKVersion)
     pDirect3D9->dwProcessId = GetCurrentThreadId();
     pDirect3D9->dwRefCnt = 1;
 
-    pDirect3D9->unknown004576 = 0;
-    pDirect3D9->unknown004578 = 0;
-    pDirect3D9->unknown004579 = 0;
-    pDirect3D9->unknown004580 = 0;
-    pDirect3D9->unknown004581 = 0;
-    pDirect3D9->unknown004582 = 0;
-    pDirect3D9->unknown004583 = 0;
     pDirect3D9->SDKVersion = SDKVersion;
 
     pDirect3D9->lpInt = pDirect3D9;
@@ -254,7 +247,6 @@ HRESULT CreateD3D9(OUT LPDIRECT3D9 *ppDirect3D9, UINT SDKVersion)
 
     InitializeCriticalSection(&pDirect3D9->d3d9_cs);
 
-    memset(pDirect3D9->DisplayAdapters, 0, sizeof(pDirect3D9->DisplayAdapters));
     GetDisplayDeviceInfo(pDirect3D9);
 
     *ppDirect3D9 = (LPDIRECT3D9)&pDirect3D9->lpVtbl;

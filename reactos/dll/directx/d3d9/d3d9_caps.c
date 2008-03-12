@@ -502,6 +502,7 @@ BOOL GetD3D9DriverInfo( D3D9_Unknown6BC_INT* pUnknown6BC,
 
                 memcpy(&pDriverCaps->DriverCaps9, &DriverCaps8, sizeof(D3DCAPS8));
                 pDriverCaps->DriverCaps9.Caps = HalInfo.ddCaps.dwCaps;
+                pDriverCaps->dwDriverCaps |= D3D9_INT_D3DCAPS8_VALID;
             }
         }
 
@@ -524,6 +525,7 @@ BOOL GetD3D9DriverInfo( D3D9_Unknown6BC_INT* pUnknown6BC,
 
             pDriverCaps->DriverCaps9 = DriverCaps9;
             pDriverCaps->DriverCaps9.Caps = HalInfo.ddCaps.dwCaps;
+            pDriverCaps->dwDriverCaps |= D3D9_INT_D3DCAPS9_VALID;
         }
 
 

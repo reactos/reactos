@@ -11,7 +11,10 @@
 #include <windows.h>
 #include <ddraw.h>
 
-#define DX_D3D9_MAX_NUM_ADAPTERS    12
+#define D3D9_INT_MAX_NUM_ADAPTERS   12
+
+#define D3D9_INT_D3DCAPS8_VALID     1
+#define D3D9_INT_D3DCAPS9_VALID     2
 
 typedef struct _D3D9Unknown6BC_INT_
 {
@@ -64,7 +67,7 @@ typedef struct _tagD3D9_DRIVERCAPS
 /* 0x0148 */    DWORD dwSVBCaps;
 /* 0x014c */    DWORD dwVSBCaps;
 /* 0x0150 */    DWORD dwSVBCaps2;
-/* 0x0154 */    DWORD unknown0085;
+/* 0x0154 */    DWORD dwDriverCaps;
 /* 0x0158 */    DWORD NumSupportedFormatOps;
 /* 0x015c */    LPDDSURFACEDESC pSupportedFormatOps;
 /* 0x0160 */    DWORD unknown0088;
@@ -162,7 +165,7 @@ typedef struct _tagDIRECT3D9_INT_
 /* 0x0024 */    struct _tagDIRECT3D9_INT_ *lpInt;
 /* 0x0028 */    LONG dwRefCnt;          /* Increases and decreases by AddRef() and Release() */
 /* 0x002c */    UINT NumDisplayAdapters;
-/* 0x0030 */    Direct3D9DisplayAdapterInfo_INT DisplayAdapters[DX_D3D9_MAX_NUM_ADAPTERS];
+/* 0x0030 */    Direct3D9DisplayAdapterInfo_INT DisplayAdapters[D3D9_INT_MAX_NUM_ADAPTERS];
 /* 0x2100 */    DWORD unknown002112;
 /* 0x2104 */    DWORD unknown002113;
 /* 0x2108 */    DWORD unknown002114;
