@@ -1841,7 +1841,9 @@ Phase1InitializationDiscard(IN PVOID Context)
     InbvUpdateProgressBar(80);
 
     /* Initialize VDM support */
+#ifdef i386
     KeI386VdmInitialize();
+#endif
 
     /* Initialize Power Subsystem in Phase 1*/
     if (!PoInitSystem(1, AcpiTableDetected)) KeBugCheck(INTERNAL_POWER_ERROR);

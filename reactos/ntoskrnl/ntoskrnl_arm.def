@@ -518,7 +518,6 @@ KdEnteredDebugger
 KdPollBreakIn
 KdPowerTransition
 KdSystemDebugControl
-Ke386CallBios
 KeAcquireGuardedMutex
 KeAcquireGuardedMutexUnsafe
 KeAcquireSpinLockAtDpcLevel
@@ -550,16 +549,6 @@ KeFlushQueuedDpcs
 KeGetCurrentThread
 KeGetPreviousMode
 KeGetRecommendedSharedDataAlignment
-;KeI386AbiosCall
-KeI386AllocateGdtSelectors
-;KeI386Call16BitCStyleFunction
-;KeI386Call16BitFunction
-KeI386FlatToGdtSelector
-;KeI386GetLid
-;KeI386MachineType DATA
-KeI386ReleaseGdtSelectors
-;KeI386ReleaseLid
-;KeI386SetGdtSelector
 KeIcacheFlushCount DATA
 KeInitializeApc
 KeInitializeDeviceQueue
@@ -621,10 +610,8 @@ KeRemoveQueue
 KeRemoveQueueDpc
 KeRemoveSystemServiceTable
 KeResetEvent
-KeRestoreFloatingPointState
 KeRevertToUserAffinityThread
 KeRundownQueue
-KeSaveFloatingPointState
 KeSaveStateForHibernate
 KeServiceDescriptorTable DATA
 KeSetAffinityThread
@@ -658,13 +645,10 @@ KeWaitForMutexObject=KeWaitForSingleObject
 KeWaitForSingleObject
 KefAcquireSpinLockAtDpcLevel
 KefReleaseSpinLockFromDpcLevel
-Kei386EoiHelper
 KiAcquireSpinLock
 ;KiBugCheckData DATA
-KiCoprocessorError
 KiCheckForKernelApcDelivery
 KiDeliverApc
-KiDispatchInterrupt
 KiEnableTimerWatchdog
 KiIpiServiceRoutine
 KiReleaseSpinLock

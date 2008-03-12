@@ -9,10 +9,14 @@
 /* INCLUDES *******************************************************************/
 
 #include <ntoskrnl.h>
+#include <internal/arm/ksarm.h>
 #define NDEBUG
 #include <debug.h>
 
 /* GLOBALS ********************************************************************/
+
+#define KiGetPreviousMode(tf) \
+    ((tf->Spsr & CPSR_MODES) == CPSR_USER_MODE) ? UserMode: KernelMode
 
 /* FUNCTIONS ******************************************************************/
 
@@ -41,3 +45,60 @@ KiDataAbortHandler(IN PKTRAP_FRAME TrapFrame)
     return STATUS_SUCCESS;
 }
 
+NTSTATUS
+KiSystemService(IN PKTHREAD Thread,
+                IN PKTRAP_FRAME TrapFrame,
+                IN ULONG Instruction)
+{
+    ULONG Id;
+    PKPCR Pcr;
+    
+    //
+    // Increase count of system calls
+    //
+    Pcr = (PKPCR)KeGetPcr();
+    Pcr->Prcb->KeSystemCalls++;
+    
+    //
+    // Get the system call ID
+    //
+    Id = Instruction & 0xFFFFF;
+    DPRINT1("System call (%X) from thread: %p \n", Id, Thread);            
+    while (TRUE);
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+KiSoftwareInterruptHandler(IN PKTRAP_FRAME TrapFrame)
+{
+    PKTHREAD Thread;
+    KPROCESSOR_MODE PreviousMode;
+    ULONG Instruction;
+    DPRINT1("SWI @ %p %p \n", TrapFrame->Pc, TrapFrame->UserLr);
+    
+    //
+    // Get the current thread
+    //
+    Thread = KeGetCurrentThread();
+    
+    //
+    // Isolate previous mode
+    //
+    PreviousMode = KiGetPreviousMode(TrapFrame);
+    
+    //
+    // Save previous mode and trap frame
+    //
+    Thread->TrapFrame = TrapFrame;
+    Thread->PreviousMode = PreviousMode;
+    
+    //
+    // Read the opcode
+    //
+    Instruction = *(PULONG)(TrapFrame->Pc - sizeof(ULONG));
+    
+    //
+    // Call the service call dispatcher
+    //
+    return KiSystemService(Thread, TrapFrame, Instruction);
+}

@@ -44,10 +44,35 @@
     PROLOG_END KiSoftwareInterruptException
     
     //
-    // FIXME: TODO
+    // Save return address
     //
-    b .
+    str lr, [sp, #-4]!
     
+    //
+    // Make space for trap frame
+    //
+    sub sp, sp, #(4*17)
+    
+    //
+    // Save user-mode registers
+    //
+    stmia sp, {r0-r12}
+    add r0, sp, #(4*13)
+    stmia r0, {r13-r14}^
+    mov r0, r0
+    
+    //
+    // Save SPSR
+    //
+    mrs r0, spsr_all
+    str r0, [sp, #-4]!
+    
+    //
+    // Call the C handler
+    //
+    mov r0, sp
+    bl KiSoftwareInterruptHandler
+
     ENTRY_END KiSoftwareInterruptException
 
     NESTED_ENTRY KiPrefetchAbortException
@@ -125,6 +150,7 @@
     stmia sp, {r0-r12}
     add r0, sp, #(4*13)
     stmia r0, {r13-r14}^
+    mov r0, r0
     
     //
     // Save SPSR

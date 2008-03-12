@@ -68,11 +68,7 @@
                             "    j $8\n" \
                             "    nop\n"
 
-//
-// For now, only supports 0-4 arguments
-//
-#define UserModeStub_arm    "    ldr r12, =%x\n" \
-                            "    swi #0x2E\n"      \
+#define UserModeStub_arm    "    swi #0x%x\n"      \
                             "    bx lr\n\n"
 
 #elif defined(_MSC_VER)
@@ -104,8 +100,7 @@
 #define KernelModeStub_mips "    j KiSystemService\n" \
                             "    nop\n"
 
-#define KernelModeStub_arm  "    ldr r12, =0x%x\n" \
-                            "    swi #0x2E\n"      \
+#define KernelModeStub_arm  "    swi #0x%x\n"      \
                             "    bx lr\n\n"
 
 #elif defined(_MSC_VER)

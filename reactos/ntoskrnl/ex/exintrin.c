@@ -18,6 +18,11 @@
 #undef InterlockedExchangeAdd
 #undef InterlockedExchange
 
+//
+// HAL Port to Inlined Port
+//
+#define H2I(Port) PtrToUshort(Port)
+
 /* FUNCTIONS ******************************************************************/
 
 LONG
