@@ -769,7 +769,8 @@ FASTCALL
 KfLowerIrql(
   KIRQL NewIrql)
 {
-  UNIMPLEMENTED;
+    KeGetPcr()->CurrentIrql = NewIrql;
+    UNIMPLEMENTED;
 }
 
 
@@ -778,9 +779,11 @@ FASTCALL
 KfRaiseIrql(
   KIRQL NewIrql)
 {
-  UNIMPLEMENTED;
+    KIRQL OldIrql = KeGetPcr()->CurrentIrql;
+    KeGetPcr()->CurrentIrql = NewIrql;
+    UNIMPLEMENTED;
 
-  return (KIRQL)0;
+    return OldIrql;
 }
 
 VOID
@@ -912,22 +915,28 @@ WRITE_PORT_USHORT(
 KIRQL
 KeSwapIrql(IN KIRQL Irql)
 {
+    KIRQL OldIrql = KeGetPcr()->CurrentIrql;
+    KeGetPcr()->CurrentIrql = Irql;
     UNIMPLEMENTED;
-    return 0;
+    return OldIrql;
 }
 
 KIRQL
 KeRaiseIrqlToDpcLevel(VOID)
 {
+    KIRQL OldIrql = KeGetPcr()->CurrentIrql;
+    KeGetPcr()->CurrentIrql = SYNCH_LEVEL;
     UNIMPLEMENTED;
-    return 0;
+    return OldIrql;
 }
 
 KIRQL
 KeRaiseIrqlToSynchLevel(VOID)
 {
+    KIRQL OldIrql = KeGetPcr()->CurrentIrql;
+    KeGetPcr()->CurrentIrql = SYNCH_LEVEL;
     UNIMPLEMENTED;
-    return 0;
+    return OldIrql;
 }
 
 BOOLEAN HalpProcessorIdentified;

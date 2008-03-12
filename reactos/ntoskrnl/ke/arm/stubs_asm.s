@@ -1,40 +1,6 @@
 #include <internal/arm/asmmacro.S>
 
 //
-// Interlocked APIs
-//
-GENERATE_ARM_STUB ExInterlockedAddLargeInteger 
-GENERATE_ARM_STUB ExInterlockedAddLargeStatistic 
-GENERATE_ARM_STUB ExInterlockedAddUlong 
-GENERATE_ARM_STUB ExInterlockedCompareExchange64
-GENERATE_ARM_STUB ExInterlockedDecrementLong 
-GENERATE_ARM_STUB ExInterlockedExchangeUlong 
-GENERATE_ARM_STUB ExInterlockedFlushSList 
-GENERATE_ARM_STUB ExInterlockedIncrementLong 
-GENERATE_ARM_STUB ExInterlockedInsertHeadList 
-GENERATE_ARM_STUB ExInterlockedInsertTailList 
-GENERATE_ARM_STUB ExInterlockedPopEntryList 
-GENERATE_ARM_STUB ExInterlockedPopEntrySList 
-GENERATE_ARM_STUB ExInterlockedPushEntryList 
-GENERATE_ARM_STUB ExInterlockedPushEntrySList 
-GENERATE_ARM_STUB ExInterlockedRemoveHeadList 
-GENERATE_ARM_STUB ExfInterlockedAddUlong 
-GENERATE_ARM_STUB ExfInterlockedCompareExchange64
-GENERATE_ARM_STUB ExfInterlockedInsertHeadList 
-GENERATE_ARM_STUB ExfInterlockedInsertTailList 
-GENERATE_ARM_STUB ExfInterlockedPopEntryList 
-GENERATE_ARM_STUB ExfInterlockedPushEntryList 
-GENERATE_ARM_STUB ExfInterlockedRemoveHeadList 
-GENERATE_ARM_STUB Exfi386InterlockedDecrementLong 
-GENERATE_ARM_STUB Exfi386InterlockedExchangeUlong 
-GENERATE_ARM_STUB Exfi386InterlockedIncrementLong 
-GENERATE_ARM_STUB Exi386InterlockedDecrementLong 
-GENERATE_ARM_STUB Exi386InterlockedExchangeUlong 
-GENERATE_ARM_STUB Exi386InterlockedIncrementLong 
-GENERATE_ARM_STUB InterlockedPopEntrySList 
-GENERATE_ARM_STUB InterlockedPushEntrySList 
-
-//
 // Port I/O and Register Access
 //
 GENERATE_ARM_STUB READ_REGISTER_BUFFER_UCHAR 
@@ -49,35 +15,6 @@ GENERATE_ARM_STUB WRITE_REGISTER_BUFFER_USHORT
 GENERATE_ARM_STUB WRITE_REGISTER_UCHAR 
 GENERATE_ARM_STUB WRITE_REGISTER_ULONG 
 GENERATE_ARM_STUB WRITE_REGISTER_USHORT 
-
-//
-// CRT APIs implemented in ASM
-//
-GENERATE_ARM_STUB _alldiv 
-GENERATE_ARM_STUB _alldvrm 
-GENERATE_ARM_STUB _allmul 
-GENERATE_ARM_STUB _alloca_probe 
-GENERATE_ARM_STUB _allrem 
-GENERATE_ARM_STUB _allshl 
-GENERATE_ARM_STUB _allshr 
-GENERATE_ARM_STUB _aulldiv 
-GENERATE_ARM_STUB _aulldvrm 
-GENERATE_ARM_STUB _aullrem 
-GENERATE_ARM_STUB _aullshr 
-
-//
-// RTL CRT-like APIs implemented in ASM
-//
-GENERATE_ARM_STUB RtlCompareMemory 
-GENERATE_ARM_STUB RtlCompareMemoryUlong 
-GENERATE_ARM_STUB RtlFillMemory 
-GENERATE_ARM_STUB RtlFillMemoryUlong 
-GENERATE_ARM_STUB RtlMoveMemory 
-GENERATE_ARM_STUB RtlPrefetchMemoryNonTemporal 
-GENERATE_ARM_STUB RtlUlongByteSwap 
-GENERATE_ARM_STUB RtlUlonglongByteSwap 
-GENERATE_ARM_STUB RtlUshortByteSwap 
-GENERATE_ARM_STUB RtlZeroMemory 
 
 //
 // Exceptions

@@ -27,7 +27,7 @@ KiDataAbortHandler(IN PKTRAP_FRAME TrapFrame)
     //
     // Check if this is a page fault
     //
-    if (KeArmFaultStatusRegisterGet() == 21)
+    if (KeArmFaultStatusRegisterGet() == 21 || KeArmFaultStatusRegisterGet() == 23)
     {
         Status = MmAccessFault(FALSE,
                                Address,

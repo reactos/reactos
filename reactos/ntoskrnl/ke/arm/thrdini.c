@@ -87,7 +87,7 @@ KeArmInitThreadWithContext(IN PKTHREAD Thread,
         //
         // Set the previous mode as user
         //
-        TrapFrame->PreviousMode = UserMode;
+        //TrapFrame->PreviousMode = UserMode;
         Thread->PreviousMode = UserMode;
         
         //
@@ -112,7 +112,7 @@ KeArmInitThreadWithContext(IN PKTHREAD Thread,
         //
         // Set the previous mode as kernel
         //
-        Thread->PreviousMode = KernelMode;
+        //Thread->PreviousMode = KernelMode;
         
         //
         // Context switch frame to setup below

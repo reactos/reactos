@@ -33,6 +33,8 @@
 		<directory name="arm">
 			<file>debug_asm.S</file>
 		</directory>
+        <file>mem.c</file>
+        <file>memgen.c</file>
 	</if>
 	<directory name="austin">
 		<file>avl.c</file>

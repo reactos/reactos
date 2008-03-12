@@ -172,8 +172,11 @@
 		<if property="ARCH" value="powerpc">
 			<directory name="powerpc">
 				<file>ioport.s</file>
-				<file>fastinterlck.c</file>
 			</directory>
+            <file>fastinterlck.c</file>
+		</if>
+		<if property="ARCH" value="arm">
+            <file>fastinterlck.c</file>
 		</if>
 		<file>atom.c</file>
 		<file>callback.c</file>
