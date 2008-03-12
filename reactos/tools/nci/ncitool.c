@@ -100,8 +100,9 @@
 #define KernelModeStub_mips "    j KiSystemService\n" \
                             "    nop\n"
 
-#define KernelModeStub_arm  "    swi #0x%x\n"      \
-                            "    bx lr\n\n"
+#define KernelModeStub_arm  "    mov ip, lr\n"      \
+                            "    swi #0x%x\n"      \
+                            "    bx ip\n\n"
 
 #elif defined(_MSC_VER)
 #define KernelModeStub_x86  "    asm { \n" \

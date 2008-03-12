@@ -72,7 +72,30 @@
     //
     mov r0, sp
     bl KiSoftwareInterruptHandler
-
+    
+    //
+    // Get the SPSR and restore it
+    //
+    ldr r0, [sp], #4
+    msr spsr_all, r0
+    
+    //
+    // Restore the registers
+    //
+    ldmia sp, {r0-r14}^
+    mov r0, r0
+    
+    //
+    // Advance in the trap frame
+    //
+    add sp, sp, #(4*17)
+    
+    //
+    // Restore program execution state
+    //
+    ldr lr, [sp], #4
+    movs pc, lr
+    b .
     ENTRY_END KiSoftwareInterruptException
 
     NESTED_ENTRY KiPrefetchAbortException
@@ -222,3 +245,43 @@ AbortExit:
     
     ENTRY_END KiReservedException
 
+
+    NESTED_ENTRY KiSystemCall
+    PROLOG_END KiSystemCall
+    
+    //
+    // a1 has the function pointer, a2 has an array of arguments, a3 has the count
+    // Save these to better locations
+    //
+    mov r4, a1
+    mov r5, a2
+    mov r6, a3
+    
+    //
+    // Load up A1-A4 from the argument array
+    // It doesn't matter if we had less than 4 arguments, we'll be loading some
+    // of the registers with garbage, but nobody will know/care.
+    //
+    ldmia r5, {a1-a4}
+    add r5, r5, #(4* 4)
+    //sub r6, r6, #4
+    
+    //
+    // Now copy the other arguments into our stack
+    //
+CopyLoop:
+    cmp r6, #4
+    //strne sp, [r5], #4
+    //subne r6, r6, #1
+    beq .
+
+    //
+    // Now do the system call
+    //
+    mov pc, r4
+    
+    //
+    // Should not get here
+    //
+    b .
+    ENTRY_END KiSystemCall

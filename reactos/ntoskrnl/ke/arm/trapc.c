@@ -18,6 +18,14 @@
 #define KiGetPreviousMode(tf) \
     ((tf->Spsr & CPSR_MODES) == CPSR_USER_MODE) ? UserMode: KernelMode
 
+NTSTATUS
+KiSystemCall(
+    IN PVOID Handler,
+    IN PULONG Arguments,
+    IN ULONG ArgumentCount
+);
+ 
+
 /* FUNCTIONS ******************************************************************/
 
 NTSTATUS
@@ -45,13 +53,18 @@ KiDataAbortHandler(IN PKTRAP_FRAME TrapFrame)
     return STATUS_SUCCESS;
 }
 
-NTSTATUS
+VOID
 KiSystemService(IN PKTHREAD Thread,
                 IN PKTRAP_FRAME TrapFrame,
                 IN ULONG Instruction)
 {
-    ULONG Id;
+    ULONG Id, Number, ArgumentCount, i;
     PKPCR Pcr;
+    ULONG_PTR ServiceTable, Offset;
+    PKSERVICE_TABLE_DESCRIPTOR DescriptorTable;
+    PVOID SystemCall;
+    PULONG Argument;
+    ULONG Arguments[16]; // Maximum 20 arguments
     
     //
     // Increase count of system calls
@@ -63,12 +76,104 @@ KiSystemService(IN PKTHREAD Thread,
     // Get the system call ID
     //
     Id = Instruction & 0xFFFFF;
-    DPRINT1("System call (%X) from thread: %p \n", Id, Thread);            
-    while (TRUE);
-    return STATUS_SUCCESS;
+    DPRINT1("System call (%X) from thread: %p (%d) \n", Id, Thread, Thread->PreviousMode);
+    
+    //
+    // Get the descriptor table
+    //
+    ServiceTable = (ULONG_PTR)Thread->ServiceTable;
+    Offset = ((Id >> SERVICE_TABLE_SHIFT) & SERVICE_TABLE_MASK);
+    ServiceTable += Offset;
+    DescriptorTable = (PVOID)ServiceTable;
+    DPRINT1("Descriptor Table: %p (Count %d)\n", DescriptorTable, DescriptorTable->Limit);
+    
+    //
+    // Get the service call number and validate it
+    //
+    Number = Id & SERVICE_NUMBER_MASK;
+    if (Number > DescriptorTable->Limit)
+    {
+        //
+        // Check if this is a GUI call
+        //
+        UNIMPLEMENTED;
+        while (TRUE);
+    }
+    
+    //
+    // Save the function responsible for handling this system call
+    //
+    SystemCall = (PVOID)DescriptorTable->Base[Number];
+    DPRINT1("Handler: %p\n", SystemCall);
+    DPRINT1("NtClose: %p\n", NtClose);
+    
+    //
+    // Check if this is a GUI call
+    //
+    if (Offset & SERVICE_TABLE_TEST)
+    {
+        //
+        // TODO
+        //
+        UNIMPLEMENTED;
+        while (TRUE);
+    }
+    
+    //
+    // Check how many arguments this system call takes
+    //
+    DPRINT1("Number: %d\n", Number);
+    ArgumentCount = DescriptorTable->Number[Number] / 4;
+    ASSERT(ArgumentCount <= 20);
+    DPRINT1("Argument Count: %d\n", ArgumentCount);
+    
+    //
+    // Copy the register-arguments first
+    // First four arguments are in a1, a2, a3, a4
+    //
+    Argument = &TrapFrame->R0;
+    for (i = 0; (i < ArgumentCount) && (i < 4); i++)
+    {
+        //
+        // Copy them into the kernel stack
+        //
+        Arguments[i] = *Argument;
+        Argument++;
+        DPRINT1("Argument %d: %x\n", i, Arguments[i]);
+    }
+    
+    //
+    // If more than four, we'll have some on the user stack
+    //
+    if (ArgumentCount > 4)
+    {
+        //
+        // FIXME: Validate the user stack
+        //
+        DPRINT1("User stack: %p\n", TrapFrame->UserSp);
+        
+        //
+        // Copy the rest
+        //
+        Argument = (PULONG)TrapFrame->UserSp;
+        for (i = 4; i < ArgumentCount; i++)
+        {
+            //
+            // Copy into kernel stack
+            //
+            Arguments[i] = *Argument;
+            Argument++;
+            DPRINT1("Argument %d: %x\n", i, Arguments[i]);
+        }
+    }
+    
+    //
+    // Do the system call and save result in EAX
+    //
+    TrapFrame->R0 = KiSystemCall(SystemCall, Arguments, ArgumentCount);
 }
 
-NTSTATUS
+VOID
 KiSoftwareInterruptHandler(IN PKTRAP_FRAME TrapFrame)
 {
     PKTHREAD Thread;
@@ -87,6 +192,11 @@ KiSoftwareInterruptHandler(IN PKTRAP_FRAME TrapFrame)
     PreviousMode = KiGetPreviousMode(TrapFrame);
     
     //
+    // Save old previous mode
+    //
+    //TrapFrame->PreviousMode = PreviousMode;
+    
+    //
     // Save previous mode and trap frame
     //
     Thread->TrapFrame = TrapFrame;
@@ -98,7 +208,11 @@ KiSoftwareInterruptHandler(IN PKTRAP_FRAME TrapFrame)
     Instruction = *(PULONG)(TrapFrame->Pc - sizeof(ULONG));
     
     //
+    // FIXME: Enable interrupts?
+    //
+    
+    //
     // Call the service call dispatcher
     //
-    return KiSystemService(Thread, TrapFrame, Instruction);
+    KiSystemService(Thread, TrapFrame, Instruction);
 }
