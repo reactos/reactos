@@ -65,8 +65,6 @@ IDirect3D9* WINAPI Direct3DCreate9(UINT SDKVersion)
     CHAR DebugMessageBuffer[DEBUG_MESSAGE_BUFFER_SIZE];
     UINT NoDebugSDKVersion = SDKVersion & ~DX_D3D9_DEBUG;
 
-    UNIMPLEMENTED
-
     LoadDebugDllSize = sizeof(LoadDebugDll);
     if (ReadRegistryValue(REG_DWORD, "LoadDebugRuntime", (LPBYTE)&LoadDebugDll, &LoadDebugDllSize))
     {
