@@ -166,7 +166,7 @@
 			<directory name="i386">
 				<file>interlck_asm.S</file>
 				<file>fastinterlck_asm.S</file>
-                <file>ioport.s</file>
+				<file>ioport.S</file>
 			</directory>
 		</if>
 		<file>atom.c</file>
@@ -176,7 +176,7 @@
 		<file>event.c</file>
 		<file>evtpair.c</file>
 		<file>exintrin.c</file>
-        <file>fastinterlck.c</file>
+		<file>fastinterlck.c</file>
 		<file>fmutex.c</file>
 		<file>handle.c</file>
 		<file>harderr.c</file>
