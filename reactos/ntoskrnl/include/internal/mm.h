@@ -1025,7 +1025,11 @@ MmGetLRUFirstUserPage(VOID);
 
 VOID
 NTAPI
-MmSetLRULastPage(PFN_TYPE Page);
+MmInsertLRULastUserPage(PFN_TYPE Page);
+
+VOID
+NTAPI
+MmRemoveLRUUserPage(PFN_TYPE Page);
 
 VOID
 NTAPI

@@ -31,8 +31,12 @@ PPHYSICAL_PAGE MmPageArray;
 ULONG MmPageArraySize;
 
 static KSPIN_LOCK PageListLock;
+/* List of pages allocated to the MC_USER Consumer */
 static LIST_ENTRY UserPageListHead;
+/* List of pages zeroed by the ZPW (MmZeroPageThreadMain) */
 static LIST_ENTRY FreeZeroedPageListHead;
+/* List of free pages, filled by MmGetReferenceCountPage and
+ * and MmInitializePageList */
 static LIST_ENTRY FreeUnzeroedPageListHead;
 
 static KEVENT ZeroPageThreadEvent;
@@ -65,19 +69,16 @@ MmGetLRUFirstUserPage(VOID)
 
 VOID
 NTAPI
-MmSetLRULastPage(PFN_TYPE Pfn)
+MmInsertLRULastUserPage(PFN_TYPE Pfn)
 {
    KIRQL oldIrql;
    PPHYSICAL_PAGE Page;
 
    KeAcquireSpinLock(&PageListLock, &oldIrql);
    Page = MiGetPfnEntry(Pfn);
-   if (Page->Flags.Type == MM_PHYSICAL_PAGE_USED &&
-       Page->Flags.Consumer == MC_USER)
-   {
-      RemoveEntryList(&Page->ListEntry);
-      InsertTailList(&UserPageListHead, &Page->ListEntry);
-   }
+   ASSERT(Page->Flags.Type == MM_PHYSICAL_PAGE_USED);
+   ASSERT(Page->Flags.Consumer == MC_USER);
+   InsertTailList(&UserPageListHead, &Page->ListEntry);
    KeReleaseSpinLock(&PageListLock, oldIrql);
 }
 
@@ -92,15 +93,9 @@ MmGetLRUNextUserPage(PFN_TYPE PreviousPfn)
 
    KeAcquireSpinLock(&PageListLock, &oldIrql);
    Page = MiGetPfnEntry(PreviousPfn);
-   if (Page->Flags.Type != MM_PHYSICAL_PAGE_USED ||
-       Page->Flags.Consumer != MC_USER)
-   {
-      NextListEntry = UserPageListHead.Flink;
-   }
-   else
-   {
-      NextListEntry = Page->ListEntry.Flink;
-   }
+   ASSERT(Page->Flags.Type == MM_PHYSICAL_PAGE_USED);
+   ASSERT(Page->Flags.Consumer == MC_USER);
+   NextListEntry = Page->ListEntry.Flink;
    if (NextListEntry == &UserPageListHead)
    {
       KeReleaseSpinLock(&PageListLock, oldIrql);
@@ -109,6 +104,13 @@ MmGetLRUNextUserPage(PFN_TYPE PreviousPfn)
    PageDescriptor = CONTAINING_RECORD(NextListEntry, PHYSICAL_PAGE, ListEntry);
    KeReleaseSpinLock(&PageListLock, oldIrql);
    return PageDescriptor - MmPageArray;
+}
+
+VOID
+NTAPI
+MmRemoveLRUUserPage(PFN_TYPE Page)
+{
+   RemoveEntryList(&MiGetPfnEntry(Page)->ListEntry);
 }
 
 PFN_TYPE
@@ -782,7 +784,6 @@ MmAllocPage(ULONG Consumer, SWAPENTRY SavedSwapEntry)
    KeReleaseSpinLock(&PageListLock, oldIrql);
 
    PfnOffset = PageDescriptor - MmPageArray;
-   MmSetLRULastPage(PfnOffset);
    if (NeedClear)
    {
       MiZeroPage(PfnOffset);
@@ -882,7 +883,7 @@ MmAllocPagesSpecifyRange(ULONG Consumer,
          /* Remember the page */
          pfn = PageDescriptor - MmPageArray;
          Pages[NumberOfPagesFound++] = pfn;
-         MmSetLRULastPage(pfn);
+         if(Consumer == MC_USER) MmInsertLRULastUserPage(pfn);
       }
    }
    else
@@ -917,7 +918,6 @@ MmAllocPagesSpecifyRange(ULONG Consumer,
 
             /* Remember the page */
             Pages[NumberOfPagesFound++] = pfn;
-            MmSetLRULastPage(pfn);
             if (NumberOfPagesFound == NumberOfPages)
                break;
          }
