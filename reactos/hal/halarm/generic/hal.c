@@ -17,8 +17,10 @@
 #include <ndk/halfuncs.h>
 #include <ndk/iofuncs.h>
 #include <ndk/kdfuncs.h>
+#include <ndk/kefuncs.h>
 #include <internal/arm/ke.h>
 #include <internal/arm/intrin_i.h>
+#include <bugcodes.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -31,6 +33,9 @@
 #undef KeLowerIrql
 #undef KeRaiseIrql
 #undef KeReleaseSpinLock
+
+#define READ_REGISTER_ULONG(r) (*(volatile ULONG * const)(r))
+#define WRITE_REGISTER_ULONG(r, v) (*(volatile ULONG *)(r) = (v))
 
 /* DATA **********************************************************************/
 
@@ -371,16 +376,210 @@ HalHandleNMI(
   UNIMPLEMENTED;
 }
 
+VOID
+NTAPI
+HalpGetParameters(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
+{
+    PCHAR CommandLine;
+    
+    /* Make sure we have a loader block and command line */
+    if ((LoaderBlock) && (LoaderBlock->LoadOptions))
+    {
+        /* Read the command line */
+        CommandLine = LoaderBlock->LoadOptions;
+        
+        /* Check for initial breakpoint */
+        if (strstr(CommandLine, "BREAK")) DbgBreakPoint();
+    }
+}
 
+
+//
+// INTs on the Versatile:
+//
+// 0 WATCHDOG -> We use it for profiling
+// 1 SOFTWARE INTERRUPT -> We use it for APC delivery
+// 2 COMM RX -> We use it for DPC delivery
+// 3 COMM TX -> We use it for IPI delivery
+// 4 TIMER0/1 -> Use for Clock Interrupt.
+// 5+ XXX -> Mapped to to actual device
+//
+// So we have the following IRQL masks:
+// PASSIVE_LEVEL - 0xFFFFFFFF (enable all interrupts)
+// APC_LEVEL - 0xFFFFFFFD (disable interrupt 1)
+// DISPATCH_LEVEL - 0xFFFFFFF9 (disable interrupts 1, 2)
+// DEVICE_LEVEL_0 - 0xFFFFFFD9 (disable interrupts 1, 2, 5)
+// DEVICE_LEVEL_N - 0x19 (everything disabled except 0, 3, 4)
+// PROFILE_LEVEL - 0x18 (everything disabled except, 3, 4)
+// CLOCK_LEVEL - 0x10 (everything disabled except 4)
+// POWER_LEVEL, IPI_LEVEL, HIGH_LEVEL - 0x00 (everything disabled)
+
+ULONG HalpIrqlTable[] =
+{
+    0xFFFFFFFF, // IRQL 0 PASSIVE_LEVEL
+    0xFFFFFFFD, // IRQL 1 APC_LEVEL
+    0xFFFFFFF9, // IRQL 2 DISPATCH_LEVEL
+    0xFFFFFFD9, // IRQL 3
+    0xFFFFFF99, // IRQL 4
+    0xFFFFFF19, // IRQL 5
+    0xFFFFFE19, // IRQL 6
+    0xFFFFFC19, // IRQL 7
+    0xFFFFF819, // IRQL 8
+    0xFFFFF019, // IRQL 9
+    0xFFFFE019, // IRQL 10
+    0xFFFFC019, // IRQL 11
+    0xFFFF8019, // IRQL 12
+    0xFFFF0019, // IRQL 13
+    0xFFFE0019, // IRQL 14
+    0xFFFC0019, // IRQL 15
+    0xFFF80019, // IRQL 16
+    0xFFF00019, // IRQL 17
+    0xFFE00019, // IRQL 18
+    0xFFC00019, // IRQL 19
+    0xFF800019, // IRQL 20
+    0xFF000019, // IRQL 21
+    0xFE000019, // IRQL 22
+    0xFC000019, // IRQL 23
+    0xF0000019, // IRQL 24
+    0x80000019, // IRQL 25
+    0x19,       // IRQL 26
+    0x18,       // IRQL 27 PROFILE_LEVEL
+    0x10,       // IRQL 28 CLOCK2_LEVEL
+    0x00,       // IRQL 29 IPI_LEVEL
+    0x00,       // IRQL 30 POWER_LEVEL
+    0x00,       // IRQL 31 HIGH_LEVEL
+};
+
+
+VOID
+HalpStallInterrupt(VOID)
+{
+    DPRINT1("STALL INTERRUPT!!!\n");
+    while (TRUE);
+}
+
+VOID
+HalpInitializeInterrupts(VOID)
+{
+    ULONG i;
+    PKPCR Pcr = (PKPCR)KeGetPcr();
+    
+    //
+    // Fill out the IRQL mappings
+    //
+    for (i = 0; i < (HIGH_LEVEL + 1); i++)
+    {
+        //
+        // Save the valeue in the PCR
+        //
+        Pcr->IrqlTable[i] = HalpIrqlTable[i];
+    }
+    
+    //
+    // Setup the clock and profile interrupt
+    //
+    Pcr->InterruptRoutine[CLOCK2_LEVEL] = HalpStallInterrupt;
+    //    Pcr->InterruptRoutine[PROFILE_LEVEL] = HalpCountInterrupt;
+}
+
+ULONG HalpCurrentTimeIncrement, HalpNextTimeIncrement, HalpNextIntervalCount;
+
+#define VICINTENABLE     (PVOID)0xE0040010
+#define VICINTENCLEAR    (PVOID)0xE0040014
+#define VICSOFTINT       (PVOID)0xE0040018
+#define VICSOFTINTCLEAR  (PVOID)0xE004001C
+
+/*
+ * @implemented
+ */
 BOOLEAN
 NTAPI
-HalInitSystem(
-  ULONG BootPhase,
-  PLOADER_PARAMETER_BLOCK LoaderBlock)
+HalInitSystem(IN ULONG BootPhase,
+              IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
-  UNIMPLEMENTED;
-
-  return TRUE;
+    PKPRCB Prcb = KeGetCurrentPrcb();
+    
+    //
+    // Check the boot phase
+    //
+    if (!BootPhase)
+    {
+        //
+        // Get command-line parameters
+        //
+        HalpGetParameters(LoaderBlock);
+        
+#if DBG
+        //
+        // Checked HAL requires checked kernel
+        //
+        if (!(Prcb->BuildType & PRCB_BUILD_DEBUG))
+        {
+            //
+            // No match, bugcheck
+            //
+            KeBugCheckEx(MISMATCHED_HAL, 2, Prcb->BuildType, 1, 0);
+        }
+#else
+        //
+        // Release build requires release HAL
+        //
+        if (Prcb->BuildType & PRCB_BUILD_DEBUG)
+        {
+            //
+            // No match, bugcheck
+            //
+            KeBugCheckEx(MISMATCHED_HAL, 2, Prcb->BuildType, 0, 0);
+        }
+#endif
+        
+#ifdef CONFIG_SMP
+        //
+        // SMP HAL requires SMP kernel
+        //
+        if (Prcb->BuildType & PRCB_BUILD_UNIPROCESSOR)
+        {
+            //
+            // No match, bugcheck
+            //
+            KeBugCheckEx(MISMATCHED_HAL, 2, Prcb->BuildType, 0, 0);
+        }
+#endif
+        
+        //
+        // Validate the PRCB
+        //
+        if (Prcb->MajorVersion != PRCB_MAJOR_VERSION)
+        {
+            //
+            // Validation failed, bugcheck
+            //
+            KeBugCheckEx(MISMATCHED_HAL, 1, Prcb->MajorVersion, 1, 0);
+        }
+        
+        //
+        // Setup time increments to 10ms and 1ms
+        //
+        HalpCurrentTimeIncrement = 100000;
+        HalpNextTimeIncrement = 100000;
+        HalpNextIntervalCount = 0;
+        KeSetTimeIncrement(100000, 10000);
+        
+        //
+        // Initialize interrupts
+        //
+        HalpInitializeInterrupts();
+    }
+    else if (BootPhase == 1)
+    {
+        UNIMPLEMENTED;
+        while (TRUE);
+    }
+    
+    //
+    // All done, return
+    //
+    return TRUE;
 }
 
 
@@ -484,10 +683,35 @@ HalRequestIpi(
 
 VOID
 FASTCALL
-HalRequestSoftwareInterrupt(
-  KIRQL Request)
+HalRequestSoftwareInterrupt(IN KIRQL Request)
 {
-  UNIMPLEMENTED;
+    ULONG Interrupt = 0;
+
+    //
+    // Get the interrupt that maches this IRQL level
+    //
+    switch (Request)
+    {
+        case APC_LEVEL:
+            
+            Interrupt = 1 << 1;
+            break;
+            
+        case DISPATCH_LEVEL:
+            
+            Interrupt = 1 << 2;
+            break;
+            
+        default:
+            
+            ASSERT(FALSE);
+    }
+    
+    //
+    // Force a software interrupt
+    //
+    DPRINT1("About to force interrupt mask: %d\n", Interrupt);
+    WRITE_REGISTER_ULONG(VICSOFTINT, Interrupt);
 }
 
 VOID FASTCALL
@@ -766,23 +990,79 @@ KeStallExecutionProcessor(
 
 VOID
 FASTCALL
-KfLowerIrql(
-  KIRQL NewIrql)
+KfLowerIrql(IN KIRQL NewIrql)
 {
-    KeGetPcr()->CurrentIrql = NewIrql;
-    UNIMPLEMENTED;
+    ULONG InterruptMask;
+    PKPCR Pcr = (PKPCR)KeGetPcr();
+    
+    //
+    // Validate the new IRQL
+    //
+    ASSERT(NewIrql <= Pcr->CurrentIrql);
+    
+    //
+    // IRQLs are internally 8 bits
+    //
+    NewIrql &= 0xFF;
+    
+    //
+    // Setup the interrupt mask for this IRQL
+    //
+    InterruptMask = KeGetPcr()->IrqlTable[NewIrql];
+    DPRINT1("New IRQL: %d InterruptMask: %lx\n", NewIrql, InterruptMask);
+    
+    //
+    // Clear interrupts associated to the old IRQL
+    //
+    WRITE_REGISTER_ULONG(VICINTENCLEAR, 0xFFFFFFFF);
+    
+    //
+    // Set the new interrupt mask
+    // PL190 VIC support only for now
+    //
+    WRITE_REGISTER_ULONG(VICINTENABLE, InterruptMask);
+    
+    //
+    // Save the new IRQL
+    //
+    Pcr->CurrentIrql = NewIrql;
 }
-
 
 KIRQL
 FASTCALL
-KfRaiseIrql(
-  KIRQL NewIrql)
+KfRaiseIrql(IN KIRQL NewIrql)
 {
-    KIRQL OldIrql = KeGetPcr()->CurrentIrql;
-    KeGetPcr()->CurrentIrql = NewIrql;
-    UNIMPLEMENTED;
-
+    KIRQL OldIrql;
+    ULONG InterruptMask;
+    PKPCR Pcr = (PKPCR)KeGetPcr();
+    
+    //
+    // Save the current IRQL
+    //
+    OldIrql = Pcr->CurrentIrql;
+    
+    //
+    // IRQLs are internally 8 bits
+    //
+    NewIrql &= 0xFF;
+    
+    //
+    // Setup the interrupt mask for this IRQL
+    //
+    InterruptMask = KeGetPcr()->IrqlTable[NewIrql];
+    DPRINT1("New IRQL: %d InterruptMask: %lx\n", NewIrql, InterruptMask);
+    //ASSERT(NewIrql >= OldIrql);
+    
+    //
+    // Set the new interrupt mask
+    // PL190 VIC support only for now
+    //
+    WRITE_REGISTER_ULONG(VICINTENABLE, InterruptMask);
+    
+    //
+    // Save the new IRQL
+    //
+    Pcr->CurrentIrql = NewIrql;
     return OldIrql;
 }
 
@@ -915,28 +1195,28 @@ WRITE_PORT_USHORT(
 KIRQL
 KeSwapIrql(IN KIRQL Irql)
 {
-    KIRQL OldIrql = KeGetPcr()->CurrentIrql;
-    KeGetPcr()->CurrentIrql = Irql;
-    UNIMPLEMENTED;
-    return OldIrql;
+    //
+    // Call the generic routine
+    //
+    return KfRaiseIrql(Irql);
 }
 
 KIRQL
 KeRaiseIrqlToDpcLevel(VOID)
 {
-    KIRQL OldIrql = KeGetPcr()->CurrentIrql;
-    KeGetPcr()->CurrentIrql = SYNCH_LEVEL;
-    UNIMPLEMENTED;
-    return OldIrql;
+    //
+    // Call the generic routine
+    //
+    return KfRaiseIrql(DISPATCH_LEVEL);
 }
 
 KIRQL
 KeRaiseIrqlToSynchLevel(VOID)
 {
-    KIRQL OldIrql = KeGetPcr()->CurrentIrql;
-    KeGetPcr()->CurrentIrql = SYNCH_LEVEL;
-    UNIMPLEMENTED;
-    return OldIrql;
+    //
+    // Call the generic routine
+    //
+    return KfRaiseIrql(DISPATCH_LEVEL);
 }
 
 BOOLEAN HalpProcessorIdentified;
@@ -1136,7 +1416,7 @@ KeAcquireInStackQueuedSpinLockRaiseToSynch(IN PKSPIN_LOCK SpinLock,
                                            IN PKLOCK_QUEUE_HANDLE LockHandle)
 {
     /* Simply raise to synch */
-    LockHandle->OldIrql = KfRaiseIrql(SYNCH_LEVEL);
+    LockHandle->OldIrql = KfRaiseIrql(DISPATCH_LEVEL);
 }
 
 /*

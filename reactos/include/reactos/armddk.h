@@ -4,15 +4,17 @@
 //
 // IRQLs
 //
-#define PASSIVE_LEVEL           0
-#define LOW_LEVEL               0
-#define APC_LEVEL               1
-#define DISPATCH_LEVEL          2
-#define IPI_LEVEL               7
-#define POWER_LEVEL             7
-#define PROFILE_LEVEL           8
-#define HIGH_LEVEL              8
-#define SYNCH_LEVEL             (IPI_LEVEL - 1)
+#define PASSIVE_LEVEL                     0
+#define LOW_LEVEL                         0
+#define APC_LEVEL                         1
+#define DISPATCH_LEVEL                    2
+#define SYNCH_LEVEL                       DISPATCH_LEVEL
+#define PROFILE_LEVEL                     27
+#define CLOCK1_LEVEL                      28
+#define CLOCK2_LEVEL                      28
+#define IPI_LEVEL                         29
+#define POWER_LEVEL                       30
+#define HIGH_LEVEL                        31
 
 //
 // FIXME: mmtypes.h?
@@ -83,8 +85,8 @@ typedef struct _KPCR
     PVOID InstructionBusError;
     ULONG CachePolicy;
     ULONG AlignedCachePolicy;
-    UCHAR IrqlMask[64];
-    UCHAR IrqlTable[64];
+//    UCHAR IrqlMask[64];
+    ULONG IrqlTable[HIGH_LEVEL + 1];
     UCHAR CurrentIrql;
     KAFFINITY SetMember;
     struct _KTHREAD *CurrentThread;

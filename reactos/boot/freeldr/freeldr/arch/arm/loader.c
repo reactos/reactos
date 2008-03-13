@@ -742,7 +742,7 @@ ArmSetupPageDirectory(VOID)
     ArmTable->Pte[0] = Pte;
     
     //
-    // Map the page in MMIO space that contains the serial port into virtual memory
+    // Map the page in MMIO space that contains the serial port and timers
     //
     Pte.L1.Section.BaseAddress = ArmBoardBlock->UartRegisterBase >> PDE_SHIFT;
     ArmTable->Pte[UART_VIRTUAL >> PDE_SHIFT] = Pte;
