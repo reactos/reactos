@@ -46,7 +46,6 @@ MmAllocateNonCachedMemory(IN ULONG NumberOfBytes)
    PVOID Result;
    MEMORY_AREA* marea;
    NTSTATUS Status;
-   ULONG i;
    ULONG Protect = PAGE_READWRITE|PAGE_SYSTEM|PAGE_NOCACHE|PAGE_WRITETHROUGH;
    PHYSICAL_ADDRESS BoundaryAddressMultiple;
 
@@ -66,20 +65,14 @@ MmAllocateNonCachedMemory(IN ULONG NumberOfBytes)
 
    if (!NT_SUCCESS(Status))
    {
+      DPRINT1("Allocating marea for noncached mem failed with Status "
+          "0x%08X\n", Status);
       return (NULL);
    }
 
-   for (i = 0; i < (PAGE_ROUND_UP(NumberOfBytes) / PAGE_SIZE); i++)
-   {
-      PFN_TYPE NPage;
+   /* Create a virtual mapping for this memory area */
+   MmMapMemoryArea(Result, NumberOfBytes, MC_NPPOOL, Protect);
 
-      Status = MmRequestPageMemoryConsumer(MC_NPPOOL, TRUE, &NPage);
-      MmCreateVirtualMapping (NULL,
-                              (char*)Result + (i * PAGE_SIZE),
-                              Protect,
-                              &NPage,
-                              1);
-   }
    return ((PVOID)Result);
 }
 

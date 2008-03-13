@@ -561,16 +561,13 @@ CcRosCreateCacheSegment(PBCB Bcb,
 			ULONG FileOffset,
 			PCACHE_SEGMENT* CacheSeg)
 {
-  ULONG i;
   PCACHE_SEGMENT current;
   PCACHE_SEGMENT previous;
   PLIST_ENTRY current_entry;
   NTSTATUS Status;
   KIRQL oldIrql;
-  PPFN_TYPE Pfn;
 #ifdef CACHE_BITMAP
   ULONG StartingOffset;
-#else
 #endif
   PHYSICAL_ADDRESS BoundaryAddressMultiple;
 
@@ -706,24 +703,10 @@ CcRosCreateCacheSegment(PBCB Bcb,
      KEBUGCHECKCC;
   }
 #endif
-  Pfn = alloca(sizeof(PFN_TYPE) * ((Bcb->CacheSegmentSize / PAGE_SIZE)));
-  for (i = 0; i < (Bcb->CacheSegmentSize / PAGE_SIZE); i++)
-  {
-     Status = MmRequestPageMemoryConsumer(MC_CACHE, TRUE, &Pfn[i]);
-     if (!NT_SUCCESS(Status))
-     {
-	KEBUGCHECKCC;
-     }
-  }
-  Status = MmCreateVirtualMapping(NULL,
-				  current->BaseAddress,
-				  PAGE_READWRITE,
-				  Pfn,
-				  Bcb->CacheSegmentSize / PAGE_SIZE);
-  if (!NT_SUCCESS(Status))
-  {
-    KEBUGCHECKCC;
-  }
+
+  /* Create a virtual mapping for this memory area */
+  MmMapMemoryArea(current->BaseAddress, Bcb->CacheSegmentSize,
+      MC_CACHE, PAGE_READWRITE);
 
   return(STATUS_SUCCESS);
 }

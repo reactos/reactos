@@ -503,6 +503,13 @@ MmReleaseMemoryAreaIfDecommitted(
     PVOID BaseAddress
 );
 
+VOID
+NTAPI
+MmMapMemoryArea(PVOID BaseAddress,
+                ULONG Length,
+                ULONG Consumer,
+                ULONG Protection);
+
 /* npool.c *******************************************************************/
 
 VOID

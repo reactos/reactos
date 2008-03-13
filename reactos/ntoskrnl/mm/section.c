@@ -4391,7 +4391,6 @@ MmAllocateSection (IN ULONG Length, PVOID BaseAddress)
    PVOID Result;
    MEMORY_AREA* marea;
    NTSTATUS Status;
-   ULONG i;
    PMADDRESS_SPACE AddressSpace;
    PHYSICAL_ADDRESS BoundaryAddressMultiple;
 
@@ -4418,27 +4417,10 @@ MmAllocateSection (IN ULONG Length, PVOID BaseAddress)
       return (NULL);
    }
    DPRINT("Result %p\n",Result);
-   for (i = 0; i < PAGE_ROUND_UP(Length) / PAGE_SIZE; i++)
-   {
-      PFN_TYPE Page;
 
-      Status = MmRequestPageMemoryConsumer(MC_NPPOOL, TRUE, &Page);
-      if (!NT_SUCCESS(Status))
-      {
-         DPRINT1("Unable to allocate page\n");
-         KEBUGCHECK(0);
-      }
-      Status = MmCreateVirtualMapping (NULL,
-                                       (PVOID)((ULONG_PTR)Result + (i * PAGE_SIZE)),
-                                       PAGE_READWRITE,
-                                       &Page,
-                                       1);
-      if (!NT_SUCCESS(Status))
-      {
-         DPRINT1("Unable to create virtual mapping\n");
-         KEBUGCHECK(0);
-      }
-   }
+   /* Create a virtual mapping for this memory area */
+   MmMapMemoryArea(Result, Length, MC_NPPOOL, PAGE_READWRITE);
+
    return ((PVOID)Result);
 }
 
