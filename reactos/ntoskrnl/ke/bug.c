@@ -227,41 +227,39 @@ KeRosCaptureUserStackBackTrace(IN ULONG FramesToSkip,
     return (USHORT)i;
 }
 
+
 VOID
-NTAPI
-KeRosDumpStackFrames(IN PULONG Frame OPTIONAL,
-                     IN ULONG FrameCount OPTIONAL)
+FASTCALL
+KeRosDumpStackFrameArray(IN PULONG Frames,
+                         IN ULONG FrameCount)
 {
-    ULONG Frames[32];
     ULONG i, Addr;
     BOOLEAN InSystem;
+    PVOID p;
     PLDR_DATA_TABLE_ENTRY LdrEntry;
 
-    /* If the caller didn't ask, assume 32 frames */
-    if (!FrameCount || FrameCount > 32) FrameCount = 32;
-
-    /* Get the current frames */
-    FrameCount = RtlCaptureStackBackTrace(2, FrameCount, (PVOID*)Frames, NULL);
-
-    /* Now loop them (skip the two. One for the dumper, one for the caller) */
+    /* Loop them */
     for (i = 0; i < FrameCount; i++)
     {
         /* Get the EIP */
         Addr = Frames[i];
-
-        /* If we had a custom frame, make sure we've reached it first */
-        if ((Frame) && (Frame[1] == Addr))
+        if (!Addr)
         {
-            Frame = NULL;
-        }
-        else if (Frame)
-        {
-            /* Skip this entry */
-            continue;
+        	break;
         }
 
         /* Get the base for this file */
-        if (KiPcToFileHeader((PVOID)Addr, &LdrEntry, FALSE, &InSystem))
+        if (Addr > (ULONG_PTR)MmHighestUserAddress)
+        {
+            /* We are in kernel */
+            p = KiPcToFileHeader((PVOID)Addr, &LdrEntry, FALSE, &InSystem);
+        }
+        else
+        {
+            /* We are in user land */
+            p = KiRosPcToUserFileHeader((PVOID)Addr, &LdrEntry);
+        }
+        if (p)
         {
 #ifdef KDBG
             if (!KdbSymPrintAddress((PVOID)Addr))
@@ -269,53 +267,54 @@ KeRosDumpStackFrames(IN PULONG Frame OPTIONAL,
             {
                 /* Print out the module name */
                 Addr -= (ULONG_PTR)LdrEntry->DllBase;
-                DbgPrint("<%wZ: %x>", &LdrEntry->FullDllName, Addr);
+                DbgPrint("<%wZ: %x>\n", &LdrEntry->FullDllName, Addr);
             }
         }
-        else if (Addr)
+        else
         {
             /* Print only the address */
-            DbgPrint("<%x>", Addr);
+            DbgPrint("<%x>\n", Addr);
         }
 
         /* Go to the next frame */
         DbgPrint("\n");
     }
+}
 
-    /* Get the current frames */
-    FrameCount = KeRosCaptureUserStackBackTrace(-1, 32, (PVOID*)Frames, NULL);
+VOID
+NTAPI
+KeRosDumpStackFrames(IN PULONG Frame OPTIONAL,
+                     IN ULONG FrameCount OPTIONAL)
+{
+    ULONG Frames[32];
+    ULONG RealFrameCount;
 
-    /* Now loop them */
-    for (i = 0; i < FrameCount; i++)
+    /* If the caller didn't ask, assume 32 frames */
+    if (!FrameCount || FrameCount > 32) FrameCount = 32;
+
+    if (Frame)
     {
-        /* Get the EIP */
-        Addr = Frames[i];
-
-        /* Get the base for this file */
-        if (KiRosPcToUserFileHeader((PVOID)Addr, &LdrEntry))
-        {
-            /* Print out the module name */
-#ifdef KDBG
-            if (!KdbSymPrintAddress((PVOID)Addr))
-#endif
-            {
-                /* Fall back to usual printing */
-                Addr -= (ULONG_PTR)LdrEntry->DllBase;
-                DbgPrint("<%wZ: %x>", &LdrEntry->FullDllName, Addr);
-            }
-        }
-        else if (Addr)
-        {
-            /* Print only the address */
-            DbgPrint("<%x>", Addr);
-        }
-
-        /* Go to the next frame */
-        DbgPrint("\n");
+        /* Dump them */
+        KeRosDumpStackFrameArray(Frame, FrameCount);
     }
+    else
+    {
+        /* Get the current frames (skip the two. One for the dumper, one for the caller) */
+        RealFrameCount = RtlCaptureStackBackTrace(2, FrameCount, (PVOID*)Frames, NULL);
 
-    /* Finish the output */
-    DbgPrint("\n");
+        /* Dump them */
+        KeRosDumpStackFrameArray(Frames, RealFrameCount);
+
+        /* Count left for user mode? */
+        if (FrameCount - RealFrameCount > 0)
+        {
+            /* Get the current frames */
+            RealFrameCount = KeRosCaptureUserStackBackTrace(-1, FrameCount - RealFrameCount, (PVOID*)Frames, NULL);
+
+            /* Dump them */
+            KeRosDumpStackFrameArray(Frames, RealFrameCount);
+        }
+    }
 }
 
 VOID
