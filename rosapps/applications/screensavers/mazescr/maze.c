@@ -774,6 +774,7 @@ hWnd = hParent;
 
 	// Make the window visible; update its client area; and return "success"
 	ShowWindow(hWnd, SW_SHOW); // Show the window
+	SetCursor(NULL);
 	UpdateWindow(hWnd);         // Sends WM_PAINT message
 
 	hPenWall = CreatePen(PS_SOLID, 3, RGB(150,150,150));
