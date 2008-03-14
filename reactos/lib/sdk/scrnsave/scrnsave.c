@@ -189,6 +189,7 @@ static int LaunchScreenSaver(HWND hParent)
     if (hMainWindow)
     {
         ShowWindow(hMainWindow, SW_SHOW);
+        SetCursor(NULL);
 
         while (GetMessage(&msg, NULL, 0, 0))
             DispatchMessage(&msg);

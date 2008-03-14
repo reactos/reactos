@@ -125,59 +125,54 @@ IntSetCursor(PWINSTATION_OBJECT WinSta, PCURICON_OBJECT NewCursor,
    {
       return Ret;
    }
-   else
+
+   if(!(Screen = IntGetScreenDC()))
    {
-      if(!(Screen = IntGetScreenDC()))
-      {
-         return (HCURSOR)0;
-      }
-      /* FIXME use the desktop's HDC instead of using ScreenDeviceContext */
-      dc = DC_LockDc(Screen);
-
-      if (!dc)
-      {
-         return Ret;
-      }
-      dcbmp = dc->w.hBitmap;
-      DevInfo = (PDEVINFO)&((GDIDEVICE *)dc->pPDev)->DevInfo;
-      DC_UnlockDc(dc);
-
-      BitmapObj = BITMAPOBJ_LockBitmap(dcbmp);
-      if ( !BitmapObj )
-         return (HCURSOR)0;
-      SurfObj = &BitmapObj->SurfObj;
-      ASSERT(SurfObj);
+      return (HCURSOR)0;
    }
+   /* FIXME use the desktop's HDC instead of using ScreenDeviceContext */
+   dc = DC_LockDc(Screen);
 
-   if (!NewCursor && (CurInfo->CurrentCursorObject || ForceChange))
+   if (!dc)
    {
-      if (NULL != CurInfo->CurrentCursorObject)
-      {
-         UserDereferenceObject(CurInfo->CurrentCursorObject);
-         if (CurInfo->ShowingCursor)
-         {
-            /* Remove the cursor if it was displayed */
-            IntEngMovePointer(SurfObj, -1, -1, &GDIDEV(SurfObj)->Pointer.Exclude);
-         }
-      }
-
-      GDIDEV(SurfObj)->Pointer.Status = SPS_ACCEPT_NOEXCLUDE;
-
-      CurInfo->CurrentCursorObject = NewCursor; /* i.e. CurrentCursorObject = NULL */
-      CurInfo->ShowingCursor = 0;
-      BITMAPOBJ_UnlockBitmap(BitmapObj);
       return Ret;
    }
+   dcbmp = dc->w.hBitmap;
+   DevInfo = (PDEVINFO)&((GDIDEVICE *)dc->pPDev)->DevInfo;
+   DC_UnlockDc(dc);
+
+   BitmapObj = BITMAPOBJ_LockBitmap(dcbmp);
+   if (!BitmapObj)
+      return (HCURSOR)0;
+   SurfObj = &BitmapObj->SurfObj;
 
    if (!NewCursor)
    {
+      if (CurInfo->CurrentCursorObject || ForceChange)
+      {
+         if (CurInfo->CurrentCursorObject)
+         {
+            UserDereferenceObject(CurInfo->CurrentCursorObject);
+            if (CurInfo->ShowingCursor)
+            {
+                DPRINT1("Removing pointer!\n");
+               /* Remove the cursor if it was displayed */
+               IntEngMovePointer(SurfObj, -1, -1, &GDIDEV(SurfObj)->Pointer.Exclude);
+            }
+         }
+
+         GDIDEV(SurfObj)->Pointer.Status = SPS_ACCEPT_NOEXCLUDE;
+
+         CurInfo->CurrentCursorObject = NewCursor; /* i.e. CurrentCursorObject = NULL */
+         CurInfo->ShowingCursor = 0;
+      }
+
       BITMAPOBJ_UnlockBitmap(BitmapObj);
       return Ret;
    }
 
    /* TODO: Fixme. Logic is screwed above */
 
-   ASSERT(NewCursor);
    MaskBmpObj = BITMAPOBJ_LockBitmap(NewCursor->IconInfo.hbmMask);
    if (MaskBmpObj)
    {
@@ -249,6 +244,12 @@ IntSetCursor(PWINSTATION_OBJECT WinSta, PCURICON_OBJECT NewCursor,
    {
       CurInfo->ShowingCursor = 0;
       CurInfo->CurrentCursorObject = NULL;
+   }
+
+   /* OldCursor is not in use anymore */
+   if (OldCursor)
+   {
+      UserDereferenceObject(OldCursor);
    }
 
    if (GDIDEVFUNCS(SurfObj).SetPointerShape)
@@ -1107,15 +1108,25 @@ NtUserSetCursor(
       RETURN(NULL);
    }
 
-   if(!(CurIcon = UserGetCurIconObject(hCursor)))
+   if(hCursor)
    {
-      ObDereferenceObject(WinSta);
-      RETURN(NULL);
+      if(!(CurIcon = UserGetCurIconObject(hCursor)))
+      {
+         ObDereferenceObject(WinSta);
+         RETURN(NULL);
+      }
+   }
+   else
+   {
+      CurIcon = NULL;
    }
 
    OldCursor = IntSetCursor(WinSta, CurIcon, FALSE);
 
-   UserDereferenceObject(CurIcon);
+   if(CurIcon)
+   {
+      UserDereferenceObject(CurIcon);
+   }
    ObDereferenceObject(WinSta);
 
    RETURN(OldCursor);

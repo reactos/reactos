@@ -1096,7 +1096,10 @@ IntMouseInput(MOUSEINPUT *mi)
          {
             SurfObj = &BitmapObj->SurfObj;
 
-            IntEngMovePointer(SurfObj, MousePos.x, MousePos.y, &(GDIDEV(SurfObj)->Pointer.Exclude));
+            if (CurInfo->ShowingCursor)
+            {
+               IntEngMovePointer(SurfObj, MousePos.x, MousePos.y, &(GDIDEV(SurfObj)->Pointer.Exclude));
+            }
             /* Only now, update the info in the GDIDEVICE, so EngMovePointer can
             * use the old values to move the pointer image */
             GDIDEV(SurfObj)->Pointer.Pos.x = MousePos.x;
