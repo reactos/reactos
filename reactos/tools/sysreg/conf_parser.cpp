@@ -12,6 +12,7 @@
 #include <sstream>
 #include <fstream>
 #include <cstdio>
+#include <cstdlib>
 
 namespace Sysreg_
 {
