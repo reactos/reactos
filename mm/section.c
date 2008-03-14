@@ -3647,7 +3647,9 @@ extern NTSTATUS NTAPI ElfFmtCreateSection
 static PEXEFMT_LOADER ExeFmtpLoaders[] =
 {
  PeFmtCreateSection,
+#ifdef __ELF
  ElfFmtCreateSection
+#endif
 };
 
 static
