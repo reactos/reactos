@@ -14,20 +14,25 @@
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#if defined(__FreeBSD__) || defined(__APPLE__)
-# include <stdlib.h>
-#else
-# include <malloc.h>
-#endif // __FreeBSD__
+// For character conversion functions like "wctomb" and "alloca" under Unix
+#include <stdlib.h>
+
+#if defined(WIN32)
+    // Under Win32 hosts, "alloca" is not defined by stdlib.h, but by malloc.h
+    // On the other hand, malloc.h is deprecated under some Unix hosts, so only include it for Win32 hosts.
+    #include <malloc.h>
+#endif
+
+#include <ctype.h>
 #include <math.h>
 #include <float.h>
 #include <assert.h>
 #include "ssprintf.h"
 
 #ifndef WIN32
-#include <ctype.h>
 #define _finite __finite
 #define _isnan __isnan
+#endif
 
 #ifndef __APPLE__
 inline int iswdigit ( wchar_t c )
@@ -35,7 +40,6 @@ inline int iswdigit ( wchar_t c )
 	return ( c >= L'0' && c <= L'9' );
 }
 #endif
-#endif//WIN32
 
 #if defined(__FreeBSD__) || defined(__APPLE__) || defined(__CYGWIN__)
 # define __isnan isnan

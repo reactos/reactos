@@ -21,15 +21,23 @@
 #endif//_MSC_VER
 
 #ifdef WIN32
-#	include <direct.h>
-#	include <io.h>
+    #include <direct.h>
+    #include <io.h>
 #else
-#	include <sys/stat.h>
-#	include <unistd.h>
-#	include <ctype.h>
-#	define MAX_PATH PATH_MAX
+    #include <sys/stat.h>
+    #include <unistd.h>
+
+    // Some hosts don't define PATH_MAX in unistd.h
+    #if !defined(PATH_MAX)
+        #include <limits.h>
+    #endif
+
+    #define MAX_PATH PATH_MAX
 #endif
+
 #include <assert.h>
+#include <ctype.h>
+#include <string.h>
 
 #include "xml.h"
 #include "ssprintf.h"
