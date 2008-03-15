@@ -1596,4 +1596,109 @@ NtGdiDeleteClientObj(
     return GDIOBJ_FreeObj(h, GDI_OBJECT_TYPE_CLIOBJ);
 }
 
+INT
+FASTCALL
+IntGdiGetObject(IN HANDLE Handle,
+                IN INT cbCount,
+                IN LPVOID lpBuffer)
+{
+  PVOID pGdiObject;
+  INT Result = 0;
+  DWORD dwObjectType;
+
+  pGdiObject = GDIOBJ_LockObj(Handle, GDI_OBJECT_TYPE_DONTCARE);
+  if (!pGdiObject)
+    {
+      SetLastWin32Error(ERROR_INVALID_HANDLE);
+      return 0;
+    }
+
+  dwObjectType = GDIOBJ_GetObjectType(Handle);
+  switch (dwObjectType)
+    {
+      case GDI_OBJECT_TYPE_PEN:
+      case GDI_OBJECT_TYPE_EXTPEN:
+        Result = PEN_GetObject((PGDIBRUSHOBJ) pGdiObject, cbCount, (PLOGPEN) lpBuffer); // IntGdiCreatePenIndirect
+        break;
+
+      case GDI_OBJECT_TYPE_BRUSH:
+        Result = BRUSH_GetObject((PGDIBRUSHOBJ ) pGdiObject, cbCount, (LPLOGBRUSH)lpBuffer);
+        break;
+
+      case GDI_OBJECT_TYPE_BITMAP:
+        Result = BITMAP_GetObject((BITMAPOBJ *) pGdiObject, cbCount, lpBuffer);
+        break;
+      case GDI_OBJECT_TYPE_FONT:
+        Result = FontGetObject((PTEXTOBJ) pGdiObject, cbCount, lpBuffer);
+#if 0
+        // Fix the LOGFONT structure for the stock fonts
+        if (FIRST_STOCK_HANDLE <= Handle && Handle <= LAST_STOCK_HANDLE)
+          {
+            FixStockFontSizeW(Handle, cbCount, lpBuffer);
+          }
+#endif
+        break;
+
+      case GDI_OBJECT_TYPE_PALETTE:
+        Result = PALETTE_GetObject((PPALGDI) pGdiObject, cbCount, lpBuffer);
+        break;
+
+      default:
+        DPRINT1("GDI object type 0x%08x not implemented\n", dwObjectType);
+        break;
+    }
+
+  GDIOBJ_UnlockObjByPtr(pGdiObject);
+
+  return Result;
+}
+
+INT
+NTAPI
+NtGdiExtGetObjectW(IN HANDLE hGdiObj,
+                   IN INT cbCount,
+                   OUT LPVOID lpBuffer)
+{
+    INT iRetCount = 0;
+    INT cbCopyCount;
+    union
+    {
+        BITMAP bitmap;
+        DIBSECTION dibsection;
+        LOGPEN logpen;
+        LOGBRUSH logbrush;
+        LOGFONTW logfontw;
+        EXTLOGFONTW extlogfontw;
+        ENUMLOGFONTEXDVW enumlogfontexdvw;
+    } Object;
+
+    // Normalize to the largest supported object size
+    cbCount = min((UINT)cbCount, sizeof(Object));
+
+    // Now do the actual call
+    iRetCount = IntGdiGetObject(hGdiObj, cbCount, lpBuffer ? &Object : NULL);
+    cbCopyCount = min((UINT)cbCount, (UINT)iRetCount);
+
+    // Make sure we have a buffer and a copy size
+    if ((cbCopyCount) && (lpBuffer))
+    {
+        // Enter SEH for buffer transfer
+        _SEH_TRY
+        {
+            // Probe the buffer and copy it
+            ProbeForWrite(lpBuffer, cbCopyCount, sizeof(WORD));
+            RtlCopyMemory(lpBuffer, &Object, cbCopyCount);
+        }
+        _SEH_HANDLE
+        {
+            // Clear the return value.
+            // Do *NOT* set last error here!
+            iRetCount = 0;
+        }
+        _SEH_END;
+    }
+    // Return the count
+    return iRetCount;
+}
+
 /* EOF */
