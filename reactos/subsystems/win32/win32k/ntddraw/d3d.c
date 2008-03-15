@@ -22,7 +22,8 @@
 * @implemented
 *
 * The function NtGdiDdCanCreateD3DBuffer checks if you can create a 
-* surface for DirectX. It is redirected to dxg.sys.
+* surface for DirectX. it redirects to dxg.sys in windows XP/2003, 
+* dxkrnl.sys in vista and is fully implemented in win32k.sys in windows 2000 and below
 *
 * @param HANDLE hDirectDraw
 * The handle we got from NtGdiDdCreateDirectDrawObject
@@ -49,6 +50,8 @@
 * puCanCreateSurfaceData->lpDD  is a pointer to DDRAWI_DIRECTDRAW_GBL, not PDD_DIRECTDRAW_GLOBAL as MSDN claims.
 * puCanCreateSurfaceData->lpDD->hDD also needs be filled in with the handle we got from NtGdiDdCreateDirectDrawObject.
 * puCreateSurfaceData->CanCreateSurface is a pointer to the real functions in the HAL or HEL, that you need fill in.
+* Do not forget PDD_CANCREATESURFACEDATA is typecast of LPDDHAL_CANCREATESURFACEDATA and thuse two struct are different size,
+* the correct struct is LPDDHAL_CANCREATESURFACEDATA.
 *
 *--*/
 
@@ -74,7 +77,8 @@ NtGdiDdCanCreateD3DBuffer(HANDLE hDirectDraw,
 * @implemented
 *
 * The Function NtGdiDdCanCreateD3DBuffer checks if you can create a 
-* surface for Directx. It redirects the call to dxg.sys.
+* surface for Directx. It redirects to dxg.sys in windows XP/2003, 
+* dxkrnl.sys in vista and is fully implemented in win32k.sys in windows 2000 and below
 *
 * @param HANDLE hDirectDrawLocal
 * The handle we got from NtGdiDdCreateDirectDrawObject
@@ -126,6 +130,8 @@ NtGdiD3dContextCreate(HANDLE hDirectDrawLocal,
 * @implemented
 *
 * The Function NtGdiD3dContextDestroy destorys the context data we got from NtGdiD3dContextCreate
+* It redirects to dxg.sys in windows XP/2003,  dxkrnl.sys in vista and is fully implemented 
+* in win32k.sys in windows 2000 and below
 *
 * @param LPD3DNTHAL_CONTEXTDESTROYDATA pContextDestroyData
 * The context data we want to destroy
@@ -160,6 +166,8 @@ NtGdiD3dContextDestroy(LPD3DNTHAL_CONTEXTDESTROYDATA pContextDestroyData)
 *
 * The Function NtGdiD3dContextDestroyAll destroys all the context data in a process
 * The data having been allocated with NtGdiD3dContextCreate
+* It redirects to dxg.sys in windows XP/2003,  dxkrnl.sys in vista and is fully implemented 
+* in win32k.sys in windows 2000 and below
 *
 * @param LPD3DNTHAL_CONTEXTDESTROYALLDATA pdcad
 * The context data we want to destory
@@ -194,8 +202,9 @@ NtGdiD3dContextDestroyAll(LPD3DNTHAL_CONTEXTDESTROYALLDATA pdcad)
 * @name NtGdiDdCreateD3DBuffer
 * @implemented
 *
-* The function NtGdiDdCreateD3DBuffer creates a 
-* surface for DirectX. It is redirected to dxg.sys.
+* The function NtGdiDdCreateD3DBuffer creates a surface for DirectX. 
+* It redirects to dxg.sys in windows XP/2003,  dxkrnl.sys in vista and is fully implemented 
+* in win32k.sys in windows 2000 and below
 *
 * @param HANDLE hDirectDraw
 * The handle we got from NtGdiDdCreateDirectDrawObject

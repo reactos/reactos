@@ -158,7 +158,7 @@ NtGdiDdCreateDirectDrawObject(HDC hdc)
 * @implemented
 *
 * The function NtGdiDxgGenericThunk redirects DirectX calls to another function.
-* Redirection is done in dxg.sys in XP or higher.  If dxg.sys does not exist, redirection takes place in win32k.sys
+* It redirects to dxg.sys in windows XP/2003, dxkrnl.sys in vista and is fully implemented in win32k.sys in windows 2000 and below
 *
 * @param ULONG_PTR ulIndex
 * The functions we want to redirect
