@@ -117,7 +117,7 @@ namespace Sysreg_
 
 	void dumpCheckpoints();
 
-typedef enum DebugState
+enum DebugState
 {
 	DebugStateContinue = 1, /* continue debugging */
 	DebugStateBSODDetected, /* bsod detected */
