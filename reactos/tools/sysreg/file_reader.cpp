@@ -8,8 +8,10 @@
  */
 
 #include "file_reader.h"
-#include <assert.h>
+#include <cassert>
 #include <cstdio>
+#include <cstring>
+
 namespace System_
 {
 //---------------------------------------------------------------------------------------
