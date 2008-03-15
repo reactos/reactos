@@ -8,6 +8,7 @@
  */
 
 #include "os_support.h"
+#include <cstdlib>
 
 namespace System_
 {
@@ -19,7 +20,7 @@ namespace System_
     void OsSupport::checkAlarms()
     {
         struct timeval tm;
-		size_t i;
+        size_t i;
 #if 0
 //        gettimeofday(&tm, 0);
 #endif
@@ -109,33 +110,33 @@ __inline int gettimeofday(struct timeval *tv, struct timezone *tz)
     return 0;
 }
 #endif
-	bool OsSupport::terminateProcess(OsSupport::ProcessID pid, int exitcode)
-	{
-		HANDLE hProcess = OpenProcess(PROCESS_TERMINATE, FALSE, pid);
-		if (!hProcess)
-		{
-			return false;
-		}
+    bool OsSupport::terminateProcess(OsSupport::ProcessID pid, int exitcode)
+    {
+        HANDLE hProcess = OpenProcess(PROCESS_TERMINATE, FALSE, pid);
+        if (!hProcess)
+        {
+            return false;
+        }
 
-		bool ret = TerminateProcess(hProcess, exitcode);
-		CloseHandle(hProcess);
-		return ret;
-	}
+        bool ret = TerminateProcess(hProcess, exitcode);
+        CloseHandle(hProcess);
+        return ret;
+    }
 
-	OsSupport::ProcessID OsSupport::createProcess(const char *procname, int procargsnum, const char **procargs, bool wait)
-	{
-		STARTUPINFO siStartInfo;
-		PROCESS_INFORMATION piProcInfo;
-		OsSupport::ProcessID pid;
+    OsSupport::ProcessID OsSupport::createProcess(const char *procname, int procargsnum, const char **procargs, bool wait)
+    {
+        STARTUPINFO siStartInfo;
+        PROCESS_INFORMATION piProcInfo;
+        OsSupport::ProcessID pid;
         DWORD length = 0;
         char * szBuffer;
         char * cmd;
-		ZeroMemory(&siStartInfo, sizeof(STARTUPINFO));
-		ZeroMemory(&piProcInfo, sizeof(PROCESS_INFORMATION));
+        ZeroMemory(&siStartInfo, sizeof(STARTUPINFO));
+        ZeroMemory(&piProcInfo, sizeof(PROCESS_INFORMATION));
 
-		siStartInfo.cb = sizeof(STARTUPINFO);
-		siStartInfo.wShowWindow = SW_SHOWNORMAL;
-		siStartInfo.dwFlags = STARTF_USESHOWWINDOW;
+        siStartInfo.cb = sizeof(STARTUPINFO);
+        siStartInfo.wShowWindow = SW_SHOWNORMAL;
+        siStartInfo.dwFlags = STARTF_USESHOWWINDOW;
 
         if (procargsnum)
         {
@@ -173,27 +174,27 @@ __inline int gettimeofday(struct timeval *tv, struct timezone *tz)
             cmd = _strdup(procname);
 
         }
-		if (!CreateProcess(NULL, cmd, NULL, NULL, FALSE, NORMAL_PRIORITY_CLASS, NULL, NULL, &siStartInfo, &piProcInfo))
-		{
+        if (!CreateProcess(NULL, cmd, NULL, NULL, FALSE, NORMAL_PRIORITY_CLASS, NULL, NULL, &siStartInfo, &piProcInfo))
+        {
             cerr << "Error: CreateProcess failed " << cmd << endl;
-			pid = 0;
-		}
-		else
-		{
-			pid = piProcInfo.dwProcessId;
+            pid = 0;
+        }
+        else
+        {
+            pid = piProcInfo.dwProcessId;
             if (wait)
             {
                 WaitForSingleObject(piProcInfo.hThread, INFINITE);
             }
-			CloseHandle(piProcInfo.hProcess);
-			CloseHandle(piProcInfo.hThread);
-		}
-		free(cmd);
-		return pid;
-	}
-   	void OsSupport::delayExecution(long value)
+            CloseHandle(piProcInfo.hProcess);
+            CloseHandle(piProcInfo.hThread);
+        }
+        free(cmd);
+        return pid;
+    }
+    void OsSupport::delayExecution(long value)
     {
-      	Sleep(value * 1000);
+        Sleep(value * 1000);
     }
 
     DWORD WINAPI AlarmThread(LPVOID param)
@@ -243,23 +244,23 @@ __inline int gettimeofday(struct timeval *tv, struct timezone *tz)
 /********************************************************************************************************************/
 
 
-	struct sigaction OsSupport::s_sact;
+    struct sigaction OsSupport::s_sact;
 
 
-	OsSupport::ProcessID OsSupport::createProcess(const char *procname, int procargsnum, const char **procargs, bool bWait)
-	{
-		ProcessID pid;
+    OsSupport::ProcessID OsSupport::createProcess(const char *procname, int procargsnum, const char **procargs, bool bWait)
+    {
+        ProcessID pid;
 
-		if ((pid = fork()) < 0)
-		{
-			cerr << "OsSupport::createProcess> fork failed" << endl;
-			return 0;
-		}
-		if (pid == 0)
-		{
-			execv(procname, (char* const*)procargs);
-			return 0;
-		}
+        if ((pid = fork()) < 0)
+        {
+            cerr << "OsSupport::createProcess> fork failed" << endl;
+            return 0;
+        }
+        if (pid == 0)
+        {
+            execv(procname, (char* const*)procargs);
+            return 0;
+        }
         else
         {
             /* parent process */
@@ -268,14 +269,14 @@ __inline int gettimeofday(struct timeval *tv, struct timezone *tz)
                 waitpid(pid, NULL, 0);
             }
         }
-		return pid;
-	}
+        return pid;
+    }
 
-	bool OsSupport::terminateProcess(OsSupport::ProcessID pid, int exitcode)
-	{
-		kill(pid, SIGKILL);
-		return true;
-	}
+    bool OsSupport::terminateProcess(OsSupport::ProcessID pid, int exitcode)
+    {
+        kill(pid, SIGKILL);
+        return true;
+    }
 
     void OsSupport::delayExecution(long value)
     {
