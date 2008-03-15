@@ -86,7 +86,14 @@ BOOL CALLBACK EnumSymbolsProc(
 	ULONG SymbolSize,
 	PVOID UserContext)
 {
-	printf("%s@%d ", pSymInfo->Name, (UINT)UserContext);
+	if ((UINT)UserContext == -1)
+	{
+		printf("%s ", pSymInfo->Name);
+	}
+	else
+	{
+		printf("%s@%d ", pSymInfo->Name, (UINT)UserContext);
+	}
 	return TRUE;
 }
 
@@ -100,6 +107,8 @@ int main(int argc, char* argv[])
     UINT i;
     BOOL bX64;
     DWORD64 dwW32pServiceTable, dwW32pServiceLimit, dwW32pArgumentTable;
+    DWORD64 dwSimpleCall;
+    PVOID *pfnSimpleCall;
     DWORD dwServiceLimit;
     BYTE *pdwArgs;
 
@@ -152,7 +161,7 @@ cont:
 		goto cleanup;
 	}
 
-	hMap = CreateFileMappingA(hFile, NULL, PAGE_READONLY, 0, 0, NULL); 
+	hMap = CreateFileMappingA(hFile, NULL, PAGE_READONLY, 0, 0, NULL);
 	if (!hMap)
 	{
 		printf("CreateFileMapping() failed: %ld\n", GetLastError());
@@ -204,6 +213,20 @@ cont:
 			printf("\n");
 		}
 	}
+
+	/* Dump apfnSimpleCall */
+	printf("\nDumping apfnSimpleCall:\n");
+	dwSimpleCall = GetOffsetFromName(hProcess, &Sym.Symbol, pModule, "apfnSimpleCall", &bX64);
+	pfnSimpleCall = (PVOID*)(pModule + dwSimpleCall);
+	i = 0;
+	while (pfnSimpleCall[i] != NULL)
+	{
+		printf("0x%x:", i);
+		SymEnumSymbolsForAddr(hProcess, (DWORD64)(ULONG_PTR)pfnSimpleCall[i], EnumSymbolsProc, (PVOID)-1);
+		printf("\n");
+		i++;
+	}
+
 
 cleanup:
 	if (pModule)
