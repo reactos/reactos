@@ -304,12 +304,12 @@ static NTSTATUS
 NtfsMountVolume(PDEVICE_OBJECT DeviceObject,
                 PIRP Irp)
 {
-  PDEVICE_EXTENSION DeviceExt = NULL;
   PDEVICE_OBJECT NewDeviceObject = NULL;
   PDEVICE_OBJECT DeviceToMount;
   PIO_STACK_LOCATION Stack;
   PNTFS_FCB Fcb = NULL;
   PNTFS_CCB Ccb = NULL;
+  PNTFS_VCB Vcb = NULL;
   PVPB Vpb;
   NTSTATUS Status;
 
@@ -343,26 +343,28 @@ NtfsMountVolume(PDEVICE_OBJECT DeviceObject,
     goto ByeBye;
 
   NewDeviceObject->Flags = NewDeviceObject->Flags | DO_DIRECT_IO;
-  DeviceExt = (PVOID)NewDeviceObject->DeviceExtension;
-  RtlZeroMemory(DeviceExt,
-                sizeof(DEVICE_EXTENSION));
+  Vcb = (PVOID)NewDeviceObject->DeviceExtension;
+  RtlZeroMemory(Vcb, sizeof(NTFS_VCB));
+
+  Vcb->Identifier.Type = NTFS_TYPE_VCB;
+  Vcb->Identifier.Size = sizeof(NTFS_TYPE_VCB);
 
   Status = NtfsGetVolumeData(DeviceToMount,
-                             DeviceExt);
+                             Vcb);
   if (!NT_SUCCESS(Status))
     goto ByeBye;
 
   NewDeviceObject->Vpb = DeviceToMount->Vpb;
 
-  DeviceExt->StorageDevice = DeviceToMount;
-  DeviceExt->StorageDevice->Vpb->DeviceObject = NewDeviceObject;
-  DeviceExt->StorageDevice->Vpb->RealDevice = DeviceExt->StorageDevice;
-  DeviceExt->StorageDevice->Vpb->Flags |= VPB_MOUNTED;
-  NewDeviceObject->StackSize = DeviceExt->StorageDevice->StackSize + 1;
+  Vcb->StorageDevice = DeviceToMount;
+  Vcb->StorageDevice->Vpb->DeviceObject = NewDeviceObject;
+  Vcb->StorageDevice->Vpb->RealDevice = Vcb->StorageDevice;
+  Vcb->StorageDevice->Vpb->Flags |= VPB_MOUNTED;
+  NewDeviceObject->StackSize = Vcb->StorageDevice->StackSize + 1;
   NewDeviceObject->Flags &= ~DO_DEVICE_INITIALIZING;
 
-  DeviceExt->StreamFileObject = IoCreateStreamFileObject(NULL,
-                                                         DeviceExt->StorageDevice);
+  Vcb->StreamFileObject = IoCreateStreamFileObject(NULL,
+                                                   Vcb->StorageDevice);
 
 
   Fcb = NtfsCreateFCB(NULL);
@@ -380,47 +382,49 @@ NtfsMountVolume(PDEVICE_OBJECT DeviceObject,
     Status =  STATUS_INSUFFICIENT_RESOURCES;
     goto ByeBye;
   }
-  RtlZeroMemory(Ccb,
-                sizeof(NTFS_CCB));
+  RtlZeroMemory(Ccb, sizeof(NTFS_CCB));
 
-  DeviceExt->StreamFileObject->FsContext = Fcb;
-  DeviceExt->StreamFileObject->FsContext2 = Ccb;
-  DeviceExt->StreamFileObject->SectionObjectPointer = &Fcb->SectionObjectPointers;
-  DeviceExt->StreamFileObject->PrivateCacheMap = NULL;
-  DeviceExt->StreamFileObject->Vpb = DeviceExt->Vpb;
-  Ccb->PtrFileObject = DeviceExt->StreamFileObject;
-  Fcb->FileObject = DeviceExt->StreamFileObject;
-  Fcb->DevExt = (PDEVICE_EXTENSION)DeviceExt->StorageDevice;
+  Ccb->Identifier.Type = NTFS_TYPE_CCB;
+  Ccb->Identifier.Size = sizeof(NTFS_TYPE_CCB);
+
+  Vcb->StreamFileObject->FsContext = Fcb;
+  Vcb->StreamFileObject->FsContext2 = Ccb;
+  Vcb->StreamFileObject->SectionObjectPointer = &Fcb->SectionObjectPointers;
+  Vcb->StreamFileObject->PrivateCacheMap = NULL;
+  Vcb->StreamFileObject->Vpb = Vcb->Vpb;
+  Ccb->PtrFileObject = Vcb->StreamFileObject;
+  Fcb->FileObject = Vcb->StreamFileObject;
+  Fcb->DevExt = (PDEVICE_EXTENSION)Vcb->StorageDevice;
 
   Fcb->Flags = FCB_IS_VOLUME_STREAM;
 
-  Fcb->RFCB.FileSize.QuadPart = DeviceExt->NtfsInfo.SectorCount * DeviceExt->NtfsInfo.BytesPerSector;
-  Fcb->RFCB.ValidDataLength.QuadPart = DeviceExt->NtfsInfo.SectorCount * DeviceExt->NtfsInfo.BytesPerSector;
-  Fcb->RFCB.AllocationSize.QuadPart = DeviceExt->NtfsInfo.SectorCount * DeviceExt->NtfsInfo.BytesPerSector; /* Correct? */
+  Fcb->RFCB.FileSize.QuadPart = Vcb->NtfsInfo.SectorCount * Vcb->NtfsInfo.BytesPerSector;
+  Fcb->RFCB.ValidDataLength.QuadPart = Vcb->NtfsInfo.SectorCount * Vcb->NtfsInfo.BytesPerSector;
+  Fcb->RFCB.AllocationSize.QuadPart = Vcb->NtfsInfo.SectorCount * Vcb->NtfsInfo.BytesPerSector; /* Correct? */
 
 //  Fcb->Entry.ExtentLocationL = 0;
 //  Fcb->Entry.DataLengthL = DeviceExt->CdInfo.VolumeSpaceSize * BLOCKSIZE;
 
-  CcInitializeCacheMap(DeviceExt->StreamFileObject,
+  CcInitializeCacheMap(Vcb->StreamFileObject,
                        (PCC_FILE_SIZES)(&Fcb->RFCB.AllocationSize),
                        FALSE,
                        &(NtfsGlobalData->CacheMgrCallbacks),
                        Fcb);
 
-  ExInitializeResourceLite(&DeviceExt->DirResource);
+  ExInitializeResourceLite(&Vcb->DirResource);
 //  ExInitializeResourceLite(&DeviceExt->FatResource);
 
-  KeInitializeSpinLock(&DeviceExt->FcbListLock);
-  InitializeListHead(&DeviceExt->FcbListHead);
+  KeInitializeSpinLock(&Vcb->FcbListLock);
+  InitializeListHead(&Vcb->FcbListHead);
 
   /* Get serial number */
-  NewDeviceObject->Vpb->SerialNumber = DeviceExt->NtfsInfo.SerialNumber;
+  NewDeviceObject->Vpb->SerialNumber = Vcb->NtfsInfo.SerialNumber;
 
   /* Get volume label */
-  NewDeviceObject->Vpb->VolumeLabelLength = DeviceExt->NtfsInfo.VolumeLabelLength;
-  RtlCopyMemory (NewDeviceObject->Vpb->VolumeLabel,
-                 DeviceExt->NtfsInfo.VolumeLabel,
-                 DeviceExt->NtfsInfo.VolumeLabelLength);
+  NewDeviceObject->Vpb->VolumeLabelLength = Vcb->NtfsInfo.VolumeLabelLength;
+  RtlCopyMemory(NewDeviceObject->Vpb->VolumeLabel,
+                Vcb->NtfsInfo.VolumeLabel,
+                Vcb->NtfsInfo.VolumeLabelLength);
 
   Status = STATUS_SUCCESS;
 
@@ -428,8 +432,8 @@ ByeBye:
   if (!NT_SUCCESS(Status))
   {
     /* Cleanup */
-    if (DeviceExt && DeviceExt->StreamFileObject)
-      ObDereferenceObject(DeviceExt->StreamFileObject);
+    if (Vcb && Vcb->StreamFileObject)
+      ObDereferenceObject(Vcb->StreamFileObject);
     if (Fcb)
       ExFreePool(Fcb);
     if (Ccb)

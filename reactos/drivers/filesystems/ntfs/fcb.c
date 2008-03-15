@@ -75,6 +75,9 @@ NtfsCreateFCB(PCWSTR FileName)
   Fcb = ExAllocatePoolWithTag(NonPagedPool, sizeof(NTFS_FCB), TAG_FCB);
   RtlZeroMemory(Fcb, sizeof(NTFS_FCB));
 
+  Fcb->Identifier.Type = NTFS_TYPE_FCB;
+  Fcb->Identifier.Size = sizeof(NTFS_TYPE_FCB);
+
   if (FileName)
   {
     wcscpy(Fcb->PathName, FileName);
@@ -230,6 +233,9 @@ NtfsFCBInitializeCache(PNTFS_VCB Vcb,
       return(STATUS_INSUFFICIENT_RESOURCES);
   }
   RtlZeroMemory(newCCB, sizeof(NTFS_CCB));
+
+  newCCB->Identifier.Type = NTFS_TYPE_CCB;
+  newCCB->Identifier.Size = sizeof(NTFS_TYPE_CCB);
 
   FileObject->SectionObjectPointer = &Fcb->SectionObjectPointers;
   FileObject->FsContext = Fcb;
@@ -396,7 +402,10 @@ NtfsAttachFCBToFileObject(PNTFS_VCB Vcb,
   {
     return(STATUS_INSUFFICIENT_RESOURCES);
   }
-  memset(newCCB, 0, sizeof(NTFS_CCB));
+  RtlZeroMemory(newCCB, sizeof(NTFS_CCB));
+
+  newCCB->Identifier.Type = NTFS_TYPE_CCB;
+  newCCB->Identifier.Size = sizeof(NTFS_TYPE_CCB);
 
   FileObject->SectionObjectPointer = &Fcb->SectionObjectPointers;
   FileObject->FsContext = Fcb;
