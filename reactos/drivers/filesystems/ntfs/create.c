@@ -41,7 +41,7 @@ NtfsMakeAbsoluteFilename(PFILE_OBJECT pFileObject,
 			 PWSTR *pAbsoluteFilename)
 {
   PWSTR rcName;
-  PFCB Fcb;
+  PNTFS_FCB Fcb;
 
   DPRINT("try related for %S\n", pRelativeFileName);
   Fcb = pFileObject->FsContext;
@@ -82,8 +82,8 @@ NtfsOpenFile(PDEVICE_EXTENSION DeviceExt,
  * FUNCTION: Opens a file
  */
 {
-  PFCB ParentFcb;
-  PFCB Fcb;
+  PNTFS_FCB ParentFcb;
+  PNTFS_FCB Fcb;
   NTSTATUS Status;
   PWSTR AbsFileName = NULL;
 

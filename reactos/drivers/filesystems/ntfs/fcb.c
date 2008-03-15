@@ -67,13 +67,13 @@ NtfsWSubString(PWCHAR pTarget, const PWCHAR pSource, size_t pLength)
 }
 
 
-PFCB
+PNTFS_FCB
 NtfsCreateFCB(PCWSTR FileName)
 {
-  PFCB Fcb;
+  PNTFS_FCB Fcb;
 
-  Fcb = ExAllocatePoolWithTag(NonPagedPool, sizeof(FCB), TAG_FCB);
-  RtlZeroMemory(Fcb, sizeof(FCB));
+  Fcb = ExAllocatePoolWithTag(NonPagedPool, sizeof(NTFS_FCB), TAG_FCB);
+  RtlZeroMemory(Fcb, sizeof(NTFS_FCB));
 
   if (FileName)
     {
@@ -95,7 +95,7 @@ NtfsCreateFCB(PCWSTR FileName)
 
 
 VOID
-NtfsDestroyFCB(PFCB Fcb)
+NtfsDestroyFCB(PNTFS_FCB Fcb)
 {
   ExDeleteResourceLite(&Fcb->MainResource);
 
@@ -104,7 +104,7 @@ NtfsDestroyFCB(PFCB Fcb)
 
 
 BOOLEAN
-NtfsFCBIsDirectory(PFCB Fcb)
+NtfsFCBIsDirectory(PNTFS_FCB Fcb)
 {
 //  return(Fcb->entry.Attrib & FILE_ATTRIBUTE_DIRECTORY);
 //  return(Fcb->Entry.FileFlags & 0x02);
@@ -113,15 +113,15 @@ NtfsFCBIsDirectory(PFCB Fcb)
 
 
 BOOLEAN
-NtfsFCBIsRoot(PFCB Fcb)
+NtfsFCBIsRoot(PNTFS_FCB Fcb)
 {
   return(wcscmp(Fcb->PathName, L"\\") == 0);
 }
 
 
 VOID
-NtfsGrabFCB(PDEVICE_EXTENSION Vcb,
-	    PFCB Fcb)
+NtfsGrabFCB(PNTFS_VCB Vcb,
+	    PNTFS_FCB Fcb)
 {
   KIRQL  oldIrql;
 
@@ -137,8 +137,8 @@ NtfsGrabFCB(PDEVICE_EXTENSION Vcb,
 
 
 VOID
-NtfsReleaseFCB(PDEVICE_EXTENSION Vcb,
-	       PFCB Fcb)
+NtfsReleaseFCB(PNTFS_VCB Vcb,
+	       PNTFS_FCB Fcb)
 {
   KIRQL  oldIrql;
 
@@ -160,8 +160,8 @@ NtfsReleaseFCB(PDEVICE_EXTENSION Vcb,
 
 
 VOID
-NtfsAddFCBToTable(PDEVICE_EXTENSION Vcb,
-		  PFCB Fcb)
+NtfsAddFCBToTable(PNTFS_VCB Vcb,
+		  PNTFS_FCB Fcb)
 {
   KIRQL  oldIrql;
 
@@ -172,12 +172,12 @@ NtfsAddFCBToTable(PDEVICE_EXTENSION Vcb,
 }
 
 
-PFCB
-NtfsGrabFCBFromTable(PDEVICE_EXTENSION Vcb,
+PNTFS_FCB
+NtfsGrabFCBFromTable(PNTFS_VCB Vcb,
 		     PCWSTR FileName)
 {
   KIRQL  oldIrql;
-  PFCB Fcb;
+  PNTFS_FCB Fcb;
   PLIST_ENTRY  current_entry;
 
   KeAcquireSpinLock(&Vcb->FcbListLock, &oldIrql);
@@ -194,7 +194,7 @@ NtfsGrabFCBFromTable(PDEVICE_EXTENSION Vcb,
   current_entry = Vcb->FcbListHead.Flink;
   while (current_entry != &Vcb->FcbListHead)
     {
-      Fcb = CONTAINING_RECORD(current_entry, FCB, FcbListEntry);
+      Fcb = CONTAINING_RECORD(current_entry, NTFS_FCB, FcbListEntry);
 
       DPRINT("Comparing '%S' and '%S'\n", FileName, Fcb->PathName);
       if (_wcsicmp(FileName, Fcb->PathName) == 0)
@@ -215,22 +215,22 @@ NtfsGrabFCBFromTable(PDEVICE_EXTENSION Vcb,
 
 
 NTSTATUS
-NtfsFCBInitializeCache(PVCB Vcb,
-		       PFCB Fcb)
+NtfsFCBInitializeCache(PNTFS_VCB Vcb,
+		       PNTFS_FCB Fcb)
 {
   PFILE_OBJECT FileObject;
   NTSTATUS Status;
-  PCCB  newCCB;
+  PNTFS_CCB  newCCB;
 
   FileObject = IoCreateStreamFileObject(NULL, Vcb->StorageDevice);
 
-  newCCB = ExAllocatePoolWithTag(NonPagedPool, sizeof(CCB), TAG_CCB);
+  newCCB = ExAllocatePoolWithTag(NonPagedPool, sizeof(NTFS_CCB), TAG_CCB);
   if (newCCB == NULL)
     {
       return(STATUS_INSUFFICIENT_RESOURCES);
     }
   RtlZeroMemory(newCCB,
-		sizeof(CCB));
+		sizeof(NTFS_CCB));
 
   FileObject->SectionObjectPointer = &Fcb->SectionObjectPointers;
   FileObject->FsContext = Fcb;
@@ -253,10 +253,10 @@ NtfsFCBInitializeCache(PVCB Vcb,
 }
 
 
-PFCB
-NtfsMakeRootFCB(PDEVICE_EXTENSION Vcb)
+PNTFS_FCB
+NtfsMakeRootFCB(PNTFS_VCB Vcb)
 {
-  PFCB Fcb;
+  PNTFS_FCB Fcb;
 
   Fcb = NtfsCreateFCB(L"\\");
 
@@ -279,10 +279,10 @@ NtfsMakeRootFCB(PDEVICE_EXTENSION Vcb)
 }
 
 
-PFCB
-NtfsOpenRootFCB(PDEVICE_EXTENSION Vcb)
+PNTFS_FCB
+NtfsOpenRootFCB(PNTFS_VCB Vcb)
 {
-  PFCB Fcb;
+  PNTFS_FCB Fcb;
 
   Fcb = NtfsGrabFCBFromTable(Vcb, L"\\");
   if (Fcb == NULL)
@@ -386,18 +386,18 @@ NtfsMakeFCBFromDirEntry(PVCB Vcb,
 
 
 NTSTATUS
-NtfsAttachFCBToFileObject(PDEVICE_EXTENSION Vcb,
-			  PFCB Fcb,
+NtfsAttachFCBToFileObject(PNTFS_VCB Vcb,
+			  PNTFS_FCB Fcb,
 			  PFILE_OBJECT FileObject)
 {
-  PCCB  newCCB;
+  PNTFS_CCB  newCCB;
 
-  newCCB = ExAllocatePoolWithTag(NonPagedPool, sizeof(CCB), TAG_CCB);
+  newCCB = ExAllocatePoolWithTag(NonPagedPool, sizeof(NTFS_CCB), TAG_CCB);
   if (newCCB == NULL)
     {
       return(STATUS_INSUFFICIENT_RESOURCES);
     }
-  memset(newCCB, 0, sizeof(CCB));
+  memset(newCCB, 0, sizeof(NTFS_CCB));
 
   FileObject->SectionObjectPointer = &Fcb->SectionObjectPointers;
   FileObject->FsContext = Fcb;
@@ -423,10 +423,10 @@ NtfsAttachFCBToFileObject(PDEVICE_EXTENSION Vcb,
 
 
 static NTSTATUS
-NtfsDirFindFile(PDEVICE_EXTENSION DeviceExt,
-		PFCB DirectoryFcb,
+NtfsDirFindFile(PNTFS_VCB Vcb,
+		PNTFS_FCB DirectoryFcb,
 		PWSTR FileToFind,
-		PFCB *FoundFCB)
+		PNTFS_FCB *FoundFCB)
 {
 #if 0
   WCHAR TempName[2];
@@ -534,17 +534,17 @@ NtfsDirFindFile(PDEVICE_EXTENSION DeviceExt,
 
 
 NTSTATUS
-NtfsGetFCBForFile(PDEVICE_EXTENSION Vcb,
-		  PFCB *pParentFCB,
-		  PFCB *pFCB,
+NtfsGetFCBForFile(PNTFS_VCB Vcb,
+		  PNTFS_FCB *pParentFCB,
+		  PNTFS_FCB *pFCB,
 		  const PWSTR pFileName)
 {
   NTSTATUS Status;
   WCHAR  pathName [MAX_PATH];
   WCHAR  elementName [MAX_PATH];
   PWCHAR  currentElement;
-  PFCB  FCB;
-  PFCB  parentFCB;
+  PNTFS_FCB  FCB;
+  PNTFS_FCB  parentFCB;
 
   DPRINT("NtfsGetFCBForFile(%p, %p, %p, '%S')\n",
 	 Vcb,

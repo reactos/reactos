@@ -36,7 +36,7 @@
 /* FUNCTIONS ****************************************************************/
 
 static NTSTATUS
-NtfsGetStandardInformation(PFCB Fcb,
+NtfsGetStandardInformation(PNTFS_FCB Fcb,
                            PDEVICE_OBJECT DeviceObject,
                            PFILE_STANDARD_INFORMATION StandardInfo,
                            PULONG BufferLength)
@@ -91,7 +91,7 @@ NtfsGetPositionInformation(PFILE_OBJECT FileObject,
 
 static NTSTATUS
 NtfsGetBasicInformation(PFILE_OBJECT FileObject,
-                        PFCB Fcb,
+                        PNTFS_FCB Fcb,
                         PDEVICE_OBJECT DeviceObject,
                         PFILE_BASIC_INFORMATION BasicInfo,
                         PULONG BufferLength)
@@ -123,7 +123,7 @@ NtfsGetBasicInformation(PFILE_OBJECT FileObject,
 
 static NTSTATUS
 NtfsGetNameInformation(PFILE_OBJECT FileObject,
-                       PFCB Fcb,
+                       PNTFS_FCB Fcb,
                        PDEVICE_OBJECT DeviceObject,
                        PFILE_NAME_INFORMATION NameInfo,
                        PULONG BufferLength)
@@ -157,7 +157,7 @@ NtfsGetNameInformation(PFILE_OBJECT FileObject,
 
 
 static NTSTATUS
-NtfsGetInternalInformation(PFCB Fcb,
+NtfsGetInternalInformation(PNTFS_FCB Fcb,
                            PFILE_INTERNAL_INFORMATION InternalInfo,
                            PULONG BufferLength)
 {
@@ -188,7 +188,7 @@ NtfsFsdQueryInformation(PDEVICE_OBJECT DeviceObject,
   FILE_INFORMATION_CLASS FileInformationClass;
   PIO_STACK_LOCATION Stack;
   PFILE_OBJECT FileObject;
-  PFCB Fcb;
+  PNTFS_FCB Fcb;
   PVOID SystemBuffer;
   ULONG BufferLength;
 

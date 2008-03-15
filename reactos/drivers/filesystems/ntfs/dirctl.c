@@ -489,8 +489,8 @@ NtfsQueryDirectory(PNTFS_IRP_CONTEXT IrpContext)
   ULONG FileIndex = 0;
   PUCHAR Buffer = NULL;
   PFILE_NAMES_INFORMATION Buffer0 = NULL;
-  PFCB Fcb;
-  PCCB Ccb;
+  PNTFS_FCB Fcb;
+  PNTFS_CCB Ccb;
 //  FCB TempFcb;
   BOOLEAN First = FALSE;
   PIO_STACK_LOCATION Stack;
@@ -507,8 +507,8 @@ NtfsQueryDirectory(PNTFS_IRP_CONTEXT IrpContext)
   Stack = IoGetCurrentIrpStackLocation(Irp);
   FileObject = Stack->FileObject;
 
-  Ccb = (PCCB)FileObject->FsContext2;
-  Fcb = (PFCB)FileObject->FsContext;
+  Ccb = (PNTFS_CCB)FileObject->FsContext2;
+  Fcb = (PNTFS_FCB)FileObject->FsContext;
 
   /* Obtain the callers parameters */
   BufferLength = Stack->Parameters.QueryDirectory.Length;

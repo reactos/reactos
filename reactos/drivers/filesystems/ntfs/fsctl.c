@@ -308,8 +308,8 @@ NtfsMountVolume(PDEVICE_OBJECT DeviceObject,
   PDEVICE_OBJECT NewDeviceObject = NULL;
   PDEVICE_OBJECT DeviceToMount;
   PIO_STACK_LOCATION Stack;
-  PFCB Fcb = NULL;
-  PCCB Ccb = NULL;
+  PNTFS_FCB Fcb = NULL;
+  PNTFS_CCB Ccb = NULL;
   PVPB Vpb;
   NTSTATUS Status;
 
@@ -373,7 +373,7 @@ NtfsMountVolume(PDEVICE_OBJECT DeviceObject,
   }
 
   Ccb = ExAllocatePoolWithTag(NonPagedPool,
-                              sizeof(CCB),
+                              sizeof(NTFS_CCB),
                               TAG_CCB);
   if (Ccb == NULL)
   {
@@ -381,7 +381,7 @@ NtfsMountVolume(PDEVICE_OBJECT DeviceObject,
     goto ByeBye;
   }
   RtlZeroMemory(Ccb,
-                sizeof(CCB));
+                sizeof(NTFS_CCB));
 
   DeviceExt->StreamFileObject->FsContext = Fcb;
   DeviceExt->StreamFileObject->FsContext2 = Ccb;

@@ -84,9 +84,23 @@ typedef struct _NTFS_INFO
 
 } NTFS_INFO, *PNTFS_INFO;
 
+#define NTFS_TYPE_CCB         TAG('F','S',0,2)
+#define NTFS_TYPE_FCB         TAG('F','S',0,3)
+#define	NTFS_TYPE_VCB         TAG('F','S',0,5)
+#define NTFS_TYPE_IRP_CONTEST TAG('F','S',0,6)
+#define NTFS_TYPE_GLOBAL_DATA TAG('F','S',0,7)
 
 typedef struct
 {
+  ULONG Type;
+  ULONG Size;
+} NTFSIDENTIFIER, *PNTFSIDENTIFIER;
+
+
+typedef struct
+{
+  NTFSIDENTIFIER Identifier;
+
   ERESOURCE DirResource;
 //  ERESOURCE FatResource;
 
@@ -100,7 +114,7 @@ typedef struct
   NTFS_INFO NtfsInfo;
 
 
-} DEVICE_EXTENSION, *PDEVICE_EXTENSION, VCB, *PVCB;
+} DEVICE_EXTENSION, *PDEVICE_EXTENSION, NTFS_VCB, *PNTFS_VCB;
 
 
 #define FCB_CACHE_INITIALIZED   0x0001
@@ -110,6 +124,8 @@ typedef struct
 
 typedef struct _FCB
 {
+  NTFSIDENTIFIER Identifier;
+
   FSRTL_COMMON_FCB_HEADER RFCB;
   SECTION_OBJECT_POINTERS SectionObjectPointers;
 
@@ -133,11 +149,12 @@ typedef struct _FCB
 //  DIR_RECORD Entry;
 
 
-} FCB, *PFCB;
+} NTFS_FCB, *PNTFS_FCB;
 
 
-typedef struct _CCB
+typedef struct
 {
+  NTFSIDENTIFIER Identifier;
   LIST_ENTRY     NextCCB;
   PFILE_OBJECT   PtrFileObject;
   LARGE_INTEGER  CurrentByteOffset;
@@ -147,18 +164,9 @@ typedef struct _CCB
   PWCHAR DirectorySearchPattern;
   ULONG LastCluster;
   ULONG LastOffset;
-} CCB, *PCCB;
+} NTFS_CCB, *PNTFS_CCB;
 
 #define TAG_CCB TAG('I', 'C', 'C', 'B')
-
-#define NTFS_TYPE_IRP_CONTEST TAG('F','S',0,6)
-#define NTFS_TYPE_GLOBAL_DATA TAG('F','S',0,7)
-
-typedef struct
-{
-  ULONG Type;
-  ULONG Size;
-} NTFSIDENTIFIER, *PNTFSIDENTIFIER;
 
 typedef struct
 {
@@ -419,53 +427,53 @@ NtfsRelReadAhead(PVOID Context);
 
 /* fcb.c */
 
-PFCB
+PNTFS_FCB
 NtfsCreateFCB(PCWSTR FileName);
 
 VOID
-NtfsDestroyFCB(PFCB Fcb);
+NtfsDestroyFCB(PNTFS_FCB Fcb);
 
 BOOLEAN
-NtfsFCBIsDirectory(PFCB Fcb);
+NtfsFCBIsDirectory(PNTFS_FCB Fcb);
 
 BOOLEAN
-NtfsFCBIsRoot(PFCB Fcb);
+NtfsFCBIsRoot(PNTFS_FCB Fcb);
 
 VOID
-NtfsGrabFCB(PDEVICE_EXTENSION Vcb,
-	    PFCB Fcb);
+NtfsGrabFCB(PNTFS_VCB Vcb,
+	    PNTFS_FCB Fcb);
 
 VOID
-NtfsReleaseFCB(PDEVICE_EXTENSION Vcb,
-	       PFCB Fcb);
+NtfsReleaseFCB(PNTFS_VCB Vcb,
+	       PNTFS_FCB Fcb);
 
 VOID
-NtfsAddFCBToTable(PDEVICE_EXTENSION Vcb,
-		  PFCB Fcb);
+NtfsAddFCBToTable(PNTFS_VCB Vcb,
+		  PNTFS_FCB Fcb);
 
-PFCB
-NtfsGrabFCBFromTable(PDEVICE_EXTENSION Vcb,
+PNTFS_FCB
+NtfsGrabFCBFromTable(PNTFS_VCB Vcb,
 		     PCWSTR FileName);
 
 NTSTATUS
-NtfsFCBInitializeCache(PVCB Vcb,
-		       PFCB Fcb);
+NtfsFCBInitializeCache(PNTFS_VCB Vcb,
+		       PNTFS_FCB Fcb);
 
-PFCB
-NtfsMakeRootFCB(PDEVICE_EXTENSION Vcb);
+PNTFS_FCB
+NtfsMakeRootFCB(PNTFS_VCB Vcb);
 
-PFCB
-NtfsOpenRootFCB(PDEVICE_EXTENSION Vcb);
+PNTFS_FCB
+NtfsOpenRootFCB(PNTFS_VCB Vcb);
 
 NTSTATUS
-NtfsAttachFCBToFileObject(PDEVICE_EXTENSION Vcb,
-			  PFCB Fcb,
+NtfsAttachFCBToFileObject(PNTFS_VCB Vcb,
+			  PNTFS_FCB Fcb,
 			  PFILE_OBJECT FileObject);
 
 NTSTATUS
-NtfsGetFCBForFile(PDEVICE_EXTENSION Vcb,
-		  PFCB *pParentFCB,
-		  PFCB *pFCB,
+NtfsGetFCBForFile(PNTFS_VCB Vcb,
+		  PNTFS_FCB *pParentFCB,
+		  PNTFS_FCB *pFCB,
 		  const PWSTR pFileName);
 
 

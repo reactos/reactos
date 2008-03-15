@@ -102,7 +102,6 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
   ObReferenceObject(NtfsGlobalData->DeviceObject);
 
 ErrorEnd:
-
   if (!NT_SUCCESS(Status))
   {
     if (NtfsGlobalData)
@@ -111,7 +110,6 @@ ErrorEnd:
       ExFreePoolWithTag(NtfsGlobalData, TAG('N', 'D', 'R', 'G'));
     }
   }
-  
 
   return Status;
 }
