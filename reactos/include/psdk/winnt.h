@@ -2903,6 +2903,17 @@ typedef struct _RTL_CRITICAL_SECTION {
 #endif
 
 NTSYSAPI
+WORD  
+NTAPI
+RtlCaptureStackBackTrace(
+    IN DWORD FramesToSkip,
+    IN DWORD FramesToCapture,
+    OUT PVOID *BackTrace,
+    OUT PDWORD BackTraceHash OPTIONAL
+);
+
+
+NTSYSAPI
 PVOID
 NTAPI
 RtlPcToFileHeader(
