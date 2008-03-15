@@ -313,12 +313,12 @@ CaptureStackBackTace(PVOID* pFrames, ULONG nFramesToCapture)
 #define GDIDBG_TRACECALLER() \
   DPRINT1("-> called from:\n"); \
   KeRosDumpStackFrames(NULL, 20);
-#define GDIDBG_TRACEALLOCATOR(index)
-//  DPRINT1("-> allocated from:\n");
-//  KeRosDumpStackFrames(GDIHandleAllocator[index], GDI_STACK_LEVELS);
-#define GDIDBG_TRACELOCKER(index)
-//  DPRINT1("-> locked from:\n");
-//  KeRosDumpStackFrames(GDIHandleLocker[index], GDI_STACK_LEVELS);
+#define GDIDBG_TRACEALLOCATOR(index) \
+  DPRINT1("-> allocated from:\n"); \
+  KeRosDumpStackFrames(GDIHandleAllocator[index], GDI_STACK_LEVELS);
+#define GDIDBG_TRACELOCKER(index) \
+  DPRINT1("-> locked from:\n"); \
+  KeRosDumpStackFrames(GDIHandleLocker[index], GDI_STACK_LEVELS);
 #define GDIDBG_CAPTUREALLOCATOR(index) \
   CaptureStackBackTace((PVOID*)GDIHandleAllocator[index], GDI_STACK_LEVELS);
 #define GDIDBG_CAPTURELOCKER(index) \
