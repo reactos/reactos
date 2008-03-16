@@ -76,8 +76,8 @@ NtGdiDdCanCreateD3DBuffer(HANDLE hDirectDraw,
 * @name NtGdiD3dContextCreate
 * @implemented
 *
-* The Function NtGdiDdCanCreateD3DBuffer checks if you can create a 
-* surface for Directx. It redirects to dxg.sys in windows XP/2003, 
+* The Function NtGdiD3dContextCreate checks if you can create a 
+* context for Directx. It redirects to dxg.sys in windows XP/2003, 
 * dxkrnl.sys in vista and is fully implemented in win32k.sys in windows 2000 and below
 *
 * @param HANDLE hDirectDrawLocal
