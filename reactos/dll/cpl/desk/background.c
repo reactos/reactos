@@ -481,8 +481,6 @@ ListViewItemChanged(HWND hwndDlg, PGLOBAL_DATA pGlobalData, int itemIndex)
     InvalidateRect(GetDlgItem(hwndDlg, IDC_BACKGROUND_PREVIEW),
                    NULL, TRUE);
 
-    EnableWindow(GetDlgItem(hwndDlg, IDC_COLOR_BUTTON),
-                 (backgroundItem->bWallpaper == FALSE ? TRUE : FALSE));
     EnableWindow(GetDlgItem(hwndDlg, IDC_PLACEMENT_COMBO),
                  backgroundItem->bWallpaper);
 

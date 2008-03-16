@@ -15,6 +15,7 @@ InitFontSizeList(HWND hWnd)
     HWND hFontSize;
     INFCONTEXT Context;
     int i, ci = 0;
+    DWORD dwSize, dwValue, dwType;
 
     hFontSize = GetDlgItem(hWnd, IDC_FONTSIZE_COMBO);
 
@@ -39,7 +40,8 @@ InitFontSizeList(HWND hWnd)
                     if (i != CB_ERR)
                         SendMessage(hFontSize, CB_SETITEMDATA, (WPARAM)i, (LPARAM)ci);
 
-                    DWORD dwSize = MAX_PATH, dwValue, dwType = REG_DWORD;
+                    dwSize = MAX_PATH;
+                    dwType = REG_DWORD;
 
                     if (RegQueryValueEx(hKey, _T("LogPixels"), NULL,
                                         &dwType, (LPBYTE)&dwValue, &dwSize) == ERROR_SUCCESS)
