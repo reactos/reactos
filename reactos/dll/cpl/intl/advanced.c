@@ -28,6 +28,8 @@ GetSupportedCP(VOID)
     INFCONTEXT infCont;
     LPCPAGE lpCPage;
     HANDLE hCPage;
+    CPINFOEX cpInfEx;
+    TCHAR Section[MAX_PATH];
 
     Count = (UINT) SetupGetLineCount(hIntlInf, _T("CodePages"));
     if (Count <= 0) return FALSE;
@@ -45,7 +47,6 @@ GetSupportedCP(VOID)
             lpCPage->Status    = 0;
             (lpCPage->Name)[0] = 0;
 
-            CPINFOEX cpInfEx;
             if (GetCPInfoEx(uiCPage, 0, &cpInfEx))
             {
                 _tcscpy(lpCPage->Name, cpInfEx.CodePageName);
@@ -57,7 +58,6 @@ GetSupportedCP(VOID)
                 continue;
             }
 
-            TCHAR Section[MAX_PATH];
             _stprintf(Section, _T("%s%d"), _T("CODEPAGE_REMOVE_"), uiCPage);
             if ((uiCPage == GetACP()) || (uiCPage == GetOEMCP()) || 
                 (!SetupFindFirstLine(hIntlInf, Section, _T("AddReg"), &infCont)))
@@ -101,6 +101,9 @@ InitLangList(HWND hwndDlg)
     LPCPAGE lpCPage;
     INT ItemIndex;
     HWND hList;
+    LV_COLUMN column;
+    LV_ITEM item;
+    RECT ListRect;
 
     hList = GetDlgItem(hwndDlg, IDC_CONV_TABLES);
 
@@ -120,10 +123,6 @@ InitLangList(HWND hwndDlg)
     SetupCloseInfFile(hIntlInf);
 
     if (!EnumSystemCodePages(InstalledCPProc, CP_INSTALLED)) return;
-
-    LV_COLUMN column;
-    LV_ITEM item;
-    RECT ListRect;
 
     ZeroMemory(&column, sizeof(LV_COLUMN));
     column.mask = LVCF_FMT|LVCF_TEXT|LVCF_WIDTH;
