@@ -89,29 +89,35 @@ NtGdiDdCanCreateD3DBuffer(HANDLE hDirectDraw,
 * @param HANDLE hSurfZ
 * Handle to a DD_SURFACE_LOCAL. It is the Z deep buffer. According MSDN if it is set to NULL nothing should happen.
 *
-* @param D3DNTHAL_CONTEXTCREATEDATA* hSurfZ
+* @param LPD3DNTHAL_CONTEXTCREATEDATA pdcci
 * The buffer to create the context data
 *
 * @return 
 * DDHAL_DRIVER_HANDLED or DDHAL_DRIVER_NOTHANDLED if the driver supports this function.
 * A full check is done by checking if the return value is DDHAL_DRIVER_HANDLED 
-* and puCanCreateSurfaceData->ddRVal is set to DD_OK.
+* and pdcci->ddRVal is set to DD_OK.
 *
 *
 * @remarks.
 * dxg.sys NtGdiD3dContextCreate calls are redirected to the same function in the dxg.sys. As such they all work the same way.
 *
-* Before calling this function please set the hSurfZ->ddRVal to an error value such as DDERR_NOTUSPORTED,
+* Before calling this function please set the pdcci->ddRVal to an error value such as DDERR_NOTSUPORTED,
 * for the ddRVal will otherwise be unchanged even if an error occurs inside the driver. 
-* hSurfZ->dwhContext also needs to be filled in with the handle we got from NtGdiDdCreateDirectDrawObject
 *
+* pdcci->lpDDLcl is a pointer to DDRAWI_DIRECTDRAW_LCL, not DD_DIRECTDRAW_LOCAL  as MSDN claims.
+* pdcci->lpDDSLcl is a pointer to DDRAWI_DDRAWSURFACE_LCL, not DD_DDDRAWSURFACE_LOCAL as MSDN claims.
+* pdcci->lpDDSZLcl is a pointer to DDRAWI_DDRAWSURFACE_LCL, not DD_DDRAWSURFACE_LOCAL as MSDN claims.
+* pdcci->dwhContext also needs be filled in with the handle we receive from NtGdiDdCreateDirectDrawObject.
+* pdcci->dwPID the processid it belong to, that you need to fill in.
+* Do not forget LPD3DNTHAL_CONTEXTCREATEDATA is typecast of LPD3DHAL_CONTEXTCREATEDATA and thuse two struct are different size,
+* the correct struct is LPD3DHAL_CONTEXTCREATEDATA.
 *--*/
 BOOL 
 STDCALL
 NtGdiD3dContextCreate(HANDLE hDirectDrawLocal,
                       HANDLE hSurfColor,
                       HANDLE hSurfZ,
-                      D3DNTHAL_CONTEXTCREATEDATA* pdcci)
+                      LPD3DNTHAL_CONTEXTCREATEDATA pdcci)
 {
     PGD_D3DCONTEXTCREATE pfnD3dContextCreate = (PGD_D3DCONTEXTCREATE)gpDxFuncs[DXG_INDEX_DxD3dContextCreate].pfn;
 
