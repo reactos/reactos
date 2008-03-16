@@ -333,7 +333,7 @@ BEGIN
 	EDITTEXT 14002, 106, 87, 50, 14, WS_TABSTOP | ES_NUMBER
 	LTEXT "M&aximum size(MB):", -1, 20, 105, 70, 10
 	RADIOBUTTON "Do not move files to the &Recycle Bin. Remove files immediately when deleted.", 14003, 20, 117, 170, 20, BS_MULTILINE | WS_TABSTOP
-	RADIOBUTTON "&Display delete confirmation dialog", 14004, 20, 155, 140, 10, WS_TABSTOP
+	AUTOCHECKBOX "&Display delete confirmation dialog", 14004, 20, 155, 140, 10, WS_TABSTOP
 END
 
 OPEN_WITH_PROGRAMM_DLG DIALOGEX 0, 0, 264, 256
@@ -643,4 +643,7 @@ BEGIN
 	FCIDM_SHVIEW_NEWFOLDER      "New &Folder"
 	FCIDM_SHVIEW_NEWLINK 	    "New &Link"
 	IDS_FOLDER_OPTIONS          "Folder Options"
+	IDS_RECYCLEBIN_LOCATION     "Recycle Bin Location"
+	IDS_RECYCLEBIN_DISKSPACE    "Space Available"
+
 END

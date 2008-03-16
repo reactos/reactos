@@ -337,7 +337,7 @@ BEGIN
 	EDITTEXT 14002, 106, 87, 50, 14, WS_TABSTOP | ES_NUMBER
 	LTEXT "T&aille maximale (MO) :", -1, 20, 105, 70, 10
 	RADIOBUTTON "Ne pas déplacer les fichie&rs vers la Corbeille. Effacer les fichiers immédiatement lors de la suppression.", 14003, 20, 117, 170, 20, BS_MULTILINE | WS_TABSTOP
-	RADIOBUTTON "Afficher une fenêtre de confirmation d'effacement", 14004, 20, 155, 140, 10, WS_TABSTOP
+	AUTOCHECKBOX "Afficher une fenêtre de confirmation d'effacement", 14004, 20, 155, 140, 10, WS_TABSTOP
 END
 
 OPEN_WITH_PROGRAMM_DLG DIALOGEX 0, 0, 264, 256
@@ -647,4 +647,7 @@ BEGIN
 	FCIDM_SHVIEW_NEWFOLDER      "Nouveau d&ossier"
 	FCIDM_SHVIEW_NEWLINK        "Nouveau &lien"
 	IDS_FOLDER_OPTIONS          "Options du dossier"
+	IDS_RECYCLEBIN_LOCATION     "Recycle Bin Location"
+	IDS_RECYCLEBIN_DISKSPACE    "Space Available"
+
 END

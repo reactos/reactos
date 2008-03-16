@@ -113,6 +113,8 @@
 #define IDS_FOLDER_OPTIONS          150
 #define IDS_COLUMN_EXTENSION        151
 #define IDS_NO_EXTENSION            152
+#define IDS_RECYCLEBIN_LOCATION     153
+#define IDS_RECYCLEBIN_DISKSPACE    154
 
 /* Note: this string is referenced from the registry */
 #define IDS_RECYCLEBIN_FOLDER_NAME   8964

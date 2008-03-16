@@ -333,7 +333,7 @@ BEGIN
 	EDITTEXT 14002, 110, 90, 50, 10, WS_TABSTOP | ES_NUMBER
 	LTEXT "Μέγιστο μέγεθος (MB):", -1, 20, 100, 100, 10
 	RADIOBUTTON "Να μην μετακινούνται τα αρχεία στον κάδο ανακυκλωσης. Να καταργούνται τα αρχεία μόλις διαγράφονται.", 14003, 20, 115, 170, 20, BS_MULTILINE | WS_TABSTOP
-	RADIOBUTTON "&Εμφάνιση παραθύρου για επιβεβαίωση διαγραφών", 14004, 20, 155, 155, 10, WS_TABSTOP
+	AUTOCHECKBOX "&Εμφάνιση παραθύρου για επιβεβαίωση διαγραφών", 14004, 20, 155, 155, 10, WS_TABSTOP
 END
 
 OPEN_WITH_PROGRAMM_DLG DIALOGEX 0, 0, 264, 256
@@ -643,4 +643,7 @@ BEGIN
 	FCIDM_SHVIEW_NEWFOLDER      "Νέος &Φάκελος"
 	FCIDM_SHVIEW_NEWLINK        "Νέα &Συντόμευση"
 	IDS_FOLDER_OPTIONS          "Folder Options"
+	IDS_RECYCLEBIN_LOCATION     "Recycle Bin Location"
+	IDS_RECYCLEBIN_DISKSPACE    "Space Available"
+
 END

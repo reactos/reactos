@@ -793,30 +793,71 @@ static const IContextMenuVtbl recycleBincmVtbl =
     RecycleBin_IContextMenu_GetCommandString
 };
 
-INT_PTR
-CALLBACK
-RecycleBinGeneralDlg(
-    HWND hwndDlg,
-    UINT uMsg,
-    WPARAM wParam,
-    LPARAM lParam
-)
+void toggleNukeOnDeleteOption(HWND hwndDlg, BOOL bEnable)
 {
-
-
-    return FALSE;
+    if (bEnable)
+    {
+        SendDlgItemMessage(hwndDlg, 14001, BM_SETCHECK, BST_UNCHECKED, 0);
+        EnableWindow(GetDlgItem(hwndDlg, 14002), FALSE);
+        SendDlgItemMessage(hwndDlg, 14003, BM_SETCHECK, BST_CHECKED, 0);
+    }
+    else
+    {
+        SendDlgItemMessage(hwndDlg, 14001, BM_SETCHECK, BST_CHECKED, 0);
+        EnableWindow(GetDlgItem(hwndDlg, 14002), TRUE);
+        SendDlgItemMessage(hwndDlg, 14003, BM_SETCHECK, BST_UNCHECKED, 0);
+    }
 }
 
+
 void
-InitializeBitBucketDlg(HWND hwndDlg)
+InitializeBitBucketDlg(HWND hwndDlg, WCHAR DefaultDrive)
 {
    WCHAR CurDrive = L'A';
    WCHAR szDrive[] = L"A:\\";
    DWORD dwDrives;
-   WCHAR szName[MAX_PATH+1];
+   WCHAR szName[30];
+   WCHAR szVolume[100];
    DWORD MaxComponent, Flags;
+   LVCOLUMNW lc;
+   HWND hDlgCtrl;
+   LVITEMW li;
+   INT itemCount;
+   ULARGE_INTEGER TotalNumberOfFreeBytes, TotalNumberOfBytes, FreeBytesAvailable;
+   RECT rect;
+   int columnSize;
+   int defIndex = 0;
+   DWORD dwNukeOnDelete, dwSize;
+
+   hDlgCtrl = GetDlgItem(hwndDlg, 14000);
+
+   if (!LoadStringW(shell32_hInstance, IDS_RECYCLEBIN_LOCATION, szVolume, sizeof(szVolume) / sizeof(WCHAR)))
+       szVolume[0] = 0;
+
+   GetClientRect(hDlgCtrl, &rect);
+
+   memset(&lc, 0, sizeof(LV_COLUMN) );
+   lc.mask = LVCF_WIDTH | LVCF_TEXT | LVCF_SUBITEM | LVCF_FMT;
+
+   columnSize = 140; //FIXME
+   lc.iSubItem   = 0;
+   lc.fmt = LVCFMT_FIXED_WIDTH;
+   lc.cx         = columnSize;
+   lc.cchTextMax = lstrlenW(szVolume);
+   lc.pszText    = szVolume;
+   (void)ListView_InsertColumnW(hDlgCtrl, 0, &lc);
+
+   if (!LoadStringW(shell32_hInstance, IDS_RECYCLEBIN_DISKSPACE, szVolume, sizeof(szVolume) / sizeof(WCHAR)))
+       szVolume[0] = 0;
+
+   lc.iSubItem   = 1;
+   lc.cx         = rect.right - rect.left - columnSize;
+   lc.cchTextMax = lstrlenW(szVolume);
+   lc.pszText    = szVolume;
+   (void)ListView_InsertColumnW(hDlgCtrl, 1, &lc);
 
    dwDrives = GetLogicalDrives();
+   itemCount = 0;
    do
    {
      if ((dwDrives & 0x1))
@@ -824,10 +865,37 @@ InitializeBitBucketDlg(HWND hwndDlg)
         UINT Type = GetDriveTypeW(szDrive);
         if (Type == DRIVE_FIXED) //FIXME
         {
-            if (!GetVolumeInformationW(szDrive, szName, MAX_PATH+1, NULL, &MaxComponent, &Flags, NULL, 0))
+            if (!GetVolumeInformationW(szDrive, szName, sizeof(szName) / sizeof(WCHAR), NULL, &MaxComponent, &Flags, NULL, 0))
             {
-                wcscpy(szName, szDrive);
+                szName[0] = 0;
             }
+            sprintfW(szVolume, L"%s (%c)", szName, szDrive[0]);
+            memset(&li, 0x0, sizeof(LVITEMW));
+            li.mask = LVIF_TEXT | LVIF_PARAM;
+            li.iSubItem = 0;
+            li.pszText = szVolume;
+            li.iItem = itemCount;
+            li.lParam = CurDrive;
+            (void)ListView_InsertItemW(hDlgCtrl, &li);
+            if (GetDiskFreeSpaceExW(szDrive, &FreeBytesAvailable , &TotalNumberOfBytes, &TotalNumberOfFreeBytes))
+            {
+                if (StrFormatByteSizeW(TotalNumberOfFreeBytes.QuadPart, szVolume, sizeof(szVolume) / sizeof(WCHAR)))
+                {
+                    memset(&li, 0x0, sizeof(LVITEMW));
+                    li.mask = LVIF_TEXT;
+                    li.iSubItem = 1;
+                    li.pszText = szVolume;
+                    li.iItem = itemCount;
+                    (void)ListView_SetItemW(hDlgCtrl, &li);
+                }
+            }
+
+            if (CurDrive == DefaultDrive)
+            {
+                defIndex = itemCount;
+            }
+
+            itemCount++;
         }
      }
      CurDrive++;
@@ -835,10 +903,26 @@ InitializeBitBucketDlg(HWND hwndDlg)
      dwDrives = (dwDrives >> 1);
    }while(dwDrives);
 
+   li.mask = LVIF_STATE;
+   li.state = LVIS_FOCUSED;
+   li.iItem = defIndex;
+   (void)ListView_SetItemW(hDlgCtrl, &li);
 
+   wcscpy(szVolume, L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Bitbucket\\c");
+   szVolume[62] = DefaultDrive;
+
+   dwSize = sizeof(dwNukeOnDelete);
+   if (RegGetValueW(HKEY_LOCAL_MACHINE, szVolume, L"NukeOnDelete", RRF_RT_REG_DWORD, NULL, &dwNukeOnDelete, &dwSize) == ERROR_SUCCESS)
+   {
+       toggleNukeOnDeleteOption(hwndDlg, dwNukeOnDelete);
+   }
+   else
+   {
+       /* default to NukeOnDelete 
+        */
+       toggleNukeOnDeleteOption(hwndDlg, TRUE);
+   }
 }
-
-
 
 INT_PTR
 CALLBACK
@@ -849,8 +933,29 @@ BitBucketDlg(
     LPARAM lParam
 )
 {
+    switch(uMsg)
+    {
+    case WM_INITDIALOG:
+        InitializeBitBucketDlg(hwndDlg, (WCHAR)lParam);
+        return TRUE;
 
-
+    case WM_COMMAND:
+        switch(LOWORD(wParam))
+        {
+        case 14001:
+            toggleNukeOnDeleteOption(hwndDlg, FALSE);
+            PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+            break;
+        case 14003:
+            toggleNukeOnDeleteOption(hwndDlg, TRUE);
+            PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+            break;
+        case 14004:
+            PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+            break;
+        }
+        break;
+    }
     return FALSE;
 }
 
@@ -868,7 +973,7 @@ BOOL SH_ShowRecycleBinProperties(WCHAR sDrive)
    psh.hwndParent = NULL;
    psh.u3.phpage = hpsp;
 
-   hprop = SH_CreatePropertySheetPage("BITBUCKET_PROPERTIES_DLG", BitBucketDlg, (LPARAM)0, NULL);
+   hprop = SH_CreatePropertySheetPage("BITBUCKET_PROPERTIES_DLG", BitBucketDlg, (LPARAM)sDrive, NULL);
    if (!hprop)
    {
        ERR("Failed to create property sheet");
@@ -888,7 +993,57 @@ BOOL SH_ShowRecycleBinProperties(WCHAR sDrive)
 BOOL
 TRASH_CanTrashFile(LPCWSTR wszPath)
 {
-   FIXME("(%s)\n", debugstr_w(wszPath));
+   LONG res;
+   HKEY hKey;
+   DWORD RegSerial, dwNukeOnDelete, dwType;
+   LONG dwLength;
+
+
+   static WCHAR szKey[] = L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Bitbucket\\c";
+   if (wszPath[1] != L':')
+   {
+     /* path is UNC */
+     return FALSE;
+   }
+
+   szKey[62] = wszPath[0];
+   res = RegOpenKeyExW(HKEY_LOCAL_MACHINE, szKey, 0, KEY_QUERY_VALUE, &hKey);
+   if (res != ERROR_SUCCESS)
+   {
+      FIXME("Failed to open registry path");
+      return FALSE;
+   }
+   dwLength = sizeof(RegSerial);
+   res = RegQueryValueExW(hKey, L"VolumeSerialNumber", NULL, &dwType, (LPBYTE)&RegSerial, &dwLength);
+   if (res == ERROR_SUCCESS)
+   {
+       DWORD FileSystemFlags, MaxComponentLength, VolSerialNumber;
+       
+       GetVolumeInformationW(wszPath, NULL, 0, &VolSerialNumber, &MaxComponentLength, &FileSystemFlags, NULL, 0);
+       if (VolSerialNumber != RegSerial)
+       {
+           /* FIXME
+            * the current volume was mounted on a different path
+            */
+           FIXME("mismatched serial volume number");
+           RegCloseKey(hKey);
+           return FALSE;
+       }
+   }
+   
+   dwLength = sizeof(dwNukeOnDelete);
+   res = RegQueryValueExW(hKey, L"NukeOnDelete", NULL, &dwType, (LPBYTE)&dwNukeOnDelete, &dwLength);
+   if (res == ERROR_SUCCESS && dwNukeOnDelete == 0x0)
+   {
+       RegCloseKey(hKey);
+       return FALSE;
+   }
+
+   /* FIXME
+    * check if trash is already full 
+    */
+
+   RegCloseKey(hKey);
    return TRUE;
 }
 
