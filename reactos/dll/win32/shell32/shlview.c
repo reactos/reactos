@@ -1924,7 +1924,7 @@ static HRESULT WINAPI IShellView_fnCreateViewWindow(
 	  wc.hInstance		= shell32_hInstance;
 	  wc.hIcon		= 0;
 	  wc.hCursor		= LoadCursorW(0, (LPWSTR)IDC_ARROW);
-	  wc.hbrBackground	= (HBRUSH) (COLOR_WINDOW + 1);
+	  wc.hbrBackground	= (HBRUSH) (COLOR_BACKGROUND+1);
 	  wc.lpszMenuName	= NULL;
 	  wc.lpszClassName	= SV_CLASS_NAME;
 
