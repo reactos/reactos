@@ -1,5 +1,0 @@
-NAME	3dtext.scr
-
-EXPORTS
-	ScreenSaverProc
-	ScreenSaverConfigureDialog

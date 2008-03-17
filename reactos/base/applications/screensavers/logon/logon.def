@@ -1,5 +1,0 @@
-NAME	logon.scr
-
-EXPORTS
-	ScreenSaverProc
-	ScreenSaverConfigureDialog
