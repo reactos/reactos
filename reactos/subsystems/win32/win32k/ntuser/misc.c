@@ -145,103 +145,16 @@ NtUserCallOneParam(
    DWORD Routine)
 {
    DECLARE_RETURN(DWORD);
-   PDC dc;
 
    DPRINT("Enter NtUserCallOneParam\n");
-
-
-   if (Routine == ONEPARAM_ROUTINE_SHOWCURSOR)
-   {
-      PWINSTATION_OBJECT WinSta = PsGetCurrentThreadWin32Thread()->Desktop->WindowStation;
-      PSYSTEM_CURSORINFO CurInfo;
-
-      HDC Screen;
-      HBITMAP dcbmp;
-      SURFOBJ *SurfObj;
-      BITMAPOBJ *BitmapObj;
-      GDIDEVICE *ppdev;
-      GDIPOINTER *pgp;
-      int showpointer=0;
-
-      if(!(Screen = IntGetScreenDC()))
-      {
-        return showpointer; /* No mouse */
-      }
-
-      dc = DC_LockDc(Screen);
-
-      if (!dc)
-      {
-        return showpointer; /* No mouse */
-      }
-
-      dcbmp = dc->w.hBitmap;
-      DC_UnlockDc(dc);
-
-      BitmapObj = BITMAPOBJ_LockBitmap(dcbmp);
-      if ( !BitmapObj )
-      {
-         BITMAPOBJ_UnlockBitmap(BitmapObj);
-         return showpointer; /* No Mouse */
-      }
-
-      SurfObj = &BitmapObj->SurfObj;
-      if (SurfObj == NULL)
-      {
-        BITMAPOBJ_UnlockBitmap(BitmapObj);
-        return showpointer; /* No mouse */
-      }
-
-      ppdev = GDIDEV(SurfObj);
-
-      if(ppdev == NULL)
-      {
-        BITMAPOBJ_UnlockBitmap(BitmapObj);
-        return showpointer; /* No mouse */
-      }
-
-      pgp = &ppdev->Pointer;
-
-      CurInfo = IntGetSysCursorInfo(WinSta);
-
-      if (Param == FALSE)
-      {
-          pgp->ShowPointer--;
-          showpointer = pgp->ShowPointer;
-
-          if (showpointer >= 0)
-          {
-             //ppdev->SafetyRemoveCount = 1;
-             //ppdev->SafetyRemoveLevel = 1;
-             EngMovePointer(SurfObj,-1,-1,NULL);
-             CurInfo->ShowingCursor = 0;
-           }
-
-       }
-       else
-       {
-          pgp->ShowPointer++;
-          showpointer = pgp->ShowPointer;
-
-          /* Show Cursor */
-          if (showpointer < 0)
-          {
-             //ppdev->SafetyRemoveCount = 0;
-             //ppdev->SafetyRemoveLevel = 0;
-             EngMovePointer(SurfObj,-1,-1,NULL);
-             CurInfo->ShowingCursor = CURSOR_SHOWING;
-          }
-       }
-
-       BITMAPOBJ_UnlockBitmap(BitmapObj);
-       return showpointer;
-       }
-
 
    UserEnterExclusive();
 
    switch(Routine)
    {
+      case ONEPARAM_ROUTINE_SHOWCURSOR:
+         RETURN( (DWORD)UserShowCursor((BOOL)Param) );
+
       case ONEPARAM_ROUTINE_GETDESKTOPMAPPING:
          {
              PW32THREADINFO ti;

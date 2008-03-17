@@ -37,7 +37,7 @@ CLIPPING_UpdateGCRegion(DC* Dc)
       NtGdiCombineRgn(Dc->w.hGCClipRgn, Dc->w.hClipRgn, Dc->w.hVisRgn, RGN_AND);
    NtGdiOffsetRgn(Dc->w.hGCClipRgn, Dc->w.DCOrgX, Dc->w.DCOrgY);
 
-   if((CombinedRegion = RGNDATA_LockRgn(Dc->w.hGCClipRgn)))
+   if((CombinedRegion = REGION_LockRgn(Dc->w.hGCClipRgn)))
    {
      if (Dc->CombinedClip != NULL)
         IntEngDeleteClipRegion(Dc->CombinedClip);
@@ -47,13 +47,13 @@ CLIPPING_UpdateGCRegion(DC* Dc)
         (PRECTL)CombinedRegion->Buffer,
         (PRECTL)&CombinedRegion->rdh.rcBound);
 
-     RGNDATA_UnlockRgn(CombinedRegion);
+     REGION_UnlockRgn(CombinedRegion);
    }
 
    if ( NULL == Dc->CombinedClip )
    {
-	   DPRINT1("IntEngCreateClipRegion() failed\n");
-	   return ERROR;
+       DPRINT1("IntEngCreateClipRegion() failed\n");
+       return ERROR;
    }
 
    return NtGdiOffsetRgn(Dc->w.hGCClipRgn, -Dc->w.DCOrgX, -Dc->w.DCOrgY);
@@ -126,10 +126,10 @@ int STDCALL IntGdiExtSelectClipRgn(PDC dc,
     {
       PROSRGNDATA Rgn;
       RECT rect;
-      if((Rgn = RGNDATA_LockRgn(dc->w.hVisRgn)))
+      if((Rgn = REGION_LockRgn(dc->w.hVisRgn)))
       {
-        UnsafeIntGetRgnBox(Rgn, &rect);
-        RGNDATA_UnlockRgn(Rgn);
+        REGION_GetRgnBox(Rgn, &rect);
+        REGION_UnlockRgn(Rgn);
         dc->w.hClipRgn = UnsafeIntCreateRectRgnIndirect(&rect);
       }
       else
@@ -181,13 +181,13 @@ IntGdiGetClipBox(HDC hDC, LPRECT rc)
       return ERROR;
    }
 
-   if (!(Rgn = RGNDATA_LockRgn(dc->w.hGCClipRgn)))
+   if (!(Rgn = REGION_LockRgn(dc->w.hGCClipRgn)))
    {
       DC_UnlockDc(dc);
       return ERROR;
    }
-   retval = UnsafeIntGetRgnBox(Rgn, rc);
-   RGNDATA_UnlockRgn(Rgn);
+   retval = REGION_GetRgnBox(Rgn, rc);
+   REGION_UnlockRgn(Rgn);
    IntDPtoLP(dc, (LPPOINT)rc, 2);
    DC_UnlockDc(dc);
 
@@ -418,11 +418,11 @@ BOOL STDCALL NtGdiRectVisible(HDC  hDC,
 
    if (dc->w.hGCClipRgn)
    {
-      if((Rgn = (PROSRGNDATA)RGNDATA_LockRgn(dc->w.hGCClipRgn)))
+      if((Rgn = (PROSRGNDATA)REGION_LockRgn(dc->w.hGCClipRgn)))
       {
          IntLPtoDP(dc, (LPPOINT)&Rect, 2);
-         Result = UnsafeIntRectInRegion(Rgn, &Rect);
-         RGNDATA_UnlockRgn(Rgn);
+         Result = REGION_RectInRegion(Rgn, &Rect);
+         REGION_UnlockRgn(Rgn);
       }
    }
    DC_UnlockDc(dc);

@@ -86,7 +86,7 @@ IntEngWndUpdateClipObj(
   if (hVisRgn != NULL)
   {
     NtGdiOffsetRgn(hVisRgn, Window->Wnd->ClientRect.left, Window->Wnd->ClientRect.top);
-    visRgn = RGNDATA_LockRgn(hVisRgn);
+    visRgn = REGION_LockRgn(hVisRgn);
     if (visRgn != NULL)
     {
       if (visRgn->rdh.nCount > 0)
@@ -107,7 +107,7 @@ IntEngWndUpdateClipObj(
           }
         }
       }
-      RGNDATA_UnlockRgn(visRgn);
+      REGION_UnlockRgn(visRgn);
     }
     else
     {

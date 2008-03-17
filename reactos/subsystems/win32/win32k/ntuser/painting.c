@@ -816,11 +816,11 @@ NtUserBeginPaint(HWND hWnd, PAINTSTRUCT* UnsafePs)
    if (Window->UpdateRegion != NULL)
    {
       MsqDecPaintCountQueue(Window->MessageQueue);
-      Rgn = RGNDATA_LockRgn(Window->UpdateRegion);
+      Rgn = REGION_LockRgn(Window->UpdateRegion);
       if (NULL != Rgn)
       {
-         UnsafeIntGetRgnBox(Rgn, &Ps.rcPaint);
-         RGNDATA_UnlockRgn(Rgn);
+         REGION_GetRgnBox(Rgn, &Ps.rcPaint);
+         REGION_UnlockRgn(Rgn);
          IntGdiIntersectRect(&Ps.rcPaint, &Ps.rcPaint, &Window->Wnd->ClientRect);
          if (! IntGdiIsEmptyRect(&Ps.rcPaint))
          {
@@ -1042,10 +1042,10 @@ NtUserGetUpdateRect(HWND hWnd, LPRECT UnsafeRect, BOOL bErase)
       }
       else
       {
-         RgnData = RGNDATA_LockRgn(Window->UpdateRegion);
+         RgnData = REGION_LockRgn(Window->UpdateRegion);
          ASSERT(RgnData != NULL);
-         RegionType = UnsafeIntGetRgnBox(RgnData, &Rect);
-         RGNDATA_UnlockRgn(RgnData);
+         RegionType = REGION_GetRgnBox(RgnData, &Rect);
+         REGION_UnlockRgn(RgnData);
 
          if (RegionType != ERROR && RegionType != NULLREGION)
             IntGdiIntersectRect(&Rect, &Rect, &Window->Wnd->ClientRect);

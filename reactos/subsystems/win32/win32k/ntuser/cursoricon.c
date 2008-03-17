@@ -1817,3 +1817,95 @@ NtUserDrawIconEx(
    UserLeave();
    return Ret;
 }
+
+/* Called from NtUserCallOneParam with Routine ONEPARAM_ROUTINE_SHOWCURSOR
+ * User32 macro NtUserShowCursor */
+int
+NTAPI
+UserShowCursor(BOOL bShow)
+{
+    PWINSTATION_OBJECT WinSta = PsGetCurrentThreadWin32Thread()->Desktop->WindowStation;
+    PSYSTEM_CURSORINFO CurInfo;
+
+    HDC Screen;
+    PDC dc;
+    HBITMAP dcbmp;
+    SURFOBJ *SurfObj;
+    BITMAPOBJ *BitmapObj;
+    GDIDEVICE *ppdev;
+    GDIPOINTER *pgp;
+    int showpointer=0;
+
+    if(!(Screen = IntGetScreenDC()))
+    {
+        return showpointer; /* No mouse */
+    }
+
+    dc = DC_LockDc(Screen);
+
+    if (!dc)
+    {
+        return showpointer; /* No mouse */
+    }
+
+    dcbmp = dc->w.hBitmap;
+    DC_UnlockDc(dc);
+
+    BitmapObj = BITMAPOBJ_LockBitmap(dcbmp);
+    if ( !BitmapObj )
+    {
+        BITMAPOBJ_UnlockBitmap(BitmapObj);
+        return showpointer; /* No Mouse */
+    }
+
+    SurfObj = &BitmapObj->SurfObj;
+    if (SurfObj == NULL)
+    {
+        BITMAPOBJ_UnlockBitmap(BitmapObj);
+        return showpointer; /* No mouse */
+    }
+
+    ppdev = GDIDEV(SurfObj);
+
+    if(ppdev == NULL)
+    {
+        BITMAPOBJ_UnlockBitmap(BitmapObj);
+        return showpointer; /* No mouse */
+    }
+
+    pgp = &ppdev->Pointer;
+
+    CurInfo = IntGetSysCursorInfo(WinSta);
+
+    if (bShow == FALSE)
+    {
+        pgp->ShowPointer--;
+        showpointer = pgp->ShowPointer;
+
+        if (showpointer >= 0)
+        {
+            //ppdev->SafetyRemoveCount = 1;
+            //ppdev->SafetyRemoveLevel = 1;
+            EngMovePointer(SurfObj,-1,-1,NULL);
+            CurInfo->ShowingCursor = 0;
+        }
+
+    }
+    else
+    {
+        pgp->ShowPointer++;
+        showpointer = pgp->ShowPointer;
+
+        /* Show Cursor */
+        if (showpointer < 0)
+        {
+            //ppdev->SafetyRemoveCount = 0;
+            //ppdev->SafetyRemoveLevel = 0;
+            EngMovePointer(SurfObj,-1,-1,NULL);
+            CurInfo->ShowingCursor = CURSOR_SHOWING;
+        }
+    }
+
+    BITMAPOBJ_UnlockBitmap(BitmapObj);
+    return showpointer;
+}

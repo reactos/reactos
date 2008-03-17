@@ -126,29 +126,6 @@ BOOL FASTCALL IntGdiGradientFill(DC *dc,
     ULONG uVertex,
     PVOID pMesh, ULONG uMesh, ULONG ulMode);
 
-/* Rgn functions */
-
-int FASTCALL
-IntGdiGetClipBox(HDC    hDC,
-			     LPRECT rc);
-
-INT
-STDCALL
-IntGdiSelectVisRgn(HDC hdc,
-                     HRGN hrgn);
-
-HRGN FASTCALL REGION_CropRgn(HRGN hDst, HRGN hSrc, const PRECT lpRect, PPOINT lpPt);
-void FASTCALL REGION_UnionRectWithRegion(const RECT *rect, ROSRGNDATA *rgn);
-INT FASTCALL UnsafeIntGetRgnBox(PROSRGNDATA Rgn, LPRECT pRect);
-BOOL FASTCALL UnsafeIntRectInRegion(PROSRGNDATA Rgn, CONST LPRECT rc);
-INT STDCALL IntGdiGetRgnBox(HRGN, LPRECT);
-
-#define UnsafeIntCreateRectRgnIndirect(prc) \
-  NtGdiCreateRectRgn((prc)->left, (prc)->top, (prc)->right, (prc)->bottom)
-
-#define UnsafeIntUnionRectWithRgn(rgndest, prc) \
-  REGION_UnionRectWithRegion((prc), (rgndest))
-
 /* DC functions */
 
 BOOL FASTCALL

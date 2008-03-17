@@ -72,7 +72,7 @@ OBJ_TYPE_INFO ObjTypeInfo[] =
   {1, sizeof(DC),            TAG_DC,           DC_Cleanup},       /* 01 DC */
   {1, 0,                     0,                NULL},             /* 02 UNUSED1 */
   {1, 0,                     0,                NULL},             /* 03 UNUSED2 */
-  {1, sizeof(ROSRGNDATA),    TAG_REGION,       RGNDATA_Cleanup},  /* 04 RGN */
+  {1, sizeof(ROSRGNDATA),    TAG_REGION,       REGION_Cleanup},  /* 04 RGN */
   {1, sizeof(BITMAPOBJ),     TAG_SURFACE,      BITMAP_Cleanup},   /* 05 SURFACE */
   {0, sizeof(DC),            TAG_CLIENTOBJ,    GDI_CleanupDummy}, /* 06 CLIENTOBJ: METADC,... FIXME: don't use DC struct */
   {0, 0,                     TAG_PATH,         NULL},             /* 07 PATH, unused */
@@ -537,6 +537,7 @@ LockHandle:
                     _InterlockedIncrement(&W32Process->GDIObjects);
                 }
                 Handle = (HGDIOBJ)((Index & 0xFFFF) | (TypeInfo << GDI_ENTRY_UPPER_SHIFT));
+                newObject->hHmgr = Handle;
 
                 DPRINT("GDIOBJ_AllocObj: 0x%x ob: 0x%x\n", Handle, newObject);
                 return Handle;

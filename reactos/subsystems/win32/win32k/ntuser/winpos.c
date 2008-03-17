@@ -961,16 +961,16 @@ co_WinPosSetWindowPos(
          VisBefore = VIS_ComputeVisibleRegion(Window, FALSE, FALSE, TRUE);
          VisRgn = NULL;
 
-         if (VisBefore != NULL && (VisRgn = (PROSRGNDATA)RGNDATA_LockRgn(VisBefore)) &&
-               UnsafeIntGetRgnBox(VisRgn, &TempRect) == NULLREGION)
+         if (VisBefore != NULL && (VisRgn = (PROSRGNDATA)REGION_LockRgn(VisBefore)) &&
+               REGION_GetRgnBox(VisRgn, &TempRect) == NULLREGION)
          {
-            RGNDATA_UnlockRgn(VisRgn);
+            REGION_UnlockRgn(VisRgn);
             NtGdiDeleteObject(VisBefore);
             VisBefore = NULL;
          }
          else if(VisRgn)
          {
-            RGNDATA_UnlockRgn(VisRgn);
+            REGION_UnlockRgn(VisRgn);
             NtGdiOffsetRgn(VisBefore, -Window->Wnd->WindowRect.left, -Window->Wnd->WindowRect.top);
          }
       }
@@ -1111,16 +1111,16 @@ co_WinPosSetWindowPos(
       VisAfter = VIS_ComputeVisibleRegion(Window, FALSE, FALSE, TRUE);
       VisRgn = NULL;
 
-      if (VisAfter != NULL && (VisRgn = (PROSRGNDATA)RGNDATA_LockRgn(VisAfter)) &&
-            UnsafeIntGetRgnBox(VisRgn, &TempRect) == NULLREGION)
+      if (VisAfter != NULL && (VisRgn = (PROSRGNDATA)REGION_LockRgn(VisAfter)) &&
+            REGION_GetRgnBox(VisRgn, &TempRect) == NULLREGION)
       {
-         RGNDATA_UnlockRgn(VisRgn);
+         REGION_UnlockRgn(VisRgn);
          NtGdiDeleteObject(VisAfter);
          VisAfter = NULL;
       }
       else if(VisRgn)
       {
-         RGNDATA_UnlockRgn(VisRgn);
+         REGION_UnlockRgn(VisRgn);
          NtGdiOffsetRgn(VisAfter, -Window->Wnd->WindowRect.left, -Window->Wnd->WindowRect.top);
       }
 
@@ -1149,12 +1149,15 @@ co_WinPosSetWindowPos(
          if (!(WinPos.flags & SWP_NOSIZE) && RgnType != ERROR &&
                RgnType != NULLREGION)
          {
+            PROSRGNDATA pCopyRgn;
             RECT ORect = OldClientRect;
             RECT NRect = NewClientRect;
             IntGdiOffsetRect(&ORect, - OldWindowRect.left, - OldWindowRect.top);
             IntGdiOffsetRect(&NRect, - NewWindowRect.left, - NewWindowRect.top);
             IntGdiIntersectRect(&CopyRect, &ORect, &NRect);
-            REGION_CropRgn(CopyRgn, CopyRgn, &CopyRect, NULL);
+            pCopyRgn = REGION_LockRgn(CopyRgn);
+            REGION_CropAndOffsetRegion(pCopyRgn, pCopyRgn, &CopyRect, NULL);
+            REGION_UnlockRgn(pCopyRgn);
          }
 
          /* No use in copying bits which are in the update region. */
@@ -1170,11 +1173,11 @@ co_WinPosSetWindowPos(
           * there's nothing to copy. Also, it's no use copying bits onto
           * themselves.
           */
-         if ((VisRgn = (PROSRGNDATA)RGNDATA_LockRgn(CopyRgn)) &&
-               UnsafeIntGetRgnBox(VisRgn, &CopyRect) == NULLREGION)
+         if ((VisRgn = (PROSRGNDATA)REGION_LockRgn(CopyRgn)) &&
+               REGION_GetRgnBox(VisRgn, &CopyRect) == NULLREGION)
          {
             /* Nothing to copy, clean up */
-            RGNDATA_UnlockRgn(VisRgn);
+            REGION_UnlockRgn(VisRgn);
             NtGdiDeleteObject(CopyRgn);
             CopyRgn = NULL;
          }
@@ -1183,7 +1186,7 @@ co_WinPosSetWindowPos(
          {
             if(VisRgn)
             {
-               RGNDATA_UnlockRgn(VisRgn);
+               REGION_UnlockRgn(VisRgn);
             }
 
             /*
@@ -1210,7 +1213,7 @@ co_WinPosSetWindowPos(
          }
          else if(VisRgn)
          {
-            RGNDATA_UnlockRgn(VisRgn);
+            REGION_UnlockRgn(VisRgn);
          }
       }
       else
