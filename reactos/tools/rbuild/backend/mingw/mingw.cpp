@@ -270,7 +270,6 @@ MingwBackend::ProcessModules ()
 	fprintf ( fMakefile, "\n" );
 
 	GenerateAllTarget ( v );
-	GenerateInitTarget ();
 	GenerateRegTestsRunTarget ();
 
 	for ( i = 0; i < iend; i++ )
@@ -574,34 +573,6 @@ MingwBackend::GenerateAllTarget ( const vector<MingwModuleHandler*>& handlers ) 
 		}
 	}
 	fprintf ( fMakefile, "\n\t\n\n" );
-}
-
-string
-MingwBackend::GetBuildToolDependencies () const
-{
-	string dependencies;
-	for ( size_t i = 0; i < ProjectNode.modules.size (); i++ )
-	{
-		Module& module = *ProjectNode.modules[i];
-		if ( !module.enabled )
-			continue;
-		if ( module.type == BuildTool )
-		{
-			if ( dependencies.length () > 0 )
-				dependencies += " ";
-			dependencies += GetFullName ( *module.dependency );
-		}
-	}
-	return dependencies;
-}
-
-void
-MingwBackend::GenerateInitTarget () const
-{
-	fprintf ( fMakefile,
-	          "INIT = %s\n",
-	          GetBuildToolDependencies ().c_str () );
-	fprintf ( fMakefile, "\n" );
 }
 
 void

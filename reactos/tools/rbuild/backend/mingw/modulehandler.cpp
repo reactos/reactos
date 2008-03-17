@@ -2296,7 +2296,7 @@ MingwModuleHandler::GetDefaultDependencies (
 		return;
 
 	if ( module.name != "psdk" )
-		dependencies.push_back ( "$(INIT) $(PSDK_TARGET) $(psdk_HEADERS)" );
+		dependencies.push_back ( "$(PSDK_TARGET) $(psdk_HEADERS)" );
 
 	/* Check if any dependent library relies on the generated headers */
 	for ( size_t i = 0; i < module.project.modules.size (); i++ )

@@ -75,8 +75,6 @@ private:
 	void GenerateGlobalVariables () const;
 	bool IncludeInAllTarget ( const Module& module ) const;
 	void GenerateAllTarget ( const std::vector<MingwModuleHandler*>& handlers ) const;
-	std::string GetBuildToolDependencies () const;
-	void GenerateInitTarget () const;
 	void GenerateRegTestsRunTarget () const;
 	void GenerateXmlBuildFilesMacro() const;
 	void GenerateTestSupportCode ();
