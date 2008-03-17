@@ -156,9 +156,13 @@ i8042DetectKeyboard(
 		WARN_(I8042PRT, "Warning: can't write SET_LEDS (0x%08lx)\n", Status);
 	}
 
-	/* Turn on translation and SF (Some machines don't reboot if SF is not set) */
-	if (!i8042ChangeMode(DeviceExtension, 0, CCB_TRANSLATE | CCB_SYSTEM_FLAG))
+	/* Turn on translation */
+	if (!i8042ChangeMode(DeviceExtension, 0, CCB_TRANSLATE))
 		return FALSE;
+
+	/* Turn on SF (Some machines don't reboot if SF is not set) ;
+	 * we assume that if call fails, machine doesn't need it. */
+	i8042ChangeMode(DeviceExtension, 0, CCB_SYSTEM_FLAG);
 
 	return TRUE;
 }
