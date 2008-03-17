@@ -1,4 +1,4 @@
-/* $Id$
+/* $Id: keyboard.c 29170 2007-09-23 22:59:00Z ekohl $
  *
  * PROJECT:         ReactOS Accessibility Control Panel
  * LICENSE:         GPL - See COPYING in the top level directory
