@@ -643,7 +643,7 @@ BEGIN
 	FCIDM_SHVIEW_NEWFOLDER 	    "Neues Ver&zeichnis"
 	FCIDM_SHVIEW_NEWLINK        "Neuer Ver&weis"
 	IDS_FOLDER_OPTIONS          "Ordneroptionen"
-	IDS_RECYCLEBIN_LOCATION     "Recycle Bin Location"
-	IDS_RECYCLEBIN_DISKSPACE    "Space Available"
+	IDS_RECYCLEBIN_LOCATION     "Papierkorbpfad"
+	IDS_RECYCLEBIN_DISKSPACE    "Speicher frei"
 
 END

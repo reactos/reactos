@@ -16,7 +16,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  *
- * translation updated by Caemyr - Olaf Siejka (Jan, 2008)
+ * translation updated by Caemyr - Olaf Siejka (Jan,Mar 2008)
  * Use ReactOS forum PM or IRC to contact me
  * http://www.reactos.org
  * IRC: irc.freenode.net #reactos-pl;
@@ -649,7 +649,7 @@ BEGIN
 	FCIDM_SHVIEW_NEWFOLDER 	    "&Folder"
 	FCIDM_SHVIEW_NEWLINK 	    "&Skrót"
 	IDS_FOLDER_OPTIONS          "Opcje Katalogów"
-	IDS_RECYCLEBIN_LOCATION     "Recycle Bin Location"
-	IDS_RECYCLEBIN_DISKSPACE    "Space Available"
+	IDS_RECYCLEBIN_LOCATION     "Lokalizacja Kosza"
+	IDS_RECYCLEBIN_DISKSPACE    "Pozosta³o wolnego miejsca"
 
 END
