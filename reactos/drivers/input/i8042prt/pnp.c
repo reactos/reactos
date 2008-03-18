@@ -106,7 +106,7 @@ i8042BasicDetect(
 			KeStallExecutionProcessor(50);
 			continue;
 		}
-		else if (Value != 0x55)
+		else if (Value != KBD_SELF_TEST_OK)
 		{
 			WARN_(I8042PRT, "Got 0x%02x instead of 0x55\n", Value);
 			return STATUS_IO_DEVICE_ERROR;
@@ -156,7 +156,7 @@ i8042DetectKeyboard(
 		WARN_(I8042PRT, "Warning: can't write SET_LEDS (0x%08lx)\n", Status);
 	}
 
-	/* Turn on translation and SF (Some machines don't reboot if SF is not set) */
+	/* Turn on translation and SF (Some machines don't reboot if SF is not set, see ReactOS bug #1842) */
 	if (!i8042ChangeMode(DeviceExtension, 0, CCB_TRANSLATE | CCB_SYSTEM_FLAG))
 		return FALSE;
 
@@ -337,24 +337,12 @@ cleanup:
 
 static NTSTATUS
 EnableInterrupts(
-	IN PPORT_DEVICE_EXTENSION DeviceExtension)
+	IN PPORT_DEVICE_EXTENSION DeviceExtension,
+    IN UCHAR FlagsToDisable,
+    IN UCHAR FlagsToEnable)
 {
-	UCHAR FlagsToDisable = 0;
-	UCHAR FlagsToEnable = 0;
-
 	i8042Flush(DeviceExtension);
 
-	/* Select the devices we have */
-	if (DeviceExtension->Flags & KEYBOARD_PRESENT)
-	{
-		FlagsToDisable |= CCB_KBD_DISAB;
-		FlagsToEnable |= CCB_KBD_INT_ENAB;
-	}
-	if (DeviceExtension->Flags & MOUSE_PRESENT)
-	{
-		FlagsToDisable |= CCB_MOUSE_DISAB;
-		FlagsToEnable |= CCB_MOUSE_INT_ENAB;
-	}
 	if (!i8042ChangeMode(DeviceExtension, FlagsToDisable, FlagsToEnable))
 		return STATUS_UNSUCCESSFUL;
 
@@ -379,6 +367,8 @@ StartProcedure(
 	IN PPORT_DEVICE_EXTENSION DeviceExtension)
 {
 	NTSTATUS Status;
+    UCHAR FlagsToDisable = 0;
+    UCHAR FlagsToEnable = 0;
 
 	if (DeviceExtension->DataPort == 0)
 	{
@@ -409,58 +399,40 @@ StartProcedure(
 	}
 
 	/* Connect interrupts */
+    Status = STATUS_SUCCESS;
+
 	if (DeviceExtension->Flags & KEYBOARD_PRESENT &&
 	    DeviceExtension->Flags & KEYBOARD_CONNECTED &&
 	    DeviceExtension->Flags & KEYBOARD_STARTED &&
-	    !(DeviceExtension->Flags & (MOUSE_PRESENT | KEYBOARD_INITIALIZED)))
+	    !(DeviceExtension->Flags & KEYBOARD_INITIALIZED))
 	{
-		/* No mouse, and the keyboard is ready */
+		/* Keyboard is ready to be initialized */
 		Status = i8042ConnectKeyboardInterrupt(DeviceExtension->KeyboardExtension);
 		if (NT_SUCCESS(Status))
 		{
 			DeviceExtension->Flags |= KEYBOARD_INITIALIZED;
-			Status = EnableInterrupts(DeviceExtension);
+            FlagsToDisable |= CCB_KBD_DISAB;
+            FlagsToEnable |= CCB_KBD_INT_ENAB;
 		}
 	}
-	else if (DeviceExtension->Flags & MOUSE_PRESENT &&
-	         DeviceExtension->Flags & MOUSE_CONNECTED &&
-	         DeviceExtension->Flags & MOUSE_STARTED &&
-	         !(DeviceExtension->Flags & (KEYBOARD_PRESENT | MOUSE_INITIALIZED)))
+
+	if (DeviceExtension->Flags & MOUSE_PRESENT &&
+	    DeviceExtension->Flags & MOUSE_CONNECTED &&
+	    DeviceExtension->Flags & MOUSE_STARTED &&
+	    !(DeviceExtension->Flags & MOUSE_INITIALIZED))
 	{
-		/* No keyboard, and the mouse is ready */
+		/* Mouse is ready to be initialized */
 		Status = i8042ConnectMouseInterrupt(DeviceExtension->MouseExtension);
 		if (NT_SUCCESS(Status))
 		{
 			DeviceExtension->Flags |= MOUSE_INITIALIZED;
-			Status = EnableInterrupts(DeviceExtension);
+            FlagsToDisable |= CCB_MOUSE_DISAB;
+            FlagsToEnable |= CCB_MOUSE_INT_ENAB;
 		}
 	}
-	else if (DeviceExtension->Flags & KEYBOARD_PRESENT &&
-	         DeviceExtension->Flags & KEYBOARD_CONNECTED &&
-	         DeviceExtension->Flags & KEYBOARD_STARTED &&
-	         DeviceExtension->Flags & MOUSE_PRESENT &&
-	         DeviceExtension->Flags & MOUSE_CONNECTED &&
-	         DeviceExtension->Flags & MOUSE_STARTED &&
-	         !(DeviceExtension->Flags & (KEYBOARD_INITIALIZED | MOUSE_INITIALIZED)))
-	{
-		/* The keyboard and mouse are ready */
-		Status = i8042ConnectKeyboardInterrupt(DeviceExtension->KeyboardExtension);
-		if (NT_SUCCESS(Status))
-		{
-			DeviceExtension->Flags |= KEYBOARD_INITIALIZED;
-			Status = i8042ConnectMouseInterrupt(DeviceExtension->MouseExtension);
-			if (NT_SUCCESS(Status))
-			{
-				DeviceExtension->Flags |= MOUSE_INITIALIZED;
-				Status = EnableInterrupts(DeviceExtension);
-			}
-		}
-	}
-	else
-	{
-		/* Nothing to do */
-		Status = STATUS_SUCCESS;
-	}
+
+    if(FlagsToEnable)
+        Status = EnableInterrupts(DeviceExtension, FlagsToDisable, FlagsToEnable);
 
 	return Status;
 }

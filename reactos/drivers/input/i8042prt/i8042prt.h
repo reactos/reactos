@@ -240,6 +240,7 @@ typedef struct _I8042_HOOK_WORKITEM
  * Keyboard responses
  * --------------------------------------------------*/
 
+#define KBD_SELF_TEST_OK   0x55
 #define KBD_ACK            0xFA
 #define KBD_NACK           0xFC
 #define KBD_RESEND         0xFE
