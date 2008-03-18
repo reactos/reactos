@@ -338,8 +338,8 @@ cleanup:
 static NTSTATUS
 EnableInterrupts(
 	IN PPORT_DEVICE_EXTENSION DeviceExtension,
-    IN UCHAR FlagsToDisable,
-    IN UCHAR FlagsToEnable)
+	IN UCHAR FlagsToDisable,
+	IN UCHAR FlagsToEnable)
 {
 	i8042Flush(DeviceExtension);
 
@@ -367,8 +367,8 @@ StartProcedure(
 	IN PPORT_DEVICE_EXTENSION DeviceExtension)
 {
 	NTSTATUS Status;
-    UCHAR FlagsToDisable = 0;
-    UCHAR FlagsToEnable = 0;
+	UCHAR FlagsToDisable = 0;
+	UCHAR FlagsToEnable = 0;
 
 	if (DeviceExtension->DataPort == 0)
 	{
@@ -399,8 +399,6 @@ StartProcedure(
 	}
 
 	/* Connect interrupts */
-    Status = STATUS_SUCCESS;
-
 	if (DeviceExtension->Flags & KEYBOARD_PRESENT &&
 	    DeviceExtension->Flags & KEYBOARD_CONNECTED &&
 	    DeviceExtension->Flags & KEYBOARD_STARTED &&
@@ -411,8 +409,8 @@ StartProcedure(
 		if (NT_SUCCESS(Status))
 		{
 			DeviceExtension->Flags |= KEYBOARD_INITIALIZED;
-            FlagsToDisable |= CCB_KBD_DISAB;
-            FlagsToEnable |= CCB_KBD_INT_ENAB;
+			FlagsToDisable |= CCB_KBD_DISAB;
+			FlagsToEnable |= CCB_KBD_INT_ENAB;
 		}
 	}
 
@@ -426,13 +424,15 @@ StartProcedure(
 		if (NT_SUCCESS(Status))
 		{
 			DeviceExtension->Flags |= MOUSE_INITIALIZED;
-            FlagsToDisable |= CCB_MOUSE_DISAB;
-            FlagsToEnable |= CCB_MOUSE_INT_ENAB;
+			FlagsToDisable |= CCB_MOUSE_DISAB;
+			FlagsToEnable |= CCB_MOUSE_INT_ENAB;
 		}
 	}
 
-    if(FlagsToEnable)
-        Status = EnableInterrupts(DeviceExtension, FlagsToDisable, FlagsToEnable);
+	if (FlagsToEnable)
+		Status = EnableInterrupts(DeviceExtension, FlagsToDisable, FlagsToEnable);
+	else
+		Status = STATUS_SUCCESS;
 
 	return Status;
 }
