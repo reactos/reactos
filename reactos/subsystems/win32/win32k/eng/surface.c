@@ -264,7 +264,7 @@ IntCreateBitmap(IN SIZEL Size,
   if (Format == 0)
 	return 0;
 
-  NewBitmap = BITMAPOBJ_AllocBitmap();
+  NewBitmap = BITMAPOBJ_AllocBitmapDepricated();
   if (NewBitmap == NULL)
 	return 0;
 
@@ -272,7 +272,7 @@ IntCreateBitmap(IN SIZEL Size,
   if (! BITMAPOBJ_InitBitsLock(BitmapObj))
     {
       BITMAPOBJ_UnlockBitmap(BitmapObj);
-      BITMAPOBJ_FreeBitmap(NewBitmap);
+      BITMAPOBJ_FreeBitmapByHandle(NewBitmap);
       return 0;
     }
   SurfObj = &BitmapObj->SurfObj;
@@ -325,7 +325,7 @@ IntCreateBitmap(IN SIZEL Size,
           if (SurfObj->pvBits == NULL)
             {
               BITMAPOBJ_UnlockBitmap(BitmapObj);
-              BITMAPOBJ_FreeBitmap(NewBitmap);
+              BITMAPOBJ_FreeBitmapByHandle(NewBitmap);
               return 0;
             }
         }
@@ -396,7 +396,7 @@ EngCreateDeviceSurface(IN DHSURF dhsurf,
   SURFOBJ *SurfObj;
   BITMAPOBJ *BitmapObj;
 
-  NewSurface = (HSURF)BITMAPOBJ_AllocBitmap();
+  NewSurface = (HSURF)BITMAPOBJ_AllocBitmapDepricated();
   if (NewSurface == NULL)
 	return 0;
 
@@ -406,7 +406,7 @@ EngCreateDeviceSurface(IN DHSURF dhsurf,
   if (! BITMAPOBJ_InitBitsLock(BitmapObj))
     {
       BITMAPOBJ_UnlockBitmap(BitmapObj);
-      BITMAPOBJ_FreeBitmap(NewSurface);
+      BITMAPOBJ_FreeBitmapByHandle(NewSurface);
       return 0;
     }
   SurfObj = &BitmapObj->SurfObj;
@@ -513,7 +513,7 @@ BOOL STDCALL
 EngDeleteSurface(IN HSURF Surface)
 {
    GDIOBJ_SetOwnership(Surface, PsGetCurrentProcess());
-   BITMAPOBJ_FreeBitmap(Surface);
+   BITMAPOBJ_FreeBitmapByHandle(Surface);
    return TRUE;
 }
 

@@ -68,9 +68,11 @@ typedef struct
 
 /*  Internal interface  */
 
-#define  TEXTOBJ_AllocText() \
-  ((HFONT) GDIOBJ_AllocObj (GDI_OBJECT_TYPE_FONT))
-#define  TEXTOBJ_FreeText(hBMObj)  GDIOBJ_FreeObj((HGDIOBJ) hBMObj, GDI_OBJECT_TYPE_FONT)
+#define  TEXTOBJ_AllocText()       ((PTEXTOBJ) GDIOBJ_AllocObj(GDIObjType_LFONT_TYPE))
+#define  TEXTOBJ_AllocTextWithHandle() ((PTEXTOBJ) GDIOBJ_AllocObjWithHandle(GDI_OBJECT_TYPE_FONT))
+#define  TEXTOBJ_AllocTextDepricated() ((HFONT) GDIOBJ_AllocObj(GDI_OBJECT_TYPE_FONT))
+#define  TEXTOBJ_FreeText(pBMObj)  GDIOBJ_FreeObj((POBJ) pBMObj, GDILoObjType_LO_FONT_TYPE)
+#define  TEXTOBJ_FreeTextByHandle(hBMObj)  GDIOBJ_FreeObj((HGDIOBJ) hBMObj, GDI_OBJECT_TYPE_FONT)
 #define  TEXTOBJ_LockText(hBMObj) ((PTEXTOBJ) GDIOBJ_LockObj ((HGDIOBJ) hBMObj, GDI_OBJECT_TYPE_FONT))
 #define  TEXTOBJ_UnlockText(pBMObj) GDIOBJ_UnlockObjByPtr ((POBJ)pBMObj)
 

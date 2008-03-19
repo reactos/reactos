@@ -72,7 +72,7 @@ OBJ_TYPE_INFO ObjTypeInfo[] =
   {1, sizeof(DC),            TAG_DC,           DC_Cleanup},       /* 01 DC */
   {1, 0,                     0,                NULL},             /* 02 UNUSED1 */
   {1, 0,                     0,                NULL},             /* 03 UNUSED2 */
-  {1, sizeof(ROSRGNDATA),    TAG_REGION,       REGION_Cleanup},  /* 04 RGN */
+  {1, sizeof(ROSRGNDATA),    TAG_REGION,       REGION_Cleanup},   /* 04 RGN */
   {1, sizeof(BITMAPOBJ),     TAG_SURFACE,      BITMAP_Cleanup},   /* 05 SURFACE */
   {0, sizeof(DC),            TAG_CLIENTOBJ,    GDI_CleanupDummy}, /* 06 CLIENTOBJ: METADC,... FIXME: don't use DC struct */
   {0, 0,                     TAG_PATH,         NULL},             /* 07 PATH, unused */
@@ -444,24 +444,51 @@ GDIOBJ_ValidateHandle(HGDIOBJ hObj, ULONG ObjectType)
     return FALSE;
 }
 
+POBJ INTERNAL_CALL
+GDIOBJ_AllocObj(UCHAR BaseType)
+{
+    POBJ pObject;
+
+    ASSERT((BaseType & ~GDIObjTypeTotal) == 0);
+//    BaseType &= GDI_HANDLE_BASETYPE_MASK;
+
+    if (ObjTypeInfo[BaseType].bUseLookaside)
+    {
+        PPAGED_LOOKASIDE_LIST LookasideList;
+
+        LookasideList = GdiHandleTable->LookasideLists + BaseType;
+        pObject = ExAllocateFromPagedLookasideList(LookasideList);
+    }
+    else
+    {
+        pObject = ExAllocatePoolWithTag(PagedPool,
+                                        ObjTypeInfo[BaseType].ulBodySize,
+                                        ObjTypeInfo[BaseType].Tag);
+    }
+
+    if (pObject)
+    {
+        RtlZeroMemory(pObject, ObjTypeInfo[BaseType].ulBodySize);
+    }
+
+    return pObject;
+}
+
+
 /*!
  * Allocate memory for GDI object and return handle to it.
  *
  * \param ObjectType - type of object \ref GDI object types
  *
- * \return Handle of the allocated object.
- *
- * \note Use GDIOBJ_Lock() to obtain pointer to the new object.
- * \todo return the object pointer and lock it by default.
+ * \return Pointer to the allocated object, which is locked.
 */
-HGDIOBJ INTERNAL_CALL
-GDIOBJ_AllocObj(ULONG ObjectType)
+POBJ INTERNAL_CALL
+GDIOBJ_AllocObjWithHandle(ULONG ObjectType)
 {
     PW32PROCESS W32Process;
     POBJ  newObject = NULL;
-    PPAGED_LOOKASIDE_LIST LookasideList = NULL;
     HANDLE CurrentProcessId, LockedProcessId;
-    ULONG TypeIndex;
+    UCHAR TypeIndex;
 #ifdef GDI_DEBUG
     ULONG Attempts = 0;
 #endif
@@ -475,106 +502,130 @@ GDIOBJ_AllocObj(ULONG ObjectType)
     ASSERT(ObjectType != GDI_OBJECT_TYPE_DONTCARE);
 
     TypeIndex = GDI_OBJECT_GET_TYPE_INDEX(ObjectType);
-    if (ObjTypeInfo[TypeIndex].bUseLookaside)
+
+    newObject = GDIOBJ_AllocObj(TypeIndex);
+    if (!newObject)
     {
-        LookasideList = FindLookasideList(TypeIndex);
-        if (LookasideList != NULL)
-        {
-            newObject = ExAllocateFromPagedLookasideList(LookasideList);
-        }
+        DPRINT1("Not enough memory to allocate gdi object!\n");
+        return NULL;
     }
-    else
+
+    UINT Index;
+    PGDI_TABLE_ENTRY Entry;
+    LONG TypeInfo;
+
+    CurrentProcessId = PsGetCurrentProcessId();
+    LockedProcessId = (HANDLE)((ULONG_PTR)CurrentProcessId | 0x1);
+
+//    RtlZeroMemory(newObject, GetObjectSize(TypeIndex));
+
+    /* On Windows the higher 16 bit of the type field don't contain the
+       full type from the handle, but the base type.
+       (type = BRSUH, PEN, EXTPEN, basetype = BRUSH) */
+    TypeInfo = (ObjectType & GDI_HANDLE_BASETYPE_MASK) | (ObjectType >> GDI_ENTRY_UPPER_SHIFT);
+
+    Index = InterlockedPopFreeEntry();
+    if (Index != 0)
     {
-        newObject = ExAllocatePoolWithTag(PagedPool,
-                                          ObjTypeInfo[TypeIndex].ulBodySize,
-                                          ObjTypeInfo[TypeIndex].Tag);
-    }
-    if (newObject != NULL)
-    {
-        UINT Index;
-        PGDI_TABLE_ENTRY Entry;
-        LONG TypeInfo;
+        HANDLE PrevProcId;
 
-        CurrentProcessId = PsGetCurrentProcessId();
-        LockedProcessId = (HANDLE)((ULONG_PTR)CurrentProcessId | 0x1);
-
-        RtlZeroMemory(newObject, GetObjectSize(TypeIndex));
-
-        /* On Windows the higher 16 bit of the type field don't contain the
-           full type from the handle, but the base type.
-           (type = BRSUH, PEN, EXTPEN, basetype = BRUSH) */
-        TypeInfo = (ObjectType & GDI_HANDLE_BASETYPE_MASK) | (ObjectType >> GDI_ENTRY_UPPER_SHIFT);
-
-        Index = InterlockedPopFreeEntry();
-        if (Index != 0)
-        {
-            HANDLE PrevProcId;
-
-            Entry = &GdiHandleTable->Entries[Index];
+        Entry = &GdiHandleTable->Entries[Index];
 
 LockHandle:
-            PrevProcId = _InterlockedCompareExchangePointer((PVOID*)&Entry->ProcessId, LockedProcessId, 0);
-            if (PrevProcId == NULL)
-            {
-                HGDIOBJ Handle;
-
-                Entry->KernelData = newObject;
-
-                /* copy the reuse-counter */
-                TypeInfo |= Entry->Type & GDI_ENTRY_REUSE_MASK;
-
-                /* we found a free entry, no need to exchange this field atomically
-                   since we're holding the lock */
-                Entry->Type = TypeInfo;
-
-                /* unlock the entry */
-                (void)_InterlockedExchangePointer((PVOID*)&Entry->ProcessId, CurrentProcessId);
-
-                GDIDBG_CAPTUREALLOCATOR(Index);
-
-                if (W32Process != NULL)
-                {
-                    _InterlockedIncrement(&W32Process->GDIObjects);
-                }
-                Handle = (HGDIOBJ)((Index & 0xFFFF) | (TypeInfo << GDI_ENTRY_UPPER_SHIFT));
-                newObject->hHmgr = Handle;
-
-                DPRINT("GDIOBJ_AllocObj: 0x%x ob: 0x%x\n", Handle, newObject);
-                return Handle;
-            }
-            else
-            {
-#ifdef GDI_DEBUG
-                if (++Attempts > 20)
-                {
-                    DPRINT1("[%d]Waiting on handle in index 0x%x\n", Attempts, Index);
-                }
-#endif
-                /* damn, someone is trying to lock the object even though it doesn't
-                   eve nexist anymore, wait a little and try again!
-                   FIXME - we shouldn't loop forever! Give up after some time! */
-                DelayExecution();
-                /* try again */
-                goto LockHandle;
-            }
-        }
-
-        if (ObjTypeInfo[TypeIndex].bUseLookaside)
+        PrevProcId = _InterlockedCompareExchangePointer((PVOID*)&Entry->ProcessId, LockedProcessId, 0);
+        if (PrevProcId == NULL)
         {
-            ExFreeToPagedLookasideList(LookasideList, newObject);
+            PW32THREAD Thread = PsGetCurrentThreadWin32Thread();
+            HGDIOBJ Handle;
+
+            Entry->KernelData = newObject;
+
+            /* copy the reuse-counter */
+            TypeInfo |= Entry->Type & GDI_ENTRY_REUSE_MASK;
+
+            /* we found a free entry, no need to exchange this field atomically
+               since we're holding the lock */
+            Entry->Type = TypeInfo;
+
+            /* Create a handle */
+            Handle = (HGDIOBJ)((Index & 0xFFFF) | (TypeInfo << GDI_ENTRY_UPPER_SHIFT));
+
+            /* Initialize BaseObject fields */
+            newObject->hHmgr = Handle;
+            newObject->ulShareCount = 0;
+            newObject->cExclusiveLock = 1;
+            newObject->Tid = Thread;
+
+            /* unlock the entry */
+            (void)_InterlockedExchangePointer((PVOID*)&Entry->ProcessId, CurrentProcessId);
+
+            GDIDBG_CAPTUREALLOCATOR(Index);
+
+            if (W32Process != NULL)
+            {
+                _InterlockedIncrement(&W32Process->GDIObjects);
+            }
+
+            DPRINT("GDIOBJ_AllocObj: 0x%x ob: 0x%x\n", Handle, newObject);
+            return newObject;
         }
         else
         {
-            ExFreePool(newObject);
+#ifdef GDI_DEBUG
+            if (++Attempts > 20)
+            {
+                DPRINT1("[%d]Waiting on handle in index 0x%x\n", Attempts, Index);
+            }
+#endif
+            /* damn, someone is trying to lock the object even though it doesn't
+               even exist anymore, wait a little and try again!
+               FIXME - we shouldn't loop forever! Give up after some time! */
+            DelayExecution();
+            /* try again */
+            goto LockHandle;
         }
-        DPRINT1("Failed to insert gdi object into the handle table, no handles left!\n");
-        GDIDBG_DUMPHANDLETABLE();
+    }
+
+    GDIOBJ_FreeObj(newObject, TypeIndex);
+
+    DPRINT1("Failed to insert gdi object into the handle table, no handles left!\n");
+    GDIDBG_DUMPHANDLETABLE();
+
+    return NULL;
+}
+
+/* Wrapper for compatibility with old calls, will be removed later */
+HGDIOBJ INTERNAL_CALL
+GDIOBJ_AllocObjDepricated(ULONG ObjectType)
+{
+    POBJ pObject;
+    HGDIOBJ hObject;
+
+    pObject = GDIOBJ_AllocObjWithHandle(ObjectType);
+    hObject = pObject->hHmgr;
+    GDIOBJ_UnlockObjByPtr(pObject);
+
+    return hObject;
+}
+
+
+VOID INTERNAL_CALL
+GDIOBJ_FreeObj(POBJ pObject, UCHAR BaseType)
+{
+    /* Object must not have a handle! */
+    ASSERT(pObject->hHmgr == NULL);
+
+    if (ObjTypeInfo[BaseType].bUseLookaside)
+    {
+        PPAGED_LOOKASIDE_LIST LookasideList;
+
+        LookasideList = GdiHandleTable->LookasideLists + BaseType;
+        ExFreeToPagedLookasideList(LookasideList, pObject);
     }
     else
     {
-        DPRINT1("Not enough memory to allocate gdi object!\n");
+        ExFreePool(pObject);
     }
-    return NULL;
 }
 
 /*!
@@ -588,10 +639,9 @@ LockHandle:
  * to the calling process.
 */
 BOOL INTERNAL_CALL
-GDIOBJ_FreeObj(HGDIOBJ hObj, DWORD ExpectedType)
+GDIOBJ_FreeObjByHandle(HGDIOBJ hObj, DWORD ExpectedType)
 {
     PGDI_TABLE_ENTRY Entry;
-    PPAGED_LOOKASIDE_LIST LookasideList;
     HANDLE ProcessId, LockedProcessId, PrevProcId;
     ULONG HandleType, HandleUpper, TypeIndex;
     BOOL Silent;
@@ -658,6 +708,8 @@ LockHandle:
                 /* push this entry to the free list */
                 InterlockedPushFreeEntry(GDI_ENTRY_TO_INDEX(GdiHandleTable, Entry));
 
+                Object->hHmgr = NULL;
+
                 if (W32Process != NULL)
                 {
                     _InterlockedDecrement(&W32Process->GDIObjects);
@@ -668,18 +720,7 @@ LockHandle:
                 Ret = RunCleanupCallback(Object, TypeIndex);
 
                 /* Now it's time to free the memory */
-                if (ObjTypeInfo[TypeIndex].bUseLookaside)
-                {
-                    LookasideList = FindLookasideList(TypeIndex);
-                    if (LookasideList != NULL)
-                    {
-                        ExFreeToPagedLookasideList(LookasideList, Object);
-                    }
-                }
-                else
-                {
-                    ExFreePool(Object);
-                }
+                GDIOBJ_FreeObj(Object, TypeIndex);
 
                 return Ret;
             }
@@ -764,7 +805,7 @@ NtGdiDeleteObject(HGDIOBJ hObject)
     if (!IsObjectDead(hObject))
     {
         return NULL != hObject
-               ? GDIOBJ_FreeObj(hObject, GDI_OBJECT_TYPE_DONTCARE) : FALSE;
+               ? GDIOBJ_FreeObjByHandle(hObject, GDI_OBJECT_TYPE_DONTCARE) : FALSE;
     }
     else
     {
@@ -818,7 +859,7 @@ GDI_CleanupForProcess(struct _EPROCESS *Process)
                    simply ignore this fact here. */
                 ObjectHandle = (HGDIOBJ)(Index | (Entry->Type << GDI_ENTRY_UPPER_SHIFT));
 
-                if (GDIOBJ_FreeObj(ObjectHandle, GDI_OBJECT_TYPE_DONTCARE) &&
+                if (GDIOBJ_FreeObjByHandle(ObjectHandle, GDI_OBJECT_TYPE_DONTCARE) &&
                         W32Process->GDIObjects == 0)
                 {
                     /* there are no more gdi handles for this process, bail */
@@ -1569,21 +1610,30 @@ NtGdiCreateClientObj(
     IN ULONG ulType
 )
 {
-// ATM we use DC object for KernelData. I think it should be at a minimum GDIOBJEMPTYHDR.
+// ATM we use DC object for KernelData. This is wrong.
+// The real type consists of BASEOBJECT and a pointer.
 // The UserData is set in user mode, so it is always NULL.
+// HANDLE should be HGDIOBJ
 //
-    INT Index;
-    PGDI_TABLE_ENTRY Entry;
-    HANDLE handle = GDIOBJ_AllocObj(GDI_OBJECT_TYPE_CLIOBJ);
-// Need to change handle type based on ulType.
-    Index = GDI_HANDLE_GET_INDEX((HGDIOBJ)handle);
-    Entry = &GdiHandleTable->Entries[Index];
-// mask out lower half and set the type by ulType.
-    Entry->Type &= GDI_HANDLE_UPPER_MASK;
-    Entry->Type |= ulType >> GDI_ENTRY_UPPER_SHIFT;
-// mask out handle type than set it by ulType.
-    handle = (HANDLE)(((ULONG_PTR)(handle)) & (GDI_HANDLE_REUSE_MASK|GDI_HANDLE_STOCK_MASK|0x0ffff));
-    handle = (HANDLE)(((ULONG_PTR)(handle)) | ulType);
+    POBJ pObject;
+    HANDLE handle;
+
+    /* Mask out everything that would change the type in a wrong manner */
+    ulType &= (GDI_HANDLE_TYPE_MASK & ~GDI_HANDLE_BASETYPE_MASK);
+
+    /* Allocate a new object */
+    pObject = GDIOBJ_AllocObjWithHandle(GDI_OBJECT_TYPE_CLIOBJ | ulType);
+    if (!pObject)
+    {
+        return NULL;
+    }
+
+    /* get the handle */
+    handle = pObject->hHmgr;
+
+    /* Unlock it */
+    GDIOBJ_UnlockObjByPtr(pObject);
+
     return handle;
 }
 
@@ -1594,7 +1644,16 @@ NtGdiDeleteClientObj(
     IN HANDLE h
 )
 {
-    return GDIOBJ_FreeObj(h, GDI_OBJECT_TYPE_CLIOBJ);
+    /* We first need to get the real type from the handle */
+    ULONG type = GDI_HANDLE_GET_TYPE(h);
+
+    /* Check if it's really a CLIENTOBJ */
+    if ((type & GDI_HANDLE_BASETYPE_MASK) != GDILoObjType_LO_CLIENTOBJ_TYPE)
+    {
+        /* FIXME: SetLastError? */
+        return FALSE;
+    }
+    return GDIOBJ_FreeObjByHandle(h, type);
 }
 
 INT

@@ -230,7 +230,7 @@ NtGdiCloseEnhMetaFile(HDC  hDC)
           NtClose( Dc->hFile );
     }
 
-  hmf = GDIOBJ_AllocObj(GdiHandleTable, GDI_OBJECT_TYPE_ENHMETAFILE);
+  hmf = GDIOBJ_AllocObjDepricated(GdiHandleTable, GDI_OBJECT_TYPE_ENHMETAFILE);
   if (hmf != NULL)
   {
      phmf = GDIOBJ_LockObj(GdiHandleTable, hmf, GDI_OBJECT_TYPE_ENHMETAFILE);

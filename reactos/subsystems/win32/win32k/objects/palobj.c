@@ -63,7 +63,7 @@ PALETTE_AllocPalette(ULONG Mode,
   HPALETTE NewPalette;
   PPALGDI PalGDI;
 
-  NewPalette = (HPALETTE) GDIOBJ_AllocObj(GDI_OBJECT_TYPE_PALETTE);
+  NewPalette = (HPALETTE) GDIOBJ_AllocObjDepricated(GDI_OBJECT_TYPE_PALETTE);
   if (NULL == NewPalette)
     {
       return NULL;
@@ -82,7 +82,7 @@ PALETTE_AllocPalette(ULONG Mode,
       if (NULL == PalGDI->IndexedColors)
 	{
 	  PALETTE_UnlockPalette(PalGDI);
-	  PALETTE_FreePalette(NewPalette);
+	  PALETTE_FreePaletteByHandle(NewPalette);
 	  return NULL;
 	}
       RtlCopyMemory(PalGDI->IndexedColors, Colors, sizeof(PALETTEENTRY) * NumColors);
@@ -112,7 +112,7 @@ PALETTE_AllocPaletteIndexedRGB(ULONG NumColors,
   PPALGDI PalGDI;
   unsigned i;
 
-  NewPalette = (HPALETTE) GDIOBJ_AllocObj(GDI_OBJECT_TYPE_PALETTE);
+  NewPalette = (HPALETTE) GDIOBJ_AllocObjDepricated(GDI_OBJECT_TYPE_PALETTE);
   if (NULL == NewPalette)
     {
       return NULL;
@@ -129,7 +129,7 @@ PALETTE_AllocPaletteIndexedRGB(ULONG NumColors,
   if (NULL == PalGDI->IndexedColors)
     {
       PALETTE_UnlockPalette(PalGDI);
-      PALETTE_FreePalette(NewPalette);
+      PALETTE_FreePaletteByHandle(NewPalette);
       return NULL;
     }
   for (i = 0; i < NumColors; i++)

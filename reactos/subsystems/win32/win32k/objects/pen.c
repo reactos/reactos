@@ -51,29 +51,20 @@ IntGdiExtCreatePen(
 
    if (bOldStylePen)
    {
-      hPen = PENOBJ_AllocPen();
+      PenObject = PENOBJ_AllocPenWithHandle();
    }
    else
    {
-      hPen = PENOBJ_AllocExtPen();
+      PenObject = PENOBJ_AllocExtPenWithHandle();
    }
 
-   if (!hPen)
+   if (!PenObject)
    {
       SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
       DPRINT("Can't allocate pen\n");
       return 0;
    }
-
-   if (bOldStylePen)
-   {
-      PenObject = PENOBJ_LockPen(hPen);
-   }
-   else
-   {
-      PenObject = PENOBJ_LockExtPen(hPen);
-   }
-   /* FIXME - Handle PenObject == NULL!!! */
+   hPen = PenObject->BaseObject.hHmgr;
 
    PenObject->ptPenWidth.x = dwWidth;
    PenObject->ptPenWidth.y = 0;

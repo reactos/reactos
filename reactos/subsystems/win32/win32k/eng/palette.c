@@ -82,7 +82,7 @@ EngDeletePalette(IN HPALETTE Palette)
 {
    GDIOBJ_SetOwnership(Palette, PsGetCurrentProcess());
 
-   return PALETTE_FreePalette(Palette);
+   return PALETTE_FreePaletteByHandle(Palette);
 }
 
 /*

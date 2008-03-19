@@ -2024,7 +2024,7 @@ REGION_AllocRgnWithHandle(INT n)
     HRGN hReg;
     PROSRGNDATA pReg;
 
-    if ((hReg = (HRGN) GDIOBJ_AllocObj(GDI_OBJECT_TYPE_REGION)))
+    if ((hReg = (HRGN) GDIOBJ_AllocObjDepricated(GDI_OBJECT_TYPE_REGION)))
     {
         if (NULL != (pReg = REGION_LockRgn(hReg)))
         {

@@ -237,7 +237,7 @@ IntSetDIBits(
   XlateObj = IntEngCreateXlate(DDB_Palette_Type, DIB_Palette_Type, DDB_Palette, DIB_Palette);
   if (NULL == XlateObj)
     {
-      PALETTE_FreePalette(DIB_Palette);
+      PALETTE_FreePaletteByHandle(DIB_Palette);
       EngUnlockSurface(SourceSurf);
       EngDeleteSurface((HSURF)SourceBitmap);
       BITMAPOBJ_UnlockBitmap(bitmap);
@@ -265,7 +265,7 @@ IntSetDIBits(
 
   // Clean up
   EngDeleteXlate(XlateObj);
-  PALETTE_FreePalette(DIB_Palette);
+  PALETTE_FreePaletteByHandle(DIB_Palette);
   EngUnlockSurface(SourceSurf);
   EngDeleteSurface((HSURF)SourceBitmap);
 
@@ -713,7 +713,7 @@ cleanup:
         EngDeleteSurface((HSURF)hDestBitmap);
 
     if (hDestPalette != NULL && bPaletteMatch == FALSE)
-        PALETTE_FreePalette(hDestPalette);
+        PALETTE_FreePaletteByHandle(hDestPalette);
 
     BITMAPOBJ_UnlockBitmap(BitmapObj);
 
@@ -1147,7 +1147,7 @@ DIB_CreateDIBSection(
 
     if (dib) { ExFreePool(dib); dib = NULL; }
     if (bmp) { bmp = NULL; }
-    if (res) { BITMAPOBJ_FreeBitmap(res); res = 0; }
+    if (res) { BITMAPOBJ_FreeBitmapByHandle(res); res = 0; }
   }
 
   if (lpRGB != bmi->bmiColors)

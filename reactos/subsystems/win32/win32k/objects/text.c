@@ -487,36 +487,24 @@ NTSTATUS FASTCALL
 TextIntCreateFontIndirect(CONST LPLOGFONTW lf, HFONT *NewFont)
 {
   PTEXTOBJ TextObj;
-  NTSTATUS Status = STATUS_SUCCESS;
 
-  *NewFont = TEXTOBJ_AllocText();
-  if (NULL != *NewFont)
+  TextObj = TEXTOBJ_AllocTextWithHandle();
+  if (!TextObj)
   {
-    TextObj = TEXTOBJ_LockText(*NewFont);
-    if (NULL != TextObj)
-    {
-      memcpy(&TextObj->logfont.elfEnumLogfontEx.elfLogFont, lf, sizeof(LOGFONTW));
-      if (lf->lfEscapement != lf->lfOrientation)
-      {
-        /* this should really depend on whether GM_ADVANCED is set */
-        TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfOrientation =
-        TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfEscapement;
-      }
-      TEXTOBJ_UnlockText(TextObj);
-    }
-    else
-    {
-/* FIXME */
-/*      ASSERT(FALSE);*/
-      Status = STATUS_INVALID_HANDLE;
-    }
-  }
-  else
-  {
-    Status = STATUS_NO_MEMORY;
+    return STATUS_NO_MEMORY;
   }
 
-  return Status;
+  *NewFont = TextObj->BaseObject.hHmgr;
+  memcpy(&TextObj->logfont.elfEnumLogfontEx.elfLogFont, lf, sizeof(LOGFONTW));
+  if (lf->lfEscapement != lf->lfOrientation)
+  {
+    /* this should really depend on whether GM_ADVANCED is set */
+    TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfOrientation =
+    TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfEscapement;
+  }
+  TEXTOBJ_UnlockText(TextObj);
+
+  return STATUS_SUCCESS;
 }
 
 HFONT
@@ -528,51 +516,51 @@ NtGdiHfontCreate(
   IN FLONG  fl,
   IN PVOID pvCliData )
 {
- ENUMLOGFONTEXDVW SafeLogfont;
- HFONT NewFont;
- PTEXTOBJ TextObj;
- NTSTATUS Status = STATUS_SUCCESS;
+  ENUMLOGFONTEXDVW SafeLogfont;
+  HFONT hNewFont;
+  PTEXTOBJ TextObj;
+  NTSTATUS Status = STATUS_SUCCESS;
 
-  if (NULL != pelfw)
+  if (!pelfw)
   {
-    Status = MmCopyFromCaller(&SafeLogfont, pelfw, sizeof(ENUMLOGFONTEXDVW));
-    if (NT_SUCCESS(Status))
-    {
-       NewFont = TEXTOBJ_AllocText();
-       if (NULL != NewFont)
-       {
-          TextObj = TEXTOBJ_LockText(NewFont);
-
-          if (NULL != TextObj)
-          {
-             RtlCopyMemory ( &TextObj->logfont,
-                                  &SafeLogfont,
-                                  sizeof(ENUMLOGFONTEXDVW));
-
-             if (SafeLogfont.elfEnumLogfontEx.elfLogFont.lfEscapement !=
-                 SafeLogfont.elfEnumLogfontEx.elfLogFont.lfOrientation)
-             {
-        /* this should really depend on whether GM_ADVANCED is set */
-                TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfOrientation =
-                TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfEscapement;
-             }
-             TEXTOBJ_UnlockText(TextObj);
-          }
-          else
-          {
-/* FIXME */
-/*      ASSERT(FALSE);*/
-            Status = STATUS_INVALID_HANDLE;
-          }
-       }
-    }
-  }
-  else
-  {
-    Status = STATUS_INVALID_PARAMETER;
+      return NULL;
   }
 
- return NT_SUCCESS(Status) ? NewFont : NULL;
+  _SEH_TRY
+  {
+      ProbeForRead(pelfw, sizeof(ENUMLOGFONTEXDVW), 1);
+      RtlCopyMemory(&SafeLogfont, pelfw, sizeof(ENUMLOGFONTEXDVW));
+  }
+  _SEH_HANDLE
+  {
+      Status = _SEH_GetExceptionCode();
+  }
+  _SEH_END
+
+  if (!NT_SUCCESS(Status))
+  {
+      return NULL;
+  }
+
+  TextObj = TEXTOBJ_AllocTextWithHandle();
+  if (!TextObj)
+  {
+      return NULL;
+  }
+  hNewFont = TextObj->BaseObject.hHmgr;
+
+  RtlCopyMemory (&TextObj->logfont, &SafeLogfont, sizeof(ENUMLOGFONTEXDVW));
+
+  if (SafeLogfont.elfEnumLogfontEx.elfLogFont.lfEscapement !=
+      SafeLogfont.elfEnumLogfontEx.elfLogFont.lfOrientation)
+  {
+    /* this should really depend on whether GM_ADVANCED is set */
+    TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfOrientation =
+    TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfEscapement;
+  }
+  TEXTOBJ_UnlockText(TextObj);
+
+  return hNewFont;
 
 }
 
@@ -1577,7 +1565,7 @@ NtGdiExtTextOutW(
 
    Dc_Attr = dc->pDc_Attr;
    if(!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
-   
+
 	/* Check if String is valid */
    if ((Count > 0xFFFF) || (Count > 0 && UnsafeString == NULL))
    {
@@ -2159,7 +2147,7 @@ NtGdiGetCharABCWidthsW(
       SetLastWin32Error(Status);
       return FALSE;
    }
-   
+
    BufferSize = Count * sizeof(ABC); // Same size!
    SafeBuff = ExAllocatePoolWithTag(PagedPool, BufferSize, TAG_GDITEXT);
    if (!fl) SafeBuffF = (LPABCFLOAT) SafeBuff;
@@ -2447,7 +2435,7 @@ NtGdiGetGlyphIndicesW(
   WCHAR DefChar = 0;
   PWSTR Buffer = NULL;
   ULONG Size;
-  
+
   if ((!UnSafepwc) && (!UnSafepgi)) return cwc;
 
   dc = DC_LockDc(hdc);
@@ -2488,7 +2476,7 @@ NtGdiGetGlyphIndicesW(
         goto ErrorRet;
      }
      IntGetOutlineTextMetrics(FontGDI, Size, potm);
-     DefChar = potm->otmTextMetrics.tmDefaultChar; // May need this.  
+     DefChar = potm->otmTextMetrics.tmDefaultChar; // May need this.
      ExFreePool(potm);
   }
 
@@ -2508,7 +2496,7 @@ NtGdiGetGlyphIndicesW(
 
   IntLockFreeType;
   face = FontGDI->face;
-    
+
   for (i = 0; i < cwc; i++)
   {
      Buffer[i] = FT_Get_Char_Index(face, UnSafepwc[i]);
@@ -3340,7 +3328,7 @@ NtGdiGetCharSet(HDC hDC)
   PDC Dc;
   PDC_ATTR Dc_Attr;
   DWORD cscp = IntGdiGetCharSet(hDC);
-  // If here, update everything!  
+  // If here, update everything!
   Dc = DC_LockDc(hDC);
   Dc_Attr = Dc->pDc_Attr;
   if (!Dc_Attr) Dc_Attr = &Dc->Dc_Attr;

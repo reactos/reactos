@@ -2270,7 +2270,7 @@ DC_AllocDC(PUNICODE_STRING Driver)
     RtlCopyMemory(Buf, Driver->Buffer, Driver->MaximumLength);
   }
 
-  hDC = (HDC) GDIOBJ_AllocObj(GDI_OBJECT_TYPE_DC);
+  hDC = (HDC) GDIOBJ_AllocObjDepricated(GDI_OBJECT_TYPE_DC);
   if (hDC == NULL)
   {
     if(Buf)
@@ -2441,7 +2441,7 @@ DC_FreeDC(HDC  DCToFree)
   DC_FreeDcAttr(DCToFree);
   if(!IsObjectDead( DCToFree ))
   {
-    if (!GDIOBJ_FreeObj(DCToFree, GDI_OBJECT_TYPE_DC))
+    if (!GDIOBJ_FreeObjByHandle(DCToFree, GDI_OBJECT_TYPE_DC))
     {
        DPRINT1("DC_FreeDC failed\n");
     }

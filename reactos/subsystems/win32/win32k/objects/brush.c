@@ -351,16 +351,14 @@ IntGdiCreateDIBBrush(
    BitmapObject->hDIBPalette = BuildDIBPalette(BitmapInfo, &PaletteType);
    BITMAPOBJ_UnlockBitmap(BitmapObject);
 
-   hBrush = BRUSHOBJ_AllocBrush();
-   if (hBrush == NULL)
+   BrushObject = BRUSHOBJ_AllocBrushWithHandle();
+   if (BrushObject == NULL)
    {
       NtGdiDeleteObject(hPattern);
       SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
       return NULL;
    }
-
-   BrushObject = BRUSHOBJ_LockBrush(hBrush);
-   ASSERT(BrushObject != NULL);
+   hBrush = BrushObject->BaseObject.hHmgr;
 
    BrushObject->flAttrs |= GDIBRUSH_IS_BITMAP | GDIBRUSH_IS_DIB;
    BrushObject->hbmPattern = hPattern;
@@ -394,16 +392,14 @@ IntGdiCreateHatchBrush(
       return NULL;
    }
 
-   hBrush = BRUSHOBJ_AllocBrush();
-   if (hBrush == NULL)
+   BrushObject = BRUSHOBJ_AllocBrushWithHandle();
+   if (BrushObject == NULL)
    {
       NtGdiDeleteObject(hPattern);
       SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
       return NULL;
    }
-
-   BrushObject = BRUSHOBJ_LockBrush(hBrush);
-   ASSERT(BrushObject != NULL);
+   hBrush = BrushObject->BaseObject.hHmgr;
 
    BrushObject->flAttrs |= GDIBRUSH_IS_HATCH;
    BrushObject->hbmPattern = hPattern;
@@ -431,16 +427,14 @@ IntGdiCreatePatternBrush(
       return NULL;
    }
 
-   hBrush = BRUSHOBJ_AllocBrush();
-   if (hBrush == NULL)
+   BrushObject = BRUSHOBJ_AllocBrushWithHandle();
+   if (BrushObject == NULL)
    {
       NtGdiDeleteObject(hPattern);
       SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
       return NULL;
    }
-
-   BrushObject = BRUSHOBJ_LockBrush(hBrush);
-   ASSERT(BrushObject != NULL);
+   hBrush = BrushObject->BaseObject.hHmgr;
 
    BrushObject->flAttrs |= GDIBRUSH_IS_BITMAP;
    BrushObject->hbmPattern = hPattern;
@@ -460,15 +454,13 @@ IntGdiCreateSolidBrush(
    HBRUSH hBrush;
    PGDIBRUSHOBJ BrushObject;
 
-   hBrush = BRUSHOBJ_AllocBrush();
-   if (hBrush == NULL)
+   BrushObject = BRUSHOBJ_AllocBrushWithHandle();
+   if (BrushObject == NULL)
    {
       SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
       return NULL;
    }
-
-   BrushObject = BRUSHOBJ_LockBrush(hBrush);
-   ASSERT(BrushObject != NULL);
+   hBrush = BrushObject->BaseObject.hHmgr;
 
    BrushObject->flAttrs |= GDIBRUSH_IS_SOLID;
 
@@ -486,15 +478,14 @@ IntGdiCreateNullBrush(VOID)
    HBRUSH hBrush;
    PGDIBRUSHOBJ BrushObject;
 
-   hBrush = BRUSHOBJ_AllocBrush();
-   if (hBrush == NULL)
+   BrushObject = BRUSHOBJ_AllocBrushWithHandle();
+   if (BrushObject == NULL)
    {
       SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
       return NULL;
    }
+   hBrush = BrushObject->BaseObject.hHmgr;
 
-   BrushObject = BRUSHOBJ_LockBrush(hBrush);
-   ASSERT(BrushObject != NULL);
    BrushObject->flAttrs |= GDIBRUSH_IS_NULL;
    BRUSHOBJ_UnlockBrush(BrushObject);
 
