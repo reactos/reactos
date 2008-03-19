@@ -25,6 +25,7 @@
  */
 
 #include "usetup.h"
+#include "interface/consup.h"
 #include "errorcode.h"
 #include "mui.h"
 
@@ -162,7 +163,6 @@ MUIDisplayPage(IN ULONG page)
 {
     const MUI_ENTRY * entry;
     int index;
-    int flags;
 
     entry = FindMUIEntriesOfPage(page);
     if (!entry)
@@ -177,24 +177,12 @@ MUIDisplayPage(IN ULONG page)
     index = 0;
     do
     {
-        flags = entry[index].Flags;
-        switch(flags)
-        {
-            case TEXT_NORMAL:
-                CONSOLE_SetTextXY(entry[index].X, entry[index].Y, entry[index].Buffer);
-                break;
-            case TEXT_HIGHLIGHT:
-                CONSOLE_SetHighlightedTextXY(entry[index].X, entry[index].Y, entry[index].Buffer);
-                break;
-            case TEXT_UNDERLINE:
-                CONSOLE_SetUnderlinedTextXY(entry[index].X, entry[index].Y, entry[index].Buffer);
-                break;
-            case TEXT_STATUS:
-                CONSOLE_SetStatusText(entry[index].Buffer);
-                break;
-            default:
-                break;
-        }
+        CONSOLE_SetStyledText (
+		    entry[index].X, 
+		    entry[index].Y, 
+		    entry[index].Flags,
+		    entry[index].Buffer);
+
         index++;
     }
     while (entry[index].Buffer != NULL);

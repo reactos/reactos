@@ -12,37 +12,37 @@ static MUI_ENTRY skSKLanguagePageEntries[] =
         4,
         3,
          " Inçtal tor syst‚mu ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_UNDERLINE
+        TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
         "Vìber jazyka.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         10,
         "\x07  Zvo–te si jazyk, ktorì sa pou§ije poŸas inçtal cie.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
         "   Potom stlaŸte ENTER.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
         "\x07  Tento jazyk bude predvolenìm jazykom nainçtalovan‚ho syst‚mu.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
         "   ENTER = PokraŸovaœ   F3 = SkonŸiœ",
-        TEXT_STATUS
+        TEXT_TYPE_STATUS
     },
     {
         0,
@@ -58,67 +58,67 @@ static MUI_ENTRY skSKWelcomePageEntries[] =
         4,
         3,
          " Inçtal tor syst‚mu ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_UNDERLINE
+        TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
         "V¡ta V s Inçtal tor syst‚mu ReactOS",
-        TEXT_HIGHLIGHT
+        TEXT_STYLE_HIGHLIGHT
     },
     {
         6,
         11,
         "Tento stupeå Inçtal tora skop¡ruje operaŸnì syst‚m ReactOS na V ç",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         6,
         12,
         "poŸ¡taŸ a priprav¡ druhì stupeå Inçtal tora.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         15,
         "\x07  StlaŸte ENTER pre nainçtalovanie syst‚mu ReactOS.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
         "\x07  StlaŸte R pre opravu syst‚mu ReactOS.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         19,
         "\x07  StlaŸte L, ak chcete zobraziœ licenŸn‚ podmienky syst‚mu ReactOS.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
         "\x07  StlaŸte F3 pre skonŸenie inçtal cie, syst‚m ReactOS sa nenainçtaluje.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         6,
         23,
         "Pre viac inform ci¡ o syst‚me ReactOS, navçt¡vte pros¡m:",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         6,
         24,
         "http://www.reactos.org",
-        TEXT_HIGHLIGHT
+        TEXT_STYLE_HIGHLIGHT
     },
     {
         0,
         0,
         "   ENTER = PokraŸovaœ   R = Opraviœ   F3 = SkonŸiœ",
-        TEXT_STATUS
+        TEXT_TYPE_STATUS
     },
     {
         0,
@@ -134,85 +134,85 @@ static MUI_ENTRY skSKIntroPageEntries[] =
         4,
         3,
         " Inçtal tor syst‚mu ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_UNDERLINE
+        TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
         "Inçtal tor syst‚mu ReactOS je v zaŸiatoŸnom çt diu vìvoja. Zatia–",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         6,
         9,
         "nepodporuje vçetky funkcie plne vyu§¡vaj£ce program Inçtal tor.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         6,
         12,
         "M  nasleduj£ce obmedzenia:",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
         "- Inçtal tor nepracuje s viac ako 1 prim rnou oblasœou na 1 disku.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         14,
         "- Inçtal tor nevie odstr niœ prim rnu oblasœ z disku,",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         15,
         "  pokia– existuj£ rozç¡ren‚ oblasti na disku.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         16,
         "- Inçtal tor nevie odstr niœ prv£ rozç¡ren£ oblasœ z disku,",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
         "  pokia– existuj£ in‚ rozç¡ren‚ oblasti na disku.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         18,
         "- Inçtal tor podporuje iba s£borovì syst‚m FAT.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         19,
         "- Kontrola s£borov‚ho syst‚mu zatia– nie je implementovan .",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         23,
         "\x07  StlaŸte ENTER pre nainçtalovanie syst‚mu ReactOS.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         25,
         "\x07  StlaŸte F3 pre skonŸenie inçtal cie, syst‚m ReactOS sa nenainçtaluje.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
         "   ENTER = PokraŸovaœ   F3 = SkonŸiœ",
-        TEXT_STATUS
+        TEXT_TYPE_STATUS
     },
     {
         0,
@@ -228,115 +228,115 @@ static MUI_ENTRY skSKLicensePageEntries[] =
         4,
         3,
         " Inçtal tor syst‚mu ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_UNDERLINE
+        TEXT_STYLE_UNDERLINE
     },
     {
         6,
         6,
         "Licencia:",
-        TEXT_HIGHLIGHT
+        TEXT_STYLE_HIGHLIGHT
     },
     {
         8,
         8,
         "The ReactOS System is licensed under the terms of the",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         9,
         "GNU GPL with parts containing code from other compatible",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         10,
         "licenses such as the X11 or BSD and GNU LGPL licenses.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
         "All software that is part of the ReactOS system is",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         12,
         "therefore released under the GNU GPL as well as maintaining",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
         "the original license.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         15,
         "This software comes with NO WARRANTY or restrictions on usage",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         16,
         "save applicable local and international law. The licensing of",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
         "ReactOS only covers distribution to third parties.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         18,
         "If for some reason you did not receive a copy of the",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         19,
         "GNU General Public License with ReactOS please visit",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         20,
         "http://www.gnu.org/licenses/licenses.html",
-        TEXT_HIGHLIGHT
+        TEXT_STYLE_HIGHLIGHT
     },
     {
         8,
         22,
         "Z ruka:",
-        TEXT_HIGHLIGHT
+        TEXT_STYLE_HIGHLIGHT
     },
     {
         8,
         24,
         "This is free software; see the source for copying conditions.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         25,
         "There is NO warranty; not even for MERCHANTABILITY or",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         26,
         "FITNESS FOR A PARTICULAR PURPOSE",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
         "   ENTER = N vrat",
-        TEXT_STATUS
+        TEXT_TYPE_STATUS
     },
     {
         0,
@@ -352,84 +352,84 @@ static MUI_ENTRY skSKDevicePageEntries[] =
         4,
         3,
         " Inçtal tor syst‚mu ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_UNDERLINE
+        TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
         "Zoznam ni§çie, zobrazuje s£Ÿasn‚ nastavenia zariaden¡.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
         "        PoŸ¡taŸ:",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         12,
         "        Monitor:",
-        TEXT_NORMAL,
+        TEXT_STYLE_NORMAL,
     },
     {
         8,
         13,
         "     Kl vesnica:",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         14,
         " Rozlo§enie kl.:",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         16,
         "     Akceptovaœ:",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         25,
         16, "Akceptovaœ tieto nastavenia zariaden¡",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         6,
         19,
         "M“§ete zmeniœ hardv‚rov‚ nastavenia stlaŸen¡m kl vesov HORE alebo DOLE",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         6,
         20,
         "pre vìber polo§ky. Potom stlaŸte kl ves ENTER pre vìber alternat¡vnych",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         6,
         21,
         "nastaven¡.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         6,
         23,
         "Ak s£ vçetky nastavenia spr vne, vyberte polo§ku",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         6,
         24,
         "\"Akceptovaœ tieto nastavenia zariaden¡\" a stlaŸte ENTER.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
         "   ENTER = PokraŸovaœ   F3 = SkonŸiœ",
-        TEXT_STATUS
+        TEXT_TYPE_STATUS
     },
     {
         0,
@@ -445,55 +445,55 @@ static MUI_ENTRY skSKRepairPageEntries[] =
         4,
         3,
         " Inçtal tor syst‚mu ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_UNDERLINE
+        TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
         "Inçtal tor syst‚mu ReactOS je v zaŸiatoŸnom çt diu vìvoja. Zatia–",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         6,
         9,
         "nepodporuje vçetky funkcie plne vyu§¡vaj£ce program Inçtal tor.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         6,
         12,
         "Funkcie na opravu syst‚mu zatia– nie s£ implementovan‚.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         15,
         "\x07  StlaŸte U pre aktualiz ciu OS.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
         "\x07  StlaŸte R pre z chrann£ konzolu.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         19,
         "\x07  StlaŸte ESC pre n vrat na hlavn£ str nku.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
         "\x07  StlaŸte ENTER pre reçtart poŸ¡taŸa.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
         "   ESC = Hlavn  str nka  ENTER = Reçtart",
-        TEXT_STATUS
+        TEXT_TYPE_STATUS
     },
     {
         0,
@@ -508,43 +508,43 @@ static MUI_ENTRY skSKComputerPageEntries[] =
         4,
         3,
         " Inçtal tor syst‚mu ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_UNDERLINE
+        TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
         "Chcete zmeniœ typ poŸ¡taŸa, ktorì m  byœ nainçtalovanì.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         10,
         "\x07  StlaŸte kl ves HORE alebo DOLE pre vìber po§adovan‚ho typu poŸ¡taŸa.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
         "   Potom stlaŸte ENTER.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
         "\x07  StlaŸte kl ves ESC pre n vrat na predch dzaj£cu str nku bez zmeny",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         14,
         "   typu poŸ¡taŸa.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
         "   ENTER = PokraŸovaœ   ESC = Zruçiœ   F3 = SkonŸiœ",
-        TEXT_STATUS
+        TEXT_TYPE_STATUS
     },
     {
         0,
@@ -560,31 +560,31 @@ static MUI_ENTRY skSKFlushPageEntries[] =
         4,
         3,
         " Inçtal tor syst‚mu ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_UNDERLINE
+        TEXT_STYLE_UNDERLINE
     },
     {
         10,
         6,
         "Syst‚m pr ve overuje vçetky ulo§en‚ £daje na Vaçom disku",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         10,
         8,
         "To m“§e trvaœ nieko–ko min£t",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         10,
         9,
         "KeÔ skonŸ¡, poŸ¡taŸ sa automaticky reçtartuje",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
         "   Vypr zdåujem cache", //Flushing cache (zapisuje sa na disk obsah cache)
-        TEXT_STATUS
+        TEXT_TYPE_STATUS
     },
     {
         0,
@@ -600,37 +600,37 @@ static MUI_ENTRY skSKQuitPageEntries[] =
         4,
         3,
         " Inçtal tor syst‚mu ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_UNDERLINE
+        TEXT_STYLE_UNDERLINE
     },
     {
         10,
         6,
         "Syst‚m ReactOS nie je nainçtalovanì kompletne",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         10,
         8,
         "Vyberte disketu z mechaniky A: a",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         10,
         9,
         "vçetky m‚di  CD-ROM z CD mechan¡k.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         10,
         11,
         "StlaŸte ENTER pre reçtart poŸ¡taŸa.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
         "   PoŸkajte, pros¡m ...",
-        TEXT_STATUS,
+        TEXT_TYPE_STATUS,
     },
     {
         0,
@@ -646,42 +646,42 @@ static MUI_ENTRY skSKDisplayPageEntries[] =
         4,
         3,
         " Inçtal tor syst‚mu ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_UNDERLINE
+        TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
         "Chcete zmeniœ typ monitora, ktorì m  byœ nainçtalovanì.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {   8,
         10,
          "\x07  StlaŸte kl ves HORE alebo DOLE pre vìber po§adovan‚ho typu monitora.",
-         TEXT_NORMAL
+         TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
         "   Potom stlaŸte ENTER.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
         "\x07  StlaŸte kl ves ESC pre n vrat na predch dzaj£cu str nku bez zmeny",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         14,
         "   typu monitora.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
         "   ENTER = PokraŸovaœ   ESC = Zruçiœ   F3 = SkonŸiœ",
-        TEXT_STATUS
+        TEXT_TYPE_STATUS
     },
     {
         0,
@@ -697,37 +697,37 @@ static MUI_ENTRY skSKSuccessPageEntries[] =
         4,
         3,
         " Inçtal tor syst‚mu ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_UNDERLINE
+        TEXT_STYLE_UNDERLINE
     },
     {
         10,
         6,
         "Z kladn‚ s£Ÿast¡ syst‚mu ReactOS boli £speçne nainçtalovan‚.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         10,
         8,
         "Vyberte disketu z mechaniky A: a",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         10,
         9,
         "vçetky m‚di  CD-ROM z CD mechan¡k.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         10,
         11,
         "StlaŸte ENTER pre reçtart poŸ¡taŸa.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
         "   ENTER = Reçtart poŸ¡taŸa",
-        TEXT_STATUS
+        TEXT_TYPE_STATUS
     },
     {
         0,
@@ -743,37 +743,37 @@ static MUI_ENTRY skSKBootPageEntries[] =
         4,
         3,
         " Inçtal tor syst‚mu ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_UNDERLINE
+        TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
         "Inçtal tor nem“§e nainçtalovaœ zav dzaŸ syst‚mu na pevnì disk V çho", //bootloader = zav dzaŸ syst‚mu
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         6,
         9,
         "poŸ¡taŸa",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         6,
         13,
         "Vlo§te pros¡m, naform tovan£ disketu do mechaniky A:",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         6,
         14,
         "a stlaŸte ENTER.",
-        TEXT_NORMAL,
+        TEXT_STYLE_NORMAL,
     },
     {
         0,
         0,
         "   ENTER = PokraŸovaœ   F3 = SkonŸiœ",
-        TEXT_STATUS
+        TEXT_TYPE_STATUS
     },
     {
         0,
@@ -790,49 +790,49 @@ static MUI_ENTRY skSKSelectPartitionEntries[] =
         4,
         3,
         " Inçtal tor syst‚mu ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_UNDERLINE
+        TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
         "Zoznam ni§çie, zobrazuje existuj£ce oblasti a nevyu§it‚ miesto",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         6,
         9,
         "na disku vhodn‚ pre nov‚ oblasti.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
         "\x07  StlaŸte HORE alebo DOLE pre vìber zo zoznamu polo§iek.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
         "\x07  StlaŸte ENTER pre inçtal ciu syst‚mu ReactOS na vybran£ oblasœ.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         15,
         "\x07  StlaŸte C pre vytvorenie novej oblasti.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
         "\x07  StlaŸte D pre vymazanie existuj£cej oblasti.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
         "   PoŸkajte, pros¡m ...",
-        TEXT_STATUS
+        TEXT_TYPE_STATUS
     },
     {
         0,
@@ -848,31 +848,31 @@ static MUI_ENTRY skSKFormatPartitionEntries[] =
         4,
         3,
         " Inçtal tor syst‚mu ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_UNDERLINE
+        TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
         "Form tovanie oblasti",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         6,
         10,
         "Inçtal tor teraz naform tuje oblasœ. StlaŸte ENTER pre pokraŸovanie.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
         "   ENTER = PokraŸovaœ   F3 = SkonŸiœ",
-        TEXT_STATUS
+        TEXT_TYPE_STATUS
     },
     {
         0,
         0,
         NULL,
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     }
 };
 
@@ -882,43 +882,43 @@ static MUI_ENTRY skSKInstallDirectoryEntries[] =
         4,
         3,
         " Inçtal tor syst‚mu ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_UNDERLINE
+        TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
         "Inçtal tor nainçtaluje s£bory syst‚mu ReactOS na zvolen£ oblasœ.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         6,
         9,
         "Vyberte adres r kam chcete nainçtalovaœ syst‚m ReactOS:",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         6,
         14,
         "Ak chcete zmeniœ odpor£Ÿanì adres r, stlaŸte BACKSPACE a vyma§te",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         6,
         15,
         "znaky. Potom nap¡çte n zov adres ra, v ktor‚ho chcete aby bol",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         6,
         16,
         "syst‚m ReactOS nainçtalovanì.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
         "   ENTER = PokraŸovaœ   F3 = SkonŸiœ",
-        TEXT_STATUS
+        TEXT_TYPE_STATUS
     },
     {
         0,
@@ -934,31 +934,31 @@ static MUI_ENTRY skSKFileCopyEntries[] =
         4,
         3,
         " Inçtal tor syst‚mu ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_UNDERLINE
+        TEXT_STYLE_UNDERLINE
     },
     {
         11,
         12,
         "PoŸkajte, pros¡m, kìm Inçtal tor skop¡ruje s£bory do inçtalaŸn‚ho",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         30,
         13,
         "prieŸinka pre ReactOS.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         20,
         14,
         "DokonŸenie m“§e trvaœ nieko–ko min£t.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
         "                                                     \xB3 PoŸkajte, pros¡m ...    ",
-        TEXT_STATUS
+        TEXT_TYPE_STATUS
     },
     {
         0,
@@ -974,37 +974,37 @@ static MUI_ENTRY skSKBootLoaderEntries[] =
         4,
         3,
         " Inçtal tor syst‚mu ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_UNDERLINE
+        TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
         "Inçtal tor je pripravenì nainçtalovaœ zav dzaŸ operaŸn‚ho syst‚mu",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         12,
         "Nainçtalovaœ zav dzaŸ syst‚mu na pevnì disk (MBR).",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
         "Nainçtalovaœ zav dzaŸ syst‚mu na disketu.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         14,
         "PreskoŸiœ inçtal ciu zav dzaŸa syst‚mu.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
         "   ENTER = PokraŸovaœ   F3 = SkonŸiœ",
-        TEXT_STATUS
+        TEXT_TYPE_STATUS
     },
     {
         0,
@@ -1020,43 +1020,43 @@ static MUI_ENTRY skSKKeyboardSettingsEntries[] =
         4,
         3,
         " Inçtal tor syst‚mu ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_UNDERLINE
+        TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
         "Chcete zmeniœ typ kl vesnice, ktorì m  byœ nainçtalovanì.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         10,
         "\x07  StlaŸte kl ves HORE alebo DOLE a vyberte po§adovanì typ kl vesnice.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
         "   Potom stlaŸte ENTER.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
         "\x07  StlaŸte kl ves ESC pre n vrat na predch dzaj£cu str nku bez zmeny",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         14,
         "   typu kl vesnice.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
         "   ENTER = PokraŸovaœ   ESC = Zruçiœ   F3 = SkonŸiœ",
-        TEXT_STATUS
+        TEXT_TYPE_STATUS
     },
     {
         0,
@@ -1072,43 +1072,43 @@ static MUI_ENTRY skSKLayoutSettingsEntries[] =
         4,
         3,
         " Inçtal tor syst‚mu ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_UNDERLINE
+        TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
         "Chcete zmeniœ rozlo§enie kl vesnice, ktor‚ m  byœ nainçtalovan‚.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         10,
         "\x07  StlaŸte kl ves HORE alebo DOLE pre vìber po§adovan‚ho rozlo§enia",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
         "   kl vesnice. Potom stlaŸte ENTER.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
         "\x07  StlaŸte kl ves ESC pre n vrat na predch dzaj£cu str nku bez zmeny",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         14,
         "   rozlo§enia kl vesnice.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
         "   ENTER = PokraŸovaœ   ESC = Zruçiœ   F3 = SkonŸiœ",
-        TEXT_STATUS
+        TEXT_TYPE_STATUS
     },
     {
         0,
@@ -1125,19 +1125,19 @@ static MUI_ENTRY skSKPrepareCopyEntries[] =
         4,
         3,
         " Inçtal tor syst‚mu ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_UNDERLINE
+        TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
         "Pripravuje sa kop¡rovanie s£borov syst‚mu ReactOS. ",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
         "   Vytv ra sa zoznam potrebnìch s£borov ...",
-        TEXT_STATUS
+        TEXT_TYPE_STATUS
     },
     {
         0,
@@ -1154,7 +1154,7 @@ static MUI_ENTRY skSKSelectFSEntries[] =
         4,
         3,
         " Inçtal tor syst‚mu ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_UNDERLINE
+        TEXT_STYLE_UNDERLINE
     },
     {
         6,
@@ -1184,7 +1184,7 @@ static MUI_ENTRY skSKSelectFSEntries[] =
         0,
         0,
         "   ENTER = PokraŸovaœ   ESC = Zruçiœ   F3 = SkonŸiœ",
-        TEXT_STATUS
+        TEXT_TYPE_STATUS
     },
 
     {
@@ -1201,37 +1201,37 @@ static MUI_ENTRY skSKDeletePartitionEntries[] =
         4,
         3,
         " Inçtal tor syst‚mu ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_UNDERLINE
+        TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
         "Vybrali Ste si odstr nenie oblasti",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         18,
         "\x07  StlaŸte D pre odstr nenie oblasti.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         11,
         19,
         "UPOZORNENIE: Vçetky £daje na tejto oblasti sa nen vratne stratia!",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
         "\x07  StlaŸte ESC pre zruçenie.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
         "   D = Odstr niœ oblasœ   ESC = Zruçiœ   F3 = SkonŸiœ",
-        TEXT_STATUS
+        TEXT_TYPE_STATUS
     },
     {
         0,
@@ -1247,19 +1247,19 @@ static MUI_ENTRY skSKRegistryEntries[] =
         4,
         3,
         " Inçtal tor syst‚mu ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_UNDERLINE
+        TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
         "Aktualizuj£ sa syst‚mov‚ nastavenia.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
         "   Vytv raj£ sa polo§ky registrov ...", //registry hives
-        TEXT_STATUS
+        TEXT_TYPE_STATUS
     },
     {
         0,

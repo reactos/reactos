@@ -520,4 +520,82 @@ CONSOLE_PrintTextXYN(
 	}
 }
 
+VOID
+CONSOLE_SetStyledText(
+	IN SHORT x,
+	IN SHORT y,
+	IN INT Flags,
+	IN LPCSTR Text)
+{
+	COORD coPos;
+	DWORD Length;
+
+	coPos.X = x;
+	coPos.Y = y;
+
+	Length = (ULONG)strlen(Text);
+
+    if (Flags & TEXT_TYPE_STATUS)
+	{
+		coPos.Y = yScreen - 1;
+		coPos.X = 0;
+	}
+    else /* TEXT_TYPE_REGULAR (Default) */
+    {
+		coPos.X = x;
+		coPos.Y = y;
+    }
+
+   	if (Flags & TEXT_ALIGN_LEFT)
+	{
+		coPos.X = 0;
+	
+		if (Flags & TEXT_PADDING_SMALL)
+		{
+			coPos.X += 1;
+		}
+		else if (Flags & TEXT_PADDING_BIG)
+		{
+			coPos.X += 2; 
+		}
+	}
+    else if (Flags & TEXT_ALIGN_RIGHT)
+	{
+		coPos.X = coPos.X - Length; 
+
+		if (Flags & TEXT_PADDING_SMALL)
+		{
+			coPos.X -= 1;
+		}
+		else if (Flags & TEXT_PADDING_BIG)
+		{
+			coPos.X -= 2; 
+		}
+	}
+    else if (Flags & TEXT_ALIGN_CENTER)
+	{
+		coPos.X = (xScreen - Length) /2; 
+	}
+
+	if (Flags & TEXT_TYPE_STATUS)
+	{
+        CONSOLE_SetStatusText(Text);
+	}
+    else /* TEXT_TYPE_REGULAR (Default) */
+    {
+        if (Flags & TEXT_STYLE_HIGHLIGHT)
+	    {
+            CONSOLE_SetHighlightedTextXY(coPos.X, coPos.Y, Text);
+	    }
+        else if (Flags & TEXT_STYLE_UNDERLINE)
+	    {
+            CONSOLE_SetUnderlinedTextXY(coPos.X, coPos.Y, Text);
+	    }
+        else /* TEXT_STYLE_NORMAL (Default) */
+        {
+            CONSOLE_SetTextXY(coPos.X, coPos.Y, Text);
+        }
+    }
+}
+
 /* EOF */

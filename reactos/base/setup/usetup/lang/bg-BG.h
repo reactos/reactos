@@ -7,37 +7,37 @@ static MUI_ENTRY bgBGLanguagePageEntries[] =
         4,
         3,
         " Слагане на РеактОС " KERNEL_VERSION_STR " . ",
-        TEXT_UNDERLINE
+        TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
         "Избор на език",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         10,
         "\x07  Изберете език, който да изполвате при слагането.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
         "   натиснете ENTER.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
         "\x07  Езикът ще бъде подразбираният за крайната уредба.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
         "   ENTER = Продължаване  F3 = Изход",
-        TEXT_STATUS
+        TEXT_TYPE_STATUS
     },
     {
         0,
@@ -53,73 +53,73 @@ static MUI_ENTRY bgBGWelcomePageEntries[] =
         4,
         3,
         " Слагане на РеактОС " KERNEL_VERSION_STR " . ",
-        TEXT_UNDERLINE
+        TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
         "РеактОС ви приветства!",
-        TEXT_HIGHLIGHT
+        TEXT_STYLE_HIGHLIGHT
     },
     {
         6,
         11,
         "Тази част от настройката записва работната уредба РеактОС",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         6,
         12,
         "на компютъра ви и подготвя втората част на настройката.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         15,
         "\x07  Натиснете ENTER за слагане на РеактОС.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
         "\x07  Натиснете R за поправка на РеактОС.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         19,
         "\x07  Натиснете L, за да видите разрешителните (лицензните)",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
         {
         8,
         20,
         "   изисквания и условия на РеактОС",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         22,
         "\x07  Натиснете F3 за изход без слагане на РеактОС.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         6,
         24,
         "За повече сведения за РеактОС, посетете:",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         6,
         25,
         "http://www.reactos.org",
-        TEXT_HIGHLIGHT
+        TEXT_STYLE_HIGHLIGHT
     },
     {
         0,
         0,
         "   ENTER = Продължаване   R = Поправка   F3 = Изход",
-        TEXT_STATUS
+        TEXT_TYPE_STATUS
     },
     {
         0,
@@ -135,85 +135,85 @@ static MUI_ENTRY bgBGIntroPageEntries[] =
         4,
         3,
         " Слагане на РеактОС " KERNEL_VERSION_STR " . ",
-        TEXT_UNDERLINE
+        TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
         "Настройвачът на РеактОС е в ранна степен на разработка. Все още",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         6,
         9,
         "няма всички възможности на напълно използваемо настройващо приложение.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         6,
         12,
         "Съществуват следните ограничения:",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
         "- Настройвачът не може да работи с повече от един дял на диск.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         14,
         "- Настройвачът не може да изтриe първичeн дял,",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         15,
         "  ако на диска има разширен дял." ,
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         16,
         "- Настройвачът не може да изтрие първия разширен дял от диска, ",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
         "  ако на диска има и други разширени дялове.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         18,
         "- Настройвачът поддържа само FAT.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         19,
         "- Проверката на файловата уредба все още не е готова.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         23,
         "\x07  Натиснете ENTER за слагане на РеактОС.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         25,
         "\x07  Натиснете F3 за изход без слагане на РеактОС.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
         "   ENTER = Продължаване   F3 = Изход",
-        TEXT_STATUS
+        TEXT_TYPE_STATUS
     },
     {
         0,
@@ -229,115 +229,115 @@ static MUI_ENTRY bgBGLicensePageEntries[] =
         4,
         3,
         " Слагане на РеактОС " KERNEL_VERSION_STR " . ",
-        TEXT_UNDERLINE
+        TEXT_STYLE_UNDERLINE
     },
     {
         6,
         6,
         "Лицензиране:",
-        TEXT_HIGHLIGHT
+        TEXT_STYLE_HIGHLIGHT
     },
     {
         8,
         8,
         "Уредбата РеактОС е лицензирана при условията на GNU GPL",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         9,
         "с части, съдържащи код от други съвместими лицензи като",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         10,
         "X11, BSD или GNU LGPL.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
         "Следователно всяко осигуряване, което е част от",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         12,
         "РеактОС, се обнародва под GNU GPL, с поддържането на",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
         "на оригиналния лиценз.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         15,
         "This software comes with NO WARRANTY or restrictions on usage",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         16,
         "save applicable local and international law. The licensing of",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
         "ReactOS only covers distribution to third parties.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         18,
         "Ако поради някаква причина, заедно с РеактОС не сте",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         19,
         "получили копие на GNU General Public License, посетете",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         20,
         "http://www.gnu.org/licenses/licenses.html",
-        TEXT_HIGHLIGHT
+        TEXT_STYLE_HIGHLIGHT
     },
     {
         8,
         22,
         "Гаранция:",
-        TEXT_HIGHLIGHT
+        TEXT_STYLE_HIGHLIGHT
     },
     {
         8,
         24,
         "This is free software; see the source for copying conditions.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         25,
         "There is NO warranty; not even for MERCHANTABILITY or",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         26,
         "FITNESS FOR A PARTICULAR PURPOSE",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
         "   ENTER = Връщане",
-        TEXT_STATUS
+        TEXT_TYPE_STATUS
     },
     {
         0,
@@ -353,84 +353,84 @@ static MUI_ENTRY bgBGDevicePageEntries[] =
         4,
         3,
         " Настройка на РеактОС " KERNEL_VERSION_STR " . ",
-        TEXT_UNDERLINE
+        TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
         "Списъкът по- долу показва текущите настройки на устройствата.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
         "       Компютър:",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         12,
         "          Екран:",
-        TEXT_NORMAL,
+        TEXT_STYLE_NORMAL,
     },
     {
         3,
         13,
         "          Клавиатура:",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         3,
         14,
         "Клавиатурна подредба:",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         3,
         16,
         "            Приемане:",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         25,
         16, "Приемане на настройките",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         6,
         19,
         "За да промените настройките на оборудването, използвайте стрелките",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         6,
         20,
         "НАГОРЕ и НАДОЛУ. След това натиснете ENTER, за да изберете",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         6,
         21,
         "заместващи настройки.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         6,
         23,
         "Когато направите всички настройки, изберете 'Приемане на настройките'",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         6,
         24,
         "и натиснете ENTER.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
         "   ENTER = Продължаване   F3 = Изход",
-        TEXT_STATUS
+        TEXT_TYPE_STATUS
     },
     {
         0,
@@ -446,55 +446,55 @@ static MUI_ENTRY bgBGRepairPageEntries[] =
         4,
         3,
         " Слагане на РеактОС " KERNEL_VERSION_STR " . ",
-        TEXT_UNDERLINE
+        TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
         "Настройвачът на РеактОС е в ранна степен на разработка. Все още",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         6,
         9,
         "няма всички възможности на напълно използваемо настройващо приложение.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         6,
         12,
         "Възможността за поправка още не е готова.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         15,
         "\x07  натиснете U за обновяване на операционната система.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
         "\x07  Натиснете R за възстановяваща среда (конзола).",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         19,
         "\x07  натсинете ESC за връщане към главната страница.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
         "\x07  Натиснете ENTER за презапуск на компютъра.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
         "   ESC = Главна страница  ENTER = Презапуск",
-        TEXT_STATUS
+        TEXT_TYPE_STATUS
     },
     {
         0,
@@ -509,43 +509,43 @@ static MUI_ENTRY bgBGComputerPageEntries[] =
         4,
         3,
         " Слагане на РеактОС " KERNEL_VERSION_STR " . ",
-        TEXT_UNDERLINE
+        TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
         "Решили сте да смените вида на компютъра.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         10,
         "\x07  Изберете вида на екрана със стрелките нагоре и надолу и ",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
         "   натиснете ENTER.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
         "\x07  Натиснете ESC, за да се върнете към предходната страница, без да",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         14,
         "   сменяте вида на компютъра.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
         "   ENTER = Продължаване   ESC = Отказ   F3 = Изход",
-        TEXT_STATUS
+        TEXT_TYPE_STATUS
     },
     {
         0,
@@ -561,31 +561,31 @@ static MUI_ENTRY bgBGFlushPageEntries[] =
         4,
         3,
         " Слагане на РеактОС " KERNEL_VERSION_STR " . ",
-        TEXT_UNDERLINE
+        TEXT_STYLE_UNDERLINE
     },
     {
         10,
         6,
         "Уредбата проверява, дали всички данни са съхранени на диска ви.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         10,
         8,
         "Това ще отнеме минутка.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         10,
         9,
         "Компютърът ви ще се презапусне сам, когато приключи.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
         "   Изчистване на склада",
-        TEXT_STATUS
+        TEXT_TYPE_STATUS
     },
     {
         0,
@@ -601,37 +601,37 @@ static MUI_ENTRY bgBGQuitPageEntries[] =
         4,
         3,
         " Слагане на РеактОС " KERNEL_VERSION_STR " . ",
-        TEXT_UNDERLINE
+        TEXT_STYLE_UNDERLINE
     },
     {
         10,
         6,
         "Слагането на РеактОС не е завършило.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         10,
         8,
         "Извадете дискетата от устройство А: и",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         10,
         9,
         "всички носители от КД и DVD устройствата.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         10,
         11,
         "Натиснете ENTER, за да презапуснете компютъра.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
         "   Изчакайте...",
-        TEXT_STATUS,
+        TEXT_TYPE_STATUS,
     },
     {
         0,
@@ -647,42 +647,42 @@ static MUI_ENTRY bgBGDisplayPageEntries[] =
         4,
         3,
         " Слагане на РеактОС " KERNEL_VERSION_STR " . ",
-        TEXT_UNDERLINE
+        TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
         "Решили сте да смените вида на екрана.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {   8,
         10,
          "\x07  Изберете вида на екрана със стрелките нагоре и надолу и ",
-         TEXT_NORMAL
+         TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
         "   натиснете ENTER.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
         "\x07  Натиснете ESC, за да се върнете към предходната страница, без да",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         14,
         "   сменяте вида на екрана.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
         "   ENTER = Продължаване   ESC = Отказ   F3 = Изход",
-        TEXT_STATUS
+        TEXT_TYPE_STATUS
     },
     {
         0,
@@ -698,37 +698,37 @@ static MUI_ENTRY bgBGSuccessPageEntries[] =
         4,
         3,
         " Настройка на РеактОС " KERNEL_VERSION_STR " . ",
-        TEXT_UNDERLINE
+        TEXT_STYLE_UNDERLINE
     },
     {
         10,
         6,
         "Основните съставки на РеактОС са сложени успешно.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         10,
         8,
         "Извадете дискетата от устройство А: и",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         10,
         9,
         "всички носители от оптичните устройства (КД/DVD)",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         10,
         11,
         "Натиснете ENTER, за да презапуснете компютъра.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
         "   ENTER = Презапускане на компютъра",
-        TEXT_STATUS
+        TEXT_TYPE_STATUS
     },
     {
         0,
@@ -744,37 +744,37 @@ static MUI_ENTRY bgBGBootPageEntries[] =
         4,
         3,
         " Настройка на РеактОС " KERNEL_VERSION_STR " . ",
-        TEXT_UNDERLINE
+        TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
         "Слагането на зареждача (bootloader) на диска на компютъра ви",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         6,
         9,
         "бе неуспешно.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         6,
         13,
         "Сложете форматирана дискета в устройство A:",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         6,
         14,
         "и натиснете ENTER.",
-        TEXT_NORMAL,
+        TEXT_STYLE_NORMAL,
     },
     {
         0,
         0,
         "   ENTER = Продължаване   F3 = Изход",
-        TEXT_STATUS
+        TEXT_TYPE_STATUS
     },
     {
         0,
@@ -791,49 +791,49 @@ static MUI_ENTRY bgBGSelectPartitionEntries[] =
         4,
         3,
         " Слагане на РеактОС " KERNEL_VERSION_STR " . ",
-        TEXT_UNDERLINE
+        TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
         "Списъкът по- долу съдържа съществуващите дялове и празното",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         6,
         9,
         "място за нови дялове",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
         "\x07  Използвайте стрелките за избор от списъка.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
         "\x07  Натиснете ENTER за слагане на РеактОС на избрания дял.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         15,
         "\x07  Натиснете C за създаване на нов дял.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
         "\x07  Натиснете D за изтриване на съществуващ дял.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
         "   Почакайте...",
-        TEXT_STATUS
+        TEXT_TYPE_STATUS
     },
     {
         0,
@@ -849,31 +849,31 @@ static MUI_ENTRY bgBGFormatPartitionEntries[] =
         4,
         3,
         " Слагане на РеактОС " KERNEL_VERSION_STR " . ",
-        TEXT_UNDERLINE
+        TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
         "Форматиране на дял",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         6,
         10,
         "Дялът ще бъде форматиран. Натиснете ENTER за продължаване.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
         "   ENTER = Продължаване   F3 = Изход",
-        TEXT_STATUS
+        TEXT_TYPE_STATUS
     },
     {
         0,
         0,
         NULL,
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     }
 };
 
@@ -883,43 +883,43 @@ static MUI_ENTRY bgBGInstallDirectoryEntries[] =
         4,
         3,
         " Настройка на РеактОС " KERNEL_VERSION_STR " . ",
-        TEXT_UNDERLINE
+        TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
         "Файловете на РеактОС ще бъдат сложени на избрания дял. Изберете",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         6,
         9,
         "папка, в която да бъде сложен РеактОС:",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         6,
         14,
         "За смяна на предложената папка натиснете BACKSPACE, за да",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         6,
         15,
         "изтриете знаците и тогава напишете папката, в която да бъде",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         6,
         16,
         "сложен РеактОС.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
         "   ENTER = Продължаване   F3 = Изход",
-        TEXT_STATUS
+        TEXT_TYPE_STATUS
     },
     {
         0,
@@ -935,32 +935,32 @@ static MUI_ENTRY bgBGFileCopyEntries[] =
         4,
         3,
         " Настройка на РеактОС " KERNEL_VERSION_STR " . ",
-        TEXT_UNDERLINE
+        TEXT_STYLE_UNDERLINE
     },
     {
         11,
         12,
         "Изчакайте да приключи записът на файловете в избраната папка.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         30,
         13,
        // "избраната папка.",
        "",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         20,
         14,
         "Това може да отнеме няколко минути.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
         "                                                           \xB3 Почакайте...      ",
-        TEXT_STATUS
+        TEXT_TYPE_STATUS
     },
     {
         0,
@@ -976,37 +976,37 @@ static MUI_ENTRY bgBGBootLoaderEntries[] =
         4,
         3,
         " Настройка на РеактОС " KERNEL_VERSION_STR " . ",
-        TEXT_UNDERLINE
+        TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
         "Протича слагането на зареждача.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         12,
         "Слагане на зареждач на твърдия диск (MBR).",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
         "Слагане на зареждач на дискета.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         14,
         "Да не се слага зареждач.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
         "   ENTER = Продължаване   F3 = Изход",
-        TEXT_STATUS
+        TEXT_TYPE_STATUS
     },
     {
         0,
@@ -1022,43 +1022,43 @@ static MUI_ENTRY bgBGKeyboardSettingsEntries[] =
         4,
         3,
         " Настройка на РеактОС " KERNEL_VERSION_STR " . ",
-        TEXT_UNDERLINE
+        TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
         "Искате да смените вида на клавиатурата.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         10,
         "\x07  Използвайте стрелките, за да изберете вида на клавиатура.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
         "   натиснете ENTER.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
         "\x07  Натиснете ESC, за да се върнете към предходната страница, без да",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         14,
         "   сменяте вида на клавиатурата.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
         "   ENTER = Продължаване   ESC = Отказ   F3 = Изход",
-        TEXT_STATUS
+        TEXT_TYPE_STATUS
     },
     {
         0,
@@ -1074,43 +1074,43 @@ static MUI_ENTRY bgBGLayoutSettingsEntries[] =
         4,
         3,
         " Настройка на РеактОС " KERNEL_VERSION_STR " . ",
-        TEXT_UNDERLINE
+        TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
         "Искате да смените клавиатурната подредба.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         10,
         "\x07  Използвайте стрелките, за да изберете желаната клавиатурна",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
         "    подредба и после натиснете ENTER.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
         "\x07  Натиснете ESC, за да се върнете към предходната страница, без да",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         14,
         "   сменяте клавиатурната подредба.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
         "   ENTER = Продължаване   ESC = Отказ   F3 = Изход",
-        TEXT_STATUS
+        TEXT_TYPE_STATUS
     },
     {
         0,
@@ -1127,19 +1127,19 @@ static MUI_ENTRY bgBGPrepareCopyEntries[] =
         4,
         3,
         " Настройка на РеактОС " KERNEL_VERSION_STR " . ",
-        TEXT_UNDERLINE
+        TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
         "Компютърът се подготвя за запис на файловете на РеактОС. ",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
         "   Съставяне на списъка от файлове за запис...",
-        TEXT_STATUS
+        TEXT_TYPE_STATUS
     },
     {
         0,
@@ -1156,7 +1156,7 @@ static MUI_ENTRY bgBGSelectFSEntries[] =
         4,
         3,
         " Настройка на РеактОС " KERNEL_VERSION_STR " . ",
-        TEXT_UNDERLINE
+        TEXT_STYLE_UNDERLINE
     },
     {
         6,
@@ -1186,7 +1186,7 @@ static MUI_ENTRY bgBGSelectFSEntries[] =
         0,
         0,
         "   ENTER = Продължаване   ESC = Отказ   F3 = Изход",
-        TEXT_STATUS
+        TEXT_TYPE_STATUS
     },
 
     {
@@ -1203,37 +1203,37 @@ static MUI_ENTRY bgBGDeletePartitionEntries[] =
         4,
         3,
         " Настройка на РеактОС " KERNEL_VERSION_STR " . ",
-        TEXT_UNDERLINE
+        TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
         "Избрали сте да изтриете дял",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         18,
         "\x07  Натиснете D, за да изтриете дяла.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         11,
         19,
         "ВНИМАНИЕ: Всички данни на този дял ще бъдат унищожени!",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
         "\x07  Натиснете ESC, за да се откажете.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
         "   D = Изтриване на дяла, ESC = Отказ    F3 = Изход",
-        TEXT_STATUS
+        TEXT_TYPE_STATUS
     },
     {
         0,
@@ -1249,19 +1249,19 @@ static MUI_ENTRY bgBGRegistryEntries[] =
         4,
         3,
         " Настройка на РеактОС " KERNEL_VERSION_STR " . ",
-        TEXT_UNDERLINE
+        TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
         "Протича обновяване на системните настройки. ",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
         "   Създаване на регистърните роеве...",
-        TEXT_STATUS
+        TEXT_TYPE_STATUS
     },
     {
         0,

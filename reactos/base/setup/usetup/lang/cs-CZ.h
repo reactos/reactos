@@ -13,37 +13,37 @@ static MUI_ENTRY csCZLanguagePageEntries[] =
         4,
         3,
         " Instalace ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_UNDERLINE
+        TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
         "VìbØr jazyka",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         10,
         "\x07  Pros¡m zvolte jazyk, kterì bude bØhem instalace pou§it.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
         "   Pot‚ stisknØte ENTER.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
         "\x07  Tento jazyk bude defaultn¡m jazykem v nainstalovan‚m syst‚mu.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
         "   ENTER = PokraŸovat  F3 = UkonŸit",
-        TEXT_STATUS
+        TEXT_TYPE_STATUS
     },
     {
         0,
@@ -59,67 +59,67 @@ static MUI_ENTRY csCZWelcomePageEntries[] =
         4,
         3,
         " Instalace ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_UNDERLINE
+        TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
         "V¡tejte v instalaci ReactOS",
-        TEXT_HIGHLIGHT
+        TEXT_STYLE_HIGHLIGHT
     },
     {
         6,
         11,
         "Tato Ÿ st instalace nakop¡ruje operaŸn¡ syst‚m ReactOS do vaçeho",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         6,
         12,
         "poŸ¡taŸe a pýiprav¡ druhou Ÿ st instalace.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         15,
         "\x07  StisknØte ENTER pro instalaci ReactOS.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
         "\x07  StisknØte R pro opravu ReactOS.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         19,
         "\x07  StisknØte L pro prohl‚dnut¡ LicenŸn¡ch podm¡nek ReactOS",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
         "\x07  StisktnØte F3 pro ukonŸen¡ bez instalace ReactOS.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         6,
         23,
         "Pro v¡ce informac¡ o ReactOS navçtivte:",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         6,
         24,
         "http://www.reactos.org",
-        TEXT_HIGHLIGHT
+        TEXT_STYLE_HIGHLIGHT
     },
     {
         0,
         0,
         "   ENTER = PokraŸovat  R = Opravit F3 = UkonŸit",
-        TEXT_STATUS
+        TEXT_TYPE_STATUS
     },
     {
         0,
@@ -135,85 +135,85 @@ static MUI_ENTRY csCZIntroPageEntries[] =
         4,
         3,
         " Instalace ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_UNDERLINE
+        TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
         "Instalace ReactOS je v ran‚ vìvojov‚ f zi. Zat¡m nejsou podporov ny",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         6,
         9,
         "vçechny funkce plnØ pou§iteln‚ instalaŸn¡ aplikace.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         6,
         12,
         "Plat¡ n sleduj¡c¡ omezen¡:",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
         "- Instalace nedok §e zpracovat v¡ce ne§ jeden prim rn¡ odd¡l na disku.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         14,
         "- Instalace nedok §e vymazat prim rn¡ odd¡l z disku,",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         15,
         "  pokud na tomto disku existuj¡ rozç¡ýen‚ odd¡ly.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         16,
         "- Instalace nedok §e vymazat prvn¡ rozç¡ýenì odd¡l z disku,",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
         "  pokud na tomto disku existuj¡ dalç¡ rozç¡ýen‚ odd¡ly.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         18,
         "- Instalace podporuje pouze souborovì syst‚m FAT.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         19,
         "- Kontroly souborovìch syst‚m… zat¡m nejsou implementov ny.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         23,
         "\x07  StisknØte ENTER pro instalaci ReactOS.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         25,
         "\x07  StisknØte F3 pro ukonŸen¡ bez instalace ReactOS.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
         "   ENTER = PokraŸovat   F3 = UkonŸit",
-        TEXT_STATUS
+        TEXT_TYPE_STATUS
     },
     {
         0,
@@ -229,115 +229,115 @@ static MUI_ENTRY csCZLicensePageEntries[] =
         4,
         3,
         " Instalace ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_UNDERLINE
+        TEXT_STYLE_UNDERLINE
     },
     {
         6,
         6,
         "Licence:",
-        TEXT_HIGHLIGHT
+        TEXT_STYLE_HIGHLIGHT
     },
     {
         8,
         8,
         "The ReactOS System is licensed under the terms of the",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         9,
         "GNU GPL with parts containing code from other compatible",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         10,
         "licenses such as the X11 or BSD and GNU LGPL licenses.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
         "All software that is part of the ReactOS system is",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         12,
         "therefore released under the GNU GPL as well as maintaining",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
         "the original license.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         15,
         "This software comes with NO WARRANTY or restrictions on usage",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         16,
         "save applicable local and international law. The licensing of",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
         "ReactOS only covers distribution to third parties.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         18,
         "If for some reason you did not receive a copy of the",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         19,
         "GNU General Public License with ReactOS please visit",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         20,
         "http://www.gnu.org/licenses/licenses.html",
-        TEXT_HIGHLIGHT
+        TEXT_STYLE_HIGHLIGHT
     },
     {
         8,
         22,
         "Z ruka:",
-        TEXT_HIGHLIGHT
+        TEXT_STYLE_HIGHLIGHT
     },
     {
         8,
         24,
         "This is free software; see the source for copying conditions.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         25,
         "There is NO warranty; not even for MERCHANTABILITY or",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         26,
         "FITNESS FOR A PARTICULAR PURPOSE",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
         "   ENTER = ZpØt",
-        TEXT_STATUS
+        TEXT_TYPE_STATUS
     },
     {
         0,
@@ -353,84 +353,84 @@ static MUI_ENTRY csCZDevicePageEntries[] =
         4,
         3,
         " Instalace ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_UNDERLINE
+        TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
         "N sleduj¡c¡ seznam zobrazuje souŸasn‚ nastaven¡ zaý¡zen¡.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
         "         PoŸ¡taŸ:",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         12,
         "       Obrazovka:",
-        TEXT_NORMAL,
+        TEXT_STYLE_NORMAL,
     },
     {
         8,
         13,
         "      Kl vesnice:",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         14,
         "Rozvr§en¡ kl ves:",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         16,
         "        Pýijmout:",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         25,
         16, "Pýijmout toto nastaven¡ zaý¡zen¡",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         6,
         19,
         "Nastaven¡ hardwaru lze zmØnit stiskem kl vesy ENTER na ý dku",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         6,
         20,
         "zvolen‚m çipkami nahoru a dol…. Pot‚ lze zvolit jin‚ nastaven¡.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         6,
         21,
         " ",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         6,
         23,
         "Jakmile budou vçechna nastaven¡ v poý dku, oznaŸte \"Pýijmout toto",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         6,
         24,
         "nastaven¡ zaý¡zen¡\" a stisknØte ENTER.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
         "   ENTER = PokraŸovat   F3 = UkonŸit",
-        TEXT_STATUS
+        TEXT_TYPE_STATUS
     },
     {
         0,
@@ -446,55 +446,55 @@ static MUI_ENTRY csCZRepairPageEntries[] =
         4,
         3,
         " Instalace ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_UNDERLINE
+        TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
         "Instalace ReactOS je v ran‚ vìvojov‚ f zi. Zat¡m nejsou",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         6,
         9,
         "podporov ny vçechny funkce plnØ pou§iteln‚ instalaŸn¡ aplikace.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         6,
         12,
         "Opravn‚ funkce zat¡m nejsou implementov ny.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         15,
         "\x07  StisknØte U pro Update syst‚mu.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
         "\x07  StisknØte R pro Konzoli obnoven¡.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         19,
         "\x07  StisknØte ESC pro n vrat na hlavn¡ str nku.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
         "\x07  StisknØte ENTER pro restartov n¡ poŸ¡taŸe.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
         "   ESC = Hlavn¡ str nka  ENTER = Restartovat",
-        TEXT_STATUS
+        TEXT_TYPE_STATUS
     },
     {
         0,
@@ -509,43 +509,43 @@ static MUI_ENTRY csCZComputerPageEntries[] =
         4,
         3,
         " Instalace ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_UNDERLINE
+        TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
         "Chcete zmØnit typ poŸ¡taŸe k nainstalov n¡.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         10,
         "\x07  Po§adovanì typ poŸ¡taŸe zvolte pomoc¡ çipek nahoru a dol….",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
         "   Pot‚ stisknØte ENTER.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
         "\x07  StisknØte ESC pro n vrat na pýedchoz¡ str nku bez zmØny typu",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         14,
         "   poŸ¡taŸe.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
         "   ENTER = PokraŸovat   ESC = Zruçit   F3 = UkonŸit",
-        TEXT_STATUS
+        TEXT_TYPE_STATUS
     },
     {
         0,
@@ -561,31 +561,31 @@ static MUI_ENTRY csCZFlushPageEntries[] =
         4,
         3,
         " Instalace ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_UNDERLINE
+        TEXT_STYLE_UNDERLINE
     },
     {
         10,
         6,
         "Syst‚m se nyn¡ ujiçœuje, §e vçechna data budou ulo§ena na disk.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         10,
         8,
         "Toto m…§e trvat nØkolik minut",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         10,
         9,
         "Po dokonŸen¡ bude poŸ¡taŸ automaticky zrestartov n",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
         "   Uvolåuji cache",
-        TEXT_STATUS
+        TEXT_TYPE_STATUS
     },
     {
         0,
@@ -601,37 +601,37 @@ static MUI_ENTRY csCZQuitPageEntries[] =
         4,
         3,
         " Instalace ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_UNDERLINE
+        TEXT_STYLE_UNDERLINE
     },
     {
         10,
         6,
         "ReactOS nen¡ kompletnØ nainstalov n",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         10,
         8,
         "VyjmØte disketu z jednotky A:",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         10,
         9,
         "a vçechny CD-ROM z CD mechanik.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         10,
         11,
         "StisknØte ENTER pro restart poŸ¡taŸe.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
         "   Pros¡m Ÿekejte...",
-        TEXT_STATUS,
+        TEXT_TYPE_STATUS,
     },
     {
         0,
@@ -647,42 +647,42 @@ static MUI_ENTRY csCZDisplayPageEntries[] =
         4,
         3,
         " Instalace ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_UNDERLINE
+        TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
         "Chcete zmØnit typ obrazovky k nainstalov n¡.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {   8,
         10,
          "\x07  Po§adovanì typ obrazovky zvolte pomoc¡ çipek nahoru a dol….",
-         TEXT_NORMAL
+         TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
         "   Pot‚ stisknØte ENTER.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
         "\x07  StisknØte ESC pro n vrat na pýedchoz¡ str nku bez zmØny typu",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         14,
         "   obrazovky.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
         "   ENTER = PokraŸovat   ESC = Zruçit   F3 = UkonŸit",
-        TEXT_STATUS
+        TEXT_TYPE_STATUS
     },
     {
         0,
@@ -698,37 +698,37 @@ static MUI_ENTRY csCZSuccessPageEntries[] =
         4,
         3,
         " Instalace ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_UNDERLINE
+        TEXT_STYLE_UNDERLINE
     },
     {
         10,
         6,
         "Z kladn¡ souŸ sti ReactOS byly £spØçnØ nainstalov ny.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         10,
         8,
         "VyjmØte disketu z jednotky A:",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         10,
         9,
         "a vçechny CD-ROM z CD mechanik.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         10,
         11,
         "StisknØte ENTER pro restart poŸ¡taŸe.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
         "   ENTER = Restartovat poŸ¡taŸ",
-        TEXT_STATUS
+        TEXT_TYPE_STATUS
     },
     {
         0,
@@ -744,37 +744,37 @@ static MUI_ENTRY csCZBootPageEntries[] =
         4,
         3,
         " Instalace ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_UNDERLINE
+        TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
         "InstalaŸn¡ aplikace nedok §e nainstalovat zavadØŸ na tento",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         6,
         9,
         "disk",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         6,
         13,
         "Vlo§te naform tovanou disketu do jednotky A:",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         6,
         14,
         "a stisknØte ENTER.",
-        TEXT_NORMAL,
+        TEXT_STYLE_NORMAL,
     },
     {
         0,
         0,
         "   ENTER = PokraŸovat   F3 = UkonŸit",
-        TEXT_STATUS
+        TEXT_TYPE_STATUS
     },
     {
         0,
@@ -791,49 +791,49 @@ static MUI_ENTRY csCZSelectPartitionEntries[] =
         4,
         3,
         " Instalace ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_UNDERLINE
+        TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
         "N sleduj¡c¡ seznam zobrazuje existuj¡c¡ odd¡ly a nevyu§it‚",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         6,
         9,
         "m¡sto pro nov‚ odd¡ly.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
         "\x07  Vyberte polo§ku seznam pomoc¡ çipek nahoru a dol….",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
         "\x07  StisknØte ENTER pro nainstalov n¡ ReactOS na zvolenì odd¡l.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         15,
         "\x07  StisknØte C pro vytvoýen¡ nov‚ho odd¡lu.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
         "\x07  StisknØte D pro smaz n¡ existuj¡c¡ho odd¡lu.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
         "   Pros¡m Ÿekejte...",
-        TEXT_STATUS
+        TEXT_TYPE_STATUS
     },
     {
         0,
@@ -849,31 +849,31 @@ static MUI_ENTRY csCZFormatPartitionEntries[] =
         4,
         3,
         " Instalace ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_UNDERLINE
+        TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
         "Form t odd¡lu",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         6,
         10,
         "Instalace nyn¡ zform tuje tento odd¡l. StisknØte ENTER pro pokraŸov n¡.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
         "   ENTER = PokraŸovat   F3 = UkonŸit",
-        TEXT_STATUS
+        TEXT_TYPE_STATUS
     },
     {
         0,
         0,
         NULL,
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     }
 };
 
@@ -883,43 +883,43 @@ static MUI_ENTRY csCZInstallDirectoryEntries[] =
         4,
         3,
         " Instalace ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_UNDERLINE
+        TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
         "Instalace nyn¡ na zvolenì odd¡l nakop¡ruje soubory ReactOS.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         6,
         9,
         "Zvolte adres ý, kam bude ReactOS nainstalov n:",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         6,
         14,
         "Chcete-li zmØnit navrhnutì adres ý, stisknØte BACKSPACE pro",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         6,
         15,
         "vymaz n¡ znak… a pot‚ zapiçte cestu, do kter‚ chcete ReactOS",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         6,
         16,
         "nainstalovat.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
         "   ENTER = PokraŸovat   F3 = UkonŸit",
-        TEXT_STATUS
+        TEXT_TYPE_STATUS
     },
     {
         0,
@@ -935,31 +935,31 @@ static MUI_ENTRY csCZFileCopyEntries[] =
         4,
         3,
         " Instalace ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_UNDERLINE
+        TEXT_STYLE_UNDERLINE
     },
     {
         11,
         12,
         "Pros¡m Ÿekejte, instalace nyn¡ kop¡ruje soubory do zvolen‚ho",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         30,
         13,
         "adres ýe.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         20,
         14,
         "Toto m…§e trvat nØkolik minut.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
         "                                                           \xB3 Pros¡m Ÿekejte...    ",
-        TEXT_STATUS
+        TEXT_TYPE_STATUS
     },
     {
         0,
@@ -975,37 +975,37 @@ static MUI_ENTRY csCZBootLoaderEntries[] =
         4,
         3,
         " Instalace ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_UNDERLINE
+        TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
         "Instalace nyn¡ nainstaluje zavadØŸ",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         12,
         "Nainstalovat zavadØŸ na disk (MBR).",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
         "Nainstalovat zavadØŸ na disketu.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         14,
         "PýeskoŸit instalaci zavadØŸe.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
         "   ENTER = PokraŸovat   F3 = UkonŸit",
-        TEXT_STATUS
+        TEXT_TYPE_STATUS
     },
     {
         0,
@@ -1021,43 +1021,43 @@ static MUI_ENTRY csCZKeyboardSettingsEntries[] =
         4,
         3,
         " Instalace ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_UNDERLINE
+        TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
         "Chcete zmØnit typ kl vesnice k nainstalov n¡.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         10,
         "\x07  Po§adovanì typ kl vesnice zvolte pomoc¡ çipek nahoru a dol….",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
         "   Pot‚ stisknØte ENTER.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
         "\x07  StisknØte ESC pro n vrat na pýedchoz¡ str nku bez zmØny typu",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         14,
         "   kl vesnice.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
         "   ENTER = PokraŸovat   ESC = Zruçit   F3 = UkonŸit",
-        TEXT_STATUS
+        TEXT_TYPE_STATUS
     },
     {
         0,
@@ -1073,43 +1073,43 @@ static MUI_ENTRY csCZLayoutSettingsEntries[] =
         4,
         3,
         " Instalace ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_UNDERLINE
+        TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
         "Chcete zmØnit rozlo§en¡ kl ves k nainstalov n¡.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         10,
         "\x07  Po§adovan‚ rozlo§en¡ kl ves zvolte pomoc¡ çipek nahoru a dol….",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
         "    Pot‚ stisknØte ENTER.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
         "\x07  StisknØte ESC pro n vrat na pýedchoz¡ str nku bez zmØny rozlo§en¡",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         14,
         "   kl ves.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
         "   ENTER = PokraŸovat   ESC = Zruçit   F3 = UkonŸit",
-        TEXT_STATUS
+        TEXT_TYPE_STATUS
     },
     {
         0,
@@ -1126,19 +1126,19 @@ static MUI_ENTRY csCZPrepareCopyEntries[] =
         4,
         3,
         " Instalace ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_UNDERLINE
+        TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
         "Instalace pýiprav¡ poŸ¡taŸ na kop¡rov n¡ soubor… ReactOS. ",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
         "   Sestavuji seznam soubor… ke zkop¡rov n¡...",
-        TEXT_STATUS
+        TEXT_TYPE_STATUS
     },
     {
         0,
@@ -1155,7 +1155,7 @@ static MUI_ENTRY csCZSelectFSEntries[] =
         4,
         3,
         " Instalace ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_UNDERLINE
+        TEXT_STYLE_UNDERLINE
     },
     {
         6,
@@ -1185,7 +1185,7 @@ static MUI_ENTRY csCZSelectFSEntries[] =
         0,
         0,
         "   ENTER = PokraŸovat   ESC = Zruçit   F3 = UkonŸit",
-        TEXT_STATUS
+        TEXT_TYPE_STATUS
     },
 
     {
@@ -1202,37 +1202,37 @@ static MUI_ENTRY csCZDeletePartitionEntries[] =
         4,
         3,
         " Instalace ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_UNDERLINE
+        TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
         "Zvolili jste odstranØn¡ odd¡lu",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         18,
         "\x07  StisknØte D pro odstranØn¡ odd¡lu.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         11,
         19,
         "POZOR: Vçechna data na tomto odd¡lu budou ztracena!",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
         "\x07  StisknØte ESC pro zruçen¡ akce.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
         "   D = Odstranit odd¡l   ESC = Zruçit   F3 = UkonŸit",
-        TEXT_STATUS
+        TEXT_TYPE_STATUS
     },
     {
         0,
@@ -1248,19 +1248,19 @@ static MUI_ENTRY csCZRegistryEntries[] =
         4,
         3,
         " Instalace ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_UNDERLINE
+        TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
         "Instalace aktualizuje nastaven¡ syst‚mu. ",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
         "   Vytv ý¡m registry...",
-        TEXT_STATUS
+        TEXT_TYPE_STATUS
     },
     {
         0,

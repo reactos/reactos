@@ -7,37 +7,37 @@ static MUI_ENTRY ruRULanguagePageEntries[] =
         4,
         3,
         " Установка ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_UNDERLINE
+        TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
         "Выбор языка",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         10,
         "\x07  Пожалуйста, выберите язык, используемый при установке.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
         "   Затем нажмите ENTER.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
         "\x07  Этот язык будет использоваться по умолчанию в установленной системе.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
         "   ENTER = Продолжить  F3 = Выход",
-        TEXT_STATUS
+        TEXT_TYPE_STATUS
     },
     {
         0,
@@ -53,67 +53,67 @@ static MUI_ENTRY ruRUWelcomePageEntries[] =
         4,
         3,
         " Установка ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_UNDERLINE
+        TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
         "Добро пожаловать в программу установки ReactOS",
-        TEXT_HIGHLIGHT
+        TEXT_STYLE_HIGHLIGHT
     },
     {
         6,
         11,
         "На этой стадии будут скопированы файлы операционной системы ReactOS",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         6,
         12,
         "на Ваш компьютер и подготовлена вторая стадия установки.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         15,
         "\x07  Нажмите ENTER для установки ReactOS.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
         "\x07  Нажмите R для восстановления ReactOS.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         19,
         "\x07  Нажмите L для просмотра лицензионного соглашения ReactOS",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
         "\x07  Нажмите F3 для выхода из программы установки ReactOS.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         6,
         23,
         "Для дополнительной информации о ReactOS посетите:",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         6,
         24,
         "http://www.reactos.ru",
-        TEXT_HIGHLIGHT
+        TEXT_STYLE_HIGHLIGHT
     },
     {
         0,
         0,
         "   ENTER = Продолжение  R = Восстановление F3 = Выход",
-        TEXT_STATUS
+        TEXT_TYPE_STATUS
     },
     {
         0,
@@ -129,85 +129,85 @@ static MUI_ENTRY ruRUIntroPageEntries[] =
         4,
         3,
         " Установка ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_UNDERLINE
+        TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
         "ReactOS находится в ранней стадии разработки и не поддерживает все",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         6,
         9,
         "функции для полной совместимости с устанавливаемыми приложениями.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         6,
         12,
         "Имеются следующие ограничения:",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
         "- Установка возможна только на первичный раздел диска",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         14,
         "- При установке нельзя удалить первичный раздел диска",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         15,
         "  пока имеется расширенный раздел.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         16,
         "- При установке нельзя удалить первый расширенный раздел с диска",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
         "  пока существуют другие расширенные разделы.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         18,
         "- При установке поддерживается только файловая система FAT.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         19,
         "- Проверка файловой системы не осуществляется.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         23,
         "\x07  Нажмите ENTER для установки ReactOS.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         25,
         "\x07  Нажмите F3 для выхода из установки ReactOS.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
         "   ENTER = Продолжение   F3 = Выход",
-        TEXT_STATUS
+        TEXT_TYPE_STATUS
     },
     {
         0,
@@ -223,115 +223,115 @@ static MUI_ENTRY ruRULicensePageEntries[] =
         4,
         3,
         " Установка ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_UNDERLINE
+        TEXT_STYLE_UNDERLINE
     },
     {
         6,
         6,
         "Лицензия:",
-        TEXT_HIGHLIGHT
+        TEXT_STYLE_HIGHLIGHT
     },
     {
         8,
         8,
         "ReactOS лицензирована в соответствии с Открытым лицензионным",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         9,
         "соглашением GNU GPL и содержит компоненты, распространяемые",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         10,
         "с совместимыми лицензиями: X11, BSD и GNU LGPL.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
         "Все программное обеспечение входящее в систему ReactOS выпущено",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         12,
         "под Открытым лицензионным соглашением GNU GPL с сохранением",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
         "первоначальной лицензии.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         15,
         "Данное программное обеспечение поставляется БЕЗ ГАРАНТИИ и без ограничений",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         16,
         "в использовании, как в местном, так и международном праве.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
         "Лицензия ReactOS разрешает передачу продукта третьим лицам.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         18,
         "Если по каком-либо причинам вы не получили копию Открытого",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         19,
         "лицензионного соглашения GNU вместе с ReactOS, посетите",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         20,
         "http://www.gnu.org/licenses/licenses.html",
-        TEXT_HIGHLIGHT
+        TEXT_STYLE_HIGHLIGHT
     },
     {
         8,
         22,
         "Гарантии:",
-        TEXT_HIGHLIGHT
+        TEXT_STYLE_HIGHLIGHT
     },
     {
         8,
         24,
         "Это свободное программное обеспечение; см. источник для просмотра прав.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         25,
         "НЕТ НИКАКИХ ГАРАНТИЙ; нет гарантии ТОВАРНОГО СОСТОЯНИЯ или",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         26,
         "ПРИГОДНОСТИ ДЛЯ КОНКРЕТНЫХ ЦЕЛЕЙ",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
         "   ENTER = Возврат",
-        TEXT_STATUS
+        TEXT_TYPE_STATUS
     },
     {
         0,
@@ -347,84 +347,84 @@ static MUI_ENTRY ruRUDevicePageEntries[] =
         4,
         3,
         " Установка ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_UNDERLINE
+        TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
         "В списке ниже приведены устройства и их параметры.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
         "      Компьютер:",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         12,
         "          Экран:",
-        TEXT_NORMAL,
+        TEXT_STYLE_NORMAL,
     },
     {
         8,
         13,
         "     Клавиатура:",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         14,
         "      Раскладка:",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         16,
         "      Применить:",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         25,
         16, "Применить данные параметры устройств",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         6,
         19,
         "Вы можете изменить параметры устройств, нажимая клавиши ВВЕРХ и ВНИЗ",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         6,
         20,
         "для выделения элемента, и клавишу ENTER для выбора других вариантов",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         6,
         21,
         "параметров.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         6,
         23,
         "Когда все параметры определены, выберите \"Применить данные параметры",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         6,
         24,
         "устройств\" и нажмите ENTER.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
         "   ENTER = Продолжение   F3 = Выход",
-        TEXT_STATUS
+        TEXT_TYPE_STATUS
     },
     {
         0,
@@ -440,55 +440,55 @@ static MUI_ENTRY ruRURepairPageEntries[] =
         4,
         3,
         " Установка ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_UNDERLINE
+        TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
         "ReactOS находится в ранней стадии разработки и не поддерживает все",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         6,
         9,
         "функции для полной совместимости с устанавливаемыми приложениями.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         6,
         12,
         "Функция восстановления в данным момент отсутствует.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         15,
         "\x07  Нажмите U для обновления ОС.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
         "\x07  Нажмите R для запуска консоли восстановления.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         19,
         "\x07  Нажмите ESC для возврата на главную страницу.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
         "\x07  Нажмите ENTER для перезагрузки компьютера.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
         "   ESC = Главная страница  ENTER = Перезагрузка",
-        TEXT_STATUS
+        TEXT_TYPE_STATUS
     },
     {
         0,
@@ -503,43 +503,43 @@ static MUI_ENTRY ruRUComputerPageEntries[] =
         4,
         3,
         " Установка ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_UNDERLINE
+        TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
         "Вы хотите изменить устанавливаемый тип компьютера.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         10,
         "\x07  Нажмите клавишу ВВЕРХ или ВНИЗ для выбора предпочтительного типа",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
         "   компьютера. Затем нажмите ENTER.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
         "\x07  Нажмите клавишу ESC для возврата к предыдущей странице без изменения",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         14,
         "   типа компьютера.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
         "   ENTER = Продолжение   ESC = Отмена   F3 = Выход",
-        TEXT_STATUS
+        TEXT_TYPE_STATUS
     },
     {
         0,
@@ -555,31 +555,31 @@ static MUI_ENTRY ruRUFlushPageEntries[] =
         4,
         3,
         " Установка ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_UNDERLINE
+        TEXT_STYLE_UNDERLINE
     },
     {
         10,
         6,
         "Система проверяет, все ли данные записаны на диск",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         10,
         8,
         "Это может занять некоторое время.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         10,
         9,
         "После завершения компьютер будет автоматически перезагружен.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
         "   Очистка кеша",
-        TEXT_STATUS
+        TEXT_TYPE_STATUS
     },
     {
         0,
@@ -595,37 +595,37 @@ static MUI_ENTRY ruRUQuitPageEntries[] =
         4,
         3,
         " Установка ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_UNDERLINE
+        TEXT_STYLE_UNDERLINE
     },
     {
         10,
         6,
         "ReactOS установлен не полностью",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         10,
         8,
         "Извлеките гибкий диск из дисковода A: и",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         10,
         9,
         "все CD-ROM из CD-дисководов.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         10,
         11,
         "Нажмите ENTER для перезагрузки компьютера.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
         "   Пожалуйста подождите ...",
-        TEXT_STATUS,
+        TEXT_TYPE_STATUS,
     },
     {
         0,
@@ -641,42 +641,42 @@ static MUI_ENTRY ruRUDisplayPageEntries[] =
         4,
         3,
         " Установка ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_UNDERLINE
+        TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
         "Вы хотите изменить устанавливаемый тип экрана.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {   8,
         10,
          "\x07  Нажмите клавиши ВВЕРХ или ВНИЗ для выбора типа экрана.",
-         TEXT_NORMAL
+         TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
         "   Затем нажмите ENTER.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
         "\x07  Нажмите клавишу ESC для возврата к предыдущей странице без изменения",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         14,
         "   типа экрана.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
         "   ENTER = Продолжение   ESC = Отмена   F3 = Выход",
-        TEXT_STATUS
+        TEXT_TYPE_STATUS
     },
     {
         0,
@@ -692,37 +692,37 @@ static MUI_ENTRY ruRUSuccessPageEntries[] =
         4,
         3,
         " Установка ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_UNDERLINE
+        TEXT_STYLE_UNDERLINE
     },
     {
         10,
         6,
         "Основные компоненты ReactOS были успешно установлены.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         10,
         8,
         "Извлеките гибкий диск из дисковода A: и",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         10,
         9,
         "все CD-ROM из CD-дисководов.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         10,
         11,
         "Нажмите ENTER для перезагрузки компьютера.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
         "   ENTER = Перезагрузка",
-        TEXT_STATUS
+        TEXT_TYPE_STATUS
     },
     {
         0,
@@ -738,37 +738,37 @@ static MUI_ENTRY ruRUBootPageEntries[] =
         4,
         3,
         " Установка ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_UNDERLINE
+        TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
         "Программа установки не смогла установить загрузчик на",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         6,
         9,
         "жесткий диск вашего компьютера.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         6,
         13,
         "Пожалуйста вставьте отформатированный гибкий диск в дисковод A: и",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         6,
         14,
         "нажмите ENTER.",
-        TEXT_NORMAL,
+        TEXT_STYLE_NORMAL,
     },
     {
         0,
         0,
         "   ENTER = Продолжение   F3 = Выход",
-        TEXT_STATUS
+        TEXT_TYPE_STATUS
     },
     {
         0,
@@ -785,49 +785,49 @@ static MUI_ENTRY ruRUSelectPartitionEntries[] =
         4,
         3,
         " Установка ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_UNDERLINE
+        TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
         "В списке ниже показаны существующие разделы и неиспользуемое",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         6,
         9,
         "пространство для нового раздела.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
         "\x07  Нажмите ВВЕРХ или ВНИЗ для выбора элемента.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
         "\x07  Нажмите ENTER для установки ReactOS на выделенный раздел.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         15,
         "\x07  Нажмите C для создания нового раздела.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
         "\x07  Нажмите D для удаления существующего раздела.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
         "   Please wait...",
-        TEXT_STATUS
+        TEXT_TYPE_STATUS
     },
     {
         0,
@@ -843,31 +843,31 @@ static MUI_ENTRY ruRUFormatPartitionEntries[] =
         4,
         3,
         " Установка ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_UNDERLINE
+        TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
         "Форматирование раздела",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         6,
         10,
         "Для установки раздел будет отформатирован. Нажмите ENTER для продолжения.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
         "   ENTER = Продолжение   F3 = Выход",
-        TEXT_STATUS
+        TEXT_TYPE_STATUS
     },
     {
         0,
         0,
         NULL,
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     }
 };
 
@@ -877,43 +877,43 @@ static MUI_ENTRY ruRUInstallDirectoryEntries[] =
         4,
         3,
         " Установка ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_UNDERLINE
+        TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
         "Установка файлов ReactOS на выбранный раздел. Выберите директорию,",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         6,
         9,
         "в которую будет установлена система:",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         6,
         14,
         "Чтобы изменить выбранную директорию, нажмите BACKSPACE и удалите символы,",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         6,
         15,
         "а за тем наберите новое имя директории для установки ReactOS.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         6,
         16,
         " ",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
         "   ENTER = Продолжить   F3 = Выход",
-        TEXT_STATUS
+        TEXT_TYPE_STATUS
     },
     {
         0,
@@ -929,31 +929,31 @@ static MUI_ENTRY ruRUFileCopyEntries[] =
         4,
         3,
         " Установка ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_UNDERLINE
+        TEXT_STYLE_UNDERLINE
     },
     {
         11,
         12,
         "Пожалуйста, подождите, пока программа установки скопирует файлы",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         11,
         13,
         "ReactOS в установочную директорию.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         11,
         14,
         "Это может занять несколько минут.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
         "                                                           \xB3 Пожалуйста подождите...    ",
-        TEXT_STATUS
+        TEXT_TYPE_STATUS
     },
     {
         0,
@@ -969,37 +969,37 @@ static MUI_ENTRY ruRUBootLoaderEntries[] =
         4,
         3,
         " Установка ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_UNDERLINE
+        TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
         "Установка загрузчика ReactOS:",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         12,
         "Установка на жесткий диск (MBR).",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
         "Установка на гибкий диск.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         14,
         "Не устанавливать загрузчик.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
         "   ENTER = Продолжить   F3 = Выход",
-        TEXT_STATUS
+        TEXT_TYPE_STATUS
     },
     {
         0,
@@ -1015,43 +1015,43 @@ static MUI_ENTRY ruRUKeyboardSettingsEntries[] =
         4,
         3,
         " Установка ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_UNDERLINE
+        TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
         "Изменение типа клавиатуры.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         10,
         "\x07  Нажмите ВВЕРХ или ВНИЗ для выбора нужного типа клавиатуры.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
         "   Затем нажмите ENTER.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
         "\x07  Нажмите клавишу ESC для возврата к предыдущей странице без изменения",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         14,
         "   типа клавиатуры.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
         "   ENTER = Продолжить   ESC = Отмена   F3 = Выход",
-        TEXT_STATUS
+        TEXT_TYPE_STATUS
     },
     {
         0,
@@ -1067,43 +1067,43 @@ static MUI_ENTRY ruRULayoutSettingsEntries[] =
         4,
         3,
         " Установка ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_UNDERLINE
+        TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
         "Выбор устанавливаемой раскладки клавиатуры.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         10,
         "\x07  Нажмите ВВЕРХ или ВНИЗ для выбора нужной раскладки клавиатуры.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
         "   Затем нажмите ENTER.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
         "\x07  Нажмите клавишу ESC для возврата к предыдущей странице без",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         14,
         "   изменения раскладки клавиатуры.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
         "   ENTER = Продолжить   ESC = Отмена   F3 = Выход",
-        TEXT_STATUS
+        TEXT_TYPE_STATUS
     },
     {
         0,
@@ -1120,19 +1120,19 @@ static MUI_ENTRY ruRUPrepareCopyEntries[] =
         4,
         3,
         " Установка ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_UNDERLINE
+        TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
         "Подготовка вашего компьютера к копированию файлов ReactOS. ",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
         "   Подготовка списка копируемых файлов...",
-        TEXT_STATUS
+        TEXT_TYPE_STATUS
     },
     {
         0,
@@ -1149,7 +1149,7 @@ static MUI_ENTRY ruRUSelectFSEntries[] =
         4,
         3,
         " Установка ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_UNDERLINE
+        TEXT_STYLE_UNDERLINE
     },
     {
         6,
@@ -1179,7 +1179,7 @@ static MUI_ENTRY ruRUSelectFSEntries[] =
         0,
         0,
         "   ENTER = Продолжить   ESC = Отмена   F3 = Выход",
-        TEXT_STATUS
+        TEXT_TYPE_STATUS
     },
 
     {
@@ -1196,37 +1196,37 @@ static MUI_ENTRY ruRUDeletePartitionEntries[] =
         4,
         3,
         " Установка ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_UNDERLINE
+        TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
         "Вы выбрали удаление раздела.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         18,
         "\x07  Нажмите D для удаления раздела.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         11,
         19,
         "ВНИМАНИЕ: Все данные с этого раздела будут потеряны!",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
         "\x07  Нажмите ESC для отмены.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
         "   D = Удалить раздел   ESC = Отмена   F3 = Выход",
-        TEXT_STATUS
+        TEXT_TYPE_STATUS
     },
     {
         0,
@@ -1242,19 +1242,19 @@ static MUI_ENTRY ruRURegistryEntries[] =
         4,
         3,
         "Установка ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_UNDERLINE
+        TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
         "Программа установки обновляет конфигурацию системы. ",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
         "   Создание кустов системного реестра...",
-        TEXT_STATUS
+        TEXT_TYPE_STATUS
     },
     {
         0,

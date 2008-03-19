@@ -31,6 +31,25 @@
 #define FOREGROUND_YELLOW (FOREGROUND_INTENSITY | FOREGROUND_RED | FOREGROUND_GREEN)
 #define BACKGROUND_WHITE (BACKGROUND_RED | BACKGROUND_GREEN | BACKGROUND_BLUE)
 
+/* Text style */
+#define TEXT_STYLE_NORMAL      0x00000001
+#define TEXT_STYLE_HIGHLIGHT   0x00000002
+#define TEXT_STYLE_UNDERLINE   0x00000004
+
+/* Text type */
+#define TEXT_TYPE_REGULAR      0x00000008
+#define TEXT_TYPE_STATUS       0x00000010
+
+/* Text align */
+#define TEXT_ALIGN_DEFAULT     0x00000020
+#define TEXT_ALIGN_RIGHT       0x00000040
+#define TEXT_ALIGN_LEFT        0x00000080
+#define TEXT_ALIGN_CENTER      0x00000100
+
+/* Text padding */
+#define TEXT_PADDING_SMALL     0x00000200
+#define TEXT_PADDING_BIG       0x00000400
+
 extern HANDLE StdInput, StdOutput;
 extern SHORT xScreen, yScreen;
 
@@ -148,6 +167,13 @@ VOID
 CONSOLE_SetUnderlinedTextXY(
 	IN SHORT x,
 	IN SHORT y,
+	IN LPCSTR Text);
+
+VOID
+CONSOLE_SetStyledText(
+	IN SHORT x,
+	IN SHORT y,
+	IN INT Flags,
 	IN LPCSTR Text);
 
 #endif /* __CONSOLE_H__*/

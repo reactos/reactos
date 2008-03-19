@@ -15,37 +15,37 @@ static MUI_ENTRY plPLLanguagePageEntries[] =
         4,
         3,
         " ReactOS " KERNEL_VERSION_STR " Instalator ReactOS ",
-        TEXT_UNDERLINE
+        TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
         "Wyb¢r j©zyka",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         10,
         "\x07  Prosz© wybraÜ j©zyk dla procesu instalacji systemu",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
         "   i nacisn•Ü ENTER.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
         "\x07  Wybrany j©zyk b©dzie domyòlnym dla zainstalowanego systemu.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
         "   ENTER = Kontynuacja  F3 = Wyjòcie",
-        TEXT_STATUS
+        TEXT_TYPE_STATUS
     },
     {
         0,
@@ -61,67 +61,67 @@ static MUI_ENTRY plPLWelcomePageEntries[] =
         4,
         3,
         " ReactOS " KERNEL_VERSION_STR " Instalator ReactOS ",
-        TEXT_UNDERLINE
+        TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
         "Witamy w programie instalacyjnym systemu ReactOS",
-        TEXT_HIGHLIGHT
+        TEXT_STYLE_HIGHLIGHT
     },
     {
         6,
         11,
         " Na tym etapie, instalator skopiuje niezb©dne pliki systemu operacyjnego",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         6,
         12,
         "na tw¢j komputer i rozpocznie kolejny etap procesu instalacji.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         15,
         "\x07  Naciònij ENTER, aby zainstalowaÜ system ReactOS.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
         "\x07  Naciònij R, aby naprawiÜ zainstalowany system ReactOS.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         19,
         "\x07  Naciònij L, aby zapoznaÜ si© z licencj• ReactOS",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
         "\x07  Naciònij F3 aby wyjòÜ bez instalacji systemu ReactOS.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         6,
         23,
         "Wi©cej informacji o systemie ReactOS moæna znale´Ü na stronie:",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         6,
         24,
         "http://www.reactos.org",
-        TEXT_HIGHLIGHT
+        TEXT_STYLE_HIGHLIGHT
     },
     {
         0,
         0,
         "   ENTER = Kontynuacja  R = Naprawa F3 = Wyjòcie",
-        TEXT_STATUS
+        TEXT_TYPE_STATUS
     },
     {
         0,
@@ -137,85 +137,85 @@ static MUI_ENTRY plPLIntroPageEntries[] =
         4,
         3,
         " ReactOS " KERNEL_VERSION_STR " Instalator ReactOS ",
-        TEXT_UNDERLINE
+        TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
         "Instalator ReactOS wci•æ jest we wczesnej fazie rozwoju. Nadal nie",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         6,
         9,
         "obsàuguje wszystkich funkcji, niezb©dnych dla programu instalacyjnego.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         6,
         12,
         "Najwaæniejsze ograniczenia:",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
         "- Instalator obsàuguje jedn• partycj© Podstawow• na dysku.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         14,
         "- Instalator nie moæe skasowaÜ partycji podstawowej z dysku",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         15,
         "  o ile nadal znajduje si© na nim takæe partycja Rozszerzona.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         16,
         "- Instalator nie moæe skasowaÜ pierwszej partycji Rozszerzonej z dysku",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
         "  o ile nadal znajduj• si© na nim kolejne partycje Rozszerzone.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         18,
         "- Instalator obsàuguje jedynie system plik¢w FAT.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         19,
         "- Brakuje sprawdzenia poprawnoòci systemu plik¢w.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         23,
         "\x07  Naciònij ENTER aby zainstalowaÜ system ReactOS.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         25,
         "\x07  Naciònij F3 aby wyjòÜ bez instalacji systemu ReactOS.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
         "   ENTER = Kontynuacja   F3 = Wyjòcie",
-        TEXT_STATUS
+        TEXT_TYPE_STATUS
     },
     {
         0,
@@ -231,115 +231,115 @@ static MUI_ENTRY plPLLicensePageEntries[] =
         4,
         3,
         " ReactOS " KERNEL_VERSION_STR " Instalator ReactOS ",
-        TEXT_UNDERLINE
+        TEXT_STYLE_UNDERLINE
     },
     {
         6,
         6,
         "Licencja:",
-        TEXT_HIGHLIGHT
+        TEXT_STYLE_HIGHLIGHT
     },
     {
         8,
         8,
         "System ReactOS jest licencjonowany na warunkach licencji",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         9,
         "GNU GPL z elementami kodu pochodz•cego z kompatybilnych",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         10,
         "licencji, takich jak X11 czy BSD albo GNU LGPL. Caàe",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
         "oprogramowanie, b©d•ce cz©sci• system ReactOS podlega wi©c",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         12,
         "licencji GNU GPL jak i odpowiedniej licencji oryginalnej.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
         "To oprogramowanie wydawane jest BEZ JAKIEJKOLWIEK gwarancji",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         15,
         "czy teæ ogranicze‰ w uæyciu, poza przepisami prawa lokalnego",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         16,
         "b•d´ mi©dzynarodowego. Licencja systemu ReactOS",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
         "reguluje wyà•cznie zasady dystrybucji dla os¢b trzecich.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         18,
         "Jeòli z jakiegoò powodu nie otrzymaàeò kopii licencji",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         19,
         "GNU GPL wraz z systemem ReactOS, prosimy odwiedziÜ stron©:",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         20,
         "http://www.gnu.org/licenses/licenses.html",
-        TEXT_HIGHLIGHT
+        TEXT_STYLE_HIGHLIGHT
     },
     {
         8,
         22,
         "Gwarancja:",
-        TEXT_HIGHLIGHT
+        TEXT_STYLE_HIGHLIGHT
     },
     {
         8,
         24,
         "Niniejszy program jest wolnym oprogramowaniem; szczeg¢ày",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         25,
         "dotycz•ce kopiowania w ´r¢dàach. Nie ma ØADNEJ gwarancji",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         26,
         "PRZYDATNOóCI HANDLOWEJ LUB DO OKREóLONYCH ZASTOSOWA„",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
         "   ENTER = Powr¢t",
-        TEXT_STATUS
+        TEXT_TYPE_STATUS
     },
     {
         0,
@@ -355,84 +355,84 @@ static MUI_ENTRY plPLDevicePageEntries[] =
         4,
         3,
         " ReactOS " KERNEL_VERSION_STR " Instalator ReactOS ",
-        TEXT_UNDERLINE
+        TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
         "Poniæsza lista zawiera obecne ustawienia sprz©tu.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
         "       Komputer:",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         12,
         "          Ekran:",
-        TEXT_NORMAL,
+        TEXT_STYLE_NORMAL,
     },
     {
         8,
         13,
         "     Klawiatura:",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         14,
         "Ukà. klawiatury:",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         16,
         "         Zapisz:",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         25,
         16, "Akceptuj ustawienia sprz©tu",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         6,
         19,
         "Moæesz zmieniÜ poszczeg¢lne ustawienia za pomoc• klawiszy G‡RA i D‡ù",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         6,
         20,
         "aby wybraÜ kategori©. Potem naciònij ENTER by przejòÜ do menu z ",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         6,
         21,
         "ustawieniami szczeg¢àowymi do wyboru.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         6,
         23,
         "Gdy wszystkie ustawienia s• poprawne, wybierz: ",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         6,
         24,
         "\"Akceptuj ustawienia sprz©tu\" i naciònij ENTER.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
         "   ENTER = Kontynuacja   F3 = Wyjòcie",
-        TEXT_STATUS
+        TEXT_TYPE_STATUS
     },
     {
         0,
@@ -448,55 +448,55 @@ static MUI_ENTRY plPLRepairPageEntries[] =
         4,
         3,
         " ReactOS " KERNEL_VERSION_STR " Instalator ReactOS ",
-        TEXT_UNDERLINE
+        TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
         "Instalator ReactOS wci•æ jest we wczesnej fazie rozwoju. Nadal nie",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         6,
         9,
         "obsàuguje wszystkich funkcji, niezb©dnych dla programu instalacyjnego.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         6,
         12,
         "Naprawa istniej•cej instalacji systemu nie jest jeszcze moæliwa.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         15,
         "\x07  Naciònij U æeby uaktualniÜ system.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
         "\x07  Naciònij R by uruchomiÜ Konsol© Odtwarzania.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         19,
         "\x07  Naciònij ESC by powr¢ciÜ do gà¢wnego menu.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
         "\x07  Naciònij ENTER by zrestartowaÜ komputer.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
         "   ESC = Menu gà¢wne  ENTER = Restart",
-        TEXT_STATUS
+        TEXT_TYPE_STATUS
     },
     {
         0,
@@ -511,43 +511,43 @@ static MUI_ENTRY plPLComputerPageEntries[] =
         4,
         3,
         " ReactOS " KERNEL_VERSION_STR " Instalator ReactOS ",
-        TEXT_UNDERLINE
+        TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
         "Aby zmieniÜ typ komputera, na kt¢rym chcesz zainstalowaÜ ReactOS",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         10,
         "\x07  Naciònij klawisz G‡RA albo D‡ù by wybraÜ odpowiedni typ komputera.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
         "   a nast©pnie naciònij ENTER.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
         "\x07  Naciònij klawisz ESC aby powr¢ciÜ do poprzedniej strony bez zmiany",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         14,
         "   typu komputera.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
         "   ENTER = Kontynuacja   ESC = Anulowanie   F3 = Wyjòcie",
-        TEXT_STATUS
+        TEXT_TYPE_STATUS
     },
     {
         0,
@@ -563,31 +563,31 @@ static MUI_ENTRY plPLFlushPageEntries[] =
         4,
         3,
         " ReactOS " KERNEL_VERSION_STR " Instalator ReactOS ",
-        TEXT_UNDERLINE
+        TEXT_STYLE_UNDERLINE
     },
     {
         10,
         6,
         "System obecnie sprawdza czy dane s• poprawnie zapisane na dysku",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         10,
         8,
         "To moæe zaj•Ü minut©.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         10,
         9,
         "Po zako‰czeniu, system zrestartuje komputer automatycznie.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
         "   Czyszczenie pami©ci Cache",
-        TEXT_STATUS
+        TEXT_TYPE_STATUS
     },
     {
         0,
@@ -603,37 +603,37 @@ static MUI_ENTRY plPLQuitPageEntries[] =
         4,
         3,
         " ReactOS " KERNEL_VERSION_STR " Instalator ReactOS ",
-        TEXT_UNDERLINE
+        TEXT_STYLE_UNDERLINE
     },
     {
         10,
         6,
         "ReactOS zostaà juæ poprawnie zainstalowany",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         10,
         8,
         "Upewnij si© ze w Nap©dzie A: nie ma dyskietki i",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         10,
         9,
         "w nap©dach optycznych - æadnych CD-ROM¢w.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         10,
         11,
         "Naciònij ENTER by zrestartowaÜ komputer.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
         "   Prosz© czekaÜ ...",
-        TEXT_STATUS,
+        TEXT_TYPE_STATUS,
     },
     {
         0,
@@ -649,42 +649,42 @@ static MUI_ENTRY plPLDisplayPageEntries[] =
         4,
         3,
         " ReactOS " KERNEL_VERSION_STR " Instalator ReactOS ",
-        TEXT_UNDERLINE
+        TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
         "Chcesz zmieniÜ rozdzielczoòÜ ekranu.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {   8,
         10,
          "\x07  Naciònij klawisz G‡RA albo D‡ù by wybraÜ rozdzielczoòÜ i liczb©",
-         TEXT_NORMAL
+         TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
         "   kolor¢w a nast©pnie naciònij ENTER.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
         "\x07  Naciònij ESC key aby powr¢ciÜ do poprzedniej strony bez zmiany",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         14,
         "   rozdzielczoòci czy iloòci kolor¢w.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
         "   ENTER = Kontynuacja   ESC = Anulowanie   F3 = Wyjòcie",
-        TEXT_STATUS
+        TEXT_TYPE_STATUS
     },
     {
         0,
@@ -700,37 +700,37 @@ static MUI_ENTRY plPLSuccessPageEntries[] =
         4,
         3,
         " ReactOS " KERNEL_VERSION_STR " Instalator ReactOS ",
-        TEXT_UNDERLINE
+        TEXT_STYLE_UNDERLINE
     },
     {
         10,
         6,
         "Podstawowe skàadniki systemu ReactOS zostaày zainstalowane.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         10,
         8,
         "Upewnij si© ze w Nap©dzie A: nie ma dyskietki i",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         10,
         9,
         "w nap©dach optycznych - æadnych CD-ROM¢w.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         10,
         11,
         "Naciònij ENTER by zrestartowaÜ komputer.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
         "   ENTER = Restart komputera",
-        TEXT_STATUS
+        TEXT_TYPE_STATUS
     },
     {
         0,
@@ -746,37 +746,37 @@ static MUI_ENTRY plPLBootPageEntries[] =
         4,
         3,
         " ReactOS " KERNEL_VERSION_STR " Instalator ReactOS ",
-        TEXT_UNDERLINE
+        TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
         "Instalator ReactOS nie moæe wgraÜ bootloadera na tw¢j",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         6,
         9,
         "dysk twardy",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         6,
         13,
         "Prosz© umieòciÜ sformatowan• dyskietk© w nap©dzie A:",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         6,
         14,
         "i nacisn•Ü klawisz ENTER.",
-        TEXT_NORMAL,
+        TEXT_STYLE_NORMAL,
     },
     {
         0,
         0,
         "   ENTER = Kontynuacja   F3 = Wyjòcie",
-        TEXT_STATUS
+        TEXT_TYPE_STATUS
     },
     {
         0,
@@ -793,49 +793,49 @@ static MUI_ENTRY plPLSelectPartitionEntries[] =
         4,
         3,
         " ReactOS " KERNEL_VERSION_STR " Instalator ReactOS ",
-        TEXT_UNDERLINE
+        TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
         "Poniæsza lista pokazuje istniej•ce partycje i puste",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         6,
         9,
         "miejsce na nowe partycje.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
         "\x07  Naciònij G‡RA lub D‡ù by wybraÜ pozycj© z listy.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
         "\x07  Naciònij ENTER by zainstalowaÜ ReactOS na wybranej partycji.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         15,
         "\x07  Naciònij C by stworzyÜ now• partycj©.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
         "\x07  Naciònij D by skasowaÜ istniej•c• partycj©.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
         "   Prosz© czekaÜ...",
-        TEXT_STATUS
+        TEXT_TYPE_STATUS
     },
     {
         0,
@@ -851,31 +851,31 @@ static MUI_ENTRY plPLFormatPartitionEntries[] =
         4,
         3,
         " ReactOS " KERNEL_VERSION_STR " Instalator ReactOS ",
-        TEXT_UNDERLINE
+        TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
         "Formatowanie partycji",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         6,
         10,
         "Instalator sformatuje teraz partycj©. Naciònij ENTER aby kontynuowaÜ.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
         "   ENTER = Kontynuacja   F3 = Wyjòcie",
-        TEXT_STATUS
+        TEXT_TYPE_STATUS
     },
     {
         0,
         0,
         NULL,
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     }
 };
 
@@ -885,43 +885,43 @@ static MUI_ENTRY plPLInstallDirectoryEntries[] =
         4,
         3,
         " ReactOS " KERNEL_VERSION_STR " Instalator ReactOS ",
-        TEXT_UNDERLINE
+        TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
         "Instalator przegra pliki systemu na wybran• partycj©. Wybierz",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         6,
         9,
         "katalog do kt¢rego chcesz zainstalowaÜ system ReactOS:",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         6,
         14,
         "Aby zmieniÜ domyòlny katalog, uæyj klawisza BACKSPACE by skasowaÜ",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         6,
         15,
         "a nast©pnie wprowad´ now• òcieæk© do katalogu, do kt¢rego system",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         6,
         16,
         "ma zostaÜ zainstalowany.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
         "   ENTER = Kontynuacja   F3 = Wyjòcie",
-        TEXT_STATUS
+        TEXT_TYPE_STATUS
     },
     {
         0,
@@ -937,31 +937,31 @@ static MUI_ENTRY plPLFileCopyEntries[] =
         4,
         3,
         " ReactOS " KERNEL_VERSION_STR " Instalator ReactOS ",
-        TEXT_UNDERLINE
+        TEXT_STYLE_UNDERLINE
     },
     {
         11,
         12,
         "Prosz© czekaÜ, Instalator ReactOS kopiuje pliki do wybranego",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         30,
         13,
         "katalogu.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         20,
         14,
         "To moæe zaj•Ü kilka minut.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
         "                                                           \xB3 Prosz© czekaÜ...    ",
-        TEXT_STATUS
+        TEXT_TYPE_STATUS
     },
     {
         0,
@@ -977,37 +977,37 @@ static MUI_ENTRY plPLBootLoaderEntries[] =
         4,
         3,
         " ReactOS " KERNEL_VERSION_STR " Instalator ReactOS ",
-        TEXT_UNDERLINE
+        TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
         "Instalator musi teraz wgraÜ bootloader",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         12,
         " Wgraj bootloader na dysk twardy (MBR).",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
         " Wgraj bootloader na dyskietk©.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         14,
         " Pomi‰ wgrywanie bootloadera.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
         "   ENTER = Kontynuacja   F3 = Wyjòcie",
-        TEXT_STATUS
+        TEXT_TYPE_STATUS
     },
     {
         0,
@@ -1023,43 +1023,43 @@ static MUI_ENTRY plPLKeyboardSettingsEntries[] =
         4,
         3,
         " ReactOS " KERNEL_VERSION_STR " Instalator ReactOS ",
-        TEXT_UNDERLINE
+        TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
         "Chcesz zmieniÜ typ klawiatury, jaki ma byÜ zainstalowany.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         10,
         "\x07  Naciònij klawisz G‡RA albo D‡ù by wybraÜ odpowiedni typ klawiatury.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
         "   a nast©pnie naciònij ENTER.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
         "\x07  Naciònij ESC key aby powr¢ciÜ do poprzedniej strony bez zmiany",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         14,
         "   typu klawiatury.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
         "   ENTER = Kontynuacja   ESC = Anulowanie   F3 = Wyjòcie",
-        TEXT_STATUS
+        TEXT_TYPE_STATUS
     },
     {
         0,
@@ -1075,43 +1075,43 @@ static MUI_ENTRY plPLLayoutSettingsEntries[] =
         4,
         3,
         " ReactOS " KERNEL_VERSION_STR " Instalator ReactOS ",
-        TEXT_UNDERLINE
+        TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
         "Chcesz zmieniÜ ukàad klawiatury, jaki ma byÜ zainstalowany.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         10,
         "\x07  Naciònij klawisz G‡RA albo D‡ù by wybraÜ odpowiedni ukàad",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
         "   klawiatury. Nast©pnie naciònij ENTER.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
         "\x07  Naciònij ESC key aby powr¢ciÜ do poprzedniej strony bez zmiany",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         14,
         "   ukàadu klawiatury.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
         "   ENTER = Kontynuacja   ESC = Anulowanie   F3 = Wyjòcie",
-        TEXT_STATUS
+        TEXT_TYPE_STATUS
     },
     {
         0,
@@ -1128,19 +1128,19 @@ static MUI_ENTRY plPLPrepareCopyEntries[] =
         4,
         3,
         " ReactOS " KERNEL_VERSION_STR " Instalator ReactOS ",
-        TEXT_UNDERLINE
+        TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
         "Instalator  tw¢j komputer do skopiowania plik¢w systemu. ",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
         "   Tworzenie listy plik¢w do skopiowania...",
-        TEXT_STATUS
+        TEXT_TYPE_STATUS
     },
     {
         0,
@@ -1157,7 +1157,7 @@ static MUI_ENTRY plPLSelectFSEntries[] =
         4,
         3,
         " ReactOS " KERNEL_VERSION_STR " Instalator ReactOS ",
-        TEXT_UNDERLINE
+        TEXT_STYLE_UNDERLINE
     },
     {
         6,
@@ -1187,7 +1187,7 @@ static MUI_ENTRY plPLSelectFSEntries[] =
         0,
         0,
         "   ENTER = Kontynuacja   ESC = Anulowanie   F3 = Wyjòcie",
-        TEXT_STATUS
+        TEXT_TYPE_STATUS
     },
 
     {
@@ -1204,37 +1204,37 @@ static MUI_ENTRY plPLDeletePartitionEntries[] =
         4,
         3,
         " ReactOS " KERNEL_VERSION_STR " Instalator ReactOS ",
-        TEXT_UNDERLINE
+        TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
         "Chcesz skasowaÜ wybran• partycj©",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         18,
         "\x07  Naciònij D by skasowaÜ partycj©.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         11,
         19,
         "UWAGA: Wszystkie dane, zapisane na tej partycji zostan• skasowane!",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
         "\x07  Naciònij ESC aby anulowaÜ.",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
         "   D = Skasowanie partycji   ESC = Anulowanie   F3 = Wyjòcie",
-        TEXT_STATUS
+        TEXT_TYPE_STATUS
     },
     {
         0,
@@ -1250,19 +1250,19 @@ static MUI_ENTRY plPLRegistryEntries[] =
         4,
         3,
         " ReactOS " KERNEL_VERSION_STR " Instalator ReactOS ",
-        TEXT_UNDERLINE
+        TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
         "Instalator uaktualnia wàaònie konfiguracj© systemu. ",
-        TEXT_NORMAL
+        TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
         "   Tworzenie gaà©zi rejestru...",
-        TEXT_STATUS
+        TEXT_TYPE_STATUS
     },
     {
         0,

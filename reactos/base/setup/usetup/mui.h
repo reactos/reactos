@@ -6,7 +6,7 @@ typedef struct
    BYTE X;
    BYTE Y;
    LPCSTR Buffer;
-   BYTE Flags;
+   DWORD Flags;
 }MUI_ENTRY, *PMUI_ENTRY;
 
 typedef struct
@@ -39,17 +39,6 @@ typedef struct
     const MUI_ERROR * MuiErrors;
     const MUI_STRING * MuiStrings;
 }MUI_LANGUAGE;
-
-
-#define TEXT_NORMAL            0
-#define TEXT_HIGHLIGHT         1
-#define TEXT_UNDERLINE         2
-#define TEXT_STATUS            4
-
-#define TEXT_ALIGN_DEFAULT     8
-#define TEXT_ALIGN_RIGHT       16
-#define TEXT_ALIGN_LEFT        32
-#define TEXT_ALIGN_CENTER      64
 
 VOID
 MUIDisplayPage (ULONG PageNumber);
