@@ -50,6 +50,7 @@
 	<file>update.c</file>
 	<file>upgrade.c</file>
 	<file>where.c</file>
+	<file>msiserver.idl</file>
 	<file>msi.rc</file>
 	<include base="msi" root="intermediate">.</include>
 	<file>msi.spec</file>
