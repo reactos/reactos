@@ -1829,7 +1829,7 @@ SendMessageA(HWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 
 
 /*
- * @implemented
+ * @unimplemented
  */
 BOOL
 STDCALL
@@ -1841,18 +1841,13 @@ SendMessageCallbackA(
   SENDASYNCPROC lpCallBack,
   ULONG_PTR dwData)
 {
-  return NtUserSendMessageCallback(
-    hWnd,
-    Msg,
-    wParam,
-    lParam,
-    lpCallBack,
-    dwData);
+  UNIMPLEMENTED;
+  return FALSE;
 }
 
 
 /*
- * @implemented
+ * @unimplemented
  */
 BOOL
 STDCALL
@@ -1864,13 +1859,8 @@ SendMessageCallbackW(
   SENDASYNCPROC lpCallBack,
   ULONG_PTR dwData)
 {
-  return NtUserSendMessageCallback(
-    hWnd,
-    Msg,
-    wParam,
-    lParam,
-    lpCallBack,
-    dwData);
+  UNIMPLEMENTED;
+  return FALSE;
 }
 
 

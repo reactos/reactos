@@ -1687,19 +1687,6 @@ CLEANUP:
    END_CLEANUP;
 }
 
-BOOL STDCALL
-NtUserSendMessageCallback(HWND hWnd,
-                          UINT Msg,
-                          WPARAM wParam,
-                          LPARAM lParam,
-                          SENDASYNCPROC lpCallBack,
-                          ULONG_PTR dwData)
-{
-   UNIMPLEMENTED;
-
-   return 0;
-}
-
 
 BOOL FASTCALL
 UserSendNotifyMessage(HWND hWnd,

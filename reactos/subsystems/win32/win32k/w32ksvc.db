@@ -679,7 +679,6 @@ NtGdiSetViewportExtEx                   4
 NtGdiSetViewportOrgEx                   4
 NtGdiSetWindowExtEx                     4
 NtGdiSetWindowOrgEx                     4
-NtUserAcquireOrReleaseInputOwnership    1
 NtUserBuildMenuItemList                 4
 NtUserCreateCursorIconHandle            2
 NtUserDereferenceWndProcHandle          2
@@ -714,7 +713,6 @@ NtUserMonitorFromWindow                 2
 NtUserRegisterClassEx                   6
 NtUserRegisterClipboardFormat           1
 NtUserSendMessage                       5
-NtUserSendMessageCallback               6
 NtUserSendMessageTimeout                8
 NtUserSendNotifyMessage                 4
 NtUserSetScrollBarInfo                  3

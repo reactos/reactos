@@ -2378,7 +2378,7 @@ typedef struct tagKMDDELPARAM
 
 
 /* NtUserBad
-*   ReactOS-specific NtUser calls which shouldn't exist.
+*   ReactOS-specific NtUser calls and their related structures, both which shouldn't exist.
  */
 
 
@@ -2522,6 +2522,34 @@ VOID
 NTAPI
 NtUserManualGuiCheck(LONG Check);
 
+
+
+/* (other FocusedItem values give the position of the focused item) */
+#define NO_SELECTED_ITEM  0xffff
+
+typedef struct tagROSMENUINFO
+{
+    /* ----------- MENUINFO ----------- */
+    DWORD cbSize;
+    DWORD fMask;
+    DWORD dwStyle;
+    UINT cyMax;
+    HBRUSH  hbrBack;
+    DWORD dwContextHelpID;
+    ULONG_PTR dwMenuData;
+    /* ----------- Extra ----------- */
+    HMENU Self;         /* Handle of this menu */
+    WORD Flags;         /* Menu flags (MF_POPUP, MF_SYSMENU) */
+    UINT FocusedItem;   /* Currently focused item */
+    UINT MenuItemCount; /* Number of items in the menu */
+    HWND Wnd;           /* Window containing the menu */
+    WORD Width;         /* Width of the whole menu */
+    WORD Height;        /* Height of the whole menu */
+    HWND WndOwner;     /* window receiving the messages for ownerdraw */
+    BOOL TimeToHide;   /* Request hiding when receiving a second click in the top-level menu item */
+    SIZE maxBmpSize;   /* Maximum size of the bitmap items in MIIM_BITMAP state */
+} ROSMENUINFO, *PROSMENUINFO;
+
 BOOL
 NTAPI
 NtUserMenuInfo(
@@ -2529,6 +2557,29 @@ NtUserMenuInfo(
  PROSMENUINFO lpmi,
  BOOL fsog
 );
+
+
+
+typedef struct tagROSMENUITEMINFO
+{
+    /* ----------- MENUITEMINFOW ----------- */
+    UINT cbSize;
+    UINT fMask;
+    UINT fType;
+    UINT fState;
+    UINT wID;
+    HMENU hSubMenu;
+    HBITMAP hbmpChecked;
+    HBITMAP hbmpUnchecked;
+    DWORD dwItemData;
+    LPWSTR dwTypeData;
+    UINT cch;
+    HBITMAP hbmpItem;
+    /* ----------- Extra ----------- */
+    RECT Rect;      /* Item area (relative to menu window) */
+    UINT XTab;      /* X position of text after Tab */
+    LPWSTR Text;    /* Copy of the text pointer in MenuItem->Text */
+} ROSMENUITEMINFO, *PROSMENUITEMINFO;
 
 BOOL
 NTAPI

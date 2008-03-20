@@ -832,13 +832,6 @@ KeyboardEscape:
 }
 
 
-NTSTATUS STDCALL
-NtUserAcquireOrReleaseInputOwnership(BOOLEAN Release)
-{
-   return STATUS_SUCCESS;
-}
-
-
 NTSTATUS FASTCALL
 InitInputImpl(VOID)
 {

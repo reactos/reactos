@@ -585,16 +585,6 @@ PrivateCsrssRegisterPrimitive(VOID)
 }
 
 /*
- * Another private call for CSRSS
- */
-VOID
-STDCALL
-PrivateCsrssAcquireOrReleaseInputOwnership(BOOL Release)
-{
-  NtUserAcquireOrReleaseInputOwnership(Release);
-}
-
-/*
  * @implemented
  */
 VOID

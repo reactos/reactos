@@ -30,6 +30,8 @@
 /* FIXME include right header for KeRosDumpStackFrames */
 VOID NTAPI KeRosDumpStackFrames(PULONG, ULONG);
 
+//#define GDI_DEBUG
+
 #ifdef GDI_DEBUG
 BOOLEAN STDCALL KiRosPrintAddress(PVOID Address);
 NTSYSAPI ULONG NTAPI RtlWalkFrameChain(OUT PVOID *Callers, IN ULONG Count, IN ULONG Flags);
@@ -730,6 +732,7 @@ LockHandle:
                  * The object is currently locked, so freeing is forbidden!
                  */
                 DPRINT1("Object->cExclusiveLock = %d\n", Object->cExclusiveLock);
+                GDIDBG_TRACECALLER();
                 GDIDBG_TRACELOCKER(GDI_HANDLE_GET_INDEX(hObj));
                 ASSERT(FALSE);
             }
