@@ -356,34 +356,34 @@ static MUI_ENTRY esESDevicePageEntries[] =
         TEXT_STYLE_NORMAL
     },
     {
-        8,
+        24,
         11,
-        "        Equipo:",
-        TEXT_STYLE_NORMAL
+        "Equipo:",
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT
     },
     {
-        8,
+        24,
         12,
-        "       Pantalla:",
-        TEXT_STYLE_NORMAL,
+        "Pantalla:",
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT
     },
     {
-        8,
+        24,
         13,
-        "        Teclado:",
-        TEXT_STYLE_NORMAL
+        "Teclado:",
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT
     },
     {
-        8,
+        24,
         14,
-        " Disp. Teclado:",
-        TEXT_STYLE_NORMAL
+        "Disp. Teclado:",
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT
     },
     {
-        8,
+        24,
         16,
-        "        Aceptar:",
-        TEXT_STYLE_NORMAL
+        "Aceptar:",
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT
     },
     {
         25,
@@ -932,22 +932,22 @@ static MUI_ENTRY esESFileCopyEntries[] =
         TEXT_STYLE_UNDERLINE
     },
     {
-        11,
+        0,
         12,
         "Por favor espere mientras el Instalador de ReactOS copia",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
     },
     {
-        30,
+        0,
         13,
         "archivos en su carpeta de instalaci¢n de ReactOS.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
     },
     {
-        20,
+        0,
         14,
         "Esta operaci¢n puede durar varios minutos.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
     },
     {
         0,
@@ -1598,7 +1598,7 @@ MUI_STRING esESStrings[] =
     {STRING_TXTSETUPFAILED,
     "El instalador fall¢ al buscar la secci¢n\nin TXTSETUP.SIF.\n"},
     {STRING_COPYING,
-     "                                          \xB3 Copiando archivo: %S"},
+     "\xB3 Copiando archivo: %S"},
     {STRING_SETUPCOPYINGFILES,
      "El instalador est  copiando archivos..."},
     {STRING_PAGEDMEM,

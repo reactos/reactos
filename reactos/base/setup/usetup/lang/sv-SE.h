@@ -1598,7 +1598,7 @@ MUI_STRING svSEStrings[] =
     {STRING_TXTSETUPFAILED,
     "Setup failed to find the '%S' section\nin TXTSETUP.SIF.\n"},
     {STRING_COPYING,
-     "                                          \xB3 Copying file: %S"},
+     "\xB3 Copying file: %S"},
     {STRING_SETUPCOPYINGFILES,
      "Setup is copying files..."},
     {STRING_PAGEDMEM,

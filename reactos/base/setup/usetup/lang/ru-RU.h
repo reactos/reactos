@@ -1599,7 +1599,7 @@ MUI_STRING ruRUStrings[] =
     {STRING_TXTSETUPFAILED,
     "Программа установки не смогла найти секцию '%S'\nв файле TXTSETUP.SIF.\n"},
     {STRING_COPYING,
-     "                                          \xB3 Копирование: %S"},
+     "\xB3 Копирование: %S"},
     {STRING_SETUPCOPYINGFILES,
      "Программа установки копирует файлы..."},
     {STRING_PAGEDMEM,

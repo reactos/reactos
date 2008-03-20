@@ -1608,7 +1608,7 @@ MUI_STRING bgBGStrings[] =
     {STRING_TXTSETUPFAILED,
     "Не бе намерен раздел '%S'\nв TXTSETUP.SIF.\n"},
     {STRING_COPYING,
-     "                                         \xB3 Запис на файл: %S"},
+     "\xB3 Запис на файл: %S"},
     {STRING_SETUPCOPYINGFILES,
      "Тече записване на файловете..."},
     {STRING_PAGEDMEM,

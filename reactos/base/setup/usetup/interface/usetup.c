@@ -3002,13 +3002,13 @@ FileCopyCallback(PVOID Context,
         case SPFILENOTIFY_STARTSUBQUEUE:
             CopyContext->TotalOperations = (ULONG)Param2;
             ProgressSetStepCount(CopyContext->ProgressBar,
-            CopyContext->TotalOperations);
+                                 CopyContext->TotalOperations);
             SetupUpdateMemoryInfo(CopyContext, TRUE);
             break;
 
         case SPFILENOTIFY_STARTCOPY:
             /* Display copy message */
-            CONSOLE_SetStatusText(MUIGetString(STRING_COPYING), (PWSTR)Param1);
+            CONSOLE_SetStatusTextAutoFitX (45 , MUIGetString(STRING_COPYING), (PWSTR)Param1);
             SetupUpdateMemoryInfo(CopyContext, FALSE);
             break;
 

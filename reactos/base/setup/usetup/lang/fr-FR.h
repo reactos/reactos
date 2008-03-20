@@ -1611,7 +1611,7 @@ MUI_STRING frFRStrings[] =
     {STRING_TXTSETUPFAILED,
     "Setup n'a pu trouver la section '%S'\ndans TXTSETUP.SIF.\n"},
     {STRING_COPYING,
-     "                                      \xB3 Copie du fichier: %S"},
+     "\xB3 Copie du fichier: %S"},
     {STRING_SETUPCOPYINGFILES,
      "Setup copie les fichiers..."},
     {STRING_PAGEDMEM,

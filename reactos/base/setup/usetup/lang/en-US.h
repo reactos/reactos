@@ -36,8 +36,8 @@ static MUI_ENTRY enUSLanguagePageEntries[] =
     {
         0,
         0,
-        "   ENTER = Continue  F3 = Quit",
-        TEXT_TYPE_STATUS
+        "ENTER = Continue  F3 = Quit",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -112,8 +112,8 @@ static MUI_ENTRY enUSWelcomePageEntries[] =
     {
         0,
         0,
-        "   ENTER = Continue  R = Repair F3 = Quit",
-        TEXT_TYPE_STATUS
+        "ENTER = Continue  R = Repair F3 = Quit",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -206,8 +206,8 @@ static MUI_ENTRY enUSIntroPageEntries[] =
     {
         0,
         0,
-        "   ENTER = Continue   F3 = Quit",
-        TEXT_TYPE_STATUS
+        "ENTER = Continue   F3 = Quit",
+        TEXT_TYPE_STATUS| TEXT_PADDING_BIG
     },
     {
         0,
@@ -330,8 +330,8 @@ static MUI_ENTRY enUSLicensePageEntries[] =
     {
         0,
         0,
-        "   ENTER = Return",
-        TEXT_TYPE_STATUS
+        "ENTER = Return",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -423,8 +423,8 @@ static MUI_ENTRY enUSDevicePageEntries[] =
     {
         0,
         0,
-        "   ENTER = Continue   F3 = Quit",
-        TEXT_TYPE_STATUS
+        "ENTER = Continue   F3 = Quit",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -487,8 +487,8 @@ static MUI_ENTRY enUSRepairPageEntries[] =
     {
         0,
         0,
-        "   ESC = Main page  ENTER = Reboot",
-        TEXT_TYPE_STATUS
+        "ESC = Main page  ENTER = Reboot",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -538,8 +538,8 @@ static MUI_ENTRY enUSComputerPageEntries[] =
     {
         0,
         0,
-        "   ENTER = Continue   ESC = Cancel   F3 = Quit",
-        TEXT_TYPE_STATUS
+        "ENTER = Continue   ESC = Cancel   F3 = Quit",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -578,8 +578,8 @@ static MUI_ENTRY enUSFlushPageEntries[] =
     {
         0,
         0,
-        "   Flushing cache",
-        TEXT_TYPE_STATUS
+        "Flushing cache",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -624,8 +624,8 @@ static MUI_ENTRY enUSQuitPageEntries[] =
     {
         0,
         0,
-        "   Please wait ...",
-        TEXT_TYPE_STATUS,
+        "Please wait ...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
     },
     {
         0,
@@ -675,8 +675,8 @@ static MUI_ENTRY enUSDisplayPageEntries[] =
     {
         0,
         0,
-        "   ENTER = Continue   ESC = Cancel   F3 = Quit",
-        TEXT_TYPE_STATUS
+        "ENTER = Continue   ESC = Cancel   F3 = Quit",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -721,8 +721,8 @@ static MUI_ENTRY enUSSuccessPageEntries[] =
     {
         0,
         0,
-        "   ENTER = Reboot computer",
-        TEXT_TYPE_STATUS
+        "ENTER = Reboot computer",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -767,8 +767,8 @@ static MUI_ENTRY enUSBootPageEntries[] =
     {
         0,
         0,
-        "   ENTER = Continue   F3 = Quit",
-        TEXT_TYPE_STATUS
+        "ENTER = Continue   F3 = Quit",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -826,8 +826,8 @@ static MUI_ENTRY enUSSelectPartitionEntries[] =
     {
         0,
         0,
-        "   Please wait...",
-        TEXT_TYPE_STATUS
+        "Please wait...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -860,8 +860,8 @@ static MUI_ENTRY enUSFormatPartitionEntries[] =
     {
         0,
         0,
-        "   ENTER = Continue   F3 = Quit",
-        TEXT_TYPE_STATUS
+        "ENTER = Continue   F3 = Quit",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -912,8 +912,8 @@ static MUI_ENTRY enUSInstallDirectoryEntries[] =
     {
         0,
         0,
-        "   ENTER = Continue   F3 = Quit",
-        TEXT_TYPE_STATUS
+        "ENTER = Continue   F3 = Quit",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -950,9 +950,9 @@ static MUI_ENTRY enUSFileCopyEntries[] =
         TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
     },
     {
+        50,
         0,
-        0,
-        "                                                           \xB3 Please wait...    ",
+        "\xB3 Please wait...    ",
         TEXT_TYPE_STATUS
     },
     {
@@ -998,8 +998,8 @@ static MUI_ENTRY enUSBootLoaderEntries[] =
     {
         0,
         0,
-        "   ENTER = Continue   F3 = Quit",
-        TEXT_TYPE_STATUS
+        "ENTER = Continue   F3 = Quit",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -1050,8 +1050,8 @@ static MUI_ENTRY enUSKeyboardSettingsEntries[] =
     {
         0,
         0,
-        "   ENTER = Continue   ESC = Cancel   F3 = Quit",
-        TEXT_TYPE_STATUS
+        "ENTER = Continue   ESC = Cancel   F3 = Quit",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -1102,8 +1102,8 @@ static MUI_ENTRY enUSLayoutSettingsEntries[] =
     {
         0,
         0,
-        "   ENTER = Continue   ESC = Cancel   F3 = Quit",
-        TEXT_TYPE_STATUS
+        "ENTER = Continue   ESC = Cancel   F3 = Quit",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -1131,8 +1131,8 @@ static MUI_ENTRY enUSPrepareCopyEntries[] =
     {
         0,
         0,
-        "   Building the file copy list...",
-        TEXT_TYPE_STATUS
+        "Building the file copy list...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -1178,8 +1178,8 @@ static MUI_ENTRY enUSSelectFSEntries[] =
     {
         0,
         0,
-        "   ENTER = Continue   ESC = Cancel   F3 = Quit",
-        TEXT_TYPE_STATUS
+        "ENTER = Continue   ESC = Cancel   F3 = Quit",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
 
     {
@@ -1225,8 +1225,8 @@ static MUI_ENTRY enUSDeletePartitionEntries[] =
     {
         0,
         0,
-        "   D = Delete Partition   ESC = Cancel   F3 = Quit",
-        TEXT_TYPE_STATUS
+        "D = Delete Partition   ESC = Cancel   F3 = Quit",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -1253,8 +1253,8 @@ static MUI_ENTRY enUSRegistryEntries[] =
     {
         0,
         0,
-        "   Creating registry hives...",
-        TEXT_TYPE_STATUS
+        "Creating registry hives...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -1599,7 +1599,7 @@ MUI_STRING enUSStrings[] =
     {STRING_TXTSETUPFAILED,
     "Setup failed to find the '%S' section\nin TXTSETUP.SIF.\n"},
     {STRING_COPYING,
-     "                                          \xB3 Copying file: %S"},
+     "\xB3 Copying file: %S"},
     {STRING_SETUPCOPYINGFILES,
      "Setup is copying files..."},
     {STRING_PAGEDMEM,

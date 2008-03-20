@@ -1599,7 +1599,7 @@ MUI_STRING itITStrings[] =
     {STRING_TXTSETUPFAILED,
     "Setup non ha trovato la sezione '%S' \nin TXTSETUP.SIF.\n"},
     {STRING_COPYING,
-     "                                          \xB3 Copia di: %S"},
+     "\xB3 Copia di: %S"},
     {STRING_SETUPCOPYINGFILES,
      "Copia dei file in corso..."},
     {STRING_PAGEDMEM,

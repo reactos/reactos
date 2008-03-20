@@ -47,8 +47,9 @@
 #define TEXT_ALIGN_CENTER      0x00000100
 
 /* Text padding */
-#define TEXT_PADDING_SMALL     0x00000200
-#define TEXT_PADDING_BIG       0x00000400
+#define TEXT_PADDING_SMALL     0x00000200 /* One space */
+#define TEXT_PADDING_MEDIUM    0x00000400 /* Two spaces */
+#define TEXT_PADDING_BIG       0x00000800 /* Three spaces */
 
 extern HANDLE StdInput, StdOutput;
 extern SHORT xScreen, yScreen;
@@ -155,6 +156,16 @@ CONSOLE_SetInvertedTextXY(
 
 VOID
 CONSOLE_SetStatusText(
+	IN LPCSTR fmt, ...);
+
+VOID
+CONSOLE_SetStatusTextX(
+    IN SHORT x,
+	IN LPCSTR fmt, ...);
+
+VOID
+CONSOLE_SetStatusTextAutoFitX(
+    IN SHORT x,
 	IN LPCSTR fmt, ...);
 
 VOID

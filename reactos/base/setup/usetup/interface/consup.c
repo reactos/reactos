@@ -204,44 +204,6 @@ CONSOLE_ClearScreen(VOID)
 }
 
 VOID
-CONSOLE_SetStatusText(
-	IN LPCSTR fmt, ...)
-{
-	CHAR Buffer[128];
-	va_list ap;
-	COORD coPos;
-	DWORD Written;
-
-	va_start(ap, fmt);
-	vsprintf(Buffer, fmt, ap);
-	va_end(ap);
-
-	coPos.X = 0;
-	coPos.Y = yScreen - 1;
-
-	FillConsoleOutputAttribute(
-		StdOutput,
-		BACKGROUND_WHITE,
-		xScreen,
-		coPos,
-		&Written);
-
-	FillConsoleOutputCharacterA(
-		StdOutput,
-		' ',
-		xScreen,
-		coPos,
-		&Written);
-
-	WriteConsoleOutputCharacterA(
-		StdOutput,
-		Buffer,
-		(ULONG)strlen(Buffer),
-		coPos,
-		&Written);
-}
-
-VOID
 CONSOLE_InvertTextXY(
 	IN SHORT x,
 	IN SHORT y,
@@ -391,6 +353,110 @@ CONSOLE_SetUnderlinedTextXY(
 }
 
 VOID
+CONSOLE_SetStatusText(
+	IN LPCSTR fmt, ...)
+{
+	CHAR Buffer[128];
+	va_list ap;
+	COORD coPos;
+	DWORD Written;
+
+	va_start(ap, fmt);
+	vsprintf(Buffer, fmt, ap);
+	va_end(ap);
+
+	coPos.X = 0;
+	coPos.Y = yScreen - 1;
+
+	FillConsoleOutputAttribute(
+		StdOutput,
+		BACKGROUND_WHITE,
+		xScreen,
+		coPos,
+		&Written);
+
+	FillConsoleOutputCharacterA(
+		StdOutput,
+		' ',
+		xScreen,
+		coPos,
+		&Written);
+
+	WriteConsoleOutputCharacterA(
+		StdOutput,
+		Buffer,
+		(ULONG)strlen(Buffer),
+		coPos,
+		&Written);
+}
+
+VOID
+CONSOLE_SetStatusTextX(
+    IN SHORT x,
+	IN LPCSTR fmt, ...)
+{
+	CHAR Buffer[128];
+	va_list ap;
+	COORD coPos;
+	DWORD Written;
+
+	va_start(ap, fmt);
+	vsprintf(Buffer, fmt, ap);
+	va_end(ap);
+
+	coPos.X = 0;
+	coPos.Y = yScreen - 1;
+
+	FillConsoleOutputAttribute(
+		StdOutput,
+		BACKGROUND_WHITE,
+		xScreen,
+		coPos,
+		&Written);
+
+	FillConsoleOutputCharacterA(
+		StdOutput,
+		' ',
+		xScreen,
+		coPos,
+		&Written);
+
+    coPos.X = x;
+
+	WriteConsoleOutputCharacterA(
+		StdOutput,
+		Buffer,
+		(ULONG)strlen(Buffer),
+		coPos,
+		&Written);
+}
+
+VOID
+CONSOLE_SetStatusTextAutoFitX(
+    IN SHORT x,
+	IN LPCSTR fmt, ...)
+{
+	CHAR Buffer[128];
+    DWORD Length;
+	va_list ap;
+
+	va_start(ap, fmt);
+	vsprintf(Buffer, fmt, ap);
+	va_end(ap);
+
+    Length = (ULONG)strlen(Buffer);
+
+    if (Length + x <= 79)
+    {
+        CONSOLE_SetStatusTextX (x , Buffer);
+    }
+    else
+    {
+        CONSOLE_SetStatusTextX (79 - Length , Buffer);
+    }
+}
+
+VOID
 CONSOLE_SetInvertedTextXY(
 	IN SHORT x,
 	IN SHORT y,
@@ -537,29 +603,20 @@ CONSOLE_SetStyledText(
 
     if (Flags & TEXT_TYPE_STATUS)
 	{
+		coPos.X = x;
 		coPos.Y = yScreen - 1;
-		coPos.X = 0;
 	}
     else /* TEXT_TYPE_REGULAR (Default) */
     {
-		coPos.X = x;
+        coPos.X = x;
 		coPos.Y = y;
     }
 
-   	if (Flags & TEXT_ALIGN_LEFT)
+    if (Flags & TEXT_ALIGN_CENTER)
 	{
-		coPos.X = 0;
-	
-		if (Flags & TEXT_PADDING_SMALL)
-		{
-			coPos.X += 1;
-		}
-		else if (Flags & TEXT_PADDING_BIG)
-		{
-			coPos.X += 2; 
-		}
+		coPos.X = (xScreen - Length) /2; 
 	}
-    else if (Flags & TEXT_ALIGN_RIGHT)
+    else if(Flags & TEXT_ALIGN_RIGHT)
 	{
 		coPos.X = coPos.X - Length; 
 
@@ -567,19 +624,34 @@ CONSOLE_SetStyledText(
 		{
 			coPos.X -= 1;
 		}
-		else if (Flags & TEXT_PADDING_BIG)
+		else if (Flags & TEXT_PADDING_MEDIUM)
 		{
 			coPos.X -= 2; 
 		}
+		else if (Flags & TEXT_PADDING_BIG)
+		{
+			coPos.X -= 3;
+		}
 	}
-    else if (Flags & TEXT_ALIGN_CENTER)
+   	else /* TEXT_ALIGN_LEFT (Default) */
 	{
-		coPos.X = (xScreen - Length) /2; 
+		if (Flags & TEXT_PADDING_SMALL)
+		{
+			coPos.X += 1;
+		}
+		else if (Flags & TEXT_PADDING_MEDIUM)
+		{
+			coPos.X += 2; 
+		}		
+		else if (Flags & TEXT_PADDING_BIG)
+		{
+			coPos.X += 3;
+		}
 	}
 
 	if (Flags & TEXT_TYPE_STATUS)
 	{
-        CONSOLE_SetStatusText(Text);
+        CONSOLE_SetStatusTextX(coPos.X, Text);
 	}
     else /* TEXT_TYPE_REGULAR (Default) */
     {
