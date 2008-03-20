@@ -4,6 +4,7 @@
  * FILE:        drivers/input/i8042prt/pnp.c
  * PURPOSE:     IRP_MJ_PNP operations
  * PROGRAMMERS: Copyright 2006-2007 Hervé Poussineau (hpoussin@reactos.org)
+ *              Copyright 2008 Colin Finck (mail@colinfinck.de)
  */
 
 /* INCLUDES ******************************************************************/
@@ -100,13 +101,17 @@ i8042BasicDetect(
 			return Status;
 		}
 
-		if (Value == KBD_RESEND)
+		if (Value == KBD_SELF_TEST_OK)
+		{
+			INFO_(I8042PRT, "CTRL_SELF_TEST completed successfully!\n");
+			break;
+		}
+		else if (Value == KBD_RESEND)
 		{
 			TRACE_(I8042PRT, "Resending...\n", Value);
 			KeStallExecutionProcessor(50);
-			continue;
 		}
-		else if (Value != KBD_SELF_TEST_OK)
+		else
 		{
 			WARN_(I8042PRT, "Got 0x%02x instead of 0x55\n", Value);
 			return STATUS_IO_DEVICE_ERROR;
@@ -134,7 +139,7 @@ i8042BasicDetect(
 	return STATUS_SUCCESS;
 }
 
-static BOOLEAN
+static VOID
 i8042DetectKeyboard(
 	IN PPORT_DEVICE_EXTENSION DeviceExtension)
 {
@@ -148,7 +153,7 @@ i8042DetectKeyboard(
 		if (!NT_SUCCESS(Status))
 		{
 			WARN_(I8042PRT, "Can't finish SET_LEDS (0x%08lx)\n", Status);
-			return FALSE;
+			return;
 		}
 	}
 	else
@@ -158,19 +163,18 @@ i8042DetectKeyboard(
 
 	/* Turn on translation and SF (Some machines don't reboot if SF is not set, see ReactOS bug #1842) */
 	if (!i8042ChangeMode(DeviceExtension, 0, CCB_TRANSLATE | CCB_SYSTEM_FLAG))
-		return FALSE;
+		return;
 
-	return TRUE;
+	INFO_(I8042PRT, "Keyboard detected\n");
 }
 
-static BOOLEAN
+static VOID
 i8042DetectMouse(
 	IN PPORT_DEVICE_EXTENSION DeviceExtension)
 {
-	BOOLEAN Ok = FALSE;
 	NTSTATUS Status;
 	UCHAR Value;
-	UCHAR ExpectedReply[] = { MOUSE_ACK, 0xAA, 0x00 };
+	UCHAR ExpectedReply[] = { MOUSE_ACK, 0xAA };
 	UCHAR ReplyByte;
 
 	i8042Flush(DeviceExtension);
@@ -179,9 +183,20 @@ i8042DetectMouse(
 	  ||!i8042Write(DeviceExtension, DeviceExtension->DataPort, MOU_CMD_RESET))
 	{
 		WARN_(I8042PRT, "Failed to write reset command to mouse\n");
-		goto cleanup;
+		goto failure;
 	}
 
+	/* The implementation of the "Mouse Reset" command differs much from chip to chip.
+
+	   By default, the first byte is an ACK, when the mouse is plugged in and working and NACK when it's not.
+	   On success, the next bytes are 0xAA and 0x00.
+
+	   But on some systems (like ECS K7S5A Pro, SiS 735 chipset), we always get an ACK and 0xAA.
+	   Only the last byte indicates, whether a mouse is plugged in.
+	   It is either sent or not, so there is no byte, which indicates a failure here.
+
+	   After the Mouse Reset command was issued, it usually takes some time until we get a response.
+	   So get the first two bytes in a loop. */
 	for (ReplyByte = 0;
 	     ReplyByte < sizeof(ExpectedReply) / sizeof(ExpectedReply[0]);
 	     ReplyByte++)
@@ -191,39 +206,55 @@ i8042DetectMouse(
 		do
 		{
 			Status = i8042ReadDataWait(DeviceExtension, &Value);
+
+			if(!NT_SUCCESS(Status))
+			{
+				/* Wait some time before trying again */
+				KeStallExecutionProcessor(50);
+			}
 		} while (Status == STATUS_IO_TIMEOUT && Counter--);
 
 		if (!NT_SUCCESS(Status))
 		{
 			WARN_(I8042PRT, "No ACK after mouse reset, status 0x%08lx\n", Status);
-			goto cleanup;
+			goto failure;
 		}
 		else if (Value != ExpectedReply[ReplyByte])
 		{
-			WARN_(I8042PRT, "Unexpected reply: 0x%02x (expected 0x%02x)\n",
-			        Value, ExpectedReply[ReplyByte]);
-			goto cleanup;
+			WARN_(I8042PRT, "Unexpected reply: 0x%02x (expected 0x%02x)\n", Value, ExpectedReply[ReplyByte]);
+			goto failure;
 		}
 	}
 
-	Ok = TRUE;
+	/* Finally get the third byte, but only try it one time (see above).
+	   Otherwise this takes around 45 seconds on a K7S5A Pro, when no mouse is plugged in. */
+	Status = i8042ReadDataWait(DeviceExtension, &Value);
 
-cleanup:
-	if (!Ok)
+	if(!NT_SUCCESS(Status))
 	{
-		/* There is probably no mouse present. On some systems,
-		   the probe locks the entire keyboard controller. Let's
-		   try to get access to the keyboard again by sending a
-		   reset */
-		i8042Flush(DeviceExtension);
-		i8042Write(DeviceExtension, DeviceExtension->ControlPort, CTRL_SELF_TEST);
-		i8042ReadDataWait(DeviceExtension, &Value);
-		i8042Flush(DeviceExtension);
+		WARN_(I8042PRT, "Last byte was not transmitted after mouse reset, status 0x%08lx\n", Status);
+		goto failure;
+	}
+	else if(Value != 0x00)
+	{
+		WARN_(I8042PRT, "Last byte after mouse reset was not 0x00, but 0x%02x\n", Value);
+		goto failure;
 	}
 
-	INFO_(I8042PRT, "Mouse %sdetected\n", Ok ? "" : "not ");
+	INFO_(I8042PRT, "Mouse detected\n");
+	return;
 
-	return Ok;
+failure:
+	/* There is probably no mouse present. On some systems,
+	   the probe locks the entire keyboard controller. Let's
+	   try to get access to the keyboard again by sending a
+	   reset */
+	i8042Flush(DeviceExtension);
+	i8042Write(DeviceExtension, DeviceExtension->ControlPort, CTRL_SELF_TEST);
+	i8042ReadDataWait(DeviceExtension, &Value);
+	i8042Flush(DeviceExtension);
+
+	INFO_(I8042PRT, "Mouse not detected\n");
 }
 
 static NTSTATUS
@@ -387,12 +418,10 @@ StartProcedure(
 			return STATUS_UNSUCCESSFUL;
 		}
 		TRACE_(I8042PRT, "Detecting keyboard\n");
-		if (!i8042DetectKeyboard(DeviceExtension))
-			INFO_(I8042PRT, "No keyboard detected!\n");
+		i8042DetectKeyboard(DeviceExtension);
 
 		TRACE_(I8042PRT, "Detecting mouse\n");
-		if (!i8042DetectMouse(DeviceExtension))
-			INFO_(I8042PRT, "No mouse detected!\n");
+		i8042DetectMouse(DeviceExtension);
 
 		INFO_(I8042PRT, "Keyboard present: %s\n", DeviceExtension->Flags & KEYBOARD_PRESENT ? "YES" : "NO");
 		INFO_(I8042PRT, "Mouse present   : %s\n", DeviceExtension->Flags & MOUSE_PRESENT ? "YES" : "NO");
