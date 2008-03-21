@@ -363,31 +363,31 @@ static MUI_ENTRY plPLDevicePageEntries[] =
         TEXT_STYLE_NORMAL
     },
     {
-        8,
+        24,
         11,
         "Komputer:",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT
     },
     {
-        8,
+        24,
         12,
         "Ekran:",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT
     },
     {
-        8,
+        24,
         13,
         "Klawiatura:",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT
     },
     {
-        8,
+        24,
         14,
         "Ukˆ. klawiatury:",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT
     },
     {
-        8,
+        24,
         16,
         "Zapisz:",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT
