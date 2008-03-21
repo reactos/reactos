@@ -589,10 +589,7 @@ NtUserCallOneParam(
 #define TWOPARAM_ROUTINE_SHOWOWNEDPOPUPS    0x62
 #define TWOPARAM_ROUTINE_SWITCHTOTHISWINDOW 0x63
 
-#define TWOPARAM_ROUTINE_SETDCPENCOLOR      0xfffd0045 /* Private ROS */
-#define TWOPARAM_ROUTINE_SETDCBRUSHCOLOR    0xfffd0046
-#define TWOPARAM_ROUTINE_GETDCCOLOR         0xfffd0047
-#define TWOPARAM_ROUTINE_GETWINDOWRGNBOX    0xfffd0048
+#define TWOPARAM_ROUTINE_GETWINDOWRGNBOX    0xfffd0048 /* Private ROS */
 #define TWOPARAM_ROUTINE_GETWINDOWRGN       0xfffd0049
 #define TWOPARAM_ROUTINE_SETMENUBARHEIGHT   0xfffd0050
 #define TWOPARAM_ROUTINE_SETMENUITEMRECT    0xfffd0051
@@ -2372,25 +2369,6 @@ typedef struct tagKMDDELPARAM
 /* NtUserBad
 *   ReactOS-specific NtUser calls and their related structures, both which shouldn't exist.
  */
-
-/* The following macros don't belong to ntuser, but are part of gdi */
-
-/* Should be done in usermode */
-#define NtUserGetDCBrushColor(hbr) \
-  (COLORREF)NtUserCallTwoParam((DWORD)(hbr), OBJ_BRUSH, TWOPARAM_ROUTINE_GETDCCOLOR)
-
-/* Should be done in usermode */
-#define NtUserGetDCPenColor(hbr) \
-  (COLORREF)NtUserCallTwoParam((DWORD)(hbr), OBJ_PEN, TWOPARAM_ROUTINE_GETDCCOLOR)
-
-/* Should be done in usermode */
-#define NtUserSetDCBrushColor(hbr, crColor) \
-  (COLORREF)NtUserCallTwoParam((DWORD)(hbr), (DWORD)crColor, TWOPARAM_ROUTINE_SETDCBRUSHCOLOR)
-
-/* Should be done in usermode */
-#define NtUserSetDCPenColor(hbr, crColor) \
-  (COLORREF)NtUserCallTwoParam((DWORD)(hbr), (DWORD)crColor, TWOPARAM_ROUTINE_SETDCPENCOLOR)
-
 
 NTSTATUS
 NTAPI
