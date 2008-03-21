@@ -2370,11 +2370,6 @@ typedef struct tagKMDDELPARAM
 *   ReactOS-specific NtUser calls and their related structures, both which shouldn't exist.
  */
 
-NTSTATUS
-NTAPI
-NtUserAcquireOrReleaseInputOwnership(
-  BOOLEAN Release);
-
 DWORD
 NTAPI
 NtUserBuildMenuItemList(
@@ -2640,17 +2635,6 @@ NtUserSendMessage(HWND hWnd,
 		  WPARAM wParam,
 		  LPARAM lParam,
           PNTUSERSENDMESSAGEINFO Info);
-
-/* use NtUserMessageCall */
-BOOL
-NTAPI
-NtUserSendMessageCallback(
-  HWND hWnd,
-  UINT Msg,
-  WPARAM wParam,
-  LPARAM lParam,
-  SENDASYNCPROC lpCallBack,
-  ULONG_PTR dwData);
 
 /* use NtUserMessageCall */
 LRESULT NTAPI
