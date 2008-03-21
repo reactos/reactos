@@ -1284,9 +1284,11 @@ Rule wmcRule ( "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).rc 
                "\t$(ECHO_WMC)\n"
                "\t$(Q)$(WMC_TARGET) -i -H $(INTERMEDIATE)$(SEP)include$(SEP)reactos$(SEP)$(source_name_noext).h -o $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).rc $(source)\n",
                "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).rc", "$(INTERMEDIATE)$(SEP)include$(SEP)reactos$(SEP)$(source_name_noext).h", NULL );
-Rule winebuildRule ( "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).spec.def: $(source)$(dependencies) $(WINEBUILD_TARGET) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
+Rule winebuildRule ( "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).spec.def: $(source)$(dependencies) $(WINEBUILD_TARGET) | $(INTERMEDIATE)$(SEP)$(source_dir) $(TEMPORARY)\n"
                      "\t$(ECHO_WINEBLD)\n"
-                     "\t$(Q)$(WINEBUILD_TARGET) $(WINEBUILD_FLAGS) -o $(INTERMEDIATE)$(SEP)$(source_path)$(SEP)$(source_name_noext).spec.def --def -E $(source_path)$(SEP)$(source_name_noext).spec\n"
+                     "\t${gcc} -xc -E ${$(module_name)_RCFLAGS} $(source) > $(TEMPORARY)$(SEP)$(module_name).spec.tmp\n"
+                     "\t$(Q)$(WINEBUILD_TARGET) $(WINEBUILD_FLAGS) -o $(INTERMEDIATE)$(SEP)$(source_path)$(SEP)$(source_name_noext).spec.def --def -E $(TEMPORARY)$(SEP)$(module_name).spec.tmp\n"
+                     "\t-@${rm} $(TEMPORARY)$(SEP)$(module_name).spec.tmp 2>$(NUL)\n"
                      "$(INTERMEDIATE)$(SEP)$(source_path)$(SEP)$(source_name_noext).stubs.c: $(source_path)$(SEP)$(source_name_noext).spec $(WINEBUILD_TARGET)\n"
                      "\t$(ECHO_WINEBLD)\n"
                      "\t$(Q)$(WINEBUILD_TARGET) $(WINEBUILD_FLAGS) -o $(INTERMEDIATE)$(SEP)$(source_path)$(SEP)$(source_name_noext).stubs.c --pedll $(source_path)$(SEP)$(source_name_noext).spec\n"
@@ -1672,7 +1674,7 @@ MingwModuleHandler::GenerateLinkerCommand (
 	fprintf ( fMakefile,
 		"%s: %s %s $(RSYM_TARGET) $(PEFIXUP_TARGET) | %s\n",
 		target_macro.c_str (),
-		backend->GetFullName ( *definitionFilename ).c_str (),
+		definitionFilename ? backend->GetFullName ( *definitionFilename ).c_str () : "",
 		dependencies.c_str (),
 		target_folder.c_str () );
 	fprintf ( fMakefile, "\t$(ECHO_LD)\n" );
@@ -1700,7 +1702,7 @@ MingwModuleHandler::GenerateLinkerCommand (
 		fprintf ( fMakefile,
 		          "\t${dlltool} --dllname %s --def %s --output-exp %s%s%s\n",
 		          targetName.c_str (),
-		          backend->GetFullName ( *definitionFilename ).c_str (),
+		          definitionFilename ? backend->GetFullName ( *definitionFilename ).c_str () : "",
 		          backend->GetFullName ( temp_exp ).c_str (),
 		          module.mangledSymbols ? "" : " --kill-at",
 		          module.underscoreSymbols ? " --add-underscore" : "" );
@@ -1750,7 +1752,8 @@ MingwModuleHandler::GenerateLinkerCommand (
 	GenerateRunStripCode ();
 	GenerateCleanObjectsAsYouGoCode ();
 
-	delete definitionFilename;
+	if ( definitionFilename )
+		delete definitionFilename;
 	delete target_file;
 }
 
@@ -1856,22 +1859,22 @@ const FileLocation*
 MingwModuleHandler::GenerateArchiveTarget ()
 {
 	const FileLocation *archiveFilename = GetModuleArchiveFilename ();
+	const FileLocation *definitionFilename = GetDefinitionFilename ();
 
 	arRule1.Execute ( fMakefile, backend, module, archiveFilename, clean_files );
 
-	if ( IsStaticLibrary ( module ) && module.importLibrary )
+	if ( IsStaticLibrary ( module ) && definitionFilename )
 	{
-		const FileLocation *definitionFilename = GetDefinitionFilename ();
-
 		fprintf ( fMakefile,
 		          "\t${dlltool} --dllname %s --def %s --output-lib $@%s%s\n",
 		          module.importLibrary->dllname.c_str (),
 		          backend->GetFullName ( *definitionFilename ).c_str (),
 		          module.mangledSymbols ? "" : " --kill-at",
 		          module.underscoreSymbols ? " --add-underscore" : "" );
-
-		delete definitionFilename;
 	}
+
+	if ( definitionFilename )
+		delete definitionFilename;
 
 	if(module.type == HostStaticLibrary)
 		arHostRule2.Execute ( fMakefile, backend, module, archiveFilename, clean_files );
@@ -2357,20 +2360,18 @@ MingwModuleHandler::IsWineModule () const
 const FileLocation*
 MingwModuleHandler::GetDefinitionFilename () const
 {
-	if ( module.importLibrary != NULL )
-	{
-		DirectoryLocation directory;
-		if ( IsWineModule () )
-			directory = IntermediateDirectory;
-		else
-			directory = SourceDirectory;
+	if ( module.importLibrary == NULL )
+		return NULL;
 
-		return new FileLocation ( directory,
-		                          module.importLibrary->source->relative_path,
-		                          module.importLibrary->source->name );
-	}
+	DirectoryLocation directory;
+	if ( IsWineModule () )
+		directory = IntermediateDirectory;
 	else
-		return new FileLocation ( SourceDirectory, "tools" + sSep + "rbuild", "empty.def" );
+		directory = SourceDirectory;
+
+	return new FileLocation ( directory,
+	                          module.importLibrary->source->relative_path,
+	                          module.importLibrary->source->name );
 }
 
 void
@@ -2380,15 +2381,21 @@ MingwModuleHandler::GenerateImportLibraryTargetIfNeeded ()
 	{
 		const FileLocation *library_target = GetImportLibraryFilename ( module, &clean_files );
 		const FileLocation *defFilename = GetDefinitionFilename ();
+		string empty = "tools" + sSep + "rbuild" + sSep + "empty.def";
 
 		vector<FileLocation> deps;
 		GetDefinitionDependencies ( deps );
 
 		fprintf ( fMakefile, "# IMPORT LIBRARY RULE:\n" );
 
-		fprintf ( fMakefile, "%s: %s",
-		          backend->GetFullName ( *library_target ).c_str (),
-		          backend->GetFullName ( *defFilename ).c_str () );
+		fprintf ( fMakefile, "%s:",
+		          backend->GetFullName ( *library_target ).c_str () );
+
+		if ( defFilename )
+		{
+			fprintf ( fMakefile, " %s",
+			          backend->GetFullName ( *defFilename ).c_str () );
+		}
 
 		size_t i, iend = deps.size();
 		for ( i = 0; i < iend; i++ )
@@ -2403,12 +2410,14 @@ MingwModuleHandler::GenerateImportLibraryTargetIfNeeded ()
 		fprintf ( fMakefile,
 		          "\t${dlltool} --dllname %s --def %s --output-lib %s%s%s\n\n",
 		          module.output->name.c_str (),
-		          backend->GetFullName ( *defFilename ).c_str (),
+		          defFilename ? backend->GetFullName ( *defFilename ).c_str ()
+		                      : empty.c_str (),
 		          backend->GetFullName ( *library_target ).c_str (),
 		          module.mangledSymbols ? "" : " --kill-at",
 		          module.underscoreSymbols ? " --add-underscore" : "" );
 
-		delete defFilename;
+		if ( defFilename )
+			delete defFilename;
 		delete library_target;
 	}
 }
