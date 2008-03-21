@@ -230,23 +230,20 @@ NtGdiCloseEnhMetaFile(HDC  hDC)
           NtClose( Dc->hFile );
     }
 
-  hmf = GDIOBJ_AllocObjDepricated(GdiHandleTable, GDI_OBJECT_TYPE_ENHMETAFILE);
-  if (hmf != NULL)
+  phmf = GDIOBJ_AllocObjWithHandle(GdiHandleTable, GDI_OBJECT_TYPE_ENHMETAFILE);
+  if (phmf != NULL)
   {
-     phmf = GDIOBJ_LockObj(GdiHandleTable, hmf, GDI_OBJECT_TYPE_ENHMETAFILE);
-	 if (phmf != NULL)
-	 {
-         if (Dc->hFile != NULL)
-         {
-             phmf->on_disk = TRUE;
-	     }
-         else
-         {
-	         phmf->on_disk = FALSE;
-         }
-		 GDIOBJ_UnlockObjByPtr(GdiHandleTable, phmf);
-		 phmf->emh = Dc->emh;
-	 }
+    hmf = phmf->BaseObject.hHmgr;
+    if (Dc->hFile != NULL)
+    {
+      phmf->on_disk = TRUE;
+    }
+    else
+    {
+      phmf->on_disk = FALSE;
+    }
+    phmf->emh = Dc->emh;
+    GDIOBJ_UnlockObjByPtr(GdiHandleTable, phmf);
   }
 
   Dc->emh = NULL;  /* So it won't be deleted */
