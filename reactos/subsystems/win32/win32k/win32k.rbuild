@@ -125,12 +125,14 @@
 		<file>misc.c</file>
 		<file>monitor.c</file>
 		<file>msgqueue.c</file>
+		<file>ntstubs.c</file>
 		<file>ntuser.c</file>
 		<file>painting.c</file>
 		<file>prop.c</file>
 		<file>scrollbar.c</file>
 		<file>session.c</file>
-		<file>ntstubs.c</file>
+		<file>simplecall.c</file>
+		<file>sysparams.c</file>
 		<file>timer.c</file>
 		<file>useratom.c</file>
 		<file>vis.c</file>
