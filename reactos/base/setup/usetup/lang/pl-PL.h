@@ -5,7 +5,6 @@
  *      IRC: irc.freenode.net #reactos-pl;
  */
 
-
 #ifndef LANG_PL_PL_H__
 #define LANG_PL_PL_H__
 
@@ -44,8 +43,8 @@ static MUI_ENTRY plPLLanguagePageEntries[] =
     {
         0,
         0,
-        "   ENTER = Kontynuacja  F3 = Wyj˜cie",
-        TEXT_TYPE_STATUS
+        "ENTER = Kontynuacja  F3 = Wyj˜cie",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -120,8 +119,8 @@ static MUI_ENTRY plPLWelcomePageEntries[] =
     {
         0,
         0,
-        "   ENTER = Kontynuacja  R = Naprawa F3 = Wyj˜cie",
-        TEXT_TYPE_STATUS
+        "ENTER = Kontynuacja  R = Naprawa F3 = Wyj˜cie",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -214,8 +213,8 @@ static MUI_ENTRY plPLIntroPageEntries[] =
     {
         0,
         0,
-        "   ENTER = Kontynuacja   F3 = Wyj˜cie",
-        TEXT_TYPE_STATUS
+        "ENTER = Kontynuacja   F3 = Wyj˜cie",
+        TEXT_TYPE_STATUS| TEXT_PADDING_BIG
     },
     {
         0,
@@ -338,8 +337,8 @@ static MUI_ENTRY plPLLicensePageEntries[] =
     {
         0,
         0,
-        "   ENTER = Powr¢t",
-        TEXT_TYPE_STATUS
+        "ENTER = Powr¢t",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -366,32 +365,32 @@ static MUI_ENTRY plPLDevicePageEntries[] =
     {
         8,
         11,
-        "       Komputer:",
-        TEXT_STYLE_NORMAL
+        "Komputer:",
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT
     },
     {
         8,
         12,
-        "          Ekran:",
-        TEXT_STYLE_NORMAL,
+        "Ekran:",
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT
     },
     {
         8,
         13,
-        "     Klawiatura:",
-        TEXT_STYLE_NORMAL
+        "Klawiatura:",
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT
     },
     {
         8,
         14,
         "Ukˆ. klawiatury:",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT
     },
     {
         8,
         16,
-        "         Zapisz:",
-        TEXT_STYLE_NORMAL
+        "Zapisz:",
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT
     },
     {
         25,
@@ -431,8 +430,8 @@ static MUI_ENTRY plPLDevicePageEntries[] =
     {
         0,
         0,
-        "   ENTER = Kontynuacja   F3 = Wyj˜cie",
-        TEXT_TYPE_STATUS
+        "ENTER = Kontynuacja   F3 = Wyj˜cie",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -495,8 +494,8 @@ static MUI_ENTRY plPLRepairPageEntries[] =
     {
         0,
         0,
-        "   ESC = Menu gˆ¢wne  ENTER = Restart",
-        TEXT_TYPE_STATUS
+        "ESC = Menu gˆ¢wne  ENTER = Restart",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -546,8 +545,8 @@ static MUI_ENTRY plPLComputerPageEntries[] =
     {
         0,
         0,
-        "   ENTER = Kontynuacja   ESC = Anulowanie   F3 = Wyj˜cie",
-        TEXT_TYPE_STATUS
+        "ENTER = Kontynuacja   ESC = Anulowanie   F3 = Wyj˜cie",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -586,8 +585,8 @@ static MUI_ENTRY plPLFlushPageEntries[] =
     {
         0,
         0,
-        "   Czyszczenie pami©ci Cache",
-        TEXT_TYPE_STATUS
+        "Czyszczenie pami©ci Cache",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -632,8 +631,8 @@ static MUI_ENTRY plPLQuitPageEntries[] =
     {
         0,
         0,
-        "   Prosz© czeka† ...",
-        TEXT_TYPE_STATUS,
+        "Prosz© czeka† ...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
     },
     {
         0,
@@ -683,8 +682,8 @@ static MUI_ENTRY plPLDisplayPageEntries[] =
     {
         0,
         0,
-        "   ENTER = Kontynuacja   ESC = Anulowanie   F3 = Wyj˜cie",
-        TEXT_TYPE_STATUS
+        "ENTER = Kontynuacja   ESC = Anulowanie   F3 = Wyj˜cie",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -729,8 +728,8 @@ static MUI_ENTRY plPLSuccessPageEntries[] =
     {
         0,
         0,
-        "   ENTER = Restart komputera",
-        TEXT_TYPE_STATUS
+        "ENTER = Restart komputera",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -775,8 +774,8 @@ static MUI_ENTRY plPLBootPageEntries[] =
     {
         0,
         0,
-        "   ENTER = Kontynuacja   F3 = Wyj˜cie",
-        TEXT_TYPE_STATUS
+        "ENTER = Kontynuacja   F3 = Wyj˜cie",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -834,8 +833,8 @@ static MUI_ENTRY plPLSelectPartitionEntries[] =
     {
         0,
         0,
-        "   Prosz© czeka†...",
-        TEXT_TYPE_STATUS
+        "Prosz© czeka†...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -868,8 +867,8 @@ static MUI_ENTRY plPLFormatPartitionEntries[] =
     {
         0,
         0,
-        "   ENTER = Kontynuacja   F3 = Wyj˜cie",
-        TEXT_TYPE_STATUS
+        "ENTER = Kontynuacja   F3 = Wyj˜cie",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -920,8 +919,8 @@ static MUI_ENTRY plPLInstallDirectoryEntries[] =
     {
         0,
         0,
-        "   ENTER = Kontynuacja   F3 = Wyj˜cie",
-        TEXT_TYPE_STATUS
+        "ENTER = Kontynuacja   F3 = Wyj˜cie",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -943,24 +942,24 @@ static MUI_ENTRY plPLFileCopyEntries[] =
         11,
         12,
         "Prosz© czeka†, Instalator ReactOS kopiuje pliki do wybranego",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
     },
     {
         30,
         13,
         "katalogu.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
     },
     {
         20,
         14,
         "To mo¾e zaj¥† kilka minut.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
     },
     {
+        50,
         0,
-        0,
-        "                                                           \xB3 Prosz© czeka†...    ",
+        "\xB3 Please wait...    ",
         TEXT_TYPE_STATUS
     },
     {
@@ -1006,8 +1005,8 @@ static MUI_ENTRY plPLBootLoaderEntries[] =
     {
         0,
         0,
-        "   ENTER = Kontynuacja   F3 = Wyj˜cie",
-        TEXT_TYPE_STATUS
+        "ENTER = Kontynuacja   F3 = Wyj˜cie",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -1058,8 +1057,8 @@ static MUI_ENTRY plPLKeyboardSettingsEntries[] =
     {
         0,
         0,
-        "   ENTER = Kontynuacja   ESC = Anulowanie   F3 = Wyj˜cie",
-        TEXT_TYPE_STATUS
+        "ENTER = Kontynuacja   ESC = Anulowanie   F3 = Wyj˜cie",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -1110,8 +1109,8 @@ static MUI_ENTRY plPLLayoutSettingsEntries[] =
     {
         0,
         0,
-        "   ENTER = Kontynuacja   ESC = Anulowanie   F3 = Wyj˜cie",
-        TEXT_TYPE_STATUS
+        "ENTER = Kontynuacja   ESC = Anulowanie   F3 = Wyj˜cie",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -1133,14 +1132,14 @@ static MUI_ENTRY plPLPrepareCopyEntries[] =
     {
         6,
         8,
-        "Instalator  tw¢j komputer do skopiowania plik¢w systemu. ",
+        "Instalator przygotuje tw¢j komputer do skopiowania plik¢w systemu. ",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "   Tworzenie listy plik¢w do skopiowania...",
-        TEXT_TYPE_STATUS
+        "Tworzenie listy plik¢w do skopiowania...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -1186,8 +1185,8 @@ static MUI_ENTRY plPLSelectFSEntries[] =
     {
         0,
         0,
-        "   ENTER = Kontynuacja   ESC = Anulowanie   F3 = Wyj˜cie",
-        TEXT_TYPE_STATUS
+        "ENTER = Kontynuacja   ESC = Anulowanie   F3 = Wyj˜cie",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
 
     {
@@ -1233,8 +1232,8 @@ static MUI_ENTRY plPLDeletePartitionEntries[] =
     {
         0,
         0,
-        "   D = Skasowanie partycji   ESC = Anulowanie   F3 = Wyj˜cie",
-        TEXT_TYPE_STATUS
+        "D = Skasowanie partycji   ESC = Anulowanie   F3 = Wyj˜cie",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -1261,8 +1260,8 @@ static MUI_ENTRY plPLRegistryEntries[] =
     {
         0,
         0,
-        "   Tworzenie gaˆ©zi rejestru...",
-        TEXT_TYPE_STATUS
+        "Tworzenie gaˆ©zi rejestru...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,

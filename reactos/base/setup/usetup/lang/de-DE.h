@@ -36,8 +36,8 @@ static MUI_ENTRY deDELanguagePageEntries[] =
     {
         0,
         0,
-        "   ENTER = Fortsetzen  F3 = Beenden",
-        TEXT_TYPE_STATUS
+        "ENTER = Fortsetzen  F3 = Beenden",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -112,8 +112,8 @@ static MUI_ENTRY deDEWelcomePageEntries[] =
     {
         0,
         0,
-        "   ENTER = Fortsetzen  R = Reparieren F3 = Beenden",
-        TEXT_TYPE_STATUS
+        "ENTER = Fortsetzen  R = Reparieren F3 = Beenden",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -125,12 +125,6 @@ static MUI_ENTRY deDEWelcomePageEntries[] =
 
 static MUI_ENTRY deDEIntroPageEntries[] =
 {
-    {
-        4,
-        3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
-        TEXT_STYLE_UNDERLINE
-    },
     {
         4,
         3,
@@ -212,8 +206,8 @@ static MUI_ENTRY deDEIntroPageEntries[] =
     {
         0,
         0,
-        "   ENTER = Fortsetzen   F3 = Beenden",
-        TEXT_TYPE_STATUS
+        "ENTER = Fortsetzen   F3 = Beenden",
+        TEXT_TYPE_STATUS| TEXT_PADDING_BIG
     },
     {
         0,
@@ -336,8 +330,8 @@ static MUI_ENTRY deDELicensePageEntries[] =
     {
         0,
         0,
-        "   ENTER = ZurÅck",
-        TEXT_TYPE_STATUS
+        "ENTER = ZurÅck",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -362,34 +356,34 @@ static MUI_ENTRY deDEDevicePageEntries[] =
         TEXT_STYLE_NORMAL
     },
     {
-        8,
+        24,
         11,
-        "       Computer:",
-        TEXT_STYLE_NORMAL
+        "Computer:",
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT
     },
     {
-        8,
+        24,
         12,
-        "     Bildschirm:",
-        TEXT_STYLE_NORMAL,
+        "Bildschirm:",
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT
     },
     {
-        8,
+        24,
         13,
-        "       Tastatur:",
-        TEXT_STYLE_NORMAL
+        "Tastatur:",
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT
     },
     {
-        8,
+        24,
         14,
         " Tastaturlayout:",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT
     },
     {
-        8,
+        24,
         16,
-        "    Akzeptieren:",
-        TEXT_STYLE_NORMAL
+        "Akzeptieren:",
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT
     },
     {
         25,
@@ -429,8 +423,8 @@ static MUI_ENTRY deDEDevicePageEntries[] =
     {
         0,
         0,
-        "   ENTER = Fortsetzen   F3 = Beenden",
-        TEXT_TYPE_STATUS
+        "ENTER = Fortsetzen   F3 = Beenden",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -493,8 +487,8 @@ static MUI_ENTRY deDERepairPageEntries[] =
     {
         0,
         0,
-        "   ESC = Hauptseite  ENTER = Neustarten",
-        TEXT_TYPE_STATUS
+        "ESC = Hauptseite  ENTER = Neustarten",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -544,8 +538,8 @@ static MUI_ENTRY deDEComputerPageEntries[] =
     {
         0,
         0,
-        "   ENTER = Fortsetzen   ESC = Abbrechen   F3 = Beenden",
-        TEXT_TYPE_STATUS
+        "ENTER = Fortsetzen   ESC = Abbrechen   F3 = Beenden",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -584,8 +578,8 @@ static MUI_ENTRY deDEFlushPageEntries[] =
     {
         0,
         0,
-        "   Cache wird geleert",
-        TEXT_TYPE_STATUS
+        "Cache wird geleert",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -630,8 +624,8 @@ static MUI_ENTRY deDEQuitPageEntries[] =
     {
         0,
         0,
-        "   Bitte warten ...",
-        TEXT_TYPE_STATUS,
+        "Bitte warten ...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -681,8 +675,8 @@ static MUI_ENTRY deDEDisplayPageEntries[] =
     {
         0,
         0,
-        "   ENTER = Fortsetzen   ESC = Abbrechen   F3 = Beenden",
-        TEXT_TYPE_STATUS
+        "ENTER = Fortsetzen   ESC = Abbrechen   F3 = Beenden",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -727,8 +721,8 @@ static MUI_ENTRY deDESuccessPageEntries[] =
     {
         0,
         0,
-        "   ENTER = Computer neustarten",
-        TEXT_TYPE_STATUS
+        "ENTER = Computer neustarten",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -773,8 +767,8 @@ static MUI_ENTRY deDEBootPageEntries[] =
     {
         0,
         0,
-        "   ENTER = Fortsetzen   F3 = Beenden",
-        TEXT_TYPE_STATUS
+        "ENTER = Fortsetzen   F3 = Beenden",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -832,8 +826,8 @@ static MUI_ENTRY deDESelectPartitionEntries[] =
     {
         0,
         0,
-        "   Bitte warten...",
-        TEXT_TYPE_STATUS
+        "Bitte warten...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -872,8 +866,8 @@ static MUI_ENTRY deDEFormatPartitionEntries[] =
     {
         0,
         0,
-        "   ENTER = Fortfahren   F3 = Beenden",
-        TEXT_TYPE_STATUS
+        "ENTER = Fortfahren   F3 = Beenden",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -918,8 +912,8 @@ static MUI_ENTRY deDEInstallDirectoryEntries[] =
     {
         0,
         0,
-        "   ENTER = Fortfahren   F3 = Beenden",
-        TEXT_TYPE_STATUS
+        "ENTER = Fortfahren   F3 = Beenden",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -938,27 +932,27 @@ static MUI_ENTRY deDEFileCopyEntries[] =
         TEXT_STYLE_UNDERLINE
     },
     {
-        11,
+        0,
         12,
         "Bitte warten Sie wÑhrend ReactOS Setup die ReactOS Dateien",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
     },
     {
-        11,
+        0,
         13,
         "in das Installationsverzeichnis kopiert.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
     },
     {
-        11,
+        0,
         14,
         "Dieser Vorgang kann mehrere Minuten in Anspruch nehmen.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
     },
     {
+        50,
         0,
-        0,
-        "                                                           \xB3 Bitte warten...    ",
+        "\xB3 Bitte warten...    ",
         TEXT_TYPE_STATUS
     },
     {
@@ -1004,8 +998,8 @@ static MUI_ENTRY deDEBootLoaderEntries[] =
     {
         0,
         0,
-        "   ENTER = Fortfahren   F3 = Abbrechen",
-        TEXT_TYPE_STATUS
+        "ENTER = Fortfahren   F3 = Abbrechen",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -1056,8 +1050,8 @@ static MUI_ENTRY deDEKeyboardSettingsEntries[] =
     {
         0,
         0,
-        "   ENTER = Fortfahren   ESC = Abbrechen   F3 = Beenden",
-        TEXT_TYPE_STATUS
+        "ENTER = Fortfahren   ESC = Abbrechen   F3 = Beenden",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -1108,8 +1102,8 @@ static MUI_ENTRY deDELayoutSettingsEntries[] =
     {
         0,
         0,
-        "   ENTER = Fortfahren   ESC = Abbrechen   F3 = Beenden",
-        TEXT_TYPE_STATUS
+        "ENTER = Fortfahren   ESC = Abbrechen   F3 = Beenden",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -1137,8 +1131,8 @@ static MUI_ENTRY deDEPrepareCopyEntries[] =
     {
         0,
         0,
-        "   Erstelle Liste der zu kopierenden Dateien...",
-        TEXT_TYPE_STATUS
+        "Erstelle Liste der zu kopierenden Dateien...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -1184,8 +1178,8 @@ static MUI_ENTRY deDESelectFSEntries[] =
     {
         0,
         0,
-        "   ENTER = Fortfahren   ESC = Abbrechen   F3 = Beenden",
-        TEXT_TYPE_STATUS
+        "ENTER = Fortfahren   ESC = Abbrechen   F3 = Beenden",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
 
     {
@@ -1231,8 +1225,8 @@ static MUI_ENTRY deDEDeletePartitionEntries[] =
     {
         0,
         0,
-        "   D = Lîsche Partition   ESC = Abbrechen   F3 = Beenden",
-        TEXT_TYPE_STATUS
+        "D = Lîsche Partition   ESC = Abbrechen   F3 = Beenden",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -1259,8 +1253,8 @@ static MUI_ENTRY deDERegistryEntries[] =
     {
         0,
         0,
-        "   Registry Hives erstellen...",
-        TEXT_TYPE_STATUS
+        "Registry Hives erstellen...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
