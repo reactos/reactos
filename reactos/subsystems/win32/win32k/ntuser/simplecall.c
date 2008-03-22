@@ -823,21 +823,68 @@ CLEANUP:
 HWND
 STDCALL
 NtUserCallHwndOpt(
-   HWND Param,
+   HWND hWnd,
    DWORD Routine)
 {
    switch (Routine)
    {
       case HWNDOPT_ROUTINE_SETPROGMANWINDOW:
-         GetW32ThreadInfo()->Desktop->hProgmanWindow = Param;
+         GetW32ThreadInfo()->Desktop->hProgmanWindow = hWnd;
          break;
 
       case HWNDOPT_ROUTINE_SETTASKMANWINDOW:
-         GetW32ThreadInfo()->Desktop->hTaskManWindow = Param;
+         GetW32ThreadInfo()->Desktop->hTaskManWindow = hWnd;
          break;
    }
 
-   return Param;
+   return hWnd;
+}
+
+DWORD
+STDCALL
+NtUserCallHwnd(
+   HWND hWnd,
+   DWORD Routine)
+{
+   switch (Routine)
+   {
+      case HWND_ROUTINE_REGISTERSHELLHOOKWINDOW:
+         if (IntIsWindow(hWnd))
+            return IntRegisterShellHookWindow(hWnd);
+         return FALSE;
+         break;
+      case HWND_ROUTINE_DEREGISTERSHELLHOOKWINDOW:
+         if (IntIsWindow(hWnd))
+            return IntDeRegisterShellHookWindow(hWnd);
+         return FALSE;
+   }
+   UNIMPLEMENTED;
+
+   return 0;
+}
+
+DWORD
+STDCALL
+NtUserCallHwndParam(
+   HWND hWnd,
+   DWORD Param,
+   DWORD Routine)
+{
+   UNIMPLEMENTED;
+
+   return 0;
+}
+
+DWORD
+STDCALL
+NtUserCallHwndParamLock(
+   HWND hWnd,
+   DWORD Param,
+   DWORD Routine)
+{
+   UNIMPLEMENTED;
+
+   return 0;
 }
 
 /* EOF */

@@ -197,7 +197,7 @@ BOOL
 STDCALL
 DeregisterShellHookWindow(HWND hWnd)
 {
-  return NtUserCallHwnd(HWND_ROUTINE_DEREGISTERSHELLHOOKWINDOW, (DWORD)hWnd);
+  return NtUserCallHwnd(hWnd, HWND_ROUTINE_DEREGISTERSHELLHOOKWINDOW);
 }
 
 /*
@@ -207,7 +207,7 @@ BOOL
 STDCALL
 RegisterShellHookWindow(HWND hWnd)
 {
-  return NtUserCallHwnd(HWND_ROUTINE_REGISTERSHELLHOOKWINDOW, (DWORD)hWnd);
+  return NtUserCallHwnd(hWnd, HWND_ROUTINE_REGISTERSHELLHOOKWINDOW);
 }
 
 /*
