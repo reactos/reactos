@@ -462,7 +462,7 @@ NdisConvertStringToAtmAddress(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 VOID
 EXPORT
@@ -477,7 +477,7 @@ NdisGetCurrentProcessorCounts(
  *    NDIS 5.0
  */
 {
-    UNIMPLEMENTED
+    ExGetCurrentProcessorCounts( (PULONG) pIdleCount, (PULONG) pKernelAndUser, (PULONG) pIndex); 
 }
 
 

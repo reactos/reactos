@@ -507,6 +507,14 @@ typedef struct _NDIS40_MINIPORT_CHARACTERISTICS {
    KeReleaseSpinLock(_Lock, OldIrql); \
  }
 
+/* missing protypes */
+VOID
+NTAPI
+ExGetCurrentProcessorCounts(
+  PULONG ThreadKernelTime,
+   PULONG TotalCpuTime,
+   PULONG ProcessorNumber);
+
 #endif /* __NDISSYS_H */
 
 /* EOF */
