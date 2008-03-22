@@ -384,14 +384,14 @@ NdisSetProtocolFilter(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 CCHAR
 EXPORT
 NdisSystemProcessorCount(
     VOID)
 {
-	return (CCHAR)1;
+	return (CCHAR)KeNumberProcessors;
 }
 
 
