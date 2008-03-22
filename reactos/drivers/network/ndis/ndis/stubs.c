@@ -522,7 +522,7 @@ NdisGetReceivedPacket(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 VOID
 EXPORT
@@ -534,8 +534,9 @@ NdisGetSystemUptime(
  * NOTES:
  *    NDIS 5.0
  */
-{
-    UNIMPLEMENTED
+{           
+    /* Get the uptime of the system in msec */
+     *pSystemUpTime = ( (SharedUserData->TickCountLowDeprecated *  SharedUserData->TickCountMultiplier) / 0x1000000); 
 }
 
 
