@@ -4152,6 +4152,16 @@ typedef struct _NDIS_MINIPORT_WORK_ITEM {
 	PVOID  WorkItemContext;
 } NDIS_MINIPORT_WORK_ITEM, *PNDIS_MINIPORT_WORK_ITEM;
 
+#pragma warning(push)
+typedef VOID    (*NDIS_PROC)(struct _NDIS_WORK_ITEM *, PVOID);
+#pragma warning(pop)
+typedef struct _NDIS_WORK_ITEM
+{
+    PVOID Context;
+    NDIS_PROC Routine;
+    UCHAR WrapperReserved[8*sizeof(PVOID)];
+} NDIS_WORK_ITEM, *PNDIS_WORK_ITEM;
+
 
 typedef struct _NDIS_BIND_PATHS {
 	UINT  Number;
@@ -5381,6 +5391,12 @@ NdisRegisterProtocol(
   OUT PNDIS_HANDLE  NdisProtocolHandle,
   IN PNDIS_PROTOCOL_CHARACTERISTICS  ProtocolCharacteristics,
   IN UINT  CharacteristicsLength);
+
+NDISAPI
+NDIS_STATUS
+DDKAPI
+NdisScheduleWorkItem(
+  IN  PNDIS_WORK_ITEM WorkItem);
 
 /* Obsoleted in Windows XP */
 
