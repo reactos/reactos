@@ -3,12 +3,23 @@ Test_CreateCompatibleDC(PTESTINFO pti)
 {
 	HDC hDCScreen, hOldDC, hDC, hDC2;
 
-	// Create a DC
+	/* Get screen DC */
 	hDCScreen = GetDC(NULL);
-	if (hDCScreen == NULL)
-	{
-		return FALSE;
-	}
+	ASSERT(hDCScreen != NULL);
+
+	/* Test NULL DC handle */
+	SetLastError(ERROR_SUCCESS);
+	hDC = CreateCompatibleDC(NULL);
+	TEST(hDC != NULL);
+	TEST(GetLastError() == ERROR_SUCCESS);
+	if(hDC) DeleteDC(hDC);
+
+	/* Test invalid DC handle */
+	SetLastError(ERROR_SUCCESS);
+	hDC = CreateCompatibleDC((HDC)0x123456);
+	TEST(hDC == NULL);
+	TEST(GetLastError() == ERROR_SUCCESS);
+	if(hDC) DeleteDC(hDC);
 
 	hDC = CreateCompatibleDC(hDCScreen);
 	RTEST(hDC != NULL);

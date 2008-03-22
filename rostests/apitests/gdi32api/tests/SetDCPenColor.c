@@ -4,7 +4,9 @@ Test_SetDCPenColor(PTESTINFO pti)
 	HDC hScreenDC, hDC;
 
 	// Test an incorrect DC
+	SetLastError(ERROR_SUCCESS);
 	RTEST(SetDCPenColor(0, RGB(0,0,0)) == CLR_INVALID);
+	TEST(GetLastError() == ERROR_INVALID_PARAMETER);
 
 	// Get the Screen DC
 	hScreenDC = GetDC(NULL);

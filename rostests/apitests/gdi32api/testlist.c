@@ -18,7 +18,7 @@
 #include "tests/SelectObject.c"
 #include "tests/SetDCPenColor.c"
 #include "tests/SetSysColors.c"
-//#include "tests/SetWorldTransform.c"
+#include "tests/SetWorldTransform.c"
 
 /* The List of tests */
 TESTENTRY TestList[] =
@@ -37,7 +37,7 @@ TESTENTRY TestList[] =
 	{ L"SetSysColors", Test_SetSysColors },
 	{ L"SelectObject", Test_SelectObject },
 	{ L"SetDCPenColor", Test_SetDCPenColor },
-//	{ L"SetWorldTransform", Test_SetWorldTransform },
+	{ L"SetWorldTransform", Test_SetWorldTransform },
 };
 
 /* The function that gives us the number of tests */

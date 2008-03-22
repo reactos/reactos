@@ -2,7 +2,7 @@ INT
 Test_SelectObject(PTESTINFO pti)
 {
 	HGDIOBJ hOldObj, hNewObj;
-	HDC hScreenDC, hDC;
+	HDC hScreenDC, hDC, hDC2;
 	PGDI_TABLE_ENTRY pEntry;
 	PDC_ATTR pDc_Attr;
 	HANDLE hcmXform;
@@ -34,6 +34,16 @@ Test_SelectObject(PTESTINFO pti)
 	TEST(hOldObj == GetStockObject(WHITE_BRUSH));
 	TEST(pDc_Attr->hbrush == hNewObj);
 	SelectObject(hDC, hOldObj);
+
+	/* Test wrong hDC handle type */
+	SetLastError(ERROR_SUCCESS);
+	hNewObj = GetStockObject(GRAY_BRUSH);
+	hDC2 = (HDC)((UINT_PTR)hDC & ~GDI_HANDLE_TYPE_MASK);
+	hDC2 = (HDC)((UINT_PTR)hDC2 | GDI_OBJECT_TYPE_PEN);
+	hOldObj = SelectObject(hDC2, hNewObj);
+	TEST(GetLastError() == ERROR_INVALID_HANDLE);
+	TEST(hOldObj == NULL);
+	TEST(pDc_Attr->hbrush == GetStockObject(WHITE_BRUSH));
 
 	/* Test wrong hobj handle type */
 	SetLastError(ERROR_SUCCESS);
