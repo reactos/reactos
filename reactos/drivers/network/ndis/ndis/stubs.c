@@ -10,7 +10,6 @@
 
 #include "ndissys.h"
 
-
 /*
  * @unimplemented
  */
@@ -1036,5 +1035,28 @@ NdisIMInitializeDeviceInstanceEx(
 
     return NDIS_STATUS_FAILURE;
 }
+
+
+ 
+VOID
+STDCALL
+ndisProcWorkItemHandler(PVOID pContext)
+{
+    PNDIS_WORK_ITEM pNdisItem = (PNDIS_WORK_ITEM)pContext;
+    pNdisItem->Routine(pNdisItem, pNdisItem->Context);
+}
+
+EXPORT
+NDIS_STATUS
+NdisScheduleWorkItem(
+    IN PNDIS_WORK_ITEM  pWorkItem)
+{
+    PWORK_QUEUE_ITEM pntWorkItem = (PWORK_QUEUE_ITEM)pWorkItem->WrapperReserved;
+    ExInitializeWorkItem(pntWorkItem, ndisProcWorkItemHandler, pWorkItem);
+    ExQueueWorkItem(pntWorkItem, CriticalWorkQueue);
+    return NDIS_STATUS_SUCCESS;
+}
+
+
 
 /* EOF */

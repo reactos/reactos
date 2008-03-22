@@ -2285,7 +2285,7 @@ NdisDestroyLookaheadBufferFromSharedMemory(
 
 #endif
 
-#if defined(_M_IX86) || defined(_M_AMD64) || defined(_M_ARM)
+#if defined(_M_IX86) || defined(_M_AMD64) || defined(_M_ARM) || defined(_M_PPC)
 
 /*
  * VOID
@@ -2309,17 +2309,17 @@ NdisDestroyLookaheadBufferFromSharedMemory(
 #else
 
 #define NdisMoveMappedMemory(Destination, Source, Length) \
-{
-  PUCHAR _Dest = Destination, _Src = Source, _End = _Dest + Length;
-  while (_Dest < _End)
-    *_Dest++ = _Src++;
+{ \
+  PUCHAR _Dest = Destination, _Src = Source, _End = _Dest + Length; \
+  while (_Dest < _End) \
+    *_Dest++ = _Src++; \
 }
 
 #define NdisZeroMappedMemory(Destination, Length) \
-{
-  PUCHAR _Dest = Destination, _End = _Dest + Length;
-  while (_Dest < _End)
-    *_Dest++ = 0;
+{ \
+  PUCHAR _Dest = Destination, _End = _Dest + Length; \
+  while (_Dest < _End) \
+    *_Dest++ = 0; \
 }
 
 #endif /* _M_IX86 or _M_AMD64 */
@@ -4152,6 +4152,8 @@ typedef struct _NDIS_MINIPORT_WORK_ITEM {
 	PVOID  WorkItemContext;
 } NDIS_MINIPORT_WORK_ITEM, *PNDIS_MINIPORT_WORK_ITEM;
 
+/* Forward declare to pick up a consistent type */
+typedef struct _NDIS_WORK_ITEM;
 #pragma warning(push)
 typedef VOID    (*NDIS_PROC)(struct _NDIS_WORK_ITEM *, PVOID);
 #pragma warning(pop)
@@ -4161,7 +4163,6 @@ typedef struct _NDIS_WORK_ITEM
     NDIS_PROC Routine;
     UCHAR WrapperReserved[8*sizeof(PVOID)];
 } NDIS_WORK_ITEM, *PNDIS_WORK_ITEM;
-
 
 typedef struct _NDIS_BIND_PATHS {
 	UINT  Number;

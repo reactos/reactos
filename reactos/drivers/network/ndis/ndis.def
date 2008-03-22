@@ -269,5 +269,6 @@ NdisWritePciSlotInformation@20
 NdisWritePcmciaAttributeMemory@16
 TrFilterDprIndicateReceive@28
 TrFilterDprIndicateReceiveComplete@4
+NdisScheduleWorkItem@4
 
 ; EOF
