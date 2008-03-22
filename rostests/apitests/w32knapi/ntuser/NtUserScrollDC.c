@@ -74,7 +74,6 @@ Test_NtUserScrollDC(PTESTINFO pti)
 	Result = NtUserScrollDC((HDC)0x123456, 10, 20, &rcScroll, &rcClip, hRgn, &rcUpdate);
 	RTEST(Result == 0);
 	RTEST(GetLastError() == ERROR_SUCCESS);
-	printf("%ld\n", GetLastError());
 
 	/* Test invalid update rect */
 	SetLastError(ERROR_SUCCESS);

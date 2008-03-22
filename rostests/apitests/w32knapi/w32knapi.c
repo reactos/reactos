@@ -74,6 +74,9 @@ WinMain(HINSTANCE hInstance,
 	/* Convert to gui thread */
 	// IsGUIThread(TRUE); <- does not exists on win2k
 
+	InitOsVersion();
+	printf("g_OsIdx = %d\n", g_OsIdx);
+
 	g_hModule = LoadLibraryW(L"w32kdll.dll");
 	if (!g_hModule)
 	{

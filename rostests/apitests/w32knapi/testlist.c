@@ -24,10 +24,19 @@
 //#include "ntgdi/NtGdiSTROBJ_vEnumStart.c"
 #include "ntgdi/NtGdiGetDIBits.c"
 
+#include "ntuser/NtUserCallHwnd.c"
+#include "ntuser/NtUserCallHwndLock.c"
+#include "ntuser/NtUserCallHwndOpt.c"
+#include "ntuser/NtUserCallHwndParam.c"
+#include "ntuser/NtUserCallHwndParamLock.c"
+#include "ntuser/NtUserCallNoParam.c"
+#include "ntuser/NtUserCallOneParam.c"
 #include "ntuser/NtUserCountClipboardFormats.c"
+//#include "ntuser/NtUserCreateWindowEx.c"
 #include "ntuser/NtUserFindExistingCursorIcon.c"
 #include "ntuser/NtUserRedrawWindow.c"
 #include "ntuser/NtUserScrollDC.c"
+#include "ntuser/NtUserSystemParametersInfo.c"
 #include "ntuser/NtUserToUnicodeEx.c"
 
 /* The List of tests */
@@ -58,10 +67,19 @@ TESTENTRY TestList[] =
 	{ L"NtGdiGetDIBitsInternal", Test_NtGdiGetDIBitsInternal },
 
 	/* ntuser */
+	{ L"NtUserCallHwnd", Test_NtUserCallHwnd },
+	{ L"NtUserCallHwndLock", Test_NtUserCallHwndLock },
+	{ L"NtUserCallHwndOpt", Test_NtUserCallHwndOpt },
+	{ L"NtUserCallHwndParam", Test_NtUserCallHwndParam },
+	{ L"NtUserCallHwndParamLock", Test_NtUserCallHwndParamLock },
+	{ L"NtUserCallNoParam", Test_NtUserCallNoParam },
+	{ L"NtUserCallOneParam", Test_NtUserCallOneParam },
 	{ L"NtUserCountClipboardFormats", Test_NtUserCountClipboardFormats },
+//	{ L"NtUserCreateWindowEx", Test_NtUserCreateWindowEx },
 	{ L"NtUserFindExistingCursorIcon", Test_NtUserFindExistingCursoricon },
 	{ L"NtUserRedrawWindow", Test_NtUserRedrawWindow },
 	{ L"NtUserScrollDC", Test_NtUserScrollDC },
+	{ L"NtUserSystemParametersInfo", Test_NtUserSystemParametersInfo },
 	{ L"NtUserToUnicodeEx", Test_NtUserToUnicodeEx }
 };
 
