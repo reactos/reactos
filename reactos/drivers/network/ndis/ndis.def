@@ -100,7 +100,7 @@ NdisGetCurrentSystemTime@4
 NdisGetDriverHandle@8
 NdisGetFirstBufferFromPacket@20
 NdisGetReceivedPacket@8
-NdisGetSystemUptime@4
+NdisGetSystemUpTime@4
 NdisIMAssociateMiniport@8
 NdisIMCancelInitializeDeviceInstance@8
 NdisIMCopySendCompletePerPacketInfo@8

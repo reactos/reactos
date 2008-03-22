@@ -526,7 +526,7 @@ NdisGetReceivedPacket(
  */
 VOID
 EXPORT
-NdisGetSystemUptime(
+NdisGetSystemUpTime(
     OUT PULONG  pSystemUpTime)
 /*
  * FUNCTION:

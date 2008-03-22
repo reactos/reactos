@@ -3192,7 +3192,7 @@ NdisGetReceivedPacket(
 NDISAPI
 VOID
 DDKAPI
-NdisGetSystemUptime(
+NdisGetSystemUpTime(
   OUT PULONG  pSystemUpTime);
 
 NDISAPI
