@@ -298,11 +298,13 @@ IntCreateBitmap(IN SIZEL Size,
     if (Format == 0)
         return 0;
 
-    NewBitmap = BITMAPOBJ_AllocBitmapDepricated();
-    if (NewBitmap == NULL)
+    BitmapObj = BITMAPOBJ_AllocBitmapWithHandle();
+    if (BitmapObj == NULL)
+    {
         return 0;
+    }
+    NewBitmap = BitmapObj->BaseObject.hHmgr;
 
-    BitmapObj = BITMAPOBJ_LockBitmap(NewBitmap);
     if (! BITMAPOBJ_InitBitsLock(BitmapObj))
     {
         BITMAPOBJ_UnlockBitmap(BitmapObj);

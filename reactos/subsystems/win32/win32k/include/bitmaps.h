@@ -34,8 +34,12 @@ typedef struct _BITMAPOBJ
 
 /* NOTE: Use shared locks! */
 #define  BITMAPOBJ_LockBitmap(hBMObj) \
+  ((PBITMAPOBJ) GDIOBJ_LockObj ((HGDIOBJ) hBMObj, GDI_OBJECT_TYPE_BITMAP))
+#define  BITMAPOBJ_ShareLockBitmap(hBMObj) \
   ((PBITMAPOBJ) GDIOBJ_ShareLockObj ((HGDIOBJ) hBMObj, GDI_OBJECT_TYPE_BITMAP))
 #define  BITMAPOBJ_UnlockBitmap(pBMObj)  \
+  GDIOBJ_UnlockObjByPtr ((POBJ)pBMObj)
+#define  BITMAPOBJ_ShareUnlockBitmap(pBMObj)  \
   GDIOBJ_ShareUnlockObjByPtr ((POBJ)pBMObj)
 
 BOOL INTERNAL_CALL BITMAP_Cleanup(PVOID ObjectBody);
