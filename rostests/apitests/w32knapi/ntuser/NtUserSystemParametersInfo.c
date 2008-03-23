@@ -269,7 +269,7 @@ void
 Test_NtUserSystemParametersInfo_fWinIni(PTESTINFO pti)
 {
 	ACCESSTIMEOUT ato;
-	UINT uFocusBorderHeight;
+//	UINT uFocusBorderHeight;
 	WCHAR Buffer[6];
 	DWORD cbSize;
 
@@ -279,8 +279,8 @@ Test_NtUserSystemParametersInfo_fWinIni(PTESTINFO pti)
 	NtUserSystemParametersInfo(SPI_SETACCESSTIMEOUT, 0, &ato, 0);
 	ato.iTimeOutMSec--;
 
-	NtUserSystemParametersInfo(SPI_GETFOCUSBORDERHEIGHT, 0, &uFocusBorderHeight, 0);
-	NtUserSystemParametersInfo(SPI_SETFOCUSBORDERHEIGHT, 0, &uFocusBorderHeight, SPIF_UPDATEINIFILE);
+//	NtUserSystemParametersInfo(SPI_GETFOCUSBORDERHEIGHT, 0, &uFocusBorderHeight, 0);
+//	NtUserSystemParametersInfo(SPI_SETFOCUSBORDERHEIGHT, 0, &uFocusBorderHeight, SPIF_UPDATEINIFILE);
 
 	NtUserSystemParametersInfo(SPI_SETACCESSTIMEOUT, 0, &ato, 0);
 
