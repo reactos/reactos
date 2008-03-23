@@ -1,7 +1,7 @@
 /*
  * Copyright 1998 Juergen Schmied
  * Copyright 2003,2004 José Manuel Ferrer Ortiz
- * Actualizado Javier Remacha 2007/12/26
+ * Actualizado Javier Remacha 2008
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -645,7 +645,7 @@ BEGIN
 	FCIDM_SHVIEW_NEWFOLDER 	    "Nueva &carpeta"
 	FCIDM_SHVIEW_NEWLINK 	    "Nuevo &acceso directo"
 	IDS_FOLDER_OPTIONS          "Opciones de carpetas"
-	IDS_RECYCLEBIN_LOCATION     "Recycle Bin Location"
-	IDS_RECYCLEBIN_DISKSPACE    "Space Available"
+	IDS_RECYCLEBIN_LOCATION     "Ubicación de la Papelera de reciclaje"
+	IDS_RECYCLEBIN_DISKSPACE    "Espacio disponible"
 
 END
