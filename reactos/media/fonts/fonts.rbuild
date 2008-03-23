@@ -1,11 +1,12 @@
 <?xml version="1.0"?>
 <!DOCTYPE group SYSTEM "../../tools/rbuild/project.dtd">
 <group>
-	<installfile installbase="media/fonts">DejaVuSans-Bold.ttf </installfile>
 	<installfile installbase="media/fonts">DejaVuSans.ttf</installfile>
+	<installfile installbase="media/fonts">DejaVuSans-Bold.ttf </installfile>
 	<installfile installbase="media/fonts">DejaVuSans-BoldOblique.ttf</installfile>
 	<installfile installbase="media/fonts">DejaVuSansCondensed.ttf</installfile>
 	<installfile installbase="media/fonts">DejaVuSansCondensed-Bold.ttf</installfile>
+	<installfile installbase="media/fonts">DejaVuSansCondensed-BoldOblique.ttf</installfile>
 	<installfile installbase="media/fonts">DejaVuSansCondensed-Oblique.ttf</installfile>
 	<installfile installbase="media/fonts">DejaVuSans-ExtraLight.ttf</installfile>
 	<installfile installbase="media/fonts">DejaVuSansMono.ttf</installfile>
@@ -15,13 +16,10 @@
 	<installfile installbase="media/fonts">DejaVuSans-Oblique.ttf</installfile>
 	<installfile installbase="media/fonts">DejaVuSerif.ttf</installfile>
 	<installfile installbase="media/fonts">DejaVuSerif-Bold.ttf</installfile>
-	<installfile installbase="media/fonts">DejaVuSerif-BoldOblique.ttf</installfile>
+	<installfile installbase="media/fonts">DejaVuSerif-BoldItalic.ttf</installfile>
+	<installfile installbase="media/fonts">DejaVuSerif-Italic.ttf</installfile>
 	<installfile installbase="media/fonts">DejaVuSerifCondensed.ttf</installfile>
 	<installfile installbase="media/fonts">DejaVuSerifCondensed-Bold.ttf</installfile>
-	<installfile installbase="media/fonts">DejaVuSerifCondensed-BoldOblique.ttf</installfile>
-	<installfile installbase="media/fonts">DejaVuSerifCondensed-Oblique.ttf</installfile>
-	<installfile installbase="media/fonts">DejaVuSerif-Italic.ttf</installfile>
-	<installfile installbase="media/fonts">DejaVuSerif-BoldItalic.ttf</installfile>
 	<installfile installbase="media/fonts">DejaVuSerifCondensed-BoldItalic.ttf</installfile>
 	<installfile installbase="media/fonts">DejaVuSerifCondensed-Italic.ttf</installfile>
 	<installfile installbase="media/fonts">c0419bt_.ttf</installfile>
