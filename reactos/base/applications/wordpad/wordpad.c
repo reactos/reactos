@@ -350,7 +350,7 @@ static void update_font_list(void)
     fmt.cbSize = sizeof(fmt);
 
     SendMessageW(hEditorWnd, EM_GETCHARFORMAT, SCF_SELECTION, (LPARAM)&fmt);
-    SendMessageW(hFontListEdit, WM_GETTEXT, MAX_PATH, (LPARAM)fontName);
+    if (!SendMessageW(hFontListEdit, WM_GETTEXT, MAX_PATH, (LPARAM)fontName)) return;
 
     if(lstrcmpW(fontName, fmt.szFaceName))
     {
@@ -1212,7 +1212,7 @@ static void number_with_units(LPWSTR buffer, int number)
     MultiByteToWideChar(CP_ACP, 0, string, -1, buffer, MAX_STRING_LEN);
 }
 
-BOOL CALLBACK datetime_proc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+static INT_PTR CALLBACK datetime_proc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     switch(message)
     {
@@ -1263,7 +1263,7 @@ BOOL CALLBACK datetime_proc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
     return FALSE;
 }
 
-BOOL CALLBACK newfile_proc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+static INT_PTR CALLBACK newfile_proc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     switch(message)
     {
@@ -1844,7 +1844,7 @@ static LRESULT OnCommand( HWND hWnd, WPARAM wParam, LPARAM lParam)
         {
             HINSTANCE hInstance = (HINSTANCE)GetWindowLongPtr(hWnd, GWLP_HINSTANCE);
             int ret = DialogBox(hInstance, MAKEINTRESOURCE(IDD_NEWFILE), hWnd,
-                                (DLGPROC)newfile_proc);
+                                newfile_proc);
 
             if(ret != ID_NEWFILE_ABORT)
             {
@@ -2160,7 +2160,7 @@ static LRESULT OnCommand( HWND hWnd, WPARAM wParam, LPARAM lParam)
     case ID_DATETIME:
         {
         HINSTANCE hInstance = (HINSTANCE)GetWindowLongPtr(hWnd, GWLP_HINSTANCE);
-        DialogBoxW(hInstance, MAKEINTRESOURCEW(IDD_DATETIME), hWnd, (DLGPROC)datetime_proc);
+        DialogBoxW(hInstance, MAKEINTRESOURCEW(IDD_DATETIME), hWnd, datetime_proc);
         break;
         }
 
@@ -2269,7 +2269,6 @@ static LRESULT OnSize( HWND hWnd, WPARAM wParam, LPARAM lParam )
     HWND hwndReBar = GetDlgItem(hWnd, IDC_REBAR);
     HWND hRulerWnd = GetDlgItem(hWnd, IDC_RULER);
     int rebarHeight = 0;
-    int rebarRows = 2;
 
     if (hwndStatusBar)
     {
@@ -2285,13 +2284,7 @@ static LRESULT OnSize( HWND hWnd, WPARAM wParam, LPARAM lParam )
     }
     if (hwndReBar)
     {
-        if(!is_bar_visible(BANDID_TOOLBAR))
-            rebarRows--;
-
-        if(!is_bar_visible(BANDID_FORMATBAR))
-            rebarRows--;
-
-        rebarHeight = rebarRows ? SendMessageW(hwndReBar, RB_GETBARHEIGHT, 0, 0) : 0;
+        rebarHeight = SendMessageW(hwndReBar, RB_GETBARHEIGHT, 0, 0);
 
         MoveWindow(hwndReBar, 0, 0, LOWORD(lParam), rebarHeight, TRUE);
     }
