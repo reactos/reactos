@@ -50,6 +50,7 @@ extern "C" {
 
 #define MAX_QUEUE_STAT        8
 
+#define UNIATA_COMM_PORT_VENDOR_STR "UNIATA  " "Management Port " UNIATA_VER_STR
 
 #ifndef UNIATA_CORE
 
@@ -65,6 +66,11 @@ extern "C" {
 
 typedef struct _ADDREMOVEDEV {
     ULONG WaitForPhysicalLink; // us
+    ULONG Flags;
+
+#define UNIATA_REMOVE_FLAGS_HIDE   0x01
+#define UNIATA_ADD_FLAGS_UNHIDE    0x01
+
 } ADDREMOVEDEV, *PADDREMOVEDEV;
 
 typedef struct _SETTRANSFERMODE {
@@ -127,10 +133,48 @@ typedef struct _ADAPTERINFO {
     ULONG NumberChannels;
 
     BOOLEAN ChanInfoValid;
+    CHAR    Reserved[3];
+
+    ULONG   AdapterInterfaceType;
 
     CHANINFO Chan[AHCI_MAX_PORT];
 
 } ADAPTERINFO, *PADAPTERINFO;
+
+#ifdef USER_MODE
+
+typedef enum _INTERFACE_TYPE {
+    InterfaceTypeUndefined = -1,
+    Internal,
+    Isa,
+    Eisa,
+    MicroChannel,
+    TurboChannel,
+    PCIBus,
+    VMEBus,
+    NuBus,
+    PCMCIABus,
+    CBus,
+    MPIBus,
+    MPSABus,
+    ProcessorInternal,
+    InternalPowerBus,
+    PNPISABus,
+    MaximumInterfaceType
+} INTERFACE_TYPE, *PINTERFACE_TYPE;
+
+typedef struct _PCI_SLOT_NUMBER {
+    union {
+        struct {
+            ULONG   DeviceNumber:5;
+            ULONG   FunctionNumber:3;
+            ULONG   Reserved:24;
+        } bits;
+        ULONG   AsULONG;
+    } u;
+} PCI_SLOT_NUMBER, *PPCI_SLOT_NUMBER;
+
+#endif
 
 #ifndef ATA_FLAGS_DRDY_REQUIRED
 
@@ -179,22 +223,28 @@ typedef struct _IDEREGS_EX {
 #define UNIATA_SPTI_EX_LBA48             0x08
 #define UNIATA_SPTI_EX_SPEC_TO           0x10
 //#define UNIATA_SPTI_EX_FREEZE_TO         0x20 // do not reset device on timeout and keep interrupts disabled
+#define UNIATA_SPTI_EX_USE_DMA 	         0x20 // Force DMA transfer mode
 
         UCHAR    bFeaturesRegH;          // feature (high part for LBA48 mode)
         UCHAR    bSectorCountRegH;       // IDE sector count register (high part for LBA48 mode)
         UCHAR    bSectorNumberRegH;      // IDE sector number register (high part for LBA48 mode)
         UCHAR    bCylLowRegH;            // IDE low order cylinder value (high part for LBA48 mode)
         UCHAR    bCylHighRegH;           // IDE high order cylinder value (high part for LBA48 mode)
-        UCHAR    bReserved;              // 0
+        UCHAR    bReserved2;             // 0
 } IDEREGS_EX, *PIDEREGS_EX, *LPIDEREGS_EX;
 
 typedef struct _UNIATA_REG_IO {
     USHORT RegIDX;
-    UCHAR  RegSz:2;   // 0=1, 1=2, 2=4, 3=2+2 (for lba48)
+    UCHAR  RegSz:3;   // 0=1, 1=2, 2=4, 3=1+1 (for lba48) 4=2+2 (for lba48)
     UCHAR  InOut:1;   // 0=in, 1=out
-    UCHAR  Reserved:5;
+    UCHAR  Reserved:4;
     UCHAR  Reserved1;
-    ULONG  Data;
+    union {
+        ULONG  Data;
+        ULONG  d32;
+        USHORT d16[2];
+        USHORT d8[2];
+    };
 } UNIATA_REG_IO, *PUNIATA_REG_IO;
 
 typedef struct _UNIATA_REG_IO_HDR {

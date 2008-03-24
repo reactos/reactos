@@ -33,4 +33,33 @@ UniataSataEvent(
     IN ULONG Action
     );
 
+#define UniataIsSATARangeAvailable(deviceExtension, lChannel) \
+    ((deviceExtension->BaseIoAddressSATA_0.Addr || \
+      deviceExtension->BaseIoAHCI_0.Addr) && \
+        (deviceExtension->chan[lChannel].RegTranslation[IDX_SATA_SStatus].Addr))
+
+BOOLEAN
+UniataAhciInit(
+    IN PVOID HwDeviceExtension
+    );
+
+UCHAR
+UniataAhciStatus(
+    IN PVOID HwDeviceExtension,
+    IN ULONG lChannel
+    );
+
+ULONG
+UniataAhciSetupFIS(
+    IN PHW_DEVICE_EXTENSION deviceExtension,
+    IN ULONG DeviceNumber,
+    IN ULONG lChannel,
+   OUT PUCHAR fis,
+    IN UCHAR command,
+    IN ULONGLONG lba,
+    IN USHORT count,
+    IN USHORT feature,
+    IN ULONG flags
+    );
+
 #endif //__UNIATA_SATA__H__

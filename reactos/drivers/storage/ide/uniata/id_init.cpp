@@ -213,7 +213,7 @@ UniataChipDetect(
 
         case 0x06401095:        /* CMD 640 known bad, no DMA */
         case 0x06011039:
-            *simplexOnly = TRUE;
+            *simplexOnly = TRUE; 
 
             /* FALLTHROUGH */
 
@@ -244,7 +244,7 @@ UniataChipDetect(
     i = Ata_is_dev_listed(DevTypeInfo, VendorID, DeviceID, RevID, -1);
 for_ugly_chips:
     KdPrint2((PRINT_PREFIX "i: %#x\n", i));
-    if(i == 0xFFFFFFFF) {
+    if(i == BMLIST_TERMINATOR) {
         return FALSE;
     }
     deviceExtension->MaxTransferMode =  DevTypeInfo[i].MaxTransferMode;
@@ -556,7 +556,7 @@ for_ugly_chips:
                tmp32 == ATA_SIS5517) {
                 i = AtapiFindListedDev((BUSMASTER_CONTROLLER_INFORMATION*)&SiSSouthAdapters[0],
                      -1, HwDeviceExtension, SystemIoBusNumber, -1, NULL);
-                if(i != 0xFFFFFFFF) {
+                if(i != BMLIST_TERMINATOR) {
                     deviceExtension->HwFlags = (deviceExtension->HwFlags & ~CHIPTYPE_MASK) | SIS133OLD;
                     //deviceExtension->MaxTransferMode = ATA_UDMA6;
                     deviceExtension->MaxTransferMode = SiSSouthAdapters[i].MaxTransferMode;

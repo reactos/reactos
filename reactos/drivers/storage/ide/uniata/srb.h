@@ -423,39 +423,39 @@ typedef struct _SCSI_WMI_REQUEST_BLOCK {
 //
 
 typedef
-BOOLEAN DDKAPI
-(*PHW_INITIALIZE) (
+BOOLEAN
+(DDKAPI *PHW_INITIALIZE) (
     IN PVOID DeviceExtension
     );
 
 typedef
-BOOLEAN DDKAPI
-(*PHW_STARTIO) (
+BOOLEAN
+(DDKAPI *PHW_STARTIO) (
     IN PVOID DeviceExtension,
     IN PSCSI_REQUEST_BLOCK Srb
     );
 
 typedef
-BOOLEAN DDKAPI
-(*PHW_INTERRUPT) (
+BOOLEAN
+(DDKAPI *PHW_INTERRUPT) (
     IN PVOID DeviceExtension
     );
 
 typedef
-VOID DDKAPI
-(*PHW_TIMER) (
+VOID
+(DDKAPI *PHW_TIMER) (
     IN PVOID DeviceExtension
     );
 
 typedef
-VOID DDKAPI
-(*PHW_DMA_STARTED) (
+VOID
+(DDKAPI *PHW_DMA_STARTED) (
     IN PVOID DeviceExtension
     );
 
 typedef
-ULONG DDKAPI
-(*PHW_FIND_ADAPTER) (
+ULONG
+(DDKAPI *PHW_FIND_ADAPTER) (
     IN PVOID DeviceExtension,
     IN PVOID HwContext,
     IN PVOID BusInformation,
@@ -465,23 +465,23 @@ ULONG DDKAPI
     );
 
 typedef
-BOOLEAN DDKAPI
-(*PHW_RESET_BUS) (
+BOOLEAN
+(DDKAPI *PHW_RESET_BUS) (
     IN PVOID DeviceExtension,
     IN ULONG PathId
     );
 
 typedef
-BOOLEAN DDKAPI
-(*PHW_ADAPTER_STATE) (
+BOOLEAN
+(DDKAPI *PHW_ADAPTER_STATE) (
     IN PVOID DeviceExtension,
     IN PVOID Context,
     IN BOOLEAN SaveState
     );
 
 typedef
-SCSI_ADAPTER_CONTROL_STATUS DDKAPI
-(*PHW_ADAPTER_CONTROL) (
+SCSI_ADAPTER_CONTROL_STATUS
+(DDKAPI *PHW_ADAPTER_CONTROL) (
     IN PVOID DeviceExtension,
     IN SCSI_ADAPTER_CONTROL_TYPE ControlType,
     IN PVOID Parameters

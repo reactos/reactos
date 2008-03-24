@@ -86,19 +86,20 @@ ScsiDebugPrint(
 
 #define PRINT_PREFIX                0,
 
+#define KdPrint3(_x_) ScsiDebugPrint _x_    {;}
 #define KdPrint2(_x_) {ScsiDebugPrint("%x: ", PsGetCurrentThread()) ; ScsiDebugPrint _x_ ; }
-#define KdPrint(_x_) ScsiDebugPrint _x_
+#define KdPrint(_x_) ScsiDebugPrint _x_ {;}
 
 #else // SCSI_PORT_DBG_PRINT
 
-#ifndef USE_DBGPRINT_LOGGER
-ULONG
-_cdecl
-DbgPrint(
-    const CHAR * Format,
-    ...
-    );
-#endif // USE_DBGPRINT_LOGGER
+//#ifndef USE_DBGPRINT_LOGGER
+//ULONG
+//_cdecl
+//DbgPrint(
+//    PCH Format,
+//    ...
+//    );
+//#endif // USE_DBGPRINT_LOGGER
 
 #define PRINT_PREFIX
 
@@ -107,6 +108,7 @@ DbgPrint(
 //#define LOG_ON_RAISED_IRQL_W2K    TRUE
 //#define LOG_ON_RAISED_IRQL_W2K    FALSE
 
+#define KdPrint3(_x_) {if(LOG_ON_RAISED_IRQL_W2K || MajorVersion < 0x05 || KeGetCurrentIrql() <= 2){/*DbgPrint("%x: ", PsGetCurrentThread()) ;*/ DbgPrint _x_ ; if(g_LogToDisplay){ PrintNtConsole _x_ ;} }}
 #define KdPrint2(_x_) {if(LOG_ON_RAISED_IRQL_W2K || MajorVersion < 0x05 || KeGetCurrentIrql() <= 2){/*DbgPrint("%x: ", PsGetCurrentThread()) ;*/ DbgPrint _x_ ; if(g_LogToDisplay){ PrintNtConsole _x_ ;} }}
 #define KdPrint(_x_)  {if(LOG_ON_RAISED_IRQL_W2K || MajorVersion < 0x05 || KeGetCurrentIrql() <= 2){/*DbgPrint("%x: ", PsGetCurrentThread()) ;*/ DbgPrint _x_ ; if(g_LogToDisplay){ PrintNtConsole _x_ ;} }}
 /*
@@ -136,8 +138,12 @@ DbgPrint(
 
 #else // _DEBUG
 
-#define KdPrint2(_x_)
-#define KdPrint(_x_)
+#define PRINT_PREFIX "UniATA: "
+
+//#define KdPrint3(_x_) {if(LOG_ON_RAISED_IRQL_W2K || MajorVersion < 0x05 || KeGetCurrentIrql() <= 2){/*DbgPrint("%x: ", PsGetCurrentThread()) ;*/ DbgPrint _x_ ; if(g_LogToDisplay){ PrintNtConsole _x_ ;} }}
+#define KdPrint3(_x_)  {;}
+#define KdPrint2(_x_)  {;}
+#define KdPrint(_x_)   {;}
 #define Connect_DbgPrint()   {;}
 
 #define AtapiStallExecution(dt)  ScsiPortStallExecution(dt)
@@ -235,6 +241,9 @@ typedef struct _IDE_REGISTERS_2 {
 #define DFLAGS_RCACHE_ENABLED        0x1000    // Indicates that we use read cache
 #define DFLAGS_ORIG_GEOMETRY         0x2000    //
 #define DFLAGS_REINIT_DMA            0x4000    //
+#define DFLAGS_HIDDEN                0x8000    // Hidden device, available only with special IOCTLs
+                                               // via communication virtual device
+//#define DFLAGS_            0x10000    // 
 //
 // Used to disable 'advanced' features.
 //
@@ -287,6 +296,7 @@ typedef struct _MODE_PARAMETER_HEADER_10 {
 #define IDE_COMMAND_ATAPI_RESET      0x08
 #define IDE_COMMAND_RECALIBRATE      0x10
 #define IDE_COMMAND_READ             0x20
+#define IDE_COMMAND_READ_NO_RETR     0x21
 #define IDE_COMMAND_READ48           0x24
 #define IDE_COMMAND_READ_DMA48       0x25
 #define IDE_COMMAND_READ_DMA_Q48     0x26
@@ -296,6 +306,7 @@ typedef struct _MODE_PARAMETER_HEADER_10 {
 #define IDE_COMMAND_READ_STREAM48        0x2B
 #define IDE_COMMAND_READ_LOG48           0x2f
 #define IDE_COMMAND_WRITE                0x30
+#define IDE_COMMAND_WRITE_NO_RETR        0x31
 #define IDE_COMMAND_WRITE48              0x34
 #define IDE_COMMAND_WRITE_DMA48          0x35
 #define IDE_COMMAND_WRITE_DMA_Q48        0x36
@@ -849,8 +860,10 @@ NATIVE_MODE_CONTROLLER_INFORMATION const NativeModeAdapters[] = {
     AtapiWritePort1(chan, IDX_IO1_o_Command, _Command);
 
 
-#define SelectDrive(chan, unit) \
-    AtapiWritePort1(chan, IDX_IO1_o_DriveSelect, (unit) ? IDE_DRIVE_SELECT_2 : IDE_DRIVE_SELECT_1);
+#define SelectDrive(chan, unit) { \
+    if(chan && chan->lun[unit] && chan->lun[unit]->DeviceFlags & DFLAGS_ATAPI_CHANGER) KdPrint3(("  Select %d\n", unit)); \
+    AtapiWritePort1(chan, IDX_IO1_o_DriveSelect, (unit) ? IDE_DRIVE_SELECT_2 : IDE_DRIVE_SELECT_1); \
+}
 
 
 #define ReadBuffer(chan, Buffer, Count, timing) \
@@ -1054,10 +1067,12 @@ CheckDevice(
     IN BOOLEAN ResetBus
     );
 
+#define UNIATA_FIND_DEV_UNHIDE    0x01
+
 BOOLEAN
 FindDevices(
     IN PVOID HwDeviceExtension,
-    IN BOOLEAN AtapiOnly,
+    IN ULONG   Flags,
     IN ULONG   Channel
     );
 
@@ -1154,8 +1169,10 @@ AtapiDisableInterrupts(
     IN ULONG c
     );
 
-#define CHAN_NOT_SPECIFIED      (0xffffffffL)
-#define DEVNUM_NOT_SPECIFIED    (0xffffffffL)
+#define CHAN_NOT_SPECIFIED                  (0xffffffffL)
+#define CHAN_NOT_SPECIFIED_CHECK_CABLE      (0xfffffffeL)
+#define DEVNUM_NOT_SPECIFIED                (0xffffffffL)
+#define IOMODE_NOT_SPECIFIED                (0xffffffffL)
 
 extern ULONG
 AtapiRegCheckDevValue(

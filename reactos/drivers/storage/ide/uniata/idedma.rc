@@ -1,6 +1,6 @@
 #include "uniata_ver.h"
 
-#define VERSION                         0,38,2,0
+#define VERSION                         0,39,6,0
 #define VERSION_STR                     "0." UNIATA_VER_STR
 
 #define REACTOS_FILETYPE                VFT_DRV

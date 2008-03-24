@@ -78,7 +78,8 @@ Revision History:
 // define PIO timings in nanoseconds
 #define         PIO0_TIMING             600
 
-#define UniataGetPioTiming(LunExt)      ((LunExt->TransferMode <= ATA_PIO0) ? PIO0_TIMING : 0)
+//#define UniataGetPioTiming(LunExt)      ((LunExt->TransferMode <= ATA_PIO0) ? PIO0_TIMING : 0)
+#define UniataGetPioTiming(LunExt)      0 //ktp
 
 #ifndef __IDE_BUSMASTER_DEVICES_H__
 #define __IDE_BUSMASTER_DEVICES_H__
@@ -101,6 +102,7 @@ typedef struct _BUSMASTER_CONTROLLER_INFORMATION {
     CHAR    channel;
 //    CHAR    numOfChannes;
     CHAR    MasterDev;
+    BOOLEAN Known;
 #ifndef USER_MODE
     CHAR    ChanInitOk;             // 0x01 - primary,  0x02 - secondary
     BOOLEAN Isr2Enable;
@@ -197,6 +199,9 @@ typedef struct _BUSMASTER_CONTROLLER_INFORMATION {
 
 #define ATA_NATIONAL_ID		0x100b
 #define ATA_SC1100		0x0502100b
+
+#define ATA_NETCELL_ID          0x169c
+#define ATA_NETCELL_SR          0x0044169c
 
 #define ATA_NVIDIA_ID		0x10de
 #define ATA_NFORCE1		0x01bc10de
@@ -354,6 +359,7 @@ typedef struct _BUSMASTER_CONTROLLER_INFORMATION {
 #define UNIATA_NO_DPC           0x08000000
 #define UNIATA_NO_DPC_ATAPI     0x04000000
 #define UNIATA_AHCI             0x02000000
+#define UNIATA_NO80CHK          0x01000000
 
 #define ATPOLD		0x0100
 
@@ -440,11 +446,11 @@ typedef struct _BUSMASTER_CONTROLLER_INFORMATION {
 BUSMASTER_CONTROLLER_INFORMATION const BusMasterAdapters[] = {
 
     PCI_DEV_HW_SPEC_BM( 0005, 1191, 0x00, ATA_UDMA2, "Acard ATP850"     , ATPOLD | UNIATA_SIMPLEX_ONLY            ),
-    PCI_DEV_HW_SPEC_BM( 0006, 1191, 0x00, ATA_UDMA4, "Acard ATP860A"    , 0                                       ),
-    PCI_DEV_HW_SPEC_BM( 0007, 1191, 0x00, ATA_UDMA4, "Acard ATP860R"    , 0                                       ),
-    PCI_DEV_HW_SPEC_BM( 0008, 1191, 0x00, ATA_UDMA6, "Acard ATP865A"    , 0                                       ),
-    PCI_DEV_HW_SPEC_BM( 0009, 1191, 0x00, ATA_UDMA6, "Acard ATP865R"    , 0                                       ),
-
+    PCI_DEV_HW_SPEC_BM( 0006, 1191, 0x00, ATA_UDMA4, "Acard ATP860A"    , UNIATA_NO80CHK                          ),
+    PCI_DEV_HW_SPEC_BM( 0007, 1191, 0x00, ATA_UDMA4, "Acard ATP860R"    , UNIATA_NO80CHK                          ),
+    PCI_DEV_HW_SPEC_BM( 0008, 1191, 0x00, ATA_UDMA6, "Acard ATP865A"    , UNIATA_NO80CHK                          ),
+    PCI_DEV_HW_SPEC_BM( 0009, 1191, 0x00, ATA_UDMA6, "Acard ATP865R"    , UNIATA_NO80CHK                          ),
+                                          
     PCI_DEV_HW_SPEC_BM( 5289, 10b9, 0x00, ATA_SA150, "ALI M5289"        , UNIATA_SATA | UNIATA_NO_SLAVE           ),
     PCI_DEV_HW_SPEC_BM( 5288, 10b9, 0x00, ATA_SA300, "ALI M5288"        , UNIATA_SATA | UNIATA_NO_SLAVE           ),
     PCI_DEV_HW_SPEC_BM( 5287, 10b9, 0x00, ATA_SA150, "ALI M5287"        , UNIATA_SATA | UNIATA_NO_SLAVE           ),
@@ -455,10 +461,11 @@ BUSMASTER_CONTROLLER_INFORMATION const BusMasterAdapters[] = {
     PCI_DEV_HW_SPEC_BM( 5229, 10b9, 0x20, ATA_UDMA2, "ALI M5229 UDMA2"  , ALIOLD                                  ),
     PCI_DEV_HW_SPEC_BM( 5229, 10b9, 0x00, ATA_WDMA2, "ALI M5229 WDMA2"  , ALIOLD                                  ),
 
-    PCI_DEV_HW_SPEC_BM( 7409, 1022, 0x00, ATA_UDMA4, "AMD 756"          , AMDNVIDIA | 0x00                        ),
-    PCI_DEV_HW_SPEC_BM( 7411, 1022, 0x00, ATA_UDMA5, "AMD 766"          , AMDNVIDIA | AMDCABLE|AMDBUG             ),
-    PCI_DEV_HW_SPEC_BM( 7441, 1022, 0x00, ATA_UDMA5, "AMD 768"          , AMDNVIDIA | AMDCABLE                    ),
-    PCI_DEV_HW_SPEC_BM( 7469, 1022, 0x00, ATA_UDMA6, "AMD 8111"         , AMDNVIDIA | AMDCABLE                    ),
+    PCI_DEV_HW_SPEC_BM( 7401, 1022, 0x00, ATA_UDMA2, "AMD 755"          , AMDNVIDIA | 0x00                        ),
+    PCI_DEV_HW_SPEC_BM( 7409, 1022, 0x00, ATA_UDMA4, "AMD 756"          , AMDNVIDIA | UNIATA_NO80CHK              ),
+    PCI_DEV_HW_SPEC_BM( 7411, 1022, 0x00, ATA_UDMA5, "AMD 766"          , AMDNVIDIA | AMDBUG                      ),
+    PCI_DEV_HW_SPEC_BM( 7441, 1022, 0x00, ATA_UDMA5, "AMD 768"          , AMDNVIDIA                               ),
+    PCI_DEV_HW_SPEC_BM( 7469, 1022, 0x00, ATA_UDMA6, "AMD 8111"         , AMDNVIDIA                               ),
 
     PCI_DEV_HW_SPEC_BM( 4349, 1002, 0x00, ATA_UDMA5, "ATI IXP200"       , 0                                       ),
     PCI_DEV_HW_SPEC_BM( 4369, 1002, 0x00, ATA_UDMA6, "ATI IXP300"       , 0                                       ),
@@ -520,6 +527,10 @@ BUSMASTER_CONTROLLER_INFORMATION const BusMasterAdapters[] = {
     PCI_DEV_HW_SPEC_BM( 2825, 8086, 0x00, ATA_SA300, "Intel ICH8"       , UNIATA_SATA | UNIATA_AHCI               ),
     PCI_DEV_HW_SPEC_BM( 2829, 8086, 0x00, ATA_SA300, "Intel ICH8M"      , UNIATA_SATA | UNIATA_AHCI               ),
     PCI_DEV_HW_SPEC_BM( 282a, 8086, 0x00, ATA_SA300, "Intel ICH8M"      , UNIATA_SATA | UNIATA_AHCI               ),
+    PCI_DEV_HW_SPEC_BM( 2920, 8086, 0x00, ATA_SA300, "Intel ICH9"       , UNIATA_SATA | UNIATA_AHCI               ),
+    PCI_DEV_HW_SPEC_BM( 2926, 8086, 0x00, ATA_SA300, "Intel ICH9"       , UNIATA_SATA | UNIATA_AHCI               ),
+    PCI_DEV_HW_SPEC_BM( 2923, 8086, 0x00, ATA_SA300, "Intel ICH9"       , UNIATA_SATA | UNIATA_AHCI               ),
+    PCI_DEV_HW_SPEC_BM( 2922, 8086, 0x00, ATA_SA300, "Intel ICH9"       , UNIATA_SATA | UNIATA_AHCI               ),
 //    PCI_DEV_HW_SPEC_BM( 3200, 8086, 0x00, ATA_SA150, "Intel 31244"      , UNIATA_SATA                             ),
 
     PCI_DEV_HW_SPEC_BM( 01bc, 10de, 0x00, ATA_UDMA5, "nVidia nForce"    , AMDNVIDIA                               ),
@@ -689,6 +700,8 @@ BUSMASTER_CONTROLLER_INFORMATION const BusMasterAdapters[] = {
 
     PCI_DEV_HW_SPEC_BM( 8172, 1283, 0x00, ATA_UDMA2, "IT8172"           , 0                                       ),
     PCI_DEV_HW_SPEC_BM( 8212, 1283, 0x00, ATA_UDMA6, "IT8212F"          , ITE_133                                 ),
+
+    PCI_DEV_HW_SPEC_BM( 0044, 169c, 0x00, ATA_UDMA2, "Netcell SR3000/5000", 0                                     ),
 
     PCI_DEV_HW_SPEC_BM( 8013, 3388, 0x00, ATA_DMA,   "HiNT VXII EIDE"   , 0                                       ),
 

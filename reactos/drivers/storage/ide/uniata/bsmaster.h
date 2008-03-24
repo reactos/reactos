@@ -77,8 +77,6 @@ Revision History:
 #define PCI_ADDRESS_IOMASK              0xfffffff0
 
 #define ATA_BM_OFFSET1			0x08
-#define ATA_DMA_ENTRIES			256     /* PAGESIZE/2/sizeof(BM_DMA_ENTRY)*/
-#define ATA_DMA_EOT			0x80000000
 #define ATA_IOSIZE			0x08
 #define ATA_ALTOFFSET			0x206	/* alternate registers offset */
 #define ATA_PCCARD_ALTOFFSET		0x0e	/* do for PCCARD devices */
@@ -86,6 +84,9 @@ Revision History:
 #define ATA_BMIOSIZE			0x20
 #define ATA_PC98_BANKIOSIZE             0x01
 #define ATA_MAX_LBA28                   DEF_U64(0x0fffffff)
+
+#define ATA_DMA_ENTRIES			256     /* PAGESIZE/2/sizeof(BM_DMA_ENTRY)*/
+#define ATA_DMA_EOT			0x80000000
 
 #define DEV_BSIZE                       512
 
@@ -348,6 +349,34 @@ typedef struct _IDE_SATA_REGISTERS {
 
 #define IDX_MAX_REG                     (IDX_SATA_IO+IDX_SATA_IO_SZ)
 
+typedef union _AHCI_IS_REG {
+    struct {
+        ULONG DHRS:1;// Device to Host Register FIS Interrupt
+        ULONG PSS:1; // PIO Setup FIS Interrupt
+        ULONG DSS:1; // DMA Setup FIS Interrupt
+        ULONG SDBS:1;// Set Device Bits Interrupt
+        ULONG UFS:1; // Unknown FIS Interrupt
+        ULONG DPS:1; // Descriptor Processed
+        ULONG PCS:1; // Port Connect Change Status
+        ULONG DMPS:1;// Device Mechanical Presence Status
+
+        ULONG Reserved_8_21:14;
+        ULONG PRCS:1;// PhyRdy Change Status
+        ULONG IPMS:1;// Incorrect Port Multiplier Status
+
+        ULONG OFS:1; // Overflow Status
+        ULONG Reserved_25:1;
+        ULONG INFS:1;// Interface Non-fatal Error Status
+        ULONG IFS:1; // Interface Fatal Error Status
+        ULONG HBDS:1;// Host Bus Data Error Status
+        ULONG HBFS:1;// Host Bus Fatal Error Status
+        ULONG TFES:1;// Task File Error Status
+        ULONG CPDS:1;// Cold Port Detect Status
+    };
+    ULONG Reg;
+} AHCI_IS_REG, *PAHCI_IS_REG;
+
+
 typedef struct _IDE_AHCI_PORT_REGISTERS {
     union {
         struct {
@@ -366,31 +395,9 @@ typedef struct _IDE_AHCI_PORT_REGISTERS {
     };
 
     union {
-        ULONG Reg;            // interrupt status
-        struct {
-            ULONG DHRS:1;// Device to Host Register FIS Interrupt
-            ULONG PSS:1; // PIO Setup FIS Interrupt
-            ULONG DSS:1; // DMA Setup FIS Interrupt
-            ULONG SDBS:1;// Set Device Bits Interrupt
-            ULONG UFS:1; // Unknown FIS Interrupt
-            ULONG DPS:1; // Descriptor Processed
-            ULONG PCS:1; // Port Connect Change Status
-            ULONG DMPS:1;// Device Mechanical Presence Status
-
-            ULONG Reserved_8_21:14;
-            ULONG PRCS:1;// PhyRdy Change Status
-            ULONG IPMS:1;// Incorrect Port Multiplier Status
-
-            ULONG OFS:1; // Overflow Status
-            ULONG Reserved_25:1;
-            ULONG INFS:1;// Interface Non-fatal Error Status
-            ULONG IFS:1; // Interface Fatal Error Status
-            ULONG HBDS:1;// Host Bus Data Error Status
-            ULONG HBFS:1;// Host Bus Fatal Error Status
-            ULONG TFES:1;// Task File Error Status
-            ULONG CPDS:1;// Cold Port Detect Status
-        };
-    } IS;
+        ULONG       IS_Reg;            // interrupt status
+        AHCI_IS_REG IS;
+    };
 
     union {
         ULONG Reg;            // interrupt enable
@@ -513,13 +520,19 @@ typedef struct _IDE_AHCI_PORT_REGISTERS {
 
 } IDE_AHCI_PORT_REGISTERS, *PIDE_AHCI_PORT_REGISTERS;
 
+#define IDX_AHCI_P_IS                     (FIELD_OFFSET(IDE_AHCI_PORT_REGISTERS, IS))
+#define IDX_AHCI_P_CI                     (FIELD_OFFSET(IDE_AHCI_PORT_REGISTERS, CI))
+
 typedef struct _IDE_AHCI_PRD_ENTRY {
     union {
         ULONG base;
         ULONGLONG base64;
         struct {
             ULONG DBA;
-            ULONG DBAU;
+            union {
+                ULONG DBAU;
+                ULONG baseu;
+            };
         };
     };
     ULONG Reserved1;
@@ -529,6 +542,22 @@ typedef struct _IDE_AHCI_PRD_ENTRY {
     ULONG I:1;
 
 } IDE_AHCI_PRD_ENTRY, *PIDE_AHCI_PRD_ENTRY;
+
+#define ATA_AHCI_DMA_ENTRIES		(PAGE_SIZE/2/sizeof(IDE_AHCI_PRD_ENTRY))   /* 128 */
+
+typedef struct _IDE_AHCI_CMD {
+    UCHAR              cfis[64];
+    UCHAR              acmd[32];
+    UCHAR              Reserved[32];
+    IDE_AHCI_PRD_ENTRY prd_tab[ATA_AHCI_DMA_ENTRIES];
+} IDE_AHCI_CMD, *PIDE_AHCI_CMD;
+
+typedef struct _IDE_AHCI_CMD_LIST {
+    USHORT             cmd_flags;
+    USHORT             prd_length;     /* PRD entries */
+    ULONG              bytecount;
+    ULONGLONG          cmd_table_phys; /* 128byte aligned */
+} IDE_AHCI_CMD_LIST, *PIDE_AHCI_CMD_LIST;
 
 #define IsBusMaster(pciData) \
     ( ((pciData)->Command & (PCI_ENABLE_BUS_MASTER/* | PCI_ENABLE_IO_SPACE*/)) == \
@@ -545,31 +574,52 @@ typedef struct _IDE_AHCI_PRD_ENTRY {
 //#define INT_Q_SIZE 32
 #define MIN_REQ_TTL 4
 
-struct _ATA_REQ;
+union _ATA_REQ;
 
-typedef struct _ATA_REQ {
+typedef union _ATA_REQ {
 //    ULONG               reqId;          // serial
-    struct _ATA_REQ*    next_req;
-    struct _ATA_REQ*    prev_req;
+    struct {
 
-    PSCSI_REQUEST_BLOCK Srb;            // Current request on controller.
+        union {
 
-    PUSHORT             DataBuffer;     // Data buffer pointer.
-    ULONG               WordsLeft;      // Data words left.
-    ULONG               TransferLength; // Originally requested transfer length
-    LONGLONG            lba;
-    ULONG               bcount;
+            struct {
+                union _ATA_REQ*     next_req;
+                union _ATA_REQ*     prev_req;
 
-    UCHAR               retry;
-    UCHAR               ttl;
-//    UCHAR               tag;
-    UCHAR               Flags;
-    UCHAR               ReqState;
+                PSCSI_REQUEST_BLOCK Srb;            // Current request on controller.
 
-    PSCSI_REQUEST_BLOCK OriginalSrb;    // Mechanism Status Srb Data
+                PUSHORT             DataBuffer;     // Data buffer pointer.
+                ULONG               WordsLeft;      // Data words left.
+                ULONG               TransferLength; // Originally requested transfer length
+                LONGLONG            lba;
+                ULONG               WordsTransfered;// Data words already transfered.
+                ULONG               bcount;
 
-    ULONG               dma_base;
-    BM_DMA_ENTRY        dma_tab[ATA_DMA_ENTRIES];
+                UCHAR               retry;
+                UCHAR               ttl;
+            //    UCHAR               tag;
+                UCHAR               Flags;
+                UCHAR               ReqState;
+
+                PSCSI_REQUEST_BLOCK OriginalSrb;    // Mechanism Status Srb Data
+
+                ULONG               dma_entries;
+                union {
+                    ULONG           dma_base;
+                    ULONGLONG       ahci_base64;    // for AHCI
+                };
+            };
+            UCHAR padding_128b[128];
+        };
+        struct {
+            union {
+                BM_DMA_ENTRY    dma_tab[ATA_DMA_ENTRIES];
+                IDE_AHCI_CMD    ahci_cmd;       // for AHCI
+            };
+        };
+    };
+
+    UCHAR padding_4kb[PAGE_SIZE];
 
 } ATA_REQ, *PATA_REQ;
 
@@ -588,6 +638,7 @@ typedef struct _ATA_REQ {
 #define REQ_STATE_QUEUED                0x10
 
 #define REQ_STATE_PREPARE_TO_TRANSFER   0x20
+#define REQ_STATE_PREPARE_TO_NEXT       0x21
 #define REQ_STATE_READY_TO_TRANSFER     0x30
 
 #define REQ_STATE_EXPECTING_INTR        0x40
@@ -724,7 +775,14 @@ typedef struct _HW_CHANNEL {
     PVOID   DB_IO;
     ULONG   DB_IO_PhAddr;
 
-    PUCHAR              DmaBuffer;
+    PUCHAR  DmaBuffer;
+
+    // 
+    PIDE_AHCI_CMD_LIST       AHCI_CL;
+    ULONGLONG                AHCI_CL_PhAddr;
+    PVOID                    AHCI_FIS;  // is not actually used by UniATA now, but is required by AHCI controller
+    ULONGLONG                AHCI_FIS_PhAddr;
+    // Note: in contrast to FBSD, we keep PRD and CMD item in AtaReq structure 
 
 #ifdef QUEUE_STATISTICS
     LONGLONG QueueStat[MAX_QUEUE_STAT];
@@ -732,7 +790,7 @@ typedef struct _HW_CHANNEL {
     LONGLONG IntersectCount;
     LONGLONG TryReorderCount;
     LONGLONG TryReorderHeadCount;
-    LONGLONG TryReorderTailCount; // in-order requests
+    LONGLONG TryReorderTailCount; /* in-order requests */
 #endif //QUEUE_STATISTICS
 
     //ULONG BaseMemAddress;
@@ -800,12 +858,15 @@ typedef struct _HW_LU_EXTENSION {
     ULONG          opt_PreferedTransferMode;
     BOOLEAN        opt_ReadCacheEnable;
     BOOLEAN        opt_WriteCacheEnable;
+    UCHAR          opt_ReadOnly;
     // padding
-    BOOLEAN        opt_reserved[2];
+    BOOLEAN        opt_reserved[1];
 
     struct _SBadBlockListItem* bbListDescr;
     struct _SBadBlockRange* arrBadBlocks;
     ULONG           nBadBlocks;
+
+    struct _HW_DEVICE_EXTENSION* DeviceExtension;
 
 #ifdef IO_STATISTICS
 
@@ -833,7 +894,7 @@ typedef struct _HW_DEVICE_EXTENSION {
     ULONG FirstChannelToCheck;
 #if 1
     HW_LU_EXTENSION lun[IDE_MAX_LUN];
-    HW_CHANNEL chan[AHCI_MAX_PORT]; // IDE_MAX_CHAN
+    HW_CHANNEL chan[AHCI_MAX_PORT/*IDE_MAX_CHAN*/];
 #else
     PHW_LU_EXTENSION lun;
     PHW_CHANNEL chan;
@@ -851,12 +912,12 @@ typedef struct _HW_DEVICE_EXTENSION {
 
     ULONG       ActiveDpcChan;
     ULONG       FirstDpcChan;
-
-//    PHW_TIMER   HwScsiTimer1;
-//    PHW_TIMER   HwScsiTimer2;
-//    LONGLONG    DpcTime1;
-//    LONGLONG    DpcTime2;
-
+/*
+    PHW_TIMER   HwScsiTimer1;
+    PHW_TIMER   HwScsiTimer2;
+    LONGLONG    DpcTime1;
+    LONGLONG    DpcTime2;
+*/
     ULONG          queue_depth;
 
     PDEVICE_OBJECT Isr2DevObj;
@@ -891,6 +952,7 @@ typedef struct _HW_DEVICE_EXTENSION {
     ULONG MaxTransferMode;  // max transfer mode supported by controller
     ULONG HwFlags;
     INTERFACE_TYPE OrigAdapterInterfaceType;
+    INTERFACE_TYPE AdapterInterfaceType;
     ULONG MaximumDmaTransferLength;
     ULONG AlignmentMask;
 
@@ -908,6 +970,8 @@ typedef struct _HW_DEVICE_EXTENSION {
     BOOLEAN        opt_AtapiDmaRawRead;      // default TRUE
     BOOLEAN        opt_AtapiDmaReadWrite;    // default TRUE
 
+    PCHAR          FullDevName;
+
 } HW_DEVICE_EXTENSION, *PHW_DEVICE_EXTENSION;
 
 typedef struct _ISR2_DEVICE_EXTENSION {
@@ -921,6 +985,8 @@ typedef struct _ISR2_DEVICE_EXTENSION {
 extern UCHAR         pciBuffer[256];
 extern PBUSMASTER_CONTROLLER_INFORMATION BMList;
 extern ULONG         BMListLen;
+extern ULONG         IsaCount;
+extern ULONG         MCACount;
 
 //extern const CHAR retry_Wdma[MAX_RETRIES+1];
 //extern const CHAR retry_Udma[MAX_RETRIES+1];
@@ -932,7 +998,37 @@ UniataEnumBusMasterController(
     );
 
 extern ULONG DDKAPI
+UniataFindCompatBusMasterController1(
+    IN PVOID HwDeviceExtension,
+    IN PVOID Context,
+    IN PVOID BusInformation,
+    IN PCHAR ArgumentString,
+    IN OUT PPORT_CONFIGURATION_INFORMATION ConfigInfo,
+    OUT PBOOLEAN Again
+    );
+
+extern ULONG DDKAPI
+UniataFindCompatBusMasterController2(
+    IN PVOID HwDeviceExtension,
+    IN PVOID Context,
+    IN PVOID BusInformation,
+    IN PCHAR ArgumentString,
+    IN OUT PPORT_CONFIGURATION_INFORMATION ConfigInfo,
+    OUT PBOOLEAN Again
+    );
+
+extern ULONG DDKAPI
 UniataFindBusMasterController(
+    IN PVOID HwDeviceExtension,
+    IN PVOID Context,
+    IN PVOID BusInformation,
+    IN PCHAR ArgumentString,
+    IN OUT PPORT_CONFIGURATION_INFORMATION ConfigInfo,
+    OUT PBOOLEAN Again
+    );
+
+extern ULONG DDKAPI
+UniataFindFakeBusMasterController(
     IN PVOID HwDeviceExtension,
     IN PVOID Context,
     IN PVOID BusInformation,
@@ -961,6 +1057,9 @@ ScsiPortGetBusDataByOffset(
     IN ULONG  Offset,
     IN ULONG  Length
     );
+
+#define PCIBUSNUM_NOT_SPECIFIED    (0xffffffffL)
+#define PCISLOTNUM_NOT_SPECIFIED   (0xffffffffL)
 
 extern ULONG
 AtapiFindListedDev(
@@ -1020,8 +1119,6 @@ AtapiDmaStart(
     IN ULONG lChannel,          // logical channel,
     IN PSCSI_REQUEST_BLOCK Srb
     );
-
-//#define DEVNUM_NOT_SPECIFIED    (0xffffffffL)
 
 extern UCHAR
 AtapiDmaDone(
@@ -1327,6 +1424,8 @@ AtapiReadBuffer2(
         chan->lun[1] = &(deviceExtension->lun[c*2+1]); \
         chan->AltRegMap       = deviceExtension->AltRegMap; \
         chan->NextDpcChan     = -1; \
+        chan->lun[0]->DeviceExtension = deviceExtension; \
+        chan->lun[1]->DeviceExtension = deviceExtension; \
 }
 
 BOOLEAN
@@ -1336,11 +1435,18 @@ AtapiReadChipConfig(
     IN ULONG channel // physical channel
     );
 
+VOID
+UniataForgetDevice(
+    PHW_LU_EXTENSION   LunExt
+    );
+
 extern ULONG SkipRaids;
 extern ULONG ForceSimplex;
 
 extern BOOLEAN InDriverEntry;
 
 extern BOOLEAN g_opt_Verbose;
+
+extern BOOLEAN WinVer_WDM_Model;
 
 #endif //__IDE_BUSMASTER_H__

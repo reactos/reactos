@@ -19,7 +19,7 @@ UniataSataConnect(
 
     KdPrint2((PRINT_PREFIX "UniataSataConnect:\n"));
 
-    if(!deviceExtension->BaseIoAddressSATA_0.Addr) {
+    if(!UniataIsSATARangeAvailable(deviceExtension, lChannel)) {
         KdPrint2((PRINT_PREFIX "  no I/O range\n"));
         return IDE_STATUS_IDLE;
     }
@@ -73,7 +73,7 @@ UniataSataPhyEnable(
 
     KdPrint2((PRINT_PREFIX "UniataSataPhyEnable:\n"));
 
-    if(!deviceExtension->BaseIoAddressSATA_0.Addr) {
+    if(!UniataIsSATARangeAvailable(deviceExtension, lChannel)) {
         KdPrint2((PRINT_PREFIX "  no I/O range\n"));
         return IDE_STATUS_IDLE;
     }
@@ -130,7 +130,7 @@ UniataSataClearErr(
     SATA_SSTATUS_REG SStatus;
     SATA_SERROR_REG  SError;
 
-    if(deviceExtension->BaseIoAddressSATA_0.Addr) {
+    if(UniataIsSATARangeAvailable(deviceExtension, lChannel)) {
     //if(ChipFlags & UNIATA_SATA) {
 
         SStatus.Reg = AtapiReadPort4(chan, IDX_SATA_SStatus);
@@ -172,7 +172,7 @@ UniataSataEvent(
     UCHAR Status;
     ULONG ldev = lChannel*2;
 
-    if(!deviceExtension->BaseIoAddressSATA_0.Addr) {
+    if(!UniataIsSATARangeAvailable(deviceExtension, lChannel)) {
         return FALSE;
     }
 
@@ -189,7 +189,7 @@ UniataSataEvent(
         break;
     case UNIATA_SATA_EVENT_DETACH:
         KdPrint2((PRINT_PREFIX "  DISCONNECTED\n"));
-        deviceExtension->lun[ldev].DeviceFlags = 0;
+        UniataForgetDevice(&(deviceExtension->lun[ldev]));
         return TRUE;
         break;
     }
@@ -286,4 +286,128 @@ UniataAhciInit(
 
     return TRUE;
 } // end UniataAhciInit()
+
+UCHAR
+UniataAhciStatus(
+    IN PVOID HwDeviceExtension,
+    IN ULONG lChannel
+    )
+{
+    PHW_DEVICE_EXTENSION deviceExtension = (PHW_DEVICE_EXTENSION)HwDeviceExtension;
+    PHW_CHANNEL chan = &deviceExtension->chan[lChannel];
+    ULONG Channel = deviceExtension->Channel + lChannel;
+    ULONG            hIS;
+    ULONG            CI;
+    AHCI_IS_REG      IS;
+    SATA_SSTATUS_REG SStatus;
+    SATA_SERROR_REG  SError;
+    ULONG offs = sizeof(IDE_AHCI_REGISTERS) + Channel*sizeof(IDE_AHCI_PORT_REGISTERS);
+    ULONG base;
+    ULONG tag=0;
+
+    KdPrint(("UniataAhciStatus:\n"));
+
+    hIS = AtapiReadPortEx4(NULL, (ULONG)&deviceExtension->BaseIoAHCI_0, IDX_AHCI_IS);
+    KdPrint((" hIS %x\n", hIS));
+    hIS &= (1 << Channel);
+    if(!hIS) {
+        return 0;
+    }
+    base = (ULONG)&deviceExtension->BaseIoAHCI_0 + offs;
+    IS.Reg      = AtapiReadPort4(chan, base + IDX_AHCI_P_IS);
+    CI          = AtapiReadPort4(chan, base + IDX_AHCI_P_CI);
+    SStatus.Reg = AtapiReadPort4(chan, IDX_SATA_SStatus);
+    SError.Reg  = AtapiReadPort4(chan, IDX_SATA_SError); 
+
+    /* clear interrupt(s) */
+    AtapiWritePortEx4(NULL, (ULONG)&deviceExtension->BaseIoAHCI_0, IDX_AHCI_IS, hIS);
+    AtapiWritePort4(chan, base + IDX_AHCI_P_IS, IS.Reg);
+    AtapiWritePort4(chan, IDX_SATA_SError, SError.Reg);
+
+    KdPrint((" AHCI: status=%08x sstatus=%08x error=%08x CI=%08x\n",
+	   IS.Reg, SStatus.Reg, SError.Reg, CI));
+
+    /* do we have cold connect surprise */
+    if(IS.CPDS) {
+    }
+
+    /* check for and handle connect events */
+    if(IS.PCS) {
+        UniataSataEvent(HwDeviceExtension, lChannel, UNIATA_SATA_EVENT_ATTACH);
+    }
+    if(IS.PRCS) {
+        UniataSataEvent(HwDeviceExtension, lChannel, UNIATA_SATA_EVENT_DETACH);
+    }
+    if(CI & (1 << tag)) {
+        return 1;
+    }
+    KdPrint((" AHCI: unexpected\n"));
+    return 2;
+
+} // end UniataAhciStatus()
+
+ULONG
+UniataAhciSetupFIS(
+    IN PHW_DEVICE_EXTENSION deviceExtension,
+    IN ULONG DeviceNumber,
+    IN ULONG lChannel,
+   OUT PUCHAR fis,
+    IN UCHAR command,
+    IN ULONGLONG lba,
+    IN USHORT count,
+    IN USHORT feature,
+    IN ULONG flags
+    )
+{
+    ULONG ldev = lChannel*2 + DeviceNumber;
+    ULONG i;
+    PUCHAR plba;
+
+    KdPrint2((PRINT_PREFIX "  AHCI setup FIS\n" ));
+    i = 0;
+    plba = (PUCHAR)&lba;
+
+    /* translate command into 48bit version */
+    if ((lba >= ATA_MAX_LBA28 || count > 256) &&
+        deviceExtension->lun[ldev].IdentifyData.FeaturesSupport.Address48) {
+        if(AtaCommandFlags[command] & ATA_CMD_FLAG_48supp) {
+            command = AtaCommands48[command];
+        } else {
+            KdPrint2((PRINT_PREFIX "  unhandled LBA48 command\n"));
+            return 0;
+        }
+    }
+
+    fis[i++] = 0x27;  /* host to device */
+    fis[i++] = 0x80;  /* command FIS (note PM goes here) */
+    fis[i++] = command;
+    fis[i++] = (UCHAR)feature;
+
+    fis[i++] = plba[0];
+    fis[i++] = plba[1];
+    fis[i++] = plba[2];
+    fis[i] = IDE_USE_LBA | (DeviceNumber ? IDE_DRIVE_2 : IDE_DRIVE_1);
+    if ((lba >= ATA_MAX_LBA28 || count > 256) &&
+        deviceExtension->lun[ldev].IdentifyData.FeaturesSupport.Address48) {
+        i++;
+    } else {
+        fis[i++] |= (plba[3] >> 24) & 0x0f;
+    }
+
+    fis[i++] = plba[3];
+    fis[i++] = plba[4];
+    fis[i++] = plba[5]; 
+    fis[i++] = (UCHAR)(feature>>8) & 0xff;
+
+    fis[i++] = (UCHAR)count & 0xff;
+    fis[i++] = (UCHAR)(count>>8) & 0xff;
+    fis[i++] = 0x00;
+    fis[i++] = IDE_DC_A_4BIT;
+
+    fis[i++] = 0x00;
+    fis[i++] = 0x00;
+    fis[i++] = 0x00;
+    fis[i++] = 0x00;
+    return i;
+} // end UniataAhciSetupFIS()
 

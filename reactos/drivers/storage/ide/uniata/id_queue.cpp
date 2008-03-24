@@ -350,7 +350,7 @@ UniataGetNextChannel(
             cost_c = chan->queue_depth * (chan->ChannelSelectWaitCount+1);
         }
     }
-    if(best_c == 0xFFFFFFFF) {
+    if(best_c == CHAN_NOT_SPECIFIED) {
         KdPrint2((PRINT_PREFIX "  empty queues\n"));
         return NULL;
     }

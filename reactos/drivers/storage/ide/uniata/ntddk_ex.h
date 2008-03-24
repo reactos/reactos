@@ -1,16 +1,20 @@
 #ifndef __NTDDK_EX__H__
 #define __NTDDK_EX__H__
 
+#ifndef __REACTOS__
 #undef ASSERT
 #define ASSERT
+#else
+#undef ASSERT
+#define ASSERT //(x) if (!(x)) {RtlAssert("#x",__FILE__,__LINE__, ""); }
+#endif //__REACTOS__
 
-typedef enum _SYSTEM_INFORMATION_CLASS
-{
+typedef enum _SYSTEM_INFORMATION_CLASS {
     SystemBasicInformation,
     SystemProcessorInformation,
     SystemPerformanceInformation,
     SystemTimeOfDayInformation,
-    SystemPathInformation, /// Obsolete: Use KUSER_SHARED_DATA
+    SystemPathInformation,
     SystemProcessInformation,
     SystemCallCountInformation,
     SystemDeviceInformation,
@@ -36,9 +40,15 @@ typedef enum _SYSTEM_INFORMATION_CLASS
     SystemUnloadGdiDriverInformation,
     SystemTimeAdjustmentInformation,
     SystemSummaryMemoryInformation,
+#ifndef __REACTOS__
+    SystemNextEventIdInformation,
+    SystemEventIdsInformation,
+    SystemCrashDumpInformation,
+#else
     SystemMirrorMemoryInformation,
     SystemPerformanceTraceInformation,
     SystemObsolete0,
+#endif
     SystemExceptionInformation,
     SystemCrashDumpStateInformation,
     SystemKernelDebuggerInformation,
@@ -48,10 +58,17 @@ typedef enum _SYSTEM_INFORMATION_CLASS
     SystemPrioritySeperation,
     SystemPlugPlayBusInformation,
     SystemDockInformation,
+#ifdef __REACTOS__
     SystemPowerInformationNative,
+#elif defined IRP_MN_START_DEVICE
+    SystemPowerInformationInfo,
+#else
+    SystemPowerInformation,
+#endif
     SystemProcessorSpeedInformation,
     SystemCurrentTimeZoneInformation,
     SystemLookasideInformation,
+#ifdef __REACTOS__
     SystemTimeSlipNotification,
     SystemSessionCreate,
     SystemSessionDetach,
@@ -105,7 +122,9 @@ typedef enum _SYSTEM_INFORMATION_CLASS
     SystemPrefetchPathInformation,
     SystemVerifierFaultsInformation,
     MaxSystemInfoClass,
+#endif //__REACTOS__
 } SYSTEM_INFORMATION_CLASS;
+
 
 NTSYSAPI
 NTSTATUS
@@ -161,7 +180,9 @@ typedef struct _SYSTEM_MODULE_INFORMATION
 } SYSTEM_MODULE_INFORMATION, *PSYSTEM_MODULE_INFORMATION;
 
 typedef unsigned short  WORD;
-//typedef unsigned int    BOOL;
+#ifndef __REACTOS__
+typedef unsigned int    BOOL;
+#endif //__REACTOS__
 typedef unsigned long   DWORD;
 typedef unsigned char   BYTE;
 
