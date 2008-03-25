@@ -1,168 +1,167 @@
 /*
- * GdiPlusMetaHeader.h
+ * Copyright (C) 2007 Google (Evan Stade)
  *
- * Windows GDI+
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
  *
- * This file is part of the w32api package.
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
  *
- * THIS SOFTWARE IS NOT COPYRIGHTED
- *
- * This source code is offered for use in the public domain. You may
- * use, modify or distribute it freely.
- *
- * This code is distributed in the hope that it will be useful but
- * WITHOUT ANY WARRANTY. ALL WARRANTIES, EXPRESS OR IMPLIED ARE HEREBY
- * DISCLAIMED. This includes but is not limited to warranties of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #ifndef _GDIPLUSMETAHEADER_H
 #define _GDIPLUSMETAHEADER_H
 
-#if __GNUC__ >= 3
-#pragma GCC system_header
-#endif
-
-typedef struct {
-  DWORD iType;
-  DWORD nSize;
-  RECTL rclBounds;
-  RECTL rclFrame;
-  DWORD dSignature;
-  DWORD nVersion;
-  DWORD nBytes;
-  DWORD nRecords;
-  WORD nHandles;
-  WORD sReserved;
-  DWORD nDescription;
-  DWORD offDescription;
-  DWORD nPalEntries;
-  SIZEL szlDevice;
-  SIZEL szlMillimeters;
+typedef struct
+{
+    DWORD   iType;
+    DWORD   nSize;
+    RECTL   rclBounds;
+    RECTL   rclFrame;
+    DWORD   dSignature;
+    DWORD   nVersion;
+    DWORD   nBytes;
+    DWORD   nRecords;
+    WORD    nHandles;
+    WORD    sReserved;
+    DWORD   nDescription;
+    DWORD   offDescription;
+    DWORD   nPalEntries;
+    SIZEL   szlDevice;
+    SIZEL   szlMillimeters;
 } ENHMETAHEADER3;
 
-typedef struct {
-  INT16 Left;
-  INT16 Top;
-  INT16 Right;
-  INT16 Bottom;
+#include <pshpack2.h>
+
+typedef struct
+{
+    INT16  Left;
+    INT16  Top;
+    INT16  Right;
+    INT16  Bottom;
 } PWMFRect16;
 
-typedef struct {
-  UINT32 Key;
-  INT16 Hmf;
-  PWMFRect16 BoundingBox;
-  INT16 Inch;
-  UINT32 Reserved;
-  INT16 Checksum;
+typedef struct
+{
+    UINT32     Key;
+    INT16      Hmf;
+    PWMFRect16 BoundingBox;
+    INT16      Inch;
+    UINT32     Reserved;
+    INT16      Checksum;
 } WmfPlaceableFileHeader;
 
+#include <poppack.h>
 
+#define GDIP_EMFPLUSFLAGS_DISPLAY       0x00000001
+
+#ifdef __cplusplus
 class MetafileHeader
 {
 public:
-  VOID GetBounds(Rect *rect)
-  {
-  }
+    MetafileType        Type;
+    UINT                Size;
+    UINT                Version;
+    UINT                EmfPlusFlags;
+    REAL                DpiX;
+    REAL                DpiY;
+    INT                 X;
+    INT                 Y;
+    INT                 Width;
+    INT                 Height;
+    union
+    {
+        METAHEADER      WmfHeader;
+        ENHMETAHEADER3  EmfHeader;
+    };
+    INT                 EmfPlusHeaderSize;
+    INT                 LogicalDpiX;
+    INT                 LogicalDpiY;
 
-  REAL GetDpiX(VOID)
-  {
-    return 0;
-  }
+public:
+    MetafileType GetType() const { return Type; }
 
-  REAL GetDpiY(VOID)
-  {
-    return 0;
-  }
+    UINT GetMetafileSize() const { return Size; }
 
-  const ENHMETAHEADER3 *GetEmfHeader(VOID) const
-  {
-    return NULL;
-  }
+    UINT GetVersion() const { return Version; }
 
-  UINT GetEmPlusFlags(VOID)
-  {
-    return 0;
-  }
+    UINT GetEmfPlusFlags() const { return EmfPlusFlags; }
 
-  UINT GetMetafileSize(VOID)
-  {
-    return 0;
-  }
+    REAL GetDpiX() const { return DpiX; }
 
-  MetafileType GetType(VOID)
-  {
-    return MetafileTypeInvalid;
-  }
+    REAL GetDpiY() const { return DpiY; }
 
-  UINT GetVersion(VOID)
-  {
-    return 0;
-  }
+    VOID GetBounds (OUT Rect *r) const
+    {
+        r->X = X;
+        r->Y = Y;
+        r->Width = Width;
+        r->Height = Height;
+    }
 
-  const METAHEADER *GetWmfHeader(VOID) const
-  {
-    return NULL;
-  }
+    BOOL IsWmf() const
+    {
+       return ((Type == MetafileTypeWmf) || (Type == MetafileTypeWmfPlaceable));
+    }
 
-  BOOL IsDisplay(VOID) const
-  {
-    return FALSE;
-  }
+    BOOL IsWmfPlaceable() const { return (Type == MetafileTypeWmfPlaceable); }
 
-  BOOL IsEmf(VOID) const
-  {
-    return FALSE;
-  }
+    BOOL IsEmf() const { return (Type == MetafileTypeEmf); }
 
-  BOOL IsEmfOrEmfPlus(VOID) const
-  {
-    return FALSE;
-  }
+    BOOL IsEmfOrEmfPlus() const { return (Type >= MetafileTypeEmf); }
 
-  BOOL IsEmfPlus(VOID) const
-  {
-    return FALSE;
-  }
+    BOOL IsEmfPlus() const { return (Type >= MetafileTypeEmfPlusOnly); }
 
-  BOOL IsEmfPlusDual(VOID) const
-  {
-    return FALSE;
-  }
+    BOOL IsEmfPlusDual() const { return (Type == MetafileTypeEmfPlusDual); }
 
-  BOOL IsEmfPlusOnly(VOID) const
-  {
-    return FALSE;
-  }
+    BOOL IsEmfPlusOnly() const { return (Type == MetafileTypeEmfPlusOnly); }
 
-  BOOL IsWmf(VOID)
-  {
-    return FALSE;
-  }
+    BOOL IsDisplay() const
+    {
+        return IsEmfPlus() && ((EmfPlusFlags & GDIP_EMFPLUSFLAGS_DISPLAY) != 0);
+    }
 
-  BOOL IsWmfPlaceable(VOID) const
-  {
-    return FALSE;
-  }
+    const METAHEADER * GetWmfHeader() const
+    {
+        return IsWmf() ? &WmfHeader : NULL;
+    }
 
-  REAL DpiX;
-  REAL DpiY;
-  UINT EmfPlusFlags;
-  INT EmfPlusHeaderSize;
-  INT Height;
-  INT LogicalDpiX;
-  INT LogicalDpiY;
-  MetafileType Type;
-  UINT Version;
-  INT Width;
-  INT X;
-  INT Y;
-
-  union
-  {
-    METAHEADER WmfHeader;
-    ENHMETAHEADER3 EmfHeader;
-  };
+    const ENHMETAHEADER3 * GetEmfHeader() const
+    {
+        return IsEmfOrEmfPlus() ? &EmfHeader : NULL;
+    }
 };
+#else /* end of c++ typedefs */
+
+typedef struct MetafileHeader
+{
+    MetafileType        Type;
+    UINT                Size;
+    UINT                Version;
+    UINT                EmfPlusFlags;
+    REAL                DpiX;
+    REAL                DpiY;
+    INT                 X;
+    INT                 Y;
+    INT                 Width;
+    INT                 Height;
+    union
+    {
+        METAHEADER      WmfHeader;
+        ENHMETAHEADER3  EmfHeader;
+    } DUMMYUNIONNAME;
+    INT                 EmfPlusHeaderSize;
+    INT                 LogicalDpiX;
+    INT                 LogicalDpiY;
+} MetafileHeader;
+
+#endif /* end of c typedefs */
 
 #endif /* _GDIPLUSMETAHEADER_H */

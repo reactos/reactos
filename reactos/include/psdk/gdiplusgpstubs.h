@@ -1,74 +1,80 @@
 /*
- * GdiPlusGpStubs.h
+ * Copyright (C) 2007 Google (Evan Stade)
  *
- * Windows GDI+
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
  *
- * This file is part of the w32api package.
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
  *
- * THIS SOFTWARE IS NOT COPYRIGHTED
- *
- * This source code is offered for use in the public domain. You may
- * use, modify or distribute it freely.
- *
- * This code is distributed in the hope that it will be useful but
- * WITHOUT ANY WARRANTY. ALL WARRANTIES, EXPRESS OR IMPLIED ARE HEREBY
- * DISCLAIMED. This includes but is not limited to warranties of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #ifndef _GDIPLUSGPSTUBS_H
 #define _GDIPLUSGPSTUBS_H
 
-#if __GNUC__ >= 3
-#pragma GCC system_header
-#endif
+#ifdef __cplusplus
 
-class Matrix;
-
-class GpCustomLineCap {};
-class GpAdjustableArrowCap : public GpCustomLineCap {};
-class GpImage {};
-class GpBitmap : public GpImage {};
 class GpGraphics {};
-class CGpEffect {};
+class GpGraphics {};
 class GpBrush {};
-class GpPath {};
-class GpCachedBitmap;
-class GpFont {};
-class GpFontFamily {};
-class GpFontCollection {};
-class GpPen {};
-class GpRegion {};
-class GpImageAttributes {};
-class GpMetafile : public GpImage {};
-class GpStringFormat {};
-class GpHatch : public GpBrush {};
-class GpLineGradient : public GpBrush {};
-class GpPathGradient : public GpBrush {};
-class GpPathIterator {};
 class GpSolidFill : public GpBrush {};
+class GpPath {};
+class GpMatrix {};
+class GpPathIterator {};
+class GpCustomLineCap {};
+class GpImage {};
+class GpMetafile : public GpImage {};
+class GpImageAttributes {};
+class GpBitmap : public GpImage {};
+class GpPathGradient : public GpBrush {};
+class GpLineGradient : public GpBrush {};
 class GpTexture : public GpBrush {};
+class GpFont {};
+class GpStringFormat {};
+
+#else /* end of c++ declarations */
+
+typedef struct GpGraphics GpGraphics;
+typedef struct GpPen GpPen;
+typedef struct GpBrush GpBrush;
+typedef struct GpSolidFill GpSolidFill;
+typedef struct GpPath GpPath;
+typedef struct GpMatrix GpMatrix;
+typedef struct GpPathIterator GpPathIterator;
+typedef struct GpCustomLineCap GpCustomLineCap;
+typedef struct GpImage GpImage;
+typedef struct GpMetafile GpMetafile;
+typedef struct GpImageAttributes GpImageAttributes;
+typedef struct GpBitmap GpBitmap;
+typedef struct GpPathGradient GpPathGradient;
+typedef struct GpLineGradient GpLineGradient;
+typedef struct GpTexture GpTexture;
+typedef struct GpFont GpFont;
+typedef struct GpStringFormat GpStringFormat;
+
+#endif /* end of c declarations */
 
 typedef Status GpStatus;
-typedef Rect GpRect;
-typedef PathData GpPathData;
-typedef BrushType GpBrushType;
-typedef LineCap GpLineCap;
-typedef LineJoin GpLineJoin;
-typedef FlushIntention GpFlushIntention;
-typedef Matrix GpMatrix;
-typedef MatrixOrder GpMatrixOrder;
 typedef Unit GpUnit;
-typedef CoordinateSpace GpCoordinateSpace;
+typedef BrushType GpBrushType;
 typedef PointF GpPointF;
-typedef Point GpPoint;
-typedef RectF GpRectF;
 typedef FillMode GpFillMode;
-typedef HatchStyle GpHatchStyle;
-typedef WrapMode GpWrapMode;
+typedef PathData GpPathData;
+typedef LineCap GpLineCap;
+typedef RectF GpRectF;
+typedef Rect GpRect;
+typedef LineJoin GpLineJoin;
 typedef DashCap GpDashCap;
-typedef PenAlignment GpPenAlignment;
-typedef PenType GpPenType;
 typedef DashStyle GpDashStyle;
+typedef MatrixOrder GpMatrixOrder;
+typedef Point GpPoint;
+typedef WrapMode GpWrapMode;
 
-#endif /* _GDIPLUSGPSTUBS_H */
+#endif
