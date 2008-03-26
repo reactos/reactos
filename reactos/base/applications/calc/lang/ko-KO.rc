@@ -1,0 +1,157 @@
+/*
+ * Korean translation by manatails007(www.manatails007.org)
+ */
+
+#include "windows.h"
+#include "resource.h"
+#include "winecalc.h"
+
+LANGUAGE LANG_KOREAN, SUBLANG_DEFAULT
+
+STRINGTABLE DISCARDABLE
+BEGIN
+   IDS_APPNAME,            "계산기"
+
+   IDS_COPYRIGHT1,         "계산기 5.0. LGPL 2라이센스 이하 사용"
+   IDS_COPYRIGHT2          "Copyright 2003, James Briggs"
+   IDS_COPYRIGHT3          "San Jose, California, USA"
+   IDS_COPYRIGHT4          "james@ActionMessage.com"
+   IDS_COPYRIGHT5          "http://www.ActionMessage.com/winecalc/"
+
+   IDS_BTN_BACKSPACE,      "Backspace"
+   IDS_BTN_CLEAR_ENTRY,    "CE"
+   IDS_BTN_CLEAR_ALL,      "C"
+   IDS_BTN_MEM_CLEAR,      "MC"
+   IDS_BTN_MEM_RECALL,     "MR"
+   IDS_BTN_MEM_STORE,      "MS"
+   IDS_BTN_MEM_PLUS,       "M+"
+   IDS_BTN_MEM_STATUS_M,   "M"
+   IDS_BTN_SQRT,           "sqrt"
+   IDS_BTN_DEGREES,        "Degrees"
+   IDS_BTN_RADIANS,        "Radians"
+   IDS_BTN_GRADS,          "Grads"
+   IDS_BTN_SHRT_HEX        "Hex"
+   IDS_BTN_SHRT_DEC        "Dec"
+   IDS_BTN_SHRT_OCT        "Oct"
+   IDS_BTN_SHRT_BIN        "Bin"
+   IDS_ERR_INVALID_INPUT,  "함수를 잘못 입력 하셨습니다."
+   IDS_ERR_DIVIDE_BY_ZERO, "0으로 나눌수 없습니다."
+   IDS_ERR_UNDEFINED,      "함수 결과가 지정되지 않았습니다."
+END
+
+MAIN_MENU MENU DISCARDABLE
+BEGIN
+   POPUP "편집"
+   BEGIN
+      MENUITEM "복사 Ctrl+C",     IDM_COPY
+      MENUITEM "붙여넣기 Ctrl+V",    IDM_PASTE
+   END
+   POPUP "보기"
+   BEGIN
+      MENUITEM "일반",         IDM_MODE_STANDARD
+      MENUITEM "공학",       IDM_MODE_SCIENTIFIC
+      MENUITEM SEPARATOR
+      MENUITEM "자리수 구분 단위",   IDM_DIGIT_GROUPING
+   END
+   POPUP "도움말"
+   BEGIN
+      MENUITEM "도움말 항목",      IDM_HELP_TOPICS
+      MENUITEM SEPARATOR
+      MENUITEM "계산기에 대해", IDM_ABOUT
+   END
+END
+
+SCIMS_MENU MENU DISCARDABLE
+BEGIN
+   POPUP "편집"
+   BEGIN
+      MENUITEM "복사 Ctrl+C",     IDM_COPY
+      MENUITEM "붙여넣기 Ctrl+V",    IDM_PASTE
+   END
+   POPUP "보기"
+   BEGIN
+      MENUITEM "일반",         IDM_MODE_STANDARD
+      MENUITEM "공학",       IDM_MODE_SCIENTIFIC
+      MENUITEM SEPARATOR
+	  MENUITEM "Hex\tF5",          ID_CALC_NS_HEX
+	  MENUITEM "Decimal\tF6",      ID_CALC_NS_DEC
+	  MENUITEM "Octal\tF7",        ID_CALC_NS_OCT
+	  MENUITEM "Binary\tF8",       ID_CALC_NS_BIN
+      MENUITEM SEPARATOR
+      MENUITEM "Degrees\tF2",      ID_CALC_MS_DEGREES
+      MENUITEM "Radians\tF3",      ID_CALC_MS_RADIANS
+	  MENUITEM "Grads\tF4",        ID_CALC_MS_GRADS
+      MENUITEM SEPARATOR
+      MENUITEM "자리수 구분 단위",   IDM_DIGIT_GROUPING
+   END
+   POPUP "도움말"
+   BEGIN
+      MENUITEM "도움말 항목",      IDM_HELP_TOPICS
+      MENUITEM SEPARATOR
+      MENUITEM "계산기에 대해", IDM_ABOUT
+   END
+END
+
+SCIWS_MENU MENU DISCARDABLE
+BEGIN
+   POPUP "편집"
+   BEGIN
+      MENUITEM "복사 Ctrl+C",     IDM_COPY
+      MENUITEM "붙여넣기 Ctrl+V",    IDM_PASTE
+   END
+   POPUP "보기"
+   BEGIN
+      MENUITEM "일반",         IDM_MODE_STANDARD
+      MENUITEM "공학",       IDM_MODE_SCIENTIFIC
+      MENUITEM SEPARATOR
+	  MENUITEM "Hex\tF5",          ID_CALC_NS_HEX
+	  MENUITEM "Decimal\tF6",      ID_CALC_NS_DEC
+	  MENUITEM "Octal\tF7",        ID_CALC_NS_OCT
+	  MENUITEM "Binary\tF8",       ID_CALC_NS_BIN
+      MENUITEM SEPARATOR
+	  MENUITEM "Qword\tF12",       ID_CALC_WS_QWORD
+	  MENUITEM "Dword\tF2",        ID_CALC_WS_DWORD
+	  MENUITEM "Word\tF3",         ID_CALC_WS_WORD
+	  MENUITEM "Byte\tF4",         ID_CALC_WS_BYTE
+      MENUITEM SEPARATOR
+      MENUITEM "자릿수 구분 단위",   IDM_DIGIT_GROUPING
+   END
+   POPUP "도움말"
+   BEGIN
+      MENUITEM "도움말 항목",      IDM_HELP_TOPICS
+      MENUITEM SEPARATOR
+      MENUITEM "계산기에 대해", IDM_ABOUT
+   END
+END
+
+MAIN_MENU ACCELERATORS
+BEGIN
+   VK_F1, IDV_HELP,     VIRTKEY
+END
+
+DLG_ABOUT DIALOGEX 12,0,175,90
+CAPTION "GNU winecalc에 대해"
+FONT 8, "MS Shell Dlg"
+STYLE DS_MODALFRAME | DS_SHELLFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU
+BEGIN
+   DEFPUSHBUTTON "확인", IDOK,       73, 70, 30, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+END
+
+WHATS_THIS_MENU MENU DISCARDABLE
+BEGIN
+   POPUP ""
+   BEGIN
+      MENUITEM "이게 뭐야?",     IDM_WHATS_THIS
+   END
+END
+
+DLG_STATS DIALOGEX 12,0,145,85
+CAPTION "상태 박스"
+FONT 8, "MS Shell Dlg"
+STYLE DS_MODALFRAME | DS_SHELLFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_VISIBLE
+BEGIN
+   DEFPUSHBUTTON "&RET",  ID_STATS_RET,    4, 52, 30, 13, WS_TABSTOP | WS_GROUP
+   PUSHBUTTON    "&LOAD", ID_STATS_LOAD,  39, 52, 30, 13, WS_TABSTOP | WS_GROUP
+   PUSHBUTTON    "&CD"    ID_STATS_CD,    74, 52, 30, 13, WS_TABSTOP | WS_GROUP
+   PUSHBUTTON    "C&AD",  ID_STATS_CAD,  109, 52, 30, 13, WS_TABSTOP | WS_GROUP
+END
