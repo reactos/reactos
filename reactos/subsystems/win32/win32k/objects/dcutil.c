@@ -112,10 +112,24 @@ static
 VOID
 CopytoUserDcAttr(PDC dc, PDC_ATTR Dc_Attr)
 {
+  NTSTATUS Status = STATUS_SUCCESS;
   XForm2MatrixS( &dc->Dc_Attr.mxWorldToDevice, &dc->w.xformWorld2Vport);
   XForm2MatrixS( &dc->Dc_Attr.mxDevicetoWorld, &dc->w.xformVport2World);
   XForm2MatrixS( &dc->Dc_Attr.mxWorldToPage, &dc->w.xformWorld2Wnd);
-  MmCopyToCaller(Dc_Attr, &dc->Dc_Attr, sizeof(DC_ATTR));
+  _SEH_TRY
+  {
+      ProbeForWrite( Dc_Attr,
+             sizeof(DC_ATTR),
+                           1);
+      RtlCopyMemory( Dc_Attr,
+                &dc->Dc_Attr,
+             sizeof(DC_ATTR));
+  }
+  _SEH_HANDLE
+  {
+     Status = _SEH_GetExceptionCode();
+  }
+  _SEH_END;
 }
 
 
