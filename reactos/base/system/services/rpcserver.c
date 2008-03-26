@@ -310,7 +310,7 @@ ScmrControlService(handle_t BindingHandle,
 
     /* Check the service handle */
     hSvc = (PSERVICE_HANDLE)hService;
-    if (hSvc->Handle.Tag != SERVICE_TAG)
+    if (!hSvc || hSvc->Handle.Tag != SERVICE_TAG)
     {
         DPRINT1("Invalid handle tag!\n");
         return ERROR_INVALID_HANDLE;
@@ -395,7 +395,7 @@ ScmrDeleteService(handle_t BindingHandle,
         return ERROR_SHUTDOWN_IN_PROGRESS;
 
     hSvc = (PSERVICE_HANDLE)hService;
-    if (hSvc->Handle.Tag != SERVICE_TAG)
+    if (!hSvc || hSvc->Handle.Tag != SERVICE_TAG)
         return ERROR_INVALID_HANDLE;
 
     if (!RtlAreAllAccessesGranted(hSvc->Handle.DesiredAccess,
@@ -443,7 +443,7 @@ ScmrLockServiceDatabase(handle_t BindingHandle,
     *hLock = 0;
 
     hMgr = (PMANAGER_HANDLE)hSCManager;
-    if (hMgr->Handle.Tag != MANAGER_TAG)
+    if (!hMgr || hMgr->Handle.Tag != MANAGER_TAG)
         return ERROR_INVALID_HANDLE;
 
     if (!RtlAreAllAccessesGranted(hMgr->Handle.DesiredAccess,
@@ -479,7 +479,7 @@ ScmrQueryServiceObjectSecurity(handle_t BindingHandle,
     DPRINT("ScmrQueryServiceObjectSecurity() called\n");
 
     hSvc = (PSERVICE_HANDLE)hService;
-    if (hSvc->Handle.Tag != SERVICE_TAG)
+    if (!hSvc || hSvc->Handle.Tag != SERVICE_TAG)
     {
         DPRINT1("Invalid handle tag!\n");
         return ERROR_INVALID_HANDLE;
@@ -562,7 +562,7 @@ ScmrSetServiceObjectSecurity(handle_t BindingHandle,
     DPRINT1("ScmrSetServiceObjectSecurity() called\n");
 
     hSvc = (PSERVICE_HANDLE)hService;
-    if (hSvc->Handle.Tag != SERVICE_TAG)
+    if (!hSvc || hSvc->Handle.Tag != SERVICE_TAG)
     {
         DPRINT1("Invalid handle tag!\n");
         return ERROR_INVALID_HANDLE;
@@ -678,7 +678,7 @@ ScmrQueryServiceStatus(handle_t BindingHandle,
         return ERROR_SHUTDOWN_IN_PROGRESS;
 
     hSvc = (PSERVICE_HANDLE)hService;
-    if (hSvc->Handle.Tag != SERVICE_TAG)
+    if (!hSvc || hSvc->Handle.Tag != SERVICE_TAG)
     {
         DPRINT1("Invalid handle tag!\n");
         return ERROR_INVALID_HANDLE;
@@ -809,7 +809,7 @@ ScmrChangeServiceConfigW(handle_t BiningHandle,
         return ERROR_SHUTDOWN_IN_PROGRESS;
 
     hSvc = (PSERVICE_HANDLE)hService;
-    if (hSvc->Handle.Tag != SERVICE_TAG)
+    if (!hSvc || hSvc->Handle.Tag != SERVICE_TAG)
     {
         DPRINT1("Invalid handle tag!\n");
         return ERROR_INVALID_HANDLE;
@@ -1411,7 +1411,7 @@ ScmrCreateServiceW(handle_t BindingHandle,
         return ERROR_SHUTDOWN_IN_PROGRESS;
 
     hManager = (PMANAGER_HANDLE)hSCManager;
-    if (hManager->Handle.Tag != MANAGER_TAG)
+    if (!hManager || hManager->Handle.Tag != MANAGER_TAG)
     {
         DPRINT1("Invalid manager handle!\n");
         return ERROR_INVALID_HANDLE;
@@ -1698,7 +1698,7 @@ ScmrEnumServicesStatusW(handle_t BindingHandle,
         return ERROR_SHUTDOWN_IN_PROGRESS;
 
     hManager = (PMANAGER_HANDLE)hSCManager;
-    if (hManager->Handle.Tag != MANAGER_TAG)
+    if (!hManager || hManager->Handle.Tag != MANAGER_TAG)
     {
         DPRINT1("Invalid manager handle!\n");
         return ERROR_INVALID_HANDLE;
@@ -1887,6 +1887,9 @@ ScmrOpenSCManagerW(handle_t BindingHandle,
     if (ScmShutdown)
         return ERROR_SHUTDOWN_IN_PROGRESS;
 
+	if (!hScm)
+		return ERROR_INVALID_PARAMETER;
+
     dwError = ScmCreateManagerHandle(lpDatabaseName,
                                      &hHandle);
     if (dwError != ERROR_SUCCESS)
@@ -1936,8 +1939,11 @@ ScmrOpenServiceW(handle_t BindingHandle,
     if (ScmShutdown)
         return ERROR_SHUTDOWN_IN_PROGRESS;
 
+	if (!hService)
+		return ERROR_INVALID_PARAMETER;
+
     hManager = (PMANAGER_HANDLE)hSCManager;
-    if (hManager->Handle.Tag != MANAGER_TAG)
+    if (!hManager || hManager->Handle.Tag != MANAGER_TAG)
     {
         DPRINT1("Invalid manager handle!\n");
         return ERROR_INVALID_HANDLE;
@@ -2005,7 +2011,7 @@ ScmrQueryServiceConfigW(handle_t BindingHandle,
         return ERROR_SHUTDOWN_IN_PROGRESS;
 
     hSvc = (PSERVICE_HANDLE)hService;
-    if (hSvc->Handle.Tag != SERVICE_TAG)
+    if (!hSvc || hSvc->Handle.Tag != SERVICE_TAG)
     {
         DPRINT1("Invalid handle tag!\n");
         return ERROR_INVALID_HANDLE;
@@ -2172,7 +2178,7 @@ ScmrStartServiceW(handle_t BindingHandle,
         return ERROR_SHUTDOWN_IN_PROGRESS;
 
     hSvc = (PSERVICE_HANDLE)hService;
-    if (hSvc->Handle.Tag != SERVICE_TAG)
+    if (!hSvc || hSvc->Handle.Tag != SERVICE_TAG)
     {
         DPRINT1("Invalid handle tag!\n");
         return ERROR_INVALID_HANDLE;
@@ -2510,7 +2516,7 @@ ScmrStartServiceA(handle_t BindingHandle,
         return ERROR_SHUTDOWN_IN_PROGRESS;
 
     hSvc = (PSERVICE_HANDLE)hService;
-    if (hSvc->Handle.Tag != SERVICE_TAG)
+    if (!hSvc || hSvc->Handle.Tag != SERVICE_TAG)
     {
         DPRINT1("Invalid handle tag!\n");
         return ERROR_INVALID_HANDLE;
@@ -2625,7 +2631,7 @@ ScmrChangeServiceConfig2W(handle_t BindingHandle,
         return ERROR_SHUTDOWN_IN_PROGRESS;
 
     hSvc = (PSERVICE_HANDLE)hService;
-    if (hSvc->Handle.Tag != SERVICE_TAG)
+    if (!hSvc || hSvc->Handle.Tag != SERVICE_TAG)
     {
         DPRINT1("Invalid handle tag!\n");
         return ERROR_INVALID_HANDLE;
@@ -2736,7 +2742,7 @@ ScmrQueryServiceConfig2W(handle_t BindingHandle,
         return ERROR_SHUTDOWN_IN_PROGRESS;
 
     hSvc = (PSERVICE_HANDLE)hService;
-    if (hSvc->Handle.Tag != SERVICE_TAG)
+    if (!hSvc || hSvc->Handle.Tag != SERVICE_TAG)
     {
         DPRINT1("Invalid handle tag!\n");
         return ERROR_INVALID_HANDLE;
@@ -2839,7 +2845,7 @@ ScmrQueryServiceStatusEx(handle_t BindingHandle,
         return ERROR_INSUFFICIENT_BUFFER;
 
     hSvc = (PSERVICE_HANDLE)hService;
-    if (hSvc->Handle.Tag != SERVICE_TAG)
+    if (!hSvc || hSvc->Handle.Tag != SERVICE_TAG)
     {
         DPRINT1("Invalid handle tag!\n");
         return ERROR_INVALID_HANDLE;
@@ -2930,7 +2936,7 @@ ScmrEnumServicesStatusExW(handle_t BindingHandle,
         return ERROR_INVALID_LEVEL;
 
     hManager = (PMANAGER_HANDLE)hSCManager;
-    if (hManager->Handle.Tag != MANAGER_TAG)
+    if (!hManager || hManager->Handle.Tag != MANAGER_TAG)
     {
         DPRINT1("Invalid manager handle!\n");
         return ERROR_INVALID_HANDLE;
