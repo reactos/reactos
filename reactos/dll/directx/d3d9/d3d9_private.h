@@ -16,24 +16,22 @@
 #define D3D9_INT_D3DCAPS8_VALID     1
 #define D3D9_INT_D3DCAPS9_VALID     2
 
-typedef struct _D3D9Unknown6BC_INT_
+typedef struct _D3D9Unknown6BC_
 {
 /* 0x0000 */    HANDLE hDD;
 /* 0x0004 */    LPDWORD pUnknown0004;
-/* 0x0008 */
+/* 0x0008 */    DWORD dwUnknown0008;
 /* 0x000c */    CHAR szDeviceName[CCHDEVICENAME];
 /* 0x002c */    HLOCAL swDDICreateDirectDrawObject;
-
 /* 0x0030 */    DWORD dwUnknown0030;
-
 /* 0x0034 */    ULONG DeviceUniq;
-
+/* 0x0038 */    DWORD dwUnknown0038;
 /* 0x0040 */    D3DFORMAT RawDisplayFormat;
 /* 0x0044 */    D3DFORMAT DisplayFormat;
 /* 0x0048 */    LONG lDisplayPitch;
 /* 0x004c */    DWORD MajorDxVersion;
 /* 0x0050 */    RECT DeviceRect;
-/* 0x0060 */
+/* 0x0060 */    DWORD dwUnknown0060;
 /* 0x0064 */    DWORD unknown0064;  // = 0
 /* 0x0068 */    BOOL bIsXPorLater;
 /* 0x006c */    DWORD DevVenId;     // DeviceId << 10 | VendorId
@@ -45,15 +43,23 @@ typedef struct _D3D9Unknown6BC_INT_
 #endif
 /* 0x0078 */    DWORD bForceDriverFlagsOn;
 /* 0x007c */    DWORD bForceDriverFlagsOff;
-
+/* 0x0080 */    DWORD dwUnknown0080;
 /* 0x0084 */    DWORD dwCaps;
 /* 0x0088 */    DWORD dwSVBCaps;
 /* 0x008c */    HMODULE _unknown0151;
-
+/* 0x0090 */    DWORD dwUnknown0090;
 /* 0x0094 */    D3DDEVTYPE DeviceType;
-
+/* 0x0098 */    DWORD dwUnknown0098;
+/* 0x009c */    DWORD dwUnknown009c;
+/* 0x00a0 */    DWORD dwUnknown00a0;
+/* 0x00a4 */    DWORD dwUnknown00a4;
+/* 0x00a8 */    DWORD dwUnknown00a8;
+/* 0x00ac */    DWORD dwUnknown00ac;
+/* 0x00b0 */    DWORD dwUnknown00b0;
+/* 0x00b4 */    DWORD dwUnknown00b4;
+/* 0x00b8 */    DWORD dwUnknown00b8;
 /* 0x00BC */    DDGAMMARAMP lpGammaRamp;
-} D3D9_Unknown6BC_INT;
+} D3D9_Unknown6BC;
 
 typedef struct _tagD3D9_DRIVERCAPS
 {
@@ -78,7 +84,7 @@ typedef struct _tagD3D9_DRIVERCAPS
 /* 0x0174 */    D3DQUERYTYPE* pSupportedQueriesList;
 } D3D9_DRIVERCAPS, FAR *LPD3D9_DRIVERCAPS;
 
-typedef struct _tagUnknownA8h
+typedef struct _tagUnknownA8h_
 {
 /* 0x0000 */    DWORD DdCreateSurface;
 /* 0x0004 */    DWORD DdDestroySurface;
@@ -122,16 +128,16 @@ typedef struct _tagUnknownA8h
 /* 0x009c */    DWORD DXVAExecute;
 /* 0x00a0 */    DWORD DXVAQueryStatus;
 /* 0x00a4 */    D3DDEVTYPE DeviceType;
-} D3D9_UnknownA8h_INT;
+} D3D9_UnknownA8h;
 
-typedef struct _tagD3D9_DEVICEDATA
+typedef struct _tagD3D9_DEVICEDATA_
 {
 /* 0x0000 */    D3D9_DRIVERCAPS DriverCaps;
-/* 0x0178 */    D3D9_UnknownA8h_INT _UnknownA8h;
+/* 0x0178 */    D3D9_UnknownA8h _UnknownA8h;
 /* 0x0220 */    CHAR szDeviceName[CCHDEVICENAME];
 /* 0x0240 */    HDC hDC;
 /* 0x0244 */    GUID DisplayGuid;
-/* 0x0254 */    D3D9_Unknown6BC_INT* pUnknown6BC;
+/* 0x0254 */    D3D9_Unknown6BC* pUnknown6BC;
 /* 0x0258 */    D3DDEVTYPE DeviceType;
 /* 0x025c */    HMODULE hD3DRefDll;
 /* 0x0260 */    DWORD unknown0152;
@@ -154,7 +160,7 @@ typedef struct _tagDIRECT3D9DisplayAdapterInfo_
 /* 0x013c */    D3D9_DRIVERCAPS DriverCaps;
 /* 0x02b4 */    DWORD unknown000104;
 /* 0x02b8 */    DWORD unknown000105;
-} Direct3D9DisplayAdapterInfo_INT, FAR* LPDIRECT3D9_DISPLAYADAPTER_INT;
+} Direct3D9DisplayAdapterInfo, FAR* LPDIRECT3D9_DISPLAYADAPTER;
 
 typedef struct _tagDIRECT3D9_INT_
 {
@@ -165,7 +171,7 @@ typedef struct _tagDIRECT3D9_INT_
 /* 0x0024 */    struct _tagDIRECT3D9_INT_ *lpInt;
 /* 0x0028 */    LONG dwRefCnt;          /* Increases and decreases by AddRef() and Release() */
 /* 0x002c */    UINT NumDisplayAdapters;
-/* 0x0030 */    Direct3D9DisplayAdapterInfo_INT DisplayAdapters[D3D9_INT_MAX_NUM_ADAPTERS];
+/* 0x0030 */    Direct3D9DisplayAdapterInfo DisplayAdapters[D3D9_INT_MAX_NUM_ADAPTERS];
 /* 0x2100 */    DWORD unknown002112;
 /* 0x2104 */    DWORD unknown002113;
 /* 0x2108 */    DWORD unknown002114;

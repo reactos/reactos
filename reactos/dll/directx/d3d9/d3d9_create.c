@@ -36,7 +36,7 @@ static BOOL IsDirectDrawSupported()
     return TRUE;
 }
 
-static VOID SetAdapterInfo(IN OUT LPDIRECT3D9_DISPLAYADAPTER_INT pDisplayAdapter, IN LPDISPLAY_DEVICEA pDisplayDevice)
+static VOID SetAdapterInfo(IN OUT LPDIRECT3D9_DISPLAYADAPTER pDisplayAdapter, IN LPDISPLAY_DEVICEA pDisplayDevice)
 {
     memcpy(&pDisplayAdapter->DisplayGuid, &DISPLAY_GUID, sizeof(GUID));
 
@@ -57,9 +57,9 @@ static BOOL IsGDIDriver(HDC hDC)
     return FALSE;
 }
 
-void GetDisplayAdapterFromDevice(IN OUT LPDIRECT3D9_DISPLAYADAPTER_INT pDisplayAdapters, IN DWORD AdapterIndex, IN LPD3D9_DEVICEDATA pDeviceData)
+void GetDisplayAdapterFromDevice(IN OUT LPDIRECT3D9_DISPLAYADAPTER pDisplayAdapters, IN DWORD AdapterIndex, IN LPD3D9_DEVICEDATA pDeviceData)
 {
-    LPDIRECT3D9_DISPLAYADAPTER_INT pDisplayAdapter = &pDisplayAdapters[AdapterIndex];
+    LPDIRECT3D9_DISPLAYADAPTER pDisplayAdapter = &pDisplayAdapters[AdapterIndex];
     DWORD FormatOpIndex;
     DWORD AdapterGroupId;
     DWORD NumAdaptersInGroup;
@@ -113,11 +113,11 @@ void GetDisplayAdapterFromDevice(IN OUT LPDIRECT3D9_DISPLAYADAPTER_INT pDisplayA
     }
 }
 
-static BOOL GetDirect3D9AdapterInfo(IN OUT LPDIRECT3D9_DISPLAYADAPTER_INT pDisplayAdapters, IN DWORD AdapterIndex)
+static BOOL GetDirect3D9AdapterInfo(IN OUT LPDIRECT3D9_DISPLAYADAPTER pDisplayAdapters, IN DWORD AdapterIndex)
 {
     HDC hDC;
     LPD3D9_DEVICEDATA pDeviceData;
-    LPDIRECT3D9_DISPLAYADAPTER_INT pDisplayAdapter = &pDisplayAdapters[AdapterIndex];
+    LPDIRECT3D9_DISPLAYADAPTER pDisplayAdapter = &pDisplayAdapters[AdapterIndex];
 
     /* Test DC creation for the display device */
     if (NULL == (hDC = CreateDCA(NULL, pDisplayAdapter->szDeviceName, NULL, NULL)))

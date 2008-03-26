@@ -230,7 +230,7 @@ static void CopyDriverCaps(const D3DCAPS9* pSrcCaps, D3DCAPS9* pDstCaps)
         pDstCaps->MaxPointSize = 1.0f;
 }
 
-HRESULT GetAdapterCaps(const LPDIRECT3D9_DISPLAYADAPTER_INT pDisplayAdapter, D3DDEVTYPE DeviceType, D3DCAPS9* pDstCaps)
+HRESULT GetAdapterCaps(const LPDIRECT3D9_DISPLAYADAPTER pDisplayAdapter, D3DDEVTYPE DeviceType, D3DCAPS9* pDstCaps)
 {
     HRESULT hResult = D3DERR_INVALIDDEVICE;
     D3DCAPS9* pDriverCaps = NULL;

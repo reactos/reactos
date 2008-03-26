@@ -15,7 +15,7 @@
 
 static INT g_NumDevices = 0;
 
-void CreateDisplayModeList(LPCSTR lpszDeviceName, D3DDISPLAYMODE* pDisplayModes, DWORD* pNumDisplayModes, D3DFORMAT Default16BitFormat, D3D9_Unknown6BC_INT* pUnknown6BC)
+void CreateDisplayModeList(LPCSTR lpszDeviceName, D3DDISPLAYMODE* pDisplayModes, DWORD* pNumDisplayModes, D3DFORMAT Default16BitFormat, D3D9_Unknown6BC* pUnknown6BC)
 {
     DEVMODEA DevMode;
     DWORD ModeIndex = 0;
@@ -68,9 +68,9 @@ void CreateDisplayModeList(LPCSTR lpszDeviceName, D3DDISPLAYMODE* pDisplayModes,
     *pNumDisplayModes = ValidModes;
 }
 
-static void CreateInternalDeviceData(HDC hDC, LPCSTR lpszDeviceName, D3D9_Unknown6BC_INT** ppUnknown, D3DDEVTYPE DeviceType, HMODULE* hD3DRefDll)
+static void CreateInternalDeviceData(HDC hDC, LPCSTR lpszDeviceName, D3D9_Unknown6BC** ppUnknown, D3DDEVTYPE DeviceType, HMODULE* hD3DRefDll)
 {
-    D3D9_Unknown6BC_INT* pUnknown6BC;
+    D3D9_Unknown6BC* pUnknown6BC;
     DWORD ValueSize;
 
     if (ppUnknown) *ppUnknown = NULL;
@@ -83,7 +83,7 @@ static void CreateInternalDeviceData(HDC hDC, LPCSTR lpszDeviceName, D3D9_Unknow
         return;
     }
 
-    pUnknown6BC = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(D3D9_Unknown6BC_INT));
+    pUnknown6BC = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(D3D9_Unknown6BC));
     if (NULL == pUnknown6BC)
     {
         DPRINT1("Out of memory");
@@ -157,7 +157,7 @@ BOOL GetDeviceData(LPD3D9_DEVICEDATA pDeviceData)
     else
     {
         D3D9_DRIVERCAPS DriverCaps;
-        D3D9_UnknownA8h_INT unknownA8h;
+        D3D9_UnknownA8h unknownA8h;
 
         if (FALSE == CanReenableDirectDrawObject(pDeviceData->pUnknown6BC))
         {
@@ -297,7 +297,7 @@ BOOL GetDeviceData(LPD3D9_DEVICEDATA pDeviceData)
 
 
 
-BOOL CanReenableDirectDrawObject(D3D9_Unknown6BC_INT* pUnknown)
+BOOL CanReenableDirectDrawObject(D3D9_Unknown6BC* pUnknown)
 {
     BOOL bDisplayModeWasChanged;
 
@@ -332,9 +332,9 @@ static void ResetGetDriverInfo2Data(DD_GETDRIVERINFO2DATA* DrvInfo2, DWORD dwTyp
     DrvInfo2->dwExpectedSize = dwExpectedSize;
 }
 
-BOOL GetD3D9DriverInfo( D3D9_Unknown6BC_INT* pUnknown6BC,
+BOOL GetD3D9DriverInfo( D3D9_Unknown6BC* pUnknown6BC,
                         LPD3D9_DRIVERCAPS pDriverCaps,
-                        D3D9_UnknownA8h_INT* pUnknownA8h,
+                        D3D9_UnknownA8h* pUnknownA8h,
                         LPCSTR lpszDeviceName,
                         HMODULE hD3dRefDll,
                         D3DHAL_GLOBALDRIVERDATA* pGblDriverData,

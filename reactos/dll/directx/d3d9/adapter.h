@@ -13,7 +13,7 @@ BOOL GetAdapterInfo(LPCSTR lpszDeviceName, D3DADAPTER_IDENTIFIER9* pIdentifier);
 
 BOOL GetAdapterMode(LPCSTR lpszDeviceName, D3DDISPLAYMODE* pMode);
 
-HRESULT GetAdapterCaps(const LPDIRECT3D9_DISPLAYADAPTER_INT pDisplayAdapter, D3DDEVTYPE DeviceType, D3DCAPS9* pDstCaps);
+HRESULT GetAdapterCaps(const LPDIRECT3D9_DISPLAYADAPTER pDisplayAdapter, D3DDEVTYPE DeviceType, D3DCAPS9* pDstCaps);
 
 HMONITOR GetAdapterMonitor(LPCSTR lpszDeviceName);
 

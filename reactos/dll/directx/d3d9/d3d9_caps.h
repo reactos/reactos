@@ -14,15 +14,15 @@
 
 #define DX9_DDI_VERSION     4
 
-void CreateDisplayModeList(LPCSTR lpszDeviceName, D3DDISPLAYMODE* pDisplayModes, DWORD* pNumDisplayModes, D3DFORMAT DisplayFormat, D3D9_Unknown6BC_INT* pUnknown6BC);
+void CreateDisplayModeList(LPCSTR lpszDeviceName, D3DDISPLAYMODE* pDisplayModes, DWORD* pNumDisplayModes, D3DFORMAT DisplayFormat, D3D9_Unknown6BC* pUnknown6BC);
 
 BOOL GetDeviceData(LPD3D9_DEVICEDATA pDeviceData);
 
-BOOL CanReenableDirectDrawObject(D3D9_Unknown6BC_INT* ppUnknown);
+BOOL CanReenableDirectDrawObject(D3D9_Unknown6BC* ppUnknown);
 
-BOOL GetD3D9DriverInfo( D3D9_Unknown6BC_INT* pUnknown6BC,
+BOOL GetD3D9DriverInfo( D3D9_Unknown6BC* pUnknown6BC,
                         LPD3D9_DRIVERCAPS pDriverCaps,
-                        D3D9_UnknownA8h_INT* pUnknownA8h,
+                        D3D9_UnknownA8h* pUnknownA8h,
                         LPCSTR lpszDeviceName,
                         HMODULE hD3dRefDll,
                         D3DHAL_GLOBALDRIVERDATA* pGblDriverData,
