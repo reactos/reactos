@@ -29,7 +29,9 @@ typedef struct _previewinfo
     int page;
     int pages;
     HDC hdc;
+    HDC hdc2;
     HDC hdcSized;
+    HDC hdcSized2;
     RECT window;
     LPWSTR wszFileName;
 } previewinfo, *ppreviewinfo;
@@ -229,6 +231,7 @@ static LPWSTR dialog_print_to_file(HWND hMainWnd)
 static int get_num_pages(HWND hEditorWnd, FORMATRANGE fr)
 {
     int page = 0;
+    fr.chrg.cpMin = 0;
 
     do
     {
@@ -245,11 +248,10 @@ static void char_from_pagenum(HWND hEditorWnd, FORMATRANGE *fr, int page)
 {
     int i;
 
-    for(i = 1; i <= page; i++)
-    {
-        if(i == page)
-            break;
+    fr->chrg.cpMin = 0;
 
+    for(i = 1; i < page; i++)
+    {
         fr->chrg.cpMin = SendMessageW(hEditorWnd, EM_FORMATRANGE, TRUE, (LPARAM)fr);
     }
 }
@@ -431,7 +433,8 @@ static void preview_bar_show(HWND hMainWnd, BOOL show)
         AddTextButton(hReBar, STRING_PREVIEW_PRINT, ID_PRINT, BANDID_PREVIEW_BTN1);
         AddTextButton(hReBar, STRING_PREVIEW_NEXTPAGE, ID_PREVIEW_NEXTPAGE, BANDID_PREVIEW_BTN2);
         AddTextButton(hReBar, STRING_PREVIEW_PREVPAGE, ID_PREVIEW_PREVPAGE, BANDID_PREVIEW_BTN3);
-        AddTextButton(hReBar, STRING_PREVIEW_CLOSE, ID_FILE_EXIT, BANDID_PREVIEW_BTN4);
+        AddTextButton(hReBar, STRING_PREVIEW_TWOPAGES, ID_PREVIEW_NUMPAGES, BANDID_PREVIEW_BTN4);
+        AddTextButton(hReBar, STRING_PREVIEW_CLOSE, ID_FILE_EXIT, BANDID_PREVIEW_BTN5);
 
         hStatic = CreateWindowW(WC_STATICW, NULL,
                                 WS_VISIBLE | WS_CHILD, 0, 0, 0, 0,
@@ -458,6 +461,7 @@ void init_preview(HWND hMainWnd, LPWSTR wszFileName)
 {
     preview.page = 1;
     preview.hdc = 0;
+    preview.hdc2 = 0;
     preview.wszFileName = wszFileName;
     preview_bar_show(hMainWnd, TRUE);
 }
@@ -616,17 +620,63 @@ LRESULT CALLBACK ruler_proc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
     return 0;
 }
 
+void draw_preview_page(HDC hdc, HDC* hdcSized, FORMATRANGE* lpFr, float ratio, int bmNewWidth, int bmNewHeight, int bmWidth, int bmHeight)
+{
+    HBITMAP hBitmapScaled = CreateCompatibleBitmap(hdc, bmNewWidth, bmNewHeight);
+    HPEN hPen;
+    int TopMargin = (int)((float)twips_to_pixels(lpFr->rc.top, GetDeviceCaps(hdc, LOGPIXELSX)) * ratio);
+    int BottomMargin = (int)((float)twips_to_pixels(lpFr->rc.bottom, GetDeviceCaps(hdc, LOGPIXELSX)) * ratio);
+    int LeftMargin = (int)((float)twips_to_pixels(lpFr->rc.left, GetDeviceCaps(hdc, LOGPIXELSY)) * ratio);
+    int RightMargin = (int)((float)twips_to_pixels(lpFr->rc.right, GetDeviceCaps(hdc, LOGPIXELSY)) * ratio);
+
+    if(*hdcSized);
+        DeleteDC(*hdcSized);
+    *hdcSized = CreateCompatibleDC(hdc);
+    SelectObject(*hdcSized, hBitmapScaled);
+
+    StretchBlt(*hdcSized, 0, 0, bmNewWidth, bmNewHeight, hdc, 0, 0, bmWidth, bmHeight, SRCCOPY);
+
+    /* Draw margin lines */
+    hPen = CreatePen(PS_DOT, 1, RGB(0,0,0));
+    SelectObject(*hdcSized, hPen);
+
+    MoveToEx(*hdcSized, 0, TopMargin, NULL);
+    LineTo(*hdcSized, bmNewWidth, TopMargin);
+    MoveToEx(*hdcSized, 0, BottomMargin, NULL);
+    LineTo(*hdcSized, bmNewWidth, BottomMargin);
+
+    MoveToEx(*hdcSized, LeftMargin, 0, NULL);
+    LineTo(*hdcSized, LeftMargin, bmNewHeight);
+    MoveToEx(*hdcSized, RightMargin, 0, NULL);
+    LineTo(*hdcSized, RightMargin, bmNewHeight);
+
+}
+
+static void draw_preview(HWND hEditorWnd, FORMATRANGE* lpFr, int bmWidth, int bmHeight, RECT* paper, int page)
+{
+    HBITMAP hBitmapCapture = CreateCompatibleBitmap(lpFr->hdc, bmWidth, bmHeight);
+
+    char_from_pagenum(hEditorWnd, lpFr, page);
+    SelectObject(lpFr->hdc, hBitmapCapture);
+    FillRect(lpFr->hdc, paper, GetStockObject(WHITE_BRUSH));
+    SendMessageW(hEditorWnd, EM_FORMATRANGE, TRUE, (LPARAM)lpFr);
+    /* EM_FORMATRANGE sets fr.rc to indicate the area printed in, but we want to
+       keep the original for drawing margins */
+    lpFr->rc = get_print_rect(lpFr->hdcTarget);
+    SendMessageW(hEditorWnd, EM_FORMATRANGE, FALSE, 0);
+}
+
 LRESULT print_preview(HWND hMainWnd)
 {
     FORMATRANGE fr;
     GETTEXTLENGTHEX gt;
     HDC hdc;
     RECT window, background;
-    HBITMAP hBitmapCapture, hBitmapScaled;
     int bmWidth, bmHeight, bmNewWidth, bmNewHeight;
     float ratioWidth, ratioHeight, ratio;
     int xOffset, yOffset;
     int barheight;
+    float spacing = 20.0;
     HWND hReBar = GetDlgItem(hMainWnd, IDC_REBAR);
     PAINTSTRUCT ps;
 
@@ -643,14 +693,20 @@ LRESULT print_preview(HWND hMainWnd)
     bmWidth = twips_to_pixels(fr.rcPage.right, GetDeviceCaps(hdc, LOGPIXELSX));
     bmHeight = twips_to_pixels(fr.rcPage.bottom, GetDeviceCaps(hdc, LOGPIXELSY));
 
-    hBitmapCapture = CreateCompatibleBitmap(hdc, bmWidth, bmHeight);
-
     if(!preview.hdc)
     {
         RECT paper;
         HWND hEditorWnd = GetDlgItem(hMainWnd, IDC_EDITOR);
 
         preview.hdc = CreateCompatibleDC(hdc);
+
+        if(preview.hdc2)
+        {
+            if((int)preview.hdc2 != -1)
+                DeleteDC(preview.hdc2);
+            preview.hdc2 = CreateCompatibleDC(hdc);
+        }
+
         fr.hdc = preview.hdc;
         gt.flags = GTL_DEFAULT;
         gt.codepage = 1200;
@@ -665,21 +721,29 @@ LRESULT print_preview(HWND hMainWnd)
         if(!preview.pages)
             preview.pages = get_num_pages(hEditorWnd, fr);
 
-        SelectObject(preview.hdc, hBitmapCapture);
+        fr.hdc = preview.hdc;
+        draw_preview(hEditorWnd, &fr, bmWidth, bmHeight, &paper, preview.page);
 
-        char_from_pagenum(hEditorWnd, &fr, preview.page);
-
-        FillRect(preview.hdc, &paper, GetStockObject(WHITE_BRUSH));
-        SendMessageW(hEditorWnd, EM_FORMATRANGE, TRUE, (LPARAM)&fr);
-        SendMessageW(hEditorWnd, EM_FORMATRANGE, FALSE, 0);
+        if(preview.hdc2)
+        {
+            fr.hdc = preview.hdc2;
+            draw_preview(hEditorWnd, &fr, bmWidth, bmHeight, &paper, preview.page + 1);
+        }
 
         EnableWindow(GetDlgItem(hReBar, ID_PREVIEW_PREVPAGE), preview.page > 1);
-        EnableWindow(GetDlgItem(hReBar, ID_PREVIEW_NEXTPAGE), preview.page < preview.pages);
+        EnableWindow(GetDlgItem(hReBar, ID_PREVIEW_NEXTPAGE), preview.hdc2 ?
+                                                              (preview.page + 1) < preview.pages :
+                                                              preview.page < preview.pages);
+        EnableWindow(GetDlgItem(hReBar, ID_PREVIEW_NUMPAGES), preview.pages > 1);
     }
 
     barheight = SendMessageW(hReBar, RB_GETBARHEIGHT, 0, 0);
-    ratioWidth = ((float)window.right - 20.0) / (float)bmHeight;
-    ratioHeight = ((float)window.bottom - 20.0 - (float)barheight) / (float)bmHeight;
+    ratioHeight = ((float)window.bottom - spacing - (float)barheight) / (float)bmHeight;
+
+    if(preview.hdc2)
+        ratioWidth = ((float)window.right / 2.0 - spacing * 2.0) / (float)bmWidth;
+    else
+        ratioWidth = ((float)window.right - spacing * 3.0) / (float)bmWidth;
 
     if(ratioWidth > ratioHeight)
         ratio = ratioHeight;
@@ -688,44 +752,16 @@ LRESULT print_preview(HWND hMainWnd)
 
     bmNewWidth = (int)((float)bmWidth * ratio);
     bmNewHeight = (int)((float)bmHeight * ratio);
-    hBitmapScaled = CreateCompatibleBitmap(hdc, bmNewWidth, bmNewHeight);
 
-    xOffset = ((window.right - bmNewWidth) / 2);
     yOffset = ((window.bottom - bmNewHeight + barheight) / 2);
 
-    if(window.right != preview.window.right || window.bottom != preview.window.bottom)
-    {
-        HPEN hPen;
-        int TopMargin = (int)((float)twips_to_pixels(fr.rc.top, GetDeviceCaps(hdc, LOGPIXELSX)) * ratio);
-        int BottomMargin = (int)((float)twips_to_pixels(fr.rc.bottom, GetDeviceCaps(hdc, LOGPIXELSX)) * ratio);
-        int LeftMargin = (int)((float)twips_to_pixels(fr.rc.left, GetDeviceCaps(hdc, LOGPIXELSY)) * ratio);
-        int RightMargin = (int)((float)twips_to_pixels(fr.rc.right, GetDeviceCaps(hdc, LOGPIXELSY)) * ratio);
-
-        DeleteDC(preview.hdcSized);
-        preview.hdcSized = CreateCompatibleDC(hdc);
-        SelectObject(preview.hdcSized, hBitmapScaled);
-
-        StretchBlt(preview.hdcSized, 0, 0, bmNewWidth, bmNewHeight, preview.hdc, 0, 0, bmWidth, bmHeight, SRCCOPY);
-
-        /* Draw margin lines */
-        hPen = CreatePen(PS_DOT, 1, RGB(0,0,0));
-        SelectObject(preview.hdcSized, hPen);
-
-        MoveToEx(preview.hdcSized, 0, TopMargin, NULL);
-        LineTo(preview.hdcSized, bmNewWidth, TopMargin);
-        MoveToEx(preview.hdcSized, 0, BottomMargin, NULL);
-        LineTo(preview.hdcSized, bmNewWidth, BottomMargin);
-
-        MoveToEx(preview.hdcSized, LeftMargin, 0, NULL);
-        LineTo(preview.hdcSized, LeftMargin, bmNewHeight);
-        MoveToEx(preview.hdcSized, RightMargin, 0, NULL);
-        LineTo(preview.hdcSized, RightMargin, bmNewHeight);
-    }
+    if(!preview.hdc2)
+        xOffset = (window.right - bmNewWidth) / 2;
+    else
+        xOffset = (window.right - bmNewWidth * 2) / 2;
 
     window.top = barheight;
     FillRect(hdc, &window, GetStockObject(GRAY_BRUSH));
-
-    SelectObject(hdc, hBitmapScaled);
 
     background.left = xOffset - 2;
     background.right = xOffset + bmNewWidth + 2;
@@ -734,7 +770,27 @@ LRESULT print_preview(HWND hMainWnd)
 
     FillRect(hdc, &background, GetStockObject(BLACK_BRUSH));
 
+    if(window.right != preview.window.right || window.bottom != preview.window.bottom)
+    {
+        draw_preview_page(preview.hdc, &preview.hdcSized, &fr, ratio, bmNewWidth, bmNewHeight, bmWidth, bmHeight);
+
+        if(preview.hdc2)
+        {
+            background.left += bmNewWidth + spacing;
+            background.right += bmNewWidth + spacing;
+
+            FillRect(hdc, &background, GetStockObject(BLACK_BRUSH));
+
+            draw_preview_page(preview.hdc2, &preview.hdcSized2, &fr, ratio, bmNewWidth, bmNewHeight, bmWidth, bmHeight);
+        }
+    }
+
     BitBlt(hdc, xOffset, yOffset, bmNewWidth, bmNewHeight, preview.hdcSized, 0, 0, SRCCOPY);
+
+    if(preview.hdc2)
+    {
+        BitBlt(hdc, xOffset + bmNewWidth + spacing, yOffset, bmNewWidth, bmNewHeight, preview.hdcSized2, 0, 0, SRCCOPY);
+    }
 
     DeleteDC(fr.hdcTarget);
     preview.window = window;
@@ -742,6 +798,20 @@ LRESULT print_preview(HWND hMainWnd)
     EndPaint(hMainWnd, &ps);
 
     return 0;
+}
+
+void update_preview(HWND hWnd)
+{
+    RECT rc;
+
+    DeleteDC(preview.hdc);
+    preview.hdc = 0;
+
+    preview.window.right = 0;
+
+    GetClientRect(hWnd, &rc);
+    rc.top += SendMessageW(GetDlgItem(hWnd, IDC_REBAR), RB_GETBARHEIGHT, 0, 0);
+    InvalidateRect(hWnd, &rc, TRUE);
 }
 
 LRESULT preview_command(HWND hWnd, WPARAM wParam, LPARAM lParam)
@@ -755,20 +825,37 @@ LRESULT preview_command(HWND hWnd, WPARAM wParam, LPARAM lParam)
         case ID_PREVIEW_NEXTPAGE:
         case ID_PREVIEW_PREVPAGE:
         {
-            HWND hReBar = GetDlgItem(hWnd, IDC_REBAR);
-            RECT rc;
-
             if(LOWORD(wParam) == ID_PREVIEW_NEXTPAGE)
                 preview.page++;
             else
                 preview.page--;
 
-            preview.hdc = 0;
-            preview.window.right = 0;
+            update_preview(hWnd);
+        }
+        break;
 
-            GetClientRect(hWnd, &rc);
-            rc.top += SendMessageW(hReBar, RB_GETBARHEIGHT, 0, 0);
-            InvalidateRect(hWnd, &rc, TRUE);
+        case ID_PREVIEW_NUMPAGES:
+        {
+            HWND hReBar = GetDlgItem(hWnd, IDC_REBAR);
+            WCHAR name[MAX_STRING_LEN];
+            HINSTANCE hInst = (HINSTANCE)GetWindowLongPtrW(hWnd, GWLP_HINSTANCE);
+
+            if(preview.hdc2)
+            {
+                DeleteDC(preview.hdc2);
+                preview.hdc2 = 0;
+            } else
+            {
+                if(preview.page == preview.pages)
+                    preview.page--;
+                preview.hdc2 = (HDC)-1;
+            }
+
+            LoadStringW(hInst, preview.hdc2 ? STRING_PREVIEW_ONEPAGE : STRING_PREVIEW_TWOPAGES,
+                        name, MAX_STRING_LEN);
+
+            SetWindowTextW(GetDlgItem(hReBar, ID_PREVIEW_NUMPAGES), name);
+            update_preview(hWnd);
         }
         break;
 

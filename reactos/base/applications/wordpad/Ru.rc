@@ -212,6 +212,8 @@ BEGIN
     STRING_PREVIEW_PRINT,            "Печать"
     STRING_PREVIEW_NEXTPAGE,         "Следующая страница"
     STRING_PREVIEW_PREVPAGE,         "Предыдущая страница"
+    STRING_PREVIEW_TWOPAGES,         "Two pages"
+    STRING_PREVIEW_ONEPAGE,          "One page"
     STRING_PREVIEW_CLOSE,            "Закрыть"
 END
 

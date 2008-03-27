@@ -50,6 +50,16 @@ MAIN_MENU MENU LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
  }
 }
 
+IDD_INDEX DIALOG DISCARDABLE 0, 0, 200, 190 LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
+STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "Index"
+{
+    LISTBOX IDC_INDEXLIST, 10, 10, 180, 150, LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_BORDER
+    PUSHBUTTON "&OK", IDOK, 40, 170, 50, 12
+    PUSHBUTTON "&Abbrechen", IDCANCEL, 120, 170, 50, 12
+}
+
 /* Strings */
 
 STRINGTABLE DISCARDABLE LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
@@ -64,8 +74,8 @@ STID_CONTENTS, 		"&Inhalt"
 STID_SEARCH, 		"&Suchen"
 STID_BACK, 		"&Zurück"
 STID_HISTORY, 		"&Bisher"
-STID_TOPICS, 		"&Topics"
+STID_TOPICS, 		"&Themen"
 STID_ALL_FILES, 	"Alle Dateien (*.*)"
 STID_HELP_FILES_HLP, 	"Hilfe-Dateien (*.hlp)"
-STID_FILE_NOT_FOUND_s	"Cannot find '%s'. Do you want to find this file yourself?"
+STID_FILE_NOT_FOUND_s	"'%s' konnte nicht gefunden werden. Wollen Sie selber nach dieser Datei suchen?"
 }

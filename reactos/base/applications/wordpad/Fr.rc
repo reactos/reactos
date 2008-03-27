@@ -213,6 +213,8 @@ BEGIN
     STRING_PREVIEW_PRINT,            "Imprimer"
     STRING_PREVIEW_NEXTPAGE,         "Page suivante"
     STRING_PREVIEW_PREVPAGE,         "Page précédente"
+    STRING_PREVIEW_TWOPAGES,         "Two pages"
+    STRING_PREVIEW_ONEPAGE,          "One page"
     STRING_PREVIEW_CLOSE,            "Fermer"
 END
 

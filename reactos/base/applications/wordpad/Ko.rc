@@ -208,6 +208,8 @@ BEGIN
     STRING_PREVIEW_PRINT,            "인쇄"
     STRING_PREVIEW_NEXTPAGE,         "다음 페이지"
     STRING_PREVIEW_PREVPAGE,         "이전 페이지"
+    STRING_PREVIEW_TWOPAGES,         "Two pages"
+    STRING_PREVIEW_ONEPAGE,          "One page"
     STRING_PREVIEW_CLOSE,            "닫기"
 END
 

@@ -213,6 +213,8 @@ BEGIN
     STRING_PREVIEW_PRINT,            "Skriv ut"
     STRING_PREVIEW_NEXTPAGE,         "Neste side"
     STRING_PREVIEW_PREVPAGE,         "Forrige side"
+    STRING_PREVIEW_TWOPAGES,         "To sider"
+    STRING_PREVIEW_ONEPAGE,          "Én side"
     STRING_PREVIEW_CLOSE,            "Lukk"
 END
 
