@@ -17,7 +17,7 @@
 
 LIST_ENTRY HandleTableListHead;
 EX_PUSH_LOCK HandleTableListLock;
-#define SizeOfHandle(x) (sizeof(HANDLE) * x)
+#define SizeOfHandle(x) (sizeof(HANDLE) * (x))
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
@@ -43,11 +43,11 @@ ExpLookupHandleTableEntry(IN PHANDLE_TABLE HandleTable,
 
     /* Clear the tag bits and check what the next handle is */
     Handle.TagBits = 0;
-    NextHandle = HandleTable->NextHandleNeedingPool;
+    NextHandle = *(volatile ULONG*)&HandleTable->NextHandleNeedingPool;
     if (Handle.Value >= NextHandle) return NULL;
 
     /* Get the table code */
-    TableBase = (ULONG_PTR)HandleTable->TableCode;
+    TableBase = *(volatile ULONG_PTR*)&HandleTable->TableCode;
 
     /* Extract the table level and actual table base */
     TableLevel = (ULONG)(TableBase & 3);
@@ -734,7 +734,7 @@ ExpAllocateHandleTableEntry(IN PHANDLE_TABLE HandleTable,
         ExAcquirePushLockShared(&HandleTable->HandleTableLock[i]);
 
         /* Check if the value changed after acquiring the lock */
-        if (OldValue != HandleTable->FirstFree)
+        if (OldValue != *(volatile ULONG*)&HandleTable->FirstFree)
         {
             /* It did, so try again */
             ExReleasePushLockShared(&HandleTable->HandleTableLock[i]);
@@ -743,7 +743,7 @@ ExpAllocateHandleTableEntry(IN PHANDLE_TABLE HandleTable,
         }
 
         /* Now get the next value and do the compare */
-        NewValue = Entry->NextFreeTableEntry;
+        NewValue = *(volatile ULONG*)&Entry->NextFreeTableEntry;
         NewValue1 = InterlockedCompareExchange((PLONG) &HandleTable->FirstFree,
                                                NewValue,
                                                OldValue);
@@ -874,7 +874,7 @@ ExpLockHandleTableEntry(IN PHANDLE_TABLE HandleTable,
     for (;;)
     {
         /* Get the current value and check if it's locked */
-        OldValue = (LONG_PTR)HandleTableEntry->Object;
+        OldValue = *(volatile LONG_PTRits *)&HandleTableEntry->Object;
         if (OldValue & EXHANDLE_TABLE_ENTRY_LOCK_BIT)
         {
             /* It's not locked, remove the lock bit to lock it */
