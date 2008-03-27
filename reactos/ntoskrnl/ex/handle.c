@@ -874,7 +874,7 @@ ExpLockHandleTableEntry(IN PHANDLE_TABLE HandleTable,
     for (;;)
     {
         /* Get the current value and check if it's locked */
-        OldValue = *(volatile LONG_PTRits *)&HandleTableEntry->Object;
+        OldValue = *(volatile LONG_PTR *)&HandleTableEntry->Object;
         if (OldValue & EXHANDLE_TABLE_ENTRY_LOCK_BIT)
         {
             /* It's not locked, remove the lock bit to lock it */
