@@ -970,8 +970,11 @@ BOOL SH_ShowRecycleBinProperties(WCHAR sDrive)
 
    ZeroMemory(&psh, sizeof(PROPSHEETHEADERW));
    psh.dwSize = sizeof(PROPSHEETHEADERW);
+   psh.dwFlags = PSP_DEFAULT | PSH_PROPTITLE;
+   psh.pszCaption = MAKEINTRESOURCEW(IDS_RECYCLEBIN_FOLDER_NAME);
    psh.hwndParent = NULL;
    psh.u3.phpage = hpsp;
+   psh.hInstance = shell32_hInstance;
 
    hprop = SH_CreatePropertySheetPage("BITBUCKET_PROPERTIES_DLG", BitBucketDlg, (LPARAM)sDrive, NULL);
    if (!hprop)
