@@ -142,9 +142,6 @@ IDM_WINEFILE MENU FIXED IMPURE
         MENUITEM "&Uso dell Guida\tF1",         ID_HELP_USING
         MENUITEM SEPARATOR
         MENUITEM "&Informazioni su Winefile...",ID_ABOUT
-#ifdef __WINE__
-        MENUITEM "Informazioni su &Wine...",    ID_ABOUT_WINE
-#endif
     }
 }
 

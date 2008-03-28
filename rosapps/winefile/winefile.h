@@ -43,10 +43,6 @@
 #include <locale.h>
 #include <time.h>
 
-#ifndef __WINE__
-#include <malloc.h> /* for alloca() */
-#endif
-
 #include <shellapi.h>   /* for ShellExecute() */
 #include <shlobj.h>     /* for SHFormatDrive() */
 

@@ -244,22 +244,6 @@ static void display_network_error(HWND hwnd)
 		MessageBox(hwnd, msg, RS(b2,IDS_WINEFILE), MB_OK);
 }
 
-static VOID WineLicense(HWND Wnd)
-{
-	WCHAR cap[20], text[1024];
-	LoadStringW(Globals.hInstance, IDS_LICENSE, text, 1024);
-	LoadStringW(Globals.hInstance, IDS_LICENSE_CAPTION, cap, 20);
-	MessageBoxW(Wnd, text, cap, MB_ICONINFORMATION | MB_OK);
-}
-
-static VOID WineWarranty(HWND Wnd)
-{
-	WCHAR cap[20], text[1024];
-	LoadStringW(Globals.hInstance, IDS_WARRANTY, text, 1024);
-	LoadStringW(Globals.hInstance, IDS_WARRANTY_CAPTION, cap, 20);
-	MessageBoxW(Wnd, text, cap, MB_ICONEXCLAMATION | MB_OK);
-}
-
 static inline BOOL get_check(HWND hwnd, INT id)
 {
 	return BST_CHECKED&SendMessageW(GetDlgItem(hwnd, id), BM_GETSTATE, 0, 0);
@@ -2509,25 +2493,11 @@ static LRESULT CALLBACK FrameWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM
 
 				/*TODO: There are even more menu items! */
 
-#ifndef _NO_EXTENSIONS
-#ifdef __WINE__
-				case ID_LICENSE:
-					WineLicense(Globals.hMainWnd);
-					break;
-
-				case ID_NO_WARRANTY:
-					WineWarranty(Globals.hMainWnd);
-					break;
-
-				case ID_ABOUT_WINE:
-					ShellAbout(hwnd, RS(b2,IDS_WINE), RS(b1,IDS_WINEFILE), 0);
-					break;
-#endif
-
 				case ID_ABOUT:
-					ShellAbout(hwnd, RS(b1,IDS_WINEFILE), NULL, 0);
+                                        ShellAbout(hwnd, RS(b1,IDS_WINEFILE), NULL,
+                                                   LoadImage( Globals.hInstance, MAKEINTRESOURCE(IDI_WINEFILE),
+                                                              IMAGE_ICON, 48, 48, LR_SHARED ));
 					break;
-#endif	/* _NO_EXTENSIONS */
 
 				default:
 					/*TODO: if (wParam >= PM_FIRST_LANGUAGE && wParam <= PM_LAST_LANGUAGE)
@@ -4491,7 +4461,7 @@ static LRESULT CALLBACK ChildWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM
 
 				case ID_FILE_DELETE: {
 					TCHAR path[BUFFER_LEN];
-					SHFILEOPSTRUCT shfo = {hwnd, FO_DELETE, path};
+                                        SHFILEOPSTRUCT shfo = {hwnd, FO_DELETE, path, NULL, FOF_ALLOWUNDO};
 
 					get_path(pane->cur, path);
 

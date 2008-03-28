@@ -139,9 +139,6 @@ IDM_WINEFILE MENU FIXED IMPURE
         MENUITEM "Yardým &Kullanýmý\tF1",       ID_HELP_USING
         MENUITEM SEPARATOR
         MENUITEM "Winefile hakkýnda &bilgi...", ID_ABOUT
-#ifdef __WINE__
-        MENUITEM "&Wine hakkýnda bilgi...",     ID_ABOUT_WINE
-#endif
     }
 }
 
@@ -242,7 +239,6 @@ STRINGTABLE
     IDS_SHELL               "Kabuk"
     IDS_TITLEFMT            "%s - %s"
     IDS_NO_IMPL             "Henüz tamamlanmadý"
-    IDS_WINE                "WINE"
     IDS_WINE_FILE           "Wine Dosya Yöneticisi"
 }
 

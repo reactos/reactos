@@ -101,9 +101,6 @@
 
 /* winefile extensions */
 
-#define ID_ABOUT_WINE                   0x8000
-#define ID_LICENSE                      0x8001
-#define ID_NO_WARRANTY                  0x8002
 #define ID_WINDOW_AUTOSORT              0x8003
 #define ID_VIEW_FULLSCREEN              0x8004
 #define ID_PREFERRED_SIZES              0x8005
@@ -122,8 +119,7 @@
 #define IDS_SHELL                       1205
 #define IDS_TITLEFMT                    1206
 #define IDS_NO_IMPL                     1207
-#define IDS_WINE                        1208
-#define IDS_WINE_FILE                   1209
+#define IDS_WINE_FILE                   1208
 
 #define IDS_COL_NAME                    1210
 #define IDS_COL_SIZE                    1211
@@ -135,11 +131,6 @@
 #define IDS_COL_ATTR                    1217
 #define IDS_COL_SEC                     1218
 #define IDS_FREE_SPACE_FMT              1219
-
-#define IDS_LICENSE_CAPTION             1300
-#define IDS_LICENSE                     1301
-#define IDS_WARRANTY_CAPTION            1302
-#define IDS_WARRANTY                    1303
 
 /* range for drive bar command ids: 0x9000..0x90FF */
 

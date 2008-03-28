@@ -139,9 +139,6 @@ IDM_WINEFILE MENU FIXED IMPURE
         MENUITEM "使用帮助（&U）\tF1",          ID_HELP_USING
         MENUITEM SEPARATOR
         MENUITEM "&关于 Winefile...",           ID_ABOUT
-#ifdef __WINE__
-        MENUITEM "关于 &Wine...",               ID_ABOUT_WINE
-#endif
     }
 }
 

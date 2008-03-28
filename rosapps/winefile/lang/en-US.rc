@@ -140,10 +140,7 @@ IDM_WINEFILE MENU FIXED IMPURE
         MENUITEM "Help &Search...\tF1",         ID_HELP
         MENUITEM "&Using Help\tF1",             ID_HELP_USING
         MENUITEM SEPARATOR
-        MENUITEM "&Info about Winefile...",     ID_ABOUT
-#ifdef __WINE__
-        MENUITEM "Info about &Wine...",         ID_ABOUT_WINE
-#endif
+        MENUITEM "&About Winefile...",          ID_ABOUT
     }
 }
 
@@ -236,7 +233,7 @@ STRINGTABLE
 
 STRINGTABLE
 {
-    IDS_WINEFILE            "Winefile"
+    IDS_WINEFILE            "Wine File Manager"
     IDS_ERROR               "Error"
     IDS_ROOT_FS             "root fs"
     IDS_UNIXFS              "unixfs"
@@ -244,7 +241,6 @@ STRINGTABLE
     IDS_SHELL               "Shell"
     IDS_TITLEFMT            "%s - %s"
     IDS_NO_IMPL             "Not yet implemented"
-    IDS_WINE                "WINE"
     IDS_WINE_FILE           "Wine File"
 }
 
@@ -261,28 +257,4 @@ STRINGTABLE
     IDS_COL_SEC             "Security"
 
     IDS_FREE_SPACE_FMT      "%s of %s free"
-}
-
-STRINGTABLE
-{
-IDS_LICENSE_CAPTION,            "LICENSE"
-IDS_LICENSE,
-"This library is free software; you can redistribute it and/or \
-modify it under the terms of the GNU Lesser General Public \
-License as published by the Free Software Foundation; either \
-version 2.1 of the License, or (at your option) any later version.\n\
-This library is distributed in the hope that it will be useful, \
-but WITHOUT ANY WARRANTY; without even the implied warranty of \
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU \
-Lesser General Public License for more details.\n\
-You should have received a copy of the GNU Lesser General Public \
-License along with this library; if not, write to the Free Software \
-Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA"
-
-IDS_WARRANTY_CAPTION, "NO WARRANTY"
-IDS_WARRANTY,
-"This library is distributed in the hope that it will be useful, \
-but WITHOUT ANY WARRANTY; without even the implied warranty of \
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU \
-Lesser General Public License for more details."
 }

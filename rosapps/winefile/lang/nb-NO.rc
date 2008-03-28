@@ -139,9 +139,6 @@ IDM_WINEFILE MENU FIXED IMPURE
         MENUITEM "Br&uk av hjelp\tF1",             ID_HELP_USING
         MENUITEM SEPARATOR
         MENUITEM "&Informasjon om Filbehandling . . .",     ID_ABOUT
-#ifdef __WINE__
-        MENUITEM "Informasjon om &Wine . . .",         ID_ABOUT_WINE
-#endif
     }
 }
 
@@ -242,7 +239,6 @@ STRINGTABLE
     IDS_SHELL               "Skall"
     IDS_TITLEFMT            "%s - %s"
     IDS_NO_IMPL             "Ikke implementert ennå"
-    IDS_WINE                "WINE"
     IDS_WINE_FILE           "Filbehandling"
 }
 
@@ -259,28 +255,4 @@ STRINGTABLE
     IDS_COL_SEC             "Sikkerhet"
 
     IDS_FREE_SPACE_FMT      "%s av %s ledig"
-}
-
-STRINGTABLE
-{
-IDS_LICENSE_CAPTION,            "LISENS"
-IDS_LICENSE,
-"Dette biblioteket er fri programvare; du kan redistribuere det \
-og/eller endre det under vilkårene i «GNU Lesser General Public \
-License», utgitt av the Free Software Foundation; enten \
-versjon 2.1 av Lisensen, eller (hvis du ønsker det) en nyere versjon.\n\
-Dette biblioteket distribueres i håp om at det er nyttig, \
-men UTEN ENHVER GARANTI; ikke engang den uttrykte garantien for \
-HANDELSDYKTIGHET eller EGNETHET FOR ET SPESIELT FORMÅL. Se «GNU \
-Lesser General Public License» for flere detaljer.\n\
-Du skal ha mottatt et eksemplar av «GNU Lesser General Public \
-License» sammen med dette biblioteket; hvis ikke, skriv til: the Free Software \
-Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA"
-
-IDS_WARRANTY_CAPTION, "INGEN GARANTI"
-IDS_WARRANTY,
-"Dette biblioteket distribueres i håp om at det er nyttig, \
-men UTEN ENHVER GARANTI; ikke engang en uttrykte garantien for \
-HANDELSDYKTIGHET eller EGNETHET FOR ET SPESIELT FORMÅL. Se «GNU \
-Lesser General Public License» for flere detaljer."
 }

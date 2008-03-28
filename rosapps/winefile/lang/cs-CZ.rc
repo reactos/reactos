@@ -145,9 +145,6 @@ IDM_WINEFILE MENU FIXED IMPURE
         MENUITEM "&Jak používat nápovìdu\tF1",  ID_HELP_USING
         MENUITEM SEPARATOR
         MENUITEM "&Informace o Winefile...",    ID_ABOUT
-#ifdef __WINE__
-        MENUITEM "Informace o &Wine...",        ID_ABOUT_WINE
-#endif
     }
 }
 
@@ -195,7 +192,6 @@ STRINGTABLE
     IDS_SHELL               "Pøíkazový øádek"
     IDS_TITLEFMT            "%s - %s"
     IDS_NO_IMPL             "Zatím neimplementováno"
-    IDS_WINE                "WINE"
     IDS_WINE_FILE           "Wine File"
 }
 

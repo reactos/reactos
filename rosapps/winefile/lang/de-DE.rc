@@ -137,9 +137,6 @@ IDM_WINEFILE MENU FIXED IMPURE
         MENUITEM "Hilfe &verwenden\tF1",        ID_HELP_USING
         MENUITEM SEPARATOR
         MENUITEM "&Info über Winefile...",      ID_ABOUT
-#ifdef __WINE__
-        MENUITEM "Info über &Wine...",          ID_ABOUT_WINE
-#endif
     }
 }
 
@@ -240,7 +237,6 @@ STRINGTABLE
     IDS_SHELL               "Shell"
     IDS_TITLEFMT            "%s - %s"
     IDS_NO_IMPL             "Noch nicht implementiert"
-    IDS_WINE                "WINE"
     IDS_WINE_FILE           "Wine File"
 }
 
@@ -257,31 +253,4 @@ STRINGTABLE
     IDS_COL_SEC             "Sicherheit"
 
     IDS_FREE_SPACE_FMT      "%s von %s frei"
-}
-
-STRINGTABLE
-{
-IDS_LICENSE_CAPTION,            "LIZENZ"
-IDS_LICENSE,
-"Diese Bibliothek ist freie Software; Sie dürfen sie unter den \
-Bedingungen der GNU Lesser General Public License, wie von der \
-Free Software Foundation veröffentlicht, weiterverteilen und/oder \
-modifizieren; entweder gemäß Version 2.1 der Lizenz oder (nach \
-Ihrer Option) jeder späteren Version.\n\
-Diese Bibliothek wird in der Hoffnung weiterverbreitet, daß sie \
-nützlich sein wird, jedoch OHNE IRGENDEINE GARANTIE, auch ohne \
-die implizierte Garantie der MARKTREIFE oder der VERWENDBARKEIT \
-FÜR EINEN BESTIMMTEN ZWECK. Mehr Details finden Sie in der \
-GNU Lesser General Public License.\n\
-Sie sollten eine Kopie der GNU Lesser General Public License zusammen \
-mit dieser Bibliothek erhalten haben; falls nicht, schreiben Sie an \
-die Free Software Foundation, Inc., 51 Franklin St, Fifth Floor, \
-Boston, MA 02110, USA."
-
-IDS_WARRANTY_CAPTION, "KEINE GARANTIE"
-IDS_WARRANTY,
-"Diese Bibliothek wird in der Hoffnung weiterverbreitet, daß sie nützlich \
-sein wird, jedoch OHNE IRGENDEINE GARANTIE, auch ohne die implizierte Garantie \
-der MARKTREIFE oder der VERWENDBARKEIT FÜR EINEN BESTIMMTEN ZWECK. Mehr Details \
-finden Sie in der GNU Lesser General Public License."
 }

@@ -139,9 +139,6 @@ IDM_WINEFILE MENU FIXED IMPURE
         MENUITEM "&Использование справки\tF1",  ID_HELP_USING
         MENUITEM SEPARATOR
         MENUITEM "&О Winefile...",              ID_ABOUT
-#ifdef __WINE__
-        MENUITEM "О &Wine...",                  ID_ABOUT_WINE
-#endif
     }
 }
 
@@ -241,7 +238,6 @@ STRINGTABLE
     IDS_SHELL               "Shell"
     IDS_TITLEFMT            "%s - %s"
     IDS_NO_IMPL             "Ещё не реализовано"
-    IDS_WINE                "WINE"
     IDS_WINE_FILE           "Wine File"
 }
 
@@ -258,28 +254,4 @@ STRINGTABLE
     IDS_COL_SEC             "Безопасность"
 
     IDS_FREE_SPACE_FMT      "%s из %s свободно"
-}
-
-STRINGTABLE
-{
-IDS_LICENSE_CAPTION,            "Лицензия"
-IDS_LICENSE,
-"Эта работа является свободным программным обеспечением; вы можете свободно распространять и/или \
-изменять её при соблюдении условий лицензии GNU Lesser General Public \
-которая была опубликована Free Software Foundation; \
-либо версии 2.1, либо любой более поздней версии.\n\
-Данная работа распространяется в надежде, что она будет полезной, \
-но БЕЗ ВСЯКОЙ ГАРАНТИИ; в том числе без вытекающей гарантии \
-ТОВАРНОЙ ПРИГОДНОСТИ или ПРИГОДНОСТИ ДЛЯ ЧАСТНОГО ИСПОЛЬЗОВАНИЯ. \
-См. GNU Lesser General Public License для более подробной информации.\n\
-Вы должны были получить копию the GNU Lesser General Public \
-License вместе с этой работой; если нет, пишите: the Free Software \
-Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA"
-
-IDS_WARRANTY_CAPTION, "Отсутствие гарантии"
-IDS_WARRANTY,
-"Данная работа распространяется в надежде, что она будет полезной, \
-но БЕЗ ВСЯКОЙ ГАРАНТИИ; в том числе без вытекающей гарантии \
-ТОВАРНОЙ ПРИГОДНОСТИ или ПРИГОДНОСТИ ДЛЯ ЧАСТНОГО ИСПОЛЬЗОВАНИЯ. \
-См. GNU Lesser General Public License для более подробной информации."
 }

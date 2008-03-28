@@ -142,9 +142,6 @@ IDM_WINEFILE MENU FIXED IMPURE
         MENUITEM "&Használat\tF1",              ID_HELP_USING
         MENUITEM SEPARATOR
         MENUITEM "&Winefile-ról...",            ID_ABOUT
-#ifdef __WINE__
-        MENUITEM "W&ine-ról...",                ID_ABOUT_WINE
-#endif
     }
 }
 
