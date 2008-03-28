@@ -629,7 +629,7 @@ void draw_preview_page(HDC hdc, HDC* hdcSized, FORMATRANGE* lpFr, float ratio, i
     int LeftMargin = (int)((float)twips_to_pixels(lpFr->rc.left, GetDeviceCaps(hdc, LOGPIXELSY)) * ratio);
     int RightMargin = (int)((float)twips_to_pixels(lpFr->rc.right, GetDeviceCaps(hdc, LOGPIXELSY)) * ratio);
 
-    if(*hdcSized);
+    if(*hdcSized)
         DeleteDC(*hdcSized);
     *hdcSized = CreateCompatibleDC(hdc);
     SelectObject(*hdcSized, hBitmapScaled);
