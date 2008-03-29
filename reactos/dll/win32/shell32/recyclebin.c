@@ -999,7 +999,7 @@ TRASH_CanTrashFile(LPCWSTR wszPath)
    LONG res;
    HKEY hKey;
    DWORD RegSerial, dwNukeOnDelete, dwType;
-   LONG dwLength;
+   DWORD dwLength;
 
 
    static WCHAR szKey[] = L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Bitbucket\\c";
