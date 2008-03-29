@@ -8,6 +8,10 @@
 #define NDEBUG
 #include <debug.h>
 
+NTSTATUS NTAPI RtlRegisterWait(PHANDLE, HANDLE, WAITORTIMERCALLBACKFUNC, PVOID, ULONG, ULONG);
+NTSTATUS NTAPI RtlDeregisterWaitEx(HANDLE, HANDLE);
+NTSTATUS NTAPI RtlDeregisterWait(HANDLE);
+
 
 #define STUB \
   SetLastError(ERROR_CALL_NOT_IMPLEMENTED); \
@@ -657,8 +661,18 @@ RegisterWaitForSingleObject(
     ULONG dwFlags
     )
 {
-    STUB;
-    return 0;
+    NTSTATUS status;
+
+//    TRACE("%p %p %p %p %d %d\n",
+//          phNewWaitObject,hObject,Callback,Context,dwMilliseconds,dwFlags);
+
+    status = RtlRegisterWait( phNewWaitObject, hObject, Callback, Context, dwMilliseconds, dwFlags );
+    if (status != STATUS_SUCCESS)
+    {
+        SetLastError( RtlNtStatusToDosError(status) );
+        return FALSE;
+    }
+    return TRUE;
 }
 
 /*
@@ -674,8 +688,19 @@ RegisterWaitForSingleObjectEx(
     ULONG dwFlags
     )
 {
-    STUB;
-    return 0;
+    NTSTATUS status;
+    HANDLE hNewWaitObject;
+
+//    TRACE("%p %p %p %d %d\n",
+//          hObject,Callback,Context,dwMilliseconds,dwFlags);
+
+    status = RtlRegisterWait( &hNewWaitObject, hObject, Callback, Context, dwMilliseconds, dwFlags );
+    if (status != STATUS_SUCCESS)
+    {
+        SetLastError( RtlNtStatusToDosError(status) );
+        return NULL;
+    }
+    return hNewWaitObject;
 }
 
 /*
@@ -794,8 +819,17 @@ UnregisterWait(
     HANDLE WaitHandle
     )
 {
-    STUB;
-    return 0;
+    NTSTATUS status;
+
+//    TRACE("%p\n",WaitHandle);
+
+    status = RtlDeregisterWaitEx( WaitHandle, NULL );
+    if (status != STATUS_SUCCESS)
+    {
+        SetLastError( RtlNtStatusToDosError(status) );
+        return FALSE;
+    }
+    return TRUE;
 }
 
 /*
@@ -808,8 +842,17 @@ UnregisterWaitEx(
     HANDLE CompletionEvent
     )
 {
-    STUB;
-    return 0;
+    NTSTATUS status;
+
+//    TRACE("%p\n",WaitHandle);
+
+    status = RtlDeregisterWaitEx( WaitHandle, CompletionEvent );
+    if (status != STATUS_SUCCESS)
+    {
+        SetLastError( RtlNtStatusToDosError(status) );
+        return FALSE;
+    }
+    return TRUE;
 }
 
 /*

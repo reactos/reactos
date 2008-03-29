@@ -274,4 +274,83 @@ _NtCurrentTeb(VOID)
     return NtCurrentTeb();
 }
 
+
+/***********************************************************************
+ *              RtlRegisterWait
+ *
+ * Registers a wait for a handle to become signaled.
+ *
+ * PARAMS
+ *  NewWaitObject [I] Handle to the new wait object. Use RtlDeregisterWait() to free it.
+ *  Object   [I] Object to wait to become signaled.
+ *  Callback [I] Callback function to execute when the wait times out or the handle is signaled.
+ *  Context  [I] Context to pass to the callback function when it is executed.
+ *  Milliseconds [I] Number of milliseconds to wait before timing out.
+ *  Flags    [I] Flags. See notes.
+ *
+ * RETURNS
+ *  Success: STATUS_SUCCESS.
+ *  Failure: Any NTSTATUS code.
+ *
+ * NOTES
+ *  Flags can be one or more of the following:
+ *|WT_EXECUTEDEFAULT - Executes the work item in a non-I/O worker thread.
+ *|WT_EXECUTEINIOTHREAD - Executes the work item in an I/O worker thread.
+ *|WT_EXECUTEINPERSISTENTTHREAD - Executes the work item in a thread that is persistent.
+ *|WT_EXECUTELONGFUNCTION - Hints that the execution can take a long time.
+ *|WT_TRANSFER_IMPERSONATION - Executes the function with the current access token.
+ */
+NTSTATUS 
+NTAPI
+RtlRegisterWait(PHANDLE NewWaitObject, 
+                HANDLE Object,
+                WAITORTIMERCALLBACKFUNC Callback,
+                PVOID Context,
+                ULONG Milliseconds,
+                ULONG Flags)
+{
+   return STATUS_SUCCESS;
+}
+
+/***********************************************************************
+ *              RtlDeregisterWaitEx
+ *
+ * Cancels a wait operation and frees the resources associated with calling
+ * RtlRegisterWait().
+ *
+ * PARAMS
+ *  WaitObject [I] Handle to the wait object to free.
+ *
+ * RETURNS
+ *  Success: STATUS_SUCCESS.
+ *  Failure: Any NTSTATUS code.
+ */
+NTSTATUS 
+NTAPI 
+RtlDeregisterWaitEx(HANDLE WaitHandle,
+                    HANDLE CompletionEvent)
+{
+   return STATUS_SUCCESS;   
+}
+
+/***********************************************************************
+ *              RtlDeregisterWait
+ *
+ * Cancels a wait operation and frees the resources associated with calling
+ * RtlRegisterWait().
+ *
+ * PARAMS
+ *  WaitObject [I] Handle to the wait object to free.
+ *
+ * RETURNS
+ *  Success: STATUS_SUCCESS.
+ *  Failure: Any NTSTATUS code.
+ */
+NTSTATUS
+NTAPI
+RtlDeregisterWait(HANDLE WaitHandle)
+{
+    return RtlDeregisterWaitEx(WaitHandle, NULL);
+}
+
 /* EOF */

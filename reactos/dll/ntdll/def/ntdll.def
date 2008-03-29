@@ -404,6 +404,8 @@ RtlDeleteSecurityObject@4
 RtlDeleteTimer@12
 RtlDeleteTimerQueue@4
 RtlDeleteTimerQueueEx@8
+RtlDeregisterWait@4
+RtlDeregisterWaitEx@8
 RtlDestroyAtomTable@4
 RtlDestroyEnvironment@4
 RtlDestroyHandleTable@4
@@ -622,6 +624,7 @@ RtlRandomEx=RtlRandom@4
 RtlReAllocateHeap@16
 RtlRealPredecessor@4
 RtlRealSuccessor@4
+RtlRegisterWait@24
 RtlReleasePebLock@0
 RtlReleaseRelativeName@4
 RtlReleaseResource@4
