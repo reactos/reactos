@@ -78,7 +78,7 @@ INT cmd_ver (LPTSTR cmd, LPTSTR param)
 	{
 
 		ConOutPuts (_T("Copyright (C) 1994-1998 Tim Norman and others."));
-		ConOutPuts (_T("Copyright (C) 1998-" COPYRIGHT_YEAR " ReactOS Team")); 
+		ConOutPuts (_T("Copyright (C) 1998-") _T(COPYRIGHT_YEAR) _T(" ReactOS Team")); 
 
 		for (i = 0; param[i]; i++)
 		{

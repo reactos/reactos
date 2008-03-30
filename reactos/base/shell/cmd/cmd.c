@@ -1850,7 +1850,7 @@ Initialize (int argc, const TCHAR* argv[])
             _T(KERNEL_RELEASE_STR),
             _T(KERNEL_VERSION_BUILD_STR));
 
-	    ConOutPuts (_T("(C) Copyright 1998-" COPYRIGHT_YEAR " ReactOS Team.\n"));
+	    ConOutPuts (_T("(C) Copyright 1998-") _T(COPYRIGHT_YEAR) _T(" ReactOS Team.\n"));
     }
 
     ExecuteAutoRunFile ();
