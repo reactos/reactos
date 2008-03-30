@@ -27,17 +27,6 @@ SetDIBits(HDC hdc,
     return NtGdiSetDIBits(hdc, hbmp, uStartScan, cScanLines, lpvBits, lpbmi, fuColorUse);
 }
 
-HBITMAP
-STDCALL
-CreateDIBitmap(HDC hDc,
-               const BITMAPINFOHEADER *Header,
-               DWORD Init, LPCVOID Bits, const BITMAPINFO *Data,
-               UINT ColorUse)
-{
-    /* FIMXE we need do more thing in user mode */
-    return NtGdiCreateDIBitmap(hDc, Header, Init, Bits, Data,  ColorUse);
-}
-
 /*
  * @implemented
  *

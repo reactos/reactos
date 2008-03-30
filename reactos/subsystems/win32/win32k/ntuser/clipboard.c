@@ -273,8 +273,17 @@ renderBITMAPfromDIB(LPBYTE hDIB)
 
     offset = sizeof(BITMAPINFOHEADER) + ((ih->biBitCount <= 8) ? (sizeof(RGBQUAD) * (1 << ih->biBitCount)) : 0);
 
-    hbitmap = NtGdiCreateDIBitmap(hdc, ih, CBM_INIT, (LPBYTE)ih + offset, (LPBITMAPINFO)ih, DIB_RGB_COLORS);
-
+    hbitmap = NtGdiCreateDIBitmapInternal(hdc,
+                                          ih->biWidth,
+                                          ih->biHeight,
+                                          CBM_INIT,
+                                          (LPBYTE)ih+offset,
+                                          (LPBITMAPINFO)ih,
+                                          DIB_RGB_COLORS,
+                                          ih->biBitCount,
+                                          ih->biSizeImage,
+                                          0,
+                                          0);
     //UserReleaseDC(NULL, hdc, FALSE);
     UserReleaseDC(ClipboardWindow, hdc, FALSE);
 

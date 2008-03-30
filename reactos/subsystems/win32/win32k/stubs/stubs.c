@@ -1682,30 +1682,6 @@ NtGdiCreateMetafileDC(IN HDC hdc)
  /*
  * @unimplemented
  */
-
-HBITMAP
-APIENTRY
-NtGdiCreateDIBitmapInternal(
-    IN HDC hdc,
-    IN INT cx,
-    IN INT cy,
-    IN DWORD fInit,
-    IN OPTIONAL LPBYTE pjInit,
-    IN OPTIONAL LPBITMAPINFO pbmi,
-    IN DWORD iUsage,
-    IN UINT cjMaxInitInfo,
-    IN UINT cjMaxBits,
-    IN FLONG f,
-    IN HANDLE hcmXform)
-{
-    UNIMPLEMENTED;
-    return NULL;
-}
-
-
- /*
- * @unimplemented
- */
 HBITMAP
 APIENTRY
 NtGdiClearBitmapAttributes(

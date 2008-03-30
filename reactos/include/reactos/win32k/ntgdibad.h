@@ -59,18 +59,6 @@ NtGdiGetFontFamilyInfo(
     DWORD Size
 );
 
-/* Use NtGdiCreateDIBitmapInternal */
-HBITMAP
-STDCALL
-NtGdiCreateDIBitmap (
-	HDC			hDC,
-	CONST BITMAPINFOHEADER	* bmih,
-	DWORD			Init,
-	CONST VOID		* bInit,
-	CONST BITMAPINFO	* bmi,
-	UINT			Usage
-	);
-
 /* Use NtGdiGetDCPoint with GdiGetViewPortExt */
 BOOL STDCALL  NtGdiGetViewportExtEx(HDC  hDC, LPSIZE viewportExt);
 

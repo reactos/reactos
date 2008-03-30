@@ -300,7 +300,18 @@ NtGdiGetPixel(HDC hDC, INT XPos, INT YPos)
 			static const BITMAPINFOHEADER bih = { sizeof(BITMAPINFOHEADER), 1, 1, 1, 32, BI_RGB, 0, 0, 0, 0, 0 };
 			BITMAPINFO bi;
 			RtlMoveMemory ( &(bi.bmiHeader), &bih, sizeof(bih) );
-			hBmpTmp = NtGdiCreateDIBitmap ( hDC, &bi.bmiHeader, 0, NULL, &bi, DIB_RGB_COLORS );
+			hBmpTmp = NtGdiCreateDIBitmapInternal(hDC,
+                                                  bi.bmiHeader.biWidth,
+                                                  bi.bmiHeader.biHeight,
+                                                  0,
+                                                  NULL,
+                                                  &bi,
+                                                  DIB_RGB_COLORS,
+                                                  bi.bmiHeader.biBitCount,
+                                                  bi.bmiHeader.biSizeImage,
+                                                  0,
+                                                  0);
+
 			//HBITMAP hBmpTmp = IntGdiCreateBitmap ( 1, 1, 1, 32, NULL);
 			if ( hBmpTmp )
 			{

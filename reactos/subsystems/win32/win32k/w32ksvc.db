@@ -716,7 +716,6 @@ NtUserSendMessage                       5
 NtUserSendMessageTimeout                8
 NtUserSendNotifyMessage                 4
 NtUserSetScrollBarInfo                  3
-NtGdiCreateDIBitmap                     6
 NtGdiGetFontFamilyInfo                  4
 NtGdiOffsetViewportOrgEx                4
 NtGdiOffsetWindowOrgEx                  4

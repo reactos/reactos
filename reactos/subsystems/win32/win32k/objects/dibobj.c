@@ -801,29 +801,25 @@ NtGdiStretchDIBitsInternal(
 }
 
 
-HBITMAP FASTCALL
-IntCreateDIBitmap(PDC Dc, const BITMAPINFOHEADER *header,
-                  DWORD init, LPCVOID bits, const BITMAPINFO *data,
-                  UINT coloruse)
+HBITMAP
+FASTCALL
+IntCreateDIBitmap(PDC Dc,
+                  INT width,
+                  INT height,
+                  UINT bpp,
+                  DWORD init,
+                  LPBYTE bits,
+                  PBITMAPINFO data,
+                  DWORD coloruse)
 {
   HBITMAP handle;
-
-  LONG width;
-  LONG height;
-  WORD planes;
-  WORD bpp;
-  LONG compr;
-  LONG dibsize;
   BOOL fColor;
-
-  if (DIB_GetBitmapInfo( header, &width, &height, &planes, &bpp, &compr, &dibsize ) == -1) return 0;
 
   // Check if we should create a monochrome or color bitmap. We create a monochrome bitmap only if it has exactly 2
   // colors, which are black followed by white, nothing else. In all other cases, we create a color bitmap.
 
   if (bpp != 1) fColor = TRUE;
-  else if ((coloruse != DIB_RGB_COLORS) ||
-           (init != CBM_INIT) || !data) fColor = FALSE;
+  else if ((coloruse != DIB_RGB_COLORS) || (init != CBM_INIT) || !data) fColor = FALSE;
   else
   {
     if (data->bmiHeader.biSize == sizeof(BITMAPINFOHEADER))
@@ -845,7 +841,7 @@ IntCreateDIBitmap(PDC Dc, const BITMAPINFOHEADER *header,
   else if (data->bmiHeader.biSize == sizeof(BITMAPCOREHEADER))
   {
     RGBTRIPLE *rgb = ((BITMAPCOREINFO *)data)->bmciColors;
-     DWORD col = RGB( rgb->rgbtRed, rgb->rgbtGreen, rgb->rgbtBlue);
+    DWORD col = RGB( rgb->rgbtRed, rgb->rgbtGreen, rgb->rgbtBlue);
 
     if ((col == RGB(0,0,0)))
     {
@@ -875,7 +871,7 @@ IntCreateDIBitmap(PDC Dc, const BITMAPINFOHEADER *header,
                                 1,
                                 NULL);
   }
-
+ 
   if (height < 0)
     height = -height;
 
@@ -889,63 +885,61 @@ IntCreateDIBitmap(PDC Dc, const BITMAPINFOHEADER *header,
 
 // The CreateDIBitmap function creates a device-dependent bitmap (DDB) from a DIB and, optionally, sets the bitmap bits
 // The DDB that is created will be whatever bit depth your reference DC is
-HBITMAP STDCALL NtGdiCreateDIBitmap(HDC hDc, const BITMAPINFOHEADER *Header,
-                                    DWORD Init, LPCVOID Bits, const BITMAPINFO *Data,
-                                    UINT ColorUse)
+HBITMAP
+APIENTRY
+NtGdiCreateDIBitmapInternal(IN HDC hDc,
+                            IN INT cx,
+                            IN INT cy,
+                            IN DWORD fInit,
+                            IN OPTIONAL LPBYTE pjInit,
+                            IN OPTIONAL LPBITMAPINFO pbmi,
+                            IN DWORD iUsage,
+                            IN UINT cjMaxInitInfo,
+                            IN UINT cjMaxBits,
+                            IN FLONG fl,
+                            IN HANDLE hcmXform)
 {
   PDC Dc;
   HBITMAP Bmp;
 
-  if (Header == NULL)
+  if (!hDc)
   {
-	  return NULL;
+     hDc =  IntGdiCreateDC(NULL, NULL, NULL, NULL,FALSE);
+     if (!hDc)
+     {
+        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        return NULL;
+     }
+
+     Dc = DC_LockDc(hDc);
+     if (!Dc)
+     {
+        NtGdiDeleteObjectApp(hDc);
+        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        return NULL;
+     }
+
+     cjMaxInitInfo = 1;
+     Bmp = IntCreateDIBitmap(Dc, cx, cy, cjMaxInitInfo, fInit, pjInit, pbmi, iUsage);
+
+     DC_UnlockDc(Dc);
+     NtGdiDeleteObjectApp(hDc);
   }
-
-  if (Header->biSize == 0)
+  else
   {
-	  return NULL;
+     Dc = DC_LockDc(hDc);
+     if (!Dc)
+     {
+        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        return NULL;
+     }
+
+     Bmp = IntCreateDIBitmap(Dc, cx, cy, cjMaxInitInfo, fInit, pjInit, pbmi, iUsage);
+     DC_UnlockDc(Dc);
   }
-
-  if (NULL == hDc)
-  {
-	   BITMAPINFOHEADER *change_Header = (BITMAPINFOHEADER *)Header;
-       hDc =  IntGdiCreateDC(NULL, NULL, NULL, NULL,FALSE);
-       if (hDc == NULL)
-       {
-          SetLastWin32Error(ERROR_INVALID_HANDLE);
-          return NULL;
-       }
-      Dc = DC_LockDc(hDc);
-      if (Dc == NULL)
-      {
-          NtGdiDeleteObjectApp(hDc);
-          SetLastWin32Error(ERROR_INVALID_HANDLE);
-          return NULL;
-      }
-
-	  change_Header->biBitCount = 1;
-	  change_Header->biPlanes = 1;
-
-      Bmp = IntCreateDIBitmap(Dc, Header, Init, Bits, Data, ColorUse);
-      DC_UnlockDc(Dc);
-      NtGdiDeleteObjectApp(hDc);
-    }
-    else
-    {
-       Dc = DC_LockDc(hDc);
-       if (Dc == NULL)
-       {
-          SetLastWin32Error(ERROR_INVALID_HANDLE);
-          return NULL;
-       }
-       Bmp = IntCreateDIBitmap(Dc, Header, Init, Bits, Data, ColorUse);
-       DC_UnlockDc(Dc);
-    }
-
-
-
   return Bmp;
 }
+
 
 HBITMAP STDCALL NtGdiCreateDIBSection(HDC hDC,
                               IN OPTIONAL HANDLE hSection,
@@ -1216,100 +1210,6 @@ INT FASTCALL DIB_BitmapInfoSize (const BITMAPINFO * info, WORD coloruse)
     if (!colors && (info->bmiHeader.biBitCount <= 8)) colors = 1 << info->bmiHeader.biBitCount;
     return sizeof(BITMAPINFOHEADER) + colors * ((coloruse == DIB_RGB_COLORS) ? sizeof(RGBQUAD) : sizeof(WORD));
   }
-}
-
-/*
- * DIB_GetBitmapInfo is complete copy of wine cvs 2/9-2006
- * from file dib.c from gdi32.dll or orginal version
- * did not calc the info right for some headers.
- */
-
-INT STDCALL
-DIB_GetBitmapInfo( const BITMAPINFOHEADER *header,
-				  PLONG width,
-				  PLONG height,
-				  PWORD planes,
-				  PWORD bpp,
-				  PLONG compr,
-				  PLONG size )
-{
-
-  if (header->biSize == sizeof(BITMAPCOREHEADER))
-  {
-     BITMAPCOREHEADER *core = (BITMAPCOREHEADER *)header;
-     *width  = core->bcWidth;
-     *height = core->bcHeight;
-     *planes = core->bcPlanes;
-     *bpp    = core->bcBitCount;
-     *compr  = 0;
-     *size   = 0;
-     return 0;
-  }
-
-  if (header->biSize == sizeof(BITMAPINFOHEADER))
-  {
-     *width  = header->biWidth;
-     *height = header->biHeight;
-     *planes = header->biPlanes;
-     *bpp    = header->biBitCount;
-     *compr  = header->biCompression;
-     *size   = header->biSizeImage;
-     return 1;
-  }
-
-  if (header->biSize == sizeof(BITMAPV4HEADER))
-  {
-      BITMAPV4HEADER *v4hdr = (BITMAPV4HEADER *)header;
-      *width  = v4hdr->bV4Width;
-      *height = v4hdr->bV4Height;
-      *planes = v4hdr->bV4Planes;
-      *bpp    = v4hdr->bV4BitCount;
-      *compr  = v4hdr->bV4V4Compression;
-      *size   = v4hdr->bV4SizeImage;
-      return 4;
-  }
-
-  if (header->biSize == sizeof(BITMAPV5HEADER))
-  {
-      BITMAPV5HEADER *v5hdr = (BITMAPV5HEADER *)header;
-      *width  = v5hdr->bV5Width;
-      *height = v5hdr->bV5Height;
-      *planes = v5hdr->bV5Planes;
-      *bpp    = v5hdr->bV5BitCount;
-      *compr  = v5hdr->bV5Compression;
-      *size   = v5hdr->bV5SizeImage;
-      return 5;
-  }
-  DPRINT("(%ld): wrong size for header\n", header->biSize );
-  return -1;
-}
-
-// Converts a Device Independent Bitmap (DIB) to a Device Dependant Bitmap (DDB)
-// The specified Device Context (DC) defines what the DIB should be converted to
-PBITMAPOBJ FASTCALL DIBtoDDB(HGLOBAL hPackedDIB, HDC hdc) // FIXME: This should be removed. All references to this function should
-						 // change to NtGdiSetDIBits
-{
-  HBITMAP hBmp = 0;
-  PBITMAPOBJ pBmp = NULL;
-  DIBSECTION *dib;
-  LPBYTE pbits = NULL;
-
-  // Get a pointer to the packed DIB's data
-  // pPackedDIB = (LPBYTE)GlobalLock(hPackedDIB);
-  dib = hPackedDIB;
-
-  pbits = (LPBYTE)(dib + DIB_BitmapInfoSize((BITMAPINFO*)&dib->dsBmih, DIB_RGB_COLORS));
-
-  // Create a DDB from the DIB
-  hBmp = NtGdiCreateDIBitmap ( hdc, &dib->dsBmih, CBM_INIT,
-    (LPVOID)pbits, (BITMAPINFO*)&dib->dsBmih, DIB_RGB_COLORS);
-
-  // GlobalUnlock(hPackedDIB);
-
-  // Retrieve the internal Pixmap from the DDB
-  pBmp = BITMAPOBJ_LockBitmap(hBmp);
-
-  return pBmp;
 }
 
 RGBQUAD * FASTCALL
