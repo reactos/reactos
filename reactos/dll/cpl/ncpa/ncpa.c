@@ -285,6 +285,8 @@ NICPropertyPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			EnableWindow(GetDlgItem(hwndDlg,IDC_CONFIGURE),FALSE);
 
 			//SetDlgItemTextA(hwndDlg,IDC_NETCARDNAME,Info[pPage->lParam].Description);
+			EnumRegKeys(NICPropertyProtocolCallback,hwndDlg,HKEY_LOCAL_MACHINE,_T("SYSTEM\\CurrentControlSet\\Control\\Network\\{4d36e973-e325-11ce-bfc1-08002be10318}"));
+			EnumRegKeys(NICPropertyProtocolCallback,hwndDlg,HKEY_LOCAL_MACHINE,_T("SYSTEM\\CurrentControlSet\\Control\\Network\\{4d36e974-e325-11ce-bfc1-08002be10318}"));
 			EnumRegKeys(NICPropertyProtocolCallback,hwndDlg,HKEY_LOCAL_MACHINE,_T("System\\CurrentControlSet\\Control\\Network\\{4D36E975-E325-11CE-BFC1-08002BE10318}"));
 
 			SendDlgItemMessage(hwndDlg, IDC_COMPONENTSLIST, LB_SETCURSEL, 0, 0);
@@ -311,8 +313,18 @@ NICPropertyPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				RegOpenKeyEx(HKEY_LOCAL_MACHINE,tpszHelpKey,0,KEY_QUERY_VALUE,&hNDIKey);
 				dwType = REG_SZ;
 				dwSize = sizeof(tpszHelpText);
-				if(RegQueryValueEx(hNDIKey,_T("HelpText"),NULL,&dwType,(BYTE*)tpszHelpText,&dwSize)!= ERROR_SUCCESS)
-					;//return;
+
+				tpszHelpText[0] = _T('\0');
+				if (RegLoadMUIString(hNDIKey, _T("HelpText"),tpszHelpText,dwSize,&dwSize,0,NULL) !=ERROR_SUCCESS)
+				{
+					DWORD dwResult;
+					dwResult = GetSystemDirectory(tpszHelpKey, dwSize / sizeof(TCHAR));
+					if (dwResult < dwSize && dwResult != 0)
+					{
+						if (RegLoadMUIString(hNDIKey, _T("HelpText"),tpszHelpText,dwSize,&dwSize,0,tpszHelpKey) !=ERROR_SUCCESS)
+							tpszHelpText[0] = _T('\0');
+					}
+				}
 				RegCloseKey(hNDIKey);
 
 				SetDlgItemText(hwndDlg,IDC_DESCRIPTION,tpszHelpText);
