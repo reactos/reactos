@@ -37,7 +37,7 @@ DWORD WINAPI ThreadProc(LPVOID lpParam)
 /*******************************************/
 
 
-VOID
+static VOID
 UpdateStatus(PSERVICEINFO pServInfo,
              DWORD NewStatus,
              DWORD Check)
@@ -61,7 +61,7 @@ UpdateStatus(PSERVICEINFO pServInfo,
     return;
 }
 
-INT
+static BOOL
 CreateServiceThread(PSERVICEINFO pServInfo)
 {
     HANDLE hThread;
@@ -81,6 +81,7 @@ CreateServiceThread(PSERVICEINFO pServInfo)
     if (!hThread)
     {
         LogEvent(_T("Failed to start service thread"), GetLastError(), 101, LOG_ALL);
+        return FALSE;
     }
 
     UpdateStatus(pServInfo, 0, 1);
@@ -93,7 +94,7 @@ CreateServiceThread(PSERVICEINFO pServInfo)
     if (hThread)
         CloseHandle(hThread);
 
-    return 0;
+    return TRUE;
 }
 
 
@@ -139,8 +140,6 @@ ServerCtrlHandler(DWORD dwControl,
                 LogEvent(_T("ERROR: Bad control code"), 0, 0, LOG_FILE);
             break;
     }
-
-    return;
 }
 
 
@@ -166,7 +165,7 @@ ServiceMain(DWORD argc, LPTSTR argv[])
 
     UpdateStatus(&servInfo, SERVICE_START_PENDING, 1);
 
-    if (CreateServiceThread(&servInfo) != 0)
+    if (!CreateServiceThread(&servInfo))
     {
         servInfo.servStatus.dwServiceSpecificExitCode = 1;
         UpdateStatus(&servInfo, SERVICE_STOPPED, 0);
@@ -177,8 +176,6 @@ ServiceMain(DWORD argc, LPTSTR argv[])
     UpdateStatus(&servInfo, SERVICE_STOPPED, 0);
 
     LogEvent(_T("Leaving ServiceMain"), 0, 0, LOG_FILE);
-
-    return;
 }
 
 
