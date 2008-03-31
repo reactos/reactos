@@ -886,7 +886,7 @@ IopInitializeBootDrivers(VOID)
     NTSTATUS Status;
     UNICODE_STRING DriverName;
 
-    DPRINT("IopInitializeBootDrivers()");
+    DPRINT("IopInitializeBootDrivers()\n");
 
     /* Use IopRootDeviceNode for now */
     Status = IopCreateDeviceNode(IopRootDeviceNode, NULL, NULL, &DeviceNode);
