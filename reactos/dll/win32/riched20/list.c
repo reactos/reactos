@@ -115,6 +115,7 @@ void ME_DestroyDisplayItem(ME_DisplayItem *item) {
     ME_DestroyTableCellList(item);
   }
   if (item->type==diRun || item->type == diUndoInsertRun) {
+    if (item->member.run.ole_obj) ME_DeleteReObject(item->member.run.ole_obj);
     ME_ReleaseStyle(item->member.run.style);
     ME_DestroyString(item->member.run.strText);
   }

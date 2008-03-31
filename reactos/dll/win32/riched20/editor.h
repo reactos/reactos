@@ -149,7 +149,6 @@ ME_DisplayItem *ME_InsertRunAtCursor(ME_TextEditor *editor, ME_Cursor *cursor,
                                      ME_Style *style, const WCHAR *str, int len, int flags);
 void ME_CheckCharOffsets(ME_TextEditor *editor);
 void ME_PropagateCharOffset(ME_DisplayItem *p, int shift);
-void ME_GetGraphicsSize(ME_TextEditor *editor, ME_Run *run, SIZE *pSize);
 int ME_CharFromPoint(ME_Context *c, int cx, ME_Run *run);
 /* this one accounts for 1/2 char tolerance */
 int ME_CharFromPointCursor(ME_TextEditor *editor, int cx, ME_Run *run);
@@ -157,13 +156,13 @@ int ME_PointFromChar(ME_TextEditor *editor, ME_Run *pRun, int nOffset);
 int ME_GetLastSplittablePlace(ME_Context *c, ME_Run *run);
 int ME_CanJoinRuns(const ME_Run *run1, const ME_Run *run2);
 void ME_JoinRuns(ME_TextEditor *editor, ME_DisplayItem *p);
-ME_DisplayItem *ME_SplitRun(ME_Context *c, ME_DisplayItem *item, int nChar);
+ME_DisplayItem *ME_SplitRun(ME_WrapContext *wc, ME_DisplayItem *item, int nChar);
 ME_DisplayItem *ME_SplitRunSimple(ME_TextEditor *editor, ME_DisplayItem *item, int nChar);
 int ME_FindSplitPoint(ME_Context *c, POINT *pt, ME_Run *run, int desperate);
 void ME_UpdateRunFlags(ME_TextEditor *editor, ME_Run *run);
 ME_DisplayItem *ME_SplitFurther(ME_TextEditor *editor, ME_DisplayItem *run);
-void ME_CalcRunExtent(ME_Context *c, const ME_Paragraph *para, ME_Run *run);
-SIZE ME_GetRunSize(ME_Context *c, const ME_Paragraph *para, ME_Run *run, int nLen);
+void ME_CalcRunExtent(ME_Context *c, const ME_Paragraph *para, int startx, ME_Run *run);
+SIZE ME_GetRunSize(ME_Context *c, const ME_Paragraph *para, ME_Run *run, int nLen, int startx);
 void ME_CursorFromCharOfs(ME_TextEditor *editor, int nCharOfs, ME_Cursor *pCursor);
 void ME_RunOfsFromCharOfs(ME_TextEditor *editor, int nCharOfs, ME_DisplayItem **ppRun, int *pOfs);
 int ME_CharOfsFromRunOfs(ME_TextEditor *editor, ME_DisplayItem *pRun, int nOfs);
@@ -187,10 +186,11 @@ void ME_MouseMove(ME_TextEditor *editor, int x, int y);
 void ME_DeleteTextAtCursor(ME_TextEditor *editor, int nCursor, int nChars);
 void ME_InsertTextFromCursor(ME_TextEditor *editor, int nCursor, 
                              const WCHAR *str, int len, ME_Style *style);
+void ME_InsertEndRowFromCursor(ME_TextEditor *editor, int nCursor);
 BOOL ME_ArrowKey(ME_TextEditor *ed, int nVKey, BOOL extend, BOOL ctrl);
 
 void ME_InitContext(ME_Context *c, ME_TextEditor *editor, HDC hDC);
-void ME_DestroyContext(ME_Context *c);
+void ME_DestroyContext(ME_Context *c, HWND release);
 ME_Style *GetInsertStyle(ME_TextEditor *editor, int nCursor);
 void ME_MustBeWrapped(ME_Context *c, ME_DisplayItem *para);
 void ME_GetCursorCoordinates(ME_TextEditor *editor, ME_Cursor *pCursor,
@@ -201,7 +201,7 @@ int ME_CountParagraphsBetween(ME_TextEditor *editor, int from, int to);
 BOOL ME_IsSelection(ME_TextEditor *editor);
 void ME_DeleteSelection(ME_TextEditor *editor);
 void ME_SendSelChange(ME_TextEditor *editor);
-void ME_InsertGraphicsFromCursor(ME_TextEditor *editor, int nCursor);
+void ME_InsertOLEFromCursor(ME_TextEditor *editor, const REOBJECT* reo, int nCursor);
 void ME_InsertTableCellFromCursor(ME_TextEditor *editor, int nCursor);
 void ME_InternalDeleteText(ME_TextEditor *editor, int nOfs, int nChars);
 int ME_GetTextLength(ME_TextEditor *editor);
@@ -259,7 +259,11 @@ int  ME_GetParaBorderWidth(ME_TextEditor *editor, int);
 int  ME_GetParaLineSpace(ME_Context *c, ME_Paragraph*);
 
 /* richole.c */
-extern LRESULT CreateIRichEditOle(ME_TextEditor *editor, LPVOID *);
+LRESULT CreateIRichEditOle(ME_TextEditor *editor, LPVOID *);
+void ME_DrawOLE(ME_Context *c, int x, int y, ME_Run* run, ME_Paragraph *para, BOOL selected);
+void ME_GetOLEObjectSize(ME_Context *c, ME_Run *run, SIZE *pSize);
+void ME_CopyReObject(REOBJECT* dst, const REOBJECT* src);
+void ME_DeleteReObject(REOBJECT* reo);
 
 /* wintest.c */
 

@@ -91,7 +91,7 @@ void ME_PaintContent(ME_TextEditor *editor, HDC hDC, BOOL bOnlyNew, const RECT *
   if (editor->nTotalLength != editor->nLastTotalLength)
     ME_SendRequestResize(editor, FALSE);
   editor->nLastTotalLength = editor->nTotalLength;
-  ME_DestroyContext(&c);
+  ME_DestroyContext(&c, NULL);
 }
 
 void ME_Repaint(ME_TextEditor *editor)
@@ -246,34 +246,6 @@ static void ME_DebugWrite(HDC hDC, const POINT *pt, LPCWSTR szText) {
   SetTextColor(hDC, color);
 }
 
-static void ME_DrawGraphics(ME_Context *c, int x, int y, ME_Run *run,
-                            ME_Paragraph *para, BOOL selected) {
-  SIZE sz;
-  int xs, ys, xe, ye, h, ym, width, eyes;
-  ME_GetGraphicsSize(c->editor, run, &sz);
-  xs = run->pt.x;
-  ys = y-sz.cy;
-  xe = xs+sz.cx;
-  ye = y;
-  h = ye-ys;
-  ym = ys+h/4;
-  width = sz.cx;
-  eyes = width/8;
-  /* draw a smiling face :) */
-  Ellipse(c->hDC, xs, ys, xe, ye);
-  Ellipse(c->hDC, xs+width/8, ym, x+width/8+eyes, ym+eyes);
-  Ellipse(c->hDC, xs+7*width/8-eyes, ym, xs+7*width/8, ym+eyes);
-  MoveToEx(c->hDC, xs+width/8, ys+3*h/4-eyes, NULL);
-  LineTo(c->hDC, xs+width/8, ys+3*h/4);
-  LineTo(c->hDC, xs+7*width/8, ys+3*h/4);
-  LineTo(c->hDC, xs+7*width/8, ys+3*h/4-eyes);
-  if (selected)
-  {
-    /* descent is usually (always?) 0 for graphics */
-    PatBlt(c->hDC, x, y-run->nAscent, sz.cx, run->nAscent+run->nDescent, DSTINVERT);    
-  }
-}
-
 static void ME_DrawRun(ME_Context *c, int x, int y, ME_DisplayItem *rundi, ME_Paragraph *para) 
 {
   ME_Run *run = &rundi->member.run;
@@ -299,7 +271,7 @@ static void ME_DrawRun(ME_Context *c, int x, int y, ME_DisplayItem *rundi, ME_Pa
     return;
 
   if (run->nFlags & MERF_GRAPHICS)
-    ME_DrawGraphics(c, x, y, run, para, (runofs >= nSelFrom) && (runofs < nSelTo));
+    ME_DrawOLE(c, x, y, run, para, (runofs >= nSelFrom) && (runofs < nSelTo));
   else
   {
     if (c->editor->cPasswordMask)
@@ -318,7 +290,7 @@ static void ME_DrawRun(ME_Context *c, int x, int y, ME_DisplayItem *rundi, ME_Pa
 }
 
 static struct {unsigned width_num : 4, width_den : 4, pen_style : 4, dble : 1;} border_details[] = {
-  /* none */            {0, 0, PS_SOLID, FALSE},
+  /* none */            {0, 1, PS_SOLID, FALSE},
   /* 3/4 */             {3, 4, PS_SOLID, FALSE},
   /* 1 1/2 */           {3, 2, PS_SOLID, FALSE},
   /* 2 1/4 */           {9, 4, PS_SOLID, FALSE},

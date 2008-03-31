@@ -857,9 +857,9 @@ static void ReadFontTbl(RTF_Info *info)
 		fp->rtfFName = NULL;
 		fp->rtfFAltName = NULL;
 		fp->rtfFNum = -1;
-		fp->rtfFFamily = 0;
+		fp->rtfFFamily = FF_DONTCARE;
 		fp->rtfFCharSet = DEFAULT_CHARSET; /* 1 */
-		fp->rtfFPitch = 0;
+		fp->rtfFPitch = DEFAULT_PITCH;
 		fp->rtfFType = 0;
 		fp->rtfFCodePage = CP_ACP;
 
@@ -1788,6 +1788,7 @@ static RTFKey	rtfKey[] =
 	{ rtfPictAttr,	rtfWinMetafile,		"wmetafile",	0 },
 	{ rtfPictAttr,	rtfDevIndBitmap,	"dibitmap",	0 },
 	{ rtfPictAttr,	rtfWinBitmap,		"wbitmap",	0 },
+	{ rtfPictAttr,	rtfEmfBlip,		"emfblip",	0 },
 	{ rtfPictAttr,	rtfPixelBits,		"wbmbitspixel",	0 },
 	{ rtfPictAttr,	rtfBitmapPlanes,	"wbmplanes",	0 },
 	{ rtfPictAttr,	rtfBitmapWid,		"wbmwidthbytes", 0 },
@@ -2596,10 +2597,13 @@ static void SpecialChar (RTF_Info *info)
 		}
 		break;
 	}
+	case rtfLine:
+            RTFFlushOutputBuffer(info);
+            ME_InsertEndRowFromCursor(info->editor, 0);
+            break;
 	case rtfPage:
 	case rtfSect:
 	case rtfRow:
-	case rtfLine:
 	case rtfPar:
 		RTFPutUnicodeChar (info, '\n');
 		break;
@@ -2647,6 +2651,7 @@ RTFFlushUnicodeOutputBuffer(RTF_Info *info)
                 info->dwOutputCount = 0;
         }
 }
+
 
 static void
 RTFPutUnicodeString(RTF_Info *info, const WCHAR *string, int length)

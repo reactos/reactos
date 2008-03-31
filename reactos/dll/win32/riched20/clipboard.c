@@ -252,14 +252,14 @@ static HRESULT WINAPI DataObjectImpl_QueryGetData(IDataObject* iface, FORMATETC 
     return foundFormat?DV_E_FORMATETC:DV_E_TYMED;
 }
 
-static HRESULT WINAPI DataObjectImpl_GetCanonicalFormatEtc(IDataObject* iface, FORMATETC *pformatectIn,
+static HRESULT WINAPI DataObjectImpl_GetCanonicalFormatEtc(IDataObject* iface, FORMATETC *pformatetcIn,
                                                            FORMATETC *pformatetcOut)
 {
     DataObjectImpl *This = (DataObjectImpl*)iface;
-    TRACE("(%p)->(%p,%p)\n", This, pformatectIn, pformatetcOut);
+    TRACE("(%p)->(%p,%p)\n", This, pformatetcIn, pformatetcOut);
 
     if(pformatetcOut) {
-        memcpy(pformatetcOut, pformatectIn, sizeof(FORMATETC));
+        *pformatetcOut = *pformatetcIn;
         pformatetcOut->ptd = NULL;
     }
     return DATA_S_SAMEFORMATETC;

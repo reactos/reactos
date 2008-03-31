@@ -28,7 +28,6 @@ static const WCHAR wszParagraphSign[] = {0xB6, 0};
 void ME_MakeFirstParagraph(ME_TextEditor *editor)
 {
   ME_Context c;
-  HDC hDC;
   PARAFORMAT2 fmt;
   CHARFORMAT2W cf;
   LOGFONTW lf;
@@ -38,9 +37,8 @@ void ME_MakeFirstParagraph(ME_TextEditor *editor)
   ME_DisplayItem *run;
   ME_Style *style;
 
-  hDC = GetDC(editor->hWnd);
+  ME_InitContext(&c, editor, GetDC(editor->hWnd));
 
-  ME_InitContext(&c, editor, hDC);
   hf = (HFONT)GetStockObject(SYSTEM_FONT);
   assert(hf);
   GetObjectW(hf, sizeof(LOGFONTW), &lf);
@@ -55,7 +53,7 @@ void ME_MakeFirstParagraph(ME_TextEditor *editor)
   cf.dwEffects = CFE_AUTOCOLOR | CFE_AUTOBACKCOLOR;
   lstrcpyW(cf.szFaceName, lf.lfFaceName);
   cf.yHeight = ME_twips2pointsY(&c, lf.lfHeight);
-  if (lf.lfWeight >= 700) cf.dwEffects |= CFE_BOLD;
+  if (lf.lfWeight > FW_NORMAL) cf.dwEffects |= CFE_BOLD;
   cf.wWeight = lf.lfWeight;
   if (lf.lfItalic) cf.dwEffects |= CFE_ITALIC;
   cf.bUnderlineType = (lf.lfUnderline) ? CFU_CF1UNDERLINE : CFU_UNDERLINENONE;
@@ -68,8 +66,8 @@ void ME_MakeFirstParagraph(ME_TextEditor *editor)
   fmt.dwMask = PFM_ALIGNMENT | PFM_OFFSET | PFM_STARTINDENT | PFM_RIGHTINDENT | PFM_TABSTOPS;
   fmt.wAlignment = PFA_LEFT;
 
-  CopyMemory(para->member.para.pFmt, &fmt, sizeof(PARAFORMAT2));
-  
+  *para->member.para.pFmt = fmt;
+
   style = ME_MakeStyle(&cf);
   text->pDefaultStyle = style;
   
@@ -85,8 +83,7 @@ void ME_MakeFirstParagraph(ME_TextEditor *editor)
 
   text->pLast->member.para.nCharOfs = 1;
 
-  ME_DestroyContext(&c);
-  ReleaseDC(editor->hWnd, hDC);
+  ME_DestroyContext(&c, editor->hWnd);
 }
  
 void ME_MarkAllForWrapping(ME_TextEditor *editor)
@@ -148,7 +145,7 @@ ME_DisplayItem *ME_SplitParagraph(ME_TextEditor *editor, ME_DisplayItem *run, ME
   
   new_para->member.para.nFlags = MEPF_REWRAP; /* FIXME copy flags (if applicable) */
   /* FIXME initialize format style and call ME_SetParaFormat blah blah */
-  CopyMemory(new_para->member.para.pFmt, run_para->member.para.pFmt, sizeof(PARAFORMAT2));
+  *new_para->member.para.pFmt = *run_para->member.para.pFmt;
 
   new_para->member.para.bTable = run_para->member.para.bTable;
   
@@ -226,7 +223,7 @@ ME_DisplayItem *ME_JoinParagraphs(ME_TextEditor *editor, ME_DisplayItem *tp)
   {
     undo->nStart = pNext->member.para.nCharOfs - end_len;
     assert(pNext->member.para.pFmt->cbSize == sizeof(PARAFORMAT2));
-    CopyMemory(undo->di.member.para.pFmt, pNext->member.para.pFmt, sizeof(PARAFORMAT2));
+    *undo->di.member.para.pFmt = *pNext->member.para.pFmt;
   }
   
   shift = pNext->member.para.nCharOfs - tp->member.para.nCharOfs - end_len;
@@ -352,7 +349,7 @@ void ME_SetParaFormat(ME_TextEditor *editor, ME_DisplayItem *para, const PARAFOR
   assert(sizeof(*para->member.para.pFmt) == sizeof(PARAFORMAT2));
   ME_AddUndoItem(editor, diUndoSetParagraphFormat, para);
   
-  CopyMemory(&copy, para->member.para.pFmt, sizeof(PARAFORMAT2));
+  copy = *para->member.para.pFmt;
 
 #define COPY_FIELD(m, f) \
   if (pFmt->dwMask & (m)) {                     \
@@ -447,7 +444,7 @@ void ME_GetParaFormat(ME_TextEditor *editor, const ME_DisplayItem *para, PARAFOR
 {
   if (pFmt->cbSize >= sizeof(PARAFORMAT2))
   {
-    CopyMemory(pFmt, para->member.para.pFmt, sizeof(PARAFORMAT2));
+    *pFmt = *para->member.para.pFmt;
     return;
   }
   CopyMemory(pFmt, para->member.para.pFmt, pFmt->cbSize);  

@@ -202,19 +202,21 @@ ME_GetCursorCoordinates(ME_TextEditor *editor, ME_Cursor *pCursor,
           pSizeRun = run = tmp;
           assert(run);
           assert(run->type == diRun);
-          sz = ME_GetRunSize(&c, &para->member.para, &run->member.run, ME_StrLen(run->member.run.strText));
+          sz = ME_GetRunSize(&c, &para->member.para,
+                             &run->member.run, ME_StrLen(run->member.run.strText),
+                             row->member.row.nLMargin);
         }
       }
       if (pCursor->nOffset && !(run->member.run.nFlags & MERF_SKIPPED)) {
-        sz = ME_GetRunSize(&c, &para->member.para, &run->member.run, pCursor->nOffset);
+        sz = ME_GetRunSize(&c, &para->member.para, &run->member.run, pCursor->nOffset,
+                           row->member.row.nLMargin);
       }
 
       *height = pSizeRun->member.run.nAscent + pSizeRun->member.run.nDescent;
       *x = run->member.run.pt.x + sz.cx;
       *y = para->member.para.nYPos + row->member.row.nBaseline + pSizeRun->member.run.pt.y - pSizeRun->member.run.nAscent - ME_GetYScrollPos(editor);
-      
-      ME_DestroyContext(&c);
-      ReleaseDC(editor->hWnd, hDC);
+
+      ME_DestroyContext(&c, editor->hWnd);
       return;
     }
   }
@@ -393,21 +395,38 @@ ME_InternalInsertTextFromCursor(ME_TextEditor *editor, int nCursor,
 }
 
 
-/* FIXME this is temporary, just to have something to test how bad graphics handler is */
-void ME_InsertGraphicsFromCursor(ME_TextEditor *editor, int nCursor)
+void ME_InsertOLEFromCursor(ME_TextEditor *editor, const REOBJECT* reo, int nCursor)
 {
-  ME_Style *pStyle = ME_GetInsertStyle(editor, nCursor);
-  WCHAR space = ' ';
+  ME_Style              *pStyle = ME_GetInsertStyle(editor, nCursor);
+  ME_DisplayItem        *di;
+  WCHAR                 space = ' ';
   
   /* FIXME no no no */
   if (ME_IsSelection(editor))
     ME_DeleteSelection(editor);
 
-  ME_InternalInsertTextFromCursor(editor, nCursor, &space, 1, pStyle,
-                                  MERF_GRAPHICS);
+  di = ME_InternalInsertTextFromCursor(editor, nCursor, &space, 1, pStyle,
+                                       MERF_GRAPHICS);
+  di->member.run.ole_obj = ALLOC_OBJ(*reo);
+  ME_CopyReObject(di->member.run.ole_obj, reo);
   ME_SendSelChange(editor);
 }
 
+
+void ME_InsertEndRowFromCursor(ME_TextEditor *editor, int nCursor)
+{
+  ME_Style              *pStyle = ME_GetInsertStyle(editor, nCursor);
+  ME_DisplayItem        *di;
+  WCHAR                 space = ' ';
+
+  /* FIXME no no no */
+  if (ME_IsSelection(editor))
+    ME_DeleteSelection(editor);
+
+  di = ME_InternalInsertTextFromCursor(editor, nCursor, &space, 1, pStyle,
+                                       MERF_ENDROW);
+  ME_SendSelChange(editor);
+}
 
 void
 ME_InsertTableCellFromCursor(ME_TextEditor *editor, int nCursor)

@@ -74,7 +74,7 @@ CHARFORMAT2W *ME_ToCF2W(CHARFORMAT2W *to, CHARFORMAT2W *from)
 void ME_CopyToCF2W(CHARFORMAT2W *to, CHARFORMAT2W *from)
 {
   if (ME_ToCF2W(to, from) == from)
-    CopyMemory(to, from, sizeof(*from));
+    *to = *from;
 }
 
 CHARFORMAT2W *ME_ToCFAny(CHARFORMAT2W *to, CHARFORMAT2W *from)
@@ -154,7 +154,7 @@ ME_Style *ME_MakeStyle(CHARFORMAT2W *style) {
   if (style->cbSize <= sizeof(CHARFORMAT2W))
     CopyMemory(&s->fmt, style, style->cbSize);
   else
-    CopyMemory(&s->fmt, style, sizeof(CHARFORMAT2W));
+    s->fmt = *style;
   s->fmt.cbSize = sizeof(CHARFORMAT2W);
 
   s->nSequence = -2;
@@ -218,7 +218,6 @@ ME_Style *ME_ApplyStyle(ME_Style *sSrc, CHARFORMAT2W *style)
   if (style->dwMask & CFM_UNDERLINE)
   {
       s->fmt.dwMask |= CFM_UNDERLINETYPE;
-      s->fmt.dwMask &= ~CFM_UNDERLINE;
       s->fmt.bUnderlineType = (style->dwEffects & CFM_UNDERLINE) ?
           CFU_CF1UNDERLINE : CFU_UNDERLINENONE;
   }
@@ -230,7 +229,7 @@ void ME_CopyCharFormat(CHARFORMAT2W *pDest, const CHARFORMAT2W *pSrc)
   /* using this with non-2W structs is forbidden */
   assert(pSrc->cbSize == sizeof(CHARFORMAT2W));
   assert(pDest->cbSize == sizeof(CHARFORMAT2W));
-  CopyMemory(pDest, pSrc, sizeof(CHARFORMAT2W));
+  *pDest = *pSrc;
 }
 
 static void ME_DumpStyleEffect(char **p, const char *name, const CHARFORMAT2W *fmt, int mask)
@@ -262,12 +261,12 @@ void ME_DumpStyleToBuf(CHARFORMAT2W *pFmt, char buf[2048])
     p += sprintf(p, "N/A");
 
   if (pFmt->dwMask & CFM_SIZE)
-    p += sprintf(p, "\nFont size:            %d\n", (int)pFmt->yHeight);
+    p += sprintf(p, "\nFont size:            %d\n", pFmt->yHeight);
   else
     p += sprintf(p, "\nFont size:            N/A\n");
-    
+
   if (pFmt->dwMask & CFM_OFFSET)
-    p += sprintf(p, "Char offset:          %d\n", (int)pFmt->yOffset);
+    p += sprintf(p, "Char offset:          %d\n", pFmt->yOffset);
   else
     p += sprintf(p, "Char offset:          N/A\n");
 
@@ -304,9 +303,9 @@ ME_LogFontFromStyle(ME_Context* c, LOGFONTW *lf, const ME_Style *s)
 
   lf->lfHeight = ME_twips2pointsY(c, -s->fmt.yHeight);
   
-  lf->lfWeight = 400;
+  lf->lfWeight = FW_NORMAL;
   if (s->fmt.dwEffects & s->fmt.dwMask & CFM_BOLD)
-    lf->lfWeight = 700;
+    lf->lfWeight = FW_BOLD;
   if (s->fmt.dwMask & CFM_WEIGHT)
     lf->lfWeight = s->fmt.wWeight;
   if (s->fmt.dwEffects & s->fmt.dwMask & CFM_ITALIC)
@@ -338,7 +337,7 @@ void ME_CharFormatFromLogFont(HDC hDC, const LOGFONTW *lf, CHARFORMAT2W *fmt)
   fmt->dwMask = CFM_WEIGHT|CFM_BOLD|CFM_ITALIC|CFM_UNDERLINE|CFM_STRIKEOUT|CFM_SIZE|CFM_FACE|CFM_CHARSET;
   fmt->wWeight = lf->lfWeight;
   fmt->yHeight = -lf->lfHeight*1440/ry;
-  if (lf->lfWeight>400) fmt->dwEffects |= CFM_BOLD;
+  if (lf->lfWeight > FW_NORMAL) fmt->dwEffects |= CFM_BOLD;
   if (lf->lfItalic) fmt->dwEffects |= CFM_ITALIC;
   if (lf->lfUnderline) fmt->dwEffects |= CFM_UNDERLINE;
   /* notice that if a logfont was created with underline due to CFM_LINK, this
@@ -404,7 +403,7 @@ HFONT ME_SelectStyleFont(ME_Context *c, ME_Style *s)
     TRACE_(richedit_style)("font created %d\n", nEmpty);
     item->hFont = s->hFont;
     item->nRefs = 1;
-    memcpy(&item->lfSpecs, &lf, sizeof(LOGFONTW));
+    item->lfSpecs = lf;
   }
   hOldFont = SelectObject(c->hDC, s->hFont);
   /* should be cached too, maybe ? */

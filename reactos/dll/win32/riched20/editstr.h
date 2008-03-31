@@ -92,11 +92,11 @@ typedef enum {
 /******************************** run flags *************************/
 #define MERF_STYLEFLAGS 0x0FFF
 /* run contains non-text content, which has its own rules for wrapping, sizing etc */
-#define MERF_GRAPHICS 1
+#define MERF_GRAPHICS   0x001
 /* run is a tab (or, in future, any kind of content whose size is dependent on run position) */
-#define MERF_TAB 2
+#define MERF_TAB        0x002
 /* run is a cell boundary */
-#define MERF_CELL 4
+#define MERF_CELL       0x004
 
 #define MERF_NONTEXT (MERF_GRAPHICS | MERF_TAB | MERF_CELL)
 
@@ -114,13 +114,15 @@ typedef enum {
 #define MERF_CALCBYWRAP 0x0F0000
 /* the "end of paragraph" run, contains 1 character */
 #define MERF_ENDPARA    0x100000
+/* forcing the "end of row" run, contains 1 character */
+#define MERF_ENDROW     0x200000
 /* run is hidden */
-#define MERF_HIDDEN     0x200000
+#define MERF_HIDDEN     0x400000
 
 /* runs with any of these flags set cannot be joined */
-#define MERF_NOJOIN (MERF_GRAPHICS|MERF_TAB|MERF_ENDPARA)
+#define MERF_NOJOIN (MERF_GRAPHICS|MERF_TAB|MERF_ENDPARA|MERF_ENDROW)
 /* runs that don't contain real text */
-#define MERF_NOTEXT (MERF_GRAPHICS|MERF_TAB|MERF_ENDPARA)
+#define MERF_NOTEXT (MERF_GRAPHICS|MERF_TAB|MERF_ENDPARA|MERF_ENDROW)
 
 /* those flags are kept when the row is split */
 #define MERF_SPLITMASK (~(0))
@@ -145,6 +147,7 @@ typedef struct tagME_Run
   int nAscent, nDescent; /* pixels above/below baseline */
   POINT pt; /* relative to para's position */
   struct tagME_TableCell *pCell; /* for MERF_CELL: points to respective cell in ME_Paragraph */
+  REOBJECT *ole_obj; /* FIXME: should be a union with strText (at least) */
 } ME_Run;
 
 typedef struct tagME_Document {
@@ -309,6 +312,7 @@ typedef struct tagME_TextEditor
   int nZoomNumerator, nZoomDenominator;
   RECT rcFormat;
   BOOL bRedraw;
+  BOOL bWordWrap;
   int nInvalidOfs;
   int nTextLimit;
   EDITWORDBREAKPROCW pfnWordBreak;
@@ -347,7 +351,7 @@ typedef struct tagME_WrapContext
   ME_Style *style;
   ME_Context *context;
   int nLeftMargin, nRightMargin, nFirstMargin;
-  int nTotalWidth, nAvailWidth;
+  int nAvailWidth;
   int nRow;
   POINT pt;
   BOOL bOverflown;
