@@ -374,12 +374,6 @@ ObpAddSecurityDescriptor(
     OUT PSECURITY_DESCRIPTOR *DestinationSD
 );
 
-NTSTATUS
-NTAPI
-ObpRemoveSecurityDescriptor(
-    IN PSECURITY_DESCRIPTOR SecurityDescriptor
-);
-
 PSECURITY_DESCRIPTOR
 NTAPI
 ObpReferenceCachedSecurityDescriptor(
@@ -436,6 +430,44 @@ ObpCheckObjectReference(
     IN BOOLEAN LockHeld,
     IN KPROCESSOR_MODE AccessMode,
     OUT PNTSTATUS AccessStatus
+);
+
+//
+// Default Object Security Callback Routines
+//
+NTSTATUS
+NTAPI
+ObAssignObjectSecurityDescriptor(
+    IN PVOID Object,
+    IN PSECURITY_DESCRIPTOR SecurityDescriptor OPTIONAL,
+    IN POOL_TYPE PoolType
+);
+
+NTSTATUS
+NTAPI
+ObDeassignSecurity(
+    IN OUT PSECURITY_DESCRIPTOR *SecurityDescriptor
+);
+
+NTSTATUS
+NTAPI
+ObQuerySecurityDescriptorInfo(
+    IN PVOID Object,
+    IN PSECURITY_INFORMATION SecurityInformation,
+    OUT PSECURITY_DESCRIPTOR SecurityDescriptor,
+    IN OUT PULONG Length,
+    IN PSECURITY_DESCRIPTOR *OutputSecurityDescriptor
+);
+
+NTSTATUS
+NTAPI
+ObSetSecurityDescriptorInfo(
+    IN PVOID Object,
+    IN PSECURITY_INFORMATION SecurityInformation,
+    IN OUT PSECURITY_DESCRIPTOR SecurityDescriptor,
+    IN OUT PSECURITY_DESCRIPTOR *OutputSecurityDescriptor,
+    IN POOL_TYPE PoolType,
+    IN PGENERIC_MAPPING GenericMapping
 );
 
 //

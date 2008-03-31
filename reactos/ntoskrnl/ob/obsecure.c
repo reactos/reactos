@@ -15,6 +15,157 @@
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
+NTSTATUS
+NTAPI
+ObAssignObjectSecurityDescriptor(IN PVOID Object,
+                                 IN PSECURITY_DESCRIPTOR SecurityDescriptor OPTIONAL,
+                                 IN POOL_TYPE PoolType)
+{
+    POBJECT_HEADER ObjectHeader;
+    NTSTATUS Status;
+    PSECURITY_DESCRIPTOR NewSd;
+    PAGED_CODE();
+    
+    /* Get the object header */
+    ObjectHeader = OBJECT_TO_OBJECT_HEADER(Object);
+    if (!SecurityDescriptor)
+    {
+        /* Nothing to assign */
+        ObjectHeader->SecurityDescriptor = NULL;
+        return STATUS_SUCCESS;
+    }
+    
+    /* Add it to our internal cache */
+    Status = ObpAddSecurityDescriptor(SecurityDescriptor, &NewSd);
+    if (NT_SUCCESS(Status))
+    {
+        /* Free the old copy */
+        ExFreePool(SecurityDescriptor);
+        
+        /* Set the new pointer */
+        ASSERT(NewSd);
+        ObjectHeader->SecurityDescriptor = NewSd;
+    }
+    
+    /* Return status */
+    return Status;
+}
+
+NTSTATUS
+NTAPI
+ObDeassignSecurity(IN OUT PSECURITY_DESCRIPTOR *SecurityDescriptor)
+{
+    /* Dereference it */
+    ObpDereferenceCachedSecurityDescriptor(*SecurityDescriptor);
+    
+    /* Don't free again later */
+    *SecurityDescriptor = NULL;
+    
+    /* All done */
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
+ObQuerySecurityDescriptorInfo(IN PVOID Object,
+                              IN PSECURITY_INFORMATION SecurityInformation,
+                              OUT PSECURITY_DESCRIPTOR SecurityDescriptor,
+                              IN OUT PULONG Length,
+                              IN PSECURITY_DESCRIPTOR *OutputSecurityDescriptor)
+{
+    POBJECT_HEADER ObjectHeader;
+    NTSTATUS Status;
+    PSECURITY_DESCRIPTOR ObjectSd;
+    PAGED_CODE();
+    
+    /* Get the object header */
+    ObjectHeader = OBJECT_TO_OBJECT_HEADER(Object);
+    
+    /* Get the SD */
+    ObjectSd = ObpReferenceCachedSecurityDescriptor(ObjectHeader->SecurityDescriptor);
+    
+    /* Query the information */
+    Status = SeQuerySecurityDescriptorInfo(SecurityInformation,
+                                           SecurityDescriptor,
+                                           Length,
+                                           &ObjectSd);
+
+    /* Check if we have an object SD and dereference it, if so */
+    if (ObjectSd) ObpDereferenceCachedSecurityDescriptor(ObjectSd);
+    
+    /* Return status */
+    return Status;
+}
+
+NTSTATUS
+NTAPI
+ObSetSecurityDescriptorInfo(IN PVOID Object,
+                            IN PSECURITY_INFORMATION SecurityInformation,
+                            IN OUT PSECURITY_DESCRIPTOR SecurityDescriptor,
+                            IN OUT PSECURITY_DESCRIPTOR *OutputSecurityDescriptor,
+                            IN POOL_TYPE PoolType,
+                            IN PGENERIC_MAPPING GenericMapping)
+{
+    NTSTATUS Status;
+    POBJECT_HEADER ObjectHeader;
+    PSECURITY_DESCRIPTOR OldDescriptor, NewDescriptor, CachedDescriptor;
+    PAGED_CODE();
+    
+    /* Get the object header */
+    ObjectHeader = OBJECT_TO_OBJECT_HEADER(Object);
+    while (TRUE)
+    {
+        /* Reference the old descriptor */
+        OldDescriptor = ObpReferenceCachedSecurityDescriptor(ObjectHeader->SecurityDescriptor);
+        NewDescriptor = OldDescriptor;
+        
+        /* Set the SD information */
+        Status = SeSetSecurityDescriptorInfo(Object,
+                                             SecurityInformation,
+                                             SecurityDescriptor,
+                                             &NewDescriptor,
+                                             PoolType,
+                                             GenericMapping);
+        if (NT_SUCCESS(Status))
+        {
+            /* Now add this to the cache */
+            Status = ObpAddSecurityDescriptor(NewDescriptor, &CachedDescriptor);
+            
+            /* Let go of our uncached copy */
+            ExFreePool(NewDescriptor);
+            
+            /* Check for success */
+            if (NT_SUCCESS(Status))
+            {
+                /* Dereference the old one */
+                ASSERT(OldDescriptor == ObjectHeader->SecurityDescriptor);
+                
+                /* Now set this as the new descriptor */
+                ObjectHeader->SecurityDescriptor = CachedDescriptor;
+                
+                /* And dereference the old one */
+                ObpDereferenceCachedSecurityDescriptor(OldDescriptor);
+                break;
+            }
+            else
+            {
+                /* We failed, dereference the old one */
+                ObpDereferenceCachedSecurityDescriptor(OldDescriptor);
+                break;
+            }
+        }
+        else
+        {
+            /* We failed, dereference the old one */
+            if (OldDescriptor) ObpDereferenceCachedSecurityDescriptor(OldDescriptor);
+            break;
+        }
+    }
+    
+    /* Return status */
+    return Status;
+}
+
 BOOLEAN
 NTAPI
 ObCheckCreateObjectAccess(IN PVOID Object,
