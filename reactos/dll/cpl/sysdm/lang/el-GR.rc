@@ -11,13 +11,13 @@ BEGIN
     LTEXT       "Έκδοση ", IDC_STATIC, 10, 153, 25, 9
     LTEXT       REACTOS_STR_PRODUCT_VERSION, IDC_STATIC, 35, 153, 91, 9
     LTEXT       REACTOS_STR_PRODUCT_BUILD, IDC_STATIC, 10, 162, 60, 9
-    LTEXT       "Υπολογιστής:", IDC_STATIC, 124, 132, 34, 9
+    LTEXT       "Υπολογιστής:", IDC_STATIC, 124, 132, 44, 9
     LTEXT       "", IDC_MACHINELINE1, 130, 144, 118, 9
     LTEXT       "", IDC_MACHINELINE2, 130, 153, 118, 9
     LTEXT       "", IDC_MACHINELINE3, 130, 162, 118, 9
     LTEXT       "", IDC_MACHINELINE4, 130, 171, 118, 9
     LTEXT       "", IDC_MACHINELINE5, 130, 180, 118, 9
-    CONTROL     "Επισκευτείτε την <A HREF=""http://www.reactos.org/"">Ιστοσελίδα του ReactOS</A>", IDC_ROSHOMEPAGE_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 20, 200, 93, 8
+    CONTROL     "Επισκευτείτε την <A HREF=""http://www.reactos.org/"">Ιστοσελίδα του ReactOS</A>", IDC_ROSHOMEPAGE_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 20, 180, 93, 8
     PUSHBUTTON  "&Προβολή άδειας...", IDC_LICENCE, 170, 199, 78, 13
 END
 
@@ -88,8 +88,8 @@ BEGIN
     //RADIOBUTTON "&Wait until I select a hardware profile", IDC_HRDPROFWAIT, 14, 158, 133, 8
     //RADIOBUTTON "&Select the first profile listed if I don't select a profile in", IDC_HRDPROFSELECT, 14, 173, 190, 8
     CONTROL     "Α&ναμονή όσπου να επιλέξω προφίλ υλικού", IDC_HRDPROFWAIT, "button", BS_AUTORADIOBUTTON, 14, 158, 200, 8
-    CONTROL     "Επιλογή του πρώτου προφίλ στη λίστα εάν δεν επι&λέξω ένα σε", IDC_HRDPROFSELECT, "button", BS_AUTORADIOBUTTON, 14, 173, 200, 8
-    LTEXT       "δευτερόλεπτα", IDC_STATIC, 65, 187, 45, 8
+    CONTROL     "Επιλογή του πρώτου προφίλ στη λίστα εάν δεν επι&λέξω ένα σε", IDC_HRDPROFSELECT, "button", BS_AUTORADIOBUTTON, 14, 173, 213, 8
+    LTEXT       "δευτερόλεπτα", IDC_STATIC, 65, 187, 47, 8
     EDITTEXT    IDC_HRDPROFEDIT, 25, 185, 35, 12
     CONTROL     "", IDC_HRDPROFUPDWN, "msctls_updown32", UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | UDS_NOTHOUSANDS | WS_CHILD | WS_VISIBLE, 25, 185, 7, 10
 
@@ -156,7 +156,7 @@ BEGIN
     PUSHBUTTON  "Επε&ξεργασία", IDC_STRRECEDIT, 188, 87, 50, 14
 
     GROUPBOX    "Αποτυχία συστήματος", IDC_STATIC, 7, 111, 238, 140
-    CONTROL     "Εγγραφή του συμβάντος στο αρχείο &καταγραφής συστήματος", IDC_STRRECWRITEEVENT, "button", BS_AUTOCHECKBOX, 14, 124, 148, 10
+    CONTROL     "Εγγραφή του συμβάντος στο αρχείο &καταγραφής συστήματος", IDC_STRRECWRITEEVENT, "button", BS_AUTOCHECKBOX, 14, 124, 158, 10
     CONTROL     "&Αποστολή ειδοποίησης διαχειριστή", IDC_STRRECSENDALERT, "button", BS_AUTOCHECKBOX, 14, 138, 148, 10
     CONTROL     "Α&υτόματη επανεκκίνηση", IDC_STRRECRESTART, "button", BS_AUTOCHECKBOX, 14, 152, 145, 10
 
@@ -177,29 +177,29 @@ CAPTION "Εικονική μνήμη"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LTEXT       "Μονάδα  [Ετικέτα τόμου]", IDC_STATIC, 12, 5, 96, 9
-    LTEXT       "Μέγεθος αρχείου σελιδοποίησης (σε MB)", IDC_STATIC, 115, 5, 96, 9
+    LTEXT       "Μέγεθος αρχείου σελιδοποίησης (σε MB)", IDC_STATIC, 105, 5, 106, 9
     CONTROL     "", IDC_PAGEFILELIST, "SysListView32", LVS_REPORT | LVS_NOCOLUMNHEADER | WS_TABSTOP,  10, 16, 204, 52, WS_EX_CLIENTEDGE
     GROUPBOX    "Μέγεθος αρχείου σελιδοποίησης μνήμης", IDC_DRIVEGROUP, 10, 70, 204, 104
-    LTEXT       "Μονάδα δίσκου:", IDC_STATIC, 20, 80, 20, 8
-    LTEXT       "", IDC_DRIVE, 88, 81, 100, 9
-    LTEXT       "Διαθέσιμος χώρος:", IDC_STATIC, 20, 92, 56, 9
-    LTEXT       "", IDC_SPACEAVAIL, 88, 92, 104, 9
-    LTEXT       "&Αρχικό μέγεθος (MB):", -1, 22, 118, 54, 9
-    LTEXT       "Μέγιστο μέ&γεθος (MB):", -1, 22, 131, 64, 9
+    LTEXT       "Μονάδα δίσκου:", IDC_STATIC, 20, 80, 35, 8
+    LTEXT       "", IDC_DRIVE, 90, 81, 100, 9
+    LTEXT       "Διαθέσιμος χώρος:", IDC_STATIC, 20, 92, 66, 9
+    LTEXT       "", IDC_SPACEAVAIL, 90, 92, 104, 9
+    LTEXT       "&Αρχικό μέγεθος (MB):", -1, 22, 118, 68, 9
+    LTEXT       "Μέγιστο μέ&γεθος (MB):", -1, 22, 131, 68, 9
     CONTROL     "&Προσαρμογή μεγέ&θους", IDC_CUSTOM, "Button", BS_AUTORADIOBUTTON, 20, 105, 54, 9
     CONTROL     "Δια&χείριση μεγέθους από το σύστημα", IDC_SYSMANSIZE, "Button", BS_AUTORADIOBUTTON, 20, 145, 100, 9
-    CONTROL     "Χωρίς αρχείο σε&λιδοποίησης", IDC_NOPAGEFILE, "Button", BS_AUTORADIOBUTTON, 20, 158, 86,9
+    CONTROL     "Χωρίς αρχείο σε&λιδοποίησης", IDC_NOPAGEFILE, "Button", BS_AUTORADIOBUTTON, 20, 158, 106,9
     EDITTEXT    IDC_INITIALSIZE, 100, 114, 44, 13, NOT WS_BORDER, WS_EX_CLIENTEDGE
     EDITTEXT    IDC_MAXSIZE, 100, 129, 44, 13, NOT WS_BORDER, WS_EX_CLIENTEDGE
     PUSHBUTTON  "&Ορισμός", IDC_SET, 158, 155, 50, 13
 
     GROUPBOX    "Συνολικό μέγεθος αρχείου σελιδοποίησης", IDC_TOTALGROUP, 10, 177, 204, 46
-    LTEXT       "Ελάχιστο επιτρεπόμενο:", IDC_STATIC, 18, 188, 58, 9
-    LTEXT       "", IDC_MINIMUM, 88, 188, 100, 9
+    LTEXT       "Ελάχιστο επιτρεπόμενο:", IDC_STATIC, 18, 188, 68, 9
+    LTEXT       "", IDC_MINIMUM, 88, 188, 110, 9
     LTEXT       "Προτείνεται:", IDC_STATIC, 18, 199, 52, 9
-    LTEXT       "", IDC_RECOMMENDED, 88, 197, 100, 9
+    LTEXT       "", IDC_RECOMMENDED, 88, 197, 110, 9
     LTEXT       "Τρέχον μέγεθος:", IDC_STATIC, 18, 210, 66, 9
-    LTEXT       "", IDC_CURRENT, 88, 208, 100, 9
+    LTEXT       "", IDC_CURRENT, 88, 208, 110, 9
 
     DEFPUSHBUTTON  "OK", IDOK, 114, 232, 48, 13
     PUSHBUTTON  "’κυρο", IDCANCEL, 168, 232, 48, 13
@@ -237,12 +237,12 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS
 CAPTION "Επεξεργασία μεταβλητής"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT       "Όνομα μεταβλητής:", IDC_STATIC, 7, 14, 50, 8
+    LTEXT       "Όνομα μεταβλητής:", IDC_STATIC, 5, 14, 65, 8
     EDITTEXT    IDC_VARIABLE_NAME, 75, 12, 145, 12, ES_AUTOHSCROLL
-    LTEXT       "Τιμή μεταβλητής:", IDC_STATIC, 7, 32, 50, 8
+    LTEXT       "Τιμή μεταβλητής:", IDC_STATIC, 5, 32, 60, 8
     EDITTEXT    IDC_VARIABLE_VALUE, 75, 30, 145, 12, ES_AUTOHSCROLL
     DEFPUSHBUTTON  "OK", IDOK, 116, 50, 50, 14
-    PUSHBUTTON  "’κτρο", IDCANCEL, 170, 50, 50, 14
+    PUSHBUTTON  "’κυρο", IDCANCEL, 170, 50, 50, 14
 END
 
 
@@ -268,11 +268,11 @@ BEGIN
     IDS_VALUE    "Τιμή"
     IDS_NO_DUMP "(Κανένα)"
     IDS_MINI_DUMP "Ένδειξη μειωμένης μνήμης(64KB)"
-    IDS_KERNEL_DUMP "Ένδειξη μνήμης πυρίνα"
+    IDS_KERNEL_DUMP "Ένδειξη μνήμης πυρήνα"
     IDS_FULL_DUMP "Ένδειξη πλήρους μνήμης"
-    IDS_USERPROFILE_NAME "Name"
-    IDS_USERPROFILE_SIZE "Size"
-    IDS_USERPROFILE_TYPE "Type"
-    IDS_USERPROFILE_STATUS "Status"
-    IDS_USERPROFILE_MODIFIED "Modified"
+    IDS_USERPROFILE_NAME "Όνομα"
+    IDS_USERPROFILE_SIZE "Μέγεθος"
+    IDS_USERPROFILE_TYPE "Τύπος"
+    IDS_USERPROFILE_STATUS "Κατάσταση"
+    IDS_USERPROFILE_MODIFIED "Τροποποιήθηκε"
 END
