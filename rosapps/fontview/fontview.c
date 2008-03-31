@@ -23,8 +23,7 @@
 #include "fontview.h"
 
 HINSTANCE g_hInstance;
-WCHAR g_szTypeFaceName[LF_FULLFACESIZE];
-LOGFONTW g_LogFontW;
+EXTLOGFONTW g_ExtLogFontW;
 
 static const WCHAR g_szFontViewClassName[] = L"FontViewWClass";
 
@@ -117,15 +116,15 @@ WinMain (HINSTANCE hThisInstance,
 	PGFRI GetFontResourceInfoW = (PGFRI)GetProcAddress(hDLL, "GetFontResourceInfoW");
 
 	/* Get the font name */
-	dwSize = sizeof(g_szTypeFaceName);
-	if (!GetFontResourceInfoW(argv[1], &dwSize, g_szTypeFaceName, 1))
+	dwSize = sizeof(g_ExtLogFontW.elfFullName);
+	if (!GetFontResourceInfoW(argv[1], &dwSize, g_ExtLogFontW.elfFullName, 1))
 	{
 		ErrorMsgBox(0, IDS_ERROR, IDS_ERROR_NOFONT, argv[1]);
 		return -1;
 	}
 
 	dwSize = sizeof(LOGFONTW);
-	if (!GetFontResourceInfoW(argv[1], &dwSize, &g_LogFontW, 2))
+	if (!GetFontResourceInfoW(argv[1], &dwSize, &g_ExtLogFontW.elfLogFont, 2))
 	{
 		ErrorMsgBox(0, IDS_ERROR, IDS_ERROR_NOFONT, argv[1]);
 		return -1;
@@ -162,7 +161,7 @@ WinMain (HINSTANCE hThisInstance,
 	hMainWnd = CreateWindowExW(
 				0,						/* Extended possibilites for variation */
 				g_szFontViewClassName,	/* Classname */
-				g_szTypeFaceName,		/* Title Text */
+				g_ExtLogFontW.elfFullName,/* Title Text */
 				WS_OVERLAPPEDWINDOW,	/* default window */
 				CW_USEDEFAULT,			/* Windows decides the position */
 				CW_USEDEFAULT,			/* where the window ends up on the screen */
@@ -215,7 +214,7 @@ MainWnd_OnCreate(HWND hwnd)
 	SendMessage(hDisplay, FVM_SETSTRING, 0, (LPARAM)szString);
 
 	/* Init the display window with the font name */
-	SendMessage(hDisplay, FVM_SETTYPEFACE, 0, (LPARAM)&g_LogFontW.lfFaceName);
+	SendMessage(hDisplay, FVM_SETTYPEFACE, 0, (LPARAM)&g_ExtLogFontW);
 	ShowWindow(hDisplay, SW_SHOWNORMAL);
 
 	/* Create the quit button */

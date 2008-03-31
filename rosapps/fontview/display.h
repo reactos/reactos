@@ -8,7 +8,7 @@
 /* Size restrictions */
 #define MAX_STRING 100
 #define MAX_FORMAT 20
-#define MAX_SIZES 7
+#define MAX_SIZES 8
 
 extern const WCHAR g_szFontDisplayClassName[];
 

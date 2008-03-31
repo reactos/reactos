@@ -140,7 +140,7 @@ Display_DrawText(HDC hDC, DISPLAYDATA* pData, int nYPos)
 }
 
 static LRESULT
-Display_SetTypeFace(HWND hwnd, LPARAM lParam)
+Display_SetTypeFace(HWND hwnd, PEXTLOGFONTW pExtLogFont)
 {
 	DISPLAYDATA* pData;
 	TEXTMETRIC tm;
@@ -148,19 +148,19 @@ Display_SetTypeFace(HWND hwnd, LPARAM lParam)
 	RECT rect;
 	SCROLLINFO si;
 	int i;
+	LOGFONTW logfont;
 
 	/* Set the new type face name */
 	pData = (DISPLAYDATA*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
-	snwprintf(pData->szTypeFaceName, LF_FULLFACESIZE, (WCHAR*)lParam);
+	snwprintf(pData->szTypeFaceName, LF_FULLFACESIZE, pExtLogFont->elfFullName);
 
 	/* Create the new fonts */
 	hDC = GetDC(hwnd);
 	DeleteObject(pData->hCharSetFont);
-	pData->hCharSetFont = CreateFontW(-MulDiv(16, GetDeviceCaps(GetDC(NULL), LOGPIXELSY), 72),
-	                                  0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
-	                                  ANSI_CHARSET, OUT_DEFAULT_PRECIS,
-	                                  CLIP_DEFAULT_PRECIS, PROOF_QUALITY,
-	                                  DEFAULT_PITCH , pData->szTypeFaceName);
+
+	logfont = pExtLogFont->elfLogFont;
+	logfont.lfHeight = -MulDiv(16, GetDeviceCaps(GetDC(NULL), LOGPIXELSY), 72);
+	pData->hCharSetFont = CreateFontIndirectW(&logfont);
 
 	/* Get font format */
 	// FIXME: Get the real font format (OpenType?)
@@ -174,11 +174,8 @@ Display_SetTypeFace(HWND hwnd, LPARAM lParam)
 	for (i = 0; i < MAX_SIZES; i++)
 	{
 		DeleteObject(pData->hFonts[i]);
-		pData->hFonts[i] = CreateFontW(-MulDiv(pData->nSizes[i], GetDeviceCaps(hDC, LOGPIXELSY), 72),
-		                               0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
-		                               ANSI_CHARSET, OUT_DEFAULT_PRECIS,
-		                               CLIP_DEFAULT_PRECIS, PROOF_QUALITY,
-		                               DEFAULT_PITCH , pData->szTypeFaceName);
+		logfont.lfHeight = -MulDiv(pData->nSizes[i], GetDeviceCaps(hDC, LOGPIXELSY), 72);
+		pData->hFonts[i] = CreateFontIndirectW(&logfont);
 	}
 
 	/* Calculate new page dimensions */
@@ -216,8 +213,13 @@ static LRESULT
 Display_OnCreate(HWND hwnd)
 {
 	DISPLAYDATA* pData;
-	const int nSizes[MAX_SIZES] = {12, 18, 24, 36, 48, 60, 72};
+	const int nSizes[MAX_SIZES] = {8, 12, 18, 24, 36, 48, 60, 72};
 	int i;
+	EXTLOGFONTW ExtLogFont = {{50, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
+	                          ANSI_CHARSET, OUT_DEFAULT_PRECIS,
+	                          CLIP_DEFAULT_PRECIS, PROOF_QUALITY,
+	                          DEFAULT_PITCH , L"Ms Shell Dlg"},
+	                          L"Ms Shell Dlg"};
 
 	/* Create data structure */
 	pData = malloc(sizeof(DISPLAYDATA));
@@ -231,18 +233,13 @@ Display_OnCreate(HWND hwnd)
 		pData->nSizes[i] = nSizes[i];
 	}
 
-	pData->hCaptionFont = CreateFontW(50, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
-	                                  ANSI_CHARSET, OUT_DEFAULT_PRECIS,
-	                                  CLIP_DEFAULT_PRECIS, PROOF_QUALITY,
-	                                  DEFAULT_PITCH , L"Ms Shell Dlg");
-
-	pData->hSizeFont = CreateFontW(12, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
-	                               ANSI_CHARSET, OUT_DEFAULT_PRECIS,
-	                               CLIP_DEFAULT_PRECIS, PROOF_QUALITY,
-	                               DEFAULT_PITCH , L"Ms Shell Dlg");
+	pData->hCaptionFont = CreateFontIndirectW(&ExtLogFont.elfLogFont);
+	ExtLogFont.elfLogFont.lfHeight = 12;
+	pData->hSizeFont = CreateFontIndirectW(&ExtLogFont.elfLogFont);
 
 	Display_SetString(hwnd, (LPARAM)L"Jackdaws love my big sphinx of quartz. 1234567890");
-	Display_SetTypeFace(hwnd, (LPARAM)L"Ms Shell Dlg");
+
+	Display_SetTypeFace(hwnd, &ExtLogFont);
 
 	return 0;
 }
@@ -398,7 +395,7 @@ DisplayProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 			return Display_OnVScroll(hwnd, wParam);
 
 		case FVM_SETTYPEFACE:
-			return Display_SetTypeFace(hwnd, lParam);
+			return Display_SetTypeFace(hwnd, (PEXTLOGFONTW)lParam);
 
 		case FVM_SETSTRING:
 			return Display_SetString(hwnd, lParam);
