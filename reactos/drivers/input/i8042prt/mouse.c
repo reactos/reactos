@@ -7,6 +7,7 @@
                 Copyright Jason Filby (jasonfilby@yahoo.com)
                 Copyright Martijn Vernooij (o112w8r02@sneakemail.com)
                 Copyright 2006-2007 Hervé Poussineau (hpoussin@reactos.org)
+                Copyright 2008 Colin Finck (mail@colinfinck.de)
  */
 
 /* INCLUDES ****************************************************************/
@@ -211,8 +212,6 @@ i8042MouHandleButtons(
 		(DeviceExtension->MouseButtonState & ~Mask) | (NewButtonData & Mask);
 }
 
-static NTSTATUS OldInitialization(PPORT_DEVICE_EXTENSION); /* FIXME */
-
 /* Does lastest initializations for the mouse. This method
  * is called just before connecting the interrupt.
  */
@@ -220,13 +219,34 @@ NTSTATUS
 i8042MouInitialize(
 	IN PI8042_MOUSE_EXTENSION DeviceExtension)
 {
-	PPORT_DEVICE_EXTENSION PortDeviceExtension;
+	NTSTATUS Status;
+	UCHAR Value;
 
-	PortDeviceExtension = DeviceExtension->Common.PortDeviceExtension;
+	/* Enable the PS/2 mouse port */
+	i8042Write(DeviceExtension->Common.PortDeviceExtension, DeviceExtension->Common.PortDeviceExtension->ControlPort, MOUSE_ENAB);
 
-/* FIXME */ OldInitialization(PortDeviceExtension);
+	/* Enable the mouse */
+	if(!i8042IsrWritePort(DeviceExtension->Common.PortDeviceExtension, MOU_ENAB, CTRL_WRITE_MOUSE))
+	{
+		WARN_(I8042PRT, "Failed to enable mouse!\n");
+		return STATUS_IO_DEVICE_ERROR;
+	}
 
-	return STATUS_SUCCESS;
+	Status = i8042ReadDataWait(DeviceExtension->Common.PortDeviceExtension, &Value);
+	if (!NT_SUCCESS(Status))
+	{
+		WARN_(I8042PRT, "Failed to read the response of MOU_ENAB, status 0x%08lx\n", Status);
+		return Status;
+	}
+
+	if(Value == MOUSE_ACK)
+	{
+		INFO_(I8042PRT, "Mouse was enabled successfully!\n");
+		return STATUS_SUCCESS;
+	}
+
+	WARN_(I8042PRT, "Got 0x%02x instead of 0xFA\n", Value);
+	return STATUS_IO_DEVICE_ERROR;
 }
 
 static VOID NTAPI
@@ -874,183 +894,4 @@ i8042MouInterruptService(
 		i8042MouHandle(DeviceExtension, Output);
 
 	return TRUE;
-}
-
-/****************************************************************************************
- * WARNING: the mouse initialization code has been taken from old ReactOS mouse driver, *
- * named psaux.sys, which has been deleted in revision 14938.                           *
- * Coding style and structures are not exactly the same as in the other parts of the    *
- * i8042prt driver, but code is supposed to work.                                       *
- ****************************************************************************************/
-
-#define CONTROLLER_COMMAND_MOUSE_ENABLE 0xA8
-#define PSMOUSE_CMD_ENABLE              0x00f4
-#define PSMOUSE_CMD_GETID               (0x0200 | MOU_CMD_GET_ID)
-#define PSMOUSE_CMD_RESET_BAT           (0x0200 | MOU_CMD_RESET)
-#define PSMOUSE_RET_ACK                 MOUSE_ACK
-#define PSMOUSE_RET_NAK                 MOUSE_NACK
-
-typedef struct _I8042_MOUSE_EXTENSION_OLD
-{
-	PPORT_DEVICE_EXTENSION PortDeviceExtension;
-	UCHAR pkt[8];
-	UCHAR ack;
-	ULONG RepliesExpected;
-} I8042_MOUSE_EXTENSION_OLD, *PI8042_MOUSE_EXTENSION_OLD;
-
-/* Sends a byte to the mouse */
-static INT SendByte(
-	IN PI8042_MOUSE_EXTENSION_OLD DeviceExtension,
-	IN UCHAR byte)
-{
-	INT timeout = 100; /* 100 msec */
-	UCHAR scancode;
-	LARGE_INTEGER Millisecond_Timeout;
-
-	Millisecond_Timeout.QuadPart = -10000L;
-
-	DeviceExtension->ack = 0;
-
-	i8042IsrWritePort(DeviceExtension->PortDeviceExtension, byte, CTRL_WRITE_MOUSE);
-	while ((DeviceExtension->ack == 0) && timeout--)
-	{
-		if (i8042ReadKeyboardData(DeviceExtension->PortDeviceExtension, &scancode))
-		{
-			switch(scancode)
-			{
-				case PSMOUSE_RET_ACK:
-					DeviceExtension->ack = 1;
-					break;
-				case PSMOUSE_RET_NAK:
-					DeviceExtension->ack = -1;
-					break;
-				default:
-					DeviceExtension->ack = 1; /* Workaround for mice which don't ACK the Get ID command */
-					if (DeviceExtension->RepliesExpected)
-						DeviceExtension->pkt[--DeviceExtension->RepliesExpected] = scancode;
-					break;
-			}
-			return (INT)(-(DeviceExtension->ack <= 0));
-		}
-		KeDelayExecutionThread(KernelMode, FALSE, &Millisecond_Timeout);
-	}
-	return (INT)(-(DeviceExtension->ack <= 0));
-}
-
-/* Send a PS/2 command to the mouse. */
-static INT SendCommand(
-	IN PI8042_MOUSE_EXTENSION_OLD DeviceExtension,
-	IN PUCHAR param,
-	IN INT command)
-{
-	LARGE_INTEGER Millisecond_Timeout;
-	UCHAR scancode;
-	INT timeout = 500; /* 500 msec */
-	UCHAR send = (command >> 12) & 0xf;
-	UCHAR receive = (command >> 8) & 0xf;
-	UCHAR i;
-
-	Millisecond_Timeout.QuadPart = -10000L;
-
-	DeviceExtension->RepliesExpected = receive;
-	if (command == PSMOUSE_CMD_RESET_BAT)
-		timeout = 2000; /* 2 sec */
-
-	if (command & 0xff)
-		if (SendByte(DeviceExtension, command & 0xff))
-			return (INT)(DeviceExtension->RepliesExpected = 0) - 1;
-
-	for (i = 0; i < send; i++)
-		if (SendByte(DeviceExtension, param[i]))
-			return (INT)(DeviceExtension->RepliesExpected = 0) - 1;
-
-	while (DeviceExtension->RepliesExpected && timeout--)
-	{
-		if (DeviceExtension->RepliesExpected == 1 && command == PSMOUSE_CMD_RESET_BAT)
-			timeout = 100;
-
-		if (DeviceExtension->RepliesExpected == 1 && command == PSMOUSE_CMD_GETID &&
-			DeviceExtension->pkt[1] != 0xab && DeviceExtension->pkt[1] != 0xac)
-		{
-			DeviceExtension->RepliesExpected = 0;
-			break;
-		}
-
-		if (i8042ReadKeyboardData(DeviceExtension->PortDeviceExtension, &scancode))
-		{
-			DeviceExtension->pkt[--DeviceExtension->RepliesExpected] = scancode;
-		}
-
-		KeDelayExecutionThread (KernelMode, FALSE, &Millisecond_Timeout);
-	}
-
-	for (i = 0; i < receive; i++)
-		param[i] = DeviceExtension->pkt[(receive - 1) - i];
-
-	if (DeviceExtension->RepliesExpected)
-		return (int)(DeviceExtension->RepliesExpected = 0) - 1;
-
-	return 0;
-}
-
-/* Detect if mouse is just a standard ps/2 mouse */
-static BOOLEAN TestMouse(
-	IN PI8042_MOUSE_EXTENSION_OLD DeviceExtension)
-{
-	UCHAR param[4];
-
-	param[0] = param[1] = 0xa5;
-
-	/*
-	 * First, we check if it's a mouse. It should send 0x00 or 0x03
-	 * in case of an IntelliMouse in 4-byte mode or 0x04 for IM Explorer.
-	 */
-	if(SendCommand(DeviceExtension, param, PSMOUSE_CMD_GETID))
-		return -1;
-
-	if(param[0] != 0x00 && param[0] != 0x03 && param[0] != 0x04)
-		return -1;
-
-	/*
-	 * Then we reset and disable the mouse so that it doesn't generate events.
-	 */
-
-	return TRUE;
-}
-
-/* Initialize the PS/2 mouse support */
-static BOOLEAN SetupMouse(
-	IN PI8042_MOUSE_EXTENSION_OLD DeviceExtension)
-{
-	LARGE_INTEGER Millisecond_Timeout;
-
-	Millisecond_Timeout.QuadPart = -10000L;
-
-	/* setup */
-	DeviceExtension->RepliesExpected = 0;
-	DeviceExtension->ack = 0;
-
-	/* Enable the PS/2 mouse port */
-	i8042Write(DeviceExtension->PortDeviceExtension, DeviceExtension->PortDeviceExtension->ControlPort, CONTROLLER_COMMAND_MOUSE_ENABLE);
-
-	if (TestMouse(DeviceExtension))
-	{
-		TRACE_(I8042PRT, "Detected Mouse\n");
-
-		if (SendCommand(DeviceExtension, NULL, PSMOUSE_CMD_ENABLE))
-			WARN_(I8042PRT, "Failed to enable mouse!\n");
-	}
-
-	return TRUE;
-}
-
-static NTSTATUS OldInitialization(
-	IN PPORT_DEVICE_EXTENSION PortDeviceExtension)
-{
-	I8042_MOUSE_EXTENSION_OLD DeviceExtension;
-
-	RtlZeroMemory(&DeviceExtension, sizeof(I8042_MOUSE_EXTENSION_OLD));
-	DeviceExtension.PortDeviceExtension = PortDeviceExtension;
-	SetupMouse(&DeviceExtension);
-	return STATUS_SUCCESS;
 }

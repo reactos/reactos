@@ -179,8 +179,7 @@ i8042DetectMouse(
 
 	i8042Flush(DeviceExtension);
 
-	if (!i8042Write(DeviceExtension, DeviceExtension->ControlPort, CTRL_WRITE_MOUSE)
-	  ||!i8042Write(DeviceExtension, DeviceExtension->DataPort, MOU_CMD_RESET))
+	if(!i8042IsrWritePort(DeviceExtension, MOU_CMD_RESET, CTRL_WRITE_MOUSE))
 	{
 		WARN_(I8042PRT, "Failed to write reset command to mouse\n");
 		goto failure;
@@ -383,10 +382,7 @@ EnableInterrupts(
 		KIRQL Irql;
 
 		Irql = KeAcquireInterruptSpinLock(DeviceExtension->HighestDIRQLInterrupt);
-
-		i8042Write(DeviceExtension, DeviceExtension->ControlPort, CTRL_WRITE_MOUSE);
-		i8042Write(DeviceExtension, DeviceExtension->DataPort, MOU_CMD_RESET);
-
+		i8042IsrWritePort(DeviceExtension, MOU_CMD_RESET, CTRL_WRITE_MOUSE);
 		KeReleaseInterruptSpinLock(DeviceExtension->HighestDIRQLInterrupt, Irql);
 	}
 

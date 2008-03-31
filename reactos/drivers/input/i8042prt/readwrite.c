@@ -34,7 +34,7 @@ i8042Flush(
 	}
 }
 
-VOID
+BOOLEAN
 i8042IsrWritePort(
 	IN PPORT_DEVICE_EXTENSION DeviceExtension,
 	IN UCHAR Value,
@@ -42,9 +42,9 @@ i8042IsrWritePort(
 {
 	if (SelectCmd)
 		if (!i8042Write(DeviceExtension, DeviceExtension->ControlPort, SelectCmd))
-			return;
+			return FALSE;
 
-	i8042Write(DeviceExtension, DeviceExtension->DataPort, Value);
+	return i8042Write(DeviceExtension, DeviceExtension->DataPort, Value);
 }
 
 /*
