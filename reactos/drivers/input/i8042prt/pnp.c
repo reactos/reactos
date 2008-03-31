@@ -413,11 +413,14 @@ StartProcedure(
 			WARN_(I8042PRT, "i8042BasicDetect() failed with status 0x%08lx\n", Status);
 			return STATUS_UNSUCCESSFUL;
 		}
-		TRACE_(I8042PRT, "Detecting keyboard\n");
-		i8042DetectKeyboard(DeviceExtension);
 
+		/* First detect the mouse and then the keyboard!
+		   If we do it the other way round, some systems throw away settings like the keyboard translation, when detecting the mouse. */
 		TRACE_(I8042PRT, "Detecting mouse\n");
 		i8042DetectMouse(DeviceExtension);
+
+		TRACE_(I8042PRT, "Detecting keyboard\n");
+		i8042DetectKeyboard(DeviceExtension);
 
 		INFO_(I8042PRT, "Keyboard present: %s\n", DeviceExtension->Flags & KEYBOARD_PRESENT ? "YES" : "NO");
 		INFO_(I8042PRT, "Mouse present   : %s\n", DeviceExtension->Flags & MOUSE_PRESENT ? "YES" : "NO");
