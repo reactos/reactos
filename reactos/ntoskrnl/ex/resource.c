@@ -49,7 +49,7 @@ ExReleaseResourceLock(IN PERESOURCE_XP Resource,
     UNREFERENCED_PARAMETER(LockHandle);
 
     /* Simply enable interrupts */
-    _disable();
+    _enable();
 }
 
 #else
