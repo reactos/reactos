@@ -387,7 +387,7 @@
 		<file>obname.c</file>
 		<file>oblife.c</file>
 		<file>obref.c</file>
-		<file>sdcache.c</file>
+		<file>obsdcach.c</file>
 		<file>obsecure.c</file>
 		<file>oblink.c</file>
 		<file>obwait.c</file>
