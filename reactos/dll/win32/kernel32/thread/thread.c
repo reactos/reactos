@@ -927,4 +927,105 @@ QueueUserWorkItem(
     return TRUE;
 }
 
+
+/*
+ * @implemented
+ */
+BOOL
+STDCALL
+RegisterWaitForSingleObject(
+    PHANDLE phNewWaitObject,
+    HANDLE hObject,
+    WAITORTIMERCALLBACK Callback,
+    PVOID Context,
+    ULONG dwMilliseconds,
+    ULONG dwFlags
+    )
+{
+    NTSTATUS Status = RtlRegisterWait( phNewWaitObject,
+                                       hObject,
+                                       Callback,
+                                       Context,
+                                       dwMilliseconds,
+                                       dwFlags );
+
+    if (Status != STATUS_SUCCESS)
+    {
+        SetLastError( RtlNtStatusToDosError(Status) );
+        return FALSE;
+    }
+    return TRUE;
+}
+
+
+/*
+ * @implemented
+ */
+HANDLE
+STDCALL
+RegisterWaitForSingleObjectEx(
+    HANDLE hObject,
+    WAITORTIMERCALLBACK Callback,
+    PVOID Context,
+    ULONG dwMilliseconds,
+    ULONG dwFlags
+    )
+{
+    NTSTATUS Status;
+    HANDLE hNewWaitObject;
+    
+    Status = RtlRegisterWait( &hNewWaitObject,
+                               hObject,
+                               Callback,
+                               Context,
+                               dwMilliseconds,
+                               dwFlags );
+
+    if (Status != STATUS_SUCCESS)
+    {
+        SetLastError( RtlNtStatusToDosError(Status) );
+        return NULL;
+    }
+    return hNewWaitObject;
+}
+
+
+/*
+ * @implemented
+ */
+BOOL
+STDCALL
+UnregisterWait(
+    HANDLE WaitHandle
+    )
+{
+    NTSTATUS Status = RtlDeregisterWaitEx( WaitHandle, NULL );
+    if (Status != STATUS_SUCCESS)
+    {
+        SetLastError( RtlNtStatusToDosError(Status) );
+        return FALSE;
+    }
+    return TRUE;
+}
+
+
+/*
+ * @implemented
+ */
+BOOL
+STDCALL
+UnregisterWaitEx(
+    HANDLE WaitHandle,
+    HANDLE CompletionEvent
+    )
+{
+    NTSTATUS Status = RtlDeregisterWaitEx( WaitHandle, CompletionEvent );
+    if (Status != STATUS_SUCCESS)
+    {
+        SetLastError( RtlNtStatusToDosError(Status) );
+        return FALSE;
+    }
+    return TRUE;
+}
+
 /* EOF */

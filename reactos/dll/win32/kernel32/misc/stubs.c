@@ -645,62 +645,6 @@ ReadFileScatter(
 /*
  * @unimplemented
  */
-BOOL
-STDCALL
-RegisterWaitForSingleObject(
-    PHANDLE phNewWaitObject,
-    HANDLE hObject,
-    WAITORTIMERCALLBACK Callback,
-    PVOID Context,
-    ULONG dwMilliseconds,
-    ULONG dwFlags
-    )
-{
-    NTSTATUS status;
-
-//    TRACE("%p %p %p %p %d %d\n",
-//          phNewWaitObject,hObject,Callback,Context,dwMilliseconds,dwFlags);
-
-    status = RtlRegisterWait( phNewWaitObject, hObject, Callback, Context, dwMilliseconds, dwFlags );
-    if (status != STATUS_SUCCESS)
-    {
-        SetLastError( RtlNtStatusToDosError(status) );
-        return FALSE;
-    }
-    return TRUE;
-}
-
-/*
- * @unimplemented
- */
-HANDLE
-STDCALL
-RegisterWaitForSingleObjectEx(
-    HANDLE hObject,
-    WAITORTIMERCALLBACK Callback,
-    PVOID Context,
-    ULONG dwMilliseconds,
-    ULONG dwFlags
-    )
-{
-    NTSTATUS status;
-    HANDLE hNewWaitObject;
-
-//    TRACE("%p %p %p %d %d\n",
-//          hObject,Callback,Context,dwMilliseconds,dwFlags);
-
-    status = RtlRegisterWait( &hNewWaitObject, hObject, Callback, Context, dwMilliseconds, dwFlags );
-    if (status != STATUS_SUCCESS)
-    {
-        SetLastError( RtlNtStatusToDosError(status) );
-        return NULL;
-    }
-    return hNewWaitObject;
-}
-
-/*
- * @unimplemented
- */
 ULONG
 STDCALL
 RemoveVectoredExceptionHandler(
@@ -803,51 +747,6 @@ TzSpecificLocalTimeToSystemTime(
 {
     STUB;
     return 0;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-UnregisterWait(
-    HANDLE WaitHandle
-    )
-{
-    NTSTATUS status;
-
-//    TRACE("%p\n",WaitHandle);
-
-    status = RtlDeregisterWaitEx( WaitHandle, NULL );
-    if (status != STATUS_SUCCESS)
-    {
-        SetLastError( RtlNtStatusToDosError(status) );
-        return FALSE;
-    }
-    return TRUE;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-UnregisterWaitEx(
-    HANDLE WaitHandle,
-    HANDLE CompletionEvent
-    )
-{
-    NTSTATUS status;
-
-//    TRACE("%p\n",WaitHandle);
-
-    status = RtlDeregisterWaitEx( WaitHandle, CompletionEvent );
-    if (status != STATUS_SUCCESS)
-    {
-        SetLastError( RtlNtStatusToDosError(status) );
-        return FALSE;
-    }
-    return TRUE;
 }
 
 /*
