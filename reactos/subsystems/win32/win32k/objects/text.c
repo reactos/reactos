@@ -993,9 +993,9 @@ FontFamilyFillInfo(PFONTFAMILYINFO Info, PCWSTR FaceName, PFONTGDI FontGDI)
   Lf->lfItalic = TM->tmItalic;
   Lf->lfPitchAndFamily = (TM->tmPitchAndFamily & 0xf1) + 1;
   Lf->lfCharSet = TM->tmCharSet;
-  Lf->lfOutPrecision = OUT_STROKE_PRECIS;
-  Lf->lfClipPrecision = CLIP_STROKE_PRECIS;
-  Lf->lfQuality = DRAFT_QUALITY;
+  Lf->lfOutPrecision = OUT_OUTLINE_PRECIS;
+  Lf->lfClipPrecision = CLIP_DEFAULT_PRECIS;
+  Lf->lfQuality = PROOF_QUALITY;
 
   Ntm = &Info->NewTextMetricEx.ntmTm;
   Ntm->tmHeight = TM->tmHeight;
@@ -4322,6 +4322,7 @@ IntGdiGetFontResourceInfo(
             break;
 
         case 2: /* Copy a LOGFONTW structure */
+            Info.EnumLogFontEx.elfLogFont.lfWidth = 0;
             memcpy(pBuffer, &Info.EnumLogFontEx.elfLogFont, sizeof(LOGFONTW));
             *pdwBytes = sizeof(LOGFONTW);
             break;
