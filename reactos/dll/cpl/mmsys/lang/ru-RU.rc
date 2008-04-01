@@ -97,13 +97,13 @@ END
 
 IDD_SAVE_SCHEME_AS DIALOG 9, 23, 225, 54
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "Save Scheme As"
+CAPTION "Сохранить схему как"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "&Save this sound scheme as:", -1, 7, 7, 212, 9
+    LTEXT "&Сохранить эту схему как:", -1, 7, 7, 212, 9
     EDITTEXT 8960, 7, 17, 211, 14, ES_AUTOHSCROLL
     DEFPUSHBUTTON "OK", IDOK, 93, 36, 60, 14
-    PUSHBUTTON "Cancel", IDCANCEL, 157, 36, 60, 14
+    PUSHBUTTON "Отмена", IDCANCEL, 157, 36, 60, 14
 END
 
 IDD_SPEAKERS DIALOG 0, 0, 257, 204
@@ -169,7 +169,7 @@ BEGIN
     ICON 4393, 10241, 26, 26, 20, 20
     LTEXT "This computer cannot play audio because the ReactOS Audio service is not enabled.", 10245, 60, 25, 150, 40
     AUTOCHECKBOX "&Enable ReactOS Audio", 10253, 60, 68, 150, 9
-    LTEXT "Notes", 10246, 58, 87, 150, 11
+    LTEXT "Примечания", 10246, 58, 87, 150, 11
     LTEXT "1. You must be an administrator to enable this service. If you are not logged on as administrator, you will be prompted for an administrator name and password.", 10247, 60, 100, 150, 40
     LTEXT "2. After you enable ReactOS Audio you will have to restart the computer.", 10248, 60, 140, 150, 40
 END
@@ -213,7 +213,7 @@ BEGIN
     CONTROL "Slider1", 9503, "MSCTLS_TRACKBAR32", WS_TABSTOP | 0x00000401, 87, 162, 108, 17
     LTEXT "High", 9502, 202, 164, 17, 8
     AUTOCHECKBOX "&Move all slide indicators at the same time", 9504, 5, 185, 216, 9
-    PUSHBUTTON "Restore &Defaults", 9505, 110, 199, 110, 14
+    PUSHBUTTON "&Востановить умолчания", 9505, 110, 199, 110, 14
 END
 
 IDD_SETUP2 DIALOG 0, 0, 227, 206
@@ -232,15 +232,15 @@ STRINGTABLE
 BEGIN
     IDS_CPLNAME "Звук и аудиоустройства"
     IDS_CPLDESCRIPTION "Изменение звуковых схем вашего компьютера, настройка колонок и записывающих устройств."
-    IDS_NO_SOUND "(None)"
+    IDS_NO_SOUND "(Нет)"
 
-    5825 "Program error"
-    5826 "Close program"
+    5825 "Ошибка программы"
+    5826 "Закрытие программы"
     5827 "Critical Battery Alarm"
     5828 "Device Connect"
     5829 "Device Disconnect"
     5830 "Device Failed to Connect"
-    5831 "Empty Recycle Bin"
+    5831 "Очистка карзины"
     5832 "Low Battery Alarm"
     5833 "Maximize"
     5834 "Menu command"
@@ -248,19 +248,19 @@ BEGIN
     5836 "Minimize"
     5837 "New Mail Notification"
     5838 "Start Navigation"
-    5839 "Open program"
+    5839 "Открытие программы"
     5840 "Print Complete"
     5841 "Restore Down"
     5842 "Restore Up"
     5843 "Asterisk"
     5844 "Default sound"
     5845 "Exclamation"
-    5846 "Exit ReactOS"
+    5846 "Выход из ReactOS"
     5847 "Critical Stop"
     5848 "System Notification"
     5849 "Question"
-    5850 "Start ReactOS"
+    5850 "Запуск ReactOS"
     5851 "Start Menu"
-    5852 "ReactOS Logoff"
+    5852 "Завершение сеанса ReactOS"
     5853 "ReactOS Logon"
 END
