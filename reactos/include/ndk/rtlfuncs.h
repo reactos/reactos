@@ -1972,10 +1972,37 @@ RtlSetProcessIsCritical(
 NTSYSAPI
 NTSTATUS
 NTAPI
+RtlDeregisterWaitEx(
+    IN HANDLE hWaitHandle,
+    IN HANDLE hCompletionEvent
+);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlDeregisterWait(
+    IN HANDLE hWaitHandle
+);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
 RtlQueueWorkItem(
     IN WORKERCALLBACKFUNC Function,
     IN PVOID Context OPTIONAL,
     IN ULONG Flags
+);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlRegisterWait(
+    IN PHANDLE phNewWaitObject,
+    IN HANDLE hObject,
+    IN WAITORTIMERCALLBACKFUNC Callback,
+    IN PVOID pvContext,
+    IN ULONG ulMilliseconds,
+    IN ULONG ulFlags
 );
 
 //
