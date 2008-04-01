@@ -83,6 +83,18 @@
     ((POBJECT_HEADER)((ULONG_PTR)x->Object & ~OBJ_HANDLE_ATTRIBUTES))
 
 //
+// Recovers the security descriptor from a cached security descriptor header
+//
+#define ObpGetHeaderForSd(x) \
+    CONTAINING_RECORD((x), SECURITY_DESCRIPTOR_HEADER, SecurityDescriptor)
+
+//
+// Recovers the security descriptor from a cached security descriptor list entry
+//
+#define ObpGetHeaderForEntry(x) \
+    CONTAINING_RECORD((x), SECURITY_DESCRIPTOR_HEADER, Link)
+
+//
 // Context Structures for Ex*Handle Callbacks
 //
 typedef struct _OBP_SET_HANDLE_ATTRIBUTES_CONTEXT
@@ -90,17 +102,39 @@ typedef struct _OBP_SET_HANDLE_ATTRIBUTES_CONTEXT
     KPROCESSOR_MODE PreviousMode;
     OBJECT_HANDLE_ATTRIBUTE_INFORMATION Information;
 } OBP_SET_HANDLE_ATTRIBUTES_CONTEXT, *POBP_SET_HANDLE_ATTRIBUTES_CONTEXT;
+
 typedef struct _OBP_CLOSE_HANDLE_CONTEXT
 {
     PHANDLE_TABLE HandleTable;
     KPROCESSOR_MODE AccessMode;
 } OBP_CLOSE_HANDLE_CONTEXT, *POBP_CLOSE_HANDLE_CONTEXT;
+
 typedef struct _OBP_FIND_HANDLE_DATA
 {
     POBJECT_HEADER ObjectHeader;
     POBJECT_TYPE ObjectType;
     POBJECT_HANDLE_INFORMATION HandleInformation;
 } OBP_FIND_HANDLE_DATA, *POBP_FIND_HANDLE_DATA;
+
+//
+// Cached Security Descriptor Header
+//
+typedef struct _SECURITY_DESCRIPTOR_HEADER
+{
+    LIST_ENTRY Link;
+    ULONG RefCount;
+    ULONG FullHash;
+    QUAD SecurityDescriptor;    
+} SECURITY_DESCRIPTOR_HEADER, *PSECURITY_DESCRIPTOR_HEADER;
+
+//
+// Cached Security Descriptor List
+//
+typedef struct _OB_SD_CACHE_LIST
+{
+    EX_PUSH_LOCK PushLock;
+    LIST_ENTRY Head;
+} OB_SD_CACHE_LIST, *POB_SD_CACHE_LIST;
 
 //
 // Structure for quick-compare of a DOS Device path
@@ -388,23 +422,10 @@ ObpInitSdCache(
     VOID
 );
 
-NTSTATUS
-NTAPI
-ObpAddSecurityDescriptor(
-    IN PSECURITY_DESCRIPTOR SourceSD,
-    OUT PSECURITY_DESCRIPTOR *DestinationSD
-);
-
 PSECURITY_DESCRIPTOR
 NTAPI
-ObpReferenceCachedSecurityDescriptor(
-    IN PSECURITY_DESCRIPTOR SecurityDescriptor
-);
-
-VOID
-NTAPI
-ObpDereferenceCachedSecurityDescriptor(
-    IN PSECURITY_DESCRIPTOR SecurityDescriptor
+ObpReferenceSecurityDescriptor(
+    IN POBJECT_HEADER ObjectHeader
 );
 
 //

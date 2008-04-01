@@ -29,13 +29,13 @@ ObpAcquireObjectLock(IN POBJECT_HEADER ObjectHeader)
 {
     ULONG Slot;
     POBJECT_TYPE ObjectType = ObjectHeader->Type;
-    
+
     /* Sanity check */
     ASSERT(KeGetCurrentIrql() <= APC_LEVEL);
-    
+
     /* Pick a slot */
     Slot = ObpSelectObjectLockSlot(ObjectHeader);
-    
+
     /* Enter a critical region and acquire the resource */
     KeEnterCriticalRegion();
     ExAcquireResourceExclusiveLite(&ObjectType->ObjectLocks[Slot], TRUE);
@@ -47,13 +47,13 @@ ObpAcquireObjectLockShared(IN POBJECT_HEADER ObjectHeader)
 {
     ULONG Slot;
     POBJECT_TYPE ObjectType = ObjectHeader->Type;
-    
+
     /* Sanity check */
     ASSERT(KeGetCurrentIrql() <= APC_LEVEL);
-    
+
     /* Pick a slot */
     Slot = ObpSelectObjectLockSlot(ObjectHeader);
-    
+
     /* Enter a critical region and acquire the resource */
     KeEnterCriticalRegion();
     ExAcquireResourceSharedLite(&ObjectType->ObjectLocks[Slot], TRUE);
@@ -65,14 +65,14 @@ ObpReleaseObjectLock(IN POBJECT_HEADER ObjectHeader)
 {
     ULONG Slot;
     POBJECT_TYPE ObjectType = ObjectHeader->Type;
-    
+
     /* Pick a slot */
     Slot = ObpSelectObjectLockSlot(ObjectHeader);
-    
-    /* Enter a critical region and acquire the resource */
+
+    /* Release the resource and leave a critical region */
     ExReleaseResourceLite(&ObjectType->ObjectLocks[Slot]);
     KeLeaveCriticalRegion();
-    
+
     /* Sanity check */
     ASSERT(KeGetCurrentIrql() <= APC_LEVEL);
 }

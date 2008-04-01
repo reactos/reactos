@@ -25,7 +25,7 @@ ObAssignObjectSecurityDescriptor(IN PVOID Object,
     NTSTATUS Status;
     PSECURITY_DESCRIPTOR NewSd;
     PAGED_CODE();
-    
+
     /* Get the object header */
     ObjectHeader = OBJECT_TO_OBJECT_HEADER(Object);
     if (!SecurityDescriptor)
@@ -34,19 +34,19 @@ ObAssignObjectSecurityDescriptor(IN PVOID Object,
         ObjectHeader->SecurityDescriptor = NULL;
         return STATUS_SUCCESS;
     }
-    
+
     /* Add it to our internal cache */
-    Status = ObpAddSecurityDescriptor(SecurityDescriptor, &NewSd);
+    Status = ObLogSecurityDescriptor(SecurityDescriptor, &NewSd, 1);
     if (NT_SUCCESS(Status))
     {
         /* Free the old copy */
         ExFreePool(SecurityDescriptor);
-        
+
         /* Set the new pointer */
         ASSERT(NewSd);
         ObjectHeader->SecurityDescriptor = NewSd;
     }
-    
+
     /* Return status */
     return Status;
 }
@@ -56,11 +56,11 @@ NTAPI
 ObDeassignSecurity(IN OUT PSECURITY_DESCRIPTOR *SecurityDescriptor)
 {
     /* Dereference it */
-    ObpDereferenceCachedSecurityDescriptor(*SecurityDescriptor);
-    
+    ObDereferenceSecurityDescriptor(*SecurityDescriptor, 1);
+
     /* Don't free again later */
     *SecurityDescriptor = NULL;
-    
+
     /* All done */
     return STATUS_SUCCESS;
 }
@@ -77,13 +77,13 @@ ObQuerySecurityDescriptorInfo(IN PVOID Object,
     NTSTATUS Status;
     PSECURITY_DESCRIPTOR ObjectSd;
     PAGED_CODE();
-    
+
     /* Get the object header */
     ObjectHeader = OBJECT_TO_OBJECT_HEADER(Object);
-    
+
     /* Get the SD */
-    ObjectSd = ObpReferenceCachedSecurityDescriptor(ObjectHeader->SecurityDescriptor);
-    
+    ObjectSd = ObpReferenceSecurityDescriptor(ObjectHeader);
+
     /* Query the information */
     Status = SeQuerySecurityDescriptorInfo(SecurityInformation,
                                            SecurityDescriptor,
@@ -91,8 +91,8 @@ ObQuerySecurityDescriptorInfo(IN PVOID Object,
                                            &ObjectSd);
 
     /* Check if we have an object SD and dereference it, if so */
-    if (ObjectSd) ObpDereferenceCachedSecurityDescriptor(ObjectSd);
-    
+    if (ObjectSd) ObDereferenceSecurityDescriptor(ObjectSd, 1);
+
     /* Return status */
     return Status;
 }
@@ -110,15 +110,15 @@ ObSetSecurityDescriptorInfo(IN PVOID Object,
     POBJECT_HEADER ObjectHeader;
     PSECURITY_DESCRIPTOR OldDescriptor, NewDescriptor, CachedDescriptor;
     PAGED_CODE();
-    
+
     /* Get the object header */
     ObjectHeader = OBJECT_TO_OBJECT_HEADER(Object);
     while (TRUE)
     {
         /* Reference the old descriptor */
-        OldDescriptor = ObpReferenceCachedSecurityDescriptor(ObjectHeader->SecurityDescriptor);
+        OldDescriptor = ObpReferenceSecurityDescriptor(ObjectHeader);
         NewDescriptor = OldDescriptor;
-        
+
         /* Set the SD information */
         Status = SeSetSecurityDescriptorInfo(Object,
                                              SecurityInformation,
@@ -129,39 +129,39 @@ ObSetSecurityDescriptorInfo(IN PVOID Object,
         if (NT_SUCCESS(Status))
         {
             /* Now add this to the cache */
-            Status = ObpAddSecurityDescriptor(NewDescriptor, &CachedDescriptor);
-            
+            Status = ObLogSecurityDescriptor(NewDescriptor, &CachedDescriptor, 1);
+
             /* Let go of our uncached copy */
             ExFreePool(NewDescriptor);
-            
+
             /* Check for success */
             if (NT_SUCCESS(Status))
             {
                 /* Dereference the old one */
                 ASSERT(OldDescriptor == ObjectHeader->SecurityDescriptor);
-                
+
                 /* Now set this as the new descriptor */
                 ObjectHeader->SecurityDescriptor = CachedDescriptor;
-                
+
                 /* And dereference the old one */
-                ObpDereferenceCachedSecurityDescriptor(OldDescriptor);
+                ObDereferenceSecurityDescriptor(OldDescriptor, 1);
                 break;
             }
             else
             {
                 /* We failed, dereference the old one */
-                ObpDereferenceCachedSecurityDescriptor(OldDescriptor);
+                ObDereferenceSecurityDescriptor(OldDescriptor, 1);
                 break;
             }
         }
         else
         {
             /* We failed, dereference the old one */
-            if (OldDescriptor) ObpDereferenceCachedSecurityDescriptor(OldDescriptor);
+            if (OldDescriptor) ObDereferenceSecurityDescriptor(OldDescriptor, 1);
             break;
         }
     }
-    
+
     /* Return status */
     return Status;
 }
@@ -585,8 +585,7 @@ ObGetObjectSecurity(IN PVOID Object,
     if (Type->TypeInfo.SecurityProcedure == SeDefaultObjectMethod)
     {
         /* Reference the descriptor */
-        *SecurityDescriptor =
-            ObpReferenceCachedSecurityDescriptor(Header->SecurityDescriptor);
+        *SecurityDescriptor = ObpReferenceSecurityDescriptor(Header);
         return STATUS_SUCCESS;
     }
 
@@ -678,7 +677,7 @@ ObReleaseObjectSecurity(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
     else
     {
         /* Otherwise this means we used an internal descriptor */
-        ObpDereferenceCachedSecurityDescriptor(SecurityDescriptor);
+        ObDereferenceSecurityDescriptor(SecurityDescriptor, 1);
     }
 }
 
