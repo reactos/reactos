@@ -4358,6 +4358,7 @@ NtGdiGetFontResourceInfoInternalW(
     DWORD dwBytes;
     UNICODE_STRING SafeFileNames;
     BOOL bRet = FALSE;
+    ULONG cbStringSize;
 
     union
     {
@@ -4375,13 +4376,26 @@ NtGdiGetFontResourceInfoInternalW(
         return FALSE;
     }
 
-    /* Check buffers and copy pwszFiles */
+    /* Allocate a safe unicode string buffer */
+    cbStringSize = cwc * sizeof(WCHAR);
+    SafeFileNames.MaximumLength = SafeFileNames.Length = cbStringSize - sizeof(WCHAR);
+    SafeFileNames.Buffer = ExAllocatePoolWithTag(PagedPool,
+                                                 cbStringSize,
+                                                 TAG('R','T','S','U'));
+    if (!SafeFileNames.Buffer)
+    {
+        SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+        return FALSE;
+    }
+
+    /* Check buffers and copy pwszFiles to safe unicode string */
     _SEH_TRY
     {
-        ProbeForRead(pwszFiles, cwc * sizeof(WCHAR), 1);
-        bRet = RtlCreateUnicodeString(&SafeFileNames, pwszFiles);
+        ProbeForRead(pwszFiles, cbStringSize, 1);
         ProbeForWrite(pdwBytes, sizeof(DWORD), 1);
         ProbeForWrite(pvBuf, cjIn, 1);
+
+        RtlCopyMemory(SafeFileNames.Buffer, pwszFiles, cbStringSize);
     }
     _SEH_HANDLE
     {
@@ -4389,20 +4403,15 @@ NtGdiGetFontResourceInfoInternalW(
     }
     _SEH_END
 
-    if(!bRet)
-    {
-        /* Could not create the unicode string, so return instantly */
-        return FALSE;
-    }
-
     if(!NT_SUCCESS(Status))
     {
         SetLastNtError(Status);
-        /* Free the string for the filename */
-        RtlFreeUnicodeString(&SafeFileNames);
+        /* Free the string buffer for the safe filename */
+        ExFreePool(SafeFileNames.Buffer);
         return FALSE;
     }
 
+    /* Do the actual call */
     bRet = IntGdiGetFontResourceInfo(&SafeFileNames, &Buffer, &dwBytes, dwType);
 
     /* Check if succeeded and the buffer is big enough */
@@ -4428,8 +4437,8 @@ NtGdiGetFontResourceInfoInternalW(
         }
     }
 
-    /* Free the string for the filename */
-    RtlFreeUnicodeString(&SafeFileNames);
+    /* Free the string for the safe filenames */
+    ExFreePool(SafeFileNames.Buffer);
 
     return bRet;
 }
