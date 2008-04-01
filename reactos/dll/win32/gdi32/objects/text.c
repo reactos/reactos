@@ -428,7 +428,7 @@ GetFontResourceInfoW(
 
     bRet = NtGdiGetFontResourceInfoInternalW(
         NtFileName.Buffer,
-        NtFileName.Length,
+        (NtFileName.Length / sizeof(WCHAR)) + 1,
         1,
         *pdwBufSize,
         pdwBufSize,
