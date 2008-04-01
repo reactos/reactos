@@ -208,7 +208,7 @@ BEGIN
 	ICON "", 14000, 10, 3, 30, 30, WS_VISIBLE
 	EDITTEXT 14001, 70, 9, 158, 14, ES_LEFT | ES_READONLY
 	LTEXT "Тип файла:", 14004, 8, 35, 50, 10
-	LTEXT "File", 14005, 68, 35, 160, 10
+	LTEXT "файл", 14005, 68, 35, 160, 10
 	LTEXT "Приложение:", 14006, 8, 53, 50, 10
 	LTEXT "", 14007, 68, 53, 160, 10
 	LTEXT "Размещение:", 14008, 8, 72, 45, 10
@@ -641,7 +641,7 @@ BEGIN
 	FCIDM_SHVIEW_NEWFOLDER 	    "&Папка"
 	FCIDM_SHVIEW_NEWLINK 	    "&Ярлык"
 	IDS_FOLDER_OPTIONS          "Свойства папки"
-	IDS_RECYCLEBIN_LOCATION     "Recycle Bin Location"
-	IDS_RECYCLEBIN_DISKSPACE    "Space Available"
+	IDS_RECYCLEBIN_LOCATION     "Расположение Корзины"
+	IDS_RECYCLEBIN_DISKSPACE    "Доступное пространство"
 
 END
