@@ -26,6 +26,7 @@ extern ULONG CmNtCSDVersion;
 extern ULONG NtGlobalFlag;
 extern ULONG ExpInitializationPhase;
 extern ULONG ExpAltTimeZoneBias;
+extern LIST_ENTRY ExSystemLookasideListHead;
 
 typedef struct _EXHANDLE
 {
@@ -711,7 +712,6 @@ ExAcquirePushLockExclusive(PEX_PUSH_LOCK PushLock)
     if (InterlockedBitTestAndSet((PLONG)PushLock, EX_PUSH_LOCK_LOCK_V))
     {
         /* Someone changed it, use the slow path */
-        // DbgPrint("%s - Contention!\n", __FUNCTION__);
         ExfAcquirePushLockExclusive(PushLock);
     }
 
@@ -750,6 +750,7 @@ ExTryToAcquirePushLockExclusive(PEX_PUSH_LOCK PushLock)
     }
 
     /* Got acquired */
+    ASSERT (PushLock->Locked);
     return TRUE;
 }
 
@@ -783,7 +784,6 @@ ExAcquirePushLockShared(PEX_PUSH_LOCK PushLock)
     if (ExpChangePushlock(PushLock, NewValue.Ptr, 0))
     {
         /* Someone changed it, use the slow path */
-        // DbgPrint("%s - Contention!\n", __FUNCTION__);
         ExfAcquirePushLockShared(PushLock);
     }
 
@@ -897,7 +897,6 @@ ExReleasePushLockShared(PEX_PUSH_LOCK PushLock)
     if (ExpChangePushlock(PushLock, 0, OldValue.Ptr) != OldValue.Ptr)
     {
         /* There are still other people waiting on it */
-        DbgPrint("%s - Contention!\n", __FUNCTION__);
         ExfReleasePushLockShared(PushLock);
     }
 }
@@ -945,7 +944,6 @@ ExReleasePushLockExclusive(PEX_PUSH_LOCK PushLock)
     if ((OldValue.Waiting) && !(OldValue.Waking))
     {
         /* Wake it up */
-        DbgPrint("%s - Contention!\n", __FUNCTION__);
         ExfTryToWakePushLock(PushLock);
     }
 }
@@ -997,7 +995,6 @@ ExReleasePushLock(PEX_PUSH_LOCK PushLock)
          OldValue.Ptr))
     {
         /* We have waiters, use the long path */
-        // DbgPrint("%s - Contention!\n", __FUNCTION__);
         ExfReleasePushLock(PushLock);
     }
 }

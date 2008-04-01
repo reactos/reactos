@@ -147,6 +147,7 @@ extern ULONG NtBuildNumber;
 // Pushlock Wait Block Flags
 //
 #define EX_PUSH_LOCK_FLAGS_EXCLUSIVE        1
+#define EX_PUSH_LOCK_FLAGS_WAIT_V           1
 #define EX_PUSH_LOCK_FLAGS_WAIT             2
 
 //
