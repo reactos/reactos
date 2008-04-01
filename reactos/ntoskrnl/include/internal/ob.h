@@ -124,6 +124,21 @@ typedef struct _OB_TEMP_BUFFER
 } OB_TEMP_BUFFER, *POB_TEMP_BUFFER;
 
 //
+// Startup and Shutdown Functions
+//
+BOOLEAN
+NTAPI
+ObInitSystem(
+    VOID
+);
+
+VOID
+NTAPI
+ObShutdownSystem(
+    VOID
+);
+
+//
 // Directory Namespace Functions
 //
 BOOLEAN
@@ -328,6 +343,12 @@ VOID
 NTAPI
 ObpFreeObjectNameBuffer(
     IN PUNICODE_STRING Name
+);
+
+VOID
+NTAPI
+ObpDeleteObjectType(
+    IN PVOID Object
 );
 
 //
@@ -541,7 +562,7 @@ extern POBJECT_DIRECTORY ObpTypeDirectoryObject;
 extern PHANDLE_TABLE ObpKernelHandleTable;
 extern WORK_QUEUE_ITEM ObpReaperWorkItem;
 extern volatile PVOID ObpReaperList;
-extern NPAGED_LOOKASIDE_LIST ObpNmLookasideList, ObpCiLookasideList;
+extern GENERAL_LOOKASIDE ObpNameBufferLookasideList, ObpCreateInfoLookasideList;
 extern BOOLEAN IoCountOperations;
 extern ALIGNEDNAME ObpDosDevicesShortNamePrefix;
 extern ALIGNEDNAME ObpDosDevicesShortNameRoot;

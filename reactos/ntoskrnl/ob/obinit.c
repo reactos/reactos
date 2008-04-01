@@ -61,7 +61,7 @@ ObInit2(VOID)
 {
     CCHAR i;
     PKPRCB Prcb;
-    PNPAGED_LOOKASIDE_LIST CurrentList = NULL;
+    PGENERAL_LOOKASIDE CurrentList = NULL;
 
     /* Now allocate the per-processor lists */
     for (i = 0; i < KeNumberProcessors; i++)
@@ -70,54 +70,52 @@ ObInit2(VOID)
         Prcb = KiProcessorBlock[(int)i];
 
         /* Set the OBJECT_CREATE_INFORMATION List */
-        Prcb->PPLookasideList[LookasideCreateInfoList].L = &ObpCiLookasideList.L;
+        Prcb->PPLookasideList[LookasideCreateInfoList].L = &ObpCreateInfoLookasideList;
         CurrentList = ExAllocatePoolWithTag(NonPagedPool,
-                                            sizeof(NPAGED_LOOKASIDE_LIST),
+                                            sizeof(GENERAL_LOOKASIDE),
                                             TAG('O', 'b', 'C', 'I'));
         if (CurrentList)
         {
             /* Initialize it */
-            ExInitializeNPagedLookasideList(CurrentList,
-                                            NULL,
-                                            NULL,
-                                            0,
+            ExInitializeSystemLookasideList(CurrentList,
+                                            NonPagedPool,
                                             sizeof(OBJECT_CREATE_INFORMATION),
                                             TAG('O', 'b', 'C', 'I'),
-                                            32);
+                                            32,
+                                            &ExSystemLookasideListHead);
         }
         else
         {
             /* No list, use the static buffer */
-            CurrentList = &ObpCiLookasideList;
+            CurrentList = &ObpCreateInfoLookasideList;
         }
 
         /* Link it */
-        Prcb->PPLookasideList[LookasideCreateInfoList].P = &CurrentList->L;
+        Prcb->PPLookasideList[LookasideCreateInfoList].P = CurrentList;
 
         /* Set the captured UNICODE_STRING Object Name List */
-        Prcb->PPLookasideList[LookasideNameBufferList].L = &ObpNmLookasideList.L;
+        Prcb->PPLookasideList[LookasideNameBufferList].L = &ObpNameBufferLookasideList;
         CurrentList = ExAllocatePoolWithTag(NonPagedPool,
-                                            sizeof(NPAGED_LOOKASIDE_LIST),
+                                            sizeof(GENERAL_LOOKASIDE),
                                             TAG('O', 'b', 'N', 'M'));
         if (CurrentList)
         {
             /* Initialize it */
-            ExInitializeNPagedLookasideList(CurrentList,
-                                            NULL,
-                                            NULL,
-                                            0,
+            ExInitializeSystemLookasideList(CurrentList,
+                                            PagedPool,
                                             248,
                                             TAG('O', 'b', 'N', 'M'),
-                                            16);
+                                            16,
+                                            &ExSystemLookasideListHead);
         }
         else
         {
             /* No list, use the static buffer */
-            CurrentList = &ObpNmLookasideList;
+            CurrentList = &ObpNameBufferLookasideList;
         }
 
         /* Link it */
-        Prcb->PPLookasideList[LookasideNameBufferList].P = &CurrentList->L;
+        Prcb->PPLookasideList[LookasideNameBufferList].P = CurrentList;
     }
 
     return TRUE;
@@ -144,34 +142,32 @@ ObInit(VOID)
     if (ObpInitializationPhase != 0) goto ObPostPhase0;
 
     /* Initialize the OBJECT_CREATE_INFORMATION List */
-    ExInitializeNPagedLookasideList(&ObpCiLookasideList,
-                                    NULL,
-                                    NULL,
-                                    0,
+    ExInitializeSystemLookasideList(&ObpCreateInfoLookasideList,
+                                    NonPagedPool,
                                     sizeof(OBJECT_CREATE_INFORMATION),
                                     TAG('O', 'b', 'C', 'I'),
-                                    32);
+                                    32,
+                                    &ExSystemLookasideListHead);
 
     /* Set the captured UNICODE_STRING Object Name List */
-    ExInitializeNPagedLookasideList(&ObpNmLookasideList,
-                                    NULL,
-                                    NULL,
-                                    0,
+    ExInitializeSystemLookasideList(&ObpNameBufferLookasideList,
+                                    PagedPool,
                                     248,
                                     TAG('O', 'b', 'N', 'M'),
-                                    16);
+                                    16,
+                                    &ExSystemLookasideListHead);
 
     /* Temporarily setup both pointers to the shared list */
-    Prcb->PPLookasideList[LookasideCreateInfoList].L = &ObpCiLookasideList.L;
-    Prcb->PPLookasideList[LookasideCreateInfoList].P = &ObpCiLookasideList.L;
-    Prcb->PPLookasideList[LookasideNameBufferList].L = &ObpNmLookasideList.L;
-    Prcb->PPLookasideList[LookasideNameBufferList].P = &ObpNmLookasideList.L;
+    Prcb->PPLookasideList[LookasideCreateInfoList].L = &ObpCreateInfoLookasideList;
+    Prcb->PPLookasideList[LookasideCreateInfoList].P = &ObpCreateInfoLookasideList;
+    Prcb->PPLookasideList[LookasideNameBufferList].L = &ObpNameBufferLookasideList;
+    Prcb->PPLookasideList[LookasideNameBufferList].P = &ObpNameBufferLookasideList;
 
     /* Initialize the security descriptor cache */
     ObpInitSdCache();
 
     /* Initialize the Default Event */
-    KeInitializeEvent(&ObpDefaultObject, NotificationEvent, TRUE );
+    KeInitializeEvent(&ObpDefaultObject, NotificationEvent, TRUE);
 
     /* Setup default access for the system process */
     PsGetCurrentProcess()->GrantedAccess = PROCESS_ALL_ACCESS;
@@ -198,21 +194,22 @@ ObInit(VOID)
     ObjectTypeInitializer.GenericMapping = ObpTypeMapping;
     ObjectTypeInitializer.DefaultNonPagedPoolCharge = sizeof(OBJECT_TYPE);
     ObjectTypeInitializer.InvalidAttributes = OBJ_OPENLINK;
+    ObjectTypeInitializer.DeleteProcedure = ObpDeleteObjectType;
     ObCreateObjectType(&Name, &ObjectTypeInitializer, NULL, &ObpTypeObjectType);
 
     /* Create the Directory Type */
     RtlInitUnicodeString(&Name, L"Directory");
     ObjectTypeInitializer.ValidAccessMask = DIRECTORY_ALL_ACCESS;
-    ObjectTypeInitializer.UseDefaultObject = FALSE;
+    ObjectTypeInitializer.CaseInsensitive = TRUE;
     ObjectTypeInitializer.MaintainTypeList = FALSE;
     ObjectTypeInitializer.GenericMapping = ObpDirectoryMapping;
+    ObjectTypeInitializer.DeleteProcedure = NULL;
     ObjectTypeInitializer.DefaultNonPagedPoolCharge = sizeof(OBJECT_DIRECTORY);
     ObCreateObjectType(&Name, &ObjectTypeInitializer, NULL, &ObDirectoryType);
 
     /* Create 'symbolic link' object type */
     RtlInitUnicodeString(&Name, L"SymbolicLink");
-    ObjectTypeInitializer.DefaultNonPagedPoolCharge =
-        sizeof(OBJECT_SYMBOLIC_LINK);
+    ObjectTypeInitializer.DefaultNonPagedPoolCharge = sizeof(OBJECT_SYMBOLIC_LINK);
     ObjectTypeInitializer.GenericMapping = ObpSymbolicLinkMapping;
     ObjectTypeInitializer.ValidAccessMask = SYMBOLIC_LINK_ALL_ACCESS;
     ObjectTypeInitializer.ParseProcedure = ObpParseSymbolicLink;
@@ -251,6 +248,24 @@ ObPostPhase0:
                                        NULL);
     if (!NT_SUCCESS(Status)) return FALSE;
 
+    /* Close the extra handle */
+    Status = NtClose(Handle);
+    if (!NT_SUCCESS(Status)) return FALSE;
+
+    /* Initialize Object Types directory attributes */
+    RtlInitUnicodeString(&Name, L"\\KernelObjects");
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &Name,
+                               OBJ_CASE_INSENSITIVE | OBJ_PERMANENT,
+                               NULL,
+                               NULL);
+    
+    /* Create the directory */
+    Status = NtCreateDirectoryObject(&Handle,
+                                     DIRECTORY_ALL_ACCESS,
+                                     &ObjectAttributes);
+    if (!NT_SUCCESS(Status)) return FALSE;
+    
     /* Close the extra handle */
     Status = NtClose(Handle);
     if (!NT_SUCCESS(Status)) return FALSE;

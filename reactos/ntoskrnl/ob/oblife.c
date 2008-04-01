@@ -22,7 +22,7 @@ extern ULONG NtGlobalFlag;
 POBJECT_TYPE ObpTypeObjectType = NULL;
 KEVENT ObpDefaultObject;
 
-NPAGED_LOOKASIDE_LIST ObpNmLookasideList, ObpCiLookasideList;
+GENERAL_LOOKASIDE ObpNameBufferLookasideList, ObpCreateInfoLookasideList;
 
 WORK_QUEUE_ITEM ObpReaperWorkItem;
 volatile PVOID ObpReaperList;
@@ -1234,6 +1234,24 @@ ObCreateObjectType(IN PUNICODE_STRING TypeName,
     /* If we got here, then we failed */
     ObpCleanupDirectoryLookup(&Context);
     return STATUS_INSUFFICIENT_RESOURCES;
+}
+
+VOID
+NTAPI
+ObpDeleteObjectType(IN PVOID Object)
+{
+    ULONG i;
+    POBJECT_TYPE ObjectType = (PVOID)Object;
+    
+    /* Loop our locks */
+    for (i = 0; i < 4; i++)
+    {
+        /* Delete each one */
+        ExDeleteResourceLite(&ObjectType->ObjectLocks[i]);
+    }
+    
+    /* Delete our main mutex */
+    ExDeleteResourceLite(&ObjectType->Mutex);
 }
 
 /*++
