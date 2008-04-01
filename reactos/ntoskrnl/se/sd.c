@@ -906,9 +906,12 @@ SeSetSecurityDescriptorInfo(IN PVOID Object OPTIONAL,
     ULONG Control = 0;
     ULONG_PTR Current;
     SECURITY_INFORMATION SecurityInformation;
-    
-    
+
     ObjectSd = *ObjectsSecurityDescriptor;
+    
+    if (!ObjectSd)
+        return STATUS_NO_SECURITY_ON_OBJECT; // The object does not have a security descriptor.
+    
     SecurityInformation = *_SecurityInformation;
     
     /* Get owner and owner size */
@@ -1083,6 +1086,11 @@ SeSetSecurityDescriptorInfoEx(
 	IN PGENERIC_MAPPING GenericMapping
 	)
 {
+    PISECURITY_DESCRIPTOR ObjectSd = *ObjectsSecurityDescriptor;
+    
+    if (!ObjectSd)
+        return STATUS_NO_SECURITY_ON_OBJECT; // The object does not have a security descriptor.
+
 	UNIMPLEMENTED;
 	return STATUS_NOT_IMPLEMENTED;
 }
