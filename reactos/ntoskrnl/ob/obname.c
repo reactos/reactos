@@ -206,8 +206,8 @@ ObpDeleteNameCheck(IN PVOID Object)
                                          &Context);
         if (Object)
         {
-            /* Lock the object type */
-            ObpEnterObjectTypeMutex(ObjectType);
+            /* Lock the object */
+            ObpAcquireObjectLock(ObjectHeader);
 
             /* Make sure we can still delete the object */
             if (!(ObjectHeader->HandleCount) &&
@@ -238,7 +238,7 @@ ObpDeleteNameCheck(IN PVOID Object)
             }
 
             /* Release the lock */
-            ObpLeaveObjectTypeMutex(ObjectType);
+            ObpReleaseObjectLock(ObjectHeader);
         }
 
         /* Cleanup after lookup */

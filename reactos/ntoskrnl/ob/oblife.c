@@ -262,8 +262,8 @@ ObpSetPermanentObject(IN PVOID ObjectBody,
     /* Get the header */
     ObjectHeader = OBJECT_TO_OBJECT_HEADER(ObjectBody);
 
-    /* Acquire object type lock */
-    ObpEnterObjectTypeMutex(ObjectHeader->Type);
+    /* Acquire object lock */
+    ObpAcquireObjectLock(ObjectHeader);
 
     /* Check what we're doing to it */
     if (Permanent)
@@ -272,7 +272,7 @@ ObpSetPermanentObject(IN PVOID ObjectBody,
         ObjectHeader->Flags |= OB_FLAG_PERMANENT;
 
         /* Release the lock */
-        ObpLeaveObjectTypeMutex(ObjectHeader->Type);
+        ObpReleaseObjectLock(ObjectHeader);
     }
     else
     {
@@ -280,7 +280,7 @@ ObpSetPermanentObject(IN PVOID ObjectBody,
         ObjectHeader->Flags &= ~OB_FLAG_PERMANENT;
 
         /* Release the lock */
-        ObpLeaveObjectTypeMutex(ObjectHeader->Type);
+        ObpReleaseObjectLock(ObjectHeader);
 
         /* Check if we should delete the object now */
         ObpDeleteNameCheck(ObjectBody);

@@ -495,8 +495,8 @@ ObpDecrementHandleCount(IN PVOID ObjectBody,
             ObjectHeader->HandleCount,
             ObjectHeader->PointerCount);
 
-    /* Lock the object type */
-    ObpEnterObjectTypeMutex(ObjectType);
+    /* Lock the object */
+    ObpAcquireObjectLock(ObjectHeader);
 
     /* Set default counts */
     SystemHandleCount = ObjectHeader->HandleCount;
@@ -571,7 +571,7 @@ ObpDecrementHandleCount(IN PVOID ObjectBody,
     }
 
     /* Release the lock */
-    ObpLeaveObjectTypeMutex(ObjectType);
+    ObpReleaseObjectLock(ObjectHeader);
 
     /* Check if we have a close procedure */
     if (ObjectType->TypeInfo.CloseProcedure)
@@ -796,8 +796,8 @@ ObpIncrementHandleCount(IN PVOID Object,
         ProbeMode = AccessMode;
     }
 
-    /* Lock the object type */
-    ObpEnterObjectTypeMutex(ObjectType);
+    /* Lock the object */
+    ObpAcquireObjectLock(ObjectHeader);
 
     /* Charge quota and remove the creator info flag */
     Status = ObpChargeQuotaForObject(ObjectHeader, ObjectType, &NewObject);
@@ -922,7 +922,7 @@ ObpIncrementHandleCount(IN PVOID Object,
     }
 
     /* Release the lock */
-    ObpLeaveObjectTypeMutex(ObjectType);
+    ObpReleaseObjectLock(ObjectHeader);
 
     /* Check if we have an open procedure */
     Status = STATUS_SUCCESS;
@@ -988,7 +988,7 @@ ObpIncrementHandleCount(IN PVOID Object,
 
 Quickie:
     /* Release lock and return */
-    ObpLeaveObjectTypeMutex(ObjectType);
+    ObpReleaseObjectLock(ObjectHeader);
     return Status;
 }
 
@@ -1049,7 +1049,7 @@ ObpIncrementUnnamedHandleCount(IN PVOID Object,
             ObjectHeader->PointerCount);
 
     /* Lock the object type */
-    ObpEnterObjectTypeMutex(ObjectType);
+    ObpAcquireObjectLock(ObjectHeader);
 
     /* Charge quota and remove the creator info flag */
     Status = ObpChargeQuotaForObject(ObjectHeader, ObjectType, &NewObject);
@@ -1149,7 +1149,7 @@ ObpIncrementUnnamedHandleCount(IN PVOID Object,
     }
 
     /* Release the lock */
-    ObpLeaveObjectTypeMutex(ObjectType);
+    ObpReleaseObjectLock(ObjectHeader);
 
     /* Check if we have an open procedure */
     Status = STATUS_SUCCESS;
@@ -1207,7 +1207,7 @@ ObpIncrementUnnamedHandleCount(IN PVOID Object,
 
 Quickie:
     /* Release lock and return */
-    ObpLeaveObjectTypeMutex(ObjectType);
+    ObpReleaseObjectLock(ObjectHeader);
     return Status;
 }
 
@@ -3093,8 +3093,8 @@ ObInsertObject(IN PVOID Object,
     }
     else
     {
-        /* Otherwise, lock the object type */
-        ObpEnterObjectTypeMutex(ObjectType);
+        /* Otherwise, lock the object */
+        ObpAcquireObjectLock(ObjectHeader);
 
         /* And charge quota for the process to make it appear as used */
         RealStatus = ObpChargeQuotaForObject(ObjectHeader,
@@ -3102,7 +3102,7 @@ ObInsertObject(IN PVOID Object,
                                              &IsNewObject);
 
         /* Release the lock */
-        ObpLeaveObjectTypeMutex(ObjectType);
+        ObpReleaseObjectLock(ObjectHeader);
 
         /* Check if we failed and dereference the object if so */
         if (!NT_SUCCESS(RealStatus)) ObDereferenceObject(Object);

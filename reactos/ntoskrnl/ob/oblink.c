@@ -503,9 +503,8 @@ NtQuerySymbolicLinkObject(IN HANDLE LinkHandle,
                                        NULL);
     if (NT_SUCCESS(Status))
     {
-        /* Lock the object type */
-        KeEnterCriticalRegion();
-        ExAcquireResourceExclusiveLite(&ObSymbolicLinkType->Mutex, TRUE);
+        /* Lock the object */
+        ObpAcquireObjectLock(OBJECT_TO_OBJECT_HEADER(SymlinkObject));
 
         /*
          * So here's the thing: If you specify a return length, then the
@@ -549,9 +548,8 @@ NtQuerySymbolicLinkObject(IN HANDLE LinkHandle,
         }
         _SEH_END;
 
-        /* Unlock the object type and reference the object */
-        ExReleaseResourceLite(&ObSymbolicLinkType->Mutex);
-        KeLeaveCriticalRegion();
+        /* Unlock the object and reference the object */
+        ObpReleaseObjectLock(OBJECT_TO_OBJECT_HEADER(SymlinkObject));
         ObDereferenceObject(SymlinkObject);
     }
 
