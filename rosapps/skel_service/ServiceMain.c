@@ -52,13 +52,15 @@ UpdateStatus(PSERVICEINFO pServInfo,
     if (NewStatus > 0)
         pServInfo->servStatus.dwCurrentState = NewStatus;
 
-    _sntprintf(szSet, 49, _T("Setting service to 0x%lu, CheckPoint %lu"), NewStatus, pServInfo->servStatus.dwCheckPoint);
+    _sntprintf(szSet,
+               49,
+               _T("Service state 0x%lu, CheckPoint %lu"),
+               pServInfo->servStatus.dwCurrentState,
+               pServInfo->servStatus.dwCheckPoint);
     LogEvent(szSet, 0, 0, LOG_FILE);
 
     if (!SetServiceStatus(pServInfo->hStatus, &pServInfo->servStatus))
         LogEvent(_T("Cannot set service status"), GetLastError(), 0, LOG_ALL);
-
-    return;
 }
 
 static BOOL

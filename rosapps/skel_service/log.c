@@ -82,7 +82,7 @@ LogToFile(LPCTSTR lpMsg,
                                 0,
                                 NULL);
 
-        msgLen = msgLen + eMsgLen + 26;
+        msgLen = msgLen + eMsgLen + 40;
 
         lpFullMsg = HeapAlloc(GetProcessHeap(),
                               0,
@@ -91,7 +91,7 @@ LogToFile(LPCTSTR lpMsg,
         {
             _sntprintf(lpFullMsg,
                        msgLen,
-                       _T("%s %s ErrNum = %lu ExitCode = %lu\r\n"),
+                       _T("%s : %s\tErrNum = %lu ExitCode = %lu\r\n"),
                        lpMsg,
                        lpSysMsg,
                        errNum,
@@ -125,7 +125,7 @@ LogToFile(LPCTSTR lpMsg,
 
         WriteFile(hLogFile,
                   lpFullMsg,
-                  msgLen * sizeof(TCHAR),
+                  _tcslen(lpFullMsg) * sizeof(TCHAR),
                   &bytesWritten,
                   NULL);
         if (bytesWritten == 0)
@@ -155,7 +155,7 @@ LogEvent(LPCTSTR lpMsg,
          UINT flags)
 {
 #ifdef DEBUG
-    if (flags & LOG_FILE)
+    if (flags & LOG_FILE || flags & LOG_ERROR)
         LogToFile(lpMsg, errNum, exitCode, flags);
 #endif
     if (flags & LOG_EVENTLOG)
