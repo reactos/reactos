@@ -1088,7 +1088,7 @@ static void test_EM_SETTEXTEX(void)
   getText.cb = MAX_BUF_LEN;
   getText.flags = GT_DEFAULT;
   getText.lpDefaultChar = NULL;
-  getText.lpUsedDefaultChar = NULL;
+  getText.lpUsedDefChar = NULL;
 
   setText.flags = 0;
   SendMessage(hwndRichEdit, EM_SETTEXTEX, (WPARAM)&setText, (LPARAM) TestItem1);
@@ -1104,7 +1104,7 @@ static void test_EM_SETTEXTEX(void)
   getText.cb = MAX_BUF_LEN;
   getText.flags = GT_DEFAULT;
   getText.lpDefaultChar = NULL;
-  getText.lpUsedDefaultChar = NULL;
+  getText.lpUsedDefChar = NULL;
   setText.flags = 0;
   SendMessage(hwndRichEdit, EM_SETTEXTEX, (WPARAM)&setText, (LPARAM) TestItem2);
   SendMessage(hwndRichEdit, EM_GETTEXTEX, (WPARAM)&getText, (LPARAM) buf);
@@ -1122,7 +1122,7 @@ static void test_EM_SETTEXTEX(void)
   getText.cb = MAX_BUF_LEN;
   getText.flags = GT_DEFAULT;
   getText.lpDefaultChar = NULL;
-  getText.lpUsedDefaultChar = NULL;
+  getText.lpUsedDefChar = NULL;
   setText.flags = 0;
   SendMessage(hwndRichEdit, EM_SETTEXTEX, (WPARAM)&setText, (LPARAM) TestItem3);
   SendMessage(hwndRichEdit, EM_GETTEXTEX, (WPARAM)&getText, (LPARAM) buf);
@@ -1135,7 +1135,7 @@ static void test_EM_SETTEXTEX(void)
   getText.cb = MAX_BUF_LEN;
   getText.flags = GT_DEFAULT;
   getText.lpDefaultChar = NULL;
-  getText.lpUsedDefaultChar = NULL;
+  getText.lpUsedDefChar = NULL;
   setText.flags = 0;
   SendMessage(hwndRichEdit, EM_SETTEXTEX, (WPARAM)&setText, (LPARAM) TestItem3alt);
   SendMessage(hwndRichEdit, EM_GETTEXTEX, (WPARAM)&getText, (LPARAM) buf);
@@ -1148,7 +1148,7 @@ static void test_EM_SETTEXTEX(void)
   getText.cb = MAX_BUF_LEN;
   getText.flags = GT_DEFAULT;
   getText.lpDefaultChar = NULL;
-  getText.lpUsedDefaultChar = NULL;
+  getText.lpUsedDefChar = NULL;
   setText.flags = 0;
   SendMessage(hwndRichEdit, EM_SETTEXTEX, (WPARAM)&setText, (LPARAM) TestItem4);
   SendMessage(hwndRichEdit, EM_GETTEXTEX, (WPARAM)&getText, (LPARAM) buf);
@@ -1756,7 +1756,7 @@ static void test_EM_REPLACESEL(void)
     getText.codepage = CP_ACP;
     getText.flags = GT_DEFAULT;
     getText.lpDefaultChar = NULL;
-    getText.lpUsedDefaultChar = NULL;
+    getText.lpUsedDefChar = NULL;
     SendMessage(hwndRichEdit, EM_GETTEXTEX, (WPARAM)&getText, (LPARAM) buffer);
     ok(strcmp(buffer, "RichEdit1") == 0,
       "EM_GETTEXTEX results not what was set by EM_REPLACESEL\n");
@@ -1771,7 +1771,7 @@ static void test_EM_REPLACESEL(void)
     getText.codepage = CP_ACP;
     getText.flags = GT_DEFAULT;
     getText.lpDefaultChar = NULL;
-    getText.lpUsedDefaultChar = NULL;
+    getText.lpUsedDefChar = NULL;
     SendMessage(hwndRichEdit, EM_GETTEXTEX, (WPARAM)&getText, (LPARAM) buffer);
     ok(strcmp(buffer, "RichEdit1\r") == 0,
       "EM_GETTEXTEX returned incorrect string\n");
@@ -1800,7 +1800,7 @@ static void test_EM_REPLACESEL(void)
     getText.codepage = CP_ACP;
     getText.flags = GT_DEFAULT;
     getText.lpDefaultChar = NULL;
-    getText.lpUsedDefaultChar = NULL;
+    getText.lpUsedDefChar = NULL;
     SendMessage(hwndRichEdit, EM_GETTEXTEX, (WPARAM)&getText, (LPARAM) buffer);
     ok(strcmp(buffer, "RichEdit1\r") == 0,
       "EM_GETTEXTEX returned incorrect string\n");
@@ -1829,7 +1829,7 @@ static void test_EM_REPLACESEL(void)
     getText.codepage = CP_ACP;
     getText.flags = GT_DEFAULT;
     getText.lpDefaultChar = NULL;
-    getText.lpUsedDefaultChar = NULL;
+    getText.lpUsedDefChar = NULL;
     SendMessage(hwndRichEdit, EM_GETTEXTEX, (WPARAM)&getText, (LPARAM) buffer);
     ok(strcmp(buffer, "\r\r") == 0,
       "EM_GETTEXTEX returned incorrect string\n");
@@ -1848,7 +1848,7 @@ static void test_EM_REPLACESEL(void)
     getText.codepage = CP_ACP;
     getText.flags = GT_DEFAULT;
     getText.lpDefaultChar = NULL;
-    getText.lpUsedDefaultChar = NULL;
+    getText.lpUsedDefChar = NULL;
     SendMessage(hwndRichEdit, EM_GETTEXTEX, (WPARAM)&getText, (LPARAM) buffer);
     ok(strcmp(buffer, " ") == 0,
       "EM_GETTEXTEX returned incorrect string\n");
@@ -1867,7 +1867,7 @@ static void test_EM_REPLACESEL(void)
     getText.codepage = CP_ACP;
     getText.flags = GT_DEFAULT;
     getText.lpDefaultChar = NULL;
-    getText.lpUsedDefaultChar = NULL;
+    getText.lpUsedDefChar = NULL;
     SendMessage(hwndRichEdit, EM_GETTEXTEX, (WPARAM)&getText, (LPARAM) buffer);
     ok(strcmp(buffer, "\r\r\r \r\r\r") == 0,
       "EM_GETTEXTEX returned incorrect string\n");
@@ -1886,7 +1886,7 @@ static void test_EM_REPLACESEL(void)
     getText.codepage = CP_ACP;
     getText.flags = GT_DEFAULT;
     getText.lpDefaultChar = NULL;
-    getText.lpUsedDefaultChar = NULL;
+    getText.lpUsedDefChar = NULL;
     SendMessage(hwndRichEdit, EM_GETTEXTEX, (WPARAM)&getText, (LPARAM) buffer);
     ok(strcmp(buffer, " \r") == 0,
       "EM_GETTEXTEX returned incorrect string\n");
@@ -1905,7 +1905,7 @@ static void test_EM_REPLACESEL(void)
     getText.codepage = CP_ACP;
     getText.flags = GT_DEFAULT;
     getText.lpDefaultChar = NULL;
-    getText.lpUsedDefaultChar = NULL;
+    getText.lpUsedDefChar = NULL;
     SendMessage(hwndRichEdit, EM_GETTEXTEX, (WPARAM)&getText, (LPARAM) buffer);
     ok(strcmp(buffer, " \r\r") == 0,
       "EM_GETTEXTEX returned incorrect string\n");
@@ -1924,7 +1924,7 @@ static void test_EM_REPLACESEL(void)
     getText.codepage = CP_ACP;
     getText.flags = GT_DEFAULT;
     getText.lpDefaultChar = NULL;
-    getText.lpUsedDefaultChar = NULL;
+    getText.lpUsedDefChar = NULL;
     SendMessage(hwndRichEdit, EM_GETTEXTEX, (WPARAM)&getText, (LPARAM) buffer);
     ok(strcmp(buffer, "\rX\r\r\r") == 0,
       "EM_GETTEXTEX returned incorrect string\n");
@@ -1942,7 +1942,7 @@ static void test_EM_REPLACESEL(void)
     getText.codepage = CP_ACP;
     getText.flags = GT_DEFAULT;
     getText.lpDefaultChar = NULL;
-    getText.lpUsedDefaultChar = NULL;
+    getText.lpUsedDefChar = NULL;
     SendMessage(hwndRichEdit, EM_GETTEXTEX, (WPARAM)&getText, (LPARAM) buffer);
     ok(strcmp(buffer, "\r\r") == 0,
       "EM_GETTEXTEX returned incorrect string\n");
@@ -1961,7 +1961,7 @@ static void test_EM_REPLACESEL(void)
     getText.codepage = CP_ACP;
     getText.flags = GT_DEFAULT;
     getText.lpDefaultChar = NULL;
-    getText.lpUsedDefaultChar = NULL;
+    getText.lpUsedDefChar = NULL;
     SendMessage(hwndRichEdit, EM_GETTEXTEX, (WPARAM)&getText, (LPARAM) buffer);
     ok(strcmp(buffer, "\r\r\r\r\r\r ") == 0,
       "EM_GETTEXTEX returned incorrect string\n");
