@@ -485,6 +485,7 @@ INT cmd_copy (LPTSTR cmd, LPTSTR param)
                         LoadString(CMD_ModuleHandle, STRING_ERROR_INVALID_SWITCH, szMsg, RC_STRING_MAX_SIZE);
                         ConOutPrintf(szMsg, _totupper(arg[i][1]));
                         nErrorLevel = 1;
+						freep (arg);
                         return 1;
                         break;
                 }
@@ -504,8 +505,19 @@ INT cmd_copy (LPTSTR cmd, LPTSTR param)
                 /* Add these onto the source string
                    this way we can do all checks
                     directly on source string later on */
-                _tcscat(arg[nSrc],arg[i]);
-                nFiles--;
+				TCHAR * ptr;
+				int length = (_tcslen(arg[nSrc]) +_tcslen(arg[i]) + _tcslen(arg[i+1]) + 1) * sizeof(TCHAR);
+				ptr = cmd_alloc(length);
+				if (ptr)
+				{
+					_tcscpy(ptr, arg[nSrc]);
+					_tcscat(ptr, arg[i]);
+					_tcscat(ptr, arg[i+1]);
+					cmd_free(arg[nSrc]);
+					arg[nSrc] = ptr;
+					i++;
+					nFiles -= 2;
+				}
             }
             else if(nDes == -1)
             {
