@@ -2,149 +2,159 @@
  * PROJECT:     ReactOS simple TCP/IP services
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        /base/services/tcpsvcs/skelserver.c
- * PURPOSE:     Provide CharGen, Daytime, Discard, Echo, and Qotd services
- * COPYRIGHT:   Copyright 2005 - 2006 Ged Murphy <gedmurphy@gmail.com>
+ * PURPOSE:     Sets up a server and listens for connections
+ * COPYRIGHT:   Copyright 2005 - 2008 Ged Murphy <gedmurphy@gmail.com>
  *
  */
 
 #include "tcpsvcs.h"
 
-extern BOOL bShutDown;
-extern BOOL bPause;
+#define BUF 1024
 
 static SOCKET
 SetUpListener(USHORT Port)
 {
-    SOCKET Sock;
-    SOCKADDR_IN Server;
+    SOCKET sock;
+    SOCKADDR_IN server;
+    BOOL bSetup = FALSE;
 
-    Sock = socket(AF_INET, SOCK_STREAM, 0);
-    if (Sock != INVALID_SOCKET)
+    sock = socket(AF_INET, SOCK_STREAM, 0);
+    if (sock != INVALID_SOCKET)
     {
-        Server.sin_family = AF_INET;
-        Server.sin_addr.s_addr = htonl(INADDR_ANY);
-        Server.sin_port = Port;
-        if (bind(Sock, (SOCKADDR*)&Server, sizeof(SOCKADDR_IN)) != SOCKET_ERROR)
+        server.sin_family = AF_INET;
+        server.sin_addr.s_addr = htonl(INADDR_ANY);
+        server.sin_port = Port;
+
+        if (bind(sock, (SOCKADDR*)&server, sizeof(SOCKADDR_IN)) != SOCKET_ERROR)
         {
-            listen(Sock, SOMAXCONN);
-            return Sock;
+            if (listen(sock, SOMAXCONN) != SOCKET_ERROR)
+            {
+                bSetup = TRUE;
+            }
+            else
+            {
+                LogEvent(_T("listen() failed"), WSAGetLastError(), 0, LOG_ERROR);
+            }
         }
         else
-            LogEvent(_T("bind() failed\n"), 0, TRUE);
-
+        {
+            LogEvent(_T("bind() failed"), WSAGetLastError(), 0, LOG_ERROR);
+        }
+    }
+    else
+    {
+        LogEvent(_T("socket() failed"), WSAGetLastError(), 0, LOG_ERROR);
     }
 
-    return INVALID_SOCKET;
+    return bSetup ? sock : INVALID_SOCKET;
 }
 
 
 static VOID
-AcceptConnections(SOCKET ListeningSocket,
-                  LPTHREAD_START_ROUTINE Service,
-                  TCHAR *Name)
+AcceptConnections(SOCKET listeningSocket,
+                  LPTHREAD_START_ROUTINE lpService,
+                  LPTSTR lpName)
 {
-    SOCKADDR_IN Client;
-    SOCKET Sock;
+    SOCKADDR_IN client;
+    SOCKET sock;
     HANDLE hThread;
-    TIMEVAL TimeVal;
-    FD_SET ReadFDS;
-    INT nAddrSize = sizeof(Client);
-    DWORD ThreadID;
-    TCHAR buf[256];
-    INT TimeOut = 2000;
+    TIMEVAL timeVal;
+    FD_SET readFD;
+    TCHAR logBuf[256];
+    INT timeOut = 2000;
 
-    /* set timeout values */
-    TimeVal.tv_sec  = TimeOut / 1000;
-    TimeVal.tv_usec = TimeOut % 1000;
+    timeVal.tv_sec  = timeOut / 1000;
+    timeVal.tv_usec = timeOut % 1000;
 
-    while (!bShutDown)
+    while (!bShutdown)
     {
-        INT SelRet = 0;
+        INT selRet = 0;
 
-        FD_ZERO(&ReadFDS);
-        FD_SET(ListeningSocket, &ReadFDS);
+        FD_ZERO(&readFD);
+        FD_SET(listeningSocket, &readFD);
 
-        SelRet = select(0, &ReadFDS, NULL, NULL, &TimeVal);
-        if (SelRet == SOCKET_ERROR)
+        selRet = select(0, &readFD, NULL, NULL, &timeVal);
+        if (selRet > 0)
         {
-            LogEvent(_T("select failed\n"), 0, TRUE);
-            return;
-        }
-        else if (SelRet > 0)
-        {
-            /* don't call FD_ISSET if bShutDown flag is set */
-            if ((! bShutDown) || (FD_ISSET(ListeningSocket, &ReadFDS)))
+            if (!bShutdown || FD_ISSET(listeningSocket, &readFD))
             {
-                Sock = accept(ListeningSocket, (SOCKADDR*)&Client, &nAddrSize);
-                if (Sock != INVALID_SOCKET)
+                INT addrSize = sizeof(SOCKADDR_IN);
+
+                sock = accept(listeningSocket, (SOCKADDR*)&client, &addrSize);
+                if (sock != INVALID_SOCKET)
                 {
-                    _stprintf(buf, _T("Accepted connection to %s server from %s:%d\n"),
-                        Name, inet_ntoa(Client.sin_addr), ntohs(Client.sin_port));
-                    LogEvent(buf, 0, FALSE);
-                    _stprintf(buf, _T("Creating new thread for %s\n"), Name);
-                    LogEvent(buf, 0, FALSE);
+                    _stprintf(logBuf,
+                              _T("Accepted connection to %s server from %s:%d"),
+                              lpName,
+                              inet_ntoa(client.sin_addr),
+                              ntohs(client.sin_port));
+                    LogEvent(logBuf, 0, 0, LOG_FILE);
 
-                    hThread = CreateThread(0, 0, Service, (void*)Sock, 0, &ThreadID);
+                    _stprintf(logBuf, _T("Creating worker thread for %s"), lpName);
+                    LogEvent(logBuf, 0, 0, LOG_FILE);
 
-                    /* Check the return value for success. */
-                    if (hThread == NULL)
+                    if (!bShutdown)
                     {
-                        _stprintf(buf, _T("Failed to start worker thread for "
-                            "the %s server....\n"), Name);
-                        LogEvent(buf, 0, TRUE);
-                    }
-                    else
-                    {
-                        WaitForSingleObject(hThread, INFINITE);
-                        CloseHandle(hThread);
+                        hThread = CreateThread(0, 0, lpService, (void*)sock, 0, NULL);
+                        if (hThread != NULL)
+                        {
+                            CloseHandle(hThread);
+                        }
+                        else
+                        {
+                            _stprintf(logBuf, _T("Failed to start worker thread for the %s server"),
+                                      lpName);
+                            LogEvent(logBuf, 0, 0, LOG_FILE);
+                        }
                     }
                 }
                 else
                 {
-                    LogEvent(_T("accept failed\n"), 0, TRUE);
-                    return;
+                    LogEvent(_T("accept failed"), WSAGetLastError(), 0, LOG_ERROR);
                 }
             }
+        }
+        else if (selRet == SOCKET_ERROR)
+        {
+            LogEvent(_T("select failed"), WSAGetLastError(), 0, LOG_ERROR);
         }
     }
 }
 
 BOOL
-ShutdownConnection(SOCKET Sock,
+ShutdownConnection(SOCKET sock,
                    BOOL bRec)
 {
-    TCHAR buf[256];
+    TCHAR logBuf[256];
 
     /* Disallow any further data sends.  This will tell the other side
        that we want to go away now.  If we skip this step, we don't
        shut the connection down nicely. */
-    if (shutdown(Sock, SD_SEND) == SOCKET_ERROR)
+    if (shutdown(sock, SD_SEND) == SOCKET_ERROR)
     {
-        LogEvent(_T("Error in shutdown()\n"), 0, TRUE);
+        LogEvent(_T("Error in shutdown()"), WSAGetLastError(), 0, LOG_ERROR);
         return FALSE;
     }
 
-      /* Receive any extra data still sitting on the socket.  After all
-         data is received, this call will block until the remote host
-         acknowledges the TCP control packet sent by the shutdown above.
-         Then we'll get a 0 back from recv, signalling that the remote
-         host has closed its side of the connection. */
+      /* Receive any extra data still sitting on the socket
+         before we close it */
     if (bRec)
     {
-        char ReadBuffer[BUF];
-        int NewBytes = recv(Sock, ReadBuffer, BUF, 0);
-        if (NewBytes == SOCKET_ERROR)
-            return FALSE;
-        else if (NewBytes != 0)
+        CHAR readBuffer[BUF];
+        INT ret;
+
+        do
         {
-            _stprintf(buf, _T("FYI, received %d unexpected bytes during shutdown\n"), NewBytes);
-            LogEvent(buf, 0, FALSE);
-        }
+            ret = recv(sock, readBuffer, BUF, 0);
+            if (ret >= 0)
+            {
+                _stprintf(logBuf, _T("FYI, received %d unexpected bytes during shutdown"), ret);
+                LogEvent(logBuf, 0, 0, LOG_FILE);
+            }
+        } while (ret > 0);
     }
 
-    /* Close the socket. */
-    if (closesocket(Sock) == SOCKET_ERROR)
-        return FALSE;
+    closesocket(sock);
 
     return TRUE;
 }
@@ -153,31 +163,37 @@ ShutdownConnection(SOCKET Sock,
 DWORD WINAPI
 StartServer(LPVOID lpParam)
 {
-    SOCKET ListeningSocket;
+    SOCKET listeningSocket;
     PSERVICES pServices;
-    TCHAR buf[256];
+    TCHAR logBuf[256];
 
     pServices = (PSERVICES)lpParam;
 
-    ListeningSocket = SetUpListener(htons(pServices->Port));
-    if (ListeningSocket == INVALID_SOCKET)
+    _stprintf(logBuf, _T("Starting %s server"), pServices->Name);
+    LogEvent(logBuf, 0, 0, LOG_FILE);
+
+    if (!bShutdown)
     {
-        LogEvent(_T("Socket error when setting up listener"), 0, TRUE);
-        return 3;
+        listeningSocket = SetUpListener(htons(pServices->Port));
+        if (!bShutdown && listeningSocket != INVALID_SOCKET)
+        {
+            _stprintf(logBuf,
+                      _T("%s is waiting for connections on port %d"),
+                      pServices->Name,
+                      pServices->Port);
+            LogEvent(logBuf, 0, 0, LOG_FILE);
+
+            AcceptConnections(listeningSocket, pServices->Service, pServices->Name);
+        }
+        else
+        {
+            LogEvent(_T("Socket error when setting up listener"), 0, 0, LOG_FILE);
+        }
     }
 
-    _stprintf(buf,
-              _T("%s is waiting for connections on port %d"),
-              pServices->Name,
-              pServices->Port);
-    LogEvent(buf, 0, FALSE);
-
-    if (!bShutDown)
-        AcceptConnections(ListeningSocket, pServices->Service, pServices->Name);
-
-    _stprintf(buf,
+    _stprintf(logBuf,
               _T("Exiting %s thread"),
               pServices->Name);
-    LogEvent(buf, 0, FALSE);
+    LogEvent(logBuf, 0, 0, LOG_FILE);
     ExitThread(0);
 }

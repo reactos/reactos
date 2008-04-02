@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
-<module name="tcpsvcs" type="win32cui" installbase="system32" installname="tcpsvcs.exe">
+<module name="tcpsvcs" type="win32cui" installbase="system32" installname="tcpsvcs.exe" unicode="yes">
 	<include base="arp">.</include>
 	<library>kernel32</library>
 	<library>iphlpapi</library>
@@ -16,5 +16,6 @@
 	<file>qotd.c</file>
 	<file>chargen.c</file>
 	<file>tcpsvcs.rc</file>
+	<file>log.c</file>
 	<pch>tcpsvcs.h</pch>
 </module>

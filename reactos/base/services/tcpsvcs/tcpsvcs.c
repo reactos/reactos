@@ -3,22 +3,22 @@
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        /base/services/tcpsvcs/tcpsvcs.c
  * PURPOSE:     Provide CharGen, Daytime, Discard, Echo, and Qotd services
- * COPYRIGHT:   Copyright 2005 - 2007 Ged Murphy <gedmurphy@reactos.org>
+ * COPYRIGHT:   Copyright 2005 - 2008 Ged Murphy <gedmurphy@reactos.org>
  *
  */
 
 #include "tcpsvcs.h"
 
-#define DEBUG
+static LPTSTR ServiceName = _T("tcpsvcs");
 
-volatile BOOL bShutDown = FALSE;
+volatile BOOL bShutdown = FALSE;
 volatile BOOL bPause = FALSE;
 
-static SERVICE_STATUS hServStatus;
-static SERVICE_STATUS_HANDLE hSStat;
-
-LPCTSTR LogFileName = _T("C:\\tcpsvcs_log.log");
-LPTSTR ServiceName = _T("tcpsvcs");
+typedef struct _ServiceInfo
+{
+    SERVICE_STATUS servStatus;
+    SERVICE_STATUS_HANDLE hStatus;
+} SERVICEINFO, *PSERVICEINFO;
 
 static SERVICES
 Services[NUM_SERVICES] =
@@ -30,164 +30,36 @@ Services[NUM_SERVICES] =
     {CHARGEN_PORT, _T("Chargen"), ChargenHandler}
 };
 
-VOID
-LogEvent(LPCTSTR UserMessage,
-         DWORD ExitCode,
-         BOOL PrintErrorMsg)
-{
-#ifdef DEBUG
-    DWORD eMsgLen;
-    DWORD ErrNum;
-    LPTSTR lpvSysMsg;
-    TCHAR MessageBuffer[512];
-    FILE *hLogFile = NULL;
 
-    hLogFile = _tfopen(LogFileName, _T("a"));
-    if (hLogFile == NULL) return;
-
-    if (PrintErrorMsg)
-    {
-        ErrNum = GetLastError();
-        eMsgLen = FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
-                                NULL,
-                                ErrNum,
-                                MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-                                (LPTSTR)&lpvSysMsg,
-                                0,
-                                NULL);
-
-        _stprintf(MessageBuffer,
-                  _T("\n%s %s ErrNum = %lu ExitCode = %lu"),
-                  UserMessage,
-                  lpvSysMsg,
-                  ErrNum,
-                  ExitCode);
-
-        HeapFree(GetProcessHeap(),
-                 0,
-                 lpvSysMsg);
-
-    }
-    else
-    {
-        _stprintf(MessageBuffer,
-                  _T("\n%s"),
-                  UserMessage);
-    }
-
-    _fputts(MessageBuffer, hLogFile);
-
-    fclose(hLogFile);
-#endif
-    if (ExitCode > 0)
-        ExitProcess(ExitCode);
-    else
-        return;
-}
-
-
-VOID
-UpdateStatus(DWORD NewStatus,
+static VOID
+UpdateStatus(PSERVICEINFO pServInfo,
+             DWORD NewStatus,
              DWORD Check)
 {
     TCHAR szSet[50];
 
     if (Check > 0)
-        hServStatus.dwCheckPoint += Check;
+        pServInfo->servStatus.dwCheckPoint += Check;
     else
-        hServStatus.dwCheckPoint = Check;
+        pServInfo->servStatus.dwCheckPoint = Check;
 
     if (NewStatus > 0)
-        hServStatus.dwCurrentState = NewStatus;
+        pServInfo->servStatus.dwCurrentState = NewStatus;
 
-    _sntprintf(szSet, 49, _T("setting service to 0x%lu, CheckPoint %lu"), NewStatus, hServStatus.dwCheckPoint);
-    LogEvent(szSet, 0, FALSE);
+    _sntprintf(szSet,
+               49,
+               _T("Service state 0x%lu, CheckPoint %lu"),
+               pServInfo->servStatus.dwCurrentState,
+               pServInfo->servStatus.dwCheckPoint);
+    LogEvent(szSet, 0, 0, LOG_FILE);
 
-    if (!SetServiceStatus(hSStat, &hServStatus))
-        LogEvent(_T("Cannot set service status"), 101, TRUE);
-
-    return;
+    if (!SetServiceStatus(pServInfo->hStatus, &pServInfo->servStatus))
+        LogEvent(_T("Cannot set service status"), GetLastError(), 0, LOG_ALL);
 }
 
 
-
-VOID WINAPI
-ServiceMain(DWORD argc, LPTSTR argv[])
-{
-    LogEvent(_T("Starting service. First log entry."), 0, FALSE);
-    LogEvent (_T("Entering ServiceMain."), 0, FALSE);
-
-    hServStatus.dwServiceType      = SERVICE_WIN32_OWN_PROCESS;
-    hServStatus.dwCurrentState     = SERVICE_STOPPED;
-    hServStatus.dwControlsAccepted = SERVICE_ACCEPT_STOP | SERVICE_ACCEPT_SHUTDOWN | SERVICE_ACCEPT_PAUSE_CONTINUE;
-    hServStatus.dwWin32ExitCode    = ERROR_SERVICE_SPECIFIC_ERROR;
-    hServStatus.dwServiceSpecificExitCode = 0;
-    hServStatus.dwCheckPoint       = 0;
-    hServStatus.dwWaitHint         = 2 * CS_TIMEOUT;
-
-    hSStat = RegisterServiceCtrlHandler(ServiceName, ServerCtrlHandler);
-    if (hSStat == 0)
-        LogEvent(_T("Failed to register service\n"), 100, TRUE);
-
-    LogEvent(_T("Control handler registered successfully"), 0, FALSE);
-    UpdateStatus(SERVICE_START_PENDING, 1);
-    LogEvent(_T("Service status set to SERVICE_START_PENDING"), 0, FALSE);
-
-    if (CreateServers() != 0)
-    {
-        hServStatus.dwServiceSpecificExitCode = 1;
-        UpdateStatus(SERVICE_STOPPED, 0);
-        return;
-    }
-
-    LogEvent(_T("Service threads shut down. Set SERVICE_STOPPED status"), 0, FALSE);
-    UpdateStatus(SERVICE_STOPPED, 0);
-    LogEvent(_T("Service status set to SERVICE_STOPPED\n"), 0, FALSE);
-    LogEvent(_T("Leaving ServiceMain\n"), 0, FALSE);
-
-    return;
-}
-
-VOID WINAPI
-ServerCtrlHandler(DWORD Control)
-{
-    switch (Control)
-    {
-        case SERVICE_CONTROL_SHUTDOWN:
-        case SERVICE_CONTROL_STOP:
-            LogEvent(_T("\nSetting the service to SERVICE_STOP_PENDING"), 0, FALSE);
-            InterlockedExchange((LONG *)&bShutDown, TRUE);
-            hServStatus.dwWin32ExitCode = 0;
-            hServStatus.dwWaitHint = 0;
-            UpdateStatus(SERVICE_STOP_PENDING, 1);
-            break;
-
-        case SERVICE_CONTROL_PAUSE: /* not yet implemented */
-            LogEvent(_T("Setting the service to SERVICE_PAUSED"), 0, FALSE);
-            InterlockedExchange((LONG *)&bPause, TRUE);
-            UpdateStatus(SERVICE_PAUSED, 0);
-            break;
-
-        case SERVICE_CONTROL_CONTINUE:
-            LogEvent(_T("Setting the service to SERVICE_RUNNING"), 0, FALSE);
-            InterlockedExchange((LONG *)&bPause, FALSE);
-            UpdateStatus(SERVICE_RUNNING, 0);
-            break;
-
-        case SERVICE_CONTROL_INTERROGATE:
-            break;
-
-        default:
-            if (Control > 127 && Control < 256) /* user defined */
-            break;
-    }
-
-    return;
-}
-
-
-INT
-CreateServers()
+static BOOL
+CreateServers(PSERVICEINFO pServInfo)
 {
     DWORD dwThreadId[NUM_SERVICES];
     HANDLE hThread[NUM_SERVICES];
@@ -199,41 +71,38 @@ CreateServers()
     if ((RetVal = WSAStartup(MAKEWORD(2, 2), &wsaData)) != 0)
     {
         _stprintf(buf, _T("WSAStartup() failed : %lu\n"), RetVal);
-        LogEvent(buf, RetVal, TRUE);
-        return -1;
+        LogEvent(buf, 0, 100, LOG_ALL);
+        return FALSE;
     }
 
-    UpdateStatus(0, 1); /* increment checkpoint */
+    UpdateStatus(pServInfo, 0, 1);
 
-    LogEvent(_T("\nCreating server Threads"), 0, FALSE);
+    LogEvent(_T("\nCreating server Threads"), 0, 0, LOG_FILE);
 
     /* Create worker threads. */
     for(i = 0; i < NUM_SERVICES; i++)
     {
-        _stprintf(buf, _T("Starting %s server"), Services[i].Name);
-        LogEvent(buf, 0, FALSE);
+        _stprintf(buf, _T("Creating thread for %s server"), Services[i].Name);
+        LogEvent(buf, 0, 0, LOG_FILE);
 
-        hThread[i] = CreateThread(NULL,            // default security attributes
-                                  0,               // use default stack size
-                                  StartServer,     // thread function
-                                  &Services[i],    // argument to thread function
-                                  0,               // use default creation flags
-                                  &dwThreadId[i]); // returns the thread identifier
+        hThread[i] = CreateThread(NULL,
+                                  0,
+                                  StartServer,
+                                  &Services[i],
+                                  0,
+                                  &dwThreadId[i]);
 
         if (hThread[i] == NULL)
         {
             _stprintf(buf, _T("\nFailed to start %s server\n"), Services[i].Name);
-            /* don't exit process via LogEvent. We want to exit via the server
-             * which failed to start, which could mean i=0 */
-            LogEvent(buf, 0, TRUE);
+            LogEvent(buf, GetLastError(), 0, LOG_ALL);
         }
 
-        UpdateStatus(0, 1); /* increment checkpoint */
+        UpdateStatus(pServInfo, 0, 1);
     }
 
-    LogEvent(_T("setting service status to running"), 0, FALSE);
-
-    UpdateStatus(SERVICE_RUNNING, 0);
+    LogEvent(_T("Setting service status to running"), 0, 0, LOG_FILE);
+    UpdateStatus(pServInfo, SERVICE_RUNNING, 0);
 
     /* Wait until all threads have terminated. */
     WaitForMultipleObjects(NUM_SERVICES, hThread, TRUE, INFINITE);
@@ -244,11 +113,92 @@ CreateServers()
             CloseHandle(hThread[i]);
     }
 
-    LogEvent(_T("Detaching Winsock2"), 0, FALSE);
+    LogEvent(_T("Detaching Winsock2"), 0, 0, LOG_FILE);
     WSACleanup();
 
     return 0;
 }
+
+VOID WINAPI
+ServerCtrlHandler(DWORD dwControl,
+                  DWORD dwEventType,
+                  LPVOID lpEventData,
+                  LPVOID lpContext)
+{
+    PSERVICEINFO pServInfo = (PSERVICEINFO)lpContext;
+
+    switch (dwControl)
+    {
+        case SERVICE_CONTROL_SHUTDOWN:
+        case SERVICE_CONTROL_STOP:
+            LogEvent(_T("\nSetting the service to SERVICE_STOP_PENDING"), 0, 0, LOG_FILE);
+            InterlockedExchange((LONG *)&bShutdown, TRUE);
+            pServInfo->servStatus.dwWin32ExitCode = 0;
+            pServInfo->servStatus.dwWaitHint = 0;
+            UpdateStatus(pServInfo, SERVICE_STOP_PENDING, 1);
+            break;
+
+        case SERVICE_CONTROL_PAUSE: /* not yet implemented */
+            LogEvent(_T("Setting the service to SERVICE_PAUSED"), 0, 0, LOG_FILE);
+            InterlockedExchange((LONG *)&bPause, TRUE);
+            UpdateStatus(pServInfo, SERVICE_PAUSED, 0);
+            break;
+
+        case SERVICE_CONTROL_CONTINUE:
+            LogEvent(_T("Setting the service to SERVICE_RUNNING"), 0, 0, LOG_FILE);
+            InterlockedExchange((LONG *)&bPause, FALSE);
+            UpdateStatus(pServInfo, SERVICE_RUNNING, 0);
+            break;
+
+        case SERVICE_CONTROL_INTERROGATE:
+            break;
+
+        default:
+            if (dwControl > 127 && dwControl < 256) /* user defined */
+                LogEvent(_T("User defined control code"), 0, 0, LOG_FILE);
+            else
+                LogEvent(_T("ERROR: Bad control code"), 0, 0, LOG_FILE);
+            break;
+    }
+}
+
+VOID WINAPI
+ServiceMain(DWORD argc, LPTSTR argv[])
+{
+    SERVICEINFO servInfo;
+
+    LogEvent (_T("Entering ServiceMain."), 0, 0, LOG_FILE);
+
+    servInfo.servStatus.dwServiceType      = SERVICE_WIN32_OWN_PROCESS;
+    servInfo.servStatus.dwCurrentState     = SERVICE_STOPPED;
+    servInfo.servStatus.dwControlsAccepted = SERVICE_ACCEPT_STOP | SERVICE_ACCEPT_SHUTDOWN | SERVICE_ACCEPT_PAUSE_CONTINUE;
+    servInfo.servStatus.dwWin32ExitCode    = ERROR_SERVICE_SPECIFIC_ERROR;
+    servInfo.servStatus.dwServiceSpecificExitCode = 0;
+    servInfo.servStatus.dwCheckPoint       = 0;
+    servInfo.servStatus.dwWaitHint         = 2 * CS_TIMEOUT;
+
+    LogEvent(_T("Registering service control handler"), 0, 0, LOG_FILE);
+    servInfo.hStatus = RegisterServiceCtrlHandlerEx(ServiceName,
+                                                    (LPHANDLER_FUNCTION_EX)ServerCtrlHandler,
+                                                    &servInfo);
+    if (!servInfo.hStatus)
+        LogEvent(_T("Failed to register service\n"), GetLastError(), 100, LOG_ALL);
+
+    UpdateStatus(&servInfo, SERVICE_START_PENDING, 1);
+
+    if (!CreateServers(&servInfo))
+    {
+        servInfo.servStatus.dwServiceSpecificExitCode = 1;
+        UpdateStatus(&servInfo, SERVICE_STOPPED, 0);
+        return;
+    }
+
+    LogEvent(_T("Service threads shut down. Set SERVICE_STOPPED status"), 0, 0, LOG_FILE);
+    UpdateStatus(&servInfo, SERVICE_STOPPED, 0);
+
+    LogEvent(_T("Leaving ServiceMain\n"), 0, 0, LOG_FILE);
+}
+
 
 int _tmain (int argc, LPTSTR argv [])
 {
@@ -258,10 +208,12 @@ int _tmain (int argc, LPTSTR argv [])
         {NULL,        NULL }
     };
 
-    remove(LogFileName);
+    InitLogging();
 
     if (!StartServiceCtrlDispatcher(ServiceTable))
-        LogEvent(_T("failed to start the service control dispatcher\n"), 100, TRUE);
+        LogEvent(_T("failed to start the service control dispatcher"), GetLastError(), 101, LOG_ALL);
+
+    UninitLogging();
 
     return 0;
 }

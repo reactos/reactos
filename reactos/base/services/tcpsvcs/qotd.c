@@ -2,91 +2,153 @@
  * PROJECT:     ReactOS simple TCP/IP services
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        /base/services/tcpsvcs/qotd.c
- * PURPOSE:     Provide CharGen, Daytime, Discard, Echo, and Qotd services
- * COPYRIGHT:   Copyright 2005 - 2006 Ged Murphy <gedmurphy@gmail.com>
+ * PURPOSE:     Sends a random quote to the client
+ * COPYRIGHT:   Copyright 2005 - 2008 Ged Murphy <gedmurphy@reactos.org>
  *
  */
 
 #include "tcpsvcs.h"
 
-#define QBUFSIZ 60
+static LPCTSTR lpFilePath = _T("\\drivers\\etc\\quotes");
 
-LPCTSTR FilePath = _T("\\drivers\\etc\\quotes"); /* 19 chars */
-
-BOOL SendQuote(SOCKET Sock, char* Quote)
+static BOOL
+SendQuote(SOCKET sock, char* Quote)
 {
-    INT StringSize;
-    INT RetVal;
-
-    StringSize = (INT)strlen(Quote);
-    RetVal = send(Sock, Quote, sizeof(char) * StringSize, 0);
-
-    if (RetVal == SOCKET_ERROR)
+    INT strSize = strlen(Quote);
+    if (send(sock, Quote, strSize, 0) == SOCKET_ERROR)
         return FALSE;
 
-    LogEvent(_T("QOTD: Connection closed by peer\n"), 0, FALSE);
     return TRUE;
 }
 
-
-DWORD WINAPI QotdHandler(VOID* Sock_)
+static BOOL
+RetrieveQuote(SOCKET sock)
 {
-    FILE *fp;
-    SOCKET Sock;
-    TCHAR Sys[MAX_PATH + 20];
-    char Quote[QBUFSIZ][BUFSIZ]; // need to set this dynamically
-    INT QuoteToPrint;
-    INT NumQuotes;
+    HANDLE hFile;
+    TCHAR lpFullPath[MAX_PATH + 20];
+    DWORD dwBytesRead;
+    LPSTR lpQuotes;
+    LPSTR lpStr;
+    DWORD quoteNum;
+    DWORD NumQuotes = 0;
+    INT i;
 
-    Sock = (SOCKET)Sock_;
-
-    if(! GetSystemDirectory(Sys, MAX_PATH))
+    if(!GetSystemDirectory(lpFullPath, MAX_PATH))
     {
-    	LogEvent(_T("QOTD: Getting system path failed.\n"), 0, TRUE);
-    	ExitThread(1);
+        LogEvent(_T("QOTD: Getting system path failed"), GetLastError(), 0, LOG_FILE);
+        return FALSE;
     }
+    _tcscat(lpFullPath, lpFilePath);
 
-    _tcsncat(Sys, FilePath, _tcslen(FilePath));
 
-    LogEvent(_T("QOTD: Opening quotes file\n"), 0, FALSE);
-    if ((fp = _tfopen(Sys, _T("r"))) == NULL)
+    LogEvent(_T("QOTD: Opening quotes file"), 0, 0, LOG_FILE);
+    hFile = CreateFile(lpFullPath,
+                       GENERIC_READ,
+                       0,
+                       NULL,
+                       OPEN_EXISTING,
+                       FILE_ATTRIBUTE_NORMAL,
+                       NULL);
+    if (hFile == INVALID_HANDLE_VALUE)
     {
-		TCHAR buf[320];
-
-		_sntprintf(buf, 320, _T("QOTD: Error opening quote file : %s\n"), Sys);
-        LogEvent(buf, 0, TRUE);
-        LogEvent(_T("QOTD: Terminating thread\n"), 0, FALSE);
-        ExitThread(1);
+        LogEvent(_T("QOTD: Error opening quotes file"), GetLastError(), 0, LOG_FILE);
     }
-
-    /* read all quotes in the file into an array */
-    NumQuotes = 0;
-    while ((fgets(Quote[NumQuotes], QBUFSIZ, fp) != NULL) &&
-           (NumQuotes != QBUFSIZ))
-        NumQuotes++;
-
-    LogEvent(_T("QOTD: Closing quotes file\n"), 0, FALSE);
-    fclose(fp);
-
-    /* randomise the quote */
-    srand((unsigned int) time(0));
-    QuoteToPrint = rand() % NumQuotes;
-
-    if (!SendQuote(Sock, Quote[QuoteToPrint]))
-        LogEvent(_T("QOTD: Error sending data\n"), 0, TRUE);
-
-
-    LogEvent(_T("QOTD: Shutting connection down...\n"), 0, FALSE);
-    if (ShutdownConnection(Sock, FALSE))
-        LogEvent(_T("QOTD: Connection is down\n"), 0, FALSE);
     else
     {
-        LogEvent(_T("QOTD: Connection shutdown failed\n"), 0, FALSE);
-        LogEvent(_T("QOTD: Terminating thread\n"), 0, FALSE);
-        ExitThread(1);
+        DWORD dwSize = GetFileSize(hFile, NULL);
+        lpQuotes = (LPSTR)HeapAlloc(GetProcessHeap(), 0, dwSize);
+        if (!lpQuotes) 
+        {
+            CloseHandle(hFile);
+            return FALSE;
+        }
+
+        ReadFile(hFile,
+                 lpQuotes,
+                 dwSize,
+                 &dwBytesRead,
+                 NULL);
+        CloseHandle(hFile);
+
+        lpQuotes[dwSize] = 0;
+
+        if (dwBytesRead != dwSize)
+            return FALSE;
+
+        lpStr = lpQuotes;
+        while (*lpStr)
+        {
+            if (*lpStr == '%')
+                NumQuotes++;
+            lpStr++;
+        }
+
+        /* pick a random quote */
+        srand((unsigned int) GetTickCount());
+        quoteNum = rand() % NumQuotes;
+
+        /* retrieve the full quote */
+        lpStr = lpQuotes;
+        for (i = 1; i <= quoteNum; i++)
+        {
+            /* move past proceding quote */
+            lpStr++;
+
+            if (i == quoteNum)
+            {
+                LPSTR lpStart = lpStr;
+
+                while (*lpStr != '%' && *lpStr != '\0')
+                    lpStr++;
+
+                *lpStr = 0;
+
+                /* send the quote */
+                if (!SendQuote(sock, lpStart))
+                    LogEvent(_T("QOTD: Error sending data"), 0, 0, LOG_FILE);
+                break;
+            }
+            else
+            {
+                while (*lpStr != '%' && *lpStr != '\0')
+                    lpStr++;
+
+                /* move past % and RN */
+                lpStr += 3;
+            }
+        }
+
+        return TRUE;
     }
 
-    LogEvent(_T("QOTD: Terminating thread\n"), 0, FALSE);
-    ExitThread(0);
+    return FALSE;
+}
 
+
+DWORD WINAPI
+QotdHandler(VOID* sock_)
+{
+    SOCKET sock = (SOCKET)sock_;
+    DWORD retVal = 0;
+
+    if (!RetrieveQuote(sock))
+    {
+        LogEvent(_T("QOTD: Error retrieving quote"), 0, 0, LOG_FILE);
+        retVal = 1;
+    }
+
+    LogEvent(_T("QOTD: Shutting connection down"), 0, 0, LOG_FILE);
+    if (ShutdownConnection(sock, FALSE))
+    {
+        LogEvent(_T("QOTD: Connection is down"), 0, 0, LOG_FILE);
+    }
+    else
+    {
+        LogEvent(_T("QOTD: Connection shutdown failed"), 0, 0, LOG_FILE);
+        LogEvent(_T("QOTD: Terminating thread"), 0, 0, LOG_FILE);
+        retVal = 1;
+    }
+
+    LogEvent(_T("QOTD: Terminating thread"), 0, 0, LOG_FILE);
+    ExitThread(retVal);
 }

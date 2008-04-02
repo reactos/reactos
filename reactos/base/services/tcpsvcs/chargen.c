@@ -2,122 +2,119 @@
  * PROJECT:     ReactOS simple TCP/IP services
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        /base/services/tcpsvcs/chargen.c
- * PURPOSE:     Provide CharGen, Daytime, Discard, Echo, and Qotd services
- * COPYRIGHT:   Copyright 2005 - 2006 Ged Murphy <gedmurphy@gmail.com>
+ * PURPOSE:     Sends continous lines of chars to the client
+ * COPYRIGHT:   Copyright 2005 - 2008 Ged Murphy <gedmurphy@reactos.org>
  *
  */
 
 #include "tcpsvcs.h"
 
-extern BOOL bShutDown;
+/* printable ASCII's characters for chargen */
+#define ASCII_START 32
+#define ASCII_END 126
+#define NUM_CHARS ASCII_END - ASCII_START
 
-BOOL SendLine(SOCKET Sock, char* Line)
+/* number of chars to put on a line */
+#define LINESIZE 74 // 72 + CR + NL
+
+static BOOL
+SendLine(SOCKET sock, LPSTR lpLine)
 {
-    INT RetVal;
-    INT SentBytes;
-    INT LineSize;
+    BOOL bRet = FALSE;
 
-    LineSize = sizeof(TCHAR) * LINESIZ;
-
-    SentBytes = 0;
-    RetVal = send(Sock, Line, LineSize, 0);
-    /*FIXME: need to establish if peer closes connection,
-             not just report a socket error */
-    if (RetVal > 0)
+    /*FIXME: need to establish if peer closes connection, not just report a socket error */
+    INT retVal = send(sock, lpLine, LINESIZE, 0);
+    if (retVal > 0)
     {
-        if (RetVal != LineSize)
+        if (retVal == LINESIZE)
         {
-            LogEvent(_T("Chargen: Not sent enough bytes\n"), 0, FALSE);
-            return FALSE;
+            bRet = TRUE;
         }
-        SentBytes += RetVal;
-        return TRUE;
+        else
+        {
+            LogEvent(_T("Chargen: Not sent enough bytes"), 0, 0, LOG_FILE);
+        }
     }
-    else if (RetVal == SOCKET_ERROR)
+    else if (retVal == SOCKET_ERROR)
     {
-        LogEvent(_T("Chargen: Socket error\n"), 0, FALSE);
-        return FALSE;
+        LogEvent(_T("Chargen: Socket error\n"), WSAGetLastError(), 0, LOG_ERROR);
     }
     else
-        LogEvent(_T("Chargen: unknown error\n"), 0, FALSE);
-        // return FALSE;
+    {
+        LogEvent(_T("Chargen: unknown error\n"), WSAGetLastError(), 0, LOG_ERROR);
+    }
 
-    LogEvent(_T("Chargen: Connection closed by peer.\n"), 0, FALSE);
-    return TRUE;
+    return bRet;;
 }
 
-BOOL GenerateChars(SOCKET Sock)
+static BOOL
+GenerateChars(SOCKET sock)
 {
-    int i;
-    int charIndex; /* internal loop */
-    int loopIndex; /* line loop */
-    char ring[ASCII_END - ASCII_START];
-    char *endring;
-    char Line[LINESIZ];
+    CHAR chars[NUM_CHARS];
+    CHAR line[LINESIZE];
+    INT charIndex;
+    INT loopIndex;
+    INT i;
 
-    /* fill ring with printable characters */
-    for (charIndex=0, i=ASCII_START; i<=ASCII_END; charIndex++, i++)
-        ring[charIndex] = (char)i;
-    /* save the address of the end character in the ring */
-    endring = &ring[charIndex];
+    /* fill the array with printable characters */
+    for (charIndex = 0, i = ASCII_START; i <= ASCII_END; charIndex++, i++)
+        chars[charIndex] = (char)i;
 
-    /* where we will start output from */
     loopIndex = 0;
-    while (! bShutDown)
+    while (!bShutdown)
     {
-        /* if the loop index is equal to the last char,
-         * start the loop again from the beginning */
-        if (loopIndex == ASCII_END-ASCII_START)
+        /* reset the loop when we hit the last char */
+        if (loopIndex == NUM_CHARS)
             loopIndex = 0;
 
-        /* start printing from char controled by loopIndex */
+        /* fill a line array to send */
         charIndex = loopIndex;
-        for (i=0; i < LINESIZ - 2; i++)
+        for (i=0; i < LINESIZE - 2; i++)
         {
-            Line[i] = ring[charIndex];
+            line[i] = chars[charIndex];
 
-            if (ring[charIndex] == *endring)
+            /* if we hit the end char, reset it */
+            if (chars[charIndex] == chars[NUM_CHARS])
                 charIndex = 0;
             else
                 charIndex++;
         }
+        line[LINESIZE - 2] = '\r';
+        line[LINESIZE - 1] = '\n';
 
-        Line[LINESIZ - 2] = '\r';
-        Line[LINESIZ - 1] = '\n';
-
-        if (! SendLine(Sock, Line))
+        if (!SendLine(sock, line))
             break;
 
-        /* increment loop index to start printing from next char in ring */
+        /* start printing from next char in the array */
         loopIndex++;
     }
 
-    if (bShutDown)
-        return FALSE;
-    else
-        return TRUE;
+    return TRUE;
 }
 
-DWORD WINAPI ChargenHandler(VOID* Sock_)
+DWORD WINAPI
+ChargenHandler(VOID* sock_)
 {
-    INT RetVal = 0;
-    SOCKET Sock = (SOCKET)Sock_;
+    INT retVal = 0;
+    SOCKET sock = (SOCKET)sock_;
 
-    if (!GenerateChars(Sock))
+    if (!GenerateChars(sock))
     {
-        LogEvent(_T("Chargen: Char generation failed\n"), 0, FALSE);
-        RetVal = 1;
+        LogEvent(_T("Chargen: Char generation failed"), 0, 0, LOG_FILE);
+        retVal = 1;
     }
 
-    LogEvent(_T("Chargen: Shutting connection down...\n"), 0, FALSE);
-    if (ShutdownConnection(Sock, FALSE))
-        LogEvent(_T("Chargen: Connection is down.\n"), 0, FALSE);
+    LogEvent(_T("Chargen: Shutting connection down..."), 0, 0, LOG_FILE);
+    if (ShutdownConnection(sock, FALSE))
+    {
+        LogEvent(_T("Chargen: Connection is down"), 0, 0, LOG_FILE);
+    }
     else
     {
-        LogEvent(_T("Chargen: Connection shutdown failed\n"), 0, FALSE);
-        RetVal = 1;
+        LogEvent(_T("Chargen: Connection shutdown failed"), 0, 0, LOG_FILE);
+        retVal = 1;
     }
 
-    LogEvent(_T("Chargen: Terminating thread\n"), 0, FALSE);
-    ExitThread(RetVal);
+    LogEvent(_T("Chargen: Terminating thread"), 0, 0, LOG_FILE);
+    ExitThread(retVal);
 }

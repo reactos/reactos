@@ -1,10 +1,12 @@
-#ifdef _MSC_VER
-#define _CRT_SECURE_NO_DEPRECATE 1
-#endif
 #include <stdio.h>
 #include <winsock2.h>
 #include <tchar.h>
 #include <time.h>
+
+#define LOG_FILE 1
+#define LOG_EVENTLOG 2
+#define LOG_ERROR 4
+#define LOG_ALL (LOG_FILE | LOG_EVENTLOG | LOG_ERROR)
 
 /* default port numbers */
 #define ECHO_PORT 7
@@ -14,19 +16,8 @@
 #define CHARGEN_PORT 19
 
 #define NUM_SERVICES 5
-#define BUF_SIZE 255
-#define BUF 1024
 #define CS_TIMEOUT 1000
 
-/* RFC865 states no more than 512 chars per line */
-#define MAX_QUOTE_BUF 512
-
-/* printable ASCII's characters for chargen */
-#define ASCII_START 32
-#define ASCII_END 126
-
-/* number of chars to put on a line */
-#define LINESIZ 74 // 72 + /r and /n
 
 /* data structure to pass to threads */
 typedef struct _Services {
@@ -35,19 +26,21 @@ typedef struct _Services {
     LPTHREAD_START_ROUTINE Service;
 } SERVICES, *PSERVICES;
 
-/* tcpsvcs functions */
-VOID WINAPI ServerCtrlHandler(DWORD control);
-INT CreateServers(VOID);
-VOID LogEvent(LPCTSTR UserMessage, DWORD ExitCode, BOOL PrintErrorMsg);
-void UpdateStatus(DWORD NewStatus, DWORD Check);
+extern volatile BOOL bShutdown;
+extern volatile BOOL bPause;
+
+/* logging functions */
+VOID InitLogging();
+VOID UninitLogging();
+VOID LogEvent(LPCTSTR lpMsg, DWORD errNum, DWORD exitCode, UINT flags);
 
 /* skelserver functions */
 DWORD WINAPI StartServer(LPVOID lpParam);
 BOOL ShutdownConnection(SOCKET Sock, BOOL bRec);
 
 /* server thread handlers */
-DWORD WINAPI ChargenHandler(VOID* Sock_);
-DWORD WINAPI DaytimeHandler(VOID* Sock_);
-DWORD WINAPI EchoHandler(VOID* Sock_);
-DWORD WINAPI DiscardHandler(VOID* Sock_);
-DWORD WINAPI QotdHandler(VOID* Sock_);
+DWORD WINAPI ChargenHandler(VOID* sock_);
+DWORD WINAPI DaytimeHandler(VOID* sock_);
+DWORD WINAPI EchoHandler(VOID* sock_);
+DWORD WINAPI DiscardHandler(VOID* sock_);
+DWORD WINAPI QotdHandler(VOID* sock_);
