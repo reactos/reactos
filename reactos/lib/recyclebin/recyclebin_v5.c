@@ -199,7 +199,7 @@ RecycleBin5_RecycleBin5_DeleteFile(
 	TRACE("(%p, %s)\n", This, debugstr_w(szFileName));
 
 	if (s->EnumeratorCount != 0)
-		return E_FAIL;
+		return HRESULT_FROM_WIN32(ERROR_SHARING_VIOLATION);
 
 	/* Get full file name */
 	while (TRUE)
@@ -414,7 +414,7 @@ RecycleBin5_RecycleBin5_Delete(
 	TRACE("(%p, %s, %p)\n", This, debugstr_w(pDeletedFileName), pDeletedFile);
 
 	if (s->EnumeratorCount != 0)
-		return E_FAIL;
+		return HRESULT_FROM_WIN32(ERROR_SHARING_VIOLATION);
 
 	pHeader = MapViewOfFile(s->hInfoMapped, FILE_MAP_WRITE, 0, 0, 0);
 	if (!pHeader)
@@ -476,7 +476,7 @@ RecycleBin5_RecycleBin5_Restore(
 	TRACE("(%p, %s, %p)\n", This, debugstr_w(pDeletedFileName), pDeletedFile);
 
 	if (s->EnumeratorCount != 0)
-		return E_FAIL;
+		return HRESULT_FROM_WIN32(ERROR_SHARING_VIOLATION);
 
 	pHeader = MapViewOfFile(s->hInfoMapped, FILE_MAP_WRITE, 0, 0, 0);
 	if (!pHeader)
