@@ -45,6 +45,10 @@
 
 /* BUILDCOMMDCB & BUILDCOMMDCBANDTIMEOUTS */
 
+/* STRINGS */
+static const WCHAR lpszSerialUI[] = { 
+   's','e','r','i','a','l','u','i','.','d','l','l',0 };
+
 /* TYPES */
 
 /* Pointer to a callback that handles a particular parameter */
@@ -1069,33 +1073,32 @@ GetCommState(HANDLE hFile, LPDCB lpDCB)
     DPRINT("GetCommState(%d, %p)\n", hFile, lpDCB);
 
 	if (lpDCB == NULL) {
+		SetLastError(ERROR_INVALID_PARAMETER);
         DPRINT("ERROR: GetCommState() - NULL DCB pointer\n");
 		return FALSE;
 	}
 
-	lpDCB->DCBlength = sizeof(DCB);
+    if (!DeviceIoControl(hFile, IOCTL_SERIAL_GET_BAUD_RATE,
+                         NULL, 0, &BaudRate, sizeof(BaudRate), NULL, NULL) ||
+        !DeviceIoControl(hFile, IOCTL_SERIAL_GET_LINE_CONTROL,
+                         NULL, 0, &LineControl, sizeof(LineControl), NULL, NULL) ||
+        !DeviceIoControl(hFile, IOCTL_SERIAL_GET_HANDFLOW,
+                         NULL, 0, &HandFlow, sizeof(HandFlow), NULL, NULL) ||
+        !DeviceIoControl(hFile, IOCTL_SERIAL_GET_CHARS,
+                         NULL, 0, &SpecialChars, sizeof(SpecialChars), NULL, NULL))
+        return FALSE;
 
-	/* FIXME: need to fill following fields (1 bit):
-	 * fBinary: binary mode, no EOF check
-	 * fParity: enable parity checking
-	 * fOutX  : XON/XOFF out flow control
-	 * fInX   : XON/XOFF in flow control
-	 */
+    memset(lpDCB, 0, sizeof(*lpDCB));
+    lpDCB->DCBlength = sizeof(*lpDCB);
 
-	result = DeviceIoControl(hFile, IOCTL_SERIAL_GET_BAUD_RATE,
-			 NULL, 0, &BaudRate, sizeof(BaudRate),&dwBytesReturned, NULL);
-	if (!NT_SUCCESS(result)) {
-        DPRINT("ERROR: GetCommState() - DeviceIoControl(IOCTL_SERIAL_GET_BAUD_RATE) Failed.\n");
-		return FALSE;
-	}
+    lpDCB->fBinary = 1;
+    lpDCB->fParity = 0;
     lpDCB->BaudRate = BaudRate.BaudRate;
 
-	result = DeviceIoControl(hFile, IOCTL_SERIAL_GET_HANDFLOW,
-			NULL, 0, &HandFlow, sizeof(HandFlow), &dwBytesReturned, NULL);
-	if (!NT_SUCCESS(result)) {
-        DPRINT("ERROR: GetCommState() - DeviceIoControl(IOCTL_SERIAL_GET_HANDFLOW) Failed.\n");
-		return FALSE;
-	}
+    lpDCB->StopBits = LineControl.StopBits;
+    lpDCB->Parity = LineControl.Parity;
+    lpDCB->ByteSize = LineControl.WordLength;
+
 	if (HandFlow.ControlHandShake & SERIAL_CTS_HANDSHAKE) {
     	lpDCB->fOutxCtsFlow = 1;
 	}
@@ -1182,26 +1185,50 @@ GetCommTimeouts(HANDLE hFile, LPCOMMTIMEOUTS lpCommTimeouts)
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 STDCALL
 GetDefaultCommConfigW(LPCWSTR lpszName, LPCOMMCONFIG lpCC, LPDWORD lpdwSize)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
+    FARPROC pGetDefaultCommConfig;
+    HMODULE hConfigModule;
+    DWORD   res = ERROR_INVALID_PARAMETER;
+
+    DPRINT("(%s, %p, %p)  *lpdwSize: %u\n", lpszName, lpCC, lpdwSize, lpdwSize ? *lpdwSize : 0 );
+    hConfigModule = LoadLibraryW(lpszSerialUI);
+
+    if (hConfigModule) {
+        pGetDefaultCommConfig = GetProcAddress(hConfigModule, "drvGetDefaultCommConfigW");
+        if (pGetDefaultCommConfig) {
+            res = pGetDefaultCommConfig(lpszName, lpCC, lpdwSize);
+        }
+        FreeLibrary(hConfigModule);
+    }
+
+    if (res) SetLastError(res);
+    return (res == ERROR_SUCCESS);
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 STDCALL
 GetDefaultCommConfigA(LPCSTR lpszName, LPCOMMCONFIG lpCC, LPDWORD lpdwSize)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
+	BOOL ret = FALSE;
+	UNICODE_STRING lpszNameW;
+
+	DPRINT("(%s, %p, %p)  *lpdwSize: %u\n", lpszName, lpCC, lpdwSize, lpdwSize ? *lpdwSize : 0 );
+	if(lpszName) RtlCreateUnicodeStringFromAsciiz(&lpszNameW,lpszName);
+	else lpszNameW.Buffer = NULL;
+
+	ret = GetDefaultCommConfigW(lpszNameW.Buffer,lpCC,lpdwSize);
+
+	RtlFreeUnicodeString(&lpszNameW);
+	return ret;
 }
 
 
@@ -1424,26 +1451,54 @@ SetCommTimeouts(HANDLE hFile, LPCOMMTIMEOUTS lpCommTimeouts)
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 STDCALL
 SetDefaultCommConfigA(LPCSTR lpszName, LPCOMMCONFIG lpCC, DWORD dwSize)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
+    BOOL r;
+    LPWSTR lpDeviceW = NULL;
+    DWORD len;
+
+    DPRINT("(%s, %p, %u)\n", lpszName, lpCC, dwSize);
+
+    if (lpszName)
+    {
+        len = MultiByteToWideChar( CP_ACP, 0, lpszName, -1, NULL, 0 );
+        lpDeviceW = HeapAlloc( GetProcessHeap(), 0, len*sizeof(WCHAR) );
+        MultiByteToWideChar( CP_ACP, 0, lpszName, -1, lpDeviceW, len );
+    }
+    r = SetDefaultCommConfigW(lpDeviceW,lpCC,dwSize);
+    HeapFree( GetProcessHeap(), 0, lpDeviceW );
+    return r;
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 STDCALL
 SetDefaultCommConfigW(LPCWSTR lpszName, LPCOMMCONFIG lpCC, DWORD dwSize)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
+    FARPROC pGetDefaultCommConfig;
+    HMODULE hConfigModule;
+    DWORD   res = ERROR_INVALID_PARAMETER;
+
+    DPRINT("(%s, %p, %p)  *dwSize: %u\n", lpszName, lpCC, dwSize, dwSize ? dwSize : 0 );
+    hConfigModule = LoadLibraryW(lpszSerialUI);
+
+    if (hConfigModule) {
+        pGetDefaultCommConfig = GetProcAddress(hConfigModule, "drvGetDefaultCommConfigW");
+        if (pGetDefaultCommConfig) {
+            res = pGetDefaultCommConfig(lpszName, lpCC, &dwSize);
+        }
+        FreeLibrary(hConfigModule);
+    }
+
+    if (res) SetLastError(res);
+    return (res == ERROR_SUCCESS);
 }
 
 
