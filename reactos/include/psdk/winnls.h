@@ -8,6 +8,7 @@
 extern "C" {
 #endif
 
+#define GEOID_NOT_AVAILABLE (-1)
 #define MAX_LEADBYTES 	12
 #define MAX_DEFAULTCHAR	2
 #define LOCALE_NOUSEROVERRIDE	0x80000000
