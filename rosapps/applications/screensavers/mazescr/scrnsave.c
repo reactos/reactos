@@ -49,6 +49,8 @@ LRESULT WINAPI WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	switch (msg)
 	{
 		case WM_DESTROY:
+			if (fullscreen)
+				ShowCursor(TRUE);
 			PostQuitMessage(0);
 			break;
 
