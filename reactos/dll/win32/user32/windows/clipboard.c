@@ -69,7 +69,7 @@ EmptyClipboard(VOID)
 UINT STDCALL
 EnumClipboardFormats(UINT format)
 {
-    UINT ret = NtUserEnumClipboardFormats(format);
+    UINT ret = NtUserCallOneParam(format, ONEPARAM_ROUTINE_ENUMCLIPBOARDFORMATS);
     return ret;
 }
 
@@ -248,7 +248,7 @@ RegisterClipboardFormatA(LPCSTR lpszFormat)
     ret = RtlCreateUnicodeStringFromAsciiz(&usFormat, lpszFormat);
     if (ret)
     {
-        ret = NtUserRegisterClipboardFormat(&usFormat); //(LPCWSTR)
+        ret = NtUserRegisterWindowMessage(&usFormat); //(LPCWSTR)
         RtlFreeUnicodeString(&usFormat);
     }
 
@@ -278,7 +278,7 @@ RegisterClipboardFormatW(LPCWSTR lpszFormat)
     }
 
     RtlInitUnicodeString(&usFormat, lpszFormat);
-    ret = NtUserRegisterClipboardFormat(&usFormat);
+    ret = NtUserRegisterWindowMessage(&usFormat);
 
     return ret;
 }

@@ -681,20 +681,14 @@ NtGdiSetWindowExtEx                     4
 NtGdiSetWindowOrgEx                     4
 NtUserBuildMenuItemList                 4
 NtUserCreateCursorIconHandle            2
-NtUserDereferenceWndProcHandle          2
-NtUserEnumClipboardFormats              1
-NtUserGetActiveWindow                   0
-NtUserGetCapture                        0
 NtUserGetClassLong                      3
 NtUserGetClientOrigin                   2
 NtUserGetClientRect                     2
 NtUserGetMenuDefaultItem                3
-NtUserGetLastActivePopup                1
 NtUserGetLastInputInfo                  1
 NtUserGetMinMaxInfo                     3
 NtUserGetMonitorInfo                    2
 NtUserGetProp                           2
-NtUserGetQueueStatus                    1
 NtUserGetScrollInfo                     3
 NtUserGetShellWindow                    0
 NtUserGetSystemMetrics                  1
@@ -702,8 +696,6 @@ NtUserGetWindow                         2
 NtUserGetWindowLong                     3
 NtUserGetWindowRect                     2
 NtUserGetWindowThreadProcessId          2
-NtUserInsertMenuItem                    4
-NtUserKillSystemTimer                   2
 NtUserManualGuiCheck                    1
 NtUserMenuInfo                          3
 NtUserMenuItemInfo                      5
@@ -711,7 +703,6 @@ NtUserMonitorFromPoint                  3
 NtUserMonitorFromRect                   2
 NtUserMonitorFromWindow                 2
 NtUserRegisterClassEx                   6
-NtUserRegisterClipboardFormat           1
 NtUserSendMessage                       5
 NtUserSendMessageTimeout                8
 NtUserSendNotifyMessage                 4

@@ -1797,14 +1797,13 @@ CLEANUP:
 }
 
 DWORD STDCALL
-NtUserGetQueueStatus(BOOL ClearChanges)
+IntGetQueueStatus(BOOL ClearChanges)
 {
    PUSER_MESSAGE_QUEUE Queue;
    DWORD Result;
    DECLARE_RETURN(DWORD);
 
-   DPRINT("Enter NtUserGetQueueStatus\n");
-   UserEnterExclusive();
+   DPRINT("Enter IntGetQueueStatus\n");
 
    Queue = PsGetCurrentThreadWin32Thread()->MessageQueue;
 
@@ -1814,11 +1813,10 @@ NtUserGetQueueStatus(BOOL ClearChanges)
       Queue->ChangedBits = 0;
    }
 
-   RETURN( Result);
+   RETURN(Result);
 
 CLEANUP:
-   DPRINT("Leave NtUserGetQueueStatus, ret=%i\n",_ret_);
-   UserLeave();
+   DPRINT("Leave IntGetQueueStatus, ret=%i\n",_ret_);
    END_CLEANUP;
 }
 

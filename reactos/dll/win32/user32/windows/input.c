@@ -574,15 +574,6 @@ SendInput(
   return NtUserSendInput(nInputs, pInputs, cbSize);
 }
 
-/*
- * Private call for CSRSS
- */
-VOID
-STDCALL
-PrivateCsrssRegisterPrimitive(VOID)
-{
-  NtUserCallNoParam(NOPARAM_ROUTINE_REGISTER_PRIMITIVE);
-}
 
 /*
  * @implemented

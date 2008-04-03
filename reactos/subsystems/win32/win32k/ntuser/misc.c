@@ -41,10 +41,15 @@ NtUserGetThreadState(
 
       case THREADSTATE_FOCUSWINDOW:
          RETURN( (DWORD)IntGetThreadFocusWindow());
+      case THREADSTATE_CAPTUREWINDOW:
+         /* FIXME should use UserEnterShared */
+         RETURN( (DWORD)IntGetCapture());
       case THREADSTATE_PROGMANWINDOW:
          RETURN( (DWORD)GetW32ThreadInfo()->Desktop->hProgmanWindow);
       case THREADSTATE_TASKMANWINDOW:
          RETURN( (DWORD)GetW32ThreadInfo()->Desktop->hTaskManWindow);
+      case THREADSTATE_ACTIVEWINDOW:
+         RETURN ( (DWORD)UserGetActiveWindow());
    }
    RETURN( 0);
 

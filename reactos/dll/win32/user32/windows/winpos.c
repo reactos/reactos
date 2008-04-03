@@ -99,7 +99,7 @@ WinPosGetMinMaxInfo(HWND hWnd, POINT* MaxSize, POINT* MaxPos,
 HWND STDCALL
 GetActiveWindow(VOID)
 {
-  return(NtUserGetActiveWindow());
+  return (HWND)NtUserGetThreadState(THREADSTATE_ACTIVEWINDOW);
 }
 
 /*

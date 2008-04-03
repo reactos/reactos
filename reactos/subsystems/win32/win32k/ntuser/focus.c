@@ -386,25 +386,6 @@ HWND FASTCALL UserGetActiveWindow()
 }
 
 
-/*
- * @implemented
- */
-HWND STDCALL
-NtUserGetActiveWindow(VOID)
-{
-   DECLARE_RETURN(HWND);
-
-   DPRINT("Enter NtUserGetActiveWindow\n");
-   UserEnterShared();
-
-   RETURN( UserGetActiveWindow());
-
-CLEANUP:
-   DPRINT("Leave NtUserGetActiveWindow, ret=%i\n",_ret_);
-   UserLeave();
-   END_CLEANUP;
-}
-
 HWND STDCALL
 NtUserSetActiveWindow(HWND hWnd)
 {
@@ -454,20 +435,18 @@ CLEANUP:
  * @implemented
  */
 HWND STDCALL
-NtUserGetCapture(VOID)
+IntGetCapture(VOID)
 {
    PUSER_MESSAGE_QUEUE ThreadQueue;
    DECLARE_RETURN(HWND);
 
-   DPRINT("Enter NtUserGetCapture\n");
-   UserEnterShared();
+   DPRINT("Enter IntGetCapture\n");
 
    ThreadQueue = (PUSER_MESSAGE_QUEUE)PsGetCurrentThreadWin32Thread()->MessageQueue;
    RETURN( ThreadQueue ? ThreadQueue->CaptureWindow : 0);
 
 CLEANUP:
-   DPRINT("Leave NtUserGetCapture, ret=%i\n",_ret_);
-   UserLeave();
+   DPRINT("Leave IntGetCapture, ret=%i\n",_ret_);
    END_CLEANUP;
 }
 

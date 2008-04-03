@@ -245,10 +245,7 @@ NtUserCallOneParam(
 
       case ONEPARAM_ROUTINE_SETCARETBLINKTIME:
          RETURN( (DWORD)IntSetCaretBlinkTime((UINT)Param));
-/*
-      case ONEPARAM_ROUTINE_ENUMCLIPBOARDFORMATS:
-         RETURN( (DWORD)NtUserEnumClipboardFormats((UINT)Param));
-*/
+
       case ONEPARAM_ROUTINE_GETWINDOWINSTANCE:
          {
             PWINDOW_OBJECT Window;
@@ -391,6 +388,13 @@ NtUserCallOneParam(
 
       case ONEPARAM_ROUTINE_REALIZEPALETTE:
          RETURN (UserRealizePalette((HDC) Param));
+
+      case ONEPARAM_ROUTINE_GETQUEUESTATUS:
+         RETURN (IntGetQueueStatus((BOOL) Param));
+
+      case ONEPARAM_ROUTINE_ENUMCLIPBOARDFORMATS:
+         /* FIXME: Should use UserEnterShared */
+         RETURN(IntEnumClipboardFormats(Param));
    }
    DPRINT1("Calling invalid routine number 0x%x in NtUserCallOneParam(), Param=0x%x\n",
            Routine, Param);
@@ -870,6 +874,13 @@ NtUserCallHwndParam(
    DWORD Param,
    DWORD Routine)
 {
+
+   switch (Routine)
+   {
+      case HWNDPARAM_ROUTINE_KILLSYSTEMTIMER:
+          return IntKillTimer(hWnd, (UINT_PTR)Param, TRUE);
+   }
+
    UNIMPLEMENTED;
 
    return 0;

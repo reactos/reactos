@@ -1424,11 +1424,18 @@ NtUserGetThreadDesktop(
   DWORD dwThreadId,
   DWORD Unknown1);
 
-#define THREADSTATE_GETTHREADINFO   (0)
-#define THREADSTATE_FOCUSWINDOW (1)
-#define THREADSTATE_INSENDMESSAGE       (2)
-#define THREADSTATE_PROGMANWINDOW (3)
-#define THREADSTATE_TASKMANWINDOW (4)
+
+enum ThreadStateRoutines
+{
+    THREADSTATE_GETTHREADINFO,
+    THREADSTATE_INSENDMESSAGE,
+    THREADSTATE_FOCUSWINDOW,
+    THREADSTATE_ACTIVEWINDOW,
+    THREADSTATE_CAPTUREWINDOW,
+    THREADSTATE_PROGMANWINDOW,
+    THREADSTATE_TASKMANWINDOW
+};
+
 DWORD
 NTAPI
 NtUserGetThreadState(
@@ -1773,10 +1780,6 @@ NtUserRealInternalGetMessage(
     DWORD dwUnknown5,
     DWORD dwUnknown6);
 
-UINT
-NTAPI
-NtUserRealizePalette(HDC hDC);
-
 DWORD
 NTAPI
 NtUserRealChildWindowFromPoint(
@@ -1830,11 +1833,6 @@ NtUserRegisterHotKey(HWND hWnd,
 		     int id,
 		     UINT fsModifiers,
 		     UINT vk);
-
-BOOL
-NTAPI
-NtUserGetLastInputInfo(
-    PLASTINPUTINFO plii);
 
 DWORD
 NTAPI
@@ -2475,7 +2473,6 @@ typedef struct tagKMDDELPARAM
  * ReactOS-specific NtUser calls and their related structures, both which shouldn't exist.
  */
 
-#define NOPARAM_ROUTINE_REGISTER_PRIMITIVE	  0xffff0001
 #define NOPARAM_ROUTINE_GETMESSAGEEXTRAINFO   0xffff0005
 #define NOPARAM_ROUTINE_ANYPOPUP              0xffff0006
 #define NOPARAM_ROUTINE_CSRSS_INITIALIZED     0xffff0007
@@ -2533,30 +2530,6 @@ NtUserCreateCursorIconHandle(
   BOOL Indirect);
 
 
-typedef struct _WNDPROC_INFO
-{
-    WNDPROC WindowProc;
-    BOOL IsUnicode;
-} WNDPROC_INFO, *PWNDPROC_INFO;
-
-BOOL
-NTAPI
-NtUserDereferenceWndProcHandle(IN HANDLE wpHandle, OUT PWNDPROC_INFO wpInfo);
-
-/* Use ONEPARAM_ROUTINE_ENUMCLIPBOARDFORMATS */
-UINT
-NTAPI
-NtUserEnumClipboardFormats(
-  UINT format);
-
-HWND
-NTAPI
-NtUserGetActiveWindow(VOID);
-
-HWND
-NTAPI
-NtUserGetCapture(VOID);
-
 /* Should be done in usermode */
 ULONG_PTR
 NTAPI
@@ -2578,10 +2551,6 @@ NtUserGetMenuDefaultItem(
   HMENU hMenu,
   UINT fByPos,
   UINT gmdiFlags);
-
-HWND
-NTAPI
-NtUserGetLastActivePopup(HWND hWnd);
 
 BOOL
 NTAPI
@@ -2605,10 +2574,6 @@ NtUserGetMonitorInfo(
 HANDLE
 NTAPI
 NtUserGetProp(HWND hWnd, ATOM Atom);
-
-DWORD
-NTAPI
-NtUserGetQueueStatus(BOOL ClearChanges);
 
 BOOL
 NTAPI
@@ -2643,17 +2608,7 @@ DWORD
 NTAPI
 NtUserGetWindowThreadProcessId(HWND hWnd, LPDWORD UnsafePid);
 
-DWORD
-NTAPI
-NtUserInsertMenuItem(
-  HMENU hMenu,
-  UINT uItem,
-  BOOL fByPosition,
-  LPCMENUITEMINFOW lpmii);
 
-BOOL
-NTAPI
-NtUserKillSystemTimer(HWND hWnd, UINT_PTR uIDEvent);
 
 VOID
 NTAPI
@@ -2761,11 +2716,6 @@ NtUserRegisterClassEx(
    DWORD Flags,
    HMENU hMenu);
 
-
-UINT
-NTAPI
-NtUserRegisterClipboardFormat(
-    PUNICODE_STRING format);
 
 
 typedef struct tagNTUSERSENDMESSAGEINFO

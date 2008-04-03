@@ -7,5 +7,6 @@
 #define W32PF_CREATEDWINORDC	(0x0004)
 
 ULONG FASTCALL IntSystemParametersInfo(UINT uiAction, UINT uiParam, PVOID pvParam, UINT fWinIni);
+DWORD STDCALL IntGetQueueStatus(BOOL ClearChanges);
 
 #endif /* __WIN32K_MISC_H */

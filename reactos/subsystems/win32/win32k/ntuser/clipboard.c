@@ -746,48 +746,6 @@ NtUserGetClipboardFormatName(UINT format, PUNICODE_STRING FormatName,
     return ret;
 }
 
-UINT STDCALL
-NtUserRegisterClipboardFormat(PUNICODE_STRING FormatName)
-{
-    UINT ret = 0;
-    UNICODE_STRING cFormatName = {0};
-
-    if (FormatName == NULL)
-    {
-        SetLastWin32Error(ERROR_INVALID_PARAMETER);
-        return ret;
-    }
-
-    UserEnterExclusive();
-
-    _SEH_TRY
-    {
-        cFormatName = ProbeForReadUnicodeString(FormatName);
-
-        if (cFormatName.Length > 0)
-        {
-            ret = (UINT)IntAddAtom(cFormatName.Buffer);
-            //RtlFreeUnicodeString(&cFormatName);
-        }
-        else
-        {
-            SetLastWin32Error(ERROR_INVALID_NAME);
-            _SEH_LEAVE;
-        }
-
-    }
-    _SEH_HANDLE
-    {
-        SetLastNtError(_SEH_GetExceptionCode());
-    }
-    _SEH_END;
-
-    UserLeave();
-
-    return ret;
-}
-
-
 HWND STDCALL
 NtUserGetClipboardOwner(VOID)
 {
@@ -1107,11 +1065,9 @@ NtUserSetClipboardViewer(HWND hWndNewViewer)
 }
 
 UINT STDCALL
-NtUserEnumClipboardFormats(UINT uFormat)
+IntEnumClipboardFormats(UINT uFormat)
 {
     UINT ret = 0;
-
-    UserEnterShared();
 
     if (intIsClipboardOpenByMe())
     {
@@ -1161,8 +1117,6 @@ NtUserEnumClipboardFormats(UINT uFormat)
     {
         SetLastWin32Error(ERROR_CLIPBOARD_NOT_OPEN);
     }
-
-    UserLeave();
 
     return ret;
 }

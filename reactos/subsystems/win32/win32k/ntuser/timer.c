@@ -268,24 +268,4 @@ CLEANUP:
 }
 
 
-BOOL
-STDCALL
-NtUserKillSystemTimer(
-   HWND hWnd,
-   UINT_PTR uIDEvent
-)
-{
-   DECLARE_RETURN(BOOL);
-
-   DPRINT("Enter NtUserKillSystemTimer\n");
-   UserEnterExclusive();
-
-   RETURN(IntKillTimer(hWnd, uIDEvent, TRUE));
-
-CLEANUP:
-   DPRINT("Leave NtUserKillSystemTimer, ret=%i\n", _ret_);
-   UserLeave();
-   END_CLEANUP;
-}
-
 /* EOF */

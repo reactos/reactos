@@ -2979,37 +2979,6 @@ NtUserGetInternalWindowPos(DWORD Unknown0,
    return 0;
 }
 
-
-/*
- * @unimplemented
- */
-HWND STDCALL
-NtUserGetLastActivePopup(HWND hWnd)
-{
-   /*
-    * This code can't work, because hWndLastPopup member of WINDOW_OBJECT is
-    * not changed anywhere.
-    * -- Filip, 01/nov/2003
-    */
-#if 0
-   PWINDOW_OBJECT Wnd;
-   HWND hWndLastPopup;
-
-   if (!(Wnd = UserGetWindowObject(hWnd)))
-   {
-      return NULL;
-   }
-
-   hWndLastPopup = Wnd->hWndLastPopup;
-
-   return hWndLastPopup;
-#else
-
-   return NULL;
-#endif
-}
-
-
 DWORD
 STDCALL
 NtUserGetListBoxInfo(

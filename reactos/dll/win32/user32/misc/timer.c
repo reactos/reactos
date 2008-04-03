@@ -43,7 +43,7 @@ KillSystemTimer(
   HWND hWnd,
   UINT_PTR IDEvent)
 {
-  return NtUserKillSystemTimer(hWnd, IDEvent);
+  return NtUserCallHwndParam(hWnd, IDEvent, HWNDPARAM_ROUTINE_KILLSYSTEMTIMER);
 }
 
 
@@ -88,4 +88,7 @@ SetTimer(
 {
   return NtUserSetTimer(hWnd, IDEvent, Period, TimerFunc);
 }
+
+
+
 

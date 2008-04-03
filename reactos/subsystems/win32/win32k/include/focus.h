@@ -14,6 +14,8 @@ IntGetFocusWindow();
  */
 HWND FASTCALL
 IntGetThreadFocusWindow();
+HWND STDCALL IntGetCapture();
+HWND FASTCALL UserGetActiveWindow();
 
 BOOL FASTCALL
 co_IntMouseActivateWindow(PWINDOW_OBJECT Window);

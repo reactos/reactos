@@ -4458,7 +4458,7 @@ InsertMenuItemA(
       mi.cch = MenuText.Length / sizeof(WCHAR);
       CleanHeap = TRUE;
     }
-    res = NtUserInsertMenuItem(hMenu, uItem, fByPosition, &mi);
+    res = NtUserThunkedMenuItemInfo(hMenu, uItem, fByPosition, TRUE, &mi, NULL);
 
     if ( CleanHeap ) RtlFreeUnicodeString ( &MenuText );
   }
@@ -4504,7 +4504,7 @@ InsertMenuItemW(
       mi.dwTypeData = MenuText.Buffer;
       mi.cch = MenuText.Length / sizeof(WCHAR);
     }
-    res = NtUserInsertMenuItem(hMenu, uItem, fByPosition, &mi);
+    res = NtUserThunkedMenuItemInfo(hMenu, uItem, fByPosition, TRUE, &mi, NULL);
   }
   return res;
 }
@@ -5171,5 +5171,8 @@ ChangeMenuA(
             return InsertMenuA(hMenu, cmd, flags, cmdInsert, lpszNewItem);
     };
 }
+
+
+
 
 

@@ -4,6 +4,12 @@
 #define IS_ATOM(x) \
   (((ULONG_PTR)(x) > 0x0) && ((ULONG_PTR)(x) < 0x10000))
 
+typedef struct _WNDPROC_INFO
+{
+    WNDPROC WindowProc;
+    BOOL IsUnicode;
+} WNDPROC_INFO, *PWNDPROC_INFO;
+
 static BOOL __inline
 IsCallProcHandle(IN WNDPROC lpWndProc)
 {

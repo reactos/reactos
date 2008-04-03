@@ -130,31 +130,3 @@ UserGetCallProcInfo(IN HANDLE hCallProc,
 
     return TRUE;
 }
-
-BOOL NTAPI
-NtUserDereferenceWndProcHandle(IN HANDLE wpHandle,
-                               OUT PWNDPROC_INFO wpInfo)
-{
-    BOOL Ret = FALSE;
-
-    UserEnterShared();
-
-    _SEH_TRY
-    {
-        ProbeForWrite(wpInfo,
-                      sizeof(WNDPROC_INFO),
-                      sizeof(ULONG));
-
-        Ret = UserGetCallProcInfo(wpHandle,
-                                  wpInfo);
-    }
-    _SEH_HANDLE
-    {
-        SetLastWin32Error(_SEH_GetExceptionCode());
-    }
-    _SEH_END;
-
-    UserLeave();
-
-    return Ret;
-}

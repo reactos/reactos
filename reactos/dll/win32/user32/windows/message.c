@@ -2140,7 +2140,7 @@ SetCapture(HWND hWnd)
 HWND STDCALL
 GetCapture(VOID)
 {
-  return(NtUserGetCapture());
+  return (HWND)NtUserGetThreadState(THREADSTATE_CAPTUREWINDOW);
 }
 
 /*
@@ -2171,7 +2171,7 @@ RealGetQueueStatus(UINT flags)
       USER_Driver.pMsgWaitForMultipleObjectsEx( 0, NULL, 0, 0, 0 );
 #endif
 
-   ret = NtUserGetQueueStatus(TRUE /*ClearChanges*/);
+   ret = NtUserCallOneParam(TRUE, ONEPARAM_ROUTINE_GETQUEUESTATUS);
 
    changed_bits = LOWORD(ret);
    wake_bits = HIWORD(ret);
@@ -2195,7 +2195,7 @@ BOOL STDCALL GetInputState(VOID)
      USER_Driver.pMsgWaitForMultipleObjectsEx( 0, NULL, 0, 0, 0 );
 #endif
 
-   ret = NtUserGetQueueStatus(FALSE /*ClearChanges*/);
+   ret = NtUserCallOneParam(FALSE, ONEPARAM_ROUTINE_GETQUEUESTATUS);
 
    wake_bits = HIWORD(ret);
 

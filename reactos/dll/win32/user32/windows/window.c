@@ -919,7 +919,8 @@ GetGUIThreadInfo(DWORD idThread,
 HWND STDCALL
 GetLastActivePopup(HWND hWnd)
 {
-  return NtUserGetLastActivePopup(hWnd);
+  UNIMPLEMENTED;
+  return 0;
 }
 
 
@@ -1986,4 +1987,7 @@ DisableProcessWindowsGhosting(VOID)
 }
 
 /* EOF */
+
+
+
 

@@ -1613,7 +1613,7 @@ CLEANUP:
  * @implemented
  */
 DWORD STDCALL
-NtUserInsertMenuItem(
+UserInsertMenuItem(
    HMENU hMenu,
    UINT uItem,
    BOOL fByPosition,
@@ -1624,7 +1624,7 @@ NtUserInsertMenuItem(
    ROSMENUITEMINFO ItemInfo;
    DECLARE_RETURN(DWORD);
 
-   DPRINT("Enter NtUserInsertMenuItem\n");
+   DPRINT("Enter UserInsertMenuItem\n");
    UserEnterExclusive();
 
    if(!(Menu = UserGetMenuObject(hMenu)))
@@ -1662,7 +1662,7 @@ NtUserInsertMenuItem(
    RETURN( FALSE);
 
 CLEANUP:
-   DPRINT("Leave NtUserInsertMenuItem, ret=%i\n",_ret_);
+   DPRINT("Leave UserInsertMenuItem, ret=%i\n",_ret_);
    UserLeave();
    END_CLEANUP;
 }
@@ -2444,10 +2444,13 @@ NtUserThunkedMenuItemInfo(
    LPMENUITEMINFOW lpmii,
    PUNICODE_STRING lpszCaption)
 {
-   UNIMPLEMENTED
+
    /* lpszCaption may be NULL, check for it and call RtlInitUnicodeString()
-      if bInsert == TRUE call NtUserInsertMenuItem() else NtUserSetMenuItemInfo()
-   */
+      if bInsert == TRUE call NtUserInsertMenuItem() else NtUserSetMenuItemInfo()   */
+
+   if (bInsert) return UserInsertMenuItem(hMenu, uItem, fByPosition, lpmii);
+   
+   UNIMPLEMENTED
    return 0;
 }
 
