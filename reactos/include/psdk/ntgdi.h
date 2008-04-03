@@ -61,7 +61,14 @@ typedef struct _LOGCOLORSPACEEXW
     DWORD dwFlags;
 } LOGCOLORSPACEEXW, *PLOGCOLORSPACEEXW;
 
-typedef struct _POLYPATBLT POLYPATBLT, *PPOLYPATBLT;
+typedef struct _POLYPATBLT
+{
+  INT nXLeft;
+  INT nYLeft;
+  INT nWidth;
+  INT nHeight;
+  HBRUSH hBrush;
+} POLYPATBLT, *PPOLYPATBLT;
 
 /* NtGdiAddRemoteMMInstanceToDC */
 typedef struct tagDOWNLOADDESIGNVECTOR
