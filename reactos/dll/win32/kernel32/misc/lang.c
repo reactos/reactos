@@ -31,6 +31,23 @@
 
 //static RTL_CRITICAL_SECTION LocalesListLock;
 
+typedef struct
+{
+    union
+    {
+        UILANGUAGE_ENUMPROCA procA;
+        UILANGUAGE_ENUMPROCW procW;
+    } u;
+    DWORD flags;
+    LONG_PTR param;
+} ENUM_UILANG_CALLBACK;
+
+static const WCHAR szLocaleKeyName[] = {
+    'M','a','c','h','i','n','e','\\','S','y','s','t','e','m','\\',
+    'C','u','r','r','e','n','t','C','o','n','t','r','o','l','S','e','t','\\',
+    'C','o','n','t','r','o','l','\\','N','l','s','\\','L','o','c','a','l','e',0
+};
+
 /******************************************************************************
  * @implemented
  * RIPPED FROM WINE's dlls\kernel\locale.c rev 1.42
@@ -263,8 +280,151 @@ EnumDateFormatsExW(
 }
 
 
+static BOOL NLS_RegEnumValue(HANDLE hKey, UINT ulIndex,
+                             LPWSTR szValueName, ULONG valueNameSize,
+                             LPWSTR szValueData, ULONG valueDataSize)
+{
+    BYTE buffer[80];
+    KEY_VALUE_FULL_INFORMATION *info = (KEY_VALUE_FULL_INFORMATION *)buffer;
+    DWORD dwLen;
+
+    if (NtEnumerateValueKey( hKey, ulIndex, KeyValueFullInformation,
+        buffer, sizeof(buffer), &dwLen ) != STATUS_SUCCESS ||
+        info->NameLength > valueNameSize ||
+        info->DataLength > valueDataSize)
+    {
+        return FALSE;
+    }
+
+    DPRINT("info->Name %s info->DataLength %d\n", info->Name, info->DataLength);
+
+    memcpy( szValueName, info->Name, info->NameLength);
+    szValueName[info->NameLength / sizeof(WCHAR)] = '\0';
+    memcpy( szValueData, buffer + info->DataOffset, info->DataLength );
+    szValueData[info->DataLength / sizeof(WCHAR)] = '\0';
+
+    DPRINT("returning %s %s\n", szValueName, szValueData);
+    return TRUE;
+}
+
+
+static HANDLE NLS_RegOpenKey(HANDLE hRootKey, LPCWSTR szKeyName)
+{
+    UNICODE_STRING keyName;
+    OBJECT_ATTRIBUTES attr;
+    HANDLE hkey;
+
+    RtlInitUnicodeString( &keyName, szKeyName );
+    InitializeObjectAttributes(&attr, &keyName, 0, hRootKey, NULL);
+
+    if (NtOpenKey( &hkey, KEY_ALL_ACCESS, &attr ) != STATUS_SUCCESS)
+        hkey = 0;
+
+    return hkey;
+}
+
+
+/* Callback function ptrs for EnumLanguageGrouplocalesA/W */
+typedef struct
+{
+  LANGGROUPLOCALE_ENUMPROCA procA;
+  LANGGROUPLOCALE_ENUMPROCW procW;
+  DWORD    dwFlags;
+  LGRPID   lgrpid;
+  LONG_PTR lParam;
+} ENUMLANGUAGEGROUPLOCALE_CALLBACKS;
+
+/* Internal implementation of EnumLanguageGrouplocalesA/W */
+static BOOL NLS_EnumLanguageGroupLocales(ENUMLANGUAGEGROUPLOCALE_CALLBACKS *lpProcs)
+{
+    static const WCHAR szAlternateSortsKeyName[] = {
+      'A','l','t','e','r','n','a','t','e',' ','S','o','r','t','s','\0'
+    };
+    WCHAR szNumber[10], szValue[4];
+    HANDLE hKey;
+    BOOL bContinue = TRUE, bAlternate = FALSE;
+    LGRPID lgrpid;
+    ULONG ulIndex = 1;  /* Ignore default entry of 1st key */
+
+    if (!lpProcs || !lpProcs->lgrpid || lpProcs->lgrpid > LGRPID_ARMENIAN)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    if (lpProcs->dwFlags)
+    {
+        SetLastError(ERROR_INVALID_FLAGS);
+        return FALSE;
+    }
+
+    hKey = NLS_RegOpenKey( 0, szLocaleKeyName );
+
+    if (!hKey)
+        DPRINT("NLS registry key not found. Please apply the default registry file 'wine.inf'\n");
+
+    while (bContinue)
+    {
+        if (NLS_RegEnumValue( hKey, ulIndex, szNumber, sizeof(szNumber),
+                              szValue, sizeof(szValue) ))
+        {
+            lgrpid = wcstoul( szValue, NULL, 16 );
+
+            DPRINT("lcid %s, grpid %d (%smatched)\n", szNumber,
+                   lgrpid, lgrpid == lpProcs->lgrpid ? "" : "not ");
+
+            if (lgrpid == lpProcs->lgrpid)
+            {
+                LCID lcid;
+
+                lcid = wcstoul( szNumber, NULL, 16 );
+
+                /* FIXME: native returns extra text for a few (17/150) locales, e.g:
+                 * '00000437          ;Georgian'
+                 * At present we only pass the LCID string.
+                 */
+
+                if (lpProcs->procW)
+                    bContinue = lpProcs->procW( lgrpid, lcid, szNumber, lpProcs->lParam );
+                else
+                {
+                    char szNumberA[sizeof(szNumber)/sizeof(WCHAR)];
+
+                    WideCharToMultiByte(CP_ACP, 0, szNumber, -1, szNumberA, sizeof(szNumberA), 0, 0);
+
+                    bContinue = lpProcs->procA( lgrpid, lcid, szNumberA, lpProcs->lParam );
+                }
+            }
+
+            ulIndex++;
+        }
+        else
+        {
+            /* Finished enumerating this key */
+            if (!bAlternate)
+            {
+                /* Enumerate alternate sorts also */
+                hKey = NLS_RegOpenKey( hKey, szAlternateSortsKeyName );
+                bAlternate = TRUE;
+                ulIndex = 0;
+            }
+            else
+                bContinue = FALSE; /* Finished both keys */
+        }
+
+        if (!bContinue)
+            break;
+    }
+
+    if (hKey)
+        NtClose( hKey );
+
+    return TRUE;
+}
+
+
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 STDCALL
@@ -274,13 +434,22 @@ EnumLanguageGroupLocalesA(
     DWORD                     dwFlags,
     LONG_PTR                  lParam)
 {
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
+    ENUMLANGUAGEGROUPLOCALE_CALLBACKS callbacks;
+
+    DPRINT("(%p,0x%08X,0x%08X,0x%08lX)\n", lpLangGroupLocaleEnumProc, LanguageGroup, dwFlags, lParam);
+
+    callbacks.procA   = lpLangGroupLocaleEnumProc;
+    callbacks.procW   = NULL;
+    callbacks.dwFlags = dwFlags;
+    callbacks.lgrpid  = LanguageGroup;
+    callbacks.lParam  = lParam;
+
+    return NLS_EnumLanguageGroupLocales( lpLangGroupLocaleEnumProc ? &callbacks : NULL );
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 STDCALL
@@ -290,8 +459,17 @@ EnumLanguageGroupLocalesW(
     DWORD                     dwFlags,
     LONG_PTR                  lParam)
 {
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
+    ENUMLANGUAGEGROUPLOCALE_CALLBACKS callbacks;
+
+    DPRINT("(%p,0x%08X,0x%08X,0x%08lX)\n", lpLangGroupLocaleEnumProc, LanguageGroup, dwFlags, lParam);
+
+    callbacks.procA   = NULL;
+    callbacks.procW   = lpLangGroupLocaleEnumProc;
+    callbacks.dwFlags = dwFlags;
+    callbacks.lgrpid  = LanguageGroup;
+    callbacks.lParam  = lParam;
+
+    return NLS_EnumLanguageGroupLocales( lpLangGroupLocaleEnumProc ? &callbacks : NULL );
 }
 
 
@@ -503,8 +681,19 @@ EnumSystemLocalesW (
 }
 
 
+static BOOL CALLBACK enum_uilang_proc_a( HMODULE hModule, LPCSTR type,
+                                         LPCSTR name, WORD LangID, LONG_PTR lParam )
+{
+    ENUM_UILANG_CALLBACK *enum_uilang = (ENUM_UILANG_CALLBACK *)lParam;
+    char buf[20];
+
+    sprintf(buf, "%08x", (UINT)LangID);
+    return enum_uilang->u.procA( buf, enum_uilang->param );
+}
+
+
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 STDCALL
@@ -513,13 +702,42 @@ EnumUILanguagesA(
     DWORD                dwFlags,
     LONG_PTR             lParam)
 {
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
+    ENUM_UILANG_CALLBACK enum_uilang;
+
+    DPRINT("%p, %x, %lx\n", lpUILanguageEnumProc, dwFlags, lParam);
+
+    if(!lpUILanguageEnumProc) {
+	SetLastError(ERROR_INVALID_PARAMETER);
+	return FALSE;
+    }
+    if(dwFlags) {
+	SetLastError(ERROR_INVALID_FLAGS);
+	return FALSE;
+    }
+
+    enum_uilang.u.procA = lpUILanguageEnumProc;
+    enum_uilang.flags = dwFlags;
+    enum_uilang.param = lParam;
+
+    EnumResourceLanguagesA( hCurrentModule, (LPCSTR)RT_STRING,
+                            (LPCSTR)LOCALE_ILANGUAGE, enum_uilang_proc_a,
+                            (LONG_PTR)&enum_uilang);
+    return TRUE;
 }
 
+static BOOL CALLBACK enum_uilang_proc_w( HMODULE hModule, LPCWSTR type,
+                                         LPCWSTR name, WORD LangID, LONG_PTR lParam )
+{
+    static const WCHAR formatW[] = {'%','0','8','x',0};
+    ENUM_UILANG_CALLBACK *enum_uilang = (ENUM_UILANG_CALLBACK *)lParam;
+    WCHAR buf[20];
+
+    swprintf( buf, formatW, (UINT)LangID );
+    return enum_uilang->u.procW( buf, enum_uilang->param );
+}
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 STDCALL
@@ -528,8 +746,28 @@ EnumUILanguagesW(
     DWORD                dwFlags,
     LONG_PTR             lParam)
 {
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
+    ENUM_UILANG_CALLBACK enum_uilang;
+
+    DPRINT("%p, %x, %lx\n", lpUILanguageEnumProc, dwFlags, lParam);
+
+
+    if(!lpUILanguageEnumProc) {
+	SetLastError(ERROR_INVALID_PARAMETER);
+	return FALSE;
+    }
+    if(dwFlags) {
+	SetLastError(ERROR_INVALID_FLAGS);
+	return FALSE;
+    }
+
+    enum_uilang.u.procW = lpUILanguageEnumProc;
+    enum_uilang.flags = dwFlags;
+    enum_uilang.param = lParam;
+
+    EnumResourceLanguagesW( hCurrentModule, (LPCWSTR)RT_STRING,
+                            (LPCWSTR)LOCALE_ILANGUAGE, enum_uilang_proc_w,
+                            (LONG_PTR)&enum_uilang);
+    return TRUE;
 }
 
 /*
@@ -1285,6 +1523,35 @@ GetUserDefaultUILanguage(VOID)
 }
 
 
+/***********************************************************************
+ *		create_registry_key
+ *
+ * Create the Control Panel\\International registry key.
+ */
+static inline HANDLE create_registry_key(void)
+{
+    static const WCHAR intlW[] = {'C','o','n','t','r','o','l',' ','P','a','n','e','l','\\',
+                                  'I','n','t','e','r','n','a','t','i','o','n','a','l',0};
+    OBJECT_ATTRIBUTES attr;
+    UNICODE_STRING nameW;
+    HANDLE hkey;
+
+    if (RtlOpenCurrentUser( KEY_ALL_ACCESS, &hkey ) != STATUS_SUCCESS) return 0;
+
+    attr.Length = sizeof(attr);
+    attr.RootDirectory = hkey;
+    attr.ObjectName = &nameW;
+    attr.Attributes = 0;
+    attr.SecurityDescriptor = NULL;
+    attr.SecurityQualityOfService = NULL;
+    RtlInitUnicodeString( &nameW, intlW );
+
+    if (NtCreateKey( &hkey, KEY_ALL_ACCESS, &attr, 0, NULL, 0, NULL ) != STATUS_SUCCESS) hkey = 0;
+    NtClose( attr.RootDirectory );
+    return hkey;
+}
+
+
 /*
  * @unimplemented
  */
@@ -1293,8 +1560,36 @@ STDCALL
 GetUserGeoID(
     GEOCLASS    GeoClass)
 {
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
+    GEOID ret = GEOID_NOT_AVAILABLE;
+    static const WCHAR geoW[] = {'G','e','o',0};
+    static const WCHAR nationW[] = {'N','a','t','i','o','n',0};
+    WCHAR bufferW[40], *end;
+    DWORD count;
+    HANDLE hkey, hSubkey = 0;
+    UNICODE_STRING keyW;
+    const KEY_VALUE_PARTIAL_INFORMATION *info = (KEY_VALUE_PARTIAL_INFORMATION *)bufferW;
+    RtlInitUnicodeString( &keyW, nationW );
+    count = sizeof(bufferW);
+
+    if(!(hkey = create_registry_key())) return ret;
+
+    switch( GeoClass ){
+    case GEOCLASS_NATION:
+        if ((hSubkey = NLS_RegOpenKey(hkey, geoW)))
+        {
+            if((NtQueryValueKey(hSubkey, &keyW, KeyValuePartialInformation,
+                                (LPBYTE)bufferW, count, &count) == STATUS_SUCCESS ) && info->DataLength)
+                ret = wcstol((LPCWSTR)info->Data, &end, 10);
+        }
+        break;
+    case GEOCLASS_REGION:
+        DPRINT("GEOCLASS_REGION not handled yet\n");
+        break;
+    }
+
+    NtClose(hkey);
+    if (hSubkey) NtClose(hSubkey);
+    return ret;
 }
 
 
@@ -1806,15 +2101,44 @@ SetUserDefaultUILanguage(LANGID LangId)
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 STDCALL
 SetUserGeoID(
     GEOID       GeoId)
 {
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
+    static const WCHAR geoW[] = {'G','e','o',0};
+    static const WCHAR nationW[] = {'N','a','t','i','o','n',0};
+    static const WCHAR formatW[] = {'%','i',0};
+    UNICODE_STRING nameW,keyW;
+    WCHAR bufferW[10];
+    OBJECT_ATTRIBUTES attr;
+    HANDLE hkey;
+
+    if(!(hkey = create_registry_key())) return FALSE;
+
+    attr.Length = sizeof(attr);
+    attr.RootDirectory = hkey;
+    attr.ObjectName = &nameW;
+    attr.Attributes = 0;
+    attr.SecurityDescriptor = NULL;
+    attr.SecurityQualityOfService = NULL;
+    RtlInitUnicodeString( &nameW, geoW );
+    RtlInitUnicodeString( &keyW, nationW );
+
+    if (NtCreateKey( &hkey, KEY_ALL_ACCESS, &attr, 0, NULL, 0, NULL ) != STATUS_SUCCESS)
+
+    {
+        NtClose(attr.RootDirectory);
+        return FALSE;
+    }
+
+    swprintf(bufferW, formatW, GeoId);
+    NtSetValueKey(hkey, &keyW, 0, REG_SZ, bufferW, (wcslen(bufferW) + 1) * sizeof(WCHAR));
+    NtClose(attr.RootDirectory);
+    NtClose(hkey);
+    return TRUE;
 }
 
 
