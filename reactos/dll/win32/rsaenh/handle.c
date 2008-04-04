@@ -193,10 +193,10 @@ int alloc_handle_table(HANDLETABLE **lplpTable)
 int release_handle_table(HANDLETABLE *lpTable) 
 {
     TRACE("(lpTable=%p)\n", lpTable);
-        
+
     release_all_handles(lpTable);
     destroy_handle_table(lpTable);
-    return (int)HeapFree(GetProcessHeap(), 0, lpTable);
+    return HeapFree(GetProcessHeap(), 0, lpTable);
 }
 
 /******************************************************************************

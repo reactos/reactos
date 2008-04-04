@@ -75,8 +75,7 @@ typedef struct tagCRYPTHASH
 #define RSAENH_MAX_BLOCK_SIZE      24
 #define RSAENH_KEYSTATE_IDLE       0
 #define RSAENH_KEYSTATE_ENCRYPTING 1
-#define RSAENH_KEYSTATE_DECRYPTING 2
-#define RSAENH_KEYSTATE_MASTERKEY  3
+#define RSAENH_KEYSTATE_MASTERKEY  2
 typedef struct _RSAENH_SCHANNEL_INFO 
 {
     SCHANNEL_ALG saEncAlg;
@@ -549,7 +548,7 @@ static BOOL copy_hmac_info(PHMAC_INFO *dst, const HMAC_INFO *src) {
     if (!src) return FALSE;
     *dst = HeapAlloc(GetProcessHeap(), 0, sizeof(HMAC_INFO));
     if (!*dst) return FALSE;
-    memcpy(*dst, src, sizeof(HMAC_INFO));
+    **dst = *src;
     (*dst)->pbInnerString = NULL;
     (*dst)->pbOuterString = NULL;
     if ((*dst)->cbInnerString == 0) (*dst)->cbInnerString = RSAENH_HMAC_DEF_PAD_LEN;
@@ -828,8 +827,8 @@ static HCRYPTKEY new_key(HCRYPTPROV hProv, ALG_ID aiAlgid, DWORD dwFlags, CRYPTK
             }
     }
 
-    hCryptKey = (HCRYPTKEY)new_object(&handle_table, sizeof(CRYPTKEY), RSAENH_MAGIC_KEY, 
-                                      destroy_key, (OBJECTHDR**)&pCryptKey);
+    hCryptKey = new_object(&handle_table, sizeof(CRYPTKEY), RSAENH_MAGIC_KEY,
+                           destroy_key, (OBJECTHDR**)&pCryptKey);
     if (hCryptKey != (HCRYPTKEY)INVALID_HANDLE_VALUE)
     {
         pCryptKey->aiAlgid = aiAlgid;
@@ -1095,8 +1094,8 @@ static HCRYPTPROV new_key_container(PCCH pszContainerName, DWORD dwFlags, const 
     KEYCONTAINER *pKeyContainer;
     HCRYPTPROV hKeyContainer;
 
-    hKeyContainer = (HCRYPTPROV)new_object(&handle_table, sizeof(KEYCONTAINER), RSAENH_MAGIC_CONTAINER,
-                                           destroy_key_container, (OBJECTHDR**)&pKeyContainer);
+    hKeyContainer = new_object(&handle_table, sizeof(KEYCONTAINER), RSAENH_MAGIC_CONTAINER,
+                               destroy_key_container, (OBJECTHDR**)&pKeyContainer);
     if (hKeyContainer != (HCRYPTPROV)INVALID_HANDLE_VALUE)
     {
         lstrcpynA(pKeyContainer->szName, pszContainerName, MAX_PATH);
@@ -1670,10 +1669,10 @@ BOOL WINAPI RSAENH_CPCreateHash(HCRYPTPROV hProv, ALG_ID Algid, HCRYPTKEY hKey, 
         }
     }
 
-    *phHash = (HCRYPTHASH)new_object(&handle_table, sizeof(CRYPTHASH), RSAENH_MAGIC_HASH,
-                                     destroy_hash, (OBJECTHDR**)&pCryptHash);
+    *phHash = new_object(&handle_table, sizeof(CRYPTHASH), RSAENH_MAGIC_HASH,
+                         destroy_hash, (OBJECTHDR**)&pCryptHash);
     if (!pCryptHash) return FALSE;
-    
+
     pCryptHash->aiAlgid = Algid;
     pCryptHash->hKey = hKey;
     pCryptHash->hProv = hProv;
@@ -1834,11 +1833,11 @@ BOOL WINAPI RSAENH_CPDuplicateHash(HCRYPTPROV hUID, HCRYPTHASH hHash, DWORD *pdw
         return FALSE;
     }
 
-    *phHash = (HCRYPTHASH)new_object(&handle_table, sizeof(CRYPTHASH), RSAENH_MAGIC_HASH, 
-                                     destroy_hash, (OBJECTHDR**)&pDestHash);
+    *phHash = new_object(&handle_table, sizeof(CRYPTHASH), RSAENH_MAGIC_HASH,
+                         destroy_hash, (OBJECTHDR**)&pDestHash);
     if (*phHash != (HCRYPTHASH)INVALID_HANDLE_VALUE)
     {
-        memcpy(pDestHash, pSrcHash, sizeof(CRYPTHASH));
+        *pDestHash = *pSrcHash;
         duplicate_hash_impl(pSrcHash->aiAlgid, &pSrcHash->context, &pDestHash->context);
         copy_hmac_info(&pDestHash->pHMACInfo, pSrcHash->pHMACInfo);
         copy_data_blob(&pDestHash->tpPRFParams.blobLabel, &pSrcHash->tpPRFParams.blobLabel);
@@ -1890,11 +1889,11 @@ BOOL WINAPI RSAENH_CPDuplicateKey(HCRYPTPROV hUID, HCRYPTKEY hKey, DWORD *pdwRes
         return FALSE;
     }
 
-    *phKey = (HCRYPTKEY)new_object(&handle_table, sizeof(CRYPTKEY), RSAENH_MAGIC_KEY, destroy_key, 
-                                   (OBJECTHDR**)&pDestKey);
+    *phKey = new_object(&handle_table, sizeof(CRYPTKEY), RSAENH_MAGIC_KEY, destroy_key,
+                        (OBJECTHDR**)&pDestKey);
     if (*phKey != (HCRYPTKEY)INVALID_HANDLE_VALUE)
     {
-        memcpy(pDestKey, pSrcKey, sizeof(CRYPTKEY));
+        *pDestKey = *pSrcKey;
         copy_data_blob(&pDestKey->siSChannelInfo.blobServerRandom,
                        &pSrcKey->siSChannelInfo.blobServerRandom);
         copy_data_blob(&pDestKey->siSChannelInfo.blobClientRandom, 
@@ -2115,9 +2114,9 @@ BOOL WINAPI RSAENH_CPDecrypt(HCRYPTPROV hProv, HCRYPTKEY hKey, HCRYPTHASH hHash,
     }
 
     if (pCryptKey->dwState == RSAENH_KEYSTATE_IDLE) 
-        pCryptKey->dwState = RSAENH_KEYSTATE_DECRYPTING;
+        pCryptKey->dwState = RSAENH_KEYSTATE_ENCRYPTING;
 
-    if (pCryptKey->dwState != RSAENH_KEYSTATE_DECRYPTING)
+    if (pCryptKey->dwState != RSAENH_KEYSTATE_ENCRYPTING)
     {
         SetLastError(NTE_BAD_DATA);
         return FALSE;
@@ -3028,11 +3027,11 @@ BOOL WINAPI RSAENH_CPGetProvParam(HCRYPTPROV hProv, DWORD dwParam, BYTE *pbData,
     DWORD dwTemp;
     HKEY hKey;
    
-    /* This is for dwParam 41, which does not seem to be documented
-     * on MSDN. IE6 SP1 asks for it in the 'About' dialog, however.
+    /* This is for dwParam PP_CRYPT_COUNT_KEY_USE.
+     * IE6 SP1 asks for it in the 'About' dialog.
      * Returning this BLOB seems to satisfy IE. The marked 0x00 seem 
      * to be 'don't care's. If you know anything more specific about
-     * provider parameter 41, please report to wine-devel@winehq.org */
+     * this provider parameter, please report to wine-devel@winehq.org */
     static CONST BYTE abWTF[96] = { 
         0xb0, 0x25,     0x63,     0x86, 0x9c, 0xab,     0xb6,     0x37, 
         0xe8, 0x82, /**/0x00,/**/ 0x72, 0x06, 0xb2, /**/0x00,/**/ 0x3b, 
@@ -3176,7 +3175,7 @@ BOOL WINAPI RSAENH_CPGetProvParam(HCRYPTPROV hProv, DWORD dwParam, BYTE *pbData,
                                   sizeof(PROV_ENUMALGS_EX));
             }
 
-        case 41: /* Undocumented. Asked for by IE About dialog */
+        case PP_CRYPT_COUNT_KEY_USE: /* Asked for by IE About dialog */
             return copy_param(pbData, pdwDataLen, abWTF, sizeof(abWTF));
 
         default:
