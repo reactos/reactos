@@ -7,7 +7,7 @@
 @ stub CreateStdAccessibleProxyW
 @ stdcall -private DllRegisterServer()
 @ stdcall -private DllUnregisterServer()
-@ stub GetOleaccVersionInfo
+@ stdcall GetOleaccVersionInfo(ptr ptr)
 @ stub GetRoleTextA
 @ stub GetRoleTextW
 @ stub GetStateTextA

@@ -61,3 +61,9 @@ HRESULT WINAPI DllUnregisterServer(void)
     FIXME("\n");
     return S_OK;
 }
+
+void WINAPI GetOleaccVersionInfo(DWORD* pVersion, DWORD* pBuild)
+{
+    *pVersion = MAKELONG(2,4); /* Windows XP version of oleacc: 4.2.5406.0 */
+    *pBuild = MAKELONG(0,5406);
+}
