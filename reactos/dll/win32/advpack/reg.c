@@ -210,7 +210,7 @@ static HRESULT write_predefined_strings(HMODULE hm, LPCWSTR ini_path)
  * substitution table, and executes the INF.
  *
  * PARAMS
- *   hm         [I] Module that contains the REGINST resouce.
+ *   hm         [I] Module that contains the REGINST resource.
  *   pszSection [I] The INF section to execute.
  *   pstTable   [I] Table of string substitutions.
  * 

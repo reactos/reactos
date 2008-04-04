@@ -514,7 +514,7 @@ HRESULT WINAPI DelNodeRunDLL32W(HWND hWnd, HINSTANCE hInst, LPWSTR cmdline, INT 
     return res;
 }
 
-/* The following defintions were copied from dlls/cabinet/cabinet.h */
+/* The following definitions were copied from dlls/cabinet/cabinet.h */
 
 /* SESSION Operation */
 #define EXTRACT_FILLFILELIST  0x00000001
@@ -564,9 +564,7 @@ static LPSTR convert_file_list(LPCSTR FileList, DWORD *dwNumFiles)
     dwLen = last - first + 3; /* room for double-null termination */
     szConvertedList = HeapAlloc(GetProcessHeap(), 0, dwLen);
     lstrcpynA(szConvertedList, first, dwLen - 1);
-
     szConvertedList[dwLen - 1] = '\0';
-    szConvertedList[dwLen] = '\0';
 
     /* empty list */
     if (!lstrlenA(szConvertedList))

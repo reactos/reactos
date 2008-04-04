@@ -8,6 +8,11 @@
 	<define name="__WINESRC__" />
 	<define name="WINVER">0x600</define>
 	<define name="_WIN32_WINNT">0x600</define>
+	<file>advpack.c</file>
+	<file>files.c</file>
+	<file>install.c</file>
+	<file>reg.c</file>
+	<file>advpack.spec</file>
 	<library>wine</library>
 	<library>ole32</library>
 	<library>setupapi</library>
@@ -15,10 +20,5 @@
 	<library>advapi32</library>
 	<library>kernel32</library>
 	<library>ntdll</library>
-	<file>advpack.c</file>
-	<file>files.c</file>
-	<file>install.c</file>
-	<file>reg.c</file>
-	<file>advpack.spec</file>
 </module>
 </group>
