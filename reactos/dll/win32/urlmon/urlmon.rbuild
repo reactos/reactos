@@ -9,18 +9,10 @@
 	<define name="__WINESRC__" />
 	<define name="WINVER">0x600</define>
 	<define name="_WIN32_WINNT">0x600</define>
-	<library>wine</library>
-	<library>ole32</library>
-	<library>shlwapi</library>
-	<library>wininet</library>
-	<library>user32</library>
-	<library>advapi32</library>
-	<library>kernel32</library>
-	<library>ntdll</library>
-	<library>uuid</library>
 	<file>bindctx.c</file>
 	<file>binding.c</file>
 	<file>bindprot.c</file>
+	<file>download.c</file>
 	<file>file.c</file>
 	<file>format.c</file>
 	<file>ftp.c</file>
@@ -35,5 +27,14 @@
 	<file>urlmon_main.c</file>
 	<file>rsrc.rc</file>
 	<file>urlmon.spec</file>
+	<library>wine</library>
+	<library>ole32</library>
+	<library>shlwapi</library>
+	<library>wininet</library>
+	<library>user32</library>
+	<library>advapi32</library>
+	<library>kernel32</library>
+	<library>uuid</library>
+	<library>ntdll</library>
 </module>
 </group>

@@ -493,10 +493,7 @@ static HRESULT WINAPI URLMonikerImpl_BindToObject(IMoniker* iface,
 /******************************************************************************
  *        URLMoniker_BindToStorage
  ******************************************************************************/
-static HRESULT URLMonikerImpl_BindToStorage_hack(LPCWSTR URLName,
-						   IBindCtx* pbc,
-						   REFIID riid,
-						   VOID** ppvObject)
+static HRESULT URLMonikerImpl_BindToStorage_hack(LPCWSTR URLName, IBindCtx* pbc, VOID** ppvObject)
 {
     HRESULT hres;
     BINDINFO bi;
@@ -505,12 +502,7 @@ static HRESULT URLMonikerImpl_BindToStorage_hack(LPCWSTR URLName,
     Binding *bind;
     int len;
 
-    WARN("(%s %p %s %p)\n", debugstr_w(URLName), pbc, debugstr_guid(riid), ppvObject);
-
-    if(!IsEqualIID(&IID_IStream, riid)) {
-	FIXME("unsupported iid\n");
-	return E_NOTIMPL;
-    }
+    WARN("(%s %p %p)\n", debugstr_w(URLName), pbc, ppvObject);
 
     bind = heap_alloc_zero(sizeof(Binding));
     bind->lpVtbl = &BindingVtbl;
@@ -741,10 +733,11 @@ static HRESULT WINAPI URLMonikerImpl_BindToStorage(IMoniker* iface,
         return E_FAIL;
     }
 
-    if(url.nScheme== INTERNET_SCHEME_HTTPS
-       || url.nScheme== INTERNET_SCHEME_FTP
-       || url.nScheme == INTERNET_SCHEME_GOPHER)
-        return URLMonikerImpl_BindToStorage_hack(This->URLName, pbc, riid, ppvObject);
+    if(IsEqualGUID(&IID_IStream, riid) &&
+       (  url.nScheme == INTERNET_SCHEME_HTTPS
+       || url.nScheme == INTERNET_SCHEME_FTP
+       || url.nScheme == INTERNET_SCHEME_GOPHER))
+        return URLMonikerImpl_BindToStorage_hack(This->URLName, pbc, ppvObject);
 
     TRACE("(%p)->(%p %p %s %p)\n", This, pbc, pmkToLeft, debugstr_guid(riid), ppvObject);
 
@@ -1186,218 +1179,25 @@ HRESULT WINAPI BindAsyncMoniker(IMoniker *pmk, DWORD grfOpt, IBindStatusCallback
 }
 
 /***********************************************************************
- *           URLDownloadToFileA (URLMON.@)
- *
- * Downloads URL szURL to rile szFileName and call lpfnCB callback to
- * report progress.
- *
- * PARAMS
- *  pCaller    [I] controlling IUnknown interface.
- *  szURL      [I] URL of the file to download
- *  szFileName [I] file name to store the content of the URL
- *  dwReserved [I] reserved - set to 0
- *  lpfnCB     [I] callback for progress report
- *
- * RETURNS
- *  S_OK on success
- *  E_OUTOFMEMORY when going out of memory
+ *           MkParseDisplayNameEx (URLMON.@)
  */
-HRESULT WINAPI URLDownloadToFileA(LPUNKNOWN pCaller,
-				  LPCSTR szURL,
-				  LPCSTR szFileName,
-				  DWORD dwReserved,
-				  LPBINDSTATUSCALLBACK lpfnCB)
+HRESULT WINAPI MkParseDisplayNameEx(IBindCtx *pbc, LPCWSTR szDisplayName, ULONG *pchEaten, LPMONIKER *ppmk)
 {
-    UNICODE_STRING szURL_w, szFileName_w;
+    TRACE("(%p %s %p %p)\n", pbc, debugstr_w(szDisplayName), pchEaten, ppmk);
 
-    if ((szURL == NULL) || (szFileName == NULL)) {
-	FIXME("(%p,%s,%s,%08x,%p) cannot accept NULL strings !\n", pCaller, debugstr_a(szURL), debugstr_a(szFileName), dwReserved, lpfnCB);
-	return E_INVALIDARG; /* The error code is not specified in this case... */
-    }
-    
-    if (RtlCreateUnicodeStringFromAsciiz(&szURL_w, szURL)) {
-	if (RtlCreateUnicodeStringFromAsciiz(&szFileName_w, szFileName)) {
-	    HRESULT ret = URLDownloadToFileW(pCaller, szURL_w.Buffer, szFileName_w.Buffer, dwReserved, lpfnCB);
+    if(is_registered_protocol(szDisplayName)) {
+        HRESULT hres;
 
-	    RtlFreeUnicodeString(&szURL_w);
-	    RtlFreeUnicodeString(&szFileName_w);
-	    
-	    return ret;
-	} else {
-	    RtlFreeUnicodeString(&szURL_w);
-	}
+        hres = CreateURLMoniker(NULL, szDisplayName, ppmk);
+        if(SUCCEEDED(hres)) {
+            *pchEaten = strlenW(szDisplayName);
+            return hres;
+        }
     }
-    
-    FIXME("(%p,%s,%s,%08x,%p) could not allocate W strings !\n", pCaller, szURL, szFileName, dwReserved, lpfnCB);
-    return E_OUTOFMEMORY;
+
+    return MkParseDisplayName(pbc, szDisplayName, pchEaten, ppmk);
 }
 
-/***********************************************************************
- *           URLDownloadToFileW (URLMON.@)
- *
- * Downloads URL szURL to rile szFileName and call lpfnCB callback to
- * report progress.
- *
- * PARAMS
- *  pCaller    [I] controlling IUnknown interface.
- *  szURL      [I] URL of the file to download
- *  szFileName [I] file name to store the content of the URL
- *  dwReserved [I] reserved - set to 0
- *  lpfnCB     [I] callback for progress report
- *
- * RETURNS
- *  S_OK on success
- *  E_OUTOFMEMORY when going out of memory
- */
-HRESULT WINAPI URLDownloadToFileW(LPUNKNOWN pCaller,
-				  LPCWSTR szURL,
-				  LPCWSTR szFileName,
-				  DWORD dwReserved,
-				  LPBINDSTATUSCALLBACK lpfnCB)
-{
-    HINTERNET hinternet, hcon, hreq;
-    BOOL r;
-    CHAR buffer[0x1000];
-    DWORD sz, total, written;
-    DWORD total_size = 0xFFFFFFFF, arg_size = sizeof(total_size);
-    URL_COMPONENTSW url;
-    WCHAR host[0x80], path[0x100];
-    HANDLE hfile;
-    static const WCHAR wszAppName[]={'u','r','l','m','o','n','.','d','l','l',0};
-
-    /* Note: all error codes would need to be checked agains real Windows behaviour... */
-    TRACE("(%p,%s,%s,%08x,%p) stub!\n", pCaller, debugstr_w(szURL), debugstr_w(szFileName), dwReserved, lpfnCB);
-
-    if ((szURL == NULL) || (szFileName == NULL)) {
-	FIXME(" cannot accept NULL strings !\n");
-	return E_INVALIDARG;
-    }
-
-    /* Would be better to use the application name here rather than 'urlmon' :-/ */
-    hinternet = InternetOpenW(wszAppName, INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
-    if (hinternet == NULL) {
-	return E_OUTOFMEMORY;
-    }                                                                                                                             
-
-    memset(&url, 0, sizeof(url));
-    url.dwStructSize = sizeof(url);
-    url.lpszHostName = host;
-    url.dwHostNameLength = sizeof(host);
-    url.lpszUrlPath = path;
-    url.dwUrlPathLength = sizeof(path);
-
-    if (!InternetCrackUrlW(szURL, 0, 0, &url)) {
-	InternetCloseHandle(hinternet);
-	return E_OUTOFMEMORY;
-    }
-
-    if (lpfnCB) {
-	if (IBindStatusCallback_OnProgress(lpfnCB, 0, 0, BINDSTATUS_CONNECTING, url.lpszHostName) == E_ABORT) {
-	    InternetCloseHandle(hinternet);
-	    return S_OK;
-	}
-    }
-    
-    hcon = InternetConnectW(hinternet, url.lpszHostName, url.nPort,
-                            url.lpszUserName, url.lpszPassword,
-                            INTERNET_SERVICE_HTTP, 0, 0);
-    if (!hcon) {
-	InternetCloseHandle(hinternet);
-	return E_OUTOFMEMORY;
-    }
-    
-    hreq = HttpOpenRequestW(hcon, NULL, url.lpszUrlPath, NULL, NULL, NULL, 0, 0);
-    if (!hreq) {
-	InternetCloseHandle(hinternet);
-	InternetCloseHandle(hcon);
-	return E_OUTOFMEMORY;
-    }                                                                                                                             
-
-    if (!HttpSendRequestW(hreq, NULL, 0, NULL, 0)) {
-	InternetCloseHandle(hinternet);
-	InternetCloseHandle(hcon);
-	InternetCloseHandle(hreq);
-	return E_OUTOFMEMORY;
-    }
-    
-    if (HttpQueryInfoW(hreq, HTTP_QUERY_CONTENT_LENGTH | HTTP_QUERY_FLAG_NUMBER,
-		       &total_size, &arg_size, NULL)) {
-	TRACE(" total size : %d\n", total_size);
-    }
-    
-    hfile = CreateFileW(szFileName, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS,
-                        FILE_ATTRIBUTE_NORMAL, NULL );
-    if (hfile == INVALID_HANDLE_VALUE) {
-	return E_ACCESSDENIED;
-    }
-    
-    if (lpfnCB) {
-	if (IBindStatusCallback_OnProgress(lpfnCB, 0, total_size != 0xFFFFFFFF ? total_size : 0,
-					   BINDSTATUS_BEGINDOWNLOADDATA, szURL) == E_ABORT) {
-	    InternetCloseHandle(hreq);
-	    InternetCloseHandle(hcon);
-	    InternetCloseHandle(hinternet);
-	    CloseHandle(hfile);
-	    return S_OK;
-	}
-    }
-    
-    total = 0;
-    while (1) {
-	r = InternetReadFile(hreq, buffer, sizeof(buffer), &sz);
-	if (!r) {
-	    InternetCloseHandle(hreq);
-	    InternetCloseHandle(hcon);
-	    InternetCloseHandle(hinternet);
-	    
-	    CloseHandle(hfile);
-	    return E_OUTOFMEMORY;	    
-	}
-	if (!sz)
-	    break;
-	
-	total += sz;
-
-	if (lpfnCB) {
-	    if (IBindStatusCallback_OnProgress(lpfnCB, total, total_size != 0xFFFFFFFF ? total_size : 0,
-					       BINDSTATUS_DOWNLOADINGDATA, szURL) == E_ABORT) {
-		InternetCloseHandle(hreq);
-		InternetCloseHandle(hcon);
-		InternetCloseHandle(hinternet);
-		CloseHandle(hfile);
-		return S_OK;
-	    }
-	}
-	
-	if (!WriteFile(hfile, buffer, sz, &written, NULL)) {
-	    InternetCloseHandle(hreq);
-	    InternetCloseHandle(hcon);
-	    InternetCloseHandle(hinternet);
-	    
-	    CloseHandle(hfile);
-	    return E_OUTOFMEMORY;
-	}
-    }
-
-    if (lpfnCB) {
-	if (IBindStatusCallback_OnProgress(lpfnCB, total, total_size != 0xFFFFFFFF ? total_size : 0,
-					   BINDSTATUS_ENDDOWNLOADDATA, szURL) == E_ABORT) {
-	    InternetCloseHandle(hreq);
-	    InternetCloseHandle(hcon);
-	    InternetCloseHandle(hinternet);
-	    CloseHandle(hfile);
-	    return S_OK;
-	}
-    }
-    
-    InternetCloseHandle(hreq);
-    InternetCloseHandle(hcon);
-    InternetCloseHandle(hinternet);
-    
-    CloseHandle(hfile);
-
-    return S_OK;
-}
 
 /***********************************************************************
  *           URLDownloadToCacheFileA (URLMON.@)

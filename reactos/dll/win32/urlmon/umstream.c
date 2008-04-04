@@ -221,7 +221,7 @@ static HRESULT WINAPI IStream_fnRead (IStream * iface,
     if ( !pcbRead)
         pcbRead = &dwBytesRead;
 
-    if ( ! ReadFile( This->handle, pv, cb, (LPDWORD)pcbRead, NULL ) )
+    if ( ! ReadFile( This->handle, pv, cb, pcbRead, NULL ) )
        return S_FALSE;
 
     if (!*pcbRead)

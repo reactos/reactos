@@ -23,65 +23,27 @@
 
 #include "urlmon_main.h"
 #include "winreg.h"
+#include "wininet.h"
 
 #include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(urlmon);
 
-/***********************************************************************
- *           InternetSecurityManager implementation
- *
- */
-typedef struct {
-    const IInternetSecurityManagerVtbl* lpInternetSecurityManagerVtbl;
+static const WCHAR fileW[] = {'f','i','l','e',0};
 
-    LONG ref;
-
-    IInternetSecurityMgrSite *mgrsite;
-    IInternetSecurityManager *custom_manager;
-} SecManagerImpl;
-
-#define SECMGR_THIS(iface) DEFINE_THIS(SecManagerImpl, InternetSecurityManager, iface)
-
-static HRESULT map_url_to_zone(LPCWSTR url, DWORD *zone)
+static HRESULT get_zone_from_reg(LPCWSTR schema, DWORD *zone)
 {
-    WCHAR schema[64];
-    DWORD res, size=0;
+    DWORD res, size;
     HKEY hkey;
-    HRESULT hres;
 
     static const WCHAR wszZoneMapProtocolKey[] =
         {'S','o','f','t','w','a','r','e','\\',
-                    'M','i','c','r','o','s','o','f','t','\\',
-                    'W','i','n','d','o','w','s','\\',
-                    'C','u','r','r','e','n','t','V','e','r','s','i','o','n','\\',
-                    'I','n','t','e','r','n','e','t',' ','S','e','t','t','i','n','g','s','\\',
-                    'Z','o','n','e','M','a','p','\\',
-                    'P','r','o','t','o','c','o','l','D','e','f','a','u','l','t','s',0};
-    static const WCHAR wszFile[] = {'f','i','l','e',0};
-
-    *zone = -1;
-
-    hres = CoInternetParseUrl(url, PARSE_SCHEMA, 0, schema, sizeof(schema)/sizeof(WCHAR), &size, 0);
-    if(FAILED(hres))
-        return hres;
-    if(!*schema)
-        return 0x80041001;
-
-    /* file protocol is a special case */
-    if(!strcmpW(schema, wszFile)) {
-        WCHAR path[MAX_PATH];
-
-        hres = CoInternetParseUrl(url, PARSE_PATH_FROM_URL, 0, path,
-                sizeof(path)/sizeof(WCHAR), &size, 0);
-
-        if(SUCCEEDED(hres) && strchrW(path, '\\')) {
-            *zone = 0;
-            return S_OK;
-        }
-    }
-
-    WARN("domains are not yet implemented\n");
+         'M','i','c','r','o','s','o','f','t','\\',
+         'W','i','n','d','o','w','s','\\',
+         'C','u','r','r','e','n','t','V','e','r','s','i','o','n','\\',
+         'I','n','t','e','r','n','e','t',' ','S','e','t','t','i','n','g','s','\\',
+         'Z','o','n','e','M','a','p','\\',
+         'P','r','o','t','o','c','o','l','D','e','f','a','u','l','t','s',0};
 
     res = RegOpenKeyW(HKEY_CURRENT_USER, wszZoneMapProtocolKey, &hkey);
     if(res != ERROR_SUCCESS) {
@@ -110,6 +72,171 @@ static HRESULT map_url_to_zone(LPCWSTR url, DWORD *zone)
     *zone = 3;
     return S_OK;
 }
+
+static HRESULT map_url_to_zone(LPCWSTR url, DWORD *zone, LPWSTR *ret_url)
+{
+    LPWSTR secur_url;
+    WCHAR schema[64];
+    DWORD size=0;
+    HRESULT hres;
+
+    secur_url = heap_alloc(INTERNET_MAX_URL_LENGTH*sizeof(WCHAR));
+    *zone = -1;
+
+    hres = CoInternetParseUrl(url, PARSE_SECURITY_URL, 0, secur_url, INTERNET_MAX_URL_LENGTH, &size, 0);
+    if(hres != S_OK)
+        strcpyW(secur_url, url);
+
+    hres = CoInternetParseUrl(secur_url, PARSE_SCHEMA, 0, schema, sizeof(schema)/sizeof(WCHAR), &size, 0);
+    if(FAILED(hres) || !*schema) {
+        heap_free(secur_url);
+        return E_INVALIDARG;
+    }
+
+    /* file protocol is a special case */
+    if(!strcmpW(schema, fileW)) {
+        WCHAR path[MAX_PATH], root[20];
+        WCHAR *ptr;
+
+        hres = CoInternetParseUrl(secur_url, PARSE_PATH_FROM_URL, 0, path,
+                sizeof(path)/sizeof(WCHAR), &size, 0);
+
+        if(SUCCEEDED(hres) && (ptr = strchrW(path, '\\')) && ptr-path < sizeof(root)/sizeof(WCHAR)) {
+            UINT type;
+
+            memcpy(root, path, (ptr-path)*sizeof(WCHAR));
+            root[ptr-path] = 0;
+
+            type = GetDriveTypeW(root);
+
+            switch(type) {
+            case DRIVE_UNKNOWN:
+            case DRIVE_NO_ROOT_DIR:
+                break;
+            case DRIVE_REMOVABLE:
+            case DRIVE_FIXED:
+            case DRIVE_CDROM:
+            case DRIVE_RAMDISK:
+                *zone = 0;
+                hres = S_OK;
+                break;
+            case DRIVE_REMOTE:
+                *zone = 3;
+                hres = S_OK;
+                break;
+            default:
+                FIXME("unsupported drive type %d\n", type);
+            }
+        }
+    }
+
+    if(*zone == -1) {
+        WARN("domains are not yet implemented\n");
+        hres = get_zone_from_reg(schema, zone);
+    }
+
+    if(FAILED(hres) || !ret_url)
+        heap_free(secur_url);
+    else
+        *ret_url = secur_url;
+
+    return hres;
+}
+
+static HRESULT open_zone_key(HKEY parent_key, DWORD zone, HKEY *hkey)
+{
+    static const WCHAR wszZonesKey[] =
+        {'S','o','f','t','w','a','r','e','\\',
+         'M','i','c','r','o','s','o','f','t','\\',
+         'W','i','n','d','o','w','s','\\',
+         'C','u','r','r','e','n','t','V','e','r','s','i','o','n','\\',
+         'I','n','t','e','r','n','e','t',' ','S','e','t','t','i','n','g','s','\\',
+         'Z','o','n','e','s','\\',0};
+    static const WCHAR wszFormat[] = {'%','s','%','l','d',0};
+
+    WCHAR key_name[sizeof(wszZonesKey)/sizeof(WCHAR)+8];
+    DWORD res;
+
+    wsprintfW(key_name, wszFormat, wszZonesKey, zone);
+
+    res = RegOpenKeyW(parent_key, key_name, hkey);
+
+    if(res != ERROR_SUCCESS) {
+        WARN("RegOpenKey failed\n");
+        return E_INVALIDARG;
+    }
+
+    return S_OK;
+}
+
+static HRESULT get_action_policy(DWORD zone, DWORD action, BYTE *policy, DWORD size, URLZONEREG zone_reg)
+{
+    HKEY parent_key;
+    HKEY hkey;
+    LONG res;
+    HRESULT hres;
+
+    switch(action) {
+    case URLACTION_SCRIPT_OVERRIDE_SAFETY:
+        *(DWORD*)policy = URLPOLICY_DISALLOW;
+        return S_OK;
+    }
+
+    switch(zone_reg) {
+    case URLZONEREG_DEFAULT:
+    case URLZONEREG_HKCU:
+        parent_key = HKEY_CURRENT_USER;
+        break;
+    case URLZONEREG_HKLM:
+        parent_key = HKEY_LOCAL_MACHINE;
+        break;
+    default:
+        WARN("Unknown URLZONEREG: %d\n", zone_reg);
+        return E_FAIL;
+    };
+
+    hres = open_zone_key(parent_key, zone, &hkey);
+    if(SUCCEEDED(hres)) {
+        WCHAR action_str[16];
+        DWORD len = size;
+
+        static const WCHAR formatW[] = {'%','X',0};
+
+        wsprintfW(action_str, formatW, action);
+
+        res = RegQueryValueExW(hkey, action_str, NULL, NULL, policy, &len);
+        if(res == ERROR_MORE_DATA) {
+            hres = E_INVALIDARG;
+        }else if(res == ERROR_FILE_NOT_FOUND) {
+            hres = E_FAIL;
+        }else if(res != ERROR_SUCCESS) {
+            ERR("RegQueryValue failed: %d\n", res);
+            hres = E_UNEXPECTED;
+        }
+
+        RegCloseKey(hkey);
+    }
+
+    if(FAILED(hres) && zone_reg == URLZONEREG_DEFAULT)
+        return get_action_policy(zone, action, policy, size, URLZONEREG_HKLM);
+
+    return hres;
+}
+
+/***********************************************************************
+ *           InternetSecurityManager implementation
+ *
+ */
+typedef struct {
+    const IInternetSecurityManagerVtbl* lpInternetSecurityManagerVtbl;
+
+    LONG ref;
+
+    IInternetSecurityMgrSite *mgrsite;
+    IInternetSecurityManager *custom_manager;
+} SecManagerImpl;
+
+#define SECMGR_THIS(iface) DEFINE_THIS(SecManagerImpl, InternetSecurityManager, iface)
 
 static HRESULT WINAPI SecManagerImpl_QueryInterface(IInternetSecurityManager* iface,REFIID riid,void** ppvObject)
 {
@@ -230,8 +357,6 @@ static HRESULT WINAPI SecManagerImpl_MapUrlToZone(IInternetSecurityManager *ifac
                                                   DWORD dwFlags)
 {
     SecManagerImpl *This = SECMGR_THIS(iface);
-    LPWSTR url;
-    DWORD size;
     HRESULT hres;
 
     TRACE("(%p)->(%s %p %08x)\n", iface, debugstr_w(pwszUrl), pdwZone, dwFlags);
@@ -251,26 +376,15 @@ static HRESULT WINAPI SecManagerImpl_MapUrlToZone(IInternetSecurityManager *ifac
     if(dwFlags)
         FIXME("not supported flags: %08x\n", dwFlags);
 
-    size = (strlenW(pwszUrl)+16) * sizeof(WCHAR);
-    url = heap_alloc(size);
-
-    hres = CoInternetParseUrl(pwszUrl, PARSE_SECURITY_URL, 0, url, size/sizeof(WCHAR), &size, 0);
-    if(FAILED(hres))
-        memcpy(url, pwszUrl, size);
-
-    hres = map_url_to_zone(url, pdwZone);
-
-    heap_free(url);
-
-    return hres;
+    return map_url_to_zone(pwszUrl, pdwZone, NULL);
 }
 
 static HRESULT WINAPI SecManagerImpl_GetSecurityId(IInternetSecurityManager *iface, 
         LPCWSTR pwszUrl, BYTE *pbSecurityId, DWORD *pcbSecurityId, DWORD_PTR dwReserved)
 {
     SecManagerImpl *This = SECMGR_THIS(iface);
-    LPWSTR buf, ptr, ptr2;
-    DWORD size, zone, len;
+    LPWSTR url, ptr, ptr2;
+    DWORD zone, len;
     HRESULT hres;
 
     static const WCHAR wszFile[] = {'f','i','l','e',':'};
@@ -291,26 +405,17 @@ static HRESULT WINAPI SecManagerImpl_GetSecurityId(IInternetSecurityManager *ifa
     if(dwReserved)
         FIXME("dwReserved is not supported\n");
 
-    len = strlenW(pwszUrl)+1;
-    buf = heap_alloc((len+16)*sizeof(WCHAR));
-
-    hres = CoInternetParseUrl(pwszUrl, PARSE_SECURITY_URL, 0, buf, len, &size, 0);
+    hres = map_url_to_zone(pwszUrl, &zone, &url);
     if(FAILED(hres))
-        memcpy(buf, pwszUrl, len*sizeof(WCHAR));
-
-    hres = map_url_to_zone(buf, &zone);
-    if(FAILED(hres)) {
-        heap_free(buf);
         return hres == 0x80041001 ? E_INVALIDARG : hres;
-    }
 
     /* file protocol is a special case */
-    if(strlenW(pwszUrl) >= sizeof(wszFile)/sizeof(WCHAR)
-            && !memcmp(buf, wszFile, sizeof(wszFile))) {
+    if(strlenW(url) >= sizeof(wszFile)/sizeof(WCHAR)
+            && !memcmp(url, wszFile, sizeof(wszFile)) && strchrW(url, '\\')) {
 
         static const BYTE secidFile[] = {'f','i','l','e',':'};
 
-        heap_free(buf);
+        heap_free(url);
 
         if(*pcbSecurityId < sizeof(secidFile)+sizeof(zone))
             return HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER);
@@ -322,7 +427,7 @@ static HRESULT WINAPI SecManagerImpl_GetSecurityId(IInternetSecurityManager *ifa
         return S_OK;
     }
 
-    ptr = strchrW(buf, ':');
+    ptr = strchrW(url, ':');
     ptr2 = ++ptr;
     while(*ptr2 == '/')
         ptr2++;
@@ -333,15 +438,15 @@ static HRESULT WINAPI SecManagerImpl_GetSecurityId(IInternetSecurityManager *ifa
     if(ptr)
         *ptr = 0;
 
-    len = WideCharToMultiByte(CP_ACP, 0, buf, -1, NULL, 0, NULL, NULL)-1;
+    len = WideCharToMultiByte(CP_ACP, 0, url, -1, NULL, 0, NULL, NULL)-1;
 
     if(len+sizeof(DWORD) > *pcbSecurityId) {
-        heap_free(buf);
+        heap_free(url);
         return HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER);
     }
 
-    WideCharToMultiByte(CP_ACP, 0, buf, -1, (LPSTR)pbSecurityId, -1, NULL, NULL);
-    heap_free(buf);
+    WideCharToMultiByte(CP_ACP, 0, url, -1, (LPSTR)pbSecurityId, len, NULL, NULL);
+    heap_free(url);
 
     *(DWORD*)(pbSecurityId+len) = zone;
 
@@ -358,6 +463,7 @@ static HRESULT WINAPI SecManagerImpl_ProcessUrlAction(IInternetSecurityManager *
                                                       DWORD dwFlags, DWORD dwReserved)
 {
     SecManagerImpl *This = SECMGR_THIS(iface);
+    DWORD zone, policy;
     HRESULT hres;
 
     TRACE("(%p)->(%s %08x %p %08x %p %08x %08x %08x)\n", iface, debugstr_w(pwszUrl), dwAction,
@@ -370,8 +476,36 @@ static HRESULT WINAPI SecManagerImpl_ProcessUrlAction(IInternetSecurityManager *
             return hres;
     }
 
-    FIXME("Default action is not implemented\n");
-    return E_NOTIMPL;
+    if(pContext || cbContext || dwFlags || dwReserved)
+        FIXME("Unsupported arguments\n");
+
+    if(!pwszUrl)
+        return E_INVALIDARG;
+
+    hres = map_url_to_zone(pwszUrl, &zone, NULL);
+    if(FAILED(hres))
+        return hres;
+
+    hres = get_action_policy(zone, dwAction, (BYTE*)&policy, sizeof(policy), URLZONEREG_DEFAULT);
+    if(FAILED(hres))
+        return hres;
+
+    TRACE("policy %x\n", policy);
+
+    switch(GetUrlPolicyPermissions(policy)) {
+    case URLPOLICY_ALLOW:
+    case URLPOLICY_CHANNEL_SOFTDIST_PRECACHE:
+        return S_OK;
+    case URLPOLICY_DISALLOW:
+        return S_FALSE;
+    case URLPOLICY_QUERY:
+        FIXME("URLPOLICY_QUERY not implemented\n");
+        return E_FAIL;
+    default:
+        FIXME("Not implemented policy %x\n", policy);
+    }
+
+    return E_FAIL;
 }
                                                
 
@@ -480,46 +614,6 @@ typedef struct {
     const IInternetZoneManagerVtbl* lpVtbl;
     LONG ref;
 } ZoneMgrImpl;
-
-static HRESULT open_zone_key(DWORD zone, HKEY *hkey, URLZONEREG zone_reg)
-{
-    static const WCHAR wszZonesKey[] =
-        {'S','o','f','t','w','a','r','e','\\',
-            'M','i','c','r','o','s','o','f','t','\\',
-            'W','i','n','d','o','w','s','\\',
-            'C','u','r','r','e','n','t','V','e','r','s','i','o','n','\\',
-            'I','n','t','e','r','n','e','t',' ','S','e','t','t','i','n','g','s','\\',
-            'Z','o','n','e','s','\\',0};
-    static const WCHAR wszFormat[] = {'%','s','%','l','d',0};
-
-    WCHAR key_name[sizeof(wszZonesKey)/sizeof(WCHAR)+8];
-    HKEY parent_key;
-    DWORD res;
-
-    switch(zone_reg) {
-    case URLZONEREG_DEFAULT: /* FIXME: TEST */
-    case URLZONEREG_HKCU:
-        parent_key = HKEY_CURRENT_USER;
-        break;
-    case URLZONEREG_HKLM:
-        parent_key = HKEY_LOCAL_MACHINE;
-        break;
-    default:
-        WARN("Unknown URLZONEREG: %d\n", zone_reg);
-        return E_FAIL;
-    };
-
-    wsprintfW(key_name, wszFormat, wszZonesKey, zone);
-
-    res = RegOpenKeyW(parent_key, key_name, hkey);
-
-    if(res != ERROR_SUCCESS) {
-        WARN("RegOpenKey failed\n");
-        return E_INVALIDARG;
-    }
-
-    return S_OK;
-}
 
 /********************************************************************
  *      IInternetZoneManager_QueryInterface
@@ -634,39 +728,13 @@ static HRESULT WINAPI ZoneMgrImpl_SetZoneCustomPolicy(IInternetZoneManager* ifac
 static HRESULT WINAPI ZoneMgrImpl_GetZoneActionPolicy(IInternetZoneManager* iface,
         DWORD dwZone, DWORD dwAction, BYTE* pPolicy, DWORD cbPolicy, URLZONEREG urlZoneReg)
 {
-    WCHAR action[16];
-    HKEY hkey;
-    LONG res;
-    DWORD size = cbPolicy;
-    HRESULT hres;
-
-    static const WCHAR wszFormat[] = {'%','l','X',0};
-
     TRACE("(%p)->(%d %08x %p %d %d)\n", iface, dwZone, dwAction, pPolicy,
             cbPolicy, urlZoneReg);
 
     if(!pPolicy)
         return E_INVALIDARG;
 
-    hres = open_zone_key(dwZone, &hkey, urlZoneReg);
-    if(FAILED(hres))
-        return hres;
-
-    wsprintfW(action, wszFormat, dwAction);
-
-    res = RegQueryValueExW(hkey, action, NULL, NULL, pPolicy, &size);
-    if(res == ERROR_MORE_DATA) {
-        hres = E_INVALIDARG;
-    }else if(res == ERROR_FILE_NOT_FOUND) {
-        hres = E_FAIL;
-    }else if(res != ERROR_SUCCESS) {
-        ERR("RegQueryValue failed: %d\n", res);
-        hres = E_UNEXPECTED;
-    }
-
-    RegCloseKey(hkey);
-
-    return hres;
+    return get_action_policy(dwZone, dwAction, pPolicy, cbPolicy, urlZoneReg);
 }
 
 /********************************************************************

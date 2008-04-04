@@ -21,7 +21,7 @@
 @ stdcall CoInternetQueryInfo(ptr long long ptr long ptr long)
 @ stub CompareSecurityIds
 @ stub CopyBindInfo
-@ stub CopyStgMedium
+@ stdcall CopyStgMedium(ptr ptr)
 @ stdcall CreateAsyncBindCtx(long ptr ptr ptr)
 @ stdcall CreateAsyncBindCtxEx(ptr long ptr ptr ptr long)
 @ stdcall CreateFormatEnumerator(long ptr ptr)
@@ -53,7 +53,7 @@
 @ stub IsLoggingEnabledA
 @ stub IsLoggingEnabledW
 @ stdcall IsValidURL(ptr wstr long)
-@ stdcall MkParseDisplayNameEx(ptr ptr ptr ptr) ole32.MkParseDisplayName
+@ stdcall MkParseDisplayNameEx(ptr wstr ptr ptr)
 @ stdcall ObtainUserAgentString(long str ptr)
 @ stub PrivateCoInstall
 @ stdcall RegisterBindStatusCallback(ptr ptr ptr long)

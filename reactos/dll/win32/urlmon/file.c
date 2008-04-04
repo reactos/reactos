@@ -229,10 +229,14 @@ static HRESULT WINAPI FileProtocol_Read(IInternetProtocol *iface, void *pv,
 
     TRACE("(%p)->(%p %u %p)\n", This, pv, cb, pcbRead);
 
+    if (pcbRead)
+        *pcbRead = 0;
+
     if(!This->file)
         return INET_E_DATA_NOT_AVAILABLE;
 
-    ReadFile(This->file, pv, cb, &read, NULL);
+    if (!ReadFile(This->file, pv, cb, &read, NULL))
+        return INET_E_DOWNLOAD_FAILURE;
 
     if(pcbRead)
         *pcbRead = read;

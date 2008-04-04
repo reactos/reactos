@@ -67,6 +67,8 @@ void	UMCloseCacheFileStream(IUMCacheStream *pstr);
 
 IInternetProtocolInfo *get_protocol_info(LPCWSTR url);
 HRESULT get_protocol_handler(LPCWSTR url, CLSID *clsid, IClassFactory **ret);
+BOOL is_registered_protocol(LPCWSTR);
+void register_urlmon_namespace(IClassFactory*,REFIID,LPCWSTR,BOOL);
 
 HRESULT bind_to_storage(LPCWSTR url, IBindCtx *pbc, REFIID riid, void **ppv);
 HRESULT bind_to_object(IMoniker *mon, LPCWSTR url, IBindCtx *pbc, REFIID riid, void **ppv);
@@ -104,6 +106,19 @@ static inline LPWSTR heap_strdupW(LPCWSTR str)
         size = (strlenW(str)+1)*sizeof(WCHAR);
         ret = heap_alloc(size);
         memcpy(ret, str, size);
+    }
+
+    return ret;
+}
+
+static inline LPWSTR heap_strdupAtoW(const char *str)
+{
+    LPWSTR ret = NULL;
+
+    if(str) {
+        DWORD len = MultiByteToWideChar(CP_ACP, 0, str, -1, NULL, 0);
+        ret = heap_alloc(len*sizeof(WCHAR));
+        MultiByteToWideChar(CP_ACP, 0, str, -1, ret, len);
     }
 
     return ret;

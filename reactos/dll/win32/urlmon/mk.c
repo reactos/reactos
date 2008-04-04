@@ -124,7 +124,6 @@ static HRESULT WINAPI MkProtocol_Start(IInternetProtocol *iface, LPCWSTR szUrl,
 
     ReleaseBindInfo(&bindinfo);
 
-    IInternetProtocolSink_ReportProgress(pOIProtSink, BINDSTATUS_DIRECTBIND, NULL);
     IInternetProtocolSink_ReportProgress(pOIProtSink, BINDSTATUS_SENDINGREQUEST, NULL);
 
     hres = FindMimeFromData(NULL, szUrl, NULL, 0, NULL, 0, &mime, 0);
