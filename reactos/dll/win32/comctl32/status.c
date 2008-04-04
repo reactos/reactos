@@ -31,7 +31,7 @@
  * TODO:
  * 	-- CCS_BOTTOM (default)
  * 	-- CCS_LEFT
- * 	-- CCS_NODEVIDER
+ * 	-- CCS_NODIVIDER
  * 	-- CCS_NOMOVEX
  * 	-- CCS_NOMOVEY
  * 	-- CCS_NOPARENTALIGN
@@ -114,8 +114,8 @@ STATUSBAR_DrawSizeGrip (HTHEME theme, HDC hdc, LPRECT lpRect)
     POINT pt;
     INT i;
 
-    TRACE("draw size grip %d,%d - %d,%d\n", lpRect->left, lpRect->top, lpRect->right, lpRect->bottom);
-    
+    TRACE("draw size grip %s\n", wine_dbgstr_rect(lpRect));
+
     if (theme)
     {
         RECT gripperRect;
@@ -175,7 +175,7 @@ STATUSBAR_DrawPart (const STATUS_INFO *infoPtr, HDC hdc, const STATUSWINDOWPART 
     HTHEME theme = GetWindowTheme (infoPtr->Self);
     int themePart = SP_PANE;
 
-    TRACE("part bound %d,%d - %d,%d\n", r.left, r.top, r.right, r.bottom);
+    TRACE("part bound %s\n", wine_dbgstr_rect(&r));
     if (part->style & SBT_POPOUT)
         border = BDR_RAISEDOUTER;
     else if (part->style & SBT_NOBORDERS)
@@ -333,7 +333,7 @@ STATUSBAR_SetPartBounds (STATUS_INFO *infoPtr)
 
     /* get our window size */
     GetClientRect (infoPtr->Self, &rect);
-    TRACE("client wnd size is %d,%d - %d,%d\n", rect.left, rect.top, rect.right, rect.bottom);
+    TRACE("client wnd size is %s\n", wine_dbgstr_rect(&rect));
 
     rect.left += infoPtr->horizontalBorder;
     rect.top += infoPtr->verticalBorder;
@@ -668,7 +668,7 @@ static BOOL
 STATUSBAR_SetParts (STATUS_INFO *infoPtr, INT count, LPINT parts)
 {
     STATUSWINDOWPART *tmp;
-    int	i, oldNumParts;
+    UINT i, oldNumParts;
 
     TRACE("(%d,%p)\n", count, parts);
 
@@ -700,7 +700,7 @@ STATUSBAR_SetParts (STATUS_INFO *infoPtr, INT count, LPINT parts)
 	infoPtr->parts[i].x = parts[i];
 
     if (infoPtr->hwndToolTip) {
-	INT nTipCount, i;
+	UINT nTipCount;
 	TTTOOLINFOW ti;
 
 	ZeroMemory (&ti, sizeof(TTTOOLINFOW));

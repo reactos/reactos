@@ -107,6 +107,7 @@ IDI_TT_ERROR_SM ICON LOADONCALL DISCARDABLE idi_tt_error_sm.ico
 #include "comctl_No.rc"
 #include "comctl_Pl.rc"
 #include "comctl_Pt.rc"
+#include "comctl_Ro.rc"
 #include "comctl_Ru.rc"
 #include "comctl_Si.rc"
 #include "comctl_Sv.rc"

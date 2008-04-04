@@ -439,8 +439,7 @@ TRACKBAR_CalcSelection (TRACKBAR_INFO *infoPtr)
         }
     }
 
-    TRACE("selection[left=%d, top=%d, right=%d, bottom=%d]\n",
-	   selection->left, selection->top, selection->right, selection->bottom);
+    TRACE("selection[%s]\n", wine_dbgstr_rect(selection));
 }
 
 static BOOL
@@ -865,14 +864,11 @@ TRACKBAR_Refresh (TRACKBAR_INFO *infoPtr, HDC hdcDst)
     gcdrf = notify_customdraw(infoPtr, &nmcd, CDDS_PREPAINT);
     if (gcdrf & CDRF_SKIPDEFAULT) goto cleanup;
     
-    /* Erase backbround */
+    /* Erase background */
     if (gcdrf == CDRF_DODEFAULT ||
         notify_customdraw(infoPtr, &nmcd, CDDS_PREERASE) != CDRF_SKIPDEFAULT) {
         if ((theme = GetWindowTheme (infoPtr->hwndSelf))) {
-            DrawThemeBackground (theme, hdc,
-                (GetWindowLongW (infoPtr->hwndSelf, GWL_STYLE) & TBS_VERT) ?
-                    TKP_TRACKVERT : TKP_TRACK, TKS_NORMAL, &rcClient, 0);
-            DrawThemeParentBackground (infoPtr->hwndSelf, hdc, &rcClient);
+            DrawThemeParentBackground (infoPtr->hwndSelf, hdc, 0);
         }
         else
 	    FillRect (hdc, &rcClient, GetSysColorBrush(COLOR_BTNFACE));

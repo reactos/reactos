@@ -333,7 +333,7 @@ static void MONTHCAL_DrawDay(const MONTHCAL_INFO *infoPtr, HDC hdc, int day, int
   wsprintfW(buf, fmtW, day);
 
 /* No need to check styles: when selection is not valid, it is set to zero.
- * 1<day<31, so evertyhing's OK.
+ * 1<day<31, so everything is OK.
  */
 
   MONTHCAL_CalcDayRect(infoPtr, &r, x, y);
@@ -344,7 +344,7 @@ static void MONTHCAL_DrawDay(const MONTHCAL_INFO *infoPtr, HDC hdc, int day, int
     RECT r2;
 
     TRACE("%d %d %d\n",day, infoPtr->minSel.wDay, infoPtr->maxSel.wDay);
-    TRACE("%d %d %d %d\n", r.left, r.top, r.right, r.bottom);
+    TRACE("%s\n", wine_dbgstr_rect(&r));
     oldCol = SetTextColor(hdc, infoPtr->monthbk);
     oldBk = SetBkColor(hdc, infoPtr->trailingtxt);
     hbr = GetSysColorBrush(COLOR_GRAYTEXT);
@@ -516,7 +516,7 @@ static void MONTHCAL_Refresh(MONTHCAL_INFO *infoPtr, HDC hdc, const PAINTSTRUCT 
     DeleteObject(hbr);
   }
 
-/* draw line under day abbreviatons */
+/* draw line under day abbreviations */
 
   MoveToEx(hdc, infoPtr->days.left + 3, title->bottom + textHeight + 1, NULL);
   LineTo(hdc, infoPtr->days.right - 3, title->bottom + textHeight + 1);

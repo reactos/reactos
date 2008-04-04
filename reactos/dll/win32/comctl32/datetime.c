@@ -133,8 +133,8 @@ extern int MONTHCAL_MonthLength(int month, int year);
 static BOOL DATETIME_SendSimpleNotify (const DATETIME_INFO *infoPtr, UINT code);
 static BOOL DATETIME_SendDateTimeChangeNotify (const DATETIME_INFO *infoPtr);
 extern void MONTHCAL_CopyTime(const SYSTEMTIME *from, SYSTEMTIME *to);
-static const WCHAR allowedformatchars[] = {'d', 'h', 'H', 'm', 'M', 's', 't', 'y', 'X', '\'', 0};
-static const int maxrepetition [] = {4,2,2,2,4,2,2,4,-1,-1};
+static const WCHAR allowedformatchars[] = {'d', 'h', 'H', 'm', 'M', 's', 't', 'y', 'X', 0};
+static const int maxrepetition [] = {4,2,2,2,4,2,2,4,-1};
 
 
 static DWORD
@@ -205,6 +205,7 @@ DATETIME_UseFormat (DATETIME_INFO *infoPtr, LPCWSTR formattxt)
 {
     unsigned int i;
     int j, k, len;
+    BOOL inside_literal = FALSE; /* inside '...' */
     int *nrFields = &infoPtr->nrFields;
 
     *nrFields = 0;
@@ -214,27 +215,37 @@ DATETIME_UseFormat (DATETIME_INFO *infoPtr, LPCWSTR formattxt)
 
     for (i = 0; formattxt[i]; i++)  {
 	TRACE ("\n%d %c:", i, formattxt[i]);
- 	for (j = 0; j < len; j++) {
- 	    if (allowedformatchars[j]==formattxt[i]) {
-		TRACE ("%c[%d,%x]", allowedformatchars[j], *nrFields, infoPtr->fieldspec[*nrFields]);
-		if ((*nrFields==0) && (infoPtr->fieldspec[*nrFields]==0)) {
-		    infoPtr->fieldspec[*nrFields] = (j<<4) + 1;
-		    break;
-		}
-		if (infoPtr->fieldspec[*nrFields] >> 4 != j) {
-		    (*nrFields)++;
-		    infoPtr->fieldspec[*nrFields] = (j<<4) + 1;
-		    break;
-		}
-		if ((infoPtr->fieldspec[*nrFields] & 0x0f) == maxrepetition[j]) {
-		    (*nrFields)++;
-		    infoPtr->fieldspec[*nrFields] = (j<<4) + 1;
-		    break;
-		}
-		infoPtr->fieldspec[*nrFields]++;
-		break;
-	    }   /* if allowedformatchar */
-	} /* for j */
+	if (!inside_literal) {
+	    for (j = 0; j < len; j++) {
+	        if (allowedformatchars[j]==formattxt[i]) {
+                    TRACE ("%c[%d,%x]", allowedformatchars[j], *nrFields, infoPtr->fieldspec[*nrFields]);
+                    if ((*nrFields==0) && (infoPtr->fieldspec[*nrFields]==0)) {
+                        infoPtr->fieldspec[*nrFields] = (j<<4) + 1;
+                        break;
+                    }
+                    if (infoPtr->fieldspec[*nrFields] >> 4 != j) {
+                        (*nrFields)++;
+                        infoPtr->fieldspec[*nrFields] = (j<<4) + 1;
+                        break;
+                    }
+                    if ((infoPtr->fieldspec[*nrFields] & 0x0f) == maxrepetition[j]) {
+                        (*nrFields)++;
+                        infoPtr->fieldspec[*nrFields] = (j<<4) + 1;
+                        break;
+		    }
+                    infoPtr->fieldspec[*nrFields]++;
+                    break;
+                }   /* if allowedformatchar */
+            } /* for j */
+        }
+        else
+            j = len;
+
+        if (formattxt[i] == '\'')
+        {
+            inside_literal = !inside_literal;
+            continue;
+        }
 
 	/* char is not a specifier: handle char like a string */
 	if (j == len) {

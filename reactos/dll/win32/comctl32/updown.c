@@ -137,7 +137,7 @@ static BOOL UPDOWN_InBounds(const UPDOWN_INFO *infoPtr, int val)
 /***********************************************************************
  *           UPDOWN_OffsetVal
  * Change the current value by delta.
- * It returns TRUE is the value was changed successfuly, or FALSE
+ * It returns TRUE is the value was changed successfully, or FALSE
  * if the value was not changed, as it would go out of bounds.
  */
 static BOOL UPDOWN_OffsetVal(UPDOWN_INFO *infoPtr, int delta)
@@ -174,7 +174,7 @@ static BOOL UPDOWN_HasBuddyBorder(const UPDOWN_INFO *infoPtr)
  * rect     - will hold the rectangle
  * arrow    - FLAG_INCR to get the "increment" rect (up or right)
  *            FLAG_DECR to get the "decrement" rect (down or left)
- *            If both flags are pressent, the envelope is returned.
+ *            If both flags are present, the envelope is returned.
  */
 static void UPDOWN_GetArrowRect (const UPDOWN_INFO* infoPtr, RECT *rect, int arrow)
 {

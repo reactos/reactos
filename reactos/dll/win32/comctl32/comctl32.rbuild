@@ -9,14 +9,6 @@
 	<define name="__WINESRC__" />
 	<define name="WINVER">0x600</define>
 	<define name="_WIN32_WINNT">0x600</define>
-	<library>wine</library>
-	<library>user32</library>
-	<library>gdi32</library>
-	<library>advapi32</library>
-	<library>kernel32</library>
-	<library>winmm</library>
-	<library>uxtheme</library>
-	<library>ntdll</library>
 	<file>animate.c</file>
 	<file>comboex.c</file>
 	<file>comctl32undoc.c</file>
@@ -54,5 +46,13 @@
 	<file>updown.c</file>
 	<file>rsrc.rc</file>
 	<file>comctl32.spec</file>
+	<library>wine</library>
+	<library>user32</library>
+	<library>gdi32</library>
+	<library>advapi32</library>
+	<library>kernel32</library>
+	<library>winmm</library>
+	<library>uxtheme</library>
+	<library>ntdll</library>
 </module>
 </group>

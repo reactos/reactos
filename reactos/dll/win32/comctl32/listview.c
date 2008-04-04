@@ -371,7 +371,7 @@ typedef struct tagLISTVIEW_INFO
 /* Size of "line" scroll for V & H scrolls */
 #define LISTVIEW_SCROLL_ICON_LINE_SIZE 37
 
-/* Padding betwen image and label */
+/* Padding between image and label */
 #define IMAGE_PADDING  2
 
 /* Padding behind the label */
@@ -611,7 +611,7 @@ static const char* debugnmlistview(const NMLISTVIEW *plvnm)
 {
     if (!plvnm) return "(null)";
     return wine_dbg_sprintf("iItem=%d, iSubItem=%d, uNewState=0x%x,"
-	         " uOldState=0x%x, uChanged=0x%x, ptAction=%s, lParam=%ld\n",
+	         " uOldState=0x%x, uChanged=0x%x, ptAction=%s, lParam=%ld",
 	         plvnm->iItem, plvnm->iSubItem, plvnm->uNewState, plvnm->uOldState,
 		 plvnm->uChanged, wine_dbgstr_point(&plvnm->ptAction), plvnm->lParam);
 }
@@ -950,7 +950,7 @@ static void prepaint_setup (const LISTVIEW_INFO *infoPtr, HDC hdc, NMLVCUSTOMDRA
     if (lpnmlvcd->clrText == CLR_DEFAULT)
         lpnmlvcd->clrText = comctl32_color.clrWindowText;
 
-    /* apprently, for selected items, we have to override the returned values */
+    /* apparently, for selected items, we have to override the returned values */
     if (!SubItem)
     {
         if (lpnmlvcd->nmcd.uItemState & CDIS_SELECTED)
@@ -1010,7 +1010,7 @@ static inline BOOL ranges_delitem(RANGES ranges, INT nItem)
  * ITERATOR DOCUMENTATION
  *
  * The iterator functions allow for easy, and convenient iteration
- * over items of iterest in the list. Typically, you create a
+ * over items of interest in the list. Typically, you create a
  * iterator, use it, and destroy it, as such:
  *   ITERATOR i;
  *
@@ -1353,6 +1353,19 @@ static inline BOOL is_autoarrange(const LISTVIEW_INFO *infoPtr)
 	   (uView == LVS_ICON || uView == LVS_SMALLICON);
 }
 
+static void toggle_checkbox_state(LISTVIEW_INFO *infoPtr, INT nItem)
+{
+    DWORD state = STATEIMAGEINDEX(LISTVIEW_GetItemState(infoPtr, nItem, LVIS_STATEIMAGEMASK));
+    if(state == 1 || state == 2)
+    {
+        LVITEMW lvitem;
+        state ^= 3;
+        lvitem.state = INDEXTOSTATEIMAGEMASK(state);
+        lvitem.stateMask = LVIS_STATEIMAGEMASK;
+        LISTVIEW_SetItemState(infoPtr, nItem, &lvitem);
+    }
+}
+
 /******** Internal API functions ************************************/
 
 static inline COLUMN_INFO * LISTVIEW_GetColumnInfo(const LISTVIEW_INFO *infoPtr, INT nSubItem)
@@ -1496,7 +1509,7 @@ static inline INT LISTVIEW_GetCountPerColumn(const LISTVIEW_INFO *infoPtr)
  * BUGS
  *
  *  - The current implementation has a list of characters it will
- *    accept and it ignores averything else. In particular it will
+ *    accept and it ignores everything else. In particular it will
  *    ignore accentuated characters which seems to match what
  *    Windows does. But I'm not sure it makes sense to follow
  *    Windows there.
@@ -1826,9 +1839,9 @@ static void LISTVIEW_InvalidateSelectedItems(const LISTVIEW_INFO *infoPtr)
  * Computes an item's (left,top) corner, relative to rcView.
  * That is, the position has NOT been made relative to the Origin.
  * This is deliberate, to avoid computing the Origin over, and
- * over again, when this function is call in a loop. Instead,
- * one ca factor the computation of the Origin before the loop,
- * and offset the value retured by this function, on every iteration.
+ * over again, when this function is called in a loop. Instead,
+ * one can factor the computation of the Origin before the loop,
+ * and offset the value returned by this function, on every iteration.
  * 
  * PARAMETER(S):
  * [I] infoPtr : valid pointer to the listview structure
@@ -1866,15 +1879,15 @@ static void LISTVIEW_GetItemOrigin(const LISTVIEW_INFO *infoPtr, INT nItem, LPPO
  * DESCRIPTION:            [INTERNAL]
  * Compute the rectangles of an item.  This is to localize all
  * the computations in one place. If you are not interested in some
- * of these values, simply pass in a NULL -- the fucntion is smart
+ * of these values, simply pass in a NULL -- the function is smart
  * enough to compute only what's necessary. The function computes
  * the standard rectangles (BOUNDS, ICON, LABEL) plus a non-standard
  * one, the BOX rectangle. This rectangle is very cheap to compute,
  * and is guaranteed to contain all the other rectangles. Computing
- * the ICON rect is also cheap, but all the others are potentaily
+ * the ICON rect is also cheap, but all the others are potentially
  * expensive. This gives an easy and effective optimization when
  * searching (like point inclusion, or rectangle intersection):
- * first test against the BOX, and if TRUE, test agains the desired
+ * first test against the BOX, and if TRUE, test against the desired
  * rectangle.
  * If the function does not have all the necessary information
  * to computed the requested rectangles, will crash with a
@@ -1884,7 +1897,7 @@ static void LISTVIEW_GetItemOrigin(const LISTVIEW_INFO *infoPtr, INT nItem, LPPO
  * We have the following 'special' meanings for a few fields:
  *   * If LVIS_FOCUSED is set, we assume the item has the focus
  *     This is important in ICON mode, where it might get a larger
- *     then usual rectange
+ *     then usual rectangle
  *
  * Please note that subitem support works only in REPORT mode.
  *
@@ -2009,7 +2022,7 @@ static void LISTVIEW_GetItemMetrics(const LISTVIEW_INFO *infoPtr, const LVITEMW 
     /************************************************************/
     if (doLabel)
     {
-	/* calculate how far to the right can the label strech */
+	/* calculate how far to the right can the label stretch */
 	Label.right = Box.right;
 	if (uView == LVS_REPORT)
 	{
@@ -2760,7 +2773,7 @@ static BOOL ranges_add(RANGES ranges, RANGE range)
 	
 	TRACE("New range %s @%d\n", debugrange(chkrgn), index);
 
-        /* merge now common anges */
+        /* merge now common ranges */
 	fromindex = 0;
 	srchrgn.lower = chkrgn->lower - 1;
 	srchrgn.upper = chkrgn->upper + 1;
@@ -3349,7 +3362,7 @@ static LRESULT LISTVIEW_MouseMove(LISTVIEW_INFO *infoPtr, WORD fwKeys, INT x, IN
 
 
 /***
- * Tests wheather the item is assignable to a list with style lStyle 
+ * Tests whether the item is assignable to a list with style lStyle
  */
 static inline BOOL is_assignable_item(const LVITEMW *lpLVItem, LONG lStyle)
 {
@@ -3367,7 +3380,7 @@ static inline BOOL is_assignable_item(const LVITEMW *lpLVItem, LONG lStyle)
  *
  * PARAMETER(S):
  * [I] infoPtr : valid pointer to the listview structure
- * [I] lpLVItem : valid pointer to new item atttributes
+ * [I] lpLVItem : valid pointer to new item attributes
  * [I] isNew : the item being set is being inserted
  * [I] isW : TRUE if lpLVItem is Unicode, FALSE if it's ANSI
  * [O] bChanged : will be set to TRUE if the item really changed
@@ -3392,7 +3405,7 @@ static BOOL set_main_item(LISTVIEW_INFO *infoPtr, const LVITEMW *lpLVItem, BOOL 
 
     if (infoPtr->dwStyle & LVS_OWNERDATA)
     {
-	/* a virtual listview we stores only selection and focus */
+	/* a virtual listview only stores selection and focus */
 	if (lpLVItem->mask & ~LVIF_STATE)
 	    return FALSE;
 	lpItem = NULL;
@@ -3442,7 +3455,7 @@ static BOOL set_main_item(LISTVIEW_INFO *infoPtr, const LVITEMW *lpLVItem, BOOL 
     nmlv.lParam = item.lParam;
     
     /* send LVN_ITEMCHANGING notification, if the item is not being inserted */
-    /* and we are _NOT_ virtual (LVS_OWERNDATA), and change notifications */
+    /* and we are _NOT_ virtual (LVS_OWNERDATA), and change notifications */
     /* are enabled */
     if(lpItem && !isNew && infoPtr->bDoChangeNotify)
     {
@@ -3512,7 +3525,7 @@ static BOOL set_main_item(LISTVIEW_INFO *infoPtr, const LVITEMW *lpLVItem, BOOL 
  *
  * PARAMETER(S):
  * [I] infoPtr : valid pointer to the listview structure
- * [I] lpLVItem : valid pointer to new subitem atttributes
+ * [I] lpLVItem : valid pointer to new subitem attributes
  * [I] isW : TRUE if lpLVItem is Unicode, FALSE if it's ANSI
  * [O] bChanged : will be set to TRUE if the item really changed
  *
@@ -3590,7 +3603,7 @@ static BOOL set_sub_item(const LISTVIEW_INFO *infoPtr, const LVITEMW *lpLVItem, 
  *
  * PARAMETER(S):
  * [I] infoPtr : valid pointer to the listview structure
- * [I] lpLVItem : new item atttributes
+ * [I] lpLVItem : new item attributes
  * [I] isW : TRUE if lpLVItem is Unicode, FALSE if it's ANSI
  *
  * RETURN:
@@ -4425,7 +4438,7 @@ static void LISTVIEW_ScrollColumns(LISTVIEW_INFO *infoPtr, INT nColumn, INT dx)
     if (nColumn >= DPA_GetPtrCount(infoPtr->hdpaColumns))
 	rcCol.left = rcCol.right;
     
-    /* ajust the other columns */
+    /* adjust the other columns */
     for (nCol = nColumn; nCol < DPA_GetPtrCount(infoPtr->hdpaColumns); nCol++)
     {
 	lpColumnInfo = LISTVIEW_GetColumnInfo(infoPtr, nCol);
@@ -4436,7 +4449,7 @@ static void LISTVIEW_ScrollColumns(LISTVIEW_INFO *infoPtr, INT nColumn, INT dx)
     /* do not update screen if not in report mode */
     if (!is_redrawing(infoPtr) || (infoPtr->dwStyle & LVS_TYPEMASK) != LVS_REPORT) return;
     
-    /* if we have a focus, must first erase the focus rect */
+    /* if we have a focus, we must first erase the focus rect */
     if (infoPtr->bFocus) LISTVIEW_ShowFocusRect(infoPtr, FALSE);
     
     /* Need to reset the item width when inserting a new column */
@@ -4629,8 +4642,9 @@ static void LISTVIEW_ScrollOnInsert(LISTVIEW_INFO *infoPtr, INT nItem, INT dir)
  */
 static BOOL LISTVIEW_DeleteItem(LISTVIEW_INFO *infoPtr, INT nItem)
 {
-    UINT uView = infoPtr->dwStyle & LVS_TYPEMASK;
     LVITEMW item;
+    const UINT uView = infoPtr->dwStyle & LVS_TYPEMASK;
+    const BOOL is_icon = (uView == LVS_SMALLICON || uView == LVS_ICON);
 
     TRACE("(nItem=%d)\n", nItem);
 
@@ -4645,7 +4659,7 @@ static BOOL LISTVIEW_DeleteItem(LISTVIEW_INFO *infoPtr, INT nItem)
     if (!notify_deleteitem(infoPtr, nItem)) return FALSE;
 
     /* we need to do this here, because we'll be deleting stuff */  
-    if (uView == LVS_SMALLICON || uView == LVS_ICON)
+    if (is_icon)
 	LISTVIEW_InvalidateItem(infoPtr, nItem);
     
     if (!(infoPtr->dwStyle & LVS_OWNERDATA))
@@ -4664,7 +4678,7 @@ static BOOL LISTVIEW_DeleteItem(LISTVIEW_INFO *infoPtr, INT nItem)
         DPA_Destroy(hdpaSubItems);
     }
 
-    if (uView == LVS_SMALLICON || uView == LVS_ICON)
+    if (is_icon)
     {
 	DPA_DeletePtr(infoPtr->hdpaPosX, nItem);
 	DPA_DeletePtr(infoPtr->hdpaPosY, nItem);
@@ -4674,7 +4688,8 @@ static BOOL LISTVIEW_DeleteItem(LISTVIEW_INFO *infoPtr, INT nItem)
     LISTVIEW_ShiftIndices(infoPtr, nItem, -1);
 
     /* now is the invalidation fun */
-    LISTVIEW_ScrollOnInsert(infoPtr, nItem, -1);
+    if (!is_icon)
+        LISTVIEW_ScrollOnInsert(infoPtr, nItem, -1);
     return TRUE;
 }
 
@@ -6243,7 +6258,10 @@ static INT LISTVIEW_HitTest(const LISTVIEW_INFO *infoPtr, LPLVHITTESTINFO lpht, 
     if (uView == LVS_REPORT)
 	rcBounds = rcBox;
     else
-	UnionRect(&rcBounds, &rcIcon, &rcLabel);
+    {
+        UnionRect(&rcBounds, &rcIcon, &rcLabel);
+        UnionRect(&rcBounds, &rcBounds, &rcState);
+    }
     TRACE("rcBounds=%s\n", wine_dbgstr_rect(&rcBounds));
     if (!PtInRect(&rcBounds, opt)) return -1;
 
@@ -6497,7 +6515,7 @@ static BOOL LISTVIEW_RedrawItems(const LISTVIEW_INFO *infoPtr, INT nFirst, INT n
  *  is 16 and an 8 is passed, the list will be scrolled by 16. If a 7
  *  is passed, then the scroll will be 0.  (per MSDN 7/2002)
  *
- *  For:  (per experimentaion with native control and CSpy ListView)
+ *  For:  (per experimentation with native control and CSpy ListView)
  *     LVS_ICON       dy=1 = 1 pixel  (vertical only)
  *                    dx ignored
  *     LVS_SMALLICON  dy=1 = 1 pixel  (vertical only)
@@ -6985,17 +7003,17 @@ static HIMAGELIST LISTVIEW_CreateCheckBoxIL(const LISTVIEW_INFO *infoPtr)
  *   SUCCESS : previous style
  *   FAILURE : 0
  */
-static DWORD LISTVIEW_SetExtendedListViewStyle(LISTVIEW_INFO *infoPtr, DWORD dwMask, DWORD dwStyle)
+static DWORD LISTVIEW_SetExtendedListViewStyle(LISTVIEW_INFO *infoPtr, DWORD dwMask, DWORD dwExStyle)
 {
-    DWORD dwOldStyle = infoPtr->dwLvExStyle;
+    DWORD dwOldExStyle = infoPtr->dwLvExStyle;
 
     /* set new style */
     if (dwMask)
-	infoPtr->dwLvExStyle = (dwOldStyle & ~dwMask) | (dwStyle & dwMask);
+	infoPtr->dwLvExStyle = (dwOldExStyle & ~dwMask) | (dwExStyle & dwMask);
     else
-	infoPtr->dwLvExStyle = dwStyle;
+	infoPtr->dwLvExStyle = dwExStyle;
 
-    if((infoPtr->dwLvExStyle ^ dwOldStyle) & LVS_EX_CHECKBOXES)
+    if((infoPtr->dwLvExStyle ^ dwOldExStyle) & LVS_EX_CHECKBOXES)
     {
         HIMAGELIST himl = 0;
         if(infoPtr->dwLvExStyle & LVS_EX_CHECKBOXES)
@@ -7011,7 +7029,7 @@ static DWORD LISTVIEW_SetExtendedListViewStyle(LISTVIEW_INFO *infoPtr, DWORD dwM
         LISTVIEW_SetImageList(infoPtr, LVSIL_STATE, himl);
     }
     
-    if((infoPtr->dwLvExStyle ^ dwOldStyle) & LVS_EX_HEADERDRAGDROP)
+    if((infoPtr->dwLvExStyle ^ dwOldExStyle) & LVS_EX_HEADERDRAGDROP)
     {
         DWORD dwStyle = GetWindowLongW(infoPtr->hwndHeader, GWL_STYLE);
         if (infoPtr->dwLvExStyle & LVS_EX_HEADERDRAGDROP)
@@ -7021,7 +7039,8 @@ static DWORD LISTVIEW_SetExtendedListViewStyle(LISTVIEW_INFO *infoPtr, DWORD dwM
         SetWindowLongW(infoPtr->hwndHeader, GWL_STYLE, dwStyle);
     }
 
-    return dwOldStyle;
+    LISTVIEW_InvalidateList(infoPtr);
+    return dwOldExStyle;
 }
 
 /***
@@ -7596,7 +7615,7 @@ static INT WINAPI LISTVIEW_CallBackCompare(LPVOID first, LPVOID second, LPARAM l
  * PARAMETER(S):
  * [I] infoPtr : valid pointer to the listview structure
  * [I] pfnCompare : application-defined value
- * [I] lParamSort : pointer to comparision callback
+ * [I] lParamSort : pointer to comparison callback
  *
  * RETURN:
  *   SUCCESS : TRUE
@@ -7763,7 +7782,7 @@ static BOOL LISTVIEW_DrawTrackLine(const LISTVIEW_INFO *infoPtr)
  * RETURN:
  *   None.
  */
-static CALLBACK VOID LISTVIEW_DelayedEditItem(HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime)
+static VOID CALLBACK LISTVIEW_DelayedEditItem(HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime)
 {
     DELAYED_ITEM_EDIT *editItem = (DELAYED_ITEM_EDIT *)idEvent;
     LISTVIEW_INFO *infoPtr = (LISTVIEW_INFO *)GetWindowLongPtrW(hwnd, 0);
@@ -8283,6 +8302,8 @@ static LRESULT LISTVIEW_KeyDown(LISTVIEW_INFO *infoPtr, INT nVirtualKey, LONG lK
   {
   case VK_SPACE:
     nItem = infoPtr->nFocusedItem;
+    if (infoPtr->dwLvExStyle & LVS_EX_CHECKBOXES)
+        toggle_checkbox_state(infoPtr, infoPtr->nFocusedItem);
     break;
 
   case VK_RETURN:
@@ -8475,15 +8496,7 @@ static LRESULT LISTVIEW_LButtonDown(LISTVIEW_INFO *infoPtr, WORD wKey, INT x, IN
   {
     if ((infoPtr->dwLvExStyle & LVS_EX_CHECKBOXES) && (lvHitTestInfo.flags & LVHT_ONITEMSTATEICON))
     {
-        DWORD state = STATEIMAGEINDEX(LISTVIEW_GetItemState(infoPtr, nItem, LVIS_STATEIMAGEMASK));
-        if(state == 1 || state == 2)
-        {
-            LVITEMW lvitem;
-            state ^= 3;
-            lvitem.state = INDEXTOSTATEIMAGEMASK(state);
-            lvitem.stateMask = LVIS_STATEIMAGEMASK;
-            LISTVIEW_SetItemState(infoPtr, nItem, &lvitem);
-        }
+        toggle_checkbox_state(infoPtr, nItem);
         return 0;
     }
 
@@ -10116,7 +10129,7 @@ static LRESULT CALLBACK EditLblWndProcA(HWND hwnd, UINT uMsg, WPARAM wParam, LPA
 
 /***
  * DESCRIPTION:
- * Creates a subclassed edit cotrol
+ * Creates a subclassed edit control
  *
  * PARAMETER(S):
  * [I] infoPtr : valid pointer to the listview structure

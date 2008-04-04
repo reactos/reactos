@@ -714,7 +714,7 @@ InitCommonControls (void)
  *     Failure: FALSE
  *
  * NOTES
- *     Probaly all versions of comctl32 initializes the Win95 controls in DllMain
+ *     Probably all versions of comctl32 initializes the Win95 controls in DllMain
  *     during DLL initialization. Starting from comctl32 v5.82 all the controls
  *     are initialized there. We follow this behaviour and this function is just
  *     a dummy.
@@ -1091,7 +1091,7 @@ VOID WINAPI InitMUILanguage (LANGID uiLang)
  * BUGS
  *     If an application manually subclasses a window after subclassing it with
  *     this API and then with this API again, then none of the previous 
- *     subclasses get called or the origional window procedure.
+ *     subclasses get called or the original window procedure.
  */
 
 BOOL WINAPI SetWindowSubclass (HWND hWnd, SUBCLASSPROC pfnSubclass,
@@ -1257,7 +1257,7 @@ BOOL WINAPI RemoveWindowSubclass(HWND hWnd, SUBCLASSPROC pfnSubclass, UINT_PTR u
    
    if (!stack->SubclassProcs && !stack->running) {
       TRACE("Last Subclass removed, cleaning up\n");
-      /* clean up our heap and reset the origional window procedure */
+      /* clean up our heap and reset the original window procedure */
       if (IsWindowUnicode (hWnd))
          SetWindowLongPtrW (hWnd, GWLP_WNDPROC, (DWORD_PTR)stack->origproc);
       else
@@ -1299,7 +1299,7 @@ LRESULT WINAPI COMCTL32_SubclassProc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARA
     
    if (!stack->SubclassProcs && !stack->running) {
       TRACE("Last Subclass removed, cleaning up\n");
-      /* clean up our heap and reset the origional window procedure */
+      /* clean up our heap and reset the original window procedure */
       if (IsWindowUnicode (hWnd))
          SetWindowLongPtrW (hWnd, GWLP_WNDPROC, (DWORD_PTR)stack->origproc);
       else
@@ -1425,6 +1425,7 @@ COMCTL32_RefreshSysColors(void)
     comctl32_color.clrBtnFace = GetSysColor (COLOR_BTNFACE);
     comctl32_color.clrHighlight = GetSysColor (COLOR_HIGHLIGHT);
     comctl32_color.clrHighlightText = GetSysColor (COLOR_HIGHLIGHTTEXT);
+    comctl32_color.clrHotTrackingColor = GetSysColor (COLOR_HOTLIGHT);
     comctl32_color.clr3dHilight = GetSysColor (COLOR_3DHILIGHT);
     comctl32_color.clr3dShadow = GetSysColor (COLOR_3DSHADOW);
     comctl32_color.clr3dDkShadow = GetSysColor (COLOR_3DDKSHADOW);

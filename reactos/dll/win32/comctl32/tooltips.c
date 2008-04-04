@@ -202,6 +202,44 @@ TOOLTIPS_InitSystemSettings (TOOLTIPS_INFO *infoPtr)
     infoPtr->hTitleFont = CreateFontIndirectW (&nclm.lfStatusFont);
 }
 
+/* Custom draw routines */
+static void
+TOOLTIPS_customdraw_fill(NMTTCUSTOMDRAW *lpnmttcd,
+                         const HWND hwnd,
+                         HDC hdc, const RECT *rcBounds, UINT uFlags)
+{
+    TOOLTIPS_INFO *infoPtr = TOOLTIPS_GetInfoPtr(hwnd);
+
+    ZeroMemory(lpnmttcd, sizeof(NMTTCUSTOMDRAW));
+    lpnmttcd->uDrawFlags = uFlags;
+    lpnmttcd->nmcd.hdr.hwndFrom = hwnd;
+    lpnmttcd->nmcd.hdr.code     = NM_CUSTOMDRAW;
+    if (infoPtr->nCurrentTool != -1) {
+        TTTOOL_INFO *toolPtr = &infoPtr->tools[infoPtr->nCurrentTool];
+        lpnmttcd->nmcd.hdr.idFrom = toolPtr->uId;
+    }
+    lpnmttcd->nmcd.hdc = hdc;
+    lpnmttcd->nmcd.rc = *rcBounds;
+    /* FIXME - dwItemSpec, uItemState, lItemlParam */
+}
+
+static inline DWORD
+TOOLTIPS_notify_customdraw (DWORD dwDrawStage, NMTTCUSTOMDRAW *lpnmttcd)
+{
+    LRESULT result = CDRF_DODEFAULT;
+    lpnmttcd->nmcd.dwDrawStage = dwDrawStage;
+
+    TRACE("Notifying stage %d, flags %x, id %x\n", lpnmttcd->nmcd.dwDrawStage,
+          lpnmttcd->uDrawFlags, lpnmttcd->nmcd.hdr.code);
+
+    result = SendMessageW(GetParent(lpnmttcd->nmcd.hdr.hwndFrom), WM_NOTIFY,
+                          0, (LPARAM)lpnmttcd);
+
+    TRACE("Notify result %x\n", (unsigned int)result);
+
+    return result;
+}
+
 static void
 TOOLTIPS_Refresh (HWND hwnd, HDC hdc)
 {
@@ -213,6 +251,8 @@ TOOLTIPS_Refresh (HWND hwnd, HDC hdc)
     UINT uFlags = DT_EXTERNALLEADING;
     HRGN hRgn = NULL;
     DWORD dwStyle = GetWindowLongW(hwnd, GWL_STYLE);
+    NMTTCUSTOMDRAW nmttcd;
+    DWORD cdmode;
 
     if (infoPtr->nMaxTipWidth > -1)
 	uFlags |= DT_WORDBREAK;
@@ -224,6 +264,13 @@ TOOLTIPS_Refresh (HWND hwnd, HDC hdc)
 
     oldBkMode = SetBkMode (hdc, TRANSPARENT);
     SetTextColor (hdc, infoPtr->clrText);
+    hOldFont = SelectObject (hdc, infoPtr->hFont);
+
+    /* Custom draw - Call PrePaint once initial properties set up     */
+    /* Note: Contrary to MSDN, CDRF_SKIPDEFAULT still draws a tooltip */
+    TOOLTIPS_customdraw_fill(&nmttcd, hwnd, hdc, &rc, uFlags);
+    cdmode = TOOLTIPS_notify_customdraw(CDDS_PREPAINT, &nmttcd);
+    uFlags = nmttcd.uDrawFlags;
 
     if (dwStyle & TTS_BALLOON)
     {
@@ -259,6 +306,7 @@ TOOLTIPS_Refresh (HWND hwnd, HDC hdc)
             RECT rcTitle = {rc.left, rc.top, rc.right, rc.bottom};
             int height;
             BOOL icon_present;
+            HFONT prevFont;
 
             /* draw icon */
             icon_present = infoPtr->hTitleIcon && 
@@ -270,9 +318,9 @@ TOOLTIPS_Refresh (HWND hwnd, HDC hdc)
             rcTitle.bottom = rc.top + ICON_HEIGHT;
 
             /* draw title text */
-            hOldFont = SelectObject (hdc, infoPtr->hTitleFont);
+            prevFont = SelectObject (hdc, infoPtr->hTitleFont);
             height = DrawTextW(hdc, infoPtr->pszTitle, -1, &rcTitle, DT_BOTTOM | DT_SINGLELINE | DT_NOPREFIX);
-            SelectObject (hdc, hOldFont);
+            SelectObject (hdc, prevFont);
             rc.top += height + BALLOON_TITLE_TEXT_SPACING;
         }
     }
@@ -286,8 +334,13 @@ TOOLTIPS_Refresh (HWND hwnd, HDC hdc)
     }
 
     /* draw text */
-    hOldFont = SelectObject (hdc, infoPtr->hFont);
     DrawTextW (hdc, infoPtr->szTipText, -1, &rc, uFlags);
+
+    /* Custom draw - Call PostPaint after drawing */
+    if (cdmode & CDRF_NOTIFYPOSTPAINT) {
+        TOOLTIPS_notify_customdraw(CDDS_POSTPAINT, &nmttcd);
+    }
+
     /* be polite and reset the things we changed in the dc */
     SelectObject (hdc, hOldFont);
     SetBkMode (hdc, oldBkMode);
@@ -752,7 +805,7 @@ TOOLTIPS_Show (HWND hwnd, TOOLTIPS_INFO *infoPtr, BOOL track_activate)
          * it is no longer needed */
     }
 
-    SetWindowPos (hwnd, HWND_TOP, rect.left, rect.top,
+    SetWindowPos (hwnd, HWND_TOPMOST, rect.left, rect.top,
 		    rect.right - rect.left, rect.bottom - rect.top,
 		    SWP_SHOWWINDOW | SWP_NOACTIVATE);
 

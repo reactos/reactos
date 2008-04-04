@@ -1008,9 +1008,8 @@ PAGER_MouseMove (PAGER_INFO* infoPtr, INT keys, INT x, INT y)
 	/* If in one of the buttons the capture and draw buttons */
 	if (btnrect)
 	{
-            TRACE("[%p] draw btn (%d,%d)-(%d,%d), Capture %s, style %08x\n",
-		  infoPtr->hwndSelf, btnrect->left, btnrect->top,
-		  btnrect->right, btnrect->bottom,
+            TRACE("[%p] draw btn (%s), Capture %s, style %08x\n",
+                  infoPtr->hwndSelf, wine_dbgstr_rect(btnrect),
 		  (infoPtr->bCapture) ? "TRUE" : "FALSE",
 		  infoPtr->dwStyle);
 	    if (!infoPtr->bCapture)

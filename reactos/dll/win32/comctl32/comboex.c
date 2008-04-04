@@ -243,7 +243,7 @@ static INT COMBOEX_NotifyEndEdit (COMBOEX_INFO *infoPtr, NMCBEENDEDITW *neew, LP
     } else {
 	NMCBEENDEDITA neea;
 
-        memcpy (&neea.hdr, &neew->hdr, sizeof(NMHDR));
+        neea.hdr = neew->hdr;
         neea.fChanged = neew->fChanged;
         neea.iNewSelection = neew->iNewSelection;
         WideCharToMultiByte (CP_ACP, 0, wstr, -1, neea.szText, CBEMAXSTRLEN, 0, 0);
@@ -412,8 +412,8 @@ static void COMBOEX_AdjustEditPos (COMBOEX_INFO *infoPtr)
     h = mysize.cy + 1;
     y = rect.bottom - h - 1;
 
-    TRACE("Combo client (%d,%d)-(%d,%d), setting Edit to (%d,%d)-(%d,%d)\n",
-	  rect.left, rect.top, rect.right, rect.bottom, x, y, x + w, y + h);
+    TRACE("Combo client (%s), setting Edit to (%d,%d)-(%d,%d)\n",
+          wine_dbgstr_rect(&rect), x, y, x + w, y + h);
     SetWindowPos(infoPtr->hwndEdit, HWND_TOP, x, y, w, h,
 		 SWP_SHOWWINDOW | SWP_NOACTIVATE | SWP_NOZORDER);
 }
@@ -952,12 +952,10 @@ static INT COMBOEX_SetItemHeight (COMBOEX_INFO const *infoPtr, INT index, UINT h
     height = cb_wrect.bottom-cb_wrect.top
              + cbx_wrect.bottom-cbx_wrect.top
              - (cbx_crect.bottom-cbx_crect.top);
-    TRACE("EX window=(%d,%d)-(%d,%d), client=(%d,%d)-(%d,%d)\n",
-	  cbx_wrect.left, cbx_wrect.top, cbx_wrect.right, cbx_wrect.bottom,
-	  cbx_crect.left, cbx_crect.top, cbx_crect.right, cbx_crect.bottom);
-    TRACE("CB window=(%d,%d)-(%d,%d), EX setting=(0,0)-(%d,%d)\n",
-	  cb_wrect.left, cb_wrect.top, cb_wrect.right, cb_wrect.bottom,
-	  cbx_wrect.right-cbx_wrect.left, height);
+    TRACE("EX window=(%s), client=(%s)\n",
+          wine_dbgstr_rect(&cbx_wrect), wine_dbgstr_rect(&cbx_crect));
+    TRACE("CB window=(%s), EX setting=(0,0)-(%d,%d)\n",
+          wine_dbgstr_rect(&cbx_wrect), cbx_wrect.right-cbx_wrect.left, height);
     SetWindowPos (infoPtr->hwndSelf, HWND_TOP, 0, 0,
 		  cbx_wrect.right-cbx_wrect.left, height,
 		  SWP_NOACTIVATE | SWP_NOZORDER | SWP_NOMOVE);
@@ -1004,9 +1002,8 @@ static LRESULT COMBOEX_Create (HWND hwnd, CREATESTRUCTA const *cs)
     /* create combo box */
     GetWindowRect(hwnd, &wnrc1);
     GetClientRect(hwnd, &clrc1);
-    TRACE("EX window=(%d,%d)-(%d,%d) client=(%d,%d)-(%d,%d)\n",
-	  wnrc1.left, wnrc1.top, wnrc1.right, wnrc1.bottom,
-	  clrc1.left, clrc1.top, clrc1.right, clrc1.bottom);
+    TRACE("EX window=(%s), client=(%s)\n",
+          wine_dbgstr_rect(&wnrc1), wine_dbgstr_rect(&clrc1));
 
     /* Native version of ComboEx creates the ComboBox with DROPDOWNLIST */
     /* specified. It then creates it's own version of the EDIT control  */
@@ -1095,17 +1092,15 @@ static LRESULT COMBOEX_Create (HWND hwnd, CREATESTRUCTA const *cs)
     GetWindowRect(hwnd, &wnrc1);
     GetClientRect(hwnd, &clrc1);
     GetWindowRect(infoPtr->hwndCombo, &cmbwrc);
-    TRACE("EX window=(%d,%d)-(%d,%d) client=(%d,%d)-(%d,%d) CB wnd=(%d,%d)-(%d,%d)\n",
-	  wnrc1.left, wnrc1.top, wnrc1.right, wnrc1.bottom,
-	  clrc1.left, clrc1.top, clrc1.right, clrc1.bottom,
-	  cmbwrc.left, cmbwrc.top, cmbwrc.right, cmbwrc.bottom);
+    TRACE("EX window=(%s) client=(%s) CB wnd=(%s)\n",
+          wine_dbgstr_rect(&wnrc1), wine_dbgstr_rect(&clrc1),
+          wine_dbgstr_rect(&cmbwrc));
     SetWindowPos(infoPtr->hwndCombo, HWND_TOP,
 		 0, 0, wnrc1.right-wnrc1.left, wnrc1.bottom-wnrc1.top,
 		 SWP_NOACTIVATE | SWP_NOREDRAW);
 
     GetWindowRect(infoPtr->hwndCombo, &cmbwrc);
-    TRACE("CB window=(%d,%d)-(%d,%d)\n",
-	  cmbwrc.left, cmbwrc.top, cmbwrc.right, cmbwrc.bottom);
+    TRACE("CB window=(%s)\n", wine_dbgstr_rect(&cmbwrc));
     SetWindowPos(hwnd, HWND_TOP,
 		 0, 0, cmbwrc.right-cmbwrc.left, cmbwrc.bottom-cmbwrc.top,
 		 SWP_NOACTIVATE | SWP_NOZORDER | SWP_NOMOVE);
@@ -1354,10 +1349,8 @@ static LRESULT COMBOEX_DrawItem (COMBOEX_INFO *infoPtr, DRAWITEMSTRUCT const *di
 	  dis->CtlType, dis->CtlID);
     TRACE("itemID=0x%08x itemAction=0x%08x itemState=0x%08x\n",
 	  dis->itemID, dis->itemAction, dis->itemState);
-    TRACE("hWnd=%p hDC=%p (%d,%d)-(%d,%d) itemData=0x%08lx\n",
-	  dis->hwndItem, dis->hDC, dis->rcItem.left,
-	  dis->rcItem.top, dis->rcItem.right, dis->rcItem.bottom,
-	  dis->itemData);
+    TRACE("hWnd=%p hDC=%p (%s) itemData=0x%08lx\n",
+          dis->hwndItem, dis->hDC, wine_dbgstr_rect(&dis->rcItem), dis->itemData);
 
     /* MSDN says:                                                       */
     /*     "itemID - Specifies the menu item identifier for a menu      */
@@ -1374,9 +1367,8 @@ static LRESULT COMBOEX_DrawItem (COMBOEX_INFO *infoPtr, DRAWITEMSTRUCT const *di
 	if ( ( (dis->itemAction & ODA_FOCUS) && (dis->itemState & ODS_SELECTED)) ||
 	     ( (dis->itemAction & (ODA_SELECT | ODA_DRAWENTIRE)) && (dis->itemState & ODS_FOCUS) ) ) {
 
-            TRACE("drawing item -1 special focus, rect=(%d,%d)-(%d,%d)\n",
-		  dis->rcItem.left, dis->rcItem.top,
-		  dis->rcItem.right, dis->rcItem.bottom);
+            TRACE("drawing item -1 special focus, rect=(%s)\n",
+                  wine_dbgstr_rect(&dis->rcItem));
 	}
 	else if ((dis->CtlType == ODT_COMBOBOX) &&
 		 (dis->itemAction == ODA_DRAWENTIRE)) {
@@ -1390,17 +1382,15 @@ static LRESULT COMBOEX_DrawItem (COMBOEX_INFO *infoPtr, DRAWITEMSTRUCT const *di
 		edrc.left=edrc.top=edrc.right=edrc.bottom=-1;
 		if (infoPtr->hwndEdit)
 		    GetWindowRect (infoPtr->hwndEdit, &edrc);
-		TRACE("window rects ex=(%d,%d)-(%d,%d), cb=(%d,%d)-(%d,%d), ed=(%d,%d)-(%d,%d)\n",
-		      exrc.left, exrc.top, exrc.right, exrc.bottom,
-		      cbrc.left, cbrc.top, cbrc.right, cbrc.bottom,
-		      edrc.left, edrc.top, edrc.right, edrc.bottom);
+                TRACE("window rects ex=(%s), cb=(%s), ed=(%s)\n",
+                      wine_dbgstr_rect(&exrc), wine_dbgstr_rect(&cbrc),
+                      wine_dbgstr_rect(&edrc));
 	    }
 	}
 	else {
-            ERR("NOT drawing item  -1 special focus, rect=(%d,%d)-(%d,%d), action=%08x, state=%08x\n",
-		dis->rcItem.left, dis->rcItem.top,
-		dis->rcItem.right, dis->rcItem.bottom,
-		dis->itemAction, dis->itemState);
+            ERR("NOT drawing item  -1 special focus, rect=(%s), action=%08x, state=%08x\n",
+                wine_dbgstr_rect(&dis->rcItem),
+                dis->itemAction, dis->itemState);
 	    return 0;
 	}
     }
@@ -1557,8 +1547,8 @@ static LRESULT COMBOEX_DrawItem (COMBOEX_INFO *infoPtr, DRAWITEMSTRUCT const *di
 	    rect.right = x + txtsize.cx;
 	    rect.top = dis->rcItem.top + 1;
 	    rect.bottom = dis->rcItem.bottom - 1;
-            TRACE("drawing item %d text, rect=(%d,%d)-(%d,%d)\n",
-	          dis->itemID, rect.left, rect.top, rect.right, rect.bottom);
+            TRACE("drawing item %d text, rect=(%s)\n",
+                  dis->itemID, wine_dbgstr_rect(&rect));
 	    ExtTextOutW (dis->hDC, x, y, ETO_OPAQUE | ETO_CLIPPED,
 		         &rect, str, len, 0);
 	    SetBkColor (dis->hDC, bkc);
@@ -1692,12 +1682,10 @@ static LRESULT COMBOEX_WindowPosChanging (COMBOEX_INFO *infoPtr, WINDOWPOS *wp)
 
     TRACE("winpos=(%d,%d %dx%d) flags=0x%08x\n",
 	  wp->x, wp->y, wp->cx, wp->cy, wp->flags);
-    TRACE("EX window=(%d,%d)-(%d,%d), client=(%d,%d)-(%d,%d)\n",
-	  cbx_wrect.left, cbx_wrect.top, cbx_wrect.right, cbx_wrect.bottom,
-	  cbx_crect.left, cbx_crect.top, cbx_crect.right, cbx_crect.bottom);
-    TRACE("CB window=(%d,%d)-(%d,%d), EX setting=(0,0)-(%d,%d)\n",
-	  cb_wrect.left, cb_wrect.top, cb_wrect.right, cb_wrect.bottom,
-	  width, cb_wrect.bottom-cb_wrect.top);
+    TRACE("EX window=(%s), client=(%s)\n",
+          wine_dbgstr_rect(&cbx_wrect), wine_dbgstr_rect(&cbx_crect));
+    TRACE("CB window=(%s), EX setting=(0,0)-(%d,%d)\n",
+          wine_dbgstr_rect(&cbx_wrect), width, cb_wrect.bottom-cb_wrect.top);
 
     if (width) SetWindowPos (infoPtr->hwndCombo, HWND_TOP, 0, 0,
 			     width,
@@ -1753,8 +1741,7 @@ COMBOEX_EditWndProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             hDC = (HDC) wParam;
 	    obkc = SetBkColor (hDC, GetSysColor (COLOR_WINDOW));
             GetClientRect (hwnd, &rect);
-            TRACE("erasing (%d,%d)-(%d,%d)\n",
-		  rect.left, rect.top, rect.right, rect.bottom);
+            TRACE("erasing (%s)\n", wine_dbgstr_rect(&rect));
 	    ExtTextOutW (hDC, 0, 0, ETO_OPAQUE, &rect, 0, 0, 0);
             SetBkColor (hDC, obkc);
 	    return CallWindowProcW (infoPtr->prevEditWndProc,
@@ -1957,8 +1944,7 @@ COMBOEX_ComboWndProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             hDC = (HDC) wParam;
 	    obkc = SetBkColor (hDC, GetSysColor (COLOR_WINDOW));
             GetClientRect (hwnd, &rect);
-            TRACE("erasing (%d,%d)-(%d,%d)\n",
-		  rect.left, rect.top, rect.right, rect.bottom);
+            TRACE("erasing (%s)\n", wine_dbgstr_rect(&rect));
 	    ExtTextOutW (hDC, 0, 0, ETO_OPAQUE, &rect, 0, 0, 0);
             SetBkColor (hDC, obkc);
 	    return CallWindowProcW (infoPtr->prevComboWndProc,

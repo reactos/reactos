@@ -128,6 +128,7 @@ typedef struct
     COLORREF clrBtnFace;            /* COLOR_BTNFACE                       */
     COLORREF clrHighlight;          /* COLOR_HIGHLIGHT                     */
     COLORREF clrHighlightText;      /* COLOR_HIGHLIGHTTEXT                 */
+    COLORREF clrHotTrackingColor;   /* COLOR_HOTLIGHT                      */
     COLORREF clr3dHilight;          /* COLOR_3DHILIGHT                     */
     COLORREF clr3dShadow;           /* COLOR_3DSHADOW                      */
     COLORREF clr3dDkShadow;         /* COLOR_3DDKSHADOW                    */

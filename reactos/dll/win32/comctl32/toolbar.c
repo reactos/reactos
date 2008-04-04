@@ -283,11 +283,10 @@ TOOLBAR_DumpButton(const TOOLBAR_INFO *infoPtr, const TBUTTON_INFO *bP, INT btn_
               bP->fsState, bP->fsStyle, bP->dwData, bP->iString);
 	TRACE("string %s\n", debugstr_w(TOOLBAR_GetText(infoPtr,bP)));
 	if (internal)
-            TRACE("button %d id %d, hot=%s, row=%d, rect=(%d,%d)-(%d,%d)\n",
+            TRACE("button %d id %d, hot=%s, row=%d, rect=(%s)\n",
 		  btn_num, bP->idCommand,
 		  (bP->bHot) ? "TRUE":"FALSE", bP->nRow,
-		  bP->rect.left, bP->rect.top,
-		  bP->rect.right, bP->rect.bottom);
+                  wine_dbgstr_rect(&bP->rect));
     }
 }
 
@@ -509,8 +508,7 @@ TOOLBAR_DrawDDFlatSeparator (const RECT *lpRect, HDC hdc, const TBUTTON_INFO *bt
 
     InflateRect (&myrect, -2, 0);
 
-    TRACE("rect=(%d,%d)-(%d,%d)\n",
-	  myrect.left, myrect.top, myrect.right, myrect.bottom);
+    TRACE("rect=(%s)\n", wine_dbgstr_rect(&myrect));
 
     newcolor = (infoPtr->clrBtnShadow == CLR_DEFAULT) ?
 	        comctl32_color.clrBtnShadow : infoPtr->clrBtnShadow;
@@ -568,8 +566,8 @@ TOOLBAR_DrawString (const TOOLBAR_INFO *infoPtr, RECT *rcText, LPCWSTR lpText,
 
     /* draw text */
     if (lpText) {
-	TRACE("string=%s rect=(%d,%d)-(%d,%d)\n", debugstr_w(lpText),
-	      rcText->left, rcText->top, rcText->right, rcText->bottom);
+        TRACE("string=%s rect=(%s)\n", debugstr_w(lpText),
+              wine_dbgstr_rect(rcText));
 
 	hOldFont = SelectObject (hdc, infoPtr->hFont);
 	if ((state & CDIS_HOT) && (dwItemCDFlag & TBCDRF_HILITEHOTTRACK )) {
@@ -880,7 +878,7 @@ TOOLBAR_DrawButton (HWND hwnd, TBUTTON_INFO *btnPtr, HDC hdc, DWORD dwBaseCustDr
     }
 
     /* copy text & bitmap rects after adjusting for drop-down arrow
-     * so that text & bitmap is centred in the rectangle not containing
+     * so that text & bitmap is centered in the rectangle not containing
      * the arrow */
     CopyRect(&rcText, &rc);
     CopyRect(&rcBitmap, &rc);
@@ -1769,7 +1767,7 @@ TOOLBAR_LayoutToolbar(HWND hwnd)
 		else
 		    y += cy;
 
-		/* nSepRows is used to calculate the extra height follwoing  */
+		/* nSepRows is used to calculate the extra height following  */
 		/* the last row.					     */
 		nSepRows++;
 	    }
@@ -2089,7 +2087,7 @@ static void TOOLBAR_Cust_AddButton(const CUSTDLG_INFO *custInfo, HWND hwnd, INT 
 
             /* duplicate 'separator' button */
             btnNew = (PCUSTOMBUTTON)Alloc(sizeof(CUSTOMBUTTON));
-            memcpy(btnNew, btnInfo, sizeof(CUSTOMBUTTON));
+            *btnNew = *btnInfo;
             btnInfo = btnNew;
         }
 
@@ -2372,7 +2370,7 @@ TOOLBAR_CustomizeDialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                             IDC_TOOLBARBTN_LBOX, LB_GETITEMDATA, index, 0);
                     }
 
-                    memcpy (&btnInfo->btn, &nmtb.tbButton, sizeof(TBBUTTON));
+                    btnInfo->btn = nmtb.tbButton;
                     if (!(nmtb.tbButton.fsStyle & BTNS_SEP))
                     {
                         if (lstrlenW(nmtb.pszText))
@@ -4967,7 +4965,7 @@ TOOLBAR_SetRows (HWND hwnd, WPARAM wParam, LPARAM lParam)
            rows (if CCS_NORESIZE is set), or will take up the whole window
            (if no CCS_NORESIZE).
 
-           Basic algorithum - If N buttons, and y rows requested, each row
+           Basic algorithm - If N buttons, and y rows requested, each row
            contains N/y buttons.
 
            FIXME: Handling of separators not obvious from testing results
@@ -5188,6 +5186,7 @@ TOOLBAR_GetStringA (HWND hwnd, WPARAM wParam, LPARAM lParam)
     if (iString < infoPtr->nNumStrings)
     {
         ret = WideCharToMultiByte(CP_ACP, 0, infoPtr->strings[iString], -1, str, buffersize, NULL, NULL);
+        ret--;
 
         TRACE("returning %s\n", debugstr_a(str));
     }
@@ -5213,13 +5212,17 @@ TOOLBAR_GetStringW (HWND hwnd, WPARAM wParam, LPARAM lParam)
     {
         len = min(len, strlenW(infoPtr->strings[iString]));
         ret = (len+1)*sizeof(WCHAR);
-        memcpy(str, infoPtr->strings[iString], ret);
-        str[len] = '\0';
+        if (str)
+        {
+            memcpy(str, infoPtr->strings[iString], ret);
+            str[len] = '\0';
+        }
+        ret = len;
 
         TRACE("returning %s\n", debugstr_w(str));
     }
     else
-        ERR("String index %d out of range (largest is %d)\n", iString, infoPtr->nNumStrings - 1);
+        WARN("String index %d out of range (largest is %d)\n", iString, infoPtr->nNumStrings - 1);
 
     return ret;
 }
@@ -5321,8 +5324,7 @@ TOOLBAR_Unkwn463 (HWND hwnd, WPARAM wParam, LPARAM lParam)
 
 	    GetWindowRect(hwnd, &rc);
 	    MapWindowPoints(0, hwndParent, (LPPOINT)&rc, 2);
-            TRACE("mapped to (%d,%d)-(%d,%d)\n",
-		rc.left, rc.top, rc.right, rc.bottom);
+            TRACE("mapped to (%s)\n", wine_dbgstr_rect(&rc));
 	    lpsize->cx = max(rc.right-rc.left,
 			     infoPtr->rcBound.right - infoPtr->rcBound.left);
 	}
@@ -6458,13 +6460,11 @@ TOOLBAR_Paint (HWND hwnd, WPARAM wParam)
     PAINTSTRUCT ps;
 
     /* fill ps.rcPaint with a default rect */
-    memcpy(&(ps.rcPaint), &(infoPtr->rcBound), sizeof(infoPtr->rcBound));
+    ps.rcPaint = infoPtr->rcBound;
 
     hdc = wParam==0 ? BeginPaint(hwnd, &ps) : (HDC)wParam;
 
-    TRACE("psrect=(%d,%d)-(%d,%d)\n",
-	  ps.rcPaint.left, ps.rcPaint.top,
-	  ps.rcPaint.right, ps.rcPaint.bottom);
+    TRACE("psrect=(%s)\n", wine_dbgstr_rect(&ps.rcPaint));
 
     TOOLBAR_Refresh (hwnd, hdc, &ps);
     if (!wParam) EndPaint (hwnd, &ps);
@@ -7184,7 +7184,7 @@ static BOOL TOOLBAR_GetButtonInfo(const TOOLBAR_INFO *infoPtr, NMTOOLBARW *nmtb)
                MultiByteToWideChar(CP_ACP, 0, (LPCSTR)nmtba.pszText, -1, 
                   nmtb->pszText, nmtb->cchText);
 
-            memcpy(&nmtb->tbButton, &nmtba.tbButton, sizeof(TBBUTTON));
+            nmtb->tbButton = nmtba.tbButton;
             bRet = TRUE;
         }
 

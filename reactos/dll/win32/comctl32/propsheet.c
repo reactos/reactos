@@ -555,7 +555,7 @@ static BOOL PROPSHEET_CollectPageInfo(LPCPROPSHEETPAGEW lppsp,
 
     if ( !HIWORD( lppsp->pszTitle ) )
     {
-      if (!LoadStringW( lppsp->hInstance, (DWORD_PTR)lppsp->pszTitle,szTitle,sizeof(szTitle) ))
+      if (!LoadStringW( lppsp->hInstance, (DWORD_PTR)lppsp->pszTitle,szTitle,sizeof(szTitle)/sizeof(szTitle[0]) ))
       {
         pTitle = pszNull;
 	FIXME("Could not load resource #%04x?\n",LOWORD(lppsp->pszTitle));
@@ -709,8 +709,7 @@ static BOOL PROPSHEET_SizeMismatch(HWND hwndDlg, const PropSheetInfo* psInfo)
    * Original tab size.
    */
   GetClientRect(hwndTabCtrl, &rcOrigTab);
-  TRACE("orig tab %d %d %d %d\n", rcOrigTab.left, rcOrigTab.top,
-        rcOrigTab.right, rcOrigTab.bottom);
+  TRACE("orig tab %s\n", wine_dbgstr_rect(&rcOrigTab));
 
   /*
    * Biggest page size.
@@ -721,8 +720,7 @@ static BOOL PROPSHEET_SizeMismatch(HWND hwndDlg, const PropSheetInfo* psInfo)
   rcPage.bottom = psInfo->height;
 
   MapDialogRect(hwndDlg, &rcPage);
-  TRACE("biggest page %d %d %d %d\n", rcPage.left, rcPage.top,
-        rcPage.right, rcPage.bottom);
+  TRACE("biggest page %s\n", wine_dbgstr_rect(&rcPage));
 
   if ( (rcPage.right - rcPage.left) != (rcOrigTab.right - rcOrigTab.left) )
     return TRUE;
@@ -798,8 +796,7 @@ static BOOL PROPSHEET_AdjustSize(HWND hwndDlg, PropSheetInfo* psInfo)
 
   GetClientRect(hwndTabCtrl, &rc);
 
-  TRACE("tab client rc %d %d %d %d\n",
-        rc.left, rc.top, rc.right, rc.bottom);
+  TRACE("tab client rc %s\n", wine_dbgstr_rect(&rc));
 
   rc.right += ((padding.x * 2) + tabOffsetX);
   rc.bottom += (buttonHeight + (3 * padding.y) + tabOffsetY);
@@ -831,7 +828,7 @@ static BOOL PROPSHEET_AdjustSizeWizard(HWND hwndDlg, const PropSheetInfo* psInfo
   rc.bottom = psInfo->height;
   MapDialogRect(hwndDlg, &rc);
 
-  TRACE("Biggest page %d %d %d %d\n", rc.left, rc.top, rc.right, rc.bottom);
+  TRACE("Biggest page %s\n", wine_dbgstr_rect(&rc));
 
   /* Add space for the buttons row */
   GetWindowRect(hwndLine, &lineRect);
@@ -1218,7 +1215,7 @@ static BOOL PROPSHEET_CreateTabControl(HWND hwndParent,
 /******************************************************************************
  *            PROPSHEET_WizardSubclassProc
  *
- * Subclassing window procedure for wizard extrior pages to prevent drawing
+ * Subclassing window procedure for wizard exterior pages to prevent drawing
  * background and so drawing above the watermark.
  */
 static LRESULT CALLBACK
@@ -2052,8 +2049,8 @@ static BOOL PROPSHEET_SetCurSel(HWND hwndDlg,
      * NOTE: The resizing happens every time the page is selected and
      * not only when it's created (some applications depend on it). */
     PROPSHEET_GetPageRect(psInfo, hwndDlg, &rc, ppshpage);
-    TRACE("setting page %p, rc (%d,%d)-(%d,%d) w=%d, h=%d\n",
-          psInfo->proppage[index].hwndPage, rc.left, rc.top, rc.right, rc.bottom,
+    TRACE("setting page %p, rc (%s) w=%d, h=%d\n",
+          psInfo->proppage[index].hwndPage, wine_dbgstr_rect(&rc),
           rc.right - rc.left, rc.bottom - rc.top);
     SetWindowPos(psInfo->proppage[index].hwndPage, HWND_TOP,
                  rc.left, rc.top,
@@ -2163,7 +2160,7 @@ static void PROPSHEET_SetTitleW(HWND hwndDlg, DWORD dwStyle, LPCWSTR lpszText)
   TRACE("%s (style %08x)\n", debugstr_w(lpszText), dwStyle);
   if (HIWORD(lpszText) == 0) {
     if (!LoadStringW(psInfo->ppshheader.hInstance,
-                     LOWORD(lpszText), szTitle, sizeof(szTitle)-sizeof(WCHAR)))
+                     LOWORD(lpszText), szTitle, sizeof(szTitle)/sizeof(szTitle[0])))
       return;
     lpszText = szTitle;
   }
@@ -2938,7 +2935,6 @@ INT_PTR WINAPI PropertySheetW(LPCPROPSHEETHEADERW lppsh)
 static LPWSTR load_string( HINSTANCE instance, LPCWSTR str )
 {
     LPWSTR ret;
-    UINT len;
 
     if (IS_INTRESOURCE(str))
     {
@@ -2946,6 +2942,7 @@ static LPWSTR load_string( HINSTANCE instance, LPCWSTR str )
         HGLOBAL hmem;
         WCHAR *ptr;
         WORD i, id = LOWORD(str);
+        UINT len;
 
         if (!(hrsrc = FindResourceW( instance, MAKEINTRESOURCEW((id >> 4) + 1), (LPWSTR)RT_STRING )))
             return NULL;
@@ -3676,7 +3673,7 @@ PROPSHEET_DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
       HWND hwndCancel = GetDlgItem(hwnd, IDCANCEL);
 
       EnableWindow(hwndCancel, FALSE);
-      if (LoadStringW(COMCTL32_hModule, IDS_CLOSE, buf, sizeof(buf)))
+      if (LoadStringW(COMCTL32_hModule, IDS_CLOSE, buf, sizeof(buf)/sizeof(buf[0])))
          SetWindowTextW(hwndOK, buf);
 
       return FALSE;

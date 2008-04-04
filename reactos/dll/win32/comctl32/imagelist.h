@@ -39,7 +39,7 @@ struct _IMAGELIST
     DWORD       x4;
     UINT        flags;                  /* 1c: flags */
     COLORREF    clrFg;                  /* 20: foreground color */
-    COLORREF    clrBk;                  /* 24: backgournd color */
+    COLORREF    clrBk;                  /* 24: background color */
 
 
     HBITMAP     hbmImage;               /* 30: images Bitmap */

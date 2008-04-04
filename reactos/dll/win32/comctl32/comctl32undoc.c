@@ -812,7 +812,7 @@ HANDLE WINAPI CreateMRUListA (const CREATEMRULISTA *lpcml)
 /**************************************************************************
  *                EnumMRUListW [COMCTL32.403]
  *
- * Enumerate item in a most-recenty-used list
+ * Enumerate item in a most-recently-used list
  *
  * PARAMS
  *    hList [I] list handle

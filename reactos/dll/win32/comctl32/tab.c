@@ -414,9 +414,8 @@ static BOOL TAB_InternalGetItemRect(
 	     SELECTED_TAB_OFFSET,
 	     0);
   }
-  TRACE("item %d tab h=%d, rect=(%d,%d)-(%d,%d)\n",
-	itemIndex, infoPtr->tabHeight,
-	itemRect->left, itemRect->top, itemRect->right, itemRect->bottom);
+  TRACE("item %d tab h=%d, rect=(%s)\n",
+        itemIndex, infoPtr->tabHeight, wine_dbgstr_rect(itemRect));
 
   /* Now, calculate the position of the item as if it were selected. */
   if (selectedRect!=NULL)
@@ -529,9 +528,7 @@ static void TAB_FocusChanging(const TAB_INFO *infoPtr)
    */
   if (isVisible)
   {
-      TRACE("invalidate (%d,%d)-(%d,%d)\n",
-	    selectedRect.left,selectedRect.top,
-	    selectedRect.right,selectedRect.bottom);
+    TRACE("invalidate (%s)\n", wine_dbgstr_rect(&selectedRect));
     InvalidateRect(infoPtr->hwnd, &selectedRect, TRUE);
   }
 }
@@ -864,7 +861,8 @@ static LRESULT TAB_AdjustRect(const TAB_INFO *infoPtr, WPARAM fLarger, LPRECT pr
     DWORD lStyle = GetWindowLongW(infoPtr->hwnd, GWL_STYLE);
     LONG *iRightBottom, *iLeftTop;
 
-    TRACE ("hwnd=%p fLarger=%ld (%d,%d)-(%d,%d)\n", infoPtr->hwnd, fLarger, prc->left, prc->top, prc->right, prc->bottom);
+    TRACE ("hwnd=%p fLarger=%ld (%s)\n", infoPtr->hwnd, fLarger,
+           wine_dbgstr_rect(prc));
 
     if(lStyle & TCS_VERTICAL)
     {
@@ -1217,8 +1215,7 @@ static void TAB_SetItemBounds (TAB_INFO *infoPtr)
     curr->rect.bottom = 0;
     curr->rect.top = curItemRowCount - 1;
 
-    TRACE("Rect: T %i, L %i, B %i, R %i\n", curr->rect.top,
-	  curr->rect.left, curr->rect.bottom, curr->rect.right);
+    TRACE("Rect: %s\n", wine_dbgstr_rect(&curr->rect));
 
     /*
      * The leftmost position of the next item is the rightmost position
@@ -1598,8 +1595,7 @@ TAB_DrawItemInterior(const TAB_INFO *infoPtr, HDC hdc, INT iItem, RECT *drawRect
       }
     }
   }
-  TRACE("drawRect=(%d,%d)-(%d,%d)\n",
-	  drawRect->left, drawRect->top, drawRect->right, drawRect->bottom);
+  TRACE("drawRect=(%s)\n", wine_dbgstr_rect(drawRect));
 
   /* Clear interior */
   TAB_EraseTabInterior (infoPtr, hdc, iItem, drawRect);
@@ -1742,10 +1738,9 @@ TAB_DrawItemInterior(const TAB_INFO *infoPtr, HDC hdc, INT iItem, RECT *drawRect
       if (center_offset_v < 0)
         center_offset_v = 0;
 	
-      TRACE("for <%s>, c_o_h=%d, c_o_v=%d, draw=(%d,%d)-(%d,%d), textlen=%d\n",
+      TRACE("for <%s>, c_o_h=%d, c_o_v=%d, draw=(%s), textlen=%d\n",
 	  debugstr_w(item->pszText), center_offset_h, center_offset_v,
-	  drawRect->left, drawRect->top, drawRect->right, drawRect->bottom,
-	  (rcText.right-rcText.left));
+          wine_dbgstr_rect(drawRect), (rcText.right-rcText.left));
 
       if((lStyle & TCS_VERTICAL) && (lStyle & TCS_BOTTOM))
       {
@@ -1873,10 +1868,9 @@ TAB_DrawItemInterior(const TAB_INFO *infoPtr, HDC hdc, INT iItem, RECT *drawRect
     }
     else
     {
-      TRACE("for <%s>, c_o_h=%d, c_o_v=%d, draw=(%d,%d)-(%d,%d), textlen=%d\n",
+      TRACE("for <%s>, c_o_h=%d, c_o_v=%d, draw=(%s), textlen=%d\n",
 	  debugstr_w(item->pszText), center_offset_h, center_offset_v,
-	  drawRect->left, drawRect->top, drawRect->right, drawRect->bottom,
-	  (rcText.right-rcText.left));
+          wine_dbgstr_rect(drawRect), (rcText.right-rcText.left));
       if (item->pszText)
       {
         DrawTextW
@@ -2044,7 +2038,7 @@ static void TAB_DrawItem(const TAB_INFO *infoPtr, HDC  hdc, INT  iItem)
       {
 	/* These are for adjusting the drawing of a Selected tab      */
 	/* The initial values are for the normal case of non-Selected */
-	int ZZ = 1;   /* Do not strech if selected */
+	int ZZ = 1;   /* Do not stretch if selected */
 	if (iItem == infoPtr->iSelected) {
 	    ZZ = 0;
 
@@ -2061,10 +2055,8 @@ static void TAB_DrawItem(const TAB_INFO *infoPtr, HDC  hdc, INT  iItem)
 	  /* Adjust both rectangles to match native */
 	  r.left += (1-ZZ);
 
-          TRACE("<right> item=%d, fill=(%d,%d)-(%d,%d), edge=(%d,%d)-(%d,%d)\n",
-		iItem,
-		fillRect.left,fillRect.top,fillRect.right,fillRect.bottom,
-		r.left,r.top,r.right,r.bottom);
+          TRACE("<right> item=%d, fill=(%s), edge=(%s)\n",
+                iItem, wine_dbgstr_rect(&fillRect), wine_dbgstr_rect(&r));
 
 	  /* Clear interior */
 	  SetBkColor(hdc, bkgnd);
@@ -2102,10 +2094,8 @@ static void TAB_DrawItem(const TAB_INFO *infoPtr, HDC  hdc, INT  iItem)
         }
         else
         {
-          TRACE("<left> item=%d, fill=(%d,%d)-(%d,%d), edge=(%d,%d)-(%d,%d)\n",
-		iItem,
-		fillRect.left,fillRect.top,fillRect.right,fillRect.bottom,
-		r.left,r.top,r.right,r.bottom);
+          TRACE("<left> item=%d, fill=(%s), edge=(%s)\n",
+                iItem, wine_dbgstr_rect(&fillRect), wine_dbgstr_rect(&r));
 
 	  /* Clear interior */
 	  SetBkColor(hdc, bkgnd);
@@ -2156,10 +2146,8 @@ static void TAB_DrawItem(const TAB_INFO *infoPtr, HDC  hdc, INT  iItem)
 	    r.top -= 1;
 	  }
 
-          TRACE("<bottom> item=%d, fill=(%d,%d)-(%d,%d), edge=(%d,%d)-(%d,%d)\n",
-		iItem,
-		fillRect.left,fillRect.top,fillRect.right,fillRect.bottom,
-		r.left,r.top,r.right,r.bottom);
+          TRACE("<bottom> item=%d, fill=(%s), edge=(%s)\n",
+                iItem, wine_dbgstr_rect(&fillRect), wine_dbgstr_rect(&r));
 
 	  /* Clear interior */
 	  SetBkColor(hdc, bkgnd);
@@ -2210,10 +2198,8 @@ static void TAB_DrawItem(const TAB_INFO *infoPtr, HDC  hdc, INT  iItem)
 	    r.bottom += 2;
 	  }
 
-          TRACE("<top> item=%d, fill=(%d,%d)-(%d,%d), edge=(%d,%d)-(%d,%d)\n",
-		iItem,
-		fillRect.left,fillRect.top,fillRect.right,fillRect.bottom,
-		r.left,r.top,r.right,r.bottom);
+          TRACE("<top> item=%d, fill=(%s), edge=(%s)\n",
+                iItem, wine_dbgstr_rect(&fillRect), wine_dbgstr_rect(&r));
 
 	  /* Clear interior */
 	  SetBkColor(hdc, bkgnd);
@@ -2281,8 +2267,7 @@ static void TAB_DrawBorder(const TAB_INFO *infoPtr, HDC hdc)
       rect.top    += infoPtr->tabHeight * infoPtr->uNumRows + CONTROL_BORDER_SIZEX;
   }
 
-  TRACE("border=(%d,%d)-(%d,%d)\n",
-	rect.left, rect.top, rect.right, rect.bottom);
+  TRACE("border=(%s)\n", wine_dbgstr_rect(&rect));
 
   if (theme)
       DrawThemeBackground (theme, hdc, TABP_PANE, 0, &rect, NULL);
@@ -2517,11 +2502,9 @@ static void TAB_InvalidateTabArea(const TAB_INFO *infoPtr)
     else
       rInvalidate.right = clientRect.right - r.left;
   }
-  
-  TRACE("invalidate (%d,%d)-(%d,%d)\n",
-	rInvalidate.left,  rInvalidate.top,
-	rInvalidate.right, rInvalidate.bottom);
- 
+
+  TRACE("invalidate (%s)\n", wine_dbgstr_rect(&rInvalidate));
+
   InvalidateRect(infoPtr->hwnd, &rInvalidate, TRUE);
 }
 
@@ -2535,9 +2518,7 @@ static inline LRESULT TAB_Paint (TAB_INFO *infoPtr, HDC hdcPaint)
   else
   {
     hdc = BeginPaint (infoPtr->hwnd, &ps);
-    TRACE("erase %d, rect=(%d,%d)-(%d,%d)\n",
-         ps.fErase,
-         ps.rcPaint.left,ps.rcPaint.top,ps.rcPaint.right,ps.rcPaint.bottom);
+    TRACE("erase %d, rect=(%s)\n", ps.fErase, wine_dbgstr_rect(&ps.rcPaint));
   }
 
   TAB_Refresh (infoPtr, hdc);
@@ -2557,8 +2538,7 @@ TAB_InsertItemT (TAB_INFO *infoPtr, WPARAM wParam, LPARAM lParam, BOOL bUnicode)
   RECT rect;
 
   GetClientRect (infoPtr->hwnd, &rect);
-  TRACE("Rect: %p T %i, L %i, B %i, R %i\n", infoPtr->hwnd,
-        rect.top, rect.left, rect.bottom, rect.right);
+  TRACE("Rect: %p %s\n", infoPtr->hwnd, wine_dbgstr_rect(&rect));
 
   pti = (TCITEMW *)lParam;
   iItem = (INT)wParam;

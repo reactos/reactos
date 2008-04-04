@@ -169,7 +169,7 @@ typedef struct tagTREEVIEW_INFO
 #define TV_VSCROLL 	0x02	/* (horizontal/vertical) */
 #define TV_LDRAG		0x04	/* Lbutton pushed to start drag */
 #define TV_LDRAGGING	0x08	/* Lbutton pushed, mouse moved. */
-#define TV_RDRAG		0x10	/* dito Rbutton */
+#define TV_RDRAG		0x10	/* ditto Rbutton */
 #define TV_RDRAGGING	0x20
 
 /* bitflags for infoPtr->timer */
@@ -241,8 +241,6 @@ TREEVIEW_GetInfoPtr(HWND hwnd)
 static inline int
 TREEVIEW_GetItemIndex(const TREEVIEW_INFO *infoPtr, HTREEITEM handle)
 {
-    assert(infoPtr != NULL);
-
     return DPA_GetPtrIndex(infoPtr->items, handle);
 }
 
@@ -407,8 +405,6 @@ TREEVIEW_GetPrevListItem(const TREEVIEW_INFO *infoPtr, const TREEVIEW_ITEM *tvIt
 static TREEVIEW_ITEM *
 TREEVIEW_GetNextListItem(const TREEVIEW_INFO *infoPtr, const TREEVIEW_ITEM *tvItem)
 {
-    assert(tvItem != NULL);
-
     /*
      * If this item has children and is expanded, return the first child
      */
@@ -1049,7 +1045,6 @@ static void
 TREEVIEW_InsertBefore(TREEVIEW_ITEM *newItem, TREEVIEW_ITEM *sibling,
 		      TREEVIEW_ITEM *parent)
 {
-    assert(newItem != NULL);
     assert(parent != NULL);
 
     if (sibling != NULL)
@@ -1082,7 +1077,6 @@ static void
 TREEVIEW_InsertAfter(TREEVIEW_ITEM *newItem, TREEVIEW_ITEM *sibling,
 		     TREEVIEW_ITEM *parent)
 {
-    assert(newItem != NULL);
     assert(parent != NULL);
 
     if (sibling != NULL)
@@ -2033,8 +2027,7 @@ TREEVIEW_GetItemRect(const TREEVIEW_INFO *infoPtr, BOOL fTextRect, LPRECT lpRect
 	*lpRect = wineItem->rect;
     }
 
-    TRACE("%s [L:%d R:%d T:%d B:%d]\n", fTextRect ? "text" : "item",
-	  lpRect->left, lpRect->right, lpRect->top, lpRect->bottom);
+    TRACE("%s [%s]\n", fTextRect ? "text" : "item", wine_dbgstr_rect(lpRect));
 
     return TRUE;
 }
@@ -2042,7 +2035,7 @@ TREEVIEW_GetItemRect(const TREEVIEW_INFO *infoPtr, BOOL fTextRect, LPRECT lpRect
 static inline LRESULT
 TREEVIEW_GetVisibleCount(const TREEVIEW_INFO *infoPtr)
 {
-    /* Suprise! This does not take integral height into account. */
+    /* Surprise! This does not take integral height into account. */
     return infoPtr->clientHeight / infoPtr->uItemHeight;
 }
 
@@ -2138,7 +2131,7 @@ TREEVIEW_SetItemT(TREEVIEW_INFO *infoPtr, const TVITEMEXW *tvItem, BOOL isW)
     if (!TREEVIEW_ValidItem(infoPtr, wineItem))
 	return FALSE;
 
-    /* store the orignal item values */
+    /* store the original item values */
     originalItem = *wineItem;
 
     if (!TREEVIEW_DoSetItemT(infoPtr, wineItem, tvItem, isW))
@@ -2580,9 +2573,8 @@ TREEVIEW_DrawItem(const TREEVIEW_INFO *infoPtr, HDC hdc, TREEVIEW_ITEM *wineItem
 	    rcText.left = wineItem->textOffset;
 	    rcText.right = rcText.left + wineItem->textWidth + 4;
 
-            TRACE("drawing text %s at (%d,%d)-(%d,%d)\n",
-		  debugstr_w(wineItem->pszText),
-		  rcText.left, rcText.top, rcText.right, rcText.bottom);
+            TRACE("drawing text %s at (%s)\n",
+                  debugstr_w(wineItem->pszText), wine_dbgstr_rect(&rcText));
 
 	    /* Draw it */
 	    ExtTextOutW(hdc, rcText.left + 2, rcText.top + 1,
@@ -3015,7 +3007,7 @@ TREEVIEW_Sort(TREEVIEW_INFO *infoPtr, BOOL fRecurse, HTREEITEM parent,
 	item = (HTREEITEM)DPA_GetPtr(sortList, count++);
 	while ((nextItem = (HTREEITEM)DPA_GetPtr(sortList, count++)) != NULL)
 	{
-	    /* link the two current item toghether */
+	    /* link the two current item together */
 	    item->nextSibling = nextItem;
 	    nextItem->prevSibling = item;
 
@@ -3586,7 +3578,7 @@ TREEVIEW_Command(TREEVIEW_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
 
 	    infoPtr->bLabelChanged = TRUE;
 
-	    len = GetWindowTextW(infoPtr->hwndEdit, buffer, sizeof(buffer));
+	    len = GetWindowTextW(infoPtr->hwndEdit, buffer, sizeof(buffer)/sizeof(buffer[0]));
 
 	    /* Select font to get the right dimension of the string */
 	    hFont = (HFONT)SendMessageW(infoPtr->hwndEdit, WM_GETFONT, 0, 0);
@@ -4365,7 +4357,7 @@ TREEVIEW_SelectItem(TREEVIEW_INFO *infoPtr, INT wParam, HTREEITEM item)
  * BUGS
  *
  *  - The current implementation has a list of characters it will
- *    accept and it ignores averything else. In particular it will
+ *    accept and it ignores everything else. In particular it will
  *    ignore accentuated characters which seems to match what
  *    Windows does. But I'm not sure it makes sense to follow
  *    Windows there.
@@ -4515,7 +4507,7 @@ TREEVIEW_EnsureVisible(TREEVIEW_INFO *infoPtr, HTREEITEM item, BOOL bHScroll)
 	/* Expand parents as necessary. */
 	HTREEITEM parent;
 
-        /* see if we are trying to ensure that root is vislble */
+        /* see if we are trying to ensure that root is visible */
         if((item != infoPtr->root) && TREEVIEW_ValidItem(infoPtr, item))
           parent = item->parent;
         else
