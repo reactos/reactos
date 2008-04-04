@@ -1,26 +1,12 @@
 /*
- *  ReactOS W32 Subsystem
- *  Copyright (C) 1998 - 2004 ReactOS Team
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * PROJECT:         ReactOS win32 kernel mode subsystem
+ * LICENSE:         GPL - See COPYING in the top level directory
+ * FILE:            subsystems/win32/win32k/objects/gdiobj.c
+ * PURPOSE:         General GDI object manipulation routines
+ * PROGRAMMERS:     ...
  */
-/*
- * GDIOBJ.C - GDI object manipulation routines
- *
- * $Id$
- */
+
+/** INCLUDES ******************************************************************/
 
 #include <w32k.h>
 
@@ -42,22 +28,16 @@ NTSYSAPI ULONG NTAPI RtlWalkFrameChain(OUT PVOID *Callers, IN ULONG Count, IN UL
 #define GDI_HANDLE_GET_ENTRY(HandleTable, h)                                   \
   (&(HandleTable)->Entries[GDI_HANDLE_GET_INDEX((h))])
 
-#define GDIBdyToHdr(body)                                                      \
-  ((PGDIOBJHDR)(body) - 1)
-#define GDIHdrToBdy(hdr)                                                       \
-  (PGDIOBJ)((PGDIOBJHDR)(hdr) + 1)
-
 /* apparently the first 10 entries are never used in windows as they are empty */
 #define RESERVE_ENTRIES_COUNT 10
 
-/*
- * Dummy GDI Cleanup Callback
- */
-static BOOL INTERNAL_CALL
-GDI_CleanupDummy(PVOID ObjectBody)
-{
-    return TRUE;
-}
+#define DelayExecution() \
+  DPRINT("%s:%i: Delay\n", __FILE__, __LINE__); \
+  KeDelayExecutionThread(KernelMode, FALSE, &ShortDelay)
+
+static BOOL INTERNAL_CALL GDI_CleanupDummy(PVOID ObjectBody);
+
+/** GLOBALS *******************************************************************/
 
 typedef struct
 {
@@ -107,101 +87,7 @@ OBJ_TYPE_INFO ObjTypeInfo[] =
 
 static LARGE_INTEGER ShortDelay;
 
-#define DelayExecution() \
-  DPRINT("%s:%i: Delay\n", __FILE__, __LINE__); \
-  KeDelayExecutionThread(KernelMode, FALSE, &ShortDelay)
-
-/*!
- * Allocate GDI object table.
- * \param	Size - number of entries in the object table.
-*/
-PGDI_HANDLE_TABLE INTERNAL_CALL
-GDIOBJ_iAllocHandleTable(OUT PSECTION_OBJECT *SectionObject)
-{
-    PGDI_HANDLE_TABLE HandleTable = NULL;
-    LARGE_INTEGER htSize;
-    UINT ObjType;
-    ULONG ViewSize = 0;
-    NTSTATUS Status;
-
-    ASSERT(SectionObject != NULL);
-
-    htSize.QuadPart = sizeof(GDI_HANDLE_TABLE);
-
-    Status = MmCreateSection((PVOID*)SectionObject,
-                             SECTION_ALL_ACCESS,
-                             NULL,
-                             &htSize,
-                             PAGE_READWRITE,
-                             SEC_COMMIT,
-                             NULL,
-                             NULL);
-    if (!NT_SUCCESS(Status))
-        return NULL;
-
-    /* FIXME - use MmMapViewInSessionSpace once available! */
-    Status = MmMapViewInSystemSpace(*SectionObject,
-                                    (PVOID*)&HandleTable,
-                                    &ViewSize);
-    if (!NT_SUCCESS(Status))
-    {
-        ObDereferenceObject(*SectionObject);
-        *SectionObject = NULL;
-        return NULL;
-    }
-
-    RtlZeroMemory(HandleTable, sizeof(GDI_HANDLE_TABLE));
-
-    HandleTable->LookasideLists = ExAllocatePoolWithTag(NonPagedPool,
-                                  BASE_OBJTYPE_COUNT * sizeof(PAGED_LOOKASIDE_LIST),
-                                  TAG_GDIHNDTBLE);
-    if (HandleTable->LookasideLists == NULL)
-    {
-        MmUnmapViewInSystemSpace(HandleTable);
-        ObDereferenceObject(*SectionObject);
-        *SectionObject = NULL;
-        return NULL;
-    }
-
-    for (ObjType = 0; ObjType < BASE_OBJTYPE_COUNT; ObjType++)
-    {
-        if (ObjTypeInfo[ObjType].bUseLookaside)
-        {
-            ExInitializePagedLookasideList(HandleTable->LookasideLists + ObjType,
-                                           NULL,
-                                           NULL,
-                                           0,
-                                           ObjTypeInfo[ObjType].ulBodySize,
-                                           ObjTypeInfo[ObjType].Tag,
-                                           0);
-        }
-    }
-
-    ShortDelay.QuadPart = -5000LL; /* FIXME - 0.5 ms? */
-
-    HandleTable->FirstFree = 0;
-    HandleTable->FirstUnused = RESERVE_ENTRIES_COUNT;
-
-    return HandleTable;
-}
-
-static __inline PPAGED_LOOKASIDE_LIST
-FindLookasideList(ULONG TypeIndex)
-{
-    return GdiHandleTable->LookasideLists + TypeIndex;
-}
-
-static __inline BOOL
-RunCleanupCallback(PGDIOBJ pObj, ULONG TypeIndex)
-{
-    return ((GDICLEANUPPROC)ObjTypeInfo[TypeIndex].CleanupProc)(pObj);
-}
-
-static __inline ULONG
-GetObjectSize(ULONG TypeIndex)
-{
-    return ObjTypeInfo[TypeIndex].ulBodySize;
-}
+/** DEBUGGING *****************************************************************/
 
 #ifdef GDI_DEBUG
 
@@ -325,9 +211,15 @@ CaptureStackBackTace(PVOID* pFrames, ULONG nFramesToCapture)
   CaptureStackBackTace((PVOID*)GDIHandleAllocator[index], GDI_STACK_LEVELS);
 #define GDIDBG_CAPTURELOCKER(index) \
   CaptureStackBackTace((PVOID*)GDIHandleLocker[index], GDI_STACK_LEVELS);
-
 #define GDIDBG_DUMPHANDLETABLE() \
   IntDumpHandleTable(GdiHandleTable)
+#define GDIDBG_INITLOOPTRACE() \
+  ULONG Attempts = 0;
+#define GDIDBG_TRACELOOP(Handle, PrevThread, Thread) \
+  if ((++Attempts % 20) == 0) \
+  { \
+    DPRINT1("[%d] Handle 0x%p Locked by 0x%x (we're 0x%x)\n", Attempts, Handle, PrevThread, Thread); \
+  }
 
 #else
 
@@ -337,9 +229,96 @@ CaptureStackBackTace(PVOID* pFrames, ULONG nFramesToCapture)
 #define GDIDBG_CAPTUREALLOCATOR(index)
 #define GDIDBG_CAPTURELOCKER(index)
 #define GDIDBG_DUMPHANDLETABLE()
+#define GDIDBG_INITLOOPTRACE()
+#define GDIDBG_TRACELOOP(Handle, PrevThread, Thread)
 
 #endif /* GDI_DEBUG */
 
+
+/** INTERNAL FUNCTIONS ********************************************************/
+
+/*
+ * Dummy GDI Cleanup Callback
+ */
+static BOOL INTERNAL_CALL
+GDI_CleanupDummy(PVOID ObjectBody)
+{
+    return TRUE;
+}
+
+/*!
+ * Allocate GDI object table.
+ * \param	Size - number of entries in the object table.
+*/
+PGDI_HANDLE_TABLE INTERNAL_CALL
+GDIOBJ_iAllocHandleTable(OUT PSECTION_OBJECT *SectionObject)
+{
+    PGDI_HANDLE_TABLE HandleTable = NULL;
+    LARGE_INTEGER htSize;
+    UINT ObjType;
+    ULONG ViewSize = 0;
+    NTSTATUS Status;
+
+    ASSERT(SectionObject != NULL);
+
+    htSize.QuadPart = sizeof(GDI_HANDLE_TABLE);
+
+    Status = MmCreateSection((PVOID*)SectionObject,
+                             SECTION_ALL_ACCESS,
+                             NULL,
+                             &htSize,
+                             PAGE_READWRITE,
+                             SEC_COMMIT,
+                             NULL,
+                             NULL);
+    if (!NT_SUCCESS(Status))
+        return NULL;
+
+    /* FIXME - use MmMapViewInSessionSpace once available! */
+    Status = MmMapViewInSystemSpace(*SectionObject,
+                                    (PVOID*)&HandleTable,
+                                    &ViewSize);
+    if (!NT_SUCCESS(Status))
+    {
+        ObDereferenceObject(*SectionObject);
+        *SectionObject = NULL;
+        return NULL;
+    }
+
+    RtlZeroMemory(HandleTable, sizeof(GDI_HANDLE_TABLE));
+
+    HandleTable->LookasideLists = ExAllocatePoolWithTag(NonPagedPool,
+                                  BASE_OBJTYPE_COUNT * sizeof(PAGED_LOOKASIDE_LIST),
+                                  TAG_GDIHNDTBLE);
+    if (HandleTable->LookasideLists == NULL)
+    {
+        MmUnmapViewInSystemSpace(HandleTable);
+        ObDereferenceObject(*SectionObject);
+        *SectionObject = NULL;
+        return NULL;
+    }
+
+    for (ObjType = 0; ObjType < BASE_OBJTYPE_COUNT; ObjType++)
+    {
+        if (ObjTypeInfo[ObjType].bUseLookaside)
+        {
+            ExInitializePagedLookasideList(HandleTable->LookasideLists + ObjType,
+                                           NULL,
+                                           NULL,
+                                           0,
+                                           ObjTypeInfo[ObjType].ulBodySize,
+                                           ObjTypeInfo[ObjType].Tag,
+                                           0);
+        }
+    }
+
+    ShortDelay.QuadPart = -5000LL; /* FIXME - 0.5 ms? */
+
+    HandleTable->FirstFree = 0;
+    HandleTable->FirstUnused = RESERVE_ENTRIES_COUNT;
+
+    return HandleTable;
+}
 
 static void FASTCALL
 LockErrorDebugOutput(HGDIOBJ hObj, PGDI_TABLE_ENTRY Entry, LPSTR Function)
@@ -491,9 +470,8 @@ GDIOBJ_AllocObjWithHandle(ULONG ObjectType)
     POBJ  newObject = NULL;
     HANDLE CurrentProcessId, LockedProcessId;
     UCHAR TypeIndex;
-#ifdef GDI_DEBUG
-    ULONG Attempts = 0;
-#endif
+
+    GDIDBG_INITLOOPTRACE();
 
     W32Process = PsGetCurrentProcessWin32Process();
     /* HACK HACK HACK: simplest-possible quota implementation - don't allow a process
@@ -519,7 +497,7 @@ GDIOBJ_AllocObjWithHandle(ULONG ObjectType)
     CurrentProcessId = PsGetCurrentProcessId();
     LockedProcessId = (HANDLE)((ULONG_PTR)CurrentProcessId | 0x1);
 
-//    RtlZeroMemory(newObject, GetObjectSize(TypeIndex));
+//    RtlZeroMemory(newObject, ObjTypeInfo[TypeIndex].ulBodySize);
 
     /* On Windows the higher 16 bit of the type field don't contain the
        full type from the handle, but the base type.
@@ -573,12 +551,7 @@ LockHandle:
         }
         else
         {
-#ifdef GDI_DEBUG
-            if (++Attempts > 20)
-            {
-                DPRINT1("[%d]Waiting on handle in index 0x%x\n", Attempts, Index);
-            }
-#endif
+            GDIDBG_TRACELOOP(Index, PrevProcId, CurrentProcessId);
             /* damn, someone is trying to lock the object even though it doesn't
                even exist anymore, wait a little and try again!
                FIXME - we shouldn't loop forever! Give up after some time! */
@@ -647,9 +620,8 @@ GDIOBJ_FreeObjByHandle(HGDIOBJ hObj, DWORD ExpectedType)
     HANDLE ProcessId, LockedProcessId, PrevProcId;
     ULONG HandleType, HandleUpper, TypeIndex;
     BOOL Silent;
-#ifdef GDI_DEBUG
-    ULONG Attempts = 0;
-#endif
+
+    GDIDBG_INITLOOPTRACE();
 
     DPRINT("GDIOBJ_FreeObj: hObj: 0x%08x\n", hObj);
 
@@ -719,7 +691,7 @@ LockHandle:
 
                 /* call the cleanup routine. */
                 TypeIndex = GDI_OBJECT_GET_TYPE_INDEX(HandleType);
-                Ret = RunCleanupCallback(Object, TypeIndex);
+                Ret = ObjTypeInfo[TypeIndex].CleanupProc(Object);
 
                 /* Now it's time to free the memory */
                 GDIOBJ_FreeObj(Object, TypeIndex);
@@ -745,12 +717,8 @@ LockHandle:
     }
     else if (PrevProcId == LockedProcessId)
     {
-#ifdef GDI_DEBUG
-        if (++Attempts > 20)
-        {
-            DPRINT1("[%d]Waiting on 0x%x\n", Attempts, hObj);
-        }
-#endif
+        GDIDBG_TRACELOOP(hObj, PrevProcId, ProcessId);
+
         /* the object is currently locked, wait some time and try again.
            FIXME - we shouldn't loop forever! Give up after some time! */
         DelayExecution();
@@ -1201,9 +1169,8 @@ GDIOBJ_ConvertToStockObj(HGDIOBJ *phObj)
     HANDLE ProcessId, LockedProcessId, PrevProcId;
     PW32THREAD Thread;
     HGDIOBJ hObj;
-#ifdef GDI_DEBUG
-    ULONG Attempts = 0;
-#endif
+
+    GDIDBG_INITLOOPTRACE();
 
     ASSERT(phObj);
     hObj = *phObj;
@@ -1287,12 +1254,8 @@ LockHandle:
                 }
                 else
                 {
-#ifdef GDI_DEBUG
-                    if (++Attempts > 20)
-                    {
-                        DPRINT1("[%d]Locked by 0x%x (we're 0x%x)\n", Attempts, PrevThread, Thread);
-                    }
-#endif
+                    GDIDBG_TRACELOOP(hObj, PrevThread, Thread);
+
                     /* WTF?! The object is already locked by a different thread!
                        Release the lock, wait a bit and try again!
                        FIXME - we should give up after some time unless we want to wait forever! */
@@ -1310,12 +1273,8 @@ LockHandle:
         }
         else if (PrevProcId == LockedProcessId)
         {
-#ifdef GDI_DEBUG
-            if (++Attempts > 20)
-            {
-                DPRINT1("[%d]Waiting on 0x%x\n", Attempts, hObj);
-            }
-#endif
+            GDIDBG_TRACELOOP(hObj, PrevProcId, ProcessId);
+
             /* the object is currently locked, wait some time and try again.
                FIXME - we shouldn't loop forever! Give up after some time! */
             DelayExecution();
@@ -1337,9 +1296,8 @@ GDIOBJ_SetOwnership(HGDIOBJ ObjectHandle, PEPROCESS NewOwner)
     PGDI_TABLE_ENTRY Entry;
     HANDLE ProcessId, LockedProcessId, PrevProcId;
     PW32THREAD Thread;
-#ifdef GDI_DEBUG
-    ULONG Attempts = 0;
-#endif
+
+    GDIDBG_INITLOOPTRACE();
 
     DPRINT("GDIOBJ_SetOwnership: hObj: 0x%x, NewProcess: 0x%x\n", ObjectHandle, (NewOwner ? PsGetProcessId(NewOwner) : 0));
 
@@ -1408,12 +1366,8 @@ LockHandle:
                 }
                 else
                 {
-#ifdef GDI_DEBUG
-                    if (++Attempts > 20)
-                    {
-                        DPRINT1("[%d]Locked by 0x%x (we're 0x%x)\n", Attempts, PrevThread, Thread);
-                    }
-#endif
+                    GDIDBG_TRACELOOP(ObjectHandle, PrevThread, Thread);
+
                     /* WTF?! The object is already locked by a different thread!
                        Release the lock, wait a bit and try again! DO reset the pid lock
                        so we make sure we don't access invalid memory in case the object is
@@ -1434,12 +1388,8 @@ LockHandle:
         }
         else if (PrevProcId == LockedProcessId)
         {
-#ifdef GDI_DEBUG
-            if (++Attempts > 20)
-            {
-                DPRINT1("[%d]Waiting on 0x%x\n", Attempts, ObjectHandle);
-            }
-#endif
+            GDIDBG_TRACELOOP(ObjectHandle, PrevProcId, ProcessId);
+
             /* the object is currently locked, wait some time and try again.
                FIXME - we shouldn't loop forever! Give up after some time! */
             DelayExecution();
@@ -1470,9 +1420,8 @@ GDIOBJ_CopyOwnership(HGDIOBJ CopyFrom, HGDIOBJ CopyTo)
     PGDI_TABLE_ENTRY FromEntry;
     PW32THREAD Thread;
     HANDLE FromProcessId, FromLockedProcessId, FromPrevProcId;
-#ifdef GDI_DEBUG
-    ULONG Attempts = 0;
-#endif
+
+    GDIDBG_INITLOOPTRACE();
 
     DPRINT("GDIOBJ_CopyOwnership: from: 0x%x, to: 0x%x\n", CopyFrom, CopyTo);
 
@@ -1524,12 +1473,8 @@ LockHandleFrom:
                 }
                 else
                 {
-#ifdef GDI_DEBUG
-                    if (++Attempts > 20)
-                    {
-                        DPRINT1("[%d]Locked by 0x%x (we're 0x%x)\n", Attempts, PrevThread, Thread);
-                    }
-#endif
+                    GDIDBG_TRACELOOP(CopyFrom, PrevThread, Thread);
+
                     /* WTF?! The object is already locked by a different thread!
                        Release the lock, wait a bit and try again! DO reset the pid lock
                        so we make sure we don't access invalid memory in case the object is
@@ -1549,12 +1494,8 @@ LockHandleFrom:
         }
         else if (FromPrevProcId == FromLockedProcessId)
         {
-#ifdef GDI_DEBUG
-            if (++Attempts > 20)
-            {
-                DPRINT1("[%d]Waiting on 0x%x\n", Attempts, CopyFrom);
-            }
-#endif
+            GDIDBG_TRACELOOP(CopyFrom, FromPrevProcId, FromProcessId);
+
             /* the object is currently locked, wait some time and try again.
                FIXME - we shouldn't loop forever! Give up after some time! */
             DelayExecution();
@@ -1605,6 +1546,8 @@ GDI_MapHandleTable(PSECTION_OBJECT SectionObject, PEPROCESS Process)
 
     return MappedView;
 }
+
+/** PUBLIC FUNCTIONS **********************************************************/
 
 W32KAPI
 HANDLE
@@ -1716,8 +1659,9 @@ IntGdiGetObject(IN HANDLE Handle,
   return Result;
 }
 
+W32KAPI
 INT
-NTAPI
+APIENTRY
 NtGdiExtGetObjectW(IN HANDLE hGdiObj,
                    IN INT cbCount,
                    OUT LPVOID lpBuffer)
