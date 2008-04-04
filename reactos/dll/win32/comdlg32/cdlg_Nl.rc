@@ -1,5 +1,6 @@
 /*
  * Copyright 1999 Klaas van Gend
+ * Copyright 2008 Frans Kool
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -35,7 +36,7 @@ FONT 8, "MS Shell Dlg"
  LISTBOX 1121, 110, 32, 92, 68, LBS_STANDARD | LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_DISABLENOSCROLL | WS_TABSTOP
  LTEXT "Bestands&typen:", 1089, 6, 104, 90, 9
  COMBOBOX 1136, 6, 114, 90, 36, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_BORDER | WS_VSCROLL | WS_TABSTOP
- LTEXT "Dri&ves:", 1091, 110, 104, 92, 9
+ LTEXT "Schij&ven:", 1091, 110, 104, 92, 9
  COMBOBOX 1137, 110, 114, 92, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
  DEFPUSHBUTTON "&Openen", IDOK, 208, 6, 56, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
  PUSHBUTTON "Annuleren", IDCANCEL, 208, 24, 56, 14, WS_GROUP | WS_TABSTOP
@@ -57,7 +58,7 @@ FONT 8, "MS Shell Dlg"
  LISTBOX 1121, 110, 32, 92, 68, LBS_STANDARD | LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_DISABLENOSCROLL | WS_TABSTOP
  LTEXT "Bestands&typen:", 1089, 6, 104, 90, 9
  COMBOBOX 1136, 6, 114, 90, 36, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_BORDER | WS_VSCROLL | WS_TABSTOP
- LTEXT "Dri&ves:", 1091, 110, 104, 92, 9
+ LTEXT "Schij&ven:", 1091, 110, 104, 92, 9
  COMBOBOX 1137, 110, 114, 92, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
  DEFPUSHBUTTON "&Opslaan als", IDOK, 208, 6, 56, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
  PUSHBUTTON "Annuleren", IDCANCEL, 208, 24, 56, 14, WS_GROUP | WS_TABSTOP
@@ -85,7 +86,7 @@ FONT 8, "MS Shell Dlg"
  LTEXT "Afdruk&kwaliteit:", 1092, 6, 100, 76, 9
  COMBOBOX 1136, 80, 100, 92, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
  CHECKBOX "Naar &bestand", 1040, 20, 100, 50, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
- CHECKBOX "Condensed", 1041, 160, 100, 50, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+ CHECKBOX "Verkort", 1041, 160, 100, 50, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
 }
 
 
@@ -95,7 +96,7 @@ CAPTION "Afdrukeigenschappen"
 FONT 8, "MS Shell Dlg"
 {
  GROUPBOX "Printer", 1072, 6, 10, 180, 65, BS_GROUPBOX
- RADIOBUTTON "&Default Printer", 1056, 16, 20, 80, 12
+ RADIOBUTTON "Stan&daard Printer", 1056, 16, 20, 80, 12
  LTEXT "[geen]", 1088, 35, 35, 120, 9
  RADIOBUTTON "Specifieke &Printer", 1057, 16, 50, 80, 12
  COMBOBOX 1136, 35, 65, 149, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
@@ -103,7 +104,7 @@ FONT 8, "MS Shell Dlg"
  PUSHBUTTON "Annuleren", IDCANCEL, 206, 24, 56, 14, WS_GROUP | WS_TABSTOP
  PUSHBUTTON "&Setup", 1024, 206, 46, 56, 14, WS_GROUP | WS_TABSTOP
  GROUPBOX "Afdrukstand", 1073, 6, 85, 100, 50, BS_GROUPBOX
- RADIOBUTTON "&Staand", 1058, 50, 100, 40, 12
+ RADIOBUTTON "S&taand", 1058, 50, 100, 40, 12
  RADIOBUTTON "&Liggend", 1059, 50, 115, 40, 12
  ICON "LANDSCAP", 1097, 10, 95, 32, 32
  ICON "PORTRAIT", 1098, 10, 95, 32, 32
@@ -250,7 +251,7 @@ CAPTION "Print32"
 FONT 8, "MS Shell Dlg"
 {
     DEFPUSHBUTTON   "OK",     IDOK,     180,164, 48,14, WS_GROUP | BS_DEFPUSHBUTTON
-    PUSHBUTTON      "Cancel", IDCANCEL, 232,164, 48,14, WS_GROUP
+    PUSHBUTTON      "Annuleren", IDCANCEL, 232,164, 48,14, WS_GROUP
     PUSHBUTTON      "&Help",  pshHelp,  50, 161, 48,14, WS_GROUP
 
     GROUPBOX        "Printer",        grp4,   8,  4, 272,84, WS_GROUP
@@ -259,15 +260,15 @@ FONT 8, "MS Shell Dlg"
     LTEXT           "&Naam:",         stc6,  16, 20,  36,8
     COMBOBOX                          cmb4,  52, 18, 152,152,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
     LTEXT           "Status:",        stc8,  16, 36,  36,10, SS_NOPREFIX
-    LTEXT           "Dummy State",    stc12, 52, 36, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+    LTEXT           "Dummy Status",    stc12, 52, 36, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
     LTEXT           "Type:",          stc7,  16, 48,  36,10, SS_NOPREFIX
     LTEXT           "Dummy Type",     stc11, 52, 48, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
     LTEXT           "Waar:",          stc10, 16, 60,  36,10, SS_NOPREFIX
-    LTEXT           "Dummy Location", stc14, 52, 60, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+    LTEXT           "Dummy Locatie", stc14, 52, 60, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
     LTEXT           "Opmerking:",     stc9,  16, 72,  36,10, SS_NOPREFIX
-    LTEXT           "Dummy Remark",   stc13, 52, 72, 152,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+    LTEXT           "Dummy Opmerking",   stc13, 52, 72, 152,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
 
-    GROUPBOX        "Aantal ",         grp2, 160, 92, 120,64, WS_GROUP
+    GROUPBOX        "Aantal",         grp2, 160, 92, 120,64, WS_GROUP
     LTEXT           "Aantal e&xemplaren:",stc5,168,108,68,8
     ICON            "",               ico3, 162,124,  76,24, WS_GROUP | SS_CENTERIMAGE
     CONTROL         "&Sorteren",      chx2,"Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,240,130,36,12
@@ -282,6 +283,71 @@ FONT 8, "MS Shell Dlg"
     RTEXT           "&van:",          stc2,  52,124,  20,8
     RTEXT           "&t/m:",           stc3, 100,124,  16,8
 }
+
+PRINT32_SETUP DIALOG LOADONCALL MOVEABLE DISCARDABLE  32, 32, 288, 178
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU |
+      DS_CONTEXTHELP | DS_3DLOOK
+CAPTION "Print Setup"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,180,156,48,14,WS_GROUP
+    PUSHBUTTON      "Annuleren",IDCANCEL,232,156,48,14
+
+    GROUPBOX        "Printer",        grp4,   8,  4, 272,84, WS_GROUP
+    PUSHBUTTON      "&Eigenschappen", psh2, 212, 17,  60,14, WS_GROUP
+    LTEXT           "&Naam:",         stc6,  16, 20,  36,8
+    COMBOBOX                          cmb1,  52, 18, 152,152,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
+    LTEXT           "Status:",        stc8,  16, 36,  36,10, SS_NOPREFIX
+    LTEXT           "Dummy Status",    stc12, 52, 36, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+    LTEXT           "Type:",          stc7,  16, 48,  36,10, SS_NOPREFIX
+    LTEXT           "Dummy Type",     stc11, 52, 48, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+    LTEXT           "Waar:",         stc10, 16, 60,  36,10, SS_NOPREFIX
+    LTEXT           "Dummy Locatie", stc14, 52, 60, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+    LTEXT           "Opmerking:",       stc9,  16, 72,  36,10, SS_NOPREFIX
+    LTEXT           "Dummy Opmerking",   stc13, 52, 72, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+
+    GROUPBOX        "Papier",          grp2,   8, 92, 164,56, WS_GROUP
+    LTEXT           "&Grootte:",         stc2,  16,108,  36, 8
+    COMBOBOX                          cmb2,  52,106, 112,112,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
+    LTEXT           "&Bron:",       stc3,  16,128,  36, 8
+    COMBOBOX                          cmb3,  52,126, 112,112,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
+
+    GROUPBOX        "Orientatie",    grp1, 180, 92, 100,56, WS_GROUP
+    ICON            "",               ico1, 195,112,  18,20, WS_GROUP
+    CONTROL         "P&ortret",      rad1,"Button",BS_AUTORADIOBUTTON | WS_GROUP |WS_TABSTOP,224,106,52,12
+    CONTROL         "L&iggend",     rad2,"Button",BS_AUTORADIOBUTTON,224,126,52,12
+END
+
+PAGESETUPDLGORD DIALOG LOADONCALL MOVEABLE DISCARDABLE 32, 32, 240, 240
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Setup Page"
+FONT 8, "MS Shell Dlg"
+BEGIN
+  CONTROL "", rct1, "Static", SS_WHITERECT, 80, 8, 80, 80
+  CONTROL "", rct2, "Static", SS_GRAYRECT, 160, 12, 4, 80
+  CONTROL "", rct3, "Static", SS_GRAYRECT,  84, 88, 80, 4
+  GROUPBOX "Papier", grp2, 8, 96, 224, 56, BS_GROUPBOX
+  LTEXT "&Grootte:", stc2, 16, 112, 36, 8
+  COMBOBOX cmb2, 64, 110, 160, 160, CBS_SIMPLE|CBS_DROPDOWN|CBS_SORT|WS_GROUP|WS_TABSTOP|WS_VSCROLL
+  LTEXT "La&de:", stc3, 16, 132, 36, 8
+  COMBOBOX cmb3, 64, 130, 160, 160, CBS_SIMPLE|CBS_DROPDOWN|CBS_SORT|WS_GROUP|WS_TABSTOP|WS_VSCROLL
+  GROUPBOX "Orientatie", grp1, 8, 156, 64, 56, BS_GROUPBOX
+  AUTORADIOBUTTON "&Portret", rad1, 16, 170, 52, 12, BS_AUTORADIOBUTTON
+  AUTORADIOBUTTON "&Liggend", rad2, 16, 190, 52, 12, BS_AUTORADIOBUTTON
+  GROUPBOX "Borders", grp4, 80, 156, 152, 56, BS_GROUPBOX
+  LTEXT "L&inks:", stc15, 88, 172, 21, 8
+  EDITTEXT edt4, 111, 170, 39, 12, WS_TABSTOP|WS_GROUP|WS_BORDER|ES_NUMBER
+  LTEXT "&Rechts:", stc16, 159, 172, 27, 8
+  EDITTEXT edt6, 187, 170, 39, 12, WS_TABSTOP|WS_GROUP|WS_BORDER|ES_NUMBER
+  LTEXT "B&oven:", stc17, 88, 192, 21, 8
+  EDITTEXT edt5, 111, 190, 39, 12, WS_TABSTOP|WS_GROUP|WS_BORDER|ES_NUMBER
+  LTEXT "&Onder:", stc18, 159, 192, 23, 8
+  EDITTEXT edt7, 187, 190, 39, 12, WS_TABSTOP|WS_GROUP|WS_BORDER|ES_NUMBER
+  DEFPUSHBUTTON "OK", IDOK, 71, 220, 50, 14, BS_PUSHBUTTON
+  PUSHBUTTON "Annuleren", IDCANCEL, 126, 220, 50, 14
+  PUSHBUTTON "P&rinter...", psh3, 184, 220, 48, 14
+END
+
 
 STRINGTABLE DISCARDABLE
 {
@@ -341,11 +407,11 @@ beschikbaar"
     PD32_GENERIC_ERROR                    "Er onstond een niet nader \
 gespecifieerde fout"
     PD32_DRIVER_UNKNOWN                   "De printer driver is onbekend"
-    PD32_NO_DEVICES                       "Before you can perform printer-related tasks \
-such as page setup or printing a document, you need to install a printer. \
-Please install one and retry."
+    PD32_NO_DEVICES                       "Voordat u printer-gerelateerde taken \
+zoals pagina instellingen of het printen van een document kun uitvoeren, moet u een \
+printer installeren. Installeer een printer en probeer het opnieuw."
 
-    PD32_DEFAULT_PRINTER                  "Default Printer, "
+    PD32_DEFAULT_PRINTER                  "Standaard Printer, "
     PD32_NR_OF_DOCUMENTS_IN_QUEUE         "Er staan %d documenten in de \
 wachtrij"
     PD32_MARGINS_IN_INCHES                "Marges [inch]"
@@ -356,7 +422,7 @@ wachtrij"
     PD32_PRINTER_STATUS_PAUSED            "Gepauseerd, "
     PD32_PRINTER_STATUS_ERROR             "Fout, "
     PD32_PRINTER_STATUS_PENDING_DELETION  "Bezig met verwijderen, "
-    PD32_PRINTER_STATUS_PAPER_JAM         "Paper jam, "
+    PD32_PRINTER_STATUS_PAPER_JAM         "Papier opstopping, "
     PD32_PRINTER_STATUS_PAPER_OUT         "Papier is op, "
     PD32_PRINTER_STATUS_MANUAL_FEED       "Voer s.v.p. met de hand papier in, "
     PD32_PRINTER_STATUS_PAPER_PROBLEM     "Papier probleem, "
@@ -367,7 +433,7 @@ wachtrij"
     PD32_PRINTER_STATUS_OUTPUT_BIN_FULL   "De uitvoerlade is vol, "
     PD32_PRINTER_STATUS_NOT_AVAILABLE     "Niet aanwezig, "
     PD32_PRINTER_STATUS_WAITING           "Aan het wachten, "
-    PD32_PRINTER_STATUS_PROCESSING        "Aan het Verwerken, "
+    PD32_PRINTER_STATUS_PROCESSING        "Aan het verwerken, "
     PD32_PRINTER_STATUS_INITIALIZING      "Aan het opstarten, "
     PD32_PRINTER_STATUS_WARMING_UP        "Aan het opwarmen, "
     PD32_PRINTER_STATUS_TONER_LOW         "Er is nog maar weinig toner, "
@@ -377,7 +443,15 @@ wachtrij"
     PD32_PRINTER_STATUS_OUT_OF_MEMORY     "Onvoldoende geheugen beschikbaar, "
     PD32_PRINTER_STATUS_DOOR_OPEN         "De printer staat is open, "
     PD32_PRINTER_STATUS_SERVER_UNKNOWN    "Print server onbekend; "
-    PD32_PRINTER_STATUS_POWER_SAVE        "Power safe mode; "
+    PD32_PRINTER_STATUS_POWER_SAVE        "Power safe modus; "
+}
+
+STRINGTABLE DISCARDABLE /* Font styles */
+{
+    IDS_FONT_REGULAR       "Normaal"
+    IDS_FONT_BOLD          "Vet"
+    IDS_FONT_ITALIC        "Cursief"
+    IDS_FONT_BOLD_ITALIC   "Vet-Cursief"
 }
 
 STRINGTABLE DISCARDABLE /* Color names */

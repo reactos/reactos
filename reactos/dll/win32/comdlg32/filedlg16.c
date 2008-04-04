@@ -73,7 +73,7 @@ static void FD16_MapOfnStruct16(const OPENFILENAME16 *ofn16, LPOPENFILENAMEW ofn
     if (HIWORD(ofn16->lpTemplateName))
         ofnA.lpTemplateName = MapSL(ofn16->lpTemplateName);
     else
-        ofnA.lpTemplateName = (LPSTR) ofn16->lpTemplateName; /* ressource number */
+        ofnA.lpTemplateName = (LPSTR) ofn16->lpTemplateName; /* resource number */
     /* now calls the 32 bits Ansi to Unicode version to complete the job */
     FD31_MapOfnStructA(&ofnA, ofnW, open);
 }
@@ -485,7 +485,7 @@ BOOL16 WINAPI GetOpenFileName16(
  *    unknown. There are some FIXME's left.
  */
 BOOL16 WINAPI GetSaveFileName16(
-				SEGPTR ofn /* [in/out] addess of structure with data*/
+				SEGPTR ofn /* [in/out] address of structure with data*/
 				)
 {
     HINSTANCE16 hInst;

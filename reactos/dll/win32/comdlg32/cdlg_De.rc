@@ -74,7 +74,7 @@ FONT 8, "MS Shell Dlg"
 {
  LTEXT "Drucker:", 1088, 6, 6, 40, 9
  LTEXT "", 1089, 60, 6, 150, 9
- GROUPBOX "Druckbereicht", 1072, 6, 30, 160, 65, BS_GROUPBOX
+ GROUPBOX "Druckbereich", 1072, 6, 30, 160, 65, BS_GROUPBOX
  RADIOBUTTON "&Alles", rad1, 16, 45, 60, 12
  RADIOBUTTON "A&uswahl", rad2, 16, 60, 60, 12
  RADIOBUTTON "&Seiten", rad3, 16, 75, 60, 12
@@ -435,6 +435,14 @@ Bitte geben sie einen Wert zwischen %d und %d an."
     PD32_PRINTER_STATUS_DOOR_OPEN         "Druckergehäuse ist offen; "
     PD32_PRINTER_STATUS_SERVER_UNKNOWN    "Druckserver unbekannt; "
     PD32_PRINTER_STATUS_POWER_SAVE        "Stromsparmodus; "
+}
+
+STRINGTABLE DISCARDABLE /* Font styles */
+{
+    IDS_FONT_REGULAR       "Normal"
+    IDS_FONT_BOLD          "Fett"
+    IDS_FONT_ITALIC        "Kursiv"
+    IDS_FONT_BOLD_ITALIC   "Fett Kursiv"
 }
 
 STRINGTABLE DISCARDABLE /* Color names */

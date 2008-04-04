@@ -126,6 +126,13 @@ typedef struct {
 #define IDS_CHARSET_ISO10       223
 #define IDS_CHARSET_CELTIC      224
 
+/* Font styles */
+
+#define IDS_FONT_REGULAR        256
+#define IDS_FONT_BOLD           257
+#define IDS_FONT_ITALIC         258
+#define IDS_FONT_BOLD_ITALIC    259
+
 /* Color names string IDs */
 
 #define IDS_COLOR_BLACK                 1040

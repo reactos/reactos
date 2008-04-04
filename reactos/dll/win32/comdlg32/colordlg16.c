@@ -58,7 +58,7 @@ typedef struct CCPRIVATE
     RECT fullsize;       /* original dialog window size */
     UINT msetrgb;        /* # of SETRGBSTRING message (today not used)  */
     RECT old3angle;      /* last position of l-marker */
-    RECT oldcross;       /* last position of color/satuation marker */
+    RECT oldcross;       /* last position of color/saturation marker */
     BOOL updating;       /* to prevent recursive WM_COMMAND/EN_UPDATE processing */
     int h;
     int s;

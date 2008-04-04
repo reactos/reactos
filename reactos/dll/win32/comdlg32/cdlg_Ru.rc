@@ -442,6 +442,14 @@ STRINGTABLE DISCARDABLE
     PD32_PRINTER_STATUS_POWER_SAVE        "Питание в безопасном режиме; "
 }
 
+STRINGTABLE DISCARDABLE /* Font styles */
+{
+    IDS_FONT_REGULAR       "Нормальный"
+    IDS_FONT_BOLD          "Жирный"
+    IDS_FONT_ITALIC        "Курсив"
+    IDS_FONT_BOLD_ITALIC   "Жирный курсив"
+}
+
 STRINGTABLE DISCARDABLE /* Color names */
 {
     IDS_COLOR_BLACK     "Чёрный"

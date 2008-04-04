@@ -443,6 +443,14 @@ Please install one and retry."
     PD32_PRINTER_STATUS_POWER_SAVE        "Power save mode; "
 }
 
+STRINGTABLE DISCARDABLE /* Font styles */
+{
+    IDS_FONT_REGULAR       "Regular"
+    IDS_FONT_BOLD          "Bold"
+    IDS_FONT_ITALIC        "Italic"
+    IDS_FONT_BOLD_ITALIC   "Bold Italic"
+}
+
 STRINGTABLE DISCARDABLE /* Color names */
 {
     IDS_COLOR_BLACK     "Black"

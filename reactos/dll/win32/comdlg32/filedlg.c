@@ -889,7 +889,7 @@ static INT_PTR FILEDLG95_Handle_GetFilePath(HWND hwnd, DWORD size, LPVOID buffer
         {
             /* 'n' includes trailing \0 */
             bufW[n-1] = '\\';
-            memcpy( &bufW[n], lpstrFileList, (size-n)*sizeof(WCHAR) );
+            lstrcpynW( &bufW[n], lpstrFileList, size - n );
         }
         TRACE("returned -> %s\n",debugstr_wn(bufW, total));
     }
@@ -931,16 +931,15 @@ static INT_PTR FILEDLG95_Handle_GetFileSpec(HWND hwnd, DWORD size, LPVOID buffer
     FILEDLG95_FILENAME_GetFileNames(hwnd, &lpstrFileList, &sizeUsed, ' ');
     if( fodInfos->unicode )
     {
-        LPWSTR bufW = buffer;
-        memcpy( bufW, lpstrFileList, sizeof(WCHAR)*sizeUsed );
+        lstrcpynW( buffer, lpstrFileList, size );
     }
     else
     {
         LPSTR bufA = buffer;
-        sizeUsed = WideCharToMultiByte( CP_ACP, 0, lpstrFileList, sizeUsed,
-                                        NULL, 0, NULL, NULL);
-        WideCharToMultiByte(CP_ACP, 0, lpstrFileList, sizeUsed,
-                            bufA, size, NULL, NULL);
+        DWORD sizeA = WideCharToMultiByte( CP_ACP, 0, lpstrFileList, sizeUsed, NULL, 0, NULL, NULL);
+        WideCharToMultiByte(CP_ACP, 0, lpstrFileList, sizeUsed, bufA, size, NULL, NULL);
+        if (size && size < sizeA) bufA[size - 1] = 0;
+        sizeUsed = sizeA;
     }
     MemFree(lpstrFileList);
 
@@ -1373,9 +1372,9 @@ static LRESULT FILEDLG95_InitControls(HWND hwnd)
       if (handledPath == FALSE && (win2000plus || win98plus)) {
           fodInfos->initdir = MemAlloc(MAX_PATH*sizeof(WCHAR));
 
-          if(FAILED(COMDLG32_SHGetFolderPathW(hwnd, CSIDL_PERSONAL, 0, 0, fodInfos->initdir)))
+          if(!COMDLG32_SHGetFolderPathW(hwnd, CSIDL_PERSONAL, 0, 0, fodInfos->initdir))
           {
-            if(FAILED(COMDLG32_SHGetFolderPathW(hwnd, CSIDL_DESKTOPDIRECTORY|CSIDL_FLAG_CREATE, 0, 0, fodInfos->initdir)))
+            if(!COMDLG32_SHGetFolderPathW(hwnd, CSIDL_DESKTOPDIRECTORY|CSIDL_FLAG_CREATE, 0, 0, fodInfos->initdir))
             {
                 /* last fallback */
                 GetCurrentDirectoryW(MAX_PATH, fodInfos->initdir);
@@ -1834,7 +1833,7 @@ BOOL FILEDLG95_OnOpen(HWND hwnd)
 
   TRACE("current directory=%s\n", debugstr_w(lpstrPathAndFile));
 
-  /* if the user specifyed a fully qualified path use it */
+  /* if the user specified a fully qualified path use it */
   if(PathIsRelativeW(lpstrFileList))
   {
     lstrcatW(lpstrPathAndFile, lpstrFileList);
@@ -3237,29 +3236,27 @@ static int FILEDLG95_FILENAME_GetFileNames (HWND hwnd, LPWSTR * lpstrFileList, U
 	    while ((lpstrEdit[nStrCharCount]!='"') && (nStrCharCount <= nStrLen))
 	    {
 	      (*lpstrFileList)[nFileIndex++] = lpstrEdit[nStrCharCount];
-	      (*sizeUsed)++;
 	      nStrCharCount++;
 	    }
 	    (*lpstrFileList)[nFileIndex++] = separator;
-	    (*sizeUsed)++;
 	    nFileCount++;
 	  }
 	  nStrCharCount++;
 	}
 
 	/* single, unquoted string */
-	if ((nStrLen > 0) && (*sizeUsed == 0) )
+	if ((nStrLen > 0) && (nFileIndex == 0) )
 	{
 	  lstrcpyW(*lpstrFileList, lpstrEdit);
 	  nFileIndex = lstrlenW(lpstrEdit) + 1;
-	  (*sizeUsed) = nFileIndex;
 	  nFileCount = 1;
 	}
 
-	/* trailing \0 */
-	(*lpstrFileList)[nFileIndex] = '\0';
-	(*sizeUsed)++;
+        /* trailing \0 */
+        if (nFileIndex && separator) nFileIndex--;  /* remove trailing separator */
+        (*lpstrFileList)[nFileIndex++] = '\0';
 
+        *sizeUsed = nFileIndex;
 	MemFree(lpstrEdit);
 	return nFileCount;
 }
@@ -3681,7 +3678,7 @@ static void CALLBACK FD32_UpdateResult(const FD31_DATA *lfs)
                                   priv->ofnA->lpstrFile, ofnW->nMaxFile, NULL, NULL ))
             priv->ofnA->lpstrFile[ofnW->nMaxFile-1] = 0;
 
-        /* offsets are not guarenteed to be the same in WCHAR to MULTIBYTE conversion */
+        /* offsets are not guaranteed to be the same in WCHAR to MULTIBYTE conversion */
         /* set filename offset */
         lpszTemp = PathFindFileNameA(priv->ofnA->lpstrFile);
         priv->ofnA->nFileOffset = (lpszTemp - priv->ofnA->lpstrFile);
@@ -3813,7 +3810,7 @@ static INT_PTR CALLBACK FD32_FileOpenDlgProc(HWND hWnd, UINT wMsg,
  *
  * Creates a win31 style dialog box for the user to select a file to open/save.
  */
-static BOOL GetFileName31A(LPOPENFILENAMEA lpofn, /* addess of structure with data*/
+static BOOL GetFileName31A(LPOPENFILENAMEA lpofn, /* address of structure with data*/
                            UINT dlgType /* type dialogue : open/save */
                            )
 {
@@ -3844,7 +3841,7 @@ static BOOL GetFileName31A(LPOPENFILENAMEA lpofn, /* addess of structure with da
  *
  * Creates a win31 style dialog box for the user to select a file to open/save
  */
-static BOOL GetFileName31W(LPOPENFILENAMEW lpofn, /* addess of structure with data*/
+static BOOL GetFileName31W(LPOPENFILENAMEW lpofn, /* address of structure with data*/
                            UINT dlgType /* type dialogue : open/save */
                            )
 {
