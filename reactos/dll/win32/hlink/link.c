@@ -602,7 +602,7 @@ static HRESULT WINAPI IPersistStream_fnGetClassID(IPersistStream* iface,
 {
     HlinkImpl *This = HlinkImpl_from_IPersistStream(iface);
     TRACE("(%p)\n", This);
-    memcpy(pClassID, &CLSID_StdHlink, sizeof(CLSID));
+    *pClassID = CLSID_StdHlink;
     return S_OK;
 }
 

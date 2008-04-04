@@ -41,8 +41,6 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 
     switch (fdwReason)
     {
-    case DLL_WINE_PREATTACH:
-        return FALSE;  /* prefer native version */
     case DLL_PROCESS_ATTACH:
         DisableThreadLibraryCalls(hinstDLL);
         break;
@@ -52,12 +50,18 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
     return TRUE;
 }
 
+/***********************************************************************
+ *             DllCanUnloadNow (HLINK.@)
+ */
 HRESULT WINAPI DllCanUnloadNow( void )
 {
     FIXME("\n");
     return S_OK;
 }
 
+/***********************************************************************
+ *             HlinkCreateFromMoniker (HLINK.@)
+ */
 HRESULT WINAPI HlinkCreateFromMoniker( IMoniker *pimkTrgt, LPCWSTR pwzLocation,
         LPCWSTR pwzFriendlyName, IHlinkSite* pihlsite, DWORD dwSiteData,
         IUnknown* piunkOuter, REFIID riid, void** ppvObj)
@@ -89,6 +93,9 @@ HRESULT WINAPI HlinkCreateFromMoniker( IMoniker *pimkTrgt, LPCWSTR pwzLocation,
     return r;
 }
 
+/***********************************************************************
+ *             HlinkCreateFromString (HLINK.@)
+ */
 HRESULT WINAPI HlinkCreateFromString( LPCWSTR pwzTarget, LPCWSTR pwzLocation,
         LPCWSTR pwzFriendlyName, IHlinkSite* pihlsite, DWORD dwSiteData,
         IUnknown* piunkOuter, REFIID riid, void** ppvObj)
@@ -151,6 +158,9 @@ HRESULT WINAPI HlinkCreateFromString( LPCWSTR pwzTarget, LPCWSTR pwzLocation,
 }
 
 
+/***********************************************************************
+ *             HlinkNavigate (HLINK.@)
+ */
 HRESULT WINAPI HlinkCreateBrowseContext( IUnknown* piunkOuter, REFIID riid, void** ppvObj)
 {
     HRESULT r = S_OK;
@@ -164,6 +174,9 @@ HRESULT WINAPI HlinkCreateBrowseContext( IUnknown* piunkOuter, REFIID riid, void
     return r;
 }
 
+/***********************************************************************
+ *             HlinkNavigate (HLINK.@)
+ */
 HRESULT WINAPI HlinkNavigate(IHlink *phl, IHlinkFrame *phlFrame,
         DWORD grfHLNF, LPBC pbc, IBindStatusCallback *pbsc,
         IHlinkBrowseContext *phlbc)
@@ -180,6 +193,9 @@ HRESULT WINAPI HlinkNavigate(IHlink *phl, IHlinkFrame *phlFrame,
     return r;
 }
 
+/***********************************************************************
+ *             HlinkOnNavigate (HLINK.@)
+ */
 HRESULT WINAPI HlinkOnNavigate( IHlinkFrame *phlFrame,
         IHlinkBrowseContext* phlbc, DWORD grfHLNF, IMoniker *pmkTarget,
         LPCWSTR pwzLocation, LPCWSTR pwzFriendlyName, ULONG* puHLID)
@@ -199,6 +215,9 @@ HRESULT WINAPI HlinkOnNavigate( IHlinkFrame *phlFrame,
     return r;
 }
 
+/***********************************************************************
+ *             HlinkCreateFromData (HLINK.@)
+ */
 HRESULT WINAPI HlinkCreateFromData(IDataObject *piDataObj,
         IHlinkSite *pihlsite, DWORD dwSiteData, IUnknown *piunkOuter,
         REFIID riid, void **ppvObj)
@@ -209,12 +228,18 @@ HRESULT WINAPI HlinkCreateFromData(IDataObject *piDataObj,
     return E_NOTIMPL;
 }
 
+/***********************************************************************
+ *             HlinkQueryCreateFromData (HLINK.@)
+ */
 HRESULT WINAPI HlinkQueryCreateFromData(IDataObject* piDataObj)
 {
     FIXME("%p\n", piDataObj);
     return E_NOTIMPL;
 }
 
+/***********************************************************************
+ *             HlinkNavigateToStringReference (HLINK.@)
+ */
 HRESULT WINAPI HlinkNavigateToStringReference( LPCWSTR pwzTarget,
         LPCWSTR pwzLocation, IHlinkSite *pihlsite, DWORD dwSiteData,
         IHlinkFrame *pihlframe, DWORD grfHLNF, LPBC pibc,
@@ -235,6 +260,9 @@ HRESULT WINAPI HlinkNavigateToStringReference( LPCWSTR pwzTarget,
     return r;
 }
 
+/***********************************************************************
+ *             HlinkIsShortcut (HLINK.@)
+ */
 HRESULT WINAPI HlinkIsShortcut(LPCWSTR pwzFileName)
 {
     int len;
@@ -253,6 +281,9 @@ HRESULT WINAPI HlinkIsShortcut(LPCWSTR pwzFileName)
     return strcmpiW(pwzFileName+len, url_ext) ? S_FALSE : S_OK;
 }
 
+/***********************************************************************
+ *             HlinkGetSpecialReference (HLINK.@)
+ */
 HRESULT WINAPI HlinkGetSpecialReference(ULONG uReference, LPWSTR *ppwzReference)
 {
     DWORD res, type, size = 100;
@@ -308,18 +339,89 @@ HRESULT WINAPI HlinkGetSpecialReference(ULONG uReference, LPWSTR *ppwzReference)
     return S_OK;
 }
 
+/***********************************************************************
+ *             HlinkTranslateURL (HLINK.@)
+ */
 HRESULT WINAPI HlinkTranslateURL(LPCWSTR pwzURL, DWORD grfFlags, LPWSTR *ppwzTranslatedURL)
 {
     FIXME("(%s %08x %p)\n", debugstr_w(pwzURL), grfFlags, ppwzTranslatedURL);
     return E_NOTIMPL;
 }
 
+/***********************************************************************
+ *             HlinkUpdateStackItem (HLINK.@)
+ */
 HRESULT WINAPI HlinkUpdateStackItem(IHlinkFrame *pihlframe, IHlinkBrowseContext *pihlbc,
         ULONG uHLID, IMoniker *pimkTrgt, LPCWSTR pwzLocation, LPCWSTR pwzFriendlyName)
 {
     FIXME("(%p %p %u %p %s %s)\n", pihlframe, pihlbc, uHLID, pimkTrgt, debugstr_w(pwzLocation),
           debugstr_w(pwzFriendlyName));
     return E_NOTIMPL;
+}
+
+/***********************************************************************
+ *             HlinkParseDisplayName (HLINK.@)
+ */
+HRESULT WINAPI HlinkParseDisplayName(LPBC pibc, LPCWSTR pwzDisplayName, BOOL fNoForceAbs,
+        ULONG *pcchEaten, IMoniker **ppimk)
+{
+    HRESULT hres;
+
+    TRACE("(%p %s %x %p %p)\n", pibc, debugstr_w(pwzDisplayName), fNoForceAbs, pcchEaten, ppimk);
+
+    if(fNoForceAbs)
+        FIXME("Unsupported fNoForceAbs\n");
+
+    hres = MkParseDisplayNameEx(pibc, pwzDisplayName, pcchEaten, ppimk);
+    if(SUCCEEDED(hres))
+        return hres;
+
+    hres = MkParseDisplayName(pibc, pwzDisplayName, pcchEaten, ppimk);
+    if(SUCCEEDED(hres))
+        return hres;
+
+    hres = CreateFileMoniker(pwzDisplayName, ppimk);
+    if(SUCCEEDED(hres))
+        *pcchEaten = strlenW(pwzDisplayName);
+
+    return hres;
+}
+
+/***********************************************************************
+ *             HlinkResolveMonikerForData (HLINK.@)
+ */
+HRESULT WINAPI HlinkResolveMonikerForData(LPMONIKER pimkReference, DWORD reserved, LPBC pibc,
+        ULONG cFmtetc, FORMATETC *rgFmtetc, IBindStatusCallback *pibsc, LPMONIKER pimkBase)
+{
+    LPOLESTR name = NULL;
+    IBindCtx *bctx;
+    DWORD mksys = 0;
+    void *obj = NULL;
+    HRESULT hres;
+
+    TRACE("(%p %x %p %d %p %p %p)\n", pimkReference, reserved, pibc, cFmtetc, rgFmtetc, pibsc, pimkBase);
+
+    if(cFmtetc || rgFmtetc || pimkBase)
+        FIXME("Unsupported args\n");
+
+    hres = RegisterBindStatusCallback(pibc, pibsc, NULL /* FIXME */, 0);
+    if(FAILED(hres))
+        return hres;
+
+    hres = IMoniker_IsSystemMoniker(pimkReference, &mksys);
+    if(SUCCEEDED(hres) && mksys != MKSYS_URLMONIKER)
+        WARN("sysmk = %x\n", mksys);
+
+    /* FIXME: What is it for? */
+    CreateBindCtx(0, &bctx);
+    hres = IMoniker_GetDisplayName(pimkReference, bctx, NULL, &name);
+    IBindCtx_Release(bctx);
+    if(SUCCEEDED(hres)) {
+        TRACE("got display name %s\n", debugstr_w(name));
+        CoTaskMemFree(name);
+    }
+
+    return IMoniker_BindToStorage(pimkReference, pibc, NULL, &IID_IUnknown, &obj);
 }
 
 static HRESULT WINAPI HLinkCF_fnQueryInterface ( LPCLASSFACTORY iface,
@@ -435,6 +537,9 @@ static HRESULT register_clsid(LPCGUID guid)
     return S_OK;
 }
 
+/***********************************************************************
+ *             DllRegisterServer (HLINK.@)
+ */
 HRESULT WINAPI DllRegisterServer(void)
 {
     HRESULT r;

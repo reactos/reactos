@@ -63,7 +63,7 @@ static HRESULT WINAPI ExtServUnk_QueryInterface(IUnknown *iface, REFIID riid, vo
     }
 
     if(*ppv) {
-        IUnknown_AddRef(EXTSERVUNK(This));
+        IUnknown_AddRef((IUnknown*)*ppv);
         return S_OK;
     }
 
@@ -209,6 +209,9 @@ static const IHttpNegotiateVtbl HttpNegotiateVtbl = {
     HttpNegotiate_OnResponse
 };
 
+/***********************************************************************
+ *             HlinkCreateExtensionServices (HLINK.@)
+ */
 HRESULT WINAPI HlinkCreateExtensionServices(LPCWSTR pwzAdditionalHeaders,
         HWND phwnd, LPCWSTR pszUsername, LPCWSTR pszPassword,
         IUnknown *punkOuter, REFIID riid, void** ppv)
