@@ -25,6 +25,20 @@ import "msxml.idl";
 interface IInternetProtocolSink;
 
 /*****************************************************************************
+ * IInternet interface
+ */
+[
+    object,
+    uuid(79eac9e0-baf9-11ce-8c82-00aa004ba90b),
+    pointer_default(unique),
+    local
+]
+interface IInternet : IUnknown
+{
+    typedef [unique] IInternet *LPIINTERNET;
+}
+
+/*****************************************************************************
  * IBinding interface
  */
 [
@@ -1005,6 +1019,120 @@ cpp_quote("#define MAX_SIZE_SECURITY_ID 512")
         [in] DWORD dwFlags);
 }
 
+cpp_quote("#define URLACTION_MIN                        0x00001000")
+cpp_quote("#define URLACTION_DOWNLOAD_MIN               0x00001000")
+cpp_quote("#define URLACTION_DOWNLOAD_SIGNED_ACTIVEX    0x00001001")
+cpp_quote("#define URLACTION_DOWNLOAD_UNSIGNED_ACTIVEX  0x00001004")
+cpp_quote("#define URLACTION_DOWNLOAD_CURR_MAX          0x00001004")
+cpp_quote("#define URLACTION_DOWNLOAD_MAX               0x000011ff")
+
+cpp_quote("#define URLACTION_ACTIVEX_MIN                     0x00001200")
+cpp_quote("#define URLACTION_ACTIVEX_RUN                     0x00001200")
+cpp_quote("#define URLPOLICY_ACTIVEX_CHECK_LIST              0x00010000")
+cpp_quote("#define URLACTION_ACTIVEX_OVERRIDE_OBJECT_SAFETY  0x00001201")
+cpp_quote("#define URLACTION_ACTIVEX_OVERRIDE_DATA_SAFETY    0x00001202")
+cpp_quote("#define URLACTION_ACTIVEX_OVERRIDE_SCRIPT_SAFETY  0x00001203")
+cpp_quote("#define URLACTION_SCRIPT_OVERRIDE_SAFETY          0x00001401")
+cpp_quote("#define URLACTION_ACTIVEX_CONFIRM_NOOBJECTSAFETY  0x00001204")
+cpp_quote("#define URLACTION_ACTIVEX_TREATASUNTRUSTED        0x00001205")
+cpp_quote("#define URLACTION_ACTIVEX_CURR_MAX                0x00001205")
+cpp_quote("#define URLACTION_ACTIVEX_MAX                     0x000013ff")
+
+cpp_quote("#define URLACTION_SCRIPT_MIN           0x00001400")
+cpp_quote("#define URLACTION_SCRIPT_RUN           0x00001400")
+cpp_quote("#define URLACTION_SCRIPT_JAVA_USE      0x00001402")
+cpp_quote("#define URLACTION_SCRIPT_SAFE_ACTIVEX  0x00001405")
+cpp_quote("#define URLACTION_CROSS_DOMAIN_DATA    0x00001406")
+cpp_quote("#define URLACTION_SCRIPT_PASTE         0x00001407")
+cpp_quote("#define URLACTION_SCRIPT_CURR_MAX      0x00001407")
+cpp_quote("#define URLACTION_SCRIPT_MAX           0x000015ff")
+
+cpp_quote("#define URLACTION_HTML_MIN                0x00001600")
+cpp_quote("#define URLACTION_HTML_SUBMIT_FORMS       0x00001601")
+cpp_quote("#define URLACTION_HTML_SUBMIT_FORMS_FROM  0x00001602")
+cpp_quote("#define URLACTION_HTML_SUBMIT_FORMS_TO    0x00001603")
+cpp_quote("#define URLACTION_HTML_FONT_DOWNLOAD      0x00001604")
+cpp_quote("#define URLACTION_HTML_JAVA_RUN           0x00001605")
+cpp_quote("#define URLACTION_HTML_USERDATA_SAVE      0x00001606")
+cpp_quote("#define URLACTION_HTML_SUBFRAME_NAVIGATE  0x00001607")
+cpp_quote("#define URLACTION_HTML_META_REFRESH       0x00001608")
+cpp_quote("#define URLACTION_HTML_MIXED_CONTENT      0x00001609")
+cpp_quote("#define URLACTION_HTML_MAX                0x000017ff")
+
+cpp_quote("#define URLACTION_SHELL_MIN              0x00001800")
+cpp_quote("#define URLACTION_SHELL_INSTALL_DTITEMS  0x00001800")
+cpp_quote("#define URLACTION_SHELL_MOVE_OR_COPY     0x00001802")
+cpp_quote("#define URLACTION_SHELL_FILE_DOWNLOAD    0x00001803")
+cpp_quote("#define URLACTION_SHELL_VERB             0x00001804")
+cpp_quote("#define URLACTION_SHELL_WEBVIEW_VERB     0x00001805")
+cpp_quote("#define URLACTION_SHELL_CURR_MAX         0x00001805")
+cpp_quote("#define URLACTION_SHELL_MAX              0x000019ff")
+
+cpp_quote("#define URLACTION_NETWORK_MIN                  0x00001a00")
+cpp_quote("#define URLACTION_CREDENTIALS_USE              0x00001a00")
+cpp_quote("#define URLACTION_AUTHENTICATE_CLIENT          0x00001a01")
+cpp_quote("#define URLACTION_COOKIES                      0x00001a02")
+cpp_quote("#define URLACTION_COOKIES_SESSION              0x00001a03")
+cpp_quote("#define URLACTION_CLIENT_CERT_PROMPT           0x00001a04")
+cpp_quote("#define URLACTION_COOKIES_THIRD_PARTY          0x00001a05")
+cpp_quote("#define URLACTION_COOKIES_SESSION_THIRD_PARTY  0x00001a06")
+cpp_quote("#define URLACTION_COOKIES_ENABLED              0x00001a10")
+cpp_quote("#define URLACTION_NETWORK_CURR_MAX             0x00001a10")
+cpp_quote("#define URLACTION_NETWORK_MAX                  0x00001bff")
+
+cpp_quote("#define URLACTION_JAVA_MIN          0x00001c00")
+cpp_quote("#define URLACTION_JAVA_PERMISSIONS  0x00001c00")
+cpp_quote("#define URLPOLICY_JAVA_PROHIBIT     0x00000000")
+cpp_quote("#define URLPOLICY_JAVA_HIGH         0x00010000")
+cpp_quote("#define URLPOLICY_JAVA_MEDIUM       0x00020000")
+cpp_quote("#define URLPOLICY_JAVA_LOW          0x00030000")
+cpp_quote("#define URLPOLICY_JAVA_CUSTOM       0x00800000")
+cpp_quote("#define URLACTION_JAVA_CURR_MAX     0x00001c00")
+cpp_quote("#define URLACTION_JAVA_MAX          0x00001cff")
+
+cpp_quote("#define URLACTION_INFODELIVERY_MIN                        0x00001d00")
+cpp_quote("#define URLACTION_INFODELIVERY_NO_ADDING_CHANNELS         0x00001d00")
+cpp_quote("#define URLACTION_INFODELIVERY_NO_EDITING_CHANNELS        0x00001d01")
+cpp_quote("#define URLACTION_INFODELIVERY_NO_REMOVING_CHANNELS       0x00001d02")
+cpp_quote("#define URLACTION_INFODELIVERY_NO_ADDING_SUBSCRIPTIONS    0x00001d03")
+cpp_quote("#define URLACTION_INFODELIVERY_NO_EDITING_SUBSCRIPTIONS   0x00001d04")
+cpp_quote("#define URLACTION_INFODELIVERY_NO_REMOVING_SUBSCRIPTIONS  0x00001d05")
+cpp_quote("#define URLACTION_INFODELIVERY_NO_CHANNEL_LOGGING         0x00001d06")
+cpp_quote("#define URLACTION_INFODELIVERY_CURR_MAX                   0x00001d06")
+cpp_quote("#define URLACTION_INFODELIVERY_MAX                        0x00001dff")
+
+cpp_quote("#define URLACTION_CHANNEL_SOFTDIST_MIN          0x00001e00")
+cpp_quote("#define URLACTION_CHANNEL_SOFTDIST_PERMISSIONS  0x00001e05")
+cpp_quote("#define URLPOLICY_CHANNEL_SOFTDIST_PROHIBIT     0x00010000")
+cpp_quote("#define URLPOLICY_CHANNEL_SOFTDIST_PRECACHE     0x00020000")
+cpp_quote("#define URLPOLICY_CHANNEL_SOFTDIST_AUTOINSTALL  0x00030000")
+cpp_quote("#define URLACTION_CHANNEL_SOFTDIST_MAX          0x00001eff")
+
+cpp_quote("#define URLPOLICY_ALLOW     0x00")
+cpp_quote("#define URLPOLICY_QUERY     0x01")
+cpp_quote("#define URLPOLICY_DISALLOW  0x03")
+
+cpp_quote("#define URLPOLICY_NOTIFY_ON_ALLOW     0x10")
+cpp_quote("#define URLPOLICY_NOTIFY_ON_DISALLOW  0x20")
+
+cpp_quote("#define URLPOLICY_LOG_ON_ALLOW     0x40")
+cpp_quote("#define URLPOLICY_LOG_ON_DISALLOW  0x80")
+
+cpp_quote("#define URLPOLICY_DONTCHECKDLGBOX     0x100")
+
+cpp_quote("#define URLPOLICY_CREDENTIALS_SILENT_LOGON_OK     0x00000000")
+cpp_quote("#define URLPOLICY_CREDENTIALS_MUST_PROMPT_USER    0x00010000")
+cpp_quote("#define URLPOLICY_CREDENTIALS_CONDITIONAL_PROMPT  0x00020000")
+cpp_quote("#define URLPOLICY_CREDENTIALS_ANONYMOUS_ONLY      0x00030000")
+
+cpp_quote("#define URLPOLICY_AUTHENTICATE_CLEARTEXT_OK        0x00000000")
+cpp_quote("#define URLPOLICY_AUTHENTICATE_CHALLENGE_RESPONSE  0x00010000")
+cpp_quote("#define URLPOLICY_AUTHENTICATE_MUTUAL_ONLY         0x00030000")
+
+cpp_quote("#define URLPOLICY_MASK_PERMISSIONS  0x0f")
+cpp_quote("#define GetUrlPolicyPermissions(dw)      (dw & URLPOLICY_MASK_PERMISSIONS)")
+cpp_quote("#define SetUrlPolicyPermissions(dw,dw2)  ((dw) = ((dw) & ~URLPOLICY_MASK_PERMISSIONS) | (dw2))")
+
 /*****************************************************************************
  * IInternetZoneManager interface
  */
@@ -1279,6 +1407,7 @@ cpp_quote("HRESULT WINAPI ObtainUserAgentString(DWORD,LPSTR,DWORD*);")
 cpp_quote("HRESULT WINAPI RegisterFormatEnumerator(LPBC,IEnumFORMATETC*,DWORD);")
 cpp_quote("HRESULT WINAPI RevokeFormatEnumerator(LPBC,IEnumFORMATETC*);")
 cpp_quote("HRESULT WINAPI RevokeBindStatusCallback(LPBC,IBindStatusCallback*);")
+cpp_quote("HRESULT WINAPI CopyStgMedium(const STGMEDIUM*,STGMEDIUM*);")
 cpp_quote("void WINAPI ReleaseBindInfo(BINDINFO*);")
 cpp_quote("HRESULT WINAPI UrlMkGetSessionOption(DWORD,LPVOID,DWORD,DWORD*,DWORD);")
 cpp_quote("HRESULT WINAPI UrlMkSetSessionOption(DWORD,LPVOID,DWORD,DWORD);")
