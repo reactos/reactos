@@ -46,6 +46,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(mlang);
 #define ICOM_THIS_MULTI(impl,field,iface) impl* const This=(impl*)((char*)(iface) - offsetof(impl,field))
 
 static HRESULT MultiLanguage_create(IUnknown *pUnkOuter, LPVOID *ppObj);
+static HRESULT EnumRfc1766_create(LANGID LangId, IEnumRfc1766 **ppEnum);
 
 static DWORD MLANG_tls_index; /* to store various per thead data */
 
@@ -759,6 +760,38 @@ static HRESULT lcid_from_rfc1766(IEnumRfc1766 *iface, LCID *lcid, LPCWSTR rfc176
     }
 
     return E_FAIL;
+}
+
+HRESULT WINAPI Rfc1766ToLcidW(LCID *pLocale, LPCWSTR pszRfc1766)
+{
+    IEnumRfc1766 *enumrfc1766;
+    HRESULT hr;
+
+    TRACE("(%p, %s)\n", pLocale, debugstr_w(pszRfc1766));
+
+    if (!pLocale || !pszRfc1766)
+        return E_INVALIDARG;
+
+    *pLocale = 0;
+
+    hr = EnumRfc1766_create(0, &enumrfc1766);
+    if (FAILED(hr))
+        return hr;
+
+    hr = lcid_from_rfc1766(enumrfc1766, pLocale, pszRfc1766);
+    IEnumRfc1766_Release(enumrfc1766);
+
+    return hr;
+}
+
+HRESULT WINAPI Rfc1766ToLcidA(LCID *lcid, LPCSTR rfc1766A)
+{
+    WCHAR rfc1766W[MAX_RFC1766_NAME + 1];
+
+    MultiByteToWideChar(CP_ACP, 0, rfc1766A, -1, rfc1766W, MAX_RFC1766_NAME);
+    rfc1766W[MAX_RFC1766_NAME] = 0;
+
+    return Rfc1766ToLcidW(lcid, rfc1766W);
 }
 
 /******************************************************************************
@@ -1868,13 +1901,12 @@ static BOOL CALLBACK enum_locales_proc(LPWSTR locale)
     return TRUE;
 }
 
-static HRESULT EnumRfc1766_create(MLang_impl* mlang, LANGID LangId,
-                                  IEnumRfc1766 **ppEnum)
+static HRESULT EnumRfc1766_create(LANGID LangId, IEnumRfc1766 **ppEnum)
 {
     EnumRfc1766_impl *rfc;
     struct enum_locales_data data;
 
-    TRACE("%p, %04x, %p\n", mlang, LangId, ppEnum);
+    TRACE("%04x, %p\n", LangId, ppEnum);
 
     rfc = HeapAlloc( GetProcessHeap(), 0, sizeof(EnumRfc1766_impl) );
     rfc->vtbl_IEnumRfc1766 = &IEnumRfc1766_vtbl;
@@ -1918,7 +1950,7 @@ static HRESULT WINAPI fnIMultiLanguage_EnumRfc1766(
     ICOM_THIS_MULTI(MLang_impl, vtbl_IMultiLanguage, iface);
     TRACE("%p %p\n", This, ppEnumRfc1766);
 
-    return EnumRfc1766_create(This, 0, ppEnumRfc1766);
+    return EnumRfc1766_create(0, ppEnumRfc1766);
 }
 
 /******************************************************************************/
@@ -2243,7 +2275,7 @@ static HRESULT WINAPI fnIMultiLanguage2_EnumRfc1766(
     ICOM_THIS_MULTI(MLang_impl, vtbl_IMultiLanguage, iface);
     TRACE("%p %p\n", This, ppEnumRfc1766);
 
-    return EnumRfc1766_create(This, LangId, ppEnumRfc1766);
+    return EnumRfc1766_create(LangId, ppEnumRfc1766);
 }
 
 static HRESULT WINAPI fnIMultiLanguage2_GetRfc1766Info(
