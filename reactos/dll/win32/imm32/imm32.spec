@@ -17,7 +17,7 @@
 @ stdcall ImmEscapeA(long long long ptr)
 @ stdcall ImmEscapeW(long long long ptr)
 @ stub ImmFreeLayout
-@ stub ImmGenerateMessage
+@ stdcall ImmGenerateMessage(ptr)
 @ stdcall ImmGetCandidateListA(long long ptr long)
 @ stdcall ImmGetCandidateListCountA(long ptr)
 @ stdcall ImmGetCandidateListCountW(long ptr)
