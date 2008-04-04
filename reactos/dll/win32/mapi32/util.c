@@ -890,3 +890,15 @@ BOOL WINAPI FGetComponentPath(LPCSTR component, LPCSTR qualifier, LPSTR dll_path
     }
     return ret;
 }
+
+/**************************************************************************
+ *  HrQueryAllRows   (MAPI32.75)
+ */
+HRESULT WINAPI HrQueryAllRows(LPMAPITABLE lpTable, LPSPropTagArray lpPropTags,
+    LPSRestriction lpRestriction, LPSSortOrderSet lpSortOrderSet,
+    LONG crowsMax, LPSRowSet *lppRows)
+{
+    FIXME("(%p, %p, %p, %p, %d, %p): stub\n", lpTable, lpPropTags, lpRestriction, lpSortOrderSet, crowsMax, lppRows);
+    *lppRows = NULL;
+    return MAPI_E_CALL_FAILED;
+}

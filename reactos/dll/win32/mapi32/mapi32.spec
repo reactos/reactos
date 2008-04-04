@@ -54,7 +54,7 @@
  72 stdcall FEqualNames@8(ptr ptr) FEqualNames
  73 stub WrapStoreEntryID@24
  74 stdcall IsBadBoundedStringPtr@8(ptr long) IsBadBoundedStringPtr
- 75 stub HrQueryAllRows@24
+ 75 stdcall HrQueryAllRows@24(ptr ptr ptr ptr long ptr) HrQueryAllRows
  76 stdcall PropCopyMore@16(ptr ptr ptr ptr) PropCopyMore
  77 stdcall UlPropSize@4(ptr) UlPropSize
  78 stdcall FPropContainsProp@12(ptr ptr long) FPropContainsProp

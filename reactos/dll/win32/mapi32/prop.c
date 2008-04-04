@@ -83,7 +83,7 @@ SCODE WINAPI PropCopyMore(LPSPropValue lpDest, LPSPropValue lpSrc,
     case PT_CLSID:
         scode = lpMore(sizeof(GUID), lpOrig, (LPVOID*)&lpDest->Value.lpguid);
         if (SUCCEEDED(scode))
-            memcpy(lpDest->Value.lpguid, lpSrc->Value.lpguid, sizeof(GUID));
+            *lpDest->Value.lpguid = *lpSrc->Value.lpguid;
         break;
     case PT_STRING8:
         ulLen = lstrlenA(lpSrc->Value.lpszA) + 1u;
@@ -810,7 +810,7 @@ SCODE WINAPI ScCopyProps(int cValues, LPSPropValue lpProps, LPVOID lpDst, ULONG 
         {
         case PT_CLSID:
             lpDest->Value.lpguid = (LPGUID)lpDataDest;
-            memcpy(lpDest->Value.lpguid, lpProps->Value.lpguid, sizeof(GUID));
+            *lpDest->Value.lpguid = *lpProps->Value.lpguid;
             lpDataDest += sizeof(GUID);
             break;
         case PT_STRING8:

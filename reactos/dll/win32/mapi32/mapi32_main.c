@@ -24,6 +24,7 @@
 #include "winbase.h"
 #include "winerror.h"
 #include "objbase.h"
+#include "initguid.h"
 #include "mapix.h"
 #include "mapiform.h"
 #include "mapi.h"
