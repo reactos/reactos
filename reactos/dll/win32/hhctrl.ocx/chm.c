@@ -113,11 +113,20 @@ static BOOL ReadChmSystem(CHMInfo *chm)
             break;
 
         switch(entry.code) {
+        case 0x0:
+            TRACE("TOC is %s\n", debugstr_an(buf, entry.len));
+            heap_free(chm->defToc);
+            chm->defToc = strdupnAtoW(buf, entry.len);
+            break;
         case 0x2:
             TRACE("Default topic is %s\n", debugstr_an(buf, entry.len));
+            heap_free(chm->defTopic);
+            chm->defTopic = strdupnAtoW(buf, entry.len);
             break;
         case 0x3:
             TRACE("Title is %s\n", debugstr_an(buf, entry.len));
+            heap_free(chm->defTitle);
+            chm->defTitle = strdupnAtoW(buf, entry.len);
             break;
         case 0x5:
             TRACE("Default window is %s\n", debugstr_an(buf, entry.len));
@@ -212,7 +221,26 @@ BOOL LoadWinTypeFromCHM(HHInfo *info)
 
     hr = IStorage_OpenStream(pStorage, windowsW, NULL, STGM_READ, 0, &pStream);
     if (FAILED(hr))
-        return FALSE;
+    {
+        /* no defined window types so use (hopefully) sane defaults */
+        static const WCHAR defaultwinW[] = {'d','e','f','a','u','l','t','w','i','n','\0'};
+        static const WCHAR null[] = {0};
+        memset((void*)&(info->WinType), 0, sizeof(info->WinType));
+        info->WinType.cbStruct=sizeof(info->WinType);
+        info->WinType.fUniCodeStrings=TRUE;
+        info->WinType.pszType=strdupW(defaultwinW);
+        info->WinType.pszToc = strdupW(info->pCHMInfo->defToc);
+        info->WinType.pszIndex = strdupW(null);
+        info->WinType.fsValidMembers=0;
+        info->WinType.fsWinProperties=HHWIN_PROP_TRI_PANE;
+        info->WinType.pszCaption=strdupW(info->pCHMInfo->defTitle);
+        info->WinType.dwStyles=WS_POPUP;
+        info->WinType.dwExStyles=0;
+        info->WinType.nShowState=SW_SHOW;
+        info->WinType.pszFile=strdupW(info->pCHMInfo->defTopic);
+        info->WinType.curNavType=HHWIN_NAVTYPE_TOC;
+        return TRUE;
+    }
 
     /* jump past the #WINDOWS header */
     liOffset.QuadPart = sizeof(DWORD) * 2;
@@ -304,7 +332,7 @@ void SetChmPath(ChmPath *file, LPCWSTR base_file, LPCWSTR path)
 IStream *GetChmStream(CHMInfo *info, LPCWSTR parent_chm, ChmPath *chm_file)
 {
     IStorage *storage;
-    IStream *stream;
+    IStream *stream = NULL;
     HRESULT hres;
 
     TRACE("%s (%s :: %s)\n", debugstr_w(parent_chm), debugstr_w(chm_file->chm_file),
@@ -342,7 +370,7 @@ CHMInfo *OpenCHM(LPCWSTR szFile)
 
     CHMInfo *ret = heap_alloc_zero(sizeof(CHMInfo));
 
-    res = GetFullPathNameW(szFile, sizeof(file), file, NULL);
+    res = GetFullPathNameW(szFile, sizeof(file)/sizeof(file[0]), file, NULL);
     ret->szFile = strdupW(file);
 
     hres = CoCreateInstance(&CLSID_ITStorage, NULL, CLSCTX_INPROC_SERVER,
@@ -393,6 +421,9 @@ CHMInfo *CloseCHM(CHMInfo *chm)
     }
 
     heap_free(chm->strings);
+    heap_free(chm->defTitle);
+    heap_free(chm->defTopic);
+    heap_free(chm->defToc);
     heap_free(chm);
 
     return NULL;

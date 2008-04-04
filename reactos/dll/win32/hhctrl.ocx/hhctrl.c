@@ -114,6 +114,7 @@ HWND WINAPI HtmlHelpW(HWND caller, LPCWSTR filename, UINT command, DWORD_PTR dat
             memcpy(chm_file, filename, (index-filename)*sizeof(WCHAR));
             chm_file[index-filename] = 0;
             filename = chm_file;
+            index += 2; /* advance beyond "::" for calling NavigateToChm() later */
         }
         else
         {

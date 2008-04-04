@@ -6,11 +6,17 @@
 	<importlibrary definition="hhctrl.ocx.spec.def" />
 	<include base="hhctrl">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
-	<include base="ReactOS" root="intermediate">include/reactos</include>
 	<define name="__WINESRC__" />
 	<define name="WINVER">0x600</define>
 	<define name="_WIN32_WINNT">0x600</define>
-	<dependency>wineheaders</dependency>
+	<file>chm.c</file>
+	<file>content.c</file>
+	<file>help.c</file>
+	<file>hhctrl.c</file>
+	<file>regsvr.c</file>
+	<file>webbrowser.c</file>
+	<file>hhctrl.rc</file>
+	<file>hhctrl.ocx.spec</file>
 	<library>wine</library>
 	<library>advapi32</library>
 	<library>comctl32</library>
@@ -22,13 +28,5 @@
 	<library>kernel32</library>
 	<library>uuid</library>
 	<library>ntdll</library>
-	<file>chm.c</file>
-	<file>content.c</file>
-	<file>help.c</file>
-	<file>hhctrl.c</file>
-	<file>regsvr.c</file>
-	<file>webbrowser.c</file>
-	<file>hhctrl.rc</file>
-	<file>hhctrl.ocx.spec</file>
 </module>
 </group>
