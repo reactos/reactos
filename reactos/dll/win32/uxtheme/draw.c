@@ -1609,12 +1609,12 @@ HRESULT WINAPI GetThemeBackgroundContentRect(HTHEME hTheme, HDC hdc, int iPartId
     } else {
         /* otherwise, try to determine content rect from the background type and props */
         int bgtype = BT_BORDERFILL;
-        memcpy(pContentRect, pBoundingRect, sizeof(RECT));
+        *pContentRect = *pBoundingRect;
 
         GetThemeEnumValue(hTheme, iPartId, iStateId, TMT_BGTYPE, &bgtype);
         if(bgtype == BT_BORDERFILL) {
             int bordersize = 1;
-    
+
             GetThemeInt(hTheme, iPartId, iStateId, TMT_BORDERSIZE, &bordersize);
             InflateRect(pContentRect, -bordersize, -bordersize);
         } else if ((bgtype == BT_IMAGEFILE)
@@ -1657,12 +1657,12 @@ HRESULT WINAPI GetThemeBackgroundExtent(HTHEME hTheme, HDC hdc, int iPartId,
     } else {
         /* otherwise, try to determine content rect from the background type and props */
         int bgtype = BT_BORDERFILL;
-        memcpy(pExtentRect, pContentRect, sizeof(RECT));
+        *pExtentRect = *pContentRect;
 
         GetThemeEnumValue(hTheme, iPartId, iStateId, TMT_BGTYPE, &bgtype);
         if(bgtype == BT_BORDERFILL) {
             int bordersize = 1;
-    
+
             GetThemeInt(hTheme, iPartId, iStateId, TMT_BORDERSIZE, &bordersize);
             InflateRect(pExtentRect, bordersize, bordersize);
         } else if ((bgtype == BT_IMAGEFILE)
