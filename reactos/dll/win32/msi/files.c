@@ -59,6 +59,7 @@ static const WCHAR cszTempFolder[]= {'T','e','m','p','F','o','l','d','e','r',0};
 
 struct media_info {
     UINT disk_id;
+    UINT type;
     UINT last_sequence;
     LPWSTR disk_prompt;
     LPWSTR cabinet;
@@ -400,9 +401,12 @@ static INT_PTR cabinet_notify(FDINOTIFICATIONTYPE fdint, PFDINOTIFICATION pfdin)
     }
     case fdintCLOSE_FILE_INFO:
     {
+        CabData *data = (CabData*) pfdin->pv;
         FILETIME ft;
         FILETIME ftLocal;
         HANDLE handle = (HANDLE) pfdin->hf;
+
+        data->mi->is_continuous = FALSE;
 
         if (!DosDateTimeToFileTime(pfdin->date, pfdin->time, &ft))
             return -1;
@@ -504,6 +508,8 @@ static UINT load_media_info(MSIPACKAGE *package, MSIFILE *file, struct media_inf
 {
     MSIRECORD *row;
     LPWSTR source_dir;
+    LPWSTR source;
+    DWORD options;
     UINT r;
 
     static const WCHAR query[] = {
@@ -539,6 +545,9 @@ static UINT load_media_info(MSIPACKAGE *package, MSIFILE *file, struct media_inf
     source_dir = msi_dup_property(package, cszSourceDir);
     lstrcpyW(mi->source, source_dir);
 
+    PathStripToRootW(source_dir);
+    mi->type = GetDriveTypeW(source_dir);
+
     if (file->IsCompressed && mi->cabinet)
     {
         if (mi->cabinet[0] == '#')
@@ -554,15 +563,75 @@ static UINT load_media_info(MSIPACKAGE *package, MSIFILE *file, struct media_inf
             lstrcatW(mi->source, mi->cabinet);
     }
 
-    msi_package_add_media_disk(package, MSIINSTALLCONTEXT_USERMANAGED, MSICODE_PRODUCT,
-                               mi->disk_id, mi->volume_label, mi->disk_prompt);
+    options = MSICODE_PRODUCT;
+    if (mi->type == DRIVE_CDROM || mi->type == DRIVE_REMOVABLE)
+    {
+        source = source_dir;
+        options |= MSISOURCETYPE_MEDIA;
+    }
+    else if (package->BaseURL && UrlIsW(package->BaseURL, URLIS_URL))
+    {
+        source = package->BaseURL;
+        options |= MSISOURCETYPE_URL;
+    }
+    else
+    {
+        source = mi->source;
+        options |= MSISOURCETYPE_NETWORK;
+    }
 
-    msi_package_add_info(package, MSIINSTALLCONTEXT_USERMANAGED,
-                         MSICODE_PRODUCT | MSISOURCETYPE_MEDIA,
-                         INSTALLPROPERTY_LASTUSEDSOURCEW, mi->source);
+    if (mi->type == DRIVE_CDROM || mi->type == DRIVE_REMOVABLE)
+        msi_package_add_media_disk(package, MSIINSTALLCONTEXT_USERUNMANAGED,
+                                   MSICODE_PRODUCT, mi->disk_id,
+                                   mi->volume_label, mi->disk_prompt);
+
+    msi_package_add_info(package, MSIINSTALLCONTEXT_USERUNMANAGED,
+                         options, INSTALLPROPERTY_LASTUSEDSOURCEW, source);
 
     msi_free(source_dir);
     return ERROR_SUCCESS;
+}
+
+/* FIXME: search NETWORK and URL sources as well */
+static UINT find_published_source(MSIPACKAGE *package, struct media_info *mi)
+{
+    WCHAR source[MAX_PATH];
+    WCHAR volume[MAX_PATH];
+    WCHAR prompt[MAX_PATH];
+    DWORD volumesz, promptsz;
+    DWORD index, size, id;
+    UINT r;
+
+    r = MsiSourceListGetInfoW(package->ProductCode, NULL,
+                              MSIINSTALLCONTEXT_USERUNMANAGED, MSICODE_PRODUCT,
+                              INSTALLPROPERTY_LASTUSEDSOURCEW, source, &size);
+    if (r != ERROR_SUCCESS)
+        return r;
+
+    index = 0;
+    volumesz = MAX_PATH;
+    promptsz = MAX_PATH;
+    while (MsiSourceListEnumMediaDisksW(package->ProductCode, NULL,
+                                        MSIINSTALLCONTEXT_USERUNMANAGED,
+                                        MSICODE_PRODUCT, index++, &id,
+                                        volume, &volumesz, prompt, &promptsz) == ERROR_SUCCESS)
+    {
+        mi->disk_id = id;
+        mi->volume_label = msi_realloc(mi->volume_label, ++volumesz * sizeof(WCHAR));
+        lstrcpyW(mi->volume_label, volume);
+        mi->disk_prompt = msi_realloc(mi->disk_prompt, ++promptsz * sizeof(WCHAR));
+        lstrcpyW(mi->disk_prompt, prompt);
+
+        if (source_matches_volume(mi, source))
+        {
+            /* FIXME: what about SourceDir */
+            lstrcpyW(mi->source, source);
+            lstrcatW(mi->source, mi->cabinet);
+            return ERROR_SUCCESS;
+        }
+    }
+
+    return ERROR_FUNCTION_FAILED;
 }
 
 static UINT ready_media(MSIPACKAGE *package, MSIFILE *file, struct media_info *mi)
@@ -602,14 +671,11 @@ static UINT ready_media(MSIPACKAGE *package, MSIFILE *file, struct media_info *m
     {
         LPWSTR source = msi_dup_property(package, cszSourceDir);
         BOOL matches;
-        UINT type;
 
-        PathStripToRootW(source);
-        type = GetDriveTypeW(source);
         matches = source_matches_volume(mi, source);
         msi_free(source);
 
-        if ((type == DRIVE_CDROM || type == DRIVE_REMOVABLE) && !matches)
+        if ((mi->type == DRIVE_CDROM || mi->type == DRIVE_REMOVABLE) && !matches)
         {
             rc = msi_change_media(package, mi);
             if (rc != ERROR_SUCCESS)
@@ -620,8 +686,13 @@ static UINT ready_media(MSIPACKAGE *package, MSIFILE *file, struct media_info *m
     if (file->IsCompressed &&
         GetFileAttributesW(mi->source) == INVALID_FILE_ATTRIBUTES)
     {
-        ERR("Cabinet not found: %s\n", debugstr_w(mi->source));
-        return ERROR_INSTALL_FAILURE;
+        /* FIXME: this might be done earlier in the install process */
+        rc = find_published_source(package, mi);
+        if (rc != ERROR_SUCCESS)
+        {
+            ERR("Cabinet not found: %s\n", debugstr_w(mi->source));
+            return ERROR_INSTALL_FAILURE;
+        }
     }
 
     return ERROR_SUCCESS;
@@ -739,20 +810,10 @@ UINT ACTION_InstallFiles(MSIPACKAGE *package)
 {
     struct media_info *mi;
     UINT rc = ERROR_SUCCESS;
-    LPWSTR ptr;
     MSIFILE *file;
 
     /* increment progress bar each time action data is sent */
     ui_progress(package,1,1,0,0);
-
-    /* handle the keys for the SourceList */
-    ptr = strrchrW(package->PackagePath,'\\');
-    if (ptr)
-    {
-        ptr++;
-        msi_package_add_info(package, MSIINSTALLCONTEXT_USERMANAGED,
-                             MSICODE_PRODUCT, INSTALLPROPERTY_PACKAGENAMEW, ptr);
-    }
 
     schedule_install_files(package);
 

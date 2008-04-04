@@ -18,11 +18,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-
-/*
-http://msdn.microsoft.com/library/default.asp?url=/library/en-us/msi/setup/controlevent_overview.asp
-*/
-
 #include <stdarg.h>
 #include <stdio.h>
 

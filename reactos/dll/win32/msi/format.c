@@ -346,7 +346,7 @@ static LPWSTR build_default_format(const MSIRECORD* record)
         sprintfW(index, fmt_index, i);
         str = MSI_RecordGetString(record, i);
         len = (str) ? lstrlenW(str) : 0;
-        len += (sizeof(fmt_null) - 3) + lstrlenW(index);
+        len += (sizeof(fmt_null)/sizeof(fmt_null[0]) - 3) + lstrlenW(index);
         size += len;
 
         if (len > max_len)
@@ -544,6 +544,10 @@ static FORMSTR *format_replace(FORMAT *format, BOOL propfound, BOOL nonprop,
     format->deformatted = str;
     format->len = size - 1;
 
+    /* don't reformat the NULL */
+    if (replace && !*replace)
+        format->n++;
+
     if (!replace)
         return NULL;
 
@@ -726,9 +730,6 @@ static UINT replace_stack(FORMAT *format, STACK *stack, STACK *values)
 
     msi_free(replaced);
     format->n = beg->n + beg->len;
-
-    if (type == FORMAT_PROPNULL)
-        format->n++;
 
     top = stack_peek(stack);
     if (top)

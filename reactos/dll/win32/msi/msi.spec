@@ -207,8 +207,8 @@
 211 stdcall MsiSourceListAddSourceW(wstr wstr long wstr)
 212 stub MsiSourceListForceResolutionA
 213 stub MsiSourceListForceResolutionW
-214 stub MsiIsProductElevatedA
-215 stub MsiIsProductElevatedW
+214 stdcall MsiIsProductElevatedA(str ptr)
+215 stdcall MsiIsProductElevatedW(wstr ptr)
 216 stdcall MsiGetShortcutTargetA(str ptr ptr ptr)
 217 stdcall MsiGetShortcutTargetW(wstr ptr ptr ptr)
 218 stdcall MsiGetFileHashA(str long ptr)
@@ -240,8 +240,8 @@
 244 stub MsiGetPatchInfoExW
 245 stdcall MsiEnumProductsExA(str str long long ptr ptr ptr ptr)
 246 stdcall MsiEnumProductsExW(wstr wstr long long ptr ptr ptr ptr)
-247 stub MsiGetProductInfoExA
-248 stub MsiGetProductInfoExW
+247 stdcall MsiGetProductInfoExA(str str long str ptr ptr)
+248 stdcall MsiGetProductInfoExW(wstr wstr long wstr ptr ptr)
 249 stdcall MsiQueryComponentStateA(str str long str ptr)
 250 stdcall MsiQueryComponentStateW(wstr wstr long wstr ptr)
 251 stub MsiQueryFeatureStateExA
@@ -257,16 +257,16 @@
 261 stub MsiSourceListForceResolutionExA
 262 stub MsiSourceListForceResolutionExW
 263 stdcall MsiSourceListEnumSourcesA(str str long long long ptr ptr)
-264 stub MsiSourceListEnumSourcesW
+264 stdcall MsiSourceListEnumSourcesW(wstr wstr long long long ptr ptr)
 265 stdcall MsiSourceListGetInfoA(str str long long str ptr ptr)
 266 stdcall MsiSourceListGetInfoW(wstr wstr long long wstr ptr ptr)
-267 stub MsiSourceListSetInfoA
+267 stdcall MsiSourceListSetInfoA(str str long long str str)
 268 stdcall MsiSourceListSetInfoW(wstr wstr long long wstr wstr)
 269 stub MsiEnumPatchesExA
 270 stub MsiEnumPatchesExW
-271 stub MsiSourceListEnumMediaDisksA
-272 stub MsiSourceListEnumMediaDisksW
-273 stub MsiSourceListAddMediaDiskA
+271 stdcall MsiSourceListEnumMediaDisksA(str str long long long ptr ptr ptr ptr ptr)
+272 stdcall MsiSourceListEnumMediaDisksW(wstr wstr long long long ptr ptr ptr ptr ptr)
+273 stdcall MsiSourceListAddMediaDiskA(str str long long long str str)
 274 stdcall MsiSourceListAddMediaDiskW(wstr wstr long long long wstr wstr)
 275 stub MsiSourceListClearMediaDiskA
 276 stub MsiSourceListClearMediaDiskW

@@ -923,7 +923,7 @@ static UINT get_defaulttablecolumns( LPCWSTR name, MSICOLUMNINFO *colinfo, UINT 
     {
         if (colinfo && (i < *sz) )
         {
-            memcpy( &colinfo[i], &p[i], sizeof(MSICOLUMNINFO) );
+            colinfo[i] = p[i];
             colinfo[i].tablename = strdupW( p[i].tablename );
             colinfo[i].colname = strdupW( p[i].colname );
         }
@@ -1626,6 +1626,23 @@ static UINT modify_delete_row( struct tagMSIVIEW *view, MSIRECORD *rec )
     return TABLE_delete_row(view, row);
 }
 
+static UINT msi_refresh_record( struct tagMSIVIEW *view, MSIRECORD *rec, UINT row )
+{
+    MSIRECORD *curr;
+    UINT r, i, count;
+
+    r = TABLE_get_row(view, row - 1, &curr);
+    if (r != ERROR_SUCCESS)
+        return r;
+
+    count = MSI_RecordGetFieldCount(rec);
+    for (i = 0; i < count; i++)
+        MSI_RecordCopyField(curr, i + 1, rec, i + 1);
+
+    msiobj_release(&curr->hdr);
+    return ERROR_SUCCESS;
+}
+
 static UINT TABLE_modify( struct tagMSIVIEW *view, MSIMODIFY eModifyMode,
                           MSIRECORD *rec, UINT row)
 {
@@ -1657,11 +1674,14 @@ static UINT TABLE_modify( struct tagMSIVIEW *view, MSIMODIFY eModifyMode,
         r = TABLE_insert_row( view, rec, TRUE );
         break;
 
+    case MSIMODIFY_REFRESH:
+        r = msi_refresh_record( view, rec, row );
+        break;
+
     case MSIMODIFY_UPDATE:
         r = msi_table_update( view, rec, row );
         break;
 
-    case MSIMODIFY_REFRESH:
     case MSIMODIFY_ASSIGN:
     case MSIMODIFY_REPLACE:
     case MSIMODIFY_MERGE:
@@ -2033,6 +2053,9 @@ static UINT TABLE_sort(struct tagMSIVIEW *view, column_info *columns)
     r = TABLE_get_dimensions(view, &rows, &cols);
     if (r != ERROR_SUCCESS)
         return r;
+
+    if (rows == 0)
+        return ERROR_SUCCESS;
 
     order = msi_alloc_zero(sizeof(MSIORDERINFO) + sizeof(UINT) * cols);
     if (!order)

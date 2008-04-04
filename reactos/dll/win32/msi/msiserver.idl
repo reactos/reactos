@@ -126,10 +126,25 @@ library WindowsInstaller
         msiOpenDatabaseModePatchFile = 32
     } MsiOpenDatabaseMode;
 
+    typedef enum {
+        msiUILevelNoChange = 0,
+        msiUILevelDefault = 1,
+        msiUILevelNone = 2,
+        msiUILevelBasic = 3,
+        msiUILevelReduced = 4,
+        msiUILevelFull = 5,
+        msiUILevelHideCancel = 32,
+        msiUILevelProgressOnly = 64,
+        msiUILevelEndDialog = 128,
+        msiUILevelSourceResOnly = 256
+    } MsiUILevel;
+
     [ uuid(000C1090-0000-0000-C000-000000000046) ]
     dispinterface Installer
     {
     properties:
+        [id(DISPID_INSTALLER_UILEVEL)]
+            MsiUILevel UILevel;
     methods:
         [id(DISPID_INSTALLER_CREATERECORD)]
             Record *CreateRecord([in] long Count);

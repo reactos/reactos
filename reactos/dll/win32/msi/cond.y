@@ -317,7 +317,11 @@ value_i:
             INSTALLSTATE install = INSTALLSTATE_UNKNOWN, action = INSTALLSTATE_UNKNOWN;
       
             MSI_GetFeatureStateW(cond->package, $2, &install, &action );
-            $$ = action;
+            if (action == INSTALLSTATE_UNKNOWN)
+                $$ = MSICONDITION_FALSE;
+            else
+                $$ = action;
+
             msi_free( $2 );
         }
   | COND_EXCLAM identifier

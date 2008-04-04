@@ -317,12 +317,18 @@ static void msi_parse_line(LPWSTR *line, LPWSTR **entries, DWORD *num_entries)
     /* store pointers into the data */
     for (i = 0, ptr = *line; i < count; i++)
     {
+        while (*ptr && *ptr == '\r') ptr++;
         save = ptr;
 
-        while (*ptr && *ptr != '\t' && *ptr != '\n') ptr++;
+        while (*ptr && *ptr != '\t' && *ptr != '\n' && *ptr != '\r') ptr++;
 
         /* NULL-separate the data */
-        if (*ptr)
+        if (*ptr == '\n' || *ptr == '\r')
+        {
+            while (*ptr == '\n' || *ptr == '\r')
+                *(ptr++) = '\0';
+        }
+        else if (*ptr)
             *ptr++ = '\0';
 
         (*entries)[i] = save;
@@ -342,7 +348,7 @@ static LPWSTR msi_build_createsql_prelude(LPWSTR table)
 
     static const WCHAR create_fmt[] = {'C','R','E','A','T','E',' ','T','A','B','L','E',' ','`','%','s','`',' ','(',' ',0};
 
-    size = sizeof(create_fmt) + lstrlenW(table) - 2;
+    size = sizeof(create_fmt)/sizeof(create_fmt[0]) + lstrlenW(table) - 2;
     prelude = msi_alloc(size * sizeof(WCHAR));
     if (!prelude)
         return NULL;
@@ -509,156 +515,88 @@ static UINT msi_add_table_to_db(MSIDATABASE *db, LPWSTR *columns, LPWSTR *types,
     return r;
 }
 
-static LPWSTR msi_build_insertsql_prelude(LPWSTR table)
+static UINT construct_record(DWORD num_columns, LPWSTR *types,
+                             LPWSTR *data, MSIRECORD **rec)
 {
-    LPWSTR prelude;
-    DWORD size;
+    UINT i;
 
-    static const WCHAR insert_fmt[] = {'I','N','S','E','R','T',' ','I','N','T','O',' ','`','%','s','`',' ','(',' ',0};
-
-    size = sizeof(insert_fmt) + lstrlenW(table) - 2;
-    prelude = msi_alloc(size * sizeof(WCHAR));
-    if (!prelude)
-        return NULL;
-
-    sprintfW(prelude, insert_fmt, table);
-    return prelude;
-}
-
-static LPWSTR msi_build_insertsql_columns(LPWSTR *columns_data, LPWSTR *types, DWORD num_columns)
-{
-    LPWSTR columns, p;
-    DWORD sql_size = 1, i;
-    WCHAR expanded[128];
-
-    static const WCHAR column_fmt[] =  {'`','%','s','`',',',' ',0};
-
-    columns = msi_alloc_zero(sql_size * sizeof(WCHAR));
-    if (!columns)
-        return NULL;
-
-    for (i = 0; i < num_columns; i++)
-    {
-        sprintfW(expanded, column_fmt, columns_data[i]);
-        sql_size += lstrlenW(expanded);
-
-        if (i == num_columns - 1)
-        {
-            sql_size -= 2;
-            expanded[lstrlenW(expanded) - 2] = '\0';
-        }
-
-        p = msi_realloc(columns, sql_size * sizeof(WCHAR));
-        if (!p)
-        {
-            msi_free(columns);
-            return NULL;
-        }
-        columns = p;
-
-        lstrcatW(columns, expanded);
-    }
-
-    return columns;
-}
-
-static LPWSTR msi_build_insertsql_data(LPWSTR **records, LPWSTR *types, DWORD num_columns, DWORD irec)
-{
-    LPWSTR columns, temp_columns;
-    DWORD sql_size = 1, i;
-    WCHAR expanded[128];
-
-    static const WCHAR str_fmt[] = {'\'','%','s','\'',',',' ',0};
-    static const WCHAR int_fmt[] = {'%','s',',',' ',0};
-    static const WCHAR empty[] = {'\'','\'',',',' ',0};
-
-    columns = msi_alloc_zero(sql_size * sizeof(WCHAR));
-    if (!columns)
-        return NULL;
+    *rec = MSI_CreateRecord(num_columns);
+    if (!*rec)
+        return ERROR_OUTOFMEMORY;
 
     for (i = 0; i < num_columns; i++)
     {
         switch (types[i][0])
         {
             case 'L': case 'l': case 'S': case 's':
-                sprintfW(expanded, str_fmt, records[irec][i]);
+                MSI_RecordSetStringW(*rec, i + 1, data[i]);
                 break;
             case 'I': case 'i':
-                if (*records[0][i])
-                    sprintfW(expanded, int_fmt, records[irec][i]);
-                else
-                    lstrcpyW(expanded, empty);
+                if (*data[i])
+                    MSI_RecordSetInteger(*rec, i + 1, atoiW(data[i]));
                 break;
             default:
-                HeapFree( GetProcessHeap(), 0, columns );
-                return NULL;
+                ERR("Unhandled column type: %c\n", types[i][0]);
+                msiobj_release(&(*rec)->hdr);
+                return ERROR_FUNCTION_FAILED;
         }
-
-        if (i == num_columns - 1)
-            expanded[lstrlenW(expanded) - 2] = '\0';
-
-        sql_size += lstrlenW(expanded);
-        temp_columns = msi_realloc(columns, sql_size * sizeof(WCHAR));
-        if (!temp_columns)
-        {
-            HeapFree( GetProcessHeap(), 0, columns);
-            return NULL;
-        }
-        columns = temp_columns;
-
-        lstrcatW(columns, expanded);
     }
 
-    return columns;
+    return ERROR_SUCCESS;
 }
 
 static UINT msi_add_records_to_table(MSIDATABASE *db, LPWSTR *columns, LPWSTR *types,
                                      LPWSTR *labels, LPWSTR **records,
                                      int num_columns, int num_records)
 {
+    UINT r;
+    DWORD i, size;
     MSIQUERY *view;
-    LPWSTR insert_sql;
-    DWORD size, i;
-    UINT r = ERROR_SUCCESS;
+    MSIRECORD *rec;
+    LPWSTR query;
 
-    static const WCHAR mid[] = {' ',')',' ','V','A','L','U','E','S',' ','(',' ',0};
-    static const WCHAR end[] = {' ',')',0};
+    static const WCHAR select[] = {
+        'S','E','L','E','C','T',' ','*',' ',
+        'F','R','O','M',' ','`','%','s','`',0
+    };
 
-    LPWSTR prelude = msi_build_insertsql_prelude(labels[0]);
-    LPWSTR columns_sql = msi_build_insertsql_columns(columns, types, num_columns);
-    
+    size = lstrlenW(select) + lstrlenW(labels[0]) - 1;
+    query = msi_alloc(size * sizeof(WCHAR));
+    if (!query)
+        return ERROR_OUTOFMEMORY;
+
+    sprintfW(query, select, labels[0]);
+
+    r = MSI_DatabaseOpenViewW(db, query, &view);
+    msi_free(query);
+    if (r != ERROR_SUCCESS)
+        return r;
+
+    while (MSI_ViewFetch(view, &rec) != ERROR_NO_MORE_ITEMS)
+    {
+        r = MSI_ViewModify(view, MSIMODIFY_DELETE, rec);
+        if (r != ERROR_SUCCESS)
+            goto done;
+    }
+
     for (i = 0; i < num_records; i++)
     {
-        LPWSTR data = msi_build_insertsql_data(records, types, num_columns, i);
-
-        size = lstrlenW(prelude) + lstrlenW(columns_sql) + sizeof(mid) + lstrlenW(data) + sizeof(end) - 1; 
-        insert_sql = msi_alloc(size * sizeof(WCHAR));
-        if (!insert_sql)
-            return ERROR_OUTOFMEMORY;
-    
-        lstrcpyW(insert_sql, prelude);
-        lstrcatW(insert_sql, columns_sql);
-        lstrcatW(insert_sql, mid);
-        lstrcatW(insert_sql, data);
-        lstrcatW(insert_sql, end);
-
-        msi_free(data);
-
-        r = MSI_DatabaseOpenViewW( db, insert_sql, &view );
-        msi_free(insert_sql);
-
+        r = construct_record(num_columns, types, records[i], &rec);
         if (r != ERROR_SUCCESS)
             goto done;
 
-        r = MSI_ViewExecute(view, NULL);
-        MSI_ViewClose(view);
-        msiobj_release(&view->hdr);
+        r = MSI_ViewModify(view, MSIMODIFY_INSERT, rec);
+        if (r != ERROR_SUCCESS)
+        {
+            msiobj_release(&rec->hdr);
+            goto done;
+        }
+
+        msiobj_release(&rec->hdr);
     }
 
 done:
-    msi_free(prelude);
-    msi_free(columns_sql);
-
+    msiobj_release(&view->hdr);
     return r;
 }
 
@@ -666,11 +604,11 @@ UINT MSI_DatabaseImport(MSIDATABASE *db, LPCWSTR folder, LPCWSTR file)
 {
     UINT r;
     DWORD len, i;
-    DWORD num_labels;
+    DWORD num_labels, num_types;
     DWORD num_columns, num_records = 0;
     LPWSTR *columns, *types, *labels;
     LPWSTR path, ptr, data;
-    LPWSTR **records;
+    LPWSTR **records = NULL;
     LPWSTR **temp_records;
 
     static const WCHAR backslash[] = {'\\',0};
@@ -693,8 +631,14 @@ UINT MSI_DatabaseImport(MSIDATABASE *db, LPCWSTR folder, LPCWSTR file)
 
     ptr = data;
     msi_parse_line( &ptr, &columns, &num_columns );
-    msi_parse_line( &ptr, &types, NULL );
+    msi_parse_line( &ptr, &types, &num_types );
     msi_parse_line( &ptr, &labels, &num_labels );
+
+    if (num_columns != num_types)
+    {
+        r = ERROR_FUNCTION_FAILED;
+        goto done;
+    }
 
     records = msi_alloc(sizeof(LPWSTR *));
     if (!records)
@@ -718,9 +662,15 @@ UINT MSI_DatabaseImport(MSIDATABASE *db, LPCWSTR folder, LPCWSTR file)
         records = temp_records;
     }
 
-    r = msi_add_table_to_db( db, columns, types, labels, num_labels, num_columns );
-    if (r != ERROR_SUCCESS)
-        goto done;
+    if (!TABLE_Exists(db, labels[0]))
+    {
+        r = msi_add_table_to_db( db, columns, types, labels, num_labels, num_columns );
+        if (r != ERROR_SUCCESS)
+        {
+            r = ERROR_FUNCTION_FAILED;
+            goto done;
+        }
+    }
 
     r = msi_add_records_to_table( db, columns, types, labels, records, num_columns, num_records );
 
@@ -849,12 +799,29 @@ static UINT msi_export_row( MSIRECORD *row, void *arg )
     return msi_export_record( arg, row, 1 );
 }
 
+static UINT msi_export_forcecodepage( HANDLE handle )
+{
+    DWORD sz;
+
+    static const char data[] = "\r\n\r\n0\t_ForceCodepage\r\n";
+
+    FIXME("Read the codepage from the strings table!\n");
+
+    sz = lstrlenA(data) + 1;
+    if (!WriteFile(handle, data, sz, &sz, NULL))
+        return ERROR_FUNCTION_FAILED;
+
+    return ERROR_SUCCESS;
+}
+
 UINT MSI_DatabaseExport( MSIDATABASE *db, LPCWSTR table,
                LPCWSTR folder, LPCWSTR file )
 {
     static const WCHAR query[] = {
         's','e','l','e','c','t',' ','*',' ','f','r','o','m',' ','%','s',0 };
     static const WCHAR szbs[] = { '\\', 0 };
+    static const WCHAR forcecodepage[] = {
+        '_','F','o','r','c','e','C','o','d','e','p','a','g','e',0 };
     MSIRECORD *rec = NULL;
     MSIQUERY *view = NULL;
     LPWSTR filename;
@@ -881,6 +848,12 @@ UINT MSI_DatabaseExport( MSIDATABASE *db, LPCWSTR table,
     msi_free( filename );
     if (handle == INVALID_HANDLE_VALUE)
         return ERROR_FUNCTION_FAILED;
+
+    if (!lstrcmpW( table, forcecodepage ))
+    {
+        r = msi_export_forcecodepage( handle );
+        goto done;
+    }
 
     r = MSI_OpenQuery( db, &view, query, table );
     if (r == ERROR_SUCCESS)
@@ -915,8 +888,8 @@ UINT MSI_DatabaseExport( MSIDATABASE *db, LPCWSTR table,
         msiobj_release( &view->hdr );
     }
 
+done:
     CloseHandle( handle );
-
     return r;
 }
 
@@ -1079,32 +1052,32 @@ static ULONG WINAPI mrd_Release( IWineMsiRemoteDatabase *iface )
     return r;
 }
 
-HRESULT WINAPI mrd_IsTablePersistent( IWineMsiRemoteDatabase *iface,
-                                      BSTR table, MSICONDITION *persistent )
+static HRESULT WINAPI mrd_IsTablePersistent( IWineMsiRemoteDatabase *iface,
+                                             BSTR table, MSICONDITION *persistent )
 {
     msi_remote_database_impl *This = mrd_from_IWineMsiRemoteDatabase( iface );
     *persistent = MsiDatabaseIsTablePersistentW(This->database, (LPWSTR)table);
     return S_OK;
 }
 
-HRESULT WINAPI mrd_GetPrimaryKeys( IWineMsiRemoteDatabase *iface,
-                                   BSTR table, MSIHANDLE *keys )
+static HRESULT WINAPI mrd_GetPrimaryKeys( IWineMsiRemoteDatabase *iface,
+                                          BSTR table, MSIHANDLE *keys )
 {
     msi_remote_database_impl *This = mrd_from_IWineMsiRemoteDatabase( iface );
     UINT r = MsiDatabaseGetPrimaryKeysW(This->database, (LPWSTR)table, keys);
     return HRESULT_FROM_WIN32(r);
 }
 
-HRESULT WINAPI mrd_GetSummaryInformation( IWineMsiRemoteDatabase *iface,
-                                          UINT updatecount, MSIHANDLE *suminfo )
+static HRESULT WINAPI mrd_GetSummaryInformation( IWineMsiRemoteDatabase *iface,
+                                                UINT updatecount, MSIHANDLE *suminfo )
 {
     msi_remote_database_impl *This = mrd_from_IWineMsiRemoteDatabase( iface );
     UINT r = MsiGetSummaryInformationW(This->database, NULL, updatecount, suminfo);
     return HRESULT_FROM_WIN32(r);
 }
 
-HRESULT WINAPI mrd_OpenView( IWineMsiRemoteDatabase *iface,
-                             BSTR query, MSIHANDLE *view )
+static HRESULT WINAPI mrd_OpenView( IWineMsiRemoteDatabase *iface,
+                                    BSTR query, MSIHANDLE *view )
 {
     msi_remote_database_impl *This = mrd_from_IWineMsiRemoteDatabase( iface );
     UINT r = MsiDatabaseOpenViewW(This->database, (LPWSTR)query, view);

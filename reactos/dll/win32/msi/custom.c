@@ -331,6 +331,9 @@ UINT ACTION_CustomAction(MSIPACKAGE *package, LPCWSTR action, UINT script, BOOL 
             msi_free(deformated);
             break;
         case 51: /* Property set with formatted text. */
+            if (!source)
+                break;
+
             deformat_string(package,target,&deformated);
             rc = MSI_SetPropertyW(package,source,deformated);
             msi_free(deformated);
@@ -856,12 +859,6 @@ static UINT HANDLE_CustomType23(MSIPACKAGE *package, LPCWSTR source,
     MSI_GetPropertyW(package, cszSourceDir, package_path, &size);
     lstrcatW(package_path, backslash);
     lstrcatW(package_path, source);
-
-    if (GetFileAttributesW(package_path) == INVALID_FILE_ATTRIBUTES)
-    {
-        ERR("Source package does not exist: %s\n", debugstr_w(package_path));
-        return ERROR_FUNCTION_FAILED;
-    }
 
     TRACE("Installing package %s concurrently\n", debugstr_w(package_path));
 

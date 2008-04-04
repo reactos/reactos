@@ -29,6 +29,7 @@
 #include "msiquery.h"
 #include "objbase.h"
 #include "msipriv.h"
+#include "query.h"
 
 #include "wine/debug.h"
 
@@ -39,7 +40,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(msidb);
 
 typedef struct tabSTREAM
 {
-    int str_index;
+    UINT str_index;
     LPWSTR name;
     IStream *stream;
 } STREAM;
@@ -54,7 +55,7 @@ typedef struct tagMSISTREAMSVIEW
     UINT row_size;
 } MSISTREAMSVIEW;
 
-static BOOL streams_set_table_size(MSISTREAMSVIEW *sv, int size)
+static BOOL streams_set_table_size(MSISTREAMSVIEW *sv, UINT size)
 {
     if (size >= sv->max_streams)
     {
@@ -372,7 +373,7 @@ static UINT STREAMS_modify(struct tagMSIVIEW *view, MSIMODIFY eModifyMode, MSIRE
 static UINT STREAMS_delete(struct tagMSIVIEW *view)
 {
     MSISTREAMSVIEW *sv = (MSISTREAMSVIEW *)view;
-    int i;
+    UINT i;
 
     TRACE("(%p)\n", view);
 
@@ -439,7 +440,7 @@ static const MSIVIEWOPS streams_ops =
     NULL,
 };
 
-static UINT add_streams_to_table(MSISTREAMSVIEW *sv)
+static INT add_streams_to_table(MSISTREAMSVIEW *sv)
 {
     IEnumSTATSTG *stgenum = NULL;
     STATSTG stat;
@@ -498,6 +499,7 @@ static UINT add_streams_to_table(MSISTREAMSVIEW *sv)
 UINT STREAMS_CreateView(MSIDATABASE *db, MSIVIEW **view)
 {
     MSISTREAMSVIEW *sv;
+    INT rows;
 
     TRACE("(%p, %p)\n", db, view);
 
@@ -507,10 +509,10 @@ UINT STREAMS_CreateView(MSIDATABASE *db, MSIVIEW **view)
 
     sv->view.ops = &streams_ops;
     sv->db = db;
-    sv->num_rows = add_streams_to_table(sv);
-
-    if (sv->num_rows < 0)
+    rows = add_streams_to_table(sv);
+    if (rows < 0)
         return ERROR_FUNCTION_FAILED;
+    sv->num_rows = rows;
 
     *view = (MSIVIEW *)sv;
 

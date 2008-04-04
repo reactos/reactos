@@ -77,7 +77,7 @@ static UINT JOIN_fetch_int( struct tagMSIVIEW *view, UINT row, UINT col, UINT *v
             break;
         }
 
-        prev_rows = table->rows;
+        prev_rows *= table->rows;
         cols += table->columns;
     }
 
@@ -108,7 +108,7 @@ static UINT JOIN_fetch_stream( struct tagMSIVIEW *view, UINT row, UINT col, IStr
             break;
         }
 
-        prev_rows = table->rows;
+        prev_rows *= table->rows;
         cols += table->columns;
     }
 
@@ -341,7 +341,8 @@ UINT JOIN_CreateView( MSIDATABASE *db, MSIVIEW **view, LPWSTR tables )
         r = TABLE_CreateView( db, tables, &table->view );
         if( r != ERROR_SUCCESS )
         {
-            ERR("can't create table\n");
+            WARN("can't create table: %s\n", debugstr_w(tables));
+            r = ERROR_BAD_QUERY_SYNTAX;
             goto end;
         }
 

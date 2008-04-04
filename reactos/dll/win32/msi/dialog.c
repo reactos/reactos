@@ -50,12 +50,14 @@ extern HINSTANCE msi_hInstance;
 struct msi_control_tag;
 typedef struct msi_control_tag msi_control;
 typedef UINT (*msi_handler)( msi_dialog *, msi_control *, WPARAM );
+typedef void (*msi_update)( msi_dialog *, msi_control * );
 
 struct msi_control_tag
 {
     struct list entry;
     HWND hwnd;
     msi_handler handler;
+    msi_update update;
     LPWSTR property;
     LPWSTR value;
     HBITMAP hBitmap;
@@ -564,6 +566,16 @@ static HICON msi_load_icon( MSIDATABASE *db, LPCWSTR text, UINT attributes )
     return msi_load_image( db, text, IMAGE_ICON, cx, cy, flags );
 }
 
+static void msi_dialog_update_controls( msi_dialog *dialog, LPCWSTR property )
+{
+    msi_control *control;
+
+    LIST_FOR_EACH_ENTRY( control, &dialog->controls, msi_control, entry )
+    {
+        if ( !lstrcmpW( control->property, property ) && control->update )
+            control->update( dialog, control );
+    }
+}
 
 /* called from the Control Event subscription code */
 void msi_dialog_handle_event( msi_dialog* dialog, LPCWSTR control, 
@@ -855,6 +867,7 @@ static UINT msi_dialog_checkbox_control( msi_dialog *dialog, MSIRECORD *rec )
     control = msi_dialog_add_control( dialog, rec, szButton,
                                 BS_CHECKBOX | BS_MULTILINE | WS_TABSTOP );
     control->handler = msi_dialog_checkbox_handler;
+    control->update = msi_dialog_checkbox_sync_state;
     prop = MSI_RecordGetString( rec, 9 );
     if( prop )
     {
@@ -2904,7 +2917,7 @@ static MSIRECORD *msi_get_dialog_record( msi_dialog *dialog )
 
     rec = MSI_QueryGetRecord( package->db, query, dialog->name );
     if( !rec )
-        ERR("query failed for dialog %s\n", debugstr_w(dialog->name));
+        WARN("query failed for dialog %s\n", debugstr_w(dialog->name));
 
     return rec;
 }
@@ -3083,6 +3096,7 @@ static UINT msi_dialog_set_property( msi_dialog *dialog, LPCWSTR event, LPCWSTR 
         if( strcmpW( szNullArg, arg ) )
             deformat_string( dialog->package, arg, &arg_fmt );
         MSI_SetPropertyW( dialog->package, prop, arg_fmt );
+        msi_dialog_update_controls( dialog, prop );
         msi_free( arg_fmt );
     }
     else

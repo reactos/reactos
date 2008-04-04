@@ -568,6 +568,7 @@ typedef struct tagMSISCRIPT
 #define MSI_BUILDNUMBER 4000
 
 #define GUID_SIZE 39
+#define SQUISH_GUID_SIZE 33
 
 #define MSIHANDLE_MAGIC 0x4d434923
 
@@ -748,12 +749,10 @@ extern UINT MSIREG_OpenUninstallKey(LPCWSTR szProduct, HKEY* key, BOOL create);
 extern UINT MSIREG_DeleteUninstallKey(LPCWSTR szProduct);
 extern UINT MSIREG_OpenUserProductsKey(LPCWSTR szProduct, HKEY* key, BOOL create);
 extern UINT MSIREG_OpenUserPatchesKey(LPCWSTR szPatch, HKEY* key, BOOL create);
-extern UINT MSIREG_OpenFeatures(HKEY* key);
 extern UINT MSIREG_OpenFeaturesKey(LPCWSTR szProduct, HKEY* key, BOOL create);
 extern UINT MSIREG_OpenUserDataFeaturesKey(LPCWSTR szProduct, HKEY *key, BOOL create);
 extern UINT MSIREG_OpenComponents(HKEY* key);
 extern UINT MSIREG_OpenUserComponentsKey(LPCWSTR szComponent, HKEY* key, BOOL create);
-extern UINT MSIREG_OpenComponentsKey(LPCWSTR szComponent, HKEY* key, BOOL create);
 extern UINT MSIREG_OpenUserDataComponentKey(LPCWSTR szComponent, HKEY *key, BOOL create);
 extern UINT MSIREG_OpenProductsKey(LPCWSTR szProduct, HKEY* key, BOOL create);
 extern UINT MSIREG_OpenPatchesKey(LPCWSTR szPatch, HKEY* key, BOOL create);
@@ -886,6 +885,8 @@ extern BOOL check_unique_action(const MSIPACKAGE *, LPCWSTR);
 extern WCHAR* generate_error_string(MSIPACKAGE *, UINT, DWORD, ... );
 extern UINT msi_create_component_directories( MSIPACKAGE *package );
 extern void msi_ui_error( DWORD msg_id, DWORD type );
+extern UINT msi_set_last_used_source(LPCWSTR product, LPCWSTR usersid,
+                        MSIINSTALLCONTEXT context, DWORD options, LPCWSTR value);
 
 /* control event stuff */
 extern VOID ControlEvent_FireSubscribedEvent(MSIPACKAGE *package, LPCWSTR event,

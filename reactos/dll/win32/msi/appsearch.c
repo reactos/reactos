@@ -901,9 +901,6 @@ static UINT iterate_appsearch(MSIRECORD *row, LPVOID param)
     return r;
 }
 
-/* http://msdn.microsoft.com/library/en-us/msi/setup/appsearch_table.asp
- * is the best reference for the AppSearch table and how it's used.
- */
 UINT ACTION_AppSearch(MSIPACKAGE *package)
 {
     static const WCHAR query[] =  {
