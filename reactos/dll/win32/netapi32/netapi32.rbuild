@@ -8,12 +8,6 @@
 	<define name="__WINESRC__" />
 	<define name="WINVER">0x600</define>
 	<define name="_WIN32_WINNT">0x600</define>
-	<library>wine</library>
-	<library>iphlpapi</library>
-	<library>ws2_32</library>
-	<library>advapi32</library>
-	<library>kernel32</library>
-	<library>ntdll</library>
 	<file>access.c</file>
 	<file>apibuf.c</file>
 	<file>browsr.c</file>
@@ -27,5 +21,11 @@
 	<file>share.c</file>
 	<file>wksta.c</file>
 	<file>netapi32.spec</file>
+	<library>wine</library>
+	<library>iphlpapi</library>
+	<library>ws2_32</library>
+	<library>advapi32</library>
+	<library>kernel32</library>
+	<library>ntdll</library>
 </module>
 </group>

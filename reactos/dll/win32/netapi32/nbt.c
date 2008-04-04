@@ -1278,13 +1278,13 @@ static UCHAR NetBTRegisterAdapter(const MIB_IPADDRROW *ipRow)
 {
     UCHAR ret;
     NetBTAdapter *adapter;
-    
+
     if (!ipRow) return NRC_BADDR;
 
     adapter = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(NetBTAdapter));
     if (adapter)
     {
-        memcpy(&adapter->ipr, ipRow, sizeof(MIB_IPADDRROW));
+        adapter->ipr = *ipRow;
         if (!NetBIOSRegisterAdapter(gTransportID, ipRow->dwIndex, adapter))
         {
             NetBTCleanupAdapter(adapter);

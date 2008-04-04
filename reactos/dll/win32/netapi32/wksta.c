@@ -308,6 +308,8 @@ NetWkstaTransportEnum(LMSTR ServerName, DWORD level, PBYTE* pbuf,
 NET_API_STATUS WINAPI NetWkstaUserGetInfo(LMSTR reserved, DWORD level,
                                           PBYTE* bufptr)
 {
+    NET_API_STATUS nastatus;
+
     TRACE("(%s, %d, %p)\n", debugstr_w(reserved), level, bufptr);
     switch (level)
     {
@@ -317,8 +319,10 @@ NET_API_STATUS WINAPI NetWkstaUserGetInfo(LMSTR reserved, DWORD level,
         DWORD dwSize = UNLEN + 1;
 
         /* set up buffer */
-        NetApiBufferAllocate(sizeof(WKSTA_USER_INFO_0) + dwSize * sizeof(WCHAR),
+        nastatus = NetApiBufferAllocate(sizeof(WKSTA_USER_INFO_0) + dwSize * sizeof(WCHAR),
                              (LPVOID *) bufptr);
+        if (nastatus != NERR_Success)
+            return ERROR_NOT_ENOUGH_MEMORY;
 
         ui = (PWKSTA_USER_INFO_0) *bufptr;
         ui->wkui0_username = (LMSTR) (*bufptr + sizeof(WKSTA_USER_INFO_0));
@@ -329,11 +333,14 @@ NET_API_STATUS WINAPI NetWkstaUserGetInfo(LMSTR reserved, DWORD level,
             NetApiBufferFree(ui);
             return ERROR_NOT_ENOUGH_MEMORY;
         }
-        else
-            NetApiBufferReallocate(
+        else {
+            nastatus = NetApiBufferReallocate(
                 *bufptr, sizeof(WKSTA_USER_INFO_0) +
                 (lstrlenW(ui->wkui0_username) + 1) * sizeof(WCHAR),
                 (LPVOID *) bufptr);
+            if (nastatus != NERR_Success)
+                return nastatus;
+        }
         break;
     }
 
@@ -356,7 +363,9 @@ NET_API_STATUS WINAPI NetWkstaUserGetInfo(LMSTR reserved, DWORD level,
 
         /* get some information first to estimate size of the buffer */
         ui0 = NULL;
-        NetWkstaUserGetInfo(NULL, 0, (PBYTE *) &ui0);
+        nastatus = NetWkstaUserGetInfo(NULL, 0, (PBYTE *) &ui0);
+        if (nastatus != NERR_Success)
+            return nastatus;
         username_sz = lstrlenW(ui0->wkui0_username) + 1;
 
         ZeroMemory(&ObjectAttributes, sizeof(ObjectAttributes));
@@ -376,10 +385,14 @@ NET_API_STATUS WINAPI NetWkstaUserGetInfo(LMSTR reserved, DWORD level,
         LsaClose(PolicyHandle);
 
         /* set up buffer */
-        NetApiBufferAllocate(sizeof(WKSTA_USER_INFO_1) +
+        nastatus = NetApiBufferAllocate(sizeof(WKSTA_USER_INFO_1) +
                              (username_sz + logon_domain_sz +
                               oth_domains_sz + logon_server_sz) * sizeof(WCHAR),
                              (LPVOID *) bufptr);
+        if (nastatus != NERR_Success) {
+            NetApiBufferFree(ui0);
+            return nastatus;
+        }
         ui = (WKSTA_USER_INFO_1 *) *bufptr;
         ui->wkui1_username = (LMSTR) (*bufptr + sizeof(WKSTA_USER_INFO_1));
         ui->wkui1_logon_domain = (LMSTR) (
@@ -414,9 +427,10 @@ NET_API_STATUS WINAPI NetWkstaUserGetInfo(LMSTR reserved, DWORD level,
         /* FIXME see also wkui1_oth_domains for level 1 */
 
         /* set up buffer */
-        NetApiBufferAllocate(sizeof(WKSTA_USER_INFO_1101) + dwSize * sizeof(WCHAR),
+        nastatus = NetApiBufferAllocate(sizeof(WKSTA_USER_INFO_1101) + dwSize * sizeof(WCHAR),
                              (LPVOID *) bufptr);
-
+        if (nastatus != NERR_Success)
+            return nastatus;
         ui = (PWKSTA_USER_INFO_1101) *bufptr;
         ui->wkui1101_oth_domains = (LMSTR)(ui + 1);
 
@@ -442,10 +456,9 @@ NET_API_STATUS WINAPI NetpGetComputerName(LPWSTR *Buffer)
     NetApiBufferAllocate(dwSize * sizeof(WCHAR), (LPVOID *) Buffer);
     if (GetComputerNameW(*Buffer,  &dwSize))
     {
-        NetApiBufferReallocate(
+        return NetApiBufferReallocate(
             *Buffer, (dwSize + 1) * sizeof(WCHAR),
             (LPVOID *) Buffer);
-        return NERR_Success;
     }
     else
     {
