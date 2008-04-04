@@ -51,7 +51,7 @@ DEFINE_GUID(GUID_NULL,0,0,0,0,0,0,0,0,0,0,0);
 #include "shldisp.h"
 #include "comcat.h"
 #include "urlmon.h"
-#include "mapiguid.h"
+
 #include "activscp.h"
 #include "dispex.h"
 #include "mlang.h"
