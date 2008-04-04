@@ -1284,9 +1284,6 @@ BOOL WINAPI SHIsSameObject(IUnknown* lpInt1, IUnknown* lpInt2)
  */
 HRESULT WINAPI IUnknown_GetWindow(IUnknown *lpUnknown, HWND *lphWnd)
 {
-  /* FIXME: Wine has no header for this object */
-  static const GUID IID_IInternetSecurityMgrSite = { 0x79eac9ed,
-    0xbaf9, 0x11ce, { 0x8c, 0x82, 0x00, 0xaa, 0x00, 0x4b, 0xa9, 0x0b }};
   IUnknown *lpOle;
   HRESULT hRet = E_FAIL;
 

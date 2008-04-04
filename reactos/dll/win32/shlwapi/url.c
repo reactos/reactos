@@ -752,7 +752,6 @@ HRESULT WINAPI UrlCombineW(LPCWSTR pszBase, LPCWSTR pszRelative,
 	break;
     } while(FALSE); /* a litte trick to allow easy exit from nested if's */
 
-
     ret = S_OK;
     switch (process_case) {
 
@@ -780,9 +779,6 @@ HRESULT WINAPI UrlCombineW(LPCWSTR pszBase, LPCWSTR pszRelative,
         memcpy(preliminary, base.pszProtocol, (base.cchProtocol + 1)*sizeof(WCHAR));
 	work = preliminary + base.cchProtocol + 1;
 	strcpyW(work, relative.pszSuffix);
-	if (!(dwFlags & URL_PLUGGABLE_PROTOCOL) &&
-	    URL_JustLocation(relative.pszSuffix))
-	    strcatW(work, single_slash);
 	break;
 
     case 4:  /*
@@ -1584,14 +1580,18 @@ static HRESULT URL_ApplyDefault(LPCWSTR pszIn, LPWSTR pszOut, LPDWORD pcchOut)
 {
     HKEY newkey;
     DWORD data_len, dwType;
-    WCHAR reg_path[MAX_PATH];
     WCHAR value[MAX_PATH], data[MAX_PATH];
 
+    static const WCHAR prefix_keyW[] =
+        {'S','o','f','t','w','a','r','e',
+         '\\','M','i','c','r','o','s','o','f','t',
+         '\\','W','i','n','d','o','w','s',
+         '\\','C','u','r','r','e','n','t','V','e','r','s','i','o','n',
+         '\\','U','R','L',
+         '\\','D','e','f','a','u','l','t','P','r','e','f','i','x',0};
+
     /* get and prepend default */
-    MultiByteToWideChar(0, 0,
-	 "Software\\Microsoft\\Windows\\CurrentVersion\\URL\\DefaultPrefix",
-			-1, reg_path, MAX_PATH);
-    RegOpenKeyExW(HKEY_LOCAL_MACHINE, reg_path, 0, 1, &newkey);
+    RegOpenKeyExW(HKEY_LOCAL_MACHINE, prefix_keyW, 0, 1, &newkey);
     data_len = MAX_PATH;
     value[0] = '@';
     value[1] = '\0';
@@ -2013,7 +2013,7 @@ static LONG URL_ParseUrl(LPCWSTR pszUrl, WINE_PARSE_URL *pl)
  *  pszIn   [I]   Url to parse
  *  pszOut  [O]   Destination for part of pszIn requested
  *  pcchOut [I]   Size of pszOut
- *          [O]   length of pszOut string EXLUDING '\0' if S_OK, otherwise
+ *          [O]   length of pszOut string EXCLUDING '\0' if S_OK, otherwise
  *                needed size of pszOut INCLUDING '\0'.
  *  dwPart  [I]   URL_PART_ enum from "shlwapi.h"
  *  dwFlags [I]   URL_ flags from "shlwapi.h"
@@ -2155,6 +2155,8 @@ BOOL WINAPI PathIsURLA(LPCSTR lpstrPath)
     PARSEDURLA base;
     DWORD res1;
 
+    TRACE("%s\n", debugstr_a(lpstrPath));
+
     if (!lpstrPath || !*lpstrPath) return FALSE;
 
     /* get protocol        */
@@ -2172,6 +2174,8 @@ BOOL WINAPI PathIsURLW(LPCWSTR lpstrPath)
 {
     PARSEDURLW base;
     DWORD res1;
+
+    TRACE("%s\n", debugstr_w(lpstrPath));
 
     if (!lpstrPath || !*lpstrPath) return FALSE;
 

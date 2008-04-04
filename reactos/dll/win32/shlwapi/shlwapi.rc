@@ -39,6 +39,7 @@
 #include "shlwapi_No.rc"
 #include "shlwapi_Pl.rc"
 #include "shlwapi_Pt.rc"
+#include "shlwapi_Ro.rc"
 #include "shlwapi_Ru.rc"
 #include "shlwapi_Sv.rc"
 #include "shlwapi_Tr.rc"

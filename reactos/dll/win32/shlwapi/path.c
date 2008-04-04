@@ -2344,7 +2344,12 @@ BOOL WINAPI PathCanonicalizeA(LPSTR lpszBuf, LPCSTR lpszPath)
   {
     WCHAR szPath[MAX_PATH];
     WCHAR szBuff[MAX_PATH];
-    MultiByteToWideChar(CP_ACP,0,lpszPath,-1,szPath,MAX_PATH);
+    int ret = MultiByteToWideChar(CP_ACP,0,lpszPath,-1,szPath,MAX_PATH);
+
+    if (!ret) {
+	WARN("Failed to convert string to widechar (too long?), LE %d.\n", GetLastError());
+	return FALSE;
+    }
     bRet = PathCanonicalizeW(szBuff, szPath);
     WideCharToMultiByte(CP_ACP,0,szBuff,-1,lpszBuf,MAX_PATH,0,0);
   }
