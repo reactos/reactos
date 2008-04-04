@@ -2229,7 +2229,7 @@ static int fdi_decomp(const struct fdi_file *fi, int savemode, fdi_decomp_state 
         for (file = cab->firstfile; (file); file = file->next) {
           if ((file->index & cffileCONTINUED_FROM_PREV) == cffileCONTINUED_FROM_PREV) {
             /* check to ensure a real match */
-            if (strcasecmp(fi->filename, file->filename) == 0) {
+            if (lstrcmpiA(fi->filename, file->filename) == 0) {
               success = TRUE;
               if (PFDI_SEEK(CAB(hfdi), cab->cabhf, cab->firstfol->offset, SEEK_SET) == -1)
                 return DECR_INPUT;
