@@ -922,10 +922,12 @@ static void test_settargetpath(void)
     sprintf( tempdir, "%s\\subdir", buffer );
 
     r = MsiSetTargetPath( hpkg, "TARGETDIR", buffer );
-    ok( r == ERROR_SUCCESS, "MsiSetTargetPath on file returned %d\n", r );
+    ok( r == ERROR_SUCCESS || r == ERROR_DIRECTORY,
+        "MsiSetTargetPath on file returned %d\n", r );
 
     r = MsiSetTargetPath( hpkg, "TARGETDIR", tempdir );
-    ok( r == ERROR_SUCCESS, "MsiSetTargetPath on 'subdir' of file returned %d\n", r );
+    ok( r == ERROR_SUCCESS || r == ERROR_DIRECTORY,
+        "MsiSetTargetPath on 'subdir' of file returned %d\n", r );
 
     DeleteFile( buffer );
 
@@ -985,6 +987,9 @@ static void test_condition(void)
 
     r = MsiEvaluateCondition(hpkg, "0");
     ok( r == MSICONDITION_FALSE, "wrong return val\n");
+
+    r = MsiEvaluateCondition(hpkg, "-1");
+    ok( r == MSICONDITION_TRUE, "wrong return val\n");
 
     r = MsiEvaluateCondition(hpkg, "0 = 0");
     ok( r == MSICONDITION_TRUE, "wrong return val\n");
@@ -1621,6 +1626,10 @@ static void test_condition(void)
 
     r = MsiEvaluateCondition(hpkg, "X !=\"\" and (X =\"5.0\" or X =\"5.1\" or X =\"6.0\")");
     ok( r == MSICONDITION_ERROR, "wrong return val (%d)\n", r);
+
+    /* feature doesn't exist */
+    r = MsiEvaluateCondition(hpkg, "&nofeature");
+    ok( r == MSICONDITION_FALSE, "wrong return val (%d)\n", r);
 
     MsiCloseHandle( hpkg );
     DeleteFile(msifile);
@@ -4697,7 +4706,8 @@ static void test_installprops(void)
     CHAR path[MAX_PATH];
     CHAR buf[MAX_PATH];
     DWORD size, type;
-    HKEY hkey;
+    LANGID langid;
+    HKEY hkey1, hkey2;
     UINT r;
 
     GetCurrentDirectory(MAX_PATH, path);
@@ -4717,25 +4727,46 @@ static void test_installprops(void)
     ok( r == ERROR_SUCCESS, "failed to get property: %d\n", r);
     ok( !lstrcmp(buf, path), "Expected %s, got %s\n", path, buf);
 
-    RegOpenKey(HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion", &hkey);
+    RegOpenKey(HKEY_CURRENT_USER, "SOFTWARE\\Microsoft\\MS Setup (ACME)\\User Info", &hkey1);
+
+    RegOpenKey(HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion", &hkey2);
 
     size = MAX_PATH;
     type = REG_SZ;
-    RegQueryValueEx(hkey, "RegisteredOwner", NULL, &type, (LPBYTE)path, &size);
+    *path = '\0';
+    if (RegQueryValueEx(hkey1, "DefName", NULL, &type, (LPBYTE)path, &size) != ERROR_SUCCESS)
+    {
+        size = MAX_PATH;
+        type = REG_SZ;
+        RegQueryValueEx(hkey2, "RegisteredOwner", NULL, &type, (LPBYTE)path, &size);
+    }
 
-    size = MAX_PATH;
-    r = MsiGetProperty(hpkg, "USERNAME", buf, &size);
-    ok( r == ERROR_SUCCESS, "failed to get property: %d\n", r);
-    ok( !lstrcmp(buf, path), "Expected %s, got %s\n", path, buf);
+    /* win9x doesn't set this */
+    if (*path)
+    {
+        size = MAX_PATH;
+        r = MsiGetProperty(hpkg, "USERNAME", buf, &size);
+        ok( r == ERROR_SUCCESS, "failed to get property: %d\n", r);
+        ok( !lstrcmp(buf, path), "Expected %s, got %s\n", path, buf);
+    }
 
     size = MAX_PATH;
     type = REG_SZ;
-    RegQueryValueEx(hkey, "RegisteredOrganization", NULL, &type, (LPBYTE)path, &size);
+    *path = '\0';
+    if (RegQueryValueEx(hkey1, "DefCompany", NULL, &type, (LPBYTE)path, &size) != ERROR_SUCCESS)
+    {
+        size = MAX_PATH;
+        type = REG_SZ;
+        RegQueryValueEx(hkey2, "RegisteredOrganization", NULL, &type, (LPBYTE)path, &size);
+    }
 
-    size = MAX_PATH;
-    r = MsiGetProperty(hpkg, "COMPANYNAME", buf, &size);
-    ok( r == ERROR_SUCCESS, "failed to get property: %d\n", r);
-    ok( !lstrcmp(buf, path), "Expected %s, got %s\n", path, buf);
+    if (*path)
+    {
+        size = MAX_PATH;
+        r = MsiGetProperty(hpkg, "COMPANYNAME", buf, &size);
+        ok( r == ERROR_SUCCESS, "failed to get property: %d\n", r);
+        ok( !lstrcmp(buf, path), "Expected %s, got %s\n", path, buf);
+    }
 
     size = MAX_PATH;
     r = MsiGetProperty(hpkg, "VersionDatabase", buf, &size);
@@ -4762,7 +4793,16 @@ static void test_installprops(void)
     ok( r == ERROR_SUCCESS, "failed to get property: %d\n", r);
     trace("PackageCode = %s\n", buf);
 
-    CloseHandle(hkey);
+    langid = GetUserDefaultLangID();
+    sprintf(path, "%d", langid);
+
+    size = MAX_PATH;
+    r = MsiGetProperty(hpkg, "UserLanguageID", buf, &size);
+    ok( r == ERROR_SUCCESS, "Expected ERROR_SUCCESS< got %d\n", r);
+    ok( !lstrcmpA(buf, path), "Expected \"%s\", got \"%s\"\n", path, buf);
+
+    CloseHandle(hkey1);
+    CloseHandle(hkey2);
     MsiCloseHandle(hpkg);
     DeleteFile(msifile);
 }
@@ -5294,7 +5334,8 @@ static void test_complocator(void)
 
     lstrcpyA(expected, CURR_DIR);
     lstrcatA(expected, "\\abelisaurus");
-    ok(!lstrcmpA(prop, expected), "Expected %s, got %s\n", expected, prop);
+    ok(!lstrcmpA(prop, expected) || !lstrcmpA(prop, ""),
+       "Expected %s or empty string, got %s\n", expected, prop);
 
     size = MAX_PATH;
     r = MsiGetPropertyA(hpkg, "BACTROSAURUS", prop, &size);
@@ -5317,7 +5358,8 @@ static void test_complocator(void)
 
     lstrcpyA(expected, CURR_DIR);
     lstrcatA(expected, "\\");
-    ok(!lstrcmpA(prop, expected), "Expected %s, got %s\n", expected, prop);
+    ok(!lstrcmpA(prop, expected) || !lstrcmpA(prop, ""),
+       "Expected %s or empty string, got %s\n", expected, prop);
 
     size = MAX_PATH;
     r = MsiGetPropertyA(hpkg, "FALCARIUS", prop, &size);
@@ -5360,7 +5402,8 @@ static void test_complocator(void)
 
     lstrcpyA(expected, CURR_DIR);
     lstrcatA(expected, "\\");
-    ok(!lstrcmpA(prop, expected), "Expected %s, got %s\n", expected, prop);
+    ok(!lstrcmpA(prop, expected) || !lstrcmpA(prop, ""),
+       "Expected %s or empty string, got %s\n", expected, prop);
 
     size = MAX_PATH;
     r = MsiGetPropertyA(hpkg, "NEOSODON", prop, &size);
@@ -5368,7 +5411,8 @@ static void test_complocator(void)
 
     lstrcpyA(expected, CURR_DIR);
     lstrcatA(expected, "\\neosodon\\");
-    ok(!lstrcmpA(prop, expected), "Expected %s, got %s\n", expected, prop);
+    ok(!lstrcmpA(prop, expected) || !lstrcmpA(prop, ""),
+       "Expected %s or empty string, got %s\n", expected, prop);
 
     size = MAX_PATH;
     r = MsiGetPropertyA(hpkg, "OLOROTITAN", prop, &size);

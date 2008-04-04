@@ -23,6 +23,7 @@
 #include <advpub.h>
 #include "wine/test.h"
 
+static HMODULE hAdvPack;
 /* function pointers */
 static HRESULT (WINAPI *pRunSetupCommand)(HWND, LPCSTR, LPCSTR, LPCSTR, LPCSTR, HANDLE*, DWORD, LPVOID);
 static HRESULT (WINAPI *pLaunchINFSection)(HWND, HINSTANCE, LPSTR, INT);
@@ -32,7 +33,7 @@ static char CURR_DIR[MAX_PATH];
 
 static BOOL init_function_pointers(void)
 {
-    HMODULE hAdvPack = LoadLibraryA("advpack.dll");
+    hAdvPack = LoadLibraryA("advpack.dll");
     if (!hAdvPack)
         return FALSE;
 
@@ -273,4 +274,6 @@ START_TEST(install)
     test_RunSetupCommand();
     test_LaunchINFSection();
     test_LaunchINFSectionEx();
+
+    FreeLibrary(hAdvPack);
 }

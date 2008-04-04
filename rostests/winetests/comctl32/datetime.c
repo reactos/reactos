@@ -112,6 +112,7 @@ static const struct message test_dtm_set_range_swap_min_max_seq[] = {
 
 static const struct message test_dtm_set_and_get_system_time_seq[] = {
     { DTM_SETSYSTEMTIME, sent|wparam, 0x00000001 },
+    { 0x0090, sent|optional }, /* Vista */
     { WM_DESTROY, sent|wparam|lparam, 0x00000000, 0x00000000 },
     { WM_NCDESTROY, sent|wparam|lparam, 0x00000000, 0x00000000 },
     { DTM_SETSYSTEMTIME, sent|wparam, 0x00000001 },
@@ -125,6 +126,7 @@ static const struct message test_dtm_set_and_get_system_time_seq[] = {
 };
 
 static const struct message destroy_window_seq[] = {
+    { 0x0090, sent|optional }, /* Vista */
     { WM_DESTROY, sent|wparam|lparam, 0x00000000, 0x00000000 },
     { WM_NCDESTROY, sent|wparam|lparam, 0x00000000, 0x00000000 },
     { 0 }
@@ -191,6 +193,8 @@ static HWND create_datetime_control(DWORD style, DWORD exstyle)
 
 static void test_dtm_set_format(HWND hWndDateTime)
 {
+    CHAR txt[256];
+    SYSTEMTIME systime;
     LRESULT r;
 
     r = SendMessage(hWndDateTime, DTM_SETFORMAT, 0, (LPARAM)NULL);
@@ -201,6 +205,17 @@ static void test_dtm_set_format(HWND hWndDateTime)
     expect(1, r);
 
     ok_sequence(sequences, DATETIME_SEQ_INDEX, test_dtm_set_format_seq, "test_dtm_set_format", FALSE);
+
+    r = SendMessage(hWndDateTime, DTM_SETFORMAT, 0,
+		    (LPARAM)"'hh' hh");
+    expect(1, r);
+    ZeroMemory(&systime, sizeof(systime));
+    systime.wYear = 2000;
+    systime.wMonth = systime.wDay = 1;
+    r = SendMessage(hWndDateTime, DTM_SETSYSTEMTIME, 0, (LPARAM)&systime);
+    expect(1, r);
+    GetWindowText(hWndDateTime, txt, 256);
+    todo_wine ok(strcmp(txt, "hh 12") == 0, "String mismatch (\"%s\" vs \"hh 12\")\n", txt);
     flush_sequences(sequences, NUM_MSG_SEQUENCES);
 }
 
@@ -311,7 +326,7 @@ static void test_dtm_set_and_get_range(HWND hWndDateTime)
 
     /* initialize st[0] to lowest possible value */
     fill_systime_struct(&st[0], 1601, 1, 0, 1, 0, 0, 0, 0);
-    /* intialize st[1] to all invalid numbers */
+    /* initialize st[1] to all invalid numbers */
     fill_systime_struct(&st[1], 0, 0, 7, 0, 24, 60, 60, 1000);
 
     r = SendMessage(hWndDateTime, DTM_SETRANGE, GDTR_MIN, (LPARAM)st);
@@ -560,7 +575,21 @@ static void test_datetime_control(void)
 
 START_TEST(datetime)
 {
-    InitCommonControls();
+    HMODULE hComctl32;
+    BOOL (WINAPI *pInitCommonControlsEx)(const INITCOMMONCONTROLSEX*);
+    INITCOMMONCONTROLSEX iccex;
+
+    hComctl32 = GetModuleHandleA("comctl32.dll");
+    pInitCommonControlsEx = (void*)GetProcAddress(hComctl32, "InitCommonControlsEx");
+    if (!pInitCommonControlsEx)
+    {
+        skip("InitCommonControlsEx() is missing. Skipping the tests\n");
+        return;
+    }
+    iccex.dwSize = sizeof(iccex);
+    iccex.dwICC  = ICC_DATE_CLASSES;
+    pInitCommonControlsEx(&iccex);
+
     init_msg_sequences(sequences, NUM_MSG_SEQUENCES);
 
     test_datetime_control();

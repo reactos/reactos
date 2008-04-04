@@ -244,7 +244,17 @@ static void run_userhandling_tests(void)
     usri.usri1_password = sTestUserOldPass;
 
     ret = pNetUserAdd(NULL, 1, (LPBYTE)&usri, NULL);
-    ok(ret == NERR_BadUsername, "Adding user with too long username returned 0x%08x\n", ret);
+    if (ret == NERR_Success || ret == NERR_UserExists)
+    {
+        /* Windows NT4 does create the user. Delete the user and also if it already existed
+         * due to a previous test run on NT4.
+         */
+        trace("We are on NT4, we have to delete the user with the too long username\n");
+        ret = pNetUserDel(NULL, sTooLongName);
+        ok(ret == NERR_Success, "Deleting the user failed : %d\n", ret);
+    }
+    else
+        ok(ret == NERR_BadUsername, "Adding user with too long username returned 0x%08x\n", ret);
 
     usri.usri1_name = sTestUserName;
     usri.usri1_password = sTooLongPassword;
@@ -256,7 +266,10 @@ static void run_userhandling_tests(void)
     usri.usri1_password = sTooLongPassword;
 
     ret = pNetUserAdd(NULL, 1, (LPBYTE)&usri, NULL);
-    ok(ret == NERR_BadUsername,
+    /* NT4 doesn't have a problem with the username so it will report the too long password
+     * as the error. NERR_PasswordTooShort is reported for all kind of password related errors.
+     */
+    ok(ret == NERR_BadUsername || ret == NERR_PasswordTooShort,
             "Adding user with too long username/password returned 0x%08x\n", ret);
 
     usri.usri1_name = sTestUserName;
@@ -283,7 +296,7 @@ static void run_userhandling_tests(void)
 
     ret = pNetUserChangePassword(NULL, sNonexistentUser, sTestUserOldPass,
             sTestUserNewPass);
-    ok(ret == NERR_UserNotFound,
+    ok(ret == NERR_UserNotFound || ret == ERROR_INVALID_PASSWORD,
             "Changing password for nonexistent user returned 0x%08x.\n", ret);
 
     ret = pNetUserChangePassword(NULL, sTestUserName, sTestUserOldPass,

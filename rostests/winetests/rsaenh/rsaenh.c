@@ -175,12 +175,20 @@ static void test_prov(void)
     DWORD dwLen, dwInc;
     
     dwLen = (DWORD)sizeof(DWORD);
+    SetLastError(0xdeadbeef);
     result = CryptGetProvParam(hProv, PP_SIG_KEYSIZE_INC, (BYTE*)&dwInc, &dwLen, 0);
-    ok(result && dwInc==8, "%08x, %d\n", GetLastError(), dwInc);
+    if (!result && GetLastError() == NTE_BAD_TYPE)
+        skip("PP_SIG_KEYSIZE_INC is not supported (win9x or NT)\n");
+    else
+        ok(result && dwInc==8, "%08x, %d\n", GetLastError(), dwInc);
     
     dwLen = (DWORD)sizeof(DWORD);
+    SetLastError(0xdeadbeef);
     result = CryptGetProvParam(hProv, PP_KEYX_KEYSIZE_INC, (BYTE*)&dwInc, &dwLen, 0);
-    ok(result && dwInc==8, "%08x, %d\n", GetLastError(), dwInc);
+    if (!result && GetLastError() == NTE_BAD_TYPE)
+        skip("PP_KEYX_KEYSIZE_INC is not supported (win9x or NT)\n");
+    else
+        ok(result && dwInc==8, "%08x, %d\n", GetLastError(), dwInc);
 }
 
 static void test_gen_random(void)
@@ -1823,9 +1831,13 @@ static void test_null_provider(void)
     ok(result && dataLen == sizeof(dwParam) && (dwParam & CRYPT_SEC_DESCR),
         "Expected CRYPT_SEC_DESCR to be set, got 0x%08X\n",dwParam);
     dataLen = sizeof(keySpec);
+    SetLastError(0xdeadbeef);
     result = CryptGetProvParam(prov, PP_KEYSPEC, (LPBYTE)&keySpec, &dataLen, 0);
-    ok(result && keySpec == (AT_KEYEXCHANGE | AT_SIGNATURE),
-        "Expected AT_KEYEXCHANGE | AT_SIGNATURE, got %08x\n", keySpec);
+    if (!result && GetLastError() == NTE_BAD_TYPE)
+        skip("PP_KEYSPEC is not supported (win9x or NT)\n");
+    else
+        ok(result && keySpec == (AT_KEYEXCHANGE | AT_SIGNATURE),
+            "Expected AT_KEYEXCHANGE | AT_SIGNATURE, got %08x\n", keySpec);
     /* PP_CONTAINER parameter */
     dataLen = sizeof(szName);
     result = CryptGetProvParam(prov, PP_CONTAINER, (LPBYTE)szName, &dataLen, 0);
@@ -1834,10 +1846,14 @@ static void test_null_provider(void)
         (result)? "TRUE":"FALSE",GetLastError(),dataLen);
     /* PP_UNIQUE_CONTAINER parameter */
     dataLen = sizeof(szName);
+    SetLastError(0xdeadbeef);
     result = CryptGetProvParam(prov, PP_UNIQUE_CONTAINER, (LPBYTE)szName, &dataLen, 0);
-    ok(result && dataLen == strlen(szContainer)+1 && strcmp(szContainer,szName) == 0,
-        "failed getting PP_CONTAINER. result = %s. Error 0x%08X. returned length = %d\n",
-        (result)? "TRUE":"FALSE",GetLastError(),dataLen);
+    if (!result && GetLastError() == NTE_BAD_TYPE)
+        skip("PP_UNIQUE_CONTAINER is not supported (win9x or NT)\n");
+    else
+        ok(result && dataLen == strlen(szContainer)+1 && strcmp(szContainer,szName) == 0,
+            "failed getting PP_UNIQUE_CONTAINER. result = %s. Error 0x%08X. returned length = %d\n",
+            (result)? "TRUE":"FALSE",GetLastError(),dataLen);
     result = CryptGetUserKey(prov, AT_KEYEXCHANGE, &key);
     ok(!result && GetLastError() == NTE_NO_KEY,
      "Expected NTE_NO_KEY, got %08x\n", GetLastError());

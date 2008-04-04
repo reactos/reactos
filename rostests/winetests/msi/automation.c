@@ -465,85 +465,138 @@ static DISPID get_dispid( IDispatch *disp, const char *name )
 
 static void test_dispid(void)
 {
-    ok( get_dispid( pInstaller, "CreateRecord" ) == 1, "dispid wrong\n");
-    ok( get_dispid( pInstaller, "OpenPackage" ) == 2, "dispid wrong\n");
-    todo_wine ok( get_dispid( pInstaller, "OpenProduct" ) == 3, "dispid wrong\n");
-    ok( get_dispid( pInstaller, "OpenDatabase" ) == 4, "dispid wrong\n");
-    todo_wine {
-    ok( get_dispid( pInstaller, "SummaryInformation" ) == 5, "dispid wrong\n");
-    ok( get_dispid( pInstaller, "UILevel" ) == 6, "dispid wrong\n");
-    ok( get_dispid( pInstaller, "EnableLog" ) == 7, "dispid wrong\n");
-    }
-    ok( get_dispid( pInstaller, "InstallProduct" ) == 8, "dispid wrong\n");
-    ok( get_dispid( pInstaller, "Version" ) == 9, "dispid wrong\n");
-    todo_wine {
-    ok( get_dispid( pInstaller, "LastErrorRecord" ) == 10, "dispid wrong\n");
-    }
-    ok( get_dispid( pInstaller, "RegistryValue" ) == 11, "dispid wrong\n");
-    todo_wine {
-    ok( get_dispid( pInstaller, "Environment" ) == 12, "dispid wrong\n");
-    ok( get_dispid( pInstaller, "FileAttributes" ) == 13, "dispid wrong\n");
+    DISPID dispid;
 
-    ok( get_dispid( pInstaller, "FileSize" ) == 15, "dispid wrong\n");
-    ok( get_dispid( pInstaller, "FileVersion" ) == 16, "dispid wrong\n");
+    dispid = get_dispid(pInstaller, "CreateRecord");
+    ok(dispid  == 1, "Expected 1, got %d\n", dispid);
+    dispid = get_dispid(pInstaller, "OpenPackage");
+    ok(dispid  == 2, "Expected 2, got %d\n", dispid);
+    dispid = get_dispid(pInstaller, "OpenDatabase");
+    ok(dispid == 4, "Expected 4, got %d\n", dispid);
+    dispid = get_dispid( pInstaller, "UILevel" );
+    ok(dispid == 6, "Expected 6, got %d\n", dispid);
+    dispid = get_dispid(pInstaller, "InstallProduct");
+    ok(dispid == 8, "Expected 8, got %d\n", dispid);
+    dispid = get_dispid(pInstaller, "Version");
+    ok(dispid == 9, "Expected 9, got %d\n", dispid);
+    dispid = get_dispid(pInstaller, "RegistryValue");
+    ok(dispid == 11, "Expected 11, got %d\n", dispid);
+    todo_wine
+    {
+        dispid = get_dispid(pInstaller, "OpenProduct");
+        ok(dispid  == 3, "Expected 3, got %d\n", dispid);
+        dispid = get_dispid(pInstaller, "SummaryInformation");
+        ok(dispid == 5, "Expected 5, got %d\n", dispid);
+        dispid = get_dispid(pInstaller, "EnableLog");
+        ok(dispid == 7, "Expected 7, got %d\n", dispid);
+        dispid = get_dispid(pInstaller, "LastErrorRecord");
+        ok(dispid == 10, "Expected 10, got %d\n", dispid);
+        dispid = get_dispid(pInstaller, "Environment");
+        ok(dispid == 12, "Expected 12, got %d\n", dispid);
+        dispid = get_dispid(pInstaller, "FileAttributes");
+        ok(dispid == 13, "Expected 13, got %d\n", dispid);
+        dispid = get_dispid(pInstaller, "FileSize");
+        ok(dispid == 15, "Expected 15, got %d\n", dispid);
+        dispid = get_dispid(pInstaller, "FileVersion");
+        ok(dispid == 16, "Expected 16, got %d\n", dispid);
     }
-    ok( get_dispid( pInstaller, "ProductState" ) == 17, "dispid wrong\n");
-    ok( get_dispid( pInstaller, "ProductInfo" ) == 18, "dispid wrong\n");
-    todo_wine {
-    ok( get_dispid( pInstaller, "ConfigureProduct" ) == 19, "dispid wrong\n");
-    ok( get_dispid( pInstaller, "ReinstallProduct" ) == 20 , "dispid wrong\n");
-    ok( get_dispid( pInstaller, "CollectUserInfo" ) == 21, "dispid wrong\n");
-    ok( get_dispid( pInstaller, "ApplyPatch" ) == 22, "dispid wrong\n");
-    ok( get_dispid( pInstaller, "FeatureParent" ) == 23, "dispid wrong\n");
-    ok( get_dispid( pInstaller, "FeatureState" ) == 24, "dispid wrong\n");
-    ok( get_dispid( pInstaller, "UseFeature" ) == 25, "dispid wrong\n");
-    ok( get_dispid( pInstaller, "FeatureUsageCount" ) == 26, "dispid wrong\n");
-    ok( get_dispid( pInstaller, "FeatureUsageDate" ) == 27, "dispid wrong\n");
-    ok( get_dispid( pInstaller, "ConfigureFeature" ) == 28, "dispid wrong\n");
-    ok( get_dispid( pInstaller, "ReinstallFeature" ) == 29, "dispid wrong\n");
-    ok( get_dispid( pInstaller, "ProvideComponent" ) == 30, "dispid wrong\n");
-    ok( get_dispid( pInstaller, "ComponentPath" ) == 31, "dispid wrong\n");
-    ok( get_dispid( pInstaller, "ProvideQualifiedComponent" ) == 32, "dispid wrong\n");
-    ok( get_dispid( pInstaller, "QualifierDescription" ) == 33, "dispid wrong\n");
-    ok( get_dispid( pInstaller, "ComponentQualifiers" ) == 34, "dispid wrong\n");
+    dispid = get_dispid(pInstaller, "ProductState");
+    ok(dispid == 17, "Expected 17, got %d\n", dispid);
+    dispid = get_dispid(pInstaller, "ProductInfo");
+    ok(dispid == 18, "Expected 18, got %d\n", dispid);
+    todo_wine
+    {
+        dispid = get_dispid(pInstaller, "ConfigureProduct");
+        ok(dispid == 19, "Expected 19, got %d\n", dispid);
+        dispid = get_dispid(pInstaller, "ReinstallProduct");
+        ok(dispid == 20 , "Expected 20, got %d\n", dispid);
+        dispid = get_dispid(pInstaller, "CollectUserInfo");
+        ok(dispid == 21, "Expected 21, got %d\n", dispid);
+        dispid = get_dispid(pInstaller, "ApplyPatch");
+        ok(dispid == 22, "Expected 22, got %d\n", dispid);
+        dispid = get_dispid(pInstaller, "FeatureParent");
+        ok(dispid == 23, "Expected 23, got %d\n", dispid);
+        dispid = get_dispid(pInstaller, "FeatureState");
+        ok(dispid == 24, "Expected 24, got %d\n", dispid);
+        dispid = get_dispid(pInstaller, "UseFeature");
+        ok(dispid == 25, "Expected 25, got %d\n", dispid);
+        dispid = get_dispid(pInstaller, "FeatureUsageCount");
+        ok(dispid == 26, "Expected 26, got %d\n", dispid);
+        dispid = get_dispid(pInstaller, "FeatureUsageDate");
+        ok(dispid == 27, "Expected 27, got %d\n", dispid);
+        dispid = get_dispid(pInstaller, "ConfigureFeature");
+        ok(dispid == 28, "Expected 28, got %d\n", dispid);
+        dispid = get_dispid(pInstaller, "ReinstallFeature");
+        ok(dispid == 29, "Expected 29, got %d\n", dispid);
+        dispid = get_dispid(pInstaller, "ProvideComponent");
+        ok(dispid == 30, "Expected 30, got %d\n", dispid);
+        dispid = get_dispid(pInstaller, "ComponentPath");
+        ok(dispid == 31, "Expected 31, got %d\n", dispid);
+        dispid = get_dispid(pInstaller, "ProvideQualifiedComponent");
+        ok(dispid == 32, "Expected 32, got %d\n", dispid);
+        dispid = get_dispid(pInstaller, "QualifierDescription");
+        ok(dispid == 33, "Expected 33, got %d\n", dispid);
+        dispid = get_dispid(pInstaller, "ComponentQualifiers");
+        ok(dispid == 34, "Expected 34, got %d\n", dispid);
     }
-    ok( get_dispid( pInstaller, "Products" ) == 35, "dispid wrong\n");
-    todo_wine {
-    ok( get_dispid( pInstaller, "Features" ) == 36, "dispid wrong\n");
-    ok( get_dispid( pInstaller, "Components" ) == 37, "dispid wrong\n");
-    ok( get_dispid( pInstaller, "ComponentClients" ) == 38, "dispid wrong\n");
-    ok( get_dispid( pInstaller, "Patches" ) == 39, "dispid wrong\n");
+    dispid = get_dispid(pInstaller, "Products");
+    ok(dispid == 35, "Expected 35, got %d\n", dispid);
+    todo_wine
+    {
+        dispid = get_dispid(pInstaller, "Features");
+        ok(dispid == 36, "Expected 36, got %d\n", dispid);
+        dispid = get_dispid(pInstaller, "Components");
+        ok(dispid == 37, "Expected 37, got %d\n", dispid);
+        dispid = get_dispid(pInstaller, "ComponentClients");
+        ok(dispid == 38, "Expected 38, got %d\n", dispid);
+        dispid = get_dispid(pInstaller, "Patches");
+        ok(dispid == 39, "Expected 39, got %d\n", dispid);
     }
-    ok( get_dispid( pInstaller, "RelatedProducts" ) == 40, "dispid wrong\n");
-    todo_wine {
-    ok( get_dispid( pInstaller, "PatchInfo" ) == 41, "dispid wrong\n");
-    ok( get_dispid( pInstaller, "PatchTransforms" ) == 42, "dispid wrong\n");
-    ok( get_dispid( pInstaller, "AddSource" ) == 43, "dispid wrong\n");
-    ok( get_dispid( pInstaller, "ClearSourceList" ) == 44, "dispid wrong\n");
-    ok( get_dispid( pInstaller, "ForceSourceListResolution" ) == 45, "dispid wrong\n");
-    ok( get_dispid( pInstaller, "ShortcutTarget" ) == 46, "dispid wrong\n");
-    ok( get_dispid( pInstaller, "FileHash" ) == 47, "dispid wrong\n");
-    ok( get_dispid( pInstaller, "FileSignatureInfo" ) == 48, "dispid wrong\n");
-    ok( get_dispid( pInstaller, "RemovePatches" ) == 49, "dispid wrong\n");
-
-    ok( get_dispid( pInstaller, "ApplyMultiplePatches" ) == 51, "dispid wrong\n");
-    ok( get_dispid( pInstaller, "ProductsEx" ) ==  52, "dispid wrong\n");
-
-    ok( get_dispid( pInstaller, "PatchesEx" ) == 55, "dispid wrong\n");
-
-    ok( get_dispid( pInstaller, "ExtractPatchXMLData" ) == 57, "dispid wrong\n");
+    dispid = get_dispid(pInstaller, "RelatedProducts");
+    ok(dispid == 40, "Expected 40, got %d\n", dispid);
+    dispid = get_dispid(pInstaller, "RemovePatches");
+    ok(dispid == 49 || dispid == -1, "Expected 49 or -1, got %d\n", dispid);
+    dispid = get_dispid(pInstaller, "ApplyMultiplePatches");
+    ok(dispid == 51 || dispid == -1, "Expected 51 or -1, got %d\n", dispid);
+    dispid = get_dispid(pInstaller, "ProductsEx");
+    ok(dispid == 52 || dispid == -1, "Expected 52 or -1, got %d\n", dispid);
+    dispid = get_dispid(pInstaller, "PatchesEx");
+    ok(dispid == 55 || dispid == -1, "Expected 55 or -1, got %d\n", dispid);
+    dispid = get_dispid(pInstaller, "ExtractPatchXMLData");
+    ok(dispid == 57 || dispid == -1, "Expected 57 or -1, got %d\n", dispid);
+    todo_wine
+    {
+        dispid = get_dispid(pInstaller, "PatchInfo");
+        ok(dispid == 41, "Expected 41, got %d\n", dispid);
+        dispid = get_dispid(pInstaller, "PatchTransforms");
+        ok(dispid == 42, "Expected 42, got %d\n", dispid);
+        dispid = get_dispid(pInstaller, "AddSource");
+        ok(dispid == 43, "Expected 43, got %d\n", dispid);
+        dispid = get_dispid(pInstaller, "ClearSourceList");
+        ok(dispid == 44, "Expected 44, got %d\n", dispid);
+        dispid = get_dispid(pInstaller, "ForceSourceListResolution");
+        ok(dispid == 45, "Expected 45, got %d\n", dispid);
+        dispid = get_dispid(pInstaller, "ShortcutTarget");
+        ok(dispid == 46, "Expected 46, got %d\n", dispid);
+        dispid = get_dispid(pInstaller, "FileHash");
+        ok(dispid == 47, "Expected 47, got %d\n", dispid);
+        dispid = get_dispid(pInstaller, "FileSignatureInfo");
+        ok(dispid == 48, "Expected 48, got %d\n", dispid);
     }
 
     /* MSDN claims the following functions exist but IDispatch->GetIDsOfNames disagrees */
-    if (0)
-    {
-        get_dispid( pInstaller, "ProductElevated" );
-        get_dispid( pInstaller, "ProductInfoFromScript" );
-        get_dispid( pInstaller, "ProvideAssembly" );
-        get_dispid( pInstaller, "CreateAdvertiseScript" );
-        get_dispid( pInstaller, "AdvertiseProduct" );
-        get_dispid( pInstaller, "PatchFiles" );
-    }
+    dispid = get_dispid( pInstaller, "ProductElevated" );
+    ok(dispid == -1, "Expected -1, got %d\n", dispid);
+    dispid = get_dispid( pInstaller, "ProductInfoFromScript" );
+    ok(dispid == -1, "Expected -1, got %d\n", dispid);
+    dispid = get_dispid( pInstaller, "ProvideAssembly" );
+    ok(dispid == -1, "Expected -1, got %d\n", dispid);
+    dispid = get_dispid( pInstaller, "CreateAdvertiseScript" );
+    ok(dispid == -1, "Expected -1, got %d\n", dispid);
+    dispid = get_dispid( pInstaller, "AdvertiseProduct" );
+    ok(dispid == -1, "Expected -1, got %d\n", dispid);
+    dispid = get_dispid( pInstaller, "PatchFiles" );
+    ok(dispid == -1, "Expected -1, got %d\n", dispid);
 }
 
 /* Test basic IDispatch functions */
@@ -1526,10 +1579,8 @@ static void test_Database(IDispatch *pDatabase, BOOL readonly)
             ok(hr == DISP_E_EXCEPTION, "View_Modify failed, hresult 0x%08x\n", hr);
             ok_exception(hr, szModifyModeRecord);
 
-            /* View::Modify with MSIMODIFY_REFRESH should undo our changes */
             hr = View_Modify(pView, MSIMODIFY_REFRESH, pRecord);
-            /* Wine's MsiViewModify currently does not support MSIMODIFY_REFRESH */
-            todo_wine ok(hr == S_OK, "View_Modify failed, hresult 0x%08x\n", hr);
+            ok(hr == S_OK, "View_Modify failed, hresult 0x%08x\n", hr);
 
             /* Record::StringDataGet, confirm that the record is back to its unmodified value */
             memset(szString, 0, sizeof(szString));
@@ -1762,6 +1813,7 @@ static void test_Installer_RegistryValue(void)
     VARIANTARG vararg;
     WCHAR szString[MAX_PATH];
     HKEY hkey, hkey_sub;
+    HKEY curr_user = (HKEY)1;
     HRESULT hr;
     BOOL bRet;
 
@@ -1769,16 +1821,16 @@ static void test_Installer_RegistryValue(void)
     if (!RegOpenKeyW( HKEY_CURRENT_USER, szKey, &hkey )) delete_key( hkey );
 
     /* Does our key exist? Shouldn't; check with all three possible value parameter types */
-    hr = Installer_RegistryValueE(HKEY_CURRENT_USER, szKey, &bRet);
+    hr = Installer_RegistryValueE(curr_user, szKey, &bRet);
     ok(hr == S_OK, "Installer_RegistryValueE failed, hresult 0x%08x\n", hr);
     ok(!bRet, "Registry key expected to not exist, but Installer_RegistryValue claims it does\n");
 
     memset(szString, 0, sizeof(szString));
-    hr = Installer_RegistryValueW(HKEY_CURRENT_USER, szKey, NULL, szString);
+    hr = Installer_RegistryValueW(curr_user, szKey, NULL, szString);
     ok(hr == DISP_E_BADINDEX, "Installer_RegistryValueW failed, hresult 0x%08x\n", hr);
 
     memset(szString, 0, sizeof(szString));
-    hr = Installer_RegistryValueI(HKEY_CURRENT_USER, szKey, 0, szString, VT_BSTR);
+    hr = Installer_RegistryValueI(curr_user, szKey, 0, szString, VT_BSTR);
     ok(hr == DISP_E_BADINDEX, "Installer_RegistryValueI failed, hresult 0x%08x\n", hr);
 
     /* Create key */
@@ -1807,87 +1859,87 @@ static void test_Installer_RegistryValue(void)
 
     /* Does our key exist? It should, and make sure we retrieve the correct default value */
     bRet = FALSE;
-    hr = Installer_RegistryValueE(HKEY_CURRENT_USER, szKey, &bRet);
+    hr = Installer_RegistryValueE(curr_user, szKey, &bRet);
     ok(hr == S_OK, "Installer_RegistryValueE failed, hresult 0x%08x\n", hr);
     ok(bRet, "Registry key expected to exist, but Installer_RegistryValue claims it does not\n");
 
     memset(szString, 0, sizeof(szString));
-    hr = Installer_RegistryValueW(HKEY_CURRENT_USER, szKey, NULL, szString);
+    hr = Installer_RegistryValueW(curr_user, szKey, NULL, szString);
     ok(hr == S_OK, "Installer_RegistryValueW failed, hresult 0x%08x\n", hr);
     ok_w2("Default registry value \"%s\" does not match expected \"%s\"\n", szString, szOne);
 
     /* Ask for the value of a nonexistent key */
     memset(szString, 0, sizeof(szString));
-    hr = Installer_RegistryValueW(HKEY_CURRENT_USER, szKey, szExpand, szString);
+    hr = Installer_RegistryValueW(curr_user, szKey, szExpand, szString);
     ok(hr == DISP_E_BADINDEX, "Installer_RegistryValueW failed, hresult 0x%08x\n", hr);
 
     /* Get values of keys */
     memset(szString, 0, sizeof(szString));
-    hr = Installer_RegistryValueW(HKEY_CURRENT_USER, szKey, szOne, szString);
+    hr = Installer_RegistryValueW(curr_user, szKey, szOne, szString);
     ok(hr == S_OK, "Installer_RegistryValueW failed, hresult 0x%08x\n", hr);
     ok_w2("Registry value \"%s\" does not match expected \"%s\"\n", szString, szOne);
 
     VariantInit(&vararg);
     V_VT(&vararg) = VT_BSTR;
     V_BSTR(&vararg) = SysAllocString(szTwo);
-    hr = Installer_RegistryValue(HKEY_CURRENT_USER, szKey, vararg, &varresult, VT_I4);
+    hr = Installer_RegistryValue(curr_user, szKey, vararg, &varresult, VT_I4);
     ok(hr == S_OK, "Installer_RegistryValue failed, hresult 0x%08x\n", hr);
     ok(V_I4(&varresult) == 305419896, "Registry value %d does not match expected value\n", V_I4(&varresult));
     VariantClear(&varresult);
 
     memset(szString, 0, sizeof(szString));
-    hr = Installer_RegistryValueW(HKEY_CURRENT_USER, szKey, szThree, szString);
+    hr = Installer_RegistryValueW(curr_user, szKey, szThree, szString);
     ok(hr == S_OK, "Installer_RegistryValueW failed, hresult 0x%08x\n", hr);
     ok_w2("Registry value \"%s\" does not match expected \"%s\"\n", szString, szREG_BINARY);
 
     memset(szString, 0, sizeof(szString));
-    hr = Installer_RegistryValueW(HKEY_CURRENT_USER, szKey, szFour, szString);
+    hr = Installer_RegistryValueW(curr_user, szKey, szFour, szString);
     ok(hr == S_OK, "Installer_RegistryValueW failed, hresult 0x%08x\n", hr);
     ok_w2("Registry value \"%s\" does not match expected \"%s\"\n", szString, szFour);
 
     memset(szString, 0, sizeof(szString));
-    hr = Installer_RegistryValueW(HKEY_CURRENT_USER, szKey, szFive, szString);
+    hr = Installer_RegistryValueW(curr_user, szKey, szFive, szString);
     ok(hr == S_OK, "Installer_RegistryValueW failed, hresult 0x%08x\n", hr);
     ok_w2("Registry value \"%s\" does not match expected \"%s\"\n", szString, szFiveHi);
 
     memset(szString, 0, sizeof(szString));
-    hr = Installer_RegistryValueW(HKEY_CURRENT_USER, szKey, szSix, szString);
+    hr = Installer_RegistryValueW(curr_user, szKey, szSix, szString);
     ok(hr == S_OK, "Installer_RegistryValueW failed, hresult 0x%08x\n", hr);
     ok_w2("Registry value \"%s\" does not match expected \"%s\"\n", szString, szREG_);
 
     VariantInit(&vararg);
     V_VT(&vararg) = VT_BSTR;
     V_BSTR(&vararg) = SysAllocString(szSeven);
-    hr = Installer_RegistryValue(HKEY_CURRENT_USER, szKey, vararg, &varresult, VT_EMPTY);
+    hr = Installer_RegistryValue(curr_user, szKey, vararg, &varresult, VT_EMPTY);
     ok(hr == S_OK, "Installer_RegistryValue failed, hresult 0x%08x\n", hr);
 
     /* Get string class name for the key */
     memset(szString, 0, sizeof(szString));
-    hr = Installer_RegistryValueI(HKEY_CURRENT_USER, szKey, 0, szString, VT_BSTR);
+    hr = Installer_RegistryValueI(curr_user, szKey, 0, szString, VT_BSTR);
     ok(hr == S_OK, "Installer_RegistryValueI failed, hresult 0x%08x\n", hr);
     ok_w2("Registry name \"%s\" does not match expected \"%s\"\n", szString, szBlank);
 
     /* Get name of a value by positive number (RegEnumValue like), valid index */
     memset(szString, 0, sizeof(szString));
-    hr = Installer_RegistryValueI(HKEY_CURRENT_USER, szKey, 2, szString, VT_BSTR);
+    hr = Installer_RegistryValueI(curr_user, szKey, 2, szString, VT_BSTR);
     ok(hr == S_OK, "Installer_RegistryValueI failed, hresult 0x%08x\n", hr);
     /* RegEnumValue order seems different on wine */
     todo_wine ok_w2("Registry name \"%s\" does not match expected \"%s\"\n", szString, szTwo);
 
     /* Get name of a value by positive number (RegEnumValue like), invalid index */
     memset(szString, 0, sizeof(szString));
-    hr = Installer_RegistryValueI(HKEY_CURRENT_USER, szKey, 10, szString, VT_EMPTY);
+    hr = Installer_RegistryValueI(curr_user, szKey, 10, szString, VT_EMPTY);
     ok(hr == S_OK, "Installer_RegistryValueI failed, hresult 0x%08x\n", hr);
 
     /* Get name of a subkey by negative number (RegEnumValue like), valid index */
     memset(szString, 0, sizeof(szString));
-    hr = Installer_RegistryValueI(HKEY_CURRENT_USER, szKey, -1, szString, VT_BSTR);
+    hr = Installer_RegistryValueI(curr_user, szKey, -1, szString, VT_BSTR);
     ok(hr == S_OK, "Installer_RegistryValueI failed, hresult 0x%08x\n", hr);
     ok_w2("Registry name \"%s\" does not match expected \"%s\"\n", szString, szEight);
 
     /* Get name of a subkey by negative number (RegEnumValue like), invalid index */
     memset(szString, 0, sizeof(szString));
-    hr = Installer_RegistryValueI(HKEY_CURRENT_USER, szKey, -10, szString, VT_EMPTY);
+    hr = Installer_RegistryValueI(curr_user, szKey, -10, szString, VT_EMPTY);
     ok(hr == S_OK, "Installer_RegistryValueI failed, hresult 0x%08x\n", hr);
 
     /* clean up */
@@ -2116,6 +2168,12 @@ static void test_Installer_InstallProduct(void)
 
     /* Installer::InstallProduct */
     hr = Installer_InstallProduct(szMsifile, NULL);
+    if (hr == DISP_E_EXCEPTION)
+    {
+        skip("Installer object not supported.\n");
+        delete_test_files();
+        return;
+    }
     ok(hr == S_OK, "Installer_InstallProduct failed, hresult 0x%08x\n", hr);
 
     /* Installer::ProductState for our product code, which has been installed */
@@ -2140,14 +2198,14 @@ static void test_Installer_InstallProduct(void)
     /* Package name */
     memset(szString, 0, sizeof(szString));
     hr = Installer_ProductInfo(szProductCode, WINE_INSTALLPROPERTY_PACKAGENAMEW, szString);
-    todo_wine ok(hr == S_OK, "Installer_ProductInfo failed, hresult 0x%08x\n", hr);
+    ok(hr == S_OK, "Installer_ProductInfo failed, hresult 0x%08x\n", hr);
     todo_wine ok_w2("Installer_ProductInfo returned %s but expected %s\n", szString, szMsifile);
 
     /* Product name */
     memset(szString, 0, sizeof(szString));
     hr = Installer_ProductInfo(szProductCode, WINE_INSTALLPROPERTY_PRODUCTNAMEW, szString);
     ok(hr == S_OK, "Installer_ProductInfo failed, hresult 0x%08x\n", hr);
-    ok_w2("Installer_ProductInfo returned %s but expected %s\n", szString, szMSITEST);
+    todo_wine ok_w2("Installer_ProductInfo returned %s but expected %s\n", szString, szMSITEST);
 
     /* Installer::Products */
     test_Installer_Products(TRUE);

@@ -92,10 +92,6 @@ static void test_FDICreate(void)
     HFDI hfdi;
     ERF erf;
 
-    erf.erfOper = 0xcafefeed;
-    erf.erfType = 0xdeadbabe;
-    erf.fError = 0xdecaface;
-
     /* native crashes if pfnalloc is NULL */
 
     /* FDICreate does not crash with a NULL pfnfree,
@@ -104,6 +100,9 @@ static void test_FDICreate(void)
     if (0)
     {
         SetLastError(0xdeadbeef);
+        erf.erfOper = 0xcafefeed;
+        erf.erfType = 0xdeadbabe;
+        erf.fError = 0xdecaface;
         hfdi = FDICreate(fdi_alloc, NULL, fdi_open, fdi_read,
                          fdi_write, fdi_close, fdi_seek,
                          cpuUNKNOWN, &erf);
@@ -118,99 +117,121 @@ static void test_FDICreate(void)
     }
 
     SetLastError(0xdeadbeef);
+    erf.erfOper = 0xcafefeed;
+    erf.erfType = 0xdeadbabe;
+    erf.fError = 0xdecaface;
     hfdi = FDICreate(fdi_alloc, fdi_free, NULL, fdi_read,
                      fdi_write, fdi_close, fdi_seek,
                      cpuUNKNOWN, &erf);
     ok(hfdi != NULL, "Expected non-NULL context\n");
     ok(GetLastError() == 0xdeadbeef,
        "Expected 0xdeadbeef, got %d\n", GetLastError());
-    ok(erf.erfOper == 0xcafefeed, "Expected 0xcafefeed, got %d\n", erf.erfOper);
-    ok(erf.erfType == 0xdeadbabe, "Expected 0xdeadbabe, got %d\n", erf.erfType);
-    ok(erf.fError == 0xdecaface, "Expected 0xdecaface, got %d\n", erf.fError);
+    ok((erf.erfOper == 0xcafefeed || erf.erfOper == 0 /* Vista */), "Expected 0xcafefeed or 0, got %d\n", erf.erfOper);
+    ok((erf.erfType == 0xdeadbabe || erf.erfType == 0 /* Vista */), "Expected 0xdeadbabe or 0, got %d\n", erf.erfType);
+    ok((erf.fError == 0xdecaface || erf.fError == 0 /* Vista */), "Expected 0xdecaface or 0, got %d\n", erf.fError);
 
     FDIDestroy(hfdi);
 
     SetLastError(0xdeadbeef);
+    erf.erfOper = 0xcafefeed;
+    erf.erfType = 0xdeadbabe;
+    erf.fError = 0xdecaface;
     hfdi = FDICreate(fdi_alloc, fdi_free, fdi_open, NULL,
                      fdi_write, fdi_close, fdi_seek,
                      cpuUNKNOWN, &erf);
     ok(hfdi != NULL, "Expected non-NULL context\n");
     ok(GetLastError() == 0xdeadbeef,
        "Expected 0xdeadbeef, got %d\n", GetLastError());
-    ok(erf.erfOper == 0xcafefeed, "Expected 0xcafefeed, got %d\n", erf.erfOper);
-    ok(erf.erfType == 0xdeadbabe, "Expected 0xdeadbabe, got %d\n", erf.erfType);
-    ok(erf.fError == 0xdecaface, "Expected 0xdecaface, got %d\n", erf.fError);
+    ok((erf.erfOper == 0xcafefeed || erf.erfOper == 0 /* Vista */), "Expected 0xcafefeed or 0, got %d\n", erf.erfOper);
+    ok((erf.erfType == 0xdeadbabe || erf.erfType == 0 /* Vista */), "Expected 0xdeadbabe or 0, got %d\n", erf.erfType);
+    ok((erf.fError == 0xdecaface || erf.fError == 0 /* Vista */), "Expected 0xdecaface or 0, got %d\n", erf.fError);
 
     FDIDestroy(hfdi);
 
     SetLastError(0xdeadbeef);
+    erf.erfOper = 0xcafefeed;
+    erf.erfType = 0xdeadbabe;
+    erf.fError = 0xdecaface;
     hfdi = FDICreate(fdi_alloc, fdi_free, fdi_open, fdi_read,
                      NULL, fdi_close, fdi_seek,
                      cpuUNKNOWN, &erf);
     ok(hfdi != NULL, "Expected non-NULL context\n");
     ok(GetLastError() == 0xdeadbeef,
        "Expected 0xdeadbeef, got %d\n", GetLastError());
-    ok(erf.erfOper == 0xcafefeed, "Expected 0xcafefeed, got %d\n", erf.erfOper);
-    ok(erf.erfType == 0xdeadbabe, "Expected 0xdeadbabe, got %d\n", erf.erfType);
-    ok(erf.fError == 0xdecaface, "Expected 0xdecaface, got %d\n", erf.fError);
+    ok((erf.erfOper == 0xcafefeed || erf.erfOper == 0 /* Vista */), "Expected 0xcafefeed or 0, got %d\n", erf.erfOper);
+    ok((erf.erfType == 0xdeadbabe || erf.erfType == 0 /* Vista */), "Expected 0xdeadbabe or 0, got %d\n", erf.erfType);
+    ok((erf.fError == 0xdecaface || erf.fError == 0 /* Vista */), "Expected 0xdecaface or 0, got %d\n", erf.fError);
 
     FDIDestroy(hfdi);
 
     SetLastError(0xdeadbeef);
+    erf.erfOper = 0xcafefeed;
+    erf.erfType = 0xdeadbabe;
+    erf.fError = 0xdecaface;
     hfdi = FDICreate(fdi_alloc, fdi_free, fdi_open, fdi_read,
                      fdi_write, NULL, fdi_seek,
                      cpuUNKNOWN, &erf);
     ok(hfdi != NULL, "Expected non-NULL context\n");
     ok(GetLastError() == 0xdeadbeef,
        "Expected 0xdeadbeef, got %d\n", GetLastError());
-    ok(erf.erfOper == 0xcafefeed, "Expected 0xcafefeed, got %d\n", erf.erfOper);
-    ok(erf.erfType == 0xdeadbabe, "Expected 0xdeadbabe, got %d\n", erf.erfType);
-    ok(erf.fError == 0xdecaface, "Expected 0xdecaface, got %d\n", erf.fError);
+    ok((erf.erfOper == 0xcafefeed || erf.erfOper == 0 /* Vista */), "Expected 0xcafefeed or 0, got %d\n", erf.erfOper);
+    ok((erf.erfType == 0xdeadbabe || erf.erfType == 0 /* Vista */), "Expected 0xdeadbabe or 0, got %d\n", erf.erfType);
+    ok((erf.fError == 0xdecaface || erf.fError == 0 /* Vista */), "Expected 0xdecaface or 0, got %d\n", erf.fError);
 
     FDIDestroy(hfdi);
 
     SetLastError(0xdeadbeef);
+    erf.erfOper = 0xcafefeed;
+    erf.erfType = 0xdeadbabe;
+    erf.fError = 0xdecaface;
     hfdi = FDICreate(fdi_alloc, fdi_free, fdi_open, fdi_read,
                      fdi_write, fdi_close, NULL,
                      cpuUNKNOWN, &erf);
     ok(hfdi != NULL, "Expected non-NULL context\n");
     ok(GetLastError() == 0xdeadbeef,
        "Expected 0xdeadbeef, got %d\n", GetLastError());
-    ok(erf.erfOper == 0xcafefeed, "Expected 0xcafefeed, got %d\n", erf.erfOper);
-    ok(erf.erfType == 0xdeadbabe, "Expected 0xdeadbabe, got %d\n", erf.erfType);
-    ok(erf.fError == 0xdecaface, "Expected 0xdecaface, got %d\n", erf.fError);
+    ok((erf.erfOper == 0xcafefeed || erf.erfOper == 0 /* Vista */), "Expected 0xcafefeed or 0, got %d\n", erf.erfOper);
+    ok((erf.erfType == 0xdeadbabe || erf.erfType == 0 /* Vista */), "Expected 0xdeadbabe or 0, got %d\n", erf.erfType);
+    ok((erf.fError == 0xdecaface || erf.fError == 0 /* Vista */), "Expected 0xdecaface or 0, got %d\n", erf.fError);
 
     FDIDestroy(hfdi);
 
     SetLastError(0xdeadbeef);
+    erf.erfOper = 0xcafefeed;
+    erf.erfType = 0xdeadbabe;
+    erf.fError = 0xdecaface;
     hfdi = FDICreate(fdi_alloc, fdi_free, fdi_open, fdi_read,
                      fdi_write, fdi_close, fdi_seek,
                      cpuUNKNOWN, NULL);
-    ok(hfdi != NULL, "Expected non-NULL context\n");
+    /* XP sets hfdi to a non-NULL value, but Vista sets it to NULL! */
     ok(GetLastError() == 0xdeadbeef,
        "Expected 0xdeadbeef, got %d\n", GetLastError());
-    ok(erf.erfOper == 0xcafefeed, "Expected 0xcafefeed, got %d\n", erf.erfOper);
-    ok(erf.erfType == 0xdeadbabe, "Expected 0xdeadbabe, got %d\n", erf.erfType);
-    ok(erf.fError == 0xdecaface, "Expected 0xdecaface, got %d\n", erf.fError);
+    /* NULL is passed to FDICreate instead of &erf, so don't retest the erf member values. */
 
     FDIDestroy(hfdi);
 
     /* bad cpu type */
     SetLastError(0xdeadbeef);
+    erf.erfOper = 0xcafefeed;
+    erf.erfType = 0xdeadbabe;
+    erf.fError = 0xdecaface;
     hfdi = FDICreate(fdi_alloc, fdi_free, fdi_open, fdi_read,
                      fdi_write, fdi_close, fdi_seek,
                      0xcafebabe, &erf);
     ok(hfdi != NULL, "Expected non-NULL context\n");
     ok(GetLastError() == 0xdeadbeef,
        "Expected 0xdeadbeef, got %d\n", GetLastError());
-    ok(erf.erfOper == 0xcafefeed, "Expected 0xcafefeed, got %d\n", erf.erfOper);
-    ok(erf.erfType == 0xdeadbabe, "Expected 0xdeadbabe, got %d\n", erf.erfType);
-    ok(erf.fError == 0xdecaface, "Expected 0xdecaface, got %d\n", erf.fError);
+    ok((erf.erfOper == 0xcafefeed || erf.erfOper == 0 /* Vista */), "Expected 0xcafefeed or 0, got %d\n", erf.erfOper);
+    ok((erf.erfType == 0xdeadbabe || erf.erfType == 0 /* Vista */), "Expected 0xdeadbabe or 0, got %d\n", erf.erfType);
+    ok((erf.fError == 0xdecaface || erf.fError == 0 /* Vista */), "Expected 0xdecaface or 0, got %d\n", erf.fError);
 
     FDIDestroy(hfdi);
 
     /* pfnalloc fails */
     SetLastError(0xdeadbeef);
+    erf.erfOper = 0xcafefeed;
+    erf.erfType = 0xdeadbabe;
+    erf.fError = 0xdecaface;
     hfdi = FDICreate(fdi_alloc_bad, fdi_free, fdi_open, fdi_read,
                      fdi_write, fdi_close, fdi_seek,
                      cpuUNKNOWN, &erf);

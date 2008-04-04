@@ -9,6 +9,7 @@
 extern void func_clist(void);
 extern void func_clsid(void);
 extern void func_generated(void);
+extern void func_istream(void);
 extern void func_ordinal(void);
 extern void func_path(void);
 extern void func_shreg(void);
@@ -20,6 +21,7 @@ const struct test winetest_testlist[] =
     { "clist", func_clist },
     { "clsid", func_clsid },
     { "generated", func_generated },
+    { "istream", func_istream },
     { "ordinal", func_ordinal },
     { "path", func_path },
     { "shreg", func_shreg },

@@ -21,6 +21,7 @@
 
 #include <stdio.h>
 #include <windows.h>
+#include <shlwapi.h>
 #include <msi.h>
 #include <msiquery.h>
 
@@ -2176,6 +2177,7 @@ static void test_formatrecord_tables(void)
     CHAR buf[MAX_PATH];
     CHAR curr_dir[MAX_PATH];
     CHAR expected[MAX_PATH];
+    CHAR root[MAX_PATH];
     DWORD size;
     UINT r;
 
@@ -2304,48 +2306,57 @@ static void test_formatrecord_tables(void)
     r = MsiDoAction(hpkg, "CostFinalize");
     ok( r == ERROR_SUCCESS, "CostFinalize failed: %d\n", r);
 
+    size = MAX_PATH;
+    MsiGetProperty( hpkg, "ROOTDRIVE", root, &size );
+
+    sprintf( expected, "1: %sfrontal.txt ", root);
+
     /* frontal full file key */
     size = MAX_PATH;
     MsiRecordSetString( hrec, 1, "[#frontal_file]" );
     r = MsiFormatRecord( hpkg, hrec, buf, &size );
     ok( r == ERROR_SUCCESS, "format record failed: %d\n", r);
-    ok( !lstrcmp( buf, "1: C:\\frontal.txt " ), "Expected '1: C:\\frontal.txt ', got %s\n", buf);
+    ok( !lstrcmp( buf, expected ), "Expected \"%s\", got \"%s\"\n", expected, buf);
 
     /* frontal short file key */
     size = MAX_PATH;
     MsiRecordSetString( hrec, 1, "[!frontal_file]" );
     r = MsiFormatRecord( hpkg, hrec, buf, &size );
     ok( r == ERROR_SUCCESS, "format record failed: %d\n", r);
-    ok( !lstrcmp( buf, "1: C:\\frontal.txt " ), "Expected '1: C:\\frontal.txt ', got %s\n", buf);
+    ok( !lstrcmp( buf, expected ), "Expected \"%s\", got \"%s\"\n", expected, buf);
+
+    sprintf( expected, "1: %sI am a really long directory\\temporal.txt ", root);
 
     /* temporal full file key */
     size = MAX_PATH;
     MsiRecordSetString( hrec, 1, "[#temporal_file]" );
     r = MsiFormatRecord( hpkg, hrec, buf, &size );
     ok( r == ERROR_SUCCESS, "format record failed: %d\n", r);
-    ok( !lstrcmp( buf, "1: C:\\I am a really long directory\\temporal.txt " ),
-        "Expected '1: C:\\I am a really long directory\\temporal.txt ', got %s\n", buf);
+    ok( !lstrcmp( buf, expected ), "Expected \"%s\", got \"%s\"\n", expected, buf);
 
     /* temporal short file key */
     size = MAX_PATH;
     MsiRecordSetString( hrec, 1, "[!temporal_file]" );
     r = MsiFormatRecord( hpkg, hrec, buf, &size );
     ok( r == ERROR_SUCCESS, "format record failed: %d\n", r);
-    ok( !lstrcmp( buf, "1: C:\\I am a really long directory\\temporal.txt " ),
-        "Expected '1: C:\\I am a really long directory\\temporal.txt ', got %s\n", buf);
+    ok( !lstrcmp( buf, expected ), "Expected \"%s\", got \"%s\"\n", expected, buf);
 
     /* custom action 51, files don't exist */
     r = MsiDoAction( hpkg, "MyCustom" );
     ok( r == ERROR_SUCCESS, "MyCustom failed: %d\n", r);
 
+    sprintf( expected, "%sI am a really long directory\\temporal.txt", root);
+
     size = MAX_PATH;
     r = MsiGetProperty( hpkg, "prop", buf, &size );
     ok( r == ERROR_SUCCESS, "get property failed: %d\n", r);
-    ok( !lstrcmp( buf, "C:\\I am a really long directory\\temporal.txt" ),
-        "Expected 'C:\\I am a really long directory\\temporal.txt', got %s\n", buf);
+    ok( !lstrcmp( buf, expected ), "Expected \"%s\", got \"%s\"\n", expected, buf);
 
-    CreateDirectory( "C:\\I am a really long directory", NULL );
-    create_test_file( "C:\\I am a really long directory\\temporal.txt" );
+    sprintf( buf, "%sI am a really long directory", root );
+    CreateDirectory( buf, NULL );
+
+    lstrcat( buf, "\\temporal.txt" );
+    create_test_file( buf );
 
     /* custom action 51, files exist */
     r = MsiDoAction( hpkg, "MyCustom" );
@@ -2356,8 +2367,7 @@ static void test_formatrecord_tables(void)
     ok( r == ERROR_SUCCESS, "get property failed: %d\n", r);
     todo_wine
     {
-        ok( !lstrcmp( buf, "C:\\I am a really long directory\\temporal.txt" ),
-            "Expected 'C:\\I am a really long directory\\temporal.txt', got %s\n", buf);
+        ok( !lstrcmp( buf, expected ), "Expected \"%s\", got \"%s\"\n", expected, buf);
     }
 
     /* custom action 51, escaped text 1 */
@@ -2387,13 +2397,14 @@ static void test_formatrecord_tables(void)
     ok( r == ERROR_SUCCESS, "get property failed: %d\n", r);
     ok( !lstrcmp( buf, "" ), "Expected '', got %s\n", buf);
 
+    sprintf( expected, "1: %sI am a really long directory\\ ", root);
+
     /* component with INSTALLSTATE_LOCAL */
     size = MAX_PATH;
     MsiRecordSetString( hrec, 1, "[$temporal]" );
     r = MsiFormatRecord( hpkg, hrec, buf, &size );
     ok( r == ERROR_SUCCESS, "format record failed: %d\n", r);
-    ok( !lstrcmp( buf, "1: C:\\I am a really long directory\\ " ),
-        "Expected '1: C:\\I am a really long directory\\ ', got %s\n", buf);
+    ok( !lstrcmp( buf, expected ), "Expected \"%s\", got \"%s\"\n", expected, buf);
 
     r = MsiSetComponentState( hpkg, "temporal", INSTALLSTATE_SOURCE );
     ok( r == ERROR_SUCCESS, "failed to set install state: %d\n", r);
@@ -2408,8 +2419,11 @@ static void test_formatrecord_tables(void)
     ok( r == ERROR_SUCCESS, "format record failed: %d\n", r);
     ok( !lstrcmp( buf, expected ), "Expected '%s', got %s\n", expected, buf);
 
-    DeleteFile( "C:\\I am a really long directory\\temporal.txt" );
-    RemoveDirectory( "C:\\I am a really long directory" );
+    sprintf( buf, "%sI am a really long directory\\temporal.txt", root );
+    DeleteFile( buf );
+
+    sprintf( buf, "%sI am a really long directory", root );
+    RemoveDirectory( buf );
 
     MsiCloseHandle( hrec );
     MsiCloseHandle( hpkg );

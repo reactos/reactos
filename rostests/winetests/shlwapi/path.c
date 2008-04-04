@@ -76,11 +76,13 @@ static struct {
 } TEST_PATH_IS_URL[] = {
     {"http://foo/bar", TRUE},
     {"c:\\foo\\bar", FALSE},
+    {"c:/foo/bar", FALSE},
     {"foo://foo/bar", TRUE},
     {"foo\\bar", FALSE},
     {"foo.bar", FALSE},
     {"bogusscheme:", TRUE},
-    {"http:partial", TRUE}
+    {"http:partial", TRUE},
+    {"www.winehq.org", FALSE}
 };
 
 struct {
@@ -906,9 +908,9 @@ static void test_PathCanonicalizeA(void)
     lstrcpy(dest, "test");
     SetLastError(0xdeadbeef);
     res = PathCanonicalizeA(dest, too_long);
+    ok(!res, "Expected failure\n");
     todo_wine
     {
-        ok(!res, "Expected failure\n");
         ok(GetLastError() == 0xdeadbeef, "Expected 0xdeadbeef, got %d\n", GetLastError());
     }
     ok(lstrlen(too_long) == LONG_LEN - 1, "Expected length LONG_LEN - 1, got %i\n", lstrlen(too_long));

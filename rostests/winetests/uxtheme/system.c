@@ -128,7 +128,7 @@ static void test_GetWindowTheme(void)
             "Expected E_HANDLE, got 0x%08x\n",
             GetLastError());
 
-    /* Only do the bare minumum to get a valid hwnd */
+    /* Only do the bare minimum to get a valid hwnd */
     hWnd = CreateWindowExA(0, "static", "", WS_POPUP, 0,0,100,100,0, 0, 0, NULL);
     if (!hWnd) return;
 
@@ -161,7 +161,7 @@ static void test_SetWindowTheme(void)
             GetLastError());
     }
 
-    /* Only do the bare minumum to get a valid hwnd */
+    /* Only do the bare minimum to get a valid hwnd */
     hWnd = CreateWindowExA(0, "static", "", WS_POPUP, 0,0,100,100,0, 0, 0, NULL);
     if (!hWnd) return;
 
@@ -231,7 +231,7 @@ static void test_OpenThemeData(void)
                 GetLastError());
     }
 
-    /* Only do the bare minumum to get a valid hdc */
+    /* Only do the bare minimum to get a valid hdc */
     hWnd = CreateWindowExA(0, "static", "", WS_POPUP, 0,0,100,100,0, 0, 0, NULL);
     if (!hWnd) return;
 
@@ -417,8 +417,10 @@ static void test_GetCurrentThemeName(void)
     /* Given number of characters for the theme name is too large */
     SetLastError(0xdeadbeef);
     hRes = pGetCurrentThemeName(currentTheme, sizeof(currentTheme), NULL, 0, NULL, 0);
-    todo_wine
-        ok( hRes == E_POINTER, "Expected E_POINTER, got 0x%08x\n", hRes);
+    if (bThemeActive)
+        ok( hRes == E_POINTER || hRes == S_OK, "Expected E_POINTER or S_OK, got 0x%08x\n", hRes);
+    else
+        ok( hRes == E_PROP_ID_UNSUPPORTED, "Expected E_PROP_ID_UNSUPPORTED, got 0x%08x\n", hRes);
     ok( GetLastError() == 0xdeadbeef,
         "Expected 0xdeadbeef, got 0x%08x\n",
         GetLastError());

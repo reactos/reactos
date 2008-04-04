@@ -90,10 +90,22 @@ static void update_window(HWND hWnd)
 
 static void init(void)
 {
+    HMODULE hComctl32;
+    BOOL (WINAPI *pInitCommonControlsEx)(const INITCOMMONCONTROLSEX*);
     WNDCLASSA wc;
     RECT rect;
     
-    InitCommonControls();
+    hComctl32 = GetModuleHandleA("comctl32.dll");
+    pInitCommonControlsEx = (void*)GetProcAddress(hComctl32, "InitCommonControlsEx");
+    if (pInitCommonControlsEx)
+    {
+        INITCOMMONCONTROLSEX iccex;
+        iccex.dwSize = sizeof(iccex);
+        iccex.dwICC  = ICC_PROGRESS_CLASS;
+        pInitCommonControlsEx(&iccex);
+    }
+    else
+        InitCommonControls();
   
     wc.style = CS_HREDRAW | CS_VREDRAW;
     wc.cbClsExtra = 0;

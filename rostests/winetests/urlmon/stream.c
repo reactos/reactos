@@ -167,7 +167,7 @@ static HRESULT WINAPI statusclb_OnProgress(IBindStatusCallback *iface, ULONG ulP
             ok(szStatusText != NULL, "szStatusText == NULL\n");
             break;
         default:
-            todo_wine { ok(0, "unexpexted code %d\n", ulStatusCode); }
+            todo_wine { ok(0, "unexpected code %d\n", ulStatusCode); }
     };
     return S_OK;
 }

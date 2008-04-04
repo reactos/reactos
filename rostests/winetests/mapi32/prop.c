@@ -24,6 +24,7 @@
 #include "winuser.h"
 #include "winerror.h"
 #include "winnt.h"
+#include "initguid.h"
 #include "mapiutil.h"
 #include "mapitags.h"
 

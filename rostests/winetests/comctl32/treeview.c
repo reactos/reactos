@@ -649,10 +649,23 @@ static LRESULT CALLBACK MyWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPa
 
 START_TEST(treeview)
 {
+    HMODULE hComctl32;
+    BOOL (WINAPI *pInitCommonControlsEx)(const INITCOMMONCONTROLSEX*);
     WNDCLASSA wc;
     MSG msg;
   
-    InitCommonControls();
+    hComctl32 = GetModuleHandleA("comctl32.dll");
+    pInitCommonControlsEx = (void*)GetProcAddress(hComctl32, "InitCommonControlsEx");
+    if (pInitCommonControlsEx)
+    {
+        INITCOMMONCONTROLSEX iccex;
+        iccex.dwSize = sizeof(iccex);
+        iccex.dwICC  = ICC_TREEVIEW_CLASSES;
+        pInitCommonControlsEx(&iccex);
+    }
+    else
+        InitCommonControls();
+
     init_msg_sequences(MsgSequences, NUM_MSG_SEQUENCES);
   
     wc.style = CS_HREDRAW | CS_VREDRAW;

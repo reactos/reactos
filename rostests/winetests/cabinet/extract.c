@@ -28,7 +28,7 @@
 #define MEDIA_SIZE          999999999
 #define FOLDER_THRESHOLD    900000
 
-/* The following defintions were copied from dlls/cabinet/cabinet.h
+/* The following definitions were copied from dlls/cabinet/cabinet.h
  * because they are undocumented in windows.
  */
 

@@ -656,14 +656,60 @@ static void test_WM_GETTEXT(void)
 {
     HWND hwndRichEdit = new_richedit(NULL);
     static const char text[] = "Hello. My name is RichEdit!";
+    static const char text2[] = "Hello. My name is RichEdit!\r";
+    static const char text2_after[] = "Hello. My name is RichEdit!\r\n";
     char buffer[1024] = {0};
     int result;
 
+    /* Baseline test with normal-sized buffer */
     SendMessage(hwndRichEdit, WM_SETTEXT, 0, (LPARAM) text);
+    result = SendMessage(hwndRichEdit, WM_GETTEXT, 1024, (LPARAM) buffer);
+    ok(result == lstrlen(buffer),
+        "WM_GETTEXT returned %d, expected %d\n", result, lstrlen(buffer));
     SendMessage(hwndRichEdit, WM_GETTEXT, 1024, (LPARAM) buffer);
     result = strcmp(buffer,text);
     ok(result == 0, 
         "WM_GETTEXT: settext and gettext differ. strcmp: %d\n", result);
+
+    /* Test for returned value of WM_GETTEXTLENGTH */
+    result = SendMessage(hwndRichEdit, WM_GETTEXTLENGTH, 0, 0);
+    ok(result == lstrlen(text),
+        "WM_GETTEXTLENGTH reports incorrect length %d, expected %d\n",
+        result, lstrlen(text));
+
+    /* Test for behavior in overflow case */
+    memset(buffer, 0, 1024);
+    result = SendMessage(hwndRichEdit, WM_GETTEXT, strlen(text), (LPARAM)buffer);
+    ok(result == 0,
+        "WM_GETTEXT returned %d, expected 0\n", result);
+    result = strcmp(buffer,text);
+    ok(result == 0,
+        "WM_GETTEXT: settext and gettext differ. strcmp: %d\n", result);
+
+    /* Baseline test with normal-sized buffer and carriage return */
+    SendMessage(hwndRichEdit, WM_SETTEXT, 0, (LPARAM) text2);
+    result = SendMessage(hwndRichEdit, WM_GETTEXT, 1024, (LPARAM) buffer);
+    ok(result == lstrlen(buffer),
+        "WM_GETTEXT returned %d, expected %d\n", result, lstrlen(buffer));
+    result = strcmp(buffer,text2_after);
+    ok(result == 0,
+        "WM_GETTEXT: settext and gettext differ. strcmp: %d\n", result);
+
+    /* Test for returned value of WM_GETTEXTLENGTH */
+    result = SendMessage(hwndRichEdit, WM_GETTEXTLENGTH, 0, 0);
+    ok(result == lstrlen(text2_after),
+        "WM_GETTEXTLENGTH reports incorrect length %d, expected %d\n",
+        result, lstrlen(text2_after));
+
+    /* Test for behavior of CRLF conversion in case of overflow */
+    memset(buffer, 0, 1024);
+    result = SendMessage(hwndRichEdit, WM_GETTEXT, strlen(text2), (LPARAM)buffer);
+    ok(result == 0,
+        "WM_GETTEXT returned %d, expected 0\n", result);
+    result = strcmp(buffer,text2);
+    ok(result == 0,
+        "WM_GETTEXT: settext and gettext differ. strcmp: %d\n", result);
+
     DestroyWindow(hwndRichEdit);
 }
 
@@ -1024,9 +1070,9 @@ static void test_WM_SETTEXT()
   result = SendMessage(hwndRichEdit, WM_SETTEXT, 0, (LPARAM) a); \
   ok (result == 1, "WM_SETTEXT returned %ld instead of 1\n", result); \
   result = SendMessage(hwndRichEdit, WM_GETTEXT, 1024, (LPARAM) buf); \
-  ok (result == strlen(buf), \
+  ok (result == lstrlen(buf), \
 	"WM_GETTEXT returned %ld instead of expected %u\n", \
-	result, strlen(buf)); \
+	result, lstrlen(buf)); \
   result = strcmp(b, buf); \
   ok(result == 0, \
         "WM_SETTEXT round trip: strcmp = %ld\n", result);
@@ -1115,6 +1161,33 @@ static void test_EM_SETTEXTEX(void)
   SendMessage(hwndRichEdit, WM_GETTEXT, MAX_BUF_LEN, (LPARAM)buf);
   ok(strcmp((const char *)buf, TestItem2_after) == 0,
       "WM_GETTEXT did *not* see \\r converted to \\r\\n pairs.\n");
+
+  /* Baseline test for just-enough buffer space for string */
+  getText.cb = (lstrlenW(TestItem2) + 1) * sizeof(WCHAR);
+  getText.codepage = 1200;  /* no constant for unicode */
+  getText.flags = GT_DEFAULT;
+  getText.lpDefaultChar = NULL;
+  getText.lpUsedDefChar = NULL;
+  memset(buf, 0, MAX_BUF_LEN);
+  SendMessage(hwndRichEdit, EM_GETTEXTEX, (WPARAM)&getText, (LPARAM) buf);
+  ok(lstrcmpW(buf, TestItem2) == 0,
+      "EM_GETTEXTEX results not what was set by EM_SETTEXTEX\n");
+
+  /* When there is enough space for one character, but not both, of the CRLF
+     pair at the end of the string, the CR is not copied at all. That is,
+     the caller must not see CRLF pairs truncated to CR at the end of the
+     string.
+   */
+  getText.cb = (lstrlenW(TestItem2) + 1) * sizeof(WCHAR);
+  getText.codepage = 1200;  /* no constant for unicode */
+  getText.flags = GT_USECRLF;   /* <-- asking for CR -> CRLF conversion */
+  getText.lpDefaultChar = NULL;
+  getText.lpUsedDefChar = NULL;
+  memset(buf, 0, MAX_BUF_LEN);
+  SendMessage(hwndRichEdit, EM_GETTEXTEX, (WPARAM)&getText, (LPARAM) buf);
+  ok(lstrcmpW(buf, TestItem1) == 0,
+      "EM_GETTEXTEX results not what was set by EM_SETTEXTEX\n");
+
 
   /* \r\n pairs get changed into \r */
   setText.codepage = 1200;  /* no constant for unicode */
@@ -2443,8 +2516,10 @@ static void test_EM_GETTEXTLENGTHEX(void)
     HWND hwnd;
     GETTEXTLENGTHEX gtl;
     int ret;
+    const char * base_string = "base string";
     const char * test_string = "a\nb\n\n\r\n";
     const char * test_string_after = "a";
+    const char * test_string_2 = "a\rtest\rstring";
     char buffer[64] = {0};
 
     /* single line */
@@ -2461,6 +2536,18 @@ static void test_EM_GETTEXTLENGTHEX(void)
     gtl.codepage = CP_ACP;
     ret = SendMessageA(hwnd, EM_GETTEXTLENGTHEX, (WPARAM)&gtl, 0);
     ok(ret == 0, "ret %d\n",ret);
+
+    SendMessage(hwnd, WM_SETTEXT, 0, (LPARAM) base_string);
+
+    gtl.flags = GTL_NUMCHARS | GTL_PRECISE | GTL_USECRLF;
+    gtl.codepage = CP_ACP;
+    ret = SendMessageA(hwnd, EM_GETTEXTLENGTHEX, (WPARAM)&gtl, 0);
+    ok(ret == strlen(base_string), "ret %d\n",ret);
+
+    gtl.flags = GTL_NUMCHARS | GTL_PRECISE;
+    gtl.codepage = CP_ACP;
+    ret = SendMessageA(hwnd, EM_GETTEXTLENGTHEX, (WPARAM)&gtl, 0);
+    ok(ret == strlen(base_string), "ret %d\n",ret);
 
     SendMessage(hwnd, WM_SETTEXT, 0, (LPARAM) test_string);
 
@@ -2488,19 +2575,43 @@ static void test_EM_GETTEXTLENGTHEX(void)
     gtl.flags = GTL_NUMCHARS | GTL_PRECISE | GTL_USECRLF;
     gtl.codepage = CP_ACP;
     ret = SendMessageA(hwnd, EM_GETTEXTLENGTHEX, (WPARAM)&gtl, 0);
-    todo_wine ok(ret == 0, "ret %d\n",ret);
+    ok(ret == 0, "ret %d\n",ret);
 
     gtl.flags = GTL_NUMCHARS | GTL_PRECISE;
     gtl.codepage = CP_ACP;
     ret = SendMessageA(hwnd, EM_GETTEXTLENGTHEX, (WPARAM)&gtl, 0);
     ok(ret == 0, "ret %d\n",ret);
 
+    SendMessage(hwnd, WM_SETTEXT, 0, (LPARAM) base_string);
+
+    gtl.flags = GTL_NUMCHARS | GTL_PRECISE | GTL_USECRLF;
+    gtl.codepage = CP_ACP;
+    ret = SendMessageA(hwnd, EM_GETTEXTLENGTHEX, (WPARAM)&gtl, 0);
+    ok(ret == strlen(base_string), "ret %d\n",ret);
+
+    gtl.flags = GTL_NUMCHARS | GTL_PRECISE;
+    gtl.codepage = CP_ACP;
+    ret = SendMessageA(hwnd, EM_GETTEXTLENGTHEX, (WPARAM)&gtl, 0);
+    ok(ret == strlen(base_string), "ret %d\n",ret);
+
+    SendMessage(hwnd, WM_SETTEXT, 0, (LPARAM) test_string_2);
+
+    gtl.flags = GTL_NUMCHARS | GTL_PRECISE | GTL_USECRLF;
+    gtl.codepage = CP_ACP;
+    ret = SendMessageA(hwnd, EM_GETTEXTLENGTHEX, (WPARAM)&gtl, 0);
+    ok(ret == strlen(test_string_2) + 2, "ret %d\n",ret);
+
+    gtl.flags = GTL_NUMCHARS | GTL_PRECISE;
+    gtl.codepage = CP_ACP;
+    ret = SendMessageA(hwnd, EM_GETTEXTLENGTHEX, (WPARAM)&gtl, 0);
+    ok(ret == strlen(test_string_2), "ret %d\n",ret);
+
     SendMessage(hwnd, WM_SETTEXT, 0, (LPARAM) test_string);
 
     gtl.flags = GTL_NUMCHARS | GTL_PRECISE | GTL_USECRLF;
     gtl.codepage = CP_ACP;
     ret = SendMessageA(hwnd, EM_GETTEXTLENGTHEX, (WPARAM)&gtl, 0);
-    todo_wine ok(ret == 10, "ret %d\n",ret);
+    ok(ret == 10, "ret %d\n",ret);
 
     gtl.flags = GTL_NUMCHARS | GTL_PRECISE;
     gtl.codepage = CP_ACP;

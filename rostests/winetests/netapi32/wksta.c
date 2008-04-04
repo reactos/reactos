@@ -48,7 +48,7 @@ static int init_wksta_tests(void)
     BOOL rc;
 
     user_name[0] = 0;
-    dwSize = sizeof(user_name);
+    dwSize = sizeof(user_name)/sizeof(user_name[0]);
     rc=GetUserNameW(user_name, &dwSize);
     if (rc==FALSE && GetLastError()==ERROR_CALL_NOT_IMPLEMENTED) {
         skip("GetUserNameW is not implemented\n");
@@ -57,7 +57,7 @@ static int init_wksta_tests(void)
     ok(rc, "User Name Retrieved\n");
 
     computer_name[0] = 0;
-    dwSize = sizeof(computer_name);
+    dwSize = sizeof(computer_name)/sizeof(computer_name[0]);
     ok(GetComputerNameW(computer_name, &dwSize), "Computer Name Retrieved\n");
     return 1;
 }

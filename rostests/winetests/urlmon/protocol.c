@@ -36,17 +36,16 @@
 #define SET_EXPECT(func) \
     expect_ ## func = TRUE
 
-#define CHECK_EXPECT(func) \
-    do { \
-        ok(expect_ ##func, "unexpected call " #func "\n"); \
-        expect_ ## func = FALSE; \
-        called_ ## func = TRUE; \
-    }while(0)
-
 #define CHECK_EXPECT2(func) \
     do { \
         ok(expect_ ##func, "unexpected call " #func  "\n"); \
         called_ ## func = TRUE; \
+    }while(0)
+
+#define CHECK_EXPECT(func) \
+    do { \
+        CHECK_EXPECT2(func);     \
+        expect_ ## func = FALSE; \
     }while(0)
 
 #define CHECK_CALLED(func) \
@@ -357,6 +356,8 @@ static HRESULT WINAPI ProtocolSink_Switch(IInternetProtocolSink *iface, PROTOCOL
         CHECK_CALLED(ReportProgress_SENDINGREQUEST);
         SET_EXPECT(OnResponse);
         SET_EXPECT(ReportProgress_MIMETYPEAVAILABLE);
+        if(bindf & BINDF_NEEDFILE)
+            SET_EXPECT(ReportProgress_CACHEFILENAMEAVAILABLE);
     }
 
     SET_EXPECT(ReportData);
@@ -368,6 +369,8 @@ static HRESULT WINAPI ProtocolSink_Switch(IInternetProtocolSink *iface, PROTOCOL
         state = 1;
         CHECK_CALLED(OnResponse);
         CHECK_CALLED(ReportProgress_MIMETYPEAVAILABLE);
+        if(bindf & BINDF_NEEDFILE)
+            CHECK_CALLED(ReportProgress_CACHEFILENAMEAVAILABLE);
     }
 
     SetEvent(event_complete);
@@ -423,8 +426,10 @@ static HRESULT WINAPI ProtocolSink_ReportProgress(IInternetProtocolSink *iface, 
         if(szStatusText) {
             if(binding_test)
                 ok(szStatusText == expect_wsz, "unexpected szStatusText\n");
+            else if(tested_protocol == FILE_TEST)
+                ok(!lstrcmpW(szStatusText, file_name), "szStatusText = \"%s\"\n", debugstr_w(szStatusText));
             else
-                ok(!lstrcmpW(szStatusText, file_name), "szStatusText != file_name\n");
+                ok(szStatusText != NULL, "szStatusText == NULL\n");
         }
         break;
     case BINDSTATUS_FINDINGRESOURCE:
@@ -1408,6 +1413,8 @@ static void test_file_protocol(void) {
     test_file_protocol_url(index_url);
     bindf = BINDF_FROMURLMON;
     test_file_protocol_url(index_url);
+    bindf = BINDF_FROMURLMON | BINDF_NEEDFILE;
+    test_file_protocol_url(index_url);
 
     memcpy(buf, wszFile, sizeof(wszFile));
     len = sizeof(wszFile)/sizeof(WCHAR)-1;
@@ -1639,11 +1646,15 @@ static void test_http_protocol(void)
     bindf = BINDF_ASYNCHRONOUS | BINDF_ASYNCSTORAGE | BINDF_PULLDATA | BINDF_FROMURLMON;
     test_http_protocol_url(winehq_url, FALSE);
 
+    trace("Testing http protocol (to file)...\n");
+    bindf = BINDF_ASYNCHRONOUS | BINDF_ASYNCSTORAGE | BINDF_PULLDATA | BINDF_FROMURLMON | BINDF_NEEDFILE;
+    test_http_protocol_url(winehq_url, FALSE);
+
     trace("Testing http protocol (post data)...\n");
     http_post_test = TRUE;
     /* Without this flag we get a ReportProgress_CACHEFILENAMEAVAILABLE
      * notification with BINDVERB_POST */
-    bindf |= BINDF_NOWRITECACHE;
+    bindf = BINDF_ASYNCHRONOUS | BINDF_ASYNCSTORAGE | BINDF_PULLDATA | BINDF_FROMURLMON | BINDF_NOWRITECACHE;
     test_http_protocol_url(posttest_url, TRUE);
     http_post_test = FALSE;
 }
@@ -1700,7 +1711,7 @@ static void test_mk_protocol(void)
     ok(hres == INET_E_RESOURCE_NOT_FOUND, "Start failed: %08x, expected INET_E_RESOURCE_NOT_FOUND\n", hres);
 
     CHECK_CALLED(GetBindInfo);
-    CHECK_CALLED(ReportProgress_DIRECTBIND);
+    CLEAR_CALLED(ReportProgress_DIRECTBIND);
     CHECK_CALLED(ReportProgress_SENDINGREQUEST);
     CHECK_CALLED(ReportProgress_MIMETYPEAVAILABLE);
     CHECK_CALLED(ReportResult);

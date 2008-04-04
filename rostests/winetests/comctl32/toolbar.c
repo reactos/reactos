@@ -40,6 +40,8 @@ static BOOL g_fExpectedHotItemOld;
 static BOOL g_fExpectedHotItemNew;
 static DWORD g_dwExpectedDispInfoMask;
 
+#define expect(EXPECTED,GOT) ok((GOT)==(EXPECTED), "Expected %d, got %d\n", (EXPECTED), (GOT))
+
 #define check_rect(name, val, exp) ok(val.top == exp.top && val.bottom == exp.bottom && \
     val.left == exp.left && val.right == exp.right, "invalid rect (" name ") (%d,%d) (%d,%d) - expected (%d,%d) (%d,%d)\n", \
     val.left, val.top, val.right, val.bottom, exp.left, exp.top, exp.right, exp.bottom);
@@ -1088,6 +1090,38 @@ static void test_setrows(void)
     DestroyWindow(hToolbar);
 }
 
+static void test_getstring(void)
+{
+    HWND hToolbar = NULL;
+    char str[10];
+    WCHAR strW[10];
+    static const char answer[] = "STR";
+    static const WCHAR answerW[] = { 'S','T','R',0 };
+    INT r;
+
+    hToolbar = CreateWindowExA(0, TOOLBARCLASSNAME, NULL, WS_CHILD | WS_VISIBLE, 0, 0, 0, 0, hMainWnd, (HMENU)5, GetModuleHandle(NULL), NULL);
+    ok(hToolbar != NULL, "Toolbar creation problem\n");
+
+    r = SendMessage(hToolbar, TB_GETSTRING, MAKEWPARAM(0, 0), (LPARAM)NULL);
+    expect(-1, r);
+    r = SendMessage(hToolbar, TB_GETSTRINGW, MAKEWPARAM(0, 0), (LPARAM)NULL);
+    expect(-1, r);
+    r = SendMessage(hToolbar, TB_ADDSTRING, 0, (LPARAM)answer);
+    expect(0, r);
+    r = SendMessage(hToolbar, TB_GETSTRING, MAKEWPARAM(0, 0), (LPARAM)NULL);
+    expect(lstrlenA(answer), r);
+    r = SendMessage(hToolbar, TB_GETSTRINGW, MAKEWPARAM(0, 0), (LPARAM)NULL);
+    expect(lstrlenA(answer), r);
+    r = SendMessage(hToolbar, TB_GETSTRING, MAKEWPARAM(sizeof(str), 0), (LPARAM)str);
+    expect(lstrlenA(answer), r);
+    expect(0, lstrcmp(answer, str));
+    r = SendMessage(hToolbar, TB_GETSTRINGW, MAKEWPARAM(sizeof(strW), 0), (LPARAM)strW);
+    expect(lstrlenA(answer), r);
+    expect(0, lstrcmpW(answerW, strW));
+
+    DestroyWindow(hToolbar);
+}
+
 START_TEST(toolbar)
 {
     WNDCLASSA wc;
@@ -1122,6 +1156,7 @@ START_TEST(toolbar)
     test_createtoolbarex();
     test_dispinfo();
     test_setrows();
+    test_getstring();
 
     PostQuitMessage(0);
     while(GetMessageA(&msg,0,0,0)) {

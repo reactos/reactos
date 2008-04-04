@@ -21,7 +21,7 @@
 #include "wine/test.h"
 
 /***********************************************************************
- * Compability macros
+ * Compatibility macros
  */
 
 #define DWORD_PTR UINT_PTR

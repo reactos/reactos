@@ -5,14 +5,6 @@
 	<include base="comctl32_winetest">.</include>
 	<define name="WINVER">0x600</define>
 	<define name="_WIN32_WINNT">0x600</define>
-	<library>wine</library>
-	<library>comctl32</library>
-	<library>ole32</library>
-	<library>user32</library>
-	<library>gdi32</library>
-	<library>advapi32</library>
-	<library>kernel32</library>
-	<library>ntdll</library>
 	<file>comboex.c</file>
 	<file>datetime.c</file>
 	<file>dpa.c</file>
@@ -36,5 +28,13 @@
 	<file>updown.c</file>
 	<file>rsrc.rc</file>
 	<file>testlist.c</file>
+	<library>wine</library>
+	<library>comctl32</library>
+	<library>ole32</library>
+	<library>user32</library>
+	<library>gdi32</library>
+	<library>advapi32</library>
+	<library>kernel32</library>
+	<library>ntdll</library>
 </module>
 </group>

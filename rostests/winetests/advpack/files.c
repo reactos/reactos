@@ -560,4 +560,6 @@ START_TEST(files)
     test_AdvInstallFile();
 
     delete_test_files();
+
+    FreeLibrary(hAdvPack);
 }

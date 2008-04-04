@@ -44,6 +44,18 @@
 	"ERROR_PATH_NOT_FOUND (NT4)/ERROR_FILE_NOT_FOUND (2k3)" \
 	"expected, got %u\n", GetLastError());
 
+static void create_file(const CHAR *name)
+{
+    HANDLE file;
+    DWORD written;
+
+    file = CreateFileA(name, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, 0, NULL);
+    ok(file != INVALID_HANDLE_VALUE, "Failure to open file %s\n", name);
+    WriteFile(file, name, strlen(name), &written, NULL);
+    WriteFile(file, "\n", strlen("\n"), &written, NULL);
+    CloseHandle(file);
+}
+
 static void test_info_size(void)
 {   DWORD hdl, retval;
     char mypath[MAX_PATH] = "";
@@ -153,6 +165,19 @@ static void test_info_size(void)
     }
     else
 	trace("skipping GetModuleFileNameA(NULL,..) failed\n");
+
+    create_file("test.txt");
+
+    /* no version info */
+    SetLastError(0xdeadbeef);
+    hdl = 0xcafe;
+    retval = GetFileVersionInfoSizeA("test.txt", &hdl);
+    ok(retval == 0, "Expected 0, got %d\n", retval);
+    ok(hdl == 0, "Expected 0, got %d\n", hdl);
+    ok(GetLastError() == ERROR_RESOURCE_DATA_NOT_FOUND,
+       "Expected ERROR_RESOURCE_DATA_NOT_FOUND, got %d\n", GetLastError());
+
+    DeleteFileA("test.txt");
 }
 
 static void VersionDwordLong2String(DWORDLONG Version, LPSTR lpszVerString)
@@ -451,7 +476,8 @@ static void test_VerQueryValue(void)
     SetLastError(0xdeadbeef);
     ret = VerQueryValue(ver, "String", (LPVOID*)&p, &len);
     ok(!ret, "VerQueryValue should fail\n");
-    ok(GetLastError() == ERROR_RESOURCE_TYPE_NOT_FOUND,
+    ok(GetLastError() == ERROR_RESOURCE_TYPE_NOT_FOUND ||
+       GetLastError() == 0xdeadbeef /* Win9x, NT4, W2K */,
        "VerQueryValue returned %u\n", GetLastError());
     ok(p == (char *)0xdeadbeef, "expected 0xdeadbeef got %p\n", p);
     ok(len == 0, "expected 0 got %x\n", len);
@@ -517,7 +543,8 @@ todo_wine ok(len == 0, "VerQueryValue returned %u, expected 0\n", len);
         SetLastError(0xdeadbeef);
         ret = VerQueryValue(ver, buf, (LPVOID*)&p, &len);
         ok(!ret, "VerQueryValue(%s) succeeded\n", buf);
-        ok(GetLastError() == ERROR_RESOURCE_TYPE_NOT_FOUND,
+        ok(GetLastError() == ERROR_RESOURCE_TYPE_NOT_FOUND ||
+           GetLastError() == 0xdeadbeef /* Win9x, NT4, W2K */,
            "VerQueryValue returned %u\n", GetLastError());
         ok(p == (char *)0xdeadbeef, "expected 0xdeadbeef got %p\n", p);
         ok(len == 0, "expected 0 got %x\n", len);

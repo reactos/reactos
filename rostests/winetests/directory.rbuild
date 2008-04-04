@@ -31,6 +31,9 @@
 	<directory name="icmp">
 		<xi:include href="icmp/icmp.rbuild" />
 	</directory>
+	<directory name="imm32">
+		<xi:include href="imm32/imm32.rbuild" />
+	</directory>
 	<directory name="kernel32">
 		<xi:include href="kernel32/kernel32.rbuild" />
 	</directory>
@@ -72,6 +75,9 @@
 	</directory>
 	<directory name="riched20">
 		<xi:include href="riched20/riched20.rbuild" />
+	</directory>
+	<directory name="riched32">
+		<xi:include href="riched32/riched32.rbuild" />
 	</directory>
 	<directory name="rpcrt4">
 		<xi:include href="rpcrt4/rpcrt4.rbuild" />

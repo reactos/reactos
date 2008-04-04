@@ -54,10 +54,7 @@ static char filename2[] = "testfile.yyy";
    a simple text file with the contents "This is a test file."
  
    The file was created using COMPRESS.EXE from the Windows Server 2003
-   Resource Kit from Microsoft.  The resource kit was retrieved from the
-   following URL:  
-
-   http://www.microsoft.com/downloads/details.aspx?FamilyID=9d467a69-57ff-4ae7-96ee-b18c4790cffd&displaylang=en
+   Resource Kit from Microsoft.
  */
 static const unsigned char compressed_file[] = 
   {0x53,0x5A,0x44,0x44,0x88,0xF0,0x27,0x33,0x41,
