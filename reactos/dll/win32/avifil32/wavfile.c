@@ -540,7 +540,7 @@ static HRESULT WINAPI IPersistFile_fnGetClassID(IPersistFile *iface,
   if (pClassID == NULL)
     return AVIERR_BADPARAM;
 
-  memcpy(pClassID, &CLSID_WAVFile, sizeof(CLSID_WAVFile));
+  *pClassID = CLSID_WAVFile;
 
   return AVIERR_OK;
 }
@@ -574,7 +574,7 @@ static HRESULT WINAPI IPersistFile_fnLoad(IPersistFile *iface,
   if (This->hmmio != NULL)
     return AVIERR_ERROR; /* No reuse of this object for another file! */
 
-  /* remeber mode and name */
+  /* remember mode and name */
   This->uMode = dwMode;
 
   len = lstrlenW(pszFileName) + 1;
@@ -607,9 +607,9 @@ static HRESULT WINAPI IPersistFile_fnLoad(IPersistFile *iface,
   memset(& This->sInfo, 0, sizeof(This->sInfo));
 
   LoadStringW(AVIFILE_hModule, IDS_WAVEFILETYPE, This->fInfo.szFileType,
-	      sizeof(This->fInfo.szFileType));
+	      sizeof(This->fInfo.szFileType)/sizeof(This->fInfo.szFileType[0]));
   if (LoadStringW(AVIFILE_hModule, IDS_WAVESTREAMFORMAT,
-		  wszStreamFmt, sizeof(wszStreamFmt)) > 0) {
+		  wszStreamFmt, sizeof(wszStreamFmt)/sizeof(wszStreamFmt[0])) > 0) {
     wsprintfW(This->sInfo.szName, wszStreamFmt,
 	      AVIFILE_BasenameW(This->szFileName));
   }

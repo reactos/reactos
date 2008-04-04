@@ -212,7 +212,7 @@ static LPVOID  WINAPI IGetFrame_fnGetFrame(IGetFrame *iface, LONG lPos)
       if (This->lpOutFormat != NULL) {
 	BITMAPINFOHEADER bi;
 
-	memcpy(&bi, This->lpOutFormat, sizeof(bi));
+	bi = *This->lpOutFormat;
 	AVIFILE_CloseCompressor(This);
 
 	if (FAILED(IGetFrame_SetFormat(iface, &bi, NULL, 0, 0, -1, -1))) {

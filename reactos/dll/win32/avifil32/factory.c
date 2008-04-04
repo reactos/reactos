@@ -25,16 +25,15 @@
 #include "wingdi.h"
 #include "winuser.h"
 #include "winerror.h"
-
 #include "ole2.h"
+
+#include "initguid.h"
 #include "vfw.h"
+#include "avifile_private.h"
 
 #include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(avifile);
-
-#include "initguid.h"
-#include "avifile_private.h"
 
 HMODULE AVIFILE_hModule   = NULL;
 
@@ -78,7 +77,7 @@ static HRESULT AVIFILE_CreateClassFactory(const CLSID *pclsid, const IID *riid,
 
   pClassFactory->lpVtbl    = &iclassfact;
   pClassFactory->dwRef     = 0;
-  memcpy(&pClassFactory->clsid, pclsid, sizeof(pClassFactory->clsid));
+  pClassFactory->clsid     = *pclsid;
 
   hr = IClassFactory_QueryInterface((IClassFactory*)pClassFactory, riid, ppv);
   if (FAILED(hr)) {

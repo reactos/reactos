@@ -249,7 +249,7 @@ HRESULT WINAPI AVIFileOpenW(PAVIFILE *ppfile, LPCWSTR szFile, UINT uMode,
     if (! AVIFILE_GetFileHandlerByExtension(szFile, &clsidHandler))
       return AVIERR_UNSUPPORTED;
   } else
-    memcpy(&clsidHandler, lpHandler, sizeof(clsidHandler));
+    clsidHandler = *lpHandler;
 
   /* create instance of handler */
   hr = CoCreateInstance(&clsidHandler, NULL, CLSCTX_INPROC, &IID_IAVIFile, (LPVOID*)ppfile);
@@ -746,7 +746,7 @@ HRESULT WINAPI AVIMakeCompressedStream(PAVISTREAM *ppsCompressed,
     if (AVIFILE_CLSIDFromString(szValue, &clsidHandler) != S_OK)
       return AVIERR_UNSUPPORTED;
   } else
-    memcpy(&clsidHandler, pclsidHandler, sizeof(clsidHandler));
+    clsidHandler = *pclsidHandler;
 
   hr = CoCreateInstance(&clsidHandler, NULL, CLSCTX_INPROC, &IID_IAVIStream, (LPVOID*)ppsCompressed);
   if (FAILED(hr) || *ppsCompressed == NULL)
@@ -1077,7 +1077,7 @@ HRESULT WINAPI AVIBuildFilterW(LPWSTR szFilter, LONG cbFilter, BOOL fSaving)
 	break; /* a new one */
     }
 
-    if (count - i == -1U) {
+    if (i == count + 1) {
       /* it's a new CLSID */
 
       /* FIXME: How do we get info's about read/write capabilities? */
@@ -1148,7 +1148,7 @@ HRESULT WINAPI AVIBuildFilterW(LPWSTR szFilter, LONG cbFilter, BOOL fSaving)
 
   /* add "All files" "*.*" filter if enough space left */
   size = LoadStringW(AVIFILE_hModule, IDS_ALLFILES,
-		     szAllFiles, sizeof(szAllFiles)) + 1;
+		     szAllFiles, sizeof(szAllFiles)/sizeof(szAllFiles[0])) + 1;
   if (cbFilter > size) {
     int i;
 
@@ -1336,7 +1336,8 @@ static void AVISaveOptionsUpdate(HWND hWnd)
 	    }
 	  } else {
 	    LoadStringW(AVIFILE_hModule, IDS_UNCOMPRESSED,
-			icinfo.szDescription, sizeof(icinfo.szDescription));
+			icinfo.szDescription,
+			sizeof(icinfo.szDescription)/sizeof(icinfo.szDescription[0]));
 	    lstrcatW(szFormat, icinfo.szDescription);
 	  }
 	} else if (sInfo.fccType == streamtypeAUDIO) {

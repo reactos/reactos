@@ -9,16 +9,6 @@
 	<define name="__WINESRC__" />
 	<define name="WINVER">0x600</define>
 	<define name="_WIN32_WINNT">0x600</define>
-	<library>wine</library>
-	<library>msacm32</library>
-	<library>msvfw32</library>
-	<library>winmm</library>
-	<library>ole32</library>
-	<library>user32</library>
-	<library>advapi32</library>
-	<library>kernel32</library>
-	<library>uuid</library>
-	<library>ntdll</library>
 	<file>acmstream.c</file>
 	<file>api.c</file>
 	<file>avifile.c</file>
@@ -32,5 +22,15 @@
 	<file>wavfile.c</file>
 	<file>rsrc.rc</file>
 	<file>avifil32.spec</file>
+	<library>wine</library>
+	<library>msacm32</library>
+	<library>msvfw32</library>
+	<library>winmm</library>
+	<library>ole32</library>
+	<library>user32</library>
+	<library>advapi32</library>
+	<library>kernel32</library>
+	<library>uuid</library>
+	<library>ntdll</library>
 </module>
 </group>

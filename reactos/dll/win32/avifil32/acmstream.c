@@ -467,7 +467,7 @@ static HRESULT WINAPI ACMStream_fnRead(IAVIStream *iface, LONG start,
     if (This->acmStreamHdr.pbSrc == NULL)
       This->acmStreamHdr.pbSrc = HeapAlloc(GetProcessHeap(), 0, size);
     else
-      This->acmStreamHdr.pbDst = HeapReAlloc(GetProcessHeap(), 0, This->acmStreamHdr.pbSrc, size);
+      This->acmStreamHdr.pbSrc = HeapReAlloc(GetProcessHeap(), 0, This->acmStreamHdr.pbSrc, size);
     if (This->acmStreamHdr.pbSrc == NULL)
       return AVIERR_MEMORY;
     This->acmStreamHdr.dwSrcUser = size;

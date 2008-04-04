@@ -424,7 +424,7 @@ static HRESULT WINAPI IAVIEditStream_fnCut(IAVIEditStream*iface,LONG*plStart,
   if (plStart == NULL || plLength == NULL || *plStart < 0)
     return AVIERR_BADPARAM;
 
-  /* if asked for cutted part copy it before deleting */
+  /* if asked for cut part copy it before deleting */
   if (ppResult != NULL) {
     hr = IAVIEditStream_Copy(iface, plStart, plLength, ppResult);
     if (FAILED(hr))
@@ -620,7 +620,7 @@ static HRESULT WINAPI IAVIEditStream_fnPaste(IAVIEditStream*iface,LONG*plStart,
 	AVIFILE_ReadFrame(This, This->pStreams[0].pStream,
 			  This->pStreams[0].dwStart);
 
-	/* Check if we could convert the source streams to the disired format... */
+	/* Check if we could convert the source streams to the desired format... */
 	if (pEdit != NULL) {
 	  if (FAILED(AVIFILE_FindStreamInTable(pEdit, lStart, &pStream,
 					       &startPos, &streamNr, TRUE)))

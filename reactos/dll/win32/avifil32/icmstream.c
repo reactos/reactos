@@ -558,7 +558,7 @@ static HRESULT WINAPI ICMStream_fnSetFormat(IAVIStream *iface, LONG pos,
     if (ICCompressBegin(This->hic, lpbi, This->lpbiOutput) != S_OK)
       return AVIERR_COMPRESSOR;
 
-    /* check if we need to restart decompresion also */
+    /* check if we need to restart decompression also */
     if (This->lKeyFrameEvery != 1 &&
 	(This->dwICMFlags & VIDCF_FASTTEMPORALC) == 0) {
       ICDecompressEnd(This->hic);

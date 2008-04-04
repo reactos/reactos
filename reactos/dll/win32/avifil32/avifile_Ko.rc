@@ -31,8 +31,8 @@ BEGIN
     AUTOCHECKBOX    "항상 상호배치(&I)",IDC_INTERLEAVE,3,42,60,11,WS_TABSTOP
     EDITTEXT        IDC_INTERLEAVEEVERY,66,41,32,12,ES_AUTOHSCROLL
     LTEXT           "프레임",-1,104,43,36,9
-    LTEXT           "현재 포맷:",-1,3,56,53,9
-    LTEXT           "사용을 목적으로 하는 공",IDC_FORMATTEXT,55,56,90,26
+    LTEXT           "현재 형식:",-1,3,56,53,9
+    LTEXT           "필요한 공간",IDC_FORMATTEXT,55,56,90,26
     DEFPUSHBUTTON   "확인",IDOK,145,42,45,14
     PUSHBUTTON      "취소",IDCANCEL,145,61,45,14
 END
@@ -46,6 +46,6 @@ STRINGTABLE DISCARDABLE
   IDS_VIDEO		"비디오"
   IDS_AUDIO		"오디오"
   IDS_AVISTREAMFORMAT	"%s %s #%d"
-  IDS_AVIFILETYPE	"Wine AVI-기본-파일핸들러r"
+  IDS_AVIFILETYPE	"Wine AVI-기본-파일핸들러"
   IDS_UNCOMPRESSED      "비압축"
 }
