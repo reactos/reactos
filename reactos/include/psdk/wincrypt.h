@@ -1687,6 +1687,11 @@ static const WCHAR MS_ENH_RSA_AES_PROV_W[] =           { 'M','i','c','r','o','s'
 #define PP_USE_HARDWARE_RNG     38
 #define PP_KEYSPEC              39
 #define PP_ENUMEX_SIGNING_PROT  40
+#define PP_CRYPT_COUNT_KEY_USE  41
+#define PP_USER_CERTSTORE       42
+#define PP_SMARTCARD_READER     43
+#define PP_SMARTCARD_GUID       45
+#define PP_ROOT_CERTSTORE       46
 
 /* Crypt{Get/Set}KeyParam */
 #define KP_IV                   1
