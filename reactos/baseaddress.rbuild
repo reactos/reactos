@@ -93,8 +93,8 @@
   <property name="BASEADDRESS_WS2_32" value="0x74aa0000" />
   <property name="BASEADDRESS_SYSSETUP" value="0x74a30000" />
   <property name="BASEADDRESS_POWRPROF" value="0x74ad0000" />
+  <property name="BASEADDRESS_MSXML3" value="0x74ae0000" />
   <property name="BASEADDRESS_MMDRV" value="0x74c30000" />
-  <property name="BASEADDRESS_MSXML3" value="0x74980000" />
   <property name="BASEADDRESS_OLEDLG" value="0x74d00000" />
   <property name="BASEADDRESS_SAMSRV" value="0x74f30000" />
   <property name="BASEADDRESS_SAMLIB" value="0x750C0000" />
