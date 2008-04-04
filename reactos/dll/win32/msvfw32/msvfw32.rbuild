@@ -8,6 +8,11 @@
 	<define name="__WINESRC__" />
 	<define name="WINVER">0x600</define>
 	<define name="_WIN32_WINNT">0x600</define>
+	<file>mciwnd.c</file>
+	<file>msvideo_main.c</file>
+	<file>drawdib.c</file>
+	<file>rsrc.rc</file>
+	<file>msvfw32.spec</file>
 	<library>wine</library>
 	<library>winmm</library>
 	<library>version</library>
@@ -17,10 +22,5 @@
 	<library>advapi32</library>
 	<library>kernel32</library>
 	<library>ntdll</library>
-	<file>mciwnd.c</file>
-	<file>msvideo_main.c</file>
-	<file>drawdib.c</file>
-	<file>rsrc.rc</file>
-	<file>msvfw32.spec</file>
 </module>
 </group>

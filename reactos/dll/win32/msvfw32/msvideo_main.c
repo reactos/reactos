@@ -753,7 +753,7 @@ static BOOL enum_compressors(HWND list, COMPVARS *pcv, BOOL enum_all)
             idx = SendMessageW(list, CB_ADDSTRING, 0, (LPARAM)icinfo.szDescription);
 
             ic = HeapAlloc(GetProcessHeap(), 0, sizeof(struct codec_info));
-            memcpy(&ic->icinfo, &icinfo, sizeof(ICINFO));
+            ic->icinfo = icinfo;
             ic->hic = hic;
             SendMessageW(list, CB_SETITEMDATA, idx, (LPARAM)ic);
         }
@@ -1449,7 +1449,7 @@ BOOL VFWAPI ICSeqCompressFrameStart(PCOMPVARS pc, LPBITMAPINFO lpbiIn)
     if (!pc->lpbiIn)
         return FALSE;
 
-    memcpy(pc->lpbiIn, lpbiIn, sizeof(BITMAPINFO));
+    *pc->lpbiIn = *lpbiIn;
     pc->lpBitsPrev = HeapAlloc(GetProcessHeap(), 0, pc->lpbiIn->bmiHeader.biSizeImage);
     if (!pc->lpBitsPrev)
     {

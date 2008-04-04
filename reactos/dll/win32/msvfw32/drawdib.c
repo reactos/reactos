@@ -133,6 +133,8 @@ BOOL VFWAPI DrawDibEnd(HDRAWDIB hdd)
 
     TRACE("(%p)\n", hdd);
 
+    if (!whdd) return FALSE;
+
     whdd->hpal = 0; /* Do not free this */
     whdd->hdc = 0;
     HeapFree(GetProcessHeap(), 0, whdd->lpbi);

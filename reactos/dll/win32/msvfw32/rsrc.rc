@@ -26,6 +26,7 @@
 #include "msvfw32_Fr.rc"
 #include "msvfw32_Hu.rc"
 #include "msvfw32_Ko.rc"
+#include "msvfw32_Nl.rc"
 #include "msvfw32_No.rc"
 #include "msvfw32_Pl.rc"
 #include "msvfw32_Sv.rc"
