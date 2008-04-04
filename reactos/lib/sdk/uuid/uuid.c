@@ -74,8 +74,6 @@ DEFINE_GUID(GUID_NULL,0,0,0,0,0,0,0,0,0,0,0);
 
 /* other GUIDs */
 
-#include "vfw.h"
-
 #if 0 /* FIXME */
 #include "uuids.h"
 #endif
