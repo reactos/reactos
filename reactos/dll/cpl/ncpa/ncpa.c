@@ -551,9 +551,7 @@ UpdateNICStatusData(HWND hwndDlg, PGLOBAL_NCPA_DATA pGlobalData)
 				if (pIfRow->dwIndex == pGlobalData->pCurrentAdapterInfo->Index)
 				{
 					DWORD DurationSeconds;
-					SYSTEMTIME SystemTime;
-					FILETIME SystemFileTime;
-					ULARGE_INTEGER LargeSystemTime;
+					ULONGLONG Ticks;
 
 					PktsOut = pIfRow->dwOutOctets;
 					PktsIn = pIfRow->dwInOctets;
@@ -561,11 +559,8 @@ UpdateNICStatusData(HWND hwndDlg, PGLOBAL_NCPA_DATA pGlobalData)
 					OperStatus = pIfRow->dwOperStatus;
 
 					/* TODO: For some unknown reason, this doesn't correspond to the Windows duration */
-					GetSystemTime(&SystemTime);
-					SystemTimeToFileTime(&SystemTime, &SystemFileTime);
-					LargeSystemTime = *(ULARGE_INTEGER *)&SystemFileTime;
-					LargeSystemTime.QuadPart /= 100000ULL;
-					DurationSeconds = ((LargeSystemTime.LowPart - pIfRow->dwLastChange) / 100);
+					Ticks = GetTickCount64();
+					DurationSeconds = Ticks / 1000;
 					TimeConnected.wSecond = (DurationSeconds % 60);
 					TimeConnected.wMinute = (DurationSeconds / 60) % 60;
 					TimeConnected.wHour = (DurationSeconds / (60 * 60)) % 24;
