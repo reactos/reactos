@@ -1053,16 +1053,15 @@ CLEANUP:
    END_CLEANUP;
 }
 
-DWORD
-STDCALL
+LRESULT STDCALL
 NtUserMessageCall(
-   DWORD Unknown0,
-   DWORD Unknown1,
-   DWORD Unknown2,
-   DWORD Unknown3,
-   DWORD Unknown4,
-   DWORD Unknown5,
-   DWORD Unknown6)
+   HWND hWnd,
+   UINT Msg,
+   WPARAM wParam,
+   LPARAM lParam,
+   ULONG_PTR ResultInfo,
+   DWORD dwType,
+   BOOL Ansi)
 {
    UNIMPLEMENTED
 

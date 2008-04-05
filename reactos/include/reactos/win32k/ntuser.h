@@ -1584,16 +1584,23 @@ NtUserMapVirtualKeyEx( UINT keyCode,
 		       DWORD keyboardId,
 		       HKL dwhkl );
 
-DWORD
+#define NUMC_SENDMESSAGE            0x02B0
+// Kernel has option to use TO or normal msg send, based on type of msg.
+#define NUMC_SENDMESSAGEWTOOPTION   0x02B1 
+#define NUMC_SENDMESSAGETIMEOUT     0x02B2
+#define NUMC_BROADCASTSYSTEMMESSAGE 0x02B4
+#define NUMC_SENDNOTIFYMESSAGE      0x02B7
+#define NUMC_SENDMESSAGECALLBACK    0x02B8
+LRESULT
 NTAPI
 NtUserMessageCall(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2,
-  DWORD Unknown3,
-  DWORD Unknown4,
-  DWORD Unknown5,
-  DWORD Unknown6);
+  HWND hWnd,
+  UINT Msg,
+  WPARAM wParam,
+  LPARAM lParam,
+  ULONG_PTR ResultInfo,
+  DWORD dwType, // NUMC_XX types
+  BOOL Ansi);
 
 DWORD
 NTAPI
