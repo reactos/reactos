@@ -2559,3 +2559,136 @@ IsDialogMessageA( HWND hwndDlg, LPMSG pmsg )
     msg.wParam = map_wparam_AtoW( msg.message, msg.wParam );
     return IsDialogMessageW( hwndDlg, &msg );
 }
+
+typedef struct _BROADCASTPARM
+{
+    DWORD flags;
+    LPDWORD recipients;
+} BROADCASTPARM, *PBROADCASTPARM;
+
+LONG
+STDCALL
+IntBroadcastSystemMessage(
+    DWORD dwflags,
+    LPDWORD lpdwRecipients,
+    UINT uiMessage,
+    WPARAM wParam,
+    LPARAM lParam,
+    PBSMINFO pBSMInfo,
+    BOOL Ansi)
+{
+    BROADCASTPARM parm;
+    DWORD recips = BSM_ALLCOMPONENTS;
+    BOOL ret = TRUE;
+    static const DWORD all_flags = ( BSF_QUERY | BSF_IGNORECURRENTTASK | BSF_FLUSHDISK | BSF_NOHANG
+                                   | BSF_POSTMESSAGE | BSF_FORCEIFHUNG | BSF_NOTIMEOUTIFNOTHUNG
+                                   | BSF_ALLOWSFW | BSF_SENDNOTIFYMESSAGE | BSF_RETURNHDESK | BSF_LUID );
+
+    if (dwflags & ~all_flags)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return 0;
+    }
+
+    if(uiMessage >= WM_USER && uiMessage < 0xC000)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return 0;
+    }
+
+    if (!lpdwRecipients)
+        lpdwRecipients = &recips;
+
+    if ( pBSMInfo && dwflags & BSF_QUERY )
+    {
+       if (pBSMInfo->cbSize != sizeof(BSMINFO))
+       {
+           SetLastError(ERROR_INVALID_PARAMETER);
+           return 0;
+       }
+       FIXME("Not returning PBSMINFO information yet\n");
+    }
+
+    parm.flags = dwflags;
+    parm.recipients = lpdwRecipients;
+
+    if (*lpdwRecipients & BSM_APPLICATIONS)
+    {
+        return NtUserMessageCall(GetDesktopWindow(),
+                                          uiMessage,
+                                             wParam,
+                                             lParam,
+                                   (ULONG_PTR)&parm,
+                        NUMC_BROADCASTSYSTEMMESSAGE,
+                                               Ansi);
+    }
+    else
+    {
+       FIXME("Recipients %08x not supported!\n", *lpdwRecipients);
+    }
+
+    return ret;
+}
+
+/*
+ * @implemented
+ */
+LONG
+STDCALL
+BroadcastSystemMessageA(
+  DWORD dwFlags,
+  LPDWORD lpdwRecipients,
+  UINT uiMessage,
+  WPARAM wParam,
+  LPARAM lParam)
+{
+  return IntBroadcastSystemMessage( dwFlags, lpdwRecipients, uiMessage, wParam, lParam, NULL, TRUE );
+}
+
+/*
+ * @implemented
+ */
+LONG
+STDCALL
+BroadcastSystemMessageW(
+  DWORD dwFlags,
+  LPDWORD lpdwRecipients,
+  UINT uiMessage,
+  WPARAM wParam,
+  LPARAM lParam)
+{
+  return IntBroadcastSystemMessage( dwFlags, lpdwRecipients, uiMessage, wParam, lParam, NULL, FALSE );
+}
+
+/*
+ * @implemented
+ */
+LONG
+STDCALL
+BroadcastSystemMessageExA(
+    DWORD dwflags,
+    LPDWORD lpdwRecipients,
+    UINT uiMessage,
+    WPARAM wParam,
+    LPARAM lParam,
+    PBSMINFO pBSMInfo)
+{
+  return IntBroadcastSystemMessage( dwflags, lpdwRecipients, uiMessage, wParam, lParam , pBSMInfo, TRUE );
+}
+
+/*
+ * @implemented
+ */
+LONG
+STDCALL
+BroadcastSystemMessageExW(
+    DWORD dwflags,
+    LPDWORD lpdwRecipients,
+    UINT uiMessage,
+    WPARAM wParam,
+    LPARAM lParam,
+    PBSMINFO pBSMInfo)
+{
+  return IntBroadcastSystemMessage( dwflags, lpdwRecipients, uiMessage, wParam, lParam , pBSMInfo, FALSE );
+}
+

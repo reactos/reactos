@@ -34,40 +34,6 @@ AttachThreadInput(
 /*
  * @unimplemented
  */
-long
-STDCALL
-BroadcastSystemMessageA(
-  DWORD dwFlags,
-  LPDWORD lpdwRecipients,
-  UINT uiMessage,
-  WPARAM wParam,
-  LPARAM lParam)
-{
-  UNIMPLEMENTED;
-  return 0;
-}
-
-
-/*
- * @unimplemented
- */
-long
-STDCALL
-BroadcastSystemMessageW(
-  DWORD dwFlags,
-  LPDWORD lpdwRecipients,
-  UINT uiMessage,
-  WPARAM wParam,
-  LPARAM lParam)
-{
-  UNIMPLEMENTED;
-  return 0;
-}
-
-
-/*
- * @unimplemented
- */
 int
 STDCALL
 GetMouseMovePointsEx(
@@ -357,23 +323,6 @@ GetRawInputDeviceInfoW(
  */
 LONG
 STDCALL
-BroadcastSystemMessageExW(
-    DWORD dwflags,
-    LPDWORD lpdwRecipients,
-    UINT uiMessage,
-    WPARAM wParam,
-    LPARAM lParam,
-    PBSMINFO pBSMInfo)
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-/*
- * @unimplemented
- */
-LONG
-STDCALL
 CsrBroadcastSystemMessageExW(
     DWORD dwflags,
     LPDWORD lpdwRecipients,
@@ -396,23 +345,6 @@ GetRawInputDeviceInfoA(
     UINT uiCommand,
     LPVOID pData,
     PUINT pcbSize)
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-/*
- * @unimplemented
- */
-LONG
-STDCALL
-BroadcastSystemMessageExA(
-    DWORD dwflags,
-    LPDWORD lpdwRecipients,
-    UINT uiMessage,
-    WPARAM wParam,
-    LPARAM lParam,
-    PBSMINFO pBSMInfo)
 {
   UNIMPLEMENTED;
   return FALSE;
