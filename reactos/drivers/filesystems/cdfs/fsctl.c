@@ -361,6 +361,11 @@ CdfsMountVolume(PDEVICE_OBJECT DeviceObject,
   NewDeviceObject->StackSize = DeviceExt->StorageDevice->StackSize + 1;
   NewDeviceObject->Flags &= ~DO_DEVICE_INITIALIZING;
 
+  /* Close (and cleanup) might be called from IoCreateStreamFileObject 
+   * but we use this resource from CdfsCleanup, therefore it should be
+   * initialized no later than this. */
+  ExInitializeResourceLite(&DeviceExt->DirResource);
+
   DeviceExt->StreamFileObject = IoCreateStreamFileObject(NULL,
 							 DeviceExt->StorageDevice);
 
@@ -406,7 +411,6 @@ CdfsMountVolume(PDEVICE_OBJECT DeviceObject,
 		       Fcb);
 
   ExInitializeResourceLite(&DeviceExt->VcbResource);
-  ExInitializeResourceLite(&DeviceExt->DirResource);
 
   KeInitializeSpinLock(&DeviceExt->FcbListLock);
   InitializeListHead(&DeviceExt->FcbListHead);
