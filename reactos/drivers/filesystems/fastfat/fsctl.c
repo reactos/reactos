@@ -506,6 +506,9 @@ VfatMount (PVFAT_IRP_CONTEXT IrpContext)
 
    DPRINT("FsDeviceObject %p\n", DeviceObject);
 
+   /* Initialize this resource early ... it's used in VfatCleanup */
+   ExInitializeResourceLite(&DeviceExt->DirResource);
+
    DeviceExt->FATFileObject = IoCreateStreamFileObject(NULL, DeviceExt->StorageDevice);
    Fcb = vfatNewFCB(DeviceExt, &NameU);
    if (Fcb == NULL)
@@ -542,7 +545,6 @@ VfatMount (PVFAT_IRP_CONTEXT IrpContext)
                         Fcb);
 
    DeviceExt->LastAvailableCluster = 2;
-   ExInitializeResourceLite(&DeviceExt->DirResource);
    ExInitializeResourceLite(&DeviceExt->FatResource);
 
    InitializeListHead(&DeviceExt->FcbListHead);
