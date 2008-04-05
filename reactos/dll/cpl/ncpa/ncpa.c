@@ -534,8 +534,9 @@ UpdateNICStatusData(HWND hwndDlg, PGLOBAL_NCPA_DATA pGlobalData)
 		DWORD Mbps = 0;
 		DWORD OperStatus = IF_OPER_STATUS_DISCONNECTED;
 		PMIB_IFROW pIfRow = NULL;
-		TCHAR Buffer[256], LocBuffer[256];
+		TCHAR Buffer[256], LocBuffer[256], szDecimalSep[3];
 		SYSTEMTIME TimeConnected;
+		NUMBERFMT fmt;
 
 		memset(&TimeConnected, 0, sizeof(TimeConnected));
 
@@ -554,8 +555,8 @@ UpdateNICStatusData(HWND hwndDlg, PGLOBAL_NCPA_DATA pGlobalData)
 					FILETIME SystemFileTime;
 					ULARGE_INTEGER LargeSystemTime;
 
-					PktsOut = pIfRow->dwOutUcastPkts;
-					PktsIn = pIfRow->dwInUcastPkts;
+					PktsOut = pIfRow->dwOutOctets;
+					PktsIn = pIfRow->dwInOctets;
 					Mbps = pIfRow->dwSpeed;
 					OperStatus = pIfRow->dwOperStatus;
 
@@ -575,12 +576,18 @@ UpdateNICStatusData(HWND hwndDlg, PGLOBAL_NCPA_DATA pGlobalData)
 			}
 		}
 
+		memset(&fmt, 0x0, sizeof(fmt));
+		if (GetLocaleInfo(LOCALE_USER_DEFAULT, LOCALE_STHOUSAND, szDecimalSep, sizeof(szDecimalSep) / sizeof(szDecimalSep[0])))
+			fmt.lpThousandSep = szDecimalSep;
+		fmt.Grouping = 3;
+		fmt.lpDecimalSep = _T("");
+
 		_stprintf(Buffer, L"%u", PktsOut);
-		GetNumberFormat(LOCALE_USER_DEFAULT, 0, Buffer, NULL, LocBuffer, sizeof(LocBuffer) / sizeof(LocBuffer[0]));
+		GetNumberFormat(LOCALE_USER_DEFAULT, 0, Buffer, &fmt, LocBuffer, sizeof(LocBuffer) / sizeof(LocBuffer[0]));
 		SendDlgItemMessage(hwndDlg, IDC_SEND, WM_SETTEXT, 0, (LPARAM)LocBuffer);
 
 		_stprintf(Buffer, L"%u", PktsIn);
-		GetNumberFormat(LOCALE_USER_DEFAULT, 0, Buffer, NULL, LocBuffer, sizeof(LocBuffer) / sizeof(LocBuffer[0]));
+		GetNumberFormat(LOCALE_USER_DEFAULT, 0, Buffer, &fmt, LocBuffer, sizeof(LocBuffer) / sizeof(LocBuffer[0]));
 		SendDlgItemMessage(hwndDlg, IDC_RECEIVED, WM_SETTEXT, 0, (LPARAM)LocBuffer);
 
 		switch (OperStatus)

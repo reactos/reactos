@@ -26,7 +26,7 @@
 
 #include "resource.h"
 #include "ncpa.h"
-
+#define NDEBUG
 #include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(ncpa);
 
@@ -163,7 +163,7 @@ ValidateAndStore(HWND Dlg, PTCPIP_PROPERTIES_DATA DlgData)
     DlgData->DhcpEnabled = (BST_CHECKED ==
                             IsDlgButtonChecked(Dlg, IDC_USEDHCP));
     if (! DlgData->DhcpEnabled) {
-	DhcpReleaseIpAddressLease( DlgData->AdapterIndex );
+//	DhcpReleaseIpAddressLease( DlgData->AdapterIndex );
 
         if (4 != SendMessageW(GetDlgItem(Dlg, IDC_IPADDR), IPM_GETADDRESS,
                               0, (LPARAM) &IpAddress)) {
@@ -185,8 +185,8 @@ ValidateAndStore(HWND Dlg, PTCPIP_PROPERTIES_DATA DlgData)
         } else {
             DlgData->Gateway = htonl(IpAddress);
         }
-	DhcpStaticRefreshParams
-	    ( DlgData->AdapterIndex, DlgData->IpAddress, DlgData->SubnetMask );
+//	DhcpStaticRefreshParams
+//	    ( DlgData->AdapterIndex, DlgData->IpAddress, DlgData->SubnetMask );
 
 	RowToRem.dwForwardMask = 0;
 	RowToRem.dwForwardMetric1 = 1;
@@ -204,7 +204,7 @@ ValidateAndStore(HWND Dlg, PTCPIP_PROPERTIES_DATA DlgData)
         DlgData->IpAddress = INADDR_NONE;
         DlgData->SubnetMask = INADDR_NONE;
         DlgData->Gateway = INADDR_NONE;
-	DhcpLeaseIpAddress( DlgData->AdapterIndex );
+//	DhcpLeaseIpAddress( DlgData->AdapterIndex );
     }
 
     if (BST_CHECKED == IsDlgButtonChecked(Dlg, IDC_FIXEDDNS)) {
