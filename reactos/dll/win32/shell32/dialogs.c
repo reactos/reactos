@@ -38,6 +38,7 @@
 #include "shell32_main.h"
 #include "shresdef.h"
 #include "undocshell.h"
+#include "shlwapi.h"
 
 typedef struct
     {
@@ -60,15 +61,218 @@ static void FillList (HWND, char *) ;
  * PickIconDlg					[SHELL32.62]
  *
  */
-BOOL WINAPI PickIconDlg(
-	HWND hwndOwner,
-	LPWSTR lpstrFile,
-	UINT nMaxFile,
-	INT* lpdwIconIndex)
+
+typedef struct
 {
-	FIXME("(%p,%s,%08x,%p):stub.\n",
-	  hwndOwner, lpstrFile, nMaxFile,lpdwIconIndex);
-	return 0xffffffff;
+    HMODULE hLibrary;
+    HWND hDlgCtrl;
+    WCHAR szName[MAX_PATH];
+    INT Index;
+}PICK_ICON_CONTEXT, *PPICK_ICON_CONTEXT;
+
+BOOL CALLBACK EnumPickIconResourceProc(HMODULE hModule,
+    LPCWSTR lpszType,
+    LPWSTR lpszName,
+    LONG_PTR lParam
+)
+{
+    WCHAR szName[100];
+    int index;
+    HICON  hIcon;
+    PPICK_ICON_CONTEXT pIconContext = (PPICK_ICON_CONTEXT)lParam;
+
+    if (IS_INTRESOURCE(lpszName))
+        swprintf(szName, L"%u\n", lpszName);
+    else
+        wcscpy(szName, (WCHAR*)lpszName);
+
+
+    hIcon = LoadIconW(pIconContext->hLibrary, (LPCWSTR)lpszName);
+    if (hIcon == NULL)
+        return TRUE;
+
+    index = SendMessageW(pIconContext->hDlgCtrl, LB_ADDSTRING, 0, (LPARAM)szName);
+    if (index != LB_ERR)
+        SendMessageW(pIconContext->hDlgCtrl, LB_SETITEMDATA, index, (LPARAM)hIcon);
+
+    return TRUE;
+}
+
+void
+DestroyIconList(HWND hDlgCtrl)
+{
+    int count;
+    int index;
+
+    count = SendMessage(hDlgCtrl, LB_GETCOUNT, 0, 0);
+    if (count == LB_ERR)
+        return;
+
+    for(index = 0; index < count; index++)
+    {
+        HICON hIcon = (HICON)SendMessageW(hDlgCtrl, LB_GETITEMDATA, index, 0);
+        DestroyIcon(hIcon);
+    }
+}
+
+INT_PTR CALLBACK PickIconProc(HWND hwndDlg,
+    UINT uMsg,
+    WPARAM wParam,
+    LPARAM lParam
+)
+{
+    LPMEASUREITEMSTRUCT lpmis; 
+    LPDRAWITEMSTRUCT lpdis; 
+    HICON hIcon;
+    INT index;
+    WCHAR szText[MAX_PATH], szTitle[100], szFilter[100];
+    OPENFILENAMEW ofn = {0};
+
+    PPICK_ICON_CONTEXT pIconContext = (PPICK_ICON_CONTEXT)GetWindowLong(hwndDlg, DWLP_USER);
+
+    switch(uMsg)
+    {
+    case WM_INITDIALOG:
+        pIconContext = (PPICK_ICON_CONTEXT)lParam;
+        SetWindowLong(hwndDlg, DWLP_USER, (LONG)pIconContext);
+        pIconContext->hDlgCtrl = GetDlgItem(hwndDlg, IDC_PICKICON_LIST);
+        EnumResourceNamesW(pIconContext->hLibrary, MAKEINTRESOURCEW(RT_ICON), EnumPickIconResourceProc, (LPARAM)pIconContext);
+        if (PathUnExpandEnvStringsW(pIconContext->szName, szText, MAX_PATH))
+            SendDlgItemMessageW(hwndDlg, IDC_EDIT_PATH, WM_SETTEXT, 0, (LPARAM)szText);
+        else
+            SendDlgItemMessageW(hwndDlg, IDC_EDIT_PATH, WM_SETTEXT, 0, (LPARAM)pIconContext->szName);
+
+        swprintf(szText, L"%u", pIconContext->Index);
+        index = SendMessageW(pIconContext->hDlgCtrl, LB_FINDSTRING, -1, (LPARAM)szText);
+        if (index != LB_ERR)
+            SendMessageW(pIconContext->hDlgCtrl, LB_SETCURSEL, index, 0);
+        return TRUE;
+    case WM_COMMAND:
+        switch(LOWORD(wParam))
+        {
+        case IDOK:
+            index = SendMessageW(pIconContext->hDlgCtrl, LB_GETCURSEL, 0, 0);
+            SendMessageW(pIconContext->hDlgCtrl, LB_GETTEXT, index, (LPARAM)szText);
+            pIconContext->Index = _wtoi(szText);
+            SendDlgItemMessageW(hwndDlg, IDC_EDIT_PATH, WM_GETTEXT, MAX_PATH, (LPARAM)pIconContext->szName);
+            DestroyIconList(pIconContext->hDlgCtrl);
+            EndDialog(hwndDlg, 1);
+            break;
+        case IDCANCEL:
+            DestroyIconList(pIconContext->hDlgCtrl);
+            EndDialog(hwndDlg, 0);
+            break;
+        case IDC_PICKICON_LIST:
+            if (HIWORD(wParam) == LBN_SELCHANGE)
+                InvalidateRect((HWND)lParam, NULL, TRUE); // FIXME USE UPDATE RECT
+            break;
+        case IDC_BUTTON_PATH:
+            szText[0] = 0;
+            szTitle[0] = 0;
+            szFilter[0] = 0;
+            ofn.lStructSize = sizeof(ofn);
+            ofn.hwndOwner = hwndDlg;
+            ofn.lpstrFile = szText;
+            ofn.nMaxFile = MAX_PATH;
+            LoadStringW(shell32_hInstance, IDS_PICK_ICON_TITLE, szTitle, sizeof(szTitle) / sizeof(WCHAR));
+            ofn.lpstrTitle = szTitle;
+            LoadStringW(shell32_hInstance, IDS_PICK_ICON_FILTER, szFilter, sizeof(szFilter) / sizeof(WCHAR));
+            ofn.lpstrFilter = szFilter;
+            if (GetOpenFileNameW(&ofn))
+            {
+                HMODULE hLibrary;
+
+                if (!wcsicmp(pIconContext->szName, szText))
+                    break;
+
+                DestroyIconList(pIconContext->hDlgCtrl);
+
+                hLibrary = LoadLibraryExW(szText, NULL, LOAD_LIBRARY_AS_DATAFILE | LOAD_LIBRARY_AS_IMAGE_RESOURCE);
+                if (hLibrary == NULL)
+                    break;
+                FreeLibrary(pIconContext->hLibrary);
+                pIconContext->hLibrary = hLibrary;
+                wcscpy(pIconContext->szName, szText);
+                EnumResourceNamesW(pIconContext->hLibrary, MAKEINTRESOURCEW(RT_ICON), EnumPickIconResourceProc, (LPARAM)pIconContext);
+                if (PathUnExpandEnvStringsW(pIconContext->szName, szText, MAX_PATH))
+                    SendDlgItemMessageW(hwndDlg, IDC_EDIT_PATH, WM_SETTEXT, 0, (LPARAM)szText);
+                else
+                    SendDlgItemMessageW(hwndDlg, IDC_EDIT_PATH, WM_SETTEXT, 0, (LPARAM)pIconContext->szName);
+
+                SendMessageW(pIconContext->hDlgCtrl, LB_SETCURSEL, 0, 0);
+            }
+            break;
+        }
+        break;
+        case WM_MEASUREITEM:
+            lpmis = (LPMEASUREITEMSTRUCT) lParam; 
+            lpmis->itemHeight = 32;
+            lpmis->itemWidth = 64;
+            return TRUE; 
+        case WM_DRAWITEM: 
+            lpdis = (LPDRAWITEMSTRUCT) lParam; 
+           if (lpdis->itemID == -1) 
+            { 
+                break; 
+            } 
+            switch (lpdis->itemAction) 
+            { 
+                case ODA_SELECT: 
+                case ODA_DRAWENTIRE:
+                    index = SendMessageW(pIconContext->hDlgCtrl, LB_GETCURSEL, 0, 0);
+                    hIcon =(HICON)SendMessage(lpdis->hwndItem, LB_GETITEMDATA, lpdis->itemID, (LPARAM) 0);
+
+                    if (lpdis->itemID == index)
+                    {
+                        HBRUSH hBrush;
+                        hBrush = CreateSolidBrush(RGB(0, 0, 255));
+                        FillRect(lpdis->hDC, &lpdis->rcItem, hBrush);
+                        DeleteObject(hBrush);
+                    }
+                    else
+                    {
+                        HBRUSH hBrush;
+                        hBrush = CreateSolidBrush(RGB(255, 255, 255));
+                        FillRect(lpdis->hDC, &lpdis->rcItem, hBrush);
+                        DeleteObject(hBrush);
+                    }
+                    DrawIconEx(lpdis->hDC, lpdis->rcItem.left,lpdis->rcItem.top, hIcon, 
+                                0,
+                                0,
+                                0,
+                                NULL,
+                                DI_NORMAL);
+                    break;
+            }
+    }
+
+    return FALSE;
+}
+
+BOOL WINAPI PickIconDlg(
+    HWND hwndOwner,
+    LPWSTR lpstrFile,
+    UINT nMaxFile,
+    INT* lpdwIconIndex)
+{
+    HMODULE hLibrary;
+    int res;
+    PICK_ICON_CONTEXT IconContext;
+
+    hLibrary = LoadLibraryExW(lpstrFile, NULL, LOAD_LIBRARY_AS_DATAFILE | LOAD_LIBRARY_AS_IMAGE_RESOURCE);
+    IconContext.hLibrary = hLibrary;
+    IconContext.Index = *lpdwIconIndex;
+    wcscpy(IconContext.szName, lpstrFile);
+
+    res = DialogBoxParamW(shell32_hInstance, MAKEINTRESOURCEW(IDD_PICK_ICON_DIALOG), hwndOwner, PickIconProc, (LPARAM)&IconContext);
+    if (res)
+    {
+        wcscpy(lpstrFile, IconContext.szName);
+        *lpdwIconIndex = IconContext.Index;
+    }
+
+    FreeLibrary(hLibrary);
+    return res;
 }
 
 /*************************************************************************

@@ -18,6 +18,7 @@
 	<library>gdi32</library>
 	<library>user32</library>
 	<library>comctl32</library>
+	<library>comdlg32</library>
 	<library>shlwapi</library>
 	<library>ole32</library>
 	<library>version</library>
@@ -74,4 +75,5 @@
 	<file>shv_item_new.c</file>
 	<file>folder_options.c</file>
 	<file>shfldr_netplaces.c</file>
+	<file>shv_default_context_menu.c</file>
 </module>

@@ -149,6 +149,12 @@
 #define IDD_SHELL_ABOUT_AUTHORS           0x4100
 #define IDC_SHELL_ABOUT_AUTHORS           0x4101
 #define IDC_SHELL_ABOUT_AUTHORS_LISTBOX   0x4102
+#define IDD_PICK_ICON_DIALOG              0x4120
+#define IDC_PICKICON_LIST                 0x4121
+#define IDC_BUTTON_PATH                   0x4122
+#define IDC_EDIT_PATH                     0x4123
+#define IDS_PICK_ICON_TITLE               0x4124
+#define IDS_PICK_ICON_FILTER              0x4125
 
 #define IDI_SHELL_DOCUMENT           1
 #define IDI_SHELL_FOLDER             4

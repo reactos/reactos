@@ -2681,6 +2681,9 @@ SH_ShellLinkDlgProc(
                ///
                return TRUE;
            case 14021:
+               if (This->sIcoPath)
+                    wcscpy(szBuffer, This->sIcoPath);
+               IconIndex = This->iIcoNdx;
                if (PickIconDlg(hwndDlg, szBuffer, MAX_PATH, &IconIndex))
                {
                     IShellLinkW_fnSetIconLocation((IShellLinkW*)&This->lpvtblw, szBuffer, IconIndex);
