@@ -16,9 +16,9 @@ typedef struct _GDI_HANDLE_TABLE
  */
 //////////////////////////////////////////////////////////////////////////////
   GDI_TABLE_ENTRY Entries[GDI_HANDLE_COUNT];
-  DEVCAPS         DevCaps;                 // Device Capabilities
+  DEVCAPS         DevCaps;                 // Device Capabilities.
   FLONG           flDeviceUniq;            // Device settings uniqueness.
-  PVOID           pvLangPack;              // Lanuage Pack.
+  PVOID           pvLangPack;              // Language Pack.
   CFONT           cfPublic[GDI_CFONT_MAX]; // Public Fonts.
   DWORD           dwCsbSupported1;         // OEM code-page bitfield.
 //////////////////////////////////////////////////////////////////////////////
@@ -60,7 +60,6 @@ VOID    INTERNAL_CALL GDIOBJ_ShareUnlockObjByPtr(POBJ Object);
 BOOL    INTERNAL_CALL GDIOBJ_ValidateHandle(HGDIOBJ hObj, ULONG ObjectType);
 POBJ    INTERNAL_CALL GDIOBJ_AllocObj(UCHAR ObjectType);
 POBJ    INTERNAL_CALL GDIOBJ_AllocObjWithHandle(ULONG ObjectType);
-HGDIOBJ INTERNAL_CALL GDIOBJ_AllocObjDepricated(ULONG ObjectType);
 VOID    INTERNAL_CALL GDIOBJ_FreeObj (POBJ pObj, UCHAR ObjectType);
 BOOL    INTERNAL_CALL GDIOBJ_FreeObjByHandle (HGDIOBJ hObj, DWORD ObjectType);
 PGDIOBJ INTERNAL_CALL GDIOBJ_LockObj (HGDIOBJ hObj, DWORD ObjectType);

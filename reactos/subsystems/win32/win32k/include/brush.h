@@ -74,7 +74,6 @@ typedef struct
 
 #define  BRUSHOBJ_AllocBrush() ((PGDIBRUSHOBJ) GDIOBJ_AllocObj(GDIObjType_BRUSH_TYPE))
 #define  BRUSHOBJ_AllocBrushWithHandle() ((PGDIBRUSHOBJ) GDIOBJ_AllocObjWithHandle (GDI_OBJECT_TYPE_BRUSH))
-#define  BRUSHOBJ_AllocBrushDepricated() ((HBRUSH) GDIOBJ_AllocObjDepricated (GDI_OBJECT_TYPE_BRUSH))
 #define  BRUSHOBJ_FreeBrush(pBrush) GDIOBJ_FreeObj((POBJ)pBrush, GDIObjType_BRUSH_TYPE)
 #define  BRUSHOBJ_FreeBrushByHandle(hBrush) GDIOBJ_FreeObjByHandle((HGDIOBJ)hBrush, GDI_OBJECT_TYPE_BRUSH)
 #define  BRUSHOBJ_LockBrush(hBrush) ((PGDIBRUSHOBJ)GDIOBJ_LockObj((HGDIOBJ)hBrush, GDI_OBJECT_TYPE_BRUSH))

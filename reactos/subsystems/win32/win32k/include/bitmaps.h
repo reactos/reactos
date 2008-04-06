@@ -28,7 +28,6 @@ typedef struct _BITMAPOBJ
 
 #define  BITMAPOBJ_AllocBitmap()    ((PBITMAPOBJ) GDIOBJ_AllocObj(GDIObjType_SURF_TYPE))
 #define  BITMAPOBJ_AllocBitmapWithHandle()    ((PBITMAPOBJ) GDIOBJ_AllocObjWithHandle(GDI_OBJECT_TYPE_BITMAP))
-#define  BITMAPOBJ_AllocBitmapDepricated()    ((HBITMAP) GDIOBJ_AllocObjDepricated(GDI_OBJECT_TYPE_BITMAP))
 #define  BITMAPOBJ_FreeBitmap(pBMObj) GDIOBJ_FreeObj((POBJ) pBMObj, GDIObjType_SURF_TYPE)
 #define  BITMAPOBJ_FreeBitmapByHandle(hBMObj) GDIOBJ_FreeObjByHandle((HGDIOBJ) hBMObj, GDI_OBJECT_TYPE_BITMAP)
 
@@ -59,4 +58,5 @@ INT     NTAPI  BITMAP_GetObject(BITMAPOBJ * bmp, INT count, LPVOID buffer);
 HBITMAP FASTCALL BitmapToSurf(PBITMAPOBJ BitmapObj, HDEV GDIDevice);
 
 #endif
+
 

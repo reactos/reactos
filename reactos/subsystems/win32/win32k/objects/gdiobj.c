@@ -569,20 +569,6 @@ LockHandle:
     return NULL;
 }
 
-/* Wrapper for compatibility with old calls, will be removed later */
-HGDIOBJ INTERNAL_CALL
-GDIOBJ_AllocObjDepricated(ULONG ObjectType)
-{
-    POBJ pObject;
-    HGDIOBJ hObject;
-
-    pObject = GDIOBJ_AllocObjWithHandle(ObjectType);
-    hObject = pObject->hHmgr;
-    GDIOBJ_UnlockObjByPtr(pObject);
-
-    return hObject;
-}
-
 
 VOID INTERNAL_CALL
 GDIOBJ_FreeObj(POBJ pObject, UCHAR BaseType)

@@ -8,13 +8,11 @@
 
 #define PENOBJ_AllocPen() ((HPEN)GDIOBJ_AllocObj(GDIObjType_BRUSH_TYPE))
 #define PENOBJ_AllocPenWithHandle() ((PGDIBRUSHOBJ)GDIOBJ_AllocObjWithHandle(GDI_OBJECT_TYPE_PEN))
-#define PENOBJ_AllocPenDepricated() ((HPEN)GDIOBJ_AllocObjDepricated(GDI_OBJECT_TYPE_PEN))
 #define PENOBJ_FreePen(pBMObj) GDIOBJ_FreeObj((POBJ) pBMObj, GDI_OBJECT_TYPE_PEN)
 #define PENOBJ_FreePenByHandle(hBMObj) GDIOBJ_FreeObjByHandle((HGDIOBJ) hBMObj, GDI_OBJECT_TYPE_PEN)
 #define PENOBJ_LockPen(hBMObj) ((PGDIBRUSHOBJ)GDIOBJ_LockObj((HGDIOBJ) hBMObj, GDI_OBJECT_TYPE_PEN))
 #define PENOBJ_AllocExtPen() ((PGDIBRUSHOBJ)GDIOBJ_AllocObj(GDIObjType_BRUSH_TYPE))
 #define PENOBJ_AllocExtPenWithHandle() ((PGDIBRUSHOBJ)GDIOBJ_AllocObjWithHandle(GDI_OBJECT_TYPE_EXTPEN))
-#define PENOBJ_AllocExtPenDepricated() ((HPEN)GDIOBJ_AllocObjDepricated(GDI_OBJECT_TYPE_EXTPEN))
 #define PENOBJ_FreeExtPen(pBMObj) GDIOBJ_FreeObj((POBJ) pBMObj, GDI_OBJECT_TYPE_EXTPEN)
 #define PENOBJ_FreeExtPenByHandle(hBMObj) GDIOBJ_FreeObjByHandle((HGDIOBJ) hBMObj, GDI_OBJECT_TYPE_EXTPEN)
 #define PENOBJ_LockExtPen(hBMObj) ((PGDIBRUSHOBJ)GDIOBJ_LockObj((HGDIOBJ) hBMObj, GDI_OBJECT_TYPE_EXTPEN))

@@ -16,7 +16,6 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id$ */
 
 #include <w32k.h>
 
@@ -52,7 +51,8 @@ PALETTE_Cleanup(PVOID ObjectBody)
   return TRUE;
 }
 
-HPALETTE FASTCALL
+HPALETTE
+FASTCALL
 PALETTE_AllocPalette(ULONG Mode,
                      ULONG NumColors,
                      ULONG *Colors,
@@ -63,15 +63,13 @@ PALETTE_AllocPalette(ULONG Mode,
   HPALETTE NewPalette;
   PPALGDI PalGDI;
 
-  NewPalette = (HPALETTE) GDIOBJ_AllocObjDepricated(GDI_OBJECT_TYPE_PALETTE);
-  if (NULL == NewPalette)
-    {
+  PalGDI = (PPALGDI)GDIOBJ_AllocObjWithHandle(GDI_OBJECT_TYPE_PALETTE);
+  if (!PalGDI)
+  {
       return NULL;
-    }
+  }
 
-  PalGDI = PALETTE_LockPalette(NewPalette);
-  /* FIXME - PalGDI can be NULL!!! Don't assert here! */
-  ASSERT( PalGDI );
+  NewPalette = PalGDI->BaseObject.hHmgr;
 
   PalGDI->Self = NewPalette;
   PalGDI->Mode = Mode;
@@ -104,23 +102,22 @@ PALETTE_AllocPalette(ULONG Mode,
   return NewPalette;
 }
 
-HPALETTE FASTCALL
+HPALETTE
+FASTCALL
 PALETTE_AllocPaletteIndexedRGB(ULONG NumColors,
                                CONST RGBQUAD *Colors)
 {
   HPALETTE NewPalette;
   PPALGDI PalGDI;
-  unsigned i;
+  UINT i;
 
-  NewPalette = (HPALETTE) GDIOBJ_AllocObjDepricated(GDI_OBJECT_TYPE_PALETTE);
-  if (NULL == NewPalette)
-    {
+  PalGDI = (PPALGDI)GDIOBJ_AllocObjWithHandle(GDI_OBJECT_TYPE_PALETTE);
+  if (!PalGDI)
+  {
       return NULL;
-    }
+  }
 
-  PalGDI = PALETTE_LockPalette(NewPalette);
-  /* FIXME - PalGDI can be NULL!!! Don't assert here! */
-  ASSERT( PalGDI );
+  NewPalette = PalGDI->BaseObject.hHmgr;
 
   PalGDI->Self = NewPalette;
   PalGDI->Mode = PAL_INDEXED;

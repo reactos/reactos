@@ -16,8 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id$
- *
+/*
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
  * PURPOSE:           GDI Driver Surace Functions
@@ -432,14 +431,16 @@ EngCreateDeviceSurface(IN DHSURF dhsurf,
     SURFOBJ *SurfObj;
     BITMAPOBJ *BitmapObj;
 
-    NewSurface = (HSURF)BITMAPOBJ_AllocBitmapDepricated();
-    if (NewSurface == NULL)
+    BitmapObj = BITMAPOBJ_AllocBitmapWithHandle();
+    if (!BitmapObj)
+    {
         return 0;
+    }
 
+    NewSurface = BitmapObj->BaseObject.hHmgr;
     GDIOBJ_SetOwnership(NewSurface, NULL);
 
-    BitmapObj = BITMAPOBJ_LockBitmap(NewSurface);
-    if (! BITMAPOBJ_InitBitsLock(BitmapObj))
+    if (!BITMAPOBJ_InitBitsLock(BitmapObj))
     {
         BITMAPOBJ_UnlockBitmap(BitmapObj);
         BITMAPOBJ_FreeBitmapByHandle(NewSurface);

@@ -113,7 +113,6 @@ SOFTWARE.
  * the y-x-banding that's so nice to have...
  */
 
-/* $Id$ */
 #include <w32k.h>
 
 #define NDEBUG
@@ -2018,44 +2017,43 @@ done:
     return ret;
 }
 
-PROSRGNDATA FASTCALL
-REGION_AllocRgnWithHandle(INT n)
+PROSRGNDATA
+FASTCALL
+REGION_AllocRgnWithHandle(INT nReg)
 {
     HRGN hReg;
     PROSRGNDATA pReg;
-
-    if ((hReg = (HRGN) GDIOBJ_AllocObjDepricated(GDI_OBJECT_TYPE_REGION)))
+    
+    pReg = (PROSRGNDATA)GDIOBJ_AllocObjWithHandle(GDI_OBJECT_TYPE_REGION);
+    if(!pReg)
     {
-        if (NULL != (pReg = REGION_LockRgn(hReg)))
-        {
-            if (1 == n)
-            {
-                /* Testing shows that > 95% of all regions have only 1 rect.
-                   Including that here saves us from having to do another
-                   allocation */
-                pReg->Buffer = &pReg->rdh.rcBound;
-            }
-            else
-            {
-                pReg->Buffer = ExAllocatePoolWithTag(PagedPool, n * sizeof(RECT), TAG_REGION);
-            }
-            if (NULL != pReg->Buffer)
-            {
-                EMPTY_REGION(pReg);
-                pReg->rdh.dwSize = sizeof(RGNDATAHEADER);
-                pReg->rdh.nCount = n;
-                pReg->rdh.nRgnSize = n*sizeof(RECT);
+        return NULL;
+    }
+    
+    hReg = pReg->BaseObject.hHmgr;
 
-                return pReg;
-            }
-        }
-        else
+    if (nReg == 1)
+    {
+        /* Testing shows that > 95% of all regions have only 1 rect.
+           Including that here saves us from having to do another allocation */
+        pReg->Buffer = &pReg->rdh.rcBound;
+    }
+    else
+    {
+        pReg->Buffer = ExAllocatePoolWithTag(PagedPool, nReg * sizeof(RECT), TAG_REGION);
+        if (!pReg->Buffer)
         {
-            REGION_FreeRgn(hReg);
+            GDIOBJ_FreeObjByHandle(hReg, GDI_OBJECT_TYPE_REGION);
+            return NULL;
         }
     }
 
-    return NULL;
+    EMPTY_REGION(pReg);
+    pReg->rdh.dwSize = sizeof(RGNDATAHEADER);
+    pReg->rdh.nCount = nReg;
+    pReg->rdh.nRgnSize = nReg * sizeof(RECT);
+
+    return pReg;
 }
 
 BOOL INTERNAL_CALL

@@ -2270,20 +2270,20 @@ DC_AllocDC(PUNICODE_STRING Driver)
     RtlCopyMemory(Buf, Driver->Buffer, Driver->MaximumLength);
   }
 
-  hDC = (HDC) GDIOBJ_AllocObjDepricated(GDI_OBJECT_TYPE_DC);
-  if (hDC == NULL)
+  NewDC = (PDC)GDIOBJ_AllocObjWithHandle(GDI_OBJECT_TYPE_DC);
+  if(!NewDC)
   {
     if(Buf)
     {
       ExFreePool(Buf);
     }
-    return  NULL;
+    return NULL;
   }
+
+  hDC = NewDC->BaseObject.hHmgr;
 
   DC_AllocateDcAttr(hDC);
 
-  NewDC = DC_LockDc(hDC);
-  /* FIXME - Handle NewDC == NULL! */
   if (Driver != NULL)
   {
     RtlCopyMemory(&NewDC->DriverName, Driver, sizeof(UNICODE_STRING));
