@@ -1827,9 +1827,8 @@ SendMessageA(HWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam)
   return Result;
 }
 
-
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 STDCALL
@@ -1841,13 +1840,17 @@ SendMessageCallbackA(
   SENDASYNCPROC lpCallBack,
   ULONG_PTR dwData)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+  return NtUserMessageCall(hWnd,
+                            Msg, 
+                         wParam,
+                         lParam,
+         (ULONG_PTR)&lpCallBack,
+       NUMC_SENDMESSAGECALLBACK,
+                           TRUE);
 }
 
-
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 STDCALL
@@ -1859,10 +1862,14 @@ SendMessageCallbackW(
   SENDASYNCPROC lpCallBack,
   ULONG_PTR dwData)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+  return NtUserMessageCall(hWnd,
+                            Msg, 
+                         wParam,
+                         lParam,
+         (ULONG_PTR)&lpCallBack,
+       NUMC_SENDMESSAGECALLBACK,
+                          FALSE);
 }
-
 
 /*
  * @implemented
@@ -2303,22 +2310,10 @@ DWORD gfMessagePumpHook = 0;
 
 BOOL WINAPI IsInsideMessagePumpHook()
 {
-	if(!gfMessagePumpHook)
-		return FALSE;
-
-    /* This code checks if we're inside SendMessage. */
-#if 0
-	/* Since our TEB doesnt match that of real windows, testing this value is useless until we know what it does
-	PUCHAR NtTeb = (PUCHAR)NtCurrentTeb();
-
-	if(!*(PLONG*)&NtTeb[0x708])
-		return FALSE;
-
-	if(**(PLONG*)&NtTeb[0x708] <= 0)
-		return FALSE;*/
-#endif
-
-	return TRUE;
+//   PCLIENTTHREADINFO pcti = ((PW32CLIENTINFO)GetWin32ClientInfo())->pClientThreadInfo;
+//   return (gfMessagePumpHook && pcti && (pcti->dwcPumpHook > 0));
+    if(!gfMessagePumpHook) return FALSE;
+    return TRUE;
 }
 
 void WINAPI ResetMessagePumpHook(PUSER_MESSAGE_PUMP_ADDRESSES Addresses)
@@ -2564,6 +2559,9 @@ typedef struct _BROADCASTPARM
 {
     DWORD flags;
     LPDWORD recipients;
+    HDESK hDesk;
+    HWND  hWnd;
+    LUID  luid;
 } BROADCASTPARM, *PBROADCASTPARM;
 
 LONG
@@ -2579,12 +2577,13 @@ IntBroadcastSystemMessage(
 {
     BROADCASTPARM parm;
     DWORD recips = BSM_ALLCOMPONENTS;
-    BOOL ret = TRUE;
+    BOOL ret = -1; // Set to return fail
     static const DWORD all_flags = ( BSF_QUERY | BSF_IGNORECURRENTTASK | BSF_FLUSHDISK | BSF_NOHANG
                                    | BSF_POSTMESSAGE | BSF_FORCEIFHUNG | BSF_NOTIMEOUTIFNOTHUNG
                                    | BSF_ALLOWSFW | BSF_SENDNOTIFYMESSAGE | BSF_RETURNHDESK | BSF_LUID );
 
-    if (dwflags & ~all_flags)
+    if ((dwflags & ~all_flags) || 
+        (!pBSMInfo && (dwflags & (BSF_RETURNHDESK|BSF_LUID))) )
     {
         SetLastError(ERROR_INVALID_PARAMETER);
         return 0;
@@ -2596,37 +2595,54 @@ IntBroadcastSystemMessage(
         return 0;
     }
 
+    if (dwflags & BSF_FORCEIFHUNG) dwflags |= BSF_NOHANG;
+    
+    if (dwflags & BSF_QUERY) dwflags &= ~BSF_SENDNOTIFYMESSAGE|BSF_POSTMESSAGE;
+
     if (!lpdwRecipients)
         lpdwRecipients = &recips;
 
-    if ( pBSMInfo && dwflags & BSF_QUERY )
+    if (*lpdwRecipients & ~(BSM_APPLICATIONS|BSM_ALLDESKTOPS|BSM_INSTALLABLEDRIVERS|BSM_NETDRIVER|BSM_VXDS))
+    {
+       SetLastError(ERROR_INVALID_PARAMETER);
+       return 0;
+    }
+
+    if ( pBSMInfo && (dwflags & BSF_QUERY) )
     {
        if (pBSMInfo->cbSize != sizeof(BSMINFO))
        {
            SetLastError(ERROR_INVALID_PARAMETER);
            return 0;
        }
-       FIXME("Not returning PBSMINFO information yet\n");
     }
 
+    parm.hDesk = NULL;
+    parm.hWnd = NULL;
     parm.flags = dwflags;
     parm.recipients = lpdwRecipients;
 
+    if (dwflags & BSF_LUID) parm.luid = pBSMInfo->luid;
+
     if (*lpdwRecipients & BSM_APPLICATIONS)
     {
-        return NtUserMessageCall(GetDesktopWindow(),
-                                          uiMessage,
-                                             wParam,
-                                             lParam,
-                                   (ULONG_PTR)&parm,
-                        NUMC_BROADCASTSYSTEMMESSAGE,
-                                               Ansi);
-    }
-    else
-    {
-       FIXME("Recipients %08x not supported!\n", *lpdwRecipients);
+        ret = NtUserMessageCall(GetDesktopWindow(),
+                                         uiMessage,
+                                            wParam,
+                                            lParam,
+                                  (ULONG_PTR)&parm,
+                       NUMC_BROADCASTSYSTEMMESSAGE,
+                                              Ansi);
     }
 
+    if (!ret)
+    {
+       if ( pBSMInfo && (dwflags & BSF_QUERY) )
+       {
+          pBSMInfo->hdesk = parm.hDesk;
+          pBSMInfo->hwnd = parm.hWnd;
+       }
+    }
     return ret;
 }
 

@@ -181,6 +181,11 @@ typedef struct _W32PROCESSINFO
 
 } W32PROCESSINFO, *PW32PROCESSINFO;
 
+typedef struct _CLIENTTHREADINFO
+{
+    DWORD dwcPumpHook;
+} CLIENTTHREADINFO, *PCLIENTTHREADINFO;
+
 typedef struct _W32THREADINFO
 {
     PW32PROCESSINFO pi; /* [USER] */
@@ -194,6 +199,7 @@ typedef struct _W32THREADINFO
     /* Application compatibility flags */
     DWORD AppCompatFlags;
     DWORD AppCompatFlags2;
+    CLIENTTHREADINFO ClientThreadInfo;
 } W32THREADINFO, *PW32THREADINFO;
 
 /* Window Client Information structure */
@@ -221,7 +227,7 @@ typedef struct _W32CLIENTINFO
     PVOID pvWND; // " "
     DWORD dwHookCurrent;
     ULONG Win32ClientInfo1;
-    PVOID pClientThreadInfo;
+    PCLIENTTHREADINFO pClientThreadInfo;
     DWORD dwHookData;
     ULONG Win32ClientInfo2[8];
     HANDLE hKL;
