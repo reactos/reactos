@@ -75,5 +75,4 @@
 	<file>shv_item_new.c</file>
 	<file>folder_options.c</file>
 	<file>shfldr_netplaces.c</file>
-	<file>shv_default_context_menu.c</file>
 </module>
