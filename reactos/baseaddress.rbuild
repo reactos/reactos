@@ -1,8 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE group SYSTEM "tools/rbuild/project.dtd">
 <group xmlns:xi="http://www.w3.org/2001/XInclude">
-  <property name="BASEADDRESS_REGTESTS" value="0x07000000" />
-  <property name="BASEADDRESS_NOTIFYHOOK" value="0x08000000" />
   <property name="BASEADDRESS_COMCAT" value="0x20A50000" />
   <property name="BASEADDRESS_DEVENUM" value="0x35680000" />
   <property name="BASEADDRESS_RSABASE" value="0x35700000" />
@@ -68,6 +66,7 @@
   <property name="BASEADDRESS_WLDAP32" value="0x6e130000" />
   <property name="BASEADDRESS_SCHANNEL" value="0x6e360000" />
   <property name="BASEADDRESS_CLB" value="0x6f2b0000" />
+  <property name="BASEADDRESS_REGTESTS" value="0x07000000" />
   <property name="BASEADDRESS_CARDS" value="0x701a0000" />
   <property name="BASEADDRESS_WININET" value="0x70200000" />
   <property name="BASEADDRESS_WINHTTP" value="0x70c60000" />
@@ -132,8 +131,8 @@
   <property name="BASEADDRESS_FMIFS" value="0x76df0000" />
   <property name="BASEADDRESS_OLEAUT32" value="0x76e00000" />
   <property name="BASEADDRESS_TAPI32" value="0x76e60000" />
-  <property name="BASEADDRESS_RASAPI32" value="0x76ee0000" />
   <property name="BASEADDRESS_RASMAN" value="0x76e90000h" />
+  <property name="BASEADDRESS_RASAPI32" value="0x76ee0000" />
   <property name="BASEADDRESS_WTSAPI32" value="0x76f50000" />
   <property name="BASEADDRESS_MSVFW32" value="0x76f60000" />
   <property name="BASEADDRESS_MSACM32" value="0x77400000" />
@@ -164,4 +163,5 @@
   <property name="BASEADDRESS_HHCTRL" value="0x7e410000" />
   <property name="BASEADDRESS_BEEPMIDI" value="0x7ef0000" />
   <property name="BASEADDRESS_FREETYPE" value="0x7f000000" />
+  <property name="BASEADDRESS_NOTIFYHOOK" value="0x08000000" />
 </group>
