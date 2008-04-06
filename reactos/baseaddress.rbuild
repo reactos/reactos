@@ -1,6 +1,8 @@
 <?xml version="1.0"?>
 <!DOCTYPE group SYSTEM "tools/rbuild/project.dtd">
 <group xmlns:xi="http://www.w3.org/2001/XInclude">
+  <property name="BASEADDRESS_REGTESTS" value="0x07000000" />
+  <property name="BASEADDRESS_NOTIFYHOOK" value="0x08000000" />
   <property name="BASEADDRESS_COMCAT" value="0x20A50000" />
   <property name="BASEADDRESS_DEVENUM" value="0x35680000" />
   <property name="BASEADDRESS_RSABASE" value="0x35700000" />
@@ -12,6 +14,7 @@
   <property name="BASEADDRESS_UXTHEME" value="0x5ad70000" />
   <property name="BASEADDRESS_VDMDBG" value="0x5b0d0000" />
   <property name="BASEADDRESS_OBJSEL" value="0x5b400000" />
+  <property name="BASEADDRESS_UFAT" value="0x5b570000" />
   <property name="BASEADDRESS_TAPIUI" value="0x5b770000" />
   <property name="BASEADDRESS_SLAYER" value="0x5c7e0000" />
   <property name="BASEADDRESS_USRMGR" value="0x5c900000" />
@@ -59,14 +62,12 @@
   <property name="BASEADDRESS_SMDLL" value="0x6b3b0000" />
   <property name="BASEADDRESS_URLMON" value="0x6b3c0000" />
   <property name="BASEADDRESS_SERIALUI" value="0x6b3D0000" />
-  <property name="BASEADDRESS_WINSTA" value="0x6b3D0000" />
   <property name="BASEADDRESS_HLINK" value="0x6C6E0000" />
   <property name="BASEADDRESS_DESKMON" value="0x6d400000" />
   <property name="BASEADDRESS_DESKADP" value="0x6d410000" />
   <property name="BASEADDRESS_WLDAP32" value="0x6e130000" />
   <property name="BASEADDRESS_SCHANNEL" value="0x6e360000" />
   <property name="BASEADDRESS_CLB" value="0x6f2b0000" />
-  <property name="BASEADDRESS_REGTESTS" value="0x07000000" />
   <property name="BASEADDRESS_CARDS" value="0x701a0000" />
   <property name="BASEADDRESS_WININET" value="0x70200000" />
   <property name="BASEADDRESS_WINHTTP" value="0x70c60000" />
@@ -83,11 +84,11 @@
   <property name="BASEADDRESS_WINFAX" value="0x722C0000" />
   <property name="BASEADDRESS_WINSCARD" value="0x723d0000" />
   <property name="BASEADDRESS_DEVMGR" value="0x72a90000" />
+  <property name="BASEADDRESS_WINSPOOL" value="0x72f50000" />
   <property name="BASEADDRESS_AVIFIL32" value="0x73ac0000" />
   <property name="BASEADDRESS_LZ32" value="0x73d80000" />
   <property name="BASEADDRESS_COREDLL" value="0x73d80000" />
   <property name="BASEADDRESS_ICMP" value="0x741f0000" />
-  <property name="BASEADDRESS_UFAT" value="0x741f0000" />
   <property name="BASEADDRESS_USERENV" value="0x74850000" />
   <property name="BASEADDRESS_WS2_32" value="0x74aa0000" />
   <property name="BASEADDRESS_SYSSETUP" value="0x74a30000" />
@@ -106,6 +107,7 @@
   <property name="BASEADDRESS_SHLWAPI" value="0x76120000" />
   <property name="BASEADDRESS_COMCTL32" value="0x76160000" />
   <property name="BASEADDRESS_COMDLG32" value="0x76210000" />
+  <property name="BASEADDRESS_WINSTA" value="0x762F0000" />
   <property name="BASEADDRESS_RICHED32" value="0x76340000" />
   <property name="BASEADDRESS_D3D8THK" value="0x76340000" />
   <property name="BASEADDRESS_RICHED20" value="0x76360000" />
@@ -142,7 +144,6 @@
   <property name="BASEADDRESS_SENSAPI" value="0x77700000" />
   <property name="BASEADDRESS_PACKET" value="0x77780000" />
   <property name="BASEADDRESS_MSAFD" value="0x77780000" />
-  <property name="BASEADDRESS_WINSPOOL" value="0x77800000" />
   <property name="BASEADDRESS_MSI" value="0x77790000" />
   <property name="BASEADDRESS_SNMPAPI" value="0x777a0000" />
   <property name="BASEADDRESS_IPRTPRIO" value="0x777c0000" />
@@ -163,5 +164,4 @@
   <property name="BASEADDRESS_HHCTRL" value="0x7e410000" />
   <property name="BASEADDRESS_BEEPMIDI" value="0x7ef0000" />
   <property name="BASEADDRESS_FREETYPE" value="0x7f000000" />
-  <property name="BASEADDRESS_NOTIFYHOOK" value="0x08000000" />
 </group>
