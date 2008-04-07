@@ -1506,6 +1506,36 @@ HRESULT WINAPI CIDLData_CreateFromIDArray(
 	LPCITEMIDLIST* apidl,
 	IDataObject **ppdtobj);
 
+/****************************************************************************
+ * SHOpenWithDialog
+ */
+
+enum tagOPEN_AS_INFO_FLAGS 
+{
+	OAIF_ALLOW_REGISTRATION = 1,
+	OAIF_REGISTER_EXT       = 2,
+	OAIF_EXEC               = 4,
+	OAIF_FORCE_REGISTRATION = 8,
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+	OAIF_HIDE_REGISTRATION  = 32,
+	OAIF_URL_PROTOCOL       = 64,
+#endif
+};
+typedef int OPEN_AS_INFO_FLAGS;
+
+
+typedef struct tagOPENASINFO {
+	LPCTSTR pcszFile;
+	LPCTSTR pcszClass;
+	OPEN_AS_INFO_FLAGS oaifInFlags;
+} OPENASINFO;
+
+HRESULT SHOpenWithDialog(
+  HWND hwndParent,
+  const OPENASINFO *poainfo
+);
+
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif /* defined(__cplusplus) */
