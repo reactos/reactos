@@ -2310,10 +2310,8 @@ DWORD gfMessagePumpHook = 0;
 
 BOOL WINAPI IsInsideMessagePumpHook()
 {
-//   PCLIENTTHREADINFO pcti = ((PW32CLIENTINFO)GetWin32ClientInfo())->pClientThreadInfo;
-//   return (gfMessagePumpHook && pcti && (pcti->dwcPumpHook > 0));
-    if(!gfMessagePumpHook) return FALSE;
-    return TRUE;
+   PCLIENTTHREADINFO pcti = ((PW32CLIENTINFO)GetWin32ClientInfo())->pClientThreadInfo;
+   return (gfMessagePumpHook && pcti && (pcti->dwcPumpHook > 0));
 }
 
 void WINAPI ResetMessagePumpHook(PUSER_MESSAGE_PUMP_ADDRESSES Addresses)
@@ -2558,7 +2556,7 @@ IsDialogMessageA( HWND hwndDlg, LPMSG pmsg )
 typedef struct _BROADCASTPARM
 {
     DWORD flags;
-    LPDWORD recipients;
+    DWORD recipients;
     HDESK hDesk;
     HWND  hWnd;
     LUID  luid;
@@ -2620,7 +2618,7 @@ IntBroadcastSystemMessage(
     parm.hDesk = NULL;
     parm.hWnd = NULL;
     parm.flags = dwflags;
-    parm.recipients = lpdwRecipients;
+    parm.recipients = *lpdwRecipients;
 
     if (dwflags & BSF_LUID) parm.luid = pBSMInfo->luid;
 

@@ -436,7 +436,7 @@ GetW32ThreadInfo(VOID)
 {
     PTEB Teb;
     PW32THREADINFO ti;
-//    PW32CLIENTINFO ci;
+    PW32CLIENTINFO ci;
     PW32THREAD W32Thread = PsGetCurrentThreadWin32Thread();
 
     if (W32Thread == NULL)
@@ -476,7 +476,7 @@ GetW32ThreadInfo(VOID)
             W32Thread->ThreadInfo = ti;
             /* update the TEB */
             Teb = NtCurrentTeb();
-//            ci = GetWin32ClientInfo();
+            ci = ((PW32CLIENTINFO)Teb->Win32ClientInfo);
             _SEH_TRY
             {
                 ProbeForWrite(Teb,
@@ -484,7 +484,7 @@ GetW32ThreadInfo(VOID)
                               sizeof(ULONG));
 
                 Teb->Win32ThreadInfo = UserHeapAddressToUser(W32Thread->ThreadInfo);
-//                ci->pClientThreadInfo = UserHeapAddressToUser(&ti->ClientThreadInfo);
+                ci->pClientThreadInfo = &ti->ClientThreadInfo;
             }
             _SEH_HANDLE
             {
