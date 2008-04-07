@@ -11,7 +11,8 @@ typedef struct _W32THREAD
   struct _KBL* KeyboardLayout;
   struct _DESKTOP_OBJECT* Desktop;
   HANDLE hDesktop;
-  DWORD MessagePumpHookValue;
+  PVOID pgdiDcattr;
+  PVOID pgdiBrushAttr;
   BOOLEAN IsExiting;
   SINGLE_LIST_ENTRY  ReferencesList;
   ULONG Hooks;

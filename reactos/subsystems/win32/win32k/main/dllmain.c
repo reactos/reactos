@@ -266,7 +266,8 @@ Win32kThreadCallback(struct _ETHREAD *Thread,
       co_IntDestroyCaret(Win32Thread);
       Win32Thread->MessageQueue = MsqCreateMessageQueue(Thread);
       Win32Thread->KeyboardLayout = W32kGetDefaultKeyLayout();
-      Win32Thread->MessagePumpHookValue = 0;
+      if (Win32Thread->ThreadInfo)
+          Win32Thread->ThreadInfo->ClientThreadInfo.dwcPumpHook = 0;
     }
   else
     {

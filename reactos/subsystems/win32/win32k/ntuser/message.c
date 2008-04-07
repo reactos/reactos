@@ -1822,19 +1822,27 @@ CLEANUP:
 BOOL STDCALL
 IntInitMessagePumpHook()
 {
-   ((PW32THREAD)PsGetCurrentThread()->Tcb.Win32Thread)->MessagePumpHookValue++;
-   return TRUE;
+   if (((PW32THREAD)PsGetCurrentThread()->Tcb.Win32Thread)->ThreadInfo)
+   {
+     ((PW32THREAD)PsGetCurrentThread()->Tcb.Win32Thread)->ThreadInfo->ClientThreadInfo.dwcPumpHook++;
+     return TRUE;
+   }
+   return FALSE;
 }
 
 BOOL STDCALL
 IntUninitMessagePumpHook()
 {
-   if (((PW32THREAD)PsGetCurrentThread()->Tcb.Win32Thread)->MessagePumpHookValue <= 0)
+   if (((PW32THREAD)PsGetCurrentThread()->Tcb.Win32Thread)->ThreadInfo)
    {
-      return FALSE;
+      if (((PW32THREAD)PsGetCurrentThread()->Tcb.Win32Thread)->ThreadInfo->ClientThreadInfo.dwcPumpHook <= 0)
+      {
+         return FALSE;
+      }
+      ((PW32THREAD)PsGetCurrentThread()->Tcb.Win32Thread)->ThreadInfo->ClientThreadInfo.dwcPumpHook--;
+      return TRUE;
    }
-   ((PW32THREAD)PsGetCurrentThread()->Tcb.Win32Thread)->MessagePumpHookValue--;
-   return TRUE;
+   return FALSE;
 }
 
 /* EOF */
