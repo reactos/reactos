@@ -2,6 +2,9 @@
 * translation by xrogers
 * xxrogers@users.sourceforge.net
 * https://sourceforge.net/projects/reactospl
+*
+* translation update by Caemyr (Olaf Siejka)
+* April, 2008
 */
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
@@ -27,53 +30,53 @@ END
 
 IDD_PROPPAGECOMPNAMECHENGE DIALOGEX 0, 0, 232, 222
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Computer Name Changes"
+CAPTION "Zmiana nazwy komputera"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "(message goes here)", 1017, 7, 5, 218, 30
-    LTEXT "&Computer name:", -1, 7, 41, 219, 8
+    LTEXT "&Nazwa komputera:", -1, 7, 41, 219, 8
     EDITTEXT 1002, 7, 53, 218, 14, ES_AUTOHSCROLL | ES_OEMCONVERT
-    LTEXT "Full computer name:", 1016, 7, 72, 218, 10
+    LTEXT "Pe³na nazwa komputera:", 1016, 7, 72, 218, 10
     EDITTEXT 1001, 7, 82, 219, 14, ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
-    PUSHBUTTON "&More...", 1003, 150, 102, 75, 14
-    GROUPBOX "Member of", 1018, 7, 119, 219, 73
-    AUTORADIOBUTTON "&Domain:", 1008, 17, 132, 192, 10, WS_GROUP
-    AUTORADIOBUTTON "&Workgroup:", 1004, 17, 161, 191, 10
+    PUSHBUTTON "&Wiêcej...", 1003, 150, 102, 75, 14
+    GROUPBOX "Nale¿y do", 1018, 7, 119, 219, 73
+    AUTORADIOBUTTON "&Domeny:", 1008, 17, 132, 192, 10, WS_GROUP
+    AUTORADIOBUTTON "&Grupy roboczej:", 1004, 17, 161, 191, 10
     EDITTEXT 116, 28, 144, 181, 14, ES_AUTOHSCROLL | WS_GROUP
-    PUSHBUTTON "&Find my domain", 1010, 7, 203, 109, 14, NOT WS_VISIBLE | WS_DISABLED
+    PUSHBUTTON "Wy&szukaj moj¹ domenê", 1010, 7, 203, 109, 14, NOT WS_VISIBLE | WS_DISABLED
     EDITTEXT 1007, 28, 172, 181, 14, ES_UPPERCASE | ES_AUTOHSCROLL | ES_OEMCONVERT
     DEFPUSHBUTTON "OK", 1, 121, 203, 50, 14, WS_GROUP
-    PUSHBUTTON "Cancel", 2, 176, 203, 50, 14
+    PUSHBUTTON "Anuluj", 2, 176, 203, 50, 14
 END
 
 IDD_PROPPAGEDNSANDNETBIOS DIALOGEX 0, 0, 266, 125
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "DNS Suffix and NetBIOS Computer Name"
+CAPTION "Sufiksy DNS i nazwa NetBIOS komputera"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "&Primary DNS suffix of this computer:", -1, 7, 5, 253, 8
+    LTEXT "&Podstawowy sufiks DNS tego komputera:", -1, 7, 5, 253, 8
     EDITTEXT 1011, 7, 17, 252, 14, ES_AUTOHSCROLL
-    AUTOCHECKBOX "&Change primary DNS suffix when domain membership changes", 115, 11, 39, 250, 10
-    LTEXT "&NetBIOS computer name:", -1, 7, 57, 148, 8
+    AUTOCHECKBOX "&Zmieñ podstawowy sufiks DNS przy zmianie cz³onkostwa domeny", 115, 11, 39, 250, 10
+    LTEXT "&Nazwa komputera NetBIOS:", -1, 7, 57, 148, 8
     EDITTEXT 1013, 7, 69, 150, 14, ES_UPPERCASE | ES_AUTOHSCROLL | ES_READONLY
     DEFPUSHBUTTON "OK", 1, 153, 104, 50, 14
-    PUSHBUTTON "Cancel", 2, 209, 104, 50, 14
-    LTEXT "This name is used for interoperability with older computers and services.", 13, 7, 88, 253, 8
+    PUSHBUTTON "Anuluj", 2, 209, 104, 50, 14
+    LTEXT "Nazwa ta jest niezbêdna przy pracy ze starszymi serwerami i us³ugami.", 13, 7, 88, 253, 8
 END
 
 STRINGTABLE
 BEGIN
-    1 "* Unknown *"
-    2 "WORKGROUP"
-    3 "The following error occurred while attempting to read domain membership information:"
-    4 "Computer Name Changes"
-    5 "Workgroup:"
-    6 "Domain:"
-    22 "Welcome to the %1 workgroup."
-    23 "Welcome to the %1 domain."
-    24 "You must restart this computer for the changes to take effect."
-    1021 "Note: Only Administrators can change the identification of this computer."
-    1022 "Note: The identification of the computer cannot be changed because:"
-    3210 "&Details >>"
-    3220 "<< &Details"
+    1 "* Nieznane *"
+    2 "GRUPA ROBOCZA"
+    3 "Podczas odczytywania informacji o cz³onkowstwie w domenie, wyst¹pi³ b³¹d:"
+    4 "Zmiana nazwy komputera"
+    5 "Grupa Robocza:"
+    6 "Domena:"
+    22 "Witamy w grupie roboczej %1."
+    23 "Witamy w domenie %1."
+    24 "Musisz zrestartowaæ komputer aby zmiany odnios³y skutek."
+    1021 "Uwaga: Tylko Administratorzy mog¹ zmieniaæ identyfikator tego komputera."
+    1022 "Uwaga: Identyfikator tego komputera nie zosta³ zmieniony, powód:"
+    3210 "&Szczegó³y >>"
+    3220 "<< &Szczegó³y"
 END
