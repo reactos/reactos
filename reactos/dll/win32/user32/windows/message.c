@@ -1081,12 +1081,11 @@ BOOL
 STDCALL
 InSendMessage(VOID)
 {
-  static DWORD ShowNotImplemented = TRUE;
-  if (ShowNotImplemented)
-    {
-      DbgPrint("InSendMessage is unimplemented\n");
-      ShowNotImplemented = FALSE;
-    }
+  PCLIENTTHREADINFO pcti = ((PW32CLIENTINFO)GetWin32ClientInfo())->pClientThreadInfo;
+
+  if ( pcti )
+    return (pcti->CTI_flags & CTI_INSENDMESSAGE);
+  else
   /* return(NtUserGetThreadState(THREADSTATE_INSENDMESSAGE) != ISMEX_NOSEND); */
   return FALSE;
 }
@@ -1100,8 +1099,11 @@ STDCALL
 InSendMessageEx(
   LPVOID lpReserved)
 {
+  PCLIENTTHREADINFO pcti = ((PW32CLIENTINFO)GetWin32ClientInfo())->pClientThreadInfo;
+
+  if (pcti && !(pcti->CTI_flags & CTI_INSENDMESSAGE)) return ISMEX_NOSEND;
+  else
   /* return NtUserGetThreadState(THREADSTATE_INSENDMESSAGE); */
-  UNIMPLEMENTED;
   return 0;
 }
 
