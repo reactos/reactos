@@ -210,7 +210,6 @@ typedef struct _CALLBACKWND
      PVOID pvWnd;
 } CALLBACKWND, *PCALLBACKWND;
 
-
 typedef struct _W32CLIENTINFO
 {
     ULONG CI_flags;
@@ -225,15 +224,17 @@ typedef struct _W32CLIENTINFO
     ULONG fsHooks;
     HWND  hWND;  // Well be replaced with CALLBACKWND.
     PVOID pvWND; // " "
+    ULONG Win32ClientInfo;
     DWORD dwHookCurrent;
     ULONG Win32ClientInfo1;
     PCLIENTTHREADINFO pClientThreadInfo;
     DWORD dwHookData;
-    ULONG Win32ClientInfo2[8];
-    HANDLE hKL;
+    DWORD dwKeyCache;
+    ULONG Win32ClientInfo2[7];
     USHORT CodePage;
     USHORT csCF;
-    ULONG Win32ClientInfo3[36];
+    HANDLE hKL;
+    ULONG Win32ClientInfo3[35];
 } W32CLIENTINFO, *PW32CLIENTINFO;
 
 #define GetWin32ClientInfo() (PW32CLIENTINFO)(NtCurrentTeb()->Win32ClientInfo)
