@@ -146,7 +146,7 @@ GetSystemInfo (
 			Si->dwProcessorType = PROCESSOR_PPC_620;
 			break;
 		default:
-			Si->dwProcessorType = -1;
+			Si->dwProcessorType = 0;
 		}
 		break;
 
@@ -171,12 +171,12 @@ GetSystemInfo (
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL STDCALL
 IsProcessorFeaturePresent(DWORD ProcessorFeature)
 {
-  if (ProcessorFeature >= PROCESSOR_FEATURE_MAX)
+  if (ProcessorFeature > PROCESSOR_FEATURE_MAX)
     return(FALSE);
 
   return((BOOL)SharedUserData->ProcessorFeatures[ProcessorFeature]);
