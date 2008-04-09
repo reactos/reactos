@@ -194,7 +194,7 @@ namespace Sysreg_
         }
        remove(image.c_str ());
 
-        const char * options[] = {NULL,
+       const char * options[] = {NULL,
                                   "create",
                                   "-f",
 #ifdef __LINUX__
@@ -664,23 +664,31 @@ namespace Sysreg_
 	}
 
 //---------------------------------------------------------------------------------------
-    bool RosBootTest::configureXen()
-    {
+	bool RosBootTest::configureXen()
+	{
 		if (!xenGetCaps())
 		{
 			return false;
 		}
 		
-        cerr << "Xen isn't supported yet." << endl;
+		if (!isFileExisting(m_XenConfig))
+		{
+			cerr << "Xen configuration file missing" << endl;
+			return false;
+		}
 		
-		return false;
-    }
+		m_BootCmd = m_EmuPath + "/xm create " + m_XenConfig;
+        if (!executeBootCmd())
+			return false;
+		
+		return true;
+	}
 //---------------------------------------------------------------------------------------
-    bool RosBootTest::configureVmWare()
-    {
+	bool RosBootTest::configureVmWare()
+	{
         cerr << "VmWare is currently not yet supported" << endl;
         return false;
-    }
+	}
 //---------------------------------------------------------------------------------------
     bool RosBootTest::readConfigurationValues(ConfigParser &conf_parser)
     {
@@ -691,7 +699,7 @@ namespace Sysreg_
             return false;
         }
 
-		if (ROS_EMU_TYPE == "xen")
+		if (m_EmuType == "xen")
 		{
 			if (!conf_parser.getStringValue(RosBootTest::XEN_CONFIG_FILE, m_XenConfig))
 			{
