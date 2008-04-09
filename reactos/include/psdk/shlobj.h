@@ -1530,7 +1530,7 @@ typedef struct tagOPENASINFO {
 	OPEN_AS_INFO_FLAGS oaifInFlags;
 } OPENASINFO;
 
-HRESULT SHOpenWithDialog(
+HRESULT WINAPI SHOpenWithDialog(
   HWND hwndParent,
   const OPENASINFO *poainfo
 );
