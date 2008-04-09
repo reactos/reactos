@@ -43,6 +43,7 @@ namespace Sysreg_
 		static string ROS_EMU_TYPE;
 		static string EMU_TYPE_QEMU;
 		static string EMU_TYPE_VMWARE;
+		static string EMU_TYPE_XEN;
 		static string ROS_EMU_PATH;
 		static string ROS_HDD_IMAGE;
 		static string ROS_CD_IMAGE;
@@ -55,6 +56,7 @@ namespace Sysreg_
 		static string ROS_EMU_KILL;
 		static string ROS_EMU_MEM;
 		static string ROS_BOOT_CMD;
+		static string XEN_CONFIG_FILE;
 
 //---------------------------------------------------------------------------------------
 ///
@@ -107,8 +109,10 @@ namespace Sysreg_
     bool readConfigurationValues(ConfigParser & conf_parser);
     bool configureQemu();
     bool configureVmWare();
+	bool configureXen();
     bool hasQemuNoRebootOption();
     void cleanup();
+	bool xenGetCaps();
 //---------------------------------------------------------------------------------------
 ///
 /// dumpCheckpoints
@@ -155,6 +159,7 @@ protected:
     string m_Src;
     string m_DebugPort;
     string m_PidFile;
+	string m_XenConfig;
 
     DataSource * m_DataSource;
     OsSupport::ProcessID m_Pid;

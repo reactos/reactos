@@ -53,6 +53,7 @@ namespace Sysreg_
 	string RosBootTest::ROS_EMU_TYPE= "ROS_EMU_TYPE";
 	string RosBootTest::EMU_TYPE_QEMU = "qemu";
 	string RosBootTest::EMU_TYPE_VMWARE = "vmware";
+	string RosBootTest::EMU_TYPE_XEN = "xen";
 	string RosBootTest::ROS_HDD_IMAGE= "ROS_HDD_IMAGE";
 	string RosBootTest::ROS_CD_IMAGE = "ROS_CD_IMAGE";
 	string RosBootTest::ROS_MAX_TIME = "ROS_MAX_TIME";
@@ -64,6 +65,7 @@ namespace Sysreg_
 	string RosBootTest::ROS_EMU_KILL = "ROS_EMU_KILL";
 	string RosBootTest::ROS_EMU_MEM = "ROS_EMU_MEM";
 	string RosBootTest::ROS_BOOT_CMD = "ROS_BOOT_CMD";
+	string RosBootTest::XEN_CONFIG_FILE = "XEN_CONFIG_FILE";
 
 #ifdef __LINUX__
     string RosBootTest::ROS_EMU_PATH = "ROS_EMU_PATH_LIN";
@@ -621,13 +623,58 @@ namespace Sysreg_
         m_DataSource = new NamedPipeReader();
         if (!executeBootCmd())
         {
+
             cerr << "Error: failed to launch emulator with: " << m_BootCmd << endl;
             return false;
         }
 
         return true;
     }
+	
+//---------------------------------------------------------------------------------------
+	bool RosBootTest::xenGetCaps()
+	{
+		FILE *fp;
+		int ch, i;
+		char buffer[2048];
 
+		fp = popen("xm info", "r");
+		if (!fp)
+		{
+			cerr << "Error getting Xen caps." << endl;
+			return false;
+		}
+		for (i=0;(i<2049)&&(feof(fp) == 0 && ((ch = fgetc(fp)) != -1)); i++)
+		{
+			buffer[i] = (char) ch;
+		}
+		buffer[i] = '\0';
+		pclose(fp);
+
+		if (strstr(buffer, "hvm") == 0)
+		{
+			cerr << "No hvm support detected!" << endl;
+			return false;
+		}
+		else
+		{
+			return true;
+		}
+
+	}
+
+//---------------------------------------------------------------------------------------
+    bool RosBootTest::configureXen()
+    {
+		if (!xenGetCaps())
+		{
+			return false;
+		}
+		
+        cerr << "Xen isn't supported yet." << endl;
+		
+		return false;
+    }
 //---------------------------------------------------------------------------------------
     bool RosBootTest::configureVmWare()
     {
@@ -637,17 +684,25 @@ namespace Sysreg_
 //---------------------------------------------------------------------------------------
     bool RosBootTest::readConfigurationValues(ConfigParser &conf_parser)
     {
-#if 0
+
         if (!conf_parser.getStringValue(RosBootTest::ROS_EMU_TYPE, m_EmuType))
         {
             cerr << "Error: ROS_EMU_TYPE is not set" << endl;
             return false;
         }
-#endif
+
+		if (ROS_EMU_TYPE == "xen")
+		{
+			if (!conf_parser.getStringValue(RosBootTest::XEN_CONFIG_FILE, m_XenConfig))
+			{
+				cerr << "Error: XEN_CONFIG_FILE is not set" << endl;
+				return false;
+			}
+		}
 
         if (!conf_parser.getStringValue(RosBootTest::ROS_EMU_PATH, m_EmuPath))
         {
-            cerr << "Error: ROS_EMU_PATH is not set" << endl;
+            cerr << "Error: ROS_EMU_PATH_[LIN/WIN] is not set" << endl;
             return false;
         }
         if (!m_HDDImage.length())
@@ -702,7 +757,7 @@ namespace Sysreg_
         {
             return false;
         }
-#if 0
+
         if (m_EmuType == EMU_TYPE_QEMU)
         {
             if (!configureQemu())
@@ -719,6 +774,14 @@ namespace Sysreg_
                 return false;
             }
         }
+        else if (m_EmuType == EMU_TYPE_XEN)
+        {
+            if (!configureXen())
+            {
+                cerr << "Error: failed to configure xen" << endl;
+                return false;
+            }
+        }
         else
         {
             ///
@@ -727,13 +790,6 @@ namespace Sysreg_
             cerr << "Error: ROS_EMU_TYPE value is not supported:" << m_EmuType << "=" << EMU_TYPE_QEMU << endl;
             return false;
         }
-#else
-        if (!configureQemu())
-        {
-            cerr << "Error: failed to configure qemu" << endl;
-            return false;
-        }
-#endif
 
         if (m_DelayRead)
         {
