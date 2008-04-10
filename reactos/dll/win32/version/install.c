@@ -367,7 +367,8 @@ DWORD WINAPI VerInstallFileA(
     LPCSTR pdest;
     char	destfn[260],tmpfn[260],srcfn[260];
     HFILE	hfsrc,hfdst;
-    DWORD	attr,ret,xret,tmplast;
+    DWORD	attr,xret,tmplast;
+    LONG	ret;
     LPBYTE	buf1,buf2;
     OFSTRUCT	ofs;
 
@@ -419,30 +420,31 @@ DWORD WINAPI VerInstallFileA(
 	}
 	ret = LZCopy(hfsrc,hfdst);
 	_lclose(hfdst);
-	if (((LONG)ret) < 0) {
+	if (ret < 0) {
 	    /* translate LZ errors into VIF_xxx */
 	    switch (ret) {
 	    case LZERROR_BADINHANDLE:
 	    case LZERROR_READ:
 	    case LZERROR_BADVALUE:
 	    case LZERROR_UNKNOWNALG:
-		ret = VIF_CANNOTREADSRC;
+		xret = VIF_CANNOTREADSRC;
 		break;
 	    case LZERROR_BADOUTHANDLE:
 	    case LZERROR_WRITE:
-		ret = VIF_OUTOFSPACE;
+		xret = VIF_OUTOFSPACE;
 		break;
 	    case LZERROR_GLOBALLOC:
 	    case LZERROR_GLOBLOCK:
-		ret = VIF_OUTOFMEMORY;
+		xret = VIF_OUTOFMEMORY;
 		break;
 	    default: /* unknown error, should not happen */
-		ret = 0;
+		FIXME("Unknown LZCopy error %d, ignoring.\n", ret);
+		xret = 0;
 		break;
 	    }
-	    if (ret) {
+	    if (xret) {
 		LZClose(hfsrc);
-		return ret;
+		return xret;
 	    }
 	}
     }

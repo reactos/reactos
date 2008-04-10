@@ -10,7 +10,7 @@ Index: info.c
  #include "wine/winuser16.h"
  #include "wine/unicode.h"
  #include "winerror.h"
-@@ -302,6 +303,7 @@
+@@ -303,6 +304,7 @@
      return len;
  }
  
@@ -18,7 +18,7 @@ Index: info.c
  /***********************************************************************
   *           VERSION_GetFileVersionInfo_16             [internal]
   *
-@@ -435,6 +438,7 @@
+@@ -439,6 +442,7 @@
  
      return len;
  }
@@ -26,7 +26,7 @@ Index: info.c
  
  /***********************************************************************
   *           GetFileVersionInfoSizeW         [VERSION.@]
-@@ -468,6 +471,10 @@
+@@ -472,6 +475,10 @@
  
      if (!len)
      {
@@ -37,7 +37,7 @@ Index: info.c
          LPSTR filenameA;
  
          len = WideCharToMultiByte( CP_ACP, 0, filename, -1, NULL, 0, NULL, NULL );
-@@ -499,6 +506,7 @@
+@@ -503,6 +510,7 @@
           * doesn't seem to be a problem (len is bigger than info->wLength).
           */
           len = (len - sizeof(VS_FIXEDFILEINFO)) * 4;
@@ -45,7 +45,7 @@ Index: info.c
      }
      else
      {
-@@ -563,6 +571,10 @@
+@@ -567,6 +575,10 @@
  
      if (!len)
      {
@@ -56,7 +56,7 @@ Index: info.c
          LPSTR filenameA;
  
          len = WideCharToMultiByte( CP_ACP, 0, filename, -1, NULL, 0, NULL, NULL );
-@@ -578,6 +590,7 @@
+@@ -582,6 +594,7 @@
              return FALSE;
          }
          /* We have a 16bit resource. */
