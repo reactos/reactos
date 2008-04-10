@@ -347,7 +347,7 @@ BEGIN
 	LTEXT "Elija el programa que desea usar para abrir el siguiente archivo:", -1, 44, 12, 211, 10
 	LTEXT "Archivo:    ", 14001, 44, 25, 188, 10
 	GROUPBOX "&Programas", -1, 7, 42, 249, 187
-	CONTROL "", 14002, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_NOCOLUMNHEADER | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 16, 57, 230, 130
+        LISTBOX 14002, 16 ,57, 230, 130, LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP, WS_EX_STATICEDGE
 	AUTOCHECKBOX "Utilizar &siempre el programa seleccionado para abrir este tipo de archivos", 14003, 20, 193, 225, 10
 	PUSHBUTTON "&Examinar...", 14004, 198, 207, 50, 14
 	PUSHBUTTON "Aceptar", 14005, 150, 236, 50, 14
@@ -662,6 +662,6 @@ BEGIN
 	IDS_RECYCLEBIN_LOCATION     "Ubicación de la Papelera de reciclaje"
 	IDS_RECYCLEBIN_DISKSPACE    "Espacio disponible"
 	IDS_PICK_ICON_TITLE         "Seleccione un icono"
-        IDS_PICK_ICON_FILTER        "Archivos de iconos(*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0"
-
+	IDS_PICK_ICON_FILTER        "Archivos de iconos(*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0"
+	IDS_OPEN_WITH_FILTER        "Executable Files\0*.exe\0"
 END

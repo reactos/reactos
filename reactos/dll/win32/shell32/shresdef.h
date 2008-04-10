@@ -115,6 +115,7 @@
 #define IDS_NO_EXTENSION            152
 #define IDS_RECYCLEBIN_LOCATION     153
 #define IDS_RECYCLEBIN_DISKSPACE    154
+#define IDS_OPEN_WITH_FILTER        155
 
 /* Note: this string is referenced from the registry */
 #define IDS_RECYCLEBIN_FOLDER_NAME   8964

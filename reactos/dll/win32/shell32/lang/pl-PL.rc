@@ -351,7 +351,7 @@ BEGIN
 	LTEXT "Wybierz program, którego chcesz u¿yæ do otwarcia tego pliku:", -1, 44, 12, 211, 10
 	LTEXT "Plik:    ", 14001, 44, 25, 188, 10
 	GROUPBOX "&Programs", -1, 7, 42, 249, 187
-	CONTROL "", 14002, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_NOCOLUMNHEADER | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 16, 57, 230, 130
+        LISTBOX 14002, 16 ,57, 230, 130, LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP, WS_EX_STATICEDGE
 	AUTOCHECKBOX "&Zawsze u¿ywaj danego programu do otwierania tego typu plików", 14003, 20, 193, 225, 10
 	PUSHBUTTON "&Przegl¹daj", 14004, 198, 207, 50, 14
 	PUSHBUTTON "OK", 14005, 150, 236, 50, 14
@@ -666,6 +666,6 @@ BEGIN
 	IDS_RECYCLEBIN_LOCATION     "Lokalizacja Kosza"
 	IDS_RECYCLEBIN_DISKSPACE    "Pozosta³o wolnego miejsca"
 	IDS_PICK_ICON_TITLE         "Choose Icon"
-        IDS_PICK_ICON_FILTER        "Icon Files(*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0"
-
+	IDS_PICK_ICON_FILTER        "Icon Files(*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0"
+	IDS_OPEN_WITH_FILTER        "Executable Files\0*.exe\0"
 END
