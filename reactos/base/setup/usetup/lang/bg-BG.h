@@ -318,7 +318,7 @@ static MUI_ENTRY bgBGLicensePageEntries[] =
     {
         8,
         24,
-        "This is free software; see the source for copying conditions.",
+        "Това е свободен софтуер; вижте изходния код за условията на възпроизвеждане.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1598,7 +1598,7 @@ MUI_STRING bgBGStrings[] =
     {STRING_NONFORMATTEDPART,
     "Избрали сте да сложите РеактОС на нов или неразпределен дял."},
     {STRING_INSTALLONPART,
-    "Setup install ReactOS onto Partition"},
+    "Слагане на РеактОС върху дял"},
     {STRING_CHECKINGPART,
     "Тече проверка на избрания дял."},
     {STRING_QUITCONTINUE,

@@ -98,7 +98,7 @@ BEGIN
  CONTROL "",IDC_DNS1,"SysIPAddress32",WS_TABSTOP,150,171-2,80,12
  LTEXT "Заместващ DNS сървър:", -1, 14, 186, 135, 8
  CONTROL "",IDC_DNS2,"SysIPAddress32",WS_TABSTOP,150,186-2,80,12
- PUSHBUTTON "&Advanced", IDC_ADVANCED, 186, 209, 50, 14, WS_DISABLED | WS_TABSTOP
+ PUSHBUTTON "Раз&ширени", IDC_ADVANCED, 186, 209, 50, 14, WS_DISABLED | WS_TABSTOP
 END
 
 STRINGTABLE
@@ -119,16 +119,16 @@ BEGIN
   IDS_ENTER_VALID_IPADDRESS "Трябва да въведете правилен IP адрес"
   IDS_ENTER_VALID_SUBNET "Трябва да въведете правилна мрежова маска"
   IDS_CANNOT_LOAD_CONFIG "Зареждането на текущите настроечни данни е невъзможно"
-  IDS_CANNOT_CREATE_PROPSHEET "Unable to create property sheet"
+  IDS_CANNOT_CREATE_PROPSHEET "Неуспешно създаване на списък със свойства"
   IDS_OUT_OF_MEMORY "Недостиг на памет"
   IDS_CANNOT_SAVE_CHANGES "Съхраняването на направените от вас настройки е невъзможно"
-  IDS_STATUS_NON_OPERATIONAL "Non-operational"
-  IDS_STATUS_UNREACHABLE "No WAN adapter found"
-  IDS_STATUS_DISCONNECTED "Disconnected"
-  IDS_STATUS_CONNECTING "Connecting"
-  IDS_STATUS_CONNECTED "Connected"
-  IDS_STATUS_OPERATIONAL "Connected"
-  IDS_SPEED_MBPS "%d Mbps"
-  IDS_DURATION_DAY "%d day %s"
-  IDS_DURATION_DAYS "%d days %s"
+  IDS_STATUS_NON_OPERATIONAL "Не работи"
+  IDS_STATUS_UNREACHABLE "Не е открито WAN устройство"
+  IDS_STATUS_DISCONNECTED "Разкачен"
+  IDS_STATUS_CONNECTING "Свързване"
+  IDS_STATUS_CONNECTED "Свързан"
+  IDS_STATUS_OPERATIONAL "Свързан"
+  IDS_SPEED_MBPS "%d Мб/с"
+  IDS_DURATION_DAY "%d ден %s"
+  IDS_DURATION_DAYS "%d дни %s"
 END

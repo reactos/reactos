@@ -11,7 +11,7 @@ END
 
 IDM_WINEMINE MENU DISCARDABLE
 BEGIN
-	POPUP "&Game"
+	POPUP "&Игра"
         BEGIN
 		MENUITEM "&Нова\tF2",                       IDM_NEW
 		MENUITEM SEPARATOR

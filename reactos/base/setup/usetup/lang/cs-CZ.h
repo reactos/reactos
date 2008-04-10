@@ -1,7 +1,7 @@
 /* FILE:        setup/usetup/lang/cs-CZ.rc
- * PURPOSE:     Czech Language File
  * TRANSLATOR:  Radek Liska aka Black_Fox (radekliska at gmail dot com)
- * UPDATED:     2008-02-26
+ * THANKS TO:   preston
+ * UPDATED:     2008-04-09
  */
 
 #ifndef LANG_CS_CZ_H__
@@ -42,8 +42,8 @@ static MUI_ENTRY csCZLanguagePageEntries[] =
     {
         0,
         0,
-        "   ENTER = Pokraüovat  F3 = Ukonüit",
-        TEXT_TYPE_STATUS
+        "ENTER = Pokraüovat  F3 = Ukonüit",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -82,31 +82,31 @@ static MUI_ENTRY csCZWelcomePageEntries[] =
     {
         8,
         15,
-        "\x07  Stisknÿte ENTER pro instalaci ReactOS.",
+        "\x07  Stisknut°m kl†vesy ENTER zah†j°te instalaci ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
-        "\x07  Stisknÿte R pro opravu ReactOS.",
+        "\x07  Stisknut°m R zah†j°te opravu ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         19,
-        "\x07  Stisknÿte L pro prohlÇdnut° Licenün°ch podm°nek ReactOS",
+        "\x07  Stiskut°m L zobraz°te Licenün° podm°nky ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
-        "\x07  Stisktnÿte F3 pro ukonüen° bez instalace ReactOS.",
+        "\x07  Stisknut°m F3 ukonü°te instalaci ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         23,
-        "Pro v°ce informac° o ReactOS navÁtivte:",
+        "V°ce informac° o ReactOS naleznete na adrese:",
         TEXT_STYLE_NORMAL
     },
     {
@@ -118,8 +118,8 @@ static MUI_ENTRY csCZWelcomePageEntries[] =
     {
         0,
         0,
-        "   ENTER = Pokraüovat  R = Opravit F3 = Ukonüit",
-        TEXT_TYPE_STATUS
+        "ENTER = Pokraüovat  R = Opravit F3 = Ukonüit",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -200,20 +200,20 @@ static MUI_ENTRY csCZIntroPageEntries[] =
     {
         8,
         23,
-        "\x07  Stisknÿte ENTER pro instalaci ReactOS.",
+        "\x07  Stisknut°m kl†vesy ENTER zah†j°te instalaci ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         25,
-        "\x07  Stisknÿte F3 pro ukonüen° bez instalace ReactOS.",
+        "\x07  Stisknut°m F3 ukonü°te instalaci ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "   ENTER = Pokraüovat   F3 = Ukonüit",
-        TEXT_TYPE_STATUS
+        "ENTER = Pokraüovat   F3 = Ukonüit",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -336,8 +336,8 @@ static MUI_ENTRY csCZLicensePageEntries[] =
     {
         0,
         0,
-        "   ENTER = Zpÿt",
-        TEXT_TYPE_STATUS
+        "ENTER = Zpÿt",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -362,34 +362,34 @@ static MUI_ENTRY csCZDevicePageEntries[] =
         TEXT_STYLE_NORMAL
     },
     {
-        8,
+        24,
         11,
-        "         Poü°taü:",
-        TEXT_STYLE_NORMAL
+        "Poü°taü:",
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT
     },
     {
-        8,
+        24,
         12,
-        "       Obrazovka:",
-        TEXT_STYLE_NORMAL,
+        "Obrazovka:",
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT
     },
     {
-        8,
+        24,
         13,
-        "      Kl†vesnice:",
-        TEXT_STYLE_NORMAL
+        "Kl†vesnice:",
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT
     },
     {
-        8,
+        24,
         14,
-        "Rozvrßen° kl†ves:",
-        TEXT_STYLE_NORMAL
+        "Rozloßen° kl†ves:",
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT
     },
     {
-        8,
+        24,
         16,
-        "        P˝ijmout:",
-        TEXT_STYLE_NORMAL
+        "P˝ijmout:",
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT
     },
     {
         25,
@@ -429,8 +429,8 @@ static MUI_ENTRY csCZDevicePageEntries[] =
     {
         0,
         0,
-        "   ENTER = Pokraüovat   F3 = Ukonüit",
-        TEXT_TYPE_STATUS
+        "ENTER = Pokraüovat   F3 = Ukonüit",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -469,32 +469,32 @@ static MUI_ENTRY csCZRepairPageEntries[] =
     {
         8,
         15,
-        "\x07  Stisknÿte U pro Update systÇmu.",
+        "\x07  Stisknut°m U zah†j°te Update systÇmu.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
-        "\x07  Stisknÿte R pro Konzoli obnoven°.",
+        "\x07  Stisknut°m R spust°te Konzoli obnoven°.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         19,
-        "\x07  Stisknÿte ESC pro n†vrat na hlavn° str†nku.",
+        "\x07  Stisknut°m ESC se vr†t°te na hlavn° str†nku.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
-        "\x07  Stisknÿte ENTER pro restartov†n° poü°taüe.",
+        "\x07  Stisknut°m kl†vesy ENTER restartujete poü°taü.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "   ESC = Hlavn° str†nka  ENTER = Restartovat",
-        TEXT_TYPE_STATUS
+        "ESC = Hlavn° str†nka  ENTER = Restartovat",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -514,7 +514,7 @@ static MUI_ENTRY csCZComputerPageEntries[] =
     {
         6,
         8,
-        "Chcete zmÿnit typ poü°taüe k nainstalov†n°.",
+        "Chcete zmÿnit typ poü°taüe, kterÏ bude nainstalov†n.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -532,7 +532,7 @@ static MUI_ENTRY csCZComputerPageEntries[] =
     {
         8,
         13,
-        "\x07  Stisknÿte ESC pro n†vrat na p˝edchoz° str†nku bez zmÿny typu",
+        "\x07  Stisknut°m ESC se vr†t°te na p˝edchoz° str†nku bez zmÿny typu",
         TEXT_STYLE_NORMAL
     },
     {
@@ -544,8 +544,8 @@ static MUI_ENTRY csCZComputerPageEntries[] =
     {
         0,
         0,
-        "   ENTER = Pokraüovat   ESC = ZruÁit   F3 = Ukonüit",
-        TEXT_TYPE_STATUS
+        "ENTER = Pokraüovat   ESC = ZruÁit   F3 = Ukonüit",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -572,20 +572,20 @@ static MUI_ENTRY csCZFlushPageEntries[] =
     {
         10,
         8,
-        "Toto mÖße trvat nÿkolik minut",
+        "Toto mÖße trvat nÿkolik minut.",
         TEXT_STYLE_NORMAL
     },
     {
         10,
         9,
-        "Po dokonüen° bude poü°taü automaticky zrestartov†n",
+        "Po dokonüen° bude poü°taü automaticky zrestartov†n.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "   UvolÂuji cache",
-        TEXT_TYPE_STATUS
+        "UvolÂuji cache",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -624,14 +624,14 @@ static MUI_ENTRY csCZQuitPageEntries[] =
     {
         10,
         11,
-        "Stisknÿte ENTER pro restart poü°taüe.",
+        "Stisknut°m kl†vesy ENTER restartujete poü°taü.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "   Pros°m üekejte...",
-        TEXT_TYPE_STATUS,
+        "   ¨ekejte, pros°m...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
     },
     {
         0,
@@ -652,7 +652,7 @@ static MUI_ENTRY csCZDisplayPageEntries[] =
     {
         6,
         8,
-        "Chcete zmÿnit typ obrazovky k nainstalov†n°.",
+        "Chcete zmÿnit typ obrazovky, kter† bude nainstalov†na.",
         TEXT_STYLE_NORMAL
     },
     {   8,
@@ -669,7 +669,7 @@ static MUI_ENTRY csCZDisplayPageEntries[] =
     {
         8,
         13,
-        "\x07  Stisknÿte ESC pro n†vrat na p˝edchoz° str†nku bez zmÿny typu",
+        "\x07  Stisknut°m ESC se vr†t°te na p˝edchoz° str†nku bez zmÿny typu",
         TEXT_STYLE_NORMAL
     },
     {
@@ -681,8 +681,8 @@ static MUI_ENTRY csCZDisplayPageEntries[] =
     {
         0,
         0,
-        "   ENTER = Pokraüovat   ESC = ZruÁit   F3 = Ukonüit",
-        TEXT_TYPE_STATUS
+        "ENTER = Pokraüovat   ESC = ZruÁit   F3 = Ukonüit",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -721,14 +721,14 @@ static MUI_ENTRY csCZSuccessPageEntries[] =
     {
         10,
         11,
-        "Stisknÿte ENTER pro restart poü°taüe.",
+        "Stisknut°m kl†vesy ENTER restartujete poü°taü.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "   ENTER = Restartovat poü°taü",
-        TEXT_TYPE_STATUS
+        "ENTER = Restartovat poü°taü",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -773,8 +773,8 @@ static MUI_ENTRY csCZBootPageEntries[] =
     {
         0,
         0,
-        "   ENTER = Pokraüovat   F3 = Ukonüit",
-        TEXT_TYPE_STATUS
+        "ENTER = Pokraüovat   F3 = Ukonüit",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -796,7 +796,7 @@ static MUI_ENTRY csCZSelectPartitionEntries[] =
     {
         6,
         8,
-        "N†sleduj°c° seznam zobrazuje existuj°c° odd°ly a nevyußitÇ",
+        "Na n†sleduj°c°m seznamu jsou existuj°c° odd°ly a nevyußitÇ",
         TEXT_STYLE_NORMAL
     },
     {
@@ -808,32 +808,32 @@ static MUI_ENTRY csCZSelectPartitionEntries[] =
     {
         8,
         11,
-        "\x07  Vyberte poloßku seznam pomoc° Áipek nahoru a dolÖ.",
+        "\x07  Vyberte poloßku v seznamu pomoc° Áipek nahoru a dolÖ.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "\x07  Stisknÿte ENTER pro nainstalov†n° ReactOS na zvolenÏ odd°l.",
+        "\x07  Stisknut°m kl†vesy ENTER nainstalujete ReactOS na zvolenÏ odd°l.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         15,
-        "\x07  Stisknÿte C pro vytvo˝en° novÇho odd°lu.",
+        "\x07  Stisknut°m C umoßn°te vytvo˝en° novÇho odd°lu.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
-        "\x07  Stisknÿte D pro smaz†n° existuj°c°ho odd°lu.",
+        "\x07  Stisknut°m D umoßn°te smaz†n° existuj°c°ho odd°lu.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "   Pros°m üekejte...",
-        TEXT_TYPE_STATUS
+        "Cekejte, prosim...", //MUSI ZUSTAT BEZ DIAKRITIKY!
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -854,20 +854,20 @@ static MUI_ENTRY csCZFormatPartitionEntries[] =
     {
         6,
         8,
-        "Form†t odd°lu",
+        "Form†tov†n° odd°lu",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         10,
-        "Instalace nyn° zform†tuje tento odd°l. Stisknÿte ENTER pro pokraüov†n°.",
+        "Tento odd°l bude nyn° zform†tov†n. Stisknut°m kl†vesy ENTER zaünete.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "   ENTER = Pokraüovat   F3 = Ukonüit",
-        TEXT_TYPE_STATUS
+        "ENTER = Pokraüovat   F3 = Ukonüit",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -900,13 +900,13 @@ static MUI_ENTRY csCZInstallDirectoryEntries[] =
     {
         6,
         14,
-        "Chcete-li zmÿnit navrhnutÏ adres†˝, stisknÿte BACKSPACE pro",
+        "Chcete-li zmÿnit navrhnutÏ adres†˝, stisknut°m kl†vesy BACKSPACE",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         15,
-        "vymaz†n° znakÖ a potÇ zapiÁte cestu, do kterÇ chcete ReactOS",
+        "vymaßte text cesty a potÇ zapiÁte cestu, do kterÇ chcete ReactOS",
         TEXT_STYLE_NORMAL
     },
     {
@@ -918,8 +918,8 @@ static MUI_ENTRY csCZInstallDirectoryEntries[] =
     {
         0,
         0,
-        "   ENTER = Pokraüovat   F3 = Ukonüit",
-        TEXT_TYPE_STATUS
+        "ENTER = Pokraüovat   F3 = Ukonüit",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -938,27 +938,27 @@ static MUI_ENTRY csCZFileCopyEntries[] =
         TEXT_STYLE_UNDERLINE
     },
     {
-        11,
+        0,
         12,
-        "Pros°m üekejte, instalace nyn° kop°ruje soubory do zvolenÇho",
-        TEXT_STYLE_NORMAL
+        "¨ekejte, pros°m, instalace nyn° kop°ruje soubory do zvolenÇho adres†˝e.",
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
     },
     {
-        30,
+        0,
         13,
-        "adres†˝e.",
-        TEXT_STYLE_NORMAL
+        " ",
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
     },
     {
-        20,
+        0,
         14,
         "Toto mÖße trvat nÿkolik minut.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
     },
     {
+        49,
         0,
-        0,
-        "                                                           \xB3 Pros°m üekejte...    ",
+        "\xB3 ¨ekejte, pros°m...    ",
         TEXT_TYPE_STATUS
     },
     {
@@ -980,7 +980,7 @@ static MUI_ENTRY csCZBootLoaderEntries[] =
     {
         6,
         8,
-        "Instalace nyn° nainstaluje zavadÿü",
+        "Instalace nyn° nainstaluje zavadÿü.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1004,8 +1004,8 @@ static MUI_ENTRY csCZBootLoaderEntries[] =
     {
         0,
         0,
-        "   ENTER = Pokraüovat   F3 = Ukonüit",
-        TEXT_TYPE_STATUS
+        "ENTER = Pokraüovat   F3 = Ukonüit",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -1026,7 +1026,7 @@ static MUI_ENTRY csCZKeyboardSettingsEntries[] =
     {
         6,
         8,
-        "Chcete zmÿnit typ kl†vesnice k nainstalov†n°.",
+        "Chcete zmÿnit typ kl†vesnice, kter† bude nainstalov†na.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1044,7 +1044,7 @@ static MUI_ENTRY csCZKeyboardSettingsEntries[] =
     {
         8,
         13,
-        "\x07  Stisknÿte ESC pro n†vrat na p˝edchoz° str†nku bez zmÿny typu",
+        "\x07  Stisknut°m ESC se vr†t°te na p˝edchoz° str†nku bez zmÿny typu",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1056,8 +1056,8 @@ static MUI_ENTRY csCZKeyboardSettingsEntries[] =
     {
         0,
         0,
-        "   ENTER = Pokraüovat   ESC = ZruÁit   F3 = Ukonüit",
-        TEXT_TYPE_STATUS
+        "ENTER = Pokraüovat   ESC = ZruÁit   F3 = Ukonüit",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -1078,7 +1078,7 @@ static MUI_ENTRY csCZLayoutSettingsEntries[] =
     {
         6,
         8,
-        "Chcete zmÿnit rozloßen° kl†ves k nainstalov†n°.",
+        "Chcete zmÿnit rozloßen° kl†ves, kterÇ bude nainstalov†no.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1096,7 +1096,7 @@ static MUI_ENTRY csCZLayoutSettingsEntries[] =
     {
         8,
         13,
-        "\x07  Stisknÿte ESC pro n†vrat na p˝edchoz° str†nku bez zmÿny rozloßen°",
+        "\x07  Stisknut°m ESC se vr†t°te na p˝edchoz° str†nku bez zmÿny rozloßen°",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1108,8 +1108,8 @@ static MUI_ENTRY csCZLayoutSettingsEntries[] =
     {
         0,
         0,
-        "   ENTER = Pokraüovat   ESC = ZruÁit   F3 = Ukonüit",
-        TEXT_TYPE_STATUS
+        "ENTER = Pokraüovat   ESC = ZruÁit   F3 = Ukonüit",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -1131,14 +1131,14 @@ static MUI_ENTRY csCZPrepareCopyEntries[] =
     {
         6,
         8,
-        "Instalace p˝iprav° poü°taü na kop°rov†n° souborÖ ReactOS. ",
+        "Instalace p˝iprav° poü°taü na kop°rov†n° souborÖ ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "   Sestavuji seznam souborÖ ke zkop°rov†n°...",
-        TEXT_TYPE_STATUS
+        "Sestavuji seznam souborÖ ke zkop°rov†n°...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -1166,26 +1166,26 @@ static MUI_ENTRY csCZSelectFSEntries[] =
     {
         8,
         19,
-        "\x07  Zvolte souborovÏ systÇm Áipkami nahoru a dolÖ.",
+        "\x07  SouborovÏ systÇm zvol°te Áipkami nahoru a dolÖ.",
         0
     },
     {
         8,
         21,
-        "\x07  Stisknÿte ENTER pro zform†tov†n° odd°lu.",
+        "\x07  Stisknut°m kl†vesy ENTER zform†tujete odd°l.",
         0
     },
     {
         8,
         23,
-        "\x07  Stisknÿte ESC pro vybr†n° jinÇho odd°lu.",
+        "\x07  Stisknut°m ESC se vr†t°te na vÏbÿr odd°lu.",
         0
     },
     {
         0,
         0,
-        "   ENTER = Pokraüovat   ESC = ZruÁit   F3 = Ukonüit",
-        TEXT_TYPE_STATUS
+        "ENTER = Pokraüovat   ESC = ZruÁit   F3 = Ukonüit",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
 
     {
@@ -1213,7 +1213,7 @@ static MUI_ENTRY csCZDeletePartitionEntries[] =
     {
         8,
         18,
-        "\x07  Stisknÿte D pro odstranÿn° odd°lu.",
+        "\x07  Stisknut°m D odstran°te odd°l.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1225,14 +1225,14 @@ static MUI_ENTRY csCZDeletePartitionEntries[] =
     {
         8,
         21,
-        "\x07  Stisknÿte ESC pro zruÁen° akce.",
+        "\x07  Stisknut°m ESC zruÁ°te akci.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "   D = Odstranit odd°l   ESC = ZruÁit   F3 = Ukonüit",
-        TEXT_TYPE_STATUS
+        "D = Odstranit odd°l   ESC = ZruÁit   F3 = Ukonüit",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -1253,14 +1253,14 @@ static MUI_ENTRY csCZRegistryEntries[] =
     {
         6,
         8,
-        "Instalace aktualizuje nastaven° systÇmu. ",
+        "Instalace aktualizuje nastaven° systÇmu.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "   Vytv†˝°m registry...",
-        TEXT_TYPE_STATUS
+        "Vytv†˝°m registry...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -1279,8 +1279,8 @@ MUI_ERROR csCZErrorEntries[] =
         "Pokud nyn° instalaci ukonü°te, budete ji muset pro\n"
         "nainstalov†n° ReactOS spustit znovu.\n"
         "\n"
-        "  \x07  Stisknÿte ENTER pro pokraüov†n° instalace.\n"
-        "  \x07  Stisknÿte F3 pro ukonüen° instalace.",
+        "  \x07  Stisknut°m kl†vesy ENTER budete pokraüovat v instalaci.\n"
+        "  \x07  Stisknut°m F3 ukonü°te instalaci.",
         "F3 = Ukonüit  ENTER = Pokraüovat"
     },
     {
@@ -1345,8 +1345,8 @@ MUI_ERROR csCZErrorEntries[] =
           "\n"
           "Vytv†˝en° nebo odstraÂov†n° odd°lÖ mÖße tuto tabulku odd°lÖ zniüit.\n"
           "\n"
-          "  \x07  Stisknÿte F3 pro ukonüen° instalace."
-          "  \x07  Stisknÿte ENTER pro pokraüov†n°.",
+          "  \x07  Stisknut°m F3 ukonü°te instalaci."
+          "  \x07  Stisknut°m ENTER budete pokraüovat v instalaci.",
           "F3= Ukonüit  ENTER = Pokraüovat"
     },
     {
@@ -1577,7 +1577,7 @@ MUI_PAGE csCZPages[] =
 MUI_STRING csCZStrings[] =
 {
     {STRING_PLEASEWAIT,
-     "   Pros°m üekejte..."},
+     "   ¨ekejte, pros°m..."},
     {STRING_INSTALLCREATEPARTITION,
      "   ENTER = Instalovat   C = Vytvo˝it odd°l    F3 = Ukonüit"},
     {STRING_INSTALLDELETEPARTITION,
@@ -1637,15 +1637,55 @@ MUI_STRING csCZStrings[] =
     {STRING_CONSOLEFAIL3,
     "USB kl†vesnice zat°m nejsou plnÿ podporov†ny\n"},
     {STRING_FORMATTINGDISK,
-    "Setup form†tuje disk"},
+    "Instalace form†tuje disk"},
     {STRING_CHECKINGDISK,
-    "Setup kontroluje disk"},
+    "Instalace kontroluje disk"},
     {STRING_FORMATDISK1,
-    " Zform†tovat odd°l na souborovÏ systÇm %S (rychlÇ form†tov†n°) "},
+    " Zform†tovat odd°l na souborovÏ systÇm %S (rychle) "},
     {STRING_FORMATDISK2,
     " Zform†tovat odd°l na souborovÏ systÇm %S "},
     {STRING_KEEPFORMAT,
     " Ponechat souüasnÏ souborovÏ systÇm (bez zmÿny) "},
+    {STRING_HDINFOPARTCREATE,
+    "%I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) na %wZ."},
+    {STRING_HDDINFOUNK1,
+    "%I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu)."},
+    {STRING_HDDINFOUNK2,
+    "   %c%c  Type %lu    %I64u %s"},
+    {STRING_HDINFOPARTDELETE,
+    "na %I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) na %wZ."},
+    {STRING_HDDINFOUNK3,
+    "na %I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu)."},
+    {STRING_HDINFOPARTZEROED,
+    "Harddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ)."},
+    {STRING_HDDINFOUNK4,
+    "%c%c  Typ %lu    %I64u %s"},
+    {STRING_HDINFOPARTEXISTS,
+    "na harddisku %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ)."},
+    {STRING_HDDINFOUNK5,
+    "%c%c  Typ %-3u                        %6lu %s"},
+    {STRING_HDINFOPARTSELECT,
+    "%6lu %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) na %S"},
+    {STRING_HDDINFOUNK6,
+    "%6lu %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu)"},
+    {STRING_NEWPARTITION,
+    "Instalace vytvo˝ila novÏ odd°l na"},
+    {STRING_UNPSPACE,
+    "    M°sto bez odd°lÖ                 %6lu %s"},
+    {STRING_MAXSIZE,
+    "MB (max. %lu MB)"},
+    {STRING_UNFORMATTED,
+    "NovÏ (Nenaform†tovanÏ)"},
+    {STRING_FORMATUNUSED,
+    "NepoußitÏ"},
+    {STRING_FORMATUNKNOWN,
+    "Nezn†mÏ"},
+    {STRING_KB,
+    "KB"},
+    {STRING_MB,
+    "MB"},
+    {STRING_GB,
+    "GB"},
     {0, 0}
 };
 

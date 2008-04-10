@@ -33,6 +33,7 @@
 #include <debug.h>
 
 #include "lang/bg-BG.h"
+#include "lang/cs-CZ.h"
 #include "lang/en-US.h"
 #include "lang/de-DE.h"
 #include "lang/el-GR.h"
@@ -54,7 +55,7 @@ static const MUI_LANGUAGE LanguageList[] =
   {L"00000402", L"00000402", L"1251", L"866", L"10007", L"Bulgarian",     bgBGPages, bgBGErrorEntries, bgBGStrings },
   {L"00000403", L"00000403", L"1252", L"850", L"10000", L"Catalan",       enUSPages, enUSErrorEntries, enUSStrings },
   {L"00000804", L"00000804", L"936",  L"936", L"10008", L"Chinese (PRC)", enUSPages, enUSErrorEntries, enUSStrings },
-  {L"00000405", L"00000405", L"1250", L"852", L"10029", L"Czech",         enUSPages, enUSErrorEntries, enUSStrings },
+  {L"00000405", L"00000405", L"1250", L"852", L"10029", L"Czech",         csCZPages, csCZErrorEntries, csCZStrings },
   {L"00000406", L"00000406", L"1252", L"850", L"10000", L"Danish",        enUSPages, enUSErrorEntries, enUSStrings },
   {L"00000407", L"00000407", L"1252", L"850", L"10000", L"Deutsch",       deDEPages, deDEErrorEntries, deDEStrings },
   {L"00000413", L"00000813", L"1252", L"850", L"10000", L"Dutch",         enUSPages, enUSErrorEntries, enUSStrings },

@@ -1143,7 +1143,7 @@ DlgProc(HWND hDlg,
                                       szBuffer,
                                       -1,
                                       &txtRc,
-                                      DT_BOTTOM | DT_SINGLELINE);
+                                      DT_BOTTOM | DT_SINGLELINE | DT_NOCLIP);
                             DeleteObject(hFont);
                         }
                     }

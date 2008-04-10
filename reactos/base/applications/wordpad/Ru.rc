@@ -37,11 +37,12 @@ BEGIN
     BEGIN
         MENUITEM "&Отменить\tCtrl+Z",           ID_EDIT_UNDO
         MENUITEM "&Повторить\tCtrl+Y",          ID_EDIT_REDO
-        MENUITEM "Выделить в&се\tCtrl+A",       ID_EDIT_SELECTALL
         MENUITEM SEPARATOR
         MENUITEM "&Вырезать\tCtrl+X",           ID_EDIT_CUT
         MENUITEM "&Копировать\tCtrl+C",         ID_EDIT_COPY
         MENUITEM "&Вставить\tCtrl+V",           ID_EDIT_PASTE
+        MENUITEM "&Удалить\tDEL",               ID_EDIT_CLEAR
+        MENUITEM "Выделить в&се\tCtrl+A",       ID_EDIT_SELECTALL
         MENUITEM SEPARATOR
         MENUITEM "&Найти . . .\tCrtl+F",        ID_FIND
         MENUITEM "На&йти далее\tF3",            ID_FIND_NEXT

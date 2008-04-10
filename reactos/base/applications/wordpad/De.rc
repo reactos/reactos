@@ -57,7 +57,7 @@ BEGIN
             MENUITEM "Zeichen&format",              ID_EDIT_CHARFORMAT
             MENUITEM "&Standardzeichenformat",      ID_EDIT_DEFCHARFORMAT
             MENUITEM "&Absatzformat",               ID_EDIT_PARAFORMAT
-            MENUITEM "&Get text",                   ID_EDIT_GETTEXT
+            MENUITEM "&Text holen",                 ID_EDIT_GETTEXT
         END
     END
     POPUP "&Ansicht"

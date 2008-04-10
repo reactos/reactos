@@ -590,7 +590,7 @@ BEGIN
 	IDS_VIEW_DETAILS            "&Подробен"
 	IDS_SELECT                  "Избор"
 	IDS_OPEN                    "Отваряне"
-/* */
+
 	IDS_CREATEFOLDER_DENIED     "Създаването на нова папка е невъзможно: недостатъчни права."
 	IDS_CREATEFOLDER_CAPTION    "Грешка при създаване на нова папка"
 	IDS_DELETEITEM_CAPTION      "Потвърдете изтриване на файла"
@@ -623,8 +623,8 @@ BEGIN
 	IDS_RECENT                  "Скорошни"
 	IDS_SENDTO                  "Изпращане"
 	IDS_STARTMENU               "Пусков изборник"
-	IDS_MYMUSIC                 "My Music"
-	IDS_MYVIDEO                 "My Videos"
+	IDS_MYMUSIC                 "Музиката ми"
+	IDS_MYVIDEO                 "Лентите ми"
 	IDS_DESKTOPDIRECTORY        "Работна площ"
 	IDS_NETHOOD                 "Мрежова околност"
 	IDS_TEMPLATES               "Templates"
@@ -639,11 +639,11 @@ BEGIN
 	IDS_PROGRAM_FILES_COMMON    "Program Files\\Common Files"
 	IDS_COMMON_DOCUMENTS        "Документи"
 	IDS_ADMINTOOLS              "Start Menu\\Programs\\Administrative Tools"
-	IDS_COMMON_MUSIC            "Documents\\My Music"
-	IDS_COMMON_PICTURES         "Documents\\My Pictures"
-	IDS_COMMON_VIDEO            "Documents\\My Videos"
+	IDS_COMMON_MUSIC            "Documents\\Музиката ми"
+	IDS_COMMON_PICTURES         "Documents\\Рисунките ми"
+	IDS_COMMON_VIDEO            "Documents\\Лентите ми"
 	IDS_CDBURN_AREA             "Local Settings\\Application Data\\Microsoft\\CD Burning"
-	IDS_NETWORKPLACE            "My Network Place"
+	IDS_NETWORKPLACE            "Моята мрежа"
 
 	IDS_NEWFOLDER               "Нова папка"
 
@@ -653,17 +653,18 @@ BEGIN
 
 	IDS_OPEN_WITH               "Отваряне с"
 	IDS_OPEN_WITH_CHOOSE        "Избор на приложение..."
-/* */
+
 	IDS_SHELL_ABOUT_AUTHORS     "&Създатели"
 	IDS_SHELL_ABOUT_BACK        "< &Назад"
 	FCIDM_SHVIEW_NEW 	    "Нови"
 	FCIDM_SHVIEW_NEWFOLDER 	    "Нова &папка"
 	FCIDM_SHVIEW_NEWLINK        "Нова &връзка"
 	IDS_FOLDER_OPTIONS          "Настройки на папките"
-	IDS_RECYCLEBIN_LOCATION     "Recycle Bin Location"
-	IDS_RECYCLEBIN_DISKSPACE    "Space Available"
+	IDS_RECYCLEBIN_LOCATION     "Място на кошчето"
+	IDS_RECYCLEBIN_DISKSPACE    "Свободно място"
 	IDS_PICK_ICON_TITLE         "Choose Icon"
         IDS_PICK_ICON_FILTER        "Icon Files(*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0"
 END
+
 
 

@@ -48,7 +48,7 @@ STRINGTABLE
 BEGIN
     IDS_SOL_NAME    "Пасианс"
     IDS_SOL_ABOUT   "Solitaire by J Brown\n\nCardLib version 1.0."
-    IDS_SOL_QUIT    "Да прекратя ли текущата игра?"
+    IDS_SOL_QUIT    "Да прекратя ли играта?"
     IDS_SOL_WIN     "Поздравления, победихте!!"
 END
 

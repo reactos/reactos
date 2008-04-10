@@ -883,7 +883,7 @@ static void DialogOpenFile(void)
 static void dialog_about(void)
 {
     HINSTANCE hInstance = (HINSTANCE)GetWindowLongPtr(hMainWnd, GWLP_HINSTANCE);
-    HICON icon = LoadIconW(hInstance, MAKEINTRESOURCEW(IDI_WORDPAD));
+    HICON icon = LoadImageW(hInstance, MAKEINTRESOURCEW(IDI_WORDPAD), IMAGE_ICON, 48, 48, LR_SHARED);
     ShellAboutW(hMainWnd, wszAppTitle, 0, icon);
 }
 
