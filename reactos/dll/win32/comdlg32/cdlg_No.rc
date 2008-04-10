@@ -1,5 +1,5 @@
 /*
- * Copyright 2005-2007 Alexander N. Sørnes
+ * Copyright 2005-2008 Alexander N. Sørnes
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -437,6 +437,14 @@ Oppgi en verdi mellom %d og %d."
     PD32_PRINTER_STATUS_DOOR_OPEN         "Skriverdøren er åpen; "
     PD32_PRINTER_STATUS_SERVER_UNKNOWN    "Ukjent skrivertjener; "
     PD32_PRINTER_STATUS_POWER_SAVE        "Strømsparingsmodus; "
+}
+
+STRINGTABLE DISCARDABLE /* Font styles */
+{
+    IDS_FONT_REGULAR       "Normal"
+    IDS_FONT_BOLD          "Fet"
+    IDS_FONT_ITALIC        "Kursiv"
+    IDS_FONT_BOLD_ITALIC   "Fet kursiv"
 }
 
 STRINGTABLE DISCARDABLE /* Color names */

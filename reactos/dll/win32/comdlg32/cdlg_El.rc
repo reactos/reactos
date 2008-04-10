@@ -24,7 +24,7 @@ LANGUAGE LANG_GREEK, SUBLANG_DEFAULT
 
 OPEN_FILE DIALOG LOADONCALL MOVEABLE DISCARDABLE 36, 24, 275, 134
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "¶νοιγμα"
+CAPTION "Άνοιγμα"
 FONT 8, "MS Shell Dlg"
 {
  LTEXT "File &Όνομα:", 1090, 6, 6, 76, 9
@@ -37,8 +37,8 @@ FONT 8, "MS Shell Dlg"
  COMBOBOX cmb1, 6, 114, 90, 36, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_BORDER | WS_VSCROLL | WS_TABSTOP
  LTEXT "Dri&ves:", 1091, 110, 104, 92, 9
  COMBOBOX cmb2, 110, 114, 92, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
- DEFPUSHBUTTON "¶νοιγμα", 1, 208, 6, 56, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
- PUSHBUTTON "¶κυρο", 2, 208, 24, 56, 14, WS_GROUP | WS_TABSTOP
+ DEFPUSHBUTTON "Άνοιγμα", 1, 208, 6, 56, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Άκυρο", 2, 208, 24, 56, 14, WS_GROUP | WS_TABSTOP
  PUSHBUTTON "&Βοήθεια", pshHelp, 208, 46, 56, 14, WS_GROUP | WS_TABSTOP
  CHECKBOX "&Μόνο για Ανάγνωση", chx1, 208, 68, 50, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
 }
@@ -60,7 +60,7 @@ FONT 8, "MS Shell Dlg"
  LTEXT "Dri&ves:", 1091, 110, 104, 92, 9
  COMBOBOX cmb2, 110, 114, 92, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
  DEFPUSHBUTTON "Αποθήκευση ως", 1, 208, 6, 56, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
- PUSHBUTTON "¶κυρο", 2, 208, 24, 56, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Άκυρο", 2, 208, 24, 56, 14, WS_GROUP | WS_TABSTOP
  PUSHBUTTON "&Βοήθεια", pshHelp, 208, 46, 56, 14, WS_GROUP | WS_TABSTOP
  CHECKBOX "&Μόνο για Ανάγνωση", chx1, 208, 68, 50, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
 }
@@ -78,7 +78,7 @@ FONT 8, "MS Shell Dlg"
  RADIOBUTTON "Ε&πιλογή", rad2, 16, 60, 60, 12
  RADIOBUTTON "&Σελίδες", rad3, 16, 75, 60, 12
  DEFPUSHBUTTON "Εκτύπωση", 1, 206, 6, 56, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
- PUSHBUTTON "¶κυρο", 2, 206, 24, 56, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Άκυρο", 2, 206, 24, 56, 14, WS_GROUP | WS_TABSTOP
  PUSHBUTTON "&Εγκατάσταση", psh1, 206, 46, 56, 14, WS_GROUP | WS_TABSTOP
  LTEXT "&Από:", 1090, 60, 80, 30, 9
  LTEXT "&Έως:", 1091, 120, 80, 30, 9
@@ -100,7 +100,7 @@ FONT 8, "MS Shell Dlg"
  RADIOBUTTON "Specific &Printer", rad2, 16, 50, 80, 12
  COMBOBOX cmb1, 35, 65, 149, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
  DEFPUSHBUTTON "OK", IDOK, 206, 6, 56, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
- PUSHBUTTON "¶κυρο", IDCANCEL, 206, 24, 56, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Άκυρο", IDCANCEL, 206, 24, 56, 14, WS_GROUP | WS_TABSTOP
  PUSHBUTTON "&Εγκατάσταση", psh1, 206, 46, 56, 14, WS_GROUP | WS_TABSTOP
  GROUPBOX "Orientation", grp2, 6, 85, 100, 50, BS_GROUPBOX
  RADIOBUTTON "Po&rtrait", rad3, 50, 100, 40, 12
@@ -130,7 +130,7 @@ FONT 8, "MS Shell Dlg"
     COMBOBOX        cmb3,179,13,32,54, CBS_OWNERDRAWFIXED | CBS_HASSTRINGS | CBS_DISABLENOSCROLL |
                     WS_VSCROLL | WS_TABSTOP | CBS_SIMPLE | CBS_SORT
     DEFPUSHBUTTON   "OK",IDOK,218,6,40,14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
-    PUSHBUTTON      "¶κυρο",IDCANCEL,218,23,40,14,WS_GROUP | WS_TABSTOP
+    PUSHBUTTON      "Άκυρο",IDCANCEL,218,23,40,14,WS_GROUP | WS_TABSTOP
     PUSHBUTTON      "&Εφαρμογή", psh3,218,40,40,14,WS_GROUP | WS_TABSTOP
     PUSHBUTTON      "&Βοήθεια" , pshHelp,218,57,40,14,WS_GROUP | WS_TABSTOP
     GROUPBOX        "Εφφέ",grp1,6,72,84,34,WS_GROUP
@@ -152,8 +152,8 @@ STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Χρώμα"
 FONT 8, "MS Shell Dlg"
 {
- LTEXT "&ΒΑσικά χρώματα:",   1088, 4,    4,  140, 10
- LTEXT "&Custom χρώματα:",  1089, 4,   106, 140, 10
+ LTEXT "&Βασικά χρώματα:",   1088, 4,    4,  140, 10
+ LTEXT "&Προσαρμοσμένα χρώματα:",  1089, 4,   106, 150, 10
  LTEXT "Χρώμα |  Sol&id",  1090, 150, 151,  48, 10
  LTEXT   "&Κόκκινο:", 726 /*1094*/,249,126,24,10
  EDITTEXT 706, 275,124,21,12, WS_BORDER | WS_GROUP | WS_TABSTOP
@@ -165,7 +165,7 @@ FONT 8, "MS Shell Dlg"
  EDITTEXT 703, 226,124,21,12, WS_BORDER | WS_GROUP | WS_TABSTOP
  LTEXT  "&Sat:" ,724 /*1092*/,202,140,22,10
  EDITTEXT 704, 226,138,21,12, WS_BORDER | WS_GROUP | WS_TABSTOP
- LTEXT  "&Lum:" ,725 /*1093*/,202,154,22,10
+ LTEXT  "&Φωτεινότητα:" ,725 /*1093*/,202,154,22,10
  EDITTEXT 705, 226,152,21,12, WS_BORDER | WS_GROUP | WS_TABSTOP
  CONTROL "" ,720,"STATIC",SS_SIMPLE|WS_TABSTOP|WS_GROUP,4,14,140,86
  CONTROL "" ,721,"STATIC",SS_SIMPLE|WS_TABSTOP|WS_GROUP,4,116,140,28
@@ -175,8 +175,8 @@ FONT 8, "MS Shell Dlg"
  DEFPUSHBUTTON "OK",  1,  4, 166, 44, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
  PUSHBUTTON "Cancel", 2, 52, 166, 44, 14, WS_GROUP | WS_TABSTOP
  PUSHBUTTON "Help", pshHelp,100,166, 44, 14
- PUSHBUTTON "&Προσθήκη στα Custom Χρώματα",    712/*1024*/, 152, 166, 142, 14, WS_GROUP | WS_TABSTOP
- PUSHBUTTON "&Ορισμός Custom Χρωμάτων >>", 719/*1025*/,   4, 150, 142, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "&Προσθήκη στα προσαρμοσμένα χρώματα",    712/*1024*/, 152, 166, 142, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "&Ορισμός προσαρμοσμένων χρωμάτων >>", 719/*1025*/,   4, 150, 142, 14, WS_GROUP | WS_TABSTOP
  PUSHBUTTON  "&i",713,300,200,4,14   /* just a dummy:  'i' is  like  &i  in "sol&id"  */
 }
 
@@ -186,7 +186,7 @@ STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Εύρεση"
 FONT 8, "MS Shell Dlg"
 {
- LTEXT "Fi&nd What:", -1, 4, 8, 42, 8
+ LTEXT "Εύ&ρεση του:", -1, 4, 8, 42, 8
  EDITTEXT edt1, 47, 7, 128, 12, ES_AUTOHSCROLL | WS_BORDER | WS_GROUP | WS_TABSTOP
  CHECKBOX "Ταίριασμα &Ολόκληρης Λέξης Μόνο", chx1, 4, 26, 100, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
  CHECKBOX "Ταίριασμα &Κεφαλαίων", chx2, 4, 42, 64, 12, BS_AUTOCHECKBOX | WS_TABSTOP
@@ -195,7 +195,7 @@ FONT 8, "MS Shell Dlg"
  CONTROL "&Κάτω", rad2, "BUTTON", BS_AUTORADIOBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 138, 38, 30, 12
 
  DEFPUSHBUTTON "&Εύρεση Επόμενου", IDOK, 182,  5, 50, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
- PUSHBUTTON "¶Κυρο", IDCANCEL	 , 182, 23, 50, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Άκυρο", IDCANCEL	 , 182, 23, 50, 14, WS_GROUP | WS_TABSTOP
  PUSHBUTTON "&Βοήθεια", pshHelp	 , 182, 45, 50, 14, WS_GROUP | WS_TABSTOP
 }
 
@@ -205,7 +205,7 @@ STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Αντικατάσταση"
 FONT 8, "MS Shell Dlg"
 {
- LTEXT "Fi&nd What:", -1, 4, 9, 48, 8
+ LTEXT "Εύ&ρεση του:", -1, 4, 9, 48, 8
  EDITTEXT edt1, 54, 7, 114, 12, ES_AUTOHSCROLL | WS_BORDER | WS_GROUP | WS_TABSTOP
  LTEXT "Αν&τικατάσταση Με:", -1, 4, 26, 48, 8
  EDITTEXT edt2, 54, 24, 114, 12, ES_AUTOHSCROLL | WS_BORDER | WS_GROUP | WS_TABSTOP
@@ -215,7 +215,7 @@ FONT 8, "MS Shell Dlg"
  DEFPUSHBUTTON "&Εύρεση Επόμενου", IDOK, 174,  4, 50, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
  PUSHBUTTON "&Αντικατάσταση", psh1	 , 174, 21, 50, 14, WS_GROUP | WS_TABSTOP
  PUSHBUTTON "Αντικατάσταση &Όλων", psh2 , 174, 38, 50, 14, WS_GROUP | WS_TABSTOP
- PUSHBUTTON "¶κυρο", IDCANCEL	 , 174, 55, 50, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Άκυρο", IDCANCEL	 , 174, 55, 50, 14, WS_GROUP | WS_TABSTOP
  PUSHBUTTON "&Βοήθεια", pshHelp	 , 174, 75, 50, 14, WS_GROUP | WS_TABSTOP
 }
 
@@ -227,7 +227,7 @@ CAPTION "Εκτύπωση"
 FONT 8, "MS Shell Dlg"
 {
     DEFPUSHBUTTON   "OK",     IDOK,     180,164, 48,14, WS_GROUP | BS_DEFPUSHBUTTON
-    PUSHBUTTON      "¶κυρο", IDCANCEL, 232,164, 48,14, WS_GROUP
+    PUSHBUTTON      "Άκυρο", IDCANCEL, 232,164, 48,14, WS_GROUP
     PUSHBUTTON      "&Βοήθεια",  pshHelp,  50, 161, 48,14, WS_GROUP
 
     GROUPBOX        "Εκτυπωτής",        grp4,   8,  4, 272,84, WS_GROUP
@@ -267,7 +267,7 @@ CAPTION "Ρύθμιση εκτύπωσης"
 FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON   "OK",IDOK,180,156,48,14,WS_GROUP
-    PUSHBUTTON      "¶κυρο",IDCANCEL,232,156,48,14
+    PUSHBUTTON      "Άκυρο",IDCANCEL,232,156,48,14
 /*    PUSHBUTTON      "Δίκτυο...", psh5, 284,156,48,14 */
 
     GROUPBOX        "Εκτυπωτής",       grp4,   8,  4, 272,84, WS_GROUP
@@ -320,13 +320,13 @@ BEGIN
   LTEXT "&Κάτω:", stc18, 159, 192, 23, 8
   EDITTEXT edt7, 187, 190, 39, 12, WS_TABSTOP|WS_GROUP|WS_BORDER|ES_NUMBER
   DEFPUSHBUTTON "OK", IDOK, 71, 220, 50, 14, BS_PUSHBUTTON
-  PUSHBUTTON "¶κυρο", IDCANCEL, 126, 220, 50, 14
+  PUSHBUTTON "Άκυρο", IDCANCEL, 126, 220, 50, 14
   PUSHBUTTON "Εκ&τυπωτής...", psh3, 184, 220, 48, 14
 END
 
 NEWFILEOPENORD DIALOG LOADONCALL MOVEABLE DISCARDABLE 0, 0, 280, 164
 STYLE DS_MODALFRAME | DS_CONTEXTHELP | WS_VISIBLE | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_CLIPCHILDREN
-CAPTION "¶νοιγμα"
+CAPTION "Άνοιγμα"
 FONT 8, "MS Shell Dlg"
 {
     LTEXT	"Look &in:",IDC_LOOKINSTATIC,4,6,43,8, SS_NOTIFY
@@ -341,10 +341,10 @@ FONT 8, "MS Shell Dlg"
     LTEXT	"Αρχεία του &τύπου:",IDC_FILETYPESTATIC,5,128,42,8, SS_NOTIFY
     COMBOBOX	IDC_FILETYPE,54,126,155,53,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
 
-    CONTROL	"¶νοιγμα ως &μόνο-για-ανάγνωση",IDC_OPENREADONLY,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,54,145,100,10
+    CONTROL	"Άνοιγμα ως &μόνο-για-ανάγνωση",IDC_OPENREADONLY,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,54,145,100,10
 
-    DEFPUSHBUTTON	"&¶νοιγμα",		 IDOK,222,110,50,14
-    PUSHBUTTON		"¶κυρο",		 IDCANCEL,222,128,50,14
+    DEFPUSHBUTTON	"&Άνοιγμα",		 IDOK,222,110,50,14
+    PUSHBUTTON		"Άκυρο",		 IDCANCEL,222,128,50,14
     PUSHBUTTON		"&Βοήθεια",		 pshHelp,222,145,50,14
 }
 
@@ -403,7 +403,7 @@ supported by your printer.\nPlease enter a value between 1 and %d."
     PD32_CANT_FIND_PRINTER                "Δεν ήταν δυνατή η εύρεση του εκτυπωτή."
     PD32_OUT_OF_MEMORY                    "Out of memory."
     PD32_GENERIC_ERROR                    "Προκλήθηκε σφάλμα."
-    PD32_DRIVER_UNKNOWN                   "¶γνωστος οδηγός εκτυπωτή."
+    PD32_DRIVER_UNKNOWN                   "Άγνωστος οδηγός εκτυπωτή."
     PD32_NO_DEVICES                       "Before you can perform printer-related tasks \
 such as page setup or printing a document, you need to install a printer. \
 Please install one and retry."
@@ -467,7 +467,7 @@ STRINGTABLE DISCARDABLE /* Color names */
     IDS_COLOR_BLUE      "Μπλε"
     IDS_COLOR_FUCHSIA   "Fuchsia"
     IDS_COLOR_AQUA      "Aqua"
-    IDS_COLOR_WHITE     "¶σπρο"
+    IDS_COLOR_WHITE     "Άσπρο"
 }
 
 STRINGTABLE DISCARDABLE
@@ -477,5 +477,5 @@ STRINGTABLE DISCARDABLE
     IDS_SAVE_IN     "Αποθήκευση &σε:"
     IDS_SAVE        "Αποθήκευση"
     IDS_SAVE_AS     "Αποθήκευση ως"
-    IDS_OPEN_FILE   "¶νοιγμα Αρχείου"
+    IDS_OPEN_FILE   "Άνοιγμα Αρχείου"
 }

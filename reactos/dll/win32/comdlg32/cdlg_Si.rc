@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2003 Rok Mandeljc <rok.mandeljc@gimb.org>
+ * Copyright 2002, 2003, 2008 Rok Mandeljc
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -20,11 +20,13 @@
  * WARNING: DO NOT CHANGE THE SIZE OF THE STANDARD DIALOG TEMPLATES.
  */
 
+#pragma code_page(65001)
+
 LANGUAGE LANG_SLOVENIAN, SUBLANG_DEFAULT
 
 OPEN_FILE DIALOG LOADONCALL MOVEABLE DISCARDABLE 36, 24, 275, 134
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Odpiranje"
+CAPTION "Odpri"
 FONT 8, "MS Shell Dlg"
 {
  LTEXT "Ime &datoteke:", 1090, 6, 6, 76, 9
@@ -37,16 +39,16 @@ FONT 8, "MS Shell Dlg"
  COMBOBOX cmb1, 6, 114, 90, 36, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_BORDER | WS_VSCROLL | WS_TABSTOP
  LTEXT "Pog&oni:", 1091, 110, 104, 92, 9
  COMBOBOX cmb2, 110, 114, 92, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
- DEFPUSHBUTTON "V redu", 1, 208, 6, 56, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
- PUSHBUTTON "PrekliËi", 2, 208, 24, 56, 14, WS_GROUP | WS_TABSTOP
- PUSHBUTTON "&PomoË", pshHelp, 208, 46, 56, 14, WS_GROUP | WS_TABSTOP
+ DEFPUSHBUTTON "Odpri", 1, 208, 6, 56, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Prekliƒçi", 2, 208, 24, 56, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "&Pomoƒç", pshHelp, 208, 46, 56, 14, WS_GROUP | WS_TABSTOP
  CHECKBOX "Samo za b&ranje", chx1, 208, 68, 50, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
 }
 
 
 SAVE_FILE DIALOG LOADONCALL MOVEABLE DISCARDABLE 36, 24, 275, 134
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Shrani kot"
+CAPTION "Shrani kot ..."
 FONT 8, "MS Shell Dlg"
 {
  LTEXT "Ime &datoteke:", 1090, 6, 6, 76, 9
@@ -59,9 +61,9 @@ FONT 8, "MS Shell Dlg"
  COMBOBOX cmb1, 6, 114, 90, 36, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_BORDER | WS_VSCROLL | WS_TABSTOP
  LTEXT "Pog&oni:", 1091, 110, 104, 92, 9
  COMBOBOX cmb2, 110, 114, 92, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
- DEFPUSHBUTTON "V redu", 1, 208, 6, 56, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
- PUSHBUTTON "PrekliËi", 2, 208, 24, 56, 14, WS_GROUP | WS_TABSTOP
- PUSHBUTTON "&PomoË", pshHelp, 208, 46, 56, 14, WS_GROUP | WS_TABSTOP
+ DEFPUSHBUTTON "Shrani", 1, 208, 6, 56, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Prekliƒçi", 2, 208, 24, 56, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "&Pomoƒç", pshHelp, 208, 46, 56, 14, WS_GROUP | WS_TABSTOP
  CHECKBOX "Samo za b&ranje", chx1, 208, 68, 50, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
 }
 
@@ -77,39 +79,39 @@ FONT 8, "MS Shell Dlg"
  RADIOBUTTON "&Vse", rad1, 16, 45, 60, 12
  RADIOBUTTON "I&zbor", rad2, 16, 60, 60, 12
  RADIOBUTTON "St&rani", rad3, 16, 75, 60, 12
- DEFPUSHBUTTON "V redu", 1, 206, 6, 56, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
- PUSHBUTTON "PrekliËi", 2, 206, 24, 56, 14, WS_GROUP | WS_TABSTOP
- PUSHBUTTON "Pripr&ava ...", psh1, 206, 46, 56, 14, WS_GROUP | WS_TABSTOP
+ DEFPUSHBUTTON "Natisni", 1, 206, 6, 56, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Prekliƒçi", 2, 206, 24, 56, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "&Nastavitve", psh1, 206, 46, 56, 14, WS_GROUP | WS_TABSTOP
  LTEXT "&od:", 1090, 60, 80, 30, 9
  LTEXT "&do:", 1091, 120, 80, 30, 9
  LTEXT "Kakovost ti&skanja:", 1092, 6, 100, 76, 9
  COMBOBOX cmb1, 80, 100, 92, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
- CHECKBOX "&Tiskanje v datoteko", chx1, 20, 100, 50, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
- CHECKBOX "Z&biranje kopij", chx2, 160, 100, 50, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+ CHECKBOX "Na&tisni v datoteko", chx1, 20, 100, 50, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+ CHECKBOX "Zbiranje kopij", chx2, 160, 100, 50, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
 }
 
 
 PRINT_SETUP DIALOG LOADONCALL MOVEABLE DISCARDABLE 36, 24, 264, 134
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Priprava za tiskanje"
+CAPTION "Nastavitve tiskanja"
 FONT 8, "MS Shell Dlg"
 {
  GROUPBOX "Tiskalnik", grp1, 6, 10, 180, 65, BS_GROUPBOX
  RADIOBUTTON "Privzeti &tiskalnik", rad1, 16, 20, 80, 12
- LTEXT "(Ni privzetega tiskalnika)", 1088, 35, 35, 120, 9
- RADIOBUTTON "DoloËeni ti&skalnik:", rad2, 16, 50, 80, 12
+ LTEXT "[brez]", 1088, 35, 35, 120, 9
+ RADIOBUTTON "Doloƒçen ti&skalnik", rad2, 16, 50, 80, 12
  COMBOBOX cmb1, 35, 65, 149, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
  DEFPUSHBUTTON "V redu", IDOK, 206, 6, 56, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
- PUSHBUTTON "PrekliËi", IDCANCEL, 206, 24, 56, 14, WS_GROUP | WS_TABSTOP
- PUSHBUTTON "&Moûnosti ...", psh1, 206, 46, 56, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Prekliƒçi", IDCANCEL, 206, 24, 56, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "&Mo≈ænosti", psh1, 206, 46, 56, 14, WS_GROUP | WS_TABSTOP
  GROUPBOX "Usmerjenost", grp2, 6, 85, 100, 50, BS_GROUPBOX
- RADIOBUTTON "P&okonËna", rad3, 50, 100, 40, 12
- RADIOBUTTON "L&eûeËa", rad4, 50, 115, 40, 12
+ RADIOBUTTON "P&okonƒçno", rad3, 50, 100, 40, 12
+ RADIOBUTTON "L&e≈æeƒçe", rad4, 50, 115, 40, 12
  ICON "LANDSCAP", stc10, 10, 95, 32, 32
  ICON "PORTRAIT", stc11, 10, 95, 32, 32
  GROUPBOX "Papir", grp3, 120, 85, 180, 50, BS_GROUPBOX
- LTEXT "Veli&kost:", 1089, 130, 95, 30, 9
- LTEXT "&Vir:", 1090, 130, 110, 30, 9
+ LTEXT "Veli&kost", 1089, 130, 95, 30, 9
+ LTEXT "&Vir", 1090, 130, 110, 30, 9
  COMBOBOX cmb2, 155, 95, 92, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
  COMBOBOX cmb3, 155, 110, 92, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
 }
@@ -120,28 +122,28 @@ STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Pisava"
 FONT 8, "MS Shell Dlg"
 {
-    LTEXT           "Pis&ava:",1088 ,6,3,40,9
+    LTEXT           "Pis&ava:",stc1 ,6,3,40,9
     COMBOBOX        cmb1, 6,13,94,54,  CBS_OWNERDRAWFIXED | CBS_HASSTRINGS | CBS_DISABLENOSCROLL |
                     CBS_AUTOHSCROLL | CBS_SORT | WS_VSCROLL | WS_TABSTOP | CBS_SIMPLE
-    LTEXT           "Slog pi&save:",1089 ,108,3,44,9
+    LTEXT           "Slog pi&save:",stc2 ,108,3,44,9
     COMBOBOX        cmb2,108,13,64,54, CBS_OWNERDRAWFIXED | CBS_HASSTRINGS | CBS_DISABLENOSCROLL |
                     WS_VSCROLL | WS_TABSTOP | CBS_SIMPLE
-    LTEXT           "&Velikost:",1090,179,3,30,9
+    LTEXT           "&Velikost:",stc3,179,3,30,9
     COMBOBOX        cmb3,179,13,32,54, CBS_OWNERDRAWFIXED | CBS_HASSTRINGS | CBS_DISABLENOSCROLL |
                     WS_VSCROLL | WS_TABSTOP | CBS_SIMPLE | CBS_SORT
     DEFPUSHBUTTON   "V redu",IDOK,218,6,40,14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
-    PUSHBUTTON      "PrekliËi",IDCANCEL,218,23,40,14,WS_GROUP | WS_TABSTOP
+    PUSHBUTTON      "Prekliƒçi",IDCANCEL,218,23,40,14,WS_GROUP | WS_TABSTOP
     PUSHBUTTON      "&Uporabi", psh3,218,40,40,14,WS_GROUP | WS_TABSTOP
-    PUSHBUTTON      "&PomoË" , pshHelp,218,57,40,14,WS_GROUP | WS_TABSTOP
-    GROUPBOX        "UËinki",1072,6,72,84,34,WS_GROUP
-    CHECKBOX	    "Pr&eËrtano", chx1, 10,82,50,10, BS_AUTOCHECKBOX | WS_TABSTOP
-    CHECKBOX 	    "Po&dËrtano", chx2, 10,94,50,10, BS_AUTOCHECKBOX
-    LTEXT           "&Barva:", 1091 ,6,110,30,9
+    PUSHBUTTON      "&Pomoƒç" , pshHelp,218,57,40,14,WS_GROUP | WS_TABSTOP
+    GROUPBOX        "Uƒçinki",grp1,6,72,84,34,WS_GROUP
+    CHECKBOX	    "Pr&eƒçrtano", chx1, 10,82,50,10, BS_AUTOCHECKBOX | WS_TABSTOP
+    CHECKBOX 	    "P&odƒçrtano", chx2, 10,94,50,10, BS_AUTOCHECKBOX
+    LTEXT           "&Barva:", stc4 ,6,110,30,9
     COMBOBOX        cmb4,6,120,84,100,CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_HASSTRINGS |
 		    CBS_AUTOHSCROLL |  WS_BORDER | WS_VSCROLL | WS_TABSTOP
     GROUPBOX        "Vzorec",grp2,98,72,120,36,WS_GROUP
     CTEXT           "AaBbYyZz",stc5,103,80,109,24,SS_NOPREFIX | NOT WS_VISIBLE
-    LTEXT           "Scr&ipt (translate):",stc7 ,98,114,80,9
+    LTEXT           "Sis&tem pisave:",stc7 ,98,114,40,9
     COMBOBOX        cmb5,98,124,120,90,CBS_DROPDOWNLIST | CBS_HASSTRINGS |
 		    CBS_AUTOHSCROLL |   WS_VSCROLL | WS_TABSTOP
 }
@@ -153,19 +155,19 @@ CAPTION "Barva"
 FONT 8, "MS Shell Dlg"
 {
  LTEXT "Osno&vne barve:",   1088, 4,    4,  140, 10
- LTEXT "Nameöane &barve:",  1089, 4,   106, 140, 10
- LTEXT "Barva | T&emelj",  1090, 150, 151,  48, 10
- LTEXT   "&RdeËa:", 726 /*1094*/,249,126,24,10
+ LTEXT "Name≈°ane &barve:",  1089, 4,   106, 140, 10
+ LTEXT "Barva |  T&emelj",  1090, 150, 151,  48, 10
+ LTEXT   "&Rdeƒça:", 726 /*1094*/,249,126,24,10
  EDITTEXT 706, 275,124,21,12, WS_BORDER | WS_GROUP | WS_TABSTOP
  LTEXT   "&Zelena:",727/*1095*/,249,140,24,10
  EDITTEXT 707, 275,138,21,12, WS_BORDER | WS_GROUP | WS_TABSTOP
- LTEXT   "Modr&a:",728 /*1096*/,249,154,24,10
+ LTEXT   "&Modra:",728 /*1096*/,249,154,24,10
  EDITTEXT 708, 275,152,21,12, WS_BORDER | WS_GROUP | WS_TABSTOP
- LTEXT  "Od&tenek:" ,723 /*1091*/,202,126,22,10
+ LTEXT  "Od&tn.:" ,723 /*1091*/,202,126,22,10
  EDITTEXT 703, 226,124,21,12, WS_BORDER | WS_GROUP | WS_TABSTOP
- LTEXT  "&NasiËenost:" ,724 /*1092*/,202,140,22,10
+ LTEXT  "&Nasiƒç.:" ,724 /*1092*/,202,140,22,10
  EDITTEXT 704, 226,138,21,12, WS_BORDER | WS_GROUP | WS_TABSTOP
- LTEXT  "&Svetlost:" ,725 /*1093*/,202,154,22,10
+ LTEXT  "&Svetl.:" ,725 /*1093*/,202,154,22,10
  EDITTEXT 705, 226,152,21,12, WS_BORDER | WS_GROUP | WS_TABSTOP
  CONTROL "" ,720,"STATIC",SS_SIMPLE|WS_TABSTOP|WS_GROUP,4,14,140,86
  CONTROL "" ,721,"STATIC",SS_SIMPLE|WS_TABSTOP|WS_GROUP,4,116,140,28
@@ -173,11 +175,11 @@ FONT 8, "MS Shell Dlg"
  CONTROL "" ,702,"STATIC",SS_SIMPLE|WS_TABSTOP|WS_GROUP, 278,4,8,116
  CONTROL "" ,709,"STATIC",SS_SIMPLE|WS_TABSTOP|WS_GROUP, 152,124,40,26
  DEFPUSHBUTTON "V redu",  1,  4, 166, 44, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
- PUSHBUTTON "PrekliËi", 2, 52, 166, 44, 14, WS_GROUP | WS_TABSTOP
- PUSHBUTTON "&PomoË", pshHelp,100,166, 44, 14
- PUSHBUTTON "&Dodaj med nameöane barve",    712/*1024*/, 152, 166, 142, 14, WS_GROUP | WS_TABSTOP
- PUSHBUTTON "&Meöanje barv >>", 719/*1025*/,   4, 150, 142, 14, WS_GROUP | WS_TABSTOP
- PUSHBUTTON  "&i",713,300,200,4,14   /* just a dummy:  'i' is  like  &i  in "sol&id"  */
+ PUSHBUTTON "Prekliƒçi", 2, 52, 166, 44, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Pomoƒç", pshHelp,100,166, 44, 14
+ PUSHBUTTON "&Dodaj med name≈°ane barve",    712/*1024*/, 152, 166, 142, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "M&e≈°anje barv >>", 719/*1025*/,   4, 150, 142, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON  "&e",713,300,200,4,14   /* just a dummy:  'i' is  like  &i  in "sol&id"  */
 }
 
 
@@ -187,16 +189,16 @@ CAPTION "Iskanje"
 FONT 8, "MS Shell Dlg"
 {
  LTEXT "N&ajdi:", -1, 4, 8, 42, 8
- EDITTEXT edt1, 47, 7, 128, 12, ES_AUTOHSCROLL | WS_BORDER | WS_GROUP | WS_TABSTOP
+ EDITTEXT edt1, 47, 7, 120, 12, ES_AUTOHSCROLL | WS_BORDER | WS_GROUP | WS_TABSTOP
  CHECKBOX "&Samo cele besede", chx1, 4, 26, 100, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
- CHECKBOX "&Razlikovanje malih in velikih Ërk", chx2, 4, 42, 64, 12, BS_AUTOCHECKBOX | WS_TABSTOP
- GROUPBOX "Smer iskanja", grp1, 107, 26, 68, 28
- CONTROL "&Gor", rad1, "BUTTON", BS_AUTORADIOBUTTON | WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP, 111, 38, 20, 12
- CONTROL "&Dol", rad2, "BUTTON", BS_AUTORADIOBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 138, 38, 30, 12
+ CHECKBOX "&Razlikuj velikost ƒçrk", chx2, 4, 42, 96, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+ GROUPBOX "Smer iskanja", grp1, 103, 26, 64, 28
+ CONTROL "&Gor", rad1, "BUTTON", BS_AUTORADIOBUTTON | WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP, 107, 38, 30, 12
+ CONTROL "&Dol", rad2, "BUTTON", BS_AUTORADIOBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 136, 38, 30, 12
 
- DEFPUSHBUTTON "&Nadaljuj iskanje", IDOK, 182,  5, 50, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
- PUSHBUTTON "PrekliËi", IDCANCEL	 , 182, 23, 50, 14, WS_GROUP | WS_TABSTOP
- PUSHBUTTON "&PomoË", pshHelp	 , 182, 45, 50, 14, WS_GROUP | WS_TABSTOP
+ DEFPUSHBUTTON "&Najdi naslednje", IDOK, 174,  5, 58, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
+ PUSHBUTTON "Prekliƒçi", IDCANCEL	 , 174, 23, 58, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "&Pomoƒç", pshHelp	 , 174, 45, 58, 14, WS_GROUP | WS_TABSTOP
 }
 
 
@@ -206,17 +208,17 @@ CAPTION "Zamenjava"
 FONT 8, "MS Shell Dlg"
 {
  LTEXT "N&ajdi:", -1, 4, 9, 48, 8
- EDITTEXT edt1, 54, 7, 114, 12, ES_AUTOHSCROLL | WS_BORDER | WS_GROUP | WS_TABSTOP
- LTEXT "Za&menjaj z:", -1, 4, 26, 48, 8
- EDITTEXT edt2, 54, 24, 114, 12, ES_AUTOHSCROLL | WS_BORDER | WS_GROUP | WS_TABSTOP
+ EDITTEXT edt1, 54, 7, 106, 12, ES_AUTOHSCROLL | WS_BORDER | WS_GROUP | WS_TABSTOP
+ LTEXT "Zamenjaj &z:", -1, 4, 26, 48, 8
+ EDITTEXT edt2, 54, 24, 106, 12, ES_AUTOHSCROLL | WS_BORDER | WS_GROUP | WS_TABSTOP
  CHECKBOX "&Samo cele besede", chx1, 5, 46, 104, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
- CHECKBOX "&Razlikovanje malih in velikih Ërk", chx2, 5, 62, 59, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+ CHECKBOX "&Razlikuj velikost ƒçrk", chx2, 5, 62, 96, 12, BS_AUTOCHECKBOX | WS_TABSTOP
 
- DEFPUSHBUTTON "&Nadaljuj iskanje", IDOK, 174,  4, 50, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
- PUSHBUTTON "&Zamenjaj", psh1	 , 174, 21, 50, 14, WS_GROUP | WS_TABSTOP
- PUSHBUTTON "Zamenjaj &vse", psh2 , 174, 38, 50, 14, WS_GROUP | WS_TABSTOP
- PUSHBUTTON "PrekliËi", IDCANCEL	 , 174, 55, 50, 14, WS_GROUP | WS_TABSTOP
- PUSHBUTTON "&PomoË", pshHelp	 , 174, 75, 50, 14, WS_GROUP | WS_TABSTOP
+ DEFPUSHBUTTON "&Najdi naslednje", IDOK, 166,  4, 58, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
+ PUSHBUTTON "&Zamenjaj", psh1	 , 166, 21, 58, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Zamenjaj &vse", psh2 , 166, 38, 58, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Prekliƒçi", IDCANCEL	 , 166, 55, 58, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "&Pomoƒç", pshHelp	 , 166, 75, 58, 14, WS_GROUP | WS_TABSTOP
 }
 
 
@@ -227,14 +229,14 @@ CAPTION "Tiskanje"
 FONT 8, "MS Shell Dlg"
 {
     DEFPUSHBUTTON   "V redu",     IDOK,     180,164, 48,14, WS_GROUP | BS_DEFPUSHBUTTON
-    PUSHBUTTON      "PrekliËi", IDCANCEL, 232,164, 48,14, WS_GROUP
-    PUSHBUTTON      "&PomoË",  pshHelp,  50, 161, 48,14, WS_GROUP
+    PUSHBUTTON      "Prekliƒçi", IDCANCEL, 232,164, 48,14, WS_GROUP
+    PUSHBUTTON      "&Pomoƒç",  pshHelp,  50, 161, 48,14, WS_GROUP
 
     GROUPBOX        "Tiskalnik",        grp4,   8,  4, 272,84, WS_GROUP
-    CONTROL         "&Tiskanje v datoteko", chx1, "Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,212,70,64,12
-    PUSHBUTTON      "&Lastnosti",    psh2, 212, 17,  60,14, WS_GROUP
+    CONTROL         "Na&tisni v datoteko", chx1, "Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,204,70,72,12
+    PUSHBUTTON      "&Lastnosti",    psh2, 204, 17,  68,14, WS_GROUP
     LTEXT           "&Ime:",         stc6,  16, 20,  36,8
-    COMBOBOX                          cmb4,  52, 18, 152,152,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
+    COMBOBOX                          cmb4,  52, 18, 144,152,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
     LTEXT           "Stanje:",        stc8,  16, 36,  36,10, SS_NOPREFIX
     LTEXT           "Dummy State",    stc12, 52, 36, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
     LTEXT           "Vrsta:",          stc7,  16, 48,  36,10, SS_NOPREFIX
@@ -244,31 +246,31 @@ FONT 8, "MS Shell Dlg"
     LTEXT           "Komentar:",       stc9,  16, 72,  36,10, SS_NOPREFIX
     LTEXT           "Dummy Remark",   stc13, 52, 72, 152,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
 
-    GROUPBOX        "Kopije",         grp2, 160, 92, 120,64, WS_GROUP
-    LTEXT           "ätevilo &kopij:",stc5,168,108,68,8
-    ICON            "",               ico3, 162,124,  76,24, WS_GROUP | SS_CENTERIMAGE
-    CONTROL         "Z&biranje",       chx2,"Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,240,130,36,12
-    EDITTEXT                          edt3, 240,106,  32,12, WS_GROUP | ES_NUMBER
+    GROUPBOX        "Kopije",         grp2, 152, 92, 128,64, WS_GROUP
+    LTEXT           "≈†tevilo &kopij:",stc5,160,108,68,8
+    ICON            "",               ico3, 154,124,  76,24, WS_GROUP | SS_CENTERIMAGE
+    CONTROL         "Z&biranje",       chx2,"Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,232,130,44,12
+    EDITTEXT                          edt3, 232,106,  40,12, WS_GROUP | ES_NUMBER
 
-    GROUPBOX        "Obseg tiskanja",    grp1,   8,92,  144,64, WS_GROUP
-    CONTROL         "&Vse",           rad1,"Button",BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,16,106,64,12
-    CONTROL         "St&rani",         rad3,"Button",BS_AUTORADIOBUTTON,16,122,36,12
-    CONTROL         "I&zbor",     rad2,"Button",BS_AUTORADIOBUTTON,16,138,64,12
-    EDITTEXT                          edt1,  74,122,  26,12, WS_GROUP | ES_NUMBER
-    EDITTEXT                          edt2, 118,122,  26,12, WS_GROUP | ES_NUMBER
-    RTEXT           "&od:",         stc2,  52,124,  20,8
-    RTEXT           "&do:",           stc3, 100,124,  16,8
+    GROUPBOX        "Obseg tiskanja",    grp1,   8,92,  136,64, WS_GROUP
+    CONTROL         "&Vse",           rad1,"Button",BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,16,106,30,12
+    CONTROL         "St&rani",         rad3,"Button",BS_AUTORADIOBUTTON,16,122,30,12
+    CONTROL         "I&zbor",     rad2,"Button",BS_AUTORADIOBUTTON,16,138,30,12
+    EDITTEXT                          edt1,  64,122,  26,12, WS_GROUP | ES_NUMBER
+    EDITTEXT                          edt2, 108,122,  26,12, WS_GROUP | ES_NUMBER
+    LTEXT           "&od:",         stc2,  52,124,  10,8
+    LTEXT           "&do:",           stc3, 94,124,  10,8
 }
 
 PRINT32_SETUP DIALOG LOADONCALL MOVEABLE DISCARDABLE  32, 32, 288, 178
 STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU |
       DS_CONTEXTHELP | DS_3DLOOK
-CAPTION "Priprava za tiskanje"
+CAPTION "Nastavitev tiskanja"
 FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON   "V redu",IDOK,180,156,48,14,WS_GROUP
-    PUSHBUTTON      "PrekliËi",IDCANCEL,232,156,48,14
-/*    PUSHBUTTON      "Omreûje...", psh5, 284,156,48,14 */
+    PUSHBUTTON      "Prekliƒçi",IDCANCEL,232,156,48,14
+/*    PUSHBUTTON      "Omre≈æje ...", psh5, 284,156,48,14 */
 
     GROUPBOX        "Tiskalnik",        grp4,   8,  4, 272,84, WS_GROUP
     PUSHBUTTON      "&Lastnosti",    psh2, 212, 17,  60,14, WS_GROUP
@@ -291,13 +293,13 @@ BEGIN
 
     GROUPBOX        "Usmerjenost",    grp1, 180, 92, 100,56, WS_GROUP
     ICON            "",               ico1, 195,112,  18,20, WS_GROUP
-    CONTROL         "P&okonËna",      rad1,"Button",BS_AUTORADIOBUTTON | WS_GROUP |WS_TABSTOP,224,106,52,12
-    CONTROL         "L&eûeËa",     rad2,"Button",BS_AUTORADIOBUTTON,224,126,52,12
+    CONTROL         "P&okonƒçno",      rad1,"Button",BS_AUTORADIOBUTTON | WS_GROUP |WS_TABSTOP,224,106,52,12
+    CONTROL         "L&e≈æeƒçe",     rad2,"Button",BS_AUTORADIOBUTTON,224,126,52,12
 END
 
 PAGESETUPDLGORD DIALOG LOADONCALL MOVEABLE DISCARDABLE 32, 32, 240, 240
 STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Priprava strani"
+CAPTION "Nastavitev strani"
 FONT 8, "MS Shell Dlg"
 BEGIN
   CONTROL "", rct1, "Static", SS_WHITERECT, 80, 8, 80, 80
@@ -309,8 +311,8 @@ BEGIN
   LTEXT "&Vir:", stc3, 16, 132, 36, 8
   COMBOBOX cmb3, 64, 130, 160, 160, CBS_SIMPLE|CBS_DROPDOWN|CBS_SORT|WS_GROUP|WS_TABSTOP|WS_VSCROLL
   GROUPBOX "Usmerjenost", grp1, 8, 156, 64, 56, BS_GROUPBOX
-  AUTORADIOBUTTON "P&okonËna", rad1, 16, 170, 52, 12, BS_AUTORADIOBUTTON
-  AUTORADIOBUTTON "L&eæeËa", rad2, 16, 190, 52, 12, BS_AUTORADIOBUTTON
+  AUTORADIOBUTTON "P&okonƒçno", rad1, 16, 170, 52, 12, BS_AUTORADIOBUTTON
+  AUTORADIOBUTTON "L&e≈æeƒçe", rad2, 16, 190, 52, 12, BS_AUTORADIOBUTTON
   GROUPBOX "Robovi", grp4, 80, 156, 152, 56, BS_GROUPBOX
   LTEXT "&Levo:", stc15, 88, 172, 21, 8
   EDITTEXT edt4, 111, 170, 39, 12, WS_TABSTOP|WS_GROUP|WS_BORDER|ES_NUMBER
@@ -321,16 +323,16 @@ BEGIN
   LTEXT "&Spodaj:", stc18, 159, 192, 23, 8
   EDITTEXT edt7, 187, 190, 39, 12, WS_TABSTOP|WS_GROUP|WS_BORDER|ES_NUMBER
   DEFPUSHBUTTON "V redu", IDOK, 71, 220, 50, 14, BS_PUSHBUTTON
-  PUSHBUTTON "PrekliËi", IDCANCEL, 126, 220, 50, 14
+  PUSHBUTTON "Prekliƒçi", IDCANCEL, 126, 220, 50, 14
   PUSHBUTTON "&Tiskalnik ...", psh3, 184, 220, 48, 14
 END
 
 NEWFILEOPENORD DIALOG LOADONCALL MOVEABLE DISCARDABLE 0, 0, 280, 164
 STYLE DS_MODALFRAME | DS_CONTEXTHELP | WS_VISIBLE | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_CLIPCHILDREN
-CAPTION "Odpiranje"
+CAPTION "Odpri"
 FONT 8, "MS Shell Dlg"
 {
-    LTEXT	"&IöËi v",IDC_LOOKINSTATIC,4,6,43,8, SS_NOTIFY
+    LTEXT	"&I≈°ƒçi v:",IDC_LOOKINSTATIC,4,6,43,8, SS_NOTIFY
     COMBOBOX	IDC_LOOKIN,49,3,132,100,CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_HASSTRINGS | WS_VSCROLL | WS_TABSTOP
 
     LTEXT	"" , IDC_TOOLBARSTATIC, 181, 2, 102, 17, NOT WS_GROUP | NOT WS_VISIBLE
@@ -339,14 +341,14 @@ FONT 8, "MS Shell Dlg"
     LTEXT	"Ime &datoteke:",IDC_FILENAMESTATIC,5,112,46,8, SS_NOTIFY
     EDITTEXT	IDC_FILENAME,54,110,155,12,ES_AUTOHSCROLL
 
-    LTEXT	"Vrsta da&totek:",IDC_FILETYPESTATIC,5,128,49,8, SS_NOTIFY
+    LTEXT	"Vrsta da&totek:",IDC_FILETYPESTATIC,5,128,42,8, SS_NOTIFY
     COMBOBOX	IDC_FILETYPE,54,126,155,53,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
 
     CONTROL	"&Samo za branje",IDC_OPENREADONLY,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,54,145,100,10
 
     DEFPUSHBUTTON	"&Odpri",		 IDOK,222,110,50,14
-    PUSHBUTTON		"PrekliËi",		 IDCANCEL,222,128,50,14
-    PUSHBUTTON		"&PomoË",		 pshHelp,222,145,50,14
+    PUSHBUTTON		"Prekliƒçi",		 IDCANCEL,222,128,50,14
+    PUSHBUTTON		"&Pomoƒç",		 pshHelp,222,145,50,14
 }
 
 STRINGTABLE DISCARDABLE
@@ -358,18 +360,18 @@ STRINGTABLE DISCARDABLE
     IDS_PATH                "Sistemska pot"
     IDS_DESKTOP             "Namizje"
     IDS_FONTS               "Pisave"
-    IDS_MYCOMPUTER          "Moj raËunalnik"
+    IDS_MYCOMPUTER          "Moj raƒçunalnik"
 }
 
 STRINGTABLE DISCARDABLE
 {
     IDS_SYSTEMFOLDERS       "Sistemske mape"
     IDS_LOCALHARDRIVES      "Lokalni trdi diski"
-    IDS_FILENOTFOUND        "Datoteke ni mogoËe najti"
+    IDS_FILENOTFOUND        "Datoteke ni mogoƒçe najti"
     IDS_VERIFYFILE          "Preverite, ali ste vnesli pravilno ime datoteke"
-    IDS_CREATEFILE          "Datoteka ne obstaja\nAli jo ûelite ustvariti?"
-    IDS_OVERWRITEFILE       "Datoteka ûe obstaja.\nAli jo ûelite zamenjati?"
-    IDS_INVALID_FILENAME_TITLE "Neustrezni znaki v imenu"
+    IDS_CREATEFILE          "Datoteka ne obstaja.\nAli jo ≈æelite ustvariti?"
+    IDS_OVERWRITEFILE       "Datoteka ≈æe obstaja.\nAli jo ≈æelite zamenjati?"
+    IDS_INVALID_FILENAME_TITLE "Neveljavni znaki v imenu"
     IDS_INVALID_FILENAME    "Ime datoteke ne sme vsebovati naslednjih znakov: \n                          / : < > |"
     IDS_PATHNOTEXISTING     "Pot ne obstaja"
     IDS_FILENOTEXISTING     "Datoteka ne obstaja"
@@ -386,56 +388,98 @@ STRINGTABLE DISCARDABLE
 
 STRINGTABLE DISCARDABLE
 {
-    PD32_PRINT_TITLE       "Tiskalnik:"
+    PD32_PRINT_TITLE       "Tiskanje"
 
-    PD32_VALUE_UREADABLE                  "Velikost mora biti izraûena s ötevilko."
-    PD32_INVALID_PAGE_RANGE "Ta vrednost ni znotraj dovoljenega obsega.\n\
-Vnesite ötevilo med %d in %d."
-    PD32_FROM_NOT_ABOVE_TO                "Vrednost 'od' ne more biti veËja od vrednosti 'do'."
-    PD32_MARGINS_OVERLAP                  "Robovi se ne prekrivajo ali pa niso na listu papirja.\nVnesite nove velikosti robov."
-    PD32_NR_OF_COPIES_EMPTY               "ätevilo kopij ne more biti 0 in mora biti pozitivno."
-    PD32_TOO_LARGE_COPIES                 "Ta tiskalnik ne omogoËa tolikönega \
-ötevila kopij.\nVnesite ötevilo med 1 in %d."
-    PD32_PRINT_ERROR                      "Napaka pri tiskanju"
-    PD32_NO_DEFAULT_PRINTER               "Preden lahko tiskate, morate namestiti tiskalnik."
-    PD32_CANT_FIND_PRINTER                "Tiskalnika ni bilo mogoËe najti."
-    PD32_OUT_OF_MEMORY                    "Na voljo ni dovolj pomnilnika, da bi bilo mogoËe dokonËati operacijo."
-    PD32_GENERIC_ERROR                    "Med operacijo je priölo do napake."
+    PD32_VALUE_UREADABLE                  "Neveljavna vrednost"
+    PD32_INVALID_PAGE_RANGE "Podana vrednost ne le≈æi znotraj obsega strani.\n\
+Podajte vrednost med %d in %d."
+    PD32_FROM_NOT_ABOVE_TO                "Vrednost 'od' ne more biti veƒçja od \
+vrednosti 'do'."
+    PD32_MARGINS_OVERLAP                  "Robovi se prekrivajo ali pa niso \
+znotraj meja papirja.\nPonovno vnesite vrednosti robov."
+    PD32_NR_OF_COPIES_EMPTY               "Polje '≈†tevilo kopij' ne sme biti prazno."
+    PD32_TOO_LARGE_COPIES                 "Tiskalnik ne podpira tako velikega \
+≈°tevila kopij.\nVnesite vrednost med 1 in %d."
+    PD32_PRINT_ERROR                      "Napaka pri tiskanju."
+    PD32_NO_DEFAULT_PRINTER               "Privzeti tiskalnik ni nastavljen."
+    PD32_CANT_FIND_PRINTER                "Tiskalnika ni mogoƒçe najti."
+    PD32_OUT_OF_MEMORY                    "Zmanjkalo je pomnilnika."
+    PD32_GENERIC_ERROR                    "Med operacijo je pri≈°lo do napake."
     PD32_DRIVER_UNKNOWN                   "Neznan gonilnik tiskalnika."
-    PD32_NO_DEVICES                       "Before you can perform printer-related tasks \
-such as page setup or printing a document, you need to install a printer. \
-Please install one and retry."
+    PD32_NO_DEVICES                       "Preden lahko izvajate operacije, \
+povezane s tiskanjem, morate namestiti tiskalnik. Po namestitvi tiskalnika \
+poskusite znova."
 
-    PD32_DEFAULT_PRINTER                  "Privzeti tiskalnik; "
-    PD32_NR_OF_DOCUMENTS_IN_QUEUE         "%d ËakajoËih dok."
+    PD32_DEFAULT_PRINTER                  "Priveti tiskalnik; "
+    PD32_NR_OF_DOCUMENTS_IN_QUEUE         "V ƒçakalni vrsti je %d dokumentov"
     PD32_MARGINS_IN_INCHES                "Robovi [palci]"
     PD32_MARGINS_IN_MILIMETERS            "Robovi [mm]"
     PD32_MILIMETERS                       "mm"
 
     PD32_PRINTER_STATUS_READY             "Pripravljen"
-    PD32_PRINTER_STATUS_PAUSED            "ZaËasno zaustavljen; "
+    PD32_PRINTER_STATUS_PAUSED            "Zaƒçasno zaustavljen; "
     PD32_PRINTER_STATUS_ERROR             "Napaka; "
-    PD32_PRINTER_STATUS_PENDING_DELETION  "Priölo bo do brisanja; "
-    PD32_PRINTER_STATUS_PAPER_JAM         "Papir se je zagozdil; "
-    PD32_PRINTER_STATUS_PAPER_OUT         "Ni veË papirja; "
-    PD32_PRINTER_STATUS_MANUAL_FEED       "RoËno podajanje; "
-    PD32_PRINTER_STATUS_PAPER_PROBLEM     "Teûave s papirjem; "
+    PD32_PRINTER_STATUS_PENDING_DELETION  "Priprava na brisanje; "
+    PD32_PRINTER_STATUS_PAPER_JAM         "Papir se je zataknil; "
+    PD32_PRINTER_STATUS_PAPER_OUT         "Zmanjkalo je papirja; "
+    PD32_PRINTER_STATUS_MANUAL_FEED       "Roƒçno podajanje papirja; "
+    PD32_PRINTER_STATUS_PAPER_PROBLEM     "Te≈æave s papirjem; "
     PD32_PRINTER_STATUS_OFFLINE           "Ne sprejema podatkov; "
     PD32_PRINTER_STATUS_IO_ACTIVE         "V/I aktiven; "
     PD32_PRINTER_STATUS_BUSY              "Zaposlen; "
     PD32_PRINTER_STATUS_PRINTING          "Tiska; "
     PD32_PRINTER_STATUS_OUTPUT_BIN_FULL   "Izhodni predal je poln; "
     PD32_PRINTER_STATUS_NOT_AVAILABLE     "Ni na voljo; "
-    PD32_PRINTER_STATUS_WAITING           "»aka; "
+    PD32_PRINTER_STATUS_WAITING           "ƒåaka; "
     PD32_PRINTER_STATUS_PROCESSING        "Obdeluje; "
-    PD32_PRINTER_STATUS_INITIALIZING      "Se inicializira; "
-    PD32_PRINTER_STATUS_WARMING_UP        "Se ogreva; "
+    PD32_PRINTER_STATUS_INITIALIZING      "Inicializacija; "
+    PD32_PRINTER_STATUS_WARMING_UP        "Ogrevanje; "
     PD32_PRINTER_STATUS_TONER_LOW         "Zmanjkuje tonerja; "
     PD32_PRINTER_STATUS_NO_TONER          "Ni tonerja; "
-    PD32_PRINTER_STATUS_PAGE_PUNT         "Predmet strani; "
+    PD32_PRINTER_STATUS_PAGE_PUNT         "Premet strani; "
     PD32_PRINTER_STATUS_USER_INTERVENTION "Poseg uporabnika; "
     PD32_PRINTER_STATUS_OUT_OF_MEMORY     "Zmanjkalo je pomnilnika; "
-    PD32_PRINTER_STATUS_DOOR_OPEN         "Odprto ohiöje; "
-    PD32_PRINTER_STATUS_SERVER_UNKNOWN    "Neznan streûnik; "
+    PD32_PRINTER_STATUS_DOOR_OPEN         "Odprto ohi≈°je; "
+    PD32_PRINTER_STATUS_SERVER_UNKNOWN    "Neznan stre≈ænik; "
     PD32_PRINTER_STATUS_POWER_SAVE        "V pripravljenosti; "
 }
+
+STRINGTABLE DISCARDABLE /* Font styles */
+{
+    IDS_FONT_REGULAR       "Navadno"
+    IDS_FONT_BOLD          "Krepko"
+    IDS_FONT_ITALIC        "Le≈æeƒçe"
+    IDS_FONT_BOLD_ITALIC   "Krepko le≈æeƒçe"
+}
+
+STRINGTABLE DISCARDABLE /* Color names */
+{
+    IDS_COLOR_BLACK     "ƒårna"
+    IDS_COLOR_MAROON    "Kostanjeva"
+    IDS_COLOR_GREEN     "Zelena"
+    IDS_COLOR_OLIVE     "Olivna"
+    IDS_COLOR_NAVY      "Mornari≈°ka"
+    IDS_COLOR_PURPLE    "Vijoliƒçna"
+    IDS_COLOR_TEAL      "Zelenomodra"
+    IDS_COLOR_GRAY      "Siva"
+    IDS_COLOR_SILVER    "Srebrna"
+    IDS_COLOR_RED       "Rdeƒça"
+    IDS_COLOR_LIME      "Citronska"
+    IDS_COLOR_YELLOW    "Rumena"
+    IDS_COLOR_BLUE      "Modra"
+    IDS_COLOR_FUCHSIA   "Roza"
+    IDS_COLOR_AQUA      "Akvamarin"
+    IDS_COLOR_WHITE     "Bela"
+}
+
+STRINGTABLE DISCARDABLE
+{
+    IDS_FONT_SIZE   "Izberite velikost pisave med %d in %d toƒçk."
+    IDS_SAVE_BUTTON "&Shrani"
+    IDS_SAVE_IN     "Shrani &v:"
+    IDS_SAVE        "Shrani"
+    IDS_SAVE_AS     "Shrani kot"
+    IDS_OPEN_FILE   "Odpri datoteko"
+}
+
+#pragma code_page(default)
