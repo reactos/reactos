@@ -2569,7 +2569,7 @@ CONFIGRET WINAPI CM_Is_Dock_Station_Present_Ex(
     }
 
     return PNP_IsDockStationPresent(BindingHandle,
-                                    (unsigned long *)pbPresent);
+                                    pbPresent);
 }
 
 

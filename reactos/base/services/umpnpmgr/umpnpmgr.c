@@ -1252,7 +1252,7 @@ Done:
 /* Function 38 */
 CONFIGRET
 PNP_IsDockStationPresent(handle_t BindingHandle,
-                         unsigned long *Present)
+                         BOOL *Present)
 {
     HKEY hKey;
     DWORD dwType;
