@@ -561,9 +561,9 @@ SetServiceStatus(SERVICE_STATUS_HANDLE hServiceStatus,
     HandleBind();
 
     /* Call to services.exe using RPC */
-    dwError = ScmrSetServiceStatus(BindingHandle,
-                                   (unsigned long)hServiceStatus,
-                                   lpServiceStatus);
+    dwError = RSetServiceStatus(BindingHandle,
+                                (SC_RPC_HANDLE)hServiceStatus,
+                                lpServiceStatus);
     if (dwError != ERROR_SUCCESS)
     {
         ERR("ScmrSetServiceStatus() failed (Error %lu)\n", dwError);

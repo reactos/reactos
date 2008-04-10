@@ -236,13 +236,13 @@ ScmAssignNewTag(PSERVICE lpService)
 
 
 /* Function 0 */
-DWORD ScmrCloseServiceHandle(
+DWORD RCloseServiceHandle(
     handle_t BindingHandle,
     LPSC_RPC_HANDLE hSCObject)
 {
     PMANAGER_HANDLE hManager;
 
-    DPRINT("ScmrCloseServiceHandle() called\n");
+    DPRINT("RCloseServiceHandle() called\n");
 
     DPRINT("hSCObject = %p\n", *hSCObject);
 
@@ -262,7 +262,7 @@ DWORD ScmrCloseServiceHandle(
             HeapFree(GetProcessHeap(), 0, hManager);
         }
 
-        DPRINT("ScmrCloseServiceHandle() done\n");
+        DPRINT("RCloseServiceHandle() done\n");
         return ERROR_SUCCESS;
     }
     else if (hManager->Handle.Tag == SERVICE_TAG)
@@ -277,7 +277,7 @@ DWORD ScmrCloseServiceHandle(
             HeapFree(GetProcessHeap(), 0, hManager);
         }
 
-        DPRINT("ScmrCloseServiceHandle() done\n");
+        DPRINT("RCloseServiceHandle() done\n");
         return ERROR_SUCCESS;
     }
 
@@ -288,7 +288,7 @@ DWORD ScmrCloseServiceHandle(
 
 
 /* Function 1 */
-DWORD ScmrControlService(
+DWORD RControlService(
     handle_t BindingHandle,
     SC_RPC_HANDLE hService,
     DWORD dwControl,
@@ -299,7 +299,7 @@ DWORD ScmrControlService(
     ACCESS_MASK DesiredAccess;
     DWORD dwError = ERROR_SUCCESS;
 
-    DPRINT("ScmrControlService() called\n");
+    DPRINT("RControlService() called\n");
 
     if (ScmShutdown)
         return ERROR_SHUTDOWN_IN_PROGRESS;
@@ -377,7 +377,7 @@ DWORD ScmrControlService(
 
 
 /* Function 2 */
-DWORD ScmrDeleteService(
+DWORD RDeleteService(
     handle_t BindingHandle,
     SC_RPC_HANDLE hService)
 {
@@ -385,7 +385,7 @@ DWORD ScmrDeleteService(
     PSERVICE lpService;
     DWORD dwError;
 
-    DPRINT("ScmrDeleteService() called\n");
+    DPRINT("RDeleteService() called\n");
 
     if (ScmShutdown)
         return ERROR_SHUTDOWN_IN_PROGRESS;
@@ -420,21 +420,21 @@ DWORD ScmrDeleteService(
 
     /* FIXME: Release service database lock */
 
-    DPRINT("ScmrDeleteService() done\n");
+    DPRINT("RDeleteService() done\n");
 
     return dwError;
 }
 
 
 /* Function 3 */
-DWORD ScmrLockServiceDatabase(
+DWORD RLockServiceDatabase(
     handle_t BindingHandle,
     SC_RPC_HANDLE hSCManager,
     LPSC_RPC_LOCK lpLock)
 {
     PMANAGER_HANDLE hMgr;
 
-    DPRINT("ScmrLockServiceDatabase() called\n");
+    DPRINT("RLockServiceDatabase() called\n");
 
     *lpLock = 0;
 
@@ -456,7 +456,7 @@ DWORD ScmrLockServiceDatabase(
 
 
 /* Function 4 */
-DWORD ScmrQueryServiceObjectSecurity(
+DWORD RQueryServiceObjectSecurity(
     handle_t BindingHandle,
     SC_RPC_HANDLE hService,
     SECURITY_INFORMATION dwSecurityInformation,
@@ -472,7 +472,7 @@ DWORD ScmrQueryServiceObjectSecurity(
     DWORD dwBytesNeeded;
     DWORD dwError;
 
-    DPRINT("ScmrQueryServiceObjectSecurity() called\n");
+    DPRINT("RQueryServiceObjectSecurity() called\n");
 
     hSvc = (PSERVICE_HANDLE)hService;
     if (!hSvc || hSvc->Handle.Tag != SERVICE_TAG)
@@ -540,7 +540,7 @@ DWORD ScmrQueryServiceObjectSecurity(
 
 
 /* Function 5 */
-DWORD ScmrSetServiceObjectSecurity(
+DWORD RSetServiceObjectSecurity(
     handle_t BindingHandle,
     SC_RPC_HANDLE hService,
     DWORD dwSecurityInformation,
@@ -555,7 +555,7 @@ DWORD ScmrSetServiceObjectSecurity(
     NTSTATUS Status;
     DWORD dwError;
 
-    DPRINT1("ScmrSetServiceObjectSecurity() called\n");
+    DPRINT1("RSetServiceObjectSecurity() called\n");
 
     hSvc = (PSERVICE_HANDLE)hService;
     if (!hSvc || hSvc->Handle.Tag != SERVICE_TAG)
@@ -653,14 +653,14 @@ Done:
 
     /* FIXME: Unlock service database */
 
-    DPRINT("ScmrSetServiceObjectSecurity() done (Error %lu)\n", dwError);
+    DPRINT("RSetServiceObjectSecurity() done (Error %lu)\n", dwError);
 
     return dwError;
 }
 
 
 /* Function 6 */
-DWORD ScmrQueryServiceStatus(
+DWORD RQueryServiceStatus(
     handle_t BindingHandle,
     SC_RPC_HANDLE hService,
     LPSERVICE_STATUS lpServiceStatus)
@@ -668,7 +668,7 @@ DWORD ScmrQueryServiceStatus(
     PSERVICE_HANDLE hSvc;
     PSERVICE lpService;
 
-    DPRINT("ScmrQueryServiceStatus() called\n");
+    DPRINT("RQueryServiceStatus() called\n");
 
     if (ScmShutdown)
         return ERROR_SHUTDOWN_IN_PROGRESS;
@@ -704,14 +704,14 @@ DWORD ScmrQueryServiceStatus(
 
 
 /* Function 7 */
-DWORD ScmrSetServiceStatus(
+DWORD RSetServiceStatus(
     handle_t BindingHandle,
     SC_RPC_HANDLE hServiceStatus,
     LPSERVICE_STATUS lpServiceStatus)
 {
     PSERVICE lpService;
 
-    DPRINT("ScmrSetServiceStatus() called\n");
+    DPRINT("RSetServiceStatus() called\n");
 
     if (ScmShutdown)
         return ERROR_SHUTDOWN_IN_PROGRESS;
@@ -728,14 +728,14 @@ DWORD ScmrSetServiceStatus(
                   sizeof(SERVICE_STATUS));
 
     DPRINT("Set %S to %lu\n", lpService->lpDisplayName, lpService->Status.dwCurrentState);
-    DPRINT("ScmrSetServiceStatus() done\n");
+    DPRINT("RSetServiceStatus() done\n");
 
     return ERROR_SUCCESS;
 }
 
 
 /* Function 8 */
-DWORD ScmrUnlockServiceDatabase(
+DWORD RUnlockServiceDatabase(
     handle_t BindingHandle,
     LPSC_RPC_LOCK Lock)
 {
@@ -745,7 +745,7 @@ DWORD ScmrUnlockServiceDatabase(
 
 
 /* Function 9 */
-DWORD ScmrNotifyBootConfigStatus(
+DWORD RNotifyBootConfigStatus(
     handle_t BindingHandle,
     SVCCTL_HANDLEW lpMachineName,
     DWORD BootAcceptable)
@@ -756,7 +756,7 @@ DWORD ScmrNotifyBootConfigStatus(
 
 
 /* Function 10 */
-DWORD ScmrSetServiceBitsW(
+DWORD RSetServiceBitsW(
     handle_t BindingHandle,
     SC_RPC_HANDLE hServiceStatus,
     DWORD dwServiceBits,
@@ -770,7 +770,7 @@ DWORD ScmrSetServiceBitsW(
 
 
 /* Function 11 */
-DWORD ScmrChangeServiceConfigW(
+DWORD RChangeServiceConfigW(
     handle_t BindingHandle,
     SC_RPC_HANDLE hService,
     DWORD dwServiceType,
@@ -791,7 +791,7 @@ DWORD ScmrChangeServiceConfigW(
     PSERVICE lpService = NULL;
     HKEY hServiceKey = NULL;
 
-    DPRINT("ScmrChangeServiceConfigW() called\n");
+    DPRINT("RChangeServiceConfigW() called\n");
     DPRINT("dwServiceType = %lu\n", dwServiceType);
     DPRINT("dwStartType = %lu\n", dwStartType);
     DPRINT("dwErrorControl = %lu\n", dwErrorControl);
@@ -984,7 +984,7 @@ done:
     if (hServiceKey != NULL)
         RegCloseKey(hServiceKey);
 
-    DPRINT("ScmrChangeServiceConfigW() done (Error %lu)\n", dwError);
+    DPRINT("RChangeServiceConfigW() done (Error %lu)\n", dwError);
 
     return dwError;
 }
@@ -1365,7 +1365,7 @@ ScmCanonDriverImagePath(DWORD dwStartType,
 
 
 /* Function 12 */
-DWORD ScmrCreateServiceW(
+DWORD RCreateServiceW(
     handle_t BindingHandle,
     SC_RPC_HANDLE hSCManager,
     LPWSTR lpServiceName,
@@ -1391,7 +1391,7 @@ DWORD ScmrCreateServiceW(
     LPWSTR lpImagePath = NULL;
     HKEY hServiceKey = NULL;
 
-    DPRINT("ScmrCreateServiceW() called\n");
+    DPRINT("RCreateServiceW() called\n");
     DPRINT("lpServiceName = %S\n", lpServiceName);
     DPRINT("lpDisplayName = %S\n", lpDisplayName);
     DPRINT("dwDesiredAccess = %lx\n", dwDesiredAccess);
@@ -1633,14 +1633,14 @@ done:;
     if (lpImagePath != NULL)
         HeapFree(GetProcessHeap(), 0, lpImagePath);
 
-    DPRINT("ScmrCreateServiceW() done (Error %lu)\n", dwError);
+    DPRINT("RCreateServiceW() done (Error %lu)\n", dwError);
 
     return dwError;
 }
 
 
 /* Function 13 */
-DWORD ScmrEnumDependentServicesW(
+DWORD REnumDependentServicesW(
     handle_t BindingHandle,
     SC_RPC_HANDLE hService,
     DWORD dwServiceState,
@@ -1655,14 +1655,14 @@ DWORD ScmrEnumDependentServicesW(
     *pcbBytesNeeded = 0;
     *lpServicesReturned = 0;
 
-    DPRINT1("ScmrEnumDependentServicesW() done (Error %lu)\n", dwError);
+    DPRINT1("REnumDependentServicesW() done (Error %lu)\n", dwError);
 
     return dwError;
 }
 
 
 /* Function 14 */
-DWORD ScmrEnumServicesStatusW(
+DWORD REnumServicesStatusW(
     handle_t BindingHandle,
     SC_RPC_HANDLE hSCManager,
     DWORD dwServiceType,
@@ -1686,7 +1686,7 @@ DWORD ScmrEnumServicesStatusW(
     LPENUM_SERVICE_STATUSW lpStatusPtr;
     LPWSTR lpStringPtr;
 
-    DPRINT("ScmrEnumServicesStatusW() called\n");
+    DPRINT("REnumServicesStatusW() called\n");
 
     if (ScmShutdown)
         return ERROR_SHUTDOWN_IN_PROGRESS;
@@ -1854,14 +1854,14 @@ DWORD ScmrEnumServicesStatusW(
 Done:;
     /* FIXME: Unlock the service list */
 
-    DPRINT("ScmrEnumServicesStatusW() done (Error %lu)\n", dwError);
+    DPRINT("REnumServicesStatusW() done (Error %lu)\n", dwError);
 
     return dwError;
 }
 
 
 /* Function 15 */
-DWORD ScmrOpenSCManagerW(
+DWORD ROpenSCManagerW(
     handle_t BindingHandle,
     LPWSTR lpMachineName,
     LPWSTR lpDatabaseName,
@@ -1871,7 +1871,7 @@ DWORD ScmrOpenSCManagerW(
     DWORD dwError;
     SC_HANDLE hHandle;
 
-    DPRINT("ScmrOpenSCManagerW() called\n");
+    DPRINT("ROpenSCManagerW() called\n");
     DPRINT("lpMachineName = %p\n", lpMachineName);
     DPRINT("lpMachineName: %S\n", lpMachineName);
     DPRINT("lpDataBaseName = %p\n", lpDatabaseName);
@@ -1905,14 +1905,14 @@ DWORD ScmrOpenSCManagerW(
     *lpScHandle = (unsigned long)hHandle; /* FIXME: 64 bit portability */
     DPRINT("*hScm = %p\n", *lpScHandle);
 
-    DPRINT("ScmrOpenSCManagerW() done\n");
+    DPRINT("ROpenSCManagerW() done\n");
 
     return ERROR_SUCCESS;
 }
 
 
 /* Function 16 */
-DWORD ScmrOpenServiceW(
+DWORD ROpenServiceW(
     handle_t BindingHandle,
     SC_RPC_HANDLE hSCManager,
     LPWSTR lpServiceName,
@@ -1924,7 +1924,7 @@ DWORD ScmrOpenServiceW(
     SC_HANDLE hHandle;
     DWORD dwError;
 
-    DPRINT("ScmrOpenServiceW() called\n");
+    DPRINT("ROpenServiceW() called\n");
     DPRINT("hSCManager = %p\n", hSCManager);
     DPRINT("lpServiceName = %p\n", lpServiceName);
     DPRINT("lpServiceName: %S\n", lpServiceName);
@@ -1975,14 +1975,14 @@ DWORD ScmrOpenServiceW(
     *lpServiceHandle = (unsigned long)hHandle; /* FIXME: 64 bit portability */
     DPRINT("*hService = %p\n", *lpServiceHandle);
 
-    DPRINT("ScmrOpenServiceW() done\n");
+    DPRINT("ROpenServiceW() done\n");
 
     return ERROR_SUCCESS;
 }
 
 
 /* Function 17 */
-DWORD ScmrQueryServiceConfigW(
+DWORD RQueryServiceConfigW(
     handle_t BindingHandle,
     SC_RPC_HANDLE hService,
     LPBYTE lpBuf, //LPQUERY_SERVICE_CONFIGW lpServiceConfig,
@@ -2000,7 +2000,7 @@ DWORD ScmrQueryServiceConfigW(
     LPQUERY_SERVICE_CONFIGW lpConfig;
     LPWSTR lpStr;
 
-    DPRINT("ScmrQueryServiceConfigW() called\n");
+    DPRINT("RQueryServiceConfigW() called\n");
 
     if (ScmShutdown)
         return ERROR_SHUTDOWN_IN_PROGRESS;
@@ -2136,14 +2136,14 @@ Done:;
 
     /* FIXME: Unlock the service database */
 
-    DPRINT("ScmrQueryServiceConfigW() done\n");
+    DPRINT("RQueryServiceConfigW() done\n");
 
     return dwError;
 }
 
 
 /* Function 18 */
-DWORD ScmrQueryServiceLockStatusW(
+DWORD RQueryServiceLockStatusW(
     handle_t BindingHandle,
     SC_RPC_HANDLE hSCManager,
     LPQUERY_SERVICE_LOCK_STATUSW lpLockStatus,
@@ -2156,7 +2156,7 @@ DWORD ScmrQueryServiceLockStatusW(
 
 
 /* Function 19 */
-DWORD ScmrStartServiceW(
+DWORD RStartServiceW(
     handle_t BindingHandle,
     SC_RPC_HANDLE hService,
     DWORD argc,
@@ -2166,7 +2166,7 @@ DWORD ScmrStartServiceW(
     PSERVICE_HANDLE hSvc;
     PSERVICE lpService = NULL;
 
-    DPRINT("ScmrStartServiceW() called\n");
+    DPRINT("RStartServiceW() called\n");
 
     if (ScmShutdown)
         return ERROR_SHUTDOWN_IN_PROGRESS;
@@ -2211,7 +2211,7 @@ DWORD ScmrStartServiceW(
 
 
 /* Function 20 */
-DWORD ScmrGetServiceDisplayNameW(
+DWORD RGetServiceDisplayNameW(
     handle_t BindingHandle,
     SC_RPC_HANDLE hSCManager,
     LPWSTR lpServiceName,
@@ -2223,7 +2223,7 @@ DWORD ScmrGetServiceDisplayNameW(
     DWORD dwLength;
     DWORD dwError;
 
-    DPRINT("ScmrGetServiceDisplayNameW() called\n");
+    DPRINT("RGetServiceDisplayNameW() called\n");
     DPRINT("hSCManager = %p\n", hSCManager);
     DPRINT("lpServiceName: %S\n", lpServiceName);
     DPRINT("lpDisplayName: %p\n", lpDisplayName);
@@ -2261,7 +2261,7 @@ DWORD ScmrGetServiceDisplayNameW(
 
 
 /* Function 21 */
-DWORD ScmrGetServiceKeyNameW(
+DWORD RGetServiceKeyNameW(
     handle_t BindingHandle,
     SC_RPC_HANDLE hSCManager,
     LPWSTR lpDisplayName,
@@ -2273,7 +2273,7 @@ DWORD ScmrGetServiceKeyNameW(
     DWORD dwLength;
     DWORD dwError;
 
-    DPRINT("ScmrGetServiceKeyNameW() called\n");
+    DPRINT("RGetServiceKeyNameW() called\n");
     DPRINT("hSCManager = %p\n", hSCManager);
     DPRINT("lpDisplayName: %S\n", lpDisplayName);
     DPRINT("lpServiceName: %p\n", lpServiceName);
@@ -2311,7 +2311,7 @@ DWORD ScmrGetServiceKeyNameW(
 
 
 /* Function 22 */
-DWORD ScmrSetServiceBitsA(
+DWORD RSetServiceBitsA(
     handle_t BindingHandle,
     SC_RPC_HANDLE hServiceStatus,
     DWORD dwServiceBits,
@@ -2325,7 +2325,7 @@ DWORD ScmrSetServiceBitsA(
 
 
 /* Function 23 */
-DWORD ScmrChangeServiceConfigA(
+DWORD RChangeServiceConfigA(
     handle_t BindingHandle,
     SC_RPC_HANDLE hService,
     DWORD dwServiceType,
@@ -2347,7 +2347,7 @@ DWORD ScmrChangeServiceConfigA(
 
 
 /* Function 24 */
-DWORD ScmrCreateServiceA(
+DWORD RCreateServiceA(
     handle_t BindingHandle,
     SC_RPC_HANDLE hSCManager,
     LPSTR lpServiceName,
@@ -2372,7 +2372,7 @@ DWORD ScmrCreateServiceA(
 
 
 /* Function 25 */
-DWORD ScmrEnumDependentServicesA(
+DWORD REnumDependentServicesA(
     handle_t BindingHandle,
     SC_RPC_HANDLE hService,
     DWORD dwServiceState,
@@ -2389,7 +2389,7 @@ DWORD ScmrEnumDependentServicesA(
 
 
 /* Function 26 */
-DWORD ScmrEnumServicesStatusA(
+DWORD REnumServicesStatusA(
     handle_t BindingHandle,
     SC_RPC_HANDLE hSCManager,
     DWORD dwServiceType,
@@ -2406,7 +2406,7 @@ DWORD ScmrEnumServicesStatusA(
 
 
 /* Function 27 */
-DWORD ScmrOpenSCManagerA(
+DWORD ROpenSCManagerA(
     handle_t BindingHandle,
     LPSTR lpMachineName,
     LPSTR lpDatabaseName,
@@ -2417,7 +2417,7 @@ DWORD ScmrOpenSCManagerA(
     UNICODE_STRING DatabaseName;
     DWORD dwError;
 
-    DPRINT("ScmrOpenSCManagerA() called\n");
+    DPRINT("ROpenSCManagerA() called\n");
 
     if (lpMachineName)
         RtlCreateUnicodeStringFromAsciiz(&MachineName,
@@ -2427,7 +2427,7 @@ DWORD ScmrOpenSCManagerA(
         RtlCreateUnicodeStringFromAsciiz(&DatabaseName,
                                          lpDatabaseName);
 
-    dwError = ScmrOpenSCManagerW(BindingHandle,
+    dwError = ROpenSCManagerW(BindingHandle,
                                  lpMachineName ? MachineName.Buffer : NULL,
                                  lpDatabaseName ? DatabaseName.Buffer : NULL,
                                  dwDesiredAccess,
@@ -2444,7 +2444,7 @@ DWORD ScmrOpenSCManagerA(
 
 
 /* Function 28 */
-DWORD ScmrOpenServiceA(
+DWORD ROpenServiceA(
     handle_t BindingHandle,
     SC_RPC_HANDLE hSCManager,
     LPSTR lpServiceName,
@@ -2454,12 +2454,12 @@ DWORD ScmrOpenServiceA(
     UNICODE_STRING ServiceName;
     DWORD dwError;
 
-    DPRINT("ScmrOpenServiceA() called\n");
+    DPRINT("ROpenServiceA() called\n");
 
     RtlCreateUnicodeStringFromAsciiz(&ServiceName,
                                      lpServiceName);
 
-    dwError = ScmrOpenServiceW(BindingHandle,
+    dwError = ROpenServiceW(BindingHandle,
                                hSCManager,
                                ServiceName.Buffer,
                                dwDesiredAccess,
@@ -2472,7 +2472,7 @@ DWORD ScmrOpenServiceA(
 
 
 /* Function 29 */
-DWORD ScmrQueryServiceConfigA(
+DWORD RQueryServiceConfigA(
     handle_t BindingHandle,
     SC_RPC_HANDLE hService,
     LPQUERY_SERVICE_CONFIGA lpServiceConfig,
@@ -2485,7 +2485,7 @@ DWORD ScmrQueryServiceConfigA(
 
 
 /* Function 30 */
-DWORD ScmrQueryServiceLockStatusA(
+DWORD RQueryServiceLockStatusA(
     handle_t BindingHandle,
     SC_RPC_HANDLE hSCManager,
     LPQUERY_SERVICE_LOCK_STATUSA lpLockStatus,
@@ -2498,7 +2498,7 @@ DWORD ScmrQueryServiceLockStatusA(
 
 
 /* Function 31 */
-DWORD ScmrStartServiceA(
+DWORD RStartServiceA(
     handle_t BindingHandle,
     SC_RPC_HANDLE hService,
     DWORD argc,
@@ -2508,7 +2508,7 @@ DWORD ScmrStartServiceA(
     PSERVICE_HANDLE hSvc;
     PSERVICE lpService = NULL;
 
-    DPRINT1("ScmrStartServiceA() called\n");
+    DPRINT1("RStartServiceA() called\n");
 
     if (ScmShutdown)
         return ERROR_SHUTDOWN_IN_PROGRESS;
@@ -2552,7 +2552,7 @@ DWORD ScmrStartServiceA(
 
 
 /* Function 32 */
-DWORD ScmrGetServiceDisplayNameA(
+DWORD RGetServiceDisplayNameA(
     handle_t BindingHandle,
     SC_RPC_HANDLE hSCManager,
     LPSTR lpServiceName,
@@ -2565,7 +2565,7 @@ DWORD ScmrGetServiceDisplayNameA(
 
 
 /* Function 33 */
-DWORD ScmrGetServiceKeyNameA(
+DWORD RGetServiceKeyNameA(
     handle_t BindingHandle,
     SC_RPC_HANDLE hSCManager,
     LPSTR lpDisplayName,
@@ -2578,7 +2578,7 @@ DWORD ScmrGetServiceKeyNameA(
 
 
 /* Function 34 */
-DWORD ScmrGetCurrentGroupStateW(
+DWORD RGetCurrentGroupStateW(
     handle_t BindingHandle)
 {
     UNIMPLEMENTED;
@@ -2587,7 +2587,7 @@ DWORD ScmrGetCurrentGroupStateW(
 
 
 /* Function 35 */
-DWORD ScmrEnumServiceGroupW(
+DWORD REnumServiceGroupW(
     handle_t BindingHandle,
     SC_RPC_HANDLE hSCManager,
     DWORD dwServiceType,
@@ -2605,7 +2605,7 @@ DWORD ScmrEnumServiceGroupW(
 
 
 /* Function 36 */
-DWORD ScmrChangeServiceConfig2A(
+DWORD RChangeServiceConfig2A(
     handle_t BindingHandle,
     SC_RPC_HANDLE hService,
     SC_RPC_CONFIG_INFOA Info)
@@ -2616,7 +2616,7 @@ DWORD ScmrChangeServiceConfig2A(
 
 
 /* Function 37 */
-DWORD ScmrChangeServiceConfig2W(
+DWORD RChangeServiceConfig2W(
     handle_t BindingHandle,
     SC_RPC_HANDLE hService,
     SC_RPC_CONFIG_INFOW Info)
@@ -2626,7 +2626,7 @@ DWORD ScmrChangeServiceConfig2W(
     PSERVICE lpService = NULL;
     HKEY hServiceKey = NULL;
 
-    DPRINT("ScmrChangeServiceConfig2W() called\n");
+    DPRINT("RChangeServiceConfig2W() called\n");
     DPRINT("dwInfoLevel = %lu\n", Info.dwInfoLevel);
 
     if (ScmShutdown)
@@ -2702,14 +2702,14 @@ done:
     if (hServiceKey != NULL)
         RegCloseKey(hServiceKey);
 
-    DPRINT("ScmrChangeServiceConfig2W() done (Error %lu)\n", dwError);
+    DPRINT("RChangeServiceConfig2W() done (Error %lu)\n", dwError);
 
     return dwError;
 }
 
 
 /* Function 38 */
-DWORD ScmrQueryServiceConfig2A(
+DWORD RQueryServiceConfig2A(
     handle_t BindingHandle,
     SC_RPC_HANDLE hService,
     DWORD dwInfoLevel,
@@ -2723,7 +2723,7 @@ DWORD ScmrQueryServiceConfig2A(
 
 
 /* Function 39 */
-DWORD ScmrQueryServiceConfig2W(
+DWORD RQueryServiceConfig2W(
     handle_t BindingHandle,
     SC_RPC_HANDLE hService,
     DWORD dwInfoLevel,
@@ -2738,7 +2738,7 @@ DWORD ScmrQueryServiceConfig2W(
     DWORD dwRequiredSize;
     LPWSTR lpDescription = NULL;
 
-    DPRINT("ScmrQueryServiceConfig2W() called\n");
+    DPRINT("RQueryServiceConfig2W() called\n");
 
     if (ScmShutdown)
         return ERROR_SHUTDOWN_IN_PROGRESS;
@@ -2814,14 +2814,14 @@ done:
 
     /* FIXME: Unlock database */
 
-    DPRINT("ScmrQueryServiceConfig2W() done (Error %lu)\n", dwError);
+    DPRINT("RQueryServiceConfig2W() done (Error %lu)\n", dwError);
 
     return dwError;
 }
 
 
 /* Function 40 */
-DWORD ScmrQueryServiceStatusEx(
+DWORD RQueryServiceStatusEx(
     handle_t BindingHandle,
     SC_RPC_HANDLE hService,
     SC_STATUS_TYPE InfoLevel,
@@ -2833,7 +2833,7 @@ DWORD ScmrQueryServiceStatusEx(
     PSERVICE_HANDLE hSvc;
     PSERVICE lpService;
 
-    DPRINT("ScmrQueryServiceStatusEx() called\n");
+    DPRINT("RQueryServiceStatusEx() called\n");
 
     if (ScmShutdown)
         return ERROR_SHUTDOWN_IN_PROGRESS;
@@ -2882,7 +2882,7 @@ DWORD ScmrQueryServiceStatusEx(
 
 
 /* Function 41 */
-DWORD ScmrEnumServicesStatusExA(
+DWORD REnumServicesStatusExA(
     handle_t BindingHandle,
     SC_RPC_HANDLE hSCManager,
     SC_ENUM_TYPE InfoLevel,
@@ -2903,7 +2903,7 @@ DWORD ScmrEnumServicesStatusExA(
 
 
 /* Function 42 */
-DWORD ScmrEnumServicesStatusExW(
+DWORD REnumServicesStatusExW(
     handle_t BindingHandle,
     SC_RPC_HANDLE hSCManager,
     SC_ENUM_TYPE InfoLevel,
@@ -2929,7 +2929,7 @@ DWORD ScmrEnumServicesStatusExW(
     LPENUM_SERVICE_STATUS_PROCESSW lpStatusPtr;
     LPWSTR lpStringPtr;
 
-    DPRINT("ScmrEnumServicesStatusExW() called\n");
+    DPRINT("REnumServicesStatusExW() called\n");
 
     if (ScmShutdown)
         return ERROR_SHUTDOWN_IN_PROGRESS;
@@ -3147,14 +3147,14 @@ DWORD ScmrEnumServicesStatusExW(
 Done:;
     /* Unlock the service list */
 
-    DPRINT("ScmrEnumServicesStatusExW() done (Error %lu)\n", dwError);
+    DPRINT("REnumServicesStatusExW() done (Error %lu)\n", dwError);
 
     return dwError;
 }
 
 
 /* Function 43 */
-DWORD ScmrSendTSMessage(
+DWORD RSendTSMessage(
     handle_t BindingHandle)
 {
     UNIMPLEMENTED;
@@ -3163,7 +3163,7 @@ DWORD ScmrSendTSMessage(
 
 
 /* Function 44 */
-DWORD ScmrCreateServiceWOW64A(
+DWORD RCreateServiceWOW64A(
     handle_t BindingHandle,
     LPSTR lpServiceName,
     LPSTR lpDisplayName,
@@ -3187,7 +3187,7 @@ DWORD ScmrCreateServiceWOW64A(
 
 
 /* Function 45 */
-DWORD ScmrCreateServiceWOW64W(
+DWORD RCreateServiceWOW64W(
     handle_t BindingHandle,
     LPWSTR lpServiceName,
     LPWSTR lpDisplayName,
@@ -3211,7 +3211,7 @@ DWORD ScmrCreateServiceWOW64W(
 
 
 /* Function 46 */
-DWORD ScmrFunction46(
+DWORD RQueryServiceTagInfo(
     handle_t BindingHandle)
 {
     UNIMPLEMENTED;
@@ -3220,7 +3220,7 @@ DWORD ScmrFunction46(
 
 
 /* Function 47 */
-DWORD ScmrNotifyServiceStatusChange(
+DWORD RNotifyServiceStatusChange(
     handle_t BindingHandle,
     SC_RPC_HANDLE hService,
     SC_RPC_NOTIFY_PARAMS NotifyParams,
@@ -3235,7 +3235,7 @@ DWORD ScmrNotifyServiceStatusChange(
 
 
 /* Function 48 */
-DWORD ScmrGetNotifyResults(
+DWORD RGetNotifyResults(
     handle_t BindingHandle,
     SC_NOTIFY_RPC_HANDLE hNotify,
     PSC_RPC_NOTIFY_PARAMS_LIST *ppNotifyParams)
@@ -3246,7 +3246,7 @@ DWORD ScmrGetNotifyResults(
 
 
 /* Function 49 */
-DWORD ScmrCloseNotifyHandle(
+DWORD RCloseNotifyHandle(
     handle_t BindingHandle,
     LPSC_NOTIFY_RPC_HANDLE phNotify,
     PBOOL pfApcFired)
@@ -3257,7 +3257,7 @@ DWORD ScmrCloseNotifyHandle(
 
 
 /* Function 50 */
-DWORD ScmrControlServiceExA(
+DWORD RControlServiceExA(
     handle_t BindingHandle,
     SC_RPC_HANDLE hService,
     DWORD dwControl,
@@ -3269,7 +3269,7 @@ DWORD ScmrControlServiceExA(
 
 
 /* Function 51 */
-DWORD ScmrControlServiceExW(
+DWORD RControlServiceExW(
     handle_t BindingHandle,
     SC_RPC_HANDLE hService,
     DWORD dwControl,
@@ -3281,7 +3281,7 @@ DWORD ScmrControlServiceExW(
 
 
 /* Function 52 */
-DWORD ScmrFunction52(
+DWORD RSendPnPMessage(
     handle_t BindingHandle)
 {
     UNIMPLEMENTED;
@@ -3290,7 +3290,7 @@ DWORD ScmrFunction52(
 
 
 /* Function 53 */
-DWORD ScmrFunction53(
+DWORD RValidatePnPService(
     handle_t BindingHandle)
 {
     UNIMPLEMENTED;
@@ -3299,7 +3299,7 @@ DWORD ScmrFunction53(
 
 
 /* Function 54 */
-DWORD ScmrFunction54(
+DWORD ROpenServiceStatusHandle(
     handle_t BindingHandle)
 {
     UNIMPLEMENTED;
@@ -3308,7 +3308,7 @@ DWORD ScmrFunction54(
 
 
 /* Function 55 */
-DWORD ScmrFunction55(
+DWORD RFunction55(
     handle_t BindingHandle)
 {
     UNIMPLEMENTED;
