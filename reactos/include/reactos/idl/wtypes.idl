@@ -1,14 +1,26 @@
 #define BYTE unsigned char
+#define UCHAR unsigned char
 #define WORD unsigned short
-#define DWORD unsigned long
-#define ULONG unsigned long
+
 #define BOOL int
-#define LPSTR char*
-#define LPCSTR char*
-#define LPWSTR wchar_t*
-#define LPCWSTR wchar_t*
-#define LPBYTE unsigned char*
-#define LPDWORD unsigned long*
-#define PBOOL unsigned long*
+typedef wchar_t WCHAR;
+typedef char CHAR;
+
+typedef void *PVOID;
+typedef BOOL *PBOOL;
+typedef unsigned char *LPBYTE;
+typedef unsigned long DWORD, *LPDWORD;
+typedef CHAR *LPSTR;
+typedef WCHAR *LPWSTR;
+
+#define LPCSTR LPSTR
+#define LPCWSTR LPWSTR
+#define ULONG unsigned long
+#define PBYTE unsigned char*
+#define PWSTR wchar_t*
 
 #define NTSTATUS long
+cpp_quote("#if 0")
+typedef int GUID;
+typedef unsigned long ULONGLONG;
+cpp_quote("#endif")

@@ -88,20 +88,21 @@ ChangeServiceConfig2A(SC_HANDLE hService,
                       DWORD dwInfoLevel,
                       LPVOID lpInfo)
 {
-    DWORD lpInfoSize;
+    SC_RPC_CONFIG_INFOA Info;
     DWORD dwError;
 
     TRACE("ChangeServiceConfig2A() called\n");
 
-    /* Determine the length of the lpInfo parameter */
+    /* Fill relevent field of the Info structure */
+    Info.dwInfoLevel = dwInfoLevel;
     switch (dwInfoLevel)
     {
         case SERVICE_CONFIG_DESCRIPTION:
-            lpInfoSize = sizeof(SERVICE_DESCRIPTIONA);
+            Info.psd = (LPSERVICE_DESCRIPTIONA)&lpInfo;
             break;
 
         case SERVICE_CONFIG_FAILURE_ACTIONS:
-            lpInfoSize = sizeof(SERVICE_FAILURE_ACTIONSA);
+            Info.psfa = (LPSERVICE_FAILURE_ACTIONSA)&lpInfo;
             break;
 
         default:
@@ -116,10 +117,8 @@ ChangeServiceConfig2A(SC_HANDLE hService,
     HandleBind();
 
     dwError = ScmrChangeServiceConfig2A(BindingHandle,
-                                        (unsigned int)hService,
-                                        dwInfoLevel,
-                                        lpInfo,
-                                        lpInfoSize);
+                                        (SC_RPC_HANDLE)hService,
+                                        Info);
     if (dwError != ERROR_SUCCESS)
     {
         ERR("ScmrChangeServiceConfig2A() failed (Error %lu)\n", dwError);
@@ -141,42 +140,23 @@ ChangeServiceConfig2W(SC_HANDLE hService,
                       DWORD dwInfoLevel,
                       LPVOID lpInfo)
 {
-    LPBYTE lpSendData = NULL;
-    DWORD dwInfoSize;
+    SC_RPC_CONFIG_INFOW Info;
     DWORD dwError;
 
     TRACE("ChangeServiceConfig2W() called\n");
 
+    /* Fill relevent field of the Info structure */
+    Info.dwInfoLevel = dwInfoLevel;
     switch (dwInfoLevel)
     {
         case SERVICE_CONFIG_DESCRIPTION:
         {
-            LPSERVICE_DESCRIPTIONW lpServiceDescription = lpInfo;
-            DWORD dwStringSize;
-
-            dwInfoSize = sizeof(SERVICE_DESCRIPTIONW);
-            dwStringSize = (wcslen(lpServiceDescription->lpDescription) + 1) * sizeof(WCHAR);
-            dwInfoSize += dwStringSize;
-
-            lpSendData = HeapAlloc(GetProcessHeap(), 0, dwInfoSize);
-            if (lpSendData)
-            {
-                LPBYTE pt = lpSendData;
-
-                CopyMemory(pt, lpInfo, sizeof(SERVICE_DESCRIPTIONW));
-                pt += sizeof(SERVICE_DESCRIPTIONW);
-                CopyMemory(pt, lpServiceDescription->lpDescription, dwStringSize);
-            }
-            else
-            {
-                SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-                return FALSE;
-            }
+            Info.psd = (LPSERVICE_DESCRIPTIONW)&lpInfo;
             break;
         }
 
         case SERVICE_CONFIG_FAILURE_ACTIONS:
-            dwInfoSize = sizeof(SERVICE_FAILURE_ACTIONSW);
+            Info.psfa = (LPSERVICE_FAILURE_ACTIONSW)&lpInfo;
             break;
 
         default:
@@ -186,27 +166,19 @@ ChangeServiceConfig2W(SC_HANDLE hService,
     }
 
     if (lpInfo == NULL)
-        goto done;
+        return TRUE;
 
     HandleBind();
 
     dwError = ScmrChangeServiceConfig2W(BindingHandle,
-                                        (unsigned int)hService,
-                                        dwInfoLevel,
-                                        lpSendData,
-                                        dwInfoSize);
+                                        (SC_RPC_HANDLE)hService,
+                                        Info);
     if (dwError != ERROR_SUCCESS)
     {
         ERR("ScmrChangeServiceConfig2W() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
         return FALSE;
     }
-
-done:
-    if (lpSendData != NULL)
-        HeapFree(GetProcessHeap(), 0, lpSendData);
-
-    TRACE("ChangeServiceConfig2W() done\n");
 
     return TRUE;
 }
@@ -324,14 +296,14 @@ ChangeServiceConfigW(SC_HANDLE hService,
 
     /* Call to services.exe using RPC */
     dwError = ScmrChangeServiceConfigW(BindingHandle,
-                                       (unsigned int)hService,
+                                       (SC_RPC_HANDLE)hService,
                                        dwServiceType,
                                        dwStartType,
                                        dwErrorControl,
                                        (LPWSTR)lpBinaryPathName,
                                        (LPWSTR)lpLoadOrderGroup,
                                        lpdwTagId,
-                                       (LPWSTR)lpDependencies,
+                                       (LPBYTE)lpDependencies,
                                        dwDependenciesLength,
                                        (LPWSTR)lpServiceStartName,
                                        NULL,              /* FIXME: lpPassword */
@@ -364,7 +336,7 @@ CloseServiceHandle(SC_HANDLE hSCObject)
 
     /* Call to services.exe using RPC */
     dwError = ScmrCloseServiceHandle(BindingHandle,
-                                     (unsigned int)hSCObject);
+                                     (LPSC_RPC_HANDLE)&hSCObject);
     if (dwError)
     {
         ERR("ScmrCloseServiceHandle() failed (Error %lu)\n", dwError);
@@ -644,7 +616,7 @@ CreateServiceW(SC_HANDLE hSCManager,
 
     /* Call to services.exe using RPC */
     dwError = ScmrCreateServiceW(BindingHandle,
-                                 (unsigned int)hSCManager,
+                                 (SC_RPC_HANDLE)hSCManager,
                                  (LPWSTR)lpServiceName,
                                  (LPWSTR)lpDisplayName,
                                  dwDesiredAccess,
@@ -654,12 +626,12 @@ CreateServiceW(SC_HANDLE hSCManager,
                                  (LPWSTR)lpBinaryPathName,
                                  (LPWSTR)lpLoadOrderGroup,
                                  lpdwTagId,
-                                 (LPWSTR)lpDependencies,
+                                 (LPBYTE)lpDependencies,
                                  dwDependenciesLength,
                                  (LPWSTR)lpServiceStartName,
                                  NULL,              /* FIXME: lpPassword */
                                  0,                 /* FIXME: dwPasswordLength */
-                                 (unsigned long *)&hService);
+                                 (SC_RPC_HANDLE *)&hService);
     if (dwError != ERROR_SUCCESS)
     {
         ERR("ScmrCreateServiceW() failed (Error %lu)\n", dwError);
@@ -1256,8 +1228,8 @@ LockServiceDatabase(SC_HANDLE hSCManager)
 
     /* Call to services.exe using RPC */
     dwError = ScmrLockServiceDatabase(BindingHandle,
-                                      (unsigned int)hSCManager,
-                                      (unsigned int *)&hLock);
+                                      (SC_RPC_HANDLE)hSCManager,
+                                      (SC_RPC_LOCK *)&hLock);
     if (dwError != ERROR_SUCCESS)
     {
         ERR("ScmrLockServiceDatabase() failed (Error %lu)\n", dwError);
@@ -1483,8 +1455,8 @@ QueryServiceConfigA(SC_HANDLE hService,
 
     /* Call to services.exe using RPC */
     dwError = ScmrQueryServiceConfigA(BindingHandle,
-                                      (unsigned int)hService,
-                                      (unsigned char *)lpServiceConfig,
+                                      (SC_RPC_HANDLE)hService,
+                                      lpServiceConfig,
                                       cbBufSize,
                                       pcbBytesNeeded);
     if (dwError != ERROR_SUCCESS)
@@ -1546,8 +1518,8 @@ QueryServiceConfigW(SC_HANDLE hService,
 
     /* Call to services.exe using RPC */
     dwError = ScmrQueryServiceConfigW(BindingHandle,
-                                      (unsigned int)hService,
-                                      (unsigned char *)lpServiceConfig,
+                                      (SC_RPC_HANDLE)hService,
+                                      (LPBYTE)lpServiceConfig,
                                       cbBufSize,
                                       pcbBytesNeeded);
     if (dwError != ERROR_SUCCESS)
@@ -1758,8 +1730,8 @@ QueryServiceLockStatusA(SC_HANDLE hSCManager,
 
     /* Call to services.exe using RPC */
     dwError = ScmrQueryServiceLockStatusA(BindingHandle,
-                                          (unsigned int)hSCManager,
-                                          (unsigned char *)lpLockStatus,
+                                          (SC_RPC_HANDLE)hSCManager,
+                                          lpLockStatus,
                                           cbBufSize,
                                           pcbBytesNeeded);
     if (dwError != ERROR_SUCCESS)
@@ -1800,8 +1772,8 @@ QueryServiceLockStatusW(SC_HANDLE hSCManager,
 
     /* Call to services.exe using RPC */
     dwError = ScmrQueryServiceLockStatusW(BindingHandle,
-                                          (unsigned int)hSCManager,
-                                          (unsigned char *)lpLockStatus,
+                                          (SC_RPC_HANDLE)hSCManager,
+                                          lpLockStatus,
                                           cbBufSize,
                                           pcbBytesNeeded);
     if (dwError != ERROR_SUCCESS)
@@ -2000,45 +1972,13 @@ StartServiceA(SC_HANDLE hService,
               DWORD dwNumServiceArgs,
               LPCSTR *lpServiceArgVectors)
 {
-    LPSTR lpBuffer = NULL;
-    LPSTR lpStr;
     DWORD dwError;
-    DWORD dwBufSize = 0;
-    DWORD i;
-
-    if (dwNumServiceArgs > 0)
-    {
-        for (i = 0; i < dwNumServiceArgs; i++)
-        {
-            dwBufSize += (strlen(lpServiceArgVectors[i]) + 1);
-        }
-        dwBufSize++;
-        TRACE("dwBufSize: %lu\n", dwBufSize);
-
-        lpBuffer = HeapAlloc(GetProcessHeap(), 0, dwBufSize);
-        if (lpBuffer == NULL)
-        {
-            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-            return FALSE;
-        }
-
-        lpStr = lpBuffer;
-        for (i = 0; i < dwNumServiceArgs; i++)
-        {
-            strcpy(lpStr, lpServiceArgVectors[i]);
-            lpStr += (strlen(lpServiceArgVectors[i]) + 1);
-        }
-        *lpStr = 0;
-    }
 
     dwError = ScmrStartServiceA(BindingHandle,
-                                (unsigned int)hService,
+                                (SC_RPC_HANDLE)hService,
                                 dwNumServiceArgs,
-                                (unsigned char *)lpBuffer,
-                                dwBufSize);
+                                (LPSTRING_PTRSA)lpServiceArgVectors);
 
-    if (lpBuffer != NULL)
-        HeapFree(GetProcessHeap(), 0, lpBuffer);
 
     if (dwError != ERROR_SUCCESS)
     {
@@ -2061,42 +2001,12 @@ StartServiceW(SC_HANDLE hService,
               DWORD dwNumServiceArgs,
               LPCWSTR *lpServiceArgVectors)
 {
-    LPWSTR lpBuffer;
-    LPWSTR lpStr;
     DWORD dwError;
-    DWORD dwBufSize;
-    DWORD i;
-
-    dwBufSize = 0;
-    for (i = 0; i < dwNumServiceArgs; i++)
-    {
-        dwBufSize += ((wcslen(lpServiceArgVectors[i]) + 1) * sizeof(WCHAR));
-    }
-    dwBufSize += sizeof(WCHAR);
-    TRACE("dwBufSize: %lu\n", dwBufSize);
-
-    lpBuffer = HeapAlloc(GetProcessHeap(), 0, dwBufSize);
-    if (lpBuffer == NULL)
-    {
-        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-        return FALSE;
-    }
-
-    lpStr = lpBuffer;
-    for (i = 0; i < dwNumServiceArgs; i++)
-    {
-        wcscpy(lpStr, lpServiceArgVectors[i]);
-        lpStr += (wcslen(lpServiceArgVectors[i]) + 1);
-    }
-    *lpStr = 0;
 
     dwError = ScmrStartServiceW(BindingHandle,
-                                (unsigned int)hService,
+                                (SC_RPC_HANDLE)hService,
                                 dwNumServiceArgs,
-                                (unsigned char *)lpBuffer,
-                                dwBufSize);
-
-    HeapFree(GetProcessHeap(), 0, lpBuffer);
+                                (LPSTRING_PTRSW)lpServiceArgVectors);
 
     if (dwError != ERROR_SUCCESS)
     {
@@ -2125,7 +2035,7 @@ UnlockServiceDatabase(SC_LOCK ScLock)
 
     /* Call to services.exe using RPC */
     dwError = ScmrUnlockServiceDatabase(BindingHandle,
-                                        (unsigned int)ScLock);
+                                        (SC_RPC_LOCK)ScLock);
     if (dwError != ERROR_SUCCESS)
     {
         ERR("ScmrUnlockServiceDatabase() failed (Error %lu)\n", dwError);
@@ -2153,6 +2063,7 @@ NotifyBootConfigStatus(BOOL BootAcceptable)
 
     /* Call to services.exe using RPC */
     dwError = ScmrNotifyBootConfigStatus(BindingHandle,
+                                         NULL,
                                          BootAcceptable);
     if (dwError != ERROR_SUCCESS)
     {

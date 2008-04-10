@@ -612,7 +612,8 @@ ScmControlService(PSERVICE Service,
 
 static DWORD
 ScmSendStartCommand(PSERVICE Service,
-                    LPWSTR Arguments)
+                    DWORD argc,
+                    LPWSTR *argv)
 {
     PSCM_CONTROL_PACKET ControlPacket;
     DWORD TotalLength;
@@ -625,16 +626,14 @@ ScmSendStartCommand(PSERVICE Service,
 
     /* Calculate the total length of the start command line */
     TotalLength = wcslen(Service->lpServiceName) + 1;
-    if (Arguments != NULL)
+    if (argc > 0)
     {
-        Ptr = Arguments;
-        while (*Ptr)
+        for (Count = 0; Count < argc; Count++)
         {
-            Length = wcslen(Ptr) + 1;
+            DPRINT("Arg: %S\n", argv[Count]);
+            Length = wcslen(argv[Count]) + 1;
             TotalLength += Length;
             ArgsLength += Length;
-            Ptr += Length;
-            DPRINT("Arg: %S\n", Ptr);
         }
     }
     TotalLength++;
@@ -655,10 +654,14 @@ ScmSendStartCommand(PSERVICE Service,
     Ptr += (wcslen(Service->lpServiceName) + 1);
 
     /* Copy argument list */
-    if (Arguments != NULL)
+    if (argc > 0)
     {
+        UNIMPLEMENTED;
+        DPRINT1("Arguments sent to service ignored!\n");
+#if 0
         memcpy(Ptr, Arguments, ArgsLength);
         Ptr += ArgsLength;
+#endif
     }
 
     /* Terminate the argument list */
@@ -686,7 +689,8 @@ ScmSendStartCommand(PSERVICE Service,
 
 static DWORD
 ScmStartUserModeService(PSERVICE Service,
-                        LPWSTR lpArgs)
+                        DWORD argc,
+                        LPWSTR *argv)
 {
     RTL_QUERY_REGISTRY_TABLE QueryTable[3];
     PROCESS_INFORMATION ProcessInformation;
@@ -855,7 +859,7 @@ ScmStartUserModeService(PSERVICE Service,
             DPRINT("Received service status %lu\n", Service->hClient);
 
             /* Send start command */
-            dwError = ScmSendStartCommand(Service, lpArgs);
+            dwError = ScmSendStartCommand(Service, argc, argv);
         }
     }
     else
@@ -878,7 +882,7 @@ ScmStartUserModeService(PSERVICE Service,
 
 
 DWORD
-ScmStartService(PSERVICE Service, LPWSTR lpArgs)
+ScmStartService(PSERVICE Service, DWORD argc, LPWSTR *argv)
 {
     PSERVICE_GROUP Group = Service->lpGroup;
     DWORD dwError = ERROR_SUCCESS;
@@ -898,7 +902,7 @@ ScmStartService(PSERVICE Service, LPWSTR lpArgs)
     else
     {
         /* Start user-mode service */
-        dwError = ScmStartUserModeService(Service, lpArgs);
+        dwError = ScmStartUserModeService(Service, argc, argv);
     }
 
     DPRINT("ScmStartService() done (Error %lu)\n", dwError);
@@ -985,7 +989,7 @@ ScmAutoStartServices(VOID)
                     (CurrentService->dwTag == CurrentGroup->TagArray[i]))
                 {
                     CurrentService->ServiceVisited = TRUE;
-                    ScmStartService(CurrentService, NULL);
+                    ScmStartService(CurrentService, 0, NULL);
                 }
 
                 ServiceEntry = ServiceEntry->Flink;
@@ -1003,7 +1007,7 @@ ScmAutoStartServices(VOID)
                 (CurrentService->ServiceVisited == FALSE))
             {
                 CurrentService->ServiceVisited = TRUE;
-                ScmStartService(CurrentService, NULL);
+                ScmStartService(CurrentService, 0, NULL);
             }
 
             ServiceEntry = ServiceEntry->Flink;
@@ -1023,7 +1027,7 @@ ScmAutoStartServices(VOID)
             (CurrentService->ServiceVisited == FALSE))
         {
             CurrentService->ServiceVisited = TRUE;
-            ScmStartService(CurrentService, NULL);
+            ScmStartService(CurrentService, 0, NULL);
         }
 
         ServiceEntry = ServiceEntry->Flink;
@@ -1040,7 +1044,7 @@ ScmAutoStartServices(VOID)
             (CurrentService->ServiceVisited == FALSE))
         {
             CurrentService->ServiceVisited = TRUE;
-            ScmStartService(CurrentService, NULL);
+            ScmStartService(CurrentService, 0, NULL);
         }
 
         ServiceEntry = ServiceEntry->Flink;
