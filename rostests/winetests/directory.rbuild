@@ -46,6 +46,9 @@
 	<directory name="mlang">
 		<xi:include href="mlang/mlang.rbuild" />
 	</directory>
+	<directory name="mshtml">
+		<xi:include href="mshtml/mshtml.rbuild" />
+	</directory>
 	<directory name="msi">
 		<xi:include href="msi/msi.rbuild" />
 	</directory>
