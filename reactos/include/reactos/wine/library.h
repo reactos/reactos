@@ -29,7 +29,9 @@
 
 /* configuration */
 
+extern const char *wine_get_build_dir(void);
 extern const char *wine_get_config_dir(void);
+extern const char *wine_get_data_dir(void);
 extern const char *wine_get_server_dir(void);
 extern const char *wine_get_user_name(void);
 extern void wine_init_argv0_path( const char *argv0 );

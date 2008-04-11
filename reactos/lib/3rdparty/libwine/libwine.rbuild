@@ -2,6 +2,7 @@
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="wine" type="staticlibrary">
 	<define name="_DISABLE_TIDENTS" />
+	<file>config.c</file>
 	<file>debug.c</file>
 	<file>string.c</file>
 </module>
