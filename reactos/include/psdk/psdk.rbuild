@@ -3,6 +3,7 @@
 <module name="psdk" type="idlheader">
 	<file>activscp.idl</file>
 	<file>control.idl</file>
+	<file>dimm.idl</file>
 	<file>dispex.idl</file>
 	<file>docobj.idl</file>
 	<file>downloadmgr.idl</file>

@@ -16,10 +16,33 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#ifndef DO_NO_IMPORTS
 import "ocidl.idl";
 import "oleidl.idl";
 import "oaidl.idl";
+#endif
 
+cpp_quote("#ifndef _NO_SCRIPT_GUIDS")
+
+cpp_quote("DEFINE_GUID(CATID_ActiveScript,       0xf0b7a1a1,0x9847,0x11cf,0x8f,0x20,0x00,0x80,0x5f,0x2c,0xd0,0x64);")
+cpp_quote("DEFINE_GUID(CATID_ActiveScriptParse,  0xf0b7a1a2,0x9847,0x11cf,0x8f,0x20,0x00,0x80,0x5f,0x2c,0xd0,0x64);")
+cpp_quote("DEFINE_GUID(CATID_ActiveScriptEncode, 0xf0b7a1a3,0x9847,0x11cf,0x8f,0x20,0x00,0x80,0x5f,0x2c,0xd0,0x64);")
+
+cpp_quote("#endif")
+
+cpp_quote("#define SCRIPTPROP_NAME                   0x00000000")
+cpp_quote("#define SCRIPTPROP_MAJORVERSION           0x00000001")
+cpp_quote("#define SCRIPTPROP_MINORVERSION           0x00000002")
+cpp_quote("#define SCRIPTPROP_BUILDNUMBER            0x00000003")
+cpp_quote("#define SCRIPTPROP_DELAYEDEVENTSINKING    0x00001000")
+cpp_quote("#define SCRIPTPROP_CATCHEXCEPTION         0x00001001")
+cpp_quote("#define SCRIPTPROP_CONVERSIONLCID         0x00001002")
+cpp_quote("#define SCRIPTPROP_HOSTSTACKREQUIRED      0x00001003")
+cpp_quote("#define SCRIPTPROP_DEBUGGER               0x00001100")
+cpp_quote("#define SCRIPTPROP_JITDEBUG               0x00001101")
+cpp_quote("#define SCRIPTPROP_HACK_FIBERSUPPORT      0x70000000")
+cpp_quote("#define SCRIPTPROP_HACK_TRIDENTEVENTSINK  0x70000001")
+ 
 typedef enum tagSCRIPTSTATE {
     SCRIPTSTATE_UNINITIALIZED = 0,
     SCRIPTSTATE_STARTED       = 1,
@@ -91,13 +114,13 @@ interface IActiveScriptError : IUnknown
     HRESULT GetExceptionInfo(
             [out] EXCEPINFO *pexcepinfo
     );
-
+    
     HRESULT GetSourcePosition(
             [out] DWORD *pdwSourceContext,
             [out] ULONG *pulLineNumber,
             [out] LONG *plCharacterPosition
     );
-
+    
     HRESULT GetSourceLineText(
             [out] BSTR *pbstrSourceLine
     );
@@ -112,33 +135,33 @@ interface IActiveScriptSite : IUnknown
 {
     HRESULT GetLCID(
             [out] LCID *plcid);
-
+    
     HRESULT GetItemInfo(
             [in] LPCOLESTR pstrName,
             [in] DWORD dwReturnMask,
             [out] IUnknown **ppiunkItem,
             [out] ITypeInfo **ppti
     );
-
+    
     HRESULT GetDocVersionString(
             [out] BSTR *pbstrVersion
     );
-
+    
     HRESULT OnScriptTerminate(
             [in] const VARIANT *pvarResult,
             [in] const EXCEPINFO *pexcepinfo
     );
-
+    
     HRESULT OnStateChange(
             [in] SCRIPTSTATE ssScriptState
     );
-
+    
     HRESULT OnScriptError(
             [in] IActiveScriptError *pscripterror
     );
-
+    
     HRESULT OnEnterScript(void);
-
+    
     HRESULT OnLeaveScript(void);
 }
 
@@ -320,6 +343,15 @@ interface IActiveScriptParseProcedure : IUnknown
 }
 
 [
+    object,
+    uuid(71ee5b20-fb04-11d1-b3a8-00a0c911e8b2),
+    pointer_default(unique)
+]
+interface IActiveScriptParseProcedure2 : IActiveScriptParseProcedure
+{
+}
+
+[
 object,
 uuid(63CDBCB0-C1B1-11d0-9336-00A0C90DCAA9),
 pointer_default(unique)
@@ -352,4 +384,22 @@ interface IActiveScriptStats : IUnknown
     );
 
     HRESULT ResetStats(void);
+}
+
+[
+    object,
+    uuid(4954e0d0-fbc7-11d1-8410-006008c3fbfc),
+    pointer_default(unique)
+]
+interface IActiveScriptProperty : IUnknown
+{
+    HRESULT GetProperty(
+            [in] DWORD dwProperty,
+            [in] VARIANT *pvarIndex,
+            [out] VARIANT *pvarValue);
+
+    HRESULT SetProperty(
+            [in] DWORD dwProperty,
+            [in] VARIANT *pvarIndex,
+            [in] VARIANT *pvarValue);
 }
