@@ -145,6 +145,9 @@
 <directory name="msgina">
 	<xi:include href="msgina/msgina.rbuild" />
 </directory>
+<directory name="mshtml">
+	<xi:include href="mshtml/mshtml.rbuild" />
+</directory>
 <directory name="msi">
 	<xi:include href="msi/msi.rbuild" />
 </directory>
