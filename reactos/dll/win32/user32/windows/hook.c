@@ -211,14 +211,13 @@ RegisterShellHookWindow(HWND hWnd)
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 STDCALL
 UnhookWindowsHook ( int nCode, HOOKPROC pfnFilterProc )
 {
-  UNIMPLEMENTED;
-  return FALSE;
+  return NtUserCallTwoParam(nCode, (DWORD)pfnFilterProc, TWOPARAM_ROUTINE_UNHOOKWINDOWSHOOK);
 }
 
 /*
@@ -233,11 +232,11 @@ NotifyWinEvent(
 	       LONG  idChild
 	       )
 {
-  UNIMPLEMENTED;
+  NtUserNotifyWinEvent(event, hwnd, idObject, idChild);
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 HWINEVENTHOOK
 STDCALL
@@ -251,19 +250,30 @@ SetWinEventHook(
 		UINT         dwFlags
 		)
 {
-  UNIMPLEMENTED;
-  return FALSE;
-}
+  WCHAR ModuleName[MAX_PATH];
+  UNICODE_STRING USModuleName;
 
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-UnhookWinEvent ( HWINEVENTHOOK hWinEventHook )
-{
-  UNIMPLEMENTED;
-  return FALSE;
+  if ((hmodWinEventProc != NULL) && (dwFlags & WINEVENT_INCONTEXT))
+  {
+      if (0 == GetModuleFileNameW(hmodWinEventProc, ModuleName, MAX_PATH))
+      {
+          return NULL;
+      }
+      RtlInitUnicodeString(&USModuleName, ModuleName);
+  }
+  else
+  {
+      RtlInitUnicodeString(&USModuleName, NULL);
+  }
+
+  return NtUserSetWinEventHook(eventMin,
+                               eventMax,
+                       hmodWinEventProc,
+                          &USModuleName,
+                        pfnWinEventProc,
+                              idProcess,
+                               idThread,
+                                dwFlags);
 }
 
 /*
@@ -274,10 +284,11 @@ STDCALL
 IsWinEventHookInstalled(
     DWORD event)
 {
-  UNIMPLEMENTED;
+  if ((PW32THREADINFO)NtCurrentTeb()->Win32ThreadInfo)
+  {
+  }
   return FALSE;
 }
-
 
 /*
  * @unimplemented

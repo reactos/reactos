@@ -691,7 +691,7 @@ TranslateAcceleratorW@12
 TranslateMDISysAccel@8
 TranslateMessage@4
 TranslateMessageEx@8
-UnhookWinEvent@4
+UnhookWinEvent@4=NtUserUnhookWinEvent@4
 UnhookWindowsHook@8
 UnhookWindowsHookEx@4
 UnionRect@12

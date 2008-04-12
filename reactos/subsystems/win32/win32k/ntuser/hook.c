@@ -697,7 +697,7 @@ CLEANUP:
    END_CLEANUP;
 }
 
-DWORD
+HWINEVENTHOOK
 STDCALL
 NtUserSetWinEventHook(
    UINT eventMin,
@@ -765,7 +765,7 @@ CLEANUP:
 DWORD
 STDCALL
 NtUserUnhookWinEvent(
-   DWORD Unknown0)
+   HWINEVENTHOOK hWinEventHook)
 {
    UNIMPLEMENTED
 

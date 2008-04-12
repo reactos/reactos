@@ -2233,7 +2233,7 @@ NtUserSetWindowStationUser(
 WORD NTAPI
 NtUserSetWindowWord(HWND hWnd, INT Index, WORD NewVal);
 
-DWORD
+HWINEVENTHOOK
 NTAPI
 NtUserSetWinEventHook(
   UINT eventMin,
@@ -2330,7 +2330,7 @@ NtUserUnhookWindowsHookEx(
 DWORD
 NTAPI
 NtUserUnhookWinEvent(
-  DWORD Unknown0);
+  HWINEVENTHOOK hWinEventHook);
 
 BOOL
 NTAPI
