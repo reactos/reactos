@@ -22,53 +22,11 @@ BOOL InitDbgHelp(HANDLE hProcess)
 }
 
 DWORD64
-GetOffsetFromAdress64(PBYTE pModule, DWORD64 dwAdress, PBOOL pbX64)
-{
-	PIMAGE_DOS_HEADER pDosHdr;
-	PIMAGE_NT_HEADERS32 pNtHdr32;
-	WORD NumberOfSections;
-	INT i, nSection;
-	DWORD64 dwOffset = 0;
-
-	pDosHdr = (PIMAGE_DOS_HEADER)pModule;
-	pNtHdr32 = (PIMAGE_NT_HEADERS32)((UINT_PTR)pModule + pDosHdr->e_lfanew);
-
-	if (pNtHdr32->Signature != IMAGE_NT_SIGNATURE)
-	{
-		return 0;
-	}
-
-	if (pNtHdr32->FileHeader.Machine == IMAGE_FILE_MACHINE_I386)
-	{
-		PIMAGE_SECTION_HEADER pSectionHdr;
-
-		*pbX64 = FALSE;
-		NumberOfSections = pNtHdr32->FileHeader.NumberOfSections;
-		pSectionHdr = (PIMAGE_SECTION_HEADER)(pNtHdr32 + 1);
-
-		nSection = 0;
-		for (i = 0; i < NumberOfSections; i++)
-		{
-			if (dwAdress >= pSectionHdr[i].VirtualAddress &&
-			    pSectionHdr[i].PointerToRawData > pSectionHdr[nSection].PointerToRawData)
-			{
-				nSection = i;
-			}
-		}
-		dwOffset = pSectionHdr[nSection].PointerToRawData + dwAdress - pSectionHdr[nSection].VirtualAddress;
-		return dwOffset;
-	}
-	else
-	{
-		*pbX64 = TRUE;
-		printf("x64 is unsupported atm\n");
-		return 0;
-	}
-}
-
-DWORD64
 GetOffsetFromName(HANDLE hProcess, PSYMBOL_INFO pSym, PBYTE pModule, PCSTR Name, PBOOL pbX64)
 {
+	PIMAGE_NT_HEADERS NtHeaders;
+	PVOID p;
+
 	pSym->SizeOfStruct = sizeof(SYMBOL_INFO);
 	pSym->MaxNameLen = MAX_SYMBOL_NAME-1;
 
@@ -78,7 +36,13 @@ GetOffsetFromName(HANDLE hProcess, PSYMBOL_INFO pSym, PBYTE pModule, PCSTR Name,
 		return 0;
 	}
 	printf("looking up adress for %s: 0x%llx\n", Name, pSym->Address);
-	return GetOffsetFromAdress64(pModule, pSym->Address - pSym->ModBase, pbX64);
+
+	NtHeaders = ImageNtHeader(pModule);
+	*pbX64 = (NtHeaders->FileHeader.Machine != IMAGE_FILE_MACHINE_I386);
+
+	p = ImageRvaToVa(NtHeaders, pModule, pSym->Address - pSym->ModBase, NULL);
+
+	return (DWORD64)((ULONG_PTR)p - (ULONG_PTR)pModule);
 }
 
 BOOL CALLBACK EnumSymbolsProc(
