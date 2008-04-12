@@ -1336,16 +1336,19 @@ NtUserBuildHwndList(
          Window = CONTAINING_RECORD(Current, WINDOW_OBJECT, ThreadListEntry);
          ASSERT(Window);
 
-         if(dwCount < nBufSize && pWnd)
+         if(bChildren || Window->hOwner != NULL)
          {
-            Status = MmCopyToCaller(pWnd++, &Window->hSelf, sizeof(HWND));
-            if(!NT_SUCCESS(Status))
-            {
-               SetLastNtError(Status);
-               break;
-            }
+             if(dwCount < nBufSize && pWnd)
+             {
+                Status = MmCopyToCaller(pWnd++, &Window->hSelf, sizeof(HWND));
+                if(!NT_SUCCESS(Status))
+                {
+                   SetLastNtError(Status);
+                   break;
+                }
+             }
+             dwCount++;
          }
-         dwCount++;
          Current = Current->Flink;
       }
 
