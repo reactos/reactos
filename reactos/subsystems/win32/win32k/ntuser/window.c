@@ -2229,7 +2229,7 @@ NtUserCreateWindowEx(DWORD dwExStyle,
    else if (! IS_ATOM(ClassName.Buffer))
    {
        SetLastWin32Error(ERROR_INVALID_PARAMETER);
-       return NULL;
+       RETURN(NULL);
    }
 
    /* safely copy the window name */
