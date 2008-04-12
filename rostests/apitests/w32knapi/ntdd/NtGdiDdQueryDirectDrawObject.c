@@ -21,7 +21,10 @@ Test_NtGdiDdQueryDirectDrawObject(PTESTINFO pti)
     DD_HALINFO HalInfo;
     DD_HALINFO oldHalInfo;
     DWORD CallBackFlags[4];
+
     D3DNTHAL_CALLBACKS D3dCallbacks;
+    D3DNTHAL_CALLBACKS oldD3dCallbacks;
+
     D3DNTHAL_GLOBALDRIVERDATA D3dDriverData;
     DD_D3DBUFCALLBACKS D3dBufferCallbacks;
     DDSURFACEDESC2 D3dTextureFormats[100];
@@ -282,6 +285,43 @@ Test_NtGdiDdQueryDirectDrawObject(PTESTINFO pti)
      * if it windows 2000 or windows xp/2003
      */
     RTEST(puD3dCallbacks->dwSize == sizeof(D3DNTHAL_CALLBACKS));
+    RTEST(puD3dCallbacks->ContextDestroyAll == NULL);
+    RTEST(puD3dCallbacks->SceneCapture  == NULL);
+    RTEST(puD3dCallbacks->dwReserved10 == 0);
+    RTEST(puD3dCallbacks->dwReserved11 == 0);
+    RTEST(puD3dCallbacks->dwReserved22 == 0);
+    RTEST(puD3dCallbacks->dwReserved23 == 0);
+    RTEST(puD3dCallbacks->dwReserved == 0);
+    RTEST(puD3dCallbacks->TextureCreate  == NULL);
+    RTEST(puD3dCallbacks->TextureDestroy  == NULL);
+    RTEST(puD3dCallbacks->TextureSwap  == NULL);
+    RTEST(puD3dCallbacks->TextureGetSurf  == NULL);
+    RTEST(puD3dCallbacks->dwReserved12 == 0);
+    RTEST(puD3dCallbacks->dwReserved13 == 0);
+    RTEST(puD3dCallbacks->dwReserved14 == 0);
+    RTEST(puD3dCallbacks->dwReserved15 == 0);
+    RTEST(puD3dCallbacks->dwReserved16 == 0);
+    RTEST(puD3dCallbacks->dwReserved17 == 0);
+    RTEST(puD3dCallbacks->dwReserved18 == 0);
+    RTEST(puD3dCallbacks->dwReserved19 == 0);
+    RTEST(puD3dCallbacks->dwReserved20 == 0);
+    RTEST(puD3dCallbacks->dwReserved21 == 0);
+    RTEST(puD3dCallbacks->dwReserved24 == 0);
+    RTEST(puD3dCallbacks->dwReserved0 == 0);
+    RTEST(puD3dCallbacks->dwReserved1 == 0);
+    RTEST(puD3dCallbacks->dwReserved2 == 0);
+    RTEST(puD3dCallbacks->dwReserved3 == 0);
+    RTEST(puD3dCallbacks->dwReserved4 == 0);
+    RTEST(puD3dCallbacks->dwReserved5 == 0);
+    RTEST(puD3dCallbacks->dwReserved6 == 0);
+    RTEST(puD3dCallbacks->dwReserved7 == 0);
+    RTEST(puD3dCallbacks->dwReserved8 == 0);
+    RTEST(puD3dCallbacks->dwReserved9 == 0);
+
+    /* how detect puD3dCallbacks->ContextCreate and puD3dCallbacks->ContextDestroy shall be set for bugi drv like nivda ? */
+    /* pointer direcly to the graphic drv, it is kmode pointer */
+    // RTEST( ( (DWORD)puD3dCallbacks->ContextCreate & (~0x80000000)) != 0 );
+    // RTEST( ( (DWORD)puD3dCallbacks->ContextDestroy & (~0x80000000)) != 0 );
 
     RTEST(puD3dDriverData == NULL);
     RTEST(puD3dBufferCallbacks == NULL);
@@ -296,6 +336,10 @@ Test_NtGdiDdQueryDirectDrawObject(PTESTINFO pti)
     RTEST(pCallBackFlags[0] != 0);
     RTEST(pCallBackFlags[1] != 0);
     RTEST(pCallBackFlags[2] == 0);
+
+    /* Backup D3DNTHAL_CALLBACKS so we do not need resting it */
+    RtlCopyMemory(&oldD3dCallbacks, &D3dCallbacks, sizeof(D3DNTHAL_CALLBACKS));
+
 
 /* Next Start 4 */
     pHalInfo = &HalInfo;

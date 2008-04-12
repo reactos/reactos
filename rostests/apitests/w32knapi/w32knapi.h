@@ -11,6 +11,7 @@
 #include <ndk/ntndk.h>
 #include <wingdi.h>
 #include <winddi.h>
+#include <ddrawi.h>
 #include <d3dnthal.h>
 #include <prntfont.h>
 
