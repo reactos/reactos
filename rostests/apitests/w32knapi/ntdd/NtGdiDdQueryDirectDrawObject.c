@@ -128,7 +128,8 @@ Test_NtGdiDdQueryDirectDrawObject(PTESTINFO pti)
     if (pHalInfo->dwSize == sizeof(DD_HALINFO))
     {
         /*the offset, in bytes, to primary surface in the display memory  */
-        RTEST(pHalInfo->vmiData.fpPrimary != 0 );
+        /* some graphic card like  sis 760 GX, Nvida GF7900GS does not set any offset at all */
+        // RTEST(pHalInfo->vmiData.fpPrimary != 0 );
 
         /* unsuse always 0 */
         RTEST(pHalInfo->vmiData.dwFlags == 0 );
@@ -188,6 +189,8 @@ Test_NtGdiDdQueryDirectDrawObject(PTESTINFO pti)
         /* Test see if we got any hardware acclartions for 2d or 3d, this always fill in 
          * that mean we found a bugi drv and dx does not work on this drv 
          */
+
+        /* the SIS 760 GX will never fill it in, it is a bugi drv */
         RTEST(pHalInfo->ddCaps.dwSize == sizeof(DDCORECAPS));
 
         /* Testing see if we got any hw support for
@@ -285,7 +288,15 @@ Test_NtGdiDdQueryDirectDrawObject(PTESTINFO pti)
      * if it windows 2000 or windows xp/2003
      */
     RTEST(puD3dCallbacks->dwSize == sizeof(D3DNTHAL_CALLBACKS));
+
+    /* Nivda like GF7900GS will not follow ms design rule here, 
+     * ContextDestroyAll must alwyas be NULL for it is not longer inuse in windows 2000 and higher
+     */
     RTEST(puD3dCallbacks->ContextDestroyAll == NULL);
+
+    /* Nivda like GF7900GS will not follow ms design rule here, 
+     * SceneCapture must alwyas be NULL for it is not longer inuse in windows 2000 and higher
+     */
     RTEST(puD3dCallbacks->SceneCapture  == NULL);
     RTEST(puD3dCallbacks->dwReserved10 == 0);
     RTEST(puD3dCallbacks->dwReserved11 == 0);
@@ -341,7 +352,7 @@ Test_NtGdiDdQueryDirectDrawObject(PTESTINFO pti)
     RtlCopyMemory(&oldD3dCallbacks, &D3dCallbacks, sizeof(D3DNTHAL_CALLBACKS));
 
 
-/* Next Start 4 */
+/* testing  NtGdiDdQueryDirectDrawObject( hDD, pHalInfo, pCallBackFlags, puD3dCallbacks, puD3dDriverData, NULL, */
     pHalInfo = &HalInfo;
     pCallBackFlags = CallBackFlags;
     puD3dCallbacks = &D3dCallbacks;
@@ -358,13 +369,16 @@ Test_NtGdiDdQueryDirectDrawObject(PTESTINFO pti)
                                         puvmList, puNumFourCC,
                                         puFourCC)== FALSE);
     RTEST(pHalInfo != NULL);
-    RTEST(pCallBackFlags != NULL);
+    ASSERT(pHalInfo != NULL);
 
-    if (pHalInfo->ddCaps.ddsCaps.dwCaps  & DDSCAPS_3DDEVICE )
-    {
-        RTEST(puD3dCallbacks != NULL);
-        RTEST(puD3dDriverData != NULL);
-    }
+    RTEST(pCallBackFlags != NULL);
+    ASSERT(pCallBackFlags != NULL);
+
+    RTEST(puD3dCallbacks != NULL);
+    ASSERT(puD3dCallbacks != NULL);
+
+    RTEST(puD3dDriverData != NULL);
+    ASSERT(puD3dDriverData != NULL);
 
     RTEST(puD3dBufferCallbacks == NULL);
     RTEST(puD3dTextureFormats == NULL);
@@ -372,15 +386,17 @@ Test_NtGdiDdQueryDirectDrawObject(PTESTINFO pti)
     RTEST(puFourCC == NULL);
     RTEST(puNumHeaps == NULL);
     RTEST(puvmList == NULL);
-    ASSERT(pHalInfo != NULL);
 
     /* We do not retesting DD_HALINFO, instead we compare it */
     RTEST(memcmp(&oldHalInfo, pHalInfo, sizeof(DD_HALINFO)) == 0);
     RTEST(pCallBackFlags[0] != 0);
     RTEST(pCallBackFlags[1] != 0);
-
-    /* NT4 this will fail */
     RTEST(pCallBackFlags[2] == 0);
+
+    /* We do not retesting D3DNTHAL_CALLBACKS, instead we compare it */
+    RTEST(memcmp(&oldD3dCallbacks, puD3dCallbacks, sizeof(D3DNTHAL_CALLBACKS)) == 0);
+
+    /* start test of puD3dDriverData */
 
 /* Next Start 5 */
     pHalInfo = &HalInfo;
@@ -422,9 +438,10 @@ Test_NtGdiDdQueryDirectDrawObject(PTESTINFO pti)
     RTEST(memcmp(&oldHalInfo, pHalInfo, sizeof(DD_HALINFO)) == 0);
     RTEST(pCallBackFlags[0] != 0);
     RTEST(pCallBackFlags[1] != 0);
-
-    /* NT4 this will fail */
     RTEST(pCallBackFlags[2] == 0);
+
+    /* We do not retesting D3DNTHAL_CALLBACKS, instead we compare it */
+    RTEST(memcmp(&oldD3dCallbacks, puD3dCallbacks, sizeof(D3DNTHAL_CALLBACKS)) == 0);
 
 /* Next Start 6 */
     pHalInfo = &HalInfo;
@@ -466,9 +483,11 @@ Test_NtGdiDdQueryDirectDrawObject(PTESTINFO pti)
     RTEST(memcmp(&oldHalInfo, pHalInfo, sizeof(DD_HALINFO)) == 0);
     RTEST(pCallBackFlags[0] != 0);
     RTEST(pCallBackFlags[1] != 0);
-
-    /* NT4 this will fail */
     RTEST(pCallBackFlags[2] == 0);
+
+    /* We do not retesting D3DNTHAL_CALLBACKS, instead we compare it */
+    RTEST(memcmp(&oldD3dCallbacks, puD3dCallbacks, sizeof(D3DNTHAL_CALLBACKS)) == 0);
+
 
 /* Next Start 7 */
     pHalInfo = &HalInfo;
@@ -524,9 +543,10 @@ Test_NtGdiDdQueryDirectDrawObject(PTESTINFO pti)
     RTEST(memcmp(&oldHalInfo, pHalInfo, sizeof(DD_HALINFO)) == 0);
     RTEST(pCallBackFlags[0] != 0);
     RTEST(pCallBackFlags[1] != 0);
-
-    /* NT4 this will fail */
     RTEST(pCallBackFlags[2] == 0);
+
+    /* We do not retesting D3DNTHAL_CALLBACKS, instead we compare it */
+    RTEST(memcmp(&oldD3dCallbacks, puD3dCallbacks, sizeof(D3DNTHAL_CALLBACKS)) == 0);
 
 
 
