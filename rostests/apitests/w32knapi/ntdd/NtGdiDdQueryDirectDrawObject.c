@@ -201,13 +201,19 @@ Test_NtGdiDdQueryDirectDrawObject(PTESTINFO pti)
          */
         RTEST( (pHalInfo->dwFlags & (DDHALINFO_GETDRIVERINFOSET | DDHALINFO_GETDRIVERINFO2)) != 0 );
 
-        if (pHalInfo->ddCaps.ddsCaps.dwCaps  & DDSCAPS_3DDEVICE )
-        {
-            /* it is store in kmode so we check if it kmode address or not  */
-            RTEST( ( (DWORD)pHalInfo->lpD3DGlobalDriverData & (~0x80000000)) != 0 );
-            RTEST( ( (DWORD)pHalInfo->lpD3DHALCallbacks & (~0x80000000)) != 0 );
-            RTEST( ( (DWORD)pHalInfo->lpD3DHALCallbacks & (~0x80000000)) != 0 );
-        }
+        /* point to kmode direcly to the graphic drv, the drv is kmode and it is kmode address we getting back*/
+        RTEST( ( (DWORD)pHalInfo->GetDriverInfo & (~0x80000000)) != 0 );
+
+
+       /* the pHalInfo->ddCaps.ddsCaps.dwCaps & DDSCAPS_3DDEVICE will be ignore, only way detect it proper follow code,
+        * this will be fill in of all drv, it is not only for 3d stuff, this always fill by win32k.sys or dxg.sys depns 
+        * if it windows 2000 or windows xp/2003
+        *
+        * point to kmode direcly to the win32k.sys, win32k.sys is kmode and it is kmode address we getting back
+        */
+        RTEST( ( (DWORD)pHalInfo->lpD3DGlobalDriverData & (~0x80000000)) != 0 );
+        RTEST( ( (DWORD)pHalInfo->lpD3DHALCallbacks & (~0x80000000)) != 0 );
+        RTEST( ( (DWORD)pHalInfo->lpD3DHALCallbacks & (~0x80000000)) != 0 );
     }
 
     /* Backup DD_HALINFO so we do not need resting it */
