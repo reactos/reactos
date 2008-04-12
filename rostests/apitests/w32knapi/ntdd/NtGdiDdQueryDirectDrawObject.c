@@ -172,9 +172,6 @@ Test_NtGdiDdQueryDirectDrawObject(PTESTINFO pti)
         // pHalInfo->vmiData->dwAlphaAlign 
 
         /* the primary display address */
-
-        /* test see if it in kmode memory or not, t */
-        RTEST(pHalInfo->vmiData.pvPrimary != 0 );
         RTEST( ( (DWORD)pHalInfo->vmiData.pvPrimary & (~0x80000000)) != 0 );
 
         /* test see if we got back the pvmList here 
@@ -203,7 +200,7 @@ Test_NtGdiDdQueryDirectDrawObject(PTESTINFO pti)
 
         /* point to kmode direcly to the graphic drv, the drv is kmode and it is kmode address we getting back*/
         RTEST( ( (DWORD)pHalInfo->GetDriverInfo & (~0x80000000)) != 0 );
-
+        ASSERT( ((DWORD)pHalInfo->GetDriverInfo & (~0x80000000)) != 0 );
 
        /* the pHalInfo->ddCaps.ddsCaps.dwCaps & DDSCAPS_3DDEVICE will be ignore, only way detect it proper follow code,
         * this will be fill in of all drv, it is not only for 3d stuff, this always fill by win32k.sys or dxg.sys depns 
