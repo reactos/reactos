@@ -1800,8 +1800,8 @@ _NtGdiScaleWindowExtEx@24:
     call *(%ecx)
     ret $0x18
 
-.global _GreSelectBitmap@8
-_GreSelectBitmap@8:
+.global _NtGdiSelectBitmap@8
+_NtGdiSelectBitmap@8:
     movl $0x1100, %eax
     movl $KUSER_SHARED_SYSCALL, %ecx
     call *(%ecx)

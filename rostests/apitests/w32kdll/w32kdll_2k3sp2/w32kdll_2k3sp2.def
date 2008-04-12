@@ -263,7 +263,7 @@ NtGdiRoundRect@28
 NtGdiSaveDC@4
 NtGdiScaleViewportExtEx@24
 NtGdiScaleWindowExtEx@24
-GreSelectBitmap@8
+NtGdiSelectBitmap@8
 NtGdiSelectBrush@8
 NtGdiSelectClipPath@8
 NtGdiSelectFont@8
