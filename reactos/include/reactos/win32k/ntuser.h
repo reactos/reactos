@@ -242,6 +242,16 @@ typedef struct _W32CLIENTINFO
 
 #define GetWin32ClientInfo() (PW32CLIENTINFO)(NtCurrentTeb()->Win32ClientInfo)
 
+// Server event activity bits.
+#define SRV_EVENT_MENU            0x0001
+#define SRV_EVENT_END_APPLICATION 0x0002
+#define SRV_EVENT_RUNNING         0x0004
+#define SRV_EVENT_NAMECHANGE      0x0008
+#define SRV_EVENT_VALUECHANGE     0x0010
+#define SRV_EVENT_STATECHANGE     0x0020
+#define SRV_EVENT_LOCATIONCHANGE  0x0040
+#define SRV_EVENT_CREATE          0x8000
+
 PW32THREADINFO GetW32ThreadInfo(VOID);
 PW32PROCESSINFO GetW32ProcessInfo(VOID);
 
@@ -2205,12 +2215,12 @@ NtUserSetWindowRgn(
   HRGN hRgn,
   BOOL bRedraw);
 
-DWORD
+HHOOK
 NTAPI
 NtUserSetWindowsHookAW(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2);
+  int idHook,
+  HOOKPROC lpfn,
+  BOOL Ansi);
 
 HHOOK
 NTAPI

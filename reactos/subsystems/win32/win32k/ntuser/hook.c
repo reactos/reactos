@@ -16,8 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id$
- *
+/*
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Window hooks
@@ -38,6 +37,44 @@
 #define HOOKID_TO_FLAG(HookId) (1 << ((HookId) + 1))
 
 static PHOOKTABLE GlobalHooks;
+DWORD Bogus_SrvEventActivity = 0;
+
+
+/* PRIVATE FUNCTIONS *********************************************************/
+
+static
+DWORD
+FASTCALL
+GetMaskFromEvent(DWORD Event)
+{
+  DWORD Ret = 0;
+
+  if ( Event > EVENT_OBJECT_STATECHANGE )
+  {
+    if ( Event == EVENT_OBJECT_LOCATIONCHANGE ) return SRV_EVENT_LOCATIONCHANGE;
+    if ( Event == EVENT_OBJECT_NAMECHANGE )     return SRV_EVENT_NAMECHANGE;
+    if ( Event == EVENT_OBJECT_VALUECHANGE )    return SRV_EVENT_VALUECHANGE;
+    return SRV_EVENT_CREATE;
+  }
+
+  if ( Event == EVENT_OBJECT_STATECHANGE ) return SRV_EVENT_STATECHANGE;
+
+  Ret = SRV_EVENT_RUNNING;
+
+  if ( Event < EVENT_SYSTEM_MENUSTART )    return SRV_EVENT_CREATE;
+
+  if ( Event <= EVENT_SYSTEM_MENUPOPUPEND )
+  {
+    Ret = SRV_EVENT_MENU;
+  }
+  else
+  {
+    if ( Event <= EVENT_CONSOLE_CARET-1 )         return SRV_EVENT_CREATE;
+    if ( Event <= EVENT_CONSOLE_END_APPLICATION ) return SRV_EVENT_END_APPLICATION;
+    if ( Event != EVENT_OBJECT_FOCUS )            return SRV_EVENT_CREATE;
+  }
+  return Ret;
+}
 
 /* create a new hook table */
 static PHOOKTABLE
@@ -485,16 +522,16 @@ CLEANUP:
    END_CLEANUP;
 }
 
-DWORD
+HHOOK
 STDCALL
 NtUserSetWindowsHookAW(
-   DWORD Unknown0,
-   DWORD Unknown1,
-   DWORD Unknown2)
+   int idHook, 
+   HOOKPROC lpfn,
+   BOOL Ansi)
 {
-   UNIMPLEMENTED
-
-   return 0;
+   UNICODE_STRING USModuleName;
+   RtlInitUnicodeString(&USModuleName, NULL);
+   return NtUserSetWindowsHookEx(NULL, &USModuleName, 0, idHook, lpfn, Ansi);
 }
 
 HHOOK
@@ -709,6 +746,9 @@ NtUserSetWinEventHook(
    DWORD idThread,
    UINT dwflags)
 {
+
+   Bogus_SrvEventActivity |= GetMaskFromEvent(eventMin); // Fake it out for now.
+   Bogus_SrvEventActivity &= ~GetMaskFromEvent(eventMin);
    UNIMPLEMENTED
 
    return 0;

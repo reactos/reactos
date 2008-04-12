@@ -34,6 +34,44 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(user32);
 
+DWORD Bogus_SrvEventActivity = 0; // Fixme, need to ref to share data.
+
+/* PRIVATE FUNCTIONS *********************************************************/
+
+static
+DWORD
+FASTCALL
+GetMaskFromEvent(DWORD Event)
+{
+  DWORD Ret = 0;
+
+  if ( Event > EVENT_OBJECT_STATECHANGE )
+  {
+    if ( Event == EVENT_OBJECT_LOCATIONCHANGE ) return SRV_EVENT_LOCATIONCHANGE;
+    if ( Event == EVENT_OBJECT_NAMECHANGE )     return SRV_EVENT_NAMECHANGE;
+    if ( Event == EVENT_OBJECT_VALUECHANGE )    return SRV_EVENT_VALUECHANGE;
+    return SRV_EVENT_CREATE;
+  }
+
+  if ( Event == EVENT_OBJECT_STATECHANGE ) return SRV_EVENT_STATECHANGE;
+
+  Ret = SRV_EVENT_RUNNING;
+
+  if ( Event < EVENT_SYSTEM_MENUSTART )    return SRV_EVENT_CREATE;
+
+  if ( Event <= EVENT_SYSTEM_MENUPOPUPEND )
+  {
+    Ret = SRV_EVENT_MENU;
+  }
+  else
+  {
+    if ( Event <= EVENT_CONSOLE_CARET-1 )         return SRV_EVENT_CREATE;
+    if ( Event <= EVENT_CONSOLE_END_APPLICATION ) return SRV_EVENT_END_APPLICATION;
+    if ( Event != EVENT_OBJECT_FOCUS )            return SRV_EVENT_CREATE;
+  }
+  return Ret;
+}
+
 /* FUNCTIONS *****************************************************************/
 
 /*
@@ -221,7 +259,7 @@ UnhookWindowsHook ( int nCode, HOOKPROC pfnFilterProc )
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 VOID
 STDCALL
@@ -232,7 +270,11 @@ NotifyWinEvent(
 	       LONG  idChild
 	       )
 {
-  NtUserNotifyWinEvent(event, hwnd, idObject, idChild);
+// "Servers call NotifyWinEvent to announce the event to the system after the
+// event has occurred; they must never notify the system of an event before
+// the event has occurred." msdn on NotifyWinEvent.
+  if (Bogus_SrvEventActivity & GetMaskFromEvent(event)) // Check to see.
+      NtUserNotifyWinEvent(event, hwnd, idObject, idChild);
 }
 
 /*
@@ -277,7 +319,7 @@ SetWinEventHook(
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 STDCALL
@@ -286,6 +328,7 @@ IsWinEventHookInstalled(
 {
   if ((PW32THREADINFO)NtCurrentTeb()->Win32ThreadInfo)
   {
+     return (Bogus_SrvEventActivity & GetMaskFromEvent(event)) != 0;
   }
   return FALSE;
 }
