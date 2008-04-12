@@ -826,8 +826,22 @@ static void BUTTON_DrawLabel(HWND hwnd, HDC hdc, UINT dtFlags, RECT *rc)
          return;
    }
 
-   DrawStateW(hdc, hbr, lpOutputProc, lp, wp, rc->left, rc->top,
-              rc->right - rc->left, rc->bottom - rc->top, flags);
+   /* ROS Hack to make font look less ugly */
+   if ( ((style & (BS_ICON|BS_BITMAP)) == BS_TEXT) &&
+        (flags & DSS_DISABLED) )
+   {
+      ++rc->left; ++rc->top; ++rc->right; ++rc->bottom;
+      SetTextColor(hdc, GetSysColor(COLOR_3DHILIGHT));
+      DrawTextW(hdc, (LPCWSTR)lp, -1, rc, (UINT)wp);
+      --rc->left; --rc->top; --rc->right; --rc->bottom;
+      SetTextColor(hdc, GetSysColor(COLOR_GRAYTEXT));
+      DrawTextW(hdc, (LPCWSTR)lp, -1, rc, (UINT)wp);
+   }
+   else
+   {
+      DrawStateW(hdc, hbr, lpOutputProc, lp, wp, rc->left, rc->top,
+                 rc->right - rc->left, rc->bottom - rc->top, flags);
+   }
    HeapFree( GetProcessHeap(), 0, text );
 }
 
