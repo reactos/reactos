@@ -429,10 +429,10 @@ NtUserNotifyIMEStatus(
 DWORD
 STDCALL
 NtUserNotifyWinEvent(
-   DWORD Unknown0,
-   DWORD Unknown1,
-   DWORD Unknown2,
-   DWORD Unknown3)
+   DWORD Event,
+   HWND  hWnd,
+   LONG  idObject,
+   LONG  idChild)
 {
    UNIMPLEMENTED
 

@@ -1664,10 +1664,10 @@ NtUserNotifyProcessCreate(
 DWORD
 NTAPI
 NtUserNotifyWinEvent(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2,
-  DWORD Unknown3);
+  DWORD Event,
+  HWND  hWnd,
+  LONG  idObject,
+  LONG  idChild);
 
 BOOL
 NTAPI
@@ -2236,14 +2236,14 @@ NtUserSetWindowWord(HWND hWnd, INT Index, WORD NewVal);
 DWORD
 NTAPI
 NtUserSetWinEventHook(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2,
-  DWORD Unknown3,
-  DWORD Unknown4,
-  DWORD Unknown5,
-  DWORD Unknown6,
-  DWORD Unknown7);
+  UINT eventMin,
+  UINT eventMax,
+  HMODULE hmodWinEventProc,
+  PUNICODE_STRING puString,
+  WINEVENTPROC lpfnWinEventProc,
+  DWORD idProcess,
+  DWORD idThread,
+  UINT dwflags);
 
 BOOL
 NTAPI
