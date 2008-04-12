@@ -1,4 +1,8 @@
 
+/* Note : OsThunkDdQueryDirectDrawObject is the usermode name of NtGdiDdQueryDirectDrawObject
+ *        it lives in d3d8thk.dll and in windows 2000 it doing syscall direcly to win32k.sus
+ *        in windows xp and higher it call to gdi32.dll to DdEntry41 and it doing the syscall
+ */
 INT
 Test_NtGdiDdQueryDirectDrawObject(PTESTINFO pti)
 {
@@ -28,7 +32,6 @@ Test_NtGdiDdQueryDirectDrawObject(PTESTINFO pti)
     DEVMODE devmode;
     HDC hdc;
 
-
     /* clear data */
     memset(&vmList,0,sizeof(VIDEOMEMORY));
     memset(&D3dTextureFormats,0,sizeof(DDSURFACEDESC));
@@ -37,8 +40,6 @@ Test_NtGdiDdQueryDirectDrawObject(PTESTINFO pti)
     memset(&D3dCallbacks,0,sizeof(D3DNTHAL_CALLBACKS));
     memset(&HalInfo,0,sizeof(DD_HALINFO));
     memset(CallBackFlags,0,sizeof(DWORD)*3);
-
-
 
     /* Get currenet display mode */
     EnumDisplaySettings(NULL, ENUM_CURRENT_SETTINGS, &devmode);
@@ -92,7 +93,7 @@ Test_NtGdiDdQueryDirectDrawObject(PTESTINFO pti)
     RTEST(puNumHeaps == NULL);
     RTEST(puvmList == NULL);
 
-    /* testing  OsThunkDdQueryDirectDrawObject( hDirectDrawLocal, pHalInfo, NULL, ....  */
+    /* testing  NtGdiDdQueryDirectDrawObject( hDirectDrawLocal, pHalInfo, NULL, ....  */
     pHalInfo = &HalInfo;
     RTEST(NtGdiDdQueryDirectDrawObject( hDirectDraw, pHalInfo,
                                         pCallBackFlags, puD3dCallbacks,
@@ -187,7 +188,7 @@ Test_NtGdiDdQueryDirectDrawObject(PTESTINFO pti)
         /* Test see if we got any hardware acclartions for 2d or 3d, this always fill in 
          * that mean we found a bugi drv and dx does not work on this drv 
          */
-        RTEST(pHalInfo->ddCaps.dwSize == sizeof(DDCORECAPS));        
+        RTEST(pHalInfo->ddCaps.dwSize == sizeof(DDCORECAPS));
 
         /* Testing see if we got any hw support for
          * This test can fail on video card that does not support 2d/overlay/3d
@@ -202,16 +203,17 @@ Test_NtGdiDdQueryDirectDrawObject(PTESTINFO pti)
 
         if (pHalInfo->ddCaps.ddsCaps.dwCaps  & DDSCAPS_3DDEVICE )
         {
-            RTEST( pHalInfo->lpD3DGlobalDriverData != 0);
-            RTEST( pHalInfo->lpD3DHALCallbacks != 0);
-            RTEST( pHalInfo->lpD3DBufCallbacks != 0);
+            /* it is store in kmode so we check if it kmode address or not  */
+            RTEST( ( (DWORD)pHalInfo->lpD3DGlobalDriverData & (~0x80000000)) != 0 );
+            RTEST( ( (DWORD)pHalInfo->lpD3DHALCallbacks & (~0x80000000)) != 0 );
+            RTEST( ( (DWORD)pHalInfo->lpD3DHALCallbacks & (~0x80000000)) != 0 );
         }
     }
 
-
-/* Next Start 2 */
+    /* Backup DD_HALINFO so we do not need resting it */
     RtlCopyMemory(&oldHalInfo, &HalInfo, sizeof(DD_HALINFO));
 
+    /* testing  NtGdiDdQueryDirectDrawObject( hDirectDrawLocal, pHalInfo, pCallBackFlags, NULL, ....  */
     pHalInfo = &HalInfo;
     pCallBackFlags = CallBackFlags;
     RtlZeroMemory(pHalInfo,sizeof(DD_HALINFO));
@@ -223,26 +225,32 @@ Test_NtGdiDdQueryDirectDrawObject(PTESTINFO pti)
                                         puvmList, puNumFourCC,
                                         puFourCC)== FALSE);
     RTEST(pHalInfo != NULL);
+    ASSERT(pHalInfo != NULL);
+
     RTEST(pCallBackFlags != NULL);
+    ASSERT(pCallBackFlags != NULL);
+
     RTEST(puD3dCallbacks == NULL);
     RTEST(puD3dDriverData == NULL);
     RTEST(puD3dBufferCallbacks == NULL);
     RTEST(puD3dTextureFormats == NULL);
     RTEST(puNumFourCC == NULL);
     RTEST(puFourCC == NULL);
-    ASSERT(pHalInfo != NULL);
     RTEST(puNumHeaps == NULL);
     RTEST(puvmList == NULL);
 
     /* We do not retesting DD_HALINFO, instead we compare it */
     RTEST(memcmp(&oldHalInfo, pHalInfo, sizeof(DD_HALINFO)) == 0);
+
+    /* Rember on some nivida drv the pCallBackFlags will not be set even they api exists in the drv
+     * known workaround is to check if the drv really return a kmode pointer for the drv functions 
+     * we want to use.
+     */
     RTEST(pCallBackFlags[0] != 0);
     RTEST(pCallBackFlags[1] != 0);
-
-    /* NT4 this will fail */
     RTEST(pCallBackFlags[2] == 0);
 
-/* Next Start 3 */
+    /* testing  NtGdiDdQueryDirectDrawObject( hDirectDrawLocal, pHalInfo, pCallBackFlags, D3dCallbacks, NULL, ....  */
     pHalInfo = &HalInfo;
     pCallBackFlags = CallBackFlags;
     puD3dCallbacks = &D3dCallbacks;
@@ -257,12 +265,20 @@ Test_NtGdiDdQueryDirectDrawObject(PTESTINFO pti)
                                         puvmList, puNumFourCC,
                                         puFourCC)== FALSE);
     RTEST(pHalInfo != NULL);
-    RTEST(pCallBackFlags != NULL);
+    ASSERT(pHalInfo != NULL);
 
-    if (pHalInfo->ddCaps.ddsCaps.dwCaps  & DDSCAPS_3DDEVICE )
-    {
-        RTEST(puD3dCallbacks != NULL);
-    }
+    RTEST(pCallBackFlags != NULL);
+    ASSERT(pCallBackFlags != NULL);
+
+    /* rember puD3dCallbacks shall never return NULL */
+    RTEST(puD3dCallbacks != NULL);
+    ASSERT(puD3dCallbacks != NULL);
+
+    /* the pHalInfo->ddCaps.ddsCaps.dwCaps & DDSCAPS_3DDEVICE will be ignore, only way detect it proper follow code,
+     * this will be fill in of all drv, it is not only for 3d stuff, this always fill by win32k.sys or dxg.sys depns 
+     * if it windows 2000 or windows xp/2003
+     */
+    RTEST(puD3dCallbacks->dwSize == sizeof(D3DNTHAL_CALLBACKS));
 
     RTEST(puD3dDriverData == NULL);
     RTEST(puD3dBufferCallbacks == NULL);
@@ -271,14 +287,11 @@ Test_NtGdiDdQueryDirectDrawObject(PTESTINFO pti)
     RTEST(puFourCC == NULL);
     RTEST(puNumHeaps == NULL);
     RTEST(puvmList == NULL);
-    ASSERT(pHalInfo != NULL);
 
     /* We do not retesting DD_HALINFO, instead we compare it */
     RTEST(memcmp(&oldHalInfo, pHalInfo, sizeof(DD_HALINFO)) == 0);
     RTEST(pCallBackFlags[0] != 0);
     RTEST(pCallBackFlags[1] != 0);
-
-    /* NT4 this will fail */
     RTEST(pCallBackFlags[2] == 0);
 
 /* Next Start 4 */
