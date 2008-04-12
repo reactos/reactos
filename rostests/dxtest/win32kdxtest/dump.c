@@ -9,6 +9,12 @@
 
 #include "test.h"
 
+/* this flag are only set for dx5 and lower but we need check see if we getting it back from win32k or not */
+#define D3DLIGHTCAPS_GLSPOT             0x00000010
+
+/* this flag are only set for dx6 and lower but we need check see if we getting it back from win32k or not */
+#define D3DLIGHTCAPS_PARALLELPOINT      0x00000008
+
 #define checkflag(dwflag,dwvalue,text) \
         if (dwflag & dwvalue) \
         { \
@@ -191,8 +197,7 @@ dump_halinfo(DD_HALINFO *pHalInfo, char *text)
         int t;
         UINT flag;
         INT count=0;
-        // LPD3DNTHAL_GLOBALDRIVERDATA lpD3DGlobalDriverData = pHalInfo->lpD3DGlobalDriverData;
-
+        
         printf("DD_HALINFO Version NT 2000/XP/2003 found \n");
         printf(" pHalInfo->dwSize                                  : 0x%08lx\n",(long)pHalInfo->dwSize);
 
@@ -467,41 +472,41 @@ dump_D3dCallbacks(D3DNTHAL_CALLBACKS *puD3dCallbacks, char *text)
     printf("dumping the D3DNTHAL_CALLBACKS from %s\n",text);
     if (puD3dCallbacks->dwSize ==  sizeof(D3DNTHAL_CALLBACKS))
     {
-        printf(" puD3dCallbacks->dwSize                            : 0x%08lx\n",(long)puD3dCallbacks->dwSize);
-        printf(" puD3dCallbacks->ContextCreate                     : 0x%08lx\n",(long)puD3dCallbacks->ContextCreate);
-        printf(" puD3dCallbacks->ContextDestroy                    : 0x%08lx\n",(long)puD3dCallbacks->ContextDestroy);
-        printf(" puD3dCallbacks->ContextDestroyAll                 : 0x%08lx\n",(long)puD3dCallbacks->ContextDestroyAll);
-        printf(" puD3dCallbacks->SceneCapture                      : 0x%08lx\n",(long)puD3dCallbacks->SceneCapture);
-        printf(" puD3dCallbacks->dwReserved10                      : 0x%08lx\n",(long)puD3dCallbacks->dwReserved10);
-        printf(" puD3dCallbacks->dwReserved11                      : 0x%08lx\n",(long)puD3dCallbacks->dwReserved11);
-        printf(" puD3dCallbacks->dwReserved22                      : 0x%08lx\n",(long)puD3dCallbacks->dwReserved22);
-        printf(" puD3dCallbacks->dwReserved23                      : 0x%08lx\n",(long)puD3dCallbacks->dwReserved23);
-        printf(" puD3dCallbacks->dwReserved                        : 0x%08lx\n",(long)puD3dCallbacks->dwReserved);
-        printf(" puD3dCallbacks->TextureCreate                     : 0x%08lx\n",(long)puD3dCallbacks->TextureCreate);
-        printf(" puD3dCallbacks->TextureDestroy                    : 0x%08lx\n",(long)puD3dCallbacks->TextureDestroy);
-        printf(" puD3dCallbacks->TextureSwap                       : 0x%08lx\n",(long)puD3dCallbacks->TextureSwap);
-        printf(" puD3dCallbacks->TextureGetSurf                    : 0x%08lx\n",(long)puD3dCallbacks->TextureGetSurf);
-        printf(" puD3dCallbacks->dwReserved12                      : 0x%08lx\n",(long)puD3dCallbacks->dwReserved12);
-        printf(" puD3dCallbacks->dwReserved13                      : 0x%08lx\n",(long)puD3dCallbacks->dwReserved13);
-        printf(" puD3dCallbacks->dwReserved14                      : 0x%08lx\n",(long)puD3dCallbacks->dwReserved14);
-        printf(" puD3dCallbacks->dwReserved15                      : 0x%08lx\n",(long)puD3dCallbacks->dwReserved15);
-        printf(" puD3dCallbacks->dwReserved16                      : 0x%08lx\n",(long)puD3dCallbacks->dwReserved16);
-        printf(" puD3dCallbacks->dwReserved17                      : 0x%08lx\n",(long)puD3dCallbacks->dwReserved17);
-        printf(" puD3dCallbacks->dwReserved18                      : 0x%08lx\n",(long)puD3dCallbacks->dwReserved18);
-        printf(" puD3dCallbacks->dwReserved19                      : 0x%08lx\n",(long)puD3dCallbacks->dwReserved19);
-        printf(" puD3dCallbacks->dwReserved20                      : 0x%08lx\n",(long)puD3dCallbacks->dwReserved20);
-        printf(" puD3dCallbacks->dwReserved21                      : 0x%08lx\n",(long)puD3dCallbacks->dwReserved21);
-        printf(" puD3dCallbacks->dwReserved24                      : 0x%08lx\n",(long)puD3dCallbacks->dwReserved24);
-        printf(" puD3dCallbacks->dwReserved0                       : 0x%08lx\n",(long)puD3dCallbacks->dwReserved0);
-        printf(" puD3dCallbacks->dwReserved1                       : 0x%08lx\n",(long)puD3dCallbacks->dwReserved1);
-        printf(" puD3dCallbacks->dwReserved2                       : 0x%08lx\n",(long)puD3dCallbacks->dwReserved2);
-        printf(" puD3dCallbacks->dwReserved3                       : 0x%08lx\n",(long)puD3dCallbacks->dwReserved3);
-        printf(" puD3dCallbacks->dwReserved4                       : 0x%08lx\n",(long)puD3dCallbacks->dwReserved4);
-        printf(" puD3dCallbacks->dwReserved5                       : 0x%08lx\n",(long)puD3dCallbacks->dwReserved5);
-        printf(" puD3dCallbacks->dwReserved6                       : 0x%08lx\n",(long)puD3dCallbacks->dwReserved6);
-        printf(" puD3dCallbacks->dwReserved7                       : 0x%08lx\n",(long)puD3dCallbacks->dwReserved7);
-        printf(" puD3dCallbacks->dwReserved8                       : 0x%08lx\n",(long)puD3dCallbacks->dwReserved8);
-        printf(" puD3dCallbacks->dwReserved9                       : 0x%08lx\n",(long)puD3dCallbacks->dwReserved9);
+        printf(" puD3dCallbacks->dwSize                                         : 0x%08lx\n",(long)puD3dCallbacks->dwSize);
+        printf(" puD3dCallbacks->ContextCreate                                  : 0x%08lx\n",(long)puD3dCallbacks->ContextCreate);
+        printf(" puD3dCallbacks->ContextDestroy                                 : 0x%08lx\n",(long)puD3dCallbacks->ContextDestroy);
+        printf(" puD3dCallbacks->ContextDestroyAll                              : 0x%08lx\n",(long)puD3dCallbacks->ContextDestroyAll);
+        printf(" puD3dCallbacks->SceneCapture                                   : 0x%08lx\n",(long)puD3dCallbacks->SceneCapture);
+        printf(" puD3dCallbacks->dwReserved10                                   : 0x%08lx\n",(long)puD3dCallbacks->dwReserved10);
+        printf(" puD3dCallbacks->dwReserved11                                   : 0x%08lx\n",(long)puD3dCallbacks->dwReserved11);
+        printf(" puD3dCallbacks->dwReserved22                                   : 0x%08lx\n",(long)puD3dCallbacks->dwReserved22);
+        printf(" puD3dCallbacks->dwReserved23                                   : 0x%08lx\n",(long)puD3dCallbacks->dwReserved23);
+        printf(" puD3dCallbacks->dwReserved                                     : 0x%08lx\n",(long)puD3dCallbacks->dwReserved);
+        printf(" puD3dCallbacks->TextureCreate                                  : 0x%08lx\n",(long)puD3dCallbacks->TextureCreate);
+        printf(" puD3dCallbacks->TextureDestroy                                 : 0x%08lx\n",(long)puD3dCallbacks->TextureDestroy);
+        printf(" puD3dCallbacks->TextureSwap                                    : 0x%08lx\n",(long)puD3dCallbacks->TextureSwap);
+        printf(" puD3dCallbacks->TextureGetSurf                                 : 0x%08lx\n",(long)puD3dCallbacks->TextureGetSurf);
+        printf(" puD3dCallbacks->dwReserved12                                   : 0x%08lx\n",(long)puD3dCallbacks->dwReserved12);
+        printf(" puD3dCallbacks->dwReserved13                                   : 0x%08lx\n",(long)puD3dCallbacks->dwReserved13);
+        printf(" puD3dCallbacks->dwReserved14                                   : 0x%08lx\n",(long)puD3dCallbacks->dwReserved14);
+        printf(" puD3dCallbacks->dwReserved15                                   : 0x%08lx\n",(long)puD3dCallbacks->dwReserved15);
+        printf(" puD3dCallbacks->dwReserved16                                   : 0x%08lx\n",(long)puD3dCallbacks->dwReserved16);
+        printf(" puD3dCallbacks->dwReserved17                                   : 0x%08lx\n",(long)puD3dCallbacks->dwReserved17);
+        printf(" puD3dCallbacks->dwReserved18                                   : 0x%08lx\n",(long)puD3dCallbacks->dwReserved18);
+        printf(" puD3dCallbacks->dwReserved19                                   : 0x%08lx\n",(long)puD3dCallbacks->dwReserved19);
+        printf(" puD3dCallbacks->dwReserved20                                   : 0x%08lx\n",(long)puD3dCallbacks->dwReserved20);
+        printf(" puD3dCallbacks->dwReserved21                                   : 0x%08lx\n",(long)puD3dCallbacks->dwReserved21);
+        printf(" puD3dCallbacks->dwReserved24                                   : 0x%08lx\n",(long)puD3dCallbacks->dwReserved24);
+        printf(" puD3dCallbacks->dwReserved0                                    : 0x%08lx\n",(long)puD3dCallbacks->dwReserved0);
+        printf(" puD3dCallbacks->dwReserved1                                    : 0x%08lx\n",(long)puD3dCallbacks->dwReserved1);
+        printf(" puD3dCallbacks->dwReserved2                                    : 0x%08lx\n",(long)puD3dCallbacks->dwReserved2);
+        printf(" puD3dCallbacks->dwReserved3                                    : 0x%08lx\n",(long)puD3dCallbacks->dwReserved3);
+        printf(" puD3dCallbacks->dwReserved4                                    : 0x%08lx\n",(long)puD3dCallbacks->dwReserved4);
+        printf(" puD3dCallbacks->dwReserved5                                    : 0x%08lx\n",(long)puD3dCallbacks->dwReserved5);
+        printf(" puD3dCallbacks->dwReserved6                                    : 0x%08lx\n",(long)puD3dCallbacks->dwReserved6);
+        printf(" puD3dCallbacks->dwReserved7                                    : 0x%08lx\n",(long)puD3dCallbacks->dwReserved7);
+        printf(" puD3dCallbacks->dwReserved8                                    : 0x%08lx\n",(long)puD3dCallbacks->dwReserved8);
+        printf(" puD3dCallbacks->dwReserved9                                    : 0x%08lx\n",(long)puD3dCallbacks->dwReserved9);
     }
      else
     {
@@ -510,4 +515,207 @@ dump_D3dCallbacks(D3DNTHAL_CALLBACKS *puD3dCallbacks, char *text)
 }
 
 
+void
+dump_D3dDriverData(D3DNTHAL_GLOBALDRIVERDATA *puD3dDriverData, char *text)
+{
+    UINT flag = 0;
+    INT count = 0;
 
+    printf("dumping the D3DNTHAL_GLOBALDRIVERDATA from %s\n",text);
+    if (puD3dDriverData->dwSize ==  sizeof(D3DNTHAL_GLOBALDRIVERDATA))
+    {
+        printf(" puD3dDriverData->dwSize                                        : 0x%08lx\n",(long)puD3dDriverData->dwSize);
+        if (puD3dDriverData->hwCaps.dwSize == sizeof(D3DNTHALDEVICEDESC_V1))
+        {
+            printf(" puD3dDriverData->hwCaps.dwSize                                 : 0x%08lx\n",(long)puD3dDriverData->hwCaps.dwSize);
+            printf(" puD3dDriverData->hwCaps.dwFlags                                : ");
+
+            flag = puD3dDriverData->hwCaps.dwFlags;
+            checkflag(flag,D3DDD_BCLIPPING,"D3DDD_BCLIPPING");
+            checkflag(flag,D3DDD_COLORMODEL,"D3DDD_COLORMODEL");
+            checkflag(flag,D3DDD_DEVCAPS,"D3DDD_DEVCAPS");
+            checkflag(flag,D3DDD_DEVICERENDERBITDEPTH,"D3DDD_DEVICERENDERBITDEPTH");
+            checkflag(flag,D3DDD_DEVICEZBUFFERBITDEPTH,"D3DDD_DEVICEZBUFFERBITDEPTH");
+            checkflag(flag,D3DDD_LIGHTINGCAPS,"D3DDD_LIGHTINGCAPS");
+            checkflag(flag,D3DDD_LINECAPS,"D3DDD_LINECAPS");
+            checkflag(flag,D3DDD_MAXBUFFERSIZE,"D3DDD_MAXBUFFERSIZE");
+            checkflag(flag,D3DDD_MAXVERTEXCOUNT,"D3DDD_MAXVERTEXCOUNT");
+            checkflag(flag,D3DDD_TRANSFORMCAPS,"D3DDD_TRANSFORMCAPS");
+            checkflag(flag,D3DDD_TRICAPS,"D3DDD_TRICAPS");
+            endcheckflag(flag,"puD3dDriverData->hwCaps.dwFlags ");
+             
+            printf(" puD3dDriverData->hwCaps.dcmColorModel                          : 0x%08lx\n",(long)puD3dDriverData->hwCaps.dcmColorModel);
+            printf(" puD3dDriverData->hwCaps.dwDevCaps                              : ");
+
+            count = 0;
+            flag = puD3dDriverData->hwCaps.dwDevCaps;
+            checkflag(flag,D3DDEVCAPS_CANBLTSYSTONONLOCAL,"D3DDEVCAPS_CANBLTSYSTONONLOCAL");
+            checkflag(flag,D3DDEVCAPS_CANRENDERAFTERFLIP,"D3DDEVCAPS_CANRENDERAFTERFLIP");
+            checkflag(flag,D3DDEVCAPS_DRAWPRIMITIVES2,"D3DDEVCAPS_DRAWPRIMITIVES2");
+            checkflag(flag,D3DDEVCAPS_DRAWPRIMITIVES2EX,"D3DDEVCAPS_DRAWPRIMITIVES2EX");
+            checkflag(flag,D3DDEVCAPS_DRAWPRIMTLVERTEX,"D3DDEVCAPS_DRAWPRIMTLVERTEX");
+            checkflag(flag,D3DDEVCAPS_EXECUTESYSTEMMEMORY,"D3DDEVCAPS_EXECUTESYSTEMMEMORY");
+            checkflag(flag,D3DDEVCAPS_EXECUTEVIDEOMEMORY,"D3DDEVCAPS_EXECUTEVIDEOMEMORY");
+            checkflag(flag,D3DDEVCAPS_FLOATTLVERTEX,"D3DDEVCAPS_FLOATTLVERTEX");
+            checkflag(flag,D3DDEVCAPS_HWRASTERIZATION,"D3DDEVCAPS_HWRASTERIZATION");
+            checkflag(flag,D3DDEVCAPS_HWTRANSFORMANDLIGHT,"D3DDEVCAPS_HWTRANSFORMANDLIGHT");
+            checkflag(flag,D3DDEVCAPS_SEPARATETEXTUREMEMORIES,"D3DDEVCAPS_SEPARATETEXTUREMEMORIES");
+            checkflag(flag,D3DDEVCAPS_SORTDECREASINGZ,"D3DDEVCAPS_SORTDECREASINGZ");
+            checkflag(flag,D3DDEVCAPS_SORTEXACT,"D3DDEVCAPS_SORTEXACT");
+            checkflag(flag,D3DDEVCAPS_SORTINCREASINGZ,"D3DDEVCAPS_SORTINCREASINGZ");
+            // not in ddk or dxsdk I have but it is msdn checkflag(flag,D3DDEVCAPS_TEXTURENONLOCALVIDEOMEMORY,"D3DDEVCAPS_TEXTURENONLOCALVIDEOMEMORY");
+            checkflag(flag,D3DDEVCAPS_TLVERTEXSYSTEMMEMORY,"D3DDEVCAPS_TLVERTEXSYSTEMMEMORY");
+            checkflag(flag,D3DDEVCAPS_TLVERTEXVIDEOMEMORY,"D3DDEVCAPS_TLVERTEXVIDEOMEMORY");
+            checkflag(flag,D3DDEVCAPS_TEXTURESYSTEMMEMORY,"D3DDEVCAPS_TEXTURESYSTEMMEMORY");
+            checkflag(flag,D3DDEVCAPS_TEXTUREVIDEOMEMORY,"D3DDEVCAPS_TEXTUREVIDEOMEMORY");
+            endcheckflag(flag,"puD3dDriverData->hwCaps.dwDevCaps");
+            
+            if (puD3dDriverData->hwCaps.dtcTransformCaps.dwSize == sizeof(D3DTRANSFORMCAPS))
+            {
+                printf(" puD3dDriverData->hwCaps.dtcTransformCaps.dwSize                : 0x%08lx\n",(long) puD3dDriverData->hwCaps.dtcTransformCaps.dwSize);
+                printf(" puD3dDriverData->hwCaps.dtcTransformCaps.dwCaps                : ");
+
+                count = 0;
+                flag = puD3dDriverData->hwCaps.dtcTransformCaps.dwCaps;
+                checkflag(flag,D3DTRANSFORMCAPS_CLIP,"D3DTRANSFORMCAPS_CLIP");
+                endcheckflag(flag,"puD3dDriverData->hwCaps.dtcTransformCaps.dwCaps");                 
+            }
+            else
+            {
+                printf("none puD3dDriverData->hwCaps.dtcTransformCaps.dwSize from the driver 0x%08lx\n",puD3dDriverData->hwCaps.dtcTransformCaps.dwSize);
+            }
+
+            if (puD3dDriverData->hwCaps.dlcLightingCaps.dwSize == sizeof(D3DLIGHTINGCAPS))
+            {
+                printf(" puD3dDriverData->hwCaps.dlcLightingCaps.dwSize                 : 0x%08lx\n",(long)puD3dDriverData->hwCaps.dlcLightingCaps.dwSize);
+                printf(" puD3dDriverData->hwCaps.dlcLightingCaps.dwCaps                 : ");
+
+                count = 0;
+                flag = puD3dDriverData->hwCaps.dlcLightingCaps.dwCaps;
+
+                checkflag(flag,D3DLIGHTCAPS_DIRECTIONAL,"D3DLIGHTCAPS_DIRECTIONAL");
+                checkflag(flag,D3DLIGHTCAPS_GLSPOT,"D3DLIGHTCAPS_GLSPOT");
+                checkflag(flag,D3DLIGHTCAPS_PARALLELPOINT,"D3DLIGHTCAPS_PARALLELPOINT");
+                checkflag(flag,D3DLIGHTCAPS_POINT,"D3DLIGHTCAPS_POINT");
+                checkflag(flag,D3DLIGHTCAPS_SPOT,"D3DLIGHTCAPS_SPOT");
+                endcheckflag(flag,"puD3dDriverData->hwCaps.dlcLightingCaps.dwCaps");         
+                
+                printf(" puD3dDriverData->hwCaps.dlcLightingCaps.dwLightingModel        : ");
+
+                count = 0;
+                flag = puD3dDriverData->hwCaps.dlcLightingCaps.dwLightingModel;
+
+                checkflag(flag,D3DLIGHTINGMODEL_MONO,"D3DLIGHTINGMODEL_MONO");
+                checkflag(flag,D3DLIGHTINGMODEL_RGB,"D3DLIGHTINGMODEL_RGB");
+                endcheckflag(flag,"puD3dDriverData->hwCaps.dlcLightingCaps.dwLightingModel"); 
+               
+                printf(" puD3dDriverData->hwCaps.dlcLightingCaps.dwNumLights            : 0x%08lx\n",(long)puD3dDriverData->hwCaps.dlcLightingCaps.dwNumLights);
+            }
+            else
+            {
+                printf("none puD3dDriverData->hwCaps.dlcLightingCaps.dwSize from the driver 0x%08lx\n",puD3dDriverData->hwCaps.dlcLightingCaps.dwSize);
+            }
+
+
+            if (puD3dDriverData->hwCaps.dpcLineCaps.dwSize == sizeof(D3DPRIMCAPS))
+            {
+                printf(" puD3dDriverData->hwCaps.dpcLineCaps.dwSize                     : 0x%08lx\n",(long)puD3dDriverData->hwCaps.dpcLineCaps.dwSize);
+
+                printf(" puD3dDriverData->hwCaps.dpcLineCaps.dwMiscCaps                 : ");
+                count = 0;
+                flag = puD3dDriverData->hwCaps.dpcLineCaps.dwMiscCaps;
+                checkflag(flag,D3DPMISCCAPS_CONFORMANT,"D3DPMISCCAPS_CONFORMANT");
+                checkflag(flag,D3DPMISCCAPS_CULLCCW,"D3DPMISCCAPS_CULLCCW");
+                checkflag(flag,D3DPMISCCAPS_CULLCW,"D3DPMISCCAPS_CULLCW");
+                checkflag(flag,D3DPMISCCAPS_CULLNONE,"D3DPMISCCAPS_CULLNONE");
+                checkflag(flag,D3DPMISCCAPS_LINEPATTERNREP,"D3DPMISCCAPS_LINEPATTERNREP");
+                checkflag(flag,D3DPMISCCAPS_MASKPLANES,"D3DPMISCCAPS_MASKPLANES");
+                checkflag(flag,D3DPMISCCAPS_MASKZ,"D3DPMISCCAPS_MASKZ");
+                endcheckflag(flag,"puD3dDriverData->hwCaps.dpcLineCaps.dwMiscCaps"); 
+
+                printf(" puD3dDriverData->hwCaps.dpcLineCaps.dwRasterCaps               : ");
+                count = 0;
+                flag = puD3dDriverData->hwCaps.dpcLineCaps.dwRasterCaps;
+                checkflag(flag,D3DPRASTERCAPS_ANISOTROPY,"D3DPRASTERCAPS_ANISOTROPY");
+                checkflag(flag,D3DPRASTERCAPS_ANTIALIASEDGES,"D3DPRASTERCAPS_ANTIALIASEDGES");
+                checkflag(flag,D3DPRASTERCAPS_ANTIALIASSORTDEPENDENT,"D3DPRASTERCAPS_ANTIALIASSORTDEPENDENT");
+                checkflag(flag,D3DPRASTERCAPS_ANTIALIASSORTINDEPENDENT,"D3DPRASTERCAPS_ANTIALIASSORTINDEPENDENT");
+                checkflag(flag,D3DPRASTERCAPS_DITHER,"D3DPRASTERCAPS_DITHER");
+                checkflag(flag,D3DPRASTERCAPS_FOGRANGE,"D3DPRASTERCAPS_FOGRANGE");
+                checkflag(flag,D3DPRASTERCAPS_FOGTABLE,"D3DPRASTERCAPS_FOGTABLE");
+                checkflag(flag,D3DPRASTERCAPS_FOGVERTEX,"D3DPRASTERCAPS_FOGVERTEX");
+                checkflag(flag,D3DPRASTERCAPS_PAT,"D3DPRASTERCAPS_PAT");
+                checkflag(flag,D3DPRASTERCAPS_ROP2,"D3DPRASTERCAPS_ROP2");
+                checkflag(flag,D3DPRASTERCAPS_STIPPLE,"D3DPRASTERCAPS_STIPPLE");
+                checkflag(flag,D3DPRASTERCAPS_SUBPIXEL,"D3DPRASTERCAPS_SUBPIXEL");
+                checkflag(flag,D3DPRASTERCAPS_SUBPIXELX,"D3DPRASTERCAPS_SUBPIXELX");
+                checkflag(flag,D3DPRASTERCAPS_TRANSLUCENTSORTINDEPENDENT,"D3DPRASTERCAPS_TRANSLUCENTSORTINDEPENDENT");
+                checkflag(flag,D3DPRASTERCAPS_WBUFFER,"D3DPRASTERCAPS_WBUFFER");
+                checkflag(flag,D3DPRASTERCAPS_WFOG,"D3DPRASTERCAPS_WFOG");
+                checkflag(flag,D3DPRASTERCAPS_XOR,"D3DPRASTERCAPS_XOR");
+                checkflag(flag,D3DPRASTERCAPS_ZBIAS,"D3DPRASTERCAPS_ZBIAS");
+                checkflag(flag,D3DPRASTERCAPS_ZBUFFERLESSHSR,"D3DPRASTERCAPS_ZBUFFERLESSHSR");
+                checkflag(flag,D3DPRASTERCAPS_ZFOG,"D3DPRASTERCAPS_ZFOG");
+                checkflag(flag,D3DPRASTERCAPS_ZTEST,"D3DPRASTERCAPS_ZTEST");               
+                endcheckflag(flag,"puD3dDriverData->hwCaps.dpcLineCaps.dwRasterCaps"); 
+
+                printf(" puD3dDriverData->hwCaps.dpcLineCaps.dwZCmpCaps                 : 0x%08lx\n",(long)puD3dDriverData->hwCaps.dpcLineCaps.dwZCmpCaps);
+                printf(" puD3dDriverData->hwCaps.dpcLineCaps.dwSrcBlendCaps             : 0x%08lx\n",(long)puD3dDriverData->hwCaps.dpcLineCaps.dwSrcBlendCaps);
+                printf(" puD3dDriverData->hwCaps.dpcLineCaps.dwDestBlendCaps            : 0x%08lx\n",(long)puD3dDriverData->hwCaps.dpcLineCaps.dwDestBlendCaps);
+                printf(" puD3dDriverData->hwCaps.dpcLineCaps.dwAlphaCmpCaps             : 0x%08lx\n",(long)puD3dDriverData->hwCaps.dpcLineCaps.dwAlphaCmpCaps);
+                printf(" puD3dDriverData->hwCaps.dpcLineCaps.dwShadeCaps                : 0x%08lx\n",(long)puD3dDriverData->hwCaps.dpcLineCaps.dwShadeCaps);
+                printf(" puD3dDriverData->hwCaps.dpcLineCaps.dwTextureCaps              : 0x%08lx\n",(long)puD3dDriverData->hwCaps.dpcLineCaps.dwTextureCaps);
+                printf(" puD3dDriverData->hwCaps.dpcLineCaps.dwTextureFilterCaps        : 0x%08lx\n",(long)puD3dDriverData->hwCaps.dpcLineCaps.dwTextureFilterCaps);
+                printf(" puD3dDriverData->hwCaps.dpcLineCaps.dwTextureBlendCaps         : 0x%08lx\n",(long)puD3dDriverData->hwCaps.dpcLineCaps.dwTextureBlendCaps);
+                printf(" puD3dDriverData->hwCaps.dpcLineCaps.dwTextureAddressCaps       : 0x%08lx\n",(long)puD3dDriverData->hwCaps.dpcLineCaps.dwTextureAddressCaps);
+                printf(" puD3dDriverData->hwCaps.dpcLineCaps.dwStippleWidth             : 0x%08lx\n",(long)puD3dDriverData->hwCaps.dpcLineCaps.dwStippleWidth);
+                printf(" puD3dDriverData->hwCaps.dpcLineCaps.dwStippleHeight            : 0x%08lx\n",(long)puD3dDriverData->hwCaps.dpcLineCaps.dwStippleHeight);
+            }
+            else
+            {
+                printf("none puD3dDriverData->hwCaps.dpcLineCaps.dwSize from the driver 0x%08lx\n",puD3dDriverData->hwCaps.dpcLineCaps.dwSize);
+            }
+
+            if (puD3dDriverData->hwCaps.dpcTriCaps.dwSize == sizeof(D3DPRIMCAPS))
+            {
+                printf(" puD3dDriverData->hwCaps.dpcTriCaps.dwSize                      : 0x%08lx\n",(long)puD3dDriverData->hwCaps.dpcTriCaps.dwSize);
+                printf(" puD3dDriverData->hwCaps.dpcTriCaps.dwMiscCaps                  : 0x%08lx\n",(long)puD3dDriverData->hwCaps.dpcTriCaps.dwMiscCaps);
+                printf(" puD3dDriverData->hwCaps.dpcTriCaps.dwRasterCaps                : 0x%08lx\n",(long)puD3dDriverData->hwCaps.dpcTriCaps.dwRasterCaps);
+                printf(" puD3dDriverData->hwCaps.dpcTriCaps.dwZCmpCaps                  : 0x%08lx\n",(long)puD3dDriverData->hwCaps.dpcTriCaps.dwZCmpCaps);
+                printf(" puD3dDriverData->hwCaps.dpcTriCaps.dwSrcBlendCaps              : 0x%08lx\n",(long)puD3dDriverData->hwCaps.dpcTriCaps.dwSrcBlendCaps);
+                printf(" puD3dDriverData->hwCaps.dpcTriCaps.dwDestBlendCaps             : 0x%08lx\n",(long)puD3dDriverData->hwCaps.dpcTriCaps.dwDestBlendCaps);
+                printf(" puD3dDriverData->hwCaps.dpcTriCaps.dwAlphaCmpCaps              : 0x%08lx\n",(long)puD3dDriverData->hwCaps.dpcTriCaps.dwAlphaCmpCaps);
+                printf(" puD3dDriverData->hwCaps.dpcTriCaps.dwShadeCaps                 : 0x%08lx\n",(long)puD3dDriverData->hwCaps.dpcTriCaps.dwShadeCaps);
+                printf(" puD3dDriverData->hwCaps.dpcTriCaps.dwTextureCaps               : 0x%08lx\n",(long)puD3dDriverData->hwCaps.dpcTriCaps.dwTextureCaps);
+                printf(" puD3dDriverData->hwCaps.dpcTriCaps.dwTextureFilterCaps         : 0x%08lx\n",(long)puD3dDriverData->hwCaps.dpcTriCaps.dwTextureFilterCaps);
+                printf(" puD3dDriverData->hwCaps.dpcTriCaps.dwTextureBlendCaps          : 0x%08lx\n",(long)puD3dDriverData->hwCaps.dpcTriCaps.dwTextureBlendCaps);
+                printf(" puD3dDriverData->hwCaps.dpcTriCaps.dwTextureAddressCaps        : 0x%08lx\n",(long)puD3dDriverData->hwCaps.dpcTriCaps.dwTextureAddressCaps);
+                printf(" puD3dDriverData->hwCaps.dpcTriCaps.dwStippleWidth              : 0x%08lx\n",(long)puD3dDriverData->hwCaps.dpcTriCaps.dwStippleWidth);
+                printf(" puD3dDriverData->hwCaps.dpcTriCaps.dwStippleHeight             : 0x%08lx\n",(long)puD3dDriverData->hwCaps.dpcTriCaps.dwStippleHeight);
+            }
+            else
+            {
+                printf("none puD3dDriverData->hwCaps.dpcTriCaps.dwSize from the driver 0x%08lx\n",puD3dDriverData->hwCaps.dpcTriCaps.dwSize);
+            }
+
+            printf(" puD3dDriverData->hwCaps.dwDeviceRenderBitDepth                 : 0x%08lx\n",(long)puD3dDriverData->hwCaps.dwDeviceRenderBitDepth);
+            printf(" puD3dDriverData->hwCaps.dwDeviceZBufferBitDepth                : 0x%08lx\n",(long)puD3dDriverData->hwCaps.dwDeviceZBufferBitDepth);
+            printf(" puD3dDriverData->hwCaps.dwMaxBufferSize                        : 0x%08lx\n",(long)puD3dDriverData->hwCaps.dwMaxBufferSize);
+            printf(" puD3dDriverData->hwCaps.dwMaxVertexCount                       : 0x%08lx\n",(long)puD3dDriverData->hwCaps.dwMaxVertexCount);
+        }
+        else
+        {
+            printf("none puD3dDriverData->hwCaps.dwSize from the driver 0x%08lx\n",puD3dDriverData->hwCaps.dwSize);
+        }
+
+        printf(" puD3dDriverData->dwNumVertices                                 : 0x%08lx\n",(long)puD3dDriverData->dwNumVertices);
+        printf(" puD3dDriverData->dwNumClipVertices                             : 0x%08lx\n",(long)puD3dDriverData->dwNumClipVertices);
+        printf(" puD3dDriverData->dwNumTextureFormats                           : 0x%08lx\n",(long)puD3dDriverData->dwNumTextureFormats);
+        printf(" puD3dDriverData->lpTextureFormats                              : 0x%08lx\n",(long)puD3dDriverData->lpTextureFormats);
+        printf(" puD3dDriverData->lpTextureFormats                              : 0x%08lx\n",(long)puD3dDriverData->lpTextureFormats);
+    }
+    else
+    {
+        printf("none puD3dDriverData from the driver 0x%08lx\n",puD3dDriverData->dwSize);
+    }
+}

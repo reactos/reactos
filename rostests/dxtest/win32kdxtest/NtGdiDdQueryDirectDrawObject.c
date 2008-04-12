@@ -285,7 +285,7 @@ test_NtGdiDdQueryDirectDrawObject( HANDLE hDirectDrawLocal)
         dump_halinfo(pHalInfo,"NtGdiDdQueryDirectDrawObject(hDirectDrawLocal, pHalInfo, pCallBackFlags, puD3dCallbacks, puD3dDriverData, NULL, ...)");
         dump_CallBackFlags(pCallBackFlags,"NtGdiDdQueryDirectDrawObject(hDirectDrawLocal, pHalInfo, pCallBackFlags, puD3dCallbacks, puD3dDriverData, NULL, ...)");
         dump_D3dCallbacks(puD3dCallbacks,"NtGdiDdQueryDirectDrawObject(hDirectDrawLocal, pHalInfo, pCallBackFlags, puD3dCallbacks, puD3dDriverData, NULL, ...)");
-        /* FIXME dump puD3dDriverData */
+        dump_D3dDriverData(puD3dDriverData,"NtGdiDdQueryDirectDrawObject(hDirectDrawLocal, pHalInfo, pCallBackFlags, puD3dCallbacks, puD3dDriverData, NULL, ...)");
     }
 
 /* testing  OsThunkDdQueryDirectDrawObject( hDD, pHalInfo, pCallBackFlags, puD3dCallbacks, puD3dDriverData, D3dBufferCallbacks, NULL, */
@@ -338,7 +338,7 @@ test_NtGdiDdQueryDirectDrawObject( HANDLE hDirectDrawLocal)
         dump_halinfo(pHalInfo,"NtGdiDdQueryDirectDrawObject(hDirectDrawLocal, pHalInfo, pCallBackFlags, puD3dCallbacks, puD3dDriverData, puD3dBufferCallbacks, NULL, ...)");
         dump_CallBackFlags(pCallBackFlags,"NtGdiDdQueryDirectDrawObject(hDirectDrawLocal, pHalInfo, pCallBackFlags, puD3dCallbacks, puD3dDriverData, puD3dBufferCallbacks, NULL, ...)");
         dump_D3dCallbacks(puD3dCallbacks,"NtGdiDdQueryDirectDrawObject(hDirectDrawLocal, pHalInfo, pCallBackFlags, puD3dCallbacks, puD3dDriverData, puD3dBufferCallbacks, NULL, ...)");
-        /* FIXME dump puD3dDriverData */
+        dump_D3dDriverData(puD3dDriverData, "NtGdiDdQueryDirectDrawObject(hDirectDrawLocal, pHalInfo, pCallBackFlags, puD3dCallbacks, puD3dDriverData, puD3dBufferCallbacks, NULL, ...)");
         /* FIXME dump D3dBufferCallbacks */
 
     }
