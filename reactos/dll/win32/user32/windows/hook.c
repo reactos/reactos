@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id$
+/*
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -72,18 +72,38 @@ GetMaskFromEvent(DWORD Event)
   return Ret;
 }
 
+static
+HHOOK
+FASTCALL
+IntSetWindowsHook(
+    int idHook,
+    HOOKPROC lpfn,
+    HINSTANCE hMod,
+    DWORD dwThreadId,
+    BOOL bAnsi)
+{
+  WCHAR ModuleName[MAX_PATH];
+  UNICODE_STRING USModuleName;
+
+  if (NULL != hMod)
+    {
+      if (0 == GetModuleFileNameW(hMod, ModuleName, MAX_PATH))
+        {
+          return NULL;
+        }
+      RtlInitUnicodeString(&USModuleName, ModuleName);
+    }
+  else
+    {
+      RtlInitUnicodeString(&USModuleName, NULL);
+    }
+
+  return NtUserSetWindowsHookEx(hMod, &USModuleName, dwThreadId, idHook, lpfn, bAnsi);
+}
+
+
 /* FUNCTIONS *****************************************************************/
 
-/*
- * @implemented
- */
-BOOL
-STDCALL
-UnhookWindowsHookEx(
-  HHOOK Hook)
-{
-  return NtUserUnhookWindowsHookEx(Hook);
-}
 #if 0
 BOOL
 STDCALL
@@ -95,7 +115,6 @@ CallMsgFilter(
   return FALSE;
 }
 #endif
-
 
 /*
  * @implemented
@@ -177,35 +196,6 @@ CallNextHookEx(
   LPARAM lParam)
 {
   return NtUserCallNextHookEx(Hook, Code, wParam, lParam);
-}
-
-static
-HHOOK
-FASTCALL
-IntSetWindowsHook(
-    int idHook,
-    HOOKPROC lpfn,
-    HINSTANCE hMod,
-    DWORD dwThreadId,
-    BOOL bAnsi)
-{
-  WCHAR ModuleName[MAX_PATH];
-  UNICODE_STRING USModuleName;
-
-  if (NULL != hMod)
-    {
-      if (0 == GetModuleFileNameW(hMod, ModuleName, MAX_PATH))
-        {
-          return NULL;
-        }
-      RtlInitUnicodeString(&USModuleName, ModuleName);
-    }
-  else
-    {
-      RtlInitUnicodeString(&USModuleName, NULL);
-    }
-
-  return NtUserSetWindowsHookEx(hMod, &USModuleName, dwThreadId, idHook, lpfn, bAnsi);
 }
 
 /*

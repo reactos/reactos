@@ -693,7 +693,7 @@ TranslateMessage@4
 TranslateMessageEx@8
 UnhookWinEvent@4=NtUserUnhookWinEvent@4
 UnhookWindowsHook@8
-UnhookWindowsHookEx@4
+UnhookWindowsHookEx@4=NtUserUnhookWindowsHookEx@4
 UnionRect@12
 UnloadKeyboardLayout@4=NtUserUnloadKeyboardLayout@4
 UnlockWindowStation@4
