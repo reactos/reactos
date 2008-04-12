@@ -2503,6 +2503,7 @@ typedef struct tagKMDDELPARAM
 #define NOPARAM_ROUTINE_GETMESSAGEEXTRAINFO   0xffff0005
 #define NOPARAM_ROUTINE_ANYPOPUP              0xffff0006
 #define NOPARAM_ROUTINE_CSRSS_INITIALIZED     0xffff0007
+#define ONEPARAM_ROUTINE_CSRSS_GUICHECK       0xffff0008
 #define ONEPARAM_ROUTINE_GETMENU              0xfffe0001 // usermode
 #define ONEPARAM_ROUTINE_ISWINDOWUNICODE      0xfffe0002
 #define ONEPARAM_ROUTINE_GETCARETINFO         0xfffe0007
@@ -2562,16 +2563,6 @@ ULONG_PTR
 NTAPI
 NtUserGetClassLong(HWND hWnd, INT Offset, BOOL Ansi);
 
-/* Should be done in usermode */
-BOOL
-NTAPI
-NtUserGetClientOrigin(HWND hWnd, LPPOINT Point);
-
-/* Should be done in usermode */
-BOOL
-NTAPI
-NtUserGetClientRect(HWND hWnd, LPRECT Rect);
-
 UINT
 NTAPI
 NtUserGetMenuDefaultItem(
@@ -2626,20 +2617,9 @@ LONG
 NTAPI
 NtUserGetWindowLong(HWND hWnd, DWORD Index, BOOL Ansi);
 
-/* Should be done in usermode */
-BOOL
-NTAPI
-NtUserGetWindowRect(HWND hWnd, LPRECT Rect);
-
 DWORD
 NTAPI
 NtUserGetWindowThreadProcessId(HWND hWnd, LPDWORD UnsafePid);
-
-
-
-VOID
-NTAPI
-NtUserManualGuiCheck(LONG Check);
 
 
 

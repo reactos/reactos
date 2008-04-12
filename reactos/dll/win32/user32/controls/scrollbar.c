@@ -1193,7 +1193,7 @@ ScrollTrackScrollBar(HWND Wnd, INT SBType, POINT Pt)
 
   if (SB_CTL != SBType)
     {
-      NtUserGetWindowRect(Wnd, &WindowRect);
+      GetWindowRect(Wnd, &WindowRect);
 
       Pt.x -= WindowRect.left;
       Pt.y -= WindowRect.top;

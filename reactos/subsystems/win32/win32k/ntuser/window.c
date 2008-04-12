@@ -2887,45 +2887,6 @@ CLEANUP:
    END_CLEANUP;
 }
 
-/*!
- * Returns client window rectangle relative to the upper-left corner of client area.
- *
- * \param hWnd window handle.
- * \param Rect pointer to the buffer where the coordinates are returned.
- *
-*/
-/*
- * @implemented
- */
-BOOL STDCALL
-NtUserGetClientRect(HWND hWnd, LPRECT Rect)
-{
-   PWINDOW_OBJECT Window;
-   RECT SafeRect;
-   DECLARE_RETURN(BOOL);
-
-   DPRINT("Enter NtUserGetClientRect\n");
-   UserEnterShared();
-
-   if(!(Window = UserGetWindowObject(hWnd)))
-   {
-      RETURN( FALSE);
-   }
-
-   IntGetClientRect(Window, &SafeRect);
-
-   if(!NT_SUCCESS(MmCopyToCaller(Rect, &SafeRect, sizeof(RECT))))
-   {
-      RETURN( FALSE);
-   }
-   RETURN( TRUE);
-
-CLEANUP:
-   DPRINT("Leave NtUserGetClientRect, ret=%i\n",_ret_);
-   UserLeave();
-   END_CLEANUP;
-}
-
 
 BOOL
 STDCALL
@@ -3902,44 +3863,6 @@ NtUserGetWindowPlacement(HWND hWnd,
 
 CLEANUP:
    DPRINT("Leave NtUserGetWindowPlacement, ret=%i\n",_ret_);
-   UserLeave();
-   END_CLEANUP;
-}
-
-
-/*!
- * Return the dimension of the window in the screen coordinates.
- * \param hWnd window handle.
- * \param Rect pointer to the buffer where the coordinates are returned.
-*/
-/*
- * @implemented
- */
-BOOL STDCALL
-NtUserGetWindowRect(HWND hWnd, LPRECT Rect)
-{
-   PWINDOW_OBJECT Wnd;
-   NTSTATUS Status;
-   DECLARE_RETURN(BOOL);
-
-   DPRINT("Enter NtUserGetWindowRect\n");
-   UserEnterShared();
-
-   if (!(Wnd = UserGetWindowObject(hWnd)))
-   {
-      RETURN(FALSE);
-   }
-   Status = MmCopyToCaller(Rect, &Wnd->Wnd->WindowRect, sizeof(RECT));
-   if (!NT_SUCCESS(Status))
-   {
-      SetLastNtError(Status);
-      RETURN( FALSE);
-   }
-
-   RETURN( TRUE);
-
-CLEANUP:
-   DPRINT("Leave NtUserGetWindowRect, ret=%i\n",_ret_);
    UserLeave();
    END_CLEANUP;
 }

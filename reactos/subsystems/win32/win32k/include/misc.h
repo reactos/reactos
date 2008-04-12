@@ -8,5 +8,6 @@
 
 ULONG FASTCALL IntSystemParametersInfo(UINT uiAction, UINT uiParam, PVOID pvParam, UINT fWinIni);
 DWORD STDCALL IntGetQueueStatus(BOOL ClearChanges);
+VOID FASTCALL IntUserManualGuiCheck(LONG Check);
 
 #endif /* __WIN32K_MISC_H */

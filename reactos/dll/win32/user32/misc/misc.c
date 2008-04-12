@@ -55,7 +55,7 @@ VOID
 STDCALL
 PrivateCsrssManualGuiCheck(LONG Check)
 {
-  NtUserManualGuiCheck(Check);
+  NtUserCallOneParam(Check, ONEPARAM_ROUTINE_CSRSS_GUICHECK);
 }
 
 VOID

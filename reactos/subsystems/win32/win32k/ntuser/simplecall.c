@@ -395,6 +395,10 @@ NtUserCallOneParam(
       case ONEPARAM_ROUTINE_ENUMCLIPBOARDFORMATS:
          /* FIXME: Should use UserEnterShared */
          RETURN(IntEnumClipboardFormats(Param));
+
+       case ONEPARAM_ROUTINE_CSRSS_GUICHECK:
+          IntUserManualGuiCheck(Param);
+          RETURN(TRUE);
    }
    DPRINT1("Calling invalid routine number 0x%x in NtUserCallOneParam(), Param=0x%x\n",
            Routine, Param);

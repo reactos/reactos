@@ -106,27 +106,6 @@ UserGetClientOrigin(PWINDOW_OBJECT Window, LPPOINT Point)
 
 
 
-BOOL STDCALL
-NtUserGetClientOrigin(HWND hWnd, LPPOINT Point)
-{
-   DECLARE_RETURN(BOOL);
-   PWINDOW_OBJECT Window;
-
-   DPRINT("Enter NtUserGetClientOrigin\n");
-   UserEnterShared();
-
-   if (!(Window = UserGetWindowObject(hWnd)))
-      RETURN(FALSE);
-
-   RETURN(UserGetClientOrigin(Window, Point));
-
-CLEANUP:
-   DPRINT("Leave NtUserGetClientOrigin, ret=%i\n",_ret_);
-   UserLeave();
-   END_CLEANUP;
-}
-
-
 /*******************************************************************
  *         can_activate_window
  *

@@ -98,13 +98,13 @@ co_IntGraphicsCheck(BOOL Create)
    return TRUE;
 }
 
-VOID STDCALL
-NtUserManualGuiCheck(LONG Check)
+VOID
+FASTCALL
+IntUserManualGuiCheck(LONG Check)
 {
    PW32PROCESS W32Data;
 
-   DPRINT("Enter NtUserManualGuiCheck\n");
-   UserEnterExclusive();
+   DPRINT("Enter IntUserManualGuiCheck\n");
 
    W32Data = PsGetCurrentProcessWin32Process();
    if (0 == Check)
@@ -126,8 +126,7 @@ NtUserManualGuiCheck(LONG Check)
       }
    }
 
-   DPRINT("Leave NtUserManualGuiCheck\n");
-   UserLeave();
+   DPRINT("Leave IntUserManualGuiCheck\n");
 
 }
 
