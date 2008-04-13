@@ -422,17 +422,20 @@ extern "C" {
 #define DDFXCAPS_BLTFILTER                     DDFXCAPS_BLTARITHSTRETCHY
 #define DDFXCAPS_OVERLAYFILTER                 DDFXCAPS_OVERLAYARITHSTRETCHY
 
-#if DIRECTDRAW_VERSION >= 0x700
+
   #define DDSVCAPS_RESERVED1                     0x00000001
   #define DDSVCAPS_RESERVED2                     0x00000002
   #define DDSVCAPS_RESERVED3                     0x00000004
   #define DDSVCAPS_RESERVED4                     0x00000008
-#else
+/* rember that DDSVCAPS_ENIGMA is same as DDSVCAPS_RESERVED1 */
   #define DDSVCAPS_ENIGMA                        0x00000001
+/* rember that DDSVCAPS_FLICKER is same as DDSVCAPS_RESERVED2 */
   #define DDSVCAPS_FLICKER                       0x00000002
+/* rember that DDSVCAPS_REDBLUE is same as DDSVCAPS_RESERVED3 */
   #define DDSVCAPS_REDBLUE                       0x00000004
+/* rember that DDSVCAPS_SPLIT is same as DDSVCAPS_RESERVED4 */
   #define DDSVCAPS_SPLIT                         0x00000008
-#endif
+
 #define DDSVCAPS_STEREOSEQUENTIAL              0x00000010
 
 #define DDPCAPS_INITIALIZE                     0x00000000
