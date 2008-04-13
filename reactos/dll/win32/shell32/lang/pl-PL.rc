@@ -98,12 +98,12 @@ END
 
 SHNEWBRSFORFOLDER_MSGBOX DIALOGEX LOADONCALL MOVEABLE DISCARDABLE 15, 40, 218, 196
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-CAPTION "Wybierz folder"
+CAPTION "Wybierz katalog"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	LTEXT "", IDD_TITLE, 10, 8, 198, 24
 	LTEXT "", IDD_STATUS, 10, 25, 198, 12
-	LTEXT "Folder:", IDD_FOLDER, 10, 152, 40, 12
+	LTEXT "Katalog:", IDD_FOLDER, 10, 152, 40, 12
 	CONTROL "", IDD_TREEVIEW, "SysTreeView32", TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | WS_BORDER | WS_TABSTOP, 12, 38, 194, 105
 	EDITTEXT IDD_FOLDERTEXT, 46, 150, 160, 14, WS_BORDER | WS_GROUP | WS_TABSTOP
 	PUSHBUTTON "&Utwórz katalog", IDD_MAKENEWFOLDER, 12, 174, 77, 14, WS_GROUP | WS_TABSTOP
@@ -393,7 +393,7 @@ PUSHBUTTON "Zastosuj do w&szystkich Katalogów", 14001, 60, 50, 80, 14, WS_TABSTO
 PUSHBUTTON "Z&resetuj ustawienia", 14002, 150, 50, 80, 14, WS_TABSTOP
 LTEXT "Zaawansowane:", -1, 7, 80, 100, 10
 CONTROL "", 14003, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_NOCOLUMNHEADER | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 7, 90, 249, 120
-PUSHBUTTON "Odtwórz &Domyœlne", 14004, 180, 210, 80, 14, WS_TABSTOP
+PUSHBUTTON "Odtwórz &domyœlne", 14004, 180, 210, 80, 14, WS_TABSTOP
 END
 
 FOLDER_OPTIONS_FILETYPES_DLG DIALOGEX 0, 0, 264, 256
@@ -635,7 +635,7 @@ BEGIN
 	IDS_PRINTHOOD               "Drukarki"
 	IDS_LOCAL_APPDATA           "Ustawienia lokalne\\Dane aplikacji"
 	IDS_INTERNET_CACHE          "Ustawienia lokalne\\Temporary Internet Files"
-	IDS_COOKIES                 "Cookies"
+	IDS_COOKIES                 "Ciasteczka"
 	IDS_HISTORY                 "Ustawienia Lokalne\\Historia"
 	IDS_PROGRAM_FILES           "Program Files"
 	IDS_MYPICTURES              "Moje obrazy"
@@ -646,26 +646,26 @@ BEGIN
 	IDS_COMMON_PICTURES         "Documenty\\Moje obrazy"
 	IDS_COMMON_VIDEO            "Documenty\\Moje wideo"
 	IDS_CDBURN_AREA             "Ustawienia lokalne\\Dane aplikacji\\Microsoft\\Nagrywanie dysków CD"
-	IDS_NETWORKPLACE            "My Network Place"
+	IDS_NETWORKPLACE            "Moja sieæ"
 
-	IDS_NEWFOLDER               "Nowy Katalog"
+	IDS_NEWFOLDER               "Nowy katalog"
 
-	IDS_DRIVE_FIXED             "Dysk Lokalny"
+	IDS_DRIVE_FIXED             "Dysk lokalny"
 	IDS_DRIVE_CDROM             "CDROM"
-	IDS_DRIVE_NETWORK           "Dysk Sieciowy"
+	IDS_DRIVE_NETWORK           "Dysk sieciowy"
 
 	IDS_OPEN_WITH               "Otwórz z"
-	IDS_OPEN_WITH_CHOOSE        "Wybierz Program..."
+	IDS_OPEN_WITH_CHOOSE        "Wybierz program..."
 
 	IDS_SHELL_ABOUT_AUTHORS     "&Autorzy"
 	IDS_SHELL_ABOUT_BACK        "< &Wstecz"
 	FCIDM_SHVIEW_NEW 	    "&Nowy"
 	FCIDM_SHVIEW_NEWFOLDER 	    "&Folder"
 	FCIDM_SHVIEW_NEWLINK 	    "&Skrót"
-	IDS_FOLDER_OPTIONS          "Opcje Katalogów"
-	IDS_RECYCLEBIN_LOCATION     "Lokalizacja Kosza"
+	IDS_FOLDER_OPTIONS          "Opcje katalogów"
+	IDS_RECYCLEBIN_LOCATION     "Lokalizacja kosza"
 	IDS_RECYCLEBIN_DISKSPACE    "Pozosta³o wolnego miejsca"
-	IDS_PICK_ICON_TITLE         "Choose Icon"
-	IDS_PICK_ICON_FILTER        "Icon Files(*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0"
-	IDS_OPEN_WITH_FILTER        "Executable Files\0*.exe\0"
+	IDS_PICK_ICON_TITLE         "Wybierz ikonê"
+	IDS_PICK_ICON_FILTER        "Pliki ikon(*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0"
+	IDS_OPEN_WITH_FILTER        "Programy\0*.exe\0"
 END
