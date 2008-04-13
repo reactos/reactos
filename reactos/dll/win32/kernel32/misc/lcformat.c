@@ -37,6 +37,7 @@
 
 #define TRACE DPRINT
 #define WARN DPRINT1
+#define ERR DPRINT1
 #define FIXME DPRINT1
 
 #define DATE_DATEVARSONLY 0x0100  /* only date stuff: yMdg */
@@ -1993,11 +1994,40 @@ BOOL WINAPI EnumDateFormatsA( DATEFMT_ENUMPROCA lpDateFmtEnumProc, LCID Locale, 
 /**************************************************************************
  *              EnumDateFormatsW	(KERNEL32.@)
  */
-BOOL WINAPI EnumDateFormatsW( DATEFMT_ENUMPROCW lpDateFmtEnumProc, LCID Locale, DWORD dwFlags )
+BOOL WINAPI EnumDateFormatsW( DATEFMT_ENUMPROCW proc, LCID lcid, DWORD flags )
 {
-  FIXME("(%p, %ld, %ld): stub\n", lpDateFmtEnumProc, Locale, dwFlags);
-  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-  return FALSE;
+    WCHAR buf[256];
+
+    if (!proc)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    switch (flags & ~LOCALE_USE_CP_ACP)
+    {
+    case 0:
+    case DATE_SHORTDATE:
+        if (GetLocaleInfoW(lcid, LOCALE_SSHORTDATE | (flags & LOCALE_USE_CP_ACP), buf, 256))
+            proc(buf);
+        break;
+
+    case DATE_LONGDATE:
+        if (GetLocaleInfoW(lcid, LOCALE_SLONGDATE | (flags & LOCALE_USE_CP_ACP), buf, 256))
+            proc(buf);
+        break;
+
+    case DATE_YEARMONTH:
+        if (GetLocaleInfoW(lcid, LOCALE_SYEARMONTH | (flags & LOCALE_USE_CP_ACP), buf, 256))
+            proc(buf);
+        break;
+
+    default:
+        FIXME("Unknown date format (%d)\n", flags);
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+    return TRUE;
 }
 
 /**************************************************************************
@@ -2081,11 +2111,184 @@ BOOL WINAPI EnumTimeFormatsW( TIMEFMT_ENUMPROCW lpTimeFmtEnumProc, LCID Locale, 
 }
 
 /******************************************************************************
+ * NLS_EnumCalendarInfoAW <internal>
+ * Enumerates calendar information for a specified locale.
+ *
+ * PARAMS
+ *    calinfoproc [I] Pointer to the callback
+ *    locale      [I] The locale for which to retrieve calendar information.
+ *                    This parameter can be a locale identifier created by the
+ *                    MAKELCID macro, or one of the following values:
+ *                        LOCALE_SYSTEM_DEFAULT
+ *                            Use the default system locale.
+ *                        LOCALE_USER_DEFAULT
+ *                            Use the default user locale.
+ *    calendar    [I] The calendar for which information is requested, or
+ *                    ENUM_ALL_CALENDARS.
+ *    caltype     [I] The type of calendar information to be returned. Note
+ *                    that only one CALTYPE value can be specified per call
+ *                    of this function, except where noted.
+ *    unicode     [I] Specifies if the callback expects a unicode string.
+ *    ex          [I] Specifies if the callback needs the calendar identifier.
+ *
+ * RETURNS
+ *    Success: TRUE.
+ *    Failure: FALSE. Use GetLastError() to determine the cause.
+ *
+ * NOTES
+ *    When the ANSI version of this function is used with a Unicode-only LCID,
+ *    the call can succeed because the system uses the system code page.
+ *    However, characters that are undefined in the system code page appear
+ *    in the string as a question mark (?).
+ *
+ * TODO
+ *    The above note should be respected by GetCalendarInfoA.
+ */
+static BOOL NLS_EnumCalendarInfoAW(void *calinfoproc, LCID locale,
+                  CALID calendar, CALTYPE caltype, BOOL unicode, BOOL ex )
+{
+  WCHAR *buf, *opt = NULL, *iter = NULL;
+  BOOL ret = FALSE;
+  int bufSz = 200;		/* the size of the buffer */
+
+  if (calinfoproc == NULL)
+  {
+    SetLastError(ERROR_INVALID_PARAMETER);
+    return FALSE;
+  }
+
+  buf = HeapAlloc(GetProcessHeap(), 0, bufSz);
+  if (buf == NULL)
+  {
+    SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+    return FALSE;
+  }
+
+  if (calendar == ENUM_ALL_CALENDARS)
+  {
+    int optSz = GetLocaleInfoW(locale, LOCALE_IOPTIONALCALENDAR, NULL, 0);
+    if (optSz > 1)
+    {
+      opt = HeapAlloc(GetProcessHeap(), 0, optSz * sizeof(WCHAR));
+      if (opt == NULL)
+      {
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        goto NLS_EnumCalendarInfoAW_Cleanup;
+      }
+      if (GetLocaleInfoW(locale, LOCALE_IOPTIONALCALENDAR, opt, optSz))
+        iter = opt;
+    }
+    calendar = NLS_GetLocaleNumber(locale, LOCALE_ICALENDARTYPE);
+  }
+
+  while (TRUE)			/* loop through calendars */
+  {
+    do				/* loop until there's no error */
+    {
+      if (unicode)
+        ret = GetCalendarInfoW(locale, calendar, caltype, buf, bufSz / sizeof(WCHAR), NULL);
+      else ret = GetCalendarInfoA(locale, calendar, caltype, (CHAR*)buf, bufSz / sizeof(CHAR), NULL);
+
+      if (!ret)
+      {
+        if (GetLastError() == ERROR_INSUFFICIENT_BUFFER)
+        {				/* so resize it */
+          int newSz;
+          if (unicode)
+            newSz = GetCalendarInfoW(locale, calendar, caltype, NULL, 0, NULL) * sizeof(WCHAR);
+          else newSz = GetCalendarInfoA(locale, calendar, caltype, NULL, 0, NULL) * sizeof(CHAR);
+          if (bufSz >= newSz)
+          {
+            ERR("Buffer resizing disorder: was %d, requested %d.\n", bufSz, newSz);
+            goto NLS_EnumCalendarInfoAW_Cleanup;
+          }
+          bufSz = newSz;
+          WARN("Buffer too small; resizing to %d bytes.\n", bufSz);
+          buf = HeapReAlloc(GetProcessHeap(), 0, buf, bufSz);
+          if (buf == NULL)
+            goto NLS_EnumCalendarInfoAW_Cleanup;
+        } else goto NLS_EnumCalendarInfoAW_Cleanup;
+      }
+    } while (!ret);
+
+    /* Here we are. We pass the buffer to the correct version of
+     * the callback. Because it's not the same number of params,
+     * we must check for Ex, but we don't care about Unicode
+     * because the buffer is already in the correct format.
+     */
+    if (ex) {
+      ret = ((CALINFO_ENUMPROCEXW)calinfoproc)(buf, calendar);
+    } else
+      ret = ((CALINFO_ENUMPROCW)calinfoproc)(buf);
+
+    if (!ret) {			/* the callback told to stop */
+      ret = TRUE;
+      break;
+    }
+
+    if ((iter == NULL) || (*iter == 0))	/* no more calendars */
+      break;
+
+    calendar = 0;
+    while ((*iter >= '0') && (*iter <= '9'))
+      calendar = calendar * 10 + *iter++ - '0';
+
+    if (*iter++ != 0)
+    {
+      SetLastError(ERROR_BADDB);
+      ret = FALSE;
+      break;
+    }
+  }
+
+NLS_EnumCalendarInfoAW_Cleanup:
+  HeapFree(GetProcessHeap(), 0, opt);
+  HeapFree(GetProcessHeap(), 0, buf);
+  return ret;
+}
+
+/******************************************************************************
  *		EnumCalendarInfoA	[KERNEL32.@]
  */
 BOOL WINAPI EnumCalendarInfoA( CALINFO_ENUMPROCA calinfoproc,LCID locale,
                                CALID calendar,CALTYPE caltype )
 {
     FIXME("(%p,0x%04lx,0x%08lx,0x%08lx),stub!\n",calinfoproc,locale,calendar,caltype);
-    return FALSE;
+    return NLS_EnumCalendarInfoAW(calinfoproc, locale, calendar, caltype, FALSE, FALSE);
+}
+
+/******************************************************************************
+ *		EnumCalendarInfoW	[KERNEL32.@]
+ *
+ * See EnumCalendarInfoAW.
+ */
+BOOL WINAPI EnumCalendarInfoW( CALINFO_ENUMPROCW calinfoproc,LCID locale,
+                               CALID calendar,CALTYPE caltype )
+{
+  TRACE("(%p,0x%08x,0x%08x,0x%08x)\n", calinfoproc, locale, calendar, caltype);
+  return NLS_EnumCalendarInfoAW(calinfoproc, locale, calendar, caltype, TRUE, FALSE);
+}
+
+/******************************************************************************
+ *		EnumCalendarInfoExA	[KERNEL32.@]
+ *
+ * See EnumCalendarInfoAW.
+ */
+BOOL WINAPI EnumCalendarInfoExA( CALINFO_ENUMPROCEXA calinfoproc,LCID locale,
+                                 CALID calendar,CALTYPE caltype )
+{
+  TRACE("(%p,0x%08x,0x%08x,0x%08x)\n", calinfoproc, locale, calendar, caltype);
+  return NLS_EnumCalendarInfoAW(calinfoproc, locale, calendar, caltype, FALSE, TRUE);
+}
+
+/******************************************************************************
+ *		EnumCalendarInfoExW	[KERNEL32.@]
+ *
+ * See EnumCalendarInfoAW.
+ */
+BOOL WINAPI EnumCalendarInfoExW( CALINFO_ENUMPROCEXW calinfoproc,LCID locale,
+                                 CALID calendar,CALTYPE caltype )
+{
+  TRACE("(%p,0x%08x,0x%08x,0x%08x)\n", calinfoproc, locale, calendar, caltype);
+  return NLS_EnumCalendarInfoAW(calinfoproc, locale, calendar, caltype, TRUE, TRUE);
 }

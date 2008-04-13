@@ -730,8 +730,15 @@ SetThreadExecutionState(
     EXECUTION_STATE esFlags
     )
 {
-    STUB;
-    return 0;
+    static EXECUTION_STATE current =
+        ES_SYSTEM_REQUIRED | ES_DISPLAY_REQUIRED | ES_USER_PRESENT;
+    EXECUTION_STATE old = current;
+
+    DPRINT1("(0x%x): stub, harmless.\n", esFlags);
+
+    if (!(current & ES_CONTINUOUS) || (esFlags & ES_CONTINUOUS))
+        current = esFlags;
+    return old;
 }
 
 /*
@@ -785,27 +792,80 @@ DeleteVolumeMountPointW(
 BOOL
 STDCALL
 DnsHostnameToComputerNameW (
-    LPCWSTR Hostname,
-    LPWSTR ComputerName,
-    LPDWORD nSize
+	LPCWSTR hostname,
+    LPWSTR computername,
+	LPDWORD size
     )
 {
-    STUB;
-    return 0;
+    DWORD len;
+
+    DPRINT("(%s, %p, %p): stub\n", hostname, computername, size);
+
+    if (!hostname || !size) return FALSE;
+    len = lstrlenW(hostname);
+
+    if (len > MAX_COMPUTERNAME_LENGTH)
+        len = MAX_COMPUTERNAME_LENGTH;
+
+    if (*size < len)
+    {
+        *size = len;
+        return FALSE;
+    }
+    if (!computername) return FALSE;
+
+    memcpy( computername, hostname, len * sizeof(WCHAR) );
+    computername[len + 1] = 0;
+    return TRUE;
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 HANDLE
 STDCALL
 FindFirstVolumeW(
-    LPWSTR lpszVolumeName,
-    DWORD cchBufferLength
+	LPWSTR volume,
+	DWORD len
     )
 {
-    STUB;
-    return 0;
+    DWORD size = 1024;
+    HANDLE mgr = CreateFileW( MOUNTMGR_DOS_DEVICE_NAME, 0, FILE_SHARE_READ|FILE_SHARE_WRITE,
+                              NULL, OPEN_EXISTING, 0, 0 );
+    if (mgr == INVALID_HANDLE_VALUE) return INVALID_HANDLE_VALUE;
+
+    for (;;)
+    {
+        MOUNTMGR_MOUNT_POINT input;
+        MOUNTMGR_MOUNT_POINTS *output;
+
+        if (!(output = HeapAlloc( GetProcessHeap(), 0, size )))
+        {
+            SetLastError( ERROR_NOT_ENOUGH_MEMORY );
+            break;
+        }
+        memset( &input, 0, sizeof(input) );
+
+        if (!DeviceIoControl( mgr, IOCTL_MOUNTMGR_QUERY_POINTS, &input, sizeof(input),
+                              output, size, NULL, NULL ))
+        {
+            if (GetLastError() != ERROR_MORE_DATA) break;
+            size = output->Size;
+            HeapFree( GetProcessHeap(), 0, output );
+            continue;
+        }
+        CloseHandle( mgr );
+        /* abuse the Size field to store the current index */
+        output->Size = 0;
+        if (!FindNextVolumeW( output, volume, len ))
+        {
+            HeapFree( GetProcessHeap(), 0, output );
+            return INVALID_HANDLE_VALUE;
+        }
+        return (HANDLE)output;
+    }
+    CloseHandle( mgr );
+    return INVALID_HANDLE_VALUE;
 }
 
 /*
@@ -824,18 +884,40 @@ FindFirstVolumeMountPointW(
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 STDCALL
 FindNextVolumeW(
-    HANDLE hFindVolume,
-    LPWSTR lpszVolumeName,
-    DWORD cchBufferLength
+	HANDLE handle,
+	LPWSTR volume,
+	DWORD len
     )
 {
-    STUB;
-    return 0;
+    MOUNTMGR_MOUNT_POINTS *data = handle;
+
+    while (data->Size < data->NumberOfMountPoints)
+    {
+        static const WCHAR volumeW[] = {'\\','?','?','\\','V','o','l','u','m','e','{',};
+        WCHAR *link = (WCHAR *)((char *)data + data->MountPoints[data->Size].SymbolicLinkNameOffset);
+        DWORD size = data->MountPoints[data->Size].SymbolicLinkNameLength;
+        data->Size++;
+        /* skip non-volumes */
+        if (size < sizeof(volumeW) || memcmp( link, volumeW, sizeof(volumeW) )) continue;
+        if (size + sizeof(WCHAR) >= len * sizeof(WCHAR))
+        {
+            SetLastError( ERROR_FILENAME_EXCED_RANGE );
+            return FALSE;
+        }
+        memcpy( volume, link, size );
+        volume[1] = '\\';  /* map \??\ to \\?\ */
+        volume[size / sizeof(WCHAR)] = '\\';  /* Windows appends a backslash */
+        volume[size / sizeof(WCHAR) + 1] = 0;
+        DPRINT( "returning entry %u %s\n", data->Size - 1, volume );
+        return TRUE;
+    }
+    SetLastError( ERROR_NO_MORE_FILES );
+    return FALSE;
 }
 
 /*
@@ -977,17 +1059,28 @@ DnsHostnameToComputerNameA (
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 HANDLE
 STDCALL
 FindFirstVolumeA(
-    LPSTR lpszVolumeName,
-    DWORD cchBufferLength
+	LPSTR volume,
+	DWORD len
     )
 {
-    STUB;
-    return 0;
+    WCHAR *buffer = HeapAlloc( GetProcessHeap(), 0, len * sizeof(WCHAR) );
+    HANDLE handle = FindFirstVolumeW( buffer, len );
+
+    if (handle != INVALID_HANDLE_VALUE)
+    {
+        if (!WideCharToMultiByte( CP_ACP, 0, buffer, -1, volume, len, NULL, NULL ))
+        {
+            FindVolumeClose( handle );
+            handle = INVALID_HANDLE_VALUE;
+        }
+    }
+    HeapFree( GetProcessHeap(), 0, buffer );
+    return handle;
 }
 
 /*
@@ -1011,13 +1104,20 @@ FindFirstVolumeMountPointA(
 BOOL
 STDCALL
 FindNextVolumeA(
-    HANDLE hFindVolume,
-    LPSTR lpszVolumeName,
-    DWORD cchBufferLength
+	HANDLE handle,
+	LPSTR volume,
+	DWORD len
     )
 {
-    STUB;
-    return 0;
+    WCHAR *buffer = HeapAlloc( GetProcessHeap(), 0, len * sizeof(WCHAR) );
+    BOOL ret;
+
+    if ((ret = FindNextVolumeW( handle, buffer, len )))
+    {
+        if (!WideCharToMultiByte( CP_ACP, 0, buffer, -1, volume, len, NULL, NULL )) ret = FALSE;
+    }
+    HeapFree( GetProcessHeap(), 0, buffer );
+    return ret;
 }
 
 /*
