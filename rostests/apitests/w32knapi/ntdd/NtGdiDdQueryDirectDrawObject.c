@@ -29,6 +29,8 @@ Test_NtGdiDdQueryDirectDrawObject(PTESTINFO pti)
     D3DNTHAL_GLOBALDRIVERDATA oldD3dDriverData;
 
     DD_D3DBUFCALLBACKS D3dBufferCallbacks;
+    DD_D3DBUFCALLBACKS oldD3dBufferCallbacks;
+
     DDSURFACEDESC2 D3dTextureFormats[100];
     //DWORD NumHeaps = 0;
     VIDEOMEMORY vmList;
@@ -475,7 +477,61 @@ Test_NtGdiDdQueryDirectDrawObject(PTESTINFO pti)
     RTEST(memcmp(&oldD3dCallbacks, puD3dCallbacks, sizeof(D3DNTHAL_CALLBACKS)) == 0);
     RTEST(memcmp(&oldD3dDriverData, puD3dDriverData, sizeof(D3DNTHAL_GLOBALDRIVERDATA)) == 0);
 
-   /* start test of puD3dBufferCallbacks */
+    /* start test of puD3dBufferCallbacks */
+    RTEST(puD3dBufferCallbacks->dwSize == sizeof(DD_D3DBUFCALLBACKS));
+    if (puD3dBufferCallbacks->dwFlags & DDHAL_D3DBUFCB32_CANCREATED3DBUF)
+    {
+        /* point to kmode direcly to the graphic drv, the drv is kmode and it is kmode address we getting back*/
+        RTEST( ( (DWORD)puD3dBufferCallbacks->CanCreateD3DBuffer & (~0x80000000)) != 0 );
+    }
+    else
+    {
+        RTEST( puD3dBufferCallbacks->CanCreateD3DBuffer == NULL);
+    }
+
+    if (puD3dBufferCallbacks->dwFlags & DDHAL_D3DBUFCB32_CREATED3DBUF)
+    {
+        /* point to kmode direcly to the graphic drv, the drv is kmode and it is kmode address we getting back*/
+        RTEST( ( (DWORD)puD3dBufferCallbacks->CreateD3DBuffer & (~0x80000000)) != 0 );
+    }
+    else
+    {
+        RTEST( puD3dBufferCallbacks->CreateD3DBuffer == NULL);
+    }
+
+    if (puD3dBufferCallbacks->dwFlags & DDHAL_D3DBUFCB32_DESTROYD3DBUF)
+    {
+        /* point to kmode direcly to the graphic drv, the drv is kmode and it is kmode address we getting back*/
+        RTEST( ( (DWORD)puD3dBufferCallbacks->DestroyD3DBuffer & (~0x80000000)) != 0 );
+    }
+    else
+    {
+        RTEST( puD3dBufferCallbacks->DestroyD3DBuffer == NULL);
+    }
+
+    if (puD3dBufferCallbacks->dwFlags & DDHAL_D3DBUFCB32_LOCKD3DBUF)
+    {
+        /* point to kmode direcly to the graphic drv, the drv is kmode and it is kmode address we getting back*/
+        RTEST( ( (DWORD)puD3dBufferCallbacks->LockD3DBuffer & (~0x80000000)) != 0 );
+    }
+    else
+    {
+        RTEST( puD3dBufferCallbacks->LockD3DBuffer == NULL);
+    }
+
+    if (puD3dBufferCallbacks->dwFlags & DDHAL_D3DBUFCB32_UNLOCKD3DBUF)
+    {
+        /* point to kmode direcly to the graphic drv, the drv is kmode and it is kmode address we getting back*/
+        RTEST( ( (DWORD)puD3dBufferCallbacks->UnlockD3DBuffer & (~0x80000000)) != 0 );
+    }
+    else
+    {
+        RTEST( puD3dBufferCallbacks->UnlockD3DBuffer == NULL);
+    }
+
+    /* Backup D3DHAL_GLOBALDRIVERDATA so we do not need resting it */
+    RtlCopyMemory(&oldD3dBufferCallbacks, &D3dBufferCallbacks, sizeof(DD_D3DBUFCALLBACKS));
+
 
 /* Next Start 6 */
     pHalInfo = &HalInfo;
@@ -519,8 +575,13 @@ Test_NtGdiDdQueryDirectDrawObject(PTESTINFO pti)
     RTEST(pCallBackFlags[1] != 0);
     RTEST(pCallBackFlags[2] == 0);
 
-    /* We do not retesting D3DNTHAL_CALLBACKS, instead we compare it */
+    /* We do not retesting instead we compare it */
+    RTEST(memcmp(&oldHalInfo, pHalInfo, sizeof(DD_HALINFO)) == 0);
     RTEST(memcmp(&oldD3dCallbacks, puD3dCallbacks, sizeof(D3DNTHAL_CALLBACKS)) == 0);
+    RTEST(memcmp(&oldD3dDriverData, puD3dDriverData, sizeof(D3DNTHAL_GLOBALDRIVERDATA)) == 0);
+    RTEST(memcmp(&oldD3dBufferCallbacks, puD3dBufferCallbacks, sizeof(DD_D3DBUFCALLBACKS)) == 0);
+
+    
 
 
 /* Next Start 7 */
@@ -579,8 +640,11 @@ Test_NtGdiDdQueryDirectDrawObject(PTESTINFO pti)
     RTEST(pCallBackFlags[1] != 0);
     RTEST(pCallBackFlags[2] == 0);
 
-    /* We do not retesting D3DNTHAL_CALLBACKS, instead we compare it */
+    /* We do not retesting instead we compare it */
+    RTEST(memcmp(&oldHalInfo, pHalInfo, sizeof(DD_HALINFO)) == 0);
     RTEST(memcmp(&oldD3dCallbacks, puD3dCallbacks, sizeof(D3DNTHAL_CALLBACKS)) == 0);
+    RTEST(memcmp(&oldD3dDriverData, puD3dDriverData, sizeof(D3DNTHAL_GLOBALDRIVERDATA)) == 0);
+    RTEST(memcmp(&oldD3dBufferCallbacks, puD3dBufferCallbacks, sizeof(DD_D3DBUFCALLBACKS)) == 0);
 
 
 
