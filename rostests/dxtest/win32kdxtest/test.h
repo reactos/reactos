@@ -13,6 +13,7 @@ void dump_CallBackFlags(DWORD *pCallBackFlags, char *text);
 void dump_D3dCallbacks(D3DNTHAL_CALLBACKS *puD3dCallbacks, char *text);
 void dump_D3dDriverData(D3DNTHAL_GLOBALDRIVERDATA *puD3dDriverData, char *text);
 void dump_D3dBufferCallbacks(DD_D3DBUFCALLBACKS *puD3dCallbacks, char *text);
+void dump_D3dTextureFormats(DDSURFACEDESC *puD3dTextureFormats, int dwNum, char *text);
 
 
 

@@ -1128,6 +1128,8 @@ dump_D3dBufferCallbacks(DD_D3DBUFCALLBACKS *puD3dBufferCallbacks, char *text)
     int count = 0;
     DWORD flag = 0;
 
+    printf("dumping the DD_D3DBUFCALLBACKS from %s\n",text);
+
     if (puD3dBufferCallbacks->dwSize == sizeof(DD_D3DBUFCALLBACKS))
     {
         printf(" puD3dBufferCallbacks->dwSize                                   : 0x%08lx\n",(long)puD3dBufferCallbacks->dwSize);
@@ -1143,7 +1145,7 @@ dump_D3dBufferCallbacks(DD_D3DBUFCALLBACKS *puD3dBufferCallbacks, char *text)
 
         checkflag(flag,DDHAL_D3DBUFCB32_LOCKD3DBUF,"DDHAL_D3DBUFCB32_LOCKD3DBUF");
         checkflag(flag,DDHAL_D3DBUFCB32_UNLOCKD3DBUF,"DDHAL_D3DBUFCB32_UNLOCKD3DBUF");                                
-        endcheckflag(flag,"ppuD3dBufferCallbacks->dwFlags"); 
+        endcheckflag(flag,"puD3dBufferCallbacks->dwFlags"); 
 
         printf(" puD3dBufferCallbacks->CanCreateD3DBuffer                       : 0x%08lx\n",(long)puD3dBufferCallbacks->CanCreateD3DBuffer);
         printf(" puD3dBufferCallbacks->CreateD3DBuffer                          : 0x%08lx\n",(long)puD3dBufferCallbacks->CreateD3DBuffer);
@@ -1155,5 +1157,280 @@ dump_D3dBufferCallbacks(DD_D3DBUFCALLBACKS *puD3dBufferCallbacks, char *text)
     {
         printf("none puD3dBufferCallbacks from the driver 0x%08lx\n",puD3dBufferCallbacks->dwSize);
     }
+
+}
+
+void
+dump_D3dTextureFormats(DDSURFACEDESC *puD3dTextureFormats, int dwNum, char *text)
+{
+    int t=0;
+    int count = 0;
+    DWORD flag = 0;
+    DDSURFACEDESC * myTextureFormats = puD3dTextureFormats;
+    
+    printf("dumping the DDSURFACEDESC/DDSURFACEDESC2 from %s\n",text);
+
+    for (t=0;t<dwNum;t++)
+    {
+        printf("Show %d of %d DDSURFACEDESC\n",t+1,dwNum);
+        if (myTextureFormats->dwSize == sizeof(DDSURFACEDESC))
+        {         
+            printf(" puD3dTextureFormats->dwSize                                    : 0x%08lx\n",(long)myTextureFormats->dwSize);        
+
+            printf(" puD3dTextureFormats->dwFlags                                   : ");
+            count = 0;
+            flag = myTextureFormats->dwFlags;
+            checkflag(flag,DDSD_ALPHABITDEPTH,"DDSD_ALPHABITDEPTH");
+            checkflag(flag,DDSD_BACKBUFFERCOUNT ,"DDSD_BACKBUFFERCOUNT");
+            checkflag(flag,DDSD_CAPS,"DDSD_CAPS ");
+            checkflag(flag,DDSD_CKDESTBLT,"DDSD_CKDESTBLT");
+            checkflag(flag,DDSD_CKDESTOVERLAY,"DDSD_CKDESTOVERLAY");                                
+            checkflag(flag,DDSD_CKSRCBLT,"DDSD_CKSRCBLT"); 
+            checkflag(flag,DDSD_CKSRCOVERLAY,"DDSD_CKSRCOVERLAY"); 
+            checkflag(flag,DDSD_HEIGHT,"DDSD_HEIGHT"); 
+            checkflag(flag,DDSD_LINEARSIZE,"DDSD_LINEARSIZE"); 
+            checkflag(flag,DDSD_LPSURFACE,"DDSD_LPSURFACE"); 
+            checkflag(flag,DDSD_MIPMAPCOUNT,"DDSD_MIPMAPCOUNT"); 
+            checkflag(flag,DDSD_PITCH,"DDSD_PITCH"); 
+            checkflag(flag,DDSD_PIXELFORMAT,"DDSD_PIXELFORMAT"); 
+            checkflag(flag,DDSD_REFRESHRATE,"DDSD_REFRESHRATE");
+            checkflag(flag,DDSD_WIDTH,"DDSD_WIDTH");
+            checkflag(flag,DDSD_ZBUFFERBITDEPTH,"DDSD_ZBUFFERBITDEPTH");
+            endcheckflag(flag,"puD3dTextureFormats->dwFlags"); 
+
+            printf(" puD3dTextureFormats->dwHeight                                  : 0x%08lx\n",(long)myTextureFormats->dwHeight);
+            printf(" puD3dTextureFormats->dwWidth                                   : 0x%08lx\n",(long)myTextureFormats->dwWidth);
+            printf(" puD3dTextureFormats->dwLinearSize                              : 0x%08lx\n",(long)myTextureFormats->dwLinearSize);
+            printf(" puD3dTextureFormats->dwBackBufferCount                         : 0x%08lx\n",(long)myTextureFormats->dwBackBufferCount);
+            printf(" puD3dTextureFormats->dwZBufferBitDepth                         : 0x%08lx\n",(long)myTextureFormats->dwZBufferBitDepth);
+            printf(" puD3dTextureFormats->dwAlphaBitDepth                           : 0x%08lx\n",(long)myTextureFormats->dwAlphaBitDepth);
+            printf(" puD3dTextureFormats->dwReserved                                : 0x%08lx\n",(long)myTextureFormats->dwReserved);
+            printf(" puD3dTextureFormats->lpSurface                                 : 0x%08lx\n",(long)myTextureFormats->lpSurface);
+            printf(" puD3dTextureFormats->ddckCKDestOverlay.dwColorSpaceLowValue    : 0x%08lx\n",(long)myTextureFormats->ddckCKDestOverlay.dwColorSpaceLowValue);
+            printf(" puD3dTextureFormats->ddckCKDestOverlay.dwColorSpaceHighValue   : 0x%08lx\n",(long)myTextureFormats->ddckCKDestOverlay.dwColorSpaceHighValue);
+            printf(" puD3dTextureFormats->ddckCKDestBlt.dwColorSpaceLowValue        : 0x%08lx\n",(long)myTextureFormats->ddckCKDestBlt.dwColorSpaceLowValue);
+            printf(" puD3dTextureFormats->ddckCKDestBlt                             : 0x%08lx\n",(long)myTextureFormats->ddckCKDestBlt.dwColorSpaceHighValue);
+            printf(" puD3dTextureFormats->ddckCKSrcOverlay.dwColorSpaceLowValue     : 0x%08lx\n",(long)myTextureFormats->ddckCKSrcOverlay.dwColorSpaceLowValue);        
+            printf(" puD3dTextureFormats->ddckCKSrcOverlay.dwColorSpaceHighValue    : 0x%08lx\n",(long)myTextureFormats->ddckCKSrcOverlay.dwColorSpaceHighValue);        
+            printf(" puD3dTextureFormats->ddckCKSrcBlt.dwColorSpaceLowValue         : 0x%08lx\n",(long)myTextureFormats->ddckCKSrcBlt.dwColorSpaceLowValue);
+            printf(" puD3dTextureFormats->ddckCKSrcBlt.dwColorSpaceHighValue        : 0x%08lx\n",(long)myTextureFormats->ddckCKSrcBlt.dwColorSpaceHighValue);
+
+         // DDPIXELFORMAT            
+            printf(" puD3dTextureFormats->ddpfPixelFormat.dwSize                    : 0x%08lx\n",(long)myTextureFormats->ddpfPixelFormat.dwSize);
+            if (puD3dTextureFormats->ddpfPixelFormat.dwSize == sizeof(DDPIXELFORMAT))
+            {
+                printf(" puD3dTextureFormats->ddpfPixelFormat.dwFlags                   : ");                
+                count = 0;
+                flag = myTextureFormats->ddpfPixelFormat.dwFlags;
+                checkflag(flag,DDPF_ALPHA,"DDPF_ALPHA");
+                checkflag(flag,DDPF_ALPHAPIXELS ,"DDPF_ALPHAPIXELS");
+                checkflag(flag,DDPF_ALPHAPREMULT,"DDPF_ALPHAPREMULT");
+                checkflag(flag,DDPF_BUMPLUMINANCE ,"DDPF_BUMPLUMINANCE");
+                checkflag(flag,DDPF_BUMPDUDV,"DDPF_BUMPDUDV");
+                checkflag(flag,DDPF_COMPRESSED,"DDPF_COMPRESSED");
+                checkflag(flag,DDPF_FOURCC,"DDPF_FOURCC");
+                checkflag(flag,DDPF_LUMINANCE,"DDPF_LUMINANCE");
+                checkflag(flag,DDPF_PALETTEINDEXED1,"DDPF_PALETTEINDEXED1");
+                checkflag(flag,DDPF_PALETTEINDEXED2,"DDPF_PALETTEINDEXED2");
+                checkflag(flag,DDPF_PALETTEINDEXED4,"DDPF_PALETTEINDEXED4");
+                checkflag(flag,DDPF_PALETTEINDEXED8,"DDPF_PALETTEINDEXED8");
+                checkflag(flag,DDPF_PALETTEINDEXEDTO8,"DDPF_PALETTEINDEXEDTO8");
+                checkflag(flag,DDPF_RGB ,"DDPF_RGB");
+                checkflag(flag,DDPF_RGBTOYUV,"DDPF_RGBTOYUV");
+                checkflag(flag,DDPF_STENCILBUFFER,"DDPF_STENCILBUFFER");
+                checkflag(flag,DDPF_YUV,"DDPF_YUV");
+                checkflag(flag,DDPF_ZBUFFER,"DDPF_ZBUFFER");
+                checkflag(flag,DDPF_ZPIXELS,"DDPF_ZPIXELS");
+                endcheckflag(flag,"puD3dTextureFormats->ddpfPixelFormat.dwFlags"); 
+
+
+                if (myTextureFormats->ddpfPixelFormat.dwFlags & DDPF_FOURCC)
+                {
+                    printf(" puD3dTextureFormats->ddpfPixelFormat.dwFourCC                  : ");
+                    switch(myTextureFormats->ddpfPixelFormat.dwFourCC)
+                    {       
+                        case MAKEFOURCC('A','U','R','2'):
+                            printf("AUR2\n");
+                            break;
+
+                        case MAKEFOURCC('A','U','R','A'):
+                            printf("AURA\n");
+                            break;
+
+                        case MAKEFOURCC('C','H','A','M'):
+                            printf("CHAM\n");
+                            break;
+
+                        case MAKEFOURCC('C','V','I','D'):
+                            printf("CVID\n");
+                            break;
+
+                        case MAKEFOURCC('D','X','T','1'):
+                            printf("DXT1\n");
+                            break;
+
+                        case MAKEFOURCC('D','X','T','2'):
+                            printf("DXT2\n");
+                            break;
+
+                        case MAKEFOURCC('D','X','T','3'):
+                            printf("DXT3\n");
+                            break;
+
+                        case MAKEFOURCC('D','X','T','4'):
+                            printf("DXT4\n");
+                            break;
+
+                        case MAKEFOURCC('D','X','T','5'):
+                            printf("DXT5\n");
+                            break;
+
+                        case MAKEFOURCC('F','V','F','1'):
+                            printf("FVF1\n");
+                            break;
+
+                        case MAKEFOURCC('I','F','0','9'):
+                            printf("IF09\n");
+                            break;
+
+                        case MAKEFOURCC('I','V','3','1'):
+                            printf("IV31\n");
+                            break;
+
+                        case MAKEFOURCC('J','P','E','G'):
+                            printf("JPEG\n");
+                            break;
+
+                        case MAKEFOURCC('M','J','P','G'):
+                            printf("MJPG\n");
+                            break;
+
+                        case MAKEFOURCC('M','R','L','E'):
+                            printf("MRLE\n");
+                            break;
+
+                        case MAKEFOURCC('M','S','V','C'):
+                            printf("MSVC\n");
+                            break;
+
+                        case MAKEFOURCC('P','H','M','O'):
+                            printf("PHMO\n");
+                            break;
+
+                        case MAKEFOURCC('R','T','2','1'):
+                            printf("RT21\n");
+                            break;
+
+                        case MAKEFOURCC('U','L','T','I'):
+                            printf("ULTI\n");
+                            break;
+
+                        case MAKEFOURCC('V','4','2','2'):
+                            printf("V422\n");
+                            break;
+
+                        case MAKEFOURCC('V','6','5','5'):
+                            printf("V655\n");
+                            break;
+
+                        case MAKEFOURCC('V','D','C','T'):
+                            printf("VDCT\n");
+                            break;
+
+                        case MAKEFOURCC('V','I','D','S'):
+                            printf("VIDS\n");
+                            break;
+                        
+                        case MAKEFOURCC('Y','U','9','2'):
+                            printf("YU92\n");
+                            break;
+                         
+                        case MAKEFOURCC('Y','U','V','8'):
+                            printf("YUV8\n");
+                            break;
+
+                        case MAKEFOURCC('Y','U','V','9'):
+                            printf("YUV9\n");
+                            break;
+
+                        case MAKEFOURCC('Y','U','Y','V'):
+                            printf("YUYV\n");
+                            break;
+                                                    
+                        case MAKEFOURCC('Z','P','E','G'):
+                            printf("ZPEG\n");
+                            break;
+
+                        default:
+                            printf("0x%08lx\n",(long)myTextureFormats->ddpfPixelFormat.dwFourCC);
+                            break;
+                    }
+                }
+                else
+                {
+                    printf(" puD3dTextureFormats->ddpfPixelFormat.dwFourCC                  : 0x%08lx\n",(long)myTextureFormats->ddpfPixelFormat.dwFourCC);
+                }
+                printf(" puD3dTextureFormats->ddpfPixelFormat.dwRGBBitCount             : 0x%08lx\n",(long)myTextureFormats->ddpfPixelFormat.dwRGBBitCount);
+                printf(" puD3dTextureFormats->ddpfPixelFormat.dwRBitMask                : 0x%08lx\n",(long)myTextureFormats->ddpfPixelFormat.dwRBitMask);
+                printf(" puD3dTextureFormats->ddpfPixelFormat.dwGBitMask                : 0x%08lx\n",(long)myTextureFormats->ddpfPixelFormat.dwGBitMask);
+                printf(" puD3dTextureFormats->ddpfPixelFormat.dwBBitMask                : 0x%08lx\n",(long)myTextureFormats->ddpfPixelFormat.dwBBitMask);
+                printf(" puD3dTextureFormats->ddpfPixelFormat.dwRGBAlphaBitMask         : 0x%08lx\n",(long)myTextureFormats->ddpfPixelFormat.dwRGBAlphaBitMask);
+            }
+            else
+            {
+                printf("none uD3dTextureFormats->ddpfPixelFormat from the driver 0x%08lx\n",myTextureFormats->ddpfPixelFormat.dwSize);
+            }
+         
+            printf(" puD3dTextureFormats->ddsCaps.dwCaps                            : ");
+            count = 0;
+            flag = myTextureFormats->ddsCaps.dwCaps;
+            // not in use longer acoing msdn checkflag(flag,DDSCAPS_3D,"DDSCAPS_3D");
+            checkflag(flag,DDSCAPS_3DDEVICE  ,"DDSCAPS_3DDEVICE");
+            checkflag(flag,DDSCAPS_ALLOCONLOAD,"DDSCAPS_ALLOCONLOAD ");
+            checkflag(flag,DDSCAPS_ALPHA,"DDSCAPS_ALPHA");
+            checkflag(flag,DDSCAPS_BACKBUFFER,"DDSCAPS_BACKBUFFER");
+            checkflag(flag,DDSCAPS_FLIP,"DDSCAPS_FLIP");
+            checkflag(flag,DDSCAPS_FRONTBUFFER,"DDSCAPS_FRONTBUFFER"); 
+            checkflag(flag,DDSCAPS_HWCODEC,"DDSCAPS_HWCODEC"); 
+            checkflag(flag,DDSCAPS_LIVEVIDEO ,"DDSCAPS_LIVEVIDEO"); 
+            checkflag(flag,DDSCAPS_LOCALVIDMEM,"DDSCAPS_LOCALVIDMEM"); 
+            checkflag(flag,DDSCAPS_MIPMAP,"DDSCAPS_MIPMAP"); 
+            checkflag(flag,DDSCAPS_MODEX,"DDSCAPS_MODEX"); 
+            checkflag(flag,DDSCAPS_NONLOCALVIDMEM,"DDSCAPS_NONLOCALVIDMEM"); 
+            checkflag(flag,DDSCAPS_OFFSCREENPLAIN,"DDSCAPS_OFFSCREENPLAIN");
+            checkflag(flag,DDSCAPS_OPTIMIZED,"DDSCAPS_OPTIMIZED");
+            checkflag(flag,DDSCAPS_OVERLAY,"DDSCAPS_OVERLAY");
+            checkflag(flag,DDSCAPS_OWNDC,"DDSCAPS_OWNDC");
+            checkflag(flag,DDSCAPS_PALETTE,"DDSCAPS_PALETTE");
+            checkflag(flag,DDSCAPS_PRIMARYSURFACE ,"DDSCAPS_PRIMARYSURFACE");
+            checkflag(flag,DDSCAPS_STANDARDVGAMODE,"DDSCAPS_STANDARDVGAMODE");
+            checkflag(flag,DDSCAPS_SYSTEMMEMORY,"DDSCAPS_SYSTEMMEMORY");
+            checkflag(flag,DDSCAPS_TEXTURE,"DDSCAPS_TEXTURE");
+            checkflag(flag,DDSCAPS_VIDEOMEMORY,"DDSCAPS_VIDEOMEMORY");
+            checkflag(flag,DDSCAPS_VIDEOPORT,"DDSCAPS_VIDEOPORT");
+            checkflag(flag,DDSCAPS_VISIBLE,"DDSCAPS_VISIBLE");
+            checkflag(flag,DDSCAPS_WRITEONLY ,"DDSCAPS_WRITEONLY");
+            checkflag(flag,DDSCAPS_ZBUFFER,"DDSCAPS_ZBUFFER");
+            endcheckflag(flag,"puD3dTextureFormats->ddsCaps.dwCaps"); 
+
+
+           myTextureFormats = (DDSURFACEDESC *) (((DWORD) myTextureFormats) + sizeof(DDSURFACEDESC));
+        }
+        else
+        {
+            printf("error this should not happen : puD3dTextureFormats from the driver 0x%08lx\n",myTextureFormats->dwSize);
+            break;
+        }
+    }
+
+
+   
+
+    
+    
+    
+
+
+
 
 }

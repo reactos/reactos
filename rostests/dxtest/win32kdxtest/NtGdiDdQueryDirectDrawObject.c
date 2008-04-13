@@ -405,12 +405,12 @@ test_NtGdiDdQueryDirectDrawObject( HANDLE hDirectDrawLocal)
 
     if (dumping_on == TRUE)
     {
-        dump_halinfo(pHalInfo,"NtGdiDdQueryDirectDrawObject(hDirectDrawLocal, pHalInfo, pCallBackFlags, puD3dCallbacks, puD3dDriverData, puD3dBufferCallbacks, NULL, ...)");
-        dump_CallBackFlags(pCallBackFlags,"NtGdiDdQueryDirectDrawObject(hDirectDrawLocal, pHalInfo, pCallBackFlags, puD3dCallbacks, puD3dDriverData, puD3dBufferCallbacks, NULL, ...)");
-        dump_D3dCallbacks(puD3dCallbacks,"NtGdiDdQueryDirectDrawObject(hDirectDrawLocal, pHalInfo, pCallBackFlags, puD3dCallbacks, puD3dDriverData, puD3dBufferCallbacks, NULL, ...)");
-        dump_D3dDriverData(puD3dDriverData, "NtGdiDdQueryDirectDrawObject(hDirectDrawLocal, pHalInfo, pCallBackFlags, puD3dCallbacks, puD3dDriverData, puD3dBufferCallbacks, NULL, ...)");
-        dump_D3dBufferCallbacks(puD3dBufferCallbacks, "NtGdiDdQueryDirectDrawObject(hDirectDrawLocal, pHalInfo, pCallBackFlags, puD3dCallbacks, puD3dDriverData, puD3dBufferCallbacks, NULL, ...)");
-        /* FIXME dump puD3dTextureFormats */
+        dump_halinfo(pHalInfo,"NtGdiDdQueryDirectDrawObject(hDirectDrawLocal, pHalInfo, pCallBackFlags, puD3dCallbacks, puD3dDriverData, puD3dBufferCallbacks, puD3dTextureFormats, NULL, ...)");
+        dump_CallBackFlags(pCallBackFlags,"NtGdiDdQueryDirectDrawObject(hDirectDrawLocal, pHalInfo, pCallBackFlags, puD3dCallbacks, puD3dDriverData, puD3dBufferCallbacks, puD3dTextureFormats, NULL, ...)");
+        dump_D3dCallbacks(puD3dCallbacks,"NtGdiDdQueryDirectDrawObject(hDirectDrawLocal, pHalInfo, pCallBackFlags, puD3dCallbacks, puD3dDriverData, puD3dBufferCallbacks, puD3dTextureFormats, NULL, ...)");
+        dump_D3dDriverData(puD3dDriverData, "NtGdiDdQueryDirectDrawObject(hDirectDrawLocal, pHalInfo, pCallBackFlags, puD3dCallbacks, puD3dDriverData, puD3dBufferCallbacks, puD3dTextureFormats, NULL, ...)");
+        dump_D3dBufferCallbacks(puD3dBufferCallbacks, "NtGdiDdQueryDirectDrawObject(hDirectDrawLocal, pHalInfo, pCallBackFlags, puD3dCallbacks, puD3dDriverData, puD3dBufferCallbacks, puD3dTextureFormats, NULL, ...)");
+        dump_D3dTextureFormats(puD3dTextureFormats, puD3dDriverData->dwNumTextureFormats, "NtGdiDdQueryDirectDrawObject(hDirectDrawLocal, pHalInfo, pCallBackFlags, puD3dCallbacks, puD3dDriverData, puD3dBufferCallbacks, puD3dTextureFormats, NULL, ...)");
     }
 
 
