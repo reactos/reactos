@@ -32,7 +32,7 @@ Test_NtGdiDdQueryDirectDrawObject(PTESTINFO pti)
     DD_D3DBUFCALLBACKS oldD3dBufferCallbacks;
 
     DDSURFACEDESC2 D3dTextureFormats[100];
-    //DWORD NumHeaps = 0;
+    DWORD NumHeaps = 0;
     VIDEOMEMORY vmList;
     //DWORD NumFourCC = 0;
     //DWORD FourCC = 0;
@@ -639,12 +639,142 @@ Test_NtGdiDdQueryDirectDrawObject(PTESTINFO pti)
     }
      
 
+    /* testing  NtGdiDdQueryDirectDrawObject( hDD, pHalInfo, pCallBackFlags, puD3dCallbacks, puD3dDriverData, puD3dBufferCallbacks, puD3dTextureFormats, puNumHeaps, NULL, */ 
+    pHalInfo = &HalInfo;
+    pCallBackFlags = CallBackFlags;
+    puD3dCallbacks = &D3dCallbacks;
+    puD3dDriverData = &D3dDriverData;
+    puD3dBufferCallbacks = &D3dBufferCallbacks;
+    puNumHeaps = &NumHeaps;
+    
+    if (puD3dDriverData->dwNumTextureFormats != 0)
+    {
+        RtlZeroMemory(puD3dTextureFormats, puD3dDriverData->dwNumTextureFormats * sizeof(DDSURFACEDESC2));
+    }    
+    RtlZeroMemory(pHalInfo,sizeof(DD_HALINFO));
+    RtlZeroMemory(pCallBackFlags,sizeof(DWORD)*3);
+    RtlZeroMemory(puD3dCallbacks,sizeof(D3DNTHAL_CALLBACKS));
+    RtlZeroMemory(puD3dDriverData,sizeof(D3DNTHAL_GLOBALDRIVERDATA));
+    RtlZeroMemory(&D3dBufferCallbacks,sizeof(DD_D3DBUFCALLBACKS));
+
+    RTEST(NtGdiDdQueryDirectDrawObject( hDirectDraw, pHalInfo,
+                                        pCallBackFlags, puD3dCallbacks,
+                                        puD3dDriverData, puD3dBufferCallbacks,
+                                        puD3dTextureFormats, puNumHeaps,
+                                        puvmList, puNumFourCC,
+                                        puFourCC)== FALSE);
+
+    RTEST(pHalInfo != NULL);
+    ASSERT(pHalInfo != NULL);
+
+    RTEST(pCallBackFlags != NULL);
+    ASSERT(pCallBackFlags != NULL);
+
+    RTEST(puD3dCallbacks != NULL);
+    ASSERT(puD3dCallbacks != NULL);
+
+    RTEST(puD3dDriverData != NULL);
+    ASSERT(puD3dDriverData != NULL);
+
+    RTEST(puD3dBufferCallbacks != NULL);
+    ASSERT(puD3dDriverData != NULL);
+
+    RTEST(puD3dTextureFormats != NULL);
+    ASSERT(puD3dTextureFormats != NULL);
+    
+    RTEST(puNumHeaps != NULL);
+    ASSERT(puNumHeaps != NULL);
+    RTEST(NumHeaps == 0);
+
+    RTEST(puNumFourCC == NULL);
+    RTEST(puFourCC == NULL);
+    
+    RTEST(puvmList == NULL);
+
+    /* We retesting the flags */    
+    RTEST(pCallBackFlags[0] != 0);
+    RTEST(pCallBackFlags[1] != 0);
+    RTEST(pCallBackFlags[2] == 0);
+
+    /* We do not retesting instead we compare it */
+    RTEST(memcmp(&oldHalInfo, pHalInfo, sizeof(DD_HALINFO)) == 0);
+    RTEST(memcmp(&oldD3dCallbacks, puD3dCallbacks, sizeof(D3DNTHAL_CALLBACKS)) == 0);
+    RTEST(memcmp(&oldD3dDriverData, puD3dDriverData, sizeof(D3DNTHAL_GLOBALDRIVERDATA)) == 0);
+    RTEST(memcmp(&oldD3dBufferCallbacks, puD3dBufferCallbacks, sizeof(DD_D3DBUFCALLBACKS)) == 0);
+    /* we skip resting texture */
+
+
+    /* testing  NtGdiDdQueryDirectDrawObject( hDD, pHalInfo, pCallBackFlags, puD3dCallbacks, puD3dDriverData, puD3dBufferCallbacks, puD3dTextureFormats, puNumHeaps, puvmList, NULL, */ 
+    pHalInfo = &HalInfo;
+    pCallBackFlags = CallBackFlags;
+    puD3dCallbacks = &D3dCallbacks;
+    puD3dDriverData = &D3dDriverData;
+    puD3dBufferCallbacks = &D3dBufferCallbacks;
+    puNumHeaps = &NumHeaps;
+    puvmList = &vmList;
+    
+    if (puD3dDriverData->dwNumTextureFormats != 0)
+    {
+        RtlZeroMemory(puD3dTextureFormats, puD3dDriverData->dwNumTextureFormats * sizeof(DDSURFACEDESC2));
+    }    
+    RtlZeroMemory(pHalInfo,sizeof(DD_HALINFO));
+    RtlZeroMemory(pCallBackFlags,sizeof(DWORD)*3);
+    RtlZeroMemory(puD3dCallbacks,sizeof(D3DNTHAL_CALLBACKS));
+    RtlZeroMemory(puD3dDriverData,sizeof(D3DNTHAL_GLOBALDRIVERDATA));
+    RtlZeroMemory(&D3dBufferCallbacks,sizeof(DD_D3DBUFCALLBACKS));
+
+    RTEST(NtGdiDdQueryDirectDrawObject( hDirectDraw, pHalInfo,
+                                        pCallBackFlags, puD3dCallbacks,
+                                        puD3dDriverData, puD3dBufferCallbacks,
+                                        puD3dTextureFormats, puNumHeaps,
+                                        puvmList, puNumFourCC,
+                                        puFourCC)== FALSE);
+
+    RTEST(pHalInfo != NULL);
+    ASSERT(pHalInfo != NULL);
+
+    RTEST(pCallBackFlags != NULL);
+    ASSERT(pCallBackFlags != NULL);
+
+    RTEST(puD3dCallbacks != NULL);
+    ASSERT(puD3dCallbacks != NULL);
+
+    RTEST(puD3dDriverData != NULL);
+    ASSERT(puD3dDriverData != NULL);
+
+    RTEST(puD3dBufferCallbacks != NULL);
+    ASSERT(puD3dDriverData != NULL);
+
+    RTEST(puD3dTextureFormats != NULL);
+    ASSERT(puD3dTextureFormats != NULL);
+    
+    RTEST(puNumHeaps != NULL);
+    ASSERT(puNumHeaps != NULL);
+    RTEST(NumHeaps == 0);
+
+    RTEST(puvmList != NULL);    
+
+    RTEST(puNumFourCC == NULL);
+    RTEST(puFourCC == NULL);
+    
+    
+
+    /* We retesting the flags */    
+    RTEST(pCallBackFlags[0] != 0);
+    RTEST(pCallBackFlags[1] != 0);
+    RTEST(pCallBackFlags[2] == 0);
+
+    /* We do not retesting instead we compare it */
+    RTEST(memcmp(&oldHalInfo, pHalInfo, sizeof(DD_HALINFO)) == 0);
+    RTEST(memcmp(&oldD3dCallbacks, puD3dCallbacks, sizeof(D3DNTHAL_CALLBACKS)) == 0);
+    RTEST(memcmp(&oldD3dDriverData, puD3dDriverData, sizeof(D3DNTHAL_GLOBALDRIVERDATA)) == 0);
+    RTEST(memcmp(&oldD3dBufferCallbacks, puD3dBufferCallbacks, sizeof(DD_D3DBUFCALLBACKS)) == 0);
+    /* we skip resting texture */
+
     /* Todo
     * adding test for   
     * puNumFourCC
     * puFourCC
-    * puNumHeaps
-    * puvmList
     */
 
     /* Cleanup ReactX setup */
