@@ -39,6 +39,9 @@ Test_NtGdiDdQueryDirectDrawObject(PTESTINFO pti)
     DEVMODE devmode;
     HDC hdc;
 
+    DWORD dwTextureCounter = 0;
+    DDSURFACEDESC *myDesc = NULL;
+
     /* clear data */
     memset(&vmList,0,sizeof(VIDEOMEMORY));
     memset(&D3dTextureFormats,0,sizeof(DDSURFACEDESC));
@@ -529,62 +532,11 @@ Test_NtGdiDdQueryDirectDrawObject(PTESTINFO pti)
         RTEST( puD3dBufferCallbacks->UnlockD3DBuffer == NULL);
     }
 
-    /* Backup D3DHAL_GLOBALDRIVERDATA so we do not need resting it */
+    /* Backup DD_D3DBUFCALLBACKS so we do not need resting it */
     RtlCopyMemory(&oldD3dBufferCallbacks, &D3dBufferCallbacks, sizeof(DD_D3DBUFCALLBACKS));
 
 
-/* Next Start 6 */
-    pHalInfo = &HalInfo;
-    pCallBackFlags = CallBackFlags;
-    puD3dCallbacks = &D3dCallbacks;
-    puD3dDriverData = &D3dDriverData;
-    puD3dBufferCallbacks = &D3dBufferCallbacks;
-    
-    RtlZeroMemory(pHalInfo,sizeof(DD_HALINFO));
-    RtlZeroMemory(pCallBackFlags,sizeof(DWORD)*3);
-    RtlZeroMemory(puD3dCallbacks,sizeof(D3DNTHAL_CALLBACKS));
-    RtlZeroMemory(puD3dDriverData,sizeof(D3DNTHAL_GLOBALDRIVERDATA));
-    RtlZeroMemory(&D3dBufferCallbacks,sizeof(DD_D3DBUFCALLBACKS));
-
-    RTEST(NtGdiDdQueryDirectDrawObject( hDirectDraw, pHalInfo,
-                                        pCallBackFlags, puD3dCallbacks,
-                                        puD3dDriverData, puD3dBufferCallbacks,
-                                        puD3dTextureFormats, puNumHeaps,
-                                        puvmList, puNumFourCC,
-                                        puFourCC)== FALSE);
-    RTEST(pHalInfo != NULL);
-    RTEST(pCallBackFlags != NULL);
-
-    if (pHalInfo->ddCaps.ddsCaps.dwCaps  & DDSCAPS_3DDEVICE )
-    {
-        RTEST(puD3dCallbacks != NULL);
-        RTEST(puD3dDriverData != NULL);
-        RTEST(puD3dBufferCallbacks != NULL);
-    }
-
-    RTEST(puD3dTextureFormats == NULL);
-    RTEST(puNumFourCC == NULL);
-    RTEST(puFourCC == NULL);
-    RTEST(puNumHeaps == NULL);
-    RTEST(puvmList == NULL);
-    ASSERT(pHalInfo != NULL);
-
-    /* We do not retesting DD_HALINFO, instead we compare it */
-    RTEST(memcmp(&oldHalInfo, pHalInfo, sizeof(DD_HALINFO)) == 0);
-    RTEST(pCallBackFlags[0] != 0);
-    RTEST(pCallBackFlags[1] != 0);
-    RTEST(pCallBackFlags[2] == 0);
-
-    /* We do not retesting instead we compare it */
-    RTEST(memcmp(&oldHalInfo, pHalInfo, sizeof(DD_HALINFO)) == 0);
-    RTEST(memcmp(&oldD3dCallbacks, puD3dCallbacks, sizeof(D3DNTHAL_CALLBACKS)) == 0);
-    RTEST(memcmp(&oldD3dDriverData, puD3dDriverData, sizeof(D3DNTHAL_GLOBALDRIVERDATA)) == 0);
-    RTEST(memcmp(&oldD3dBufferCallbacks, puD3dBufferCallbacks, sizeof(DD_D3DBUFCALLBACKS)) == 0);
-
-    
-
-
-/* Next Start 7 */
+/* testing  NtGdiDdQueryDirectDrawObject( hDD, pHalInfo, pCallBackFlags, puD3dCallbacks, puD3dDriverData, puD3dBufferCallbacks, puD3dTextureFormats, NULL, */ 
     pHalInfo = &HalInfo;
     pCallBackFlags = CallBackFlags;
     puD3dCallbacks = &D3dCallbacks;
@@ -613,29 +565,31 @@ Test_NtGdiDdQueryDirectDrawObject(PTESTINFO pti)
                                         puD3dTextureFormats, puNumHeaps,
                                         puvmList, puNumFourCC,
                                         puFourCC)== FALSE);
+
     RTEST(pHalInfo != NULL);
+    ASSERT(pHalInfo != NULL);
+
     RTEST(pCallBackFlags != NULL);
+    ASSERT(pCallBackFlags != NULL);
 
-    if (pHalInfo->ddCaps.ddsCaps.dwCaps  & DDSCAPS_3DDEVICE )
-    {
-        RTEST(puD3dCallbacks != NULL);
-        RTEST(puD3dDriverData != NULL);
+    RTEST(puD3dCallbacks != NULL);
+    ASSERT(puD3dCallbacks != NULL);
+
+    RTEST(puD3dDriverData != NULL);
+    ASSERT(puD3dDriverData != NULL);
+
     RTEST(puD3dBufferCallbacks != NULL);
-    if (puD3dDriverData->dwNumTextureFormats != 0)
-    {
-            /* FIXME add a better test for texture */
-            RTEST(puD3dTextureFormats != NULL);
-        }
-    }
+    ASSERT(puD3dDriverData != NULL);
 
+    RTEST(puD3dTextureFormats != NULL);
+    ASSERT(puD3dTextureFormats != NULL);
+    
     RTEST(puNumFourCC == NULL);
     RTEST(puFourCC == NULL);
     RTEST(puNumHeaps == NULL);
     RTEST(puvmList == NULL);
-    ASSERT(pHalInfo != NULL);
 
-    /* We do not retesting DD_HALINFO, instead we compare it */
-    RTEST(memcmp(&oldHalInfo, pHalInfo, sizeof(DD_HALINFO)) == 0);
+    /* We retesting the flags */    
     RTEST(pCallBackFlags[0] != 0);
     RTEST(pCallBackFlags[1] != 0);
     RTEST(pCallBackFlags[2] == 0);
@@ -646,13 +600,47 @@ Test_NtGdiDdQueryDirectDrawObject(PTESTINFO pti)
     RTEST(memcmp(&oldD3dDriverData, puD3dDriverData, sizeof(D3DNTHAL_GLOBALDRIVERDATA)) == 0);
     RTEST(memcmp(&oldD3dBufferCallbacks, puD3dBufferCallbacks, sizeof(DD_D3DBUFCALLBACKS)) == 0);
 
+    /* start test of dwNumTextureFormats */        
+    if (puD3dDriverData->dwNumTextureFormats != 0)
+    {
+        myDesc = puD3dTextureFormats;
+        for (dwTextureCounter=0;dwTextureCounter<puD3dDriverData->dwNumTextureFormats;dwTextureCounter++)
+        {
+            RTEST(myDesc->dwSize == sizeof(DDSURFACEDESC))
+            ASSERT(myDesc->dwSize == sizeof(DDSURFACEDESC));
 
+            RTEST( (myDesc->dwFlags & (~(DDSD_CAPS|DDSD_PIXELFORMAT))) == 0);
+            RTEST(myDesc->dwHeight == 0);
+            RTEST(myDesc->dwWidth == 0);
+            RTEST(myDesc->dwLinearSize == 0);
+            RTEST(myDesc->dwBackBufferCount == 0);
+            RTEST(myDesc->dwZBufferBitDepth == 0);
+            RTEST(myDesc->dwAlphaBitDepth == 0);
+            RTEST(myDesc->dwReserved == 0);
+            RTEST(myDesc->lpSurface == 0);
+            RTEST(myDesc->ddckCKDestOverlay.dwColorSpaceLowValue == 0);
+            RTEST(myDesc->ddckCKDestOverlay.dwColorSpaceHighValue == 0);
+            RTEST(myDesc->ddckCKDestBlt.dwColorSpaceLowValue == 0);
+            RTEST(myDesc->ddckCKDestBlt.dwColorSpaceHighValue == 0);
+            RTEST(myDesc->ddckCKSrcOverlay.dwColorSpaceLowValue == 0);
+            RTEST(myDesc->ddckCKSrcOverlay.dwColorSpaceHighValue == 0);
+            RTEST(myDesc->ddckCKSrcBlt.dwColorSpaceLowValue == 0);
+            RTEST(myDesc->ddckCKSrcBlt.dwColorSpaceHighValue == 0);            
+            RTEST(myDesc->ddpfPixelFormat.dwSize == sizeof(DDPIXELFORMAT));
+            RTEST(myDesc->ddpfPixelFormat.dwFlags != 0);
+            if (myDesc->ddpfPixelFormat.dwFlags & DDPF_FOURCC)
+            {
+                RTEST(myDesc->ddpfPixelFormat.dwFourCC != 0);
+            }
+            RTEST(myDesc->ddsCaps.dwCaps == DDSCAPS_TEXTURE);
+
+            myDesc = (DDSURFACEDESC *) (((DWORD) myDesc) + sizeof(DDSURFACEDESC));
+        }
+    }
+     
 
     /* Todo
-    * adding test for
-    * puD3dCallbacks
-    * puD3dDriverData
-    * puD3dBufferCallbacks
+    * adding test for   
     * puNumFourCC
     * puFourCC
     * puNumHeaps
