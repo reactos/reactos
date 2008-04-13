@@ -141,7 +141,9 @@ typedef struct _avistreamheader
   } rcFrame;
 } AVISTREAMHEADER;
 
+#if defined(_MSC_VER)
 #pragma warning(disable:4200)
+#endif
 
 typedef struct _avioldindex
 {

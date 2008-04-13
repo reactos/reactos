@@ -245,7 +245,9 @@ typedef enum
 
 typedef struct IQueryAssociations *LPQUERYASSOCIATIONS;
 
+#ifndef INTERFACE
 #define INTERFACE IQueryAssociations
+#endif
 DECLARE_INTERFACE_(IQueryAssociations,IUnknown)
 {
     /*** IUnknown methods ***/
