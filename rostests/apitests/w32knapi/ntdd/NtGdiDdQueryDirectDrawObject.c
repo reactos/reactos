@@ -26,6 +26,8 @@ Test_NtGdiDdQueryDirectDrawObject(PTESTINFO pti)
     D3DNTHAL_CALLBACKS oldD3dCallbacks;
 
     D3DNTHAL_GLOBALDRIVERDATA D3dDriverData;
+    D3DNTHAL_GLOBALDRIVERDATA oldD3dDriverData;
+
     DD_D3DBUFCALLBACKS D3dBufferCallbacks;
     DDSURFACEDESC2 D3dTextureFormats[100];
     //DWORD NumHeaps = 0;
@@ -198,6 +200,10 @@ Test_NtGdiDdQueryDirectDrawObject(PTESTINFO pti)
          */
         RTEST( pHalInfo->ddCaps.dwCaps != 0);
         RTEST( pHalInfo->ddCaps.ddsCaps.dwCaps != 0);
+
+        /* This flags is obsolete and should not be used by the driver */ 
+        RTEST( pHalInfo->ddCaps.dwFXAlphaCaps == 0);
+        
 
         /* if this fail we do not have a dx driver install acodring ms, some version of windows it
          * is okay this fail and drv does then only support basic dx
@@ -387,18 +393,30 @@ Test_NtGdiDdQueryDirectDrawObject(PTESTINFO pti)
     RTEST(puNumHeaps == NULL);
     RTEST(puvmList == NULL);
 
-    /* We do not retesting DD_HALINFO, instead we compare it */
-    RTEST(memcmp(&oldHalInfo, pHalInfo, sizeof(DD_HALINFO)) == 0);
+    /* We retesting pCallBackFlags  */    
     RTEST(pCallBackFlags[0] != 0);
     RTEST(pCallBackFlags[1] != 0);
     RTEST(pCallBackFlags[2] == 0);
 
-    /* We do not retesting D3DNTHAL_CALLBACKS, instead we compare it */
+    /* We do not retesting instead we compare it */
+    RTEST(memcmp(&oldHalInfo, pHalInfo, sizeof(DD_HALINFO)) == 0);
     RTEST(memcmp(&oldD3dCallbacks, puD3dCallbacks, sizeof(D3DNTHAL_CALLBACKS)) == 0);
 
     /* start test of puD3dDriverData */
+   
+    RTEST(puD3dDriverData->dwSize == sizeof(D3DNTHAL_GLOBALDRIVERDATA));
+    RTEST(puD3dDriverData->hwCaps.dwSize == sizeof(D3DNTHALDEVICEDESC_V1));
+    RTEST(puD3dDriverData->hwCaps.dtcTransformCaps.dwSize == sizeof(D3DTRANSFORMCAPS));
+    RTEST(puD3dDriverData->hwCaps.dlcLightingCaps.dwSize == sizeof(D3DLIGHTINGCAPS)); 
+    RTEST(puD3dDriverData->hwCaps.dpcLineCaps.dwSize == sizeof(D3DPRIMCAPS));
+    RTEST(puD3dDriverData->hwCaps.dpcTriCaps.dwSize  == sizeof(D3DPRIMCAPS));
+    RTEST(puD3dDriverData->hwCaps.dwMaxBufferSize == 0);
+    RTEST(puD3dDriverData->hwCaps.dwMaxVertexCount == 0); 
 
-/* Next Start 5 */
+    /* Backup D3DHAL_GLOBALDRIVERDATA so we do not need resting it */
+    RtlCopyMemory(&oldD3dDriverData, &D3dDriverData, sizeof(D3DNTHAL_GLOBALDRIVERDATA));
+
+/* testing  NtGdiDdQueryDirectDrawObject( hDD, pHalInfo, pCallBackFlags, puD3dCallbacks, puD3dDriverData, puD3dBufferCallbacks, NULL, */
     pHalInfo = &HalInfo;
     pCallBackFlags = CallBackFlags;
     puD3dCallbacks = &D3dCallbacks;
@@ -426,22 +444,38 @@ Test_NtGdiDdQueryDirectDrawObject(PTESTINFO pti)
         RTEST(puD3dBufferCallbacks != NULL);
     }
 
+    RTEST(pHalInfo != NULL);
+    ASSERT(pHalInfo != NULL);
+
+    RTEST(pCallBackFlags != NULL);
+    ASSERT(pCallBackFlags != NULL);
+
+    RTEST(puD3dCallbacks != NULL);
+    ASSERT(puD3dCallbacks != NULL);
+
+    RTEST(puD3dDriverData != NULL);
+    ASSERT(puD3dDriverData != NULL);
+
+    RTEST(puD3dBufferCallbacks != NULL);
+    ASSERT(puD3dDriverData != NULL);
 
     RTEST(puD3dTextureFormats == NULL);
     RTEST(puNumFourCC == NULL);
     RTEST(puFourCC == NULL);
     RTEST(puNumHeaps == NULL);
     RTEST(puvmList == NULL);
-    ASSERT(pHalInfo != NULL);
 
-    /* We do not retesting DD_HALINFO, instead we compare it */
-    RTEST(memcmp(&oldHalInfo, pHalInfo, sizeof(DD_HALINFO)) == 0);
+    /* We retesting the flags */    
     RTEST(pCallBackFlags[0] != 0);
     RTEST(pCallBackFlags[1] != 0);
     RTEST(pCallBackFlags[2] == 0);
 
-    /* We do not retesting D3DNTHAL_CALLBACKS, instead we compare it */
+    /* We do not retesting instead we compare it */
+    RTEST(memcmp(&oldHalInfo, pHalInfo, sizeof(DD_HALINFO)) == 0);
     RTEST(memcmp(&oldD3dCallbacks, puD3dCallbacks, sizeof(D3DNTHAL_CALLBACKS)) == 0);
+    RTEST(memcmp(&oldD3dDriverData, puD3dDriverData, sizeof(D3DNTHAL_GLOBALDRIVERDATA)) == 0);
+
+   /* start test of puD3dBufferCallbacks */
 
 /* Next Start 6 */
     pHalInfo = &HalInfo;
