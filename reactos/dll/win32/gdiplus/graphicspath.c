@@ -179,7 +179,7 @@ GpStatus WINGDIPAPI GdipAddPathEllipse(GpPath *path, REAL x, REAL y, REAL width,
     memset(&path->pathdata.Types[old_count + 1], PathPointTypeBezier,
            MAX_ARC_PTS - 1);
 
-    /* An ellipse is an instrinsic figure (always its own subpath). */
+    /* An ellipse is an intrinsic figure (always is its own subpath). */
     path->pathdata.Types[old_count] = PathPointTypeStart;
     path->pathdata.Types[old_count + MAX_ARC_PTS - 1] |= PathPointTypeCloseSubpath;
     path->newfigure = TRUE;

@@ -29,5 +29,6 @@
         <file>pathiterator.c</file>
         <file>pen.c</file>
         <file>stringformat.c</file>
+		<file>region.c</file>
         <file>gdiplus.spec</file>
 </module>

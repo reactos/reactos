@@ -653,3 +653,47 @@ GpStatus WINGDIPAPI GdipSetTextureTransform(GpTexture *texture,
 
     return Ok;
 }
+
+GpStatus WINGDIPAPI GdipSetLineColors(GpLineGradient *brush, ARGB color1,
+    ARGB color2)
+{
+    static int calls;
+
+    if(!(calls++))
+        FIXME("not implemented\n");
+
+    return NotImplemented;
+}
+
+GpStatus WINGDIPAPI GdipSetLineLinearBlend(GpLineGradient *brush, REAL focus,
+    REAL scale)
+{
+    static int calls;
+
+    if(!(calls++))
+        FIXME("not implemented\n");
+
+    return NotImplemented;
+}
+
+GpStatus WINGDIPAPI GdipSetLinePresetBlend(GpLineGradient *brush,
+    GDIPCONST ARGB *blend, GDIPCONST REAL* positions, INT count)
+{
+    static int calls;
+
+    if(!(calls++))
+        FIXME("not implemented\n");
+
+    return NotImplemented;
+}
+
+GpStatus WINGDIPAPI GdipSetLineTransform(GpLineGradient *brush,
+    GDIPCONST GpMatrix *matrix)
+{
+    static int calls;
+
+    if(!(calls++))
+        FIXME("not implemented\n");
+
+    return NotImplemented;
+}

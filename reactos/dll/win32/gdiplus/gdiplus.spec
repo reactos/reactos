@@ -75,7 +75,7 @@
 @ stdcall GdipCreateBitmapFromFileICM(wstr ptr)
 @ stub GdipCreateBitmapFromGdiDib
 @ stdcall GdipCreateBitmapFromGraphics(long long ptr ptr)
-@ stub GdipCreateBitmapFromHBITMAP
+@ stdcall GdipCreateBitmapFromHBITMAP(ptr ptr ptr)
 @ stub GdipCreateBitmapFromHICON
 @ stub GdipCreateBitmapFromResource
 @ stdcall GdipCreateBitmapFromScan0(long long long long ptr ptr)
@@ -250,7 +250,7 @@
 @ stdcall GdipGetCompositingMode(ptr ptr)
 @ stdcall GdipGetCompositingQuality(ptr ptr)
 @ stub GdipGetCustomLineCapBaseCap
-@ stub GdipGetCustomLineCapBaseInset
+@ stdcall GdipGetCustomLineCapBaseInset(ptr ptr)
 @ stub GdipGetCustomLineCapStrokeCaps
 @ stub GdipGetCustomLineCapStrokeJoin
 @ stub GdipGetCustomLineCapType
@@ -510,41 +510,41 @@
 @ stub GdipSetClipHrgn
 @ stub GdipSetClipPath
 @ stub GdipSetClipRect
-@ stub GdipSetClipRectI
-@ stub GdipSetClipRegion
+@ stdcall GdipSetClipRectI(ptr long long long long long)
+@ stdcall GdipSetClipRegion(ptr ptr long)
 @ stdcall GdipSetCompositingMode(ptr long)
 @ stdcall GdipSetCompositingQuality(ptr long)
-@ stub GdipSetCustomLineCapBaseCap
-@ stub GdipSetCustomLineCapBaseInset
+@ stdcall GdipSetCustomLineCapBaseCap(ptr long)
+@ stdcall GdipSetCustomLineCapBaseInset(ptr long)
 @ stdcall GdipSetCustomLineCapStrokeCaps(ptr long long)
-@ stub GdipSetCustomLineCapStrokeJoin
-@ stub GdipSetCustomLineCapWidthScale
-@ stub GdipSetEffectParameters
-@ stub GdipSetEmpty
-@ stub GdipSetImageAttributesCachedBackground
+@ stdcall GdipSetCustomLineCapStrokeJoin(ptr long)
+@ stdcall GdipSetCustomLineCapWidthScale(ptr long)
+@ stdcall GdipSetEffectParameters(ptr ptr long)
+@ stdcall GdipSetEmpty(ptr)
+@ stdcall GdipSetImageAttributesCachedBackground(ptr long)
 @ stdcall GdipSetImageAttributesColorKeys(ptr long long long long)
 @ stdcall GdipSetImageAttributesColorMatrix(ptr long long ptr ptr long)
-@ stub GdipSetImageAttributesGamma
-@ stub GdipSetImageAttributesNoOp
-@ stub GdipSetImageAttributesOutputChannel
-@ stub GdipSetImageAttributesOutputChannelColorProfile
-@ stub GdipSetImageAttributesRemapTable
-@ stub GdipSetImageAttributesThreshold
-@ stub GdipSetImageAttributesToIdentity
+@ stdcall GdipSetImageAttributesGamma(ptr long long long)
+@ stdcall GdipSetImageAttributesNoOp(ptr long long)
+@ stdcall GdipSetImageAttributesOutputChannel(ptr long long long)
+@ stdcall GdipSetImageAttributesOutputChannelColorProfile(ptr long long ptr)
+@ stdcall GdipSetImageAttributesRemapTable(ptr long long long ptr)
+@ stdcall GdipSetImageAttributesThreshold(ptr long long long)
+@ stdcall GdipSetImageAttributesToIdentity(ptr long)
 @ stdcall GdipSetImageAttributesWrapMode(ptr long long long)
 @ stdcall GdipSetImagePalette(ptr ptr)
-@ stub GdipSetInfinite
+@ stdcall GdipSetInfinite(ptr)
 @ stdcall GdipSetInterpolationMode(ptr long)
 @ stdcall GdipSetLineBlend(ptr ptr ptr long)
-@ stub GdipSetLineColors
+@ stdcall GdipSetLineColors(ptr long long)
 @ stdcall GdipSetLineGammaCorrection(ptr long)
-@ stub GdipSetLineLinearBlend
-@ stub GdipSetLinePresetBlend
+@ stdcall GdipSetLineLinearBlend(ptr long long)
+@ stdcall GdipSetLinePresetBlend(ptr ptr ptr long)
 @ stdcall GdipSetLineSigmaBlend(ptr long long)
-@ stub GdipSetLineTransform
+@ stdcall GdipSetLineTransform(ptr ptr)
 @ stdcall GdipSetLineWrapMode(ptr long)
 @ stdcall GdipSetMatrixElements(ptr long long long long long long)
-@ stub GdipSetMetafileDownLevelRasterizationLimit
+@ stdcall GdipSetMetafileDownLevelRasterizationLimit(ptr long)
 @ stdcall GdipSetPageScale(ptr long)
 @ stdcall GdipSetPageUnit(ptr long)
 @ stdcall GdipSetPathFillMode(ptr long)

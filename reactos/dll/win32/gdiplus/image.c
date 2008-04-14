@@ -1096,3 +1096,14 @@ GpStatus WINGDIPAPI GdipCreateBitmapFromHBITMAP(HBITMAP hbm, HPALETTE hpal, GpBi
 
     return retval;
 }
+
+GpStatus WINGDIPAPI GdipSetEffectParameters(CGpEffect *effect,
+    const VOID *params, const UINT size)
+{
+    static int calls;
+
+    if(!(calls++))
+        FIXME("not implemented\n");
+
+    return NotImplemented;
+}
