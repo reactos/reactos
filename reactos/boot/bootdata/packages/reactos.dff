@@ -487,7 +487,6 @@ modules\rosky\dll\win32\libsky\libsky.dll                                  1   o
 modules\rosky\dll\win32\libskygi\libskygi.dll                              1   optional
 modules\vms\server\vmssrv.dll                                              1   optional
 modules\vms\dll\win32\vmsdll\vmsdll.dll                                    1   optional
-modules\rosapps\avtest\avtest.sys                                          1   optional
 modules\rosapps\applications\screensavers\cylfrac\cylfrac.scr              1   optional
 modules\rosapps\applications\screensavers\matrix\matrix.scr                1   optional
 modules\rosapps\applications\screensavers\blankscr\scrnsave.scr            1   optional
@@ -512,9 +511,11 @@ modules\rosapps\devutils\zoomin\zoomin.exe                                 1   o
 modules\rosapps\dflat32\edit.exe                                           1   optional
 modules\rosapps\downloader\downloader.exe                                  1   optional
 modules\rosapps\downloader\downloader.xml                                  1   optional
+modules\rosapps\drivers\avtest\avtest.sys                                  1   optional
+modules\rosapps\drivers\ramdrv\ramdrv.sys                                  1   optional
+modules\rosapps\drivers\green\green.sys                                    1   optional
 modules\rosapps\fontview\fontview.exe                                      1   optional
 modules\rosapps\gettype\gettype.exe                                        1   optional
-modules\rosapps\green\green.sys                                            1   optional
 modules\rosapps\imagesoft\imagesoft.exe                                    1   optional
 modules\rosapps\lib\dflat32\dflat32.dll                                    1   optional
 modules\rosapps\mc\mc.exe                                                  1   optional
@@ -526,7 +527,6 @@ modules\rosapps\magnify\magnify.exe                                        1   o
 modules\rosapps\packmgr\cmd-line\rosget.exe                                1   optional
 modules\rosapps\packmgr\gui\packmgr.exe                                    1   optional
 modules\rosapps\packmgr\lib\package.dll                                    1   optional
-modules\rosapps\ramdrv\ramdrv.sys                                          1   optional
 modules\rosapps\roshttpd\roshttpd.exe                                      1   optional
 modules\rosapps\screenshot\screenshot.exe                                  1   optional
 modules\rosapps\sysutils\chkdsk\chkdsk.exe                                 1   optional
