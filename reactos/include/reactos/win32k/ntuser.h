@@ -167,6 +167,12 @@ typedef struct _WINDOW
     UINT HideAccel : 1;
 } WINDOW, *PWINDOW;
 
+typedef struct _SERVERINFO
+{
+  DWORD SrvEventActivity;
+
+} SERVERINFO, *PSERVERINFO;
+
 typedef struct _W32PROCESSINFO
 {
     PVOID UserHandleTable;
@@ -178,6 +184,8 @@ typedef struct _W32PROCESSINFO
     PWINDOWCLASS SystemClassList;
 
     UINT RegisteredSysClasses : 1;
+
+    PSERVERINFO psi;
 
 } W32PROCESSINFO, *PW32PROCESSINFO;
 
