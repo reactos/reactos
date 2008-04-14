@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <!DOCTYPE group SYSTEM "../../tools/rbuild/project.dtd">
 <group xmlns:xi="http://www.w3.org/2001/XInclude">
-	<directory name="avtest">
-		<xi:include href="avtest/avtest.rbuild" />
+	<directory name="drivers">
+		<xi:include href="drivers/directory.rbuild" />
 	</directory>
 
 	<directory name="applications">
@@ -41,10 +41,6 @@
 		<xi:include href="gettype/gettype.rbuild" />
 	</directory>
 
-	<directory name="green">
-		<xi:include href="green/green.rbuild" />
-	</directory>
-
 	<directory name="imagesoft">
 		<xi:include href="imagesoft/imagesoft.rbuild" />
 	</directory>
@@ -78,10 +74,6 @@
 		<xi:include href="packmgr/directory.rbuild" />
 	</directory>
 	-->
-
-	<directory name="ramdrv">
-		<xi:include href="ramdrv/ramdrv.rbuild" />
-	</directory>
 
 	<directory name="roscalc">
 		<xi:include href="roscalc/roscalc.rbuild" />
