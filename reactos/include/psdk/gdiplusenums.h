@@ -270,6 +270,16 @@ enum ImageCodecFlags
     ImageCodecFlagsUser		        = 262144
 };
 
+enum CombineMode
+{
+    CombineModeReplace,
+    CombineModeIntersect,
+    CombineModeUnion,
+    CombineModeXor,
+    CombineModeExclude,
+    CombineModeComplement
+};
+
 #ifndef __cplusplus
 
 typedef enum Unit Unit;
@@ -299,6 +309,7 @@ typedef enum StringFormatFlags StringFormatFlags;
 typedef enum HotkeyPrefix HotkeyPrefix;
 typedef enum PenAlignment GpPenAlignment;
 typedef enum ImageCodecFlags ImageCodecFlags;
+typedef enum CombineMode CombineMode;
 
 #endif /* end of c typedefs */
 

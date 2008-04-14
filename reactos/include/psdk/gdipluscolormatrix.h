@@ -42,11 +42,18 @@ enum ColorAdjustType
     ColorAdjustTypeAny
 };
 
+struct ColorMap
+{
+    Color oldColor;
+    Color newCOlor;
+};
+
 #ifndef __cplusplus
 
 typedef enum ColorAdjustType ColorAdjustType;
 typedef enum ColorMatrixFlags ColorMatrixFlags;
 typedef struct ColorMatrix ColorMatrix;
+typedef struct ColorMap ColorMap;
 
 #endif  /* end of c typedefs */
 

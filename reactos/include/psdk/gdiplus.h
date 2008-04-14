@@ -34,6 +34,7 @@ namespace Gdiplus
 #include "gdipluspixelformats.h"
 #include "gdiplusmetaheader.h"
 #include "gdiplusimaging.h"
+#include "gdipluscolor.h"
 #include "gdipluscolormatrix.h"
 #include "gdiplusgpstubs.h"
 
@@ -53,6 +54,7 @@ namespace Gdiplus
 #include "gdipluspixelformats.h"
 #include "gdiplusmetaheader.h"
 #include "gdiplusimaging.h"
+#include "gdipluscolor.h"
 #include "gdipluscolormatrix.h"
 #include "gdiplusgpstubs.h"
 
