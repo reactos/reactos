@@ -668,4 +668,5 @@ BEGIN
 	IDS_PICK_ICON_TITLE         "Wybierz ikonê"
 	IDS_PICK_ICON_FILTER        "Pliki ikon(*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0"
 	IDS_OPEN_WITH_FILTER        "Programy\0*.exe\0"
+	IDS_DIRECTORY               "Folder"
 END

@@ -104,6 +104,12 @@ BOOL HCR_MapTypeToValueA(LPCSTR szExtension, LPSTR szFileType, LONG len, BOOL bP
 	  return FALSE;
 	}
 
+	if (RegLoadMUIStringA(hkey, "FriendlyTypeName", szFileType, len, NULL, 0, NULL) == ERROR_SUCCESS)
+	{
+	  RegCloseKey(hkey);
+	  return FALSE;
+	}
+
 	if (RegQueryValueA(hkey, NULL, szFileType, &len))
 	{
 	  RegCloseKey(hkey);
@@ -375,6 +381,12 @@ BOOL HCR_GetClassNameW(REFIID riid, LPWSTR szDest, DWORD len)
 	    if(LoadStringW(shell32_hInstance, IDS_RECYCLEBIN_FOLDER_NAME, szDest, buflen))
 	      ret = TRUE;
 	  }
+	  else if (IsEqualIID(riid, &CLSID_ControlPanel))
+	  {
+	    if(LoadStringW(shell32_hInstance, IDS_CONTROLPANEL, szDest, buflen))
+	      ret = TRUE;
+	  }
+
 	}
 	TRACE("-- %s\n", debugstr_w(szDest));
 	return ret;

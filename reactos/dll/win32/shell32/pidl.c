@@ -44,6 +44,7 @@
 #include "undocshell.h"
 #include "shell32_main.h"
 #include "shlwapi.h"
+#include "shresdef.h"
 
 #include "pidl.h"
 #include "wine/debug.h"
@@ -2229,24 +2230,42 @@ BOOL _ILGetExtension (LPCITEMIDLIST pidl, LPSTR pOut, UINT uOutSize)
  */
 void _ILGetFileType(LPCITEMIDLIST pidl, LPSTR pOut, UINT uOutSize)
 {
+    char sType[64];
+
     if(_ILIsValue(pidl))
     {
         char sTemp[64];
 
         if(uOutSize > 0)
             pOut[0] = 0;
-        if (_ILGetExtension (pidl, sTemp, 64))
+        if (_ILGetExtension (pidl, sType, 64))
         {
-            if (!( HCR_MapTypeToValueA(sTemp, sTemp, 64, TRUE)
-                && HCR_MapTypeToValueA(sTemp, pOut, uOutSize, FALSE )))
+            if (HCR_MapTypeToValueA(sType, sTemp, 64, TRUE))
             {
-                lstrcpynA (pOut, sTemp, uOutSize - 6);
-                strcat (pOut, "-file");
+                /* retrieve description */
+                if(HCR_MapTypeToValueA(sTemp, pOut, uOutSize, FALSE ))
+                    return;
+            }
+            /* display Ext-file as description */
+            strcpy(pOut, sType);
+            strupr(pOut);
+            /* load localized file string */
+            sTemp[0] = '\0';
+            if(LoadStringA(shell32_hInstance, IDS_SHV_COLUMN1, sTemp, 64))
+            {
+                sTemp[63] = '\0';
+                strcat(pOut, "-");
+                strcat(pOut, sTemp);
             }
         }
     }
-    else
-        lstrcpynA(pOut, "Folder", uOutSize);
+    else 
+    {
+        pOut[0] = '\0';
+        LoadStringA(shell32_hInstance, IDS_DIRECTORY, pOut, uOutSize);
+        /* make sure its null terminated */
+        pOut[uOutSize-1] = '\0';
+    }
 }
 
 /*************************************************************************

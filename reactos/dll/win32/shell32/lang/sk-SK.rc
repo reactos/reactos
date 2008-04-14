@@ -668,4 +668,5 @@ BEGIN
 	IDS_PICK_ICON_TITLE         "Choose Icon"
 	IDS_PICK_ICON_FILTER        "Icon Files(*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0"
 	IDS_OPEN_WITH_FILTER        "Executable Files\0*.exe\0"
+	IDS_DIRECTORY               "Folder"
 END
