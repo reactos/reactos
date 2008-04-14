@@ -67,6 +67,7 @@
   <property name="BASEADDRESS_DESKADP" value="0x6d410000" />
   <property name="BASEADDRESS_WLDAP32" value="0x6e130000" />
   <property name="BASEADDRESS_SCHANNEL" value="0x6e360000" />
+  <property name="BASEADDRESS_COMPSTUI" value="0x6ec10000" />
   <property name="BASEADDRESS_CLB" value="0x6f2b0000" />
   <property name="BASEADDRESS_CARDS" value="0x701a0000" />
   <property name="BASEADDRESS_WININET" value="0x70200000" />
@@ -94,6 +95,7 @@
   <property name="BASEADDRESS_SYSSETUP" value="0x74a30000" />
   <property name="BASEADDRESS_POWRPROF" value="0x74ad0000" />
   <property name="BASEADDRESS_MSXML3" value="0x74ae0000" />
+  <property name="BASEADDRESS_PRINTUI" value="0x74b40000" />
   <property name="BASEADDRESS_MMDRV" value="0x74c30000" />
   <property name="BASEADDRESS_OLEDLG" value="0x74d00000" />
   <property name="BASEADDRESS_SAMSRV" value="0x74f30000" />
@@ -122,7 +124,8 @@
   <property name="BASEADDRESS_MPR" value="0x76620000" />
   <property name="BASEADDRESS_SETUPAPI" value="0x76660000" />
   <property name="BASEADDRESS_CRYPTDLL" value="0x76740000" />
-  <property name="BASEADDRESS_SHFOLDER" value="0x76780000" />
+  <property name="BASEADDRESS_SHFOLDER" value="0x76760000" />
+  <property name="BASEADDRESS_NTDSAPI" value="0x76780000" />
   <property name="BASEADDRESS_NTMARTA" value="0x768A0000" />
   <property name="BASEADDRESS_RASDLG" value="0x768d0000" />
   <property name="BASEADDRESS_GDIPLUS" value="0x76a00000" />
