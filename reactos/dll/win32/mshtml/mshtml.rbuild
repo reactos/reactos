@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <group>
-<module name="mshtml" type="win32dll" baseaddress="${BASEADDRESS_MSHTML}" installbase="system32" installname="mshtml.dll" allowwarnings="true" entrypoint="0">
+<module name="mshtml" type="win32dll" baseaddress="${BASEADDRESS_MSHTML}" installbase="system32" installname="mshtml.dll" allowwarnings="true">
 	<autoregister infsection="OleControlDlls" type="Both" />
 	<importlibrary definition="mshtml.spec.def" />
 	<include base="mshtml">.</include>
