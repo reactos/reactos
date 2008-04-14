@@ -52,6 +52,9 @@
 <directory name="comdlg32">
 	<xi:include href="comdlg32/comdlg32.rbuild" />
 </directory>
+<directory name="compstui">
+	<xi:include href="compstui/compstui.rbuild" />
+</directory>
 <directory name="crtdll">
 	<xi:include href="crtdll/crtdll.rbuild" />
 </directory>
@@ -181,6 +184,9 @@
 <directory name="newdev">
 	<xi:include href="newdev/newdev.rbuild" />
 </directory>
+<directory name="ntdsapi">
+	<xi:include href="ntdsapi/ntdsapi.rbuild" />
+</directory>
 <directory name="ntmarta">
 	<xi:include href="ntmarta/ntmarta.rbuild" />
 </directory>
@@ -210,6 +216,9 @@
 </directory>
 <directory name="powrprof">
 	<xi:include href="powrprof/powrprof.rbuild" />
+</directory>
+<directory name="printui">
+	<xi:include href="printui/printui.rbuild" />
 </directory>
 <directory name="psapi">
 	<xi:include href="psapi/psapi.rbuild" />
