@@ -810,7 +810,7 @@ CONFIGRET WINAPI CM_Enumerate_Classes_Ex(
     }
 
     ret = PNP_EnumerateSubKeys(BindingHandle,
-                               PNP_BRANCH_CLASS,
+                               PNP_CLASS_SUBKEYS,
                                ulClassIndex,
                                szBuffer,
                                MAX_GUID_STRING_LEN,
@@ -933,7 +933,7 @@ CONFIGRET WINAPI CM_Enumerate_Enumerators_ExW(
     }
 
     return PNP_EnumerateSubKeys(BindingHandle,
-                                PNP_BRANCH_ENUM,
+                                PNP_ENUMERATOR_SUBKEYS,
                                 ulEnumIndex,
                                 Buffer,
                                 *pulLength,
@@ -1042,7 +1042,7 @@ CONFIGRET WINAPI CM_Get_Child_Ex(
     RPC_BINDING_HANDLE BindingHandle = NULL;
     HSTRING_TABLE StringTable = NULL;
     LPWSTR lpDevInst;
-    DWORD dwIndex;
+    DWORD dwIndex, dwLength = MAX_DEVICE_ID_LEN;
     CONFIGRET ret;
 
     TRACE("%p %lx %lx %lx\n", pdnDevInst, dnDevInst, ulFlags, hMachine);
@@ -1079,10 +1079,10 @@ CONFIGRET WINAPI CM_Get_Child_Ex(
         return CR_INVALID_DEVNODE;
 
     ret = PNP_GetRelatedDeviceInstance(BindingHandle,
-                                       PNP_DEVICE_CHILD,
+                                       PNP_GET_CHILD_DEVICE_INSTANCE,
                                        lpDevInst,
                                        szRelatedDevInst,
-                                       MAX_DEVICE_ID_LEN,
+                                       &dwLength,
                                        0);
     if (ret != CR_SUCCESS)
         return ret;
@@ -2181,8 +2181,8 @@ CONFIGRET WINAPI CM_Get_HW_Prof_Flags_ExW(
             return CR_FAILURE;
     }
 
-    return PNP_HwProfFlags(BindingHandle, PNP_GET_HW_PROFILE_FLAGS, szDevInstName,
-                           ulHardwareProfile, pulValue, 0);
+    return PNP_HwProfFlags(BindingHandle, PNP_GET_HWPROFFLAGS, szDevInstName,
+                           ulHardwareProfile, pulValue, NULL, NULL, 0, 0);
 }
 
 
@@ -2356,7 +2356,7 @@ CONFIGRET WINAPI CM_Get_Parent_Ex(
     RPC_BINDING_HANDLE BindingHandle = NULL;
     HSTRING_TABLE StringTable = NULL;
     LPWSTR lpDevInst;
-    DWORD dwIndex;
+    DWORD dwIndex, dwLength = MAX_DEVICE_ID_LEN;
     CONFIGRET ret;
 
     TRACE("%p %lx %lx %lx\n", pdnDevInst, dnDevInst, ulFlags, hMachine);
@@ -2393,10 +2393,10 @@ CONFIGRET WINAPI CM_Get_Parent_Ex(
         return CR_INVALID_DEVNODE;
 
     ret = PNP_GetRelatedDeviceInstance(BindingHandle,
-                                       PNP_DEVICE_PARENT,
+                                       PNP_GET_PARENT_DEVICE_INSTANCE,
                                        lpDevInst,
                                        szRelatedDevInst,
-                                       MAX_DEVICE_ID_LEN,
+                                       &dwLength,
                                        0);
     if (ret != CR_SUCCESS)
         return ret;
@@ -2434,7 +2434,7 @@ CONFIGRET WINAPI CM_Get_Sibling_Ex(
     RPC_BINDING_HANDLE BindingHandle = NULL;
     HSTRING_TABLE StringTable = NULL;
     LPWSTR lpDevInst;
-    DWORD dwIndex;
+    DWORD dwIndex, dwLength = MAX_DEVICE_ID_LEN;
     CONFIGRET ret;
 
     TRACE("%p %lx %lx %lx\n", pdnDevInst, dnDevInst, ulFlags, hMachine);
@@ -2471,10 +2471,10 @@ CONFIGRET WINAPI CM_Get_Sibling_Ex(
         return CR_INVALID_DEVNODE;
 
     ret = PNP_GetRelatedDeviceInstance(BindingHandle,
-                                       PNP_DEVICE_SIBLING,
+                                       PNP_GET_SIBLING_DEVICE_INSTANCE,
                                        lpDevInst,
                                        szRelatedDevInst,
-                                       MAX_DEVICE_ID_LEN,
+                                       &dwLength,
                                        0);
     if (ret != CR_SUCCESS)
         return ret;
@@ -3407,7 +3407,7 @@ CONFIGRET WINAPI CM_Set_DevNode_Registry_Property_ExW(
                                 lpDevInst,
                                 ulProperty,
                                 ulType,
-                                (char *)Buffer,
+                                (BYTE *)Buffer,
                                 ulLength,
                                 ulFlags);
 }
@@ -3502,8 +3502,8 @@ CONFIGRET WINAPI CM_Set_HW_Prof_Flags_ExW(
             return CR_FAILURE;
     }
 
-    return PNP_HwProfFlags(BindingHandle, PNP_SET_HW_PROFILE_FLAGS, szDevInstName,
-                           ulConfig, &ulValue, 0);
+    return PNP_HwProfFlags(BindingHandle, PNP_SET_HWPROFFLAGS, szDevInstName,
+                           ulConfig, &ulValue, NULL, NULL, 0, 0);
 }
 
 

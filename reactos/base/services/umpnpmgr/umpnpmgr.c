@@ -35,6 +35,7 @@
 #include <umpnpmgr/sysguid.h>
 #include <wdmguid.h>
 #include <cfgmgr32.h>
+#include <regstr.h>
 
 #include <rpc.h>
 #include <rpcdce.h>
@@ -158,37 +159,57 @@ NtStatusToCrError(NTSTATUS Status)
 }
 
 
-/* Function 2 */
-CONFIGRET
-PNP_GetVersion(handle_t BindingHandle,
-               unsigned short *Version)
+/* Function 0 */
+DWORD PNP_Function0(
+    handle_t hBinding)
 {
-    UNREFERENCED_PARAMETER(BindingHandle);
+    UNREFERENCED_PARAMETER(hBinding);
+    UNIMPLEMENTED;
+    return CR_CALL_NOT_IMPLEMENTED;
+}
 
-    *Version = 0x0400;
+
+/* Function 1 */
+DWORD PNP_Function1(
+    handle_t hBinding)
+{
+    UNREFERENCED_PARAMETER(hBinding);
+    UNIMPLEMENTED;
+    return CR_CALL_NOT_IMPLEMENTED;
+}
+
+
+/* Function 2 */
+DWORD PNP_GetVersion(
+    handle_t hBinding,
+    WORD *pVersion)
+{
+    UNREFERENCED_PARAMETER(hBinding);
+
+    *pVersion = 0x0400;
     return CR_SUCCESS;
 }
 
 
 /* Function 3 */
-CONFIGRET
-PNP_GetGlobalState(handle_t BindingHandle,
-                   unsigned long *State,
-                   unsigned long Flags)
+DWORD PNP_GetGlobalState(
+    handle_t hBinding,
+    DWORD *pulState,
+    DWORD ulFlags)
 {
-    UNREFERENCED_PARAMETER(BindingHandle);
-    UNREFERENCED_PARAMETER(Flags);
+    UNREFERENCED_PARAMETER(hBinding);
+    UNREFERENCED_PARAMETER(ulFlags);
 
-    *State = CM_GLOBAL_STATE_CAN_DO_UI | CM_GLOBAL_STATE_SERVICES_AVAILABLE;
+    *pulState = CM_GLOBAL_STATE_CAN_DO_UI | CM_GLOBAL_STATE_SERVICES_AVAILABLE;
     return CR_SUCCESS;
 }
 
 
 /* Function 4 */
-CONFIGRET
-PNP_InitDetection(handle_t BindingHandle)
+DWORD PNP_InitDetection(
+    handle_t hBinding)
 {
-    UNREFERENCED_PARAMETER(BindingHandle);
+    UNREFERENCED_PARAMETER(hBinding);
 
     DPRINT("PNP_InitDetection() called\n");
     return CR_SUCCESS;
@@ -196,14 +217,15 @@ PNP_InitDetection(handle_t BindingHandle)
 
 
 /* Function 5 */
-CONFIGRET
-PNP_ReportLogOn(handle_t BindingHandle,
-                BOOL Admin,
-                DWORD ProcessId)
+DWORD PNP_ReportLogOn(
+    handle_t hBinding,
+    BOOL Admin,
+    DWORD ProcessId)
 {
     HANDLE hProcess;
 
-    UNREFERENCED_PARAMETER(BindingHandle);
+    UNREFERENCED_PARAMETER(hBinding);
+    UNREFERENCED_PARAMETER(Admin);
 
     DPRINT("PNP_ReportLogOn(%u, %u) called\n", Admin, ProcessId);
 
@@ -237,21 +259,22 @@ PNP_ReportLogOn(handle_t BindingHandle,
 
 
 /* Function 6 */
-CONFIGRET
-PNP_ValidateDeviceInstance(handle_t BindingHandle,
-                           wchar_t *DeviceInstance,
-                           DWORD Flags)
+DWORD PNP_ValidateDeviceInstance(
+    handle_t hBinding,
+    LPWSTR pDeviceID,
+    DWORD ulFlags)
 {
     CONFIGRET ret = CR_SUCCESS;
     HKEY hDeviceKey = NULL;
 
-    UNREFERENCED_PARAMETER(BindingHandle);
+    UNREFERENCED_PARAMETER(hBinding);
+    UNREFERENCED_PARAMETER(ulFlags);
 
     DPRINT("PNP_ValidateDeviceInstance(%S %lx) called\n",
-           DeviceInstance, Flags);
+           pDeviceID, ulFlags);
 
     if (RegOpenKeyExW(hEnumKey,
-                      DeviceInstance,
+                      pDeviceID,
                       0,
                       KEY_READ,
                       &hDeviceKey))
@@ -274,24 +297,24 @@ Done:
 
 
 /* Function 7 */
-CONFIGRET
-PNP_GetRootDeviceInstance(handle_t BindingHandle,
-                          wchar_t *DeviceInstance,
-                          DWORD Length)
+DWORD PNP_GetRootDeviceInstance(
+    handle_t hBinding,
+    LPWSTR pDeviceID,
+    PNP_RPC_STRING_LEN ulLength)
 {
     CONFIGRET ret = CR_SUCCESS;
 
-    UNREFERENCED_PARAMETER(BindingHandle);
+    UNREFERENCED_PARAMETER(hBinding);
 
     DPRINT("PNP_GetRootDeviceInstance() called\n");
 
-    if (Length < lstrlenW(szRootDeviceId) + 1)
+    if (ulLength < lstrlenW(szRootDeviceId) + 1)
     {
         ret = CR_BUFFER_SMALL;
         goto Done;
     }
 
-    lstrcpyW(DeviceInstance,
+    lstrcpyW(pDeviceID,
              szRootDeviceId);
 
 Done:
@@ -302,32 +325,32 @@ Done:
 
 
 /* Function 8 */
-CONFIGRET
-PNP_GetRelatedDeviceInstance(handle_t BindingHandle,
-                             DWORD Relationship,
-                             wchar_t *DeviceId,
-                             wchar_t *RelatedDeviceId,
-                             DWORD Length,
-                             DWORD Flags)
+DWORD PNP_GetRelatedDeviceInstance(
+    handle_t hBinding,
+    DWORD ulRelationship,
+    LPWSTR pDeviceID,
+    LPWSTR pRelatedDeviceId,
+    PNP_RPC_STRING_LEN *pulLength,
+    DWORD ulFlags)
 {
     PLUGPLAY_CONTROL_RELATED_DEVICE_DATA PlugPlayData;
     CONFIGRET ret = CR_SUCCESS;
     NTSTATUS Status;
 
-    UNREFERENCED_PARAMETER(BindingHandle);
-    UNREFERENCED_PARAMETER(Flags);
+    UNREFERENCED_PARAMETER(hBinding);
+    UNREFERENCED_PARAMETER(ulFlags);
 
     DPRINT("PNP_GetRelatedDeviceInstance() called\n");
-    DPRINT("  Relationship %ld\n", Relationship);
-    DPRINT("  DeviceId %S\n", DeviceId);
+    DPRINT("  Relationship %ld\n", ulRelationship);
+    DPRINT("  DeviceId %S\n", pDeviceID);
 
     RtlInitUnicodeString(&PlugPlayData.TargetDeviceInstance,
-                         DeviceId);
+                         pDeviceID);
 
-    PlugPlayData.Relation = Relationship;
+    PlugPlayData.Relation = ulRelationship;
 
-    PlugPlayData.RelatedDeviceInstanceLength = Length;
-    PlugPlayData.RelatedDeviceInstance = RelatedDeviceId;
+    PlugPlayData.RelatedDeviceInstanceLength = *pulLength;
+    PlugPlayData.RelatedDeviceInstance = pRelatedDeviceId;
 
     Status = NtPlugPlayControl(PlugPlayControlGetRelatedDevice,
                                (PVOID)&PlugPlayData,
@@ -348,31 +371,31 @@ PNP_GetRelatedDeviceInstance(handle_t BindingHandle,
 
 
 /* Function 9 */
-CONFIGRET
-PNP_EnumerateSubKeys(handle_t BindingHandle,
-                     DWORD Branch,
-                     DWORD Index,
-                     wchar_t *Buffer,
-                     DWORD Length,
-                     DWORD *RequiredLength,
-                     DWORD Flags)
+DWORD PNP_EnumerateSubKeys(
+    handle_t hBinding,
+    DWORD ulBranch,
+    DWORD ulIndex,
+    LPWSTR Buffer,
+    PNP_RPC_STRING_LEN ulLength,
+    PNP_RPC_STRING_LEN *pulRequiredLen,
+    DWORD ulFlags)
 {
     CONFIGRET ret = CR_SUCCESS;
     HKEY hKey;
     DWORD dwError;
 
-    UNREFERENCED_PARAMETER(BindingHandle);
-    UNREFERENCED_PARAMETER(Flags);
+    UNREFERENCED_PARAMETER(hBinding);
+    UNREFERENCED_PARAMETER(ulFlags);
 
     DPRINT("PNP_EnumerateSubKeys() called\n");
 
-    switch (Branch)
+    switch (ulBranch)
     {
-        case PNP_BRANCH_ENUM:
+        case PNP_ENUMERATOR_SUBKEYS:
             hKey = hEnumKey;
             break;
 
-        case PNP_BRANCH_CLASS:
+        case PNP_CLASS_SUBKEYS:
             hKey = hClassKey;
             break;
 
@@ -380,11 +403,11 @@ PNP_EnumerateSubKeys(handle_t BindingHandle,
             return CR_FAILURE;
     }
 
-    *RequiredLength = Length;
+    *pulRequiredLen = ulLength;
     dwError = RegEnumKeyExW(hKey,
-                            Index,
+                            ulIndex,
                             Buffer,
-                            RequiredLength,
+                            pulRequiredLen,
                             NULL,
                             NULL,
                             NULL,
@@ -395,7 +418,7 @@ PNP_EnumerateSubKeys(handle_t BindingHandle,
     }
     else
     {
-        (*RequiredLength)++;
+        (*pulRequiredLen)++;
     }
 
     DPRINT("PNP_EnumerateSubKeys() done (returns %lx)\n", ret);
@@ -404,51 +427,56 @@ PNP_EnumerateSubKeys(handle_t BindingHandle,
 }
 
 
-/* Function 11 */
-CONFIGRET
-PNP_GetDeviceListSize(handle_t BindingHandle,
-                      wchar_t *Filter,
-                      unsigned long *Length,
-                      DWORD Flags)
+/* Function 10 */
+DWORD PNP_GetDeviceList(
+    handle_t hBinding,
+    LPWSTR pszFilter,
+    LPWSTR Buffer,
+    PNP_RPC_STRING_LEN *pulLength,
+    DWORD ulFlags)
 {
-    UNREFERENCED_PARAMETER(BindingHandle);
-    UNREFERENCED_PARAMETER(Filter);
-    UNREFERENCED_PARAMETER(Flags);
+    UNIMPLEMENTED;
+    return CR_CALL_NOT_IMPLEMENTED;
+}
 
-    DPRINT("PNP_GetDeviceListSize() called\n");
 
-    /* FIXME */
-    *Length = 2;
-
-    return CR_SUCCESS;
+/* Function 11 */
+DWORD PNP_GetDeviceListSize(
+    handle_t hBinding,
+    LPWSTR pszFilter,
+    PNP_RPC_BUFFER_SIZE *pulLen,
+    DWORD ulFlags)
+{
+    UNIMPLEMENTED;
+    return CR_CALL_NOT_IMPLEMENTED;
 }
 
 
 /* Function 12 */
-CONFIGRET
-PNP_GetDepth(handle_t BindingHandle,
-             wchar_t *DeviceInstance,
-             unsigned long *Depth,
-             DWORD Flags)
+DWORD PNP_GetDepth(
+    handle_t hBinding,
+    LPWSTR pszDeviceID,
+    DWORD *pulDepth,
+    DWORD ulFlags)
 {
     PLUGPLAY_CONTROL_DEPTH_DATA PlugPlayData;
     CONFIGRET ret = CR_SUCCESS;
     NTSTATUS Status;
 
-    UNREFERENCED_PARAMETER(BindingHandle);
-    UNREFERENCED_PARAMETER(Flags);
+    UNREFERENCED_PARAMETER(hBinding);
+    UNREFERENCED_PARAMETER(ulFlags);
 
     DPRINT("PNP_GetDepth() called\n");
 
     RtlInitUnicodeString(&PlugPlayData.DeviceInstance,
-                         DeviceInstance);
+                         pszDeviceID);
 
     Status = NtPlugPlayControl(PlugPlayControlGetDeviceDepth,
                                (PVOID)&PlugPlayData,
                                sizeof(PLUGPLAY_CONTROL_DEPTH_DATA));
     if (NT_SUCCESS(Status))
     {
-        *Depth = PlugPlayData.Depth;
+        *pulDepth = PlugPlayData.Depth;
     }
     else
     {
@@ -462,15 +490,15 @@ PNP_GetDepth(handle_t BindingHandle,
 
 
 /* Function 13 */
-CONFIGRET
-PNP_GetDeviceRegProp(handle_t BindingHandle,
-                     wchar_t *DeviceInstance,
-                     DWORD Property,
-                     DWORD *DataType,
-                     char *Buffer,
-                     DWORD *TransferLen,
-                     DWORD *Length,
-                     DWORD Flags)
+DWORD PNP_GetDeviceRegProp(
+    handle_t hBinding,
+    LPWSTR pDeviceID,
+    DWORD ulProperty,
+    DWORD *pulRegDataType,
+    BYTE *Buffer,
+    PNP_PROP_SIZE *pulTransferLen,
+    PNP_PROP_SIZE *pulLength,
+    DWORD ulFlags)
 {
     PLUGPLAY_CONTROL_PROPERTY_DATA PlugPlayData;
     CONFIGRET ret = CR_SUCCESS;
@@ -478,12 +506,12 @@ PNP_GetDeviceRegProp(handle_t BindingHandle,
     HKEY hKey = 0;
     NTSTATUS Status;
 
-    UNREFERENCED_PARAMETER(BindingHandle);
-    UNREFERENCED_PARAMETER(Flags);
+    UNREFERENCED_PARAMETER(hBinding);
+    UNREFERENCED_PARAMETER(ulFlags);
 
     DPRINT("PNP_GetDeviceRegProp() called\n");
 
-    switch (Property)
+    switch (ulProperty)
     {
         case CM_DRP_DEVICEDESC:
             lpValueName = L"DeviceDesc";
@@ -575,7 +603,7 @@ PNP_GetDeviceRegProp(handle_t BindingHandle,
     {
         /* Retrieve information from the Registry */
         if (RegOpenKeyExW(hEnumKey,
-                          DeviceInstance,
+                          pDeviceID,
                           0,
                           KEY_ALL_ACCESS,
                           &hKey))
@@ -584,9 +612,9 @@ PNP_GetDeviceRegProp(handle_t BindingHandle,
         if (RegQueryValueExW(hKey,
                              lpValueName,
                              NULL,
-                             DataType,
-                             (LPBYTE)Buffer,
-                             Length))
+                             pulRegDataType,
+                             Buffer,
+                             pulLength))
             ret = CR_REGISTRY_ERROR;
 
         /* FIXME: Check buffer size */
@@ -597,11 +625,11 @@ PNP_GetDeviceRegProp(handle_t BindingHandle,
     {
         /* Retrieve information from the Device Node */
         RtlInitUnicodeString(&PlugPlayData.DeviceInstance,
-                             DeviceInstance);
+                             pDeviceID);
         PlugPlayData.Buffer = Buffer;
-        PlugPlayData.BufferSize = *TransferLen;
+        PlugPlayData.BufferSize = *pulTransferLen;
 
-        switch (Property)
+        switch (ulProperty)
         {
 #if 0
             case CM_DRP_PHYSICAL_DEVICE_OBJECT_NAME:
@@ -638,7 +666,7 @@ PNP_GetDeviceRegProp(handle_t BindingHandle,
                                    sizeof(PLUGPLAY_CONTROL_PROPERTY_DATA));
         if (NT_SUCCESS(Status))
         {
-            *Length = PlugPlayData.BufferSize;
+            *pulLength = PlugPlayData.BufferSize;
         }
         else
         {
@@ -653,30 +681,30 @@ PNP_GetDeviceRegProp(handle_t BindingHandle,
 
 
 /* Function 14 */
-CONFIGRET
-PNP_SetDeviceRegProp(handle_t BindingHandle,
-                     wchar_t *DeviceId,
-                     unsigned long Property,
-                     unsigned long DataType,
-                     char *Buffer,
-                     unsigned long Length,
-                     unsigned long Flags)
+DWORD PNP_SetDeviceRegProp(
+    handle_t hBinding,
+    LPWSTR pDeviceId,
+    DWORD ulProperty,
+    DWORD ulDataType,
+    BYTE *Buffer,
+    PNP_PROP_SIZE ulLength,
+    DWORD ulFlags)
 {
     CONFIGRET ret = CR_SUCCESS;
     LPWSTR lpValueName = NULL;
     HKEY hKey = 0;
 
-    UNREFERENCED_PARAMETER(BindingHandle);
-    UNREFERENCED_PARAMETER(Flags);
+    UNREFERENCED_PARAMETER(hBinding);
+    UNREFERENCED_PARAMETER(ulFlags);
 
     DPRINT("PNP_SetDeviceRegProp() called\n");
 
-    DPRINT("DeviceId: %S\n", DeviceId);
-    DPRINT("Property: %lu\n", Property);
-    DPRINT("DataType: %lu\n", DataType);
-    DPRINT("Length: %lu\n", Length);
+    DPRINT("DeviceId: %S\n", pDeviceId);
+    DPRINT("Property: %lu\n", ulProperty);
+    DPRINT("DataType: %lu\n", ulDataType);
+    DPRINT("Length: %lu\n", ulLength);
 
-    switch (Property)
+    switch (ulProperty)
     {
         case CM_DRP_DEVICEDESC:
             lpValueName = L"DeviceDesc";
@@ -737,13 +765,13 @@ PNP_SetDeviceRegProp(handle_t BindingHandle,
     DPRINT("Value name: %S\n", lpValueName);
 
     if (RegOpenKeyExW(hEnumKey,
-                      DeviceId,
+                      pDeviceId,
                       0,
-                      KEY_ALL_ACCESS,
+                      KEY_ALL_ACCESS, /* FIXME: so much? */
                       &hKey))
         return CR_INVALID_DEVNODE;
 
-    if (Length == 0)
+    if (ulLength == 0)
     {
         if (RegDeleteValueW(hKey,
                             lpValueName))
@@ -754,9 +782,9 @@ PNP_SetDeviceRegProp(handle_t BindingHandle,
         if (RegSetValueExW(hKey,
                            lpValueName,
                            0,
-                           DataType,
-                           (const BYTE*)Buffer,
-                           Length))
+                           ulDataType,
+                           Buffer,
+                           ulLength))
             ret = CR_REGISTRY_ERROR;
     }
 
@@ -769,87 +797,56 @@ PNP_SetDeviceRegProp(handle_t BindingHandle,
 
 
 /* Function 15 */
-CONFIGRET
-PNP_GetClassInstance(handle_t BindingHandle,
-                     wchar_t *DeviceId, /* in */
-                     wchar_t *Buffer, /* out */
-                     unsigned long Length)
+DWORD PNP_GetClassInstance(
+    handle_t hBinding,
+    LPWSTR pDeviceId,
+    LPWSTR pszClassInstance,
+    PNP_RPC_STRING_LEN ulLength)
 {
-    CONFIGRET ret = CR_SUCCESS;
-
-    UNREFERENCED_PARAMETER(BindingHandle);
-    UNREFERENCED_PARAMETER(DeviceId);
-    UNREFERENCED_PARAMETER(Buffer);
-    UNREFERENCED_PARAMETER(Length);
-
-    DPRINT("PNP_Get_Class_Instance() called\n");
-
-    DPRINT("PNP_Get_Class_Instance() done (returns %lx)\n", ret);
-
-    return ret;
+    UNIMPLEMENTED;
+    return CR_CALL_NOT_IMPLEMENTED;
 }
 
 
 /* Function 16 */
-CONFIGRET
-PNP_CreateKey(handle_t BindingHandle,
-              wchar_t *SubKey,
-              unsigned long samDesired,
-              unsigned long Flags)
+DWORD PNP_CreateKey(
+    handle_t hBinding,
+    LPWSTR pszSubKey,
+    DWORD samDesired,
+    DWORD ulFlags)
 {
-    CONFIGRET ret = CR_SUCCESS;
-
-    UNREFERENCED_PARAMETER(BindingHandle);
-    UNREFERENCED_PARAMETER(SubKey);
-    UNREFERENCED_PARAMETER(samDesired);
-    UNREFERENCED_PARAMETER(Flags);
-
-    DPRINT("PNP_CreateKey() called\n");
-
-    DPRINT("PNP_CreateKey() done (returns %lx)\n", ret);
-
-    return ret;
+    UNIMPLEMENTED;
+    return CR_CALL_NOT_IMPLEMENTED;
 }
 
 
 /* Function 17 */
-CONFIGRET
-PNP_DeleteRegistryKey(handle_t BindingHandle,
-                      wchar_t *DeviceId,
-                      wchar_t *ParentKey,
-                      wchar_t *ChildKey,
-                      unsigned long Flags)
+DWORD PNP_DeleteRegistryKey(
+    handle_t hBinding,
+    LPWSTR pszDeviceID,
+    LPWSTR pszParentKey,
+    LPWSTR pszChildKey,
+    DWORD ulFlags)
 {
-    CONFIGRET ret = CR_SUCCESS;
-
-    UNREFERENCED_PARAMETER(BindingHandle);
-    UNREFERENCED_PARAMETER(DeviceId);
-    UNREFERENCED_PARAMETER(ParentKey);
-    UNREFERENCED_PARAMETER(ChildKey);
-    UNREFERENCED_PARAMETER(Flags);
-
-    DPRINT("PNP_DeleteRegistryKey() called\n");
-
-    DPRINT("PNP_DeleteRegistryKey() done (returns %lx)\n", ret);
-
-    return ret;
+    UNIMPLEMENTED;
+    return CR_CALL_NOT_IMPLEMENTED;
 }
 
 
 /* Function 18 */
-#if 0
-CONFIGRET
-PNP_GetClassCount(handle_t BindingHandle,
-                  unsigned long *ClassCount,
-                  unsigned long Flags)
+DWORD PNP_GetClassCount(
+    handle_t hBinding,
+    DWORD *pulClassCount,
+    DWORD ulFlags)
 {
-    HANDLE hKey = NULL;
+    HKEY hKey;
     DWORD dwError;
 
-    UNREFERENCED_PARAMETER(BindingHandle);
+    UNREFERENCED_PARAMETER(hBinding);
+    UNREFERENCED_PARAMETER(ulFlags);
 
     dwError = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
-                            pszRegPathClass,
+                            REGSTR_PATH_CLASS,
                             0,
                             KEY_QUERY_VALUE,
                             &hKey);
@@ -860,7 +857,7 @@ PNP_GetClassCount(handle_t BindingHandle,
                                NULL,
                                NULL,
                                NULL,
-                               &ClassCount,
+                               pulClassCount,
                                NULL,
                                NULL,
                                NULL,
@@ -874,31 +871,30 @@ PNP_GetClassCount(handle_t BindingHandle,
 
     return CR_SUCCESS;
 }
-#endif
 
 
 /* Function 19 */
-CONFIGRET
-PNP_GetClassName(handle_t BindingHandle,
-                 wchar_t *ClassGuid,
-                 wchar_t *Buffer,
-                 unsigned long *Length,
-                 unsigned long Flags)
+DWORD PNP_GetClassName(
+    handle_t hBinding,
+    LPWSTR pszClassGuid,
+    LPWSTR Buffer,
+    PNP_RPC_STRING_LEN *pulLength,
+    DWORD ulFlags)
 {
     WCHAR szKeyName[MAX_PATH];
     CONFIGRET ret = CR_SUCCESS;
-    HKEY hKey = NULL;
+    HKEY hKey;
     DWORD dwSize;
 
-    UNREFERENCED_PARAMETER(BindingHandle);
-    UNREFERENCED_PARAMETER(Flags);
+    UNREFERENCED_PARAMETER(hBinding);
+    UNREFERENCED_PARAMETER(ulFlags);
 
     DPRINT("PNP_GetClassName() called\n");
 
     lstrcpyW(szKeyName, L"System\\CurrentControlSet\\Control\\Class");
     lstrcatW(szKeyName, L"\\");
-    if(lstrlenW(ClassGuid) < sizeof(szKeyName)/sizeof(WCHAR)-lstrlenW(szKeyName))
-        lstrcatW(szKeyName, ClassGuid);
+    if(lstrlenW(pszClassGuid) < sizeof(szKeyName)/sizeof(WCHAR)-lstrlenW(szKeyName))
+        lstrcatW(szKeyName, pszClassGuid);
     else return CR_INVALID_DATA;
 
     if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
@@ -908,7 +904,7 @@ PNP_GetClassName(handle_t BindingHandle,
                       &hKey))
         return CR_REGISTRY_ERROR;
 
-    dwSize = *Length * sizeof(WCHAR);
+    dwSize = *pulLength * sizeof(WCHAR);
     if (RegQueryValueExW(hKey,
                          L"Class",
                          NULL,
@@ -916,12 +912,12 @@ PNP_GetClassName(handle_t BindingHandle,
                          (LPBYTE)Buffer,
                          &dwSize))
     {
-        *Length = 0;
+        *pulLength = 0;
         ret = CR_REGISTRY_ERROR;
     }
     else
     {
-        *Length = dwSize / sizeof(WCHAR);
+        *pulLength = dwSize / sizeof(WCHAR);
     }
 
     RegCloseKey(hKey);
@@ -933,25 +929,25 @@ PNP_GetClassName(handle_t BindingHandle,
 
 
 /* Function 20 */
-CONFIGRET
-PNP_DeleteClassKey(handle_t BindingHandle,
-                   wchar_t *ClassGuid,
-                   unsigned long Flags)
+DWORD PNP_DeleteClassKey(
+    handle_t hBinding,
+    LPWSTR pszClassGuid,
+    DWORD ulFlags)
 {
     CONFIGRET ret = CR_SUCCESS;
 
-    UNREFERENCED_PARAMETER(BindingHandle);
+    UNREFERENCED_PARAMETER(hBinding);
 
-    DPRINT("PNP_GetClassName(%S, %lx) called\n", ClassGuid, Flags);
+    DPRINT("PNP_GetClassName(%S, %lx) called\n", pszClassGuid, ulFlags);
 
-    if (Flags & CM_DELETE_CLASS_SUBKEYS)
+    if (ulFlags & CM_DELETE_CLASS_SUBKEYS)
     {
-        if (RegDeleteTreeW(hClassKey, ClassGuid) != ERROR_SUCCESS)
+        if (RegDeleteTreeW(hClassKey, pszClassGuid) != ERROR_SUCCESS)
             ret = CR_REGISTRY_ERROR;
     }
     else
     {
-        if (RegDeleteKeyW(hClassKey, ClassGuid) != ERROR_SUCCESS)
+        if (RegDeleteKeyW(hClassKey, pszClassGuid) != ERROR_SUCCESS)
             ret = CR_REGISTRY_ERROR;
     }
 
@@ -961,81 +957,161 @@ PNP_DeleteClassKey(handle_t BindingHandle,
 }
 
 
-/* Function 28 */
-CONFIGRET
-PNP_CreateDevInst(handle_t BindingHandle,
-                  wchar_t *DeviceId,       /* [in, out, string, size_is(Length)] */
-                  wchar_t *ParentDeviceId, /* [in, string] */
-                  unsigned long Length,    /* [in] */
-                  unsigned long Flags)     /* [in] */
+/* Function 21 */
+DWORD PNP_GetInterfaceDeviceAlias(
+    handle_t hBinding,
+    LPWSTR pszInterfaceDevice,
+    GUID *AliasInterfaceGuid,
+    LPWSTR pszAliasInterfaceDevice,
+    PNP_RPC_STRING_LEN *pulLength,
+    PNP_RPC_STRING_LEN *pulTransferLen,
+    DWORD ulFlags)
 {
-    CONFIGRET ret = CR_CALL_NOT_IMPLEMENTED;
+    UNIMPLEMENTED;
+    return CR_CALL_NOT_IMPLEMENTED;
+}
 
-    UNREFERENCED_PARAMETER(BindingHandle);
-    UNREFERENCED_PARAMETER(DeviceId);
-    UNREFERENCED_PARAMETER(ParentDeviceId);
-    UNREFERENCED_PARAMETER(Length);
-    UNREFERENCED_PARAMETER(Flags);
 
-    DPRINT1("PNP_CreateDevInst() called\n");
+/* Function 22 */
+DWORD PNP_GetInterfaceDeviceList(
+    handle_t hBinding,
+    GUID *InterfaceGuid,
+    LPWSTR pszDeviceID,
+    BYTE *Buffer,
+    PNP_RPC_BUFFER_SIZE *pulLength,
+    DWORD ulFlags)
+{
+    UNIMPLEMENTED;
+    return CR_CALL_NOT_IMPLEMENTED;
+}
 
-    DPRINT1("PNP_CreateDevInst() done (returns %lx)\n", ret);
 
-    return ret;
+/* Function 23 */
+DWORD PNP_GetInterfaceDeviceListSize(
+    handle_t hBinding,
+    PNP_RPC_BUFFER_SIZE *pulLen,
+    GUID *InterfaceGuid,
+    LPWSTR pszDeviceID,
+    DWORD ulFlags)
+{
+    UNIMPLEMENTED;
+    return CR_CALL_NOT_IMPLEMENTED;
+}
+
+
+/* Function 24 */
+DWORD PNP_RegisterDeviceClassAssociation(
+    handle_t hBinding,
+    LPWSTR pszDeviceID,
+    GUID *InterfaceGuid,
+    LPWSTR pszReference,
+    LPWSTR pszSymLink,
+    PNP_RPC_STRING_LEN *pulLength,
+    PNP_RPC_STRING_LEN *pulTransferLen,
+    DWORD ulFlags)
+{
+    UNIMPLEMENTED;
+    return CR_CALL_NOT_IMPLEMENTED;
+}
+
+
+/* Function 25 */
+DWORD PNP_UnregisterDeviceClassAssociation(
+    handle_t hBinding,
+    LPWSTR pszInterfaceDevice,
+    DWORD ulFlags)
+{
+    UNIMPLEMENTED;
+    return CR_CALL_NOT_IMPLEMENTED;
+}
+
+
+/* Function 26 */
+DWORD PNP_GetClassRegProp(
+    handle_t hBinding,
+    LPWSTR pszClassGuid,
+    DWORD ulProperty,
+    DWORD *pulRegDataType,
+    BYTE *Buffer,
+    PNP_RPC_STRING_LEN *pulTransferLen,
+    PNP_RPC_STRING_LEN *pulLength,
+    DWORD ulFlags)
+{
+    UNIMPLEMENTED;
+    return CR_CALL_NOT_IMPLEMENTED;
+}
+
+
+/* Function 27 */
+DWORD PNP_SetClassRegProp(
+    handle_t hBinding,
+    LPWSTR *pszClassGuid,
+    DWORD ulProperty,
+    DWORD ulDataType,
+    BYTE *Buffer,
+    PNP_PROP_SIZE ulLength,
+    DWORD ulFlags)
+{
+    UNIMPLEMENTED;
+    return CR_CALL_NOT_IMPLEMENTED;
+}
+
+
+/* Function 28 */
+DWORD PNP_CreateDevInst(
+    handle_t hBinding,
+    LPWSTR pszDeviceID,
+    LPWSTR pszParentDeviceID,
+    PNP_RPC_STRING_LEN ulLength,
+    DWORD ulFlags)
+{
+    UNIMPLEMENTED;
+    return CR_CALL_NOT_IMPLEMENTED;
 }
 
 
 /* Function 29 */
-CONFIGRET
-PNP_DeviceInstanceAction(handle_t BindingHandle,
-                         unsigned long MajorAction,
-                         unsigned long MinorAction,
-                         wchar_t *DeviceInstance1,
-                         wchar_t *DeviceInstance2)
+#define PNP_DEVINST_SETUP       0x3
+#define PNP_DEVINST_ENABLE      0x4
+#define PNP_DEVINST_REENUMERATE 0x7
+DWORD PNP_DeviceInstanceAction(
+    handle_t hBinding,
+    DWORD ulMajorAction,
+    DWORD ulMinorAction,
+    LPWSTR pszDeviceInstance1,
+    LPWSTR pszDeviceInstance2)
 {
     CONFIGRET ret = CR_SUCCESS;
 
-    UNREFERENCED_PARAMETER(BindingHandle);
-    UNREFERENCED_PARAMETER(MinorAction);
-    UNREFERENCED_PARAMETER(DeviceInstance1);
-    UNREFERENCED_PARAMETER(DeviceInstance2);
+    UNREFERENCED_PARAMETER(hBinding);
+    UNREFERENCED_PARAMETER(ulMinorAction);
+    UNREFERENCED_PARAMETER(pszDeviceInstance1);
+    UNREFERENCED_PARAMETER(pszDeviceInstance2);
 
     DPRINT("PNP_DeviceInstanceAction() called\n");
 
-    switch (MajorAction)
+    switch (ulMajorAction)
     {
-        case 2:
-            DPRINT("Move device instance\n");
-            /* FIXME */
-            ret = CR_CALL_NOT_IMPLEMENTED;
-            break;
-
-        case 3:
+        case PNP_DEVINST_SETUP:
             DPRINT("Setup device instance\n");
             /* FIXME */
             ret = CR_CALL_NOT_IMPLEMENTED;
             break;
 
-        case 4:
+        case PNP_DEVINST_ENABLE:
             DPRINT("Enable device instance\n");
             /* FIXME */
             ret = CR_CALL_NOT_IMPLEMENTED;
             break;
 
-        case 5:
-            DPRINT("Disable device instance\n");
-            /* FIXME */
-            ret = CR_CALL_NOT_IMPLEMENTED;
-            break;
-
-        case 7:
+        case PNP_DEVINST_REENUMERATE:
             DPRINT("Reenumerate device instance\n");
             /* FIXME */
             ret = CR_CALL_NOT_IMPLEMENTED;
             break;
 
         default:
-            DPRINT1("Unknown function %lu\n", MajorAction);
+            DPRINT1("Unknown function %lu\n", ulMajorAction);
             ret = CR_CALL_NOT_IMPLEMENTED;
     }
 
@@ -1046,24 +1122,24 @@ PNP_DeviceInstanceAction(handle_t BindingHandle,
 
 
 /* Function 30 */
-CONFIGRET
-PNP_GetDeviceStatus(handle_t BindingHandle,
-                    wchar_t *DeviceInstance,
-                    unsigned long *pStatus,
-                    unsigned long *pProblem,
-                    DWORD Flags)
+DWORD PNP_GetDeviceStatus(
+    handle_t hBinding,
+    LPWSTR pDeviceID,
+    DWORD *pulStatus,
+    DWORD *pulProblem,
+    DWORD ulFlags)
 {
     PLUGPLAY_CONTROL_STATUS_DATA PlugPlayData;
     CONFIGRET ret = CR_SUCCESS;
     NTSTATUS Status;
 
-    UNREFERENCED_PARAMETER(BindingHandle);
-    UNREFERENCED_PARAMETER(Flags);
+    UNREFERENCED_PARAMETER(hBinding);
+    UNREFERENCED_PARAMETER(ulFlags);
 
     DPRINT("PNP_GetDeviceStatus() called\n");
 
     RtlInitUnicodeString(&PlugPlayData.DeviceInstance,
-                         DeviceInstance);
+                         pDeviceID);
     PlugPlayData.Operation = 0; /* Get status */
 
     Status = NtPlugPlayControl(PlugPlayControlDeviceStatus,
@@ -1071,8 +1147,8 @@ PNP_GetDeviceStatus(handle_t BindingHandle,
                                sizeof(PLUGPLAY_CONTROL_STATUS_DATA));
     if (NT_SUCCESS(Status))
     {
-        *pStatus = PlugPlayData.DeviceStatus;
-        *pProblem = PlugPlayData.DeviceProblem;
+        *pulStatus = PlugPlayData.DeviceStatus;
+        *pulProblem = PlugPlayData.DeviceProblem;
     }
     else
     {
@@ -1086,48 +1162,38 @@ PNP_GetDeviceStatus(handle_t BindingHandle,
 
 
 /* Function 31 */
-CONFIGRET
-PNP_SetDeviceProblem(handle_t BindingHandle,
-                     wchar_t *DeviceInstance,
-                     unsigned long Problem,
-                     DWORD Flags)
+DWORD PNP_SetDeviceProblem(
+    handle_t hBinding,
+    LPWSTR pDeviceID,
+    DWORD ulProblem,
+    DWORD ulFlags)
 {
-    CONFIGRET ret = CR_SUCCESS;
-
-    UNREFERENCED_PARAMETER(BindingHandle);
-    UNREFERENCED_PARAMETER(DeviceInstance);
-    UNREFERENCED_PARAMETER(Problem);
-    UNREFERENCED_PARAMETER(Flags);
-
-    DPRINT1("PNP_SetDeviceProblem() called\n");
-
-    /* FIXME */
-
-    DPRINT1("PNP_SetDeviceProblem() done (returns %lx)\n", ret);
-
-    return ret;
+    UNIMPLEMENTED;
+    return CR_CALL_NOT_IMPLEMENTED;
 }
 
 
-/* Function 33 */
-CONFIGRET
-PNP_UninstallDevInst(handle_t BindingHandle,
-                     wchar_t *DeviceInstance,
-                     DWORD Flags)
+/* Function 32 */
+DWORD PNP_DisableDevInst(
+    handle_t hBinding,
+    LPWSTR pDeviceID,
+    PPNP_VETO_TYPE pVetoType,
+    LPWSTR pszVetoName,
+    DWORD ulNameLength,
+    DWORD ulFlags)
 {
-    CONFIGRET ret = CR_SUCCESS;
+    UNIMPLEMENTED;
+    return CR_CALL_NOT_IMPLEMENTED;
+}
 
-    UNREFERENCED_PARAMETER(BindingHandle);
-    UNREFERENCED_PARAMETER(DeviceInstance);
-    UNREFERENCED_PARAMETER(Flags);
-
-    DPRINT1("PNP_UninstallDevInst() called\n");
-
-    /* FIXME */
-
-    DPRINT1("PNP_UninstallDevInst() done (returns %lx)\n", ret);
-
-    return ret;
+/* Function 33 */
+DWORD PNP_UninstallDevInst(
+    handle_t hBinding,
+    LPWSTR pDeviceID,
+    DWORD ulFlags)
+{
+    UNIMPLEMENTED;
+    return CR_CALL_NOT_IMPLEMENTED;
 }
 
 
@@ -1174,11 +1240,11 @@ AppendDeviceId(LPWSTR lpDeviceIdList,
 
 
 /* Function 34 */
-CONFIGRET
-PNP_AddID(handle_t BindingHandle,
-          wchar_t *DeviceInstance,
-          wchar_t *DeviceId,
-          DWORD Flags)
+DWORD PNP_AddID(
+    handle_t hBinding,
+    LPWSTR pszDeviceID,
+    LPWSTR pszID,
+    DWORD ulFlags)
 {
     CONFIGRET ret = CR_SUCCESS;
     HKEY hDeviceKey;
@@ -1186,15 +1252,15 @@ PNP_AddID(handle_t BindingHandle,
     DWORD dwDeviceIdListSize;
     WCHAR szDeviceIdList[512];
 
-    UNREFERENCED_PARAMETER(BindingHandle);
+    UNREFERENCED_PARAMETER(hBinding);
 
     DPRINT("PNP_AddID() called\n");
-    DPRINT("  DeviceInstance: %S\n", DeviceInstance);
-    DPRINT("  DeviceId: %S\n", DeviceId);
-    DPRINT("  Flags: %lx\n", Flags);
+    DPRINT("  DeviceInstance: %S\n", pszDeviceID);
+    DPRINT("  DeviceId: %S\n", pszID);
+    DPRINT("  Flags: %lx\n", ulFlags);
 
     if (RegOpenKeyExW(hEnumKey,
-                      DeviceInstance,
+                      pszDeviceID,
                       0,
                       KEY_QUERY_VALUE | KEY_SET_VALUE,
                       &hDeviceKey) != ERROR_SUCCESS)
@@ -1203,7 +1269,7 @@ PNP_AddID(handle_t BindingHandle,
         return CR_INVALID_DEVNODE;
     }
 
-    pszSubKey = (Flags & CM_ADD_ID_COMPATIBLE) ? L"CompatibleIDs" : L"HardwareID";
+    pszSubKey = (ulFlags & CM_ADD_ID_COMPATIBLE) ? L"CompatibleIDs" : L"HardwareID";
 
     dwDeviceIdListSize = 512 * sizeof(WCHAR);
     if (RegQueryValueExW(hDeviceKey,
@@ -1219,7 +1285,7 @@ PNP_AddID(handle_t BindingHandle,
     }
 
     /* Check whether the device ID is already in use */
-    if (CheckForDeviceId(szDeviceIdList, DeviceId))
+    if (CheckForDeviceId(szDeviceIdList, pszDeviceID))
     {
         DPRINT("Device ID was found in the ID string!\n");
         ret = CR_SUCCESS;
@@ -1227,7 +1293,7 @@ PNP_AddID(handle_t BindingHandle,
     }
 
     /* Append the Device ID */
-    AppendDeviceId(szDeviceIdList, &dwDeviceIdListSize, DeviceId);
+    AppendDeviceId(szDeviceIdList, &dwDeviceIdListSize, pszID);
 
     if (RegSetValueExW(hDeviceKey,
                        pszSubKey,
@@ -1249,9 +1315,47 @@ Done:
 }
 
 
+/* Function 35 */
+DWORD PNP_RegisterDriver(
+    handle_t hBinding,
+    LPWSTR pszDeviceID,
+    DWORD ulFlags)
+{
+    UNIMPLEMENTED;
+    return CR_CALL_NOT_IMPLEMENTED;
+}
+
+
+/* Function 36 */
+DWORD PNP_QueryRemove(
+    handle_t hBinding,
+    LPWSTR pszDeviceID,
+    PPNP_VETO_TYPE pVetoType,
+    LPWSTR pszVetoName,
+    DWORD ulNameLength,
+    DWORD ulFlags)
+{
+    UNIMPLEMENTED;
+    return CR_CALL_NOT_IMPLEMENTED;
+}
+
+
+/* Function 37 */
+DWORD PNP_RequestDeviceEject(
+    handle_t hBinding,
+    LPWSTR pszDeviceID,
+    PPNP_VETO_TYPE pVetoType,
+    LPWSTR pszVetoName,
+    DWORD ulNameLength,
+    DWORD ulFlags)
+{
+    UNIMPLEMENTED;
+    return CR_CALL_NOT_IMPLEMENTED;
+}
+
 /* Function 38 */
 CONFIGRET
-PNP_IsDockStationPresent(handle_t BindingHandle,
+PNP_IsDockStationPresent(handle_t hBinding,
                          BOOL *Present)
 {
     HKEY hKey;
@@ -1260,7 +1364,7 @@ PNP_IsDockStationPresent(handle_t BindingHandle,
     DWORD dwSize;
     CONFIGRET ret = CR_SUCCESS;
 
-    UNREFERENCED_PARAMETER(BindingHandle);
+    UNREFERENCED_PARAMETER(hBinding);
 
     DPRINT1("PNP_IsDockStationPresent() called\n");
 
@@ -1303,189 +1407,397 @@ PNP_IsDockStationPresent(handle_t BindingHandle,
 
 
 /* Function 39 */
-CONFIGRET
-PNP_RequestEjectPC(handle_t BindingHandle)
+DWORD PNP_RequestEjectPC(
+    handle_t hBinding)
 {
-    CONFIGRET ret = CR_SUCCESS;
-
-    UNREFERENCED_PARAMETER(BindingHandle);
-
-    DPRINT1("PNP_RequestEjectPC() called\n");
-
-    ret = CR_FAILURE; /* FIXME */
-
-    DPRINT1("PNP_RequestEjectPC() done (returns %lx)\n", ret);
-
-    return ret;
+    UNIMPLEMENTED;
+    return CR_CALL_NOT_IMPLEMENTED;
 }
 
 
 /* Function 40 */
-CONFIGRET
-PNP_HwProfFlags(handle_t BindingHandle,
-                DWORD Action,
-                wchar_t *DeviceId,
-                DWORD ProfileId,
-                DWORD *Value, // out
-                DWORD Flags)
+DWORD PNP_HwProfFlags(
+    handle_t hBinding,
+    DWORD ulAction,
+    LPWSTR pDeviceID,
+    DWORD ulConfig,
+    DWORD *pulValue,
+    PPNP_VETO_TYPE pVetoType,
+    LPWSTR pszVetoName,
+    DWORD ulNameLength,
+    DWORD ulFlags)
 {
-    CONFIGRET ret = CR_SUCCESS;
+    UNIMPLEMENTED;
+    return CR_CALL_NOT_IMPLEMENTED;
+}
 
-    UNREFERENCED_PARAMETER(BindingHandle);
-    UNREFERENCED_PARAMETER(Action);
-    UNREFERENCED_PARAMETER(DeviceId);
-    UNREFERENCED_PARAMETER(ProfileId);
-    UNREFERENCED_PARAMETER(Value);
-    UNREFERENCED_PARAMETER(Flags);
 
-    DPRINT1("PNP_HwProfFlags() called\n");
-
-    ret = CR_CALL_NOT_IMPLEMENTED; /* FIXME */
-
-    DPRINT1("PNP_HwProfFlags() done (returns %lx)\n", ret);
-
-    return ret;
+/* Function 41 */
+DWORD PNP_GetHwProfInfo(
+    handle_t hBinding,
+    DWORD ulIndex,
+    HWPROFILEINFO *pHWProfileInfo,
+    DWORD ulProfileInfoSize,
+    DWORD ulFlags)
+{
+    UNIMPLEMENTED;
+    return CR_CALL_NOT_IMPLEMENTED;
 }
 
 
 /* Function 42 */
-CONFIGRET
-PNP_AddEmptyLogConf(handle_t BindingHandle,
-                    wchar_t *DeviceInstance,
-                    unsigned long ulPriority,
-                    unsigned long *pulLogConfTag,
-                    unsigned long ulFlags)
+DWORD PNP_AddEmptyLogConf(
+    handle_t hBinding,
+    LPWSTR pDeviceID,
+    DWORD ulPriority,
+    DWORD *pulLogConfTag,
+    DWORD ulFlags)
 {
-    CONFIGRET ret = CR_SUCCESS;
-
-    UNREFERENCED_PARAMETER(BindingHandle);
-    UNREFERENCED_PARAMETER(DeviceInstance);
-    UNREFERENCED_PARAMETER(ulPriority);
-    UNREFERENCED_PARAMETER(ulFlags);
-
-    DPRINT1("PNP_AddEmptyLogConf() called\n");
-
-    *pulLogConfTag = 0; /* FIXME */
-
-    DPRINT1("PNP_AddEmptyLogConf() done (returns %lx)\n", ret);
-
-    return ret;
+    UNIMPLEMENTED;
+    return CR_CALL_NOT_IMPLEMENTED;
 }
 
 
 /* Function 43 */
-CONFIGRET
-PNP_FreeLogConf(handle_t BindingHandle,
-                wchar_t *DeviceInstance,
-                unsigned long ulType,
-                unsigned long ulLogConfTag,
-                unsigned long ulFlags)
+DWORD PNP_FreeLogConf(
+    handle_t hBinding,
+    LPWSTR pDeviceID,
+    DWORD ulLogConfType,
+    DWORD ulLogConfTag,
+    DWORD ulFlags)
 {
-    CONFIGRET ret = CR_SUCCESS;
-
-    UNREFERENCED_PARAMETER(BindingHandle);
-    UNREFERENCED_PARAMETER(DeviceInstance);
-    UNREFERENCED_PARAMETER(ulType);
-    UNREFERENCED_PARAMETER(ulLogConfTag);
-    UNREFERENCED_PARAMETER(ulFlags);
-
-    DPRINT1("PNP_FreeLogConf() called\n");
-
-
-    DPRINT1("PNP_FreeLogConf() done (returns %lx)\n", ret);
-
-    return ret;
+    UNIMPLEMENTED;
+    return CR_CALL_NOT_IMPLEMENTED;
 }
 
 
 /* Function 44 */
-CONFIGRET
-PNP_GetFirstLogConf(handle_t BindingHandle,
-                    wchar_t *DeviceInstance,
-                    unsigned long ulPriority,
-                    unsigned long *pulLogConfTag,
-                    unsigned long ulFlags)
+DWORD PNP_GetFirstLogConf(
+    handle_t hBinding,
+    LPWSTR pDeviceID,
+    DWORD ulLogConfType,
+    DWORD *pulLogConfTag,
+    DWORD ulFlags)
 {
-    CONFIGRET ret = CR_SUCCESS;
-
-    UNREFERENCED_PARAMETER(BindingHandle);
-    UNREFERENCED_PARAMETER(DeviceInstance);
-    UNREFERENCED_PARAMETER(ulPriority);
-    UNREFERENCED_PARAMETER(ulFlags);
-
-    DPRINT1("PNP_GetFirstLogConf() called\n");
-
-    *pulLogConfTag = 0; /* FIXME */
-
-    DPRINT1("PNP_GetFirstLogConf() done (returns %lx)\n", ret);
-
-    return ret;
+    UNIMPLEMENTED;
+    return CR_CALL_NOT_IMPLEMENTED;
 }
 
 
 /* Function 45 */
-CONFIGRET
-PNP_GetNextLogConf(handle_t BindingHandle,
-                   wchar_t *DeviceInstance,
-                   unsigned long ulLogConfType,
-                   unsigned long ulCurrentTag,
-                   unsigned long *pulNextTag,
-                   unsigned long ulFlags)
+DWORD PNP_GetNextLogConf(
+    handle_t hBinding,
+    LPWSTR pDeviceID,
+    DWORD ulLogConfType,
+    DWORD ulCurrentTag,
+    DWORD *pulNextTag,
+    DWORD ulFlags)
 {
-    CONFIGRET ret = CR_SUCCESS;
-
-    UNREFERENCED_PARAMETER(BindingHandle);
-    UNREFERENCED_PARAMETER(DeviceInstance);
-    UNREFERENCED_PARAMETER(ulLogConfType);
-    UNREFERENCED_PARAMETER(ulCurrentTag);
-    UNREFERENCED_PARAMETER(ulFlags);
-
-    DPRINT1("PNP_GetNextLogConf() called\n");
-
-    *pulNextTag = 0; /* FIXME */
-
-    DPRINT1("PNP_GetNextLogConf() done (returns %lx)\n", ret);
-
-    return ret;
+    UNIMPLEMENTED;
+    return CR_CALL_NOT_IMPLEMENTED;
 }
 
 
 /* Function 46 */
-CONFIGRET
-PNP_GetLogConfPriority(handle_t BindingHandle,
-                       wchar_t *DeviceInstance,
-                       unsigned long ulLogConfType,
-                       unsigned long ulCurrentTag,
-                       unsigned long *pPriority,
-                       unsigned long ulFlags)
+DWORD PNP_GetLogConfPriority(
+    handle_t hBinding,
+    LPWSTR pDeviceID,
+    DWORD ulType,
+    DWORD ulTag,
+    DWORD *pPriority,
+    DWORD ulFlags)
 {
-    CONFIGRET ret = CR_SUCCESS;
+    UNIMPLEMENTED;
+    return CR_CALL_NOT_IMPLEMENTED;
+}
 
-    UNREFERENCED_PARAMETER(BindingHandle);
-    UNREFERENCED_PARAMETER(DeviceInstance);
-    UNREFERENCED_PARAMETER(ulLogConfType);
-    UNREFERENCED_PARAMETER(ulCurrentTag);
-    UNREFERENCED_PARAMETER(ulFlags);
 
-    DPRINT1("PNP_GetLogConfPriority() called\n");
+/* Function 47 */
+DWORD PNP_AddResDes(
+    handle_t hBinding,
+    LPWSTR pDeviceID,
+    DWORD ulLogConfTag,
+    DWORD ulLogConfType,
+    RESOURCEID ResourceID,
+    DWORD *pulResourceTag,
+    BYTE *ResourceData,
+    PNP_RPC_BUFFER_SIZE ResourceLen,
+    DWORD ulFlags)
+{
+    UNIMPLEMENTED;
+    return CR_CALL_NOT_IMPLEMENTED;
+}
 
-    *pPriority = 0; /* FIXME */
 
-    DPRINT1("PNP_GetLogConfPriority() done (returns %lx)\n", ret);
+/* Function 48 */
+DWORD PNP_FreeResDes(
+    handle_t hBinding,
+    LPWSTR pDeviceID,
+    DWORD ulLogConfTag,
+    DWORD ulLogConfType,
+    RESOURCEID ResourceID,
+    DWORD ulResourceTag,
+    DWORD *pulPreviousResType,
+    DWORD *pulPreviousResTag,
+    DWORD ulFlags)
+{
+    UNIMPLEMENTED;
+    return CR_CALL_NOT_IMPLEMENTED;
+}
 
-    return ret;
+
+/* Function 49 */
+DWORD PNP_GetNextResDes(
+    handle_t hBinding,
+    LPWSTR pDeviceID,
+    DWORD ulLogConfTag,
+    DWORD ulLogConfType,
+    RESOURCEID ResourceID,
+    DWORD ulResourceTag,
+    DWORD *pulNextResType,
+    DWORD *pulNextResTag,
+    DWORD ulFlags)
+{
+    UNIMPLEMENTED;
+    return CR_CALL_NOT_IMPLEMENTED;
+}
+
+
+/* Function 50 */
+DWORD PNP_GetResDesData(
+    handle_t hBinding,
+    LPWSTR pDeviceID,
+    DWORD ulLogConfTag,
+    DWORD ulLogConfType,
+    RESOURCEID ResourceID,
+    DWORD ulResourceTag,
+    BYTE *Buffer,
+    PNP_RPC_BUFFER_SIZE BufferLen,
+    DWORD ulFlags)
+{
+    UNIMPLEMENTED;
+    return CR_CALL_NOT_IMPLEMENTED;
+}
+
+
+/* Function 51 */
+DWORD PNP_GetResDesDataSize(
+    handle_t hBinding,
+    LPWSTR pDeviceID,
+    DWORD ulLogConfTag,
+    DWORD ulLogConfType,
+    RESOURCEID ResourceID,
+    DWORD ulResourceTag,
+    DWORD *pulSize,
+    DWORD ulFlags)
+{
+    UNIMPLEMENTED;
+    return CR_CALL_NOT_IMPLEMENTED;
+}
+
+
+/* Function 52 */
+DWORD PNP_ModifyResDes(
+    handle_t hBinding,
+    LPWSTR pDeviceID,
+    DWORD ulLogConfTag,
+    DWORD ulLogConfType,
+    RESOURCEID CurrentResourceID,
+    RESOURCEID NewResourceID,
+    DWORD ulResourceTag,
+    BYTE *ResourceData,
+    PNP_RPC_BUFFER_SIZE ResourceLen,
+    DWORD ulFlags)
+{
+    UNIMPLEMENTED;
+    return CR_CALL_NOT_IMPLEMENTED;
+}
+
+
+/* Function 53 */
+DWORD PNP_DetectResourceConflict(
+    handle_t hBinding,
+    LPWSTR pDeviceID,
+    RESOURCEID ResourceID,
+    BYTE *ResourceData,
+    PNP_RPC_BUFFER_SIZE ResourceLen,
+    BOOL *pbConflictDetected,
+    DWORD ulFlags)
+{
+    UNIMPLEMENTED;
+    return CR_CALL_NOT_IMPLEMENTED;
+}
+
+
+/* Function 54 */
+DWORD PNP_QueryResConfList(
+    handle_t hBinding,
+    LPWSTR pDeviceID,
+    RESOURCEID ResourceID,
+    BYTE *ResourceData,
+    PNP_RPC_BUFFER_SIZE ResourceLen,
+    BYTE *Buffer,
+    PNP_RPC_BUFFER_SIZE BufferLen,
+    DWORD ulFlags)
+{
+    UNIMPLEMENTED;
+    return CR_CALL_NOT_IMPLEMENTED;
+}
+
+
+/* Function 55 */
+DWORD PNP_Function55(
+    handle_t hBinding)
+{
+    UNIMPLEMENTED;
+    return CR_CALL_NOT_IMPLEMENTED;
+}
+
+
+/* Function 56 */
+DWORD PNP_Function56(
+    handle_t hBinding)
+{
+    UNIMPLEMENTED;
+    return CR_CALL_NOT_IMPLEMENTED;
+}
+
+
+/* Function 57 */
+DWORD PNP_Function57(
+    handle_t hBinding)
+{
+    UNIMPLEMENTED;
+    return CR_CALL_NOT_IMPLEMENTED;
 }
 
 
 /* Function 58 */
 CONFIGRET
-PNP_RunDetection(handle_t BindingHandle,
-                 unsigned long Flags)
+PNP_RunDetection(
+    handle_t BindingHandle,
+    DWORD ulFlags)
 {
-    UNREFERENCED_PARAMETER(BindingHandle);
-    UNREFERENCED_PARAMETER(Flags);
+    UNIMPLEMENTED;
+    return CR_CALL_NOT_IMPLEMENTED;
+}
 
-    DPRINT("PNP_RunDetection() called\n");
+
+/* Function 59 */
+DWORD PNP_Function59(
+    handle_t hBinding)
+{
+    UNIMPLEMENTED;
+    return CR_CALL_NOT_IMPLEMENTED;
+}
+
+
+/* Function 60 */
+DWORD PNP_Function60(
+    handle_t hBinding)
+{
+    UNIMPLEMENTED;
+    return CR_CALL_NOT_IMPLEMENTED;
+}
+
+
+/* Function 61 */
+DWORD PNP_GetCustomDevProp(
+    handle_t hBinding,
+    LPWSTR pDeviceID,
+    LPWSTR CustomPropName,
+    DWORD *pulRegDataType,
+    BYTE *Buffer,
+    PNP_RPC_STRING_LEN *pulTransferLen,
+    PNP_RPC_STRING_LEN *pulLength,
+    DWORD ulFlags)
+{
+    UNIMPLEMENTED;
+    return CR_CALL_NOT_IMPLEMENTED;
+}
+
+
+/* Function 62 */
+DWORD PNP_GetVersionInternal(
+    handle_t hBinding,
+    WORD *pwVersion)
+{
+    UNIMPLEMENTED;
+    return CR_CALL_NOT_IMPLEMENTED;
+}
+
+
+/* Function 63 */
+DWORD PNP_GetBlockedDriverInfo(
+    handle_t hBinding,
+    BYTE *Buffer,
+    PNP_RPC_BUFFER_SIZE *pulTransferLen,
+    PNP_RPC_BUFFER_SIZE *pulLength,
+    DWORD ulFlags)
+{
+    UNIMPLEMENTED;
+    return CR_CALL_NOT_IMPLEMENTED;
+}
+
+
+/* Function 64 */
+DWORD PNP_GetServerSideDeviceInstallFlags(
+    handle_t hBinding,
+    DWORD *pulSSDIFlags,
+    DWORD ulFlags)
+{
+    UNIMPLEMENTED;
+    return CR_CALL_NOT_IMPLEMENTED;
+}
+
+
+/* Function 65 */
+DWORD PNP_GetObjectPropKeys(
+    handle_t hBinding,
+    LPWSTR ObjectName,
+    DWORD ObjectType,
+    LPWSTR PropertyCultureName,
+    PNP_PROP_COUNT *PropertyCount,
+    PNP_PROP_COUNT *TransferLen,
+    DEVPROPKEY *PropertyKeys,
+    DWORD Flags)
+{
+    UNIMPLEMENTED;
+    return CR_CALL_NOT_IMPLEMENTED;
+}
+
+
+/* Function 66 */
+DWORD PNP_GetObjectProp(
+    handle_t hBinding,
+    LPWSTR ObjectName,
+    DWORD ObjectType,
+    LPWSTR PropertyCultureName,
+    const DEVPROPKEY *PropertyKey,
+    DEVPROPTYPE *PropertyType,
+    PNP_PROP_SIZE *PropertySize,
+    PNP_PROP_SIZE *TransferLen,
+    BYTE *PropertyBuffer,
+    DWORD Flags)
+{
+    UNIMPLEMENTED;
+    return CR_CALL_NOT_IMPLEMENTED;
+}
+
+
+/* Function 67 */
+DWORD PNP_SetObjectProp(
+    handle_t hBinding,
+    LPWSTR ObjectName,
+    DWORD ObjectType,
+    LPWSTR PropertyCultureName,
+    const DEVPROPKEY *PropertyKey,
+    DEVPROPTYPE PropertyType,
+    PNP_PROP_SIZE PropertySize,
+    BYTE *PropertyBuffer,
+    DWORD Flags)
+{
+    UNIMPLEMENTED;
     return CR_CALL_NOT_IMPLEMENTED;
 }
 
