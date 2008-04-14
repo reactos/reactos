@@ -39,4 +39,5 @@ STRINGTABLE DISCARDABLE
 BEGIN
 	IDS_QUERY_REBOOT_TEXT        "A számítógépet újra kell indítani a telepítés befejezéséhez. Szeretnéd most újraindítani?"
 	IDS_QUERY_REBOOT_CAPTION     "Újraindítás"
+        IDS_INF_FILE                 "Setup Information"
 END

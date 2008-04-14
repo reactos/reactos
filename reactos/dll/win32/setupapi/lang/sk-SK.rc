@@ -21,4 +21,6 @@ STRINGTABLE DISCARDABLE
 BEGIN
 	IDS_QUERY_REBOOT_TEXT        "Pre dokonËenie inötal·cie je potrebnÈ reötartovaù poËÌtaË. Chcete pokraËovaù?"
 	IDS_QUERY_REBOOT_CAPTION     "Reötartovaù"
+	IDS_INF_FILE                 "Setup Information"
+
 END

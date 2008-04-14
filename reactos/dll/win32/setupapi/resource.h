@@ -1,5 +1,6 @@
 #define IDS_QUERY_REBOOT_TEXT       1000
 #define IDS_QUERY_REBOOT_CAPTION    2000
+#define IDS_INF_FILE                2001
 
 #define COPYFILEDLGORD              3000
 #define SOURCESTRORD                3001

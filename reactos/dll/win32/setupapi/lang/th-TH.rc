@@ -37,4 +37,5 @@ STRINGTABLE DISCARDABLE
 BEGIN
 	IDS_QUERY_REBOOT_TEXT        "เมื่อเสร็จสิ้นการติดตั้งแล้ว คอมพิวเตอร์ของคุณจำเป็นต้องเปิดเครื่องใหม่/n/n คุณต้องการเปิดเครื่องใหม่เดี๋ยวนี้เลยหรือไม่?"
 	IDS_QUERY_REBOOT_CAPTION     "เปิดเครื่องใหม่อัตโนมัติ"
+	IDS_INF_FILE                 "Setup Information"
 END

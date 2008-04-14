@@ -37,4 +37,5 @@ STRINGTABLE DISCARDABLE
 BEGIN
 	IDS_QUERY_REBOOT_TEXT        "Ihr Computer muss zum Beenden der Installation neugestartet werden. Wollen Sie fortfahren?"
 	IDS_QUERY_REBOOT_CAPTION     "Neustarten"
+	IDS_INF_FILE                 "Setup-Informationen"
 END

@@ -25,4 +25,5 @@ STRINGTABLE DISCARDABLE
 BEGIN
 	IDS_QUERY_REBOOT_TEXT        "Для закінчення установки необхідно перезапустити Ваш комп'ютер. Продовжити?"
 	IDS_QUERY_REBOOT_CAPTION     "Перезапустити"
+	IDS_INF_FILE                 "Setup Information"
 END

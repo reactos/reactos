@@ -37,4 +37,5 @@ STRINGTABLE DISCARDABLE
 BEGIN
 	IDS_QUERY_REBOOT_TEXT        "Komputer anda perlu di-boot ulang untuk menyelesaikan instalasi. Anda ingin melakukannya?"
 	IDS_QUERY_REBOOT_CAPTION     "Reboot"
+        IDS_INF_FILE                 "Setup Information"
 END
