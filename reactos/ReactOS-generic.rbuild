@@ -20,6 +20,7 @@
 	<include>include/psdk</include>
 	<include root="intermediate">include/psdk</include>
 	<include>include/dxsdk</include>
+	<include root="intermediate">include/dxsdk</include>
 	<include>include/crt</include>
 	<include>include/crt/mingw32</include>
 	<include>include/ddk</include>
