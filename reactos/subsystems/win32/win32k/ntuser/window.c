@@ -33,6 +33,8 @@
 #define NDEBUG
 #include <debug.h>
 
+extern PSERVERINFO gpsi;
+
 /* dialog resources appear to pass this in 16 bits, handle them properly */
 #define CW_USEDEFAULT16 (0x8000)
 
@@ -49,6 +51,8 @@
 NTSTATUS FASTCALL
 InitWindowImpl(VOID)
 {
+   gpsi = UserHeapAlloc(sizeof(SERVERINFO));
+   if (gpsi) RtlZeroMemory(gpsi, sizeof(SERVERINFO));
    return STATUS_SUCCESS;
 }
 

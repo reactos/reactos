@@ -13,6 +13,7 @@
 #define NDEBUG
 #include <debug.h>
 
+extern PSERVERINFO gpsi;
 
 /*
  * @unimplemented
@@ -414,6 +415,7 @@ GetW32ProcessInfo(VOID)
             pi->hUserHeap = W32Process->HeapMappings.KernelMapping;
             pi->UserHeapDelta = (ULONG_PTR)W32Process->HeapMappings.KernelMapping -
                                 (ULONG_PTR)W32Process->HeapMappings.UserMapping;
+            pi->psi = gpsi;
 
             if (InterlockedCompareExchangePointer(&W32Process->ProcessInfo,
                                                   pi,

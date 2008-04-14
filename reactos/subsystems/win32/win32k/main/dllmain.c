@@ -38,6 +38,8 @@ LIST_ENTRY GlobalDriverListHead;
 HANDLE GlobalUserHeap = NULL;
 PSECTION_OBJECT GlobalUserHeapSection = NULL;
 
+PSERVERINFO gpsi = NULL; // Global User Server Information.
+
 extern ULONG_PTR Win32kSSDT[];
 extern UCHAR Win32kSSPT[];
 extern ULONG Win32kNumberOfSysCalls;
