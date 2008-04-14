@@ -174,4 +174,5 @@ BEGIN
   IDS_REMOVE_TEXT "Are you sure you want to remove the cursor scheme '%s'?"
   IDS_OVERWRITE_TITLE "Confirm Cursor Scheme Overwrite"
   IDS_OVERWRITE_TEXT "The cursor scheme name you chose is already in use. Do you want to overwrite the existing cursor scheme?"
+  IDS_ANIMATE_CURSOR "Animated Cursor"
 END

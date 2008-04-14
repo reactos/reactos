@@ -169,4 +169,5 @@ BEGIN
   IDS_REMOVE_TEXT "Êtes-vous sûr de vouloir supprimer le profil de curseur  '%s' ?"
   IDS_OVERWRITE_TITLE "Confirmation de remplacement du profil"
   IDS_OVERWRITE_TEXT "Le nom du profil de curseur que vous avez choisi est déjà utilisé. Voulez-vous écraser le profil de curseur déjà existant ?"
+  IDS_ANIMATE_CURSOR "Animated Cursor"
 END

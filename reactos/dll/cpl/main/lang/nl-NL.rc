@@ -169,4 +169,5 @@ BEGIN
   IDS_REMOVE_TEXT "Weet u zeker dat u aanwijzer schema '%s' wilt verwijderen?"
   IDS_OVERWRITE_TITLE "Bevestig het overschrijven van dit schema"
   IDS_OVERWRITE_TEXT "Het aanwijzer schema met die naam is al in gebruik. Wilt u het bestaande aanwijzer schema overschrijven?"
+  IDS_ANIMATE_CURSOR "Animated Cursor"
 END

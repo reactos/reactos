@@ -169,4 +169,5 @@ BEGIN
   IDS_REMOVE_TEXT "¿Desea quitar completamente la combinación '%s' del sistema?"
   IDS_OVERWRITE_TITLE "¿Desea reemplazar el esquema?"
   IDS_OVERWRITE_TEXT "El nombre del esquema de cursores que seleccionó ya está en uso. ¿Desea reemplazar el esquema original?"
+  IDS_ANIMATE_CURSOR "Animated Cursor"
 END

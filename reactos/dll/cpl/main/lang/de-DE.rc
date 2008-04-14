@@ -170,5 +170,6 @@ BEGIN
   IDS_REMOVE_TEXT "Soll das Cursorschema '%s' wirklich gelöscht werden?"
   IDS_OVERWRITE_TITLE "Cursorschema überscheiben"
   IDS_OVERWRITE_TEXT "Ein Cursorschema mit diesem Namen existiert bereits. Möchen Sie das existierende Cursorschema überscheiben?"
+  IDS_ANIMATE_CURSOR "Animierter Cursor"
 END
 

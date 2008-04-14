@@ -174,4 +174,5 @@ BEGIN
   IDS_REMOVE_TEXT "Czy na pewno chcesz usun¹æ schemat kursorów '%s'?"
   IDS_OVERWRITE_TITLE "PotwierdŸ nadpisanie schematu kursorów"
   IDS_OVERWRITE_TEXT "Wybrana nazwa schematu kursorów jest ju¿ w u¿yciu. Czy chcesz nadpisaæ istniej¹cy schemat?"
+  IDS_ANIMATE_CURSOR "Animated Cursor"
 END

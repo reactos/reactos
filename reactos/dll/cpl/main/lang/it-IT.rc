@@ -170,4 +170,5 @@ BEGIN
   IDS_REMOVE_TEXT "Confermate di voler rimuovere lo schema dei cursori '%s'?"
   IDS_OVERWRITE_TITLE "Sovrascrittura dello schema dei cursori"
   IDS_OVERWRITE_TEXT "Il nome dello schema dei cursori è già in uso. Confermate di voler sovrascrivere lo schema dei cursori?"
+  IDS_ANIMATE_CURSOR "Animated Cursor"
 END
