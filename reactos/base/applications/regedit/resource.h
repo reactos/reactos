@@ -147,6 +147,7 @@
 #define ID_TREE_EXPORT                  32888
 #define ID_TREE_PERMISSIONS             32889
 
+#define IDS_FLT_REGFILE         31000
 #define IDS_FLT_REGFILES		31001
 #define IDS_FLT_REGFILES_FLT		31002
 #define IDS_FLT_REGEDIT4		31003

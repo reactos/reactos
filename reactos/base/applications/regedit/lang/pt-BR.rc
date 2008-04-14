@@ -329,6 +329,7 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
+    IDS_FLT_REGFILE         "Registration File"
     IDS_FLT_REGFILES        "Arquivos do Registro"
     IDS_FLT_REGFILES_FLT    "*.reg"
     IDS_FLT_REGEDIT4        "Arquivos do Registro Win9x/NT4 (REGEDIT4)"
