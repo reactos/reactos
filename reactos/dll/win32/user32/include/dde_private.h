@@ -164,6 +164,7 @@ typedef struct tagWDML_INSTANCE
     DWORD           		monitorFlags;
     DWORD			lastError;
     HWND			hwndEvent;
+    DWORD			wStatus;	/* global instance status */
     WDML_SERVER*		servers;	/* list of registered servers */
     WDML_CONV*			convs[2];	/* active conversations for this instance (client and server) */
     WDML_LINK*			links[2];	/* active links for this instance (client and server) */
@@ -198,6 +199,8 @@ extern	void		WDML_RemoveServer(WDML_INSTANCE* pInstance, HSZ hszService, HSZ hsz
 extern	WDML_SERVER*	WDML_FindServer(WDML_INSTANCE* pInstance, HSZ hszService, HSZ hszTopic);
 /* transaction handler on the server side */
 extern WDML_QUEUE_STATE WDML_ServerHandle(WDML_CONV* pConv, WDML_XACT* pXAct);
+/* transaction handler on the client side */
+HDDEDATA WDML_ClientHandle(WDML_CONV *pConv, WDML_XACT *pXAct, DWORD dwTimeout, LPDWORD pdwResult) DECLSPEC_HIDDEN;
 /* called both in DdeClientTransaction and server side. */
 extern	UINT		WDML_Initialize(LPDWORD pidInst, PFNCALLBACK pfnCallback,
 					DWORD afCmd, DWORD ulRes, BOOL bUnicode, BOOL b16);
@@ -222,7 +225,7 @@ extern	void 		WDML_FreeAllHSZ(WDML_INSTANCE* pInstance);
 extern	BOOL		WDML_DecHSZ(WDML_INSTANCE* pInstance, HSZ hsz);
 extern	BOOL		WDML_IncHSZ(WDML_INSTANCE* pInstance, HSZ hsz);
 extern	ATOM		WDML_MakeAtomFromHsz(HSZ hsz);
-extern	HSZ		WDML_MakeHszFromAtom(WDML_INSTANCE* pInstance, ATOM atom);
+extern	HSZ	        WDML_MakeHszFromAtom(const WDML_INSTANCE* pInstance, ATOM atom);
 /* client calls these */
 extern	WDML_XACT*	WDML_AllocTransaction(WDML_INSTANCE* pInstance, UINT ddeMsg, UINT wFmt, HSZ hszItem);
 extern	void		WDML_QueueTransaction(WDML_CONV* pConv, WDML_XACT* pXAct);

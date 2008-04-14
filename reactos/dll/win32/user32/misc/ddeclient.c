@@ -1094,6 +1094,37 @@ static HDDEDATA WDML_SyncWaitTransactionReply(HCONV hConv, DWORD dwTimeout, WDML
 }
 
 /*****************************************************************
+ *            WDML_ClientHandle
+ */
+HDDEDATA WDML_ClientHandle(WDML_CONV *pConv, WDML_XACT *pXAct, DWORD dwTimeout, LPDWORD pdwResult)
+{
+    HDDEDATA hDdeData;
+
+    if (!PostMessageW(pConv->hwndServer, pXAct->ddeMsg, (WPARAM)pConv->hwndClient, pXAct->lParam))
+    {
+        WARN("Failed posting message %x to %p (error=0x%x)\n",
+              pXAct->ddeMsg, pConv->hwndServer, GetLastError());
+        pConv->wStatus &= ~ST_CONNECTED;
+        pConv->instance->lastError = DMLERR_POSTMSG_FAILED;
+        return 0;
+    }
+    pXAct->dwTimeout = dwTimeout;
+    /* FIXME: should set the app bits on *pdwResult */
+
+    if (dwTimeout == TIMEOUT_ASYNC)
+    {
+        if (pdwResult)
+            *pdwResult = MAKELONG(0, pXAct->xActID);
+
+        hDdeData = (HDDEDATA)1;
+    }
+    else
+        hDdeData = WDML_SyncWaitTransactionReply((HCONV)pConv, dwTimeout, pXAct, pdwResult);
+
+    return hDdeData;
+}
+
+/*****************************************************************
  *            DdeClientTransaction  (USER32.@)
  */
 HDDEDATA WINAPI DdeClientTransaction(LPBYTE pData, DWORD cbData, HCONV hConv, HSZ hszItem, UINT wFmt,
