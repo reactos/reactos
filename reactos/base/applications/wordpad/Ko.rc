@@ -193,6 +193,13 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
+    STRING_NEWFILE_RICHTEXT,     "리치 텍스트 문서"
+    STRING_NEWFILE_TXT,          "텍스트 문서"
+    STRING_NEWFILE_TXT_UNICODE,  "유니코드 텍스트 문서"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
     STRING_PRINTER_FILES_PRN,        "프린터 파일 (*.PRN)"
 END
 
@@ -208,8 +215,8 @@ BEGIN
     STRING_PREVIEW_PRINT,            "인쇄"
     STRING_PREVIEW_NEXTPAGE,         "다음 페이지"
     STRING_PREVIEW_PREVPAGE,         "이전 페이지"
-    STRING_PREVIEW_TWOPAGES,         "Two pages"
-    STRING_PREVIEW_ONEPAGE,          "One page"
+    STRING_PREVIEW_TWOPAGES,         "두 페이지"
+    STRING_PREVIEW_ONEPAGE,          "한 페이지"
     STRING_PREVIEW_CLOSE,            "닫기"
 END
 

@@ -223,7 +223,7 @@ void registry_read_filelist(HWND hMainWnd)
                != ERROR_SUCCESS)
                 break;
 
-            mi.dwItemData = (DWORD)pFile[i];
+            mi.dwItemData = (ULONG_PTR)pFile[i];
             wsprintfW(itemText, numFormat, i+1);
 
             lstrcpyW(buffer, pFile[i]);

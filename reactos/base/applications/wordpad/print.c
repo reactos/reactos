@@ -85,7 +85,7 @@ void registry_read_pagemargins(HKEY hKey)
     }
 }
 
-static void AddTextButton(HWND hRebarWnd, int string, int command, int id)
+static void AddTextButton(HWND hRebarWnd, UINT string, UINT command, UINT id)
 {
     REBARBANDINFOW rb;
     HINSTANCE hInstance = (HINSTANCE)GetWindowLongPtr(hRebarWnd, GWLP_HINSTANCE);
@@ -95,7 +95,7 @@ static void AddTextButton(HWND hRebarWnd, int string, int command, int id)
     LoadStringW(hInstance, string, text, MAX_STRING_LEN);
     hButton = CreateWindowW(WC_BUTTONW, text,
                             WS_VISIBLE | WS_CHILD, 5, 5, 100, 15,
-                            hRebarWnd, (HMENU)command, hInstance, NULL);
+                            hRebarWnd, (HMENU)ULongToHandle(command), hInstance, NULL);
 
     rb.cbSize = sizeof(rb);
     rb.fMask = RBBIM_SIZE | RBBIM_CHILDSIZE | RBBIM_STYLE | RBBIM_CHILD | RBBIM_IDEALSIZE | RBBIM_ID;
@@ -500,7 +500,7 @@ static void add_ruler_units(HDC hdcRuler, RECT* drawRect, BOOL NewMetrics, long 
             DeleteObject(hBitmap);
         }
 
-        hdc =  CreateCompatibleDC(hdc);
+        hdc = CreateCompatibleDC(0);
 
         CmPixels = twips_to_pixels(TWIPS_PER_CM, GetDeviceCaps(hdc, LOGPIXELSX));
         QuarterCmPixels = (int)((float)CmPixels / 4.0);
@@ -702,7 +702,7 @@ LRESULT print_preview(HWND hMainWnd)
 
         if(preview.hdc2)
         {
-            if((int)preview.hdc2 != -1)
+            if(preview.hdc2 != (HDC)-1)
                 DeleteDC(preview.hdc2);
             preview.hdc2 = CreateCompatibleDC(hdc);
         }
