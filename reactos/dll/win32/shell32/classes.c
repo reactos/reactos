@@ -107,7 +107,7 @@ BOOL HCR_MapTypeToValueA(LPCSTR szExtension, LPSTR szFileType, LONG len, BOOL bP
 	if (RegLoadMUIStringA(hkey, "FriendlyTypeName", szFileType, len, NULL, 0, NULL) == ERROR_SUCCESS)
 	{
 	  RegCloseKey(hkey);
-	  return FALSE;
+	  return TRUE;
 	}
 
 	if (RegQueryValueA(hkey, NULL, szFileType, &len))

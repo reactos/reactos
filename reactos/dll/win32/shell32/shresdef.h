@@ -117,6 +117,22 @@
 #define IDS_RECYCLEBIN_DISKSPACE    154
 #define IDS_OPEN_WITH_FILTER        155
 #define IDS_DIRECTORY               156
+#define IDS_VIRTUAL_DRIVER          157
+#define IDS_BAT_FILE                158
+#define IDS_CMD_FILE                159
+#define IDS_COM_FILE                160
+#define IDS_CPL_FILE                161
+#define IDS_CUR_FILE                162
+#define IDS_DLL_FILE                163
+#define IDS_DRV_FILE                164
+#define IDS_EXE_FILE                165
+#define IDS_FON_FILE                166
+#define IDS_TTF_FILE                167
+#define IDS_HLP_FILE                168
+#define IDS_INI_FILE                169
+#define IDS_LNK_FILE                170
+#define IDS_SYS_FILE                171
+
 /* Note: this string is referenced from the registry */
 #define IDS_RECYCLEBIN_FOLDER_NAME   8964
 

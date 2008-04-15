@@ -32,6 +32,7 @@ HKCR,".rtf","",0x00000000,"rtffile"
 HKCR,".rtf\shellnew","",0x00000000,""
 HKCR,".rft\shellnew","Data",0x00020000,"{\rtf1}"
 HKCR,"rtffile","",0x00000000,"Rich Text Document"
+HKCR,"rtffile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\wordpad.exe,-1404"
 HKCR,"rtffile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-2"
 HKCR,"rtffile\shell\open","",0x00000000,"Open"
 HKCR,"rtffile\shell\open\command","",0x00020000,"%SystemRoot%\system32\wordpad.exe %1"
@@ -40,21 +41,25 @@ HKCR,"rtffile\shell\open\command","",0x00020000,"%SystemRoot%\system32\wordpad.e
 HKCR,".386","",0x00000000,"vxdfile"
 HKCR,".vxd","",0x00000000,"vxdfile"
 HKCR,"vxdfile","",0x00000000,"Virtual Device Driver"
+HKCR,"vxdfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll,-157"
 
 ; Animated Cursors
 HKCR,".ani","",0x00000000,"anifile"
 HKCR,"anifile","",0x00000000,"Animated Cursor"
+HKCR,"anifile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\main.cpl,-1039"
 HKCR,"anifile\DefaultIcon","",0x00000000,"%1"
 
 ; DOS Batch-Files
 HKCR,".bat","",0x00000000,"batfile"
 HKCR,"batfile","",0x00000000,"DOS Batch File"
+HKCR,"batfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll,-158"
 HKCR,"batfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-153"
 HKCR,"batfile\shell\edit\command","",0x00020000,"%SystemRoot%\system32\notepad.exe %1"
 HKCR,"batfile\shell\open\command","",0x00000000,"""%1"" %*"
 
 HKCR,".cmd","",0x00000000,"cmdfile"
 HKCR,"cmdfile","",0x00000000,"ReactOS Command Script"
+HKCR,"cmdfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll,-159"
 HKCR,"cmdfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-153"
 HKCR,"cmdfile\shell\edit\command","",0x00020000,"%SystemRoot%\system32\notepad.exe %1"
 HKCR,"cmdfile\shell\open\command","",0x00000000,"""%1"" %*"
@@ -62,11 +67,13 @@ HKCR,"cmdfile\shell\open\command","",0x00000000,"""%1"" %*"
 ; Get DOS Applications a Icon 
 HKCR,".com","",0x00000000,"comfile"
 HKCR,"comfile","",0x00000000,"DOS Application"
+HKCR,"comfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll,-160"
 HKCR,"comfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-3"
 
 ; Control Panel extensions
 HKCR,".cpl","",0x00000000,"cplfile"
 HKCR,"cplfile","",0x00000000,"Control Panel Extension"
+HKCR,"cplfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll,-161"
 HKCR,"cplfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-154"
 HKCR,"cplfile\shell\cplopen","",0x00000000,"Open with Control Panel"
 HKCR,"cplfile\shell\cplopen\command","",0x00020000,"%SystemRoot%\system32\rundll32.exe shell32.dll,Control_RunDLL %1,%*"
@@ -74,36 +81,43 @@ HKCR,"cplfile\shell\cplopen\command","",0x00020000,"%SystemRoot%\system32\rundll
 ; Cursors
 HKCR,".cur","",0x00000000,"curfile"
 HKCR,"curfile","",0x00000000,"Cursor"
+HKCR,"curfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll,-162"
 HKCR,"curfile\DefaultIcon","",0x00000000,"%1"
 
 ; Dynamic Link Libraries
 HKCR,".dll","",0x00000000,"dllfile"
 HKCR,"dllfile","",0x00000000,"Dynamic Link Library"
+HKCR,"dllfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll,-163"
 HKCR,"dllfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-154"
 
 ; Device Drivers
 HKCR,".drv","",0x00000000,"drvfile"
 HKCR,"drvfile","",0x00000000,"Device Driver"
+HKCR,"drvfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll,-164"
 
 ; Applicatons
 HKCR,".exe","",0x00000000,"exefile"
 HKCR,"exefile","",0x00000000,"ReactOS Application"
+HKCR,"exefile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll,-165"
 HKCR,"exefile\Defaulticon","",0x00000000,"%1"
 HKCR,"exefile\shell\open\command","",0x00000000,"""%1"" %*"
 
 ; Fonts
 HKCR,".fon","",0x00000000,"fonfile"
 HKCR,"fonfile","",0x00000000,"Font File"
+HKCR,"fonfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll,-166"
 HKCR,"fonfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-155"
 
 HKCR,".ttf","",0x00000000,"ttffile"
 HKCR,"ttffile","",0x00000000,"TrueType Font File"
 HKCR,"ttffile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-156"
+HKCR,"ttffile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll,-167"
 HKCR,"ttffile\shell\open\command","",0x00020000,"%SystemRoot%\system32\fontview.exe %1"
 
 ; Help Files
 HKCR,".hlp","",0x00000000,"hlpfile"
 HKCR,"hlpfile","",0x00000000,"Help File"
+HKCR,"fonfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll,-168"
 HKCR,"hlpfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-24"
 
 ; set MIME type for .html and .htm because Tiny webserver needs it
@@ -121,12 +135,14 @@ HKCR,"icofile\DefaultIcon","",0x00000000,"%1"
 ; Configuration Files
 HKCR,".ini","",0x00000000,"inifile"
 HKCR,"inifile","",0x00000000,"Configuration Settings"
+HKCR,"inifile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll,-169"
 HKCR,"inifile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-151"
 HKCR,"inifile\shell\open\command","",0x00000000,"notepad.exe ""%1"""
 
 ; Setup Information Files
 HKCR,".inf","",0x00000000,"inffile"
 HKCR,"inffile","",0x00000000,"Setup Information"
+HKCR,"inffile\FriendlyTypeName","",0x00020000,"%SystemRoot%\system32\setupapi.dll,-2001"
 HKCR,"inffile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-151"
 HKCR,"inffile\shell\open\command","",0x00000000,"notepad.exe ""%1"""
 HKCR,"inffile\shell\Install","",0x00000000,"Install"
@@ -138,6 +154,7 @@ HKCR,".lnk","",0x00000000,"lnkfile"
 HKCR,".lnk\shellnew","",0x00000000,""
 HKCR,".lnk\shellnew","command",0x00020000,"%SystemRoot%\system32\rundll32.exe appwiz.cpl,NewLinkHere %1"
 HKCR,"lnkfile","",0x00000000,"Shortcut"
+HKCR,"lnkfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll,-170"
 HKCR,"lnkfile","NeverShowExt",0x00000000,""
 HKCR,"lnkfile","IsShortcut",0x00000000,"yes"
 HKCR,"lnkfile\CLSID","",0x00000000,"{00021401-0000-0000-C000-000000000046}"
@@ -166,6 +183,7 @@ HKCR,".pif","",0x00000000,"piffile"
 ; Registration Entries
 HKCR,".reg","",0x00000000,"regfile"
 HKCR,"regfile","",0x00000000,"Registration Entries"
+HKCR,"regfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll,-170"
 HKCR,"regfile\DefaultIcon","",0x00020000,"%SystemRoot%\regedit.exe,1"
 HKCR,"regfile\shell\edit\command","",0x00020000,"%SystemRoot%\system32\notepad.exe %1"
 HKCR,"regfile\shell\open","",0x00000000,"Merge"
@@ -193,6 +211,7 @@ HKCR,"SHCmdFile\shellex\IconHandler","",0x00000000,"{57651662-CE3E-11D0-8D77-00C
 ; System-Files
 HKCR,".sys","",0x00000000,"sysfile"
 HKCR,"sysfile","",0x00000000,"System File"
+HKCR,"regfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll,-171"
 HKCR,"sysfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-154"
 
 ; URL shortcuts (e.g. used in favorites folder of IExplorer)
