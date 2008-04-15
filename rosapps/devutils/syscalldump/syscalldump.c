@@ -77,7 +77,7 @@ int main(int argc, char* argv[])
     UINT i;
     PVOID pW32pServiceTable, pW32pServiceLimit;
     PBYTE pW32pArgumentTable;
-    PVOID *pfnSimpleCall;
+    PVOID pfnSimpleCall;
     DWORD dwServiceLimit;
 
 	struct
@@ -187,14 +187,29 @@ cont:
 	printf("\nDumping apfnSimpleCall:\n");
 	pfnSimpleCall = (PVOID*)ImageSymToVa(hProcess, &Sym.Symbol, pModule, "apfnSimpleCall");
 	i = 0;
-	while (pfnSimpleCall[i] != NULL)
-	{
-		printf("0x%x:", i);
-		SymEnumSymbolsForAddr(hProcess, (DWORD64)(ULONG_PTR)pfnSimpleCall[i], EnumSymbolsProc, (PVOID)-1);
-		printf("\n");
-		i++;
-	}
 
+	if (bX64)
+	{
+		DWORD64 *pfnSC64 = (DWORD64*)pfnSimpleCall;
+		while (pfnSC64[i] != 0)
+		{
+			printf("0x%x:", i);
+			SymEnumSymbolsForAddr(hProcess, (DWORD64)pfnSC64[i], EnumSymbolsProc, (PVOID)-1);
+			printf("\n");
+			i++;
+		}
+	}
+	else
+	{
+		DWORD *pfnSC32 = (DWORD*)pfnSimpleCall;
+		while (pfnSC32[i] != 0)
+		{
+			printf("0x%x:", i);
+			SymEnumSymbolsForAddr(hProcess, (DWORD64)pfnSC32[i], EnumSymbolsProc, (PVOID)-1);
+			printf("\n");
+			i++;
+		}
+	}
 
 cleanup:
 	if (pModule)
