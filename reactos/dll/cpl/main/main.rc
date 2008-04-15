@@ -11,11 +11,15 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 #define REACTOS_STR_ORIGINAL_FILENAME	"main.cpl\0"
 #include <reactos/version.rc>
 
-IDC_CPLICON_1 ICON "resources/mouse.ico"
-IDC_CPLICON_2 ICON "resources/keyboard.ico"
-IDI_FOLDER_OPEN ICON "resources/folder_open.ico"
-IDI_FOLDER_CLOSED ICON "resources/folder_closed.ico"
-IDI_MOUSE_LEFT ICON "resources/mouse_left.ico"
-IDI_MOUSE_RIGHT ICON "resources/mouse_right.ico"
+IDC_CPLICON_1       ICON "resources/mouse.ico"
+IDC_CPLICON_2       ICON "resources/keyboard.ico"
+IDI_FOLDER_OPEN     ICON "resources/folder_open.ico"
+IDI_FOLDER_CLOSED   ICON "resources/folder_closed.ico"
+IDI_MOUSE_LEFT      ICON "resources/mouse_left.ico"
+IDI_MOUSE_RIGHT     ICON "resources/mouse_right.ico"
+IDI_MOUSE_SPEED     ICON "resources/mouse_speed.ico"
+IDI_MOUSE_BUTTON    ICON "resources/mouse_button.ico"
+IDI_MOUSE_TRAILS    ICON "resources/mouse_trails.ico"
+IDI_MOUSE_POINTER   ICON "resources/mouse_pointer.ico"
 
 #include "rsrc.rc"
