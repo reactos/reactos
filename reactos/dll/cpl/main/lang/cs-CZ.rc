@@ -6,12 +6,12 @@ CAPTION "Rychlost"
 FONT 8, "MS Shell Dlg"
 BEGIN
   GROUPBOX "Opakování znakù", -1, 5, 5, 230, 130
-  ICON -1, IDC_ICON_REPEAT_DELAY, 15, 15, 15, 15
+  ICON IDI_REPEAT_DELAY, IDC_ICON_REPEAT_DELAY, 15, 15, 15, 15
   LTEXT "&Prodleva pøed opakováním", -1, 40, 15, 150, 10
   LTEXT "Dlouhá", -1, 40, 30, 25, 10
   LTEXT "Krátká", -1, 200, 30, 25, 10
   CONTROL "",IDC_SLIDER_REPEAT_DELAY, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 65, 30, 130, 17
-  ICON -1, IDC_ICON_REPEAT_RATE, 15, 70, 15, 15
+  ICON IDI_REPEAT_RATE, IDC_ICON_REPEAT_RATE, 15, 70, 15, 15
   LTEXT "&Rychlost opakování", -1, 40, 70, 120, 10
   LTEXT "Malá", -1, 40, 85, 25, 10
   LTEXT "Velká", -1, 200, 85, 25, 10
@@ -43,7 +43,7 @@ BEGIN
   PUSHBUTTON "Ok", IDOK, 120, 75, 50, 15
   PUSHBUTTON "Storno", IDCANCEL, 175, 75, 50, 15
   LTEXT "&Nastavte dobu, po kterou musíte držet tlaèítko myši stisknuté, než se funkce ClickLock aktivuje.",-1,60,15,170,30
-  ICON -1, IDC_ICON_CLICK_LOCK, 15, 15, 15, 15
+  ICON IDI_LOOK_KEY, IDC_ICON_CLICK_LOCK, 15, 15, 15, 15
 END
 
 IDD_PAGE_BUTTON DIALOGEX 0, 0, 246, 228
@@ -131,7 +131,7 @@ CAPTION "Koleèko"
 FONT 8, "MS Shell Dlg"
 BEGIN
   GROUPBOX "Posouvání", -1, 5, 5, 230, 80
-  ICON -1, IDC_ICON_WHEEL, 20, 35, 15, 15
+  ICON IDI_MOUSE_WHEEL, IDC_ICON_WHEEL, 20, 20, 32, 32
   LTEXT "Otoèení koleèka o jeden krok posune o:", -1, 60, 15, 150, 10
   RADIOBUTTON "&tento poèet øádkù", IDC_RADIO_WHEEL_SCROLL_LINES, 60, 30, 150, 10, WS_VISIBLE | WS_GROUP | WS_TABSTOP
   RADIOBUTTON "&celou obrazovku", IDC_RADIO_WHEEL_SCROLL_PAGE, 60, 65, 90, 10

@@ -14,12 +14,12 @@ CAPTION "Швидкість"
 FONT 8, "MS Shell Dlg"
 BEGIN
   GROUPBOX "Повтор символу, що вводиться", -1, 5, 5, 230, 130
-  ICON -1, IDC_ICON_REPEAT_DELAY, 15, 15, 15, 15
+  ICON IDI_REPEAT_DELAY, IDC_ICON_REPEAT_DELAY, 15, 15, 15, 15
   LTEXT "&Затримка перед початком повтору символу", -1, 40, 15, 50, 10
   LTEXT "Довше", -1, 40, 30, 20, 10
   LTEXT "Коротше", -1, 200, 30, 20, 10
   CONTROL "",IDC_SLIDER_REPEAT_DELAY, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 65, 30, 130, 17
-  ICON -1, IDC_ICON_REPEAT_RATE, 15, 70, 15, 15
+  ICON IDI_REPEAT_RATE, IDC_ICON_REPEAT_RATE, 15, 70, 15, 15
   LTEXT "&Швидкість повтору", -1, 40, 70, 50, 10
   LTEXT "Нижче", -1, 40, 85, 20, 10
   LTEXT "Вище", -1, 200, 85, 20, 10
@@ -51,7 +51,7 @@ BEGIN
   PUSHBUTTON "&OK", IDOK, 120, 75, 50, 15
   PUSHBUTTON "&Скасувати", IDCANCEL, 175, 75, 50, 15
   LTEXT "&Виберіть, як довго слід утримувати натиснуту кнопку миші або трекбола перед спрацьовуванням заліпанія",-1,60,15,170,30
-  ICON -1, IDC_ICON_CLICK_LOCK, 15, 15, 15, 15
+  ICON IDI_LOOK_KEY, IDC_ICON_CLICK_LOCK, 15, 15, 15, 15
 END
 
 IDD_PAGE_BUTTON DIALOGEX 0, 0, 246, 228
@@ -139,7 +139,7 @@ CAPTION "Коліщатко"
 FONT 8, "MS Shell Dlg"
 BEGIN
   GROUPBOX "Прокрутка", -1, 5, 5, 230, 80
-  ICON -1, IDC_ICON_WHEEL, 20, 35, 15, 15
+  ICON IDI_MOUSE_WHEEL, IDC_ICON_WHEEL, 20, 20, 32, 32
   LTEXT "Поворот колисчатка на одне клацання прокручує", -1, 60, 15, 150, 10
   RADIOBUTTON "На вказану кількість &рядків:", IDC_RADIO_WHEEL_SCROLL_LINES, 60, 30, 150, 10, WS_VISIBLE | WS_GROUP | WS_TABSTOP
   RADIOBUTTON "На один &екран", IDC_RADIO_WHEEL_SCROLL_PAGE, 60, 65, 90, 10

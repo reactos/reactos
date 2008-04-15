@@ -8,12 +8,12 @@ CAPTION "Geschwindigkeit"
 FONT 8, "MS Shell Dlg"
 BEGIN
   GROUPBOX "Zeichenwiederholung", -1, 5, 5, 230, 130
-  ICON -1, IDC_ICON_REPEAT_DELAY, 15, 15, 15, 15
+  ICON IDI_REPEAT_DELAY, IDC_ICON_REPEAT_DELAY, 15, 15, 15, 15
   LTEXT "&Verzögerung:", -1, 40, 15, 50, 10
   LTEXT "Lang", -1, 40, 30, 24, 10
   LTEXT "Kurz", -1, 200, 30, 24, 10
   CONTROL "", IDC_SLIDER_REPEAT_DELAY, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 65, 30, 130, 17
-  ICON -1, IDC_ICON_REPEAT_RATE, 15, 70, 15, 15
+  ICON IDI_REPEAT_RATE, IDC_ICON_REPEAT_RATE, 15, 70, 15, 15
   LTEXT "&Wiederholrate:", -1, 40, 70, 50, 10
   LTEXT "Niedrig", -1, 40, 85, 24, 10
   LTEXT "Hoch", -1, 200, 85, 24, 10
@@ -45,7 +45,7 @@ BEGIN
   PUSHBUTTON "&OK", IDOK, 120, 75, 50, 15
   PUSHBUTTON "&Abbrechen", IDCANCEL, 175, 75, 50, 15
   LTEXT "&Stellen Sie ein, wie lange eine Maus- oder Trackballtaste gedrückt werden muss, bevor die KlickEinrasten-Funktion aktiviert wird.",-1,60,15,170,30
-  ICON -1, IDC_ICON_CLICK_LOCK, 15, 15, 15, 15
+  ICON IDI_LOOK_KEY, IDC_ICON_CLICK_LOCK, 15, 15, 15, 15
 END
 
 IDD_PAGE_BUTTON DIALOGEX 0, 0, 246, 228
@@ -132,7 +132,7 @@ CAPTION "Rad"
 FONT 8, "MS Shell Dlg"
 BEGIN
   GROUPBOX "Bildlauf", -1, 5, 5, 230, 80
-  ICON -1, IDC_ICON_WHEEL, 20, 35, 15, 15
+  ICON IDI_MOUSE_WHEEL, IDC_ICON_WHEEL, 20, 20, 32, 32
   LTEXT "Durch Drehen des Rades um eine Einbuchtung wird ein Bildlauf durchgeführt um:", -1, 60, 11, 150, 16
   RADIOBUTTON "&Folgende Anzahl Zeilen:", IDC_RADIO_WHEEL_SCROLL_LINES, 60, 30, 150, 10, WS_VISIBLE | WS_GROUP | WS_TABSTOP
   RADIOBUTTON "&Eine Bildschirmseite", IDC_RADIO_WHEEL_SCROLL_PAGE, 60, 65, 90, 10

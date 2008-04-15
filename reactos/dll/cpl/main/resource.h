@@ -13,6 +13,10 @@
 #define IDI_MOUSE_BUTTON                    206
 #define IDI_MOUSE_TRAILS                    207
 #define IDI_MOUSE_POINTER                   208
+#define IDI_MOUSE_WHEEL                     209
+#define IDI_REPEAT_RATE                     210
+#define IDI_REPEAT_DELAY                    211
+#define IDI_LOOK_KEY                        212
 
 #define IDD_PAGE_BUTTON                     101
 #define IDD_PAGE_POINTER                    102

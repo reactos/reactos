@@ -5,22 +5,22 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Speed"
 FONT 8, "MS Shell Dlg"
 BEGIN
-  GROUPBOX "Character repeat", -1, 5, 5, 230, 130
-  ICON -1, IDC_ICON_REPEAT_DELAY, 15, 15, 15, 15
-  LTEXT "Repeat &delay", -1, 40, 15, 50, 10
-  LTEXT "Long", -1, 40, 30, 20, 10
-  LTEXT "Short", -1, 200, 30, 20, 10
-  CONTROL "",IDC_SLIDER_REPEAT_DELAY, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 65, 30, 130, 17
-  ICON -1, IDC_ICON_REPEAT_RATE, 15, 70, 15, 15
-  LTEXT "&Repeat rate", -1, 40, 70, 50, 10
+  GROUPBOX "Character repeat", -1, 5, 5, 236, 135
+  ICON IDI_REPEAT_DELAY, IDC_ICON_REPEAT_DELAY, 13, 18, 15, 15
+  LTEXT "Repeat &delay:", -1, 40, 18, 100, 10
+  LTEXT "Long", -1, 40, 33, 20, 10
+  LTEXT "Short", -1, 200, 33, 20, 10
+  CONTROL "",IDC_SLIDER_REPEAT_DELAY, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 65, 33, 130, 17
+  ICON IDI_REPEAT_RATE, IDC_ICON_REPEAT_RATE, 13, 70, 15, 15
+  LTEXT "&Repeat rate:", -1, 40, 70, 100, 10
   LTEXT "Slow", -1, 40, 85, 20, 10
   LTEXT "Fast", -1, 200, 85, 20, 10
   CONTROL "",IDC_SLIDER_REPEAT_RATE, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 65, 85, 130, 17
-  LTEXT "Click here and hold down a key to &test repeat rate:", -1, 15, 105, 200, 10
-  EDITTEXT IDC_EDIT_REPEAT_RATE, 15, 115, 200, 15, WS_CHILD | WS_VISIBLE | WS_GROUP
-  GROUPBOX "Cursor &blink rate:", -1, 5, 145, 230, 50
+  LTEXT "Click here and hold down a key to &test repeat rate:", -1, 15, 105, 216, 10
+  EDITTEXT IDC_EDIT_REPEAT_RATE, 15, 116, 216, 14, WS_CHILD | WS_VISIBLE | WS_GROUP
+  GROUPBOX "Cursor &blink rate:", -1, 5, 145, 236, 50
   LTEXT "", IDC_TEXT_CURSOR_BLINK, 20, 165, 1, 8
-  LTEXT "None", -1, 40, 165, 30, 10
+  LTEXT "None", -1, 40, 165, 25, 10
   LTEXT "Fast", -1, 200, 165, 30, 10
   CONTROL "",IDC_SLIDER_CURSOR_BLINK, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 65, 165, 130, 17
 END
@@ -32,18 +32,18 @@ FONT 8, "MS Shell Dlg"
 BEGIN
 END
 
-IDD_CLICK_LOCK DIALOGEX 0, 0, 246, 100
+IDD_CLICK_LOCK DIALOGEX 0, 0, 240, 78
 STYLE DS_SHELLFONT | WS_CAPTION | WS_SYSMENU
 CAPTION "Click Lock"
 FONT 8, "MS Shell Dlg"
 BEGIN
-  LTEXT "Short", -1, 35,  50, 30, 10
-  LTEXT "Long", -1, 140, 50, 30, 10
-  CONTROL "",IDC_SLIDER_CLICK_LOCK, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 65, 50, 70, 17
-  PUSHBUTTON "&Ok", IDOK, 120, 75, 50, 15
-  PUSHBUTTON "&Cancel", IDCANCEL, 175, 75, 50, 15
-  LTEXT "&Adjust how long you need to hold down a mouse or trackball button before your click is locked",-1,60,15,170,30
-  ICON -1, IDC_ICON_CLICK_LOCK, 15, 15, 15, 15
+  LTEXT "Short", -1, 50, 35, 27, 10
+  LTEXT "Long", -1, 157, 35, 27, 10
+  CONTROL "",IDC_SLIDER_CLICK_LOCK, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 78, 35, 70, 17
+  PUSHBUTTON "&OK", IDOK, 110, 59, 60, 14
+  PUSHBUTTON "&Cancel", IDCANCEL, 174, 59, 60, 14
+  LTEXT "&Adjust how long you need to hold down a mouse or trackball button before your click is locked",-1,37,5,200,27
+  ICON IDI_LOOK_KEY, IDC_ICON_CLICK_LOCK, 5, 5, 15, 15
 END
 
 IDD_PAGE_BUTTON DIALOGEX 0, 0, 246, 228
@@ -51,20 +51,20 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
 CAPTION "Button"
 FONT 8, "MS Shell Dlg"
 BEGIN
-  GROUPBOX "Button configuration", -1, 5, 5, 230, 70
-  CHECKBOX "&Switch primary and secondary buttons", IDC_SWAP_MOUSE_BUTTONS, 10, 18, 140, 10
-  CONTROL "", IDC_IMAGE_SWAP_MOUSE, "Static", SS_ICON | SS_CENTERIMAGE | WS_VISIBLE, 165, 14, 65, 57, WS_EX_STATICEDGE
-  LTEXT "Select this checkbox to make the right mouse button the one used for primary functions such as selecting and dragging.", -1, 10, 36, 150, 30
-  GROUPBOX "Double-click speed", -1, 5, 78, 230, 70
-  LTEXT "Double-click the folder to test your settings. If the folder does not open or close, try using a slower setting.", -1, 10, 90, 150, 28
+  GROUPBOX "Button configuration", -1, 5, 5, 236, 70
+  CHECKBOX "&Switch primary and secondary buttons", IDC_SWAP_MOUSE_BUTTONS, 10, 18, 156, 10
+  CONTROL "", IDC_IMAGE_SWAP_MOUSE, "Static", SS_ICON | SS_CENTERIMAGE | WS_VISIBLE, 171, 14, 65, 57, WS_EX_STATICEDGE
+  LTEXT "Select this checkbox to make the right mouse button the one used for primary functions such as selecting and dragging.", -1, 10, 36, 156, 30
+  GROUPBOX "Double-click speed", -1, 5, 78, 236, 70
+  LTEXT "Double-click the folder to test your settings. If the folder does not open or close, try using a slower setting.", -1, 10, 90, 156, 28
   LTEXT "Spee&d:   Slow", -1, 10, 123, 50, 10
   LTEXT "Fast", -1, 136, 123, 24, 10
   CONTROL "",IDC_SLIDER_DOUBLE_CLICK_SPEED, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 60, 123, 70, 17
-  CONTROL "", IDC_IMAGE_DOUBLE_CLICK_SPEED, "Static", SS_ICON | SS_NOTIFY | SS_CENTERIMAGE | WS_VISIBLE, 165, 87, 65, 57, WS_EX_STATICEDGE
-  GROUPBOX "ClickLock", -1, 5, 150, 230, 70
+  CONTROL "", IDC_IMAGE_DOUBLE_CLICK_SPEED, "Static", SS_ICON | SS_NOTIFY | SS_CENTERIMAGE | WS_VISIBLE, 171, 87, 65, 57, WS_EX_STATICEDGE
+  GROUPBOX "ClickLock", -1, 5, 150, 236, 70
   CHECKBOX "&Turn on ClickLock", IDC_CHECK_CLICK_LOCK, 10, 160, 70, 20
-  PUSHBUTTON "&Settings...", IDC_BUTTON_CLICK_LOCK, 166, 161, 60, 14
-  LTEXT "Enables you to highlight or drag without holding down the mouse button. To set, briefly press the mouse button. To release, click the mouse button again.", -1, 10, 180, 216, 30
+  PUSHBUTTON "&Settings...", IDC_BUTTON_CLICK_LOCK, 172, 161, 60, 14
+  LTEXT "Enables you to highlight or drag without holding down the mouse button. To set, briefly press the mouse button. To release, click the mouse button again.", -1, 10, 180, 224, 30
 END
 
 IDD_PAGE_POINTER DIALOGEX 0, 0, 246, 228
@@ -84,15 +84,15 @@ BEGIN
   PUSHBUTTON "&Browse...", IDC_BUTTON_BROWSE_CURSOR, 186, 196, 55, 14
 END
 
-IDD_CURSOR_SCHEME_SAVEAS DIALOGEX 0, 0, 200, 75
+IDD_CURSOR_SCHEME_SAVEAS DIALOGEX 0, 0, 192, 53
 STYLE DS_SHELLFONT | WS_CAPTION | WS_SYSMENU
 CAPTION "Save Scheme"
 FONT 8, "MS Shell Dlg"
 BEGIN
-  LTEXT "Save this cursor scheme as:", -1, 5, 5, 100, 10
+  LTEXT "Save this cursor scheme as:", -1, 5, 5, 181, 10
   EDITTEXT IDC_EDIT_SCHEME_NAME, 5, 15, 180, 15, WS_CHILD | WS_VISIBLE | WS_GROUP
-  PUSHBUTTON "&Ok", IDOK, 60, 45, 50, 15
-  PUSHBUTTON "&Cancel", IDCANCEL, 115, 45, 50, 15
+  PUSHBUTTON "&OK", IDOK, 63, 35, 60, 14
+  PUSHBUTTON "&Cancel", IDCANCEL, 126, 35, 60, 14
 END
 
 
@@ -131,9 +131,9 @@ CAPTION "Wheel"
 FONT 8, "MS Shell Dlg"
 BEGIN
   GROUPBOX "Scrolling", -1, 5, 5, 236, 80
-  ICON -1, IDC_ICON_WHEEL, 20, 35, 15, 15
+  ICON IDI_MOUSE_WHEEL, IDC_ICON_WHEEL, 20, 20, 32, 32
   LTEXT "Roll the wheel one notch to scroll", -1, 60, 15, 150, 10
-  RADIOBUTTON "The following &number of lines at a time", IDC_RADIO_WHEEL_SCROLL_LINES, 60, 30, 150, 10, WS_VISIBLE | WS_GROUP | WS_TABSTOP
+  RADIOBUTTON "The following &number of lines at a time:", IDC_RADIO_WHEEL_SCROLL_LINES, 60, 30, 150, 10, WS_VISIBLE | WS_GROUP | WS_TABSTOP
   RADIOBUTTON "&One screen at a time", IDC_RADIO_WHEEL_SCROLL_PAGE, 60, 65, 90, 10
   EDITTEXT IDC_EDIT_WHEEL_SCROLL_LINES, 70, 45, 60, 15, ES_RIGHT | WS_VISIBLE | WS_GROUP | WS_TABSTOP
   CONTROL "", IDC_UPDOWN_WHEEL_SCROLL_LINES, UPDOWN_CLASS, UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_BORDER, 125, 45, 12, 12

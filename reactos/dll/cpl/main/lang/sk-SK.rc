@@ -12,12 +12,12 @@ CAPTION "R˝chlosù"
 FONT 8, "MS Shell Dlg"
 BEGIN
   GROUPBOX "Character repeat", -1, 5, 5, 230, 130
-  ICON -1, IDC_ICON_REPEAT_DELAY, 15, 15, 15, 15
+  ICON IDI_REPEAT_DELAY, IDC_ICON_REPEAT_DELAY, 15, 15, 15, 15
   LTEXT "Repeat &delay", -1, 40, 15, 50, 10
   LTEXT "Long", -1, 40, 30, 20, 10
   LTEXT "Short", -1, 200, 30, 20, 10
   CONTROL "",IDC_SLIDER_REPEAT_DELAY, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 65, 30, 130, 17
-  ICON -1, IDC_ICON_REPEAT_RATE, 15, 70, 15, 15
+  ICON IDI_REPEAT_RATE, IDC_ICON_REPEAT_RATE, 15, 70, 15, 15
   LTEXT "&Repeat rate", -1, 40, 70, 50, 10
   LTEXT "Slow", -1, 40, 85, 20, 10
   LTEXT "Fast", -1, 200, 85, 20, 10
@@ -49,7 +49,7 @@ BEGIN
   PUSHBUTTON "&OK", IDOK, 120, 75, 50, 15
   PUSHBUTTON "&Zruöiù", IDCANCEL, 175, 75, 50, 15
   LTEXT "&Adjust how long you need to hold down a mouse or trackball button before your click is locked",-1,60,15,170,30
-  ICON -1, IDC_ICON_CLICK_LOCK, 15, 15, 15, 15
+  ICON IDI_LOOK_KEY, IDC_ICON_CLICK_LOCK, 15, 15, 15, 15
 END
 
 IDD_PAGE_BUTTON DIALOGEX 0, 0, 246, 228
@@ -137,7 +137,7 @@ CAPTION "Koliesko"
 FONT 8, "MS Shell Dlg"
 BEGIN
   GROUPBOX "Rolovanie", -1, 5, 5, 230, 80
-  ICON -1, IDC_ICON_WHEEL, 20, 35, 15, 15
+  ICON IDI_MOUSE_WHEEL, IDC_ICON_WHEEL, 20, 20, 32, 32
   LTEXT "Roll the wheel one notch to scroll", -1, 60, 15, 150, 10
   RADIOBUTTON "The following &number of lines at a time", IDC_RADIO_WHEEL_SCROLL_LINES, 60, 30, 150, 10, WS_VISIBLE | WS_GROUP | WS_TABSTOP
   RADIOBUTTON "&One screen at a time", IDC_RADIO_WHEEL_SCROLL_PAGE, 60, 65, 90, 10

@@ -6,12 +6,12 @@ CAPTION "Скорость"
 FONT 8, "MS Shell Dlg"
 BEGIN
   GROUPBOX "Повтор вводимого символа", -1, 5, 5, 230, 150
-  ICON -1, IDC_ICON_REPEAT_DELAY, 15, 15, 15, 15
+  ICON IDI_REPEAT_DELAY, IDC_ICON_REPEAT_DELAY, 15, 15, 15, 15
   LTEXT "&Задержка перед началом повтора:", -1, 40, 15, 160, 10
   LTEXT "Длиннее", -1, 25, 30, 28, 10
   LTEXT "Короче", -1, 200, 30, 25, 10
   CONTROL "",IDC_SLIDER_REPEAT_DELAY, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 65, 30, 130, 17
-  ICON -1, IDC_ICON_REPEAT_RATE, 15, 70, 15, 15
+  ICON IDI_REPEAT_RATE, IDC_ICON_REPEAT_RATE, 15, 70, 15, 15
   LTEXT "&Скорость повтора:", -1, 40, 70, 100, 10
   LTEXT "Ниже", -1, 40, 85, 20, 10
   LTEXT "Выше", -1, 200, 85, 20, 10
@@ -43,7 +43,7 @@ BEGIN
   PUSHBUTTON "&OK", IDOK, 120, 75, 50, 15
   PUSHBUTTON "&Отмена", IDCANCEL, 175, 75, 50, 15
   LTEXT "&Adjust how long you need to hold down a mouse or trackball button before your click is locked",-1,60,15,170,30
-  ICON -1, IDC_ICON_CLICK_LOCK, 15, 15, 15, 15
+  ICON IDI_LOOK_KEY, IDC_ICON_CLICK_LOCK, 15, 15, 15, 15
 END
 
 IDD_PAGE_BUTTON DIALOGEX 0, 0, 246, 228
@@ -131,7 +131,7 @@ CAPTION "Колесико"
 FONT 8, "MS Shell Dlg"
 BEGIN
   GROUPBOX "Прокрутка", -1, 5, 5, 230, 80
-  ICON -1, IDC_ICON_WHEEL, 20, 35, 15, 15
+  ICON IDI_MOUSE_WHEEL, IDC_ICON_WHEEL, 20, 20, 32, 32
   LTEXT "Поворот колесика на один щелчок служит для прокрутки:", -1, 20, 15, 212, 10
   RADIOBUTTON "на указанное количество &строк:", IDC_RADIO_WHEEL_SCROLL_LINES, 60, 30, 150, 10, WS_VISIBLE | WS_GROUP | WS_TABSTOP
   RADIOBUTTON "на один &экран", IDC_RADIO_WHEEL_SCROLL_PAGE, 60, 65, 90, 10

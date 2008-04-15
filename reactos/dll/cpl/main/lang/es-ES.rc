@@ -6,12 +6,12 @@ CAPTION "Velocidad"
 FONT 8, "MS Shell Dlg"
 BEGIN
   GROUPBOX "Repetición de caracteres", -1, 5, 5, 230, 130
-  ICON -1, IDC_ICON_REPEAT_DELAY, 15, 15, 15, 15
+  ICON IDI_REPEAT_DELAY, IDC_ICON_REPEAT_DELAY, 15, 15, 15, 15
   LTEXT "Retra&so de la repetición", -1, 40, 15, 50, 10
   LTEXT "Largo", -1, 40, 30, 20, 10
   LTEXT "Corto", -1, 200, 30, 20, 10
   CONTROL "",IDC_SLIDER_REPEAT_DELAY, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 65, 30, 130, 17
-  ICON -1, IDC_ICON_REPEAT_RATE, 15, 70, 15, 15
+  ICON IDI_REPEAT_RATE, IDC_ICON_REPEAT_RATE, 15, 70, 15, 15
   LTEXT "Velocidad de &repetición", -1, 40, 70, 50, 10
   LTEXT "Lenta", -1, 40, 85, 20, 10
   LTEXT "Rápida", -1, 200, 85, 20, 10
@@ -43,7 +43,7 @@ BEGIN
   PUSHBUTTON "&Aceptar", IDOK, 120, 75, 50, 15
   PUSHBUTTON "&Cancelar", IDCANCEL, 175, 75, 50, 15
   LTEXT "&Ajustar el tiempo que debe mantenerse presionado un botón del ratón o de la bola de seguimiento antes de que el clic se bloquee.",-1,60,15,170,30
-  ICON -1, IDC_ICON_CLICK_LOCK, 15, 15, 15, 15
+  ICON IDI_LOOK_KEY, IDC_ICON_CLICK_LOCK, 15, 15, 15, 15
 END
 
 IDD_PAGE_BUTTON DIALOGEX 0, 0, 246, 228
@@ -131,7 +131,7 @@ CAPTION "Rueda"
 FONT 8, "MS Shell Dlg"
 BEGIN
   GROUPBOX "Desplazamiento", -1, 5, 5, 230, 80
-  ICON -1, IDC_ICON_WHEEL, 20, 35, 15, 15
+  ICON IDI_MOUSE_WHEEL, IDC_ICON_WHEEL, 20, 20, 32, 32
   LTEXT "Girar la rueda una posición para desplazar", -1, 60, 15, 150, 10
   RADIOBUTTON "&El siguiente número de líneas a la vez", IDC_RADIO_WHEEL_SCROLL_LINES, 60, 30, 150, 10, WS_VISIBLE | WS_GROUP | WS_TABSTOP
   RADIOBUTTON "&Una pantalla a la vez", IDC_RADIO_WHEEL_SCROLL_PAGE, 60, 65, 90, 10

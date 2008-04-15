@@ -201,6 +201,7 @@ ClickLockProc(IN HWND hwndDlg,
 {
     HWND hDlgCtrl;
     int pos;
+    static HICON hIcon;
 
     PBUTTON_DATA pButtonData;
 
@@ -216,6 +217,10 @@ ClickLockProc(IN HWND hwndDlg,
             SendMessage(hDlgCtrl, TBM_SETRANGE, (WPARAM)TRUE, (LPARAM)MAKELONG(0, 10));
             pos = (pButtonData->g_ClickLockTime - 200) / 200;
             SendMessage(hDlgCtrl, TBM_SETPOS, (WPARAM)TRUE, (LPARAM)pos);
+
+            hIcon = LoadImage(hApplet, MAKEINTRESOURCE(IDI_LOOK_KEY),
+                              IMAGE_ICON, 16, 16, 0);
+            SendMessage(hwndDlg, WM_SETICON, ICON_SMALL, (LPARAM)hIcon);
             return TRUE;
 
         case WM_COMMAND:

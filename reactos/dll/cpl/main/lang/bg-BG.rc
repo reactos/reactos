@@ -7,12 +7,12 @@ CAPTION "Скорост"
 FONT 8, "MS Shell Dlg"
 BEGIN
   GROUPBOX "Повтаряне на знаците", -1, 5, 5, 230, 130
-  ICON -1, IDC_ICON_REPEAT_DELAY, 15, 15, 15, 15
+  ICON IDI_REPEAT_DELAY, IDC_ICON_REPEAT_DELAY, 15, 15, 15, 15
   LTEXT "&Забавяне на повтарянето ", -1, 40, 15, 90, 10
   LTEXT "Кратко", -1, 35, 30, 25, 10
   LTEXT "Дълго", -1, 200, 30, 25, 10
   CONTROL "",IDC_SLIDER_REPEAT_DELAY, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 65, 30, 130, 17
-  ICON -1, IDC_ICON_REPEAT_RATE, 15, 70, 15, 15
+  ICON IDI_REPEAT_RATE, IDC_ICON_REPEAT_RATE, 15, 70, 15, 15
   LTEXT "&Скорост на повтаряне", -1, 40, 65, 110, 10
   LTEXT "Бавно", -1, 40, 80, 20, 10
   LTEXT "Бързо", -1, 200, 80, 20, 10
@@ -44,7 +44,7 @@ BEGIN
   PUSHBUTTON "&Добре", IDOK, 120, 75, 50, 15
   PUSHBUTTON "&Отказ", IDCANCEL, 175, 75, 50, 15
   LTEXT "На&стройка продължителността на задържане на цъка на мишката, необходимо за да бъде отчетено цъкането",-1,60,15,170,30
-  ICON -1, IDC_ICON_CLICK_LOCK, 15, 15, 15, 15
+  ICON IDI_LOOK_KEY, IDC_ICON_CLICK_LOCK, 15, 15, 15, 15
 END
 
 IDD_PAGE_BUTTON DIALOGEX 0, 0, 246, 228
@@ -135,7 +135,7 @@ CAPTION "Колело"
 FONT 8, "MS Shell Dlg"
 BEGIN
   GROUPBOX "Превъртане", -1, 5, 5, 230, 80
-  ICON -1, IDC_ICON_WHEEL, 20, 35, 15, 15
+  ICON IDI_MOUSE_WHEEL, IDC_ICON_WHEEL, 20, 20, 32, 32
   LTEXT "Завъртане на колелото на една стъпка", -1, 60, 15, 150, 10
   RADIOBUTTON "Брой &редове наведнъж", IDC_RADIO_WHEEL_SCROLL_LINES, 60, 30, 150, 10, WS_VISIBLE | WS_GROUP | WS_TABSTOP
   RADIOBUTTON "&Един екран наведнъж", IDC_RADIO_WHEEL_SCROLL_PAGE, 60, 65, 90, 10
