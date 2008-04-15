@@ -229,10 +229,12 @@ ClickLockProc(IN HWND hwndDlg,
                 hDlgCtrl = GetDlgItem(hwndDlg, IDC_SLIDER_CLICK_LOCK);
                 pButtonData->g_ClickLockTime = (DWORD) (SendMessage(hDlgCtrl, TBM_GETPOS, 0, 0) * 200) + 200;
                 EndDialog(hwndDlg, TRUE);
+                if (hIcon) DestroyIcon(hIcon);
             }
             else if (LOWORD(wParam) == IDCANCEL)
             {
                 EndDialog(hwndDlg, FALSE);
+                if (hIcon) DestroyIcon(hIcon);
             }
             break;
     }
