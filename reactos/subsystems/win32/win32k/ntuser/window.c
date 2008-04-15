@@ -2054,6 +2054,7 @@ AllocErr:
    {
       /* FIXME: Cleanup. */
       DPRINT1("IntCreateWindowEx(): send CREATE message failed. No cleanup performed!\n");
+      IntUnlinkWindow(Window);
       RETURN((HWND)0);
    }
 
