@@ -178,6 +178,8 @@ LRESULT WINAPI WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			wglDeleteContext(hrc);
 			ReleaseDC(hwnd, dc);
 			DeleteDC(dc);
+			if (fullscreen)
+				ShowCursor(TRUE);
 			PostQuitMessage(0);
 			break;
 		case WM_NOTIFY:
