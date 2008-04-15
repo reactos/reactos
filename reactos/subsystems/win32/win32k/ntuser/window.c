@@ -2049,7 +2049,6 @@ AllocErr:
    DPRINT("IntCreateWindowEx(): about to send CREATE message.\n");
    Result = co_IntSendMessage(Window->hSelf, WM_CREATE, 0, (LPARAM) &Cs);
 
-
    if (Result == (LRESULT)-1)
    {
       /* FIXME: Cleanup. */
@@ -2057,7 +2056,16 @@ AllocErr:
       IntUnlinkWindow(Window);
       RETURN((HWND)0);
    }
+#if 0
+   Result = co_EVENT_CallEvents(EVENT_OBJECT_CREATE, Window->hSelf, OBJID_WINDOW, 0);
 
+   if (Result == (LRESULT)-1)
+   {
+      /* FIXME: Cleanup. */
+      DPRINT1("IntCreateWindowEx(): event CREATE hook failed. No cleanup performed!\n");
+      RETURN((HWND)0);
+   }
+#endif
    /* Send move and size messages. */
    if (!(Window->Flags & WINDOWOBJECT_NEED_SIZE))
    {
