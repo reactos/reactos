@@ -37,5 +37,5 @@ STRINGTABLE DISCARDABLE
 BEGIN
 	IDS_QUERY_REBOOT_TEXT        "Ваш компьютер должен быть перезагружен, чтобы завершить установку. Продолжить?"
 	IDS_QUERY_REBOOT_CAPTION     "Перезагрузка"
-	IDS_INF_FILE                 "Setup Information"
+	IDS_INF_FILE                 "Информация для установки"
 END
