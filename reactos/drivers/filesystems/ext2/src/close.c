@@ -144,7 +144,6 @@ BOOLEAN						FirstAttempt )
 			{
 				DebugTrace( DEBUG_TRACE_SPECIAL, "###### File Pointer 0x%LX [Close]", PtrFileObject);
 			}
-			Ext2BreakPoint();
 			try_return( RC );
 		}
 
