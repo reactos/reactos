@@ -2,6 +2,7 @@
 #define _WIN32K_CLIPBOARD_H
 
 #include "window.h"
+#include <include/win32.h>
 
 VOID FASTCALL IntIncrementSequenceNumber(VOID);
 

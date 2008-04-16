@@ -1,7 +1,8 @@
 #ifndef __WIN32K_DC_H
 #define __WIN32K_DC_H
 
-#include "driver.h"
+#include <include/brush.h>
+#include <include/bitmaps.h>
 
 /* Constants ******************************************************************/
 
@@ -32,6 +33,45 @@
 
 /* Type definitions ***********************************************************/
 
+typedef struct _DCLEVEL
+{
+  HPALETTE          hpal;
+  struct _PALGDI  * ppal;
+  PVOID             pColorSpace; // COLORSPACE*
+  LONG              lIcmMode;
+  LONG              lSaveDepth;
+  DWORD             unk1_00000000;
+  HGDIOBJ           hdcSave;
+  POINTL            ptlBrushOrigin;
+  PGDIBRUSHOBJ      pbrFill;
+  PGDIBRUSHOBJ      pbrLine;
+  PVOID             plfnt; // LFONTOBJ* (TEXTOBJ*)
+  HGDIOBJ           hPath; // HPATH
+  FLONG             flPath;
+  LINEATTRS         laPath; // 0x20 bytes
+  PVOID             prgnClip; // PROSRGNDATA
+  PVOID             prgnMeta;
+  COLORADJUSTMENT   ca;
+  FLONG             flFontState;
+  UNIVERSAL_FONT_ID ufi;
+  DWORD             unk4_00000000[11];
+  FLONG             fl;
+  FLONG             flBrush;
+  MATRIX_S          mxWorldToDevice;
+  MATRIX_S          mxDeviceToWorld;
+  MATRIX_S          mxWorldToPage;
+  EFLOAT_S          efM11PtoD;
+  EFLOAT_S          efM22PtoD;
+  EFLOAT_S          efDxPtoD;
+  EFLOAT_S          efDyPtoD;
+  EFLOAT_S          efM11_TWIPS;
+  EFLOAT_S          efM22_TWIPS;
+  EFLOAT_S          efPr11;
+  EFLOAT_S          efPr22;
+  PBITMAPOBJ        pSurface; // SURFACE*
+  SIZE              sizl;
+} DCLEVEL, PDCLEVEL;
+
 /* The DC object structure */
 typedef struct _DC
 {
@@ -47,16 +87,39 @@ typedef struct _DC
   FLONG       flGraphics;
   FLONG       flGraphics2;
   PDC_ATTR    pDc_Attr;
-  WIN_DC_INFO w;
+  DCLEVEL     DcLevel;
   DC_ATTR     Dc_Attr;
   HDC         hNext;
   HDC         hPrev;
   RECTL       erclClip;
+  POINTL      ptlSaveFillOrig;
   RECTL       erclWindow;
   RECTL       erclBounds;
-  HRGN        hprgnAPI;
-  HRGN        hprgnVis;
+  RECTL       erclBoundsApp;
+  PVOID       prgnAPI; // PROSRGNDATA
+  PVOID       prgnVis;
+  PVOID       prgnRao;
+  POINTL      ptlFillOrigin;
+  unsigned    eboFill_[23]; // EBRUSHOBJ
+  unsigned    eboLine_[23];
+  unsigned    eboText_[23];
+  unsigned    eboBackground_[23];
+  HFONT       hlfntCur;
+  FLONG       flSimulationFlags;
+  LONG        lEscapement;
+  PVOID       prfnt; // RFONT*
+  unsigned    co_[31]; // CLIPOBJ
+  PVOID       pPFFList; // PPFF*
+  PVOID       ClrxFormObj;
+  INT         ipfdDevMax;
+  ULONG       ulCopyCount;
+  PVOID       pSurfInfo;
+  POINTL      ptlDoBanding;
 
+  /* Reactos specific members */
+  WIN_DC_INFO w;
+  HRGN        hprgnAPI; // should use prgnAPI
+  HRGN        hprgnVis; // should use prgnVis
   CLIPOBJ     *CombinedClip;
   XLATEOBJ    *XlateBrush;
   XLATEOBJ    *XlatePen;

@@ -8,6 +8,7 @@
 
 /* Public GDI Object/Handle definitions */
 #include <win32k/ntgdihdl.h>
+#include <include/win32.h>
 
 typedef struct _GDI_HANDLE_TABLE
 {

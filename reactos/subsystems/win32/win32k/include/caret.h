@@ -1,6 +1,9 @@
 #ifndef _WIN32K_CARET_H
 #define _WIN32K_CARET_H
 
+#include <include/win32.h>
+#include <include/window.h>
+
 #define IDCARETTIMER (0xffff)
 
 BOOL FASTCALL

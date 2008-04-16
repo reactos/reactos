@@ -37,9 +37,6 @@ BOOL INTERNAL_CALL REGION_Cleanup(PVOID ObjectBody);
 INT STDCALL IntGdiGetRgnBox(HRGN, LPRECT);
 BOOL FASTCALL IntGdiPaintRgn(PDC, HRGN );
 HRGN FASTCALL GdiCreatePolyPolygonRgn(CONST PPOINT, CONST PINT, INT, INT );
-int FASTCALL IntGdiGetClipBox(HDC hDC, LPRECT rc);
-INT STDCALL IntGdiSelectVisRgn(HDC hdc, HRGN hrgn);
-
 
 #define UnsafeIntCreateRectRgnIndirect(prc) \
   NtGdiCreateRectRgn((prc)->left, (prc)->top, (prc)->right, (prc)->bottom)

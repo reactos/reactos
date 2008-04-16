@@ -1,6 +1,8 @@
 #ifndef _WIN32K_PALETTE_H
 #define _WIN32K_PALETTE_H
 
+#include <include/dc.h>
+
 #define NO_MAPPING
 
 #define PALETTE_FIXED    0x0001 /* read-only colormap - have to use XAllocColor (if not virtual) */

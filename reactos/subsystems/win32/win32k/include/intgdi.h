@@ -193,8 +193,6 @@ IntGetSysColor(INT nIndex);
 INT FASTCALL
 IntGdiGetDeviceCaps(PDC dc, INT Index);
 
-int STDCALL IntGdiExtSelectClipRgn (PDC dc, HRGN hrgn, int fnMode);
-
 INT
 FASTCALL
 IntGdiEscape(PDC    dc,

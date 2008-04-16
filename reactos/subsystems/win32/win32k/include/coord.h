@@ -1,6 +1,8 @@
 #ifndef __WIN32K_COORD_H
 #define __WIN32K_COORD_H
 
+#include <include/dc.h>
+
 VOID
 FASTCALL
 IntDPtoLP ( PDC dc, LPPOINT Points, INT Count );

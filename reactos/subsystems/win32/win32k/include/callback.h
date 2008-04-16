@@ -1,6 +1,8 @@
 #ifndef _WIN32K_CALLBACK_H
 #define _WIN32K_CALLBACK_H
 
+#include <include/win32.h>
+
 LRESULT STDCALL
 co_IntCallWindowProc(WNDPROC Proc,
                   BOOLEAN IsAnsiProc,
