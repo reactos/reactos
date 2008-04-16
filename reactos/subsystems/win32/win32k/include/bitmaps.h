@@ -2,8 +2,8 @@
 #ifndef __WIN32K_BITMAPS_H
 #define __WIN32K_BITMAPS_H
 
-#include <include/win32.h>
-#include <include/gdiobj.h>
+#include "win32.h"
+#include "gdiobj.h"
 
 /* GDI logical bitmap object */
 typedef struct _BITMAPOBJ

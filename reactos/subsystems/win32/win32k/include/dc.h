@@ -1,8 +1,8 @@
 #ifndef __WIN32K_DC_H
 #define __WIN32K_DC_H
 
-#include <include/brush.h>
-#include <include/bitmaps.h>
+#include "brush.h"
+#include "bitmaps.h"
 
 /* Constants ******************************************************************/
 

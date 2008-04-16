@@ -17,8 +17,6 @@ InitAcceleratorImpl();
 NTSTATUS FASTCALL
 CleanupAcceleratorImpl();
 
-VOID
-RegisterThreadAcceleratorTable(struct _ETHREAD *Thread);
 PACCELERATOR_TABLE FASTCALL UserGetAccelObject(HACCEL);
 
 #endif /* _WIN32K_ACCELERATOR_H */
