@@ -511,7 +511,7 @@ DEFINE_GUIDSTRUCT("9F564180-704C-11D0-A5D6-28DB04C10000", KSDEGRADESETID_Standar
         KSEVENTS_ERESOURCE
     } KSEVENTS_LOCKTYPE;
 
-    #if !defined(__WIDL_WTYPES_H)
+    #if !defined(__wtypes_h__)
         enum VARENUM
         {
             VT_EMPTY = 0,
@@ -2077,7 +2077,7 @@ typedef struct
 
     #ifndef _NTOS_
 
-    void __inline KsGateTurnInputOn(IN PKSGATE Gate OPTIONAL)
+    static __inline void KsGateTurnInputOn(IN PKSGATE Gate OPTIONAL)
     {
         while (Gate && (InterlockedIncrement(&Gate->Count) == 1))
         {
@@ -2085,7 +2085,7 @@ typedef struct
         }
     }
 
-    void __inline KsGateTurnInputOff(IN PKSGATE Gate OPTIONAL)
+    static __inline void KsGateTurnInputOff(IN PKSGATE Gate OPTIONAL)
     {
         while (Gate && (InterlockedDecrement(&Gate->Count) == 0))
         {
@@ -2093,16 +2093,18 @@ typedef struct
         }
     }
 
-    BOOLEAN __inline KsGateGetStateUnsafe(IN PKSGATE Gate)
+    static __inline BOOLEAN KsGateGetStateUnsafe(IN PKSGATE Gate)
     {
-        ASSERT(Gate);
+        // FIXME ASSERT create error at compiling 
+        //ASSERT(Gate);                
         return((BOOLEAN)(Gate->Count > 0));
     }
 
-    BOOLEAN __inline KsGateCaptureThreshold(IN PKSGATE Gate)
+    static __inline BOOLEAN KsGateCaptureThreshold(IN PKSGATE Gate)
     {
         BOOLEAN captured;
-        ASSERT(Gate);
+        // FIXME ASSERT create error at compiling 
+        // ASSERT(Gate);
 
         captured = (BOOLEAN)(InterlockedCompareExchange(&Gate->Count,0,1) == 1);
         if (captured)
@@ -2112,9 +2114,10 @@ typedef struct
         return captured;
     }
 
-    void __inline KsGateInitialize( IN PKSGATE Gate, IN LONG InitialCount, IN PKSGATE NextGate OPTIONAL, IN BOOLEAN StateToPropagate)
+    static __inline void KsGateInitialize( IN PKSGATE Gate, IN LONG InitialCount, IN PKSGATE NextGate OPTIONAL, IN BOOLEAN StateToPropagate)
     {
-        ASSERT(Gate);
+        // FIXME ASSERT create error at compiling 
+        // ASSERT(Gate);
         Gate->Count = InitialCount;
         Gate->NextGate = NextGate;
 
@@ -2137,28 +2140,29 @@ typedef struct
         }
     }
 
-    void __inline KsGateInitializeAnd( IN PKSGATE AndGate, IN PKSGATE NextOrGate OPTIONAL)
+    static __inline void KsGateInitializeAnd( IN PKSGATE AndGate, IN PKSGATE NextOrGate OPTIONAL)
     { 
         KsGateInitialize(AndGate,1,NextOrGate,TRUE);
     }
 
-    void __inline KsGateInitializeOr(IN PKSGATE OrGate, IN PKSGATE NextAndGate OPTIONAL)
+    static __inline void KsGateInitializeOr(IN PKSGATE OrGate, IN PKSGATE NextAndGate OPTIONAL)
     {
         KsGateInitialize(OrGate,0,NextAndGate,FALSE);
     }
 
-    void __inline KsGateAddOnInputToAnd(IN PKSGATE AndGate) { UNREFERENCED_PARAMETER (AndGate); }
-    void __inline KsGateRemoveOnInputFromAnd(IN PKSGATE AndGate) { UNREFERENCED_PARAMETER (AndGate); }
-    void __inline KsGateRemoveOnInputFromOr(IN PKSGATE OrGate) { KsGateTurnInputOff(OrGate); }
-    void __inline KsGateRemoveOffInputFromOr(IN PKSGATE OrGate) { UNREFERENCED_PARAMETER (OrGate); }
-    void __inline KsGateAddOnInputToOr(IN PKSGATE OrGate) { KsGateTurnInputOn(OrGate); }
-    void __inline KsGateRemoveOffInputFromAnd(IN PKSGATE AndGate) { KsGateTurnInputOn(AndGate); }
-    void __inline KsGateAddOffInputToOr(IN PKSGATE OrGate) { UNREFERENCED_PARAMETER (OrGate); }
-    void __inline KsGateAddOffInputToAnd(IN PKSGATE AndGate) { KsGateTurnInputOff(AndGate); }
+    static __inline void KsGateAddOnInputToAnd(IN PKSGATE AndGate) { UNREFERENCED_PARAMETER (AndGate); }
+    static __inline void KsGateRemoveOnInputFromAnd(IN PKSGATE AndGate) { UNREFERENCED_PARAMETER (AndGate); }
+    static __inline void KsGateRemoveOnInputFromOr(IN PKSGATE OrGate) { KsGateTurnInputOff(OrGate); }
+    static __inline void KsGateRemoveOffInputFromOr(IN PKSGATE OrGate) { UNREFERENCED_PARAMETER (OrGate); }
+    static __inline void KsGateAddOnInputToOr(IN PKSGATE OrGate) { KsGateTurnInputOn(OrGate); }
+    static __inline void KsGateRemoveOffInputFromAnd(IN PKSGATE AndGate) { KsGateTurnInputOn(AndGate); }
+    static __inline void KsGateAddOffInputToOr(IN PKSGATE OrGate) { UNREFERENCED_PARAMETER (OrGate); }
+    static __inline void KsGateAddOffInputToAnd(IN PKSGATE AndGate) { KsGateTurnInputOff(AndGate); }
 
-    void __inline KsGateTerminateOr(IN PKSGATE OrGate)
+    static __inline void KsGateTerminateOr(IN PKSGATE OrGate)
     {
-        ASSERT(OrGate);
+        // FIXME ASSERT create error at compiling 
+        // ASSERT(OrGate);
         if (KsGateGetStateUnsafe(OrGate))
         {
             KsGateRemoveOnInputFromAnd(OrGate->NextGate);
@@ -2169,9 +2173,10 @@ typedef struct
         }
     }
 
-    void __inline KsGateTerminateAnd( IN PKSGATE AndGate)
+    static __inline void KsGateTerminateAnd( IN PKSGATE AndGate)
     {
-        ASSERT(AndGate);
+        // FIXME ASSERT create error at compiling 
+        // ASSERT(AndGate);
         if (KsGateGetStateUnsafe(AndGate))
         {
             KsGateRemoveOnInputFromOr(AndGate->NextGate);
@@ -2471,7 +2476,7 @@ typedef struct
         ULONG Count;
     };
 
-    #if defined(_UNKNOWN_H_) || defined(__IUnknown_INTERFACE_DEFINED__)
+    #if defined(__unknwn_h__) || defined(__IUnknown_INTERFACE_DEFINED__)
         #if !defined(_IKsControl_)
 
             #define _IKsControl_
@@ -2554,7 +2559,7 @@ extern "C" {
 
     #if (!defined( RT_STRING ))
         #define RT_STRING           MAKEINTRESOURCE( 6 )
-        #define RT_RCDATA           MAKEINTRESOURCE( 10 ) 
+        #define RT_RCDATA           MAKEINTRESOURCE( 10 )
     #endif
 
     typedef enum
@@ -2568,7 +2573,7 @@ extern "C" {
     KsAllocateDefaultClock(OUT PKSDEFAULTCLOCK* DefaultClock);
 
     KSDDKAPI NTSTATUS NTAPI 
-    KsAllocateDefaultClockEx(OUT PKSDEFAULTCLOCK* DefaultClock, 
+    KsAllocateDefaultClockEx(OUT PKSDEFAULTCLOCK* DefaultClock,
                              IN PVOID Context OPTIONAL,
                              IN PFNKSSETTIMER SetTimer OPTIONAL,
                              IN PFNKSCANCELTIMER CancelTimer OPTIONAL,
@@ -3493,111 +3498,110 @@ extern "C" {
 
     #define KsDiscard(Object,Pointer)  KsRemoveItemFromObjectBag((Object)->Bag, (PVOID)(Pointer), TRUE)
 
-    void __inline
-    KsFilterAddEvent(IN PKSFILTER Filter, IN PKSEVENT_ENTRY EventEntry)
+ 
+    static __inline void KsFilterAddEvent(IN PKSFILTER Filter, IN PKSEVENT_ENTRY EventEntry)
     {
         KsAddEvent(Filter,EventEntry);
     }
 
-    void __inline KsPinAddEvent(IN PKSPIN Pin, IN PKSEVENT_ENTRY EventEntry)
+
+    static __inline void KsPinAddEvent(IN PKSPIN Pin, IN PKSEVENT_ENTRY EventEntry)
     {
         KsAddEvent(Pin,EventEntry);
     }
 
-    void __inline KsFilterGenerateEvents(IN PKSFILTER Filter, IN const GUID* EventSet OPTIONAL,
+    static __inline void KsFilterGenerateEvents(IN PKSFILTER Filter, IN const GUID* EventSet OPTIONAL,
                                         IN ULONG EventId, IN ULONG DataSize, IN PVOID Data OPTIONAL,
                                         IN PFNKSGENERATEEVENTCALLBACK CallBack OPTIONAL, IN PVOID CallBackContext OPTIONAL)
     {
         KsGenerateEvents(Filter, EventSet, EventId, DataSize, Data, CallBack, CallBackContext);
     }
 
-    void __inline KsPinGenerateEvents(IN PKSPIN Pin, IN const GUID* EventSet OPTIONAL, IN ULONG EventId, IN ULONG DataSize,
+    static __inline void KsPinGenerateEvents(IN PKSPIN Pin, IN const GUID* EventSet OPTIONAL, IN ULONG EventId, IN ULONG DataSize,
                                      IN PVOID Data OPTIONAL, IN PFNKSGENERATEEVENTCALLBACK CallBack OPTIONAL,IN PVOID CallBackContext OPTIONAL)
     {
         KsGenerateEvents(Pin, EventSet, EventId, DataSize, Data, CallBack, CallBackContext);
     }
 
-    PKSFILTER __inline KsGetFilterFromFileObject(IN PFILE_OBJECT FileObject)
+    static __inline PKSFILTER KsGetFilterFromFileObject(IN PFILE_OBJECT FileObject)
     {
         return (PKSFILTER) KsGetObjectFromFileObject(FileObject);
     }
 
-    PKSPIN __inline KsGetPinFromFileObject(IN PFILE_OBJECT FileObject)
+    static __inline PKSPIN KsGetPinFromFileObject(IN PFILE_OBJECT FileObject)
     {
         return (PKSPIN) KsGetObjectFromFileObject(FileObject);
     }    
 
-    PKSDEVICE __inline KsFilterFactoryGetParentDevice(IN PKSFILTERFACTORY FilterFactory)
+    static __inline PKSDEVICE KsFilterFactoryGetParentDevice(IN PKSFILTERFACTORY FilterFactory)
     {
         return (PKSDEVICE) KsGetParent((PVOID) FilterFactory);
     }
 
-    PKSFILTERFACTORY __inline KsFilterGetParentFilterFactory(IN PKSFILTER Filter)
+    static __inline PKSFILTERFACTORY KsFilterGetParentFilterFactory(IN PKSFILTER Filter)
     {
         return (PKSFILTERFACTORY) KsGetParent((PVOID) Filter);
     }
 
-    PKSFILTERFACTORY __inline KsDeviceGetFirstChildFilterFactory(IN PKSDEVICE Device)
+    static __inline PKSFILTERFACTORY KsDeviceGetFirstChildFilterFactory(IN PKSDEVICE Device)
     {
         return (PKSFILTERFACTORY) KsGetFirstChild((PVOID) Device);
     }
 
-    PKSFILTER __inline KsFilterFactoryGetFirstChildFilter(IN PKSFILTERFACTORY FilterFactory)
+    static __inline PKSFILTER KsFilterFactoryGetFirstChildFilter(IN PKSFILTERFACTORY FilterFactory)
     {
         return (PKSFILTER) KsGetFirstChild((PVOID) FilterFactory);
     }
 
 
-    PKSFILTERFACTORY __inline KsFilterFactoryGetNextSiblingFilterFactory(IN PKSFILTERFACTORY FilterFactory)
+    static __inline PKSFILTERFACTORY KsFilterFactoryGetNextSiblingFilterFactory(IN PKSFILTERFACTORY FilterFactory)
     {
         return (PKSFILTERFACTORY) KsGetNextSibling((PVOID) FilterFactory);
     }
 
-    PKSFILTER __inline KsFilterGetNextSiblingFilter(IN PKSFILTER Filter)
+    static __inline PKSFILTER KsFilterGetNextSiblingFilter(IN PKSFILTER Filter)
     {
         return (PKSFILTER) KsGetNextSibling((PVOID) Filter);
     }
 
-    PKSDEVICE __inline KsFilterFactoryGetDevice(IN PKSFILTERFACTORY FilterFactory)
+    static __inline PKSDEVICE KsFilterFactoryGetDevice(IN PKSFILTERFACTORY FilterFactory)
     {
         return KsGetDevice((PVOID) FilterFactory);
     }
 
-    PKSDEVICE __inline KsFilterGetDevice(IN PKSFILTER Filter)
+    static __inline PKSDEVICE KsFilterGetDevice(IN PKSFILTER Filter)
     {
         return KsGetDevice((PVOID) Filter);
     }
 
-    PKSDEVICE __inline KsPinGetDevice(IN PKSPIN Pin)
+    static __inline PKSDEVICE KsPinGetDevice(IN PKSPIN Pin)
     {
         return KsGetDevice((PVOID) Pin);
     }
 
-    void __inline KsFilterAcquireControl(IN PKSFILTER Filter)
+    static __inline void KsFilterAcquireControl(IN PKSFILTER Filter)
     {
         KsAcquireControl((PVOID) Filter);
     }
 
-    void __inline KsFilterReleaseControl(IN PKSFILTER Filter)
+    static __inline void KsFilterReleaseControl(IN PKSFILTER Filter)
     {
         KsReleaseControl((PVOID) Filter);
     }
 
-    void __inline KsPinAcquireControl(IN PKSPIN Pin)
+    static __inline void KsPinAcquireControl(IN PKSPIN Pin)
     {
         KsAcquireControl((PVOID) Pin);
     }
 
-    void __inline KsPinReleaseControl(IN PKSPIN Pin)
+    static __inline void KsPinReleaseControl(IN PKSPIN Pin)
     {
         KsReleaseControl((PVOID) Pin);
     }
 
-    #if defined(_UNKNOWN_H_) || defined(__IUnknown_FWD_DEFINED__)
+    #if defined(_UNKNOWN_H_) || defined(__unknwn_h__)
 
-        #ifndef PUNKNOWN 
-            typedef IUnknown *PUNKNOWN;
-        #endif
+ 
 
         KSDDKAPI NTSTATUS NTAPI
         KsPinGetReferenceClockInterface(IN PKSPIN Pin,
@@ -3610,42 +3614,42 @@ extern "C" {
         KSDDKAPI PUNKNOWN NTAPI
         KsGetOuterUnknown(IN PVOID Object);
 
-        PUNKNOWN __inline KsDeviceRegisterAggregatedClientUnknown(IN PKSDEVICE Device, IN PUNKNOWN ClientUnknown)
+        static __inline PUNKNOWN KsDeviceRegisterAggregatedClientUnknown(IN PKSDEVICE Device, IN PUNKNOWN ClientUnknown)
         {
             return KsRegisterAggregatedClientUnknown((PVOID) Device,ClientUnknown);
         }
 
-        PUNKNOWN __inline KsDeviceGetOuterUnknown(IN PKSDEVICE Device)
+        static __inline PUNKNOWN KsDeviceGetOuterUnknown(IN PKSDEVICE Device)
         {
             return KsGetOuterUnknown((PVOID) Device);
         }
 
-        PUNKNOWN __inline KsFilterFactoryRegisterAggregatedClientUnknown(IN PKSFILTERFACTORY FilterFactory, IN PUNKNOWN ClientUnknown)
+        static __inline PUNKNOWN KsFilterFactoryRegisterAggregatedClientUnknown(IN PKSFILTERFACTORY FilterFactory, IN PUNKNOWN ClientUnknown)
         {
             return KsRegisterAggregatedClientUnknown((PVOID) FilterFactory,ClientUnknown);
         }
 
-        PUNKNOWN __inline KsFilterFactoryGetOuterUnknown(IN PKSFILTERFACTORY FilterFactory)
+        static __inline PUNKNOWN KsFilterFactoryGetOuterUnknown(IN PKSFILTERFACTORY FilterFactory)
         {
             return KsGetOuterUnknown((PVOID) FilterFactory);
         }
 
-        PUNKNOWN __inline KsFilterRegisterAggregatedClientUnknown(IN PKSFILTER Filter, IN PUNKNOWN ClientUnknown)
+        static __inline PUNKNOWN KsFilterRegisterAggregatedClientUnknown(IN PKSFILTER Filter, IN PUNKNOWN ClientUnknown)
         {
             return KsRegisterAggregatedClientUnknown((PVOID) Filter,ClientUnknown);
         }
 
-        PUNKNOWN __inline KsFilterGetOuterUnknown(IN PKSFILTER Filter)
+        static __inline PUNKNOWN KsFilterGetOuterUnknown(IN PKSFILTER Filter)
         {
             return KsGetOuterUnknown((PVOID) Filter);
         }
 
-        PUNKNOWN __inline KsPinRegisterAggregatedClientUnknown(IN PKSPIN Pin, IN PUNKNOWN ClientUnknown )
+        static __inline PUNKNOWN KsPinRegisterAggregatedClientUnknown(IN PKSPIN Pin, IN PUNKNOWN ClientUnknown )
         {
             return KsRegisterAggregatedClientUnknown((PVOID) Pin,ClientUnknown);
         }
 
-        PUNKNOWN __inline KsPinGetOuterUnknown(IN PKSPIN Pin)
+        static __inline PUNKNOWN KsPinGetOuterUnknown(IN PKSPIN Pin)
         {
             return KsGetOuterUnknown((PVOID) Pin);
         }
