@@ -47,7 +47,7 @@ KGDTENTRY KiBootGdt[256] =
 };
 
 /* GDT Descriptor */
-KDESCRIPTOR KiGdtDescriptor = {0, sizeof(KiBootGdt), (ULONG)KiBootGdt};
+KDESCRIPTOR KiGdtDescriptor = {0, sizeof(KiBootGdt) - 1, (ULONG)KiBootGdt};
 
 /* CPU Features and Flags */
 ULONG KeI386CpuType;
