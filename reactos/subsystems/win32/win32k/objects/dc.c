@@ -1113,6 +1113,34 @@ IntGdiGetDCOrgEx(DC *dc, LPPOINT  Point)
   return  TRUE;
 }
 
+LONG FASTCALL
+IntCalcFillOrigin(PDC pdc)
+{
+  pdc->ptlFillOrigin.x = pdc->DcLevel.ptlBrushOrigin.x + pdc->ptlSaveFillOrig.x;
+  pdc->ptlFillOrigin.y = pdc->DcLevel.ptlBrushOrigin.y + pdc->ptlSaveFillOrig.y;
+
+  return pdc->ptlFillOrigin.y;
+}
+
+VOID
+STDCALL
+GdiSetDCOrg(HDC hDC, LONG Left, LONG Top, PRECTL prc)
+{
+  PDC pdc;
+
+  pdc = DC_LockDc(hDC);
+  if (!pdc) return;
+
+  pdc->ptlSaveFillOrig.x = Left;
+  pdc->ptlSaveFillOrig.y = Top;
+
+  IntCalcFillOrigin(pdc);
+
+  if (prc) pdc->erclWindow = *prc;
+
+  DC_UnlockDc(pdc);
+}
+
 BOOL FASTCALL
 IntGetAspectRatioFilter(PDC pDC,
                         LPSIZE AspectRatio)
