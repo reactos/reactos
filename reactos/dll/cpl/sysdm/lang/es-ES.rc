@@ -11,7 +11,7 @@ CAPTION "General"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     CONTROL     "", IDC_ROSIMG, "Static", SS_OWNERDRAW, 4, 5, 248, 111
-    LTEXT       "Sistema Operativo:", IDC_STATIC, 4, 132, 32, 9
+    LTEXT       "Sistema Operativo:", IDC_STATIC, 4, 132, 80, 9
     LTEXT       REACTOS_STR_PRODUCT_NAME, IDC_STATIC, 10, 144, 116, 9
     LTEXT       "Versión ", IDC_STATIC, 10, 153, 25, 9
     LTEXT       REACTOS_STR_PRODUCT_VERSION, IDC_STATIC, 35, 153, 91, 9
@@ -22,7 +22,7 @@ BEGIN
     LTEXT       "", IDC_MACHINELINE3, 130, 162, 118, 9
     LTEXT       "", IDC_MACHINELINE4, 130, 171, 118, 9
     LTEXT       "", IDC_MACHINELINE5, 130, 180, 118, 9
-    CONTROL     "Visite <A HREF=""http://www.reactos.org/"">Página Web de ReactOS</A>", IDC_ROSHOMEPAGE_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 20, 200, 93, 8
+    CONTROL     "Visite <A HREF=""http://www.reactos.org/"">Página Web de ReactOS</A>", IDC_ROSHOMEPAGE_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 20, 200, 110, 8
     PUSHBUTTON  "Ver &licencia...", IDC_LICENCE, 170, 199, 78, 13
 END
 
@@ -32,20 +32,20 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Hardware"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    GROUPBOX    "Administrador de dispositivos", IDC_STATIC, 6, 7, 244, 61
+    GROUPBOX    "Administrador de dispositivos ", IDC_STATIC, 6, 7, 244, 61
     ICON        IDI_DEVMGR, IDC_STATIC, 12, 18, 23, 21, SS_ICON
     LTEXT       "El Administrador de dispositivos muestra una lista de todos los dispositivos de hardware instalados en su equipo. Puede usarlo para cambiar las propiedades de cualquier dispositivo.", IDC_STATIC, 42, 18, 204, 24
-    PUSHBUTTON  "&Administrador de dispositivos...", IDC_HARDWARE_DEVICE_MANAGER, 154, 48, 90, 15
+    PUSHBUTTON  "&Administrador de dispositivos...", IDC_HARDWARE_DEVICE_MANAGER, 140, 48, 104, 15
 
-    GROUPBOX    "Asistente de Hardware", IDC_STATIC, 6, 79, 244, 61
+    GROUPBOX    "Asistente de Hardware ", IDC_STATIC, 6, 79, 244, 61
     ICON        IDI_DEVMGR, IDC_STATIC, 12, 90, 23, 21, SS_ICON
     LTEXT       "El asistente de hardware the ayuda instalar, desinstalar, reparar, desconectar, expulsar, y configurar tu hardware.", IDC_STATIC, 42, 90, 204, 24
-    PUSHBUTTON  "&Asistente de Hardware...", IDC_HARDWARE_WIZARD, 154, 120, 90, 15
+    PUSHBUTTON  "&Asistente de Hardware...", IDC_HARDWARE_WIZARD, 140, 120, 104, 15
 
-    GROUPBOX    "Perfiles de Hardware", IDC_STATIC, 6, 149, 244, 61
+    GROUPBOX    "Perfiles de Hardware ", IDC_STATIC, 6, 149, 244, 61
     ICON        IDI_HARDPROF, IDC_STATIC, 12, 160, 23, 21, SS_ICON
     LTEXT       "Los perfiles de hardware le ofrecen una forma de definir y almacenar diferentes configuraciones de hardware.", IDC_STATIC, 42, 160, 204, 24
-    PUSHBUTTON  "Perfiles Hard&ware...", IDC_HARDWARE_PROFILE, 154, 190, 90, 15
+    PUSHBUTTON  "Perfiles Hard&ware...", IDC_HARDWARE_PROFILE, 140, 190, 104, 15
 END
 
 
@@ -54,21 +54,21 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Opciones avanzadas"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT       "Debe iniciar la sesión como un Administrador para hacer la mayoría de los cambios.", IDC_STATIC, 12, 5, 236, 8
-    GROUPBOX    "Rendimiento", IDC_STATIC, 6, 18, 244, 50
-    LTEXT       "Efectos visuales, programación del precesador, uso de memoria y memoria virtual.", IDC_STATIC, 16, 29, 210, 17
-    PUSHBUTTON  "Configuración", IDC_PERFOR, 194, 48, 50, 15
+    LTEXT       "Debe iniciar la sesión como un Administrador para hacer la mayoría de los cambios.", IDC_STATIC, 12, 5, 236, 17
+    GROUPBOX    "Rendimiento ", IDC_STATIC, 6, 27, 244, 50
+    LTEXT       "Efectos visuales, programación del precesador, uso de memoria y memoria virtual.", IDC_STATIC, 16, 38, 210, 17
+    PUSHBUTTON  "Configuración", IDC_PERFOR, 194, 47, 50, 15
 
-    GROUPBOX    "Perfiles de usuario", IDC_STATIC, 6,75,244,48
-    LTEXT       "Configuración del escritorio relacionada con su inicio de sesión", IDC_STATIC, 16, 88, 210, 20
-    PUSHBUTTON  "Configuración", IDC_USERPROFILE, 194, 103, 50, 15
+    GROUPBOX    "Perfiles de usuario ", IDC_STATIC, 6,84,244,48
+    LTEXT       "Configuración del escritorio relacionada con su inicio de sesión", IDC_STATIC, 16, 97, 210, 20
+    PUSHBUTTON  "Configuración", IDC_USERPROFILE, 194, 112, 50, 15
 
-    GROUPBOX    "Inicio y recuperación", IDC_STATIC, 6, 131, 244, 52
-    LTEXT       "SInicio de sistema, error de sistema e información de depuración.", IDC_STATIC, 16, 144, 210, 19
-    PUSHBUTTON  "Configuración", IDC_STAREC, 194, 162, 50, 15
+    GROUPBOX    "Inicio y recuperación ", IDC_STATIC, 6, 140, 244, 52
+    LTEXT       "Inicio de sistema, error de sistema e información de depuración.", IDC_STATIC, 16, 153, 210, 19
+    PUSHBUTTON  "Configuración", IDC_STAREC, 194, 171, 50, 15
 
-    PUSHBUTTON  "Variables de entorno", IDC_ENVVAR, 84, 192, 80, 15
-    PUSHBUTTON  "Informe de errores", IDC_ERRORREPORT, 170, 192, 80, 15
+    PUSHBUTTON  "Variables de entorno", IDC_ENVVAR, 84, 201, 80, 15
+    PUSHBUTTON  "Informe de errores", IDC_ERRORREPORT, 170, 201, 80, 15
 END
 
 
@@ -83,15 +83,15 @@ BEGIN
     LISTBOX     IDC_HRDPROFLSTBOX, 8, 52, 215, 54, LBS_NOTIFY
     PUSHBUTTON  "", IDC_HRDPROFUP, 232, 59, 15, 14, BS_ICON
     PUSHBUTTON  "", IDC_HRDPROFDWN, 232, 79, 15, 14, BS_ICON
-    PUSHBUTTON  "&Proppiedades", IDC_HRDPROFPROP, 8, 106, 50, 14
-    PUSHBUTTON  "&Copiar", IDC_HRDPROFCOPY, 63, 106, 50, 14
-    PUSHBUTTON  "Cambiar No&mbre", IDC_HRDPROFRENAME, 118, 106, 50, 14
+    PUSHBUTTON  "&Propiedades", IDC_HRDPROFPROP, 8, 106, 50, 14
+    PUSHBUTTON  "&Copiar", IDC_HRDPROFCOPY, 63, 106, 40, 14
+    PUSHBUTTON  "Cambiar No&mbre", IDC_HRDPROFRENAME, 108, 106, 60, 14
     PUSHBUTTON  "&Eliminar", IDC_HRDPROFDEL, 173, 106, 50, 14
 
-    GROUPBOX    "Selección de perfiles de hardware", IDC_STATIC, 7, 130, 240, 75
-    LTEXT       "Cuando inicie ReactOS:", IDC_STATIC, 14, 142, 210, 8
-    AUTORADIOBUTTON "Esperar &hasta que seleccione un perfil de hardware", IDC_HRDPROFWAIT, 14, 158, 133, 8, WS_GROUP
-    AUTORADIOBUTTON "&Seleccionar el primer perfil de la lista si no se seleccciona uno después de", IDC_HRDPROFSELECT, 14, 173, 190, 8
+    GROUPBOX    "Selección de perfiles de hardware ", IDC_STATIC, 7, 130, 240, 75
+    LTEXT       "Cuando inicie ReactOS:", IDC_STATIC, 13, 142, 210, 8
+    AUTORADIOBUTTON "Esperar &hasta que seleccione un perfil de hardware", IDC_HRDPROFWAIT, 13, 158, 190, 8, WS_GROUP
+    AUTORADIOBUTTON "&Seleccionar el primer perfil de la lista si no se seleccciona uno tras", IDC_HRDPROFSELECT, 13, 173, 230, 8
     LTEXT       "segundos", IDC_STATIC, 65, 187, 35, 8
     EDITTEXT    IDC_HRDPROFEDIT, 25, 185, 35, 12
     CONTROL     "", IDC_HRDPROFUPDWN, "msctls_updown32", UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | UDS_NOTHOUSANDS | WS_CHILD | WS_VISIBLE, 25, 185, 7, 10
@@ -143,30 +143,30 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS
 CAPTION "Inicio y recuperación"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX    "Inicio del sistema", IDC_STATIC, 7, 12, 238, 95
+    GROUPBOX    "Inicio del sistema ", IDC_STATIC, 7, 12, 238, 95
     LTEXT       "&Sistema operativo predeterminado:", IDC_STATIC, 14, 26, 100, 8
     COMBOBOX    IDC_STRECOSCOMBO, 14, 37, 224, 46, CBS_DROPDOWNLIST
-    AUTOCHECKBOX "&Mostrar la lista de sistemas operativos durante:", IDC_STRECLIST, 14, 56, 150, 8
-    EDITTEXT    IDC_STRRECLISTEDIT, 179, 54, 30, 12
+    AUTOCHECKBOX "&Mostrar la lista de sistemas operativos durante:", IDC_STRECLIST, 14, 56, 165, 8
+    EDITTEXT    IDC_STRRECLISTEDIT, 180, 54, 29, 12
     CONTROL     "", IDC_STRRECLISTUPDWN, "msctls_updown32", UDS_WRAP | UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | UDS_NOTHOUSANDS | WS_CHILD | WS_VISIBLE, 0, 0, 8, 13
-    LTEXT       "segundos", IDC_STATIC, 215, 56, 25, 8
-    AUTOCHECKBOX "&Tiempo para mostrar opciones de recuperación:", IDC_STRRECREC, 14, 70, 163, 8
-    EDITTEXT    IDC_STRRECRECEDIT, 179, 68, 30, 12
+    LTEXT       "segundos", IDC_STATIC, 210, 56, 30, 8
+    AUTOCHECKBOX "&Tiempo para mostrar opciones de recuperación:", IDC_STRRECREC, 14, 70, 165, 8
+    EDITTEXT    IDC_STRRECRECEDIT, 180, 68, 29, 12
     CONTROL     "", IDC_STRRECRECUPDWN, "msctls_updown32", UDS_WRAP | UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | UDS_NOTHOUSANDS | WS_CHILD | WS_VISIBLE, 0, 0, 8, 13
-    LTEXT       "segundos", IDC_STATIC, 215, 70, 25, 8
-    LTEXT       "Para editar manualmente el archivo de opciones de inicio, haga clic en Editar.", IDC_STATIC, 14, 89, 187, 8
+    LTEXT       "segundos", IDC_STATIC, 210, 70, 30, 8
+    LTEXT       "Para editar manualmente el archivo de opciones de inicio, haga clic en Editar.", IDC_STATIC, 14, 84, 187, 17
     PUSHBUTTON  "&Editar", IDC_STRRECEDIT, 188, 87, 50, 14
 
-    GROUPBOX    "Error del sistema", IDC_STATIC, 7, 111, 238, 140
-    AUTOCHECKBOX "&Grabar un suceso en el registro del sistema", IDC_STRRECWRITEEVENT, 14, 124, 148, 10
+    GROUPBOX    "Error del sistema ", IDC_STATIC, 7, 111, 238, 140
+    AUTOCHECKBOX "&Grabar un suceso en el registro del sistema", IDC_STRRECWRITEEVENT, 14, 124, 155, 10
     AUTOCHECKBOX "E&nviar una alerta administrativa", IDC_STRRECSENDALERT, 14, 138, 148, 10
     AUTOCHECKBOX "&Reiniciar automáticamente", IDC_STRRECRESTART, 14, 152, 145, 10
 
-    GROUPBOX    "Escribir información de depuración", IDC_STATIC, 12, 167, 227, 76
+    GROUPBOX    "Escribir información de depuración ", IDC_STATIC, 12, 167, 227, 76
     COMBOBOX    IDC_STRRECDEBUGCOMBO, 17, 182, 151, 49, CBS_DROPDOWNLIST
     LTEXT       "&Volcado de descarga pequeña:", IDC_STATIC, 17, 202, 150, 8
     EDITTEXT    IDC_STRRECDUMPFILE, 17, 210, 153, 12
-    AUTOCHECKBOX "So&brescribir cualquier archivo existente", IDC_STRRECOVERWRITE, 17, 228, 125, 10
+    AUTOCHECKBOX "So&brescribir cualquier archivo existente", IDC_STRRECOVERWRITE, 17, 228, 150, 10
 
     DEFPUSHBUTTON  "Aceptar", IDOK, 141, 259, 50, 14
     PUSHBUTTON  "Cancelar", IDCANCEL, 195, 259, 50, 14
@@ -178,30 +178,30 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS
 CAPTION "Memoria virtual"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT       "Unidad  [etiqueta de volumen]", IDC_STATIC, 12, 5, 96, 9
-    LTEXT       "Tamaño del archivo de paginación (MB)", IDC_STATIC, 115, 5, 96, 9
-    LISTBOX     IDC_PAGEFILELIST, 10, 16, 204, 52, LBS_NOTIFY | LBS_USETABSTOPS
-    GROUPBOX    "Tamaño del archivo de paginación para la unidad seleccionada", IDC_DRIVEGROUP, 10, 70, 204, 104
-    LTEXT       "Unidad:", IDC_STATIC, 20, 80, 20, 8
+    LTEXT       "Unidad  [etiqueta de volumen]", IDC_STATIC, 12, 3, 96, 16
+    LTEXT       "Tamaño del archivo de paginación (MB)", IDC_STATIC, 115, 3, 96, 16
+    LISTBOX     IDC_PAGEFILELIST, 10, 20, 204, 48, LBS_NOTIFY | LBS_USETABSTOPS
+    GROUPBOX    "Tamaño del archivo de paginación para la unidad ", IDC_DRIVEGROUP, 10, 70, 204, 104
+    LTEXT       "Unidad:", IDC_STATIC, 20, 80, 25, 8
     LTEXT       "", IDC_DRIVE, 88, 81, 100, 9
-    LTEXT       "Espacio disponible:", IDC_STATIC, 20, 92, 56, 9
+    LTEXT       "Espacio disponible:", IDC_STATIC, 20, 92, 80, 9
     LTEXT       "", IDC_SPACEAVAIL, 88, 92, 104, 9
-    LTEXT       "&Tamaño inicial (MB):", -1, 22, 118, 54, 9
-    LTEXT       "Tamaño ma&ximo (MB):", -1, 22, 131, 64, 9
-    AUTORADIOBUTTON "T&amaño personalizado", IDC_CUSTOM, 20, 105, 54, 9, WS_GROUP
-    AUTORADIOBUTTON "Ta&maño administrado por el sistema", IDC_SYSMANSIZE, 20, 145, 88, 9
-    AUTORADIOBUTTON "&Sin archivo de paginación", IDC_NOPAGEFILE, 20, 158, 78,9
-    EDITTEXT    IDC_INITIALSIZE, 100, 114, 44, 13, NOT WS_BORDER, WS_EX_CLIENTEDGE
-    EDITTEXT    IDC_MAXSIZE, 100, 129, 44, 13, NOT WS_BORDER, WS_EX_CLIENTEDGE
+    LTEXT       "&Tamaño inicial (MB):", -1, 22, 118, 72, 9
+    LTEXT       "Tamaño ma&ximo (MB):", -1, 22, 131, 76, 9
+    AUTORADIOBUTTON "T&amaño personalizado", IDC_CUSTOM, 20, 105, 85, 9, WS_GROUP
+    AUTORADIOBUTTON "Ta&maño administrado por el sistema", IDC_SYSMANSIZE, 20, 145, 150, 9
+    AUTORADIOBUTTON "&Sin archivo de paginación", IDC_NOPAGEFILE, 20, 158, 100,9
+    EDITTEXT    IDC_INITIALSIZE, 100, 114, 50, 13, NOT WS_BORDER, WS_EX_CLIENTEDGE
+    EDITTEXT    IDC_MAXSIZE, 100, 129, 50, 13, NOT WS_BORDER, WS_EX_CLIENTEDGE
     PUSHBUTTON  "&Establecer", IDC_SET, 158, 155, 50, 13
 
-    GROUPBOX    "Tamaño total del archivo de paginación para todas las unidades", IDC_TOTALGROUP, 10, 177, 204, 46
+    GROUPBOX    "Tamaño total del archivo de paginación ", IDC_TOTALGROUP, 10, 177, 204, 46
     LTEXT       "Mínimo permitido:", IDC_STATIC, 18, 188, 58, 9
-    LTEXT       "", IDC_MINIMUM, 88, 188, 100, 9
+    LTEXT       "", IDC_MINIMUM, 100, 188, 100, 9
     LTEXT       "Recomendado:", IDC_STATIC, 18, 199, 52, 9
-    LTEXT       "", IDC_RECOMMENDED, 88, 197, 100, 9
-    LTEXT       "Asignado actualmente:", IDC_STATIC, 18, 210, 66, 9
-    LTEXT       "", IDC_CURRENT, 88, 208, 100, 9
+    LTEXT       "", IDC_RECOMMENDED, 100, 199, 100, 9
+    LTEXT       "Asignado actualmente:", IDC_STATIC, 18, 210, 75, 9
+    LTEXT       "", IDC_CURRENT, 100, 210, 100, 9
 
     DEFPUSHBUTTON  "Aceptar", IDOK, 114, 232, 48, 13
     PUSHBUTTON  "Cancelar", IDCANCEL, 168, 232, 48, 13
@@ -213,7 +213,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS
 CAPTION "Variables de entorno"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    GROUPBOX    "Variables de usuario", IDC_STATIC, 7, 12, 238, 100
+    GROUPBOX    "Variables de usuario ", IDC_STATIC, 7, 12, 238, 100
 
     CONTROL     "", IDC_USER_VARIABLE_LIST, "SysListView32",
                     LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SORTASCENDING | LVS_NOSORTHEADER |
@@ -221,7 +221,7 @@ BEGIN
     PUSHBUTTON  "&Nueva...", IDC_USER_VARIABLE_NEW, 80, 90, 50, 14
     PUSHBUTTON  "&Modificar...", IDC_USER_VARIABLE_EDIT, 134, 90, 50, 14
     PUSHBUTTON  "E&liminar", IDC_USER_VARIABLE_DELETE, 188, 90, 50, 14
-    GROUPBOX    "VAriables del sistema", IDC_STATIC, 7, 116, 238, 100
+    GROUPBOX    "Variables del sistema ", IDC_STATIC, 7, 116, 238, 100
 
     CONTROL     "", IDC_SYSTEM_VARIABLE_LIST, "SysListView32",
                     LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SORTASCENDING | LVS_NOSORTHEADER |
@@ -239,9 +239,9 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS
 CAPTION "Modificar la variable"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT       "&Nombre de la variable:", IDC_STATIC, 7, 14, 50, 8
+    LTEXT       "&Nombre:", IDC_STATIC, 7, 14, 50, 8
     EDITTEXT    IDC_VARIABLE_NAME, 75, 12, 145, 12, ES_AUTOHSCROLL
-    LTEXT       "&Valor de variable:", IDC_STATIC, 7, 32, 50, 8
+    LTEXT       "&Valor:", IDC_STATIC, 7, 32, 50, 8
     EDITTEXT    IDC_VARIABLE_VALUE, 75, 30, 145, 12, ES_AUTOHSCROLL
     DEFPUSHBUTTON  "Aceptar", IDOK, 116, 50, 50, 14
     PUSHBUTTON  "Cancelar", IDCANCEL, 170, 50, 50, 14

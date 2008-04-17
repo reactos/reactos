@@ -171,13 +171,13 @@ BEGIN
 	ICON "", 14000, 10, 4, 30, 30, WS_VISIBLE
 	LTEXT "Tipo de destino:", 14004, 8, 38, 64, 10
 	LTEXT "", 14005, 78, 38, 142, 10
-	LTEXT "Ubicación de destino:", 14006, 8, 58, 64, 10
+	LTEXT "Ubicación de destino:", 14006, 8, 54, 64, 14
 	LTEXT "", 14007, 79, 58, 141, 10
 	LTEXT "&Destino:", 14008, 8, 77, 45, 10
 	EDITTEXT 14009, 79, 75, 150, 14, ES_AUTOHSCROLL
 	LTEXT "I&niciar en:", 14010, 8, 96, 57, 10
 	EDITTEXT 14011, 79, 94, 150, 14, ES_AUTOHSCROLL
-	LTEXT "&Tecla de método abreviado:", 14014, 8, 115, 57, 10
+	LTEXT "&Tecla de método abreviado:", 14014, 8, 111, 57, 11
 	EDITTEXT 14015, 79, 112, 150, 14, ES_LEFT
 	LTEXT "&Ejecutar:", 14016, 8, 134, 57, 10
 	EDITTEXT 14017, 79, 131, 150, 14, ES_AUTOHSCROLL
@@ -185,7 +185,7 @@ BEGIN
 	EDITTEXT 14019, 79, 149, 150, 14, ES_AUTOHSCROLL
 	PUSHBUTTON "&Buscar destino...", 14020, 9, 172, 70, 14, ES_LEFT
 	PUSHBUTTON "Cambiar &icono...", 14021, 84, 172, 70, 14, ES_LEFT
-	PUSHBUTTON "Propiedades avan&zadas...", 14022, 159, 172, 70, 14, ES_LEFT
+	PUSHBUTTON "Propiedades avan&zadas...", 14022, 149, 172, 80, 14, ES_LEFT
 END
 
 SHELL_EXTENDED_SHORTCUT_DLG DIALOGEX 0, 0, 230, 150
@@ -208,7 +208,7 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 	ICON "", 14000, 10, 3, 30, 30, WS_VISIBLE
 	EDITTEXT 14001, 70, 9, 158, 14, ES_LEFT | ES_READONLY
-	LTEXT "Tipo de archivo:", 14004, 8, 35, 50, 10
+	LTEXT "Tipo de archivo:", 14004, 8, 35, 55, 10
 	LTEXT "Archivo", 14005, 68, 35, 160, 10
 	LTEXT "Se abre con:", 14006, 8, 53, 50, 10
 	LTEXT "", 14007, 68, 53, 160, 10
@@ -220,7 +220,7 @@ BEGIN
 	LTEXT "", 14015, 68, 118, 160, 10
 	LTEXT "Modificado:", 14016, 8, 140, 45, 10
 	LTEXT "", 14017, 68, 140, 160, 10
-	LTEXT "Último acceso:", 14018, 8, 160, 45, 10
+	LTEXT "Último acceso:", 14018, 8, 160, 55, 10
 	LTEXT "", 14019, 68, 160, 160, 10
 	LTEXT "Atributos:", 14020, 8, 189, 45, 10
 	CHECKBOX "&Sólo lectura", 14021, 58, 189, 67, 10
@@ -233,14 +233,14 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Versión"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-	LTEXT "Versión del archivo: ", 14000, 10, 10, 55, 10
+	LTEXT "Versión del archivo: ", 14000, 10, 10, 60, 10
 	LTEXT "", 14001, 77, 10, 152, 10
 	LTEXT "Descripción: ", 14002, 10, 27, 45, 10
 	LTEXT "", 14003, 77, 27, 152, 10
 	LTEXT "Copyright: ", 14004, 10, 46, 66, 10
 	LTEXT "", 14005, 77, 46, 152, 10
 	GROUPBOX "Más información de la versión: ", 14006, 6, 70, 222, 115
-	LTEXT "Nombre del elemento: ", 14007, 13, 82, 50, 10
+	LTEXT "Nombre del elemento: ", 14007, 13, 82, 60, 10
 	LTEXT "Valor: ", 14008, 112, 82, 45, 10
 	LISTBOX 14009, 12, 94, 94, 83, LBS_STANDARD | WS_TABSTOP | LBS_NOTIFY
 	EDITTEXT 14010, 112, 93, 109, 83, ES_LEFT | WS_BORDER | WS_VSCROLL | WS_GROUP | ES_MULTILINE | ES_READONLY
@@ -285,13 +285,13 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Herramientas"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-	GROUPBOX "Comprobación de errores", -1, 5, 5, 230, 60
+	GROUPBOX "Comprobación de errores ", -1, 5, 5, 230, 60
 	LTEXT "Esta opción comprobará los errores en la\nunidad.", -1, 40, 25, 160, 20
 	PUSHBUTTON "Comprobar ahora...", 14000, 130, 45, 90, 15, WS_TABSTOP
-	GROUPBOX "Desfragmentación", -1, 5, 65, 230, 60
+	GROUPBOX "Desfragmentación ", -1, 5, 65, 230, 60
 	LTEXT "Esta opción desfragmentará los archivos en esta\nunidad.", -1, 40, 85, 160, 20
 	PUSHBUTTON "Desfragmentar ahora...", 14001, 130, 105, 90, 15, WS_TABSTOP
-	GROUPBOX "Copia de seguridad", -1, 5, 130, 230, 60
+	GROUPBOX "Copia de seguridad ", -1, 5, 130, 230, 60
 	LTEXT "Esta opción realizará una copia de seguridad de\nlos archivos almacenados en la unidad.", -1, 40, 150, 160, 20
 	PUSHBUTTON "Realizar copia de seguridad ahora...", 14002, 130, 170, 90, 15, WS_TABSTOP
 END
@@ -330,12 +330,12 @@ CAPTION "Propiedades de Papelera de reciclaje"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 	CONTROL "", 14000, "SysListView32", LVS_REPORT | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 10, 10, 220, 50
-	GROUPBOX "Configuración para la unidad seleccionada", -1, 10, 72, 220, 70
-	RADIOBUTTON "Tamaño &Personalizado:", 14001, 20, 90, 80, 10, WS_TABSTOP
-	EDITTEXT 14002, 106, 87, 50, 14, WS_TABSTOP | ES_NUMBER
+	GROUPBOX "Configuración para la unidad seleccionada ", -1, 10, 72, 220, 70
+	RADIOBUTTON "Tamaño &Personalizado:", 14001, 20, 90, 88, 10, WS_TABSTOP
+	EDITTEXT 14002, 120, 87, 50, 14, WS_TABSTOP | ES_NUMBER
 	LTEXT "&Tamaño máximo(MB):", -1, 20, 105, 70, 10
-	RADIOBUTTON "&No mover archivos a la Papelera de reciclaje. Quitar los archivos inmediatamente al eliminarlos.", 14003, 20, 117, 170, 20, BS_MULTILINE | WS_TABSTOP
-	AUTOCHECKBOX "&Mostrar cuadro de diálogo para confirmar eliminación", 14004, 20, 155, 140, 10, WS_TABSTOP
+	RADIOBUTTON "&No mover archivos a la Papelera de reciclaje. Quitar los archivos inmediatamente al eliminarlos.", 14003, 20, 117, 185, 20, BS_MULTILINE | WS_TABSTOP
+	AUTOCHECKBOX "&Mostrar cuadro de diálogo para confirmar la eliminación", 14004, 20, 155, 200, 10, WS_TABSTOP
 END
 
 OPEN_WITH_PROGRAMM_DLG DIALOGEX 0, 0, 264, 256
@@ -346,7 +346,7 @@ BEGIN
 	ICON IDI_SHELL_OPEN_WITH, -1, 8, 12, 21, 20
 	LTEXT "Elija el programa que desea usar para abrir el siguiente archivo:", -1, 44, 12, 211, 10
 	LTEXT "Archivo:    ", 14001, 44, 25, 188, 10
-	GROUPBOX "&Programas", -1, 7, 42, 249, 187
+	GROUPBOX "&Programas ", -1, 7, 42, 249, 187
         LISTBOX 14002, 16 ,57, 230, 130, LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP, WS_EX_STATICEDGE
 	AUTOCHECKBOX "Utilizar &siempre el programa seleccionado para abrir este tipo de archivos", 14003, 20, 193, 225, 10
 	PUSHBUTTON "&Examinar...", 14004, 198, 207, 50, 14
@@ -364,11 +364,11 @@ GROUPBOX "Tareas", -1, 7, 10, 249, 45
 //ICON
 AUTORADIOBUTTON "M&ostrar tareas comunes en las carpetas", 14001, 40, 25, 120, 10, WS_TABSTOP
 AUTORADIOBUTTON "Utilizar las carpetas clá&sicas de ReactOS", 14002, 40, 37, 120, 10, WS_TABSTOP
-GROUPBOX "Examinar carpetas", -1, 7, 60, 249, 45, WS_TABSTOP
+GROUPBOX "Examinar carpetas ", -1, 7, 60, 249, 45, WS_TABSTOP
 //ICON
 AUTORADIOBUTTON "Abrir todas las carpetas en la &misma ventana", 14004, 40, 70, 140, 10, WS_TABSTOP
 AUTORADIOBUTTON "Abrir cada carpeta ventanas di&ferentes", 14005, 40, 82, 140, 10, WS_TABSTOP
-GROUPBOX "Hacer clic en los elementos como se indica", -1, 7, 110, 249, 60
+GROUPBOX "Hacer clic en los elementos como se indica ", -1, 7, 110, 249, 60
 //ICON
 AUTORADIOBUTTON "&Un solo clic para abrir elemento (seleccionar al señalar)", 14007, 40, 120, 170, 10, WS_TABSTOP
 AUTORADIOBUTTON "Subrayar los títulos de iconos que coincidan con el e&xplorador", 14008, 50, 132, 170, 10, WS_TABSTOP
@@ -460,7 +460,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
 	LTEXT "&Seleccione un tipo de contenido y elija una acción para que ReactOS la realice automáticamente cuando ese tipo se use en este dispositivo:", 1000, 7, 7, 215, 20
 	CONTROL "", 1001, "COMBOBOXEX32", WS_TABSTOP | 0x00000043, 7, 27, 212, 200
-	GROUPBOX "Acciones", -1, 7, 45, 212, 146
+	GROUPBOX "Acciones ", -1, 7, 45, 212, 146
 	AUTORADIOBUTTON "Seleccionar la &acción que desea ejecutar:", 1005, 14, 54, 202, 10, WS_GROUP
 	CONTROL "LIST2", 1002, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C04D, 22, 66, 192, 107
 	AUTORADIOBUTTON "&Preguntarme siempre que elija una acción", 1006, 14, 177, 202, 10
@@ -540,7 +540,7 @@ BEGIN
 	COMBOBOX 28680, 7, 75, 170, 200, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
 	LTEXT "&Etiqueta del volumen", -1, 7, 93, 170, 9
 	EDITTEXT 28679, 7, 103, 170, 13, ES_AUTOHSCROLL
-	GROUPBOX "&Opciones de formato", 4610, 7, 121, 170, 49
+	GROUPBOX "&Opciones de formato ", 4610, 7, 121, 170, 49
 	AUTOCHECKBOX "Formato &rápido", 28674, 16, 135, 155, 10
 	AUTOCHECKBOX "&Habilitar compresión", 28675, 16, 152, 155, 10
 END
@@ -664,20 +664,20 @@ BEGIN
 	IDS_PICK_ICON_TITLE         "Seleccione un icono"
 	IDS_PICK_ICON_FILTER        "Archivos de iconos(*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0"
 	IDS_OPEN_WITH_FILTER        "Executable Files\0*.exe\0"
-	IDS_DIRECTORY               "Folder"
-	IDS_VIRTUAL_DRIVER          "Virtual Device Driver"
-	IDS_BAT_FILE                "ReactOS Batch File"
-	IDS_CMD_FILE                "ReactOS Command Script"
-	IDS_COM_FILE                "Dos Application"
-	IDS_CPL_FILE                "Control Panel Item"
+	IDS_DIRECTORY               "Directorio"
+	IDS_VIRTUAL_DRIVER          "Controlador de dispositivo virtual"
+	IDS_BAT_FILE                "Archivo por lotes ReactOS"
+	IDS_CMD_FILE                "Script de comandos ReactOS"
+	IDS_COM_FILE                "Aplicación DOS"
+	IDS_CPL_FILE                "Elemento del Panel de Control"
 	IDS_CUR_FILE                "Cursor"
-	IDS_DLL_FILE                "Application Extension"
-	IDS_DRV_FILE                "Device Driver"
-	IDS_EXE_FILE                "Application"
-	IDS_FON_FILE                "Font file"
-	IDS_TTF_FILE                "TrueType Font file"
-	IDS_HLP_FILE                "Help File"
-	IDS_INI_FILE                "Configuration Settings"
-	IDS_LNK_FILE                "Shortcut"
-	IDS_SYS_FILE                "System file"
+	IDS_DLL_FILE                "Extensión de la aplicación"
+	IDS_DRV_FILE                "Controlador de dispositivo"
+	IDS_EXE_FILE                "Aplicación"
+	IDS_FON_FILE                "Archivo de fuente"
+	IDS_TTF_FILE                "Archivo de fuente TrueType"
+	IDS_HLP_FILE                "Archivo de ayuda"
+	IDS_INI_FILE                "Opciones de configuración"
+	IDS_LNK_FILE                "Acceso directo"
+	IDS_SYS_FILE                "Archivo del sistema"
 END

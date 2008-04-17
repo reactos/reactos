@@ -1,5 +1,5 @@
 /*
- *  Spanish language file by Javier Remacha <2007-09-18>
+ *  Spanish language file by Javier Remacha <2007-2008>
  */
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 
@@ -23,7 +23,7 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
     IDS_SNDVOL32       "Control de Volumen"
-    IDS_NOMIXERDEVICES "¡No hay dispositivos mezcladores activos en este momento! La aplicación se cerrará ahora."
+    IDS_NOMIXERDEVICES "¡No hay dispositivos mezcladores activos en este momento! \n\La aplicación se cerrará ahora."
 END
 
 IDD_PREFERENCES DIALOGEX 0, 0, 224, 250

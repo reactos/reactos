@@ -5,7 +5,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Fecha y Hora"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    GROUPBOX "&Fecha", -1, 4, 2, 122, 125
+    GROUPBOX "&Fecha ", -1, 4, 2, 122, 125
     COMBOBOX IDC_MONTHCB, 11, 17, 50, 120, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     EDITTEXT IDC_YEARTEXT,65, 17, 55, 12, ES_LEFT | WS_GROUP | ES_READONLY
     CONTROL "", IDC_YEAR, UPDOWN_CLASS, UDS_SETBUDDYINT | UDS_NOTHOUSANDS |
@@ -14,7 +14,7 @@ BEGIN
     CONTROL "", IDC_MONTHCALENDAR, "MonthCalWnd",
             WS_CHILD | WS_VISIBLE | WS_TABSTOP,
             11, 37, 108, 80, WS_EX_CLIENTEDGE
-    GROUPBOX "&Hora", -1, 132, 2, 113, 125
+    GROUPBOX "&Hora ", -1, 132, 2, 113, 125
     CONTROL "", IDC_TIMEPICKER, "SysDateTimePick32",
             DTS_TIMEFORMAT | WS_CHILD | WS_VISIBLE | WS_TABSTOP,
             144, 105, 90, 12
@@ -45,7 +45,7 @@ BEGIN
     AUTOCHECKBOX    "Sincronizar automáticamente con un servidor horario de Internet", IDC_AUTOSYNC,
                     11 ,7, 241, 10, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
     LTEXT           "Servidor:", IDC_SERVERTEXT, 34, 22, 28, 13
-    PUSHBUTTON      "Actualizar ahora", IDC_UPDATEBUTTON, 187, 22, 49, 14
+    PUSHBUTTON      "Actualizar ahora", IDC_UPDATEBUTTON, 187, 22, 58, 14
     LTEXT           "", IDC_SUCSYNC, 12, 54, 214, 23
     LTEXT           "", IDC_NEXTSYNC, 12, 96, 137, 12
     LTEXT           "La sincronización sólo se puede realizar cuando su equipo esté conectado a Internet.", -1, 12, 114, 225, 25

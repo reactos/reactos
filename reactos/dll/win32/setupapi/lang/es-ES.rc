@@ -35,8 +35,9 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-	IDS_QUERY_REBOOT_TEXT        "Su computadora debe ser reinicializada para completar la instalación. ¿Desea proceguir?"
-	IDS_QUERY_REBOOT_CAPTION     "Reinicialize"
-	IDS_INF_FILE                 "Setup Information"
+	IDS_QUERY_REBOOT_TEXT        "Su equipo debe ser reinicializada para completar la instalación. ¿Desea continuar?"
+	IDS_QUERY_REBOOT_CAPTION     "Reinicializar"
+	IDS_INF_FILE                 "Información del instalador"
 END
+
 

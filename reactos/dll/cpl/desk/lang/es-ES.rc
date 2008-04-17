@@ -34,21 +34,21 @@ FONT 8, "MS Shell Dlg", 0, 0
 BEGIN
     CONTROL         "", IDC_SCREENS_PREVIEW, "Static", SS_OWNERDRAW,
                     70, 10, 105, 70, WS_EX_STATICEDGE
-    GROUPBOX        "&Protector de pantalla",IDC_SCREENS_DUMMY, 8, 92, 230, 52
+    GROUPBOX        "&Protector de pantalla ",IDC_SCREENS_DUMMY, 8, 92, 230, 52
     COMBOBOX        IDC_SCREENS_LIST, 14, 103, 100, 100, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON      "C&onfiguración",IDC_SCREENS_SETTINGS, 120, 103, 50, 13, WS_GROUP
     PUSHBUTTON      "&Vista previa",IDC_SCREENS_TESTSC, 175, 103, 50, 13
-    LTEXT           "&Esperar",IDC_WAITTEXT, 14, 125, 16, 9
-    EDITTEXT        IDC_SCREENS_TIMEDELAY, 34, 123, 32, 13, ES_RIGHT | WS_GROUP
+    LTEXT           "&Esperar",IDC_WAITTEXT, 14, 125, 25, 9 //16
+    EDITTEXT        IDC_SCREENS_TIMEDELAY, 41, 123, 29, 13, ES_RIGHT | WS_GROUP
     CONTROL         "",IDC_SCREENS_TIME ,UPDOWN_CLASS,UDS_SETBUDDYINT |
                     UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS |
-                    WS_BORDER | WS_GROUP, 54, 123, 12, 13
+                    WS_BORDER | WS_GROUP, 61, 123, 12, 13
     LTEXT           "minutos", IDC_MINTEXT, 70, 125, 26, 9
     CONTROL         "Pr&oteger con contraseña al reanudar",IDC_SCREENS_USEPASSCHK,"button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP, 108, 120, 104, 19
-    GROUPBOX        "Energía del monitor", IDC_SCREENS_DUMMY2, 6, 155, 232, 41
+                    BS_AUTOCHECKBOX | WS_TABSTOP, 104, 120, 130, 19 //104
+    GROUPBOX        "Energía del monitor ", IDC_SCREENS_DUMMY2, 6, 155, 232, 41
     LTEXT           "Para ajustar la configuración de energía del monitor y ahorrar energía, haga clic en Energía.",
-                    IDC_STATIC, 14, 166, 146 ,20
+                    IDC_STATIC, 14, 166, 146 ,24
     PUSHBUTTON      "E&nergía...", IDC_SCREENS_POWER_BUTTON, 176, 171, 50, 13
 END
 
@@ -59,7 +59,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL         "", IDC_APPEARANCE_PREVIEW, "PreviewWndClass",
                     WS_VISIBLE | WS_BORDER, 7, 7, 232, 120
-    LTEXT           "Combinación de colores", IDC_STATIC, 7, 140, 64, 7
+    LTEXT           "Combinación de colores", IDC_STATIC, 7, 140, 90, 7 //84
     COMBOBOX        IDC_APPEARANCE_UI_ITEM, 7, 169, 120, 54, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON      "Avanzado", IDC_APPEARANCE_ADVANCED, 182, 150, 56, 15
 END
@@ -76,7 +76,7 @@ BEGIN
     LTEXT "Elemento:", 8, 5, 160, 50, 9
     COMBOBOX IDC_ADVAPPEARANCE_ELEMENT, 5, 170, 130, 90, CBS_DROPDOWNLIST | CBS_HASSTRINGS | CBS_SORT | WS_CHILD | WS_VSCROLL | WS_TABSTOP
 
-    LTEXT "&Tamaño", IDC_ADVAPPEARANCE_SIZE_T, 142, 160, 21, 9
+    LTEXT "&Tamaño", IDC_ADVAPPEARANCE_SIZE_T, 142, 160, 39, 9
     EDITTEXT IDC_ADVAPPEARANCE_SIZE_E, 142, 170, 38, 13, ES_RIGHT | WS_GROUP
     CONTROL "", IDC_ADVAPPEARANCE_SIZE_UD, UPDOWN_CLASS, UDS_AUTOBUDDY | WS_BORDER | WS_GROUP | UDS_ALIGNRIGHT | UDS_ARROWKEYS | UDS_SETBUDDYINT | WS_CHILD | WS_VISIBLE, 172, 170, 10, 13
 
@@ -107,17 +107,17 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Configuración"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "Arrastre los iconos de los monitores para ajustar el orden físico de sus monitores.",-1,3,3,240,10
+    LTEXT           "Arrastre los iconos para ajustar el orden físico de sus monitores.",-1,3,3,240,10
     CONTROL         "",IDC_SETTINGS_MONSEL,"MONITORSELWNDCLASS",WS_CHILD|WS_VISIBLE|WS_TABSTOP,3,16,240,82,WS_EX_CLIENTEDGE
     LTEXT           "Monitor",1820,3,100,30,8
     LTEXT           "<ninguno>",IDC_SETTINGS_DEVICE,9,109,224,8
-    GROUPBOX        "Resolución de &pantalla",1818,3,120,115,43
+    GROUPBOX        "Resolución de &pantalla ",1818,3,120,115,43
     CONTROL         "",IDC_SETTINGS_RESOLUTION,"msctls_trackbar32",
                     TBS_AUTOTICKS | WS_TABSTOP, 30, 130, 58, 17
     LTEXT           "Menor",1815,8,130,21,8,NOT WS_GROUP
     LTEXT           "Mayor",1816,93,130,21,8,NOT WS_GROUP
     LTEXT           "",IDC_SETTINGS_RESOLUTION_TEXT,10,150,100,10,NOT WS_GROUP | SS_CENTER
-    GROUPBOX        "&Calidad de color",1817,125,120,115,43
+    GROUPBOX        "&Calidad de color ",1817,125,120,115,43
     COMBOBOX        IDC_SETTINGS_BPP,131,130,103,80,CBS_DROPDOWNLIST | CBS_AUTOHSCROLL |
                     WS_VSCROLL | WS_TABSTOP
     CONTROL         "",IDC_SETTINGS_SPECTRUM,"Static",SS_OWNERDRAW | SS_SUNKEN,131,148,103,9
@@ -129,12 +129,12 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "General"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Pantalla", -1, 7, 6, 237, 56, WS_GROUP
+    GROUPBOX "Pantalla ", -1, 7, 6, 237, 56, WS_GROUP
     LTEXT "Tamaño de la fuente:", -1, 14, 20, 222, 8
     COMBOBOX IDC_FONTSIZE_COMBO, 14, 30, 223, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     LTEXT "", IDC_FONTSIZE_COSTOM, 14, 46, 223, 12
-    GROUPBOX "Compatibilidad", -1, 7, 67, 237, 97
-    LTEXT "Algunos programas no funcionan correctamente si no reinicia el equipo después de cambiar la configuración de pantalla.\r\n\nAfter I change color settings:", -1, 12, 78, 228, 34
+    GROUPBOX "Compatibilidad ", -1, 7, 67, 237, 97
+    LTEXT "Algunos programas no funcionan correctamente si no reinicia el equipo después de cambiar la configuración de pantalla.\r\n\nDespués de cambiar la configuración de pantalla:", -1, 12, 78, 228, 34
     AUTORADIOBUTTON "&Reiniciar el equipo antes de aplicar la nueva configuración.", IDC_RESTART_RB, 14, 116, 224, 10
     AUTORADIOBUTTON "&Aplicar la nueva configuración de pantalla sin reiniciar.", IDC_WITHOUTREBOOT_RB, 14, 131, 224, 10
     AUTORADIOBUTTON "Pregu&ntar antes de aplicar la nueva configuración de pantalla.", IDC_ASKME_RB, 14, 146, 224, 10

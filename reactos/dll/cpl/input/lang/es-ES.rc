@@ -10,13 +10,13 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Configuración"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Seleccione los servicios que desea para cada idioma mostrado en la lista.\nUse los botones de Agregar y Quitar para modificar esta lista.", -1, 9, 6, 238, 17
+    LTEXT "Seleccione los servicios que desea para cada idioma mostrado en la lista. Use los botones de Agregar y Quitar para modificar esta lista.", -1, 9, 6, 238, 17
     CONTROL "TEXT", IDC_KEYLAYOUT_LIST, "SYSLISTVIEW32", WS_BORDER | WS_VSCROLL | WS_TABSTOP | LVS_SORTASCENDING | LVS_REPORT | 0x0000808D, 8, 28, 237, 109
     PUSHBUTTON "Por &Defecto", IDC_SET_DEFAULT, 101, 159, 144, 14
     PUSHBUTTON "Ag&regar...", IDC_ADD_BUTTON, 27, 142, 70, 14
     PUSHBUTTON "&Quitar...", IDC_REMOVE_BUTTON, 101, 142, 70, 14
     PUSHBUTTON "&Propiedades...", IDC_PROP_BUTTON, 175, 142, 70, 14
-    GROUPBOX "Preferencias", -1, 7, 185, 240, 36
+    GROUPBOX "Preferencias ", -1, 7, 185, 240, 36
     PUSHBUTTON "C&onfiguración de teclas...", IDC_KEY_SET_BTN, 14, 198, 110, 14
 END
 
@@ -25,10 +25,10 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUPWIN
 CAPTION "Configuración avanzada de teclas"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	GROUPBOX "Desactivar la tecla Bloq Mayús", -1, 7, 7, 258, 26
+	GROUPBOX "Desactivar la tecla Bloq Mayús ", -1, 7, 7, 258, 26
 	AUTORADIOBUTTON "Pressionar la tecla B&loq Mayús", IDC_PRESS_CL_KEY_RB, 14, 17, 120, 11, WS_GROUP
 	AUTORADIOBUTTON "Presionar la tecla &Mayús", IDC_PRESS_SHIFT_KEY_RB, 144, 17, 120, 11, NOT WS_TABSTOP
-	GROUPBOX "Teclas de acceso rápido para idiomas de dispositivo de entrada", -1, 7, 37, 258, 95
+	GROUPBOX "Teclas de acceso rápido para idiomas de dispositivo de entrada ", -1, 7, 37, 258, 95
 	LTEXT "Acción", -1, 14, 47, 60, 9
 	RTEXT "&Secuencia de teclas", -1, 177, 47, 79, 9
 	LISTBOX IDC_KEY_LISTBOX, 14, 57, 244, 52, LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | WS_VSCROLL | WS_TABSTOP
@@ -42,7 +42,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUPWIN
 CAPTION "Agregar idioma de entrada"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT "&Idioma de dispositivo de entrada:", -1, 7, 7, 61, 10
+	LTEXT "&Idioma de dispositivo de entrada:", -1, 7, 7, 120, 10
 	COMBOBOX IDC_INPUT_LANG_COMBO, 7, 17, 212, 110, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
 	LTEXT "&Distribución del teclado/IME:", -1, 7, 36, 110, 10
 	COMBOBOX IDC_KEYBOARD_LO_COMBO, 7, 47, 212, 110, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
@@ -57,7 +57,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "", 1240, 4, 5, 186, 10
     GROUPBOX "", -1, 7, 16, 179, 48
-    AUTOCHECKBOX "Camb&iar la distribución del teclado", IDC_USE_SK, 12, 17, 135, 8
+    AUTOCHECKBOX "Camb&iar la distribución del teclado", IDC_USE_SK, 12, 17, 131, 8
     CTEXT "Mayús", -1, 68, 37, 27, 12
     CTEXT "+", -1, 57, 37, 8, 9
     AUTORADIOBUTTON "&CTRL", -1, 24, 31, 30, 11, WS_GROUP
