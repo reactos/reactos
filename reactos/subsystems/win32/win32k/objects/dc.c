@@ -146,6 +146,7 @@ NtGdiCreateCompatibleDC(HDC hDC)
   nDc_Attr->jROP2           = oDc_Attr->jROP2;
   nDc_Attr->dwLayout        = oDc_Attr->dwLayout;
   if (oDc_Attr->dwLayout & LAYOUT_ORIENTATIONMASK) Layout = oDc_Attr->dwLayout;
+  NewDC->DcLevel.flPath     = OrigDC->DcLevel.flPath;
 
   DC_UnlockDc(NewDC);
   DC_UnlockDc(OrigDC);
@@ -828,6 +829,7 @@ IntGdiCreateDC(PUNICODE_STRING Driver,
     NewDC->erclWindow.top = NewDC->erclWindow.left = 0;
     NewDC->erclWindow.right  = ((PGDIDEVICE)NewDC->pPDev)->GDIInfo.ulHorzRes;
     NewDC->erclWindow.bottom = ((PGDIDEVICE)NewDC->pPDev)->GDIInfo.ulVertRes;
+    NewDC->DcLevel.flPath = DCPATH_CLOCKWISE;
 
     DC_UnlockDc( NewDC );
 
@@ -1248,7 +1250,7 @@ IntGdiCopyToSaveState(PDC dc, PDC newdc)
 #endif
   nDc_Attr->ptlCurrent      = Dc_Attr->ptlCurrent;
   nDc_Attr->ptfxCurrent     = Dc_Attr->ptfxCurrent;
-  newdc->w.ArcDirection     = dc->w.ArcDirection;
+  newdc->DcLevel.flPath     = dc->DcLevel.flPath;
   newdc->w.xformWorld2Wnd   = dc->w.xformWorld2Wnd;
   newdc->w.xformWorld2Vport = dc->w.xformWorld2Vport;
   newdc->w.xformVport2World = dc->w.xformVport2World;
@@ -1318,7 +1320,7 @@ IntGdiCopyFromSaveState(PDC dc, PDC dcs, HDC hDC)
 #endif
   Dc_Attr->ptlCurrent      = sDc_Attr->ptlCurrent;
   Dc_Attr->ptfxCurrent     = sDc_Attr->ptfxCurrent;
-  dc->w.ArcDirection       = dcs->w.ArcDirection;
+  dc->DcLevel.flPath       = dcs->DcLevel.flPath;
   dc->w.xformWorld2Wnd     = dcs->w.xformWorld2Wnd;
   dc->w.xformWorld2Vport   = dcs->w.xformWorld2Vport;
   dc->w.xformVport2World   = dcs->w.xformVport2World;
@@ -2105,7 +2107,10 @@ NtGdiGetDCDword(
       SafeResult = Dc_Attr->cBreak;
       break;
     case GdiGetArcDirection:
-      SafeResult = dc->w.ArcDirection;
+      if (Dc_Attr->dwLayout & LAYOUT_RTL)
+          SafeResult = AD_CLOCKWISE - ((dc->DcLevel.flPath & DCPATH_CLOCKWISE) != 0);
+      else
+          SafeResult = ((dc->DcLevel.flPath & DCPATH_CLOCKWISE) != 0) + AD_COUNTERCLOCKWISE;
       break;
     case GdiGetEMFRestorDc:
       break;
@@ -2217,29 +2222,26 @@ NtGdiGetAndSetDCDword(
          Ret = FALSE;
          break;
       }
-      if ( Dc_Attr->dwLayout & LAYOUT_RTL )
+      if ( Dc_Attr->dwLayout & LAYOUT_RTL ) // Right to Left
       {
          SafeResult = AD_CLOCKWISE - ((dc->DcLevel.flPath & DCPATH_CLOCKWISE) != 0);
          if ( dwIn == AD_CLOCKWISE )
          {
-            dc->DcLevel.flPath |= DCPATH_CLOCKWISE;
+            dc->DcLevel.flPath &= ~DCPATH_CLOCKWISE;
             break;
          }
-         dc->DcLevel.flPath &= ~DCPATH_CLOCKWISE;
+         dc->DcLevel.flPath |= DCPATH_CLOCKWISE;
       }
-      else
+      else // Left to Right
       {
          SafeResult = ((dc->DcLevel.flPath & DCPATH_CLOCKWISE) != 0) + AD_COUNTERCLOCKWISE;
          if ( dwIn == AD_COUNTERCLOCKWISE)
          {
-            dc->DcLevel.flPath |= DCPATH_CLOCKWISE;
+            dc->DcLevel.flPath &= ~DCPATH_CLOCKWISE;
             break;
          }
-         dc->DcLevel.flPath &= ~DCPATH_CLOCKWISE;
+         dc->DcLevel.flPath |= DCPATH_CLOCKWISE;
       }
-
-      SafeResult = dc->w.ArcDirection; // Fixme
-      dc->w.ArcDirection = dwIn;       // Fixme
       break;
     default:
       SetLastWin32Error(ERROR_INVALID_PARAMETER);

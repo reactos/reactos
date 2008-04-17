@@ -980,10 +980,10 @@ NtGdiSetLayout(
 
   if (!(Dc_Attr->flTextAlign & TA_CENTER)) Dc_Attr->flTextAlign |= TA_RIGHT;
 
-  if (dc->w.ArcDirection == AD_CLOCKWISE)
-      dc->w.ArcDirection = AD_COUNTERCLOCKWISE;
+  if (dc->DcLevel.flPath & DCPATH_CLOCKWISE)
+      dc->DcLevel.flPath &= ~DCPATH_CLOCKWISE;
   else
-      dc->w.ArcDirection = AD_CLOCKWISE;
+      dc->DcLevel.flPath |= DCPATH_CLOCKWISE;
 
   Dc_Attr->flXform |= (PAGE_EXTENTS_CHANGED|INVALIDATE_ATTRIBUTES|DEVICE_TO_WORLD_INVALID);
 

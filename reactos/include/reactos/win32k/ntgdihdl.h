@@ -346,7 +346,6 @@ typedef struct _WIN_DC_INFO
 
   INT  DCOrgX;            /* DC origin */
   INT  DCOrgY;
-  INT  ArcDirection;
 
   XFORM  xformWorld2Wnd;    /* World-to-window transformation */
   XFORM  xformWorld2Vport;  /* World-to-viewport transformation */

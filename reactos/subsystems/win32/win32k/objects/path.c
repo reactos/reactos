@@ -757,7 +757,7 @@ PATH_Arc ( PDC dc, INT x1, INT y1, INT x2, INT y2,
 
   ASSERT ( dc );
 
-  clockwise = ( dc->w.ArcDirection == AD_CLOCKWISE );
+  clockwise = ((dc->DcLevel.flPath & DCPATH_CLOCKWISE) != 0);
 
   /* Check that path is open */
   if ( dc->w.path.state != PATH_Open )
