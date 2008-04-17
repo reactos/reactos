@@ -130,6 +130,12 @@ NtGdiDdCreateDirectDrawObject(HDC hdc)
     NTSTATUS Status;
     PEPROCESS Proc = NULL;
     INT i=0;
+    
+    if (hdc == NULL)
+    {
+        DPRINT1("Warning : hdc is NULL\n");
+        return 0;
+    }
 
     /* FIXME get the process data */
     /* FIXME this code should be add where the driver being load */
