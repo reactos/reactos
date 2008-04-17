@@ -2187,6 +2187,8 @@ NtGdiGetAndSetDCDword(
   switch (u)
   {
     case GdtGetSetCopyCount:
+      SafeResult = dc->ulCopyCount;
+      dc->ulCopyCount = dwIn;
       break;
     case GdiGetSetTextAlign:
       SafeResult = Dc_Attr->lTextAlign;
@@ -2213,9 +2215,31 @@ NtGdiGetAndSetDCDword(
       {
          SetLastWin32Error(ERROR_INVALID_PARAMETER);
          Ret = FALSE;
+         break;
       }
-      SafeResult = dc->w.ArcDirection;
-      dc->w.ArcDirection = dwIn;
+      if ( Dc_Attr->dwLayout & LAYOUT_RTL )
+      {
+         SafeResult = AD_CLOCKWISE - ((dc->DcLevel.flPath & DCPATH_CLOCKWISE) != 0);
+         if ( dwIn == AD_CLOCKWISE )
+         {
+            dc->DcLevel.flPath |= DCPATH_CLOCKWISE;
+            break;
+         }
+         dc->DcLevel.flPath &= ~DCPATH_CLOCKWISE;
+      }
+      else
+      {
+         SafeResult = ((dc->DcLevel.flPath & DCPATH_CLOCKWISE) != 0) + AD_COUNTERCLOCKWISE;
+         if ( dwIn == AD_COUNTERCLOCKWISE)
+         {
+            dc->DcLevel.flPath |= DCPATH_CLOCKWISE;
+            break;
+         }
+         dc->DcLevel.flPath &= ~DCPATH_CLOCKWISE;
+      }
+
+      SafeResult = dc->w.ArcDirection; // Fixme
+      dc->w.ArcDirection = dwIn;       // Fixme
       break;
     default:
       SetLastWin32Error(ERROR_INVALID_PARAMETER);

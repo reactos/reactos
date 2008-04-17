@@ -9,6 +9,11 @@
 // Get/SetBounds/Rect support.
 #define DCB_WINDOWMGR 0x8000 // Queries the Windows bounding rectangle instead of the application's
 
+  /* DCPATH flPath */
+#define DCPATH_ACTIVE    0x0001
+#define DCPATH_SAVE      0x0002
+#define DCPATH_CLOCKWISE 0x0004
+
   /* DC flags */
 #define DC_SAVED      0x0002   /* It is a saved DC */
 #define DC_DIRTY      0x0004   /* hVisRgn has to be updated */
