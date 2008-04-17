@@ -21,11 +21,8 @@ STDCALL
 NtGdiDvpCanCreateVideoPort(HANDLE hDirectDraw,
                            PDD_CANCREATEVPORTDATA puCanCreateVPortData)
 {
-    PGD_DVPCANCREATEVIDEOPORT pfnDvpCanCreateVideoPort = NULL;
-    INT i;
-
-    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDvpCanCreateVideoPort, pfnDvpCanCreateVideoPort);
-
+    PGD_DVPCANCREATEVIDEOPORT pfnDvpCanCreateVideoPort = (PGD_DVPCANCREATEVIDEOPORT)gpDxFuncs[DXG_INDEX_DxDvpCanCreateVideoPort].pfn;
+    
     if (pfnDvpCanCreateVideoPort == NULL)
     {
         DPRINT1("Warring no pfnDvpCanCreateVideoPort");
@@ -44,11 +41,8 @@ STDCALL
 NtGdiDvpColorControl(HANDLE hVideoPort,
                      PDD_VPORTCOLORDATA puVPortColorData)
 {
-    PGD_DVPCOLORCONTROL pfnDvpColorControl = NULL;
-    INT i;
-
-    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDvpColorControl, pfnDvpColorControl);
-
+    PGD_DVPCOLORCONTROL pfnDvpColorControl = (PGD_DVPCOLORCONTROL)gpDxFuncs[DXG_INDEX_DxDvpColorControl].pfn;
+    
     if (pfnDvpColorControl == NULL)
     {
         DPRINT1("Warring no pfnDvpColorControl");
@@ -67,11 +61,8 @@ STDCALL
 NtGdiDvpCreateVideoPort(HANDLE hDirectDraw,
                         PDD_CREATEVPORTDATA puCreateVPortData)
 {
-    PGD_DVPCREATEVIDEOPORT pfnDvpCreateVideoPort = NULL;
-    INT i;
-
-    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDvpCreateVideoPort, pfnDvpCreateVideoPort);
-
+    PGD_DVPCREATEVIDEOPORT pfnDvpCreateVideoPort = (PGD_DVPCREATEVIDEOPORT)gpDxFuncs[DXG_INDEX_DxDvpCreateVideoPort].pfn;
+    
     if (pfnDvpCreateVideoPort == NULL)
     {
         DPRINT1("Warring no pfnDvpCreateVideoPort");
@@ -90,11 +81,8 @@ STDCALL
 NtGdiDvpDestroyVideoPort(HANDLE hVideoPort,
                          PDD_DESTROYVPORTDATA puDestroyVPortData)
 {
-    PGD_DVPDESTROYVIDEOPORT pfnDvpDestroyVideoPort = NULL;
-    INT i;
-
-    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDvpDestroyVideoPort, pfnDvpDestroyVideoPort);
-
+    PGD_DVPDESTROYVIDEOPORT pfnDvpDestroyVideoPort  = (PGD_DVPDESTROYVIDEOPORT)gpDxFuncs[DXG_INDEX_DxDvpDestroyVideoPort].pfn;
+    
     if (pfnDvpDestroyVideoPort == NULL)
     {
         DPRINT1("Warring no pfnDvpDestroyVideoPort");

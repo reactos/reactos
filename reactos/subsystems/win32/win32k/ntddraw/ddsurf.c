@@ -18,11 +18,8 @@ DWORD
 STDCALL
 NtGdiDdDestroySurface(HANDLE hSurface, BOOL bRealDestroy)
 {
-    PGD_DXDDDESTROYSURFACE pfnDdDestroySurface = NULL;
-    INT i;
-
-    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDdDestroySurface, pfnDdDestroySurface);
-
+    PGD_DXDDDESTROYSURFACE pfnDdDestroySurface = (PGD_DXDDDESTROYSURFACE)gpDxFuncs[DXG_INDEX_DxDdDestroySurface].pfn;
+    
     if (pfnDdDestroySurface == NULL)
     {
         DPRINT1("Warring no pfnDdDestroySurface");
@@ -44,11 +41,8 @@ NtGdiDdFlip(HANDLE hSurfaceCurrent,
             HANDLE hSurfaceTargetLeft,
             PDD_FLIPDATA puFlipData)
 {
-    PGD_DXDDFLIP pfnDdDdFlip = NULL;
-    INT i;
-
-    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDdFlip, pfnDdDdFlip);
-
+    PGD_DXDDFLIP pfnDdDdFlip = (PGD_DXDDFLIP)gpDxFuncs[DXG_INDEX_DxDdFlip].pfn;
+   
     if (pfnDdDdFlip == NULL)
     {
         DPRINT1("Warring no pfnDdDdFlip");
@@ -68,11 +62,8 @@ NtGdiDdLock(HANDLE hSurface,
             PDD_LOCKDATA puLockData,
             HDC hdcClip)
 {
-    PGD_DXDDLOCK pfnDdLock = NULL;
-    INT i;
-
-    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDdLock, pfnDdLock);
-
+    PGD_DXDDLOCK pfnDdLock = (PGD_DXDDLOCK)gpDxFuncs[DXG_INDEX_DxDdLock].pfn;
+    
     if (pfnDdLock == NULL)
     {
         DPRINT1("Warring no pfnDdLock");
@@ -91,11 +82,8 @@ STDCALL
 NtGdiDdUnlock(HANDLE hSurface, 
               PDD_UNLOCKDATA puUnlockData)
 {
-    PGD_DXDDUNLOCK pfnDdUnlock = NULL;
-    INT i;
-
-    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDdUnlock, pfnDdUnlock);
-
+    PGD_DXDDUNLOCK pfnDdUnlock = (PGD_DXDDUNLOCK)gpDxFuncs[DXG_INDEX_DxDdUnlock].pfn;
+   
     if (pfnDdUnlock == NULL)
     {
         DPRINT1("Warring no pfnDdUnlock");
@@ -115,11 +103,8 @@ NtGdiDdBlt(HANDLE hSurfaceDest,
            HANDLE hSurfaceSrc,
            PDD_BLTDATA puBltData)
 {
-    PGD_DDBLT pfnDdBlt = NULL;
-    INT i;
-
-    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDdBlt, pfnDdBlt);
-
+    PGD_DDBLT pfnDdBlt = (PGD_DDBLT)gpDxFuncs[DXG_INDEX_DxDdBlt].pfn;
+    
     if (pfnDdBlt == NULL)
     {
         DPRINT1("Warring no pfnDdBlt");
@@ -138,11 +123,8 @@ STDCALL
 NtGdiDdSetColorKey(HANDLE hSurface,
                    PDD_SETCOLORKEYDATA puSetColorKeyData)
 {
-    PGD_DXDDSETCOLORKEY pfnDdSetColorKey = NULL;
-    INT i;
-
-    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDdSetColorKey, pfnDdSetColorKey);
-
+    PGD_DXDDSETCOLORKEY pfnDdSetColorKey = (PGD_DXDDSETCOLORKEY)gpDxFuncs[DXG_INDEX_DxDdSetColorKey].pfn;
+    
     if (pfnDdSetColorKey == NULL)
     {
         DPRINT1("Warring no pfnDdSetColorKey");
@@ -164,11 +146,8 @@ NtGdiDdAddAttachedSurface(HANDLE hSurface,
                           HANDLE hSurfaceAttached,
                           PDD_ADDATTACHEDSURFACEDATA puAddAttachedSurfaceData)
 {
-    PGD_DDADDATTACHEDSURFACE pfnDdAddAttachedSurface = NULL;
-    INT i;
-
-    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDdAddAttachedSurface, pfnDdAddAttachedSurface);
-
+    PGD_DDADDATTACHEDSURFACE pfnDdAddAttachedSurface = (PGD_DDADDATTACHEDSURFACE)gpDxFuncs[DXG_INDEX_DxDdAddAttachedSurface].pfn;
+    
     if (pfnDdAddAttachedSurface == NULL)
     {
         DPRINT1("Warring no pfnDdAddAttachedSurface");
@@ -187,11 +166,8 @@ STDCALL
 NtGdiDdGetBltStatus(HANDLE hSurface,
                     PDD_GETBLTSTATUSDATA puGetBltStatusData)
 {
-    PGD_DXDDGETBLTSTATUS pfnDdGetBltStatus = NULL;
-    INT i;
-
-    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDdGetBltStatus, pfnDdGetBltStatus);
-
+    PGD_DXDDGETBLTSTATUS pfnDdGetBltStatus = (PGD_DXDDGETBLTSTATUS)gpDxFuncs[DXG_INDEX_DxDdGetBltStatus].pfn;
+    
     if (pfnDdGetBltStatus == NULL)
     {
         DPRINT1("Warring no pfnDdGetBltStatus");
@@ -210,11 +186,8 @@ STDCALL
 NtGdiDdGetFlipStatus(HANDLE hSurface,
                      PDD_GETFLIPSTATUSDATA puGetFlipStatusData)
 {
-    PGD_DXDDGETFLIPSTATUS pfnDdGetFlipStatus = NULL;
-    INT i;
-
-    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDdGetFlipStatus, pfnDdGetFlipStatus);
-
+    PGD_DXDDGETFLIPSTATUS pfnDdGetFlipStatus = (PGD_DXDDGETFLIPSTATUS)gpDxFuncs[DXG_INDEX_DxDdGetFlipStatus].pfn;
+    
     if (pfnDdGetFlipStatus == NULL)
     {
         DPRINT1("Warring no pfnDdGetFlipStatus");
@@ -234,11 +207,8 @@ NtGdiDdUpdateOverlay(HANDLE hSurfaceDestination,
                      HANDLE hSurfaceSource,
                      PDD_UPDATEOVERLAYDATA puUpdateOverlayData)
 {
-    PGD_DXDDUPDATEOVERLAY pfnDdUpdateOverlay = NULL;
-    INT i;
-
-    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDdUpdateOverlay, pfnDdUpdateOverlay);
-
+    PGD_DXDDUPDATEOVERLAY pfnDdUpdateOverlay = (PGD_DXDDUPDATEOVERLAY)gpDxFuncs[DXG_INDEX_DxDdUpdateOverlay].pfn;
+   
     if (pfnDdUpdateOverlay == NULL)
     {
         DPRINT1("Warring no pfnDdUpdateOverlay");
@@ -259,11 +229,8 @@ NtGdiDdSetOverlayPosition(HANDLE hSurfaceSource,
                           HANDLE hSurfaceDestination,
                           PDD_SETOVERLAYPOSITIONDATA puSetOverlayPositionData)
 {
-    PGD_DXDDSETOVERLAYPOSITION pfnDdSetOverlayPosition = NULL;
-    INT i;
-
-    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDdSetOverlayPosition, pfnDdSetOverlayPosition);
-
+    PGD_DXDDSETOVERLAYPOSITION pfnDdSetOverlayPosition = (PGD_DXDDSETOVERLAYPOSITION)gpDxFuncs[DXG_INDEX_DxDdSetOverlayPosition].pfn;
+  
     if (pfnDdSetOverlayPosition == NULL)
     {
         DPRINT1("Warring no pfnDdSetOverlayPosition");
@@ -289,11 +256,8 @@ NtGdiDdAlphaBlt(HANDLE hSurfaceDest,
                 HANDLE hSurfaceSrc,
                 PDD_BLTDATA puBltData)
 {
-    PGD_DDALPHABLT pfnDdAlphaBlt = NULL;
-    INT i;
-
-    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDdAlphaBlt, pfnDdAlphaBlt);
-
+    PGD_DDALPHABLT pfnDdAlphaBlt = (PGD_DDALPHABLT)gpDxFuncs[DXG_INDEX_DxDdAlphaBlt].pfn;
+   
     if (pfnDdAlphaBlt == NULL)
     {
         DPRINT1("Warring no pfnDdAlphaBlt");
@@ -313,11 +277,8 @@ NtGdiDdAttachSurface(HANDLE hSurfaceFrom,
                      HANDLE hSurfaceTo
 )
 {
-    PGD_DDATTACHSURFACE pfnDdAttachSurface = NULL;
-    INT i;
-
-    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDdAttachSurface, pfnDdAttachSurface);
-
+    PGD_DDATTACHSURFACE pfnDdAttachSurface = (PGD_DDATTACHSURFACE)gpDxFuncs[DXG_INDEX_DxDdAttachSurface].pfn;
+  
     if (pfnDdAttachSurface == NULL)
     {
         DPRINT1("Warring no pfnDdAttachSurface");
@@ -340,11 +301,7 @@ STDCALL
 NtGdiDdUnattachSurface(HANDLE hSurface,
                        HANDLE hSurfaceAttached)
 {
-    PGD_DXDDUNATTACHSURFACE pfnDdUnattachSurface = NULL;
-    INT i;
-
-    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDdUnattachSurface, pfnDdUnattachSurface);
-
+    PGD_DXDDUNATTACHSURFACE pfnDdUnattachSurface = (PGD_DXDDUNATTACHSURFACE)gpDxFuncs[DXG_INDEX_DxDdUnattachSurface].pfn;  
     if (pfnDdUnattachSurface == NULL)
     {
         DPRINT1("Warring no pfnDdUnattachSurface");

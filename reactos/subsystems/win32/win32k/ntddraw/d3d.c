@@ -289,11 +289,8 @@ DWORD
 STDCALL
 NtGdiDdDestroyD3DBuffer(HANDLE hSurface)
 {
-    PGD_DXDDDESTROYD3DBUFFER pfnDdDestroyD3DBuffer = NULL;
-    INT i;
-
-    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDdDestroyD3DBuffer, pfnDdDestroyD3DBuffer);
-
+    PGD_DXDDDESTROYD3DBUFFER pfnDdDestroyD3DBuffer = (PGD_DXDDDESTROYD3DBUFFER)gpDxFuncs[DXG_INDEX_DxDdDestroyD3DBuffer].pfn;  
+    
     if (pfnDdDestroyD3DBuffer == NULL)
     {
         DPRINT1("Warring no pfnDdDestroyD3DBuffer");
@@ -317,11 +314,8 @@ NtGdiD3dDrawPrimitives2(HANDLE hCmdBuf,
                         FLATPTR *pfpVidMemVtx,
                         DWORD *pdwSizeVtx)
 {
-    PGD_D3DDRAWPRIMITIVES2 pfnD3dDrawPrimitives2 = NULL;
-    INT i;
-
-    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxD3dDrawPrimitives2, pfnD3dDrawPrimitives2);
-
+    PGD_D3DDRAWPRIMITIVES2 pfnD3dDrawPrimitives2  = (PGD_D3DDRAWPRIMITIVES2)gpDxFuncs[DXG_INDEX_DxD3dDrawPrimitives2].pfn;  
+    
     if (pfnD3dDrawPrimitives2 == NULL)
     {
         DPRINT1("Warring no pfnD3dDrawPrimitives2");
@@ -341,11 +335,8 @@ STDCALL
 NtGdiDdLockD3D(HANDLE hSurface,
                PDD_LOCKDATA puLockData)
 {
-    PGD_DXDDLOCKD3D pfnDdLockD3D  = NULL;
-    INT i;
-
-    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDdLockD3D, pfnDdLockD3D);
-
+    PGD_DXDDLOCKD3D pfnDdLockD3D  = (PGD_DXDDLOCKD3D)gpDxFuncs[DXG_INDEX_DxDdLockD3D].pfn;  
+    
     if (pfnDdLockD3D == NULL)
     {
         DPRINT1("Warring no pfnDdLockD3D");
@@ -363,11 +354,8 @@ DWORD
 STDCALL
 NtGdiD3dValidateTextureStageState(LPD3DNTHAL_VALIDATETEXTURESTAGESTATEDATA pData)
 {
-    PGD_D3DVALIDATETEXTURESTAGESTATE pfnD3dValidateTextureStageState = NULL;
-    INT i;
-
-    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxD3dValidateTextureStageState, pfnD3dValidateTextureStageState);
-
+    PGD_D3DVALIDATETEXTURESTAGESTATE pfnD3dValidateTextureStageState = (PGD_D3DVALIDATETEXTURESTAGESTATE)gpDxFuncs[DXG_INDEX_DxD3dValidateTextureStageState].pfn;  
+   
     if (pfnD3dValidateTextureStageState == NULL)
     {
         DPRINT1("Warring no pfnD3dValidateTextureStageState");
@@ -386,11 +374,8 @@ STDCALL
 NtGdiDdUnlockD3D(HANDLE hSurface,
                  PDD_UNLOCKDATA puUnlockData)
 {
-    PGD_DXDDUNLOCKD3D pfnDdUnlockD3D = NULL;
-    INT i;
-
-    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDdUnlockD3D, pfnDdUnlockD3D);
-
+    PGD_DXDDUNLOCKD3D pfnDdUnlockD3D = (PGD_DXDDUNLOCKD3D)gpDxFuncs[DXG_INDEX_DxDdUnlockD3D].pfn;
+   
     if (pfnDdUnlockD3D == NULL)
     {
         DPRINT1("Warring no pfnDdUnlockD3D");

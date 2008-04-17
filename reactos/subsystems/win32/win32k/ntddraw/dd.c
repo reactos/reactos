@@ -25,11 +25,8 @@ NtGdiDdCreateSurface(HANDLE hDirectDrawLocal,
                      PDD_CREATESURFACEDATA puCreateSurfaceData,
                      HANDLE *puhSurface)
 {
-    PGD_DDCREATESURFACE pfnDdCreateSurface = NULL;
-    INT i;
-
-    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDdCreateSurface, pfnDdCreateSurface);
-
+    PGD_DDCREATESURFACE pfnDdCreateSurface = (PGD_DDCREATESURFACE)gpDxFuncs[DXG_INDEX_DxDdCreateSurface].pfn;
+   
     if (pfnDdCreateSurface == NULL)
     {
         DPRINT1("Warring no pfnDdCreateSurface");
@@ -49,11 +46,8 @@ STDCALL
 NtGdiDdWaitForVerticalBlank(HANDLE hDirectDraw,
                             PDD_WAITFORVERTICALBLANKDATA puWaitForVerticalBlankData)
 {
-    PGD_DXDDWAITFORVERTICALBLANK pfnDdWaitForVerticalBlank = NULL;
-    INT i;
-
-    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDdWaitForVerticalBlank, pfnDdWaitForVerticalBlank);
-
+    PGD_DXDDWAITFORVERTICALBLANK pfnDdWaitForVerticalBlank = (PGD_DXDDWAITFORVERTICALBLANK)gpDxFuncs[DXG_INDEX_DxDdWaitForVerticalBlank].pfn;
+   
     if (pfnDdWaitForVerticalBlank == NULL)
     {
         DPRINT1("Warring no pfnDdWaitForVerticalBlank");
@@ -72,11 +66,8 @@ STDCALL
 NtGdiDdCanCreateSurface(HANDLE hDirectDrawLocal,
                         PDD_CANCREATESURFACEDATA puCanCreateSurfaceData)
 {
-    PGD_DDCANCREATESURFACE pfnDdCanCreateSurface = NULL;
-    INT i;
-
-    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDdCanCreateSurface, pfnDdCanCreateSurface);
-
+    PGD_DDCANCREATESURFACE pfnDdCanCreateSurface = (PGD_DDCANCREATESURFACE)gpDxFuncs[DXG_INDEX_DxDdCanCreateSurface].pfn;
+    
     if (pfnDdCanCreateSurface == NULL)
     {
         DPRINT1("Warring no pfnDdCanCreateSurface");
@@ -95,11 +86,8 @@ STDCALL
 NtGdiDdGetScanLine(HANDLE hDirectDrawLocal,
                    PDD_GETSCANLINEDATA puGetScanLineData)
 {
-    PGD_DXDDGETSCANLINE  pfnDdGetScanLine = NULL;
-    INT i;
-
-    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDdGetScanLine, pfnDdGetScanLine);
-
+    PGD_DXDDGETSCANLINE  pfnDdGetScanLine = (PGD_DXDDGETSCANLINE)gpDxFuncs[DXG_INDEX_DxDdGetScanLine].pfn;
+   
     if (pfnDdGetScanLine == NULL)
     {
         DPRINT1("Warring no pfnDdGetScanLine");
@@ -125,11 +113,8 @@ NtGdiDdCreateSurfaceEx(HANDLE hDirectDraw,
                        HANDLE hSurface,
                        DWORD dwSurfaceHandle)
 {
-    PGD_DXDDCREATESURFACEEX pfnDdCreateSurfaceEx  = NULL;
-    INT i;
-
-    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDdCreateSurfaceEx, pfnDdCreateSurfaceEx);
-
+    PGD_DXDDCREATESURFACEEX pfnDdCreateSurfaceEx  = (PGD_DXDDCREATESURFACEEX)gpDxFuncs[DXG_INDEX_DxDdCreateSurfaceEx].pfn;
+   
     if (pfnDdCreateSurfaceEx == NULL)
     {
         DPRINT1("Warring no pfnDdCreateSurfaceEx");
