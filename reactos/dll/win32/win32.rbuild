@@ -214,6 +214,9 @@
 <directory name="opengl32">
 	<xi:include href="opengl32/opengl32.rbuild" />
 </directory>
+<directory name="pdh">
+	<xi:include href="pdh/pdh.rbuild" />
+</directory>
 <directory name="powrprof">
 	<xi:include href="powrprof/powrprof.rbuild" />
 </directory>

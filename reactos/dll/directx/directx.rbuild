@@ -28,6 +28,21 @@
 	<directory name="dxdiagn">
 		<xi:include href="dxdiagn/dxdiagn.rbuild" />
 	</directory>
+	<directory name="ksproxy">
+		<xi:include href="ksproxy/ksproxy.rbuild" />
+	</directory>
+	<directory name="ksuser">
+		<xi:include href="ksuser/ksuser.rbuild" />
+	</directory>
+	<directory name="msdmo">
+		<xi:include href="msdmo/msdmo.rbuild" />
+	</directory>
+	<directory name="qedit">
+		<xi:include href="qedit/qedit.rbuild" />
+	</directory>
+	<directory name="quartz">
+		<xi:include href="quartz/quartz.rbuild" />
+	</directory>
 
 	<directory name="wine">
 		<xi:include href="wine/wine.rbuild" />

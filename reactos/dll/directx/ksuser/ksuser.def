@@ -1,0 +1,7 @@
+LIBRARY ksuser.dll
+EXPORTS
+KsCreateAllocator
+KsCreateClock
+KsCreatePin
+KsCreateTopologyNode
+; EOF

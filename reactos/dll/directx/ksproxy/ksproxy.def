@@ -1,0 +1,12 @@
+LIBRARY ksproxy.ax
+EXPORTS
+DllCanUnloadNow
+DllGetClassObject
+DllRegisterServer
+DllUnregisterServer
+KsGetMediaType
+KsGetMediaTypeCount
+KsGetMultiplePinFactoryItems
+KsOpenDefaultDevice
+KsResolveRequiredAttributes
+KsSynchronousDeviceControl
