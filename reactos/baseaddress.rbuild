@@ -23,6 +23,7 @@
   <property name="BASEADDRESS_INPUT" value ="0x5e400000" />
   <property name="BASEADDRESS_DINPUT" value="0x5f580000" />
   <property name="BASEADDRESS_NETID" value="0x5f660000" />
+  <property name="BASEADDRESS_QEDIT" value="0x611c0000" />
   <property name="BASEADDRESS_MODEMUI" value="0x61650000" />
   <property name="BASEADDRESS_MAPI32" value="0x62250000" />
   <property name="BASEADDRESS_HDWWIZ" value="0x64d40000" />
@@ -41,6 +42,7 @@
   <property name="BASEADDRESS_HID" value="0x688f0000" />
   <property name="BASEADDRESS_PSXDLL" value="0x68eb0000" />
   <property name="BASEADDRESS_PSAPI" value="0x68f70000" />
+  <property name="BASEADDRESS_KSPROXY" value="0x68f90000" />
   <property name="BASEADDRESS_OLEACC" value="0x69640000" />
   <property name="BASEADDRESS_WINMM" value="0x697d0000" />
   <property name="BASEADDRESS_MSIMG32" value="0x69cc0000" />
@@ -86,10 +88,13 @@
   <property name="BASEADDRESS_WINSCARD" value="0x723d0000" />
   <property name="BASEADDRESS_DEVMGR" value="0x72a90000" />
   <property name="BASEADDRESS_WINSPOOL" value="0x72f50000" />
+  <property name="BASEADDRESS_MSDMO" value="0x73670000" />
   <property name="BASEADDRESS_AVIFIL32" value="0x73ac0000" />
   <property name="BASEADDRESS_LZ32" value="0x73d80000" />
   <property name="BASEADDRESS_COREDLL" value="0x73d80000" />
+  <property name="BASEADDRESS_KSUSER" value="0x73ea0000" />
   <property name="BASEADDRESS_ICMP" value="0x741f0000" />
+  <property name="BASEADDRESS_QUARTZ" value="0x747d0000" />
   <property name="BASEADDRESS_USERENV" value="0x74850000" />
   <property name="BASEADDRESS_WS2_32" value="0x74aa0000" />
   <property name="BASEADDRESS_SYSSETUP" value="0x74a30000" />
@@ -97,6 +102,7 @@
   <property name="BASEADDRESS_MSXML3" value="0x74ae0000" />
   <property name="BASEADDRESS_PRINTUI" value="0x74b40000" />
   <property name="BASEADDRESS_MMDRV" value="0x74c30000" />
+  <property name="BASEADDRESS_PDH" value="0x74c70000" />
   <property name="BASEADDRESS_OLEDLG" value="0x74d00000" />
   <property name="BASEADDRESS_SAMSRV" value="0x74f30000" />
   <property name="BASEADDRESS_SAMLIB" value="0x750C0000" />
