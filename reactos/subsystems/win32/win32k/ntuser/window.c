@@ -2063,6 +2063,7 @@ AllocErr:
    {
       /* FIXME: Cleanup. */
       DPRINT1("IntCreateWindowEx(): event CREATE hook failed. No cleanup performed!\n");
+      IntUnlinkWindow(Window);
       RETURN((HWND)0);
    }
 #endif
