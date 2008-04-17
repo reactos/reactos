@@ -56,6 +56,15 @@ seem to compile without this...
 #define KSDDKAPI
 
 
+#define KSSTRING_Filter L"{9B365890-165F-11D0-A195-0020AFD156E4}"
+#define KSSTRING_Pin L"{146F1A80-4791-11D0-A5D6-28DB04C10000}"
+#define KSSTRING_Clock L"{53172480-4791-11D0-A5D6-28DB04C10000}"
+#define KSSTRING_Allocator L"{642F5D00-4791-11D0-A5D6-28DB04C10000}"
+#define KSSTRING_AllocatorEx L"{091BB63B-603F-11D1-B067-00A0C9062802}"
+#define KSSTRING_TopologyNode L"{0621061A-EE75-11D0-B915-00A0C9223196}"
+
+#define KSDATAFORMAT_BIT_ATTRIBUTES                         1
+#define KSDATAFORMAT_ATTRIBUTES                             (1 << KSDATAFORMAT_BIT_ATTRIBUTES)
 typedef PVOID PKSWORKER;
 
 /* ===============================================================
