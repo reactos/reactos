@@ -127,10 +127,15 @@ dll\directx\dsound\dsound.dll                       1
 dll\directx\dxdiagn\dxdiagn.dll                     1
 dll\directx\ddraw\ddraw.dll                         1
 dll\directx\d3d8thk\d3d8thk.dll                     1
+dll\directx\devenum\devenum.dll                     1
+dll\directx\ksproxy\ksproxy.ax                      1
+dll\directx\ksuser\ksuser.dll                       1
+dll\directx\msdmo\msdmo.dll                         1
+dll\directx\quartz\quartz.dll                       1
+dll\directx\qedit\qedit.dll                         1
 dll\directx\wine\d3d8\d3d8.dll                      1
 dll\directx\wine\wined3d\wined3d.dll                1
 dll\directx\wine\d3d9\d3d9.dll                      1
-dll\directx\devenum\devenum.dll                     1
 
 dll\keyboard\kbdbgm\kbdbgm.dll                      1
 dll\keyboard\kbdbgt\kbdbgt.dll                      1
@@ -235,6 +240,7 @@ dll\win32\oleaut32\oleaut32.dll                     1
 dll\win32\oledlg\oledlg.dll                         1
 dll\win32\olepro32\olepro32.dll                     1
 dll\win32\opengl32\opengl32.dll                     1
+dll\win32\pdh\pdh.dll                               1
 dll\win32\powrprof\powrprof.dll                     1
 dll\win32\printui\printui.dll                       1
 dll\win32\psapi\psapi.dll                           1
