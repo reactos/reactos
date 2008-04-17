@@ -465,4 +465,69 @@ co_IntCallHookProc(INT HookId,
    return Result;
 }
 
+LRESULT
+STDCALL
+co_IntCallEventProc(HWINEVENTHOOK hook,
+                           DWORD event,
+                             HWND hWnd,
+                         LONG idObject,
+                          LONG idChild,
+                   DWORD dwEventThread,
+                   DWORD dwmsEventTime,
+                     WINEVENTPROC Proc)
+{
+   LRESULT Result;
+   NTSTATUS Status;
+   PEVENTPROC_CALLBACK_ARGUMENTS Common;
+   ULONG ArgumentLength, ResultLength;
+   PVOID Argument, ResultPointer, pWnd;
+
+   ArgumentLength = sizeof(EVENTPROC_CALLBACK_ARGUMENTS);
+
+   Argument = IntCbAllocateMemory(ArgumentLength);
+   if (NULL == Argument)
+   {
+      DPRINT1("EventProc callback failed: out of memory\n");
+      return 0;
+   }
+   Common = (PEVENTPROC_CALLBACK_ARGUMENTS) Argument;
+   Common->hook = hook;
+   Common->event = event;
+   Common->hwnd = hWnd;
+   Common->idObject = idObject;
+   Common->idChild = idChild;
+   Common->dwEventThread = dwEventThread;
+   Common->dwmsEventTime = dwmsEventTime;
+   Common->Proc = Proc;
+
+   ResultPointer = NULL;
+   ResultLength = sizeof(LRESULT);
+
+   IntSetTebWndCallback (&hWnd, &pWnd);
+
+   UserLeaveCo();
+
+   Status = KeUserModeCallback(USER32_CALLBACK_EVENTPROC,
+                               Argument,
+                               ArgumentLength,
+                               &ResultPointer,
+                               &ResultLength);
+
+   /* Simulate old behaviour: copy into our local buffer */
+   Result = *(LRESULT*)ResultPointer;
+
+   UserEnterCo();
+
+   IntRestoreTebWndCallback (hWnd, pWnd);
+
+   IntCbFreeMemory(Argument);
+  
+   if (!NT_SUCCESS(Status))
+   {
+      return 0;
+   }
+
+   return Result;
+}
+
 /* EOF */

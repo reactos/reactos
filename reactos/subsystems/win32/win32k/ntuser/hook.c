@@ -1,26 +1,8 @@
 /*
- *  ReactOS W32 Subsystem
- *  Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003 ReactOS Team
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- */
-/*
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Window hooks
- * FILE:             subsys/win32k/ntuser/hook.c
+ * FILE:             subsystem/win32/win32k/ntuser/hook.c
  * PROGRAMER:        Casper S. Hornstrup (chorns@users.sourceforge.net)
  * REVISION HISTORY:
  *       06-06-2001  CSH  Created
@@ -37,44 +19,10 @@
 #define HOOKID_TO_FLAG(HookId) (1 << ((HookId) + 1))
 
 static PHOOKTABLE GlobalHooks;
-DWORD Bogus_SrvEventActivity = 0;
 
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
-static
-DWORD
-FASTCALL
-GetMaskFromEvent(DWORD Event)
-{
-  DWORD Ret = 0;
-
-  if ( Event > EVENT_OBJECT_STATECHANGE )
-  {
-    if ( Event == EVENT_OBJECT_LOCATIONCHANGE ) return SRV_EVENT_LOCATIONCHANGE;
-    if ( Event == EVENT_OBJECT_NAMECHANGE )     return SRV_EVENT_NAMECHANGE;
-    if ( Event == EVENT_OBJECT_VALUECHANGE )    return SRV_EVENT_VALUECHANGE;
-    return SRV_EVENT_CREATE;
-  }
-
-  if ( Event == EVENT_OBJECT_STATECHANGE ) return SRV_EVENT_STATECHANGE;
-
-  Ret = SRV_EVENT_RUNNING;
-
-  if ( Event < EVENT_SYSTEM_MENUSTART )    return SRV_EVENT_CREATE;
-
-  if ( Event <= EVENT_SYSTEM_MENUPOPUPEND )
-  {
-    Ret = SRV_EVENT_MENU;
-  }
-  else
-  {
-    if ( Event <= EVENT_CONSOLE_CARET-1 )         return SRV_EVENT_CREATE;
-    if ( Event <= EVENT_CONSOLE_END_APPLICATION ) return SRV_EVENT_END_APPLICATION;
-    if ( Event != EVENT_OBJECT_FOCUS )            return SRV_EVENT_CREATE;
-  }
-  return Ret;
-}
 
 /* create a new hook table */
 static PHOOKTABLE
@@ -734,25 +682,6 @@ CLEANUP:
    END_CLEANUP;
 }
 
-HWINEVENTHOOK
-STDCALL
-NtUserSetWinEventHook(
-   UINT eventMin,
-   UINT eventMax,
-   HMODULE hmodWinEventProc,
-   PUNICODE_STRING puString,
-   WINEVENTPROC lpfnWinEventProc,
-   DWORD idProcess,
-   DWORD idThread,
-   UINT dwflags)
-{
-
-   Bogus_SrvEventActivity |= GetMaskFromEvent(eventMin); // Fake it out for now.
-   Bogus_SrvEventActivity &= ~GetMaskFromEvent(eventMin);
-   UNIMPLEMENTED
-
-   return 0;
-}
 
 BOOL
 STDCALL
@@ -801,15 +730,5 @@ CLEANUP:
    UserLeave();
    END_CLEANUP;
 }
-
-DWORD
-STDCALL
-NtUserUnhookWinEvent(
-   HWINEVENTHOOK hWinEventHook)
-{
-   UNIMPLEMENTED
-
-   return 0;
-}
-
+ 
 /* EOF */

@@ -6,7 +6,8 @@
 #define USER32_CALLBACK_LOADSYSMENUTEMPLATE   (2)
 #define USER32_CALLBACK_LOADDEFAULTCURSORS    (3)
 #define USER32_CALLBACK_HOOKPROC              (4)
-#define USER32_CALLBACK_MAXIMUM               (4)
+#define USER32_CALLBACK_EVENTPROC             (5)
+#define USER32_CALLBACK_MAXIMUM               (5)
 
 typedef struct _WINDOWPROC_CALLBACK_ARGUMENTS
 {
@@ -50,6 +51,23 @@ typedef struct _HOOKPROC_CBT_CREATEWND_EXTRA_ARGUMENTS
   /* WCHAR szClass[] */
 } HOOKPROC_CBT_CREATEWND_EXTRA_ARGUMENTS, *PHOOKPROC_CBT_CREATEWND_EXTRA_ARGUMENTS;
 
+typedef VOID (*WINEVENTPROC)(HWINEVENTHOOK,DWORD,HWND,LONG,LONG,DWORD,DWORD);
+
+typedef struct _EVENTPROC_CALLBACK_ARGUMENTS
+{
+  HWINEVENTHOOK hook;
+  DWORD event;
+  HWND hwnd; 
+  LONG idObject;
+  LONG idChild;
+  DWORD dwEventThread;
+  DWORD dwmsEventTime;
+  WINEVENTPROC Proc;
+  BOOLEAN Ansi;
+  UINT ModuleNameLength;
+  WCHAR ModuleName[1];
+} EVENTPROC_CALLBACK_ARGUMENTS, *PEVENTPROC_CALLBACK_ARGUMENTS;
+
 NTSTATUS STDCALL
 User32CallWindowProcFromKernel(PVOID Arguments, ULONG ArgumentLength);
 NTSTATUS STDCALL
@@ -60,5 +78,7 @@ NTSTATUS STDCALL
 User32SetupDefaultCursors(PVOID Arguments, ULONG ArgumentLength);
 NTSTATUS STDCALL
 User32CallHookProcFromKernel(PVOID Arguments, ULONG ArgumentLength);
+NTSTATUS STDCALL
+User32CallEventProcFromKernel(PVOID Arguments, ULONG ArgumentLength);
 
 #endif /* __INCLUDE_USER32_CALLBACK_H */

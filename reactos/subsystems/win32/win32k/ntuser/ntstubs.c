@@ -428,19 +428,6 @@ NtUserNotifyIMEStatus(
 
 DWORD
 STDCALL
-NtUserNotifyWinEvent(
-   DWORD Event,
-   HWND  hWnd,
-   LONG  idObject,
-   LONG  idChild)
-{
-   UNIMPLEMENTED
-
-   return 0;
-}
-
-DWORD
-STDCALL
 NtUserQueryUserCounters(
    DWORD Unknown0,
    DWORD Unknown1,

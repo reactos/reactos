@@ -8,6 +8,7 @@ PUSER_HANDLE_TABLE gHandleTable = NULL;
 PUSER_HANDLE_ENTRY gHandleEntries = NULL;
 PW32PROCESSINFO g_pi = NULL; /* User Mode Pointer */
 PW32PROCESSINFO g_kpi = NULL; /* Kernel Mode Pointer */
+PSERVERINFO g_psi = NULL;
 
 PW32PROCESSINFO
 GetW32ProcessInfo(VOID);
@@ -56,9 +57,12 @@ Init(VOID)
       (PVOID)User32SetupDefaultCursors;
    NtCurrentTeb()->ProcessEnvironmentBlock->KernelCallbackTable[USER32_CALLBACK_HOOKPROC] =
       (PVOID)User32CallHookProcFromKernel;
+   NtCurrentTeb()->ProcessEnvironmentBlock->KernelCallbackTable[USER32_CALLBACK_EVENTPROC] =
+      (PVOID)User32CallEventProcFromKernel;
 
    g_pi = GetW32ProcessInfo();
    g_kpi = SharedPtrToKernel(g_pi);
+   g_psi = SharedPtrToUser(g_pi->psi);
    gHandleTable = SharedPtrToUser(g_pi->UserHandleTable);
    gHandleEntries = SharedPtrToUser(gHandleTable->handles);
 

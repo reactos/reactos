@@ -1679,7 +1679,7 @@ NtUserNotifyProcessCreate(
     DWORD dwUnknown3,
     DWORD dwUnknown4);
 
-DWORD
+VOID
 NTAPI
 NtUserNotifyWinEvent(
   DWORD Event,
@@ -2345,7 +2345,7 @@ NTAPI
 NtUserUnhookWindowsHookEx(
   HHOOK Hook);
 
-DWORD
+BOOL
 NTAPI
 NtUserUnhookWinEvent(
   HWINEVENTHOOK hWinEventHook);

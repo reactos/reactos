@@ -33,8 +33,7 @@
 #include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(user32);
-
-DWORD Bogus_SrvEventActivity = 0; // Fixme, need to ref to share data.
+extern PSERVERINFO g_psi;
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
@@ -263,7 +262,7 @@ NotifyWinEvent(
 // "Servers call NotifyWinEvent to announce the event to the system after the
 // event has occurred; they must never notify the system of an event before
 // the event has occurred." msdn on NotifyWinEvent.
-  if (Bogus_SrvEventActivity & GetMaskFromEvent(event)) // Check to see.
+  if (g_psi->SrvEventActivity & GetMaskFromEvent(event)) // Check to see.
       NtUserNotifyWinEvent(event, hwnd, idObject, idChild);
 }
 
@@ -318,7 +317,7 @@ IsWinEventHookInstalled(
 {
   if ((PW32THREADINFO)NtCurrentTeb()->Win32ThreadInfo)
   {
-     return (Bogus_SrvEventActivity & GetMaskFromEvent(event)) != 0;
+     return (g_psi->SrvEventActivity & GetMaskFromEvent(event)) != 0;
   }
   return FALSE;
 }
@@ -454,3 +453,24 @@ User32CallHookProcFromKernel(PVOID Arguments, ULONG ArgumentLength)
 
   return ZwCallbackReturn(&Result, sizeof(LRESULT), STATUS_SUCCESS);
 }
+
+NTSTATUS STDCALL
+User32CallEventProcFromKernel(PVOID Arguments, ULONG ArgumentLength)
+{
+  PEVENTPROC_CALLBACK_ARGUMENTS Common;
+
+  Common = (PEVENTPROC_CALLBACK_ARGUMENTS) Arguments;
+  
+  Common->Proc(Common->hook,
+              Common->event,
+               Common->hwnd,
+           Common->idObject,
+            Common->idChild,
+      Common->dwEventThread,
+      Common->dwmsEventTime);
+  
+  return ZwCallbackReturn(NULL, 0, STATUS_SUCCESS);
+}
+
+
+

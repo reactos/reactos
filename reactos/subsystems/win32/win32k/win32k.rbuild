@@ -112,6 +112,7 @@
 		<file>csr.c</file>
 		<file>cursoricon.c</file>
 		<file>desktop.c</file>
+		<file>event.c</file>
 		<file>focus.c</file>
 		<file>guicheck.c</file>
 		<file>hook.c</file>

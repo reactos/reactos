@@ -35,6 +35,16 @@ co_IntCallHookProc(INT HookId,
                 BOOLEAN Ansi,
                 PUNICODE_STRING ModuleName);
 
+LRESULT STDCALL
+co_IntCallEventProc(HWINEVENTHOOK hook,
+                           DWORD event,
+                             HWND hwnd,
+                         LONG idObject,
+                          LONG idChild,
+                   DWORD dwEventThread,
+                   DWORD dwmsEventTime,
+                     WINEVENTPROC Proc);
+
 VOID FASTCALL
 IntCleanupThreadCallbacks(PW32THREAD W32Thread);
 
