@@ -103,7 +103,7 @@ DxDdStartupDxGraphics(  ULONG ulc1,
             for (t=0;t<=DXG_INDEX_DxDdIoctl;t++)
             {
                 gpDxFuncs[lstDrvFN[t].iFunc].iFunc =lstDrvFN[t].iFunc;
-                gpDxFuncs[lstDrvFN[t].iFunc].pfn =lstDrvFN[t].pfn;
+                gpDxFuncs[lstDrvFN[t].iFunc].pfn =lstDrvFN[t].pfn;                
             }
             DPRINT1("DirectX interface is activated\n");
         }
@@ -126,11 +126,10 @@ HANDLE
 STDCALL 
 NtGdiDdCreateDirectDrawObject(HDC hdc)
 {
-    PGD_DDCREATEDIRECTDRAWOBJECT pfnDdCreateDirectDrawObject = NULL;
+    PGD_DDCREATEDIRECTDRAWOBJECT pfnDdCreateDirectDrawObject = (PGD_DDCREATEDIRECTDRAWOBJECT)gpDxFuncs[DXG_INDEX_DxDdCreateDirectDrawObject].pfn;
     NTSTATUS Status;
     PEPROCESS Proc = NULL;
-    INT i=0;
-    
+        
     if (hdc == NULL)
     {
         DPRINT1("Warning : hdc is NULL\n");
@@ -145,10 +144,7 @@ NtGdiDdCreateDirectDrawObject(HDC hdc)
         DPRINT1("Warning : Failed to create the directx interface\n");
         return 0;
     }
-
-    /* This is in correct place */
-    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDdCreateDirectDrawObject, pfnDdCreateDirectDrawObject);
-
+  
     if (pfnDdCreateDirectDrawObject == NULL)
     {
 		DPRINT1("Warning: no pfnDdCreateDirectDrawObject\n");
@@ -220,10 +216,7 @@ DWORD
 STDCALL
 NtGdiDdGetDriverState(PDD_GETDRIVERSTATEDATA pdata)
 {
-    PGD_DDGETDRIVERSTATE pfnDdGetDriverState = NULL;
-    INT i;
-
-    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDdGetDriverState, pfnDdGetDriverState);
+    PGD_DDGETDRIVERSTATE pfnDdGetDriverState = (PGD_DDGETDRIVERSTATE)gpDxFuncs[DXG_INDEX_DxDdGetDriverState].pfn;
 
     if (pfnDdGetDriverState == NULL)
     {
@@ -243,11 +236,8 @@ STDCALL
 NtGdiDdColorControl(HANDLE hSurface,
                     PDD_COLORCONTROLDATA puColorControlData)
 {
-    PGD_DDCOLORCONTROL pfnDdColorControl = NULL;
-    INT i;
-
-    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDdColorControl, pfnDdColorControl);
-
+    PGD_DDCOLORCONTROL pfnDdColorControl = (PGD_DDCOLORCONTROL)gpDxFuncs[DXG_INDEX_DxDdColorControl].pfn;
+       
     if (pfnDdColorControl == NULL)
     {
 		DPRINT1("Warning: no pfnDdColorControl\n");
@@ -271,11 +261,8 @@ NtGdiDdCreateSurfaceObject(HANDLE hDirectDrawLocal,
                            BOOL bComplete
 )
 {
-    PGD_DXDDCREATESURFACEOBJECT pfnDdCreateSurfaceObject = NULL;
-    INT i;
-
-    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDdCreateSurfaceObject, pfnDdCreateSurfaceObject);
-
+    PGD_DXDDCREATESURFACEOBJECT pfnDdCreateSurfaceObject = (PGD_DXDDCREATESURFACEOBJECT)gpDxFuncs[DXG_INDEX_DxDdCreateSurfaceObject].pfn;
+  
     if (pfnDdCreateSurfaceObject == NULL)
     {
 		DPRINT1("Warning: no pfnDdCreateSurfaceObject\n");
@@ -293,10 +280,7 @@ BOOL
 STDCALL 
 NtGdiDdDeleteDirectDrawObject(HANDLE hDirectDrawLocal)
 {
-    PGD_DXDDDELETEDIRECTDRAWOBJECT pfnDdDeleteDirectDrawObject = NULL;
-    INT i;
-
-    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDdDeleteDirectDrawObject, pfnDdDeleteDirectDrawObject);
+    PGD_DXDDDELETEDIRECTDRAWOBJECT pfnDdDeleteDirectDrawObject = (PGD_DXDDDELETEDIRECTDRAWOBJECT)gpDxFuncs[DXG_INDEX_DxDdDeleteDirectDrawObject].pfn;
 
     if (pfnDdDeleteDirectDrawObject == NULL)
     {
@@ -315,10 +299,7 @@ BOOL
 STDCALL
 NtGdiDdDeleteSurfaceObject(HANDLE hSurface)
 {
-    PGD_DXDDDELETESURFACEOBJECT pfnDdDeleteSurfaceObject = NULL;
-    INT i;
-
-    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDdDeleteSurfaceObject, pfnDdDeleteSurfaceObject);
+    PGD_DXDDDELETESURFACEOBJECT pfnDdDeleteSurfaceObject = (PGD_DXDDDELETESURFACEOBJECT)gpDxFuncs[DXG_INDEX_DxDdDeleteSurfaceObject].pfn;
 
     if (pfnDdDeleteSurfaceObject == NULL)
     {
@@ -347,11 +328,8 @@ NtGdiDdQueryDirectDrawObject(HANDLE hDirectDrawLocal,
                              DWORD *puNumFourCC,
                              DWORD *puFourCC)
 {
-    PGD_DXDDQUERYDIRECTDRAWOBJECT pfnDdQueryDirectDrawObject = NULL;
-    INT i;
-
-    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDdQueryDirectDrawObject, pfnDdQueryDirectDrawObject);
-
+    PGD_DXDDQUERYDIRECTDRAWOBJECT pfnDdQueryDirectDrawObject = (PGD_DXDDQUERYDIRECTDRAWOBJECT)gpDxFuncs[DXG_INDEX_DxDdQueryDirectDrawObject].pfn;
+   
     if (pfnDdQueryDirectDrawObject == NULL)
     {
         DPRINT1("Warning: no pfnDdQueryDirectDrawObject\n");
@@ -372,11 +350,8 @@ STDCALL
 NtGdiDdReenableDirectDrawObject(HANDLE hDirectDrawLocal,
                                 BOOL *pubNewMode)
 {
-    PGD_DXDDREENABLEDIRECTDRAWOBJECT pfnDdReenableDirectDrawObject = NULL;
-    INT i;
-
-    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDdReenableDirectDrawObject, pfnDdReenableDirectDrawObject);
-
+    PGD_DXDDREENABLEDIRECTDRAWOBJECT pfnDdReenableDirectDrawObject = (PGD_DXDDREENABLEDIRECTDRAWOBJECT)gpDxFuncs[DXG_INDEX_DxDdReenableDirectDrawObject].pfn;
+  
     if (pfnDdReenableDirectDrawObject == NULL)
     {
         DPRINT1("Warning: no pfnDdReenableDirectDrawObject\n");
@@ -397,11 +372,8 @@ NtGdiDdGetDriverInfo(HANDLE hDirectDrawLocal,
                      PDD_GETDRIVERINFODATA puGetDriverInfoData)
 
 {
-    PGD_DXDDGETDRIVERINFO pfnDdGetDriverInfo = NULL;
-    INT i;
-
-    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDdGetDriverInfo, pfnDdGetDriverInfo);
-
+    PGD_DXDDGETDRIVERINFO pfnDdGetDriverInfo = (PGD_DXDDGETDRIVERINFO)gpDxFuncs[DXG_INDEX_DxDdGetDriverInfo].pfn;
+    
     if (pfnDdGetDriverInfo == NULL)
     {
         DPRINT1("Warning: no pfnDdGetDriverInfo\n");
@@ -421,11 +393,8 @@ STDCALL
 NtGdiDdGetAvailDriverMemory(HANDLE hDirectDrawLocal,
                             PDD_GETAVAILDRIVERMEMORYDATA puGetAvailDriverMemoryData)
 {
-    PGD_DXDDGETAVAILDRIVERMEMORY pfnDdGetAvailDriverMemory = NULL;
-    INT i;
-
-    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDdGetAvailDriverMemory, pfnDdGetAvailDriverMemory);
-
+    PGD_DXDDGETAVAILDRIVERMEMORY pfnDdGetAvailDriverMemory = (PGD_DXDDGETAVAILDRIVERMEMORY)gpDxFuncs[DXG_INDEX_DxDdGetAvailDriverMemory].pfn;
+   
     if (pfnDdGetAvailDriverMemory == NULL)
     {
         DPRINT1("Warning: no pfnDdGetAvailDriverMemory\n");
@@ -446,11 +415,8 @@ STDCALL
 NtGdiDdSetExclusiveMode(HANDLE hDirectDraw,
                         PDD_SETEXCLUSIVEMODEDATA puSetExclusiveModeData)
 {
-    PGD_DXDDSETEXCLUSIVEMODE pfnDdSetExclusiveMode = NULL;
-    INT i;
-
-    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDdSetExclusiveMode, pfnDdSetExclusiveMode);
-
+    PGD_DXDDSETEXCLUSIVEMODE pfnDdSetExclusiveMode = (PGD_DXDDSETEXCLUSIVEMODE)gpDxFuncs[DXG_INDEX_DxDdSetExclusiveMode].pfn;
+      
     if (pfnDdSetExclusiveMode == NULL)
     {
         DPRINT1("Warning: no pfnDdSetExclusiveMode\n");
@@ -471,11 +437,8 @@ STDCALL
 NtGdiDdFlipToGDISurface(HANDLE hDirectDraw,
                         PDD_FLIPTOGDISURFACEDATA puFlipToGDISurfaceData)
 {
-    PGD_DXDDFLIPTOGDISURFACE pfnDdFlipToGDISurface = NULL;
-    INT i;
-
-    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDdFlipToGDISurface, pfnDdFlipToGDISurface);
-
+    PGD_DXDDFLIPTOGDISURFACE pfnDdFlipToGDISurface = (PGD_DXDDFLIPTOGDISURFACE)gpDxFuncs[DXG_INDEX_DxDdFlipToGDISurface].pfn;
+   
     if (pfnDdFlipToGDISurface == NULL)
     {
         DPRINT1("Warning: no pfnDdFlipToGDISurface\n");
@@ -495,11 +458,8 @@ STDCALL
 NtGdiDdGetDC(HANDLE hSurface,
              PALETTEENTRY *puColorTable)
 {
-    PGD_DDGETDC pfnDdGetDC  = NULL;
-    INT i;
-
-    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDdGetDC, pfnDdGetDC);
-
+    PGD_DDGETDC pfnDdGetDC = (PGD_DDGETDC)gpDxFuncs[DXG_INDEX_DxDdGetDC].pfn;
+    
     if (pfnDdGetDC == NULL)
     {
         DPRINT1("Warning: no pfnDdGetDC\n");
@@ -518,13 +478,9 @@ STDCALL
 NtGdiDdGetDxHandle(HANDLE hDirectDraw,
                    HANDLE hSurface,
                    BOOL bRelease)
-{
+{    
+    PGD_DDGETDXHANDLE pfnDdGetDxHandle = (PGD_DDGETDXHANDLE)gpDxFuncs[DXG_INDEX_DxDdGetDxHandle].pfn;
     
-    PGD_DDGETDXHANDLE pfnDdGetDxHandle = NULL;
-    INT i;
-
-    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDdGetDxHandle, pfnDdGetDxHandle);
-
     if (pfnDdGetDxHandle == NULL)
     {
         DPRINT1("Warning: no pfnDdGetDxHandle\n");
@@ -543,11 +499,8 @@ BOOL
 STDCALL
 NtGdiDdReleaseDC(HANDLE hSurface)
 {
-    PGD_DDRELEASEDC pfnDdReleaseDC = NULL;
-    INT i;
-
-    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDdReleaseDC, pfnDdReleaseDC);
-
+    PGD_DDRELEASEDC pfnDdReleaseDC = (PGD_DDRELEASEDC)gpDxFuncs[DXG_INDEX_DxDdReleaseDC].pfn;
+   
     if (pfnDdReleaseDC == NULL)
     {
         DPRINT1("Warning: no pfnDdReleaseDC\n");
@@ -567,11 +520,8 @@ NtGdiDdResetVisrgn(HANDLE hSurface,
                    HWND hwnd)
 {
 
-    PGD_DDRESTVISRGN pfnDdResetVisrgn = NULL;
-    INT i;
-
-    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDdResetVisrgn, pfnDdResetVisrgn);
-
+    PGD_DDRESTVISRGN pfnDdResetVisrgn = (PGD_DDRESTVISRGN)gpDxFuncs[DXG_INDEX_DxDdResetVisrgn].pfn;
+   
     if (pfnDdResetVisrgn == NULL)
     {
         DPRINT1("Warning: no pfnDdResetVisrgn\n");
@@ -591,11 +541,8 @@ NtGdiDdSetGammaRamp(HANDLE hDirectDraw,
                     HDC hdc,
                     LPVOID lpGammaRamp)
 {
-    PGD_DDSETGAMMARAMP pfnDdSetGammaRamp = NULL;
-    INT i;
-
-    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDdSetGammaRamp, pfnDdSetGammaRamp);
-
+    PGD_DDSETGAMMARAMP pfnDdSetGammaRamp = (PGD_DDSETGAMMARAMP)gpDxFuncs[DXG_INDEX_DxDdSetGammaRamp].pfn;
+   
     if (pfnDdSetGammaRamp == NULL)
     {
         DPRINT1("Warning: no pfnDdSetGammaRamp\n");
