@@ -254,22 +254,6 @@ SetBoundsRect(HDC hdc,
     return NtGdiSetBoundsRect(hdc, (LPRECT)prc, flags);
 }
 
-
-/*
- * @unimplemented
- */
-DWORD
-STDCALL
-SetMapperFlags(
-	HDC	a0,
-	DWORD	a1
-	)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
 /*
  * @unimplemented
  */

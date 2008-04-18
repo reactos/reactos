@@ -1678,6 +1678,60 @@ TranslateCharsetInfo(
 
 
 /*
+ * @implemented
+ */
+DWORD
+STDCALL
+SetMapperFlags(
+	HDC	hDC,
+	DWORD	flags
+	)
+{
+  DWORD Ret = GDI_ERROR;
+  PDC_ATTR Dc_Attr;
+#if 0
+  if (GDI_HANDLE_GET_TYPE(hDC) != GDI_OBJECT_TYPE_DC)
+  {
+    if (GDI_HANDLE_GET_TYPE(hDC) == GDI_OBJECT_TYPE_METADC)
+      return MFDRV_SetMapperFlags( hDC, flags);
+    else
+    {
+      PLDC pLDC = Dc_Attr->pvLDC;
+      if ( !pLDC )
+      {
+         SetLastError(ERROR_INVALID_HANDLE);
+         return GDI_ERROR;
+      }
+      if (pLDC->iType == LDC_EMFLDC)
+      {
+        return EMFDRV_SetMapperFlags( hDC, flags);
+      }
+    }
+  }
+#endif
+  if (!GdiGetHandleUserData((HGDIOBJ) hDC, GDI_OBJECT_TYPE_DC, (PVOID) &Dc_Attr)) return GDI_ERROR;
+
+  if (NtCurrentTeb()->GdiTebBatch.HDC == (ULONG)hDC)
+  {
+     if (Dc_Attr->ulDirty_ & DC_FONTTEXT_DIRTY)
+     {
+       NtGdiFlush();
+       Dc_Attr->ulDirty_ &= ~(DC_MODE_DIRTY|DC_FONTTEXT_DIRTY);
+     }
+  }
+
+  if ( flags & ~1 )
+     SetLastError(ERROR_INVALID_PARAMETER);
+  else
+  {
+     Ret = Dc_Attr->flFontMapper;
+     Dc_Attr->flFontMapper = flags;
+  }
+  return Ret;
+}
+
+
+/*
  * @unimplemented
  */
 int

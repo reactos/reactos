@@ -1168,8 +1168,24 @@ BOOL FASTCALL
 IntGetAspectRatioFilter(PDC pDC,
                         LPSIZE AspectRatio)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+  PDC_ATTR pDc_Attr;
+  
+  pDc_Attr = pDC->pDc_Attr;
+  if ( !pDc_Attr ) pDc_Attr = &pDC->Dc_Attr;
+
+  if ( pDc_Attr->flFontMapper & 1 ) // TRUE assume 1.
+  {
+   // "This specifies that Windows should only match fonts that have the
+   // same aspect ratio as the display.", Programming Windows, Fifth Ed.
+     AspectRatio->cx = ((PGDIDEVICE)pDC->pPDev)->GDIInfo.ulLogPixelsX;
+     AspectRatio->cy = ((PGDIDEVICE)pDC->pPDev)->GDIInfo.ulLogPixelsY;
+  }
+  else
+  {
+     AspectRatio->cx = 0;
+     AspectRatio->cy = 0;
+  }
+  return TRUE;
 }
 
 BOOL STDCALL
@@ -2262,6 +2278,14 @@ NtGdiGetAndSetDCDword(
     case GdiGetSetSelectFont:
       break;
     case GdiGetSetMapperFlagsInternal:
+      if (dwIn & ~1)
+      {
+         SetLastWin32Error(ERROR_INVALID_PARAMETER);
+         Ret = FALSE;
+         break;
+      }
+      SafeResult = Dc_Attr->flFontMapper;
+      Dc_Attr->flFontMapper = dwIn;      
       break;
     case GdiGetSetMapMode:
       SafeResult = IntGdiSetMapMode( dc, dwIn);
