@@ -1116,8 +1116,8 @@ IntGdiGetDCOrgEx(DC *dc, LPPOINT  Point)
 LONG FASTCALL
 IntCalcFillOrigin(PDC pdc)
 {
-  pdc->ptlFillOrigin.x = pdc->DcLevel.ptlBrushOrigin.x + pdc->ptlSaveFillOrig.x;
-  pdc->ptlFillOrigin.y = pdc->DcLevel.ptlBrushOrigin.y + pdc->ptlSaveFillOrig.y;
+  pdc->ptlFillOrigin.x = pdc->DcLevel.ptlBrushOrigin.x + pdc->ptlDCOrig.x;
+  pdc->ptlFillOrigin.y = pdc->DcLevel.ptlBrushOrigin.y + pdc->ptlDCOrig.y;
 
   return pdc->ptlFillOrigin.y;
 }
@@ -1131,14 +1131,37 @@ GdiSetDCOrg(HDC hDC, LONG Left, LONG Top, PRECTL prc)
   pdc = DC_LockDc(hDC);
   if (!pdc) return;
 
-  pdc->ptlSaveFillOrig.x = Left;
-  pdc->ptlSaveFillOrig.y = Top;
+  pdc->ptlDCOrig.x = Left;
+  pdc->ptlDCOrig.y = Top;
 
   IntCalcFillOrigin(pdc);
 
   if (prc) pdc->erclWindow = *prc;
 
   DC_UnlockDc(pdc);
+}
+
+
+BOOL FASTCALL
+IntGdiGetDCOrg(PDC pDc, PPOINTL ppt)
+{
+  *ppt = pDc->ptlDCOrig;
+  return TRUE;
+}
+    
+BOOL STDCALL
+GdiGetDCOrgEx(HDC hDC, PPOINTL ppt, PRECTL prc)
+{
+  PDC pdc;
+      
+  pdc = DC_LockDc(hDC);
+  if (!pdc) return FALSE;
+          
+  *prc = pdc->erclWindow;
+  *ppt = pdc->ptlDCOrig;
+              
+  DC_UnlockDc(pdc);
+  return TRUE;
 }
 
 BOOL FASTCALL

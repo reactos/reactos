@@ -97,7 +97,7 @@ typedef struct _DC
   HDC         hNext;
   HDC         hPrev;
   RECTL       erclClip;
-  POINTL      ptlSaveFillOrig;
+  POINTL      ptlDCOrig;
   RECTL       erclWindow;
   RECTL       erclBounds;
   RECTL       erclBoundsApp;
