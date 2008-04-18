@@ -1,6 +1,9 @@
 <?xml version="1.0"?>
 <!DOCTYPE group SYSTEM "../../tools/rbuild/project.dtd">
 <group xmlns:xi="http://www.w3.org/2001/XInclude">
+	<directory name="kbdal">
+		<xi:include href="kbdal/kbdal.rbuild" />
+	</directory>
 	<directory name="kbdbe">
 		<xi:include href="kbdbe/kbdbe.rbuild" />
 	</directory>
@@ -66,6 +69,9 @@
 	</directory>
 	<directory name="kbdru">
 		<xi:include href="kbdru/kbdru.rbuild" />
+	</directory>
+	<directory name="kbdru1">
+		<xi:include href="kbdru1/kbdru1.rbuild" />
 	</directory>
 	<directory name="kbdsg">
 		<xi:include href="kbdsg/kbdsg.rbuild" />
