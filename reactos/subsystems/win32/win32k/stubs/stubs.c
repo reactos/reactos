@@ -2053,19 +2053,6 @@ NtGdiGetColorSpaceforBitmap(
  /*
  * @unimplemented
  */
-HDC
-APIENTRY
-NtGdiGetDCforBitmap(
-    IN HBITMAP hsurf)
-{
-    UNIMPLEMENTED;
-    return NULL;
-}
-
-
- /*
- * @unimplemented
- */
 BOOL
 APIENTRY
 NtGdiGetDeviceCapsAll (

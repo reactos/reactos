@@ -23,6 +23,7 @@ typedef struct _BITMAPOBJ
   /* For device-independent bitmaps: */
   DIBSECTION *dib;
   HPALETTE hDIBPalette;
+  HDC hDC;
 } BITMAPOBJ, *PBITMAPOBJ;
 
 #define BITMAPOBJ_IS_APIBITMAP		0x1

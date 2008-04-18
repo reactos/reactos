@@ -78,6 +78,7 @@ IntGdiCreateBitmap(
    }
 
    bmp->flFlags = BITMAPOBJ_IS_APIBITMAP;
+   bmp->hDC = NULL; // Fixme
 
    if (NULL != pBits)
    {
@@ -739,4 +740,21 @@ BITMAP_GetObject(BITMAPOBJ * bmp, INT Count, LPVOID buffer)
 		return Count;
 	}
 }
+
+/*
+ * @implemented
+ */
+HDC
+APIENTRY
+NtGdiGetDCforBitmap(
+    IN HBITMAP hsurf)
+{
+  HDC hDC = NULL;
+  PBITMAPOBJ bmp = BITMAPOBJ_LockBitmap( hsurf );
+  hDC = bmp->hDC;
+  BITMAPOBJ_UnlockBitmap( bmp );
+  return hDC;
+}
+
+
 /* EOF */

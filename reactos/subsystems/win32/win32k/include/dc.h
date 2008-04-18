@@ -87,7 +87,7 @@ typedef struct _DC
   DHPDEV      PDev;   // <- GDIDEVICE.hPDev DHPDEV for device.
   INT         DC_Type;
   INT         DC_Flags;
-  PVOID       pPDev;  // PGDIDEVICE
+  PVOID       pPDev;  // PGDIDEVICE aka PDEVOBJ
   PVOID       hSem;   // PERESOURCE
   FLONG       flGraphics;
   FLONG       flGraphics2;
