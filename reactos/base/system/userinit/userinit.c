@@ -133,6 +133,7 @@ cleanup:
     if (ControlKey != NULL)
         RegCloseKey(ControlKey);
     HeapFree(GetProcessHeap(), 0, SystemStartOptions);
+    TRACE("IsConsoleShell() returning %d\n", ret);
     return ret;
 }
 
@@ -150,17 +151,17 @@ BOOL GetShell(
 
     TRACE("(%p, %p)\n", CommandLine, hRootKey);
 
-    rc = RegOpenKeyEx(hRootKey, REGSTR_PATH_WINLOGON,
-                      0, KEY_QUERY_VALUE, &hKey);
+    rc = RegOpenKeyExW(hRootKey, L"Software\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon",
+                       0, KEY_QUERY_VALUE, &hKey);
     if (rc == ERROR_SUCCESS)
     {
         Size = MAX_PATH * sizeof(WCHAR);
-        rc = RegQueryValueEx(hKey,
-                             ConsoleShell ? L"ConsoleShell" : L"Shell",
-                             NULL,
-                             &Type,
-                             (LPBYTE)Shell,
-                             &Size);
+        rc = RegQueryValueExW(hKey,
+                              ConsoleShell ? L"ConsoleShell" : L"Shell",
+                              NULL,
+                              &Type,
+                              (LPBYTE)Shell,
+                              &Size);
         if (rc == ERROR_SUCCESS)
         {
             if ((Type == REG_SZ) || (Type == REG_EXPAND_SZ))
@@ -279,14 +280,14 @@ VOID StartShell(VOID)
     /* Try to run shell in user key */
     if (GetShell(Shell, HKEY_CURRENT_USER) && TryToStartShell(Shell))
     {
-        TRACE("Failed to start a shell from HKEY_CURRENT_USER\n");
+        TRACE("Started shell from HKEY_CURRENT_USER\n");
         return;
     }
 
     /* Try to run shell in local machine key */
     if (GetShell(Shell, HKEY_LOCAL_MACHINE) && TryToStartShell(Shell))
     {
-        TRACE("Failed to start a shell from HKEY_LOCAL_MACHINE\n");
+        TRACE("Started shell from HKEY_LOCAL_MACHINE\n");
         return;
     }
 
