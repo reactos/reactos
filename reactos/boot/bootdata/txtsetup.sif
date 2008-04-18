@@ -131,6 +131,7 @@ Default = "XT-, AT- or extended keyboard (83-105 keys)"
 
 
 [KeyboardLayout]
+0000041c = "Albanian"
 00040402 = "Bulgarian BDS 5237-1978"
 00020402 = "Bulgarian phonetic classic"
 00030402 = "Bulgarian phonetic BDS 5237-2006"
@@ -157,6 +158,7 @@ Default = "XT-, AT- or extended keyboard (83-105 keys)"
 00000415 = "Polish (programmer's)"
 00000816 = "Portuguese (Portugal)"
 00000419 = "Russian"
+00010419 = "Russian (Typewriter)"
 0000041B = "Slovak (QWERTZ)"
 0000040A = "Spanish (traditional short)"
 0000041D = "Swedish (Sweden)"
@@ -183,11 +185,13 @@ Default = "XT-, AT- or extended keyboard (83-105 keys)"
 0000040E = kbdhu.dll
 00000410 = kbdit.dll
 00000411 = kbdja.dll
+0000041c = kbdal.dll
 00000427 = kbdlt.dll
 00000414 = kbdno.dll
 00000415 = kbdpl1.dll
 00000816 = kbdpo.dll
 00000419 = kbdru.dll
+00010419 = kbdru1.dll
 00000807 = kbdsg.dll
 0000041B = kbdsk.dll
 0000041D = kbdsw.dll
