@@ -11,5 +11,9 @@
 	<directory name="niclist">
 		<xi:include href="niclist/niclist.rbuild" />
 	</directory>
+
+	<directory name="tditest">
+		<xi:include href="tditest/tditest.rbuild" />
+	</directory>
 </group>
 

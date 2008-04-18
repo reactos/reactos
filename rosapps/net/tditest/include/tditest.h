@@ -7,15 +7,9 @@
 #ifndef __TDITEST_H
 #define __TDITEST_H
 
-#ifdef _MSC_VER
 #include <ntddk.h>
 #include <tdikrnl.h>
 #include <tdiinfo.h>
-#else
-#include <ntddk.h>
-#include <net/tdikrnl.h>
-#include <net/tdiinfo.h>
-#endif
 #include "debug.h"
 
 

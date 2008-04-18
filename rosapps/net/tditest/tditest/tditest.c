@@ -915,7 +915,7 @@ DriverEntry(
 
 	/* Call TdiOpenThread() */
 	KeInitializeEvent(&Event, SynchronizationEvent, FALSE);
-	ExInitializeWorkItem(&WorkItem, TdiOpenThread, &Event);
+	ExInitializeWorkItem(&WorkItem, (PWORKER_THREAD_ROUTINE)TdiOpenThread, &Event);
  	ExQueueWorkItem(&WorkItem, DelayedWorkQueue);
 	KeWaitForSingleObject(&Event, Executive, KernelMode, TRUE, NULL);
 
