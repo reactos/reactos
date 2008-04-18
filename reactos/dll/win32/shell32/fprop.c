@@ -435,10 +435,10 @@ SH_FileVersionInitialize(HWND hwndDlg, WCHAR * lpfilename)
   if(VerQueryValueW(pBuf, wSlash, &info, &infolen))
   {
     VS_FIXEDFILEINFO * inf = (VS_FIXEDFILEINFO *)info;
-	sprintfW(buff, wVersionFormat,inf->dwFileVersionMS & 0xFFFF0000,
-		                                  inf->dwFileVersionMS & 0x0000FFFF,
-										  inf->dwFileVersionLS & 0xFFFF0000,
-										  inf->dwFileVersionLS & 0x0000FFFF);
+    sprintfW(buff, wVersionFormat, HIWORD(inf->dwFileVersionMS),
+                                   LOWORD(inf->dwFileVersionMS),
+                                   HIWORD(inf->dwFileVersionLS),
+                                   LOWORD(inf->dwFileVersionLS));
 
    hDlgCtrl = GetDlgItem(hwndDlg, 14001);
    TRACE("MS %x LS %x res %s \n",inf->dwFileVersionMS, inf->dwFileVersionLS, debugstr_w(buff));
