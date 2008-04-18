@@ -5,12 +5,13 @@
 	<define name="UNICODE" />
 	<define name="_UNICODE" />
 	<define name="_WIN32_IE">0x600</define>
-	<define name="_WIN32_WINNT">0x501</define>
+	<define name="_WIN32_WINNT">0x600</define>
 	<library>kernel32</library>
 	<library>user32</library>
 	<library>advapi32</library>
 	<library>comctl32</library>
 	<library>shell32</library>
+	<library>version</library>
 	<file>system.c</file>
 	<file>display.c</file>
 	<file>sound.c</file>

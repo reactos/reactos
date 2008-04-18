@@ -1,6 +1,7 @@
 #ifndef PRECOMP_H__
 #define PRECOMP_H__
 
+#include <stdio.h>
 #include <windows.h>
 #include <commctrl.h>
 
@@ -11,6 +12,8 @@ typedef struct
 	HWND hDialogs[7];
 
 }DXDIAG_CONTEXT, *PDXDIAG_CONTEXT;
+
+
 
 
 /* globals */

@@ -44,7 +44,7 @@ InsertTabCtrlItem(HWND hDlgCtrl, INT Position, UINT uId)
     item.mask = TCIF_TEXT;
     item.pszText = szName;
 
-    (void)TabCtrl_InsertItemW(hDlgCtrl, Position, &item);
+    SendMessageW(hDlgCtrl, TCM_INSERTITEM, Position, (LPARAM)&item);
 }
 
 VOID
