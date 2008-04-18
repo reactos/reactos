@@ -11,23 +11,6 @@
  */
 
 /*
- * @unimplemented
- */
-int
-STDCALL
-SetDIBits(HDC hdc,
-          HBITMAP hbmp,
-          UINT uStartScan,
-          UINT cScanLines,
-          CONST VOID *lpvBits,
-          CONST BITMAPINFO *lpbmi,
-          UINT fuColorUse)
-{
-    /* FIXME share memory */
-    return NtGdiSetDIBits(hdc, hbmp, uStartScan, cScanLines, lpvBits, lpbmi, fuColorUse);
-}
-
-/*
  * @implemented
  *
  */

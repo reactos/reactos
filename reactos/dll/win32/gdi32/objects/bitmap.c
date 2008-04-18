@@ -295,3 +295,96 @@ CreateDIBitmap( HDC hDC,
                                     0);
 }
 
+
+/*
+ * @implemented
+ */
+INT
+STDCALL
+SetDIBits(HDC hDC,
+          HBITMAP hBitmap,
+          UINT uStartScan,
+          UINT cScanLines,
+          CONST VOID *lpvBits,
+          CONST BITMAPINFO *lpbmi,
+          UINT fuColorUse)
+{
+ HDC hDCc, SavehDC, nhDC;
+ DWORD dwWidth, dwHeight;
+ HGDIOBJ hOldBitmap;
+ HPALETTE hPal = NULL;
+ INT LinesCopied = 0;
+ BOOL newDC = FALSE;
+
+ if ( !lpvBits || (GDI_HANDLE_GET_TYPE(hBitmap) != GDI_OBJECT_TYPE_BITMAP) )
+    return 0;
+
+ if ( lpbmi )
+ {
+    if ( lpbmi->bmiHeader.biSize >= sizeof(BITMAPINFOHEADER) )
+    {
+      if ( lpbmi->bmiHeader.biCompression == BI_JPEG || lpbmi->bmiHeader.biCompression == BI_PNG )
+      {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return 0;
+      }
+    }
+ }
+
+ hDCc = NtGdiGetDCforBitmap(hBitmap);
+ SavehDC = hDCc;
+ if ( !hDCc )
+ {
+    nhDC = CreateCompatibleDC(hDC);
+    if ( !nhDC ) return 0;
+    newDC = TRUE;
+    SavehDC = nhDC;
+ }
+ else if ( !SaveDC(hDCc) )
+           return 0;
+
+ hOldBitmap = SelectObject(SavehDC, hBitmap);
+
+ if ( hOldBitmap )
+ {
+    if ( hDC )    
+      hPal = SelectPalette(SavehDC, (HPALETTE)GetDCObject(hDC, GDI_OBJECT_TYPE_PALETTE), FALSE);
+
+    if ( lpbmi->bmiHeader.biSize < sizeof(BITMAPINFOHEADER))
+    {
+      PBITMAPCOREINFO pbci = (PBITMAPCOREINFO) lpbmi;
+      dwWidth = pbci->bmciHeader.bcWidth;
+      dwHeight = pbci->bmciHeader.bcHeight;
+    }
+    else
+    {
+      dwWidth = lpbmi->bmiHeader.biWidth;
+      dwHeight = abs(lpbmi->bmiHeader.biHeight);
+    }
+
+    LinesCopied = SetDIBitsToDevice(SavehDC,
+                                          0,
+                                          0,
+                                    dwWidth,
+                                   dwHeight,
+                                          0,
+                                          0,
+                                 uStartScan,
+                                 cScanLines,
+                            (void *)lpvBits,
+                        (LPBITMAPINFO)lpbmi,
+                                 fuColorUse);
+
+    if ( hDC ) SelectPalette(SavehDC, hPal, FALSE);
+
+    SelectObject(SavehDC, hOldBitmap);
+ }
+
+ if ( newDC )
+    DeleteDC((HDC)SavehDC);
+ else
+    RestoreDC((HDC)SavehDC, -1);
+
+ return LinesCopied;
+}
+
