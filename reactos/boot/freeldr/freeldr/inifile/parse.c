@@ -232,9 +232,9 @@ ULONG IniGetNextLine(PCHAR IniFileData, ULONG IniFileSize, PCHAR Buffer, ULONG B
 	Buffer[Idx] = '\0';
 
 	// Get rid of newline & linefeed characters (if any)
-	if((Buffer[strlen(Buffer)-1] == '\n') || (Buffer[strlen(Buffer)-1] == '\r'))
+	if(strlen(Buffer) && ((Buffer[strlen(Buffer)-1] == '\n') || (Buffer[strlen(Buffer)-1] == '\r')))
 		Buffer[strlen(Buffer)-1] = '\0';
-	if((Buffer[strlen(Buffer)-1] == '\n') || (Buffer[strlen(Buffer)-1] == '\r'))
+	if(strlen(Buffer) && ((Buffer[strlen(Buffer)-1] == '\n') || (Buffer[strlen(Buffer)-1] == '\r')))
 		Buffer[strlen(Buffer)-1] = '\0';
 
 	// Send back new offset

@@ -34,7 +34,8 @@ BOOLEAN IniOpenSection(PCSTR SectionName, ULONG* SectionId)
 		if (_stricmp(SectionName, Section->SectionName) == 0)
 		{
 			// We found it
-			*SectionId = (ULONG)Section;
+                        if (SectionId)
+                                *SectionId = (ULONG)Section;
 			DbgPrint((DPRINT_INIFILE, "IniOpenSection() Found it! SectionId = 0x%x\n", SectionId));
 			return TRUE;
 		}
