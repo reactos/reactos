@@ -692,7 +692,8 @@ LockHandle:
                 DPRINT1("Object->cExclusiveLock = %d\n", Object->cExclusiveLock);
                 GDIDBG_TRACECALLER();
                 GDIDBG_TRACELOCKER(GDI_HANDLE_GET_INDEX(hObj));
-                ASSERT(FALSE);
+                /* do not assert here for it will call again from dxg.sys it being call twice */
+                //ASSERT(FALSE);
             }
         }
         else
