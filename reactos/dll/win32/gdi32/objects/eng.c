@@ -151,9 +151,31 @@ EngGetCurrentCodePage( OUT PUSHORT OemCodePage,
  * @implemented
  */
 LPWSTR STDCALL
+EngGetDriverName(HDEV hdev)
+{
+  // DHPDEV from NtGdiGetDhpdev must be from print driver.
+  PDRIVER_INFO_2W pDrvInfo2 = (PDRIVER_INFO_2W)NtGdiGetDhpdev(hdev);
+  if (pDrvInfo2->cVersion != 0xFEDCBA98 ) // Init mask for ver 2+
+  {
+     PDRIVER_INFO_1W pDrvInfo1 = (PDRIVER_INFO_1W) pDrvInfo2;
+        return pDrvInfo1->pName;
+  }
+  return pDrvInfo2->pDriverPath;
+}
+
+/*
+ * @implemented
+ */
+LPWSTR STDCALL
 EngGetPrinterDataFileName(HDEV hdev)
 {
-    return EngGetDriverName(hdev);
+  PDRIVER_INFO_2W pDrvInfo2 = (PDRIVER_INFO_2W)NtGdiGetDhpdev(hdev);
+  if (pDrvInfo2->cVersion != 0xFEDCBA98 )
+  {
+     PDRIVER_INFO_1W pDrvInfo1 = (PDRIVER_INFO_1W) pDrvInfo2;
+        return pDrvInfo1->pName;
+  }
+  return pDrvInfo2->pDataFile;
 }
 
 /*

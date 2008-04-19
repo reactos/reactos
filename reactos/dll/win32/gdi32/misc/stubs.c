@@ -47,44 +47,6 @@ StretchDIBits(HDC hdc,
 }
 
 /*
- * @implemented
- *
- */
-INT
-STDCALL
-SetDIBitsToDevice(
-    HDC hDC,
-    int XDest,
-    int YDest,
-    DWORD Width,
-    DWORD Height,
-    int XSrc,
-    int YSrc,
-    UINT StartScan,
-    UINT ScanLines,
-    CONST VOID *Bits,
-    CONST BITMAPINFO *lpbmi,
-    UINT ColorUse)
-{
-    return NtGdiSetDIBitsToDeviceInternal(hDC,
-                                          XDest,
-                                          YDest,
-                                          Width,
-                                          Height,
-                                          XSrc,
-                                          YSrc,
-                                          StartScan,
-                                          ScanLines,
-                                          (LPBYTE)Bits,
-                                          (LPBITMAPINFO)lpbmi,
-                                          ColorUse,
-                                          lpbmi->bmiHeader.biSizeImage,
-                                          lpbmi->bmiHeader.biSize,
-                                          FALSE,
-                                          NULL);
-}
-
-/*
  * @unimplemented
  */
 BOOL
@@ -1980,17 +1942,6 @@ CreateBitmap(INT  Width,
 /*
  * @unimplemented
  */
-LPWSTR STDCALL
-EngGetDriverName(HDEV hdev)
-{
-    UNIMPLEMENTED;
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
-}
-
-/*
- * @unimplemented
- */
 ULONG STDCALL
 XLATEOBJ_iXlate(XLATEOBJ *XlateObj,
                 ULONG Color)
@@ -2179,7 +2130,6 @@ STDCALL
 GetClipBox(HDC hdc,
            LPRECT lprc)
 {
-    /* FIXME some part need be done in user mode */
     return  NtGdiGetAppClipBox(hdc, lprc);
 }
 
@@ -2231,8 +2181,25 @@ STDCALL
 GetRgnBox(HRGN hrgn,
           LPRECT prcOut)
 {
-    /* FIXME some stuff need be done in user mode */
-    return NtGdiGetRgnBox(hrgn, prcOut);
+#if 0
+  PRGN_ATTR Rgn_Attr;
+  if (!GdiGetHandleUserData((HGDIOBJ) hRgn, GDI_OBJECT_TYPE_REGION, (PVOID) &Rgn_Attr))
+     return NtGdiGetRgnBox(hrgn, prcOut);
+  if (Rgn_Attr->Flags == NULLREGION)
+  {
+     prcOut->left   = 0;
+     prcOut->top    = 0;
+     prcOut->right  = 0;
+     prcOut->bottom = 0;
+  }
+  else
+  {
+     if (Rgn_Attr->Flags != SIMPLEREGION) return NtGdiGetRgnBox(hrgn, prcOut);
+     *prcOut = Rgn_Attr->Rect;
+  }
+  return Rgn_Attr->Flags;
+#endif
+  return NtGdiGetRgnBox(hrgn, prcOut);
 }
 
 
@@ -2250,19 +2217,9 @@ OffsetRgn( HRGN hrgn,
     return NtGdiOffsetRgn(hrgn,nXOffset,nYOffset);
 }
 
-
-INT
-STDCALL
-GetTextCharsetInfo(HDC hdc,
-                   LPFONTSIGNATURE lpSig,
-                   DWORD dwFlags)
-{
-    /* FIXME some part are done in user mode */
-    return NtGdiGetTextCharsetInfo(hdc, lpSig, dwFlags);
-}
-
-
-
+/*
+ * @implemented
+ */
 INT
 STDCALL
 IntersectClipRect(HDC hdc,
@@ -2271,18 +2228,59 @@ IntersectClipRect(HDC hdc,
                   int nRightRect,
                   int nBottomRect)
 {
-    /* FIXME some part are done in user mode */
+#if 0
+// Handle something other than a normal dc object.
+  if (GDI_HANDLE_GET_TYPE(hdc) != GDI_OBJECT_TYPE_DC)
+  {
+    if (GDI_HANDLE_GET_TYPE(hdc) == GDI_OBJECT_TYPE_METADC)
+      return MFDRV_IntersectClipRect( hdc, nLeftRect, nTopRect, nRightRect, nBottomRect);
+    else
+    {
+      PLDC pLDC = GdiGetLDC(hdc);
+      if ( pLDC )
+      {
+         if (pLDC->iType != LDC_EMFLDC || EMFDRV_IntersectClipRect( hdc, nLeftRect, nTopRect, nRightRect, nBottomRect))
+             return NtGdiIntersectClipRect(hdc, nLeftRect, nTopRect, nRightRect, nBottomRect);
+      }
+      else
+        SetLastError(ERROR_INVALID_HANDLE);
+      return 0;
+    }
+  }
+#endif
     return NtGdiIntersectClipRect(hdc, nLeftRect, nTopRect, nRightRect, nBottomRect);
 }
 
+/*
+ * @implemented
+ */
 INT
 STDCALL
 OffsetClipRgn(HDC hdc,
               int nXOffset,
               int nYOffset)
 {
-    /* FIXME some part are done in user mode */
-    return NtGdiOffsetClipRgn( hdc,  nXOffset,  nYOffset);
+#if 0
+// Handle something other than a normal dc object.
+  if (GDI_HANDLE_GET_TYPE(hdc) != GDI_OBJECT_TYPE_DC)
+  {
+    if (GDI_HANDLE_GET_TYPE(hdc) == GDI_OBJECT_TYPE_METADC)
+      return MFDRV_OffsetClipRgn( hdc, nXOffset, nYOffset );
+    else
+    {
+      PLDC pLDC = GdiGetLDC(hdc);
+      if ( !pLDC )
+      {
+         SetLastError(ERROR_INVALID_HANDLE);
+         return 0;
+      }
+      if (pLDC->iType == LDC_EMFLDC && !EMFDRV_OffsetClipRgn( hdc, nXOffset, nYOffset ))
+         return 0;
+      return NtGdiOffsetClipRgn( hdc,  nXOffset,  nYOffset);
+    }
+  }
+#endif
+  return NtGdiOffsetClipRgn( hdc,  nXOffset,  nYOffset);
 }
 
 

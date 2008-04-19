@@ -436,7 +436,7 @@ GetSystemPaletteUse@4=NtGdiGetSystemPaletteUse@4
 GetTextAlign@4
 GetTextCharacterExtra@4
 GetTextCharset@4
-GetTextCharsetInfo@12
+GetTextCharsetInfo@12=NtGdiGetTextCharsetInfo@12
 GetTextColor@4
 GetTextExtentExPointA@28
 GetTextExtentExPointI@28

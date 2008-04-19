@@ -381,10 +381,49 @@ SetDIBits(HDC hDC,
  }
 
  if ( newDC )
-    DeleteDC((HDC)SavehDC);
+    DeleteDC(SavehDC);
  else
-    RestoreDC((HDC)SavehDC, -1);
+    RestoreDC(SavehDC, -1);
 
  return LinesCopied;
 }
+
+/*
+ * @implemented
+ *
+ */
+INT
+STDCALL
+SetDIBitsToDevice(
+    HDC hDC,
+    int XDest,
+    int YDest,
+    DWORD Width,
+    DWORD Height,
+    int XSrc,
+    int YSrc,
+    UINT StartScan,
+    UINT ScanLines,
+    CONST VOID *Bits,
+    CONST BITMAPINFO *lpbmi,
+    UINT ColorUse)
+{
+    return NtGdiSetDIBitsToDeviceInternal(hDC,
+                                          XDest,
+                                          YDest,
+                                          Width,
+                                          Height,
+                                          XSrc,
+                                          YSrc,
+                                          StartScan,
+                                          ScanLines,
+                                          (LPBYTE)Bits,
+                                          (LPBITMAPINFO)lpbmi,
+                                          ColorUse,
+                                          lpbmi->bmiHeader.biSizeImage,
+                                          lpbmi->bmiHeader.biSize,
+                                          FALSE,
+                                          NULL);
+}
+
 
