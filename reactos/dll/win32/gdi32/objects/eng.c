@@ -155,6 +155,9 @@ EngGetDriverName(HDEV hdev)
 {
   // DHPDEV from NtGdiGetDhpdev must be from print driver.
   PDRIVER_INFO_2W pDrvInfo2 = (PDRIVER_INFO_2W)NtGdiGetDhpdev(hdev);
+
+  if (!pDrvInfo2) return NULL;
+  
   if (pDrvInfo2->cVersion != 0xFEDCBA98 ) // Init mask for ver 2+
   {
      PDRIVER_INFO_1W pDrvInfo1 = (PDRIVER_INFO_1W) pDrvInfo2;
@@ -170,6 +173,9 @@ LPWSTR STDCALL
 EngGetPrinterDataFileName(HDEV hdev)
 {
   PDRIVER_INFO_2W pDrvInfo2 = (PDRIVER_INFO_2W)NtGdiGetDhpdev(hdev);
+
+  if (!pDrvInfo2) return NULL;
+
   if (pDrvInfo2->cVersion != 0xFEDCBA98 )
   {
      PDRIVER_INFO_1W pDrvInfo1 = (PDRIVER_INFO_1W) pDrvInfo2;

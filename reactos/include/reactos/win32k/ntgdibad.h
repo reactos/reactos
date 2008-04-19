@@ -91,19 +91,6 @@ NtGdiOffsetWindowOrgEx (
 	LPPOINT	Point
 	);
 
-/* Use SetDIBitsToDevice in gdi32. */
-INT
-STDCALL
-NtGdiSetDIBits (
-	HDC			hDC,
-	HBITMAP			hBitmap,
-	UINT			StartScan,
-	UINT			ScanLines,
-	CONST VOID		* Bits,
-	CONST BITMAPINFO	* bmi,
-	UINT			ColorUse
-	);
-
 /* Needs to be done in user-mode. */
 BOOL
 STDCALL
