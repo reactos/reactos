@@ -51,12 +51,23 @@ DxDdStartupDxGraphics(  ULONG ulc1,
 
     /* Loading the kernel interface of directx for win32k */
 
-    ghDxGraphics = EngLoadImage(L"\\SystemRoot\\System32\\drivers\\dxg.sys");
     
-    if (ghDxGraphics == NULL)
+    ghDxGraphics = EngLoadImage(L"\\SystemRoot\\System32\\drivers\\dxg.sys");
+
+    if ( ghDxGraphics == NULL)
     {
         DPRINT1("Warning: dxg.sys not found\n");
+
+        /* try loading vista dx kernel */
+        DPRINT1("Warning: trying loading vista dxkrnl.sys\n");
+
+        ghDxGraphics = EngLoadImage(L"\\SystemRoot\\System32\\drivers\\dxkrnl.sys");        
+    }
+
+    if ( ghDxGraphics == NULL)
+    {
         Status = STATUS_DLL_NOT_FOUND;
+        DPRINT1("Warning: no ReactX or DirectX kernel driver found\n");
     }
     else
     {
@@ -105,7 +116,21 @@ DxDdStartupDxGraphics(  ULONG ulc1,
                 gpDxFuncs[lstDrvFN[t].iFunc].iFunc =lstDrvFN[t].iFunc;
                 gpDxFuncs[lstDrvFN[t].iFunc].pfn =lstDrvFN[t].pfn;                
             }
+
+            /* dump sort list for debuging */
+#if 1
+            DPRINT1("ghDxGraphics address 0x%08lx\n",ghDxGraphics);
+            DPRINT1("gpfnStartupDxGraphics address 0x%08lx\n",gpfnStartupDxGraphics);
+            DPRINT1("gpfnCleanupDxGraphics address 0x%08lx\n",gpfnCleanupDxGraphics);
+
+            for (t=0;t<=DXG_INDEX_DxDdIoctl;t++)
+            {
+                DPRINT1("gpDxFuncs[0x%08lx].iFunc = 0x%08lx\n",t,gpDxFuncs[t].iFunc);
+                DPRINT1("gpDxFuncs[0x%08lx].pfn = 0x%08lx\n",t,gpDxFuncs[t].pfn);                             
+            }
+#endif
             DPRINT1("DirectX interface is activated\n");
+
         }
         /* return the status */
     }
@@ -126,7 +151,7 @@ HANDLE
 STDCALL 
 NtGdiDdCreateDirectDrawObject(HDC hdc)
 {
-    PGD_DDCREATEDIRECTDRAWOBJECT pfnDdCreateDirectDrawObject = (PGD_DDCREATEDIRECTDRAWOBJECT)gpDxFuncs[DXG_INDEX_DxDdCreateDirectDrawObject].pfn;
+    PGD_DDCREATEDIRECTDRAWOBJECT pfnDdCreateDirectDrawObject;
     NTSTATUS Status;
     PEPROCESS Proc = NULL;
         
@@ -144,6 +169,9 @@ NtGdiDdCreateDirectDrawObject(HDC hdc)
         DPRINT1("Warning : Failed to create the directx interface\n");
         return 0;
     }
+
+    /* get the pfnDdCreateDirectDrawObject after we load the drv */
+    pfnDdCreateDirectDrawObject = (PGD_DDCREATEDIRECTDRAWOBJECT)gpDxFuncs[DXG_INDEX_DxDdCreateDirectDrawObject].pfn;
   
     if (pfnDdCreateDirectDrawObject == NULL)
     {
