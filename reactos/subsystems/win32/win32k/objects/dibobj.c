@@ -276,6 +276,41 @@ IntSetDIBits(
   return result;
 }
 
+// Converts a DIB to a device-dependent bitmap
+INT STDCALL
+NtGdiSetDIBits(
+	HDC  hDC,
+	HBITMAP  hBitmap,
+	UINT  StartScan,
+	UINT  ScanLines,
+	CONST VOID  *Bits,
+	CONST BITMAPINFO  *bmi,
+	UINT  ColorUse)
+{
+  PDC Dc;
+  INT Ret;
+
+  Dc = DC_LockDc(hDC);
+  if (NULL == Dc)
+    {
+      SetLastWin32Error(ERROR_INVALID_HANDLE);
+      return 0;
+    }
+  if (Dc->DC_Type == DC_TYPE_INFO)
+    {
+      DC_UnlockDc(Dc);
+      return 0;
+    }
+
+  Ret = IntSetDIBits(Dc, hBitmap, StartScan, ScanLines, Bits, bmi, ColorUse);
+
+  DC_UnlockDc(Dc);
+
+  return Ret;
+}
+
+
+
 W32KAPI
 INT
 APIENTRY

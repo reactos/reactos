@@ -131,6 +131,18 @@ NtGdiSetWindowOrgEx (
 	LPPOINT	Point
 	);
 
+/* Use SetDIBitsToDevice in gdi32. */
+INT
+STDCALL
+NtGdiSetDIBits (
+	HDC			hDC,
+	HBITMAP			hBitmap,
+	UINT			StartScan,
+	UINT			ScanLines,
+	CONST VOID		* Bits,
+	CONST BITMAPINFO	* bmi,
+	UINT			ColorUse
+	);
 
 #endif /* WIN32K_NTGDI_BAD_INCLUDED */
 
