@@ -126,6 +126,7 @@ DxEngGetDeviceGammaRamp(HDEV hPDev, PGAMMARAMP Ramp)
 *
 *--*/
 PDC
+STDCALL
 DxEngLockDC(HDC hDC)
 {
     DPRINT1("ReactX Calling : DxEngLockDC\n");
@@ -149,7 +150,8 @@ DxEngLockDC(HDC hDC)
 * none
 *
 *--*/
-BOOL
+BOOLEAN
+STDCALL
 DxEngUnlockDC(PDC pDC)
 {
     DPRINT1("ReactX Calling : DxEngUnlockDC\n");
@@ -234,7 +236,7 @@ DxEngUnlockShareSem()
 * None
 *
 *--*/
-BOOL
+BOOLEAN
 DxEngSetDeviceGammaRamp(HDEV hPDev, PGAMMARAMP Ramp, BOOL Test)
 {
     DPRINT1("ReactX Calling : DxEngSetDeviceGammaRamp\n");
@@ -281,6 +283,7 @@ DxEngSetDeviceGammaRamp(HDEV hPDev, PGAMMARAMP Ramp, BOOL Test)
 *
 *--*/
 DWORD
+STDCALL
 DxEngGetHdevData(HDEV hDev,
                  DXEGSHDEVDATA Type)
 {
@@ -292,61 +295,80 @@ DxEngGetHdevData(HDEV hDev,
     switch ( Type )
     {
       case DxEGShDevData_Surface:
+        DPRINT1("requested DXEGSHDEVDATA DxEGShDevData_Surface\n");
         retVal = (DWORD) PDev->pSurface; // ptr to Surface handle.
         break;
       case DxEGShDevData_hSpooler:
+        DPRINT1("requested DXEGSHDEVDATA DxEGShDevData_hSpooler\n");
         retVal = (DWORD) PDev->hSpooler; // If the device is a spooler driver.
         break;
       case DxEGShDevData_DitherFmt:
+        DPRINT1("requested DXEGSHDEVDATA DxEGShDevData_DitherFmt\n");
         retVal = (DWORD) PDev->DevInfo.iDitherFormat;
         break;
       case DxEGShDevData_FxCaps:
+        DPRINT1("requested DXEGSHDEVDATA DxEGShDevData_FxCaps\n");
         retVal = (DWORD) PDev->DevInfo.flGraphicsCaps;
         break;
       case DxEGShDevData_FxCaps2:
+        DPRINT1("requested DXEGSHDEVDATA DxEGShDevData_FxCaps2\n");
         retVal = (DWORD) PDev->DevInfo.flGraphicsCaps2;
         break;
       case DxEGShDevData_DrvFuncs:
+        DPRINT1("requested DXEGSHDEVDATA DxEGShDevData_DrvFuncs\n");
         retVal = (DWORD) &PDev->DriverFunctions;
         break;
       case DxEGShDevData_dhpdev:
+        DPRINT1("requested DXEGSHDEVDATA DxEGShDevData_dhpdev\n");
         retVal = (DWORD) PDev->hPDev; // DHPDEV
         break;
       case DxEGShDevData_eddg:
+        DPRINT1("requested DXEGSHDEVDATA DxEGShDevData_eddg\n");
         retVal = (DWORD) PDev->pEDDgpl;
         break;
       case DxEGShDevData_dd_nCount:
+        DPRINT1("requested DXEGSHDEVDATA DxEGShDevData_dd_nCount\n");
         retVal = (DWORD) PDev->DxDd_nCount;
         break;
       case DxEGShDevData_dd_flags:
+        DPRINT1("requested DXEGSHDEVDATA DxEGShDevData_dd_flags\n");
         retVal = (DWORD) PDev->DxDd_Flags;
         break;
       case DxEGShDevData_disable:
+        DPRINT1("requested DXEGSHDEVDATA DxEGShDevData_disable\n");
         retVal = (DWORD) PDev->flFlags & PDEV_DISABLED;
         break;
       case DxEGShDevData_metadev:
+        DPRINT1("requested DXEGSHDEVDATA DxEGShDevData_metadev\n");
         retVal = (DWORD) PDev->flFlags & PDEV_META_DEVICE;
         break;
       case DxEGShDevData_display:
+        DPRINT1("requested DXEGSHDEVDATA DxEGShDevData_display\n");
         retVal = (DWORD) PDev->flFlags & PDEV_DISPLAY;
         break;
       case DxEGShDevData_Parent:
+        DPRINT1("requested DXEGSHDEVDATA DxEGShDevData_Parent\n");
         retVal = (DWORD) PDev->ppdevParent;
         break;
       case DxEGShDevData_OpenRefs:
+        DPRINT1("requested DXEGSHDEVDATA DxEGShDevData_OpenRefs\n");
         retVal = (DWORD) PDev->cPdevOpenRefs == 0;
         break;
       case DxEGShDevData_palette:
+        DPRINT1("requested DXEGSHDEVDATA DxEGShDevData_palette\n");
         retVal = (DWORD) PDev->GDIInfo.flRaster & RC_PALETTE;
         break;
       case DxEGShDevData_ldev:
+          DPRINT1("DxEGShDevData_ldev not supported yet\n");
       // ATM we do not support the Loader Device driver structure.
 //        retVal = (DWORD) PDev->pldev;
         break;
       case DxEGShDevData_GDev:
+        DPRINT1("requested DXEGSHDEVDATA DxEGShDevData_GDev\n");
         retVal = (DWORD) PDev->pGraphicsDev; // P"GRAPHICS_DEVICE"
         break;
       case DxEGShDevData_clonedev:
+        DPRINT1("requested DXEGSHDEVDATA DxEGShDevData_clonedev\n");
         retVal = (DWORD) PDev->flFlags & PDEV_CLONE_DEVICE;
         break;
 
@@ -381,6 +403,7 @@ DxEngGetHdevData(HDEV hDev,
 *
 *--*/
 BOOLEAN
+STDCALL
 DxEngSetHdevData(HDEV hDev,
                  DXEGSHDEVDATA Type,
                  DWORD Data)
@@ -423,6 +446,7 @@ DxEngSetHdevData(HDEV hDev,
 *
 *--*/
 DWORD
+STDCALL
 DxEngGetDCState(HDC hDC,
                 DWORD type)
 {
@@ -497,6 +521,7 @@ DxEngIncDispUniq()
 *
 *--*/
 BOOLEAN 
+STDCALL
 DxEngLockHdev(HDEV hDev)
 {
     PGDIDEVICE pPDev = (PGDIDEVICE)hDev;
@@ -550,7 +575,8 @@ DxEngUnlockHdev(HDEV hDev)
 /************************************************************************/
 
 /* Notes : Check see if termal server got a connections or not */
-BOOL
+BOOLEAN
+STDCALL
 DxEngNUIsTermSrv()
 {
     /* FIXME ReactOS does not suport terminal server yet, we can not check if we got a connections or not */
@@ -563,7 +589,7 @@ DxEngNUIsTermSrv()
 /************************************************************************/
 
 /* Notes : it always return TRUE, and it update whole the screen (redaw current desktop) */
-BOOL
+BOOLEAN
 DxEngRedrawDesktop()
 {
     /* FIXME add redraw code */
