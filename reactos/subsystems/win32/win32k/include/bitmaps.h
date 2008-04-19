@@ -23,7 +23,7 @@ typedef struct _BITMAPOBJ
   /* For device-independent bitmaps: */
   DIBSECTION *dib;
   HPALETTE hDIBPalette;
-  HDC hDC;
+  HDC hDC; // Doc in "Undocumented Windows", page 546, seems to be supported with XP.
 } BITMAPOBJ, *PBITMAPOBJ;
 
 #define BITMAPOBJ_IS_APIBITMAP		0x1

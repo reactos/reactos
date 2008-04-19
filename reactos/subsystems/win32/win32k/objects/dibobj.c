@@ -1,5 +1,4 @@
 /*
- * $Id$
  *
  * ReactOS W32 Subsystem
  * Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003 ReactOS Team
@@ -277,39 +276,6 @@ IntSetDIBits(
   return result;
 }
 
-// Converts a DIB to a device-dependent bitmap
-INT STDCALL
-NtGdiSetDIBits(
-	HDC  hDC,
-	HBITMAP  hBitmap,
-	UINT  StartScan,
-	UINT  ScanLines,
-	CONST VOID  *Bits,
-	CONST BITMAPINFO  *bmi,
-	UINT  ColorUse)
-{
-  PDC Dc;
-  INT Ret;
-
-  Dc = DC_LockDc(hDC);
-  if (NULL == Dc)
-    {
-      SetLastWin32Error(ERROR_INVALID_HANDLE);
-      return 0;
-    }
-  if (Dc->DC_Type == DC_TYPE_INFO)
-    {
-      DC_UnlockDc(Dc);
-      return 0;
-    }
-
-  Ret = IntSetDIBits(Dc, hBitmap, StartScan, ScanLines, Bits, bmi, ColorUse);
-
-  DC_UnlockDc(Dc);
-
-  return Ret;
-}
-
 W32KAPI
 INT
 APIENTRY
@@ -335,13 +301,16 @@ NtGdiSetDIBitsToDeviceInternal(
     INT ret = 0;
     NTSTATUS Status = STATUS_SUCCESS;
     PDC pDC;
-    HBITMAP hSourceBitmap;
-    SURFOBJ *pDestSurf, *pSourceSurf;
+    HBITMAP hSourceBitmap = NULL;
+    SURFOBJ *pDestSurf, *pSourceSurf = NULL;
     RECTL rcDest;
     POINTL ptSource;
     INT DIBWidth;
     SIZEL SourceSize;
     XLATEOBJ *XlateObj = NULL;
+    PPALGDI pDCPalette;
+    HPALETTE DDBPalette, DIBPalette = NULL;
+    ULONG DDBPaletteType, DIBPaletteType;
 
     if (!Bits) return 0;
 
@@ -365,10 +334,6 @@ NtGdiSetDIBitsToDeviceInternal(
         return 0;
     }
 
-    SourceSize.cx = bmi->bmiHeader.biWidth;
-    SourceSize.cy = ScanLines;
-    DIBWidth = DIB_GetDIBWidthBytes(SourceSize.cx, bmi->bmiHeader.biBitCount);
-
     rcDest.left = XDest;
     rcDest.top = YDest;
     rcDest.right = XDest + Width;
@@ -379,6 +344,10 @@ NtGdiSetDIBitsToDeviceInternal(
     /* Enter SEH, as the bits are user mode */
     _SEH_TRY
     {
+        SourceSize.cx = bmi->bmiHeader.biWidth;
+        SourceSize.cy = ScanLines;
+        DIBWidth = DIB_GetDIBWidthBytes(SourceSize.cx, bmi->bmiHeader.biBitCount);
+        
         ProbeForRead(Bits, DIBWidth * abs(bmi->bmiHeader.biHeight), 1);
         hSourceBitmap = EngCreateBitmap(SourceSize,
                                         DIBWidth,
@@ -395,13 +364,39 @@ NtGdiSetDIBitsToDeviceInternal(
         pSourceSurf = EngLockSurface((HSURF)hSourceBitmap);
         if (!pSourceSurf)
         {
-            EngDeleteSurface((HSURF)hSourceBitmap);
             Status = STATUS_UNSUCCESSFUL;
             _SEH_LEAVE;
         }
 
-        /* FIXME: handle XlateObj */
-        XlateObj = NULL;
+        
+        /* Obtain destination palette from the DC */
+        pDCPalette = PALETTE_LockPalette(((GDIDEVICE *)pDC->pPDev)->DevInfo.hpalDefault);
+        if (!pDCPalette)
+        {
+            SetLastWin32Error(ERROR_INVALID_HANDLE);
+            Status = STATUS_UNSUCCESSFUL;
+            _SEH_LEAVE;
+        }
+        DDBPaletteType = pDCPalette->Mode;
+        DDBPalette = ((GDIDEVICE *)pDC->pPDev)->DevInfo.hpalDefault;
+        PALETTE_UnlockPalette(pDCPalette);
+        
+        DIBPalette = BuildDIBPalette(bmi, (PINT)&DIBPaletteType);
+        if (!DIBPalette)
+        {
+            SetLastWin32Error(ERROR_NO_SYSTEM_RESOURCES);
+            Status = STATUS_NO_MEMORY;
+            _SEH_LEAVE;
+        }
+
+        /* Determine XlateObj */
+        XlateObj = IntEngCreateXlate(DDBPaletteType, DIBPaletteType, DDBPalette, DIBPalette);
+        if (!XlateObj)
+        {
+            SetLastWin32Error(ERROR_NO_SYSTEM_RESOURCES);
+            Status = STATUS_NO_MEMORY;
+            _SEH_LEAVE;
+        }
 
         /* Copy the bits */
         Status = IntEngBitBlt(pDestSurf,
@@ -416,8 +411,6 @@ NtGdiSetDIBitsToDeviceInternal(
                               NULL,
                               ROP3_TO_ROP4(SRCCOPY));
 
-        EngUnlockSurface(pSourceSurf);
-        EngDeleteSurface((HSURF)hSourceBitmap);
     }
     _SEH_HANDLE
     {
@@ -431,6 +424,10 @@ NtGdiSetDIBitsToDeviceInternal(
         ret = ScanLines;
     }
 
+    if (pSourceSurf) EngUnlockSurface(pSourceSurf);
+    if (hSourceBitmap) EngDeleteSurface((HSURF)hSourceBitmap);
+    if (XlateObj) EngDeleteXlate(XlateObj);
+    if (DIBPalette) PALETTE_FreePaletteByHandle(DIBPalette);
     EngUnlockSurface(pDestSurf);
     DC_UnlockDc(pDC);
 
@@ -745,6 +742,7 @@ NtGdiStretchDIBitsInternal(
    HBITMAP hBitmap, hOldBitmap;
    HDC hdcMem;
    HPALETTE hPal = NULL;
+   PDC pDC;
 
    if (!Bits || !BitsInfo)
    {
@@ -776,8 +774,13 @@ NtGdiStretchDIBitsInternal(
                          ROP, 0);
    }
 
-   NtGdiSetDIBits(hdcMem, hBitmap, 0, BitsInfo->bmiHeader.biHeight, Bits,
-                  BitsInfo, (UINT)Usage);
+   pDC = DC_LockDc(hdcMem);
+
+   IntSetDIBits(pDC, hBitmap, 0, BitsInfo->bmiHeader.biHeight, Bits,
+                  BitsInfo, Usage);
+
+   DC_UnlockDc(pDC);
+
 
    /* Origin for DIBitmap may be bottom left (positive biHeight) or top
       left (negative biHeight) */
