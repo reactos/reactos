@@ -73,31 +73,32 @@ typedef enum _DXEGSHDEVDATA
 /* win32k.sys internal protypes for the driver functions it export      */
 /************************************************************************/
 BOOLEAN STDCALL DxEngNUIsTermSrv();
+
+PDC STDCALL DxEngLockDC(HDC hDC);
+BOOLEAN STDCALL DxEngUnlockDC(PDC pDC);
+DWORD STDCALL DxEngGetHdevData(HDEV, DXEGSHDEVDATA);
+BOOLEAN STDCALL DxEngSetHdevData(HDEV, DXEGSHDEVDATA, DWORD);
+BOOLEAN STDCALL DxEngLockHdev(HDEV hdev);
+BOOLEAN STDCALL DxEngUnlockHdev(HDEV hdev);
+DWORD STDCALL DxEngGetDCState(HDC hDC, DWORD type);
+DWORD STDCALL DxEngReferenceHdev(HDEV hdev);
+
+/* prototypes are not done yet, I need gather all my notes
+ * to make them correct
+ */
 BOOLEAN DxEngRedrawDesktop();
 ULONG DxEngDispUniq();
 ULONG DxEngVisRgnUniq();
 HDEV *DxEngEnumerateHdev(HDEV *hdev);
 BOOL DxEngGetDeviceGammaRamp(HDEV hPDev, PGAMMARAMP Ramp);
-PDC STDCALL DxEngLockDC(HDC hDC);
-BOOLEAN STDCALL DxEngUnlockDC(PDC pDC);
 BOOLEAN DxEngSetDeviceGammaRamp(HDEV hPDev, PGAMMARAMP Ramp, BOOL Unuse);
 BOOLEAN DxEngLockShareSem();
 BOOLEAN DxEngUnlockShareSem();
 BOOLEAN DxEngCleanDC(HDC hdc);
-DWORD STDCALL DxEngGetHdevData(HDEV, DXEGSHDEVDATA);
-BOOLEAN STDCALL DxEngSetHdevData(HDEV, DXEGSHDEVDATA, DWORD);
 BOOLEAN DxEngIncDispUniq();
-BOOLEAN STDCALL DxEngLockHdev(HDEV hdev);
-BOOLEAN DxEngUnlockHdev(HDEV hdev);
-DWORD STDCALL DxEngGetDCState(HDC hDC, DWORD type);
 
-/* prototypes are not done yet, I need gather all my notes
- * to make them correct
- */
 DWORD DxEngCreateMemoryDC(DWORD x1);
 DWORD DxEngScreenAccessCheck();
-
-DWORD DxEngReferenceHdev(DWORD x1);
 DWORD DxEngIsHdevLockedByCurrentThread(DWORD x1);
 DWORD DxEngUnreferenceHdev(DWORD x1);
 DWORD DxEngSpTearDownSprites(DWORD x1, DWORD x2, DWORD x3);

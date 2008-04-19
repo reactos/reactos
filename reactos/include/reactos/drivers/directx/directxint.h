@@ -104,8 +104,8 @@ typedef struct _EDD_DIRECTDRAW_GLOBAL
 /* 0x018 */    LONG cDriverReferences;
 /* 0x01C */    ULONG unk_01c[3];
 /* 0x028 */    LONGLONG llAssertModeTimeout;
-/* 0x030 */    DWORD dwNumHeaps;
-/* 0x034 */    VIDEOMEMORY *pvmList;
+/* 0x030 */    DWORD dwNumHeaps;                   // verify it match windows xp
+/* 0x034 */    VIDEOMEMORY *pvmList;               // verify it match windows xp
 /* 0x038 */    DWORD dwNumFourCC;
 /* 0x03C */    PDWORD pdwFourCC;
 /* 0x040 */    DD_HALINFO ddHalInfo;

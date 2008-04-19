@@ -553,7 +553,8 @@ DxEngLockHdev(HDEV hDev)
 * none
 *
 *--*/
-BOOLEAN 
+BOOLEAN
+STDCALL
 DxEngUnlockHdev(HDEV hDev)
 {
     PGDIDEVICE pPDev = (PGDIDEVICE)hDev;
@@ -569,6 +570,19 @@ DxEngUnlockHdev(HDEV hDev)
     return TRUE;
 }
 
+
+/************************************************************************/
+/* DxEngReferenceHdev                                                   */
+/************************************************************************/
+DWORD
+STDCALL
+DxEngReferenceHdev(HDEV hDev)
+{
+    UNIMPLEMENTED;
+
+    /* ALWAYS return true */
+    return TRUE;
+}
 
 /************************************************************************/
 /* DxEngNUIsTermSrv                                                     */
@@ -635,17 +649,6 @@ DWORD DxEngCreateMemoryDC(DWORD x1)
 /* DxEngScreenAccessCheck                                               */
 /************************************************************************/
 DWORD DxEngScreenAccessCheck()
-{
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
-
-
-/************************************************************************/
-/* DxEngReferenceHdev                                                   */
-/************************************************************************/
-DWORD DxEngReferenceHdev(DWORD x1)
 {
     UNIMPLEMENTED;
     return FALSE;
