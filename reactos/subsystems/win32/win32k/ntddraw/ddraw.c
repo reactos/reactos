@@ -21,6 +21,7 @@ extern ULONG gcEngFuncs;
 DRVFN gpDxFuncs[DXG_INDEX_DxDdIoctl];
 HANDLE ghDxGraphics = NULL;
 ULONG gdwDirectDrawContext;
+EDD_DIRECTDRAW_GLOBAL eDdirectDraw_Global;
 
 
 /************************************************************************/
@@ -154,7 +155,8 @@ NtGdiDdCreateDirectDrawObject(HDC hdc)
     PGD_DDCREATEDIRECTDRAWOBJECT pfnDdCreateDirectDrawObject;
     NTSTATUS Status;
     PEPROCESS Proc = NULL;
-        
+    PDC pDC;   
+
     if (hdc == NULL)
     {
         DPRINT1("Warning : hdc is NULL\n");
@@ -170,12 +172,25 @@ NtGdiDdCreateDirectDrawObject(HDC hdc)
         return 0;
     }
 
+    /* FIXME this code should be add where the driver being load */
+    pDC = DC_LockDc(hdc);
+    if (pDC == NULL)
+    {
+        DPRINT1("Warning : Failed to lock hdc\n");
+        return 0;
+    }
+    /* FIXME This should be alloc for each drv and use it from each drv, not global for whole win32k */
+    ((PGDIDEVICE)pDC->pPDev)->pEDDgpl = &eDdirectDraw_Global;
+    RtlZeroMemory(&eDdirectDraw_Global,sizeof(EDD_DIRECTDRAW_GLOBAL));
+    DC_UnlockDc(pDC);
+
+
     /* get the pfnDdCreateDirectDrawObject after we load the drv */
     pfnDdCreateDirectDrawObject = (PGD_DDCREATEDIRECTDRAWOBJECT)gpDxFuncs[DXG_INDEX_DxDdCreateDirectDrawObject].pfn;
   
     if (pfnDdCreateDirectDrawObject == NULL)
     {
-		DPRINT1("Warning: no pfnDdCreateDirectDrawObject\n");
+        DPRINT1("Warning: no pfnDdCreateDirectDrawObject\n");
         return DDHAL_DRIVER_NOTHANDLED;
     }
 
