@@ -29,11 +29,11 @@ NtGdiDdCreateSurface(HANDLE hDirectDrawLocal,
    
     if (pfnDdCreateSurface == NULL)
     {
-        DPRINT1("Warring no pfnDdCreateSurface");
+        DPRINT1("Warring no pfnDdCreateSurface\n");
         return DDHAL_DRIVER_NOTHANDLED;
     }
 
-    DPRINT1("Calling on dxg.sys pfnDdCreateSurface");
+    DPRINT1("Calling on dxg.sys pfnDdCreateSurface\n");
     return pfnDdCreateSurface(hDirectDrawLocal,hSurface,puSurfaceDescription,puSurfaceGlobalData,
                               puSurfaceLocalData,puSurfaceMoreData,puCreateSurfaceData,puhSurface);
 }
@@ -50,11 +50,11 @@ NtGdiDdWaitForVerticalBlank(HANDLE hDirectDraw,
    
     if (pfnDdWaitForVerticalBlank == NULL)
     {
-        DPRINT1("Warring no pfnDdWaitForVerticalBlank");
+        DPRINT1("Warring no pfnDdWaitForVerticalBlank\n");
         return DDHAL_DRIVER_NOTHANDLED;
     }
 
-    DPRINT1("Calling on dxg.sys pfnDdWaitForVerticalBlank");
+    DPRINT1("Calling on dxg.sys pfnDdWaitForVerticalBlank\n");
     return pfnDdWaitForVerticalBlank(hDirectDraw, puWaitForVerticalBlankData);
 }
 
@@ -70,12 +70,15 @@ NtGdiDdCanCreateSurface(HANDLE hDirectDrawLocal,
     
     if (pfnDdCanCreateSurface == NULL)
     {
-        DPRINT1("Warring no pfnDdCanCreateSurface");
+        DPRINT1("Warring no pfnDdCanCreateSurface\n");
         return DDHAL_DRIVER_NOTHANDLED;
     }
 
-    DPRINT1("Calling on dxg.sys DdCanCreateSurface");
-    return pfnDdCanCreateSurface(hDirectDrawLocal,puCanCreateSurfaceData);
+    DPRINT1("Calling on dxg.sys DdCanCreateSurface\n");
+    DPRINT1("FIXME it crash when it trying call on pfnDdCanCreateSurface\n");
+    /* FIXME it crash when it trying call on pfnDdCanCreateSurface */
+    // return pfnDdCanCreateSurface(hDirectDrawLocal,puCanCreateSurfaceData);
+    return 0;
 }
 
 /************************************************************************/
@@ -90,11 +93,11 @@ NtGdiDdGetScanLine(HANDLE hDirectDrawLocal,
    
     if (pfnDdGetScanLine == NULL)
     {
-        DPRINT1("Warring no pfnDdGetScanLine");
+        DPRINT1("Warring no pfnDdGetScanLine\n");
         return DDHAL_DRIVER_NOTHANDLED;
     }
 
-    DPRINT1("Calling on dxg.sys pfnDdGetScanLine");
+    DPRINT1("Calling on dxg.sys pfnDdGetScanLine\n");
     DPRINT1("FIXME it crash when it trying call on pfnDdGetScanLine\n");
     /* FIXME it crash when it trying call on pfnDdGetScanLine */
     // return pfnDdGetScanLine(hDirectDrawLocal,puGetScanLineData);
@@ -120,11 +123,11 @@ NtGdiDdCreateSurfaceEx(HANDLE hDirectDraw,
    
     if (pfnDdCreateSurfaceEx == NULL)
     {
-        DPRINT1("Warring no pfnDdCreateSurfaceEx");
+        DPRINT1("Warring no pfnDdCreateSurfaceEx\n");
         return DDHAL_DRIVER_NOTHANDLED;
     }
 
-    DPRINT1("Calling on dxg.sys pfnDdCreateSurfaceEx");
+    DPRINT1("Calling on dxg.sys pfnDdCreateSurfaceEx\n");
     return pfnDdCreateSurfaceEx(hDirectDraw,hSurface,dwSurfaceHandle);
 
 }
