@@ -8,7 +8,7 @@
 @ stdcall ScriptGetCMap(ptr ptr ptr long long ptr)
 @ stdcall ScriptGetFontProperties(long ptr ptr)
 @ stdcall ScriptGetGlyphABCWidth(ptr ptr long ptr)
-@ stub ScriptGetLogicalWidths
+@ stdcall ScriptGetLogicalWidths(ptr long long ptr ptr ptr ptr)
 @ stdcall ScriptGetProperties(ptr long)
 @ stdcall ScriptIsComplex(wstr long long)
 @ stdcall ScriptItemize(wstr long long ptr ptr ptr ptr)
