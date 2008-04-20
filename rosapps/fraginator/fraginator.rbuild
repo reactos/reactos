@@ -1,5 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../tools/rbuild/project.dtd">
+<group>
 	<module name="frag" type="win32gui" installbase="system32" installname="frag.exe" unicode="yes">
 		<include base="frag">.</include>
 		<define name="WINVER">0x0501</define>
@@ -28,3 +29,4 @@
 		<file>Defragment.cpp</file>
 		<file>DriveVolume.cpp</file>
 	</module>
+</group>
