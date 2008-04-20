@@ -9,14 +9,40 @@
 
 #include "precomp.h"
 
+BOOL
+GetRegValue(HKEY hBaseKey, LPWSTR SubKey, LPWSTR ValueName, DWORD Type, LPWSTR Result, DWORD Size)
+{
+    HKEY hKey;
+    LONG res;
+    DWORD dwType;
+    DWORD dwSize;
+
+
+    if (RegOpenKeyExW(hBaseKey, SubKey, 0, KEY_QUERY_VALUE, &hKey) != ERROR_SUCCESS)
+        return FALSE;
+
+    dwSize = Size;
+    res = RegQueryValueExW(hKey, ValueName, NULL, &dwType, (LPBYTE)Result, &dwSize);
+    RegCloseKey(hKey);
+
+    if (dwType != Type)
+        return FALSE;
+
+    if (res != ERROR_SUCCESS)
+        return FALSE;
+
+    Result[(Size / sizeof(WCHAR))-1] = L'\0';
+    return TRUE;
+}
+
+
 static 
 BOOL
 GetDirectXVersion(WCHAR * szBuffer)
 {
     WCHAR szVer[20];
-    DWORD dwVer = sizeof(szVer);
 
-    if (RegGetValueW(HKEY_LOCAL_MACHINE, L"SOFTWARE\\Microsoft\\DirectX", L"Version", RRF_RT_REG_SZ, NULL, szVer, &dwVer) != ERROR_SUCCESS)
+    if (!GetRegValue(HKEY_LOCAL_MACHINE, L"SOFTWARE\\Microsoft\\DirectX", L"Version", REG_SZ, szVer, sizeof(szVer)))
         return FALSE;
 
     if(!wcscmp(szVer, L"4.02.0095"))
@@ -218,8 +244,7 @@ InitializeSystemPage(HWND hwndDlg)
 
     /* set system manufacturer */
     szTime[0] = L'\0';
-    Length = sizeof(szTime) / sizeof(WCHAR);
-    if (RegGetValueW(HKEY_LOCAL_MACHINE, L"Hardware\\Description\\System\\BIOS", L"SystemManufacturer", RRF_RT_REG_SZ, NULL, szTime, &Length) == ERROR_SUCCESS)
+    if (GetRegValue(HKEY_LOCAL_MACHINE, L"Hardware\\Description\\System\\BIOS", L"SystemManufacturer", REG_SZ, szTime, sizeof(szTime)))
     {
         szTime[199] = L'\0';
         SendDlgItemMessageW(hwndDlg, IDC_STATIC_MANU, WM_SETTEXT, 0, (LPARAM)szTime);
@@ -227,37 +252,36 @@ InitializeSystemPage(HWND hwndDlg)
 
     /* set motherboard model */
     szTime[0] = L'\0';
-    Length = sizeof(szTime) / sizeof(WCHAR);
-    if (RegGetValueW(HKEY_LOCAL_MACHINE, L"Hardware\\Description\\System\\BIOS", L"SystemProductName", RRF_RT_REG_SZ, NULL, szTime, &Length) == ERROR_SUCCESS)
+    if (GetRegValue(HKEY_LOCAL_MACHINE, L"Hardware\\Description\\System\\BIOS", L"SystemProductName", REG_SZ, szTime, sizeof(szTime)))
     {
-        szTime[199] = L'\0';
         SendDlgItemMessageW(hwndDlg, IDC_STATIC_MODEL, WM_SETTEXT, 0, (LPARAM)szTime);
     }
 
     /* set bios model */
     szTime[0] = L'\0';
-    Length = sizeof(szTime) / sizeof(WCHAR);
-    if (RegGetValueW(HKEY_LOCAL_MACHINE, L"Hardware\\Description\\System\\BIOS", L"BIOSVendor", RRF_RT_REG_SZ, NULL, szTime, &Length) == ERROR_SUCCESS)
+    if (GetRegValue(HKEY_LOCAL_MACHINE, L"Hardware\\Description\\System\\BIOS", L"BIOSVendor", REG_SZ, szTime, sizeof(szTime)))
     {
         DWORD Index;
-        DWORD StrLength = (sizeof(szTime) / sizeof(WCHAR)) - (Length/sizeof(WCHAR));
+        DWORD StrLength = (sizeof(szTime) / sizeof(WCHAR));
 
-        Index = (Length/sizeof(WCHAR));
-        szTime[Index-1] = L' ';
+        Index = wcslen(szTime);
+        StrLength -= Index;
 
-        if (RegGetValueW(HKEY_LOCAL_MACHINE, L"Hardware\\Description\\System\\BIOS", L"BIOSReleaseDate", RRF_RT_REG_SZ, NULL, &szTime[Index], &StrLength) == ERROR_SUCCESS)
+        if (GetRegValue(HKEY_LOCAL_MACHINE, L"Hardware\\Description\\System\\BIOS", L"BIOSReleaseDate", REG_SZ, &szTime[Index], StrLength))
         {
-            StrLength = (StrLength/sizeof(WCHAR));
+            if (Index + StrLength > (sizeof(szTime)/sizeof(WCHAR))- 15)
+            {
+                //FIXME  retrieve BiosMajorRelease, BiosMinorRelease
+                //StrLength = wcslen(&szTime[Index]);
+                //szTime[Index+StrLength] = L' ';
+                //wcscpy(&szTime[Index+StrLength], L"Ver: "); //FIXME NON-NLS
+                //szTime[(sizeof(szTime)/sizeof(WCHAR))-1] = L'\0';
+            }
+            SendDlgItemMessageW(hwndDlg, IDC_STATIC_BIOS, WM_SETTEXT, 0, (LPARAM)szTime);
         }
-        szTime[Index+StrLength] = L' ';
-        wcscpy(&szTime[Index+StrLength], L"Ver: "); //FIXME NON-NLS
-        szTime[199] = L'\0';
-        SendDlgItemMessageW(hwndDlg, IDC_STATIC_BIOS, WM_SETTEXT, 0, (LPARAM)szTime);
-        //FIXME  retrieve BiosMajorRelease, BiosMinorRelease
     }
     /* set processor string */
-    Length = sizeof(szDesc);
-    if (RegGetValueW(HKEY_LOCAL_MACHINE, L"Hardware\\Description\\System\\CentralProcessor\\0", L"ProcessorNameString", RRF_RT_REG_SZ, NULL, szDesc, &Length) == ERROR_SUCCESS)
+    if (GetRegValue(HKEY_LOCAL_MACHINE, L"Hardware\\Description\\System\\CentralProcessor\\0", L"ProcessorNameString", REG_SZ, szDesc, sizeof(szDesc)))
     {
         /* FIXME retrieve current speed */
         szFormat[0] = L'\0';

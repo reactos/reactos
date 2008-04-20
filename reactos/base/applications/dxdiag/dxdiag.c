@@ -66,9 +66,6 @@ TabCtrl_OnSelChange(PDXDIAG_CONTEXT pContext)
          else
              ShowWindow(pContext->hDialogs[Index], SW_HIDE);
     }
-
-    /* make sure its displayed */
-    BringWindowToTop(pContext->hDialogs[CurSel]);
 }
 
 
@@ -190,7 +187,7 @@ int APIENTRY WinMain(HINSTANCE hInstance,
     UNREFERENCED_PARAMETER(nCmdShow);
 
     InitControls.dwSize = sizeof(INITCOMMONCONTROLSEX);
-    InitControls.dwICC = ICC_TAB_CLASSES | ICC_LISTVIEW_CLASSES;
+    InitControls.dwICC = ICC_TAB_CLASSES | ICC_LISTVIEW_CLASSES | ICC_STANDARD_CLASSES;
     InitCommonControlsEx(&InitControls);
 
     hInst = hInstance;
