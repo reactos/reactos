@@ -656,7 +656,9 @@ DWORD DxEngCreateMemoryDC(DWORD x1)
 DWORD DxEngScreenAccessCheck()
 {
     UNIMPLEMENTED;
-    return FALSE;
+
+    /* we cheating here and tell dxg.sys it have always premitions to access the screen */
+    return TRUE;
 }
 
 /************************************************************************/
