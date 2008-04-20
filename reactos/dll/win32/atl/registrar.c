@@ -27,7 +27,6 @@
 #include "winreg.h"
 #include "objbase.h"
 #include "oaidl.h"
-#include "string.h"
 
 #define ATL_INITGUID
 #include "atliface.h"
@@ -171,7 +170,7 @@ static HRESULT do_preprocess(const Registrar *This, LPCOLESTR data, strbuf *buf)
         }else {
             for(rep_iter = This->rep; rep_iter; rep_iter = rep_iter->next) {
                 if(rep_iter->key_len == iter-iter2
-                        && !memicmp(iter2, rep_iter->key, rep_iter->key_len))
+                        && !memicmpW(iter2, rep_iter->key, rep_iter->key_len))
                     break;
             }
             if(!rep_iter) {
