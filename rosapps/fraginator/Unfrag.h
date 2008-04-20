@@ -28,10 +28,10 @@
 #endif
 #endif
 
-#include <windows.h>
-#include <string>
 #include <stdio.h>
 #include <stdlib.h>
+#include <windows.h>
+#include <string>
 //#include <initguid.h>
 #include <winioctl.h>
 

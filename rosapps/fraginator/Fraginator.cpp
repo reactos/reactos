@@ -20,7 +20,10 @@ HINSTANCE   GlobalHInstance = NULL;
 Defragment *Defrag = NULL;
 
 INT WINAPI
-wWinMain (HINSTANCE HInstance, HINSTANCE HPrevInstance, LPCWSTR CmdLine, INT ShowCmd)
+wWinMain(HINSTANCE HInstance,
+         HINSTANCE hPrev,
+         LPWSTR Cmd,
+         int iCmd)
 {
     INITCOMMONCONTROLSEX InitControls;
 

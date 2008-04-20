@@ -1,8 +1,7 @@
 <?xml version="1.0"?>
-<group xmlns:xi="http://www.w3.org/2001/XInclude">
+<!DOCTYPE module SYSTEM "../tools/rbuild/project.dtd">
 	<module name="frag" type="win32gui" installbase="system32" installname="frag.exe" unicode="yes">
 		<include base="frag">.</include>
-		<define name="__USE_W32API" />
 		<define name="WINVER">0x0501</define>
 		<define name="_WIN32_IE">0x0600</define>
 		<library>kernel32</library>
@@ -20,7 +19,6 @@
 
 	<module name="unfrag" type="win32cui" installbase="system32" installname="unfrag.exe" unicode="yes">
 		<include base="unfrag">.</include>
-		<define name="__USE_W32API" />
 		<define name="WINVER">0x0501</define>
 		<define name="_WIN32_IE">0x0600</define>
 		<library>kernel32</library>
@@ -30,4 +28,3 @@
 		<file>Defragment.cpp</file>
 		<file>DriveVolume.cpp</file>
 	</module>
-</group>
