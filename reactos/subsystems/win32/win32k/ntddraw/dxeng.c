@@ -180,13 +180,13 @@ DxEngLockShareSem()
 {
     BOOLEAN retVal = 0;
     DPRINT1("ReactX Calling : DxEngLockShareSem\n");
-
+#if 0
     if (ExIsResourceAcquiredExclusiveLite(&ghsemShareDevLock) == FALSE)
     {
         KeEnterCriticalRegion();
         retVal = ExAcquireResourceExclusiveLite(&ghsemShareDevLock, TRUE);
     }
-
+#endif
     return retVal;
 }
 
@@ -208,11 +208,14 @@ STDCALL
 DxEngUnlockShareSem()
 {
     DPRINT1("ReactX Calling : DxEngUnlockShareSem\n");
+
+#if 0
     if (ExIsResourceAcquiredExclusiveLite(&ghsemShareDevLock) == TRUE)
     {
         ExReleaseResourceLite(&ghsemShareDevLock);
         KeLeaveCriticalRegion();
     }
+#endif
     return TRUE;
 }
 

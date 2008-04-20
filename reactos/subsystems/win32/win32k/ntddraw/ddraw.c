@@ -336,8 +336,12 @@ NtGdiDdDeleteDirectDrawObject(HANDLE hDirectDrawLocal)
          DPRINT1("Warning: hDirectDrawLocal is NULL\n");
          return DDHAL_DRIVER_HANDLED;
     }
+    DPRINT1("hDirectDrawLocal = %lx \n",hDirectDrawLocal);
     DPRINT1("Calling dxg.sys pfnDdDeleteDirectDrawObject\n");
-    return pfnDdDeleteDirectDrawObject(hDirectDrawLocal);
+    DPRINT1("FIXME delete of the HANDLE\n");
+    /* FIXME it crash inside or after it return from DxEngLockShareSem */
+    // return pfnDdDeleteDirectDrawObject(hDirectDrawLocal);
+    return DDHAL_DRIVER_HANDLED;
 }
 
 /************************************************************************/
@@ -360,7 +364,7 @@ NtGdiDdDeleteSurfaceObject(HANDLE hSurface)
 }
 
 /************************************************************************/
-/* NtGdiDdDeleteSurfaceObject                                           */
+/* NtGdiDdQueryDirectDrawObject                                         */
 /************************************************************************/
 BOOL
 STDCALL 

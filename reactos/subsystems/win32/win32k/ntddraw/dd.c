@@ -95,7 +95,10 @@ NtGdiDdGetScanLine(HANDLE hDirectDrawLocal,
     }
 
     DPRINT1("Calling on dxg.sys pfnDdGetScanLine");
-    return pfnDdGetScanLine(hDirectDrawLocal,puGetScanLineData);
+    DPRINT1("FIXME it crash when it trying call on pfnDdGetScanLine\n");
+    /* FIXME it crash when it trying call on pfnDdGetScanLine */
+    // return pfnDdGetScanLine(hDirectDrawLocal,puGetScanLineData);
+    return 0;
 }
 
 
