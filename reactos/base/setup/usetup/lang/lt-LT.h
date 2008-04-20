@@ -45,8 +45,8 @@ static MUI_ENTRY ltLTLanguagePageEntries[] =
     {
         0,
         0,
-        "   ENTER = T“sti  F3 = Baigti",
-        TEXT_TYPE_STATUS
+        "ENTER = T“sti  F3 = Baigti",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -121,8 +121,8 @@ static MUI_ENTRY ltLTWelcomePageEntries[] =
     {
         0,
         0,
-        "   ENTER = T“sti  R = Taisyti F3 = Baigti",
-        TEXT_TYPE_STATUS
+        "ENTER = T“sti  R = Taisyti F3 = Baigti",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -215,8 +215,8 @@ static MUI_ENTRY ltLTIntroPageEntries[] =
     {
         0,
         0,
-        "   ENTER = T“sti   F3 = Baigti",
-        TEXT_TYPE_STATUS
+        "ENTER = T“sti   F3 = Baigti",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -339,8 +339,8 @@ static MUI_ENTRY ltLTLicensePageEntries[] =
     {
         0,
         0,
-        "   ENTER = Return",
-        TEXT_TYPE_STATUS
+        "ENTER = Gr‘ÿti",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -361,79 +361,79 @@ static MUI_ENTRY ltLTDevicePageEntries[] =
     {
         6,
         8,
-        "The list below shows the current device settings.",
+        "œemiau esantis s–ra’as rodo dabartinius ‘rengini÷ nustatymus.",
         TEXT_STYLE_NORMAL
     },
     {
-        8,
+        24,
         11,
-        "       Computer:",
-        TEXT_STYLE_NORMAL
+        "Kompiuteris:",
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT
     },
     {
-        8,
+        24,
         12,
-        "        Display:",
-        TEXT_STYLE_NORMAL,
+        "Ekranas:",
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT,
     },
     {
-        8,
+        24,
         13,
-        "       Keyboard:",
-        TEXT_STYLE_NORMAL
+        "Klaviat◊ra:",
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT
     },
     {
-        8,
+        24,
         14,
-        "Keyboard layout:",
-        TEXT_STYLE_NORMAL
+        "Klav i’d”stymas:",
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT
     },
     {
-        8,
+        24,
         16,
-        "         Accept:",
-        TEXT_STYLE_NORMAL
+        "Naudoti:",
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT
     },
     {
         25,
-        16, "Accept these device settings",
+        16, "Naudoti ’iuos ‘rengini÷ nustatymus",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         19,
-        "You can change the hardware settings by pressing the UP or DOWN keys",
+        "J◊s galite pakeisti ‘rengini÷ nustatymus. Spausdami klavi’us AUKæTYN",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         20,
-        "to select an entry. Then press the ENTER key to select alternative",
+        "arba œEMYN, pasirinkite punkt–, kur‘ norite pakeisti. Paspaud“ ENTER",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         21,
-        "settings.",
+        "gal”site pasirinkti alternatyv–.",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         23,
-        "When all settings are correct, select \"Accept these device settings\"",
+        "Kai visi nustatymai bus teisingi, pasirinkite \"Naudoti ’iuos ‘rengi-",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         24,
-        "and press ENTER.",
+        "ni÷ nustatymus\" ir paspauskite ENTER.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "   ENTER = T“sti   F3 = Baigti",
-        TEXT_TYPE_STATUS
+        "ENTER = T“sti   F3 = Baigti",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -496,8 +496,8 @@ static MUI_ENTRY ltLTRepairPageEntries[] =
     {
         0,
         0,
-        "   ESC = Main page  ENTER = Reboot",
-        TEXT_TYPE_STATUS
+        "ESC = Main page  ENTER = Reboot",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -547,8 +547,8 @@ static MUI_ENTRY ltLTComputerPageEntries[] =
     {
         0,
         0,
-        "   ENTER = T“sti   ESC = At’aukti   F3 = Baigti",
-        TEXT_TYPE_STATUS
+        "ENTER = T“sti   ESC = At’aukti   F3 = Baigti",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -587,8 +587,8 @@ static MUI_ENTRY ltLTFlushPageEntries[] =
     {
         0,
         0,
-        "   Flushing cache",
-        TEXT_TYPE_STATUS
+        "Flushing cache",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -633,8 +633,8 @@ static MUI_ENTRY ltLTQuitPageEntries[] =
     {
         0,
         0,
-        "   Please wait ...",
-        TEXT_TYPE_STATUS,
+        "Pra’ome palaukti...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
     },
     {
         0,
@@ -684,8 +684,8 @@ static MUI_ENTRY ltLTDisplayPageEntries[] =
     {
         0,
         0,
-        "   ENTER = T“sti   ESC = At’aukti   F3 = Baigti",
-        TEXT_TYPE_STATUS
+        "ENTER = T“sti   ESC = At’aukti   F3 = Baigti",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -730,8 +730,8 @@ static MUI_ENTRY ltLTSuccessPageEntries[] =
     {
         0,
         0,
-        "   ENTER = Reboot computer",
-        TEXT_TYPE_STATUS
+        "ENTER = Reboot computer",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -776,8 +776,8 @@ static MUI_ENTRY ltLTBootPageEntries[] =
     {
         0,
         0,
-        "   ENTER = T“sti   F3 = Baigti",
-        TEXT_TYPE_STATUS
+        "ENTER = T“sti   F3 = Baigti",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -835,8 +835,8 @@ static MUI_ENTRY ltLTSelectPartitionEntries[] =
     {
         0,
         0,
-        "   Please wait...",
-        TEXT_TYPE_STATUS
+        "Pra’ome palaukti...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -869,8 +869,8 @@ static MUI_ENTRY ltLTFormatPartitionEntries[] =
     {
         0,
         0,
-        "   ENTER = T“sti   F3 = Baigti",
-        TEXT_TYPE_STATUS
+        "ENTER = T“sti   F3 = Baigti",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -921,8 +921,8 @@ static MUI_ENTRY ltLTInstallDirectoryEntries[] =
     {
         0,
         0,
-        "   ENTER = T“sti   F3 = Baigti",
-        TEXT_TYPE_STATUS
+        "ENTER = T“sti   F3 = Baigti",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -941,27 +941,27 @@ static MUI_ENTRY ltLTFileCopyEntries[] =
         TEXT_STYLE_UNDERLINE
     },
     {
-        11,
+        0,
         12,
         "Please wait while ReactOS Setup copies files to your ReactOS",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
     },
     {
-        30,
+        0,
         13,
         "installation folder.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
     },
     {
-        20,
+        0,
         14,
         "This may take several minutes to complete.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
     },
     {
+        50,
         0,
-        0,
-        "                                                           \xB3 Please wait...    ",
+        "\xB3 Please wait...    ",
         TEXT_TYPE_STATUS
     },
     {
@@ -1007,8 +1007,8 @@ static MUI_ENTRY ltLTBootLoaderEntries[] =
     {
         0,
         0,
-        "   ENTER = T“sti   F3 = Baigti",
-        TEXT_TYPE_STATUS
+        "ENTER = T“sti   F3 = Baigti",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -1059,8 +1059,8 @@ static MUI_ENTRY ltLTKeyboardSettingsEntries[] =
     {
         0,
         0,
-        "   ENTER = T“sti   ESC = At’aukti   F3 = Baigti",
-        TEXT_TYPE_STATUS
+        "ENTER = T“sti   ESC = At’aukti   F3 = Baigti",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -1111,8 +1111,8 @@ static MUI_ENTRY ltLTLayoutSettingsEntries[] =
     {
         0,
         0,
-        "   ENTER = T“sti   ESC = At’aukti   F3 = Baigti",
-        TEXT_TYPE_STATUS
+        "ENTER = T“sti   ESC = At’aukti   F3 = Baigti",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -1140,8 +1140,8 @@ static MUI_ENTRY ltLTPrepareCopyEntries[] =
     {
         0,
         0,
-        "   Building the file copy list...",
-        TEXT_TYPE_STATUS
+        "Building the file copy list...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -1187,8 +1187,8 @@ static MUI_ENTRY ltLTSelectFSEntries[] =
     {
         0,
         0,
-        "   ENTER = T“sti   ESC = At’aukti   F3 = Baigti",
-        TEXT_TYPE_STATUS
+        "ENTER = T“sti   ESC = At’aukti   F3 = Baigti",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
 
     {
@@ -1234,7 +1234,7 @@ static MUI_ENTRY ltLTDeletePartitionEntries[] =
     {
         0,
         0,
-        "   D = Delete Partition   ESC = At’aukti   F3 = Baigti",
+        "D = Delete Partition   ESC = At’aukti   F3 = Baigti",
         TEXT_TYPE_STATUS
     },
     {
@@ -1262,8 +1262,8 @@ static MUI_ENTRY ltLTRegistryEntries[] =
     {
         0,
         0,
-        "   Creating registry hives...",
-        TEXT_TYPE_STATUS
+        "Creating registry hives...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -1404,7 +1404,7 @@ MUI_ERROR ltLTErrorEntries[] =
     },
     {
         //ERROR_INITIALIZE_REGISTRY,
-        "Setup failed to set the initialize the registry.",
+        "Setup failed to initialize the registry.",
         "ENTER = Reboot computer"
     },
     {
@@ -1598,7 +1598,7 @@ MUI_STRING ltLTStrings[] =
     {STRING_NONFORMATTEDPART,
     "You chose to install ReactOS on a new or unformatted Partition."},
     {STRING_INSTALLONPART,
-    "Setup install ReactOS onto Partition"},
+    "Setup installs ReactOS onto Partition"},
     {STRING_CHECKINGPART,
     "Setup is now checking the selected partition."},
     {STRING_QUITCONTINUE,
