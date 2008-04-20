@@ -1,0 +1,6 @@
+#include "resource.h"
+#include <windows.h>
+
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+
+IDI_MAIN ICON "res/kbswitch.ico"

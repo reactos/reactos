@@ -25,6 +25,9 @@
 	<directory name="hh">
 		<xi:include href="hh/hh.rbuild" />
 	</directory>
+	<directory name="kbswitch">
+		<xi:include href="kbswitch/kbswitch.rbuild" />
+	</directory>
 	<directory name="logoff">
 		<xi:include href="logoff/logoff.rbuild" />
 	</directory>
