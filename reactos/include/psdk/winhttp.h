@@ -60,6 +60,8 @@ typedef int INTERNET_SCHEME, *LPINTERNET_SCHEME;
 
 #define WINHTTP_ERROR_BASE                  12000
 
+#define ERROR_WINHTTP_AUTODETECTION_FAILED     (WINHTTP_ERROR_BASE + 180)
+
 typedef struct
 {
     DWORD   dwStructSize;
