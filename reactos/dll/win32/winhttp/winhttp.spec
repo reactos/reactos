@@ -8,7 +8,7 @@
 @ stub WinHttpConnect
 @ stub WinHttpCrackUrl
 @ stub WinHttpCreateUrl
-@ stub WinHttpDetectAutoProxyConfigUrl
+@ stdcall WinHttpDetectAutoProxyConfigUrl(long ptr)
 @ stub WinHttpGetDefaultProxyConfiguration
 @ stdcall WinHttpGetIEProxyConfigForCurrentUser(ptr)
 @ stub WinHttpGetProxyForUrl

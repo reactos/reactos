@@ -94,6 +94,17 @@ BOOL WINAPI WinHttpCheckPlatform(void)
 }
 
 /***********************************************************************
+ *          WinHttpDetectAutoProxyConfigUrl (winhttp.@)
+ */
+BOOL WINAPI WinHttpDetectAutoProxyConfigUrl(DWORD flags, LPWSTR *url)
+{
+    FIXME("(%x %p)\n", flags, url);
+
+    SetLastError(ERROR_WINHTTP_AUTODETECTION_FAILED);
+    return FALSE;
+}
+
+/***********************************************************************
  *          WinHttpGetIEProxyConfigForCurrentUser (winhttp.@)
  */
 BOOL WINAPI WinHttpGetIEProxyConfigForCurrentUser(WINHTTP_CURRENT_USER_IE_PROXY_CONFIG* config)
