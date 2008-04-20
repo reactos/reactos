@@ -9,3 +9,5 @@
 
 // Maximum Character Count of a ULONG in decimal
 #define CCH_ULONG_DEC    10
+
+#define MENU_ID_EXIT     65535

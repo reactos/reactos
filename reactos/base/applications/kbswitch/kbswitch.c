@@ -137,6 +137,7 @@ BuildPopupMenu()
     HMENU hMenu;
     HKEY hKey;
     DWORD dwIndex, dwSize;
+    LPTSTR szExit;
     TCHAR szLayoutNum[CCH_ULONG_DEC + 1];
     TCHAR szName[MAX_PATH];
 
@@ -159,8 +160,9 @@ BuildPopupMenu()
         RegCloseKey(hKey);
     }
 
-    AppendMenu(hMenu, MF_SEPARATOR, 0, _T(""));
-    AppendMenu(hMenu, MF_STRING, 1000, _T("Exit"));
+    LoadString(hInst, IDS_EXIT, (LPTSTR)&szExit, 0);
+    AppendMenu(hMenu, MF_SEPARATOR, 0, NULL);
+    AppendMenu(hMenu, MF_STRING, MENU_ID_EXIT, szExit);
 
     return hMenu;
 }
@@ -194,16 +196,11 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
             break;
 
         case WM_COMMAND:
-            if (LOWORD(wParam) == 1000)
-            {
-                DestroyMenu(hPopupMenu);
-                DelTrayIcon(hwnd);
-                PostQuitMessage(0);
-            }
+            if (LOWORD(wParam) == MENU_ID_EXIT)
+                SendMessage(hwnd, WM_CLOSE, 0, 0);
             else
-            {
                 ActivateLayout(LOWORD(wParam));
-            }
+
             break;
 
         case WM_DESTROY:
