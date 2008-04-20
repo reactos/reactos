@@ -22,6 +22,10 @@ typedef struct
 } APPLET, *PAPPLET;
 
 extern HINSTANCE hApplet;
+extern HANDLE hProcessHeap;
+
+// Character Count of a layout ID like "00000409"
+#define CCH_LAYOUT_ID    8
 
 /* input.c */
 VOID
@@ -32,6 +36,8 @@ INT_PTR CALLBACK
 SettingPageProc(HWND hwndDlg,UINT uMsg,WPARAM wParam,LPARAM lParam);
 BOOL
 GetLayoutName(LPCTSTR lcid, LPTSTR name);
+VOID
+UpdateLayoutsList(VOID);
 
 /* keysettings.c */
 INT_PTR CALLBACK
