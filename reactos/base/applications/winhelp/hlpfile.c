@@ -158,11 +158,11 @@ HLPFILE_PAGE *HLPFILE_PageByOffset(HLPFILE* hlpfile, LONG offset)
 static int comp_PageByHash(void *p, const void *key,
                            int leaf, void** next)
 {
-    LONG lKey = (LONG)key;
-    LONG lTest = GET_UINT(p, 0);
+    LONG lKey = (LONG_PTR)key;
+    LONG lTest = (INT)GET_UINT(p, 0);
 
     *next = (char *)p+(leaf?8:6);
-    WINE_TRACE("Comparing '%u' with '%u'\n", lKey, lTest);
+    WINE_TRACE("Comparing '%d' with '%d'\n", lKey, lTest);
     if (lTest < lKey) return -1;
     if (lTest > lKey) return 1;
     return 0;
@@ -184,7 +184,7 @@ HLPFILE_PAGE *HLPFILE_PageByHash(HLPFILE* hlpfile, LONG lHash)
     if (hlpfile->version <= 16)
         return HLPFILE_PageByNumber(hlpfile, lHash);
 
-    ptr = HLPFILE_BPTreeSearch(hlpfile->Context, (void*)lHash, comp_PageByHash);
+    ptr = HLPFILE_BPTreeSearch(hlpfile->Context, LongToPtr(lHash), comp_PageByHash);
     if (!ptr)
     {
         WINE_ERR("Page of hash %x not found in file %s\n", lHash, hlpfile->lpszPath);
@@ -587,7 +587,7 @@ static BYTE*    HLPFILE_DecompressGfx(BYTE* src, unsigned csz, unsigned sz, BYTE
         if (!dst) return NULL;
         HLPFILE_UncompressRLE(src, src + csz, &tmp, sz);
         if (tmp - dst != sz)
-            WINE_WARN("Bogus gfx sizes (RunLen): %u/%u\n", tmp - dst, sz);
+            WINE_WARN("Bogus gfx sizes (RunLen): %lu/%u\n", (SIZE_T)(tmp - dst), sz);
         break;
     case 2: /* LZ77 */
         sz77 = HLPFILE_UncompressedLZ77_Size(src, src + csz);
@@ -610,7 +610,7 @@ static BYTE*    HLPFILE_DecompressGfx(BYTE* src, unsigned csz, unsigned sz, BYTE
         }
         HLPFILE_UncompressRLE(tmp, tmp + sz77, &tmp2, sz);
         if (tmp2 - dst != sz)
-            WINE_WARN("Bogus gfx sizes (LZ77+RunLen): %u / %u\n", tmp2 - dst, sz);
+            WINE_WARN("Bogus gfx sizes (LZ77+RunLen): %lu / %u\n", (SIZE_T)(tmp2 - dst), sz);
         HeapFree(GetProcessHeap(), 0, tmp);
         break;
     default:
@@ -729,8 +729,8 @@ static BOOL     HLPFILE_LoadMetaFile(BYTE* beg, BYTE pack, HLPFILE_PARAGRAPH* pa
     hsoff = GET_UINT(ptr, 4);
     ptr += 8;
 
-    WINE_TRACE("sz=%lu csz=%lu (%d,%d) offs=%lu/%u,%lu\n",
-               size, csize, lpmfp->xExt, lpmfp->yExt, off, ptr - beg, hsoff);
+    WINE_TRACE("sz=%lu csz=%lu (%d,%d) offs=%lu/%lu,%lu\n",
+               size, csize, lpmfp->xExt, lpmfp->yExt, off, (SIZE_T)(ptr - beg), hsoff);
 
     bits = HLPFILE_DecompressGfx(beg + off, csize, size, pack);
     if (!bits) return FALSE;
@@ -944,7 +944,7 @@ static BOOL HLPFILE_AddParagraph(HLPFILE *hlpfile, BYTE *buf, BYTE *end, unsigne
 
     for (nc = 0; nc < ncol; nc++)
     {
-        WINE_TRACE("looking for format at offset %u for column %d\n", format - (buf + 0x15), nc);
+        WINE_TRACE("looking for format at offset %lu for column %d\n", (SIZE_T)(format - (buf + 0x15)), nc);
         if (buf[0x14] == 0x23)
             format += 5;
         if (buf[0x14] == 0x01)
@@ -1796,8 +1796,8 @@ static void HLPFILE_Uncompress2(const BYTE *ptr, const BYTE *end, BYTE *newptr, 
 
             if (newptr + (phend - phptr) > newend)
             {
-                WINE_FIXME("buffer overflow %p > %p for %d bytes\n", 
-                           newptr, newend, phend - phptr);
+                WINE_FIXME("buffer overflow %p > %p for %lu bytes\n",
+                           newptr, newend, (SIZE_T)(phend - phptr));
                 return;
             }
             memcpy(newptr, phptr, phend - phptr);
@@ -1902,8 +1902,8 @@ static void HLPFILE_UncompressRLE(const BYTE* src, const BYTE* end, BYTE** dst, 
         *dst += ch;
     }
     if (*dst != sdst)
-        WINE_WARN("Buffer X-flow: d(%u) instead of d(%u)\n",
-                  *dst - (sdst - dstsz), dstsz);
+        WINE_WARN("Buffer X-flow: d(%lu) instead of d(%u)\n",
+                  (SIZE_T)(*dst - (sdst - dstsz)), dstsz);
 }
 
 /**************************************************************************

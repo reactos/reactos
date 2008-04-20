@@ -127,16 +127,16 @@ static void CALLBACK WHD_ErrorString(LPSTR err)
     WINE_FIXME("()\n");
 }
 
-static LONG CALLBACK WHD_GetInfo(WORD what, HWND hnd)
+static ULONG_PTR CALLBACK WHD_GetInfo(WORD what, HWND hnd)
 {
-    LONG        ret = 0;
+    ULONG_PTR ret = 0;
 
     WINE_TRACE("(%x %p)\n", what, hnd);
     switch (what)
     {
     case 0: break;
-    case 1: /* instance */ ret = (LONG)Globals.hInstance; break;
-    case 3: /* current window */ ret = (LONG)Globals.active_win->hMainWnd; break;
+    case 1: /* instance */ ret = (ULONG_PTR)Globals.hInstance; break;
+    case 3: /* current window */ ret = (ULONG_PTR)Globals.active_win->hMainWnd; break;
     case 2: /* main window */
     case 4: /* handle to opened file */
     case 5: /* foreground color */

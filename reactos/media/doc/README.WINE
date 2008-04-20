@@ -31,6 +31,7 @@ reactos/tools/widl                # Synced to Wine-0_9_55
 The following libraries are shared with Wine.
 
 reactos/dll/win32/advpack         # Autosync
+reactos/dll/win32/atl             # Out of sync
 reactos/dll/win32/avifil32        # Autosync
 reactos/dll/win32/browseui        # Out of sync
 reactos/dll/win32/cabinet         # Autosync
@@ -43,13 +44,13 @@ reactos/dll/win32/crypt32         # Out of sync
 reactos/dll/win32/cryptdll        # Autosync
 reactos/dll/win32/cryptnet        # Autosync
 reactos/dll/win32/dbghelp         # Synced to Wine-20080106
+reactos/dll/win32/gdiplus         # Autosync
 reactos/dll/win32/hhctrl.ocx      # Autosync
 reactos/dll/win32/hlink           # Autosync
 reactos/dll/win32/icmp            # Synced to Wine-0_9_10
 reactos/dll/win32/imm32           # Autosync
-reactos/dll/win32/iphlpapi        # Out of sync
 reactos/dll/win32/imagehlp        # Patches for BindImage need review and submission to winehq.
-reactos/dll/win32/gdiplus         # Autosync
+reactos/dll/win32/iphlpapi        # Out of sync
 reactos/dll/win32/lz32            # Autosync
 reactos/dll/win32/mapi32          # Autosync
 reactos/dll/win32/mlang           # Autosync
@@ -71,8 +72,11 @@ reactos/dll/win32/oleacc          # Autosync
 reactos/dll/win32/oleaut32        # Autosync
 reactos/dll/win32/oledlg          # Autosync
 reactos/dll/win32/olepro32        # Autosync
+reactos/dll/win32/pdh             # Out of sync
 reactos/dll/win32/powrprof        # Autosync
 reactos/dll/win32/printui         # Autosync
+reactos/dll/win32/rasapi32        # Out of sync
+reactos/dll/win32/rasdlg          # Out of sync
 reactos/dll/win32/riched20        # Autosync
 reactos/dll/win32/riched32        # Autosync
 reactos/dll/win32/rpcrt4          # Synced to Wine-0_9_55
@@ -85,11 +89,15 @@ reactos/dll/win32/shell32         # Forked at Wine-20071011
 reactos/dll/win32/shdocvw         # Synced to Wine-0_9_5
 reactos/dll/win32/shfolder        # Autosync
 reactos/dll/win32/shlwapi         # Autosync
+reactos/dll/win32/stdole2.tlb     # Out of Sync
+reactos/dll/win32/tapi32          # Out of sync
 reactos/dll/win32/twain_32        # Out of sync
 reactos/dll/win32/urlmon          # Autosync
+reactos/dll/win32/usp10           # Out of sync
 reactos/dll/win32/uxtheme         # Autosync
 reactos/dll/win32/version         # Autosync
 reactos/dll/win32/wininet         # Autosync
+reactos/dll/win32/winhttp         # Out of Sync
 reactos/dll/win32/wintrust        # Out of sync
 reactos/dll/win32/winmm           # Forked at Wine-20050628
 reactos/dll/win32/winmm/midimap   # Forked at Wine-20050628
