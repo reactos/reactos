@@ -7,6 +7,7 @@
 #include <winbase.h>
 #include <winnls.h>
 
+#define memicmpW(s1,s2,n) _wcsnicmp((const wchar_t *)(s1),(const wchar_t *)(s2),(n))
 #define strlenW(s) wcslen((const wchar_t *)(s))
 #define strcpyW(d,s) wcscpy((wchar_t *)(d),(const wchar_t *)(s))
 #define strcatW(d,s) wcscat((wchar_t *)(d),(const wchar_t *)(s))
