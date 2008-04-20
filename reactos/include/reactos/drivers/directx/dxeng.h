@@ -73,7 +73,6 @@ typedef enum _DXEGSHDEVDATA
 /* win32k.sys internal protypes for the driver functions it export      */
 /************************************************************************/
 BOOLEAN STDCALL DxEngNUIsTermSrv();
-
 PDC STDCALL DxEngLockDC(HDC hDC);
 BOOLEAN STDCALL DxEngUnlockDC(PDC pDC);
 DWORD STDCALL DxEngGetHdevData(HDEV, DXEGSHDEVDATA);
@@ -82,6 +81,8 @@ BOOLEAN STDCALL DxEngLockHdev(HDEV hdev);
 BOOLEAN STDCALL DxEngUnlockHdev(HDEV hdev);
 DWORD STDCALL DxEngGetDCState(HDC hDC, DWORD type);
 DWORD STDCALL DxEngReferenceHdev(HDEV hdev);
+BOOLEAN STDCALL DxEngLockShareSem();
+BOOLEAN STDCALL DxEngUnlockShareSem();
 
 /* prototypes are not done yet, I need gather all my notes
  * to make them correct
@@ -92,8 +93,6 @@ ULONG DxEngVisRgnUniq();
 HDEV *DxEngEnumerateHdev(HDEV *hdev);
 BOOL DxEngGetDeviceGammaRamp(HDEV hPDev, PGAMMARAMP Ramp);
 BOOLEAN DxEngSetDeviceGammaRamp(HDEV hPDev, PGAMMARAMP Ramp, BOOL Unuse);
-BOOLEAN DxEngLockShareSem();
-BOOLEAN DxEngUnlockShareSem();
 BOOLEAN DxEngCleanDC(HDC hdc);
 BOOLEAN DxEngIncDispUniq();
 

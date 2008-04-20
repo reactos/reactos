@@ -175,6 +175,7 @@ DxEngUnlockDC(PDC pDC)
 *SystemResourcesList
 *--*/
 BOOLEAN
+STDCALL
 DxEngLockShareSem()
 {
     BOOLEAN retVal = 0;
@@ -203,6 +204,7 @@ DxEngLockShareSem()
 *
 *--*/
 BOOLEAN
+STDCALL
 DxEngUnlockShareSem()
 {
     DPRINT1("ReactX Calling : DxEngUnlockShareSem\n");
