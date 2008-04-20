@@ -47,7 +47,6 @@ static BOOL
 GetLayoutID(LPTSTR szLayoutNum, LPTSTR szLCID)
 {
     DWORD dwBufLen;
-    DWORD dwTest = 0;
     HKEY hKey;
     TCHAR szTempLCID[CCH_LAYOUT_ID + 1];
 
