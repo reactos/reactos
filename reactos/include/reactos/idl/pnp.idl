@@ -294,9 +294,9 @@ interface pnp
         [in] PNP_RPC_STRING_LEN ulLength);
 
     /* Function 8 */
-    cpp_quote("#define PNP_GET_PARENT_DEVICE_INSTANCE  0x1");
-    cpp_quote("#define PNP_GET_CHILD_DEVICE_INSTANCE   0x2");
-    cpp_quote("#define PNP_GET_SIBLING_DEVICE_INSTANCE 0x3");
+    cpp_quote("#define PNP_GET_PARENT_DEVICE_INSTANCE  0x1")
+    cpp_quote("#define PNP_GET_CHILD_DEVICE_INSTANCE   0x2")
+    cpp_quote("#define PNP_GET_SIBLING_DEVICE_INSTANCE 0x3")
     DWORD PNP_GetRelatedDeviceInstance(
         [in] handle_t hBinding,
         [in] DWORD ulRelationship,
@@ -306,8 +306,8 @@ interface pnp
         [in] DWORD ulFlags);
 
     /* Function 9 */
-    cpp_quote("#define PNP_ENUMERATOR_SUBKEYS 0x1");
-    cpp_quote("#define PNP_CLASS_SUBKEYS      0x2");
+    cpp_quote("#define PNP_ENUMERATOR_SUBKEYS 0x1")
+    cpp_quote("#define PNP_CLASS_SUBKEYS      0x2")
     DWORD PNP_EnumerateSubKeys(
         [in] handle_t hBinding,
         [in] DWORD ulBranch,
@@ -557,8 +557,8 @@ interface pnp
         [in] handle_t hBinding);
 
     /* Function 40 */
-    cpp_quote("#define PNP_GET_HWPROFFLAGS 0x1");
-    cpp_quote("#define PNP_SET_HWPROFFLAGS 0x2");
+    cpp_quote("#define PNP_GET_HWPROFFLAGS 0x1")
+    cpp_quote("#define PNP_SET_HWPROFFLAGS 0x2")
     DWORD PNP_HwProfFlags(
         [in] handle_t hBinding,
         [in] DWORD ulAction,

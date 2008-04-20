@@ -74,6 +74,6 @@ cpp_quote("HRESULT WINAPI AtlAxCreateControl(LPCOLESTR,HWND,IStream*,IUnknown**)
 cpp_quote("HRESULT WINAPI AtlAxCreateControlEx(LPCOLESTR,HWND,IStream*,IUnknown**,IUnknown**,REFIID,IUnknown*);")
 cpp_quote("BOOL WINAPI AtlAxWinInit(void);")
 
-cpp_quote("HWND WINAPI AtlAxCreateDialogW(HINSTANCE,LPCWSTR,HWND,DLGPROC,LPARAM);");
-cpp_quote("HWND WINAPI AtlAxCreateDialogA(HINSTANCE,LPCSTR,HWND,DLGPROC,LPARAM);");
-cpp_quote("#define     AtlAxCreateDialog WINELIB_NAME_AW(AtlAxCreateDialog");
+cpp_quote("HWND WINAPI AtlAxCreateDialogW(HINSTANCE,LPCWSTR,HWND,DLGPROC,LPARAM);")
+cpp_quote("HWND WINAPI AtlAxCreateDialogA(HINSTANCE,LPCSTR,HWND,DLGPROC,LPARAM);")
+cpp_quote("#define     AtlAxCreateDialog WINELIB_NAME_AW(AtlAxCreateDialog")

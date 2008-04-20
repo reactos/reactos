@@ -64,7 +64,7 @@ interface eventlog
 #else
 	#define LOGHANDLE unsigned int
 	#define PLOGHANDLE unsigned int*
-	cpp_quote("typedef unsigned int LOGHANDLE, *PLOGHANDLE;");
+	cpp_quote("typedef unsigned int LOGHANDLE, *PLOGHANDLE;")
 #endif
 
 	/* Function 0x00 */

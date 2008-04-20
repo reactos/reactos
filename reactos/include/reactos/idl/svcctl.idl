@@ -239,7 +239,7 @@ typedef struct _SC_RPC_NOTIFY_PARAMS_LIST {
     [size_is(cElements)] SC_RPC_NOTIFY_PARAMS NotifyParamsArray[];
 } SC_RPC_NOTIFY_PARAMS_LIST, *PSC_RPC_NOTIFY_PARAMS_LIST;
 
-cpp_quote("#if 0");
+cpp_quote("#if 0")
 
 #if 0
 typedef
@@ -297,7 +297,9 @@ typedef struct _STRING_PTRSW {
   uuid(367abb81-9844-35f1-ad32-98f038001003),
   version(2.0),
   pointer_default(unique),
-  explicit_handle
+  #ifndef __midl
+  ,explicit_handle
+  #endif
 ]
 interface svcctl
 {
