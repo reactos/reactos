@@ -159,6 +159,9 @@ BuildPopupMenu()
         RegCloseKey(hKey);
     }
 
+    AppendMenu(hMenu, MF_SEPARATOR, 0, _T(""));
+    AppendMenu(hMenu, MF_STRING, 1000, _T("Exit"));
+
     return hMenu;
 }
 
@@ -191,7 +194,16 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
             break;
 
         case WM_COMMAND:
-            ActivateLayout(LOWORD(wParam));
+            if (LOWORD(wParam) == 1000)
+            {
+                DestroyMenu(hPopupMenu);
+                DelTrayIcon(hwnd);
+                PostQuitMessage(0);
+            }
+            else
+            {
+                ActivateLayout(LOWORD(wParam));
+            }
             break;
 
         case WM_DESTROY:
