@@ -1164,15 +1164,23 @@ GetEnvVarOrSpecial ( LPCTSTR varName )
 		if (position)
 		{
 			position += 2;
-			Token = _tcstok(position, _T(","));
-			while ((Token != NULL) && (i < 2))
+			if (_tcschr(position, _T(',')) != NULL)
 			{
-				StringPart[i] = _ttoi(Token);
-				i++;
-				Token = _tcstok (NULL, _T(","));
+				Token = _tcstok(position, _T(","));
+				while ((Token != NULL) && (i < 2))
+				{
+					StringPart[i] = _ttoi(Token);
+					i++;
+					Token = _tcstok (NULL, _T(","));
+				}
+				if (i > 0)
+				{
+					if (StringPart[1] < 0)
+						StringPart[1] = _tcslen(ret + StringPart[0]) + StringPart[1];
+					_tcsncpy(ReturnValue, ret + StringPart[0], StringPart[1]);
+					_tcscpy(ret, ReturnValue);
+				}
 			}
-			_tcsncpy(ReturnValue, ret + StringPart[0], StringPart[1]);
-			_tcscpy(ret, ReturnValue);
 			return ret;
 		}
 		else
