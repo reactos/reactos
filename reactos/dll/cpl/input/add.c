@@ -39,34 +39,34 @@ SelectLayoutByLang(VOID)
 static VOID
 AddNewLayout(HWND hwndDlg)
 {
-	TCHAR NewLayout[3];
-	INT iLayout;
-	HKEY hKey;
-	DWORD cValues;
-	PTSTR pts;
+    TCHAR NewLayout[3];
+    INT iLayout;
+    HKEY hKey;
+    DWORD cValues;
+    PTSTR pts;
 
-	iLayout = SendMessage(hLayoutList, CB_GETCURSEL, 0, 0);
-	if (iLayout == CB_ERR) return;
+    iLayout = SendMessage(hLayoutList, CB_GETCURSEL, 0, 0);
+    if (iLayout == CB_ERR) return;
 
-	if (RegOpenKey(HKEY_CURRENT_USER, _T("Keyboard Layout\\Preload"), &hKey) == ERROR_SUCCESS)
-	{
-		if (RegQueryInfoKey(hKey, NULL, NULL, NULL, NULL, NULL, NULL, &cValues, NULL, NULL, NULL, NULL) == ERROR_SUCCESS)
-		{
-			_stprintf(NewLayout, _T("%d"), cValues + 1);
+    if (RegOpenKey(HKEY_CURRENT_USER, _T("Keyboard Layout\\Preload"), &hKey) == ERROR_SUCCESS)
+    {
+        if (RegQueryInfoKey(hKey, NULL, NULL, NULL, NULL, NULL, NULL, &cValues, NULL, NULL, NULL, NULL) == ERROR_SUCCESS)
+        {
+            _stprintf(NewLayout, _T("%d"), cValues + 1);
 
-			pts = (PTSTR) SendMessage(hLayoutList, CB_GETITEMDATA, iLayout, 0);
+            pts = (PTSTR) SendMessage(hLayoutList, CB_GETITEMDATA, iLayout, 0);
 
-			if (RegSetValueEx(hKey,
-							  NewLayout,
-							  0,
-							  REG_SZ,
-							  (LPBYTE)pts,
-							  (DWORD)(_tcslen(pts)*sizeof(PTSTR))) == ERROR_SUCCESS)
-			{
-				UpdateLayoutsList();
-			}
-		}
-	}
+            if (RegSetValueEx(hKey,
+                              NewLayout,
+                              0,
+                              REG_SZ,
+                              (LPBYTE)pts,
+                              (DWORD)(_tcslen(pts)*sizeof(PTSTR))) == ERROR_SUCCESS)
+            {
+                UpdateLayoutsList();
+            }
+        }
+    }
 }
 
 VOID

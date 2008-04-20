@@ -167,20 +167,20 @@ InitLangList(HWND hWnd)
 VOID
 UpdateLayoutsList(VOID)
 {
-	(VOID) ListView_DeleteAllItems(GetDlgItem(MainDlgWnd, IDC_KEYLAYOUT_LIST));
-	InitLangList(MainDlgWnd);
+    (VOID) ListView_DeleteAllItems(GetDlgItem(MainDlgWnd, IDC_KEYLAYOUT_LIST));
+    InitLangList(MainDlgWnd);
 }
 
 static VOID
 DeleteLayout(VOID)
 {
-	INT iIndex;
+    INT iIndex;
 
-	iIndex = (INT) SendMessage(GetDlgItem(MainDlgWnd, IDC_KEYLAYOUT_LIST), LVM_GETNEXTITEM, -1, LVNI_FOCUSED);
-	if (iIndex != -1)
-	{
-		MessageBox(0, _T("Not implemented!"), NULL, MB_OK);
-	}
+    iIndex = (INT) SendMessage(GetDlgItem(MainDlgWnd, IDC_KEYLAYOUT_LIST), LVM_GETNEXTITEM, -1, LVNI_FOCUSED);
+    if (iIndex != -1)
+    {
+        MessageBox(0, _T("Not implemented!"), NULL, MB_OK);
+    }
 }
 
 /* Property page dialog callback */
@@ -193,10 +193,10 @@ SettingPageProc(HWND hwndDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
     {
         case WM_INITDIALOG:
         {
-			MainDlgWnd = hwndDlg;
-			AddListColumn(hwndDlg);
-			(VOID) ListView_SetExtendedListViewStyle(GetDlgItem(MainDlgWnd, IDC_KEYLAYOUT_LIST),
-													 LVS_EX_FULLROWSELECT);
+            MainDlgWnd = hwndDlg;
+            AddListColumn(hwndDlg);
+            (VOID) ListView_SetExtendedListViewStyle(GetDlgItem(MainDlgWnd, IDC_KEYLAYOUT_LIST),
+                                                     LVS_EX_FULLROWSELECT);
             InitLangList(hwndDlg);
             EnableWindow(GetDlgItem(hwndDlg, IDC_PROP_BUTTON),FALSE);
             EnableWindow(GetDlgItem(hwndDlg, IDC_SET_DEFAULT),FALSE);
@@ -213,9 +213,9 @@ SettingPageProc(HWND hwndDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
         case WM_COMMAND:
             switch (LOWORD(wParam))
             {
-				case IDC_REMOVE_BUTTON:
-					DeleteLayout();
-					break;
+                case IDC_REMOVE_BUTTON:
+                    DeleteLayout();
+                    break;
 
                 case IDC_KEY_SET_BTN:
                     DialogBox(hApplet,
