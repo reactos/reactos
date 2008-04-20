@@ -156,6 +156,7 @@
   <property name="BASEADDRESS_MSAFD" value="0x77780000" />
   <property name="BASEADDRESS_MSI" value="0x77790000" />
   <property name="BASEADDRESS_SNMPAPI" value="0x777a0000" />
+  <property name="BASEADDRESS_USP10" value="0x777b0000" />
   <property name="BASEADDRESS_IPRTPRIO" value="0x777c0000" />
   <property name="BASEADDRESS_WS2HELP" value="0x777e0000" />
   <property name="BASEADDRESS_WSHIRDA" value="0x777f0000" />
