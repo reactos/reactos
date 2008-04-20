@@ -653,7 +653,7 @@ DWORD DxEngCreateMemoryDC(DWORD x1)
 /************************************************************************/
 /* DxEngScreenAccessCheck                                               */
 /************************************************************************/
-DWORD DxEngScreenAccessCheck()
+DWORD STDCALL DxEngScreenAccessCheck()
 {
     UNIMPLEMENTED;
 

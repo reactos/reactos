@@ -83,6 +83,7 @@ DWORD STDCALL DxEngGetDCState(HDC hDC, DWORD type);
 DWORD STDCALL DxEngReferenceHdev(HDEV hdev);
 BOOLEAN STDCALL DxEngLockShareSem();
 BOOLEAN STDCALL DxEngUnlockShareSem();
+DWORD STDCALL DxEngScreenAccessCheck();
 
 /* prototypes are not done yet, I need gather all my notes
  * to make them correct
@@ -97,7 +98,7 @@ BOOLEAN DxEngCleanDC(HDC hdc);
 BOOLEAN DxEngIncDispUniq();
 
 DWORD DxEngCreateMemoryDC(DWORD x1);
-DWORD DxEngScreenAccessCheck();
+
 DWORD DxEngIsHdevLockedByCurrentThread(DWORD x1);
 DWORD DxEngUnreferenceHdev(DWORD x1);
 DWORD DxEngSpTearDownSprites(DWORD x1, DWORD x2, DWORD x3);
