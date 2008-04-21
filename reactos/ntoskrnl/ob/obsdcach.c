@@ -18,16 +18,6 @@
 #define SD_CACHE_ENTRIES 0x100
 OB_SD_CACHE_LIST ObsSecurityDescriptorCache[SD_CACHE_ENTRIES];
 
-ULONGLONG Cycles;
-ULONG TimeDelta;
-
-#define ObpSdCacheBeginPerfCount() \
-    Cycles = __rdtsc();
-
-#define ObpSdCacheEndPerfCount() \
-    TimeDelta += __rdtsc() - Cycles;
-
-
 /* PRIVATE FUNCTIONS **********************************************************/
 
 VOID
@@ -191,14 +181,12 @@ ObpReferenceSecurityDescriptor(IN POBJECT_HEADER ObjectHeader)
 {
     PSECURITY_DESCRIPTOR SecurityDescriptor;
     PSECURITY_DESCRIPTOR_HEADER SdHeader;
-    ObpSdCacheBeginPerfCount();
     
     /* Get the SD */
     SecurityDescriptor = ObjectHeader->SecurityDescriptor;
     if (!SecurityDescriptor)
     {
         /* No SD, nothing to do */
-        ObpSdCacheEndPerfCount();
         return NULL;
     }
     
@@ -213,7 +201,6 @@ ObpReferenceSecurityDescriptor(IN POBJECT_HEADER ObjectHeader)
     
     /* Release the lock and return */
     ObpReleaseObjectLock(ObjectHeader);
-    ObpSdCacheEndPerfCount();
     return SecurityDescriptor;
 }
 
@@ -242,14 +229,12 @@ ObReferenceSecurityDescriptor(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
                               IN ULONG Count)
 {
     PSECURITY_DESCRIPTOR_HEADER SdHeader;
-    ObpSdCacheBeginPerfCount();
 
     /* Get the header */
     SdHeader = ObpGetHeaderForSd(SecurityDescriptor);
     
     /* Do the references */
     InterlockedExchangeAdd((PLONG)&SdHeader->RefCount, Count);
-    ObpSdCacheEndPerfCount();
 }
 
 /*++
@@ -278,7 +263,6 @@ ObDereferenceSecurityDescriptor(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
     LONG OldValue, NewValue;
     ULONG Index;
     POB_SD_CACHE_LIST CacheEntry;
-    ObpSdCacheBeginPerfCount();
     
     /* Get the header */
     SdHeader = ObpGetHeaderForSd(SecurityDescriptor);
@@ -293,7 +277,7 @@ ObDereferenceSecurityDescriptor(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
         NewValue = InterlockedCompareExchange((PLONG)&SdHeader->RefCount,
                                               OldValue - Count,
                                               OldValue);
-        if (NewValue == OldValue) ObpSdCacheEndPerfCount(); return;
+        if (NewValue == OldValue) return;
         
         /* Try again */
         OldValue = NewValue;
@@ -325,7 +309,6 @@ ObDereferenceSecurityDescriptor(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
         ObpSdReleaseLock(CacheEntry);
     }
     
-    ObpSdCacheEndPerfCount();
 }
 
 /*++
@@ -359,7 +342,6 @@ ObLogSecurityDescriptor(IN PSECURITY_DESCRIPTOR InputSecurityDescriptor,
     POB_SD_CACHE_LIST CacheEntry;
     BOOLEAN Result;
     PLIST_ENTRY NextEntry;
-    ObpSdCacheBeginPerfCount();
 
     /* Get the length */
     Length = RtlLengthSecurityDescriptor(InputSecurityDescriptor);
@@ -418,7 +400,6 @@ ObLogSecurityDescriptor(IN PSECURITY_DESCRIPTOR InputSecurityDescriptor,
             
             /* Free anything that we may have had to create */
             if (NewHeader) ExFreePool(NewHeader);
-            ObpSdCacheEndPerfCount();
             return STATUS_SUCCESS;
         }
         
@@ -453,7 +434,6 @@ ObLogSecurityDescriptor(IN PSECURITY_DESCRIPTOR InputSecurityDescriptor,
     
     /* Return the SD*/
     *OutputSecurityDescriptor = &NewHeader->SecurityDescriptor;
-    ObpSdCacheEndPerfCount();
     return STATUS_SUCCESS;
 }
 
