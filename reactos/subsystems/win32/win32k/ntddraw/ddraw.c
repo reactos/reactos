@@ -23,7 +23,7 @@ DRVFN gpDxFuncs[DXG_INDEX_DxDdIoctl];
 HANDLE ghDxGraphics = NULL;
 ULONG gdwDirectDrawContext;
 void dump_edd_directdraw_global(EDD_DIRECTDRAW_GLOBAL *pEddgbl);
-EDD_DIRECTDRAW_GLOBAL eDdirectDraw_Global;
+EDD_DIRECTDRAW_GLOBAL edd_DdirectDraw_Global;
 
 
 /************************************************************************/
@@ -54,17 +54,14 @@ DxDdStartupDxGraphics(  ULONG ulc1,
 
     /* Loading the kernel interface of directx for win32k */
 
-    
-    ghDxGraphics = EngLoadImage(L"\\SystemRoot\\System32\\drivers\\dxg.sys");
-
+    DPRINT1("Warning: trying loading vista dxkrnl.sys\n");
+    ghDxGraphics = EngLoadImage(L"\\SystemRoot\\System32\\drivers\\dxkrnl.sys"); 
     if ( ghDxGraphics == NULL)
     {
-        DPRINT1("Warning: dxg.sys not found\n");
-
+        DPRINT1("Warning: dxkrnl.sys not found\n");
         /* try loading vista dx kernel */
-        DPRINT1("Warning: trying loading vista dxkrnl.sys\n");
-
-        ghDxGraphics = EngLoadImage(L"\\SystemRoot\\System32\\drivers\\dxkrnl.sys");        
+        DPRINT1("Warning: trying loading xp/2003/reactos dxg.sys\n");
+        ghDxGraphics = EngLoadImage(L"\\SystemRoot\\System32\\drivers\\dxg.sys");
     }
 
     if ( ghDxGraphics == NULL)
@@ -117,7 +114,7 @@ DxDdStartupDxGraphics(  ULONG ulc1,
             for (t=0;t<=DXG_INDEX_DxDdIoctl;t++)
             {
                 gpDxFuncs[lstDrvFN[t].iFunc].iFunc =lstDrvFN[t].iFunc;
-                gpDxFuncs[lstDrvFN[t].iFunc].pfn =lstDrvFN[t].pfn;                
+                gpDxFuncs[lstDrvFN[t].iFunc].pfn =lstDrvFN[t].pfn;
             }
 
             /* dump sort list for debuging */
@@ -129,7 +126,7 @@ DxDdStartupDxGraphics(  ULONG ulc1,
             for (t=0;t<=DXG_INDEX_DxDdIoctl;t++)
             {
                 DPRINT1("gpDxFuncs[0x%08lx].iFunc = 0x%08lx\n",t,gpDxFuncs[t].iFunc);
-                DPRINT1("gpDxFuncs[0x%08lx].pfn = 0x%08lx\n",t,gpDxFuncs[t].pfn);                             
+                DPRINT1("gpDxFuncs[0x%08lx].pfn = 0x%08lx\n",t,gpDxFuncs[t].pfn);
             }
 #endif
             DPRINT1("DirectX interface is activated\n");
@@ -183,10 +180,13 @@ NtGdiDdCreateDirectDrawObject(HDC hdc)
         return 0;
     }
     /* FIXME This should be alloc for each drv and use it from each drv, not global for whole win32k */
-    ((PGDIDEVICE)pDC->pPDev)->pEDDgpl = &eDdirectDraw_Global;
-    RtlZeroMemory(&eDdirectDraw_Global,sizeof(EDD_DIRECTDRAW_GLOBAL));
-    DC_UnlockDc(pDC);
+    ((PGDIDEVICE)pDC->pPDev)->pEDDgpl = &edd_DdirectDraw_Global;
+    RtlZeroMemory(&edd_DdirectDraw_Global,sizeof(EDD_DIRECTDRAW_GLOBAL));
 
+    /* setup hdev for edd_DdirectDraw_Global xp */
+    edd_DdirectDraw_Global.hDev = (PVOID)pDC->pPDev;
+    edd_DdirectDraw_Global.hPDev = (PVOID)pDC->pPDev;
+    DC_UnlockDc(pDC);
 
     /* get the pfnDdCreateDirectDrawObject after we load the drv */
     pfnDdCreateDirectDrawObject = (PGD_DDCREATEDIRECTDRAWOBJECT)gpDxFuncs[DXG_INDEX_DxDdCreateDirectDrawObject].pfn;
@@ -201,7 +201,7 @@ NtGdiDdCreateDirectDrawObject(HDC hdc)
     DxHandle = pfnDdCreateDirectDrawObject(hdc);
 
 #if DXDDRAWDEBUG
-    dump_edd_directdraw_global(&eDdirectDraw_Global);
+    dump_edd_directdraw_global(&edd_DdirectDraw_Global);
 #endif
 
     return DxHandle;

@@ -530,7 +530,11 @@ STDCALL
 DxEngLockHdev(HDEV hDev)
 {
     PGDIDEVICE pPDev = (PGDIDEVICE)hDev;
-    PERESOURCE Resource = pPDev->hsemDevLock;
+    PERESOURCE Resource;
+
+    DPRINT1("hDev                   : 0x%08lx\n",hDev);
+
+    Resource = pPDev->hsemDevLock;
 
     DPRINT1("ReactX Calling : DxEngLockHdev \n");
 
