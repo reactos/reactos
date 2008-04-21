@@ -822,10 +822,11 @@ DWORD DxEngSetPaletteState(DWORD x1, DWORD x2, DWORD x3)
 /************************************************************************/
 /* DxEngGetRedirectionBitmap                                            */
 /************************************************************************/
-DWORD DxEngGetRedirectionBitmap(DWORD x1)
+DWORD
+STDCALL
+DxEngGetRedirectionBitmap(DWORD x1)
 {
-    UNIMPLEMENTED;
-    return FALSE;
+    return FALSE; // Normal return.
 }
 
 /************************************************************************/

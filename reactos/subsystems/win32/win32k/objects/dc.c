@@ -2258,7 +2258,7 @@ NtGdiGetAndSetDCDword(
 
   switch (u)
   {
-    case GdtGetSetCopyCount:
+    case GdiGetSetCopyCount:
       SafeResult = dc->ulCopyCount;
       dc->ulCopyCount = dwIn;
       break;
