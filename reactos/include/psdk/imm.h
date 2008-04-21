@@ -344,7 +344,7 @@ BOOL WINAPI ImmGetConversionStatus(HIMC,LPDWORD,PDWORD);
 BOOL WINAPI ImmSetConversionStatus(HIMC,DWORD,DWORD);
 BOOL WINAPI ImmGetOpenStatus(HIMC);
 BOOL WINAPI ImmSetOpenStatus(HIMC,BOOL);
-#ifndef NOGDI
+#if defined(_WINGDI_) && !defined(NOGDI)
 BOOL WINAPI ImmGetCompositionFontA(HIMC,LPLOGFONTA);
 BOOL WINAPI ImmGetCompositionFontW(HIMC,LPLOGFONTW);
 BOOL WINAPI ImmSetCompositionFontA(HIMC,LPLOGFONTA);

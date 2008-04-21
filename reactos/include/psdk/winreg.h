@@ -37,7 +37,6 @@ extern "C" {
 #define REG_NOTIFY_CHANGE_LAST_SET 4
 #define REG_NOTIFY_CHANGE_SECURITY 8
 
-#if (_WIN32_WINNT >= 0x0600)
 #define RRF_RT_REG_NONE         (1 << 0)
 #define RRF_RT_REG_SZ           (1 << 1)
 #define RRF_RT_REG_EXPAND_SZ    (1 << 2)
@@ -50,7 +49,6 @@ extern "C" {
 #define RRF_RT_ANY              (0x0000FFFF)
 #define RRF_NOEXPAND            (1 << 28)
 #define RRF_ZEROONFAILURE       (1 << 29)
-#endif
 
 #ifndef RC_INVOKED
 typedef ACCESS_MASK REGSAM;

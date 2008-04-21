@@ -3027,7 +3027,7 @@ typedef struct tagHIGHCONTRASTW {
 	DWORD dwFlags;
 	LPWSTR lpszDefaultScheme;
 } HIGHCONTRASTW,*LPHIGHCONTRASTW;
-#ifndef NOGDI
+#if defined(_WINGDI_) && !defined(NOGDI)
 typedef struct tagICONMETRICSA {
 	UINT cbSize;
 	int iHorzSpacing;
@@ -3059,7 +3059,7 @@ typedef struct tagMOUSEKEYS{
 	DWORD dwReserved1;
 	DWORD dwReserved2;
 } MOUSEKEYS,*LPMOUSEKEYS;
-#ifndef NOGDI
+#if defined(_WINGDI_) && !defined(NOGDI)
 typedef struct tagNONCLIENTMETRICSA {
 	UINT cbSize;
 	int iBorderWidth;
@@ -3552,7 +3552,7 @@ LRESULT WINAPI CallWindowProcA(WNDPROC,HWND,UINT,WPARAM,LPARAM);
 LRESULT WINAPI CallWindowProcW(WNDPROC,HWND,UINT,WPARAM,LPARAM);
 WORD WINAPI CascadeWindows(HWND,UINT,LPCRECT,UINT,const HWND*);
 BOOL WINAPI ChangeClipboardChain(HWND,HWND);
-#ifndef NOGDI
+#if defined(_WINGDI_) && !defined(NOGDI)
 LONG WINAPI ChangeDisplaySettingsA(PDEVMODEA,DWORD);
 LONG WINAPI ChangeDisplaySettingsW(PDEVMODEW,DWORD);
 LONG WINAPI ChangeDisplaySettingsExA(LPCSTR,LPDEVMODEA,HWND,DWORD,LPVOID);
@@ -3603,7 +3603,7 @@ HACCEL WINAPI CreateAcceleratorTableA(LPACCEL,int);
 HACCEL WINAPI CreateAcceleratorTableW(LPACCEL,int);
 BOOL WINAPI CreateCaret(HWND,HBITMAP,int,int);
 HCURSOR WINAPI CreateCursor(HINSTANCE,int,int,int,int,PCVOID,PCVOID);
-#ifndef NOGDI
+#if defined(_WINGDI_) && !defined(NOGDI)
 HDESK WINAPI CreateDesktopA(LPCSTR,LPCSTR,LPDEVMODEA,DWORD,ACCESS_MASK,LPSECURITY_ATTRIBUTES);
 HDESK WINAPI CreateDesktopW(LPCWSTR,LPCWSTR,LPDEVMODEW,DWORD,ACCESS_MASK,LPSECURITY_ATTRIBUTES);
 #endif
@@ -3704,7 +3704,7 @@ BOOL WINAPI EnumDesktopsA(HWINSTA,DESKTOPENUMPROCA,LPARAM);
 BOOL WINAPI EnumDesktopsW(HWINSTA,DESKTOPENUMPROCW,LPARAM);
 BOOL WINAPI EnumDesktopWindows(HDESK,WNDENUMPROC,LPARAM);
 BOOL WINAPI EnumDisplayMonitors(HDC,LPCRECT,MONITORENUMPROC,LPARAM);
-#ifndef NOGDI
+#if defined(_WINGDI_) && !defined(NOGDI)
 BOOL WINAPI EnumDisplaySettingsA(LPCSTR,DWORD,PDEVMODEA);
 BOOL WINAPI EnumDisplaySettingsW(LPCWSTR,DWORD,PDEVMODEW);
 #if (_WIN32_WINNT >= 0x0500 || _WIN32_WINDOWS >= 0x0410)
@@ -4215,7 +4215,7 @@ BOOL WINAPI LockSetForegroundWindow(UINT);
 #endif
 #if (_WIN32_WINNT >= 0x0500)
 BOOL WINAPI SetLayeredWindowAttributes(HWND,COLORREF,BYTE,DWORD);
-#ifndef NOGDI
+#if defined(_WINGDI_) && !defined(NOGDI)
 BOOL WINAPI UpdateLayeredWindow(HWND,HDC,POINT*,SIZE*,HDC,POINT*,COLORREF,BLENDFUNCTION*,DWORD);
 #endif
 #endif
@@ -4548,7 +4548,7 @@ typedef MONITORINFOEXA MONITORINFOEX, *LPMONITORINFOEX;
 #define WinHelp WinHelpA
 #define wsprintf wsprintfA
 #define wvsprintf wvsprintfA
-#ifndef NOGDI
+#if defined(_WINGDI_) && !defined(NOGDI)
 typedef ICONMETRICSA ICONMETRICS,*LPICONMETRICS;
 typedef NONCLIENTMETRICSA NONCLIENTMETRICS,*LPNONCLIENTMETRICS;
 #define ChangeDisplaySettings ChangeDisplaySettingsA
