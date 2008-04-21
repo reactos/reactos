@@ -308,6 +308,11 @@ DWORD PNP_GetRootDeviceInstance(
 
     DPRINT("PNP_GetRootDeviceInstance() called\n");
 
+    if (!pDeviceID)
+    {
+        ret = CR_INVALID_POINTER;
+        goto Done;
+    }
     if (ulLength < lstrlenW(szRootDeviceId) + 1)
     {
         ret = CR_BUFFER_SMALL;
@@ -891,9 +896,8 @@ DWORD PNP_GetClassName(
 
     DPRINT("PNP_GetClassName() called\n");
 
-    lstrcpyW(szKeyName, L"System\\CurrentControlSet\\Control\\Class");
-    lstrcatW(szKeyName, L"\\");
-    if(lstrlenW(pszClassGuid) < sizeof(szKeyName)/sizeof(WCHAR)-lstrlenW(szKeyName))
+    lstrcpyW(szKeyName, L"System\\CurrentControlSet\\Control\\Class\\");
+    if(lstrlenW(pszClassGuid) + 1 < sizeof(szKeyName)/sizeof(WCHAR)-(lstrlenW(szKeyName) * sizeof(WCHAR)))
         lstrcatW(szKeyName, pszClassGuid);
     else return CR_INVALID_DATA;
 
@@ -1250,7 +1254,8 @@ DWORD PNP_AddID(
     HKEY hDeviceKey;
     LPWSTR pszSubKey;
     DWORD dwDeviceIdListSize;
-    WCHAR szDeviceIdList[512];
+    DWORD dwNewDeviceIdSize;
+    WCHAR * pszDeviceIdList = NULL;
 
     UNREFERENCED_PARAMETER(hBinding);
 
@@ -1271,12 +1276,40 @@ DWORD PNP_AddID(
 
     pszSubKey = (ulFlags & CM_ADD_ID_COMPATIBLE) ? L"CompatibleIDs" : L"HardwareID";
 
-    dwDeviceIdListSize = 512 * sizeof(WCHAR);
     if (RegQueryValueExW(hDeviceKey,
                          pszSubKey,
                          NULL,
                          NULL,
-                         (LPBYTE)szDeviceIdList,
+                         NULL,
+                         &dwDeviceIdListSize) != ERROR_SUCCESS)
+    {
+        DPRINT("Failed to query the desired ID string!\n");
+        ret = CR_REGISTRY_ERROR;
+        goto Done;
+    }
+
+    dwNewDeviceIdSize = lstrlenW(pszDeviceID);
+    if (!dwNewDeviceIdSize)
+    {
+        ret = CR_INVALID_POINTER;
+        goto Done;
+    }
+
+    dwDeviceIdListSize += (dwNewDeviceIdSize + 2) * sizeof(WCHAR);
+
+    pszDeviceIdList = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, dwDeviceIdListSize);
+    if (!pszDeviceIdList)
+    {
+        DPRINT("Failed to allocate memory for the desired ID string!\n");
+        ret = CR_OUT_OF_MEMORY;
+        goto Done;
+    }
+
+    if (RegQueryValueExW(hDeviceKey,
+                         pszSubKey,
+                         NULL,
+                         NULL,
+                         (LPBYTE)pszDeviceIdList,
                          &dwDeviceIdListSize) != ERROR_SUCCESS)
     {
         DPRINT("Failed to query the desired ID string!\n");
@@ -1285,7 +1318,7 @@ DWORD PNP_AddID(
     }
 
     /* Check whether the device ID is already in use */
-    if (CheckForDeviceId(szDeviceIdList, pszDeviceID))
+    if (CheckForDeviceId(pszDeviceIdList, pszDeviceID))
     {
         DPRINT("Device ID was found in the ID string!\n");
         ret = CR_SUCCESS;
@@ -1293,13 +1326,13 @@ DWORD PNP_AddID(
     }
 
     /* Append the Device ID */
-    AppendDeviceId(szDeviceIdList, &dwDeviceIdListSize, pszID);
+    AppendDeviceId(pszDeviceIdList, &dwDeviceIdListSize, pszID);
 
     if (RegSetValueExW(hDeviceKey,
                        pszSubKey,
                        0,
                        REG_MULTI_SZ,
-                       (LPBYTE)szDeviceIdList,
+                       (LPBYTE)pszDeviceIdList,
                        dwDeviceIdListSize) != ERROR_SUCCESS)
     {
         DPRINT("Failed to set the desired ID string!\n");
@@ -1308,6 +1341,8 @@ DWORD PNP_AddID(
 
 Done:
     RegCloseKey(hDeviceKey);
+    if (pszDeviceIdList)
+        HeapFree(GetProcessHeap(), 0, pszDeviceIdList);
 
     DPRINT("PNP_AddID() done (returns %lx)\n", ret);
 
@@ -2071,22 +2106,26 @@ PnpEventThread(LPVOID lpParameter)
         {
             DeviceInstallParams* Params;
             DWORD len;
+            DWORD DeviceIdLength;
 
             DPRINT("Device arrival event: %S\n", PnpEvent->TargetDevice.DeviceIds);
 
-            /* Queue device install (will be dequeued by DeviceInstallThread */
-            len = FIELD_OFFSET(DeviceInstallParams, DeviceIds)
-                + wcslen(PnpEvent->TargetDevice.DeviceIds) * sizeof(WCHAR) + sizeof(UNICODE_NULL);
-            Params = HeapAlloc(GetProcessHeap(), 0, len);
-            if (Params)
+            DeviceIdLength = lstrlenW(PnpEvent->TargetDevice.DeviceIds);
+            if (DeviceIdLength)
             {
-                wcscpy(Params->DeviceIds, PnpEvent->TargetDevice.DeviceIds);
+                /* Queue device install (will be dequeued by DeviceInstallThread */
+                len = FIELD_OFFSET(DeviceInstallParams, DeviceIds) + (DeviceIdLength + 1) * sizeof(WCHAR);
+                Params = HeapAlloc(GetProcessHeap(), 0, len);
+                if (Params)
+                {
+                    wcscpy(Params->DeviceIds, PnpEvent->TargetDevice.DeviceIds);
 #ifdef HAVE_SLIST_ENTRY_IMPLEMENTED
-                InterlockedPushEntrySList(&DeviceInstallListHead, &Params->ListEntry);
+                    InterlockedPushEntrySList(&DeviceInstallListHead, &Params->ListEntry);
 #else
-                InsertTailList(&DeviceInstallListHead, &Params->ListEntry);
+                    InsertTailList(&DeviceInstallListHead, &Params->ListEntry);
 #endif
-                SetEvent(hDeviceInstallListNotEmpty);
+                    SetEvent(hDeviceInstallListNotEmpty);
+                }
             }
         }
         else
