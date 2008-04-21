@@ -494,7 +494,12 @@ Module::~Module ()
 		delete bootstrap;
 	if ( importLibrary )
 		delete importLibrary;
-	delete output;
+	if ( dependency )
+		delete 	dependency;
+	if ( autoRegister )
+		delete autoRegister;
+	if ( output )
+		delete output;		
 }
 
 void

@@ -57,6 +57,10 @@ Define::Define ( const Project& project,
 
 Define::~Define ()
 {
+//	if ( node )
+//		delete node;
+//	if ( module )
+//		delete module;
 }
 
 void

@@ -240,3 +240,10 @@ Directory::CreateRule ( FILE* f,
 		i->second->CreateRule ( f, path );
 	}
 }
+
+Directory::~Directory()
+{
+	std::map<std::string, Directory*>::iterator theIterator;
+	for ( theIterator = subdirs.begin (); theIterator != subdirs.end (); theIterator++ )
+		delete theIterator->second;
+}

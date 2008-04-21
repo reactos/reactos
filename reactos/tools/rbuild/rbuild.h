@@ -134,6 +134,7 @@ public:
 	std::string name;
 	directory_map subdirs;
 	Directory ( const std::string& name );
+	~Directory();
 	void Add ( const char* subdir );
 	void GenerateTree ( DirectoryLocation root,
 	                    bool verbose );
@@ -256,7 +257,7 @@ private:
 	const Property* LookupProperty ( const std::string& name ) const;
 	void SetConfigurationOption ( char* s,
 	                              std::string name,
-	                              std::string* alternativeName );
+	                              std::string alternativeName );
 	void SetConfigurationOption ( char* s,
 	                              std::string name );
 	void ReadXml ();

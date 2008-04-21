@@ -195,7 +195,8 @@ Project::~Project ()
 		delete cdfiles[i];
 	for ( i = 0; i < installfiles.size (); i++ )
 		delete installfiles[i];
-	delete head;
+	if ( head )
+		delete head;
 }
 
 const Property*
@@ -252,7 +253,7 @@ Project::ResolveProperties ( const string& s ) const
 void
 Project::SetConfigurationOption ( char* s,
                                   string name,
-                                  string* alternativeName )
+                                  string alternativeName )
 {
 	const Property* property = LookupProperty ( name );
 	if ( property != NULL && property->value.length () > 0 )
@@ -268,11 +269,11 @@ Project::SetConfigurationOption ( char* s,
 		                  "#define %s\n",
 		                  property->name.c_str () );
 	}
-	else if ( alternativeName != NULL )
+	else if ( !alternativeName.empty()  )
 	{
 		s = s + sprintf ( s,
 		                  "#define %s\n",
-		                  alternativeName->c_str () );
+		                  alternativeName.c_str () );
 	}
 }
 
@@ -280,7 +281,7 @@ void
 Project::SetConfigurationOption ( char* s,
 	                              string name )
 {
-	SetConfigurationOption ( s, name, NULL );
+	SetConfigurationOption ( s, name, "" );
 }
 
 void
@@ -301,7 +302,7 @@ Project::WriteConfigurationFile ()
 
 	SetConfigurationOption ( s, "ARCH" );
 	SetConfigurationOption ( s, "OPTIMIZED" );
-	SetConfigurationOption ( s, "MP", new string ( "UP" ) );
+	SetConfigurationOption ( s, "MP", "UP");
 	SetConfigurationOption ( s, "ACPI" );
 	SetConfigurationOption ( s, "_3GB" );
 
