@@ -254,9 +254,9 @@ typedef struct _MADDRESS_SPACE
 {
     PMEMORY_AREA MemoryAreaRoot;
     PVOID LowestAddress;
-    struct _EPROCESS* Process;
+    PEPROCESS Process;
     PUSHORT PageTableRefCountTable;
-    ULONG PageTableRefCountTableSize;
+    PEX_PUSH_LOCK Lock;
 } MADDRESS_SPACE, *PMADDRESS_SPACE;
 
 typedef struct
@@ -394,23 +394,7 @@ typedef VOID
 
 VOID
 NTAPI
-MmLockAddressSpace(PMADDRESS_SPACE AddressSpace);
-
-VOID
-NTAPI
-MmUnlockAddressSpace(PMADDRESS_SPACE AddressSpace);
-
-VOID
-NTAPI
 MmInitializeKernelAddressSpace(VOID);
-
-PMADDRESS_SPACE
-NTAPI
-MmGetCurrentAddressSpace(VOID);
-
-PMADDRESS_SPACE
-NTAPI
-MmGetKernelAddressSpace(VOID);
 
 NTSTATUS
 NTAPI
@@ -1582,6 +1566,39 @@ MiSyncThreadProcessViews(IN PVOID Process,
                          IN ULONG Size)
 {
     MmUpdatePageDir((PEPROCESS)Process, Address, Size);
+}
+
+
+extern MADDRESS_SPACE MmKernelAddressSpace;
+
+FORCEINLINE
+VOID
+MmLockAddressSpace(PMADDRESS_SPACE AddressSpace)
+{
+    KeEnterCriticalRegion();
+    ExAcquirePushLockExclusive(AddressSpace->Lock);
+}
+
+FORCEINLINE
+VOID
+MmUnlockAddressSpace(PMADDRESS_SPACE AddressSpace)
+{
+    ExReleasePushLock(AddressSpace->Lock);
+    KeLeaveCriticalRegion();
+}
+
+FORCEINLINE
+PMADDRESS_SPACE
+MmGetCurrentAddressSpace(VOID)
+{
+    return (PMADDRESS_SPACE)&((PEPROCESS)KeGetCurrentThread()->ApcState.Process)->VadRoot;
+}
+
+FORCEINLINE
+PMADDRESS_SPACE
+MmGetKernelAddressSpace(VOID)
+{
+    return &MmKernelAddressSpace;
 }
 
 #endif
