@@ -833,8 +833,10 @@ XMLLoadInclude (
 							Path::RelativeFromWorkingDirectory ( includeFile ) );
 						XMLInclude* fallbackInclude =
 							new XMLInclude ( e3, include.path, topIncludeFile );
-						return XMLLoadInclude (
-							*fallbackInclude, includes );
+
+						XMLElement* value = XMLLoadInclude (*fallbackInclude, includes );
+						delete fallbackInclude;
+						return value;
 					}
 				}
 				throw XMLInvalidBuildFileException (
