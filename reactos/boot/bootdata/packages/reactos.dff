@@ -125,8 +125,7 @@ dll\directx\dplay\dplay.dll                         1
 dll\directx\dplayx\dplayx.dll                       1
 dll\directx\dsound\dsound.dll                       1
 dll\directx\dxdiagn\dxdiagn.dll                     1
-windows\ddraw.dll                                   1
-windows\dciman32.dll                                1
+dll\directx\ddraw\ddraw.dll                         1
 dll\directx\d3d8thk\d3d8thk.dll                     1
 dll\directx\devenum\devenum.dll                     1
 dll\directx\ksproxy\ksproxy.ax                      1
@@ -308,9 +307,9 @@ drivers\base\null\null.sys                          2
 
 drivers\bus\isapnp\isapnp.sys                       2
 
-windows\dxapi.sys                     2
-windows\dxg.sys                         2
-windows\dxgthk.sys                   2
+drivers\directx\dxapi\dxapi.sys                     2
+drivers\directx\dxg\dxg.sys                         2
+drivers\directx\dxgthk\dxgthk.sys                   2
 
 drivers\filesystems\fs_rec\fs_rec.sys               2
 drivers\filesystems\msfs\msfs.sys                   2
@@ -606,17 +605,6 @@ modules\rostests\winetests\usp10\usp10_winetest.exe                        7   o
 modules\rostests\winetests\uxtheme\uxtheme_winetest.exe                    7   optional
 modules\rostests\winetests\version\version_winetest.exe                    7   optional
 modules\rostests\winetests\wininet\wininet_winetest.exe                    7   optional
-
-modules\rostests\dxtest\ddraw_test\ddraw_test.exe                    7   optional
-modules\rostests\dxtest\win32kdxtest\win32kdxtest.exe                    7   optional
-
-modules\rostests\apitests\gdi32api\gdi32api.exe                    7   optional
-
-modules\rostests\apitests\user32api\user32api.exe                    7   optional
-modules\rostests\apitests\w32knapi\w32knapi.exe                    7   optional
-modules\rostests\apitests\w32kdll\w32kdll_ros\w32kdll.dll                    7   optional
-
-
 modules\wallpaper\lake.bmp                                                 4   optional
 
 ; Native libraries
