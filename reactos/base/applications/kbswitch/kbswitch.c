@@ -9,7 +9,6 @@
 #include "kbswitch.h"
 
 #define WM_NOTIFYICONMSG (WM_USER + 248)
-#define BUFSIZE 256
 
 HINSTANCE hInst;
 HWND      hwnd;
@@ -48,14 +47,14 @@ GetLayoutID(LPTSTR szLayoutNum, LPTSTR szLCID)
 {
     DWORD dwBufLen;
     HKEY hKey;
-    TCHAR szTempLCID[CCH_LAYOUT_ID + 1];
+    TCHAR szTempLCID[MAX_PATH];
 
     // Get the Layout ID
     if (RegOpenKeyEx(HKEY_CURRENT_USER, _T("Keyboard Layout\\Preload"), 0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
     {
-        dwBufLen = sizeof(szTempLCID);
+        dwBufLen = MAX_PATH;
 
-        if(RegQueryValueEx(hKey, szLayoutNum, NULL, NULL, (LPBYTE)szTempLCID, &dwBufLen) != ERROR_SUCCESS)
+        if (RegQueryValueEx(hKey, szLayoutNum, NULL, NULL, (LPBYTE)szTempLCID, &dwBufLen) != ERROR_SUCCESS)
         {
             RegCloseKey(hKey);
             return FALSE;
@@ -65,11 +64,11 @@ GetLayoutID(LPTSTR szLayoutNum, LPTSTR szLCID)
     }
 
     // Look for a substitude of this layout
-    if(RegOpenKeyEx(HKEY_CURRENT_USER, _T("Keyboard Layout\\Substitutes"), 0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
+    if (RegOpenKeyEx(HKEY_CURRENT_USER, _T("Keyboard Layout\\Substitutes"), 0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
     {
-        dwBufLen = sizeof(szTempLCID);
+        dwBufLen = MAX_PATH;
 
-        if(RegQueryValueEx(hKey, szTempLCID, NULL, NULL, (LPBYTE)szLCID, &dwBufLen) != ERROR_SUCCESS)
+        if (RegQueryValueEx(hKey, szTempLCID, NULL, NULL, (LPBYTE)szLCID, &dwBufLen) != ERROR_SUCCESS)
         {
             // No substitute found, then use the old LCID
             lstrcpy(szLCID, szTempLCID);
@@ -97,11 +96,11 @@ GetLayoutName(LPTSTR szLayoutNum, LPTSTR szName)
     if(!GetLayoutID(szLayoutNum, szLCID))
         return FALSE;
 
-    wsprintf(szBuf, _T("SYSTEM\\CurrentControlSet\\Control\\Keyboard Layouts\\%s"), szLCID);
+    _stprintf(szBuf, _T("SYSTEM\\CurrentControlSet\\Control\\Keyboard Layouts\\%s"), szLCID);
 
     if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, (LPCTSTR)szBuf, 0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
     {
-        dwBufLen = MAX_PATH * sizeof(TCHAR);
+        dwBufLen = MAX_PATH;
 
         if(RegQueryValueEx(hKey, _T("Layout Text"), NULL, NULL, (LPBYTE)szName, &dwBufLen) != ERROR_SUCCESS)
         {
@@ -115,20 +114,26 @@ GetLayoutName(LPTSTR szLayoutNum, LPTSTR szName)
     return TRUE;
 }
 
+BOOL CALLBACK
+EnumWindowsProc(HWND hwnd, LPARAM lParam)
+{
+	SendMessage(hwnd, WM_INPUTLANGCHANGEREQUEST, 0, lParam);
+	return TRUE;
+}
+
 static VOID
 ActivateLayout(ULONG uLayoutNum)
 {
     HKL hKl;
     TCHAR szLayoutNum[CCH_ULONG_DEC + 1];
     TCHAR szLCID[CCH_LAYOUT_ID + 1];
-    DWORD Ret;
 
     _ultot(uLayoutNum, szLayoutNum, 10);
     GetLayoutID(szLayoutNum, szLCID);
 
     // Switch to the new keyboard layout
     hKl = LoadKeyboardLayout(szLCID, KLF_ACTIVATE);
-    Ret = SystemParametersInfo(SPI_SETDEFAULTINPUTLANG, 0, &hKl, SPIF_SENDWININICHANGE);
+	EnumWindows(EnumWindowsProc, (LPARAM) hKl);
 }
 
 static HMENU
@@ -137,7 +142,7 @@ BuildPopupMenu()
     HMENU hMenu;
     HKEY hKey;
     DWORD dwIndex, dwSize;
-    LPTSTR szExit;
+    TCHAR szExit[MAX_PATH];
     TCHAR szLayoutNum[CCH_ULONG_DEC + 1];
     TCHAR szName[MAX_PATH];
 
@@ -160,7 +165,7 @@ BuildPopupMenu()
         RegCloseKey(hKey);
     }
 
-    LoadString(hInst, IDS_EXIT, (LPTSTR)&szExit, 0);
+    LoadString(hInst, IDS_EXIT, szExit, MAX_PATH);
     AppendMenu(hMenu, MF_SEPARATOR, 0, NULL);
     AppendMenu(hMenu, MF_STRING, MENU_ID_EXIT, szExit);
 
@@ -230,11 +235,11 @@ wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInst, LPTSTR lpCmdLine, INT nCmdSho
     WndClass.hCursor       = NULL;
     WndClass.hbrBackground = NULL;
     WndClass.lpszMenuName  = NULL;
-    WndClass.lpszClassName = L"kbswitch";
+    WndClass.lpszClassName = _T("kbswitch");
 
     if (!RegisterClass(&WndClass)) return 0;
 
-    hwnd = CreateWindow(L"kbswitch", L"kbswitch", 0, 0, 0, 1, 1, HWND_DESKTOP, NULL, hInstance, NULL);
+    hwnd = CreateWindow(_T("kbswitch"), _T("kbswitch"), 0, 0, 0, 1, 1, HWND_DESKTOP, NULL, hInstance, NULL);
 
     while(GetMessage(&msg,NULL,0,0))
     {
