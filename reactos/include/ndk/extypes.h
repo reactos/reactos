@@ -377,29 +377,6 @@ typedef BOOLEAN
 );
 
 //
-// Compatibility with Windows XP Drivers using ERESOURCE
-//
-typedef struct _ERESOURCE_XP
-{
-    LIST_ENTRY SystemResourcesList;
-    POWNER_ENTRY OwnerTable;
-    SHORT ActiveCount;
-    USHORT Flag;
-    PKSEMAPHORE SharedWaiters;
-    PKEVENT ExclusiveWaiters;
-    OWNER_ENTRY OwnerThreads[2];
-    ULONG ContentionCount;
-    USHORT NumberOfSharedWaiters;
-    USHORT NumberOfExclusiveWaiters;
-    union
-    {
-        PVOID Address;
-        ULONG_PTR CreatorBackTraceIndex;
-    };
-    KSPIN_LOCK SpinLock;
-} ERESOURCE_XP, *PERESOURCE_XP;
-
-//
 // Executive Work Queue Structures
 //
 typedef struct _EX_QUEUE_WORKER_INFO

@@ -277,11 +277,13 @@ CdfsCreate(PDEVICE_OBJECT DeviceObject,
 
   DeviceExt = DeviceObject->DeviceExtension;
 
+    KeEnterCriticalRegion();
   ExAcquireResourceExclusiveLite(&DeviceExt->DirResource,
 				 TRUE);
   Status = CdfsCreateFile(DeviceObject,
 			  Irp);
   ExReleaseResourceLite(&DeviceExt->DirResource);
+    KeLeaveCriticalRegion();
 
 ByeBye:
   Irp->IoStatus.Status = Status;

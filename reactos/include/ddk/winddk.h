@@ -3279,22 +3279,25 @@ typedef struct _OWNER_ENTRY {
 
 #define RESOURCE_HASH_TABLE_SIZE          64
 
-typedef struct _ERESOURCE {
-  LIST_ENTRY  SystemResourcesList;
-  POWNER_ENTRY  OwnerTable;
-  SHORT  ActiveCount;
-  USHORT  Flag;
-  volatile PKSEMAPHORE  SharedWaiters;
-  volatile PKEVENT  ExclusiveWaiters;
-  OWNER_ENTRY  OwnerThreads[2];
-  ULONG  ContentionCount;
-  USHORT  NumberOfSharedWaiters;
-  USHORT  NumberOfExclusiveWaiters;
-  _ANONYMOUS_UNION union {
-    PVOID  Address;
-    ULONG_PTR  CreatorBackTraceIndex;
-  } DUMMYUNIONNAME;
-  KSPIN_LOCK  SpinLock;
+typedef struct _ERESOURCE
+{
+    LIST_ENTRY SystemResourcesList;
+    POWNER_ENTRY OwnerTable;
+    SHORT ActiveCount;
+    USHORT Flag;
+    volatile PKSEMAPHORE SharedWaiters;
+    volatile PKEVENT ExclusiveWaiters;
+    OWNER_ENTRY OwnerEntry;
+    ULONG ActiveEntries;
+    ULONG ContentionCount;
+    ULONG NumberOfSharedWaiters;
+    ULONG NumberOfExclusiveWaiters;
+    union
+    {
+        PVOID Address;
+        ULONG_PTR CreatorBackTraceIndex;
+    };
+    KSPIN_LOCK SpinLock;
 } ERESOURCE, *PERESOURCE;
 
 typedef struct _DEVOBJ_EXTENSION
