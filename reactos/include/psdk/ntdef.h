@@ -130,6 +130,6 @@ typedef LIST_ENTRY64 *PLIST_ENTRY64;
 #define MAXUSHORT 0xffff
 #define MAXULONG  0xffffffff
 #define MAXLONGLONG (0x7fffffffffffffffLL)
-#define C_ASSERT(e) typedef __C_ASSERT__ char[(e)?1:-1]
+#define C_ASSERT(e) typedef char __C_ASSERT__[(e)?1:-1]
 
 #endif /* _NTDEF_H */
