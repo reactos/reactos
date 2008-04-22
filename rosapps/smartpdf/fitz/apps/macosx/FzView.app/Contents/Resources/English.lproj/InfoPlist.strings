@@ -1,7 +1,0 @@
-/* Localized versions of Info.plist keys */
-
-CFBundleName = "GhostPDF";
-CFBundleShortVersionString = "GhostPDF version 1.0.0";
-CFBundleGetInfoString = "Copyright (C) 2005 artofcode LLC.";
-NSHumanReadableCopyright = "Copyright (C) 2005 artofcode LLC.";
-

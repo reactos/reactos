@@ -1,7 +1,0 @@
-<package>
-  <name>IrfanView</name>
-  <version>3.98</version>
-  <description>Viewer for all kinds of graphics.</description>
-  <scripts inst="irfanview.inst.rps"/>
-</package>
-
