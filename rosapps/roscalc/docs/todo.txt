@@ -1,3 +1,0 @@
-* Translators for the user interfaces and the help texts.
-* Use correct symbols for math functions (square root, etc...)
-* Implements conversion dialog box.
