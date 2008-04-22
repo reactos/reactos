@@ -83,7 +83,7 @@
 #        are (usually small) generated files that are needed to generate the
 #        intermediate or final output files. Examples of temporary files include
 #        *.rci (preprocessed .rc files for wrc), *.tmp, and *.exp. N.B. Don't put
-#        a path separator at the end. The variable defaults to the current
+#        a path separator at the end. The variable defaults to {ROS_INTERMEDIATE}
 #        directory.
 #
 #    ROS_INSTALL
@@ -351,7 +351,7 @@ CDOUTPUT_ := $(CDOUTPUT)$(SEP)
 ifneq ($(ROS_TEMPORARY),)
   TEMPORARY := $(ROS_TEMPORARY)
 else
-  TEMPORARY := .
+  TEMPORARY := $(INTERMEDIATE)
 endif
 TEMPORARY_ := $(TEMPORARY)$(SEP)
 
