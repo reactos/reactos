@@ -187,7 +187,7 @@ int APIENTRY WinMain(HINSTANCE hInstance,
     UNREFERENCED_PARAMETER(nCmdShow);
 
     InitControls.dwSize = sizeof(INITCOMMONCONTROLSEX);
-    InitControls.dwICC = ICC_TAB_CLASSES | ICC_LISTVIEW_CLASSES | ICC_STANDARD_CLASSES;
+    InitControls.dwICC = ICC_TAB_CLASSES | ICC_LISTVIEW_CLASSES | ICC_STANDARD_CLASSES | ICC_TREEVIEW_CLASSES;
     InitCommonControlsEx(&InitControls);
 
     hInst = hInstance;

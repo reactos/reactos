@@ -1,9 +1,15 @@
 #ifndef PRECOMP_H__
 #define PRECOMP_H__
 
+#define DIRECTINPUT_VERSION 0x0800
+
 #include <stdio.h>
 #include <windows.h>
+#include <setupapi.h>
+#include <devguid.h>
 #include <commctrl.h>
+
+#include <dinput.h>
 #include "resource.h"
 
 typedef struct
@@ -11,7 +17,6 @@ typedef struct
 	HWND hDialogs[7];
 
 }DXDIAG_CONTEXT, *PDXDIAG_CONTEXT;
-
 
 
 

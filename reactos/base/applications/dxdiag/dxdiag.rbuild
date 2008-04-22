@@ -12,6 +12,8 @@
 	<library>comctl32</library>
 	<library>shell32</library>
 	<library>version</library>
+	<library>dinput8</library>
+	<library>dxguid</library>
 	<file>system.c</file>
 	<file>display.c</file>
 	<file>sound.c</file>
