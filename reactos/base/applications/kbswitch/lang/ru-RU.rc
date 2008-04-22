@@ -1,6 +1,11 @@
 LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
-STRINGTABLE
+IDR_POPUP MENU
 BEGIN
-	IDS_EXIT, "Выход"
+    POPUP "popup"
+    BEGIN
+        MENUITEM "&Параметры...",    ID_PROFERENCES
+        MENUITEM SEPARATOR
+        MENUITEM "&Выход",           ID_EXIT
+    END
 END

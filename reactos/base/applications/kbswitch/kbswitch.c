@@ -117,8 +117,8 @@ GetLayoutName(LPTSTR szLayoutNum, LPTSTR szName)
 BOOL CALLBACK
 EnumWindowsProc(HWND hwnd, LPARAM lParam)
 {
-	SendMessage(hwnd, WM_INPUTLANGCHANGEREQUEST, 0, lParam);
-	return TRUE;
+    SendMessage(hwnd, WM_INPUTLANGCHANGEREQUEST, 0, lParam);
+    return TRUE;
 }
 
 static VOID
@@ -142,7 +142,6 @@ BuildPopupMenu()
     HMENU hMenu;
     HKEY hKey;
     DWORD dwIndex, dwSize;
-    TCHAR szExit[MAX_PATH];
     TCHAR szLayoutNum[CCH_ULONG_DEC + 1];
     TCHAR szName[MAX_PATH];
 
@@ -165,11 +164,17 @@ BuildPopupMenu()
         RegCloseKey(hKey);
     }
 
-    LoadString(hInst, IDS_EXIT, szExit, MAX_PATH);
-    AppendMenu(hMenu, MF_SEPARATOR, 0, NULL);
-    AppendMenu(hMenu, MF_STRING, MENU_ID_EXIT, szExit);
-
     return hMenu;
+}
+
+static VOID
+ShowRightPopupMenu(HWND hwnd, POINT pt)
+{
+    HMENU hMenu;
+
+    hMenu = GetSubMenu(LoadMenu(hInst, MAKEINTRESOURCE(IDR_POPUP)), 0);
+    TrackPopupMenu(hMenu, 0, pt.x, pt.y, 0, hwnd, NULL);
+    DestroyMenu(hMenu);
 }
 
 LRESULT CALLBACK
@@ -189,7 +194,6 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
             {
                 case WM_LBUTTONDBLCLK:
                 case WM_LBUTTONDOWN:
-                case WM_RBUTTONDOWN:
                 {
                     POINT pt;
 
@@ -197,15 +201,45 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
                     TrackPopupMenu(hPopupMenu, 0, pt.x, pt.y, 0, hwnd, NULL);
                 }
                 break;
+				case WM_RBUTTONDOWN:
+				{
+					POINT pt;
+
+					GetCursorPos(&pt);
+					ShowRightPopupMenu(hwnd, pt);
+				}
+				break;
             }
             break;
 
         case WM_COMMAND:
-            if (LOWORD(wParam) == MENU_ID_EXIT)
-                SendMessage(hwnd, WM_CLOSE, 0, 0);
-            else
-                ActivateLayout(LOWORD(wParam));
+			switch (LOWORD(wParam))
+			{
+				case ID_EXIT:
+					SendMessage(hwnd, WM_CLOSE, 0, 0);
+				break;
 
+				case ID_PROFERENCES:
+				{
+					SHELLEXECUTEINFO shInputDll;
+
+                    memset(&shInputDll, 0x0, sizeof(SHELLEXECUTEINFO));
+                    shInputDll.cbSize = sizeof(shInputDll);
+                    shInputDll.hwnd = hwnd;
+                    shInputDll.lpVerb = _T("open");
+                    shInputDll.lpFile = _T("RunDll32.exe");
+                    shInputDll.lpParameters = _T("shell32.dll,Control_RunDLL input.dll");
+                    if (ShellExecuteEx(&shInputDll) == 0)
+                    {
+                        MessageBox(hwnd, _T("Can't start input.dll"), NULL, MB_OK | MB_ICONERROR);
+                    }
+				}
+				break;
+
+				default:
+					ActivateLayout(LOWORD(wParam));
+				break;
+			}
             break;
 
         case WM_DESTROY:

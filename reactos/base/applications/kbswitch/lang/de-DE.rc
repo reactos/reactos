@@ -1,6 +1,11 @@
 LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
 
-STRINGTABLE
+IDR_POPUP MENU
 BEGIN
-	IDS_EXIT, "Beenden"
+    POPUP "popup"
+    BEGIN
+        MENUITEM "&Preferences...",  ID_PROFERENCES
+        MENUITEM SEPARATOR
+        MENUITEM "&Beenden",         ID_EXIT
+    END
 END
