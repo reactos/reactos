@@ -24,6 +24,7 @@ HANDLE ghDxGraphics = NULL;
 ULONG gdwDirectDrawContext;
 void dump_edd_directdraw_global(EDD_DIRECTDRAW_GLOBAL *pEddgbl);
 EDD_DIRECTDRAW_GLOBAL edd_DdirectDraw_Global;
+EDD_DIRECTDRAW_LOCAL edd_DirectDrawLocalList;
 
 
 /************************************************************************/
@@ -183,9 +184,16 @@ NtGdiDdCreateDirectDrawObject(HDC hdc)
     ((PGDIDEVICE)pDC->pPDev)->pEDDgpl = &edd_DdirectDraw_Global;
     RtlZeroMemory(&edd_DdirectDraw_Global,sizeof(EDD_DIRECTDRAW_GLOBAL));
 
+    /* FIXME this should be alloc by win32k */
+    RtlZeroMemory(&edd_DirectDrawLocalList,sizeof(EDD_DIRECTDRAW_LOCAL));
+
     /* setup hdev for edd_DdirectDraw_Global xp */
     edd_DdirectDraw_Global.hDev = (PVOID)pDC->pPDev;
     edd_DdirectDraw_Global.hPDev = (PVOID)pDC->pPDev;
+    edd_DdirectDraw_Global.peDirectDrawLocalList = &edd_DirectDrawLocalList;
+
+    /* setup hdev for edd_DdirectDraw_Local xp */
+    edd_DirectDrawLocalList.peDirectDrawGlobal = &edd_DdirectDraw_Global;
     DC_UnlockDc(pDC);
 
     /* get the pfnDdCreateDirectDrawObject after we load the drv */
