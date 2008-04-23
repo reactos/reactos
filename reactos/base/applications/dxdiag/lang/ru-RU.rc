@@ -20,12 +20,12 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Данная программа позволяет получить подробные сведения об установленных компонентах и драйверах ReactX.", -1, 10, 10, 343, 17
     LTEXT "Если известна возможная причина неполадки, можно сразу выбрать соответствующую вкладку. В противном случае используйте кнопку ""Следующая страница"" для последовательного просмотра страниц.", -1, 10, 30, 343, 25
-    GROUPBOX "Сведения о системе", -1, 10, 55, 343, 130, SS_RIGHT
+    GROUPBOX "Сведения о системе", -1, 10, 58, 343, 130, SS_RIGHT
     LTEXT "Текущие время и дата:", -1, 70, 70, 80, 10, SS_RIGHT
     LTEXT "Имя компьютера:", -1, 70, 80, 80, 10, SS_RIGHT
-    LTEXT "Операционная система:", -1, 70, 90, 80, 10, SS_RIGHT
+    LTEXT "Операционная система:", -1, 70, 90, 100, 10, SS_RIGHT
     LTEXT "Язык:", -1, 70, 100, 80, 10, SS_RIGHT
-    LTEXT "Изготовитель компьютера:", -1, 70, 110, 80, 10, SS_RIGHT
+    LTEXT "Изготовитель компьютера:", -1, 70, 110, 100, 10, SS_RIGHT
     LTEXT "Модель компьютера:", -1, 70, 120, 80, 10, SS_RIGHT
     LTEXT "BIOS:", -1, 70, 130, 80, 10, SS_RIGHT
     LTEXT "Процессор:", -1, 70, 140, 80, 10, SS_RIGHT
@@ -69,11 +69,11 @@ IDD_INPUT_DIALOG DIALOGEX DISCARDABLE  0, 0, 362, 220
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "DirectInput Devices", -1, 10, 10, 352, 80
+    GROUPBOX "Устройства DirectInput", -1, 10, 10, 352, 80
     CONTROL "", IDC_LIST_DEVICE, "SysListView32", LVS_REPORT | WS_CHILD | WS_BORDER | WS_TABSTOP, 20, 20, 332, 60
-    GROUPBOX "Input Devices", -1, 10, 100, 352, 60
+    GROUPBOX "Устройства ввода", -1, 10, 100, 352, 60
     CONTROL "", IDC_TREE_PORT, "SysTreeView32", TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_DISABLEDRAGDROP | TVS_SHOWSELALWAYS | WS_VISIBLE | WS_BORDER | WS_TABSTOP, 20, 110, 332, 40, 0x00000200
-    GROUPBOX "Information", -1, 10, 170, 352, 50
+    GROUPBOX "Информация", -1, 10, 170, 352, 50
     EDITTEXT  IDC_RICH_INFO, 20, 180, 332, 30, WS_DISABLED | WS_TABSTOP
 END
 
@@ -104,16 +104,16 @@ BEGIN
 	IDS_FORMAT_UNIPROC "%s (%u ЦП)"
 	IDS_FORMAT_MPPROC  "%s (%u ЦП)"
 	IDS_VERSION_UNKNOWN "Неизвестная версия"
-	IDS_DEVICE_STATUS_ATTACHED "Connected"
-	IDS_DEVICE_STATUS_MISSING "Disconnected"
-	IDS_DEVICE_STATUS_UNKNOWN "Unknown"
-	IDS_DEVICE_NAME "Device name"
-	IDS_DEVICE_STATUS "Status"
-	IDS_DEVICE_CONTROLLER "Controller ID"
-	IDS_DEVICE_MANUFACTURER "Manufacturer ID"
-	IDS_DEVICE_PRODUCT "Product ID"
+	IDS_DEVICE_STATUS_ATTACHED "Подключено"
+	IDS_DEVICE_STATUS_MISSING "Отключено"
+	IDS_DEVICE_STATUS_UNKNOWN "Неизвестно"
+	IDS_DEVICE_NAME "Имя устройства"
+	IDS_DEVICE_STATUS "Состояние"
+	IDS_DEVICE_CONTROLLER "ID контроллера"
+	IDS_DEVICE_MANUFACTURER "ID производителя"
+	IDS_DEVICE_PRODUCT "ID продукта"
 	IDS_DEVICE_FORCEFEEDBACK "Force Feedback-Driver"
-	IDS_NOT_APPLICABLE "Not applicable"
-	IDS_OPTION_YES "Yes"
+	IDS_NOT_APPLICABLE "Н/Д"
+	IDS_OPTION_YES "Да"
 
 END
