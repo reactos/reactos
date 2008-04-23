@@ -161,6 +161,7 @@ DdHmgLock( HANDLE DdHandle, UCHAR ObjectType,  BOOLEAN LockOwned)
         pEntry = (PDD_ENTRY)((PBYTE)gpentDdHmgr + (sizeof(DD_ENTRY) * Index));
         if ( VerifyObjectOwner(pEntry) )
         {
+            /* FIXME
             if ( (pEntry->Objt == ObjectType ) &&
                  (pEntry->FullUnique == (((DWORD)DdHandle >> 21) & 0x7FF) ) &&
                  (pEntry->pobj->cExclusiveLock == 0) &&
@@ -170,6 +171,7 @@ DdHmgLock( HANDLE DdHandle, UCHAR ObjectType,  BOOLEAN LockOwned)
                     pEntry->pobj->Tid = PsGetCurrentThread();
                     Object = pEntry->pobj;
                }
+           */
         }
     }
 
