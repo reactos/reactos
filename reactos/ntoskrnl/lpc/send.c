@@ -198,28 +198,41 @@ LpcRequestWaitReplyPort(IN PVOID PortObject,
     if (Thread->LpcExitThreadCalled) return STATUS_THREAD_IS_TERMINATING;
 
     /* Check if this is an LPC Request */
-    if (LpcpGetMessageType(LpcRequest) == LPC_REQUEST)
+    MessageType = LpcpGetMessageType(LpcRequest);
+    switch (MessageType)
     {
-        /* Then it's a callback */
-        Callback = TRUE;
+        /* No type */
+        case 0:
+            
+            /* Assume LPC request */
+            MessageType = LPC_REQUEST;
+            break;
+        
+        /* LPC request callback */
+        case LPC_REQUEST:
+            
+            /* This is a callback */
+            Callback = TRUE;
+            break;
+        
+        /* Anything else */
+        case LPC_CLIENT_DIED:
+        case LPC_PORT_CLOSED:
+        case LPC_EXCEPTION:
+        case LPC_DEBUG_EVENT:
+        case LPC_ERROR_EVENT:
+            
+            /* Nothing to do */
+            break;
+            
+        default:
+            
+            /* Invalid message type */
+            return STATUS_INVALID_PARAMETER;
     }
-    else
-    {
-        /* This is a kernel-mode message without a callback */
-        LpcRequest->u2.s2.Type |= LPC_REQUEST;
-        Callback = FALSE;
-    }
-
-    /* Get the message type */
-    MessageType = LpcRequest->u2.s2.Type;
-
-    /* Validate the length */
-    if (((ULONG)LpcRequest->u1.s1.DataLength + sizeof(PORT_MESSAGE)) >
-         (ULONG)LpcRequest->u1.s1.TotalLength)
-    {
-        /* Fail */
-        return STATUS_INVALID_PARAMETER;
-    }
+    
+    /* Set the request type */
+    LpcRequest->u2.s2.Type = MessageType;
 
     /* Validate the message length */
     if (((ULONG)LpcRequest->u1.s1.TotalLength > Port->MaxMessageLength) ||
@@ -250,7 +263,7 @@ LpcRequestWaitReplyPort(IN PVOID PortObject,
         LpcpMoveMessage(&Message->Request,
                         LpcRequest,
                         LpcRequest + 1,
-                        MessageType,
+                        0,
                         &Thread->Cid);
 
         /* Acquire the LPC lock */
@@ -383,19 +396,21 @@ LpcRequestWaitReplyPort(IN PVOID PortObject,
                             (&Message->Request) + 1,
                             0,
                             NULL);
+            
+            /* Acquire the lock */
+            KeAcquireGuardedMutex(&LpcpLock);
+            
+            /* Check if we replied to a thread */
+            if (Message->RepliedToThread)
+            {
+                /* Dereference */
+                ObDereferenceObject(Message->RepliedToThread);
+                Message->RepliedToThread = NULL;
+            }
 
-            /* Check if this is an LPC request with data information */
-            if ((LpcpGetMessageType(&Message->Request) == LPC_REQUEST) &&
-                (Message->Request.u2.s2.DataInfoOffset))
-            {
-                /* Save the data information */
-                LpcpSaveDataInfoMessage(Port, Message, 0);
-            }
-            else
-            {
-                /* Otherwise, just free it */
-                LpcpFreeToPortZone(Message, 0);
-            }
+
+            /* Free the message */
+            LpcpFreeToPortZone(Message, 3);
         }
         else
         {
@@ -415,6 +430,7 @@ LpcRequestWaitReplyPort(IN PVOID PortObject,
              Port,
              Status);
 
+    /* Dereference the connection port */
     if (ConnectionPort) ObDereferenceObject(ConnectionPort);
     return Status;
 }
