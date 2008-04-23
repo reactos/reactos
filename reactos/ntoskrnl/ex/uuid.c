@@ -40,8 +40,8 @@ static BOOLEAN UuidSequenceInitialized = FALSE;
 static BOOLEAN UuidSequenceChanged = FALSE;
 static UCHAR UuidSeed[SEED_BUFFER_SIZE];
 static ULONG UuidCount;
-
-
+static LARGE_INTEGER LuidIncrement;
+static LARGE_INTEGER LuidValue;
 
 /* FUNCTIONS ****************************************************************/
 
@@ -212,6 +212,91 @@ ExpCreateUuids(PULARGE_INTEGER Time,
     *Range = 10000; /* What does this mean? Ticks per millisecond?*/
 
     return STATUS_SUCCESS;
+}
+
+VOID
+INIT_FUNCTION
+NTAPI
+ExpInitLuid(VOID)
+{
+    LUID DummyLuidValue = SYSTEM_LUID;
+    
+    LuidValue.u.HighPart = DummyLuidValue.HighPart;
+    LuidValue.u.LowPart = DummyLuidValue.LowPart;
+    LuidIncrement.QuadPart = 1;
+}
+
+
+NTSTATUS
+NTAPI
+ExpAllocateLocallyUniqueId(OUT LUID *LocallyUniqueId)
+{
+    LARGE_INTEGER NewLuid, PrevLuid;
+    
+    /* atomically increment the luid */
+    do
+    {
+        PrevLuid = LuidValue;
+        NewLuid = RtlLargeIntegerAdd(PrevLuid,
+                                     LuidIncrement);
+    } while(ExfInterlockedCompareExchange64(&LuidValue.QuadPart,
+                                            &NewLuid.QuadPart,
+                                            &PrevLuid.QuadPart) != PrevLuid.QuadPart);
+    
+    LocallyUniqueId->LowPart = NewLuid.u.LowPart;
+    LocallyUniqueId->HighPart = NewLuid.u.HighPart;
+    
+    return STATUS_SUCCESS;
+}
+
+
+/*
+ * @implemented
+ */
+NTSTATUS STDCALL
+NtAllocateLocallyUniqueId(OUT LUID *LocallyUniqueId)
+{
+    LUID NewLuid;
+    KPROCESSOR_MODE PreviousMode;
+    NTSTATUS Status = STATUS_SUCCESS;
+    
+    PAGED_CODE();
+    
+    PreviousMode = ExGetPreviousMode();
+    
+    if(PreviousMode != KernelMode)
+    {
+        _SEH_TRY
+        {
+            ProbeForWrite(LocallyUniqueId,
+                          sizeof(LUID),
+                          sizeof(ULONG));
+        }
+        _SEH_HANDLE
+        {
+            Status = _SEH_GetExceptionCode();
+        }
+        _SEH_END;
+        
+        if(!NT_SUCCESS(Status))
+        {
+            return Status;
+        }
+    }
+    
+    Status = ExpAllocateLocallyUniqueId(&NewLuid);
+    
+    _SEH_TRY
+    {
+        *LocallyUniqueId = NewLuid;
+    }
+    _SEH_HANDLE
+    {
+        Status = _SEH_GetExceptionCode();
+    }
+    _SEH_END;
+    
+    return Status;
 }
 
 /*

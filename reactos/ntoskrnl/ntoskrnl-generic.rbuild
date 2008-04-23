@@ -425,7 +425,6 @@
 		<file>acl.c</file>
 		<file>audit.c</file>
 		<file>lsa.c</file>
-		<file>luid.c</file>
 		<file>priv.c</file>
 		<file>sd.c</file>
 		<file>semgr.c</file>

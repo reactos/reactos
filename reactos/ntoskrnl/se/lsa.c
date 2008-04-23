@@ -1,28 +1,32 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
- * FILE:            ntoskrnl/se/lsa.c
- * PURPOSE:         No purpose listed.
+ * FILE:            ntoskrnl/se/sid.c
+ * PURPOSE:         Security manager
  *
- * PROGRAMMERS:     No programmer listed.
+ * PROGRAMMERS:     David Welch <welch@cwcom.net>
  */
+
+/* INCLUDES *******************************************************************/
 
 #include <ntoskrnl.h>
 #define NDEBUG
-#include <internal/debug.h>
+#include <debug.h>
+
+/* FUNCTIONS ******************************************************************/
 
 /*
  * @unimplemented
  */
-NTSTATUS STDCALL LsaCallAuthenticationPackage (
-    ULONG Unknown0,
-    ULONG Unknown1,
-    ULONG Unknown2,
-    ULONG Unknown3,
-    ULONG Unknown4,
-    ULONG Unknown5,
-    ULONG Unknown6
-    )
+NTSTATUS
+NTAPI
+LsaCallAuthenticationPackage(ULONG Unknown0,
+                             ULONG Unknown1,
+                             ULONG Unknown2,
+                             ULONG Unknown3,
+                             ULONG Unknown4,
+                             ULONG Unknown5,
+                             ULONG Unknown6)
 {
     return STATUS_NOT_IMPLEMENTED;
 }
@@ -30,10 +34,10 @@ NTSTATUS STDCALL LsaCallAuthenticationPackage (
 /*
  * @unimplemented
  */
-NTSTATUS STDCALL LsaDeregisterLogonProcess (
-    ULONG Unknown0,
-    ULONG Unknown1
-    )
+NTSTATUS
+NTAPI
+LsaDeregisterLogonProcess(ULONG Unknown0,
+                          ULONG Unknown1)
 {
     return STATUS_NOT_IMPLEMENTED;
 }
@@ -41,16 +45,15 @@ NTSTATUS STDCALL LsaDeregisterLogonProcess (
 /*
  * @implemented
  */
-NTSTATUS STDCALL LsaFreeReturnBuffer (PVOID Buffer)
+NTSTATUS
+NTAPI
+LsaFreeReturnBuffer(PVOID Buffer)
 {
-    ULONG Size = 0; /* required by MEM_RELEASE */
-
-    return ZwFreeVirtualMemory (
-               NtCurrentProcess(),
-	       & Buffer,
-	       & Size,
-	       MEM_RELEASE
-               );
+    ULONG Size = 0;
+    return ZwFreeVirtualMemory(NtCurrentProcess(),
+                               &Buffer,
+                               &Size,
+                               MEM_RELEASE);
 }
 
 /*
@@ -79,11 +82,11 @@ LsaLogonUser(IN HANDLE LsaHandle,
 /*
  * @unimplemented
  */
-NTSTATUS STDCALL LsaLookupAuthenticationPackage (
-    ULONG	Unknown0,
-    ULONG	Unknown1,
-    ULONG	Unknown2
-    )
+NTSTATUS
+NTAPI
+LsaLookupAuthenticationPackage(ULONG Unknown0,
+                               ULONG Unknown1,
+                               ULONG Unknown2)
 {
     return STATUS_NOT_IMPLEMENTED;
 }
@@ -93,9 +96,9 @@ NTSTATUS STDCALL LsaLookupAuthenticationPackage (
  */
 NTSTATUS
 NTAPI
-LsaRegisterLogonProcess (IN PLSA_STRING LogonProcessName,
-                         OUT PHANDLE LsaHandle,
-                         OUT PLSA_OPERATIONAL_MODE SecurityMode)
+LsaRegisterLogonProcess(IN PLSA_STRING LogonProcessName,
+                        OUT PHANDLE LsaHandle,
+                        OUT PLSA_OPERATIONAL_MODE SecurityMode)
 {
     return STATUS_NOT_IMPLEMENTED;
 }
@@ -105,9 +108,7 @@ LsaRegisterLogonProcess (IN PLSA_STRING LogonProcessName,
  */
 NTSTATUS
 STDCALL
-SeMarkLogonSessionForTerminationNotification(
-	IN PLUID LogonId
-	)
+SeMarkLogonSessionForTerminationNotification(IN PLUID LogonId)
 {
 	UNIMPLEMENTED;
 	return STATUS_NOT_IMPLEMENTED;
@@ -118,9 +119,7 @@ SeMarkLogonSessionForTerminationNotification(
  */
 NTSTATUS
 STDCALL
-SeRegisterLogonSessionTerminatedRoutine(
-	IN PSE_LOGON_SESSION_TERMINATED_ROUTINE CallbackRoutine
-	)
+SeRegisterLogonSessionTerminatedRoutine(IN PSE_LOGON_SESSION_TERMINATED_ROUTINE CallbackRoutine)
 {
 	UNIMPLEMENTED;
 	return STATUS_NOT_IMPLEMENTED;
@@ -131,13 +130,10 @@ SeRegisterLogonSessionTerminatedRoutine(
  */
 NTSTATUS
 STDCALL
-SeUnregisterLogonSessionTerminatedRoutine(
-	IN PSE_LOGON_SESSION_TERMINATED_ROUTINE CallbackRoutine
-	)
+SeUnregisterLogonSessionTerminatedRoutine(IN PSE_LOGON_SESSION_TERMINATED_ROUTINE CallbackRoutine)
 {
 	UNIMPLEMENTED;
 	return STATUS_NOT_IMPLEMENTED;
 }
-
 
 /* EOF */

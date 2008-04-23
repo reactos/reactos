@@ -94,7 +94,7 @@ SeInitSRM(VOID);
 
 VOID
 NTAPI
-SepInitLuid(VOID);
+ExpInitLuid(VOID);
 
 VOID
 NTAPI
@@ -313,6 +313,15 @@ SeSetWorldSecurityDescriptor(
     SECURITY_INFORMATION SecurityInformation,
     PISECURITY_DESCRIPTOR SecurityDescriptor,
     PULONG BufferLength
+);
+
+NTSTATUS
+STDCALL
+SeCopyClientToken(
+    IN PACCESS_TOKEN Token,
+    IN SECURITY_IMPERSONATION_LEVEL Level,
+    IN KPROCESSOR_MODE PreviousMode,
+    OUT PACCESS_TOKEN* NewToken
 );
 
 #define SepAcquireTokenLockExclusive(Token)                                    \
