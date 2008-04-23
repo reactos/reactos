@@ -38,7 +38,7 @@ DxDdUnlockDirectDrawSurface(PDD_SURFACE_LOCAL pSurface)
     if (pSurface)
     {
         pEDDSurface = (PEDD_SURFACE)( ((PBYTE)pSurface) - sizeof(DD_BASEOBJECT));
-        InterlockedDecrement(&pEDDSurface->pobj.cExclusiveLock);
+        // InterlockedDecrement(&pEDDSurface->pobj.cExclusiveLock);
         retVal = TRUE;
     }
 
