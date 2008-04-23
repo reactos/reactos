@@ -1,6 +1,3 @@
-<module name="msi_msiserver_typelib" type="embeddedtypelib" allowwarnings="true">
-	<file>msiserver_v2.idl</file>
-</module>
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <group>
@@ -9,11 +6,9 @@
 	<importlibrary definition="msi.spec.def" />
 	<include base="msi">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
-	<include base="msi" root="intermediate">.</include>
 	<define name="__WINESRC__" />
 	<define name="WINVER">0x600</define>
 	<define name="_WIN32_WINNT">0x600</define>
-	<dependency>msi_msiserver_typelib</dependency>
 	<file>action.c</file>
 	<file>alter.c</file>
 	<file>appsearch.c</file>
@@ -57,6 +52,7 @@
 	<file>where.c</file>
 	<file>msiserver.idl</file>
 	<file>msi.rc</file>
+	<include base="msi" root="intermediate">.</include>
 	<file>msi.spec</file>
 	<library>wine</library>
 	<library>urlmon</library>
@@ -75,5 +71,9 @@
 	<library>odbccp32</library>
 	<library>uuid</library>
 	<library>ntdll</library>
+	<dependency>msi_msiserver_typelib</dependency>
+</module>
+<module name="msi_msiserver_typelib" type="embeddedtypelib" allowwarnings="true">
+	<file>msiserver.idl</file>
 </module>
 </group>

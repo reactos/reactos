@@ -72,7 +72,7 @@ reactos/dll/win32/oleacc          # Autosync
 reactos/dll/win32/oleaut32        # Autosync
 reactos/dll/win32/oledlg          # Autosync
 reactos/dll/win32/olepro32        # Autosync
-reactos/dll/win32/pdh             # Out of sync
+reactos/dll/win32/pdh             # Autosync
 reactos/dll/win32/powrprof        # Autosync
 reactos/dll/win32/printui         # Autosync
 reactos/dll/win32/rasapi32        # Autosync
@@ -88,15 +88,15 @@ reactos/dll/win32/shell32         # Forked at Wine-20071011
 reactos/dll/win32/shdocvw         # Synced to Wine-0_9_5
 reactos/dll/win32/shfolder        # Autosync
 reactos/dll/win32/shlwapi         # Autosync
-reactos/dll/win32/stdole2.tlb     # Out of Sync
-reactos/dll/win32/tapi32          # Out of sync
+reactos/dll/win32/stdole2.tlb     # Autosync
+reactos/dll/win32/tapi32          # Autosync
 reactos/dll/win32/twain_32        # Out of sync
 reactos/dll/win32/urlmon          # Autosync
-reactos/dll/win32/usp10           # Out of sync
+reactos/dll/win32/usp10           # Autosync
 reactos/dll/win32/uxtheme         # Autosync
 reactos/dll/win32/version         # Autosync
 reactos/dll/win32/wininet         # Autosync
-reactos/dll/win32/winhttp         # Out of Sync
+reactos/dll/win32/winhttp         # Autosync
 reactos/dll/win32/wintrust        # Out of sync
 reactos/dll/win32/winmm           # Forked at Wine-20050628
 reactos/dll/win32/winmm/midimap   # Forked at Wine-20050628
