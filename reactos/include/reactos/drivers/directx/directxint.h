@@ -2,33 +2,32 @@
 #ifndef _DXINTERNEL_
 #define _DXINTERNEL_
 
-typedef struct _DD_BASEOBJECT
-{
-    HANDLE hHmgr;
-    ULONG ulShareCount;
-    LONG cExclusiveLock;
-    PVOID Tid;
-} DD_BASEOBJECT, *PDD_BASEOBJECT;
+#define PDD_BASEOBJECT POBJ
+#define DD_BASEOBJECT BASEOBJECT
 
+/* _EDD_DIRECTDRAW_LOCAL is 0x54 byte big on windows xp */
 typedef struct _EDD_DIRECTDRAW_LOCAL
 {
     //
     // GDI Object Header
     //
     DD_BASEOBJECT pobj;
-
-    struct _EDD_DIRECTDRAW_GLOBAL * peDirectDrawGlobal;
-    struct _EDD_DIRECTDRAW_GLOBAL * peDirectDrawGlobal2;
-    struct _EDD_SURFACE * peSurface_DdList;
-    ULONG unk_01c[2];
-    struct _EDD_DIRECTDRAW_LOCAL * peDirectDrawLocalNext;
-    FLATPTR fpProcess;
-    FLONG fl;
-    HANDLE UniqueProcess;
-    PEPROCESS Process;
-    ULONG unk_038[2];
-    VOID *unk_040;
-    VOID *unk_044;
+/* 0x10 */    struct _EDD_DIRECTDRAW_GLOBAL * peDirectDrawGlobal;
+/* 0x1C */    struct _EDD_SURFACE * peSurface_DdList;
+/* 0x1C */    ULONG unk_01c;
+/* 0x20 */    ULONG unk_020;
+/* 0x24 */    struct _EDD_DIRECTDRAW_GLOBAL * peDirectDrawGlobal2;
+/* 0x28 */    FLATPTR fpProcess;
+/* 0x2C */    FLONG fl;
+/* 0x30 */    HANDLE UniqueProcess;
+/* 0x34 */    PEPROCESS Process;
+/* 0x38 */    ULONG unk_038;
+/* 0x3C */    ULONG unk_03C;
+/* 0x40 */    VOID *unk_040;
+/* 0x44 */    VOID *unk_044;
+/* 0x48 */    ULONG unk_048;
+/* 0x4C */    ULONG unk_04C;
+/* 0x50 */    ULONG unk_050;
 } EDD_DIRECTDRAW_LOCAL, PEDD_DIRECTDRAW_LOCAL;
 
 
