@@ -59,7 +59,7 @@ typedef struct _D3D9Unknown6BC_
 /* 0x00b0 */    DWORD dwUnknown00b0;
 /* 0x00b4 */    DWORD dwUnknown00b4;
 /* 0x00b8 */    DWORD dwUnknown00b8;
-/* 0x00BC */    DDGAMMARAMP lpGammaRamp;
+/* 0x00BC */    DDGAMMARAMP GammaRamp;
 } D3D9_Unknown6BC;
 
 typedef struct _tagD3D9_DRIVERCAPS
