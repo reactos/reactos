@@ -22,7 +22,7 @@ BOOL CanReenableDirectDrawObject(D3D9_Unknown6BC* ppUnknown);
 
 BOOL GetD3D9DriverInfo( D3D9_Unknown6BC* pUnknown6BC,
                         LPD3D9_DRIVERCAPS pDriverCaps,
-                        D3D9_UnknownA8h* pUnknownA8h,
+                        D3D9_CALLBACKS* pD3D9Callbacks,
                         LPCSTR lpszDeviceName,
                         HMODULE hD3dRefDll,
                         D3DHAL_GLOBALDRIVERDATA* pGblDriverData,

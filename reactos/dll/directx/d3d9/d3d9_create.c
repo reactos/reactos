@@ -139,11 +139,11 @@ static BOOL GetDirect3D9AdapterInfo(IN OUT LPDIRECT3D9_DISPLAYADAPTER pDisplayAd
 
     if (pDisplayAdapter->bInUseFlag)
     {
-        pDeviceData->_UnknownA8h.DeviceType = D3DDEVTYPE_HAL;
+        pDeviceData->D3D9Callbacks.DeviceType = D3DDEVTYPE_HAL;
     }
     else if (IsGDIDriver(hDC))
     {
-        pDeviceData->_UnknownA8h.DeviceType = D3DDEVTYPE_REF;
+        pDeviceData->D3D9Callbacks.DeviceType = D3DDEVTYPE_REF;
     }
 
     if (FALSE == GetDeviceData(pDeviceData))

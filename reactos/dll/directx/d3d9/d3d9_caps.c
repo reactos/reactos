@@ -157,7 +157,7 @@ BOOL GetDeviceData(LPD3D9_DEVICEDATA pDeviceData)
     else
     {
         D3D9_DRIVERCAPS DriverCaps;
-        D3D9_UnknownA8h unknownA8h;
+        D3D9_CALLBACKS D3D9Callbacks;
 
         if (FALSE == CanReenableDirectDrawObject(pDeviceData->pUnknown6BC))
         {
@@ -168,7 +168,7 @@ BOOL GetDeviceData(LPD3D9_DEVICEDATA pDeviceData)
         bRet = GetD3D9DriverInfo(
             pDeviceData->pUnknown6BC,
             &DriverCaps,
-            &unknownA8h,
+            &D3D9Callbacks,
             pDeviceData->szDeviceName,
             pDeviceData->hD3DRefDll,
             &GlobalDriverData,
@@ -222,7 +222,7 @@ BOOL GetDeviceData(LPD3D9_DEVICEDATA pDeviceData)
     bRet = GetD3D9DriverInfo(
         pDeviceData->pUnknown6BC,
         &pDeviceData->DriverCaps,
-        &pDeviceData->_UnknownA8h,
+        &pDeviceData->D3D9Callbacks,
         pDeviceData->szDeviceName,
         pDeviceData->hD3DRefDll,
         &GlobalDriverData,
@@ -252,7 +252,7 @@ BOOL GetDeviceData(LPD3D9_DEVICEDATA pDeviceData)
     bRet = GetD3D9DriverInfo(
         pDeviceData->pUnknown6BC,
         &pDeviceData->DriverCaps,
-        &pDeviceData->_UnknownA8h,
+        &pDeviceData->D3D9Callbacks,
         pDeviceData->szDeviceName,
         pDeviceData->hD3DRefDll,
         &GlobalDriverData,
@@ -334,7 +334,7 @@ static void ResetGetDriverInfo2Data(DD_GETDRIVERINFO2DATA* DrvInfo2, DWORD dwTyp
 
 BOOL GetD3D9DriverInfo( D3D9_Unknown6BC* pUnknown6BC,
                         LPD3D9_DRIVERCAPS pDriverCaps,
-                        D3D9_UnknownA8h* pUnknownA8h,
+                        D3D9_CALLBACKS* pD3D9Callbacks,
                         LPCSTR lpszDeviceName,
                         HMODULE hD3dRefDll,
                         D3DHAL_GLOBALDRIVERDATA* pGblDriverData,
