@@ -11,7 +11,7 @@
 #define WM_NOTIFYICONMSG (WM_USER + 248)
 
 HINSTANCE hInst;
-HWND      hwnd;
+HANDLE    hProcessHeap;
 
 static VOID
 AddTrayIcon(HWND hwnd, HICON hIcon)
@@ -46,15 +46,17 @@ static BOOL
 GetLayoutID(LPTSTR szLayoutNum, LPTSTR szLCID)
 {
     DWORD dwBufLen;
+    DWORD dwRes;
     HKEY hKey;
-    TCHAR szTempLCID[MAX_PATH];
+    TCHAR szTempLCID[CCH_LAYOUT_ID + 1];
 
     // Get the Layout ID
     if (RegOpenKeyEx(HKEY_CURRENT_USER, _T("Keyboard Layout\\Preload"), 0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
     {
-        dwBufLen = MAX_PATH;
+        dwBufLen = sizeof(szTempLCID);
+        dwRes = RegQueryValueEx(hKey, szLayoutNum, NULL, NULL, (LPBYTE)szTempLCID, &dwBufLen);
 
-        if (RegQueryValueEx(hKey, szLayoutNum, NULL, NULL, (LPBYTE)szTempLCID, &dwBufLen) != ERROR_SUCCESS)
+        if (dwRes != ERROR_SUCCESS)
         {
             RegCloseKey(hKey);
             return FALSE;
@@ -66,7 +68,7 @@ GetLayoutID(LPTSTR szLayoutNum, LPTSTR szLCID)
     // Look for a substitude of this layout
     if (RegOpenKeyEx(HKEY_CURRENT_USER, _T("Keyboard Layout\\Substitutes"), 0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
     {
-        dwBufLen = MAX_PATH;
+        dwBufLen = sizeof(szTempLCID);
 
         if (RegQueryValueEx(hKey, szTempLCID, NULL, NULL, (LPBYTE)szLCID, &dwBufLen) != ERROR_SUCCESS)
         {
@@ -96,11 +98,11 @@ GetLayoutName(LPTSTR szLayoutNum, LPTSTR szName)
     if(!GetLayoutID(szLayoutNum, szLCID))
         return FALSE;
 
-    _stprintf(szBuf, _T("SYSTEM\\CurrentControlSet\\Control\\Keyboard Layouts\\%s"), szLCID);
+    wsprintf(szBuf, _T("SYSTEM\\CurrentControlSet\\Control\\Keyboard Layouts\\%s"), szLCID);
 
     if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, (LPCTSTR)szBuf, 0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
     {
-        dwBufLen = MAX_PATH;
+        dwBufLen = MAX_PATH * sizeof(TCHAR);
 
         if(RegQueryValueEx(hKey, _T("Layout Text"), NULL, NULL, (LPBYTE)szName, &dwBufLen) != ERROR_SUCCESS)
         {
@@ -133,20 +135,25 @@ ActivateLayout(ULONG uLayoutNum)
 
     // Switch to the new keyboard layout
     hKl = LoadKeyboardLayout(szLCID, KLF_ACTIVATE);
-	EnumWindows(EnumWindowsProc, (LPARAM) hKl);
+    SystemParametersInfo(SPI_SETDEFAULTINPUTLANG, 0, &hKl, SPIF_SENDWININICHANGE);
+    EnumWindows(EnumWindowsProc, (LPARAM) hKl);
 }
 
 static HMENU
 BuildPopupMenu()
 {
     HMENU hMenu;
+    HMENU hMenuTemplate;
     HKEY hKey;
     DWORD dwIndex, dwSize;
+    LPTSTR pszMenuItem;
+    MENUITEMINFO mii;
     TCHAR szLayoutNum[CCH_ULONG_DEC + 1];
     TCHAR szName[MAX_PATH];
 
     hMenu = CreatePopupMenu();
 
+    // Add the keyboard layouts to the popup menu
     if (RegOpenKeyEx(HKEY_CURRENT_USER, _T("Keyboard Layout\\Preload"), 0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
     {
         for(dwIndex = 0; ; dwIndex++)
@@ -164,17 +171,38 @@ BuildPopupMenu()
         RegCloseKey(hKey);
     }
 
+    // Add the menu items from the popup menu template
+    hMenuTemplate = GetSubMenu(LoadMenu(hInst, MAKEINTRESOURCE(IDR_POPUP)), 0);
+    dwIndex = 0;
+
+    mii.cbSize = sizeof(mii);
+    mii.fMask = MIIM_FTYPE | MIIM_STRING | MIIM_ID;
+    mii.dwTypeData = NULL;
+
+    while(GetMenuItemInfo(hMenuTemplate, dwIndex, TRUE, &mii))
+    {
+        if(mii.cch > 0)
+        {
+            mii.cch++;
+            pszMenuItem = (LPTSTR)HeapAlloc(hProcessHeap, 0, mii.cch * sizeof(TCHAR));
+
+            mii.dwTypeData = pszMenuItem;
+            GetMenuItemInfo(hMenuTemplate, dwIndex, TRUE, &mii);
+
+            AppendMenu(hMenu, mii.fType, mii.wID, mii.dwTypeData);
+
+            HeapFree(hProcessHeap, 0, pszMenuItem);
+            mii.dwTypeData = NULL;
+        }
+        else
+        {
+            AppendMenu(hMenu, mii.fType, 0, NULL);
+        }
+
+        dwIndex++;
+    }
+
     return hMenu;
-}
-
-static VOID
-ShowRightPopupMenu(HWND hwnd, POINT pt)
-{
-    HMENU hMenu;
-
-    hMenu = GetSubMenu(LoadMenu(hInst, MAKEINTRESOURCE(IDR_POPUP)), 0);
-    TrackPopupMenu(hMenu, 0, pt.x, pt.y, 0, hwnd, NULL);
-    DestroyMenu(hMenu);
 }
 
 LRESULT CALLBACK
@@ -192,54 +220,47 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
         case WM_NOTIFYICONMSG:
             switch (lParam)
             {
-                case WM_LBUTTONDBLCLK:
                 case WM_LBUTTONDOWN:
+                case WM_RBUTTONDOWN:
                 {
                     POINT pt;
 
                     GetCursorPos(&pt);
+                    SetForegroundWindow(hwnd);
                     TrackPopupMenu(hPopupMenu, 0, pt.x, pt.y, 0, hwnd, NULL);
+                    PostMessage(hwnd, WM_NULL, 0, 0);
+                    break;
                 }
-                break;
-				case WM_RBUTTONDOWN:
-				{
-					POINT pt;
-
-					GetCursorPos(&pt);
-					ShowRightPopupMenu(hwnd, pt);
-				}
-				break;
             }
             break;
 
         case WM_COMMAND:
-			switch (LOWORD(wParam))
-			{
-				case ID_EXIT:
-					SendMessage(hwnd, WM_CLOSE, 0, 0);
-				break;
+            switch (LOWORD(wParam))
+            {
+                case ID_EXIT:
+                    SendMessage(hwnd, WM_CLOSE, 0, 0);
+                    break;
 
-				case ID_PROFERENCES:
-				{
-					SHELLEXECUTEINFO shInputDll;
+                case ID_PREFERENCES:
+                {
+                    SHELLEXECUTEINFO shInputDll = {0};
 
-                    memset(&shInputDll, 0x0, sizeof(SHELLEXECUTEINFO));
                     shInputDll.cbSize = sizeof(shInputDll);
                     shInputDll.hwnd = hwnd;
                     shInputDll.lpVerb = _T("open");
                     shInputDll.lpFile = _T("RunDll32.exe");
                     shInputDll.lpParameters = _T("shell32.dll,Control_RunDLL input.dll");
-                    if (ShellExecuteEx(&shInputDll) == 0)
-                    {
-                        MessageBox(hwnd, _T("Can't start input.dll"), NULL, MB_OK | MB_ICONERROR);
-                    }
-				}
-				break;
 
-				default:
-					ActivateLayout(LOWORD(wParam));
-				break;
-			}
+                    if (!ShellExecuteEx(&shInputDll))
+                        MessageBox(hwnd, _T("Can't start input.dll"), NULL, MB_OK | MB_ICONERROR);
+
+                    break;
+                }
+
+                default:
+                    ActivateLayout(LOWORD(wParam));
+                    break;
+            }
             break;
 
         case WM_DESTROY:
@@ -253,12 +274,13 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 }
 
 INT WINAPI
-wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInst, LPTSTR lpCmdLine, INT nCmdShow)
+_tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInst, LPTSTR lpCmdLine, INT nCmdShow)
 {
     WNDCLASS WndClass = {0};
     MSG msg;
 
     hInst = hInstance;
+    hProcessHeap = GetProcessHeap();
 
     WndClass.style = 0;
     WndClass.lpfnWndProc   = (WNDPROC)WndProc;
@@ -271,9 +293,10 @@ wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInst, LPTSTR lpCmdLine, INT nCmdSho
     WndClass.lpszMenuName  = NULL;
     WndClass.lpszClassName = _T("kbswitch");
 
-    if (!RegisterClass(&WndClass)) return 0;
+    if (!RegisterClass(&WndClass))
+        return 1;
 
-    hwnd = CreateWindow(_T("kbswitch"), _T("kbswitch"), 0, 0, 0, 1, 1, HWND_DESKTOP, NULL, hInstance, NULL);
+    CreateWindow(_T("kbswitch"), NULL, 0, 0, 0, 1, 1, HWND_DESKTOP, NULL, hInstance, NULL);
 
     while(GetMessage(&msg,NULL,0,0))
     {

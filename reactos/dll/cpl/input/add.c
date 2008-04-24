@@ -18,16 +18,16 @@ static HWND hLayoutList;
 static VOID
 SelectLayoutByLang(VOID)
 {
-    TCHAR Layout[MAX_PATH], Lang[MAX_PATH], LangID[MAX_PATH];
+    TCHAR Layout[MAX_PATH], Lang[MAX_PATH], LangID[CCH_LAYOUT_ID + 1];
     INT iIndex;
     LCID Lcid;
 
     iIndex = SendMessage(hLangList, CB_GETCURSEL, 0, 0);
     Lcid = SendMessage(hLangList, CB_GETITEMDATA, iIndex, 0);
 
-    GetLocaleInfo(MAKELCID(Lcid, SORT_DEFAULT), LOCALE_ILANGUAGE, (WORD*)Lang, sizeof(Lang));
+    GetLocaleInfo(MAKELCID(Lcid, SORT_DEFAULT), LOCALE_ILANGUAGE, Lang, sizeof(Lang) / sizeof(TCHAR));
 
-    _stprintf(LangID, _T("0000%s"), Lang);
+    wsprintf(LangID, _T("0000%s"), Lang);
 
     if (GetLayoutName(LangID, Layout))
     {
@@ -39,7 +39,7 @@ SelectLayoutByLang(VOID)
 static VOID
 AddNewLayout(HWND hwndDlg)
 {
-    TCHAR NewLayout[3];
+    TCHAR NewLayout[CCH_ULONG_DEC + 1];
     INT iLayout;
     HKEY hKey;
     DWORD cValues;
@@ -48,11 +48,11 @@ AddNewLayout(HWND hwndDlg)
     iLayout = SendMessage(hLayoutList, CB_GETCURSEL, 0, 0);
     if (iLayout == CB_ERR) return;
 
-    if (RegOpenKey(HKEY_CURRENT_USER, _T("Keyboard Layout\\Preload"), &hKey) == ERROR_SUCCESS)
+    if (RegOpenKeyEx(HKEY_CURRENT_USER, _T("Keyboard Layout\\Preload"), 0, KEY_QUERY_VALUE | KEY_SET_VALUE, &hKey) == ERROR_SUCCESS)
     {
         if (RegQueryInfoKey(hKey, NULL, NULL, NULL, NULL, NULL, NULL, &cValues, NULL, NULL, NULL, NULL) == ERROR_SUCCESS)
         {
-            _stprintf(NewLayout, _T("%d"), cValues + 1);
+            _ultot(cValues + 1, NewLayout, 10);
 
             pts = (PTSTR) SendMessage(hLayoutList, CB_GETITEMDATA, iLayout, 0);
 
@@ -61,7 +61,7 @@ AddNewLayout(HWND hwndDlg)
                               0,
                               REG_SZ,
                               (LPBYTE)pts,
-                              (DWORD)(_tcslen(pts)*sizeof(PTSTR))) == ERROR_SUCCESS)
+                              (DWORD)((CCH_LAYOUT_ID + 1) * sizeof(TCHAR))) == ERROR_SUCCESS)
             {
                 UpdateLayoutsList();
             }
@@ -73,47 +73,48 @@ VOID
 CreateKeyboardLayoutList(VOID)
 {
     HKEY hKey, hSubKey;
-    PTSTR pstrBuf;
-    TCHAR szBuf[CCH_LAYOUT_ID + 1], KeyName[MAX_PATH];
-    LONG Ret;
+    PTSTR pstrLayoutID;
+    TCHAR szLayoutID[CCH_LAYOUT_ID + 1], KeyName[MAX_PATH];
     DWORD dwIndex = 0;
+    DWORD dwSize;
 
-    if (RegOpenKey(HKEY_LOCAL_MACHINE, _T("System\\CurrentControlSet\\Control\\Keyboard Layouts"), &hKey) == ERROR_SUCCESS)
+    if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, _T("System\\CurrentControlSet\\Control\\Keyboard Layouts"), 0, KEY_ENUMERATE_SUB_KEYS, &hKey) == ERROR_SUCCESS)
     {
-        Ret = RegEnumKey(hKey, dwIndex, szBuf, sizeof(szBuf) / sizeof(TCHAR));
+        dwSize = sizeof(szLayoutID) / sizeof(TCHAR);
 
-        while (Ret == ERROR_SUCCESS)
+        while (RegEnumKeyEx(hKey, dwIndex, szLayoutID, &dwSize, NULL, NULL, NULL, NULL) == ERROR_SUCCESS)
         {
-            _stprintf(KeyName, _T("System\\CurrentControlSet\\Control\\Keyboard Layouts\\%s"), szBuf);
+            wsprintf(KeyName, _T("System\\CurrentControlSet\\Control\\Keyboard Layouts\\%s"), szLayoutID);
 
-            if (RegOpenKey(HKEY_LOCAL_MACHINE, KeyName, &hSubKey) == ERROR_SUCCESS)
+            if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, KeyName, 0, KEY_QUERY_VALUE, &hSubKey) == ERROR_SUCCESS)
             {
-                DWORD Length = MAX_PATH;
+                DWORD dwKeyNameSize = sizeof(KeyName);
 
-                if (RegQueryValueEx(hSubKey, _T("Layout Text"), NULL, NULL, (LPBYTE)KeyName, &Length) == ERROR_SUCCESS)
+                if (RegQueryValueEx(hSubKey, _T("Layout Text"), NULL, NULL, (LPBYTE)KeyName, &dwKeyNameSize) == ERROR_SUCCESS)
                 {
                     INT iIndex = (INT) SendMessage(hLayoutList, CB_ADDSTRING, 0, (LPARAM)KeyName);
 
-                    pstrBuf = (PTSTR)HeapAlloc(hProcessHeap, 0, (CCH_LAYOUT_ID + 1) * sizeof(TCHAR));
-                    _tcscpy(pstrBuf, szBuf);
-                    SendMessage(hLayoutList, CB_SETITEMDATA, iIndex, (LPARAM)pstrBuf);
+                    pstrLayoutID = (PTSTR)HeapAlloc(hProcessHeap, 0, sizeof(szLayoutID));
+                    lstrcpy(pstrLayoutID, szLayoutID);
+                    SendMessage(hLayoutList, CB_SETITEMDATA, iIndex, (LPARAM)pstrLayoutID);
 
                     // FIXME!
-                    if (_tcscmp(szBuf, _T("00000409")) == 0)
+                    if (_tcscmp(szLayoutID, _T("00000409")) == 0)
                     {
                         SendMessage(hLayoutList, CB_SETCURSEL, (WPARAM)iIndex, (LPARAM)0);
                     }
 
                     dwIndex++;
-                    Ret = RegEnumKey(hKey, dwIndex, szBuf, sizeof(szBuf) / sizeof(TCHAR));
                 }
+
+                RegCloseKey(hSubKey);
             }
 
-            RegCloseKey(hSubKey);
+            dwSize = sizeof(szLayoutID) / sizeof(TCHAR);
         }
-    }
 
-    RegCloseKey(hKey);
+        RegCloseKey(hKey);
+    }
 }
 
 /* Language enumerate procedure */

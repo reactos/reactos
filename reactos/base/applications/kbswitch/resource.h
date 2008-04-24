@@ -6,4 +6,4 @@
 
 /* Menu items */
 #define ID_EXIT          10001
-#define ID_PROFERENCES   10002
+#define ID_PREFERENCES   10002

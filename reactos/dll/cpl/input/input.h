@@ -27,6 +27,9 @@ extern HANDLE hProcessHeap;
 // Character Count of a layout ID like "00000409"
 #define CCH_LAYOUT_ID    8
 
+// Maximum Character Count of a ULONG in decimal
+#define CCH_ULONG_DEC    10
+
 /* input.c */
 VOID
 InitPropSheetPage(PROPSHEETPAGE *psp, WORD idDlg, DLGPROC DlgProc);

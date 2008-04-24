@@ -12,8 +12,6 @@
 #include "resource.h"
 #include "input.h"
 
-#define BUFSIZE 256
-
 static HWND MainDlgWnd;
 
 typedef struct
@@ -21,9 +19,8 @@ typedef struct
     LANGID LangId;
     TCHAR LangName[MAX_PATH];
     TCHAR LayoutName[MAX_PATH];
-    TCHAR ValName[MAX_PATH];
+    TCHAR ValName[CCH_ULONG_DEC + 1];
     TCHAR IndName[MAX_PATH];
-    TCHAR SubName[MAX_PATH];
 } LAYOUT_ITEM, *LPLAYOUT_ITEM;
 
 BOOL
@@ -31,14 +28,15 @@ GetLayoutName(LPCTSTR lcid, LPTSTR name)
 {
     HKEY hKey;
     DWORD dwBufLen;
-    TCHAR szBuf[BUFSIZE];
+    TCHAR szBuf[MAX_PATH];
 
-    _stprintf(szBuf, _T("SYSTEM\\CurrentControlSet\\Control\\Keyboard Layouts\\%s"),lcid);
+    wsprintf(szBuf, _T("SYSTEM\\CurrentControlSet\\Control\\Keyboard Layouts\\%s"), lcid);
 
     if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, (LPCTSTR)szBuf, 0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
     {
-        dwBufLen = BUFSIZE;
-        if (RegQueryValueEx(hKey,_T("Layout Text"),NULL,NULL,(LPBYTE)name,&dwBufLen) == ERROR_SUCCESS)
+        dwBufLen = sizeof(szBuf);
+
+        if (RegQueryValueEx(hKey, _T("Layout Text"), NULL, NULL, (LPBYTE)name, &dwBufLen) == ERROR_SUCCESS)
         {
             RegCloseKey(hKey);
             return TRUE;
@@ -78,90 +76,71 @@ AddListColumn(HWND hWnd)
     (VOID) ListView_InsertColumn(hList, 2, &column);
 }
 
-static BOOL
+static VOID
 InitLangList(HWND hWnd)
 {
     HKEY hKey, hSubKey;
-    TCHAR szBuf[MAX_PATH], szPreload[MAX_PATH], szSub[MAX_PATH];
+    TCHAR szBuf[MAX_PATH], szPreload[CCH_LAYOUT_ID + 1], szSub[CCH_LAYOUT_ID + 1];
     LAYOUT_ITEM lItem;
-    LONG Ret;
     DWORD dwIndex = 0, dwType, dwSize;
-    LV_ITEM item;
+    LV_ITEM item = {0};
     HWND hList = GetDlgItem(hWnd, IDC_KEYLAYOUT_LIST);
     INT i;
-    
+
+    item.mask = LVIF_TEXT | LVIF_PARAM | LVIF_STATE;
+
     if (RegOpenKeyEx(HKEY_CURRENT_USER, _T("Keyboard Layout\\Preload"),
         0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
     {
-        dwSize = MAX_PATH;
-        Ret = RegEnumValue(hKey, dwIndex, szBuf, &dwSize, NULL, &dwType, NULL, NULL);
-        if (Ret == ERROR_SUCCESS)
+        dwSize = sizeof(lItem.ValName);
+
+        while (RegEnumValue(hKey, dwIndex, lItem.ValName, &dwSize, NULL, &dwType, NULL, NULL) == ERROR_SUCCESS)
         {
-            while (Ret == ERROR_SUCCESS)
+            dwSize = sizeof(szPreload);
+            RegQueryValueEx(hKey, lItem.ValName, NULL, NULL, (LPBYTE)szPreload, &dwSize);
+
+            lItem.LangId = (LANGID)_tcstoul(szPreload, NULL, 16);
+
+            GetLocaleInfo(lItem.LangId, LOCALE_SISO639LANGNAME, (LPTSTR)szBuf, sizeof(szBuf) / sizeof(TCHAR));
+            lstrcpy(lItem.IndName, _tcsupr(szBuf));
+
+            GetLocaleInfo(lItem.LangId, LOCALE_SLANGUAGE, (LPTSTR)szBuf, sizeof(szBuf) / sizeof(TCHAR));
+            lstrcpy(lItem.LangName, szBuf);
+
+            // Does this keyboard layout have a substitute?
+            // Then add the substitute instead of the Layout ID
+            if (RegOpenKeyEx(HKEY_CURRENT_USER, _T("Keyboard Layout\\Substitutes"),
+                             0, KEY_QUERY_VALUE, &hSubKey) == ERROR_SUCCESS)
             {
-                _tcscpy(lItem.ValName, szBuf);
+                dwSize = sizeof(szSub);
 
-                dwSize = MAX_PATH;
-                RegQueryValueEx(hKey, szBuf, NULL, NULL, (LPBYTE)szPreload, &dwSize);
-
-                lItem.LangId = _tcstoul(szPreload, NULL, 16);
-
-                GetLocaleInfo(lItem.LangId, LOCALE_SISO639LANGNAME, (LPTSTR) szBuf, sizeof(szBuf));
-                _tcscpy(lItem.IndName, _tcsupr(szBuf));
-
-                GetLocaleInfo(lItem.LangId, LOCALE_SLANGUAGE, (LPTSTR)szBuf, sizeof(szBuf));
-                _tcscpy(lItem.LangName, szBuf);
-                
-                if (RegOpenKeyEx(HKEY_CURRENT_USER, _T("Keyboard Layout\\Substitutes"),
-                                 0, KEY_QUERY_VALUE, &hSubKey) == ERROR_SUCCESS)
+                if (RegQueryValueEx(hSubKey, szPreload, NULL, NULL, (LPBYTE)szSub, &dwSize) == ERROR_SUCCESS)
                 {
-                    dwSize = MAX_PATH;
-                    if (RegQueryValueEx(hSubKey, szPreload, NULL, NULL, (LPBYTE)szSub, &dwSize) == ERROR_SUCCESS)
-                    {
-                        _tcscpy(lItem.SubName, szPreload);
-                        if (GetLayoutName(szSub, szBuf))
-                        {
-                            _tcscpy(lItem.LayoutName, szBuf);
-                        }
-                    }
-                    else
-                    {
-                        _tcscpy(lItem.SubName, _T(""));
-                    }
+                    lstrcpy(szPreload, szSub);
                 }
 
-                if (_tcslen(lItem.SubName) < 2)
-                {
-                    if (GetLayoutName(szPreload, szBuf))
-                    {
-                        _tcscpy(lItem.LayoutName, szBuf);
-                    }
-                }
-                
-                ZeroMemory(&item, sizeof(LV_ITEM));
-                item.mask = LVIF_TEXT | LVIF_PARAM | LVIF_STATE;
-                item.pszText = lItem.IndName;
-                item.lParam  = (LPARAM)&lItem;
-                item.iItem   = (INT) dwIndex;
-                i = ListView_InsertItem(hList, &item);
-
-                ListView_SetItemText(hList, i, 1, lItem.LangName);
-                ListView_SetItemText(hList, i, 2, lItem.LayoutName);
-
-                dwIndex++;
-                Ret = RegEnumValue(hKey, dwIndex, szBuf, &dwSize, NULL, &dwType, NULL, NULL);
                 RegCloseKey(hSubKey);
+            }
 
-                if (_tcscmp(lItem.ValName, _T("1")) == 0)
-                {
-                    (VOID) ListView_SetHotItem(hList, i);
-                }
+            GetLayoutName(szPreload, lItem.LayoutName);
+
+            item.pszText = lItem.IndName;
+            item.iItem   = (INT) dwIndex;
+            i = ListView_InsertItem(hList, &item);
+
+            ListView_SetItemText(hList, i, 1, lItem.LangName);
+            ListView_SetItemText(hList, i, 2, lItem.LayoutName);
+
+            dwIndex++;
+
+            if (lstrcmp(lItem.ValName, _T("1")) == 0)
+            {
+                (VOID) ListView_SetHotItem(hList, i);
             }
         }
-    }
 
-    RegCloseKey(hKey);
-    return TRUE;
+        RegCloseKey(hKey);
+    }
 }
 
 VOID
