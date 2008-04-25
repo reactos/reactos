@@ -1,5 +1,4 @@
-/*
- * Copyright 1998 Juergen Schmied
+/* Copyright 1998 Juergen Schmied
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -410,7 +409,7 @@ END
 
 CONFIRM_FILE_REPLACE_DLG DIALOGEX 0, 0, 282, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_SETFOREGROUND | DS_CENTER | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "Confirm File Replace"
+CAPTION "Потвърждение за замяна на файл"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	DEFPUSHBUTTON "&Да", IDYES, 20, 122, 60, 14
@@ -490,7 +489,7 @@ BEGIN
 	EDITTEXT 1006, 49, 28, 177, 14, ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
 	LTEXT "Какво да направи РеактОС?", 1002, 32, 41, 190, 8
 	CONTROL "", 1003, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C04D, 32, 55, 188, 112
-	AUTOCHECKBOX "Винаго прави избраното.", 1004, 32, 171, 190, 10
+	AUTOCHECKBOX "Винаги прави избраното.", 1004, 32, 171, 190, 10
 	DEFPUSHBUTTON "Добре", IDOK, 96, 185, 60, 14
 	PUSHBUTTON "Отказ", IDCANCEL, 160, 185, 60, 14
 END
@@ -548,17 +547,18 @@ END
 
 IDD_PICK_ICON_DIALOG DIALOGEX 0, 0, 237, 204
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "Change Icon"
+CAPTION "Смяна на значе"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    LTEXT "Filename:", -1, 7, 14, 208, 10
-    PUSHBUTTON      "Browse...",IDC_BUTTON_PATH, 148, 24,67,14
+    LTEXT "Файлов име:", -1, 7, 14, 208, 10
+    PUSHBUTTON      "Обзор...",IDC_BUTTON_PATH, 148, 24,67,14
     EDITTEXT        IDC_EDIT_PATH, 6, 24, 135, 15, ES_AUTOHSCROLL
-    LTEXT "Icons:", -1, 7, 47, 208, 10
+    LTEXT "Значета:", -1, 7, 47, 208, 10
     LISTBOX         IDC_PICKICON_LIST,7,57,208,119,LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | LBS_MULTICOLUMN | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP,WS_EX_STATICEDGE
-    DEFPUSHBUTTON   "OK",IDOK, 107, 181,50, 14
-    PUSHBUTTON      "Cancel",IDCANCEL, 167, 181, 50, 14
+    DEFPUSHBUTTON   "Добре",IDOK, 107, 181,50, 14
+    PUSHBUTTON      "Отказ",IDCANCEL, 167, 181, 50, 14
 END
+
 
 STRINGTABLE DISCARDABLE
 BEGIN
@@ -627,7 +627,7 @@ BEGIN
 	IDS_MYVIDEO                 "Лентите ми"
 	IDS_DESKTOPDIRECTORY        "Работна площ"
 	IDS_NETHOOD                 "Мрежова околност"
-	IDS_TEMPLATES               "Templates"
+	IDS_TEMPLATES               "Шаблони"
 	IDS_APPDATA                 "Приложни данни"
 	IDS_PRINTHOOD               "Съседски печатачи"
 	IDS_LOCAL_APPDATA           "Local Settings\\Application Data"
@@ -662,10 +662,10 @@ BEGIN
 	IDS_FOLDER_OPTIONS          "Настройки на папките"
 	IDS_RECYCLEBIN_LOCATION     "Място на кошчето"
 	IDS_RECYCLEBIN_DISKSPACE    "Свободно място"
-	IDS_PICK_ICON_TITLE         "Choose Icon"
-	IDS_PICK_ICON_FILTER        "Icon Files(*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0"
-	IDS_OPEN_WITH_FILTER        "Executable Files\0*.exe\0"
-	IDS_DIRECTORY               "Folder"
+	IDS_PICK_ICON_TITLE         "Изберете значе"
+	IDS_PICK_ICON_FILTER        "Файлове със значета(*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0"
+	IDS_OPEN_WITH_FILTER        "Изпълними файлове\0*.exe\0"
+	IDS_DIRECTORY                "Папка"
 	IDS_VIRTUAL_DRIVER          "Virtual Device Driver"
 	IDS_BAT_FILE                "ReactOS Batch File"
 	IDS_CMD_FILE                "ReactOS Command Script"
@@ -682,6 +682,7 @@ BEGIN
 	IDS_LNK_FILE                "Shortcut"
 	IDS_SYS_FILE                "System file"
 END
+
 
 
 

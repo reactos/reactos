@@ -2,17 +2,17 @@ LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
 
 IDD_PROPPAGESETTINGS DIALOGEX 0, 0, 254, 228
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Settings"
+CAPTION "Настройки"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Select the services that you want for each input language shown in the list.\nUse the Add and Remove buttons to modify this list.", -1, 9, 6, 238, 25
+    LTEXT "Посочете избраните от вас услуги за всеки посочен в списъка език.\nПромяната на списъка става с „Премахване“ и „Добавяне“.", -1, 9, 6, 238, 25
     CONTROL "TEXT", IDC_KEYLAYOUT_LIST, "SYSLISTVIEW32", WS_BORDER | WS_VSCROLL | WS_TABSTOP | LVS_SORTASCENDING | LVS_REPORT | 0x0000808D, 8, 36, 237, 101
-    PUSHBUTTON "&Set Default", IDC_SET_DEFAULT, 101, 159, 144, 14
-    PUSHBUTTON "A&dd...", IDC_ADD_BUTTON, 27, 142, 70, 14
-    PUSHBUTTON "&Remove...", IDC_REMOVE_BUTTON, 101, 142, 70, 14
-    PUSHBUTTON "&Properties...", IDC_PROP_BUTTON, 175, 142, 70, 14
-    GROUPBOX "Preferences", -1, 7, 185, 240, 36
-    PUSHBUTTON "&Key Settings...", IDC_KEY_SET_BTN, 14, 198, 110, 14
+    PUSHBUTTON "&Прилагане на подразбираните", IDC_SET_DEFAULT, 101, 159, 144, 14
+    PUSHBUTTON "&Добавяне...", IDC_ADD_BUTTON, 27, 142, 70, 14
+    PUSHBUTTON "Пре&махване...", IDC_REMOVE_BUTTON, 101, 142, 70, 14
+    PUSHBUTTON "&Свойства...", IDC_PROP_BUTTON, 175, 142, 70, 14
+    GROUPBOX "Предпочитания", -1, 7, 185, 240, 36
+    PUSHBUTTON "Настройка на &клавишите...", IDC_KEY_SET_BTN, 14, 198, 110, 14
 END
 
 IDD_KEYSETTINGS DIALOGEX 0, 0, 272, 163
@@ -47,18 +47,18 @@ END
 
 IDD_CHANGE_KEY_SEQ DIALOGEX 5, 100, 194, 89
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "Change Key Sequence"
+CAPTION "Промяна на клавишната последователност"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "", 1240, 4, 5, 186, 10
     GROUPBOX "", -1, 7, 16, 179, 48
-    AUTOCHECKBOX "S&witch keyboard layouts", IDC_USE_SK, 12, 17, 135, 8
+    AUTOCHECKBOX "Прев&ключване на клавишните подредби", IDC_USE_SK, 12, 17, 135, 8
     CTEXT "SHIFT", -1, 68, 37, 27, 12
     CTEXT "+", -1, 57, 37, 8, 9
     AUTORADIOBUTTON "&CTRL", -1, 24, 31, 30, 11, WS_GROUP
-    AUTORADIOBUTTON "Left A&LT", -1, 24, 45, 50, 12, NOT WS_TABSTOP
-    DEFPUSHBUTTON "OK", IDOK, 83, 70, 50, 14
-    PUSHBUTTON "Cancel", IDCANCEL, 136, 70, 50, 14
+    AUTORADIOBUTTON "Ляв A&LT", -1, 24, 45, 50, 12, NOT WS_TABSTOP
+    DEFPUSHBUTTON "Добре", IDOK, 83, 70, 50, 14
+    PUSHBUTTON "Отказ", IDCANCEL, 136, 70, 50, 14
 END
 
 IDD_INPUT_LANG_PROP DIALOGEX 20, 20, 227, 75
@@ -83,8 +83,8 @@ BEGIN
 	IDS_UNKNOWN              "(Неизвестно)"
 	IDS_RESTART              "Искате ли да презапуснете компютъра още сега?"
 	IDS_WHATS_THIS           "Какво е това?"
-	IDS_LANGUAGE             "Language"
-	IDS_LAYOUT               "Keyboard Layout"
+	IDS_LANGUAGE             "Език"
+	IDS_LAYOUT               "Клавиатурна подредба"
 END
 
 STRINGTABLE
@@ -180,20 +180,20 @@ BEGIN
 	IDS_CHINESE_SIMPLIFIED_MSPINYINIME30_LAYOUT,    "Китайска (традиционна)- Microsoft Pinyin IME 3.0"
 	IDS_UNITED_STATES_DVIRAK_LAYOUT,                "САЩ- Дворак"
 	IDS_CHINESE_TRADITIONAL_NEWCHANGJIE_LAYOUT,     "Китайска (традиционна) - New ChangJie"
-	IDS_ASSAMESE_LAYOUT,                            "Assamese"
+	IDS_ASSAMESE_LAYOUT,                            "Асамска"
 	IDS_BENGALI_LAYOUT,                             "Бенгалска"
-	IDS_DEVANAGARI_INSCRIPT_LAYOUT,                 "Devanagari - INSCRIPT"
-	IDS_GUJARATI_LAYOUT,                            "Gujarati"
-	IDS_KANNADA_LAYOUT,                             "Kannada"
-	IDS_MALAYALAM_LAYOUT,                           "Malayalam"
-	IDS_ORIYA_LAYOUT,                               "Oriya"
+	IDS_DEVANAGARI_INSCRIPT_LAYOUT,                 "Деванагари - INSCRIPT"
+	IDS_GUJARATI_LAYOUT,                            "Гуджаратска"
+	IDS_KANNADA_LAYOUT,                             "Канарийска"
+	IDS_MALAYALAM_LAYOUT,                           "Малаяламска"
+	IDS_ORIYA_LAYOUT,                               "Орийска"
 	IDS_PUNJABI_LAYOUT,                             "Панджабска"
 	IDS_TAMIL_LAYOUT,                               "Тамилска"
-	IDS_TELUGU_LAYOUT,                              "Telugu"
-	IDS_MARATHI_LAYOUT,                             "Marathi"
+	IDS_TELUGU_LAYOUT,                              "Телугуйска"
+	IDS_MARATHI_LAYOUT,                             "Мратхийска"
 	IDS_HINDI_TRADITIONAL_LAYOUT,                   "Хинди традиционна"
 	IDS_CANTONESE_PHONETIC_LAYOUT,                  "Кантонска позвукова"
-	IDS_FAEROESE_LAYOUT,                            "Faeroese"
+	IDS_FAEROESE_LAYOUT,                            "Фарерска"
 	IDS_FYRO_MACEDONIAN_LAYOUT,                     "FYRO Macedonian"
 	IDS_CANADIAN_MULTILINGUAL_STD_LAYOUT,           "Канадска многоезична стандартна"
 	IDS_CHINESE_TRADITIONAL_QUICK_LAYOUT,           "Китайска (традиционна) - бърза"
@@ -215,10 +215,10 @@ BEGIN
 	IDS_MONGOLIAN_CYRILLIC_LAYOUT,                  "Монголска"
 	IDS_KYRGYZ_CYRILLIC_LAYOUT,                     "Кирзгизка кирилица"
 	IDS_URDU_LAYOUT,                                "Урду"
-	IDS_SYRIAC_LAYOUT,                              "Syriac"
-	IDS_SYRIAC_PHONETIC_LAYOUT,                     "Syriac Phonetic"
-	IDS_DIVEHI_PHONETIC_LAYOUT,                     "Divehi Phonetic"
-	IDS_DIVEHI_TYPEWRITER_LAYOUT,                   "Divehi Typewriter"
+	IDS_SYRIAC_LAYOUT,                              "Сирийска"
+	IDS_SYRIAC_PHONETIC_LAYOUT,                     "Сирийска звукова"
+	IDS_DIVEHI_PHONETIC_LAYOUT,                     "Дхивехска звукова"
+	IDS_DIVEHI_TYPEWRITER_LAYOUT,                   "Дхивехска малтийска"
 	IDS_BULGARIAN_PHONETIC_CLASSIC_LAYOUT,          "Българска ЯВЕРТЪ"
 	IDS_BULGARIAN_PHONETIC_BDS_LAYOUT,              "Българска ЧШЕРТЪ"
 END

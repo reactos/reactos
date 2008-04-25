@@ -166,11 +166,11 @@ BEGIN
   IDS_HAND "Link Select"
   IDS_NONE "(Няма)"
   IDS_SYSTEM_SCHEME "(системна наредба)"
-  IDS_BROWSE_FILTER "Показалци (*.ani, *.cur)\0*.ani;*.cur\0Animated Cursors (*.ani)\0*.ani\0Static Cursors (*.cur)\0*.cur\0All Files\0*.*\0\0"
+  IDS_BROWSE_FILTER "Показалци (*.ani, *.cur)\0*.ani;*.cur\0Раздвижени показалци (*.ani)\0*.ani\0Неподвижни показалци (*.cur)\0*.cur\0Всички файлове\0*.*\0\0"
   IDS_BROWSE_TITLE "Обзор"
   IDS_REMOVE_TITLE "Потвърдете изтриване на наредбата"
   IDS_REMOVE_TEXT "Сигурен ли сте, че искате да премахнете наредбата '%s'?"
   IDS_OVERWRITE_TITLE "Потвърждение за замяна на наредбата на показалците"
   IDS_OVERWRITE_TEXT "Наредбата показалци, чието име сте избрали вече се използва. Искате ли да замените съществуващата наредба показалци?"
-  IDS_ANIMATE_CURSOR "Animated Cursor"
+  IDS_ANIMATE_CURSOR "Раздвижен показалец"
 END

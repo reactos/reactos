@@ -1,7 +1,7 @@
 /*
- * Bulgarian resources for SETUPAPI
+ * English resources for SETUPAPI
  *
- * Copyright 2005 Milko Krachounov
+ * Copyright 2001 Andreas Mohr
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -22,10 +22,10 @@ LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
 
 COPYFILEDLGORD DIALOGEX LOADONCALL MOVEABLE DISCARDABLE 20, 20, 208, 105
 STYLE DS_MODALFRAME | DS_SHELLFONT | WS_POPUP | WS_VISIBLE | WS_CAPTION
-CAPTION "Копиране на файлове..."
+CAPTION "Презапис на файловете..."
 FONT 8, "MS Shell Dlg"
 BEGIN
-	PUSHBUTTON "Отмени", IDCANCEL, 79, 84, 50, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+	PUSHBUTTON "Отказ", IDCANCEL, 79, 84, 50, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
 	LTEXT "Източник:", -1, 7, 7, 77, 11, WS_CHILD | WS_VISIBLE | WS_GROUP
 	LTEXT "", SOURCESTRORD, 7, 18, 194, 11, WS_CHILD | WS_VISIBLE | WS_GROUP
 	LTEXT "Цел:", -1, 7, 30, 77, 11, WS_CHILD | WS_VISIBLE | WS_GROUP
@@ -35,7 +35,7 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-	IDS_QUERY_REBOOT_TEXT        "Your computer needs to be rebooted to finish installation. Do you want to proceed?"
-	IDS_QUERY_REBOOT_CAPTION     "Reboot"
-	IDS_INF_FILE                 "Setup Information"
+	IDS_QUERY_REBOOT_TEXT        "Трябва да презапуснете компютъра, за да приключено слагането. Искате ли да го направите?"
+	IDS_QUERY_REBOOT_CAPTION     "Презапускане"
+	IDS_INF_FILE                 "Сведения за настройката"
 END
