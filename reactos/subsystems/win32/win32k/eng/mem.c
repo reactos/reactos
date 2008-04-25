@@ -72,7 +72,7 @@ EngFreeMem(PVOID Mem)
  * @implemented
  */
 PVOID STDCALL
-EngAllocUserMem(ULONG cj, ULONG Tag)
+EngAllocUserMem(SIZE_T cj, ULONG Tag)
 {
   PVOID NewMem = NULL;
   NTSTATUS Status;
