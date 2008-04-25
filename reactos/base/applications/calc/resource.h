@@ -1,78 +1,118 @@
-/*
- * WineCalc (resource.h)
- *
- * Copyright 2003 James Briggs
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- */
+#define IDS_STRING_LICENSE              1
+#define IDS_MATH_ERROR                  2
+#define IDS_QUICKHELP                   3
+#define IDD_DIALOG_SCIENTIFIC           101
+#define IDR_MENU_SCIENTIFIC_1           103
+#define IDR_MENU_SCIENTIFIC_2           104
+#define IDD_DIALOG_STANDARD             104
+#define IDR_MENU_STANDARD               105
+#define IDD_DIALOG_ABOUT                105
+#define IDB_BITMAP_ROS                  106
+#define IDD_DIALOG_STAT                 107
+#define IDI_CALC_BIG                    108
+#define IDI_CALC_SMALL                  109
+#define IDC_RADIO_HEX                   1002
+#define IDC_RADIO_DEC                   1003
+#define IDC_RADIO_OCT                   1004
+#define IDC_RADIO_BIN                   1005
+#define IDC_CHECK_INV                   1006
+#define IDC_CHECK_HYP                   1007
+#define IDC_BUTTON_STA                  1009
+#define IDC_BUTTON_AVE                  1010
+#define IDC_BUTTON_SUM                  1011
+#define IDC_BUTTON_S                    1012
+#define IDC_BUTTON_DAT                  1013
+#define IDC_BUTTON_FE                   1014
+#define IDC_BUTTON_DMS                  1015
+#define IDC_BUTTON_SIN                  1016
+#define IDC_BUTTON_COS                  1017
+#define IDC_BUTTON_TAN                  1018
+#define IDC_BUTTON_LEFTPAR              1019
+#define IDC_BUTTON_EXP                  1020
+#define IDC_BUTTON_XeY                  1021
+#define IDC_BUTTON_Xe2                  1022
+#define IDC_BUTTON_Xe3                  1023
+#define IDC_BUTTON_RIGHTPAR             1024
+#define IDC_BUTTON_LN                   1025
+#define IDC_BUTTON_LOG                  1026
+#define IDC_BUTTON_NF                   1027
+#define IDC_BUTTON_RX                   1028
+#define IDC_BUTTON_MC                   1029
+#define IDC_BUTTON_MR                   1030
+#define IDC_BUTTON_MS                   1031
+#define IDC_BUTTON_MP                   1032
+#define IDC_BUTTON_PI                   1033
+#define IDC_BUTTON_7                    1034
+#define IDC_BUTTON_4                    1035
+#define IDC_BUTTON_1                    1036
+#define IDC_BUTTON_0                    1037
+#define IDC_BUTTON_A                    1038
+#define IDC_BUTTON_8                    1039
+#define IDC_BUTTON_5                    1040
+#define IDC_BUTTON_2                    1041
+#define IDC_BUTTON_SIGN                 1042
+#define IDC_BUTTON_B                    1043
+#define IDC_BUTTON_9                    1044
+#define IDC_BUTTON_6                    1045
+#define IDC_BUTTON_3                    1046
+#define IDC_BUTTON_DOT                  1047
+#define IDC_BUTTON_C                    1048
+#define IDC_BUTTON_DIV                  1049
+#define IDC_BUTTON_MULT                 1050
+#define IDC_BUTTON_SUB                  1051
+#define IDC_BUTTON_ADD                  1052
+#define IDC_BUTTON_D                    1053
+#define IDC_BUTTON_MOD                  1054
+#define IDC_BUTTON_OR                   1055
+#define IDC_BUTTON_LSH                  1056
+#define IDC_BUTTON_EQU                  1057
+#define IDC_BUTTON_E                    1058
+#define IDC_BUTTON_AND                  1059
+#define IDC_BUTTON_XOR                  1060
+#define IDC_BUTTON_NOT                  1061
+#define IDC_BUTTON_INT                  1062
+#define IDC_BUTTON_F                    1063
+#define IDC_RADIO_QWORD                 1064
+#define IDC_RADIO_DWORD                 1065
+#define IDC_RADIO_WORD                  1066
+#define IDC_RADIO_BYTE                  1067
+#define IDC_RADIO_DEG                   1068
+#define IDC_RADIO_RAD                   1069
+#define IDC_RADIO_GRAD                  1070
+#define IDC_BUTTON_CANC                 1071
+#define IDC_BUTTON_CE                   1072
+#define IDC_BUTTON_BACK                 1073
+#define IDC_TEXT_OUTPUT                 1074
+#define IDC_TEXT_PARENT                 1075
+#define IDC_TEXT_MEMORY                 1076
+#define IDC_EDIT_LICENSE                1078
+#define IDC_LIST_STAT                   1079
+#define IDC_BUTTON_RET                  1080
+#define IDC_BUTTON_LOAD                 1081
+#define IDC_BUTTON_CD                   1082
+#define IDC_BUTTON_CAD                  1083
+#define IDC_TEXT_NITEMS                 1084
+#define IDC_BUTTON_SQRT                 1085
+#define IDC_BUTTON_PERCENT              1086
+#define IDC_TEXT_VERSION                1087
+#define IDC_BUTTON_FOCUS                1088
+#define IDM_EDIT_COPY                   40002
+#define IDM_EDIT_PASTE                  40003
+#define IDM_VIEW_STANDARD               40004
+#define IDM_VIEW_SCIENTIFIC             40005
+#define IDM_VIEW_HEX                    40006
+#define IDM_VIEW_DEC                    40007
+#define IDM_VIEW_OCT                    40008
+#define IDM_VIEW_BIN                    40009
+#define IDM_VIEW_DEG                    40010
+#define IDM_VIEW_RAD                    40011
+#define IDM_VIEW_GRAD                   40012
+#define IDM_VIEW_GROUP                  40013
+#define IDM_HELP_HELP                   40014
+#define IDM_HELP_ABOUT                  40015
+#define IDM_VIEW_QWORD                  40016
+#define IDM_VIEW_WORD                   40017
+#define IDM_VIEW_BYTE                   40018
+#define IDM_VIEW_DWORD                  40019
+#define IDM_VIEW_CONVERSION             40020
 
-/* menus */
-
-#define IDM_COPY               1001
-#define IDM_PASTE              1002
-#define IDM_MODE_STANDARD      1003
-#define IDM_MODE_SCIENTIFIC    1004
-#define IDM_DIGIT_GROUPING     1005
-#define IDM_HELP_TOPICS        1006
-#define IDM_ABOUT              1007
-#define IDM_SEPARATOR1         1008
-#define IDM_SEPARATOR2         1009
-#define IDM_SEPARATOR3         1010
-#define IDM_WHATS_THIS         1011
-
-#define IDI_CALCICON           1050
-
-/* strings */
-
-#define IDS_APPNAME            1100
-
-#define IDS_BTN_BACKSPACE      1101
-#define IDS_BTN_CLEAR_ENTRY    1102
-#define IDS_BTN_CLEAR_ALL      1103
-#define IDS_BTN_MEM_CLEAR      1104
-#define IDS_BTN_MEM_RECALL     1105
-#define IDS_BTN_MEM_STORE      1106
-#define IDS_BTN_MEM_PLUS       1107
-#define IDS_BTN_MEM_STATUS_M   1108
-#define IDS_BTN_SQRT           1109
-#define IDS_BTN_DEGREES        1110
-#define IDS_BTN_RADIANS        1111
-#define IDS_BTN_GRADS          1112
-#define IDS_BTN_SHRT_HEX       1113
-#define IDS_BTN_SHRT_DEC       1114
-#define IDS_BTN_SHRT_OCT       1115
-#define IDS_BTN_SHRT_BIN       1116
-
-
-#define IDS_ERR_INVALID_INPUT  1120
-#define IDS_ERR_DIVIDE_BY_ZERO 1121
-#define IDS_ERR_UNDEFINED      1122
-
-#define IDS_COPYRIGHT1         1130
-#define IDS_COPYRIGHT2         1131
-#define IDS_COPYRIGHT3         1132
-#define IDS_COPYRIGHT4         1133
-#define IDS_COPYRIGHT5         1134
-
-/* keys */
-
-#define IDV_HELP                103
-
-/* stats dialog */
-
-#define ID_STATS_RET           3000
-#define ID_STATS_LOAD          3001
-#define ID_STATS_CD            3002
-#define ID_STATS_CAD           3003
