@@ -76,7 +76,7 @@ Win32kProcessCallback(struct _EPROCESS *Process,
 
   if (Create)
     {
-      ULONG ViewSize = 0;
+      SIZE_T ViewSize = 0;
       LARGE_INTEGER Offset;
       PVOID UserBase = NULL;
       NTSTATUS Status;
