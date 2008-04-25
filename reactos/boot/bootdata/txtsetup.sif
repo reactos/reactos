@@ -131,7 +131,7 @@ Default = "XT-, AT- or extended keyboard (83-105 keys)"
 
 
 [KeyboardLayout]
-0000041c = "Albanian"
+0000041C = "Albanian"
 00040402 = "Bulgarian BDS 5237-1978"
 00020402 = "Bulgarian phonetic classic"
 00030402 = "Bulgarian phonetic BDS 5237-2006"
@@ -151,6 +151,7 @@ Default = "XT-, AT- or extended keyboard (83-105 keys)"
 00010408 = "Greek 220"
 0000040D = "Hebrew"
 0000040E = "Hungarian" 
+0000040F = "Icelandic" 
 00000410 = "Italian"
 00000411 = "Japanese"
 00000427 = "Lithuanian"
@@ -164,17 +165,20 @@ Default = "XT-, AT- or extended keyboard (83-105 keys)"
 0000041D = "Swedish (Sweden)"
 0000041E = "Thai (traditional)"
 00000422 = "Ukrainian"
+00050409 = "US English (IBM Arabic 238_L)"
 
 [Files.KeyboardLayout]
-00040402 = kbdbgm.dll
 00020402 = kbdbgt.dll
 00030402 = kbdbga.dll
+00040402 = kbdbgm.dll
 0000080C = kbdbe.dll
 00000813 = kbdbe.dll
 00000455 = kbdbur.dll
 00000405 = kbdcz1.dll
 00000406 = kbdda.dll
+00000409 = kbdus.dll
 00010409 = kbddv.dll
+00050409 = kbdusa.dll
 0000040A = kbdes.dll
 0000040B = kbdfi.dll
 0000040C = kbdfr.dll
@@ -183,6 +187,7 @@ Default = "XT-, AT- or extended keyboard (83-105 keys)"
 00010408 = kbdhe.dll
 0000040D = kbdheb.dll
 0000040E = kbdhu.dll
+0000040F = kbdic.dll
 00000410 = kbdit.dll
 00000411 = kbdja.dll
 0000041c = kbdal.dll
@@ -198,7 +203,6 @@ Default = "XT-, AT- or extended keyboard (83-105 keys)"
 0000041E = kbdth.dll
 00000809 = kbduk.dll
 00000422 = kbdur.dll
-00000409 = kbdus.dll
 
 [HiveInfs.Install]
 AddReg=hivecls.inf,AddReg
