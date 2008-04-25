@@ -125,6 +125,17 @@ static BOOLEAN MmSwapSpaceMessage = FALSE;
 
 /* FUNCTIONS *****************************************************************/
 
+VOID
+NTAPI
+MmBuildMdlFromPages(PMDL Mdl, PPFN_TYPE Pages)
+{
+    memcpy(Mdl + 1, Pages, sizeof(PFN_TYPE) * (PAGE_ROUND_UP(Mdl->ByteOffset+Mdl->ByteCount)/PAGE_SIZE));
+    
+    /* FIXME: this flag should be set by the caller perhaps? */
+    Mdl->MdlFlags |= MDL_IO_PAGE_READ;
+}
+
+
 BOOLEAN
 STDCALL
 MmIsFileAPagingFile(PFILE_OBJECT FileObject)
@@ -247,6 +258,7 @@ MmWriteToSwapPage(SWAPENTRY SwapEntry, PFN_TYPE Page)
 
    MmInitializeMdl(Mdl, NULL, PAGE_SIZE);
    MmBuildMdlFromPages(Mdl, &Page);
+   Mdl->MdlFlags |= MDL_PAGES_LOCKED;
 
    file_offset.QuadPart = offset * PAGE_SIZE;
    file_offset = MmGetOffsetPageFile(PagingFileList[i]->RetrievalPointers, file_offset);
@@ -262,7 +274,11 @@ MmWriteToSwapPage(SWAPENTRY SwapEntry, PFN_TYPE Page)
       KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
       Status = Iosb.Status;
    }
-   MmUnmapLockedPages(Mdl->MappedSystemVa, Mdl);
+    
+   if (Mdl->MdlFlags & MDL_MAPPED_TO_SYSTEM_VA)
+   {
+      MmUnmapLockedPages (Mdl->MappedSystemVa, Mdl);
+   }
    return(Status);
 }
 
@@ -303,6 +319,7 @@ MmReadFromSwapPage(SWAPENTRY SwapEntry, PFN_TYPE Page)
 
    MmInitializeMdl(Mdl, NULL, PAGE_SIZE);
    MmBuildMdlFromPages(Mdl, &Page);
+   Mdl->MdlFlags |= MDL_PAGES_LOCKED;
 
    file_offset.QuadPart = offset * PAGE_SIZE;
    file_offset = MmGetOffsetPageFile(PagingFileList[i]->RetrievalPointers, file_offset);
@@ -318,7 +335,10 @@ MmReadFromSwapPage(SWAPENTRY SwapEntry, PFN_TYPE Page)
       KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
       Status = Iosb.Status;
    }
-   MmUnmapLockedPages(Mdl->MappedSystemVa, Mdl);
+   if (Mdl->MdlFlags & MDL_MAPPED_TO_SYSTEM_VA)
+   {
+      MmUnmapLockedPages (Mdl->MappedSystemVa, Mdl);
+   }
    return(Status);
 }
 

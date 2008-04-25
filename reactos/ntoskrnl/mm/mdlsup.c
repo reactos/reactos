@@ -20,482 +20,847 @@
 /* GLOBALS *******************************************************************/
 
 #define TAG_MDL    TAG('M', 'D', 'L', ' ')
-
 #define MI_MDL_MAPPING_REGION_SIZE       (256*1024*1024)
 
-static PVOID MiMdlMappingRegionBase = NULL;
-static RTL_BITMAP MiMdlMappingRegionAllocMap;
-static ULONG MiMdlMappingRegionHint;
-static KSPIN_LOCK MiMdlMappingRegionLock;
+PVOID MiMdlMappingRegionBase = NULL;
+RTL_BITMAP MiMdlMappingRegionAllocMap;
+ULONG MiMdlMappingRegionHint;
+KSPIN_LOCK MiMdlMappingRegionLock;
 extern ULONG MmPageArraySize;
 
-/*
-MDL Flags desc.
-
-MDL_PAGES_LOCKED              MmProbeAndLockPages has been called for this mdl
-MDL_SOURCE_IS_NONPAGED_POOL   mdl has been build by MmBuildMdlForNonPagedPool
-MDL_PARTIAL                   mdl has been built by IoBuildPartialMdl
-MDL_MAPPING_CAN_FAIL          in case of an error, MmMapLockedPages will return NULL instead of to bugcheck
-MDL_MAPPED_TO_SYSTEM_VA       mdl has been mapped into kernel space using MmMapLockedPages
-MDL_PARTIAL_HAS_BEEN_MAPPED   mdl flagged MDL_PARTIAL has been mapped into kernel space using MmMapLockedPages
-*/
-
-/* FUNCTIONS *****************************************************************/
-
-
-/*
- * @unimplemented
- */
-NTSTATUS
-STDCALL
-MmAdvanceMdl (
-    IN PMDL Mdl,
-    IN ULONG NumberOfBytes
-    )
-{
-	UNIMPLEMENTED;
-	return STATUS_NOT_IMPLEMENTED;
-}
-
+/* PRIVATE FUNCTIONS **********************************************************/
 
 VOID
 INIT_FUNCTION
 NTAPI
 MmInitializeMdlImplementation(VOID)
 {
-   MEMORY_AREA* Result;
-   NTSTATUS Status;
-   PVOID Buffer;
-   PHYSICAL_ADDRESS BoundaryAddressMultiple;
-
-   BoundaryAddressMultiple.QuadPart = 0;
-   MiMdlMappingRegionHint = 0;
-   MiMdlMappingRegionBase = NULL;
-
-   MmLockAddressSpace(MmGetKernelAddressSpace());
-   Status = MmCreateMemoryArea(MmGetKernelAddressSpace(),
-                               MEMORY_AREA_MDL_MAPPING,
-                               &MiMdlMappingRegionBase,
-                               MI_MDL_MAPPING_REGION_SIZE,
-                               PAGE_READWRITE,
-                               &Result,
-                               FALSE,
-                               0,
-                               BoundaryAddressMultiple);
-   if (!NT_SUCCESS(Status))
-   {
-      MmUnlockAddressSpace(MmGetKernelAddressSpace());
-      KEBUGCHECK(0);
-   }
-   MmUnlockAddressSpace(MmGetKernelAddressSpace());
-
-   Buffer = ExAllocatePoolWithTag(NonPagedPool,
-                                  MI_MDL_MAPPING_REGION_SIZE / (PAGE_SIZE * 8),
-                                  TAG_MDL);
-
-   RtlInitializeBitMap(&MiMdlMappingRegionAllocMap, Buffer, MI_MDL_MAPPING_REGION_SIZE / PAGE_SIZE);
-   RtlClearAllBits(&MiMdlMappingRegionAllocMap);
-
-   KeInitializeSpinLock(&MiMdlMappingRegionLock);
+    MEMORY_AREA* Result;
+    NTSTATUS Status;
+    PVOID Buffer;
+    PHYSICAL_ADDRESS BoundaryAddressMultiple;
+    
+    BoundaryAddressMultiple.QuadPart = 0;
+    MiMdlMappingRegionHint = 0;
+    MiMdlMappingRegionBase = NULL;
+    
+    MmLockAddressSpace(MmGetKernelAddressSpace());
+    Status = MmCreateMemoryArea(MmGetKernelAddressSpace(),
+                                MEMORY_AREA_MDL_MAPPING,
+                                &MiMdlMappingRegionBase,
+                                MI_MDL_MAPPING_REGION_SIZE,
+                                PAGE_READWRITE,
+                                &Result,
+                                FALSE,
+                                0,
+                                BoundaryAddressMultiple);
+    if (!NT_SUCCESS(Status))
+    {
+        MmUnlockAddressSpace(MmGetKernelAddressSpace());
+        KEBUGCHECK(0);
+    }
+    MmUnlockAddressSpace(MmGetKernelAddressSpace());
+    
+    Buffer = ExAllocatePoolWithTag(NonPagedPool,
+                                   MI_MDL_MAPPING_REGION_SIZE / (PAGE_SIZE * 8),
+                                   TAG_MDL);
+    
+    RtlInitializeBitMap(&MiMdlMappingRegionAllocMap, Buffer, MI_MDL_MAPPING_REGION_SIZE / PAGE_SIZE);
+    RtlClearAllBits(&MiMdlMappingRegionAllocMap);
+    
+    KeInitializeSpinLock(&MiMdlMappingRegionLock);
 }
 
-
-PVOID
-NTAPI
-MmGetMdlPageAddress(PMDL Mdl, PVOID Offset)
-{
-   PPFN_NUMBER MdlPages;
-
-   MdlPages = (PPFN_NUMBER)(Mdl + 1);
-
-   return((PVOID)MdlPages[((ULONG_PTR)Offset) / PAGE_SIZE]);
-}
+/* PUBLIC FUNCTIONS ***********************************************************/
 
 
 /*
  * @implemented
  */
-VOID STDCALL
-MmUnlockPages(PMDL Mdl)
-/*
- * FUNCTION: Unlocks the physical pages described by a given MDL
- * ARGUMENTS:
- *      MemoryDescriptorList = MDL describing the buffer to be unlocked
- * NOTES: The memory described by the specified MDL must have been locked
- * previously by a call to MmProbeAndLockPages. As the pages unlocked, the
- * MDL is updated
- *
- * May be called in any process context.
- */
+PMDL
+NTAPI
+MmCreateMdl(IN PMDL Mdl,
+            IN PVOID Base,
+            IN ULONG Length)
 {
-   ULONG i;
-   PPFN_NUMBER MdlPages;
-   PFN_NUMBER Page;
-
-   /*
-    * MmProbeAndLockPages MUST have been called to lock this mdl!
-    *
-    * Windows will bugcheck if you pass MmUnlockPages an mdl that hasn't been
-    * locked with MmLockAndProbePages, but (for now) we'll be more forgiving...
-    */
-   if (!(Mdl->MdlFlags & MDL_PAGES_LOCKED))
-   {
-      DPRINT1("MmUnlockPages called for non-locked mdl!\n");
-      return;
-   }
-
-   /* If mdl buffer is mapped io space -> do nothing */
-   if (Mdl->MdlFlags & MDL_IO_SPACE)
-   {
-      Mdl->MdlFlags &= ~MDL_PAGES_LOCKED;
-      return;
-   }
-
-   /* Automagically undo any calls to MmGetSystemAddressForMdl's for this mdl */
-   if (Mdl->MdlFlags & MDL_MAPPED_TO_SYSTEM_VA)
-   {
-      MmUnmapLockedPages(Mdl->MappedSystemVa, Mdl);
-   }
-
-   /*
-    * FIXME: I don't know whether this right, but it looks sensible
-    */
-   if ((Mdl->MdlFlags & MDL_SOURCE_IS_NONPAGED_POOL) ||
-         (Mdl->MdlFlags & MDL_IO_PAGE_READ))
-   {
-      return;
-   }
-
-
-   MdlPages = (PPFN_NUMBER)(Mdl + 1);
-   for (i=0; i<(PAGE_ROUND_UP(Mdl->ByteCount+Mdl->ByteOffset)/PAGE_SIZE); i++)
-   {
-      Page = MdlPages[i];
-      MmUnlockPage(Page);
-      MmDereferencePage(Page);
-   }
-
-   Mdl->MdlFlags &= ~MDL_PAGES_LOCKED;
+    ULONG Size;
+    
+    /* Check if we don't have an MDL built */
+    if (!Mdl)
+    {
+        /* Calcualte the size we'll need  and allocate the MDL */
+        Size = MmSizeOfMdl(Base, Length);
+        Mdl = ExAllocatePoolWithTag(NonPagedPool, Size, TAG_MDL);
+        if (!Mdl) return NULL;
+    }
+    
+    /* Initialize it */
+    MmInitializeMdl(Mdl, Base, Length);
+    DPRINT("Creating MDL: %p\n", Mdl);
+    DPRINT("Base: %p. Length: %lx\n", Base, Length);
+    return Mdl;
 }
 
+/*
+ * @implemented
+ */
+ULONG
+NTAPI
+MmSizeOfMdl(IN PVOID Base,
+            IN ULONG Length)
+{
+    /* Return the MDL size */
+    return sizeof(MDL) + (ADDRESS_AND_SIZE_TO_SPAN_PAGES(Base, Length) * sizeof(PFN_NUMBER));
+}
+
+/*
+ * @implemented
+ */
+VOID
+NTAPI
+MmBuildMdlForNonPagedPool(IN PMDL Mdl)
+{
+    ULONG i;
+    ULONG PageCount;
+    PPFN_NUMBER MdlPages;
+    PVOID Base;
+    DPRINT("Building MDL: %p\n", Mdl);
+    
+    /* Sanity checks */
+    ASSERT(Mdl->ByteCount != 0);
+    ASSERT((Mdl->MdlFlags & (MDL_PAGES_LOCKED |
+                             MDL_MAPPED_TO_SYSTEM_VA |
+                             MDL_SOURCE_IS_NONPAGED_POOL |
+                             MDL_PARTIAL)) == 0);
+    
+    /* We know the MDL isn't associated to a process now */
+    Mdl->Process = NULL;
+    
+    /* Get page and VA information */
+    MdlPages = (PPFN_NUMBER)(Mdl + 1);
+    Base = Mdl->StartVa;
+    
+    /* Set the system address and now get the page count */
+    Mdl->MappedSystemVa = (PVOID)((ULONG_PTR)Base + Mdl->ByteOffset);
+    PageCount = ADDRESS_AND_SIZE_TO_SPAN_PAGES(Mdl->MappedSystemVa, Mdl->ByteCount);
+    ASSERT(PageCount != 0);
+    
+    /* Go through each page */
+    for (i = 0; i < PageCount; i++)
+    {
+        /* Map it */
+        *MdlPages++ = MmGetPfnForProcess(NULL,
+                                         (PVOID)((ULONG_PTR)Base + (i * PAGE_SIZE)));
+    }
+    
+    /* Set the final flag */
+    Mdl->MdlFlags |= MDL_SOURCE_IS_NONPAGED_POOL;
+}
+
+/*
+ * @implemented
+ */
+VOID
+NTAPI
+MmFreePagesFromMdl(IN PMDL Mdl)
+{
+    PVOID Base;
+    PPFN_NUMBER Pages;
+    LONG NumberOfPages;
+    DPRINT("Freeing MDL: %p\n", Mdl);
+    
+    /* Sanity checks */
+    ASSERT(KeGetCurrentIrql() <= APC_LEVEL);
+    ASSERT((Mdl->MdlFlags & MDL_IO_SPACE) == 0);
+    ASSERT(((ULONG_PTR)Mdl->StartVa & (PAGE_SIZE - 1)) == 0);
+    
+    /* Get address and page information */
+    Base = (PVOID)((ULONG_PTR)Mdl->StartVa + Mdl->ByteOffset);
+    NumberOfPages = ADDRESS_AND_SIZE_TO_SPAN_PAGES(Base, Mdl->ByteCount);
+    
+    /* Loop all the MDL pages */
+    Pages = (PPFN_NUMBER)(Mdl + 1);
+    while (--NumberOfPages >= 0)
+    {
+        /* Dereference each one of them */
+        MmDereferencePage(Pages[NumberOfPages]);
+    }
+    
+    /* Remove the pages locked flag */
+    Mdl->MdlFlags &= ~MDL_PAGES_LOCKED;
+}
+
+/*
+ * @implemented
+ */
+PVOID
+NTAPI
+MmMapLockedPages(IN PMDL Mdl,
+                 IN KPROCESSOR_MODE AccessMode)
+{
+    /* Call the extended version */
+    return MmMapLockedPagesSpecifyCache(Mdl,
+                                        AccessMode,
+                                        MmCached,
+                                        NULL,
+                                        TRUE,
+                                        HighPagePriority);
+}
+
+/*
+ * @implemented
+ */
+VOID
+NTAPI
+MmUnlockPages(IN PMDL Mdl)
+{
+    ULONG i;
+    PPFN_NUMBER MdlPages;
+    PFN_NUMBER Page;
+    PEPROCESS Process;
+    PVOID Base;
+    ULONG Flags, PageCount;
+    DPRINT("Unlocking MDL: %p\n", Mdl);
+    
+    /* Sanity checks */
+    ASSERT((Mdl->MdlFlags & MDL_PAGES_LOCKED) != 0);
+    ASSERT((Mdl->MdlFlags & MDL_SOURCE_IS_NONPAGED_POOL) == 0);
+    ASSERT((Mdl->MdlFlags & MDL_PARTIAL) == 0);
+    ASSERT(Mdl->ByteCount != 0);
+    
+    /* Get the process associated and capture the flags which are volatile */
+    Process = Mdl->Process;
+    Flags = Mdl->MdlFlags;
+    
+    /* Automagically undo any calls to MmGetSystemAddressForMdl's for this mdl */
+    if (Mdl->MdlFlags & MDL_MAPPED_TO_SYSTEM_VA)
+    {
+        /* Unmap the pages from system spage */
+        MmUnmapLockedPages(Mdl->MappedSystemVa, Mdl);
+    }
+    
+    /* Get the page count */
+    MdlPages = (PPFN_NUMBER)(Mdl + 1);
+    Base = (PVOID)((ULONG_PTR)Mdl->StartVa + Mdl->ByteOffset);
+    PageCount = ADDRESS_AND_SIZE_TO_SPAN_PAGES(Base, Mdl->ByteCount);
+    ASSERT(PageCount != 0);
+    
+    /* We don't support AWE */
+    if (Flags & MDL_DESCRIBES_AWE) ASSERT(FALSE);    
+    
+    /* Check if the buffer is mapped I/O space */
+    if (Flags & MDL_IO_SPACE)
+    {
+        /* Check if this was a wirte */
+        if (Flags & MDL_WRITE_OPERATION)
+        {
+            /* Windows keeps track of the modified bit */
+        }
+        
+        /* Check if we have a process */
+        if (Process)
+        {
+            /* Handle the accounting of locked pages */
+            ASSERT(Process->NumberOfLockedPages >= 0);
+            InterlockedExchangeAddSizeT(&Process->NumberOfLockedPages,
+                                        -PageCount);
+        }
+        
+        /* We're done */
+        Mdl->MdlFlags &= ~MDL_IO_SPACE;
+        Mdl->MdlFlags &= ~MDL_PAGES_LOCKED;
+        return;
+    }
+    
+    /* Check if we have a process */
+    if (Process)
+    {
+        /* Handle the accounting of locked pages */
+        ASSERT(Process->NumberOfLockedPages >= 0);
+        InterlockedExchangeAddSizeT(&Process->NumberOfLockedPages,
+                                    -PageCount);
+    }
+    
+    /* Scan each page */
+    for (i = 0; i < PageCount; i++)
+    {
+        /* Get the page entry */
+        
+        /* Unlock and dereference it */
+        Page = MdlPages[i];
+        MmUnlockPage(Page);
+        MmDereferencePage(Page);
+    }
+    
+    /* We're done */
+    Mdl->MdlFlags &= ~MDL_PAGES_LOCKED;
+}
+
+/*
+ * @implemented
+ */
+VOID
+NTAPI
+MmUnmapLockedPages(IN PVOID BaseAddress,
+                   IN PMDL Mdl)
+{
+    KIRQL oldIrql;
+    ULONG i, PageCount;
+    ULONG Base;
+    MEMORY_AREA *MemoryArea;
+    DPRINT("Unmapping MDL: %p\n", Mdl);
+    DPRINT("Base: %p\n", BaseAddress);
+    
+    /* Sanity check */
+    ASSERT(Mdl->ByteCount != 0);
+    
+    /* Check if this is a kernel request */
+    if (BaseAddress > MM_HIGHEST_USER_ADDRESS)
+    {
+        /* Get base and count information */
+        Base = (ULONG_PTR)Mdl->StartVa + Mdl->ByteOffset;
+        PageCount = ADDRESS_AND_SIZE_TO_SPAN_PAGES(Base, Mdl->ByteCount);
+
+        /* Sanity checks */
+        ASSERT((Mdl->MdlFlags & MDL_PARENT_MAPPED_SYSTEM_VA) == 0);
+        ASSERT(PageCount != 0);
+        ASSERT(Mdl->MdlFlags & MDL_MAPPED_TO_SYSTEM_VA);
+        
+        /* ReactOS does not support this flag */
+        if (Mdl->MdlFlags & MDL_FREE_EXTRA_PTES) ASSERT(FALSE);
+        
+        /* Remove flags */
+        Mdl->MdlFlags &= ~(MDL_MAPPED_TO_SYSTEM_VA |
+                           MDL_PARTIAL_HAS_BEEN_MAPPED |
+                           MDL_FREE_EXTRA_PTES);
+        
+        /* If we came from non-paged pool, on ReactOS, we can leave */
+        if (Mdl->MdlFlags & MDL_SOURCE_IS_NONPAGED_POOL) return;
+        
+        /* Loop each page */
+        BaseAddress = PAGE_ALIGN(BaseAddress);
+        for (i = 0; i < PageCount; i++)
+        {
+            /* Delete it */
+            MmDeleteVirtualMapping(NULL,
+                                   (PVOID)((ULONG_PTR)BaseAddress + (i * PAGE_SIZE)),
+                                   FALSE,
+                                   NULL,
+                                   NULL);
+        }
+        
+        /* Lock the mapping region */
+        KeAcquireSpinLock(&MiMdlMappingRegionLock, &oldIrql);
+        
+        /* Deallocate all the pages used. */
+        Base = ((ULONG_PTR)BaseAddress - (ULONG_PTR)MiMdlMappingRegionBase) / PAGE_SIZE;
+        RtlClearBits(&MiMdlMappingRegionAllocMap, Base, PageCount);
+        MiMdlMappingRegionHint = min(MiMdlMappingRegionHint, Base);
+        
+        /* Release the lock */
+        KeReleaseSpinLock(&MiMdlMappingRegionLock, oldIrql);
+    }
+    else
+    {
+        /* Sanity check */
+        ASSERT(Mdl->Process == PsGetCurrentProcess());
+        
+        /* Find the memory area */
+        MemoryArea = MmLocateMemoryAreaByAddress((PMADDRESS_SPACE)&(Mdl->Process)->VadRoot,
+                                                 BaseAddress);
+        ASSERT(MemoryArea);
+
+        /* Free it */
+        MmFreeMemoryArea((PMADDRESS_SPACE)&(Mdl->Process)->VadRoot,
+                         MemoryArea,
+                         NULL,
+                         NULL);
+    }
+}
+
+/*
+ * @implemented
+ */
+VOID
+NTAPI
+MmProbeAndLockPages(IN PMDL Mdl,
+                    IN KPROCESSOR_MODE AccessMode,
+                    IN LOCK_OPERATION Operation)
+{
+    PPFN_TYPE MdlPages;
+    PVOID Base, Address;
+    ULONG i, j;
+    ULONG NrPages;
+    NTSTATUS Status;
+    PFN_TYPE Page;
+    PEPROCESS CurrentProcess;
+    PETHREAD Thread;
+    PMADDRESS_SPACE AddressSpace;
+    DPRINT("Probing MDL: %p\n", Mdl);
+    
+    /* Sanity checks */
+    ASSERT(Mdl->ByteCount != 0);
+    ASSERT(((ULONG)Mdl->ByteOffset & ~(PAGE_SIZE - 1)) == 0);
+    ASSERT(((ULONG_PTR)Mdl->StartVa & (PAGE_SIZE - 1)) == 0);
+    ASSERT((Mdl->MdlFlags & (MDL_PAGES_LOCKED |
+                             MDL_MAPPED_TO_SYSTEM_VA |
+                             MDL_SOURCE_IS_NONPAGED_POOL |
+                             MDL_PARTIAL |
+                             MDL_IO_SPACE)) == 0);
+    
+    /* Get page and base information */
+    MdlPages = (PPFN_NUMBER)(Mdl + 1);
+    Base = (PVOID)Mdl->StartVa;
+    Address = (PVOID)((ULONG_PTR)Base + Mdl->ByteOffset);
+    NrPages = ADDRESS_AND_SIZE_TO_SPAN_PAGES(Address, Mdl->ByteCount);
+    ASSERT(NrPages != 0);
+
+    /* Check if this is an MDL in I/O Space */
+    if (Mdl->StartVa >= MmSystemRangeStart &&
+        MmGetPfnForProcess(NULL, Mdl->StartVa) >= MmPageArraySize)
+    {
+        /* Just loop each page */
+        for (i = 0; i < NrPages; i++)
+        {
+            /* And map it */
+            MdlPages[i] = MmGetPfnForProcess(NULL,
+                                             (PVOID)((ULONG_PTR)Mdl->StartVa + (i * PAGE_SIZE)));
+        }
+        
+        /* Set the flags and exit */
+        Mdl->MdlFlags |= MDL_PAGES_LOCKED|MDL_IO_SPACE;
+        return;
+    }
+    
+    /* Get the thread and process */
+    Thread = PsGetCurrentThread();
+    if (Address <= MM_HIGHEST_USER_ADDRESS)
+    {
+        /* Get the process */
+        CurrentProcess = PsGetCurrentProcess();
+    }
+    else
+    {
+        /* No process */
+        CurrentProcess = NULL;
+    }
+
+    /* Check what kind of operaiton this is */
+    if (Operation != IoReadAccess)
+    {
+        /* Set the write flag */
+        Mdl->MdlFlags |= MDL_WRITE_OPERATION;
+    }
+    else
+    {
+        /* Remove the write flag */
+        Mdl->MdlFlags &= ~(MDL_WRITE_OPERATION);
+    }
+    
+    /* Check if this came from kernel mode */
+    if (Base >= MM_HIGHEST_USER_ADDRESS)
+    {
+        /* We should not have a process */
+        ASSERT(CurrentProcess == NULL);
+        Mdl->Process = NULL;
+        AddressSpace = MmGetKernelAddressSpace();
+    }
+    else
+    {
+        /* Sanity checks */
+        ASSERT(NrPages != 0);
+        ASSERT(CurrentProcess == PsGetCurrentProcess());
+        
+        /* Track locked pages */
+        InterlockedExchangeAddSizeT(&CurrentProcess->NumberOfLockedPages,
+                                    NrPages);
+        
+        /* Save the process */
+        Mdl->Process = CurrentProcess;
+        
+        /* Use the process lock */
+        AddressSpace = (PMADDRESS_SPACE)&(CurrentProcess)->VadRoot;
+    }
+    
+    
+    /*
+     * Lock the pages
+     */
+    MmLockAddressSpace(AddressSpace);
+    
+    for (i = 0; i < NrPages; i++)
+    {
+        PVOID Address;
+        
+        Address = (char*)Mdl->StartVa + (i*PAGE_SIZE);
+        
+        if (!MmIsPagePresent(NULL, Address))
+        {
+            /* Fault the page in */
+            Status = MmAccessFault(FALSE, Address, AccessMode, NULL);
+            if (!NT_SUCCESS(Status))
+            {
+                MmUnlockAddressSpace(AddressSpace);
+                ExRaiseStatus(STATUS_ACCESS_VIOLATION);
+            }
+        }
+        else
+        {
+            MmLockPage(MmGetPfnForProcess(NULL, Address));
+        }
+        
+        if ((Operation == IoWriteAccess || Operation == IoModifyAccess) &&
+            (!(MmGetPageProtect(NULL, (PVOID)Address) & PAGE_READWRITE)))
+        {
+            Status = MmAccessFault(TRUE, Address, AccessMode, NULL);
+            if (!NT_SUCCESS(Status))
+            {
+                for (j = 0; j < i; j++)
+                {
+                    Page = MdlPages[j];
+                    if (Page < MmPageArraySize)
+                    {
+                        MmUnlockPage(Page);
+                        MmDereferencePage(Page);
+                    }
+                }
+                MmUnlockAddressSpace(AddressSpace);
+                ExRaiseStatus(STATUS_ACCESS_VIOLATION);
+            }
+        }
+        Page = MmGetPfnForProcess(NULL, Address);
+        MdlPages[i] = Page;
+        if (Page >= MmPageArraySize)
+        {
+            Mdl->MdlFlags |= MDL_IO_SPACE;
+        }        
+        else
+        {
+            MmReferencePage(Page);
+        }
+    }
+    
+    MmUnlockAddressSpace(AddressSpace);
+    Mdl->MdlFlags |= MDL_PAGES_LOCKED;
+}
+
+/*
+ * @implemented
+ */
+PMDL
+NTAPI
+MmAllocatePagesForMdl(IN PHYSICAL_ADDRESS LowAddress,
+                      IN PHYSICAL_ADDRESS HighAddress,
+                      IN PHYSICAL_ADDRESS SkipBytes,
+                      IN SIZE_T Totalbytes)
+{
+    PMDL Mdl;
+    PPFN_TYPE Pages;
+    ULONG NumberOfPagesWanted, NumberOfPagesAllocated;
+    ULONG Ret;
+    DPRINT("Allocating pages: %p\n", LowAddress.LowPart);
+
+    /* SkipBytes must be a multiple of the page size */
+    if (BYTE_OFFSET(SkipBytes.LowPart)) return NULL;
+
+    /* Create the actual MDL */
+    Mdl = MmCreateMdl(NULL, NULL, Totalbytes);
+    if (!Mdl) return NULL;
+
+    /* Allocate pages into the MDL */
+    NumberOfPagesAllocated = 0;
+    NumberOfPagesWanted = PAGE_ROUND_UP(Mdl->ByteCount + Mdl->ByteOffset) / PAGE_SIZE;
+    Pages = (PPFN_TYPE)(Mdl + 1);
+    while (NumberOfPagesWanted > 0)
+    {
+        Ret = MmAllocPagesSpecifyRange(MC_NPPOOL,
+                                       LowAddress,
+                                       HighAddress,
+                                       NumberOfPagesWanted,
+                                       Pages + NumberOfPagesAllocated);
+        if (Ret == (ULONG)-1) break;
+        
+        NumberOfPagesAllocated += Ret;
+        NumberOfPagesWanted -= Ret;
+        
+        if (SkipBytes.QuadPart == 0) break;
+        LowAddress.QuadPart += SkipBytes.QuadPart;
+        HighAddress.QuadPart += SkipBytes.QuadPart;
+    }
+    
+    /* If nothing was allocated, fail */
+    if (NumberOfPagesAllocated)
+    {
+        /* Free our MDL */
+        ExFreePool(Mdl);
+        return NULL;
+    }
+    
+    /* Zero out the MDL pages */
+    //RtlZeroMemory(LowAddress.LowPart, NumberOfPagesAllocated * PAGE_SIZE);
+    
+    /* Return the MDL */
+    Mdl->MdlFlags |= MDL_PAGES_LOCKED;
+    Mdl->ByteCount = (ULONG)(NumberOfPagesAllocated * PAGE_SIZE);
+    return Mdl;
+}
+
+/*
+ * @implemented
+ */
+PVOID
+NTAPI
+MmMapLockedPagesSpecifyCache(IN PMDL Mdl,
+                             IN KPROCESSOR_MODE AccessMode,
+                             IN MEMORY_CACHING_TYPE CacheType,
+                             IN PVOID BaseAddress,
+                             IN ULONG BugCheckOnFailure,
+                             IN MM_PAGE_PRIORITY Priority)
+{
+    PVOID Base;
+    PULONG MdlPages;
+    KIRQL oldIrql;
+    ULONG PageCount;
+    ULONG StartingOffset;
+    PEPROCESS CurrentProcess;
+    NTSTATUS Status;
+    ULONG Protect;
+    MEMORY_AREA *Result;
+    LARGE_INTEGER BoundaryAddressMultiple;
+    DPRINT("Mapping MDL: %p\n", Mdl);
+    DPRINT("Base: %p\n", BaseAddress);
+    
+    /* Sanity checks */
+    ASSERT(Mdl->ByteCount != 0);
+    
+    /* Get the base */
+    Base = (PVOID)((ULONG_PTR)Mdl->StartVa + Mdl->ByteOffset);
+
+    /* Set default page protection */
+    Protect = PAGE_READWRITE;
+    if (CacheType == MmNonCached) Protect |= PAGE_NOCACHE;
+    
+    /* Handle kernel case first */
+    if (AccessMode == KernelMode)
+    {
+        /* Get the list of pages and count */
+        MdlPages = (PPFN_NUMBER)(Mdl + 1);
+        PageCount = ADDRESS_AND_SIZE_TO_SPAN_PAGES(Base, Mdl->ByteCount);
+        
+        /* Sanity checks */
+        ASSERT((Mdl->MdlFlags & (MDL_MAPPED_TO_SYSTEM_VA |
+                                 MDL_SOURCE_IS_NONPAGED_POOL |
+                                 MDL_PARTIAL_HAS_BEEN_MAPPED)) == 0);
+        ASSERT((Mdl->MdlFlags & (MDL_PAGES_LOCKED | MDL_PARTIAL)) != 0);
+        
+        /* Allocate that number of pages from the mdl mapping region. */
+        KeAcquireSpinLock(&MiMdlMappingRegionLock, &oldIrql);
+        StartingOffset = RtlFindClearBitsAndSet(&MiMdlMappingRegionAllocMap,
+                                                PageCount,
+                                                MiMdlMappingRegionHint);
+        if (StartingOffset == 0xffffffff)
+        {
+            KeReleaseSpinLock(&MiMdlMappingRegionLock, oldIrql);
+            DPRINT("Out of MDL mapping space\n");
+            if ((Mdl->MdlFlags & MDL_MAPPING_CAN_FAIL) || !BugCheckOnFailure)
+            {
+                return NULL;
+            }
+            KEBUGCHECK(0);
+        }
+        Base = (PVOID)((ULONG_PTR)MiMdlMappingRegionBase + StartingOffset * PAGE_SIZE);
+        if (MiMdlMappingRegionHint == StartingOffset) MiMdlMappingRegionHint += PageCount;
+        KeReleaseSpinLock(&MiMdlMappingRegionLock, oldIrql);
+        
+        /* Set the virtual mappings for the MDL pages. */
+        if (Mdl->MdlFlags & MDL_IO_SPACE)
+        {
+            /* Map the pages */
+            Status = MmCreateVirtualMappingUnsafe(NULL,
+                                                  Base,
+                                                  Protect,
+                                                  MdlPages,
+                                                  PageCount);
+        }
+        else
+        {
+            /* Map the pages */
+            Status = MmCreateVirtualMapping(NULL,
+                                            Base,
+                                            Protect,
+                                            MdlPages,
+                                            PageCount);
+        }
+        
+        /* Check if the mapping suceeded */
+        if (!NT_SUCCESS(Status))
+        {
+            /* If it can fail, return NULL */
+            if (Mdl->MdlFlags & MDL_MAPPING_CAN_FAIL) return NULL;
+            
+            /* Should we bugcheck? */
+            if (!BugCheckOnFailure) return NULL;
+            
+            /* Yes, crash the system */
+            KeBugCheckEx(NO_MORE_SYSTEM_PTES, 0, PageCount, 0, 0);
+        }
+
+        /* Mark it as mapped */
+        ASSERT((Mdl->MdlFlags & MDL_MAPPED_TO_SYSTEM_VA) == 0);
+        Mdl->MdlFlags |= MDL_MAPPED_TO_SYSTEM_VA;
+        
+        /* Check if it was partial */
+        if (Mdl->MdlFlags & MDL_PARTIAL)
+        {
+            /* Write the appropriate flag here too */
+            Mdl->MdlFlags |= MDL_PARTIAL_HAS_BEEN_MAPPED;
+        }
+        
+        /* Save the mapped address */
+        Base = (PVOID)((ULONG_PTR)Base + Mdl->ByteOffset);
+        Mdl->MappedSystemVa = Base;
+        return Base;
+    }
+    
+    
+    /* Calculate the number of pages required. */
+    MdlPages = (PPFN_NUMBER)(Mdl + 1);
+    PageCount = PAGE_ROUND_UP(Mdl->ByteCount + Mdl->ByteOffset) / PAGE_SIZE;
+
+    BoundaryAddressMultiple.QuadPart = 0;
+    Base = BaseAddress;
+    
+    CurrentProcess = PsGetCurrentProcess();
+    
+    MmLockAddressSpace((PMADDRESS_SPACE)&CurrentProcess->VadRoot);
+    Status = MmCreateMemoryArea((PMADDRESS_SPACE)&CurrentProcess->VadRoot,
+                                MEMORY_AREA_MDL_MAPPING,
+                                &Base,
+                                PageCount * PAGE_SIZE,
+                                Protect,
+                                &Result,
+                                (Base != NULL),
+                                0,
+                                BoundaryAddressMultiple);
+    MmUnlockAddressSpace((PMADDRESS_SPACE)&CurrentProcess->VadRoot);
+    if (!NT_SUCCESS(Status))
+    {
+        if (Mdl->MdlFlags & MDL_MAPPING_CAN_FAIL)
+        {
+            return NULL;
+        }
+        
+        /* Throw exception */
+        ExRaiseStatus(STATUS_ACCESS_VIOLATION);
+        ASSERT(0);
+    }
+    
+    /* Set the virtual mappings for the MDL pages. */
+    if (Mdl->MdlFlags & MDL_IO_SPACE)
+    {
+        /* Map the pages */
+        Status = MmCreateVirtualMappingUnsafe(CurrentProcess,
+                                              Base,
+                                              Protect,
+                                              MdlPages,
+                                              PageCount);
+    }
+    else
+    {
+        /* Map the pages */
+        Status = MmCreateVirtualMapping(CurrentProcess,
+                                        Base,
+                                        Protect,
+                                        MdlPages,
+                                        PageCount);
+    }
+    
+    /* Check if the mapping suceeded */
+    if (!NT_SUCCESS(Status))
+    {
+        /* If it can fail, return NULL */
+        if (Mdl->MdlFlags & MDL_MAPPING_CAN_FAIL) return NULL;
+
+        /* Throw exception */
+        ExRaiseStatus(STATUS_ACCESS_VIOLATION);
+    }
+
+    /* Return the base */
+    Base = (PVOID)((ULONG_PTR)Base + Mdl->ByteOffset);
+    return Base;
+}
+
+/*
+ * @unimplemented
+ */
+NTSTATUS
+NTAPI
+MmAdvanceMdl(IN PMDL Mdl,
+             IN ULONG NumberOfBytes)
+{
+	UNIMPLEMENTED;
+	return STATUS_NOT_IMPLEMENTED;
+}
 
 /*
  * @unimplemented
  */
 PVOID
-STDCALL
-MmMapLockedPagesWithReservedMapping (
-    IN PVOID MappingAddress,
-    IN ULONG PoolTag,
-    IN PMDL MemoryDescriptorList,
-    IN MEMORY_CACHING_TYPE CacheType
-    )
+NTAPI
+MmMapLockedPagesWithReservedMapping(IN PVOID MappingAddress,
+                                    IN ULONG PoolTag,
+                                    IN PMDL MemoryDescriptorList,
+                                    IN MEMORY_CACHING_TYPE CacheType)
 {
 	UNIMPLEMENTED;
 	return 0;
 }
 
-
-/*
- * @implemented
- */
-VOID STDCALL
-MmUnmapLockedPages(PVOID BaseAddress, PMDL Mdl)
-/*
- * FUNCTION: Releases a mapping set up by a preceding call to MmMapLockedPages
- * ARGUMENTS:
- *         BaseAddress = Base virtual address to which the pages were mapped
- *         MemoryDescriptorList = MDL describing the mapped pages
- *
- * User space unmappings _must_ be done from the original process context!
- */
-{
-   KIRQL oldIrql;
-   ULONG i;
-   ULONG PageCount;
-   ULONG Base;
-
-   DPRINT("MmUnmapLockedPages(BaseAddress %x, Mdl %x)\n", BaseAddress, Mdl);
-
-   /*
-    * In this case, the MDL has the same system address as the base address
-    * so there is no need to free it
-    */
-   if ((Mdl->MdlFlags & MDL_SOURCE_IS_NONPAGED_POOL) &&
-         (BaseAddress >= MmSystemRangeStart))
-   {
-      return;
-   }
-
-
-   /* Calculate the number of pages we mapped. */
-   PageCount = PAGE_ROUND_UP(Mdl->ByteCount + Mdl->ByteOffset) / PAGE_SIZE;
-
-   /*
-    * Docs says that BaseAddress should be a _base_ address, but every example
-    * I've seen pass the actual address. -Gunnar
-    */
-   BaseAddress = PAGE_ALIGN(BaseAddress);
-
-   /* Unmap all the pages. */
-   for (i = 0; i < PageCount; i++)
-   {
-      MmDeleteVirtualMapping(Mdl->Process,
-                             (char*)BaseAddress + (i * PAGE_SIZE),
-                             FALSE,
-                             NULL,
-                             NULL);
-   }
-
-   if (BaseAddress >= MmSystemRangeStart)
-   {
-      ASSERT(Mdl->MdlFlags & MDL_MAPPED_TO_SYSTEM_VA);
-
-      KeAcquireSpinLock(&MiMdlMappingRegionLock, &oldIrql);
-      /* Deallocate all the pages used. */
-      Base = (ULONG)((char*)BaseAddress - (char*)MiMdlMappingRegionBase) / PAGE_SIZE;
-
-      RtlClearBits(&MiMdlMappingRegionAllocMap, Base, PageCount);
-
-      MiMdlMappingRegionHint = min (MiMdlMappingRegionHint, Base);
-
-      KeReleaseSpinLock(&MiMdlMappingRegionLock, oldIrql);
-
-      /* Reset the MDL state. */
-      Mdl->MdlFlags &= ~MDL_MAPPED_TO_SYSTEM_VA;
-      Mdl->MappedSystemVa = NULL;
-
-   }
-   else
-   {
-      MEMORY_AREA *Marea;
-
-      ASSERT(Mdl->Process == PsGetCurrentProcess());
-
-      Marea = MmLocateMemoryAreaByAddress( (PMADDRESS_SPACE)&(Mdl->Process)->VadRoot, BaseAddress );
-      if (Marea == NULL)
-      {
-         DPRINT1( "Couldn't open memory area when unmapping user-space pages!\n" );
-         KEBUGCHECK(0);
-      }
-
-      MmFreeMemoryArea( (PMADDRESS_SPACE)&(Mdl->Process)->VadRoot, Marea, NULL, NULL );
-
-      Mdl->Process = NULL;
-   }
-
-}
-
-
 /*
  * @unimplemented
  */
-VOID
-STDCALL
-MmUnmapReservedMapping (
-     IN PVOID BaseAddress,
-     IN ULONG PoolTag,
-     IN PMDL MemoryDescriptorList
-     )
-{
-	UNIMPLEMENTED;
-}
-
-
 VOID
 NTAPI
-MmBuildMdlFromPages(PMDL Mdl, PPFN_TYPE Pages)
+MmUnmapReservedMapping(IN PVOID BaseAddress,
+                       IN ULONG PoolTag,
+                       IN PMDL MemoryDescriptorList)
 {
-   memcpy(Mdl + 1, Pages, sizeof(PFN_TYPE) * (PAGE_ROUND_UP(Mdl->ByteOffset+Mdl->ByteCount)/PAGE_SIZE));
-
-   /* FIXME: this flag should be set by the caller perhaps? */
-   Mdl->MdlFlags |= MDL_IO_PAGE_READ;
+	UNIMPLEMENTED;
 }
-
 
 /*
  * @unimplemented
  */
 NTSTATUS
-STDCALL
-MmPrefetchPages (
-    IN ULONG NumberOfLists,
-    IN PREAD_LIST *ReadLists
-    )
+NTAPI
+MmPrefetchPages(IN ULONG NumberOfLists,
+                IN PREAD_LIST *ReadLists)
 {
 	UNIMPLEMENTED;
 	return STATUS_NOT_IMPLEMENTED;
 }
-
 
 /*
  * @unimplemented
  */
 NTSTATUS
-STDCALL
-MmProtectMdlSystemAddress (
-    IN PMDL MemoryDescriptorList,
-    IN ULONG NewProtect
-    )
+NTAPI
+MmProtectMdlSystemAddress(IN PMDL MemoryDescriptorList,
+                          IN ULONG NewProtect)
 {
 	UNIMPLEMENTED;
 	return STATUS_NOT_IMPLEMENTED;
 }
-
-
-/*
- * @implemented
- */
-VOID STDCALL MmProbeAndLockPages (PMDL Mdl,
-                                  KPROCESSOR_MODE AccessMode,
-                                  LOCK_OPERATION Operation)
-/*
- * FUNCTION: Probes the specified pages, makes them resident and locks them
- * ARGUMENTS:
- *          Mdl = MDL to probe
- *          AccessMode = Access at which to probe the buffer
- *          Operation = Operation to probe for
- *
- * This function can be seen as a safe version of MmBuildMdlForNonPagedPool
- * used in cases where you know that the mdl address is paged memory or
- * you don't know where the mdl address comes from. MmProbeAndLockPages will
- * work no matter what kind of mdl address you have.
- */
-{
-   PPFN_TYPE MdlPages;
-   ULONG i, j;
-   ULONG NrPages;
-   NTSTATUS Status;
-   KPROCESSOR_MODE Mode;
-   PFN_TYPE Page;
-   PEPROCESS CurrentProcess = PsGetCurrentProcess();
-   PMADDRESS_SPACE AddressSpace;
-
-   DPRINT("MmProbeAndLockPages(Mdl %x)\n", Mdl);
-
-   ASSERT(!(Mdl->MdlFlags & (MDL_PAGES_LOCKED|MDL_MAPPED_TO_SYSTEM_VA|MDL_PARTIAL|
-            MDL_IO_SPACE|MDL_SOURCE_IS_NONPAGED_POOL)));
-
-   MdlPages = (PPFN_TYPE)(Mdl + 1);
-   NrPages = PAGE_ROUND_UP(Mdl->ByteOffset + Mdl->ByteCount) / PAGE_SIZE;
-
-   /* mdl must have enough page entries */
-   ASSERT(NrPages <= (Mdl->Size - sizeof(MDL))/sizeof(PFN_TYPE));
-
-
-   if (Mdl->StartVa >= MmSystemRangeStart &&
-       MmGetPfnForProcess(NULL, Mdl->StartVa) >= MmPageArraySize)
-   {
-       /* phys addr is not phys memory so this must be io memory */
-
-      for (i = 0; i < NrPages; i++)
-      {
-         MdlPages[i] = MmGetPfnForProcess(NULL, (char*)Mdl->StartVa + (i*PAGE_SIZE));
-      }
-
-      Mdl->MdlFlags |= MDL_PAGES_LOCKED|MDL_IO_SPACE;
-      return;
-   }
-
-
-   if (Mdl->StartVa >= MmSystemRangeStart)
-   {
-      /* FIXME: why isn't AccessMode used? */
-      Mode = KernelMode;
-      Mdl->Process = NULL;
-      AddressSpace = MmGetKernelAddressSpace();
-   }
-   else
-   {
-      /* FIXME: why isn't AccessMode used? */
-      Mode = UserMode;
-      Mdl->Process = CurrentProcess;
-      AddressSpace = (PMADDRESS_SPACE)&(CurrentProcess)->VadRoot;
-   }
-
-
-   /*
-    * Lock the pages
-    */
-   MmLockAddressSpace(AddressSpace);
-
-   for (i = 0; i < NrPages; i++)
-   {
-      PVOID Address;
-
-      Address = (char*)Mdl->StartVa + (i*PAGE_SIZE);
-
-      /*
-       * FIXME: skip the probing/access stuff if buffer is nonpaged kernel space?
-       * -Gunnar
-       */
-
-      if (!MmIsPagePresent(NULL, Address))
-      {
-         Status = MmAccessFault(FALSE, Address, Mode, NULL);
-         if (!NT_SUCCESS(Status))
-         {
-            for (j = 0; j < i; j++)
-            {
-	       Page = MdlPages[j];
-               if (Page < MmPageArraySize)
-               {
-                  MmUnlockPage(Page);
-                  MmDereferencePage(Page);
-               }
-            }
-            MmUnlockAddressSpace(AddressSpace);
-            ExRaiseStatus(STATUS_ACCESS_VIOLATION);
-         }
-      }
-      else
-      {
-         MmLockPage(MmGetPfnForProcess(NULL, Address));
-      }
-
-      if ((Operation == IoWriteAccess || Operation == IoModifyAccess) &&
-          (!(MmGetPageProtect(NULL, (PVOID)Address) & PAGE_READWRITE)))
-      {
-         Status = MmAccessFault(TRUE, Address, Mode, NULL);
-         if (!NT_SUCCESS(Status))
-         {
-            for (j = 0; j < i; j++)
-            {
-	       Page = MdlPages[j];
-               if (Page < MmPageArraySize)
-               {
-                  MmUnlockPage(Page);
-                  MmDereferencePage(Page);
-               }
-            }
-            MmUnlockAddressSpace(AddressSpace);
-            ExRaiseStatus(STATUS_ACCESS_VIOLATION);
-         }
-      }
-      Page = MmGetPfnForProcess(NULL, Address);
-      MdlPages[i] = Page;
-      if (Page >= MmPageArraySize)
-         Mdl->MdlFlags |= MDL_IO_SPACE;
-      else
-         MmReferencePage(Page);
-   }
-
-   MmUnlockAddressSpace(AddressSpace);
-   Mdl->MdlFlags |= MDL_PAGES_LOCKED;
-}
-
 
 /*
  * @unimplemented
  */
 VOID
 STDCALL
-MmProbeAndLockProcessPages (
-    IN OUT PMDL MemoryDescriptorList,
-    IN PEPROCESS Process,
-    IN KPROCESSOR_MODE AccessMode,
-    IN LOCK_OPERATION Operation
-    )
+MmProbeAndLockProcessPages(IN OUT PMDL MemoryDescriptorList,
+                           IN PEPROCESS Process,
+                           IN KPROCESSOR_MODE AccessMode,
+                           IN LOCK_OPERATION Operation)
 {
 	UNIMPLEMENTED;
 }
@@ -506,462 +871,23 @@ MmProbeAndLockProcessPages (
  */
 VOID
 STDCALL
-MmProbeAndLockSelectedPages(
-	IN OUT PMDL MemoryDescriptorList,
-	IN LARGE_INTEGER PageList[],
-	IN KPROCESSOR_MODE AccessMode,
-	IN LOCK_OPERATION Operation
-	)
+MmProbeAndLockSelectedPages(IN OUT PMDL MemoryDescriptorList,
+                            IN LARGE_INTEGER PageList[],
+                            IN KPROCESSOR_MODE AccessMode,
+                            IN LOCK_OPERATION Operation)
 {
 	UNIMPLEMENTED;
 }
 
-
-/*
- * @implemented
- */
-ULONG STDCALL MmSizeOfMdl (PVOID Base,
-                           ULONG Length)
-/*
- * FUNCTION: Returns the number of bytes to allocate for an MDL describing
- * the given address range
- * ARGUMENTS:
- *         Base = base virtual address
- *         Length = number of bytes to map
- */
-{
-   ULONG len;
-
-   len = ADDRESS_AND_SIZE_TO_SPAN_PAGES(Base,Length);
-
-   return(sizeof(MDL)+(len*sizeof(PFN_TYPE)));
-}
-
-
-/*
- * @implemented
- */
-VOID STDCALL
-MmBuildMdlForNonPagedPool (PMDL Mdl)
-/*
- * FUNCTION: Fills in the corresponding physical page array of a given
- * MDL for a buffer in nonpaged system space
- * ARGUMENTS:
- *        Mdl = Points to an MDL that supplies a virtual address,
- *              byte offset and length
- *
- * This function can be seen as a fast version of MmProbeAndLockPages in case
- * you _know_ that the mdl address is within nonpaged kernel space.
- */
-{
-   ULONG i;
-   ULONG PageCount;
-   PPFN_TYPE MdlPages;
-
-   /*
-    * mdl buffer must (at least) be in kernel space, thou this doesn't
-    * necesarely mean that the buffer in within _nonpaged_ kernel space...
-    */
-   ASSERT(Mdl->StartVa >= MmSystemRangeStart);
-
-   PageCount = PAGE_ROUND_UP(Mdl->ByteOffset + Mdl->ByteCount) / PAGE_SIZE;
-   MdlPages = (PPFN_TYPE)(Mdl + 1);
-
-   /* mdl must have enough page entries */
-   ASSERT(PageCount <= (Mdl->Size - sizeof(MDL))/sizeof(PFN_TYPE));
-
-   for (i=0; i < PageCount; i++)
-   {
-      *MdlPages++ = MmGetPfnForProcess(NULL, (char*)Mdl->StartVa + (i * PAGE_SIZE));
-   }
-
-   Mdl->MdlFlags |= MDL_SOURCE_IS_NONPAGED_POOL;
-   Mdl->Process = NULL;
-   Mdl->MappedSystemVa = (char*)Mdl->StartVa + Mdl->ByteOffset;
-}
-
-
-/*
- * @implemented
- */
-PMDL STDCALL
-MmCreateMdl (PMDL Mdl,
-             PVOID Base,
-             ULONG Length)
-/*
- * FUNCTION: Allocates and initalizes an MDL
- * ARGUMENTS:
- *          MemoryDescriptorList = Points to MDL to initalize. If this is
- *                                 NULL then one is allocated
- *          Base = Base virtual address of the buffer
- *          Length = Length in bytes of the buffer
- * RETURNS: A pointer to initalized MDL
- */
-{
-   if (Mdl == NULL)
-   {
-      ULONG Size;
-
-      Size = MmSizeOfMdl(Base,Length);
-      Mdl =
-         (PMDL)ExAllocatePoolWithTag(NonPagedPool, Size, TAG_MDL);
-      if (Mdl == NULL)
-      {
-         return(NULL);
-      }
-   }
-
-   MmInitializeMdl(Mdl, (char*)Base, Length);
-
-   return(Mdl);
-}
-
-
 /*
  * @unimplemented
  */
-VOID STDCALL
-MmMapMemoryDumpMdl (PVOID Unknown0)
-/*
- * FIXME: Has something to do with crash dumps. Do we want to implement
- * this?
- */
+VOID
+NTAPI
+MmMapMemoryDumpMdl(IN PMDL Mdl)
 {
-   UNIMPLEMENTED;
+    UNIMPLEMENTED;
 }
-
-
-/*
- * @implemented
- */
-PMDL STDCALL
-MmAllocatePagesForMdl ( IN PHYSICAL_ADDRESS LowAddress,
-                        IN PHYSICAL_ADDRESS HighAddress,
-                        IN PHYSICAL_ADDRESS SkipBytes,
-                        IN SIZE_T Totalbytes )
-{
-      /*
-      MmAllocatePagesForMdl allocates zero-filled, nonpaged, physical memory pages to an MDL
-
-      MmAllocatePagesForMdlSearch the PFN database for free, zeroed or standby
-      pagesAllocates pages and puts in MDLDoes not map pages (caller responsibility)
-      Designed to be used by an AGP driver
-
-      LowAddress is the lowest acceptable physical address it wants to allocate
-      and HighAddress is the highest. SkipBytes are the number of bytes that the
-      kernel should keep free above LowAddress and below the address at which it
-      starts to allocate physical memory. TotalBytes are the number of bytes that
-      the driver wants to allocate. The return value of the function is a MDL
-      that if non-zero describes the physical memory the kernel has given the
-      driver. To access portions of the memory the driver must create sub-MDLs
-      from the returned MDL that describe appropriate portions of the physical
-      memory. When a driver wants to access physical memory described by a
-      sub-MDL it must map the sub-MDL using MmGetSystemAddressForMdlSafe.
-
-      Konstantin Gusev
-      */
-
-   PMDL Mdl;
-   PPFN_TYPE Pages;
-   ULONG NumberOfPagesWanted, NumberOfPagesAllocated;
-   ULONG Ret;
-
-   DPRINT("MmAllocatePagesForMdl - LowAddress = 0x%I64x, HighAddress = 0x%I64x, "
-          "SkipBytes = 0x%I64x, Totalbytes = 0x%x\n",
-          LowAddress.QuadPart, HighAddress.QuadPart,
-          SkipBytes.QuadPart, Totalbytes);
-
-   /* SkipBytes must be a multiple of the page size */
-   if ((SkipBytes.QuadPart % PAGE_SIZE) != 0)
-   {
-      DPRINT1("Warning: SkipBytes is not a multiple of PAGE_SIZE\n");
-      return NULL;
-   }
-
-   /* Allocate memory for the MDL */
-   Mdl = MmCreateMdl(NULL, 0, Totalbytes);
-   if (Mdl == NULL)
-   {
-      return NULL;
-   }
-
-   /* Allocate pages into the MDL */
-   NumberOfPagesAllocated = 0;
-   NumberOfPagesWanted = PAGE_ROUND_UP(Mdl->ByteCount + Mdl->ByteOffset) / PAGE_SIZE;
-   Pages = (PPFN_TYPE)(Mdl + 1);
-   while (NumberOfPagesWanted > 0)
-   {
-      Ret = MmAllocPagesSpecifyRange(
-                        MC_NPPOOL,
-                        LowAddress,
-                        HighAddress,
-                        NumberOfPagesWanted,
-                        Pages + NumberOfPagesAllocated);
-      if (Ret == (ULONG)-1)
-         break;
-
-      NumberOfPagesAllocated += Ret;
-      NumberOfPagesWanted -= Ret;
-
-      if (SkipBytes.QuadPart == 0)
-         break;
-      LowAddress.QuadPart += SkipBytes.QuadPart;
-      HighAddress.QuadPart += SkipBytes.QuadPart;
-   }
-
-   if (NumberOfPagesAllocated == 0)
-   {
-      ExFreePool(Mdl);
-      Mdl = NULL;
-   }
-   else if (NumberOfPagesWanted > 0)
-   {
-      Mdl->ByteCount = (ULONG)(NumberOfPagesAllocated * PAGE_SIZE);
-      /* FIXME: I don't know if Mdl->Size should also be changed -- blight */
-   }
-   return Mdl;
-}
-
-
-/*
- * @implemented
- */
-VOID STDCALL
-MmFreePagesFromMdl ( IN PMDL Mdl )
-{
-      /*
-      Drivers use the MmFreePagesFromMdl, the kernel-mode equivalent of
-      FreeUserPhysicalPages, to free the physical memory it has allocated with
-      MmAllocatePagesForMdl. This function is also prototyped in ntddk.h:
-
-      Note that a driver is responsible for deallocating the MDL returned by
-      MmAllocatePagesForMdl with a call to ExFreePool, since MmFreePagesFromMdl
-      does not free the MDL.
-
-       Konstantin Gusev
-
-   */
-   PPFN_TYPE Pages;
-   LONG NumberOfPages;
-
-   NumberOfPages = PAGE_ROUND_UP(Mdl->ByteCount + Mdl->ByteOffset) / PAGE_SIZE;
-   Pages = (PPFN_TYPE)(Mdl + 1);
-
-   while (--NumberOfPages >= 0)
-   {
-      MmDereferencePage(Pages[NumberOfPages]);
-   }
-}
-
-
-/*
- * @implemented
- */
-PVOID STDCALL
-MmMapLockedPagesSpecifyCache ( IN PMDL Mdl,
-                               IN KPROCESSOR_MODE AccessMode,
-                               IN MEMORY_CACHING_TYPE CacheType,
-                               IN PVOID BaseAddress,
-                               IN ULONG BugCheckOnFailure,
-                               IN MM_PAGE_PRIORITY Priority)
-{
-   PVOID Base;
-   PULONG MdlPages;
-   KIRQL oldIrql;
-   ULONG PageCount;
-   ULONG StartingOffset;
-   PEPROCESS CurrentProcess;
-   NTSTATUS Status;
-   ULONG Protect;
-
-   DPRINT("MmMapLockedPagesSpecifyCache(Mdl 0x%x, AccessMode 0x%x, CacheType 0x%x, "
-          "BaseAddress 0x%x, BugCheckOnFailure 0x%x, Priority 0x%x)\n",
-          Mdl, AccessMode, CacheType, BaseAddress, BugCheckOnFailure, Priority);
-
-   /* FIXME: Implement Priority */
-   (void) Priority;
-
-   Protect = PAGE_READWRITE;
-   if (CacheType == MmNonCached)
-      Protect |= PAGE_NOCACHE;
-   else if (CacheType == MmWriteCombined)
-      DPRINT("CacheType MmWriteCombined not supported!\n");
-
-   /* Calculate the number of pages required. */
-   PageCount = PAGE_ROUND_UP(Mdl->ByteCount + Mdl->ByteOffset) / PAGE_SIZE;
-
-   if (AccessMode != KernelMode)
-   {
-      MEMORY_AREA *Result;
-      LARGE_INTEGER BoundaryAddressMultiple;
-      NTSTATUS Status;
-
-      /* pretty sure you can't map partial mdl's to user space */
-      ASSERT(!(Mdl->MdlFlags & MDL_PARTIAL));
-
-      BoundaryAddressMultiple.QuadPart = 0;
-      Base = BaseAddress;
-
-      CurrentProcess = PsGetCurrentProcess();
-
-      MmLockAddressSpace((PMADDRESS_SPACE)&CurrentProcess->VadRoot);
-      Status = MmCreateMemoryArea((PMADDRESS_SPACE)&CurrentProcess->VadRoot,
-                                  MEMORY_AREA_MDL_MAPPING,
-                                  &Base,
-                                  PageCount * PAGE_SIZE,
-                                  Protect,
-                                  &Result,
-                                  (Base != NULL),
-                                  0,
-                                  BoundaryAddressMultiple);
-      MmUnlockAddressSpace((PMADDRESS_SPACE)&CurrentProcess->VadRoot);
-      if (!NT_SUCCESS(Status))
-      {
-         if (Mdl->MdlFlags & MDL_MAPPING_CAN_FAIL)
-         {
-            return NULL;
-         }
-
-         /* Throw exception */
-         ExRaiseStatus(STATUS_ACCESS_VIOLATION);
-         ASSERT(0);
-      }
-
-      Mdl->Process = (PEPROCESS)CurrentProcess;
-   }
-   else /* if (AccessMode == KernelMode) */
-   {
-      /* can't map mdl twice */
-      ASSERT(!(Mdl->MdlFlags & (MDL_MAPPED_TO_SYSTEM_VA|MDL_PARTIAL_HAS_BEEN_MAPPED)));
-      /* can't map mdl buildt from non paged pool into kernel space */
-      ASSERT(!(Mdl->MdlFlags & (MDL_SOURCE_IS_NONPAGED_POOL)));
-
-      CurrentProcess = NULL;
-
-      /* Allocate that number of pages from the mdl mapping region. */
-      KeAcquireSpinLock(&MiMdlMappingRegionLock, &oldIrql);
-
-      StartingOffset = RtlFindClearBitsAndSet(&MiMdlMappingRegionAllocMap, PageCount, MiMdlMappingRegionHint);
-
-      if (StartingOffset == 0xffffffff)
-      {
-         KeReleaseSpinLock(&MiMdlMappingRegionLock, oldIrql);
-
-         DPRINT1("Out of MDL mapping space\n");
-
-         if ((Mdl->MdlFlags & MDL_MAPPING_CAN_FAIL) || !BugCheckOnFailure)
-         {
-            return NULL;
-         }
-
-         KEBUGCHECK(0);
-      }
-
-      Base = (PVOID)((ULONG_PTR)MiMdlMappingRegionBase + StartingOffset * PAGE_SIZE);
-
-      if (MiMdlMappingRegionHint == StartingOffset)
-      {
-         MiMdlMappingRegionHint += PageCount;
-      }
-
-      KeReleaseSpinLock(&MiMdlMappingRegionLock, oldIrql);
-
-      Mdl->Process = NULL;
-   }
-
-   /* Set the virtual mappings for the MDL pages. */
-   MdlPages = (PULONG)(Mdl + 1);
-
-   if (Mdl->MdlFlags & MDL_IO_SPACE)
-      Status = MmCreateVirtualMappingUnsafe(CurrentProcess,
-                                            Base,
-                                            Protect,
-                                            MdlPages,
-                                            PageCount);
-   else
-      Status = MmCreateVirtualMapping(CurrentProcess,
-                                      Base,
-                                      Protect,
-                                      MdlPages,
-                                      PageCount);
-   if (!NT_SUCCESS(Status))
-   {
-      DbgPrint("Unable to create virtual mapping\n");
-      if (Mdl->MdlFlags & MDL_MAPPING_CAN_FAIL)
-      {
-         return NULL;
-      }
-      if (AccessMode != KernelMode)
-      {
-         /* Throw exception */
-         ExRaiseStatus(STATUS_ACCESS_VIOLATION);
-         ASSERT(0);
-      }
-      else /* AccessMode == KernelMode */
-      {
-         if (!BugCheckOnFailure)
-            return NULL;
-
-         /* FIXME: Use some bugcheck code instead of 0 */
-         KEBUGCHECK(0);
-      }
-   }
-
-   /* Mark the MDL has having being mapped. */
-   if (AccessMode == KernelMode)
-   {
-      if (Mdl->MdlFlags & MDL_PARTIAL)
-      {
-         Mdl->MdlFlags |= MDL_PARTIAL_HAS_BEEN_MAPPED;
-      }
-      else
-      {
-         Mdl->MdlFlags |= MDL_MAPPED_TO_SYSTEM_VA;
-      }
-      Mdl->MappedSystemVa = (char*)Base + Mdl->ByteOffset;
-   }
-   else
-      DPRINT1("UserMode mapping - returning 0x%x\n", (ULONG)Base + Mdl->ByteOffset);
-
-   return((char*)Base + Mdl->ByteOffset);
-}
-
-
-/*
- * @implemented
- */
-PVOID STDCALL
-MmMapLockedPages(PMDL Mdl, KPROCESSOR_MODE AccessMode)
-/*
- * FUNCTION: Maps the physical pages described by a given MDL
- * ARGUMENTS:
- *       Mdl = Points to an MDL updated by MmProbeAndLockPages, MmBuildMdlForNonPagedPool,
- *             MmAllocatePagesForMdl or IoBuildPartialMdl.
- *       AccessMode = Specifies the portion of the address space to map the
- *                    pages.
- * RETURNS: The base virtual address that maps the locked pages for the
- * range described by the MDL
- *
- * If mapping into user space, pages are mapped into current address space.
- */
-{
-   return MmMapLockedPagesSpecifyCache(Mdl,
-                                       AccessMode,
-                                       MmCached,
-                                       NULL,
-                                       TRUE,
-                                       NormalPagePriority);
-}
-
 
 /* EOF */
-
-
-
-
-
-
-
-
-
 
