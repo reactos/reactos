@@ -2,14 +2,16 @@
 #define PRECOMP_H__
 
 #define DIRECTINPUT_VERSION 0x0800
-
+#define DIRECTSOUND_VERSION 0x0800
 #include <stdio.h>
 #include <windows.h>
+#include <limits.h>
 #include <setupapi.h>
 #include <devguid.h>
 #include <commctrl.h>
 
 #include <dinput.h>
+#include <dsound.h>
 #include "resource.h"
 
 typedef struct

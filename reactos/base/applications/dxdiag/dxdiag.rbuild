@@ -14,6 +14,8 @@
 	<library>version</library>
 	<library>dinput8</library>
 	<library>dxguid</library>
+	<library>dsound</library>
+	<library>version</library>
 	<file>system.c</file>
 	<file>display.c</file>
 	<file>sound.c</file>

@@ -40,6 +40,11 @@
 #define IDC_TREE_PORT             6001
 #define IDC_RICH_INFO             6002
 
+/* DirectPlay dialog constants */
+#define IDC_LIST_PROVIDER         7000
+
+
+
 /* string resource constants */
 #define IDS_MAIN_DIALOG     10000
 #define IDS_SYSTEM_DIALOG   10001
@@ -65,6 +70,20 @@
 #define IDS_DEVICE_FORCEFEEDBACK   10021
 #define IDS_NOT_APPLICABLE         10100
 #define IDS_OPTION_YES             10101
+#define IDS_DIRECTPLAY_COL_NAME1   10102
+#define IDS_DIRECTPLAY_COL_NAME2   10103
+#define IDS_DIRECTPLAY_COL_NAME3   10104
+#define IDS_DIRECTPLAY_COL_NAME4   10105
+#define IDS_DIRECTPLAY8_MODEMSP    10106
+#define IDS_DIRECTPLAY8_SERIALSP   10107
+#define IDS_DIRECTPLAY8_IPXSP      10108
+#define IDS_DIRECTPLAY8_TCPSP      10109
+#define IDS_DIRECTPLAY_TCPCONN     10110
+#define IDS_DIRECTPLAY_IPXCONN     10111
+#define IDS_DIRECTPLAY_MODEMCONN   10112
+#define IDS_DIRECTPLAY_SERIALCONN  10113
+#define IDS_REG_FAIL               10114
+#define IDS_REG_SUCCESS            10115
 
 /* icon resource constants */
 #define IDI_APPICON        20000
