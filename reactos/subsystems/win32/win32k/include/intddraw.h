@@ -122,4 +122,7 @@ typedef BOOL (NTAPI *PGD_ENGUNLOCKDIRECTDRAWSURFACE)(PDD_SURFACE_LOCAL);
 BOOL FASTCALL IntGetDeviceGammaRamp(HDEV hPDev, PGAMMARAMP Ramp);
 BOOL FASTCALL IntSetDeviceGammaRamp(HDEV hPDev, PGAMMARAMP Ramp, BOOL);
 
+/* Debug function oly for win32k dx */
+void dump_edd_directdraw_global(EDD_DIRECTDRAW_GLOBAL *pEddgbl);
+
 #endif /* _INT_W32k_DDRAW */

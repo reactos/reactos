@@ -297,6 +297,10 @@ DxEngGetHdevData(HDEV hDev,
 
     DPRINT1("ReactX Calling : DxEngGetHdevData DXEGSHDEVDATA : %ld\n", Type);
 
+#if 1
+    DPRINT1("HDEV hDev %08lx\n", hDev);
+#endif
+
     switch ( Type )
     {
       case DxEGShDevData_Surface:
@@ -330,6 +334,7 @@ DxEngGetHdevData(HDEV hDev,
       case DxEGShDevData_eddg:
         DPRINT1("requested DXEGSHDEVDATA DxEGShDevData_eddg\n");
         retVal = (DWORD) PDev->pEDDgpl;
+        dump_edd_directdraw_global(PDev->pEDDgpl);
         break;
       case DxEGShDevData_dd_nCount:
         DPRINT1("requested DXEGSHDEVDATA DxEGShDevData_dd_nCount\n");
@@ -381,7 +386,11 @@ DxEngGetHdevData(HDEV hDev,
         break;
     }
 
-  return retVal;
+#if 1
+    DPRINT1("return value %08lx\n", retVal);
+#endif
+
+    return retVal;
 
 }
 

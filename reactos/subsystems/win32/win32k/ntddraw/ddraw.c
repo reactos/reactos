@@ -22,7 +22,7 @@ extern ULONG gcEngFuncs;
 DRVFN gpDxFuncs[DXG_INDEX_DxDdIoctl];
 HANDLE ghDxGraphics = NULL;
 ULONG gdwDirectDrawContext;
-void dump_edd_directdraw_global(EDD_DIRECTDRAW_GLOBAL *pEddgbl);
+
 EDD_DIRECTDRAW_GLOBAL edd_DdirectDraw_Global;
 EDD_DIRECTDRAW_LOCAL edd_DirectDrawLocalList;
 
