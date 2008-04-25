@@ -109,7 +109,7 @@ IntUserHeapCreate(IN PSECTION_OBJECT SectionObject,
 {
     PVOID MappedView = NULL;
     LARGE_INTEGER Offset;
-    ULONG ViewSize = PAGE_SIZE;
+    SIZE_T ViewSize = PAGE_SIZE;
     RTL_HEAP_PARAMETERS Parameters = {0};
     HANDLE hHeap;
     NTSTATUS Status;
