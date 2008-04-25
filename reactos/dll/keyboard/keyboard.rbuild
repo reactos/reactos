@@ -49,6 +49,9 @@
 	<directory name="kbdhu">
 		<xi:include href="kbdhu/kbdhu.rbuild" />
 	</directory>
+	<directory name="kbdic">
+		<xi:include href="kbdic/kbdic.rbuild" />
+	</directory>
 	<directory name="kbdit">
 		<xi:include href="kbdit/kbdit.rbuild" />
 	</directory>
@@ -93,5 +96,8 @@
 	</directory>
 	<directory name="kbdus">
 		<xi:include href="kbdus/kbdus.rbuild" />
+	</directory>
+	<directory name="kbdusa">
+		<xi:include href="kbdusa/kbdusa.rbuild" />
 	</directory>
 </group>
