@@ -90,7 +90,7 @@ LdrGetProcedureAddress (IN PVOID BaseAddress,
         Ordinal &= 0x0000FFFF;
         if (Ordinal - ExportDir->Base < ExportDir->NumberOfFunctions)
           {
-             *ProcedureAddress = (PVOID)((ULONG)BaseAddress + (ULONG)AddressPtr[Ordinal - ExportDir->Base]);
+             *ProcedureAddress = (PVOID)((ULONG_PTR)BaseAddress + (ULONG_PTR)AddressPtr[Ordinal - ExportDir->Base]);
              return STATUS_SUCCESS;
           }
         DPRINT1("LdrGetProcedureAddress: Can't resolve symbol @%d\n", Ordinal);
@@ -269,7 +269,7 @@ EngUnloadImage ( IN HANDLE hModule )
 {
   NTSTATUS Status;
 
-  DPRINT("hModule 0x%x\n", hModule); 
+  DPRINT("hModule 0x%x\n", hModule);
 
   Status = ZwSetSystemInformation(SystemUnloadGdiDriverInformation,
     &hModule, sizeof(HANDLE));
@@ -292,7 +292,7 @@ EngUnloadImage ( IN HANDLE hModule )
 			  Current = CONTAINING_RECORD(CurrentEntry, DRIVERS, ListEntry);
 
 			  if( Current ) {
-				  if(Current->ImageHandle == hModule) { 
+				  if(Current->ImageHandle == hModule) {
 					  ExFreePool(Current->DriverName.Buffer);
 					  RemoveEntryList(&Current->ListEntry);
 					  ExFreePool(Current);
