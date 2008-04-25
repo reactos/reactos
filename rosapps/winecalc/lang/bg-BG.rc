@@ -1,0 +1,151 @@
+#include "winecalc.h"
+
+LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
+
+STRINGTABLE DISCARDABLE
+BEGIN
+   IDS_APPNAME,            "Изчислител"
+
+   IDS_COPYRIGHT1,         "Calculator 5.0. Licensed under LGPL 2"
+   IDS_COPYRIGHT2          "Copyright 2003, James Briggs"
+   IDS_COPYRIGHT3          "San Jose, California, USA"
+   IDS_COPYRIGHT4          "james@ActionMessage.com"
+   IDS_COPYRIGHT5          "http://www.ActionMessage.com/winecalc/"
+
+   IDS_BTN_BACKSPACE,      "<-"
+   IDS_BTN_CLEAR_ENTRY,    "CE"
+   IDS_BTN_CLEAR_ALL,      "C"
+   IDS_BTN_MEM_CLEAR,      "MC"
+   IDS_BTN_MEM_RECALL,     "MR"
+   IDS_BTN_MEM_STORE,      "MS"
+   IDS_BTN_MEM_PLUS,       "M+"
+   IDS_BTN_MEM_STATUS_M,   "M"
+   IDS_BTN_SQRT,           "корен 2"
+   IDS_BTN_DEGREES,        "Градуси"
+   IDS_BTN_RADIANS,        "Радиани"
+   IDS_BTN_GRADS,          "Градове"
+   IDS_BTN_SHRT_HEX        "Шстн"
+   IDS_BTN_SHRT_DEC        "Дстн"
+   IDS_BTN_SHRT_OCT        "Осм"
+   IDS_BTN_SHRT_BIN        "Двоич."
+   IDS_ERR_INVALID_INPUT,  "Неправилни входни данни."
+   IDS_ERR_DIVIDE_BY_ZERO, "Деленето на нула е невъзможно."
+   IDS_ERR_UNDEFINED,      "Изчислението е невъзможно."
+END
+
+MAIN_MENU MENU DISCARDABLE
+BEGIN
+   POPUP "&Обработка" 
+   BEGIN
+      MENUITEM "&Запомни Ctrl+C",     IDM_COPY
+      MENUITEM "&Постави Ctrl+V",    IDM_PASTE
+   END
+   POPUP "&Изглед"
+   BEGIN
+      MENUITEM "Обикновен",         IDM_MODE_STANDARD
+      MENUITEM "Научен",       IDM_MODE_SCIENTIFIC
+      MENUITEM SEPARATOR
+      MENUITEM "Разделяне на хилядите",   IDM_DIGIT_GROUPING
+   END
+   POPUP "&Помощ"
+   BEGIN
+      MENUITEM "Помощ",      IDM_HELP_TOPICS
+      MENUITEM SEPARATOR
+      MENUITEM "За приложението", IDM_ABOUT
+   END
+END
+
+SCIMS_MENU MENU DISCARDABLE
+BEGIN
+   POPUP "&Обработка"
+   BEGIN
+      MENUITEM "&Запомняне Ctrl+C",     IDM_COPY
+      MENUITEM "&Поставяне Ctrl+V",    IDM_PASTE
+   END
+   POPUP "&Изглед"
+   BEGIN
+      MENUITEM "Обикновен",         IDM_MODE_STANDARD
+      MENUITEM "Научен",       IDM_MODE_SCIENTIFIC
+      MENUITEM SEPARATOR
+	  MENUITEM "Шестнaдесетичен\tF5",          ID_CALC_NS_HEX
+	  MENUITEM "Десетичен\tF6",      ID_CALC_NS_DEC
+	  MENUITEM "Осмичен\tF7",        ID_CALC_NS_OCT
+	  MENUITEM "Двоичен\tF8",       ID_CALC_NS_BIN
+      MENUITEM SEPARATOR
+      MENUITEM "Градуси\tF2",      ID_CALC_MS_DEGREES
+      MENUITEM "Радиани\tF3",      ID_CALC_MS_RADIANS
+	  MENUITEM "Градове\tF4",        ID_CALC_MS_GRADS
+      MENUITEM SEPARATOR
+      MENUITEM "Разделяне на хилядите",   IDM_DIGIT_GROUPING
+   END
+   POPUP "&Помощ"
+   BEGIN
+      MENUITEM "Помощ",      IDM_HELP_TOPICS
+      MENUITEM SEPARATOR
+      MENUITEM "За приложението", IDM_ABOUT
+   END
+END
+
+SCIWS_MENU MENU DISCARDABLE
+BEGIN
+   POPUP "&Обработка"
+   BEGIN
+      MENUITEM "&Запомняне Ctrl+C",     IDM_COPY
+      MENUITEM "&Поставяне Ctrl+V",    IDM_PASTE
+   END
+   POPUP "&Изглед"
+   BEGIN
+      MENUITEM "Обикновен",         IDM_MODE_STANDARD
+      MENUITEM "Научен",       IDM_MODE_SCIENTIFIC
+      MENUITEM SEPARATOR
+	  MENUITEM "Шестнадесетичен\tF5",          ID_CALC_NS_HEX
+	  MENUITEM "Десетичен\tF6",      ID_CALC_NS_DEC
+	  MENUITEM "Осмичен\tF7",        ID_CALC_NS_OCT
+	  MENUITEM "Двоичен\tF8",       ID_CALC_NS_BIN
+      MENUITEM SEPARATOR
+	  MENUITEM "Чдума\tF12",       ID_CALC_WS_QWORD
+	  MENUITEM "Ддума\tF2",        ID_CALC_WS_DWORD
+	  MENUITEM "Дума\tF3",         ID_CALC_WS_WORD
+	  MENUITEM "Байт\tF4",         ID_CALC_WS_BYTE
+      MENUITEM SEPARATOR
+      MENUITEM "Разделяне на хилядите",   IDM_DIGIT_GROUPING
+   END
+   POPUP "&Помощ"
+   BEGIN
+      MENUITEM "Помощ",      IDM_HELP_TOPICS
+      MENUITEM SEPARATOR
+      MENUITEM "За приложението", IDM_ABOUT
+   END
+END
+
+MAIN_MENU ACCELERATORS
+BEGIN
+   VK_F1, IDV_HELP,     VIRTKEY
+END
+
+DLG_ABOUT DIALOGEX 12,0,175,90
+CAPTION "За GNU winecalc"
+FONT 8, "MS Shell Dlg"
+STYLE DS_MODALFRAME | DS_SHELLFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU
+BEGIN
+   DEFPUSHBUTTON "Добре", IDOK,       73, 70, 30, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+END
+
+WHATS_THIS_MENU MENU DISCARDABLE
+BEGIN
+   POPUP ""
+   BEGIN
+      MENUITEM "Какво е това?",     IDM_WHATS_THIS
+   END
+END
+
+DLG_STATS DIALOGEX 12,0,145,85
+CAPTION "Статистика"
+FONT 8, "MS Shell Dlg"
+STYLE DS_MODALFRAME | DS_SHELLFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_VISIBLE
+BEGIN
+   DEFPUSHBUTTON "&RET",  ID_STATS_RET,   4, 52, 30, 13, WS_TABSTOP | WS_GROUP
+   PUSHBUTTON    "&LOAD", ID_STATS_LOAD, 39, 52, 30, 13, WS_TABSTOP | WS_GROUP
+   PUSHBUTTON    "&CD"    ID_STATS_CD,   74, 52, 30, 13, WS_TABSTOP | WS_GROUP
+   PUSHBUTTON    "C&AD",  ID_STATS_CAD, 109, 52, 30, 13, WS_TABSTOP | WS_GROUP
+END

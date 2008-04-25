@@ -4,7 +4,7 @@
 	<directory name="applications">
 		<xi:include href="applications/applications.rbuild" />
 	</directory>
-	
+
 	<directory name="cmdutils">
 		<xi:include href="cmdutils/cmdutils.rbuild" />
 	</directory>
@@ -75,10 +75,6 @@
 	</directory>
 	-->
 
-	<directory name="roscalc">
-		<xi:include href="roscalc/roscalc.rbuild" />
-	</directory>
-
 	<directory name="roshttpd">
 		<xi:include href="roshttpd/roshttpd.rbuild" />
 	</directory>
@@ -101,6 +97,10 @@
 
 	<directory name="templates">
 		<xi:include href="templates/directory.rbuild" />
+	</directory>
+
+	<directory name="winecalc">
+		<xi:include href="winecalc/winecalc.rbuild" />
 	</directory>
 
 	<directory name="winefile">
