@@ -124,5 +124,6 @@ BOOL FASTCALL IntSetDeviceGammaRamp(HDEV hPDev, PGAMMARAMP Ramp, BOOL);
 
 /* Debug function oly for win32k dx */
 void dump_edd_directdraw_global(EDD_DIRECTDRAW_GLOBAL *pEddgbl);
+void dump_edd_directdraw_local(PEDD_DIRECTDRAW_LOCAL pEddlcl);
 
 #endif /* _INT_W32k_DDRAW */
