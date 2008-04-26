@@ -144,12 +144,16 @@ dll\keyboard\kbdbgt\kbdbgt.dll                      1
 dll\keyboard\kbdbga\kbdbga.dll                      1
 dll\keyboard\kbdbe\kbdbe.dll                        1
 dll\keyboard\kbdbur\kbdbur.dll                      1
+dll\keyboard\kbdcan\kbdcan.dll                      1
 dll\keyboard\kbdcz1\kbdcz1.dll                      1
 dll\keyboard\kbdda\kbdda.dll                        1
 dll\keyboard\kbddv\kbddv.dll                        1
 dll\keyboard\kbdes\kbdes.dll                        1
+dll\keyboard\kbdest\kbdest.dll                      1
+dll\keyboard\kbdfc\kbdfc.dll                        1
 dll\keyboard\kbdfi\kbdfi.dll                        1
 dll\keyboard\kbdfr\kbdfr.dll                        1
+dll\keyboard\kbdgeo\kbdgeo.dll                      1
 dll\keyboard\kbdgerg\kbdgerg.dll                    1
 dll\keyboard\kbdgneo\kbdgneo.dll                    1
 dll\keyboard\kbdgrist\kbdgrist.dll                  1
@@ -161,6 +165,9 @@ dll\keyboard\kbdic\kbdic.dll                        1
 dll\keyboard\kbdit\kbdit.dll                        1
 dll\keyboard\kbdja\kbdja.dll                        1
 dll\keyboard\kbdlt\kbdlt.dll                        1
+dll\keyboard\kbdlv\kbdlv.dll                        1
+dll\keyboard\kbdmac\kbdmac.dll                      1
+dll\keyboard\kbdne\kbdne.dll                        1
 dll\keyboard\kbdno\kbdno.dll                        1
 dll\keyboard\kbdpl1\kbdpl1.dll                      1
 dll\keyboard\kbdpo\kbdpo.dll                        1
