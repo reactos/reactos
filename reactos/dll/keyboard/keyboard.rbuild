@@ -37,6 +37,15 @@
 	<directory name="kbdfr">
 		<xi:include href="kbdfr/kbdfr.rbuild" />
 	</directory>
+	<directory name="kbdgerg">
+		<xi:include href="kbdgerg/kbdgerg.rbuild" />
+	</directory>
+	<directory name="kbdgneo">
+		<xi:include href="kbdgneo/kbdgneo.rbuild" />
+	</directory>
+	<directory name="kbdgrist">
+		<xi:include href="kbdgrist/kbdgrist.rbuild" />
+	</directory>
 	<directory name="kbdgr">
 		<xi:include href="kbdgr/kbdgr.rbuild" />
 	</directory>

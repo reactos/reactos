@@ -150,6 +150,9 @@ dll\keyboard\kbddv\kbddv.dll                        1
 dll\keyboard\kbdes\kbdes.dll                        1
 dll\keyboard\kbdfi\kbdfi.dll                        1
 dll\keyboard\kbdfr\kbdfr.dll                        1
+dll\keyboard\kbdgerg\kbdgerg.dll                    1
+dll\keyboard\kbdgneo\kbdgneo.dll                    1
+dll\keyboard\kbdgrist\kbdgrist.dll                  1
 dll\keyboard\kbdgr\kbdgr.dll                        1
 dll\keyboard\kbdhe\kbdhe.dll                        1
 dll\keyboard\kbdheb\kbdheb.dll                      1
