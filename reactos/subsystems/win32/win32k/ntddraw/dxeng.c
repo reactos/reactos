@@ -334,7 +334,6 @@ DxEngGetHdevData(HDEV hDev,
       case DxEGShDevData_eddg:
         DPRINT1("requested DXEGSHDEVDATA DxEGShDevData_eddg\n");
         retVal = (DWORD) PDev->pEDDgpl;
-        dump_edd_directdraw_global(PDev->pEDDgpl);
         break;
       case DxEGShDevData_dd_nCount:
         DPRINT1("requested DXEGSHDEVDATA DxEGShDevData_dd_nCount\n");

@@ -96,15 +96,20 @@ typedef struct _EDD_SURFACE
 
 typedef struct _EDD_DIRECTDRAW_GLOBAL
 {
-/* 0x000 */    PVOID dhpdev;           /* The assign pdev */
+/* 0x000 */    PVOID dhpdev;
 /* 0x004 */    DWORD dwReserved1;
 /* 0x008 */    DWORD dwReserved2;
 /* 0x00C */    ULONG unk_000c[3];
 /* 0x018 */    LONG cDriverReferences;
 /* 0x01C */    ULONG unk_01c[3];
-/* 0x028 */    LONGLONG llAssertModeTimeout;
-/* 0x030 */    DWORD dwNumHeaps;                   // verify it match windows xp
-/* 0x034 */    VIDEOMEMORY *pvmList;               // verify it match windows xp
+#ifdef _WIN32
+/* 0x028 */    LARGE_INTEGER   llAssertModeTimeout;
+#else
+/* 0x028 */    DWORD           llAssertModeTimeoutLowPart;
+/* 0x02C */    DWORD           llAssertModeTimeoutHighPart;
+#endif
+/* 0x030 */    DWORD dwNumHeaps;                   // 0x030 <-- verify it match windows xp, dwNumHeaps
+/* 0x034 */    VIDEOMEMORY *pvmList;               // 0x034 <-- verify it match windows xp, pvmList
 /* 0x038 */    DWORD dwNumFourCC;
 /* 0x03C */    PDWORD pdwFourCC;
 /* 0x040 */    DD_HALINFO ddHalInfo;
@@ -120,8 +125,10 @@ typedef struct _EDD_DIRECTDRAW_GLOBAL
 /* 0x4E0 */    DD_MISCELLANEOUSCALLBACKS ddMiscellanousCallbacks;
 /* 0x4EC */    ULONG unk_4ec[18];
 /* 0x534 */    D3DNTHAL_CALLBACKS3 d3dNtHalCallbacks3;
+/* 0x5A4 */    ULONG unk_544;
+/* 0x5A8 */    ULONG unk_548;
 /* 0x54C */    ULONG unk_54c[23];
-/* 0x5A8 */    EDD_DIRECTDRAW_LOCAL* peDirectDrawLocalList;  // verify it match windows xp, comment it is current local struct not a list
+/* 0x5A8 */    EDD_DIRECTDRAW_LOCAL* peDirectDrawLocalList;  // 0x5A8 <-- verify it match windows xp, comment it is current local struct not a list, peDirectDrawLocalList Current
 /* 0x5ac */    EDD_SURFACE* peSurface_LockList;
 /* 0x5B0 */    FLONG fl;
 /* 0x5B4 */    ULONG cSurfaceLocks;
@@ -131,10 +138,8 @@ typedef struct _EDD_DIRECTDRAW_GLOBAL
 /* 0x5C4 */    BOOL bSuspended;
 /* 0x5C8 */    ULONG unk_5c8[12];
 /* 0x5F8 */    RECTL rcbounds;
-/* 0x5FC */    ULONG unk_5FC;
-/* 0x600 */    ULONG unk_600;
-/* 0x608 */    HDEV hDev;
-/* 0x60c */    PVOID hPDev;  /* The real Pdev */
+/* 0x608 */    ULONG unk_608;
+/* 0x60c */    HDEV hDev;       // 0x60c <-- verify it match windows xp, The real Pdev, hDev
 
 /* Windows XP and higher */
 /* 0x610 */    ULONG unk_610[63];
