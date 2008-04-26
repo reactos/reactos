@@ -57,6 +57,9 @@ EngDeleteSemaphore ( IN HSEMAPHORE hsem )
 {
   // www.osr.com/ddk/graphics/gdifncs_13c7.htm
   ASSERT ( hsem );
+
+  ExDeleteResourceLite((PERESOURCE)hsem);
+
   ExFreePool ( (PVOID)hsem );
 }
 
