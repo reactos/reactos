@@ -19,6 +19,9 @@
 	<directory name="kbdbur">
 		<xi:include href="kbdbur/kbdbur.rbuild" />
 	</directory>
+	<directory name="kbdcan">
+		<xi:include href="kbdcan/kbdcan.rbuild" />
+	</directory>
 	<directory name="kbdcz1">
 		<xi:include href="kbdcz1/kbdcz1.rbuild" />
 	</directory>
@@ -31,11 +34,20 @@
 	<directory name="kbdes">
 		<xi:include href="kbdes/kbdes.rbuild" />
 	</directory>
+	<directory name="kbdest">
+		<xi:include href="kbdest/kbdest.rbuild" />
+	</directory>
+	<directory name="kbdfc">
+		<xi:include href="kbdfc/kbdfc.rbuild" />
+	</directory>
 	<directory name="kbdfi">
 		<xi:include href="kbdfi/kbdfi.rbuild" />
 	</directory>
 	<directory name="kbdfr">
 		<xi:include href="kbdfr/kbdfr.rbuild" />
+	</directory>
+	<directory name="kbdgeo">
+		<xi:include href="kbdgeo/kbdgeo.rbuild" />
 	</directory>
 	<directory name="kbdgerg">
 		<xi:include href="kbdgerg/kbdgerg.rbuild" />
@@ -69,6 +81,15 @@
 	</directory>
 	<directory name="kbdlt">
 		<xi:include href="kbdlt/kbdlt.rbuild" />
+	</directory>
+	<directory name="kbdlv">
+		<xi:include href="kbdlv/kbdlv.rbuild" />
+	</directory>
+	<directory name="kbdmac">
+		<xi:include href="kbdmac/kbdmac.rbuild" />
+	</directory>
+	<directory name="kbdne">
+		<xi:include href="kbdne/kbdne.rbuild" />
 	</directory>
 	<directory name="kbdno">
 		<xi:include href="kbdno/kbdno.rbuild" />
