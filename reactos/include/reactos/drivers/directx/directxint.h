@@ -13,7 +13,8 @@ typedef struct _EDD_DIRECTDRAW_LOCAL
     //
     DD_BASEOBJECT pobj;
 /* 0x10 */    struct _EDD_DIRECTDRAW_GLOBAL * peDirectDrawGlobal;    // verify it match windows xp
-/* 0x1C */    struct _EDD_SURFACE * peSurface_DdList;
+/* 0x14 */    struct _EDD_SURFACE * peSurface_DdList;
+/* 0x18 */    ULONG unk_018;
 /* 0x1C */    ULONG unk_01c;
 /* 0x20 */    ULONG unk_020;
 /* 0x24 */    struct _EDD_DIRECTDRAW_GLOBAL * peDirectDrawGlobal2;   // verify it match windows xp
