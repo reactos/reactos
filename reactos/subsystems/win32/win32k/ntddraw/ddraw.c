@@ -34,31 +34,16 @@ intEnableReactXDriver(PEDD_DIRECTDRAW_GLOBAL pEddgbl, PDC pDC)
 {
     PGDIDEVICE pDev = (PGDIDEVICE)pDC->pPDev;
     BOOLEAN success = FALSE;
-    //DD_HALINFO HalInfo;
-
-
-    // ddHalInfo.dwSize = sizeof(DD_HALINFO);
-    // VIDEOMEMORYINFO     vmiData;
-    // DDNTCORECAPS        ddCaps;
-    // PDD_GETDRIVERINFO   GetDriverInfo;
-    // DWORD               dwFlags;
-    // PVOID               lpD3DGlobalDriverData;
-    // PVOID               lpD3DHALCallbacks;
-    // PDD_D3DBUFCALLBACKS lpD3DBufCallbacks;
 
     /*clean up some of the cache entry */
     RtlZeroMemory(pEddgbl,sizeof(EDD_DIRECTDRAW_GLOBAL));
 
     /* setup hdev for edd_DdirectDraw_Global xp */
     edd_DdirectDraw_Global.hDev   = pDC->pPDev;
-    //edd_DdirectDraw_Global.dhpdev   =  (PVOID)pDC->PDev;
-
+    /*FIXME : edd_DdirectDraw_Global.dhpdev   =  (PVOID)pDC->PDev; */
 
     /* setup EDD_DIRECTDRAW_GLOBAL for pDev xp */
     pDev->pEDDgpl = pEddgbl;
-
-//    pEddgbl->GetDriverInfo = pDC->DriverFunctions.GetDirectDrawInfo;
-
 
      /* test see if drv got a dx interface or not */
     if  ( ( pDev->DriverFunctions.DisableDirectDraw == NULL) ||
@@ -91,106 +76,99 @@ intEnableReactXDriver(PEDD_DIRECTDRAW_GLOBAL pEddgbl, PDC pDC)
         }
         DPRINT1(" DrvGetDirectDrawInfo  OK\n");
 
-    //    /* The driver are not respnose to alloc the memory for pvmList
-    //     * but it is win32k responsible todo, Windows 9x it is gdi32.dll
-    //     */
-    //    if (pDirectDraw->dwNumHeaps != 0)
-    //    {
-    //        DPRINT1("Setup pvmList\n");
-    //        pDirectDraw->pvmList = (PVIDEOMEMORY) ExAllocatePoolWithTag(PagedPool, pDirectDraw->dwNumHeaps * sizeof(VIDEOMEMORY), TAG_DXPVMLIST);
-    //        if (pDirectDraw->pvmList == NULL)
-    //        {
-    //            DPRINT1("pvmList memmery alloc fail\n");
-    //            return FALSE;
-    //        }
-    //    }
+        /* The driver are not respnose to alloc the memory for pvmList
+         * but it is win32k responsible todo, Windows 9x it is gdi32.dll
+         */
 
-    //    /* The driver are not respnose to alloc the memory for pdwFourCC
-    //     * but it is win32k responsible todo, Windows 9x it is gdi32.dll
-    //     */
+        if (pEddgbl->dwNumHeaps != 0)
+        {
+            DPRINT1("Setup pvmList\n");
+            pEddgbl->pvmList = (PVIDEOMEMORY) ExAllocatePoolWithTag(PagedPool, pEddgbl->dwNumHeaps * sizeof(VIDEOMEMORY), TAG_DXPVMLIST);
+            if (pEddgbl->pvmList == NULL)
+            {
+                DPRINT1("pvmList memmery alloc fail\n");
+                return FALSE;
+            }
+        }
 
-    //    if (pDirectDraw->dwNumFourCC != 0)
-    //    {
-    //        DPRINT1("Setup pdwFourCC\n");
-    //        pDirectDraw->pdwFourCC = (LPDWORD) ExAllocatePoolWithTag(PagedPool, pDirectDraw->dwNumFourCC * sizeof(DWORD), TAG_DXFOURCC);
+        /* The driver are not respnose to alloc the memory for pdwFourCC
+         * but it is win32k responsible todo, Windows 9x it is gdi32.dll
+         */
+        if (pEddgbl->dwNumFourCC != 0)
+        {
+            DPRINT1("Setup pdwFourCC\n");
+            pEddgbl->pdwFourCC = (LPDWORD) ExAllocatePoolWithTag(PagedPool, pEddgbl->dwNumFourCC * sizeof(DWORD), TAG_DXFOURCC);
 
-    //        if (pDirectDraw->pdwFourCC == NULL)
-    //        {
-    //            DPRINT1("pdwFourCC memmery alloc fail\n");
-    //            return FALSE;
-    //        }
-    //    }
-    //    success = pDirectDraw->DrvGetDirectDrawInfo( pDirectDraw->Global.dhpdev, 
-    //                                                 &HalInfo,
-    //                                                 &pDirectDraw->dwNumHeaps,
-    //                                                 pDirectDraw->pvmList,
-    //                                                 &pDirectDraw->dwNumFourCC,
-    //                                                 pDirectDraw->pdwFourCC);
-    //    if (!success)
-    //    {
-    //        DPRINT1("DrvGetDirectDrawInfo  second call fail\n");
-    //        GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);
-    //        return FALSE;
-    //    }
+            if (pEddgbl->pdwFourCC == NULL)
+            {
+                DPRINT1("pdwFourCC memmery alloc fail\n");
+                return FALSE;
+            }
+        }
+        success = pDev->DriverFunctions.GetDirectDrawInfo( pDC->PDev,
+                                                          &pEddgbl->ddHalInfo,
+                                                          &pEddgbl->dwNumHeaps,
+                                                          pEddgbl->pvmList,
+                                                          &pEddgbl->dwNumFourCC,
+                                                          pEddgbl->pdwFourCC);
+        if (!success)
+        {
+            DPRINT1("DrvGetDirectDrawInfo  second call fail\n");
+            return FALSE;
+        }
 
+        /* We need now convert the DD_HALINFO we got, it can be NT4 driver we 
+         * loading ReactOS supporting NT4 and higher to be loading.so we make
+         * the HALInfo compatible here so we can easy pass it to gdi32.dll 
+         * without converting it later 
+         */
 
-    //    /* We need now convert the DD_HALINFO we got, it can be NT4 driver we 
-    //     * loading ReactOS supporting NT4 and higher to be loading.so we make
-    //     * the HALInfo compatible here so we can easy pass it to gdi32.dll 
-    //     * without converting it later 
-    //    */
+        if ((pEddgbl->ddHalInfo.dwSize != sizeof(DD_HALINFO)) && 
+            (pEddgbl->ddHalInfo.dwSize != sizeof(DD_HALINFO_V4)))
+        {
+            DPRINT1(" Fail not vaild driver DD_HALINFO struct found\n");
+            return FALSE;
+        }
 
-    //    if ((HalInfo.dwSize != sizeof(DD_HALINFO)) && 
-    //        (HalInfo.dwSize != sizeof(DD_HALINFO_V4)))
-    //    {
-    //        DPRINT1(" Fail not vaild driver DD_HALINFO struct found\n");
-    //        GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);
-    //        return FALSE;
-    //    }
-
-    //    if (HalInfo.dwSize != sizeof(DD_HALINFO))
-    //    {
-    //        if (HalInfo.dwSize == sizeof(DD_HALINFO_V4))
-    //        {
-    //            /* NT4 Compatible */
-    //            DPRINT1("Got DD_HALINFO_V4 sturct we convert it to DD_HALINFO \n");
-    //            HalInfo.dwSize = sizeof(DD_HALINFO);
-    //            HalInfo.lpD3DGlobalDriverData = NULL;
-    //            HalInfo.lpD3DHALCallbacks = NULL;
-    //            HalInfo.lpD3DBufCallbacks = NULL;
-    //        }
-    //        else
-    //        {
-    //            /* Unknown version found */
-    //            DPRINT1(" Fail : did not get DD_HALINFO size \n");
-    //            GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);
-    //            return FALSE;
-    //        }
-    //    }
-    //    /* Copy it to user mode pointer the data */
-    //    RtlCopyMemory(&pDirectDraw->Hal, &HalInfo, sizeof(DD_HALINFO));
+        if (pEddgbl->ddHalInfo.dwSize != sizeof(DD_HALINFO))
+        {
+            if (pEddgbl->ddHalInfo.dwSize == sizeof(DD_HALINFO_V4))
+            {
+                /* NT4 Compatible */
+                DPRINT1("Got DD_HALINFO_V4 sturct we convert it to DD_HALINFO \n");
+                pEddgbl->ddHalInfo.dwSize = sizeof(DD_HALINFO);
+                pEddgbl->ddHalInfo.lpD3DGlobalDriverData = NULL;
+                pEddgbl->ddHalInfo.lpD3DHALCallbacks = NULL;
+                pEddgbl->ddHalInfo.lpD3DBufCallbacks = NULL;
+            }
+            else
+            {
+                /* Unknown version found */
+                DPRINT1(" Fail : did not get DD_HALINFO size \n");
+                return FALSE;
+            }
+        }
     }
 
-    //DPRINT1("Trying EnableDirectDraw the driver\n");
+    DPRINT1("Trying EnableDirectDraw the driver\n");
 
-    //success = pDirectDraw->EnableDirectDraw( pDirectDraw->Global.dhpdev, 
-    //                                         &pDirectDraw->DD, 
-    //                                         &pDirectDraw->Surf, 
-    //                                         &pDirectDraw->Pal);
+    success = pDev->DriverFunctions.EnableDirectDraw( pDC->PDev, 
+                                                      &pEddgbl->ddCallbacks, 
+                                                      &pEddgbl->ddSurfaceCallbacks, 
+                                                      &pEddgbl->ddPaletteCallbacks);
 
-    //if (!success)
-    //{
-    //    DPRINT1("EnableDirectDraw call fail\n");
-    //    GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);
-    //    return FALSE;
-    //}
+    if (!success)
+    {
+        DPRINT1("EnableDirectDraw call fail\n");
+        return FALSE;
+    }
 
-    // hack for now 
-    //RtlZeroMemory(&pEddgbl->ddHalInfo,sizeof(DD_HALINFO));
+    /* setup missing data in ddHalInfo */
+    pEddgbl->ddHalInfo.GetDriverInfo = (PVOID)pDev->DriverFunctions.GetDirectDrawInfo;
+
+    /* FIXME : remove this when we are done with debuging of dxg */
     dump_edd_directdraw_global(pEddgbl);
     dump_halinfo(&pEddgbl->ddHalInfo);
-    pEddgbl->dwNumHeaps = 0;
-    pEddgbl->dwNumFourCC = 0;
     return TRUE;
 }
 
