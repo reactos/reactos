@@ -178,7 +178,7 @@ BOOLEAN
 STDCALL
 DxEngLockShareSem()
 {
-    BOOLEAN retVal = 0;
+    BOOLEAN retVal = FALSE;
     DPRINT1("ReactX Calling : DxEngLockShareSem\n");
 #if 0
     if (ExIsResourceAcquiredExclusiveLite(&ghsemShareDevLock) == FALSE)
@@ -541,11 +541,11 @@ DxEngLockHdev(HDEV hDev)
     PGDIDEVICE pPDev = (PGDIDEVICE)hDev;
     PERESOURCE Resource;
 
+    DPRINT1("ReactX Calling : DxEngLockHdev \n");
+
     DPRINT1("hDev                   : 0x%08lx\n",hDev);
 
     Resource = pPDev->hsemDevLock;
-
-    DPRINT1("ReactX Calling : DxEngLockHdev \n");
 
     if (Resource)
     {

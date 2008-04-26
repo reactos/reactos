@@ -75,10 +75,8 @@ NtGdiDdCanCreateSurface(HANDLE hDirectDrawLocal,
     }
 
     DPRINT1("Calling on dxg.sys DdCanCreateSurface\n");
-    DPRINT1("FIXME it crash when it trying call on pfnDdCanCreateSurface\n");
-    /* FIXME it crash when it trying call on pfnDdCanCreateSurface */
-    // return pfnDdCanCreateSurface(hDirectDrawLocal,puCanCreateSurfaceData);
-    return 0;
+
+    return pfnDdCanCreateSurface(hDirectDrawLocal,puCanCreateSurfaceData);
 }
 
 /************************************************************************/
@@ -98,10 +96,8 @@ NtGdiDdGetScanLine(HANDLE hDirectDrawLocal,
     }
 
     DPRINT1("Calling on dxg.sys pfnDdGetScanLine\n");
-    DPRINT1("FIXME it crash when it trying call on pfnDdGetScanLine\n");
-    /* FIXME it crash when it trying call on pfnDdGetScanLine */
-    // return pfnDdGetScanLine(hDirectDrawLocal,puGetScanLineData);
-    return 0;
+
+    return pfnDdGetScanLine(hDirectDrawLocal,puGetScanLineData);
 }
 
 

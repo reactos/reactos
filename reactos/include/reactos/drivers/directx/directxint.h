@@ -12,17 +12,17 @@ typedef struct _EDD_DIRECTDRAW_LOCAL
     // GDI Object Header
     //
     DD_BASEOBJECT pobj;
-/* 0x10 */    struct _EDD_DIRECTDRAW_GLOBAL * peDirectDrawGlobal;
+/* 0x10 */    struct _EDD_DIRECTDRAW_GLOBAL * peDirectDrawGlobal;    // verify it match windows xp
 /* 0x1C */    struct _EDD_SURFACE * peSurface_DdList;
 /* 0x1C */    ULONG unk_01c;
 /* 0x20 */    ULONG unk_020;
-/* 0x24 */    struct _EDD_DIRECTDRAW_GLOBAL * peDirectDrawGlobal2;
+/* 0x24 */    struct _EDD_DIRECTDRAW_GLOBAL * peDirectDrawGlobal2;   // verify it match windows xp
 /* 0x28 */    FLATPTR fpProcess;
 /* 0x2C */    FLONG fl;
-/* 0x30 */    HANDLE UniqueProcess;
+/* 0x30 */    struct _EDD_DIRECTDRAW_LOCAL *peDirectDrawLocal_prev;  // verify it match windows xp, to old lcl store here when new handle are create.
 /* 0x34 */    PEPROCESS Process;
 /* 0x38 */    ULONG unk_038;
-/* 0x3C */    ULONG unk_03C;
+/* 0x3C */    HANDLE UniqueProcess;
 /* 0x40 */    VOID *unk_040;
 /* 0x44 */    VOID *unk_044;
 /* 0x48 */    ULONG unk_048;
@@ -121,7 +121,7 @@ typedef struct _EDD_DIRECTDRAW_GLOBAL
 /* 0x4EC */    ULONG unk_4ec[18];
 /* 0x534 */    D3DNTHAL_CALLBACKS3 d3dNtHalCallbacks3;
 /* 0x54C */    ULONG unk_54c[23];
-/* 0x5A8 */    EDD_DIRECTDRAW_LOCAL* peDirectDrawLocalList;
+/* 0x5A8 */    EDD_DIRECTDRAW_LOCAL* peDirectDrawLocalList;  // verify it match windows xp, comment it is current local struct not a list
 /* 0x5ac */    EDD_SURFACE* peSurface_LockList;
 /* 0x5B0 */    FLONG fl;
 /* 0x5B4 */    ULONG cSurfaceLocks;
@@ -131,6 +131,8 @@ typedef struct _EDD_DIRECTDRAW_GLOBAL
 /* 0x5C4 */    BOOL bSuspended;
 /* 0x5C8 */    ULONG unk_5c8[12];
 /* 0x5F8 */    RECTL rcbounds;
+/* 0x5FC */    ULONG unk_5FC;
+/* 0x600 */    ULONG unk_600;
 /* 0x608 */    HDEV hDev;
 /* 0x60c */    PVOID hPDev;  /* The real Pdev */
 

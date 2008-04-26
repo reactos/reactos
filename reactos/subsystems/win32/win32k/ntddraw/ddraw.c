@@ -24,7 +24,7 @@ HANDLE ghDxGraphics = NULL;
 ULONG gdwDirectDrawContext;
 
 EDD_DIRECTDRAW_GLOBAL edd_DdirectDraw_Global;
-EDD_DIRECTDRAW_LOCAL edd_DirectDrawLocalList;
+
 
 
 /************************************************************************/
@@ -118,18 +118,6 @@ DxDdStartupDxGraphics(  ULONG ulc1,
                 gpDxFuncs[lstDrvFN[t].iFunc].pfn =lstDrvFN[t].pfn;
             }
 
-            /* dump sort list for debuging */
-#if DXDDRAWDEBUG
-            DPRINT1("ghDxGraphics address 0x%08lx\n",ghDxGraphics);
-            DPRINT1("gpfnStartupDxGraphics address 0x%08lx\n",gpfnStartupDxGraphics);
-            DPRINT1("gpfnCleanupDxGraphics address 0x%08lx\n",gpfnCleanupDxGraphics);
-
-            for (t=0;t<=DXG_INDEX_DxDdIoctl;t++)
-            {
-                DPRINT1("gpDxFuncs[0x%08lx].iFunc = 0x%08lx\n",t,gpDxFuncs[t].iFunc);
-                DPRINT1("gpDxFuncs[0x%08lx].pfn = 0x%08lx\n",t,gpDxFuncs[t].pfn);
-            }
-#endif
             DPRINT1("DirectX interface is activated\n");
 
         }
@@ -184,16 +172,11 @@ NtGdiDdCreateDirectDrawObject(HDC hdc)
     ((PGDIDEVICE)pDC->pPDev)->pEDDgpl = &edd_DdirectDraw_Global;
     RtlZeroMemory(&edd_DdirectDraw_Global,sizeof(EDD_DIRECTDRAW_GLOBAL));
 
-    /* FIXME this should be alloc by win32k */
-    RtlZeroMemory(&edd_DirectDrawLocalList,sizeof(EDD_DIRECTDRAW_LOCAL));
+
 
     /* setup hdev for edd_DdirectDraw_Global xp */
-    edd_DdirectDraw_Global.hDev = (PVOID)pDC->pPDev;
     edd_DdirectDraw_Global.hPDev = (PVOID)pDC->pPDev;
-    edd_DdirectDraw_Global.peDirectDrawLocalList = &edd_DirectDrawLocalList;
 
-    /* setup hdev for edd_DdirectDraw_Local xp */
-    edd_DirectDrawLocalList.peDirectDrawGlobal = &edd_DdirectDraw_Global;
     DC_UnlockDc(pDC);
 
     /* get the pfnDdCreateDirectDrawObject after we load the drv */
@@ -353,12 +336,11 @@ NtGdiDdDeleteDirectDrawObject(HANDLE hDirectDrawLocal)
          DPRINT1("Warning: hDirectDrawLocal is NULL\n");
          return DDHAL_DRIVER_HANDLED;
     }
+
     DPRINT1("hDirectDrawLocal = %lx \n",hDirectDrawLocal);
     DPRINT1("Calling dxg.sys pfnDdDeleteDirectDrawObject\n");
-    DPRINT1("FIXME delete of the HANDLE\n");
-    /* FIXME it crash inside or after it return from DxEngLockShareSem */
-    // return pfnDdDeleteDirectDrawObject(hDirectDrawLocal);
-    return DDHAL_DRIVER_HANDLED;
+
+    return pfnDdDeleteDirectDrawObject(hDirectDrawLocal);
 }
 
 /************************************************************************/
@@ -627,20 +609,20 @@ NtGdiDdSetGammaRamp(HANDLE hDirectDraw,
 /* internal debug api */
 void dump_edd_directdraw_global(EDD_DIRECTDRAW_GLOBAL *pEddgbl)
 {
-    DPRINT1("PEDD_DIRECTDRAW_GLOBAL->dhpdev                  : 0x%08lx\n",pEddgbl->dhpdev);
-    DPRINT1("PEDD_DIRECTDRAW_GLOBAL->dwReserved1             : 0x%08lx\n",pEddgbl->dwReserved1);
-    DPRINT1("PEDD_DIRECTDRAW_GLOBAL->dwReserved2             : 0x%08lx\n",pEddgbl->dwReserved2);
-    DPRINT1("PEDD_DIRECTDRAW_GLOBAL->unk_000c[0]             : 0x%08lx\n",pEddgbl->unk_000c[0]);
-    DPRINT1("PEDD_DIRECTDRAW_GLOBAL->unk_000c[1]             : 0x%08lx\n",pEddgbl->unk_000c[1]);
-    DPRINT1("PEDD_DIRECTDRAW_GLOBAL->unk_000c[2]             : 0x%08lx\n",pEddgbl->unk_000c[2]);
-    DPRINT1("PEDD_DIRECTDRAW_GLOBAL->cDriverReferences       : 0x%08lx\n",pEddgbl->cDriverReferences);
-    DPRINT1("PEDD_DIRECTDRAW_GLOBAL->unk_01c[0]              : 0x%08lx\n",pEddgbl->unk_01c[0]);
-    DPRINT1("PEDD_DIRECTDRAW_GLOBAL->unk_01c[1]              : 0x%08lx\n",pEddgbl->unk_01c[1]);
-    DPRINT1("PEDD_DIRECTDRAW_GLOBAL->unk_01c[2]              : 0x%08lx\n",pEddgbl->unk_01c[2]);
-    DPRINT1("PEDD_DIRECTDRAW_GLOBAL->llAssertModeTimeout     : 0x%llx\n",pEddgbl->llAssertModeTimeout);
-    DPRINT1("PEDD_DIRECTDRAW_GLOBAL->dwNumHeaps              : 0x%08lx\n",pEddgbl->dwNumHeaps);
+    DPRINT1("0x%08lx PEDD_DIRECTDRAW_GLOBAL->dhpdev                  : 0x%08lx\n",(((DWORD)&pEddgbl->dhpdev) - (DWORD)pEddgbl), pEddgbl->dhpdev);
+    DPRINT1("0x%08lx PEDD_DIRECTDRAW_GLOBAL->dwReserved1             : 0x%08lx\n",(((DWORD)&pEddgbl->dwReserved1) - (DWORD)pEddgbl),pEddgbl->dwReserved1);
+    DPRINT1("0x%08lx PEDD_DIRECTDRAW_GLOBAL->dwReserved2             : 0x%08lx\n",(((DWORD)&pEddgbl->dwReserved2) - (DWORD)pEddgbl),pEddgbl->dwReserved2);
+    DPRINT1("0x%08lx PEDD_DIRECTDRAW_GLOBAL->unk_000c[0]             : 0x%08lx\n",(((DWORD)&pEddgbl->unk_000c) - (DWORD)pEddgbl),pEddgbl->unk_000c[0]);
+    DPRINT1("0x%08lx PEDD_DIRECTDRAW_GLOBAL->unk_000c[1]             : 0x%08lx\n",(((DWORD)&pEddgbl->unk_000c) - (DWORD)pEddgbl),pEddgbl->unk_000c[1]);
+    DPRINT1("0x%08lx PEDD_DIRECTDRAW_GLOBAL->unk_000c[2]             : 0x%08lx\n",(((DWORD)&pEddgbl->unk_000c) - (DWORD)pEddgbl),pEddgbl->unk_000c[2]);
+    DPRINT1("0x%08lx PEDD_DIRECTDRAW_GLOBAL->cDriverReferences       : 0x%08lx\n",(((DWORD)&pEddgbl->cDriverReferences) - (DWORD)pEddgbl),pEddgbl->cDriverReferences);
+    DPRINT1("0x%08lx PEDD_DIRECTDRAW_GLOBAL->unk_01c[0]              : 0x%08lx\n",(((DWORD)&pEddgbl->unk_01c) - (DWORD)pEddgbl),pEddgbl->unk_01c[0]);
+    DPRINT1("0x%08lx PEDD_DIRECTDRAW_GLOBAL->unk_01c[1]              : 0x%08lx\n",(((DWORD)&pEddgbl->unk_01c) - (DWORD)pEddgbl),pEddgbl->unk_01c[1]);
+    DPRINT1("0x%08lx PEDD_DIRECTDRAW_GLOBAL->unk_01c[2]              : 0x%08lx\n",(((DWORD)&pEddgbl->unk_01c) - (DWORD)pEddgbl),pEddgbl->unk_01c[2]);
+    DPRINT1("0x%08lx PEDD_DIRECTDRAW_GLOBAL->llAssertModeTimeout     : 0x%llx\n",(((DWORD)&pEddgbl->llAssertModeTimeout) - (DWORD)pEddgbl),pEddgbl->llAssertModeTimeout);
+    DPRINT1("0x%08lx PEDD_DIRECTDRAW_GLOBAL->dwNumHeaps              : 0x%08lx\n",(((DWORD)&pEddgbl->dwNumHeaps) - (DWORD)pEddgbl),pEddgbl->dwNumHeaps);
     // VIDEOMEMORY *pvmList;
-    DPRINT1("PEDD_DIRECTDRAW_GLOBAL->pvmList                 : 0x%08lx\n",pEddgbl->pvmList);
+    DPRINT1("0x%08lx PEDD_DIRECTDRAW_GLOBAL->pvmList                 : 0x%08lx\n",(((DWORD)&pEddgbl->pvmList) - (DWORD)pEddgbl),pEddgbl->pvmList);
     DPRINT1("PEDD_DIRECTDRAW_GLOBAL->dwNumFourCC             : 0x%08lx\n",pEddgbl->dwNumFourCC);
     DPRINT1("PEDD_DIRECTDRAW_GLOBAL->pdwFourCC               : 0x%08lx\n",pEddgbl->pdwFourCC);
     // DD_HALINFO ddHalInfo;
@@ -844,8 +826,10 @@ void dump_edd_directdraw_global(EDD_DIRECTDRAW_GLOBAL *pEddgbl)
     DPRINT1("PEDD_DIRECTDRAW_GLOBAL->unk_5c8[11]             : 0x%08lx\n",pEddgbl->unk_5c8[11]);
     // RECTL rcbounds;
     DPRINT1("PEDD_DIRECTDRAW_GLOBAL->rcbounds                : 0x%08lx\n",pEddgbl->rcbounds);
-    DPRINT1("PEDD_DIRECTDRAW_GLOBAL->hDev                    : 0x%08lx\n",pEddgbl->hDev);
-    DPRINT1("PEDD_DIRECTDRAW_GLOBAL->hPDev                   : 0x%08lx\n",pEddgbl->hPDev);
+    DPRINT1("0x%08lx PEDD_DIRECTDRAW_GLOBAL->unk_5FC                 : 0x%08lx\n",(((DWORD)&pEddgbl->unk_5FC) - (DWORD)pEddgbl), pEddgbl->unk_5FC);
+    DPRINT1("0x%08lx PEDD_DIRECTDRAW_GLOBAL->unk_600                 : 0x%08lx\n",(((DWORD)&pEddgbl->unk_600) - (DWORD)pEddgbl), pEddgbl->unk_600);
+    DPRINT1("0x%08lx PEDD_DIRECTDRAW_GLOBAL->hDev                    : 0x%08lx\n",(((DWORD)&pEddgbl->hDev) - (DWORD)pEddgbl), pEddgbl->hDev);
+    DPRINT1("0x%08lx PEDD_DIRECTDRAW_GLOBAL->hPDev                   : 0x%08lx\n",(((DWORD)&pEddgbl->hPDev) - (DWORD)pEddgbl), pEddgbl->hPDev);
     DPRINT1("PEDD_DIRECTDRAW_GLOBAL->ddPaletteCallbacks      : 0x%08lx\n",pEddgbl->ddPaletteCallbacks);
     DPRINT1("PEDD_DIRECTDRAW_GLOBAL->unk_1e0[0]              : 0x%08lx\n",pEddgbl->unk_610[0]);
     DPRINT1("PEDD_DIRECTDRAW_GLOBAL->unk_610[1]              : 0x%08lx\n",pEddgbl->unk_610[1]);
