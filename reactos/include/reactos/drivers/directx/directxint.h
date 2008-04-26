@@ -114,11 +114,11 @@ typedef struct _EDD_DIRECTDRAW_GLOBAL
 /* 0x038 */    DWORD dwNumFourCC;
 /* 0x03C */    PDWORD pdwFourCC;
 /* 0x040 */    DD_HALINFO ddHalInfo;
-/* 0x1E0 */    ULONG unk_1e0[44];
-/* 0x290 */    DD_CALLBACKS ddCallbacks;
+/* 0x1E0 */    ULONG unk_1e0[46];
+/* 0x298 */    DD_CALLBACKS ddCallbacks;         // 0x298 <-- verify it match windows xp, ddCallbacks
 /* 0x2C4 */    DD_SURFACECALLBACKS ddSurfaceCallbacks;
 /* 0x304 */    DD_PALETTECALLBACKS ddPaletteCallbacks;
-/* 0x314 */    ULONG unk_314[48];
+/* 0x314 */    ULONG unk_314[46];
 /* 0x3D4 */    D3DNTHAL_CALLBACKS d3dNtHalCallbacks;
 /* 0x460 */    ULONG unk_460[7];
 /* 0x47C */    D3DNTHAL_CALLBACKS2 d3dNtHalCallbacks2;
@@ -136,7 +136,7 @@ typedef struct _EDD_DIRECTDRAW_GLOBAL
 /* 0x5B8 */    PKEVENT pAssertModeEvent;
 /* 0x5Bc */    EDD_SURFACE *peSurfaceCurrent;
 /* 0x5C0 */    EDD_SURFACE *peSurfacePrimary;
-/* 0x5C4 */    BOOL bSuspended;
+/* 0x5C4 */    BOOL bSuspended;                            // 0x5C4 <-- verify it match windows xp, tells to dxg to use the drv own api or return error code instead 
 /* 0x5C8 */    ULONG unk_5c8[12];
 /* 0x5F8 */    RECTL rcbounds;
 /* 0x608 */    ULONG unk_608;

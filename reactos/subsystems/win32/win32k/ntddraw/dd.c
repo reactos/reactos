@@ -95,12 +95,9 @@ NtGdiDdGetScanLine(HANDLE hDirectDrawLocal,
         return DDHAL_DRIVER_NOTHANDLED;
     }
 
-    DPRINT1("Calling on dxg.sys pfnDdGetScanLine offline until futuer notce \n");
+    DPRINT1("Calling on dxg.sys pfnDdGetScanLine\n");
 
-
-    //return pfnDdGetScanLine(hDirectDrawLocal,puGetScanLineData);
-
-    return 0;
+    return pfnDdGetScanLine(hDirectDrawLocal,puGetScanLineData);
 }
 
 
