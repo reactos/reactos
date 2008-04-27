@@ -183,6 +183,7 @@
 	<library>ntdll</library>
 	<library>hal</library>
 	<library>freetype</library>
+	<library>dxguid</library>
 	<file>win32k.rc</file>
 </module>
 </group>

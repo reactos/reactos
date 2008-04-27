@@ -34,6 +34,7 @@ intEnableReactXDriver(PEDD_DIRECTDRAW_GLOBAL pEddgbl, PDC pDC)
 {
     PGDIDEVICE pDev = (PGDIDEVICE)pDC->pPDev;
     BOOLEAN success = FALSE;
+    DD_GETDRIVERINFODATA GetInfo;
 
     /*clean up some of the cache entry */
     RtlZeroMemory(pEddgbl,sizeof(EDD_DIRECTDRAW_GLOBAL));
@@ -163,8 +164,33 @@ intEnableReactXDriver(PEDD_DIRECTDRAW_GLOBAL pEddgbl, PDC pDC)
         return FALSE;
     }
 
+    /* Fill in DD_MISCELLANEOUSCALLBACKS */
+    GetInfo.dhpdev = pDC->PDev;
+
+    /* Note this check will fail on some nvida drv, it is a bug in their drv not in our code, 
+     * we doing proper check if GetDriverInfo exists */
+    if  ( ((pEddgbl->ddHalInfo.dwFlags & (DDHALINFO_GETDRIVERINFOSET | DDHALINFO_GETDRIVERINFO2)) != 0) &&
+          (pEddgbl->ddHalInfo.GetDriverInfo != NULL) )
+    {
+        GetInfo.dwSize = sizeof (DD_GETDRIVERINFODATA);
+        GetInfo.dwFlags = 0x00;
+        GetInfo.guidInfo = GUID_MiscellaneousCallbacks;
+        GetInfo.lpvData = (PVOID)&pEddgbl->ddMiscellanousCallbacks;
+        GetInfo.dwExpectedSize = sizeof (DD_MISCELLANEOUSCALLBACKS);
+        GetInfo.ddRVal = DDERR_GENERIC;
+        if ( ( pEddgbl->ddHalInfo.GetDriverInfo (&GetInfo) == DDHAL_DRIVER_NOTHANDLED) || 
+             (GetInfo.ddRVal != DD_OK) )
+        {
+            DPRINT1(" Fail : did not get DD_MISCELLANEOUSCALLBACKS \n");
+        }
+    }
+    else
+    {
+        DPRINT1(" Fail : did not foundpEddgbl->ddHalInfo.GetDriverInfo \n");
+    }
+
     /* setup missing data in ddHalInfo */
-    pEddgbl->ddHalInfo.GetDriverInfo = (PVOID)pDev->DriverFunctions.GetDirectDrawInfo;
+    //pEddgbl->ddHalInfo.GetDriverInfo = (PVOID)pDev->DriverFunctions.GetDirectDrawInfo;
 
     /* FIXME : remove this when we are done with debuging of dxg */
     dump_edd_directdraw_global(pEddgbl);
@@ -844,10 +870,10 @@ void dump_edd_directdraw_global(EDD_DIRECTDRAW_GLOBAL *pEddgbl)
     DPRINT1("0x%08lx PEDD_DIRECTDRAW_GLOBAL->ddSurfaceCallbacks.UpdateOverlay               : 0x%08lx\n",(((DWORD)&pEddgbl->ddSurfaceCallbacks.UpdateOverlay) - (DWORD)pEddgbl),pEddgbl->ddSurfaceCallbacks.UpdateOverlay);
     DPRINT1("0x%08lx PEDD_DIRECTDRAW_GLOBAL->ddSurfaceCallbacks.SetOverlayPosition          : 0x%08lx\n",(((DWORD)&pEddgbl->ddSurfaceCallbacks.SetOverlayPosition) - (DWORD)pEddgbl),pEddgbl->ddSurfaceCallbacks.SetOverlayPosition);
     DPRINT1("0x%08lx PEDD_DIRECTDRAW_GLOBAL->ddSurfaceCallbacks.reserved4                   : 0x%08lx\n",(((DWORD)&pEddgbl->ddSurfaceCallbacks.reserved4) - (DWORD)pEddgbl),pEddgbl->ddSurfaceCallbacks.reserved4);
-    DPRINT1("0x%08lx PEDD_DIRECTDRAW_GLOBAL->ddSurfaceCallbacks.SetPalette                  : 0x%08lx\n",(((DWORD)&pEddgbl->ddSurfaceCallbacks.SetPalette) - (DWORD)pEddgbl),pEddgbl->ddSurfaceCallbacks.SetPalette);
-
-    // DD_PALETTECALLBACKS ddPaletteCallbacks;
-    DPRINT1("0x%08lx PEDD_DIRECTDRAW_GLOBAL->ddPaletteCallbacks                             : 0x%08lx\n",(((DWORD)&pEddgbl->ddPaletteCallbacks) - (DWORD)pEddgbl),pEddgbl->ddPaletteCallbacks);
+    DPRINT1("0x%08lx PEDD_DIRECTDRAW_GLOBAL->ddPaletteCallbacks.dwSize                      : 0x%08lx\n",(((DWORD)&pEddgbl->ddPaletteCallbacks.dwSize) - (DWORD)pEddgbl),pEddgbl->ddPaletteCallbacks.dwSize);
+    DPRINT1("0x%08lx PEDD_DIRECTDRAW_GLOBAL->ddPaletteCallbacks.dwFlags                     : 0x%08lx\n",(((DWORD)&pEddgbl->ddPaletteCallbacks.dwFlags) - (DWORD)pEddgbl),pEddgbl->ddPaletteCallbacks.dwFlags);
+    DPRINT1("0x%08lx PEDD_DIRECTDRAW_GLOBAL->ddPaletteCallbacks.DestroyPalette              : 0x%08lx\n",(((DWORD)&pEddgbl->ddPaletteCallbacks.DestroyPalette) - (DWORD)pEddgbl),pEddgbl->ddPaletteCallbacks.DestroyPalette);
+    DPRINT1("0x%08lx PEDD_DIRECTDRAW_GLOBAL->ddPaletteCallbacks.SetEntries                  : 0x%08lx\n",(((DWORD)&pEddgbl->ddPaletteCallbacks.SetEntries) - (DWORD)pEddgbl),pEddgbl->ddPaletteCallbacks.SetEntries);
     DPRINT1("0x%08lx PEDD_DIRECTDRAW_GLOBAL->unk_314[0]                                     : 0x%08lx\n",(((DWORD)&pEddgbl->unk_314[0]) - (DWORD)pEddgbl),pEddgbl->unk_314[0]);
     DPRINT1("0x%08lx PEDD_DIRECTDRAW_GLOBAL->unk_314[1]                                     : 0x%08lx\n",(((DWORD)&pEddgbl->unk_314[1]) - (DWORD)pEddgbl),pEddgbl->unk_314[1]);
     DPRINT1("0x%08lx PEDD_DIRECTDRAW_GLOBAL->unk_314[2]                                     : 0x%08lx\n",(((DWORD)&pEddgbl->unk_314[2]) - (DWORD)pEddgbl),pEddgbl->unk_314[2]);
