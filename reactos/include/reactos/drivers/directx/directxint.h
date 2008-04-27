@@ -11,7 +11,7 @@ typedef struct _EDD_DIRECTDRAW_LOCAL
     //
     // GDI Object Header
     //
-    DD_BASEOBJECT pobj;
+/* 0x00 */    DD_BASEOBJECT pobj; // verify it match windows xp
 /* 0x10 */    struct _EDD_DIRECTDRAW_GLOBAL * peDirectDrawGlobal;    // verify it match windows xp
 /* 0x14 */    struct _EDD_SURFACE * peSurface_DdList;
 /* 0x18 */    ULONG unk_018;
