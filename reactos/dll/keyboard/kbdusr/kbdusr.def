@@ -1,0 +1,8 @@
+;
+; ReactOS Operating System
+;
+LIBRARY kbdusr.dll
+
+EXPORTS
+KbdLayerDescriptor@0
+;EOF

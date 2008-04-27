@@ -100,6 +100,9 @@
 	<directory name="kbdpo">
 		<xi:include href="kbdpo/kbdpo.rbuild" />
 	</directory>
+	<directory name="kbdro">
+		<xi:include href="kbdro/kbdro.rbuild" />
+	</directory>
 	<directory name="kbdru">
 		<xi:include href="kbdru/kbdru.rbuild" />
 	</directory>
@@ -115,6 +118,9 @@
 	<directory name="kbdsw">
 		<xi:include href="kbdsw/kbdsw.rbuild" />
 	</directory>
+	<directory name="kbdtat">
+		<xi:include href="kbdtat/kbdtat.rbuild" />
+	</directory>
 	<directory name="kbdth">
 		<xi:include href="kbdth/kbdth.rbuild" />
 	</directory>
@@ -129,5 +135,14 @@
 	</directory>
 	<directory name="kbdusa">
 		<xi:include href="kbdusa/kbdusa.rbuild" />
+	</directory>
+	<directory name="kbdusl">
+		<xi:include href="kbdusl/kbdusl.rbuild" />
+	</directory>
+	<directory name="kbdusr">
+		<xi:include href="kbdusr/kbdusr.rbuild" />
+	</directory>
+	<directory name="kbdusx">
+		<xi:include href="kbdusx/kbdusx.rbuild" />
 	</directory>
 </group>
