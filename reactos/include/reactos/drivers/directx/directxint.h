@@ -95,6 +95,11 @@ typedef struct _EDD_SURFACE
 } EDD_SURFACE, *PEDD_SURFACE;
 
 
+/* NOTE :
+ * if EDDDGBL_MISCCALLBACKS been set in  struct EDD_DIRECTDRAW_GLOBAL member dwCallbackFlags,
+ * it mean that the callback member for it have been fill in from the graphic drv
+ */
+#define EDDDGBL_MISCCALLBACKS       0x01;
 typedef struct _EDD_DIRECTDRAW_GLOBAL
 {
 /* 0x000 */    PVOID dhpdev;
@@ -105,7 +110,7 @@ typedef struct _EDD_DIRECTDRAW_GLOBAL
 /* 0x01C */    ULONG unk_01c;
 /* 0x020 */    DWORD dwCallbackFlags; /* <-- verify it match windows xp, dwCallbackFlags
                                          Flags value 
-                                         0x0001 = GUID_MiscellaneousCallbacks
+                                         0x0001 = ddMiscellanousCallbacks
                                          0x0002 = ddVideoPortCallback and GUID_VideoPortCaps
                                          0x0004 = GUID_ColorControlCallbacks
                                          0x0040 = GUID_MotionCompCallbacks
@@ -117,26 +122,26 @@ typedef struct _EDD_DIRECTDRAW_GLOBAL
 
 /* 0x024 */    ULONG unk_024;
 #ifdef _WIN32
-/* 0x028 */    LARGE_INTEGER   llAssertModeTimeout;          // 0x028 <-- verify it match windows xp, llAssertModeTimeout
+/* 0x028 */    LARGE_INTEGER   llAssertModeTimeout;                    // 0x028 <-- verify it match windows xp, llAssertModeTimeout
 #else
 /* 0x028 */    DWORD           llAssertModeTimeoutLowPart;
 /* 0x02C */    DWORD           llAssertModeTimeoutHighPart;
 #endif
-/* 0x030 */    DWORD dwNumHeaps;                            // 0x030 <-- verify it match windows xp, dwNumHeaps
-/* 0x034 */    VIDEOMEMORY *pvmList;                        // 0x034 <-- verify it match windows xp, pvmList
+/* 0x030 */    DWORD dwNumHeaps;                                       // 0x030 <-- verify it match windows xp, dwNumHeaps
+/* 0x034 */    VIDEOMEMORY *pvmList;                                   // 0x034 <-- verify it match windows xp, pvmList
 /* 0x038 */    DWORD dwNumFourCC;
 /* 0x03C */    PDWORD pdwFourCC;
 /* 0x040 */    DD_HALINFO ddHalInfo;
 /* 0x1E0 */    ULONG unk_1e0[46];
-/* 0x298 */    DD_CALLBACKS ddCallbacks;                    // 0x298 <-- verify it match windows xp, ddCallbacks
-/* 0x2C0 */    DD_SURFACECALLBACKS ddSurfaceCallbacks;      // 0x2C0 <-- verify it match windows xp, ddSurfaceCallbacks
-/* 0x304 */    DD_PALETTECALLBACKS ddPaletteCallbacks;      // 0x304 <-- verify it match windows xp, ddPaletteCallbacks
+/* 0x298 */    DD_CALLBACKS ddCallbacks;                               // 0x298 <-- verify it match windows xp, ddCallbacks
+/* 0x2C0 */    DD_SURFACECALLBACKS ddSurfaceCallbacks;                 // 0x2C0 <-- verify it match windows xp, ddSurfaceCallbacks
+/* 0x304 */    DD_PALETTECALLBACKS ddPaletteCallbacks;                 // 0x304 <-- verify it match windows xp, ddPaletteCallbacks
 /* 0x314 */    ULONG unk_314[46];
 /* 0x3D4 */    D3DNTHAL_CALLBACKS d3dNtHalCallbacks;
 /* 0x460 */    ULONG unk_460[7];
 /* 0x47C */    D3DNTHAL_CALLBACKS2 d3dNtHalCallbacks2;
-/* 0x498 */    DD_VIDEOPORTCALLBACKS  ddVideoPortCallback;   // 0x498 <-- verify it match windows xp, ddVideoPortCallback
-/* 0x4E0 */    DD_MISCELLANEOUSCALLBACKS ddMiscellanousCallbacks;
+/* 0x498 */    DD_VIDEOPORTCALLBACKS  ddVideoPortCallback;             // 0x498 <-- verify it match windows xp, ddVideoPortCallback
+/* 0x4E0 */    DD_MISCELLANEOUSCALLBACKS ddMiscellanousCallbacks;      // 0x4E0 <-- verify it match windows xp, ddMiscellanousCallbacks
 /* 0x4EC */    ULONG unk_4ec[18];
 /* 0x534 */    D3DNTHAL_CALLBACKS3 d3dNtHalCallbacks3;
 /* 0x5A4 */    ULONG unk_544;

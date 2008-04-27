@@ -183,6 +183,10 @@ intEnableReactXDriver(PEDD_DIRECTDRAW_GLOBAL pEddgbl, PDC pDC)
         {
             DPRINT1(" Fail : did not get DD_MISCELLANEOUSCALLBACKS \n");
         }
+        else
+        {
+            pEddgbl->dwCallbackFlags |= EDDDGBL_MISCCALLBACKS;
+        }
     }
     else
     {
@@ -950,8 +954,10 @@ void dump_edd_directdraw_global(EDD_DIRECTDRAW_GLOBAL *pEddgbl)
     DPRINT1("0x%08lx PEDD_DIRECTDRAW_GLOBAL->ddVideoPortCallback.GetVideoSignalStatus       : 0x%08lx\n",(((DWORD)&pEddgbl->ddVideoPortCallback.GetVideoSignalStatus) - (DWORD)pEddgbl),pEddgbl->ddVideoPortCallback.GetVideoSignalStatus);
     DPRINT1("0x%08lx PEDD_DIRECTDRAW_GLOBAL->ddVideoPortCallback.ColorControl               : 0x%08lx\n",(((DWORD)&pEddgbl->ddVideoPortCallback.ColorControl) - (DWORD)pEddgbl),pEddgbl->ddVideoPortCallback.ColorControl);
 
-    // DD_MISCELLANEOUSCALLBACKS ddMiscellanousCallbacks;
-    DPRINT1("0x%08lx PEDD_DIRECTDRAW_GLOBAL->ddMiscellanousCallbacks                        : 0x%08lx\n",(((DWORD)&pEddgbl->ddMiscellanousCallbacks) - (DWORD)pEddgbl),pEddgbl->ddMiscellanousCallbacks);
+    DPRINT1("0x%08lx PEDD_DIRECTDRAW_GLOBAL->ddMiscellanousCallbacks.dwSize                 : 0x%08lx\n",(((DWORD)&pEddgbl->ddMiscellanousCallbacks.dwSize) - (DWORD)pEddgbl),pEddgbl->ddMiscellanousCallbacks.dwSize);
+    DPRINT1("0x%08lx PEDD_DIRECTDRAW_GLOBAL->ddMiscellanousCallbacks.dwFlags                : 0x%08lx\n",(((DWORD)&pEddgbl->ddMiscellanousCallbacks.dwFlags) - (DWORD)pEddgbl),pEddgbl->ddMiscellanousCallbacks.dwFlags);
+    DPRINT1("0x%08lx PEDD_DIRECTDRAW_GLOBAL->ddMiscellanousCallbacks.GetAvailDriverMemory   : 0x%08lx\n",(((DWORD)&pEddgbl->ddMiscellanousCallbacks.GetAvailDriverMemory) - (DWORD)pEddgbl),pEddgbl->ddMiscellanousCallbacks.GetAvailDriverMemory);
+
     DPRINT1("0x%08lx PEDD_DIRECTDRAW_GLOBAL->unk_4ec[0]                                     : 0x%08lx\n",(((DWORD)&pEddgbl->unk_4ec[0]) - (DWORD)pEddgbl),pEddgbl->unk_4ec[0]);
     DPRINT1("0x%08lx PEDD_DIRECTDRAW_GLOBAL->unk_4ec[1]                                     : 0x%08lx\n",(((DWORD)&pEddgbl->unk_4ec[1]) - (DWORD)pEddgbl),pEddgbl->unk_4ec[1]);
     DPRINT1("0x%08lx PEDD_DIRECTDRAW_GLOBAL->unk_4ec[2]                                     : 0x%08lx\n",(((DWORD)&pEddgbl->unk_4ec[2]) - (DWORD)pEddgbl),pEddgbl->unk_4ec[2]);
