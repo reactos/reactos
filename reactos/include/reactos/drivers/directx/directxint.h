@@ -96,10 +96,12 @@ typedef struct _EDD_SURFACE
 
 
 /* NOTE :
- * if EDDDGBL_MISCCALLBACKS been set in  struct EDD_DIRECTDRAW_GLOBAL member dwCallbackFlags,
+ * if these  been set in  struct EDD_DIRECTDRAW_GLOBAL member dwCallbackFlags,
  * it mean that the callback member for it have been fill in from the graphic drv
  */
-#define EDDDGBL_MISCCALLBACKS       0x01;
+#define EDDDGBL_MISCCALLBACKS           0x01; // ddMiscellanousCallbacks
+#define EDDDGBL_VIDEOPORTCALLBACKS      0x02; // ddVideoPortCallback
+
 typedef struct _EDD_DIRECTDRAW_GLOBAL
 {
 /* 0x000 */    PVOID dhpdev;
@@ -110,7 +112,6 @@ typedef struct _EDD_DIRECTDRAW_GLOBAL
 /* 0x01C */    ULONG unk_01c;
 /* 0x020 */    DWORD dwCallbackFlags; /* <-- verify it match windows xp, dwCallbackFlags
                                          Flags value 
-                                         0x0001 = ddMiscellanousCallbacks
                                          0x0002 = ddVideoPortCallback and GUID_VideoPortCaps
                                          0x0004 = GUID_ColorControlCallbacks
                                          0x0040 = GUID_MotionCompCallbacks
@@ -140,7 +141,7 @@ typedef struct _EDD_DIRECTDRAW_GLOBAL
 /* 0x3D4 */    D3DNTHAL_CALLBACKS d3dNtHalCallbacks;
 /* 0x460 */    ULONG unk_460[7];
 /* 0x47C */    D3DNTHAL_CALLBACKS2 d3dNtHalCallbacks2;
-/* 0x498 */    DD_VIDEOPORTCALLBACKS  ddVideoPortCallback;             // 0x498 <-- verify it match windows xp, ddVideoPortCallback
+/* 0x498 */    DD_VIDEOPORTCALLBACKS ddVideoPortCallback;              // 0x498 <-- verify it match windows xp, ddVideoPortCallback
 /* 0x4E0 */    DD_MISCELLANEOUSCALLBACKS ddMiscellanousCallbacks;      // 0x4E0 <-- verify it match windows xp, ddMiscellanousCallbacks
 /* 0x4EC */    ULONG unk_4ec[18];
 /* 0x534 */    D3DNTHAL_CALLBACKS3 d3dNtHalCallbacks3;

@@ -164,14 +164,44 @@ intEnableReactXDriver(PEDD_DIRECTDRAW_GLOBAL pEddgbl, PDC pDC)
         return FALSE;
     }
 
-    /* Fill in DD_MISCELLANEOUSCALLBACKS */
     GetInfo.dhpdev = pDC->PDev;
+
 
     /* Note this check will fail on some nvida drv, it is a bug in their drv not in our code, 
      * we doing proper check if GetDriverInfo exists */
     if  ( ((pEddgbl->ddHalInfo.dwFlags & (DDHALINFO_GETDRIVERINFOSET | DDHALINFO_GETDRIVERINFO2)) != 0) &&
           (pEddgbl->ddHalInfo.GetDriverInfo != NULL) )
     {
+        GetInfo.dhpdev = pDC->PDev;
+        GetInfo.dwSize = sizeof (DD_GETDRIVERINFODATA);
+        GetInfo.dwFlags = 0x00;
+        GetInfo.guidInfo = GUID_VideoPortCallbacks;
+        GetInfo.lpvData = (PVOID)&pEddgbl->ddVideoPortCallback;
+        GetInfo.dwExpectedSize = sizeof (DD_VIDEOPORTCALLBACKS);
+        GetInfo.ddRVal = DDERR_GENERIC;
+        if ( ( pEddgbl->ddHalInfo.GetDriverInfo (&GetInfo) == DDHAL_DRIVER_NOTHANDLED) || 
+             (GetInfo.ddRVal != DD_OK) )
+        {
+            DPRINT1(" Fail : did not get DD_VIDEOPORTCALLBACKS \n");
+        }
+        else
+        {
+            pEddgbl->dwCallbackFlags |= EDDDGBL_VIDEOPORTCALLBACKS;
+        }
+
+        /* FIXME fill in videoport caps */
+    }
+    else
+    {
+        DPRINT1(" Fail : did not foundpEddgbl->ddHalInfo.GetDriverInfo \n");
+    }
+
+    /* Note this check will fail on some nvida drv, it is a bug in their drv not in our code, 
+     * we doing proper check if GetDriverInfo exists */
+    if  ( ((pEddgbl->ddHalInfo.dwFlags & (DDHALINFO_GETDRIVERINFOSET | DDHALINFO_GETDRIVERINFO2)) != 0) &&
+          (pEddgbl->ddHalInfo.GetDriverInfo != NULL) )
+    {
+        GetInfo.dhpdev = pDC->PDev;
         GetInfo.dwSize = sizeof (DD_GETDRIVERINFODATA);
         GetInfo.dwFlags = 0x00;
         GetInfo.guidInfo = GUID_MiscellaneousCallbacks;
