@@ -196,7 +196,7 @@ typedef DWORD (NTAPI *PGD_DXGENERICTRUNK)(ULONG_PTR, ULONG_PTR, SIZE_T*, PVOID, 
 //typedef x (NTAPI *PGD_DxDvpReleaseNotification)(
 //typedef x (NTAPI *PGD_DxDdHeapVidMemAllocAligned)(
 //typedef x (NTAPI *PGD_DxDdHeapVidMemFree)(
-//typedef x (NTAPI *PGD_DxDdEnableDirectDraw)(
+typedef BOOLEAN (NTAPI *PGD_DXDDENABLEDIRECTDRAW)(PVOID, BOOLEAN);
 //typedef x (NTAPI *PGD_DxDdDisableDirectDraw)(
 //typedef x (NTAPI *PGD_DxDdSuspendDirectDraw)(
 //typedef x (NTAPI *PGD_DxDdResumeDirectDraw)(
