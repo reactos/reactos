@@ -99,8 +99,9 @@ typedef struct _EDD_SURFACE
  * if these  been set in  struct EDD_DIRECTDRAW_GLOBAL member dwCallbackFlags,
  * it mean that the callback member for it have been fill in from the graphic drv
  */
-#define EDDDGBL_MISCCALLBACKS           0x01; // ddMiscellanousCallbacks
-#define EDDDGBL_VIDEOPORTCALLBACKS      0x02; // ddVideoPortCallback
+#define EDDDGBL_MISCCALLBACKS           0x01 // ddMiscellanousCallbacks
+#define EDDDGBL_VIDEOPORTCALLBACKS      0x02 // ddVideoPortCallback
+#define EDDDGBL_MISC2CALLBACKS          0x80 // ddMiscellanous2Callbacks
 
 typedef struct _EDD_DIRECTDRAW_GLOBAL
 {
@@ -135,15 +136,16 @@ typedef struct _EDD_DIRECTDRAW_GLOBAL
 /* 0x040 */    DD_HALINFO ddHalInfo;
 /* 0x1E0 */    ULONG unk_1e0[46];
 /* 0x298 */    DD_CALLBACKS ddCallbacks;                               // 0x298 <-- verify it match windows xp, ddCallbacks
-/* 0x2C0 */    DD_SURFACECALLBACKS ddSurfaceCallbacks;                 // 0x2C0 <-- verify it match windows xp, ddSurfaceCallbacks
-/* 0x304 */    DD_PALETTECALLBACKS ddPaletteCallbacks;                 // 0x304 <-- verify it match windows xp, ddPaletteCallbacks
+/* 0x2C0 */    DD_SURFACECALLBACKS ddSurfaceCallbacks;                 // 0x2C4 <-- verify it match windows xp, ddSurfaceCallbacks
+/* 0x300 */    DD_PALETTECALLBACKS ddPaletteCallbacks;                 // 0x300 <-- verify it match windows xp, ddPaletteCallbacks
 /* 0x314 */    ULONG unk_314[46];
 /* 0x3D4 */    D3DNTHAL_CALLBACKS d3dNtHalCallbacks;
 /* 0x460 */    ULONG unk_460[7];
 /* 0x47C */    D3DNTHAL_CALLBACKS2 d3dNtHalCallbacks2;
 /* 0x498 */    DD_VIDEOPORTCALLBACKS ddVideoPortCallback;              // 0x498 <-- verify it match windows xp, ddVideoPortCallback
 /* 0x4E0 */    DD_MISCELLANEOUSCALLBACKS ddMiscellanousCallbacks;      // 0x4E0 <-- verify it match windows xp, ddMiscellanousCallbacks
-/* 0x4EC */    ULONG unk_4ec[18];
+/* 0x4EC */    DD_MISCELLANEOUS2CALLBACKS ddMiscellanous2Callbacks;    // 0x4EC <-- verify it match windows xp, ddMiscellanous2Callbacks
+/* 0x504 */    ULONG unk_504[12];
 /* 0x534 */    D3DNTHAL_CALLBACKS3 d3dNtHalCallbacks3;
 /* 0x5A4 */    ULONG unk_544;
 /* 0x5A8 */    ULONG unk_548;
