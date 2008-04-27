@@ -115,8 +115,8 @@ typedef struct _EDD_DIRECTDRAW_GLOBAL
 /* 0x03C */    PDWORD pdwFourCC;
 /* 0x040 */    DD_HALINFO ddHalInfo;
 /* 0x1E0 */    ULONG unk_1e0[46];
-/* 0x298 */    DD_CALLBACKS ddCallbacks;         // 0x298 <-- verify it match windows xp, ddCallbacks
-/* 0x2C4 */    DD_SURFACECALLBACKS ddSurfaceCallbacks;
+/* 0x298 */    DD_CALLBACKS ddCallbacks;                 // 0x298 <-- verify it match windows xp, ddCallbacks
+/* 0x2C0 */    DD_SURFACECALLBACKS ddSurfaceCallbacks;   // 0x2C0 <-- verify it match windows xp, ddCallbacks
 /* 0x304 */    DD_PALETTECALLBACKS ddPaletteCallbacks;
 /* 0x314 */    ULONG unk_314[46];
 /* 0x3D4 */    D3DNTHAL_CALLBACKS d3dNtHalCallbacks;
