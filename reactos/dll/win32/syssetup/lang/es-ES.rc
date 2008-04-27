@@ -108,7 +108,7 @@ BEGIN
     LTEXT "Para modificar esta configuración, pulse Modificar.",
           IDC_STATIC, 53, 60, 184, 8
     PUSHBUTTON "&Modificar...", IDC_CUSTOMLOCALE, 245, 57, 50, 14
-    LTEXT "La disposición de teclado especifica los caracteres que aparecen cuando "\ 
+    LTEXT "La disposición de teclado especifica los caracteres que aparecen cuando "\
           "usted escribe.",
           IDC_STATIC, 53, 86, 253, 20
     LTEXT "", IDC_LAYOUTTEXT, 53, 100, 250, 16
