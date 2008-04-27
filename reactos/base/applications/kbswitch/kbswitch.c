@@ -10,24 +10,99 @@
 
 #define WM_NOTIFYICONMSG (WM_USER + 248)
 
+static BOOL
+GetLayoutID(LPTSTR szLayoutNum, LPTSTR szLCID);
+
 HINSTANCE hInst;
 HANDLE    hProcessHeap;
 
+static HICON
+CreateTrayIcon(LPTSTR szLCID)
+{
+    LANGID lId;
+    TCHAR szBuf[3];
+    HDC hdc, hdcsrc;
+    HBITMAP hBitmap, hBmpNew, hBmpOld;
+    RECT rect;
+    DWORD bkColor, bkText;
+    HFONT hFont = NULL;
+    ICONINFO IconInfo;
+    HICON hIcon = NULL;
+
+    lId = (LANGID)_tcstoul(szLCID, NULL, 16);
+    if (GetLocaleInfo(lId,
+                      LOCALE_SISO639LANGNAME,
+                      szBuf,
+                      sizeof(szBuf) / sizeof(TCHAR)) == 0)
+    {
+        lstrcpy(szBuf, _T("??\0"));
+    }
+
+    hdcsrc = GetDC(NULL);
+    hdc = CreateCompatibleDC(hdcsrc);
+    hBitmap = CreateCompatibleBitmap(hdcsrc, 16, 16);
+    ReleaseDC(NULL, hdcsrc);
+
+    if (hdc && hBitmap)
+    {
+        hBmpNew = CreateBitmap(16, 16, 1, 1, NULL);
+        if (hBmpNew)
+        {
+            hBmpOld = SelectObject(hdc, hBitmap);
+            rect.right = 16;
+            rect.left = 0;
+            rect.bottom = 16;
+            rect.top = 0;
+
+            bkColor = SetBkColor(hdc, GetSysColor(COLOR_HIGHLIGHT));
+            bkText  = SetTextColor(hdc, GetSysColor(COLOR_HIGHLIGHTTEXT));
+
+            ExtTextOut(hdc, rect.left, rect.top, ETO_OPAQUE, &rect, _T(""), 0, NULL);
+
+            hFont = CreateFont(-11, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET,
+                               OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+                               DEFAULT_QUALITY, FF_DONTCARE, _T("Tahoma"));
+
+            SelectObject(hdc, hFont);
+            DrawText(hdc, _tcsupr(szBuf), 2, &rect, DT_SINGLELINE|DT_CENTER|DT_VCENTER);
+            SelectObject(hdc, hBmpNew);
+            PatBlt(hdc, 0, 0, 16, 16, BLACKNESS);
+            SelectObject(hdc, hBmpOld);
+
+            IconInfo.hbmColor = hBitmap;
+            IconInfo.hbmMask = hBmpNew;
+            IconInfo.fIcon = TRUE;
+
+            hIcon = CreateIconIndirect(&IconInfo);
+
+            DeleteObject(hBmpNew);
+            DeleteObject(hBmpOld);
+            DeleteObject(hFont);
+        }
+    }
+
+    DeleteDC(hdc);
+    DeleteObject(hBitmap);
+
+    return hIcon;
+}
+
 static VOID
-AddTrayIcon(HWND hwnd, HICON hIcon)
+AddTrayIcon(HWND hwnd)
 {
     NOTIFYICONDATA tnid;
+    TCHAR szLCID[CCH_LAYOUT_ID + 1];
+
+    GetLayoutID(_T("1"), szLCID);
 
     tnid.cbSize = sizeof(NOTIFYICONDATA);
     tnid.hWnd = hwnd;
     tnid.uID = 1;
     tnid.uFlags = NIF_ICON | NIF_MESSAGE;
     tnid.uCallbackMessage = WM_NOTIFYICONMSG;
-    tnid.hIcon = hIcon;
+    tnid.hIcon = CreateTrayIcon(szLCID);
 
     Shell_NotifyIcon(NIM_ADD, &tnid);
-
-    if (hIcon) DestroyIcon(hIcon);
 }
 
 static VOID
@@ -40,6 +115,21 @@ DelTrayIcon(HWND hwnd)
     tnid.uID = 1;
 
     Shell_NotifyIcon(NIM_DELETE, &tnid);
+}
+
+static VOID
+UpdateTrayIcon(HWND hwnd, LPTSTR szLCID)
+{
+    NOTIFYICONDATA tnid;
+
+    tnid.cbSize = sizeof(NOTIFYICONDATA);
+    tnid.hWnd = hwnd;
+    tnid.uID = 1;
+    tnid.uFlags = NIF_ICON | NIF_MESSAGE;
+    tnid.uCallbackMessage = WM_NOTIFYICONMSG;
+    tnid.hIcon = CreateTrayIcon(szLCID);
+
+    Shell_NotifyIcon(NIM_MODIFY, &tnid);
 }
 
 static BOOL
@@ -124,7 +214,7 @@ EnumWindowsProc(HWND hwnd, LPARAM lParam)
 }
 
 static VOID
-ActivateLayout(ULONG uLayoutNum)
+ActivateLayout(HWND hwnd, ULONG uLayoutNum)
 {
     HKL hKl;
     TCHAR szLayoutNum[CCH_ULONG_DEC + 1];
@@ -132,8 +222,10 @@ ActivateLayout(ULONG uLayoutNum)
 
     _ultot(uLayoutNum, szLayoutNum, 10);
     GetLayoutID(szLayoutNum, szLCID);
+    CreateTrayIcon(szLCID);
 
     // Switch to the new keyboard layout
+    UpdateTrayIcon(hwnd, szLCID);
     hKl = LoadKeyboardLayout(szLCID, KLF_ACTIVATE);
     SystemParametersInfo(SPI_SETDEFAULTINPUTLANG, 0, &hKl, SPIF_SENDWININICHANGE);
     EnumWindows(EnumWindowsProc, (LPARAM) hKl);
@@ -213,7 +305,7 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
     switch (Message)
     {
         case WM_CREATE:
-            AddTrayIcon(hwnd, LoadIcon(hInst, MAKEINTRESOURCE(IDI_MAIN)));
+            AddTrayIcon(hwnd);
             hPopupMenu = BuildPopupMenu(hwnd);
             break;
 
@@ -258,7 +350,7 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
                 }
 
                 default:
-                    ActivateLayout(LOWORD(wParam));
+                    ActivateLayout(hwnd, LOWORD(wParam));
                     break;
             }
             break;

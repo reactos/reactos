@@ -6,6 +6,7 @@
 		<library>advapi32</library>
 		<library>user32</library>
 		<library>shell32</library>
+		<library>gdi32</library>
 		<file>kbswitch.c</file>
 		<file>kbswitch.rc</file>
 	</module>
