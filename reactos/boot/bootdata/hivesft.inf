@@ -804,4 +804,7 @@ HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Controls Folder\Device\shellex\P
 ; Where to download the Mozilla ActiveX control
 HKLM,"SOFTWARE\ReactOS\shdocvw","MozillaUrl",0x00000000,"http://links.reactos.org/mozactivex"
 
+; Keyboard layout switcher
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Run","kbswitch",0x00000000,"kbswitch.exe"
+
 ; EOF
