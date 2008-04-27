@@ -10,6 +10,9 @@
 
 #define WM_NOTIFYICONMSG (WM_USER + 248)
 
+TCHAR szKbSwitcherName[] = _T("kbswitcher");
+
+
 static BOOL
 GetLayoutID(LPTSTR szLayoutNum, LPTSTR szLCID);
 
@@ -370,6 +373,11 @@ _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInst, LPTSTR lpCmdLine, INT nCmdSh
 {
     WNDCLASS WndClass = {0};
     MSG msg;
+    HANDLE hMutex;
+
+    hMutex = CreateMutex(NULL, FALSE, szKbSwitcherName);
+    if ((!hMutex) || (GetLastError() == ERROR_ALREADY_EXISTS))
+        return 1;
 
     hInst = hInstance;
     hProcessHeap = GetProcessHeap();
@@ -383,18 +391,20 @@ _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInst, LPTSTR lpCmdLine, INT nCmdSh
     WndClass.hCursor       = NULL;
     WndClass.hbrBackground = NULL;
     WndClass.lpszMenuName  = NULL;
-    WndClass.lpszClassName = _T("kbswitch");
+    WndClass.lpszClassName = szKbSwitcherName;
 
     if (!RegisterClass(&WndClass))
         return 1;
 
-    CreateWindow(_T("kbswitch"), NULL, 0, 0, 0, 1, 1, HWND_DESKTOP, NULL, hInstance, NULL);
+    CreateWindow(szKbSwitcherName, NULL, 0, 0, 0, 1, 1, HWND_DESKTOP, NULL, hInstance, NULL);
 
     while(GetMessage(&msg,NULL,0,0))
     {
         TranslateMessage(&msg);
         DispatchMessage(&msg);
     }
+
+    CloseHandle(hMutex);
 
     return 0;
 }
