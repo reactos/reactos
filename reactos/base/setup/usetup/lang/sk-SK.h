@@ -1,6 +1,7 @@
 /* TRANSLATOR:  M†rio Kaüm†r /Mario Kacmar/ aka Kario (kario@szm.sk)
  * DATE OF TR:  22-01-2008
  * Encoding  :  Latin II (852)
+ * LastChange:  24-04-08
  */
 
 #ifndef LANG_SK_SK_H__
@@ -41,8 +42,8 @@ static MUI_ENTRY skSKLanguagePageEntries[] =
     {
         0,
         0,
-        "   ENTER = Pokraüovaú   F3 = Skonüiú",
-        TEXT_TYPE_STATUS
+        "ENTER = Pokraüovaú   F3 = Skonüiú",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -87,7 +88,7 @@ static MUI_ENTRY skSKWelcomePageEntries[] =
     {
         8,
         17,
-        "\x07  Stlaüte R pre opravu systÇmu ReactOS.",
+        "\x07  Stlaüte R pre opravu alebo aktualiz†ciu systÇmu ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -117,8 +118,8 @@ static MUI_ENTRY skSKWelcomePageEntries[] =
     {
         0,
         0,
-        "   ENTER = Pokraüovaú   R = Opraviú   F3 = Skonüiú",
-        TEXT_TYPE_STATUS
+        "ENTER = Pokraüovaú  R = Opraviú  L = Licencia  F3 = Skonüiú",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -211,8 +212,8 @@ static MUI_ENTRY skSKIntroPageEntries[] =
     {
         0,
         0,
-        "   ENTER = Pokraüovaú   F3 = Skonüiú",
-        TEXT_TYPE_STATUS
+        "ENTER = Pokraüovaú   F3 = Skonüiú",
+        TEXT_TYPE_STATUS| TEXT_PADDING_BIG
     },
     {
         0,
@@ -239,67 +240,67 @@ static MUI_ENTRY skSKLicensePageEntries[] =
     {
         8,
         8,
-        "The ReactOS System is licensed under the terms of the",
+        "SystÇm ReactOS je vydanÏ za podmienok licencie",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         9,
-        "GNU GPL with parts containing code from other compatible",
+        "GNU GPL s üasúami obsahuj£cimi k¢d z inÏch kompatibilnÏch",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         10,
-        "licenses such as the X11 or BSD and GNU LGPL licenses.",
+        "licenci° ako s£ X11 alebo BSD a licencie GNU LGPL.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
-        "All software that is part of the ReactOS system is",
+        "Preto vÁetok softvÇr, ktorÏ je s£üasúou systÇmu ReactOS,",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         12,
-        "therefore released under the GNU GPL as well as maintaining",
+        "je vydanÏ pod licenciou GNU GPL, a rovnako s£ zachovanÇ",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "the original license.",
+        "aj pìvodnÇ licencie.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         15,
-        "This software comes with NO WARRANTY or restrictions on usage",
+        "Tento softvÇr prich†cha BEZ ZµRUKY alebo obmedzen° pouß°vania",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         16,
-        "save applicable local and international law. The licensing of",
+        "s vÏnimkou platnÇho miestneho a medzin†rodnÇho pr†va. Licencia",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
-        "ReactOS only covers distribution to third parties.",
+        "systÇmu ReactOS pokrÏva iba distrib£ciu k tren°m stran†m.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         18,
-        "If for some reason you did not receive a copy of the",
+        "Ak z nejakÇho dìvodu neobdrß°te k¢piu licencie GNU GPL",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         19,
-        "GNU General Public License with ReactOS please visit",
+        "spolu so systÇmom ReactOS, navÁt°vte, pros°m, str†nku:",
         TEXT_STYLE_NORMAL
     },
     {
@@ -335,8 +336,8 @@ static MUI_ENTRY skSKLicensePageEntries[] =
     {
         0,
         0,
-        "   ENTER = N†vrat",
-        TEXT_TYPE_STATUS
+        "ENTER = N†vrat",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -428,8 +429,8 @@ static MUI_ENTRY skSKDevicePageEntries[] =
     {
         0,
         0,
-        "   ENTER = Pokraüovaú   F3 = Skonüiú",
-        TEXT_TYPE_STATUS
+        "ENTER = Pokraüovaú   F3 = Skonüiú",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -492,8 +493,8 @@ static MUI_ENTRY skSKRepairPageEntries[] =
     {
         0,
         0,
-        "   ESC = Hlavn† str†nka  ENTER = ReÁtart",
-        TEXT_TYPE_STATUS
+        "ESC = Hlavn† str†nka  U = Aktualizovaú  R = Z†chrana  ENTER = ReÁtart",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -543,8 +544,8 @@ static MUI_ENTRY skSKComputerPageEntries[] =
     {
         0,
         0,
-        "   ENTER = Pokraüovaú   ESC = ZruÁiú   F3 = Skonüiú",
-        TEXT_TYPE_STATUS
+        "ENTER = Pokraüovaú   ESC = ZruÁiú   F3 = Skonüiú",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -583,8 +584,8 @@ static MUI_ENTRY skSKFlushPageEntries[] =
     {
         0,
         0,
-        "   Vypr†zdÂujem cache", //Flushing cache (zapisuje sa na disk obsah cache)
-        TEXT_TYPE_STATUS
+        "Vypr†zdÂujem cache", //Flushing cache (zapisuje sa na disk obsah cache)
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -629,8 +630,8 @@ static MUI_ENTRY skSKQuitPageEntries[] =
     {
         0,
         0,
-        "   Poükajte, pros°m ...",
-        TEXT_TYPE_STATUS,
+        "Poükajte, pros°m ...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
     },
     {
         0,
@@ -680,8 +681,8 @@ static MUI_ENTRY skSKDisplayPageEntries[] =
     {
         0,
         0,
-        "   ENTER = Pokraüovaú   ESC = ZruÁiú   F3 = Skonüiú",
-        TEXT_TYPE_STATUS
+        "ENTER = Pokraüovaú   ESC = ZruÁiú   F3 = Skonüiú",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -726,8 +727,8 @@ static MUI_ENTRY skSKSuccessPageEntries[] =
     {
         0,
         0,
-        "   ENTER = ReÁtart poü°taüa",
-        TEXT_TYPE_STATUS
+        "ENTER = ReÁtart poü°taüa",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -772,8 +773,8 @@ static MUI_ENTRY skSKBootPageEntries[] =
     {
         0,
         0,
-        "   ENTER = Pokraüovaú   F3 = Skonüiú",
-        TEXT_TYPE_STATUS
+        "ENTER = Pokraüovaú   F3 = Skonüiú",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -831,8 +832,9 @@ static MUI_ENTRY skSKSelectPartitionEntries[] =
     {
         0,
         0,
-        "   Poükajte, pros°m ...",
-        TEXT_TYPE_STATUS
+        "Poükajte, pros°m ...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+
     },
     {
         0,
@@ -865,8 +867,8 @@ static MUI_ENTRY skSKFormatPartitionEntries[] =
     {
         0,
         0,
-        "   ENTER = Pokraüovaú   F3 = Skonüiú",
-        TEXT_TYPE_STATUS
+        "ENTER = Pokraüovaú   F3 = Skonüiú",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -917,8 +919,8 @@ static MUI_ENTRY skSKInstallDirectoryEntries[] =
     {
         0,
         0,
-        "   ENTER = Pokraüovaú   F3 = Skonüiú",
-        TEXT_TYPE_STATUS
+        "ENTER = Pokraüovaú   F3 = Skonüiú",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -955,9 +957,9 @@ static MUI_ENTRY skSKFileCopyEntries[] =
         TEXT_STYLE_NORMAL
     },
     {
+        50,
         0,
-        0,
-        "                                                     \xB3 Poükajte, pros°m ...    ",
+        "\xB3 Poükajte, pros°m ...    ",
         TEXT_TYPE_STATUS
     },
     {
@@ -1003,8 +1005,8 @@ static MUI_ENTRY skSKBootLoaderEntries[] =
     {
         0,
         0,
-        "   ENTER = Pokraüovaú   F3 = Skonüiú",
-        TEXT_TYPE_STATUS
+        "ENTER = Pokraüovaú   F3 = Skonüiú",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -1055,8 +1057,8 @@ static MUI_ENTRY skSKKeyboardSettingsEntries[] =
     {
         0,
         0,
-        "   ENTER = Pokraüovaú   ESC = ZruÁiú   F3 = Skonüiú",
-        TEXT_TYPE_STATUS
+        "ENTER = Pokraüovaú   ESC = ZruÁiú   F3 = Skonüiú",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -1107,8 +1109,8 @@ static MUI_ENTRY skSKLayoutSettingsEntries[] =
     {
         0,
         0,
-        "   ENTER = Pokraüovaú   ESC = ZruÁiú   F3 = Skonüiú",
-        TEXT_TYPE_STATUS
+        "ENTER = Pokraüovaú   ESC = ZruÁiú   F3 = Skonüiú",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -1136,8 +1138,8 @@ static MUI_ENTRY skSKPrepareCopyEntries[] =
     {
         0,
         0,
-        "   Vytv†ra sa zoznam potrebnÏch s£borov ...",
-        TEXT_TYPE_STATUS
+        "Vytv†ra sa zoznam potrebnÏch s£borov ...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -1183,8 +1185,8 @@ static MUI_ENTRY skSKSelectFSEntries[] =
     {
         0,
         0,
-        "   ENTER = Pokraüovaú   ESC = ZruÁiú   F3 = Skonüiú",
-        TEXT_TYPE_STATUS
+        "ENTER = Pokraüovaú   ESC = ZruÁiú   F3 = Skonüiú",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
 
     {
@@ -1230,8 +1232,8 @@ static MUI_ENTRY skSKDeletePartitionEntries[] =
     {
         0,
         0,
-        "   D = Odstr†niú oblasú   ESC = ZruÁiú   F3 = Skonüiú",
-        TEXT_TYPE_STATUS
+        "D = Odstr†niú oblasú   ESC = ZruÁiú   F3 = Skonüiú",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -1258,8 +1260,8 @@ static MUI_ENTRY skSKRegistryEntries[] =
     {
         0,
         0,
-        "   Vytv†raj£ sa poloßky registrov ...", //registry hives
-        TEXT_TYPE_STATUS
+        "Vytv†raj£ sa poloßky registrov ...", //registry hives
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -1652,9 +1654,9 @@ MUI_STRING skSKStrings[] =
     {STRING_HDDINFOUNK2,
     "   %c%c  typ %lu    %I64u %s"},
     {STRING_HDINFOPARTDELETE,
-    "na %I64u %s  pevnÏ disk %lu  (Port=%hu, Bus=%hu, Id=%hu) na %wZ."},
+    "na %I64u %s  pevnom disku %lu  (Port=%hu, Bus=%hu, Id=%hu) na %wZ."},
     {STRING_HDDINFOUNK3,
-    "na %I64u %s  pevnÏ disk %lu  (Port=%hu, Bus=%hu, Id=%hu)."},
+    "na %I64u %s  pevnom disku %lu  (Port=%hu, Bus=%hu, Id=%hu)."},
     {STRING_HDINFOPARTZEROED,
     "pevnÏ disk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ)."},
     {STRING_HDDINFOUNK4,
@@ -1664,9 +1666,9 @@ MUI_STRING skSKStrings[] =
     {STRING_HDDINFOUNK5,
     "%c%c  typ %-3u                         %6lu %s"},
     {STRING_HDINFOPARTSELECT,
-    "%6lu %s  pevnÏ disk %lu  (Port=%hu, Bus=%hu, Id=%hu) na %S"},
+    "%6lu %s  pevnom disku %lu  (Port=%hu, Bus=%hu, Id=%hu) na %S"},
     {STRING_HDDINFOUNK6,
-    "%6lu %s  pevnÏ disk %lu  (Port=%hu, Bus=%hu, Id=%hu)"},
+    "%6lu %s  pevnom disku %lu  (Port=%hu, Bus=%hu, Id=%hu)"},
     {STRING_NEWPARTITION,
     "InÁtal†tor vytvoril nov£ oblasú na"},
     {STRING_UNPSPACE,

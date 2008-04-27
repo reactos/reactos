@@ -82,7 +82,7 @@ static MUI_ENTRY enUSWelcomePageEntries[] =
     {
         8,
         17,
-        "\x07  Press R to repair ReactOS.",
+        "\x07  Press R to repair or update ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -112,7 +112,7 @@ static MUI_ENTRY enUSWelcomePageEntries[] =
     {
         0,
         0,
-        "ENTER = Continue  R = Repair F3 = Quit",
+        "ENTER = Continue  R = Repair  L = Licence  F3 = Quit",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -487,7 +487,7 @@ static MUI_ENTRY enUSRepairPageEntries[] =
     {
         0,
         0,
-        "ESC = Main page  ENTER = Reboot",
+        "ESC = Main page  U = Update  R = Recovery  ENTER = Reboot",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {

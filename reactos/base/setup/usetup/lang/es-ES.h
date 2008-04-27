@@ -514,7 +514,7 @@ static MUI_ENTRY esESComputerPageEntries[] =
     {
         8,
         10,
-        "\x07  Presione las teclas ARRIBA y ABAJO para elegir el tipo.",
+        "\x07  Presione ARRIBA y ABAJO para elegir el tipo.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -624,7 +624,7 @@ static MUI_ENTRY esESQuitPageEntries[] =
     {
         0,
         0,
-        "   Espere por favor ...",
+        "   Por favor, espere...",
         TEXT_TYPE_STATUS,
     },
     {
@@ -651,7 +651,7 @@ static MUI_ENTRY esESDisplayPageEntries[] =
     },
     {   8,
         10,
-         "\x07  Presione las teclas ARRIBA y ABAJO para modificar el tipo.",
+         "\x07  Presione ARRIBA y ABAJO para modificar el tipo.",
          TEXT_STYLE_NORMAL
     },
     {
@@ -802,7 +802,7 @@ static MUI_ENTRY esESSelectPartitionEntries[] =
     {
         8,
         11,
-        "\x07  Presione las teclas ARRIBA o ABAJO para seleccionar un elemento de la lista.",
+        "\x07  Presione ARRIBA o ABAJO para seleccionar un elemento de la lista.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -826,7 +826,7 @@ static MUI_ENTRY esESSelectPartitionEntries[] =
     {
         0,
         0,
-        "   Espere por favor ...",
+        "   Por favor, espere...",
         TEXT_TYPE_STATUS
     },
     {
@@ -882,7 +882,7 @@ static MUI_ENTRY esESInstallDirectoryEntries[] =
     {
         6,
         8,
-        "El programa instalar  los archivos de ReactOS en la partici¢n seleccionada. ",
+        "El programa instalar  los archivos en la partici¢n seleccionada. ",
         TEXT_STYLE_NORMAL
     },
     {
@@ -952,7 +952,7 @@ static MUI_ENTRY esESFileCopyEntries[] =
     {
         0,
         0,
-        "                                                           \xB3 Espere por favor...    ",
+        "                                                           \xB3 Por favor, espere...    ",
         TEXT_TYPE_STATUS
     },
     {
@@ -1026,7 +1026,7 @@ static MUI_ENTRY esESKeyboardSettingsEntries[] =
     {
         8,
         10,
-        "\x07  Presione las teclas ARRIBA o ABAJO para seleccionar el tipo de teclado.",
+        "\x07  Presione ARRIBA o ABAJO para seleccionar el tipo de teclado.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1078,7 +1078,7 @@ static MUI_ENTRY esESLayoutSettingsEntries[] =
     {
         8,
         10,
-        "\x07  Presione las teclas ARRIBA o ABAJO para seleccionar la disposici¢n del teclado",
+        "\x07  Presione ARRIBA o ABAJO para seleccionar la disposici¢n del teclado",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1160,7 +1160,7 @@ static MUI_ENTRY esESSelectFSEntries[] =
     {
         8,
         19,
-        "\x07  Presione las teclas ARRIBA o ABAJO para seleccionar el sistema de archivos.",
+        "\x07  Presione ARRIBA o ABAJO para seleccionar el sistema de archivos.",
         0
     },
     {
@@ -1602,9 +1602,9 @@ MUI_STRING esESStrings[] =
     {STRING_SETUPCOPYINGFILES,
      "El instalador est  copiando archivos..."},
     {STRING_PAGEDMEM,
-     "Memoria paginada"},
+     "Mem. paginada"},
     {STRING_NONPAGEDMEM,
-     "Memoria no paginada"},
+     "Mem. nopaginada"},
     {STRING_FREEMEM,
      "Memoria libre"},
     {STRING_REGHIVEUPDATE,

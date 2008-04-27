@@ -24,7 +24,7 @@ BEGIN
         MENUITEM "&Comenzar Captura", IDM_FILE_STARTCAPTURE
         MENUITEM "&Parar Captura", IDM_FILE_STOPCAPTURE, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "&Local Echo", IDM_FILE_LOCALECHO
+        MENUITEM "Eco &Local", IDM_FILE_LOCALECHO
         MENUITEM SEPARATOR
         MENUITEM "Sa&lir", IDM_EXIT
     END
@@ -135,9 +135,9 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Opciones de Conexión"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "Introduzca el puerto COM (p.e. COM1):",IDC_STATIC,7,7,108,8
+    LTEXT           "Introduzca el puerto COM (p.e. COM1):",IDC_STATIC,7,7,150,8
     EDITTEXT        IDC_COMPORT,7,17,182,14,ES_AUTOHSCROLL
-    LTEXT           "Introduzca la velocidad de transmisión (p.e. 115200):",IDC_STATIC,7,38,114,
+    LTEXT           "Introduzca la velocidad de transmisión (p.e. 115200):",IDC_STATIC,7,38,185,
                     8
     EDITTEXT        IDC_BAUTRATE,7,48,182,14,ES_AUTOHSCROLL
     DEFPUSHBUTTON   "Aceptar",IDOK,45,79,50,14
@@ -149,7 +149,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Archivo de Captura"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "Archivo de la Captura:",IDC_STATIC,7,17,62,8
+    LTEXT           "Archivo de la captura:",IDC_STATIC,7,17,90,8
     EDITTEXT        IDC_CAPTUREFILENAME,7,26,181,14,ES_AUTOHSCROLL
     PUSHBUTTON      "&Buscar",IDC_BROWSE,194,26,50,14
     DEFPUSHBUTTON   "Aceptar",IDOK,139,74,50,14
@@ -188,4 +188,5 @@ END
 
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
+
 

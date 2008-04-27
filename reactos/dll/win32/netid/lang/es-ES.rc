@@ -12,9 +12,9 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     ICON        IDI_COMPNAME, IDC_STATIC, 4, 3, 26, 24, SS_ICON
     LTEXT       "ReactOS usa la siguiente información para identificar su equipo en la red.", IDC_STATIC, 40, 5, 204, 20
-    LTEXT       "Descripción del equipo:", IDC_STATIC, 6, 40, 70, 9
+    LTEXT       "Descripción del equipo:", IDC_STATIC, 6, 40, 85, 9
     EDITTEXT    IDC_COMPDESC, 98, 38, 146, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP
-    LTEXT       "Nombre completo de equipo:", IDC_STATIC, 6, 68, 64, 9
+    LTEXT       "Nombre completo de equipo:", IDC_STATIC, 6, 66, 64, 14
     LTEXT       "(Defecto)", IDC_COMPUTERNAME, 98, 68, 144, 11
     LTEXT       "Grupo de trabajo:", IDC_WORKGROUPDOMAIN, 6, 84, 64, 9
     LTEXT       "(vacío)", IDC_WORKGROUPDOMAIN_NAME, 98, 84, 144, 9
@@ -22,7 +22,7 @@ BEGIN
     PUSHBUTTON  "&Id de red...", IDC_NETWORK_ID, 190, 114, 58, 15
     LTEXT       "Para cambiar el nombre de este equipo o unirse a un dominio, haga clic en ""Cambiar"".", IDC_STATIC, 6, 149, 170, 17
     PUSHBUTTON  "Cam&biar...",IDC_NETWORK_PROPERTY, 190, 149, 58, 15
-    LTEXT       "Nota: Sólo los Administradores pueden cambiar la identificación de este equipo.", IDC_STATIC, 6, 179, 300, 9
+    LTEXT       "Nota: Sólo los Administradores pueden cambiar la identificación de este equipo.", IDC_STATIC, 6, 179, 250, 17
 END
 
 IDD_PROPPAGECOMPNAMECHENGE DIALOGEX 0, 0, 232, 222
@@ -36,7 +36,7 @@ BEGIN
     LTEXT "Nombre completo de equipo:", 1016, 7, 72, 218, 10
     EDITTEXT 1001, 7, 82, 219, 14, ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
     PUSHBUTTON "&Más...", 1003, 150, 102, 75, 14
-    GROUPBOX "Miembro de", 1018, 7, 119, 219, 73
+    GROUPBOX "Miembro de ", 1018, 7, 119, 219, 73
     AUTORADIOBUTTON "&Dominio:", 1008, 17, 132, 192, 10, WS_GROUP
     AUTORADIOBUTTON "&Grupo de trabajo:", 1004, 17, 161, 191, 10
     EDITTEXT 116, 28, 144, 181, 14, ES_AUTOHSCROLL | WS_GROUP
