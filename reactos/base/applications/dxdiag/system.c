@@ -31,6 +31,9 @@ GetRegValue(HKEY hBaseKey, LPWSTR SubKey, LPWSTR ValueName, DWORD Type, LPWSTR R
     if (res != ERROR_SUCCESS)
         return FALSE;
 
+    if (Size == sizeof(DWORD))
+        return TRUE;
+
     Result[(Size / sizeof(WCHAR))-1] = L'\0';
     return TRUE;
 }

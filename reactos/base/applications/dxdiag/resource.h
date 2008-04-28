@@ -119,6 +119,8 @@
 #define IDS_DDFULLSCREEN_DESCRIPTION 10122
 #define IDS_DDFULLSCREEN_RESULT    10123
 #define IDS_DDTEST_TITLE           10124
+#define IDS_FORMAT_ADAPTER_MEM     10125
+#define IDS_FORMAT_ADAPTER_MODE    10126
 
 /* icon resource constants */
 #define IDI_APPICON        20000

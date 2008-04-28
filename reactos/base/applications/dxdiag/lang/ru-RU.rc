@@ -177,6 +177,7 @@ BEGIN
 	IDS_DIRECTPLAY_MODEMCONN "Modem Connection For DirectPlay"
 	IDS_DIRECTPLAY_SERIALCONN "Serial Connection For DirectPlay"
 	IDS_REG_SUCCESS "OK"
+	IDS_REG_FAIL "Ошибка"
 	IDS_DDTEST_ERROR "Сбой в проверке!"
 	IDS_DDTEST_DESCRIPTION "Будет произведена проверка DirecDraw на этом устройстве. Продолжить?"
 	IDS_DDPRIMARY_DESCRIPTION "This test will use DirectDraw to draw on primary surface. Black and white rectangles should be drawn. Continue?"
@@ -185,5 +186,6 @@ BEGIN
 	IDS_DDOFFSCREEN_RESULT "Did you see white moving reactangle?"
 	IDS_DDFULLSCREEN_DESCRIPTION "This test will use DirectDraw to draw in a fullscreen mode. Moving white rectangle should be drawn. Continue?"
 	IDS_DDFULLSCREEN_RESULT "Did you see white moving reactangle in a fullscreen mode?"
-	IDS_REG_FAIL "Ошибка"
+	IDS_FORMAT_ADAPTER_MEM "%u MB"
+	IDS_FORMAT_ADAPTER_MODE "%04u x %04u (%u bit)(%uHz)"
 END

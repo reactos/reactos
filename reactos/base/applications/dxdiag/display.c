@@ -20,6 +20,70 @@ InitializeDialog(HWND hwndDlg)
     SP_DEVINFO_DATA InfoData;
     DWORD dwIndex = 0;
     WCHAR szText[100];
+    WCHAR szFormat[30];
+    HKEY hKey;
+    DWORD dwMemory;
+    DEVMODE DevMode;
+
+    DISPLAY_DEVICEW DispDevice;
+
+    /* query display device adapter */
+    ZeroMemory(&DispDevice, sizeof(DISPLAY_DEVICEW));
+    DispDevice.cb = sizeof(DISPLAY_DEVICEW);
+    if (!EnumDisplayDevicesW(NULL, 0, &DispDevice, 0))
+        return FALSE;
+
+    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, &DispDevice.DeviceKey[18], 0, KEY_READ, &hKey) != ERROR_SUCCESS)
+        return FALSE;
+
+    if (GetRegValue(hKey, NULL, L"HardwareInformation.ChipType", REG_BINARY, szText, sizeof(szText)))
+    {
+        /* set chip type */
+        SendDlgItemMessageW(hwndDlg, IDC_STATIC_ADAPTER_CHIP, WM_SETTEXT, 0, (LPARAM)szText);
+    }
+
+    if (GetRegValue(hKey, NULL, L"HardwareInformation.DacType", REG_BINARY, szText, sizeof(szText)))
+    {
+        /* set DAC type */
+        SendDlgItemMessageW(hwndDlg, IDC_STATIC_ADAPTER_DAC, WM_SETTEXT, 0, (LPARAM)szText);
+    }
+
+    if (GetRegValue(hKey, NULL, L"HardwareInformation.MemorySize", REG_BINARY, &dwMemory, sizeof(dwMemory)))
+    {
+        /* set chip memory size */
+        if (dwMemory > (1048576))
+        {
+            /* buggy ATI driver requires that */
+            dwMemory /= 1048576;
+        }
+        szFormat[0] = L'\0';
+        if (LoadStringW(hInst, IDS_FORMAT_ADAPTER_MEM, szFormat, sizeof(szFormat)/sizeof(WCHAR)))
+            szFormat[(sizeof(szFormat)/sizeof(WCHAR))-1] = L'\0';
+        swprintf(szText, szFormat, dwMemory);
+        SendDlgItemMessageW(hwndDlg, IDC_STATIC_ADAPTER_MEM, WM_SETTEXT, 0, (LPARAM)szText);
+    }
+
+    /* retrieve current display mode */
+    DevMode.dmSize = sizeof(DEVMODE);
+    if (EnumDisplaySettingsW(DispDevice.DeviceName, ENUM_CURRENT_SETTINGS, &DevMode))
+    {
+        szFormat[0] = L'\0';
+        if (LoadStringW(hInst, IDS_FORMAT_ADAPTER_MODE, szFormat, sizeof(szFormat)/sizeof(WCHAR)))
+            szFormat[(sizeof(szFormat)/sizeof(WCHAR))-1] = L'\0';
+        swprintf(szText, szFormat, DevMode.dmPelsWidth, DevMode.dmPelsHeight, DevMode.dmBitsPerPel, DevMode.dmDisplayFrequency);
+        SendDlgItemMessageW(hwndDlg, IDC_STATIC_ADAPTER_MODE, WM_SETTEXT, 0, (LPARAM)szText);
+    }
+
+    /* query attached monitor */
+    wcscpy(szText, DispDevice.DeviceName);
+    ZeroMemory(&DispDevice, sizeof(DISPLAY_DEVICEW));
+    DispDevice.cb = sizeof(DISPLAY_DEVICEW);
+    if (EnumDisplayDevicesW(szText, 0, &DispDevice, 0))
+    {
+         /* set monitor name */
+        SendDlgItemMessageW(hwndDlg, IDC_STATIC_ADAPTER_MONITOR, WM_SETTEXT, 0, (LPARAM)DispDevice.DeviceString);
+    }
+
 
     hInfo = SetupDiGetClassDevsW(&GUID_DEVCLASS_DISPLAY, NULL, hwndDlg, DIGCF_PRESENT|DIGCF_PROFILE);
     if (hInfo == INVALID_HANDLE_VALUE)
@@ -37,11 +101,15 @@ InitializeDialog(HWND hwndDlg)
             if (SetupDiGetDeviceRegistryPropertyW(hInfo, &InfoData, SPDRP_DEVICEDESC, NULL, (PBYTE)szText, sizeof(szText), NULL))
                 SendDlgItemMessageW(hwndDlg, IDC_STATIC_ADAPTER_ID, WM_SETTEXT, 0, (LPARAM)szText);
 
+            /* set the manufacturer name */
+            if (SetupDiGetDeviceRegistryPropertyW(hInfo, &InfoData, SPDRP_MFG, NULL, (PBYTE)szText, sizeof(szText), NULL))
+                SendDlgItemMessageW(hwndDlg, IDC_STATIC_ADAPTER_VENDOR, WM_SETTEXT, 0, (LPARAM)szText);
+
+            /* FIXME
+             * we currently enumerate only the first adapter 
+             */
+            break;
         }
-        /* FIXME
-         * only enumerate the first display adapter 
-         */
-         break;
 
         if (GetLastError() == ERROR_NO_MORE_ITEMS)
             break;
