@@ -49,36 +49,36 @@
 
 static const MUI_LANGUAGE LanguageList[] =
 {
-  /* Lang ID,   DefKbdLayout,ANSI CP, OEM CP, MAC CP,   Language Name,    page strgs,error strings,    other strings */
-  {L"00000409", L"00000409", L"1252", L"437", L"10000", L"English",       enUSPages, enUSErrorEntries, enUSStrings },
-  {L"00000401", L"00000401", L"1256", L"720", L"10004", L"Arabic",        enUSPages, enUSErrorEntries, enUSStrings },
-  {L"00000402", L"00000402", L"1251", L"866", L"10007", L"Bulgarian",     bgBGPages, bgBGErrorEntries, bgBGStrings },
-  {L"00000403", L"00000403", L"1252", L"850", L"10000", L"Catalan",       enUSPages, enUSErrorEntries, enUSStrings },
-  {L"00000804", L"00000804", L"936",  L"936", L"10008", L"Chinese (PRC)", enUSPages, enUSErrorEntries, enUSStrings },
-  {L"00000405", L"00000405", L"1250", L"852", L"10029", L"Czech",         csCZPages, csCZErrorEntries, csCZStrings },
-  {L"00000406", L"00000406", L"1252", L"850", L"10000", L"Danish",        enUSPages, enUSErrorEntries, enUSStrings },
-  {L"00000407", L"00000407", L"1252", L"850", L"10000", L"Deutsch",       deDEPages, deDEErrorEntries, deDEStrings },
-  {L"00000413", L"00000813", L"1252", L"850", L"10000", L"Dutch",         enUSPages, enUSErrorEntries, enUSStrings },
-  {L"0000040B", L"0000040B", L"1252", L"850", L"10000", L"Finnish",       enUSPages, enUSErrorEntries, enUSStrings },
-  {L"0000040C", L"0000040C", L"1252", L"850", L"10000", L"French",        frFRPages, frFRErrorEntries, frFRStrings },
-  {L"00000408", L"00000408", L"1253", L"737", L"10006", L"Greek",         elGRPages, elGRErrorEntries, elGRStrings },
-  {L"0000040D", L"0000040D", L"1255", L"862", L"10005", L"Hebrew",        enUSPages, enUSErrorEntries, enUSStrings },
-  {L"0000040E", L"0000040E", L"1250", L"852", L"10029", L"Hungarian",     enUSPages, enUSErrorEntries, enUSStrings },
-  {L"00000410", L"00000410", L"1252", L"850", L"10000", L"Italian",       itITPages, itITErrorEntries, itITStrings },
-  {L"00000411", L"00000411", L"932",  L"932", L"10001", L"Japanese",      enUSPages, enUSErrorEntries, enUSStrings },
-  {L"00000412", L"00000412", L"949",  L"949", L"10003", L"Korean",        enUSPages, enUSErrorEntries, enUSStrings },
-  {L"00000427", L"00000427", L"1257", L"775", L"10029", L"Lithuanian",    ltLTPages, ltLTErrorEntries, ltLTStrings },
-  {L"00000414", L"00000414", L"1252", L"850", L"10000", L"Norwegian",     enUSPages, enUSErrorEntries, enUSStrings },
-  {L"00000419", L"00000419", L"1251", L"866", L"10007", L"Russkij",       ruRUPages, ruRUErrorEntries, ruRUStrings },
-  {L"0000041B", L"0000041B", L"1250", L"852", L"10029", L"Slovak",        skSKPages, skSKErrorEntries, skSKStrings },
-  {L"0000040A", L"0000040A", L"1252", L"850", L"10000", L"Spanish",       esESPages, esESErrorEntries, esESStrings },
-  {L"00000415", L"00000415", L"1250", L"852", L"10029", L"Polski",        plPLPages, plPLErrorEntries, plPLStrings },
-  {L"00000816", L"00000816", L"1252", L"850", L"10000", L"Portuguese",    enUSPages, enUSErrorEntries, enUSStrings },
-  {L"0000041D", L"0000041D", L"1252", L"850", L"10000", L"Swedish",       svSEPages, svSEErrorEntries, svSEStrings },
-  {L"0000041E", L"0000041E", L"874",  L"874", L"10021", L"Thai",          enUSPages, enUSErrorEntries, enUSStrings },
-  {L"0000041F", L"0000041F", L"1254", L"857", L"10081", L"Turkish",       enUSPages, enUSErrorEntries, enUSStrings },
-  {L"00000422", L"00000422", L"1251", L"866", L"10017", L"Ukrainian",     ukUAPages, ukUAErrorEntries, ukUAStrings },
-  {NULL, NULL, NULL, NULL, NULL}
+  /* Lang ID,   DefKbdLayout, SecKbLayout, ANSI CP, OEM CP, MAC CP,   Language Name,    page strgs,error strings,    other strings */
+  {L"00000409", L"00000409",  NULL,        L"1252", L"437", L"10000", L"English",       enUSPages, enUSErrorEntries, enUSStrings },
+  {L"00000401", L"00000401",  L"00000409", L"1256", L"720", L"10004", L"Arabic",        enUSPages, enUSErrorEntries, enUSStrings },
+  {L"00000402", L"00000402",  L"00000409", L"1251", L"866", L"10007", L"Bulgarian",     bgBGPages, bgBGErrorEntries, bgBGStrings },
+  {L"00000403", L"00000403",  L"00000409", L"1252", L"850", L"10000", L"Catalan",       enUSPages, enUSErrorEntries, enUSStrings },
+  {L"00000804", L"00000804",  L"00000409", L"936",  L"936", L"10008", L"Chinese (PRC)", enUSPages, enUSErrorEntries, enUSStrings },
+  {L"00000405", L"00000405",  L"00000409", L"1250", L"852", L"10029", L"Czech",         csCZPages, csCZErrorEntries, csCZStrings },
+  {L"00000406", L"00000406",  L"00000409", L"1252", L"850", L"10000", L"Danish",        enUSPages, enUSErrorEntries, enUSStrings },
+  {L"00000407", L"00000407",  L"00000409", L"1252", L"850", L"10000", L"Deutsch",       deDEPages, deDEErrorEntries, deDEStrings },
+  {L"00000413", L"00000813",  L"00000409", L"1252", L"850", L"10000", L"Dutch",         enUSPages, enUSErrorEntries, enUSStrings },
+  {L"0000040B", L"0000040B",  L"00000409", L"1252", L"850", L"10000", L"Finnish",       enUSPages, enUSErrorEntries, enUSStrings },
+  {L"0000040C", L"0000040C",  L"00000409", L"1252", L"850", L"10000", L"French",        frFRPages, frFRErrorEntries, frFRStrings },
+  {L"00000408", L"00000408",  L"00000409", L"1253", L"737", L"10006", L"Greek",         elGRPages, elGRErrorEntries, elGRStrings },
+  {L"0000040D", L"0000040D",  L"00000409", L"1255", L"862", L"10005", L"Hebrew",        enUSPages, enUSErrorEntries, enUSStrings },
+  {L"0000040E", L"0000040E",  L"00000409", L"1250", L"852", L"10029", L"Hungarian",     enUSPages, enUSErrorEntries, enUSStrings },
+  {L"00000410", L"00000410",  L"00000409", L"1252", L"850", L"10000", L"Italian",       itITPages, itITErrorEntries, itITStrings },
+  {L"00000411", L"00000411",  L"00000409", L"932",  L"932", L"10001", L"Japanese",      enUSPages, enUSErrorEntries, enUSStrings },
+  {L"00000412", L"00000412",  L"00000409", L"949",  L"949", L"10003", L"Korean",        enUSPages, enUSErrorEntries, enUSStrings },
+  {L"00000427", L"00000427",  L"00000409", L"1257", L"775", L"10029", L"Lithuanian",    ltLTPages, ltLTErrorEntries, ltLTStrings },
+  {L"00000414", L"00000414",  L"00000409", L"1252", L"850", L"10000", L"Norwegian",     enUSPages, enUSErrorEntries, enUSStrings },
+  {L"00000419", L"00000419",  L"00000409", L"1251", L"866", L"10007", L"Russkij",       ruRUPages, ruRUErrorEntries, ruRUStrings },
+  {L"0000041B", L"0000041B",  L"00000409", L"1250", L"852", L"10029", L"Slovak",        skSKPages, skSKErrorEntries, skSKStrings },
+  {L"0000040A", L"0000040A",  L"00000409", L"1252", L"850", L"10000", L"Spanish",       esESPages, esESErrorEntries, esESStrings },
+  {L"00000415", L"00000415",  L"00000409", L"1250", L"852", L"10029", L"Polski",        plPLPages, plPLErrorEntries, plPLStrings },
+  {L"00000816", L"00000816",  L"00000409", L"1252", L"850", L"10000", L"Portuguese",    enUSPages, enUSErrorEntries, enUSStrings },
+  {L"0000041D", L"0000041D",  L"00000409", L"1252", L"850", L"10000", L"Swedish",       svSEPages, svSEErrorEntries, svSEStrings },
+  {L"0000041E", L"0000041E",  L"00000409", L"874",  L"874", L"10021", L"Thai",          enUSPages, enUSErrorEntries, enUSStrings },
+  {L"0000041F", L"0000041F",  L"00000409", L"1254", L"857", L"10081", L"Turkish",       enUSPages, enUSErrorEntries, enUSStrings },
+  {L"00000422", L"00000422",  L"00000409", L"1251", L"866", L"10017", L"Ukrainian",     ukUAPages, ukUAErrorEntries, ukUAStrings },
+  {NULL, NULL, NULL, NULL, NULL, NULL}
 };
 
 extern
@@ -247,6 +247,132 @@ MUIGetString(ULONG Number)
                 POPUP_WAIT_NONE);
 
     return "<nostring>";
+}
+
+static BOOLEAN
+AddKbLayoutsToRegistry(IN LPCWSTR DefKbLayout, IN LPCWSTR SecKbLayout)
+{
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    UNICODE_STRING KeyName;
+    UNICODE_STRING ValueName;
+    HANDLE KeyHandle;
+    NTSTATUS Status;
+    ULONG Disposition;
+    WCHAR szKeyName[48] = L"\\Registry\\User\\.DEFAULT\\Keyboard Layout";
+
+    // Open the keyboard layout key
+    RtlInitUnicodeString(&KeyName,
+                         szKeyName);
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &KeyName,
+                               OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
+
+    Status =  NtCreateKey(&KeyHandle,
+                          KEY_ALL_ACCESS,
+                          &ObjectAttributes,
+                          0,
+                          NULL,
+                          0,
+                          &Disposition);
+
+    if(NT_SUCCESS(Status))
+        NtClose(KeyHandle);
+    else
+    {
+        DPRINT1("NtCreateKey() failed (Status %lx)\n", Status);
+        return FALSE;
+    }
+
+    KeyName.MaximumLength = sizeof(szKeyName);
+    Status = RtlAppendUnicodeToString(&KeyName, L"\\Preload");
+
+    if(!NT_SUCCESS(Status))
+    {
+        DPRINT1("RtlAppend failed! (%lx)\n", Status);
+        DPRINT1("String is %wZ\n", &KeyName);
+        return FALSE;
+    }
+
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &KeyName,
+                               OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
+
+    Status = NtCreateKey(&KeyHandle,
+                         KEY_ALL_ACCESS,
+                         &ObjectAttributes,
+                         0,
+                         NULL,
+                         0,
+                         &Disposition);
+
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("NtCreateKey() failed (Status %lx)\n", Status);
+        return FALSE;
+    }
+
+    /* Set def keyboard layout */
+    RtlInitUnicodeString(&ValueName,
+                         L"1");
+
+    Status = NtSetValueKey(KeyHandle,
+                           &ValueName,
+                           0,
+                           REG_SZ,
+                           (PVOID)DefKbLayout,
+                           (8 + 1) * sizeof(WCHAR));
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("NtSetValueKey() failed (Status %lx)\n", Status);
+        NtClose(KeyHandle);
+        return FALSE;
+    }
+
+    if (SecKbLayout != NULL)
+    {
+        /* Set second keyboard layout */
+        RtlInitUnicodeString(&ValueName,
+                             L"2");
+
+        Status = NtSetValueKey(KeyHandle,
+                               &ValueName,
+                               0,
+                               REG_SZ,
+                               (PVOID)SecKbLayout,
+                               (8 + 1) * sizeof(WCHAR));
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("NtSetValueKey() failed (Status %lx)\n", Status);
+            NtClose(KeyHandle);
+            return FALSE;
+        }
+    }
+
+    NtClose(KeyHandle);
+    return TRUE;
+}
+
+BOOLEAN
+AddKeyboardLayouts(VOID)
+{
+    ULONG lngIndex = 0;
+    do
+    {
+        if (_wcsicmp(LanguageList[lngIndex].LanguageID , SelectedLanguageId) == 0)
+        {
+            return AddKbLayoutsToRegistry(LanguageList[lngIndex].LanguageKeyboardLayoutID,
+                                          LanguageList[lngIndex].SecondLangKbLayoutID);
+        }
+
+        lngIndex++;
+    }
+    while (LanguageList[lngIndex].MuiPages != NULL);
+
+    return FALSE;
 }
 
 static BOOLEAN

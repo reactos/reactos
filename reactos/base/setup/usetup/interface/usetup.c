@@ -3188,6 +3188,14 @@ RegistryPage(PINPUT_RECORD Ir)
         return QUIT_PAGE;
     }
 
+    /* Add keyboard layouts */
+    CONSOLE_SetStatusText(MUIGetString(STRING_ADDKBLAYOUTS));
+    if (!AddKeyboardLayouts())
+    {
+        MUIDisplayError(ERROR_ADDING_KBLAYOUTS, Ir, POPUP_WAIT_ENTER);
+        return QUIT_PAGE;
+    }
+
     /* Update keyboard layout settings */
     CONSOLE_SetStatusText(MUIGetString(STRING_KEYBOARDSETTINGSUPDATE));
     if (!ProcessKeyboardLayoutRegistry(LayoutList))

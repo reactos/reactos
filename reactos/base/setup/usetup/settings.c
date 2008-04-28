@@ -868,13 +868,14 @@ ProcessKeyboardLayoutRegistry(PGENERIC_LIST List)
 {
     PGENERIC_LIST_ENTRY Entry;
     PWCHAR LanguageId;
+    WCHAR CurrentLangId[8 + 1];
     OBJECT_ATTRIBUTES ObjectAttributes;
     UNICODE_STRING KeyName;
     UNICODE_STRING ValueName;
-    ULONG Disposition;
+    ULONG ResLength, Length;
     HANDLE KeyHandle;
     NTSTATUS Status;
-    WCHAR szKeyName[48] = L"\\Registry\\User\\.DEFAULT\\Keyboard Layout";       // 48 = "\Registry\User\.DEFAULT\Keyboard Layout\Preload" + NULL char
+    PKEY_VALUE_PARTIAL_INFORMATION ValueInfo;
 
     Entry = GetGenericListEntry(List);
     if (Entry == NULL)
@@ -884,8 +885,7 @@ ProcessKeyboardLayoutRegistry(PGENERIC_LIST List)
     if (LanguageId == NULL)
         return FALSE;
 
-    // First create the "Keyboard Layout" key
-    RtlInitUnicodeString(&KeyName, szKeyName);
+    RtlInitUnicodeString(&KeyName, L"\\Registry\\User\\.DEFAULT\\Keyboard Layout\\Preload");
 
     InitializeObjectAttributes(&ObjectAttributes,
                                &KeyName,
@@ -893,68 +893,92 @@ ProcessKeyboardLayoutRegistry(PGENERIC_LIST List)
                                NULL,
                                NULL);
 
-    Status =  NtCreateKey(&KeyHandle,
-                          KEY_ALL_ACCESS,
-                          &ObjectAttributes,
-                          0,
-                          NULL,
-                          0,
-                          &Disposition);
-
-    if(NT_SUCCESS(Status))
-        NtClose(KeyHandle);
-    else
-    {
-        DPRINT1("NtCreateKey() failed (Status %lx)\n", Status);
-        return FALSE;
-    }
-
-    // Then create the "Preload" key
-    KeyName.MaximumLength = sizeof(szKeyName);
-    Status = RtlAppendUnicodeToString(&KeyName, L"\\Preload");
+    Status =  NtOpenKey(&KeyHandle,
+                        KEY_ALL_ACCESS,
+                        &ObjectAttributes);
 
     if(!NT_SUCCESS(Status))
     {
-        DPRINT1("RtlAppend failed! (%lx)\n", Status);
-        DPRINT1("String is %wZ\n", &KeyName);
+        DPRINT1("NtOpenKey() failed (Status %lx)\n", Status);
+        NtClose(KeyHandle);
         return FALSE;
     }
 
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &KeyName,
-                               OBJ_CASE_INSENSITIVE,
-                               NULL,
-                               NULL);
-
-    Status = NtCreateKey(&KeyHandle,
-                         KEY_ALL_ACCESS,
-                         &ObjectAttributes,
-                         0,
-                         NULL,
-                         0,
-                         &Disposition);
-
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("NtCreateKey() failed (Status %lx)\n", Status);
-        return FALSE;
-    }
-
-    /* Set default keyboard layout */
+    /* Get current keyboard layout */
     RtlInitUnicodeString(&ValueName,
                          L"1");
 
-    Status = NtSetValueKey(KeyHandle,
-                           &ValueName,
-                           0,
-                           REG_SZ,
-                           (PVOID)LanguageId,
-                           (8 + 1) * sizeof(WCHAR));
-    if (!NT_SUCCESS(Status))
+    Length = sizeof(KEY_VALUE_PARTIAL_INFORMATION) + (8 + 1) * sizeof(WCHAR);
+
+    ValueInfo = (KEY_VALUE_PARTIAL_INFORMATION*) RtlAllocateHeap(RtlGetProcessHeap(),
+                                                                 0,
+                                                                 Length);
+
+    if (ValueInfo == NULL)
     {
-        DPRINT1("NtSetValueKey() failed (Status %lx)\n", Status);
+        DPRINT("RtlAllocateHeap() failed\n");
         NtClose(KeyHandle);
         return FALSE;
+    }
+
+    Status = NtQueryValueKey(KeyHandle,
+                             &ValueName,
+                             KeyValuePartialInformation,
+                             ValueInfo,
+                             Length,
+                             &ResLength);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("NtQueryValueKey() failed (Status %lx)\n", Status);
+        NtClose(KeyHandle);
+        return FALSE;
+    }
+
+    RtlCopyMemory(CurrentLangId,
+                  ValueInfo->Data,
+                  (8 + 1) * sizeof(WCHAR));
+
+    CurrentLangId[8 + 1] = 0;
+
+    RtlFreeHeap(RtlGetProcessHeap(),
+                0,
+                ValueInfo);
+
+    if (wcscmp(CurrentLangId, LanguageId) != 0)
+    {
+        RtlInitUnicodeString(&ValueName,
+                             L"1");
+
+        Status = NtSetValueKey(KeyHandle,
+                               &ValueName,
+                               0,
+                               REG_SZ,
+                               (PVOID)LanguageId,
+                               (8 + 1) * sizeof(WCHAR));
+
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("NtSetValueKey() failed (Status %lx)\n", Status);
+            NtClose(KeyHandle);
+            return FALSE;
+        }
+
+        RtlInitUnicodeString(&ValueName,
+                             L"2");
+
+        Status = NtSetValueKey(KeyHandle,
+                               &ValueName,
+                               0,
+                               REG_SZ,
+                               (PVOID)CurrentLangId,
+                               (8 + 1) * sizeof(WCHAR));
+
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("NtSetValueKey() failed (Status %lx)\n", Status);
+            NtClose(KeyHandle);
+            return FALSE;
+        }
     }
 
     NtClose(KeyHandle);

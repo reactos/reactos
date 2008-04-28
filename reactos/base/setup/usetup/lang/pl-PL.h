@@ -1469,6 +1469,11 @@ MUI_ERROR plPLErrorEntries[] =
         "ENTER = Restart komputera"
     },
     {
+        //ERROR_ADDING_KBLAYOUTS,
+        "Setup failed to add keyboard layouts to registry.\n"
+        "ENTER = Reboot computer"
+    },
+    {
         NULL,
         NULL
     }
@@ -1687,6 +1692,8 @@ MUI_STRING plPLStrings[] =
     "MB"},
     {STRING_GB,
     "GB"},
+    {STRING_ADDKBLAYOUTS,
+    "Adding keyboard layouts"},
     {0, 0}
 };
 

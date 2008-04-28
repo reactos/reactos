@@ -1471,6 +1471,11 @@ MUI_ERROR bgBGErrorEntries[] =
         "ENTER = Презапускане на компютъра"
     },
     {
+        //ERROR_ADDING_KBLAYOUTS,
+        "Setup failed to add keyboard layouts to registry.\n"
+        "ENTER = Reboot computer"
+    },
+    {
         NULL,
         NULL
     }
@@ -1689,6 +1694,8 @@ MUI_STRING bgBGStrings[] =
     "МБ"},
     {STRING_GB,
     "ГБ"},
+    {STRING_ADDKBLAYOUTS,
+    "Adding keyboard layouts"},
     {0, 0}
 };
 
