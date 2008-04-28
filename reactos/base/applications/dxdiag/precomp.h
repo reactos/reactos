@@ -3,20 +3,23 @@
 
 #define DIRECTINPUT_VERSION 0x0800
 #define DIRECTSOUND_VERSION 0x0800
+#define D3D_OVERLOADS
+
 #include <stdio.h>
 #include <windows.h>
 #include <limits.h>
 #include <setupapi.h>
-#include <devguid.h>
 #include <commctrl.h>
-
 #include <dinput.h>
+#include <ddraw.h>
+
 #include <dsound.h>
 #include "resource.h"
 
 typedef struct
 {
-	HWND hDialogs[7];
+    HWND hMainDialog;
+    HWND hDialogs[7];
 
 }DXDIAG_CONTEXT, *PDXDIAG_CONTEXT;
 
@@ -35,5 +38,7 @@ INT_PTR CALLBACK NetworkPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPAR
 INT_PTR CALLBACK HelpPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
 BOOL GetRegValue(HKEY hBaseKey, LPWSTR SubKey, LPWSTR ValueName, DWORD Type, LPWSTR Result, DWORD Size);
 
+/* DirectDraw tests */
+BOOL StartDDTest(HWND hWnd, HINSTANCE hInstance, INT resTestDescription, INT resResult, INT TestNr);
 
 #endif

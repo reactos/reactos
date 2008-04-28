@@ -13,9 +13,12 @@
 	<library>shell32</library>
 	<library>version</library>
 	<library>dinput8</library>
+	<library>setupapi</library>
 	<library>dxguid</library>
 	<library>dsound</library>
+	<library>ddraw</library>
 	<library>version</library>
+	<library>gdi32</library>
 	<file>system.c</file>
 	<file>display.c</file>
 	<file>sound.c</file>
@@ -25,5 +28,6 @@
 	<file>help.c</file>
 	<file>dxdiag.c</file>
 	<file>dxdiag.rc</file>
+	<file>ddtest.c</file>
 	<pch>precomp.h</pch>
 </module>

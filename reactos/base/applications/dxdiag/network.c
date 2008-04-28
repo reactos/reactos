@@ -212,8 +212,26 @@ EnumerateServiceProviders(HKEY hKey, HWND hDlgCtrl, DIRECTPLAY_GUID * PreDefProv
             ProviderIndex = UINT_MAX;
             if (GetRegValue(hKey, szName, L"GUID", REG_SZ, szGUID, sizeof(szGUID)))
                 ProviderIndex = FindProviderIndex(szGUID, PreDefProviders);
-            else
-                ProviderIndex = UINT_MAX;
+
+            if (ProviderIndex == UINT_MAX)
+            {
+                /* a custom service provider was found */
+                lResult = ListView_GetItemCount(hDlgCtrl);
+                Item.iItem = lResult;
+
+                /* FIXME
+                 * on Windows Vista we need to use RegLoadMUIString which is not available for older systems 
+                 */
+                if (!GetRegValue(hKey, szName, L"Friendly Name", REG_SZ, szResult, sizeof(szResult)))
+                    if (!GetRegValue(hKey, szName, L"DescriptionW", REG_SZ, szResult, sizeof(szResult)))
+                        szResult[0] = L'\0';
+
+                /* insert the new provider */
+                Item.iSubItem = 0;
+                lResult = SendMessageW(hDlgCtrl, LVM_INSERTITEM, 0, (LPARAM)&Item);
+                /* adjust index */
+                ProviderIndex = lResult - ItemCount;
+            }
 
             szResult[0] = L'\0';
             /* check if the 'Path' key is available */
@@ -224,7 +242,10 @@ EnumerateServiceProviders(HKEY hKey, HWND hDlgCtrl, DIRECTPLAY_GUID * PreDefProv
                 wcscpy(&szTemp[6], szGUID);
                 wcscpy(&szTemp[44], L"\\InProcServer32");
                 if (!GetRegValue(HKEY_CLASSES_ROOT, szTemp, NULL, REG_SZ, szResult, sizeof(szResult)))
+                {
                     szResult[0] = L'\0';
+                    ProviderIndex = UINT_MAX;
+                }
             }
             if (szResult[0])
             {
@@ -245,7 +266,7 @@ EnumerateServiceProviders(HKEY hKey, HWND hDlgCtrl, DIRECTPLAY_GUID * PreDefProv
                 Item.pszText = szResult;
             }
 
-                if (ProviderIndex != UINT_MAX)
+             if (ProviderIndex != UINT_MAX)
                 {
                     RegProviders |= (1 << ProviderIndex);
                     szResult[0] = L'\0';

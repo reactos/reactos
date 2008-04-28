@@ -104,6 +104,9 @@ InitializeDxDiagDialog(HWND hwndDlg)
     if (!pContext)
         return;
 
+    /* store window handle */
+    pContext->hMainDialog = hwndDlg;
+
     /* store the context */
     SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)pContext);
 
