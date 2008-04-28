@@ -35,9 +35,21 @@ intEnableReactXDriver(PEDD_DIRECTDRAW_GLOBAL pEddgbl, PDC pDC)
     PGDIDEVICE pDev = (PGDIDEVICE)pDC->pPDev;
     BOOLEAN success = FALSE;
     DD_GETDRIVERINFODATA GetInfo;
+    PGD_DXDDENABLEDIRECTDRAW pfnDdEnableDirectDraw = (PGD_DXDDENABLEDIRECTDRAW)gpDxFuncs[DXG_INDEX_DxDdEnableDirectDraw].pfn;
 
     /*clean up some of the cache entry */
     RtlZeroMemory(pEddgbl,sizeof(EDD_DIRECTDRAW_GLOBAL));
+
+    if (pfnDdEnableDirectDraw == NULL)
+    {
+        DPRINT1("Warning: no pfnDdEnableDirectDraw\n");
+    }
+    else
+    {
+        DPRINT1(" call to pfnDdEnableDirectDraw \n ");
+        success = pfnDdEnableDirectDraw(pDC->PDev, TRUE);
+        DPRINT1(" end call to pfnDdEnableDirectDraw \n ");
+    }
 
     /* setup hdev for edd_DdirectDraw_Global xp */
     edd_DdirectDraw_Global.hDev   = pDC->pPDev;
@@ -253,8 +265,12 @@ intEnableReactXDriver(PEDD_DIRECTDRAW_GLOBAL pEddgbl, PDC pDC)
     /* setup missing data in ddHalInfo */
     //pEddgbl->ddHalInfo.GetDriverInfo = (PVOID)pDev->DriverFunctions.GetDirectDrawInfo;
 
+
     /* FIXME : hack ? it will let us DxDdQueryDirectDrawObject if the llAssertModeTimeout contain negtive value -1*/
     pEddgbl->llAssertModeTimeout.QuadPart = -1;
+
+
+
 
     /* FIXME : remove this when we are done with debuging of dxg */
     dump_edd_directdraw_global(pEddgbl);
@@ -389,6 +405,15 @@ NtGdiDdCreateDirectDrawObject(HDC hdc)
     }
 
     /* FIXME this code should be add where the driver being load */
+        /* FIXME get the process data */
+    /* FIXME this code should be add where the driver being load */
+    Status = DxDdStartupDxGraphics(0,NULL,0,NULL,NULL, Proc);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Warning : Failed to create the directx interface\n");
+        return 0;
+    }
+
     pDC = DC_LockDc(hdc);
     if (pDC == NULL)
     {
@@ -406,14 +431,7 @@ NtGdiDdCreateDirectDrawObject(HDC hdc)
 
     DC_UnlockDc(pDC);
 
-    /* FIXME get the process data */
-    /* FIXME this code should be add where the driver being load */
-    Status = DxDdStartupDxGraphics(0,NULL,0,NULL,NULL, Proc);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("Warning : Failed to create the directx interface\n");
-        return 0;
-    }
+
 
     /* get the pfnDdCreateDirectDrawObject after we load the drv */
     pfnDdCreateDirectDrawObject = (PGD_DDCREATEDIRECTDRAWOBJECT)gpDxFuncs[DXG_INDEX_DxDdCreateDirectDrawObject].pfn;
