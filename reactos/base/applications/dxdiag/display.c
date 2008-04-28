@@ -48,7 +48,7 @@ InitializeDialog(HWND hwndDlg)
         SendDlgItemMessageW(hwndDlg, IDC_STATIC_ADAPTER_DAC, WM_SETTEXT, 0, (LPARAM)szText);
     }
 
-    if (GetRegValue(hKey, NULL, L"HardwareInformation.MemorySize", REG_BINARY, &dwMemory, sizeof(dwMemory)))
+    if (GetRegValue(hKey, NULL, L"HardwareInformation.MemorySize", REG_BINARY, (LPWSTR)&dwMemory, sizeof(dwMemory)))
     {
         /* set chip memory size */
         if (dwMemory > (1048576))
