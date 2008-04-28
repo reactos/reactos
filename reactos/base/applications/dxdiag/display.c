@@ -11,6 +11,150 @@
 #include <initguid.h>
 #include <devguid.h>
 
+BOOL
+GetFileModifyTime(LPCWSTR pFullPath, WCHAR * szTime, int szTimeSize)
+{
+    HANDLE hFile;
+    FILETIME AccessTime;
+    SYSTEMTIME SysTime, LocalTime;
+    UINT Length;
+
+    hFile = CreateFileW(pFullPath, GENERIC_READ, 0, NULL, OPEN_EXISTING, 0, NULL);
+    if (!hFile)
+        return FALSE;
+
+    if (!GetFileTime(hFile, NULL, NULL, &AccessTime))
+    {
+        CloseHandle(hFile);
+        return FALSE;
+    }
+    CloseHandle(hFile);
+
+    if (!FileTimeToSystemTime(&AccessTime, &SysTime))
+        return FALSE;
+
+    if (!SystemTimeToTzSpecificLocalTime(NULL, &SysTime, &LocalTime))
+        return FALSE;
+
+    Length = GetDateFormatW(LOCALE_USER_DEFAULT, DATE_SHORTDATE, &LocalTime, NULL, szTime, szTimeSize);
+    szTime[Length-1] = L' ';
+    return GetTimeFormatW(LOCALE_USER_DEFAULT, TIME_FORCE24HOURFORMAT, &LocalTime, NULL, &szTime[Length], szTimeSize-Length);
+}
+
+
+
+static UINT WINAPI
+DriverFilesCallback(IN PVOID Context,
+                              IN UINT Notification,
+                              IN UINT_PTR Param1,
+                              IN UINT_PTR Param2)
+{
+    LPCWSTR pFile;
+    LPWSTR pBuffer;
+    LPCWSTR pFullPath = (LPCWSTR)Param1;
+    WCHAR szVer[30];
+    LRESULT Length, fLength;
+    HWND * hDlgCtrls = (HWND *)Context;
+
+    if (wcsstr(pFullPath, L"\\DRIVERS\\"))
+    {
+        /* exclude files from drivers dir to have failsafe file version/date information */
+        return NO_ERROR;
+    }
+
+    pFile = wcsrchr(pFullPath, L'\\');
+    if (!pFile)
+       return NO_ERROR;
+
+    pFile++;
+    fLength = wcslen(pFile) + 1;
+
+    Length = SendMessageW(hDlgCtrls[0], WM_GETTEXTLENGTH, 0, 0) + 1;
+    pBuffer = HeapAlloc(GetProcessHeap(), 0, (Length + fLength) * sizeof(WCHAR));
+    if (!pBuffer)
+        return ERROR_OUTOFMEMORY;
+
+    Length = SendMessageW(hDlgCtrls[0], WM_GETTEXT, Length, (LPARAM)pBuffer);
+    if (Length)
+    {
+        pBuffer[Length++] = L',';
+    }
+    else
+    {
+        /* set file version */
+        if (GetFileVersion(pFullPath, szVer))
+            SendMessageW(hDlgCtrls[1], WM_SETTEXT, 0, (LPARAM)szVer);
+        /* set file time */
+        if (GetFileModifyTime(pFullPath, szVer, sizeof(szVer)/sizeof(WCHAR)))
+            SendMessageW(hDlgCtrls[2], WM_SETTEXT, 0, (LPARAM)szVer);
+    }
+
+    wcscpy(&pBuffer[Length], pFile);
+    SendMessageW(hDlgCtrls[0], WM_SETTEXT, 0, (LPARAM)pBuffer);
+    HeapFree(GetProcessHeap(), 0, pBuffer);
+    return NO_ERROR;
+}
+
+VOID
+EnumerateDrivers(PVOID Context, HDEVINFO hList, PSP_DEVINFO_DATA pInfoData)
+{
+    HSPFILEQ hQueue;
+    SP_DEVINSTALL_PARAMS DeviceInstallParams = {0};
+    SP_DRVINFO_DATA DriverInfoData;
+    DWORD Result;
+
+    DeviceInstallParams.cbSize = sizeof(DeviceInstallParams);
+    if (!SetupDiGetDeviceInstallParamsW(hList, pInfoData, &DeviceInstallParams))
+        return;
+
+    DeviceInstallParams.FlagsEx |= (DI_FLAGSEX_INSTALLEDDRIVER | DI_FLAGSEX_ALLOWEXCLUDEDDRVS);
+    if (!SetupDiSetDeviceInstallParams(hList, pInfoData, &DeviceInstallParams))
+        return;
+
+    if (!SetupDiBuildDriverInfoList(hList, pInfoData, SPDIT_CLASSDRIVER))
+        return;
+
+    DriverInfoData.cbSize = sizeof(DriverInfoData);
+    if (!SetupDiEnumDriverInfoW(hList, pInfoData, SPDIT_CLASSDRIVER, 0, &DriverInfoData))
+        return;
+
+    DriverInfoData.cbSize = sizeof(DriverInfoData);
+    if (!SetupDiSetSelectedDriverW(hList, pInfoData, &DriverInfoData))
+         return;
+
+    hQueue = SetupOpenFileQueue();
+    if (hQueue == (HSPFILEQ)INVALID_HANDLE_VALUE)
+        return;
+
+    DeviceInstallParams.cbSize = sizeof(DeviceInstallParams);
+    if (!SetupDiGetDeviceInstallParamsW(hList, pInfoData, &DeviceInstallParams))
+    {
+        SetupCloseFileQueue(hQueue);
+        return;
+    }
+
+    DeviceInstallParams.FileQueue = hQueue;
+    DeviceInstallParams.Flags |= DI_NOVCP;
+
+    if (!SetupDiSetDeviceInstallParamsW(hList, pInfoData, &DeviceInstallParams))
+    {
+        SetupCloseFileQueue(hQueue);
+        return;
+    }
+
+    if(!SetupDiCallClassInstaller(DIF_INSTALLDEVICEFILES, hList, pInfoData))
+    {
+        SetupCloseFileQueue(hQueue);
+        return;
+    }
+
+
+    /* enumerate the driver files */
+    SetupScanFileQueueW(hQueue, SPQ_SCAN_USE_CALLBACK, NULL, DriverFilesCallback, Context, &Result);
+    SetupCloseFileQueue(hQueue);
+}
+
+
 static
 BOOL
 InitializeDialog(HWND hwndDlg)
@@ -22,6 +166,7 @@ InitializeDialog(HWND hwndDlg)
     WCHAR szText[100];
     WCHAR szFormat[30];
     HKEY hKey;
+    HWND hDlgCtrls[3];
     DWORD dwMemory;
     DEVMODE DevMode;
 
@@ -108,6 +253,10 @@ InitializeDialog(HWND hwndDlg)
             /* FIXME
              * we currently enumerate only the first adapter 
              */
+            hDlgCtrls[0] = GetDlgItem(hwndDlg, IDC_STATIC_ADAPTER_DRIVER);
+            hDlgCtrls[1] = GetDlgItem(hwndDlg, IDC_STATIC_ADAPTER_VERSION);
+            hDlgCtrls[2] = GetDlgItem(hwndDlg, IDC_STATIC_ADAPTER_DATE);
+            EnumerateDrivers(hDlgCtrls, hInfo, &InfoData);
             break;
         }
 

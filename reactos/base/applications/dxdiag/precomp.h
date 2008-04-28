@@ -4,6 +4,7 @@
 #define DIRECTINPUT_VERSION 0x0800
 #define DIRECTSOUND_VERSION 0x0800
 #define D3D_OVERLOADS
+#define _SETUPAPI_VER _WIN32_WINNT
 
 #include <stdio.h>
 #include <windows.h>
@@ -41,4 +42,7 @@ BOOL GetRegValue(HKEY hBaseKey, LPWSTR SubKey, LPWSTR ValueName, DWORD Type, LPW
 /* DirectDraw tests */
 BOOL StartDDTest(HWND hWnd, HINSTANCE hInstance, INT resTestDescription, INT resResult, INT TestNr);
 
+
+BOOL GetFileVersion(LPCWSTR szAppName, WCHAR * szVer);
+BOOL GetFileModifyTime(LPCWSTR pFullPath, WCHAR * szTime, int szTimeSize);
 #endif

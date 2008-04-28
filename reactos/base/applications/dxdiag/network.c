@@ -98,9 +98,9 @@ FindProviderIndex(LPCWSTR szGuid, DIRECTPLAY_GUID * PreDefProviders)
     }
     return UINT_MAX;
 }
-static
+
 BOOL
-GetFileVersion(WCHAR * szAppName, WCHAR * szVer)
+GetFileVersion(LPCWSTR szAppName, WCHAR * szVer)
 {
     UINT VerSize;
     DWORD DummyHandle;
