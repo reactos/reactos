@@ -26,7 +26,6 @@
 #define DHCP_PANIC_TIMEOUT DHCP_REBOOT_TIMEOUT * 3
 #define DHCP_BACKOFF_MAX 300
 #define _PATH_DHCLIENT_PID "\\systemroot\\system32\\drivers\\etc\\dhclient.pid"
-#define RRF_RT_REG_SZ 2
 typedef void *VOIDPTR;
 
 typedef u_int32_t uintTIME;
