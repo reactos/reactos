@@ -79,11 +79,13 @@ CdfsCleanup(PDEVICE_OBJECT DeviceObject,
   FileObject = Stack->FileObject;
   DeviceExtension = DeviceObject->DeviceExtension;
 
+  KeEnterCriticalRegion();
   ExAcquireResourceExclusiveLite(&DeviceExtension->DirResource, TRUE);
 
   Status = CdfsCleanupFile(DeviceExtension, FileObject);
 
   ExReleaseResourceLite(&DeviceExtension->DirResource);
+  KeLeaveCriticalRegion();
 
 
 ByeBye:
