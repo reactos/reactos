@@ -1,4 +1,3 @@
-
 /*
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -725,8 +724,7 @@ BOOLEAN DxEngCleanDC(HDC hdc)
 /************************************************************************/
 BOOL STDCALL DxEngSetDCOwner(HGDIOBJ hObject, DWORD OwnerMask)
 {
-    UNIMPLEMENTED;
-    return FALSE;
+    return IntGdiSetDCOwnerEx( hObject, OwnerMask, FALSE);
 }
 
 /************************************************************************/

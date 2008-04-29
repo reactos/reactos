@@ -1646,6 +1646,15 @@ IntGdiGetObject(IN HANDLE Handle,
   return Result;
 }
 
+
+BOOL
+FASTCALL
+IntGdiSetDCOwnerEx( HGDIOBJ hObject, DWORD OwnerMask, BOOL NoSetBrush)
+{
+   UNIMPLEMENTED;
+   return FALSE;
+}
+
 W32KAPI
 INT
 APIENTRY
