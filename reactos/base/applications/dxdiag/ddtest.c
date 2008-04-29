@@ -7,21 +7,20 @@
  *
  */
 
-
 #include "precomp.h"
 
 BOOL DDPrimarySurfaceTest(HWND hWnd);
 BOOL DDOffscreenBufferTest(HWND hWnd, BOOL Fullscreen);
 VOID DDRedrawFrame(LPDIRECTDRAWSURFACE lpDDSurface);
 VOID DDUpdateFrame(LPDIRECTDRAWSURFACE lpDDPrimarySurface ,LPDIRECTDRAWSURFACE lpDDBackBuffer, BOOL Fullscreen, INT *posX, INT *posY, INT *gainX, INT *gainY, RECT *rectDD);
+LRESULT CALLBACK WindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
-#define TEST_DURATION 5000 
-#define WIDTH 800
-#define HEIGHT 600
+#define TEST_DURATION 10000 
+#define WIDTH 640
+#define HEIGHT 480
 #define DD_TEST_STEP 5
 #define DD_SQUARE_SIZE 100
 #define DD_SQUARE_STEP 2
-
 
 
 BOOL StartDDTest(HWND hWnd, HINSTANCE hInstance, INT resTestDescription, INT resResult, INT TestNr)
@@ -70,19 +69,50 @@ BOOL StartDDTest(HWND hWnd, HINSTANCE hInstance, INT resTestDescription, INT res
     return FALSE;
 }
 
-VOID DDTests(HWND hWnd, HINSTANCE hInstance)
+VOID DDTests()
 {
+    WNDCLASSEX winClass;
+    HWND hWnd;
+    HINSTANCE hInstance = NULL;
     WCHAR szDescription[256];
     WCHAR szCaption[256];
+
+    winClass.cbSize = sizeof(WNDCLASSEX);
+    winClass.style = CS_DBLCLKS | CS_OWNDC | CS_HREDRAW | CS_VREDRAW;
+    winClass.lpfnWndProc = WindowProc;
+    winClass.cbClsExtra = 0;
+    winClass.cbWndExtra = 0;
+    winClass.hInstance = hInstance;
+    winClass.hIcon = 0;
+    winClass.hCursor = 0;
+    winClass.hbrBackground = (HBRUSH)GetStockObject(BLACK_BRUSH);
+    winClass.lpszMenuName = NULL;
+    winClass.lpszClassName = L"ddtest";
+    winClass.hIconSm = LoadIcon(NULL, IDI_APPLICATION);
+
+    if (!RegisterClassEx(&winClass))
+        return;
+
+    hWnd = CreateWindowEx(0, winClass.lpszClassName, NULL,WS_POPUP,
+                          (GetSystemMetrics(SM_CXSCREEN) - WIDTH)/2,
+                          (GetSystemMetrics(SM_CYSCREEN) - HEIGHT)/2,
+                          WIDTH, HEIGHT, NULL, NULL, hInstance, NULL);
+
+    if (!hWnd){
+        return;
+    }
 
     LoadStringW(hInstance, IDS_DDTEST_DESCRIPTION, szDescription, sizeof(szDescription) / sizeof(WCHAR));
     LoadStringW(hInstance, IDS_DDTEST_DESCRIPTION, szCaption, sizeof(szCaption) / sizeof(WCHAR));
     if(MessageBox(NULL, szDescription, szCaption, MB_YESNO | MB_ICONQUESTION) == IDNO)
-        PostQuitMessage(0);
+        return;
 
     StartDDTest(hWnd, hInstance, IDS_DDPRIMARY_DESCRIPTION, IDS_DDPRIMARY_RESULT, 1);
     StartDDTest(hWnd, hInstance, IDS_DDOFFSCREEN_DESCRIPTION, IDS_DDOFFSCREEN_RESULT, 2);
     StartDDTest(hWnd, hInstance, IDS_DDFULLSCREEN_DESCRIPTION, IDS_DDFULLSCREEN_RESULT, 3);
+
+    DestroyWindow(hWnd);
+    UnregisterClass(winClass.lpszClassName, hInstance);
 }
 
 BOOL DDPrimarySurfaceTest(HWND hWnd){
@@ -333,4 +363,9 @@ VOID DDUpdateFrame(LPDIRECTDRAWSURFACE lpDDPrimarySurface ,LPDIRECTDRAWSURFACE l
             lpDDPrimarySurface->lpVtbl->Blt(lpDDPrimarySurface, rectDD, lpDDBackBuffer, NULL, DDBLT_WAIT, NULL);
         }
     }
+}
+
+LRESULT CALLBACK WindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+    return DefWindowProc(hWnd, msg, wParam, lParam);
 }

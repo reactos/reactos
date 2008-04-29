@@ -20,7 +20,11 @@
 typedef struct
 {
     HWND hMainDialog;
-    HWND hDialogs[7];
+    ULONG NumDisplayAdapter;
+    HWND * hDisplayWnd;
+    ULONG NumSoundAdapter;
+    HWND * hSoundWnd;
+    HWND hDialogs[5];
 
 }DXDIAG_CONTEXT, *PDXDIAG_CONTEXT;
 
@@ -39,9 +43,16 @@ INT_PTR CALLBACK NetworkPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPAR
 INT_PTR CALLBACK HelpPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
 BOOL GetRegValue(HKEY hBaseKey, LPWSTR SubKey, LPWSTR ValueName, DWORD Type, LPWSTR Result, DWORD Size);
 
-/* DirectDraw tests */
-BOOL StartDDTest(HWND hWnd, HINSTANCE hInstance, INT resTestDescription, INT resResult, INT TestNr);
+VOID InsertTabCtrlItem(HWND hDlgCtrl, INT Position, LPWSTR uId);
 
+/* DirectDraw tests */
+VOID DDTests();
+
+/* DirectSound initialization */
+void InitializeDirectSoundPage(PDXDIAG_CONTEXT pContext);
+
+/* display adapter initialization */
+void InitializeDisplayAdapters(PDXDIAG_CONTEXT pContext);
 
 BOOL GetFileVersion(LPCWSTR szAppName, WCHAR * szVer, DWORD szVerSize);
 BOOL GetFileModifyTime(LPCWSTR pFullPath, WCHAR * szTime, int szTimeSize);

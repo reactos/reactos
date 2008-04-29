@@ -173,8 +173,15 @@ InitializeDialog(HWND hwndDlg)
     HWND hDlgCtrls[3];
     DWORD dwMemory;
     DEVMODE DevMode;
-
     DISPLAY_DEVICEW DispDevice;
+
+    /// FIXME
+    /// use initialization context
+    ///
+    ZeroMemory(&DispDevice, sizeof(DISPLAY_DEVICEW));
+    DispDevice.cb = sizeof(DISPLAY_DEVICEW);
+    if (!EnumDisplayDevicesW(NULL, 0, &DispDevice, 0))
+        return FALSE;
 
     /* query display device adapter */
     ZeroMemory(&DispDevice, sizeof(DISPLAY_DEVICEW));
@@ -275,6 +282,56 @@ InitializeDialog(HWND hwndDlg)
     return TRUE;
 }
 
+void InitializeDisplayAdapters(PDXDIAG_CONTEXT pContext)
+{
+    DISPLAY_DEVICEW DispDevice;
+    HWND * hDlgs;
+    HWND hwndDlg;
+    WCHAR szDisplay[20];
+    WCHAR szText[30];
+    DWORD dwOffset = 0;
+
+    while(TRUE)
+    {
+        ZeroMemory(&DispDevice, sizeof(DISPLAY_DEVICEW));
+        DispDevice.cb = sizeof(DISPLAY_DEVICEW);
+        if (!EnumDisplayDevicesW(NULL, pContext->NumDisplayAdapter + dwOffset, &DispDevice, 0))
+            return;
+
+        /* skip devices not attached to the desktop and mirror drivers */
+        if (!(DispDevice.StateFlags & DISPLAY_DEVICE_ATTACHED_TO_DESKTOP) || (DispDevice.StateFlags & DISPLAY_DEVICE_MIRRORING_DRIVER))
+        {
+            dwOffset++;
+            continue;
+        }
+        if (pContext->NumDisplayAdapter)
+            hDlgs = HeapReAlloc(GetProcessHeap(), 0, pContext->hDisplayWnd, (pContext->NumDisplayAdapter + 1) * sizeof(HWND));
+        else
+            hDlgs = HeapAlloc(GetProcessHeap(), 0, (pContext->NumDisplayAdapter + 1) * sizeof(HWND));
+
+        if (!hDlgs)
+            break;
+
+        pContext->hDisplayWnd = hDlgs;
+        hwndDlg = CreateDialogParamW(hInst, MAKEINTRESOURCEW(IDD_DISPLAY_DIALOG), pContext->hMainDialog, DisplayPageWndProc, (LPARAM)pContext);
+        if (!hwndDlg)
+           break;
+
+        szDisplay[0] = L'\0';
+        LoadStringW(hInst, IDS_DISPLAY_DIALOG, szDisplay, sizeof(szDisplay)/sizeof(WCHAR));
+        szDisplay[(sizeof(szDisplay)/sizeof(WCHAR))-1] = L'\0';
+
+        swprintf (szText, L"%s %u", szDisplay, pContext->NumDisplayAdapter + 1);
+        InsertTabCtrlItem(GetDlgItem(pContext->hMainDialog, IDC_TAB_CONTROL), pContext->NumDisplayAdapter + 1, szText);
+
+        hDlgs[pContext->NumDisplayAdapter] = hwndDlg;
+        pContext->NumDisplayAdapter++;
+    }
+
+
+}
+
+
 INT_PTR CALLBACK
 DisplayPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -295,11 +352,7 @@ DisplayPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
             {
                 case IDC_BUTTON_TESTDD:
                     /* FIXME log result errors */
-                    ShowWindow(pContext->hMainDialog, SW_HIDE);
-                    StartDDTest(pContext->hMainDialog, hInst, IDS_DDPRIMARY_DESCRIPTION, IDS_DDPRIMARY_RESULT, 1);
-                    StartDDTest(pContext->hMainDialog, hInst, IDS_DDOFFSCREEN_DESCRIPTION, IDS_DDOFFSCREEN_RESULT, 2);
-                    StartDDTest(pContext->hMainDialog, hInst, IDS_DDFULLSCREEN_DESCRIPTION, IDS_DDFULLSCREEN_RESULT, 3);
-                    ShowWindow(pContext->hMainDialog, SW_SHOW);
+                    DDTests();
                     /* FIXME resize window */
                     break;
             }

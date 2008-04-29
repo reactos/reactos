@@ -28,21 +28,29 @@ DestroyTabCtrlDialogs(PDXDIAG_CONTEXT pContext)
 
 //---------------------------------------------------------------
 VOID
-InsertTabCtrlItem(HWND hDlgCtrl, INT Position, UINT uId)
+InsertTabCtrlItem(HWND hDlgCtrl, INT Position, LPWSTR uId)
 {
     WCHAR szName[100];
     TCITEMW item;
 
-    /* load item name */
-    szName[0] = L'\0';
-    if (!LoadStringW(hInst, uId, szName, 100))
-        return;
-    szName[99] = L'\0';
-
     /* setup item info */
     memset(&item, 0, sizeof(TCITEM));
     item.mask = TCIF_TEXT;
-    item.pszText = szName;
+
+    /* load item name */
+    if (!HIWORD(uId))
+    {
+        szName[0] = L'\0';
+        if (!LoadStringW(hInst, LOWORD(uId), szName, 100))
+            return;
+        szName[99] = L'\0';
+        item.pszText = szName;
+    }
+    else
+    {
+        item.pszText = uId;
+    }
+
 
     SendMessageW(hDlgCtrl, TCM_INSERTITEM, Position, (LPARAM)&item);
 }
@@ -55,42 +63,55 @@ TabCtrl_OnSelChange(PDXDIAG_CONTEXT pContext)
 
     /* retrieve new page */
     CurSel = TabCtrl_GetCurSel(hTabCtrlWnd);
-    if (CurSel < 0 || CurSel > 7)
+    if (CurSel < 0 || CurSel > pContext->NumDisplayAdapter + pContext->NumSoundAdapter + 5)
         return;
 
-    /* show active page */
-    for(Index = 0; Index < 7; Index++)
-    {
-         if (Index == CurSel)
-             ShowWindow(pContext->hDialogs[Index], SW_SHOW);
-         else
-             ShowWindow(pContext->hDialogs[Index], SW_HIDE);
-    }
-}
+    /* hide all windows */
+    for(Index = 0; Index < 5; Index++)
+        ShowWindow(pContext->hDialogs[Index], SW_HIDE);
 
+    for(Index = 0; Index < pContext->NumDisplayAdapter; Index++)
+        ShowWindow(pContext->hDisplayWnd[Index], SW_HIDE);
+
+    for(Index = 0; Index < pContext->NumSoundAdapter; Index++)
+        ShowWindow(pContext->hSoundWnd[Index], SW_HIDE);
+
+
+    if (CurSel == 0 || CurSel > pContext->NumDisplayAdapter + pContext->NumSoundAdapter)
+    {
+        ShowWindow(pContext->hDialogs[min(0, CurSel-pContext->NumDisplayAdapter-pContext->NumSoundAdapter)], SW_SHOW);
+        return;
+    }
+
+    if (CurSel -1 < pContext->NumDisplayAdapter)
+    {
+        ShowWindow(pContext->hDisplayWnd[CurSel-1], SW_SHOW);
+        return;
+    }
+
+    CurSel -= pContext->NumDisplayAdapter + 1;
+    ShowWindow(pContext->hSoundWnd[CurSel], SW_SHOW);
+}
 
 VOID
 InitializeTabCtrl(HWND hwndDlg, PDXDIAG_CONTEXT pContext)
 {
     /* create the dialogs */
     pContext->hDialogs[0] = CreateDialogParamW(hInst, MAKEINTRESOURCEW(IDD_SYSTEM_DIALOG), hwndDlg, SystemPageWndProc, (LPARAM)pContext);
-    pContext->hDialogs[1] = CreateDialogParamW(hInst, MAKEINTRESOURCEW(IDD_DISPLAY_DIALOG), hwndDlg, DisplayPageWndProc, (LPARAM)pContext);
-    pContext->hDialogs[2] = CreateDialogParamW(hInst, MAKEINTRESOURCEW(IDD_SOUND_DIALOG), hwndDlg, SoundPageWndProc, (LPARAM)pContext);
-    pContext->hDialogs[3] = CreateDialogParamW(hInst, MAKEINTRESOURCEW(IDD_MUSIC_DIALOG), hwndDlg, MusicPageWndProc, (LPARAM)pContext);
-    pContext->hDialogs[4] = CreateDialogParamW(hInst, MAKEINTRESOURCEW(IDD_INPUT_DIALOG), hwndDlg, InputPageWndProc, (LPARAM)pContext);
-    pContext->hDialogs[5] = CreateDialogParamW(hInst, MAKEINTRESOURCEW(IDD_NETWORK_DIALOG), hwndDlg, NetworkPageWndProc, (LPARAM)pContext);
-    pContext->hDialogs[6] = CreateDialogParamW(hInst, MAKEINTRESOURCEW(IDD_HELP_DIALOG), hwndDlg, HelpPageWndProc, (LPARAM)pContext);
+    pContext->hDialogs[1] = CreateDialogParamW(hInst, MAKEINTRESOURCEW(IDD_MUSIC_DIALOG), hwndDlg, MusicPageWndProc, (LPARAM)pContext);
+    pContext->hDialogs[2] = CreateDialogParamW(hInst, MAKEINTRESOURCEW(IDD_INPUT_DIALOG), hwndDlg, InputPageWndProc, (LPARAM)pContext);
+    pContext->hDialogs[3] = CreateDialogParamW(hInst, MAKEINTRESOURCEW(IDD_NETWORK_DIALOG), hwndDlg, NetworkPageWndProc, (LPARAM)pContext);
+    pContext->hDialogs[4] = CreateDialogParamW(hInst, MAKEINTRESOURCEW(IDD_HELP_DIALOG), hwndDlg, HelpPageWndProc, (LPARAM)pContext);
 
     /* insert tab ctrl items */
     hTabCtrlWnd = GetDlgItem(hwndDlg, IDC_TAB_CONTROL);
-    InsertTabCtrlItem(hTabCtrlWnd, 0, IDS_SYSTEM_DIALOG);
-    InsertTabCtrlItem(hTabCtrlWnd, 1, IDS_DISPLAY_DIALOG);
-    InsertTabCtrlItem(hTabCtrlWnd, 2, IDS_SOUND_DIALOG);
-    InsertTabCtrlItem(hTabCtrlWnd, 3, IDS_MUSIC_DIALOG);
-    InsertTabCtrlItem(hTabCtrlWnd, 4, IDS_INPUT_DIALOG);
-    InsertTabCtrlItem(hTabCtrlWnd, 5, IDS_NETWORK_DIALOG);
-    InsertTabCtrlItem(hTabCtrlWnd, 6, IDS_HELP_DIALOG);
-
+    InsertTabCtrlItem(hTabCtrlWnd, 0, MAKEINTRESOURCEW(IDS_SYSTEM_DIALOG));
+    InitializeDisplayAdapters(pContext);
+    InitializeDirectSoundPage(pContext);
+    InsertTabCtrlItem(hTabCtrlWnd, pContext->NumDisplayAdapter + pContext->NumSoundAdapter + 1, MAKEINTRESOURCEW(IDS_MUSIC_DIALOG));
+    InsertTabCtrlItem(hTabCtrlWnd, pContext->NumDisplayAdapter + pContext->NumSoundAdapter + 2, MAKEINTRESOURCEW(IDS_INPUT_DIALOG));
+    InsertTabCtrlItem(hTabCtrlWnd, pContext->NumDisplayAdapter + pContext->NumSoundAdapter + 3, MAKEINTRESOURCEW(IDS_NETWORK_DIALOG));
+    InsertTabCtrlItem(hTabCtrlWnd, pContext->NumDisplayAdapter + pContext->NumSoundAdapter + 4, MAKEINTRESOURCEW(IDS_HELP_DIALOG));
     TabCtrl_OnSelChange(pContext);
 }
 
