@@ -18,6 +18,7 @@ GetFileModifyTime(LPCWSTR pFullPath, WCHAR * szTime, int szTimeSize)
     FILETIME AccessTime;
     SYSTEMTIME SysTime, LocalTime;
     UINT Length;
+    TIME_ZONE_INFORMATION TimeInfo;
 
     hFile = CreateFileW(pFullPath, GENERIC_READ, 0, NULL, OPEN_EXISTING, 0, NULL);
     if (!hFile)
@@ -30,10 +31,13 @@ GetFileModifyTime(LPCWSTR pFullPath, WCHAR * szTime, int szTimeSize)
     }
     CloseHandle(hFile);
 
+    if(!GetTimeZoneInformation(&TimeInfo))
+        return FALSE;
+
     if (!FileTimeToSystemTime(&AccessTime, &SysTime))
         return FALSE;
 
-    if (!SystemTimeToTzSpecificLocalTime(NULL, &SysTime, &LocalTime))
+    if (!SystemTimeToTzSpecificLocalTime(&TimeInfo, &SysTime, &LocalTime))
         return FALSE;
 
     Length = GetDateFormatW(LOCALE_USER_DEFAULT, DATE_SHORTDATE, &LocalTime, NULL, szTime, szTimeSize);
@@ -82,7 +86,7 @@ DriverFilesCallback(IN PVOID Context,
     else
     {
         /* set file version */
-        if (GetFileVersion(pFullPath, szVer))
+        if (GetFileVersion(pFullPath, szVer, sizeof(szVer)/sizeof(WCHAR)))
             SendMessageW(hDlgCtrls[1], WM_SETTEXT, 0, (LPARAM)szVer);
         /* set file time */
         if (GetFileModifyTime(pFullPath, szVer, sizeof(szVer)/sizeof(WCHAR)))

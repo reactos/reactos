@@ -100,7 +100,7 @@ FindProviderIndex(LPCWSTR szGuid, DIRECTPLAY_GUID * PreDefProviders)
 }
 
 BOOL
-GetFileVersion(LPCWSTR szAppName, WCHAR * szVer)
+GetFileVersion(LPCWSTR szAppName, WCHAR * szVer, DWORD szVerSize)
 {
     UINT VerSize;
     DWORD DummyHandle;
@@ -150,9 +150,14 @@ GetFileVersion(LPCWSTR szAppName, WCHAR * szVer)
      pResult = NULL;
     bResult = VerQueryValueW(pBuf, szBuffer, (LPVOID *)&pResult, &VerSize);
 
-    if (VerSize && bResult && pResult)
+    if (VerSize < szVerSize && bResult && pResult)
     {
         wcscpy(szVer, pResult);
+        if (GetLocaleInfoW(MAKELCID(lang, SORT_DEFAULT), LOCALE_SLANGUAGE, &szVer[VerSize], szVerSize-VerSize))
+        {
+            szVer[VerSize-1] = L' ';
+            szVer[szVerSize-1] = L'\0';
+        }
         bResult = TRUE;
     }
 
@@ -254,7 +259,7 @@ EnumerateServiceProviders(HKEY hKey, HWND hDlgCtrl, DIRECTPLAY_GUID * PreDefProv
                 Item.iItem = ProviderIndex + ItemCount;
                 SendMessageW(hDlgCtrl, LVM_SETITEM, 0, (LPARAM)&Item);
                 /* retrieve file version */
-                if (!GetFileVersion(szResult, szTemp))
+                if (!GetFileVersion(szResult, szTemp, sizeof(szTemp)/sizeof(WCHAR)))
                 {
                     szTemp[0] = L'\0';
                     LoadStringW(hInst, IDS_VERSION_UNKNOWN, szTemp, sizeof(szTemp)/sizeof(WCHAR));
