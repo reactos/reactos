@@ -1,6 +1,6 @@
 
 /************************************************************************/
-/* This driver interface are exported from win32k.sys to dxg.sys        */
+/* These functions are imported from win32k.sys by dxg.sys              */
 /************************************************************************/
 #define DXENG_INDEX_Resverd0                            0x00
 #define DXENG_INDEX_DxEngNUIsTermSrv                    0x01
@@ -70,7 +70,7 @@ typedef enum _DXEGSHDEVDATA
 } DXEGSHDEVDATA,*PDXEGSHDEVDATA;
 
 /************************************************************************/
-/* win32k.sys internal protypes for the driver functions it export      */
+/* win32k.sys internal protypes for driver functions it exports         */
 /************************************************************************/
 BOOLEAN STDCALL DxEngNUIsTermSrv();
 PDC STDCALL DxEngLockDC(HDC hDC);
@@ -86,39 +86,37 @@ BOOLEAN STDCALL DxEngUnlockShareSem();
 DWORD STDCALL DxEngScreenAccessCheck();
 BOOL STDCALL DxEngSetDCOwner(HGDIOBJ hObject, DWORD OwnerMask);
 
-/* prototypes are not done yet, I need gather all my notes
- * to make them correct
- */
-BOOLEAN DxEngRedrawDesktop();
-ULONG DxEngDispUniq();
-ULONG DxEngVisRgnUniq();
-HDEV *DxEngEnumerateHdev(HDEV *hdev);
-BOOL DxEngGetDeviceGammaRamp(HDEV hPDev, PGAMMARAMP Ramp);
-BOOLEAN DxEngSetDeviceGammaRamp(HDEV hPDev, PGAMMARAMP Ramp, BOOL Unuse);
-BOOLEAN DxEngCleanDC(HDC hdc);
-BOOLEAN DxEngIncDispUniq();
+/* Prototypes for the following functions are not yet finished */
+BOOLEAN STDCALL DxEngRedrawDesktop();
+ULONG STDCALL DxEngDispUniq();
+ULONG STDCALL DxEngVisRgnUniq();
+HDEV* STDCALL DxEngEnumerateHdev(HDEV *hdev);
+BOOL STDCALL DxEngGetDeviceGammaRamp(HDEV hPDev, PGAMMARAMP Ramp);
+BOOLEAN STDCALL DxEngSetDeviceGammaRamp(HDEV hPDev, PGAMMARAMP Ramp, BOOL Unuse);
+BOOLEAN STDCALL DxEngCleanDC(HDC hdc);
+BOOLEAN STDCALL DxEngIncDispUniq();
 
-DWORD DxEngCreateMemoryDC(DWORD x1);
+DWORD STDCALL DxEngCreateMemoryDC(DWORD x1);
 
-DWORD DxEngIsHdevLockedByCurrentThread(DWORD x1);
-DWORD DxEngUnreferenceHdev(DWORD x1);
-DWORD DxEngSpTearDownSprites(DWORD x1, DWORD x2, DWORD x3);
-DWORD DxEngSpUnTearDownSprites(DWORD x1, DWORD x2, DWORD x3);
-DWORD DxEngSpSpritesVisible(DWORD x1);
-DWORD DxEngGetDesktopDC(DWORD x1, DWORD x2, DWORD x3);
-DWORD DxEngDeleteDC(DWORD x1, DWORD x2);
-DWORD DxEngSetDCState(DWORD x1, DWORD x2, DWORD x3);
-DWORD DxEngSelectBitmap(DWORD x1, DWORD x2);
-DWORD DxEngSetBitmapOwner(DWORD x1, DWORD x2);
-DWORD DxEngDeleteSurface(DWORD x1);
-DWORD DxEngGetSurfaceData(DWORD x1, DWORD x2);
-DWORD DxEngAltLockSurface(DWORD x1);
-DWORD DxEngUploadPaletteEntryToSurface(DWORD x1, DWORD x2,DWORD x3, DWORD x4);
-DWORD DxEngMarkSurfaceAsDirectDraw(DWORD x1, DWORD x2);
-DWORD DxEngSelectPaletteToSurface(DWORD x1, DWORD x2);
-DWORD DxEngSyncPaletteTableWithDevice(DWORD x1, DWORD x2);
-DWORD DxEngSetPaletteState(DWORD x1, DWORD x2, DWORD x3);
+DWORD STDCALL DxEngIsHdevLockedByCurrentThread(DWORD x1);
+DWORD STDCALL DxEngUnreferenceHdev(DWORD x1);
+DWORD STDCALL DxEngSpTearDownSprites(DWORD x1, DWORD x2, DWORD x3);
+DWORD STDCALL DxEngSpUnTearDownSprites(DWORD x1, DWORD x2, DWORD x3);
+DWORD STDCALL DxEngSpSpritesVisible(DWORD x1);
+DWORD STDCALL DxEngGetDesktopDC(DWORD x1, DWORD x2, DWORD x3);
+DWORD STDCALL DxEngDeleteDC(DWORD x1, DWORD x2);
+DWORD STDCALL DxEngSetDCState(DWORD x1, DWORD x2, DWORD x3);
+DWORD STDCALL DxEngSelectBitmap(DWORD x1, DWORD x2);
+DWORD STDCALL DxEngSetBitmapOwner(DWORD x1, DWORD x2);
+DWORD STDCALL DxEngDeleteSurface(DWORD x1);
+DWORD STDCALL DxEngGetSurfaceData(DWORD x1, DWORD x2);
+DWORD STDCALL DxEngAltLockSurface(DWORD x1);
+DWORD STDCALL DxEngUploadPaletteEntryToSurface(DWORD x1, DWORD x2,DWORD x3, DWORD x4);
+DWORD STDCALL DxEngMarkSurfaceAsDirectDraw(DWORD x1, DWORD x2);
+DWORD STDCALL DxEngSelectPaletteToSurface(DWORD x1, DWORD x2);
+DWORD STDCALL DxEngSyncPaletteTableWithDevice(DWORD x1, DWORD x2);
+DWORD STDCALL DxEngSetPaletteState(DWORD x1, DWORD x2, DWORD x3);
 DWORD STDCALL DxEngGetRedirectionBitmap(DWORD x1);
-DWORD DxEngLoadImage(DWORD x1,DWORD x2);
+DWORD STDCALL DxEngLoadImage(DWORD x1,DWORD x2);
 
 
