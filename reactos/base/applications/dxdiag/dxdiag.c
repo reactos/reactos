@@ -79,7 +79,9 @@ TabCtrl_OnSelChange(PDXDIAG_CONTEXT pContext)
 
     if (CurSel == 0 || CurSel > pContext->NumDisplayAdapter + pContext->NumSoundAdapter)
     {
-        ShowWindow(pContext->hDialogs[min(0, CurSel-pContext->NumDisplayAdapter-pContext->NumSoundAdapter)], SW_SHOW);
+        if (CurSel)
+            CurSel -= pContext->NumDisplayAdapter + pContext->NumSoundAdapter;
+        ShowWindow(pContext->hDialogs[CurSel], SW_SHOW);
         return;
     }
 

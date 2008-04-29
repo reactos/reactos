@@ -65,7 +65,7 @@ BEGIN
     LTEXT "", IDC_STATIC_ADAPTER_MODE, 95, 75, 150, 10
     LTEXT "", IDC_STATIC_ADAPTER_MONITOR, 95, 85, 150, 10
 
-    GROUPBOX "Treiber", -1, 270, 10, 220, 100
+    GROUPBOX "Treiber", -1, 270, 10, 190, 100
     RTEXT "Hauptreiber:", -1, 275, 25, 55, 10
     RTEXT "Version:", -1, 275, 35, 55, 10
     RTEXT "Datum:", -1, 275, 45, 55, 10
@@ -103,6 +103,38 @@ IDD_SOUND_DIALOG DIALOGEX DISCARDABLE  0, 0, 462, 220
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
+    GROUPBOX "Gerät", -1, 10, 10, 250, 100
+    RTEXT "Name:", -1, 20, 25, 70, 10
+    RTEXT "Gerätekennung:", -1, 20, 35, 70, 10
+    RTEXT "Herstellerkennung:", -1, 20, 45, 70, 10
+    RTEXT "Produktkennung:", -1, 20, 55, 70, 10
+    RTEXT "Typ:", -1, 20, 65, 70, 10
+    RTEXT "Standardgerät:", -1, 20, 75, 70, 10
+    LTEXT "", IDC_STATIC_DSOUND_NAME, 95, 25, 150, 10
+    LTEXT "", IDC_STATIC_DSOUND_DEVICEID, 95, 35, 150, 10
+    LTEXT "", IDC_STATIC_DSOUND_VENDORID, 95, 45, 150, 10
+    LTEXT "", IDC_STATIC_DSOUND_PRODUCTID, 95, 55, 150, 10
+    LTEXT "", IDC_STATIC_DSOUND_TYPE, 95, 65, 150, 10
+    LTEXT "", IDC_STATIC_DSOUND_STANDARD, 95, 75, 150, 10
+    GROUPBOX "Treiber", -1, 270, 10, 190, 100
+    RTEXT "Name:", -1, 275, 25, 55, 10
+    RTEXT "Version:", -1, 275, 35, 55, 10
+    RTEXT "Datum:", -1, 275, 45, 55, 10
+    RTEXT "Mit WHQL-Logo:", -1, 275, 55, 55, 10
+    RTEXT "Andere Dateien:", -1, 275, 65, 55, 10
+    RTEXT "Anbieter:", -1, 275, 75, 55, 10
+    LTEXT "", IDC_STATIC_DSOUND_DRIVER, 335, 25, 100, 10
+    LTEXT "", IDC_STATIC_DSOUND_VERSION, 335, 35, 100, 10
+    LTEXT "", IDC_STATIC_DSOUND_DATE, 335, 45, 100, 10
+    LTEXT "", IDC_STATIC_DSOUND_LOGO, 335, 55, 100, 10
+    LTEXT "", IDC_STATIC_DSOUND_FILES, 335, 65, 100, 10
+    LTEXT "", IDC_STATIC_ADAPTER_PROVIDER, 335, 75, 100, 10
+    GROUPBOX "ReactX-Funktionen", -1, 10, 115, 450, 60
+    CONTROL "", IDC_SLIDER_DSOUND, "msctls_trackbar32", TBS_BOTTOM | WS_TABSTOP, 120, 135, 80, 17
+    RTEXT "Einstellung der Sound-\nhardwarebeschleunigung:", -1, 20, 135, 90, 20
+    PUSHBUTTON "DirectSound testen", IDC_BUTTON_TESTDSOUND, 270, 130, 80, 13
+    GROUPBOX "Hinweise", -1, 10, 180, 450, 40
+    EDITTEXT  IDC_TEXT_DSOUNDINFO, 20, 190, 432, 20, WS_DISABLED | WS_TABSTOP
 END
 
 IDD_MUSIC_DIALOG DIALOGEX DISCARDABLE  0, 0, 362, 220
@@ -188,4 +220,5 @@ BEGIN
 	IDS_DDFULLSCREEN_RESULT "Did you see white moving reactangle in a fullscreen mode?"
 	IDS_FORMAT_ADAPTER_MEM "%u MB"
 	IDS_FORMAT_ADAPTER_MODE "%04u x %04u (%u bit)(%uHz)"
+	IDS_OPTION_NO "Nein"
 END

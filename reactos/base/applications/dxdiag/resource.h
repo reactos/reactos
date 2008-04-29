@@ -48,17 +48,32 @@
 #define IDC_STATIC_ADAPTER_MINIVDD 3011
 #define IDC_STATIC_ADAPTER_VDD     3012
 #define IDC_STATIC_ADAPTER_DDI     3013
+#define IDC_BUTTON_DDRAW           3014
+#define IDC_BUTTON_D3D             3015
+#define IDC_BUTTON_AGP             3016
+#define IDC_BUTTON_TESTDD          3017
+#define IDC_BUTTON_TEST3D          3018
+#define IDC_STATIC_DDSTATE         3019
+#define IDC_STATIC_D3DSTATE        3020
+#define IDC_STATIC_AGPSTATE        3021
+#define IDC_TEXT_INFO              3022
 
-
-#define IDC_BUTTON_DDRAW          2011
-#define IDC_BUTTON_D3D            2012
-#define IDC_BUTTON_AGP            2013
-#define IDC_BUTTON_TESTDD         2014
-#define IDC_BUTTON_TEST3D         2015
-#define IDC_STATIC_DDSTATE        2016
-#define IDC_STATIC_D3DSTATE       2017
-#define IDC_STATIC_AGPSTATE       2018
-#define IDC_TEXT_INFO             2019
+/* DirectSound dialog constants */
+#define IDC_STATIC_DSOUND_NAME       4000
+#define IDC_STATIC_DSOUND_DEVICEID   4001
+#define IDC_STATIC_DSOUND_VENDORID   4002
+#define IDC_STATIC_DSOUND_PRODUCTID  4003
+#define IDC_STATIC_DSOUND_TYPE       4004
+#define IDC_STATIC_DSOUND_STANDARD   4005
+#define IDC_STATIC_DSOUND_DRIVER     4006
+#define IDC_STATIC_DSOUND_VERSION    4007
+#define IDC_STATIC_DSOUND_DATE       4008
+#define IDC_STATIC_DSOUND_LOGO       4009
+#define IDC_STATIC_DSOUND_FILES      4010
+#define IDC_STATIC_ADAPTER_PROVIDER  4011
+#define IDC_SLIDER_DSOUND            4012
+#define IDC_BUTTON_TESTDSOUND        4013
+#define IDC_TEXT_DSOUNDINFO          4014
 
 /* DirectInput dialog constants */
 
@@ -121,6 +136,7 @@
 #define IDS_DDTEST_TITLE           10124
 #define IDS_FORMAT_ADAPTER_MEM     10125
 #define IDS_FORMAT_ADAPTER_MODE    10126
+#define IDS_OPTION_NO              10127
 
 /* icon resource constants */
 #define IDI_APPICON        20000
