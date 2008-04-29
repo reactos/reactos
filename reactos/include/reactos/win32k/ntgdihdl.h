@@ -111,6 +111,14 @@
 #define GDI_OBJECT_GET_TYPE_INDEX(t) \
     ((t & GDI_HANDLE_BASETYPE_MASK) >> GDI_HANDLE_BASETYPE_SHIFT)
 
+/* Gdi Object Handle Managment Pid lock masking sets. */
+/* Ref: used with DxEngSetDCOwner */
+#define GDI_OBJ_HMGR_PUBLIC     0          // Public owner, Open access?
+#define GDI_OBJ_HMGR_POWNED     0x80000002 // Set to current owner.
+#define GDI_OBJ_HMGR_NONE       0x80000012 // No owner, Open access?
+#define GDI_OBJ_HMGR_RESTRICTED 0x80000022 // Restricted?
+
+
 /* DC OBJ Types */
 #define DC_TYPE_DIRECT 0  // normal device context
 #define DC_TYPE_MEMORY 1  // memory device context

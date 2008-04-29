@@ -84,6 +84,7 @@ DWORD STDCALL DxEngReferenceHdev(HDEV hdev);
 BOOLEAN STDCALL DxEngLockShareSem();
 BOOLEAN STDCALL DxEngUnlockShareSem();
 DWORD STDCALL DxEngScreenAccessCheck();
+BOOL STDCALL DxEngSetDCOwner(HGDIOBJ hObject, DWORD OwnerMask);
 
 /* prototypes are not done yet, I need gather all my notes
  * to make them correct
@@ -106,7 +107,6 @@ DWORD DxEngSpUnTearDownSprites(DWORD x1, DWORD x2, DWORD x3);
 DWORD DxEngSpSpritesVisible(DWORD x1);
 DWORD DxEngGetDesktopDC(DWORD x1, DWORD x2, DWORD x3);
 DWORD DxEngDeleteDC(DWORD x1, DWORD x2);
-DWORD DxEngSetDCOwner(DWORD x1, DWORD x2);
 DWORD DxEngSetDCState(DWORD x1, DWORD x2, DWORD x3);
 DWORD DxEngSelectBitmap(DWORD x1, DWORD x2);
 DWORD DxEngSetBitmapOwner(DWORD x1, DWORD x2);
