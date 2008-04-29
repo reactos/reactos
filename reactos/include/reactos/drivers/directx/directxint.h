@@ -5,22 +5,23 @@
 #define PDD_BASEOBJECT POBJ
 #define DD_BASEOBJECT BASEOBJECT
 
-/* _EDD_DIRECTDRAW_LOCAL is 0x54 byte big on windows xp */
+/* _EDD_DIRECTDRAW_LOCAL is 0x54 bytes long on Windows XP */
 typedef struct _EDD_DIRECTDRAW_LOCAL
 {
     //
     // GDI Object Header
     //
-/* 0x00 */    DD_BASEOBJECT pobj; // verify it match windows xp
-/* 0x10 */    struct _EDD_DIRECTDRAW_GLOBAL * peDirectDrawGlobal;    // verify it match windows xp
+/* 0x00 */    DD_BASEOBJECT pobj; // verified to match Windows XP
+/* 0x10 */    struct _EDD_DIRECTDRAW_GLOBAL * peDirectDrawGlobal;    // verified to match Windows XP
 /* 0x14 */    struct _EDD_SURFACE * peSurface_DdList;
 /* 0x18 */    ULONG unk_018;
 /* 0x1C */    ULONG unk_01c;
 /* 0x20 */    ULONG unk_020;
-/* 0x24 */    struct _EDD_DIRECTDRAW_GLOBAL * peDirectDrawGlobal2;   // verify it match windows xp
+/* 0x24 */    struct _EDD_DIRECTDRAW_GLOBAL * peDirectDrawGlobal2;   // verified to match Windows XP
 /* 0x28 */    FLATPTR fpProcess;
 /* 0x2C */    FLONG fl;
-/* 0x30 */    struct _EDD_DIRECTDRAW_LOCAL *peDirectDrawLocal_prev;  // verify it match windows xp, to old lcl store here when new handle are create.
+/* 0x30 */    struct _EDD_DIRECTDRAW_LOCAL *peDirectDrawLocal_prev;  // verified to match Windows XP,
+                                                                     // points to the old DDLocal when new handle is created.
 /* 0x34 */    PEPROCESS Process;
 /* 0x38 */    ULONG unk_038;
 /* 0x3C */    HANDLE UniqueProcess;
@@ -96,8 +97,8 @@ typedef struct _EDD_SURFACE
 
 
 /* NOTE :
- * if these  been set in  struct EDD_DIRECTDRAW_GLOBAL member dwCallbackFlags,
- * it mean that the callback member for it have been fill in from the graphic drv
+ * if any of these flags are set in dwCallbackFlags (struct EDD_DIRECTDRAW_GLOBAL),
+ * it means that the respective callback member for it has been filled in by a graphic driver
  */
 #define EDDDGBL_MISCCALLBACKS           0x01 // ddMiscellanousCallbacks
 #define EDDDGBL_VIDEOPORTCALLBACKS      0x02 // ddVideoPortCallback
@@ -111,8 +112,8 @@ typedef struct _EDD_DIRECTDRAW_GLOBAL
 /* 0x00C */    ULONG unk_000c[3];
 /* 0x018 */    LONG cDriverReferences;
 /* 0x01C */    ULONG unk_01c;
-/* 0x020 */    DWORD dwCallbackFlags; /* <-- verify it match windows xp, dwCallbackFlags
-                                         Flags value 
+/* 0x020 */    DWORD dwCallbackFlags; /* <-- verified to match Windows XP, dwCallbackFlags
+                                         Flags value
                                          0x0002 = ddVideoPortCallback and GUID_VideoPortCaps
                                          0x0004 = GUID_ColorControlCallbacks
                                          0x0040 = GUID_MotionCompCallbacks
@@ -124,44 +125,44 @@ typedef struct _EDD_DIRECTDRAW_GLOBAL
 
 /* 0x024 */    ULONG unk_024;
 #ifdef _WIN32
-/* 0x028 */    LARGE_INTEGER   llAssertModeTimeout;                    // 0x028 <-- verify it match windows xp, llAssertModeTimeout
+/* 0x028 */    LARGE_INTEGER   llAssertModeTimeout;                    // 0x028 <-- verified to match Windows XP, llAssertModeTimeout
 #else
 /* 0x028 */    DWORD           llAssertModeTimeoutLowPart;
 /* 0x02C */    DWORD           llAssertModeTimeoutHighPart;
 #endif
-/* 0x030 */    DWORD dwNumHeaps;                                       // 0x030 <-- verify it match windows xp, dwNumHeaps
-/* 0x034 */    VIDEOMEMORY *pvmList;                                   // 0x034 <-- verify it match windows xp, pvmList
+/* 0x030 */    DWORD dwNumHeaps;                                       // 0x030 <-- verified to match Windows XP, dwNumHeaps
+/* 0x034 */    VIDEOMEMORY *pvmList;                                   // 0x034 <-- verified to match Windows XP, pvmList
 /* 0x038 */    DWORD dwNumFourCC;
 /* 0x03C */    PDWORD pdwFourCC;
 /* 0x040 */    DD_HALINFO ddHalInfo;
 /* 0x1E0 */    ULONG unk_1e0[46];
-/* 0x298 */    DD_CALLBACKS ddCallbacks;                               // 0x298 <-- verify it match windows xp, ddCallbacks
-/* 0x2C0 */    DD_SURFACECALLBACKS ddSurfaceCallbacks;                 // 0x2C4 <-- verify it match windows xp, ddSurfaceCallbacks
-/* 0x300 */    DD_PALETTECALLBACKS ddPaletteCallbacks;                 // 0x300 <-- verify it match windows xp, ddPaletteCallbacks
+/* 0x298 */    DD_CALLBACKS ddCallbacks;                               // 0x298 <-- verified to match Windows XP, ddCallbacks
+/* 0x2C0 */    DD_SURFACECALLBACKS ddSurfaceCallbacks;                 // 0x2C4 <-- verified to match Windows XP, ddSurfaceCallbacks
+/* 0x300 */    DD_PALETTECALLBACKS ddPaletteCallbacks;                 // 0x300 <-- verified to match Windows XP, ddPaletteCallbacks
 /* 0x314 */    ULONG unk_314[46];
 /* 0x3D4 */    D3DNTHAL_CALLBACKS d3dNtHalCallbacks;
 /* 0x460 */    ULONG unk_460[7];
 /* 0x47C */    D3DNTHAL_CALLBACKS2 d3dNtHalCallbacks2;
-/* 0x498 */    DD_VIDEOPORTCALLBACKS ddVideoPortCallback;              // 0x498 <-- verify it match windows xp, ddVideoPortCallback
-/* 0x4E0 */    DD_MISCELLANEOUSCALLBACKS ddMiscellanousCallbacks;      // 0x4E0 <-- verify it match windows xp, ddMiscellanousCallbacks
-/* 0x4EC */    DD_MISCELLANEOUS2CALLBACKS ddMiscellanous2Callbacks;    // 0x4EC <-- verify it match windows xp, ddMiscellanous2Callbacks
+/* 0x498 */    DD_VIDEOPORTCALLBACKS ddVideoPortCallback;              // 0x498 <-- verified to match Windows XP, ddVideoPortCallback
+/* 0x4E0 */    DD_MISCELLANEOUSCALLBACKS ddMiscellanousCallbacks;      // 0x4E0 <-- verified to match Windows XP, ddMiscellanousCallbacks
+/* 0x4EC */    DD_MISCELLANEOUS2CALLBACKS ddMiscellanous2Callbacks;    // 0x4EC <-- verified to match Windows XP, ddMiscellanous2Callbacks
 /* 0x504 */    ULONG unk_504[12];
 /* 0x534 */    D3DNTHAL_CALLBACKS3 d3dNtHalCallbacks3;
 /* 0x5A4 */    ULONG unk_544;
 /* 0x5A8 */    ULONG unk_548;
 /* 0x54C */    ULONG unk_54c[23];
-/* 0x5A8 */    EDD_DIRECTDRAW_LOCAL* peDirectDrawLocalList; // 0x5A8 <-- verify it match windows xp, comment it is current local struct not a list, peDirectDrawLocalList Current
+/* 0x5A8 */    EDD_DIRECTDRAW_LOCAL* peDirectDrawLocalList; // 0x5A8 <-- verified to match Windows XP, it is a current local struct, not a list, peDirectDrawLocalList Current
 /* 0x5ac */    EDD_SURFACE* peSurface_LockList;
 /* 0x5B0 */    FLONG fl;
 /* 0x5B4 */    ULONG cSurfaceLocks;
 /* 0x5B8 */    PKEVENT pAssertModeEvent;
 /* 0x5Bc */    EDD_SURFACE *peSurfaceCurrent;
 /* 0x5C0 */    EDD_SURFACE *peSurfacePrimary;
-/* 0x5C4 */    BOOL bSuspended;                             // 0x5C4 <-- verify it match windows xp, tells to dxg to use the drv own api or return error code instead 
+/* 0x5C4 */    BOOL bSuspended;                             // 0x5C4 <-- verified to match Windows XP, tells dxg to use driver's own api or return error code instead 
 /* 0x5C8 */    ULONG unk_5c8[12];
 /* 0x5F8 */    RECTL rcbounds;
 /* 0x608 */    ULONG unk_608;
-/* 0x60c */    HDEV hDev;                                   // 0x60c <-- verify it match windows xp, The real Pdev, hDev
+/* 0x60c */    HDEV hDev;                                   // 0x60c <-- verified to match Windows XP, The real Pdev, hDev
 
 /* Windows XP and higher */
 /* 0x610 */    ULONG unk_610[63];
