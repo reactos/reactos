@@ -287,12 +287,12 @@ DxEngSetDeviceGammaRamp(HDEV hPDev, PGAMMARAMP Ramp, BOOL Test)
 * ReactOS specific: Implementation is incomplete, I do not save the value into the hdev yet.
 *
 *--*/
-DWORD
+DWORD_PTR
 STDCALL
 DxEngGetHdevData(HDEV hDev,
                  DXEGSHDEVDATA Type)
 {
-    DWORD retVal = 0;
+    DWORD_PTR retVal = 0;
     PGDIDEVICE PDev = (PGDIDEVICE)hDev;
 
     DPRINT1("ReactX Calling : DxEngGetHdevData DXEGSHDEVDATA : %ld\n", Type);
@@ -305,67 +305,67 @@ DxEngGetHdevData(HDEV hDev,
     {
       case DxEGShDevData_Surface:
         DPRINT1("requested DXEGSHDEVDATA DxEGShDevData_Surface\n");
-        retVal = (DWORD) PDev->pSurface; // ptr to Surface handle.
+        retVal = (DWORD_PTR) PDev->pSurface; // ptr to Surface handle.
         break;
       case DxEGShDevData_hSpooler:
         DPRINT1("requested DXEGSHDEVDATA DxEGShDevData_hSpooler\n");
-        retVal = (DWORD) PDev->hSpooler; // If the device is a spooler driver.
+        retVal = (DWORD_PTR) PDev->hSpooler; // If the device is a spooler driver.
         break;
       case DxEGShDevData_DitherFmt:
         DPRINT1("requested DXEGSHDEVDATA DxEGShDevData_DitherFmt\n");
-        retVal = (DWORD) PDev->DevInfo.iDitherFormat;
+        retVal = (DWORD_PTR) PDev->DevInfo.iDitherFormat;
         break;
       case DxEGShDevData_FxCaps:
         DPRINT1("requested DXEGSHDEVDATA DxEGShDevData_FxCaps\n");
-        retVal = (DWORD) PDev->DevInfo.flGraphicsCaps;
+        retVal = (DWORD_PTR) PDev->DevInfo.flGraphicsCaps;
         break;
       case DxEGShDevData_FxCaps2:
         DPRINT1("requested DXEGSHDEVDATA DxEGShDevData_FxCaps2\n");
-        retVal = (DWORD) PDev->DevInfo.flGraphicsCaps2;
+        retVal = (DWORD_PTR) PDev->DevInfo.flGraphicsCaps2;
         break;
       case DxEGShDevData_DrvFuncs:
         DPRINT1("requested DXEGSHDEVDATA DxEGShDevData_DrvFuncs\n");
-        retVal = (DWORD) &PDev->DriverFunctions;
+        retVal = (DWORD_PTR) &PDev->DriverFunctions;
         break;
       case DxEGShDevData_dhpdev:
         DPRINT1("requested DXEGSHDEVDATA DxEGShDevData_dhpdev\n");
-        retVal = (DWORD) PDev->hPDev; // DHPDEV
+        retVal = (DWORD_PTR) PDev->hPDev; // DHPDEV
         break;
       case DxEGShDevData_eddg:
         DPRINT1("requested DXEGSHDEVDATA DxEGShDevData_eddg\n");
-        retVal = (DWORD) PDev->pEDDgpl;
+        retVal = (DWORD_PTR) PDev->pEDDgpl;
         break;
       case DxEGShDevData_dd_nCount:
         DPRINT1("requested DXEGSHDEVDATA DxEGShDevData_dd_nCount\n");
-        retVal = (DWORD) PDev->DxDd_nCount;
+        retVal = (DWORD_PTR) PDev->DxDd_nCount;
         break;
       case DxEGShDevData_dd_flags:
         DPRINT1("requested DXEGSHDEVDATA DxEGShDevData_dd_flags\n");
-        retVal = (DWORD) PDev->DxDd_Flags;
+        retVal = (DWORD_PTR) PDev->DxDd_Flags;
         break;
       case DxEGShDevData_disable:
         DPRINT1("requested DXEGSHDEVDATA DxEGShDevData_disable\n");
-        retVal = (DWORD) PDev->flFlags & PDEV_DISABLED;
+        retVal = (DWORD_PTR) PDev->flFlags & PDEV_DISABLED;
         break;
       case DxEGShDevData_metadev:
         DPRINT1("requested DXEGSHDEVDATA DxEGShDevData_metadev\n");
-        retVal = (DWORD) PDev->flFlags & PDEV_META_DEVICE;
+        retVal = (DWORD_PTR) PDev->flFlags & PDEV_META_DEVICE;
         break;
       case DxEGShDevData_display:
         DPRINT1("requested DXEGSHDEVDATA DxEGShDevData_display\n");
-        retVal = (DWORD) PDev->flFlags & PDEV_DISPLAY;
+        retVal = (DWORD_PTR) PDev->flFlags & PDEV_DISPLAY;
         break;
       case DxEGShDevData_Parent:
         DPRINT1("requested DXEGSHDEVDATA DxEGShDevData_Parent\n");
-        retVal = (DWORD) PDev->ppdevParent;
+        retVal = (DWORD_PTR) PDev->ppdevParent;
         break;
       case DxEGShDevData_OpenRefs:
         DPRINT1("requested DXEGSHDEVDATA DxEGShDevData_OpenRefs\n");
-        retVal = (DWORD) PDev->cPdevOpenRefs == 0;
+        retVal = (DWORD_PTR) PDev->cPdevOpenRefs == 0;
         break;
       case DxEGShDevData_palette:
         DPRINT1("requested DXEGSHDEVDATA DxEGShDevData_palette\n");
-        retVal = (DWORD) PDev->GDIInfo.flRaster & RC_PALETTE;
+        retVal = (DWORD_PTR) PDev->GDIInfo.flRaster & RC_PALETTE;
         break;
       case DxEGShDevData_ldev:
           DPRINT1("DxEGShDevData_ldev not supported yet\n");
@@ -374,11 +374,11 @@ DxEngGetHdevData(HDEV hDev,
         break;
       case DxEGShDevData_GDev:
         DPRINT1("requested DXEGSHDEVDATA DxEGShDevData_GDev\n");
-        retVal = (DWORD) PDev->pGraphicsDev; // P"GRAPHICS_DEVICE"
+        retVal = (DWORD_PTR) PDev->pGraphicsDev; // P"GRAPHICS_DEVICE"
         break;
       case DxEGShDevData_clonedev:
         DPRINT1("requested DXEGSHDEVDATA DxEGShDevData_clonedev\n");
-        retVal = (DWORD) PDev->flFlags & PDEV_CLONE_DEVICE;
+        retVal = (DWORD_PTR) PDev->flFlags & PDEV_CLONE_DEVICE;
         break;
 
       default:
@@ -419,7 +419,7 @@ BOOLEAN
 STDCALL
 DxEngSetHdevData(HDEV hDev,
                  DXEGSHDEVDATA Type,
-                 DWORD Data)
+                 DWORD_PTR Data)
 {
     BOOLEAN retVal = FALSE; // Default, no set.
 
@@ -458,13 +458,13 @@ DxEngSetHdevData(HDEV hDev,
 * We do not have type 2 implemented yet
 *
 *--*/
-DWORD
+DWORD_PTR
 STDCALL
 DxEngGetDCState(HDC hDC,
                 DWORD type)
 {
     PDC pDC = DC_LockDc(hDC);
-    DWORD retVal = 0;
+    DWORD_PTR retVal = 0;
 
     DPRINT1("ReactX Calling : DxEngGetDCState type : %ld\n", type);
 
@@ -473,7 +473,7 @@ DxEngGetDCState(HDC hDC,
         switch (type)
         {
             case 1:
-                retVal = (DWORD) pDC->DC_Flags & DC_FLAG_FULLSCREEN;
+                retVal = (DWORD_PTR) pDC->DC_Flags & DC_FLAG_FULLSCREEN;
                 break;
             case 2:
                 UNIMPLEMENTED;
@@ -481,7 +481,7 @@ DxEngGetDCState(HDC hDC,
             case 3:
             {
                 /* Return the HDEV of this DC. */
-                retVal = (DWORD) pDC->pPDev;
+                retVal = (DWORD_PTR) pDC->pPDev;
                 break;
             }
             default:
@@ -533,7 +533,7 @@ DxEngIncDispUniq()
 * none
 *
 *--*/
-BOOLEAN 
+BOOLEAN
 STDCALL
 DxEngLockHdev(HDEV hDev)
 {
