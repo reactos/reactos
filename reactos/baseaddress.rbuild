@@ -13,6 +13,7 @@
   <property name="BASEADDRESS_JOY" value="0x589b0000" />
   <property name="BASEADDRESS_UXTHEME" value="0x5ad70000" />
   <property name="BASEADDRESS_VDMDBG" value="0x5b0d0000" />
+  <property name="BASEADDRESS_UNTFS" value="0x5b340000" />
   <property name="BASEADDRESS_OBJSEL" value="0x5b400000" />
   <property name="BASEADDRESS_UFAT" value="0x5b570000" />
   <property name="BASEADDRESS_TAPIUI" value="0x5b770000" />

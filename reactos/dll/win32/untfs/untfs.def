@@ -1,0 +1,4 @@
+LIBRARY UNTFS.DLL
+EXPORTS
+ChkdskEx=NtfsChkdsk@24
+FormatEx=NtfsFormat@24

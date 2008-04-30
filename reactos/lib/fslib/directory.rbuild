@@ -4,6 +4,9 @@
 	<directory name="ext2lib">
 		<xi:include href="ext2lib/ext2lib.rbuild" />
 	</directory>
+	<directory name="ntfslib">
+		<xi:include href="ntfslib/ntfslib.rbuild" />
+	</directory>
 	<directory name="vfatlib">
 		<xi:include href="vfatlib/vfatlib.rbuild" />
 	</directory>

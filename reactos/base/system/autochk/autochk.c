@@ -243,16 +243,24 @@ static PVOID
 LoadProvider(
     IN PWCHAR FileSystem)
 {
-    UNICODE_STRING ProviderDll = RTL_CONSTANT_STRING(L"ufat.dll");
+    UNICODE_STRING ProviderDll;
     PVOID BaseAddress;
     NTSTATUS Status;
 
     /* FIXME: add more providers here */
 
-    if (wcscmp(FileSystem, L"FAT") != 0
-     && wcscmp(FileSystem, L"FAT32") != 0)
+    if (wcscmp(FileSystem, L"NTFS") == 0)
     {
-        return NULL;
+      RtlInitUnicodeString(&ProviderDll, L"untfs.dll");
+    }
+    else if (wcscmp(FileSystem, L"FAT") == 0
+             || wcscmp(FileSystem, L"FAT32") == 0)
+    {
+      RtlInitUnicodeString(&ProviderDll, L"ufat.dll");
+    }
+    else
+    {
+      return NULL;
     }
 
     Status = LdrLoadDll(NULL, NULL, &ProviderDll, &BaseAddress);
