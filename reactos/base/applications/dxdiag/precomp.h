@@ -20,6 +20,7 @@
 typedef struct
 {
     HWND hMainDialog;
+    HWND hTabCtrl;
     ULONG NumDisplayAdapter;
     HWND * hDisplayWnd;
     ULONG NumSoundAdapter;

@@ -29,7 +29,7 @@ BOOL CALLBACK DSEnumCallback(LPGUID lpGuid, LPCWSTR lpcstrDescription, LPCWSTR l
         return FALSE;
 
     pContext->hSoundWnd = hDlgs;
-    hwndDlg = CreateDialogParamW(hInst, MAKEINTRESOURCEW(IDD_SOUND_DIALOG), pContext->hMainDialog, SoundPageWndProc, (LPARAM)pContext);
+	hwndDlg = CreateDialogParamW(hInst, MAKEINTRESOURCEW(IDD_SOUND_DIALOG), pContext->hTabCtrl, SoundPageWndProc, (LPARAM)pContext);
     if (!hwndDlg)
         return FALSE;
 
@@ -40,7 +40,7 @@ BOOL CALLBACK DSEnumCallback(LPGUID lpGuid, LPCWSTR lpcstrDescription, LPCWSTR l
     swprintf (szText, L"%s %u", szSound, pContext->NumSoundAdapter + 1);
 
 
-    InsertTabCtrlItem(GetDlgItem(pContext->hMainDialog, IDC_TAB_CONTROL), pContext->NumDisplayAdapter + pContext->NumSoundAdapter + 1, szText);
+    InsertTabCtrlItem(pContext->hTabCtrl, pContext->NumDisplayAdapter + pContext->NumSoundAdapter + 1, szText);
 
     hDlgs[pContext->NumSoundAdapter] = hwndDlg;
     pContext->NumSoundAdapter++;

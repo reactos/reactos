@@ -98,15 +98,19 @@ TabCtrl_OnSelChange(PDXDIAG_CONTEXT pContext)
 VOID
 InitializeTabCtrl(HWND hwndDlg, PDXDIAG_CONTEXT pContext)
 {
+    /* get tabctrl */
+    hTabCtrlWnd = GetDlgItem(hwndDlg, IDC_TAB_CONTROL);
+    pContext->hTabCtrl = hTabCtrlWnd;
+
     /* create the dialogs */
-    pContext->hDialogs[0] = CreateDialogParamW(hInst, MAKEINTRESOURCEW(IDD_SYSTEM_DIALOG), hwndDlg, SystemPageWndProc, (LPARAM)pContext);
-    pContext->hDialogs[1] = CreateDialogParamW(hInst, MAKEINTRESOURCEW(IDD_MUSIC_DIALOG), hwndDlg, MusicPageWndProc, (LPARAM)pContext);
-    pContext->hDialogs[2] = CreateDialogParamW(hInst, MAKEINTRESOURCEW(IDD_INPUT_DIALOG), hwndDlg, InputPageWndProc, (LPARAM)pContext);
-    pContext->hDialogs[3] = CreateDialogParamW(hInst, MAKEINTRESOURCEW(IDD_NETWORK_DIALOG), hwndDlg, NetworkPageWndProc, (LPARAM)pContext);
-    pContext->hDialogs[4] = CreateDialogParamW(hInst, MAKEINTRESOURCEW(IDD_HELP_DIALOG), hwndDlg, HelpPageWndProc, (LPARAM)pContext);
+    pContext->hDialogs[0] = CreateDialogParamW(hInst, MAKEINTRESOURCEW(IDD_SYSTEM_DIALOG), hTabCtrlWnd, SystemPageWndProc, (LPARAM)pContext);
+    pContext->hDialogs[1] = CreateDialogParamW(hInst, MAKEINTRESOURCEW(IDD_MUSIC_DIALOG), hTabCtrlWnd, MusicPageWndProc, (LPARAM)pContext);
+    pContext->hDialogs[2] = CreateDialogParamW(hInst, MAKEINTRESOURCEW(IDD_INPUT_DIALOG), hTabCtrlWnd, InputPageWndProc, (LPARAM)pContext);
+    pContext->hDialogs[3] = CreateDialogParamW(hInst, MAKEINTRESOURCEW(IDD_NETWORK_DIALOG), hTabCtrlWnd, NetworkPageWndProc, (LPARAM)pContext);
+    pContext->hDialogs[4] = CreateDialogParamW(hInst, MAKEINTRESOURCEW(IDD_HELP_DIALOG), hTabCtrlWnd, HelpPageWndProc, (LPARAM)pContext);
 
     /* insert tab ctrl items */
-    hTabCtrlWnd = GetDlgItem(hwndDlg, IDC_TAB_CONTROL);
+
     InsertTabCtrlItem(hTabCtrlWnd, 0, MAKEINTRESOURCEW(IDS_SYSTEM_DIALOG));
     InitializeDisplayAdapters(pContext);
     InitializeDirectSoundPage(pContext);
