@@ -145,7 +145,6 @@ typedef struct
 * IShellView interface
 */
 
-typedef GUID SHELLVIEWID;
 #define SV_CLASS_NAME   ("SHELLDLL_DefView")
 
 #define FCIDM_SHVIEWFIRST       0x0000

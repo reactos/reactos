@@ -388,7 +388,7 @@ typedef const FOLDERSETTINGS *LPCFOLDERSETTINGS;
 /*****************************************************************************
  * IShellView interface
  */
-interface IShellBrowser;  /* forward declaration */
+interface IShellBrowser;
 [
     object,
     uuid(000214e3-0000-0000-c000-000000000046),
@@ -412,7 +412,7 @@ interface IShellView : IOleWindow
 
     typedef UINT SVSIF;
 
-    typedef enum
+    typedef enum tagSVGIO
     {
         SVGIO_BACKGROUND     = 0x00000000,
         SVGIO_SELECTION      = 0x00000001,
@@ -422,7 +422,7 @@ interface IShellView : IOleWindow
         SVGIO_FLAG_VIEWORDER = 0x80000000,
     } SVGIO;
 
-    typedef enum
+    typedef enum tagSVUIA_STATUS
     {
         SVUIA_DEACTIVATE       = 0,
         SVUIA_ACTIVATE_NOFOCUS = 1,
@@ -457,6 +457,80 @@ interface IShellView : IOleWindow
         [in] UINT uItem,
         [in] REFIID riid,
         [out, iid_is(riid)] void **ppv);
+}
+
+
+[
+    uuid(88E39E80-3578-11CF-AE69-08002B2E1262),
+    object,
+    pointer_default(unique)
+]
+interface IShellView2 :  IShellView
+{
+    typedef GUID SHELLVIEWID;
+
+    cpp_quote("#define SV2GV_CURRENTVIEW ((UINT)-1)")
+    cpp_quote("#define SV2GV_DEFAULTVIEW ((UINT)-2)")
+
+    cpp_quote("#include <pshpack8.h>")
+    typedef struct _SV2CVW2_PARAMS
+    {
+        DWORD cbSize;
+
+        IShellView *psvPrev;
+        LPCFOLDERSETTINGS pfs;
+        IShellBrowser *psbOwner;
+        RECT *prcView;
+        SHELLVIEWID const *pvid;
+        HWND hwndView;
+
+    } SV2CVW2_PARAMS, *LPSV2CVW2_PARAMS;
+
+    cpp_quote("#include <poppack.h>")
+
+    HRESULT GetView(
+        [in, out] SHELLVIEWID* pvid,
+        [in] ULONG uView);
+
+    HRESULT CreateViewWindow2(
+        [in] LPSV2CVW2_PARAMS lpParams);
+
+    HRESULT HandleRename(
+        [in, unique] PCUITEMID_CHILD pidlNew);
+
+    HRESULT SelectAndPositionItem(
+        [in] PCUITEMID_CHILD pidlItem,
+        [in] UINT uFlags,
+        [in, unique] POINT *ppt);
+}
+
+
+[
+    uuid(ec39fa88-f8af-41c5-8421-38bed28f4673),
+    object,
+    pointer_default(unique)
+]
+interface IShellView3 :  IShellView2
+{
+    enum tagSV3CVW3
+    {
+        SV3CVW3_DEFAULT             = 0x00000000,
+        SV3CVW3_NONINTERACTIVE      = 0x00000001,
+        SV3CVW3_FORCEVIEWMODE       = 0x00000002,
+        SV3CVW3_FORCEFOLDERFLAGS    = 0x00000004,
+    };
+    typedef DWORD SV3CVW3_FLAGS;
+
+    HRESULT CreateViewWindow3(
+        [in] IShellBrowser *psbOwner,
+        [in, unique] IShellView *psvPrev,
+        [in] SV3CVW3_FLAGS dwViewFlags,
+        [in] FOLDERFLAGS dwMask,
+        [in] FOLDERFLAGS dwFlags,
+        [in] FOLDERVIEWMODE fvMode,
+        [in, unique] const SHELLVIEWID *pvid,
+        [in] const RECT *prcView,
+        [out] HWND *phwndView);
 }
 
 
@@ -1583,3 +1657,91 @@ interface IMenuPopup : IDeskBar
 }
 
 cpp_quote("#endif /* _WIN32_IE_IE60 */")
+
+cpp_quote("#if (_WIN32_IE >= _WIN32_IE_IE40)")
+
+/*****************************************************************************
+ * IBandSite interface
+ */
+cpp_quote("#include <pshpack8.h>")
+
+typedef struct tagBANDSITEINFO
+{
+    DWORD dwMask;
+    DWORD dwState;
+    DWORD dwStyle;
+} BANDSITEINFO;
+
+cpp_quote("#include <poppack.h>")
+
+
+enum tagBANDSITECID {
+    BSID_BANDADDED,
+    BSID_BANDREMOVED,
+};
+
+cpp_quote("#define BSIM_STATE        0x00000001")
+cpp_quote("#define BSIM_STYLE        0x00000002")
+
+cpp_quote("#define BSSF_VISIBLE      0x00000001")
+cpp_quote("#define BSSF_NOTITLE      0x00000002")
+cpp_quote("#define BSSF_UNDELETEABLE 0x00001000")
+
+cpp_quote("#define BSIS_AUTOGRIPPER       0x00000000")
+cpp_quote("#define BSIS_NOGRIPPER         0x00000001")
+cpp_quote("#define BSIS_ALWAYSGRIPPER     0x00000002")
+cpp_quote("#define BSIS_LEFTALIGN         0x00000004")
+cpp_quote("#define BSIS_SINGLECLICK       0x00000008")
+cpp_quote("#define BSIS_NOCONTEXTMENU     0x00000010")
+cpp_quote("#define BSIS_NODROPTARGET      0x00000020")
+cpp_quote("#define BSIS_NOCAPTION         0x00000040")
+cpp_quote("#define BSIS_PREFERNOLINEBREAK 0x00000080")
+cpp_quote("#define BSIS_LOCKED            0x00000100")
+cpp_quote("#if (_WIN32_IE >= _WIN32_IE_IE70)")
+cpp_quote("#define BSIS_PRESERVEORDERDURINGLAYOUT 0x00000200")
+cpp_quote("#endif  /* _WIN32_IE_IE70 */")
+
+cpp_quote("#define SID_SBandSite IID_IBandSite")
+cpp_quote("#define CGID_BandSite IID_IBandSite")
+
+[
+    object,
+    uuid(4CF504B0-DE96-11D0-8B3F-00A0C911E8E5)
+]
+interface IBandSite : IUnknown
+{
+    HRESULT AddBand([in] IUnknown* punk);
+
+    HRESULT EnumBands(
+        [in] UINT uBand,
+        [out] DWORD* pdwBandID);
+
+    HRESULT QueryBand(
+        [in] DWORD dwBandID,
+        [out] IDeskBand** ppstb,
+        [out] DWORD* pdwState,
+        [out, string, size_is(cchName)] LPWSTR pszName,
+        [in] int cchName);
+
+    HRESULT SetBandState(
+        [in] DWORD dwBandID,
+        [in] DWORD dwMask,
+        [in] DWORD dwState);
+
+    HRESULT RemoveBand([in] DWORD dwBandID);
+
+    HRESULT GetBandObject(
+        [in] DWORD dwBandID,
+        [in] REFIID riid,
+        [out, iid_is(riid)] void **ppv);
+
+    HRESULT SetBandSiteInfo([in] const BANDSITEINFO *pbsinfo);
+
+    HRESULT GetBandSiteInfo([in, out] BANDSITEINFO *pbsinfo);
+}
+
+cpp_quote("#endif /* _WIN32_IE_IE40 */")
+
+
+
+

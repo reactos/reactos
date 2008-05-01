@@ -21,6 +21,8 @@
 
 import "wtypes.idl";
 
+
+
 cpp_quote("#include <pshpack1.h>")
 typedef struct
 {
@@ -32,9 +34,59 @@ typedef const SHITEMID *LPCSHITEMID;
 typedef struct _ITEMIDLIST
 {
     SHITEMID mkid; /* first itemid in list */
-} ITEMIDLIST,*LPITEMIDLIST;
-typedef const ITEMIDLIST *LPCITEMIDLIST;
+} ITEMIDLIST;
+
+cpp_quote("#if defined(STRICT_TYPED_ITEMIDS) && defined(__cplusplus)")
+cpp_quote("typedef struct _ITEMIDLIST_RELATIVE : ITEMIDLIST {} ITEMIDLIST_RELATIVE;")
+cpp_quote("typedef struct _ITEMID_CHILD : ITEMIDLIST_RELATIVE {} ITEMID_CHILD;")
+cpp_quote("typedef struct _ITEMIDLIST_ABSOLUTE : ITEMIDLIST_RELATIVE {} ITEMIDLIST_ABSOLUTE;")
+cpp_quote("#else /* !(defined(STRICT_TYPED_ITEMIDS) && defined(__cplusplus)) */")
+typedef ITEMIDLIST ITEMIDLIST_RELATIVE;
+typedef ITEMIDLIST ITEMID_CHILD;
+typedef ITEMIDLIST ITEMIDLIST_ABSOLUTE;
+cpp_quote("#endif /* defined(STRICT_TYPED_ITEMIDS) && defined(__cplusplus) */")
+
 cpp_quote("#include <poppack.h>")
+
+typedef [unique] BYTE_BLOB * wirePIDL;
+typedef ITEMIDLIST /*__unaligned*/ * LPITEMIDLIST;
+typedef const ITEMIDLIST /*__unaligned*/ * LPCITEMIDLIST;
+
+cpp_quote("#if defined(STRICT_TYPED_ITEMIDS) && defined(__cplusplus)")
+typedef ITEMIDLIST_ABSOLUTE * PIDLIST_ABSOLUTE;
+typedef const ITEMIDLIST_ABSOLUTE * PCIDLIST_ABSOLUTE;
+typedef const ITEMIDLIST_ABSOLUTE /*__unaligned*/ * PCUIDLIST_ABSOLUTE;
+typedef ITEMIDLIST_RELATIVE * PIDLIST_RELATIVE;
+typedef const ITEMIDLIST_RELATIVE * PCIDLIST_RELATIVE;
+typedef ITEMIDLIST_RELATIVE /*__unaligned*/ * PUIDLIST_RELATIVE;
+typedef const ITEMIDLIST_RELATIVE /*__unaligned*/ * PCUIDLIST_RELATIVE;
+typedef ITEMID_CHILD * PITEMID_CHILD;
+typedef const ITEMID_CHILD * PCITEMID_CHILD;
+typedef ITEMID_CHILD /*__unaligned*/ * PUITEMID_CHILD;
+typedef const ITEMID_CHILD /*__unaligned*/ * PCUITEMID_CHILD;
+
+typedef PCUITEMID_CHILD const *PCUITEMID_CHILD_ARRAY;
+typedef PCUIDLIST_RELATIVE const *PCUIDLIST_RELATIVE_ARRAY;
+typedef PCIDLIST_ABSOLUTE const *PCIDLIST_ABSOLUTE_ARRAY;
+typedef PCUIDLIST_ABSOLUTE const *PCUIDLIST_ABSOLUTE_ARRAY;
+cpp_quote("#else // !(defined(STRICT_TYPED_ITEMIDS) && defined(__cplusplus))")
+cpp_quote("#define PIDLIST_ABSOLUTE         LPITEMIDLIST")
+cpp_quote("#define PCIDLIST_ABSOLUTE        LPCITEMIDLIST")
+cpp_quote("#define PCUIDLIST_ABSOLUTE       LPCITEMIDLIST")
+cpp_quote("#define PIDLIST_RELATIVE         LPITEMIDLIST")
+cpp_quote("#define PCIDLIST_RELATIVE        LPCITEMIDLIST")
+cpp_quote("#define PUIDLIST_RELATIVE        LPITEMIDLIST")
+cpp_quote("#define PCUIDLIST_RELATIVE       LPCITEMIDLIST")
+cpp_quote("#define PITEMID_CHILD            LPITEMIDLIST")
+cpp_quote("#define PCITEMID_CHILD           LPCITEMIDLIST")
+cpp_quote("#define PUITEMID_CHILD           LPITEMIDLIST")
+cpp_quote("#define PCUITEMID_CHILD          LPCITEMIDLIST")
+cpp_quote("#define PCUITEMID_CHILD_ARRAY    LPCITEMIDLIST *")
+cpp_quote("#define PCUIDLIST_RELATIVE_ARRAY LPCITEMIDLIST *")
+cpp_quote("#define PCIDLIST_ABSOLUTE_ARRAY  LPCITEMIDLIST *")
+cpp_quote("#define PCUIDLIST_ABSOLUTE_ARRAY LPCITEMIDLIST *")
+cpp_quote("#endif // defined(STRICT_TYPED_ITEMIDS) && defined(__cplusplus)")
+
 
 #ifndef MAX_PATH
 #define MAX_PATH 260
