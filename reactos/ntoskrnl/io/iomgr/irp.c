@@ -621,6 +621,9 @@ IoBuildAsynchronousFsdRequest(IN ULONG MajorFunction,
     PIRP Irp;
     PIO_STACK_LOCATION StackPtr;
 
+    /* Check if DeviceObject is NULL dxg.sys will send in NULL if we got a PCI graphic card */
+    if (DeviceObject == NULL) return NULL;
+
     /* Allocate IRP */
     Irp = IoAllocateIrp(DeviceObject->StackSize, FALSE);
     if (!Irp) return Irp;

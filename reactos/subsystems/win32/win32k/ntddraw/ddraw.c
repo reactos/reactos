@@ -33,15 +33,26 @@ BOOL
 intEnableReactXDriver(PEDD_DIRECTDRAW_GLOBAL pEddgbl, PDC pDC)
 {
     PGDIDEVICE pDev = (PGDIDEVICE)pDC->pPDev;
-    BOOLEAN success = FALSE;
-    DD_GETDRIVERINFODATA GetInfo;
     PGD_DXDDENABLEDIRECTDRAW pfnDdEnableDirectDraw = (PGD_DXDDENABLEDIRECTDRAW)gpDxFuncs[DXG_INDEX_DxDdEnableDirectDraw].pfn;
+    BOOL success = FALSE;
 
     /*clean up some of the cache entry */
     RtlZeroMemory(pEddgbl,sizeof(EDD_DIRECTDRAW_GLOBAL));
 
+    /* test see if drv got a dx interface or not */
+    if  ( ( pDev->DriverFunctions.DisableDirectDraw == NULL) ||
+          ( pDev->DriverFunctions.EnableDirectDraw == NULL))
+    {
+        DPRINT1("Waring : DisableDirectDraw and EnableDirectDraw are NULL, no dx driver \n");
+        return FALSE;
+    }
+
     /* setup EDD_DIRECTDRAW_GLOBAL for pDev xp */
     pDev->pEDDgpl = pEddgbl;
+
+    pEddgbl->ddCallbacks.dwSize = sizeof(DD_CALLBACKS);
+    pEddgbl->ddSurfaceCallbacks.dwSize = sizeof(DD_SURFACECALLBACKS);
+    pEddgbl->ddPaletteCallbacks.dwSize = sizeof(DD_PALETTECALLBACKS);
 
     if (pfnDdEnableDirectDraw == NULL)
     {
@@ -57,218 +68,13 @@ intEnableReactXDriver(PEDD_DIRECTDRAW_GLOBAL pEddgbl, PDC pDC)
         dump_halinfo(&pEddgbl->ddHalInfo);
         DPRINT1(" end call to pfnDdEnableDirectDraw \n ");
     }
-
-     /* test see if drv got a dx interface or not */
-    if  ( ( pDev->DriverFunctions.DisableDirectDraw == NULL) ||
-          ( pDev->DriverFunctions.EnableDirectDraw == NULL))
-    {
-        DPRINT1("Waring : DisableDirectDraw and EnableDirectDraw are NULL, no dx driver \n");
-        return FALSE;
-    }
-
-    /* Get DirectDraw infomations form the driver 
-     * DDK say pvmList, pdwFourCC is always NULL in frist call here 
-     * but we get back how many pvmList it whant we should alloc, same 
-     * with pdwFourCC.
-     */
-
-    if (pDev->DriverFunctions.GetDirectDrawInfo)
-    {
-        // DPRINT1("if u are using vmware driver and see this msg, please repot this\n");
-        DPRINT1("at DrvGetDirectDrawInfo  \n");
-        success = pDev->DriverFunctions.GetDirectDrawInfo( pDC->PDev, 
-                                                               &pEddgbl->ddHalInfo,
-                                                               &pEddgbl->dwNumHeaps,
-                                                               NULL,
-                                                               &pEddgbl->dwNumFourCC,
-                                                               NULL);
-        if (!success)
-        {
-            DPRINT1("DrvGetDirectDrawInfo  frist call fail\n");
-            return FALSE;
-        }
-        DPRINT1(" DrvGetDirectDrawInfo  OK\n");
-
-        /* The driver are not respnose to alloc the memory for pvmList
-         * but it is win32k responsible todo, Windows 9x it is gdi32.dll
-         */
-
-        if (pEddgbl->dwNumHeaps != 0)
-        {
-            DPRINT1("Setup pvmList\n");
-            pEddgbl->pvmList = (PVIDEOMEMORY) ExAllocatePoolWithTag(PagedPool, pEddgbl->dwNumHeaps * sizeof(VIDEOMEMORY), TAG_DXPVMLIST);
-            if (pEddgbl->pvmList == NULL)
-            {
-                DPRINT1("pvmList memmery alloc fail\n");
-                return FALSE;
-            }
-        }
-
-        /* The driver are not respnose to alloc the memory for pdwFourCC
-         * but it is win32k responsible todo, Windows 9x it is gdi32.dll
-         */
-        if (pEddgbl->dwNumFourCC != 0)
-        {
-            DPRINT1("Setup pdwFourCC\n");
-            pEddgbl->pdwFourCC = (LPDWORD) ExAllocatePoolWithTag(PagedPool, pEddgbl->dwNumFourCC * sizeof(DWORD), TAG_DXFOURCC);
-
-            if (pEddgbl->pdwFourCC == NULL)
-            {
-                DPRINT1("pdwFourCC memmery alloc fail\n");
-                return FALSE;
-            }
-        }
-        success = pDev->DriverFunctions.GetDirectDrawInfo( pDC->PDev,
-                                                          &pEddgbl->ddHalInfo,
-                                                          &pEddgbl->dwNumHeaps,
-                                                          pEddgbl->pvmList,
-                                                          &pEddgbl->dwNumFourCC,
-                                                          pEddgbl->pdwFourCC);
-        if (!success)
-        {
-            DPRINT1("DrvGetDirectDrawInfo  second call fail\n");
-            return FALSE;
-        }
-
-        /* We need now convert the DD_HALINFO we got, it can be NT4 driver we 
-         * loading ReactOS supporting NT4 and higher to be loading.so we make
-         * the HALInfo compatible here so we can easy pass it to gdi32.dll 
-         * without converting it later 
-         */
-
-        if ((pEddgbl->ddHalInfo.dwSize != sizeof(DD_HALINFO)) && 
-            (pEddgbl->ddHalInfo.dwSize != sizeof(DD_HALINFO_V4)))
-        {
-            DPRINT1(" Fail not vaild driver DD_HALINFO struct found\n");
-            return FALSE;
-        }
-
-        if (pEddgbl->ddHalInfo.dwSize != sizeof(DD_HALINFO))
-        {
-            if (pEddgbl->ddHalInfo.dwSize == sizeof(DD_HALINFO_V4))
-            {
-                /* NT4 Compatible */
-                DPRINT1("Got DD_HALINFO_V4 sturct we convert it to DD_HALINFO \n");
-                pEddgbl->ddHalInfo.dwSize = sizeof(DD_HALINFO);
-                pEddgbl->ddHalInfo.lpD3DGlobalDriverData = NULL;
-                pEddgbl->ddHalInfo.lpD3DHALCallbacks = NULL;
-                pEddgbl->ddHalInfo.lpD3DBufCallbacks = NULL;
-            }
-            else
-            {
-                /* Unknown version found */
-                DPRINT1(" Fail : did not get DD_HALINFO size \n");
-                return FALSE;
-            }
-        }
-    }
-
-    DPRINT1("Trying EnableDirectDraw the driver\n");
-
-    success = pDev->DriverFunctions.EnableDirectDraw( pDC->PDev, 
-                                                      &pEddgbl->ddCallbacks, 
-                                                      &pEddgbl->ddSurfaceCallbacks, 
-                                                      &pEddgbl->ddPaletteCallbacks);
-
-    if (!success)
-    {
-        DPRINT1("EnableDirectDraw call fail\n");
-        return FALSE;
-    }
-
-    GetInfo.dhpdev = pDC->PDev;
-
-
-    /* Note this check will fail on some nvida drv, it is a bug in their drv not in our code, 
-     * we doing proper check if GetDriverInfo exists */
-    if  ( ((pEddgbl->ddHalInfo.dwFlags & (DDHALINFO_GETDRIVERINFOSET | DDHALINFO_GETDRIVERINFO2)) != 0) &&
-          (pEddgbl->ddHalInfo.GetDriverInfo != NULL) )
-    {
-        GetInfo.dhpdev = pDC->PDev;
-        GetInfo.dwSize = sizeof (DD_GETDRIVERINFODATA);
-        GetInfo.dwFlags = 0x00;
-        GetInfo.guidInfo = GUID_VideoPortCallbacks;
-        GetInfo.lpvData = (PVOID)&pEddgbl->ddVideoPortCallback;
-        GetInfo.dwExpectedSize = sizeof (DD_VIDEOPORTCALLBACKS);
-        GetInfo.ddRVal = DDERR_GENERIC;
-        if ( ( pEddgbl->ddHalInfo.GetDriverInfo (&GetInfo) == DDHAL_DRIVER_NOTHANDLED) || 
-             (GetInfo.ddRVal != DD_OK) )
-        {
-            DPRINT1(" Fail : did not get DD_VIDEOPORTCALLBACKS \n");
-        }
-        else
-        {
-            pEddgbl->dwCallbackFlags |= EDDDGBL_VIDEOPORTCALLBACKS;
-        }
-
-        /* FIXME fill in videoport caps */
-    }
-    else
-    {
-        DPRINT1(" Fail : did not foundpEddgbl->ddHalInfo.GetDriverInfo \n");
-    }
-
-    /* Note this check will fail on some nvida drv, it is a bug in their drv not in our code, 
-     * we doing proper check if GetDriverInfo exists */
-    if  ( ((pEddgbl->ddHalInfo.dwFlags & (DDHALINFO_GETDRIVERINFOSET | DDHALINFO_GETDRIVERINFO2)) != 0) &&
-          (pEddgbl->ddHalInfo.GetDriverInfo != NULL) )
-    {
-        GetInfo.dhpdev = pDC->PDev;
-        GetInfo.dwSize = sizeof (DD_GETDRIVERINFODATA);
-        GetInfo.dwFlags = 0x00;
-        GetInfo.guidInfo = GUID_MiscellaneousCallbacks;
-        GetInfo.lpvData = (PVOID)&pEddgbl->ddMiscellanousCallbacks;
-        GetInfo.dwExpectedSize = sizeof (DD_MISCELLANEOUSCALLBACKS);
-        GetInfo.ddRVal = DDERR_GENERIC;
-        if ( ( pEddgbl->ddHalInfo.GetDriverInfo (&GetInfo) == DDHAL_DRIVER_NOTHANDLED) || 
-             (GetInfo.ddRVal != DD_OK) )
-        {
-            DPRINT1(" Fail : did not get DD_MISCELLANEOUSCALLBACKS \n");
-        }
-        else
-        {
-            pEddgbl->dwCallbackFlags |= EDDDGBL_MISCCALLBACKS;
-        }
-    }
-    else
-    {
-        DPRINT1(" Fail : did not foundpEddgbl->ddHalInfo.GetDriverInfo \n");
-    }
-
-    /* Note this check will fail on some nvida drv, it is a bug in their drv not in our code, 
-     * we doing proper check if GetDriverInfo exists */
-    if  ( ((pEddgbl->ddHalInfo.dwFlags & (DDHALINFO_GETDRIVERINFOSET | DDHALINFO_GETDRIVERINFO2)) != 0) &&
-          (pEddgbl->ddHalInfo.GetDriverInfo != NULL) )
-    {
-        GetInfo.dhpdev = pDC->PDev;
-        GetInfo.dwSize = sizeof (DD_GETDRIVERINFODATA);
-        GetInfo.dwFlags = 0x00;
-        GetInfo.guidInfo = GUID_Miscellaneous2Callbacks;
-        GetInfo.lpvData = (PVOID)&pEddgbl->ddMiscellanous2Callbacks;
-        GetInfo.dwExpectedSize = sizeof (DD_MISCELLANEOUS2CALLBACKS);
-        GetInfo.ddRVal = DDERR_GENERIC;
-        if ( ( pEddgbl->ddHalInfo.GetDriverInfo (&GetInfo) == DDHAL_DRIVER_NOTHANDLED) || 
-             (GetInfo.ddRVal != DD_OK) )
-        {
-            DPRINT1(" Fail : did not get DD_MISCELLANEOUS2CALLBACKS \n");
-        }
-        else
-        {
-            pEddgbl->dwCallbackFlags |= EDDDGBL_MISC2CALLBACKS;
-        }
-    }
-    else
-    {
-        DPRINT1(" Fail : did not foundpEddgbl->ddHalInfo.GetDriverInfo \n");
-    }
-
-    /* setup missing data in ddHalInfo */
-    //pEddgbl->ddHalInfo.GetDriverInfo = (PVOID)pDev->DriverFunctions.GetDirectDrawInfo;
-
+    
     /* FIXME : remove this when we are done with debuging of dxg */
     dump_edd_directdraw_global(pEddgbl);
     dump_halinfo(&pEddgbl->ddHalInfo);
-    return TRUE;
+
+    DPRINT1("Return value : 0x%08x\n",success);
+    return success;
 }
 
 /************************************************************************/
