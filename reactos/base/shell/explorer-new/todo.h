@@ -33,17 +33,6 @@ static const GUID SID_HACK_SMenuPopup = {0xD1E7AFEB,0x6A2E,0x11D0,{0x8C,0x78,0x0
 
 
 
-#ifdef COBJMACROS
-#define IDockingWindow_QueryInterface(T,a,b) (T)->lpVtbl->QueryInterface(T,a,b)
-#define IDockingWindow_AddRef(T) (T)->lpVtbl->AddRef(T)
-#define IDockingWindow_Release(T) (T)->lpVtbl->Release(T)
-#define IDockingWindow_GetWindow(T,a) (T)->lpVtbl->GetWindow(T,a)
-#define IDockingWindow_ContextSensitiveHelp(T,a) (T)->lpVtbl->ContextSensitiveHelp(T,a)
-#define IDockingWindow_ShowDW(T,a) (T)->lpVtbl->ShowDW(T,a)
-#define IDockingWindow_CloseDW(T,a) (T)->lpVtbl->CloseDW(T,a)
-#define IDockingWindow_ResizeBorderDW(T,a,b,c) (T)->lpVtbl->ResizeBorderDW(T,a,b,c)
-#endif
-
 
 #ifdef COBJMACROS
 #define IDeskBarClient_QueryInterface(T,a,b) (T)->lpVtbl->QueryInterface(T,a,b)
@@ -57,55 +46,6 @@ static const GUID SID_HACK_SMenuPopup = {0xD1E7AFEB,0x6A2E,0x11D0,{0x8C,0x78,0x0
 #define IDeskBarClient_GetSize(T,a,b) (T)->lpVtbl->GetSize(T,a,b)
 #endif
 
-#define DBIM_TITLE  0x10
-#define DBIMF_VARIABLEHEIGHT    0x8
-#define DBIMF_DEBOSSED  0x20
-#define DBIF_VIEWMODE_VERTICAL  0x1
-
-#include <pshpack8.h>
-typedef struct tagDESKBANDINFO
-{
-    DWORD dwMask;
-    POINTL ptMinSize;
-    POINTL ptMaxSize;
-    POINTL ptIntegral;
-    POINTL ptActual;
-    WCHAR wszTitle[256];
-    DWORD dwModeFlags;
-    COLORREF crBkgnd;
-} DESKBANDINFO;
-#include <poppack.h>
-
-#define INTERFACE IDeskBand
-DECLARE_INTERFACE_(IDeskBand,IUnknown)
-{
-    /*** IUnknown methods ***/
-    STDMETHOD(QueryInterface)(THIS_ REFIID,PVOID*) PURE;
-    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
-    STDMETHOD_(ULONG,Release)(THIS) PURE;
-    /*** IOleWindow methods ***/
-    STDMETHOD_(HRESULT,GetWindow)(THIS_ HWND*) PURE;
-    STDMETHOD_(HRESULT,ContextSensitiveHelp)(THIS_ BOOL) PURE;
-    /*** IDockingWindow methods ***/
-    STDMETHOD_(HRESULT,ShowDW)(THIS_ BOOL) PURE;
-    STDMETHOD_(HRESULT,CloseDW)(THIS_ DWORD) PURE;
-    STDMETHOD_(HRESULT,ResizeBoderDW)(THIS_ LPCRECT,IUnknown*,BOOL) PURE;
-    /*** IDeskBand methods ***/
-    STDMETHOD_(HRESULT,GetBandInfo)(THIS_ DWORD,DWORD,DESKBANDINFO*) PURE;
-};
-#undef INTERFACE
-
-#ifdef COBJMACROS
-#define IDeskBand_QueryInterface(T,a,b) (T)->lpVtbl->QueryInterface(T,a,b)
-#define IDeskBand_AddRef(T) (T)->lpVtbl->AddRef(T)
-#define IDeskBand_Release(T) (T)->lpVtbl->Release(T)
-#define IDeskBand_GetWindow(T,a) (T)->lpVtbl->GetWindow(T,a)
-#define IDeskBand_ContextSensitiveHelp(T,a) (T)->lpVtbl->ContextSensitiveHelp(T,a)
-#define IDeskBand_ShowDW(T,a) (T)->lpVtbl->ShowDW(T,a)
-#define IDeskBand_CloseDW(T,a) (T)->lpVtbl->CloseDW(T,a)
-#define IDeskBand_ResizeBorderDW(T,a,b,c) (T)->lpVtbl->ResizeBorderDW(T,a,b,c)
-#define IDeskBand_GetBandInfo(T,a,b,c) (T)->lpVtbl->GetBandInfo(T,a,b,c)
-#endif
 
 #define INTERFACE IDeskBar
 DECLARE_INTERFACE_(IDeskBar,IUnknown)
@@ -283,20 +223,6 @@ DECLARE_INTERFACE_(IShellView3,IShellView)
 #define SHGVSPB_FOLDERNODEFAULTS    (SHGVSPB_PERUSER | SHGVSPB_PERFOLDER | SHGVSPB_NOAUTODEFAULTS)
 
 
-/*
- * DeskBand Command IDs
- */
-enum tagDESKBANDCID
-{
-    DBID_BANDINFOCHANGED = 0,
-    DBID_SHOWONLY,
-    DBID_MAXIMIZEBAND,
-    DBID_PUSHCHEVRON,
-    DBID_DELAYINIT,
-    DBID_FINISHINIT,
-    DBID_SETWINDOWTHEME,
-    DBID_PERMITAUTOHIDE
-};
 
 #define DBC_SHOW    1
 #define DBC_HIDE    0

@@ -18,7 +18,7 @@
 
 #ifndef __RPCNDR_H_VERSION__
 /* FIXME: What version?   Perhaps something is better than nothing, however incorrect */
-#define __RPCNDR_H_VERSION__ ( 399 )
+#define __RPCNDR_H_VERSION__ ( 500 )
 #endif
 
 #ifndef __WINE_RPCNDR_H

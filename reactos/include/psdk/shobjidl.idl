@@ -1375,3 +1375,138 @@ interface IDefaultExtractIconInit : IUnknown
                        [in] LPCWSTR pszFile,
                        [in] int iIcon);
 }
+
+
+/*****************************************************************************
+ * IDockingWindow interface
+ */
+[
+    uuid(012dd920-7b26-11d0-8ca9-00a0c92dbfe8),
+    object
+]
+interface IDockingWindow : IOleWindow
+{
+    HRESULT ShowDW([in] BOOL fShow);
+
+    HRESULT CloseDW([in] DWORD dwReserved);
+
+    HRESULT ResizeBorderDW(
+        [in] LPCRECT prcBorder,
+        [in] IUnknown* punkToolbarSite,
+        [in] BOOL fReserved);
+}
+
+
+/*****************************************************************************
+ * IDeskBand interface
+ */
+cpp_quote("#define DBIM_MINSIZE    0x0001")
+cpp_quote("#define DBIM_MAXSIZE    0x0002")
+cpp_quote("#define DBIM_INTEGRAL   0x0004")
+cpp_quote("#define DBIM_ACTUAL     0x0008")
+cpp_quote("#define DBIM_TITLE      0x0010")
+cpp_quote("#define DBIM_MODEFLAGS  0x0020")
+cpp_quote("#define DBIM_BKCOLOR    0x0040")
+
+cpp_quote("#include <pshpack8.h>")
+
+typedef struct tagDESKBANDINFO
+{
+    DWORD       dwMask;
+    POINTL      ptMinSize;
+    POINTL      ptMaxSize;
+    POINTL      ptIntegral;
+    POINTL      ptActual;
+    WCHAR       wszTitle[256];
+    DWORD       dwModeFlags;
+    COLORREF    crBkgnd;
+} DESKBANDINFO;
+
+cpp_quote("#include <poppack.h>")
+
+cpp_quote("#define DBIMF_NORMAL            0x0000")
+cpp_quote("#define DBIMF_FIXED             0x0001")
+cpp_quote("#define DBIMF_FIXEDBMP          0x0004   // a fixed background bitmap (if supported)")
+cpp_quote("#define DBIMF_VARIABLEHEIGHT    0x0008")
+cpp_quote("#define DBIMF_UNDELETEABLE      0x0010")
+cpp_quote("#define DBIMF_DEBOSSED          0x0020")
+cpp_quote("#define DBIMF_BKCOLOR           0x0040")
+cpp_quote("#define DBIMF_USECHEVRON        0x0080")
+cpp_quote("#define DBIMF_BREAK             0x0100")
+cpp_quote("#define DBIMF_ADDTOFRONT        0x0200")
+cpp_quote("#define DBIMF_TOPALIGN          0x0400")
+cpp_quote("#if (NTDDI_VERSION >= NTDDI_LONGHORN)")
+cpp_quote("#define DBIMF_NOGRIPPER         0x0800")
+cpp_quote("#define DBIMF_ALWAYSGRIPPER     0x1000")
+cpp_quote("#define DBIMF_NOMARGINS         0x2000")
+cpp_quote("#endif  // NTDDI_LONGHORN")
+
+cpp_quote("#define DBIF_VIEWMODE_NORMAL         0x0000")
+cpp_quote("#define DBIF_VIEWMODE_VERTICAL       0x0001")
+cpp_quote("#define DBIF_VIEWMODE_FLOATING       0x0002")
+cpp_quote("#define DBIF_VIEWMODE_TRANSPARENT    0x0004")
+
+enum tagDESKBANDCID {
+    DBID_BANDINFOCHANGED    = 0,
+    DBID_SHOWONLY           = 1,
+    DBID_MAXIMIZEBAND       = 2,
+    DBID_PUSHCHEVRON        = 3,
+    DBID_DELAYINIT          = 4,
+    DBID_FINISHINIT         = 5,
+    DBID_SETWINDOWTHEME     = 6,
+    DBID_PERMITAUTOHIDE     = 7,
+};
+
+cpp_quote("#define DBPC_SELECTFIRST    (DWORD)-1")
+cpp_quote("#define DBPC_SELECTLAST     (DWORD)-2")
+
+cpp_quote("#define CGID_DeskBand IID_IDeskBand")
+
+[
+    uuid(EB0FE172-1A3A-11D0-89B3-00A0C90A90AC),
+    object,
+]
+interface IDeskBand : IDockingWindow
+{
+    HRESULT GetBandInfo(
+        [in] DWORD dwBandID,
+        [in] DWORD dwViewMode,
+        [in, out] DESKBANDINFO* pdbi);
+}
+
+cpp_quote("#if (NTDDI_VERSION >= NTDDI_LONGHORN)")
+
+/*****************************************************************************
+ * IDeskBandInfo interface
+ */
+[
+    uuid(77E425FC-CBF9-4307-BA6A-BB5727745661),
+    object,
+]
+interface IDeskBandInfo : IUnknown
+{
+    HRESULT GetDefaultBandWidth(
+        [in] DWORD dwBandID,
+        [in] DWORD dwViewMode,
+        [out] int *pnWidth);
+}
+
+
+/*****************************************************************************
+ * IDeskBand2 interface
+ */
+[
+    uuid(79D16DE4-ABEE-4021-8D9D-9169B261D657),
+    object,
+]
+interface IDeskBand2 : IDeskBand
+{
+    HRESULT CanRenderComposited([out] BOOL *pfCanRenderComposited);
+
+    HRESULT SetCompositionState([in] BOOL fCompositionEnabled);
+
+    HRESULT GetCompositionState([out] BOOL *pfCompositionEnabled);
+}
+
+cpp_quote("#endif  // NTDDI_LONGHORN")
+
