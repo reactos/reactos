@@ -1,8 +1,8 @@
 
  //
- // XML storage C++ classes version 1.2
+ // XML storage C++ classes version 1.3
  //
- // Copyright (c) 2004, 2005, 2006, 2007 Martin Fuchs <martin-fuchs@gmx.net>
+ // Copyright (c) 2004, 2005, 2006, 2007, 2008 Martin Fuchs <martin-fuchs@gmx.net>
  //
 
  /// \file xmlstorage.h
@@ -39,9 +39,6 @@
 
 #ifndef _XMLSTORAGE_H
 
-#ifndef __REACTOS__
-#include <strstream>
-#endif
 
 #ifdef UNICODE
 #ifndef _UNICODE
@@ -204,6 +201,10 @@ typedef const CHAR* LPCTSTR;
 
 #endif
 
+#ifdef __BORLANDC__
+#define _stricmp stricmp
+#endif
+
 
 #include <fstream>
 #include <sstream>
@@ -264,10 +265,7 @@ namespace XMLStorage {
 #endif
 
 
-int inline isxmlsym(unsigned char c)
-{
-	return isalnum(c) || c=='_' || c=='-';
-}
+extern const char* get_xmlsym_end_utf8(const char* p);
 
 
 #if defined(_STRING_DEFINED) && !defined(XS_STRING_UTF8)
@@ -397,6 +395,10 @@ struct XS_String
 #define	XS_INTFMT_STR XS_TEXT("%d")
 #define	XS_FLOATFMT_STR XS_TEXT("%f")
 
+#define	XS_KEY_STR XS_TEXT("key")
+#define	XS_VALUE_STR XS_TEXT("value")
+#define	XS_PROPERTY_STR XS_TEXT("property")
+
  // work around GCC's wide string constant bug
 #ifdef __GNUC__
 extern const LPCXSSTR XS_EMPTY;
@@ -411,6 +413,10 @@ extern const LPCXSSTR XS_FLOATFMT;
 #define	XS_INTFMT XS_INTFMT_STR
 #define	XS_FLOATFMT XS_FLOATFMT_STR
 #endif
+
+extern const XS_String XS_KEY;
+extern const XS_String XS_VALUE;
+extern const XS_String XS_PROPERTY;
 
 
 #ifndef XS_STRING_UTF8
@@ -783,6 +789,46 @@ enum WRITE_MODE {
 };
 
 
+struct XMLNode;
+
+struct XPathElement
+{
+	XPathElement() : _child_idx(-1) {}
+
+	XPathElement(const XS_String& child_name, int child_idx=-1)
+	 :	_child_name(child_name), _child_idx(child_idx) {}
+
+	XPathElement(const XS_String& child_name, int child_idx, const XS_String& attr_name, const XS_String& attr_value)
+	 :	_child_name(child_name), _child_idx(child_idx),
+		_attr_name(attr_name), _attr_value(attr_value)
+	{
+	}
+
+	XS_String	_child_name;
+	int			_child_idx;
+
+	XS_String	_attr_name;
+	XS_String	_attr_value;
+
+	const char* parse(const char* path);
+
+	XMLNode* find(XMLNode* node) const;
+	const XMLNode* const_find(const XMLNode* node) const;
+
+	bool	matches(const XMLNode& node, int& n) const;
+};
+
+struct XPath : std::list<XPathElement>
+{
+	XPath(const char* path) {init(path);}
+	XPath(const std::string path) {init(path.c_str());}
+
+	void	init(const char* path);
+
+	bool	_absolute;
+};
+
+
  /// in memory representation of an XML node
 struct XMLNode : public XS_String
 {
@@ -841,10 +887,40 @@ struct XMLNode : public XS_String
 	 /// internal children node list
 	struct Children : public std::list<XMLNode*>
 	{
-		void assign(const Children& other)
+		typedef std::list<XMLNode*> super;
+
+		Children()
+		{
+		}
+
+		Children(Children& other)
+		{
+			for(Children::const_iterator it=other.begin(); it!=other.end(); ++it)
+				push_back(*it);
+		}
+
+		void assign(Children& other)
 		{
 			clear();
+			move(other);
+		}
 
+		void move(Children& other)
+		{
+			for(Children::const_iterator it=other.begin(); it!=other.end(); ++it)
+				push_back(*it);
+
+			other.reset();
+		}
+
+		Children& operator=(Children& other)
+		{
+			assign(other);
+			return *this;
+		}
+
+		void copy(const Children& other)
+		{
 			for(Children::const_iterator it=other.begin(); it!=other.end(); ++it)
 				push_back(new XMLNode(**it));
 		}
@@ -859,12 +935,30 @@ struct XMLNode : public XS_String
 				delete node;
 			}
 		}
+
+		bool remove(XMLNode* node)
+		{
+			for(iterator it=begin(); it!=end(); ++it)
+				if (*it == node) {
+					erase(it);
+					return true;
+				}
+
+			return false;
+		}
+
+	private:
+		void reset()
+		{
+			super::clear();
+		}
 	};
 
 	 // access to protected class members for XMLPos and XMLReader
 	friend struct XMLPos;
 	friend struct const_XMLPos;
 	friend struct XMLReaderBase;
+	friend struct XPathElement;
 
 	XMLNode(const XS_String& name)
 	 :	XS_String(name)
@@ -892,6 +986,22 @@ struct XMLNode : public XS_String
 			_children.push_back(new XMLNode(**it));
 	}
 
+	enum COPY_FLAGS {COPY_NOCHILDREN};
+
+	XMLNode(const XMLNode& other, COPY_FLAGS copy_no_children)
+	 :	XS_String(other),
+		_attributes(other._attributes),
+		_leading(other._leading),
+		_content(other._content),
+		_end_leading(other._end_leading),
+		_trailing(other._trailing)
+#ifdef XMLNODE_LOCATION
+		, _location(other._location)
+#endif
+	{
+//		assert(copy_no_children==COPY_NOCHILDREN);
+	}
+
 	virtual ~XMLNode()
 	{
 		while(!_children.empty()) {
@@ -915,7 +1025,8 @@ struct XMLNode : public XS_String
 
 	XMLNode& operator=(const XMLNode& other)
 	{
-		_children.assign(other._children);
+		_children.clear();
+		_children.copy(other._children);
 
 		_attributes = other._attributes;
 
@@ -931,6 +1042,16 @@ struct XMLNode : public XS_String
 	void add_child(XMLNode* child)
 	{
 		_children.push_back(child);
+	}
+
+	 /// remove all children named 'name'
+	void remove_children(const XS_String& name)
+	{
+		Children::iterator it, next=_children.begin();
+
+		while((it=next++)!=_children.end())
+			if (**it == name)
+				_children.erase(it);
 	}
 
 	 /// write access to an attribute
@@ -956,10 +1077,16 @@ struct XMLNode : public XS_String
 			return def;
 	}
 
-	 /// convenient value access in children node
-	XS_String subvalue(const XS_String& name, const XS_String& attr_name, int n=0) const
+	 /// remove the attribute 'attr_name'
+	void erase(const XS_String& attr_name)
 	{
-		const XMLNode* node = find(name, n);
+		_attributes.erase(attr_name);
+	}
+
+	 /// convenient value access in children node
+	XS_String subvalue(const XS_String& child_name, const XS_String& attr_name, int n=0) const
+	{
+		const XMLNode* node = XPathElement(child_name, n).const_find(this);
 
 		if (node)
 			return node->get(attr_name);
@@ -968,12 +1095,12 @@ struct XMLNode : public XS_String
 	}
 
 	 /// convenient storage of distinct values in children node
-	XS_String& subvalue(const XS_String& name, const XS_String& attr_name, int n=0)
+	XS_String& subvalue(const XS_String& child_name, const XS_String& attr_name, int n=0)
 	{
-		XMLNode* node = find(name, n);
+		XMLNode* node = XPathElement(child_name, n).find(this);
 
 		if (!node) {
-			node = new XMLNode(name);
+			node = new XMLNode(child_name);
 			add_child(node);
 		}
 
@@ -982,9 +1109,9 @@ struct XMLNode : public XS_String
 
 #if defined(UNICODE) && !defined(XS_STRING_UTF8)
 	 /// convenient value access in children node
-	XS_String subvalue(const char* name, const char* attr_name, int n=0) const
+	XS_String subvalue(const char* child_name, const char* attr_name, int n=0) const
 	{
-		const XMLNode* node = find(name, n);
+		const XMLNode* node = XPathElement(child_name, n).const_find(this);
 
 		if (node)
 			return node->get(attr_name);
@@ -993,12 +1120,12 @@ struct XMLNode : public XS_String
 	}
 
 	 /// convenient storage of distinct values in children node
-	XS_String& subvalue(const char* name, const XS_String& attr_name, int n=0)
+	XS_String& subvalue(const char* child_name, const XS_String& attr_name, int n=0)
 	{
-		XMLNode* node = find(name, n);
+		XMLNode* node = XPathElement(child_name, n).find(this);
 
 		if (!node) {
-			node = new XMLNode(name);
+			node = new XMLNode(child_name);
 			add_child(node);
 		}
 
@@ -1070,6 +1197,18 @@ struct XMLNode : public XS_String
 		return out.good();
 	}
 
+	 /// count the nodes matching the given relative XPath expression
+	int count(const XPath& xpath) const
+	{
+		return count(xpath.begin(), xpath.end());
+	}
+
+	 /// count the nodes matching the given relative XPath expression
+	int count(XPath::const_iterator from, const XPath::const_iterator& to) const;
+
+	 /// copy matching tree nodes using the given XPath filter expression
+	bool filter(const XPath& xpath, XMLNode& target) const;
+
 protected:
 	Children _children;
 	AttributeMap _attributes;
@@ -1091,72 +1230,22 @@ protected:
 			return NULL;
 	}
 
-	XMLNode* find(const XS_String& name, int n=0) const
-	{
-		for(Children::const_iterator it=_children.begin(); it!=_children.end(); ++it)
-			if (**it == name)
-				if (!n--)
-					return *it;
-
-		return NULL;
-	}
-
-	XMLNode* find(const XS_String& name, const XS_String& attr_name, const XS_String& attr_value, int n=0) const
-	{
-		for(Children::const_iterator it=_children.begin(); it!=_children.end(); ++it) {
-			const XMLNode& node = **it;
-
-			if (node==name && node.get(attr_name)==attr_value)
-				if (!n--)
-					return *it;
-		}
-
-		return NULL;
-	}
-
-#if defined(UNICODE) && !defined(XS_STRING_UTF8)
-	XMLNode* find(const char* name, int n=0) const
-	{
-		for(Children::const_iterator it=_children.begin(); it!=_children.end(); ++it)
-			if (**it == name)
-				if (!n--)
-					return *it;
-
-		return NULL;
-	}
-
-	template<typename T, typename U>
-	XMLNode* find(const char* name, const T& attr_name, const U& attr_value, int n=0) const
-	{
-		for(Children::const_iterator it=_children.begin(); it!=_children.end(); ++it) {
-			const XMLNode& node = **it;
-
-			if (node==name && node.get(attr_name)==attr_value)
-				if (!n--)
-					return *it;
-		}
-
-		return NULL;
-	}
-#endif
-
 	 /// XPath find function (const)
-	const XMLNode* find_relative(const char* path) const;
+	const XMLNode* find_relative(const XPath& xpath) const;
 
 	 /// XPath find function
-	XMLNode* find_relative(const char* path)
-		{return const_cast<XMLNode*>(const_cast<const XMLNode*>(this)->find_relative(path));}
+	XMLNode* find_relative(const XPath& xpath);
 
 	 /// relative XPath create function
-	XMLNode* create_relative(const char* path);
+	XMLNode* create_relative(const XPath& xpath);
+
+	 /// create a new node tree using the given XPath filter expression
+	XMLNode* filter(XPath::const_iterator from, const XPath::const_iterator& to) const;
 
 	void	write_worker(std::ostream& out) const;
 	void	plain_write_worker(std::ostream& out) const;
 	void	pretty_write_worker(std::ostream& out, const XMLFormat& format, int indent) const;
 	void	smart_write_worker(std::ostream& out, const XMLFormat& format, int indent) const;
-
-protected:
-	XMLNode* get_child_relative(const char*& path, bool create); // mutable for create==true
 };
 
 
@@ -1179,6 +1268,7 @@ struct XMLChildrenFilter
 	struct iterator
 	{
 		typedef XMLNode::Children::iterator BaseIterator;
+		typedef iterator myType;
 
 		iterator(BaseIterator begin, BaseIterator end, const XS_String& filter_name)
 		 :	_cur(begin),
@@ -1203,7 +1293,7 @@ struct XMLChildrenFilter
 			return *_cur;
 		}
 
-		iterator& operator++()
+		myType& operator++()
 		{
 			++_cur;
 			search_next();
@@ -1211,9 +1301,9 @@ struct XMLChildrenFilter
 			return *this;
 		}
 
-		iterator operator++(int)
+		myType operator++(int)
 		{
-			iterator ret = *this;
+			myType ret = *this;
 
 			++_cur;
 			search_next();
@@ -1221,14 +1311,14 @@ struct XMLChildrenFilter
 			return ret;
 		}
 
-		bool operator==(const BaseIterator& other) const
+		bool operator==(const myType& other) const
 		{
-			return _cur == other;
+			return _cur == other._cur;
 		}
 
-		bool operator!=(const BaseIterator& other) const
+		bool operator!=(const myType& other) const
 		{
-			return _cur != other;
+			return _cur != other._cur;
 		}
 
 	protected:
@@ -1278,6 +1368,7 @@ struct const_XMLChildrenFilter
 	struct const_iterator
 	{
 		typedef XMLNode::Children::const_iterator BaseIterator;
+		typedef const_iterator myType;
 
 		const_iterator(BaseIterator begin, BaseIterator end, const XS_String& filter_name)
 		 :	_cur(begin),
@@ -1297,7 +1388,7 @@ struct const_XMLChildrenFilter
 			return *_cur;
 		}
 
-		const_iterator& operator++()
+		myType& operator++()
 		{
 			++_cur;
 			search_next();
@@ -1305,9 +1396,9 @@ struct const_XMLChildrenFilter
 			return *this;
 		}
 
-		const_iterator operator++(int)
+		myType operator++(int)
 		{
-			const_iterator ret = *this;
+			myType ret = *this;
 
 			++_cur;
 			search_next();
@@ -1315,14 +1406,14 @@ struct const_XMLChildrenFilter
 			return ret;
 		}
 
-		bool operator==(const BaseIterator& other) const
+		bool operator==(const myType& other) const
 		{
-			return _cur == other;
+			return _cur == other._cur;
 		}
 
-		bool operator!=(const BaseIterator& other) const
+		bool operator!=(const myType& other) const
 		{
-			return _cur != other;
+			return _cur != other._cur;
 		}
 
 	protected:
@@ -1464,9 +1555,9 @@ struct XMLPos
 	}
 
 	 /// search for child and go down
-	bool go_down(const XS_String& name, int n=0)
+	bool go_down(const XS_String& child_name, int n=0)
 	{
-		XMLNode* node = _cur->find(name, n);
+		XMLNode* node = XPathElement(child_name, n).find(_cur);
 
 		if (node) {
 			go_to(node);
@@ -1475,13 +1566,13 @@ struct XMLPos
 			return false;
 	}
 
-	 /// move XPath like to position in XML tree
-	bool go(const char* path);
+	 /// move to the position defined by xpath in XML tree
+	bool go(const XPath& xpath);
 
 	 /// create child nodes using XPath notation and move to the deepest child
-	bool create_relative(const char* path)
+	bool create_relative(const XPath& xpath)
 	{
-		XMLNode* node = _cur->create_relative(path);
+		XMLNode* node = _cur->create_relative(xpath);
 		if (!node)
 			return false;	// invalid path specified
 
@@ -1496,35 +1587,47 @@ struct XMLPos
 	}
 
 	 /// create node if not already existing and move to it
-	void smart_create(const XS_String& name)
+	void smart_create(const XS_String& child_name)
 	{
-		XMLNode* node = _cur->find(name);
+		XMLNode* node = XPathElement(child_name).find(_cur);
 
 		if (node)
 			go_to(node);
 		else
-			add_down(new XMLNode(name));
+			add_down(new XMLNode(child_name));
 	}
 
 	 /// search matching child node identified by key name and an attribute value
-	void smart_create(const XS_String& name, const XS_String& attr_name, const XS_String& attr_value)
+	void smart_create(const XS_String& child_name, const XS_String& attr_name, const XS_String& attr_value)
 	{
-		XMLNode* node = _cur->find(name, attr_name, attr_value);
+		XMLNode* node = XPathElement(child_name, 0, attr_name, attr_value).find(_cur);
 
 		if (node)
 			go_to(node);
 		else {
-			node = new XMLNode(name);
+			node = new XMLNode(child_name);
 			add_down(node);
 			(*node)[attr_name] = attr_value;
 		}
 	}
 
+	 /// count the nodes matching the given relative XPath expression
+	int count(const XPath& xpath) const
+	{
+		return _cur->count(xpath);
+	}
+
+	 /// create a new node tree using the given XPath filter expression
+	int filter(const XPath& xpath, XMLNode& target) const
+	{
+		return _cur->filter(xpath, target);
+	}
+
 #if defined(UNICODE) && !defined(XS_STRING_UTF8)
 	 /// search for child and go down
-	bool go_down(const char* name, int n=0)
+	bool go_down(const char* child_name, int n=0)
 	{
-		XMLNode* node = _cur->find(name, n);
+		XMLNode* node = XPathElement(child_name, n).find(_cur);
 
 		if (node) {
 			go_to(node);
@@ -1534,40 +1637,76 @@ struct XMLPos
 	}
 
 	 /// create node and move to it
-	void create(const char* name)
+	void create(const char* child_name)
 	{
-		add_down(new XMLNode(name));
+		add_down(new XMLNode(child_name));
 	}
 
 	 /// create node if not already existing and move to it
-	void smart_create(const char* name)
+	void smart_create(const char* child_name)
 	{
-		XMLNode* node = _cur->find(name);
+		XMLNode* node = XPathElement(child_name).find(_cur);
 
 		if (node)
 			go_to(node);
 		else
-			add_down(new XMLNode(name));
+			add_down(new XMLNode(child_name));
 	}
 
 	 /// search matching child node identified by key name and an attribute value
 	template<typename T, typename U>
-	void smart_create(const char* name, const T& attr_name, const U& attr_value)
+	void smart_create(const char* child_name, const T& attr_name, const U& attr_value)
 	{
-		XMLNode* node = _cur->find(name, attr_name, attr_value);
+		XMLNode* node = XPathElement(child_name, 0, attr_name, attr_value).find(_cur);
 
 		if (node)
 			go_to(node);
 		else {
-			XMLNode* node = new XMLNode(name);
+			node = new XMLNode(child_name);
 			add_down(node);
 			(*node)[attr_name] = attr_value;
 		}
 	}
 #endif
 
+	 /// delete current node and go back to previous position
+	bool delete_this()
+	{
+		if (!_stack.empty()) {
+			XMLNode* pLast = _stack.top();
+
+			if (pLast->_children.remove(_cur)) {
+				_cur = _stack.top();
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	 /// remove all children named 'name'
+	void remove_children(const XS_String& name)
+	{
+		_cur->remove_children(name);
+	}
+
+	 /// remove the attribute 'attr_name' from the current node
+	void erase(const XS_String& attr_name)
+	{
+		_cur->erase(attr_name);
+	}
+
 	XS_String& str() {return *_cur;}
 	const XS_String& str() const {return *_cur;}
+
+	 // property (key/value pair) setter functions
+	void set_property(const XS_String& key, int value, const XS_String& name=XS_PROPERTY);
+	void set_property(const XS_String& key, double value, const XS_String& name=XS_PROPERTY);
+	void set_property(const XS_String& key, const XS_String& value, const XS_String& name=XS_PROPERTY);
+	void set_property(const XS_String& key, const struct XMLBool& value, const XS_String& name=XS_PROPERTY);
+
+	void set_property(const XS_String& key, const char* value, const XS_String& name=XS_PROPERTY)
+		{set_property(key, XS_String(value), name);}
 
 protected:
 	XMLNode* _root;
@@ -1644,9 +1783,9 @@ struct const_XMLPos
 	}
 
 	 /// search for child and go down
-	bool go_down(const XS_String& name, int n=0)
+	bool go_down(const XS_String& child_name, int n=0)
 	{
-		XMLNode* node = _cur->find(name, n);
+		const XMLNode* node = XPathElement(child_name, n).const_find(_cur);
 
 		if (node) {
 			go_to(node);
@@ -1655,14 +1794,14 @@ struct const_XMLPos
 			return false;
 	}
 
-	 /// move XPath like to position in XML tree
-	bool go(const char* path);
+	 /// move to the position defined by xpath in XML tree
+	bool go(const XPath& xpath);
 
 #if defined(UNICODE) && !defined(XS_STRING_UTF8)
 	 /// search for child and go down
-	bool go_down(const char* name, int n=0)
+	bool go_down(const char* child_name, int n=0)
 	{
-		XMLNode* node = _cur->find(name, n);
+		const XMLNode* node = XPathElement(child_name, n).const_find(_cur);
 
 		if (node) {
 			go_to(node);
@@ -1698,7 +1837,7 @@ struct XMLBool
 
 	XMLBool(LPCXSSTR value, bool def=false)
 	{
-		if (value && *value)
+		if (value && *value)//@@ also handle white space and return def instead of false
 			_value = !XS_icmp(value, XS_TRUE);
 		else
 			_value = def;
@@ -1788,7 +1927,7 @@ struct XMLInt
 
 	XMLInt(LPCXSSTR value, int def=0)
 	{
-		if (value && *value)
+		if (value && *value)//@@ also handle white space and return def instead of 0
 			_value = XS_toi(value);
 		else
 			_value = def;
@@ -1813,7 +1952,7 @@ struct XMLInt
 	{
 		XS_CHAR buffer[32];
 		XS_snprintf(buffer, COUNTOF(buffer), XS_INTFMT, _value);
-		return buffer;
+		return XS_String(buffer);
 	}
 
 protected:
@@ -1869,7 +2008,7 @@ struct XMLDouble
 	{
 		LPTSTR end;
 
-		if (value && *value)
+		if (value && *value)//@@ also handle white space and return def instead of 0
 			_value = XS_tod(value, &end);
 		else
 			_value = def;
@@ -1895,7 +2034,7 @@ struct XMLDouble
 	{
 		XS_CHAR buffer[32];
 		XS_snprintf(buffer, COUNTOF(buffer), XS_FLOATFMT, _value);
-		return buffer;
+		return XS_String(buffer);
 	}
 
 protected:
@@ -2022,6 +2161,7 @@ protected:
 };
 
 
+ // read option (for example configuration) values from XML node attributes
 template<typename T>
 	inline void read_option(T& var, const_XMLPos& cfg, LPCXSSTR key)
 	{
@@ -2031,6 +2171,7 @@ template<typename T>
 			var = val;
 	}
 
+ // read integer option values from XML node attributes
 template<>
 	inline void read_option(int& var, const_XMLPos& cfg, LPCXSSTR key)
 	{
@@ -2039,6 +2180,141 @@ template<>
 		if (!val.empty())
 			var = XS_toi(val.c_str());
 	}
+
+
+inline void XMLPos::set_property(const XS_String& key, int value, const XS_String& name)
+{
+	smart_create(name, XS_KEY, key);
+		XMLIntRef(_cur, XS_VALUE) = value;
+	back();
+}
+
+inline void XMLPos::set_property(const XS_String& key, double value, const XS_String& name)
+{
+	smart_create(name, XS_KEY, key);
+		XMLDoubleRef(_cur, XS_VALUE) = value;
+	back();
+}
+
+inline void XMLPos::set_property(const XS_String& key, const XS_String& value, const XS_String& name)
+{
+	smart_create(name, XS_KEY, key);
+		put(XS_VALUE, value);
+	back();
+}
+
+inline void XMLPos::set_property(const XS_String& key, const XMLBool& value, const XS_String& name)
+{
+	smart_create(name, XS_KEY, key);
+		XMLBoolRef(_cur, XS_VALUE) = value;
+	back();
+}
+
+
+ /// a key/value pair for property data access
+struct XMLProperty {
+	XMLProperty(const XMLNode* node)
+	 :	_key(node->get(XS_KEY)),
+		_value(node->get(XS_VALUE))
+	{
+	}
+
+	XS_String	_key;
+	XS_String	_value;
+};
+
+
+ /// utility class to read property settings from a XML tree
+struct XMLPropertyReader
+{
+	XMLPropertyReader(const XMLNode::Children& children)
+	 :	_filter(children, XS_PROPERTY),
+		_begin(_filter.begin(), _filter.end()),
+		_end(_filter.end(), _filter.end())
+	{
+	}
+
+	XMLPropertyReader(const XMLNode* node)
+	 :	_filter(node, XS_PROPERTY),
+		_begin(_filter.begin(), _filter.end()),
+		_end(_filter.end(), _filter.end())
+	{
+	}
+
+	 /// internal iterator class
+	struct const_iterator
+	{
+		typedef const_XMLChildrenFilter::const_iterator BaseIterator;
+		typedef const_iterator myType;
+
+		const_iterator(BaseIterator begin, BaseIterator end)
+		 :	_cur(begin),
+			_end(end)
+		{
+		}
+
+		operator BaseIterator()
+		{
+			return _cur;
+		}
+
+		XMLProperty operator*() const
+		{
+			return XMLProperty(*_cur);
+		}
+
+		const XMLNode* get_node() const
+		{
+			return *_cur;
+		}
+
+		myType& operator++()
+		{
+			++_cur;
+
+			return *this;
+		}
+
+		myType operator++(int)
+		{
+			myType ret = *this;
+
+			++_cur;
+
+			return ret;
+		}
+
+		bool operator==(const myType& other) const
+		{
+			return _cur == other._cur;
+		}
+
+		bool operator!=(const myType& other) const
+		{
+			return _cur != other._cur;
+		}
+
+	protected:
+		BaseIterator	_cur;
+		BaseIterator	_end;
+	};
+
+	const_iterator begin()
+	{
+		return _begin;
+	}
+
+	const_iterator end()
+	{
+		return _end;
+	}
+
+protected:
+	const_XMLChildrenFilter	_filter;
+
+	const_iterator	_begin;
+	const_iterator	_end;
+};
 
 
 #ifdef _MSC_VER
@@ -2245,7 +2521,7 @@ struct fast_ostringbuffer : public std::streambuf
 	typedef std::char_traits<_E> _Tr;
 
 	explicit fast_ostringbuffer()
-		{_Init(0, 0, /*std::_Noread*/4);}	// optimized for ios::out mode
+		{_Init(0, 0, std::_Noread);}	// optimized for ios::out mode
 
 	virtual ~fast_ostringbuffer()
 		{_Tidy();}
@@ -2274,10 +2550,10 @@ protected:
 			else if (_ALSIZE < _Alsize)
 				_Alsize = _ALSIZE;
 
-			if (_Strmode & std::strstreambuf::_Allocated)
+			if (_Strmode & std::_Allocated)
 				_Al.deallocate(eback(), _Os);
 
-			_Strmode |= std::strstreambuf::_Allocated;
+			_Strmode |= std::_Allocated;
 
 			if (_Os == 0)
 				{_Seekhigh = _P;
@@ -2291,24 +2567,24 @@ protected:
 
 			return _C;}}
 
-	void _Init(const _E *_S, size_t _N, std::strstreambuf::_Strstate _M)
+	void _Init(const _E *_S, size_t _N, std::_Strstate _M)
 		{_Pendsave = 0, _Seekhigh = 0;
 		_Alsize = _MINSIZE, _Strmode = _M;
 		setg(0, 0, 0);
 		setp(0, 0);}
 
 	void _Tidy()
-		{if (_Strmode & std::strstreambuf::_Allocated)
+		{if (_Strmode & std::_Allocated)
 			_Al.deallocate(eback(), (pptr() != 0 ? epptr() : egptr()) - eback());
 		_Seekhigh = 0;
-		_Strmode &= ~std::strstreambuf::_Allocated;}
+		_Strmode &= ~std::_Allocated;}
 
 private:
 	enum {_ALSIZE = 65536/*512*/, _MINSIZE = 32768/*32*/};	// bigger buffer sizes
 
 	_E *_Pendsave, *_Seekhigh;
 	int _Alsize;
-	std::strstreambuf::_Strstate _Strmode;
+	std::_Strstate _Strmode;
 	std::allocator<_E> _Al;
 };
 
@@ -2545,37 +2821,10 @@ struct XMLWriter
 	}
 
 	 /// create node and move to it
-	void create(const XS_String& name)
-	{
-		if (!_stack.empty()) {
-			StackEntry& last = _stack.top();
-
-			if (last._state < PRE_CLOSED) {
-				write_attributes(last);
-				close_pre(last);
-			}
-
-			++last._children;
-		}
-
-		StackEntry entry;
-		entry._node_name = name;
-		_stack.push(entry);
-
-		write_pre(entry);
-	}
+	void create(const XS_String& name);
 
 	 /// go back to previous position
-	bool back()
-	{
-		if (!_stack.empty()) {
-			write_post(_stack.top());
-
-			_stack.pop();
-			return true;
-		} else
-			return false;
-	}
+	bool back();
 
 	 /// attribute setting
 	void put(const XS_String& attr_name, const XS_String& value)
@@ -2626,62 +2875,10 @@ protected:
 
 	static XS_String s_empty_attr;
 
-	void close_pre(StackEntry& entry)
-	{
-		_out << '>';
-
-		entry._state = PRE_CLOSED;
-	}
-
-	void write_pre(StackEntry& entry)
-	{
-		if (_format._pretty >= PRETTY_LINEFEED)
-			_out << _format._endl;
-
-		if (_format._pretty == PRETTY_INDENT)
-		{
-			for(size_t i=_stack.size(); --i>0; )
-				_out << XML_INDENT_SPACE;
-		}
-		_out << '<' << EncodeXMLString(entry._node_name);
-		//entry._state = PRE;
-	}
-
-	void write_attributes(StackEntry& entry)
-	{
-		for(AttrMap::const_iterator it=entry._attributes.begin(); it!=entry._attributes.end(); ++it)
-			_out << ' ' << EncodeXMLString(it->first) << "=\"" << EncodeXMLString(it->second) << "\"";
-
-		entry._state = ATTRIBUTES;
-	}
-
-	void write_post(StackEntry& entry)
-	{
-		if (entry._state < ATTRIBUTES)
-			write_attributes(entry);
-
-		if (entry._children || !entry._content.empty()) {
-			if (entry._state < PRE_CLOSED)
-				close_pre(entry);
-
-			_out << entry._content;
-			//entry._state = CONTENT;
-
-			if (_format._pretty>=PRETTY_LINEFEED && entry._content.empty())
-				_out << _format._endl;
-
-			if (_format._pretty==PRETTY_INDENT && entry._content.empty())
-			{
-				for(size_t i=_stack.size(); --i>0; )
-					_out << XML_INDENT_SPACE;
-			}
-			_out << "</" << EncodeXMLString(entry._node_name) << ">";
-		} else {
-			_out << "/>";
-		}
-
-		entry._state = POST;
-	}
+	void close_pre(StackEntry& entry);
+	void write_pre(StackEntry& entry);
+	void write_attributes(StackEntry& entry);
+	void write_post(StackEntry& entry);
 };
 
 

@@ -1,8 +1,8 @@
 
  //
- // XML storage C++ classes version 1.2
+ // XML storage C++ classes version 1.3
  //
- // Copyright (c) 2004, 2005, 2006, 2007 Martin Fuchs <martin-fuchs@gmx.net>
+ // Copyright (c) 2004, 2005, 2006, 2007, 2008 Martin Fuchs <martin-fuchs@gmx.net>
  //
 
  /// \file xmlstorage.cpp
@@ -57,6 +57,10 @@ const LPCXSSTR XS_INTFMT = XS_INTFMT_STR;
 const LPCXSSTR XS_FLOATFMT = XS_FLOATFMT_STR;
 #endif
 
+const XS_String XS_KEY = XS_KEY_STR;
+const XS_String XS_VALUE = XS_VALUE_STR;
+const XS_String XS_PROPERTY = XS_PROPERTY_STR;
+
 
  /// remove escape characters from zero terminated string
 static std::string unescape(const char* s, char b, char e)
@@ -105,18 +109,12 @@ inline std::string unescape(const char* s, size_t l)
 }
 
 
- /// move XPath like to position in XML tree
-bool XMLPos::go(const char* path)
+ /// move to the position defined by xpath in XML tree
+bool XMLPos::go(const XPath& xpath)
 {
-	XMLNode* node = _cur;
+	XMLNode* node = xpath._absolute? _root: _cur;
 
-	 // Is this an absolute path?
-	if (*path == '/') {
-		node = _root;
-		++path;
-	}
-
-	node = node->find_relative(path);
+	node = node->find_relative(xpath);
 
 	if (node) {
 		go_to(node);
@@ -125,18 +123,12 @@ bool XMLPos::go(const char* path)
 		return false;
 }
 
- /// move XPath like to position in XML tree
-bool const_XMLPos::go(const char* path)
+ /// move to the position defined by xpath in XML tree
+bool const_XMLPos::go(const XPath& xpath)
 {
-	const XMLNode* node = _cur;
+	const XMLNode* node = xpath._absolute? _root: _cur;
 
-	 // Is this an absolute path?
-	if (*path == '/') {
-		node = _root;
-		++path;
-	}
-
-	node = node->find_relative(path);
+	node = node->find_relative(xpath);
 
 	if (node) {
 		go_to(node);
@@ -146,40 +138,7 @@ bool const_XMLPos::go(const char* path)
 }
 
 
-const XMLNode* XMLNode::find_relative(const char* path) const
-{
-	const XMLNode* node = this;
-
-	 // parse relative path
-	while(*path) {
-		node = const_cast<XMLNode*>(node)->get_child_relative(path, false);	// get_child_relative() ist const for create==false
-
-		if (!node)
-			return NULL;
-
-		if (*path == '/')
-			++path;
-	}
-
-	return node;
-}
-
-XMLNode* XMLNode::create_relative(const char* path)
-{
-	XMLNode* node = this;
-
-	 // parse relative path
-	while(*path) {
-		node = node->get_child_relative(path, true);
-
-		if (*path == '/')
-			++path;
-	}
-
-	return node;
-}
-
-XMLNode* XMLNode::get_child_relative(const char*& path, bool create)
+const char* XPathElement::parse(const char* path)
 {
 	const char* slash = strchr(path, '/');
 	if (slash == path)
@@ -192,8 +151,7 @@ XMLNode* XMLNode::get_child_relative(const char*& path, bool create)
 	 // look for [n] and [@attr_name="attr_value"] expressions in path components
 	const char* bracket = strchr(comp.c_str(), '[');
 	l = bracket? bracket-comp.c_str(): comp.length();
-	std::string child_name(comp.c_str(), l);
-	std::string attr_name, attr_value;
+	_child_name.assign(comp.c_str(), l);
 
 	int n = 0;
 	if (bracket) {
@@ -203,7 +161,7 @@ XMLNode* XMLNode::get_child_relative(const char*& path, bool create)
 		n = atoi(p);	// read index number
 
 		if (n)
-			n = n - 1;	// convert into zero based index
+			_child_idx = n - 1;	// convert into zero based index
 
 		const char* at = strchr(p, '@');
 
@@ -213,30 +171,198 @@ XMLNode* XMLNode::get_child_relative(const char*& path, bool create)
 
 			 // read attribute name and value
 			if (equal) {
-				attr_name = unescape(p, equal-p);
-				attr_value = unescape(equal+1);
+				_attr_name = unescape(p, equal-p);
+				_attr_value = unescape(equal+1);
 			}
 		}
 	}
 
-	XMLNode* child;
+	return path;
+}
 
-	if (attr_name.empty())
-		 // search n.th child node with specified name
-		child = find(child_name, n);
+XMLNode* XPathElement::find(XMLNode* node) const
+{
+	int n = 0;
+
+	for(XMLNode::Children::const_iterator it=node->_children.begin(); it!=node->_children.end(); ++it)
+		if (matches(**it, n))
+			return *it;
+
+	return NULL;
+}
+
+const XMLNode* XPathElement::const_find(const XMLNode* node) const
+{
+	int n = 0;
+
+	for(XMLNode::Children::const_iterator it=node->_children.begin(); it!=node->_children.end(); ++it)
+		if (matches(**it, n))
+			return *it;
+
+	return NULL;
+}
+
+bool XPathElement::matches(const XMLNode& node, int& n) const
+{
+	if (node != _child_name)
+		if (_child_name != XS_TEXT("*"))	// use asterisk as wildcard
+			return false;
+
+	if (!_attr_name.empty())
+		if (node.get(_attr_name) != _attr_value)
+			return false;
+
+	if (_child_idx == -1)
+		return true;
+	else if (n++ == _child_idx)
+		return true;
 	else
-		 // search n.th child node with specified name and matching attribute value
-		child = find(child_name, attr_name, attr_value, n);
+		return false;
+}
 
-	if (!child && create) {
-		child = new XMLNode(child_name);
-		add_child(child);
 
-		if (!attr_name.empty())
-			(*this)[attr_name] = attr_value;
+void XPath::init(const char* path)
+{
+	 // Is this an absolute path?
+	if (*path == '/') {
+		_absolute = true;
+		++path;
+	} else
+		_absolute = false;
+
+	 // parse path
+	while(*path) {
+		XPathElement elem;
+
+		path = elem.parse(path);
+
+		if (!path)
+			break;
+
+		if (*path == '/')
+			++path;
+
+		push_back(elem);
+	}
+}
+
+
+const XMLNode* XMLNode::find_relative(const XPath& xpath) const
+{
+	const XMLNode* node = this;
+
+	for(XPath::const_iterator it=xpath.begin(); it!=xpath.end(); ++it) {
+		node = it->const_find(node);
+
+		if (!node)
+			return NULL;
 	}
 
-	return child;
+	return node;
+}
+
+XMLNode* XMLNode::find_relative(const XPath& xpath)
+{
+	XMLNode* node = this;
+
+	for(XPath::const_iterator it=xpath.begin(); it!=xpath.end(); ++it) {
+		node = it->find(node);
+
+		if (!node)
+			return NULL;
+	}
+
+	return node;
+}
+
+XMLNode* XMLNode::create_relative(const XPath& xpath)
+{
+	XMLNode* node = this;
+
+	for(XPath::const_iterator it=xpath.begin(); it!=xpath.end(); ++it) {
+		XMLNode* child = it->find(this);
+
+		if (!child) {
+			child = new XMLNode(it->_child_name);
+			add_child(child);
+
+			if (!it->_attr_name.empty())
+				(*this)[it->_attr_name] = it->_attr_value;
+		}
+	}
+
+	return node;
+}
+
+ /// count the nodes matching the given relative XPath expression
+int XMLNode::count(XPath::const_iterator from, const XPath::const_iterator& to) const
+{
+	const XPathElement& elem = *from++;
+	int cnt = 0;
+	int n = 0;
+
+	for(XMLNode::Children::const_iterator it=_children.begin(); it!=_children.end(); ++it)
+		if (elem.matches(**it, n))
+			if (from != to)
+				 // iterate deeper
+				cnt += (*it)->count(from, to);
+			else
+				 // increment match counter
+				++cnt;
+
+	return cnt;
+}
+
+ /// copy matching tree nodes using the given XPath filter expression
+bool XMLNode::filter(const XPath& xpath, XMLNode& target) const
+{
+	XMLNode* ret = filter(xpath.begin(), xpath.end());
+
+	if (ret) {
+		 // move returned nodes to target node
+		target._children.move(ret->_children);
+		target._attributes = ret->_attributes;
+
+		delete ret;
+
+		return true;
+	} else
+		return false;
+}
+
+ /// create a new node tree using the given XPath filter expression
+XMLNode* XMLNode::filter(XPath::const_iterator from, const XPath::const_iterator& to) const
+{
+	XMLNode* copy = NULL;
+
+	const XPathElement& elem = *from++;
+	int cnt = 0;
+	int n = 0;
+
+	for(XMLNode::Children::const_iterator it=_children.begin(); it!=_children.end(); ++it)
+		if (elem.matches(**it, n)) {
+			if (!copy)
+				copy = new XMLNode(*this, XMLNode::COPY_NOCHILDREN);
+
+			if (from != to) {
+				XMLNode* ret = (*it)->filter(from, to);
+
+				if (ret) {
+					copy->add_child(ret);
+					++cnt;
+				}
+			} else {
+				copy->add_child(new XMLNode(**it, XMLNode::COPY_NOCHILDREN));
+				++cnt;
+			}
+		}
+
+	if (cnt > 0) {
+		return copy;
+	} else {
+		delete copy;
+		return NULL;
+	}
 }
 
 
@@ -286,9 +412,9 @@ std::string EncodeXMLString(const XS_String& str, bool cdata)
 				break;
 
 			  default:
-				if ((unsigned)*p<20 && *p!='\t' && *p!='\r' && *p!='\n') {
+				if ((unsigned)*p<0x20 && *p!='\t' && *p!='\r' && *p!='\n') {
 					char b[16];
-					sprintf(b, "&%d;", (unsigned)*p);
+					sprintf(b, "&#%d;", (unsigned)*p);
 					for(const char*q=b; *q; )
 						*o++ = *q++;
 				} else
@@ -330,8 +456,8 @@ std::string EncodeXMLString(const XS_String& str, bool cdata)
 				break;
 
 			  default:
-				if ((unsigned)*p<20 && *p!='\t' && *p!='\r' && *p!='\n')
-					out << "&" << (unsigned)*p << ";";
+				if ((unsigned)*p<0x20 && *p!='\t' && *p!='\r' && *p!='\n')
+					out << "&#" << (unsigned)*p << ";";
 				else
 					out << *p;
 			}
@@ -368,7 +494,7 @@ XS_String DecodeXMLString(const XS_String& str)
 			} else if (!XS_nicmp(p+1, XS_TEXT("apos;"), 5)) {
 				*o++ = '\'';
 				p += 5;
-			} else
+			} else	//@@ maybe decode "&#xx;" special characters
 				*o++ = *p;
 		} else if (*p=='<' && !XS_nicmp(p+1,XS_TEXT("![CDATA["),8)) {
 			LPCXSSTR e = XS_strstr(p+9, XS_TEXT("]]>"));
@@ -535,18 +661,33 @@ std::ostream& operator<<(std::ostream& out, const XMLError& err)
 }
 
 
+const char* get_xmlsym_end_utf8(const char* p)
+{
+	for(; *p; ++p) {
+		char c = *p;
+
+		if (c == '\xC3')	// UTF-8 escape character
+			++p;	//TODO only continue on umlaut characters
+		else if (!isalnum(c) && c!='_' && c!='-')
+			break;
+	}
+
+	return p;
+}
+
+
 void DocType::parse(const char* p)
 {
 	while(isspace((unsigned char)*p)) ++p;
 
 	const char* start = p;
-	while(isxmlsym(*p)) ++p;
+	p = get_xmlsym_end_utf8(p);
 	_name.assign(start, p-start);
 
 	while(isspace((unsigned char)*p)) ++p;
 
 	start = p;
-	while(isxmlsym(*p)) ++p;
+	p = get_xmlsym_end_utf8(p);
 	std::string keyword(p, p-start);	// "PUBLIC" or "SYSTEM"
 
 	while(isspace((unsigned char)*p)) ++p;
@@ -705,7 +846,6 @@ void XMLReaderBase::StartElementHandler(const XS_String& name, const XMLNode::At
 			break;
 
 	if (p != s)
-	{
 		if (_pos->_children.empty()) {	// no children in last node?
 			if (_last_tag == TAG_START)
 				_pos->_content.append(s, p-s);
@@ -715,7 +855,7 @@ void XMLReaderBase::StartElementHandler(const XS_String& name, const XMLNode::At
 				p = s;
 		} else
 			_pos->_children.back()->_trailing.append(s, p-s);
-	}
+
 	std::string leading;
 
 	if (p != e)
@@ -753,14 +893,12 @@ void XMLReaderBase::EndElementHandler()
 	}
 
 	if (p != s)
-	{
 		if (_pos->_children.empty())	// no children in current node?
 			_pos->_content.append(s, p-s);
 		else if (_last_tag == TAG_START)
 			_pos->_content.append(s, p-s);
 		else
 			_pos->_children.back()->_trailing.append(s, p-s);
-	}
 
 	if (p != e)
 		_pos->_end_leading.assign(p, e-p);
@@ -785,6 +923,92 @@ void XMLReaderBase::DefaultHandler(const XML_Char* s, int len)
 
 
 XS_String XMLWriter::s_empty_attr;
+
+void XMLWriter::create(const XS_String& name)
+{
+	if (!_stack.empty()) {
+		StackEntry& last = _stack.top();
+
+		if (last._state < PRE_CLOSED) {
+			write_attributes(last);
+			close_pre(last);
+		}
+
+		++last._children;
+	}
+
+	StackEntry entry;
+	entry._node_name = name;
+	_stack.push(entry);
+
+	write_pre(entry);
+}
+
+bool XMLWriter::back()
+{
+	if (!_stack.empty()) {
+		write_post(_stack.top());
+
+		_stack.pop();
+		return true;
+	} else
+		return false;
+}
+
+void XMLWriter::close_pre(StackEntry& entry)
+{
+	_out << '>';
+
+	entry._state = PRE_CLOSED;
+}
+
+void XMLWriter::write_pre(StackEntry& entry)
+{
+	if (_format._pretty >= PRETTY_LINEFEED)
+		_out << _format._endl;
+
+	if (_format._pretty == PRETTY_INDENT)
+		for(size_t i=_stack.size(); --i>0; )
+			_out << XML_INDENT_SPACE;
+
+	_out << '<' << EncodeXMLString(entry._node_name);
+	//entry._state = PRE;
+}
+
+void XMLWriter::write_attributes(StackEntry& entry)
+{
+	for(AttrMap::const_iterator it=entry._attributes.begin(); it!=entry._attributes.end(); ++it)
+		_out << ' ' << EncodeXMLString(it->first) << "=\"" << EncodeXMLString(it->second) << "\"";
+
+	entry._state = ATTRIBUTES;
+}
+
+void XMLWriter::write_post(StackEntry& entry)
+{
+	if (entry._state < ATTRIBUTES)
+		write_attributes(entry);
+
+	if (entry._children || !entry._content.empty()) {
+		if (entry._state < PRE_CLOSED)
+			close_pre(entry);
+
+		_out << entry._content;
+		//entry._state = CONTENT;
+
+		if (_format._pretty>=PRETTY_LINEFEED && entry._content.empty())
+			_out << _format._endl;
+
+		if (_format._pretty==PRETTY_INDENT && entry._content.empty())
+			for(size_t i=_stack.size(); --i>0; )
+				_out << XML_INDENT_SPACE;
+
+		_out << "</" << EncodeXMLString(entry._node_name) << ">";
+	} else {
+		_out << "/>";
+	}
+
+	entry._state = POST;
+}
 
 
 }	// namespace XMLStorage
