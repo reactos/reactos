@@ -337,6 +337,7 @@ typedef struct _DRIVEROBJ {
 #define INDEX_DrvOffset                   6L
 #define INDEX_DrvResetPDEV                7L
 #define INDEX_DrvDisableDriver            8L
+#define INDEX_DrvUnknown1                 9L
 #define INDEX_DrvCreateDeviceBitmap       10L
 #define INDEX_DrvDeleteDeviceBitmap       11L
 #define INDEX_DrvRealizeBrush             12L
@@ -348,6 +349,7 @@ typedef struct _DRIVEROBJ {
 #define INDEX_DrvBitBlt                   18L
 #define INDEX_DrvCopyBits                 19L
 #define INDEX_DrvStretchBlt               20L
+#define INDEX_DrvUnknown2                 21L
 #define INDEX_DrvSetPalette               22L
 #define INDEX_DrvTextOut                  23L
 #define INDEX_DrvEscape                   24L
@@ -362,8 +364,10 @@ typedef struct _DRIVEROBJ {
 #define INDEX_DrvStartPage                33L
 #define INDEX_DrvEndDoc                   34L
 #define INDEX_DrvStartDoc                 35L
+#define INDEX_DrvUnknown3                 36L
 #define INDEX_DrvGetGlyphMode             37L
 #define INDEX_DrvSynchronize              38L
+#define INDEX_DrvUnknown4                 39L
 #define INDEX_DrvSaveScreenBits           40L
 #define INDEX_DrvGetModes                 41L
 #define INDEX_DrvFree                     42L
@@ -387,6 +391,7 @@ typedef struct _DRIVEROBJ {
 #define INDEX_DrvEnableDirectDraw         60L
 #define INDEX_DrvDisableDirectDraw        61L
 #define INDEX_DrvQuerySpoolType           62L
+#define INDEX_DrvUnknown5                 63L
 #define INDEX_DrvIcmCreateColorTransform  64L
 #define INDEX_DrvIcmDeleteColorTransform  65L
 #define INDEX_DrvIcmCheckBitmapBits       66L
@@ -3622,6 +3627,7 @@ typedef DHPDEV
   IN LPWSTR  pwszDeviceName,
   IN HANDLE  hDriver);
 #endif
+
 typedef HSURF
 (APIENTRY *PFN_DrvEnableSurface)(
   IN DHPDEV  dhpdev);

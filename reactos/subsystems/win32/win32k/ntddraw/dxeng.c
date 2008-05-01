@@ -737,6 +737,8 @@ DxEngCleanDC(HDC hdc)
 /************************************************************************/
 BOOL STDCALL DxEngSetDCOwner(HGDIOBJ hObject, DWORD OwnerMask)
 {
+    DPRINT1("ReactX Calling : DxEngSetDCOwner \n");
+
     return IntGdiSetDCOwnerEx( hObject, OwnerMask, FALSE);
 }
 

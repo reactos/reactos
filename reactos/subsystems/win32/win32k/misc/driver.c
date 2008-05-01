@@ -31,6 +31,7 @@
 /* #define TRACE_DRV_CALLS to get a log of all calls into the display driver. */
 #undef TRACE_DRV_CALLS
 
+
 typedef struct _GRAPHICS_DRIVER
 {
   PWSTR  Name;
@@ -391,8 +392,7 @@ BOOL DRIVER_BuildDDIFunctions(PDRVENABLEDATA  DED,
                                PDRIVER_FUNCTIONS  DF)
 {
   BEGIN_FUNCTION_MAP();
-
-    DRIVER_FUNCTION(EnablePDEV);
+    DRIVER_FUNCTION(EnablePDEV);   
     DRIVER_FUNCTION(CompletePDEV);
     DRIVER_FUNCTION(DisablePDEV);
     DRIVER_FUNCTION(EnableSurface);
@@ -401,6 +401,7 @@ BOOL DRIVER_BuildDDIFunctions(PDRVENABLEDATA  DED,
     DRIVER_FUNCTION(Offset);
     DRIVER_FUNCTION(ResetPDEV);
     DRIVER_FUNCTION(DisableDriver);
+    DRIVER_FUNCTION(Unknown1);
     DRIVER_FUNCTION(CreateDeviceBitmap);
     DRIVER_FUNCTION(DeleteDeviceBitmap);
     DRIVER_FUNCTION(RealizeBrush);
@@ -410,10 +411,9 @@ BOOL DRIVER_BuildDDIFunctions(PDRVENABLEDATA  DED,
     DRIVER_FUNCTION(StrokeAndFillPath);
     DRIVER_FUNCTION(Paint);
     DRIVER_FUNCTION(BitBlt);
-    DRIVER_FUNCTION(TransparentBlt);
     DRIVER_FUNCTION(CopyBits);
     DRIVER_FUNCTION(StretchBlt);
-    DRIVER_FUNCTION(StretchBltROP);
+    DRIVER_FUNCTION(Unknown2);    
     DRIVER_FUNCTION(SetPalette);
     DRIVER_FUNCTION(TextOut);
     DRIVER_FUNCTION(Escape);
@@ -428,8 +428,10 @@ BOOL DRIVER_BuildDDIFunctions(PDRVENABLEDATA  DED,
     DRIVER_FUNCTION(StartPage);
     DRIVER_FUNCTION(EndDoc);
     DRIVER_FUNCTION(StartDoc);
+    DRIVER_FUNCTION(Unknown3);
     DRIVER_FUNCTION(GetGlyphMode);
     DRIVER_FUNCTION(Synchronize);
+    DRIVER_FUNCTION(Unknown4);
     DRIVER_FUNCTION(SaveScreenBits);
     DRIVER_FUNCTION(GetModes);
     DRIVER_FUNCTION(Free);
@@ -452,11 +454,36 @@ BOOL DRIVER_BuildDDIFunctions(PDRVENABLEDATA  DED,
     DRIVER_FUNCTION(EnableDirectDraw);
     DRIVER_FUNCTION(DisableDirectDraw);
     DRIVER_FUNCTION(QuerySpoolType);
-    DRIVER_FUNCTION(IcmSetDeviceGammaRamp);
-    DRIVER_FUNCTION(GradientFill);
-    DRIVER_FUNCTION(SynchronizeSurface);
-    DRIVER_FUNCTION(AlphaBlend);
-
+    DRIVER_FUNCTION(Unknown5);   
+    DRIVER_FUNCTION(IcmCreateColorTransform);   
+    DRIVER_FUNCTION(IcmDeleteColorTransform);   
+    DRIVER_FUNCTION(IcmCheckBitmapBits);   
+    DRIVER_FUNCTION(IcmSetDeviceGammaRamp);   
+    DRIVER_FUNCTION(GradientFill);   
+    DRIVER_FUNCTION(StretchBltROP);   
+    DRIVER_FUNCTION(PlgBlt);   
+    DRIVER_FUNCTION(AlphaBlend);   
+    DRIVER_FUNCTION(SynthesizeFont);   
+    DRIVER_FUNCTION(GetSynthesizedFontFiles);   
+    DRIVER_FUNCTION(TransparentBlt);   
+    DRIVER_FUNCTION(QueryPerBandInfo);   
+    DRIVER_FUNCTION(QueryDeviceSupport);   
+    DRIVER_FUNCTION(Reserved1);   
+    DRIVER_FUNCTION(Reserved2);   
+    DRIVER_FUNCTION(Reserved3);   
+    DRIVER_FUNCTION(Reserved4);   
+    DRIVER_FUNCTION(Reserved5);   
+    DRIVER_FUNCTION(Reserved6); 
+    DRIVER_FUNCTION(Reserved7); 
+    DRIVER_FUNCTION(Reserved8); 
+    DRIVER_FUNCTION(DeriveSurface); 
+    DRIVER_FUNCTION(QueryGlyphAttrs); 
+    DRIVER_FUNCTION(Notify); 
+    DRIVER_FUNCTION(SynchronizeSurface); 
+    DRIVER_FUNCTION(ResetDevice); 
+    DRIVER_FUNCTION(Reserved9); 
+    DRIVER_FUNCTION(Reserved10); 
+    DRIVER_FUNCTION(Reserved11);     
   END_FUNCTION_MAP();
 
   return TRUE;
