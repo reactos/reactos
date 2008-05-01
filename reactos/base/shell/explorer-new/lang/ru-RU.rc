@@ -31,7 +31,7 @@ BEGIN
         POPUP "&Настройки", IDM_SETTINGS
         BEGIN
             MENUITEM "&Панель управления", IDM_CONTROLPANEL, MFT_STRING, MFS_GRAYED
-            MENUITEM SEPARATOR
+            MENUITEM "", -1, MFT_SEPARATOR
             MENUITEM "&Безопасность...", IDM_SECURITY, MFT_STRING, MFS_ENABLED
             MENUITEM "&Сетевые подключения", IDM_NETWORKCONNECTIONS, MFT_STRING, MFS_ENABLED
             MENUITEM "&Принтеры и факсы", IDM_PRINTERSANDFAXES, MFT_STRING, MFS_ENABLED
@@ -39,7 +39,7 @@ BEGIN
         END
         POPUP "П&оиск", IDM_SEARCH
         BEGIN
-            MENUITEM SEPARATOR
+            MENUITEM "", -1, MFT_SEPARATOR
         END
         MENUITEM "Сп&равка и поддержка", IDM_HELPANDSUPPORT, MFT_STRING, MFS_ENABLED
         MENUITEM "Запус&к...", IDM_RUN, MFT_STRING, MFS_ENABLED

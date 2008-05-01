@@ -29,7 +29,7 @@ BEGIN
         POPUP "Nastav&enia", IDM_SETTINGS
         BEGIN
             MENUITEM "&Ovl·daci panel", IDM_CONTROLPANEL, MFT_STRING, MFS_GRAYED
-            MENUITEM SEPARATOR
+            MENUITEM "", -1, MFT_SEPARATOR
             MENUITEM "&ZabezpeËenie systÈmu ReactOS...", IDM_SECURITY, MFT_STRING, MFS_ENABLED
             MENUITEM "SieùovÈ pripoje&nia", IDM_NETWORKCONNECTIONS, MFT_STRING, MFS_ENABLED
             MENUITEM "&TlaËiarne a faxy", IDM_PRINTERSANDFAXES, MFT_STRING, MFS_ENABLED
@@ -37,7 +37,7 @@ BEGIN
         END
         POPUP "&Hæadaù", IDM_SEARCH
         BEGIN
-            MENUITEM SEPARATOR
+            MENUITEM "", -1, MFT_SEPARATOR
         END
         MENUITEM "&Pomoc a technick· podpora", IDM_HELPANDSUPPORT, MFT_STRING, MFS_ENABLED
         MENUITEM "Sp&ustiù...", IDM_RUN, MFT_STRING, MFS_ENABLED

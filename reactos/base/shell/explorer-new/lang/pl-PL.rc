@@ -31,7 +31,7 @@ BEGIN
         POPUP "Us&tawienia", IDM_SETTINGS
         BEGIN
             MENUITEM "P&anel sterowania", IDM_CONTROLPANEL, MFT_STRING, MFS_GRAYED
-            MENUITEM SEPARATOR
+            MENUITEM "", -1, MFT_SEPARATOR
             MENUITEM "Za&bezpieczenia...", IDM_SECURITY, MFT_STRING, MFS_ENABLED
             MENUITEM "P&o³¹czenia sieciowe", IDM_NETWORKCONNECTIONS, MFT_STRING, MFS_ENABLED
             MENUITEM "&Drukarki i faksy", IDM_PRINTERSANDFAXES, MFT_STRING, MFS_ENABLED
@@ -39,7 +39,7 @@ BEGIN
         END
         POPUP "&Szukaj", IDM_SEARCH
         BEGIN
-            MENUITEM SEPARATOR
+            MENUITEM "", -1, MFT_SEPARATOR
         END
         MENUITEM "Po&moc", IDM_HELPANDSUPPORT, MFT_STRING, MFS_ENABLED
         MENUITEM "&Uruchom...", IDM_RUN, MFT_STRING, MFS_ENABLED

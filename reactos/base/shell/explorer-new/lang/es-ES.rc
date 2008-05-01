@@ -37,7 +37,7 @@ BEGIN
         POPUP "&Configuración", IDM_SETTINGS
         BEGIN
             MENUITEM "&Panel de Control", IDM_CONTROLPANEL, MFT_STRING, MFS_GRAYED
-            MENUITEM SEPARATOR
+            MENUITEM "", -1, MFT_SEPARATOR
             MENUITEM "&Seguridad...", IDM_SECURITY, MFT_STRING, MFS_ENABLED
             MENUITEM "&Conexiones de red", IDM_NETWORKCONNECTIONS, MFT_STRING, MFS_ENABLED
             MENUITEM "&Impresoras y faxes", IDM_PRINTERSANDFAXES, MFT_STRING, MFS_ENABLED
@@ -45,7 +45,7 @@ BEGIN
         END
         POPUP "Sear&ch", IDM_SEARCH
         BEGIN
-            MENUITEM SEPARATOR
+            MENUITEM "", -1, MFT_SEPARATOR
         END
         MENUITEM "&Ayuda y soporte técnico", IDM_HELPANDSUPPORT, MFT_STRING, MFS_ENABLED
         MENUITEM "&Ejecutar...", IDM_RUN, MFT_STRING, MFS_ENABLED

@@ -100,35 +100,31 @@ OnStartContextMenuCommand(IN HWND hWndOwner,
 
     if (uiCmdId != 0)
     {
-        switch (uiCmdId)
+        if ((uiCmdId >= ID_SHELL_CMD_FIRST) && (uiCmdId <= ID_SHELL_CMD_LAST))
         {
-            case ID_SHELL_CMD_FIRST ... ID_SHELL_CMD_LAST:
+            CMINVOKECOMMANDINFO cmici = {0};
+            CHAR szDir[MAX_PATH];
+
+            /* Setup and invoke the shell command */
+            cmici.cbSize = sizeof(cmici);
+            cmici.hwnd = hWndOwner;
+            cmici.lpVerb = (LPCSTR)MAKEINTRESOURCE(uiCmdId - ID_SHELL_CMD_FIRST);
+            cmici.nShow = SW_NORMAL;
+
+            /* FIXME: Support Unicode!!! */
+            if (SHGetPathFromIDListA(psmcmc->pidl,
+                                     szDir))
             {
-                CMINVOKECOMMANDINFO cmici = {0};
-                CHAR szDir[MAX_PATH];
-
-                /* Setup and invoke the shell command */
-                cmici.cbSize = sizeof(cmici);
-                cmici.hwnd = hWndOwner;
-                cmici.lpVerb = (LPCSTR)MAKEINTRESOURCE(uiCmdId - ID_SHELL_CMD_FIRST);
-                cmici.nShow = SW_NORMAL;
-
-                /* FIXME: Support Unicode!!! */
-                if (SHGetPathFromIDListA(psmcmc->pidl,
-                                         szDir))
-                {
-                    cmici.lpDirectory = szDir;
-                }
-
-                IContextMenu_InvokeCommand(psmcmc->pcm,
-                                           &cmici);
-                break;
+                cmici.lpDirectory = szDir;
             }
 
-            default:
-                ITrayWindow_ExecContextMenuCmd((ITrayWindow *)Context,
-                                               uiCmdId);
-                break;
+            IContextMenu_InvokeCommand(psmcmc->pcm,
+                                       &cmici);
+        }
+        else
+        {
+            ITrayWindow_ExecContextMenuCmd((ITrayWindow *)Context,
+                                           uiCmdId);
         }
     }
 
@@ -804,15 +800,20 @@ UpdateStartMenu(IN OUT IMenuPopup *pMenuPopup,
                                      (PVOID)&pbb);
     if (SUCCEEDED(hRet))
     {
-        hRet = IBanneredBar_SetBitmap(pbb,
+       // hRet = IBanneredBar_SetBitmap(pbb,
+       //                               hbmBanner);
+        hRet = pbb->lpVtbl->SetBitmap(pbb,
                                       hbmBanner);
 
 
         /* Update the icon size */
-        hRet = IBanneredBar_SetIconSize(pbb,
+        //hRet = IBanneredBar_SetIconSize(pbb,
+        //                                bSmallIcons ? BMICON_SMALL : BMICON_LARGE);
+        hRet = pbb->lpVtbl->SetIconSize(pbb,
                                         bSmallIcons ? BMICON_SMALL : BMICON_LARGE);
 
-        IBanneredBar_Release(pbb);
+        //IBanneredBar_Release(pbb);
+        pbb->lpVtbl->Release(pbb);
     }
 
     return hRet;
@@ -861,9 +862,11 @@ CreateStartMenu(IN ITrayWindow *Tray,
                                                  (PVOID*)&pIo);
                 if (SUCCEEDED(hRet))
                 {
-                    hRet = IInitializeObject_Initialize(pIo);
+                    //hRet = IInitializeObject_Initialize(pIo);
+                    hRet = pIo->lpVtbl->Initialize(pIo);
 
-                    IInitializeObject_Release(pIo);
+                    //IInitializeObject_Release(pIo);
+                    pIo->lpVtbl->Release(pIo);
                 }
                 else
                     hRet = S_OK;
