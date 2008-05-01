@@ -145,4 +145,10 @@
 	<directory name="kbdusx">
 		<xi:include href="kbdusx/kbdusx.rbuild" />
 	</directory>
+	<directory name="kbdycc">
+		<xi:include href="kbdycc/kbdycc.rbuild" />
+	</directory>
+	<directory name="kbdycl">
+		<xi:include href="kbdycl/kbdycl.rbuild" />
+	</directory>
 </group>
