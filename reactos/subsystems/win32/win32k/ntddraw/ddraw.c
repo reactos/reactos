@@ -40,6 +40,9 @@ intEnableReactXDriver(PEDD_DIRECTDRAW_GLOBAL pEddgbl, PDC pDC)
     /*clean up some of the cache entry */
     RtlZeroMemory(pEddgbl,sizeof(EDD_DIRECTDRAW_GLOBAL));
 
+    /* setup EDD_DIRECTDRAW_GLOBAL for pDev xp */
+    pDev->pEDDgpl = pEddgbl;
+
     if (pfnDdEnableDirectDraw == NULL)
     {
         DPRINT1("Warning: no pfnDdEnableDirectDraw\n");
@@ -47,7 +50,10 @@ intEnableReactXDriver(PEDD_DIRECTDRAW_GLOBAL pEddgbl, PDC pDC)
     else
     {
         DPRINT1(" call to pfnDdEnableDirectDraw \n ");
-        success = pfnDdEnableDirectDraw(pDC->PDev, TRUE);
+        /* Note it is the hdev struct it want, not the drv hPDev aka pdc->PDev */
+        success = pfnDdEnableDirectDraw(pDC->pPDev, TRUE);
+
+        dump_edd_directdraw_global(pEddgbl);
         DPRINT1(" end call to pfnDdEnableDirectDraw \n ");
     }
 
@@ -55,8 +61,6 @@ intEnableReactXDriver(PEDD_DIRECTDRAW_GLOBAL pEddgbl, PDC pDC)
     edd_DdirectDraw_Global.hDev   = pDC->pPDev;
     /*FIXME : edd_DdirectDraw_Global.dhpdev   =  (PVOID)pDC->PDev; */
 
-    /* setup EDD_DIRECTDRAW_GLOBAL for pDev xp */
-    pDev->pEDDgpl = pEddgbl;
 
      /* test see if drv got a dx interface or not */
     if  ( ( pDev->DriverFunctions.DisableDirectDraw == NULL) ||
