@@ -186,6 +186,8 @@ dll\keyboard\kbdusa\kbdusa.dll                      1
 dll\keyboard\kbdusl\kbdusl.dll                      1
 dll\keyboard\kbdusr\kbdusr.dll                      1
 dll\keyboard\kbdusx\kbdusx.dll                      1
+dll\keyboard\kbdycc\kbdycc.dll                      1
+dll\keyboard\kbdycl\kbdycl.dll                      1
 
 dll\ntdll\ntdll.dll                                 1
 

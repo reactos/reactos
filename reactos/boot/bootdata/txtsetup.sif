@@ -171,6 +171,8 @@ A0000407 = "German (Ristome)"
 00000418 = "Romanian"
 00000419 = "Russian"
 00010419 = "Russian (Typewriter)"
+00000C1A = "Serbian (Cyrillic)"
+0000081A = "Serbian (Latin)"
 0000041B = "Slovak (QWERTZ)"
 0000040A = "Spanish (traditional short)"
 0000041D = "Swedish (Sweden)"
@@ -221,6 +223,7 @@ A0000407 = kbdgrist.dll
 00000419 = kbdru.dll
 00010419 = kbdru1.dll
 00000807 = kbdsg.dll
+0000081A = kbdycl.dll
 0000041B = kbdsk.dll
 0000041D = kbdsw.dll
 0000041E = kbdth.dll
@@ -233,6 +236,7 @@ A0000407 = kbdgrist.dll
 00000444 = kbdtat.dll
 00011009 = kbdcan.dll
 00000C0C = kbdfc.dll
+00000C1A = kbdycc.dll
 
 [HiveInfs.Install]
 AddReg=hivecls.inf,AddReg
