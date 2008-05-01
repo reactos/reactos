@@ -54,6 +54,7 @@ intEnableReactXDriver(PEDD_DIRECTDRAW_GLOBAL pEddgbl, PDC pDC)
         success = pfnDdEnableDirectDraw(pDC->pPDev, TRUE);
 
         dump_edd_directdraw_global(pEddgbl);
+        dump_halinfo(&pEddgbl->ddHalInfo);
         DPRINT1(" end call to pfnDdEnableDirectDraw \n ");
     }
 
@@ -263,13 +264,6 @@ intEnableReactXDriver(PEDD_DIRECTDRAW_GLOBAL pEddgbl, PDC pDC)
 
     /* setup missing data in ddHalInfo */
     //pEddgbl->ddHalInfo.GetDriverInfo = (PVOID)pDev->DriverFunctions.GetDirectDrawInfo;
-
-
-    /* FIXME : hack ? it will let us DxDdQueryDirectDrawObject if the llAssertModeTimeout contain negtive value -1*/
-    pEddgbl->llAssertModeTimeout.QuadPart = -1;
-
-
-
 
     /* FIXME : remove this when we are done with debuging of dxg */
     dump_edd_directdraw_global(pEddgbl);

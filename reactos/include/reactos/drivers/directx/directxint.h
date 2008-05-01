@@ -106,13 +106,13 @@ typedef struct _EDD_SURFACE
 
 typedef struct _EDD_DIRECTDRAW_GLOBAL
 {
-/* 0x000 */    PVOID dhpdev;
+/* 0x000 */    PVOID dhpdev;           // 0x000 <-- verified to match Windows XP, dhpdev, the drv hPDev --> 
 /* 0x004 */    DWORD dwReserved1;
 /* 0x008 */    DWORD dwReserved2;
 /* 0x00C */    ULONG unk_000c[3];
 /* 0x018 */    LONG cDriverReferences;
 /* 0x01C */    ULONG unk_01c;
-/* 0x020 */    DWORD dwCallbackFlags; /* <-- verified to match Windows XP, dwCallbackFlags
+/* 0x020 */    DWORD dwCallbackFlags; /* 0x020 <-- verified to match Windows XP, dwCallbackFlags
                                          Flags value
                                          0x0002 = ddVideoPortCallback and GUID_VideoPortCaps
                                          0x0004 = GUID_ColorControlCallbacks
@@ -125,7 +125,13 @@ typedef struct _EDD_DIRECTDRAW_GLOBAL
 
 /* 0x024 */    ULONG unk_024;
 #ifdef _WIN32
-/* 0x028 */    LARGE_INTEGER   llAssertModeTimeout;                    // 0x028 <-- verified to match Windows XP, llAssertModeTimeout
+/* 0x028 */    LARGE_INTEGER   llAssertModeTimeout;                    /* 0x028 <-- verified to match Windows XP, llAssertModeTimeout, it
+                                                                          using regkey 
+                                                                          HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\GraphicsDrivers\DCI
+                                                                          Specifies how long a DirectDraw application can keep a graphics-device frame-buffer locked
+                                                                          in second, if this value are set to 0 it disable directdraw acclatrions.
+                                                                          it is normal set to 7 (7 sec in windwos xp/2003)
+                                                                        */
 #else
 /* 0x028 */    DWORD           llAssertModeTimeoutLowPart;
 /* 0x02C */    DWORD           llAssertModeTimeoutHighPart;
