@@ -126,6 +126,7 @@ InitLangList(HWND hWnd)
 
             item.pszText = lItem.IndName;
             item.iItem   = (INT) dwIndex;
+            item.lParam  = (LPARAM)_ttoi(lItem.ValName);
             i = ListView_InsertItem(hList, &item);
 
             ListView_SetItemText(hList, i, 1, lItem.LangName);
@@ -153,12 +154,39 @@ UpdateLayoutsList(VOID)
 static VOID
 DeleteLayout(VOID)
 {
-    INT iIndex;
+    INT iIndex, LayoutNum;
+    LVITEM item;
+    HKEY hKey;
+    HWND hLayoutList = GetDlgItem(MainDlgWnd, IDC_KEYLAYOUT_LIST);
+    TCHAR szLayoutNum[10 + 1], szTitle[MAX_PATH], szConf[MAX_PATH];
 
-    iIndex = (INT) SendMessage(GetDlgItem(MainDlgWnd, IDC_KEYLAYOUT_LIST), LVM_GETNEXTITEM, -1, LVNI_FOCUSED);
+    iIndex = (INT) SendMessage(hLayoutList, LVM_GETNEXTITEM, -1, LVNI_FOCUSED);
+
     if (iIndex != -1)
     {
-        MessageBox(0, _T("Not implemented!"), NULL, MB_OK);
+        LoadString(hApplet, IDS_REM_QUESTION, szConf, sizeof(szConf) / sizeof(TCHAR));
+        LoadString(hApplet, IDS_CONFIRMATION, szTitle, sizeof(szTitle) / sizeof(TCHAR));
+
+        if (MessageBox(MainDlgWnd, szConf, szTitle, MB_YESNO | MB_ICONQUESTION) == IDYES)
+        {
+            ZeroMemory(&item, sizeof(LVITEM));
+
+            item.mask = LVIF_PARAM;
+            item.iItem = iIndex;
+
+            (VOID) ListView_GetItem(hLayoutList, &item);
+            LayoutNum = (INT) item.lParam;
+
+            if (RegOpenKeyEx(HKEY_CURRENT_USER, _T("Keyboard Layout\\Preload"), 0, KEY_ALL_ACCESS, &hKey) == ERROR_SUCCESS)
+            {
+                _ultot(LayoutNum, szLayoutNum, 10);
+                if (RegDeleteValue(hKey, szLayoutNum) == ERROR_SUCCESS)
+                {
+                    UpdateLayoutsList();
+                }
+            }
+            RegCloseKey(hKey);
+        }
     }
 }
 

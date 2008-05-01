@@ -85,6 +85,8 @@ BEGIN
 	IDS_WHATS_THIS           "Τι είναι αυτό;"
 	IDS_LANGUAGE             "Γλώσσα"
 	IDS_LAYOUT               "Διάταξη πληκτρολογίου"
+    IDS_REM_QUESTION         "Do you want to remove selected keyboard layout?"
+    IDS_CONFIRMATION         "Confirmation"
 END
 
 STRINGTABLE
