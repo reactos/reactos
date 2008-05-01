@@ -1,5 +1,5 @@
 /*
- *      translated by Caemyr (Jan-Feb, 2008)
+ *      translated by Caemyr (Jan-Feb, Apr, 2008)
  *      Use ReactOS forum PM or IRC to contact me
  *      http://www.reactos.org
  *      IRC: irc.freenode.net #reactos-pl;
@@ -1470,8 +1470,8 @@ MUI_ERROR plPLErrorEntries[] =
     },
     {
         //ERROR_ADDING_KBLAYOUTS,
-        "Setup failed to add keyboard layouts to registry.\n"
-        "ENTER = Reboot computer"
+        "Instalator nie m¢gˆ doda† ukˆad¢w klawiatury do rejestru.\n"
+        "ENTER = Restart komputera"
     },
     {
         NULL,
@@ -1693,7 +1693,7 @@ MUI_STRING plPLStrings[] =
     {STRING_GB,
     "GB"},
     {STRING_ADDKBLAYOUTS,
-    "Adding keyboard layouts"},
+    "Dodawanie ukˆad¢w klawiatury"},
     {0, 0}
 };
 

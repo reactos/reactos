@@ -1463,8 +1463,8 @@ MUI_ERROR deDEErrorEntries[] =
     },
     {
         //ERROR_ADDING_KBLAYOUTS,
-        "Setup failed to add keyboard layouts to registry.\n"
-        "ENTER = Reboot computer"
+        "Setup konnte die Tastaturlayouts nicht in Registry eintragen.\n"
+        "ENTER = Computer neustarten"
     },
     {
         NULL,
@@ -1686,7 +1686,7 @@ MUI_STRING deDEStrings[] =
     {STRING_GB,
     "GB"},
     {STRING_ADDKBLAYOUTS,
-    "Adding keyboard layouts"},
+    "Tastaturlayout hinzufügen"},
     {0, 0}
 };
 

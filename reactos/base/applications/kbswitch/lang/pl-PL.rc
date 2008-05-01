@@ -1,0 +1,18 @@
+/*
+ *      translated by Caemyr - Olaf Siejka (Apr,2008)
+ *      Use ReactOS forum PM or IRC to contact me
+ *      http://www.reactos.org
+ *      IRC: irc.freenode.net #reactos-pl
+ */
+
+LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
+
+IDR_POPUP MENU
+BEGIN
+    POPUP "popup"
+    BEGIN
+        MENUITEM SEPARATOR
+        MENUITEM "&Ustawienia...",  ID_PREFERENCES
+        MENUITEM "&Wyjœcie",            ID_EXIT
+    END
+END
