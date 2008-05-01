@@ -69,10 +69,6 @@ intEnableReactXDriver(PEDD_DIRECTDRAW_GLOBAL pEddgbl, PDC pDC)
         DPRINT1(" end call to pfnDdEnableDirectDraw \n ");
     }
     
-    /* FIXME : remove this when we are done with debuging of dxg */
-    dump_edd_directdraw_global(pEddgbl);
-    dump_halinfo(&pEddgbl->ddHalInfo);
-
     DPRINT1("Return value : 0x%08x\n",success);
     return success;
 }
