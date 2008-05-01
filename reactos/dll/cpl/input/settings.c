@@ -13,6 +13,7 @@
 #include "input.h"
 
 static HWND MainDlgWnd;
+static HIMAGELIST hImgList;
 
 typedef struct
 {
@@ -22,6 +23,67 @@ typedef struct
     TCHAR ValName[CCH_ULONG_DEC + 1];
     TCHAR IndName[MAX_PATH];
 } LAYOUT_ITEM, *LPLAYOUT_ITEM;
+
+
+static HICON
+CreateLayoutIcon(LPTSTR szInd)
+{
+    HDC hdc, hdcsrc;
+    HBITMAP hBitmap, hBmpNew, hBmpOld;
+    RECT rect;
+    DWORD bkColor, bkText;
+    HFONT hFont = NULL;
+    ICONINFO IconInfo;
+    HICON hIcon = NULL;
+
+    hdcsrc = GetDC(NULL);
+    hdc = CreateCompatibleDC(hdcsrc);
+    hBitmap = CreateCompatibleBitmap(hdcsrc, 16, 16);
+    ReleaseDC(NULL, hdcsrc);
+
+    if (hdc && hBitmap)
+    {
+        hBmpNew = CreateBitmap(16, 16, 1, 1, NULL);
+        if (hBmpNew)
+        {
+            hBmpOld = SelectObject(hdc, hBitmap);
+            rect.right = 16;
+            rect.left = 0;
+            rect.bottom = 16;
+            rect.top = 0;
+
+            bkColor = SetBkColor(hdc, GetSysColor(COLOR_HIGHLIGHT));
+            bkText  = SetTextColor(hdc, GetSysColor(COLOR_HIGHLIGHTTEXT));
+
+            ExtTextOut(hdc, rect.left, rect.top, ETO_OPAQUE, &rect, _T(""), 0, NULL);
+
+            hFont = CreateFont(-11, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET,
+                               OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+                               DEFAULT_QUALITY, FF_DONTCARE, _T("Tahoma"));
+
+            SelectObject(hdc, hFont);
+            DrawText(hdc, _tcsupr(szInd), 2, &rect, DT_SINGLELINE|DT_CENTER|DT_VCENTER);
+            SelectObject(hdc, hBmpNew);
+            PatBlt(hdc, 0, 0, 16, 16, BLACKNESS);
+            SelectObject(hdc, hBmpOld);
+
+            IconInfo.hbmColor = hBitmap;
+            IconInfo.hbmMask = hBmpNew;
+            IconInfo.fIcon = TRUE;
+
+            hIcon = CreateIconIndirect(&IconInfo);
+
+            DeleteObject(hBmpNew);
+            DeleteObject(hBmpOld);
+            DeleteObject(hFont);
+        }
+    }
+
+    DeleteDC(hdc);
+    DeleteObject(hBitmap);
+
+    return hIcon;
+}
 
 BOOL
 GetLayoutName(LPCTSTR lcid, LPTSTR name)
@@ -55,25 +117,20 @@ AddListColumn(HWND hWnd)
 
     ZeroMemory(&column, sizeof(LV_COLUMN));
     column.mask         = LVCF_FMT | LVCF_TEXT | LVCF_WIDTH | LVCF_SUBITEM;
+
     column.fmt          = LVCFMT_LEFT;
     column.iSubItem     = 0;
-    column.pszText      = NULL;
-    column.cx           = 25;
-    (VOID) ListView_InsertColumn(hList, 0, &column);
-
-    column.fmt          = LVCFMT_LEFT;
-    column.iSubItem     = 1;
     LoadString(hApplet, IDS_LANGUAGE, szBuf, sizeof(szBuf) / sizeof(TCHAR));
     column.pszText      = szBuf;
-    column.cx           = 160;
-    (VOID) ListView_InsertColumn(hList, 1, &column);
+    column.cx           = 175;
+    (VOID) ListView_InsertColumn(hList, 0, &column);
 
     column.fmt          = LVCFMT_RIGHT;
-    column.cx           = 145;
-    column.iSubItem     = 2;
+    column.cx           = 155;
+    column.iSubItem     = 1;
     LoadString(hApplet, IDS_LAYOUT, szBuf, sizeof(szBuf) / sizeof(TCHAR));
     column.pszText      = szBuf;
-    (VOID) ListView_InsertColumn(hList, 2, &column);
+    (VOID) ListView_InsertColumn(hList, 1, &column);
 }
 
 static VOID
@@ -85,9 +142,9 @@ InitLangList(HWND hWnd)
     DWORD dwIndex = 0, dwType, dwSize;
     LV_ITEM item = {0};
     HWND hList = GetDlgItem(hWnd, IDC_KEYLAYOUT_LIST);
-    INT i;
+    INT i, imgIndex;
 
-    item.mask = LVIF_TEXT | LVIF_PARAM | LVIF_STATE;
+    item.mask = LVIF_TEXT | LVIF_PARAM | LVIF_STATE | LVIF_IMAGE;
 
     if (RegOpenKeyEx(HKEY_CURRENT_USER, _T("Keyboard Layout\\Preload"),
         0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
@@ -103,6 +160,7 @@ InitLangList(HWND hWnd)
 
             GetLocaleInfo(lItem.LangId, LOCALE_SISO639LANGNAME, (LPTSTR)szBuf, sizeof(szBuf) / sizeof(TCHAR));
             lstrcpy(lItem.IndName, _tcsupr(szBuf));
+            imgIndex = ImageList_AddIcon(hImgList, CreateLayoutIcon(lItem.IndName));
 
             GetLocaleInfo(lItem.LangId, LOCALE_SLANGUAGE, (LPTSTR)szBuf, sizeof(szBuf) / sizeof(TCHAR));
             lstrcpy(lItem.LangName, szBuf);
@@ -124,13 +182,13 @@ InitLangList(HWND hWnd)
 
             GetLayoutName(szPreload, lItem.LayoutName);
 
-            item.pszText = lItem.IndName;
+            item.pszText = lItem.LangName;
             item.iItem   = (INT) dwIndex;
             item.lParam  = (LPARAM)_ttoi(lItem.ValName);
+            item.iImage  = imgIndex;
             i = ListView_InsertItem(hList, &item);
 
-            ListView_SetItemText(hList, i, 1, lItem.LangName);
-            ListView_SetItemText(hList, i, 2, lItem.LayoutName);
+            ListView_SetItemText(hList, i, 1, lItem.LayoutName);
 
             dwIndex++;
 
@@ -147,8 +205,11 @@ InitLangList(HWND hWnd)
 VOID
 UpdateLayoutsList(VOID)
 {
+    (VOID) ImageList_Destroy(hImgList);
     (VOID) ListView_DeleteAllItems(GetDlgItem(MainDlgWnd, IDC_KEYLAYOUT_LIST));
+    hImgList = ImageList_Create(16, 16, ILC_COLOR8 | ILC_MASK, 0, 1);
     InitLangList(MainDlgWnd);
+    (VOID) ListView_SetImageList(GetDlgItem(MainDlgWnd, IDC_KEYLAYOUT_LIST), hImgList, LVSIL_SMALL);
 }
 
 static VOID
@@ -204,7 +265,9 @@ SettingPageProc(HWND hwndDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
             AddListColumn(hwndDlg);
             (VOID) ListView_SetExtendedListViewStyle(GetDlgItem(MainDlgWnd, IDC_KEYLAYOUT_LIST),
                                                      LVS_EX_FULLROWSELECT);
+            hImgList = ImageList_Create(16, 16, ILC_COLOR8 | ILC_MASK, 0, 1);
             InitLangList(hwndDlg);
+            (VOID) ListView_SetImageList(GetDlgItem(MainDlgWnd, IDC_KEYLAYOUT_LIST), hImgList, LVSIL_SMALL);
             EnableWindow(GetDlgItem(hwndDlg, IDC_PROP_BUTTON),FALSE);
             EnableWindow(GetDlgItem(hwndDlg, IDC_SET_DEFAULT),FALSE);
         }
@@ -245,6 +308,9 @@ SettingPageProc(HWND hwndDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
                               InputLangPropDlgProc);
                     break;
             }
+            break;
+        case WM_DESTROY:
+            (VOID) ImageList_Destroy(hImgList);
             break;
     }
 
