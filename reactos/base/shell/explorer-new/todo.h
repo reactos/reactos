@@ -46,35 +46,6 @@ static const GUID SID_HACK_SMenuPopup = {0xD1E7AFEB,0x6A2E,0x11D0,{0x8C,0x78,0x0
 #define IDeskBarClient_GetSize(T,a,b) (T)->lpVtbl->GetSize(T,a,b)
 #endif
 
-
-#define INTERFACE IDeskBar
-DECLARE_INTERFACE_(IDeskBar,IUnknown)
-{
-    /*** IUnknown methods ***/
-    STDMETHOD(QueryInterface)(THIS_ REFIID,PVOID*) PURE;
-    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
-    STDMETHOD_(ULONG,Release)(THIS) PURE;
-    /*** IOleWindow methods ***/
-    STDMETHOD_(HRESULT,GetWindow)(THIS_ HWND*) PURE;
-    STDMETHOD_(HRESULT,ContextSensitiveHelp)(THIS_ BOOL) PURE;
-    /*** IDeskBar methods ***/
-    STDMETHOD_(HRESULT,SetClient)(THIS_ IUnknown*) PURE;
-    STDMETHOD_(HRESULT,GetClient)(THIS_ IUnknown**) PURE;
-    STDMETHOD_(HRESULT,OnPosRectChangeDB)(THIS_ RECT*) PURE;
-};
-#undef INTERFACE
-
-#ifdef COBJMACROS
-#define IDeskBar_QueryInterface(T,a,b) (T)->lpVtbl->QueryInterface(T,a,b)
-#define IDeskBar_AddRef(T) (T)->lpVtbl->AddRef(T)
-#define IDeskBar_Release(T) (T)->lpVtbl->Release(T)
-#define IDeskBar_GetWindow(T,a) (T)->lpVtbl->GetWindow(T,a)
-#define IDeskBar_ContextSensitiveHelp(T,a) (T)->lpVtbl->ContextSensitiveHelp(T,a)
-#define IDeskBar_SetClient(T,a) (T)->lpVtbl->SetClient(T,a)
-#define IDeskBar_GetClient(T,a) (T)->lpVtbl->GetClient(T,a)
-#define IDeskBar_OnPosRectChangeDB(T,a) (T)->lpVtbl->OnPosRectChangeDB(T,a)
-#endif
-
 #include <pshpack8.h>
 typedef struct
 {
@@ -315,59 +286,8 @@ DECLARE_INTERFACE_(IBanneredBar,IUnknown)
 #define IBanneredBar_GetBitmap(T,a) (T)->lpVtbl->GetBitmap(T,a)
 #endif
 
-enum tagMENUPOPUPPOPUPFLAGS
-{
-    MPPF_SETFOCUS = 0x1,
-    MPPF_INITIALSELECT = 0x2,
-    MPPF_NOANIMATE = 0x4,
-    MPPF_KEYBOARD = 0x10,
-    MPPF_REPOSITION = 0x20,
-    MPPF_FORCEZORDER = 0x40,
-    MPPF_FINALSELECT = 0x80,
-    MPPF_TOP = 0x20000000,
-    MPPF_LEFT = 0x40000000,
-    MPPF_RIGHT = 0x60000000,
-    MPPF_BOTTOM = 0x80000000,
-    MPPF_POS_MASK = 0xE0000000,
-    MPPF_ALIGN_LEFT = 0x2000000,
-    MPPF_ALIGN_RIGHT = 0x4000000,
-};
-typedef int MP_POPUPFLAGS;
 
-#define INTERFACE IMenuPopup
-DECLARE_INTERFACE_(IMenuPopup,IUnknown)
-{
-    /*** IUnknown methods ***/
-    STDMETHOD(QueryInterface)(THIS_ REFIID,PVOID*) PURE;
-    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
-    STDMETHOD_(ULONG,Release)(THIS) PURE;
-    /*** IOleWindow methods ***/
-    STDMETHOD_(HRESULT,GetWindow)(THIS_ HWND*) PURE;
-    STDMETHOD_(HRESULT,ContextSensitiveHelp)(THIS_ BOOL) PURE;
-    /*** IDeskBar methods ***/
-    STDMETHOD_(HRESULT,SetClient)(THIS_ IUnknown*) PURE;
-    STDMETHOD_(HRESULT,GetClient)(THIS_ IUnknown**) PURE;
-    STDMETHOD_(HRESULT,OnPosRectChangeDB)(THIS_ RECT*) PURE;
-    /*** IMenuPopup methods ***/
-    STDMETHOD_(HRESULT,Popup)(THIS_ POINTL*,RECTL*,MP_POPUPFLAGS) PURE;
-    STDMETHOD_(HRESULT,OnSelect)(THIS_ DWORD) PURE;
-    STDMETHOD_(HRESULT,SetSubMenu)(THIS_ IMenuPopup*,BOOL) PURE;
-};
-#undef INTERFACE
 
-#ifdef COBJMACROS
-#define IMenuPopup_QueryInterface(T,a,b) (T)->lpVtbl->QueryInterface(T,a,b)
-#define IMenuPopup_AddRef(T) (T)->lpVtbl->AddRef(T)
-#define IMenuPopup_Release(T) (T)->lpVtbl->Release(T)
-#define IMenuPopup_GetWindow(T,a) (T)->lpVtbl->GetWindow(T,a)
-#define IMenuPopup_ContextSensitiveHelp(T,a) (T)->lpVtbl->ContextSensitiveHelp(T,a)
-#define IMenuPopup_SetClient(T,a) (T)->lpVtbl->SetClient(T,a)
-#define IMenuPopup_GetClient(T,a) (T)->lpVtbl->GetClient(T,a)
-#define IMenuPopup_OnPosRectChangeDB(T,a) (T)->lpVtbl->OnPosRectChangeDB(T,a)
-#define IMenuPopup_Popup(T,a,b,c) (T)->lpVtbl->Popup(T,a,b,c)
-#define IMenuPopup_OnSelect(T,a) (T)->lpVtbl->OnSelect(T,a)
-#define IMenuPopup_SetSubMenu(T,a,b) (T)->lpVtbl->SetSubMenu(T,a,b)
-#endif
 
 #define INTERFACE IMenuBand
 DECLARE_INTERFACE_(IMenuBand,IUnknown)
