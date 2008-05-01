@@ -1742,6 +1742,26 @@ interface IBandSite : IUnknown
 
 cpp_quote("#endif /* _WIN32_IE_IE40 */")
 
+/*****************************************************************************
+ * IMenuBand interface
+ */
+[
+    uuid(568804CD-CBD7-11d0-9816-00C04FD91972),
+    object,
+    pointer_default(unique),
+    local
+]
+interface IMenuBand : IUnknown
+{
+    enum tagMENUBANDHANDLERCID {
+        MBHANDCID_PIDLSELECT = 0,
+    };
 
+    HRESULT IsMenuMessage([in] MSG* pmsg);
+
+    HRESULT TranslateMenuMessage(
+        [in, out] MSG* pmsg,
+        [out] LRESULT* plRet);
+}
 
 

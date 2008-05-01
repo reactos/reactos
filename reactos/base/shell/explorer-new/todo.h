@@ -80,7 +80,7 @@ DECLARE_INTERFACE_(IShellService,IUnknown)
 #define IShellService_SetOwner(T,a) (T)->lpVtbl->SetOwner(T,a)
 #endif
 
-#if 0
+#if _MSC_VER
 HRESULT WINAPI SHGetViewStatePropertyBag(LPCITEMIDLIST,LPCWSTR,DWORD,REFIID,PVOID*);/* FIXME: Parameter should be PCIDLIST_ABSOLUTE */
 #else
 typedef HRESULT (WINAPI *PSHGetViewStatePropertyBag)(LPCITEMIDLIST,LPCWSTR,DWORD,REFIID,PVOID*);
@@ -115,78 +115,5 @@ SHGetViewStatePropertyBag(IN LPCITEMIDLIST pidl,
 
 #define PIDLIST_ABSOLUTE LPITEMIDLIST
 PIDLIST_ABSOLUTE WINAPI SHCloneSpecialIDList(HWND hwnd, int csidl, BOOL fCreate);
-
-enum
-{
-    BMICON_LARGE = 0,
-    BMICON_SMALL
-};
-#define INTERFACE IBanneredBar
-DECLARE_INTERFACE_(IBanneredBar,IUnknown)
-{
-    /*** IUnknown methods ***/
-    STDMETHOD(QueryInterface)(THIS_ REFIID,PVOID*) PURE;
-    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
-    STDMETHOD_(ULONG,Release)(THIS) PURE;
-    /*** IBanneredBar methods ***/
-    STDMETHOD_(HRESULT,SetIconSize)(THIS_ DWORD) PURE;
-    STDMETHOD_(HRESULT,GetIconSize)(THIS_ DWORD*) PURE;
-    STDMETHOD_(HRESULT,SetBitmap)(THIS_ HBITMAP) PURE;
-    STDMETHOD_(HRESULT,GetBitmap)(THIS_ HBITMAP*) PURE;
-};
-#undef INTERFACE
-
-#ifdef COBJMACROS
-#define IBanneredBar_QueryInterface(T,a,b) (T)->lpVtbl->QueryInterface(T,a,b)
-#define IBanneredBar_AddRef(T) (T)->lpVtbl->AddRef(T)
-#define IBanneredBar_Release(T) (T)->lpVtbl->Release(T)
-#define IBanneredBar_SetIconSize(T,a) (T)->lpVtbl->SetIconSize(T,a)
-#define IBanneredBar_GetIconSize(T,a) (T)->lpVtbl->GetIconSize(T,a)
-#define IBanneredBar_SetBitmap(T,a) (T)->lpVtbl->SetBitmap(T,a)
-#define IBanneredBar_GetBitmap(T,a) (T)->lpVtbl->GetBitmap(T,a)
-#endif
-
-
-
-
-#define INTERFACE IMenuBand
-DECLARE_INTERFACE_(IMenuBand,IUnknown)
-{
-    /*** IUnknown methods ***/
-    STDMETHOD(QueryInterface)(THIS_ REFIID,PVOID*) PURE;
-    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
-    STDMETHOD_(ULONG,Release)(THIS) PURE;
-    /*** IMenuBand methods ***/
-    STDMETHOD_(HRESULT,IsMenuMessage)(THIS_ MSG*) PURE;
-    STDMETHOD_(HRESULT,TranslateMenuMessage)(THIS_ MSG*,LRESULT*) PURE;
-};
-#undef INTERFACE
-
-#ifdef COBJMACROS
-#define IMenuBand_QueryInterface(T,a,b) (T)->lpVtbl->QueryInterface(T,a,b)
-#define IMenuBand_AddRef(T) (T)->lpVtbl->AddRef(T)
-#define IMenuBand_Release(T) (T)->lpVtbl->Release(T)
-#define IMenuBand_IsMenuMessage(T,a) (T)->lpVtbl->IsMenuMessage(T,a)
-#define IMenuBand_TranslateMenuMessage(T,a,b) (T)->lpVtbl->TranslateMenuMessage(T,a,b)
-#endif
-
-#define INTERFACE IInitializeObject
-DECLARE_INTERFACE_(IInitializeObject,IUnknown)
-{
-    /*** IUnknown methods ***/
-    STDMETHOD(QueryInterface)(THIS_ REFIID,PVOID*) PURE;
-    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
-    STDMETHOD_(ULONG,Release)(THIS) PURE;
-    /*** IInitializeObject methods ***/
-    STDMETHOD_(HRESULT,Initialize)(THIS) PURE;
-};
-#undef INTERFACE
-
-#ifdef COBJMACROS
-#define IInitializeObject_QueryInterface(T,a,b) (T)->lpVtbl->QueryInterface(T,a,b)
-#define IInitializeObject_AddRef(T) (T)->lpVtbl->AddRef(T)
-#define IInitializeObject_Release(T) (T)->lpVtbl->Release(T)
-#define IInitializeObject_Initialize(T) (T)->lpVtbl->Initialize(T)
-#endif
 
 #endif /* __TODO_H */

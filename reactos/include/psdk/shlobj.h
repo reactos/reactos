@@ -1516,6 +1516,60 @@ HRESULT WINAPI SHOpenWithDialog(
   const OPENASINFO *poainfo
 );
 
+/*****************************************************************************
+ * IInitializeObject interface
+ */
+#undef  INTERFACE
+#define INTERFACE IInitializeObject
+
+DECLARE_INTERFACE_(IInitializeObject, IUnknown)//, "4622AD16-FF23-11d0-8D34-00A0C90F2719")
+{
+    STDMETHOD(QueryInterface) (THIS_ REFIID riid, void **ppv) PURE;
+    STDMETHOD_(ULONG,AddRef) (THIS)  PURE;
+    STDMETHOD_(ULONG,Release) (THIS) PURE;
+
+    STDMETHOD(Initialize)(THIS) PURE;
+};
+#undef INTERFACE
+#if !defined(__cplusplus) || defined(CINTERFACE)
+#define IInitializeObject_QueryInterface(T,a,b) (T)->lpVtbl->QueryInterface(T,a,b)
+#define IInitializeObject_AddRef(T) (T)->lpVtbl->AddRef(T)
+#define IInitializeObject_Release(T) (T)->lpVtbl->Release(T)
+#define IInitializeObject_Initialize(T) (T)->lpVtbl->Initialize(T)
+#endif
+
+
+/*****************************************************************************
+ * IBanneredBar interface
+ */
+enum
+{
+    BMICON_LARGE = 0,
+    BMICON_SMALL
+};
+#define INTERFACE IBanneredBar
+DECLARE_INTERFACE_(IBanneredBar, IUnknown)//, "596A9A94-013E-11d1-8D34-00A0C90F2719")
+{
+    STDMETHOD(QueryInterface) (THIS_ REFIID riid, void **ppv) PURE;
+    STDMETHOD_(ULONG,AddRef) (THIS)  PURE;
+    STDMETHOD_(ULONG,Release) (THIS) PURE;
+
+    STDMETHOD(SetIconSize)(THIS_ DWORD iIcon) PURE;
+    STDMETHOD(GetIconSize)(THIS_ DWORD* piIcon) PURE;
+    STDMETHOD(SetBitmap)(THIS_ HBITMAP hBitmap) PURE;
+    STDMETHOD(GetBitmap)(THIS_ HBITMAP* phBitmap) PURE;
+
+};
+#undef INTERFACE
+#if !defined(__cplusplus) || defined(CINTERFACE)
+#define IBanneredBar_QueryInterface(T,a,b) (T)->lpVtbl->QueryInterface(T,a,b)
+#define IBanneredBar_AddRef(T) (T)->lpVtbl->AddRef(T)
+#define IBanneredBar_Release(T) (T)->lpVtbl->Release(T)
+#define IBanneredBar_SetIconSize(T,a) (T)->lpVtbl->SetIconSize(T,a)
+#define IBanneredBar_GetIconSize(T,a) (T)->lpVtbl->GetIconSize(T,a)
+#define IBanneredBar_SetBitmap(T,a) (T)->lpVtbl->SetBitmap(T,a)
+#define IBanneredBar_GetBitmap(T,a) (T)->lpVtbl->GetBitmap(T,a)
+#endif
 
 #ifdef __cplusplus
 } /* extern "C" */

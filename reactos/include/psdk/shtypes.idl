@@ -69,7 +69,7 @@ typedef PCUITEMID_CHILD const *PCUITEMID_CHILD_ARRAY;
 typedef PCUIDLIST_RELATIVE const *PCUIDLIST_RELATIVE_ARRAY;
 typedef PCIDLIST_ABSOLUTE const *PCIDLIST_ABSOLUTE_ARRAY;
 typedef PCUIDLIST_ABSOLUTE const *PCUIDLIST_ABSOLUTE_ARRAY;
-cpp_quote("#else // !(defined(STRICT_TYPED_ITEMIDS) && defined(__cplusplus))")
+cpp_quote("#else /* !(defined(STRICT_TYPED_ITEMIDS) && defined(__cplusplus)) */")
 cpp_quote("#define PIDLIST_ABSOLUTE         LPITEMIDLIST")
 cpp_quote("#define PCIDLIST_ABSOLUTE        LPCITEMIDLIST")
 cpp_quote("#define PCUIDLIST_ABSOLUTE       LPCITEMIDLIST")
@@ -85,7 +85,7 @@ cpp_quote("#define PCUITEMID_CHILD_ARRAY    LPCITEMIDLIST *")
 cpp_quote("#define PCUIDLIST_RELATIVE_ARRAY LPCITEMIDLIST *")
 cpp_quote("#define PCIDLIST_ABSOLUTE_ARRAY  LPCITEMIDLIST *")
 cpp_quote("#define PCUIDLIST_ABSOLUTE_ARRAY LPCITEMIDLIST *")
-cpp_quote("#endif // defined(STRICT_TYPED_ITEMIDS) && defined(__cplusplus)")
+cpp_quote("#endif /* defined(STRICT_TYPED_ITEMIDS) && defined(__cplusplus) */")
 
 
 #ifndef MAX_PATH

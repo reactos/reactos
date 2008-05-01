@@ -227,6 +227,8 @@
 #define interface struct
 #define DECLARE_INTERFACE(iface)        interface iface
 #define DECLARE_INTERFACE_(iface,ibase) interface iface : public ibase
+#define DECLARE_INTERFACE_IID(iface, iid)             interface DECLSPEC_UUID(iid) DECLSPEC_NOVTABLE iface
+#define DECLARE_INTERFACE_IID_(iface, baseiface, iid) interface DECLSPEC_UUID(iid) DECLSPEC_NOVTABLE iface : public baseiface
 
 #define BEGIN_INTERFACE
 #define END_INTERFACE
