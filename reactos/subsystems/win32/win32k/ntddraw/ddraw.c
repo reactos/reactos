@@ -57,11 +57,6 @@ intEnableReactXDriver(PEDD_DIRECTDRAW_GLOBAL pEddgbl, PDC pDC)
         DPRINT1(" end call to pfnDdEnableDirectDraw \n ");
     }
 
-    /* setup hdev for edd_DdirectDraw_Global xp */
-    edd_DdirectDraw_Global.hDev   = pDC->pPDev;
-    /*FIXME : edd_DdirectDraw_Global.dhpdev   =  (PVOID)pDC->PDev; */
-
-
      /* test see if drv got a dx interface or not */
     if  ( ( pDev->DriverFunctions.DisableDirectDraw == NULL) ||
           ( pDev->DriverFunctions.EnableDirectDraw == NULL))
@@ -866,7 +861,7 @@ NtGdiDdSetGammaRamp(HANDLE hDirectDraw,
 /* internal debug api */
 void dump_edd_directdraw_global(EDD_DIRECTDRAW_GLOBAL *pEddgbl)
 {
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->dhpdev                                         : 0x%08lx\n",(((DWORD)&pEddgbl->dhpdev) - (DWORD)pEddgbl), pEddgbl->dhpdev);
+    DPRINT1("0x%08lx 0x000 PEDD_DIRECTDRAW_GLOBAL->dhpdev                                         : 0x%08lx\n",(((DWORD)&pEddgbl->dhpdev) - (DWORD)pEddgbl), pEddgbl->dhpdev);
     DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->dwReserved1                                    : 0x%08lx\n",(((DWORD)&pEddgbl->dwReserved1) - (DWORD)pEddgbl),pEddgbl->dwReserved1);
     DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->dwReserved2                                    : 0x%08lx\n",(((DWORD)&pEddgbl->dwReserved2) - (DWORD)pEddgbl),pEddgbl->dwReserved2);
     DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_000c[0]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_000c[0]) - (DWORD)pEddgbl),pEddgbl->unk_000c[0]);
