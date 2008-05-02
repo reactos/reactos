@@ -471,12 +471,32 @@ IStartMenuSiteImpl_Execute(IN OUT IStartMenuCallback *iface,
                            IN IShellFolder *pShellFolder,
                            IN LPCITEMIDLIST pidl)
 {
+    HMODULE hShlwapi;
+    HRESULT ret = S_FALSE;
+
     IStartMenuSiteImpl *This = IStartMenuSiteImpl_from_IStartMenuCallback(iface);
 
     DbgPrint("IStartMenuCallback::Execute\n");
-    return SHInvokeDefaultCommand(ITrayWindow_GetHWND(This->Tray),
-                                  pShellFolder,
-                                  pidl);
+
+    hShlwapi = LoadLibrary(TEXT("SHLWAPI.DLL"));
+    if (hShlwapi != NULL)
+    {
+        SHINVDEFCMD SHInvokeDefCmd;
+
+        /* SHInvokeDefaultCommand */
+        SHInvokeDefCmd = (SHINVDEFCMD)GetProcAddress(hShlwapi,
+                                                     (LPCSTR)((LONG)279));
+        if (SHInvokeDefCmd != NULL)
+        {
+            ret = SHInvokeDefCmd(ITrayWindow_GetHWND(This->Tray),
+                                 pShellFolder,
+                                 pidl);
+        }
+
+        FreeLibrary(hShlwapi);
+    }
+
+    return ret;
 }
 
 static HRESULT STDMETHODCALLTYPE

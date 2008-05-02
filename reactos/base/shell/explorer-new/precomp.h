@@ -21,11 +21,13 @@
 #include "resource.h"
 #include "comcsup.h"
 #include "todo.h"
+#include "initguid.h"
 #include "undoc.h"
 
 /* dynamic imports due to lack of support in msvc linker libs */
 typedef INT (STDCALL *REGSHELLHOOK)(HWND, DWORD);
 typedef BOOL (STDCALL *DRAWCAPTEMP)(HWND, HDC, const RECT*, HFONT, HICON, LPCWSTR, UINT);
+typedef HRESULT (STDCALL *SHINVDEFCMD)(HWND, IShellFolder*, LPCITEMIDLIST);
 
 static ULONG __inline
 Win32DbgPrint(const char *filename, int line, const char *lpFormat, ...)
