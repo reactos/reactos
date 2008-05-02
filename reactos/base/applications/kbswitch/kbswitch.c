@@ -185,8 +185,10 @@ GetLayoutName(LPTSTR szLayoutNum, LPTSTR szName)
 {
     HKEY hKey;
     DWORD dwBufLen;
-    TCHAR szBuf[MAX_PATH];
+    TCHAR szBuf[MAX_PATH], szDispName[MAX_PATH], szIndex[MAX_PATH], szPath[MAX_PATH];
     TCHAR szLCID[CCH_LAYOUT_ID + 1];
+    HANDLE hLib;
+    int i, j, k;
 
     if(!GetLayoutID(szLayoutNum, szLCID))
         return FALSE;
@@ -195,18 +197,53 @@ GetLayoutName(LPTSTR szLayoutNum, LPTSTR szName)
 
     if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, (LPCTSTR)szBuf, 0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
     {
-        dwBufLen = MAX_PATH * sizeof(TCHAR);
+        dwBufLen = sizeof(szBuf);
 
-        if(RegQueryValueEx(hKey, _T("Layout Text"), NULL, NULL, (LPBYTE)szName, &dwBufLen) != ERROR_SUCCESS)
+        if (RegQueryValueEx(hKey, _T("Layout Display Name"), NULL, NULL, (LPBYTE)szDispName, &dwBufLen) == ERROR_SUCCESS)
         {
-            RegCloseKey(hKey);
-            return FALSE;
+            if (szDispName[0] == '@')
+            {
+                for (i = 0; i < _tcslen(szDispName); i++)
+                {
+                    if ((szDispName[i] == ',') && (szDispName[i + 1] == '-'))
+                    {
+                        for (j = i + 2, k = 0; j < _tcslen(szDispName)+1; j++, k++)
+                        {
+                            szIndex[k] = szDispName[j];
+                        }
+                        szDispName[i - 1] = '\0';
+                        break;
+                    }
+                    else szDispName[i] = szDispName[i + 1];
+                }
+
+                if (ExpandEnvironmentStrings(szDispName, szPath, MAX_PATH))
+                {
+                    hLib = LoadLibrary(szPath);
+                    if (hLib)
+                    {
+                        if (LoadString(hLib, _ttoi(szIndex), szPath, sizeof(szPath) / sizeof(TCHAR)) != 0)
+                        {
+                            _tcscpy(szName, szPath);
+                            RegCloseKey(hKey);
+                            return TRUE;
+                        }
+                        FreeLibrary(hLib);
+                    }
+                }
+            }
         }
 
-        RegCloseKey(hKey);
+        dwBufLen = sizeof(szBuf);
+
+        if (RegQueryValueEx(hKey, _T("Layout Text"), NULL, NULL, (LPBYTE)szName, &dwBufLen) == ERROR_SUCCESS)
+        {
+            RegCloseKey(hKey);
+            return TRUE;
+        }
     }
 
-    return TRUE;
+    return FALSE;
 }
 
 BOOL CALLBACK
@@ -343,7 +380,7 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
                     shInputDll.cbSize = sizeof(shInputDll);
                     shInputDll.hwnd = hwnd;
                     shInputDll.lpVerb = _T("open");
-                    shInputDll.lpFile = _T("RunDll32.exe");
+                    shInputDll.lpFile = _T("rundll32.exe");
                     shInputDll.lpParameters = _T("shell32.dll,Control_RunDLL input.dll");
 
                     if (!ShellExecuteEx(&shInputDll))
@@ -404,7 +441,7 @@ _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInst, LPTSTR lpCmdLine, INT nCmdSh
         DispatchMessage(&msg);
     }
 
-    CloseHandle(hMutex);
+    if (hMutex) CloseHandle(hMutex);
 
     return 0;
 }
