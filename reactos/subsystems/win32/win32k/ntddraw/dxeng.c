@@ -362,7 +362,7 @@ DxEngGetHdevData(HDEV hDev,
         break;
       case DxEGShDevData_OpenRefs:
         DPRINT1("requested DXEGSHDEVDATA DxEGShDevData_OpenRefs\n");
-        retVal = (DWORD_PTR) PDev->cPdevOpenRefs == 0;
+        retVal = (DWORD_PTR) PDev->cPdevOpenRefs != 0;
         break;
       case DxEGShDevData_palette:
         DPRINT1("requested DXEGSHDEVDATA DxEGShDevData_palette\n");
