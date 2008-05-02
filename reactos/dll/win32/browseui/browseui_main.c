@@ -35,6 +35,7 @@
 
 #include "browseui.h"
 #include "shobjidl.h" /* for IShellFolder used in undoc.h */
+#include "initguid.h"
 #include "undoc.h" /* for CLSID_RebarBandSite */
 
 WINE_DEFAULT_DEBUG_CHANNEL(browseui);
@@ -44,6 +45,10 @@ LONG BROWSEUI_refCount = 0;
 HINSTANCE browseui_hinstance = 0;
 
 typedef HRESULT (WINAPI *LPFNCONSTRUCTOR)(IUnknown *pUnkOuter, IUnknown **ppvOut);
+
+/* undoc GUID */
+DEFINE_GUID(CLSID_RebarBandSite, 0xECD4FC4D, 0x521C, 0x11D0, 0xB7, 0x92, 0x00, 0xA0, 0xC9, 0x03, 0x12, 0xE1);
+
 
 static const struct {
     REFCLSID clsid;
