@@ -86,19 +86,58 @@ CreateLayoutIcon(LPTSTR szInd)
 }
 
 BOOL
-GetLayoutName(LPCTSTR lcid, LPTSTR name)
+GetLayoutName(LPCTSTR szLCID, LPTSTR szName)
 {
     HKEY hKey;
     DWORD dwBufLen;
-    TCHAR szBuf[MAX_PATH];
+    TCHAR szBuf[MAX_PATH], szDispName[MAX_PATH], szIndex[MAX_PATH], szPath[MAX_PATH];
+    HANDLE hLib;
+    int i, j, k;
 
-    wsprintf(szBuf, _T("SYSTEM\\CurrentControlSet\\Control\\Keyboard Layouts\\%s"), lcid);
+    wsprintf(szBuf, _T("SYSTEM\\CurrentControlSet\\Control\\Keyboard Layouts\\%s"), szLCID);
 
     if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, (LPCTSTR)szBuf, 0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
     {
         dwBufLen = sizeof(szBuf);
 
-        if (RegQueryValueEx(hKey, _T("Layout Text"), NULL, NULL, (LPBYTE)name, &dwBufLen) == ERROR_SUCCESS)
+        if (RegQueryValueEx(hKey, _T("Layout Display Name"), NULL, NULL, (LPBYTE)szDispName, &dwBufLen) == ERROR_SUCCESS)
+        {
+            if (szDispName[0] == '@')
+            {
+                for (i = 0; i < _tcslen(szDispName); i++)
+                {
+                    if ((szDispName[i] == ',') && (szDispName[i + 1] == '-'))
+                    {
+                        for (j = i + 2, k = 0; j < _tcslen(szDispName)+1; j++, k++)
+                        {
+                            szIndex[k] = szDispName[j];
+                        }
+                        szDispName[i - 1] = '\0';
+                        break;
+                    }
+                    else szDispName[i] = szDispName[i + 1];
+                }
+
+                if (ExpandEnvironmentStrings(szDispName, szPath, MAX_PATH))
+                {
+                    hLib = LoadLibrary(szPath);
+                    if (hLib)
+                    {
+                        if (LoadString(hLib, _ttoi(szIndex), szPath, sizeof(szPath) / sizeof(TCHAR)) != 0)
+                        {
+                            _tcscpy(szName, szPath);
+                            RegCloseKey(hKey);
+                            return TRUE;
+                        }
+                        FreeLibrary(hLib);
+                    }
+                }
+            }
+        }
+
+        dwBufLen = sizeof(szBuf);
+
+        if (RegQueryValueEx(hKey, _T("Layout Text"), NULL, NULL, (LPBYTE)szName, &dwBufLen) == ERROR_SUCCESS)
         {
             RegCloseKey(hKey);
             return TRUE;

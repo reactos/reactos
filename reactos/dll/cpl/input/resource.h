@@ -185,6 +185,11 @@
 #define IDS_DIVEHI_TYPEWRITER_LAYOUT                    5133
 #define IDS_BULGARIAN_PHONETIC_CLASSIC_LAYOUT           5134
 #define IDS_BULGARIAN_PHONETIC_BDS_LAYOUT               5135
+#define IDS_BULGARIAN_BDS_LAYOUT                        5136
+#define IDS_GERMAN_RISTOME_LAYOUT                       5137
+#define IDS_GERMAN_NEO_11_LAYOUT                        5138
+#define IDS_GERMAN_DE_ERGO_LAYOUT                       5139
+#define IDS_BURMESE_LAYOUT                              5140
 
 #endif /* __CPL_RESOURCE_H */
 

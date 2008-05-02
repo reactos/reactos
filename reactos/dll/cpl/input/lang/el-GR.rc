@@ -223,4 +223,9 @@ BEGIN
 	IDS_DIVEHI_TYPEWRITER_LAYOUT,                   "Divehi Typewriter"
 	IDS_BULGARIAN_PHONETIC_CLASSIC_LAYOUT,          "Bulgarian Phonetic (Classic)"
 	IDS_BULGARIAN_PHONETIC_BDS_LAYOUT,              "Bulgarian Phonetic (BDS)"
+    IDS_BULGARIAN_BDS_LAYOUT,                       "Bulgarian BDS 5237-1978"
+    IDS_GERMAN_RISTOME_LAYOUT,                      "German (RISTOME)"
+    IDS_GERMAN_NEO_11_LAYOUT,                       "German (NEO-1.1)"
+    IDS_GERMAN_DE_ERGO_LAYOUT,                      "German (de_ergo)"
+    IDS_BURMESE_LAYOUT,                             "Burmese"
 END

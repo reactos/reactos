@@ -38,7 +38,7 @@ InitPropSheetPage(PROPSHEETPAGE *psp, WORD idDlg, DLGPROC DlgProc);
 INT_PTR CALLBACK
 SettingPageProc(HWND hwndDlg,UINT uMsg,WPARAM wParam,LPARAM lParam);
 BOOL
-GetLayoutName(LPCTSTR lcid, LPTSTR name);
+GetLayoutName(LPCTSTR szLCID, LPTSTR szName);
 VOID
 UpdateLayoutsList(VOID);
 

@@ -72,7 +72,7 @@ AddNewLayout(HWND hwndDlg)
 VOID
 CreateKeyboardLayoutList(VOID)
 {
-    HKEY hKey, hSubKey;
+    HKEY hKey;
     PTSTR pstrLayoutID;
     TCHAR szLayoutID[CCH_LAYOUT_ID + 1], KeyName[MAX_PATH];
     DWORD dwIndex = 0;
@@ -84,31 +84,21 @@ CreateKeyboardLayoutList(VOID)
 
         while (RegEnumKeyEx(hKey, dwIndex, szLayoutID, &dwSize, NULL, NULL, NULL, NULL) == ERROR_SUCCESS)
         {
-            wsprintf(KeyName, _T("System\\CurrentControlSet\\Control\\Keyboard Layouts\\%s"), szLayoutID);
+            GetLayoutName(szLayoutID, KeyName);
 
-            if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, KeyName, 0, KEY_QUERY_VALUE, &hSubKey) == ERROR_SUCCESS)
+            INT iIndex = (INT) SendMessage(hLayoutList, CB_ADDSTRING, 0, (LPARAM)KeyName);
+
+            pstrLayoutID = (PTSTR)HeapAlloc(hProcessHeap, 0, sizeof(szLayoutID));
+            lstrcpy(pstrLayoutID, szLayoutID);
+            SendMessage(hLayoutList, CB_SETITEMDATA, iIndex, (LPARAM)pstrLayoutID);
+
+            // FIXME!
+            if (_tcscmp(szLayoutID, _T("00000409")) == 0)
             {
-                DWORD dwKeyNameSize = sizeof(KeyName);
-
-                if (RegQueryValueEx(hSubKey, _T("Layout Text"), NULL, NULL, (LPBYTE)KeyName, &dwKeyNameSize) == ERROR_SUCCESS)
-                {
-                    INT iIndex = (INT) SendMessage(hLayoutList, CB_ADDSTRING, 0, (LPARAM)KeyName);
-
-                    pstrLayoutID = (PTSTR)HeapAlloc(hProcessHeap, 0, sizeof(szLayoutID));
-                    lstrcpy(pstrLayoutID, szLayoutID);
-                    SendMessage(hLayoutList, CB_SETITEMDATA, iIndex, (LPARAM)pstrLayoutID);
-
-                    // FIXME!
-                    if (_tcscmp(szLayoutID, _T("00000409")) == 0)
-                    {
-                        SendMessage(hLayoutList, CB_SETCURSEL, (WPARAM)iIndex, (LPARAM)0);
-                    }
-
-                    dwIndex++;
-                }
-
-                RegCloseKey(hSubKey);
+                SendMessage(hLayoutList, CB_SETCURSEL, (WPARAM)iIndex, (LPARAM)0);
             }
+
+            dwIndex++;
 
             dwSize = sizeof(szLayoutID) / sizeof(TCHAR);
         }
