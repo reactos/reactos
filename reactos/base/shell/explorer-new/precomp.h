@@ -349,12 +349,14 @@ UpdateStartMenu(IN OUT IMenuPopup *pMenuPopup,
 
 /* TrayClockWnd */
 #define TCWM_GETMINIMUMSIZE (WM_USER + 0x100)
-#define TCWM_UPDATETIME (WM_USER + 0x101)
+#define TCWM_UPDATETIME     (WM_USER + 0x101)
 
 /* TrayNotifyWnd */
 #define TNWM_GETMINIMUMSIZE (WM_USER + 0x100)
-#define TNWM_UPDATETIME (WM_USER + 0x101)
-#define TNWM_SHOWCLOCK  (WM_USER + 0x102)
+#define TNWM_UPDATETIME     (WM_USER + 0x101)
+#define TNWM_SHOWCLOCK      (WM_USER + 0x102)
+#define TNWM_SHOWTRAY       (WM_USER + 0x103)
+#define TNWM_CHANGETRAYPOS  (WM_USER + 0x104)
 
 #define NTNWM_REALIGN   (0x1)
 
