@@ -66,6 +66,9 @@ intEnableReactXDriver(HDC hdc)
     }
     else
     {
+        /* FIXME HACK : some how pEDDgpl got zero out */
+        pDev->pEDDgpl = (PVOID)&edd_DdirectDraw_Global;
+
         /* FIXME : proper check see if it been disable */
         if (pDev->pEDDgpl->dhpdev == 0)
         {
