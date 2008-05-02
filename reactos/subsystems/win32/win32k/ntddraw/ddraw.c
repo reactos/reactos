@@ -811,6 +811,8 @@ void dump_edd_directdraw_global(EDD_DIRECTDRAW_GLOBAL *pEddgbl)
     DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_460[4]                                     : 0x%08lx\n",(((DWORD)&pEddgbl->unk_460[4]) - (DWORD)pEddgbl),pEddgbl->unk_460[4]);
     DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_460[5]                                     : 0x%08lx\n",(((DWORD)&pEddgbl->unk_460[5]) - (DWORD)pEddgbl),pEddgbl->unk_460[5]);
     DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_460[6]                                     : 0x%08lx\n",(((DWORD)&pEddgbl->unk_460[6]) - (DWORD)pEddgbl),pEddgbl->unk_460[6]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_460[7]                                     : 0x%08lx\n",(((DWORD)&pEddgbl->unk_460[6]) - (DWORD)pEddgbl),pEddgbl->unk_460[7]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_460[8]                                     : 0x%08lx\n",(((DWORD)&pEddgbl->unk_460[6]) - (DWORD)pEddgbl),pEddgbl->unk_460[8]);
     // D3DNTHAL_CALLBACKS2 d3dNtHalCallbacks2;
     DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->d3dNtHalCallbacks2                             : 0x%08lx\n",(((DWORD)&pEddgbl->d3dNtHalCallbacks2) - (DWORD)pEddgbl),pEddgbl->d3dNtHalCallbacks2);
 
@@ -854,9 +856,7 @@ void dump_edd_directdraw_global(EDD_DIRECTDRAW_GLOBAL *pEddgbl)
     DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_504[7]                                     : 0x%08lx\n",(((DWORD)&pEddgbl->unk_504[7]) - (DWORD)pEddgbl),pEddgbl->unk_504[7]);
     DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_504[8]                                     : 0x%08lx\n",(((DWORD)&pEddgbl->unk_504[8]) - (DWORD)pEddgbl),pEddgbl->unk_504[8]);
     DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_504[9]                                     : 0x%08lx\n",(((DWORD)&pEddgbl->unk_504[9]) - (DWORD)pEddgbl),pEddgbl->unk_504[9]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_504[10]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_504[10]) - (DWORD)pEddgbl),pEddgbl->unk_504[10]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_504[11]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_504[11]) - (DWORD)pEddgbl),pEddgbl->unk_504[11]);
-
+    
     // D3DNTHAL_CALLBACKS3 d3dNtHalCallbacks3;
     DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->d3dNtHalCallbacks3                             : 0x%08lx\n",(((DWORD)&pEddgbl->d3dNtHalCallbacks3) - (DWORD)pEddgbl),pEddgbl->d3dNtHalCallbacks3);
     DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_544                                        : 0x%08lx\n",(((DWORD)&pEddgbl->unk_544) - (DWORD)pEddgbl), pEddgbl->unk_544);
