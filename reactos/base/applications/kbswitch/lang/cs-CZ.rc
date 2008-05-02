@@ -11,6 +11,6 @@ BEGIN
     BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Pøedvolby...",  ID_PREFERENCES
-        MENUITEM "&Ukonèit",            ID_EXIT
+        MENUITEM "&Ukonèit",       ID_EXIT
     END
 END

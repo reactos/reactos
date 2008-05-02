@@ -272,14 +272,11 @@ ActivateLayout(HWND hwnd, ULONG uLayoutNum)
 }
 
 static HMENU
-BuildPopupMenu()
+BuildLeftPopupMenu()
 {
     HMENU hMenu;
-    HMENU hMenuTemplate;
     HKEY hKey;
     DWORD dwIndex, dwSize;
-    LPTSTR pszMenuItem;
-    MENUITEMINFO mii;
     TCHAR szLayoutNum[CCH_ULONG_DEC + 1];
     TCHAR szName[MAX_PATH];
 
@@ -302,6 +299,21 @@ BuildPopupMenu()
 
         RegCloseKey(hKey);
     }
+
+    return hMenu;
+}
+
+static HMENU
+BuildRightPopupMenu()
+{
+    HMENU hMenu;
+    HMENU hMenuTemplate;
+    DWORD dwIndex;
+    LPTSTR pszMenuItem;
+    MENUITEMINFO mii;
+
+    // Add the keyboard layouts to the popup menu
+    hMenu = BuildLeftPopupMenu();
 
     // Add the menu items from the popup menu template
     hMenuTemplate = GetSubMenu(LoadMenu(hInst, MAKEINTRESOURCE(IDR_POPUP)), 0);
@@ -340,26 +352,30 @@ BuildPopupMenu()
 LRESULT CALLBACK
 WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 {
-    static HMENU hPopupMenu;
+    static HMENU hLeftPopupMenu, hRightPopupMenu;
 
     switch (Message)
     {
         case WM_CREATE:
             AddTrayIcon(hwnd);
-            hPopupMenu = BuildPopupMenu(hwnd);
+            hLeftPopupMenu = BuildLeftPopupMenu(hwnd);
+            hRightPopupMenu = BuildRightPopupMenu(hwnd);
             break;
 
         case WM_NOTIFYICONMSG:
             switch (lParam)
             {
-                case WM_LBUTTONDOWN:
                 case WM_RBUTTONDOWN:
+                case WM_LBUTTONDOWN:
                 {
                     POINT pt;
 
                     GetCursorPos(&pt);
                     SetForegroundWindow(hwnd);
-                    TrackPopupMenu(hPopupMenu, 0, pt.x, pt.y, 0, hwnd, NULL);
+                    if (lParam == WM_LBUTTONDOWN)
+                        TrackPopupMenu(hLeftPopupMenu, 0, pt.x, pt.y, 0, hwnd, NULL);
+                    else
+                        TrackPopupMenu(hRightPopupMenu, 0, pt.x, pt.y, 0, hwnd, NULL);
                     PostMessage(hwnd, WM_NULL, 0, 0);
                     break;
                 }
@@ -396,7 +412,8 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
             break;
 
         case WM_DESTROY:
-            DestroyMenu(hPopupMenu);
+            DestroyMenu(hLeftPopupMenu);
+            DestroyMenu(hRightPopupMenu);
             DelTrayIcon(hwnd);
             PostQuitMessage(0);
             break;
