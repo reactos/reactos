@@ -34,8 +34,8 @@ intEnableReactXDriver(HDC hdc)
     NTSTATUS Status;
     PEPROCESS Proc = NULL;
     PDC pDC = NULL;
-    PGDIDEVICE pDev = (PGDIDEVICE)pDC->pPDev;
-    PGD_DXDDENABLEDIRECTDRAW pfnDdEnableDirectDraw = (PGD_DXDDENABLEDIRECTDRAW)gpDxFuncs[DXG_INDEX_DxDdEnableDirectDraw].pfn;
+    PGDIDEVICE pDev = NULL;
+    PGD_DXDDENABLEDIRECTDRAW pfnDdEnableDirectDraw = NULL;
     BOOL success = FALSE;
     
     /* FIXME get the process data */
@@ -57,7 +57,9 @@ intEnableReactXDriver(HDC hdc)
         DPRINT1("Warning : Failed to lock hdc\n");
         return FALSE;
     }
-      
+
+    pDev = (PGDIDEVICE)pDC->pPDev;
+
     /* test see if drv got a dx interface or not */
     if  ( ( pDev->DriverFunctions.DisableDirectDraw == NULL) ||
           ( pDev->DriverFunctions.EnableDirectDraw == NULL))
@@ -65,17 +67,16 @@ intEnableReactXDriver(HDC hdc)
         DPRINT1("Waring : DisableDirectDraw and EnableDirectDraw are NULL, no dx driver \n");    
     }
     else
-    {
-        /* FIXME HACK : some how pEDDgpl got zero out */
-        pDev->pEDDgpl = (PVOID)&edd_DdirectDraw_Global;
-
-        /* FIXME : proper check see if it been disable */
-        if (pDev->pEDDgpl->dhpdev == 0)
+    {   
+        
+        /* CHeck see if dx have been enable or not */
+        if (pDev->pEDDgpl->hDev != pDC->pPDev)
         {
             pDev->pEDDgpl->ddCallbacks.dwSize = sizeof(DD_CALLBACKS);
             pDev->pEDDgpl->ddSurfaceCallbacks.dwSize = sizeof(DD_SURFACECALLBACKS);
             pDev->pEDDgpl->ddPaletteCallbacks.dwSize = sizeof(DD_PALETTECALLBACKS);
 
+            pfnDdEnableDirectDraw = (PGD_DXDDENABLEDIRECTDRAW)gpDxFuncs[DXG_INDEX_DxDdEnableDirectDraw].pfn;
             if (pfnDdEnableDirectDraw == NULL)
             {
                 DPRINT1("Warning: no pfnDdEnableDirectDraw\n");

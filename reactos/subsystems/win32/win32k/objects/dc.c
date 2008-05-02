@@ -553,7 +553,7 @@ IntPrepareDriver()
       PrimarySurface.ppdevNext = NULL;    // Fixme! We need to support more than display drvs.
       PrimarySurface.ppdevParent = NULL;  // Always NULL if primary.
       PrimarySurface.pGraphicsDev = NULL; // Fixme!
-      PrimarySurface.pEDDgpl = (PVOID)&edd_DdirectDraw_Global; // FIXME! We need to support more than display drvs.
+      PrimarySurface.pEDDgpl = (EDD_DIRECTDRAW_GLOBAL *)&edd_DdirectDraw_Global; // FIXME! We need to support more than display drvs.
       RtlZeroMemory( &edd_DdirectDraw_Global ,sizeof(EDD_DIRECTDRAW_GLOBAL));
       ret = TRUE;
       goto cleanup;
