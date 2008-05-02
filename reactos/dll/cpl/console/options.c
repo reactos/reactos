@@ -1,4 +1,4 @@
-/* $Id$
+/* $Id: options.c 29690 2007-10-19 23:21:45Z dreimer $
  *
  * PROJECT:         ReactOS Console Configuration DLL
  * LICENSE:         GPL - See COPYING in the top level directory

@@ -40,9 +40,6 @@
 <directory name="clusapi">
 	<xi:include href="clusapi/clusapi.rbuild" />
 </directory>
-<directory name="console">
-	<xi:include href="console/console.rbuild" />
-</directory>
 <directory name="comcat">
 	<xi:include href="comcat/comcat.rbuild" />
 </directory>

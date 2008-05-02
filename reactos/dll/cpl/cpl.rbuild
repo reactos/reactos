@@ -10,6 +10,9 @@
 <directory name="appwiz-new">
 	<xi:include href="appwiz-new/appwiz.rbuild" />
 </directory>
+<directory name="console">
+	<xi:include href="console/console.rbuild" />
+</directory>
 <directory name="desk">
 	<xi:include href="desk/desk.rbuild" />
 </directory>
