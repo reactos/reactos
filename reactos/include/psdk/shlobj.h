@@ -442,6 +442,13 @@ DECLARE_INTERFACE_(IDeskBarClient,IUnknown)
 };
 #undef INTERFACE
 
+#define DBC_GS_IDEAL    0
+#define DBC_GS_SIZEDOWN 1
+
+#define DBC_HIDE        0
+#define DBC_SHOW        1
+#define DBC_SHOWOBSCURE 2
+
 
 /****************************************************************************
 * SHAddToRecentDocs API
@@ -752,6 +759,7 @@ HRESULT WINAPI SHGetDataFromIDListA(LPSHELLFOLDER psf, LPCITEMIDLIST pidl, int n
 HRESULT WINAPI SHGetDataFromIDListW(LPSHELLFOLDER psf, LPCITEMIDLIST pidl, int nFormat, LPVOID pv, int cb);
 #define  SHGetDataFromIDList WINELIB_NAME_AW(SHGetDataFromIDList)
 
+PIDLIST_ABSOLUTE WINAPI SHCloneSpecialIDList(HWND hwnd, int csidl, BOOL fCreate);
 BOOL WINAPI SHGetSpecialFolderPathA (HWND hwndOwner, LPSTR szPath, int nFolder, BOOL bCreate);
 BOOL WINAPI SHGetSpecialFolderPathW (HWND hwndOwner, LPWSTR szPath, int nFolder, BOOL bCreate);
 #define  SHGetSpecialFolderPath WINELIB_NAME_AW(SHGetSpecialFolderPath)

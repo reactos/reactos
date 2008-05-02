@@ -11,11 +11,8 @@
 	<library>gdi32</library>
 	<library>user32</library>
 	<library>comctl32</library>
-	<library>msvcrt20</library>
-	<library>ntdll</library>
 	<library>ole32</library>
 	<library>oleaut32</library>
-	<library>shdocvw</library>
 	<library>shell32</library>
 	<library>shlwapi</library>
 	<library>uuid</library>

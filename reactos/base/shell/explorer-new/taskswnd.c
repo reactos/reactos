@@ -1358,6 +1358,7 @@ TaskSwitchWnd_Create(IN OUT PTASK_SWITCH_WND This)
 
     if (This->hWndToolbar != NULL)
     {
+        HMODULE hShell32;
         SIZE BtnSize;
 
         /* Identify the version we're using */
@@ -1391,8 +1392,22 @@ TaskSwitchWnd_Create(IN OUT PTASK_SWITCH_WND This)
 
         /* Register the shell hook */
         This->ShellHookMsg = RegisterWindowMessage(TEXT("SHELLHOOK"));
-        RegisterShellHook(This->hWnd,
-                          3); /* 1 if not NT! We're targeting NT so we don't care! */
+        hShell32 = LoadLibrary(TEXT("SHELL32.DLL"));
+        if (hShell32 != NULL)
+        {
+            REGSHELLHOOK RegShellHook;
+
+            /* RegisterShellHook */
+            RegShellHook = (REGSHELLHOOK)GetProcAddress(hShell32,
+                                                        (LPCSTR)((LONG)181));
+            if (RegShellHook != NULL)
+            {
+                RegShellHook(This->hWnd,
+                             3); /* 1 if no NT! We're targeting NT so we don't care! */
+            }
+
+            FreeLibrary(hShell32);
+        }
 
         /* Add all windows to the toolbar */
         EnumWindows(TaskSwitchWnd_EnumWindowsProc,
@@ -1414,11 +1429,27 @@ TaskSwitchWnd_Create(IN OUT PTASK_SWITCH_WND This)
 static VOID
 TaskSwitchWnd_NCDestroy(IN OUT PTASK_SWITCH_WND This)
 {
+    HMODULE hShell32;
+
     This->IsDestroying = TRUE;
 
     /* Unregister the shell hook */
-    RegisterShellHook(This->hWnd,
-                      FALSE);
+    hShell32 = LoadLibrary(TEXT("SHELL32.DLL"));
+    if (hShell32 != NULL)
+    {
+        REGSHELLHOOK RegShellHook;
+
+        /* RegisterShellHook */
+        RegShellHook = (REGSHELLHOOK)GetProcAddress(hShell32,
+                                                    (LPCSTR)((LONG)181));
+        if (RegShellHook != NULL)
+        {
+            RegShellHook(This->hWnd,
+                         FALSE);
+        }
+
+        FreeLibrary(hShell32);
+    }
 
     TaskSwitchWnd_DeleteAllTasks(This);
 }
@@ -1572,6 +1603,7 @@ TaskSwichWnd_HandleItemPaint(IN OUT PTASK_SWITCH_WND This,
 {
     HFONT hCaptionFont, hBoldCaptionFont;
     LRESULT Ret = CDRF_DODEFAULT;
+    HMODULE hUser32;
 
 #if TASK_USE_DRAWCAPTIONTEMP != 0
 
@@ -1627,14 +1659,31 @@ TaskSwichWnd_HandleItemPaint(IN OUT PTASK_SWITCH_WND This,
                     uidctFlags |= DC_ACTIVE;
             }
 
-            /* Draw the button content */
-            TaskItem->DisplayTooltip = !DrawCaptionTemp(TaskItem->hWnd,
-                                                        nmtbcd->nmcd.hdc,
-                                                        &nmtbcd->nmcd.rc,
-                                                        hCaptionFont,
-                                                        NULL,
-                                                        NULL,
-                                                        uidctFlags);
+            hUser32 = LoadLibrary(TEXT("USER32.DLL"));
+            if (hUser32 != NULL)
+            {
+                DRAWCAPTEMP DrawCapTemp;
+                LONG ord = 187;
+#ifndef UNICODE
+                ord = 186;
+#endif
+                /* DrawCaptionTemp */
+                DrawCapTemp = (DRAWCAPTEMP)GetProcAddress(hUser32,
+                                                          (LPCSTR)ord);
+                if (DrawCapTemp != NULL)
+                {
+                    /* Draw the button content */
+                    TaskItem->DisplayTooltip = !DrawCapTemp(TaskItem->hWnd,
+                                                            nmtbcd->nmcd.hdc,
+                                                            &nmtbcd->nmcd.rc,
+                                                            hCaptionFont,
+                                                            NULL,
+                                                            NULL,
+                                                            uidctFlags);
+                }
+
+                FreeLibrary(hUser32);
+            }
 
             return CDRF_SKIPDEFAULT;
 

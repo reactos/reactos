@@ -1,12 +1,6 @@
 #ifndef __TODO_H
 #define __TODO_H
 
-/*
- * Stuff missing in our headers
- */
-
-#define SM_REMOTECONTROL 0x2001
-
 /* FIXME: Ugly hack!!! FIX ASAP! Move to uuid! */
 static const GUID IID_HACK_IShellView2 = {0x88E39E80,0x3578,0x11CF,{0xAE,0x69,0x08,0x00,0x2B,0x2E,0x12,0x62}};
 #define IID_IShellView2 IID_HACK_IShellView2
@@ -46,18 +40,6 @@ static const GUID SID_HACK_SMenuPopup = {0xD1E7AFEB,0x6A2E,0x11D0,{0x8C,0x78,0x0
 #define IDeskBarClient_GetSize(T,a,b) (T)->lpVtbl->GetSize(T,a,b)
 #endif
 
-
-#define SHGVSPB_PERUSER 0x1
-#define SHGVSPB_PERFOLDER   0x4
-#define SHGVSPB_ROAM    0x00000020
-#define SHGVSPB_NOAUTODEFAULTS  0x80000000
-#define SHGVSPB_FOLDER  (SHGVSPB_PERUSER | SHGVSPB_PERFOLDER)
-#define SHGVSPB_FOLDERNODEFAULTS    (SHGVSPB_PERUSER | SHGVSPB_PERFOLDER | SHGVSPB_NOAUTODEFAULTS)
-
-
-#define DBC_SHOW    1
-#define DBC_HIDE    0
-
 static const GUID IID_HACK_IShellService = {0x5836FB00,0x8187,0x11CF,{0xA1,0x2B,0x00,0xAA,0x00,0x4A,0xE8,0x37}};
 #define IID_IShellService IID_HACK_IShellService
 
@@ -79,41 +61,5 @@ DECLARE_INTERFACE_(IShellService,IUnknown)
 #define IShellService_Release(T) (T)->lpVtbl->Release(T)
 #define IShellService_SetOwner(T,a) (T)->lpVtbl->SetOwner(T,a)
 #endif
-
-#if _MSC_VER
-HRESULT WINAPI SHGetViewStatePropertyBag(LPCITEMIDLIST,LPCWSTR,DWORD,REFIID,PVOID*);/* FIXME: Parameter should be PCIDLIST_ABSOLUTE */
-#else
-typedef HRESULT (WINAPI *PSHGetViewStatePropertyBag)(LPCITEMIDLIST,LPCWSTR,DWORD,REFIID,PVOID*);
-static HRESULT __inline
-SHGetViewStatePropertyBag(IN LPCITEMIDLIST pidl,
-                          IN LPCWSTR pszBagName,
-                          IN DWORD dwFlags,
-                          IN REFIID riid,
-                          OUT PVOID* ppv)
-{
-    static PSHGetViewStatePropertyBag Func = NULL;
-
-    if (Func == NULL)
-    {
-        HMODULE hShlwapi;
-        hShlwapi = LoadLibrary(TEXT("SHLWAPI.DLL"));
-        if (hShlwapi != NULL)
-        {
-            Func = (PSHGetViewStatePropertyBag)GetProcAddress(hShlwapi, "SHGetViewStatePropertyBag");
-        }
-    }
-
-    if (Func != NULL)
-    {
-        return Func(pidl, pszBagName, dwFlags, riid, ppv);
-    }
-
-    MessageBox(NULL, TEXT("SHGetViewStatePropertyBag not available"), NULL, 0);
-    return E_NOTIMPL;
-}
-#endif
-
-#define PIDLIST_ABSOLUTE LPITEMIDLIST
-PIDLIST_ABSOLUTE WINAPI SHCloneSpecialIDList(HWND hwnd, int csidl, BOOL fCreate);
 
 #endif /* __TODO_H */

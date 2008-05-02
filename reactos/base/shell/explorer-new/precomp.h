@@ -23,6 +23,10 @@
 #include "todo.h"
 #include "undoc.h"
 
+/* dynamic imports due to lack of support in msvc linker libs */
+typedef INT (STDCALL *REGSHELLHOOK)(HWND, DWORD);
+typedef BOOL (STDCALL *DRAWCAPTEMP)(HWND, HDC, const RECT*, HFONT, HICON, LPCWSTR, UINT);
+
 static ULONG __inline
 Win32DbgPrint(const char *filename, int line, const char *lpFormat, ...)
 {
@@ -222,13 +226,6 @@ DisplayTrayProperties(ITrayWindow *Tray);
 /*
  * desktop.c
  */
-
-#define SHCNRF_InterruptLevel   (0x0001)
-#define SHCNRF_ShellLevel   (0x0002)
-#define SHCNRF_RecursiveInterrupt   (0x1000)
-#define SHCNRF_NewDelivery  (0x8000)
-
-
 HANDLE
 DesktopCreateWindow(IN OUT ITrayWindow *Tray);
 
