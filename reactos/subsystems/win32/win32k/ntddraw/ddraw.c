@@ -10,7 +10,6 @@
 
 #include <w32k.h>
 #include <debug.h>
-#define DXDDRAWDEBUG 1
 
 PGD_DXDDSTARTUPDXGRAPHICS gpfnStartupDxGraphics = NULL;
 PGD_DXDDCLEANUPDXGRAPHICS gpfnCleanupDxGraphics = NULL;
@@ -18,58 +17,81 @@ PGD_DXDDCLEANUPDXGRAPHICS gpfnCleanupDxGraphics = NULL;
 /* export from dxeng.c */
 extern DRVFN gaEngFuncs;
 extern ULONG gcEngFuncs;
+extern EDD_DIRECTDRAW_GLOBAL edd_DdirectDraw_Global;
+
 
 DRVFN gpDxFuncs[DXG_INDEX_DxDdIoctl];
 HANDLE ghDxGraphics = NULL;
 ULONG gdwDirectDrawContext;
-
-EDD_DIRECTDRAW_GLOBAL edd_DdirectDraw_Global;
 
 
 /************************************************************************/
 /* DirectX graphic/video driver enable start here                       */
 /************************************************************************/
 BOOL
-intEnableReactXDriver(PEDD_DIRECTDRAW_GLOBAL pEddgbl, PDC pDC)
+intEnableReactXDriver(HDC hdc)
 {
+    NTSTATUS Status;
+    PEPROCESS Proc = NULL;
+    PDC pDC = NULL;
     PGDIDEVICE pDev = (PGDIDEVICE)pDC->pPDev;
     PGD_DXDDENABLEDIRECTDRAW pfnDdEnableDirectDraw = (PGD_DXDDENABLEDIRECTDRAW)gpDxFuncs[DXG_INDEX_DxDdEnableDirectDraw].pfn;
     BOOL success = FALSE;
+    
+    /* FIXME get the process data */
 
-    /*clean up some of the cache entry */
-    RtlZeroMemory(pEddgbl,sizeof(EDD_DIRECTDRAW_GLOBAL));
+    /* Do not try load dxg.sys when it have already been load once */
+    if (gpfnStartupDxGraphics == NULL)
+    {
+        Status = DxDdStartupDxGraphics(0,NULL,0,NULL,NULL, Proc);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("Warning : Failed to create the directx interface\n");
+            return FALSE;
+        }
+    }
 
+    pDC = DC_LockDc(hdc);
+    if (pDC == NULL)
+    {
+        DPRINT1("Warning : Failed to lock hdc\n");
+        return FALSE;
+    }
+      
     /* test see if drv got a dx interface or not */
     if  ( ( pDev->DriverFunctions.DisableDirectDraw == NULL) ||
           ( pDev->DriverFunctions.EnableDirectDraw == NULL))
     {
-        DPRINT1("Waring : DisableDirectDraw and EnableDirectDraw are NULL, no dx driver \n");
-        return FALSE;
-    }
-
-    /* setup EDD_DIRECTDRAW_GLOBAL for pDev xp */
-    pDev->pEDDgpl = pEddgbl;
-
-    pEddgbl->ddCallbacks.dwSize = sizeof(DD_CALLBACKS);
-    pEddgbl->ddSurfaceCallbacks.dwSize = sizeof(DD_SURFACECALLBACKS);
-    pEddgbl->ddPaletteCallbacks.dwSize = sizeof(DD_PALETTECALLBACKS);
-
-    if (pfnDdEnableDirectDraw == NULL)
-    {
-        DPRINT1("Warning: no pfnDdEnableDirectDraw\n");
+        DPRINT1("Waring : DisableDirectDraw and EnableDirectDraw are NULL, no dx driver \n");    
     }
     else
     {
-        DPRINT1(" call to pfnDdEnableDirectDraw \n ");
-        /* Note it is the hdev struct it want, not the drv hPDev aka pdc->PDev */
-        success = pfnDdEnableDirectDraw(pDC->pPDev, TRUE);
+        /* FIXME : proper check see if it been disable */
+        if (pDev->pEDDgpl->dhpdev == 0)
+        {
+            pDev->pEDDgpl->ddCallbacks.dwSize = sizeof(DD_CALLBACKS);
+            pDev->pEDDgpl->ddSurfaceCallbacks.dwSize = sizeof(DD_SURFACECALLBACKS);
+            pDev->pEDDgpl->ddPaletteCallbacks.dwSize = sizeof(DD_PALETTECALLBACKS);
 
-        dump_edd_directdraw_global(pEddgbl);
-        dump_halinfo(&pEddgbl->ddHalInfo);
-        DPRINT1(" end call to pfnDdEnableDirectDraw \n ");
+            if (pfnDdEnableDirectDraw == NULL)
+            {
+                DPRINT1("Warning: no pfnDdEnableDirectDraw\n");
+            }
+            else
+            {
+                DPRINT1(" call to pfnDdEnableDirectDraw \n ");
+                /* Note it is the hdev struct it want, not the drv hPDev aka pdc->PDev */
+                success = pfnDdEnableDirectDraw(pDC->pPDev, TRUE);
+
+                dump_edd_directdraw_global(pDev->pEDDgpl);
+                dump_halinfo(&pDev->pEDDgpl->ddHalInfo);                
+            }
+        }
     }
-    
+
     DPRINT1("Return value : 0x%08x\n",success);
+    DC_UnlockDc(pDC);
+    DPRINT1(" end call to pfnDdEnableDirectDraw \n ");
     return success;
 }
 
@@ -189,45 +211,20 @@ STDCALL
 NtGdiDdCreateDirectDrawObject(HDC hdc)
 {
     PGD_DDCREATEDIRECTDRAWOBJECT pfnDdCreateDirectDrawObject;
-    NTSTATUS Status;
-    PEPROCESS Proc = NULL;
-    PDC pDC;
-
+   
     if (hdc == NULL)
     {
         DPRINT1("Warning : hdc is NULL\n");
         return 0;
     }
-
-    /* FIXME this code should be add where the driver being load */
-        /* FIXME get the process data */
-    /* FIXME this code should be add where the driver being load */
-    Status = DxDdStartupDxGraphics(0,NULL,0,NULL,NULL, Proc);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("Warning : Failed to create the directx interface\n");
-        return 0;
-    }
-
-    pDC = DC_LockDc(hdc);
-    if (pDC == NULL)
-    {
-        DPRINT1("Warning : Failed to lock hdc\n");
-        return 0;
-    }
-
+    
     /* FIXME This should be alloc for each drv and use it from each drv, not global for whole win32k */
-    if (intEnableReactXDriver(&edd_DdirectDraw_Global, pDC) == FALSE)
-    {
-        DC_UnlockDc(pDC);
+    if (intEnableReactXDriver(hdc) == FALSE)
+    {       
         DPRINT1("Warning : Failed to start the directx interface from the graphic driver\n");
         return DDHAL_DRIVER_NOTHANDLED;
     }
-
-    DC_UnlockDc(pDC);
-
-
-
+   
     /* get the pfnDdCreateDirectDrawObject after we load the drv */
     pfnDdCreateDirectDrawObject = (PGD_DDCREATEDIRECTDRAWOBJECT)gpDxFuncs[DXG_INDEX_DxDdCreateDirectDrawObject].pfn;
   

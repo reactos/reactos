@@ -8,7 +8,8 @@
 #include <reactos/drivers/directx/dxeng.h>
 
 /* From ddraw.c */
-BOOL intEnableReactXDriver(PEDD_DIRECTDRAW_GLOBAL pEddgbl, PDC pDC);
+BOOL intEnableReactXDriver(HDC);
+NTSTATUS STDCALL DxDdStartupDxGraphics(ULONG, PDRVENABLEDATA, ULONG, PDRVENABLEDATA, PULONG, PEPROCESS);
 extern DRVFN gpDxFuncs[];
 
 typedef BOOL (NTAPI* PGD_DDSETGAMMARAMP)(HANDLE, HDC, LPVOID);
