@@ -2,5 +2,6 @@ LIBRARY hdwwiz.cpl
 
 EXPORTS
 CPlApplet@16
+InstallNewDevice
 
 ; EOF

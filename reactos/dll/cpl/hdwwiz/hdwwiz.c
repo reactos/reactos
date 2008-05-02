@@ -44,6 +44,15 @@ APPLET Applets[] =
 
 typedef BOOL (WINAPI *PINSTALL_NEW_DEVICE)(HWND, LPGUID, PDWORD);
 
+
+BOOL CALLBACK
+InstallNewDevice(HWND hwndParent,
+                 LPGUID ClassGuid,
+                 PDWORD pReboot)
+{
+    return TRUE;
+}
+
 static LONG APIENTRY
 Applet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
 {
