@@ -24,6 +24,7 @@ DRVFN gpDxFuncs[DXG_INDEX_DxDdIoctl];
 HANDLE ghDxGraphics = NULL;
 ULONG gdwDirectDrawContext;
 
+#define DXDBG 1
 
 /************************************************************************/
 /* DirectX graphic/video driver enable start here                       */
@@ -451,6 +452,9 @@ STDCALL
 NtGdiDdReenableDirectDrawObject(HANDLE hDirectDrawLocal,
                                 BOOL *pubNewMode)
 {
+#if DXDBG 
+    BOOL status = FALSE;
+#endif
     PGD_DXDDREENABLEDIRECTDRAWOBJECT pfnDdReenableDirectDrawObject = (PGD_DXDDREENABLEDIRECTDRAWOBJECT)gpDxFuncs[DXG_INDEX_DxDdReenableDirectDrawObject].pfn;
   
     if (pfnDdReenableDirectDrawObject == NULL)
@@ -460,7 +464,15 @@ NtGdiDdReenableDirectDrawObject(HANDLE hDirectDrawLocal,
     }
 
     DPRINT1("Calling dxg.sys pfnDdReenableDirectDrawObject\n");
+
+#if DXDBG 
+    status = pfnDdReenableDirectDrawObject(hDirectDrawLocal, pubNewMode);
+    DPRINT1("end Calling dxg.sys pfnDdReenableDirectDrawObject\n");
+    DPRINT1("return value : 0x%08x\n",status);
+    return status;
+#else
     return pfnDdReenableDirectDrawObject(hDirectDrawLocal, pubNewMode);
+#endif
 }
 
 

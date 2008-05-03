@@ -43,7 +43,7 @@ DRVFN gaEngFuncs [] =
     {DXENG_INDEX_DxEngSetDCOwner, (PFN)DxEngSetDCOwner},
     {DXENG_INDEX_DxEngLockDC, (PFN)DxEngLockDC},
     {DXENG_INDEX_DxEngUnlockDC, (PFN)DxEngUnlockDC},
-    {DXENG_INDEX_DxEngSetDCState, (PFN)DxEngGetDCState},
+    {DXENG_INDEX_DxEngSetDCState, (PFN)DxEngSetDCState},
     {DXENG_INDEX_DxEngGetDCState, (PFN)DxEngGetDCState},
     {DXENG_INDEX_DxEngSelectBitmap, (PFN)DxEngSelectBitmap},
     {DXENG_INDEX_DxEngSetBitmapOwner, (PFN)DxEngSetBitmapOwner},
@@ -728,8 +728,9 @@ DxEngGetDesktopDC(BOOLEAN CreateDesktopDc, DWORD x2, DWORD x3)
 /************************************************************************/
 DWORD
 STDCALL
-DxEngDeleteDC(DWORD x1, DWORD x2)
+DxEngDeleteDC(HDC hdc, DWORD x2)
 {
+
     UNIMPLEMENTED;
     return FALSE;
 }
