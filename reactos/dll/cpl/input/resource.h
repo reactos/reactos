@@ -190,6 +190,7 @@
 #define IDS_GERMAN_NEO_11_LAYOUT                        5138
 #define IDS_GERMAN_DE_ERGO_LAYOUT                       5139
 #define IDS_BURMESE_LAYOUT                              5140
+#define IDS_UKRAINIAN_STUDENT_LAYOUT                    5141
 
 #endif /* __CPL_RESOURCE_H */
 
