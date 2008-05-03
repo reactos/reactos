@@ -1,4 +1,5 @@
 
+
 /************************************************************************/
 /* These functions are imported from win32k.sys by dxg.sys              */
 /************************************************************************/
@@ -96,15 +97,15 @@ BOOLEAN STDCALL DxEngSetDeviceGammaRamp(HDEV hPDev, PGAMMARAMP Ramp, BOOL Unuse)
 BOOLEAN STDCALL DxEngCleanDC(HDC hdc);
 BOOLEAN STDCALL DxEngIncDispUniq();
 
-DWORD STDCALL DxEngCreateMemoryDC(DWORD x1);
+HDC STDCALL DxEngCreateMemoryDC(HDEV hDev);
 
 DWORD STDCALL DxEngIsHdevLockedByCurrentThread(DWORD x1);
 DWORD STDCALL DxEngUnreferenceHdev(DWORD x1);
 DWORD STDCALL DxEngSpTearDownSprites(DWORD x1, DWORD x2, DWORD x3);
 DWORD STDCALL DxEngSpUnTearDownSprites(DWORD x1, DWORD x2, DWORD x3);
 DWORD STDCALL DxEngSpSpritesVisible(DWORD x1);
-HDC STDCALL DxEngGetDesktopDC(BOOLEAN CreateDesktopDc, DWORD x2, DWORD x3);
-DWORD STDCALL DxEngDeleteDC(HDC hdc, DWORD x2);
+HDC STDCALL DxEngGetDesktopDC(ULONG DcType, BOOL EmptyDC, BOOL ValidatehWnd);
+BOOLEAN STDCALL DxEngDeleteDC(HDC hdc, BOOL Force);
 DWORD STDCALL DxEngSetDCState(DWORD x1, DWORD x2, DWORD x3);
 DWORD STDCALL DxEngSelectBitmap(DWORD x1, DWORD x2);
 DWORD STDCALL DxEngSetBitmapOwner(DWORD x1, DWORD x2);

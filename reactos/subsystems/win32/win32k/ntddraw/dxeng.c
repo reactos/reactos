@@ -1,4 +1,4 @@
-/*
+  /*
  * PROJECT:          ReactOS Win32 Subsystem
  * LICENSE:          GPL - See COPYING in the top level directory
  * FILE:             subsystems/win32/win32k/ntddraw/dxeng.c
@@ -658,12 +658,12 @@ DxEngEnumerateHdev(HDEV *hdev)
 /************************************************************************/
 /* DxEngCreateMemoryDC                                                  */
 /************************************************************************/
-DWORD
+HDC
 STDCALL
-DxEngCreateMemoryDC(DWORD x1)
+DxEngCreateMemoryDC(HDEV hDev)
 {
     UNIMPLEMENTED;
-    return FALSE;
+    return NULL;
 }
 
 /************************************************************************/
@@ -705,12 +705,12 @@ DxEngUnreferenceHdev(DWORD x1)
 /************************************************************************/
 HDC
 STDCALL
-DxEngGetDesktopDC(BOOLEAN CreateDesktopDc, DWORD x2, DWORD x3)
+DxEngGetDesktopDC(ULONG DcType, BOOL EmptyDC, BOOL ValidatehWnd)
 {
     PWINDOW_OBJECT DesktopObject = 0;
     HDC DesktopHDC = 0;
 
-    if (CreateDesktopDc == FALSE)
+    if (DcType == DC_TYPE_DIRECT)
     {        
         DesktopObject = UserGetDesktopWindow();
         DesktopHDC = (HDC)UserGetWindowDC(DesktopObject);
@@ -726,13 +726,11 @@ DxEngGetDesktopDC(BOOLEAN CreateDesktopDc, DWORD x2, DWORD x3)
 /************************************************************************/
 /* DxEngDeleteDC                                                        */
 /************************************************************************/
-DWORD
+BOOLEAN
 STDCALL
-DxEngDeleteDC(HDC hdc, DWORD x2)
+DxEngDeleteDC(HDC hdc, BOOL Force)
 {
-
-    UNIMPLEMENTED;
-    return FALSE;
+   return IntGdiDeleteDC(hdc, Force);
 }
 
 /************************************************************************/
