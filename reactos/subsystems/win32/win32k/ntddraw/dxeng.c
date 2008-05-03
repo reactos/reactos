@@ -703,12 +703,24 @@ DxEngUnreferenceHdev(DWORD x1)
 /************************************************************************/
 /* DxEngGetDesktopDC                                                    */
 /************************************************************************/
-DWORD
+HDC
 STDCALL
-DxEngGetDesktopDC(DWORD x1, DWORD x2, DWORD x3)
+DxEngGetDesktopDC(BOOLEAN CreateDesktopDc, DWORD x2, DWORD x3)
 {
-    UNIMPLEMENTED;
-    return FALSE;
+    PWINDOW_OBJECT DesktopObject = 0;
+    HDC DesktopHDC = 0;
+
+    if (CreateDesktopDc == FALSE)
+    {        
+        DesktopObject = UserGetDesktopWindow();
+        DesktopHDC = (HDC)UserGetWindowDC(DesktopObject);
+    }
+    else
+    {
+        UNIMPLEMENTED;
+    }
+
+    return DesktopHDC;
 }
 
 /************************************************************************/
