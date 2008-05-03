@@ -124,11 +124,20 @@
 	<directory name="kbdth">
 		<xi:include href="kbdth/kbdth.rbuild" />
 	</directory>
+	<directory name="kbdtuf">
+		<xi:include href="kbdtuf/kbdtuf.rbuild" />
+	</directory>
+	<directory name="kbdtuq">
+		<xi:include href="kbdtuq/kbdtuq.rbuild" />
+	</directory>
 	<directory name="kbduk">
 		<xi:include href="kbduk/kbduk.rbuild" />
 	</directory>
 	<directory name="kbdur">
 		<xi:include href="kbdur/kbdur.rbuild" />
+	</directory>
+	<directory name="kbdurs">
+		<xi:include href="kbdurs/kbdurs.rbuild" />
 	</directory>
 	<directory name="kbdus">
 		<xi:include href="kbdus/kbdus.rbuild" />
@@ -144,6 +153,12 @@
 	</directory>
 	<directory name="kbdusx">
 		<xi:include href="kbdusx/kbdusx.rbuild" />
+	</directory>
+	<directory name="kbduzb">
+		<xi:include href="kbduzb/kbduzb.rbuild" />
+	</directory>
+	<directory name="kbdvntc">
+		<xi:include href="kbdvntc/kbdvntc.rbuild" />
 	</directory>
 	<directory name="kbdycc">
 		<xi:include href="kbdycc/kbdycc.rbuild" />
