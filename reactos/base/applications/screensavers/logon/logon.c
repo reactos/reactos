@@ -29,9 +29,6 @@
 #define APP_TIMER			1
 #define APP_TIMER_INTERVAL	2000
 
-#define BITMAP_HEIGHT	 240
-#define BITMAP_WIDTH	 340
-
 HBITMAP GetScreenSaverBitmap (void)
 {
 	OSVERSIONINFOEX osvi;
@@ -61,8 +58,6 @@ ScreenSaverProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	{
 		case WM_CREATE:
 		{
-			GetClientRect(hWnd, &rect);
-
 			bitmap = GetScreenSaverBitmap ();
 
 			if(bitmap == NULL)
@@ -87,25 +82,44 @@ ScreenSaverProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
              BITMAP bm; /* Bitmap structure as seen in bmWidth & bmHeight */ 
              PAINTSTRUCT ps; 
 
+             // Obtain window coordinates.
+             GetClientRect (hWnd, &rect);
+
              HDC hdc = BeginPaint(hWnd, &ps); 
              HDC hdcMem = CreateCompatibleDC(hdc); 
              HBITMAP hbmOld = SelectObject(hdcMem, bitmap); 
 
-             GetObject(bitmap, sizeof(bm), &bm); 
+             GetObject(bitmap, sizeof(bm), &bm);
 
-             bm.bmWidth = 1000; 
-             bm.bmHeight = 700; 
-
-             BitBlt(
-                 hdc, 
-                 RANDOM (0, rect.right - BITMAP_WIDTH),
-                 RANDOM (0, rect.bottom - BITMAP_HEIGHT),
-                 bm.bmWidth, 
-                 bm.bmHeight, 
-                 hdcMem, 
-                 5, 
-                 5, 
-                 SRCCOPY); 
+             if (rect.right < bm.bmWidth ||
+                 rect.bottom < bm.bmHeight)
+             {
+                StretchBlt(
+                    hdc,
+                    RANDOM (0, rect.right - (bm.bmWidth /5)),
+                    RANDOM (0, rect.bottom - (bm.bmHeight /5)),
+                    bm.bmWidth /5,
+                    bm.bmHeight /5,
+                    hdcMem,
+                    0,
+                    0,
+                    bm.bmWidth,
+                    bm.bmHeight,
+                    SRCCOPY);
+             }
+             else
+             {
+                 BitBlt(
+                     hdc, 
+                     RANDOM (0, rect.right - bm.bmWidth),
+                     RANDOM (0, rect.bottom - bm.bmHeight),
+                     bm.bmWidth, 
+                     bm.bmHeight, 
+                     hdcMem, 
+                     0, 
+                     0, 
+                     SRCCOPY); 
+             }
 
              SelectObject(hdcMem, hbmOld); 
              DeleteDC(hdcMem); 
