@@ -12,6 +12,8 @@
 #include <d3d9.h>
 #include "d3d9_private.h"
 
+extern struct IDirect3DDevice9Vtbl Direct3DDevice9_Vtbl;
+
 enum REF_TYPE
 {
     RT_EXTERNAL,
@@ -24,7 +26,7 @@ typedef struct _tagD3D9BaseObject_
 /* 0x0000 */    LPDWORD lpVtbl;
 /* 0x0004 */    DWORD dwUnknown0004;
 /* 0x0008 */    DWORD dwUnknown0008;
-/* 0x000c */    struct _tagD3D9BaseDevice_* pBaseDevice;
+/* 0x000c */    struct _tagDirect3DDevice9_INT_* pBaseDevice;
 /* 0x0010 */    DWORD dwUnknown0010;    // Index? Unique id?
 /* 0x0014 */    HANDLE hKernelHandle;
 /* 0x0018 */    LPDWORD dwUnknown0018;
@@ -77,7 +79,7 @@ typedef struct _tagD3D9ResourceManager_
 #ifdef D3D_DEBUG_INFO
 /* N/A    - 0x0000 */   DDSURFACEDESC SurfaceDesc[8];
 #endif
-/* 0x0000 - 0x0160 */   struct _tagD3D9BaseDevice_* pBaseDevice;
+/* 0x0000 - 0x0160 */   struct _tagDirect3DDevice9_INT_* pBaseDevice;
 /* 0x0004 - 0x0164 */   DWORD dwUnknown0004;
 /* 0x0008 - 0x0168 */   DWORD dwUnknown0008;
 /* 0x000c - 0x016c */   DWORD MaxSimultaneousTextures;
@@ -144,7 +146,7 @@ typedef struct _tagDirect3DSwapChain9_INT_
 /* 0x00ec */    DWORD dwUnknown00ec;
 /* 0x00f0 */    DWORD dwUnknown00f0[27];
 
-/* 0x015c */    LPDWORD pUnknown0174; // points to 0x0174
+/* 0x015c */    LPDWORD pUnknown015c;
 /* 0x0160 */    DWORD dwUnknown0160[4];
 /* 0x0170 */    HRESULT hResult;
 
@@ -162,7 +164,7 @@ typedef struct _tagDirect3DSwapChain9_INT_
 
 typedef struct _tagDirect3DDevice9_INT_
 {
-/* 0x0000 */    struct IDirect3D9DeviceVtbl* lpVtbl;
+/* 0x0000 */    struct IDirect3DDevice9Vtbl* lpVtbl;
 /* 0x0004 */    CRITICAL_SECTION CriticalSection;
 #ifdef D3D_DEBUG_INFO
 /* N/A    - 0x001c */   DWORD dbg0004;
@@ -180,7 +182,7 @@ typedef struct _tagDirect3DDevice9_INT_
 /* N/A    - 0x004c */   DWORD dbg0034;
 /* N/A    - 0x0050 */   DWORD dbg0038;
 #endif
-/* 0x001c - 0x0054 */   DWORD unknown000007;
+/* 0x001c - 0x0054 */   BOOL bLockDevice;
 /* 0x0020 - 0x0058 */   DWORD dwProcessId;
 /* 0x0024 - 0x005c */   struct _tagD3D9PUREDEVICE_* lpThis;
 /* 0x0028 - 0x0060 */   DWORD dwDXVersion;

@@ -9,8 +9,8 @@
 #include "d3d9_helpers.h"
 #include "debug.h"
 
-#define LOCK_D3DDEVICE9()     EnterCriticalSection(&This->CriticalSection);
-#define UNLOCK_D3DDEVICE9()   LeaveCriticalSection(&This->CriticalSection);
+#define LOCK_D3DDEVICE9()     if (This->bLockDevice) EnterCriticalSection(&This->CriticalSection);
+#define UNLOCK_D3DDEVICE9()   if (This->bLockDevice) LeaveCriticalSection(&This->CriticalSection);
 
 /* Convert a IDirect3D9 pointer safely to the internal implementation struct */
 LPDIRECT3DDEVICE9_INT impl_from_IDirect3DDevice9(LPDIRECT3DDEVICE9 iface)
@@ -144,10 +144,10 @@ static HRESULT WINAPI IDirect3DDevice9Impl_CreateAdditionalSwapChain(LPDIRECT3DD
 * The function IDirect3DDevice9Impl_GetSwapChain returns a pointer to a swap chain object.
 *
 * @param LPDIRECT3D iface
-* Pointer to the IDirect3DDevice9 object returned from IDirect3D9->CreateDevice()
+* Pointer to the IDirect3DDevice9 object returned from IDirect3D9::CreateDevice()
 *
 * @param UINT iSwapChain
-* Swap chain index to get.
+* Swap chain index to get object for.
 * The maximum value for this is the value returned by IDirect3DDevice9::GetNumberOfSwapChains() - 1.
 *
 * @param IDirect3DSwapChain9** ppSwapChain
@@ -180,7 +180,7 @@ static HRESULT WINAPI IDirect3DDevice9Impl_GetSwapChain(LPDIRECT3DDEVICE9 iface,
 
     if (This->pSwapChains[iSwapChain] != NULL)
     {
-        IDirect3DSwapChain9* pSwapChain = (IDirect3DSwapChain9*)This->pSwapChains[iSwapChain]->lpVtbl;
+        IDirect3DSwapChain9* pSwapChain = (IDirect3DSwapChain9*)&This->pSwapChains[iSwapChain]->lpVtbl;
         IDirect3DSwapChain9_AddRef(pSwapChain);
         *ppSwapChain = pSwapChain;
     }
@@ -193,11 +193,34 @@ static HRESULT WINAPI IDirect3DDevice9Impl_GetSwapChain(LPDIRECT3DDEVICE9 iface,
     return D3D_OK;
 }
 
+/*++
+* @name IDirect3DDevice9::GetNumberOfSwapChains
+* @implemented
+*
+* The function IDirect3DDevice9Impl_GetNumberOfSwapChains returns the number of swap chains
+* created by IDirect3D9::CreateDevice().
+*
+* @param LPDIRECT3D iface
+* Pointer to the IDirect3DDevice9 object returned from IDirect3D9::CreateDevice().
+*
+* @return UINT
+* Returns the number of swap chains created by IDirect3D9::CreateDevice().
+*
+* NOTE: An application can create additional swap chains using the
+*       IDirect3DDevice9::CreateAdditionalSwapChain() method.
+*
+*/
 static UINT WINAPI IDirect3DDevice9Impl_GetNumberOfSwapChains(LPDIRECT3DDEVICE9 iface)
 {
-    UNIMPLEMENTED
+    UINT NumSwapChains;
 
-    return D3D_OK;
+    LPDIRECT3DDEVICE9_INT This = impl_from_IDirect3DDevice9(iface);
+    LOCK_D3DDEVICE9();
+
+    NumSwapChains = This->NumAdaptersInDevice;
+
+    UNLOCK_D3DDEVICE9();
+    return NumSwapChains;
 }
 
 static HRESULT WINAPI IDirect3DDevice9Impl_Reset(LPDIRECT3DDEVICE9 iface, D3DPRESENT_PARAMETERS* pPresentationParameters)
