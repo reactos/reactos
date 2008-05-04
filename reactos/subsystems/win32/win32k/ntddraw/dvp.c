@@ -103,10 +103,7 @@ NtGdiDvpFlipVideoPort(HANDLE hVideoPort,
                       HANDLE hDDSurfaceTarget,
                       PDD_FLIPVPORTDATA puFlipVPortData)
 {
-    PGD_DVPFLIPVIDEOPORT pfnDvpFlipVideoPort = NULL;
-    INT i;
-
-    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDvpFlipVideoPort, pfnDvpFlipVideoPort);
+    PGD_DVPFLIPVIDEOPORT pfnDvpFlipVideoPort  = (PGD_DVPFLIPVIDEOPORT)gpDxFuncs[DXG_INDEX_DxDvpFlipVideoPort].pfn;
 
     if (pfnDvpFlipVideoPort == NULL)
     {
@@ -127,10 +124,7 @@ STDCALL
 NtGdiDvpGetVideoPortBandwidth(HANDLE hVideoPort,
                               PDD_GETVPORTBANDWIDTHDATA puGetVPortBandwidthData)
 {
-    PGD_DVPGETVIDEOPORTBANDWITH pfnDvpGetVideoPortBandwidth = NULL;
-    INT i;
-
-    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDvpGetVideoPortBandwidth, pfnDvpGetVideoPortBandwidth);
+    PGD_DVPGETVIDEOPORTBANDWITH pfnDvpGetVideoPortBandwidth = (PGD_DVPGETVIDEOPORTBANDWITH)gpDxFuncs[DXG_INDEX_DxDvpGetVideoPortBandwidth].pfn;
 
     if (pfnDvpGetVideoPortBandwidth == NULL)
     {
@@ -151,10 +145,7 @@ STDCALL
 NtGdiDvpGetVideoPortFlipStatus(HANDLE hDirectDraw,
                                PDD_GETVPORTFLIPSTATUSDATA puGetVPortFlipStatusData)
 {
-    PGD_DXDVPGETVIDEOPORTFLIPSTATUS pfnDvpGetVideoPortFlipStatus = NULL;
-    INT i;
-
-    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDvpGetVideoPortFlipStatus, pfnDvpGetVideoPortFlipStatus);
+    PGD_DXDVPGETVIDEOPORTFLIPSTATUS pfnDvpGetVideoPortFlipStatus = (PGD_DXDVPGETVIDEOPORTFLIPSTATUS)gpDxFuncs[DXG_INDEX_DxDvpGetVideoPortFlipStatus].pfn;
 
     if (pfnDvpGetVideoPortFlipStatus == NULL)
     {
@@ -175,10 +166,7 @@ STDCALL
 NtGdiDvpGetVideoPortInputFormats(HANDLE hVideoPort,
                                  PDD_GETVPORTINPUTFORMATDATA puGetVPortInputFormatData)
 {
-    PGD_DXDVPGETVIDEOPORTINPUTFORMATS pfnDvpGetVideoPortInputFormats = NULL;
-    INT i;
-
-    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDvpGetVideoPortInputFormats, pfnDvpGetVideoPortInputFormats);
+    PGD_DXDVPGETVIDEOPORTINPUTFORMATS pfnDvpGetVideoPortInputFormats = (PGD_DXDVPGETVIDEOPORTINPUTFORMATS)gpDxFuncs[DXG_INDEX_DxDvpGetVideoPortInputFormats].pfn;
 
     if (pfnDvpGetVideoPortInputFormats == NULL)
     {

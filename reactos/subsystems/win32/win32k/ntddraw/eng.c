@@ -25,10 +25,7 @@ HeapVidMemAllocAligned(LPVIDMEM lpVidMem,
                        LPSURFACEALIGNMENT lpAlignment,
                        LPLONG lpNewPitch)
 {
-    PGD_HEAPVIDMEMALLOCALIGNED pfnHeapVidMemAllocAligned = NULL;
-    INT i;
-
-    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDdHeapVidMemAllocAligned, pfnHeapVidMemAllocAligned);
+    PGD_HEAPVIDMEMALLOCALIGNED pfnHeapVidMemAllocAligned = (PGD_HEAPVIDMEMALLOCALIGNED)gpDxFuncs[DXG_INDEX_DxDdHeapVidMemAllocAligned].pfn;
 
     if (pfnHeapVidMemAllocAligned == NULL)
     {
@@ -48,10 +45,7 @@ STDCALL
 VidMemFree(LPVMEMHEAP pvmh,
            FLATPTR ptr)
 {
-    PGD_VIDMEMFREE pfnVidMemFree = NULL;
-    INT i;
-
-    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDdHeapVidMemFree, pfnVidMemFree);
+    PGD_VIDMEMFREE pfnVidMemFree = (PGD_VIDMEMFREE)gpDxFuncs[DXG_INDEX_DxDdHeapVidMemFree].pfn;
 
     if (pfnVidMemFree == NULL)
     {
@@ -73,10 +67,7 @@ EngAllocPrivateUserMem(PDD_SURFACE_LOCAL  psl,
                        SIZE_T  cj,
                        ULONG  tag)
 {
-    PGD_ENGALLOCPRIVATEUSERMEM pfnEngAllocPrivateUserMem = NULL;
-    INT i;
-
-    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDdAllocPrivateUserMem, pfnEngAllocPrivateUserMem);
+    PGD_ENGALLOCPRIVATEUSERMEM pfnEngAllocPrivateUserMem = (PGD_ENGALLOCPRIVATEUSERMEM)gpDxFuncs[DXG_INDEX_DxDdAllocPrivateUserMem].pfn;
 
     if (pfnEngAllocPrivateUserMem == NULL)
     {
@@ -96,10 +87,7 @@ STDCALL
 EngFreePrivateUserMem(PDD_SURFACE_LOCAL  psl,
                       PVOID  pv)
 {
-    PGD_ENGFREEPRIVATEUSERMEM pfnEngFreePrivateUserMem = NULL;
-    INT i;
-
-    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDdFreePrivateUserMem, pfnEngFreePrivateUserMem);
+    PGD_ENGFREEPRIVATEUSERMEM pfnEngFreePrivateUserMem = (PGD_ENGFREEPRIVATEUSERMEM)gpDxFuncs[DXG_INDEX_DxDdFreePrivateUserMem].pfn;
 
     if (pfnEngFreePrivateUserMem == NULL)
     {
