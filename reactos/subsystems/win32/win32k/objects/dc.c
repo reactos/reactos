@@ -2717,8 +2717,17 @@ GetDisplayNumberFromDeviceName(
   if (DisplayNumber == NULL)
     return STATUS_INVALID_PARAMETER_2;
 
-  if (pDeviceName && pDeviceName->Length <= DisplayString.Length)
-    return STATUS_OBJECT_NAME_INVALID;
+ DPRINT1("GetDisplayNumberFromDeviceName Pass 1 seh  \n");
+
+  if ((pDeviceName != NULL) && (pDeviceName->Length != 0))
+  {
+    if (pDeviceName->Length <= DisplayString.Length)
+    {
+      DPRINT1("GetDisplayNumberFromDeviceName FAIL pDeviceName : %wZ  \n",pDeviceName);
+      DPRINT1("GetDisplayNumberFromDeviceName FAIL pDeviceName->Length : %d  \n",pDeviceName->Length);
+      return STATUS_OBJECT_NAME_INVALID;
+    }
+  }
 
   if (pDeviceName == NULL || pDeviceName->Length == 0)
   {
@@ -2757,7 +2766,7 @@ GetDisplayNumberFromDeviceName(
         Number = Number * 10 + Char - L'0';
       else if (Char != L'\0')
         return STATUS_OBJECT_NAME_INVALID;
-    }
+      }
 
     *DisplayNumber = Number - 1;
   }
@@ -2783,13 +2792,15 @@ IntEnumDisplaySettings(
   static UNICODE_STRING CachedDeviceName;
   PDEVMODEW CachedMode = NULL;
   DEVMODEW DevMode;
-  ULONG DisplayNumber;
+  ULONG DisplayNumber = 0;
 
   if (!NT_SUCCESS(GetDisplayNumberFromDeviceName(pDeviceName, &DisplayNumber)))
   {
     SetLastWin32Error(STATUS_NO_SUCH_DEVICE);
     return FALSE;
   }
+
+  DPRINT1("IntEnumDisplaySettings Pass 1 seh  \n");
 
   DPRINT("DevMode->dmSize = %d\n", pDevMode->dmSize);
   DPRINT("DevMode->dmExtraSize = %d\n", pDevMode->dmDriverExtra);
@@ -2801,13 +2812,17 @@ IntEnumDisplaySettings(
     return FALSE;
   }
 
+  DPRINT1("IntEnumDisplaySettings Pass 2 seh  \n");
+
   if (iModeNum == ENUM_CURRENT_SETTINGS)
   {
+    DPRINT1("IntEnumDisplaySettings  ENUM_CURRENT_SETTINGS  \n");
     CachedMode = &PrimarySurface.DMW;
     ASSERT(CachedMode->dmSize > 0);
   }
   else if (iModeNum == ENUM_REGISTRY_SETTINGS)
   {
+    DPRINT1("IntEnumDisplaySettings  ENUM_REGISTRY_SETTINGS  \n");
     RtlZeroMemory(&DevMode, sizeof (DevMode));
     DevMode.dmSize = sizeof (DevMode);
     DevMode.dmDriverExtra = 0;
@@ -2821,9 +2836,13 @@ IntEnumDisplaySettings(
     /* FIXME: Maybe look for the matching devmode supplied by the
      *        driver so we can provide driver private/extra data?
      */
+
+    DPRINT1("IntEnumDisplaySettings Pass 3 seh  \n");
   }
   else
   {
+    DPRINT1("IntEnumDisplaySettings  NO FLAGs  \n");
+
     BOOL IsCachedDevice = (CachedDevModes != NULL);
 
     if (CachedDevModes &&
@@ -2840,6 +2859,8 @@ IntEnumDisplaySettings(
       LPWSTR CurrentName;
       DRVENABLEDATA DrvEnableData;
 
+      DPRINT1("IntEnumDisplaySettings iModeNum  \n");
+
       /* Free resources from last driver cache */
       if (IsCachedDevice == FALSE && CachedDeviceName.Buffer != NULL)
       {
@@ -2854,11 +2875,15 @@ IntEnumDisplaySettings(
         return FALSE;
       }
 
+      DPRINT1("IntEnumDisplaySettings Pass 4 seh  \n");
+
       if (!IntPrepareDriverIfNeeded())
       {
         DPRINT1("IntPrepareDriverIfNeeded failed\n");
         return FALSE;
       }
+
+      DPRINT1("IntEnumDisplaySettings Pass 5 seh  \n");
 
       /*
        * DriverFileNames may be a list of drivers in REG_SZ_MULTI format,
@@ -2940,6 +2965,9 @@ IntEnumDisplaySettings(
             SetLastWin32Error(STATUS_NO_MEMORY);
             return FALSE;
           }
+
+          DPRINT1("IntEnumDisplaySettings Pass 6 seh  \n");
+
           if (CachedDevModes != NULL)
           {
             RtlCopyMemory(NewBuffer, CachedDevModes, SizeUsed);
@@ -2978,12 +3006,19 @@ IntEnumDisplaySettings(
     }
 
     /* return cached info */
+
+
+     DPRINT1("IntEnumDisplaySettings return cached info  \n");
+
     CachedMode = CachedDevModes;
     if (CachedMode >= CachedDevModesEnd)
     {
       SetLastWin32Error(STATUS_NO_MORE_ENTRIES);
       return FALSE;
     }
+
+    DPRINT1("IntEnumDisplaySettings Pass 7 seh  \n");
+
     while (iModeNum-- > 0 && CachedMode < CachedDevModesEnd)
     {
       assert(CachedMode->dmSize > 0);
@@ -2994,9 +3029,13 @@ IntEnumDisplaySettings(
       SetLastWin32Error(STATUS_NO_MORE_ENTRIES);
       return FALSE;
     }
+
+    DPRINT1("IntEnumDisplaySettings Pass 8 seh  \n");
   }
 
   ASSERT(CachedMode != NULL);
+
+  DPRINT1("IntEnumDisplaySettings Pass 9 seh  \n");
 
   RtlCopyMemory(pDevMode, CachedMode, min(pDevMode->dmSize, CachedMode->dmSize));
   RtlZeroMemory(pDevMode + pDevMode->dmSize, pDevMode->dmDriverExtra);
