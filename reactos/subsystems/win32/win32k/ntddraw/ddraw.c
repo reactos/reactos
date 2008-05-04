@@ -380,13 +380,13 @@ NtGdiDdDeleteDirectDrawObject(HANDLE hDirectDrawLocal)
     if (pfnDdDeleteDirectDrawObject == NULL)
     {
         DPRINT1("Warning: no pfnDdDeleteDirectDrawObject\n");
-        return DDHAL_DRIVER_NOTHANDLED;
+        return FALSE;
     }
 
     if (hDirectDrawLocal == NULL)
     {
          DPRINT1("Warning: hDirectDrawLocal is NULL\n");
-         return DDHAL_DRIVER_HANDLED;
+         return FALSE;
     }
 
     DPRINT1("hDirectDrawLocal = %lx \n",hDirectDrawLocal);
