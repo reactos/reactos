@@ -11,9 +11,9 @@
 		<file>hal.rc</file>
 	</module>
 	<if property="ARCH" value="i386">
-		<module ifnot="${MP}" name="halupalias" type="alias" installbase="system32" installname="hal.dll" aliasof="halup">
+		<module ifnot="false" name="halupalias" type="alias" installbase="system32" installname="hal.dll" aliasof="halup">
 		</module>
-		<module if="${MP}" name="halmpalias" type="alias" installbase="system32" installname="hal.dll" aliasof="halmp">
+		<module if="false" name="halmpalias" type="alias" installbase="system32" installname="hal.dll" aliasof="halmp">
 		</module>
 	</if>
 	<if property="ARCH" value="powerpc">
