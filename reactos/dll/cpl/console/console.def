@@ -1,0 +1,6 @@
+LIBRARY console.dll
+
+EXPORTS
+CPlApplet
+
+; EOF
