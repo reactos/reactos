@@ -71,7 +71,7 @@ intEnableReactXDriver(HDC hdc)
     {   
         
         /* CHeck see if dx have been enable or not */
-        if (pDev->pEDDgpl->hDev != pDC->pPDev)
+        if ( pDev->pEDDgpl->pvmList == NULL)
         {
             pDev->pEDDgpl->ddCallbacks.dwSize = sizeof(DD_CALLBACKS);
             pDev->pEDDgpl->ddSurfaceCallbacks.dwSize = sizeof(DD_SURFACECALLBACKS);
@@ -87,12 +87,18 @@ intEnableReactXDriver(HDC hdc)
                 DPRINT1(" call to pfnDdEnableDirectDraw \n ");
                 /* Note it is the hdev struct it want, not the drv hPDev aka pdc->PDev */
                 success = pfnDdEnableDirectDraw(pDC->pPDev, TRUE);
-
+                                               
                 dump_edd_directdraw_global(pDev->pEDDgpl);
                 dump_halinfo(&pDev->pEDDgpl->ddHalInfo);                
             }
         }
+        else
+        {
+            DPRINT1(" The dxg.sys and graphic card driver interface is enable \n ");
+            success = TRUE;
+        }
     }
+   
 
     DPRINT1("Return value : 0x%08x\n",success);
     DC_UnlockDc(pDC);
@@ -216,7 +222,7 @@ STDCALL
 NtGdiDdCreateDirectDrawObject(HDC hdc)
 {
     PGD_DDCREATEDIRECTDRAWOBJECT pfnDdCreateDirectDrawObject;
-   
+ 
     if (hdc == NULL)
     {
         DPRINT1("Warning : hdc is NULL\n");
@@ -426,6 +432,10 @@ NtGdiDdQueryDirectDrawObject(HANDLE hDirectDrawLocal,
                              DWORD *puNumFourCC,
                              DWORD *puFourCC)
 {
+#if DXDBG
+    BOOL status = FALSE;
+#endif
+
     PGD_DXDDQUERYDIRECTDRAWOBJECT pfnDdQueryDirectDrawObject = (PGD_DXDDQUERYDIRECTDRAWOBJECT)gpDxFuncs[DXG_INDEX_DxDdQueryDirectDrawObject].pfn;
    
     if (pfnDdQueryDirectDrawObject == NULL)
@@ -436,11 +446,21 @@ NtGdiDdQueryDirectDrawObject(HANDLE hDirectDrawLocal,
 
     DPRINT1("Calling dxg.sys pfnDdQueryDirectDrawObject\n");
 
+#if DXDBG
+    status = pfnDdQueryDirectDrawObject(hDirectDrawLocal, pHalInfo, pCallBackFlags, puD3dCallbacks, puD3dDriverData, 
+                                      puD3dBufferCallbacks, puD3dTextureFormats, puNumHeaps, puvmList, puNumFourCC, puFourCC);
+
+
     dump_edd_directdraw_global(&edd_DdirectDraw_Global);
     dump_edd_directdraw_local(edd_DdirectDraw_Global.peDirectDrawLocalList);
 
+    return status;
+#else
     return pfnDdQueryDirectDrawObject(hDirectDrawLocal, pHalInfo, pCallBackFlags, puD3dCallbacks, puD3dDriverData, 
                                       puD3dBufferCallbacks, puD3dTextureFormats, puNumHeaps, puvmList, puNumFourCC, puFourCC);
+
+#endif
+
 }
 
 
@@ -672,22 +692,52 @@ void dump_edd_directdraw_global(EDD_DIRECTDRAW_GLOBAL *pEddgbl)
 {
     DPRINT1("0x%08lx 0x000 PEDD_DIRECTDRAW_GLOBAL->dhpdev                                         : 0x%08lx\n",(((DWORD)&pEddgbl->dhpdev) - (DWORD)pEddgbl), pEddgbl->dhpdev);
     DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->dwReserved1                                    : 0x%08lx\n",(((DWORD)&pEddgbl->dwReserved1) - (DWORD)pEddgbl),pEddgbl->dwReserved1);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->dwReserved2                                    : 0x%08lx\n",(((DWORD)&pEddgbl->dwReserved2) - (DWORD)pEddgbl),pEddgbl->dwReserved2);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->dwReserved2                                    : 0x%08lx\n",(((DWORD)&pEddgbl->dwReserved2) - (DWORD)pEddgbl),pEddgbl->dwReserved2);    
     DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_000c[0]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_000c[0]) - (DWORD)pEddgbl),pEddgbl->unk_000c[0]);
     DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_000c[1]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_000c[1]) - (DWORD)pEddgbl),pEddgbl->unk_000c[1]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_000c[2]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_000c[2]) - (DWORD)pEddgbl),pEddgbl->unk_000c[2]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->cDriverReferences                              : 0x%08lx\n",(((DWORD)&pEddgbl->cDriverReferences) - (DWORD)pEddgbl),pEddgbl->cDriverReferences);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_000c[2]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_000c[2]) - (DWORD)pEddgbl),pEddgbl->unk_000c[2]);    
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->cDriverReferences                              : 0x%08lx\n",(((DWORD)&pEddgbl->cDriverReferences) - (DWORD)pEddgbl),pEddgbl->cDriverReferences);    
     DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_01c                                        : 0x%08lx\n",(((DWORD)&pEddgbl->unk_01c) - (DWORD)pEddgbl),pEddgbl->unk_01c);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->dwCallbackFlags                                : 0x%08lx\n",(((DWORD)&pEddgbl->dwCallbackFlags) - (DWORD)pEddgbl),pEddgbl->dwCallbackFlags);
+    
+    DPRINT1("0x%08lx 0x020 PEDD_DIRECTDRAW_GLOBAL->dwCallbackFlags                                : 0x%08lx\n",(((DWORD)&pEddgbl->dwCallbackFlags) - (DWORD)pEddgbl),pEddgbl->dwCallbackFlags);
+    
     DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_024                                        : 0x%08lx\n",(((DWORD)&pEddgbl->unk_024) - (DWORD)pEddgbl),pEddgbl->unk_024);
+    
     DPRINT1("0x%08lx 0x028 PEDD_DIRECTDRAW_GLOBAL->llAssertModeTimeout                            : 0x%x\n",(((DWORD)&pEddgbl->llAssertModeTimeout) - (DWORD)pEddgbl),pEddgbl->llAssertModeTimeout);
     DPRINT1("0x%08lx 0x030 PEDD_DIRECTDRAW_GLOBAL->dwNumHeaps                                     : 0x%08lx\n",(((DWORD)&pEddgbl->dwNumHeaps) - (DWORD)pEddgbl),pEddgbl->dwNumHeaps);
     // VIDEOMEMORY *pvmList;
     DPRINT1("0x%08lx 0x034 PEDD_DIRECTDRAW_GLOBAL->pvmList                                        : 0x%08lx\n",(((DWORD)&pEddgbl->pvmList) - (DWORD)pEddgbl),pEddgbl->pvmList);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->dwNumFourCC                                    : 0x%08lx\n",(((DWORD)&pEddgbl->dwNumFourCC) - (DWORD)pEddgbl),pEddgbl->dwNumFourCC);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->pdwFourCC                                      : 0x%08lx\n",(((DWORD)&pEddgbl->pdwFourCC) - (DWORD)pEddgbl),pEddgbl->pdwFourCC);
+    
+    DPRINT1("0x%08lx 0x038 PEDD_DIRECTDRAW_GLOBAL->dwNumFourCC                                    : 0x%08lx\n",(((DWORD)&pEddgbl->dwNumFourCC) - (DWORD)pEddgbl),pEddgbl->dwNumFourCC);
+    DPRINT1("0x%08lx 0x03C PEDD_DIRECTDRAW_GLOBAL->pdwFourCC                                      : 0x%08lx\n",(((DWORD)&pEddgbl->pdwFourCC) - (DWORD)pEddgbl),pEddgbl->pdwFourCC);
+    
     // DD_HALINFO ddHalInfo;
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->ddHalInfo                                      : 0x%08lx\n",(((DWORD)&pEddgbl->ddHalInfo) - (DWORD)pEddgbl),pEddgbl->ddHalInfo);
+    DPRINT1("0x%08lx 0x040 PEDD_DIRECTDRAW_GLOBAL->ddHalInfo.dwSize                               : 0x%08lx\n",(((DWORD)&pEddgbl->ddHalInfo.dwSize) - (DWORD)pEddgbl),pEddgbl->ddHalInfo.dwSize);
+    DPRINT1("0x%08lx 0x044 PEDD_DIRECTDRAW_GLOBAL->ddHalInfo.vmiData.fpPrimary                    : 0x%08lx\n",(((DWORD)&pEddgbl->ddHalInfo.vmiData.fpPrimary) - (DWORD)pEddgbl),pEddgbl->ddHalInfo.vmiData.fpPrimary);
+    DPRINT1("0x%08lx 0x048 PEDD_DIRECTDRAW_GLOBAL->ddHalInfo.vmiData.dwFlags                      : 0x%08lx\n",(((DWORD)&pEddgbl->ddHalInfo.vmiData.dwFlags) - (DWORD)pEddgbl),pEddgbl->ddHalInfo.vmiData.dwFlags);
+    DPRINT1("0x%08lx 0x04C PEDD_DIRECTDRAW_GLOBAL->ddHalInfo.vmiData.dwDisplayWidth               : 0x%08lx\n",(((DWORD)&pEddgbl->ddHalInfo.vmiData.dwDisplayWidth) - (DWORD)pEddgbl),pEddgbl->ddHalInfo.vmiData.dwDisplayWidth);
+    DPRINT1("0x%08lx 0x050 PEDD_DIRECTDRAW_GLOBAL->ddHalInfo.vmiData.dwDisplayHeight              : 0x%08lx\n",(((DWORD)&pEddgbl->ddHalInfo.vmiData.dwDisplayHeight) - (DWORD)pEddgbl),pEddgbl->ddHalInfo.vmiData.dwDisplayHeight);
+    DPRINT1("0x%08lx 0x054 PEDD_DIRECTDRAW_GLOBAL->ddHalInfo.vmiData.lDisplayPitch                : 0x%08lx\n",(((DWORD)&pEddgbl->ddHalInfo.vmiData.lDisplayPitch) - (DWORD)pEddgbl),pEddgbl->ddHalInfo.vmiData.lDisplayPitch);
+    DPRINT1("0x%08lx 0x058 PEDD_DIRECTDRAW_GLOBAL->ddHalInfo.vmiData.ddpfDisplay.dwSize           : 0x%08lx\n",(((DWORD)&pEddgbl->ddHalInfo.vmiData.ddpfDisplay.dwSize) - (DWORD)pEddgbl),pEddgbl->ddHalInfo.vmiData.ddpfDisplay.dwSize);    
+    DPRINT1("0x%08lx 0x05C PEDD_DIRECTDRAW_GLOBAL->ddHalInfo.vmiData.ddpfDisplay.dwFlags          : 0x%08lx\n",(((DWORD)&pEddgbl->ddHalInfo.vmiData.ddpfDisplay.dwFlags) - (DWORD)pEddgbl),pEddgbl->ddHalInfo.vmiData.ddpfDisplay.dwFlags);
+    DPRINT1("0x%08lx 0x060 PEDD_DIRECTDRAW_GLOBAL->ddHalInfo.vmiData.ddpfDisplay.dwFourCC         : 0x%08lx\n",(((DWORD)&pEddgbl->ddHalInfo.vmiData.ddpfDisplay.dwFourCC) - (DWORD)pEddgbl),pEddgbl->ddHalInfo.vmiData.ddpfDisplay.dwFourCC);     
+    DPRINT1("0x%08lx 0x064 PEDD_DIRECTDRAW_GLOBAL->ddHalInfo.vmiData.ddpfDisplay.dwRGBBitCount    : 0x%08lx\n",(((DWORD)&pEddgbl->ddHalInfo.vmiData.ddpfDisplay.dwRGBBitCount) - (DWORD)pEddgbl),pEddgbl->ddHalInfo.vmiData.ddpfDisplay.dwRGBBitCount);
+    DPRINT1("0x%08lx 0x068 PEDD_DIRECTDRAW_GLOBAL->ddHalInfo.vmiData.ddpfDisplay.dwRBitMask       : 0x%08lx\n",(((DWORD)&pEddgbl->ddHalInfo.vmiData.ddpfDisplay.dwRBitMask) - (DWORD)pEddgbl),pEddgbl->ddHalInfo.vmiData.ddpfDisplay.dwRBitMask);
+    DPRINT1("0x%08lx 0x06C PEDD_DIRECTDRAW_GLOBAL->ddHalInfo.vmiData.ddpfDisplay.dwGBitMask       : 0x%08lx\n",(((DWORD)&pEddgbl->ddHalInfo.vmiData.ddpfDisplay.dwGBitMask) - (DWORD)pEddgbl),pEddgbl->ddHalInfo.vmiData.ddpfDisplay.dwGBitMask);
+    DPRINT1("0x%08lx 0x070 PEDD_DIRECTDRAW_GLOBAL->ddHalInfo.vmiData.ddpfDisplay.dwBBitMask       : 0x%08lx\n",(((DWORD)&pEddgbl->ddHalInfo.vmiData.ddpfDisplay.dwBBitMask) - (DWORD)pEddgbl),pEddgbl->ddHalInfo.vmiData.ddpfDisplay.dwGBitMask);
+    DPRINT1("0x%08lx 0x074 PEDD_DIRECTDRAW_GLOBAL->ddHalInfo.vmiData.ddpfDisplay.dwRGBAlphaBitMask : 0x%08lx\n",(((DWORD)&pEddgbl->ddHalInfo.vmiData.ddpfDisplay.dwRGBAlphaBitMask) - (DWORD)pEddgbl),pEddgbl->ddHalInfo.vmiData.ddpfDisplay.dwRGBAlphaBitMask);    
+
+    DPRINT1("0x%08lx 0x078 PEDD_DIRECTDRAW_GLOBAL->ddHalInfo.vmiData.dwOffscreenAlign             : 0x%08lx\n",(((DWORD)&pEddgbl->ddHalInfo.vmiData.dwOffscreenAlign) - (DWORD)pEddgbl),pEddgbl->ddHalInfo.vmiData.dwOffscreenAlign);
+    DPRINT1("0x%08lx 0x07C PEDD_DIRECTDRAW_GLOBAL->ddHalInfo.vmiData.dwOverlayAlign               : 0x%08lx\n",(((DWORD)&pEddgbl->ddHalInfo.vmiData.dwOverlayAlign ) - (DWORD)pEddgbl),pEddgbl->ddHalInfo.vmiData.dwOverlayAlign);
+    DPRINT1("0x%08lx 0x080 PEDD_DIRECTDRAW_GLOBAL->ddHalInfo.vmiData.dwTextureAlign               : 0x%08lx\n",(((DWORD)&pEddgbl->ddHalInfo.vmiData.dwTextureAlign) - (DWORD)pEddgbl),pEddgbl->ddHalInfo.vmiData.dwTextureAlign);
+    DPRINT1("0x%08lx 0x084 PEDD_DIRECTDRAW_GLOBAL->ddHalInfo.vmiData.dwZBufferAlign               : 0x%08lx\n",(((DWORD)&pEddgbl->ddHalInfo.vmiData.dwZBufferAlign) - (DWORD)pEddgbl),pEddgbl->ddHalInfo.vmiData.dwZBufferAlign);
+    DPRINT1("0x%08lx 0x088 PEDD_DIRECTDRAW_GLOBAL->ddHalInfo.vmiData.dwAlphaAlign                 : 0x%08lx\n",(((DWORD)&pEddgbl->ddHalInfo.vmiData.dwAlphaAlign) - (DWORD)pEddgbl),pEddgbl->ddHalInfo.vmiData.dwAlphaAlign);
+    DPRINT1("0x%08lx 0x08C PEDD_DIRECTDRAW_GLOBAL->ddHalInfo.vmiData.pvPrimary                    : 0x%08lx\n",(((DWORD)&pEddgbl->ddHalInfo.vmiData.pvPrimary) - (DWORD)pEddgbl),pEddgbl->ddHalInfo.vmiData.pvPrimary);
+    DPRINT1("0x%08lx 0x08C PEDD_DIRECTDRAW_GLOBAL->ddHalInfo.ddCaps.dwSize                        : 0x%08lx\n",(((DWORD)&pEddgbl->ddHalInfo.ddCaps.dwSize) - (DWORD)pEddgbl),pEddgbl->ddHalInfo.ddCaps.dwSize);
+    DPRINT1("0x%08lx 0x08C PEDD_DIRECTDRAW_GLOBAL->ddHalInfo.ddCaps.dwCaps                        : 0x%08lx\n",(((DWORD)&pEddgbl->ddHalInfo.ddCaps.dwCaps) - (DWORD)pEddgbl),pEddgbl->ddHalInfo.ddCaps.dwCaps);
+
+    
+
     DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_1e0[0]                                     : 0x%08lx\n",(((DWORD)&pEddgbl->unk_1e0[0]) - (DWORD)pEddgbl),pEddgbl->unk_1e0[0]);
     DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_1e0[1]                                     : 0x%08lx\n",(((DWORD)&pEddgbl->unk_1e0[1]) - (DWORD)pEddgbl),pEddgbl->unk_1e0[1]);
     DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_1e0[2]                                     : 0x%08lx\n",(((DWORD)&pEddgbl->unk_1e0[2]) - (DWORD)pEddgbl),pEddgbl->unk_1e0[2]);
