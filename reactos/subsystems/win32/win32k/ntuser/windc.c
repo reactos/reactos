@@ -890,15 +890,6 @@ NtUserGetDC(HWND hWnd)
   return NtUserGetDCEx(hWnd, NULL, NULL == hWnd ? DCX_CACHE | DCX_WINDOW : DCX_USESTYLE);
 }
 
-#define COPY_DEVMODE_VALUE_TO_CALLER(dst, src, member) \
-    Status = MmCopyToCaller(&(dst)->member, &(src)->member, sizeof ((src)->member)); \
-    if (!NT_SUCCESS(Status)) \
-    { \
-      SetLastNtError(Status); \
-      ExFreePool(src); \
-      return FALSE; \
-    }
-
 BOOL
 STDCALL
 NtUserEnumDisplaySettings(
@@ -916,7 +907,7 @@ NtUserEnumDisplaySettings(
    /* Copy the devmode */
    _SEH_TRY
    {
-        ProbeForRead(&lpDevMode->dmSize, sizeof(DEVMODEW), 1);
+        ProbeForRead(lpDevMode, sizeof(DEVMODEW), 1);
         Size = lpDevMode->dmSize;
         ExtraSize = lpDevMode->dmDriverExtra;
    }
@@ -963,11 +954,23 @@ NtUserEnumDisplaySettings(
       RtlFreeUnicodeString(pSafeDeviceName);
 
    /* Copy some information back */
-   COPY_DEVMODE_VALUE_TO_CALLER(lpDevMode, pSafeDevMode, dmPelsWidth);
-   COPY_DEVMODE_VALUE_TO_CALLER(lpDevMode, pSafeDevMode, dmPelsHeight);
-   COPY_DEVMODE_VALUE_TO_CALLER(lpDevMode, pSafeDevMode, dmBitsPerPel);
-   COPY_DEVMODE_VALUE_TO_CALLER(lpDevMode, pSafeDevMode, dmDisplayFrequency);
-   COPY_DEVMODE_VALUE_TO_CALLER(lpDevMode, pSafeDevMode, dmDisplayFlags);
+   _SEH_TRY
+   {
+        ProbeForWrite(lpDevMode,Size, 1);
+        lpDevMode->dmPelsWidth = pSafeDevMode->dmPelsWidth;
+        lpDevMode->dmPelsHeight = pSafeDevMode->dmPelsHeight;
+        lpDevMode->dmBitsPerPel = pSafeDevMode->dmBitsPerPel;
+        lpDevMode->dmDisplayFrequency = pSafeDevMode->dmDisplayFrequency;
+        lpDevMode->dmDisplayFlags = pSafeDevMode->dmDisplayFlags;
+   }
+   _SEH_HANDLE
+   {
+       DPRINT1("Warning crash here  \n");
+       SetLastNtError(_SEH_GetExceptionCode());
+       _SEH_YIELD(return FALSE);
+   }
+   _SEH_END;
+
 
    /* output private/extra driver data */
    if (ExtraSize > 0)
@@ -984,8 +987,6 @@ NtUserEnumDisplaySettings(
    ExFreePool(pSafeDevMode);
    return TRUE;
 }
-
-#undef COPY_DEVMODE_VALUE_TO_CALLER
 
 LONG
 STDCALL
