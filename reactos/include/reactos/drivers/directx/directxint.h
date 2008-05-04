@@ -124,7 +124,7 @@ typedef struct _EDD_DIRECTDRAW_GLOBAL
                                        */
 
 /* 0x024 */    ULONG unk_024;
-#ifdef _WIN32
+
 /* 0x028 */    LARGE_INTEGER   llAssertModeTimeout;                    /* 0x028 <-- verified to match Windows XP, llAssertModeTimeout, it
                                                                           using regkey 
                                                                           HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\GraphicsDrivers\DCI
@@ -132,19 +132,16 @@ typedef struct _EDD_DIRECTDRAW_GLOBAL
                                                                           in second, if this value are set to 0 it disable directdraw acclatrions.
                                                                           it is normal set to 7 (7 sec in windwos xp/2003)
                                                                         */
-#else
-/* 0x028 */    DWORD           llAssertModeTimeoutLowPart;
-/* 0x02C */    DWORD           llAssertModeTimeoutHighPart;
-#endif
+
 /* 0x030 */    DWORD dwNumHeaps;                                       // 0x030 <-- verified to match Windows XP, dwNumHeaps
 /* 0x034 */    VIDEOMEMORY *pvmList;                                   // 0x034 <-- verified to match Windows XP, pvmList
-/* 0x038 */    DWORD dwNumFourCC;
-/* 0x03C */    PDWORD pdwFourCC;
+/* 0x038 */    DWORD dwNumFourCC;                                      // 0x038 <-- verified to match Windows XP, dwNumFourCC
+/* 0x03C */    PDWORD pdwFourCC;                                       // 0x03C <-- verified to match Windows XP, pdwFourCC
 /* 0x040 */    DD_HALINFO ddHalInfo;                                   // 0x040 <-- verified to match Windows XP, ddHalInfo
 /* 0x1E0 */    ULONG unk_1e0[46];
 /* 0x298 */    DD_CALLBACKS ddCallbacks;                               // 0x298 <-- verified to match Windows XP, ddCallbacks
 /* 0x2C4 */    DD_SURFACECALLBACKS ddSurfaceCallbacks;                 // 0x2C4 <-- verified to match Windows XP, ddSurfaceCallbacks
-/* 0x300 */    DD_PALETTECALLBACKS ddPaletteCallbacks;                 // 0x300 <-- verified to match Windows XP, ddPaletteCallbacks
+/* 0x304 */    DD_PALETTECALLBACKS ddPaletteCallbacks;                 // 0x304 <-- verified to match Windows XP, ddPaletteCallbacks
 /* 0x314 */    ULONG unk_314[46];
 /* 0x3D4 */    D3DNTHAL_CALLBACKS d3dNtHalCallbacks;
 /* 0x460 */    ULONG unk_460[9];
