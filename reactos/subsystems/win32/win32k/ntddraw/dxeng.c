@@ -592,12 +592,11 @@ DxEngUnlockHdev(HDEV hDev)
 /************************************************************************/
 /* DxEngReferenceHdev                                                   */
 /************************************************************************/
-DWORD
+BOOLEAN
 STDCALL
 DxEngReferenceHdev(HDEV hDev)
 {
-    UNIMPLEMENTED;
-
+    IntGdiReferencePdev((PGDIDEVICE) hDev);;
     /* ALWAYS return true */
     return TRUE;
 }
@@ -680,24 +679,24 @@ DWORD STDCALL DxEngScreenAccessCheck()
 /************************************************************************/
 /* DxEngIsHdevLockedByCurrentThread                                     */
 /************************************************************************/
-DWORD
+BOOLEAN
 STDCALL
-DxEngIsHdevLockedByCurrentThread(DWORD x1)
-{
-    UNIMPLEMENTED;
-    return FALSE;
+DxEngIsHdevLockedByCurrentThread(HDEV hDev)
+{   // base on EngIsSemaphoreOwnedByCurrentThread w/o the Ex call.
+    PERESOURCE pSem = ((PGDIDEVICE)hDev)->hsemDevLock;
+    return pSem->OwnerEntry.OwnerThread == (ERESOURCE_THREAD)PsGetCurrentThread();
 }
 
 
 /************************************************************************/
 /* DxEngUnreferenceHdev                                                 */
 /************************************************************************/
-DWORD
+BOOLEAN
 STDCALL
-DxEngUnreferenceHdev(DWORD x1)
+DxEngUnreferenceHdev(HDEV hDev)
 {
-    UNIMPLEMENTED;
-    return FALSE;
+    IntGdiUnreferencePdev((PGDIDEVICE) hDev, 0);
+    return TRUE; // Always true.
 }
 
 /************************************************************************/
@@ -757,10 +756,27 @@ BOOL STDCALL DxEngSetDCOwner(HGDIOBJ hObject, DWORD OwnerMask)
 /************************************************************************/
 /* DxEngSetDCState                                                      */
 /************************************************************************/
-DWORD STDCALL DxEngSetDCState(DWORD x1, DWORD x2, DWORD x3)
+BOOLEAN
+STDCALL
+DxEngSetDCState(HDC hDC, DWORD SetType, DWORD Set)
 {
-    UNIMPLEMENTED;
-    return FALSE;
+   BOOLEAN Ret = FALSE;
+   PDC pDC = DC_LockDc(hDC);
+
+   if (pDC)
+   {
+      if (SetType == 1)
+      {   
+        if ( Set )
+            pDC->DC_Flags |= DC_FLAG_FULLSCREEN;
+        else
+            pDC->DC_Flags &= ~DC_FLAG_FULLSCREEN;
+        Ret = TRUE;
+      }
+      DC_UnlockDc(pDC);
+      return Ret; // Everything else returns FALSE.
+   }
+   return Ret;
 }
 
 /************************************************************************/

@@ -2699,6 +2699,19 @@ IntEnumHDev(VOID)
    return &PrimarySurface;
 }
 
+VOID FASTCALL
+IntGdiReferencePdev(PGDIDEVICE pPDev)
+{
+  pPDev->cPdevRefs++;
+}
+
+VOID FASTCALL
+IntGdiUnreferencePdev(PGDIDEVICE pPDev, DWORD CleanUpType) 
+{
+  pPDev->cPdevRefs--;
+}
+
+
 #define SIZEOF_DEVMODEW_300 188
 #define SIZEOF_DEVMODEW_400 212
 #define SIZEOF_DEVMODEW_500 220

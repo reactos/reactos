@@ -81,7 +81,7 @@ BOOLEAN STDCALL DxEngSetHdevData(HDEV, DXEGSHDEVDATA, DWORD_PTR);
 BOOLEAN STDCALL DxEngLockHdev(HDEV hdev);
 BOOLEAN STDCALL DxEngUnlockHdev(HDEV hdev);
 DWORD_PTR STDCALL DxEngGetDCState(HDC hDC, DWORD type);
-DWORD STDCALL DxEngReferenceHdev(HDEV hdev);
+BOOLEAN STDCALL DxEngReferenceHdev(HDEV hdev);
 BOOLEAN STDCALL DxEngLockShareSem();
 BOOLEAN STDCALL DxEngUnlockShareSem();
 DWORD STDCALL DxEngScreenAccessCheck();
@@ -99,14 +99,14 @@ BOOLEAN STDCALL DxEngIncDispUniq();
 
 HDC STDCALL DxEngCreateMemoryDC(HDEV hDev);
 
-DWORD STDCALL DxEngIsHdevLockedByCurrentThread(DWORD x1);
-DWORD STDCALL DxEngUnreferenceHdev(DWORD x1);
+BOOLEAN STDCALL DxEngIsHdevLockedByCurrentThread(HDEV hDev);
+BOOLEAN STDCALL DxEngUnreferenceHdev(HDEV hDev);
 DWORD STDCALL DxEngSpTearDownSprites(DWORD x1, DWORD x2, DWORD x3);
 DWORD STDCALL DxEngSpUnTearDownSprites(DWORD x1, DWORD x2, DWORD x3);
 DWORD STDCALL DxEngSpSpritesVisible(DWORD x1);
 HDC STDCALL DxEngGetDesktopDC(ULONG DcType, BOOL EmptyDC, BOOL ValidatehWnd);
 BOOLEAN STDCALL DxEngDeleteDC(HDC hdc, BOOL Force);
-DWORD STDCALL DxEngSetDCState(DWORD x1, DWORD x2, DWORD x3);
+BOOLEAN STDCALL DxEngSetDCState(HDC hDC, DWORD SetType, DWORD Set);
 DWORD STDCALL DxEngSelectBitmap(DWORD x1, DWORD x2);
 DWORD STDCALL DxEngSetBitmapOwner(DWORD x1, DWORD x2);
 DWORD STDCALL DxEngDeleteSurface(DWORD x1);

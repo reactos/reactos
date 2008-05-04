@@ -261,5 +261,7 @@ UINT FASTCALL IntGdiSetTextAlign(HDC  hDC, UINT  Mode);
 UINT STDCALL  IntGdiGetTextAlign(HDC  hDC);
 COLORREF STDCALL  IntGdiGetTextColor(HDC  hDC);
 INT STDCALL  IntGdiSetStretchBltMode(HDC  hDC, INT  stretchBltMode);
+VOID FASTCALL IntGdiReferencePdev(PGDIDEVICE pPDev);
+VOID FASTCALL IntGdiUnreferencePdev(PGDIDEVICE pPDev, DWORD CleanUpType);
 
 #endif /* not __WIN32K_DC_H */
