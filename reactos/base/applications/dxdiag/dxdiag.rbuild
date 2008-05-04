@@ -19,6 +19,7 @@
 	<library>ddraw</library>
 	<library>version</library>
 	<library>gdi32</library>
+	<library>winmm</library>
 	<file>system.c</file>
 	<file>display.c</file>
 	<file>sound.c</file>

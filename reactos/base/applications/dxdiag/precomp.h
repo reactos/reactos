@@ -9,12 +9,14 @@
 #include <stdio.h>
 #include <windows.h>
 #include <limits.h>
+#include <mmsystem.h>
 #include <setupapi.h>
 #include <commctrl.h>
 #include <dinput.h>
 #include <ddraw.h>
 
 #include <dsound.h>
+#include <mmreg.h>
 #include "resource.h"
 
 typedef struct
@@ -45,7 +47,7 @@ INT_PTR CALLBACK HelpPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM 
 BOOL GetRegValue(HKEY hBaseKey, LPWSTR SubKey, LPWSTR ValueName, DWORD Type, LPWSTR Result, DWORD Size);
 
 VOID InsertTabCtrlItem(HWND hDlgCtrl, INT Position, LPWSTR uId);
-
+VOID EnumerateDrivers(PVOID Context, HDEVINFO hList, PSP_DEVINFO_DATA pInfoData);
 /* DirectDraw tests */
 VOID DDTests();
 

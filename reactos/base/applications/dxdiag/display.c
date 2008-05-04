@@ -56,7 +56,7 @@ DriverFilesCallback(IN PVOID Context,
     LPCWSTR pFile;
     LPWSTR pBuffer;
     LPCWSTR pFullPath = (LPCWSTR)Param1;
-    WCHAR szVer[30];
+    WCHAR szVer[60];
     LRESULT Length, fLength;
     HWND * hDlgCtrls = (HWND *)Context;
 
@@ -158,38 +158,65 @@ EnumerateDrivers(PVOID Context, HDEVINFO hList, PSP_DEVINFO_DATA pInfoData)
     SetupCloseFileQueue(hQueue);
 }
 
+static
+void
+SetDeviceDetails(HWND * hDlgCtrls, LPCGUID classGUID, LPGUID * deviceGUID)
+{
+    HDEVINFO hInfo;
+    DWORD dwIndex = 0;
+    SP_DEVINFO_DATA InfoData;
+    WCHAR szText[100];
+
+    /* create the setup list */
+    hInfo = SetupDiGetClassDevsW(classGUID, NULL, NULL, DIGCF_PRESENT|DIGCF_PROFILE);
+    if (hInfo == INVALID_HANDLE_VALUE)
+        return;
+
+    do
+    {
+        ZeroMemory(&InfoData, sizeof(InfoData));
+        InfoData.cbSize = sizeof(InfoData);
+
+        if (SetupDiEnumDeviceInfo(hInfo, dwIndex, &InfoData))
+        {
+            /* set device name */
+            if (SetupDiGetDeviceRegistryPropertyW(hInfo, &InfoData, SPDRP_DEVICEDESC, NULL, (PBYTE)szText, sizeof(szText), NULL))
+                SendMessageW(hDlgCtrls[0], WM_SETTEXT, 0, (LPARAM)szText);
+
+            /* set the manufacturer name */
+            if (SetupDiGetDeviceRegistryPropertyW(hInfo, &InfoData, SPDRP_MFG, NULL, (PBYTE)szText, sizeof(szText), NULL))
+                SendMessageW(hDlgCtrls[1], WM_SETTEXT, 0, (LPARAM)szText);
+
+            /* FIXME
+             * we currently enumerate only the first adapter 
+             */
+            EnumerateDrivers(&hDlgCtrls[2], hInfo, &InfoData);
+            break;
+        }
+
+        if (GetLastError() == ERROR_NO_MORE_ITEMS)
+            break;
+
+        dwIndex++;
+    }while(TRUE);
+
+    /* destroy the setup list */
+    SetupDiDestroyDeviceInfoList(hInfo);
+}
+
 
 static
 BOOL
-InitializeDialog(HWND hwndDlg)
+InitializeDialog(HWND hwndDlg, PDISPLAY_DEVICEW pDispDevice)
 {
-    HDEVINFO hInfo;
-    SP_DEVICE_INTERFACE_DATA InterfaceData;
-    SP_DEVINFO_DATA InfoData;
-    DWORD dwIndex = 0;
     WCHAR szText[100];
     WCHAR szFormat[30];
     HKEY hKey;
-    HWND hDlgCtrls[3];
+    HWND hDlgCtrls[5];
     DWORD dwMemory;
     DEVMODE DevMode;
-    DISPLAY_DEVICEW DispDevice;
 
-    /// FIXME
-    /// use initialization context
-    ///
-    ZeroMemory(&DispDevice, sizeof(DISPLAY_DEVICEW));
-    DispDevice.cb = sizeof(DISPLAY_DEVICEW);
-    if (!EnumDisplayDevicesW(NULL, 0, &DispDevice, 0))
-        return FALSE;
-
-    /* query display device adapter */
-    ZeroMemory(&DispDevice, sizeof(DISPLAY_DEVICEW));
-    DispDevice.cb = sizeof(DISPLAY_DEVICEW);
-    if (!EnumDisplayDevicesW(NULL, 0, &DispDevice, 0))
-        return FALSE;
-
-    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, &DispDevice.DeviceKey[18], 0, KEY_READ, &hKey) != ERROR_SUCCESS)
+    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, &pDispDevice->DeviceKey[18], 0, KEY_READ, &hKey) != ERROR_SUCCESS)
         return FALSE;
 
     if (GetRegValue(hKey, NULL, L"HardwareInformation.ChipType", REG_BINARY, szText, sizeof(szText)))
@@ -215,70 +242,38 @@ InitializeDialog(HWND hwndDlg)
         szFormat[0] = L'\0';
         if (LoadStringW(hInst, IDS_FORMAT_ADAPTER_MEM, szFormat, sizeof(szFormat)/sizeof(WCHAR)))
             szFormat[(sizeof(szFormat)/sizeof(WCHAR))-1] = L'\0';
-        swprintf(szText, szFormat, dwMemory);
+        wsprintfW(szText, szFormat, dwMemory);
         SendDlgItemMessageW(hwndDlg, IDC_STATIC_ADAPTER_MEM, WM_SETTEXT, 0, (LPARAM)szText);
     }
 
     /* retrieve current display mode */
     DevMode.dmSize = sizeof(DEVMODE);
-    if (EnumDisplaySettingsW(DispDevice.DeviceName, ENUM_CURRENT_SETTINGS, &DevMode))
+    if (EnumDisplaySettingsW(pDispDevice->DeviceName, ENUM_CURRENT_SETTINGS, &DevMode))
     {
         szFormat[0] = L'\0';
         if (LoadStringW(hInst, IDS_FORMAT_ADAPTER_MODE, szFormat, sizeof(szFormat)/sizeof(WCHAR)))
             szFormat[(sizeof(szFormat)/sizeof(WCHAR))-1] = L'\0';
-        swprintf(szText, szFormat, DevMode.dmPelsWidth, DevMode.dmPelsHeight, DevMode.dmBitsPerPel, DevMode.dmDisplayFrequency);
+        wsprintfW(szText, szFormat, DevMode.dmPelsWidth, DevMode.dmPelsHeight, DevMode.dmBitsPerPel, DevMode.dmDisplayFrequency);
         SendDlgItemMessageW(hwndDlg, IDC_STATIC_ADAPTER_MODE, WM_SETTEXT, 0, (LPARAM)szText);
     }
 
     /* query attached monitor */
-    wcscpy(szText, DispDevice.DeviceName);
-    ZeroMemory(&DispDevice, sizeof(DISPLAY_DEVICEW));
-    DispDevice.cb = sizeof(DISPLAY_DEVICEW);
-    if (EnumDisplayDevicesW(szText, 0, &DispDevice, 0))
+    wcscpy(szText, pDispDevice->DeviceName);
+    ZeroMemory(pDispDevice, sizeof(DISPLAY_DEVICEW));
+    pDispDevice->cb = sizeof(DISPLAY_DEVICEW);
+    if (EnumDisplayDevicesW(szText, 0, pDispDevice, 0))
     {
          /* set monitor name */
-        SendDlgItemMessageW(hwndDlg, IDC_STATIC_ADAPTER_MONITOR, WM_SETTEXT, 0, (LPARAM)DispDevice.DeviceString);
+        SendDlgItemMessageW(hwndDlg, IDC_STATIC_ADAPTER_MONITOR, WM_SETTEXT, 0, (LPARAM)pDispDevice->DeviceString);
     }
 
+    hDlgCtrls[0] = GetDlgItem(hwndDlg, IDC_STATIC_ADAPTER_ID);
+    hDlgCtrls[1] = GetDlgItem(hwndDlg, IDC_STATIC_ADAPTER_VENDOR);
+    hDlgCtrls[2] = GetDlgItem(hwndDlg, IDC_STATIC_ADAPTER_DRIVER);
+    hDlgCtrls[3] = GetDlgItem(hwndDlg, IDC_STATIC_ADAPTER_VERSION);
+    hDlgCtrls[4] = GetDlgItem(hwndDlg, IDC_STATIC_ADAPTER_DATE);
 
-    hInfo = SetupDiGetClassDevsW(&GUID_DEVCLASS_DISPLAY, NULL, hwndDlg, DIGCF_PRESENT|DIGCF_PROFILE);
-    if (hInfo == INVALID_HANDLE_VALUE)
-        return FALSE;
-
-    do
-    {
-        ZeroMemory(&InterfaceData, sizeof(InterfaceData));
-        InterfaceData.cbSize = sizeof(InterfaceData);
-        InfoData.cbSize = sizeof(InfoData);
-
-        if (SetupDiEnumDeviceInfo(hInfo, dwIndex, &InfoData))
-        {
-            /* set device name */
-            if (SetupDiGetDeviceRegistryPropertyW(hInfo, &InfoData, SPDRP_DEVICEDESC, NULL, (PBYTE)szText, sizeof(szText), NULL))
-                SendDlgItemMessageW(hwndDlg, IDC_STATIC_ADAPTER_ID, WM_SETTEXT, 0, (LPARAM)szText);
-
-            /* set the manufacturer name */
-            if (SetupDiGetDeviceRegistryPropertyW(hInfo, &InfoData, SPDRP_MFG, NULL, (PBYTE)szText, sizeof(szText), NULL))
-                SendDlgItemMessageW(hwndDlg, IDC_STATIC_ADAPTER_VENDOR, WM_SETTEXT, 0, (LPARAM)szText);
-
-            /* FIXME
-             * we currently enumerate only the first adapter 
-             */
-            hDlgCtrls[0] = GetDlgItem(hwndDlg, IDC_STATIC_ADAPTER_DRIVER);
-            hDlgCtrls[1] = GetDlgItem(hwndDlg, IDC_STATIC_ADAPTER_VERSION);
-            hDlgCtrls[2] = GetDlgItem(hwndDlg, IDC_STATIC_ADAPTER_DATE);
-            EnumerateDrivers(hDlgCtrls, hInfo, &InfoData);
-            break;
-        }
-
-        if (GetLastError() == ERROR_NO_MORE_ITEMS)
-            break;
-
-        dwIndex++;
-    }while(TRUE);
-
-
-    SetupDiDestroyDeviceInfoList(hInfo);
+    SetDeviceDetails(hDlgCtrls, &GUID_DEVCLASS_DISPLAY, NULL);
     return TRUE;
 }
 
@@ -313,15 +308,18 @@ void InitializeDisplayAdapters(PDXDIAG_CONTEXT pContext)
             break;
 
         pContext->hDisplayWnd = hDlgs;
-        hwndDlg = CreateDialogParamW(hInst, MAKEINTRESOURCEW(IDD_DISPLAY_DIALOG), pContext->hTabCtrl, DisplayPageWndProc, (LPARAM)pContext);
+        hwndDlg = CreateDialogParamW(hInst, MAKEINTRESOURCEW(IDD_DISPLAY_DIALOG), pContext->hMainDialog, DisplayPageWndProc, (LPARAM)pContext);
         if (!hwndDlg)
            break;
+
+        /* initialize the dialog */
+        InitializeDialog(hwndDlg, &DispDevice);
 
         szDisplay[0] = L'\0';
         LoadStringW(hInst, IDS_DISPLAY_DIALOG, szDisplay, sizeof(szDisplay)/sizeof(WCHAR));
         szDisplay[(sizeof(szDisplay)/sizeof(WCHAR))-1] = L'\0';
 
-        swprintf (szText, L"%s %u", szDisplay, pContext->NumDisplayAdapter + 1);
+        wsprintfW (szText, L"%s %u", szDisplay, pContext->NumDisplayAdapter + 1);
         InsertTabCtrlItem(GetDlgItem(pContext->hMainDialog, IDC_TAB_CONTROL), pContext->NumDisplayAdapter + 1, szText);
 
         hDlgs[pContext->NumDisplayAdapter] = hwndDlg;
@@ -335,6 +333,7 @@ void InitializeDisplayAdapters(PDXDIAG_CONTEXT pContext)
 INT_PTR CALLBACK
 DisplayPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
+    RECT rect;
     PDXDIAG_CONTEXT pContext = (PDXDIAG_CONTEXT)GetWindowLongPtr(hDlg, DWLP_USER);
     switch (message) 
     {
@@ -343,7 +342,6 @@ DisplayPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
             pContext = (PDXDIAG_CONTEXT) lParam;
             SetWindowLongPtr(hDlg, DWLP_USER, (LONG_PTR)pContext);
             SetWindowPos(hDlg, NULL, 10, 32, 0, 0, SWP_NOACTIVATE | SWP_NOOWNERZORDER | SWP_NOSIZE | SWP_NOZORDER);
-            InitializeDialog(hDlg);
             return TRUE;
         }
         case WM_COMMAND:
@@ -351,9 +349,10 @@ DisplayPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
             switch(LOWORD(wParam))
             {
                 case IDC_BUTTON_TESTDD:
+                    GetWindowRect(pContext->hMainDialog, &rect);
                     /* FIXME log result errors */
                     DDTests();
-                    /* FIXME resize window */
+                    SetWindowPos(pContext->hMainDialog, NULL, rect.left, rect.top, rect.right, rect.bottom, SWP_NOACTIVATE | SWP_NOOWNERZORDER | SWP_NOSIZE | SWP_NOZORDER);
                     break;
             }
             break;

@@ -130,7 +130,7 @@ BEGIN
     LTEXT "", IDC_STATIC_DSOUND_FILES, 335, 65, 100, 10
     LTEXT "", IDC_STATIC_ADAPTER_PROVIDER, 335, 75, 100, 10
     GROUPBOX "ReactX-Funktionen", -1, 10, 115, 450, 60
-    CONTROL "", IDC_SLIDER_DSOUND, "msctls_trackbar32", TBS_BOTTOM | WS_TABSTOP, 120, 135, 80, 17
+    CONTROL "", IDC_SLIDER_DSOUND, "msctls_trackbar32", TBS_BOTTOM | TBS_AUTOTICKS | WS_TABSTOP, 120, 135, 80, 17
     RTEXT "Einstellung der Sound-\nhardwarebeschleunigung:", -1, 20, 135, 90, 20
     PUSHBUTTON "DirectSound testen", IDC_BUTTON_TESTDSOUND, 270, 130, 80, 13
     GROUPBOX "Hinweise", -1, 10, 180, 450, 40

@@ -82,12 +82,12 @@ BOOL CALLBACK DirectInputEnumDevCb(
     {
         /* set manufacturer id */
         dwManufacturerID = LOWORD(VendorID.dwData);
-        swprintf(szText, L"0x%04X", dwManufacturerID);
+        wsprintfW(szText, L"0x%04X", dwManufacturerID);
         Item.iSubItem = 3;
         SendMessageW(pContext->hDevList, LVM_SETITEM, lResult, (LPARAM)&Item);
         /* set product id */
         dwProductID = HIWORD(VendorID.dwData);
-        swprintf(szText, L"0x%04X", dwProductID);
+        wsprintfW(szText, L"0x%04X", dwProductID);
         Item.iSubItem = 4;
         SendMessageW(pContext->hDevList, LVM_SETITEM, lResult, (LPARAM)&Item);
     }

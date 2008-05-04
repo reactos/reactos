@@ -108,28 +108,28 @@ GetVistaVersion(WCHAR * szBuffer)
          switch(Length)
          {
              case PRODUCT_ULTIMATE:
-                 swprintf(szBuffer, L"Windows Vista Ultimate (6.0, Build %04u)", info.dwBuildNumber);
+                 wsprintfW(szBuffer, L"Windows Vista Ultimate (6.0, Build %04u)", info.dwBuildNumber);
                  return TRUE;
              case PRODUCT_HOME_BASIC:
-                 swprintf(szBuffer, L"Windows Vista Home Basic (6.0, Build %04u)", info.dwBuildNumber);
+                 wsprintfW(szBuffer, L"Windows Vista Home Basic (6.0, Build %04u)", info.dwBuildNumber);
                  return TRUE;
              case PRODUCT_HOME_PREMIUM:
-                 swprintf(szBuffer, L"Windows Vista Home Premimum (6.0, Build %04u)", info.dwBuildNumber);
+                 wsprintfW(szBuffer, L"Windows Vista Home Premimum (6.0, Build %04u)", info.dwBuildNumber);
                  return TRUE;
              case PRODUCT_ENTERPRISE:
-                 swprintf(szBuffer, L"Windows Vista Enterprise (6.0, Build %04u)", info.dwBuildNumber);
+                 wsprintfW(szBuffer, L"Windows Vista Enterprise (6.0, Build %04u)", info.dwBuildNumber);
                  return TRUE;
              case PRODUCT_HOME_BASIC_N:
-                 swprintf(szBuffer, L"Windows Vista Home Basic N(6.0, Build %04u)", info.dwBuildNumber);
+                 wsprintfW(szBuffer, L"Windows Vista Home Basic N(6.0, Build %04u)", info.dwBuildNumber);
                  return TRUE;
              case PRODUCT_BUSINESS:
-                 swprintf(szBuffer, L"Windows Vista Business(6.0, Build %04u)", info.dwBuildNumber);
+                 wsprintfW(szBuffer, L"Windows Vista Business(6.0, Build %04u)", info.dwBuildNumber);
                  return TRUE;
             case PRODUCT_STARTER:
-                 swprintf(szBuffer, L"Windows Vista Starter(6.0, Build %04u)", info.dwBuildNumber);
+                 wsprintfW(szBuffer, L"Windows Vista Starter(6.0, Build %04u)", info.dwBuildNumber);
                  return TRUE;
             case PRODUCT_BUSINESS_N:
-                 swprintf(szBuffer, L"Windows Vista Business N(6.0, Build %04u)", info.dwBuildNumber);
+                 wsprintfW(szBuffer, L"Windows Vista Business N(6.0, Build %04u)", info.dwBuildNumber);
                  return TRUE;
             default:
                  return FALSE;
@@ -189,7 +189,7 @@ GetOSVersion(WCHAR * szBuffer)
 //            if (GetVistaVersion(szBuffer))
 //                return TRUE;
 
-            swprintf(szBuffer, L"Windows Vista (6.0, Build %04u)", info.dwBuildNumber);
+            wsprintfW(szBuffer, L"Windows Vista (6.0, Build %04u)", info.dwBuildNumber);
             return TRUE;
         }
     }
@@ -295,7 +295,7 @@ InitializeSystemPage(HWND hwndDlg)
             LoadStringW(hInst, IDS_FORMAT_UNIPROC, szFormat, sizeof(szFormat) / sizeof(WCHAR));
 
         szFormat[(sizeof(szFormat)/sizeof(WCHAR))-1] = L'\0';
-        swprintf(szTime, szFormat, szDesc, SysInfo.dwNumberOfProcessors);
+        wsprintfW(szTime, szFormat, szDesc, SysInfo.dwNumberOfProcessors);
         SendDlgItemMessageW(hwndDlg, IDC_STATIC_PROC, WM_SETTEXT, 0, (LPARAM)szTime);
     }
 
@@ -308,7 +308,7 @@ InitializeSystemPage(HWND hwndDlg)
         {
             /* set total mem string */
             szFormat[(sizeof(szFormat) / sizeof(WCHAR))-1] = L'\0';
-            swprintf(szTime, szFormat, (mem.ullTotalPhys/1048576));
+            wsprintfW(szTime, szFormat, (mem.ullTotalPhys/1048576));
             SendDlgItemMessageW(hwndDlg, IDC_STATIC_MEM, WM_SETTEXT, 0, (LPARAM)szTime);
         }
 
@@ -319,7 +319,7 @@ InitializeSystemPage(HWND hwndDlg)
             UsedBytes = (mem.ullTotalPageFile-mem.ullAvailPageFile)/1048576;
 
             szFormat[(sizeof(szFormat) / sizeof(WCHAR))-1] = L'\0';
-            swprintf(szTime, szFormat, (UsedBytes), (AvailableBytes));
+            wsprintfW(szTime, szFormat, (UsedBytes), (AvailableBytes));
             SendDlgItemMessageW(hwndDlg, IDC_STATIC_SWAP, WM_SETTEXT, 0, (LPARAM)szTime);
         }
     }

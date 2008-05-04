@@ -111,6 +111,7 @@ GetFileVersion(LPCWSTR szAppName, WCHAR * szVer, DWORD szVerSize)
     WCHAR szBuffer[100];
     WCHAR * pResult;
     BOOL bResult = FALSE;
+    BOOL bVer;
 
     static const WCHAR wFormat[] = L"\\StringFileInfo\\%04x%04x\\FileVersion";
     static const WCHAR wTranslation[] = L"VarFileInfo\\Translation";
@@ -145,14 +146,20 @@ GetFileVersion(LPCWSTR szAppName, WCHAR * szVer, DWORD szVerSize)
        code = lplangcode->code;
     }
     /* set up format */
-    swprintf(szBuffer, wFormat, lang, code);
+    wsprintfW(szBuffer, wFormat, lang, code);
     /* query manufacturer */
      pResult = NULL;
-    bResult = VerQueryValueW(pBuf, szBuffer, (LPVOID *)&pResult, &VerSize);
+    bVer = VerQueryValueW(pBuf, szBuffer, (LPVOID *)&pResult, &VerSize);
 
-    if (VerSize < szVerSize && bResult && pResult)
+    if (VerSize < szVerSize && bVer && pResult)
     {
         wcscpy(szVer, pResult);
+        pResult = wcschr(szVer, L' ');
+        if (pResult)
+        {
+            /* cut off build info */
+            VerSize = (pResult - szVer);
+        }
         if (GetLocaleInfoW(MAKELCID(lang, SORT_DEFAULT), LOCALE_SLANGUAGE, &szVer[VerSize], szVerSize-VerSize))
         {
             szVer[VerSize-1] = L' ';
