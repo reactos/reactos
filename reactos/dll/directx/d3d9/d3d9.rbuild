@@ -18,6 +18,7 @@
 	<file>d3d9_impl.c</file>
 	<file>d3d9_create.c</file>
 	<file>d3d9_caps.c</file>
+	<file>d3d9_device.c</file>
 	<file>adapter.c</file>
 	<file>format.c</file>
 	<file>d3d9.rc</file>

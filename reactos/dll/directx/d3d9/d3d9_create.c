@@ -238,7 +238,7 @@ HRESULT CreateD3D9(OUT LPDIRECT3D9 *ppDirect3D9, UINT SDKVersion)
 
     pDirect3D9->lpVtbl = &Direct3D9_Vtbl;
     pDirect3D9->dwProcessId = GetCurrentThreadId();
-    pDirect3D9->dwRefCnt = 1;
+    pDirect3D9->lRefCnt = 1;
 
     pDirect3D9->SDKVersion = SDKVersion;
 

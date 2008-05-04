@@ -16,14 +16,6 @@
 
 static LPCSTR D3D9_DebugRegPath = "Software\\Microsoft\\Direct3D";
 
-LPDIRECT3D9_INT impl_from_IDirect3D9(LPDIRECT3D9 iface)
-{
-    if (IsBadWritePtr(iface, sizeof(LPDIRECT3D9_INT)))
-        return NULL;
-
-    return (LPDIRECT3D9_INT)((ULONG_PTR)iface - FIELD_OFFSET(DIRECT3D9_INT, lpVtbl));
-}
-
 BOOL ReadRegistryValue(IN DWORD ValueType, IN LPCSTR ValueName, OUT LPBYTE DataBuffer, IN OUT LPDWORD DataBufferSize)
 {
     HKEY hKey;

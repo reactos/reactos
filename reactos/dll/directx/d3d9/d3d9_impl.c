@@ -13,6 +13,18 @@
 #include "adapter.h"
 #include "format.h"
 
+#define LOCK_D3D9()     EnterCriticalSection(&This->d3d9_cs);
+#define UNLOCK_D3D9()   LeaveCriticalSection(&This->d3d9_cs);
+
+/* Convert a IDirect3D9 pointer safely to the internal implementation struct */
+static LPDIRECT3D9_INT impl_from_IDirect3D9(LPDIRECT3D9 iface)
+{
+    if (IsBadWritePtr(iface, sizeof(LPDIRECT3D9_INT)))
+        return NULL;
+
+    return (LPDIRECT3D9_INT)((ULONG_PTR)iface - FIELD_OFFSET(DIRECT3D9_INT, lpVtbl));
+}
+
 /* IDirect3D9: IUnknown implementation */
 static HRESULT WINAPI IDirect3D9Impl_QueryInterface(LPDIRECT3D9 iface, REFIID riid, LPVOID* ppvObject)
 {
@@ -32,7 +44,7 @@ static HRESULT WINAPI IDirect3D9Impl_QueryInterface(LPDIRECT3D9 iface, REFIID ri
 static ULONG WINAPI IDirect3D9Impl_AddRef(LPDIRECT3D9 iface)
 {
     LPDIRECT3D9_INT This = impl_from_IDirect3D9(iface);
-    ULONG ref = InterlockedIncrement(&This->dwRefCnt);
+    ULONG ref = InterlockedIncrement(&This->lRefCnt);
 
     return ref;
 }
@@ -40,7 +52,7 @@ static ULONG WINAPI IDirect3D9Impl_AddRef(LPDIRECT3D9 iface)
 static ULONG WINAPI IDirect3D9Impl_Release(LPDIRECT3D9 iface)
 {
     LPDIRECT3D9_INT This = impl_from_IDirect3D9(iface);
-    ULONG ref = InterlockedDecrement(&This->dwRefCnt);
+    ULONG ref = InterlockedDecrement(&This->lRefCnt);
 
     if (ref == 0)
     {

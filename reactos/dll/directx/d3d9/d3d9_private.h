@@ -170,7 +170,7 @@ typedef struct _tagDIRECT3D9_INT_
 /* 0x001c */    DWORD unknown000007;    /* 0x00000001 */
 /* 0x0020 */    DWORD dwProcessId;
 /* 0x0024 */    struct _tagDIRECT3D9_INT_ *lpInt;
-/* 0x0028 */    LONG dwRefCnt;          /* Increases and decreases by AddRef() and Release() */
+/* 0x0028 */    LONG lRefCnt;          /* Increases and decreases by AddRef() and Release() */
 /* 0x002c */    UINT NumDisplayAdapters;
 /* 0x0030 */    Direct3D9DisplayAdapterInfo DisplayAdapters[D3D9_INT_MAX_NUM_ADAPTERS];
 /* 0x2100 */    DWORD unknown002112;

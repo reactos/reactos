@@ -34,7 +34,7 @@ typedef struct _tagD3D9BaseObject_
 typedef struct _tagD3D9BaseSurface_
 {
 /* 0x0000 */    LPDWORD lpVtbl;
-/* 0x0024 */    D3DFORMAT DisplayFormat2;
+/* 0x0024 */    D3DFORMAT DisplayFormat2;   // Back buffer format?
 /* 0x0028 */    DWORD dwUnknown0028;    // Constant/ref count? (1)
 /* 0x002c */    DWORD dwUnknown002c;    // Refresh rate?
 /* 0x0030 */    D3DPOOL SurfacePool;
@@ -85,7 +85,26 @@ typedef struct _tagD3D9ResourceManager_
 /* 0x0014 - 0x0174 */   LPDWORD pFirstHeapTexture;
 } D3D9ResourceManager;
 
-typedef struct _tagD3D9SwapChain_
+typedef struct _tagDirect3D9Cursor_
+{
+/* 0x0000 */    DWORD dwUnknown0000;
+/* 0x0004 */    DWORD dwUnknown0004;
+/* 0x0008 */    DWORD dwUnknown0008;
+/* 0x000c */    DWORD dwUnknown000c;
+/* 0x0010 */    DWORD dwUnknown0010;
+/* 0x0014 */    DWORD dwUnknown0014;
+/* 0x0018 */    DWORD dwWidth;
+/* 0x001c */    DWORD dwHeight;
+/* 0x0020 */    DWORD dwUnknown0020[18];
+/* 0x0070 */    struct _tagD3D9BaseDevice_* pBaseDevice;
+/* 0x0074 */    struct _tagD3D9SwapChain_* pSwapChain;
+/* 0x0078 */    DWORD dwUnknown0078;
+/* 0x007c */    DWORD dwMonitorVirtualX;
+/* 0x0080 */    DWORD dwMonitorVirtualY;
+/* 0x0084 */    DWORD dwUnknown0084;
+} D3D9Cursor;
+
+typedef struct _tagDirect3DSwapChain9_INT_
 {
 /* 0x0000 */    D3D9BaseObject BaseObject;
 /* 0x0020 */    struct IDirect3DSwapChain9Vtbl* lpVtbl;
@@ -99,13 +118,33 @@ typedef struct _tagD3D9SwapChain_
 /* 0x0040 */    DWORD AdapterGroupIndex;
 /* 0x0044 */    D3DPRESENT_PARAMETERS PresentParameters;
 /* 0x007c */    DWORD dwUnknown007c;
-/* 0x0080 */    DWORD dwUnknown0080[2];
-/* 0x0088 */    LPDWORD dwUnknown0088;
+/* 0x0080 */    DWORD dwUnknown0080[2];         /* Extended format? */
+/* 0x0088 */    D3D9Cursor* pCursor;
 /* 0x008c */    DWORD dwUnknown008c[4];
 /* 0x009c */    D3D9_Unknown6BC* pUnknown6BC;
 /* 0x00a0 */    LPDWORD dwUnknown00a0;
-/* 0x00a4 */    DWORD dwUnknown00a4[46];
-/* 0x015c */    LPDWORD pUnknown0174;
+/* 0x00a4 */    DWORD dwUnknown00a4;
+/* 0x00a8 */    DWORD dwUnknown00a8;
+/* 0x00ac */    DWORD dwWidth;
+/* 0x00b0 */    DWORD dwHeight;
+/* 0x00b4 */    DWORD dwUnknown00b4;
+/* 0x00b8 */    DWORD dwUnknown00b8;
+/* 0x00bc */    DWORD dwUnknown00bc;
+/* 0x00c0 */    DWORD dwWidth2;
+/* 0x00c4 */    DWORD dwHeight2;
+/* 0x00c8 */    DWORD dwUnknown00c8;
+/* 0x00cc */    DWORD dwUnknown00cc;
+/* 0x00d0 */    DWORD dwUnknown00d0;
+/* 0x00d4 */    DWORD dwUnknown00d4;
+/* 0x00d8 */    DWORD dwUnknown00d8;
+/* 0x00dc */    DWORD dwUnknown00dc;
+/* 0x00e0 */    DWORD dwDevModeScale;
+/* 0x00e4 */    DWORD dwUnknown00e4;
+/* 0x00e8 */    DWORD dwUnknown00e8;
+/* 0x00ec */    DWORD dwUnknown00ec;
+/* 0x00f0 */    DWORD dwUnknown00f0[27];
+
+/* 0x015c */    LPDWORD pUnknown0174; // points to 0x0174
 /* 0x0160 */    DWORD dwUnknown0160[4];
 /* 0x0170 */    HRESULT hResult;
 
@@ -119,12 +158,12 @@ typedef struct _tagD3D9SwapChain_
 /* 0x01f8 */    DWORD dwUnknown01f8;
 /* 0x01fc */    DWORD dwUnknown01fc;
 /* 0x0200 */    DDGAMMARAMP GammaRamp;
-} D3D9SwapChain_INT;
+} Direct3DSwapChain9_INT, FAR* LPDIRECT3DSWAPCHAIN9_INT;
 
-typedef struct _tagD3D9BaseDevice_
+typedef struct _tagDirect3DDevice9_INT_
 {
 /* 0x0000 */    struct IDirect3D9DeviceVtbl* lpVtbl;
-/* 0x0004 */    CRITICAL_SECTION d3d9device_cs;
+/* 0x0004 */    CRITICAL_SECTION CriticalSection;
 #ifdef D3D_DEBUG_INFO
 /* N/A    - 0x001c */   DWORD dbg0004;
 /* N/A    - 0x0020 */   DWORD dbg0008;
@@ -146,7 +185,7 @@ typedef struct _tagD3D9BaseDevice_
 /* 0x0024 - 0x005c */   struct _tagD3D9PUREDEVICE_* lpThis;
 /* 0x0028 - 0x0060 */   DWORD dwDXVersion;
 /* 0x002c - 0x0064 */   DWORD unknown000011;
-/* 0x0030 - 0x0068 */   DWORD dwRefCnt;
+/* 0x0030 - 0x0068 */   LONG lRefCnt;
 /* 0x0034 - 0x006c */   DWORD unknown000013;
 /* 0x0038 - 0x0070 */   D3D9ResourceManager* pResourceManager;
 /* 0x003c - 0x0074 */   HWND hWnd;
@@ -201,9 +240,9 @@ typedef struct _tagD3D9BaseDevice_
 /* 0x010c - 0x0144 */   DWORD unknown000067;
 /* 0x0110 - 0x0148 */   DWORD AdapterIndexInGroup[D3D9_INT_MAX_NUM_ADAPTERS]; 
 /* 0x0140 - 0x0178 */   D3D9_DEVICEDATA DeviceData[D3D9_INT_MAX_NUM_ADAPTERS];
-/* 0x1df0 */    D3D9SwapChain_INT* pSwapChains[D3D9_INT_MAX_NUM_ADAPTERS];
-/* 0x1e20 */    D3D9SwapChain_INT* pSwapChains2[D3D9_INT_MAX_NUM_ADAPTERS];
-/* 0x1e50 */    D3D9BaseSurface* pUnknown001940;
+/* 0x1df0 - 0x1e28 */    LPDIRECT3DSWAPCHAIN9_INT pSwapChains[D3D9_INT_MAX_NUM_ADAPTERS];
+/* 0x1e20 */    LPDIRECT3DSWAPCHAIN9_INT pSwapChains2[D3D9_INT_MAX_NUM_ADAPTERS];
+/* 0x1e50 */    D3D9BaseSurface* pRenderTargetList;
 /* 0x1e54 */    DWORD unknown001941;
 /* 0x1e58 */    DWORD unknown001942;
 /* 0x1e5c */    DWORD unknown001943;
@@ -265,11 +304,11 @@ typedef struct _tagD3D9BaseDevice_
 /* 0x1f3c */    DWORD unknown001999;
 /* 0x1f40 */    DWORD unknown002000;
 /* 0x1f44 */    DWORD unknown002001;
-} D3D9BaseDevice;
+} DIRECT3DDEVICE9_INT, FAR* LPDIRECT3DDEVICE9_INT;
 
-typedef struct _tagD3D9PUREDEVICE_INT_
+typedef struct _tagD3D9PUREDEVICE_
 {
-/* 0x0000 - 0x0000 */   D3D9BaseDevice BaseDevice;
+/* 0x0000 - 0x0000 */   DIRECT3DDEVICE9_INT BaseDevice;
 /* 0x1f48 */    DWORD unknown002002; 
 /* 0x1f4c */    DWORD unknown002003; 
 /* 0x1f50 */    DWORD unknown002004; 
@@ -586,11 +625,11 @@ typedef struct _tagD3D9PUREDEVICE_INT_
 /* 0x242c */    DWORD unknown002315;
 /* 0x2430 */    DWORD unknown002316;
 /* 0x2434 */    DWORD unknown002317;
-} D3D9PUREDEVICE_INT, FAR *LPD3D9PUREDEVICE_INT;
+} D3D9PUREDEVICE, FAR *LPD3D9PUREDEVICE;
 
-typedef struct _tagD3D9HALDEVICE_INT_
+typedef struct _tagD3D9HALDEVICE_
 {
-/* 0x0000 */    D3D9PUREDEVICE_INT PureDevice;
+/* 0x0000 */    D3D9PUREDEVICE PureDevice;
 #ifdef D3D_DEBUG_INFO
 /* N/A    - 0x0004 */   DWORD dbg0004;
 /* N/A    - 0x0008 */   DWORD dbg0008;
@@ -1579,6 +1618,6 @@ typedef struct _tagD3D9HALDEVICE_INT_
 /* 0x3324 */    DWORD unknown003324;
 /* 0x3328 */    DWORD unknown003328;
 /* 0x332c */    DWORD unknown00332c;
-} D3D9HALDEVICE_INT, FAR *LPD3D9HALDEVICE_INT;
+} D3D9HALDEVICE, FAR *LPD3D9HALDEVICE;
 
 #endif /* _D3D9_DEVICE_H_ */
