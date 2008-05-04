@@ -131,7 +131,25 @@ GpStatus WINGDIPAPI GdipCreateLineBrush(GDIPCONST GpPointF* startpoint,
     return Ok;
 }
 
-GpStatus WINGDIPAPI GdipCreateLineBrushFromRectI(GDIPCONST GpRect* rect,
+GpStatus WINGDIPAPI GdipCreateLineBrushI(GDIPCONST GpPoint* startpoint,
+    GDIPCONST GpPoint* endpoint, ARGB startcolor, ARGB endcolor,
+    GpWrapMode wrap, GpLineGradient **line)
+{
+    GpPointF stF;
+    GpPointF endF;
+
+    if(!startpoint || !endpoint)
+        return InvalidParameter;
+
+    stF.X  = (REAL)startpoint->X;
+    stF.Y  = (REAL)startpoint->Y;
+    endF.X = (REAL)endpoint->X;
+    endF.X = (REAL)endpoint->Y;
+
+    return GdipCreateLineBrush(&stF, &endF, startcolor, endcolor, wrap, line);
+}
+
+GpStatus WINGDIPAPI GdipCreateLineBrushFromRect(GDIPCONST GpRectF* rect,
     ARGB startcolor, ARGB endcolor, LinearGradientMode mode, GpWrapMode wrap,
     GpLineGradient **line)
 {
@@ -140,12 +158,26 @@ GpStatus WINGDIPAPI GdipCreateLineBrushFromRectI(GDIPCONST GpRect* rect,
     if(!line || !rect)
         return InvalidParameter;
 
-    start.X = (REAL) rect->X;
-    start.Y = (REAL) rect->Y;
-    end.X = (REAL) (rect->X + rect->Width);
-    end.Y = (REAL) (rect->Y + rect->Height);
+    start.X = rect->X;
+    start.Y = rect->Y;
+    end.X = rect->X + rect->Width;
+    end.Y = rect->Y + rect->Height;
 
     return GdipCreateLineBrush(&start, &end, startcolor, endcolor, wrap, line);
+}
+
+GpStatus WINGDIPAPI GdipCreateLineBrushFromRectI(GDIPCONST GpRect* rect,
+    ARGB startcolor, ARGB endcolor, LinearGradientMode mode, GpWrapMode wrap,
+    GpLineGradient **line)
+{
+    GpRectF rectF;
+
+    rectF.X      = (REAL) rect->X;
+    rectF.Y      = (REAL) rect->Y;
+    rectF.Width  = (REAL) rect->Width;
+    rectF.Height = (REAL) rect->Height;
+
+    return GdipCreateLineBrushFromRect(&rectF, startcolor, endcolor, mode, wrap, line);
 }
 
 GpStatus WINGDIPAPI GdipCreatePathGradient(GDIPCONST GpPointF* points,
@@ -191,6 +223,34 @@ GpStatus WINGDIPAPI GdipCreatePathGradient(GDIPCONST GpPointF* points,
     (*grad)->focus.Y = 0.0;
 
     return Ok;
+}
+
+GpStatus WINGDIPAPI GdipCreatePathGradientI(GDIPCONST GpPoint* points,
+    INT count, GpWrapMode wrap, GpPathGradient **grad)
+{
+    GpPointF *pointsF;
+    GpStatus ret;
+    INT i;
+
+    if(!points || !grad)
+        return InvalidParameter;
+
+    if(count <= 0)
+        return OutOfMemory;
+
+    pointsF = GdipAlloc(sizeof(GpPointF) * count);
+    if(!pointsF)
+        return OutOfMemory;
+
+    for(i = 0; i < count; i++){
+        pointsF[i].X = (REAL)points[i].X;
+        pointsF[i].Y = (REAL)points[i].Y;
+    }
+
+    ret = GdipCreatePathGradient(pointsF, count, wrap, grad);
+    GdipFree(pointsF);
+
+    return ret;
 }
 
 /* FIXME: path gradient brushes not truly supported (drawn as solid brushes) */
@@ -428,6 +488,25 @@ GpStatus WINGDIPAPI GdipGetPathGradientCenterPoint(GpPathGradient *grad,
     return Ok;
 }
 
+GpStatus WINGDIPAPI GdipGetPathGradientCenterPointI(GpPathGradient *grad,
+    GpPoint *point)
+{
+    GpStatus ret;
+    GpPointF ptf;
+
+    if(!point)
+        return InvalidParameter;
+
+    ret = GdipGetPathGradientCenterPoint(grad,&ptf);
+
+    if(ret == Ok){
+        point->X = roundr(ptf.X);
+        point->Y = roundr(ptf.Y);
+    }
+
+    return ret;
+}
+
 GpStatus WINGDIPAPI GdipGetPathGradientFocusScales(GpPathGradient *grad,
     REAL *x, REAL *y)
 {
@@ -563,6 +642,20 @@ GpStatus WINGDIPAPI GdipSetPathGradientCenterPoint(GpPathGradient *grad,
     return Ok;
 }
 
+GpStatus WINGDIPAPI GdipSetPathGradientCenterPointI(GpPathGradient *grad,
+    GpPoint *point)
+{
+    GpPointF ptf;
+
+    if(!point)
+        return InvalidParameter;
+
+    ptf.X = (REAL)point->X;
+    ptf.Y = (REAL)point->Y;
+
+    return GdipSetPathGradientCenterPoint(grad,&ptf);
+}
+
 GpStatus WINGDIPAPI GdipSetPathGradientFocusScales(GpPathGradient *grad,
     REAL x, REAL y)
 {
@@ -657,12 +750,24 @@ GpStatus WINGDIPAPI GdipSetTextureTransform(GpTexture *texture,
 GpStatus WINGDIPAPI GdipSetLineColors(GpLineGradient *brush, ARGB color1,
     ARGB color2)
 {
-    static int calls;
+    if(!brush)
+        return InvalidParameter;
 
-    if(!(calls++))
-        FIXME("not implemented\n");
+    brush->startcolor = color1;
+    brush->endcolor   = color2;
 
-    return NotImplemented;
+    return Ok;
+}
+
+GpStatus WINGDIPAPI GdipGetLineColors(GpLineGradient *brush, ARGB *colors)
+{
+    if(!brush || !colors)
+        return InvalidParameter;
+
+    colors[0] = brush->startcolor;
+    colors[1] = brush->endcolor;
+
+    return Ok;
 }
 
 GpStatus WINGDIPAPI GdipSetLineLinearBlend(GpLineGradient *brush, REAL focus,
@@ -696,4 +801,35 @@ GpStatus WINGDIPAPI GdipSetLineTransform(GpLineGradient *brush,
         FIXME("not implemented\n");
 
     return NotImplemented;
+}
+
+GpStatus WINGDIPAPI GdipGetLineRect(GpLineGradient *brush, GpRectF *rect)
+{
+    if(!brush || !rect)
+        return InvalidParameter;
+
+    rect->X = (brush->startpoint.X < brush->endpoint.X ? brush->startpoint.X: brush->endpoint.X);
+    rect->Y = (brush->startpoint.Y < brush->endpoint.Y ? brush->startpoint.Y: brush->endpoint.Y);
+
+    rect->Width  = fabs(brush->startpoint.X - brush->endpoint.X);
+    rect->Height = fabs(brush->startpoint.Y - brush->endpoint.Y);
+
+    return Ok;
+}
+
+GpStatus WINGDIPAPI GdipGetLineRectI(GpLineGradient *brush, GpRect *rect)
+{
+    GpRectF  rectF;
+    GpStatus ret;
+
+    ret = GdipGetLineRect(brush, &rectF);
+
+    if(ret == Ok){
+        rect->X      = roundr(rectF.X);
+        rect->Y      = roundr(rectF.Y);
+        rect->Width  = roundr(rectF.Width);
+        rect->Height = roundr(rectF.Height);
+    }
+
+    return ret;
 }

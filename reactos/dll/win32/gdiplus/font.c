@@ -88,6 +88,24 @@ GpStatus WINGDIPAPI GdipDeleteFont(GpFont* font)
     return Ok;
 }
 
+GpStatus WINGDIPAPI GdipCreateFontFromDC(HDC hdc, GpFont **font)
+{
+    HFONT hfont;
+    LOGFONTW lfw;
+
+    if(!font)
+        return InvalidParameter;
+
+    hfont = (HFONT)GetCurrentObject(hdc, OBJ_FONT);
+    if(!hfont)
+        return GenericError;
+
+    if(!GetObjectW(hfont, sizeof(LOGFONTW), &lfw))
+        return GenericError;
+
+    return GdipCreateFontFromLogfontW(hdc, &lfw, font);
+}
+
 /* FIXME: use graphics */
 GpStatus WINGDIPAPI GdipGetLogFontW(GpFont *font, GpGraphics *graphics,
     LOGFONTW *lfw)
@@ -96,6 +114,19 @@ GpStatus WINGDIPAPI GdipGetLogFontW(GpFont *font, GpGraphics *graphics,
         return InvalidParameter;
 
     *lfw = font->lfw;
+
+    return Ok;
+}
+
+GpStatus WINGDIPAPI GdipCloneFont(GpFont *font, GpFont **cloneFont)
+{
+    if(!font || !cloneFont)
+        return InvalidParameter;
+
+    *cloneFont = GdipAlloc(sizeof(GpFont));
+    if(!*cloneFont)    return OutOfMemory;
+
+    **cloneFont = *font;
 
     return Ok;
 }

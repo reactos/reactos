@@ -759,6 +759,7 @@ GpStatus WINGDIPAPI GdipLoadImageFromStream(IStream* stream, GpImage **image)
         IPicture_get_Handle(pic, &hbm);
         IPicture_get_CurDC(pic, &hdc);
 
+        ZeroMemory(&bmi, sizeof(bmi));
         bmch = (BITMAPCOREHEADER*) (&bmi.bmiHeader);
         bmch->bcSize = sizeof(BITMAPCOREHEADER);
 

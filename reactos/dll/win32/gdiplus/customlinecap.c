@@ -184,3 +184,13 @@ GpStatus WINGDIPAPI GdipSetCustomLineCapWidthScale(GpCustomLineCap* custom,
 
     return NotImplemented;
 }
+
+GpStatus WINGDIPAPI GdipGetCustomLineCapBaseCap(GpCustomLineCap *customCap, GpLineCap *baseCap)
+{
+    if(!customCap || !baseCap)
+        return InvalidParameter;
+
+    *baseCap = customCap->cap;
+
+    return Ok;
+}

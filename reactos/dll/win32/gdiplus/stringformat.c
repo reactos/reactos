@@ -152,3 +152,18 @@ GpStatus WINGDIPAPI GdipSetStringFormatFlags(GDIPCONST GpStringFormat *format, I
 
     return Ok;
 }
+
+GpStatus WINGDIPAPI GdipCloneStringFormat(GDIPCONST GpStringFormat *format, GpStringFormat **newFormat)
+{
+    if(!format || !newFormat)
+        return InvalidParameter;
+
+    *newFormat = GdipAlloc(sizeof(GpStringFormat));
+    if(!*newFormat)    return OutOfMemory;
+
+    **newFormat = *format;
+
+    TRACE("%p %p\n",format,newFormat);
+
+    return Ok;
+}
