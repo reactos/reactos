@@ -80,7 +80,7 @@ static HRESULT WINAPI IDirect3D9Impl_RegisterSoftwareDevice(LPDIRECT3D9 iface, v
 * The function IDirect3D9Impl_GetAdapterCount returns the number of adapters
 *
 * @param LPDIRECT3D iface
-* Pointer to the IDirect3D object returned from Direct3DCreate9()
+* Pointer to the IDirect3D9 object returned from Direct3DCreate9()
 *
 * @return UINT
 * The number of display adapters on the system when Direct3DCreate9() was called.
@@ -107,11 +107,11 @@ static UINT WINAPI IDirect3D9Impl_GetAdapterCount(LPDIRECT3D9 iface)
 * a specified display adapter and fills the pIdentifier argument with the available information.
 *
 * @param LPDIRECT3D iface
-* Pointer to the IDirect3D object returned from Direct3DCreate9()
+* Pointer to the IDirect3D9 object returned from Direct3DCreate9()
 *
 * @param UINT Adapter
 * Adapter index to get information about. D3DADAPTER_DEFAULT is the primary display.
-* The maximum value for this is the value returned by IDirect3D::GetAdapterCount().
+* The maximum value for this is the value returned by IDirect3D::GetAdapterCount() - 1.
 *
 * @param DWORD Flags
 * Ignored at the moment, but the only valid flag is D3DENUM_WHQL_LEVEL
@@ -174,11 +174,11 @@ HRESULT WINAPI IDirect3D9Impl_GetAdapterIdentifier(LPDIRECT3D9 iface, UINT Adapt
 * a specific pixel format and counts the available display modes for that format.
 *
 * @param LPDIRECT3D iface
-* Pointer to the IDirect3D object returned from Direct3DCreate9()
+* Pointer to the IDirect3D9 object returned from Direct3DCreate9()
 *
 * @param UINT Adapter
 * Adapter index to get information about. D3DADAPTER_DEFAULT is the primary display.
-* The maximum value for this is the value returned by IDirect3D::GetAdapterCount().
+* The maximum value for this is the value returned by IDirect3D9::GetAdapterCount() - 1.
 *
 * @param D3DFORMAT Format
 * The pixel format to search for
@@ -230,18 +230,18 @@ static UINT WINAPI IDirect3D9Impl_GetAdapterModeCount(LPDIRECT3D9 iface, UINT Ad
 * This function is often used in a loop to enumerate all the display modes the adapter supports.
 *
 * @param LPDIRECT3D iface
-* Pointer to the IDirect3D object returned from Direct3DCreate9()
+* Pointer to the IDirect3D9 object returned from Direct3DCreate9()
 *
 * @param UINT Adapter
 * Adapter index to get information about. D3DADAPTER_DEFAULT is the primary display.
-* The maximum value for this is the value returned by IDirect3D::GetAdapterCount().
+* The maximum value for this is the value returned by IDirect3D9::GetAdapterCount() - 1.
 *
 * @param D3DFORMAT Format
 * The pixel format to search for
 *
 * @param UINT Mode
 * Index within the pixel format to be returned.
-* The maximym value for this is the value returned by IDirect3D9::GetAdapterModeCount().
+* The maximym value for this is the value returned by IDirect3D9::GetAdapterModeCount() - 1.
 *
 * @param D3DDISPLAYMODE* pMode
 * Pointer to a D3DDISPLAYMODE structure to be filled with the display mode information
@@ -312,11 +312,11 @@ static HRESULT WINAPI IDirect3D9Impl_EnumAdapterModes(LPDIRECT3D9 iface, UINT Ad
 * currently set display mode.
 *
 * @param LPDIRECT3D iface
-* Pointer to the IDirect3D object returned from Direct3DCreate9()
+* Pointer to the IDirect3D9 object returned from Direct3DCreate9()
 *
 * @param UINT Adapter
 * Adapter index to get information about. D3DADAPTER_DEFAULT is the primary display.
-* The maximum value for this is the value returned by IDirect3D::GetAdapterCount().
+* The maximum value for this is the value returned by IDirect3D9::GetAdapterCount() - 1.
 *
 * @param D3DDISPLAYMODE* pMode
 * Pointer to a D3DDISPLAYMODE structure to be filled with the current display mode information.
@@ -362,11 +362,11 @@ static HRESULT WINAPI IDirect3D9Impl_GetAdapterDisplayMode(LPDIRECT3D9 iface, UI
 * on the specified display adapter.
 *
 * @param LPDIRECT3D iface
-* Pointer to the IDirect3D object returned from Direct3DCreate9()
+* Pointer to the IDirect3D9 object returned from Direct3DCreate9()
 *
 * @param UINT Adapter
 * Adapter index to get information about. D3DADAPTER_DEFAULT is the primary display.
-* The maximum value for this is the value returned by IDirect3D::GetAdapterCount().
+* The maximum value for this is the value returned by IDirect3D9::GetAdapterCount() - 1.
 *
 * @param D3DDEVTYPE DeviceType
 * One of the D3DDEVTYPE enum members.
@@ -454,11 +454,11 @@ static HRESULT WINAPI IDirect3D9Impl_CheckDeviceType(LPDIRECT3D9 iface, UINT Ada
 * on the specified display adapter.
 *
 * @param LPDIRECT3D iface
-* Pointer to the IDirect3D object returned from Direct3DCreate9()
+* Pointer to the IDirect3D9 object returned from Direct3DCreate9()
 *
 * @param UINT Adapter
 * Adapter index to get information about. D3DADAPTER_DEFAULT is the primary display.
-* The maximum value for this is the value returned by IDirect3D::GetAdapterCount().
+* The maximum value for this is the value returned by IDirect3D9::GetAdapterCount() - 1.
 *
 * @param D3DDEVTYPE DeviceType
 * One of the D3DDEVTYPE enum members.
@@ -653,11 +653,11 @@ static HRESULT WINAPI IDirect3D9Impl_CheckDeviceMultiSampleType(LPDIRECT3D9 ifac
 * D3DFORMAT on the specified display adapter.
 *
 * @param LPDIRECT3D iface
-* Pointer to the IDirect3D object returned from Direct3DCreate9()
+* Pointer to the IDirect3D9 object returned from Direct3DCreate9()
 *
 * @param UINT Adapter
 * Adapter index to get information about. D3DADAPTER_DEFAULT is the primary display.
-* The maximum value for this is the value returned by IDirect3D::GetAdapterCount().
+* The maximum value for this is the value returned by IDirect3D9::GetAdapterCount() - 1.
 *
 * @param D3DDEVTYPE DeviceType
 * One of the D3DDEVTYPE enum members.
@@ -729,11 +729,11 @@ static HRESULT WINAPI IDirect3D9Impl_CheckDepthStencilMatch(LPDIRECT3D9 iface, U
 * can be converted to another on the specified display adapter.
 *
 * @param LPDIRECT3D iface
-* Pointer to the IDirect3D object returned from Direct3DCreate9()
+* Pointer to the IDirect3D9 object returned from Direct3DCreate9()
 *
 * @param UINT Adapter
 * Adapter index to get information about. D3DADAPTER_DEFAULT is the primary display.
-* The maximum value for this is the value returned by IDirect3D::GetAdapterCount().
+* The maximum value for this is the value returned by IDirect3D9::GetAdapterCount() - 1.
 *
 * @param D3DDEVTYPE DeviceType
 * One of the D3DDEVTYPE enum members. Only D3DDEVTYPE_HAL can potentially return D3D_OK.
@@ -804,11 +804,11 @@ static HRESULT WINAPI IDirect3D9Impl_CheckDeviceFormatConversion(LPDIRECT3D9 ifa
 * capabilities of the specified adapter and device type.
 *
 * @param LPDIRECT3D iface
-* Pointer to the IDirect3D object returned from Direct3DCreate9()
+* Pointer to the IDirect3D9 object returned from Direct3DCreate9()
 *
 * @param UINT Adapter
 * Adapter index to get information about. D3DADAPTER_DEFAULT is the primary display.
-* The maximum value for this is the value returned by IDirect3D::GetAdapterCount().
+* The maximum value for this is the value returned by IDirect3D9::GetAdapterCount() - 1.
 *
 * @param D3DDEVTYPE DeviceType
 * One of the D3DDEVTYPE enum members.
@@ -857,11 +857,11 @@ static HRESULT WINAPI IDirect3D9Impl_GetDeviceCaps(LPDIRECT3D9 iface, UINT Adapt
 * with the specified display adapter.
 *
 * @param LPDIRECT3D iface
-* Pointer to the IDirect3D object returned from Direct3DCreate9()
+* Pointer to the IDirect3D9 object returned from Direct3DCreate9()
 *
 * @param UINT Adapter
 * Adapter index to get information about. D3DADAPTER_DEFAULT is the primary display.
-* The maximum value for this is the value returned by IDirect3D::GetAdapterCount().
+* The maximum value for this is the value returned by IDirect3D9::GetAdapterCount() - 1.
 *
 * @return HMONITOR
 * If the method successfully it returns the HMONITOR belonging to the specified adapter.
