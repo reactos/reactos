@@ -914,18 +914,21 @@ NtUserEnumDisplaySettings(
    USHORT Size = 0, ExtraSize = 0;
 
    /* Copy the devmode */
-   Status = MmCopyFromCaller(&Size, &lpDevMode->dmSize, sizeof (Size));
-   if (!NT_SUCCESS(Status))
+   _SEH_TRY
    {
-      SetLastNtError(Status);
-      return FALSE;
+        ProbeForRead(&lpDevMode->dmSize, sizeof(DEVMODEW), 1);
+        Size = lpDevMode->dmSize;
+        ExtraSize = lpDevMode->dmDriverExtra;
    }
-   Status = MmCopyFromCaller(&ExtraSize, &lpDevMode->dmDriverExtra, sizeof (ExtraSize));
-   if (!NT_SUCCESS(Status))
+   _SEH_HANDLE
    {
-      SetLastNtError(Status);
-      return FALSE;
+       DPRINT1("FIXME ? : Out of range of DEVMODEW size \n");
+       SetLastNtError(_SEH_GetExceptionCode());
+       _SEH_YIELD(return FALSE);
    }
+   _SEH_END;
+
+
    pSafeDevMode = ExAllocatePool(PagedPool, Size + ExtraSize);
    if (pSafeDevMode == NULL)
    {
