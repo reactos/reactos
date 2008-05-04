@@ -321,10 +321,12 @@ dll\win32\ws2help\ws2help.dll                       1
 dll\win32\wshirda\wshirda.dll                       1
 dll\win32\wsock32\wsock32.dll                       1
 dll\win32\wtsapi32\wtsapi32.dll                     1
-dll\win32\shellext\deskadp\deskadp.dll              1
-dll\win32\shellext\deskmon\deskmon.dll              1
 dll\win32\winmm\midimap\midimap.dll                 1
 dll\win32\winmm\wavemap\msacm32.drv                 1   optional
+
+; Shell Extensions
+dll\shellext\deskadp\deskadp.dll                    1
+dll\shellext\deskmon\deskmon.dll                    1
 
 ; Drivers
 drivers\base\bootvid\bootvid.dll                    1
