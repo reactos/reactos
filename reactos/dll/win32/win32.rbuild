@@ -277,9 +277,6 @@
 <directory name="shell32">
 	<xi:include href="shell32/shell32.rbuild" />
 </directory>
-<directory name="shellext">
-	<xi:include href="shellext/shellext.rbuild" />
-</directory>
 <directory name="shfolder">
 	<xi:include href="shfolder/shfolder.rbuild" />
 </directory>
