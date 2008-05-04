@@ -16,6 +16,9 @@ TCHAR szKbSwitcherName[] = _T("kbswitcher");
 static BOOL
 GetLayoutID(LPTSTR szLayoutNum, LPTSTR szLCID);
 
+static BOOL
+GetLayoutName(LPTSTR szLayoutNum, LPTSTR szName);
+
 HINSTANCE hInst;
 HANDLE    hProcessHeap;
 
@@ -95,15 +98,19 @@ AddTrayIcon(HWND hwnd)
 {
     NOTIFYICONDATA tnid;
     TCHAR szLCID[CCH_LAYOUT_ID + 1];
+    TCHAR szName[MAX_PATH];
 
     GetLayoutID(_T("1"), szLCID);
+    GetLayoutName(_T("1"), szName);
 
     tnid.cbSize = sizeof(NOTIFYICONDATA);
     tnid.hWnd = hwnd;
     tnid.uID = 1;
-    tnid.uFlags = NIF_ICON | NIF_MESSAGE;
+    tnid.uFlags = NIF_ICON | NIF_MESSAGE | NIF_TIP;
     tnid.uCallbackMessage = WM_NOTIFYICONMSG;
     tnid.hIcon = CreateTrayIcon(szLCID);
+
+    lstrcpyn(tnid.szTip, szName, sizeof(tnid.szTip));
 
     Shell_NotifyIcon(NIM_ADD, &tnid);
 }
@@ -121,16 +128,18 @@ DelTrayIcon(HWND hwnd)
 }
 
 static VOID
-UpdateTrayIcon(HWND hwnd, LPTSTR szLCID)
+UpdateTrayIcon(HWND hwnd, LPTSTR szLCID, LPTSTR szName)
 {
     NOTIFYICONDATA tnid;
 
     tnid.cbSize = sizeof(NOTIFYICONDATA);
     tnid.hWnd = hwnd;
     tnid.uID = 1;
-    tnid.uFlags = NIF_ICON | NIF_MESSAGE;
+    tnid.uFlags = NIF_ICON | NIF_MESSAGE |NIF_TIP;
     tnid.uCallbackMessage = WM_NOTIFYICONMSG;
     tnid.hIcon = CreateTrayIcon(szLCID);
+
+	lstrcpyn(tnid.szTip, szName, sizeof(tnid.szTip));
 
     Shell_NotifyIcon(NIM_MODIFY, &tnid);
 }
@@ -259,13 +268,15 @@ ActivateLayout(HWND hwnd, ULONG uLayoutNum)
     HKL hKl;
     TCHAR szLayoutNum[CCH_ULONG_DEC + 1];
     TCHAR szLCID[CCH_LAYOUT_ID + 1];
+    TCHAR szName[MAX_PATH];
 
     _ultot(uLayoutNum, szLayoutNum, 10);
     GetLayoutID(szLayoutNum, szLCID);
+    GetLayoutName(szLayoutNum, szName);
     CreateTrayIcon(szLCID);
 
     // Switch to the new keyboard layout
-    UpdateTrayIcon(hwnd, szLCID);
+    UpdateTrayIcon(hwnd, szLCID, szName);
     hKl = LoadKeyboardLayout(szLCID, KLF_ACTIVATE);
     SystemParametersInfo(SPI_SETDEFAULTINPUTLANG, 0, &hKl, SPIF_SENDWININICHANGE);
     EnumWindows(EnumWindowsProc, (LPARAM) hKl);
@@ -408,6 +419,15 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
                 default:
                     ActivateLayout(hwnd, LOWORD(wParam));
                     break;
+            }
+            break;
+
+        case WM_SETTINGCHANGE:
+	    {
+                if (wParam == SPI_SETDEFAULTINPUTLANG)
+                {
+                     //FIXME: Should detect default language changes by CPL applet or by other tools and update UI
+                }
             }
             break;
 
