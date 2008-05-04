@@ -210,14 +210,20 @@ Test_NtGdiDdQueryDirectDrawObject(PTESTINFO pti)
         RTEST( pHalInfo->ddCaps.dwFXAlphaCaps == 0);
         
 
-        /* if this fail we do not have a dx driver install acodring ms, some version of windows it
+        /* basic dx 2 is found if this flags not set
+         * if this fail we do not have a dx driver install acodring ms, some version of windows it
          * is okay this fail and drv does then only support basic dx
+         * 
          */
-        RTEST( (pHalInfo->dwFlags & (DDHALINFO_GETDRIVERINFOSET | DDHALINFO_GETDRIVERINFO2)) != 0 );
+        if (pHalInfo->dwFlags != 0)
+        {
+            RTEST( (pHalInfo->dwFlags & (DDHALINFO_GETDRIVERINFOSET | DDHALINFO_GETDRIVERINFO2)) != 0 );
+            RTEST( ( (DWORD)pHalInfo->GetDriverInfo & 0x80000000) != 0 );
+            ASSERT( ((DWORD)pHalInfo->GetDriverInfo & 0x80000000) != 0 );
+        }
 
         /* point to kmode direcly to the graphic drv, the drv is kmode and it is kmode address we getting back*/
-        RTEST( ( (DWORD)pHalInfo->GetDriverInfo & (~0x80000000)) != 0 );
-        ASSERT( ((DWORD)pHalInfo->GetDriverInfo & (~0x80000000)) != 0 );
+        
 
        /* the pHalInfo->ddCaps.ddsCaps.dwCaps & DDSCAPS_3DDEVICE will be ignore, only way detect it proper follow code,
         * this will be fill in of all drv, it is not only for 3d stuff, this always fill by win32k.sys or dxg.sys depns 
