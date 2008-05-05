@@ -1,4 +1,3 @@
-
 /*
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -187,10 +186,7 @@ STDCALL
 NtGdiDvpGetVideoPortLine(HANDLE hVideoPort,
                          PDD_GETVPORTLINEDATA puGetVPortLineData)
 {
-    PGD_DXDVPGETVIDEOPORTLINE pfnDvpGetVideoPortLine = NULL;
-    INT i;
-
-    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDvpGetVideoPortLine, pfnDvpGetVideoPortLine);
+    PGD_DXDVPGETVIDEOPORTLINE pfnDvpGetVideoPortLine = (PGD_DXDVPGETVIDEOPORTLINE)gpDxFuncs[DXG_INDEX_DxDvpGetVideoPortLine].pfn;
 
     if (pfnDvpGetVideoPortLine == NULL)
     {
@@ -211,10 +207,7 @@ STDCALL
 NtGdiDvpGetVideoPortOutputFormats(HANDLE hVideoPort,
                                   PDD_GETVPORTOUTPUTFORMATDATA puGetVPortOutputFormatData)
 {
-    PGD_DXDVPGETVIDEOPORTOUTPUTFORMATS pfnDvpGetVideoPortOutputFormats = NULL;
-    INT i;
-
-    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDvpGetVideoPortOutputFormats, puGetVPortOutputFormatData);
+    PGD_DXDVPGETVIDEOPORTOUTPUTFORMATS pfnDvpGetVideoPortOutputFormats = (PGD_DXDVPGETVIDEOPORTOUTPUTFORMATS)gpDxFuncs[DXG_INDEX_DxDvpGetVideoPortOutputFormats].pfn;
 
     if (pfnDvpGetVideoPortOutputFormats == NULL)
     {
@@ -236,10 +229,7 @@ STDCALL
 NtGdiDvpGetVideoPortConnectInfo(HANDLE hDirectDraw,
                                 PDD_GETVPORTCONNECTDATA puGetVPortConnectData)
 {
-    PGD_DXDVPGETVIDEOPORTCONNECTINFO pfnDvpGetVideoPortConnectInfo = NULL;
-    INT i;
-
-    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDvpGetVideoPortConnectInfo, pfnDvpGetVideoPortConnectInfo);
+    PGD_DXDVPGETVIDEOPORTCONNECTINFO pfnDvpGetVideoPortConnectInfo = (PGD_DXDVPGETVIDEOPORTCONNECTINFO)gpDxFuncs[DXG_INDEX_DxDvpGetVideoPortConnectInfo].pfn;
 
     if (pfnDvpGetVideoPortConnectInfo == NULL)
     {
@@ -260,10 +250,7 @@ STDCALL
 NtGdiDvpGetVideoSignalStatus(HANDLE hVideoPort,
                              PDD_GETVPORTSIGNALDATA puGetVPortSignalData)
 {
-    PGD_DXDVPGETVIDEOSIGNALSTATUS pfnDvpGetVideoSignalStatus = NULL;
-    INT i;
-
-    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDvpGetVideoSignalStatus, pfnDvpGetVideoSignalStatus);
+    PGD_DXDVPGETVIDEOSIGNALSTATUS pfnDvpGetVideoSignalStatus = (PGD_DXDVPGETVIDEOSIGNALSTATUS)gpDxFuncs[DXG_INDEX_DxDvpGetVideoSignalStatus].pfn;
 
     if (pfnDvpGetVideoSignalStatus == NULL)
     {
@@ -287,10 +274,7 @@ NtGdiDvpUpdateVideoPort(HANDLE hVideoPort,
                         HANDLE* phSurfaceVbi,
                         PDD_UPDATEVPORTDATA puUpdateVPortData)
 {
-    PGD_DXDVPUPDATEVIDEOPORT pfnDvpUpdateVideoPort = NULL;
-    INT i;
-
-    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDvpUpdateVideoPort, pfnDvpUpdateVideoPort);
+    PGD_DXDVPUPDATEVIDEOPORT pfnDvpUpdateVideoPort = (PGD_DXDVPUPDATEVIDEOPORT)gpDxFuncs[DXG_INDEX_DxDvpUpdateVideoPort].pfn;
 
     if (pfnDvpUpdateVideoPort == NULL)
     {
@@ -312,10 +296,7 @@ STDCALL
 NtGdiDvpWaitForVideoPortSync(HANDLE hVideoPort,
                              PDD_WAITFORVPORTSYNCDATA puWaitForVPortSyncData)
 {
-    PGD_DXDVPWAITFORVIDEOPORTSYNC pfnDvpWaitForVideoPortSync = NULL;
-    INT i;
-
-    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDvpWaitForVideoPortSync, pfnDvpWaitForVideoPortSync);
+    PGD_DXDVPWAITFORVIDEOPORTSYNC pfnDvpWaitForVideoPortSync = (PGD_DXDVPWAITFORVIDEOPORTSYNC)gpDxFuncs[DXG_INDEX_DxDvpWaitForVideoPortSync].pfn;
 
     if (pfnDvpWaitForVideoPortSync == NULL)
     {
@@ -337,10 +318,7 @@ NtGdiDvpAcquireNotification(HANDLE hVideoPort,
                             HANDLE* hEvent,
                             LPDDVIDEOPORTNOTIFY pNotify)
 {
-    PGD_DXDVPACQUIRENOTIFICATION pfnDvpAcquireNotification = NULL;
-    INT i;
-
-    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDvpAcquireNotification, pfnDvpAcquireNotification);
+    PGD_DXDVPACQUIRENOTIFICATION pfnDvpAcquireNotification = (PGD_DXDVPACQUIRENOTIFICATION)gpDxFuncs[DXG_INDEX_DxDvpAcquireNotification].pfn;
 
     if (pfnDvpAcquireNotification == NULL)
     {
@@ -361,10 +339,7 @@ STDCALL
 NtGdiDvpReleaseNotification(HANDLE hVideoPort,
                             HANDLE hEvent)
 {
-    PGD_DXDVPRELEASENOTIFICATION pfnDvpReleaseNotification = NULL;
-    INT i;
-
-    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDvpReleaseNotification, pfnDvpReleaseNotification);
+    PGD_DXDVPRELEASENOTIFICATION pfnDvpReleaseNotification = (PGD_DXDVPRELEASENOTIFICATION)gpDxFuncs[DXG_INDEX_DxDvpReleaseNotification].pfn;
 
     if (pfnDvpReleaseNotification == NULL)
     {
@@ -386,10 +361,7 @@ STDCALL
 NtGdiDvpGetVideoPortField(HANDLE hVideoPort,
                           PDD_GETVPORTFIELDDATA puGetVPortFieldData)
 {
-    PGD_DXDVPGETVIDEOPORTFIELD pfnDvpGetVideoPortField = NULL;
-    INT i;
-
-    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDvpGetVideoPortField, pfnDvpGetVideoPortField);
+    PGD_DXDVPGETVIDEOPORTFIELD pfnDvpGetVideoPortField = (PGD_DXDVPGETVIDEOPORTFIELD)gpDxFuncs[DXG_INDEX_DxDvpGetVideoPortField].pfn;
 
     if (pfnDvpGetVideoPortField == NULL)
     {
@@ -401,4 +373,3 @@ NtGdiDvpGetVideoPortField(HANDLE hVideoPort,
     return pfnDvpGetVideoPortField(hVideoPort, puGetVPortFieldData);
 
 }
-

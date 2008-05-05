@@ -108,18 +108,6 @@ typedef VOID (NTAPI *PGD_ENGFREEPRIVATEUSERMEM)(PDD_SURFACE_LOCAL, PVOID);
 typedef PDD_SURFACE_LOCAL (NTAPI *PGD_ENGLOCKDIRECTDRAWSURFACE)(HANDLE);
 typedef BOOL (NTAPI *PGD_ENGUNLOCKDIRECTDRAWSURFACE)(PDD_SURFACE_LOCAL);
 
-
-/* Standard macro */
-#define DXG_GET_INDEX_FUNCTION(INDEX, FUNCTION) \
-    for (i = 0; i <= DXG_INDEX_DxDdIoctl; i++) \
-    { \
-        if (gpDxFuncs[i].iFunc == INDEX)  \
-        { \
-            FUNCTION = (VOID *)gpDxFuncs[i].pfn;  \
-            break;  \
-        }  \
-    }
-
 /* Gammaramp internal prototype */
 BOOL FASTCALL IntGetDeviceGammaRamp(HDEV hPDev, PGAMMARAMP Ramp);
 BOOL FASTCALL IntSetDeviceGammaRamp(HDEV hPDev, PGAMMARAMP Ramp, BOOL);
