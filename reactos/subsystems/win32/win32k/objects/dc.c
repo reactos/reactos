@@ -2699,16 +2699,27 @@ IntEnumHDev(VOID)
    return &PrimarySurface;
 }
 
+HSEMAPHORE hsemDriverMgmt = NULL; // Hax, should be in dllmain.c and global.
+
 VOID FASTCALL
 IntGdiReferencePdev(PGDIDEVICE pPDev)
 {
+  if(!hsemDriverMgmt) hsemDriverMgmt = EngCreateSemaphore(); // Hax, should be in dllmain.c
+  EngAcquireSemaphore(hsemDriverMgmt);
   pPDev->cPdevRefs++;
+  EngReleaseSemaphore(hsemDriverMgmt);
 }
 
 VOID FASTCALL
 IntGdiUnreferencePdev(PGDIDEVICE pPDev, DWORD CleanUpType) 
 {
+  EngAcquireSemaphore(hsemDriverMgmt);
   pPDev->cPdevRefs--;
+  if (!pPDev->cPdevRefs)
+  {
+     // Handle the destruction of pPDev or GDIDEVICE or PDEVOBJ or PDEV etc.
+  }
+  EngReleaseSemaphore(hsemDriverMgmt);
 }
 
 
