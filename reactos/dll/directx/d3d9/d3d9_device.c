@@ -70,11 +70,43 @@ static HRESULT WINAPI IDirect3DDevice9Impl_TestCooperativeLevel(LPDIRECT3DDEVICE
     return D3D_OK;
 }
 
+/*++
+* @name IDirect3DDevice9::GetAvailableTextureMem
+* @implemented
+*
+* The function IDirect3DDevice9Impl_GetAvailableTextureMem returns a pointer to the IDirect3D9 object
+* that created this device.
+*
+* @param LPDIRECT3D iface
+* Pointer to the IDirect3DDevice9 object returned from IDirect3D9::CreateDevice()
+*
+* @return UINT
+* The method returns an estimated the currently available texture memory in bytes rounded
+* to the nearest MB. Applications should NOT use this as an exact number.
+*
+*/
 static UINT WINAPI IDirect3DDevice9Impl_GetAvailableTextureMem(LPDIRECT3DDEVICE9 iface)
 {
-    UNIMPLEMENTED
+    UINT AvailableTextureMemory = 0;
+    DD_GETAVAILDRIVERMEMORYDATA ddGetAvailDriverMemoryData;
 
-    return D3D_OK;
+    LPDIRECT3DDEVICE9_INT This = impl_from_IDirect3DDevice9(iface);
+    LOCK_D3DDEVICE9();
+
+    memset(&ddGetAvailDriverMemoryData, 0, sizeof(ddGetAvailDriverMemoryData));
+    ddGetAvailDriverMemoryData.lpDD = (PDD_DIRECTDRAW_GLOBAL)&This->DeviceData[0].pUnknown6BC->hDD;
+
+    if (DDHAL_DRIVER_HANDLED == (*This->DeviceData[0].D3D9Callbacks.DdGetAvailDriverMemory)(&ddGetAvailDriverMemoryData))
+    {
+        if (DD_OK == ddGetAvailDriverMemoryData.ddRVal)
+        {
+            /* Round it up to the nearest MB */
+            AvailableTextureMemory = (ddGetAvailDriverMemoryData.dwFree + 0x80000) & 0xFFF00000;
+        }
+    }
+
+    UNLOCK_D3DDEVICE9();
+    return AvailableTextureMemory;
 }
 
 static HRESULT WINAPI IDirect3DDevice9Impl_EvictManagedResources(LPDIRECT3DDEVICE9 iface)

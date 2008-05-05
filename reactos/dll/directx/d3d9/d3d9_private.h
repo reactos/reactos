@@ -10,6 +10,7 @@
 
 #include <windows.h>
 #include <ddraw.h>
+#include <ddrawint.h>
 
 #define D3D9_INT_MAX_NUM_ADAPTERS   12
 
@@ -107,7 +108,7 @@ typedef struct _tagD3D9_CALLBACKS
 /* 0x0044 */    DWORD DdFlip;
 /* 0x0048 */    DWORD DdGetBltStatus;
 /* 0x004c */    DWORD DdGetFlipStatus;
-/* 0x0050 */    DWORD DdGetAvailDriverMemory;
+/* 0x0050 */    PDD_GETAVAILDRIVERMEMORY DdGetAvailDriverMemory;
 /* 0x0054 */    DWORD unknown0115;
 /* 0x0058 */    DWORD DdSetMode;
 /* 0x005c */    DWORD DdSetExclusiveMode;
