@@ -78,4 +78,5 @@ STID_TOPICS, 		"&Themen"
 STID_ALL_FILES, 	"Alle Dateien (*.*)"
 STID_HELP_FILES_HLP, 	"Hilfe-Dateien (*.hlp)"
 STID_FILE_NOT_FOUND_s	"'%s' konnte nicht gefunden werden. Wollen Sie selber nach dieser Datei suchen?"
+STID_NO_RICHEDIT	"Cannot find a richedit implementation... Aborting"
 }

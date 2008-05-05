@@ -58,7 +58,7 @@ BEGIN
             MENUITEM "&Format znaków",           ID_EDIT_CHARFORMAT
             MENUITEM "&Standardowy format znaków",           ID_EDIT_DEFCHARFORMAT
             MENUITEM "Format aka&pitu",           ID_EDIT_PARAFORMAT
-            MENUITEM "&Pobie¿ tekst",                   ID_EDIT_GETTEXT
+            MENUITEM "&Pobierz tekst",                   ID_EDIT_GETTEXT
         END
     END
     POPUP "Wido&k"
@@ -228,7 +228,7 @@ STRINGTABLE DISCARDABLE
 BEGIN
     STRING_DEFAULT_FILENAME,     "Dokument"
     STRING_PROMPT_SAVE_CHANGES,  "Zapisaæ zmiany w pliku '%s'?"
-    STRING_SEARCH_FINISHED,      "Zakoñczono przeszukowanie dokumentu."
+    STRING_SEARCH_FINISHED,      "Zakoñczono przeszukiwanie dokumentu."
     STRING_LOAD_RICHED_FAILED,   "Nie uda³o siê za³adowaæ biblioteki systemowej RichEdit."
     STRING_SAVE_LOSEFORMATTING,  "Wybrano zapisanie dokumentu jako zwyk³y tekst, " \
                                  "w wyniku czego formatowanie zostanie utracone. " \

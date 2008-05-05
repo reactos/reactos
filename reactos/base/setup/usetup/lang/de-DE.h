@@ -82,7 +82,7 @@ static MUI_ENTRY deDEWelcomePageEntries[] =
     {
         8,
         17,
-        "\x07  DrÅcken Sie R, um ReactOS zu reparieren.",
+        "\x07  DrÅcken Sie R, um ReactOS zu reparieren oder aktualisieren.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -112,7 +112,7 @@ static MUI_ENTRY deDEWelcomePageEntries[] =
     {
         0,
         0,
-        "ENTER = Fortsetzen  R = Reparieren F3 = Beenden",
+        "ENTER = Fortsetzen  R = Reparieren  L = Lizenz  F3 = Beenden",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -487,7 +487,7 @@ static MUI_ENTRY deDERepairPageEntries[] =
     {
         0,
         0,
-        "ESC = Hauptseite  ENTER = Neustarten",
+        "ESC = Hauptseite  U = Update  R = Recovery  ENTER = Neustarten",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {

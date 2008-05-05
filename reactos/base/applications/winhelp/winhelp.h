@@ -40,42 +40,6 @@
 #include "macro.h"
 #include "winhelp_res.h"
 
-typedef struct tagHelpLinePart
-{
-    RECT      rect;
-    enum {hlp_line_part_text, hlp_line_part_bitmap, hlp_line_part_metafile} cookie;
-    union
-    {
-        struct
-        {
-            LPCSTR      lpsText;
-            HFONT       hFont;
-            COLORREF    color;
-            WORD        wTextLen;
-            WORD        wUnderline; /* 0 None, 1 simple, 2 double, 3 dotted */
-        } text;
-        struct
-        {
-            HBITMAP     hBitmap;
-        } bitmap;
-        struct
-        {
-            HMETAFILE   hMetaFile;
-            INT         mm;
-        } metafile;
-    } u;
-    HLPFILE_LINK*       link;
-
-    struct tagHelpLinePart *next;
-} WINHELP_LINE_PART;
-
-typedef struct tagHelpLine
-{
-    RECT                rect;
-    WINHELP_LINE_PART   first_part;
-    struct tagHelpLine* next;
-} WINHELP_LINE;
-
 typedef struct tagHelpButton
 {
     HWND                hWnd;
@@ -91,35 +55,43 @@ typedef struct tagHelpButton
     struct tagHelpButton*next;
 } WINHELP_BUTTON;
 
+typedef struct
+{
+    HLPFILE_PAGE*       page;
+    HLPFILE_WINDOWINFO* wininfo;
+    ULONG               relative;
+} WINHELP_WNDPAGE;
+
+typedef struct tagPageSet
+{
+    /* FIXME: for now it's a fixed size */
+    WINHELP_WNDPAGE     set[40];
+    unsigned            index;
+} WINHELP_PAGESET;
+
 typedef struct tagWinHelp
 {
     LPCSTR              lpszName;
 
     WINHELP_BUTTON*     first_button;
     HLPFILE_PAGE*       page;
-    WINHELP_LINE*       first_line;
 
     HWND                hMainWnd;
-    HWND                hButtonBoxWnd;
-    HWND                hTextWnd;
     HWND                hShadowWnd;
     HWND                hHistoryWnd;
 
     HFONT*              fonts;
     UINT                fonts_len;
 
-    HCURSOR             hArrowCur;
     HCURSOR             hHandCur;
 
     HBRUSH              hBrush;
 
     HLPFILE_WINDOWINFO* info;
+    HLPFILE_LINK*       current_link;
 
-    /* FIXME: for now it's a fixed size */
-    HLPFILE_PAGE*       history[40];
-    unsigned            histIndex;
-    HLPFILE_PAGE*       back[40];
-    unsigned            backIndex;
+    WINHELP_PAGESET     back;
+    unsigned            font_scale; /* 0 = small, 1 = normal, 2 = large */
 
     struct tagWinHelp*  next;
 } WINHELP_WINDOW;
@@ -158,28 +130,28 @@ typedef struct
 {
     UINT                wVersion;
     HANDLE              hInstance;
-    HWND                hPopupWnd;
-    UINT                wStringTableOffset;
     BOOL                isBook;
     WINHELP_WINDOW*     active_win;
+    WINHELP_WINDOW*     active_popup;
     WINHELP_WINDOW*     win_list;
     WNDPROC             button_proc;
     WINHELP_DLL*        dlls;
+    WINHELP_PAGESET     history;
 } WINHELP_GLOBALS;
 
 extern WINHELP_GLOBALS Globals;
 extern FARPROC         Callbacks[];
 
-BOOL WINHELP_CreateHelpWindowByHash(HLPFILE*, LONG, HLPFILE_WINDOWINFO*, int);
-BOOL WINHELP_CreateHelpWindowByMap(HLPFILE*, LONG, HLPFILE_WINDOWINFO*, int);
-BOOL WINHELP_CreateHelpWindowByOffset(HLPFILE*, LONG, HLPFILE_WINDOWINFO*, int);
-BOOL WINHELP_CreateHelpWindow(HLPFILE_PAGE*, HLPFILE_WINDOWINFO*, int);
+BOOL WINHELP_CreateHelpWindow(WINHELP_WNDPAGE*, int, BOOL);
+BOOL WINHELP_OpenHelpWindow(HLPFILE_PAGE* (*)(HLPFILE*, LONG, ULONG*),
+                            HLPFILE*, LONG, HLPFILE_WINDOWINFO*, int);
 BOOL WINHELP_GetOpenFileName(LPSTR, int);
 BOOL WINHELP_CreateIndexWindow(void);
-INT  WINHELP_MessageBoxIDS(UINT, UINT, WORD);
+void WINHELP_DeleteBackSet(WINHELP_WINDOW*);
 INT  WINHELP_MessageBoxIDS_s(UINT, LPCSTR, UINT, WORD);
 HLPFILE* WINHELP_LookupHelpFile(LPCSTR lpszFile);
 HLPFILE_WINDOWINFO* WINHELP_GetWindowInfo(HLPFILE* hlpfile, LPCSTR name);
+void WINHELP_LayoutMainWindow(WINHELP_WINDOW* win);
 
 extern const char MAIN_WIN_CLASS_NAME[];
 extern const char BUTTON_BOX_WIN_CLASS_NAME[];

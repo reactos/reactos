@@ -71,6 +71,7 @@ STID_TOPICS,		"&Topics"
 STID_ALL_FILES, 	"Tos les fitchîs (*.*)"
 STID_HELP_FILES_HLP, 	"Fitchîs d' aide (*.hlp)"
 STID_FILE_NOT_FOUND_s	"Cannot find '%s'. Do you want to find this file yourself?"
+STID_NO_RICHEDIT	"Cannot find a richedit implementation... Aborting"
 }
 
 #endif  /* LANG_WALON */

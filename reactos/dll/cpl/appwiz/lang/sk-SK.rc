@@ -28,7 +28,7 @@ CAPTION "Zmeniù alebo odstr·niù programy"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 	ICON IDI_CPLSYSTEM,-1,PROPSHEETPADDING,6,16,16
-	LTEXT "The following Software can be automatically removed. To remove a program or to modify its installed components, select it from the list and click Modify/Remove.",-1,36,7,PROPSHEETWIDTH-48,22
+	LTEXT "Nasleduj˙ci softvÈr mÙûe byù odstr·nen˝ automaticky. Pre odinötalovanie softvÈru alebo zmenu jeho nainötalovan˝ch ËastÌ, vyberte softvÈr zo zoznamu a kliknite na tlaËidlo Upraviù/Odstr·niù.",-1,36,7,PROPSHEETWIDTH-48,22
 	LTEXT "N·jsù:",-1,PROPSHEETPADDING,33,30,8
 	EDITTEXT IDC_FIND_EDIT, PROPSHEETPADDING+30, 30, 180, 14, WS_VISIBLE | WS_TABSTOP
 	LTEXT "Zobraziù:",-1,250,33,30,8
@@ -44,7 +44,7 @@ CAPTION "Odstr·niù aktualiz·cie"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 	ICON IDI_UPDATES,-1,PROPSHEETPADDING,6,16,16
-	LTEXT "The following Updates can be automatically removed. To remove a update, select it from the list and click Remove.",-1,36,7,PROPSHEETWIDTH-48,22
+	LTEXT "Nasleduj˙ce aktualiz·cie mÙûu byù odstr·nenÈ automaticky. Aktualiz·ciu odinötalujete vybratÌm zo zonamu a kliknutÌm na tlaËidlo Odstr·niù.",-1,36,7,PROPSHEETWIDTH-48,22
 	LTEXT "N·jsù:",-1,PROPSHEETPADDING,33,30,8
 	EDITTEXT IDC_UPD_FIND_EDIT, PROPSHEETPADDING+30, 30, 180, 14, WS_VISIBLE | WS_TABSTOP
 	LTEXT "Zobraziù:",-1,250,33,30,8

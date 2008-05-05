@@ -76,4 +76,5 @@ STID_TOPICS,		"&Указатель"
 STID_ALL_FILES, 	"Все файлы (*.*)"
 STID_HELP_FILES_HLP, 	"Файлы справки (*.hlp)"
 STID_FILE_NOT_FOUND_s	"Не могу найти '%s'. Вы хотите найти этот файл самостоятельно?"
+STID_NO_RICHEDIT	"Cannot find a richedit implementation... Aborting"
 }

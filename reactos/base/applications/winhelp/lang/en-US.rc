@@ -77,4 +77,28 @@ STID_TOPICS,		"&Topics"
 STID_ALL_FILES, 	"All files (*.*)"
 STID_HELP_FILES_HLP, 	"Help files (*.hlp)"
 STID_FILE_NOT_FOUND_s	"Cannot find '%s'. Do you want to find this file yourself?"
+STID_NO_RICHEDIT	"Cannot find a richedit implementation... Aborting"
 }
+
+CONTEXT_MENU MENU LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
+BEGIN
+	POPUP ""
+	BEGIN
+		MENUITEM "Annotation...",       MNID_CTXT_ANNOTATE
+		MENUITEM "Copy",                MNID_CTXT_COPY
+		MENUITEM "Print...",            MNID_CTXT_PRINT
+		POPUP    "Fonts"
+		BEGIN
+			MENUITEM "Small",       MNID_CTXT_FONTS_SMALL
+			MENUITEM "Normal",      MNID_CTXT_FONTS_NORMAL
+			MENUITEM "Large",       MNID_CTXT_FONTS_LARGE
+		END
+		POPUP   "Help always visible"
+		BEGIN
+			MENUITEM "Default",     MNID_CTXT_HELP_DEFAULT
+			MENUITEM "Visible",     MNID_CTXT_HELP_VISIBLE
+			MENUITEM "Non visible", MNID_CTXT_HELP_NONVISIBLE
+		END
+		MENUITEM "Use system colors",   MNID_CTXT_SYSTEM_COLORS
+	END
+END

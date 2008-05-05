@@ -1,14 +1,7 @@
-/* TRANSLATOR:  M·rio KaËm·r /Mario Kacmar/ aka Kario (kario@szm.sk)
- * DATE OF TR:  04-08-2007
- * CHANGED   :  01-03-2008
- */
-
-
 /*
  * Help Viewer
  *
  * Copyright 1996 Ulrich Schmid
- * Copyright 2002 Sylvain Petreolle <spetreolle@yahoo.fr>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -25,8 +18,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-/* Menu */
-
 MAIN_MENU MENU LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
 {
  POPUP "&S˙bor" {
@@ -34,7 +25,6 @@ MAIN_MENU MENU LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
    MENUITEM SEPARATOR
    MENUITEM "&TlaËiù", MNID_FILE_PRINT
    MENUITEM "&Nastavenie tlaËe...", MNID_FILE_SETUP
-   MENUITEM SEPARATOR
    MENUITEM "U&konËiù", MNID_FILE_EXIT
  }
  POPUP "&Upraviù" {
@@ -45,42 +35,33 @@ MAIN_MENU MENU LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
  POPUP "&Z·loûka" {
    MENUITEM "&Definovaù...", MNID_BKMK_DEFINE
  }
- POPUP "&PomocÌk" {
-   MENUITEM "&Ako pouûiù PomocnÌka", MNID_HELP_HELPON
+ POPUP "&Pomoc" {
+   MENUITEM "Pomoc &na pomoci", MNID_HELP_HELPON
    MENUITEM "Vûdy na &vrchu", MNID_HELP_HELPTOP
    MENUITEM SEPARATOR
    MENUITEM "&Info...", MNID_HELP_ABOUT
 #ifdef WINELIB
-   MENUITEM "»&o je ReactOS", MNID_HELP_WINE
+   MENUITEM "O& WINE", MNID_HELP_WINE
 #endif
  }
-}
-
-IDD_INDEX DIALOG DISCARDABLE 0, 0, 200, 190 LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
-STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-FONT 8, "MS Shell Dlg"
-CAPTION "Index"
-{
-    LISTBOX IDC_INDEXLIST, 10, 10, 180, 150, LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_BORDER
-    PUSHBUTTON "&OK", IDOK, 40, 170, 50, 12
-    PUSHBUTTON "&Zruöiù", IDCANCEL, 120, 170, 50, 12
 }
 
 /* Strings */
 STRINGTABLE DISCARDABLE LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
 {
-STID_WINE_HELP,             "PomocnÌk systÈmu ReactOS"
+STID_WINE_HELP,             "WINE Pomoc"
 STID_WHERROR,               "CHYBA"
-STID_WARNING,               "UPOZORNENIE"
+STID_WARNING,               "VAROVANIE"
 STID_INFO,                  "Inform·cie"
 STID_NOT_IMPLEMENTED,       "NeimplementovanÈ"
-STID_HLPFILE_ERROR_s,       "Pri pokuse otvoriù s˙bor pomocnÌka '%s' sa vyskytla chyba."
+STID_HLPFILE_ERROR_s,       "Chyba poËas ËÌtania s˙boru `%s'"
 STID_CONTENTS,              "&Obsah"
 STID_SEARCH,                "&Hæadaù"
 STID_BACK,                  "&Sp‰ù"
 STID_HISTORY,               "&HistÛria"
-STID_TOPICS,		    "&TÈmy"
+STID_TOPICS,		    "&Topics"
 STID_ALL_FILES,             "Vöetky s˙bory (*.*)"
 STID_HELP_FILES_HLP,        "S˙bory pomoci (*.hlp)"
-STID_FILE_NOT_FOUND_s       "S˙bor '%s' nebol n·jden˝. Chcete sa pok˙siù n·jsù tento s˙bor sami?"
+STID_FILE_NOT_FOUND_s       "Cannot find '%s'. Do you want to find this file yourself?"
+STID_NO_RICHEDIT	    "Cannot find a richedit implementation... Aborting"
 }

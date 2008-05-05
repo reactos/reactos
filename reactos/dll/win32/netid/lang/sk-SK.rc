@@ -55,7 +55,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Pri&m·rna prÌpona poËÌtaËa pre n·zov DNS:", -1, 7, 5, 253, 8
     EDITTEXT 1011, 7, 17, 252, 14, ES_AUTOHSCROLL
-    AUTOCHECKBOX "&Change primary DNS suffix when domain membership changes", 115, 11, 39, 250, 10
+    AUTOCHECKBOX "&Pri zmene Ëlenstva v domÈne zmeniù prim·rnu prÌponu n·zvu DNS", 115, 11, 39, 250, 10
     LTEXT "N·zov poËÌtaËa pre protokol &NetBIOS:", -1, 7, 57, 148, 8
     EDITTEXT 1013, 7, 69, 150, 14, ES_UPPERCASE | ES_AUTOHSCROLL | ES_READONLY
     DEFPUSHBUTTON "OK", 1, 153, 104, 50, 14

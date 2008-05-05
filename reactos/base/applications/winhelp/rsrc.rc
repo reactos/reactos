@@ -25,6 +25,9 @@
 #include "winhelp.h"
 #include "winhelp_res.h"
 
+/* @makedep: winhelp.ico */
+IDI_WINHELP ICON DISCARDABLE winhelp.ico
+
 #include "lang/bg-BG.rc"
 #include "lang/cs-CZ.rc"
 #include "lang/da-DK.rc"
@@ -50,5 +53,5 @@
 #include "lang/sv-SE.rc"
 #include "lang/tr-TR.rc"
 #include "lang/uk-UA.rc"
-//#include "lang/wa-WA.rc"
+#include "lang/wa-WA.rc"
 #include "lang/zh-CN.rc"

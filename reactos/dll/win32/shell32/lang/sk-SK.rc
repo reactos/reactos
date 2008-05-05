@@ -477,7 +477,7 @@ CAPTION "Zmieöan˝ obsah"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	ICON "", 1000, 5, 7, 21, 20
-	LTEXT "This disk or device contains more than one type of content.", 1001, 32, 7, 191, 20
+	LTEXT "Tento disk alebo zariadenie obsahuje viac ako len jeden typ obsahu.", 1001, 32, 7, 191, 20
 	LTEXT "What do you want ReactOS to do?", 1002, 32, 31, 188, 8
 	CONTROL "", 1003, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C04D, 32, 43, 188, 139
 	DEFPUSHBUTTON "OK", IDOK, 96, 186, 60, 14
@@ -525,7 +525,7 @@ BEGIN
 	LTEXT "Maintains your session, keeping the computer running on low power with data still in memory. The computer wakes up when you press a key or move the mouse.", 8225, 39, 40, 167, 37
 	DEFPUSHBUTTON "OK", 1, 7, 82, 60, 14, WS_GROUP
 	PUSHBUTTON "Zruöiù", IDCANCEL, 75, 82, 60, 14
-	PUSHBUTTON "&Help", IDHELP, 144, 82, 60, 14
+	PUSHBUTTON "&PomocnÌk", IDHELP, 144, 82, 60, 14
 END
 
 FORMAT_DLG DIALOGEX 50, 50, 184, 218
@@ -560,7 +560,7 @@ BEGIN
     LTEXT "Icons:", -1, 7, 47, 208, 10
     LISTBOX         IDC_PICKICON_LIST,7,57,208,119,LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | LBS_MULTICOLUMN | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP,WS_EX_STATICEDGE
     DEFPUSHBUTTON   "OK",IDOK, 107, 181,50, 14
-    PUSHBUTTON      "Cancel",IDCANCEL, 167, 181, 50, 14
+    PUSHBUTTON      "Zruöiù",IDCANCEL, 167, 181, 50, 14
 END
 
 STRINGTABLE DISCARDABLE
@@ -666,22 +666,22 @@ BEGIN
 	IDS_RECYCLEBIN_LOCATION     "Recycle Bin Location"
 	IDS_RECYCLEBIN_DISKSPACE    "Space Available"
 	IDS_PICK_ICON_TITLE         "Choose Icon"
-	IDS_PICK_ICON_FILTER        "Icon Files(*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0"
-	IDS_OPEN_WITH_FILTER        "Executable Files\0*.exe\0"
-	IDS_DIRECTORY               "Folder"
+	IDS_PICK_ICON_FILTER        "S˙bory ikon(*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0"
+	IDS_OPEN_WITH_FILTER        "SpustiteænÈ s˙bory\0*.exe\0"
+	IDS_DIRECTORY               "PrieËinok"
 	IDS_VIRTUAL_DRIVER          "Virtual Device Driver"
 	IDS_BAT_FILE                "ReactOS Batch File"
 	IDS_CMD_FILE                "ReactOS Command Script"
-	IDS_COM_FILE                "Dos Application"
-	IDS_CPL_FILE                "Control Panel Item"
+	IDS_COM_FILE                "DOS aplik·cia"
+	IDS_CPL_FILE                "Poloûka ovl·dacieho panela"
 	IDS_CUR_FILE                "Cursor"
 	IDS_DLL_FILE                "Application Extension"
-	IDS_DRV_FILE                "Device Driver"
-	IDS_EXE_FILE                "Application"
-	IDS_FON_FILE                "Font file"
-	IDS_TTF_FILE                "TrueType Font file"
-	IDS_HLP_FILE                "Help File"
-	IDS_INI_FILE                "Configuration Settings"
-	IDS_LNK_FILE                "Shortcut"
-	IDS_SYS_FILE                "System file"
+	IDS_DRV_FILE                "Ovl·daË zariadenia"
+	IDS_EXE_FILE                "Aplik·cia"
+	IDS_FON_FILE                "S˙bor pÌsma"
+	IDS_TTF_FILE                "S˙bor pÌsma TrueType"
+	IDS_HLP_FILE                "S˙bor pomocnÌka"
+	IDS_INI_FILE                "KonfiguraËnÈ nastavenia"
+	IDS_LNK_FILE                "Odkaz"
+	IDS_SYS_FILE                "SystÈmov˝ s˙bor"
 END

@@ -77,4 +77,5 @@ STID_TOPICS,		"&Onderwerpen"
 STID_ALL_FILES, 	"Alle bestanden (*.*)"
 STID_HELP_FILES_HLP, 	"Helpbestanden (*.hlp)"
 STID_FILE_NOT_FOUND_s	"Kan '%s' niet openen. Wilt u zelf dit bestand zoeken?"
+STID_NO_RICHEDIT	"Cannot find a richedit implementation... Aborting"
 }

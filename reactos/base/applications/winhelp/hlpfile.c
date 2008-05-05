@@ -2,7 +2,7 @@
  * Help Viewer
  *
  * Copyright    1996 Ulrich Schmid
- *              2002 Eric Pouech
+ *              2002, 2008 Eric Pouech
  *              2007 Kirill K. Smirnov
  *
  * This library is free software; you can redistribute it and/or
@@ -50,35 +50,10 @@ static inline unsigned GET_UINT(const BYTE* buffer, unsigned i)
 }
 
 static HLPFILE *first_hlpfile = 0;
-static BYTE    *file_buffer;
-static UINT     file_buffer_size;
-
-static struct
-{
-    UINT        num;
-    unsigned*   offsets;
-    char*       buffer;
-} phrases;
-
-static struct
-{
-    BYTE**      map;
-    BYTE*       end;
-    UINT        wMapLen;
-} topic;
-
-static struct
-{
-    UINT                wFont;
-    UINT                wIndent;
-    UINT                wHSpace;
-    UINT                wVSpace;
-    HLPFILE_LINK*       link;
-} attributes;
 
 static BOOL  HLPFILE_DoReadHlpFile(HLPFILE*, LPCSTR);
-static BOOL  HLPFILE_ReadFileToBuffer(HFILE);
-static BOOL  HLPFILE_FindSubFile(LPCSTR name, BYTE**, BYTE**);
+static BOOL  HLPFILE_ReadFileToBuffer(HLPFILE*, HFILE);
+static BOOL  HLPFILE_FindSubFile(HLPFILE*, LPCSTR, BYTE**, BYTE**);
 static BOOL  HLPFILE_SystemCommands(HLPFILE*);
 static INT   HLPFILE_UncompressedLZ77_Size(BYTE *ptr, BYTE *end);
 static BYTE* HLPFILE_UncompressLZ77(BYTE *ptr, BYTE *end, BYTE *newptr);
@@ -88,10 +63,10 @@ static BOOL  HLPFILE_Uncompress_Topic(HLPFILE*);
 static BOOL  HLPFILE_GetContext(HLPFILE*);
 static BOOL  HLPFILE_GetKeywords(HLPFILE*);
 static BOOL  HLPFILE_GetMap(HLPFILE*);
-static BOOL  HLPFILE_AddPage(HLPFILE*, BYTE*, BYTE*, unsigned);
-static BOOL  HLPFILE_AddParagraph(HLPFILE*, BYTE *, BYTE*, unsigned*);
-static void  HLPFILE_Uncompress2(const BYTE*, const BYTE*, BYTE*, const BYTE*);
-static BOOL  HLPFILE_Uncompress3(char*, const char*, const BYTE*, const BYTE*);
+static BOOL  HLPFILE_AddPage(HLPFILE*, BYTE*, BYTE*, unsigned, unsigned);
+static BOOL  HLPFILE_SkipParagraph(HLPFILE*, BYTE *, BYTE*, unsigned*);
+static void  HLPFILE_Uncompress2(HLPFILE*, const BYTE*, const BYTE*, BYTE*, const BYTE*);
+static BOOL  HLPFILE_Uncompress3(HLPFILE*, char*, const char*, const BYTE*, const BYTE*);
 static void  HLPFILE_UncompressRLE(const BYTE* src, const BYTE* end, BYTE** dst, unsigned dstsz);
 static BOOL  HLPFILE_ReadFont(HLPFILE* hlpfile);
 
@@ -112,21 +87,12 @@ static HLPFILE_PAGE *HLPFILE_PageByNumber(HLPFILE* hlpfile, UINT wNum)
     return page;
 }
 
-/* FIXME:
- * this finds the page containing the offset. The offset can either
- * refer to the top of the page (offset == page->offset), or
- * to some paragraph inside the page...
- * As of today, we only return the page... we should also return
- * a paragraph, and then, while opening a new page, compute the
- * y-offset of the paragraph to be shown and scroll the window
- * accordingly
- */
 /******************************************************************
  *		HLPFILE_PageByOffset
  *
  *
  */
-HLPFILE_PAGE *HLPFILE_PageByOffset(HLPFILE* hlpfile, LONG offset)
+HLPFILE_PAGE *HLPFILE_PageByOffset(HLPFILE* hlpfile, LONG offset, ULONG* relative)
 {
     HLPFILE_PAGE*       page;
     HLPFILE_PAGE*       found;
@@ -141,7 +107,10 @@ HLPFILE_PAGE *HLPFILE_PageByOffset(HLPFILE* hlpfile, LONG offset)
     for (found = NULL, page = hlpfile->first_page; page; page = page->next)
     {
         if (page->offset <= offset && (!found || found->offset < page->offset))
+        {
+            *relative = offset - page->offset;
             found = page;
+        }
     }
     if (!found)
         WINE_ERR("Page of offset %u not found in file %s\n",
@@ -170,19 +139,23 @@ static int comp_PageByHash(void *p, const void *key,
 
 /***********************************************************************
  *
- *           HLPFILE_HlpFilePageByHash
+ *           HLPFILE_PageByHash
  */
-HLPFILE_PAGE *HLPFILE_PageByHash(HLPFILE* hlpfile, LONG lHash)
+HLPFILE_PAGE *HLPFILE_PageByHash(HLPFILE* hlpfile, LONG lHash, ULONG* relative)
 {
     BYTE *ptr;
 
-    if (!hlpfile) return 0;
+    if (!hlpfile) return NULL;
+    if (!lHash) return HLPFILE_Contents(hlpfile, relative);
 
     WINE_TRACE("<%s>[%x]\n", hlpfile->lpszPath, lHash);
 
     /* For win 3.0 files hash values are really page numbers */
     if (hlpfile->version <= 16)
+    {
+        *relative = 0;
         return HLPFILE_PageByNumber(hlpfile, lHash);
+    }
 
     ptr = HLPFILE_BPTreeSearch(hlpfile->Context, LongToPtr(lHash), comp_PageByHash);
     if (!ptr)
@@ -191,14 +164,14 @@ HLPFILE_PAGE *HLPFILE_PageByHash(HLPFILE* hlpfile, LONG lHash)
         return NULL;
     }
 
-    return HLPFILE_PageByOffset(hlpfile, GET_UINT(ptr, 4));
+    return HLPFILE_PageByOffset(hlpfile, GET_UINT(ptr, 4), relative);
 }
 
 /***********************************************************************
  *
  *           HLPFILE_PageByMap
  */
-HLPFILE_PAGE *HLPFILE_PageByMap(HLPFILE* hlpfile, LONG lMap)
+HLPFILE_PAGE *HLPFILE_PageByMap(HLPFILE* hlpfile, LONG lMap, ULONG* relative)
 {
     unsigned int i;
 
@@ -209,7 +182,7 @@ HLPFILE_PAGE *HLPFILE_PageByMap(HLPFILE* hlpfile, LONG lMap)
     for (i = 0; i < hlpfile->wMapLen; i++)
     {
         if (hlpfile->Map[i].lMap == lMap)
-            return HLPFILE_PageByOffset(hlpfile, hlpfile->Map[i].offset);
+            return HLPFILE_PageByOffset(hlpfile, hlpfile->Map[i].offset, relative);
     }
 
     WINE_ERR("Page of Map %x not found in file %s\n", lMap, hlpfile->lpszPath);
@@ -220,14 +193,18 @@ HLPFILE_PAGE *HLPFILE_PageByMap(HLPFILE* hlpfile, LONG lMap)
  *
  *           HLPFILE_Contents
  */
-HLPFILE_PAGE* HLPFILE_Contents(HLPFILE *hlpfile)
+HLPFILE_PAGE* HLPFILE_Contents(HLPFILE *hlpfile, ULONG* relative)
 {
     HLPFILE_PAGE*       page = NULL;
 
     if (!hlpfile) return NULL;
 
-    page = HLPFILE_PageByOffset(hlpfile, hlpfile->contents_start);
-    if (!page) page = hlpfile->first_page;
+    page = HLPFILE_PageByOffset(hlpfile, hlpfile->contents_start, relative);
+    if (!page)
+    {
+        page = hlpfile->first_page;
+        *relative = 0;
+    }
     return page;
 }
 
@@ -285,22 +262,11 @@ HLPFILE *HLPFILE_ReadHlpFile(LPCSTR lpszPath)
     first_hlpfile = hlpfile;
     if (hlpfile->next) hlpfile->next->prev = hlpfile;
 
-    phrases.offsets = NULL;
-    phrases.buffer = NULL;
-    topic.map = NULL;
-    topic.end = NULL;
-    file_buffer = NULL;
-
     if (!HLPFILE_DoReadHlpFile(hlpfile, lpszPath))
     {
         HLPFILE_FreeHlpFile(hlpfile);
         hlpfile = 0;
     }
-
-    HeapFree(GetProcessHeap(), 0, phrases.offsets);
-    HeapFree(GetProcessHeap(), 0, phrases.buffer);
-    HeapFree(GetProcessHeap(), 0, topic.map);
-    HeapFree(GetProcessHeap(), 0, file_buffer);
 
     return hlpfile;
 }
@@ -321,7 +287,7 @@ static BOOL HLPFILE_DoReadHlpFile(HLPFILE *hlpfile, LPCSTR lpszPath)
     hFile = OpenFile(lpszPath, &ofs, OF_READ);
     if (hFile == HFILE_ERROR) return FALSE;
 
-    ret = HLPFILE_ReadFileToBuffer(hFile);
+    ret = HLPFILE_ReadFileToBuffer(hlpfile, hFile);
     _lclose(hFile);
     if (!ret) return FALSE;
 
@@ -334,7 +300,7 @@ static BOOL HLPFILE_DoReadHlpFile(HLPFILE *hlpfile, LPCSTR lpszPath)
     if (!HLPFILE_Uncompress_Topic(hlpfile)) return FALSE;
     if (!HLPFILE_ReadFont(hlpfile)) return FALSE;
 
-    buf = topic.map[0];
+    buf = hlpfile->topic_map[0];
     old_index = -1;
     offs = 0;
     do
@@ -352,7 +318,7 @@ static BOOL HLPFILE_DoReadHlpFile(HLPFILE *hlpfile, LPCSTR lpszPath)
             offset = (ref - 0x0C) & 0x3FFF;
         }
 
-        if (hlpfile->version <= 16 && index != old_index && index != 0)
+        if (hlpfile->version <= 16 && index != old_index && old_index != -1)
         {
             /* we jumped to the next block, adjust pointers */
             ref -= 12;
@@ -361,22 +327,22 @@ static BOOL HLPFILE_DoReadHlpFile(HLPFILE *hlpfile, LPCSTR lpszPath)
 
         WINE_TRACE("ref=%08x => [%u/%u]\n", ref, index, offset);
 
-        if (index >= topic.wMapLen) {WINE_WARN("maplen\n"); break;}
-        buf = topic.map[index] + offset;
-        if (buf + 0x15 >= topic.end) {WINE_WARN("extra\n"); break;}
-        end = min(buf + GET_UINT(buf, 0), topic.end);
+        if (index >= hlpfile->topic_maplen) {WINE_WARN("maplen\n"); break;}
+        buf = hlpfile->topic_map[index] + offset;
+        if (buf + 0x15 >= hlpfile->topic_end) {WINE_WARN("extra\n"); break;}
+        end = min(buf + GET_UINT(buf, 0), hlpfile->topic_end);
         if (index != old_index) {offs = 0; old_index = index;}
 
         switch (buf[0x14])
 	{
 	case 0x02:
-            if (!HLPFILE_AddPage(hlpfile, buf, end, index * 0x8000L + offs)) return FALSE;
+            if (!HLPFILE_AddPage(hlpfile, buf, end, ref, index * 0x8000L + offs)) return FALSE;
             break;
 
 	case 0x01:
 	case 0x20:
 	case 0x23:
-            if (!HLPFILE_AddParagraph(hlpfile, buf, end, &len)) return FALSE;
+            if (!HLPFILE_SkipParagraph(hlpfile, buf, end, &len)) return FALSE;
             offs += len;
             break;
 
@@ -404,7 +370,7 @@ static BOOL HLPFILE_DoReadHlpFile(HLPFILE *hlpfile, LPCSTR lpszPath)
  *
  *           HLPFILE_AddPage
  */
-static BOOL HLPFILE_AddPage(HLPFILE *hlpfile, BYTE *buf, BYTE *end, unsigned offset)
+static BOOL HLPFILE_AddPage(HLPFILE *hlpfile, BYTE *buf, BYTE *end, unsigned ref, unsigned offset)
 {
     HLPFILE_PAGE* page;
     BYTE*         title;
@@ -426,9 +392,9 @@ static BOOL HLPFILE_AddPage(HLPFILE *hlpfile, BYTE *buf, BYTE *end, unsigned off
     {
         /* need to decompress */
         if (hlpfile->hasPhrases)
-            HLPFILE_Uncompress2(title, end, (BYTE*)page->lpszTitle, (BYTE*)page->lpszTitle + titlesize);
+            HLPFILE_Uncompress2(hlpfile, title, end, (BYTE*)page->lpszTitle, (BYTE*)page->lpszTitle + titlesize);
         else if (hlpfile->hasPhrases40)
-            HLPFILE_Uncompress3(page->lpszTitle, page->lpszTitle + titlesize, title, end);
+            HLPFILE_Uncompress3(hlpfile, page->lpszTitle, page->lpszTitle + titlesize, title, end);
         else
         {
             WINE_FIXME("Text size is too long, splitting\n");
@@ -456,10 +422,11 @@ static BOOL HLPFILE_AddPage(HLPFILE *hlpfile, BYTE *buf, BYTE *end, unsigned off
 
     page->file            = hlpfile;
     page->next            = NULL;
-    page->first_paragraph = NULL;
     page->first_macro     = NULL;
+    page->first_link      = NULL;
     page->wNumber         = GET_UINT(buf, 0x21);
     page->offset          = offset;
+    page->reference       = ref;
 
     page->browse_bwd = GET_UINT(buf, 0x19);
     page->browse_fwd = GET_UINT(buf, 0x1D);
@@ -467,8 +434,6 @@ static BOOL HLPFILE_AddPage(HLPFILE *hlpfile, BYTE *buf, BYTE *end, unsigned off
     WINE_TRACE("Added page[%d]: title='%s' %08x << %08x >> %08x\n",
                page->wNumber, page->lpszTitle, 
                page->browse_bwd, page->offset, page->browse_fwd);
-
-    memset(&attributes, 0, sizeof(attributes));
 
     /* now load macros */
     ptr = page->lpszTitle + strlen(page->lpszTitle) + 1;
@@ -561,6 +526,28 @@ static unsigned short fetch_ushort(BYTE** ptr)
     return ret;
 }
 
+/***********************************************************************
+ *
+ *           HLPFILE_SkipParagraph
+ */
+static BOOL HLPFILE_SkipParagraph(HLPFILE *hlpfile, BYTE *buf, BYTE *end, unsigned* len)
+{
+    BYTE              *tmp;
+
+    if (!hlpfile->first_page) {WINE_WARN("no page\n"); return FALSE;};
+    if (buf + 0x19 > end) {WINE_WARN("header too small\n"); return FALSE;};
+
+    tmp = buf + 0x15;
+    if (buf[0x14] == 0x20 || buf[0x14] == 0x23)
+    {
+        fetch_long(&tmp);
+        *len = fetch_ushort(&tmp);
+    }
+    else *len = end-buf-15;
+
+    return TRUE;
+}
+
 /******************************************************************
  *		HLPFILE_DecompressGfx
  *
@@ -620,19 +607,188 @@ static BYTE*    HLPFILE_DecompressGfx(BYTE* src, unsigned csz, unsigned sz, BYTE
     return dst;
 }
 
+static BOOL HLPFILE_RtfAddRawString(struct RtfData* rd, const char* str, size_t sz)
+{
+    if (rd->ptr + sz >= rd->data + rd->allocated)
+    {
+        char*   new = HeapReAlloc(GetProcessHeap(), 0, rd->data, rd->allocated *= 2);
+        if (!new) return FALSE;
+        rd->ptr = new + (rd->ptr - rd->data);
+        rd->data = new;
+    }
+    memcpy(rd->ptr, str, sz);
+    rd->ptr += sz;
+
+    return TRUE;
+}
+
+static BOOL HLPFILE_RtfAddControl(struct RtfData* rd, const char* str)
+{
+    if (*str == '\\' || *str == '{') rd->in_text = FALSE;
+    else if (*str == '}') rd->in_text = TRUE;
+    return HLPFILE_RtfAddRawString(rd, str, strlen(str));
+}
+
+static BOOL HLPFILE_RtfAddText(struct RtfData* rd, const char* str)
+{
+    const char* p;
+    const char* last;
+    const char* replace;
+    unsigned    rlen;
+
+    if (!rd->in_text)
+    {
+        if (!HLPFILE_RtfAddRawString(rd, " ", 1)) return FALSE;
+        rd->in_text = TRUE;
+    }
+    for (last = p = str; *p; p++)
+    {
+        if (*p < 0) /* escape non ASCII chars */
+        {
+            static char         xx[8];
+            rlen = sprintf(xx, "\\'%x", *(const BYTE*)p);
+            replace = xx;
+        }
+        else switch (*p)
+        {
+        case '{':  rlen = 2; replace = "\\{";  break;
+        case '}':  rlen = 2; replace = "\\}";  break;
+        case '\\': rlen = 2; replace = "\\\\"; break;
+        default:   continue;
+        }
+        if ((p != last && !HLPFILE_RtfAddRawString(rd, last, p - last)) ||
+            !HLPFILE_RtfAddRawString(rd, replace, rlen)) return FALSE;
+        last = p + 1;
+    }
+    return HLPFILE_RtfAddRawString(rd, last, p - last);
+}
+
 /******************************************************************
- *		HLPFILE_LoadBitmap
- *
+ *		RtfAddHexBytes
  *
  */
-static BOOL HLPFILE_LoadBitmap(BYTE* beg, BYTE type, BYTE pack, 
-                               HLPFILE_PARAGRAPH* paragraph)
+static BOOL HLPFILE_RtfAddHexBytes(struct RtfData* rd, const void* _ptr, unsigned sz)
+{
+    char        tmp[512];
+    unsigned    i, step;
+    const BYTE* ptr = _ptr;
+    static const char* _2hex = "0123456789abcdef";
+
+    if (!rd->in_text)
+    {
+        if (!HLPFILE_RtfAddRawString(rd, " ", 1)) return FALSE;
+        rd->in_text = TRUE;
+    }
+    for (; sz; sz -= step)
+    {
+        step = min(256, sz);
+        for (i = 0; i < step; i++)
+        {
+            tmp[2 * i + 0] = _2hex[*ptr >> 4];
+            tmp[2 * i + 1] = _2hex[*ptr++ & 0xF];
+        }
+        if (!HLPFILE_RtfAddRawString(rd, tmp, 2 * step)) return FALSE;
+    }
+    return TRUE;
+}
+
+/******************************************************************
+ *             HLPFILE_RtfAddTransparentBitmap
+ *
+ * We'll transform a transparent bitmap into an metafile that
+ * we then transform into RTF
+ */
+static BOOL HLPFILE_RtfAddTransparentBitmap(struct RtfData* rd, const BITMAPINFO* bi,
+                                            const void* pict, unsigned nc)
+{
+    HDC                 hdc, hdcMask, hdcMem, hdcEMF;
+    HBITMAP             hbm, hbmMask, hbmOldMask, hbmOldMem;
+    HENHMETAFILE        hEMF;
+    BOOL                ret = FALSE;
+    void*               data;
+    UINT                sz;
+
+    hbm = CreateDIBitmap(hdc = GetDC(0), &bi->bmiHeader,
+                         CBM_INIT, pict, bi, DIB_RGB_COLORS);
+
+    hdcMem = CreateCompatibleDC(hdc);
+    hbmOldMem = SelectObject(hdcMem, hbm);
+
+    /* create the mask bitmap from the main bitmap */
+    hdcMask = CreateCompatibleDC(hdc);
+    hbmMask = CreateBitmap(bi->bmiHeader.biWidth, bi->bmiHeader.biHeight, 1, 1, NULL);
+    hbmOldMask = SelectObject(hdcMask, hbmMask);
+    SetBkColor(hdcMem,
+               RGB(bi->bmiColors[nc - 1].rgbRed,
+                   bi->bmiColors[nc - 1].rgbGreen,
+                   bi->bmiColors[nc - 1].rgbBlue));
+    BitBlt(hdcMask, 0, 0, bi->bmiHeader.biWidth, bi->bmiHeader.biHeight, hdcMem, 0, 0, SRCCOPY);
+
+    /* sets to RGB(0,0,0) the transparent bits in main bitmap */
+    SetBkColor(hdcMem, RGB(0,0,0));
+    SetTextColor(hdcMem, RGB(255,255,255));
+    BitBlt(hdcMem, 0, 0, bi->bmiHeader.biWidth, bi->bmiHeader.biHeight, hdcMask, 0, 0, SRCAND);
+
+    SelectObject(hdcMask, hbmOldMask);
+    DeleteDC(hdcMask);
+
+    SelectObject(hdcMem, hbmOldMem);
+    DeleteDC(hdcMem);
+
+    /* we create the bitmap on the fly */
+    hdcEMF = CreateEnhMetaFile(NULL, NULL, NULL, NULL);
+    hdcMem = CreateCompatibleDC(hdcEMF);
+
+    /* sets to RGB(0,0,0) the transparent bits in final bitmap */
+    hbmOldMem = SelectObject(hdcMem, hbmMask);
+    SetBkColor(hdcEMF, RGB(255, 255, 255));
+    SetTextColor(hdcEMF, RGB(0, 0, 0));
+    BitBlt(hdcEMF, 0, 0, bi->bmiHeader.biWidth, bi->bmiHeader.biHeight, hdcMem, 0, 0, SRCAND);
+
+    /* and copy the remaining bits of main bitmap */
+    SelectObject(hdcMem, hbm);
+    BitBlt(hdcEMF, 0, 0, bi->bmiHeader.biWidth, bi->bmiHeader.biHeight, hdcMem, 0, 0, SRCPAINT);
+    SelectObject(hdcMem, hbmOldMem);
+    DeleteDC(hdcMem);
+
+    /* do the cleanup */
+    ReleaseDC(0, hdc);
+    DeleteObject(hbmMask);
+    DeleteObject(hbm);
+
+    hEMF = CloseEnhMetaFile(hdcEMF);
+
+    /* generate rtf stream */
+    sz = GetEnhMetaFileBits(hEMF, 0, NULL);
+    if (sz && (data = HeapAlloc(GetProcessHeap(), 0, sz)))
+    {
+        if (sz == GetEnhMetaFileBits(hEMF, sz, data))
+        {
+            ret = HLPFILE_RtfAddControl(rd, "{\\pict\\emfblip") &&
+                HLPFILE_RtfAddHexBytes(rd, data, sz) &&
+                HLPFILE_RtfAddControl(rd, "}");
+        }
+        HeapFree(GetProcessHeap(), 0, data);
+    }
+    DeleteEnhMetaFile(hEMF);
+
+    return ret;
+}
+
+/******************************************************************
+ *		HLPFILE_RtfAddBitmap
+ *
+ */
+static BOOL HLPFILE_RtfAddBitmap(struct RtfData* rd, BYTE* beg, BYTE type, BYTE pack)
 {
     BYTE*               ptr;
     BYTE*               pict_beg;
     BITMAPINFO*         bi;
     unsigned long       off, csz;
-    HDC                 hdc;
+    unsigned            nc = 0;
+    BOOL                clrImportant = FALSE;
+    BOOL                ret = FALSE;
+    char                tmp[256];
 
     bi = HeapAlloc(GetProcessHeap(), 0, sizeof(*bi));
     if (!bi) return FALSE;
@@ -647,13 +803,14 @@ static BOOL HLPFILE_LoadBitmap(BYTE* beg, BYTE type, BYTE pack,
     bi->bmiHeader.biWidth         = fetch_ulong(&ptr);
     bi->bmiHeader.biHeight        = fetch_ulong(&ptr);
     bi->bmiHeader.biClrUsed       = fetch_ulong(&ptr);
-    bi->bmiHeader.biClrImportant  = fetch_ulong(&ptr);
+    clrImportant  = fetch_ulong(&ptr);
+    bi->bmiHeader.biClrImportant  = (clrImportant > 1) ? clrImportant : 0;
     bi->bmiHeader.biCompression   = BI_RGB;
     if (bi->bmiHeader.biBitCount > 32) WINE_FIXME("Unknown bit count %u\n", bi->bmiHeader.biBitCount);
     if (bi->bmiHeader.biPlanes != 1) WINE_FIXME("Unsupported planes %u\n", bi->bmiHeader.biPlanes);
     bi->bmiHeader.biSizeImage = (((bi->bmiHeader.biWidth * bi->bmiHeader.biBitCount + 31) & ~31) / 8) * bi->bmiHeader.biHeight;
     WINE_TRACE("planes=%d bc=%d size=(%d,%d)\n",
-               bi->bmiHeader.biPlanes, bi->bmiHeader.biBitCount, 
+               bi->bmiHeader.biPlanes, bi->bmiHeader.biBitCount,
                bi->bmiHeader.biWidth, bi->bmiHeader.biHeight);
 
     csz = fetch_ulong(&ptr);
@@ -661,17 +818,17 @@ static BOOL HLPFILE_LoadBitmap(BYTE* beg, BYTE type, BYTE pack,
 
     off = GET_UINT(ptr, 0);     ptr += 4;
     /* GET_UINT(ptr, 0); hotspot offset */ ptr += 4;
-    
+
     /* now read palette info */
     if (type == 0x06)
     {
-        unsigned nc = bi->bmiHeader.biClrUsed;
         unsigned i;
-        
+
+        nc = bi->bmiHeader.biClrUsed;
         /* not quite right, especially for bitfields type of compression */
         if (!nc && bi->bmiHeader.biBitCount <= 8)
             nc = 1 << bi->bmiHeader.biBitCount;
-        
+
         bi = HeapReAlloc(GetProcessHeap(), 0, bi, sizeof(*bi) + nc * sizeof(RGBQUAD));
         if (!bi) return FALSE;
         for (i = 0; i < nc; i++)
@@ -684,42 +841,60 @@ static BOOL HLPFILE_LoadBitmap(BYTE* beg, BYTE type, BYTE pack,
         }
     }
     pict_beg = HLPFILE_DecompressGfx(beg + off, csz, bi->bmiHeader.biSizeImage, pack);
-    
-    paragraph->u.gfx.u.bmp.hBitmap = CreateDIBitmap(hdc = GetDC(0), &bi->bmiHeader, 
-                                                    CBM_INIT, pict_beg, 
-                                                    bi, DIB_RGB_COLORS);
-    ReleaseDC(0, hdc);      
-    if (!paragraph->u.gfx.u.bmp.hBitmap)
-        WINE_ERR("Couldn't create bitmap\n");
-    
+
+    if (clrImportant == 1 && nc > 0)
+    {
+        ret = HLPFILE_RtfAddTransparentBitmap(rd, bi, pict_beg, nc);
+        goto done;
+    }
+    if (!HLPFILE_RtfAddControl(rd, "{\\pict")) goto done;
+    if (type == 0x06)
+    {
+        sprintf(tmp, "\\dibitmap0\\picw%d\\pich%d",
+                bi->bmiHeader.biWidth, bi->bmiHeader.biHeight);
+        if (!HLPFILE_RtfAddControl(rd, tmp)) goto done;
+        if (!HLPFILE_RtfAddHexBytes(rd, bi, sizeof(*bi) + nc * sizeof(RGBQUAD))) goto done;
+    }
+    else
+    {
+        sprintf(tmp, "\\wbitmap0\\wbmbitspixel%d\\wbmplanes%d\\picw%d\\pich%d",
+                bi->bmiHeader.biBitCount, bi->bmiHeader.biPlanes,
+                bi->bmiHeader.biWidth, bi->bmiHeader.biHeight);
+        if (!HLPFILE_RtfAddControl(rd, tmp)) goto done;
+    }
+    if (!HLPFILE_RtfAddHexBytes(rd, pict_beg, bi->bmiHeader.biSizeImage)) goto done;
+    if (!HLPFILE_RtfAddControl(rd, "}")) goto done;
+
+    ret = TRUE;
+done:
     HeapFree(GetProcessHeap(), 0, bi);
     if (pict_beg != beg + off) HeapFree(GetProcessHeap(), 0, pict_beg);
 
-    return TRUE;
+    return ret;
 }
 
 /******************************************************************
- *		HLPFILE_LoadMetaFile
- *
+ *		HLPFILE_RtfAddMetaFile
  *
  */
-static BOOL     HLPFILE_LoadMetaFile(BYTE* beg, BYTE pack, HLPFILE_PARAGRAPH* paragraph)
+static BOOL     HLPFILE_RtfAddMetaFile(struct RtfData* rd, BYTE* beg, BYTE pack)
 {
     BYTE*               ptr;
     unsigned long       size, csize;
     unsigned long       off, hsoff;
     BYTE*               bits;
-    LPMETAFILEPICT      lpmfp;
+    char                tmp[256];
+    unsigned            mm;
+    BOOL                ret;
 
     WINE_TRACE("Loading metafile\n");
 
     ptr = beg + 2; /* for type and pack */
 
-    lpmfp = &paragraph->u.gfx.u.mfp;
-    lpmfp->mm = fetch_ushort(&ptr); /* mapping mode */
-
-    lpmfp->xExt = GET_USHORT(ptr, 0);
-    lpmfp->yExt = GET_USHORT(ptr, 2);
+    mm = fetch_ushort(&ptr); /* mapping mode */
+    sprintf(tmp, "{\\pict\\wmetafile%d\\picw%d\\pich%d",
+            mm, GET_USHORT(ptr, 0), GET_USHORT(ptr, 2));
+    if (!HLPFILE_RtfAddControl(rd, tmp)) return FALSE;
     ptr += 4;
 
     size = fetch_ulong(&ptr); /* decompressed size */
@@ -729,38 +904,31 @@ static BOOL     HLPFILE_LoadMetaFile(BYTE* beg, BYTE pack, HLPFILE_PARAGRAPH* pa
     hsoff = GET_UINT(ptr, 4);
     ptr += 8;
 
-    WINE_TRACE("sz=%lu csz=%lu (%d,%d) offs=%lu/%lu,%lu\n",
-               size, csize, lpmfp->xExt, lpmfp->yExt, off, (SIZE_T)(ptr - beg), hsoff);
+    WINE_TRACE("sz=%lu csz=%lu offs=%lu/%u,%lu\n",
+               size, csize, off, ptr - beg, hsoff);
 
     bits = HLPFILE_DecompressGfx(beg + off, csize, size, pack);
     if (!bits) return FALSE;
 
-    paragraph->cookie = para_metafile;
-
-    lpmfp->hMF = SetMetaFileBitsEx(size, bits);
-
-    if (!lpmfp->hMF)
-        WINE_FIXME("Couldn't load metafile\n");
+    ret = HLPFILE_RtfAddHexBytes(rd, bits, size) &&
+        HLPFILE_RtfAddControl(rd, "}");
 
     if (bits != beg + off) HeapFree(GetProcessHeap(), 0, bits);
 
-    return TRUE;
+    return ret;
 }
 
 /******************************************************************
- *		HLPFILE_LoadGfxByAddr
- *
+ *		HLPFILE_RtfAddGfxByAddr
  *
  */
-static  BOOL    HLPFILE_LoadGfxByAddr(HLPFILE *hlpfile, BYTE* ref,
-                                      unsigned long size, 
-                                      HLPFILE_PARAGRAPH* paragraph)
+static  BOOL    HLPFILE_RtfAddGfxByAddr(struct RtfData* rd, HLPFILE *hlpfile,
+                                        BYTE* ref, unsigned long size)
 {
     unsigned    i, numpict;
 
     numpict = GET_USHORT(ref, 2);
-    WINE_TRACE("Got picture magic=%04x #=%d\n", 
-               GET_USHORT(ref, 0), numpict);
+    WINE_TRACE("Got picture magic=%04x #=%d\n", GET_USHORT(ref, 0), numpict);
 
     for (i = 0; i < numpict; i++)
     {
@@ -773,15 +941,15 @@ static  BOOL    HLPFILE_LoadGfxByAddr(HLPFILE *hlpfile, BYTE* ref,
 
         type = *ptr++;
         pack = *ptr++;
-        
+
         switch (type)
         {
         case 5: /* device dependent bmp */
         case 6: /* device independent bmp */
-            HLPFILE_LoadBitmap(beg, type, pack, paragraph);
+            HLPFILE_RtfAddBitmap(rd, beg, type, pack);
             break;
-        case 8: 
-            HLPFILE_LoadMetaFile(beg, pack, paragraph);
+        case 8:
+            HLPFILE_RtfAddMetaFile(rd, beg, pack);
             break;
         default: WINE_FIXME("Unknown type %u\n", type); return FALSE;
         }
@@ -796,50 +964,24 @@ static  BOOL    HLPFILE_LoadGfxByAddr(HLPFILE *hlpfile, BYTE* ref,
 }
 
 /******************************************************************
- *		HLPFILE_LoadGfxByIndex
+ *		HLPFILE_RtfAddGfxByIndex
  *
  *
  */
-static  BOOL    HLPFILE_LoadGfxByIndex(HLPFILE *hlpfile, unsigned index, 
-                                       HLPFILE_PARAGRAPH* paragraph)
+static  BOOL    HLPFILE_RtfAddGfxByIndex(struct RtfData* rd, HLPFILE *hlpfile,
+                                         unsigned index)
 {
     char        tmp[16];
     BYTE        *ref, *end;
-    BOOL        ret;
 
     WINE_TRACE("Loading picture #%d\n", index);
 
-    if (index < hlpfile->numBmps && hlpfile->bmps[index] != NULL)
-    {
-        paragraph->u.gfx.u.bmp.hBitmap = hlpfile->bmps[index];
-        return TRUE;
-    }
-
     sprintf(tmp, "|bm%u", index);
 
-    if (!HLPFILE_FindSubFile(tmp, &ref, &end)) {WINE_WARN("no sub file\n"); return FALSE;}
+    if (!HLPFILE_FindSubFile(hlpfile, tmp, &ref, &end)) {WINE_WARN("no sub file\n"); return FALSE;}
 
     ref += 9;
-
-    ret = HLPFILE_LoadGfxByAddr(hlpfile, ref, end - ref, paragraph);
-
-    /* cache bitmap */
-    if (ret && paragraph->cookie == para_bitmap)
-    {
-        if (index >= hlpfile->numBmps)
-        {
-            hlpfile->numBmps = index + 1;
-	    if (hlpfile->bmps)
-        	hlpfile->bmps = HeapReAlloc(GetProcessHeap(), 0, hlpfile->bmps, 
-                                        hlpfile->numBmps * sizeof(hlpfile->bmps[0]));
-	    else
-	    	hlpfile->bmps = HeapAlloc(GetProcessHeap(), 0, 
-                                        hlpfile->numBmps * sizeof(hlpfile->bmps[0]));
-
-        }
-        hlpfile->bmps[index] = paragraph->u.gfx.u.bmp.hBitmap;
-    }
-    return ret;
+    return HLPFILE_RtfAddGfxByAddr(rd, hlpfile, ref, end - ref);
 }
 
 /******************************************************************
@@ -847,8 +989,9 @@ static  BOOL    HLPFILE_LoadGfxByIndex(HLPFILE *hlpfile, unsigned index,
  *
  *
  */
-static HLPFILE_LINK*       HLPFILE_AllocLink(int cookie, const char* str, LONG hash,
-                                             BOOL clrChange, unsigned wnd)
+static HLPFILE_LINK*       HLPFILE_AllocLink(struct RtfData* rd, int cookie,
+                                             const char* str, unsigned len, LONG hash,
+                                             unsigned clrChange, unsigned wnd)
 {
     HLPFILE_LINK*  link;
     char*          link_str;
@@ -856,45 +999,63 @@ static HLPFILE_LINK*       HLPFILE_AllocLink(int cookie, const char* str, LONG h
     /* FIXME: should build a string table for the attributes.link.lpszPath
      * they are reallocated for each link
      */
-    link = HeapAlloc(GetProcessHeap(), 0, sizeof(HLPFILE_LINK) + strlen(str) + 1);
+    if (len == -1) len = strlen(str);
+    link = HeapAlloc(GetProcessHeap(), 0, sizeof(HLPFILE_LINK) + len + 1);
     if (!link) return NULL;
 
     link->cookie     = cookie;
-    link->lpszString = link_str = (char*)link + sizeof(HLPFILE_LINK);
-    strcpy(link_str, str);
-    link->lHash      = hash;
+    link->string     = link_str = (char*)(link + 1);
+    memcpy(link_str, str, len);
+    link_str[len] = '\0';
+    link->hash       = hash;
     link->bClrChange = clrChange ? 1 : 0;
     link->window     = wnd;
-    link->wRefCount   = 1;
+    link->next       = rd->first_link;
+    rd->first_link   = link;
+    link->cpMin      = rd->char_pos;
+    link->cpMax      = 0;
+    rd->force_color  = clrChange;
+    if (rd->current_link) WINE_FIXME("Pending link\n");
+    rd->current_link = link;
 
     WINE_TRACE("Link[%d] to %s@%08x:%d\n",
-               link->cookie, link->lpszString, 
-               link->lHash, link->window);
+               link->cookie, link->string, link->hash, link->window);
     return link;
+}
+
+unsigned HLPFILE_HalfPointsToTwips(unsigned pts)
+{
+    static unsigned logPxY;
+    if (!logPxY)
+    {
+        HDC hdc = GetDC(NULL);
+        logPxY = GetDeviceCaps(hdc, LOGPIXELSY);
+        ReleaseDC(NULL, hdc);
+    }
+    return MulDiv(pts, 72 * 10, logPxY);
 }
 
 /***********************************************************************
  *
- *           HLPFILE_AddParagraph
+ *           HLPFILE_BrowseParagraph
  */
-static BOOL HLPFILE_AddParagraph(HLPFILE *hlpfile, BYTE *buf, BYTE *end, unsigned* len)
+static BOOL HLPFILE_BrowseParagraph(HLPFILE_PAGE* page, struct RtfData* rd,
+                                    BYTE *buf, BYTE* end, unsigned* parlen)
 {
-    HLPFILE_PAGE      *page;
-    HLPFILE_PARAGRAPH *paragraph, **paragraphptr;
     UINT               textsize;
     BYTE              *format, *format_end;
     char              *text, *text_base, *text_end;
     long               size, blocksize, datalen;
     unsigned short     bits;
     unsigned           nc, ncol = 1;
-
-    if (!hlpfile->last_page) {WINE_WARN("no page\n"); return FALSE;};
-    page = hlpfile->last_page;
-    for (paragraphptr = &page->first_paragraph; *paragraphptr;
-         paragraphptr = &(*paragraphptr)->next) /* Nothing */;
+    short              table_width;
+    BOOL               in_table = FALSE;
+    char               tmp[256];
+    BOOL               ret = FALSE;
 
     if (buf + 0x19 > end) {WINE_WARN("header too small\n"); return FALSE;};
 
+    *parlen = 0;
     blocksize = GET_UINT(buf, 0);
     size = GET_UINT(buf, 0x4);
     datalen = GET_UINT(buf, 0x10);
@@ -903,10 +1064,10 @@ static BOOL HLPFILE_AddParagraph(HLPFILE *hlpfile, BYTE *buf, BYTE *end, unsigne
     if (size > blocksize - datalen)
     {
         /* need to decompress */
-        if (hlpfile->hasPhrases)
-            HLPFILE_Uncompress2(buf + datalen, end, (BYTE*)text, (BYTE*)text + size);
-        else if (hlpfile->hasPhrases40)
-            HLPFILE_Uncompress3(text, text + size, buf + datalen, end);
+        if (page->file->hasPhrases)
+            HLPFILE_Uncompress2(page->file, buf + datalen, end, (BYTE*)text, (BYTE*)text + size);
+        else if (page->file->hasPhrases40)
+            HLPFILE_Uncompress3(page->file, text, text + size, buf + datalen, end);
         else
         {
             WINE_FIXME("Text size is too long, splitting\n");
@@ -925,84 +1086,184 @@ static BOOL HLPFILE_AddParagraph(HLPFILE *hlpfile, BYTE *buf, BYTE *end, unsigne
     if (buf[0x14] == 0x20 || buf[0x14] == 0x23)
     {
         fetch_long(&format);
-        *len = fetch_ushort(&format);
+        *parlen = fetch_ushort(&format);
     }
-    else *len = end-buf-15;
 
     if (buf[0x14] == 0x23)
     {
         char    type;
 
+        in_table = TRUE;
         ncol = *format++;
 
-        WINE_TRACE("#cols %u\n", ncol);
+        if (!HLPFILE_RtfAddControl(rd, "\\trowd")) goto done;
         type = *format++;
         if (type == 0 || type == 2)
+        {
+            table_width = GET_SHORT(format, 0);
             format += 2;
+        }
+        else
+            table_width = 32767;
+        WINE_TRACE("New table: cols=%d type=%x width=%d\n",
+                   ncol, type, table_width);
+        if (ncol > 1)
+        {
+            int     pos;
+            sprintf(tmp, "\\trgaph%d\\trleft%d",
+                    HLPFILE_HalfPointsToTwips(MulDiv(GET_SHORT(format, 6), table_width, 32767)),
+                    HLPFILE_HalfPointsToTwips(MulDiv(GET_SHORT(format, 0), table_width, 32767)));
+            if (!HLPFILE_RtfAddControl(rd, tmp)) goto done;
+            pos = HLPFILE_HalfPointsToTwips(MulDiv(GET_SHORT(format, 6) / 2, table_width, 32767));
+            for (nc = 0; nc < ncol; nc++)
+            {
+                WINE_TRACE("column(%d/%d) gap=%d width=%d\n",
+                           nc, ncol, GET_SHORT(format, nc*4),
+                           GET_SHORT(format, nc*4+2));
+                pos += GET_SHORT(format, nc * 4) + GET_SHORT(format, nc * 4 + 2);
+                sprintf(tmp, "\\cellx%d",
+                        HLPFILE_HalfPointsToTwips(MulDiv(pos, table_width, 32767)));
+                if (!HLPFILE_RtfAddControl(rd, tmp)) goto done;
+            }
+        }
+        else
+        {
+            WINE_TRACE("column(0/%d) gap=%d width=%d\n",
+                       ncol, GET_SHORT(format, 0), GET_SHORT(format, 2));
+            sprintf(tmp, "\\trleft%d\\cellx%d ",
+                    HLPFILE_HalfPointsToTwips(MulDiv(GET_SHORT(format, 0), table_width, 32767)),
+                    HLPFILE_HalfPointsToTwips(MulDiv(GET_SHORT(format, 0) + GET_SHORT(format, 2),
+                                      table_width, 32767)));
+            if (!HLPFILE_RtfAddControl(rd, tmp)) goto done;
+        }
         format += ncol * 4;
     }
 
-    for (nc = 0; nc < ncol; nc++)
+    for (nc = 0; nc < ncol; /**/)
     {
-        WINE_TRACE("looking for format at offset %lu for column %d\n", (SIZE_T)(format - (buf + 0x15)), nc);
-        if (buf[0x14] == 0x23)
+        WINE_TRACE("looking for format at offset %lu in column %d\n", (SIZE_T)(format - (buf + 0x15)), nc);
+        if (!HLPFILE_RtfAddControl(rd, "\\pard")) goto done;
+        if (in_table)
+        {
+            nc = GET_SHORT(format, 0);
+            if (nc == -1) break;
             format += 5;
+            if (!HLPFILE_RtfAddControl(rd, "\\intbl")) goto done;
+        }
+        else nc++;
         if (buf[0x14] == 0x01)
             format += 6;
         else
             format += 4;
         bits = GET_USHORT(format, 0); format += 2;
         if (bits & 0x0001) fetch_long(&format);
-        if (bits & 0x0002) fetch_short(&format);
-        if (bits & 0x0004) fetch_short(&format);
-        if (bits & 0x0008) fetch_short(&format);
-        if (bits & 0x0010) fetch_short(&format);
-        if (bits & 0x0020) fetch_short(&format);
-        if (bits & 0x0040) fetch_short(&format);
-        if (bits & 0x0100) format += 3;
-        if (bits & 0x0200)
+        if (bits & 0x0002)
         {
-            int                 ntab = fetch_short(&format);
-            unsigned short      ts;
+            sprintf(tmp, "\\sb%d", HLPFILE_HalfPointsToTwips(fetch_short(&format)));
+            if (!HLPFILE_RtfAddControl(rd, tmp)) goto done;
+        }
+        if (bits & 0x0004)
+        {
+            sprintf(tmp, "\\sa%d", HLPFILE_HalfPointsToTwips(fetch_short(&format)));
+            if (!HLPFILE_RtfAddControl(rd, tmp)) goto done;
+        }
+        if (bits & 0x0008)
+        {
+            sprintf(tmp, "\\sl%d", HLPFILE_HalfPointsToTwips(fetch_short(&format)));
+            if (!HLPFILE_RtfAddControl(rd, tmp)) goto done;
+        }
+        if (bits & 0x0010)
+        {
+            sprintf(tmp, "\\li%d", HLPFILE_HalfPointsToTwips(fetch_short(&format)));
+            if (!HLPFILE_RtfAddControl(rd, tmp)) goto done;
+        }
+        if (bits & 0x0020)
+        {
+            sprintf(tmp, "\\ri%d", HLPFILE_HalfPointsToTwips(fetch_short(&format)));
+            if (!HLPFILE_RtfAddControl(rd, tmp)) goto done;
+        }
+        if (bits & 0x0040)
+        {
+            sprintf(tmp, "\\fi%d", HLPFILE_HalfPointsToTwips(fetch_short(&format)));
+            if (!HLPFILE_RtfAddControl(rd, tmp)) goto done;
+        }
+        if (bits & 0x0100)
+        {
+            BYTE        brdr = *format++;
+            short       w;
 
-            while (ntab-- > 0)
+            if (brdr & 0x01 && !HLPFILE_RtfAddControl(rd, "\\box")) goto done;
+            if (brdr & 0x02 && !HLPFILE_RtfAddControl(rd, "\\brdrt")) goto done;
+            if (brdr & 0x04 && !HLPFILE_RtfAddControl(rd, "\\brdrl")) goto done;
+            if (brdr & 0x08 && !HLPFILE_RtfAddControl(rd, "\\brdrb")) goto done;
+            if (brdr & 0x10 && !HLPFILE_RtfAddControl(rd, "\\brdrr")) goto done;
+            if (brdr & 0x20 && !HLPFILE_RtfAddControl(rd, "\\brdrth")) goto done;
+            if (!(brdr & 0x20) && !HLPFILE_RtfAddControl(rd, "\\brdrs")) goto done;
+            if (brdr & 0x40 && !HLPFILE_RtfAddControl(rd, "\\brdrdb")) goto done;
+            /* 0x80: unknown */
+
+            w = GET_SHORT(format, 0); format += 2;
+            if (w)
             {
-                ts = fetch_ushort(&format);
-                if (ts & 0x4000) fetch_ushort(&format);
+                sprintf(tmp, "\\brdrw%d", HLPFILE_HalfPointsToTwips(w));
+                if (!HLPFILE_RtfAddControl(rd, tmp)) goto done;
             }
         }
-        /* 0x0400, 0x0800 and 0x1000 don't need space */
+        if (bits & 0x0200)
+        {
+            int                 i, ntab = fetch_short(&format);
+            unsigned            tab, ts;
+            const char*         kind;
+
+            for (i = 0; i < ntab; i++)
+            {
+                tab = fetch_ushort(&format);
+                ts = (tab & 0x4000) ? fetch_ushort(&format) : 0 /* left */;
+                switch (ts)
+                {
+                default: WINE_FIXME("Unknown tab style %x\n", ts);
+                /* fall through */
+                case 0: kind = ""; break;
+                case 1: kind = "\\tqr"; break;
+                case 2: kind = "\\tqc"; break;
+                }
+                /* FIXME: do kind */
+                sprintf(tmp, "%s\\tx%d",
+                        kind, HLPFILE_HalfPointsToTwips(tab & 0x3FFF));
+                if (!HLPFILE_RtfAddControl(rd, tmp)) goto done;
+            }
+        }
+        switch (bits & 0xc00)
+        {
+        default: WINE_FIXME("Unsupported alignment 0xC00\n"); break;
+        case 0: if (!HLPFILE_RtfAddControl(rd, "\\ql")) goto done; break;
+        case 0x400: if (!HLPFILE_RtfAddControl(rd, "\\qr")) goto done; break;
+        case 0x800: if (!HLPFILE_RtfAddControl(rd, "\\qc")) goto done; break;
+        }
+
+        /* 0x1000 doesn't need space */
+        if ((bits & 0x1000) && !HLPFILE_RtfAddControl(rd, "\\keep")) goto done;
         if ((bits & 0xE080) != 0) 
             WINE_FIXME("Unsupported bits %04x, potential trouble ahead\n", bits);
 
         while (text < text_end && format < format_end)
         {
             WINE_TRACE("Got text: %s (%p/%p - %p/%p)\n", wine_dbgstr_a(text), text, text_end, format, format_end);
-            textsize = strlen(text) + 1;
-            if (textsize > 1)
+            textsize = strlen(text);
+            if (textsize)
             {
-                paragraph = HeapAlloc(GetProcessHeap(), 0,
-                                      sizeof(HLPFILE_PARAGRAPH) + textsize);
-                if (!paragraph) return FALSE;
-                *paragraphptr = paragraph;
-                paragraphptr = &paragraph->next;
-
-                paragraph->next            = NULL;
-                paragraph->link            = attributes.link;
-                if (paragraph->link) paragraph->link->wRefCount++;
-                paragraph->cookie          = para_normal_text;
-                paragraph->u.text.wFont    = attributes.wFont;
-                paragraph->u.text.wVSpace  = attributes.wVSpace;
-                paragraph->u.text.wHSpace  = attributes.wHSpace;
-                paragraph->u.text.wIndent  = attributes.wIndent;
-                paragraph->u.text.lpszText = (char*)paragraph + sizeof(HLPFILE_PARAGRAPH);
-                strcpy(paragraph->u.text.lpszText, text);
-
-                attributes.wVSpace = 0;
-                attributes.wHSpace = 0;
+                if (rd->force_color)
+                {
+                    if ((rd->current_link->cookie == hlp_link_popup) ?
+                        !HLPFILE_RtfAddControl(rd, "{\\uld\\cf1") :
+                        !HLPFILE_RtfAddControl(rd, "{\\ul\\cf1")) goto done;
+                }
+                if (!HLPFILE_RtfAddText(rd, text)) goto done;
+                if (rd->force_color && !HLPFILE_RtfAddControl(rd, "}")) goto done;
+                rd->char_pos += textsize;
             }
             /* else: null text, keep on storing attributes */
-            text += textsize;
+            text += textsize + 1;
 
 	    if (*format == 0xff)
             {
@@ -1024,25 +1285,58 @@ static BOOL HLPFILE_AddParagraph(HLPFILE *hlpfile, BYTE *buf, BYTE *end, unsigne
                 break;
 
 	    case 0x80:
-                attributes.wFont = GET_USHORT(format, 1);
-                WINE_TRACE("Changing font to %d\n", attributes.wFont);
-                format += 3;
-                break;
+                {
+                    unsigned    font = GET_USHORT(format, 1);
+                    unsigned    fs;
+
+                    WINE_TRACE("Changing font to %d\n", font);
+                    format += 3;
+                    switch (rd->font_scale)
+                    {
+                    case 0: fs = (4 * page->file->fonts[font].LogFont.lfHeight - 13) / 5; break;
+                    default:
+                    case 1: fs = (4 * page->file->fonts[font].LogFont.lfHeight - 3) / 5; break;
+                    case 2: fs = (4 * page->file->fonts[font].LogFont.lfHeight + 17) / 5; break;
+                    }
+                    /* FIXME: missing at least colors, also bold attribute looses information */
+
+                    sprintf(tmp, "\\f%d\\cf%d\\fs%d%s%s%s%s",
+                            font, font + 2, fs,
+                            page->file->fonts[font].LogFont.lfWeight > 400 ? "\\b" : "\\b0",
+                            page->file->fonts[font].LogFont.lfItalic ? "\\i" : "\\i0",
+                            page->file->fonts[font].LogFont.lfUnderline ? "\\ul" : "\\ul0",
+                            page->file->fonts[font].LogFont.lfStrikeOut ? "\\strike" : "\\strike0");
+                    if (!HLPFILE_RtfAddControl(rd, tmp)) goto done;
+                }
+               break;
 
 	    case 0x81:
-                attributes.wVSpace++;
+                if (!HLPFILE_RtfAddControl(rd, "\\line")) goto done;
                 format += 1;
+                rd->char_pos++;
                 break;
 
 	    case 0x82:
-                attributes.wVSpace++;
-                attributes.wIndent = 0;
+                if (in_table)
+                {
+                    if (format[1] != 0xFF)
+                    {
+                        if (!HLPFILE_RtfAddControl(rd, "\\par\\intbl")) goto done;
+                    }
+                    else
+                    {
+                        if (!HLPFILE_RtfAddControl(rd, "\\cell\\pard\\intbl")) goto done;
+                    }
+                }
+                else if (!HLPFILE_RtfAddControl(rd, "\\par")) goto done;
                 format += 1;
+                rd->char_pos++;
                 break;
 
 	    case 0x83:
-                attributes.wIndent++;
+                if (!HLPFILE_RtfAddControl(rd, "\\tab")) goto done;
                 format += 1;
+                rd->char_pos++;
                 break;
 
 #if 0
@@ -1055,24 +1349,13 @@ static BOOL HLPFILE_AddParagraph(HLPFILE *hlpfile, BYTE *buf, BYTE *end, unsigne
 	    case 0x87:
 	    case 0x88:
                 {
-                    BYTE    pos = (*format - 0x86);
                     BYTE    type = format[1];
                     long    size;
 
+                    /* FIXME: we don't use 'BYTE    pos = (*format - 0x86);' for the image position */
                     format += 2;
                     size = fetch_long(&format);
 
-                    paragraph = HeapAlloc(GetProcessHeap(), 0,
-                                          sizeof(HLPFILE_PARAGRAPH) + textsize);
-                    if (!paragraph) return FALSE;
-                    *paragraphptr = paragraph;
-                    paragraphptr = &paragraph->next;
-
-                    paragraph->next        = NULL;
-                    paragraph->link        = attributes.link;
-                    if (paragraph->link) paragraph->link->wRefCount++;
-                    paragraph->cookie      = para_bitmap;
-                    paragraph->u.gfx.pos   = pos;
                     switch (type)
                     {
                     case 0x22:
@@ -1082,16 +1365,16 @@ static BOOL HLPFILE_AddParagraph(HLPFILE *hlpfile, BYTE *buf, BYTE *end, unsigne
                         switch (GET_SHORT(format, 0))
                         {
                         case 0:
-                            HLPFILE_LoadGfxByIndex(hlpfile, GET_SHORT(format, 2), 
-                                                   paragraph);
+                            HLPFILE_RtfAddGfxByIndex(rd, page->file, GET_SHORT(format, 2));
+                            rd->char_pos++;
                             break;
                         case 1:
-                            WINE_FIXME("does it work ??? %x<%lu>#%u\n", 
-                                       GET_SHORT(format, 0), 
+                            WINE_FIXME("does it work ??? %x<%lu>#%u\n",
+                                       GET_SHORT(format, 0),
                                        size, GET_SHORT(format, 2));
-                            HLPFILE_LoadGfxByAddr(hlpfile, format + 2, size - 4, 
-                                                  paragraph);
-                            break;
+                            HLPFILE_RtfAddGfxByAddr(rd, page->file, format + 2, size - 4);
+                            rd->char_pos++;
+                           break;
                         default:
                             WINE_FIXME("??? %u\n", GET_SHORT(format, 0));
                             break;
@@ -1104,22 +1387,30 @@ static BOOL HLPFILE_AddParagraph(HLPFILE *hlpfile, BYTE *buf, BYTE *end, unsigne
                         WINE_FIXME("Got a type %d picture\n", type);
                         break;
                     }
-                    if (attributes.wVSpace) paragraph->u.gfx.pos |= 0x8000;
-
                     format += size;
                 }
                 break;
 
 	    case 0x89:
-                HLPFILE_FreeLink(attributes.link);
-                attributes.link = NULL;
                 format += 1;
+                if (!rd->current_link)
+                    WINE_FIXME("No existing link\n");
+                rd->current_link->cpMax = rd->char_pos;
+                rd->current_link = NULL;
+                rd->force_color = FALSE;
                 break;
 
             case 0x8B:
-            case 0x8C:
-                WINE_FIXME("NIY non-break space/hyphen\n");
+                if (!HLPFILE_RtfAddControl(rd, "\\~")) goto done;
                 format += 1;
+                rd->char_pos++;
+                break;
+
+            case 0x8C:
+                if (!HLPFILE_RtfAddControl(rd, "\\_")) goto done;
+                /* FIXME: it could be that hypen is also in input stream !! */
+                format += 1;
+                rd->char_pos++;
                 break;
 
 #if 0
@@ -1131,20 +1422,16 @@ static BOOL HLPFILE_AddParagraph(HLPFILE *hlpfile, BYTE *buf, BYTE *end, unsigne
             case 0xC8:
             case 0xCC:
                 WINE_TRACE("macro => %s\n", format + 3);
-                HLPFILE_FreeLink(attributes.link);
-                attributes.link = HLPFILE_AllocLink(hlp_link_macro, (const char*)format + 3, 
-                                                    0, !(*format & 4), -1);
+                HLPFILE_AllocLink(rd, hlp_link_macro, (const char*)format + 3,
+                                  GET_USHORT(format, 1), 0, !(*format & 4), -1);
                 format += 3 + GET_USHORT(format, 1);
                 break;
 
             case 0xE0:
             case 0xE1:
                 WINE_WARN("jump topic 1 => %u\n", GET_UINT(format, 1));
-                HLPFILE_FreeLink(attributes.link);
-                attributes.link = HLPFILE_AllocLink((*format & 1) ? hlp_link_link : hlp_link_popup,
-                                                    hlpfile->lpszPath,
-                                                    GET_UINT(format, 1)-16,
-                                                    1, -1);
+                HLPFILE_AllocLink(rd, (*format & 1) ? hlp_link_link : hlp_link_popup,
+                                  page->file->lpszPath, -1, GET_UINT(format, 1)-16, 1, -1);
 
 
                 format += 5;
@@ -1154,11 +1441,9 @@ static BOOL HLPFILE_AddParagraph(HLPFILE *hlpfile, BYTE *buf, BYTE *end, unsigne
 	    case 0xE3:
             case 0xE6:
             case 0xE7:
-                HLPFILE_FreeLink(attributes.link);
-                attributes.link = HLPFILE_AllocLink((*format & 1) ? hlp_link_link : hlp_link_popup,
-                                                    hlpfile->lpszPath, 
-                                                    GET_UINT(format, 1), 
-                                                    !(*format & 4), -1);
+                HLPFILE_AllocLink(rd, (*format & 1) ? hlp_link_link : hlp_link_popup,
+                                  page->file->lpszPath, -1, GET_UINT(format, 1),
+                                  !(*format & 4), -1);
                 format += 5;
                 break;
 
@@ -1170,29 +1455,32 @@ static BOOL HLPFILE_AddParagraph(HLPFILE *hlpfile, BYTE *buf, BYTE *end, unsigne
                     char*       ptr = (char*) format + 8;
                     BYTE        type = format[3];
                     int         wnd = -1;
-                    char*       str;
 
-                    if (type == 1) wnd = *ptr++;
-                    if (type == 4 || type == 6)
+                    switch (type)
                     {
-                        str = ptr;
-                        ptr += strlen(ptr) + 1;
-                    }
-                    else
-                        str = hlpfile->lpszPath;
-                    if (type == 6)
-                    {
-                        for (wnd = hlpfile->numWindows - 1; wnd >= 0; wnd--)
+                    case 1:
+                        wnd = *ptr;
+                        /* fall through */
+                    case 0:
+                        ptr = page->file->lpszPath;
+                        break;
+                    case 6:
+                        for (wnd = page->file->numWindows - 1; wnd >= 0; wnd--)
                         {
-                            if (!strcmp(ptr, hlpfile->windows[wnd].name)) break;
+                            if (!strcmp(ptr, page->file->windows[wnd].name)) break;
                         }
                         if (wnd == -1)
                             WINE_WARN("Couldn't find window info for %s\n", ptr);
+                        ptr += strlen(ptr) + 1;
+                        /* fall through */
+                    case 4:
+                        break;
+                    default:
+                        WINE_WARN("Unknown link type %d\n", type);
+                        break;
                     }
-                    HLPFILE_FreeLink(attributes.link);
-                    attributes.link = HLPFILE_AllocLink((*format & 4) ? hlp_link_link : hlp_link_popup,
-                                                        str, GET_UINT(format, 4),
-                                                        !(*format & 1), wnd);
+                    HLPFILE_AllocLink(rd, (*format & 1) ? hlp_link_link : hlp_link_popup,
+                                      ptr, -1, GET_UINT(format, 4), !(*format & 4), wnd);
                 }
                 format += 3 + GET_USHORT(format, 1);
                 break;
@@ -1203,8 +1491,174 @@ static BOOL HLPFILE_AddParagraph(HLPFILE *hlpfile, BYTE *buf, BYTE *end, unsigne
 	    }
 	}
     }
+    if (in_table)
+    {
+        if (!HLPFILE_RtfAddControl(rd, "\\row\\par\\pard\\plain")) goto done;
+        rd->char_pos += 2;
+    }
+    ret = TRUE;
+done:
+
     HeapFree(GetProcessHeap(), 0, text_base);
-    return TRUE;
+    return ret;
+}
+
+/******************************************************************
+ *		HLPFILE_BrowsePage
+ *
+ */
+BOOL    HLPFILE_BrowsePage(HLPFILE_PAGE* page, struct RtfData* rd,
+                           unsigned font_scale, unsigned relative)
+{
+    HLPFILE     *hlpfile = page->file;
+    BYTE        *buf, *end;
+    DWORD       ref = page->reference;
+    unsigned    index, old_index = -1, offset, count = 0, offs = 0;
+    unsigned    cpg, parlen;
+    char        tmp[1024];
+    const char* ck = NULL;
+
+    rd->in_text = TRUE;
+    rd->data = rd->ptr = HeapAlloc(GetProcessHeap(), 0, rd->allocated = 32768);
+    rd->char_pos = 0;
+    rd->first_link = rd->current_link = NULL;
+    rd->force_color = FALSE;
+    rd->font_scale = font_scale;
+    rd->relative = relative;
+    rd->char_pos_rel = 0;
+
+    switch (hlpfile->charset)
+    {
+    case DEFAULT_CHARSET:
+    case ANSI_CHARSET:          cpg = 1252; break;
+    case SHIFTJIS_CHARSET:      cpg = 932; break;
+    case HANGEUL_CHARSET:       cpg = 949; break;
+    case GB2312_CHARSET:        cpg = 936; break;
+    case CHINESEBIG5_CHARSET:   cpg = 950; break;
+    case GREEK_CHARSET:         cpg = 1253; break;
+    case TURKISH_CHARSET:       cpg = 1254; break;
+    case HEBREW_CHARSET:        cpg = 1255; break;
+    case ARABIC_CHARSET:        cpg = 1256; break;
+    case BALTIC_CHARSET:        cpg = 1257; break;
+    case VIETNAMESE_CHARSET:    cpg = 1258; break;
+    case RUSSIAN_CHARSET:       cpg = 1251; break;
+//    case EE_CHARSET:            cpg = 1250; break;
+    case THAI_CHARSET:          cpg = 874; break;
+    case JOHAB_CHARSET:         cpg = 1361; break;
+    case MAC_CHARSET:           ck = "mac"; break;
+    default:
+        WINE_FIXME("Unsupported charset %u\n", hlpfile->charset);
+        cpg = 1252;
+    }
+    if (ck)
+    {
+        sprintf(tmp, "{\\rtf1\\%s\\deff0", ck);
+        if (!HLPFILE_RtfAddControl(rd, tmp)) return FALSE;
+    }
+    else
+    {
+        sprintf(tmp, "{\\rtf1\\ansi\\ansicpg%d\\deff0", cpg);
+        if (!HLPFILE_RtfAddControl(rd, tmp)) return FALSE;
+    }
+
+    /* generate font table */
+    if (!HLPFILE_RtfAddControl(rd, "{\\fonttbl")) return FALSE;
+    for (index = 0; index < hlpfile->numFonts; index++)
+    {
+        const char* family;
+        switch (hlpfile->fonts[index].LogFont.lfPitchAndFamily & 0xF0)
+        {
+        case FF_MODERN:     family = "modern";  break;
+        case FF_ROMAN:      family = "roman";   break;
+        case FF_SWISS:      family = "swiss";   break;
+        case FF_SCRIPT:     family = "script";  break;
+        case FF_DECORATIVE: family = "decor";   break;
+        default:            family = "nil";     break;
+        }
+        sprintf(tmp, "{\\f%d\\f%s\\fprq%d\\fcharset%d %s;}",
+                index, family,
+                hlpfile->fonts[index].LogFont.lfPitchAndFamily & 0x0F,
+                hlpfile->fonts[index].LogFont.lfCharSet,
+                hlpfile->fonts[index].LogFont.lfFaceName);
+        if (!HLPFILE_RtfAddControl(rd, tmp)) return FALSE;
+    }
+    if (!HLPFILE_RtfAddControl(rd, "}")) return FALSE;
+    /* generate color table */
+    if (!HLPFILE_RtfAddControl(rd, "{\\colortbl ;\\red0\\green128\\blue0;")) return FALSE;
+    for (index = 0; index < hlpfile->numFonts; index++)
+    {
+        const char* family;
+        switch (hlpfile->fonts[index].LogFont.lfPitchAndFamily & 0xF0)
+        {
+        case FF_MODERN:     family = "modern";  break;
+        case FF_ROMAN:      family = "roman";   break;
+        case FF_SWISS:      family = "swiss";   break;
+        case FF_SCRIPT:     family = "script";  break;
+        case FF_DECORATIVE: family = "decor";   break;
+        default:            family = "nil";     break;
+        }
+        sprintf(tmp, "\\red%d\\green%d\\blue%d;",
+                GetRValue(hlpfile->fonts[index].color),
+                GetGValue(hlpfile->fonts[index].color),
+                GetBValue(hlpfile->fonts[index].color));
+        if (!HLPFILE_RtfAddControl(rd, tmp)) return FALSE;
+    }
+    if (!HLPFILE_RtfAddControl(rd, "}")) return FALSE;
+
+    do
+    {
+        if (hlpfile->version <= 16)
+        {
+            index  = (ref - 0x0C) / hlpfile->dsize;
+            offset = (ref - 0x0C) % hlpfile->dsize;
+        }
+        else
+        {
+            index  = (ref - 0x0C) >> 14;
+            offset = (ref - 0x0C) & 0x3FFF;
+        }
+
+        if (hlpfile->version <= 16 && index != old_index && old_index != -1)
+        {
+            /* we jumped to the next block, adjust pointers */
+            ref -= 12;
+            offset -= 12;
+        }
+
+        if (index >= hlpfile->topic_maplen) {WINE_WARN("maplen\n"); break;}
+        buf = hlpfile->topic_map[index] + offset;
+        if (buf + 0x15 >= hlpfile->topic_end) {WINE_WARN("extra\n"); break;}
+        end = min(buf + GET_UINT(buf, 0), hlpfile->topic_end);
+        if (index != old_index) {offs = 0; old_index = index;}
+
+        switch (buf[0x14])
+        {
+        case 0x02:
+            if (count++) goto done;
+            break;
+        case 0x01:
+        case 0x20:
+        case 0x23:
+            if (!HLPFILE_BrowseParagraph(page, rd, buf, end, &parlen)) return FALSE;
+            if (relative >= index * 0x8000 + offs)
+                rd->char_pos_rel = rd->char_pos;
+            offs += parlen;
+            break;
+        default:
+            WINE_ERR("buf[0x14] = %x\n", buf[0x14]);
+        }
+        if (hlpfile->version <= 16)
+        {
+            ref += GET_UINT(buf, 0xc);
+            if (GET_UINT(buf, 0xc) == 0)
+                break;
+        }
+        else
+            ref = GET_UINT(buf, 0xc);
+    } while (ref != 0xffffffff);
+done:
+    page->first_link = rd->first_link;
+    return HLPFILE_RtfAddControl(rd, "}");
 }
 
 /******************************************************************
@@ -1219,7 +1673,7 @@ static BOOL HLPFILE_ReadFont(HLPFILE* hlpfile)
     unsigned    face_num, dscr_num, face_offset, dscr_offset;
     BYTE        flag, family;
 
-    if (!HLPFILE_FindSubFile("|FONT", &ref, &end))
+    if (!HLPFILE_FindSubFile(hlpfile, "|FONT", &ref, &end))
     {
         WINE_WARN("no subfile FONT\n");
         hlpfile->numFonts = 0;
@@ -1248,7 +1702,7 @@ static BOOL HLPFILE_ReadFont(HLPFILE* hlpfile)
         flag = ref[dscr_offset + i * 11 + 0];
         family = ref[dscr_offset + i * 11 + 2];
 
-        hlpfile->fonts[i].LogFont.lfHeight = -ref[dscr_offset + i * 11 + 1] / 2 - 3;
+        hlpfile->fonts[i].LogFont.lfHeight = ref[dscr_offset + i * 11 + 1];
         hlpfile->fonts[i].LogFont.lfWidth = 0;
         hlpfile->fonts[i].LogFont.lfEscapement = 0;
         hlpfile->fonts[i].LogFont.lfOrientation = 0;
@@ -1256,7 +1710,7 @@ static BOOL HLPFILE_ReadFont(HLPFILE* hlpfile)
         hlpfile->fonts[i].LogFont.lfItalic = (flag & 2) ? TRUE : FALSE;
         hlpfile->fonts[i].LogFont.lfUnderline = (flag & 4) ? TRUE : FALSE;
         hlpfile->fonts[i].LogFont.lfStrikeOut = (flag & 8) ? TRUE : FALSE;
-        hlpfile->fonts[i].LogFont.lfCharSet = DEFAULT_CHARSET;
+        hlpfile->fonts[i].LogFont.lfCharSet = hlpfile->charset;
         hlpfile->fonts[i].LogFont.lfOutPrecision = OUT_DEFAULT_PRECIS;
         hlpfile->fonts[i].LogFont.lfClipPrecision = CLIP_DEFAULT_PRECIS;
         hlpfile->fonts[i].LogFont.lfQuality = DEFAULT_QUALITY;
@@ -1308,7 +1762,7 @@ static BOOL HLPFILE_ReadFont(HLPFILE* hlpfile)
  *
  *           HLPFILE_ReadFileToBuffer
  */
-static BOOL HLPFILE_ReadFileToBuffer(HFILE hFile)
+static BOOL HLPFILE_ReadFileToBuffer(HLPFILE* hlpfile, HFILE hFile)
 {
     BYTE  header[16], dummy[1];
 
@@ -1318,17 +1772,17 @@ static BOOL HLPFILE_ReadFileToBuffer(HFILE hFile)
     if (GET_UINT(header, 0) != 0x00035F3F)
     {WINE_WARN("wrong header\n"); return FALSE;};
 
-    file_buffer_size = GET_UINT(header, 12);
-    file_buffer = HeapAlloc(GetProcessHeap(), 0, file_buffer_size + 1);
-    if (!file_buffer) return FALSE;
+    hlpfile->file_buffer_size = GET_UINT(header, 12);
+    hlpfile->file_buffer = HeapAlloc(GetProcessHeap(), 0, hlpfile->file_buffer_size + 1);
+    if (!hlpfile->file_buffer) return FALSE;
 
-    memcpy(file_buffer, header, 16);
-    if (_hread(hFile, file_buffer + 16, file_buffer_size - 16) != file_buffer_size - 16)
+    memcpy(hlpfile->file_buffer, header, 16);
+    if (_hread(hFile, hlpfile->file_buffer + 16, hlpfile->file_buffer_size - 16) !=hlpfile->file_buffer_size - 16)
     {WINE_WARN("filesize1\n"); return FALSE;};
 
     if (_hread(hFile, dummy, 1) != 0) WINE_WARN("filesize2\n");
 
-    file_buffer[file_buffer_size] = '\0'; /* FIXME: was '0', sounds ackward to me */
+    hlpfile->file_buffer[hlpfile->file_buffer_size] = '\0'; /* FIXME: was '0', sounds backwards to me */
 
     return TRUE;
 }
@@ -1351,22 +1805,22 @@ static int comp_FindSubFile(void *p, const void *key,
  *
  *           HLPFILE_FindSubFile
  */
-static BOOL HLPFILE_FindSubFile(LPCSTR name, BYTE **subbuf, BYTE **subend)
+static BOOL HLPFILE_FindSubFile(HLPFILE* hlpfile, LPCSTR name, BYTE **subbuf, BYTE **subend)
 {
     BYTE *ptr;
 
     WINE_TRACE("looking for file '%s'\n", name);
-    ptr = HLPFILE_BPTreeSearch(file_buffer + GET_UINT(file_buffer, 4),
+    ptr = HLPFILE_BPTreeSearch(hlpfile->file_buffer + GET_UINT(hlpfile->file_buffer, 4),
                                name, comp_FindSubFile);
     if (!ptr) return FALSE;
-    *subbuf = file_buffer + GET_UINT(ptr, strlen(name)+1);
-    if (*subbuf >= file_buffer + file_buffer_size)
+    *subbuf = hlpfile->file_buffer + GET_UINT(ptr, strlen(name)+1);
+    if (*subbuf >= hlpfile->file_buffer + hlpfile->file_buffer_size)
     {
         WINE_ERR("internal file %s does not fit\n", name);
         return FALSE;
     }
     *subend = *subbuf + GET_UINT(*subbuf, 0);
-    if (*subend > file_buffer + file_buffer_size)
+    if (*subend > hlpfile->file_buffer + hlpfile->file_buffer_size)
     {
         WINE_ERR("internal file %s does not fit\n", name);
         return FALSE;
@@ -1392,7 +1846,7 @@ static BOOL HLPFILE_SystemCommands(HLPFILE* hlpfile)
 
     hlpfile->lpszTitle = NULL;
 
-    if (!HLPFILE_FindSubFile("|SYSTEM", &buf, &end)) return FALSE;
+    if (!HLPFILE_FindSubFile(hlpfile, "|SYSTEM", &buf, &end)) return FALSE;
 
     magic = GET_USHORT(buf + 9, 0);
     minor = GET_USHORT(buf + 9, 2);
@@ -1431,6 +1885,7 @@ static BOOL HLPFILE_SystemCommands(HLPFILE* hlpfile)
 
     hlpfile->version = minor;
     hlpfile->flags = flags;
+    hlpfile->charset = DEFAULT_CHARSET;
 
     for (ptr = buf + 0x15; ptr + 4 <= end; ptr += GET_USHORT(ptr, 2) + 4)
     {
@@ -1470,6 +1925,15 @@ static BOOL HLPFILE_SystemCommands(HLPFILE* hlpfile)
             *m = macro;
             break;
 
+        case 5:
+            if (GET_USHORT(ptr, 4 + 4) != 1)
+                WINE_FIXME("More than one icon, picking up first\n");
+            /* 0x16 is sizeof(CURSORICONDIR), see user32/user_private.h */
+            hlpfile->hIcon = CreateIconFromResourceEx(ptr + 4 + 0x16,
+                                                      GET_USHORT(ptr, 2) - 0x16, TRUE,
+                                                      0x30000, 0, 0, 0);
+            break;
+
         case 6:
             if (GET_USHORT(ptr, 2) != 90) {WINE_WARN("system6\n");break;}
 
@@ -1489,7 +1953,7 @@ static BOOL HLPFILE_SystemCommands(HLPFILE* hlpfile)
                 else wi->type[0] = '\0';
                 if (flags & 0x0002) strcpy(wi->name, &str[12]);
                 else wi->name[0] = '\0';
-                if (flags & 0x0004) strcpy(wi->caption, &str[23]);
+                if (flags & 0x0004) strcpy(wi->caption, &str[21]);
                 else lstrcpynA(wi->caption, hlpfile->lpszTitle, sizeof(wi->caption));
                 wi->origin.x = (flags & 0x0008) ? GET_USHORT(ptr, 76) : CW_USEDEFAULT;
                 wi->origin.y = (flags & 0x0010) ? GET_USHORT(ptr, 78) : CW_USEDEFAULT;
@@ -1511,6 +1975,13 @@ static BOOL HLPFILE_SystemCommands(HLPFILE* hlpfile)
                            wi->type, wi->name, wi->caption, wi->origin.x, wi->origin.y,
                            wi->size.cx, wi->size.cy);
             }
+            break;
+        case 8:
+            WINE_WARN("Citation: '%s'\n", ptr + 4);
+            break;
+        case 11:
+            hlpfile->charset = ptr[4];
+            WINE_TRACE("Charset: %d\n", hlpfile->charset);
             break;
 	default:
             WINE_WARN("Unsupported SystemRecord[%d]\n", GET_USHORT(ptr, 0));
@@ -1594,14 +2065,14 @@ static BOOL HLPFILE_UncompressLZ77_Phrases(HLPFILE* hlpfile)
     UINT i, num, dec_size, head_size;
     BYTE *buf, *end;
 
-    if (!HLPFILE_FindSubFile("|Phrases", &buf, &end)) return FALSE;
+    if (!HLPFILE_FindSubFile(hlpfile, "|Phrases", &buf, &end)) return FALSE;
 
     if (hlpfile->version <= 16)
         head_size = 13;
     else
         head_size = 17;
 
-    num = phrases.num = GET_USHORT(buf, 9);
+    num = hlpfile->num_phrases = GET_USHORT(buf, 9);
     if (buf + 2 * num + 0x13 >= end) {WINE_WARN("1a\n"); return FALSE;};
 
     if (hlpfile->version <= 16)
@@ -1609,22 +2080,22 @@ static BOOL HLPFILE_UncompressLZ77_Phrases(HLPFILE* hlpfile)
     else
         dec_size = HLPFILE_UncompressedLZ77_Size(buf + 0x13 + 2 * num, end);
 
-    phrases.offsets = HeapAlloc(GetProcessHeap(), 0, sizeof(unsigned) * (num + 1));
-    phrases.buffer  = HeapAlloc(GetProcessHeap(), 0, dec_size);
-    if (!phrases.offsets || !phrases.buffer)
+    hlpfile->phrases_offsets = HeapAlloc(GetProcessHeap(), 0, sizeof(unsigned) * (num + 1));
+    hlpfile->phrases_buffer  = HeapAlloc(GetProcessHeap(), 0, dec_size);
+    if (!hlpfile->phrases_offsets || !hlpfile->phrases_buffer)
     {
-        HeapFree(GetProcessHeap(), 0, phrases.offsets);
-        HeapFree(GetProcessHeap(), 0, phrases.buffer);
+        HeapFree(GetProcessHeap(), 0, hlpfile->phrases_offsets);
+        HeapFree(GetProcessHeap(), 0, hlpfile->phrases_buffer);
         return FALSE;
     }
 
     for (i = 0; i <= num; i++)
-        phrases.offsets[i] = GET_USHORT(buf, head_size + 2 * i) - 2 * num - 2;
+        hlpfile->phrases_offsets[i] = GET_USHORT(buf, head_size + 2 * i) - 2 * num - 2;
 
     if (hlpfile->version <= 16)
-        memcpy(phrases.buffer, buf + 15 + 2*num, dec_size);
+        memcpy(hlpfile->phrases_buffer, buf + 15 + 2*num, dec_size);
     else
-        HLPFILE_UncompressLZ77(buf + 0x13 + 2 * num, end, (BYTE*)phrases.buffer);
+        HLPFILE_UncompressLZ77(buf + 0x13 + 2 * num, end, (BYTE*)hlpfile->phrases_buffer);
 
     hlpfile->hasPhrases = TRUE;
     return TRUE;
@@ -1644,12 +2115,12 @@ static BOOL HLPFILE_Uncompress_Phrases40(HLPFILE* hlpfile)
     unsigned int i;
     unsigned short bc, n;
 
-    if (!HLPFILE_FindSubFile("|PhrIndex", &buf_idx, &end_idx) ||
-        !HLPFILE_FindSubFile("|PhrImage", &buf_phs, &end_phs)) return FALSE;
+    if (!HLPFILE_FindSubFile(hlpfile, "|PhrIndex", &buf_idx, &end_idx) ||
+        !HLPFILE_FindSubFile(hlpfile, "|PhrImage", &buf_phs, &end_phs)) return FALSE;
 
     ptr = (long*)(buf_idx + 9 + 28);
     bc = GET_USHORT(buf_idx, 9 + 24) & 0x0F;
-    num = phrases.num = GET_USHORT(buf_idx, 9 + 4);
+    num = hlpfile->num_phrases = GET_USHORT(buf_idx, 9 + 4);
 
     WINE_TRACE("Index: Magic=%08x #entries=%u CpsdSize=%u PhrImgSize=%u\n"
                "\tPhrImgCprsdSize=%u 0=%u bc=%x ukn=%x\n",
@@ -1673,18 +2144,18 @@ static BOOL HLPFILE_Uncompress_Phrases40(HLPFILE* hlpfile)
         dec_size = max(dec_size, HLPFILE_UncompressedLZ77_Size(buf_phs + 9, end_phs));
     }
 
-    phrases.offsets = HeapAlloc(GetProcessHeap(), 0, sizeof(unsigned) * (num + 1));
-    phrases.buffer  = HeapAlloc(GetProcessHeap(), 0, dec_size);
-    if (!phrases.offsets || !phrases.buffer)
+    hlpfile->phrases_offsets = HeapAlloc(GetProcessHeap(), 0, sizeof(unsigned) * (num + 1));
+    hlpfile->phrases_buffer  = HeapAlloc(GetProcessHeap(), 0, dec_size);
+    if (!hlpfile->phrases_offsets || !hlpfile->phrases_buffer)
     {
-        HeapFree(GetProcessHeap(), 0, phrases.offsets);
-        HeapFree(GetProcessHeap(), 0, phrases.buffer);
+        HeapFree(GetProcessHeap(), 0, hlpfile->phrases_offsets);
+        HeapFree(GetProcessHeap(), 0, hlpfile->phrases_buffer);
         return FALSE;
     }
 
 #define getbit() (ptr += (mask < 0), mask = mask*2 + (mask<=0), (*ptr & mask) != 0)
 
-    phrases.offsets[0] = 0;
+    hlpfile->phrases_offsets[0] = 0;
     for (i = 0; i < num; i++)
     {
         for (n = 1; getbit(); n += 1 << bc);
@@ -1693,14 +2164,14 @@ static BOOL HLPFILE_Uncompress_Phrases40(HLPFILE* hlpfile)
         if (bc > 2 && getbit()) n += 4;
         if (bc > 3 && getbit()) n += 8;
         if (bc > 4 && getbit()) n += 16;
-        phrases.offsets[i + 1] = phrases.offsets[i] + n;
+        hlpfile->phrases_offsets[i + 1] = hlpfile->phrases_offsets[i] + n;
     }
 #undef getbit
 
     if (dec_size == cpr_size)
-        memcpy(phrases.buffer, buf_phs + 9, dec_size);
+        memcpy(hlpfile->phrases_buffer, buf_phs + 9, dec_size);
     else
-        HLPFILE_UncompressLZ77(buf_phs + 9, end_phs, (BYTE*)phrases.buffer);
+        HLPFILE_UncompressLZ77(buf_phs + 9, end_phs, (BYTE*)hlpfile->phrases_buffer);
 
     hlpfile->hasPhrases40 = TRUE;
     return TRUE;
@@ -1716,16 +2187,16 @@ static BOOL HLPFILE_Uncompress_Topic(HLPFILE* hlpfile)
     unsigned int i, newsize = 0;
     unsigned int topic_size;
 
-    if (!HLPFILE_FindSubFile("|TOPIC", &buf, &end))
+    if (!HLPFILE_FindSubFile(hlpfile, "|TOPIC", &buf, &end))
     {WINE_WARN("topic0\n"); return FALSE;}
 
     buf += 9; /* Skip file header */
     topic_size = end - buf;
     if (hlpfile->compressed)
     {
-        topic.wMapLen = (topic_size - 1) / hlpfile->tbsize + 1;
+        hlpfile->topic_maplen = (topic_size - 1) / hlpfile->tbsize + 1;
 
-        for (i = 0; i < topic.wMapLen; i++)
+        for (i = 0; i < hlpfile->topic_maplen; i++)
         {
             ptr = buf + i * hlpfile->tbsize;
 
@@ -1735,18 +2206,18 @@ static BOOL HLPFILE_Uncompress_Topic(HLPFILE* hlpfile)
             newsize += HLPFILE_UncompressedLZ77_Size(ptr + 0xc, min(end, ptr + hlpfile->tbsize));
         }
 
-        topic.map = HeapAlloc(GetProcessHeap(), 0,
-                              topic.wMapLen * sizeof(topic.map[0]) + newsize);
-        if (!topic.map) return FALSE;
-        newptr = (BYTE*)(topic.map + topic.wMapLen);
-        topic.end = newptr + newsize;
+        hlpfile->topic_map = HeapAlloc(GetProcessHeap(), 0,
+                                       hlpfile->topic_maplen * sizeof(hlpfile->topic_map[0]) + newsize);
+        if (!hlpfile->topic_map) return FALSE;
+        newptr = (BYTE*)(hlpfile->topic_map + hlpfile->topic_maplen);
+        hlpfile->topic_end = newptr + newsize;
 
-        for (i = 0; i < topic.wMapLen; i++)
+        for (i = 0; i < hlpfile->topic_maplen; i++)
         {
             ptr = buf + i * hlpfile->tbsize;
             if (ptr + 0x44 > end) ptr = end - 0x44;
 
-            topic.map[i] = newptr;
+            hlpfile->topic_map[i] = newptr;
             newptr = HLPFILE_UncompressLZ77(ptr + 0xc, min(end, ptr + hlpfile->tbsize), newptr);
         }
     }
@@ -1755,17 +2226,17 @@ static BOOL HLPFILE_Uncompress_Topic(HLPFILE* hlpfile)
         /* basically, we need to copy the TopicBlockSize byte pages
          * (removing the first 0x0C) in one single area in memory
          */
-        topic.wMapLen = (topic_size - 1) / hlpfile->tbsize + 1;
-        topic.map = HeapAlloc(GetProcessHeap(), 0,
-                              topic.wMapLen * (sizeof(topic.map[0]) + hlpfile->dsize));
-        if (!topic.map) return FALSE;
-        newptr = (BYTE*)(topic.map + topic.wMapLen);
-        topic.end = newptr + topic_size;
+        hlpfile->topic_maplen = (topic_size - 1) / hlpfile->tbsize + 1;
+        hlpfile->topic_map = HeapAlloc(GetProcessHeap(), 0,
+                                       hlpfile->topic_maplen * (sizeof(hlpfile->topic_map[0]) + hlpfile->dsize));
+        if (!hlpfile->topic_map) return FALSE;
+        newptr = (BYTE*)(hlpfile->topic_map + hlpfile->topic_maplen);
+        hlpfile->topic_end = newptr + topic_size;
 
-        for (i = 0; i < topic.wMapLen; i++)
+        for (i = 0; i < hlpfile->topic_maplen; i++)
         {
-            topic.map[i] = newptr + i * hlpfile->dsize;
-            memcpy(topic.map[i], buf + i * hlpfile->tbsize + 0x0C, hlpfile->dsize);
+            hlpfile->topic_map[i] = newptr + i * hlpfile->dsize;
+            memcpy(hlpfile->topic_map[i], buf + i * hlpfile->tbsize + 0x0C, hlpfile->dsize);
         }
     }
     return TRUE;
@@ -1776,7 +2247,7 @@ static BOOL HLPFILE_Uncompress_Topic(HLPFILE* hlpfile)
  *           HLPFILE_Uncompress2
  */
 
-static void HLPFILE_Uncompress2(const BYTE *ptr, const BYTE *end, BYTE *newptr, const BYTE *newend)
+static void HLPFILE_Uncompress2(HLPFILE* hlpfile, const BYTE *ptr, const BYTE *end, BYTE *newptr, const BYTE *newend)
 {
     BYTE *phptr, *phend;
     UINT code;
@@ -1791,8 +2262,8 @@ static void HLPFILE_Uncompress2(const BYTE *ptr, const BYTE *end, BYTE *newptr, 
             code  = 0x100 * ptr[0] + ptr[1];
             index = (code - 0x100) / 2;
 
-            phptr = (BYTE*)phrases.buffer + phrases.offsets[index];
-            phend = (BYTE*)phrases.buffer + phrases.offsets[index + 1];
+            phptr = (BYTE*)hlpfile->phrases_buffer + hlpfile->phrases_offsets[index];
+            phend = (BYTE*)hlpfile->phrases_buffer + hlpfile->phrases_offsets[index + 1];
 
             if (newptr + (phend - phptr) > newend)
             {
@@ -1815,7 +2286,7 @@ static void HLPFILE_Uncompress2(const BYTE *ptr, const BYTE *end, BYTE *newptr, 
  *
  *
  */
-static BOOL HLPFILE_Uncompress3(char* dst, const char* dst_end,
+static BOOL HLPFILE_Uncompress3(HLPFILE* hlpfile, char* dst, const char* dst_end,
                                 const BYTE* src, const BYTE* src_end)
 {
     unsigned int idx, len;
@@ -1825,32 +2296,32 @@ static BOOL HLPFILE_Uncompress3(char* dst, const char* dst_end,
         if ((*src & 1) == 0)
         {
             idx = *src / 2;
-            if (idx > phrases.num) 
+            if (idx > hlpfile->num_phrases)
             {
-                WINE_ERR("index in phrases %d/%d\n", idx, phrases.num);
+                WINE_ERR("index in phrases %d/%d\n", idx, hlpfile->num_phrases);
                 len = 0;
             }
             else 
             {
-                len = phrases.offsets[idx + 1] - phrases.offsets[idx];
+                len = hlpfile->phrases_offsets[idx + 1] - hlpfile->phrases_offsets[idx];
                 if (dst + len <= dst_end)
-                    memcpy(dst, &phrases.buffer[phrases.offsets[idx]], len);
+                    memcpy(dst, &hlpfile->phrases_buffer[hlpfile->phrases_offsets[idx]], len);
             }
         }
         else if ((*src & 0x03) == 0x01)
         {
             idx = (*src + 1) * 64;
             idx += *++src;
-            if (idx > phrases.num) 
+            if (idx > hlpfile->num_phrases)
             {
-                WINE_ERR("index in phrases %d/%d\n", idx, phrases.num);
+                WINE_ERR("index in phrases %d/%d\n", idx, hlpfile->num_phrases);
                 len = 0;
             }
             else
             {
-                len = phrases.offsets[idx + 1] - phrases.offsets[idx];
+                len = hlpfile->phrases_offsets[idx + 1] - hlpfile->phrases_offsets[idx];
                 if (dst + len <= dst_end)
-                    memcpy(dst, &phrases.buffer[phrases.offsets[idx]], len);
+                    memcpy(dst, &hlpfile->phrases_buffer[hlpfile->phrases_offsets[idx]], len);
             }
         }
         else if ((*src & 0x07) == 0x03)
@@ -2024,7 +2495,8 @@ static BOOL HLPFILE_GetContext(HLPFILE *hlpfile)
     BYTE                *cbuf, *cend;
     unsigned            clen;
 
-    if (!HLPFILE_FindSubFile("|CONTEXT",  &cbuf, &cend)) {WINE_WARN("context0\n"); return FALSE;}
+    if (!HLPFILE_FindSubFile(hlpfile, "|CONTEXT",  &cbuf, &cend))
+    {WINE_WARN("context0\n"); return FALSE;}
 
     clen = cend - cbuf;
     hlpfile->Context = HeapAlloc(GetProcessHeap(), 0, clen);
@@ -2043,13 +2515,13 @@ static BOOL HLPFILE_GetKeywords(HLPFILE *hlpfile)
     BYTE                *cbuf, *cend;
     unsigned            clen;
 
-    if (!HLPFILE_FindSubFile("|KWBTREE",  &cbuf, &cend)) return FALSE;
+    if (!HLPFILE_FindSubFile(hlpfile, "|KWBTREE", &cbuf, &cend)) return FALSE;
     clen = cend - cbuf;
     hlpfile->kwbtree = HeapAlloc(GetProcessHeap(), 0, clen);
     if (!hlpfile->kwbtree) return FALSE;
     memcpy(hlpfile->kwbtree, cbuf, clen);
 
-    if (!HLPFILE_FindSubFile("|KWDATA",  &cbuf, &cend))
+    if (!HLPFILE_FindSubFile(hlpfile, "|KWDATA", &cbuf, &cend))
     {
         WINE_ERR("corrupted help file: kwbtree present but kwdata absent\n");
         HeapFree(GetProcessHeap(), 0, hlpfile->kwbtree);
@@ -2076,7 +2548,8 @@ static BOOL HLPFILE_GetMap(HLPFILE *hlpfile)
     BYTE                *cbuf, *cend;
     unsigned            entries, i;
 
-    if (!HLPFILE_FindSubFile("|CTXOMAP",  &cbuf, &cend)) {WINE_WARN("no map section\n"); return FALSE;}
+    if (!HLPFILE_FindSubFile(hlpfile, "|CTXOMAP",  &cbuf, &cend))
+    {WINE_WARN("no map section\n"); return FALSE;}
 
     entries = GET_USHORT(cbuf, 9);
     hlpfile->Map = HeapAlloc(GetProcessHeap(), 0, entries * sizeof(HLPFILE_MAP));
@@ -2088,39 +2561,6 @@ static BOOL HLPFILE_GetMap(HLPFILE *hlpfile)
         hlpfile->Map[i].offset = GET_UINT(cbuf+11,i*8+4);
     }
     return TRUE;
-}
-
-/******************************************************************
- *		HLPFILE_DeleteLink
- *
- *
- */
-void HLPFILE_FreeLink(HLPFILE_LINK* link)
-{
-    if (link && !--link->wRefCount)
-        HeapFree(GetProcessHeap(), 0, link);
-}
-
-/***********************************************************************
- *
- *           HLPFILE_DeleteParagraph
- */
-static void HLPFILE_DeleteParagraph(HLPFILE_PARAGRAPH* paragraph)
-{
-    HLPFILE_PARAGRAPH* next;
-
-    while (paragraph)
-    {
-        next = paragraph->next;
-
-        if (paragraph->cookie == para_metafile)
-            DeleteMetaFile(paragraph->u.gfx.u.mfp.hMF);
-
-        HLPFILE_FreeLink(paragraph->link);
-
-        HeapFree(GetProcessHeap(), 0, paragraph);
-        paragraph = next;
-    }
 }
 
 /***********************************************************************
@@ -2150,7 +2590,6 @@ static void HLPFILE_DeletePage(HLPFILE_PAGE* page)
     while (page)
     {
         next = page->next;
-        HLPFILE_DeleteParagraph(page->first_paragraph);
         HLPFILE_DeleteMacro(page->first_macro);
         HeapFree(GetProcessHeap(), 0, page);
         page = next;
@@ -2192,10 +2631,15 @@ void HLPFILE_FreeHlpFile(HLPFILE* hlpfile)
     HLPFILE_DeletePage(hlpfile->first_page);
     HLPFILE_DeleteMacro(hlpfile->first_macro);
 
+    DestroyIcon(hlpfile->hIcon);
     if (hlpfile->numWindows)    HeapFree(GetProcessHeap(), 0, hlpfile->windows);
     HeapFree(GetProcessHeap(), 0, hlpfile->Context);
     HeapFree(GetProcessHeap(), 0, hlpfile->Map);
     HeapFree(GetProcessHeap(), 0, hlpfile->lpszTitle);
     HeapFree(GetProcessHeap(), 0, hlpfile->lpszCopyright);
+    HeapFree(GetProcessHeap(), 0, hlpfile->file_buffer);
+    HeapFree(GetProcessHeap(), 0, hlpfile->phrases_offsets);
+    HeapFree(GetProcessHeap(), 0, hlpfile->phrases_buffer);
+    HeapFree(GetProcessHeap(), 0, hlpfile->topic_map);
     HeapFree(GetProcessHeap(), 0, hlpfile);
 }

@@ -1,8 +1,6 @@
 /*
- * Help Viewer
+ * Help Viewer Bulgarian resource
  *
- * Copyright 1996 Ulrich Schmid
- * Copyright 2002 Sylvain Petreolle <spetreolle@yahoo.fr>
  * Copyright 2005 Milko Krachounov
  *
  * This library is free software; you can redistribute it and/or
@@ -20,69 +18,53 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
-
 /* Menu */
 
-MAIN_MENU MENU
+MAIN_MENU MENU LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
 {
- POPUP "&Файл"
-  {
-  MENUITEM "&Отваряне", MNID_FILE_OPEN
+ POPUP "&Файл" {
+  MENUITEM "&Отвори", MNID_FILE_OPEN
   MENUITEM SEPARATOR
   MENUITEM "&Печат", MNID_FILE_PRINT
-  MENUITEM "&Настройки на печатача...", MNID_FILE_SETUP
-  MENUITEM SEPARATOR
-  MENUITEM "Из&ход", MNID_FILE_EXIT
- }
- POPUP "&Обработка"
- {
-   MENUITEM "За&помняне", MNID_EDIT_COPYDLG
+  MENUITEM "&Настройка на принтера...", MNID_FILE_SETUP
    MENUITEM SEPARATOR
-   MENUITEM "&Разясняване...", MNID_EDIT_ANNOTATE
+  MENUITEM "&Изход", MNID_FILE_EXIT
  }
- POPUP "&Отметка"
- {
-   MENUITEM "&Задаване...", MNID_BKMK_DEFINE
- }
- POPUP "Помо&щ"
- {
-   MENUITEM "Помощ за &помощта", MNID_HELP_HELPON
-   MENUITEM "Винаги отгоре", MNID_HELP_HELPTOP
+ POPUP "&Редактиране" {
+   MENUITEM "&Копирай...", MNID_EDIT_COPYDLG
    MENUITEM SEPARATOR
-   MENUITEM "&Сведения...", MNID_HELP_ABOUT
+   MENUITEM "&Анотирай...", MNID_EDIT_ANNOTATE
+ }
+ POPUP "&Отметки" {
+   MENUITEM "&Задай...", MNID_BKMK_DEFINE
+ }
+ POPUP "&Помощ" {
+   MENUITEM "Помощ &за помощта", MNID_HELP_HELPON
+   MENUITEM "Винаги от&горе", MNID_HELP_HELPTOP
+   MENUITEM SEPARATOR
+   MENUITEM "&Информация...", MNID_HELP_ABOUT
 #ifdef WINELIB
-   MENUITEM "&За...", MNID_HELP_WINE
+   MENUITEM "&Относно WINE", MNID_HELP_WINE
 #endif
  }
 }
 
-IDD_INDEX DIALOG DISCARDABLE 0, 0, 200, 190 LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
-STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-FONT 8, "MS Shell Dlg"
-CAPTION "Указател"
-{
-    LISTBOX IDC_INDEXLIST, 10, 10, 180, 150, LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_BORDER
-    PUSHBUTTON "&Добре", IDOK, 40, 170, 50, 12
-    PUSHBUTTON "&Отказ", IDCANCEL, 120, 170, 50, 12
-}
-
 /* Strings */
-
-STRINGTABLE DISCARDABLE
+STRINGTABLE DISCARDABLE LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
 {
-STID_WINE_HELP, 	"Помощ"
+STID_WINE_HELP, 	"WINE Помощ"
 STID_WHERROR, 		"ГРЕШКА"
 STID_WARNING,  		"ПРЕДУПРЕЖДЕНИЕ"
-STID_INFO,  		"Сведение"
-STID_NOT_IMPLEMENTED, 	"Не е готово"
-STID_HLPFILE_ERROR_s, 	"Грешка при четене на помощен файл `%s'"
+STID_INFO,  		"Информация"
+STID_NOT_IMPLEMENTED, 	"Не е реализирано"
+STID_HLPFILE_ERROR_s, 	"Грешка при четене на помощния файл `%s'"
 STID_CONTENTS, 		"&Съдържание"
-STID_SEARCH, 		"&Търсене"
-STID_BACK, 		"На&зад"
-STID_HISTORY, 		"&Дневник"
+STID_SEARCH, 		"&Търси"
+STID_BACK, 		"&Назад"
+STID_HISTORY, 		"&История"
 STID_TOPICS,		"&Теми"
 STID_ALL_FILES, 	"Всички файлове (*.*)"
 STID_HELP_FILES_HLP, 	"Помощни файлове (*.hlp)"
-STID_FILE_NOT_FOUND_s	"Не намирам '%s'. Искате ли да го намерите сами?"
+STID_FILE_NOT_FOUND_s	"Cannot find '%s'. Do you want to find this file yourself?"
+STID_NO_RICHEDIT	"Cannot find a richedit implementation... Aborting"
 }

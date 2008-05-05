@@ -2,7 +2,7 @@
  * Help Viewer
  *
  * Copyright    1996 Ulrich Schmid
- *              2002 Eric Pouech
+ *              2002, 2008 Eric Pouech
  *              2007 Kirill K. Smirnov
  *
  * This library is free software; you can redistribute it and/or
@@ -35,50 +35,17 @@ typedef struct
     COLORREF    nsr_color;      /* color for non scrollable region */
 } HLPFILE_WINDOWINFO;
 
-typedef struct
+typedef struct tagHlpFileLink
 {
     enum {hlp_link_link, hlp_link_popup, hlp_link_macro} cookie;
-    LPCSTR      lpszString;     /* name of the file to for the link (NULL if same file) */
-    LONG        lHash;          /* topic index */
-    unsigned    bClrChange : 1, /* true if the link is green & underlined */
-                wRefCount;      /* number of internal references to this object */
+    LPCSTR      string;         /* name of the file to for the link (NULL if same file) */
+    LONG        hash;           /* topic index */
+    unsigned    bClrChange : 1; /* true if the link is green & underlined */
     unsigned    window;         /* window number for displaying the link (-1 is current) */
+    DWORD       cpMin;
+    DWORD       cpMax;
+    struct tagHlpFileLink* next;
 } HLPFILE_LINK;
-
-enum para_type {para_normal_text, para_debug_text, para_bitmap, para_metafile};
-
-typedef struct tagHlpFileParagraph
-{
-    enum para_type              cookie;
-
-    union
-    {
-        struct
-        {
-            LPSTR                       lpszText;
-            unsigned                    wFont;
-            unsigned                    wIndent;
-            unsigned                    wHSpace;
-            unsigned                    wVSpace;
-        } text;
-        struct
-        {
-            unsigned                    pos;    /* 0: center, 1: left, 2: right */
-            union 
-            {
-                struct 
-                {
-                    HBITMAP             hBitmap;
-                } bmp;
-                METAFILEPICT            mfp;
-            } u;
-        } gfx; /* for bitmaps and metafiles */
-    } u;
-
-    HLPFILE_LINK*               link;
-
-    struct tagHlpFileParagraph* next;
-} HLPFILE_PARAGRAPH;
 
 typedef struct tagHlpFileMacro
 {
@@ -89,11 +56,13 @@ typedef struct tagHlpFileMacro
 typedef struct tagHlpFilePage
 {
     LPSTR                       lpszTitle;
-    HLPFILE_PARAGRAPH*          first_paragraph;
     HLPFILE_MACRO*              first_macro;
+
+    HLPFILE_LINK*               first_link;
 
     unsigned                    wNumber;
     unsigned                    offset;
+    DWORD                       reference;
     struct tagHlpFilePage*      next;
     struct tagHlpFilePage*      prev;
 
@@ -118,6 +87,8 @@ typedef struct
 
 typedef struct tagHlpFileFile
 {
+    BYTE*                       file_buffer;
+    UINT                        file_buffer_size;
     LPSTR                       lpszPath;
     LPSTR                       lpszTitle;
     LPSTR                       lpszCopyright;
@@ -138,11 +109,19 @@ typedef struct tagHlpFileFile
 
     unsigned short              version;
     unsigned short              flags;
+    unsigned short              charset;
     unsigned short              tbsize;     /* topic block size */
     unsigned short              dsize;      /* decompress size */
     unsigned short              compressed;
     unsigned                    hasPhrases;   /* file has |Phrases */
     unsigned                    hasPhrases40; /* file has |PhrIndex/|PhrImage */
+    UINT                        num_phrases;
+    unsigned*                   phrases_offsets;
+    char*                       phrases_buffer;
+
+    BYTE**                      topic_map;
+    BYTE*                       topic_end;
+    UINT                        topic_maplen;
 
     unsigned                    numBmps;
     HBITMAP*                    bmps;
@@ -152,6 +131,7 @@ typedef struct tagHlpFileFile
 
     unsigned                    numWindows;
     HLPFILE_WINDOWINFO*         windows;
+    HICON                       hIcon;
 } HLPFILE;
 
 /*
@@ -177,13 +157,36 @@ typedef int (*HLPFILE_BPTreeCompare)(void *p, const void *key,
 typedef void (*HLPFILE_BPTreeCallback)(void *p, void **next, void *cookie);
 
 HLPFILE*      HLPFILE_ReadHlpFile(LPCSTR lpszPath);
-HLPFILE_PAGE* HLPFILE_Contents(HLPFILE* hlpfile);
-HLPFILE_PAGE* HLPFILE_PageByHash(HLPFILE* hlpfile, LONG lHash);
-HLPFILE_PAGE* HLPFILE_PageByMap(HLPFILE* hlpfile, LONG lMap);
-HLPFILE_PAGE* HLPFILE_PageByOffset(HLPFILE* hlpfile, LONG offset);
+HLPFILE_PAGE* HLPFILE_Contents(HLPFILE* hlpfile, ULONG* relative);
+HLPFILE_PAGE* HLPFILE_PageByHash(HLPFILE* hlpfile, LONG lHash, ULONG* relative);
+HLPFILE_PAGE* HLPFILE_PageByMap(HLPFILE* hlpfile, LONG lMap, ULONG* relative);
+HLPFILE_PAGE* HLPFILE_PageByOffset(HLPFILE* hlpfile, LONG offset, ULONG* relative);
 LONG          HLPFILE_Hash(LPCSTR lpszContext);
-void          HLPFILE_FreeLink(HLPFILE_LINK* link);
 void          HLPFILE_FreeHlpFile(HLPFILE*);
+unsigned      HLPFILE_HalfPointsToTwips(unsigned pts);
+
+static inline unsigned HLPFILE_PointsToTwips(unsigned pts)
+{
+    return HLPFILE_HalfPointsToTwips(2 * pts);
+}
 
 void* HLPFILE_BPTreeSearch(BYTE*, const void*, HLPFILE_BPTreeCompare);
 void  HLPFILE_BPTreeEnum(BYTE*, HLPFILE_BPTreeCallback cb, void *cookie);
+
+struct RtfData {
+    BOOL        in_text;
+    char*       data;           /* RTF stream start */
+    char*       ptr;            /* current position in stream */
+    unsigned    allocated;      /* overall allocated size */
+    unsigned    char_pos;       /* current char position (in richedit) */
+    char*       where;          /* pointer to feed back richedit */
+    unsigned    font_scale;     /* how to scale fonts */
+    HLPFILE_LINK*first_link;
+    HLPFILE_LINK*current_link;
+    BOOL        force_color;
+    unsigned    relative;       /* offset within page to lookup for */
+    unsigned    char_pos_rel;   /* char_pos correspondinf to relative */
+};
+
+BOOL          HLPFILE_BrowsePage(HLPFILE_PAGE*, struct RtfData* rd,
+                                 unsigned font_scale, unsigned relative);

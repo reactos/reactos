@@ -23,15 +23,15 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Inštalátor systému ReactOS"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT           "Vıvojári systému ReactOS by sa chceli poïakova nasledujúcim Open Source projektom,"\
+    LTEXT           "Vıvojári systému ReactOS by sa chceli poïakova nasledujúcim Open Source projektom, "\
                     "ktoré (alebo èasti ktorıch) boli pouité pri vıvoji systému ReactOS:",
                     IDC_STATIC,15,7,286,19
     LISTBOX         IDC_PROJECTS,15,30,286,75,LBS_NOSEL | LBS_HASSTRINGS |
                     LBS_NOINTEGRALHEIGHT | WS_VSCROLL
     LTEXT           "Systém ReactOS je vydanı pod licenciou GPL. Pokia¾ chcete systém (alebo jeho èasti) poui "\
                     "alebo redistribuova, musíte rešpektova GPL",
-                    IDC_STATIC,15,110,227,19
-    PUSHBUTTON      "&Zobrazi GPL...",IDC_VIEWGPL,251,110,50,19
+                    IDC_STATIC,15,110,228,22
+    PUSHBUTTON      "&Zobrazi GPL...",IDC_VIEWGPL,249,110,52,19
     LTEXT           "Kliknutím na Ïalej pokraèujte v inštalácii.",IDC_STATIC,15,136,
                     195,17
 END
@@ -78,14 +78,14 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Inštalátor systému ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Lokalizace systému by mìla souhlasit s jazykem aplikací, "\
-          "které chcete pouívat. Localizace urèí jak budou zobrazena "\
-          "èísla, mìny a kalendáøní data.", IDC_STATIC, 53, 7, 253, 20
+    LTEXT "Lokalizácia systému by mala súhlasi s jazykom aplikácií, "\
+          "ktoré chcete pouíva. Localizácia urèí ako budú zobrazené "\
+          "èísla, meny a údaje kalendára.", IDC_STATIC, 53, 7, 253, 20
     LTEXT "<locale text>", IDC_LOCALETEXT, 53, 29, 250, 16
     LTEXT "Pre zmenu lokalizácie systému kliknite na Zmeni.",
           IDC_STATIC, 53, 60, 184, 8
     PUSHBUTTON "&Zmeni...", IDC_CUSTOMLOCALE, 245, 57, 50, 14
-    LTEXT "Rozloení kláves urèí znaky, které se zobrazí, kdy píšete.",
+    LTEXT "Rozloenie kláves urèí znaky, ktoré sa zobrazia, keï píšete.",
           IDC_STATIC, 53, 86, 253, 8
     LTEXT "<layout text>", IDC_LAYOUTTEXT, 53, 100, 250, 16
     LTEXT "Pre zmenu rozloenia kláves, kliknite na Zmeni.",
@@ -108,7 +108,7 @@ BEGIN
     COMBOBOX IDC_TIMEZONELIST, 53, 52, 201, 93,
              CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
     AUTOCHECKBOX "Automaticky posunú hodiny pri prechode na &letnı èas a spä",
-                 IDC_AUTODAYLIGHT, 53, 124, 201, 10
+                 IDC_AUTODAYLIGHT, 53, 124, 220, 10
 END
 
 
@@ -128,12 +128,12 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Dokonèenie inštalácie systému ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Dokonèení prùvodce instalací systému ReactOS",IDC_FINISHTITLE,115,9,195,37
-    LTEXT "Prùvodce instalací systému ReactOS byl úspìšnì dokonèen.\n\n" \
-          "Po kliknutí na Dokonèit bude poèítaè restartován.", IDC_STATIC, 115, 58, 195, 100
+    LTEXT "Dokonèenie sprievodcu inštaláciou systému ReactOS",IDC_FINISHTITLE,115,9,195,37
+    LTEXT "Sprievodca inštaláciou systému ReactOS bol úspešne dokonèenı.\n\n" \
+          "Po kliknutí na Dokonèi sa poèítaè reštartuje.", IDC_STATIC, 115, 58, 195, 100
     CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 138, 188, 12
-    LTEXT "Pokud je v mechanice instalaèní CD, vyjmìte jej. Poté kliknutím na Dokonèit "\
-          "restartujte poèítaè.", IDC_STATIC, 115, 160, 195, 31
+    LTEXT "Ak je v mechanike inštalaèné médium, vyberte ho. Potom kliknutím na Dokonèi "\
+          "reštartujte poèítaè.", IDC_STATIC, 115, 160, 195, 31
 END
 
 

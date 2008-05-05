@@ -1041,23 +1041,26 @@ static void HandleCommandLine(LPWSTR cmdline)
     while (*cmdline && *cmdline != delimiter) cmdline++;
     if (*cmdline == delimiter) cmdline++;
 
-    while (*cmdline == ' ' || *cmdline == '-' || *cmdline == '/')
+    while (*cmdline)
     {
-        WCHAR option;
+        while (isspace(*cmdline)) cmdline++;
 
-        if (*cmdline++ == ' ') continue;
-
-        option = *cmdline;
-        if (option) cmdline++;
-        while (*cmdline == ' ') cmdline++;
-
-        switch (option)
+        if (*cmdline == '-' || *cmdline == '/')
         {
-            case 'p':
-            case 'P':
-                opt_print = 1;
-                break;
+            if (!cmdline[2] || isspace(cmdline[2]))
+            {
+                switch (cmdline[1])
+                {
+                case 'P':
+                case 'p':
+                    opt_print = 1;
+                    cmdline += 2;
+                    continue;
+                }
+            }
+            /* a filename starting by / */
         }
+        break;
     }
 
     if (*cmdline)

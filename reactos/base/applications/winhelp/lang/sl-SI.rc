@@ -1,7 +1,7 @@
 /*
  * Help Viewer (Slovenian Resources)
  *
- * Copyright 2002-2003 Rok Mandeljc <rok.mandeljc@gimb.org>
+ * Copyright 2002, 2003, 2008 Rok Mandeljc
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -18,28 +18,30 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#pragma code_page(65001)
+
 /* Menu */
 
 MAIN_MENU MENU LANGUAGE LANG_SLOVENIAN, SUBLANG_DEFAULT
 {
  POPUP "&Datoteka" {
-  MENUITEM "&Odpri ...", MNID_FILE_OPEN
+  MENUITEM "&Odpri", MNID_FILE_OPEN
   MENUITEM SEPARATOR
-  MENUITEM "Na&tisni temo ...", MNID_FILE_PRINT
-  MENUITEM "&Priprava tiskalnika", MNID_FILE_SETUP
-  MENUITEM SEPARATOR
+  MENUITEM "&Natisni", MNID_FILE_PRINT
+  MENUITEM "Priprava &tiskalnika ...", MNID_FILE_SETUP
+   MENUITEM SEPARATOR
   MENUITEM "Iz&hod", MNID_FILE_EXIT
  }
  POPUP "&Urejanje" {
-   MENUITEM "&Kopiraj", MNID_EDIT_COPYDLG
+   MENUITEM "&Kopiraj ...", MNID_EDIT_COPYDLG
    MENUITEM SEPARATOR
-   MENUITEM "&Pripombe ...", MNID_EDIT_ANNOTATE
+   MENUITEM "P&ripombe ...", MNID_EDIT_ANNOTATE
  }
- POPUP "&Zaznamek" {
-   MENUITEM "&DoloËi ...", MNID_BKMK_DEFINE
+ POPUP "&Zaznamki" {
+   MENUITEM "Do&loƒçi ...", MNID_BKMK_DEFINE
  }
- POPUP "&PomoË" {
-   MENUITEM "&O pomoËi", MNID_HELP_HELPON
+ POPUP "&Pomoƒç" {
+   MENUITEM "&O pomoƒçi", MNID_HELP_HELPON
    MENUITEM "Vedno na &vrhu", MNID_HELP_HELPTOP
    MENUITEM SEPARATOR
    MENUITEM "&Informacije ...", MNID_HELP_ABOUT
@@ -49,21 +51,34 @@ MAIN_MENU MENU LANGUAGE LANG_SLOVENIAN, SUBLANG_DEFAULT
  }
 }
 
+IDD_INDEX DIALOG DISCARDABLE 0, 0, 200, 190 LANGUAGE LANG_SLOVENIAN, SUBLANG_DEFAULT
+STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "Indeks"
+{
+    LISTBOX IDC_INDEXLIST, 10, 10, 180, 150, LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_BORDER
+    PUSHBUTTON "&V redu", IDOK, 40, 170, 50, 12
+    PUSHBUTTON "&Prekliƒçi", IDCANCEL, 120, 170, 50, 12
+}
+
 /* Strings */
 STRINGTABLE DISCARDABLE LANGUAGE LANG_SLOVENIAN, SUBLANG_DEFAULT
 {
-STID_WINE_HELP, 		"WINE PomoË"
+STID_WINE_HELP, 	"WINE Pomoƒç"
 STID_WHERROR, 		"NAPAKA"
 STID_WARNING,  		"OPOZORILO"
-STID_INFO,  			"Informacija"
-STID_NOT_IMPLEMENTED, 	"Ni (öe) na voljo"
-STID_HLPFILE_ERROR_s, 	"Napaka pri branju datoteke `%s'"
-STID_CONTENTS, 		"&Teme pomoËi"
+STID_INFO,  		"Informacija"
+STID_NOT_IMPLEMENTED, 	"Ni (≈°e) na voljo"
+STID_HLPFILE_ERROR_s, 	"Napaka pri branju datoteke s pomoƒçjo `%s'"
+STID_CONTENTS, 		"&Teme pomoƒçi"
 STID_SEARCH, 		"&Iskanje"
-STID_BACK, 			"&Nazaj"
+STID_BACK, 		"&Nazaj"
 STID_HISTORY, 		"&Zgodovina"
 STID_TOPICS,		"&Vsebina"
-STID_ALL_FILES, 		"Vse datiteke (*.*)"
-STID_HELP_FILES_HLP, 	"Datoteke s pomoËjo (*.hlp)"
-STID_FILE_NOT_FOUND_s	"Cannot find '%s'. Do you want to find this file yourself?"
+STID_ALL_FILES, 	"Vse datoteke (*.*)"
+STID_HELP_FILES_HLP, 	"Datoteke s pomoƒçjo (*.hlp)"
+STID_FILE_NOT_FOUND_s	"Ne najdem datoteke '%s'. Ali jo ≈æelite poiskati sami?"
+STID_NO_RICHEDIT	"Cannot find a richedit implementation... Aborting"
 }
+
+#pragma code_page(default)

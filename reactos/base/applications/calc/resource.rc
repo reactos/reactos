@@ -40,6 +40,7 @@ IDI_CALC_SMALL          ICON    DISCARDABLE     "res/calc_sm.ico"
 IDB_BITMAP_ROS          BITMAP  DISCARDABLE     "res/ROS_logo.bmp"
 
 
+#include "lang/bg-BG.rc"
 #include "lang/de-DE.rc"
 #include "lang/en-US.rc"
 #include "lang/es-ES.rc"

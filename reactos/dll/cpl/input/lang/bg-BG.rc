@@ -21,13 +21,13 @@ CAPTION "Разширените словесни услуги"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	GROUPBOX "За изключване на Caps Lock", -1, 7, 7, 258, 26
-	AUTORADIOBUTTON "Натиснете CAPS &LOCK key", IDC_PRESS_CL_KEY_RB, 14, 17, 120, 11, WS_GROUP
-	AUTORADIOBUTTON "Натиснете SHI&FT", IDC_PRESS_SHIFT_KEY_RB, 144, 17, 120, 11, NOT WS_TABSTOP
+	AUTORADIOBUTTON "се натиска CAPS &LOCK", IDC_PRESS_CL_KEY_RB, 14, 17, 120, 11, WS_GROUP
+	AUTORADIOBUTTON "се натиска SHI&FT", IDC_PRESS_SHIFT_KEY_RB, 144, 17, 120, 11, NOT WS_TABSTOP
 	GROUPBOX "Бързи клавиши за езиците на въвеждане", -1, 7, 37, 258, 95
 	LTEXT "Действие", -1, 14, 47, 60, 9
 	RTEXT "Клавишни &съчетания", -1, 177, 47, 79, 9
 	LISTBOX IDC_KEY_LISTBOX, 14, 57, 244, 52, LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | WS_VSCROLL | WS_TABSTOP
-	PUSHBUTTON "Про&мяна на клавишното съчетание", IDC_CHANGE_KEY_SEQ_BTN, 152, 113, 106, 14, WS_GROUP
+	PUSHBUTTON "Про&мяна на клавишното съчетание", IDC_CHANGE_KEY_SEQ_BTN, 128, 113, 130, 14, WS_GROUP
 	DEFPUSHBUTTON "Добре", IDOK, 66, 140, 70, 14
 	PUSHBUTTON "Отказ", IDCANCEL, 146, 140, 70, 14
 END
@@ -52,7 +52,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "", 1240, 4, 5, 186, 10
     GROUPBOX "", -1, 7, 16, 179, 48
-    AUTOCHECKBOX "Прев&ключване на клавишните подредби", IDC_USE_SK, 12, 17, 135, 8
+    AUTOCHECKBOX "Прев&ключване на клавиaтурните подредби", IDC_USE_SK, 12, 17, 165, 8
     CTEXT "SHIFT", -1, 68, 37, 27, 12
     CTEXT "+", -1, 57, 37, 8, 9
     AUTORADIOBUTTON "&CTRL", -1, 24, 31, 30, 11, WS_GROUP

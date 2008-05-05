@@ -110,7 +110,7 @@ static struct MacroDesc MACRO_Builtins[] = {
     {"JumpContext",         "JC", 0, "SSU",    (FARPROC)MACRO_JumpContext},
     {"JumpHash",            "JH", 0, "SSU",    (FARPROC)MACRO_JumpHash},
     {"JumpHelpOn",          NULL, 0, "",       (FARPROC)MACRO_JumpHelpOn},
-    {"JumpID",              "JI", 0, "SSS",    (FARPROC)MACRO_JumpID},
+    {"JumpID",              "JI", 0, "SS",     (FARPROC)MACRO_JumpID},
     {"JumpKeyword",         "JK", 0, "SSS",    (FARPROC)MACRO_JumpKeyword},
     {"KLink",               "KL", 0, "SUSS",   (FARPROC)MACRO_KLink},
     {"Menu",                "MU", 0, "",       (FARPROC)MACRO_Menu},
@@ -220,9 +220,8 @@ void CALLBACK MACRO_Back(void)
 
     WINE_TRACE("()\n");
 
-    if (win && win->backIndex >= 2)
-        WINHELP_CreateHelpWindow(win->back[--win->backIndex - 1],
-                                 win->info, SW_SHOW);
+    if (win && win->back.index >= 2)
+        WINHELP_CreateHelpWindow(&win->back.set[--win->back.index - 1], SW_SHOW, FALSE);
 }
 
 void CALLBACK MACRO_BackFlush(void)
@@ -231,17 +230,7 @@ void CALLBACK MACRO_BackFlush(void)
 
     WINE_TRACE("()\n");
 
-    if (win)
-    {
-        unsigned int i;
-
-        for (i = 0; i < win->backIndex; i++)
-        {
-            HLPFILE_FreeHlpFile(win->back[i]->file);
-            win->back[i] = NULL;
-        }
-        win->backIndex = 0;
-    }
+    if (win) WINHELP_DeleteBackSet(win);
 }
 
 void CALLBACK MACRO_BookmarkDefine(void)
@@ -256,10 +245,18 @@ void CALLBACK MACRO_BookmarkMore(void)
 
 void CALLBACK MACRO_BrowseButtons(void)
 {
+    HLPFILE_PAGE*       page = Globals.active_win->page;
+    ULONG               relative;
+
     WINE_TRACE("()\n");
 
     MACRO_CreateButton("BTN_PREV", "&<<", "Prev()");
     MACRO_CreateButton("BTN_NEXT", "&>>", "Next()");
+
+    if (!HLPFILE_PageByOffset(page->file, page->browse_bwd, &relative))
+        MACRO_DisableButton("BTN_PREV");
+    if (!HLPFILE_PageByOffset(page->file, page->browse_fwd, &relative))
+        MACRO_DisableButton("BTN_NEXT");
 }
 
 void CALLBACK MACRO_ChangeButtonBinding(LPCSTR id, LPCSTR macro)
@@ -300,7 +297,7 @@ void CALLBACK MACRO_ChangeButtonBinding(LPCSTR id, LPCSTR macro)
 
     *b = button;
 
-    SendMessage(win->hMainWnd, WM_USER, 0, 0);
+    WINHELP_LayoutMainWindow(win);
 }
 
 void CALLBACK MACRO_ChangeEnable(LPCSTR id, LPCSTR macro)
@@ -407,7 +404,7 @@ void CALLBACK MACRO_CreateButton(LPCSTR id, LPCSTR name, LPCSTR macro)
         button->wParam = max(button->wParam, (*b)->wParam + 1);
     *b = button;
 
-    SendMessage(win->hMainWnd, WM_USER, 0, 0);
+    WINHELP_LayoutMainWindow(win);
 }
 
 void CALLBACK MACRO_DeleteItem(LPCSTR str)
@@ -429,7 +426,7 @@ void CALLBACK MACRO_DisableButton(LPCSTR id)
 {
     WINHELP_BUTTON**    b;
 
-    WINE_FIXME("(\"%s\")\n", id);
+    WINE_TRACE("(\"%s\")\n", id);
 
     b = MACRO_LookupButton(Globals.active_win, id);
     if (!*b) {WINE_FIXME("Couldn't find button '%s'\n", id); return;}
@@ -509,10 +506,7 @@ void CALLBACK MACRO_FileOpen(void)
 
     if (WINHELP_GetOpenFileName(szFile, MAX_PATH))
     {
-        HLPFILE*        hlpfile = WINHELP_LookupHelpFile(szFile);
-
-        WINHELP_CreateHelpWindowByHash(hlpfile, 0,
-                                       WINHELP_GetWindowInfo(hlpfile, "main"), SW_SHOWNORMAL);
+        MACRO_JumpContents(szFile, "main");
     }
 }
 
@@ -631,10 +625,10 @@ void CALLBACK MACRO_JumpContents(LPCSTR lpszPath, LPCSTR lpszWindow)
     HLPFILE*    hlpfile;
 
     WINE_TRACE("(\"%s\", \"%s\")\n", lpszPath, lpszWindow);
-    hlpfile = WINHELP_LookupHelpFile(lpszPath);
-    WINHELP_CreateHelpWindowByHash(hlpfile, 0,
-                                   WINHELP_GetWindowInfo(hlpfile, lpszWindow),
-                                   SW_NORMAL);
+    if ((hlpfile = WINHELP_LookupHelpFile(lpszPath)))
+        WINHELP_OpenHelpWindow(HLPFILE_PageByHash, hlpfile, 0,
+                               WINHELP_GetWindowInfo(hlpfile, lpszWindow),
+                               SW_NORMAL);
 }
 
 void CALLBACK MACRO_JumpContext(LPCSTR lpszPath, LPCSTR lpszWindow, LONG context)
@@ -644,9 +638,9 @@ void CALLBACK MACRO_JumpContext(LPCSTR lpszPath, LPCSTR lpszWindow, LONG context
     WINE_TRACE("(\"%s\", \"%s\", %d)\n", lpszPath, lpszWindow, context);
     hlpfile = WINHELP_LookupHelpFile(lpszPath);
     /* Some madness: what user calls 'context', hlpfile calls 'map' */
-    WINHELP_CreateHelpWindowByMap(hlpfile, context,
-                                  WINHELP_GetWindowInfo(hlpfile, lpszWindow),
-                                  SW_NORMAL);
+    WINHELP_OpenHelpWindow(HLPFILE_PageByMap, hlpfile, context,
+                           WINHELP_GetWindowInfo(hlpfile, lpszWindow),
+                           SW_NORMAL);
 }
 
 void CALLBACK MACRO_JumpHash(LPCSTR lpszPath, LPCSTR lpszWindow, LONG lHash)
@@ -655,9 +649,9 @@ void CALLBACK MACRO_JumpHash(LPCSTR lpszPath, LPCSTR lpszWindow, LONG lHash)
 
     WINE_TRACE("(\"%s\", \"%s\", %u)\n", lpszPath, lpszWindow, lHash);
     hlpfile = WINHELP_LookupHelpFile(lpszPath);
-    WINHELP_CreateHelpWindowByHash(hlpfile, lHash,
-                                   WINHELP_GetWindowInfo(hlpfile, lpszWindow),
-                                   SW_NORMAL);
+    WINHELP_OpenHelpWindow(HLPFILE_PageByHash, hlpfile, lHash,
+                           WINHELP_GetWindowInfo(hlpfile, lpszWindow),
+                           SW_NORMAL);
 }
 
 void CALLBACK MACRO_JumpHelpOn(void)
@@ -665,15 +659,32 @@ void CALLBACK MACRO_JumpHelpOn(void)
     WINE_FIXME("()\n");
 }
 
-/* FIXME: those two macros are wrong
- * they should only contain 2 strings, path & window are coded as path>window
- */
-void CALLBACK MACRO_JumpID(LPCSTR lpszPath, LPCSTR lpszWindow, LPCSTR topic_id)
+void CALLBACK MACRO_JumpID(LPCSTR lpszPathWindow, LPCSTR topic_id)
 {
-    WINE_TRACE("(\"%s\", \"%s\", \"%s\")\n", lpszPath, lpszWindow, topic_id);
-    MACRO_JumpHash(lpszPath, lpszWindow, HLPFILE_Hash(topic_id));
+    LPSTR       ptr;
+
+    WINE_TRACE("(\"%s\", \"%s\")\n", lpszPathWindow, topic_id);
+    if ((ptr = strchr(lpszPathWindow, '>')) != NULL)
+    {
+        LPSTR   tmp;
+        size_t  sz = ptr - lpszPathWindow;
+
+        tmp = HeapAlloc(GetProcessHeap(), 0, sz + 1);
+        if (tmp)
+        {
+            memcpy(tmp, lpszPathWindow, sz);
+            tmp[sz] = '\0';
+            MACRO_JumpHash(tmp, ptr + 1, HLPFILE_Hash(topic_id));
+            HeapFree(GetProcessHeap(), 0, tmp);
+        }
+    }
+    else
+        MACRO_JumpHash(lpszPathWindow, NULL, HLPFILE_Hash(topic_id));
 }
 
+/* FIXME: this macros is wrong
+ * it should only contain 2 strings, path & window are coded as path>window
+ */
 void CALLBACK MACRO_JumpKeyword(LPCSTR lpszPath, LPCSTR lpszWindow, LPCSTR keyword)
 {
     WINE_FIXME("(\"%s\", \"%s\", \"%s\")\n", lpszPath, lpszWindow, keyword);
@@ -701,15 +712,16 @@ void CALLBACK MACRO_MPrintID(LPCSTR str)
 
 void CALLBACK MACRO_Next(void)
 {
-    HLPFILE_PAGE*   page;
+    WINHELP_WNDPAGE     wp;
 
     WINE_TRACE("()\n");
-    page = Globals.active_win->page;
-    page = HLPFILE_PageByOffset(page->file, page->browse_fwd);
-    if (page)
+    wp.page = Globals.active_win->page;
+    wp.page = HLPFILE_PageByOffset(wp.page->file, wp.page->browse_fwd, &wp.relative);
+    if (wp.page)
     {
-        page->file->wRefCount++;
-        WINHELP_CreateHelpWindow(page, Globals.active_win->info, SW_NORMAL);
+        wp.page->file->wRefCount++;
+        wp.wininfo = Globals.active_win->info;
+        WINHELP_CreateHelpWindow(&wp, SW_NORMAL, TRUE);
     }
 }
 
@@ -740,15 +752,16 @@ void CALLBACK MACRO_PositionWindow(LONG i1, LONG i2, LONG u1, LONG u2, LONG u3, 
 
 void CALLBACK MACRO_Prev(void)
 {
-    HLPFILE_PAGE*   page;
+    WINHELP_WNDPAGE     wp;
 
     WINE_TRACE("()\n");
-    page = Globals.active_win->page;
-    page = HLPFILE_PageByOffset(page->file, page->browse_bwd);
-    if (page)
+    wp.page = Globals.active_win->page;
+    wp.page = HLPFILE_PageByOffset(wp.page->file, wp.page->browse_bwd, &wp.relative);
+    if (wp.page)
     {
-        page->file->wRefCount++;
-        WINHELP_CreateHelpWindow(page, Globals.active_win->info, SW_NORMAL);
+        wp.page->file->wRefCount++;
+        wp.wininfo = Globals.active_win->info;
+        WINHELP_CreateHelpWindow(&wp, SW_NORMAL, TRUE);
     }
 }
 

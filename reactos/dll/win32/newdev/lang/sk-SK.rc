@@ -62,7 +62,7 @@ BEGIN
                     BS_AUTOCHECKBOX | WS_TABSTOP,47,33,163,9
     CONTROL         "Include this path",IDC_CHECK_PATH,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,47,54,162,10
-    PUSHBUTTON      "Browse",IDC_BROWSE,248,69,50,14
+    PUSHBUTTON      "Prehæad·vaù",IDC_BROWSE,248,69,50,14
     COMBOBOX        IDC_COMBO_PATH,61,71,176,12,CBS_DROPDOWN | CBS_SORT |
                     WS_VSCROLL | WS_TABSTOP  | CBS_AUTOHSCROLL
 END
@@ -110,5 +110,6 @@ BEGIN
                     179,11
     LTEXT           "NEZN¡ME ZARIADENIE",IDC_DEVICE,148,53,147,12
 END
+
 
 

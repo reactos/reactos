@@ -1470,8 +1470,8 @@ MUI_ERROR skSKErrorEntries[] =
     },
     {
         //ERROR_ADDING_KBLAYOUTS,
-        "Setup failed to add keyboard layouts to registry.\n"
-        "ENTER = Reboot computer"
+        "Inçtal tor zlyhal pri prid van¡ rozlo§eni¡ kl vesnice do registrov.\n"
+        "ENTER = Reçtart poŸ¡taŸa"
     },
     {
         NULL,
@@ -1693,7 +1693,7 @@ MUI_STRING skSKStrings[] =
     {STRING_GB,
     "GB"},
     {STRING_ADDKBLAYOUTS,
-    "Adding keyboard layouts"},
+    "Prid vam rozlo§enia kl vesnice"},
     {0, 0}
 };
 

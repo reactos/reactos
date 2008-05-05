@@ -88,7 +88,7 @@ static MUI_ENTRY csCZWelcomePageEntries[] =
     {
         8,
         17,
-        "\x07  Stisknut°m R zah†j°te opravu ReactOS.",
+        "\x07  Stisknut°m R zah†j°te opravu nebo aktualizaci ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -118,7 +118,7 @@ static MUI_ENTRY csCZWelcomePageEntries[] =
     {
         0,
         0,
-        "ENTER = Pokraüovat  R = Opravit F3 = Ukonüit",
+        "ENTER = Pokraüovat  R = Opravit  L = Licence  F3 = Ukonüit",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -493,7 +493,7 @@ static MUI_ENTRY csCZRepairPageEntries[] =
     {
         0,
         0,
-        "ESC = Hlavn° str†nka  ENTER = Restartovat",
+        "ESC = Hlavn° str†nka  U = Aktualizovat  R = Z†chrana  ENTER = Restartovat",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1470,7 +1470,7 @@ MUI_ERROR csCZErrorEntries[] =
     {
         //ERROR_ADDING_KBLAYOUTS,
         "Setup failed to add keyboard layouts to registry.\n"
-        "ENTER = Reboot computer"
+        "ENTER = Restartovat poü°taü"
     },
     {
         NULL,
