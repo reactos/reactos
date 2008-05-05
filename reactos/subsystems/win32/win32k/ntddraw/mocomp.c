@@ -20,10 +20,7 @@ STDCALL
 NtGdiDdBeginMoCompFrame(HANDLE hMoComp,
                         PDD_BEGINMOCOMPFRAMEDATA puBeginFrameData)
 {
-    PGD_DDBEGINMOCOMPFRAME pfnDdBeginMoCompFrame = NULL;
-    INT i;
-
-    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDdBeginMoCompFrame, pfnDdBeginMoCompFrame);
+    PGD_DDBEGINMOCOMPFRAME pfnDdBeginMoCompFrame = (PGD_DDBEGINMOCOMPFRAME)gpDxFuncs[DXG_INDEX_DxDdBeginMoCompFrame].pfn;
 
     if (pfnDdBeginMoCompFrame == NULL)
     {
@@ -42,10 +39,7 @@ HANDLE
 STDCALL
 NtGdiDdCreateMoComp(HANDLE hDirectDraw, PDD_CREATEMOCOMPDATA puCreateMoCompData)
 {
-    PGD_DXDDCREATEMOCOMP pfnDdCreateMoComp = NULL;
-    INT i;
-
-    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDdCreateMoComp, pfnDdCreateMoComp);
+    PGD_DXDDCREATEMOCOMP pfnDdCreateMoComp = (PGD_DXDDCREATEMOCOMP)gpDxFuncs[DXG_INDEX_DxDdCreateMoComp].pfn;
 
     if (pfnDdCreateMoComp == NULL)
     {
@@ -65,10 +59,7 @@ STDCALL
 NtGdiDdDestroyMoComp(HANDLE hMoComp,
                      PDD_DESTROYMOCOMPDATA puBeginFrameData)
 {
-    PGD_DXDDDESTROYMOCOMP pfnDxDdDestroyMoComp = NULL;
-    INT i;
-
-    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDdDestroyMoComp, pfnDxDdDestroyMoComp);
+    PGD_DXDDDESTROYMOCOMP pfnDxDdDestroyMoComp = (PGD_DXDDDESTROYMOCOMP)gpDxFuncs[DXG_INDEX_DxDdDestroyMoComp].pfn;
 
     if (pfnDxDdDestroyMoComp == NULL)
     {
@@ -88,10 +79,7 @@ STDCALL
 NtGdiDdEndMoCompFrame(HANDLE hMoComp,
                       PDD_ENDMOCOMPFRAMEDATA puEndFrameData)
 {
-    PGD_DXDDENDMOCOMPFRAME pfnDdEndMoCompFrame = NULL;
-    INT i;
-
-    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDdEndMoCompFrame, pfnDdEndMoCompFrame);
+    PGD_DXDDENDMOCOMPFRAME pfnDdEndMoCompFrame = (PGD_DXDDENDMOCOMPFRAME)gpDxFuncs[DXG_INDEX_DxDdEndMoCompFrame].pfn;
 
     if (pfnDdEndMoCompFrame == NULL)
     {
@@ -111,10 +99,7 @@ STDCALL
 NtGdiDdGetInternalMoCompInfo(HANDLE hDirectDraw,
                              PDD_GETINTERNALMOCOMPDATA puGetInternalData)
 {
-    PGD_DXDDGETINTERNALMOCOMPINFO pfnDdGetInternalMoCompInfo = NULL;
-    INT i;
-
-    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDdGetInternalMoCompInfo, pfnDdGetInternalMoCompInfo);
+    PGD_DXDDGETINTERNALMOCOMPINFO pfnDdGetInternalMoCompInfo = (PGD_DXDDGETINTERNALMOCOMPINFO)gpDxFuncs[DXG_INDEX_DxDdGetInternalMoCompInfo].pfn;
 
     if (pfnDdGetInternalMoCompInfo == NULL)
     {
@@ -135,10 +120,7 @@ STDCALL
 NtGdiDdGetMoCompBuffInfo(HANDLE hDirectDraw,
                          PDD_GETMOCOMPCOMPBUFFDATA puGetBuffData)
 {
-    PGD_DXDDGETMOCOMPBUFFINFO pfnDdGetMoCompBuffInfo = NULL;
-    INT i;
-
-    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDdGetMoCompBuffInfo, pfnDdGetMoCompBuffInfo);
+    PGD_DXDDGETMOCOMPBUFFINFO pfnDdGetMoCompBuffInfo = (PGD_DXDDGETMOCOMPBUFFINFO)gpDxFuncs[DXG_INDEX_DxDdGetMoCompBuffInfo].pfn;
 
     if (pfnDdGetMoCompBuffInfo == NULL)
     {
@@ -158,10 +140,7 @@ STDCALL
 NtGdiDdGetMoCompFormats(HANDLE hDirectDraw,
                         PDD_GETMOCOMPFORMATSDATA puGetMoCompFormatsData)
 {
-    PGD_DXDDGETMOCOMPFORMATS pfnDdGetMoCompFormats = NULL;
-    INT i;
-
-    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDdGetMoCompFormats, pfnDdGetMoCompFormats);
+    PGD_DXDDGETMOCOMPFORMATS pfnDdGetMoCompFormats = (PGD_DXDDGETMOCOMPFORMATS)gpDxFuncs[DXG_INDEX_DxDdGetMoCompFormats].pfn;
 
     if (pfnDdGetMoCompFormats == NULL)
     {
@@ -182,10 +161,7 @@ STDCALL
 NtGdiDdGetMoCompGuids(HANDLE hDirectDraw,
                       PDD_GETMOCOMPGUIDSDATA puGetMoCompGuidsData)
 {
-    PGD_DXDDGETMOCOMPGUIDS pfnDdGetMoCompGuids = NULL;
-    INT i;
-
-    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDdGetMoCompGuids, pfnDdGetMoCompGuids);
+    PGD_DXDDGETMOCOMPGUIDS pfnDdGetMoCompGuids = (PGD_DXDDGETMOCOMPGUIDS)gpDxFuncs[DXG_INDEX_DxDdGetMoCompGuids].pfn;
 
     if (pfnDdGetMoCompGuids == NULL)
     {
@@ -207,10 +183,7 @@ STDCALL
 NtGdiDdQueryMoCompStatus(HANDLE hMoComp,
                          PDD_QUERYMOCOMPSTATUSDATA puQueryMoCompStatusData)
 {
-    PGD_DXDDQUERYMOCOMPSTATUS pfnDdQueryMoCompStatus = NULL;
-    INT i;
-
-    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDdQueryMoCompStatus, pfnDdQueryMoCompStatus);
+    PGD_DXDDQUERYMOCOMPSTATUS pfnDdQueryMoCompStatus = (PGD_DXDDQUERYMOCOMPSTATUS)gpDxFuncs[DXG_INDEX_DxDdQueryMoCompStatus].pfn;
 
     if (pfnDdQueryMoCompStatus == NULL)
     {
@@ -231,10 +204,7 @@ STDCALL
 NtGdiDdRenderMoComp(HANDLE hMoComp,
                     PDD_RENDERMOCOMPDATA puRenderMoCompData)
 {
-    PGD_DXDDRENDERMOCOMP pfnDdRenderMoComp = NULL;
-    INT i;
-
-    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDdRenderMoComp, pfnDdRenderMoComp);
+    PGD_DXDDRENDERMOCOMP pfnDdRenderMoComp = (PGD_DXDDRENDERMOCOMP)gpDxFuncs[DXG_INDEX_DxDdRenderMoComp].pfn;
 
     if (pfnDdRenderMoComp == NULL)
     {
@@ -245,6 +215,4 @@ NtGdiDdRenderMoComp(HANDLE hMoComp,
     DPRINT1("Calling on dxg.sys pfnDdRenderMoComp");
     return pfnDdRenderMoComp(hMoComp, puRenderMoCompData);
 }
-
-
 
