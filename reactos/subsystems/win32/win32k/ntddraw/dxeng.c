@@ -74,6 +74,7 @@ DRVFN gaEngFuncs [] =
 *
 *--*/
 ULONG
+APIENTRY
 DxEngDispUniq()
 {
     DPRINT1("ReactX Calling : DxEngDispUniq\n");
@@ -510,6 +511,7 @@ DxEngGetDCState(HDC hDC,
 *
 *--*/
 BOOLEAN
+APIENTRY
 DxEngIncDispUniq()
 {
     DPRINT1("ReactX Calling : DxEngIncDispUniq \n");
@@ -619,8 +621,10 @@ DxEngNUIsTermSrv()
 /* DxEngRedrawDesktop                                                   */
 /************************************************************************/
 
-/* Notes : it always return TRUE, and it update whole the screen (redaw current desktop) */
+/* Notes : it always returns TRUE, and it updates whole screen
+   (redraws current desktop) */
 BOOLEAN
+APIENTRY
 DxEngRedrawDesktop()
 {
     /* FIXME add redraw code */
@@ -632,8 +636,9 @@ ULONG gulVisRgnUniqueness; // Increase count everytime client region is updated.
 /************************************************************************/
 /* DxEngVisRgnUniq                                                      */
 /************************************************************************/
-/* Notes :  return the VisRgnUniq counter for win32k */
+/* Notes :  returns the VisRgnUniq counter for win32k */
 ULONG
+APIENTRY
 DxEngVisRgnUniq()
 {
     DPRINT1("ReactX Calling : DxEngVisRgnUniq \n");
