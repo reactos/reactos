@@ -88,13 +88,13 @@ static HRESULT WINAPI IDirect3DDevice9Impl_TestCooperativeLevel(LPDIRECT3DDEVICE
 static UINT WINAPI IDirect3DDevice9Impl_GetAvailableTextureMem(LPDIRECT3DDEVICE9 iface)
 {
     UINT AvailableTextureMemory = 0;
-    DD_GETAVAILDRIVERMEMORYDATA ddGetAvailDriverMemoryData;
+    DDHAL_GETAVAILDRIVERMEMORYDATA ddGetAvailDriverMemoryData;
 
     LPDIRECT3DDEVICE9_INT This = impl_from_IDirect3DDevice9(iface);
     LOCK_D3DDEVICE9();
 
     memset(&ddGetAvailDriverMemoryData, 0, sizeof(ddGetAvailDriverMemoryData));
-    ddGetAvailDriverMemoryData.lpDD = (PDD_DIRECTDRAW_GLOBAL)&This->DeviceData[0].pUnknown6BC->hDD;
+    ddGetAvailDriverMemoryData.lpDD = (LPDDRAWI_DIRECTDRAW_GBL)&This->DeviceData[0].pUnknown6BC->hDD;
 
     if (DDHAL_DRIVER_HANDLED == (*This->DeviceData[0].D3D9Callbacks.DdGetAvailDriverMemory)(&ddGetAvailDriverMemoryData))
     {
