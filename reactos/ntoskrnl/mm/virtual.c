@@ -80,8 +80,8 @@ MiDoMappedCopy(IN PEPROCESS SourceProcess,
     PAGED_CODE();
 
     /* Calculate the maximum amount of data to move */
-    TotalSize = MI_MAPPED_COPY_PAGES - 2;
-    if (BufferSize <= (MI_MAPPED_COPY_PAGES - 2)) TotalSize = BufferSize;
+    TotalSize = (MI_MAPPED_COPY_PAGES - 2) * PAGE_SIZE;
+    if (BufferSize <= TotalSize) TotalSize = BufferSize;
     CurrentSize = BufferSize;
     RemainingSize = TotalSize;
 
