@@ -50,7 +50,6 @@
 	<file>update.c</file>
 	<file>upgrade.c</file>
 	<file>where.c</file>
-	<file>msiserver.idl</file>
 	<file>msi.rc</file>
 	<include base="msi" root="intermediate">.</include>
 	<file>msi.spec</file>
@@ -72,8 +71,12 @@
 	<library>uuid</library>
 	<library>ntdll</library>
 	<dependency>msi_msiserver_typelib</dependency>
+	<dependency>msiheader</dependency>
 </module>
 <module name="msi_msiserver_typelib" type="embeddedtypelib" allowwarnings="true">
+	<file>msiserver.idl</file>
+</module>
+<module name="msiheader" type="idlheader">
 	<file>msiserver.idl</file>
 </module>
 </group>
