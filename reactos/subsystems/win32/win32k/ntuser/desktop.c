@@ -626,6 +626,25 @@ BOOL FASTCALL IntDesktopUpdatePerUserSettings(BOOL bEnable)
 
 /* PUBLIC FUNCTIONS ***********************************************************/
 
+VOID APIENTRY
+UserRedrawDesktop()
+{
+    PWINDOW_OBJECT Window = NULL;
+
+    UserEnterExclusive();
+
+    Window = UserGetDesktopWindow();
+
+    IntInvalidateWindows( Window,
+            Window->UpdateRegion,
+                       RDW_FRAME |
+                       RDW_ERASE |
+                  RDW_INVALIDATE |
+                 RDW_ALLCHILDREN);
+    UserLeave();
+}
+
+
 NTSTATUS FASTCALL
 co_IntShowDesktop(PDESKTOP_OBJECT Desktop, ULONG Width, ULONG Height)
 {

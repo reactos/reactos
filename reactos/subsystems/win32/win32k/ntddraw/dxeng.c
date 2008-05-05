@@ -627,10 +627,11 @@ BOOLEAN
 APIENTRY
 DxEngRedrawDesktop()
 {
-    /* FIXME add redraw code */
-    UNIMPLEMENTED;
+    UserRedrawDesktop();
     return TRUE;
 }
+
+
 ULONG gulVisRgnUniqueness; // Increase count everytime client region is updated.
 
 /************************************************************************/

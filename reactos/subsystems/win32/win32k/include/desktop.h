@@ -117,6 +117,8 @@ IntParseDesktopPath(PEPROCESS Process,
 BOOL FASTCALL
 IntDesktopUpdatePerUserSettings(BOOL bEnable);
 
+VOID APIENTRY UserRedrawDesktop(VOID);
+
 BOOL IntRegisterShellHookWindow(HWND hWnd);
 BOOL IntDeRegisterShellHookWindow(HWND hWnd);
 
