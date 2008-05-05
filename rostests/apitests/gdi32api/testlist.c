@@ -12,6 +12,7 @@
 #include "tests/CreateRectRgn.c"
 #include "tests/ExtCreatePen.c"
 #include "tests/GetClipRgn.c"
+#include "tests/GetCurrentObject.c"
 #include "tests/GetObject.c"
 #include "tests/GetStockObject.c"
 #include "tests/GetDIBits.c"
@@ -31,6 +32,7 @@ TESTENTRY TestList[] =
 	{ L"CreateRectRgn", Test_CreateRectRgn },
 	{ L"ExtCreatePen", Test_ExtCreatePen },
 	{ L"GetClipRgn", Test_GetClipRgn },
+	{ L"GetCurrentObject", Test_GetCurrentObject },
 	{ L"GetObject", Test_GetObject },
 	{ L"GetStockObject", Test_GetStockObject },
 	{ L"GetDIBits", Test_GetDIBits },
