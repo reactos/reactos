@@ -706,6 +706,7 @@ void WebBrowser_OleObject_Init(WebBrowser *This)
     memset(&This->pos_rect, 0, sizeof(RECT));
     memset(&This->clip_rect, 0, sizeof(RECT));
     memset(&This->frameinfo, 0, sizeof(OLEINPLACEFRAMEINFO));
+    This->frameinfo.cb = sizeof(OLEINPLACEFRAMEINFO);
 }
 
 void WebBrowser_OleObject_Destroy(WebBrowser *This)
