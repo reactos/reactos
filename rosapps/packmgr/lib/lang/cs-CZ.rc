@@ -11,7 +11,7 @@ BEGIN
   ERR_DOWNL	   "Vyžadovaný soubor nemohl být stažen!\nProsím podívejte se do logu pro detaily."
   ERR_FILE	   "Nastala chyba bìhem vykonávání skriptu.\nSoubor nelze otevøít."
 
-  ERR_SYNATX       "Nastala chyba bìhem vykonávání skriptu.\nChybná synatxe."
+  ERR_SYNATX       "Nastala chyba bìhem vykonávání skriptu.\nChybná syntaxe."
   ERR_CALL         "Nastala chyba bìhem vykonávání skriptu.\nNelze najít funkci."
   ERR_PARAMETER    "Nastala chyba bìhem vykonávání skriptu.\nNesprávný parametr(y)."
 

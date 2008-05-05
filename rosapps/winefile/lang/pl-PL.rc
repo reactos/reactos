@@ -133,7 +133,7 @@ IDM_WINEFILE MENU FIXED IMPURE
         MENUITEM "Rozmieœæ automatycznie",      ID_WINDOW_AUTOSORT
 #endif
         MENUITEM "Rozmieœæ &symbole",           ID_WINDOW_ARRANGE
-        MENUITEM "&Odœwierz\tF5",               ID_REFRESH
+        MENUITEM "&Odœwie¿\tF5",               ID_REFRESH
     }
 
     POPUP "&?"  {
@@ -201,7 +201,7 @@ CAPTION "W³aœciwoœci: %s"
 FONT 8, "MS Sans Serif"
 BEGIN
     DEFPUSHBUTTON   "OK",IDOK,191,7,50,14
-    PUSHBUTTON      "Anulujl",IDCANCEL,191,29,50,14
+    PUSHBUTTON      "Anuluj",IDCANCEL,191,29,50,14
     LTEXT           "&Nazwa pliku:",-1,7,7,59,9
     EDITTEXT        IDC_STATIC_PROP_FILENAME,71,7,120,9,ES_READONLY | NOT WS_BORDER | WS_TABSTOP
     LTEXT           "&Pe³na œcie¿ka:",-1,7,18,59,9

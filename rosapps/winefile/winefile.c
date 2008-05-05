@@ -2406,7 +2406,7 @@ static LRESULT CALLBACK FrameWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM
 					if (DialogBoxParam(Globals.hInstance, MAKEINTRESOURCE(IDD_EXECUTE), hwnd, ExecuteDialogDlgProc, (LPARAM)&dlg) == IDOK) {
 						HINSTANCE hinst = ShellExecute(hwnd, NULL/*operation*/, dlg.cmd/*file*/, NULL/*parameters*/, NULL/*dir*/, dlg.cmdshow);
 
-						if ((int)hinst <= 32)
+						if (PtrToUlong(hinst) <= 32)
 							display_error(hwnd, GetLastError());
 					}
 					break;}
@@ -2598,13 +2598,13 @@ static void resize_tree(ChildWnd* child, int cx, int cy)
 
 #ifndef _NO_EXTENSIONS
 
-static HWND create_header(HWND parent, Pane* pane, int id)
+static HWND create_header(HWND parent, Pane* pane, UINT id)
 {
 	HD_ITEM hdi;
 	int idx;
 
 	HWND hwnd = CreateWindow(WC_HEADER, 0, WS_CHILD|WS_VISIBLE|HDS_HORZ|HDS_FULLDRAG/*TODO: |HDS_BUTTONS + sort orders*/,
-								0, 0, 0, 0, parent, (HMENU)id, Globals.hInstance, 0);
+                                 0, 0, 0, 0, parent, (HMENU)ULongToHandle(id), Globals.hInstance, 0);
 	if (!hwnd)
 		return 0;
 
@@ -2952,7 +2952,7 @@ static void set_space_status(void)
 
 static WNDPROC g_orgTreeWndProc;
 
-static void create_tree_window(HWND parent, Pane* pane, int id, int id_header, LPCTSTR pattern, int filter_flags)
+static void create_tree_window(HWND parent, Pane* pane, UINT id, UINT id_header, LPCTSTR pattern, int filter_flags)
 {
 	static const TCHAR sListBox[] = {'L','i','s','t','B','o','x','\0'};
 
@@ -2960,8 +2960,8 @@ static void create_tree_window(HWND parent, Pane* pane, int id, int id_header, L
 	Entry* entry = pane->root;
 
 	pane->hwnd = CreateWindow(sListBox, sEmpty, WS_CHILD|WS_VISIBLE|WS_HSCROLL|WS_VSCROLL|
-								LBS_DISABLENOSCROLL|LBS_NOINTEGRALHEIGHT|LBS_OWNERDRAWFIXED|LBS_NOTIFY,
-								0, 0, 0, 0, parent, (HMENU)id, Globals.hInstance, 0);
+                                  LBS_DISABLENOSCROLL|LBS_NOINTEGRALHEIGHT|LBS_OWNERDRAWFIXED|LBS_NOTIFY,
+                                  0, 0, 0, 0, parent, (HMENU)ULongToHandle(id), Globals.hInstance, 0);
 
 	SetWindowLongPtr(pane->hwnd, GWLP_USERDATA, (LPARAM)pane);
 	g_orgTreeWndProc = (WNDPROC) SetWindowLongPtr(pane->hwnd, GWLP_WNDPROC, (LPARAM)TreeWndProc);
@@ -3936,7 +3936,7 @@ static BOOL launch_file(HWND hwnd, LPCTSTR cmd, UINT nCmdShow)
 {
 	HINSTANCE hinst = ShellExecute(hwnd, NULL/*operation*/, cmd, NULL/*parameters*/, NULL/*dir*/, nCmdShow);
 
-	if ((int)hinst <= 32) {
+	if (PtrToUlong(hinst) <= 32) {
 		display_error(hwnd, GetLastError());
 		return FALSE;
 	}
@@ -4780,7 +4780,7 @@ static void show_frame(HWND hwndParent, int cmdshow, LPCTSTR path)
 
 
 	/* create main window */
-	Globals.hMainWnd = CreateWindowEx(0, (LPCTSTR)(int)Globals.hframeClass, RS(b1,IDS_WINE_FILE), WS_OVERLAPPEDWINDOW,
+	Globals.hMainWnd = CreateWindowEx(0, MAKEINTRESOURCE(Globals.hframeClass), RS(b1,IDS_WINE_FILE), WS_OVERLAPPEDWINDOW,
 					opts.start_x, opts.start_y, opts.width, opts.height,
 					hwndParent, Globals.hMenuFrame, Globals.hInstance, 0/*lpParam*/);
 

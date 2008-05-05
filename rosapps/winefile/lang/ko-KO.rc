@@ -176,7 +176,7 @@ FONT 8, "MS Shell Dlg"
 IDD_DIALOG_VIEW_TYPE DIALOG DISCARDABLE 15, 13, 161, 97
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "파일 타입으로"
-FONT 8, "MS Shell Dlg"
+FONT 8, "MS Sans Serif"
 BEGIN
     LTEXT           "이름(&N):",-1,7,8,22,10
     EDITTEXT        IDC_VIEW_PATTERN,31,7,63,12,ES_AUTOHSCROLL
@@ -190,7 +190,7 @@ BEGIN
     CONTROL         "다른 파일(&O)",IDC_VIEW_TYPE_OTHERS,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,13,65,70,10
     CONTROL         "숨김/시스템 파일 보여주기(&S)",IDC_VIEW_TYPE_HIDDEN,
-                    "버튼",BS_AUTOCHECKBOX | WS_TABSTOP,7,81,106,9
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,81,106,9
     DEFPUSHBUTTON   "확인",IDOK,104,7,50,14
     PUSHBUTTON      "취소",IDCANCEL,104,24,50,14
 END
@@ -198,11 +198,12 @@ END
 IDD_DIALOG_PROPERTIES DIALOG DISCARDABLE  0, 0, 248, 215
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "%s 속성"
-FONT 8, "MS Shell Dlg"
+FONT 8, "MS Sans Serif"
 BEGIN
     DEFPUSHBUTTON   "확인",IDOK,191,7,50,14
     PUSHBUTTON      "취소",IDCANCEL,191,29,50,14
     LTEXT           "파일 이름(&F):",-1,7,7,59,9
+
     EDITTEXT        IDC_STATIC_PROP_FILENAME,71,7,120,9,ES_READONLY | NOT WS_BORDER | WS_TABSTOP
     LTEXT           "완전한 경로(&P):",-1,7,18,59,9
     EDITTEXT        IDC_STATIC_PROP_PATH,71,18,120,9, ES_READONLY | NOT WS_BORDER | WS_TABSTOP
@@ -241,7 +242,7 @@ STRINGTABLE
     IDS_DESKTOP             "데스크탑"
     IDS_SHELL               "셀"
     IDS_TITLEFMT            "%s - %s"
-    IDS_NO_IMPL             "미구현"
+    IDS_NO_IMPL             "아직 구현안됨"
     IDS_WINE_FILE           "Wine 파일"
 }
 

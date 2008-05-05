@@ -5,8 +5,7 @@ SRCDIR    = @srcdir@
 VPATH     = @srcdir@
 MODULE    = winefile.exe
 APPMODE   = -mwindows
-IMPORTS   = shell32 comdlg32 comctl32 ole32 mpr version user32 gdi32 advapi32 kernel32
-EXTRALIBS = -luuid
+IMPORTS   = uuid shell32 comdlg32 comctl32 ole32 mpr version user32 gdi32 advapi32 kernel32
 
 C_SRCS = \
 	splitpath.c \
