@@ -8,7 +8,7 @@ IDR_POPUP MENU
 BEGIN
     POPUP "popup"
     BEGIN
-        MENUITEM "&Nastavenia...",  ID_PROFERENCES
+        MENUITEM "&Nastavenia...",  ID_PREFERENCES
         MENUITEM SEPARATOR
         MENUITEM "&Zavrieù",            ID_EXIT
     END
