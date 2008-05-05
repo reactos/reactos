@@ -95,6 +95,7 @@ static UINT WINAPI IDirect3DDevice9Impl_GetAvailableTextureMem(LPDIRECT3DDEVICE9
 
     memset(&ddGetAvailDriverMemoryData, 0, sizeof(ddGetAvailDriverMemoryData));
     ddGetAvailDriverMemoryData.lpDD = (LPDDRAWI_DIRECTDRAW_GBL)&This->DeviceData[0].pUnknown6BC->hDD;
+    ddGetAvailDriverMemoryData.ddRVal = DDERR_GENERIC;
 
     if (DDHAL_DRIVER_HANDLED == (*This->DeviceData[0].D3D9Callbacks.DdGetAvailDriverMemory)(&ddGetAvailDriverMemoryData))
     {
