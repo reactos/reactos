@@ -472,8 +472,6 @@ ULONG NTAPI Ext2AllocInode(
 				
 			}
 		}
-
-		try_exit:	NOTHING;
 	}
 	finally
 	{
@@ -714,8 +712,6 @@ NTSTATUS NTAPI Ext2WriteInode(
 	//	The Read Buffer Pointer
 	BYTE * PtrPinnedBuffer = NULL;
 
-	PEXT2_INODE		PtrTempInode;
-
 	//	Buffer Control Block
 	PBCB PtrBCB = NULL;
 
@@ -841,7 +837,6 @@ BOOLEAN NTAPI Ext2MakeNewDirectoryEntry(
 	PtrExt2VCB			PtrVCB;
 	LARGE_INTEGER		VolumeByteOffset;
 	unsigned long		LogicalBlockSize = 0;
-	unsigned long		NumberOfBytesToRead = 0;
 	BOOLEAN				RC = FALSE;
 	
 	USHORT	HeaderLength = sizeof( EXT2_DIR_ENTRY );
@@ -1071,7 +1066,6 @@ BOOLEAN NTAPI Ext2FreeDirectoryEntry(
 	PBCB				PtrDataBlockBCB	= NULL;
 	BYTE *	 			PtrDataBlock = NULL;
 	PFILE_OBJECT		PtrFileObject = NULL;
-	PEXT2_DIR_ENTRY		PtrTempDirEntry;
 	LONGLONG			ByteOffset = 0;
 	PtrExt2VCB			PtrVCB;
 	LARGE_INTEGER		VolumeByteOffset;
@@ -2598,9 +2592,6 @@ BOOLEAN NTAPI Ext2IsDirectoryEmpty(
 		BYTE *			PtrPinnedBlockBuffer = NULL;
 		PEXT2_DIR_ENTRY	PtrDirEntry = NULL;
 		BOOLEAN			Found = FALSE;
-		int				i;
-
-
 
 		StartBufferOffset.QuadPart = 0;
 

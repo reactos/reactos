@@ -282,8 +282,6 @@ PIRP							PtrIrp,
 PtrExt2VCB					PtrVCB)
 {
 	BOOLEAN			AcquiredVCB = FALSE;
-	PtrExt2FCB		PtrFCB = NULL;
-	PLIST_ENTRY		PtrNextFCB = NULL;
 
 	try {
 		ExAcquireResourceExclusiveLite(&(PtrVCB->VCBResource), TRUE);
@@ -335,8 +333,6 @@ PDEVICE_OBJECT	PtrDeviceObject,
 PIRP				PtrIrp,
 PVOID				Context)
 {
-	NTSTATUS		RC = STATUS_SUCCESS;
-
 	if (PtrIrp->PendingReturned) {
 		IoMarkIrpPending(PtrIrp);
 	}

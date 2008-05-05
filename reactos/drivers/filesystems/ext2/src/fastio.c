@@ -191,9 +191,6 @@ IN PDEVICE_OBJECT				DeviceObject)
 			Ext2LogEvent(EXT2_ERROR_INTERNAL_ERROR, RC);
 
 		}
-
-		try_exit:	NOTHING;
-
 	} finally {
 
 	}
@@ -257,9 +254,6 @@ IN PDEVICE_OBJECT				DeviceObject)
 			Ext2LogEvent(EXT2_ERROR_INTERNAL_ERROR, RC);
 
 		}
-
-		try_exit:	NOTHING;
-
 	}
 	finally
 	{
@@ -321,9 +315,6 @@ IN PDEVICE_OBJECT					DeviceObject)
 			RC = Ext2ExceptionHandler(PtrIrpContext, NULL);
 			Ext2LogEvent(EXT2_ERROR_INTERNAL_ERROR, RC);
 		}
-
-		try_exit:	NOTHING;
-
 	}
 	finally 
 	{
@@ -384,9 +375,6 @@ IN PDEVICE_OBJECT					DeviceObject)
 			RC = Ext2ExceptionHandler(PtrIrpContext, NULL);
 			Ext2LogEvent(EXT2_ERROR_INTERNAL_ERROR, RC);
 		}
-
-		try_exit:	NOTHING;
-
 	}
 	finally
 	{
@@ -452,9 +440,6 @@ IN PDEVICE_OBJECT				DeviceObject)
 			RC = Ext2ExceptionHandler(PtrIrpContext, NULL);
 			Ext2LogEvent(EXT2_ERROR_INTERNAL_ERROR, RC);
 		}
-
-		try_exit:	NOTHING;
-
 	} 
 	finally 
 	{
@@ -519,9 +504,6 @@ IN PDEVICE_OBJECT				DeviceObject)
 			RC = Ext2ExceptionHandler(PtrIrpContext, NULL);
 			Ext2LogEvent(EXT2_ERROR_INTERNAL_ERROR, RC);
 		}
-
-		try_exit:	NOTHING;
-
 	} 
 	finally 
 	{
@@ -582,9 +564,6 @@ IN PDEVICE_OBJECT				DeviceObject)
 			RC = Ext2ExceptionHandler(PtrIrpContext, NULL);
 			Ext2LogEvent(EXT2_ERROR_INTERNAL_ERROR, RC);
 		}
-
-		try_exit:	NOTHING;
-
 	}
 	finally
 	{
@@ -646,9 +625,6 @@ IN PDEVICE_OBJECT				DeviceObject)
 			RC = Ext2ExceptionHandler(PtrIrpContext, NULL);
 			Ext2LogEvent(EXT2_ERROR_INTERNAL_ERROR, RC);
 		}
-
-		try_exit:	NOTHING;
-
 	}
 	finally
 	{
@@ -931,8 +907,6 @@ void NTAPI Ext2RelLazyWrite(
 IN PVOID							Context)
 {
 
-	BOOLEAN				ReturnedStatus = TRUE;
-
 	PtrExt2VCB			PtrVCB = NULL;
 	PtrExt2FCB			PtrFCB = NULL;
 	PtrExt2CCB			PtrCCB = NULL;
@@ -1105,7 +1079,6 @@ IN BOOLEAN						Wait)
 void NTAPI Ext2RelReadAhead(
 IN PVOID							Context)
 {
-	BOOLEAN				ReturnedStatus = TRUE;
 	PtrExt2FCB			PtrFCB = NULL;
 	PtrExt2CCB			PtrCCB = NULL;
 	PtrExt2NTRequiredFCB	PtrReqdFCB = NULL;
@@ -1211,9 +1184,6 @@ IN PDEVICE_OBJECT									DeviceObject)
 			RC = Ext2ExceptionHandler(PtrIrpContext, NULL);
 			Ext2LogEvent(EXT2_ERROR_INTERNAL_ERROR, RC);
 		}
-
-		try_exit:	NOTHING;
-
 	} 
 	finally 
 	{
@@ -1278,9 +1248,6 @@ IN PDEVICE_OBJECT				DeviceObject)
 			RC = Ext2ExceptionHandler(PtrIrpContext, NULL);
 			Ext2LogEvent(EXT2_ERROR_INTERNAL_ERROR, RC);
 		}
-
-		try_exit:	NOTHING;
-
 	} 
 	finally 
 	{
@@ -1345,9 +1312,6 @@ IN PDEVICE_OBJECT				DeviceObject)
 			Ext2LogEvent(EXT2_ERROR_INTERNAL_ERROR, RC);
 
 		}
-
-		try_exit:	NOTHING;
-
 	} 
 	finally 
 	{
@@ -1411,9 +1375,6 @@ IN PDEVICE_OBJECT				DeviceObject)
 			Ext2LogEvent(EXT2_ERROR_INTERNAL_ERROR, RC);
 
 		}
-
-		try_exit:	NOTHING;
-
 	} 
 	finally 
 	{
@@ -1476,9 +1437,6 @@ IN PDEVICE_OBJECT				DeviceObject)
 			RC = Ext2ExceptionHandler(PtrIrpContext, NULL);
 			Ext2LogEvent(EXT2_ERROR_INTERNAL_ERROR, RC);
 		}
-
-		try_exit:	NOTHING;
-
 	}
 	finally
 	{
@@ -1556,9 +1514,6 @@ IN PDEVICE_OBJECT					DeviceObject)
 			RC = Ext2ExceptionHandler(PtrIrpContext, NULL);
 			Ext2LogEvent(EXT2_ERROR_INTERNAL_ERROR, RC);
 		}
-
-		try_exit:	NOTHING;
-
 	}
 	finally
 	{
@@ -1621,9 +1576,6 @@ IN PDEVICE_OBJECT				DeviceObject)
 			RC = Ext2ExceptionHandler(PtrIrpContext, NULL);
 			Ext2LogEvent(EXT2_ERROR_INTERNAL_ERROR, RC);
 		}
-
-		try_exit:	NOTHING;
-
 	}
 	finally
 	{
@@ -1681,9 +1633,6 @@ IN PDEVICE_OBJECT			DeviceObject)
 			RC = Ext2ExceptionHandler(PtrIrpContext, NULL);
 			Ext2LogEvent(EXT2_ERROR_INTERNAL_ERROR, RC);
 		}
-
-		try_exit:	NOTHING;
-
 	}
 	finally
 	{
@@ -1740,9 +1689,6 @@ IN PDEVICE_OBJECT			DeviceObject)
 			RC = Ext2ExceptionHandler(PtrIrpContext, NULL);
 			Ext2LogEvent(EXT2_ERROR_INTERNAL_ERROR, RC);
 		}
-
-		try_exit:	NOTHING;
-
 	}
 	finally
 	{

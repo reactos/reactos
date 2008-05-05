@@ -115,7 +115,6 @@ PIRP							PtrIrp)
 	BOOLEAN					MainResourceAcquired = FALSE;
 	BOOLEAN					VCBResourceAcquired = FALSE;
 	BOOLEAN					PagingIoResourceAcquired = FALSE;
-	IO_STATUS_BLOCK			LocalIoStatus;
 	void					*PtrSystemBuffer = NULL;
 	long					BufferLength = 0;
 	FILE_INFORMATION_CLASS	FunctionalityRequested;
@@ -894,8 +893,6 @@ NTSTATUS NTAPI Ext2SetBasicInformation(
 		{
 			Ext2ClearFlag(PtrFileObject->Flags, FO_TEMPORARY_FILE);
 		}
-
-		try_exit: NOTHING;
 	} 
 	finally 
 	{

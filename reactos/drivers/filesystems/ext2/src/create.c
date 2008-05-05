@@ -180,8 +180,6 @@ BOOLEAN						FirstAttempt)
 	UNICODE_STRING			AbsolutePathName;
 	UNICODE_STRING			RenameLinkTargetFileName;
 
-	LARGE_INTEGER			FileAllocationSize, FileEndOfFile;
-
 
 	ASSERT(PtrIrpContext);
 	ASSERT(PtrIrp);
@@ -472,12 +470,10 @@ BOOLEAN						FirstAttempt)
 			UNICODE_STRING			RemainingName;
 			UNICODE_STRING			CurrentName;
 			UNICODE_STRING			NextRemainingName;
-			PEXT2_INODE				PtrNextInode = NULL;
 			ULONG					CurrInodeNo = 0;
 			PtrExt2FCB				PtrCurrFCB = NULL;
 			PtrExt2FCB				PtrNextFCB = NULL;
 			PFILE_OBJECT			PtrCurrFileObject = NULL;
-			UINT					NameBufferIndex;
 			ULONG					Type = 0;
 			LARGE_INTEGER ZeroSize;
 			BOOLEAN Found		= FALSE;
@@ -527,7 +523,6 @@ BOOLEAN						FirstAttempt)
 						
 						if( OpenTargetDirectory )
 						{
-							int i;
 							//
 							//	This is for a rename/move operation...
 							//
@@ -580,10 +575,10 @@ BOOLEAN						FirstAttempt)
 						//	Quit searching...
 						//	
 					
-						if( ( NextRemainingName.Length == 0 ) &&
+						if( ( NextRemainingName.Length == 0 ) && (
 							( RequestedDisposition == FILE_CREATE ) ||
 							( RequestedDisposition == FILE_OPEN_IF) ||
-							( RequestedDisposition == FILE_OVERWRITE_IF) ) 
+							( RequestedDisposition == FILE_OVERWRITE_IF) ) )
 
 						{
 							//
@@ -618,7 +613,6 @@ BOOLEAN						FirstAttempt)
 						}
 						else if( NextRemainingName.Length == 0 && OpenTargetDirectory )
 						{ 
-							int i;
 							//
 							//	This is for a rename/move operation...
 							//	Just the last component was not found...
@@ -1163,7 +1157,6 @@ PtrExt2FCB NTAPI Ext2LocateChildFCBInCore(
 {
 
 	PtrExt2FCB PtrFCB = NULL;
-	ULONG InodeNo = 0;
 	PLIST_ENTRY	PtrEntry;
 
 	if( IsListEmpty( &(PtrVCB->FCBListHead) ) )
@@ -1222,7 +1215,6 @@ ULONG NTAPI Ext2LocateFileInDisk (
 	ULONG					*Type )
 {
 
-	PtrExt2FCB			PtrNewFCB = NULL;
 	PFILE_OBJECT		PtrFileObject = NULL;
 	ULONG				InodeNo = 0;
 	
@@ -1637,7 +1629,6 @@ BOOLEAN NTAPI Ext2SupersedeFile(
 {
 	EXT2_INODE			Inode;
 	PtrExt2VCB			PtrVCB = PtrFCB->PtrVCB;
-	ULONG				i;
 
 	Ext2InitializeFCBInodeInfo( PtrFCB );
 

@@ -49,7 +49,6 @@ PUNICODE_STRING	RegistryPath)		// path to the registry key
 {
 	NTSTATUS		RC = STATUS_SUCCESS;
 	UNICODE_STRING	DriverDeviceName;
-	BOOLEAN			RegisteredShutdown = FALSE;
 
 #if 0
 	Ext2BreakPoint();
@@ -128,7 +127,7 @@ PUNICODE_STRING	RegistryPath)		// path to the registry key
 			// create a device object representing the driver itself
 			//	so that requests can be targeted to the driver ...
 			//	e.g. for a disk-based FSD, "mount" requests will be sent to
-			//		  this device object by the I/O Manager.\
+			//		  this device object by the I/O Manager.
 			//		  For a redirector/server, you may have applications
 			//		  send "special" IOCTL's using this device object ...
 			RtlInitUnicodeString(&DriverDeviceName, EXT2_FS_NAME);
@@ -136,10 +135,10 @@ PUNICODE_STRING	RegistryPath)		// path to the registry key
 					DriverObject,		// our driver object
 					0,						// don't need an extension for this object
 					&DriverDeviceName,// name - can be used to "open" the driver
-               // see the book for alternate choices
+					                  // see the book for alternate choices
 					FILE_DEVICE_DISK_FILE_SYSTEM,
 					0,						// no special characteristics
-               // do not want this as an exclusive device, though you might
+					  						// do not want this as an exclusive device, though you might
 					FALSE,
 					&(Ext2GlobalData.Ext2DeviceObject)))) 
 			{

@@ -125,7 +125,6 @@ PIRP							PtrIrp)
 	PtrExt2CCB				PtrCCB = NULL;
 	PtrExt2VCB				PtrVCB = NULL;
 	ULONG						IoControlCode = 0;
-	void						*BufferPointer = NULL;
 
 	try 
 	{
@@ -165,9 +164,6 @@ PIRP							PtrIrp)
 		IoSetCompletionRoutine(PtrIrp, Ext2DevIoctlCompletion, NULL, TRUE, TRUE, TRUE);
 		// Send the request.
 		RC = IoCallDriver(PtrVCB->TargetDeviceObject, PtrIrp);
-
-		try_exit:	NOTHING;
-
 	} 
 	finally 
 	{

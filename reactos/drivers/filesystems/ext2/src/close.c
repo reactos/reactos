@@ -115,12 +115,10 @@ BOOLEAN						FirstAttempt )
 	PtrExt2VCB				PtrVCB = NULL;
 	PtrExt2NTRequiredFCB	PtrReqdFCB = NULL;
 	PERESOURCE				PtrResourceAcquired = NULL;
-	IO_STATUS_BLOCK		LocalIoStatus;
 
 	BOOLEAN					CompleteIrp = TRUE;
 	BOOLEAN					PostRequest = FALSE;
 	BOOLEAN					AcquiredVCB = FALSE;
-	BOOLEAN					CanWait = FALSE;
 	BOOLEAN					BlockForResource;
 	int						i = 1;
 

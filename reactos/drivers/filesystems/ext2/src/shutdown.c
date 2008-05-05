@@ -108,7 +108,6 @@ PIRP							PtrIrp)
 {
 	NTSTATUS					RC = STATUS_SUCCESS;
 	PIO_STACK_LOCATION			PtrIoStackLocation = NULL;
-	IO_STATUS_BLOCK				LocalIoStatus;
 
 	try 
 	{
@@ -196,8 +195,6 @@ PIRP							PtrIrp)
 			PtrBCB = NULL;
 		}
 */////////////////////////////////////////////
-
-		try_exit:	NOTHING;
 
 	} 
 	finally 

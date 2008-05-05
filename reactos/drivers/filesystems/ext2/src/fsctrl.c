@@ -895,8 +895,6 @@ NTSTATUS Ext2UserFileSystemRequest (
 			DebugTrace(DEBUG_TRACE_FSCTRL,   "Unknown FSCTRL !!!", 0);
 
 		}
-	
-	try_exit: NOTHING;
 	}
 	finally
 	{

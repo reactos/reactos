@@ -174,7 +174,6 @@ NTSTATUS NTAPI Ext2QueryVolInfo (
 			Status = STATUS_BUFFER_OVERFLOW;
 			DebugTrace(DEBUG_TRACE_MISC,   " === Buffer insufficient", 0);
 		}
-		try_exit: NOTHING;
     }
 	finally
 	{

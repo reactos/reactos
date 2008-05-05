@@ -242,15 +242,7 @@ NTSTATUS NTAPI Ext2PassDownSingleReadWriteIRP(
 
 	PEXT2_IO_CONTEXT		PtrIoContext = NULL;
 	PKEVENT					PtrSyncEvent = NULL;
-	PVOID					PtrReadBuffer = NULL;
-	ULONG					ReadBufferLength = 0;
 
-	ULONG		LogicalBlockNo = 0;
-	ULONG		LogicalBlockSize = 0;
-	ULONG		PhysicalBlockSize = 0;
-
-	uint32	NumberBytesRead = 0;
-	int i;
 	PIO_STACK_LOCATION	PtrIrpNextSp = NULL;
 
 	try

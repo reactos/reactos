@@ -109,7 +109,6 @@ PIRP							PtrIrp)
 	PFILE_OBJECT			PtrFileObject = NULL;
 	PtrExt2FCB				PtrFCB = NULL;
 	PtrExt2CCB				PtrCCB = NULL;
-	PtrExt2VCB				PtrVCB = NULL;
 
 	// First, get a pointer to the current I/O stack location
 	PtrIoStackLocation = IoGetCurrentIrpStackLocation(PtrIrp);
@@ -189,7 +188,6 @@ PtrExt2FCB					PtrFCB,
 PtrExt2CCB					PtrCCB)
 {
 	NTSTATUS				RC = STATUS_SUCCESS;
-	BOOLEAN					CompleteRequest = TRUE;
 	BOOLEAN					PostRequest = FALSE;
 	PtrExt2NTRequiredFCB	PtrReqdFCB = NULL;
 	BOOLEAN					CanWait = FALSE;
@@ -212,9 +210,7 @@ PtrExt2CCB					PtrCCB)
 	BOOLEAN					SearchWithWildCards = FALSE;
 	
 	PFILE_BOTH_DIR_INFORMATION		BothDirInformation = NULL;
-	PFILE_FULL_DIR_INFORMATION		FullDirInformation = NULL;
 	PFILE_DIRECTORY_INFORMATION		DirectoryInformation = NULL;
-	PFILE_NAMES_INFORMATION			NamesInformation = NULL;
 
 	
 	PEXT2_DIR_ENTRY		PtrDirEntry = NULL;
@@ -233,7 +229,7 @@ PtrExt2CCB					PtrCCB)
 	PBCB				PtrBCB = NULL;
 	BYTE *				PtrPinnedBlockBuffer = NULL;
 
-	unsigned int i,j;
+	unsigned int j;
 	
 	DebugTrace(DEBUG_TRACE_MISC,   " === Querying Directory %S", PtrFCB->FCBName->ObjectName.Buffer );
 

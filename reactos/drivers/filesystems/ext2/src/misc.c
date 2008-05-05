@@ -205,9 +205,6 @@ void)
 
 		DebugTrace( DEBUG_TRACE_FREE, "Freeing  = %lX [misc]", Ext2GlobalData.IrpContextZone);
 		ExFreePool(Ext2GlobalData.IrpContextZone);
-
-		try_exit:	NOTHING;
-
 	} 
 	finally 
 	{
@@ -429,7 +426,7 @@ void)
 {
 	PtrExt2ObjectName			PtrObjectName = NULL;
 	BOOLEAN						AllocatedFromZone = TRUE;
-   KIRQL							CurrentIrql;
+	//KIRQL							CurrentIrql;
 /*
 	// first, try to allocate out of the zone
 	KeAcquireSpinLock(&(Ext2GlobalData.ZoneAllocationSpinLock), &CurrentIrql);
@@ -491,7 +488,9 @@ void)
 void NTAPI Ext2ReleaseObjectName(
 PtrExt2ObjectName				PtrObjectName)
 {
+#ifdef USE_ZONES
 	KIRQL							CurrentIrql;
+#endif
 
 	ASSERT(PtrObjectName);
 	PtrObjectName->NodeIdentifier.NodeType = EXT2_NODE_TYPE_FREED;
@@ -540,7 +539,9 @@ void)
 {
 	PtrExt2CCB					PtrCCB = NULL;
 	BOOLEAN						AllocatedFromZone = TRUE;
-   KIRQL							CurrentIrql;
+#ifdef USE_ZONES
+	KIRQL							CurrentIrql;
+#endif
 
 
 #ifdef USE_ZONES
@@ -608,7 +609,9 @@ void)
 void NTAPI Ext2ReleaseCCB(
 PtrExt2CCB						PtrCCB)
 {
+#ifdef USE_ZONES
 	KIRQL							CurrentIrql;
+#endif
 
 	ASSERT( PtrCCB );
 	if(PtrCCB->NodeIdentifier.NodeType != EXT2_NODE_TYPE_CCB)
@@ -665,7 +668,9 @@ void)
 {
 	PtrExt2FCB					PtrFCB = NULL;
 	BOOLEAN						AllocatedFromZone = TRUE;
+#ifdef USE_ZONES
 	KIRQL						CurrentIrql;
+#endif
 
 	// first, try to allocate out of the zone
 #ifdef USE_ZONES
@@ -862,7 +867,7 @@ PtrExt2ObjectName		PtrObjectName)
 void NTAPI Ext2ReleaseFCB(
 PtrExt2FCB						PtrFCB)
 {
-	KIRQL							CurrentIrql;
+	//KIRQL							CurrentIrql;
 
 	AssertFCB( PtrFCB );
 
@@ -1025,7 +1030,7 @@ PDEVICE_OBJECT		PtrTargetDeviceObject)
 {
 	PtrExt2IrpContext			PtrIrpContext = NULL;
 	BOOLEAN						AllocatedFromZone = TRUE;
-	KIRQL							CurrentIrql;
+	//KIRQL							CurrentIrql;
 	PIO_STACK_LOCATION		PtrIoStackLocation = NULL;
 
 	/* 
@@ -1611,8 +1616,6 @@ NTSTATUS NTAPI Ext2GetFCB_CCB_VCB_FromFileObject (
 	OUT PtrExt2CCB				*PPtrCCB,
 	OUT PtrExt2VCB				*PPtrVCB	)
 {
-		int		Offset;
-
 		(*PPtrCCB) = (PtrExt2CCB)(PtrFileObject->FsContext2);
 		if( *PPtrCCB )
 		{

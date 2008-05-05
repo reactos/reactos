@@ -117,10 +117,8 @@ BOOLEAN						FirstAttempt )
 	PtrExt2VCB				PtrVCB = NULL;
 	PtrExt2NTRequiredFCB	PtrReqdFCB = NULL;
 	PERESOURCE				PtrResourceAcquired = NULL;
-	IO_STATUS_BLOCK			LocalIoStatus;
 	PVOID					PtrSystemBuffer = NULL;
 	PVOID					PtrPinnedReadBuffer = NULL;
-	uint32					KeyValue = 0;
 
 	BOOLEAN					CompleteIrp = TRUE;
 	BOOLEAN					PostRequest = FALSE;
@@ -129,13 +127,7 @@ BOOLEAN						FirstAttempt )
 	BOOLEAN					PagingIo = FALSE;
 	BOOLEAN					NonBufferedIo = FALSE;
 	BOOLEAN					SynchronousIo = FALSE;
-	BOOLEAN					MdlLocked = FALSE;
 	BOOLEAN					ReadTruncated = FALSE;
-
-	LARGE_INTEGER			StartPhysicalBlock;
-	ULONG					NoOfBlocks = 0;
-
-	PIO_STACK_LOCATION		PtrIrpNextSp = NULL;
 
 	//	Used to cache the Single Indirect blocks pointed to by 
 	//	the Double Indirect block
@@ -162,7 +154,7 @@ BOOLEAN						FirstAttempt )
 	PBCB PtrPinnedDIndirectBCB = NULL;
 	PBCB PtrPinnedTIndirectBCB = NULL;
 
-	int i, Index;
+	int Index;
 
 	try 
 	{

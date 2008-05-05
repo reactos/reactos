@@ -113,9 +113,7 @@ NTSTATUS NTAPI Ext2CommonWrite(
 	PtrExt2VCB				PtrVCB = NULL;
 	PtrExt2NTRequiredFCB	PtrReqdFCB = NULL;
 	PERESOURCE				PtrResourceAcquired = NULL;
-	IO_STATUS_BLOCK			LocalIoStatus;
 	void					*PtrSystemBuffer = NULL;
-	uint32					KeyValue = 0;
 
 	BOOLEAN					CompleteIrp = TRUE;
 	BOOLEAN					PostRequest = FALSE;
