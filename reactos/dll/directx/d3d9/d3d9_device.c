@@ -7,6 +7,7 @@
  */
 #include "d3d9_device.h"
 #include "d3d9_helpers.h"
+#include "adapter.h"
 #include "debug.h"
 
 #define LOCK_D3DDEVICE9()     if (This->bLockDevice) EnterCriticalSection(&This->CriticalSection);
@@ -83,17 +84,78 @@ static HRESULT WINAPI IDirect3DDevice9Impl_EvictManagedResources(LPDIRECT3DDEVIC
     return D3D_OK;
 }
 
+/*++
+* @name IDirect3DDevice9::GetDirect3D
+* @implemented
+*
+* The function IDirect3DDevice9Impl_GetDirect3D returns a pointer to the IDirect3D9 object
+* that created this device.
+*
+* @param LPDIRECT3D iface
+* Pointer to the IDirect3DDevice9 object returned from IDirect3D9::CreateDevice()
+*
+* @param IDirect3D9** ppD3D9
+* Pointer to a IDirect3D9* to receive the IDirect3D9 object pointer.
+*
+* @return HRESULT
+* If the method successfully fills the ppD3D9 structure, the return value is D3D_OK.
+* If ppD3D9 is a bad pointer, the return value will be D3DERR_INVALIDCALL.
+*
+*/
 static HRESULT WINAPI IDirect3DDevice9Impl_GetDirect3D(LPDIRECT3DDEVICE9 iface, IDirect3D9** ppD3D9)
 {
-    UNIMPLEMENTED
+    IDirect3D9* pDirect3D9;
+    LPDIRECT3DDEVICE9_INT This = impl_from_IDirect3DDevice9(iface);
+    LOCK_D3DDEVICE9();
 
+    if (IsBadWritePtr(ppD3D9, sizeof(IDirect3D9*)))
+    {
+        DPRINT1("Invalid ppD3D9 parameter specified");
+        UNLOCK_D3DDEVICE9();
+        return D3DERR_INVALIDCALL;
+    }
+
+    pDirect3D9 = (IDirect3D9*)&This->pDirect3D9->lpVtbl;
+    IDirect3D9_AddRef(pDirect3D9);
+    *ppD3D9 = pDirect3D9;
+
+    UNLOCK_D3DDEVICE9();
     return D3D_OK;
 }
 
+/*++
+* @name IDirect3DDevice9::GetDeviceCaps
+* @implemented
+*
+* The function IDirect3DDevice9Impl_GetDeviceCaps fills the pCaps argument with the
+* capabilities of the device.
+*
+* @param LPDIRECT3D iface
+* Pointer to the IDirect3D9 object returned from Direct3DCreate9()
+*
+* @param D3DCAPS9* pCaps
+* Pointer to a D3DCAPS9 structure to be filled with the device's capabilities.
+*
+* @return HRESULT
+* If the method successfully fills the pCaps structure, the return value is D3D_OK.
+* If pCaps is a bad pointer the return value will be D3DERR_INVALIDCALL.
+*
+*/
 static HRESULT WINAPI IDirect3DDevice9Impl_GetDeviceCaps(LPDIRECT3DDEVICE9 iface, D3DCAPS9* pCaps)
 {
-    UNIMPLEMENTED
+    LPDIRECT3DDEVICE9_INT This = impl_from_IDirect3DDevice9(iface);
+    LOCK_D3DDEVICE9();
 
+    if (IsBadWritePtr(pCaps, sizeof(D3DCAPS9)))
+    {
+        DPRINT1("Invalid pCaps parameter specified");
+        UNLOCK_D3DDEVICE9();
+        return D3DERR_INVALIDCALL;
+    }
+
+    GetAdapterCaps(&This->pDirect3D9->DisplayAdapters[0], This->DeviceData[0].DeviceType, pCaps);
+
+    UNLOCK_D3DDEVICE9();
     return D3D_OK;
 }
 
