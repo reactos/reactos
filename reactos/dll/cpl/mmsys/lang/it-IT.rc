@@ -27,7 +27,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Suoni"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Uno schema dei suoni è un insieme di suoni legati agli eventi in Reactos e nei programmi. Potete selezionare uno schema esistente o salvarne uno che avete modificato.",-1,8,7,230,40
+    LTEXT "Uno schema dei suoni è un insieme di suoni legati agli eventi in ReactOS e nei programmi. Potete selezionare uno schema esistente o salvarne uno che avete modificato.",-1,8,7,230,40
     LTEXT "S&chema dei suoni:",-1,8,42,150,17
     COMBOBOX IDC_SOUND_SCHEME, 8, 53, 230, 46, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON "&Salva come...", IDC_SAVEAS_BTN, 134,70,50,15

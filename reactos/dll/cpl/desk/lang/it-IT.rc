@@ -9,13 +9,13 @@ BEGIN
                     70, 10, 105, 70, WS_EX_STATICEDGE
     CONTROL         "", IDC_BACKGROUND_LIST, "SysListView32", LVS_REPORT |
                     LVS_SINGLESEL | LVS_NOCOLUMNHEADER | LVS_SHAREIMAGELISTS | LVS_SHOWSELALWAYS |
-                    WS_BORDER | WS_TABSTOP, 8, 114, 174, 78
+                    WS_BORDER | WS_TABSTOP, 8, 122, 174, 78
     LTEXT           "Selezionare un immagine da usare come sfondo per il tuo desktop:",
-                    IDC_STATIC, 8, 103, 180, 9
-    PUSHBUTTON      "&Esplora...", IDC_BROWSE_BUTTON, 188, 114, 50, 15
-    PUSHBUTTON      "&Colore...", IDC_COLOR_BUTTON, 188, 177, 50, 15
-    LTEXT           "Posizione:", IDC_STATIC, 188, 138, 36, 9
-    COMBOBOX        IDC_PLACEMENT_COMBO, 188, 149, 50, 54,
+                    IDC_STATIC, 8, 103, 174, 17
+    PUSHBUTTON      "&Esplora...", IDC_BROWSE_BUTTON, 188, 122, 50, 15
+    PUSHBUTTON      "&Colore...", IDC_COLOR_BUTTON, 188, 185, 50, 15
+    LTEXT           "Posizione:", IDC_STATIC, 188, 146, 36, 9
+    COMBOBOX        IDC_PLACEMENT_COMBO, 188, 157, 50, 54,
                     CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
 END
 
@@ -30,18 +30,18 @@ BEGIN
     COMBOBOX        IDC_SCREENS_LIST, 14, 103, 100, 100, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON      "&Impostazioni",IDC_SCREENS_SETTINGS, 120, 103, 50, 13, WS_GROUP
     PUSHBUTTON      "&Anteprima",IDC_SCREENS_TESTSC, 175, 103, 50, 13
-    LTEXT           "&Attesa",IDC_WAITTEXT, 14, 125, 16, 9
-    EDITTEXT        IDC_SCREENS_TIMEDELAY, 34, 123, 32, 13, ES_RIGHT | WS_GROUP
+    LTEXT           "&Attesa",IDC_WAITTEXT, 14, 125, 24, 9
+    EDITTEXT        IDC_SCREENS_TIMEDELAY, 42, 123, 32, 13, ES_RIGHT | WS_GROUP
     CONTROL         "",IDC_SCREENS_TIME ,UPDOWN_CLASS,UDS_SETBUDDYINT |
                     UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS |
-                    WS_BORDER | WS_GROUP, 54, 123, 12, 13
-    LTEXT           "minuti", IDC_MINTEXT, 70, 125, 26, 9
+                    WS_BORDER | WS_GROUP, 62, 123, 12, 13
+    LTEXT           "minuti", IDC_MINTEXT, 77, 125, 26, 9
     CONTROL         "Chiedere la &password al ripristino.",IDC_SCREENS_USEPASSCHK,"button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP, 108, 120, 104, 19
+                    BS_AUTOCHECKBOX | WS_TABSTOP, 108, 120, 120, 19
     GROUPBOX        "&Funzioni di risparmio energetico del monitor", IDC_SCREENS_DUMMY2, 6, 155, 232, 41
     LTEXT           "Per regolare le impostazioni premere Alimentazione.",
                     IDC_STATIC, 14, 166, 146 ,20
-    PUSHBUTTON      "Alim&entazione...", IDC_SCREENS_POWER_BUTTON, 176, 171, 50, 13
+    PUSHBUTTON      "Alim&entazione...", IDC_SCREENS_POWER_BUTTON, 162, 170, 64, 15
 END
 
 IDD_APPEARANCE DIALOGEX DISCARDABLE  0, 0, 246, 228
@@ -99,21 +99,21 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Impostazioni"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "Trascinare le icone dei monitor in modo corrispondente alla disposizione fisica dei vostri monitor.",-1,3,3,240,10
-    CONTROL         "",IDC_SETTINGS_MONSEL,"MONITORSELWNDCLASS",WS_CHILD|WS_VISIBLE|WS_TABSTOP,3,16,240,82,WS_EX_CLIENTEDGE
-    LTEXT           "&Schermo:",1820,3,100,30,8
-    LTEXT           "<none>",IDC_SETTINGS_DEVICE,9,109,224,8
-    GROUPBOX        "&Risoluzione dello schermo",1818,3,120,115,43
+    LTEXT           "Trascinare le icone dei monitor in modo corrispondente alla disposizione fisica dei vostri monitor.",-1,3,3,240,18
+    CONTROL         "",IDC_SETTINGS_MONSEL,"MONITORSELWNDCLASS",WS_CHILD|WS_VISIBLE|WS_TABSTOP,3,24,240,82,WS_EX_CLIENTEDGE
+    LTEXT           "&Schermo:",1820,3,108,30,8
+    LTEXT           "<none>",IDC_SETTINGS_DEVICE,9,117,224,8
+    GROUPBOX        "&Risoluzione dello schermo",1818,3,128,115,43
     CONTROL         "",IDC_SETTINGS_RESOLUTION,"msctls_trackbar32",
-                    TBS_AUTOTICKS | WS_TABSTOP, 30, 130, 58, 17
-    LTEXT           "Min",1815,9,130,15,8,NOT WS_GROUP
-    LTEXT           "Max",1816,93,130,21,8,NOT WS_GROUP
-    LTEXT           "",IDC_SETTINGS_RESOLUTION_TEXT,10,150,100,10,NOT WS_GROUP | SS_CENTER
-    GROUPBOX        "&Colori",1817,125,120,115,43
-    COMBOBOX        IDC_SETTINGS_BPP,131,130,103,80,CBS_DROPDOWNLIST | CBS_AUTOHSCROLL |
+                    TBS_AUTOTICKS | WS_TABSTOP, 30, 138, 58, 17
+    LTEXT           "Min",1815,9,138,15,8,NOT WS_GROUP
+    LTEXT           "Max",1816,93,138,21,8,NOT WS_GROUP
+    LTEXT           "",IDC_SETTINGS_RESOLUTION_TEXT,10,158,100,10,NOT WS_GROUP | SS_CENTER
+    GROUPBOX        "&Colori",1817,125,128,115,43
+    COMBOBOX        IDC_SETTINGS_BPP,131,138,103,80,CBS_DROPDOWNLIST | CBS_AUTOHSCROLL |
                     WS_VSCROLL | WS_TABSTOP
-    CONTROL         "",IDC_SETTINGS_SPECTRUM,"Static",SS_OWNERDRAW | SS_SUNKEN,131,148,103,9
-    PUSHBUTTON      "A&vanzate...",IDC_SETTINGS_ADVANCED,170,165,70,14
+    CONTROL         "",IDC_SETTINGS_SPECTRUM,"Static",SS_OWNERDRAW | SS_SUNKEN,131,156,103,9
+    PUSHBUTTON      "A&vanzate...",IDC_SETTINGS_ADVANCED,170,174,70,14
 END
 
 IDD_ADVANCED_GENERAL DIALOGEX DISCARDABLE 0, 0, 253, 204
@@ -127,7 +127,7 @@ BEGIN
     LTEXT "", IDC_FONTSIZE_COSTOM, 14, 46, 223, 12
     GROUPBOX "Compatibilità", -1, 7, 67, 237, 97
     LTEXT "Alcuni programmi funzionano in modo irregolare se non riavviate il computer dopo una modifica delle impostazioni dei colori.\r\n\nDopo la modifica delle impostazioni dei colori:", -1, 12, 78, 228, 34
-    AUTORADIOBUTTON "&Riavviare il computer prima di applicare le nuove impostazioni dei colori.", IDC_RESTART_RB, 14, 116, 224, 10
+    AUTORADIOBUTTON "&Riavviare il computer prima di applicare le nuove impostazioni.", IDC_RESTART_RB, 14, 116, 224, 10
     AUTORADIOBUTTON "Applicare le nuove impostazioni dei colori senza riavviare.", IDC_WITHOUTREBOOT_RB, 14, 131, 224, 10
     AUTORADIOBUTTON "Chiedere prima di applicare le nuove impostazioni dei colori.", IDC_ASKME_RB, 14, 146, 224, 10
 END

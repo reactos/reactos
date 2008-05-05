@@ -7,10 +7,10 @@ CAPTION "Nome del Computer"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     ICON        IDI_COMPNAME, IDC_STATIC, 4, 3, 26, 24, SS_ICON
-    LTEXT       "ReactOS usea le informazioni seguenti per identificare questo computer nella rete.", IDC_STATIC, 40, 5, 204, 20
-    LTEXT       "Descrizione del Computer :", IDC_STATIC, 6, 40, 70, 9
+    LTEXT       "ReactOS usa le informazioni seguenti per identificare questo computer nella rete.", IDC_STATIC, 40, 5, 204, 20
+    LTEXT       "Descrizione del computer:", IDC_STATIC, 6, 37, 78, 16
     EDITTEXT    IDC_COMPDESC, 98, 38, 146, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP
-    LTEXT       "Nome esteso del computer:", IDC_STATIC, 6, 68, 64, 9
+    LTEXT       "Nome esteso del computer:", IDC_STATIC, 6, 67, 78, 16
     LTEXT       "(Predefinito)", IDC_COMPUTERNAME, 98, 68, 144, 11
     LTEXT       "Gruppo di lavoro:", IDC_WORKGROUPDOMAIN, 6, 84, 64, 9
     LTEXT       "(vuoto)", IDC_WORKGROUPDOMAIN_NAME, 98, 84, 144, 9
