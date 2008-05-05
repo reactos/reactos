@@ -78,28 +78,28 @@ MiDoMappedCopy(IN PEPROCESS SourceProcess,
     _SEH_DECLARE_LOCALS(MiGetExceptionInfo);
     NTSTATUS Status = STATUS_SUCCESS;
     PAGED_CODE();
-    
+
     /* Calculate the maximum amount of data to move */
     TotalSize = MI_MAPPED_COPY_PAGES - 2;
-    if (TotalSize <= (MI_MAPPED_COPY_PAGES - 2)) TotalSize = BufferSize;
+    if (BufferSize <= (MI_MAPPED_COPY_PAGES - 2)) TotalSize = BufferSize;
     CurrentSize = BufferSize;
     RemainingSize = TotalSize;
-    
+
     /* Loop as long as there is still data */
     while (RemainingSize > 0)
     {
         /* Check if this transfer will finish everything off */
         if (RemainingSize < CurrentSize) CurrentSize = RemainingSize;
-        
+
         /* Attach to the source address space */
         KeStackAttachProcess(&SourceProcess->Pcb, &ApcState);
-        
+
         /* Reset state for this pass */
         MdlAddress = NULL;
         PagesLocked = FALSE;
         FailedInMoving = FALSE;
         ASSERT(FailedInProbe == FALSE);
-        
+
         /* Protect user-mode copy */
         _SEH_TRY
         {
@@ -108,19 +108,19 @@ MiDoMappedCopy(IN PEPROCESS SourceProcess,
             {
                 /* Catch a failure here */
                 FailedInProbe = TRUE;
-                
+
                 /* Do the probe */
                 ProbeForRead(SourceAddress, BufferSize, sizeof(CHAR));
-                
+
                 /* Passed */
                 FailedInProbe = FALSE;
             }
-            
+
             /* Initialize and probe and lock the MDL */
             MmInitializeMdl (Mdl, CurrentAddress, CurrentSize);           
             MmProbeAndLockPages (Mdl, PreviousMode, IoReadAccess);
             PagesLocked = TRUE;
-            
+
             /* Now map the pages */
             MdlAddress = MmMapLockedPagesSpecifyCache(Mdl,
                                                       KernelMode,
@@ -134,24 +134,24 @@ MiDoMappedCopy(IN PEPROCESS SourceProcess,
                 FailedInMapping = TRUE;
                 ExRaiseStatus(STATUS_INSUFFICIENT_RESOURCES);
             }
-            
+
             /* Now let go of the source and grab to the target process */
             KeUnstackDetachProcess(&ApcState);
             KeStackAttachProcess(&TargetProcess->Pcb, &ApcState);
-            
+
             /* Check if this is our first time through */
             if ((CurrentAddress == SourceAddress) && (PreviousMode != KernelMode))
             {
                 /* Catch a failure here */
                 FailedInProbe = TRUE;
-                
+
                 /* Do the probe */
                 ProbeForWrite(TargetAddress, BufferSize, sizeof(CHAR));
-                
+
                 /* Passed */
                 FailedInProbe = FALSE;
             }
-            
+
             /* Now do the actual move */
             FailedInMoving = TRUE;
             RtlCopyMemory(CurrentTargetAddress, MdlAddress, CurrentSize);
@@ -160,13 +160,13 @@ MiDoMappedCopy(IN PEPROCESS SourceProcess,
         {
             /* Detach from whoever we may be attached to */
             KeUnstackDetachProcess(&ApcState);
-            
+
             /* Check if we had mapped the pages */
             if (MdlAddress) MmUnmapLockedPages(MdlAddress, Mdl);
-            
+
             /* Check if we had locked the pages */
             if (PagesLocked) MmUnlockPages(Mdl);
-            
+
             /* Check if we failed during the probe or mapping */
             if ((FailedInProbe) || (FailedInMapping))
             {
@@ -174,7 +174,7 @@ MiDoMappedCopy(IN PEPROCESS SourceProcess,
                 Status = _SEH_GetExceptionCode();
                 _SEH_YIELD();
             }
-            
+
             /* Otherwise, we failed  probably during the move */
             *ReturnSize = BufferSize - RemainingSize;
             if (FailedInMoving)
@@ -186,28 +186,28 @@ MiDoMappedCopy(IN PEPROCESS SourceProcess,
                     *ReturnSize = _SEH_VAR(BadAddress) - (ULONG_PTR)SourceAddress;
                 }
             }
-            
+
             /* Return partial copy */
             Status = STATUS_PARTIAL_COPY;
         }
         _SEH_END;
-        
+
         /* Check for SEH status */
         if (Status != STATUS_SUCCESS) return Status;
-        
+
         /* Detach from target */
         KeUnstackDetachProcess(&ApcState);
-        
+
         /* Unmap and unlock */
         MmUnmapLockedPages(MdlAddress, Mdl);
         MmUnlockPages(Mdl);
-        
+
         /* Update location and size */
         RemainingSize -= CurrentSize;
         CurrentAddress = (PVOID)((ULONG_PTR)CurrentAddress + CurrentSize);
         CurrentTargetAddress = (PVOID)((ULONG_PTR)CurrentTargetAddress + CurrentSize);
     }
-    
+
     /* All bytes read */
     *ReturnSize = BufferSize;
     return STATUS_SUCCESS;
@@ -232,13 +232,13 @@ MiDoPoolCopy(IN PEPROCESS SourceProcess,
     _SEH_DECLARE_LOCALS(MiGetExceptionInfo);
     NTSTATUS Status = STATUS_SUCCESS;
     PAGED_CODE();
-    
+
     /* Calculate the maximum amount of data to move */
     TotalSize = MI_MAX_TRANSFER_SIZE;
-    if (TotalSize <= MI_MAX_TRANSFER_SIZE) TotalSize = BufferSize;
+    if (BufferSize <= MI_MAX_TRANSFER_SIZE) TotalSize = BufferSize;
     CurrentSize = BufferSize;
     RemainingSize = TotalSize;
-    
+
     /* Check if we can use the stack */
     if (BufferSize <= MI_POOL_COPY_BYTES)
     {
@@ -252,20 +252,20 @@ MiDoPoolCopy(IN PEPROCESS SourceProcess,
         if (!PoolAddress) ASSERT(FALSE);
         HavePoolAddress = TRUE;
     }
-    
+
     /* Loop as long as there is still data */
     while (RemainingSize > 0)
     {
         /* Check if this transfer will finish everything off */
         if (RemainingSize < CurrentSize) CurrentSize = RemainingSize;
-        
+
         /* Attach to the source address space */
         KeStackAttachProcess(&SourceProcess->Pcb, &ApcState);
-        
+
         /* Reset state for this pass */
         FailedInMoving = FALSE;
         ASSERT(FailedInProbe == FALSE);
-        
+
         /* Protect user-mode copy */
         _SEH_TRY
         {
@@ -274,34 +274,34 @@ MiDoPoolCopy(IN PEPROCESS SourceProcess,
             {
                 /* Catch a failure here */
                 FailedInProbe = TRUE;
-                
+
                 /* Do the probe */
                 ProbeForRead(SourceAddress, BufferSize, sizeof(CHAR));
-                
+
                 /* Passed */
                 FailedInProbe = FALSE;
             }
-            
+
             /* Do the copy */
             RtlCopyMemory(PoolAddress, CurrentAddress, CurrentSize);
-            
+
             /* Now let go of the source and grab to the target process */
             KeUnstackDetachProcess(&ApcState);
             KeStackAttachProcess(&TargetProcess->Pcb, &ApcState);
-            
+
             /* Check if this is our first time through */
             if ((CurrentAddress == SourceAddress) && (PreviousMode != KernelMode))
             {
                 /* Catch a failure here */
                 FailedInProbe = TRUE;
-                
+
                 /* Do the probe */
                 ProbeForWrite(TargetAddress, BufferSize, sizeof(CHAR));
-                
+
                 /* Passed */
                 FailedInProbe = FALSE;
             }
-            
+
             /* Now do the actual move */
             FailedInMoving = TRUE;
             RtlCopyMemory(CurrentTargetAddress, PoolAddress, CurrentSize);
@@ -310,10 +310,10 @@ MiDoPoolCopy(IN PEPROCESS SourceProcess,
         {
             /* Detach from whoever we may be attached to */
             KeUnstackDetachProcess(&ApcState);
-            
+
             /* Check if we had allocated pool */
             if (HavePoolAddress) ExFreePool(PoolAddress);
-            
+
             /* Check if we failed during the probe */
             if (FailedInProbe)
             {
@@ -321,7 +321,7 @@ MiDoPoolCopy(IN PEPROCESS SourceProcess,
                 Status = _SEH_GetExceptionCode();
                 _SEH_YIELD();
             }
-            
+
             /* Otherwise, we failed  probably during the move */
             *ReturnSize = BufferSize - RemainingSize;
             if (FailedInMoving)
@@ -333,27 +333,27 @@ MiDoPoolCopy(IN PEPROCESS SourceProcess,
                     *ReturnSize = _SEH_VAR(BadAddress) - (ULONG_PTR)SourceAddress;
                 }
             }
-            
+
             /* Return partial copy */
             Status = STATUS_PARTIAL_COPY;
         }
         _SEH_END;
-        
+
         /* Check for SEH status */
         if (Status != STATUS_SUCCESS) return Status;
-        
+
         /* Detach from target */
         KeUnstackDetachProcess(&ApcState);
-        
+
         /* Update location and size */
         RemainingSize -= CurrentSize;
         CurrentAddress = (PVOID)((ULONG_PTR)CurrentAddress + CurrentSize);
         CurrentTargetAddress = (PVOID)((ULONG_PTR)CurrentTargetAddress + CurrentSize);
     }
-    
+
     /* Check if we had allocated pool */
     if (HavePoolAddress) ExFreePool(PoolAddress);
-    
+
     /* All bytes read */
     *ReturnSize = BufferSize;
     return STATUS_SUCCESS;
