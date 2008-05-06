@@ -101,7 +101,7 @@ VOID
 NTAPI
 PsReturnProcessNonPagedPoolQuota(
     IN PEPROCESS Process,
-    IN ULONG_PTR Amount
+    IN SIZE_T    Amount
 );
 
 //
@@ -141,7 +141,7 @@ NTAPI
 PsChargePoolQuota(
     IN PEPROCESS Process,
     IN POOL_TYPE PoolType,
-    IN ULONG Amount
+    IN SIZE_T    Amount
 );
 
 NTKERNELAPI
@@ -149,7 +149,7 @@ NTSTATUS
 NTAPI
 PsChargeProcessNonPagedPoolQuota(
     IN PEPROCESS Process,
-    IN ULONG_PTR Amount
+    IN SIZE_T    Amount
 );
 
 NTKERNELAPI
@@ -157,7 +157,7 @@ NTSTATUS
 NTAPI
 PsChargeProcessPagedPoolQuota(
     IN PEPROCESS Process,
-    IN ULONG_PTR Amount
+    IN SIZE_T    Amount
 );
 
 NTKERNELAPI
@@ -166,7 +166,7 @@ NTAPI
 PsChargeProcessPoolQuota(
     IN PEPROCESS Process,
     IN POOL_TYPE PoolType,
-    IN ULONG Amount
+    IN SIZE_T    Amount
 );
 
 NTKERNELAPI
@@ -175,7 +175,7 @@ NTAPI
 PsReturnPoolQuota(
     IN PEPROCESS Process,
     IN POOL_TYPE PoolType,
-    IN ULONG_PTR Amount
+    IN SIZE_T    Amount
 );
 
 NTKERNELAPI
@@ -183,7 +183,7 @@ VOID
 NTAPI
 PsReturnProcessNonPagedPoolQuota(
     IN PEPROCESS Process,
-    IN ULONG_PTR Amount
+    IN SIZE_T    Amount
 );
 
 NTKERNELAPI
@@ -191,7 +191,7 @@ VOID
 NTAPI
 PsReturnProcessPagedPoolQuota(
     IN PEPROCESS Process,
-    IN ULONG_PTR Amount
+    IN SIZE_T    Amount
 );
 
 #endif
