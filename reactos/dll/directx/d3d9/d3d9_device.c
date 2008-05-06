@@ -192,10 +192,53 @@ static HRESULT WINAPI IDirect3DDevice9Impl_GetDeviceCaps(LPDIRECT3DDEVICE9 iface
     return D3D_OK;
 }
 
+/*++
+* @name IDirect3DDevice9::GetDisplayMode
+* @implemented
+*
+* The function IDirect3DDevice9Impl_GetDisplayMode fills the pMode argument with the
+* display mode for the specified swap chain.
+*
+* @param LPDIRECT3D iface
+* Pointer to the IDirect3D9 object returned from Direct3DCreate9()
+*
+* @param UINT iSwapChain
+* Swap chain index to get object for.
+* The maximum value for this is the value returned by IDirect3DDevice9::GetNumberOfSwapChains() - 1.
+*
+* @param D3DDISPLAYMODE* pMode
+* Pointer to a D3DDISPLAYMODE structure to be filled with the current swap chain's display mode information.
+*
+* @return HRESULT
+* If the method successfully fills the pMode structure, the return value is D3D_OK.
+* If iSwapChain is out of range or pMode is a bad pointer, the return value will be D3DERR_INVALIDCALL.
+*
+*/
 static HRESULT WINAPI IDirect3DDevice9Impl_GetDisplayMode(LPDIRECT3DDEVICE9 iface, UINT iSwapChain, D3DDISPLAYMODE* pMode)
 {
-    UNIMPLEMENTED
+    LPDIRECT3DDEVICE9_INT This = impl_from_IDirect3DDevice9(iface);
+    LOCK_D3DDEVICE9();
 
+    if (iSwapChain >= IDirect3DDevice9_GetNumberOfSwapChains(iface))
+    {
+        DPRINT1("Invalid iSwapChain parameter specified");
+        UNLOCK_D3DDEVICE9();
+        return D3DERR_INVALIDCALL;
+    }
+
+    if (IsBadWritePtr(pMode, sizeof(D3DDISPLAYMODE*)))
+    {
+        DPRINT1("Invalid pMode parameter specified");
+        UNLOCK_D3DDEVICE9();
+        return D3DERR_INVALIDCALL;
+    }
+
+    pMode->Width = This->DeviceData[iSwapChain].DriverCaps.dwDisplayWidth;
+    pMode->Height = This->DeviceData[iSwapChain].DriverCaps.dwDisplayHeight;
+    pMode->Format = This->DeviceData[iSwapChain].DriverCaps.RawDisplayFormat;
+    pMode->RefreshRate = This->DeviceData[iSwapChain].DriverCaps.dwRefreshRate;
+
+    UNLOCK_D3DDEVICE9();
     return D3D_OK;
 }
 
