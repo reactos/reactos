@@ -263,5 +263,7 @@ COLORREF STDCALL  IntGdiGetTextColor(HDC  hDC);
 INT STDCALL  IntGdiSetStretchBltMode(HDC  hDC, INT  stretchBltMode);
 VOID FASTCALL IntGdiReferencePdev(PGDIDEVICE pPDev);
 VOID FASTCALL IntGdiUnreferencePdev(PGDIDEVICE pPDev, DWORD CleanUpType);
+HDC FASTCALL IntGdiCreateDisplayDC(HDEV hDev, ULONG DcType, BOOL EmptyDC);
+BOOL FASTCALL IntGdiCleanDC(HDC hDC);
 
 #endif /* not __WIN32K_DC_H */

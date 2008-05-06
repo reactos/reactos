@@ -654,8 +654,7 @@ HDC
 STDCALL
 DxEngCreateMemoryDC(HDEV hDev)
 {
-    UNIMPLEMENTED;
-    return NULL;
+    return IntGdiCreateDisplayDC(hDev, DC_TYPE_MEMORY, FALSE);
 }
 
 /************************************************************************/
@@ -732,8 +731,7 @@ BOOLEAN
 STDCALL
 DxEngCleanDC(HDC hdc)
 {
-    UNIMPLEMENTED;
-    return FALSE;
+    return IntGdiCleanDC(hdc);
 }
 
 /************************************************************************/

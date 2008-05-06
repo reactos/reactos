@@ -31,6 +31,7 @@
 static GDIDEVICE PrimarySurface;
 static KEVENT VideoDriverNeedsPreparation;
 static KEVENT VideoDriverPrepared;
+static PDC defaultDCstate = NULL;
 EDD_DIRECTDRAW_GLOBAL edd_DdirectDraw_Global;
 
 NTSTATUS FASTCALL
@@ -926,6 +927,47 @@ NtGdiOpenDCW( PUNICODE_STRING Device,
 
   return Ret;
 
+}
+
+
+HDC FASTCALL
+IntGdiCreateDisplayDC(HDEV hDev, ULONG DcType, BOOL EmptyDC)
+{
+  HDC hDC;
+  UNICODE_STRING DriverName;
+  RtlInitUnicodeString(&DriverName, L"DISPLAY");
+
+  if (DcType != DC_TYPE_MEMORY)
+     hDC = IntGdiCreateDC(&DriverName, NULL, NULL, NULL, (DcType == DC_TYPE_INFO));
+  else
+     hDC = NtGdiCreateCompatibleDC(NULL); // OH~ Yuck! I think I taste vomit in my mouth!
+//
+// There is room to grow here~
+//
+
+//
+// If NULL, first time through! Build the default (was window) dc!
+//
+  if (hDC && !defaultDCstate) // Ultra HAX! Dedicated to GvG!
+  { // This is a cheesy way to do this.
+      PDC dc = DC_LockDc ( hDC );
+      defaultDCstate = ExAllocatePoolWithTag(PagedPool, sizeof(DC), TAG_DC);
+      RtlZeroMemory(defaultDCstate, sizeof(DC));
+      IntGdiCopyToSaveState(dc, defaultDCstate);
+      DC_UnlockDc( dc );
+  }
+  return hDC;
+}
+
+BOOL FASTCALL
+IntGdiCleanDC(HDC hDC)
+{
+  PDC dc;
+  dc = DC_LockDc ( hDC );
+  // Clean the DC
+  if (defaultDCstate) IntGdiCopyFromSaveState(dc, defaultDCstate, hDC );
+  DC_UnlockDc(dc);
+  return TRUE;
 }
 
 //
