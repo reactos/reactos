@@ -970,10 +970,10 @@ Module::GetTargetDirectoryTree () const
 		case LiveIso:
 		case IsoRegTest:
 		case LiveIsoRegTest:
-		case EmbeddedTypeLib:
 		case ElfExecutable:
 		case Cabinet:
 			return OutputDirectory;
+		case EmbeddedTypeLib:
 		case StaticLibrary:
 		case HostStaticLibrary:
 		case ObjectLibrary:

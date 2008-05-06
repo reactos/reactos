@@ -1340,7 +1340,7 @@ Rule widlProxyRule ( "$(source): ${$(module_name)_precondition}\n"
                      "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_p.o",
                      "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)", NULL );
 Rule widlTlbRule ( "$(source): ${$(module_name)_precondition}\n"
-                   "$(OUTPUT)$(SEP)$(source_dir)$(SEP)$(module_name).tlb: $(source)$(dependencies) $(WIDL_TARGET) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
+                   "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(module_name).tlb: $(source)$(dependencies) $(WIDL_TARGET) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
                    "\t$(ECHO_WIDL)\n"
                    "\t$(Q)$(WIDL_TARGET) $($(module_name)_WIDLFLAGS) -t -T $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).tlb $(source)\n",
                    "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)", NULL );
