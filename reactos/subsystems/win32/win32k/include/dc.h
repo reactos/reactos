@@ -132,8 +132,6 @@ typedef struct _DC
   INT         saveLevel; // DCLEVEL lSaveDepth
   HDC         hSelf;  // DCLEVEL hdcSave Used only for MemoryDC & SaveDC.
 
-  HPALETTE    PalIndexed;
-
   UNICODE_STRING    DriverName;
 } DC, *PDC;
 
