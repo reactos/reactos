@@ -271,8 +271,8 @@ NtGdiGetPixel(HDC hDC, INT XPos, INT YPos)
 		SurfaceObject = &BitmapObject->SurfObj;
 		if ( BitmapObject )
 		{
-			if ( dc->w.hPalette != 0 )
-				Pal = dc->w.hPalette;
+			if ( dc->DcLevel.hpal != 0 )
+				Pal = dc->DcLevel.hpal;
 			/* FIXME: Verify if it shouldn't be PAL_BGR! */
 			XlateObj = (XLATEOBJ*)IntEngCreateXlate ( PAL_RGB, 0, NULL, Pal );
 			if ( XlateObj )

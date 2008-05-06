@@ -344,8 +344,6 @@ typedef struct _WIN_DC_INFO
   HBITMAP  hFirstBitmap; /* Bitmap selected at creation of the DC */
 
 /* #if 0 */
-    HPALETTE    hPalette;
-
     GdiPath       path;
 /* #endif */
 

@@ -115,10 +115,10 @@ NtGdiAlphaBlend(
 		BitmapSrc = BITMAPOBJ_LockBitmap(DCSrc->w.hBitmap);
 
 	/* Create the XLATEOBJ. */
-	if (DCDest->w.hPalette != 0)
-		DestPalette = DCDest->w.hPalette;
-	if (DCSrc->w.hPalette != 0)
-		SourcePalette = DCSrc->w.hPalette;
+	if (DCDest->DcLevel.hpal != 0)
+		DestPalette = DCDest->DcLevel.hpal;
+	if (DCSrc->DcLevel.hpal != 0)
+		SourcePalette = DCSrc->DcLevel.hpal;
 
 	/* KB41464 details how to convert between mono and color */
 	if (DCDest->w.bitsPerPixel == 1 && DCSrc->w.bitsPerPixel == 1)
@@ -311,11 +311,11 @@ NtGdiBitBlt(
 	/* Create the XLATEOBJ. */
 	if (UsesSource)
 	{
-		if (DCDest->w.hPalette != 0)
-			DestPalette = DCDest->w.hPalette;
+		if (DCDest->DcLevel.hpal != 0)
+			DestPalette = DCDest->DcLevel.hpal;
 
-		if (DCSrc->w.hPalette != 0)
-			SourcePalette = DCSrc->w.hPalette;
+		if (DCSrc->DcLevel.hpal != 0)
+			SourcePalette = DCSrc->DcLevel.hpal;
 
 		/* KB41464 details how to convert between mono and color */
 		if (DCDest->w.bitsPerPixel == 1 && DCSrc->w.bitsPerPixel == 1)
@@ -459,11 +459,11 @@ NtGdiTransparentBlt(
   xSrc += DCSrc->w.DCOrgX;
   ySrc += DCSrc->w.DCOrgY;
 
-  if(DCDest->w.hPalette)
-    DestPalette = DCDest->w.hPalette;
+  if(DCDest->DcLevel.hpal)
+    DestPalette = DCDest->DcLevel.hpal;
 
-  if(DCSrc->w.hPalette)
-    SourcePalette = DCSrc->w.hPalette;
+  if(DCSrc->DcLevel.hpal)
+    SourcePalette = DCSrc->DcLevel.hpal;
 
   if(!(PalSourceGDI = PALETTE_LockPalette(SourcePalette)))
   {
@@ -962,11 +962,11 @@ NtGdiStretchBlt(
 	/* Create the XLATEOBJ. */
 	if (UsesSource)
 	{
-		if (DCDest->w.hPalette != 0)
-			DestPalette = DCDest->w.hPalette;
+		if (DCDest->DcLevel.hpal != 0)
+			DestPalette = DCDest->DcLevel.hpal;
 
-		if (DCSrc->w.hPalette != 0)
-			SourcePalette = DCSrc->w.hPalette;
+		if (DCSrc->DcLevel.hpal != 0)
+			SourcePalette = DCSrc->DcLevel.hpal;
 
 		/* FIXME: Use the same logic for create XLATEOBJ as in NtGdiBitBlt. */
 		XlateObj = (XLATEOBJ*)IntEngCreateXlate(0, 0, DestPalette, SourcePalette);

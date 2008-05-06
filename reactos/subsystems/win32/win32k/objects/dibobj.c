@@ -1,4 +1,5 @@
 /*
+ * $Id$
  *
  * ReactOS W32 Subsystem
  * Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003 ReactOS Team
@@ -382,7 +383,7 @@ NtGdiSetDIBitsToDeviceInternal(
         SourceSize.cx = bmi->bmiHeader.biWidth;
         SourceSize.cy = ScanLines;
         DIBWidth = DIB_GetDIBWidthBytes(SourceSize.cx, bmi->bmiHeader.biBitCount);
-        
+
         ProbeForRead(Bits, DIBWidth * abs(bmi->bmiHeader.biHeight), 1);
         hSourceBitmap = EngCreateBitmap(SourceSize,
                                         DIBWidth,
@@ -403,7 +404,7 @@ NtGdiSetDIBitsToDeviceInternal(
             _SEH_LEAVE;
         }
 
-        
+
         /* Obtain destination palette from the DC */
         pDCPalette = PALETTE_LockPalette(((GDIDEVICE *)pDC->pPDev)->DevInfo.hpalDefault);
         if (!pDCPalette)
@@ -415,7 +416,7 @@ NtGdiSetDIBitsToDeviceInternal(
         DDBPaletteType = pDCPalette->Mode;
         DDBPalette = ((GDIDEVICE *)pDC->pPDev)->DevInfo.hpalDefault;
         PALETTE_UnlockPalette(pDCPalette);
-        
+
         DIBPalette = BuildDIBPalette(bmi, (PINT)&DIBPaletteType);
         if (!DIBPalette)
         {
@@ -504,7 +505,7 @@ NtGdiGetDIBitsInternal(HDC hDC,
         return 0;
     }
     /* Source palette obtained from the windows hdc */
-    hSourcePalette = Dc->w.hPalette;
+    hSourcePalette = Dc->DcLevel.hpal;
     DC_UnlockDc(Dc);
 
     /* don't do anything if we fail this */
@@ -909,7 +910,7 @@ IntCreateDIBitmap(PDC Dc,
                                 1,
                                 NULL);
   }
- 
+
   if (height < 0)
     height = -height;
 
@@ -1258,7 +1259,7 @@ DIB_MapPaletteColors(PDC dc, CONST BITMAPINFO* lpbmi)
   USHORT *lpIndex;
   PPALGDI palGDI;
 
-  palGDI = PALETTE_LockPalette(dc->w.hPalette);
+  palGDI = PALETTE_LockPalette(dc->DcLevel.hpal);
 
   if (NULL == palGDI)
     {
@@ -1269,11 +1270,7 @@ DIB_MapPaletteColors(PDC dc, CONST BITMAPINFO* lpbmi)
   if (palGDI->Mode != PAL_INDEXED)
     {
       PALETTE_UnlockPalette(palGDI);
-      palGDI = PALETTE_LockPalette(dc->PalIndexed);
-      if (palGDI->Mode != PAL_INDEXED)
-        {
-          return NULL;
-        }
+      return NULL;
     }
 
   nNumColors = 1 << lpbmi->bmiHeader.biBitCount;

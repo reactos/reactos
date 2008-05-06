@@ -122,7 +122,7 @@ IntAnimatePalette(HPALETTE hPal,
         dc = DC_LockDc(hDC);
         if (NULL != dc)
         {
-            if (dc->w.hPalette == hPal)
+            if (dc->DcLevel.hpal == hPal)
             {
                 DC_UnlockDc(dc);
                 IntGdiRealizePalette(hDC);
@@ -301,7 +301,7 @@ COLORREF STDCALL NtGdiGetNearestColor(HDC hDC, COLORREF Color)
    dc = DC_LockDc(hDC);
    if (NULL != dc)
    {
-      HPALETTE hpal = dc->w.hPalette;
+      HPALETTE hpal = dc->DcLevel.hpal;
       palGDI = (PPALGDI) PALETTE_LockPalette(hpal);
       if (!palGDI)
       {
@@ -431,7 +431,7 @@ IntGetSystemPaletteEntries(HDC  hDC,
         return 0;
     }
 
-    palGDI = PALETTE_LockPalette(dc->w.hPalette);
+    palGDI = PALETTE_LockPalette(dc->DcLevel.hpal);
     if (palGDI != NULL)
     {
         if (pe != NULL)
@@ -505,7 +505,7 @@ UINT FASTCALL IntGdiRealizePalette(HDC hDC)
   	return 0;
 
   systemPalette = NtGdiGetStockObject((INT)DEFAULT_PALETTE);
-  palGDI = PALETTE_LockPalette(dc->w.hPalette);
+  palGDI = PALETTE_LockPalette(dc->DcLevel.hpal);
   palPtr = (PALOBJ*) palGDI;
 
   if (palGDI == NULL)
@@ -536,8 +536,8 @@ UINT FASTCALL IntGdiRealizePalette(HDC hDC)
   // Step 1: Create mapping of system palette\DC palette
 #ifndef NO_MAPPING
   realized = PALETTE_SetMapping(palPtr, 0, palGDI->NumColors,
-               (dc->w.hPalette != hPrimaryPalette) ||
-               (dc->w.hPalette == NtGdiGetStockObject(DEFAULT_PALETTE)));
+               (dc->DcLevel.hpal != hPrimaryPalette) ||
+               (dc->DcLevel.hpal == NtGdiGetStockObject(DEFAULT_PALETTE)));
 #else
   realized = 0;
 #endif
@@ -574,7 +574,7 @@ UINT FASTCALL IntGdiRealizePalette(HDC hDC)
   if(dc->DC_Type != DC_TYPE_MEMORY)
   {
     // Device managed DC
-    palGDI->logicalToSystem = IntEngCreateXlate(sysMode, palMode, systemPalette, dc->w.hPalette);
+    palGDI->logicalToSystem = IntEngCreateXlate(sysMode, palMode, systemPalette, dc->DcLevel.hpal);
   }
 
   DC_UnlockDc(dc);

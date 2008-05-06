@@ -1629,7 +1629,7 @@ NtGdiExtTextOutW(
    YStart = Start.y + dc->w.DCOrgY;
 
    /* Create the brushes */
-   PalDestGDI = PALETTE_LockPalette(dc->w.hPalette);
+   PalDestGDI = PALETTE_LockPalette(dc->DcLevel.hpal);
    if ( !PalDestGDI )
       Mode = PAL_RGB;
    else
@@ -1637,7 +1637,7 @@ NtGdiExtTextOutW(
       Mode = PalDestGDI->Mode;
       PALETTE_UnlockPalette(PalDestGDI);
    }
-   XlateObj = (XLATEOBJ*)IntEngCreateXlate(Mode, PAL_RGB, dc->w.hPalette, NULL);
+   XlateObj = (XLATEOBJ*)IntEngCreateXlate(Mode, PAL_RGB, dc->DcLevel.hpal, NULL);
    if ( !XlateObj )
    {
       goto fail;
@@ -1667,7 +1667,7 @@ NtGdiExtTextOutW(
       }
       IntGdiInitBrushInstance(&BrushBgInst, BrushBg, NULL);
    }
-   XlateObj2 = (XLATEOBJ*)IntEngCreateXlate(PAL_RGB, Mode, NULL, dc->w.hPalette);
+   XlateObj2 = (XLATEOBJ*)IntEngCreateXlate(PAL_RGB, Mode, NULL, dc->DcLevel.hpal);
    if ( !XlateObj2 )
    {
       goto fail;

@@ -64,7 +64,7 @@ IntGdiPolygon(PDC    dc,
 
     Dc_Attr = dc->pDc_Attr;
     if (!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
-    
+
     BitmapObj = BITMAPOBJ_LockBitmap(dc->w.hBitmap);
     /* FIXME - BitmapObj can be NULL!!!! don't assert but handle this case gracefully! */
     ASSERT(BitmapObj);
@@ -1033,7 +1033,7 @@ IntRectangle(PDC dc,
     RECTL      DestRect;
     MIX        Mix;
     PDC_ATTR Dc_Attr;
- 
+
     ASSERT ( dc ); // caller's responsibility to set this up
     /* FIXME - BitmapObj can be NULL!!! Don't assert but handle this case gracefully! */
     ASSERT ( BitmapObj );
@@ -1550,13 +1550,13 @@ IntGdiGradientFill(
     /* FIXME - BitmapObj can be NULL!!! Don't assert but handle this case gracefully! */
     ASSERT(BitmapObj);
 
-    PalDestGDI = PALETTE_LockPalette(dc->w.hPalette);
+    PalDestGDI = PALETTE_LockPalette(dc->DcLevel.hpal);
     /* FIXME - PalDestGDI can be NULL!!! Don't assert but handle this case gracefully! */
     ASSERT(PalDestGDI);
     Mode = PalDestGDI->Mode;
     PALETTE_UnlockPalette(PalDestGDI);
 
-    XlateObj = (XLATEOBJ*)IntEngCreateXlate(Mode, PAL_RGB, dc->w.hPalette, NULL);
+    XlateObj = (XLATEOBJ*)IntEngCreateXlate(Mode, PAL_RGB, dc->DcLevel.hpal, NULL);
     ASSERT(XlateObj);
 
     Ret = IntEngGradientFill(&BitmapObj->SurfObj,

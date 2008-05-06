@@ -127,7 +127,7 @@ IntGdiCreateBrushXlate(PDC Dc, GDIBRUSHOBJ *BrushObj, BOOLEAN *Failed)
    }
    else if (BrushObj->flAttrs & GDIBRUSH_IS_SOLID)
    {
-      Result = IntEngCreateXlate(0, PAL_RGB, Dc->w.hPalette, NULL);
+      Result = IntEngCreateXlate(0, PAL_RGB, Dc->DcLevel.hpal, NULL);
       *Failed = FALSE;
    }
    else
@@ -143,11 +143,11 @@ IntGdiCreateBrushXlate(PDC Dc, GDIBRUSHOBJ *BrushObj, BOOLEAN *Failed)
          if (!Dc_Attr) Dc_Attr = &Dc->Dc_Attr;
 
          if (Dc->w.bitsPerPixel != 1)
-            Result = IntEngCreateSrcMonoXlate(Dc->w.hPalette, Dc_Attr->crForegroundClr, Dc_Attr->crBackgroundClr);
+            Result = IntEngCreateSrcMonoXlate(Dc->DcLevel.hpal, Dc_Attr->crForegroundClr, Dc_Attr->crBackgroundClr);
       }
       else if (BrushObj->flAttrs & GDIBRUSH_IS_DIB)
       {
-         Result = IntEngCreateXlate(0, 0, Dc->w.hPalette, Pattern->hDIBPalette);
+         Result = IntEngCreateXlate(0, 0, Dc->DcLevel.hpal, Pattern->hDIBPalette);
       }
 
       BITMAPOBJ_UnlockBitmap(Pattern);

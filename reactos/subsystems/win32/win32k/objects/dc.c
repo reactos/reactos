@@ -135,8 +135,7 @@ NtGdiCreateCompatibleDC(HDC hDC)
   NewDC->w.hFirstBitmap = hBitmap;
   NewDC->pPDev          = OrigDC->pPDev;
 
-  NewDC->PalIndexed = OrigDC->PalIndexed;
-  NewDC->w.hPalette = OrigDC->w.hPalette;
+  NewDC->DcLevel.hpal = OrigDC->DcLevel.hpal;
   nDc_Attr->lTextAlign      = oDc_Attr->lTextAlign;
   nDc_Attr->ulForegroundClr = oDc_Attr->ulForegroundClr;
   nDc_Attr->ulBackgroundClr = oDc_Attr->ulBackgroundClr;
@@ -829,8 +828,7 @@ IntGdiCreateDC(PUNICODE_STRING Driver,
 
   if (!CreateAsIC)
   {
-    NewDC->PalIndexed = NtGdiGetStockObject(DEFAULT_PALETTE);
-    NewDC->w.hPalette = PrimarySurface.DevInfo.hpalDefault;
+    NewDC->DcLevel.hpal = PrimarySurface.DevInfo.hpalDefault;
     nDc_Attr->jROP2 = R2_COPYPEN;
 
     NewDC->erclWindow.top = NewDC->erclWindow.left = 0;
@@ -1130,7 +1128,7 @@ NtGdiGetDCObject(HDC  hDC, INT  ObjectType)
       SelObject = Dc_Attr->hbrush;
       break;
     case GDI_OBJECT_TYPE_PALETTE:
-      SelObject = dc->w.hPalette;
+      SelObject = dc->DcLevel.hpal;
       break;
     case GDI_OBJECT_TYPE_FONT:
       SelObject = Dc_Attr->hlfntNew;
@@ -1140,6 +1138,7 @@ NtGdiGetDCObject(HDC  hDC, INT  ObjectType)
       break;
     case GDI_OBJECT_TYPE_COLORSPACE:
       DPRINT1("FIXME: NtGdiGetCurrentObject() ObjectType OBJ_COLORSPACE not supported yet!\n");
+      // SelObject = dc->DcLevel.pColorSpace.BaseObject.hHmgr; ?
       SelObject = NULL;
       break;
     default:
@@ -1196,18 +1195,18 @@ IntGdiGetDCOrg(PDC pDc, PPOINTL ppt)
   *ppt = pDc->ptlDCOrig;
   return TRUE;
 }
-    
+
 BOOL STDCALL
 GdiGetDCOrgEx(HDC hDC, PPOINTL ppt, PRECTL prc)
 {
   PDC pdc;
-      
+
   pdc = DC_LockDc(hDC);
   if (!pdc) return FALSE;
-          
+
   *prc = pdc->erclWindow;
   *ppt = pdc->ptlDCOrig;
-              
+
   DC_UnlockDc(pdc);
   return TRUE;
 }
@@ -1217,7 +1216,7 @@ IntGetAspectRatioFilter(PDC pDC,
                         LPSIZE AspectRatio)
 {
   PDC_ATTR pDc_Attr;
-  
+
   pDc_Attr = pDC->pDc_Attr;
   if ( !pDc_Attr ) pDc_Attr = &pDC->Dc_Attr;
 
@@ -1337,8 +1336,7 @@ IntGdiCopyToSaveState(PDC dc, PDC newdc)
   nDc_Attr->hlfntNew        = Dc_Attr->hlfntNew;
   newdc->w.hBitmap          = dc->w.hBitmap;
   newdc->w.hFirstBitmap     = dc->w.hFirstBitmap;
-  newdc->PalIndexed         = dc->PalIndexed;
-  newdc->w.hPalette         = dc->w.hPalette;
+  newdc->DcLevel.hpal       = dc->DcLevel.hpal;
   newdc->w.totalExtent      = dc->w.totalExtent;
   newdc->w.bitsPerPixel     = dc->w.bitsPerPixel;
   nDc_Attr->jROP2           = Dc_Attr->jROP2;
@@ -1444,7 +1442,6 @@ IntGdiCopyFromSaveState(PDC dc, PDC dcs, HDC hDC)
   Dc_Attr->szlWindowExt    = sDc_Attr->szlWindowExt;
   Dc_Attr->ptlViewportOrg  = sDc_Attr->ptlViewportOrg;
   Dc_Attr->szlViewportExt  = sDc_Attr->szlViewportExt;
-  dc->PalIndexed           = dcs->PalIndexed;
 
   if (dc->DC_Type != DC_TYPE_MEMORY)
   {
@@ -1488,10 +1485,10 @@ IntGdiCopyFromSaveState(PDC dc, PDC dcs, HDC hDC)
   IntGdiSetBkColor( hDC, sDc_Attr->crBackgroundClr);
   IntGdiSetTextColor( hDC, sDc_Attr->crForegroundClr);
 
-  NtUserSelectPalette( hDC, dcs->w.hPalette, FALSE );
+  NtUserSelectPalette( hDC, dcs->DcLevel.hpal, FALSE );
 
 #if 0
-  GDISelectPalette16( hDC, dcs->w.hPalette, FALSE );
+  GDISelectPalette16( hDC, dcs->DcLevel.hpal, FALSE );
 #endif
 }
 
@@ -1960,12 +1957,12 @@ NtGdiSelectBitmap(
     if(pBmp->dib)
     {
         pDC->w.bitsPerPixel = pBmp->dib->dsBmih.biBitCount;
-        pDC->w.hPalette = pBmp->hDIBPalette;
+        pDC->DcLevel.hpal = pBmp->hDIBPalette;
     }
     else
     {
         pDC->w.bitsPerPixel = BitsPerFormat(pBmp->SurfObj.iBitmapFormat);
-        pDC->w.hPalette = ((GDIDEVICE *)pDC->pPDev)->DevInfo.hpalDefault;
+        pDC->DcLevel.hpal = ((GDIDEVICE *)pDC->pPDev)->DevInfo.hpalDefault;
     }
 
     /* Regenerate the XLATEOBJs. */
@@ -2333,7 +2330,7 @@ NtGdiGetAndSetDCDword(
          break;
       }
       SafeResult = Dc_Attr->flFontMapper;
-      Dc_Attr->flFontMapper = dwIn;      
+      Dc_Attr->flFontMapper = dwIn;
       break;
     case GdiGetSetMapMode:
       SafeResult = IntGdiSetMapMode( dc, dwIn);
@@ -2479,7 +2476,7 @@ DC_AllocDC(PUNICODE_STRING Driver)
   Dc_Attr->hlfntNew = NtGdiGetStockObject(SYSTEM_FONT);
   TextIntRealizeFont(Dc_Attr->hlfntNew);
 
-  NewDC->w.hPalette = NtGdiGetStockObject(DEFAULT_PALETTE);
+  NewDC->DcLevel.hpal = NtGdiGetStockObject(DEFAULT_PALETTE);
 
   DC_UnlockDc(NewDC);
 
@@ -2757,7 +2754,7 @@ IntGdiReferencePdev(PGDIDEVICE pPDev)
 }
 
 VOID FASTCALL
-IntGdiUnreferencePdev(PGDIDEVICE pPDev, DWORD CleanUpType) 
+IntGdiUnreferencePdev(PGDIDEVICE pPDev, DWORD CleanUpType)
 {
   IntGdiAcquireSemaphore(hsemDriverMgmt);
   pPDev->cPdevRefs--;
