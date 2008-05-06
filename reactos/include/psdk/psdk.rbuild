@@ -10,6 +10,8 @@
 	<file>hlink.idl</file>
 	<file>htiframe.idl</file>
 	<file>iads.idl</file>
+	<file>imnact.idl</file>
+	<file>imnxport.idl</file>
 	<file>indexsrv.idl</file>
 	<file>mimeinfo.idl</file>
 	<file>mlang.idl</file>
@@ -37,6 +39,7 @@
 	<file>unknwn.idl</file>
 	<file>urlhist.idl</file>
 	<file>urlmon.idl</file>
+	<file>mimeole.idl</file>
 	<file>mscoree.idl</file>
 	<file>mshtmhst.idl</file>
 	<file>exdisp.idl</file>

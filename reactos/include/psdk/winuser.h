@@ -98,6 +98,26 @@ extern "C" {
 #define CF_GDIOBJFIRST	768
 #define CF_GDIOBJLAST	1023
 
+/* Win32 4.0 messages for IME */
+#define WM_IME_SETCONTEXT           0x0281
+#define WM_IME_NOTIFY               0x0282
+#define WM_IME_CONTROL              0x0283
+#define WM_IME_COMPOSITIONFULL      0x0284
+#define WM_IME_SELECT               0x0285
+#define WM_IME_CHAR                 0x0286
+/* Win32 5.0 messages for IME */
+#define WM_IME_REQUEST              0x0288
+
+/* Win32 4.0 messages for IME */
+#define WM_IME_KEYDOWN              0x0290
+#define WM_IME_KEYUP                0x0291
+
+/* Win32 4.0 messages for IME */
+#define WM_IME_STARTCOMPOSITION     0x010d
+#define WM_IME_ENDCOMPOSITION       0x010e
+#define WM_IME_COMPOSITION          0x010f
+#define WM_IME_KEYLAST              0x010f
+
 #define HKL_NEXT	1
 #define HKL_PREV	0
 #define KLF_ACTIVATE	1

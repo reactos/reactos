@@ -18,11 +18,6 @@
 
 #ifndef _DDKIMM_H_
 #define _DDKIMM_H_
-#define __IMM_H
-
-#if __GNUC__ >=3
-#pragma GCC system_header
-#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -31,7 +26,6 @@ extern "C" {
 typedef struct _tagINPUTCONTEXT {
     HWND                hWnd;
     BOOL                fOpen;
-    HWND                hwndImeInUse;
     POINT               ptStatusWndPos;
     POINT               ptSoftKbdPos;
     DWORD               fdwConversion;
@@ -50,7 +44,7 @@ typedef struct _tagINPUTCONTEXT {
     HIMCC               hMsgBuf;
     DWORD               fdwInit;
     DWORD               dwReserve[3];
-} INPUTCONTEXT, *PINPUTCONTEXT, *LPINPUTCONTEXT;
+} INPUTCONTEXT, *LPINPUTCONTEXT;
 
 typedef struct _tagIMEINFO {
     DWORD       dwPrivateDataSize;
@@ -89,6 +83,24 @@ typedef struct tagCOMPOSITIONSTRING {
     DWORD dwPrivateSize;
     DWORD dwPrivateOffset;
 } COMPOSITIONSTRING, *LPCOMPOSITIONSTRING;
+
+typedef struct tagGUIDELINE {
+    DWORD dwSize;
+    DWORD dwLevel;
+    DWORD dwIndex;
+    DWORD dwStrLen;
+    DWORD dwStrOffset;
+    DWORD dwPrivateSize;
+    DWORD dwPrivateOffset;
+} GUIDELINE, *LPGUIDELINE;
+
+typedef struct tagCANDIDATEINFO {
+    DWORD               dwSize;
+    DWORD               dwCount;
+    DWORD               dwOffset[32];
+    DWORD               dwPrivateSize;
+    DWORD               dwPrivateOffset;
+} CANDIDATEINFO, *LPCANDIDATEINFO;
 
 LPINPUTCONTEXT WINAPI ImmLockIMC(HIMC);
 BOOL  WINAPI ImmUnlockIMC(HIMC);
@@ -129,6 +141,13 @@ DWORD  WINAPI ImmGetIMCCSize(HIMCC);
 #define NI_IMEMENUSELECTED              0x0018
 
 BOOL WINAPI ImmGenerateMessage(HIMC);
+LRESULT WINAPI ImmRequestMessageA(HIMC, WPARAM, LPARAM);
+LRESULT WINAPI ImmRequestMessageW(HIMC, WPARAM, LPARAM);
+#define ImmRequestMessage WINELIB_NAME_AW(ImmRequestMessage);
+BOOL WINAPI ImmTranslateMessage(HWND, UINT, WPARAM, LPARAM);
+HWND WINAPI ImmCreateSoftKeyboard(UINT, UINT, int, int);
+BOOL WINAPI ImmDestroySoftKeyboard(HWND);
+BOOL WINAPI ImmShowSoftKeyboard(HWND, int);
 
 BOOL WINAPI ImeInquire(LPIMEINFO, LPWSTR, LPCWSTR lpszOptions);
 BOOL WINAPI ImeConfigure (HKL, HWND, DWORD, LPVOID);
