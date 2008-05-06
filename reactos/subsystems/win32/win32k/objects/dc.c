@@ -32,7 +32,7 @@ static GDIDEVICE PrimarySurface;
 static KEVENT VideoDriverNeedsPreparation;
 static KEVENT VideoDriverPrepared;
 static PDC defaultDCstate = NULL;
-EDD_DIRECTDRAW_GLOBAL edd_DdirectDraw_Global;
+
 
 NTSTATUS FASTCALL
 InitDcImpl(VOID)
@@ -554,8 +554,11 @@ IntPrepareDriver()
       PrimarySurface.ppdevNext = NULL;    // Fixme! We need to support more than display drvs.
       PrimarySurface.ppdevParent = NULL;  // Always NULL if primary.
       PrimarySurface.pGraphicsDev = NULL; // Fixme!
-      PrimarySurface.pEDDgpl = (EDD_DIRECTDRAW_GLOBAL *)&edd_DdirectDraw_Global; // FIXME! We need to support more than display drvs.
-      RtlZeroMemory( &edd_DdirectDraw_Global ,sizeof(EDD_DIRECTDRAW_GLOBAL));
+      PrimarySurface.pEDDgpl = ExAllocatePoolWithTag(PagedPool, sizeof(EDD_DIRECTDRAW_GLOBAL), TAG_EDDGBL);
+      if (PrimarySurface.pEDDgpl)
+      {
+          RtlZeroMemory( PrimarySurface.pEDDgpl ,sizeof(EDD_DIRECTDRAW_GLOBAL));
+      }
       ret = TRUE;
       goto cleanup;
    }
@@ -625,6 +628,7 @@ PrepareVideoPrt()
 
    return NT_SUCCESS(Status);
 }
+
 
 BOOL FASTCALL
 IntCreatePrimarySurface()

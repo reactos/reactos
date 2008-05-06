@@ -91,8 +91,9 @@
 /* Dx internal tags rember I do not known if it right namees */
 #define TAG_DXPVMLIST   TAG('D', 'X', 'P', 'L') /* pmvlist for the driver */
 #define TAG_DXFOURCC    TAG('D', 'X', 'F', 'O') /* pdwFourCC for the driver */
-#define TAG_DDRAW       TAG('D', 'h', ' ', '1')
+#define TAG_DDRAW       TAG('D', 'h', ' ', '1') 
 #define TAG_DDSURF      TAG('D', 'h', ' ', '2')
+#define TAG_EDDGBL      TAG('E', 'D', 'D', 'G') /* ? edd_directdraw_global ??*/
 
 
 #endif /* _WIN32K_TAGS_H */

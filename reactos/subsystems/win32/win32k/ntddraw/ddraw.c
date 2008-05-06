@@ -432,10 +432,6 @@ NtGdiDdQueryDirectDrawObject(HANDLE hDirectDrawLocal,
                              DWORD *puNumFourCC,
                              DWORD *puFourCC)
 {
-#if DXDBG
-    BOOL status = FALSE;
-#endif
-
     PGD_DXDDQUERYDIRECTDRAWOBJECT pfnDdQueryDirectDrawObject = (PGD_DXDDQUERYDIRECTDRAWOBJECT)gpDxFuncs[DXG_INDEX_DxDdQueryDirectDrawObject].pfn;
    
     if (pfnDdQueryDirectDrawObject == NULL)
@@ -446,20 +442,9 @@ NtGdiDdQueryDirectDrawObject(HANDLE hDirectDrawLocal,
 
     DPRINT1("Calling dxg.sys pfnDdQueryDirectDrawObject\n");
 
-#if DXDBG
-    status = pfnDdQueryDirectDrawObject(hDirectDrawLocal, pHalInfo, pCallBackFlags, puD3dCallbacks, puD3dDriverData, 
-                                      puD3dBufferCallbacks, puD3dTextureFormats, puNumHeaps, puvmList, puNumFourCC, puFourCC);
 
-
-    dump_edd_directdraw_global(&edd_DdirectDraw_Global);
-    dump_edd_directdraw_local(edd_DdirectDraw_Global.peDirectDrawLocalList);
-
-    return status;
-#else
     return pfnDdQueryDirectDrawObject(hDirectDrawLocal, pHalInfo, pCallBackFlags, puD3dCallbacks, puD3dDriverData, 
                                       puD3dBufferCallbacks, puD3dTextureFormats, puNumHeaps, puvmList, puNumFourCC, puFourCC);
-
-#endif
 
 }
 
