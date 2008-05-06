@@ -29,6 +29,12 @@ extern "C" {
 #endif
 
 
+#define CRYPTCAT_OPEN_CREATENEW  1
+#define CRYPTCAT_OPEN_ALWAYS     2
+#define CRYPTCAT_OPEN_EXISTING   4
+
+
+
 #include <pshpack8.h>
 
 typedef struct CRYPTCATMEMBER_ {
@@ -45,16 +51,39 @@ typedef struct CRYPTCATMEMBER_ {
     CRYPT_ATTR_BLOB sEncodedMemberInfo;
 } CRYPTCATMEMBER;
 
+typedef struct CRYPTCATATTRIBUTE_
+{
+    DWORD cbStruct;
+    LPWSTR pwszReferenceTag;
+    DWORD dwAttrTypeAndAction;
+    DWORD cbValue;
+    BYTE *pbValue;
+    DWORD dwReserved;
+}CRYPTCATATTRIBUTE;
+
+typedef struct CATALOG_INFO_ 
+{
+    DWORD cbStruct;
+    WCHAR wszCatalogFile[MAX_PATH];
+} CATALOG_INFO;
+
+
 #include <poppack.h>
 
-
 BOOL      WINAPI CryptCATAdminAcquireContext(HCATADMIN*,const GUID*,DWORD);
+BOOL      WINAPI CryptCATAdminAddCatalog(HCATADMIN,PWSTR,PWSTR,DWORD);
 BOOL      WINAPI CryptCATAdminCalcHashFromFileHandle(HANDLE,DWORD*,BYTE*,DWORD);
 HCATINFO  WINAPI CryptCATAdminEnumCatalogFromHash(HCATADMIN,BYTE*,DWORD,DWORD,HCATINFO*);
+BOOL      WINAPI CryptCATAdminReleaseCatalogContext(HCATADMIN,HCATINFO,DWORD);
 BOOL      WINAPI CryptCATAdminReleaseContext(HCATADMIN,DWORD);
+BOOL      WINAPI CryptCATAdminRemoveCatalog(HCATADMIN,LPCWSTR,DWORD);
 BOOL      WINAPI CryptCATClose(HANDLE);
+BOOL      WINAPI CryptCATCatalogInfoFromContext(HCATINFO,CATALOG_INFO*,DWORD);
+
 CRYPTCATMEMBER* WINAPI CryptCATEnumerateMember(HANDLE,CRYPTCATMEMBER*);
 HANDLE    WINAPI CryptCATOpen(LPWSTR,DWORD,HCRYPTPROV,DWORD,DWORD);
+CRYPTCATATTRIBUTE* WINAPI CryptCATEnumerateAttr(HANDLE hCatalog, CRYPTCATMEMBER*,CRYPTCATATTRIBUTE*);
+CRYPTCATATTRIBUTE* WINAPI CryptCATEnumerateCatAttr(HANDLE,CRYPTCATATTRIBUTE*);
 
 #ifdef __cplusplus
 }

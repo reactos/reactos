@@ -55,9 +55,16 @@ typedef struct _D3DVECTOR {
     float x;
     float y;
     float z;
-} D3DVECTOR, *LPD3DVECTOR;
+} D3DVECTOR;
 #define D3DVECTOR_DEFINED
 #endif
+
+#ifndef LPD3DVECTOR_DEFINED
+typedef D3DVECTOR *LPD3DVECTOR;
+#define LPD3DVECTOR_DEFINED
+#endif
+
+
 
 #define DX_SHARED_DEFINES
 #endif /* DX_SHARED_DEFINES */
