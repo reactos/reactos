@@ -20,4 +20,7 @@ IntEngWindowChanged(
         PWINDOW_OBJECT Window,
         FLONG flChanged);
 
+VOID FASTCALL IntGdiAcquireSemaphore ( HSEMAPHORE hsem );
+VOID FASTCALL IntGdiReleaseSemaphore ( HSEMAPHORE hsem );
+
 #endif /* _WIN32K_ENG_H */

@@ -2705,21 +2705,21 @@ VOID FASTCALL
 IntGdiReferencePdev(PGDIDEVICE pPDev)
 {
   if(!hsemDriverMgmt) hsemDriverMgmt = EngCreateSemaphore(); // Hax, should be in dllmain.c
-  EngAcquireSemaphore(hsemDriverMgmt);
+  IntGdiAcquireSemaphore(hsemDriverMgmt);
   pPDev->cPdevRefs++;
-  EngReleaseSemaphore(hsemDriverMgmt);
+  IntGdiReleaseSemaphore(hsemDriverMgmt);
 }
 
 VOID FASTCALL
 IntGdiUnreferencePdev(PGDIDEVICE pPDev, DWORD CleanUpType) 
 {
-  EngAcquireSemaphore(hsemDriverMgmt);
+  IntGdiAcquireSemaphore(hsemDriverMgmt);
   pPDev->cPdevRefs--;
   if (!pPDev->cPdevRefs)
   {
      // Handle the destruction of pPDev or GDIDEVICE or PDEVOBJ or PDEV etc.
   }
-  EngReleaseSemaphore(hsemDriverMgmt);
+  IntGdiReleaseSemaphore(hsemDriverMgmt);
 }
 
 

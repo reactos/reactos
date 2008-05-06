@@ -11,7 +11,7 @@ STDCALL
 EngCreateSemaphore ( VOID )
 {
   // www.osr.com/ddk/graphics/gdifncs_95lz.htm
-  PERESOURCE psem = ExAllocatePool ( NonPagedPool, sizeof(ERESOURCE) );
+  PERESOURCE psem = ExAllocatePoolWithTag( NonPagedPool, sizeof(ERESOURCE), TAG_GSEM );
   if ( !psem )
     return NULL;
   if ( !NT_SUCCESS(ExInitializeResourceLite ( psem )) )
@@ -22,6 +22,14 @@ EngCreateSemaphore ( VOID )
   return (HSEMAPHORE)psem;
 }
 
+VOID
+FASTCALL
+IntGdiAcquireSemaphore ( HSEMAPHORE hsem )
+{
+  KeEnterCriticalRegion();
+  ExAcquireResourceExclusiveLite ( (PERESOURCE)hsem, TRUE );
+}
+
 /*
  * @implemented
  */
@@ -30,9 +38,20 @@ STDCALL
 EngAcquireSemaphore ( IN HSEMAPHORE hsem )
 {
   // www.osr.com/ddk/graphics/gdifncs_14br.htm
+  PW32THREAD W32Thread;
   ASSERT(hsem);
-  KeEnterCriticalRegion();
-  ExAcquireResourceExclusiveLite ( (PERESOURCE)hsem, TRUE );
+  IntGdiAcquireSemaphore ( hsem );
+  W32Thread = PsGetThreadWin32Thread(PsGetCurrentThread());
+  if (W32Thread) W32Thread->dwEngAcquireCount++;
+}
+
+
+VOID
+FASTCALL
+IntGdiReleaseSemaphore ( HSEMAPHORE hsem )
+{
+  ExReleaseResourceLite ( (PERESOURCE)hsem );
+  KeLeaveCriticalRegion();
 }
 
 /*
@@ -43,9 +62,11 @@ STDCALL
 EngReleaseSemaphore ( IN HSEMAPHORE hsem )
 {
   // www.osr.com/ddk/graphics/gdifncs_5u3r.htm
+  PW32THREAD W32Thread;
   ASSERT(hsem);
-  ExReleaseResourceLite ( (PERESOURCE)hsem );
-  KeLeaveCriticalRegion();
+  W32Thread = PsGetThreadWin32Thread(PsGetCurrentThread());
+  if (W32Thread) --W32Thread->dwEngAcquireCount;
+  IntGdiReleaseSemaphore ( hsem );
 }
 
 /*

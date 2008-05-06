@@ -9,7 +9,7 @@
 #include <w32k.h>
 #include <debug.h>
 
-ERESOURCE  ghsemShareDevLock;
+HSEMAPHORE  ghsemShareDevLock = NULL;
 
 ULONG gcEngFuncs = DXENG_INDEX_DxEngLoadImage + 1;
 DRVFN gaEngFuncs [] =
@@ -171,23 +171,17 @@ DxEngUnlockDC(PDC pDC)
 *
 * @remarks.
 * It is being used in various ntuser* functions and ntgdi*
-* ReactOS specific: It is not in use yet.
+* ReactOS specific: It is not in use yet?
 *SystemResourcesList
 *--*/
 BOOLEAN
 STDCALL
 DxEngLockShareSem()
 {
-    BOOLEAN retVal = FALSE;
     DPRINT1("ReactX Calling : DxEngLockShareSem\n");
-#if 0
-    if (ExIsResourceAcquiredExclusiveLite(&ghsemShareDevLock) == FALSE)
-    {
-        KeEnterCriticalRegion();
-        retVal = ExAcquireResourceExclusiveLite(&ghsemShareDevLock, TRUE);
-    }
-#endif
-    return retVal;
+    if(!ghsemShareDevLock) ghsemShareDevLock = EngCreateSemaphore(); // Hax, should be in dllmain.c
+    IntGdiAcquireSemaphore(ghsemShareDevLock);
+    return TRUE;
 }
 
 /*++
@@ -200,7 +194,7 @@ DxEngLockShareSem()
 * This function returns TRUE no matter what.
 *
 * @remarks.
-* ReactOS specific: It is not in use yet.
+* ReactOS specific: It is not in use yet?
 *
 *--*/
 BOOLEAN
@@ -208,14 +202,7 @@ STDCALL
 DxEngUnlockShareSem()
 {
     DPRINT1("ReactX Calling : DxEngUnlockShareSem\n");
-
-#if 0
-    if (ExIsResourceAcquiredExclusiveLite(&ghsemShareDevLock) == TRUE)
-    {
-        ExReleaseResourceLite(&ghsemShareDevLock);
-        KeLeaveCriticalRegion();
-    }
-#endif
+    IntGdiReleaseSemaphore(ghsemShareDevLock);
     return TRUE;
 }
 

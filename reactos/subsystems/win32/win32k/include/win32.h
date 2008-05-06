@@ -13,6 +13,7 @@ typedef struct _W32THREAD
   HANDLE hDesktop;
   PVOID pgdiDcattr;
   PVOID pgdiBrushAttr;
+  DWORD dwEngAcquireCount;
   BOOLEAN IsExiting;
   SINGLE_LIST_ENTRY  ReferencesList;
   ULONG Hooks;
