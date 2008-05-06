@@ -3843,7 +3843,7 @@ MingwCabinetModuleHandler::Process ()
 
 	fprintf ( fMakefile, "\t$(ECHO_CABMAN)\n" );
 	fprintf ( fMakefile,
-	          "\t$(Q)$(CABMAN_TARGET) -M raw -S %s $(%s_SOURCES)\n",      // Escape the asterisk for Make
+	          "\t$(Q)$(cabman_TARGET) -M raw -S %s $(%s_SOURCES)\n",      // Escape the asterisk for Make
 	          targetMacro.c_str (),
 			  module.name.c_str());
 }
