@@ -598,17 +598,16 @@ NtUserEmptyClipboard(VOID)
 }
 
 HANDLE STDCALL
-NtUserGetClipboardData(UINT uFormat, DWORD Unknown1)
+NtUserGetClipboardData(UINT uFormat, PVOID pBuffer)
 {
     HANDLE ret = NULL;
-    PCHAR buffer;
 
     UserEnterShared();
 
     if (intIsClipboardOpenByMe())
     {
         /* when Unknown1 is zero, we returns to user32 the data size */
-        if (Unknown1 == 0)
+        if (!pBuffer)
         {
             PCLIPBOARDELEMENT data = intIsFormatAvailable(uFormat);
 
@@ -624,7 +623,7 @@ NtUserGetClipboardData(UINT uFormat, DWORD Unknown1)
                         co_IntSendMessage(ClipboardOwnerWindow->hSelf, WM_RENDERFORMAT, (WPARAM)uFormat, 0);
                         data = intIsFormatAvailable(uFormat);
                         ASSERT(data->size);
-                        ret = (HANDLE)data->size;
+                        ret = (HANDLE)(ULONG_PTR)data->size;
                     }
                 }
                 else
@@ -635,7 +634,7 @@ NtUserGetClipboardData(UINT uFormat, DWORD Unknown1)
                     }
 
                 }
-                ret = (HANDLE)data->size;
+                ret = (HANDLE)(ULONG_PTR)data->size;
             }
             else
             {
@@ -668,20 +667,36 @@ NtUserGetClipboardData(UINT uFormat, DWORD Unknown1)
                         }
                         else
                         {
-                            buffer = (PCHAR)Unknown1;
-                            memcpy(buffer, (PCHAR)synthesizedData, synthesizedDataSize);
+                            ret = (HANDLE)pBuffer;
+
+                            _SEH_TRY
+                            {
+                                ProbeForWrite(pBuffer, synthesizedDataSize, 1);
+                                memcpy(pBuffer, (PCHAR)synthesizedData, synthesizedDataSize);
+                            }
+                            _SEH_HANDLE
+                            {
+                                ret = NULL;
+                            }
+                            _SEH_END
 
                             freeSynthesizedData();
-
-                            ret = (HANDLE)Unknown1;
                         }
                     }
                     else
                     {
-                        buffer = (PCHAR)Unknown1;
-                        memcpy(buffer, (PCHAR)data->hData, data->size);
+                        ret = (HANDLE)pBuffer;
 
-                        ret = (HANDLE)Unknown1;
+                        _SEH_TRY
+                        {
+                            ProbeForWrite(pBuffer, data->size, 1);
+                            memcpy(pBuffer, (PCHAR)data->hData, data->size);
+                        }
+                        _SEH_HANDLE
+                        {
+                            ret = NULL;
+                        }
+                        _SEH_END
                     }
                 }
 

@@ -1169,7 +1169,7 @@ HANDLE
 NTAPI
 NtUserGetClipboardData(
   UINT uFormat,
-  DWORD Unknown1);
+  PVOID pBuffer);
 
 INT
 NTAPI
@@ -1614,7 +1614,7 @@ NtUserMapVirtualKeyEx( UINT keyCode,
 
 #define NUMC_SENDMESSAGE            0x02B0
 // Kernel has option to use TO or normal msg send, based on type of msg.
-#define NUMC_SENDMESSAGEWTOOPTION   0x02B1 
+#define NUMC_SENDMESSAGEWTOOPTION   0x02B1
 #define NUMC_SENDMESSAGETIMEOUT     0x02B2
 #define NUMC_BROADCASTSYSTEMMESSAGE 0x02B4
 #define NUMC_SENDNOTIFYMESSAGE      0x02B7
