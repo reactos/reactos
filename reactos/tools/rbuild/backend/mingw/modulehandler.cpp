@@ -3837,13 +3837,13 @@ MingwCabinetModuleHandler::Process ()
 	GenerateRules ();
 	
 	const FileLocation *target_file = GetTargetFilename ( module, NULL );
-	fprintf ( fMakefile, "%s: | %s\n",
+	fprintf ( fMakefile, "%s: $(CABMAN_TARGET) | %s\n",
 	          targetMacro.c_str (),
 	          backend->GetFullPath ( *target_file ).c_str () );
 
 	fprintf ( fMakefile, "\t$(ECHO_CABMAN)\n" );
 	fprintf ( fMakefile,
-	          "\t$(Q)$(cabman_TARGET) -M raw -S %s $(%s_SOURCES)\n",      // Escape the asterisk for Make
+	          "\t$(Q)$(CABMAN_TARGET) -M raw -S %s $(%s_SOURCES)\n",      // Escape the asterisk for Make
 	          targetMacro.c_str (),
 			  module.name.c_str());
 }
