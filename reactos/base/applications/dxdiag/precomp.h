@@ -13,10 +13,15 @@
 #include <setupapi.h>
 #include <commctrl.h>
 #include <dinput.h>
+#include <d3d9.h>
 #include <ddraw.h>
+
 
 #include <dsound.h>
 #include <mmreg.h>
+#include <wintrust.h>
+#include <softpub.h>
+#include <mscat.h>
 #include "resource.h"
 
 typedef struct
@@ -28,10 +33,7 @@ typedef struct
     ULONG NumSoundAdapter;
     HWND * hSoundWnd;
     HWND hDialogs[5];
-
 }DXDIAG_CONTEXT, *PDXDIAG_CONTEXT;
-
-
 
 /* globals */
 extern HINSTANCE hInst;
@@ -44,10 +46,7 @@ INT_PTR CALLBACK MusicPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM
 INT_PTR CALLBACK InputPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
 INT_PTR CALLBACK NetworkPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
 INT_PTR CALLBACK HelpPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
-BOOL GetRegValue(HKEY hBaseKey, LPWSTR SubKey, LPWSTR ValueName, DWORD Type, LPWSTR Result, DWORD Size);
 
-VOID InsertTabCtrlItem(HWND hDlgCtrl, INT Position, LPWSTR uId);
-VOID EnumerateDrivers(PVOID Context, HDEVINFO hList, PSP_DEVINFO_DATA pInfoData);
 /* DirectDraw tests */
 VOID DDTests();
 
@@ -57,6 +56,11 @@ void InitializeDirectSoundPage(PDXDIAG_CONTEXT pContext);
 /* display adapter initialization */
 void InitializeDisplayAdapters(PDXDIAG_CONTEXT pContext);
 
+/* general functions */
 BOOL GetFileVersion(LPCWSTR szAppName, WCHAR * szVer, DWORD szVerSize);
 BOOL GetFileModifyTime(LPCWSTR pFullPath, WCHAR * szTime, int szTimeSize);
+BOOL GetCatFileFromDriverPath(LPWSTR szFileName, LPWSTR szCatFileName);
+BOOL GetRegValue(HKEY hBaseKey, LPWSTR SubKey, LPWSTR ValueName, DWORD Type, LPWSTR Result, DWORD Size);
+VOID InsertTabCtrlItem(HWND hDlgCtrl, INT Position, LPWSTR uId);
+VOID EnumerateDrivers(PVOID Context, HDEVINFO hList, PSP_DEVINFO_DATA pInfoData);
 #endif

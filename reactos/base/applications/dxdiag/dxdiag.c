@@ -19,11 +19,27 @@ DestroyTabCtrlDialogs(PDXDIAG_CONTEXT pContext)
 {
     UINT Index;
 
-    for(Index = 0; Index < 7; Index++)
+    /* destroy default dialogs */
+    for(Index = 0; Index < sizeof(pContext->hDialogs) / sizeof(HWND); Index++)
     {
        if (pContext->hDialogs[Index])
            DestroyWindow(pContext->hDialogs[Index]);
     }
+
+    /* destroy display dialogs */
+    for(Index = 0; Index < pContext->NumDisplayAdapter; Index++)
+    {
+       if (pContext->hDisplayWnd[Index])
+           DestroyWindow(pContext->hDisplayWnd[Index]);
+    }
+
+    /* destroy audio dialogs */
+    for(Index = 0; Index < pContext->NumSoundAdapter; Index++)
+    {
+       if (pContext->hSoundWnd[Index])
+           DestroyWindow(pContext->hSoundWnd[Index]);
+    }
+
 }
 
 //---------------------------------------------------------------

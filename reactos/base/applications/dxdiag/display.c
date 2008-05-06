@@ -215,6 +215,36 @@ InitializeDialog(HWND hwndDlg, PDISPLAY_DEVICEW pDispDevice)
     HWND hDlgCtrls[5];
     DWORD dwMemory;
     DEVMODE DevMode;
+    IDirect3D9 * ppObj;
+    D3DADAPTER_IDENTIFIER9 Identifier;
+    HRESULT hResult;
+
+    szText[0] = L'\0';
+    ppObj = Direct3DCreate9(D3D_SDK_VERSION);
+    if (ppObj)
+    {
+        hResult = IDirect3D9_GetAdapterIdentifier(ppObj, D3DADAPTER_DEFAULT , 2/*D3DENUM_WHQL_LEVEL*/, &Identifier);
+        if (hResult == D3D_OK)
+        {
+
+            if (Identifier.WHQLLevel)
+            {
+                /* adapter is WHQL certified */
+                LoadStringW(hInst, IDS_OPTION_YES, szText, sizeof(szText)/sizeof(WCHAR));
+            }
+            else
+            {
+                LoadStringW(hInst, IDS_OPTION_NO, szText, sizeof(szText)/sizeof(WCHAR));
+            }
+        }
+        IDirect3D9_Release(ppObj);
+    }
+    else
+    {
+        LoadStringW(hInst, IDS_DEVICE_STATUS_UNKNOWN, szText, sizeof(szText)/sizeof(WCHAR));
+    }
+    szText[(sizeof(szText)/sizeof(WCHAR))-1] = L'\0';
+    SendDlgItemMessageW(hwndDlg, IDC_STATIC_ADAPTER_LOGO, WM_SETTEXT, 0, (LPARAM)szText);
 
     if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, &pDispDevice->DeviceKey[18], 0, KEY_READ, &hKey) != ERROR_SUCCESS)
         return FALSE;

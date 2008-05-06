@@ -20,6 +20,8 @@
 	<library>version</library>
 	<library>gdi32</library>
 	<library>winmm</library>
+	<library>wintrust</library>
+	<library>d3d9</library>
 	<file>system.c</file>
 	<file>display.c</file>
 	<file>sound.c</file>

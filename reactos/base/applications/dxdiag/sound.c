@@ -11,6 +11,91 @@
 //#include <initguid.h>
 #include <devguid.h>
 
+#if 0
+BOOL
+GetCatFileFromDriverPath(LPWSTR szFileName, LPWSTR szCatFileName)
+{
+    GUID VerifyGuid = DRIVER_ACTION_VERIFY;
+    HANDLE hFile;
+    DWORD dwHash;
+    BYTE bHash[100];
+    HCATINFO hCatInfo;
+    HCATADMIN hActAdmin;
+    BOOL bRet = FALSE;
+    CATALOG_INFO CatInfo;
+
+    /* attempt to open file */
+    hFile = CreateFileW(szFileName, GENERIC_READ,  FILE_SHARE_READ, NULL,  OPEN_EXISTING,  FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile == INVALID_HANDLE_VALUE)
+        return FALSE;
+
+     /* calculate hash from file handle */
+     dwHash = sizeof(bHash);
+     if (!CryptCATAdminCalcHashFromFileHandle(hFile, &dwHash, bHash, 0))
+     {
+        CloseHandle(hFile);
+        return FALSE;
+     }
+
+    /* try open the CAT admin */
+    if (!CryptCATAdminAcquireContext(&hActAdmin, &VerifyGuid, 0))
+    {
+        CloseHandle(hFile);
+        return FALSE;
+    }
+
+    /* search catalog to find for catalog containing this hash */
+    hCatInfo = CryptCATAdminEnumCatalogFromHash(hActAdmin, bHash, dwHash, 0, NULL);
+    if (hCatInfo != NULL)
+    {
+        /* theres a catalog get the filename */
+        bRet = CryptCATCatalogInfoFromContext(hCatInfo, &CatInfo, 0);
+        if (bRet)
+           wcscpy(szCatFileName, CatInfo.wszCatalogFile);
+        CryptCATAdminReleaseCatalogContext(hActAdmin, hCatInfo, 0);
+    }
+
+    /* perform cleanup */
+    CloseHandle(hFile);
+    CryptCATAdminReleaseContext(hActAdmin, 0);
+    return bRet;
+}
+
+BOOL
+IsDriverWHQL(LPWSTR szFileName)
+{
+    WCHAR szCatFile[MAX_PATH];
+    HANDLE hCat;
+    BOOL bRet = FALSE;
+
+    /* get the driver's cat file */
+    if (!GetCatFileFromDriverPath(szFileName, szCatFile))
+    {
+        /* driver has no cat so its definately not WHQL signed */
+        return FALSE;
+    }
+
+    /* open the CAT file */
+    hCat = CryptCATOpen(szCatFile, CRYPTCAT_OPEN_EXISTING, 0, 0, 0);
+    if (hCat == INVALID_HANDLE_VALUE)
+    {
+        /* couldnt open cat */
+        return FALSE;
+    }
+
+    /* FIXME
+     * build certificate chain with CertGetCertificateChain
+     * verify certificate chain (WinVerifyTrust)
+     * retrieve signer (WTHelperGetProvSignerFromChain)
+     */
+
+
+    /* close CAT file */
+    CryptCATClose(hCat);
+    return bRet;
+}
+#endif
+
 static
 void
 SetDeviceDetails(HWND hwndDlg, LPCGUID classGUID, LPCWSTR lpcstrDescription)
@@ -18,11 +103,12 @@ SetDeviceDetails(HWND hwndDlg, LPCGUID classGUID, LPCWSTR lpcstrDescription)
     HDEVINFO hInfo;
     DWORD dwIndex = 0;
     SP_DEVINFO_DATA InfoData;
-    WCHAR szText[100];
+    WCHAR szText[30];
     HWND hDlgCtrls[3];
     WAVEOUTCAPSW waveOut;
     UINT numDev;
     MMRESULT errCode;
+
 
     /*  enumerate waveout devices */
     numDev = waveOutGetNumDevs();
@@ -107,6 +193,9 @@ BOOL CALLBACK DSEnumCallback(LPGUID lpGuid, LPCWSTR lpcstrDescription, LPCWSTR l
     HWND hwndDlg;
     WCHAR szSound[20];
     WCHAR szText[30];
+    IDirectSound8 *pObj;
+    HRESULT hResult;
+    DWORD dwCertified;
 
     if (!lpGuid)
         return TRUE;
@@ -123,6 +212,26 @@ BOOL CALLBACK DSEnumCallback(LPGUID lpGuid, LPCWSTR lpcstrDescription, LPCWSTR l
     hwndDlg = CreateDialogParamW(hInst, MAKEINTRESOURCEW(IDD_SOUND_DIALOG), pContext->hMainDialog, SoundPageWndProc, (LPARAM)pContext);
     if (!hwndDlg)
         return FALSE;
+
+    hResult = DirectSoundCreate8(lpGuid, (LPDIRECTSOUND8*)&pObj, NULL);
+    if (hResult == DS_OK)
+    {
+        szText[0] = L'\0';
+        if (IDirectSound8_VerifyCertification(pObj, &dwCertified) == DS_OK)
+        {
+            if (dwCertified == DS_CERTIFIED)
+                LoadStringW(hInst, IDS_OPTION_YES, szText, sizeof(szText)/sizeof(WCHAR));
+            else if (dwCertified == DS_UNCERTIFIED)
+                LoadStringW(hInst, IDS_OPTION_NO, szText, sizeof(szText)/sizeof(WCHAR));
+        }
+        else
+        {
+            LoadStringW(hInst, IDS_OPTION_NO, szText, sizeof(szText)/sizeof(WCHAR));
+        }
+        szText[(sizeof(szText)/sizeof(WCHAR))-1] = L'\0';
+        SendDlgItemMessageW(hwndDlg, IDC_STATIC_DSOUND_LOGO, WM_SETTEXT, 0, (LPARAM)szText);
+        IDirectSound8_Release(pObj);
+    }
 
     /* set device name */
     SendDlgItemMessageW(hwndDlg, IDC_STATIC_DSOUND_NAME, WM_SETTEXT, 0, (LPARAM)lpcstrDescription);
@@ -156,10 +265,10 @@ BOOL CALLBACK DSEnumCallback(LPGUID lpGuid, LPCWSTR lpcstrDescription, LPCWSTR l
 void InitializeDirectSoundPage(PDXDIAG_CONTEXT pContext)
 {
     HRESULT hResult;
-    //IDirectSound8 *pObj;
+
 
     /* create DSound object */
-//    hResult = DirectSoundCreate8(NULL, (LPDIRECTSOUND8*)&pObj, NULL);
+
 //    if (hResult != DS_OK)
 //        return;
     hResult = DirectSoundEnumerateW(DSEnumCallback, pContext);
