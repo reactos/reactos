@@ -54,6 +54,7 @@ Bootstrap::IsSupportedModuleType ( ModuleType type )
 		case BootSector:
 		case BootLoader:
 		case BootProgram:
+		case Cabinet:
 			return true;
 		case BuildTool:
 		case StaticLibrary:

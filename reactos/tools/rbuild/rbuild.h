@@ -303,6 +303,7 @@ enum ModuleType
 	RpcProxy,
 	HostStaticLibrary,
 	TypeDontCare,
+	Cabinet
 };
 
 enum HostType

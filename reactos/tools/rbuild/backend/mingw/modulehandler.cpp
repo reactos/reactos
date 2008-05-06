@@ -244,6 +244,9 @@ MingwModuleHandler::InstanciateHandler (
 		case IdlHeader:
 			handler = new MingwIdlHeaderModuleHandler ( module );
 			break;
+		case Cabinet:
+			handler = new MingwCabinetModuleHandler ( module );
+			break;
 		case EmbeddedTypeLib:
 			handler = new MingwEmbeddedTypeLibModuleHandler ( module );
 			break;
@@ -1357,6 +1360,7 @@ Rule gppHostRule ( "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)
                    "\t$(ECHO_CC)\n"
                    "\t${host_gpp} -c $< -o $@ $($(module_name)_CFLAGS)$(compiler_flags)\n",
                    "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).o", NULL );
+Rule emptyRule ( "", NULL );
 
 void
 MingwModuleHandler::GenerateGccCommand (
@@ -1479,6 +1483,7 @@ MingwModuleHandler::GenerateCommands (
 		{ HostFalse, TypeDontCare, ".cc", &gppRule },
 		{ HostFalse, TypeDontCare, ".cpp", &gppRule },
 		{ HostFalse, TypeDontCare, ".cxx", &gppRule },
+		{ HostFalse, Cabinet, ".*", &emptyRule }
 	};
 	size_t i;
 	Rule *customRule = NULL;
@@ -1489,7 +1494,7 @@ MingwModuleHandler::GenerateCommands (
 			continue;
 		if ( rules[i].type != TypeDontCare && rules[i].type != module.type )
 			continue;
-		if ( rules[i].extension != extension )
+		if ( rules[i].extension != extension && rules[i].extension != ".*")
 			continue;
 		customRule = rules[i].rule;
 		break;
@@ -3484,12 +3489,6 @@ MingwIsoModuleHandler::GenerateIsoModuleTarget ()
 	FileLocation reactosInf ( bootcdReactos.directory,
 	                          bootcdReactos.relative_path,
 	                          "reactos.inf" );
-	FileLocation vgafontsCab( bootcdReactos.directory,
-	                      bootcdReactos.relative_path,
-	                      "vgafonts.cab");
-	FileLocation vgafontsDir( SourceDirectory,
-	                      "media" + sSep + "vgafonts",
-	                      "" );
 
 	vSourceFiles.push_back ( reactosDff );
 
@@ -3518,11 +3517,6 @@ MingwIsoModuleHandler::GenerateIsoModuleTarget ()
 	          sourceFiles.c_str (),
 	          cdFiles.c_str (),
 	          cdDirectories.c_str () );
-	fprintf ( fMakefile, "\t$(ECHO_CABMAN)\n" );
-	fprintf ( fMakefile,
-	          "\t$(Q)$(CABMAN_TARGET) -M raw -S %s %s\\*.bin\n",      // Escape the asterisk for Make
-	          backend->GetFullName ( vgafontsCab ).c_str (),
-	          backend->GetFullName ( vgafontsDir ).c_str ());
 	fprintf ( fMakefile,
 	          "\t$(Q)$(CABMAN_TARGET) -C %s -L %s -I -P $(OUTPUT)\n",
 	          backend->GetFullName ( reactosDff ).c_str (),
@@ -3826,6 +3820,32 @@ void
 MingwIdlHeaderModuleHandler::Process ()
 {
 	GenerateRules ();
+}
+
+MingwCabinetModuleHandler::MingwCabinetModuleHandler (
+	const Module& module_ )
+
+	: MingwModuleHandler ( module_ )
+{
+}
+
+void
+MingwCabinetModuleHandler::Process ()
+{
+	string targetMacro ( GetTargetMacro (module) );
+
+	GenerateRules ();
+	
+	const FileLocation *target_file = GetTargetFilename ( module, NULL );
+	fprintf ( fMakefile, "%s: | %s\n",
+	          targetMacro.c_str (),
+	          backend->GetFullPath ( *target_file ).c_str () );
+
+	fprintf ( fMakefile, "\t$(ECHO_CABMAN)\n" );
+	fprintf ( fMakefile,
+	          "\t$(Q)$(CABMAN_TARGET) -M raw -S %s $(%s_SOURCES)\n",      // Escape the asterisk for Make
+	          targetMacro.c_str (),
+			  module.name.c_str());
 }
 
 MingwElfExecutableModuleHandler::MingwElfExecutableModuleHandler (

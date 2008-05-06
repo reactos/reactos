@@ -939,6 +939,8 @@ Module::GetModuleType ( const string& location, const XMLAttribute& attribute )
 		return EmbeddedTypeLib;
 	if ( attribute.value == "elfexecutable" )
 		return ElfExecutable;
+	if ( attribute.value == "cabinet" )
+		return Cabinet;
 	throw InvalidAttributeValueException ( location,
 	                                       attribute.name,
 	                                       attribute.value );
@@ -970,6 +972,7 @@ Module::GetTargetDirectoryTree () const
 		case LiveIsoRegTest:
 		case EmbeddedTypeLib:
 		case ElfExecutable:
+		case Cabinet:
 			return OutputDirectory;
 		case StaticLibrary:
 		case HostStaticLibrary:
@@ -1019,6 +1022,8 @@ Module::GetDefaultModuleExtension () const
 		case KernelModeDriver:
 		case BootLoader:
 			return ".sys";
+		case Cabinet:
+			return ".cab";
 		case BootSector:
 			return ".o";
 		case Iso:
@@ -1092,6 +1097,7 @@ Module::GetDefaultModuleEntrypoint () const
 		case IdlHeader:
 		case ElfExecutable:
 		case EmbeddedTypeLib:
+		case Cabinet:
 			return "";
 		case TypeDontCare:
 			break;
@@ -1140,6 +1146,7 @@ Module::GetDefaultModuleBaseaddress () const
 		case BootProgram:
 		case IdlHeader:
 		case EmbeddedTypeLib:
+		case Cabinet:
 			return "";
 		case TypeDontCare:
 			break;
@@ -1189,6 +1196,7 @@ Module::IsDLL () const
 		case IdlHeader:
 		case EmbeddedTypeLib:
 		case ElfExecutable:
+		case Cabinet:
 			return false;
 		case TypeDontCare:
 			break;

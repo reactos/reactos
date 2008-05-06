@@ -486,6 +486,14 @@ public:
 	virtual void Process ();
 };
 
+class MingwCabinetModuleHandler : public MingwModuleHandler
+{
+public:
+	MingwCabinetModuleHandler ( const Module& module );
+	virtual HostType DefaultHost() { return HostFalse; }
+	virtual void Process ();
+};
+
 class MingwEmbeddedTypeLibModuleHandler : public MingwModuleHandler
 {
 public:
