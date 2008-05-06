@@ -2,7 +2,7 @@
  * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            drivers/base/null/null.c
- * PURPOSE:         Beep Device Driver
+ * PURPOSE:         Null Device Driver
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  *                  David Welch (welch@mcmail.com)
  */
