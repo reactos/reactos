@@ -109,6 +109,9 @@
 <directory name="imm32">
 	<xi:include href="imm32/imm32.rbuild" />
 </directory>
+<directory name="inetcomm">
+	<xi:include href="inetcomm/inetcomm.rbuild" />
+</directory>
 <directory name="iphlpapi">
 	<xi:include href="iphlpapi/iphlpapi.rbuild" />
 </directory>
@@ -168,6 +171,9 @@
 </directory>
 <directory name="msxml3">
 	<xi:include href="msxml3/msxml3.rbuild" />
+</directory>
+<directory name="nddeapi">
+	<xi:include href="nddeapi/nddeapi.rbuild" />
 </directory>
 <directory name="netapi32">
 	<xi:include href="netapi32/netapi32.rbuild" />

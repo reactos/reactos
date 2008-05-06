@@ -843,8 +843,35 @@ RegConnectRegistryW (LPCWSTR lpMachineName,
 		     HKEY hKey,
 		     PHKEY phkResult)
 {
-  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-  return ERROR_CALL_NOT_IMPLEMENTED;
+    LONG ret;
+
+    TRACE("(%s,%p,%p): stub\n",debugstr_w(lpMachineName),hKey,phkResult);
+
+    if (!lpMachineName || !*lpMachineName) {
+        /* Use the local machine name */
+        ret = RegOpenKeyW( hKey, NULL, phkResult );
+    }
+    else {
+        WCHAR compName[MAX_COMPUTERNAME_LENGTH + 1];
+        DWORD len = sizeof(compName) / sizeof(WCHAR);
+
+        /* MSDN says lpMachineName must start with \\ : not so */
+        if( lpMachineName[0] == '\\' &&  lpMachineName[1] == '\\')
+            lpMachineName += 2;
+        if (GetComputerNameW(compName, &len))
+        {
+            if (!_wcsicmp(lpMachineName, compName))
+                ret = RegOpenKeyW(hKey, NULL, phkResult);
+            else
+            {
+                FIXME("Connect to %s is not supported.\n",debugstr_w(lpMachineName));
+                ret = ERROR_BAD_NETPATH;
+            }
+        }
+        else
+            ret = GetLastError();
+    }
+    return ret;
 }
 
 
