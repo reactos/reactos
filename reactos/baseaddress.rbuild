@@ -110,10 +110,12 @@
   <property name="BASEADDRESS_CABINET" value="0x75120000" />
   <property name="BASEADDRESS_NETCFGX" value="0x755F0000" />
   <property name="BASEADDRESS_IPHLPAPI" value="0x75700000" />
+  <property name="BASEADDRESS_NDDEAPI" value="0x75940000" />
   <property name="BASEADDRESS_MSGINA" value="0x75970000" />
   <property name="BASEADDRESS_CRYPTNET" value="0x75e60000" />
   <property name="BASEADDRESS_RPCRT4" value="0x76000000" />
   <property name="BASEADDRESS_SHLWAPI" value="0x76120000" />
+  <property name="BASEADDRESS_INETCOMM" value="0x76150000" />
   <property name="BASEADDRESS_COMCTL32" value="0x76160000" />
   <property name="BASEADDRESS_COMDLG32" value="0x76210000" />
   <property name="BASEADDRESS_WINSTA" value="0x762F0000" />
