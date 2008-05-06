@@ -51,7 +51,7 @@ MmMapViewOfSection(
     IN ULONG ZeroBits,
     IN ULONG CommitSize,
     IN OUT PLARGE_INTEGER SectionOffset OPTIONAL,
-    IN OUT PULONG ViewSize,
+    IN OUT PSIZE_T ViewSize,
     IN SECTION_INHERIT InheritDisposition,
     IN ULONG AllocationType,
     IN ULONG Protect
