@@ -47,7 +47,7 @@ InsSpacesFmt(LPCTSTR szSourceStr, LPCTSTR szFmtStr)
     LPTSTR pszDestStr;
     LPTSTR pszTempStr;
     TCHAR szFmtVal[255];
-    INT nFmtCount = 0;
+    UINT nFmtCount = 0;
     INT nValCount = 0;
     INT nLastVal = 0;
     INT nSpaceOffset = 0;
@@ -124,10 +124,10 @@ ReplaceSubStr(LPCTSTR szSourceStr,
               LPCTSTR szTempl)
 {
     LPTSTR szDestStr;
-    INT nCharCnt;
-    INT nSubStrCnt;
-    INT nDestStrCnt;
-    INT nFirstCharCnt;
+    UINT nCharCnt;
+    UINT nSubStrCnt;
+    UINT nDestStrCnt;
+    UINT nFirstCharCnt;
 
     szDestStr = (LPTSTR)malloc(MAX_SAMPLES_STR_SIZE * sizeof(TCHAR));
 

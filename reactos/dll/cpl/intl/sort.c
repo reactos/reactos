@@ -64,7 +64,7 @@ SortEnumProc(LPTSTR lpLocale)
     if ((LANGIDFROMLCID(lcid) == LANGIDFROMLCID(userLcid)) &&
         (SORTIDFROMLCID(lcid) != SORTIDFROMLCID(userLcid)))
     {
-        GetLocaleInfo(lcid, LOCALE_SSORTNAME, lang, sizeof(lang));
+        GetLocaleInfo(lcid, LOCALE_SSORTNAME, lang, sizeof(lang)/sizeof(TCHAR));
 
         index = SendMessage(hWndSortList,
                             CB_ADDSTRING,
@@ -94,7 +94,7 @@ CreateSortList(HWND hwnd, LCID lcid)
     {
         /* Add traditional sorting */
         GetLocaleInfo(MAKELANGID(LANG_SPANISH, SUBLANG_SPANISH),
-                      LOCALE_SSORTNAME, lang, sizeof(lang));
+                      LOCALE_SSORTNAME, lang, sizeof(lang)/sizeof(TCHAR));
 
         index = SendMessage(hwnd,
                             CB_ADDSTRING,
@@ -108,7 +108,7 @@ CreateSortList(HWND hwnd, LCID lcid)
 
         /* Add modern sorting */
         GetLocaleInfo(MAKELANGID(LANG_SPANISH, SUBLANG_SPANISH_MODERN),
-                      LOCALE_SSORTNAME, lang, sizeof(lang));
+                      LOCALE_SSORTNAME, lang, sizeof(lang)/sizeof(TCHAR));
 
         index = SendMessage(hwnd,
                             CB_ADDSTRING,
@@ -124,7 +124,7 @@ CreateSortList(HWND hwnd, LCID lcid)
     {
         userLcid = lcid;
 
-        GetLocaleInfo(lcid & 0xFFFF, LOCALE_SSORTNAME, lang, sizeof(lang));
+        GetLocaleInfo(lcid & 0xFFFF, LOCALE_SSORTNAME, lang, sizeof(lang)/sizeof(TCHAR));
 
         index = SendMessage(hWndSortList,
                             CB_ADDSTRING,

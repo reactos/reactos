@@ -67,7 +67,7 @@ LocalesEnumProc(LPTSTR lpLocale)
     }
     else
     {
-        GetLocaleInfo(lcid, LOCALE_SLANGUAGE, lang, sizeof(lang));
+        GetLocaleInfo(lcid, LOCALE_SLANGUAGE, lang, sizeof(lang)/sizeof(TCHAR));
     }
 
     if (bNoShow == FALSE)
@@ -135,7 +135,7 @@ CreateLanguagesList(HWND hwnd)
 
     /* Select current locale */
     /* or should it be System and not user? */
-    GetLocaleInfo(GetUserDefaultLCID(), LOCALE_SLANGUAGE, langSel, sizeof(langSel));
+    GetLocaleInfo(GetUserDefaultLCID(), LOCALE_SLANGUAGE, langSel, sizeof(langSel)/sizeof(TCHAR));
 
     SendMessage(hList,
                 CB_SELECTSTRING,
@@ -160,14 +160,14 @@ SetNewLocale(LCID lcid)
     TCHAR ACPPage[9];
     TCHAR OEMPage[9];
 
-    ret = GetLocaleInfo(MAKELCID(lcid, SORT_DEFAULT), LOCALE_IDEFAULTCODEPAGE, (WORD*)OEMPage, sizeof(OEMPage));
+    ret = GetLocaleInfo(MAKELCID(lcid, SORT_DEFAULT), LOCALE_IDEFAULTCODEPAGE, OEMPage, sizeof(OEMPage)/sizeof(TCHAR));
     if (ret == 0)
     {
         MessageBox(NULL, _T("Problem reading OEM code page"), _T("Big Problem"), MB_OK);
         return;
     }
 
-    GetLocaleInfo(MAKELCID(lcid, SORT_DEFAULT), LOCALE_IDEFAULTANSICODEPAGE, (WORD*)ACPPage, sizeof(ACPPage));
+    ret = GetLocaleInfo(MAKELCID(lcid, SORT_DEFAULT), LOCALE_IDEFAULTANSICODEPAGE, ACPPage, sizeof(ACPPage)/sizeof(TCHAR));
     if (ret == 0)
     {
         MessageBox(NULL, _T("Problem reading ANSI code page"), _T("Big Problem"), MB_OK);
@@ -305,7 +305,7 @@ VerifyUnattendLCID(HWND hwndDlg)
             continue;
         }
 
-        if (lResult == (LCID)UnattendLCID)
+        if (lResult == (LRESULT)UnattendLCID)
         {
             SendMessage(hList, CB_SETCURSEL, (WPARAM)lIndex, (LPARAM)0);
             PropSheet_Changed(GetParent(hwndDlg), hwndDlg);

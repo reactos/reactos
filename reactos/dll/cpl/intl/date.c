@@ -59,8 +59,8 @@ LPTSTR
 FindDateSep(const TCHAR *szSourceStr)
 {
     LPTSTR pszFoundSep;
-    INT nDateCompCount=0;
-    INT nDateSepCount=0;
+    UINT nDateCompCount=0;
+    UINT nDateSepCount=0;
 
     pszFoundSep = (LPTSTR)malloc(MAX_SAMPLES_STR_SIZE * sizeof(TCHAR));
 
@@ -418,7 +418,7 @@ SetMaxDate(HWND hwndDlg, LCID lcid)
     SetCalendarInfo(lcid,
                     CAL_GREGORIAN,
                     48 , /* CAL_ITWODIGITYEARMAX */
-                    (LPCTSTR)&szMaxDateVal);
+                    (LPCTSTR)szMaxDateVal);
 }
 
 /* Get max date value from registry set */
