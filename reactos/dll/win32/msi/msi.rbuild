@@ -70,10 +70,10 @@
 	<library>odbccp32</library>
 	<library>uuid</library>
 	<library>ntdll</library>
-	<dependency>msi_msiserver_typelib</dependency>
+	<dependency>msiserver</dependency>
 	<dependency>msiheader</dependency>
 </module>
-<module name="msi_msiserver_typelib" type="embeddedtypelib" allowwarnings="true">
+<module name="msiserver" type="embeddedtypelib" allowwarnings="true">
 	<file>msiserver.idl</file>
 </module>
 <module name="msiheader" type="idlheader">
