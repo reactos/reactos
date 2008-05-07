@@ -3738,7 +3738,7 @@ NTAPI
 PsChargePoolQuota (
     IN PEPROCESS    Process,
     IN POOL_TYPE    PoolType,
-    IN ULONG        Amount
+    IN SIZE_T       Amount
 );
 
 NTKERNELAPI
@@ -3747,7 +3747,7 @@ NTAPI
 PsChargeProcessPoolQuota (
     IN PEPROCESS    Process,
     IN POOL_TYPE    PoolType,
-    IN ULONG_PTR    Amount
+    IN SIZE_T       Amount
 );
 
 #define PsDereferenceImpersonationToken(T)  \
@@ -3856,7 +3856,7 @@ NTAPI
 PsReturnPoolQuota (
     IN PEPROCESS    Process,
     IN POOL_TYPE    PoolType,
-    IN ULONG        Amount
+    IN SIZE_T       Amount
 );
 
 NTKERNELAPI
@@ -4664,7 +4664,7 @@ ZwAllocateVirtualMemory (
     IN HANDLE       ProcessHandle,
     IN OUT PVOID    *BaseAddress,
     IN ULONG        ZeroBits,
-    IN OUT PULONG   RegionSize,
+    IN OUT PSIZE_T  RegionSize,
     IN ULONG        AllocationType,
     IN ULONG        Protect
 );
@@ -4912,7 +4912,7 @@ NTAPI
 ZwFreeVirtualMemory (
     IN HANDLE       ProcessHandle,
     IN OUT PVOID    *BaseAddress,
-    IN OUT PULONG   RegionSize,
+    IN OUT PSIZE_T  RegionSize,
     IN ULONG        FreeType
 );
 
