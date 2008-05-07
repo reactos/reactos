@@ -83,7 +83,6 @@ LRESULT WINAPI ScreenSaverProc (HWND hwnd, UINT iMsg, WPARAM wparam, LPARAM lpar
             ReleaseDC (hwnd, hdc);
 
             return 0;
-        }
     }
 
     return DefScreenSaverProc (hwnd, iMsg, wparam, lparam);
