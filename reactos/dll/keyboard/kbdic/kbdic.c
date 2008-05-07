@@ -165,8 +165,8 @@ ROSDATA VK_TO_BIT modifier_keys[] = {
 
 ROSDATA MODIFIERS modifier_bits = {
   modifier_keys,
-  3,
-  { 0, 1, 2, 3, 0, 0, 0xC0 } /* Modifier bit order, NONE, SHIFT, CTRL, ALT, MENU, SHIFT + MENU, CTRL + MENU */
+  6,
+  { 0, 1, 3, 4, SHFT_INVALID, SHFT_INVALID, 2 }
 };
 
 #define NOCAPS 0
