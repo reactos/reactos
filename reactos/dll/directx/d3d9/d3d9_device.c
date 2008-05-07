@@ -239,10 +239,43 @@ static HRESULT WINAPI IDirect3DDevice9Impl_GetDisplayMode(LPDIRECT3DDEVICE9 ifac
     return D3D_OK;
 }
 
-static HRESULT WINAPI IDirect3DDevice9Impl_GetCreationParameters(LPDIRECT3DDEVICE9 iface, D3DDEVICE_CREATION_PARAMETERS *pParameters)
+/*++
+* @name IDirect3DDevice9::GetCreationParameters
+* @implemented
+*
+* The function IDirect3DDevice9Impl_GetCreationParameters fills the pParameters argument with the
+* parameters the device was created with.
+*
+* @param LPDIRECT3D iface
+* Pointer to the IDirect3D9 object returned from Direct3DCreate9()
+*
+* @param D3DDEVICE_CREATION_PARAMETERS* pParameters
+* Pointer to a D3DDEVICE_CREATION_PARAMETERS structure to be filled with the creation parameter
+* information for this device.
+*
+* @return HRESULT
+* If the method successfully fills the pParameters structure, the return value is D3D_OK.
+* If pParameters is a bad pointer, the return value will be D3DERR_INVALIDCALL.
+*
+*/
+static HRESULT WINAPI IDirect3DDevice9Impl_GetCreationParameters(LPDIRECT3DDEVICE9 iface, D3DDEVICE_CREATION_PARAMETERS* pParameters)
 {
-    UNIMPLEMENTED
+    LPDIRECT3DDEVICE9_INT This = impl_from_IDirect3DDevice9(iface);
+    LOCK_D3DDEVICE9();
 
+    if (IsBadWritePtr(pParameters, sizeof(D3DDEVICE_CREATION_PARAMETERS)))
+    {
+        DPRINT1("Invalid pParameters parameter specified");
+        UNLOCK_D3DDEVICE9();
+        return D3DERR_INVALIDCALL;
+    }
+
+    pParameters->AdapterOrdinal = This->AdapterIndexInGroup[0];
+    pParameters->DeviceType = This->DeviceType;
+    pParameters->hFocusWindow = This->hWnd;
+    pParameters->BehaviorFlags = This->BehaviourFlags;
+
+    UNLOCK_D3DDEVICE9();
     return D3D_OK;
 }
 
