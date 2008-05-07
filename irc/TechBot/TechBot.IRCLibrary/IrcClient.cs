@@ -16,6 +16,10 @@ namespace TechBot.IRCLibrary
 	/// </summary>
 	public delegate void ChannelUserDatabaseChangedHandler(IrcChannel channel);
 
+    public delegate void OnConnectHandler ();
+    public delegate void OnDisconnectHandler();
+    public delegate void OnConnectionLostHandler();
+
 	/// <summary>
 	/// An IRC client.
 	/// </summary>
@@ -202,6 +206,10 @@ namespace TechBot.IRCLibrary
 
 		public event ChannelUserDatabaseChangedHandler ChannelUserDatabaseChanged;
 
+        public event OnConnectHandler OnConnect;
+        public event OnConnectionLostHandler OnConnectionLost;
+        public event OnDisconnectHandler OnDisconnect;
+
 		#endregion
 
 		#region Public properties
@@ -291,20 +299,39 @@ namespace TechBot.IRCLibrary
 		/// <param name="ar">IAsyncResult object.</param>
 		private void ReadComplete(IAsyncResult ar)
 		{
-			StateObject stateObject = (StateObject) ar.AsyncState;
-			if (stateObject.Stream.CanRead)
-			{
-				int bytesReceived = stateObject.Stream.EndRead(ar);
-				if (bytesReceived > 0)
-				{
-					messageStream.Write(Encoding.GetString(stateObject.Buffer, 0, bytesReceived));
-					while (messageStream.DataAvailable)
-					{
-						OnMessageReceived(new IrcMessage(messageStream.Read()));
-					}
-				}
-			}
-			Receive();
+            try
+            {
+                StateObject stateObject = (StateObject)ar.AsyncState;
+                if (stateObject.Stream.CanRead)
+                {
+                    int bytesReceived = stateObject.Stream.EndRead(ar);
+                    if (bytesReceived > 0)
+                    {
+                        messageStream.Write(Encoding.GetString(stateObject.Buffer, 0, bytesReceived));
+                        while (messageStream.DataAvailable)
+                        {
+                            OnMessageReceived(new IrcMessage(messageStream.Read()));
+                        }
+                    }
+                }
+             
+                Receive();
+            }
+            catch (SocketException)
+            {
+                if (OnConnectionLost != null)
+                    OnConnectionLost();
+            }
+            catch (IOException)
+            {
+                if (OnConnectionLost != null)
+                    OnConnectionLost();
+            }
+            catch (Exception)
+            {
+                if (OnConnectionLost != null)
+                    OnConnectionLost();
+            } 
 		}
 
 		/// <summary>
@@ -498,6 +525,9 @@ namespace TechBot.IRCLibrary
 				connected = false;
 				tcpClient.Close();
 				tcpClient = null;
+
+                if (OnDisconnect != null)
+                    OnDisconnect();
 			}
 		}
 
@@ -507,19 +537,37 @@ namespace TechBot.IRCLibrary
 		/// <param name="message">The message to be sent.</param>
 		public void SendMessage(IrcMessage message)
 		{
-			if (!connected)
-			{
-				throw new NotConnectedException();
-			}
-			
-			/* Serialize sending messages */
-			lock (typeof(IrcClient))
-			{
-				NetworkStream networkStream = tcpClient.GetStream();
-				byte[] bytes = Encoding.GetBytes(message.Line);
-				networkStream.Write(bytes, 0, bytes.Length);
-				networkStream.Flush();
-			}
+            try
+            {
+                if (!connected)
+                {
+                    throw new NotConnectedException();
+                }
+
+                /* Serialize sending messages */
+                lock (typeof(IrcClient))
+                {
+                    NetworkStream networkStream = tcpClient.GetStream();
+                    byte[] bytes = Encoding.GetBytes(message.Line);
+                    networkStream.Write(bytes, 0, bytes.Length);
+                    networkStream.Flush();
+                }
+            }
+            catch (SocketException)
+            {
+                if (OnConnectionLost != null)
+                    OnConnectionLost();
+            }
+            catch (IOException)
+            {
+                if (OnConnectionLost != null)
+                    OnConnectionLost();
+            }
+            catch (Exception)
+            {
+                if (OnConnectionLost != null)
+                    OnConnectionLost();
+            } 
 		}
 
 		/// <summary>

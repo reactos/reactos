@@ -9,7 +9,7 @@ using System.Configuration.Install;
 
 namespace TechBot
 {
-	public class TechBotService : System.ServiceProcess.ServiceBase
+	public class TechBotService : ServiceBase
 	{
 		private Thread thread;
 		private ServiceThread threadWorker;

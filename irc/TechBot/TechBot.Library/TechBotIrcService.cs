@@ -71,13 +71,27 @@ namespace TechBot.Library
 
             m_IrcClient = new IrcClient();
             m_IrcClient.Encoding = Encoding.GetEncoding("iso-8859-1");
+            m_IrcClient.OnConnect += new OnConnectHandler(m_IrcClient_OnConnect);
+            m_IrcClient.OnConnectionLost += new OnConnectionLostHandler(m_IrcClient_OnConnectionLost);
+            m_IrcClient.OnDisconnect += new OnDisconnectHandler(m_IrcClient_OnDisconnect);
             m_IrcClient.MessageReceived += new MessageReceivedHandler(client_MessageReceived);
             m_IrcClient.ChannelUserDatabaseChanged += new ChannelUserDatabaseChangedHandler(client_ChannelUserDatabaseChanged);
+
+            Connect();
+        }
+
+        void m_IrcClient_OnConnect()
+        {
+            Console.WriteLine("Connected...");
+        }
+
+        private void Connect()
+        {
             Console.WriteLine("Connecting to {0} port {1}",
                                                    hostname,
                                                    port);
             m_IrcClient.Connect(hostname, port);
-            Console.WriteLine("Connected...");
+            
             m_IrcClient.Register(botname, password, null);
             Console.WriteLine("Registered as {0}...", botname);
             JoinChannels();
@@ -89,7 +103,35 @@ namespace TechBot.Library
 
             PartChannels();
             m_IrcClient.Diconnect();
+        }
+
+        void m_IrcClient_OnDisconnect()
+        {
             Console.WriteLine("Disconnected...");
+        }
+
+        void m_IrcClient_OnConnectionLost()
+        {
+            //Dispose old connection
+            Disconnect();
+
+            //Sleep for 1 minute
+            Thread.Sleep(1000 * 60);
+
+            //Try to reconnect
+            Connect();
+        }
+
+        private void Disconnect()
+        {
+            try
+            {
+                m_IrcClient.Diconnect();
+            }
+            catch (Exception)
+            {
+                //
+            }
         }
 
 		public void Stop()
