@@ -1896,7 +1896,7 @@ ExReleaseResourceForThreadLite(IN PERESOURCE Resource,
             Resource->NumberOfSharedWaiters = 0;
             
             /* Release lock and let someone else have it */
-            ASSERT(Resource->ActiveCount = 1);
+            ASSERT(Resource->ActiveCount == 1);
             ExReleaseResourceLock(Resource, &LockHandle);
             KeReleaseSemaphore(Resource->SharedWaiters, 0, Count, FALSE);
             return;
@@ -1910,7 +1910,7 @@ ExReleaseResourceForThreadLite(IN PERESOURCE Resource,
             Resource->NumberOfExclusiveWaiters--;
             
             /* Release the lock and give it away */
-            ASSERT(Resource->ActiveCount = 1);
+            ASSERT(Resource->ActiveCount == 1);
             ExReleaseResourceLock(Resource, &LockHandle);
             KeSetEventBoostPriority(Resource->ExclusiveWaiters,
                                     (PKTHREAD*)&Resource->OwnerEntry.OwnerThread);
@@ -2003,7 +2003,7 @@ ExReleaseResourceForThreadLite(IN PERESOURCE Resource,
                 Resource->NumberOfExclusiveWaiters--;
 
                 /* Release the lock and give it away */
-                ASSERT(Resource->ActiveCount = 1);
+                ASSERT(Resource->ActiveCount == 1);
                 ExReleaseResourceLock(Resource, &LockHandle);
                 KeSetEventBoostPriority(Resource->ExclusiveWaiters,
                                         (PKTHREAD*)&Resource->OwnerEntry.OwnerThread);
