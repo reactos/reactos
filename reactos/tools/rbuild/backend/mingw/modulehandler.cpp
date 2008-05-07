@@ -2301,8 +2301,12 @@ MingwModuleHandler::GetDefaultDependencies (
 	if ( module.host == HostTrue )
 		return;
 
-	if ( module.name != "psdk" )
+	if (module.name != "psdk" && 
+		module.name != "dxsdk")
+	{
 		dependencies.push_back ( "$(PSDK_TARGET) $(psdk_HEADERS)" );
+		dependencies.push_back ( "$(DXSDK_TARGET) $(dxsdk_HEADERS)" );
+	}
 
 	/* Check if any dependent library relies on the generated headers */
 	for ( size_t i = 0; i < module.project.modules.size (); i++ )
