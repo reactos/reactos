@@ -15,4 +15,8 @@
 	<file>vidcap.idl</file>
 	<file>Videoacc.idl</file>
 	<file>Vmrender.idl</file>
+	<file>strmif.idl</file>
+	<file>dvdif.idl</file>
+	<file>devenum.idl</file>
+	<file>d3dvec.idl</file>
 </module>
