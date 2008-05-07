@@ -224,6 +224,7 @@ STRINGTABLE
 BEGIN
 	IDS_SYS_TOOLS        "Ситемни средства"
 	IDS_CMT_CHARMAP      "Знакова таблица"
+	IDS_CMT_KBSWITCH     "Keyboard Layout Switcher"
 END
 
 STRINGTABLE
@@ -262,6 +263,7 @@ BEGIN
     IDS_SHORT_CHARMAP    "Знакова таблица.lnk"
     IDS_SHORT_MAGNIFY    "Лупа.lnk"
     IDS_SHORT_RDESKTOP   "Далечна работна площ.lnk"
+	IDS_SHORT_KBSWITCH   "Keyboard Layout Switcher.lnk"
 END
 
 

@@ -741,6 +741,7 @@ CreateShortcuts(VOID)
 
     /* Create desktop shortcuts */
     CreateShortcut(CSIDL_DESKTOP, NULL, IDS_SHORT_CMD, _T("%SystemRoot%\\system32\\cmd.exe"), IDS_CMT_CMD, FALSE);
+    CreateShortcut(CSIDL_DESKTOP, NULL, IDS_SHORT_KBSWITCH, _T("%SystemRoot%\\system32\\kbswitch.exe"), IDS_CMT_KBSWITCH, FALSE);
 
     /* Create program startmenu shortcuts */
     CreateShortcut(CSIDL_PROGRAMS, NULL, IDS_SHORT_EXPLORER, _T("%SystemRoot%\\explorer.exe"), IDS_CMT_EXPLORER, FALSE);
@@ -756,7 +757,6 @@ CreateShortcuts(VOID)
         CreateShortcut(CSIDL_PROGRAMS, szFolder, IDS_SHORT_CALC, _T("%SystemRoot%\\system32\\calc.exe"), IDS_CMT_CALC, FALSE);
         CreateShortcut(CSIDL_PROGRAMS, szFolder, IDS_SHORT_CMD, _T("%SystemRoot%\\system32\\cmd.exe"), IDS_CMT_CMD, FALSE);
         CreateShortcut(CSIDL_PROGRAMS, szFolder, IDS_SHORT_NOTEPAD, _T("%SystemRoot%\\system32\\notepad.exe"), IDS_CMT_NOTEPAD, FALSE);
-        CreateShortcut(CSIDL_PROGRAMS, szFolder, IDS_SHORT_REGEDIT, _T("%SystemRoot%\\regedit.exe"), IDS_CMT_REGEDIT, FALSE);
         CreateShortcut(CSIDL_PROGRAMS, szFolder, IDS_SHORT_WORDPAD, _T("%SystemRoot%\\system32\\wordpad.exe"), IDS_CMT_WORDPAD, FALSE);
         CreateShortcut(CSIDL_PROGRAMS, szFolder, IDS_SHORT_SNAP, _T("%SystemRoot%\\system32\\screenshot.exe"), IDS_CMT_SCREENSHOT, TRUE);
         CreateShortcut(CSIDL_PROGRAMS, szFolder, IDS_SHORT_RDESKTOP, _T("%SystemRoot%\\system32\\mstsc.exe"), IDS_CMT_RDESKTOP, FALSE);
@@ -766,6 +766,8 @@ CreateShortcuts(VOID)
     if (CreateShortcutFolder(CSIDL_PROGRAMS, IDS_SYS_TOOLS, szFolder, sizeof(szFolder)/sizeof(szFolder[0])))
     {
         CreateShortcut(CSIDL_PROGRAMS, szFolder, IDS_SHORT_CHARMAP, _T("%SystemRoot%\\system32\\charmap.exe"), IDS_CMT_CHARMAP, FALSE);
+        CreateShortcut(CSIDL_PROGRAMS, szFolder, IDS_SHORT_KBSWITCH, _T("%SystemRoot%\\system32\\kbswitch.exe"), IDS_CMT_KBSWITCH, FALSE);
+        CreateShortcut(CSIDL_PROGRAMS, szFolder, IDS_SHORT_REGEDIT, _T("%SystemRoot%\\regedit.exe"), IDS_CMT_REGEDIT, FALSE);
     }
 
     /* Creacte Accessibility subfolder and fill if the exe is available */

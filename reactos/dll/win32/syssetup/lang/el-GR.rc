@@ -220,6 +220,7 @@ STRINGTABLE
 BEGIN
 	IDS_SYS_TOOLS        "Εργαλεία Συστήματος"
 	IDS_CMT_CHARMAP      "Πίνακας Χαρακτήρων"
+	IDS_CMT_KBSWITCH     "Keyboard Layout Switcher"
 END
 
 
@@ -259,6 +260,7 @@ BEGIN
 	IDS_SHORT_CHARMAP    "Πίνακας Χαρακτήρων.lnk"
 	IDS_SHORT_MAGNIFY    "Μεγεθυντικός φακός.lnk"
     IDS_SHORT_RDESKTOP   "Σύνδεση απομακρυσμένης επιφάνειας εργασίας.lnk"
+	IDS_SHORT_KBSWITCH   "Keyboard Layout Switcher.lnk"
 END
 
 STRINGTABLE

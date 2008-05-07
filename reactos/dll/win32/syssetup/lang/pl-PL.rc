@@ -226,6 +226,13 @@ END
 
 STRINGTABLE
 BEGIN
+	IDS_SYS_TOOLS        "System Tools"
+	IDS_CMT_CHARMAP      "Character Map"
+	IDS_CMT_KBSWITCH     "Keyboard Layout Switcher"
+END
+
+STRINGTABLE
+BEGIN
    IDS_GAMES           "Gry"
    IDS_CMT_SOLITAIRE   "Pasjans"
    IDS_CMT_WINEMINE    "Saper"
@@ -260,6 +267,7 @@ BEGIN
     IDS_SHORT_WINEMINE   "Saper.lnk"
 	IDS_SHORT_MAGNIFY    "Lupa.lnk"
     IDS_SHORT_RDESKTOP   "Dostêp zdalny.lnk"
+	IDS_SHORT_KBSWITCH   "Keyboard Layout Switcher.lnk"
 END
 
 STRINGTABLE

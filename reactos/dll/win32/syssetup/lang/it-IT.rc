@@ -211,6 +211,7 @@ STRINGTABLE
 BEGIN
 	IDS_SYS_TOOLS        "Strumenti di sistema"
 	IDS_CMT_CHARMAP      "Mappa dei caratteri"
+	IDS_CMT_KBSWITCH     "Keyboard Layout Switcher"
 END
 
 STRINGTABLE
@@ -249,6 +250,7 @@ BEGIN
 	IDS_SHORT_CHARMAP    "CharMap.lnk"
 	IDS_SHORT_MAGNIFY    "Magnify.lnk"
     IDS_SHORT_RDESKTOP   "Remote Desktop.lnk"
+	IDS_SHORT_KBSWITCH   "Keyboard Layout Switcher.lnk"
 END
 
 STRINGTABLE

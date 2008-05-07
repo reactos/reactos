@@ -202,6 +202,7 @@ STRINGTABLE
 BEGIN
 	IDS_SYS_TOOLS        "Служебные"
 	IDS_CMT_CHARMAP      "Таблица символов"
+	IDS_CMT_KBSWITCH     "Переключатель раскладки клавиатуры"
 END
 
 
@@ -241,6 +242,7 @@ BEGIN
 	IDS_SHORT_CHARMAP    "Таблица символов.lnk"
 	IDS_SHORT_MAGNIFY    "Экранная лупа.lnk"
     IDS_SHORT_RDESKTOP   "Удаленный рабочий стол.lnk"
+	IDS_SHORT_KBSWITCH   "Переключатель раскладки клавиатуры.lnk"
 END
 
 STRINGTABLE

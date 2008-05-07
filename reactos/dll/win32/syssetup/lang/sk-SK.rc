@@ -204,6 +204,7 @@ STRINGTABLE
 BEGIN
 	IDS_SYS_TOOLS        "Systémové nástroje"
 	IDS_CMT_CHARMAP      "Mapa znakov"
+	IDS_CMT_KBSWITCH     "Keyboard Layout Switcher"
 END
 
 
@@ -243,6 +244,7 @@ BEGIN
     IDS_SHORT_CHARMAP    "Mapa znakov.lnk"
     IDS_SHORT_MAGNIFY    "Lupa.lnk"
     IDS_SHORT_RDESKTOP   "Vzdialená pracovná plocha.lnk"
+	IDS_SHORT_KBSWITCH   "Keyboard Layout Switcher.lnk"
 END
 
 STRINGTABLE
