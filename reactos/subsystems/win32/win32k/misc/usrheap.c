@@ -55,7 +55,7 @@ IntUserHeapCommitRoutine(IN PVOID Base,
     }
     else
     {
-        ULONG ViewSize = 0;
+        SIZE_T ViewSize = 0;
         LARGE_INTEGER Offset;
         extern PSECTION_OBJECT GlobalUserHeapSection;
 
@@ -163,7 +163,7 @@ IntUserHeapCreate(IN PSECTION_OBJECT SectionObject,
 HANDLE
 UserCreateHeap(OUT PSECTION_OBJECT *SectionObject,
                IN OUT PVOID *SystemBase,
-               IN ULONG HeapSize)
+               IN SIZE_T HeapSize)
 {
     LARGE_INTEGER SizeHeap;
     HANDLE hHeap = NULL;

@@ -74,7 +74,7 @@ extern HANDLE GlobalUserHeap;
 HANDLE
 UserCreateHeap(OUT PSECTION_OBJECT *SectionObject,
                IN OUT PVOID *SystemBase,
-               IN ULONG HeapSize);
+               IN SIZE_T HeapSize);
 
 static __inline PVOID
 UserHeapAlloc(SIZE_T Bytes)
