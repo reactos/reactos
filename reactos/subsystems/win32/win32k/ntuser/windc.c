@@ -837,10 +837,10 @@ UserReleaseDC(PWINDOW_OBJECT Window, HDC hDc, BOOL EndPaint)
   return nRet;
 }
 
-DWORD FASTCALL
+HDC FASTCALL
 UserGetWindowDC(PWINDOW_OBJECT Wnd)
 {
-  return (DWORD)UserGetDCEx(Wnd, 0, DCX_USESTYLE | DCX_WINDOW);
+  return UserGetDCEx(Wnd, 0, DCX_USESTYLE | DCX_WINDOW);
 }
 
 HDC STDCALL
@@ -877,10 +877,10 @@ CLEANUP:
  * Status
  *    @implemented
  */
-DWORD STDCALL
+HDC STDCALL
 NtUserGetWindowDC(HWND hWnd)
 {
-  return (DWORD)NtUserGetDCEx(hWnd, 0, DCX_USESTYLE | DCX_WINDOW);
+  return NtUserGetDCEx(hWnd, 0, DCX_USESTYLE | DCX_WINDOW);
 }
 
 HDC STDCALL

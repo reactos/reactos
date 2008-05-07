@@ -118,7 +118,7 @@ IntAnimatePalette(HPALETTE hPal,
 
         /* Immediately apply the new palette if current window uses it */
         Wnd = UserGetDesktopWindow();
-        hDC =  (HDC)UserGetWindowDC(Wnd);
+        hDC =  UserGetWindowDC(Wnd);
         dc = DC_LockDc(hDC);
         if (NULL != dc)
         {

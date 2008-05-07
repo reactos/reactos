@@ -164,7 +164,7 @@ NtGdiExtEscape(
 
    if (hDC == 0)
    {
-       hDC = (HDC)UserGetWindowDC(NULL);
+       hDC = UserGetWindowDC(NULL);
    }
 
    pDC = DC_LockDc(hDC);

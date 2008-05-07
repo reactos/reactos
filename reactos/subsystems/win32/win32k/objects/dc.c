@@ -2796,7 +2796,7 @@ GetDisplayNumberFromDeviceName(
     PDC pDC;
 
     DesktopObject = UserGetDesktopWindow();
-    DesktopHDC = (HDC)UserGetWindowDC(DesktopObject);
+    DesktopHDC = UserGetWindowDC(DesktopObject);
     pDC = DC_LockDc(DesktopHDC);
 
     *DisplayNumber = ((GDIDEVICE *)pDC->pPDev)->DisplayNumber;
@@ -3320,7 +3320,7 @@ IntChangeDisplaySettings(
           return FALSE;
       }
 
-      hDC = (HDC)UserGetWindowDC(Wnd);
+      hDC = UserGetWindowDC(Wnd);
 
       DC = DC_LockDc(hDC);
       if (NULL == DC)

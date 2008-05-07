@@ -1485,7 +1485,7 @@ NtUserGetUpdateRgn(
   HRGN hRgn,
   BOOL bErase);
 
-DWORD
+HDC
 NTAPI
 NtUserGetWindowDC(
   HWND hWnd);
