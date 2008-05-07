@@ -6,4 +6,4 @@ import "objidl.idl";
 #include <axextend.idl>
 #include <dvdif.idl>
 #include <dyngraph.idl>
-#include "VMRender.idl"
+#include "Vmrender.idl"
