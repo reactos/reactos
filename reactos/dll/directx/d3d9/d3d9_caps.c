@@ -90,8 +90,8 @@ static void CreateInternalDeviceData(HDC hDC, LPCSTR lpszDeviceName, D3D9_Unknow
         return;
     }
 
-    pUnknown6BC->hDD = OsThunkDdCreateDirectDrawObject(hDC);
-    if (0 == pUnknown6BC->hDD)
+    pUnknown6BC->hDirectDrawLocal = OsThunkDdCreateDirectDrawObject(hDC);
+    if (0 == pUnknown6BC->hDirectDrawLocal)
     {
         HeapFree(GetProcessHeap(), 0, pUnknown6BC);
         return;
@@ -116,7 +116,7 @@ static void CreateInternalDeviceData(HDC hDC, LPCSTR lpszDeviceName, D3D9_Unknow
 
 static void ReleaseInternalDeviceData(LPD3D9_DEVICEDATA pDeviceData)
 {
-    OsThunkDdDeleteDirectDrawObject(pDeviceData->pUnknown6BC->hDD);
+    OsThunkDdDeleteDirectDrawObject(pDeviceData->pUnknown6BC->hDirectDrawLocal);
 
     HeapFree(GetProcessHeap(), 0, pDeviceData->pUnknown6BC);
     pDeviceData->pUnknown6BC = NULL;
@@ -302,7 +302,7 @@ BOOL CanReenableDirectDrawObject(D3D9_Unknown6BC* pUnknown)
     BOOL bDisplayModeWasChanged;
 
     /* Try the real way first */
-    if (TRUE == OsThunkDdReenableDirectDrawObject(pUnknown->hDD, &bDisplayModeWasChanged))
+    if (TRUE == OsThunkDdReenableDirectDrawObject(pUnknown->hDirectDrawLocal, &bDisplayModeWasChanged))
         return TRUE;
 
     /* Ref types and software types can always be reenabled after a mode switch */
@@ -384,7 +384,7 @@ BOOL GetD3D9DriverInfo( D3D9_Unknown6BC* pUnknown6BC,
 
 
     bRet = OsThunkDdQueryDirectDrawObject(
-        pUnknown6BC->hDD,
+        pUnknown6BC->hDirectDrawLocal,
         &HalInfo,
         CallBackFlags,
         &D3dCallbacks,
@@ -407,7 +407,7 @@ BOOL GetD3D9DriverInfo( D3D9_Unknown6BC* pUnknown6BC,
         puD3dTextureFormats != NULL)
     {
         bRet = OsThunkDdQueryDirectDrawObject(
-            pUnknown6BC->hDD,
+            pUnknown6BC->hDirectDrawLocal,
             &HalInfo,
             CallBackFlags,
             &D3dCallbacks,
@@ -447,7 +447,7 @@ BOOL GetD3D9DriverInfo( D3D9_Unknown6BC* pUnknown6BC,
             DxVersion.dwDXVersion = dwDXVersion;
 
             PrepareDriverInfoData(&DrvInfo, &DxVersion, sizeof(DxVersion));
-            OsThunkDdGetDriverInfo((HANDLE)pUnknown6BC->hDD, &DrvInfo);
+            OsThunkDdGetDriverInfo(pUnknown6BC->hDirectDrawLocal, &DrvInfo);
         }
 
 
@@ -455,7 +455,7 @@ BOOL GetD3D9DriverInfo( D3D9_Unknown6BC* pUnknown6BC,
         {
             ResetGetDriverInfo2Data(&DdiVersion.gdi2, D3DGDI2_TYPE_GETDDIVERSION, sizeof(DD_GETDDIVERSIONDATA));
             PrepareDriverInfoData(&DrvInfo, &DdiVersion, sizeof(DdiVersion));
-            bRet = OsThunkDdGetDriverInfo((HANDLE)pUnknown6BC->hDD, &DrvInfo);
+            bRet = OsThunkDdGetDriverInfo(pUnknown6BC->hDirectDrawLocal, &DrvInfo);
 
             if (DdiVersion.dwDDIVersion != DX9_DDI_VERSION)
             {
@@ -492,7 +492,7 @@ BOOL GetD3D9DriverInfo( D3D9_Unknown6BC* pUnknown6BC,
                 ResetGetDriverInfo2Data((DD_GETDRIVERINFO2DATA*)&DriverCaps8, D3DGDI2_TYPE_GETD3DCAPS8, sizeof(D3DCAPS8));
                 PrepareDriverInfoData(&DrvInfo, &DriverCaps8, sizeof(D3DCAPS8));
                 
-                if (FALSE == OsThunkDdGetDriverInfo((HANDLE)pUnknown6BC->hDD, &DrvInfo) ||
+                if (FALSE == OsThunkDdGetDriverInfo(pUnknown6BC->hDirectDrawLocal, &DrvInfo) ||
                     S_OK != DrvInfo.ddRVal ||
                     DrvInfo.dwActualSize != sizeof(D3DCAPS8))
                 {
@@ -515,7 +515,7 @@ BOOL GetD3D9DriverInfo( D3D9_Unknown6BC* pUnknown6BC,
             ResetGetDriverInfo2Data((DD_GETDRIVERINFO2DATA*)&DriverCaps9, D3DGDI2_TYPE_GETD3DCAPS9, sizeof(D3DCAPS9));
             PrepareDriverInfoData(&DrvInfo, &DriverCaps9, sizeof(D3DCAPS9));
             
-            if (FALSE == OsThunkDdGetDriverInfo((HANDLE)pUnknown6BC->hDD, &DrvInfo) ||
+            if (FALSE == OsThunkDdGetDriverInfo(pUnknown6BC->hDirectDrawLocal, &DrvInfo) ||
                 S_OK != DrvInfo.ddRVal ||
                 DrvInfo.dwActualSize != sizeof(D3DCAPS9))
             {
@@ -536,7 +536,7 @@ BOOL GetD3D9DriverInfo( D3D9_Unknown6BC* pUnknown6BC,
             FormatCountData.dwFormatCount = UINT_MAX;
             FormatCountData.dwReserved = dwDXVersion;
 
-            if (TRUE == OsThunkDdGetDriverInfo((HANDLE)pUnknown6BC->hDD, &DrvInfo))
+            if (TRUE == OsThunkDdGetDriverInfo(pUnknown6BC->hDirectDrawLocal, &DrvInfo))
             {
                 if (DrvInfo.ddRVal != S_OK)
                 {
@@ -570,7 +570,7 @@ BOOL GetD3D9DriverInfo( D3D9_Unknown6BC* pUnknown6BC,
                 PrepareDriverInfoData(&DrvInfo, &FormatData, sizeof(DD_GETFORMATDATA));
                 FormatData.dwFormatIndex = FormatIndex;
 
-                if (TRUE == OsThunkDdGetDriverInfo((HANDLE)pUnknown6BC->hDD, &DrvInfo))
+                if (TRUE == OsThunkDdGetDriverInfo(pUnknown6BC->hDirectDrawLocal, &DrvInfo))
                 {
                     if (DrvInfo.ddRVal != S_OK)
                     {
@@ -612,7 +612,7 @@ BOOL GetD3D9DriverInfo( D3D9_Unknown6BC* pUnknown6BC,
             ExModeCountData.dwModeCount = UINT_MAX;
             ExModeCountData.dwReserved = dwDXVersion;
 
-            if (TRUE == OsThunkDdGetDriverInfo((HANDLE)pUnknown6BC->hDD, &DrvInfo))
+            if (TRUE == OsThunkDdGetDriverInfo(pUnknown6BC->hDirectDrawLocal, &DrvInfo))
             {
                 if (DrvInfo.ddRVal == S_OK)
                 {
@@ -649,7 +649,7 @@ BOOL GetD3D9DriverInfo( D3D9_Unknown6BC* pUnknown6BC,
                 ExModeData.dwModeIndex = ModeIndex;
                 ExModeData.mode.Width = UINT_MAX;
 
-                if (TRUE == OsThunkDdGetDriverInfo((HANDLE)pUnknown6BC->hDD, &DrvInfo))
+                if (TRUE == OsThunkDdGetDriverInfo(pUnknown6BC->hDirectDrawLocal, &DrvInfo))
                 {
                     if (DrvInfo.ddRVal != S_OK)
                     {
@@ -680,7 +680,7 @@ BOOL GetD3D9DriverInfo( D3D9_Unknown6BC* pUnknown6BC,
             PrepareDriverInfoData(&DrvInfo, &AdapterGroupData, sizeof(DD_GETADAPTERGROUPDATA));
             AdapterGroupData.ulUniqueAdapterGroupId = UINT_MAX;
 
-            if (TRUE == OsThunkDdGetDriverInfo((HANDLE)pUnknown6BC->hDD, &DrvInfo))
+            if (TRUE == OsThunkDdGetDriverInfo(pUnknown6BC->hDirectDrawLocal, &DrvInfo))
             {
                 if (DrvInfo.ddRVal != S_OK)
                 {
@@ -708,7 +708,7 @@ BOOL GetD3D9DriverInfo( D3D9_Unknown6BC* pUnknown6BC,
             PrepareDriverInfoData(&DrvInfo, &D3dQueryCountData, sizeof(DD_GETD3DQUERYCOUNTDATA));
             D3dQueryCountData.dwNumQueries = UINT_MAX;
 
-            if (TRUE == OsThunkDdGetDriverInfo((HANDLE)pUnknown6BC->hDD, &DrvInfo))
+            if (TRUE == OsThunkDdGetDriverInfo(pUnknown6BC->hDirectDrawLocal, &DrvInfo))
             {
                 if (DrvInfo.ddRVal != S_OK)
                 {
@@ -742,7 +742,7 @@ BOOL GetD3D9DriverInfo( D3D9_Unknown6BC* pUnknown6BC,
                 PrepareDriverInfoData(&DrvInfo, &D3dQueryData, sizeof(DD_GETD3DQUERYDATA));
                 D3dQueryData.dwQueryIndex = QueryIndex;
 
-                if (TRUE == OsThunkDdGetDriverInfo((HANDLE)pUnknown6BC->hDD, &DrvInfo))
+                if (TRUE == OsThunkDdGetDriverInfo(pUnknown6BC->hDirectDrawLocal, &DrvInfo))
                 {
                     if (DrvInfo.ddRVal != S_OK)
                     {
@@ -773,7 +773,7 @@ BOOL GetD3D9DriverInfo( D3D9_Unknown6BC* pUnknown6BC,
         DrvInfo.guidInfo = GUID_D3DExtendedCaps;
         DrvInfo.dwExpectedSize = sizeof(D3DHAL_D3DEXTENDEDCAPS);
         DrvInfo.lpvData = pD3dExtendedCaps;
-        bRet = OsThunkDdGetDriverInfo((HANDLE)pUnknown6BC->hDD, &DrvInfo);
+        bRet = OsThunkDdGetDriverInfo(pUnknown6BC->hDirectDrawLocal, &DrvInfo);
 
         if (TRUE != bRet || DrvInfo.ddRVal != S_OK)
         {
@@ -790,7 +790,7 @@ BOOL GetD3D9DriverInfo( D3D9_Unknown6BC* pUnknown6BC,
         DrvInfo.guidInfo = GUID_ZPixelFormats;
         DrvInfo.dwExpectedSize = FormatCountData.dwFormatCount * sizeof(DDPIXELFORMAT);
         DrvInfo.lpvData = pZPixelFormats;
-        bRet = OsThunkDdGetDriverInfo((HANDLE)pUnknown6BC->hDD, &DrvInfo);
+        bRet = OsThunkDdGetDriverInfo(pUnknown6BC->hDirectDrawLocal, &DrvInfo);
 
         if (TRUE != bRet || DrvInfo.ddRVal != S_OK)
         {

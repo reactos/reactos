@@ -10,16 +10,31 @@
 
 #include <windows.h>
 #include <ddraw.h>
-#include <ddrawi.h>
 
 #define D3D9_INT_MAX_NUM_ADAPTERS   12
 
 #define D3D9_INT_D3DCAPS8_VALID     1
 #define D3D9_INT_D3DCAPS9_VALID     2
 
+typedef enum _D3D9_GETAVAILDRIVERMEMORY_TYPE
+{
+    D3D9_GETAVAILDRIVERMEMORY_TYPE_ALL      = 0,
+    D3D9_GETAVAILDRIVERMEMORY_TYPE_LOCAL    = 4,
+    D3D9_GETAVAILDRIVERMEMORY_TYPE_NONLOCAL = 5,
+} D3D9_GETAVAILDRIVERMEMORY_TYPE;
+
+typedef struct _D3D9_GETAVAILDRIVERMEMORYDATA
+{
+/* 0x0000 */    struct _D3D9Unknown6BC_* pUnknown6BC;
+/* 0x0004 */    D3D9_GETAVAILDRIVERMEMORY_TYPE dwMemoryType;
+/* 0x0008 */    DWORD dwTextureType;
+/* 0x000c */    DWORD dwFree;
+} D3D9_GETAVAILDRIVERMEMORYDATA, FAR* LPD3D9_GETAVAILDRIVERMEMORYDATA;
+typedef BOOL (WINAPI FAR* LPD3D9_GETAVAILDRIVERMEMORY)(LPD3D9_GETAVAILDRIVERMEMORYDATA);
+
 typedef struct _D3D9Unknown6BC_
 {
-/* 0x0000 */    HANDLE hDD;
+/* 0x0000 */    HANDLE hDirectDrawLocal;
 /* 0x0004 */    LPDWORD pUnknown0004;
 /* 0x0008 */    DWORD dwUnknown0008;
 /* 0x000c */    CHAR szDeviceName[CCHDEVICENAME];
@@ -108,7 +123,7 @@ typedef struct _tagD3D9_CALLBACKS
 /* 0x0044 */    DWORD DdFlip;
 /* 0x0048 */    DWORD DdGetBltStatus;
 /* 0x004c */    DWORD DdGetFlipStatus;
-/* 0x0050 */    LPDDHAL_GETAVAILDRIVERMEMORY DdGetAvailDriverMemory;
+/* 0x0050 */    LPD3D9_GETAVAILDRIVERMEMORY DdGetAvailDriverMemory;
 /* 0x0054 */    DWORD unknown0115;
 /* 0x0058 */    DWORD DdSetMode;
 /* 0x005c */    DWORD DdSetExclusiveMode;

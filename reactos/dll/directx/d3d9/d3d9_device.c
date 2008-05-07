@@ -88,22 +88,19 @@ static HRESULT WINAPI IDirect3DDevice9Impl_TestCooperativeLevel(LPDIRECT3DDEVICE
 static UINT WINAPI IDirect3DDevice9Impl_GetAvailableTextureMem(LPDIRECT3DDEVICE9 iface)
 {
     UINT AvailableTextureMemory = 0;
-    DDHAL_GETAVAILDRIVERMEMORYDATA ddGetAvailDriverMemoryData;
+    D3D9_GETAVAILDRIVERMEMORYDATA d3d9GetAvailDriverMemoryData;
 
     LPDIRECT3DDEVICE9_INT This = impl_from_IDirect3DDevice9(iface);
     LOCK_D3DDEVICE9();
 
-    memset(&ddGetAvailDriverMemoryData, 0, sizeof(ddGetAvailDriverMemoryData));
-    ddGetAvailDriverMemoryData.lpDD = (LPDDRAWI_DIRECTDRAW_GBL)&This->DeviceData[0].pUnknown6BC->hDD;
-    ddGetAvailDriverMemoryData.ddRVal = DDERR_GENERIC;
+    memset(&d3d9GetAvailDriverMemoryData, 0, sizeof(d3d9GetAvailDriverMemoryData));
+    d3d9GetAvailDriverMemoryData.pUnknown6BC = This->DeviceData[0].pUnknown6BC;
+    d3d9GetAvailDriverMemoryData.dwMemoryType = D3D9_GETAVAILDRIVERMEMORY_TYPE_ALL;
 
-    if (DDHAL_DRIVER_HANDLED == (*This->DeviceData[0].D3D9Callbacks.DdGetAvailDriverMemory)(&ddGetAvailDriverMemoryData))
+    if (TRUE == (*This->DeviceData[0].D3D9Callbacks.DdGetAvailDriverMemory)(&d3d9GetAvailDriverMemoryData))
     {
-        if (DD_OK == ddGetAvailDriverMemoryData.ddRVal)
-        {
-            /* Round it up to the nearest MB */
-            AvailableTextureMemory = (ddGetAvailDriverMemoryData.dwFree + 0x80000) & 0xFFF00000;
-        }
+        /* Round it up to the nearest MB */
+        AvailableTextureMemory = (d3d9GetAvailDriverMemoryData.dwFree + 0x80000) & 0xFFF00000;
     }
 
     UNLOCK_D3DDEVICE9();
@@ -226,7 +223,7 @@ static HRESULT WINAPI IDirect3DDevice9Impl_GetDisplayMode(LPDIRECT3DDEVICE9 ifac
         return D3DERR_INVALIDCALL;
     }
 
-    if (IsBadWritePtr(pMode, sizeof(D3DDISPLAYMODE*)))
+    if (IsBadWritePtr(pMode, sizeof(D3DDISPLAYMODE)))
     {
         DPRINT1("Invalid pMode parameter specified");
         UNLOCK_D3DDEVICE9();
