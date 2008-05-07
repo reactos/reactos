@@ -180,7 +180,7 @@ LpcRequestWaitReplyPort(IN PVOID PortObject,
     NTSTATUS Status = STATUS_SUCCESS;
     PLPCP_MESSAGE Message;
     PETHREAD Thread = PsGetCurrentThread();
-    BOOLEAN Callback;
+    BOOLEAN Callback = FALSE;
     PKSEMAPHORE Semaphore;
     ULONG MessageType;
     PAGED_CODE();
