@@ -4,16 +4,6 @@ using TechBot.Library;
 
 namespace TechBot.Console
 {
-	public class ConsoleServiceOutput : IServiceOutput
-	{
-		public void WriteLine(MessageContext context,
-		                      string message)
-		{
-			System.Console.WriteLine(message);
-		}
-	}
-
-	
 	class MainClass
 	{
 		private static void VerifyRequiredOption(string optionName,
@@ -208,53 +198,43 @@ namespace TechBot.Console
 		}
 
 
-		private static void RunIrcService()
-		{
-			IrcService ircService = new IrcService(IRCServerHostName,
-			                                       IRCServerHostPort,
-			                                       IRCChannelNames,
-			                                       IRCBotName,
-			                                       IRCBotPassword,
-			                                       ChmPath,
-			                                       MainChm,
-                                                   //NtstatusXml,
-                                                   //WinerrorXml,
-                                                   //HresultXml,
-                                                   //WmXml,
-			                                       //SvnCommand,
-			                                       BugUrl,
-			                                       WineBugUrl,
-			                                       SambaBugUrl);
-			ircService.Run();
-		}
-		
-		public static void Main(string[] args)
-		{
-			if (args.Length > 0 && args[0].ToLower().Equals("irc"))
-			{
-				RunIrcService();
-				return;
-			}
-			
-			System.Console.WriteLine("TechBot running console service...");
-			TechBotService service = new TechBotService(new ConsoleServiceOutput(),
-			                                            ChmPath,
-			                                            MainChm);
-                                                        //NtstatusXml,
-                                                        //WinerrorXml,
-                                                        //HresultXml,
-                                                        //WmXml,
-			                                            //SvnCommand,
-                                                        //BugUrl,
-                                                        //WineBugUrl,
-                                                        //SambaBugUrl);
-			service.Run();
-			while (true)
-			{
-				string s = System.Console.ReadLine();
-				service.InjectMessage(null,
-				                      s);
-			}
-		}
+        //private static void RunIrcService()
+        //{
+        //    IrcTechBotService ircService = new IrcTechBotService(IRCServerHostName,
+        //                                           IRCServerHostPort,
+        //                                           IRCChannelNames,
+        //                                           IRCBotName,
+        //                                           IRCBotPassword,
+        //                                           ChmPath,
+        //                                           MainChm);
+        //    ircService.Run();
+        //}
+
+        public static void Main(string[] args)
+        {
+            TechBotService m_TechBot = null;
+
+            if (args.Length > 0 && args[0].ToLower().Equals("irc"))
+            {
+                m_TechBot = new IrcTechBotService(IRCServerHostName,
+                                                                   IRCServerHostPort,
+                                                                   IRCChannelNames,
+                                                                   IRCBotName,
+                                                                   IRCBotPassword,
+                                                                   ChmPath,
+                                                                   MainChm);
+            }
+            else
+            {
+                System.Console.WriteLine("TechBot running console service...");
+                m_TechBot = new ConsoleTechBotService(
+                                                            ChmPath,
+                                                            MainChm);
+
+
+            }
+
+            m_TechBot.Run();
+        }
 	}
 }

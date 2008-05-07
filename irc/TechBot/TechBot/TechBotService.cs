@@ -80,18 +80,3 @@ namespace TechBot
 		}
 	}
 }
-
-[RunInstaller(true)]
-public class ProjectInstaller : Installer
-{
-	public ProjectInstaller()
-	{
-		ServiceProcessInstaller spi = new ServiceProcessInstaller();
-		spi.Account = ServiceAccount.LocalSystem;
-		
-		ServiceInstaller si = new ServiceInstaller();
-		si.ServiceName = "TechBot";
-		si.StartType = ServiceStartMode.Automatic;
-		Installers.AddRange(new Installer[] {spi, si});
-	}
-}

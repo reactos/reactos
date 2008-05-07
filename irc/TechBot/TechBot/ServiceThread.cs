@@ -51,21 +51,21 @@ namespace TechBot
 			SetupConfiguration();
 			System.Console.WriteLine("TechBot irc service...");
 			
-			IrcService ircService = new IrcService(IRCServerHostName,
+			IrcTechBotService ircService = new IrcTechBotService(IRCServerHostName,
 			                                       IRCServerHostPort,
 			                                       IRCChannelNames,
 			                                       IRCBotName,
 			                                       IRCBotPassword,
 			                                       ChmPath,
-			                                       MainChm,
+			                                       MainChm);
                                                    //NtstatusXml,
                                                    //WinerrorXml,
                                                    //HresultXml,
                                                    //WmXml,
 			                                       //SvnCommand,
-			                                       BugUrl,
-			                                       WineBugUrl,
-			                                       SambaBugUrl);
+                                                   //BugUrl,
+                                                   //WineBugUrl,
+                                                   //SambaBugUrl);
 			ircService.Run();
 		}
 		

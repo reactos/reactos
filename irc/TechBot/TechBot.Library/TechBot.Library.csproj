@@ -39,21 +39,29 @@
   </Target>
   -->
   <ItemGroup>
-    <Compile Include="ApiCommand.cs" />
-    <Compile Include="BugCommand.cs" />
+    <Compile Include="Attributes\CommandAttribute.cs" />
+    <Compile Include="Attributes\CommandParameterAliasAttribute.cs" />
+    <Compile Include="Attributes\CommandParameterAttribute.cs" />
+    <Compile Include="Collections\CommandBuilderCollection.cs" />
+    <Compile Include="Commands\Base\XmlLookupCommand.cs" />
+    <Compile Include="Factory\CommandBuilder.cs" />
+    <Compile Include="Factory\CommandFactory.cs" />
+    <Compile Include="Commands\Base\Command.cs" />
     <Compile Include="Commands\Base\XmlCommand.cs" />
-    <Compile Include="SambaBugUrl.cs" />
-    <Compile Include="WineBugUrl.cs" />
-    <Compile Include="ErrorCommand.cs" />
-    <Compile Include="HelpCommand.cs" />
-    <Compile Include="HresultCommand.cs" />
-    <Compile Include="Command.cs" />
-    <Compile Include="IrcService.cs" />
+    <Compile Include="Commands\BugCommand.cs" />
+    <Compile Include="Commands\HelpCommand.cs" />
+    <Compile Include="Commands\HResultCommand.cs" />
+    <Compile Include="Commands\NtStatusCommand.cs" />
+    <Compile Include="Commands\ReactOSBugUrl.cs" />
+    <Compile Include="Commands\SambaBugUrl.cs" />
+    <Compile Include="Commands\SvnCommand.cs" />
+    <Compile Include="Commands\WineBugUrl.cs" />
+    <Compile Include="Commands\WinerrorCommand.cs" />
+    <Compile Include="Commands\WMCommand.cs" />
     <Compile Include="MessageContext.cs" />
-    <Compile Include="NtStatusCommand.cs" />
     <Compile Include="NumberParser.cs" />
+    <Compile Include="ParametersParser.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="ReactOSBugUrl.cs" />
     <Compile Include="ServiceOutput.cs" />
     <Compile Include="Settings.cs" />
     <Compile Include="Settings.Designer.cs">
@@ -61,10 +69,8 @@
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
       <DependentUpon>Settings.settings</DependentUpon>
     </Compile>
-    <Compile Include="SvnCommand.cs" />
+    <Compile Include="TechBotIrcService.cs" />
     <Compile Include="TechBotService.cs" />
-    <Compile Include="WinerrorCommand.cs" />
-    <Compile Include="WmCommand.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="System" />

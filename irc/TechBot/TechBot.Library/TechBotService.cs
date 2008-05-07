@@ -4,63 +4,29 @@ using System.Collections.Generic;
 using System.IO;
 using System.Data;
 using System.Threading;
+
 using TechBot.IRCLibrary;
 
 namespace TechBot.Library
 {
-	public class TechBotService
+	public abstract class TechBotService
 	{
-		private IServiceOutput serviceOutput;
+		protected IServiceOutput serviceOutput;
 		private string chmPath;
 		private string mainChm;
-		private string ntstatusXml;
-		private string winerrorXml;
-		private string hresultXml;
-		private string wmXml;
-		private string svnCommand;
-		private string bugUrl, WineBugUrl, SambaBugUrl;
-        private List<Command> commands = new List<Command>();
 		
 		public TechBotService(IServiceOutput serviceOutput,
 		                      string chmPath,
 		                      string mainChm)
-                              //string ntstatusXml,
-                              //string winerrorXml,
-                              //string hresultXml,
-                              //string wmXml,
-		                      //string svnCommand,
-                              //string bugUrl,
-                              //string WineBugUrl,
-                              //string SambaBugUrl)
 		{
 			this.serviceOutput = serviceOutput;
 			this.chmPath = chmPath;
 			this.mainChm = mainChm;
-			this.ntstatusXml = ntstatusXml;
-			this.winerrorXml = winerrorXml;
-			this.hresultXml = hresultXml;
-			this.wmXml = wmXml;
-			this.svnCommand = svnCommand;
-			this.bugUrl = bugUrl;
-			this.WineBugUrl = WineBugUrl;
-			this.SambaBugUrl = SambaBugUrl;
 		}
 
-        public void Run()
+        public virtual void Run()
         {
-            commands.Add(new HelpCommand(this));
-            /*commands.Add(new ApiCommand(serviceOutput,
-                                        chmPath,
-                                        mainChm));*/
-            commands.Add(new NtStatusCommand(this));
-            commands.Add(new WinerrorCommand(this));
-            commands.Add(new HResultCommand(this));
-            commands.Add(new ErrorCommand(this));
-            commands.Add(new WMCommand(this));
-            commands.Add(new SvnCommand(this));
-            commands.Add(new ReactOSBugUrl(this));
-            commands.Add(new SambaBugUrl(this));
-            commands.Add(new WineBugUrl(this));
+            CommandFactory.LoadPlugins();
         }
 
         public IServiceOutput ServiceOutput
@@ -68,18 +34,16 @@ namespace TechBot.Library
             get { return serviceOutput; }
         }
 
-        public IList<Command> Commands
+        public CommandBuilderCollection Commands
         {
-            get { return commands; }
+            get { return CommandFactory.Commands; }
         }
-		
-		public void InjectMessage(MessageContext context,
-		                          string message)
-		{
-			if (message.StartsWith("!"))
-				ParseCommandMessage(context,
-				                    message);
-		}
+
+        public void InjectMessage(MessageContext context, string message)
+        {
+            ParseCommandMessage(context,
+                                message);
+        }
 		
 		private bool IsCommandMessage(string message)
 		{
@@ -104,19 +68,21 @@ namespace TechBot.Library
 			else
 				commandName = message.Trim();
 
-			foreach (Command command in commands)
-			{
-                foreach (string cmd in command.AvailableCommands)
+            foreach (CommandBuilder command in Commands)
+            {
+                if (command.Name == commandName)
                 {
-                    if (cmd == commandName)
-                    {
-                        command.Handle(context,
-                                       commandName, 
-                                       commandParams);
-                        return;
-                    }
+                    //Create a new instance of the required command type
+                    Command cmd = command.CreateCommand();
+
+                    cmd.TechBot = this;
+                    cmd.Context = context;
+                    cmd.ParseParameters(message);
+                    cmd.ExecuteCommand();
+
+                    return;
                 }
-			}
+            }
 		}
 	}
 }

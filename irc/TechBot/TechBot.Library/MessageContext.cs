@@ -7,43 +7,33 @@ namespace TechBot.Library
 	{
 	}
 
-
-
 	public class ChannelMessageContext : MessageContext
 	{
-		private IrcChannel channel;
+		private IrcChannel m_IrcChannel;
 
-		public IrcChannel Channel
-		{
-			get
-			{
-				return channel;
-			}
-		}
+        public IrcChannel Channel
+        {
+            get { return m_IrcChannel; }
+        }
 		
 		public ChannelMessageContext(IrcChannel channel)
 		{
-			this.channel = channel;
+			m_IrcChannel = channel;
 		}
 	}
-
-	
 	
 	public class UserMessageContext : MessageContext
 	{
-		private IrcUser user;
+		private IrcUser m_IrcUser;
 
-		public IrcUser User
-		{
-			get
-			{
-				return user;
-			}
-		}
+        public IrcUser User
+        {
+            get { return m_IrcUser; }
+        }
 		
 		public UserMessageContext(IrcUser user)
 		{
-			this.user = user;
+			m_IrcUser = user;
 		}
 	}
 }

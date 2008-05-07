@@ -9,8 +9,7 @@ namespace TechBot.Library
     {
         protected XmlDocument m_XmlDocument;
 
-        public XmlCommand(TechBotService techBot)
-            : base(techBot)
+        public XmlCommand()
         {
             m_XmlDocument = new XmlDocument();
             m_XmlDocument.Load(XmlFile);

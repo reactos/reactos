@@ -38,6 +38,7 @@
   -->
   <ItemGroup>
     <Compile Include="AssemblyInfo.cs" />
+    <Compile Include="ConsoleTechBotService.cs" />
     <Compile Include="Main.cs" />
   </ItemGroup>
   <ItemGroup>
