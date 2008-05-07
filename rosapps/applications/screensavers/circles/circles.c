@@ -23,79 +23,70 @@
 
 #define RANDOM_COLOR (rand () % 256)
 
-#define APPNAME _T("Circles")
-#define APP_TIMER			1
-#define APP_TIMER_INTERVAL	100
-#define MAX_CIRCLES			50
+#define APPNAME              _T("Circles")
+#define APP_TIMER            1
+#define APP_TIMER_INTERVAL   100
+#define MAX_CIRCLES          50
 
 int circlesCount;
 int width, x, y;
 
-LRESULT WINAPI ScreenSaverProc (HWND hwnd, UINT iMsg, WPARAM wparam,
-                LPARAM lparam)
+LRESULT WINAPI ScreenSaverProc (HWND hwnd, UINT iMsg, WPARAM wparam, LPARAM lparam)
 {
-  HDC hdc;
-  RECT rect;
-  HBRUSH hbrush, hbrushOld;
+    HDC hdc;
+    RECT rect;
+    HBRUSH hbrush, hbrushOld;
 
-  switch (iMsg)
-  {
-   case WM_CREATE:
-	   {
-			SetTimer (
-				hwnd, 
-				APP_TIMER, 
-				APP_TIMER_INTERVAL, 
-				NULL);
-	   }
-	   break;
-   case WM_DESTROY:
-	   {
-			KillTimer (hwnd, APP_TIMER);
-		    PostQuitMessage (0);
-			return 0;
-	   }
-	   break;
-   case WM_TIMER:
-	   {
-			hdc = GetDC (hwnd);
-			GetClientRect (hwnd, &rect);
-			hbrush = CreateSolidBrush (RGB (RANDOM_COLOR, RANDOM_COLOR, RANDOM_COLOR));
-			hbrushOld = SelectObject (hdc, hbrush);
+    switch (iMsg)
+    {
+        case WM_CREATE:
+            SetTimer (hwnd, APP_TIMER, APP_TIMER_INTERVAL, NULL);
+            break;
 
-			x = rand () % rect.right;
-			y = rand () % rect.bottom;
+        case WM_DESTROY:
+            KillTimer (hwnd, APP_TIMER);
+            PostQuitMessage (0);
+            return 0;
 
-			/* the circle will be 10% of total screen */
-			width = rect.right / 10;
-			if (rect.bottom / 10 < width)
-				width = rect.bottom / 10;
+        case WM_TIMER:
+            hdc = GetDC (hwnd);
+            GetClientRect (hwnd, &rect);
+            hbrush = CreateSolidBrush (RGB (RANDOM_COLOR, RANDOM_COLOR, RANDOM_COLOR));
+            hbrushOld = SelectObject (hdc, hbrush);
 
-			/* Draw circle on screen */
-			Ellipse (
-				hdc, 
-				x, 
-				y, 
-				x + width, 
-				y + width);
+            x = rand () % rect.right;
+            y = rand () % rect.bottom;
 
-			//Track the number of painted circles on scren
-			circlesCount++;
-			if (circlesCount == MAX_CIRCLES)
-			{
-				InvalidateRect (hwnd, NULL, TRUE);
-				circlesCount = 0;
-			}
+            /* the circle will be 10% of total screen */
+            width = rect.right / 10;
+            if (rect.bottom / 10 < width)
+                width = rect.bottom / 10;
 
-			SelectObject (hdc, hbrushOld);
-			DeleteObject (hbrush);
-			ReleaseDC (hwnd, hdc);
+            /* Draw circle on screen */
+            Ellipse (
+                hdc, 
+                x, 
+                y, 
+                x + width, 
+                y + width);
 
-			return 0;
-	   }
-  }
+            //Track the number of painted circles on scren
+            circlesCount++;
+            if (circlesCount == MAX_CIRCLES)
+            {
+                InvalidateRect (hwnd, NULL, TRUE);
+                circlesCount = 0;
+            }
 
-  return DefScreenSaverProc (hwnd, iMsg, wparam, lparam);
+            SelectObject (hdc, hbrushOld);
+            DeleteObject (hbrush);
+            ReleaseDC (hwnd, hdc);
+
+            return 0;
+        }
+    }
+
+    return DefScreenSaverProc (hwnd, iMsg, wparam, lparam);
 }
 
 
