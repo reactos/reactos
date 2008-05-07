@@ -196,6 +196,7 @@ IntVideoPortMapPhysicalMemory(
 
 extern ULONG CsrssInitialized;
 extern PKPROCESS Csrss;
+extern ULONG VideoPortDeviceNumber;
 
 VOID FASTCALL
 IntAttachToCSRSS(PKPROCESS *CallingProcess, PKAPC_STATE ApcState);

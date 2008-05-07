@@ -81,6 +81,8 @@ IntVideoPortAddDevice(
       DriverExtension,
       PhysicalDeviceObject,
       &DeviceObject);
+   if (NT_SUCCESS(Status))
+      VideoPortDeviceNumber++;
 
    return Status;
 }

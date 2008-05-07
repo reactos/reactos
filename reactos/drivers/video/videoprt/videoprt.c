@@ -187,7 +187,7 @@ IntVideoPortCreateAdapterDeviceObject(
     * object names and symlinks.
     */
 
-   DeviceNumber = VideoPortDeviceNumber++;
+   DeviceNumber = VideoPortDeviceNumber;
    if (DeviceNumber == 0xFFFFFFFF)
    {
       WARN_(VIDEOPRT, "Can't find free device number\n");
@@ -721,6 +721,8 @@ VideoPortInitialize(
          return Status;
       Status = IntVideoPortFindAdapter(DriverObject, DriverExtension, DeviceObject);
       INFO_(VIDEOPRT, "IntVideoPortFindAdapter returned 0x%x\n", Status);
+      if (NT_SUCCESS(Status))
+         VideoPortDeviceNumber++;
       return Status;
    }
    else
