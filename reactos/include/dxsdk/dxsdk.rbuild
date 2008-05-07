@@ -18,5 +18,4 @@
 	<file>strmif.idl</file>
 	<file>dvdif.idl</file>
 	<file>devenum.idl</file>
-	<file>d3dvec.idl</file>
 </module>
