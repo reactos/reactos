@@ -28,7 +28,10 @@
 #define NDEBUG
 #include <debug.h>
 
+//  ---------------------------------------------------------  File Statics
+
 static GDIDEVICE PrimarySurface;
+static PGDIDEVICE pPrimarySurface = NULL;
 static KEVENT VideoDriverNeedsPreparation;
 static KEVENT VideoDriverPrepared;
 static PDC defaultDCstate = NULL;
@@ -43,8 +46,6 @@ InitDcImpl(VOID)
 }
 
 /* FIXME: DCs should probably be thread safe  */
-
-//  ---------------------------------------------------------  File Statics
 
 //  -----------------------------------------------------  Public Functions
 
@@ -361,6 +362,8 @@ IntPrepareDriver()
       DPRINT("Trying to load display driver no. %d\n", DisplayNumber);
 
       RtlZeroMemory(&PrimarySurface, sizeof(PrimarySurface));
+
+      if (!pPrimarySurface) pPrimarySurface = ExAllocatePoolWithTag(PagedPool, sizeof(GDIDEVICE), TAG_GDIPDEV);
 
       PrimarySurface.VideoFileObject = DRIVER_FindMPDriver(DisplayNumber);
 
