@@ -1,8 +1,6 @@
-<module name="cards" type="win32dll" baseaddress="${BASEADDRESS_CARDS}" installbase="system32" installname="cards.dll">
+<module name="cards" type="win32dll" baseaddress="${BASEADDRESS_CARDS}" installbase="system32" installname="cards.dll" unicode="yes">
 	<importlibrary definition="cards.def" />
 	<include base="cards">.</include>
-	<define name="UNICODE" />
-	<define name="_UNICODE" />
 
 	<!-- Possible definitions: CARDSTYLE_DEFAULT or CARDSTYLE_BAVARIAN -->
 	<define name="CARDSTYLE_DEFAULT" />

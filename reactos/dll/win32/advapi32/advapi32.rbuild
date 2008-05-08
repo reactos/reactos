@@ -1,4 +1,4 @@
-<module name="advapi32" type="win32dll" baseaddress="${BASEADDRESS_ADVAPI32}" installbase="system32" installname="advapi32.dll">
+<module name="advapi32" type="win32dll" baseaddress="${BASEADDRESS_ADVAPI32}" installbase="system32" installname="advapi32.dll" unicode="yes">
 
 	<importlibrary definition="advapi32.def" />
 	<include base="advapi32">.</include>
@@ -8,8 +8,6 @@
 	<define name="WINVER">0x600</define>
 	<define name="_WIN32_IE">0x0500</define>
 	<define name="_WIN32_WINNT">0x0600</define>
-	<define name="UNICODE"></define>
-	<define name="_UNICODE"></define>
 	<library>scm_client</library>
 	<library>lsa_client</library>
 	<library>eventlog_client</library>

@@ -1,8 +1,7 @@
-<module name="gdi32" type="win32dll" baseaddress="${BASEADDRESS_GDI32}" installbase="system32" installname="gdi32.dll">
+<module name="gdi32" type="win32dll" baseaddress="${BASEADDRESS_GDI32}" installbase="system32" installname="gdi32.dll" unicode="yes">
 	<importlibrary definition="gdi32.def" />
 	<include base="gdi32">include</include>
 	<define name="_DISABLE_TIDENTS" />
-	<define name="UNICODE" />
 	<define name="WINVER">0x0600</define>
 	<define name="_WIN32_WINNT">0x0501</define>
 	<define name="LANGPACK" />

@@ -1,8 +1,6 @@
-<module name="mmdrv" type="win32dll" baseaddress="${BASEADDRESS_MMDRV}" installbase="system32" installname="mmdrv.dll">
+<module name="mmdrv" type="win32dll" baseaddress="${BASEADDRESS_MMDRV}" installbase="system32" installname="mmdrv.dll" unicode="yes">
 	<importlibrary definition="mmdrv.def" />
 	<include base="mmdrv">.</include>
-	<define name="UNICODE" />
-	<define name="_UNICODE" />
 	<define name="NDEBUG" />
 	<library>ntdll</library>
 	<library>kernel32</library>

@@ -6,7 +6,6 @@
 	<include base="browseui">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
 	<include base="explorer_new">.</include>
-	<define name="__REACTOS__" />
 	<define name="__WINESRC__" />
 	<define name="__USE_W32API" />
 	<define name="_WIN32_IE">0x600</define>

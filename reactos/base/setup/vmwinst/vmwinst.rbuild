@@ -1,8 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
-<module name="vmwinst" type="win32gui" installbase="system32" installname="vmwinst.exe">
+<module name="vmwinst" type="win32gui" installbase="system32" installname="vmwinst.exe" unicode="yes">
 	<include base="vmwinst">.</include>
-	<define name="UNICODE" />
 	<define name="_WIN32_IE">0x0501</define>
 	<define name="_WIN32_WINNT">0x0501</define>
 	<library>kernel32</library>

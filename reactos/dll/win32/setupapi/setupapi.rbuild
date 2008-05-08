@@ -1,12 +1,10 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
-<module name="setupapi" type="win32dll" baseaddress="${BASEADDRESS_SETUPAPI}" installbase="system32" installname="setupapi.dll" allowwarnings="true">
+<module name="setupapi" type="win32dll" baseaddress="${BASEADDRESS_SETUPAPI}" installbase="system32" installname="setupapi.dll" allowwarnings="true" unicode="yes">
 	<importlibrary definition="setupapi.spec.def" />
 	<include base="setupapi">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
 	<include base="pnp_client">.</include>
-	<define name="UNICODE" />
-	<define name="_UNICODE" />
 	<define name="_WIN32_IE">0x600</define>
 	<define name="_WIN32_WINNT">0x501</define>
 	<define name="WINVER">0x501</define>

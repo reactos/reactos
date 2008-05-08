@@ -1,8 +1,6 @@
-<module name="acledit" type="win32dll" baseaddress="${BASEADDRESS_ACLEDIT}" installbase="system32" installname="acledit.dll">
+<module name="acledit" type="win32dll" baseaddress="${BASEADDRESS_ACLEDIT}" installbase="system32" installname="acledit.dll" unicode="yes">
 	<importlibrary definition="acledit.def" />
 	<include base="acledit">.</include>
-	<define name="UNICODE" />
-	<define name="_UNICODE" />
 
 	<metadata description = "Access Control List Editor" />
 

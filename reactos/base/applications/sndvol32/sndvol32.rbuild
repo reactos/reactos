@@ -1,10 +1,8 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
-<module name="sndvol32" type="win32gui" installbase="system32" installname="sndvol32.exe">
+<module name="sndvol32" type="win32gui" installbase="system32" installname="sndvol32.exe" unicode="yes">
 	<include base="ReactOS">include/wine</include>
 	<include base="sndvol32">.</include>
-	<define name="UNICODE" />
-	<define name="_UNICODE" />
 	<define name="_WIN32_IE">0x0500</define>
 	<define name="_WIN32_WINNT">0x0600</define>
 	<define name="WINVER">0x0600</define>

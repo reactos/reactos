@@ -1,12 +1,10 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
-<module name="devenum" type="win32dll" baseaddress="${BASEADDRESS_DEVENUM}" installbase="system32" installname="devenum.dll" allowwarnings="true">
+<module name="devenum" type="win32dll" baseaddress="${BASEADDRESS_DEVENUM}" installbase="system32" installname="devenum.dll" allowwarnings="true" unicode="yes">
 	<!-- Won't load correctly in ReactOS yet autoregister infsection="OleControlDlls" type="DllRegisterServer" -->
 	<importlibrary definition="devenum.spec.def" />
 	<include base="devenum">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
-	<define name="UNICODE" />
-	<define name="_UNICODE" />
 	<define name="_WIN32_IE">0x600</define>
 	<define name="_WIN32_WINNT">0x501</define>
 	<define name="WINVER">0x501</define>

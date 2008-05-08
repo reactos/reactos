@@ -1,8 +1,6 @@
-<module name="console" type="win32dll" baseaddress="${BASEADDRESS_CONSOLE}" installbase="system32" installname="console.dll">
+<module name="console" type="win32dll" baseaddress="${BASEADDRESS_CONSOLE}" installbase="system32" installname="console.dll" unicode="yes">
 	<importlibrary definition="console.def" />
 	<include base="console">.</include>
-	<define name="UNICODE" />
-	<define name="_UNICODE" />
 	<define name="_WIN32_IE">0x600</define>
 	<define name="_WIN32_WINNT">0x501</define>
 	<library>kernel32</library>

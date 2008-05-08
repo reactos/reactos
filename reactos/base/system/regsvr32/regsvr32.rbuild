@@ -1,8 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
-<module name="regsvr32" type="win32gui" installbase="system32" installname="regsvr32.exe">
+<module name="regsvr32" type="win32gui" installbase="system32" installname="regsvr32.exe" unicode="yes">
 	<include base="regsvr32">.</include>
-	<define name="UNICODE" />
 	<library>kernel32</library>
 	<library>user32</library>
 	<library>shell32</library>

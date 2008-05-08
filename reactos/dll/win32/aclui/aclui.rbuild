@@ -1,8 +1,6 @@
-<module name="aclui" type="win32dll" baseaddress="${BASEADDRESS_ACLUI}" installbase="system32" installname="aclui.dll">
+<module name="aclui" type="win32dll" baseaddress="${BASEADDRESS_ACLUI}" installbase="system32" installname="aclui.dll" unicode="yes">
 	<importlibrary definition="aclui.spec.def" />
 	<include base="aclui">.</include>
-	<define name="UNICODE" />
-	<define name="_UNICODE" />
 	<define name="_WIN32_IE">0x0500</define>
 	<define name="_WIN32_WINNT">0x0600</define>
 	<define name="WINVER">0x0600</define>

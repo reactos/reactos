@@ -1,9 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
-<module name="msconfig" type="win32gui" installbase="system32" installname="msconfig.exe">
+<module name="msconfig" type="win32gui" installbase="system32" installname="msconfig.exe" unicode="yes">
 	<include base="msconfig">.</include>
-	<define name="UNICODE" />
-	<define name="_UNICODE" />
 	<define name="_WIN32_IE">0x600</define>
 	<define name="_WIN32_WINNT">0x501</define>
 	<library>kernel32</library>

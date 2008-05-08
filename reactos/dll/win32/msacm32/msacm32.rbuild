@@ -1,10 +1,7 @@
-<module name="msacm32" type="win32dll" baseaddress="${BASEADDRESS_MSACM32}" installbase="system32" installname="msacm32.dll">
+<module name="msacm32" type="win32dll" baseaddress="${BASEADDRESS_MSACM32}" installbase="system32" installname="msacm32.dll" unicode="yes">
 	<importlibrary definition="msacm32.spec.def" />
 	<include base="msacm32">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
-	<define name="UNICODE" />
-	<define name="_UNICODE" />
-	<define name="__REACTOS__" />
 	<define name="_WIN32_IE">0x600</define>
 	<define name="_WIN32_WINNT">0x501</define>
 	<define name="WINVER">0x501</define>

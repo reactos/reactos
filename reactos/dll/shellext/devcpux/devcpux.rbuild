@@ -1,9 +1,7 @@
-<module name="devcpux" type="win32dll" installbase="system32" installname="devcpux.dll">
+<module name="devcpux" type="win32dll" installbase="system32" installname="devcpux.dll" unicode="yes">
 	<importlibrary definition="devcpux.def" />
 	<include base="devcpux">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
-	<define name="UNICODE" />
-	<define name="_UNICODE" />
 	<define name="_WIN32_IE">0x600</define>
 	<define name="_WIN32_WINNT">0x501</define>
 	<define name="WINVER">0x501</define>

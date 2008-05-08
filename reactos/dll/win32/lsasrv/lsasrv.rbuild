@@ -1,9 +1,7 @@
-<module name="lsasrv" type="win32dll" entrypoint="0" baseaddress="${BASEADDRESS_LSASRV}" installbase="system32" installname="lsasrv.dll">
+<module name="lsasrv" type="win32dll" entrypoint="0" baseaddress="${BASEADDRESS_LSASRV}" installbase="system32" installname="lsasrv.dll" unicode="yes">
 	<importlibrary definition="lsasrv.def" />
 	<include base="lsasrv">.</include>
 	<include base="lsa_server">.</include>
-	<define name="UNICODE" />
-	<define name="_UNICODE" />
 	<define name="WINVER">0x600</define>
 	<define name="_WIN32_WINNT">0x0600</define>
 	<linkerflag>-nostartfiles</linkerflag>

@@ -2,7 +2,6 @@
         <importlibrary definition="tapi32.spec.def" />
         <include base="tapi32">.</include>
         <include base="ReactOS">include/reactos/wine</include>
-        <define name="__REACTOS__" />
         <define name="__WINESRC__" />
         <define name="__USE_W32API" />
         <define name="TAPI_CURRENT_VERSION">0x00020000</define>

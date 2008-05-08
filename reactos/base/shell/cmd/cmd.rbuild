@@ -1,14 +1,12 @@
 <?xml version="1.0"?>
 <!DOCTYPE group SYSTEM "../../../tools/rbuild/project.dtd">
 <group>
-	<module name="cmd_base" type="objectlibrary">
+	<module name="cmd_base" type="objectlibrary" unicode="yes">
 		<include base="ReactOS">include/reactos/wine</include>
 		<include base="cmd_base">.</include>
 		<define name="ANONYMOUSUNIONS" />
 		<define name="_WIN32_WINNT">0x0501</define>
 		<define name="_DEBUG_MEM" />
-		<define name="UNICODE" />
-		<define name="_UNICODE" />
 		<pch>precomp.h</pch>
 		<compilationunit name="unit.c">
 			<file>alias.c</file>

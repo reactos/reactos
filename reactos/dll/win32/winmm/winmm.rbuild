@@ -11,7 +11,6 @@
 	<importlibrary definition="winmm.spec.def" />
 	<include base="winmm">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
-	<define name="__REACTOS__" />
 	<define name="_WIN32_IE">0x600</define>
 	<define name="_WIN32_WINNT">0x501</define>
 	<define name="WINVER">0x501</define>

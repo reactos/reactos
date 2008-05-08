@@ -1,10 +1,9 @@
-<module name="user32" type="win32dll" baseaddress="${BASEADDRESS_USER32}" installbase="system32" installname="user32.dll" allowwarnings="true">
+<module name="user32" type="win32dll" baseaddress="${BASEADDRESS_USER32}" installbase="system32" installname="user32.dll" allowwarnings="true" unicode="yes">
 	<importlibrary definition="user32.def" />
 	<include base="user32">.</include>
 	<include base="user32">include</include>
 	<include base="ReactOS">include/reactos/subsys</include>
 	<define name="_DISABLE_TIDENTS" />
-	<define name="UNICODE" />
 	<define name="WINVER">0x0600</define>
 	<define name="_WIN32_WINNT">0x0501</define>
 	<library>wine</library>

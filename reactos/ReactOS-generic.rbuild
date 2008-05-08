@@ -3,7 +3,7 @@
 <group xmlns:xi="http://www.w3.org/2001/XInclude">
 	<xi:include href="baseaddress.rbuild" />
 
-	<define name="__REACTOS__" overridable="true" />
+	<define name="__REACTOS__" />
 	<if property="DBG" value="1">
 		<define name="DBG">1</define>
 		<define name="_SEH_ENABLE_TRACE" />

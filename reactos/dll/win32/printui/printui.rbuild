@@ -2,7 +2,6 @@
         <importlibrary definition="printui.spec.def" />
         <include base="printui">.</include>
         <include base="ReactOS">include/reactos/wine</include>
-        <define name="__REACTOS__" />
         <define name="__WINESRC__" />
         <define name="__USE_W32API" />
         <define name="_WIN32_IE">0x600</define>
