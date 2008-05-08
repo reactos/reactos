@@ -204,10 +204,10 @@ MsConfigWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
     return 0;
 }
 
-int APIENTRY WinMain(HINSTANCE hInstance,
-                     HINSTANCE hPrevInstance,
-                     LPSTR     lpCmdLine,
-                     int       nCmdShow)
+int APIENTRY _tWinMain(HINSTANCE hInstance,
+                       HINSTANCE hPrevInstance,
+                       LPTSTR    lpCmdLine,
+                       int       nCmdShow)
 {
 
     INITCOMMONCONTROLSEX InitControls;
