@@ -45,7 +45,7 @@ using namespace std;
 #include <windows.h>
 
  // Unicode support
-#ifdef UNICODE
+#if defined(UNICODE) && !defined(_UNICODE)
 #define	_UNICODE
 #endif
 #include <tchar.h>
