@@ -18,11 +18,9 @@ namespace TechBot.Library
         public static void LoadPlugins()
         {
             //get the file names of the dll files in the current directory.
-            FileInfo objExeInfo = new FileInfo(@"C:\Ros\current\irc\TechBot\TechBot.Console\bin\Debug\");
-
-            foreach (FileInfo objInfo in objExeInfo.Directory.GetFiles("*.dll"))
+            foreach (string fileName in Directory.GetFiles(Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location), "*.dll"))
             {
-                LoadPluginsFromDLLFile(objInfo.FullName);
+                LoadPluginsFromDLLFile(fileName);
             }
         }
 
