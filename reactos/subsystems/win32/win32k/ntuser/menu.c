@@ -930,7 +930,7 @@ IntInsertMenuItem(PMENU_OBJECT MenuObject, UINT uItem, BOOL fByPosition,
 {
    int pos = (int)uItem;
    PMENU_ITEM MenuItem;
-   PMENU_OBJECT SubMenu;
+   PMENU_OBJECT SubMenu = NULL;
 
    if (MAX_MENU_ITEMS <= MenuObject->MenuInfo.MenuItemCount)
    {
@@ -951,6 +951,13 @@ IntInsertMenuItem(PMENU_OBJECT MenuObject, UINT uItem, BOOL fByPosition,
    {
       pos = IntGetMenuItemByFlag(MenuObject, uItem, MF_BYCOMMAND, &SubMenu, NULL, NULL);
    }
+   if (SubMenu == NULL)
+   {
+       SetLastWin32Error(ERROR_INVALID_PARAMETER);
+       return FALSE;
+   }
+
+
    if (pos < -1)
    {
       pos = -1;
