@@ -331,10 +331,10 @@ ATOM RegisterBlankClass(HINSTANCE hInstance, HINSTANCE hPrevInstance)
     return Ret;
 }
 
-int WINAPI WinMain(
+int WINAPI _tWinMain(
   HINSTANCE hInstance,
   HINSTANCE hPrevInstance,
-  LPSTR lpCmdLineA,
+  LPTSTR lpCmdLine,
   int nCmdShow
 )
 {

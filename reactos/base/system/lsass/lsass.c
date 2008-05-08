@@ -55,10 +55,10 @@ ServiceMain(
 }
 
 INT WINAPI
-WinMain(
+wWinMain(
 	IN HINSTANCE hInstance,
 	IN HINSTANCE hPrevInstance,
-	IN LPSTR lpCmdLine,
+	IN LPWSTR lpCmdLine,
 	IN INT nShowCmd)
 {
 	NTSTATUS Status = STATUS_SUCCESS;

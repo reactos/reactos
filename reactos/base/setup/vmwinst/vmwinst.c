@@ -1030,9 +1030,9 @@ CreateWizard(VOID)
 }
 
 int WINAPI
-WinMain(HINSTANCE hInstance,
+wWinMain(HINSTANCE hInstance,
 	HINSTANCE hPrevInstance,
-	LPSTR lpszCmdLine,
+	LPWSTR lpszCmdLine,
 	int nCmdShow)
 {
 

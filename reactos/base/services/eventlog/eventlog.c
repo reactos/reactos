@@ -185,7 +185,7 @@ BOOL LoadLogFiles(HKEY eventlogKey)
     return TRUE;
 }
 
-INT main()
+INT wmain()
 {
     WCHAR LogPath[MAX_PATH];
     INT RetCode = 0;

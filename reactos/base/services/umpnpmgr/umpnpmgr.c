@@ -2191,7 +2191,7 @@ ServiceMain(DWORD argc, LPTSTR *argv)
 
 
 int
-main(int argc, char *argv[])
+wmain(int argc, WCHAR *argv[])
 {
     DWORD dwError;
 

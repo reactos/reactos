@@ -39,10 +39,10 @@ VOID				EnableFileMenuItemByID(UINT Id, BOOL Enable);
 VOID				CheckLocalEchoMenuItem(BOOL Checked);
 VOID				Rs232Thread(VOID* Parameter);
 
-int APIENTRY WinMain(HINSTANCE hInstance,
-                     HINSTANCE hPrevInstance,
-                     LPSTR     lpCmdLine,
-                     int       nCmdShow)
+int APIENTRY _tWinMain(HINSTANCE hInstance,
+                       HINSTANCE hPrevInstance,
+                       LPTSTR     lpCmdLine,
+                       int       nCmdShow)
 {
  	// TODO: Place code here.
 	MSG msg;

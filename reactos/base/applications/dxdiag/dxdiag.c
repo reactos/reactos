@@ -220,10 +220,10 @@ DxDiagWndProc(HWND hwndDlg, UINT message, WPARAM wParam, LPARAM lParam)
     return 0;
 }
 
-int APIENTRY WinMain(HINSTANCE hInstance,
-                     HINSTANCE hPrevInstance,
-                     LPSTR     lpCmdLine,
-                     int       nCmdShow)
+int APIENTRY wWinMain(HINSTANCE hInstance,
+                      HINSTANCE hPrevInstance,
+                      LPWSTR     lpCmdLine,
+                      int       nCmdShow)
 {
 
     INITCOMMONCONTROLSEX InitControls;

@@ -798,10 +798,10 @@ CreateApplicationWindow(VOID)
 }
 
 int WINAPI
-WinMain(HINSTANCE hInstance,
-        HINSTANCE hPrevInstance,
-        LPSTR lpszCmdLine,
-        int nCmdShow)
+_tWinMain(HINSTANCE hInstance,
+          HINSTANCE hPrevInstance,
+          LPTSTR lpszCmdLine,
+          int nCmdShow)
 {
     MSG Msg;
     int Ret = 1;

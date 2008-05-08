@@ -247,10 +247,10 @@ void DisplayMessage(BOOL bConsole, BOOL bSilent, LPCTSTR lpMessage, LPCTSTR lpTi
 		_tprintf(_T("%s: %s\n\n"),lpTitle,lpMessage);
 }
 
-int WINAPI WinMain(
+int WINAPI _tWinMain(
   HINSTANCE hInstance,
   HINSTANCE hPrevInstance,
-  LPSTR lpCmdLineA,
+  LPTSTR lpCmdLine,
   int nCmdShow
 )
 {
