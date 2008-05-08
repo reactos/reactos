@@ -114,9 +114,9 @@ RunLiveCD (HINSTANCE hInstance)
 }
 
 int STDCALL
-WinMain (HINSTANCE hInstance,
+_tWinMain (HINSTANCE hInstance,
 	 HINSTANCE hPrevInstance,
-	 LPSTR lpCmdLine,
+	 LPTSTR lpCmdLine,
 	 int nShowCmd)
 {
   LPTSTR CmdLine;
