@@ -96,9 +96,9 @@ MainWndProc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 /* FUNCTIONS ****************************************************************/
 
 int WINAPI
-WinMain(HINSTANCE hInst,
+_tWinMain(HINSTANCE hInst,
 	HINSTANCE hPrevInstance,
-	LPSTR lpszCmdLine,
+	LPTSTR lpszCmdLine,
 	int nCmdShow)
 {
   WNDCLASSEX wndclass;
