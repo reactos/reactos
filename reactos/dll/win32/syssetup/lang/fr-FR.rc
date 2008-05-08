@@ -220,7 +220,7 @@ STRINGTABLE
 BEGIN
 	IDS_SYS_TOOLS        "Outils système"
 	IDS_CMT_CHARMAP      "Table des Caractères"
-	IDS_CMT_KBSWITCH     "Keyboard Layout Switcher"
+	IDS_CMT_KBSWITCH     "Sélecteur de configuration clavier"
 END
 
 STRINGTABLE
@@ -259,7 +259,7 @@ BEGIN
     IDS_SHORT_CHARMAP    "Table des Caractères.lnk"
     IDS_SHORT_MAGNIFY    "Loupe.lnk"
     IDS_SHORT_RDESKTOP   "Bureau Distant.lnk"
-	IDS_SHORT_KBSWITCH   "Keyboard Layout Switcher.lnk"
+    IDS_SHORT_KBSWITCH   "Sélecteur de configuration clavier.lnk"
 END
 
 STRINGTABLE
