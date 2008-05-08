@@ -293,10 +293,10 @@ ShutdownHandlerRoutine(DWORD dwCtrlType)
 
 
 int STDCALL
-WinMain(HINSTANCE hInstance,
-        HINSTANCE hPrevInstance,
-        LPSTR lpCmdLine,
-        int nShowCmd)
+wWinMain(HINSTANCE hInstance,
+         HINSTANCE hPrevInstance,
+         LPWSTR lpCmdLine,
+         int nShowCmd)
 {
     HANDLE hScmStartEvent;
     HANDLE hEvent;
