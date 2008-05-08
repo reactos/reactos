@@ -256,9 +256,11 @@ DeleteLayout(VOID)
 {
     INT iIndex, LayoutNum;
     LVITEM item;
-    HKEY hKey;
+    HKEY hKey, hSubKey;
     HWND hLayoutList = GetDlgItem(MainDlgWnd, IDC_KEYLAYOUT_LIST);
-    TCHAR szLayoutNum[10 + 1], szTitle[MAX_PATH], szConf[MAX_PATH];
+    TCHAR szLayoutNum[10 + 1], szTitle[MAX_PATH],
+          szConf[MAX_PATH], szPreload[CCH_LAYOUT_ID + 1];
+    DWORD dwSize;
 
     iIndex = (INT) SendMessage(hLayoutList, LVM_GETNEXTITEM, -1, LVNI_FOCUSED);
 
@@ -277,9 +279,29 @@ DeleteLayout(VOID)
             (VOID) ListView_GetItem(hLayoutList, &item);
             LayoutNum = (INT) item.lParam;
 
-            if (RegOpenKeyEx(HKEY_CURRENT_USER, _T("Keyboard Layout\\Preload"), 0, KEY_ALL_ACCESS, &hKey) == ERROR_SUCCESS)
+            if (RegOpenKeyEx(HKEY_CURRENT_USER, _T("Keyboard Layout\\Preload"), 0,
+                             KEY_ALL_ACCESS, &hKey) == ERROR_SUCCESS)
             {
                 _ultot(LayoutNum, szLayoutNum, 10);
+
+                dwSize = sizeof(szPreload);
+                RegQueryValueEx(hKey, szLayoutNum, NULL, NULL, (LPBYTE)szPreload, &dwSize);
+
+                if (szPreload[0] == 'd')
+                {
+                    if (RegOpenKeyEx(HKEY_CURRENT_USER, _T("Keyboard Layout\\Substitutes"), 0,
+                                     KEY_ALL_ACCESS, &hSubKey) == ERROR_SUCCESS)
+                    {
+                        if (RegDeleteValue(hSubKey, szPreload) != ERROR_SUCCESS)
+                        {
+                            RegCloseKey(hSubKey);
+                            RegCloseKey(hKey);
+                            return;
+                        }
+                        RegCloseKey(hSubKey);
+                    }
+                }
+
                 if (RegDeleteValue(hKey, szLayoutNum) == ERROR_SUCCESS)
                 {
                     UpdateLayoutsList();

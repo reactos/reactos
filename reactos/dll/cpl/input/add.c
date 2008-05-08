@@ -36,14 +36,50 @@ SelectLayoutByLang(VOID)
     }
 }
 
+static INT
+GetLayoutCount(LPTSTR szLang)
+{
+    HKEY hKey;
+    TCHAR szLayoutID[3 + 1], szPreload[CCH_LAYOUT_ID + 1], szLOLang[MAX_PATH];
+    DWORD dwIndex = 0, dwType, dwSize;
+    INT Count = 0, i, j;
+
+    if (RegOpenKeyEx(HKEY_CURRENT_USER, _T("Keyboard Layout\\Preload"),
+        0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
+    {
+        dwSize = sizeof(szLayoutID);
+
+        while (RegEnumValue(hKey, dwIndex, szLayoutID, &dwSize, NULL, &dwType, NULL, NULL) == ERROR_SUCCESS)
+        {
+            dwSize = sizeof(szPreload);
+            RegQueryValueEx(hKey, szLayoutID, NULL, NULL, (LPBYTE)szPreload, &dwSize);
+
+            for (i = 4, j = 0; i < _tcslen(szPreload)+1; i++, j++)
+                szLOLang[j] = szPreload[i];
+
+            if (_tcscmp(szLOLang, szLang) == 0) Count += 1;
+
+            dwSize = sizeof(szLayoutID);
+            dwIndex++;
+        }
+
+        RegCloseKey(hKey);
+    }
+
+    return Count;
+}
+
 static VOID
 AddNewLayout(HWND hwndDlg)
 {
-    TCHAR NewLayout[CCH_ULONG_DEC + 1];
-    INT iLayout;
-    HKEY hKey;
+    TCHAR NewLayout[CCH_ULONG_DEC + 1], Lang[MAX_PATH],
+          LangID[CCH_LAYOUT_ID + 1], Layout[MAX_PATH],
+          SubPath[CCH_LAYOUT_ID + 1];
+    INT iLayout, iLang;
+    HKEY hKey, hSubKey;
     DWORD cValues;
     PTSTR pts;
+    LCID lcid;
 
     iLayout = SendMessage(hLayoutList, CB_GETCURSEL, 0, 0);
     if (iLayout == CB_ERR) return;
@@ -54,7 +90,42 @@ AddNewLayout(HWND hwndDlg)
         {
             _ultot(cValues + 1, NewLayout, 10);
 
+            iLang = SendMessage(hLangList, CB_GETCURSEL, 0, 0);
+            lcid = SendMessage(hLangList, CB_GETITEMDATA, iLang, 0);
+
+            GetLocaleInfo(MAKELCID(lcid, SORT_DEFAULT), LOCALE_ILANGUAGE, Lang, sizeof(Lang) / sizeof(TCHAR));
+            wsprintf(LangID, _T("0000%s"), Lang);
+
+            if (GetLayoutName(LangID, Layout))
+            {
+                if ((SendMessage(hLayoutList, CB_SELECTSTRING, (WPARAM) -1, (LPARAM)Layout) != CB_ERR)&&
+                    (GetLayoutCount(Lang) >= 1))
+                {
+                    wsprintf(SubPath, _T("d%03d%s"), GetLayoutCount(Lang)-1, Lang);
+                    MessageBox(0, SubPath, NULL, MB_OK);
+                }
+                else SubPath[0] = '\0';
+            }
+
             pts = (PTSTR) SendMessage(hLayoutList, CB_GETITEMDATA, iLayout, 0);
+
+            if (_tcslen(SubPath) != 0)
+            {
+                if (RegCreateKeyEx(HKEY_CURRENT_USER, _T("Keyboard Layout\\Substitutes"), 0, NULL,
+                                   REG_OPTION_NON_VOLATILE, KEY_QUERY_VALUE | KEY_SET_VALUE | KEY_WRITE,
+                                   NULL, &hSubKey, NULL) == ERROR_SUCCESS)
+                {
+                    if (RegSetValueEx(hSubKey, SubPath, 0, REG_SZ, (LPBYTE)pts,
+                                      (DWORD)((CCH_LAYOUT_ID + 1) * sizeof(TCHAR))) != ERROR_SUCCESS)
+                    {
+                        RegCloseKey(hSubKey);
+                        RegCloseKey(hKey);
+                        return;
+                    }
+                    RegCloseKey(hSubKey);
+                }
+                pts = SubPath;
+            }
 
             if (RegSetValueEx(hKey,
                               NewLayout,
@@ -66,6 +137,7 @@ AddNewLayout(HWND hwndDlg)
                 UpdateLayoutsList();
             }
         }
+        RegCloseKey(hKey);
     }
 }
 
