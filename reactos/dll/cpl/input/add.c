@@ -102,7 +102,6 @@ AddNewLayout(HWND hwndDlg)
                     (GetLayoutCount(Lang) >= 1))
                 {
                     wsprintf(SubPath, _T("d%03d%s"), GetLayoutCount(Lang)-1, Lang);
-                    MessageBox(0, SubPath, NULL, MB_OK);
                 }
                 else SubPath[0] = '\0';
             }
