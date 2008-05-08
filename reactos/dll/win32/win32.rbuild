@@ -310,6 +310,9 @@
 <directory name="twain_32">
 	<xi:include href="twain_32/twain_32.rbuild" />
 </directory>
+<directory name="uext2">
+	<xi:include href="uext2/uext2.rbuild" />
+</directory>
 <directory name="ufat">
 	<xi:include href="ufat/ufat.rbuild" />
 </directory>

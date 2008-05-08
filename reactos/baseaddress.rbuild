@@ -17,6 +17,7 @@
   <property name="BASEADDRESS_OBJSEL" value="0x5b400000" />
   <property name="BASEADDRESS_UFAT" value="0x5b570000" />
   <property name="BASEADDRESS_TAPIUI" value="0x5b770000" />
+  <property name="BASEADDRESS_UEXT2" value="0x5b7a0000" />
   <property name="BASEADDRESS_SLAYER" value="0x5c7e0000" />
   <property name="BASEADDRESS_USRMGR" value="0x5c900000" />
   <property name="BASEADDRESS_COMMCTRL" value="0x5d090000" />
