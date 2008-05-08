@@ -71,7 +71,7 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000407","Layout Text",
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000407","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5011"
 
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000807","Layout File",0x00000000,"kbdsg.dll"
-HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000807","Layout Text",0x00000000,"Swiss German"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000807","Layout Text",0x00000000,"Swiss (German)"
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000807","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5024"
 
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000408","Layout File",0x00000000,"kbdhe.dll"
