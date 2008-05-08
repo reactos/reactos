@@ -5,10 +5,10 @@
 @ stdcall ImmConfigureIMEW(long long long ptr)
 @ stdcall ImmCreateContext()
 @ stdcall ImmCreateIMCC(long)
-@ stdcall ImmCreateSoftKeyboard(long long long long)
+@ stub ImmCreateSoftKeyboard
 @ stdcall ImmDestroyContext(long)
 @ stdcall ImmDestroyIMCC(long)
-@ stdcall ImmDestroySoftKeyboard(long)
+@ stub ImmDestroySoftKeyboard
 @ stdcall ImmDisableIME(long)
 @ stdcall ImmDisableIme(long) ImmDisableIME
 @ stub ImmEnumInputContext
@@ -72,15 +72,15 @@
 @ stub ImmLockImeDpi
 @ stdcall ImmNotifyIME(long long long long)
 @ stub ImmPenAuxInput
-@ stdcall ImmProcessKey(long long long long long)
+@ stub ImmProcessKey
 @ stub ImmPutImeMenuItemsIntoMappedFile
 @ stdcall ImmReSizeIMCC(long long)
 @ stub ImmRegisterClient
 @ stdcall ImmRegisterWordA(long str long str)
 @ stdcall ImmRegisterWordW(long wstr long wstr)
 @ stdcall ImmReleaseContext(long long)
-@ stdcall ImmRequestMessageA(ptr long long)
-@ stdcall ImmRequestMessageW(ptr long long)
+@ stub ImmRequestMessageA
+@ stub ImmRequestMessageW
 @ stub ImmSendIMEMessageExA
 @ stub ImmSendIMEMessageExW
 @ stub ImmSendMessageToActiveDefImeWndW
@@ -96,10 +96,10 @@
 #@ stdcall ImmSetHotKey(long long long ptr) user32.CliImmSetHotKey
 @ stdcall ImmSetOpenStatus(long long)
 @ stdcall ImmSetStatusWindowPos(long ptr)
-@ stdcall ImmShowSoftKeyboard(long long)
+@ stub ImmShowSoftKeyboard
 @ stdcall ImmSimulateHotKey(long long)
 @ stub ImmSystemHandler
-@ stdcall ImmTranslateMessage(long long long long)
+@ stub ImmTranslateMessage
 @ stub ImmUnlockClientImc
 @ stdcall ImmUnlockIMC(long)
 @ stdcall ImmUnlockIMCC(long)
