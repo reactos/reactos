@@ -251,9 +251,6 @@ static int del_route( int argc, TCHAR **argv )
     return Error;
 }
 
-#if defined(_UNICODE) && defined(__GNUC__)
-static
-#endif
 int _tmain( int argc, TCHAR **argv )
 {
     if( argc < 2 )
@@ -267,41 +264,3 @@ int _tmain( int argc, TCHAR **argv )
     else
         return Usage();
 }
-
-#if defined(_UNICODE) && defined(__GNUC__)
-/* HACK - MINGW HAS NO OFFICIAL SUPPORT FOR wmain()!!! */
-int main( int argc, char **argv )
-{
-    WCHAR **argvW;
-    int i, j, Ret = 1;
-
-    if ((argvW = malloc(argc * sizeof(WCHAR*))))
-    {
-        /* convert the arguments */
-        for (i = 0, j = 0; i < argc; i++)
-        {
-            if (!(argvW[i] = malloc((strlen(argv[i]) + 1) * sizeof(WCHAR))))
-            {
-                j++;
-            }
-            swprintf(argvW[i], L"%hs", argv[i]);
-        }
-
-        if (j == 0)
-        {
-            /* no error converting the parameters, call wmain() */
-            Ret = wmain(argc, argvW);
-        }
-
-        /* free the arguments */
-        for (i = 0; i < argc; i++)
-        {
-            if (argvW[i])
-                free(argvW[i]);
-        }
-        free(argvW);
-    }
-
-    return Ret;
-}
-#endif
