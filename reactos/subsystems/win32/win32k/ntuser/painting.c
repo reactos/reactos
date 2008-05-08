@@ -1565,7 +1565,7 @@ UserDrawCaptionText(HDC hDc,
 {
    HFONT hOldFont = NULL, hFont = NULL;
    COLORREF OldTextColor;
-   NONCLIENTMETRICS nclm;
+   NONCLIENTMETRICSW nclm;
    NTSTATUS Status;
    #ifndef NDEBUG
    INT i;

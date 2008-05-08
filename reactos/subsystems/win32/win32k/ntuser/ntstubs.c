@@ -160,7 +160,7 @@ STDCALL
 NtUserEnumDisplayDevices (
    PUNICODE_STRING lpDevice, /* device name */
    DWORD iDevNum, /* display device */
-   PDISPLAY_DEVICE lpDisplayDevice, /* device information */
+   PDISPLAY_DEVICEW lpDisplayDevice, /* device information */
    DWORD dwFlags ) /* reserved */
 {
    DPRINT1("NtUserEnumDisplayDevices() is UNIMPLEMENTED!\n");
