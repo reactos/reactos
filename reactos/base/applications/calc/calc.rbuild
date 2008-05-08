@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
-<module name="calc" type="win32gui" installbase="system32" installname="calc.exe" allowwarnings="yes">
+<module name="calc" type="win32gui" installbase="system32" installname="calc.exe" allowwarnings="true">
 	<include base="calc">.</include>
 	<define name="__USE_W32API" />
 	<define name="_WIN32_IE">0x0501</define>
