@@ -303,32 +303,24 @@ LRESULT CALLBACK EmptyWindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 }
 
 // Registers a minimal window class for passing to the dll function
-ATOM RegisterBlankClass(HINSTANCE hInstance, HINSTANCE hPrevInstance)
+BOOL RegisterBlankClass(HINSTANCE hInstance, HINSTANCE hPrevInstance)
 {
     WNDCLASSEX wcex;
-    ATOM Ret;
 
-    if (!hPrevInstance)
-    {
-        wcex.cbSize = sizeof(WNDCLASSEX);
+    wcex.cbSize = sizeof(WNDCLASSEX);
+    wcex.style         = 0;
+    wcex.lpfnWndProc   = EmptyWindowProc;
+    wcex.cbClsExtra    = 0;
+    wcex.cbWndExtra    = 0;
+    wcex.hInstance     = hInstance;
+    wcex.hIcon         = 0;
+    wcex.hCursor       = 0;
+    wcex.hbrBackground = 0;
+    wcex.lpszMenuName  = 0;
+    wcex.lpszClassName = rundll32_wclass;
+    wcex.hIconSm       = 0;
 
-        wcex.style         = 0;
-        wcex.lpfnWndProc   = EmptyWindowProc;
-        wcex.cbClsExtra    = 0;
-        wcex.cbWndExtra    = 0;
-        wcex.hInstance     = hInstance;
-        wcex.hIcon         = 0;
-        wcex.hCursor       = 0;
-        wcex.hbrBackground = 0;
-        wcex.lpszMenuName  = 0;
-        wcex.lpszClassName = rundll32_wclass;
-        wcex.hIconSm       = 0;
-    }
-    
-    Ret = RegisterClassEx(&wcex);
-    if (!Ret) return FALSE;
-
-    return Ret;
+    return (RegisterClassEx(&wcex) != (ATOM)0);
 }
 
 int WINAPI _tWinMain(
