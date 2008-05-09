@@ -59,6 +59,7 @@ extern void winetest_start_todo( const char* platform );
 extern int winetest_loop_todo(void);
 extern void winetest_end_todo( const char* platform );
 extern int winetest_get_mainargs( char*** pargv );
+extern void winetest_wait_child_process( HANDLE process );
 
 #ifdef STANDALONE
 #define START_TEST(name) \
@@ -340,6 +341,32 @@ int winetest_get_mainargs( char*** pargv )
 {
     *pargv = winetest_argv;
     return winetest_argc;
+}
+
+void winetest_wait_child_process( HANDLE process )
+{
+    DWORD exit_code = 1;
+
+    if (WaitForSingleObject( process, 30000 ))
+        fprintf( stdout, "%s: child process wait failed\n", current_test->name );
+    else
+        GetExitCodeProcess( process, &exit_code );
+
+    if (exit_code)
+    {
+        if (exit_code > 255)
+        {
+            fprintf( stdout, "%s: exception 0x%08x in child process\n", current_test->name, exit_code );
+            InterlockedIncrement( &failures );
+        }
+        else
+        {
+            fprintf( stdout, "%s: %u failures in child process\n",
+                     current_test->name, exit_code );
+            while (exit_code-- > 0)
+                InterlockedIncrement(&failures);
+        }
+    }
 }
 
 /* Find a test by name */

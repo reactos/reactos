@@ -24,7 +24,7 @@
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
 STRINGTABLE
-BEGIN
+{
     STRING_INVPARMS, "Niew³aœciwa liczba parametrów - uruchom xcopy /? aby wyœwietliæ pomoc\n"
     STRING_INVPARM,  "Nieznany parameter '%s' -  uruchom xcopy /? aby wyœwietliæ pomoc\n"
     STRING_PAUSE,    "Naciœnij <enter> aby rozpocz¹æ kopiowanie\n"
@@ -76,4 +76,4 @@ Gdzie:\n\
 \t\tJe¿eli nie podano ¿adnej daty, to kopiowane s¹ pliki, które s¹\n\
 \t\tnowsze ni¿ w katalogu docelowym\n\n"
 
-END
+}

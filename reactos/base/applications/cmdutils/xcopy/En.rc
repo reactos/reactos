@@ -20,10 +20,10 @@
  */
 
 
-LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
 
 STRINGTABLE
-BEGIN
+{
     STRING_INVPARMS, "Invalid number of parameters - Use xcopy /? for help\n"
     STRING_INVPARM,  "Invalid parameter '%s' -  Use xcopy /? for help\n"
     STRING_PAUSE,    "Press <enter> to begin copying\n"
@@ -76,4 +76,4 @@ Where:\n\
 \t\tIf no date is supplied, only copy if destination is older\n\
 \t\tthan source\n\n"
 
-END
+}

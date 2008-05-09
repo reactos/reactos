@@ -23,11 +23,14 @@
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
 #include "Bg.rc"
+#include "Da.rc"
 #include "De.rc"
 #include "El.rc"
 #include "En.rc"
 #include "Fr.rc"
 #include "Ko.rc"
 #include "Nl.rc"
+#include "No.rc"
 #include "Pl.rc"
 #include "Ru.rc"
+#include "Si.rc"

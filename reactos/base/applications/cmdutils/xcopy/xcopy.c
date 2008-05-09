@@ -794,7 +794,7 @@ cleanup:
 
 /* =========================================================================
  * Routine copied from cmd.exe md command -
- * This works recursivly. so creating dir1\dir2\dir3 will create dir1 and
+ * This works recursively. so creating dir1\dir2\dir3 will create dir1 and
  * dir2 if they do not already exist.
  * ========================================================================= */
 static BOOL XCOPY_CreateDirectory(const WCHAR* path)

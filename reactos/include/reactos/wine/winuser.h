@@ -30,6 +30,15 @@ typedef struct tagCWPSTRUCT *LPCWPSTRUCT;
 #define E_PROP_SET_UNSUPPORTED           ((HRESULT)0x80070492)
 #endif
 
+/* MapVirtualKey translation types */
+#define MAPVK_VK_TO_VSC     0
+#define MAPVK_VSC_TO_VK     1
+#define MAPVK_VK_TO_CHAR    2
+#define MAPVK_VSC_TO_VK_EX  3
+#define MAPVK_VK_TO_VSC_EX  4
+
+#define WM_SETVISIBLE           0x0009
+
 #define MAKEINTATOMA(atom)  ((LPCSTR)((ULONG_PTR)((WORD)(atom))))
 #define MAKEINTATOMW(atom)  ((LPCWSTR)((ULONG_PTR)((WORD)(atom))))
 

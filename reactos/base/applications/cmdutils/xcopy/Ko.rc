@@ -24,7 +24,7 @@
 LANGUAGE LANG_KOREAN, SUBLANG_DEFAULT
 
 STRINGTABLE
-BEGIN
+{
     STRING_INVPARMS, "올바르지 않은 매개변수의 갯수 - xcopy /?로 도움말을 보시오\n"
     STRING_INVPARM,  "올바르지 않은 매개변수 '%s' -  xcopy /?로 도움말을 보시오\n"
     STRING_PAUSE,    "<enter> 를 누르면 복사가 시작될 것입니다\n"
@@ -73,8 +73,8 @@ Where:\n\
 [/A]  오직 압축 속성이 설정되어있는 파일만 복사\n\
 [/M]  오직 압축 속성을 제거하면서  압축 속성이 설정되어있는  \n\
 \파일만 복사 \n\
-[/D | /D:m-d-y] Copy new files or those modified after the supplied date.\n\
-\t\tIf no date is supplied, only copy if destination is older\n\
-\t\tthan source\n\n"
+[/D | /D:m-d-y] 지정된 날짜 후에 수정되거나 새로운 파일 복사.\n\
+\t\tI만약 어떠한 날짜도 지정되지 않으면,오직 원본보다 \n\
+\t\t대상이 오래된 것만 복사\n\n"
 
-END
+}
