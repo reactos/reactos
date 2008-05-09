@@ -953,8 +953,9 @@ IntInsertMenuItem(PMENU_OBJECT MenuObject, UINT uItem, BOOL fByPosition,
    }
    if (SubMenu == NULL)
    {
-       SetLastWin32Error(ERROR_INVALID_PARAMETER);
-       return FALSE;
+       /* default to last position of menu */
+      SubMenu = MenuObject;
+      pos = MenuObject->MenuInfo.MenuItemCount;
    }
 
 
