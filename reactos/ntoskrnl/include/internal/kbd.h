@@ -104,11 +104,14 @@ typedef struct _LIGATURE ## i { \
 #define WCH_DEAD 0xf001
 #define WCH_LGTR 0xf002
 
-#define CAPSLOK 1
-#define SGCAPS 2
+#define CAPSLOK     1
+#define SGCAPS      2
 #define CAPLOKALTGR 4
-#define KANALOK 8
-#define GRPSELTAP 0x80
+#define KANALOK     8
+#define GRPSELTAP   0x80
+
+#define VK_ABNT_C1  0xC1
+#define VK_ABNT_C2  0xC2
 
 
 #ifdef __cplusplus
