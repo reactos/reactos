@@ -782,7 +782,7 @@ static BOOL WINHELP_HandleTextMouse(WINHELP_WINDOW* win, UINT msg, LPARAM lParam
                 {
                     if (link->window == -1)
                         wi = win->info;
-                    else if ((link->window >= 0) && (link->window < hlpfile->numWindows))
+                    else if (link->window < hlpfile->numWindows)
                         wi = &hlpfile->windows[link->window];
                     else
                     {

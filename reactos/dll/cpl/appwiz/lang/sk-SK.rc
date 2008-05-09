@@ -44,7 +44,7 @@ CAPTION "Odstr·niù aktualiz·cie"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 	ICON IDI_UPDATES,-1,PROPSHEETPADDING,6,16,16
-	LTEXT "Nasleduj˙ce aktualiz·cie mÙûu byù odstr·nenÈ automaticky. Aktualiz·ciu odinötalujete vybratÌm zo zonamu a kliknutÌm na tlaËidlo Odstr·niù.",-1,36,7,PROPSHEETWIDTH-48,22
+	LTEXT "Nasleduj˙ce aktualiz·cie mÙûu byù odstr·nenÈ automaticky. Aktualiz·ciu odinötalujete vybratÌm zo zoznamu a kliknutÌm na tlaËidlo Odstr·niù.",-1,36,7,PROPSHEETWIDTH-48,22
 	LTEXT "N·jsù:",-1,PROPSHEETPADDING,33,30,8
 	EDITTEXT IDC_UPD_FIND_EDIT, PROPSHEETPADDING+30, 30, 180, 14, WS_VISIBLE | WS_TABSTOP
 	LTEXT "Zobraziù:",-1,250,33,30,8
@@ -106,8 +106,8 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Vytvoriù odkaz"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-  LTEXT "This wizard helps you to create shortcuts to local or\nnetwork programs, files, folders, computers, or Internet\naddresses.", -1, 120, 15, 200, 30
-  LTEXT "Type the location of the item:", -1, 120, 50, 120, 10
+  LTEXT "Tento sprievodca V·m pomÙûe vytvoriù odkazy na miestne alebo\nsieùovÈ programy, s˙bory, prieËinky, poËÌtaËe, alebo internetovÈ\nadresy.", -1, 120, 15, 200, 30
+  LTEXT "Zadajte umiestnenie poloûky:", -1, 120, 50, 120, 10
   EDITTEXT IDC_SHORTCUT_LOCATION, 120, 65, 150, 15, ES_LEFT
   PUSHBUTTON "&Prehæad·vaù...", IDC_SHORTCUT_BROWSE, 272, 65, 55, 15, ES_LEFT
   LTEXT "Kliknite na tlaËidlo œalej pre pokraËovanie.", -1, 120, 97, 162, 10
@@ -118,7 +118,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Select a Title for the Program"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-  LTEXT "&Type a name for this shortcut:", -1, 120, 15, 150, 10
+  LTEXT "&NapÌöte n·zov pre tento odkaz:", -1, 120, 15, 150, 10
   EDITTEXT IDC_SHORTCUT_NAME, 120, 35, 150, 15, ES_LEFT
   LTEXT "Kliknite na tlaËidlo DokonËiù pre vytvorenie odkazu.", -1, 118, 97, 178, 17
 END
@@ -159,13 +159,13 @@ BEGIN
 	IDS_ERROR "Chyba"
 	IDS_UNABLEREAD_UNINSTSTR "Unable to read UninstallString. This entry is invalid or has been created by an MSI installer."
 	IDS_UNABLEOPEN_UNINSTKEY "Unable to open Uninstall Key"
-	IDS_APPLIST "Currently installed programs"
-	IDS_UPDATESLIST "Currently installed updates"
+	IDS_APPLIST "Aktu·lne nainötalovanÈ programy"
+	IDS_UPDATESLIST "Aktu·lne nainötalovanÈ aktualiz·cie"
 	IDS_LARGEICONS "VeækÈ ikony"
 	IDS_LIST "Zoznam"
 	IDS_DETAILS "Podrobnosti"
     IDS_CREATE_SHORTCUT "Vytvoriù odkaz"
-    IDS_ERROR_NOT_FOUND "S˙bor %s nebol najden˝."
+    IDS_ERROR_NOT_FOUND "S˙bor %s nebol n·jden˝."
 	IDS_UNABLEREAD_INFORMATION "Unable to open Information Keys"
 	IDS_NO_INFORMATION "éiadne inform·cie"
 	IDS_NONE_APP "Nie s˙ nainötalovanÈ ûiadne programy."

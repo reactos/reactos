@@ -1542,7 +1542,7 @@ BOOL    HLPFILE_BrowsePage(HLPFILE_PAGE* page, struct RtfData* rd,
     case BALTIC_CHARSET:        cpg = 1257; break;
     case VIETNAMESE_CHARSET:    cpg = 1258; break;
     case RUSSIAN_CHARSET:       cpg = 1251; break;
-//    case EE_CHARSET:            cpg = 1250; break;
+    case EE_CHARSET:            cpg = 1250; break;
     case THAI_CHARSET:          cpg = 874; break;
     case JOHAB_CHARSET:         cpg = 1361; break;
     case MAC_CHARSET:           ck = "mac"; break;

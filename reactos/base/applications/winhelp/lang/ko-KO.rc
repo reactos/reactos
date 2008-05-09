@@ -82,3 +82,26 @@ STID_HELP_FILES_HLP, 	"도움말 파일 (*.hlp)"
 STID_FILE_NOT_FOUND_s	"%s을 찾을 수 없습니다'. 이 파일을 직접 찾겠습니까?"
 STID_NO_RICHEDIT	"richedit  구현을 찾을수 업습니다.. 취소중"
 }
+
+CONTEXT_MENU MENU LANGUAGE LANG_KOREAN, SUBLANG_NEUTRAL
+BEGIN
+	POPUP ""
+	BEGIN
+		MENUITEM "주석...",       MNID_CTXT_ANNOTATE
+		MENUITEM "복사",                MNID_CTXT_COPY
+		MENUITEM "인쇄...",            MNID_CTXT_PRINT
+		POPUP    "글꼴"
+		BEGIN
+			MENUITEM "좁게",       MNID_CTXT_FONTS_SMALL
+			MENUITEM "보통",      MNID_CTXT_FONTS_NORMAL
+			MENUITEM "넓게",       MNID_CTXT_FONTS_LARGE
+		END
+		POPUP   "도움말  항상 보이기"
+		BEGIN
+			MENUITEM "기본",     MNID_CTXT_HELP_DEFAULT
+			MENUITEM "보이기",     MNID_CTXT_HELP_VISIBLE
+			MENUITEM "안 보이기", MNID_CTXT_HELP_NONVISIBLE
+		END
+		MENUITEM "시스템 색상 사용",   MNID_CTXT_SYSTEM_COLORS
+	END
+END

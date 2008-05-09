@@ -9,29 +9,29 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Nastavenia"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Select the services that you want for each input language shown in the list.\nUse the Add and Remove buttons to modify this list.", -1, 9, 6, 238, 25
+    LTEXT "Vyberte sluûby, ktorÈ chcete priradiù ku kaûdÈmu vstupnÈmu jazyku uvedenÈmu v zozname.\nPouûite tlaËidl· Pridaù a Odstr·niù k ˙prave zoznamu.", -1, 9, 6, 238, 25
     CONTROL "TEXT", IDC_KEYLAYOUT_LIST, "SYSLISTVIEW32", WS_BORDER | WS_VSCROLL | WS_TABSTOP | LVS_SORTASCENDING | LVS_REPORT | 0x0000808D, 8, 36, 237, 101
-    PUSHBUTTON "&Set Default", IDC_SET_DEFAULT, 101, 159, 144, 14
-    PUSHBUTTON "A&dd...", IDC_ADD_BUTTON, 27, 142, 70, 14
-    PUSHBUTTON "&Remove...", IDC_REMOVE_BUTTON, 101, 142, 70, 14
-    PUSHBUTTON "&Properties...", IDC_PROP_BUTTON, 175, 142, 70, 14
-    GROUPBOX "Preferences", -1, 7, 185, 240, 36
-    PUSHBUTTON "&Key Settings...", IDC_KEY_SET_BTN, 14, 198, 110, 14
+    PUSHBUTTON "Pred&voliù", IDC_SET_DEFAULT, 101, 159, 144, 14
+    PUSHBUTTON "&Pridaù...", IDC_ADD_BUTTON, 27, 142, 70, 14
+    PUSHBUTTON "O&dstr·niù...", IDC_REMOVE_BUTTON, 101, 142, 70, 14
+    PUSHBUTTON "Vl&astnosti...", IDC_PROP_BUTTON, 175, 142, 70, 14
+    GROUPBOX "Preferencie", -1, 7, 185, 240, 36
+    PUSHBUTTON "Nastavenie &kl·vesov...", IDC_KEY_SET_BTN, 14, 198, 110, 14
 END
 
 IDD_KEYSETTINGS DIALOGEX 0, 0, 272, 163
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "Advanced Key Settings"
+CAPTION "RozöÌrenÈ nastavenia kl·vesov"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	GROUPBOX "To turn off Caps Lock", -1, 7, 7, 258, 26
-	AUTORADIOBUTTON "Press the CAPS &LOCK key", IDC_PRESS_CL_KEY_RB, 14, 17, 120, 11, WS_GROUP
-	AUTORADIOBUTTON "Press the SHI&FT key", IDC_PRESS_SHIFT_KEY_RB, 144, 17, 120, 11, NOT WS_TABSTOP
-	GROUPBOX "Hot keys for input languages", -1, 7, 37, 258, 95
+	GROUPBOX "Vypnutie funkcie Caps Lock", -1, 7, 7, 258, 26
+	AUTORADIOBUTTON "StlaËenÌm kl·vesu CAPS &LOCK", IDC_PRESS_CL_KEY_RB, 14, 17, 120, 11, WS_GROUP  //ten kl·ves, nie t· kl·vesa
+	AUTORADIOBUTTON " StlaËenÌm kl·vesu SHI&FT", IDC_PRESS_SHIFT_KEY_RB, 144, 17, 120, 11, NOT WS_TABSTOP
+	GROUPBOX "Kl·vesovÈ skratky pre vstupnÈ jazyky", -1, 7, 37, 258, 95
 	LTEXT "Akcia", -1, 14, 47, 60, 9
-	RTEXT "&Key sequence", -1, 177, 47, 79, 9
+	RTEXT "&Postupnosù kl·vesov", -1, 177, 47, 79, 9
 	LISTBOX IDC_KEY_LISTBOX, 14, 57, 244, 52, LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | WS_VSCROLL | WS_TABSTOP
-	PUSHBUTTON "&Change Key Sequence...", IDC_CHANGE_KEY_SEQ_BTN, 152, 113, 106, 14, WS_GROUP
+	PUSHBUTTON "&Zmeniù postupnosù kl·vesov...", IDC_CHANGE_KEY_SEQ_BTN, 152, 113, 106, 14, WS_GROUP
 	DEFPUSHBUTTON "OK", IDOK, 66, 140, 70, 14
 	PUSHBUTTON "Zruöiù", IDCANCEL, 146, 140, 70, 14
 END
@@ -80,7 +80,7 @@ END
 
 STRINGTABLE
 BEGIN
-	IDS_CPLSYSTEMNAME        "Text Services and Input Languages"
+	IDS_CPLSYSTEMNAME        "TextovÈ sluûby a vstupnÈ jazyky"
 	IDS_CPLSYSTEMDESCRIPTION "Customizes settings for text input of languages."
 	IDS_KEYBOARD             "Kl·vesnica"
 	IDS_NONE                 "(None)"

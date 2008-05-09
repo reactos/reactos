@@ -64,6 +64,7 @@ IDI_WRI ICON "wri.ico"
 /* @makedep: txt.ico */
 IDI_TXT ICON "txt.ico"
 
+#include "Da.rc"
 #include "De.rc"
 #include "En.rc"
 #include "Fr.rc"

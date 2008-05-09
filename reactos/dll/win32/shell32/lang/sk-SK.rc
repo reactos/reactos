@@ -1,7 +1,7 @@
-/*
- * Kario (kario@szm.sk)
- * partially translated
- * 26-12-2007
+/* TRANSLATOR :  M·rio KaËm·r /Mario Kacmar/ aka Kario (kario@szm.sk)
+ * NOTE       :  partially translated
+ * TRANSLATED :  26-12-2007
+ * LAST CHANGE:  07-05-2008
  */   
 
 /*
@@ -312,11 +312,11 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Spustiù ako"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-	LTEXT "Which user account do you want to use to run this program?", -1, 10, 20, 220, 20
+	LTEXT "KtorÈ pouûÌvateæskÈ konto chcete pouûiù k spusteniu tohto programu?", -1, 10, 20, 220, 20
 	CHECKBOX "Aktu·lny pouûÌvateæ %s", 14000, 10, 45, 150, 10
 	LTEXT "Chr·niù poËÌtaË a ˙daje pred neopr·vnen˝mi aktivitami programu", -1, 25, 57, 200, 10, WS_DISABLED
 	CHECKBOX "This option can prevent computer viruses from harming your computer or personal data, but selecting it might cause the program to function improperly.", 14001, 25, 68, 200, 30, WS_DISABLED | BS_MULTILINE
-	CHECKBOX "The following user:", 14002, 10, 100, 90, 10
+	CHECKBOX "Nasleduj˙ci pouûÌvateæ:", 14002, 10, 100, 90, 10
 	LTEXT "Meno pouûÌvateæa:", -1, 20, 118, 54, 10
 	COMBOBOX 14003, 75, 115, 100, 15, CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
 
@@ -608,9 +608,9 @@ BEGIN
 	IDS_OVERWRITEFILE_TEXT      "Tento prieËinok uû obsahuje s˙bor s n·zvom '%1'.\n\nChcete ho nahradiù?"
 	IDS_OVERWRITEFILE_CAPTION   "Potvrdenie prepÌsania s˙boru"
 	IDS_OVERWRITEFOLDER_TEXT    "Tento prieËinok uû obsahuje prieËinok s n·zvom '%1'.\n\n"\
-		"If the files in the destination folder have the same names as files in the\n"\
-		"selected folder they will be replaced. Do you still want to move or copy\n"\
-		"the folder?"
+		"Ak bud˙ maù s˙bory v cieæovom prieËinku rovnakÈ n·zvy ako s˙bory\n"\
+		"vo vybranom prieËinku, tak bud˙ nahradenÈ. St·le chcete presun˙ù\n"\
+		"alebo skopÌrovaù prieËinok?"
 
 	/* message box strings */
 	IDS_RESTART_TITLE           "Reötartovaù"
@@ -663,8 +663,8 @@ BEGIN
 	FCIDM_SHVIEW_NEWFOLDER 	    "&PrieËinok"
 	FCIDM_SHVIEW_NEWLINK 	    "&Odkaz"
 	IDS_FOLDER_OPTIONS          "Moûnosti prieËinka"
-	IDS_RECYCLEBIN_LOCATION     "Recycle Bin Location"
-	IDS_RECYCLEBIN_DISKSPACE    "Space Available"
+	IDS_RECYCLEBIN_LOCATION     "Umiestnenia Koöa" //Recycle Bin Location
+	IDS_RECYCLEBIN_DISKSPACE    "DostupnÈ miesto"
 	IDS_PICK_ICON_TITLE         "Choose Icon"
 	IDS_PICK_ICON_FILTER        "S˙bory ikon(*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0"
 	IDS_OPEN_WITH_FILTER        "SpustiteænÈ s˙bory\0*.exe\0"

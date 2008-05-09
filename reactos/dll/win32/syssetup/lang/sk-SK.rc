@@ -1,6 +1,7 @@
-/* TRANSLATOR:  M·rio KaËm·r /Mario Kacmar/ aka Kario (kario@szm.sk)
- * DATE OF TR:  09-02-2008
- * THANKS TO :  Filip Navara and Kamil Hornicek
+/* TRANSLATOR :  M·rio KaËm·r /Mario Kacmar/ aka Kario (kario@szm.sk)
+ * DATE OF TR.:  09-02-2008
+ * LAST CHANGE:  07-05-2008
+ * THANKS TO  :  Filip Navara and Kamil Hornicek and all good people ;-)
  */
 
 LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
@@ -79,7 +80,7 @@ CAPTION "Inötal·tor systÈmu ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Lokaliz·cia systÈmu by mala s˙hlasiù s jazykom aplik·ciÌ, "\
-          "ktorÈ chcete pouûÌvaù. Localiz·cia urËÌ ako bud˙ zobrazenÈ "\
+          "ktorÈ chcete pouûÌvaù. Lokaliz·cia urËÌ ako bud˙ zobrazenÈ "\
           "ËÌsla, meny a ˙daje kalend·ra.", IDC_STATIC, 53, 7, 253, 20
     LTEXT "<locale text>", IDC_LOCALETEXT, 53, 29, 250, 16
     LTEXT "Pre zmenu lokaliz·cie systÈmu kliknite na Zmeniù.",
@@ -204,7 +205,7 @@ STRINGTABLE
 BEGIN
 	IDS_SYS_TOOLS        "SystÈmovÈ n·stroje"
 	IDS_CMT_CHARMAP      "Mapa znakov"
-	IDS_CMT_KBSWITCH     "Keyboard Layout Switcher"
+	IDS_CMT_KBSWITCH     "PrepÌnaË rozloûenia kl·vesnice"
 END
 
 
@@ -244,7 +245,7 @@ BEGIN
     IDS_SHORT_CHARMAP    "Mapa znakov.lnk"
     IDS_SHORT_MAGNIFY    "Lupa.lnk"
     IDS_SHORT_RDESKTOP   "Vzdialen· pracovn· plocha.lnk"
-	IDS_SHORT_KBSWITCH   "Keyboard Layout Switcher.lnk"
+    IDS_SHORT_KBSWITCH   "PrepÌnaË rozloûenia kl·vesnice.lnk"
 END
 
 STRINGTABLE

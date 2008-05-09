@@ -1,5 +1,6 @@
-/* TRANSLATOR:  M·rio KaËm·r /Mario Kacmar/ aka Kario (kario@szm.sk)
- * DATE OF TR:  10-02-2008
+/* TRANSLATOR :  M·rio KaËm·r /Mario Kacmar/ aka Kario (kario@szm.sk)
+ * DATE OF TR.:  10-02-2008
+ * LAST CHANGE:  07-05-2008
  */
 
 LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
@@ -21,6 +22,6 @@ STRINGTABLE DISCARDABLE
 BEGIN
 	IDS_QUERY_REBOOT_TEXT        "Pre dokonËenie inötal·cie je potrebnÈ reötartovaù poËÌtaË. Chcete pokraËovaù?"
 	IDS_QUERY_REBOOT_CAPTION     "Reötartovaù"
-	IDS_INF_FILE                 "Setup Information"
+	IDS_INF_FILE                 "Inform·cie o inötal·cii"
 
 END

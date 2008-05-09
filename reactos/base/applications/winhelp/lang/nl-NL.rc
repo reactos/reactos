@@ -79,3 +79,26 @@ STID_HELP_FILES_HLP, 	"Helpbestanden (*.hlp)"
 STID_FILE_NOT_FOUND_s	"Kan '%s' niet openen. Wilt u zelf dit bestand zoeken?"
 STID_NO_RICHEDIT	"Cannot find a richedit implementation... Aborting"
 }
+
+CONTEXT_MENU MENU LANGUAGE LANG_DUTCH, SUBLANG_NEUTRAL
+BEGIN
+	POPUP ""
+	BEGIN
+		MENUITEM "Annotering...",       MNID_CTXT_ANNOTATE
+		MENUITEM "Kopiëren",            MNID_CTXT_COPY
+		MENUITEM "Print...",            MNID_CTXT_PRINT
+		POPUP    "Lettertypes"
+		BEGIN
+			MENUITEM "Klein",       MNID_CTXT_FONTS_SMALL
+			MENUITEM "Normaal",     MNID_CTXT_FONTS_NORMAL
+			MENUITEM "Groot",       MNID_CTXT_FONTS_LARGE
+		END
+		POPUP   "Help altijd zichtbaar"
+		BEGIN
+			MENUITEM "Standaard",   MNID_CTXT_HELP_DEFAULT
+			MENUITEM "Zichtbaar",   MNID_CTXT_HELP_VISIBLE
+			MENUITEM "Onzichtbaar", MNID_CTXT_HELP_NONVISIBLE
+		END
+		MENUITEM "Gebruik systeem kleuren",   MNID_CTXT_SYSTEM_COLORS
+	END
+END
