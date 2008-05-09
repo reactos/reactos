@@ -83,24 +83,12 @@
 		<xi:include href="screenshot/screenshot.rbuild" />
 	</directory>
 
-	<!--
-	<directory name="smartpdf">
-		<xi:include href="smartpdf/fitz.rbuild" />
-		<xi:include href="smartpdf/poppler.rbuild" />
-		<xi:include href="smartpdf/smartpdf.rbuild" />
-	</directory>
-	-->
-
 	<directory name="sysutils">
 		<xi:include href="sysutils/sysutils.rbuild" />
 	</directory>
 
 	<directory name="templates">
 		<xi:include href="templates/directory.rbuild" />
-	</directory>
-
-	<directory name="winecalc">
-		<xi:include href="winecalc/winecalc.rbuild" />
 	</directory>
 
 	<directory name="winefile">
