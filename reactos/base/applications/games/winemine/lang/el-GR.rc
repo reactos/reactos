@@ -12,7 +12,7 @@ END
 IDM_WINEMINE MENU DISCARDABLE
 BEGIN
 	POPUP "&Game"
-        BEGIN
+	BEGIN
 		MENUITEM "&Νέο\tF2",                 IDM_NEW
 		MENUITEM SEPARATOR
 		MENUITEM "&Σημείωση με ερωτηματικό", IDM_MARKQ
@@ -26,8 +26,8 @@ BEGIN
 		MENUITEM SEPARATOR
 		MENUITEM "Έ&ξοδος",                  IDM_EXIT
 	END
-	POPUP "&Πληροφορίες"
-        BEGIN
+	POPUP "&?"
+	BEGIN
 		MENUITEM "&Σχετικά...",              IDM_ABOUT
 	END
 END
