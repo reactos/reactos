@@ -854,11 +854,8 @@ static void CopyMemToClipboard(void *ptr)
 	    buffer = (TCHAR *)GlobalLock(clipbuffer);
 	    _tcscpy(buffer, ptr);
 	    GlobalUnlock(clipbuffer);
-#ifdef UNICODE
-	    SetClipboardData(CF_UNICODETEXT,clipbuffer);
-#else
-	    SetClipboardData(CF_TEXT,clipbuffer);
-#endif
+
+        SetClipboardData(CF_TCHAR, clipbuffer);
 	    CloseClipboard();
     }
 }
@@ -868,23 +865,23 @@ static void handle_copy_command(HWND hWnd)
     TCHAR display[sizeof(calc.buffer)];
 
     SendDlgItemMessage(hWnd, IDC_TEXT_OUTPUT, WM_GETTEXT, (WPARAM)SIZEOF(display), (LPARAM)display);
-    if (calc.base == IDC_RADIO_DEC && strchr(calc.buffer, '.') == NULL)
+    if (calc.base == IDC_RADIO_DEC && _tcschr(calc.buffer, '.') == NULL)
         display[_tcslen(display)-calc.sDecimal_len] = TEXT('\0');
     CopyMemToClipboard(display);
 }
 
-static char *ReadClipboard(void)
+static TCHAR *ReadClipboard(void)
 {
-    char *buffer = NULL;
+    TCHAR *buffer = NULL;
 
     if (OpenClipboard(NULL)) {
-	    HANDLE  hData = GetClipboardData(CF_TEXT);
-        char   *fromClipboard;
+	    HANDLE  hData = GetClipboardData(CF_TCHAR);
+        TCHAR *fromClipboard;
 
         if (hData != NULL) {
-            fromClipboard = (char *)GlobalLock(hData);
-            if (strlen(fromClipboard))
-    	        buffer = _strupr(_strdup(fromClipboard));
+            fromClipboard = (TCHAR *)GlobalLock(hData);
+            if (_tcslen(fromClipboard))
+    	        buffer = _tcsupr(_tcsdup(fromClipboard));
 	        GlobalUnlock( hData );
         }
 	    CloseClipboard();
@@ -894,8 +891,9 @@ static char *ReadClipboard(void)
 
 static void handle_clipboard_input(HWND hwnd)
 {
-    char *ptr = calc.ClipPtr;
-    int ch, x;
+    TCHAR *ptr = calc.ClipPtr;
+    TCHAR ch;
+    INT x;
 
     ch = *ptr++;
     if (ch == '\\')
@@ -1522,7 +1520,7 @@ static LRESULT CALLBACK DlgMainProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
         EnableMenuItem(GetSubMenu(GetMenu(hWnd), 0),
                        IDM_EDIT_PASTE,
                        MF_BYCOMMAND|
-                       (IsClipboardFormatAvailable(CF_TEXT) ?
+                       (IsClipboardFormatAvailable(CF_TCHAR) ?
                        MF_ENABLED : MF_GRAYED));
         break;
     case WM_EXITMENULOOP:

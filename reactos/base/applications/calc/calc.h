@@ -31,6 +31,12 @@
 #define IDC_STATIC  ((DWORD)-1)
 #endif
 
+#ifdef UNICODE
+#define CF_TCHAR    CF_UNICODETEXT
+#else
+#define CF_TCHAR    CF_TEXT
+#endif
+
 #define CALC_VERSION        TEXT("1.06")
 
 /*#define USE_KEYBOARD_HOOK*/
@@ -137,8 +143,8 @@ typedef struct {
     DWORD         degr;
     DWORD         action;
     HWND          hStatWnd;
-    char         *Clipboard;
-    char         *ClipPtr;
+    TCHAR        *Clipboard;
+    TCHAR        *ClipPtr;
     unsigned int  last_operator;
     unsigned int  prev_operator;
     TCHAR         sDecimal[8];
