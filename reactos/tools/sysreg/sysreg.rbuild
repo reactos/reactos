@@ -1,4 +1,5 @@
 <?xml version="1.0"?>
+
 <!DOCTYPE module SYSTEM "../../tools/rbuild/project.dtd">
 <module name="sysreg" type="buildtool">
 	<if property="HOST" value="mingw32-linux">
@@ -16,6 +17,7 @@
 	<file>env_var.cpp</file>
 	<file>rosboot_test.cpp</file>
 	<file>namedpipe_reader.cpp</file>
+	<file>pipe_reader.cpp</file>
 	<file>sysreg.cpp</file>
 	<file>file_reader.cpp</file>
 	<file>os_support.cpp</file>

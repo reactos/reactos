@@ -38,7 +38,7 @@ namespace Sysreg_
 	using std::vector;
 	using System_::PipeReader;
 	using System_::NamedPipeReader;
-/*	using System_::SymbolFile; */
+/*  using System_::SymbolFile; */
 	using System_::FileReader;
 	using System_::OsSupport;
     using System_::EnvironmentVariable;
@@ -74,16 +74,16 @@ namespace Sysreg_
 #endif
 
 //---------------------------------------------------------------------------------------
-	RosBootTest::RosBootTest() : m_MaxTime(65), m_DelayRead(0)
-	{
+    RosBootTest::RosBootTest() : m_MaxTime(65), m_DelayRead(0)
+    {
 
-	}
+    }
 
 //---------------------------------------------------------------------------------------
-	RosBootTest::~RosBootTest()
-	{
+    RosBootTest::~RosBootTest()
+    {
 
-	}
+    }
 //---------------------------------------------------------------------------------------
     bool RosBootTest::executeBootCmd()
     {
@@ -124,13 +124,13 @@ namespace Sysreg_
     void RosBootTest::delayRead()
     {
         if (m_DelayRead)
-		{
-			///
-			/// delay reading until emulator is ready
-			///
+        {
+            ///
+            /// delay reading until emulator is ready
+            ///
 
             OsSupport::delayExecution(m_DelayRead);
-		}
+        }
     }
 //---------------------------------------------------------------------------------------
     void RosBootTest::getDefaultHDDImage(string & img)
@@ -299,7 +299,7 @@ namespace Sysreg_
         {
 
             pipe = "pipe:/tmp/qemu";
-	    m_Src = "/tmp/qemu";
+            m_Src = "/tmp/qemu";
         }
 
         qemudir = "/usr/share/qemu";
@@ -308,13 +308,13 @@ namespace Sysreg_
         if (_mktemp(pipename))
         {
             string temp = pipename;
-    		pipe = "pipe:" + temp;
-		    m_Src = "\\\\.\\pipe\\" + temp;
+            pipe = "pipe:" + temp;
+            m_Src = "\\\\.\\pipe\\" + temp;
         }
         else
         {
-    		pipe = "pipe:qemu";
-		    m_Src = "\\\\.\\pipe\\qemu";
+            pipe = "pipe:qemu";
+            m_Src = "\\\\.\\pipe\\qemu";
         }
         m_DebugPort = "pipe";
 
@@ -363,7 +363,7 @@ namespace Sysreg_
         m_PidFile += "/pid.txt";
         m_BootCmd += " -pidfile ";
         m_BootCmd += m_PidFile;
-	m_BootCmd += " -nographic";
+        m_BootCmd += " -nographic";
 #else
 
         if (hasQemuNoRebootOption())
@@ -376,12 +376,12 @@ namespace Sysreg_
 //----------------------------------------------------------------------------------------
     bool RosBootTest::extractPipeFromBootCmd()
     {
-	string::size_type pos = m_BootCmd.find("-serial pipe:");
+        string::size_type pos = m_BootCmd.find("-serial pipe:");
         if (pos == string::npos)
         {
-            	/* no debug options provided */
-		cerr << "Error: provided boot cmd does not specify a pipe debugging port" << endl;
-            	return false;
+                /* no debug options provided */
+                cerr << "Error: provided boot cmd does not specify a pipe debugging port" << endl;
+                return false;
         }
 
         string pipe = m_BootCmd.substr(pos + 13, m_BootCmd.size() - pos - 13);
@@ -599,16 +599,16 @@ namespace Sysreg_
             }
         }
 #ifdef __LINUX__
-	if (mkfifo(m_Src.c_str(), 400))
-	{
+    if (mkfifo(m_Src.c_str(), 400))
+    {
 /*
 	    if (errno != EEXIST)
 	    {
             	cerr <<"Error: mkfifo failed with " << errno << endl;
             }
 */
-	    return false;
-	}
+        return false;
+    }
 
 #endif
         if (m_PidFile.length () && isFileExisting(m_PidFile))
@@ -616,8 +616,6 @@ namespace Sysreg_
             cerr << "Deleting pid file " << m_PidFile << endl;
             remove(m_PidFile.c_str ());
         }
-
-
 
         cerr << "Opening Data Source:" << m_BootCmd << endl;
         m_DataSource = new NamedPipeReader();
@@ -630,65 +628,68 @@ namespace Sysreg_
 
         return true;
     }
-	
-//---------------------------------------------------------------------------------------
-	bool RosBootTest::xenGetCaps()
-	{
-		FILE *fp;
-		int ch, i;
-		char buffer[2048];
-
-		fp = popen("xm info", "r");
-		if (!fp)
-		{
-			cerr << "Error getting Xen caps." << endl;
-			return false;
-		}
-		for (i=0;(i<2049)&&(feof(fp) == 0 && ((ch = fgetc(fp)) != -1)); i++)
-		{
-			buffer[i] = (char) ch;
-		}
-		buffer[i] = '\0';
-		pclose(fp);
-
-		if (strstr(buffer, "hvm") == 0)
-		{
-			cerr << "No hvm support detected!" << endl;
-			return false;
-		}
-		else
-		{
-			return true;
-		}
-
-	}
 
 //---------------------------------------------------------------------------------------
-	bool RosBootTest::configureXen()
-	{
-		if (!xenGetCaps())
-		{
-			return false;
-		}
-		
-		if (!isFileExisting(m_XenConfig))
-		{
-			cerr << "Xen configuration file missing" << endl;
-			return false;
-		}
-		
-		m_BootCmd = m_EmuPath + "/xm create " + m_XenConfig;
+    bool RosBootTest::xenGetCaps()
+    {
+        FILE *fp;
+        int ch, i;
+        char buffer[2048];
+
+        fp = popen("xm info", "r");
+        if (!fp)
+        {
+            cerr << "Error getting Xen caps." << endl;
+            return false;
+        }
+        for (i=0;(i<2049)&&(feof(fp) == 0 && ((ch = fgetc(fp)) != -1)); i++)
+        {
+            buffer[i] = (char) ch;
+        }
+        buffer[i] = '\0';
+        pclose(fp);
+
+        if (strstr(buffer, "hvm") == 0)
+        {
+            cerr << "No hvm support detected!" << endl;
+            return false;
+        }
+        else
+        {
+            return true;
+        }
+
+    }
+
+//---------------------------------------------------------------------------------------
+    bool RosBootTest::configureXen()
+    {
+        if (!xenGetCaps())
+        {
+            return false;
+        }
+
+        if (!isFileExisting(m_XenConfig))
+        {
+            cerr << "Xen configuration file missing" << endl;
+            return false;
+        }
+
+        m_Src = "xm console reactos";
+
+        m_DataSource = new PipeReader();
+        m_BootCmd = m_EmuPath + "/xm create " + m_XenConfig;
         if (!executeBootCmd())
-			return false;
-		
-		return true;
-	}
+            return false;
+
+        return true;
+    }
 //---------------------------------------------------------------------------------------
-	bool RosBootTest::configureVmWare()
-	{
+    bool RosBootTest::configureVmWare()
+    {
         cerr << "VmWare is currently not yet supported" << endl;
         return false;
-	}
+    }
 //---------------------------------------------------------------------------------------
     bool RosBootTest::readConfigurationValues(ConfigParser &conf_parser)
     {
@@ -699,15 +700,14 @@ namespace Sysreg_
             return false;
         }
 
-		if (m_EmuType == "xen")
-		{
-			if (!conf_parser.getStringValue(RosBootTest::XEN_CONFIG_FILE, m_XenConfig))
-			{
-				cerr << "Error: XEN_CONFIG_FILE is not set" << endl;
-				return false;
-			}
-		}
-
+        if (m_EmuType == EMU_TYPE_XEN)
+        {
+            if (!conf_parser.getStringValue(RosBootTest::XEN_CONFIG_FILE, m_XenConfig))
+            {
+                cerr << "Error: XEN_CONFIG_FILE is not set" << endl;
+                return false;
+            }
+        }
         if (!conf_parser.getStringValue(RosBootTest::ROS_EMU_PATH, m_EmuPath))
         {
             cerr << "Error: ROS_EMU_PATH_[LIN/WIN] is not set" << endl;
@@ -728,7 +728,7 @@ namespace Sysreg_
 
 
         conf_parser.getIntValue (RosBootTest::ROS_MAX_TIME, m_MaxTime);
-		conf_parser.getStringValue (RosBootTest::ROS_LOG_FILE, m_DebugFile);
+        conf_parser.getStringValue (RosBootTest::ROS_LOG_FILE, m_DebugFile);
         conf_parser.getStringValue (RosBootTest::ROS_SYM_DIR, m_SymDir);
         conf_parser.getIntValue (RosBootTest::ROS_DELAY_READ, m_DelayRead);
         conf_parser.getStringValue (RosBootTest::ROS_SYSREG_CHECKPOINT, m_Checkpoint);
@@ -740,28 +740,35 @@ namespace Sysreg_
         return true;
     }
 //---------------------------------------------------------------------------------------
-	void RosBootTest::cleanup()
-	{
+    void RosBootTest::cleanup()
+    {
         m_DataSource->closeSource();
         OsSupport::delayExecution(3);
 
-        if (m_Pid)
+        if (m_EmuType == EMU_TYPE_XEN)
         {
-			OsSupport::terminateProcess (m_Pid, 0);
+            system("xm destroy reactos");
         }
-		delete m_DataSource;
+        else
+        {
+            if (m_Pid)
+            {
+                OsSupport::terminateProcess (m_Pid, 0);
+            }
+        }
+        delete m_DataSource;
         m_DataSource = NULL;
 
         if (m_PidFile.length ())
         {
             remove(m_PidFile.c_str ());
         }
-	}
+    }
 
 //---------------------------------------------------------------------------------------
-	bool RosBootTest::execute(ConfigParser &conf_parser)
-	{
-		if (!readConfigurationValues(conf_parser))
+    bool RosBootTest::execute(ConfigParser &conf_parser)
+    {
+        if (!readConfigurationValues(conf_parser))
         {
             return false;
         }
@@ -819,52 +826,54 @@ namespace Sysreg_
          * it exists
          */
 
-        FILE * file = fopen(m_PidFile.c_str(), "r");
-        if (!file)
+        if (m_EmuType != EMU_TYPE_XEN)
         {
-            cerr << "Error: failed to launch emulator" << endl;
-            cleanup();
-            return false;
-        }
-        char buffer[128];
-        if (!fread(buffer, 1, sizeof(buffer), file))
-        {
-            cerr << "Error: pid file w/o pid!!! " << endl;
+            FILE * file = fopen(m_PidFile.c_str(), "r");
+            if (!file)
+            {
+                cerr << "Error: failed to launch emulator" << endl;
+                cleanup();
+                return false;
+            }
+            char buffer[128];
+            if (!fread(buffer, 1, sizeof(buffer), file))
+            {
+                cerr << "Error: pid file w/o pid!!! " << endl;
+                fclose(file);
+                cleanup();
+                return false;
+            }
+            m_Pid = atoi(buffer);
             fclose(file);
-            cleanup();
-            return false;
         }
-        m_Pid = atoi(buffer);
-        fclose(file);
 #endif
         OsSupport::cancelAlarms();
 #ifdef __LINUX__
-        //OsSupport::setAlarm (m_MaxTime, m_Pid);
-        //OsSupport::setAlarm(m_MaxTime, getpid());
+     //   OsSupport::setAlarm (m_MaxTime, m_Pid);
+     //   OsSupport::setAlarm(m_MaxTime, getpid());
 #else
         OsSupport::setAlarm (m_MaxTime, m_Pid);
         OsSupport::setAlarm(m_MaxTime, GetCurrentProcessId());
 #endif
 
         bool ret = analyzeDebugData();
-	cleanup();
+    cleanup();
 
 	return ret;
 }
 //---------------------------------------------------------------------------------------
-	void RosBootTest::dumpCheckpoints()
-	{
-		if (m_Checkpoints.size ())
-		{
-			cerr << "Dumping list of checkpoints: "<< endl;
-			while(!m_Checkpoints.empty ())
-			{
-				cerr << m_Checkpoints[0] << endl;
-				m_Checkpoints.erase (m_Checkpoints.begin ());
-
-			}
-		}
-	}
+    void RosBootTest::dumpCheckpoints()
+    {
+        if (m_Checkpoints.size ())
+        {
+            cerr << "Dumping list of checkpoints: "<< endl;
+            while(!m_Checkpoints.empty ())
+            {
+                cerr << m_Checkpoints[0] << endl;
+                m_Checkpoints.erase (m_Checkpoints.begin ());
+            }
+        }
+    }
 //---------------------------------------------------------------------------------------
 	RosBootTest::DebugState RosBootTest::checkDebugData(vector<string> & debug_data)
 	{
