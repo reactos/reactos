@@ -140,8 +140,13 @@ dll\directx\wine\wined3d\wined3d.dll                1
 dll\directx\wine\d3d9\d3d9.dll                      1
 
 dll\keyboard\kbdal\kbdal.dll                        1
+dll\keyboard\kbdarme\kbdarme.dll                    1
+dll\keyboard\kbdaze\kbdaze.dll                      1
+dll\keyboard\kbdazel\kbdazel.dll                    1
 dll\keyboard\kbdbgm\kbdbgm.dll                      1
 dll\keyboard\kbdbgt\kbdbgt.dll                      1
+dll\keyboard\kbdblr\kbdblr.dll                      1
+dll\keyboard\kbdbr\kbdbr.dll                        1
 dll\keyboard\kbdbga\kbdbga.dll                      1
 dll\keyboard\kbdbe\kbdbe.dll                        1
 dll\keyboard\kbdbur\kbdbur.dll                      1
@@ -165,6 +170,7 @@ dll\keyboard\kbdhu\kbdhu.dll                        1
 dll\keyboard\kbdic\kbdic.dll                        1
 dll\keyboard\kbdit\kbdit.dll                        1
 dll\keyboard\kbdja\kbdja.dll                        1
+dll\keyboard\kbdkaz\kbdkaz.dll                      1
 dll\keyboard\kbdlt\kbdlt.dll                        1
 dll\keyboard\kbdlv\kbdlv.dll                        1
 dll\keyboard\kbdmac\kbdmac.dll                      1
