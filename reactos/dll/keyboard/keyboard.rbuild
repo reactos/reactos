@@ -4,6 +4,15 @@
 	<directory name="kbdal">
 		<xi:include href="kbdal/kbdal.rbuild" />
 	</directory>
+	<directory name="kbdarme">
+		<xi:include href="kbdarme/kbdarme.rbuild" />
+	</directory>
+	<directory name="kbdaze">
+		<xi:include href="kbdaze/kbdaze.rbuild" />
+	</directory>
+	<directory name="kbdazel">
+		<xi:include href="kbdazel/kbdazel.rbuild" />
+	</directory>
 	<directory name="kbdbe">
 		<xi:include href="kbdbe/kbdbe.rbuild" />
 	</directory>
@@ -15,6 +24,12 @@
 	</directory>
 	<directory name="kbdbgt">
 		<xi:include href="kbdbgt/kbdbgt.rbuild" />
+	</directory>
+	<directory name="kbdblr">
+		<xi:include href="kbdblr/kbdblr.rbuild" />
+	</directory>
+	<directory name="kbdbr">
+		<xi:include href="kbdbr/kbdbr.rbuild" />
 	</directory>
 	<directory name="kbdbur">
 		<xi:include href="kbdbur/kbdbur.rbuild" />
@@ -78,6 +93,9 @@
 	</directory>
 	<directory name="kbdja">
 		<xi:include href="kbdja/kbdja.rbuild" />
+	</directory>
+	<directory name="kbdkaz">
+		<xi:include href="kbdkaz/kbdkaz.rbuild" />
 	</directory>
 	<directory name="kbdlt">
 		<xi:include href="kbdlt/kbdlt.rbuild" />
