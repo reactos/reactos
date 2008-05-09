@@ -46,6 +46,9 @@
 	<directory name="mlang">
 		<xi:include href="mlang/mlang.rbuild" />
 	</directory>
+	<directory name="msacm32">
+		<xi:include href="msacm32/msacm32.rbuild" />
+	</directory>
 	<directory name="mshtml">
 		<xi:include href="mshtml/mshtml.rbuild" />
 	</directory>

@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #include <assert.h>
@@ -25,12 +25,47 @@
 
 static UINT (WINAPI *pPrivateExtractIconsA)(LPCTSTR, int, int, int, HICON *, UINT *, UINT, UINT) = NULL;
 
-static void init_function_pointers(void)
+static void init_function_pointers(void) 
 {
     HMODULE hmod = GetModuleHandleA("user32.dll");
-    if (hmod) {
-        pPrivateExtractIconsA = (void*)GetProcAddress(hmod, "PrivateExtractIconsA");
+    pPrivateExtractIconsA = (void*)GetProcAddress(hmod, "PrivateExtractIconsA");
+}
+
+static void test_LoadStringW(void)
+{
+    HINSTANCE hInst = GetModuleHandle(NULL);
+    WCHAR copiedstringw[128], returnedstringw[128], *resourcepointer = NULL;
+    char copiedstring[128], returnedstring[128];
+    int length1, length2, retvalue;
+
+    /* Check that the string which is returned by LoadStringW matches
+       the string at the pointer returned by LoadStringW when called with buflen = 0 */
+    length1 = LoadStringW(hInst, 2, (WCHAR *) &resourcepointer, 0); /* get pointer to resource. */
+    length2 = LoadStringW(hInst, 2, returnedstringw, sizeof(returnedstringw) /sizeof(WCHAR)); /* get resource string */
+    ok(length2 > 0, "LoadStringW failed to load resource 2, ret %d, err %d\n", length2, GetLastError());
+    ok(length1 == length2, "LoadStringW returned different values dependent on buflen. ret1 %d, ret2 %d\n",
+        length1, length2);
+    ok(length1 > 0 && resourcepointer != NULL, "LoadStringW failed to get pointer to resource 2, ret %d, err %d\n",
+        length1, GetLastError());
+
+    /* Copy the resource since it is not '\0' terminated, and add '\0' to the end */
+    if(resourcepointer != NULL) /* Check that the resource pointer was loaded to avoid access violation */
+    {
+        memcpy(copiedstringw, resourcepointer, length1 * sizeof(WCHAR));
+        copiedstringw[length1] = '\0';
+        /* check that strings match */
+        WideCharToMultiByte( CP_ACP, 0, returnedstringw, -1, returnedstring, 128, NULL, NULL );
+        WideCharToMultiByte( CP_ACP, 0, copiedstringw, -1, copiedstring, 128, NULL, NULL );
+        ok(!memcmp(copiedstringw, returnedstringw, (length2 + 1)*sizeof(WCHAR)),
+           "strings don't match: returnedstring = %s, copiedstring = %s\n", returnedstring, copiedstring);
     }
+
+    /* check that calling LoadStringW with buffer = NULL returns zero */
+    retvalue = LoadStringW(hInst, 2, NULL, 0);
+    ok(!retvalue, "LoadStringW returned a non-zero value when called with buffer = NULL, retvalue = %d\n", retvalue);
+    /* check again, with a different buflen value, that calling LoadStringW with buffer = NULL returns zero */
+    retvalue = LoadStringW(hInst, 2, NULL, 128);
+    ok(!retvalue, "LoadStringW returned a non-zero value when called with buffer = NULL, retvalue = %d\n", retvalue);
 }
 
 static void test_LoadStringA (void)
@@ -39,28 +74,48 @@ static void test_LoadStringA (void)
     static const char str[] = "String resource"; /* same in resource.rc */
     char buf[128];
     struct string_test {
-        int bufsiz;
-        int expected;
+        unsigned int bufsiz;
+        unsigned int expected;
     };
     struct string_test tests[] = {{sizeof buf, sizeof str - 1},
                                   {sizeof str, sizeof str - 1},
                                   {sizeof str - 1, sizeof str - 2}};
     unsigned int i;
+    int ret;
 
     assert (sizeof str < sizeof buf);
     for (i = 0; i < sizeof tests / sizeof tests[0]; i++) {
-        const int bufsiz = tests[i].bufsiz;
-        const int expected = tests[i].expected;
+        const unsigned int bufsiz = tests[i].bufsiz;
+        const unsigned int expected = tests[i].expected;
         const int len = LoadStringA (hInst, 0, buf, bufsiz);
 
         ok (len == expected, "bufsiz=%d: got %d, expected %d\n",
             bufsiz, len, expected);
+        if (len != expected) continue;
         ok (!memcmp (buf, str, len),
             "bufsiz=%d: got '%s', expected '%.*s'\n",
             bufsiz, buf, len, str);
         ok (buf[len] == 0, "bufsiz=%d: NUL termination missing\n",
             bufsiz);
     }
+
+    ret = LoadStringA(hInst, 1, buf, sizeof(buf) );
+    ok( ret > 0, "LoadString failed: ret %d err %d\n", ret, GetLastError());
+    ok( LoadStringA( hInst, MAKELONG( 1, 0x8000 ), buf, sizeof(buf)) == ret,
+        "LoadString failed: ret %d err %d\n", ret, GetLastError());
+    ok( LoadStringA( hInst, MAKELONG( 1, 0xffff ), buf, sizeof(buf)) == ret,
+        "LoadString failed: ret %d err %d\n", ret, GetLastError());
+
+    ret = LoadStringA(hInst, 65534, buf, sizeof(buf) );
+    ok( ret > 0, "LoadString failed: ret %d err %d\n", ret, GetLastError());
+    ok( LoadStringA( hInst, MAKELONG( 65534, 0x8000 ), buf, sizeof(buf)) == ret,
+        "LoadString failed: ret %d err %d\n", ret, GetLastError());
+    ok( LoadStringA( hInst, MAKELONG( 65534, 0xffff ), buf, sizeof(buf)) == ret,
+        "LoadString failed: ret %d err %d\n", ret, GetLastError());
+
+    ret = LoadStringA(hInst, 0, buf, 0);
+    ok( ret == -1, "LoadStringA did not return -1 when called with buflen = 0, got %d, err %d\n",
+        ret, GetLastError());
 }
 
 static void test_accel1(void)
@@ -264,11 +319,11 @@ static void test_PrivateExtractIcons(void) {
     UINT cIcons, cIcons2;
 
     if (!pPrivateExtractIconsA) return;
-
+    
     cIcons = pPrivateExtractIconsA(szShell32Dll, 0, 16, 16, NULL, NULL, 0, 0);
-    cIcons2 = pPrivateExtractIconsA(szShell32Dll, 4, MAKELONG(32,16), MAKELONG(32,16),
+    cIcons2 = pPrivateExtractIconsA(szShell32Dll, 4, MAKELONG(32,16), MAKELONG(32,16), 
                                    NULL, NULL, 256, 0);
-    ok((cIcons == cIcons2) && (cIcons > 0),
+    ok((cIcons == cIcons2) && (cIcons > 0), 
        "Icon count should be independent of requested icon sizes and base icon index! "
        "(cIcons=%d, cIcons2=%d)\n", cIcons, cIcons2);
 
@@ -278,27 +333,33 @@ static void test_PrivateExtractIcons(void) {
     cIcons = pPrivateExtractIconsA(szShell32Dll, 0, 16, 16, ahIcon, aIconId, 3, 0);
     ok(cIcons == 3, "Three icons requested got cIcons=%d\n", cIcons);
 
-    cIcons = pPrivateExtractIconsA(szShell32Dll, 0, MAKELONG(32,16), MAKELONG(32,16),
+    cIcons = pPrivateExtractIconsA(szShell32Dll, 0, MAKELONG(32,16), MAKELONG(32,16), 
                                   ahIcon, aIconId, 3, 0);
     ok(cIcons == 4, "Three icons requested, four expected, got cIcons=%d\n", cIcons);
 }
 
-static void test_LoadImage(void) {
+static void test_LoadImage(void)
+{
     HBITMAP bmp;
+    HRSRC hres;
 
-    bmp = LoadBitmapA(NULL, MAKEINTRESOURCE(OBM_CHECK));
-    ok(bmp != NULL, "Could not load the OBM_CHECK bitmap\n");
+    bmp = LoadBitmapA(GetModuleHandle(NULL), MAKEINTRESOURCE(100));
+    ok(bmp != NULL, "Could not load a bitmap resource\n");
     if (bmp) DeleteObject(bmp);
 
-    bmp = LoadBitmapA(NULL, "#32760"); /* Value of OBM_CHECK */
-    ok(bmp != NULL, "Could not load the OBM_CHECK bitmap\n");
+    hres = FindResource(GetModuleHandle(NULL), "#100", RT_BITMAP);
+    ok(hres != NULL, "Could not find a bitmap resource with a numeric string\n");
+
+    bmp = LoadBitmapA(GetModuleHandle(NULL), "#100");
+    ok(bmp != NULL, "Could not load a bitmap resource with a numeric string\n");
     if (bmp) DeleteObject(bmp);
 }
 
 START_TEST(resource)
 {
     init_function_pointers();
-    test_LoadStringA ();
+    test_LoadStringA();
+    test_LoadStringW();
     test_accel1();
     test_accel2();
     test_PrivateExtractIcons();

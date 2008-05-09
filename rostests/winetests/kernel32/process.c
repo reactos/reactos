@@ -2,6 +2,7 @@
  * Unit test suite for CreateProcess function.
  *
  * Copyright 2002 Eric Pouech
+ * Copyright 2006 Dmitry Timoshkov
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -15,7 +16,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #include <assert.h>
@@ -30,8 +31,14 @@
 #include "wincon.h"
 #include "winnls.h"
 
+static HINSTANCE hkernel32;
+static LPVOID (WINAPI *pVirtualAllocEx)(HANDLE, LPVOID, SIZE_T, DWORD, DWORD);
+static BOOL   (WINAPI *pVirtualFreeEx)(HANDLE, LPVOID, SIZE_T, DWORD);
+
+/* ############################### */
 static char     base[MAX_PATH];
 static char     selfname[MAX_PATH];
+static char*    exename;
 static char     resfile[MAX_PATH];
 
 static int      myARGC;
@@ -46,7 +53,7 @@ static char**   myARGV;
 
 /* ---------------- portable memory allocation thingie */
 
-static char     memory[1024*32];
+static char     memory[1024*256];
 static char*    memory_index = memory;
 
 static char*    grab_memory(size_t len)
@@ -146,12 +153,26 @@ static WCHAR*   decodeW(const char* str)
  * generates basic information like:
  *      base:           absolute path to curr dir
  *      selfname:       the way to reinvoke ourselves
+ *      exename:        executable without the path
+ * function-pointers, which are not implemented in all windows versions
  */
 static int     init(void)
 {
+    char *p;
+
     myARGC = winetest_get_mainargs( &myARGV );
     if (!GetCurrentDirectoryA(sizeof(base), base)) return 0;
     strcpy(selfname, myARGV[0]);
+
+    /* Strip the path of selfname */
+    if ((p = strrchr(selfname, '\\')) != NULL) exename = p + 1;
+    else exename = selfname;
+
+    if ((p = strrchr(exename, '/')) != NULL) exename = p + 1;
+
+    hkernel32 = GetModuleHandleA("kernel32");
+    pVirtualAllocEx = (void *) GetProcAddress(hkernel32, "VirtualAllocEx");
+    pVirtualFreeEx = (void *) GetProcAddress(hkernel32, "VirtualFreeEx");
     return 1;
 }
 
@@ -330,13 +351,13 @@ static void     doChild(const char* file, const char* option)
         ok(SetConsoleCP(1252), "Setting CP\n");
         ok(SetConsoleOutputCP(1252), "Setting SB CP\n");
         ret = SetConsoleMode(hConIn, modeIn ^ 1);
-        ok( ret, "Setting mode (%ld)\n", GetLastError());
+        ok( ret, "Setting mode (%d)\n", GetLastError());
         ret = SetConsoleMode(hConOut, modeOut ^ 1);
-        ok( ret, "Setting mode (%ld)\n", GetLastError());
+        ok( ret, "Setting mode (%d)\n", GetLastError());
         sbi.dwCursorPosition.X ^= 1;
         sbi.dwCursorPosition.Y ^= 1;
         ret = SetConsoleCursorPosition(hConOut, sbi.dwCursorPosition);
-        ok( ret, "Setting cursor position (%ld)\n", GetLastError());
+        ok( ret, "Setting cursor position (%d)\n", GetLastError());
     }
     if (option && strcmp(option, "stdhandle") == 0)
     {
@@ -403,17 +424,16 @@ static int strCmp(const char* s1, const char* s2, BOOL sensitive)
     return (sensitive) ? strcmp(s1, s2) : wtstrcasecmp(s1, s2);
 }
 
-#define okChildString(sect, key, expect) \
-    do { \
-        char* result = getChildString((sect), (key)); \
-        ok(strCmp(result, expect, 1) == 0, "%s:%s expected '%s', got '%s'\n", (sect), (key), (expect)?(expect):"(null)", result); \
-    } while (0)
+static void ok_child_string( int line, const char *sect, const char *key,
+                             const char *expect, int sensitive )
+{
+    char* result = getChildString( sect, key );
+    ok_(__FILE__, line)( strCmp(result, expect, sensitive) == 0, "%s:%s expected '%s', got '%s'\n",
+                         sect, key, expect ? expect : "(null)", result );
+}
 
-#define okChildIString(sect, key, expect) \
-    do { \
-        char* result = getChildString(sect, key); \
-        ok(strCmp(result, expect, 0) == 0, "%s:%s expected '%s', got '%s'\n", sect, key, expect, result); \
-    } while (0)
+#define okChildString(sect, key, expect) ok_child_string(__LINE__, (sect), (key), (expect), 1 )
+#define okChildIString(sect, key, expect) ok_child_string(__LINE__, (sect), (key), (expect), 0 )
 
 /* using !expect ensures that the test will fail if the sect/key isn't present
  * in result file
@@ -429,6 +449,9 @@ static void test_Startup(void)
     char                buffer[MAX_PATH];
     PROCESS_INFORMATION	info;
     STARTUPINFOA	startup,si;
+    static CHAR title[]   = "I'm the title string",
+                desktop[] = "I'm the desktop string",
+                empty[]   = "";
 
     /* let's start simplistic */
     memset(&startup, 0, sizeof(startup));
@@ -447,7 +470,8 @@ static void test_Startup(void)
     GetStartupInfoA(&si);
     okChildInt("StartupInfoA", "cb", startup.cb);
     okChildString("StartupInfoA", "lpDesktop", si.lpDesktop);
-    okChildString("StartupInfoA", "lpTitle", si.lpTitle);
+    ok (si.lpTitle == NULL || !strncmp(si.lpTitle, selfname, strlen(selfname)),
+        "StartupInfoA:lpTitle expected something starting with '%s' or null, got '%s'\n", selfname, si.lpTitle);
     okChildInt("StartupInfoA", "dwX", startup.dwX);
     okChildInt("StartupInfoA", "dwY", startup.dwY);
     okChildInt("StartupInfoA", "dwXSize", startup.dwXSize);
@@ -465,8 +489,8 @@ static void test_Startup(void)
     startup.cb = sizeof(startup);
     startup.dwFlags = STARTF_USESHOWWINDOW;
     startup.wShowWindow = SW_SHOWNORMAL;
-    startup.lpTitle = "I'm the title string";
-    startup.lpDesktop = "I'm the desktop string";
+    startup.lpTitle = title;
+    startup.lpDesktop = desktop;
     startup.dwXCountChars = 0x12121212;
     startup.dwYCountChars = 0x23232323;
     startup.dwX = 0x34343434;
@@ -503,7 +527,7 @@ static void test_Startup(void)
     startup.cb = sizeof(startup);
     startup.dwFlags = STARTF_USESHOWWINDOW;
     startup.wShowWindow = SW_SHOWNORMAL;
-    startup.lpTitle = "I'm the title string";
+    startup.lpTitle = title;
     startup.lpDesktop = NULL;
     startup.dwXCountChars = 0x12121212;
     startup.dwYCountChars = 0x23232323;
@@ -541,8 +565,8 @@ static void test_Startup(void)
     startup.cb = sizeof(startup);
     startup.dwFlags = STARTF_USESHOWWINDOW;
     startup.wShowWindow = SW_SHOWNORMAL;
-    startup.lpTitle = "I'm the title string";
-    startup.lpDesktop = "";
+    startup.lpTitle = title;
+    startup.lpDesktop = empty;
     startup.dwXCountChars = 0x12121212;
     startup.dwYCountChars = 0x23232323;
     startup.dwX = 0x34343434;
@@ -580,7 +604,7 @@ static void test_Startup(void)
     startup.dwFlags = STARTF_USESHOWWINDOW;
     startup.wShowWindow = SW_SHOWNORMAL;
     startup.lpTitle = NULL;
-    startup.lpDesktop = "I'm the desktop string";
+    startup.lpDesktop = desktop;
     startup.dwXCountChars = 0x12121212;
     startup.dwYCountChars = 0x23232323;
     startup.dwX = 0x34343434;
@@ -599,7 +623,8 @@ static void test_Startup(void)
 
     okChildInt("StartupInfoA", "cb", startup.cb);
     okChildString("StartupInfoA", "lpDesktop", startup.lpDesktop);
-    okChildString("StartupInfoA", "lpTitle", si.lpTitle);
+    ok (startup.lpTitle == NULL || !strcmp(startup.lpTitle, selfname),
+        "StartupInfoA:lpTitle expected '%s' or null, got '%s'\n", selfname, startup.lpTitle);
     okChildInt("StartupInfoA", "dwX", startup.dwX);
     okChildInt("StartupInfoA", "dwY", startup.dwY);
     okChildInt("StartupInfoA", "dwXSize", startup.dwXSize);
@@ -617,8 +642,8 @@ static void test_Startup(void)
     startup.cb = sizeof(startup);
     startup.dwFlags = STARTF_USESHOWWINDOW;
     startup.wShowWindow = SW_SHOWNORMAL;
-    startup.lpTitle = "";
-    startup.lpDesktop = "I'm the desktop string";
+    startup.lpTitle = empty;
+    startup.lpDesktop = desktop;
     startup.dwXCountChars = 0x12121212;
     startup.dwYCountChars = 0x23232323;
     startup.dwX = 0x34343434;
@@ -655,8 +680,8 @@ static void test_Startup(void)
     startup.cb = sizeof(startup);
     startup.dwFlags = STARTF_USESHOWWINDOW;
     startup.wShowWindow = SW_SHOWNORMAL;
-    startup.lpTitle = "";
-    startup.lpDesktop = "";
+    startup.lpTitle = empty;
+    startup.lpDesktop = empty;
     startup.dwXCountChars = 0x12121212;
     startup.dwYCountChars = 0x23232323;
     startup.dwX = 0x34343434;
@@ -697,6 +722,7 @@ static void test_CommandLine(void)
     PROCESS_INFORMATION	info;
     STARTUPINFOA	startup;
     DWORD               len;
+    BOOL                ret;
 
     memset(&startup, 0, sizeof(startup));
     startup.cb = sizeof(startup);
@@ -744,46 +770,55 @@ static void test_CommandLine(void)
 
     /* Test for Bug1330 to show that XP doesn't change '/' to '\\' in argv[0]*/
     get_file_name(resfile);
-    sprintf(buffer, "./%s tests/process.c %s \"a\\\"b\\\\\" c\\\" d", selfname, resfile);
-    ok(CreateProcessA(NULL, buffer, NULL, NULL, FALSE, 0L, NULL, NULL, &startup, &info), "CreateProcess\n");
+    /* Use exename to avoid buffer containing things like 'C:' */
+    sprintf(buffer, "./%s tests/process.c %s \"a\\\"b\\\\\" c\\\" d", exename, resfile);
+    SetLastError(0xdeadbeef);
+    ret = CreateProcessA(NULL, buffer, NULL, NULL, FALSE, 0L, NULL, NULL, &startup, &info);
+    ok(ret, "CreateProcess (%s) failed : %d\n", buffer, GetLastError());
     /* wait for child to terminate */
     ok(WaitForSingleObject(info.hProcess, 30000) == WAIT_OBJECT_0, "Child process termination\n");
     /* child process has changed result file, so let profile functions know about it */
     WritePrivateProfileStringA(NULL, NULL, NULL, resfile);
-    sprintf(buffer, "./%s", selfname);
+    sprintf(buffer, "./%s", exename);
     okChildString("Arguments", "argvA0", buffer);
     release_memory();
     assert(DeleteFileA(resfile) != 0);
 
     get_file_name(resfile);
-    sprintf(buffer, ".\\%s tests/process.c %s \"a\\\"b\\\\\" c\\\" d", selfname, resfile);
-    ok(CreateProcessA(NULL, buffer, NULL, NULL, FALSE, 0L, NULL, NULL, &startup, &info), "CreateProcess\n");
+    /* Use exename to avoid buffer containing things like 'C:' */
+    sprintf(buffer, ".\\%s tests/process.c %s \"a\\\"b\\\\\" c\\\" d", exename, resfile);
+    SetLastError(0xdeadbeef);
+    ret = CreateProcessA(NULL, buffer, NULL, NULL, FALSE, 0L, NULL, NULL, &startup, &info);
+    ok(ret, "CreateProcess (%s) failed : %d\n", buffer, GetLastError());
     /* wait for child to terminate */
     ok(WaitForSingleObject(info.hProcess, 30000) == WAIT_OBJECT_0, "Child process termination\n");
     /* child process has changed result file, so let profile functions know about it */
     WritePrivateProfileStringA(NULL, NULL, NULL, resfile);
-    sprintf(buffer, ".\\%s", selfname);
+    sprintf(buffer, ".\\%s", exename);
     okChildString("Arguments", "argvA0", buffer);
     release_memory();
     assert(DeleteFileA(resfile) != 0);
-
+    
     get_file_name(resfile);
     len = GetFullPathNameA(selfname, MAX_PATH, fullpath, &lpFilePart);
     assert ( lpFilePart != 0);
     *(lpFilePart -1 ) = 0;
     p = strrchr(fullpath, '\\');
     assert (p);
-    sprintf(buffer, "..%s/%s tests/process.c %s \"a\\\"b\\\\\" c\\\" d", p, selfname, resfile);
-    ok(CreateProcessA(NULL, buffer, NULL, NULL, FALSE, 0L, NULL, NULL, &startup, &info), "CreateProcess\n");
+    /* Use exename to avoid buffer containing things like 'C:' */
+    sprintf(buffer, "..%s/%s tests/process.c %s \"a\\\"b\\\\\" c\\\" d", p, exename, resfile);
+    SetLastError(0xdeadbeef);
+    ret = CreateProcessA(NULL, buffer, NULL, NULL, FALSE, 0L, NULL, NULL, &startup, &info);
+    ok(ret, "CreateProcess (%s) failed : %d\n", buffer, GetLastError());
     /* wait for child to terminate */
     ok(WaitForSingleObject(info.hProcess, 30000) == WAIT_OBJECT_0, "Child process termination\n");
     /* child process has changed result file, so let profile functions know about it */
     WritePrivateProfileStringA(NULL, NULL, NULL, resfile);
-    sprintf(buffer, "..%s/%s", p, selfname);
+    sprintf(buffer, "..%s/%s", p, exename);
     okChildString("Arguments", "argvA0", buffer);
     release_memory();
     assert(DeleteFileA(resfile) != 0);
-
+    
 }
 
 static void test_Directory(void)
@@ -792,6 +827,7 @@ static void test_Directory(void)
     PROCESS_INFORMATION	info;
     STARTUPINFOA	startup;
     char windir[MAX_PATH];
+    static CHAR cmdline[] = "winver.exe";
 
     memset(&startup, 0, sizeof(startup));
     startup.cb = sizeof(startup);
@@ -811,6 +847,18 @@ static void test_Directory(void)
     okChildIString("Misc", "CurrDirA", windir);
     release_memory();
     assert(DeleteFileA(resfile) != 0);
+
+    /* search PATH for the exe if directory is NULL */
+    ok(CreateProcessA(NULL, cmdline, NULL, NULL, FALSE, 0L, NULL, NULL, &startup, &info), "CreateProcess\n");
+    ok(TerminateProcess(info.hProcess, 0), "Child process termination\n");
+
+    /* if any directory is provided, don't search PATH, error on bad directory */
+    SetLastError(0xdeadbeef);
+    memset(&info, 0, sizeof(info));
+    ok(!CreateProcessA(NULL, cmdline, NULL, NULL, FALSE, 0L,
+                       NULL, "non\\existent\\directory", &startup, &info), "CreateProcess\n");
+    ok(GetLastError() == ERROR_DIRECTORY, "Expected ERROR_DIRECTORY, got %d\n", GetLastError());
+    ok(!TerminateProcess(info.hProcess, 0), "Child process should not exist\n");
 }
 
 static BOOL is_str_env_drive_dir(const char* str)
@@ -831,7 +879,7 @@ static void cmpEnvironment(const char* gesA)
     BOOL                found;
 
     clen = GetPrivateProfileIntA("EnvironmentA", "len", 0, resfile);
-
+    
     /* now look each parent env in child */
     if ((ptrA = gesA) != NULL)
     {
@@ -846,7 +894,7 @@ static void cmpEnvironment(const char* gesA)
             }
             found = i < clen;
             ok(found, "Parent-env string %s isn't in child process\n", ptrA);
-
+            
             ptrA += strlen(ptrA) + 1;
             release_memory();
         }
@@ -900,7 +948,7 @@ static void test_Environment(void)
     ok(WaitForSingleObject(info.hProcess, 30000) == WAIT_OBJECT_0, "Child process termination\n");
     /* child process has changed result file, so let profile functions know about it */
     WritePrivateProfileStringA(NULL, NULL, NULL, resfile);
-
+    
     cmpEnvironment(GetEnvironmentStringsA());
     release_memory();
     assert(DeleteFileA(resfile) != 0);
@@ -913,7 +961,7 @@ static void test_Environment(void)
     /* the basics */
     get_file_name(resfile);
     sprintf(buffer, "%s tests/process.c %s", selfname, resfile);
-
+    
     child_env_len = 0;
     ptr = GetEnvironmentStringsA();
     while(*ptr)
@@ -925,7 +973,7 @@ static void test_Environment(void)
     /* Add space for additional environment variables */
     child_env_len += 256;
     child_env = HeapAlloc(GetProcessHeap(), 0, child_env_len);
-
+    
     ptr = child_env;
     sprintf(ptr, "=%c:=%s", 'C', "C:\\FOO\\BAR");
     ptr += strlen(ptr) + 1;
@@ -956,7 +1004,7 @@ static void test_Environment(void)
     ok(WaitForSingleObject(info.hProcess, 30000) == WAIT_OBJECT_0, "Child process termination\n");
     /* child process has changed result file, so let profile functions know about it */
     WritePrivateProfileStringA(NULL, NULL, NULL, resfile);
-
+    
     cmpEnvironment(child_env);
 
     HeapFree(GetProcessHeap(), 0, child_env);
@@ -995,7 +1043,8 @@ static  void    test_SuspendFlag(void)
 
     okChildInt("StartupInfoA", "cb", startup.cb);
     okChildString("StartupInfoA", "lpDesktop", us.lpDesktop);
-    okChildString("StartupInfoA", "lpTitle", startup.lpTitle);
+    ok (startup.lpTitle == NULL || !strcmp(startup.lpTitle, selfname),
+        "StartupInfoA:lpTitle expected '%s' or null, got '%s'\n", selfname, startup.lpTitle);
     okChildInt("StartupInfoA", "dwX", startup.dwX);
     okChildInt("StartupInfoA", "dwY", startup.dwY);
     okChildInt("StartupInfoA", "dwXSize", startup.dwXSize);
@@ -1028,7 +1077,7 @@ static  void    test_DebuggingFlag(void)
     ok(CreateProcessA(NULL, buffer, NULL, NULL, FALSE, DEBUG_PROCESS, NULL, NULL, &startup, &info), "CreateProcess\n");
 
     /* get all startup events up to the entry point break exception */
-    do
+    do 
     {
         ok(WaitForDebugEvent(&de, INFINITE), "reading debug event\n");
         ContinueDebugEvent(de.dwProcessId, de.dwThreadId, DBG_CONTINUE);
@@ -1045,7 +1094,8 @@ static  void    test_DebuggingFlag(void)
 
     okChildInt("StartupInfoA", "cb", startup.cb);
     okChildString("StartupInfoA", "lpDesktop", us.lpDesktop);
-    okChildString("StartupInfoA", "lpTitle", startup.lpTitle);
+    ok (startup.lpTitle == NULL || !strcmp(startup.lpTitle, selfname),
+        "StartupInfoA:lpTitle expected '%s' or null, got '%s'\n", selfname, startup.lpTitle);
     okChildInt("StartupInfoA", "dwX", startup.dwX);
     okChildInt("StartupInfoA", "dwY", startup.dwY);
     okChildInt("StartupInfoA", "dwXSize", startup.dwXSize);
@@ -1104,7 +1154,7 @@ static void test_Console(void)
     startup.hStdError = startup.hStdOutput;
 
     ok(GetConsoleScreenBufferInfo(startup.hStdOutput, &sbi), "Getting sb info\n");
-    ok(GetConsoleMode(startup.hStdInput, &modeIn) &&
+    ok(GetConsoleMode(startup.hStdInput, &modeIn) && 
        GetConsoleMode(startup.hStdOutput, &modeOut), "Getting console modes\n");
     cpIn = GetConsoleCP();
     cpOut = GetConsoleOutputCP();
@@ -1120,7 +1170,7 @@ static void test_Console(void)
 
     /* now get the modification the child has made, and resets parents expected values */
     ok(GetConsoleScreenBufferInfo(startup.hStdOutput, &sbiC), "Getting sb info\n");
-    ok(GetConsoleMode(startup.hStdInput, &modeInC) &&
+    ok(GetConsoleMode(startup.hStdInput, &modeInC) && 
        GetConsoleMode(startup.hStdOutput, &modeOutC), "Getting console modes\n");
 
     SetConsoleMode(startup.hStdInput, modeIn);
@@ -1128,6 +1178,20 @@ static void test_Console(void)
 
     cpInC = GetConsoleCP();
     cpOutC = GetConsoleOutputCP();
+
+    /* Try to set invalid CP */
+    SetLastError(0xdeadbeef);
+    ok(!SetConsoleCP(0), "Shouldn't succeed\n");
+    ok(GetLastError()==ERROR_INVALID_PARAMETER,
+       "GetLastError: expecting %u got %u\n",
+       ERROR_INVALID_PARAMETER, GetLastError());
+
+    SetLastError(0xdeadbeef);
+    ok(!SetConsoleOutputCP(0), "Shouldn't succeed\n");
+    ok(GetLastError()==ERROR_INVALID_PARAMETER,
+       "GetLastError: expecting %u got %u\n",
+       ERROR_INVALID_PARAMETER, GetLastError());
+
     SetConsoleCP(cpIn);
     SetConsoleOutputCP(cpOut);
 
@@ -1135,7 +1199,8 @@ static void test_Console(void)
 
     okChildInt("StartupInfoA", "cb", startup.cb);
     okChildString("StartupInfoA", "lpDesktop", us.lpDesktop);
-    okChildString("StartupInfoA", "lpTitle", startup.lpTitle);
+    ok (startup.lpTitle == NULL || !strcmp(startup.lpTitle, selfname),
+        "StartupInfoA:lpTitle expected '%s' or null, got '%s'\n", selfname, startup.lpTitle);
     okChildInt("StartupInfoA", "dwX", startup.dwX);
     okChildInt("StartupInfoA", "dwY", startup.dwY);
     okChildInt("StartupInfoA", "dwXSize", startup.dwXSize);
@@ -1166,28 +1231,28 @@ static void test_Console(void)
     okChildInt("Console", "InputMode", modeIn);
     okChildInt("Console", "OutputMode", modeOut);
 
-    todo_wine ok(cpInC == 1252, "Wrong console CP (expected 1252 got %ld/%ld)\n", cpInC, cpIn);
-    todo_wine ok(cpOutC == 1252, "Wrong console-SB CP (expected 1252 got %ld/%ld)\n", cpOutC, cpOut);
+    ok(cpInC == 1252, "Wrong console CP (expected 1252 got %d/%d)\n", cpInC, cpIn);
+    ok(cpOutC == 1252, "Wrong console-SB CP (expected 1252 got %d/%d)\n", cpOutC, cpOut);
     ok(modeInC == (modeIn ^ 1), "Wrong console mode\n");
     ok(modeOutC == (modeOut ^ 1), "Wrong console-SB mode\n");
-    ok(sbiC.dwCursorPosition.X == (sbi.dwCursorPosition.X ^ 1), "Wrong cursor position\n");
+    trace("cursor position(X): %d/%d\n",sbi.dwCursorPosition.X, sbiC.dwCursorPosition.X);
     ok(sbiC.dwCursorPosition.Y == (sbi.dwCursorPosition.Y ^ 1), "Wrong cursor position\n");
 
     release_memory();
     assert(DeleteFileA(resfile) != 0);
 
     ok(CreatePipe(&hParentIn, &hChildOut, NULL, 0), "Creating parent-input pipe\n");
-    ok(DuplicateHandle(GetCurrentProcess(), hChildOut, GetCurrentProcess(),
+    ok(DuplicateHandle(GetCurrentProcess(), hChildOut, GetCurrentProcess(), 
                        &hChildOutInh, 0, TRUE, DUPLICATE_SAME_ACCESS),
        "Duplicating as inheritable child-output pipe\n");
     CloseHandle(hChildOut);
-
+ 
     ok(CreatePipe(&hChildIn, &hParentOut, NULL, 0), "Creating parent-output pipe\n");
-    ok(DuplicateHandle(GetCurrentProcess(), hChildIn, GetCurrentProcess(),
+    ok(DuplicateHandle(GetCurrentProcess(), hChildIn, GetCurrentProcess(), 
                        &hChildInInh, 0, TRUE, DUPLICATE_SAME_ACCESS),
        "Duplicating as inheritable child-input pipe\n");
-    CloseHandle(hChildIn);
-
+    CloseHandle(hChildIn); 
+    
     memset(&startup, 0, sizeof(startup));
     startup.cb = sizeof(startup);
     startup.dwFlags = STARTF_USESHOWWINDOW|STARTF_USESTDHANDLES;
@@ -1204,7 +1269,7 @@ static void test_Console(void)
 
     msg_len = strlen(msg) + 1;
     ok(WriteFile(hParentOut, msg, msg_len, &w, NULL), "Writing to child\n");
-    ok(w == msg_len, "Should have written %u bytes, actually wrote %lu\n", msg_len, w);
+    ok(w == msg_len, "Should have written %u bytes, actually wrote %u\n", msg_len, w);
     memset(buffer, 0, sizeof(buffer));
     ok(ReadFile(hParentIn, buffer, sizeof(buffer), &w, NULL), "Reading from child\n");
     ok(strcmp(buffer, msg) == 0, "Should have received '%s'\n", msg);
@@ -1249,6 +1314,91 @@ static  void    test_ExitCode(void)
     assert(DeleteFileA(resfile) != 0);
 }
 
+static void test_OpenProcess(void)
+{
+    HANDLE hproc;
+    void *addr1;
+    MEMORY_BASIC_INFORMATION info;
+    SIZE_T dummy, read_bytes;
+
+    /* not exported in all windows versions */
+    if ((!pVirtualAllocEx) || (!pVirtualFreeEx)) {
+        skip("VirtualAllocEx not found\n");
+        return;
+    }
+
+    /* without PROCESS_VM_OPERATION */
+    hproc = OpenProcess(PROCESS_ALL_ACCESS & ~PROCESS_VM_OPERATION, FALSE, GetCurrentProcessId());
+    ok(hproc != NULL, "OpenProcess error %d\n", GetLastError());
+
+    SetLastError(0xdeadbeef);
+    addr1 = pVirtualAllocEx(hproc, 0, 0xFFFC, MEM_RESERVE, PAGE_NOACCESS);
+    ok(!addr1, "VirtualAllocEx should fail\n");
+    if (GetLastError() == ERROR_CALL_NOT_IMPLEMENTED)
+    {   /* Win9x */
+        CloseHandle(hproc);
+        skip("VirtualAllocEx not implemented\n");
+        return;
+    }
+    ok(GetLastError() == ERROR_ACCESS_DENIED, "wrong error %d\n", GetLastError());
+
+    read_bytes = 0xdeadbeef;
+    SetLastError(0xdeadbeef);
+    ok(ReadProcessMemory(hproc, test_OpenProcess, &dummy, sizeof(dummy), &read_bytes),
+       "ReadProcessMemory error %d\n", GetLastError());
+    ok(read_bytes == sizeof(dummy), "wrong read bytes %ld\n", read_bytes);
+
+    CloseHandle(hproc);
+
+    hproc = OpenProcess(PROCESS_VM_OPERATION, FALSE, GetCurrentProcessId());
+    ok(hproc != NULL, "OpenProcess error %d\n", GetLastError());
+
+    addr1 = pVirtualAllocEx(hproc, 0, 0xFFFC, MEM_RESERVE, PAGE_NOACCESS);
+    ok(addr1 != NULL, "VirtualAllocEx error %d\n", GetLastError());
+
+    /* without PROCESS_QUERY_INFORMATION */
+    SetLastError(0xdeadbeef);
+    ok(!VirtualQueryEx(hproc, addr1, &info, sizeof(info)),
+       "VirtualQueryEx without PROCESS_QUERY_INFORMATION rights should fail\n");
+    ok(GetLastError() == ERROR_ACCESS_DENIED, "wrong error %d\n", GetLastError());
+
+    /* without PROCESS_VM_READ */
+    read_bytes = 0xdeadbeef;
+    SetLastError(0xdeadbeef);
+    ok(!ReadProcessMemory(hproc, addr1, &dummy, sizeof(dummy), &read_bytes),
+       "ReadProcessMemory without PROCESS_VM_READ rights should fail\n");
+    ok(GetLastError() == ERROR_ACCESS_DENIED, "wrong error %d\n", GetLastError());
+    ok(read_bytes == 0, "wrong read bytes %ld\n", read_bytes);
+
+    CloseHandle(hproc);
+
+    hproc = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, GetCurrentProcessId());
+
+    memset(&info, 0xcc, sizeof(info));
+    ok(VirtualQueryEx(hproc, addr1, &info, sizeof(info)) == sizeof(info),
+       "VirtualQueryEx error %d\n", GetLastError());
+
+    ok(info.BaseAddress == addr1, "%p != %p\n", info.BaseAddress, addr1);
+    ok(info.AllocationBase == addr1, "%p != %p\n", info.AllocationBase, addr1);
+    ok(info.AllocationProtect == PAGE_NOACCESS, "%x != PAGE_NOACCESS\n", info.AllocationProtect);
+    ok(info.RegionSize == 0x10000, "%lx != 0x10000\n", info.RegionSize);
+    ok(info.State == MEM_RESERVE, "%x != MEM_RESERVE\n", info.State);
+    /* NT reports Protect == 0 for a not committed memory block */
+    ok(info.Protect == 0 /* NT */ ||
+       info.Protect == PAGE_NOACCESS, /* Win9x */
+        "%x != PAGE_NOACCESS\n", info.Protect);
+    ok(info.Type == MEM_PRIVATE, "%x != MEM_PRIVATE\n", info.Type);
+
+    SetLastError(0xdeadbeef);
+    ok(!pVirtualFreeEx(hproc, addr1, 0, MEM_RELEASE),
+       "VirtualFreeEx without PROCESS_VM_OPERATION rights should fail\n");
+    ok(GetLastError() == ERROR_ACCESS_DENIED, "wrong error %d\n", GetLastError());
+
+    CloseHandle(hproc);
+
+    ok(VirtualFree(addr1, 0, MEM_RELEASE), "VirtualFree failed\n");
+}
+
 START_TEST(process)
 {
     int b = init();
@@ -1268,6 +1418,7 @@ START_TEST(process)
     test_DebuggingFlag();
     test_Console();
     test_ExitCode();
+    test_OpenProcess();
     /* things that can be tested:
      *  lookup:         check the way program to be executed is searched
      *  handles:        check the handle inheritance stuff (+sec options)

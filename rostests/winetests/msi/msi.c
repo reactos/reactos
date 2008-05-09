@@ -414,6 +414,7 @@ static void test_MsiQueryProductState(void)
     INSTALLSTATE state;
     LONG res;
     HKEY userkey, localkey, props;
+    HKEY prodkey;
     DWORD data;
 
     create_test_guid(prodcode, prod_squashed);
@@ -443,7 +444,8 @@ static void test_MsiQueryProductState(void)
     state = MsiQueryProductStateA("A938G02JF-2NF3N93-VN3-2NNF-3KGKALDNF93");
     ok(state == INSTALLSTATE_UNKNOWN, "Expected INSTALLSTATE_UNKNOWN, got %d\n", state);
 
-    /* created guid cannot possibly be an installed product code */
+    /* MSIINSTALLCONTEXT_USERUNMANAGED */
+
     state = MsiQueryProductStateA(prodcode);
     ok(state == INSTALLSTATE_UNKNOWN, "Expected INSTALLSTATE_UNKNOWN, got %d\n", state);
 
@@ -519,13 +521,109 @@ static void test_MsiQueryProductState(void)
     state = MsiQueryProductStateA(prodcode);
     ok(state == INSTALLSTATE_ABSENT, "Expected INSTALLSTATE_ABSENT, got %d\n", state);
 
-    LocalFree(usersid);
     RegDeleteValueA(props, "WindowsInstaller");
     RegDeleteKeyA(props, "");
-    RegDeleteKeyA(localkey, "");
-    RegCloseKey(userkey);
-    RegCloseKey(localkey);
     RegCloseKey(props);
+    RegDeleteKeyA(localkey, "");
+    RegCloseKey(localkey);
+    RegDeleteKeyA(userkey, "");
+    RegCloseKey(userkey);
+
+    /* MSIINSTALLCONTEXT_USERMANAGED */
+
+    lstrcpyA(keypath, "Software\\Microsoft\\Windows\\CurrentVersion\\Installer\\Managed\\");
+    lstrcatA(keypath, usersid);
+    lstrcatA(keypath, "\\Installer\\Products\\");
+    lstrcatA(keypath, prod_squashed);
+
+    res = RegCreateKeyA(HKEY_LOCAL_MACHINE, keypath, &prodkey);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+
+    state = MsiQueryProductStateA(prodcode);
+    ok(state == INSTALLSTATE_ADVERTISED,
+       "Expected INSTALLSTATE_ADVERTISED, got %d\n", state);
+
+    lstrcpyA(keypath, "Software\\Microsoft\\Windows\\CurrentVersion\\Installer\\UserData\\");
+    lstrcatA(keypath, usersid);
+    lstrcatA(keypath, "\\Products\\");
+    lstrcatA(keypath, prod_squashed);
+
+    res = RegCreateKeyA(HKEY_LOCAL_MACHINE, keypath, &localkey);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+
+    state = MsiQueryProductStateA(prodcode);
+    ok(state == INSTALLSTATE_ADVERTISED,
+       "Expected INSTALLSTATE_ADVERTISED, got %d\n", state);
+
+    res = RegCreateKeyA(localkey, "InstallProperties", &props);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+
+    state = MsiQueryProductStateA(prodcode);
+    ok(state == INSTALLSTATE_ADVERTISED,
+       "Expected INSTALLSTATE_ADVERTISED, got %d\n", state);
+
+    data = 1;
+    res = RegSetValueExA(props, "WindowsInstaller", 0, REG_DWORD, (const BYTE *)&data, sizeof(DWORD));
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+
+    /* WindowsInstaller value exists */
+    state = MsiQueryProductStateA(prodcode);
+    ok(state == INSTALLSTATE_DEFAULT, "Expected INSTALLSTATE_DEFAULT, got %d\n", state);
+
+    RegDeleteValueA(props, "WindowsInstaller");
+    RegDeleteKeyA(props, "");
+    RegCloseKey(props);
+    RegDeleteKeyA(localkey, "");
+    RegCloseKey(localkey);
+    RegDeleteKeyA(prodkey, "");
+    RegCloseKey(prodkey);
+
+    /* MSIINSTALLCONTEXT_MACHINE */
+
+    lstrcpyA(keypath, "Software\\Classes\\Installer\\Products\\");
+    lstrcatA(keypath, prod_squashed);
+
+    res = RegCreateKeyA(HKEY_LOCAL_MACHINE, keypath, &prodkey);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+
+    state = MsiQueryProductStateA(prodcode);
+    ok(state == INSTALLSTATE_ADVERTISED, "Expected INSTALLSTATE_ADVERTISED, got %d\n", state);
+
+    lstrcpyA(keypath, "Software\\Microsoft\\Windows\\CurrentVersion\\Installer\\UserData\\");
+    lstrcatA(keypath, "S-1-5-18\\Products\\");
+    lstrcatA(keypath, prod_squashed);
+
+    res = RegCreateKeyA(HKEY_LOCAL_MACHINE, keypath, &localkey);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+
+    state = MsiQueryProductStateA(prodcode);
+    ok(state == INSTALLSTATE_ADVERTISED,
+       "Expected INSTALLSTATE_ADVERTISED, got %d\n", state);
+
+    res = RegCreateKeyA(localkey, "InstallProperties", &props);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+
+    state = MsiQueryProductStateA(prodcode);
+    ok(state == INSTALLSTATE_ADVERTISED,
+       "Expected INSTALLSTATE_ADVERTISED, got %d\n", state);
+
+    data = 1;
+    res = RegSetValueExA(props, "WindowsInstaller", 0, REG_DWORD, (const BYTE *)&data, sizeof(DWORD));
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+
+    /* WindowsInstaller value exists */
+    state = MsiQueryProductStateA(prodcode);
+    ok(state == INSTALLSTATE_DEFAULT, "Expected INSTALLSTATE_DEFAULT, got %d\n", state);
+
+    RegDeleteValueA(props, "WindowsInstaller");
+    RegDeleteKeyA(props, "");
+    RegCloseKey(props);
+    RegDeleteKeyA(localkey, "");
+    RegCloseKey(localkey);
+    RegDeleteKeyA(prodkey, "");
+    RegCloseKey(prodkey);
+
+    LocalFree(usersid);
 }
 
 static const char table_enc85[] =

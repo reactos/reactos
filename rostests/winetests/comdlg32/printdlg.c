@@ -216,11 +216,9 @@ static void test_PrintDlgA(void)
         SetLastError(0xdeadbeef);
         res = GetProfileStringA(PrinterPortsA, device, emptyA, buffer, sizeof(buffer));
         ptr = strchr(buffer, ',');
-        todo_wine {
         ok( (res > 1) && (ptr != NULL),
             "got %u with %u and %p for '%s' (expected '>1' and '!= NULL')\n",
             res, GetLastError(), ptr, buffer);
-        }
 
         if (ptr) ptr[0] = '\0';
         todo_wine {

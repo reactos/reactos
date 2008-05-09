@@ -15,9 +15,8 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
-#define _WIN32_WINNT 0x0500
 
 #include "wine/test.h"
 #include "winbase.h"
@@ -25,20 +24,32 @@
 #include "winuser.h"
 
 static HMODULE hdll;
+static LONG (WINAPI *pChangeDisplaySettingsExA)(LPCSTR, LPDEVMODEA, HWND, DWORD, LPVOID);
+static LONG (WINAPI *pChangeDisplaySettingsExW)(LPCWSTR, LPDEVMODEW, HWND, DWORD, LPVOID);
 static BOOL (WINAPI *pEnumDisplayDevicesA)(LPCSTR,DWORD,LPDISPLAY_DEVICEA,DWORD);
 static BOOL (WINAPI *pEnumDisplayMonitors)(HDC,LPRECT,MONITORENUMPROC,LPARAM);
 static BOOL (WINAPI *pGetMonitorInfoA)(HMONITOR,LPMONITORINFO);
+static HMONITOR (WINAPI *pMonitorFromPoint)(POINT,DWORD);
+static HMONITOR (WINAPI *pMonitorFromWindow)(HWND,DWORD);
 
 static void init_function_pointers(void)
 {
     hdll = GetModuleHandleA("user32.dll");
 
-    if(hdll)
-    {
-       pEnumDisplayDevicesA = (void*)GetProcAddress(hdll, "EnumDisplayDevicesA");
-       pEnumDisplayMonitors = (void*)GetProcAddress(hdll, "EnumDisplayMonitors");
-       pGetMonitorInfoA = (void*)GetProcAddress(hdll, "GetMonitorInfoA");
-    }
+#define GET_PROC(func) \
+    p ## func = (void*)GetProcAddress(hdll, #func); \
+    if(!p ## func) \
+      trace("GetProcAddress(%s) failed\n", #func);
+
+    GET_PROC(ChangeDisplaySettingsExA)
+    GET_PROC(ChangeDisplaySettingsExW)
+    GET_PROC(EnumDisplayDevicesA)
+    GET_PROC(EnumDisplayMonitors)
+    GET_PROC(GetMonitorInfoA)
+    GET_PROC(MonitorFromPoint)
+    GET_PROC(MonitorFromWindow)
+
+#undef GET_PROC
 }
 
 static BOOL CALLBACK monitor_enum_proc(HMONITOR hmon, HDC hdc, LPRECT lprc,
@@ -81,7 +92,7 @@ static void test_enumdisplaydevices(void)
         {
             /* test creating DC */
             dc = CreateDCA(dd.DeviceName, NULL, NULL, NULL);
-            ok(dc != NULL, "Failed to CreateDC(\"%s\") err=%ld\n", dd.DeviceName, GetLastError());
+            ok(dc != NULL, "Failed to CreateDC(\"%s\") err=%d\n", dd.DeviceName, GetLastError());
             DeleteDC(dc);
         }
         num++;
@@ -98,9 +109,144 @@ static void test_enumdisplaydevices(void)
     }
 }
 
+struct vid_mode
+{
+    DWORD w, h, bpp, freq, fields;
+    LONG success;
+};
+
+static const struct vid_mode vid_modes_test[] = {
+    {640, 480, 0, 0, DM_PELSWIDTH | DM_PELSHEIGHT | DM_BITSPERPEL | DM_DISPLAYFREQUENCY, 1},
+    {640, 480, 0, 0, DM_PELSWIDTH | DM_PELSHEIGHT |                 DM_DISPLAYFREQUENCY, 1},
+    {640, 480, 0, 0, DM_PELSWIDTH | DM_PELSHEIGHT | DM_BITSPERPEL                      , 1},
+    {640, 480, 0, 0, DM_PELSWIDTH | DM_PELSHEIGHT                                      , 1},
+    {640, 480, 0, 0,                                DM_BITSPERPEL                      , 1},
+    {640, 480, 0, 0,                                                DM_DISPLAYFREQUENCY, 1},
+
+    {0, 0, 0, 0, DM_PELSWIDTH, 1},
+    {0, 0, 0, 0, DM_PELSHEIGHT, 1},
+
+    {640, 480, 0, 0, DM_PELSWIDTH, 0},
+    {640, 480, 0, 0, DM_PELSHEIGHT, 0},
+    {  0, 480, 0, 0, DM_PELSWIDTH | DM_PELSHEIGHT, 0},
+    {640,   0, 0, 0, DM_PELSWIDTH | DM_PELSHEIGHT, 0},
+
+    {0, 0, 0, 0, DM_DISPLAYFREQUENCY, 0},
+};
+#define vid_modes_cnt (sizeof(vid_modes_test) / sizeof(vid_modes_test[0]))
+
+static void test_ChangeDisplaySettingsEx(void)
+{
+    DEVMODEA dm;
+    DEVMODEW dmW;
+    DWORD width;
+    LONG res;
+    int i;
+
+    if (!pChangeDisplaySettingsExA)
+    {
+        skip("ChangeDisplaySettingsExA is not available\n");
+        return;
+    }
+
+    SetLastError(0xdeadbeef);
+    res = EnumDisplaySettings(NULL, ENUM_CURRENT_SETTINGS, &dm);
+    ok(res, "EnumDisplaySettings error %u\n", GetLastError());
+
+    width = dm.dmPelsWidth;
+
+    /* the following 2 tests show that dm.dmSize being 0 is invalid, but
+     * ChangeDisplaySettingsExA still reports success.
+     */
+    memset(&dm, 0, sizeof(dm));
+    dm.dmFields = DM_PELSWIDTH | DM_PELSHEIGHT;
+    dm.dmPelsWidth = width;
+    res = pChangeDisplaySettingsExA(NULL, &dm, NULL, CDS_TEST, NULL);
+    ok(res == DISP_CHANGE_SUCCESSFUL,
+       "ChangeDisplaySettingsExA returned %d, expected DISP_CHANGE_SUCCESSFUL\n", res);
+
+    memset(&dmW, 0, sizeof(dmW));
+    dmW.dmFields = DM_PELSWIDTH | DM_PELSHEIGHT;
+    dmW.dmPelsWidth = width;
+    SetLastError(0xdeadbeef);
+    res = pChangeDisplaySettingsExW(NULL, &dmW, NULL, CDS_TEST, NULL);
+    if (GetLastError() != ERROR_CALL_NOT_IMPLEMENTED)
+        ok(res == DISP_CHANGE_FAILED,
+           "ChangeDisplaySettingsExW returned %d, expected DISP_CHANGE_FAILED\n", res);
+
+    memset(&dm, 0, sizeof(dm));
+    dm.dmSize = sizeof(dm);
+
+    for (i = 0; i < vid_modes_cnt; i++)
+    {
+        dm.dmPelsWidth        = vid_modes_test[i].w;
+        dm.dmPelsHeight       = vid_modes_test[i].h;
+        dm.dmBitsPerPel       = vid_modes_test[i].bpp;
+        dm.dmDisplayFrequency = vid_modes_test[i].freq;
+        dm.dmFields           = vid_modes_test[i].fields;
+        res = pChangeDisplaySettingsExA(NULL, &dm, NULL, CDS_FULLSCREEN, NULL);
+        ok(vid_modes_test[i].success ?
+           (res == DISP_CHANGE_SUCCESSFUL) :
+           (res == DISP_CHANGE_BADMODE || res == DISP_CHANGE_BADPARAM),
+           "Unexpected ChangeDisplaySettingsEx() return code for resolution[%d]: %d\n", i, res);
+
+        if (res == DISP_CHANGE_SUCCESSFUL)
+        {
+            RECT r, r1, virt;
+
+            SetRect(&virt, 0, 0, GetSystemMetrics(SM_CXVIRTUALSCREEN), GetSystemMetrics(SM_CYVIRTUALSCREEN));
+            OffsetRect(&virt, GetSystemMetrics(SM_XVIRTUALSCREEN), GetSystemMetrics(SM_YVIRTUALSCREEN));
+
+            /* Resolution change resets clip rect */
+            ok(GetClipCursor(&r), "GetClipCursor() failed\n");
+            ok(EqualRect(&r, &virt), "Invalid clip rect: (%d %d) x (%d %d)\n", r.left, r.top, r.right, r.bottom);
+
+            ok(ClipCursor(NULL), "ClipCursor() failed\n");
+            ok(GetClipCursor(&r), "GetClipCursor() failed\n");
+            ok(EqualRect(&r, &virt), "Invalid clip rect: (%d %d) x (%d %d)\n", r.left, r.top, r.right, r.bottom);
+
+            /* This should always work. Primary monitor is at (0,0) */
+            SetRect(&r1, 10, 10, 20, 20);
+            ok(ClipCursor(&r1), "ClipCursor() failed\n");
+            ok(GetClipCursor(&r), "GetClipCursor() failed\n");
+            ok(EqualRect(&r, &r1), "Invalid clip rect: (%d %d) x (%d %d)\n", r.left, r.top, r.right, r.bottom);
+
+            SetRect(&r1, virt.left - 10, virt.top - 10, virt.right + 20, virt.bottom + 20);
+            ok(ClipCursor(&r1), "ClipCursor() failed\n");
+            ok(GetClipCursor(&r), "GetClipCursor() failed\n");
+            ok(EqualRect(&r, &virt), "Invalid clip rect: (%d %d) x (%d %d)\n", r.left, r.top, r.right, r.bottom);
+        }
+    }
+    res = pChangeDisplaySettingsExA(NULL, NULL, NULL, CDS_RESET, NULL);
+    ok(res == DISP_CHANGE_SUCCESSFUL, "Failed to reset default resolution: %d\n", res);
+}
+
+static void test_monitors(void)
+{
+    HMONITOR monitor, primary;
+    POINT pt;
+
+    pt.x = pt.y = 0;
+    primary = pMonitorFromPoint( pt, MONITOR_DEFAULTTOPRIMARY );
+    ok( primary != 0, "couldn't get primary monitor\n" );
+
+    monitor = pMonitorFromWindow( 0, MONITOR_DEFAULTTONULL );
+    ok( !monitor, "got %p, should not get a monitor for an invalid window\n", monitor );
+    monitor = pMonitorFromWindow( 0, MONITOR_DEFAULTTOPRIMARY );
+    ok( monitor == primary, "got %p, should get primary %p for MONITOR_DEFAULTTOPRIMARY\n", monitor, primary );
+    monitor = pMonitorFromWindow( 0, MONITOR_DEFAULTTONEAREST );
+    ok( monitor == primary, "got %p, should get primary %p for MONITOR_DEFAULTTONEAREST\n", monitor, primary );
+}
+
 
 START_TEST(monitor)
 {
     init_function_pointers();
     test_enumdisplaydevices();
+    if (winetest_interactive)
+        test_ChangeDisplaySettingsEx();
+    if (pMonitorFromPoint && pMonitorFromWindow)
+        test_monitors();
+    else
+        skip("MonitorFromPoint and/or MonitorFromWindow are not available\n");
 }

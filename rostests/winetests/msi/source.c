@@ -2161,7 +2161,7 @@ static void test_MsiSourceListAddMediaDisk(void)
     ok(r == ERROR_INVALID_PARAMETER,
        "Expected ERROR_INVALID_PARAMETER, got %d\n", r);
 
-    /* update dwDiskId 1, szVolumeLable is NULL */
+    /* update dwDiskId 1, szVolumeLabel is NULL */
     r = pMsiSourceListAddMediaDiskA(prodcode, usersid,
                                     MSIINSTALLCONTEXT_USERUNMANAGED,
                                     MSICODE_PRODUCT, 1, NULL, "provocar");
@@ -2172,7 +2172,7 @@ static void test_MsiSourceListAddMediaDisk(void)
     CHECK_REG_STR(media, "1", ";provocar");
     CHECK_REG_STR(media, "42", "label42;prompt42");
 
-    /* update dwDiskId 1, szVolumeLable is empty */
+    /* update dwDiskId 1, szVolumeLabel is empty */
     r = pMsiSourceListAddMediaDiskA(prodcode, usersid,
                                     MSIINSTALLCONTEXT_USERUNMANAGED,
                                     MSICODE_PRODUCT, 1, "", "provoquer");

@@ -1,3 +1,6 @@
+<?xml version="1.0"?>
+<!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
+<group>
 <module name="shell32_winetest" type="win32cui" installbase="bin" installname="shell32_winetest.exe" allowwarnings="true">
 	<include base="shell32_winetest">.</include>
 	<define name="__USE_W32API" />
@@ -24,4 +27,6 @@
 	<file>string.c</file>
 	<file>systray.c</file>
 	<file>testlist.c</file>
+	<file>shfldr_netplaces.c</file>
 </module>
+</group>

@@ -593,9 +593,58 @@ static void test_FDIIsCabinet(void)
     delete_test_files();
 }
 
+
+INT_PTR __cdecl CopyProgress (FDINOTIFICATIONTYPE fdint, PFDINOTIFICATION pfdin)
+{
+    return 0;
+}
+
+static void test_FDICopy(void)
+{
+    CCAB cabParams;
+    HFDI hfdi;
+    HFCI hfci;
+    ERF erf;
+    BOOL ret;
+    char name[] = "extract.cab";
+    char path[MAX_PATH + 1];
+
+    GetCurrentDirectoryA(MAX_PATH, path);
+
+    set_cab_parameters(&cabParams);
+
+    hfci = FCICreate(&erf, file_placed, mem_alloc, mem_free, fci_open,
+                     fci_read, fci_write, fci_close, fci_seek,
+                     fci_delete, get_temp_file, &cabParams, NULL);
+
+    ret = FCIFlushCabinet(hfci, FALSE, get_next_cabinet, progress);
+    ok(ret, "Failed to flush the cabinet\n");
+
+    FCIDestroy(hfci);
+
+    hfdi = FDICreate(fdi_alloc, fdi_free, fdi_open, fdi_read,
+                     fdi_write, fdi_close, fdi_seek,
+                     cpuUNKNOWN, &erf);
+
+    /* cabinet with no files or folders */
+    SetLastError(0xdeadbeef);
+    ret = FDICopy(hfdi, name, path, 0, CopyProgress, NULL, 0);
+    ok(ret == FALSE, "Expected FALSE, got %d\n", ret);
+    todo_wine
+    {
+        ok(GetLastError() == ERROR_INVALID_HANDLE,
+           "Expected ERROR_INVALID_HANDLE, got %d\n", GetLastError());
+    }
+
+    FDIDestroy(hfdi);
+    DeleteFileA(name);
+}
+
+
 START_TEST(fdi)
 {
     test_FDICreate();
     test_FDIDestroy();
     test_FDIIsCabinet();
+    test_FDICopy();
 }

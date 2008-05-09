@@ -532,7 +532,7 @@ static UINT set_summary_info(MSIHANDLE hdb)
     UINT res;
     MSIHANDLE suminfo;
 
-    /* build summmary info */
+    /* build summary info */
     res = MsiGetSummaryInformation(hdb, NULL, 7, &suminfo);
     ok( res == ERROR_SUCCESS , "Failed to open summaryinfo\n" );
 

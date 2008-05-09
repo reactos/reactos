@@ -551,7 +551,7 @@ static void test_fcvt(void)
 {
     char *str;
     int dec=100, sign=100;
-
+    
     /* Numbers less than 1.0 with different precisions */
     str = _fcvt(0.0001, 1, &dec, &sign );
     ok( 0 == strcmp(str,""), "bad return '%s'\n", str);

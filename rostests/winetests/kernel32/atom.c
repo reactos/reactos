@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #include <stdarg.h>
@@ -211,18 +211,20 @@ static void test_get_atom_name(void)
 	{
 	    ok(GetLastError() == (i ? ERROR_MORE_DATA : ERROR_INVALID_PARAMETER) ||
                GetLastError() == 0xdeadbeef,  /* the Win 9x way */
-	       "wrong error conditions %lu for %u\n", GetLastError(), i);
+               "wrong error conditions %u for %u\n", GetLastError(), i);
 	}
 	else /* the Win 9x way */
 	{
 	    ok(GetLastError() == 0xdeadbeef,
-	       "wrong error conditions %lu for %u\n", GetLastError(), i);
+               "wrong error conditions %u for %u\n", GetLastError(), i);
 	}
     }
 
     memset( buf, '.', sizeof(buf) );
     len = GlobalGetAtomNameA( atom, buf, 6 );
-    ok( len == 0, "bad length %d\n", len );
+    ok( len == 0 ||
+        len == 5, /* win9x */
+        "bad length %d\n", len );
     ok( !memcmp( buf, "fooba\0....", 10 ), "bad buffer contents\n");
     if (unicode_OS)
     {
@@ -251,11 +253,11 @@ static void test_get_atom_name(void)
     len = GlobalGetAtomNameA(atom, out, 10);
     if (!len) /* the NT way */
     {
-        ok(GetLastError() == ERROR_MORE_DATA, "wrong error code (%lu instead of %lu)\n", GetLastError(), (DWORD)ERROR_MORE_DATA);
+        ok(GetLastError() == ERROR_MORE_DATA, "wrong error code (%u instead of %u)\n", GetLastError(), ERROR_MORE_DATA);
     }
     else /* the Win9x way */
     {
-        ok(GetLastError() == 0xdeadbeef, "wrong error code (%lu instead of %u)\n", GetLastError(), 0xdeadbeef);
+        ok(GetLastError() == 0xdeadbeef, "wrong error code (%u instead of %u)\n", GetLastError(), 0xdeadbeef);
     }
     for (i = 0; i < 9; i++)
     {
@@ -276,7 +278,7 @@ static void test_get_atom_name(void)
             if (i)
             {
                 WCHAR res[20];
-
+                
                 ok( (len > 1) && (len < 7), "bad length %d\n", len );
                 print_integral( res, i );
                 memset( res + lstrlenW(res) + 1, 'a', 10 * sizeof(WCHAR));
@@ -292,7 +294,7 @@ static void test_get_atom_name(void)
             {
                 /* len == 0 with ERROR_MORE_DATA is on NT3.51 */
                 ok(len == 1 || (len == 0 && GetLastError() == ERROR_MORE_DATA),
-                         "0x%04x: got %u with %ld (excepted '1' or '0' with " \
+                         "0x%04x: got %u with %d (excepted '1' or '0' with "
                          "ERROR_MORE_DATA)\n", i, len, GetLastError());
                 ok(outW[1] == DOUBLE('.'), "buffer overwrite\n");
             }
@@ -448,7 +450,7 @@ static void test_local_get_atom_name(void)
     len = GetAtomNameA( atom, buf, 6 );
     ok( len == 5, "bad length %d\n", len );
     ok( !memcmp( buf, "fooba\0....", 10 ), "bad buffer contents\n" );
-
+ 
     /* Repeat, unicode-style */
     if (unicode_OS)
     {
@@ -460,7 +462,7 @@ static void test_local_get_atom_name(void)
         ok( len == 5, "bad length %d\n", len );
         ok( !memcmp( bufW, resW, 10*sizeof(WCHAR) ), "bad buffer contents\n" );
     }
-
+ 
     /* Check error code returns */
     memset(buf, '.', 10);
     ok( !GetAtomNameA( atom, buf,  0 ), "succeeded\n" );
@@ -499,12 +501,12 @@ static void test_local_get_atom_name(void)
             ok(GetLastError() == ERROR_INSUFFICIENT_BUFFER ||
                GetLastError() == ERROR_MORE_DATA ||
                GetLastError() == 0xdeadbeef, /* the Win 9x way */
-               "wrong error conditions %lu for %u\n", GetLastError(), i);
+               "wrong error conditions %u for %u\n", GetLastError(), i);
         else
             ok(GetLastError() == ERROR_INVALID_PARAMETER ||
                GetLastError() == ERROR_MORE_DATA ||
                GetLastError() == 0xdeadbeef, /* the Win 9x way */
-               "wrong error conditions %lu for %u\n", GetLastError(), i);
+               "wrong error conditions %u for %u\n", GetLastError(), i);
     }
     /* test string limits & overflow */
     do_initA(in, "abcdefghij", 255);
@@ -534,7 +536,7 @@ static void test_local_get_atom_name(void)
     ok(GetLastError() == ERROR_INVALID_PARAMETER ||
        GetLastError() == ERROR_MORE_DATA ||
        GetLastError() == 0xdeadbeef, /* the Win 9x way */
-       "wrong error code (%lu)\n", GetLastError());
+       "wrong error code (%u)\n", GetLastError());
 
     if (unicode_OS)
     {
@@ -546,7 +548,7 @@ static void test_local_get_atom_name(void)
             if (i)
             {
                 WCHAR res[20];
-
+                
                 ok( (len > 1) && (len < 7), "bad length %d\n", len );
                 print_integral( res, i );
                 memset( res + lstrlenW(res) + 1, 'a', 10 * sizeof(WCHAR));
@@ -561,12 +563,12 @@ static void test_local_get_atom_name(void)
             /* ERROR_MORE_DATA is on nt3.51 sp5 */
             ok(GetLastError() == ERROR_MORE_DATA ||
                GetLastError() == (i ? ERROR_INSUFFICIENT_BUFFER : ERROR_INVALID_PARAMETER),
-               "wrong error conditions %lu for %u\n", GetLastError(), i);
+               "wrong error conditions %u for %u\n", GetLastError(), i);
         }
         do_initW(inW, "abcdefghij", 255);
         atom = AddAtomW(inW);
         ok(atom, "couldn't add atom for %s\n", in);
-        len = GetAtomNameW(atom, outW, sizeof(outW));
+        len = GetAtomNameW(atom, outW, sizeof(outW)/sizeof(outW[0]));
         ok(len == 255, "length mismatch (%u instead of 255)\n", len);
         for (i = 0; i < 255; i++)
         {
@@ -589,7 +591,7 @@ static void test_local_get_atom_name(void)
         /* ERROR_MORE_DATA is on nt3.51 sp5 */
         ok(GetLastError() == ERROR_INVALID_PARAMETER ||
            GetLastError() == ERROR_MORE_DATA,
-           "wrong error code (%lu)\n", GetLastError());
+           "wrong error code (%u)\n", GetLastError());
     }
 }
 

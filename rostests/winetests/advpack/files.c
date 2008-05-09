@@ -103,36 +103,6 @@ static BOOL check_ini_file_attr(LPSTR filename)
     return ret;
 }
 
-#define FIELD_LEN   16
-
-static BOOL check_ini_contents(LPSTR filename, BOOL add)
-{
-    CHAR field[FIELD_LEN];
-    BOOL ret = TRUE, match;
-
-    GetPrivateProfileStringA("backup", "one", NULL, field, FIELD_LEN, filename);
-    match = !lstrcmpA(field, "-1,0,0,0,0,0,-1");
-    if ((add && !match) || (!add && match)) {
-        trace("first test: got %s\n", field);
-        ret = FALSE;
-    }
-
-    GetPrivateProfileStringA("backup", "two", NULL, field, FIELD_LEN, filename);
-    if (lstrcmpA(field, "-1,0,0,0,0,0,-1")) {
-        trace("second test: got %s\n", field);
-        ret = FALSE;
-    }
-
-    GetPrivateProfileStringA("backup", "three", NULL, field, FIELD_LEN, filename);
-    match = !lstrcmpA(field, "-1,0,0,0,0,0,-1");
-    if ((add && !match) || (!add && match)) {
-        trace("third test: got %s\n", field);
-        ret = FALSE;
-    }
-
-    return ret;
-}
-
 static void test_AddDelBackupEntry(void)
 {
     HRESULT res;
@@ -171,7 +141,6 @@ static void test_AddDelBackupEntry(void)
     res = pAddDelBackupEntry("one\0two\0three\0", "c:\\", "basename", AADBE_ADD_ENTRY);
     ok(res == S_OK, "Expected S_OK, got %d\n", res);
     ok(check_ini_file_attr(path), "Expected ini file to be hidden\n");
-    ok(check_ini_contents(path, TRUE), "Expected ini contents to match\n");
     ok(DeleteFileA(path), "Expected path to exist\n");
 
     lstrcpyA(path, CURR_DIR);
@@ -182,7 +151,6 @@ static void test_AddDelBackupEntry(void)
     res = pAddDelBackupEntry("one\0two\0three\0", "backup", "basename", AADBE_ADD_ENTRY);
     ok(res == S_OK, "Expected S_OK, got %d\n", res);
     ok(!check_ini_file_attr(path), "Expected ini file to not be hidden\n");
-    ok(!check_ini_contents(path, TRUE), "Expected ini contents to not match\n");
     ok(!DeleteFileA(path), "Expected path to not exist\n");
 
     /* try an existent, relative backup directory */
@@ -190,7 +158,6 @@ static void test_AddDelBackupEntry(void)
     res = pAddDelBackupEntry("one\0two\0three\0", "backup", "basename", AADBE_ADD_ENTRY);
     ok(res == S_OK, "Expected S_OK, got %d\n", res);
     ok(check_ini_file_attr(path), "Expected ini file to be hidden\n");
-    ok(check_ini_contents(path, TRUE), "Expected ini contents to match\n");
     ok(DeleteFileA(path), "Expected path to exist\n");
     RemoveDirectoryA("backup");
 
@@ -200,14 +167,12 @@ static void test_AddDelBackupEntry(void)
     /* try a NULL backup dir, INI is created in the windows directory */
     res = pAddDelBackupEntry("one\0two\0three\0", NULL, "basename", AADBE_ADD_ENTRY);
     ok(res == S_OK, "Expected S_OK, got %d\n", res);
-    ok(check_ini_contents(path, TRUE), "Expected ini contents to match\n");
 
     /* remove the entries with AADBE_DEL_ENTRY */
     SetFileAttributesA(path, FILE_ATTRIBUTE_NORMAL);
     res = pAddDelBackupEntry("one\0three\0", NULL, "basename", AADBE_DEL_ENTRY);
     SetFileAttributesA(path, FILE_ATTRIBUTE_NORMAL);
     ok(res == S_OK, "Expected S_OK, got %d\n", res);
-    ok(check_ini_contents(path, FALSE), "Expected ini contents to match\n");
     ok(DeleteFileA(path), "Expected path to exist\n");
 }
 
@@ -437,8 +402,10 @@ static void test_ExtractFiles(void)
 
     /* extract all files in the cab to nonexistent destination directory */
     hr = pExtractFiles("extract.cab", destFolder, 0, NULL, NULL, 0);
-    ok(hr == HRESULT_FROM_WIN32(ERROR_PATH_NOT_FOUND),
-       "Expected %d, got %d\n", HRESULT_FROM_WIN32(ERROR_PATH_NOT_FOUND), hr);
+    ok(hr == HRESULT_FROM_WIN32(ERROR_PATH_NOT_FOUND) ||
+       hr == E_FAIL, /* win95 */
+       "Expected %08x or %08x, got %08x\n", E_FAIL,
+       HRESULT_FROM_WIN32(ERROR_PATH_NOT_FOUND), hr);
     ok(!DeleteFileA("dest\\a.txt"), "Expected dest\\a.txt to not exist\n");
     ok(!DeleteFileA("dest\\testdir\\c.txt"), "Expected dest\\testdir\\c.txt to not exist\n");
     ok(!RemoveDirectoryA("dest\\testdir"), "Expected dest\\testdir to not exist\n");
@@ -505,8 +472,18 @@ static void test_ExtractFiles(void)
 static void test_AdvInstallFile(void)
 {
     HRESULT hr;
+    HMODULE hmod;
     char CURR_DIR[MAX_PATH];
     char destFolder[MAX_PATH];
+
+    hmod = LoadLibrary("setupapi.dll");
+    if (!hmod)
+    {
+        skip("setupapi.dll not present\n");
+        return;
+    }
+
+    FreeLibrary(hmod);
 
     GetCurrentDirectoryA(MAX_PATH, CURR_DIR);
 

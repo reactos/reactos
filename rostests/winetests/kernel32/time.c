@@ -2,6 +2,7 @@
  * Unit test suite for time functions
  *
  * Copyright 2004 Uwe Bonnes
+ * Copyright 2007 Dmitry Timoshkov
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -15,11 +16,15 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #include "wine/test.h"
 #include "winbase.h"
+#include "winnls.h"
+
+static BOOL (WINAPI *pTzSpecificLocalTimeToSystemTime)(LPTIME_ZONE_INFORMATION, LPSYSTEMTIME, LPSYSTEMTIME);
+static BOOL (WINAPI *pSystemTimeToTzSpecificLocalTime)(LPTIME_ZONE_INFORMATION, LPSYSTEMTIME, LPSYSTEMTIME);
 
 #define SECSPERMIN         60
 #define SECSPERDAY        86400
@@ -73,6 +78,23 @@
     (st).wSecond = 32; \
     (st).wMilliseconds = 123;
 
+#define SETUP_ZEROTIME(st) \
+    (st).wYear = 1601; \
+    (st).wMonth = 1; \
+    (st).wDay = 1; \
+    (st).wHour = 0; \
+    (st).wMinute = 0; \
+    (st).wSecond = 0; \
+    (st).wMilliseconds = 0;
+
+#define SETUP_EARLY(st) \
+    (st).wYear = 1600; \
+    (st).wMonth = 12; \
+    (st).wDay = 31; \
+    (st).wHour = 23; \
+    (st).wMinute = 59; \
+    (st).wSecond = 59; \
+    (st).wMilliseconds = 999;
 
 
 static void test_conversions(void)
@@ -82,10 +104,24 @@ static void test_conversions(void)
 
     memset(&ft,0,sizeof ft);
 
+    SetLastError(0xdeadbeef);
+    SETUP_EARLY(st)
+    ok (!SystemTimeToFileTime(&st, &ft), "Conversion succeeded EARLY\n");
+    ok (GetLastError() == ERROR_INVALID_PARAMETER ||
+        GetLastError() == 0xdeadbeef, /* win9x */
+        "EARLY should be INVALID\n");
+
+    SETUP_ZEROTIME(st)
+    ok (SystemTimeToFileTime(&st, &ft), "Conversion failed ZERO_TIME\n");
+    ok( (!((ft.dwHighDateTime != 0) || (ft.dwLowDateTime != 0))),
+        "Wrong time for ATIME: %08x %08x (correct %08x %08x)\n",
+        ft.dwLowDateTime, ft.dwHighDateTime, 0, 0);
+
+
     SETUP_ATIME(st)
     ok (SystemTimeToFileTime(&st,&ft), "Conversion Failed ATIME\n");
     ok( (!((ft.dwHighDateTime != ATIME_HI) || (ft.dwLowDateTime!=ATIME_LOW))),
-        "Wrong time for ATIME: %08lx %08lx (correct %08x %08x)\n",
+        "Wrong time for ATIME: %08x %08x (correct %08x %08x)\n",
         ft.dwLowDateTime, ft.dwHighDateTime, ATIME_LOW, ATIME_HI);
 
 
@@ -94,7 +130,7 @@ static void test_conversions(void)
 
     ok( (!((ft.dwHighDateTime != MAYDAY_2002_HI) ||
          (ft.dwLowDateTime!=MAYDAY_2002_LO))),
-        "Wrong time for 2002 %08lx %08lx (correct %08x %08x)\n", ft.dwLowDateTime,
+        "Wrong time for 2002 %08x %08x (correct %08x %08x)\n", ft.dwLowDateTime,
         ft.dwHighDateTime, MAYDAY_2002_LO, MAYDAY_2002_HI);
 
 
@@ -103,7 +139,7 @@ static void test_conversions(void)
 
     ok( (!((ft.dwHighDateTime!=NEWYEAR_1980_HI) ||
         (ft.dwLowDateTime!=NEWYEAR_1980_LO))) ,
-        "Wrong time for 1980 %08lx %08lx (correct %08x %08x)\n", ft.dwLowDateTime,
+        "Wrong time for 1980 %08x %08x (correct %08x %08x)\n", ft.dwLowDateTime,
          ft.dwHighDateTime, NEWYEAR_1980_LO,NEWYEAR_1980_HI  );
 
     ok(DosDateTimeToFileTime(DOS_DATE(1980,1,1),DOS_TIME(0,0,0),&ft),
@@ -111,7 +147,7 @@ static void test_conversions(void)
 
     ok( (!((ft.dwHighDateTime!=NEWYEAR_1980_HI) ||
          (ft.dwLowDateTime!=NEWYEAR_1980_LO))),
-        "Wrong time DosDateTimeToFileTime %08lx %08lx (correct %08x %08x)\n",
+        "Wrong time DosDateTimeToFileTime %08x %08x (correct %08x %08x)\n",
         ft.dwHighDateTime, ft.dwLowDateTime, NEWYEAR_1980_HI, NEWYEAR_1980_LO);
 
 }
@@ -129,7 +165,7 @@ static void test_invalid_arg(void)
         "DosDateTimeToFileTime() failed\n");
 
     ok( (ft.dwHighDateTime==NEWYEAR_1980_HI) && (ft.dwLowDateTime==NEWYEAR_1980_LO),
-        "filetime for 1/1/80 00:00:00 was %08lx %08lx\n", ft.dwHighDateTime, ft.dwLowDateTime);
+        "filetime for 1/1/80 00:00:00 was %08x %08x\n", ft.dwHighDateTime, ft.dwLowDateTime);
 
     /* now check SystemTimeToFileTime */
     memset(&ft,0,sizeof ft);
@@ -154,23 +190,150 @@ static void test_invalid_arg(void)
     ok( !SystemTimeToFileTime(&st, &ft), "bad minute\n");
 }
 
+static LONGLONG system_time_to_minutes(const SYSTEMTIME *st)
+{
+    BOOL ret;
+    FILETIME ft;
+    LONGLONG minutes;
+
+    SetLastError(0xdeadbeef);
+    ret = SystemTimeToFileTime(st, &ft);
+    ok(ret, "SystemTimeToFileTime error %u\n", GetLastError());
+
+    minutes = ((LONGLONG)ft.dwHighDateTime << 32) + ft.dwLowDateTime;
+    minutes /= (LONGLONG)600000000; /* convert to minutes */
+    return minutes;
+}
+
+static LONG get_tz_bias(const TIME_ZONE_INFORMATION *tzinfo, DWORD tz_id)
+{
+    switch (tz_id)
+    {
+    case TIME_ZONE_ID_DAYLIGHT:
+        if (memcmp(&tzinfo->StandardDate, &tzinfo->DaylightDate, sizeof(tzinfo->DaylightDate)) != 0)
+            return tzinfo->DaylightBias;
+        /* fall through */
+
+    case TIME_ZONE_ID_STANDARD:
+        return tzinfo->StandardBias;
+
+    default:
+        trace("unknown time zone id %d\n", tz_id);
+        /* fall through */
+    case TIME_ZONE_ID_UNKNOWN:
+        return 0;
+    }
+}
+ 
 static void test_GetTimeZoneInformation(void)
 {
+    char std_name[32], dlt_name[32];
     TIME_ZONE_INFORMATION tzinfo, tzinfo1;
-    DWORD res =  GetTimeZoneInformation(&tzinfo);
-    ok(res != TIME_ZONE_ID_INVALID, "GetTimeZoneInformation failed\n");
+    BOOL res;
+    DWORD tz_id;
+    SYSTEMTIME st, current, utc, local;
+    FILETIME l_ft, s_ft;
+    LONGLONG l_time, s_time;
+    LONG diff;
+
+    GetSystemTime(&st);
+    s_time = system_time_to_minutes(&st);
+
+    SetLastError(0xdeadbeef);
+    res = SystemTimeToFileTime(&st, &s_ft);
+    ok(res, "SystemTimeToFileTime error %u\n", GetLastError());
+    SetLastError(0xdeadbeef);
+    res = FileTimeToLocalFileTime(&s_ft, &l_ft);
+    ok(res, "FileTimeToLocalFileTime error %u\n", GetLastError());
+    SetLastError(0xdeadbeef);
+    res = FileTimeToSystemTime(&l_ft, &local);
+    ok(res, "FileTimeToSystemTime error %u\n", GetLastError());
+    l_time = system_time_to_minutes(&local);
+
+    tz_id = GetTimeZoneInformation(&tzinfo);
+    ok(tz_id != TIME_ZONE_ID_INVALID, "GetTimeZoneInformation failed\n");
+
+    trace("tz_id %u (%s)\n", tz_id,
+          tz_id == TIME_ZONE_ID_DAYLIGHT ? "TIME_ZONE_ID_DAYLIGHT" :
+          (tz_id == TIME_ZONE_ID_STANDARD ? "TIME_ZONE_ID_STANDARD" :
+          (tz_id == TIME_ZONE_ID_UNKNOWN ? "TIME_ZONE_ID_UNKNOWN" :
+          "TIME_ZONE_ID_INVALID")));
+
+    WideCharToMultiByte(CP_ACP, 0, tzinfo.StandardName, -1, std_name, sizeof(std_name), NULL, NULL);
+    WideCharToMultiByte(CP_ACP, 0, tzinfo.DaylightName, -1, dlt_name, sizeof(dlt_name), NULL, NULL);
+    trace("bias %d, %s - %s\n", tzinfo.Bias, std_name, dlt_name);
+    trace("standard (d/m/y): %u/%02u/%04u day of week %u %u:%02u:%02u.%03u bias %d\n",
+        tzinfo.StandardDate.wDay, tzinfo.StandardDate.wMonth,
+        tzinfo.StandardDate.wYear, tzinfo.StandardDate.wDayOfWeek,
+        tzinfo.StandardDate.wHour, tzinfo.StandardDate.wMinute,
+        tzinfo.StandardDate.wSecond, tzinfo.StandardDate.wMilliseconds,
+        tzinfo.StandardBias);
+    trace("daylight (d/m/y): %u/%02u/%04u day of week %u %u:%02u:%02u.%03u bias %d\n",
+        tzinfo.DaylightDate.wDay, tzinfo.DaylightDate.wMonth,
+        tzinfo.DaylightDate.wYear, tzinfo.DaylightDate.wDayOfWeek,
+        tzinfo.DaylightDate.wHour, tzinfo.DaylightDate.wMinute,
+        tzinfo.DaylightDate.wSecond, tzinfo.DaylightDate.wMilliseconds,
+        tzinfo.DaylightBias);
+
+    diff = (LONG)(s_time - l_time);
+    ok(diff == tzinfo.Bias + get_tz_bias(&tzinfo, tz_id),
+       "system/local diff %d != tz bias %d\n",
+       diff, tzinfo.Bias + get_tz_bias(&tzinfo, tz_id));
+
     ok(SetEnvironmentVariableA("TZ","GMT0") != 0,
        "SetEnvironmentVariableA failed\n");
     res =  GetTimeZoneInformation(&tzinfo1);
     ok(res != TIME_ZONE_ID_INVALID, "GetTimeZoneInformation failed\n");
 
-    ok(((tzinfo.Bias == tzinfo1.Bias) &&
+    ok(((tzinfo.Bias == tzinfo1.Bias) && 
 	(tzinfo.StandardBias == tzinfo1.StandardBias) &&
 	(tzinfo.DaylightBias == tzinfo1.DaylightBias)),
-       "Bias influenced by TZ variable\n");
+       "Bias influenced by TZ variable\n"); 
     ok(SetEnvironmentVariableA("TZ",NULL) != 0,
        "SetEnvironmentVariableA failed\n");
 
+    if (!pSystemTimeToTzSpecificLocalTime)
+    {
+        skip("SystemTimeToTzSpecificLocalTime not present\n");
+        return;
+    }
+
+    diff = get_tz_bias(&tzinfo, tz_id);
+
+    utc = st;
+    SetLastError(0xdeadbeef);
+    res = pSystemTimeToTzSpecificLocalTime(&tzinfo, &utc, &current);
+    if (!res && GetLastError() == ERROR_CALL_NOT_IMPLEMENTED)
+    {
+        skip("SystemTimeToTzSpecificLocalTime is not implemented\n");
+        return;
+    }
+
+    ok(res, "SystemTimeToTzSpecificLocalTime error %u\n", GetLastError());
+    s_time = system_time_to_minutes(&current);
+
+    tzinfo.StandardBias -= 123;
+    tzinfo.DaylightBias += 456;
+
+    res = pSystemTimeToTzSpecificLocalTime(&tzinfo, &utc, &local);
+    ok(res, "SystemTimeToTzSpecificLocalTime error %u\n", GetLastError());
+    l_time = system_time_to_minutes(&local);
+    ok(l_time - s_time == diff - get_tz_bias(&tzinfo, tz_id), "got %d, expected %d\n",
+       (LONG)(l_time - s_time), diff - get_tz_bias(&tzinfo, tz_id));
+
+    /* pretend that there is no transition dates */
+    tzinfo.DaylightDate.wDay = 0;
+    tzinfo.DaylightDate.wMonth = 0;
+    tzinfo.DaylightDate.wYear = 0;
+    tzinfo.StandardDate.wDay = 0;
+    tzinfo.StandardDate.wMonth = 0;
+    tzinfo.StandardDate.wYear = 0;
+
+    res = pSystemTimeToTzSpecificLocalTime(&tzinfo, &utc, &local);
+    ok(res, "SystemTimeToTzSpecificLocalTime error %u\n", GetLastError());
+    l_time = system_time_to_minutes(&local);
+    ok(l_time - s_time == diff, "got %d, expected %d\n",
+       (LONG)(l_time - s_time), diff);
 }
 
 static void test_FileTimeToSystemTime(void)
@@ -184,7 +347,7 @@ static void test_FileTimeToSystemTime(void)
     ft.dwLowDateTime  = 0;
     ret = FileTimeToSystemTime(&ft, &st);
     ok( ret,
-       "FileTimeToSystemTime() failed with Error 0x%08lx\n",GetLastError());
+       "FileTimeToSystemTime() failed with Error %d\n",GetLastError());
     ok(((st.wYear == 1601) && (st.wMonth  == 1) && (st.wDay    == 1) &&
 	(st.wHour ==    0) && (st.wMinute == 0) && (st.wSecond == 0) &&
 	(st.wMilliseconds == 0)),
@@ -194,7 +357,7 @@ static void test_FileTimeToSystemTime(void)
     ft.dwLowDateTime  = (UINT)time;
     ret = FileTimeToSystemTime(&ft, &st);
     ok( ret,
-       "FileTimeToSystemTime() failed with Error 0x%08lx\n",GetLastError());
+       "FileTimeToSystemTime() failed with Error %d\n",GetLastError());
     ok(((st.wYear == 1970) && (st.wMonth == 1) && (st.wDay == 1) &&
 	(st.wHour ==    0) && (st.wMinute == 0) && (st.wSecond == 1) &&
 	(st.wMilliseconds == 0)),
@@ -210,7 +373,7 @@ static void test_FileTimeToLocalFileTime(void)
     TIME_ZONE_INFORMATION tzinfo;
     DWORD res =  GetTimeZoneInformation(&tzinfo);
     ULONGLONG time = (ULONGLONG)TICKSPERSEC + TICKS_1601_TO_1970 +
-        (LONGLONG)(tzinfo.Bias +
+        (LONGLONG)(tzinfo.Bias + 
             ( res == TIME_ZONE_ID_STANDARD ? tzinfo.StandardBias :
             ( res == TIME_ZONE_ID_DAYLIGHT ? tzinfo.DaylightBias : 0 ))) *
              SECSPERMIN *TICKSPERSEC;
@@ -221,7 +384,7 @@ static void test_FileTimeToLocalFileTime(void)
     ft.dwLowDateTime  = (UINT)time;
     ret = FileTimeToLocalFileTime(&ft, &lft);
     ok( ret,
-       "FileTimeToLocalFileTime() failed with Error 0x%08lx\n",GetLastError());
+       "FileTimeToLocalFileTime() failed with Error %d\n",GetLastError());
     FileTimeToSystemTime(&lft, &st);
     ok(((st.wYear == 1970) && (st.wMonth == 1) && (st.wDay == 1) &&
 	(st.wHour ==    0) && (st.wMinute == 0) && (st.wSecond == 1) &&
@@ -235,7 +398,7 @@ static void test_FileTimeToLocalFileTime(void)
     ok(res != TIME_ZONE_ID_INVALID, "GetTimeZoneInformation failed\n");
     ret = FileTimeToLocalFileTime(&ft, &lft);
     ok( ret,
-       "FileTimeToLocalFileTime() failed with Error 0x%08lx\n",GetLastError());
+       "FileTimeToLocalFileTime() failed with Error %d\n",GetLastError());
     FileTimeToSystemTime(&lft, &st);
     ok(((st.wYear == 1970) && (st.wMonth == 1) && (st.wDay == 1) &&
 	(st.wHour ==    0) && (st.wMinute == 0) && (st.wSecond == 1) &&
@@ -247,12 +410,6 @@ static void test_FileTimeToLocalFileTime(void)
        "SetEnvironmentVariableA failed\n");
 }
 
-
-/* test TzSpecificLocalTimeToSystemTime and SystemTimeToTzSpecificLocalTime
- * these are in winXP and later */
-typedef HANDLE (WINAPI *fnTzSpecificLocalTimeToSystemTime)( LPTIME_ZONE_INFORMATION, LPSYSTEMTIME, LPSYSTEMTIME);
-typedef HANDLE (WINAPI *fnSystemTimeToTzSpecificLocalTime)( LPTIME_ZONE_INFORMATION, LPSYSTEMTIME, LPSYSTEMTIME);
-
 typedef struct {
     int nr;             /* test case number for easier lookup */
     TIME_ZONE_INFORMATION *ptz; /* ptr to timezone */
@@ -261,18 +418,17 @@ typedef struct {
 } TZLT2ST_case;
 
 static void test_TzSpecificLocalTimeToSystemTime(void)
-{
-    HMODULE hKernel = GetModuleHandle("kernel32");
-    fnTzSpecificLocalTimeToSystemTime pTzSpecificLocalTimeToSystemTime;
-    fnSystemTimeToTzSpecificLocalTime pSystemTimeToTzSpecificLocalTime = NULL;
+{    
     TIME_ZONE_INFORMATION tzE, tzW, tzS;
     SYSTEMTIME result;
     int i, j, year;
-    pTzSpecificLocalTimeToSystemTime = (fnTzSpecificLocalTimeToSystemTime) GetProcAddress( hKernel, "TzSpecificLocalTimeToSystemTime");
-    if(pTzSpecificLocalTimeToSystemTime)
-        pSystemTimeToTzSpecificLocalTime = (fnTzSpecificLocalTimeToSystemTime) GetProcAddress( hKernel, "SystemTimeToTzSpecificLocalTime");
-    if( !pSystemTimeToTzSpecificLocalTime)
+
+    if (!pTzSpecificLocalTimeToSystemTime || !pSystemTimeToTzSpecificLocalTime)
+    {
+        skip("TzSpecificLocalTimeToSystemTime or SystemTimeToTzSpecificLocalTime not present\n");
         return;
+    }
+
     ZeroMemory( &tzE, sizeof(tzE));
     ZeroMemory( &tzW, sizeof(tzW));
     ZeroMemory( &tzS, sizeof(tzS));
@@ -369,7 +525,7 @@ static void test_TzSpecificLocalTimeToSystemTime(void)
                 cases[i].slt.wDay = yeardays[j][i/3];
                 pTzSpecificLocalTimeToSystemTime( cases[i].ptz, &(cases[i].slt), &result);
                 ok( result.wHour == cases[i].ehour,
-                        "Test TzSpecificLocalTimeToSystemTime #%d. Got %4d-%02d-%02d %02d:%02d. Expect hour =  %02d\n",
+                        "Test TzSpecificLocalTimeToSystemTime #%d. Got %4d-%02d-%02d %02d:%02d. Expect hour =  %02d\n", 
                         cases[i].nr, result.wYear, result.wMonth, result.wDay,
                         result.wHour, result.wMinute, cases[i].ehour);
             }
@@ -401,7 +557,7 @@ static void test_TzSpecificLocalTimeToSystemTime(void)
             { 18, &tzS, {2004,10,-1,24,6,0,0,0}, 3},
 
             {0}
-        };
+        }; 
     /*  days of transitions to put into the cases array */
         int yeardays[][6]=
         {
@@ -434,17 +590,21 @@ static void test_TzSpecificLocalTimeToSystemTime(void)
                 cases[i].slt.wDay = yeardays[j][i/3];
                 pSystemTimeToTzSpecificLocalTime( cases[i].ptz, &(cases[i].slt), &result);
                 ok( result.wHour == cases[i].ehour,
-                        "Test SystemTimeToTzSpecificLocalTime #%d. Got %4d-%02d-%02d %02d:%02d. Expect hour = %02d\n",
+                        "Test SystemTimeToTzSpecificLocalTime #%d. Got %4d-%02d-%02d %02d:%02d. Expect hour = %02d\n", 
                         cases[i].nr, result.wYear, result.wMonth, result.wDay,
                         result.wHour, result.wMinute, cases[i].ehour);
             }
         }
 
-    }
+    }        
 }
 
 START_TEST(time)
 {
+    HMODULE hKernel = GetModuleHandle("kernel32");
+    pTzSpecificLocalTimeToSystemTime = (void *)GetProcAddress(hKernel, "TzSpecificLocalTimeToSystemTime");
+    pSystemTimeToTzSpecificLocalTime = (void *)GetProcAddress( hKernel, "SystemTimeToTzSpecificLocalTime");
+
     test_conversions();
     test_invalid_arg();
     test_GetTimeZoneInformation();

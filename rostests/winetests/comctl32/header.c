@@ -1010,7 +1010,7 @@ static void test_hdm_filterMessages(HWND hParent)
     flush_sequences(sequences, NUM_MSG_SEQUENCES);
     todo_wine
     {
-     /* msdn incorrecly states that return value
+     /* msdn incorrectly states that return value
       * is the index of the filter control being
       * modified. The sendMessage here should
       * return previous filter timeout value

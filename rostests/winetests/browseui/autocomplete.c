@@ -273,7 +273,8 @@ static void test_ACLMulti(void)
 
     ole_ok(acl->lpVtbl->Expand(acl, exp));
     ok(acl1->expcount == 1, "expcount - expected 1, got %d\n", acl1->expcount);
-    ok(acl2->expcount == 0, "expcount - expected 0, got %d\n", acl2->expcount);
+    ok(acl2->expcount == 0 /* XP */ || acl2->expcount == 1 /* Vista */,
+        "expcount - expected 0 or 1, got %d\n", acl2->expcount);
 
     ole_ok(obj->lpVtbl->Next(obj, 15, wstrtab, &i));
     ok(i == 1, "Expected i == 1, got %d\n", i);
@@ -282,15 +283,18 @@ static void test_ACLMulti(void)
     ole_ok(obj->lpVtbl->Next(obj, 15, wstrtab, &i));
     ole_ok(acl->lpVtbl->Expand(acl, exp));
     ok(acl1->expcount == 2, "expcount - expected 1, got %d\n", acl1->expcount);
-    ok(acl2->expcount == 0, "expcount - expected 0, got %d\n", acl2->expcount);
+    ok(acl2->expcount == 0 /* XP */ || acl2->expcount == 2 /* Vista */,
+        "expcount - expected 0 or 2, got %d\n", acl2->expcount);
     acl1->expret = S_FALSE;
     ole_ok(acl->lpVtbl->Expand(acl, exp));
     ok(acl1->expcount == 3, "expcount - expected 1, got %d\n", acl1->expcount);
-    ok(acl2->expcount == 1, "expcount - expected 0, got %d\n", acl2->expcount);
+    ok(acl2->expcount == 1 /* XP */ || acl2->expcount == 3 /* Vista */,
+        "expcount - expected 0 or 3, got %d\n", acl2->expcount);
     acl1->expret = E_NOTIMPL;
     ole_ok(acl->lpVtbl->Expand(acl, exp));
     ok(acl1->expcount == 4, "expcount - expected 1, got %d\n", acl1->expcount);
-    ok(acl2->expcount == 2, "expcount - expected 0, got %d\n", acl2->expcount);
+    ok(acl2->expcount == 2 /* XP */ || acl2->expcount == 4 /* Vista */,
+        "expcount - expected 0 or 4, got %d\n", acl2->expcount);
     acl2->expret = E_OUTOFMEMORY;
     ok(acl->lpVtbl->Expand(acl, exp) == E_OUTOFMEMORY, "Unexpected Expand return\n");
     acl2->expret = E_FAIL;

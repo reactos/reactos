@@ -241,7 +241,7 @@ static void test_readmode( BOOL ascii_mode )
     ok(fread(buffer,1,1,file)==0,"fread failure in %s\n", IOMODE);
     ok(feof(file)!=0,"feof failure in %s\n", IOMODE);
     ok(fseek(file,-3,SEEK_CUR)==0,"seek failure in %s\n", IOMODE);
-    todo_wine ok(feof(file)==0,"feof failure in %s\n", IOMODE);
+    ok(feof(file)==0,"feof failure in %s\n", IOMODE);
     ok(fread(buffer,2,1,file)==1,"fread failed in %s\n", IOMODE);
     ok(feof(file)==0,"feof failure in %s\n", IOMODE);
     ok(fread(buffer,2,1,file)==0,"fread failure in %s\n",IOMODE);
@@ -918,9 +918,14 @@ static void test_stat(void)
 
 static const char* pipe_string="Hello world";
 
+/* How many messages to transfer over the pipe */
+#define N_TEST_MESSAGES 3
+
 static void test_pipes_child(int argc, char** args)
 {
     int fd;
+    int nwritten;
+    int i;
 
     if (argc < 5)
     {
@@ -932,7 +937,15 @@ static void test_pipes_child(int argc, char** args)
     ok(close(fd) == 0, "unable to close %d: %d\n", fd, errno);
 
     fd=atoi(args[4]);
-    write(fd, pipe_string, strlen(pipe_string));
+
+    for (i=0; i<N_TEST_MESSAGES; i++) {
+       nwritten=write(fd, pipe_string, strlen(pipe_string));
+       ok(nwritten == strlen(pipe_string), "i %d, expected to write %d bytes, wrote %d\n", i, strlen(pipe_string), nwritten);
+       /* let other process wake up so they can show off their "keep reading until EOF" behavior */
+       if (i < N_TEST_MESSAGES-1)
+           Sleep(100);
+    }
+
     ok(close(fd) == 0, "unable to close %d: %d\n", fd, errno);
 }
 
@@ -943,7 +956,9 @@ static void test_pipes(const char* selfname)
     FILE* file;
     const char* arg_v[6];
     char buf[4096];
+    char expected[4096];
     int r;
+    int i;
 
     /* Test reading from a pipe with read() */
     if (_pipe(pipes, 1024, O_BINARY) < 0)
@@ -961,11 +976,14 @@ static void test_pipes(const char* selfname)
     proc_handles[0] = (HANDLE)_spawnvp(_P_NOWAIT, selfname, arg_v);
     ok(close(pipes[1]) == 0, "unable to close %d: %d\n", pipes[1], errno);
 
-    r=read(pipes[0], buf, sizeof(buf)-1);
-    ok(r == strlen(pipe_string), "expected to read %d bytes, got %d\n", strlen(pipe_string)+1, r);
-    if (r > 0)
-        buf[r]='\0';
-    ok(strcmp(buf, pipe_string) == 0, "expected to read '%s', got '%s'\n", pipe_string, buf);
+    for (i=0; i<N_TEST_MESSAGES; i++) {
+       r=read(pipes[0], buf, sizeof(buf)-1);
+       ok(r == strlen(pipe_string), "i %d, expected to read %d bytes, got %d\n", i, strlen(pipe_string)+1, r);
+       if (r > 0)
+           buf[r]='\0';
+       ok(strcmp(buf, pipe_string) == 0, "expected to read '%s', got '%s'\n", pipe_string, buf);
+   }
+
     r=read(pipes[0], buf, sizeof(buf)-1);
     ok(r == 0, "expected to read 0 bytes, got %d\n", r);
     ok(close(pipes[0]) == 0, "unable to close %d: %d\n", pipes[0], errno);
@@ -987,12 +1005,21 @@ static void test_pipes(const char* selfname)
     ok(close(pipes[1]) == 0, "unable to close %d: %d\n", pipes[1], errno);
     file=fdopen(pipes[0], "r");
 
+    /* In blocking mode, fread will keep calling read() until it gets
+     * enough bytes, or EOF, even on Unix.  (If this were a Unix terminal
+     * in cooked mode instead of a pipe, it would also stop on EOL.)
+     */
+    expected[0] = 0;
+    for (i=0; i<N_TEST_MESSAGES; i++)
+       strcat(expected, pipe_string);
     r=fread(buf, 1, sizeof(buf)-1, file);
-    ok(r == strlen(pipe_string), "fread() returned %d instead of %d: ferror=%d\n", r, strlen(pipe_string), ferror(file));
+    ok(r == strlen(expected), "fread() returned %d instead of %d: ferror=%d\n", r, strlen(expected), ferror(file));
     if (r > 0)
-        buf[r]='\0';
-    ok(strcmp(buf, pipe_string) == 0, "got '%s' expected '%s'\n", buf, pipe_string);
+       buf[r]='\0';
+    ok(strcmp(buf, expected) == 0, "got '%s' expected '%s'\n", buf, expected);
 
+    /* Let child close the file before we read, so we can sense EOF reliably */
+    Sleep(100);
     r=fread(buf, 1, sizeof(buf)-1, file);
     ok(r == 0, "fread() returned %d instead of 0\n", r);
     ok(ferror(file) == 0, "got ferror() = %d\n", ferror(file));

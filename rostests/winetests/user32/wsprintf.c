@@ -14,13 +14,15 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #include <stdarg.h>
 
 #include "wine/test.h"
-#include "windows.h"
+#include "windef.h"
+#include "winbase.h"
+#include "winuser.h"
 
 static void wsprintfATest(void)
 {
@@ -28,7 +30,7 @@ static void wsprintfATest(void)
     int rc;
 
     rc=wsprintfA(buf, "%010ld", -1);
-    ok(rc == 10, "wsPrintfA length failure: rc=%d error=%ld\n",rc,GetLastError());
+    ok(rc == 10, "wsPrintfA length failure: rc=%d error=%d\n",rc,GetLastError());
     ok((lstrcmpA(buf, "-000000001") == 0),
        "wsprintfA zero padded negative value failure: buf=[%s]\n",buf);
 }
@@ -42,14 +44,60 @@ static void wsprintfWTest(void)
 
     rc=wsprintfW(buf, fmt, -1);
     if (rc==0 && GetLastError()==ERROR_CALL_NOT_IMPLEMENTED)
+    {
+        skip("wsprintfW is not implemented\n");
         return;
-    ok(rc == 10, "wsPrintfW length failure: rc=%d error=%ld\n",rc,GetLastError());
+    }
+    ok(rc == 10, "wsPrintfW length failure: rc=%d error=%d\n",rc,GetLastError());
     ok((lstrcmpW(buf, target) == 0),
        "wsprintfW zero padded negative value failure\n");
 }
+
+/* Test if the CharUpper / CharLower functions return true 16 bit results,
+   if the input is a 16 bit input value. Up to Wine 11-2003 the input value
+   0xff returns 0xffffffff. */
+
+static void CharUpperTest(void)
+{
+    int i,out,failed;
+
+    failed = 0;
+    for (i=0;i<256;i++)
+    	{
+	out = (int) CharUpper((LPTSTR)i);
+	/* printf("%0x ",out); */
+	if ((out >> 16) != 0)
+	   {
+	   failed = 1;
+	   break;
+	   }
+	}
+    ok(!failed,"CharUpper failed - 16bit input (0x%0x) returned 32bit result (0x%0x)\n",i,out);
+}
+
+static void CharLowerTest(void)
+{
+    int i,out,failed;
+
+    failed = 0;
+    for (i=0;i<256;i++)
+    	{
+	out = (int) CharLower((LPTSTR)i);
+	/* printf("%0x ",out); */
+	if ((out >> 16) != 0)
+	   {
+	   failed = 1;
+	   break;
+	   }
+	}
+    ok(!failed,"CharLower failed - 16bit input (0x%0x) returned 32bit result (0x%0x)\n",i,out);
+}
+
 
 START_TEST(wsprintf)
 {
     wsprintfATest();
     wsprintfWTest();
+    CharUpperTest();
+    CharLowerTest();
 }

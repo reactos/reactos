@@ -840,7 +840,7 @@ static void test_demangle_datatype(void)
 /*	{ "?AV?$CDB_GEN_BIG_ENUM_FLAG@W4CDB_WYSIWYG_BITS_ENUM@@$011@@@", "?AV?$CDB_GEN_BIG_ENUM_FLAG@W4CDB_WYSIWYG_BITS_ENUM@@$011@@@",FALSE}, */
     };
     int i, num_test = (sizeof(demangle)/sizeof(struct _demangle));
-
+    
     for (i = 0; i < num_test; i++)
     {
 	name = p__unDName(0, demangle[i].mangled, 0, pmalloc, pfree, 0x2800);
@@ -848,11 +848,11 @@ static void test_demangle_datatype(void)
 	    ok(name != NULL && !strcmp(name,demangle[i].result), "Got name \"%s\" for %d\n", name, i);
 	else
 	    todo_wine ok(name != NULL && !strcmp(name,demangle[i].result), "Got name %s for %d\n", name, i);
-
+	      
     }
 }
 
-/* Compare two strings treating multiple spaces (' ', ascii 0x20) in s2
+/* Compare two strings treating multiple spaces (' ', ascii 0x20) in s2 
    as single space. Needed for test_demangle as __unDName() returns sometimes
    two spaces instead of one in some older native msvcrt dlls. */
 static int strcmp_space(const char *s1, const char *s2)
@@ -981,6 +981,14 @@ static void test_demangle(void)
 { "??0?$Foo@P6GHPAX0@Z@@QAE@PAD@Z", "__thiscall Foo<int (__stdcall*)(void *,void *)>::Foo<int (__stdcall*)(void *,void *)>(char *)", 0x880},
 { "?Qux@Bar@@0PAP6AHPAV1@AAH1PAH@ZA", "private: static int (__cdecl** Bar::Qux)(class Bar *,int &,int &,int *)" },
 { "?Qux@Bar@@0PAP6AHPAV1@AAH1PAH@ZA", "Bar::Qux", 0x1800},
+{"?$AAA@$DBAB@", "AAA<`template-parameter257'>"},
+{"?$AAA@?C@", "AAA<`template-parameter-2'>"},
+{"?$AAA@PAUBBB@@", "AAA<struct BBB *>"},
+{"??$ccccc@PAVaaa@@@bar@bb@foo@@DGPAV0@PAV0@PAVee@@IPAPAVaaa@@1@Z", "private: static class bar * __stdcall foo::bb::bar::ccccc<class aaa *>(class bar *,class ee *,unsigned int,class aaa * *,class ee *)"},
+{"?f@T@@QAEHQCY1BE@BO@D@Z", "public: int __thiscall T::f(char (volatile * const)[20][30])"},
+{"?f@T@@QAEHQAY2BE@BO@CI@D@Z", "public: int __thiscall T::f(char (* const)[20][30][40])"},
+{"?f@T@@QAEHQAY1BE@BO@$$CBD@Z", "public: int __thiscall T::f(char const (* const)[20][30])"},
+
     };
     int i, num_test = (sizeof(test)/sizeof(test[0]));
     char* name;

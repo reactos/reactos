@@ -1530,7 +1530,7 @@ static HRESULT WINAPI ClientSite_SaveObject(IOleClientSite *iface)
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI ClientSite_GetMoniker(IOleClientSite *iface, DWORD dwAsign, DWORD dwWhichMoniker,
+static HRESULT WINAPI ClientSite_GetMoniker(IOleClientSite *iface, DWORD dwAssign, DWORD dwWhichMoniker,
         IMoniker **ppmon)
 {
     ok(0, "unexpected call\n");

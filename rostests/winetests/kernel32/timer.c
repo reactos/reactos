@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #define _WIN32_WINNT 0x0501
@@ -43,13 +43,13 @@ static void test_timer(void)
     pSetWaitableTimer = (fnSetWaitableTimer) GetProcAddress( hker, "SetWaitableTimer");
     if( !pSetWaitableTimer )
         return;
-
+       
     /* try once with a positive number */
     handle = pCreateWaitableTimerA( NULL, 0, NULL );
     ok( handle != NULL, "failed to create waitable timer with no name\n" );
 
     due.QuadPart = 10000;
-    r = pSetWaitableTimer( handle, &due, 0x1f4, NULL, NULL, FALSE );
+    r = pSetWaitableTimer( handle, &due, 0x1f4, NULL, NULL, FALSE ); 
     ok( r, "failed to set timer\n");
 
     CloseHandle( handle );
@@ -59,7 +59,7 @@ static void test_timer(void)
     ok( handle != NULL, "failed to create waitable timer with no name\n" );
 
     due.QuadPart = -10000;
-    r = pSetWaitableTimer( handle, &due, 0x1f4, NULL, NULL, FALSE );
+    r = pSetWaitableTimer( handle, &due, 0x1f4, NULL, NULL, FALSE ); 
     ok( r, "failed to set timer\n");
 
     CloseHandle( handle );

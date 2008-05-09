@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #include <stdarg.h>
@@ -156,12 +156,12 @@ static void test_CreateDirectoryA(void)
     ret = CreateDirectoryA(NULL, NULL);
     ok(ret == FALSE && (GetLastError() == ERROR_PATH_NOT_FOUND ||
                         GetLastError() == ERROR_INVALID_PARAMETER),
-       "CreateDirectoryA(NULL): ret=%d err=%ld\n", ret, GetLastError());
+       "CreateDirectoryA(NULL): ret=%d err=%d\n", ret, GetLastError());
 
     ret = CreateDirectoryA("", NULL);
     ok(ret == FALSE && (GetLastError() == ERROR_BAD_PATHNAME ||
                         GetLastError() == ERROR_PATH_NOT_FOUND),
-       "CreateDirectoryA(%s): ret=%d err=%ld\n", tmpdir, ret, GetLastError());
+       "CreateDirectoryA(%s): ret=%d err=%d\n", tmpdir, ret, GetLastError());
 
     ret = GetSystemDirectoryA(tmpdir, MAX_PATH);
     ok(ret < MAX_PATH, "System directory should fit into MAX_PATH\n");
@@ -171,53 +171,53 @@ static void test_CreateDirectoryA(void)
 
     ret = CreateDirectoryA(".", NULL);
     ok(ret == FALSE && GetLastError() == ERROR_ALREADY_EXISTS,
-       "CreateDirectoryA(%s): ret=%d err=%ld\n", tmpdir, ret, GetLastError());
+       "CreateDirectoryA(%s): ret=%d err=%d\n", tmpdir, ret, GetLastError());
 
 
     ret = CreateDirectoryA("..", NULL);
     ok(ret == FALSE && GetLastError() == ERROR_ALREADY_EXISTS,
-       "CreateDirectoryA(%s): ret=%d err=%ld\n", tmpdir, ret, GetLastError());
+       "CreateDirectoryA(%s): ret=%d err=%d\n", tmpdir, ret, GetLastError());
 
     GetTempPathA(MAX_PATH, tmpdir);
     tmpdir[3] = 0; /* truncate the path */
     ret = CreateDirectoryA(tmpdir, NULL);
     ok(ret == FALSE && (GetLastError() == ERROR_ALREADY_EXISTS ||
                         GetLastError() == ERROR_ACCESS_DENIED),
-       "CreateDirectoryA(%s): ret=%d err=%ld\n", tmpdir, ret, GetLastError());
+       "CreateDirectoryA(%s): ret=%d err=%d\n", tmpdir, ret, GetLastError());
 
     GetTempPathA(MAX_PATH, tmpdir);
     lstrcatA(tmpdir, "Please Remove Me");
     ret = CreateDirectoryA(tmpdir, NULL);
-    ok(ret == TRUE,       "CreateDirectoryA(%s) failed err=%ld\n", tmpdir, GetLastError());
+    ok(ret == TRUE,       "CreateDirectoryA(%s) failed err=%d\n", tmpdir, GetLastError());
 
     ret = CreateDirectoryA(tmpdir, NULL);
     ok(ret == FALSE && GetLastError() == ERROR_ALREADY_EXISTS,
-       "CreateDirectoryA(%s): ret=%d err=%ld\n", tmpdir, ret, GetLastError());
+       "CreateDirectoryA(%s): ret=%d err=%d\n", tmpdir, ret, GetLastError());
 
     ret = RemoveDirectoryA(tmpdir);
     ok(ret == TRUE,
-       "RemoveDirectoryA(%s) failed err=%ld\n", tmpdir, GetLastError());
+       "RemoveDirectoryA(%s) failed err=%d\n", tmpdir, GetLastError());
 
 
     lstrcatA(tmpdir, "?");
     ret = CreateDirectoryA(tmpdir, NULL);
     ok(ret == FALSE && (GetLastError() == ERROR_INVALID_NAME ||
 			GetLastError() == ERROR_PATH_NOT_FOUND),
-       "CreateDirectoryA(%s): ret=%d err=%ld\n", tmpdir, ret, GetLastError());
+       "CreateDirectoryA(%s): ret=%d err=%d\n", tmpdir, ret, GetLastError());
     RemoveDirectoryA(tmpdir);
 
     tmpdir[lstrlenA(tmpdir) - 1] = '*';
     ret = CreateDirectoryA(tmpdir, NULL);
     ok(ret == FALSE && (GetLastError() == ERROR_INVALID_NAME ||
 			GetLastError() == ERROR_PATH_NOT_FOUND),
-       "CreateDirectoryA(%s): ret=%d err=%ld\n", tmpdir, ret, GetLastError());
+       "CreateDirectoryA(%s): ret=%d err=%d\n", tmpdir, ret, GetLastError());
     RemoveDirectoryA(tmpdir);
 
     GetTempPathA(MAX_PATH, tmpdir);
     lstrcatA(tmpdir, "Please Remove Me/Please Remove Me");
     ret = CreateDirectoryA(tmpdir, NULL);
-    ok(ret == FALSE && GetLastError() == ERROR_PATH_NOT_FOUND,
-       "CreateDirectoryA(%s): ret=%d err=%ld\n", tmpdir, ret, GetLastError());
+    ok(ret == FALSE && GetLastError() == ERROR_PATH_NOT_FOUND, 
+       "CreateDirectoryA(%s): ret=%d err=%d\n", tmpdir, ret, GetLastError());
     RemoveDirectoryA(tmpdir);
 
     /* Test behavior with a trailing dot.
@@ -227,21 +227,21 @@ static void test_CreateDirectoryA(void)
     lstrcatA(tmpdir, "Please Remove Me.");
     ret = CreateDirectoryA(tmpdir, NULL);
     ok(ret == TRUE,
-       "CreateDirectoryA(%s) failed err=%ld\n", tmpdir, GetLastError());
+       "CreateDirectoryA(%s) failed err=%d\n", tmpdir, GetLastError());
 
     lstrcatA(tmpdir, "/Please Remove Me");
     ret = CreateDirectoryA(tmpdir, NULL);
     ok(ret == TRUE,
-       "CreateDirectoryA(%s) failed err=%ld\n", tmpdir, GetLastError());
+       "CreateDirectoryA(%s) failed err=%d\n", tmpdir, GetLastError());
     ret = RemoveDirectoryA(tmpdir);
     ok(ret == TRUE,
-       "RemoveDirectoryA(%s) failed err=%ld\n", tmpdir, GetLastError());
+       "RemoveDirectoryA(%s) failed err=%d\n", tmpdir, GetLastError());
 
     GetTempPathA(MAX_PATH, tmpdir);
     lstrcatA(tmpdir, "Please Remove Me");
     ret = RemoveDirectoryA(tmpdir);
     ok(ret == TRUE,
-       "RemoveDirectoryA(%s) failed err=%ld\n", tmpdir, GetLastError());
+       "RemoveDirectoryA(%s) failed err=%d\n", tmpdir, GetLastError());
 
     /* Test behavior with two trailing dots.
      * The directory should be created without the trailing dots.
@@ -250,25 +250,25 @@ static void test_CreateDirectoryA(void)
     lstrcatA(tmpdir, "Please Remove Me..");
     ret = CreateDirectoryA(tmpdir, NULL);
     ok(ret == TRUE,
-       "CreateDirectoryA(%s) failed err=%ld\n", tmpdir, GetLastError());
+       "CreateDirectoryA(%s) failed err=%d\n", tmpdir, GetLastError());
 
     lstrcatA(tmpdir, "/Please Remove Me");
     ret = CreateDirectoryA(tmpdir, NULL);
     ok(ret == TRUE || /* On Win98 */
        (ret == FALSE && GetLastError() == ERROR_PATH_NOT_FOUND), /* On NT! */
-       "CreateDirectoryA(%s): ret=%d err=%ld\n", tmpdir, ret, GetLastError());
+       "CreateDirectoryA(%s): ret=%d err=%d\n", tmpdir, ret, GetLastError());
     if (ret == TRUE)
     {
         ret = RemoveDirectoryA(tmpdir);
         ok(ret == TRUE,
-           "RemoveDirectoryA(%s) failed err=%ld\n", tmpdir, GetLastError());
+           "RemoveDirectoryA(%s) failed err=%d\n", tmpdir, GetLastError());
     }
 
     GetTempPathA(MAX_PATH, tmpdir);
     lstrcatA(tmpdir, "Please Remove Me");
     ret = RemoveDirectoryA(tmpdir);
     ok(ret == TRUE,
-       "RemoveDirectoryA(%s) failed err=%ld\n", tmpdir, GetLastError());
+       "RemoveDirectoryA(%s) failed err=%d\n", tmpdir, GetLastError());
 
     /* Test behavior with a trailing space.
      * The directory should be created without the trailing space.
@@ -277,25 +277,25 @@ static void test_CreateDirectoryA(void)
     lstrcatA(tmpdir, "Please Remove Me ");
     ret = CreateDirectoryA(tmpdir, NULL);
     ok(ret == TRUE,
-       "CreateDirectoryA(%s) failed err=%ld\n", tmpdir, GetLastError());
+       "CreateDirectoryA(%s) failed err=%d\n", tmpdir, GetLastError());
 
     lstrcatA(tmpdir, "/Please Remove Me");
     ret = CreateDirectoryA(tmpdir, NULL);
     ok(ret == TRUE || /* On Win98 */
        (ret == FALSE && GetLastError() == ERROR_PATH_NOT_FOUND), /* On NT! */
-       "CreateDirectoryA(%s): ret=%d err=%ld\n", tmpdir, ret, GetLastError());
+       "CreateDirectoryA(%s): ret=%d err=%d\n", tmpdir, ret, GetLastError());
     if (ret == TRUE)
     {
         ret = RemoveDirectoryA(tmpdir);
         ok(ret == TRUE,
-           "RemoveDirectoryA(%s) failed err=%ld\n", tmpdir, GetLastError());
+           "RemoveDirectoryA(%s) failed err=%d\n", tmpdir, GetLastError());
     }
 
     GetTempPathA(MAX_PATH, tmpdir);
     lstrcatA(tmpdir, "Please Remove Me");
     ret = RemoveDirectoryA(tmpdir);
     ok(ret == TRUE,
-       "RemoveDirectoryA(%s) failed err=%ld\n", tmpdir, GetLastError());
+       "RemoveDirectoryA(%s) failed err=%d\n", tmpdir, GetLastError());
 
     /* Test behavior with a trailing space.
      * The directory should be created without the trailing spaces.
@@ -304,25 +304,25 @@ static void test_CreateDirectoryA(void)
     lstrcatA(tmpdir, "Please Remove Me  ");
     ret = CreateDirectoryA(tmpdir, NULL);
     ok(ret == TRUE,
-       "CreateDirectoryA(%s) failed err=%ld\n", tmpdir, GetLastError());
+       "CreateDirectoryA(%s) failed err=%d\n", tmpdir, GetLastError());
 
     lstrcatA(tmpdir, "/Please Remove Me");
     ret = CreateDirectoryA(tmpdir, NULL);
     ok(ret == TRUE || /* On Win98 */
        (ret == FALSE && GetLastError() == ERROR_PATH_NOT_FOUND), /* On NT! */
-       "CreateDirectoryA(%s): ret=%d err=%ld\n", tmpdir, ret, GetLastError());
+       "CreateDirectoryA(%s): ret=%d err=%d\n", tmpdir, ret, GetLastError());
     if (ret == TRUE)
     {
         ret = RemoveDirectoryA(tmpdir);
         ok(ret == TRUE,
-           "RemoveDirectoryA(%s) failed err=%ld\n", tmpdir, GetLastError());
+           "RemoveDirectoryA(%s) failed err=%d\n", tmpdir, GetLastError());
     }
 
     GetTempPathA(MAX_PATH, tmpdir);
     lstrcatA(tmpdir, "Please Remove Me");
     ret = RemoveDirectoryA(tmpdir);
     ok(ret == TRUE,
-       "RemoveDirectoryA(%s) failed err=%ld\n", tmpdir, GetLastError());
+       "RemoveDirectoryA(%s) failed err=%d\n", tmpdir, GetLastError());
 }
 
 static void test_CreateDirectoryW(void)
@@ -375,23 +375,23 @@ static void test_CreateDirectoryW(void)
     lstrcatW(tmpdir, questionW);
     ret = CreateDirectoryW(tmpdir, NULL);
     ok(ret == FALSE && GetLastError() == ERROR_INVALID_NAME,
-       "CreateDirectoryW with ? wildcard name should fail with error 183, ret=%s error=%ld\n",
+       "CreateDirectoryW with ? wildcard name should fail with error 183, ret=%s error=%d\n",
        ret ? " True" : "False", GetLastError());
     ret = RemoveDirectoryW(tmpdir);
 
     tmpdir[lstrlenW(tmpdir) - 1] = '*';
     ret = CreateDirectoryW(tmpdir, NULL);
     ok(ret == FALSE && GetLastError() == ERROR_INVALID_NAME,
-       "CreateDirectoryW with * wildcard name should fail with error 183, ret=%s error=%ld\n",
+       "CreateDirectoryW with * wildcard name should fail with error 183, ret=%s error=%d\n",
        ret ? " True" : "False", GetLastError());
     ret = RemoveDirectoryW(tmpdir);
-
+    
     GetTempPathW(MAX_PATH, tmpdir);
     lstrcatW(tmpdir, tmp_dir_name);
     lstrcatW(tmpdir, slashW);
     lstrcatW(tmpdir, tmp_dir_name);
     ret = CreateDirectoryW(tmpdir, NULL);
-    ok(ret == FALSE && GetLastError() == ERROR_PATH_NOT_FOUND,
+    ok(ret == FALSE && GetLastError() == ERROR_PATH_NOT_FOUND, 
       "CreateDirectoryW with multiple nonexistent directories in path should fail\n");
     ret = RemoveDirectoryW(tmpdir);
 }
@@ -413,14 +413,14 @@ static void test_RemoveDirectoryA(void)
     ret = RemoveDirectoryA(tmpdir);
     ok(ret == FALSE && (GetLastError() == ERROR_INVALID_NAME ||
 			GetLastError() == ERROR_PATH_NOT_FOUND),
-       "RemoveDirectoryA with ? wildcard name should fail, ret=%s error=%ld\n",
+       "RemoveDirectoryA with ? wildcard name should fail, ret=%s error=%d\n",
        ret ? " True" : "False", GetLastError());
 
     tmpdir[lstrlenA(tmpdir) - 1] = '*';
     ret = RemoveDirectoryA(tmpdir);
     ok(ret == FALSE && (GetLastError() == ERROR_INVALID_NAME ||
 			GetLastError() == ERROR_PATH_NOT_FOUND),
-       "RemoveDirectoryA with * wildcard name should fail, ret=%s error=%ld\n",
+       "RemoveDirectoryA with * wildcard name should fail, ret=%s error=%d\n",
        ret ? " True" : "False", GetLastError());
 }
 
@@ -445,13 +445,13 @@ static void test_RemoveDirectoryW(void)
     lstrcatW(tmpdir, questionW);
     ret = RemoveDirectoryW(tmpdir);
     ok(ret == FALSE && GetLastError() == ERROR_INVALID_NAME,
-       "RemoveDirectoryW with wildcard should fail with error 183, ret=%s error=%ld\n",
+       "RemoveDirectoryW with wildcard should fail with error 183, ret=%s error=%d\n",
        ret ? " True" : "False", GetLastError());
 
     tmpdir[lstrlenW(tmpdir) - 1] = '*';
     ret = RemoveDirectoryW(tmpdir);
     ok(ret == FALSE && GetLastError() == ERROR_INVALID_NAME,
-       "RemoveDirectoryW with * wildcard name should fail with error 183, ret=%s error=%ld\n",
+       "RemoveDirectoryW with * wildcard name should fail with error 183, ret=%s error=%d\n",
        ret ? " True" : "False", GetLastError());
 }
 
@@ -459,9 +459,9 @@ static void test_SetCurrentDirectoryA(void)
 {
     SetLastError(0);
     ok( !SetCurrentDirectoryA( "\\some_dummy_dir" ), "SetCurrentDirectoryA succeeded\n" );
-    ok( GetLastError() == ERROR_FILE_NOT_FOUND, "wrong error %ld\n", GetLastError() );
+    ok( GetLastError() == ERROR_FILE_NOT_FOUND, "wrong error %d\n", GetLastError() );
     ok( !SetCurrentDirectoryA( "\\some_dummy\\subdir" ), "SetCurrentDirectoryA succeeded\n" );
-    ok( GetLastError() == ERROR_PATH_NOT_FOUND, "wrong error %ld\n", GetLastError() );
+    ok( GetLastError() == ERROR_PATH_NOT_FOUND, "wrong error %d\n", GetLastError() );
 }
 
 START_TEST(directory)

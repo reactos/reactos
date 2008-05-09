@@ -15,13 +15,14 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 /* Define _WIN32_WINNT to get SetThreadIdealProcessor on Windows */
 #define _WIN32_WINNT 0x0500
 
 #include <stdarg.h>
+#include <stdio.h>
 
 #include "wine/test.h"
 #include <windef.h>
@@ -58,15 +59,39 @@ static GetThreadPriorityBoost_t pGetThreadPriorityBoost=NULL;
 typedef HANDLE (WINAPI *OpenThread_t)(DWORD,BOOL,DWORD);
 static OpenThread_t pOpenThread=NULL;
 
+typedef BOOL (WINAPI *QueueUserWorkItem_t)(LPTHREAD_START_ROUTINE,PVOID,ULONG);
+static QueueUserWorkItem_t pQueueUserWorkItem=NULL;
+
 typedef DWORD (WINAPI *SetThreadIdealProcessor_t)(HANDLE,DWORD);
 static SetThreadIdealProcessor_t pSetThreadIdealProcessor=NULL;
 
 typedef BOOL (WINAPI *SetThreadPriorityBoost_t)(HANDLE,BOOL);
 static SetThreadPriorityBoost_t pSetThreadPriorityBoost=NULL;
 
+typedef BOOL (WINAPI *RegisterWaitForSingleObject_t)(PHANDLE,HANDLE,WAITORTIMERCALLBACK,PVOID,ULONG,ULONG);
+static RegisterWaitForSingleObject_t pRegisterWaitForSingleObject=NULL;
+
+typedef BOOL (WINAPI *UnregisterWait_t)(HANDLE);
+static UnregisterWait_t pUnregisterWait=NULL;
+
+static HANDLE create_target_process(const char *arg)
+{
+    char **argv;
+    char cmdline[MAX_PATH];
+    PROCESS_INFORMATION pi;
+    STARTUPINFO si = { 0 };
+    si.cb = sizeof(si);
+
+    winetest_get_mainargs( &argv );
+    sprintf(cmdline, "%s %s %s", argv[0], argv[1], arg);
+    ok(CreateProcess(NULL, cmdline, NULL, NULL, FALSE, 0, NULL, NULL,
+                     &si, &pi) != 0, "error: %u\n", GetLastError());
+    ok(CloseHandle(pi.hThread) != 0, "error %u\n", GetLastError());
+    return pi.hProcess;
+}
+
 /* Functions not tested yet:
   AttachThreadInput
-  CreateRemoteThread
   SetThreadContext
   SwitchToThread
 
@@ -121,9 +146,9 @@ static DWORD WINAPI threadFunc1(LPVOID p)
    }
 
    /* lstrlenA contains an exception handler so this makes sure exceptions work in threads */
-   //ok( lstrlenA( (char *)0xdeadbeef ) == 0, "lstrlenA: unexpected success\n" );
+   ok( lstrlenA( (char *)0xdeadbeef ) == 0, "lstrlenA: unexpected success\n" );
 
-/* Check that noone changed our tls memory */
+/* Check that no one changed our tls memory */
    ok((int)TlsGetValue(tlsIndex)-1==tstruct->threadnum,
       "TlsGetValue failed\n");
    return NUM_THREADS+tstruct->threadnum;
@@ -172,7 +197,119 @@ static DWORD WINAPI threadFunc5(LPVOID p)
 }
 #endif
 
-/* Check basic funcationality of CreateThread and Tls* functions */
+static DWORD WINAPI threadFunc_SetEvent(LPVOID p)
+{
+    SetEvent((HANDLE) p);
+    return 0;
+}
+
+static DWORD WINAPI threadFunc_CloseHandle(LPVOID p)
+{
+    CloseHandle((HANDLE) p);
+    return 0;
+}
+
+static void create_function_addr_events(HANDLE events[2])
+{
+    char buffer[256];
+
+    sprintf(buffer, "threadFunc_SetEvent %p", threadFunc_SetEvent);
+    events[0] = CreateEvent(NULL, FALSE, FALSE, buffer);
+
+    sprintf(buffer, "threadFunc_CloseHandle %p", threadFunc_CloseHandle);
+    events[1] = CreateEvent(NULL, FALSE, FALSE, buffer);
+}
+
+/* check CreateRemoteThread */
+static VOID test_CreateRemoteThread(void)
+{
+    HANDLE hProcess, hThread, hEvent, hRemoteEvent;
+    DWORD tid, ret, exitcode;
+    HANDLE hAddrEvents[2];
+
+    hProcess = create_target_process("sleep");
+    ok(hProcess != NULL, "Can't start process\n");
+
+    /* ensure threadFunc_SetEvent & threadFunc_CloseHandle are the same
+     * address as in the child process */
+    create_function_addr_events(hAddrEvents);
+    ret = WaitForMultipleObjects(2, hAddrEvents, TRUE, 5000);
+    if (ret == WAIT_TIMEOUT)
+    {
+        skip("child process wasn't mapped at same address, so can't do CreateRemoteThread tests.\n");
+        return;
+    }
+
+    hEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
+    ok(hEvent != NULL, "Can't create event, err=%u\n", GetLastError());
+    ret = DuplicateHandle(GetCurrentProcess(), hEvent, hProcess, &hRemoteEvent,
+                          0, FALSE, DUPLICATE_SAME_ACCESS);
+    ok(ret != 0, "DuplicateHandle failed, err=%u\n", GetLastError());
+
+    /* create suspended remote thread with entry point SetEvent() */
+    SetLastError(0xdeadbeef);
+    hThread = CreateRemoteThread(hProcess, NULL, 0, threadFunc_SetEvent,
+                                 hRemoteEvent, CREATE_SUSPENDED, &tid);
+    if (GetLastError() == ERROR_CALL_NOT_IMPLEMENTED)
+    {
+        skip("CreateRemoteThread is not implemented\n");
+        goto cleanup;
+    }
+    ok(hThread != NULL, "CreateRemoteThread failed, err=%u\n", GetLastError());
+    ok(tid != 0, "null tid\n");
+    ret = SuspendThread(hThread);
+    ok(ret == 1, "ret=%u, err=%u\n", ret, GetLastError());
+    ret = ResumeThread(hThread);
+    ok(ret == 2, "ret=%u, err=%u\n", ret, GetLastError());
+
+    /* thread still suspended, so wait times out */
+    ret = WaitForSingleObject(hEvent, 100);
+    ok(ret == WAIT_TIMEOUT, "wait did not time out, ret=%u\n", ret);
+
+    ret = ResumeThread(hThread);
+    ok(ret == 1, "ret=%u, err=%u\n", ret, GetLastError());
+
+    /* wait that doesn't time out */
+    ret = WaitForSingleObject(hEvent, 100);
+    ok(ret == WAIT_OBJECT_0, "object not signaled, ret=%u\n", ret);
+
+    /* wait for thread end */
+    ret = WaitForSingleObject(hThread, 100);
+    ok(ret == WAIT_OBJECT_0, "waiting for thread failed, ret=%u\n", ret);
+    CloseHandle(hThread);
+
+    /* create and wait for remote thread with entry point CloseHandle() */
+    hThread = CreateRemoteThread(hProcess, NULL, 0,
+                                 threadFunc_CloseHandle,
+                                 hRemoteEvent, 0, &tid);
+    ok(hThread != NULL, "CreateRemoteThread failed, err=%u\n", GetLastError());
+    ret = WaitForSingleObject(hThread, 100);
+    ok(ret == WAIT_OBJECT_0, "waiting for thread failed, ret=%u\n", ret);
+    CloseHandle(hThread);
+
+    /* create remote thread with entry point SetEvent() */
+    hThread = CreateRemoteThread(hProcess, NULL, 0,
+                                 threadFunc_SetEvent,
+                                 hRemoteEvent, 0, &tid);
+    ok(hThread != NULL, "CreateRemoteThread failed, err=%u\n", GetLastError());
+
+    /* closed handle, so wait times out */
+    ret = WaitForSingleObject(hEvent, 100);
+    ok(ret == WAIT_TIMEOUT, "wait did not time out, ret=%u\n", ret);
+
+    /* check that remote SetEvent() failed */
+    ret = GetExitCodeThread(hThread, &exitcode);
+    ok(ret != 0, "GetExitCodeThread failed, err=%u\n", GetLastError());
+    if (ret) ok(exitcode == 0, "SetEvent succeeded, expected to fail\n");
+    CloseHandle(hThread);
+
+cleanup:
+    TerminateProcess(hProcess, 0);
+    CloseHandle(hEvent);
+    CloseHandle(hProcess);
+}
+
+/* Check basic functionality of CreateThread and Tls* functions */
 static VOID test_CreateThread_basic(void)
 {
    HANDLE thread[NUM_THREADS],event[NUM_THREADS];
@@ -185,7 +322,7 @@ static VOID test_CreateThread_basic(void)
    DWORD GLE, ret;
 
    /* lstrlenA contains an exception handler so this makes sure exceptions work in the main thread */
-   //ok( lstrlenA( (char *)0xdeadbeef ) == 0, "lstrlenA: unexpected success\n" );
+   ok( lstrlenA( (char *)0xdeadbeef ) == 0, "lstrlenA: unexpected success\n" );
 
 /* Retrieve current Thread ID for later comparisons */
   curthreadId=GetCurrentThreadId();
@@ -194,7 +331,7 @@ static VOID test_CreateThread_basic(void)
 /* Create events for thread synchronization */
   for(i=0;i<NUM_THREADS;i++) {
     threadmem[i]=0;
-/* Note that it doesn't matter what type of event we chose here.  This
+/* Note that it doesn't matter what type of event we choose here.  This
    test isn't trying to thoroughly test events
 */
     event[i]=CreateEventA(NULL,TRUE,FALSE,NULL);
@@ -221,7 +358,7 @@ static VOID test_CreateThread_basic(void)
   }
 /* Test that each thread executed in its parent's address space
    (it was able to change threadmem and pass that change back to its parent)
-   and that each thread id was independant).  Note that we prove that the
+   and that each thread id was independent).  Note that we prove that the
    threads actually execute concurrently by having them block on each other
    in threadFunc1
 */
@@ -243,16 +380,16 @@ static VOID test_CreateThread_basic(void)
   thread[0] = CreateThread(NULL,0,threadFunc2,NULL,0,NULL);
   GLE = GetLastError();
   if (thread[0]) { /* NT */
-    ok(GLE==0xFACEaBAD, "CreateThread set last error to %ld, expected 4207848365\n", GLE);
+    ok(GLE==0xFACEaBAD, "CreateThread set last error to %d, expected 4207848365\n", GLE);
     ret = WaitForSingleObject(thread[0],100);
     ok(ret==WAIT_OBJECT_0, "threadFunc2 did not exit during 100 ms\n");
     ret = GetExitCodeThread(thread[0],&exitCode);
-    ok(ret!=0, "GetExitCodeThread returned %ld (expected nonzero)\n", ret);
-    ok(exitCode==99, "threadFunc2 exited with code: %ld (expected 99)\n", exitCode);
+    ok(ret!=0, "GetExitCodeThread returned %d (expected nonzero)\n", ret);
+    ok(exitCode==99, "threadFunc2 exited with code: %d (expected 99)\n", exitCode);
     ok(CloseHandle(thread[0])!=0,"Error closing thread handle\n");
   }
   else { /* 9x */
-    ok(GLE==ERROR_INVALID_PARAMETER, "CreateThread set last error to %ld, expected 87\n", GLE);
+    ok(GLE==ERROR_INVALID_PARAMETER, "CreateThread set last error to %d, expected 87\n", GLE);
   }
 }
 
@@ -316,8 +453,8 @@ static VOID test_SuspendThread(void)
                            0,threadId);
     ok(access_thread!=NULL,"OpenThread returned an invalid handle\n");
     if (access_thread!=NULL) {
-      obey_ar(SuspendThread(access_thread)==~0UL);
-      obey_ar(ResumeThread(access_thread)==~0UL);
+      obey_ar(SuspendThread(access_thread)==~0U);
+      obey_ar(ResumeThread(access_thread)==~0U);
       ok(CloseHandle(access_thread)!=0,"CloseHandle Failed\n");
     }
   }
@@ -333,8 +470,8 @@ static VOID test_SuspendThread(void)
   }
   /* Trying to suspend a terminated thread should fail */
   error=SuspendThread(thread);
-  ok(error==~0UL, "wrong return code: %ld\n", error);
-  ok(GetLastError()==ERROR_ACCESS_DENIED || GetLastError()==ERROR_NO_MORE_ITEMS, "unexpected error code: %ld\n", GetLastError());
+  ok(error==~0U, "wrong return code: %d\n", error);
+  ok(GetLastError()==ERROR_ACCESS_DENIED || GetLastError()==ERROR_NO_MORE_ITEMS, "unexpected error code: %d\n", GetLastError());
 
   ok(CloseHandle(thread)!=0,"CloseHandle Failed\n");
 }
@@ -437,10 +574,10 @@ static VOID test_thread_priority(void)
        obey_ar(GetExitCodeThread(access_thread,&exitCode)==0);
        ok(CloseHandle(access_thread),"Error Closing thread handle\n");
      }
-#if USE_EXTENDED_PRIORITIES
-     min_priority=-7; max_priority=6;
-#endif
    }
+#if USE_EXTENDED_PRIORITIES
+   min_priority=-7; max_priority=6;
+#endif
    for(i=min_priority;i<=max_priority;i++) {
      ok(SetThreadPriority(curthread,i)!=0,
         "SetThreadPriority Failed for priority: %d\n",i);
@@ -457,8 +594,34 @@ static VOID test_thread_priority(void)
        "GetThreadPriority Failed\n");
    ok(SetThreadPriority(curthread,0)!=0,"SetThreadPriority Failed\n");
 
+/* Check that the thread priority is not changed if SetThreadPriority
+   is called with a value outside of the max/min range */
+   SetThreadPriority(curthread,min_priority);
+   SetLastError(0xdeadbeef);
+   rc = SetThreadPriority(curthread,min_priority-1);
+
+   ok(rc == FALSE, "SetThreadPriority passed with a bad argument\n");
+   ok(GetLastError() == ERROR_INVALID_PARAMETER ||
+      GetLastError() == ERROR_INVALID_PRIORITY /* Win9x */,
+      "SetThreadPriority error %d, expected ERROR_INVALID_PARAMETER or ERROR_INVALID_PRIORITY\n",
+      GetLastError());
+   ok(GetThreadPriority(curthread)==min_priority,
+      "GetThreadPriority didn't return min_priority\n");
+
+   SetThreadPriority(curthread,max_priority);
+   SetLastError(0xdeadbeef);
+   rc = SetThreadPriority(curthread,max_priority+1);
+
+   ok(rc == FALSE, "SetThreadPriority passed with a bad argument\n");
+   ok(GetLastError() == ERROR_INVALID_PARAMETER ||
+      GetLastError() == ERROR_INVALID_PRIORITY /* Win9x */,
+      "SetThreadPriority error %d, expected ERROR_INVALID_PARAMETER or ERROR_INVALID_PRIORITY\n",
+      GetLastError());
+   ok(GetThreadPriority(curthread)==max_priority,
+      "GetThreadPriority didn't return max_priority\n");
+
 /* Check thread priority boost */
-   if (!pGetThreadPriorityBoost || !pSetThreadPriorityBoost)
+   if (!pGetThreadPriorityBoost || !pSetThreadPriorityBoost) 
      return; /* Win9x */
 
    SetLastError(0xdeadbeef);
@@ -466,31 +629,34 @@ static VOID test_thread_priority(void)
    if (rc==0 && GetLastError()==ERROR_CALL_NOT_IMPLEMENTED)
      return; /* WinME */
 
+   todo_wine
+     ok(rc!=0,"error=%d\n",GetLastError());
+
+   if (pOpenThread) {
 /* check that access control is obeyed */
-   access_thread=pOpenThread(THREAD_ALL_ACCESS &
-                     (~THREAD_QUERY_INFORMATION) & (~THREAD_SET_INFORMATION),
-                     0,curthreadId);
-   ok(access_thread!=NULL,"OpenThread returned an invalid handle\n");
-   if (access_thread!=NULL) {
-     obey_ar(pSetThreadPriorityBoost(access_thread,1)==0);
-     obey_ar(pGetThreadPriorityBoost(access_thread,&disabled)==0);
-     ok(CloseHandle(access_thread),"Error Closing thread handle\n");
+     access_thread=pOpenThread(THREAD_ALL_ACCESS &
+                       (~THREAD_QUERY_INFORMATION) & (~THREAD_SET_INFORMATION),
+                       0,curthreadId);
+     ok(access_thread!=NULL,"OpenThread returned an invalid handle\n");
+     if (access_thread!=NULL) {
+       obey_ar(pSetThreadPriorityBoost(access_thread,1)==0);
+       obey_ar(pGetThreadPriorityBoost(access_thread,&disabled)==0);
+       ok(CloseHandle(access_thread),"Error Closing thread handle\n");
+     }
    }
 
    todo_wine {
-     ok(rc!=0,"error=%ld\n",GetLastError());
-
      rc = pSetThreadPriorityBoost(curthread,1);
-     ok( rc != 0, "error=%ld\n",GetLastError());
+     ok( rc != 0, "error=%d\n",GetLastError());
      rc=pGetThreadPriorityBoost(curthread,&disabled);
      ok(rc!=0 && disabled==1,
-        "rc=%d error=%ld disabled=%d\n",rc,GetLastError(),disabled);
+        "rc=%d error=%d disabled=%d\n",rc,GetLastError(),disabled);
 
      rc = pSetThreadPriorityBoost(curthread,0);
-     ok( rc != 0, "error=%ld\n",GetLastError());
+     ok( rc != 0, "error=%d\n",GetLastError());
      rc=pGetThreadPriorityBoost(curthread,&disabled);
      ok(rc!=0 && disabled==0,
-        "rc=%d error=%ld disabled=%d\n",rc,GetLastError(),disabled);
+        "rc=%d error=%d disabled=%d\n",rc,GetLastError(),disabled);
    }
 }
 
@@ -552,7 +718,7 @@ static VOID test_GetThreadTimes(void)
 static VOID test_thread_processor(void)
 {
    HANDLE curthread,curproc;
-   DWORD processMask,systemMask;
+   DWORD_PTR processMask,systemMask;
    SYSTEM_INFO sysInfo;
    int error=0;
 
@@ -600,17 +766,17 @@ static VOID test_GetThreadExitCode(void)
     HANDLE thread;
 
     ret = GetExitCodeThread((HANDLE)0x2bad2bad,&exitCode);
-    ok(ret==0, "GetExitCodeThread returned non zero value: %ld\n", ret);
+    ok(ret==0, "GetExitCodeThread returned non zero value: %d\n", ret);
     GLE = GetLastError();
-    ok(GLE==ERROR_INVALID_HANDLE, "GetLastError returned %ld (expected 6)\n", GLE);
+    ok(GLE==ERROR_INVALID_HANDLE, "GetLastError returned %d (expected 6)\n", GLE);
 
     thread = CreateThread(NULL,0,threadFunc2,NULL,0,&threadid);
     ret = WaitForSingleObject(thread,100);
     ok(ret==WAIT_OBJECT_0, "threadFunc2 did not exit during 100 ms\n");
     ret = GetExitCodeThread(thread,&exitCode);
-    ok(ret==exitCode || ret==1,
-       "GetExitCodeThread returned %ld (expected 1 or %ld)\n", ret, exitCode);
-    ok(exitCode==99, "threadFunc2 exited with code %ld (expected 99)\n", exitCode);
+    ok(ret==exitCode || ret==1, 
+       "GetExitCodeThread returned %d (expected 1 or %d)\n", ret, exitCode);
+    ok(exitCode==99, "threadFunc2 exited with code %d (expected 99)\n", exitCode);
     ok(CloseHandle(thread)!=0,"Error closing thread handle\n");
 }
 
@@ -639,11 +805,12 @@ static void test_SetThreadContext(void)
     HANDLE thread;
     DWORD threadid;
     DWORD prevcount;
+    BOOL ret;
 
     SetLastError(0xdeadbeef);
     event = CreateEvent( NULL, TRUE, FALSE, NULL );
     thread = CreateThread( NULL, 0, threadFunc6, (void *)2, 0, &threadid );
-    ok( thread != NULL, "CreateThread failed : (%ld)\n", GetLastError() );
+    ok( thread != NULL, "CreateThread failed : (%d)\n", GetLastError() );
     if (!thread)
     {
         trace("Thread creation failed, skipping rest of test\n");
@@ -655,20 +822,24 @@ static void test_SetThreadContext(void)
 
     ctx.ContextFlags = CONTEXT_FULL;
     SetLastError(0xdeadbeef);
-    ok( GetThreadContext( thread, &ctx ), "GetThreadContext failed : (%ld)\n", GetLastError() );
+    ret = GetThreadContext( thread, &ctx );
+    ok( ret, "GetThreadContext failed : (%u)\n", GetLastError() );
 
-    /* simulate a call to set_test_val(10) */
-    stack = (int *)ctx.Esp;
-    stack[-1] = 10;
-    stack[-2] = ctx.Eip;
-    ctx.Esp -= 2 * sizeof(int *);
-    ctx.Eip = (DWORD)set_test_val;
-    SetLastError(0xdeadbeef);
-    ok( SetThreadContext( thread, &ctx ), "SetThreadContext failed : (%ld)\n", GetLastError() );
+    if (ret)
+    {
+        /* simulate a call to set_test_val(10) */
+        stack = (int *)ctx.Esp;
+        stack[-1] = 10;
+        stack[-2] = ctx.Eip;
+        ctx.Esp -= 2 * sizeof(int *);
+        ctx.Eip = (DWORD)set_test_val;
+        SetLastError(0xdeadbeef);
+        ok( SetThreadContext( thread, &ctx ), "SetThreadContext failed : (%d)\n", GetLastError() );
+    }
 
     SetLastError(0xdeadbeef);
     prevcount = ResumeThread( thread );
-    ok ( prevcount == 1, "Previous suspend count (%ld) instead of 1, last error : (%ld)\n",
+    ok ( prevcount == 1, "Previous suspend count (%d) instead of 1, last error : (%d)\n",
                          prevcount, GetLastError() );
 
     WaitForSingleObject( thread, INFINITE );
@@ -677,10 +848,117 @@ static void test_SetThreadContext(void)
 
 #endif  /* __i386__ */
 
+static HANDLE finish_event;
+static LONG times_executed;
+
+static DWORD CALLBACK work_function(void *p)
+{
+    LONG executed = InterlockedIncrement(&times_executed);
+
+    if (executed == 100)
+        SetEvent(finish_event);
+    return 0;
+}
+
+static void test_QueueUserWorkItem(void)
+{
+    int i;
+    DWORD wait_result;
+    DWORD before, after;
+
+    /* QueueUserWorkItem not present on win9x */
+    if (!pQueueUserWorkItem) return;
+
+    finish_event = CreateEvent(NULL, TRUE, FALSE, NULL);
+
+    before = GetTickCount();
+
+    for (i = 0; i < 100; i++)
+    {
+        BOOL ret = pQueueUserWorkItem(work_function, (void *)i, WT_EXECUTEDEFAULT);
+        ok(ret, "QueueUserWorkItem failed with error %d\n", GetLastError());
+    }
+
+    wait_result = WaitForSingleObject(finish_event, 10000);
+
+    after = GetTickCount();
+    trace("100 QueueUserWorkItem calls took %dms\n", after - before);
+    ok(wait_result == WAIT_OBJECT_0, "wait failed with error 0x%x\n", wait_result);
+
+    ok(times_executed == 100, "didn't execute all of the work items\n");
+}
+
+static void CALLBACK signaled_function(PVOID p, BOOLEAN TimerOrWaitFired)
+{
+    HANDLE event = p;
+    SetEvent(event);
+    ok(!TimerOrWaitFired, "wait shouldn't have timed out\n");
+}
+
+static void CALLBACK timeout_function(PVOID p, BOOLEAN TimerOrWaitFired)
+{
+    HANDLE event = p;
+    SetEvent(event);
+    ok(TimerOrWaitFired, "wait should have timed out\n");
+}
+
+static void test_RegisterWaitForSingleObject(void)
+{
+    BOOL ret;
+    HANDLE wait_handle;
+    HANDLE handle;
+    HANDLE complete_event;
+
+    if (!pRegisterWaitForSingleObject || !pUnregisterWait)
+    {
+        skip("RegisterWaitForSingleObject or UnregisterWait not implemented\n");
+        return;
+    }
+
+    /* test signaled case */
+
+    handle = CreateEvent(NULL, TRUE, TRUE, NULL);
+    complete_event = CreateEvent(NULL, FALSE, FALSE, NULL);
+
+    ret = pRegisterWaitForSingleObject(&wait_handle, handle, signaled_function, complete_event, INFINITE, WT_EXECUTEONLYONCE);
+    ok(ret, "RegisterWaitForSingleObject failed with error %d\n", GetLastError());
+
+    WaitForSingleObject(complete_event, INFINITE);
+    /* give worker thread chance to complete */
+    Sleep(100);
+
+    ret = pUnregisterWait(wait_handle);
+    ok(ret, "UnregisterWait failed with error %d\n", GetLastError());
+
+    /* test cancel case */
+
+    ResetEvent(handle);
+
+    ret = pRegisterWaitForSingleObject(&wait_handle, handle, signaled_function, complete_event, INFINITE, WT_EXECUTEONLYONCE);
+    ok(ret, "RegisterWaitForSingleObject failed with error %d\n", GetLastError());
+
+    ret = pUnregisterWait(wait_handle);
+    ok(ret, "UnregisterWait failed with error %d\n", GetLastError());
+
+    /* test timeout case */
+
+    ret = pRegisterWaitForSingleObject(&wait_handle, handle, timeout_function, complete_event, 0, WT_EXECUTEONLYONCE);
+    ok(ret, "RegisterWaitForSingleObject failed with error %d\n", GetLastError());
+
+    WaitForSingleObject(complete_event, INFINITE);
+    /* give worker thread chance to complete */
+    Sleep(100);
+
+    ret = pUnregisterWait(wait_handle);
+    ok(ret, "UnregisterWait failed with error %d\n", GetLastError());
+}
 
 START_TEST(thread)
 {
    HINSTANCE lib;
+   int argc;
+   char **argv;
+   argc = winetest_get_mainargs( &argv );
 /* Neither Cygwin nor mingW export OpenThread, so do a dynamic check
    so that the compile passes
 */
@@ -688,8 +966,38 @@ START_TEST(thread)
    ok(lib!=NULL,"Couldn't get a handle for kernel32.dll\n");
    pGetThreadPriorityBoost=(GetThreadPriorityBoost_t)GetProcAddress(lib,"GetThreadPriorityBoost");
    pOpenThread=(OpenThread_t)GetProcAddress(lib,"OpenThread");
+   pQueueUserWorkItem=(QueueUserWorkItem_t)GetProcAddress(lib,"QueueUserWorkItem");
    pSetThreadIdealProcessor=(SetThreadIdealProcessor_t)GetProcAddress(lib,"SetThreadIdealProcessor");
    pSetThreadPriorityBoost=(SetThreadPriorityBoost_t)GetProcAddress(lib,"SetThreadPriorityBoost");
+   pRegisterWaitForSingleObject=(RegisterWaitForSingleObject_t)GetProcAddress(lib,"RegisterWaitForSingleObject");
+   pUnregisterWait=(UnregisterWait_t)GetProcAddress(lib,"UnregisterWait");
+
+   if (argc >= 3)
+   {
+       if (!strcmp(argv[2], "sleep"))
+       {
+           HANDLE hAddrEvents[2];
+           create_function_addr_events(hAddrEvents);
+           SetEvent(hAddrEvents[0]);
+           SetEvent(hAddrEvents[1]);
+           Sleep(5000); /* spawned process runs for at most 5 seconds */
+           return;
+       }
+       while (1)
+       {
+           HANDLE hThread;
+           hThread = CreateThread(NULL, 0, threadFunc2, NULL, 0, NULL);
+           ok(hThread != NULL, "CreateThread failed, error %u\n",
+              GetLastError());
+           ok(WaitForSingleObject(hThread, 200) == WAIT_OBJECT_0,
+              "Thread did not exit in time\n");
+           if (hThread == NULL) break;
+           CloseHandle(hThread);
+       }
+       return;
+   }
+
+   test_CreateRemoteThread();
    test_CreateThread_basic();
    test_CreateThread_suspended();
    test_SuspendThread();
@@ -702,4 +1010,6 @@ START_TEST(thread)
 #ifdef __i386__
    test_SetThreadContext();
 #endif
+   test_QueueUserWorkItem();
+   test_RegisterWaitForSingleObject();
 }

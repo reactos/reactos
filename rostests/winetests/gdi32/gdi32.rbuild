@@ -1,5 +1,9 @@
+<?xml version="1.0"?>
+<!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
+<group>
 <module name="gdi32_winetest" type="win32cui" installbase="bin" installname="gdi32_winetest.exe" allowwarnings="true">
     <include base="gdi32_winetest">.</include>
+    <define name="WINVER">0x0600</define>
     <define name="__USE_W32API" />
     <library>ntdll</library>
     <library>gdi32</library>
@@ -11,9 +15,14 @@
     <file>clipping.c</file>
     <file>dc.c</file>
     <file>gdiobj.c</file>
+    <file>generated.c</file>
+    <file>icm.c</file>
     <file>font.c</file>
     <file>mapping.c</file>
     <file>metafile.c</file>
     <file>palette.c</file>
+    <file>path.c</file>
+    <file>pen.c</file>
     <file>testlist.c</file>
 </module>
+</group>

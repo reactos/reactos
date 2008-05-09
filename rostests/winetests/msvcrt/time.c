@@ -46,6 +46,7 @@ static void test_gmtime(void)
        "Wrong date:Year %4d mon %2d yday %3d mday %2d wday %1d hour%2d min %2d sec %2d dst %2d\n",
        gmt_tm->tm_year, gmt_tm->tm_mon, gmt_tm->tm_yday, gmt_tm->tm_mday, gmt_tm->tm_wday, 
        gmt_tm->tm_hour, gmt_tm->tm_min, gmt_tm->tm_sec, gmt_tm->tm_isdst); 
+  
 }
 
 static void test_mktime(void)
@@ -73,7 +74,7 @@ static void test_mktime(void)
     my_tm.tm_isdst=  0;
 
     sav_tm = my_tm;
-
+  
     local_time = mktime(&my_tm);
     ok(((DWORD)local_time == SECSPERDAY), "mktime returned %u, expected %u\n",
         (DWORD)local_time, SECSPERDAY);
@@ -158,7 +159,7 @@ static void test_localtime(void)
 
     char TZ_env[256];
     struct tm* lt;
-
+    
     ok (res != TIME_ZONE_ID_INVALID, "GetTimeZoneInformation failed\n");
     lt = localtime(&gmt);
     ok(((lt->tm_year == 70) && (lt->tm_mon  == 0) && (lt->tm_yday  == 1) &&
