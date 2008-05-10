@@ -1916,7 +1916,7 @@ static int indent_tls_index;
 /***********************************************************************
  *           get_indent_level
  */
-inline static INT_PTR get_indent_level(void)
+__inline static INT_PTR get_indent_level(void)
 {
     return (INT_PTR)TlsGetValue( indent_tls_index );
 }
@@ -1925,7 +1925,7 @@ inline static INT_PTR get_indent_level(void)
 /***********************************************************************
  *           set_indent_level
  */
-inline static void set_indent_level( INT_PTR level )
+__inline static void set_indent_level( INT_PTR level )
 {
     TlsSetValue( indent_tls_index, (void *)level );
 }

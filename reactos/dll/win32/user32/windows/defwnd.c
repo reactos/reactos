@@ -1000,17 +1000,22 @@ VOID FASTCALL
 DefWndScreenshot(HWND hWnd)
 {
     RECT rect;
+    HDC hdc;
+    INT w;
+    INT h;
+    HBITMAP hbitmap;
+    HDC hdc2;
 
     OpenClipboard(hWnd);
     EmptyClipboard();
 
-    HDC hdc = GetWindowDC(hWnd);
+    hdc = GetWindowDC(hWnd);
     GetWindowRect(hWnd, &rect);
-    INT w = rect.right - rect.left;
-    INT h = rect.bottom - rect.top;
+    w = rect.right - rect.left;
+    h = rect.bottom - rect.top;
 
-    HBITMAP hbitmap = CreateCompatibleBitmap(hdc, w, h);
-    HDC hdc2 = CreateCompatibleDC(hdc);
+    hbitmap = CreateCompatibleBitmap(hdc, w, h);
+    hdc2 = CreateCompatibleDC(hdc);
     SelectObject(hdc2, hbitmap);
 
     BitBlt(hdc2, 0, 0, w, h,

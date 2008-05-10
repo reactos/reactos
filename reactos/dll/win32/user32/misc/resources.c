@@ -9,8 +9,8 @@
 #define CR_INVALID_DATA                   0x0000001F
 #endif
 
-typedef DWORD STDCALL (*CMP_REGNOTIFY) (HANDLE, LPVOID, DWORD, PULONG);
-typedef DWORD STDCALL (*CMP_UNREGNOTIFY) (ULONG );
+typedef DWORD (STDCALL *CMP_REGNOTIFY) (HANDLE, LPVOID, DWORD, PULONG);
+typedef DWORD (STDCALL *CMP_UNREGNOTIFY) (ULONG );
 
 /* FIXME: Currently IsBadWritePtr is implemented using VirtualQuery which
           does not seem to work properly for stack address space. */

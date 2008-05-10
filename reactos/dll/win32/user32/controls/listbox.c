@@ -894,7 +894,7 @@ static LRESULT LISTBOX_GetText( LB_DESCR *descr, INT index, LPWSTR buffer, BOOL 
     }
 }
 
-static inline INT LISTBOX_lstrcmpiW( LCID lcid, LPCWSTR str1, LPCWSTR str2 )
+static __inline INT LISTBOX_lstrcmpiW( LCID lcid, LPCWSTR str1, LPCWSTR str2 )
 {
     INT ret = CompareStringW( lcid, NORM_IGNORECASE, str1, -1, str2, -1 );
     if (ret == CSTR_LESS_THAN)

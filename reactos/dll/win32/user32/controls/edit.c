@@ -171,7 +171,7 @@ typedef struct
 /*
  *	These functions have trivial implementations
  *	We still like to call them internally
- *	"static inline" makes them more like macro's
+ *	"static __inline" makes them more like macro's
  */
 static __inline BOOL	EDIT_EM_CanUndo(EDITSTATE *es);
 static __inline void	EDIT_EM_EmptyUndoBuffer(EDITSTATE *es);
@@ -402,14 +402,14 @@ static DWORD get_app_version(void)
     return version;
 }
 
-static inline UINT get_text_length(EDITSTATE *es)
+static __inline UINT get_text_length(EDITSTATE *es)
 {
     if(es->text_length == (UINT)-1)
         es->text_length = strlenW(es->text);
     return es->text_length;
 }
 
-static inline void text_buffer_changed(EDITSTATE *es)
+static __inline void text_buffer_changed(EDITSTATE *es)
 {
     es->text_length = (UINT)-1;
 }

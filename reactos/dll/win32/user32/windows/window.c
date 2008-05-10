@@ -277,6 +277,7 @@ CreateWindowExA(DWORD dwExStyle,
     {
         POINT mPos[2];
         UINT id = 0;
+        HWND top_child;
 
         /* lpParams of WM_[NC]CREATE is different for MDI children.
         * MDICREATESTRUCT members have the originally passed values.
@@ -309,7 +310,7 @@ CreateWindowExA(DWORD dwExStyle,
                 WS_SYSMENU | WS_THICKFRAME | WS_MINIMIZEBOX | WS_MAXIMIZEBOX);
         }
 
-        HWND top_child = GetWindow(hWndParent, GW_CHILD);
+        top_child = GetWindow(hWndParent, GW_CHILD);
 
         if (top_child)
         {
@@ -382,6 +383,7 @@ CreateWindowExW(DWORD dwExStyle,
     {
         POINT mPos[2];
         UINT id = 0;
+        HWND top_child;
 
         /* lpParams of WM_[NC]CREATE is different for MDI children.
         * MDICREATESTRUCT members have the originally passed values.
@@ -414,7 +416,7 @@ CreateWindowExW(DWORD dwExStyle,
                 WS_SYSMENU | WS_THICKFRAME | WS_MINIMIZEBOX | WS_MAXIMIZEBOX);
         }
 
-        HWND top_child = GetWindow(hWndParent, GW_CHILD);
+        top_child = GetWindow(hWndParent, GW_CHILD);
 
         if (top_child)
         {
