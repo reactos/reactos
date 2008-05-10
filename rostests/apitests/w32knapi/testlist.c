@@ -23,6 +23,7 @@
 #include "ntgdi/NtGdiSetBitmapBits.c"
 //#include "ntgdi/NtGdiSTROBJ_vEnumStart.c"
 #include "ntgdi/NtGdiGetDIBits.c"
+#include "ntgdi/NtGdiGetStockObject.c"
 
 #include "ntuser/NtUserCallHwnd.c"
 #include "ntuser/NtUserCallHwndLock.c"
@@ -50,7 +51,7 @@ TESTENTRY TestList[] =
 	/* ntgdi */
 	{ L"NtGdiArcInternal", Test_NtGdiArcInternal },
 	{ L"NtGdiBitBlt", Test_NtGdiBitBlt },
-	{ L"NtGdiCreateBitmap", Test_NtGdiCreateBitmap },
+{ L"NtGdiCreateBitmap", Test_NtGdiCreateBitmap },
 	{ L"NtGdiCreateCompatibleBitmap", Test_NtGdiCreateCompatibleBitmap },
 	{ L"NtGdiDoPalette", Test_NtGdiDoPalette },
 	{ L"NtGdiEngCreatePalette", Test_NtGdiEngCreatePalette },
@@ -65,6 +66,7 @@ TESTENTRY TestList[] =
 	{ L"NtGdiSelectPen", Test_NtGdiSelectPen },
 //	{ L"NtGdiSTROBJ_vEnumStart", Test_NtGdiSTROBJ_vEnumStart },
 	{ L"NtGdiGetDIBitsInternal", Test_NtGdiGetDIBitsInternal },
+	{ L"NtGdiGetStockObject", Test_NtGdiGetStockObject },
 
 	/* ntuser */
 	{ L"NtUserCallHwnd", Test_NtUserCallHwnd },
