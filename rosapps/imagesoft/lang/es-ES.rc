@@ -40,12 +40,12 @@ BEGIN
   END
   POPUP "&Ver"
   BEGIN
-    MENUITEM "&Tools",              ID_TOOLS
+    MENUITEM "H&erramientas",              ID_TOOLS
     MENUITEM "&Colores",             ID_COLOR
     MENUITEM "&Historia",            ID_HISTORY
     MENUITEM "&Barra de estado",         ID_STATUSBAR
   END
-  POPUP "&Adjust"
+  POPUP "&Ajuste"
   BEGIN
     MENUITEM "Brillo...",       ID_BRIGHTNESS
     MENUITEM "Contraste...",         ID_CONTRAST
@@ -62,8 +62,8 @@ BEGIN
     MENUITEM "Añadir Sombra",          -1, GRAYED
     MENUITEM SEPARATOR
     MENUITEM "Tamaño de la Imagen...",       -1, GRAYED
-    MENUITEM "Flip",                -1, GRAYED
-    MENUITEM "Voltear",              -1, GRAYED
+    MENUITEM "Voltear",                -1, GRAYED
+    MENUITEM "Espejo",              -1, GRAYED
     MENUITEM "Rotar",              -1, GRAYED
 
   END
@@ -135,7 +135,7 @@ STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
 BEGIN
   LTEXT      "Nombre:", IDC_STATIC, 12, 5, 38, 9
   EDITTEXT   IDC_IMAGE_NAME_EDIT,  58, 3, 94, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP
-  GROUPBOX   "Canvas properties", IDC_STATIC, 4, 22, 148, 98
+  GROUPBOX   "Propiedades de la imagen ", IDC_STATIC, 4, 22, 148, 98
   LTEXT      "Tipo de Imagen:", IDC_STATIC, 12, 36, 42, 9
   CONTROL    "", IDC_IMAGETYPE, "ComboBox", WS_CHILD | WS_VISIBLE | WS_TABSTOP | CBS_DROPDOWNLIST, 58, 35, 88, 54
   LTEXT      "Anchura:", IDC_STATIC, 12, 51, 42, 9
@@ -149,7 +149,7 @@ BEGIN
   LTEXT      "", IDC_RES_STAT, 94, 84, 40, 9
   LTEXT      "Unidades:", IDC_STATIC, 12, 99, 42, 9
   CONTROL    "", IDC_UNIT, "ComboBox", WS_CHILD | WS_VISIBLE | WS_TABSTOP | CBS_DROPDOWNLIST, 58, 99, 54, 50
-  LTEXT      "Tamaño de la Imagen:", IDC_STATIC, 12, 125, 42, 9
+  LTEXT      "Tamaño de la imagen:", IDC_STATIC, 12, 125, 42, 9
   LTEXT      "", IDC_IMAGE_SIZE, 58, 125, 54, 9
   PUSHBUTTON "Aceptar", IDOK, 50, 144, 48, 13
   PUSHBUTTON "Cancelar", IDCANCEL, 102, 144, 48, 13
@@ -164,7 +164,7 @@ BEGIN
   IDS_IMAGE_NAME        "Imagen %1!u!"
   IDS_FLT_TOOLS         "Herramientas"
   IDS_FLT_COLORS        "Colores"
-  IDS_FLT_HISTORY       "Historia"
+  IDS_FLT_HISTORY       "Historial"
 END
 
 /* imageprop.c */
