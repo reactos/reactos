@@ -43,24 +43,22 @@ IntGdiCreateBitmap(
    SIZEL Size;
    LONG WidthBytes;
 
-
    /* NOTE: Windows also doesn't store nr. of planes separately! */
    BitsPixel = BITMAPOBJ_GetRealBitsPixel(BitsPixel * Planes);
 
    /* Check parameters */
-
-    if ( (Height <= 0) || (Width <= 0) || (Width > 0x7FFFFFFF) || 
-         (Planes > 32) || (BitsPixel > 32) || (BitsPixel == 0) )
-    {
-        DPRINT1("Width = %d, Height = %d BitsPixel = %d\n", Width, Height, BitsPixel);
-        SetLastWin32Error(ERROR_INVALID_PARAMETER);
-        return 0;
-    }
+   if (BitsPixel == 0 || Width < 0)
+   {
+      DPRINT1("Width = %d, Height = %d BitsPixel = %d\n", Width, Height, BitsPixel);
+      SetLastWin32Error(ERROR_INVALID_PARAMETER);
+      return 0;
+   }
 
    WidthBytes = BITMAPOBJ_GetWidthBytes(Width, Planes * BitsPixel);
 
-   Size.cx = Width;
-   Size.cy = Height;
+   Size.cx = abs(Width);
+   Size.cy = abs(Height);
+
    /* Create the bitmap object. */
    hBitmap = IntCreateBitmap(Size, WidthBytes,
                              BitmapFormat(BitsPixel, BI_RGB),
@@ -114,7 +112,14 @@ NtGdiCreateBitmap(
          ProbeForRead(pUnsafeBits, cjBits, 1);
       }
 
-      hBitmap = IntGdiCreateBitmap(Width, Height, Planes, BitsPixel, pUnsafeBits);
+      if (0 == Width || 0 == Height)
+      {
+         hBitmap = IntGdiCreateBitmap (1, 1, 1, 1, NULL);
+      }
+      else
+      {
+        hBitmap = IntGdiCreateBitmap(Width, Height, Planes, BitsPixel, pUnsafeBits);
+      }
    }
    _SEH_HANDLE
    {
