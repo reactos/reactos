@@ -3,7 +3,7 @@
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            ntoskrnl/fsrtl/notify.c
  * PURPOSE:         Change Notifications and Sync for File System Drivers
- * PROGRAMMERS:     None.
+ * PROGRAMMERS:     Pierre Schweitzer
  */
 
 /* INCLUDES ******************************************************************/
@@ -18,32 +18,34 @@
  * @name FsRtlNotifyChangeDirectory
  * @implemented
  *
- * FILLME
+ * Lets FSD know if changes occures in the specified directory.
+ * Directory will be reenumerated. 
  *
  * @param NotifySync
- *        FILLME
+ *        Synchronization object pointer
  *
  * @param FsContext
- *        FILLME
+ *        Used to identify the notify structure
  *
  * @param FullDirectoryName
- *        FILLME
+ *        String (A or W) containing the full directory name 
  *
  * @param NotifyList
- *        FILLME
+ *        Notify list pointer (to head)
  *
  * @param WatchTree
- *        FILLME
+ *        True to notify changes in subdirectories too
  *
  * @param CompletionFilter
- *        FILLME
+ *        Used to define types of changes to notify
  *
  * @param NotifyIrp
- *        FILLME
+ *        IRP pointer to complete notify operation. It can be null
  *
  * @return None
  *
- * @remarks None
+ * @remarks This function only redirects to FsRtlNotifyFullChangeDirectory.
+ * So, it's better to call the entire function.  
  *
  *--*/
 VOID
@@ -56,7 +58,16 @@ FsRtlNotifyChangeDirectory(IN PNOTIFY_SYNC NotifySync,
                            IN ULONG CompletionFilter,
                            IN PIRP NotifyIrp)
 {
-    KEBUGCHECK(0);
+    FsRtlNotifyFullChangeDirectory(NotifySync,
+                                   NotifyList,
+                                   FsContext,
+                                   FullDirectoryName,
+                                   WatchTree,
+                                   TRUE,
+                                   CompletionFilter,
+                                   NotifyIrp,
+                                   NULL,
+                                   NULL);
 }
 
 /*++
