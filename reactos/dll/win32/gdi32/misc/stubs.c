@@ -1936,7 +1936,15 @@ CreateBitmap(INT  Width,
              PCVOID pUnsafeBits)
 {
     /* FIXME some part should be done in user mode */
-    return NtGdiCreateBitmap(Width, Height, Planes, BitsPixel, (LPBYTE) pUnsafeBits);
+    if (Width && Height)
+    {
+        return NtGdiCreateBitmap(Width, Height, Planes, BitsPixel, (LPBYTE) pUnsafeBits);
+    }
+    else
+    {
+        /* Return 1x1 bitmap */
+        return GetStockObject(DEFAULT_BITMAP);
+    }
 }
 
 /*

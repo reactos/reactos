@@ -30,9 +30,6 @@ typedef INT
 #define METAFILE_MEMORY 1
 #define METAFILE_DISK   2
 
-#define DEFAULT_BITMAP (STOCK_LAST+1)
-#define NB_STOCK_OBJECTS (STOCK_LAST+2)
-
 /* TYPES *********************************************************************/
 
 // Based on wmfapi.h and Wine.

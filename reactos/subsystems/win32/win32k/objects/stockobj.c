@@ -107,11 +107,6 @@ static LOGFONTW DefaultGuiFont =
 { 11, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET,
   0, 0, DEFAULT_QUALITY, VARIABLE_PITCH | FF_SWISS, L"MS Sans Serif" }; //Bitstream Vera Sans
 
-/* Comments from reserve two extra entry for the stock default bitmap  this is what Windows does too 
- * and verify if it is true it is not. in XP/2003 it is 22 stockobjects for each bitmap
- */
-#define NB_STOCK_OBJECTS (PRV_STOCK_LAST)
-
 static HGDIOBJ StockObjects[NB_STOCK_OBJECTS];
 
 /*!
@@ -139,8 +134,8 @@ CreateStockObjects(void)
   StockObjects[DC_PEN]    = IntGdiExtCreatePen(BlackPen.lopnStyle, BlackPen.lopnWidth.x, BS_SOLID, BlackPen.lopnColor, 0, 0, 0, NULL, 0, TRUE, NULL);
   StockObjects[NULL_PEN] = IntGdiExtCreatePen(NullPen.lopnStyle, NullPen.lopnWidth.x, BS_SOLID, NullPen.lopnColor, 0, 0, 0, NULL, 0, TRUE, NULL);
 
-  StockObjects[20] = NULL;
-  StockObjects[DC_BITMAP] = IntGdiCreateBitmap (1, 1, 1, 1, NULL);
+  StockObjects[20] = NULL; /* TODO: Unknown internal stock object */
+  StockObjects[DEFAULT_BITMAP] = IntGdiCreateBitmap(1, 1, 1, 1, NULL);
 
   (void) TextIntCreateFontIndirect(&OEMFixedFont, (HFONT*)&StockObjects[OEM_FIXED_FONT]);
   (void) TextIntCreateFontIndirect(&AnsiFixedFont, (HFONT*)&StockObjects[ANSI_FIXED_FONT]);

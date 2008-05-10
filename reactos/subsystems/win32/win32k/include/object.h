@@ -8,11 +8,6 @@
 #define FIRST_USER_HANDLE 0x0020  /* first possible value for low word of user handle */
 #define LAST_USER_HANDLE  0xffef  /* last possible value for low word of user handle */
 
-/* Comments from reserve two extra entry for the stock default bitmap  this is what Windows does too 
- * and verify if it is true it is not. in XP/2003 it is 22 stockobjects for each bitmap
- */
-#define PRV_STOCK_LAST 22
-
 #define USER_HEADER_TO_BODY(ObjectHeader) \
   ((PVOID)(((PUSER_OBJECT_HEADER)ObjectHeader) + 1))
 
