@@ -3,6 +3,7 @@ INT
 Test_NtGdiGetStockObject(PTESTINFO pti)
 {
     HANDLE handle = NULL;
+    BITMAP bitmap;
 
     /* BRUSH testing */
     handle = (HANDLE) NtGdiGetStockObject(WHITE_BRUSH);
@@ -114,10 +115,21 @@ Test_NtGdiGetStockObject(PTESTINFO pti)
     RTEST(GDI_HANDLE_GET_TYPE(handle) == GDI_OBJECT_TYPE_COLORSPACE);
     RTEST(GDI_HANDLE_IS_STOCKOBJ(handle) == TRUE);
 
+    /* value 21 is getting back 1x1 1Bpp Bitmap */
     handle = (HANDLE) NtGdiGetStockObject(21);
     RTEST(handle != 0);
     RTEST(GDI_HANDLE_GET_TYPE(handle) == GDI_OBJECT_TYPE_BITMAP);
     RTEST(GDI_HANDLE_IS_STOCKOBJ(handle) == TRUE);
+
+    RTEST(GetObject(handle, sizeof(BITMAP), &bitmap) == sizeof(BITMAP));
+    RTEST(bitmap.bmType == 0);
+    RTEST(bitmap.bmWidth == 1);
+    RTEST(bitmap.bmHeight == 1);
+    RTEST(bitmap.bmWidthBytes == 2);
+    RTEST(bitmap.bmPlanes == 1);
+    RTEST(bitmap.bmBitsPixel == 1);
+    RTEST(bitmap.bmBits == 0);
+
 
     RTEST(NtGdiGetStockObject(22) == 0);
     RTEST(NtGdiGetStockObject(23) == 0);
