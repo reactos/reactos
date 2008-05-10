@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2006 Juan Lang
+ * Copyright 2004-2007 Juan Lang
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -15,12 +15,15 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
+
+#include "config.h"
+#include "wine/port.h"
+
 #include <stdarg.h>
 #include "windef.h"
 #include "winbase.h"
 #include "wincrypt.h"
 #include "wine/debug.h"
-#include "excpt.h"
 #include "wine/exception.h"
 #include "crypt32_private.h"
 
@@ -422,7 +425,7 @@ const void *CRYPT_ReadSerializedElement(const BYTE *pbElement, DWORD cbElement,
 
 static const BYTE fileHeader[] = { 0, 0, 0, 0, 'C','E','R','T' };
 
-BOOL CRYPT_ReadSerializedFile(HANDLE file, HCERTSTORE store)
+BOOL CRYPT_ReadSerializedStoreFromFile(HANDLE file, HCERTSTORE store)
 {
     BYTE fileHeaderBuf[sizeof(fileHeader)];
     DWORD read;
@@ -432,7 +435,11 @@ BOOL CRYPT_ReadSerializedFile(HANDLE file, HCERTSTORE store)
     ret = ReadFile(file, fileHeaderBuf, sizeof(fileHeaderBuf), &read, NULL);
     if (ret)
     {
-        if (!memcmp(fileHeaderBuf, fileHeader, read))
+        if (!read)
+            ; /* an empty file is okay */
+        else if (read != sizeof(fileHeaderBuf))
+            ret = FALSE;
+        else if (!memcmp(fileHeaderBuf, fileHeader, read))
         {
             WINE_CERT_PROP_HEADER propHdr;
             const void *context = NULL;
@@ -504,6 +511,8 @@ BOOL CRYPT_ReadSerializedFile(HANDLE file, HCERTSTORE store)
             CryptMemFree(buf);
             ret = TRUE;
         }
+        else
+            ret = FALSE;
     }
     else
         ret = TRUE;
@@ -534,8 +543,11 @@ static BOOL WINAPI CRYPT_SerializeCTLNoHash(PCCTL_CONTEXT pCtlContext,
      CERT_CTL_PROP_ID, pCTLInterface, dwFlags, TRUE, pbElement, pcbElement);
 }
 
-static BOOL CRYPT_SerializeContextsToFile(HANDLE file,
- const WINE_CONTEXT_INTERFACE *contextInterface, HCERTSTORE store)
+typedef BOOL (*SerializedOutputFunc)(void *handle, const void *buffer,
+ DWORD size);
+
+static BOOL CRYPT_SerializeContextsToStream(SerializedOutputFunc output,
+ void *handle, const WINE_CONTEXT_INTERFACE *contextInterface, HCERTSTORE store)
 {
     const void *context = NULL;
     BOOL ret;
@@ -554,7 +566,7 @@ static BOOL CRYPT_SerializeContextsToFile(HANDLE file,
             {
                 ret = contextInterface->serialize(context, 0, buf, &size);
                 if (ret)
-                    ret = WriteFile(file, buf, size, &size, NULL);
+                    ret = output(handle, buf, size);
             }
             CryptMemFree(buf);
         }
@@ -566,35 +578,307 @@ static BOOL CRYPT_SerializeContextsToFile(HANDLE file,
     return ret;
 }
 
-BOOL CRYPT_WriteSerializedFile(HANDLE file, HCERTSTORE store)
+static BOOL CRYPT_WriteSerializedStoreToStream(HCERTSTORE store,
+ SerializedOutputFunc output, void *handle)
 {
     static const BYTE fileTrailer[12] = { 0 };
     WINE_CONTEXT_INTERFACE interface;
     BOOL ret;
-    DWORD size;
 
-    SetFilePointer(file, 0, NULL, FILE_BEGIN);
-    ret = WriteFile(file, fileHeader, sizeof(fileHeader), &size, NULL);
+    ret = output(handle, fileHeader, sizeof(fileHeader));
     if (ret)
     {
         memcpy(&interface, pCertInterface, sizeof(interface));
         interface.serialize = (SerializeElementFunc)CRYPT_SerializeCertNoHash;
-        ret = CRYPT_SerializeContextsToFile(file, &interface, store);
+        ret = CRYPT_SerializeContextsToStream(output, handle, &interface,
+         store);
     }
     if (ret)
     {
         memcpy(&interface, pCRLInterface, sizeof(interface));
         interface.serialize = (SerializeElementFunc)CRYPT_SerializeCRLNoHash;
-        ret = CRYPT_SerializeContextsToFile(file, &interface, store);
+        ret = CRYPT_SerializeContextsToStream(output, handle, &interface,
+         store);
     }
     if (ret)
     {
         memcpy(&interface, pCTLInterface, sizeof(interface));
         interface.serialize = (SerializeElementFunc)CRYPT_SerializeCTLNoHash;
-        ret = CRYPT_SerializeContextsToFile(file, &interface, store);
+        ret = CRYPT_SerializeContextsToStream(output, handle, &interface,
+         store);
     }
     if (ret)
-        ret = WriteFile(file, fileTrailer, sizeof(fileTrailer), &size, NULL);
+        ret = output(handle, fileTrailer, sizeof(fileTrailer));
+    return ret;
+}
+
+static BOOL CRYPT_FileOutputFunc(void *handle, const void *buffer, DWORD size)
+{
+    return WriteFile(handle, buffer, size, &size, NULL);
+}
+
+static BOOL CRYPT_WriteSerializedStoreToFile(HANDLE file, HCERTSTORE store)
+{
+    SetFilePointer(file, 0, NULL, FILE_BEGIN);
+    return CRYPT_WriteSerializedStoreToStream(store, CRYPT_FileOutputFunc,
+     file);
+}
+
+static BOOL CRYPT_SavePKCSToMem(HCERTSTORE store,
+ DWORD dwMsgAndCertEncodingType, void *handle)
+{
+    CERT_BLOB *blob = (CERT_BLOB *)handle;
+    CRYPT_SIGNED_INFO signedInfo = { 0 };
+    PCCERT_CONTEXT cert = NULL;
+    PCCRL_CONTEXT crl = NULL;
+    DWORD size;
+    BOOL ret = TRUE;
+
+    TRACE("(%d, %p)\n", blob->pbData ? blob->cbData : 0, blob->pbData);
+
+    do {
+        cert = CertEnumCertificatesInStore(store, cert);
+        if (cert)
+            signedInfo.cCertEncoded++;
+    } while (cert);
+    if (signedInfo.cCertEncoded)
+    {
+        signedInfo.rgCertEncoded = CryptMemAlloc(
+         signedInfo.cCertEncoded * sizeof(CERT_BLOB));
+        if (!signedInfo.rgCertEncoded)
+        {
+            SetLastError(ERROR_OUTOFMEMORY);
+            ret = FALSE;
+        }
+        else
+        {
+            DWORD i = 0;
+
+            do {
+                cert = CertEnumCertificatesInStore(store, cert);
+                if (cert)
+                {
+                    signedInfo.rgCertEncoded[i].cbData = cert->cbCertEncoded;
+                    signedInfo.rgCertEncoded[i].pbData = cert->pbCertEncoded;
+                    i++;
+                }
+            } while (cert);
+        }
+    }
+
+    do {
+        crl = CertEnumCRLsInStore(store, crl);
+        if (crl)
+            signedInfo.cCrlEncoded++;
+    } while (crl);
+    if (signedInfo.cCrlEncoded)
+    {
+        signedInfo.rgCrlEncoded = CryptMemAlloc(
+         signedInfo.cCrlEncoded * sizeof(CERT_BLOB));
+        if (!signedInfo.rgCrlEncoded)
+        {
+            SetLastError(ERROR_OUTOFMEMORY);
+            ret = FALSE;
+        }
+        else
+        {
+            DWORD i = 0;
+
+            do {
+                crl = CertEnumCRLsInStore(store, crl);
+                if (crl)
+                {
+                    signedInfo.rgCrlEncoded[i].cbData = crl->cbCrlEncoded;
+                    signedInfo.rgCrlEncoded[i].pbData = crl->pbCrlEncoded;
+                    i++;
+                }
+            } while (crl);
+        }
+    }
+    if (ret)
+    {
+        ret = CRYPT_AsnEncodePKCSSignedInfo(&signedInfo, NULL, &size);
+        if (ret)
+        {
+            if (!blob->pbData)
+                blob->cbData = size;
+            else if (blob->cbData < size)
+            {
+                blob->cbData = size;
+                SetLastError(ERROR_MORE_DATA);
+                ret = FALSE;
+            }
+            else
+            {
+                blob->cbData = size;
+                ret = CRYPT_AsnEncodePKCSSignedInfo(&signedInfo, blob->pbData,
+                 &blob->cbData);
+            }
+        }
+    }
+    CryptMemFree(signedInfo.rgCertEncoded);
+    CryptMemFree(signedInfo.rgCrlEncoded);
+    TRACE("returning %d\n", ret);
+    return ret;
+}
+
+static BOOL CRYPT_SavePKCSToFile(HCERTSTORE store,
+ DWORD dwMsgAndCertEncodingType, void *handle)
+{
+    CERT_BLOB blob = { 0, NULL };
+    BOOL ret;
+
+    TRACE("(%p)\n", handle);
+
+    ret = CRYPT_SavePKCSToMem(store, dwMsgAndCertEncodingType, &blob);
+    if (ret)
+    {
+        blob.pbData = CryptMemAlloc(blob.cbData);
+        if (blob.pbData)
+        {
+            ret = CRYPT_SavePKCSToMem(store, dwMsgAndCertEncodingType, &blob);
+            if (ret)
+                ret = WriteFile(handle, blob.pbData, blob.cbData,
+                 &blob.cbData, NULL);
+        }
+        else
+        {
+            SetLastError(ERROR_OUTOFMEMORY);
+            ret = FALSE;
+        }
+    }
+    TRACE("returning %d\n", ret);
+    return ret;
+}
+
+static BOOL CRYPT_SaveSerializedToFile(HCERTSTORE store,
+ DWORD dwMsgAndCertEncodingType, void *handle)
+{
+    return CRYPT_WriteSerializedStoreToFile(handle, store);
+}
+
+struct MemWrittenTracker
+{
+    DWORD cbData;
+    BYTE *pbData;
+    DWORD written;
+};
+
+/* handle is a pointer to a MemWrittenTracker.  Assumes its pointer is valid. */
+static BOOL CRYPT_MemOutputFunc(void *handle, const void *buffer, DWORD size)
+{
+    struct MemWrittenTracker *tracker = (struct MemWrittenTracker *)handle;
+    BOOL ret;
+
+    if (tracker->written + size > tracker->cbData)
+    {
+        SetLastError(ERROR_MORE_DATA);
+        /* Update written so caller can notify its caller of the required size
+         */
+        tracker->written += size;
+        ret = FALSE;
+    }
+    else
+    {
+        memcpy(tracker->pbData + tracker->written, buffer, size);
+        tracker->written += size;
+        ret = TRUE;
+    }
+    return ret;
+}
+
+static BOOL CRYPT_CountSerializedBytes(void *handle, const void *buffer,
+ DWORD size)
+{
+    *(DWORD *)handle += size;
+    return TRUE;
+}
+
+static BOOL CRYPT_SaveSerializedToMem(HCERTSTORE store,
+ DWORD dwMsgAndCertEncodingType, void *handle)
+{
+    CERT_BLOB *blob = (CERT_BLOB *)handle;
+    DWORD size;
+    BOOL ret;
+
+    ret = CRYPT_WriteSerializedStoreToStream(store, CRYPT_CountSerializedBytes,
+     &size);
+    if (ret)
+    {
+        if (!blob->pbData)
+            blob->cbData = size;
+        else if (blob->cbData < size)
+        {
+            SetLastError(ERROR_MORE_DATA);
+            blob->cbData = size;
+            ret = FALSE;
+        }
+        else
+        {
+            struct MemWrittenTracker tracker = { blob->cbData, blob->pbData,
+             0 };
+
+            ret = CRYPT_WriteSerializedStoreToStream(store, CRYPT_MemOutputFunc,
+             &tracker);
+            if (!ret && GetLastError() == ERROR_MORE_DATA)
+                blob->cbData = tracker.written;
+        }
+    }
+    TRACE("returning %d\n", ret);
+    return ret;
+}
+
+BOOL WINAPI CertSaveStore(HCERTSTORE hCertStore, DWORD dwMsgAndCertEncodingType,
+ DWORD dwSaveAs, DWORD dwSaveTo, void *pvSaveToPara, DWORD dwFlags)
+{
+    BOOL (*saveFunc)(HCERTSTORE, DWORD, void *);
+    void *handle;
+    BOOL ret;
+
+    TRACE("(%p, %08x, %d, %d, %p, %08x)\n", hCertStore,
+          dwMsgAndCertEncodingType, dwSaveAs, dwSaveTo, pvSaveToPara, dwFlags);
+
+    switch (dwSaveAs)
+    {
+    case CERT_STORE_SAVE_AS_STORE:
+    case CERT_STORE_SAVE_AS_PKCS7:
+        break;
+    default:
+        WARN("unimplemented for %d\n", dwSaveAs);
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+    switch (dwSaveTo)
+    {
+    case CERT_STORE_SAVE_TO_FILE:
+        handle = pvSaveToPara;
+        saveFunc = dwSaveAs == CERT_STORE_SAVE_AS_STORE ?
+         CRYPT_SaveSerializedToFile : CRYPT_SavePKCSToFile;
+        break;
+    case CERT_STORE_SAVE_TO_FILENAME_A:
+        handle = CreateFileA((LPCSTR)pvSaveToPara, GENERIC_WRITE, 0, NULL,
+         CREATE_ALWAYS, 0, NULL);
+        saveFunc = dwSaveAs == CERT_STORE_SAVE_AS_STORE ?
+         CRYPT_SaveSerializedToFile : CRYPT_SavePKCSToFile;
+        break;
+    case CERT_STORE_SAVE_TO_FILENAME_W:
+        handle = CreateFileW((LPCWSTR)pvSaveToPara, GENERIC_WRITE, 0, NULL,
+         CREATE_ALWAYS, 0, NULL);
+        saveFunc = dwSaveAs == CERT_STORE_SAVE_AS_STORE ?
+         CRYPT_SaveSerializedToFile : CRYPT_SavePKCSToFile;
+        break;
+    case CERT_STORE_SAVE_TO_MEMORY:
+        handle = pvSaveToPara;
+        saveFunc = dwSaveAs == CERT_STORE_SAVE_AS_STORE ?
+         CRYPT_SaveSerializedToMem : CRYPT_SavePKCSToMem;
+        break;
+    default:
+        WARN("unimplemented for %d\n", dwSaveTo);
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+    ret = saveFunc(hCertStore, dwMsgAndCertEncodingType, handle);
+    TRACE("returning %d\n", ret);
     return ret;
 }
 

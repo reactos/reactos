@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-LANGUAGE LANG_NORWEGIAN, SUBLANG_NEUTRAL
+LANGUAGE LANG_NORWEGIAN, SUBLANG_NORWEGIAN_BOKMAL
 
 STRINGTABLE DISCARDABLE
 {
@@ -163,4 +163,12 @@ STRINGTABLE DISCARDABLE
     IDS_ENROLLMENT_AGENT "Agent for sertifikatforespørsler"
     IDS_LIFETIME_SIGNING "Livstidsignering"
     IDS_ANY_CERT_POLICY "Alle framgangsmåter for utsteding"
+}
+
+STRINGTABLE DISCARDABLE
+{
+    IDS_LOCALIZEDNAME_ROOT "Klarerte rotsertifiseringsinstanser"
+    IDS_LOCALIZEDNAME_MY "Personlig"
+    IDS_LOCALIZEDNAME_CA "Mellomliggende sertifiseringsinstanser"
+    IDS_LOCALIZEDNAME_ADDRESSBOOK "Andre personer"
 }

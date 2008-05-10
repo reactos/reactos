@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
 
 STRINGTABLE DISCARDABLE
 {
@@ -163,4 +163,12 @@ STRINGTABLE DISCARDABLE
     IDS_ENROLLMENT_AGENT "Certificate Request Agent"
     IDS_LIFETIME_SIGNING "Lifetime Signing"
     IDS_ANY_CERT_POLICY "All issuance policies"
+}
+
+STRINGTABLE DISCARDABLE
+{
+    IDS_LOCALIZEDNAME_ROOT "Trusted Root Certification Authorities"
+    IDS_LOCALIZEDNAME_MY "Personal"
+    IDS_LOCALIZEDNAME_CA "Intermediate Certification Authorities"
+    IDS_LOCALIZEDNAME_ADDRESSBOOK "Other People"
 }

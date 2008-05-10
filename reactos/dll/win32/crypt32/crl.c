@@ -266,10 +266,10 @@ DWORD WINAPI CertEnumCRLContextProperties(PCCRL_CONTEXT pCRLContext,
     return ret;
 }
 
-static BOOL WINAPI CRLContext_SetProperty(void *context, DWORD dwPropId,
- DWORD dwFlags, const void *pvData);
+static BOOL CRLContext_SetProperty(PCCRL_CONTEXT context, DWORD dwPropId,
+                                   DWORD dwFlags, const void *pvData);
 
-static BOOL CRLContext_GetHashProp(void *context, DWORD dwPropId,
+static BOOL CRLContext_GetHashProp(PCCRL_CONTEXT context, DWORD dwPropId,
  ALG_ID algID, const BYTE *toHash, DWORD toHashLen, void *pvData,
  DWORD *pcbData)
 {
@@ -284,10 +284,9 @@ static BOOL CRLContext_GetHashProp(void *context, DWORD dwPropId,
     return ret;
 }
 
-static BOOL WINAPI CRLContext_GetProperty(void *context, DWORD dwPropId,
- void *pvData, DWORD *pcbData)
+static BOOL CRLContext_GetProperty(PCCRL_CONTEXT context, DWORD dwPropId,
+                                   void *pvData, DWORD *pcbData)
 {
-    PCCRL_CONTEXT pCRLContext = (PCCRL_CONTEXT)context;
     PCONTEXT_PROPERTY_LIST properties =
      Context_GetProperties(context, sizeof(CRL_CONTEXT));
     BOOL ret;
@@ -302,20 +301,17 @@ static BOOL WINAPI CRLContext_GetProperty(void *context, DWORD dwPropId,
     if (ret)
     {
         if (!pvData)
-        {
             *pcbData = blob.cbData;
-            ret = TRUE;
-        }
         else if (*pcbData < blob.cbData)
         {
             SetLastError(ERROR_MORE_DATA);
             *pcbData = blob.cbData;
+            ret = FALSE;
         }
         else
         {
             memcpy(pvData, blob.pbData, blob.cbData);
             *pcbData = blob.cbData;
-            ret = TRUE;
         }
     }
     else
@@ -325,12 +321,12 @@ static BOOL WINAPI CRLContext_GetProperty(void *context, DWORD dwPropId,
         {
         case CERT_SHA1_HASH_PROP_ID:
             ret = CRLContext_GetHashProp(context, dwPropId, CALG_SHA1,
-             pCRLContext->pbCrlEncoded, pCRLContext->cbCrlEncoded, pvData,
+                                         context->pbCrlEncoded, context->cbCrlEncoded, pvData,
              pcbData);
             break;
         case CERT_MD5_HASH_PROP_ID:
             ret = CRLContext_GetHashProp(context, dwPropId, CALG_MD5,
-             pCRLContext->pbCrlEncoded, pCRLContext->cbCrlEncoded, pvData,
+                                         context->pbCrlEncoded, context->cbCrlEncoded, pvData,
              pcbData);
             break;
         default:
@@ -371,19 +367,22 @@ BOOL WINAPI CertGetCRLContextProperty(PCCRL_CONTEXT pCRLContext,
         }
         else
         {
-            *(DWORD *)pvData =
-             CertStore_GetAccessState(pCRLContext->hCertStore);
+            if (pCRLContext->hCertStore)
+                ret = CertGetStoreProperty(pCRLContext->hCertStore, dwPropId,
+                 pvData, pcbData);
+            else
+                *(DWORD *)pvData = 0;
             ret = TRUE;
         }
         break;
     default:
-        ret = CRLContext_GetProperty((void *)pCRLContext, dwPropId, pvData,
+        ret = CRLContext_GetProperty(pCRLContext, dwPropId, pvData,
          pcbData);
     }
     return ret;
 }
 
-static BOOL WINAPI CRLContext_SetProperty(void *context, DWORD dwPropId,
+static BOOL CRLContext_SetProperty(PCCRL_CONTEXT context, DWORD dwPropId,
  DWORD dwFlags, const void *pvData)
 {
     PCONTEXT_PROPERTY_LIST properties =
@@ -460,8 +459,7 @@ BOOL WINAPI CertSetCRLContextProperty(PCCRL_CONTEXT pCRLContext,
         SetLastError(E_INVALIDARG);
         return FALSE;
     }
-    ret = CRLContext_SetProperty((void *)pCRLContext, dwPropId, dwFlags,
-     pvData);
+    ret = CRLContext_SetProperty(pCRLContext, dwPropId, dwFlags, pvData);
     TRACE("returning %d\n", ret);
     return ret;
 }
@@ -519,10 +517,7 @@ LONG WINAPI CertVerifyCRLTimeValidity(LPFILETIME pTimeToVerify,
 
     if (!pTimeToVerify)
     {
-        SYSTEMTIME sysTime;
-
-        GetSystemTime(&sysTime);
-        SystemTimeToFileTime(&sysTime, &fileTime);
+        GetSystemTimeAsFileTime(&fileTime);
         pTimeToVerify = &fileTime;
     }
     if ((ret = CompareFileTime(pTimeToVerify, &pCrlInfo->ThisUpdate)) >= 0)

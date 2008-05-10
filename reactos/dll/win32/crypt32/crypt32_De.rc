@@ -97,7 +97,7 @@ STRINGTABLE DISCARDABLE
     IDS_CROSS_CERT_DIST_POINTS "Verteilungspunkte für Kreuzzertifikate"
     IDS_APPLICATION_POLICIES "Anwendungsrichtlinien"
     IDS_APPLICATION_POLICY_MAPPINGS "Anwendungsrichtlinienzuordnungen"
-    IDS_APPLICATION_POLICY_CONSTRAINTS "Anweungsungsrichtlinieneinschränkungen"
+    IDS_APPLICATION_POLICY_CONSTRAINTS "Anwendungsungsrichtlinieneinschränkungen"
     IDS_CMC_DATA "CMC Daten"
     IDS_CMC_RESPONSE "CMC Antwort"
     IDS_UNSIGNED_CMC_REQUEST "Unsignierte CMC Antwort"
@@ -163,4 +163,12 @@ STRINGTABLE DISCARDABLE
     IDS_ENROLLMENT_AGENT "Agent für Zertifikationsanforderung"
     IDS_LIFETIME_SIGNING "Lebensdauersignatur"
     IDS_ANY_CERT_POLICY "Alle ausgegebenen Richtlinien"
+}
+
+STRINGTABLE DISCARDABLE
+{
+    IDS_LOCALIZEDNAME_ROOT "Vertrauenswürdige Stammzertifizierungsstellen"
+    IDS_LOCALIZEDNAME_MY "Persönlich"
+    IDS_LOCALIZEDNAME_CA "Zwischenzertifizierungsstellen"
+    IDS_LOCALIZEDNAME_ADDRESSBOOK "Andere Personen"
 }

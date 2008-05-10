@@ -1,7 +1,5 @@
 /*
- * crypt32 dll resources
- *
- * Copyright (C) 2006 Juan Lang
+ * Copyright (C) 2007 Francois Gouget
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -17,17 +15,26 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
-#include "windef.h"
-#include "winbase.h"
-#include "winuser.h"
-#include "cryptres.h"
 
-#include "version.rc"
+#ifndef __WINE_I_CRYPTASN1TLS_H
+#define __WINE_I_CRYPTASN1TLS_H
 
-#include "crypt32_De.rc"
-#include "crypt32_En.rc"
-#include "crypt32_Fr.rc"
-#include "crypt32_Ko.rc"
-#include "crypt32_Nl.rc"
-#include "crypt32_No.rc"
-#include "crypt32_Sv.rc"
+typedef void *ASN1decoding_t;
+typedef void *ASN1encoding_t;
+typedef void *ASN1module_t;
+typedef DWORD HCRYPTASN1MODULE;
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+ASN1decoding_t WINAPI I_CryptGetAsn1Decoder(HCRYPTASN1MODULE);
+ASN1encoding_t WINAPI I_CryptGetAsn1Encoder(HCRYPTASN1MODULE);
+BOOL        WINAPI I_CryptInstallAsn1Module(ASN1module_t, DWORD, void*);
+BOOL        WINAPI I_CryptUninstallAsn1Module(HCRYPTASN1MODULE);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif  /* __WINE_I_CRYPTASN1TLS_H */
