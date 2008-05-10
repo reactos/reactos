@@ -159,6 +159,11 @@ typedef enum GDILoObjType
 typedef DWORD FULLSCREENCONTROL;
 typedef DWORD LFTYPE;
 
+/* NOTE DC_BITMAP or the value are not documented in MSDN or ms header 
+ * it return a 1x1 1Bpp Bitmap in all case from GetStockObject
+ */
+#define DC_BITMAP 21
+
 /* DEFINES *******************************************************************/
 
 #define GDIBATCHBUFSIZE 0x136*4

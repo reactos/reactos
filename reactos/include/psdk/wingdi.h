@@ -813,12 +813,6 @@ extern "C" {
 #define SYSTEM_FONT 13
 #define SYSTEM_FIXED_FONT 16
 #define DEFAULT_PALETTE 15
-
-/* NOTE DC_BITMAP or the value are not documented in MSDN or ms header 
- * it return a 1x1 1Bpp Bitmap in all case from GetStockObject
- */
-#define DC_BITMAP 21
-
 #if (_WIN32_WINNT >= 0x0500)
 #define DC_BRUSH	18
 #define DC_PEN	19
