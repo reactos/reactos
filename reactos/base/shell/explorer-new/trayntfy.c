@@ -159,7 +159,7 @@ TrayClockWnd_GetMinimumSize(IN OUT PTRAY_CLOCK_WND_DATA This,
             {
                 if (Horizontal)
                 {
-                    if (szMax.cy + This->LineSizes[i].cy + This->LineSpacing >
+                    if (szMax.cy + This->LineSizes[i].cy + (LONG)This->LineSpacing >
                         pSize->cy - (2 * TRAY_CLOCK_WND_SPACING_Y))
                     {
                         break;

@@ -26,7 +26,7 @@
 
 /* Set DUMP_TASKS to 1 to enable a dump of the tasks and task groups every
    5 seconds */
-#define DUMP_TASKS  0
+#define DUMP_TASKS  1
 
 static const TCHAR szTaskSwitchWndClass[] = TEXT("MSTaskSwWClass");
 static const TCHAR szRunningApps[] = TEXT("Running Applications");
@@ -135,17 +135,6 @@ typedef struct _TASK_SWITCH_WND
 #define TSW_TOOLBAR_SUBCLASS_ID 1
 
 #define MAX_TASKS_COUNT (0x7FFF)
-
-#define MAKE_TASKITEM_PTR(ti) ((DWORD_PTR)ti)
-#define MAKE_TASKGROUP_PTR(tg) (((DWORD_PTR)tg) | 1)
-#define IS_TASKGROUP_PTR(p) ((((DWORD_PTR)p) & 1) != 0)
-#define GET_TASKITEM_PTR(lp) ((PTASK_ITEM)(((DWORD_PTR)lp) & ~1))
-#define GET_TASKGROUP_PTR(lp) ((PTASK_GROUP)(((DWORD_PTR)lp) & ~1))
-
-#define MAKE_TASKITEM_CMD_ID(id) ((INT)(id))
-#define MAKE_TASKGROUP_CMD_ID(id) ((INT)(id) | (1 << 15))
-#define IS_TASKGROUP_CMD_ID(id) ((((INT)(id)) & (1 << 15)) != 0)
-#define GET_INDEX_FROM_CMD_ID(id) ((INT)(id) & MAX_TASKS_COUNT)
 
 static VOID TaskSwitchWnd_UpdateButtonsSize(IN OUT PTASK_SWITCH_WND This,
                                             IN BOOL bRedrawDisabled);
@@ -286,7 +275,7 @@ TaskSwitchWnd_UpdateIndexesAfterButtonInserted(IN OUT PTASK_SWITCH_WND This,
                 NewIndex = CurrentGroup->Index + 1;
                 if (TaskSwitchWnd_SetToolbarButtonCommandId(This,
                                                             CurrentGroup->Index + 1,
-                                                            MAKE_TASKGROUP_CMD_ID(NewIndex)))
+                                                            NewIndex))
                 {
                     CurrentGroup->Index = NewIndex;
                 }
@@ -319,7 +308,7 @@ UpdateTaskItemBtn:
             NewIndex = CurrentTaskItem->Index + 1;
             if (TaskSwitchWnd_SetToolbarButtonCommandId(This,
                                                         CurrentTaskItem->Index + 1,
-                                                        MAKE_TASKITEM_CMD_ID(NewIndex)))
+                                                        NewIndex))
             {
                 CurrentTaskItem->Index = NewIndex;
             }
@@ -352,7 +341,7 @@ TaskSwitchWnd_UpdateIndexesAfterButtonDeleted(IN OUT PTASK_SWITCH_WND This,
                 NewIndex = CurrentGroup->Index - 1;
                 if (TaskSwitchWnd_SetToolbarButtonCommandId(This,
                                                             CurrentGroup->Index - 1,
-                                                            MAKE_TASKGROUP_CMD_ID(NewIndex)))
+                                                            NewIndex))
                 {
                     CurrentGroup->Index = NewIndex;
                 }
@@ -385,7 +374,7 @@ UpdateTaskItemBtn:
             NewIndex = CurrentTaskItem->Index - 1;
             if (TaskSwitchWnd_SetToolbarButtonCommandId(This,
                                                         CurrentTaskItem->Index - 1,
-                                                        MAKE_TASKITEM_CMD_ID(NewIndex)))
+                                                        NewIndex))
             {
                 CurrentTaskItem->Index = NewIndex;
             }
@@ -570,7 +559,7 @@ TaskSwitchWnd_AddTaskItemButton(IN OUT PTASK_SWITCH_WND This,
     tbBtn.iBitmap = 0;
     tbBtn.fsState = TBSTATE_ENABLED | TBSTATE_ELLIPSES;
     tbBtn.fsStyle = BTNS_CHECK | BTNS_NOPREFIX | BTNS_SHOWTEXT;
-    tbBtn.dwData = MAKE_TASKITEM_PTR(TaskItem);
+    tbBtn.dwData = TaskItem->Index;
 
     tbBtn.iString = (DWORD_PTR)TaskSwitchWnd_GetWndTextFromTaskItem(This,
                                                                     TaskItem);
@@ -579,7 +568,7 @@ TaskSwitchWnd_AddTaskItemButton(IN OUT PTASK_SWITCH_WND This,
     iIndex = TaskSwitchWnd_CalculateTaskItemNewButtonIndex(This,
                                                            TaskItem);
     ASSERT(iIndex >= 0);
-    tbBtn.idCommand = MAKE_TASKITEM_CMD_ID(iIndex);
+    tbBtn.idCommand = iIndex;
 
     TaskSwitchWnd_BeginUpdate(This);
 
@@ -719,6 +708,7 @@ TaskSwitchWnd_RemoveTaskFromTaskGroup(IN OUT PTASK_SWITCH_WND This,
             }
 
             /* Remove the group from the list */
+            ASSERT(TaskGroup == CurrentGroup);
             *PrevLink = TaskGroup->Next;
 
             /* Free the task group */
@@ -819,39 +809,44 @@ TaskSwitchWnd_AllocTaskItem(IN OUT PTASK_SWITCH_WND This)
         return NULL;
     }
 
-    if (This->AllocatedTaskItems <= This->TaskItemCount)
+    ASSERT(This->AllocatedTaskItems >= This->TaskItemCount);
+
+    if (This->TaskItemCount != 0)
     {
-        if (This->TaskItemCount != 0)
+        PTASK_ITEM NewArray;
+        SIZE_T NewArrayLength, ActiveTaskItemIndex;
+
+        NewArrayLength = This->AllocatedTaskItems + TASK_ITEM_ARRAY_ALLOC;
+
+        NewArray = HeapReAlloc(hProcessHeap,
+                               0,
+                               This->TaskItems,
+                               NewArrayLength * sizeof(*This->TaskItems));
+        if (NewArray != NULL)
         {
-            PTASK_ITEM NewArray;
-            WORD NewArrayLength;
-
-            NewArrayLength = This->AllocatedTaskItems + TASK_ITEM_ARRAY_ALLOC;
-
-            NewArray = HeapReAlloc(hProcessHeap,
-                                   0,
-                                   This->TaskItems,
-                                   NewArrayLength * sizeof(*This->TaskItems));
-            if (NewArray != NULL)
+            if (This->ActiveTaskItem != NULL)
             {
-                This->AllocatedTaskItems = NewArrayLength;
-                This->TaskItems = NewArray;
+                /* Fixup the ActiveTaskItem pointer */
+                ActiveTaskItemIndex = This->ActiveTaskItem - This->TaskItems;
+                This->ActiveTaskItem = NewArray + ActiveTaskItemIndex;
             }
-            else
-                return NULL;
+            This->AllocatedTaskItems = (WORD)NewArrayLength;
+            This->TaskItems = NewArray;
         }
         else
+            return NULL;
+    }
+    else
+    {
+        This->TaskItems = HeapAlloc(hProcessHeap,
+                                    0,
+                                    TASK_ITEM_ARRAY_ALLOC * sizeof(*This->TaskItems));
+        if (This->TaskItems != NULL)
         {
-            This->TaskItems = HeapAlloc(hProcessHeap,
-                                        0,
-                                        TASK_ITEM_ARRAY_ALLOC * sizeof(*This->TaskItems));
-            if (This->TaskItems != NULL)
-            {
-                This->AllocatedTaskItems = TASK_ITEM_ARRAY_ALLOC;
-            }
-            else
-                return NULL;
+            This->AllocatedTaskItems = TASK_ITEM_ARRAY_ALLOC;
         }
+        else
+            return NULL;
     }
 
     return This->TaskItems + This->TaskItemCount++;
@@ -962,6 +957,43 @@ ChangeActiveTaskItemButton:
                                                TaskItem);
         }
     }
+}
+
+static PTASK_ITEM
+FindTaskItemByIndex(IN OUT PTASK_SWITCH_WND This,
+                    IN INT Index)
+{
+    PTASK_ITEM TaskItem, LastItem;
+
+    TaskItem = This->TaskItems;
+    LastItem = TaskItem + This->TaskItemCount;
+    while (TaskItem != LastItem)
+    {
+        if (TaskItem->Index == Index)
+            return TaskItem;
+
+        TaskItem++;
+    }
+
+    return NULL;
+}
+
+static PTASK_GROUP
+FindTaskGroupByIndex(IN OUT PTASK_SWITCH_WND This,
+                     IN INT Index)
+{
+    PTASK_GROUP CurrentGroup;
+
+    CurrentGroup = This->TaskGroups;
+    while (CurrentGroup != NULL)
+    {
+        if (CurrentGroup->Index == Index)
+            break;
+
+        CurrentGroup = CurrentGroup->Next;
+    }
+
+    return CurrentGroup;
 }
 
 static BOOL
@@ -1211,9 +1243,9 @@ TaskSwitchWnd_UpdateButtonsSize(IN OUT PTASK_SWITCH_WND This,
 
             uiMin = GetSystemMetrics(SM_CXSIZE) + (2 * GetSystemMetrics(SM_CXEDGE));
 
-            if (NewBtnSize < uiMin)
+            if (NewBtnSize < (LONG)uiMin)
                 NewBtnSize = uiMin;
-            if (NewBtnSize > uiMax)
+            if (NewBtnSize > (LONG)uiMax)
                 NewBtnSize = uiMax;
 
             This->ButtonSize.cx = NewBtnSize;
@@ -1392,7 +1424,7 @@ TaskSwitchWnd_Create(IN OUT PTASK_SWITCH_WND This)
 
         /* Register the shell hook */
         This->ShellHookMsg = RegisterWindowMessage(TEXT("SHELLHOOK"));
-        hShell32 = LoadLibrary(TEXT("SHELL32.DLL"));
+        hShell32 = GetModuleHandle(TEXT("SHELL32.DLL"));
         if (hShell32 != NULL)
         {
             REGSHELLHOOK RegShellHook;
@@ -1405,8 +1437,6 @@ TaskSwitchWnd_Create(IN OUT PTASK_SWITCH_WND This)
                 RegShellHook(This->hWnd,
                              3); /* 1 if no NT! We're targeting NT so we don't care! */
             }
-
-            FreeLibrary(hShell32);
         }
 
         /* Add all windows to the toolbar */
@@ -1434,7 +1464,7 @@ TaskSwitchWnd_NCDestroy(IN OUT PTASK_SWITCH_WND This)
     This->IsDestroying = TRUE;
 
     /* Unregister the shell hook */
-    hShell32 = LoadLibrary(TEXT("SHELL32.DLL"));
+    hShell32 = GetModuleHandle(TEXT("SHELL32.DLL"));
     if (hShell32 != NULL)
     {
         REGSHELLHOOK RegShellHook;
@@ -1447,8 +1477,6 @@ TaskSwitchWnd_NCDestroy(IN OUT PTASK_SWITCH_WND This)
             RegShellHook(This->hWnd,
                          FALSE);
         }
-
-        FreeLibrary(hShell32);
     }
 
     TaskSwitchWnd_DeleteAllTasks(This);
@@ -1604,16 +1632,21 @@ TaskSwichWnd_HandleItemPaint(IN OUT PTASK_SWITCH_WND This,
     HFONT hCaptionFont, hBoldCaptionFont;
     LRESULT Ret = CDRF_DODEFAULT;
     HMODULE hUser32;
+    PTASK_GROUP TaskGroup;
+    PTASK_ITEM TaskItem;
 
 #if TASK_USE_DRAWCAPTIONTEMP != 0
 
     UINT uidctFlags = DC_TEXT | DC_ICON | DC_NOSENDMSG;
 
 #endif
-
-    if (!IS_TASKGROUP_PTR(nmtbcd->nmcd.lItemlParam))
+    TaskItem = FindTaskItemByIndex(This,
+                                   (INT)nmtbcd->nmcd.dwItemSpec);
+    TaskGroup = FindTaskGroupByIndex(This,
+                                     (INT)nmtbcd->nmcd.dwItemSpec);
+    if (TaskGroup == NULL && TaskItem != NULL)
     {
-        PTASK_ITEM TaskItem = GET_TASKITEM_PTR(nmtbcd->nmcd.lItemlParam);
+        ASSERT(TaskItem != NULL);
 
         if (TaskItem != NULL && IsWindow(TaskItem->hWnd))
         {
@@ -1717,14 +1750,9 @@ TaskSwichWnd_HandleItemPaint(IN OUT PTASK_SWITCH_WND This,
 
         }
     }
-    else
+    else if (TaskGroup != NULL)
     {
-        PTASK_GROUP TaskGroup = GET_TASKGROUP_PTR(nmtbcd->nmcd.lItemlParam);
-
-        if (TaskGroup != NULL)
-        {
-            /* FIXME: Implement painting for task groups */
-        }
+        /* FIXME: Implement painting for task groups */
     }
 
     return Ret;

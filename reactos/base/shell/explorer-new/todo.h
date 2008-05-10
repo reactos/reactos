@@ -1,6 +1,10 @@
 #ifndef __TODO_H
 #define __TODO_H
 
+#ifdef INTERFACE
+#undef INTERFACE
+#endif
+
 /* FIXME: Ugly hack!!! FIX ASAP! Move to uuid! */
 static const GUID IID_HACK_IShellView2 = {0x88E39E80,0x3578,0x11CF,{0xAE,0x69,0x08,0x00,0x2B,0x2E,0x12,0x62}};
 #define IID_IShellView2 IID_HACK_IShellView2

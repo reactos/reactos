@@ -217,7 +217,7 @@ IDropTargetImpl_DragEnter(IN OUT IDropTarget *iface,
     hr = IDropTargetHelper_DragEnter(This->DropTargetHelper,
                                      This->hwndTarget,
                                      pDataObject,
-                                     &pt,
+                                     (POINT *)&pt,
                                      *pdwEffect);
 
     if (SUCCEEDED(hr))
@@ -274,7 +274,7 @@ IDropTargetImpl_DragOver(IN OUT IDropTarget *iface,
     HRESULT hr;
 
     hr = IDropTargetHelper_DragOver(This->DropTargetHelper,
-                                    &pt,
+                                    (POINT *)&pt,
                                     *pdwEffect);
 
     if (SUCCEEDED(hr))
@@ -350,7 +350,7 @@ IDropTargetImpl_Drop(IN OUT IDropTarget *iface,
 
     hr = IDropTargetHelper_Drop(This->DropTargetHelper,
                                 pDataObject,
-                                &pt,
+                                (POINT *)&pt,
                                 *pdwEffect);
 
     if (SUCCEEDED(hr) && This->CanDrop)

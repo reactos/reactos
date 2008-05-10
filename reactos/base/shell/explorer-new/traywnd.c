@@ -1010,8 +1010,7 @@ ITrayWindowImpl_UpdateStartButton(IN OUT ITrayWindowImpl *This,
                           sizeof(bmp),
                           &bmp) != 0)
             {
-                Size.cx += max(bmp.bmWidth,
-                               GetSystemMetrics(SM_CXMINIMIZED));
+                Size.cx += bmp.bmWidth;
                 Size.cy += max(bmp.bmHeight,
                                GetSystemMetrics(SM_CYCAPTION));
             }
