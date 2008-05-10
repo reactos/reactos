@@ -38,6 +38,18 @@ HKLM,"SYSTEM\CurrentControlSet\Control\IDConfigDB","CurrentConfig",0x00010001,0x
 HKLM,"SYSTEM\CurrentControlSet\Control\IDConfigDB\Hardware Profiles\0000","FriendlyName",0x00000000,"New Hardware Profile"
 
 ; Keyboard Layouts
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000401","Layout File",0x00000000,"kbda1.dll"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000401","Layout Text",0x00000000,"Arabic (101)"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000401","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5084"
+
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00010401","Layout File",0x00000000,"kbda2.dll"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00010401","Layout Text",0x00000000,"Arabic (102)"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00010401","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5085"
+
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00020401","Layout File",0x00000000,"kbda3.dll"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00020401","Layout Text",0x00000000,"Arabic (102) AZERTY"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00020401","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5086"
+
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00040402","Layout File",0x00000000,"kbdbgm.dll"
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00040402","Layout Text",0x00000000,"Bulgarian BDS 5237-1978"
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00040402","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5136"
@@ -188,6 +200,10 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00010419","Layout File",
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00010419","Layout Text",0x00000000,"Russian (Typewriter)"
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00010419","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5056"
 
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000041a","Layout File",0x00000000,"kbdcr.dll"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000041a","Layout Text",0x00000000,"Croatian"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000041a","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5030"
+
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000041b","Layout File",0x00000000,"kbdsk.dll"
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000041b","Layout Text",0x00000000,"Slovak"
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000041b","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5039"
@@ -232,6 +248,10 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000042b","Layout File",
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000042b","Layout Text",0x00000000,"Armenian Eastern"
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000042b","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5120"
 
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0001042b","Layout File",0x00000000,"kbdarmw.dll"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0001042b","Layout Text",0x00000000,"Armenian Eastern"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0001042b","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5121"
+
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000042c","Layout File",0x00000000,"kbdazel.dll"
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000042c","Layout Text",0x00000000,"Azeri Latin"
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000042c","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5117"
@@ -248,6 +268,10 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000437","Layout File",
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000437","Layout Text",0x00000000,"Georgian"
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000437","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5119"
 
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000439","Layout File",0x00000000,"kbdindev.dll"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000439","Layout Text",0x00000000,"Devanagari - INSCRIPT"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000439","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5096"
+
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000043f","Layout File",0x00000000,"kbdkaz.dll"
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000043f","Layout Text",0x00000000,"Kazakh"
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000043f","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5113"
@@ -259,6 +283,22 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000843","Layout Displa
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000444","Layout File",0x00000000,"kbdtat.dll"
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000444","Layout Text",0x00000000,"Tatar"
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000444","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5116"
+
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000445","Layout File",0x00000000,"kbdinben.dll"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000445","Layout Text",0x00000000,"Bengali"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000445","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5135"
+
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000447","Layout File",0x00000000,"kbdinguj.dll"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000447","Layout Text",0x00000000,"Gujarati"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000447","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5097"
+
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000044c","Layout File",0x00000000,"kbdinmal.dll"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000044c","Layout Text",0x00000000,"Malayalam"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000044c","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5139"
+
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000044d","Layout File",0x00000000,"kbdinasa.dll"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000044d","Layout Text",0x00000000,"ASSAMESE - INSCRIPT"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000044d","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5177"
 
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000455","Layout File",0x00000000,"kbdbur.dll"
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000455","Layout Text",0x00000000,"Burmese"

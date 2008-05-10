@@ -139,8 +139,12 @@ dll\directx\wine\d3d8\d3d8.dll                      1
 dll\directx\wine\wined3d\wined3d.dll                1
 dll\directx\wine\d3d9\d3d9.dll                      1
 
+dll\keyboard\kbda1\kbda1.dll                        1
+dll\keyboard\kbda2\kbda2.dll                        1
+dll\keyboard\kbda3\kbda3.dll                        1
 dll\keyboard\kbdal\kbdal.dll                        1
 dll\keyboard\kbdarme\kbdarme.dll                    1
+dll\keyboard\kbdarmw\kbdarmw.dll                    1
 dll\keyboard\kbdaze\kbdaze.dll                      1
 dll\keyboard\kbdazel\kbdazel.dll                    1
 dll\keyboard\kbdbgm\kbdbgm.dll                      1
@@ -151,6 +155,7 @@ dll\keyboard\kbdbga\kbdbga.dll                      1
 dll\keyboard\kbdbe\kbdbe.dll                        1
 dll\keyboard\kbdbur\kbdbur.dll                      1
 dll\keyboard\kbdcan\kbdcan.dll                      1
+dll\keyboard\kbdcr\kbdcr.dll                        1
 dll\keyboard\kbdcz1\kbdcz1.dll                      1
 dll\keyboard\kbdda\kbdda.dll                        1
 dll\keyboard\kbddv\kbddv.dll                        1
@@ -168,6 +173,11 @@ dll\keyboard\kbdhe\kbdhe.dll                        1
 dll\keyboard\kbdheb\kbdheb.dll                      1
 dll\keyboard\kbdhu\kbdhu.dll                        1
 dll\keyboard\kbdic\kbdic.dll                        1
+dll\keyboard\kbdinasa\kbdinasa.dll                  1
+dll\keyboard\kbdinben\kbdinben.dll                  1
+dll\keyboard\kbdindev\kbdindev.dll                  1
+dll\keyboard\kbdinguj\kbdinguj.dll                  1
+dll\keyboard\kbdinmal\kbdinmal.dll                  1
 dll\keyboard\kbdit\kbdit.dll                        1
 dll\keyboard\kbdja\kbdja.dll                        1
 dll\keyboard\kbdkaz\kbdkaz.dll                      1
