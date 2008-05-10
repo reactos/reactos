@@ -36,8 +36,8 @@ static MUI_ENTRY esESLanguagePageEntries[] =
     {
         0,
         0,
-        "   ENTER = Continuar  R = Reparar F3 = Salir",
-        TEXT_TYPE_STATUS
+        "   ENTER = Continuar F3 = Salir",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -112,8 +112,8 @@ static MUI_ENTRY esESWelcomePageEntries[] =
     {
         0,
         0,
-        "   ENTER = Continuar  R = Reparar F3 = Salir",
-        TEXT_TYPE_STATUS
+        "   ENTER = Continuar  R = Reparar  L = Licencia  F3 = Salir",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -207,7 +207,7 @@ static MUI_ENTRY esESIntroPageEntries[] =
         0,
         0,
         "   ENTER = Continuar   F3 = Salir",
-        TEXT_TYPE_STATUS
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -330,8 +330,8 @@ static MUI_ENTRY esESLicensePageEntries[] =
     {
         0,
         0,
-        "   ENTER = Regresar",
-        TEXT_TYPE_STATUS
+        "ENTER = Regresar",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -424,7 +424,7 @@ static MUI_ENTRY esESDevicePageEntries[] =
         0,
         0,
         "   ENTER = Continuar   F3 = Salir",
-        TEXT_TYPE_STATUS
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -487,8 +487,8 @@ static MUI_ENTRY esESRepairPageEntries[] =
     {
         0,
         0,
-        "ESC = Men£ inicial ENTER = Reiniciar",
-        TEXT_TYPE_STATUS
+        "ESC = Men£ inicial  U = Actualizar  R = Recuperar  ENTER = Reiniciar",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -539,7 +539,7 @@ static MUI_ENTRY esESComputerPageEntries[] =
         0,
         0,
         "   ENTER = Continuar   ESC = Cancelar   F3 = Salir",
-        TEXT_TYPE_STATUS
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -579,7 +579,7 @@ static MUI_ENTRY esESFlushPageEntries[] =
         0,
         0,
         "Vaciando la cache",
-        TEXT_TYPE_STATUS
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -624,8 +624,8 @@ static MUI_ENTRY esESQuitPageEntries[] =
     {
         0,
         0,
-        "   Por favor, espere...",
-        TEXT_TYPE_STATUS,
+        "Por favor, espere...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
     },
     {
         0,
@@ -676,7 +676,7 @@ static MUI_ENTRY esESDisplayPageEntries[] =
         0,
         0,
         "   ENTER = Continuar   ESC = Cancelar   F3 = Salir",
-        TEXT_TYPE_STATUS
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -722,7 +722,7 @@ static MUI_ENTRY esESSuccessPageEntries[] =
         0,
         0,
         "   ENTER = Reiniciar su equipo",
-        TEXT_TYPE_STATUS
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -768,7 +768,7 @@ static MUI_ENTRY esESBootPageEntries[] =
         0,
         0,
         "   ENTER = Continuar   F3 = Salir",
-        TEXT_TYPE_STATUS
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -826,8 +826,8 @@ static MUI_ENTRY esESSelectPartitionEntries[] =
     {
         0,
         0,
-        "   Por favor, espere...",
-        TEXT_TYPE_STATUS
+        "Por favor, espere...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -913,7 +913,7 @@ static MUI_ENTRY esESInstallDirectoryEntries[] =
         0,
         0,
         "   ENTER = Continuar   F3 = Salir",
-        TEXT_TYPE_STATUS
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -950,9 +950,9 @@ static MUI_ENTRY esESFileCopyEntries[] =
         TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
     },
     {
+        50,
         0,
-        0,
-        "                                                           \xB3 Por favor, espere...    ",
+        "\xB3 Por favor, espere...",     
         TEXT_TYPE_STATUS
     },
     {
@@ -999,7 +999,7 @@ static MUI_ENTRY esESBootLoaderEntries[] =
         0,
         0,
         "   ENTER = Continuar   F3 = Salir",
-        TEXT_TYPE_STATUS
+        TEXT_TYPE_STATUS  | TEXT_PADDING_BIG
     },
     {
         0,
@@ -1051,7 +1051,7 @@ static MUI_ENTRY esESKeyboardSettingsEntries[] =
         0,
         0,
         "   ENTER = Continuar   ESC = Cancelar   F3 = Salir",
-        TEXT_TYPE_STATUS
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -1103,7 +1103,7 @@ static MUI_ENTRY esESLayoutSettingsEntries[] =
         0,
         0,
         "   ENTER = Continuar   ESC = Cancelar   F3 = Salir",
-        TEXT_TYPE_STATUS
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -1131,8 +1131,8 @@ static MUI_ENTRY esESPrepareCopyEntries[] =
     {
         0,
         0,
-        "   Creando la lista de archivos a copiar...",
-        TEXT_TYPE_STATUS
+        "Creando la lista de archivos a copiar...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -1179,7 +1179,7 @@ static MUI_ENTRY esESSelectFSEntries[] =
         0,
         0,
         "   ENTER = Continuar   ESC = Cancelar   F3 = Salir",
-        TEXT_TYPE_STATUS
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
 
     {
@@ -1226,7 +1226,7 @@ static MUI_ENTRY esESDeletePartitionEntries[] =
         0,
         0,
         "   D = Borrar Partici¢n   ESC = Cancelar   F3 = Salir",
-        TEXT_TYPE_STATUS
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -1254,7 +1254,7 @@ static MUI_ENTRY esESRegistryEntries[] =
         0,
         0,
         "   Creando la estructura del registro...",
-        TEXT_TYPE_STATUS
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,

@@ -1463,8 +1463,8 @@ MUI_ERROR itITErrorEntries[] =
     },
     {
         //ERROR_ADDING_KBLAYOUTS,
-        "Setup failed to add keyboard layouts to registry.\n"
-        "ENTER = Reboot computer"
+        "Impossibile aggiungere le disposizioni di tastiera al registry.\n"
+        "INVIO = Riavviare il computer"
     },
     {
         NULL,
@@ -1686,7 +1686,7 @@ MUI_STRING itITStrings[] =
     {STRING_GB,
     "GB"},
     {STRING_ADDKBLAYOUTS,
-    "Adding keyboard layouts"},
+    "Aggiunta delle disposizioni di tastiera"},
     {0, 0}
 };
 

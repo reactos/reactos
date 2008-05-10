@@ -103,7 +103,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
 CAPTION "Opzioni del puntatore"
 FONT 8, "MS Shell Dlg"
 BEGIN
-  GROUPBOX "Moto", -1, 5, 5, 230, 60
+  GROUPBOX "Movimento", -1, 5, 5, 230, 60
   LTEXT "Scegli una velocità per il puntatore:", -1, 60, 15, 130, 10
   LTEXT "Lento", -1, 60, 30, 20, 10
   CONTROL "",IDC_SLIDER_MOUSE_SPEED, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 90, 30, 70, 17
@@ -134,7 +134,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
   GROUPBOX "Scorrimento", -1, 5, 5, 230, 80
   ICON IDI_MOUSE_WHEEL, IDC_ICON_WHEEL, 20, 20, 32, 32
-  LTEXT "Gira la rotella una tacca per scorrere", -1, 60, 15, 150, 10
+  LTEXT "Gira la rotella di una tacca per scorrere", -1, 60, 15, 150, 10
   RADIOBUTTON "Il seguente numero di linee per volta", IDC_RADIO_WHEEL_SCROLL_LINES, 60, 30, 150, 10, WS_VISIBLE | WS_GROUP | WS_TABSTOP
   RADIOBUTTON "&Uno schermo alla volta", IDC_RADIO_WHEEL_SCROLL_PAGE, 60, 65, 90, 10
   EDITTEXT IDC_EDIT_WHEEL_SCROLL_LINES, 70, 45, 60, 15, ES_RIGHT | WS_VISIBLE | WS_GROUP | WS_TABSTOP
@@ -170,5 +170,5 @@ BEGIN
   IDS_REMOVE_TEXT "Confermate di voler rimuovere lo schema dei cursori '%s'?"
   IDS_OVERWRITE_TITLE "Sovrascrittura dello schema dei cursori"
   IDS_OVERWRITE_TEXT "Il nome dello schema dei cursori è già in uso. Confermate di voler sovrascrivere lo schema dei cursori?"
-  IDS_ANIMATE_CURSOR "Animated Cursor"
+  IDS_ANIMATE_CURSOR "Cursori animati"
 END

@@ -197,7 +197,7 @@ BEGIN
     IDS_CMT_SCREENSHOT  "Salva una schermata"
     IDS_CMT_DEVMGMT     "Lancia la Gestione periferiche"
     IDS_CMT_SERVMAN     "Lancia la Gestione dei servizi"
-    IDS_CMT_RDESKTOP    "Aviia il Desktop remoto"
+    IDS_CMT_RDESKTOP    "Avvia il Desktop remoto"
 END
 
 STRINGTABLE

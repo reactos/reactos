@@ -333,10 +333,10 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_FLT_REGFILE         "Registration File"
-    IDS_FLT_REGFILES        "File di Registratione"
+    IDS_FLT_REGFILE         "File di Registrazione"
+    IDS_FLT_REGFILES        "File di Registrazione"
     IDS_FLT_REGFILES_FLT    "*.reg"
-    IDS_FLT_REGEDIT4        "File di Registratione Win9x/NT4 (REGEDIT4)"
+    IDS_FLT_REGEDIT4        "File di Registrazione Win9x/NT4 (REGEDIT4)"
     IDS_FLT_REGEDIT4_FLT    "*.reg"
     IDS_FLT_ALLFILES        "Tutti i file (*.*)"
     IDS_FLT_ALLFILES_FLT    "*.*"

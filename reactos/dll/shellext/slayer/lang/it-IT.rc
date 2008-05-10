@@ -34,5 +34,5 @@ END
 STRINGTABLE
 BEGIN
   IDS_SLAYER "Slayer"
-  IDS_DESCRIPTION "Estensione dell'ambiente per la compatibilià delle applicazioni"
+  IDS_DESCRIPTION "Estensione dell'ambiente per la compatibilità delle applicazioni"
 END
