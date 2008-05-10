@@ -127,8 +127,10 @@ void ME_CheckCharOffsets(ME_TextEditor *editor)
           p->member.run.nFlags,
           p->member.run.style->fmt.dwMask & p->member.run.style->fmt.dwEffects);
         assert(ofs == p->member.run.nCharOfs);
-        if (p->member.run.nFlags & MERF_ENDPARA)
-          ofs += (editor->bEmulateVersion10 ? 2 : 1);
+        if (p->member.run.nFlags & MERF_ENDPARA) {
+          assert(p->member.run.nCR + p->member.run.nLF > 0);
+          ofs += p->member.run.nCR + p->member.run.nLF;
+        }
         else
           ofs += ME_StrLen(p->member.run.strText);
         break;
@@ -209,10 +211,12 @@ void ME_RunOfsFromCharOfs(ME_TextEditor *editor, int nCharOfs, ME_DisplayItem **
         }
         *ppRun = pNext;
       }
-      /* the handling of bEmulateVersion10 may be a source of many bugs, I'm afraid */
-      eollen = (editor->bEmulateVersion10 ? 2 : 1);
+      /* Recover proper character length of this line break */
+      eollen = (*ppRun)->member.run.nCR + (*ppRun)->member.run.nLF;
       if (nCharOfs >= nParaOfs + (*ppRun)->member.run.nCharOfs &&
         nCharOfs < nParaOfs + (*ppRun)->member.run.nCharOfs + eollen) {
+        /* FIXME: Might cause problems when actually requiring an offset in the
+           middle of a run that is considered a single line break */
         *pOfs = 0;
         return;
       }

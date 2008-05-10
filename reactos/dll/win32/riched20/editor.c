@@ -115,7 +115,7 @@
   + EM_SETSCROLLPOS 3.0
   - EM_SETTABSTOPS 3.0
   - EM_SETTARGETDEVICE (partial)
-  + EM_SETTEXTEX 3.0 (no rich text insertion handling, proper style?)
+  + EM_SETTEXTEX 3.0 (proper style?)
   - EM_SETTEXTMODE 2.0
   - EM_SETTYPOGRAPHYOPTIONS 3.0
   + EM_SETUNDOLIMIT 2.0
@@ -620,31 +620,31 @@ static void ME_RTFParAttrHook(RTF_Info *info)
   case rtfBorderSingle:
     ME_GetSelectionParaFormat(info->editor, &fmt);
     /* we assume that borders have been created before (RTF spec) */
-    fmt.wBorders &= ~0x70;
+    fmt.wBorders &= ~0x700;
     fmt.wBorders |= 1 << 8;
     break;
   case rtfBorderThick:
     ME_GetSelectionParaFormat(info->editor, &fmt);
     /* we assume that borders have been created before (RTF spec) */
-    fmt.wBorders &= ~0x70;
+    fmt.wBorders &= ~0x700;
     fmt.wBorders |= 2 << 8;
     break;
   case rtfBorderShadow:
     ME_GetSelectionParaFormat(info->editor, &fmt);
     /* we assume that borders have been created before (RTF spec) */
-    fmt.wBorders &= ~0x70;
+    fmt.wBorders &= ~0x700;
     fmt.wBorders |= 10 << 8;
     break;
   case rtfBorderDouble:
     ME_GetSelectionParaFormat(info->editor, &fmt);
     /* we assume that borders have been created before (RTF spec) */
-    fmt.wBorders &= ~0x70;
+    fmt.wBorders &= ~0x700;
     fmt.wBorders |= 7 << 8;
     break;
   case rtfBorderDot:
     ME_GetSelectionParaFormat(info->editor, &fmt);
     /* we assume that borders have been created before (RTF spec) */
-    fmt.wBorders &= ~0x70;
+    fmt.wBorders &= ~0x700;
     fmt.wBorders |= 11 << 8;
     break;
   case rtfBorderWidth:
@@ -1022,13 +1022,14 @@ ME_StreamInFill(ME_InStream *stream)
   stream->dwUsed = 0;
 }
 
-static LRESULT ME_StreamIn(ME_TextEditor *editor, DWORD format, EDITSTREAM *stream)
+static LRESULT ME_StreamIn(ME_TextEditor *editor, DWORD format, EDITSTREAM *stream, BOOL stripLastCR)
 {
   RTF_Info parser;
   ME_Style *style;
   int from, to, to2, nUndoMode;
   int nEventMask = editor->nEventMask;
   ME_InStream inStream;
+  BOOL invalidRTF = FALSE;
 
   TRACE("stream==%p hWnd==%p format==0x%X\n", stream, editor->hWnd, format);
   editor->nEventMask = 0;
@@ -1068,15 +1069,16 @@ static LRESULT ME_StreamIn(ME_TextEditor *editor, DWORD format, EDITSTREAM *stre
     ME_StreamInFill(&inStream);
     if (!inStream.editstream->dwError)
     {
-      if (strncmp(inStream.buffer, "{\\rtf", 5) && strncmp(inStream.buffer, "{\\urtf", 6))
+      if ((!editor->bEmulateVersion10 && strncmp(inStream.buffer, "{\\rtf", 5) && strncmp(inStream.buffer, "{\\urtf", 6))
+	|| (editor->bEmulateVersion10 && *inStream.buffer != '{'))
       {
-        format &= ~SF_RTF;
-        format |= SF_TEXT;
+        invalidRTF = TRUE;
+        inStream.editstream->dwError = -16;
       }
     }
   }
 
-  if (!inStream.editstream->dwError)
+  if (!invalidRTF && !inStream.editstream->dwError)
   {
     if (format & SF_RTF) {
       /* setup the RTF parser */
@@ -1099,6 +1101,24 @@ static LRESULT ME_StreamIn(ME_TextEditor *editor, DWORD format, EDITSTREAM *stre
       RTFDestroy(&parser);
       if (parser.lpRichEditOle)
         IRichEditOle_Release(parser.lpRichEditOle);
+
+      /* Remove last line break, as mandated by tests. This is not affected by
+         CR/LF counters, since RTF streaming presents only \para tokens, which
+         are converted according to the standard rules: \r for 2.0, \r\n for 1.0
+       */
+      if (stripLastCR) {
+        int newfrom, newto;
+        ME_GetSelection(editor, &newfrom, &newto);
+        if (newto > to + (editor->bEmulateVersion10 ? 1 : 0)) {
+          WCHAR lastchar[3] = {'\0', '\0'};
+          int linebreakSize = editor->bEmulateVersion10 ? 2 : 1;
+
+          ME_GetTextW(editor, lastchar, newto - linebreakSize, linebreakSize, 0);
+          if (lastchar[0] == '\r' && (lastchar[1] == '\n' || lastchar[1] == '\0')) {
+            ME_InternalDeleteText(editor, newto - linebreakSize, linebreakSize);
+          }
+        }
+      }
 
       style = parser.style;
     }
@@ -1124,10 +1144,7 @@ static LRESULT ME_StreamIn(ME_TextEditor *editor, DWORD format, EDITSTREAM *stre
 
   ME_ReleaseStyle(style);
   editor->nEventMask = nEventMask;
-  if (editor->bRedraw)
-  {
-    ME_UpdateRepaint(editor);
-  }
+  ME_UpdateRepaint(editor);
   if (!(format & SFF_SELECTION)) {
     ME_ClearTempStyle(editor);
   }
@@ -1169,7 +1186,7 @@ ME_StreamInRTFString(ME_TextEditor *editor, BOOL selection, char *string)
   data.pos = 0;
   es.dwCookie = (DWORD)&data;
   es.pfnCallback = ME_ReadFromRTFString;
-  ME_StreamIn(editor, SF_RTF | (selection ? SFF_SELECTION : 0), &es);
+  ME_StreamIn(editor, SF_RTF | (selection ? SFF_SELECTION : 0), &es, FALSE);
 }
 
 
@@ -1177,6 +1194,7 @@ ME_DisplayItem *
 ME_FindItemAtOffset(ME_TextEditor *editor, ME_DIType nItemType, int nOffset, int *nItemOffset)
 {
   ME_DisplayItem *item = ME_FindItemFwd(editor->pBuffer->pFirst, diParagraph);
+  int runLength;
   
   while (item && item->member.para.next_para->member.para.nCharOfs <= nOffset)
     item = ME_FindItemFwd(item, diParagraph);
@@ -1193,9 +1211,27 @@ ME_FindItemAtOffset(ME_TextEditor *editor, ME_DIType nItemType, int nOffset, int
   
   do {
     item = ME_FindItemFwd(item, diRun);
-  } while (item && (item->member.run.nCharOfs + ME_StrLen(item->member.run.strText) <= nOffset));
+    runLength = ME_StrLen(item->member.run.strText);
+    if (item->member.run.nFlags & MERF_ENDPARA)
+      runLength = item->member.run.nCR + item->member.run.nLF;
+  } while (item && (item->member.run.nCharOfs + runLength <= nOffset));
   if (item) {
     nOffset -= item->member.run.nCharOfs;
+
+    /* Special case: nOffset may not point exactly at the division between the
+       \r and the \n in 1.0 emulation. If such a case happens, it is sent
+       into the next run, if one exists
+     */
+    if (   item->member.run.nFlags & MERF_ENDPARA
+        && nOffset == item->member.run.nCR
+        && item->member.run.nLF > 0) {
+      ME_DisplayItem *nextItem;
+      nextItem = ME_FindItemFwd(item, diRun);
+      if (nextItem) {
+        nOffset = 0;
+        item = nextItem;
+      }
+    }
     if (nItemOffset)
       *nItemOffset = nOffset;
   }
@@ -1227,12 +1263,29 @@ ME_FindText(ME_TextEditor *editor, DWORD flags, const CHARRANGE *chrg, const WCH
   else
     nMax = chrg->cpMax > nTextLen ? nTextLen : chrg->cpMax;
   
+  /* In 1.0 emulation, if cpMax reaches end of text, add the FR_DOWN flag */
+  if (editor->bEmulateVersion10 && nMax == nTextLen)
+  {
+    flags |= FR_DOWN;
+  }
+
+  /* In 1.0 emulation, cpMin must always be no greater than cpMax */
+  if (editor->bEmulateVersion10 && nMax < nMin)
+  {
+    if (chrgText)
+    {
+      chrgText->cpMin = -1;
+      chrgText->cpMax = -1;
+    }
+    return -1;
+  }
+
   /* when searching up, if cpMin < cpMax, then instead of searching
    * on [cpMin,cpMax], we search on [0,cpMin], otherwise, search on
    * [cpMax, cpMin]. The exception is when cpMax is -1, in which
    * case, it is always bigger than cpMin.
    */
-  if (!(flags & FR_DOWN))
+  if (!editor->bEmulateVersion10 && !(flags & FR_DOWN))
   {
     int nSwap = nMax;
 
@@ -1630,6 +1683,8 @@ ME_TextEditor *ME_MakeEditor(HWND hWnd) {
   else
     ed->cPasswordMask = 0;
   
+  ed->notified_cr.cpMin = ed->notified_cr.cpMax = 0;
+
   return ed;
 }
 
@@ -1922,7 +1977,7 @@ static LRESULT RichEditWndProc_common(HWND hWnd, UINT msg, WPARAM wParam,
 /* Messages specific to Richedit controls */
   
   case EM_STREAMIN:
-   return ME_StreamIn(editor, wParam, (EDITSTREAM*)lParam);
+   return ME_StreamIn(editor, wParam, (EDITSTREAM*)lParam, TRUE);
   case EM_STREAMOUT:
    return ME_StreamOut(editor, wParam, (EDITSTREAM *)lParam);
   case WM_GETDLGCODE:
@@ -2117,17 +2172,20 @@ static LRESULT RichEditWndProc_common(HWND hWnd, UINT msg, WPARAM wParam,
     wszText = lParam ? ME_ToUnicode(pStruct->codepage == 1200, (void *)lParam) : NULL;
     len = wszText ? lstrlenW(wszText) : 0;
 
-    /* FIXME: this should support RTF strings too, according to MSDN */
     if (pStruct->flags & ST_SELECTION) {
       ME_GetSelection(editor, &from, &to);
       style = ME_GetSelectionInsertStyle(editor);
       ME_InternalDeleteText(editor, from, to - from);
-      ME_InsertTextFromCursor(editor, 0, wszText, len, style);
+      if (pStruct->codepage != 1200 && lParam && !strncmp((char *)lParam, "{\\rtf", 5))
+          ME_StreamInRTFString(editor, 0, (char *)lParam);
+      else ME_InsertTextFromCursor(editor, 0, wszText, len, style);
       ME_ReleaseStyle(style);
     }
     else {
       ME_InternalDeleteText(editor, 0, ME_GetTextLength(editor));
-      ME_InsertTextFromCursor(editor, 0, wszText, len, editor->pBuffer->pDefaultStyle);
+      if (pStruct->codepage != 1200 && lParam && !strncmp((char *)lParam, "{\\rtf", 5))
+          ME_StreamInRTFString(editor, 0, (char *)lParam);
+      else ME_InsertTextFromCursor(editor, 0, wszText, len, editor->pBuffer->pDefaultStyle);
       len = 1;
     }
     ME_CommitUndo(editor);
@@ -2166,7 +2224,7 @@ static LRESULT RichEditWndProc_common(HWND hWnd, UINT msg, WPARAM wParam,
     return lColor;
   }
   case EM_GETMODIFY:
-    return editor->nModifyStep == 0 ? 0 : 1;
+    return editor->nModifyStep == 0 ? 0 : -1;
   case EM_SETMODIFY:
   {
     if (wParam)
@@ -2209,8 +2267,10 @@ static LRESULT RichEditWndProc_common(HWND hWnd, UINT msg, WPARAM wParam,
     } else if (wParam == SCF_ALL) {
       if (editor->mode & TM_PLAINTEXT)
         ME_SetDefaultCharFormat(editor, p);
-      else
+      else {
         ME_SetCharFormat(editor, 0, ME_GetTextLength(editor), p);
+        editor->nModifyStep = 1;
+      }
     } else if (editor->mode & TM_PLAINTEXT) {
       return 0;
     } else {
@@ -2218,8 +2278,8 @@ static LRESULT RichEditWndProc_common(HWND hWnd, UINT msg, WPARAM wParam,
       ME_GetSelection(editor, &from, &to);
       bRepaint = (from != to);
       ME_SetSelectionCharFormat(editor, p);
+      if (from != to) editor->nModifyStep = 1;
     }
-    editor->nModifyStep = 1;
     ME_CommitUndo(editor);
     if (bRepaint)
       ME_RewrapRepaint(editor);
@@ -2394,10 +2454,10 @@ static LRESULT RichEditWndProc_common(HWND hWnd, UINT msg, WPARAM wParam,
     }
     else
       TRACE("WM_SETTEXT - NULL\n");
-    ME_CommitUndo(editor);
-    ME_EmptyUndoStack(editor);
     ME_SetSelection(editor, 0, 0);
     editor->nModifyStep = 0;
+    ME_CommitUndo(editor);
+    ME_EmptyUndoStack(editor);
     ME_UpdateRepaint(editor);
     return 1;
   }
@@ -2431,7 +2491,7 @@ static LRESULT RichEditWndProc_common(HWND hWnd, UINT msg, WPARAM wParam,
     gds.nLength = 0;
     es.dwCookie = (DWORD)&gds;
     es.pfnCallback = dwFormat == SF_RTF ? ME_ReadFromHGLOBALRTF : ME_ReadFromHGLOBALUnicode;
-    ME_StreamIn(editor, dwFormat|SFF_SELECTION, &es);
+    ME_StreamIn(editor, dwFormat|SFF_SELECTION, &es, FALSE);
 
     CloseClipboard();
     return 0;
@@ -2467,6 +2527,7 @@ static LRESULT RichEditWndProc_common(HWND hWnd, UINT msg, WPARAM wParam,
   {
     GETTEXTLENGTHEX how;
 
+    /* CR/LF conversion required in 2.0 mode, verbatim in 1.0 mode */
     how.flags = GTL_CLOSE | (editor->bEmulateVersion10 ? 0 : GTL_USECRLF) | GTL_NUMCHARS;
     how.codepage = unicode ? 1200 : CP_ACP;
     return ME_GetTextLengthEx(editor, &how);
@@ -2532,7 +2593,10 @@ static LRESULT RichEditWndProc_common(HWND hWnd, UINT msg, WPARAM wParam,
     else
     {
       /* potentially each char may be a CR, why calculate the exact value with O(N) when
-        we can just take a bigger buffer? :) */
+        we can just take a bigger buffer? :)
+        The above assumption still holds with CR/LF counters, since CR->CRLF expansion
+        occurs only in richedit 2.0 mode, in which line breaks have only one CR
+       */
       int crlfmul = (ex->flags & GT_USECRLF) ? 2 : 1;
       LPWSTR buffer;
       DWORD buflen = ex->cb;
@@ -2574,12 +2638,12 @@ static LRESULT RichEditWndProc_common(HWND hWnd, UINT msg, WPARAM wParam,
       rng->chrg.cpMin, rng->chrg.cpMax, unicode,
       editor->bEmulateVersion10, ME_GetTextLength(editor));
     if (unicode)
-      return ME_GetTextW(editor, rng->lpstrText, rng->chrg.cpMin, rng->chrg.cpMax-rng->chrg.cpMin, editor->bEmulateVersion10);
+      return ME_GetTextW(editor, rng->lpstrText, rng->chrg.cpMin, rng->chrg.cpMax-rng->chrg.cpMin, 0);
     else
     {
       int nLen = rng->chrg.cpMax-rng->chrg.cpMin;
       WCHAR *p = ALLOC_N_OBJ(WCHAR, nLen+1);
-      int nChars = ME_GetTextW(editor, p, rng->chrg.cpMin, nLen, editor->bEmulateVersion10);
+      int nChars = ME_GetTextW(editor, p, rng->chrg.cpMin, nLen, 0);
       /* FIXME this is a potential security hole (buffer overrun) 
          if you know more about wchar->mbyte conversion please explain
       */
@@ -2592,11 +2656,9 @@ static LRESULT RichEditWndProc_common(HWND hWnd, UINT msg, WPARAM wParam,
   {
     ME_DisplayItem *run;
     const unsigned int nMaxChars = *(WORD *) lParam;
-    unsigned int nEndChars, nCharsLeft = nMaxChars;
+    unsigned int nCharsLeft = nMaxChars;
     char *dest = (char *) lParam;
-    /* rich text editor 1.0 uses \r\n for line end, 2.0 uses just \r; 
-    we need to know how if we have the extra \n or not */
-    int nLF = editor->bEmulateVersion10;
+    BOOL wroteNull = FALSE;
 
     TRACE("EM_GETLINE: row=%d, nMaxChars=%d (%s)\n", (int) wParam, nMaxChars,
           unicode ? "Unicode" : "Ansi");
@@ -2624,36 +2686,68 @@ static LRESULT RichEditWndProc_common(HWND hWnd, UINT msg, WPARAM wParam,
       nCharsLeft -= nCopy;
     }
 
-    /* append \r\0 (or \r\n\0 in 1.0), space allowing */
-    nEndChars = min(nCharsLeft, 2 + nLF);
-    nCharsLeft -= nEndChars;
-    if (unicode)
+    /* append line termination, space allowing */
+    if (nCharsLeft > 0)
     {
-      const WCHAR src[] = {'\r', '\0'};
-      const WCHAR src10[] = {'\r', '\n', '\0'};
-      lstrcpynW((LPWSTR) dest, nLF ? src10 : src, nEndChars);
+      if (run && (run->member.run.nFlags & MERF_ENDPARA))
+      {
+        unsigned int i;
+        /* Write as many \r as encoded in end-of-paragraph, space allowing */
+        for (i = 0; i < run->member.run.nCR && nCharsLeft > 0; i++, nCharsLeft--)
+        {
+          *((WCHAR *)dest) = '\r';
+          dest += unicode ? sizeof(WCHAR) : 1;
+        }
+        /* Write as many \n as encoded in end-of-paragraph, space allowing */
+        for (i = 0; i < run->member.run.nLF && nCharsLeft > 0; i++, nCharsLeft--)
+        {
+          *((WCHAR *)dest) = '\n';
+          dest += unicode ? sizeof(WCHAR) : 1;
+        }
+      }
+      if (nCharsLeft > 0)
+      {
+        if (unicode)
+          *((WCHAR *)dest) = '\0';
+        else
+          *dest = '\0';
+        nCharsLeft--;
+        wroteNull = TRUE;
+      }
     }
-    else
-      lstrcpynA(dest, nLF ? "\r\n" : "\r", nEndChars);
 
-    TRACE("EM_GETLINE: got %u bytes\n", nMaxChars - nCharsLeft);
-
-    if (nEndChars == 2 + nLF)
-      return nMaxChars - nCharsLeft - 1; /* don't count \0 */
-    else
-      return nMaxChars - nCharsLeft;
+    TRACE("EM_GETLINE: got %u characters\n", nMaxChars - nCharsLeft);
+    return nMaxChars - nCharsLeft - (wroteNull ? 1 : 0);
   }
   case EM_GETLINECOUNT:
   {
     ME_DisplayItem *item = editor->pBuffer->pFirst->next;
     int nRows = 0;
 
+    ME_DisplayItem *prev_para = NULL, *last_para = NULL;
+
     while (item != editor->pBuffer->pLast)
     {
       assert(item->type == diParagraph);
+      prev_para = ME_FindItemBack(item, diRun);
+      if (prev_para) {
+        assert(prev_para->member.run.nFlags & MERF_ENDPARA);
+      }
       nRows += item->member.para.nRows;
       item = item->member.para.next_para;
     }
+    last_para = ME_FindItemBack(item, diRun);
+    assert(last_para);
+    assert(last_para->member.run.nFlags & MERF_ENDPARA);
+    if (editor->bEmulateVersion10 && prev_para && last_para->member.run.nCharOfs == 0
+        && prev_para->member.run.nCR == 1 && prev_para->member.run.nLF == 0)
+    {
+      /* In 1.0 emulation, the last solitary \r at the very end of the text
+         (if one exists) is NOT a line break.
+         FIXME: this is an ugly hack. This should have a more regular model. */
+      nRows--;
+    }
+
     TRACE("EM_GETLINECOUNT: nRows==%d\n", nRows);
     return max(1, nRows);
   }
@@ -2707,8 +2801,17 @@ static LRESULT RichEditWndProc_common(HWND hWnd, UINT msg, WPARAM wParam,
     if (item_end->type == diStartRow)
       nNextLineOfs = ME_CharOfsFromRunOfs(editor, ME_FindItemFwd(item_end, diRun), 0);
     else
-      nNextLineOfs = ME_FindItemFwd(item, diParagraphOrEnd)->member.para.nCharOfs
-       - (editor->bEmulateVersion10?2:1);
+    {
+      ME_DisplayItem *endPara;
+
+      nNextLineOfs = ME_FindItemFwd(item, diParagraphOrEnd)->member.para.nCharOfs;
+      endPara = ME_FindItemFwd(item, diParagraphOrEnd);
+      endPara = ME_FindItemBack(endPara, diRun);
+      assert(endPara);
+      assert(endPara->type == diRun);
+      assert(endPara->member.run.nFlags & MERF_ENDPARA);
+      nNextLineOfs -= endPara->member.run.nCR + endPara->member.run.nLF;
+    }
     nChars = nNextLineOfs - nThisLineOfs;
     TRACE("EM_LINELENGTH(%ld)==%d\n",wParam, nChars);
     return nChars;
@@ -3207,7 +3310,12 @@ static LRESULT RichEditWndProc_common(HWND hWnd, UINT msg, WPARAM wParam,
   case EM_SETTARGETDEVICE:
     if (wParam == 0)
     {
-      editor->bWordWrap = (lParam == 0);
+      BOOL new = (lParam == 0);
+      if (editor->bWordWrap != new)
+      {
+        editor->bWordWrap = new;
+        ME_RewrapRepaint(editor);
+      }
     }
     else FIXME("Unsupported yet non NULL device in EM_SETTARGETDEVICE\n");
     break;
@@ -3257,6 +3365,9 @@ LRESULT WINAPI RichEdit10ANSIWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM 
     
     editor->bEmulateVersion10 = TRUE;
     editor->pBuffer->pLast->member.para.nCharOfs = 2;
+    assert(editor->pBuffer->pLast->prev->type == diRun);
+    assert(editor->pBuffer->pLast->prev->member.run.nFlags & MERF_ENDPARA);
+    editor->pBuffer->pLast->prev->member.run.nLF = 1;
   }
   return result;
 }
@@ -3327,6 +3438,9 @@ int ME_GetTextW(ME_TextEditor *editor, WCHAR *buffer, int nStart, int nChars, in
     return 0;
   }
   
+  /* bCRLF flag is only honored in 2.0 and up. 1.0 must always return text verbatim */
+  if (editor->bEmulateVersion10) bCRLF = 0;
+
   if (nStart)
   {
     int nLen = ME_StrLen(item->member.run.strText) - nStart;
@@ -3345,6 +3459,8 @@ int ME_GetTextW(ME_TextEditor *editor, WCHAR *buffer, int nStart, int nChars, in
   while(nChars && item)
   {
     int nLen = ME_StrLen(item->member.run.strText);
+    if (item->member.run.nFlags & MERF_ENDPARA)
+       nLen = item->member.run.nCR + item->member.run.nLF;
     if (nLen > nChars)
       nLen = nChars;
 
@@ -3357,16 +3473,30 @@ int ME_GetTextW(ME_TextEditor *editor, WCHAR *buffer, int nStart, int nChars, in
         nLen = 0;
         nChars = 0;
       } else {
-        *buffer = '\r';
         if (bCRLF)
         {
-          *(++buffer) = '\n';
+          /* richedit 2.0 case - actual line-break is \r but should report \r\n */
+          assert(nLen == 1);
+          *buffer++ = '\r';
+          *buffer = '\n'; /* Later updated by nLen==1 at the end of the loop */
           nWritten++;
         }
-        assert(nLen == 1);
-        /* our end paragraph consists of 2 characters now */
-        if (editor->bEmulateVersion10)
-          nChars--;
+        else
+        {
+          int i, j;
+
+          /* richedit 2.0 verbatim has only \r. richedit 1.0 should honor encodings */
+          i = 0;
+          while (nChars - i > 0 && i < item->member.run.nCR)
+          {
+            buffer[i] = '\r'; i++;
+          }
+          j = 0;
+          while (nChars - i - j > 0 && j < item->member.run.nLF)
+          {
+            buffer[i+j] = '\n'; j++;
+          }
+        }
       }
     }
     else
@@ -3522,7 +3652,6 @@ int ME_AutoURLDetect(ME_TextEditor *editor, WCHAR curChar)
   int car_pos = 0;
   int text_pos=-1;
   int URLmin, URLmax = 0;
-  CHARRANGE url;
   FINDTEXTA ft;
   CHARFORMAT2W cur_format;
   CHARFORMAT2W default_format;
@@ -3576,8 +3705,6 @@ int ME_AutoURLDetect(ME_TextEditor *editor, WCHAR curChar)
       }
       if (text_pos != -1) 
       {
-        url.cpMin=text_pos;
-        url.cpMax=car_pos-1;
         ME_SetCharFormat(editor, text_pos, (URLmax-text_pos), &link);
         ME_RewrapRepaint(editor);
         break;

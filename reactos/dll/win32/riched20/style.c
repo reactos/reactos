@@ -327,10 +327,9 @@ ME_LogFontFromStyle(ME_Context* c, LOGFONTW *lf, const ME_Style *s)
 
 void ME_CharFormatFromLogFont(HDC hDC, const LOGFONTW *lf, CHARFORMAT2W *fmt)
 {
-  int rx, ry;
+  int ry;
 
   ME_InitCharFormat2W(fmt);
-  rx = GetDeviceCaps(hDC, LOGPIXELSX);
   ry = GetDeviceCaps(hDC, LOGPIXELSY);
   lstrcpyW(fmt->szFaceName, lf->lfFaceName);
   fmt->dwEffects = 0;
@@ -341,7 +340,7 @@ void ME_CharFormatFromLogFont(HDC hDC, const LOGFONTW *lf, CHARFORMAT2W *fmt)
   if (lf->lfItalic) fmt->dwEffects |= CFM_ITALIC;
   if (lf->lfUnderline) fmt->dwEffects |= CFM_UNDERLINE;
   /* notice that if a logfont was created with underline due to CFM_LINK, this
-      would add an erronious CFM_UNDERLINE. This isn't currently ever a problem */
+      would add an erroneous CFM_UNDERLINE. This isn't currently ever a problem. */
   if (lf->lfStrikeOut) fmt->dwEffects |= CFM_STRIKEOUT;
   fmt->bPitchAndFamily = lf->lfPitchAndFamily;
   fmt->bCharSet = lf->lfCharSet;

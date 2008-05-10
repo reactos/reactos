@@ -470,11 +470,9 @@ BOOL ME_WrapMarkedParagraphs(ME_TextEditor *editor) {
   ME_DisplayItem *item;
   ME_Context c;
   BOOL bModified = FALSE;
-  int yStart = -1, yEnd = -1;
+  int yStart = -1;
 
   ME_InitContext(&c, editor, GetDC(editor->hWnd));
-  c.pt.x = 0;
-  c.pt.y = 0;
   editor->nHeight = 0;
   item = editor->pBuffer->pFirst->next;
   while(item != editor->pBuffer->pLast) {
@@ -499,8 +497,6 @@ BOOL ME_WrapMarkedParagraphs(ME_TextEditor *editor) {
     bModified = bModified | bRedraw;
 
     c.pt.y += item->member.para.nHeight;
-    if (bRedraw)
-      yEnd = c.pt.y;
     item = item->member.para.next_para;
   }
   editor->sizeWindow.cx = c.rcView.right-c.rcView.left;
@@ -509,6 +505,14 @@ BOOL ME_WrapMarkedParagraphs(ME_TextEditor *editor) {
   editor->nTotalLength = c.pt.y;
 
   ME_DestroyContext(&c, editor->hWnd);
+
+  /* Each paragraph may contain multiple rows, which should be scrollable, even
+     if the containing paragraph has nYPos == 0 */
+  item = editor->pBuffer->pFirst;
+  while ((item = ME_FindItemFwd(item, diStartRow)) != NULL) {
+    assert(item->type == diStartRow);
+    editor->nHeight = max(editor->nHeight, item->member.row.nYPos);
+  }
 
   if (bModified || editor->nTotalLength < editor->nLastTotalLength)
     ME_InvalidateMarkedParagraphs(editor);

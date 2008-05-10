@@ -189,9 +189,6 @@ void ME_InsertTextFromCursor(ME_TextEditor *editor, int nCursor,
 void ME_InsertEndRowFromCursor(ME_TextEditor *editor, int nCursor);
 BOOL ME_ArrowKey(ME_TextEditor *ed, int nVKey, BOOL extend, BOOL ctrl);
 
-void ME_InitContext(ME_Context *c, ME_TextEditor *editor, HDC hDC);
-void ME_DestroyContext(ME_Context *c, HWND release);
-ME_Style *GetInsertStyle(ME_TextEditor *editor, int nCursor);
 void ME_MustBeWrapped(ME_Context *c, ME_DisplayItem *para);
 void ME_GetCursorCoordinates(ME_TextEditor *editor, ME_Cursor *pCursor,
                              int *x, int *y, int *height);
@@ -209,6 +206,10 @@ int ME_GetTextLengthEx(ME_TextEditor *editor, const GETTEXTLENGTHEX *how);
 ME_Style *ME_GetSelectionInsertStyle(ME_TextEditor *editor);
 BOOL ME_UpdateSelection(ME_TextEditor *editor, const ME_Cursor *pTempCursor);
 
+/* context.c */
+void ME_InitContext(ME_Context *c, ME_TextEditor *editor, HDC hDC);
+void ME_DestroyContext(ME_Context *c, HWND release);
+
 /* wrap.c */
 BOOL ME_WrapMarkedParagraphs(ME_TextEditor *editor);
 void ME_InvalidateMarkedParagraphs(ME_TextEditor *editor);
@@ -220,7 +221,7 @@ int  ME_twips2pointsY(ME_Context *c, int y);
 ME_DisplayItem *ME_GetParagraph(ME_DisplayItem *run); 
 void ME_GetSelectionParas(ME_TextEditor *editor, ME_DisplayItem **para, ME_DisplayItem **para_end);
 void ME_MakeFirstParagraph(ME_TextEditor *editor);
-ME_DisplayItem *ME_SplitParagraph(ME_TextEditor *editor, ME_DisplayItem *rp, ME_Style *style);
+ME_DisplayItem *ME_SplitParagraph(ME_TextEditor *editor, ME_DisplayItem *rp, ME_Style *style, int numCR, int numLF);
 ME_DisplayItem *ME_JoinParagraphs(ME_TextEditor *editor, ME_DisplayItem *tp);
 void ME_DumpParaStyle(ME_Paragraph *s);
 void ME_DumpParaStyleToBuf(const PARAFORMAT2 *pFmt, char buf[2048]);
@@ -272,17 +273,19 @@ ME_TextEditor *ME_MakeEditor(HWND hWnd);
 void ME_DestroyEditor(ME_TextEditor *editor);
 void ME_SendOldNotify(ME_TextEditor *editor, int nCode);
 void ME_LinkNotify(ME_TextEditor *editor, UINT msg, WPARAM wParam, LPARAM lParam);
-ME_UndoItem *ME_AddUndoItem(ME_TextEditor *editor, ME_DIType type, const ME_DisplayItem *pdi);
-void ME_CommitUndo(ME_TextEditor *editor);
-void ME_Undo(ME_TextEditor *editor);
-void ME_Redo(ME_TextEditor *editor);
-void ME_EmptyUndoStack(ME_TextEditor *editor);
 int ME_GetTextW(ME_TextEditor *editor, WCHAR *buffer, int nStart, int nChars, BOOL bCRLF);
 ME_DisplayItem *ME_FindItemAtOffset(ME_TextEditor *editor, ME_DIType nItemType, int nOffset, int *nItemOffset);
 void ME_StreamInFill(ME_InStream *stream);
 int ME_AutoURLDetect(ME_TextEditor *editor, WCHAR curChar);
 extern int me_debug;
 extern void DoWrap(ME_TextEditor *editor);
+
+/* undo.c */
+ME_UndoItem *ME_AddUndoItem(ME_TextEditor *editor, ME_DIType type, const ME_DisplayItem *pdi);
+void ME_CommitUndo(ME_TextEditor *editor);
+void ME_Undo(ME_TextEditor *editor);
+void ME_Redo(ME_TextEditor *editor);
+void ME_EmptyUndoStack(ME_TextEditor *editor);
 
 /* writer.c */
 LRESULT ME_StreamOutRange(ME_TextEditor *editor, DWORD dwFormat, int nStart, int nTo, EDITSTREAM *stream);

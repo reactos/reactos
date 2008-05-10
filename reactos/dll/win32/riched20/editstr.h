@@ -148,6 +148,7 @@ typedef struct tagME_Run
   POINT pt; /* relative to para's position */
   struct tagME_TableCell *pCell; /* for MERF_CELL: points to respective cell in ME_Paragraph */
   REOBJECT *ole_obj; /* FIXME: should be a union with strText (at least) */
+  int nCR; int nLF;  /* for MERF_ENDPARA: number of \r and \n characters encoded by run */
 } ME_Run;
 
 typedef struct tagME_Document {
@@ -217,6 +218,7 @@ typedef struct tagME_UndoItem
 {
   ME_DisplayItem di;
   int nStart, nLen;
+  int nCR, nLF;      /* used by diUndoSplitParagraph */
 } ME_UndoItem;
 
 typedef struct tagME_TextBuffer
@@ -329,6 +331,9 @@ typedef struct tagME_TextEditor
   /*for IME */
   int imeStartIndex;
   DWORD selofs, linesel, sely;
+
+  /* Track previous notified selection */
+  CHARRANGE notified_cr;
 } ME_TextEditor;
 
 typedef struct tagME_Context

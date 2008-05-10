@@ -2605,7 +2605,8 @@ static void SpecialChar (RTF_Info *info)
 	case rtfSect:
 	case rtfRow:
 	case rtfPar:
-		RTFPutUnicodeChar (info, '\n');
+		RTFPutUnicodeChar (info, '\r');
+		if (info->editor->bEmulateVersion10) RTFPutUnicodeChar (info, '\n');
 		break;
 	case rtfNoBrkSpace:
 		RTFPutUnicodeChar (info, 0x00A0);

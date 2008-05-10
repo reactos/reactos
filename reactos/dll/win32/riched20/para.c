@@ -73,6 +73,8 @@ void ME_MakeFirstParagraph(ME_TextEditor *editor)
   
   run = ME_MakeRun(style, ME_MakeString(wszParagraphSign), MERF_ENDPARA);
   run->member.run.nCharOfs = 0;
+  run->member.run.nCR = 1;
+  run->member.run.nLF = (editor->bEmulateVersion10) ? 1 : 0;
 
   ME_InsertBefore(text->pLast, para);
   ME_InsertBefore(text->pLast, run);
@@ -110,7 +112,7 @@ void ME_MarkForPainting(ME_TextEditor *editor, ME_DisplayItem *first, const ME_D
 }
 
 /* split paragraph at the beginning of the run */
-ME_DisplayItem *ME_SplitParagraph(ME_TextEditor *editor, ME_DisplayItem *run, ME_Style *style)
+ME_DisplayItem *ME_SplitParagraph(ME_TextEditor *editor, ME_DisplayItem *run, ME_Style *style, int numCR, int numLF)
 {
   ME_DisplayItem *next_para = NULL;
   ME_DisplayItem *run_para = NULL;
@@ -119,10 +121,12 @@ ME_DisplayItem *ME_SplitParagraph(ME_TextEditor *editor, ME_DisplayItem *run, ME
   ME_UndoItem *undo = NULL;
   int ofs;
   ME_DisplayItem *pp;
-  int end_len = (editor->bEmulateVersion10 ? 2 : 1);
+  int end_len = numCR + numLF;
   
   assert(run->type == diRun);  
 
+  end_run->member.run.nCR = numCR;
+  end_run->member.run.nLF = numLF;
   run_para = ME_GetParagraph(run);
   assert(run_para->member.para.pFmt->cbSize == sizeof(PARAFORMAT2));
 
@@ -204,7 +208,7 @@ ME_DisplayItem *ME_JoinParagraphs(ME_TextEditor *editor, ME_DisplayItem *tp)
   ME_DisplayItem *pNext, *pFirstRunInNext, *pRun, *pTmp;
   int i, shift;
   ME_UndoItem *undo = NULL;
-  int end_len = (editor->bEmulateVersion10 ? 2 : 1);
+  int end_len;
 
   assert(tp->type == diParagraph);
   assert(tp->member.para.next_para);
@@ -212,6 +216,15 @@ ME_DisplayItem *ME_JoinParagraphs(ME_TextEditor *editor, ME_DisplayItem *tp)
   
   pNext = tp->member.para.next_para;
   
+  /* Need to locate end-of-paragraph run here, in order to know end_len */
+  pRun = ME_FindItemBack(pNext, diRunOrParagraph);
+
+  assert(pRun);
+  assert(pRun->type == diRun);
+  assert(pRun->member.run.nFlags & MERF_ENDPARA);
+
+  end_len = pRun->member.run.nCR + pRun->member.run.nLF;
+
   {
     /* null char format operation to store the original char format for the ENDPARA run */
     CHARFORMAT2W fmt;
@@ -222,18 +235,16 @@ ME_DisplayItem *ME_JoinParagraphs(ME_TextEditor *editor, ME_DisplayItem *tp)
   if (undo)
   {
     undo->nStart = pNext->member.para.nCharOfs - end_len;
+    undo->nCR = pRun->member.run.nCR;
+    undo->nLF = pRun->member.run.nLF;
     assert(pNext->member.para.pFmt->cbSize == sizeof(PARAFORMAT2));
     *undo->di.member.para.pFmt = *pNext->member.para.pFmt;
   }
   
   shift = pNext->member.para.nCharOfs - tp->member.para.nCharOfs - end_len;
   
-  pRun = ME_FindItemBack(pNext, diRunOrParagraph);
   pFirstRunInNext = ME_FindItemFwd(pNext, diRunOrParagraph);
-  
-  assert(pRun);
-  assert(pRun->type == diRun);
-  assert(pRun->member.run.nFlags & MERF_ENDPARA);
+
   assert(pFirstRunInNext->type == diRun);
   
   /* if some cursor points at end of paragraph, make it point to the first
