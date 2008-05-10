@@ -1,11 +1,23 @@
 <?xml version="1.0"?>
 <!DOCTYPE group SYSTEM "../../tools/rbuild/project.dtd">
 <group xmlns:xi="http://www.w3.org/2001/XInclude">
+	<directory name="kbda1">
+		<xi:include href="kbda1/kbda1.rbuild" />
+	</directory>
+	<directory name="kbda2">
+		<xi:include href="kbda2/kbda2.rbuild" />
+	</directory>
+	<directory name="kbda3">
+		<xi:include href="kbda3/kbda3.rbuild" />
+	</directory>
 	<directory name="kbdal">
 		<xi:include href="kbdal/kbdal.rbuild" />
 	</directory>
 	<directory name="kbdarme">
 		<xi:include href="kbdarme/kbdarme.rbuild" />
+	</directory>
+	<directory name="kbdarmw">
+		<xi:include href="kbdarmw/kbdarmw.rbuild" />
 	</directory>
 	<directory name="kbdaze">
 		<xi:include href="kbdaze/kbdaze.rbuild" />
@@ -36,6 +48,9 @@
 	</directory>
 	<directory name="kbdcan">
 		<xi:include href="kbdcan/kbdcan.rbuild" />
+	</directory>
+	<directory name="kbdcr">
+		<xi:include href="kbdcr/kbdcr.rbuild" />
 	</directory>
 	<directory name="kbdcz1">
 		<xi:include href="kbdcz1/kbdcz1.rbuild" />
@@ -87,6 +102,21 @@
 	</directory>
 	<directory name="kbdic">
 		<xi:include href="kbdic/kbdic.rbuild" />
+	</directory>
+	<directory name="kbdinasa">
+		<xi:include href="kbdinasa/kbdinasa.rbuild" />
+	</directory>
+	<directory name="kbdinben">
+		<xi:include href="kbdinben/kbdinben.rbuild" />
+	</directory>
+	<directory name="kbdindev">
+		<xi:include href="kbdindev/kbdindev.rbuild" />
+	</directory>
+	<directory name="kbdinguj">
+		<xi:include href="kbdinguj/kbdinguj.rbuild" />
+	</directory>
+	<directory name="kbdinmal">
+		<xi:include href="kbdinmal/kbdinmal.rbuild" />
 	</directory>
 	<directory name="kbdit">
 		<xi:include href="kbdit/kbdit.rbuild" />
