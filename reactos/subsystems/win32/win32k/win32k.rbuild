@@ -111,6 +111,7 @@
 		<file>csr.c</file>
 		<file>cursoricon.c</file>
 		<file>desktop.c</file>
+		<file>display.c</file>
 		<file>event.c</file>
 		<file>focus.c</file>
 		<file>guicheck.c</file>

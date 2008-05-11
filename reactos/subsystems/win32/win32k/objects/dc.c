@@ -2843,7 +2843,8 @@ GetDisplayNumberFromDeviceName(
  * \todo Don't ignore pDeviceName
  * \todo Implement non-raw mode (only return settings valid for driver and monitor)
  */
-BOOL FASTCALL
+NTSTATUS
+FASTCALL
 IntEnumDisplaySettings(
   IN PUNICODE_STRING pDeviceName  OPTIONAL,
   IN DWORD iModeNum,
@@ -2856,11 +2857,12 @@ IntEnumDisplaySettings(
   PDEVMODEW CachedMode = NULL;
   DEVMODEW DevMode;
   ULONG DisplayNumber;
+  NTSTATUS Status;
 
-  if (!NT_SUCCESS(GetDisplayNumberFromDeviceName(pDeviceName, &DisplayNumber)))
+  Status = GetDisplayNumberFromDeviceName(pDeviceName, &DisplayNumber);
+  if (!NT_SUCCESS(Status))
   {
-    SetLastWin32Error(STATUS_NO_SUCH_DEVICE);
-    return FALSE;
+    return Status;
   }
 
   DPRINT("DevMode->dmSize = %d\n", pDevMode->dmSize);
@@ -2869,8 +2871,7 @@ IntEnumDisplaySettings(
       pDevMode->dmSize != SIZEOF_DEVMODEW_400 &&
       pDevMode->dmSize != SIZEOF_DEVMODEW_500)
   {
-    SetLastWin32Error(STATUS_INVALID_PARAMETER);
-    return FALSE;
+    return STATUS_BUFFER_TOO_SMALL;
   }
 
   if (iModeNum == ENUM_CURRENT_SETTINGS)
@@ -2887,8 +2888,7 @@ IntEnumDisplaySettings(
       CachedMode = &DevMode;
     else
     {
-      SetLastWin32Error(0); /* FIXME: use error code */
-      return FALSE;
+      return STATUS_UNSUCCESSFUL; // FIXME: what status?
     }
     /* FIXME: Maybe look for the matching devmode supplied by the
      *        driver so we can provide driver private/extra data?
@@ -2923,13 +2923,13 @@ IntEnumDisplaySettings(
       if (!FindDriverFileNames(&DriverFileNames, DisplayNumber))
       {
         DPRINT1("FindDriverFileNames failed\n");
-        return FALSE;
+        return STATUS_UNSUCCESSFUL;
       }
 
       if (!IntPrepareDriverIfNeeded())
       {
         DPRINT1("IntPrepareDriverIfNeeded failed\n");
-        return FALSE;
+        return STATUS_UNSUCCESSFUL;
       }
 
       /*
@@ -3009,8 +3009,7 @@ IntEnumDisplaySettings(
             if (CachedDeviceName.Buffer != NULL)
               RtlFreeUnicodeString(&CachedDeviceName);
 
-            SetLastWin32Error(STATUS_NO_MEMORY);
-            return FALSE;
+            return STATUS_NO_MEMORY;
           }
           if (CachedDevModes != NULL)
           {
@@ -3053,8 +3052,7 @@ IntEnumDisplaySettings(
     CachedMode = CachedDevModes;
     if (CachedMode >= CachedDevModesEnd)
     {
-      SetLastWin32Error(STATUS_NO_MORE_ENTRIES);
-      return FALSE;
+      return STATUS_NO_MORE_ENTRIES;
     }
     while (iModeNum-- > 0 && CachedMode < CachedDevModesEnd)
     {
@@ -3063,8 +3061,7 @@ IntEnumDisplaySettings(
     }
     if (CachedMode >= CachedDevModesEnd)
     {
-      SetLastWin32Error(STATUS_NO_MORE_ENTRIES);
-      return FALSE;
+      return STATUS_NO_MORE_ENTRIES;
     }
   }
 
@@ -3074,7 +3071,7 @@ IntEnumDisplaySettings(
   RtlZeroMemory(pDevMode + pDevMode->dmSize, pDevMode->dmDriverExtra);
   RtlCopyMemory(pDevMode + min(pDevMode->dmSize, CachedMode->dmSize), CachedMode + CachedMode->dmSize, min(pDevMode->dmDriverExtra, CachedMode->dmDriverExtra));
 
-  return TRUE;
+  return STATUS_SUCCESS;
 }
 
 static NTSTATUS FASTCALL

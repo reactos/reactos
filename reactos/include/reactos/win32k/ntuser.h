@@ -1064,7 +1064,7 @@ NtUserEnumDisplayMonitors(
   OPTIONAL IN DWORD listSize );
 
 
-BOOL
+NTSTATUS
 NTAPI
 NtUserEnumDisplaySettings(
   PUNICODE_STRING lpszDeviceName,

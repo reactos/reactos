@@ -201,7 +201,7 @@ IntGdiEscape(PDC    dc,
              LPCSTR InData,
              LPVOID OutData);
 
-BOOL
+NTSTATUS
 FASTCALL
 IntEnumDisplaySettings(
   IN PUNICODE_STRING pDeviceName  OPTIONAL,
