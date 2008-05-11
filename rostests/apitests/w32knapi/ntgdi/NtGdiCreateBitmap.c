@@ -169,6 +169,11 @@ Test_NtGdiCreateBitmap_Params(PTESTINFO pti)
 	TEST(GetLastError() == ERROR_INVALID_PARAMETER);
 
 
+    /* Test witdth -1 params */
+	SetLastError(ERROR_SUCCESS);
+	TEST((hBmp = NtGdiCreateBitmap(0, 0, 1, 1, NULL)) == NULL);
+	TEST(GetLastError() == ERROR_INVALID_PARAMETER);
+
 
 	return APISTATUS_NORMAL;
 }
