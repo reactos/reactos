@@ -729,8 +729,10 @@ ClassCancelRoutine(
 
 	ASSERT(ClassDeviceExtension->Common.IsClassDO);
 
-    IoReleaseCancelSpinLock(Irp->CancelIrql);
+	IoReleaseCancelSpinLock(Irp->CancelIrql);
+
 	KeAcquireSpinLock(&ClassDeviceExtension->SpinLock, &OldIrql);
+
 	if (ClassDeviceExtension->PendingIrp == Irp)
 	{
 		ClassDeviceExtension->PendingIrp = NULL;
