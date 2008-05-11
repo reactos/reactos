@@ -741,7 +741,6 @@ CreateShortcuts(VOID)
 
     /* Create desktop shortcuts */
     CreateShortcut(CSIDL_DESKTOP, NULL, IDS_SHORT_CMD, _T("%SystemRoot%\\system32\\cmd.exe"), IDS_CMT_CMD, FALSE);
-    CreateShortcut(CSIDL_DESKTOP, NULL, IDS_SHORT_KBSWITCH, _T("%SystemRoot%\\system32\\kbswitch.exe"), IDS_CMT_KBSWITCH, FALSE);
 
     /* Create program startmenu shortcuts */
     CreateShortcut(CSIDL_PROGRAMS, NULL, IDS_SHORT_EXPLORER, _T("%SystemRoot%\\explorer.exe"), IDS_CMT_EXPLORER, FALSE);
