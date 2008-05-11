@@ -29,23 +29,23 @@
 
 typedef struct _GENERIC_LIST_ENTRY
 {
-  LIST_ENTRY Entry;
-  PVOID UserData;
-  CHAR Text[1];
+    LIST_ENTRY Entry;
+    PVOID UserData;
+    CHAR Text[1];
 } GENERIC_LIST_ENTRY, *PGENERIC_LIST_ENTRY;
 
 
 typedef struct _GENERIC_LIST
 {
-  LIST_ENTRY ListHead;
+    LIST_ENTRY ListHead;
 
-  SHORT Left;
-  SHORT Top;
-  SHORT Right;
-  SHORT Bottom;
+    SHORT Left;
+    SHORT Top;
+    SHORT Right;
+    SHORT Bottom;
 
-  PGENERIC_LIST_ENTRY CurrentEntry;
-  PGENERIC_LIST_ENTRY BackupEntry;
+    PGENERIC_LIST_ENTRY CurrentEntry;
+    PGENERIC_LIST_ENTRY BackupEntry;
 } GENERIC_LIST, *PGENERIC_LIST;
 
 
@@ -55,20 +55,20 @@ CreateGenericList(VOID);
 
 VOID
 DestroyGenericList(PGENERIC_LIST List,
-		   BOOLEAN FreeUserData);
+                   BOOLEAN FreeUserData);
 
 BOOLEAN
 AppendGenericListEntry(PGENERIC_LIST List,
-		       PCHAR Text,
-		       PVOID UserData,
-		       BOOLEAN Current);
+                       PCHAR Text,
+                       PVOID UserData,
+                       BOOLEAN Current);
 
 VOID
 DrawGenericList(PGENERIC_LIST List,
-		SHORT Left,
-		SHORT Top,
-		SHORT Right,
-		SHORT Bottom);
+                SHORT Left,
+                SHORT Top,
+                SHORT Right,
+                SHORT Bottom);
 
 VOID
 ScrollDownGenericList(PGENERIC_LIST List);

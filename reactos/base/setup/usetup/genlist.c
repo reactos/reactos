@@ -36,263 +36,263 @@
 PGENERIC_LIST
 CreateGenericList(VOID)
 {
-  PGENERIC_LIST List;
+    PGENERIC_LIST List;
 
-  List = (PGENERIC_LIST)RtlAllocateHeap(ProcessHeap,
-					0,
-					sizeof(GENERIC_LIST));
-  if (List == NULL)
-    return NULL;
+    List = (PGENERIC_LIST)RtlAllocateHeap(ProcessHeap,
+                                          0,
+                                          sizeof(GENERIC_LIST));
+    if (List == NULL)
+        return NULL;
 
-  InitializeListHead(&List->ListHead);
+    InitializeListHead(&List->ListHead);
 
-  List->Left = 0;
-  List->Top = 0;
-  List->Right = 0;
-  List->Bottom = 0;
+    List->Left = 0;
+    List->Top = 0;
+    List->Right = 0;
+    List->Bottom = 0;
 
-  List->CurrentEntry = NULL;
+    List->CurrentEntry = NULL;
 
-  return List;
+    return List;
 }
 
 
 VOID
 DestroyGenericList(PGENERIC_LIST List,
-		   BOOLEAN FreeUserData)
+                   BOOLEAN FreeUserData)
 {
-  PGENERIC_LIST_ENTRY ListEntry;
-  PLIST_ENTRY Entry;
+    PGENERIC_LIST_ENTRY ListEntry;
+    PLIST_ENTRY Entry;
 
-  /* Release list entries */
-  while (!IsListEmpty (&List->ListHead))
+    /* Release list entries */
+    while (!IsListEmpty (&List->ListHead))
     {
-      Entry = RemoveHeadList (&List->ListHead);
-      ListEntry = CONTAINING_RECORD (Entry, GENERIC_LIST_ENTRY, Entry);
+        Entry = RemoveHeadList (&List->ListHead);
+        ListEntry = CONTAINING_RECORD (Entry, GENERIC_LIST_ENTRY, Entry);
 
-      /* Release user data */
-      if (FreeUserData && ListEntry->UserData != NULL)
-      RtlFreeHeap (ProcessHeap, 0, ListEntry->UserData);
+        /* Release user data */
+        if (FreeUserData && ListEntry->UserData != NULL)
+            RtlFreeHeap (ProcessHeap, 0, ListEntry->UserData);
 
-      /* Release list entry */
-      RtlFreeHeap (ProcessHeap, 0, ListEntry);
+        /* Release list entry */
+        RtlFreeHeap (ProcessHeap, 0, ListEntry);
     }
 
-  /* Release list head */
-  RtlFreeHeap (ProcessHeap, 0, List);
+    /* Release list head */
+    RtlFreeHeap (ProcessHeap, 0, List);
 }
 
 
 BOOLEAN
 AppendGenericListEntry(PGENERIC_LIST List,
-		       PCHAR Text,
-		       PVOID UserData,
-		       BOOLEAN Current)
+                     PCHAR Text,
+                     PVOID UserData,
+                     BOOLEAN Current)
 {
-  PGENERIC_LIST_ENTRY Entry;
+    PGENERIC_LIST_ENTRY Entry;
 
-  Entry = (PGENERIC_LIST_ENTRY)RtlAllocateHeap(ProcessHeap,
-					       0,
-					       sizeof(GENERIC_LIST_ENTRY) + strlen(Text));
-  if (Entry == NULL)
-    return FALSE;
+    Entry = (PGENERIC_LIST_ENTRY)RtlAllocateHeap(ProcessHeap,
+                                                 0,
+                                                 sizeof(GENERIC_LIST_ENTRY) + strlen(Text));
+    if (Entry == NULL)
+        return FALSE;
 
-  strcpy (Entry->Text, Text);
-  Entry->UserData = UserData;
+    strcpy (Entry->Text, Text);
+    Entry->UserData = UserData;
 
-  InsertTailList(&List->ListHead,
-		 &Entry->Entry);
+    InsertTailList(&List->ListHead,
+                   &Entry->Entry);
 
-  if (Current || List->CurrentEntry == NULL)
+    if (Current || List->CurrentEntry == NULL)
     {
-      List->CurrentEntry = Entry;
+        List->CurrentEntry = Entry;
     }
 
-  return TRUE;
+    return TRUE;
 }
 
 
 static VOID
 DrawListFrame(PGENERIC_LIST GenericList)
 {
-  COORD coPos;
-  DWORD Written;
-  SHORT i;
+    COORD coPos;
+    DWORD Written;
+    SHORT i;
 
-  /* Draw upper left corner */
-  coPos.X = GenericList->Left;
-  coPos.Y = GenericList->Top;
-  FillConsoleOutputCharacterA (StdOutput,
-			      0xDA, // '+',
-			      1,
-			      coPos,
-			      &Written);
+    /* Draw upper left corner */
+    coPos.X = GenericList->Left;
+    coPos.Y = GenericList->Top;
+    FillConsoleOutputCharacterA (StdOutput,
+                                 0xDA, // '+',
+                                 1,
+                                 coPos,
+                                 &Written);
 
-  /* Draw upper edge */
-  coPos.X = GenericList->Left + 1;
-  coPos.Y = GenericList->Top;
-  FillConsoleOutputCharacterA (StdOutput,
-			      0xC4, // '-',
-			      GenericList->Right - GenericList->Left - 1,
-			      coPos,
-			      &Written);
+    /* Draw upper edge */
+    coPos.X = GenericList->Left + 1;
+    coPos.Y = GenericList->Top;
+    FillConsoleOutputCharacterA (StdOutput,
+                                 0xC4, // '-',
+                                 GenericList->Right - GenericList->Left - 1,
+                                 coPos,
+                                 &Written);
 
-  /* Draw upper right corner */
-  coPos.X = GenericList->Right;
-  coPos.Y = GenericList->Top;
-  FillConsoleOutputCharacterA (StdOutput,
-			      0xBF, // '+',
-			      1,
-			      coPos,
-			      &Written);
+    /* Draw upper right corner */
+    coPos.X = GenericList->Right;
+    coPos.Y = GenericList->Top;
+    FillConsoleOutputCharacterA (StdOutput,
+                                 0xBF, // '+',
+                                 1,
+                                 coPos,
+                                 &Written);
 
-  /* Draw left and right edge */
-  for (i = GenericList->Top + 1; i < GenericList->Bottom; i++)
+    /* Draw left and right edge */
+    for (i = GenericList->Top + 1; i < GenericList->Bottom; i++)
     {
-      coPos.X = GenericList->Left;
-      coPos.Y = i;
-      FillConsoleOutputCharacterA (StdOutput,
-				  0xB3, // '|',
-				  1,
-				  coPos,
-				  &Written);
+        coPos.X = GenericList->Left;
+        coPos.Y = i;
+        FillConsoleOutputCharacterA (StdOutput,
+                                     0xB3, // '|',
+                                     1,
+                                     coPos,
+                                     &Written);
 
-      coPos.X = GenericList->Right;
-      FillConsoleOutputCharacterA (StdOutput,
-				  0xB3, //'|',
-				  1,
-				  coPos,
-				  &Written);
+        coPos.X = GenericList->Right;
+        FillConsoleOutputCharacterA (StdOutput,
+                                     0xB3, //'|',
+                                     1,
+                                     coPos,
+                                     &Written);
     }
 
-  /* Draw lower left corner */
-  coPos.X = GenericList->Left;
-  coPos.Y = GenericList->Bottom;
-  FillConsoleOutputCharacterA (StdOutput,
-			      0xC0, // '+',
-			      1,
-			      coPos,
-			      &Written);
+    /* Draw lower left corner */
+    coPos.X = GenericList->Left;
+    coPos.Y = GenericList->Bottom;
+    FillConsoleOutputCharacterA (StdOutput,
+                                 0xC0, // '+',
+                                 1,
+                                 coPos,
+                                 &Written);
 
-  /* Draw lower edge */
-  coPos.X = GenericList->Left + 1;
-  coPos.Y = GenericList->Bottom;
-  FillConsoleOutputCharacterA (StdOutput,
-			      0xC4, // '-',
-			      GenericList->Right - GenericList->Left - 1,
-			      coPos,
-			      &Written);
+    /* Draw lower edge */
+    coPos.X = GenericList->Left + 1;
+    coPos.Y = GenericList->Bottom;
+    FillConsoleOutputCharacterA (StdOutput,
+                                 0xC4, // '-',
+                                 GenericList->Right - GenericList->Left - 1,
+                                 coPos,
+                                 &Written);
 
-  /* Draw lower right corner */
-  coPos.X = GenericList->Right;
-  coPos.Y = GenericList->Bottom;
-  FillConsoleOutputCharacterA (StdOutput,
-			      0xD9, // '+',
-			      1,
-			      coPos,
-			      &Written);
+    /* Draw lower right corner */
+    coPos.X = GenericList->Right;
+    coPos.Y = GenericList->Bottom;
+    FillConsoleOutputCharacterA (StdOutput,
+                                 0xD9, // '+',
+                                 1,
+                                 coPos,
+                                 &Written);
 }
 
 
 static VOID
 DrawListEntries(PGENERIC_LIST GenericList)
 {
-  PGENERIC_LIST_ENTRY ListEntry;
-  PLIST_ENTRY Entry;
-  COORD coPos;
-  DWORD Written;
-  USHORT Width;
+    PGENERIC_LIST_ENTRY ListEntry;
+    PLIST_ENTRY Entry;
+    COORD coPos;
+    DWORD Written;
+    USHORT Width;
 
-  coPos.X = GenericList->Left + 1;
-  coPos.Y = GenericList->Top + 1;
-  Width = GenericList->Right - GenericList->Left - 1;
+    coPos.X = GenericList->Left + 1;
+    coPos.Y = GenericList->Top + 1;
+    Width = GenericList->Right - GenericList->Left - 1;
 
-  Entry = GenericList->ListHead.Flink;
-  while (Entry != &GenericList->ListHead)
+    Entry = GenericList->ListHead.Flink;
+    while (Entry != &GenericList->ListHead)
     {
-      ListEntry = CONTAINING_RECORD (Entry, GENERIC_LIST_ENTRY, Entry);
+        ListEntry = CONTAINING_RECORD (Entry, GENERIC_LIST_ENTRY, Entry);
 
-      if (coPos.Y == GenericList->Bottom)
-	break;
+        if (coPos.Y == GenericList->Bottom)
+            break;
 
-      FillConsoleOutputAttribute (StdOutput,
-				  (GenericList->CurrentEntry == ListEntry) ?
-				      FOREGROUND_BLUE | BACKGROUND_WHITE :
-				      FOREGROUND_WHITE | BACKGROUND_BLUE,
-				  Width,
-				  coPos,
-				  &Written);
+        FillConsoleOutputAttribute (StdOutput,
+                                    (GenericList->CurrentEntry == ListEntry) ?
+                                    FOREGROUND_BLUE | BACKGROUND_WHITE :
+                                    FOREGROUND_WHITE | BACKGROUND_BLUE,
+                                    Width,
+                                    coPos,
+                                    &Written);
 
-      FillConsoleOutputCharacterA (StdOutput,
-				  ' ',
-				  Width,
-				  coPos,
-				  &Written);
+        FillConsoleOutputCharacterA (StdOutput,
+                                     ' ',
+                                     Width,
+                                     coPos,
+                                     &Written);
 
-      coPos.X++;
-      WriteConsoleOutputCharacterA (StdOutput,
-				    ListEntry->Text,
-				    min (strlen(ListEntry->Text), (SIZE_T)Width - 2),
-				    coPos,
-				    &Written);
-      coPos.X--;
+        coPos.X++;
+        WriteConsoleOutputCharacterA (StdOutput,
+                                      ListEntry->Text,
+                                      min (strlen(ListEntry->Text), (SIZE_T)Width - 2),
+                                      coPos,
+                                      &Written);
+        coPos.X--;
 
-      coPos.Y++;
-      Entry = Entry->Flink;
+        coPos.Y++;
+        Entry = Entry->Flink;
     }
 
-  while (coPos.Y < GenericList->Bottom)
+    while (coPos.Y < GenericList->Bottom)
     {
-      FillConsoleOutputAttribute (StdOutput,
-				  FOREGROUND_WHITE | BACKGROUND_BLUE,
-				  Width,
-				  coPos,
-				  &Written);
+        FillConsoleOutputAttribute (StdOutput,
+                                    FOREGROUND_WHITE | BACKGROUND_BLUE,
+                                    Width,
+                                    coPos,
+                                    &Written);
 
-      FillConsoleOutputCharacterA (StdOutput,
-				' ',
-				  Width,
-				  coPos,
-				  &Written);
-      coPos.Y++;
+        FillConsoleOutputCharacterA (StdOutput,
+                                     ' ',
+                                     Width,
+                                     coPos,
+                                     &Written);
+        coPos.Y++;
     }
 }
 
 
 VOID
 DrawGenericList(PGENERIC_LIST List,
-		SHORT Left,
-		SHORT Top,
-		SHORT Right,
-		SHORT Bottom)
+                SHORT Left,
+                SHORT Top,
+                SHORT Right,
+                SHORT Bottom)
 {
-  List->Left = Left;
-  List->Top = Top;
-  List->Right = Right;
-  List->Bottom = Bottom;
+    List->Left = Left;
+    List->Top = Top;
+    List->Right = Right;
+    List->Bottom = Bottom;
 
-  DrawListFrame(List);
+    DrawListFrame(List);
 
-  if (IsListEmpty(&List->ListHead))
-    return;
+    if (IsListEmpty(&List->ListHead))
+        return;
 
-  DrawListEntries(List);
+    DrawListEntries(List);
 }
 
 
 VOID
 ScrollDownGenericList (PGENERIC_LIST List)
 {
-  PLIST_ENTRY Entry;
+    PLIST_ENTRY Entry;
 
-  if (List->CurrentEntry == NULL)
-    return;
+    if (List->CurrentEntry == NULL)
+        return;
 
-  if (List->CurrentEntry->Entry.Flink != &List->ListHead)
+    if (List->CurrentEntry->Entry.Flink != &List->ListHead)
     {
-      Entry = List->CurrentEntry->Entry.Flink;
-      List->CurrentEntry = CONTAINING_RECORD (Entry, GENERIC_LIST_ENTRY, Entry);
-      DrawListEntries(List);
+        Entry = List->CurrentEntry->Entry.Flink;
+        List->CurrentEntry = CONTAINING_RECORD (Entry, GENERIC_LIST_ENTRY, Entry);
+        DrawListEntries(List);
     }
 }
 
@@ -300,74 +300,79 @@ ScrollDownGenericList (PGENERIC_LIST List)
 VOID
 ScrollUpGenericList (PGENERIC_LIST List)
 {
-  PLIST_ENTRY Entry;
+    PLIST_ENTRY Entry;
 
-  if (List->CurrentEntry == NULL)
-    return;
+    if (List->CurrentEntry == NULL)
+        return;
 
-  if (List->CurrentEntry->Entry.Blink != &List->ListHead)
+    if (List->CurrentEntry->Entry.Blink != &List->ListHead)
     {
-      Entry = List->CurrentEntry->Entry.Blink;
-      List->CurrentEntry = CONTAINING_RECORD (Entry, GENERIC_LIST_ENTRY, Entry);
-      DrawListEntries(List);
+        Entry = List->CurrentEntry->Entry.Blink;
+        List->CurrentEntry = CONTAINING_RECORD (Entry, GENERIC_LIST_ENTRY, Entry);
+        DrawListEntries(List);
     }
 }
 
 VOID
 GenericListKeyPress (PGENERIC_LIST GenericList, CHAR AsciChar)
 {
-  PGENERIC_LIST_ENTRY ListEntry;
-  PLIST_ENTRY Entry;
+    PGENERIC_LIST_ENTRY ListEntry;
+    PLIST_ENTRY Entry;
 
-  Entry = &GenericList->CurrentEntry->Entry;
-  ListEntry = CONTAINING_RECORD (Entry, GENERIC_LIST_ENTRY, Entry);
+    Entry = &GenericList->CurrentEntry->Entry;
+    ListEntry = CONTAINING_RECORD (Entry, GENERIC_LIST_ENTRY, Entry);
 
 Reset:
 
-  if (tolower(ListEntry->Text[0]) != AsciChar)
-    Entry = GenericList->ListHead.Flink;
+    if (tolower(ListEntry->Text[0]) != AsciChar)
+        Entry = GenericList->ListHead.Flink;
 
-  while (Entry != &GenericList->ListHead)
+    while (Entry != &GenericList->ListHead)
     {
-      ListEntry = CONTAINING_RECORD (Entry, GENERIC_LIST_ENTRY, Entry);
-      if ((strlen(ListEntry->Text) > 0) && (tolower(ListEntry->Text[0]) == AsciChar))
+        ListEntry = CONTAINING_RECORD (Entry, GENERIC_LIST_ENTRY, Entry);
+
+        if ((strlen(ListEntry->Text) > 0) && (tolower(ListEntry->Text[0]) == AsciChar))
         {
-          if (CONTAINING_RECORD (Entry, GENERIC_LIST_ENTRY, Entry) == GenericList->CurrentEntry)
+            if (CONTAINING_RECORD (Entry, GENERIC_LIST_ENTRY, Entry) == GenericList->CurrentEntry)
             {
-              Entry = Entry->Flink;
-              if (Entry == &GenericList->ListHead)
-                goto Reset;
-              ListEntry = CONTAINING_RECORD (Entry, GENERIC_LIST_ENTRY, Entry);
-              if ((strlen(ListEntry->Text) < 1) || (tolower(ListEntry->Text[0]) != AsciChar))
-                goto Reset;
+                Entry = Entry->Flink;
+                if (Entry == &GenericList->ListHead)
+                    goto Reset;
+
+                ListEntry = CONTAINING_RECORD (Entry, GENERIC_LIST_ENTRY, Entry);
+                if ((strlen(ListEntry->Text) < 1) || (tolower(ListEntry->Text[0]) != AsciChar))
+                    goto Reset;
             }
-          GenericList->CurrentEntry = CONTAINING_RECORD (Entry, GENERIC_LIST_ENTRY, Entry);
-          break;
+
+            GenericList->CurrentEntry = CONTAINING_RECORD (Entry, GENERIC_LIST_ENTRY, Entry);
+            break;
         }
-      Entry = Entry->Flink;
+
+        Entry = Entry->Flink;
     }
-  if (Entry)
-    DrawListEntries(GenericList);
+
+    if (Entry)
+        DrawListEntries(GenericList);
 }
 
 PGENERIC_LIST_ENTRY
 GetGenericListEntry(PGENERIC_LIST List)
 {
-  return List->CurrentEntry;
+    return List->CurrentEntry;
 }
 
 
 VOID
 SaveGenericListState(PGENERIC_LIST List)
 {
-  List->BackupEntry = List->CurrentEntry;
+    List->BackupEntry = List->CurrentEntry;
 }
 
 
 VOID
 RestoreGenericListState(PGENERIC_LIST List)
 {
-  List->CurrentEntry = List->BackupEntry;
+    List->CurrentEntry = List->BackupEntry;
 }
 
 /* EOF */
