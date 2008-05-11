@@ -542,12 +542,12 @@ IntSetFocusMessageQueue(PUSER_MESSAGE_QUEUE NewQueue)
          return;
       }
       IntReferenceMessageQueue(NewQueue);
-      InterlockedExchange((LONG*)&NewQueue->Desktop, (LONG)pdo);
+      (void)InterlockedExchangePointer((PVOID*)&NewQueue->Desktop, pdo);
    }
-   Old = (PUSER_MESSAGE_QUEUE)InterlockedExchange((LONG*)&pdo->ActiveMessageQueue, (LONG)NewQueue);
+   Old = (PUSER_MESSAGE_QUEUE)InterlockedExchangePointer((PVOID*)&pdo->ActiveMessageQueue, NewQueue);
    if(Old != NULL)
    {
-      InterlockedExchange((LONG*)&Old->Desktop, 0);
+      (void)InterlockedExchangePointer((PVOID*)&Old->Desktop, 0);
       IntDereferenceMessageQueue(Old);
    }
 }
@@ -1660,7 +1660,7 @@ NtUserGetThreadDesktop(DWORD dwThreadId, DWORD Unknown1)
       RETURN(0);
    }
 
-   Status = PsLookupThreadByThreadId((HANDLE)dwThreadId, &Thread);
+   Status = PsLookupThreadByThreadId((HANDLE)(DWORD_PTR)dwThreadId, &Thread);
    if(!NT_SUCCESS(Status))
    {
       SetLastWin32Error(ERROR_INVALID_PARAMETER);
@@ -1774,7 +1774,7 @@ IntMapDesktopView(IN PDESKTOP_OBJECT DesktopObject)
     PW32THREADINFO ti;
     PW32HEAP_USER_MAPPING HeapMapping, *PrevLink = &PsGetCurrentProcessWin32Process()->HeapMappings.Next;
     PVOID UserBase = NULL;
-    ULONG ViewSize = 0;
+    SIZE_T ViewSize = 0;
     LARGE_INTEGER Offset;
     NTSTATUS Status;
 
