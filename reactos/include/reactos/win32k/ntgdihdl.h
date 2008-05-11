@@ -186,8 +186,13 @@
 #define PAGE_EXTENTS_CHANGED                0x00004000
 #define WORLD_XFORM_CHANGED                 0x00008000
 
-/* RGN_ATTR Flags */
-#define DIRTY_RGNATTR                       0x00000020
+/* BRUSH/RGN_ATTR Flags */
+#define ATTR_CACHED                         0x00000001
+#define ATTR_TO_BE_DELETED                  0x00000002
+#define ATTR_NEW_COLOR                      0x00000004
+#define ATTR_CANT_SELECT                    0x00000008
+#define ATTR_RGN_VALID                      0x00000010
+#define ATTR_RGN_DIRTY                      0x00000020
 
 
 /* TYPES *********************************************************************/
@@ -302,10 +307,10 @@ typedef struct _DC_ATTR
     RGN_ATTR VisRectRegion;
 } DC_ATTR, *PDC_ATTR;
 
-typedef struct _BRUSH_ATTR
+typedef struct _BRUSH_ATTR // Used with pen too.
 {
-    LOGBRUSH logbrush;
-    DWORD    dwUnused[3];
+    FLONG    AttrFlags;
+    COLORREF lbColor;
 } BRUSH_ATTR, *PBRUSH_ATTR;
 
 typedef struct _FONT_ATTR

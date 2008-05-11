@@ -270,6 +270,28 @@ typedef struct _DEVCAPS // Very similar to GDIINFO
     ULONG ulColorMgmtCaps;
 } DEVCAPS, *PDEVCAPS;
 
+/* Gdi Handle Cache Types and Structures */
+#define GDI_CACHED_HADNLE_TYPES 4
+#define CACHE_BRUSH_ENTRIES  10
+#define CACHE_PEN_ENTRIES     8
+#define CACHE_REGION_ENTRIES  8
+#define CACHE_LFONT_ENTRIES   1
+
+typedef enum _HANDLECACHETYPE
+{
+    hctBrushHandle,
+    hctPenHandle,
+    hctRegionHandle,
+    hctLFontHandle
+} HANDLECACHETYPE,*PHANDLECACHETYPE;
+
+typedef struct _GDIHANDLECACHE
+{
+    ULONG           ulLock;
+    ULONG           ulNumHandles[GDI_CACHED_HADNLE_TYPES];
+    HANDLE          Handle[CACHE_BRUSH_ENTRIES+CACHE_PEN_ENTRIES+CACHE_REGION_ENTRIES+CACHE_LFONT_ENTRIES];
+} GDIHANDLECACHE, *PGDIHANDLECACHE;
+
 /* Font Structures */
 typedef struct _TMDIFF
 {
