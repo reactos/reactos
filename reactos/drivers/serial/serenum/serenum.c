@@ -47,6 +47,7 @@ IrpStub(
 			case IRP_MJ_CREATE:
 			case IRP_MJ_CLOSE:
 			case IRP_MJ_CLEANUP:
+			case IRP_MJ_QUERY_INFORMATION:
 			case IRP_MJ_READ:
 			case IRP_MJ_WRITE:
 			case IRP_MJ_DEVICE_CONTROL:
@@ -56,7 +57,7 @@ IrpStub(
 				WARN_(SERENUM, "FDO stub for major function 0x%lx\n",
 					IoGetCurrentIrpStackLocation(Irp)->MajorFunction);
 				ASSERT(FALSE);
-				Status = Irp->IoStatus.Status;
+				return ForwardIrpToLowerDeviceAndForget(DeviceObject, Irp);
 			}
 		}
 	}
@@ -77,7 +78,7 @@ IrpStub(
 				WARN_(SERENUM, "PDO stub for major function 0x%lx\n",
 					IoGetCurrentIrpStackLocation(Irp)->MajorFunction);
 				ASSERT(FALSE);
-				Status = Irp->IoStatus.Status;
+				return ForwardIrpToAttachedFdoAndForget(DeviceObject, Irp);
 			}
 		}
 	}
