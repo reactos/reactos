@@ -467,7 +467,7 @@ IntGetClassForDesktop(IN OUT PWINDOWCLASS BaseClass,
                 Class->Next = BaseClass->Next;
 
                 /* replace the base class */
-                (void)InterlockedExchangePointer(ClassLink,
+                (void)InterlockedExchangePointer((PVOID*)ClassLink,
                                                  Class);
 
                 /* destroy the obsolete copy on the shared heap */
@@ -552,7 +552,7 @@ IntMakeCloneBaseClass(IN OUT PWINDOWCLASS Class,
     }
 
     /* link in the new base class */
-    (void)InterlockedExchangePointer(BaseClassLink,
+    (void)InterlockedExchangePointer((PVOID*)BaseClassLink,
                                      Class);
 }
 
@@ -620,7 +620,7 @@ IntDereferenceClass(IN OUT PWINDOWCLASS Class,
 
             ASSERT(CurrentClass == Class);
 
-            (void)InterlockedExchangePointer(PrevLink,
+            (void)InterlockedExchangePointer((PVOID*)PrevLink,
                                              Class->Next);
 
             ASSERT(Class->Base == BaseClass);
@@ -658,7 +658,7 @@ IntMoveClassToSharedHeap(IN OUT PWINDOWCLASS Class,
         NewClass->Base = NewClass;
 
         /* replace the class in the list */
-        (void)InterlockedExchangePointer(*ClassLinkPtr,
+        (void)InterlockedExchangePointer((PVOID*)*ClassLinkPtr,
                                          NewClass);
         *ClassLinkPtr = &NewClass->Next;
 
@@ -719,7 +719,7 @@ IntCheckDesktopClasses(IN PDESKTOP Desktop,
                 if (FreeOnFailure)
                 {
                     /* unlink the base class */
-                    (void)InterlockedExchangePointer(Link,
+                    (void)InterlockedExchangePointer((PVOID*)Link,
                                                      Class->Next);
 
                     /* we can free the old base class now */
@@ -1191,7 +1191,7 @@ UserRegisterClass(IN CONST WNDCLASSEXW* lpwcx,
             List = &pi->LocalClassList;
 
         Class->Next = *List;
-        (void)InterlockedExchangePointer(List,
+        (void)InterlockedExchangePointer((PVOID*)List,
                                          Class);
 
         Ret = Class->Atom;
@@ -1850,7 +1850,7 @@ UserRegisterSystemClasses(IN ULONG Count,
 
             ASSERT(Class->System);
             Class->Next = pi->SystemClassList;
-            (void)InterlockedExchangePointer(&pi->SystemClassList,
+            (void)InterlockedExchangePointer((PVOID*)&pi->SystemClassList,
                                              Class);
         }
         else
