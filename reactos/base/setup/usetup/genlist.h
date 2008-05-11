@@ -27,28 +27,10 @@
 #ifndef __GENLIST_H__
 #define __GENLIST_H__
 
-typedef struct _GENERIC_LIST_ENTRY
-{
-    LIST_ENTRY Entry;
-    PVOID UserData;
-    CHAR Text[1];
-} GENERIC_LIST_ENTRY, *PGENERIC_LIST_ENTRY;
-
-
-typedef struct _GENERIC_LIST
-{
-    LIST_ENTRY ListHead;
-
-    SHORT Left;
-    SHORT Top;
-    SHORT Right;
-    SHORT Bottom;
-
-    PGENERIC_LIST_ENTRY CurrentEntry;
-    PGENERIC_LIST_ENTRY BackupEntry;
-} GENERIC_LIST, *PGENERIC_LIST;
-
-
+struct _GENERIC_LIST_ENTRY;
+typedef struct _GENERIC_LIST_ENTRY *PGENERIC_LIST_ENTRY;
+struct _GENERIC_LIST;
+typedef struct _GENERIC_LIST *PGENERIC_LIST;
 
 PGENERIC_LIST
 CreateGenericList(VOID);
@@ -76,8 +58,23 @@ ScrollDownGenericList(PGENERIC_LIST List);
 VOID
 ScrollUpGenericList(PGENERIC_LIST List);
 
+VOID
+SetCurrentListEntry(PGENERIC_LIST List, PGENERIC_LIST_ENTRY Entry);
+
 PGENERIC_LIST_ENTRY
-GetGenericListEntry(PGENERIC_LIST List);
+GetCurrentListEntry(PGENERIC_LIST List);
+
+PGENERIC_LIST_ENTRY
+GetFirstListEntry(PGENERIC_LIST List);
+
+PGENERIC_LIST_ENTRY
+GetNextListEntry(PGENERIC_LIST_ENTRY Entry);
+
+PVOID
+GetListEntryUserData(PGENERIC_LIST_ENTRY List);
+
+LPCSTR
+GetListEntryText(PGENERIC_LIST_ENTRY List);
 
 VOID
 SaveGenericListState(PGENERIC_LIST List);

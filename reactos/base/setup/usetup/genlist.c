@@ -33,6 +33,28 @@
 
 /* FUNCTIONS ****************************************************************/
 
+typedef struct _GENERIC_LIST_ENTRY
+{
+    LIST_ENTRY Entry;
+    PGENERIC_LIST List;
+    PVOID UserData;
+    CHAR Text[1];
+} GENERIC_LIST_ENTRY;
+
+
+typedef struct _GENERIC_LIST
+{
+    LIST_ENTRY ListHead;
+
+    SHORT Left;
+    SHORT Top;
+    SHORT Right;
+    SHORT Bottom;
+
+    PGENERIC_LIST_ENTRY CurrentEntry;
+    PGENERIC_LIST_ENTRY BackupEntry;
+} GENERIC_LIST;
+
 PGENERIC_LIST
 CreateGenericList(VOID)
 {
@@ -98,6 +120,7 @@ AppendGenericListEntry(PGENERIC_LIST List,
         return FALSE;
 
     strcpy (Entry->Text, Text);
+    Entry->List = List;
     Entry->UserData = UserData;
 
     InsertTailList(&List->ListHead,
@@ -313,6 +336,59 @@ ScrollUpGenericList (PGENERIC_LIST List)
     }
 }
 
+
+VOID
+SetCurrentListEntry(PGENERIC_LIST List, PGENERIC_LIST_ENTRY Entry)
+{
+    if (Entry->List != List)
+        return;
+    List->CurrentEntry = Entry;
+}
+
+
+PGENERIC_LIST_ENTRY
+GetCurrentListEntry(PGENERIC_LIST List)
+{
+    return List->CurrentEntry;
+}
+
+
+PGENERIC_LIST_ENTRY
+GetFirstListEntry(PGENERIC_LIST List)
+{
+    PLIST_ENTRY Entry = List->ListHead.Flink;
+
+    if (Entry == &List->ListHead)
+        return NULL;
+    return CONTAINING_RECORD(Entry, GENERIC_LIST_ENTRY, Entry);
+}
+
+
+PGENERIC_LIST_ENTRY
+GetNextListEntry(PGENERIC_LIST_ENTRY Entry)
+{
+    PLIST_ENTRY Next = Entry->Entry.Flink;
+
+    if (Next == &Entry->List->ListHead)
+        return NULL;
+    return CONTAINING_RECORD(Next, GENERIC_LIST_ENTRY, Entry);
+}
+
+
+PVOID
+GetListEntryUserData(PGENERIC_LIST_ENTRY List)
+{
+    return List->UserData;
+}
+
+
+LPCSTR
+GetListEntryText(PGENERIC_LIST_ENTRY List)
+{
+    return List->Text;
+}
+
+
 VOID
 GenericListKeyPress (PGENERIC_LIST GenericList, CHAR AsciChar)
 {
@@ -353,12 +429,6 @@ Reset:
 
     if (Entry)
         DrawListEntries(GenericList);
-}
-
-PGENERIC_LIST_ENTRY
-GetGenericListEntry(PGENERIC_LIST List)
-{
-    return List->CurrentEntry;
 }
 
 

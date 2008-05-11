@@ -485,15 +485,15 @@ ProcessComputerFiles(HINF InfFile, PGENERIC_LIST List, PWCHAR* AdditionalSection
 
     DPRINT("ProcessComputerFiles() called\n");
 
-    Entry = GetGenericListEntry(List);
+    Entry = GetCurrentListEntry(List);
     if (Entry == NULL)
     {
-        DPRINT("GetGenericListEntry() failed\n");
+        DPRINT("GetCurrentListEntry() failed\n");
         return FALSE;
     }
 
     wcscpy(SectionName, L"Files.");
-    wcscat(SectionName, (const wchar_t*) Entry->UserData);
+    wcscat(SectionName, (const wchar_t*)GetListEntryUserData(Entry));
     *AdditionalSectionName = SectionName;
 
     return TRUE;
@@ -514,14 +514,14 @@ ProcessDisplayRegistry(HINF InfFile, PGENERIC_LIST List)
 
     DPRINT("ProcessDisplayRegistry() called\n");
 
-    Entry = GetGenericListEntry(List);
+    Entry = GetCurrentListEntry(List);
     if (Entry == NULL)
     {
-        DPRINT("GetGenericListEntry() failed\n");
+        DPRINT("GetCurrentListEntry() failed\n");
         return FALSE;
     }
 
-    if (!SetupFindFirstLineW(InfFile, L"Display", (WCHAR*) Entry->UserData, &Context))
+    if (!SetupFindFirstLineW(InfFile, L"Display", (WCHAR*)GetListEntryUserData(Entry), &Context))
     {
         DPRINT("SetupFindFirstLineW() failed\n");
         return FALSE;
@@ -629,11 +629,11 @@ ProcessLocaleRegistry(PGENERIC_LIST List)
     HANDLE KeyHandle;
     NTSTATUS Status;
 
-    Entry = GetGenericListEntry(List);
+    Entry = GetCurrentListEntry(List);
     if (Entry == NULL)
         return FALSE;
 
-    LanguageId = (PWCHAR)Entry->UserData;
+    LanguageId = (PWCHAR)GetListEntryUserData(Entry);
     if (LanguageId == NULL)
         return FALSE;
 
@@ -877,11 +877,11 @@ ProcessKeyboardLayoutRegistry(PGENERIC_LIST List)
     NTSTATUS Status;
     PKEY_VALUE_PARTIAL_INFORMATION ValueInfo;
 
-    Entry = GetGenericListEntry(List);
+    Entry = GetCurrentListEntry(List);
     if (Entry == NULL)
         return FALSE;
 
-    LanguageId = (PWCHAR)Entry->UserData;
+    LanguageId = (PWCHAR)GetListEntryUserData(Entry);
     if (LanguageId == NULL)
         return FALSE;
 

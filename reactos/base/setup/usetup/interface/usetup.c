@@ -563,7 +563,6 @@ CheckUnattendedSetup(VOID)
 VOID
 UpdateKBLayout(VOID)
 {
-    PLIST_ENTRY Entry;
     PGENERIC_LIST_ENTRY ListEntry;
     LPCWSTR pszNewLayout;
 
@@ -574,22 +573,20 @@ UpdateKBLayout(VOID)
         LayoutList = CreateKeyboardLayoutList(SetupInf, DefaultKBLayout);
     }
 
-    Entry = LayoutList->ListHead.Flink;
+    ListEntry = GetFirstListEntry(LayoutList);
 
     /* Search for default layout (if provided) */
     if (pszNewLayout != NULL)
     {
-        while (Entry != &LayoutList->ListHead)
+        while (ListEntry != NULL)
         {
-            ListEntry = CONTAINING_RECORD (Entry, GENERIC_LIST_ENTRY, Entry);
-
-            if (!wcscmp(pszNewLayout, ListEntry->UserData))
+            if (!wcscmp(pszNewLayout, GetListEntryUserData(ListEntry)))
             {
-                LayoutList->CurrentEntry = ListEntry;
+                SetCurrentListEntry(LayoutList, ListEntry);
                 break;
             }
 
-            Entry = Entry->Flink;
+            ListEntry = GetNextListEntry(ListEntry);
         }
     }
 }
@@ -647,7 +644,7 @@ LanguagePage(PINPUT_RECORD Ir)
         }
         else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)  /* ENTER */
         {
-            SelectedLanguageId = (PWCHAR)LanguageList->CurrentEntry->UserData;
+            SelectedLanguageId = (PWCHAR)GetListEntryUserData(GetCurrentListEntry(LanguageList));
 
             if (wcscmp(SelectedLanguageId, DefaultLanguage))
             {
@@ -1019,10 +1016,10 @@ DeviceSettingsPage(PINPUT_RECORD Ir)
     MUIDisplayPage(DEVICE_SETTINGS_PAGE);
 
 
-    CONSOLE_SetTextXY(25, 11, GetGenericListEntry(ComputerList)->Text);
-    CONSOLE_SetTextXY(25, 12, GetGenericListEntry(DisplayList)->Text);
-    CONSOLE_SetTextXY(25, 13, GetGenericListEntry(KeyboardList)->Text);
-    CONSOLE_SetTextXY(25, 14, GetGenericListEntry(LayoutList)->Text);
+    CONSOLE_SetTextXY(25, 11, GetListEntryText(GetCurrentListEntry((ComputerList))));
+    CONSOLE_SetTextXY(25, 12, GetListEntryText(GetCurrentListEntry((DisplayList))));
+    CONSOLE_SetTextXY(25, 13, GetListEntryText(GetCurrentListEntry((KeyboardList))));
+    CONSOLE_SetTextXY(25, 14, GetListEntryText(GetCurrentListEntry((LayoutList))));
 
     CONSOLE_InvertTextXY(24, Line, 48, 1);
 
