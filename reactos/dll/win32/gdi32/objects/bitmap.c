@@ -201,6 +201,10 @@ CreateBitmapIndirect(const BITMAP *pbm)
                             pbm->bmBitsPixel,
                             pbm->bmBits);
    }
+   else
+   {
+       SetLastError(ERROR_INVALID_PARAMETER);
+   }
 
    return bitmap;
 }
