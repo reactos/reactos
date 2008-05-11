@@ -46,6 +46,8 @@ typedef struct _GENERIC_LIST
 {
     LIST_ENTRY ListHead;
 
+    PLIST_ENTRY FirstShown;
+    PLIST_ENTRY LastShown;
     SHORT Left;
     SHORT Top;
     SHORT Right;
@@ -230,13 +232,14 @@ DrawListEntries(PGENERIC_LIST GenericList)
     coPos.Y = GenericList->Top + 1;
     Width = GenericList->Right - GenericList->Left - 1;
 
-    Entry = GenericList->ListHead.Flink;
+    Entry = GenericList->FirstShown;
     while (Entry != &GenericList->ListHead)
     {
         ListEntry = CONTAINING_RECORD (Entry, GENERIC_LIST_ENTRY, Entry);
 
         if (coPos.Y == GenericList->Bottom)
             break;
+        GenericList->LastShown = Entry;
 
         FillConsoleOutputAttribute (StdOutput,
                                     (GenericList->CurrentEntry == ListEntry) ?
@@ -289,6 +292,7 @@ DrawGenericList(PGENERIC_LIST List,
                 SHORT Right,
                 SHORT Bottom)
 {
+    List->FirstShown = List->ListHead.Flink;
     List->Left = Left;
     List->Top = Top;
     List->Right = Right;
@@ -314,6 +318,11 @@ ScrollDownGenericList (PGENERIC_LIST List)
     if (List->CurrentEntry->Entry.Flink != &List->ListHead)
     {
         Entry = List->CurrentEntry->Entry.Flink;
+        if (List->LastShown == &List->CurrentEntry->Entry)
+        {
+            List->FirstShown = List->FirstShown->Flink;
+            List->LastShown = List->LastShown->Flink;
+        }
         List->CurrentEntry = CONTAINING_RECORD (Entry, GENERIC_LIST_ENTRY, Entry);
         DrawListEntries(List);
     }
@@ -331,6 +340,11 @@ ScrollUpGenericList (PGENERIC_LIST List)
     if (List->CurrentEntry->Entry.Blink != &List->ListHead)
     {
         Entry = List->CurrentEntry->Entry.Blink;
+        if (List->FirstShown == &List->CurrentEntry->Entry)
+        {
+            List->FirstShown = List->FirstShown->Blink;
+            List->LastShown = List->LastShown->Blink;
+        }
         List->CurrentEntry = CONTAINING_RECORD (Entry, GENERIC_LIST_ENTRY, Entry);
         DrawListEntries(List);
     }
