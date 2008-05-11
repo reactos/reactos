@@ -112,14 +112,8 @@ NtGdiCreateBitmap(
          ProbeForRead(pUnsafeBits, cjBits, 1);
       }
 
-      if (0 == Width || 0 == Height)
-      {
-         hBitmap = IntGdiCreateBitmap (1, 1, 1, 1, NULL);
-      }
-      else
-      {
-        hBitmap = IntGdiCreateBitmap(Width, Height, Planes, BitsPixel, pUnsafeBits);
-      }
+      hBitmap = IntGdiCreateBitmap(Width, Height, Planes, BitsPixel, pUnsafeBits);
+
    }
    _SEH_HANDLE
    {

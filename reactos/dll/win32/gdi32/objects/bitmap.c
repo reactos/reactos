@@ -187,15 +187,22 @@ StretchBlt(
 HBITMAP WINAPI
 CreateBitmapIndirect(const BITMAP *pbm)
 {
-   if (pbm)
+   HBITMAP bitmap = NULL;
+
+   /* Note windows xp/2003 does not check if pbm is NULL or not */
+   if ( (pbm->bmWidthBytes != 0) &&
+        (!(pbm->bmWidthBytes & 1)) )
+
    {
-      return NtGdiCreateBitmap(pbm->bmWidth,
-                               pbm->bmHeight,
-                               pbm->bmPlanes,
-                               pbm->bmBitsPixel,
-                               pbm->bmBits);
+        
+      bitmap = CreateBitmap(pbm->bmWidth,
+                            pbm->bmHeight,
+                            pbm->bmPlanes,
+                            pbm->bmBitsPixel,
+                            pbm->bmBits);
    }
-   return NULL;
+
+   return bitmap;
 }
 
 HBITMAP WINAPI
