@@ -1536,6 +1536,7 @@ co_IntCreateWindowEx(DWORD dwExStyle,
        * message window (style: WS_POPUP|WS_DISABLED)
        */
       DPRINT1("FIXME - Parent is HWND_MESSAGE\n");
+      // ParentWindowHandle set already.      
    }
    else if (hWndParent)
    {
