@@ -1257,7 +1257,7 @@ NtGdiEngCopyBits(SURFOBJ *Dest,
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 HBITMAP APIENTRY
 NtGdiEngCreateBitmap(IN SIZEL Size,
@@ -1266,13 +1266,16 @@ NtGdiEngCreateBitmap(IN SIZEL Size,
 		IN ULONG Flags,
 		IN PVOID Bits)
 {
-     UNIMPLEMENTED;
-    return NULL;
+    return EngCreateBitmap(Size,
+                          Width,
+                         Format,
+                          Flags,
+                           Bits);
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 HPALETTE APIENTRY
 NtGdiEngCreatePalette(IN ULONG Mode,
@@ -1282,8 +1285,12 @@ NtGdiEngCreatePalette(IN ULONG Mode,
 		 IN ULONG Green,
 		 IN ULONG Blue)
 {
-     UNIMPLEMENTED;
-    return NULL;
+    return EngCreatePalette( Mode,
+                        NumColors,
+                           Colors,
+                              Red,
+                            Green,
+                             Blue);
 }
 
 BOOL APIENTRY
@@ -1338,13 +1345,12 @@ NtGdiEngStrokePath(SURFOBJ *pso,
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL APIENTRY
 NtGdiEngDeletePalette(IN HPALETTE Palette)
 {
-     UNIMPLEMENTED;
-    return FALSE;
+    return EngDeletePalette(Palette);
 }
 
 /*
