@@ -165,7 +165,7 @@ NtReplyWaitReceivePortEx(IN HANDLE PortHandle,
     PETHREAD Thread = PsGetCurrentThread(), WakeupThread;
     PLPCP_CONNECTION_MESSAGE ConnectMessage;
     ULONG ConnectionInfoLength;
-    PORT_MESSAGE CapturedReplyMessage;
+    //PORT_MESSAGE CapturedReplyMessage;
     LARGE_INTEGER CapturedTimeout;
 
     PAGED_CODE();
@@ -183,8 +183,8 @@ NtReplyWaitReceivePortEx(IN HANDLE PortHandle,
             if (ReplyMessage != NULL)
             {
                 ProbeForRead(ReplyMessage, sizeof(PORT_MESSAGE), sizeof(ULONG));
-                RtlCopyMemory(&CapturedReplyMessage, ReplyMessage, sizeof(PORT_MESSAGE));
-                ReplyMessage = &CapturedReplyMessage;
+                /*RtlCopyMemory(&CapturedReplyMessage, ReplyMessage, sizeof(PORT_MESSAGE));
+                ReplyMessage = &CapturedReplyMessage;*/
             }
 
             if (Timeout != NULL)
@@ -199,6 +199,8 @@ NtReplyWaitReceivePortEx(IN HANDLE PortHandle,
         }
         _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
         {
+            DPRINT1("SEH crash [1]\n");
+	    DbgBreakPoint();
             Status = _SEH_GetExceptionCode();
         }
         _SEH_END;
@@ -492,6 +494,8 @@ NtReplyWaitReceivePortEx(IN HANDLE PortHandle,
     }
     _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
     {
+        DPRINT1("SEH crash [2]\n");
+        DbgBreakPoint();
         Status = _SEH_GetExceptionCode();
     }
     _SEH_END;
