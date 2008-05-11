@@ -1625,17 +1625,12 @@ end:
  * Most values can be overridden in either
  * HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders
  * or in the same location in HKLM.
- * The registry usage is explained by the following tech note:
- * http://www.microsoft.com/windows2000/techinfo/reskit/en-us/default.asp?url=/windows2000/techinfo/reskit/en-us/regentry/36173.asp
  * The "Shell Folders" registry key was used in NT4 and earlier systems.
  * Beginning with Windows 2000, the "User Shell Folders" key is used, so
  * changes made to it are made to the former key too.  This synchronization is
  * done on-demand: not until someone requests the value of one of these paths
  * (by calling one of the SHGet functions) is the value synchronized.
- * Furthermore, as explained here:
- * http://www.microsoft.com/windows2000/techinfo/reskit/en-us/default.asp?url=/windows2000/techinfo/reskit/en-us/regentry/36276.asp
- * the HKCU paths take precedence over the HKLM paths.
- *
+ * Furthermore, the HKCU paths take precedence over the HKLM paths.
  */
 HRESULT WINAPI SHGetFolderPathW(
 	HWND hwndOwner,    /* [I] owner window */
@@ -1644,20 +1639,85 @@ HRESULT WINAPI SHGetFolderPathW(
 	DWORD dwFlags,     /* [I] which path to return */
 	LPWSTR pszPath)    /* [O] converted path */
 {
+    HRESULT hr =  SHGetFolderPathAndSubDirW(hwndOwner, nFolder, hToken, dwFlags, NULL, pszPath);
+    if(HRESULT_FROM_WIN32(ERROR_PATH_NOT_FOUND) == hr)
+        hr = HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
+    return hr;
+}
+
+HRESULT WINAPI SHGetFolderPathAndSubDirA(
+	HWND hwndOwner,    /* [I] owner window */
+	int nFolder,       /* [I] CSIDL identifying the folder */
+	HANDLE hToken,     /* [I] access token */
+	DWORD dwFlags,     /* [I] which path to return */
+	LPCSTR pszSubPath, /* [I] sub directory of the specified folder */
+	LPSTR pszPath)     /* [O] converted path */
+{
+    int length;
+    HRESULT hr = S_OK;
+    LPWSTR pszSubPathW = NULL;
+    LPWSTR pszPathW = NULL;
+    TRACE("%08x,%08x,%s\n",nFolder, dwFlags, debugstr_w(pszSubPathW));
+
+    if(pszPath) {
+        pszPathW = HeapAlloc(GetProcessHeap(), 0, MAX_PATH * sizeof(WCHAR));
+        if(!pszPathW) {
+            hr = HRESULT_FROM_WIN32(ERROR_NOT_ENOUGH_MEMORY);
+            goto cleanup;
+        }
+    }
+    TRACE("%08x,%08x,%s\n",nFolder, dwFlags, debugstr_w(pszSubPathW));
+
+    /* SHGetFolderPathAndSubDirW does not distinguish if pszSubPath isn't
+     * set (null), or an empty string.therefore call it without the parameter set
+     * if pszSubPath is an empty string
+     */
+    if (pszSubPath && pszSubPath[0]) {
+        length = MultiByteToWideChar(CP_ACP, 0, pszSubPath, -1, NULL, 0);
+        pszSubPathW = HeapAlloc(GetProcessHeap(), 0, length * sizeof(WCHAR));
+        if(!pszSubPathW) {
+            hr = HRESULT_FROM_WIN32(ERROR_NOT_ENOUGH_MEMORY);
+            goto cleanup;
+        }
+        MultiByteToWideChar(CP_ACP, 0, pszSubPath, -1, pszSubPathW, length);
+    }
+
+    hr = SHGetFolderPathAndSubDirW(hwndOwner, nFolder, hToken, dwFlags, pszSubPathW, pszPathW);
+
+    if (SUCCEEDED(hr) && pszPath)
+        WideCharToMultiByte(CP_ACP, 0, pszPathW, -1, pszPath, MAX_PATH, NULL, NULL);
+
+cleanup:
+    HeapFree(GetProcessHeap(), 0, pszPathW);
+    HeapFree(GetProcessHeap(), 0, pszSubPathW);
+    return hr;
+}
+
+HRESULT WINAPI SHGetFolderPathAndSubDirW(
+	HWND hwndOwner,    /* [I] owner window */
+	int nFolder,       /* [I] CSIDL identifying the folder */
+	HANDLE hToken,     /* [I] access token */
+	DWORD dwFlags,     /* [I] which path to return */
+	LPCWSTR pszSubPath,/* [I] sub directory of the specified folder */
+	LPWSTR pszPath)    /* [O] converted path */
+{
     HRESULT    hr;
     WCHAR      szBuildPath[MAX_PATH], szTemp[MAX_PATH];
     DWORD      folder = nFolder & CSIDL_FOLDER_MASK;
     CSIDL_Type type;
     int        ret;
 
-    TRACE("%p,%p,nFolder=0x%04x\n", hwndOwner,pszPath,nFolder);
+    TRACE("%p,%p,nFolder=0x%04x,%s\n", hwndOwner,pszPath,nFolder,debugstr_w(pszSubPath));
 
     /* Windows always NULL-terminates the resulting path regardless of success
      * or failure, so do so first
      */
     if (pszPath)
         *pszPath = '\0';
+
     if (folder >= sizeof(CSIDL_Data) / sizeof(CSIDL_Data[0]))
+        return E_INVALIDARG;
+    if ((SHGFP_TYPE_CURRENT != dwFlags) && (SHGFP_TYPE_DEFAULT != dwFlags))
         return E_INVALIDARG;
     szTemp[0] = 0;
     type = CSIDL_Data[folder].type;
@@ -1711,11 +1771,22 @@ HRESULT WINAPI SHGetFolderPathW(
         hr = _SHExpandEnvironmentStrings(szTemp, szBuildPath);
     else
         strcpyW(szBuildPath, szTemp);
+
+    if (FAILED(hr)) goto end;
+
+    if(pszSubPath) {
+        /* make sure the new path does not exceed th bufferlength
+         * rememebr to backslash and the termination */
+        if(MAX_PATH < (lstrlenW(szBuildPath) + lstrlenW(pszSubPath) + 2)) {
+            hr = HRESULT_FROM_WIN32(ERROR_FILENAME_EXCED_RANGE);
+            goto end;
+        }
+        PathAppendW(szBuildPath, pszSubPath);
+        PathRemoveBackslashW(szBuildPath);
+    }
     /* Copy the path if it's available before we might return */
     if (SUCCEEDED(hr) && pszPath)
         strcpyW(pszPath, szBuildPath);
-
-    if (FAILED(hr)) goto end;
 
     /* if we don't care about existing directories we are ready */
     if(nFolder & CSIDL_FLAG_DONT_VERIFY) goto end;
@@ -1727,7 +1798,7 @@ HRESULT WINAPI SHGetFolderPathW(
      */
     if (!(nFolder & CSIDL_FLAG_CREATE))
     {
-        hr = HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
+        hr = HRESULT_FROM_WIN32(ERROR_PATH_NOT_FOUND);
         goto end;
     }
 
