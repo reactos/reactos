@@ -294,7 +294,7 @@ static BOOL TryToTranslateChar(WORD wVirtKey,
                if( vkPtr->VirtualKey != 0xff )
                {
                   DPRINT( "Found dead key with no trailer in the table.\n" );
-                  DPRINT( "VK: %04x, ADDR: %08x\n", wVirtKey, (int)vkPtr );
+                  DPRINT( "VK: %04x, ADDR: %p\n", wVirtKey, vkPtr );
                   return FALSE;
                }
                *pwcTranslatedChar = vkPtr->wch[CapsMod];
