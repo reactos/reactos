@@ -298,3 +298,12 @@ HRESULT WINAPI CoInternetQueryInfo(LPCWSTR pwzUrl, QUERYOPTION QueryOption,
 
     return S_OK;
 }
+
+/***********************************************************************
+ *             CoInternetSetFeatureEnabled (URLMON.@)
+ */
+HRESULT WINAPI CoInternetSetFeatureEnabled(INTERNETFEATURELIST feature, DWORD flags, BOOL enable)
+{
+    FIXME("%d, 0x%08x, %x, stub\n", feature, flags, enable);
+    return E_NOTIMPL;
+}

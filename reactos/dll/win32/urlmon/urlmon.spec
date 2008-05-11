@@ -19,6 +19,7 @@
 @ stdcall CoInternetGetSession(long ptr long)
 @ stdcall CoInternetParseUrl(wstr long long wstr long ptr long)
 @ stdcall CoInternetQueryInfo(ptr long long ptr long ptr long)
+@ stdcall CoInternetSetFeatureEnabled(long long long)
 @ stub CompareSecurityIds
 @ stub CopyBindInfo
 @ stdcall CopyStgMedium(ptr ptr)
