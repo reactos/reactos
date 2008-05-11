@@ -38,7 +38,7 @@ intEnableReactXDriver(HDC hdc)
     PGDIDEVICE pDev = NULL;
     PGD_DXDDENABLEDIRECTDRAW pfnDdEnableDirectDraw = NULL;
     BOOL success = FALSE;
-    
+
     /* FIXME get the process data */
 
     /* Do not try load dxg.sys when it have already been load once */
@@ -65,11 +65,11 @@ intEnableReactXDriver(HDC hdc)
     if  ( ( pDev->DriverFunctions.DisableDirectDraw == NULL) ||
           ( pDev->DriverFunctions.EnableDirectDraw == NULL))
     {
-        DPRINT1("Waring : DisableDirectDraw and EnableDirectDraw are NULL, no dx driver \n");    
+        DPRINT1("Waring : DisableDirectDraw and EnableDirectDraw are NULL, no dx driver \n");
     }
     else
-    {   
-        
+    {
+
         /* CHeck see if dx have been enable or not */
         if ( pDev->pEDDgpl->pvmList == NULL)
         {
@@ -87,9 +87,9 @@ intEnableReactXDriver(HDC hdc)
                 DPRINT1(" call to pfnDdEnableDirectDraw \n ");
                 /* Note it is the hdev struct it want, not the drv hPDev aka pdc->PDev */
                 success = pfnDdEnableDirectDraw(pDC->pPDev, TRUE);
-                                               
+
                 dump_edd_directdraw_global(pDev->pEDDgpl);
-                dump_halinfo(&pDev->pEDDgpl->ddHalInfo);                
+                dump_halinfo(&pDev->pEDDgpl->ddHalInfo);
             }
         }
         else
@@ -98,7 +98,7 @@ intEnableReactXDriver(HDC hdc)
             success = TRUE;
         }
     }
-   
+
 
     DPRINT1("Return value : 0x%08x\n",success);
     DC_UnlockDc(pDC);
@@ -128,7 +128,7 @@ DxDdStartupDxGraphics(  ULONG ulc1,
     NTSTATUS Status = STATUS_PROCEDURE_NOT_FOUND;
 
     /* FIXME setup of gaEngFuncs driver export list
-     * but not in this api, we can add it here tempary until we figout where 
+     * but not in this api, we can add it here tempary until we figout where
      * no code have been writen for it yet
      */
 
@@ -139,7 +139,7 @@ DxDdStartupDxGraphics(  ULONG ulc1,
     /* Loading the kernel interface of directx for win32k */
 
     DPRINT1("Warning: trying loading vista dxkrnl.sys\n");
-    ghDxGraphics = EngLoadImage(L"\\SystemRoot\\System32\\drivers\\dxkrnl.sys"); 
+    ghDxGraphics = EngLoadImage(L"\\SystemRoot\\System32\\drivers\\dxkrnl.sys");
     if ( ghDxGraphics == NULL)
     {
         DPRINT1("Warning: dxkrnl.sys not found\n");
@@ -218,27 +218,27 @@ DxDdStartupDxGraphics(  ULONG ulc1,
 /* NtGdiDdCreateDirectDrawObject                                        */
 /************************************************************************/
 HANDLE
-STDCALL 
+STDCALL
 NtGdiDdCreateDirectDrawObject(HDC hdc)
 {
     PGD_DDCREATEDIRECTDRAWOBJECT pfnDdCreateDirectDrawObject;
- 
+
     if (hdc == NULL)
     {
         DPRINT1("Warning : hdc is NULL\n");
         return 0;
     }
-    
+
     /* FIXME This should be alloc for each drv and use it from each drv, not global for whole win32k */
     if (intEnableReactXDriver(hdc) == FALSE)
-    {       
+    {
         DPRINT1("Warning : Failed to start the directx interface from the graphic driver\n");
         return DDHAL_DRIVER_NOTHANDLED;
     }
-   
+
     /* get the pfnDdCreateDirectDrawObject after we load the drv */
     pfnDdCreateDirectDrawObject = (PGD_DDCREATEDIRECTDRAWOBJECT)gpDxFuncs[DXG_INDEX_DxDdCreateDirectDrawObject].pfn;
-  
+
     if (pfnDdCreateDirectDrawObject == NULL)
     {
         DPRINT1("Warning: no pfnDdCreateDirectDrawObject\n");
@@ -275,7 +275,7 @@ NtGdiDdCreateDirectDrawObject(HDC hdc)
 * @param PVOID pvPtr2
 * Unknown
 *
-* @return 
+* @return
 * Always returns DDHAL_DRIVER_NOTHANDLED
 *
 * @remarks.
@@ -332,7 +332,7 @@ NtGdiDdColorControl(HANDLE hSurface,
                     PDD_COLORCONTROLDATA puColorControlData)
 {
     PGD_DDCOLORCONTROL pfnDdColorControl = (PGD_DDCOLORCONTROL)gpDxFuncs[DXG_INDEX_DxDdColorControl].pfn;
-       
+
     if (pfnDdColorControl == NULL)
     {
         DPRINT1("Warning: no pfnDdColorControl\n");
@@ -357,7 +357,7 @@ NtGdiDdCreateSurfaceObject(HANDLE hDirectDrawLocal,
 )
 {
     PGD_DXDDCREATESURFACEOBJECT pfnDdCreateSurfaceObject = (PGD_DXDDCREATESURFACEOBJECT)gpDxFuncs[DXG_INDEX_DxDdCreateSurfaceObject].pfn;
-  
+
     if (pfnDdCreateSurfaceObject == NULL)
     {
         DPRINT1("Warning: no pfnDdCreateSurfaceObject\n");
@@ -372,7 +372,7 @@ NtGdiDdCreateSurfaceObject(HANDLE hDirectDrawLocal,
 /* NtGdiDdDeleteDirectDrawObject                                        */
 /************************************************************************/
 BOOL
-STDCALL 
+STDCALL
 NtGdiDdDeleteDirectDrawObject(HANDLE hDirectDrawLocal)
 {
     PGD_DXDDDELETEDIRECTDRAWOBJECT pfnDdDeleteDirectDrawObject = (PGD_DXDDDELETEDIRECTDRAWOBJECT)gpDxFuncs[DXG_INDEX_DxDdDeleteDirectDrawObject].pfn;
@@ -419,7 +419,7 @@ NtGdiDdDeleteSurfaceObject(HANDLE hSurface)
 /* NtGdiDdQueryDirectDrawObject                                         */
 /************************************************************************/
 BOOL
-STDCALL 
+STDCALL
 NtGdiDdQueryDirectDrawObject(HANDLE hDirectDrawLocal,
                              DD_HALINFO  *pHalInfo,
                              DWORD *pCallBackFlags,
@@ -433,7 +433,7 @@ NtGdiDdQueryDirectDrawObject(HANDLE hDirectDrawLocal,
                              DWORD *puFourCC)
 {
     PGD_DXDDQUERYDIRECTDRAWOBJECT pfnDdQueryDirectDrawObject = (PGD_DXDDQUERYDIRECTDRAWOBJECT)gpDxFuncs[DXG_INDEX_DxDdQueryDirectDrawObject].pfn;
-   
+
     if (pfnDdQueryDirectDrawObject == NULL)
     {
         DPRINT1("Warning: no pfnDdQueryDirectDrawObject\n");
@@ -443,7 +443,7 @@ NtGdiDdQueryDirectDrawObject(HANDLE hDirectDrawLocal,
     DPRINT1("Calling dxg.sys pfnDdQueryDirectDrawObject\n");
 
 
-    return pfnDdQueryDirectDrawObject(hDirectDrawLocal, pHalInfo, pCallBackFlags, puD3dCallbacks, puD3dDriverData, 
+    return pfnDdQueryDirectDrawObject(hDirectDrawLocal, pHalInfo, pCallBackFlags, puD3dCallbacks, puD3dDriverData,
                                       puD3dBufferCallbacks, puD3dTextureFormats, puNumHeaps, puvmList, puNumFourCC, puFourCC);
 
 }
@@ -457,11 +457,11 @@ STDCALL
 NtGdiDdReenableDirectDrawObject(HANDLE hDirectDrawLocal,
                                 BOOL *pubNewMode)
 {
-#if DXDBG 
+#if DXDBG
     BOOL status = FALSE;
 #endif
     PGD_DXDDREENABLEDIRECTDRAWOBJECT pfnDdReenableDirectDrawObject = (PGD_DXDDREENABLEDIRECTDRAWOBJECT)gpDxFuncs[DXG_INDEX_DxDdReenableDirectDrawObject].pfn;
-  
+
     if (pfnDdReenableDirectDrawObject == NULL)
     {
         DPRINT1("Warning: no pfnDdReenableDirectDrawObject\n");
@@ -470,7 +470,7 @@ NtGdiDdReenableDirectDrawObject(HANDLE hDirectDrawLocal,
 
     DPRINT1("Calling dxg.sys pfnDdReenableDirectDrawObject\n");
 
-#if DXDBG 
+#if DXDBG
     status = pfnDdReenableDirectDrawObject(hDirectDrawLocal, pubNewMode);
     DPRINT1("end Calling dxg.sys pfnDdReenableDirectDrawObject\n");
     DPRINT1("return value : 0x%08x\n",status);
@@ -491,7 +491,7 @@ NtGdiDdGetDriverInfo(HANDLE hDirectDrawLocal,
 
 {
     PGD_DXDDGETDRIVERINFO pfnDdGetDriverInfo = (PGD_DXDDGETDRIVERINFO)gpDxFuncs[DXG_INDEX_DxDdGetDriverInfo].pfn;
-    
+
     if (pfnDdGetDriverInfo == NULL)
     {
         DPRINT1("Warning: no pfnDdGetDriverInfo\n");
@@ -512,7 +512,7 @@ NtGdiDdGetAvailDriverMemory(HANDLE hDirectDrawLocal,
                             PDD_GETAVAILDRIVERMEMORYDATA puGetAvailDriverMemoryData)
 {
     PGD_DXDDGETAVAILDRIVERMEMORY pfnDdGetAvailDriverMemory = (PGD_DXDDGETAVAILDRIVERMEMORY)gpDxFuncs[DXG_INDEX_DxDdGetAvailDriverMemory].pfn;
-   
+
     if (pfnDdGetAvailDriverMemory == NULL)
     {
         DPRINT1("Warning: no pfnDdGetAvailDriverMemory\n");
@@ -534,7 +534,7 @@ NtGdiDdSetExclusiveMode(HANDLE hDirectDraw,
                         PDD_SETEXCLUSIVEMODEDATA puSetExclusiveModeData)
 {
     PGD_DXDDSETEXCLUSIVEMODE pfnDdSetExclusiveMode = (PGD_DXDDSETEXCLUSIVEMODE)gpDxFuncs[DXG_INDEX_DxDdSetExclusiveMode].pfn;
-      
+
     if (pfnDdSetExclusiveMode == NULL)
     {
         DPRINT1("Warning: no pfnDdSetExclusiveMode\n");
@@ -556,7 +556,7 @@ NtGdiDdFlipToGDISurface(HANDLE hDirectDraw,
                         PDD_FLIPTOGDISURFACEDATA puFlipToGDISurfaceData)
 {
     PGD_DXDDFLIPTOGDISURFACE pfnDdFlipToGDISurface = (PGD_DXDDFLIPTOGDISURFACE)gpDxFuncs[DXG_INDEX_DxDdFlipToGDISurface].pfn;
-   
+
     if (pfnDdFlipToGDISurface == NULL)
     {
         DPRINT1("Warning: no pfnDdFlipToGDISurface\n");
@@ -577,7 +577,7 @@ NtGdiDdGetDC(HANDLE hSurface,
              PALETTEENTRY *puColorTable)
 {
     PGD_DDGETDC pfnDdGetDC = (PGD_DDGETDC)gpDxFuncs[DXG_INDEX_DxDdGetDC].pfn;
-    
+
     if (pfnDdGetDC == NULL)
     {
         DPRINT1("Warning: no pfnDdGetDC\n");
@@ -596,9 +596,9 @@ STDCALL
 NtGdiDdGetDxHandle(HANDLE hDirectDraw,
                    HANDLE hSurface,
                    BOOL bRelease)
-{    
+{
     PGD_DDGETDXHANDLE pfnDdGetDxHandle = (PGD_DDGETDXHANDLE)gpDxFuncs[DXG_INDEX_DxDdGetDxHandle].pfn;
-    
+
     if (pfnDdGetDxHandle == NULL)
     {
         DPRINT1("Warning: no pfnDdGetDxHandle\n");
@@ -618,7 +618,7 @@ STDCALL
 NtGdiDdReleaseDC(HANDLE hSurface)
 {
     PGD_DDRELEASEDC pfnDdReleaseDC = (PGD_DDRELEASEDC)gpDxFuncs[DXG_INDEX_DxDdReleaseDC].pfn;
-   
+
     if (pfnDdReleaseDC == NULL)
     {
         DPRINT1("Warning: no pfnDdReleaseDC\n");
@@ -639,7 +639,7 @@ NtGdiDdResetVisrgn(HANDLE hSurface,
 {
 
     PGD_DDRESTVISRGN pfnDdResetVisrgn = (PGD_DDRESTVISRGN)gpDxFuncs[DXG_INDEX_DxDdResetVisrgn].pfn;
-   
+
     if (pfnDdResetVisrgn == NULL)
     {
         DPRINT1("Warning: no pfnDdResetVisrgn\n");
@@ -660,7 +660,7 @@ NtGdiDdSetGammaRamp(HANDLE hDirectDraw,
                     LPVOID lpGammaRamp)
 {
     PGD_DDSETGAMMARAMP pfnDdSetGammaRamp = (PGD_DDSETGAMMARAMP)gpDxFuncs[DXG_INDEX_DxDdSetGammaRamp].pfn;
-   
+
     if (pfnDdSetGammaRamp == NULL)
     {
         DPRINT1("Warning: no pfnDdSetGammaRamp\n");
@@ -675,382 +675,382 @@ NtGdiDdSetGammaRamp(HANDLE hDirectDraw,
 /* internal debug api */
 void dump_edd_directdraw_global(EDD_DIRECTDRAW_GLOBAL *pEddgbl)
 {
-    DPRINT1("0x%08lx 0x000 PEDD_DIRECTDRAW_GLOBAL->dhpdev                                         : 0x%08lx\n",(((DWORD)&pEddgbl->dhpdev) - (DWORD)pEddgbl), pEddgbl->dhpdev);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->dwReserved1                                    : 0x%08lx\n",(((DWORD)&pEddgbl->dwReserved1) - (DWORD)pEddgbl),pEddgbl->dwReserved1);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->dwReserved2                                    : 0x%08lx\n",(((DWORD)&pEddgbl->dwReserved2) - (DWORD)pEddgbl),pEddgbl->dwReserved2);    
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_000c[0]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_000c[0]) - (DWORD)pEddgbl),pEddgbl->unk_000c[0]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_000c[1]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_000c[1]) - (DWORD)pEddgbl),pEddgbl->unk_000c[1]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_000c[2]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_000c[2]) - (DWORD)pEddgbl),pEddgbl->unk_000c[2]);    
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->cDriverReferences                              : 0x%08lx\n",(((DWORD)&pEddgbl->cDriverReferences) - (DWORD)pEddgbl),pEddgbl->cDriverReferences);    
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_01c                                        : 0x%08lx\n",(((DWORD)&pEddgbl->unk_01c) - (DWORD)pEddgbl),pEddgbl->unk_01c);
-    
-    DPRINT1("0x%08lx 0x020 PEDD_DIRECTDRAW_GLOBAL->dwCallbackFlags                                : 0x%08lx\n",(((DWORD)&pEddgbl->dwCallbackFlags) - (DWORD)pEddgbl),pEddgbl->dwCallbackFlags);
-    
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_024                                        : 0x%08lx\n",(((DWORD)&pEddgbl->unk_024) - (DWORD)pEddgbl),pEddgbl->unk_024);
-    
-    DPRINT1("0x%08lx 0x028 PEDD_DIRECTDRAW_GLOBAL->llAssertModeTimeout                            : 0x%x\n",(((DWORD)&pEddgbl->llAssertModeTimeout) - (DWORD)pEddgbl),pEddgbl->llAssertModeTimeout);
-    DPRINT1("0x%08lx 0x030 PEDD_DIRECTDRAW_GLOBAL->dwNumHeaps                                     : 0x%08lx\n",(((DWORD)&pEddgbl->dwNumHeaps) - (DWORD)pEddgbl),pEddgbl->dwNumHeaps);
+    DPRINT1("0x%08lx 0x000 PEDD_DIRECTDRAW_GLOBAL->dhpdev                                         : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, dhpdev), pEddgbl->dhpdev);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->dwReserved1                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, dwReserved1),pEddgbl->dwReserved1);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->dwReserved2                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, dwReserved2),pEddgbl->dwReserved2);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_000c[0]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_000c[0]),pEddgbl->unk_000c[0]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_000c[1]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_000c[1]),pEddgbl->unk_000c[1]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_000c[2]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_000c[2]),pEddgbl->unk_000c[2]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->cDriverReferences                              : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, cDriverReferences),pEddgbl->cDriverReferences);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_01c                                        : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_01c),pEddgbl->unk_01c);
+
+    DPRINT1("0x%08lx 0x020 PEDD_DIRECTDRAW_GLOBAL->dwCallbackFlags                                : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, dwCallbackFlags),pEddgbl->dwCallbackFlags);
+
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_024                                        : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_024),pEddgbl->unk_024);
+
+    DPRINT1("0x%08lx 0x028 PEDD_DIRECTDRAW_GLOBAL->llAssertModeTimeout                            : 0x%x\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, llAssertModeTimeout),pEddgbl->llAssertModeTimeout);
+    DPRINT1("0x%08lx 0x030 PEDD_DIRECTDRAW_GLOBAL->dwNumHeaps                                     : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, dwNumHeaps),pEddgbl->dwNumHeaps);
     // VIDEOMEMORY *pvmList;
-    DPRINT1("0x%08lx 0x034 PEDD_DIRECTDRAW_GLOBAL->pvmList                                        : 0x%08lx\n",(((DWORD)&pEddgbl->pvmList) - (DWORD)pEddgbl),pEddgbl->pvmList);
-    
-    DPRINT1("0x%08lx 0x038 PEDD_DIRECTDRAW_GLOBAL->dwNumFourCC                                    : 0x%08lx\n",(((DWORD)&pEddgbl->dwNumFourCC) - (DWORD)pEddgbl),pEddgbl->dwNumFourCC);
-    DPRINT1("0x%08lx 0x03C PEDD_DIRECTDRAW_GLOBAL->pdwFourCC                                      : 0x%08lx\n",(((DWORD)&pEddgbl->pdwFourCC) - (DWORD)pEddgbl),pEddgbl->pdwFourCC);
-    
+    DPRINT1("0x%08lx 0x034 PEDD_DIRECTDRAW_GLOBAL->pvmList                                        : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, pvmList),pEddgbl->pvmList);
+
+    DPRINT1("0x%08lx 0x038 PEDD_DIRECTDRAW_GLOBAL->dwNumFourCC                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, dwNumFourCC),pEddgbl->dwNumFourCC);
+    DPRINT1("0x%08lx 0x03C PEDD_DIRECTDRAW_GLOBAL->pdwFourCC                                      : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, pdwFourCC),pEddgbl->pdwFourCC);
+
     // DD_HALINFO ddHalInfo;
-    DPRINT1("0x%08lx 0x040 PEDD_DIRECTDRAW_GLOBAL->ddHalInfo.dwSize                               : 0x%08lx\n",(((DWORD)&pEddgbl->ddHalInfo.dwSize) - (DWORD)pEddgbl),pEddgbl->ddHalInfo.dwSize);
-    DPRINT1("0x%08lx 0x044 PEDD_DIRECTDRAW_GLOBAL->ddHalInfo.vmiData.fpPrimary                    : 0x%08lx\n",(((DWORD)&pEddgbl->ddHalInfo.vmiData.fpPrimary) - (DWORD)pEddgbl),pEddgbl->ddHalInfo.vmiData.fpPrimary);
-    DPRINT1("0x%08lx 0x048 PEDD_DIRECTDRAW_GLOBAL->ddHalInfo.vmiData.dwFlags                      : 0x%08lx\n",(((DWORD)&pEddgbl->ddHalInfo.vmiData.dwFlags) - (DWORD)pEddgbl),pEddgbl->ddHalInfo.vmiData.dwFlags);
-    DPRINT1("0x%08lx 0x04C PEDD_DIRECTDRAW_GLOBAL->ddHalInfo.vmiData.dwDisplayWidth               : 0x%08lx\n",(((DWORD)&pEddgbl->ddHalInfo.vmiData.dwDisplayWidth) - (DWORD)pEddgbl),pEddgbl->ddHalInfo.vmiData.dwDisplayWidth);
-    DPRINT1("0x%08lx 0x050 PEDD_DIRECTDRAW_GLOBAL->ddHalInfo.vmiData.dwDisplayHeight              : 0x%08lx\n",(((DWORD)&pEddgbl->ddHalInfo.vmiData.dwDisplayHeight) - (DWORD)pEddgbl),pEddgbl->ddHalInfo.vmiData.dwDisplayHeight);
-    DPRINT1("0x%08lx 0x054 PEDD_DIRECTDRAW_GLOBAL->ddHalInfo.vmiData.lDisplayPitch                : 0x%08lx\n",(((DWORD)&pEddgbl->ddHalInfo.vmiData.lDisplayPitch) - (DWORD)pEddgbl),pEddgbl->ddHalInfo.vmiData.lDisplayPitch);
-    DPRINT1("0x%08lx 0x058 PEDD_DIRECTDRAW_GLOBAL->ddHalInfo.vmiData.ddpfDisplay.dwSize           : 0x%08lx\n",(((DWORD)&pEddgbl->ddHalInfo.vmiData.ddpfDisplay.dwSize) - (DWORD)pEddgbl),pEddgbl->ddHalInfo.vmiData.ddpfDisplay.dwSize);    
-    DPRINT1("0x%08lx 0x05C PEDD_DIRECTDRAW_GLOBAL->ddHalInfo.vmiData.ddpfDisplay.dwFlags          : 0x%08lx\n",(((DWORD)&pEddgbl->ddHalInfo.vmiData.ddpfDisplay.dwFlags) - (DWORD)pEddgbl),pEddgbl->ddHalInfo.vmiData.ddpfDisplay.dwFlags);
-    DPRINT1("0x%08lx 0x060 PEDD_DIRECTDRAW_GLOBAL->ddHalInfo.vmiData.ddpfDisplay.dwFourCC         : 0x%08lx\n",(((DWORD)&pEddgbl->ddHalInfo.vmiData.ddpfDisplay.dwFourCC) - (DWORD)pEddgbl),pEddgbl->ddHalInfo.vmiData.ddpfDisplay.dwFourCC);     
-    DPRINT1("0x%08lx 0x064 PEDD_DIRECTDRAW_GLOBAL->ddHalInfo.vmiData.ddpfDisplay.dwRGBBitCount    : 0x%08lx\n",(((DWORD)&pEddgbl->ddHalInfo.vmiData.ddpfDisplay.dwRGBBitCount) - (DWORD)pEddgbl),pEddgbl->ddHalInfo.vmiData.ddpfDisplay.dwRGBBitCount);
-    DPRINT1("0x%08lx 0x068 PEDD_DIRECTDRAW_GLOBAL->ddHalInfo.vmiData.ddpfDisplay.dwRBitMask       : 0x%08lx\n",(((DWORD)&pEddgbl->ddHalInfo.vmiData.ddpfDisplay.dwRBitMask) - (DWORD)pEddgbl),pEddgbl->ddHalInfo.vmiData.ddpfDisplay.dwRBitMask);
-    DPRINT1("0x%08lx 0x06C PEDD_DIRECTDRAW_GLOBAL->ddHalInfo.vmiData.ddpfDisplay.dwGBitMask       : 0x%08lx\n",(((DWORD)&pEddgbl->ddHalInfo.vmiData.ddpfDisplay.dwGBitMask) - (DWORD)pEddgbl),pEddgbl->ddHalInfo.vmiData.ddpfDisplay.dwGBitMask);
-    DPRINT1("0x%08lx 0x070 PEDD_DIRECTDRAW_GLOBAL->ddHalInfo.vmiData.ddpfDisplay.dwBBitMask       : 0x%08lx\n",(((DWORD)&pEddgbl->ddHalInfo.vmiData.ddpfDisplay.dwBBitMask) - (DWORD)pEddgbl),pEddgbl->ddHalInfo.vmiData.ddpfDisplay.dwGBitMask);
-    DPRINT1("0x%08lx 0x074 PEDD_DIRECTDRAW_GLOBAL->ddHalInfo.vmiData.ddpfDisplay.dwRGBAlphaBitMask : 0x%08lx\n",(((DWORD)&pEddgbl->ddHalInfo.vmiData.ddpfDisplay.dwRGBAlphaBitMask) - (DWORD)pEddgbl),pEddgbl->ddHalInfo.vmiData.ddpfDisplay.dwRGBAlphaBitMask);    
+    DPRINT1("0x%08lx 0x040 PEDD_DIRECTDRAW_GLOBAL->ddHalInfo.dwSize                               : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, ddHalInfo.dwSize),pEddgbl->ddHalInfo.dwSize);
+    DPRINT1("0x%08lx 0x044 PEDD_DIRECTDRAW_GLOBAL->ddHalInfo.vmiData.fpPrimary                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, ddHalInfo.vmiData.fpPrimary),pEddgbl->ddHalInfo.vmiData.fpPrimary);
+    DPRINT1("0x%08lx 0x048 PEDD_DIRECTDRAW_GLOBAL->ddHalInfo.vmiData.dwFlags                      : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, ddHalInfo.vmiData.dwFlags),pEddgbl->ddHalInfo.vmiData.dwFlags);
+    DPRINT1("0x%08lx 0x04C PEDD_DIRECTDRAW_GLOBAL->ddHalInfo.vmiData.dwDisplayWidth               : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, ddHalInfo.vmiData.dwDisplayWidth),pEddgbl->ddHalInfo.vmiData.dwDisplayWidth);
+    DPRINT1("0x%08lx 0x050 PEDD_DIRECTDRAW_GLOBAL->ddHalInfo.vmiData.dwDisplayHeight              : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, ddHalInfo.vmiData.dwDisplayHeight),pEddgbl->ddHalInfo.vmiData.dwDisplayHeight);
+    DPRINT1("0x%08lx 0x054 PEDD_DIRECTDRAW_GLOBAL->ddHalInfo.vmiData.lDisplayPitch                : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, ddHalInfo.vmiData.lDisplayPitch),pEddgbl->ddHalInfo.vmiData.lDisplayPitch);
+    DPRINT1("0x%08lx 0x058 PEDD_DIRECTDRAW_GLOBAL->ddHalInfo.vmiData.ddpfDisplay.dwSize           : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, ddHalInfo.vmiData.ddpfDisplay.dwSize),pEddgbl->ddHalInfo.vmiData.ddpfDisplay.dwSize);
+    DPRINT1("0x%08lx 0x05C PEDD_DIRECTDRAW_GLOBAL->ddHalInfo.vmiData.ddpfDisplay.dwFlags          : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, ddHalInfo.vmiData.ddpfDisplay.dwFlags),pEddgbl->ddHalInfo.vmiData.ddpfDisplay.dwFlags);
+    DPRINT1("0x%08lx 0x060 PEDD_DIRECTDRAW_GLOBAL->ddHalInfo.vmiData.ddpfDisplay.dwFourCC         : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, ddHalInfo.vmiData.ddpfDisplay.dwFourCC),pEddgbl->ddHalInfo.vmiData.ddpfDisplay.dwFourCC);
+    DPRINT1("0x%08lx 0x064 PEDD_DIRECTDRAW_GLOBAL->ddHalInfo.vmiData.ddpfDisplay.dwRGBBitCount    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, ddHalInfo.vmiData.ddpfDisplay.dwRGBBitCount),pEddgbl->ddHalInfo.vmiData.ddpfDisplay.dwRGBBitCount);
+    DPRINT1("0x%08lx 0x068 PEDD_DIRECTDRAW_GLOBAL->ddHalInfo.vmiData.ddpfDisplay.dwRBitMask       : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, ddHalInfo.vmiData.ddpfDisplay.dwRBitMask),pEddgbl->ddHalInfo.vmiData.ddpfDisplay.dwRBitMask);
+    DPRINT1("0x%08lx 0x06C PEDD_DIRECTDRAW_GLOBAL->ddHalInfo.vmiData.ddpfDisplay.dwGBitMask       : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, ddHalInfo.vmiData.ddpfDisplay.dwGBitMask),pEddgbl->ddHalInfo.vmiData.ddpfDisplay.dwGBitMask);
+    DPRINT1("0x%08lx 0x070 PEDD_DIRECTDRAW_GLOBAL->ddHalInfo.vmiData.ddpfDisplay.dwBBitMask       : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, ddHalInfo.vmiData.ddpfDisplay.dwBBitMask),pEddgbl->ddHalInfo.vmiData.ddpfDisplay.dwGBitMask);
+    DPRINT1("0x%08lx 0x074 PEDD_DIRECTDRAW_GLOBAL->ddHalInfo.vmiData.ddpfDisplay.dwRGBAlphaBitMask : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, ddHalInfo.vmiData.ddpfDisplay.dwRGBAlphaBitMask),pEddgbl->ddHalInfo.vmiData.ddpfDisplay.dwRGBAlphaBitMask);
 
-    DPRINT1("0x%08lx 0x078 PEDD_DIRECTDRAW_GLOBAL->ddHalInfo.vmiData.dwOffscreenAlign             : 0x%08lx\n",(((DWORD)&pEddgbl->ddHalInfo.vmiData.dwOffscreenAlign) - (DWORD)pEddgbl),pEddgbl->ddHalInfo.vmiData.dwOffscreenAlign);
-    DPRINT1("0x%08lx 0x07C PEDD_DIRECTDRAW_GLOBAL->ddHalInfo.vmiData.dwOverlayAlign               : 0x%08lx\n",(((DWORD)&pEddgbl->ddHalInfo.vmiData.dwOverlayAlign ) - (DWORD)pEddgbl),pEddgbl->ddHalInfo.vmiData.dwOverlayAlign);
-    DPRINT1("0x%08lx 0x080 PEDD_DIRECTDRAW_GLOBAL->ddHalInfo.vmiData.dwTextureAlign               : 0x%08lx\n",(((DWORD)&pEddgbl->ddHalInfo.vmiData.dwTextureAlign) - (DWORD)pEddgbl),pEddgbl->ddHalInfo.vmiData.dwTextureAlign);
-    DPRINT1("0x%08lx 0x084 PEDD_DIRECTDRAW_GLOBAL->ddHalInfo.vmiData.dwZBufferAlign               : 0x%08lx\n",(((DWORD)&pEddgbl->ddHalInfo.vmiData.dwZBufferAlign) - (DWORD)pEddgbl),pEddgbl->ddHalInfo.vmiData.dwZBufferAlign);
-    DPRINT1("0x%08lx 0x088 PEDD_DIRECTDRAW_GLOBAL->ddHalInfo.vmiData.dwAlphaAlign                 : 0x%08lx\n",(((DWORD)&pEddgbl->ddHalInfo.vmiData.dwAlphaAlign) - (DWORD)pEddgbl),pEddgbl->ddHalInfo.vmiData.dwAlphaAlign);
-    DPRINT1("0x%08lx 0x08C PEDD_DIRECTDRAW_GLOBAL->ddHalInfo.vmiData.pvPrimary                    : 0x%08lx\n",(((DWORD)&pEddgbl->ddHalInfo.vmiData.pvPrimary) - (DWORD)pEddgbl),pEddgbl->ddHalInfo.vmiData.pvPrimary);
-    DPRINT1("0x%08lx 0x08C PEDD_DIRECTDRAW_GLOBAL->ddHalInfo.ddCaps.dwSize                        : 0x%08lx\n",(((DWORD)&pEddgbl->ddHalInfo.ddCaps.dwSize) - (DWORD)pEddgbl),pEddgbl->ddHalInfo.ddCaps.dwSize);
-    DPRINT1("0x%08lx 0x08C PEDD_DIRECTDRAW_GLOBAL->ddHalInfo.ddCaps.dwCaps                        : 0x%08lx\n",(((DWORD)&pEddgbl->ddHalInfo.ddCaps.dwCaps) - (DWORD)pEddgbl),pEddgbl->ddHalInfo.ddCaps.dwCaps);
-
-    
-
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_1e0[0]                                     : 0x%08lx\n",(((DWORD)&pEddgbl->unk_1e0[0]) - (DWORD)pEddgbl),pEddgbl->unk_1e0[0]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_1e0[1]                                     : 0x%08lx\n",(((DWORD)&pEddgbl->unk_1e0[1]) - (DWORD)pEddgbl),pEddgbl->unk_1e0[1]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_1e0[2]                                     : 0x%08lx\n",(((DWORD)&pEddgbl->unk_1e0[2]) - (DWORD)pEddgbl),pEddgbl->unk_1e0[2]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_1e0[3]                                     : 0x%08lx\n",(((DWORD)&pEddgbl->unk_1e0[3]) - (DWORD)pEddgbl),pEddgbl->unk_1e0[3]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_1e0[4]                                     : 0x%08lx\n",(((DWORD)&pEddgbl->unk_1e0[4]) - (DWORD)pEddgbl),pEddgbl->unk_1e0[4]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_1e0[5]                                     : 0x%08lx\n",(((DWORD)&pEddgbl->unk_1e0[5]) - (DWORD)pEddgbl),pEddgbl->unk_1e0[5]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_1e0[6]                                     : 0x%08lx\n",(((DWORD)&pEddgbl->unk_1e0[6]) - (DWORD)pEddgbl),pEddgbl->unk_1e0[6]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_1e0[7]                                     : 0x%08lx\n",(((DWORD)&pEddgbl->unk_1e0[7]) - (DWORD)pEddgbl),pEddgbl->unk_1e0[7]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_1e0[8]                                     : 0x%08lx\n",(((DWORD)&pEddgbl->unk_1e0[8]) - (DWORD)pEddgbl),pEddgbl->unk_1e0[8]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_1e0[9]                                     : 0x%08lx\n",(((DWORD)&pEddgbl->unk_1e0[9]) - (DWORD)pEddgbl),pEddgbl->unk_1e0[9]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_1e0[10]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_1e0[10]) - (DWORD)pEddgbl),pEddgbl->unk_1e0[10]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_1e0[11]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_1e0[11]) - (DWORD)pEddgbl),pEddgbl->unk_1e0[11]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_1e0[12]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_1e0[12]) - (DWORD)pEddgbl),pEddgbl->unk_1e0[12]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_1e0[13]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_1e0[13]) - (DWORD)pEddgbl),pEddgbl->unk_1e0[13]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_1e0[14]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_1e0[14]) - (DWORD)pEddgbl),pEddgbl->unk_1e0[14]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_1e0[15]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_1e0[15]) - (DWORD)pEddgbl),pEddgbl->unk_1e0[15]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_1e0[16]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_1e0[16]) - (DWORD)pEddgbl),pEddgbl->unk_1e0[16]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_1e0[17]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_1e0[17]) - (DWORD)pEddgbl),pEddgbl->unk_1e0[17]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_1e0[18]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_1e0[18]) - (DWORD)pEddgbl),pEddgbl->unk_1e0[18]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_1e0[19]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_1e0[19]) - (DWORD)pEddgbl),pEddgbl->unk_1e0[19]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_1e0[20]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_1e0[20]) - (DWORD)pEddgbl),pEddgbl->unk_1e0[20]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_1e0[21]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_1e0[21]) - (DWORD)pEddgbl),pEddgbl->unk_1e0[21]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_1e0[22]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_1e0[22]) - (DWORD)pEddgbl),pEddgbl->unk_1e0[22]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_1e0[23]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_1e0[23]) - (DWORD)pEddgbl),pEddgbl->unk_1e0[23]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_1e0[24]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_1e0[24]) - (DWORD)pEddgbl),pEddgbl->unk_1e0[24]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_1e0[25]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_1e0[25]) - (DWORD)pEddgbl),pEddgbl->unk_1e0[25]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_1e0[26]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_1e0[26]) - (DWORD)pEddgbl),pEddgbl->unk_1e0[26]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_1e0[27]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_1e0[27]) - (DWORD)pEddgbl),pEddgbl->unk_1e0[27]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_1e0[28]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_1e0[28]) - (DWORD)pEddgbl),pEddgbl->unk_1e0[28]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_1e0[29]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_1e0[29]) - (DWORD)pEddgbl),pEddgbl->unk_1e0[29]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_1e0[30]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_1e0[30]) - (DWORD)pEddgbl),pEddgbl->unk_1e0[30]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_1e0[31]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_1e0[31]) - (DWORD)pEddgbl),pEddgbl->unk_1e0[31]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_1e0[32]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_1e0[32]) - (DWORD)pEddgbl),pEddgbl->unk_1e0[32]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_1e0[33]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_1e0[33]) - (DWORD)pEddgbl),pEddgbl->unk_1e0[33]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_1e0[34]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_1e0[34]) - (DWORD)pEddgbl),pEddgbl->unk_1e0[34]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_1e0[35]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_1e0[35]) - (DWORD)pEddgbl),pEddgbl->unk_1e0[35]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_1e0[36]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_1e0[36]) - (DWORD)pEddgbl),pEddgbl->unk_1e0[36]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_1e0[37]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_1e0[37]) - (DWORD)pEddgbl),pEddgbl->unk_1e0[37]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_1e0[38]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_1e0[38]) - (DWORD)pEddgbl),pEddgbl->unk_1e0[38]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_1e0[39]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_1e0[39]) - (DWORD)pEddgbl),pEddgbl->unk_1e0[39]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_1e0[40]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_1e0[40]) - (DWORD)pEddgbl),pEddgbl->unk_1e0[0]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_1e0[41]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_1e0[41]) - (DWORD)pEddgbl),pEddgbl->unk_1e0[41]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_1e0[42]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_1e0[42]) - (DWORD)pEddgbl),pEddgbl->unk_1e0[42]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_1e0[43]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_1e0[43]) - (DWORD)pEddgbl),pEddgbl->unk_1e0[43]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_1e0[44]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_1e0[44]) - (DWORD)pEddgbl),pEddgbl->unk_1e0[44]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_1e0[45]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_1e0[45]) - (DWORD)pEddgbl),pEddgbl->unk_1e0[45]);
-
-    DPRINT1("0x%08lx 0x298 PEDD_DIRECTDRAW_GLOBAL->ddCallbacks.dwSize                             : 0x%08lx\n",(((DWORD)&pEddgbl->ddCallbacks.dwSize) - (DWORD)pEddgbl),pEddgbl->ddCallbacks.dwSize);
-    DPRINT1("0x%08lx 0x29C PEDD_DIRECTDRAW_GLOBAL->ddCallbacks.dwFlags                            : 0x%08lx\n",(((DWORD)&pEddgbl->ddCallbacks.dwFlags) - (DWORD)pEddgbl),pEddgbl->ddCallbacks.dwFlags);
-    DPRINT1("0x%08lx 0x2A0 PEDD_DIRECTDRAW_GLOBAL->ddCallbacks.DestroyDriver                      : 0x%08lx\n",(((DWORD)&pEddgbl->ddCallbacks.DestroyDriver) - (DWORD)pEddgbl),pEddgbl->ddCallbacks.DestroyDriver);
-    DPRINT1("0x%08lx 0x2A4 PEDD_DIRECTDRAW_GLOBAL->ddCallbacks.CreateSurface                      : 0x%08lx\n",(((DWORD)&pEddgbl->ddCallbacks.CreateSurface) - (DWORD)pEddgbl),pEddgbl->ddCallbacks.CreateSurface);
-    DPRINT1("0x%08lx 0x2A8 PEDD_DIRECTDRAW_GLOBAL->ddCallbacks.SetColorKey                        : 0x%08lx\n",(((DWORD)&pEddgbl->ddCallbacks.SetColorKey) - (DWORD)pEddgbl),pEddgbl->ddCallbacks.SetColorKey);
-    DPRINT1("0x%08lx 0x2AC PEDD_DIRECTDRAW_GLOBAL->ddCallbacks.SetMode                            : 0x%08lx\n",(((DWORD)&pEddgbl->ddCallbacks.SetMode) - (DWORD)pEddgbl),pEddgbl->ddCallbacks.SetMode);
-    DPRINT1("0x%08lx 0x2B0 PEDD_DIRECTDRAW_GLOBAL->ddCallbacks.WaitForVerticalBlank               : 0x%08lx\n",(((DWORD)&pEddgbl->ddCallbacks.WaitForVerticalBlank) - (DWORD)pEddgbl),pEddgbl->ddCallbacks.WaitForVerticalBlank);
-    DPRINT1("0x%08lx 0x2B4 PEDD_DIRECTDRAW_GLOBAL->ddCallbacks.CanCreateSurface                   : 0x%08lx\n",(((DWORD)&pEddgbl->ddCallbacks.CanCreateSurface) - (DWORD)pEddgbl),pEddgbl->ddCallbacks.CanCreateSurface);
-    DPRINT1("0x%08lx 0x2B8 PEDD_DIRECTDRAW_GLOBAL->ddCallbacks.CreatePalette                      : 0x%08lx\n",(((DWORD)&pEddgbl->ddCallbacks.CreatePalette) - (DWORD)pEddgbl),pEddgbl->ddCallbacks.CreatePalette);
-    DPRINT1("0x%08lx 0x2BC PEDD_DIRECTDRAW_GLOBAL->ddCallbacks.GetScanLine                        : 0x%08lx\n",(((DWORD)&pEddgbl->ddCallbacks.GetScanLine) - (DWORD)pEddgbl),pEddgbl->ddCallbacks.GetScanLine);
-    DPRINT1("0x%08lx 0x2C0 PEDD_DIRECTDRAW_GLOBAL->ddCallbacks.MapMemory                          : 0x%08lx\n",(((DWORD)&pEddgbl->ddCallbacks.MapMemory) - (DWORD)pEddgbl),pEddgbl->ddCallbacks.MapMemory);
+    DPRINT1("0x%08lx 0x078 PEDD_DIRECTDRAW_GLOBAL->ddHalInfo.vmiData.dwOffscreenAlign             : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, ddHalInfo.vmiData.dwOffscreenAlign),pEddgbl->ddHalInfo.vmiData.dwOffscreenAlign);
+    DPRINT1("0x%08lx 0x07C PEDD_DIRECTDRAW_GLOBAL->ddHalInfo.vmiData.dwOverlayAlign               : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, ddHalInfo.vmiData.dwOverlayAlign ),pEddgbl->ddHalInfo.vmiData.dwOverlayAlign);
+    DPRINT1("0x%08lx 0x080 PEDD_DIRECTDRAW_GLOBAL->ddHalInfo.vmiData.dwTextureAlign               : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, ddHalInfo.vmiData.dwTextureAlign),pEddgbl->ddHalInfo.vmiData.dwTextureAlign);
+    DPRINT1("0x%08lx 0x084 PEDD_DIRECTDRAW_GLOBAL->ddHalInfo.vmiData.dwZBufferAlign               : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, ddHalInfo.vmiData.dwZBufferAlign),pEddgbl->ddHalInfo.vmiData.dwZBufferAlign);
+    DPRINT1("0x%08lx 0x088 PEDD_DIRECTDRAW_GLOBAL->ddHalInfo.vmiData.dwAlphaAlign                 : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, ddHalInfo.vmiData.dwAlphaAlign),pEddgbl->ddHalInfo.vmiData.dwAlphaAlign);
+    DPRINT1("0x%08lx 0x08C PEDD_DIRECTDRAW_GLOBAL->ddHalInfo.vmiData.pvPrimary                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, ddHalInfo.vmiData.pvPrimary),pEddgbl->ddHalInfo.vmiData.pvPrimary);
+    DPRINT1("0x%08lx 0x08C PEDD_DIRECTDRAW_GLOBAL->ddHalInfo.ddCaps.dwSize                        : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, ddHalInfo.ddCaps.dwSize),pEddgbl->ddHalInfo.ddCaps.dwSize);
+    DPRINT1("0x%08lx 0x08C PEDD_DIRECTDRAW_GLOBAL->ddHalInfo.ddCaps.dwCaps                        : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, ddHalInfo.ddCaps.dwCaps),pEddgbl->ddHalInfo.ddCaps.dwCaps);
 
 
-    DPRINT1("0x%08lx 0x2C4 PEDD_DIRECTDRAW_GLOBAL->ddSurfaceCallbacks.dwSize                      : 0x%08lx\n",(((DWORD)&pEddgbl->ddSurfaceCallbacks.dwSize) - (DWORD)pEddgbl),pEddgbl->ddSurfaceCallbacks.dwSize);
-    DPRINT1("0x%08lx 0x2C8 PEDD_DIRECTDRAW_GLOBAL->ddSurfaceCallbacks.dwFlags                     : 0x%08lx\n",(((DWORD)&pEddgbl->ddSurfaceCallbacks.dwFlags) - (DWORD)pEddgbl),pEddgbl->ddSurfaceCallbacks.dwFlags);
-    DPRINT1("0x%08lx 0x2CC PEDD_DIRECTDRAW_GLOBAL->ddSurfaceCallbacks.DestroySurface              : 0x%08lx\n",(((DWORD)&pEddgbl->ddSurfaceCallbacks.DestroySurface) - (DWORD)pEddgbl),pEddgbl->ddSurfaceCallbacks.DestroySurface);
-    DPRINT1("0x%08lx 0x2D0 PEDD_DIRECTDRAW_GLOBAL->ddSurfaceCallbacks.Flip                        : 0x%08lx\n",(((DWORD)&pEddgbl->ddSurfaceCallbacks.Flip) - (DWORD)pEddgbl),pEddgbl->ddSurfaceCallbacks.Flip);
-    DPRINT1("0x%08lx 0x2D4 PEDD_DIRECTDRAW_GLOBAL->ddSurfaceCallbacks.SetClipList                 : 0x%08lx\n",(((DWORD)&pEddgbl->ddSurfaceCallbacks.SetClipList) - (DWORD)pEddgbl),pEddgbl->ddSurfaceCallbacks.SetClipList);
-    DPRINT1("0x%08lx 0x2D8 PEDD_DIRECTDRAW_GLOBAL->ddSurfaceCallbacks.Lock                        : 0x%08lx\n",(((DWORD)&pEddgbl->ddSurfaceCallbacks.Lock) - (DWORD)pEddgbl),pEddgbl->ddSurfaceCallbacks.Lock);
-    DPRINT1("0x%08lx 0x2DC PEDD_DIRECTDRAW_GLOBAL->ddSurfaceCallbacks.Unlock                      : 0x%08lx\n",(((DWORD)&pEddgbl->ddSurfaceCallbacks.Unlock) - (DWORD)pEddgbl),pEddgbl->ddSurfaceCallbacks.Unlock);
-    DPRINT1("0x%08lx 0x2E0 PEDD_DIRECTDRAW_GLOBAL->ddSurfaceCallbacks.Blt                         : 0x%08lx\n",(((DWORD)&pEddgbl->ddSurfaceCallbacks.Blt) - (DWORD)pEddgbl),pEddgbl->ddSurfaceCallbacks.Blt);
-    DPRINT1("0x%08lx 0x2E4 PEDD_DIRECTDRAW_GLOBAL->ddSurfaceCallbacks.SetColorKey                 : 0x%08lx\n",(((DWORD)&pEddgbl->ddSurfaceCallbacks.SetColorKey) - (DWORD)pEddgbl),pEddgbl->ddSurfaceCallbacks.SetColorKey);
-    DPRINT1("0x%08lx 0x2E8 PEDD_DIRECTDRAW_GLOBAL->ddSurfaceCallbacks.AddAttachedSurface          : 0x%08lx\n",(((DWORD)&pEddgbl->ddSurfaceCallbacks.AddAttachedSurface) - (DWORD)pEddgbl),pEddgbl->ddSurfaceCallbacks.AddAttachedSurface);
-    DPRINT1("0x%08lx 0x2EC PEDD_DIRECTDRAW_GLOBAL->ddSurfaceCallbacks.GetBltStatus                : 0x%08lx\n",(((DWORD)&pEddgbl->ddSurfaceCallbacks.GetBltStatus) - (DWORD)pEddgbl),pEddgbl->ddSurfaceCallbacks.GetBltStatus);
-    DPRINT1("0x%08lx 0x2F0 PEDD_DIRECTDRAW_GLOBAL->ddSurfaceCallbacks.GetFlipStatus               : 0x%08lx\n",(((DWORD)&pEddgbl->ddSurfaceCallbacks.GetFlipStatus) - (DWORD)pEddgbl),pEddgbl->ddSurfaceCallbacks.GetFlipStatus);
-    DPRINT1("0x%08lx 0x2F4 PEDD_DIRECTDRAW_GLOBAL->ddSurfaceCallbacks.UpdateOverlay               : 0x%08lx\n",(((DWORD)&pEddgbl->ddSurfaceCallbacks.UpdateOverlay) - (DWORD)pEddgbl),pEddgbl->ddSurfaceCallbacks.UpdateOverlay);
-    DPRINT1("0x%08lx 0x2F8 PEDD_DIRECTDRAW_GLOBAL->ddSurfaceCallbacks.SetOverlayPosition          : 0x%08lx\n",(((DWORD)&pEddgbl->ddSurfaceCallbacks.SetOverlayPosition) - (DWORD)pEddgbl),pEddgbl->ddSurfaceCallbacks.SetOverlayPosition);
-    DPRINT1("0x%08lx 0x2FC PEDD_DIRECTDRAW_GLOBAL->ddSurfaceCallbacks.reserved4                   : 0x%08lx\n",(((DWORD)&pEddgbl->ddSurfaceCallbacks.reserved4) - (DWORD)pEddgbl),pEddgbl->ddSurfaceCallbacks.reserved4);
 
-    DPRINT1("0x%08lx 0x300 PEDD_DIRECTDRAW_GLOBAL->ddPaletteCallbacks.dwSize                      : 0x%08lx\n",(((DWORD)&pEddgbl->ddPaletteCallbacks.dwSize) - (DWORD)pEddgbl),pEddgbl->ddPaletteCallbacks.dwSize);
-    DPRINT1("0x%08lx 0x304 PEDD_DIRECTDRAW_GLOBAL->ddPaletteCallbacks.dwFlags                     : 0x%08lx\n",(((DWORD)&pEddgbl->ddPaletteCallbacks.dwFlags) - (DWORD)pEddgbl),pEddgbl->ddPaletteCallbacks.dwFlags);
-    DPRINT1("0x%08lx 0x308 PEDD_DIRECTDRAW_GLOBAL->ddPaletteCallbacks.DestroyPalette              : 0x%08lx\n",(((DWORD)&pEddgbl->ddPaletteCallbacks.DestroyPalette) - (DWORD)pEddgbl),pEddgbl->ddPaletteCallbacks.DestroyPalette);
-    DPRINT1("0x%08lx 0x30C PEDD_DIRECTDRAW_GLOBAL->ddPaletteCallbacks.SetEntries                  : 0x%08lx\n",(((DWORD)&pEddgbl->ddPaletteCallbacks.SetEntries) - (DWORD)pEddgbl),pEddgbl->ddPaletteCallbacks.SetEntries);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_1e0[0]                                     : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_1e0[0]),pEddgbl->unk_1e0[0]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_1e0[1]                                     : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_1e0[1]),pEddgbl->unk_1e0[1]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_1e0[2]                                     : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_1e0[2]),pEddgbl->unk_1e0[2]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_1e0[3]                                     : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_1e0[3]),pEddgbl->unk_1e0[3]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_1e0[4]                                     : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_1e0[4]),pEddgbl->unk_1e0[4]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_1e0[5]                                     : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_1e0[5]),pEddgbl->unk_1e0[5]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_1e0[6]                                     : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_1e0[6]),pEddgbl->unk_1e0[6]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_1e0[7]                                     : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_1e0[7]),pEddgbl->unk_1e0[7]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_1e0[8]                                     : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_1e0[8]),pEddgbl->unk_1e0[8]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_1e0[9]                                     : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_1e0[9]),pEddgbl->unk_1e0[9]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_1e0[10]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_1e0[10]),pEddgbl->unk_1e0[10]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_1e0[11]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_1e0[11]),pEddgbl->unk_1e0[11]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_1e0[12]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_1e0[12]),pEddgbl->unk_1e0[12]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_1e0[13]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_1e0[13]),pEddgbl->unk_1e0[13]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_1e0[14]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_1e0[14]),pEddgbl->unk_1e0[14]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_1e0[15]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_1e0[15]),pEddgbl->unk_1e0[15]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_1e0[16]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_1e0[16]),pEddgbl->unk_1e0[16]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_1e0[17]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_1e0[17]),pEddgbl->unk_1e0[17]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_1e0[18]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_1e0[18]),pEddgbl->unk_1e0[18]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_1e0[19]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_1e0[19]),pEddgbl->unk_1e0[19]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_1e0[20]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_1e0[20]),pEddgbl->unk_1e0[20]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_1e0[21]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_1e0[21]),pEddgbl->unk_1e0[21]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_1e0[22]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_1e0[22]),pEddgbl->unk_1e0[22]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_1e0[23]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_1e0[23]),pEddgbl->unk_1e0[23]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_1e0[24]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_1e0[24]),pEddgbl->unk_1e0[24]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_1e0[25]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_1e0[25]),pEddgbl->unk_1e0[25]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_1e0[26]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_1e0[26]),pEddgbl->unk_1e0[26]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_1e0[27]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_1e0[27]),pEddgbl->unk_1e0[27]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_1e0[28]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_1e0[28]),pEddgbl->unk_1e0[28]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_1e0[29]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_1e0[29]),pEddgbl->unk_1e0[29]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_1e0[30]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_1e0[30]),pEddgbl->unk_1e0[30]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_1e0[31]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_1e0[31]),pEddgbl->unk_1e0[31]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_1e0[32]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_1e0[32]),pEddgbl->unk_1e0[32]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_1e0[33]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_1e0[33]),pEddgbl->unk_1e0[33]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_1e0[34]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_1e0[34]),pEddgbl->unk_1e0[34]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_1e0[35]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_1e0[35]),pEddgbl->unk_1e0[35]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_1e0[36]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_1e0[36]),pEddgbl->unk_1e0[36]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_1e0[37]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_1e0[37]),pEddgbl->unk_1e0[37]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_1e0[38]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_1e0[38]),pEddgbl->unk_1e0[38]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_1e0[39]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_1e0[39]),pEddgbl->unk_1e0[39]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_1e0[40]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_1e0[40]),pEddgbl->unk_1e0[0]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_1e0[41]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_1e0[41]),pEddgbl->unk_1e0[41]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_1e0[42]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_1e0[42]),pEddgbl->unk_1e0[42]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_1e0[43]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_1e0[43]),pEddgbl->unk_1e0[43]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_1e0[44]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_1e0[44]),pEddgbl->unk_1e0[44]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_1e0[45]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_1e0[45]),pEddgbl->unk_1e0[45]);
 
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_314[0]                                     : 0x%08lx\n",(((DWORD)&pEddgbl->unk_314[0]) - (DWORD)pEddgbl),pEddgbl->unk_314[0]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_314[1]                                     : 0x%08lx\n",(((DWORD)&pEddgbl->unk_314[1]) - (DWORD)pEddgbl),pEddgbl->unk_314[1]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_314[2]                                     : 0x%08lx\n",(((DWORD)&pEddgbl->unk_314[2]) - (DWORD)pEddgbl),pEddgbl->unk_314[2]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_314[3]                                     : 0x%08lx\n",(((DWORD)&pEddgbl->unk_314[3]) - (DWORD)pEddgbl),pEddgbl->unk_314[3]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_314[4]                                     : 0x%08lx\n",(((DWORD)&pEddgbl->unk_314[4]) - (DWORD)pEddgbl),pEddgbl->unk_314[4]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_314[5]                                     : 0x%08lx\n",(((DWORD)&pEddgbl->unk_314[5]) - (DWORD)pEddgbl),pEddgbl->unk_314[5]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_314[6]                                     : 0x%08lx\n",(((DWORD)&pEddgbl->unk_314[6]) - (DWORD)pEddgbl),pEddgbl->unk_314[6]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_314[7]                                     : 0x%08lx\n",(((DWORD)&pEddgbl->unk_314[7]) - (DWORD)pEddgbl),pEddgbl->unk_314[7]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_314[8]                                     : 0x%08lx\n",(((DWORD)&pEddgbl->unk_314[8]) - (DWORD)pEddgbl),pEddgbl->unk_314[8]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_314[9]                                     : 0x%08lx\n",(((DWORD)&pEddgbl->unk_314[9]) - (DWORD)pEddgbl),pEddgbl->unk_314[9]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_314[10]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_314[10]) - (DWORD)pEddgbl),pEddgbl->unk_314[10]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_314[11]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_314[11]) - (DWORD)pEddgbl),pEddgbl->unk_314[11]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_314[12]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_314[12]) - (DWORD)pEddgbl),pEddgbl->unk_314[12]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_314[13]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_314[13]) - (DWORD)pEddgbl),pEddgbl->unk_314[13]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_314[14]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_314[14]) - (DWORD)pEddgbl),pEddgbl->unk_314[14]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_314[15]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_314[15]) - (DWORD)pEddgbl),pEddgbl->unk_314[15]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_314[16]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_314[16]) - (DWORD)pEddgbl),pEddgbl->unk_314[16]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_314[17]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_314[17]) - (DWORD)pEddgbl),pEddgbl->unk_314[17]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_314[18]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_314[18]) - (DWORD)pEddgbl),pEddgbl->unk_314[18]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_314[19]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_314[19]) - (DWORD)pEddgbl),pEddgbl->unk_314[19]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_314[20]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_314[20]) - (DWORD)pEddgbl),pEddgbl->unk_314[20]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_314[21]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_314[21]) - (DWORD)pEddgbl),pEddgbl->unk_314[21]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_314[22]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_314[22]) - (DWORD)pEddgbl),pEddgbl->unk_314[22]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_314[23]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_314[23]) - (DWORD)pEddgbl),pEddgbl->unk_314[23]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_314[24]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_314[24]) - (DWORD)pEddgbl),pEddgbl->unk_314[24]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_314[25]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_314[25]) - (DWORD)pEddgbl),pEddgbl->unk_314[25]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_314[26]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_314[26]) - (DWORD)pEddgbl),pEddgbl->unk_314[26]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_314[27]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_314[27]) - (DWORD)pEddgbl),pEddgbl->unk_314[27]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_314[28]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_314[28]) - (DWORD)pEddgbl),pEddgbl->unk_314[28]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_314[29]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_314[29]) - (DWORD)pEddgbl),pEddgbl->unk_314[29]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_314[30]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_314[30]) - (DWORD)pEddgbl),pEddgbl->unk_314[30]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_314[31]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_314[31]) - (DWORD)pEddgbl),pEddgbl->unk_314[31]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_314[32]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_314[32]) - (DWORD)pEddgbl),pEddgbl->unk_314[32]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_314[33]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_314[33]) - (DWORD)pEddgbl),pEddgbl->unk_314[33]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_314[34]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_314[34]) - (DWORD)pEddgbl),pEddgbl->unk_314[34]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_314[35]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_314[35]) - (DWORD)pEddgbl),pEddgbl->unk_314[35]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_314[36]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_314[36]) - (DWORD)pEddgbl),pEddgbl->unk_314[36]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_314[37]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_314[37]) - (DWORD)pEddgbl),pEddgbl->unk_314[37]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_314[38]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_314[38]) - (DWORD)pEddgbl),pEddgbl->unk_314[38]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_314[39]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_314[39]) - (DWORD)pEddgbl),pEddgbl->unk_314[39]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_314[40]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_314[40]) - (DWORD)pEddgbl),pEddgbl->unk_314[40]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_314[41]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_314[41]) - (DWORD)pEddgbl),pEddgbl->unk_314[41]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_314[42]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_314[42]) - (DWORD)pEddgbl),pEddgbl->unk_314[42]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_314[43]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_314[43]) - (DWORD)pEddgbl),pEddgbl->unk_314[43]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_314[44]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_314[44]) - (DWORD)pEddgbl),pEddgbl->unk_314[44]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_314[45]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_314[45]) - (DWORD)pEddgbl),pEddgbl->unk_314[45]);
+    DPRINT1("0x%08lx 0x298 PEDD_DIRECTDRAW_GLOBAL->ddCallbacks.dwSize                             : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, ddCallbacks.dwSize),pEddgbl->ddCallbacks.dwSize);
+    DPRINT1("0x%08lx 0x29C PEDD_DIRECTDRAW_GLOBAL->ddCallbacks.dwFlags                            : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, ddCallbacks.dwFlags),pEddgbl->ddCallbacks.dwFlags);
+    DPRINT1("0x%08lx 0x2A0 PEDD_DIRECTDRAW_GLOBAL->ddCallbacks.DestroyDriver                      : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, ddCallbacks.DestroyDriver),pEddgbl->ddCallbacks.DestroyDriver);
+    DPRINT1("0x%08lx 0x2A4 PEDD_DIRECTDRAW_GLOBAL->ddCallbacks.CreateSurface                      : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, ddCallbacks.CreateSurface),pEddgbl->ddCallbacks.CreateSurface);
+    DPRINT1("0x%08lx 0x2A8 PEDD_DIRECTDRAW_GLOBAL->ddCallbacks.SetColorKey                        : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, ddCallbacks.SetColorKey),pEddgbl->ddCallbacks.SetColorKey);
+    DPRINT1("0x%08lx 0x2AC PEDD_DIRECTDRAW_GLOBAL->ddCallbacks.SetMode                            : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, ddCallbacks.SetMode),pEddgbl->ddCallbacks.SetMode);
+    DPRINT1("0x%08lx 0x2B0 PEDD_DIRECTDRAW_GLOBAL->ddCallbacks.WaitForVerticalBlank               : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, ddCallbacks.WaitForVerticalBlank),pEddgbl->ddCallbacks.WaitForVerticalBlank);
+    DPRINT1("0x%08lx 0x2B4 PEDD_DIRECTDRAW_GLOBAL->ddCallbacks.CanCreateSurface                   : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, ddCallbacks.CanCreateSurface),pEddgbl->ddCallbacks.CanCreateSurface);
+    DPRINT1("0x%08lx 0x2B8 PEDD_DIRECTDRAW_GLOBAL->ddCallbacks.CreatePalette                      : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, ddCallbacks.CreatePalette),pEddgbl->ddCallbacks.CreatePalette);
+    DPRINT1("0x%08lx 0x2BC PEDD_DIRECTDRAW_GLOBAL->ddCallbacks.GetScanLine                        : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, ddCallbacks.GetScanLine),pEddgbl->ddCallbacks.GetScanLine);
+    DPRINT1("0x%08lx 0x2C0 PEDD_DIRECTDRAW_GLOBAL->ddCallbacks.MapMemory                          : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, ddCallbacks.MapMemory),pEddgbl->ddCallbacks.MapMemory);
+
+
+    DPRINT1("0x%08lx 0x2C4 PEDD_DIRECTDRAW_GLOBAL->ddSurfaceCallbacks.dwSize                      : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, ddSurfaceCallbacks.dwSize),pEddgbl->ddSurfaceCallbacks.dwSize);
+    DPRINT1("0x%08lx 0x2C8 PEDD_DIRECTDRAW_GLOBAL->ddSurfaceCallbacks.dwFlags                     : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, ddSurfaceCallbacks.dwFlags),pEddgbl->ddSurfaceCallbacks.dwFlags);
+    DPRINT1("0x%08lx 0x2CC PEDD_DIRECTDRAW_GLOBAL->ddSurfaceCallbacks.DestroySurface              : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, ddSurfaceCallbacks.DestroySurface),pEddgbl->ddSurfaceCallbacks.DestroySurface);
+    DPRINT1("0x%08lx 0x2D0 PEDD_DIRECTDRAW_GLOBAL->ddSurfaceCallbacks.Flip                        : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, ddSurfaceCallbacks.Flip),pEddgbl->ddSurfaceCallbacks.Flip);
+    DPRINT1("0x%08lx 0x2D4 PEDD_DIRECTDRAW_GLOBAL->ddSurfaceCallbacks.SetClipList                 : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, ddSurfaceCallbacks.SetClipList),pEddgbl->ddSurfaceCallbacks.SetClipList);
+    DPRINT1("0x%08lx 0x2D8 PEDD_DIRECTDRAW_GLOBAL->ddSurfaceCallbacks.Lock                        : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, ddSurfaceCallbacks.Lock),pEddgbl->ddSurfaceCallbacks.Lock);
+    DPRINT1("0x%08lx 0x2DC PEDD_DIRECTDRAW_GLOBAL->ddSurfaceCallbacks.Unlock                      : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, ddSurfaceCallbacks.Unlock),pEddgbl->ddSurfaceCallbacks.Unlock);
+    DPRINT1("0x%08lx 0x2E0 PEDD_DIRECTDRAW_GLOBAL->ddSurfaceCallbacks.Blt                         : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, ddSurfaceCallbacks.Blt),pEddgbl->ddSurfaceCallbacks.Blt);
+    DPRINT1("0x%08lx 0x2E4 PEDD_DIRECTDRAW_GLOBAL->ddSurfaceCallbacks.SetColorKey                 : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, ddSurfaceCallbacks.SetColorKey),pEddgbl->ddSurfaceCallbacks.SetColorKey);
+    DPRINT1("0x%08lx 0x2E8 PEDD_DIRECTDRAW_GLOBAL->ddSurfaceCallbacks.AddAttachedSurface          : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, ddSurfaceCallbacks.AddAttachedSurface),pEddgbl->ddSurfaceCallbacks.AddAttachedSurface);
+    DPRINT1("0x%08lx 0x2EC PEDD_DIRECTDRAW_GLOBAL->ddSurfaceCallbacks.GetBltStatus                : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, ddSurfaceCallbacks.GetBltStatus),pEddgbl->ddSurfaceCallbacks.GetBltStatus);
+    DPRINT1("0x%08lx 0x2F0 PEDD_DIRECTDRAW_GLOBAL->ddSurfaceCallbacks.GetFlipStatus               : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, ddSurfaceCallbacks.GetFlipStatus),pEddgbl->ddSurfaceCallbacks.GetFlipStatus);
+    DPRINT1("0x%08lx 0x2F4 PEDD_DIRECTDRAW_GLOBAL->ddSurfaceCallbacks.UpdateOverlay               : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, ddSurfaceCallbacks.UpdateOverlay),pEddgbl->ddSurfaceCallbacks.UpdateOverlay);
+    DPRINT1("0x%08lx 0x2F8 PEDD_DIRECTDRAW_GLOBAL->ddSurfaceCallbacks.SetOverlayPosition          : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, ddSurfaceCallbacks.SetOverlayPosition),pEddgbl->ddSurfaceCallbacks.SetOverlayPosition);
+    DPRINT1("0x%08lx 0x2FC PEDD_DIRECTDRAW_GLOBAL->ddSurfaceCallbacks.reserved4                   : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, ddSurfaceCallbacks.reserved4),pEddgbl->ddSurfaceCallbacks.reserved4);
+
+    DPRINT1("0x%08lx 0x300 PEDD_DIRECTDRAW_GLOBAL->ddPaletteCallbacks.dwSize                      : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, ddPaletteCallbacks.dwSize),pEddgbl->ddPaletteCallbacks.dwSize);
+    DPRINT1("0x%08lx 0x304 PEDD_DIRECTDRAW_GLOBAL->ddPaletteCallbacks.dwFlags                     : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, ddPaletteCallbacks.dwFlags),pEddgbl->ddPaletteCallbacks.dwFlags);
+    DPRINT1("0x%08lx 0x308 PEDD_DIRECTDRAW_GLOBAL->ddPaletteCallbacks.DestroyPalette              : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, ddPaletteCallbacks.DestroyPalette),pEddgbl->ddPaletteCallbacks.DestroyPalette);
+    DPRINT1("0x%08lx 0x30C PEDD_DIRECTDRAW_GLOBAL->ddPaletteCallbacks.SetEntries                  : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, ddPaletteCallbacks.SetEntries),pEddgbl->ddPaletteCallbacks.SetEntries);
+
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_314[0]                                     : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_314[0]),pEddgbl->unk_314[0]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_314[1]                                     : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_314[1]),pEddgbl->unk_314[1]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_314[2]                                     : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_314[2]),pEddgbl->unk_314[2]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_314[3]                                     : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_314[3]),pEddgbl->unk_314[3]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_314[4]                                     : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_314[4]),pEddgbl->unk_314[4]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_314[5]                                     : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_314[5]),pEddgbl->unk_314[5]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_314[6]                                     : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_314[6]),pEddgbl->unk_314[6]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_314[7]                                     : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_314[7]),pEddgbl->unk_314[7]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_314[8]                                     : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_314[8]),pEddgbl->unk_314[8]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_314[9]                                     : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_314[9]),pEddgbl->unk_314[9]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_314[10]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_314[10]),pEddgbl->unk_314[10]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_314[11]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_314[11]),pEddgbl->unk_314[11]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_314[12]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_314[12]),pEddgbl->unk_314[12]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_314[13]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_314[13]),pEddgbl->unk_314[13]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_314[14]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_314[14]),pEddgbl->unk_314[14]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_314[15]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_314[15]),pEddgbl->unk_314[15]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_314[16]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_314[16]),pEddgbl->unk_314[16]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_314[17]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_314[17]),pEddgbl->unk_314[17]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_314[18]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_314[18]),pEddgbl->unk_314[18]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_314[19]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_314[19]),pEddgbl->unk_314[19]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_314[20]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_314[20]),pEddgbl->unk_314[20]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_314[21]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_314[21]),pEddgbl->unk_314[21]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_314[22]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_314[22]),pEddgbl->unk_314[22]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_314[23]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_314[23]),pEddgbl->unk_314[23]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_314[24]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_314[24]),pEddgbl->unk_314[24]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_314[25]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_314[25]),pEddgbl->unk_314[25]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_314[26]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_314[26]),pEddgbl->unk_314[26]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_314[27]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_314[27]),pEddgbl->unk_314[27]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_314[28]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_314[28]),pEddgbl->unk_314[28]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_314[29]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_314[29]),pEddgbl->unk_314[29]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_314[30]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_314[30]),pEddgbl->unk_314[30]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_314[31]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_314[31]),pEddgbl->unk_314[31]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_314[32]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_314[32]),pEddgbl->unk_314[32]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_314[33]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_314[33]),pEddgbl->unk_314[33]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_314[34]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_314[34]),pEddgbl->unk_314[34]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_314[35]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_314[35]),pEddgbl->unk_314[35]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_314[36]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_314[36]),pEddgbl->unk_314[36]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_314[37]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_314[37]),pEddgbl->unk_314[37]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_314[38]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_314[38]),pEddgbl->unk_314[38]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_314[39]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_314[39]),pEddgbl->unk_314[39]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_314[40]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_314[40]),pEddgbl->unk_314[40]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_314[41]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_314[41]),pEddgbl->unk_314[41]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_314[42]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_314[42]),pEddgbl->unk_314[42]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_314[43]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_314[43]),pEddgbl->unk_314[43]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_314[44]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_314[44]),pEddgbl->unk_314[44]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_314[45]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_314[45]),pEddgbl->unk_314[45]);
     // D3DNTHAL_CALLBACKS d3dNtHalCallbacks;
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->d3dNtHalCallbacks                              : 0x%08lx\n",(((DWORD)&pEddgbl->d3dNtHalCallbacks) - (DWORD)pEddgbl),pEddgbl->d3dNtHalCallbacks);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_460[0]                                     : 0x%08lx\n",(((DWORD)&pEddgbl->unk_460[0]) - (DWORD)pEddgbl),pEddgbl->unk_460[0]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_460[1]                                     : 0x%08lx\n",(((DWORD)&pEddgbl->unk_460[1]) - (DWORD)pEddgbl),pEddgbl->unk_460[1]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_460[2]                                     : 0x%08lx\n",(((DWORD)&pEddgbl->unk_460[2]) - (DWORD)pEddgbl),pEddgbl->unk_460[2]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_460[3]                                     : 0x%08lx\n",(((DWORD)&pEddgbl->unk_460[3]) - (DWORD)pEddgbl),pEddgbl->unk_460[3]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_460[4]                                     : 0x%08lx\n",(((DWORD)&pEddgbl->unk_460[4]) - (DWORD)pEddgbl),pEddgbl->unk_460[4]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_460[5]                                     : 0x%08lx\n",(((DWORD)&pEddgbl->unk_460[5]) - (DWORD)pEddgbl),pEddgbl->unk_460[5]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_460[6]                                     : 0x%08lx\n",(((DWORD)&pEddgbl->unk_460[6]) - (DWORD)pEddgbl),pEddgbl->unk_460[6]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_460[7]                                     : 0x%08lx\n",(((DWORD)&pEddgbl->unk_460[6]) - (DWORD)pEddgbl),pEddgbl->unk_460[7]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_460[8]                                     : 0x%08lx\n",(((DWORD)&pEddgbl->unk_460[6]) - (DWORD)pEddgbl),pEddgbl->unk_460[8]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->d3dNtHalCallbacks                              : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, d3dNtHalCallbacks),pEddgbl->d3dNtHalCallbacks);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_460[0]                                     : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_460[0]),pEddgbl->unk_460[0]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_460[1]                                     : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_460[1]),pEddgbl->unk_460[1]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_460[2]                                     : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_460[2]),pEddgbl->unk_460[2]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_460[3]                                     : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_460[3]),pEddgbl->unk_460[3]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_460[4]                                     : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_460[4]),pEddgbl->unk_460[4]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_460[5]                                     : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_460[5]),pEddgbl->unk_460[5]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_460[6]                                     : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_460[6]),pEddgbl->unk_460[6]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_460[7]                                     : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_460[7]),pEddgbl->unk_460[7]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_460[8]                                     : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_460[8]),pEddgbl->unk_460[8]);
     // D3DNTHAL_CALLBACKS2 d3dNtHalCallbacks2;
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->d3dNtHalCallbacks2                             : 0x%08lx\n",(((DWORD)&pEddgbl->d3dNtHalCallbacks2) - (DWORD)pEddgbl),pEddgbl->d3dNtHalCallbacks2);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->d3dNtHalCallbacks2                             : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, d3dNtHalCallbacks2),pEddgbl->d3dNtHalCallbacks2);
 
-    DPRINT1("0x%08lx 0x498 PEDD_DIRECTDRAW_GLOBAL->ddVideoPortCallback.dwSize                     : 0x%08lx\n",(((DWORD)&pEddgbl->ddVideoPortCallback.dwSize) - (DWORD)pEddgbl),pEddgbl->ddVideoPortCallback.dwSize);
-    DPRINT1("0x%08lx 0x49C PEDD_DIRECTDRAW_GLOBAL->ddVideoPortCallback.dwFlags                    : 0x%08lx\n",(((DWORD)&pEddgbl->ddVideoPortCallback.dwFlags) - (DWORD)pEddgbl),pEddgbl->ddVideoPortCallback.dwFlags);
-    DPRINT1("0x%08lx 0x4A0 PEDD_DIRECTDRAW_GLOBAL->ddVideoPortCallback.CanCreateVideoPort         : 0x%08lx\n",(((DWORD)&pEddgbl->ddVideoPortCallback.CanCreateVideoPort) - (DWORD)pEddgbl),pEddgbl->ddVideoPortCallback.CanCreateVideoPort);
-    DPRINT1("0x%08lx 0x4A4 PEDD_DIRECTDRAW_GLOBAL->ddVideoPortCallback.CreateVideoPort            : 0x%08lx\n",(((DWORD)&pEddgbl->ddVideoPortCallback.CreateVideoPort) - (DWORD)pEddgbl),pEddgbl->ddVideoPortCallback.CreateVideoPort);
-    DPRINT1("0x%08lx 0x4A8 PEDD_DIRECTDRAW_GLOBAL->ddVideoPortCallback.FlipVideoPort              : 0x%08lx\n",(((DWORD)&pEddgbl->ddVideoPortCallback.FlipVideoPort) - (DWORD)pEddgbl),pEddgbl->ddVideoPortCallback.FlipVideoPort);
-    DPRINT1("0x%08lx 0x4AC PEDD_DIRECTDRAW_GLOBAL->ddVideoPortCallback.GetVideoPortBandwidth      : 0x%08lx\n",(((DWORD)&pEddgbl->ddVideoPortCallback.GetVideoPortBandwidth) - (DWORD)pEddgbl),pEddgbl->ddVideoPortCallback.GetVideoPortBandwidth);
-    DPRINT1("0x%08lx 0x4B0 PEDD_DIRECTDRAW_GLOBAL->ddVideoPortCallback.GetVideoPortInputFormats   : 0x%08lx\n",(((DWORD)&pEddgbl->ddVideoPortCallback.GetVideoPortInputFormats) - (DWORD)pEddgbl),pEddgbl->ddVideoPortCallback.GetVideoPortInputFormats);
-    DPRINT1("0x%08lx 0x4B4 PEDD_DIRECTDRAW_GLOBAL->ddVideoPortCallback.GetVideoPortOutputFormats  : 0x%08lx\n",(((DWORD)&pEddgbl->ddVideoPortCallback.GetVideoPortOutputFormats) - (DWORD)pEddgbl),pEddgbl->ddVideoPortCallback.GetVideoPortOutputFormats);
-    DPRINT1("0x%08lx 0x4B8 PEDD_DIRECTDRAW_GLOBAL->ddVideoPortCallback.lpReserved1                : 0x%08lx\n",(((DWORD)&pEddgbl->ddVideoPortCallback.lpReserved1) - (DWORD)pEddgbl),pEddgbl->ddVideoPortCallback.lpReserved1);
-    DPRINT1("0x%08lx 0x4BC PEDD_DIRECTDRAW_GLOBAL->ddVideoPortCallback.GetVideoPortField          : 0x%08lx\n",(((DWORD)&pEddgbl->ddVideoPortCallback.GetVideoPortField) - (DWORD)pEddgbl),pEddgbl->ddVideoPortCallback.GetVideoPortField);
-    DPRINT1("0x%08lx 0x4C0 PEDD_DIRECTDRAW_GLOBAL->ddVideoPortCallback.GetVideoPortLine           : 0x%08lx\n",(((DWORD)&pEddgbl->ddVideoPortCallback.GetVideoPortLine) - (DWORD)pEddgbl),pEddgbl->ddVideoPortCallback.GetVideoPortLine);
-    DPRINT1("0x%08lx 0x4C4 PEDD_DIRECTDRAW_GLOBAL->ddVideoPortCallback.GetVideoPortConnectInfo    : 0x%08lx\n",(((DWORD)&pEddgbl->ddVideoPortCallback.GetVideoPortConnectInfo) - (DWORD)pEddgbl),pEddgbl->ddVideoPortCallback.GetVideoPortConnectInfo);
-    DPRINT1("0x%08lx 0x4C8 PEDD_DIRECTDRAW_GLOBAL->ddVideoPortCallback.DestroyVideoPort           : 0x%08lx\n",(((DWORD)&pEddgbl->ddVideoPortCallback.DestroyVideoPort) - (DWORD)pEddgbl),pEddgbl->ddVideoPortCallback.DestroyVideoPort);
-    DPRINT1("0x%08lx 0x4CC PEDD_DIRECTDRAW_GLOBAL->ddVideoPortCallback.GetVideoPortFlipStatus     : 0x%08lx\n",(((DWORD)&pEddgbl->ddVideoPortCallback.GetVideoPortFlipStatus) - (DWORD)pEddgbl),pEddgbl->ddVideoPortCallback.GetVideoPortFlipStatus);
-    DPRINT1("0x%08lx 0x4D0 PEDD_DIRECTDRAW_GLOBAL->ddVideoPortCallback.UpdateVideoPort            : 0x%08lx\n",(((DWORD)&pEddgbl->ddVideoPortCallback.UpdateVideoPort) - (DWORD)pEddgbl),pEddgbl->ddVideoPortCallback.UpdateVideoPort);
-    DPRINT1("0x%08lx 0x4D4 PEDD_DIRECTDRAW_GLOBAL->ddVideoPortCallback.WaitForVideoPortSync       : 0x%08lx\n",(((DWORD)&pEddgbl->ddVideoPortCallback.WaitForVideoPortSync) - (DWORD)pEddgbl),pEddgbl->ddVideoPortCallback.WaitForVideoPortSync);
-    DPRINT1("0x%08lx 0x4D8 PEDD_DIRECTDRAW_GLOBAL->ddVideoPortCallback.GetVideoSignalStatus       : 0x%08lx\n",(((DWORD)&pEddgbl->ddVideoPortCallback.GetVideoSignalStatus) - (DWORD)pEddgbl),pEddgbl->ddVideoPortCallback.GetVideoSignalStatus);
-    DPRINT1("0x%08lx 0x4DC PEDD_DIRECTDRAW_GLOBAL->ddVideoPortCallback.ColorControl               : 0x%08lx\n",(((DWORD)&pEddgbl->ddVideoPortCallback.ColorControl) - (DWORD)pEddgbl),pEddgbl->ddVideoPortCallback.ColorControl);
+    DPRINT1("0x%08lx 0x498 PEDD_DIRECTDRAW_GLOBAL->ddVideoPortCallback.dwSize                     : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, ddVideoPortCallback.dwSize),pEddgbl->ddVideoPortCallback.dwSize);
+    DPRINT1("0x%08lx 0x49C PEDD_DIRECTDRAW_GLOBAL->ddVideoPortCallback.dwFlags                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, ddVideoPortCallback.dwFlags),pEddgbl->ddVideoPortCallback.dwFlags);
+    DPRINT1("0x%08lx 0x4A0 PEDD_DIRECTDRAW_GLOBAL->ddVideoPortCallback.CanCreateVideoPort         : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, ddVideoPortCallback.CanCreateVideoPort),pEddgbl->ddVideoPortCallback.CanCreateVideoPort);
+    DPRINT1("0x%08lx 0x4A4 PEDD_DIRECTDRAW_GLOBAL->ddVideoPortCallback.CreateVideoPort            : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, ddVideoPortCallback.CreateVideoPort),pEddgbl->ddVideoPortCallback.CreateVideoPort);
+    DPRINT1("0x%08lx 0x4A8 PEDD_DIRECTDRAW_GLOBAL->ddVideoPortCallback.FlipVideoPort              : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, ddVideoPortCallback.FlipVideoPort),pEddgbl->ddVideoPortCallback.FlipVideoPort);
+    DPRINT1("0x%08lx 0x4AC PEDD_DIRECTDRAW_GLOBAL->ddVideoPortCallback.GetVideoPortBandwidth      : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, ddVideoPortCallback.GetVideoPortBandwidth),pEddgbl->ddVideoPortCallback.GetVideoPortBandwidth);
+    DPRINT1("0x%08lx 0x4B0 PEDD_DIRECTDRAW_GLOBAL->ddVideoPortCallback.GetVideoPortInputFormats   : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, ddVideoPortCallback.GetVideoPortInputFormats),pEddgbl->ddVideoPortCallback.GetVideoPortInputFormats);
+    DPRINT1("0x%08lx 0x4B4 PEDD_DIRECTDRAW_GLOBAL->ddVideoPortCallback.GetVideoPortOutputFormats  : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, ddVideoPortCallback.GetVideoPortOutputFormats),pEddgbl->ddVideoPortCallback.GetVideoPortOutputFormats);
+    DPRINT1("0x%08lx 0x4B8 PEDD_DIRECTDRAW_GLOBAL->ddVideoPortCallback.lpReserved1                : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, ddVideoPortCallback.lpReserved1),pEddgbl->ddVideoPortCallback.lpReserved1);
+    DPRINT1("0x%08lx 0x4BC PEDD_DIRECTDRAW_GLOBAL->ddVideoPortCallback.GetVideoPortField          : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, ddVideoPortCallback.GetVideoPortField),pEddgbl->ddVideoPortCallback.GetVideoPortField);
+    DPRINT1("0x%08lx 0x4C0 PEDD_DIRECTDRAW_GLOBAL->ddVideoPortCallback.GetVideoPortLine           : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, ddVideoPortCallback.GetVideoPortLine),pEddgbl->ddVideoPortCallback.GetVideoPortLine);
+    DPRINT1("0x%08lx 0x4C4 PEDD_DIRECTDRAW_GLOBAL->ddVideoPortCallback.GetVideoPortConnectInfo    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, ddVideoPortCallback.GetVideoPortConnectInfo),pEddgbl->ddVideoPortCallback.GetVideoPortConnectInfo);
+    DPRINT1("0x%08lx 0x4C8 PEDD_DIRECTDRAW_GLOBAL->ddVideoPortCallback.DestroyVideoPort           : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, ddVideoPortCallback.DestroyVideoPort),pEddgbl->ddVideoPortCallback.DestroyVideoPort);
+    DPRINT1("0x%08lx 0x4CC PEDD_DIRECTDRAW_GLOBAL->ddVideoPortCallback.GetVideoPortFlipStatus     : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, ddVideoPortCallback.GetVideoPortFlipStatus),pEddgbl->ddVideoPortCallback.GetVideoPortFlipStatus);
+    DPRINT1("0x%08lx 0x4D0 PEDD_DIRECTDRAW_GLOBAL->ddVideoPortCallback.UpdateVideoPort            : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, ddVideoPortCallback.UpdateVideoPort),pEddgbl->ddVideoPortCallback.UpdateVideoPort);
+    DPRINT1("0x%08lx 0x4D4 PEDD_DIRECTDRAW_GLOBAL->ddVideoPortCallback.WaitForVideoPortSync       : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, ddVideoPortCallback.WaitForVideoPortSync),pEddgbl->ddVideoPortCallback.WaitForVideoPortSync);
+    DPRINT1("0x%08lx 0x4D8 PEDD_DIRECTDRAW_GLOBAL->ddVideoPortCallback.GetVideoSignalStatus       : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, ddVideoPortCallback.GetVideoSignalStatus),pEddgbl->ddVideoPortCallback.GetVideoSignalStatus);
+    DPRINT1("0x%08lx 0x4DC PEDD_DIRECTDRAW_GLOBAL->ddVideoPortCallback.ColorControl               : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, ddVideoPortCallback.ColorControl),pEddgbl->ddVideoPortCallback.ColorControl);
 
-    DPRINT1("0x%08lx 0x4E0 PEDD_DIRECTDRAW_GLOBAL->ddMiscellanousCallbacks.dwSize                 : 0x%08lx\n",(((DWORD)&pEddgbl->ddMiscellanousCallbacks.dwSize) - (DWORD)pEddgbl),pEddgbl->ddMiscellanousCallbacks.dwSize);
-    DPRINT1("0x%08lx 0x4E4 PEDD_DIRECTDRAW_GLOBAL->ddMiscellanousCallbacks.dwFlags                : 0x%08lx\n",(((DWORD)&pEddgbl->ddMiscellanousCallbacks.dwFlags) - (DWORD)pEddgbl),pEddgbl->ddMiscellanousCallbacks.dwFlags);
-    DPRINT1("0x%08lx 0x4E8 PEDD_DIRECTDRAW_GLOBAL->ddMiscellanousCallbacks.GetAvailDriverMemory   : 0x%08lx\n",(((DWORD)&pEddgbl->ddMiscellanousCallbacks.GetAvailDriverMemory) - (DWORD)pEddgbl),pEddgbl->ddMiscellanousCallbacks.GetAvailDriverMemory);
+    DPRINT1("0x%08lx 0x4E0 PEDD_DIRECTDRAW_GLOBAL->ddMiscellanousCallbacks.dwSize                 : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, ddMiscellanousCallbacks.dwSize),pEddgbl->ddMiscellanousCallbacks.dwSize);
+    DPRINT1("0x%08lx 0x4E4 PEDD_DIRECTDRAW_GLOBAL->ddMiscellanousCallbacks.dwFlags                : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, ddMiscellanousCallbacks.dwFlags),pEddgbl->ddMiscellanousCallbacks.dwFlags);
+    DPRINT1("0x%08lx 0x4E8 PEDD_DIRECTDRAW_GLOBAL->ddMiscellanousCallbacks.GetAvailDriverMemory   : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, ddMiscellanousCallbacks.GetAvailDriverMemory),pEddgbl->ddMiscellanousCallbacks.GetAvailDriverMemory);
 
-    DPRINT1("0x%08lx 0x4EC PEDD_DIRECTDRAW_GLOBAL->ddMiscellanous2Callbacks.dwSize                : 0x%08lx\n",(((DWORD)&pEddgbl->ddMiscellanous2Callbacks.dwSize) - (DWORD)pEddgbl),pEddgbl->ddMiscellanous2Callbacks.dwSize);
-    DPRINT1("0x%08lx 0x4F0 PEDD_DIRECTDRAW_GLOBAL->ddMiscellanous2Callbacks.dwFlags               : 0x%08lx\n",(((DWORD)&pEddgbl->ddMiscellanous2Callbacks.dwFlags) - (DWORD)pEddgbl),pEddgbl->ddMiscellanous2Callbacks.dwFlags);
-    DPRINT1("0x%08lx 0x4F4 PEDD_DIRECTDRAW_GLOBAL->ddMiscellanous2Callbacks.AlphaBlt              : 0x%08lx\n",(((DWORD)&pEddgbl->ddMiscellanous2Callbacks.AlphaBlt) - (DWORD)pEddgbl),pEddgbl->ddMiscellanous2Callbacks.AlphaBlt);
-    DPRINT1("0x%08lx 0x4F8 PEDD_DIRECTDRAW_GLOBAL->ddMiscellanous2Callbacks.CreateSurfaceEx       : 0x%08lx\n",(((DWORD)&pEddgbl->ddMiscellanous2Callbacks.CreateSurfaceEx) - (DWORD)pEddgbl),pEddgbl->ddMiscellanous2Callbacks.CreateSurfaceEx);
-    DPRINT1("0x%08lx 0x4FC PEDD_DIRECTDRAW_GLOBAL->ddMiscellanous2Callbacks.GetDriverState        : 0x%08lx\n",(((DWORD)&pEddgbl->ddMiscellanous2Callbacks.GetDriverState) - (DWORD)pEddgbl),pEddgbl->ddMiscellanous2Callbacks.GetDriverState);
-    DPRINT1("0x%08lx 0x500 PEDD_DIRECTDRAW_GLOBAL->ddMiscellanous2Callbacks.DestroyDDLocal        : 0x%08lx\n",(((DWORD)&pEddgbl->ddMiscellanous2Callbacks.DestroyDDLocal) - (DWORD)pEddgbl),pEddgbl->ddMiscellanous2Callbacks.DestroyDDLocal);
+    DPRINT1("0x%08lx 0x4EC PEDD_DIRECTDRAW_GLOBAL->ddMiscellanous2Callbacks.dwSize                : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, ddMiscellanous2Callbacks.dwSize),pEddgbl->ddMiscellanous2Callbacks.dwSize);
+    DPRINT1("0x%08lx 0x4F0 PEDD_DIRECTDRAW_GLOBAL->ddMiscellanous2Callbacks.dwFlags               : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, ddMiscellanous2Callbacks.dwFlags),pEddgbl->ddMiscellanous2Callbacks.dwFlags);
+    DPRINT1("0x%08lx 0x4F4 PEDD_DIRECTDRAW_GLOBAL->ddMiscellanous2Callbacks.AlphaBlt              : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, ddMiscellanous2Callbacks.AlphaBlt),pEddgbl->ddMiscellanous2Callbacks.AlphaBlt);
+    DPRINT1("0x%08lx 0x4F8 PEDD_DIRECTDRAW_GLOBAL->ddMiscellanous2Callbacks.CreateSurfaceEx       : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, ddMiscellanous2Callbacks.CreateSurfaceEx),pEddgbl->ddMiscellanous2Callbacks.CreateSurfaceEx);
+    DPRINT1("0x%08lx 0x4FC PEDD_DIRECTDRAW_GLOBAL->ddMiscellanous2Callbacks.GetDriverState        : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, ddMiscellanous2Callbacks.GetDriverState),pEddgbl->ddMiscellanous2Callbacks.GetDriverState);
+    DPRINT1("0x%08lx 0x500 PEDD_DIRECTDRAW_GLOBAL->ddMiscellanous2Callbacks.DestroyDDLocal        : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, ddMiscellanous2Callbacks.DestroyDDLocal),pEddgbl->ddMiscellanous2Callbacks.DestroyDDLocal);
 
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_504[0]                                     : 0x%08lx\n",(((DWORD)&pEddgbl->unk_504[0]) - (DWORD)pEddgbl),pEddgbl->unk_504[0]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_504[1]                                     : 0x%08lx\n",(((DWORD)&pEddgbl->unk_504[1]) - (DWORD)pEddgbl),pEddgbl->unk_504[1]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_504[2]                                     : 0x%08lx\n",(((DWORD)&pEddgbl->unk_504[2]) - (DWORD)pEddgbl),pEddgbl->unk_504[2]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_504[3]                                     : 0x%08lx\n",(((DWORD)&pEddgbl->unk_504[3]) - (DWORD)pEddgbl),pEddgbl->unk_504[3]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_504[4]                                     : 0x%08lx\n",(((DWORD)&pEddgbl->unk_504[4]) - (DWORD)pEddgbl),pEddgbl->unk_504[4]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_504[5]                                     : 0x%08lx\n",(((DWORD)&pEddgbl->unk_504[5]) - (DWORD)pEddgbl),pEddgbl->unk_504[5]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_504[6]                                     : 0x%08lx\n",(((DWORD)&pEddgbl->unk_504[6]) - (DWORD)pEddgbl),pEddgbl->unk_504[6]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_504[7]                                     : 0x%08lx\n",(((DWORD)&pEddgbl->unk_504[7]) - (DWORD)pEddgbl),pEddgbl->unk_504[7]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_504[8]                                     : 0x%08lx\n",(((DWORD)&pEddgbl->unk_504[8]) - (DWORD)pEddgbl),pEddgbl->unk_504[8]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_504[9]                                     : 0x%08lx\n",(((DWORD)&pEddgbl->unk_504[9]) - (DWORD)pEddgbl),pEddgbl->unk_504[9]);
-    
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_504[0]                                     : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_504[0]),pEddgbl->unk_504[0]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_504[1]                                     : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_504[1]),pEddgbl->unk_504[1]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_504[2]                                     : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_504[2]),pEddgbl->unk_504[2]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_504[3]                                     : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_504[3]),pEddgbl->unk_504[3]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_504[4]                                     : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_504[4]),pEddgbl->unk_504[4]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_504[5]                                     : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_504[5]),pEddgbl->unk_504[5]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_504[6]                                     : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_504[6]),pEddgbl->unk_504[6]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_504[7]                                     : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_504[7]),pEddgbl->unk_504[7]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_504[8]                                     : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_504[8]),pEddgbl->unk_504[8]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_504[9]                                     : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_504[9]),pEddgbl->unk_504[9]);
+
     // D3DNTHAL_CALLBACKS3 d3dNtHalCallbacks3;
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->d3dNtHalCallbacks3                             : 0x%08lx\n",(((DWORD)&pEddgbl->d3dNtHalCallbacks3) - (DWORD)pEddgbl),pEddgbl->d3dNtHalCallbacks3);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_544                                        : 0x%08lx\n",(((DWORD)&pEddgbl->unk_544) - (DWORD)pEddgbl), pEddgbl->unk_544);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_548                                        : 0x%08lx\n",(((DWORD)&pEddgbl->unk_548) - (DWORD)pEddgbl), pEddgbl->unk_548);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->d3dNtHalCallbacks3                             : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, d3dNtHalCallbacks3),pEddgbl->d3dNtHalCallbacks3);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_544                                        : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_544), pEddgbl->unk_544);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_548                                        : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_548), pEddgbl->unk_548);
     DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_54c[0]                                     : 0x%08lx\n",( ( (DWORD)&pEddgbl->unk_54c[0] ) - (DWORD)pEddgbl),pEddgbl->unk_54c[0]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_54c[1]                                     : 0x%08lx\n",(((DWORD)&pEddgbl->unk_54c[1]) - (DWORD)pEddgbl),pEddgbl->unk_54c[1]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_54c[2]                                     : 0x%08lx\n",(((DWORD)&pEddgbl->unk_54c[2]) - (DWORD)pEddgbl),pEddgbl->unk_54c[2]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_54c[3]                                     : 0x%08lx\n",(((DWORD)&pEddgbl->unk_54c[3]) - (DWORD)pEddgbl),pEddgbl->unk_54c[3]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_54c[4]                                     : 0x%08lx\n",(((DWORD)&pEddgbl->unk_54c[4]) - (DWORD)pEddgbl),pEddgbl->unk_54c[4]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_54c[5]                                     : 0x%08lx\n",(((DWORD)&pEddgbl->unk_54c[5]) - (DWORD)pEddgbl),pEddgbl->unk_54c[5]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_54c[6]                                     : 0x%08lx\n",(((DWORD)&pEddgbl->unk_54c[6]) - (DWORD)pEddgbl),pEddgbl->unk_54c[6]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_54c[7]                                     : 0x%08lx\n",(((DWORD)&pEddgbl->unk_54c[7]) - (DWORD)pEddgbl),pEddgbl->unk_54c[7]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_54c[8]                                     : 0x%08lx\n",(((DWORD)&pEddgbl->unk_54c[8]) - (DWORD)pEddgbl),pEddgbl->unk_54c[8]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_54c[9]                                     : 0x%08lx\n",(((DWORD)&pEddgbl->unk_54c[9]) - (DWORD)pEddgbl),pEddgbl->unk_54c[9]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_54c[10]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_54c[10]) - (DWORD)pEddgbl),pEddgbl->unk_54c[10]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_54c[11]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_54c[11]) - (DWORD)pEddgbl),pEddgbl->unk_54c[11]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_54c[12]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_54c[12]) - (DWORD)pEddgbl),pEddgbl->unk_54c[12]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_54c[13]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_54c[13]) - (DWORD)pEddgbl),pEddgbl->unk_54c[13]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_54c[14]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_54c[14]) - (DWORD)pEddgbl),pEddgbl->unk_54c[14]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_54c[15]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_54c[15]) - (DWORD)pEddgbl),pEddgbl->unk_54c[15]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_54c[16]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_54c[16]) - (DWORD)pEddgbl),pEddgbl->unk_54c[16]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_54c[17]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_54c[17]) - (DWORD)pEddgbl),pEddgbl->unk_54c[17]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_54c[18]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_54c[18]) - (DWORD)pEddgbl),pEddgbl->unk_54c[18]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_54c[19]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_54c[19]) - (DWORD)pEddgbl),pEddgbl->unk_54c[19]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_54c[20]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_54c[20]) - (DWORD)pEddgbl),pEddgbl->unk_54c[20]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_54c[21]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_54c[21]) - (DWORD)pEddgbl),pEddgbl->unk_54c[21]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_54c[22]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_54c[22]) - (DWORD)pEddgbl),pEddgbl->unk_54c[22]);    
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_54c[1]                                     : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_54c[1]),pEddgbl->unk_54c[1]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_54c[2]                                     : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_54c[2]),pEddgbl->unk_54c[2]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_54c[3]                                     : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_54c[3]),pEddgbl->unk_54c[3]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_54c[4]                                     : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_54c[4]),pEddgbl->unk_54c[4]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_54c[5]                                     : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_54c[5]),pEddgbl->unk_54c[5]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_54c[6]                                     : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_54c[6]),pEddgbl->unk_54c[6]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_54c[7]                                     : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_54c[7]),pEddgbl->unk_54c[7]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_54c[8]                                     : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_54c[8]),pEddgbl->unk_54c[8]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_54c[9]                                     : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_54c[9]),pEddgbl->unk_54c[9]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_54c[10]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_54c[10]),pEddgbl->unk_54c[10]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_54c[11]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_54c[11]),pEddgbl->unk_54c[11]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_54c[12]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_54c[12]),pEddgbl->unk_54c[12]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_54c[13]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_54c[13]),pEddgbl->unk_54c[13]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_54c[14]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_54c[14]),pEddgbl->unk_54c[14]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_54c[15]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_54c[15]),pEddgbl->unk_54c[15]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_54c[16]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_54c[16]),pEddgbl->unk_54c[16]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_54c[17]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_54c[17]),pEddgbl->unk_54c[17]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_54c[18]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_54c[18]),pEddgbl->unk_54c[18]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_54c[19]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_54c[19]),pEddgbl->unk_54c[19]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_54c[20]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_54c[20]),pEddgbl->unk_54c[20]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_54c[21]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_54c[21]),pEddgbl->unk_54c[21]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_54c[22]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_54c[22]),pEddgbl->unk_54c[22]);
     // EDD_DIRECTDRAW_LOCAL* peDirectDrawLocalList;
-    DPRINT1("0x%08lx 0x5A8 PEDD_DIRECTDRAW_GLOBAL->peDirectDrawLocalList                          : 0x%08lx\n",(((DWORD)&pEddgbl->peDirectDrawLocalList) - (DWORD)pEddgbl), pEddgbl->peDirectDrawLocalList);
+    DPRINT1("0x%08lx 0x5A8 PEDD_DIRECTDRAW_GLOBAL->peDirectDrawLocalList                          : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, peDirectDrawLocalList), pEddgbl->peDirectDrawLocalList);
     // EDD_SURFACE* peSurface_LockList;
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->peSurface_LockList                             : 0x%08lx\n",(((DWORD)&pEddgbl->peSurface_LockList) - (DWORD)pEddgbl), pEddgbl->peSurface_LockList);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->fl                                             : 0x%08lx\n",(((DWORD)&pEddgbl->fl) - (DWORD)pEddgbl), pEddgbl->fl);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->cSurfaceLocks                                  : 0x%08lx\n",(((DWORD)&pEddgbl->cSurfaceLocks) - (DWORD)pEddgbl), pEddgbl->cSurfaceLocks);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->peSurface_LockList                             : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, peSurface_LockList), pEddgbl->peSurface_LockList);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->fl                                             : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, fl), pEddgbl->fl);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->cSurfaceLocks                                  : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, cSurfaceLocks), pEddgbl->cSurfaceLocks);
     // PKEVENT pAssertModeEvent;
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->pAssertModeEvent                               : 0x%08lx\n",(((DWORD)&pEddgbl->pAssertModeEvent) - (DWORD)pEddgbl), pEddgbl->pAssertModeEvent);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->pAssertModeEvent                               : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, pAssertModeEvent), pEddgbl->pAssertModeEvent);
     // EDD_SURFACE *peSurfaceCurrent;
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->peSurfaceCurrent                               : 0x%08lx\n",(((DWORD)&pEddgbl->peSurfaceCurrent) - (DWORD)pEddgbl), pEddgbl->peSurfaceCurrent);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->peSurfaceCurrent                               : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, peSurfaceCurrent), pEddgbl->peSurfaceCurrent);
     // EDD_SURFACE *peSurfacePrimary;
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->peSurfacePrimary                               : 0x%08lx\n",(((DWORD)&pEddgbl->peSurfacePrimary) - (DWORD)pEddgbl),pEddgbl->peSurfacePrimary);
-    DPRINT1("0x%08lx 0x5C4 PEDD_DIRECTDRAW_GLOBAL->bSuspended                                     : 0x%08lx\n",(((DWORD)&pEddgbl->bSuspended) - (DWORD)pEddgbl),pEddgbl->bSuspended);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_5c8[0]                                     : 0x%08lx\n",(((DWORD)&pEddgbl->unk_5c8[0]) - (DWORD)pEddgbl),pEddgbl->unk_5c8[0]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_5c8[1]                                     : 0x%08lx\n",(((DWORD)&pEddgbl->unk_5c8[1]) - (DWORD)pEddgbl),pEddgbl->unk_5c8[1]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_5c8[2]                                     : 0x%08lx\n",(((DWORD)&pEddgbl->unk_5c8[2]) - (DWORD)pEddgbl),pEddgbl->unk_5c8[2]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_5c8[3]                                     : 0x%08lx\n",(((DWORD)&pEddgbl->unk_5c8[3]) - (DWORD)pEddgbl),pEddgbl->unk_5c8[3]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_5c8[4]                                     : 0x%08lx\n",(((DWORD)&pEddgbl->unk_5c8[4]) - (DWORD)pEddgbl),pEddgbl->unk_5c8[4]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_5c8[5]                                     : 0x%08lx\n",(((DWORD)&pEddgbl->unk_5c8[5]) - (DWORD)pEddgbl),pEddgbl->unk_5c8[5]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_5c8[6]                                     : 0x%08lx\n",(((DWORD)&pEddgbl->unk_5c8[6]) - (DWORD)pEddgbl),pEddgbl->unk_5c8[6]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_5c8[7]                                     : 0x%08lx\n",(((DWORD)&pEddgbl->unk_5c8[7]) - (DWORD)pEddgbl),pEddgbl->unk_5c8[7]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_5c8[8]                                     : 0x%08lx\n",(((DWORD)&pEddgbl->unk_5c8[8]) - (DWORD)pEddgbl),pEddgbl->unk_5c8[8]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_5c8[9]                                     : 0x%08lx\n",(((DWORD)&pEddgbl->unk_5c8[9]) - (DWORD)pEddgbl),pEddgbl->unk_5c8[9]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_5c8[10]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_5c8[10]) - (DWORD)pEddgbl),pEddgbl->unk_5c8[10]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_5c8[11]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_5c8[11]) - (DWORD)pEddgbl),pEddgbl->unk_5c8[11]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->peSurfacePrimary                               : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, peSurfacePrimary),pEddgbl->peSurfacePrimary);
+    DPRINT1("0x%08lx 0x5C4 PEDD_DIRECTDRAW_GLOBAL->bSuspended                                     : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, bSuspended),pEddgbl->bSuspended);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_5c8[0]                                     : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_5c8[0]),pEddgbl->unk_5c8[0]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_5c8[1]                                     : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_5c8[1]),pEddgbl->unk_5c8[1]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_5c8[2]                                     : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_5c8[2]),pEddgbl->unk_5c8[2]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_5c8[3]                                     : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_5c8[3]),pEddgbl->unk_5c8[3]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_5c8[4]                                     : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_5c8[4]),pEddgbl->unk_5c8[4]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_5c8[5]                                     : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_5c8[5]),pEddgbl->unk_5c8[5]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_5c8[6]                                     : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_5c8[6]),pEddgbl->unk_5c8[6]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_5c8[7]                                     : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_5c8[7]),pEddgbl->unk_5c8[7]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_5c8[8]                                     : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_5c8[8]),pEddgbl->unk_5c8[8]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_5c8[9]                                     : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_5c8[9]),pEddgbl->unk_5c8[9]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_5c8[10]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_5c8[10]),pEddgbl->unk_5c8[10]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_5c8[11]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_5c8[11]),pEddgbl->unk_5c8[11]);
     // RECTL rcbounds;
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->rcbounds                                       : 0x%08lx\n",(((DWORD)&pEddgbl->rcbounds) - (DWORD)pEddgbl),pEddgbl->rcbounds);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_608                                        : 0x%08lx\n",(((DWORD)&pEddgbl->unk_608) - (DWORD)pEddgbl), pEddgbl->unk_608);
-    DPRINT1("0x%08lx 0x60C PEDD_DIRECTDRAW_GLOBAL->hDev                                           : 0x%08lx\n",(((DWORD)&pEddgbl->hDev) - (DWORD)pEddgbl), pEddgbl->hDev);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->rcbounds                                       : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, rcbounds),pEddgbl->rcbounds);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_608                                        : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_608), pEddgbl->unk_608);
+    DPRINT1("0x%08lx 0x60C PEDD_DIRECTDRAW_GLOBAL->hDev                                           : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, hDev), pEddgbl->hDev);
 
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_610[0]                                     : 0x%08lx\n",(((DWORD)&pEddgbl->unk_610[0]) - (DWORD)pEddgbl), pEddgbl->unk_610[0]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_610[1]                                     : 0x%08lx\n",(((DWORD)&pEddgbl->unk_610[1]) - (DWORD)pEddgbl), pEddgbl->unk_610[1]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_610[2]                                     : 0x%08lx\n",(((DWORD)&pEddgbl->unk_610[2]) - (DWORD)pEddgbl), pEddgbl->unk_610[2]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_610[3]                                     : 0x%08lx\n",(((DWORD)&pEddgbl->unk_610[3]) - (DWORD)pEddgbl), pEddgbl->unk_610[3]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_610[4]                                     : 0x%08lx\n",(((DWORD)&pEddgbl->unk_610[4]) - (DWORD)pEddgbl), pEddgbl->unk_610[4]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_610[5]                                     : 0x%08lx\n",(((DWORD)&pEddgbl->unk_610[5]) - (DWORD)pEddgbl), pEddgbl->unk_610[5]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_610[6]                                     : 0x%08lx\n",(((DWORD)&pEddgbl->unk_610[6]) - (DWORD)pEddgbl), pEddgbl->unk_610[6]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_610[7]                                     : 0x%08lx\n",(((DWORD)&pEddgbl->unk_610[7]) - (DWORD)pEddgbl), pEddgbl->unk_610[7]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_610[8]                                     : 0x%08lx\n",(((DWORD)&pEddgbl->unk_610[8]) - (DWORD)pEddgbl), pEddgbl->unk_610[8]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_610[9]                                     : 0x%08lx\n",(((DWORD)&pEddgbl->unk_610[9]) - (DWORD)pEddgbl), pEddgbl->unk_610[9]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_610[10]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_610[10]) - (DWORD)pEddgbl), pEddgbl->unk_610[10]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_610[11]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_610[11]) - (DWORD)pEddgbl), pEddgbl->unk_610[11]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_610[12]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_610[12]) - (DWORD)pEddgbl), pEddgbl->unk_610[12]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_610[13]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_610[13]) - (DWORD)pEddgbl), pEddgbl->unk_610[13]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_610[14]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_610[14]) - (DWORD)pEddgbl), pEddgbl->unk_610[14]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_610[15]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_610[15]) - (DWORD)pEddgbl), pEddgbl->unk_610[15]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_610[16]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_610[16]) - (DWORD)pEddgbl), pEddgbl->unk_610[16]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_610[17]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_610[17]) - (DWORD)pEddgbl), pEddgbl->unk_610[17]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_610[18]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_610[18]) - (DWORD)pEddgbl), pEddgbl->unk_610[18]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_610[19]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_610[19]) - (DWORD)pEddgbl), pEddgbl->unk_610[19]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_610[20]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_610[20]) - (DWORD)pEddgbl), pEddgbl->unk_610[20]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_610[21]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_610[21]) - (DWORD)pEddgbl), pEddgbl->unk_610[21]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_610[22]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_610[22]) - (DWORD)pEddgbl), pEddgbl->unk_610[22]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_610[23]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_610[23]) - (DWORD)pEddgbl), pEddgbl->unk_610[23]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_610[24]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_610[24]) - (DWORD)pEddgbl), pEddgbl->unk_610[24]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_610[25]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_610[25]) - (DWORD)pEddgbl), pEddgbl->unk_610[25]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_610[26]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_610[26]) - (DWORD)pEddgbl), pEddgbl->unk_610[26]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_610[27]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_610[27]) - (DWORD)pEddgbl), pEddgbl->unk_610[27]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_610[28]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_610[28]) - (DWORD)pEddgbl), pEddgbl->unk_610[28]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_610[29]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_610[29]) - (DWORD)pEddgbl), pEddgbl->unk_610[29]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_610[30]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_610[30]) - (DWORD)pEddgbl), pEddgbl->unk_610[30]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_610[31]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_610[31]) - (DWORD)pEddgbl), pEddgbl->unk_610[31]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_610[32]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_610[32]) - (DWORD)pEddgbl), pEddgbl->unk_610[32]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_610[33]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_610[33]) - (DWORD)pEddgbl), pEddgbl->unk_610[33]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_610[34]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_610[34]) - (DWORD)pEddgbl), pEddgbl->unk_610[34]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_610[35]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_610[35]) - (DWORD)pEddgbl), pEddgbl->unk_610[35]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_610[36]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_610[36]) - (DWORD)pEddgbl), pEddgbl->unk_610[36]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_610[37]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_610[37]) - (DWORD)pEddgbl), pEddgbl->unk_610[37]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_610[38]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_610[38]) - (DWORD)pEddgbl), pEddgbl->unk_610[38]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_610[39]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_610[39]) - (DWORD)pEddgbl), pEddgbl->unk_610[39]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_610[40]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_610[40]) - (DWORD)pEddgbl), pEddgbl->unk_610[40]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_610[41]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_610[41]) - (DWORD)pEddgbl), pEddgbl->unk_610[41]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_610[42]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_610[42]) - (DWORD)pEddgbl), pEddgbl->unk_610[42]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_610[43]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_610[43]) - (DWORD)pEddgbl), pEddgbl->unk_610[43]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_610[44]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_610[44]) - (DWORD)pEddgbl), pEddgbl->unk_610[44]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_610[45]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_610[45]) - (DWORD)pEddgbl), pEddgbl->unk_610[45]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_610[46]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_610[46]) - (DWORD)pEddgbl), pEddgbl->unk_610[46]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_610[47]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_610[47]) - (DWORD)pEddgbl), pEddgbl->unk_610[47]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_610[48]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_610[48]) - (DWORD)pEddgbl), pEddgbl->unk_610[48]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_610[49]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_610[49]) - (DWORD)pEddgbl), pEddgbl->unk_610[49]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_1e0[50]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_610[50]) - (DWORD)pEddgbl), pEddgbl->unk_610[50]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_610[51]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_610[51]) - (DWORD)pEddgbl), pEddgbl->unk_610[51]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_610[52]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_610[52]) - (DWORD)pEddgbl), pEddgbl->unk_610[52]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_610[53]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_610[53]) - (DWORD)pEddgbl), pEddgbl->unk_610[53]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_610[54]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_610[54]) - (DWORD)pEddgbl), pEddgbl->unk_610[54]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_610[55]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_610[55]) - (DWORD)pEddgbl), pEddgbl->unk_610[55]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_610[56]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_610[56]) - (DWORD)pEddgbl), pEddgbl->unk_610[56]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_610[57]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_610[57]) - (DWORD)pEddgbl), pEddgbl->unk_610[57]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_610[58]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_610[58]) - (DWORD)pEddgbl), pEddgbl->unk_610[58]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_610[59]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_610[59]) - (DWORD)pEddgbl), pEddgbl->unk_610[59]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_1e0[60]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_610[60]) - (DWORD)pEddgbl), pEddgbl->unk_610[60]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_610[61]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_610[61]) - (DWORD)pEddgbl), pEddgbl->unk_610[61]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_610[62]                                    : 0x%08lx\n",(((DWORD)&pEddgbl->unk_610[62]) - (DWORD)pEddgbl), pEddgbl->unk_610[62]);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_70C                                        : 0x%08lx\n",(((DWORD)&pEddgbl->unk_70C) - (DWORD)pEddgbl), pEddgbl->unk_70C);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_610[0]                                     : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_610[0]), pEddgbl->unk_610[0]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_610[1]                                     : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_610[1]), pEddgbl->unk_610[1]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_610[2]                                     : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_610[2]), pEddgbl->unk_610[2]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_610[3]                                     : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_610[3]), pEddgbl->unk_610[3]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_610[4]                                     : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_610[4]), pEddgbl->unk_610[4]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_610[5]                                     : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_610[5]), pEddgbl->unk_610[5]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_610[6]                                     : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_610[6]), pEddgbl->unk_610[6]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_610[7]                                     : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_610[7]), pEddgbl->unk_610[7]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_610[8]                                     : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_610[8]), pEddgbl->unk_610[8]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_610[9]                                     : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_610[9]), pEddgbl->unk_610[9]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_610[10]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_610[10]), pEddgbl->unk_610[10]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_610[11]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_610[11]), pEddgbl->unk_610[11]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_610[12]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_610[12]), pEddgbl->unk_610[12]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_610[13]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_610[13]), pEddgbl->unk_610[13]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_610[14]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_610[14]), pEddgbl->unk_610[14]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_610[15]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_610[15]), pEddgbl->unk_610[15]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_610[16]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_610[16]), pEddgbl->unk_610[16]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_610[17]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_610[17]), pEddgbl->unk_610[17]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_610[18]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_610[18]), pEddgbl->unk_610[18]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_610[19]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_610[19]), pEddgbl->unk_610[19]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_610[20]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_610[20]), pEddgbl->unk_610[20]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_610[21]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_610[21]), pEddgbl->unk_610[21]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_610[22]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_610[22]), pEddgbl->unk_610[22]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_610[23]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_610[23]), pEddgbl->unk_610[23]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_610[24]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_610[24]), pEddgbl->unk_610[24]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_610[25]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_610[25]), pEddgbl->unk_610[25]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_610[26]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_610[26]), pEddgbl->unk_610[26]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_610[27]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_610[27]), pEddgbl->unk_610[27]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_610[28]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_610[28]), pEddgbl->unk_610[28]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_610[29]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_610[29]), pEddgbl->unk_610[29]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_610[30]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_610[30]), pEddgbl->unk_610[30]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_610[31]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_610[31]), pEddgbl->unk_610[31]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_610[32]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_610[32]), pEddgbl->unk_610[32]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_610[33]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_610[33]), pEddgbl->unk_610[33]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_610[34]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_610[34]), pEddgbl->unk_610[34]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_610[35]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_610[35]), pEddgbl->unk_610[35]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_610[36]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_610[36]), pEddgbl->unk_610[36]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_610[37]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_610[37]), pEddgbl->unk_610[37]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_610[38]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_610[38]), pEddgbl->unk_610[38]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_610[39]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_610[39]), pEddgbl->unk_610[39]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_610[40]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_610[40]), pEddgbl->unk_610[40]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_610[41]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_610[41]), pEddgbl->unk_610[41]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_610[42]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_610[42]), pEddgbl->unk_610[42]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_610[43]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_610[43]), pEddgbl->unk_610[43]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_610[44]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_610[44]), pEddgbl->unk_610[44]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_610[45]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_610[45]), pEddgbl->unk_610[45]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_610[46]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_610[46]), pEddgbl->unk_610[46]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_610[47]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_610[47]), pEddgbl->unk_610[47]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_610[48]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_610[48]), pEddgbl->unk_610[48]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_610[49]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_610[49]), pEddgbl->unk_610[49]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_1e0[50]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_610[50]), pEddgbl->unk_610[50]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_610[51]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_610[51]), pEddgbl->unk_610[51]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_610[52]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_610[52]), pEddgbl->unk_610[52]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_610[53]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_610[53]), pEddgbl->unk_610[53]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_610[54]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_610[54]), pEddgbl->unk_610[54]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_610[55]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_610[55]), pEddgbl->unk_610[55]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_610[56]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_610[56]), pEddgbl->unk_610[56]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_610[57]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_610[57]), pEddgbl->unk_610[57]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_610[58]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_610[58]), pEddgbl->unk_610[58]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_610[59]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_610[59]), pEddgbl->unk_610[59]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_1e0[60]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_610[60]), pEddgbl->unk_610[60]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_610[61]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_610[61]), pEddgbl->unk_610[61]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_610[62]                                    : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_610[62]), pEddgbl->unk_610[62]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_70C                                        : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_70C), pEddgbl->unk_70C);
 }
 
 void dump_edd_directdraw_local(PEDD_DIRECTDRAW_LOCAL pEddlcl)
 {
-    DPRINT1("0x%08lx PEDD_DIRECTDRAW_LOCAL->pobj                     : 0x%08lx\n",(((DWORD)&pEddlcl->pobj) - (DWORD)pEddlcl), pEddlcl->pobj);
-    DPRINT1("0x%08lx PEDD_DIRECTDRAW_LOCAL->peDirectDrawGlobal       : 0x%08lx\n",(((DWORD)&pEddlcl->peDirectDrawGlobal) - (DWORD)pEddlcl), pEddlcl->peDirectDrawGlobal);
-    DPRINT1("0x%08lx PEDD_DIRECTDRAW_LOCAL->peSurface_DdList         : 0x%08lx\n",(((DWORD)&pEddlcl->peSurface_DdList) - (DWORD)pEddlcl), pEddlcl->peSurface_DdList);
-    DPRINT1("0x%08lx PEDD_DIRECTDRAW_LOCAL->unk_018                  : 0x%08lx\n",(((DWORD)&pEddlcl->unk_018) - (DWORD)pEddlcl), pEddlcl->unk_018);
-    DPRINT1("0x%08lx PEDD_DIRECTDRAW_LOCAL->unk_01c                  : 0x%08lx\n",(((DWORD)&pEddlcl->unk_01c) - (DWORD)pEddlcl), pEddlcl->unk_01c);
-    DPRINT1("0x%08lx PEDD_DIRECTDRAW_LOCAL->unk_020                  : 0x%08lx\n",(((DWORD)&pEddlcl->unk_020) - (DWORD)pEddlcl), pEddlcl->unk_020);
-    DPRINT1("0x%08lx PEDD_DIRECTDRAW_LOCAL->peDirectDrawGlobal2      : 0x%08lx\n",(((DWORD)&pEddlcl->peDirectDrawGlobal2) - (DWORD)pEddlcl), pEddlcl->peDirectDrawGlobal2);
-    DPRINT1("0x%08lx PEDD_DIRECTDRAW_LOCAL->fpProcess                : 0x%08lx\n",(((DWORD)&pEddlcl->fpProcess) - (DWORD)pEddlcl), pEddlcl->fpProcess);
-    DPRINT1("0x%08lx PEDD_DIRECTDRAW_LOCAL->fl                       : 0x%08lx\n",(((DWORD)&pEddlcl->fl) - (DWORD)pEddlcl), pEddlcl->fl);
+    DPRINT1("0x%08lx PEDD_DIRECTDRAW_LOCAL->pobj                     : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_LOCAL, pobj), pEddlcl->pobj);
+    DPRINT1("0x%08lx PEDD_DIRECTDRAW_LOCAL->peDirectDrawGlobal       : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_LOCAL, peDirectDrawGlobal), pEddlcl->peDirectDrawGlobal);
+    DPRINT1("0x%08lx PEDD_DIRECTDRAW_LOCAL->peSurface_DdList         : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_LOCAL, peSurface_DdList), pEddlcl->peSurface_DdList);
+    DPRINT1("0x%08lx PEDD_DIRECTDRAW_LOCAL->unk_018                  : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_LOCAL, unk_018), pEddlcl->unk_018);
+    DPRINT1("0x%08lx PEDD_DIRECTDRAW_LOCAL->unk_01c                  : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_LOCAL, unk_01c), pEddlcl->unk_01c);
+    DPRINT1("0x%08lx PEDD_DIRECTDRAW_LOCAL->unk_020                  : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_LOCAL, unk_020), pEddlcl->unk_020);
+    DPRINT1("0x%08lx PEDD_DIRECTDRAW_LOCAL->peDirectDrawGlobal2      : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_LOCAL, peDirectDrawGlobal2), pEddlcl->peDirectDrawGlobal2);
+    DPRINT1("0x%08lx PEDD_DIRECTDRAW_LOCAL->fpProcess                : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_LOCAL, fpProcess), pEddlcl->fpProcess);
+    DPRINT1("0x%08lx PEDD_DIRECTDRAW_LOCAL->fl                       : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_LOCAL, fl), pEddlcl->fl);
 
-    DPRINT1("0x%08lx PEDD_DIRECTDRAW_LOCAL->peDirectDrawLocal_prev   : 0x%08lx\n",(((DWORD)&pEddlcl->peDirectDrawLocal_prev) - (DWORD)pEddlcl), pEddlcl->peDirectDrawLocal_prev);
-    DPRINT1("0x%08lx PEDD_DIRECTDRAW_LOCAL->Process                  : 0x%08lx\n",(((DWORD)&pEddlcl->Process) - (DWORD)pEddlcl), pEddlcl->Process);
-    DPRINT1("0x%08lx PEDD_DIRECTDRAW_LOCAL->unk_038                  : 0x%08lx\n",(((DWORD)&pEddlcl->unk_038) - (DWORD)pEddlcl), pEddlcl->unk_038);
-    DPRINT1("0x%08lx PEDD_DIRECTDRAW_LOCAL->UniqueProcess            : 0x%08lx\n",(((DWORD)&pEddlcl->UniqueProcess) - (DWORD)pEddlcl), pEddlcl->UniqueProcess);
-    DPRINT1("0x%08lx PEDD_DIRECTDRAW_LOCAL->unk_040                  : 0x%08lx\n",(((DWORD)&pEddlcl->unk_040) - (DWORD)pEddlcl), pEddlcl->unk_040);
-    DPRINT1("0x%08lx PEDD_DIRECTDRAW_LOCAL->unk_044                  : 0x%08lx\n",(((DWORD)&pEddlcl->unk_044) - (DWORD)pEddlcl), pEddlcl->unk_044);
-    DPRINT1("0x%08lx PEDD_DIRECTDRAW_LOCAL->unk_048                  : 0x%08lx\n",(((DWORD)&pEddlcl->unk_048) - (DWORD)pEddlcl), pEddlcl->unk_048);
-    DPRINT1("0x%08lx PEDD_DIRECTDRAW_LOCAL->unk_04C                  : 0x%08lx\n",(((DWORD)&pEddlcl->unk_04C) - (DWORD)pEddlcl), pEddlcl->unk_04C);
-    DPRINT1("0x%08lx PEDD_DIRECTDRAW_LOCAL->unk_050                  : 0x%08lx\n",(((DWORD)&pEddlcl->unk_050) - (DWORD)pEddlcl), pEddlcl->unk_050);
+    DPRINT1("0x%08lx PEDD_DIRECTDRAW_LOCAL->peDirectDrawLocal_prev   : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_LOCAL, peDirectDrawLocal_prev), pEddlcl->peDirectDrawLocal_prev);
+    DPRINT1("0x%08lx PEDD_DIRECTDRAW_LOCAL->Process                  : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_LOCAL, Process), pEddlcl->Process);
+    DPRINT1("0x%08lx PEDD_DIRECTDRAW_LOCAL->unk_038                  : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_LOCAL, unk_038), pEddlcl->unk_038);
+    DPRINT1("0x%08lx PEDD_DIRECTDRAW_LOCAL->UniqueProcess            : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_LOCAL, UniqueProcess), pEddlcl->UniqueProcess);
+    DPRINT1("0x%08lx PEDD_DIRECTDRAW_LOCAL->unk_040                  : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_LOCAL, unk_040), pEddlcl->unk_040);
+    DPRINT1("0x%08lx PEDD_DIRECTDRAW_LOCAL->unk_044                  : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_LOCAL, unk_044), pEddlcl->unk_044);
+    DPRINT1("0x%08lx PEDD_DIRECTDRAW_LOCAL->unk_048                  : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_LOCAL, unk_048), pEddlcl->unk_048);
+    DPRINT1("0x%08lx PEDD_DIRECTDRAW_LOCAL->unk_04C                  : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_LOCAL, unk_04C), pEddlcl->unk_04C);
+    DPRINT1("0x%08lx PEDD_DIRECTDRAW_LOCAL->unk_050                  : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_LOCAL, unk_050), pEddlcl->unk_050);
 
-    DPRINT1("0x%08lx PEDD_DIRECTDRAW_LOCAL->unk_050                  : 0x%08lx\n",(((DWORD)&pEddlcl->unk_050) - (DWORD)pEddlcl), pEddlcl->unk_050);
+    DPRINT1("0x%08lx PEDD_DIRECTDRAW_LOCAL->unk_050                  : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_LOCAL, unk_050), pEddlcl->unk_050);
 }
 
 void
@@ -1160,7 +1160,7 @@ dump_halinfo(DD_HALINFO *pHalInfo)
         int t;
         UINT flag;
         INT count=0;
-        
+
         DPRINT1("DD_HALINFO Version NT 2000/XP/2003 found \n");
         DPRINT1(" pHalInfo->dwSize                                  : 0x%08lx\n",(long)pHalInfo->dwSize);
 
@@ -1313,7 +1313,7 @@ dump_halinfo(DD_HALINFO *pHalInfo)
         DPRINT1(" pHalInfo->ddCaps.dwFXAlphaCaps                    : 0x%08lx\n",pHalInfo->ddCaps.dwFXAlphaCaps);
         DPRINT1(" pHalInfo->ddCaps.dwPalCaps                        : 0x%08lx\n",pHalInfo->ddCaps.dwPalCaps);
 
-        DPRINT1(" pHalInfo->ddCaps.dwSVCaps                         : ");        
+        DPRINT1(" pHalInfo->ddCaps.dwSVCaps                         : ");
         flag = pHalInfo->ddCaps.dwSVCaps;
         count = 0;
         checkflag(flag,DDSVCAPS_ENIGMA,"DDSVCAPS_ENIGMA");
@@ -1386,10 +1386,10 @@ dump_halinfo(DD_HALINFO *pHalInfo)
         DPRINT1(" pHalInfo->ddCaps.dwReserved1                      : 0x%08lx\n",pHalInfo->ddCaps.dwReserved1);
         DPRINT1(" pHalInfo->ddCaps.dwReserved2                      : 0x%08lx\n",pHalInfo->ddCaps.dwReserved2);
         DPRINT1(" pHalInfo->ddCaps.dwReserved3                      : 0x%08lx\n",pHalInfo->ddCaps.dwReserved3);
-        
+
         DPRINT1(" pHalInfo->ddCaps.dwSVBCaps                        : ");
         flag = pHalInfo->ddCaps.dwSVBCaps;
-        count = 0;   
+        count = 0;
         checkflag(flag,DDCAPS_3D,"DDCAPS_3D");
         checkflag(flag,DDCAPS_ALIGNBOUNDARYDEST,"DDCAPS_ALIGNBOUNDARYDEST");
         checkflag(flag,DDCAPS_ALIGNBOUNDARYSRC,"DDCAPS_ALIGNBOUNDARYSRC");
@@ -1433,7 +1433,7 @@ dump_halinfo(DD_HALINFO *pHalInfo)
 
         DPRINT1(" pHalInfo->ddCaps.dwVSBCaps                        : ");
         flag = pHalInfo->ddCaps.dwVSBCaps;
-        count = 0;   
+        count = 0;
         checkflag(flag,DDCAPS_3D,"DDCAPS_3D");
         checkflag(flag,DDCAPS_ALIGNBOUNDARYDEST,"DDCAPS_ALIGNBOUNDARYDEST");
         checkflag(flag,DDCAPS_ALIGNBOUNDARYSRC,"DDCAPS_ALIGNBOUNDARYSRC");
