@@ -540,7 +540,7 @@ KdbpInsertBreakPoint(
    IN  KDB_ACCESS_TYPE AccessType  OPTIONAL,
    IN  PCHAR ConditionExpression  OPTIONAL,
    IN  BOOLEAN Global,
-   OUT PULONG BreakPointNumber  OPTIONAL)
+   OUT PLONG BreakPointNr  OPTIONAL)
 {
    LONG i;
    PVOID Condition;
@@ -636,8 +636,8 @@ KdbpInsertBreakPoint(
    KdbpEnableBreakPoint(i, NULL);
 
    /* Return the breakpoint number */
-   if (BreakPointNumber != NULL)
-      *BreakPointNumber = i;
+   if (BreakPointNr != NULL)
+      *BreakPointNr = i;
 
    return STATUS_SUCCESS;
 }

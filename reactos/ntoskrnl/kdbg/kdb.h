@@ -196,7 +196,7 @@ KdbpInsertBreakPoint(
    IN  KDB_ACCESS_TYPE AccessType  OPTIONAL,
    IN  PCHAR ConditionExpression  OPTIONAL,
    IN  BOOLEAN Global,
-   OUT PULONG BreakPointNumber  OPTIONAL);
+   OUT PLONG BreakPointNr  OPTIONAL);
 
 BOOLEAN
 KdbpDeleteBreakPoint(
