@@ -386,7 +386,7 @@ FATAddEntry(
         {
             pSlots[0].alias_checksum = (((pSlots[0].alias_checksum & 1) << 7
                                      | ((pSlots[0].alias_checksum & 0xfe) >> 1))
-                                     + DirContext.DirEntry.Fat.Filename[i]);
+                                     + DirContext.DirEntry.Fat.ShortName[i]);
         }
         /* construct slots and entry */
         for (i = nbSlots - 2; i >= 0; i--)
