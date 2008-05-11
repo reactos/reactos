@@ -114,6 +114,7 @@ class MSVCBackend : public Backend
 
 		std::string _strip_gcc_deffile(std::string Filename, std::string sourcedir, std::string objdir);
 		std::string _get_solution_version ( void );
+		std::string _get_studio_version ( void );
 		std::string _gen_guid();
 		std::string _replace_str(
 			std::string string1,
@@ -147,4 +148,3 @@ class MSVCBackend : public Backend
 };
 
 #endif // __MSVC_H__
-

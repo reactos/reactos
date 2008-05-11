@@ -966,17 +966,40 @@ MSVCBackend::_get_solution_version ( void )
 	if (configuration.VSProjectVersion.empty())
 		configuration.VSProjectVersion = MS_VS_DEF_VERSION;
 
-	if (configuration.VSProjectVersion == "7.00")
+	else if (configuration.VSProjectVersion == "7.00")
 		version = "7.00";
 
-	if (configuration.VSProjectVersion == "7.10")
+	else if (configuration.VSProjectVersion == "7.10")
 		version = "8.00";
 
-	if (configuration.VSProjectVersion == "8.00")
+	else if (configuration.VSProjectVersion == "8.00")
 		version = "9.00";
 
-	if (configuration.VSProjectVersion == "9.00")
+	else if (configuration.VSProjectVersion == "9.00")
 		version = "10.00";
+
+	return version;
+}
+
+std::string
+MSVCBackend::_get_studio_version ( void )
+{
+	string version;
+
+	if (configuration.VSProjectVersion.empty())
+		configuration.VSProjectVersion = MS_VS_DEF_VERSION;
+	
+	else if (configuration.VSProjectVersion == "7.00")
+		version = "2002";
+
+	else if (configuration.VSProjectVersion == "7.10")
+		version = "2003";
+
+	else if (configuration.VSProjectVersion == "8.00")
+		version = "2005";
+
+	else if (configuration.VSProjectVersion == "9.00")
+		version = "2008";
 
 	return version;
 }
@@ -985,7 +1008,7 @@ void
 MSVCBackend::_generate_sln_header ( FILE* OUT )
 {
 	fprintf ( OUT, "Microsoft Visual Studio Solution File, Format Version %s\r\n", _get_solution_version().c_str() );
-	fprintf ( OUT, "# Visual Studio 2005\r\n" );
+	fprintf ( OUT, "# Visual Studio %s\r\n", _get_studio_version().c_str() );
 	fprintf ( OUT, "\r\n" );
 }
 
