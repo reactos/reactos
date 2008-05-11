@@ -382,11 +382,10 @@ VfatOpenFile (
 			DPRINT ("Media change detected!\n");
 			DPRINT ("Device %p\n", DeviceExt->StorageDevice);
 
+                        /* Find the device to verify and reset the thread field to empty value again. */
 			DeviceToVerify = IoGetDeviceToVerify (PsGetCurrentThread ());
-
-			IoSetDeviceToVerify (PsGetCurrentThread (),
-				NULL);
-			Status = IoVerifyVolume (DeviceExt->StorageDevice,
+			IoSetDeviceToVerify (PsGetCurrentThread (), NULL);
+			Status = IoVerifyVolume (DeviceToVerify,
 				FALSE);
 		}
 		if (!NT_SUCCESS(Status))
