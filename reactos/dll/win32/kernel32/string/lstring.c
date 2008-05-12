@@ -15,24 +15,21 @@
  */
 int
 STDCALL
-lstrcmpA(
-	 LPCSTR lpString1,
-	 LPCSTR lpString2
-	 )
+lstrcmpA(LPCSTR lpString1, LPCSTR lpString2)
 {
-   int Result;
+    int Result;
 
-   if (lpString1 == lpString2)
-      return 0;
-   if (lpString1 == NULL)
-      return -1;
-   if (lpString2 == NULL)
-      return 1;
+    if (lpString1 == lpString2)
+        return 0;
+    if (lpString1 == NULL)
+        return -1;
+    if (lpString2 == NULL)
+        return 1;
 
-   Result = CompareStringA(GetThreadLocale(), 0, lpString1, -1, lpString2, -1);
-   if (Result) Result -= 2;
+    Result = CompareStringA(GetThreadLocale(), 0, lpString1, -1, lpString2, -1);
+    if (Result) Result -= 2;
 
-   return Result;
+    return Result;
 }
 
 
@@ -41,25 +38,22 @@ lstrcmpA(
  */
 int
 STDCALL
-lstrcmpiA(
-	  LPCSTR lpString1,
-	  LPCSTR lpString2
-	  )
+lstrcmpiA(LPCSTR lpString1, LPCSTR lpString2)
 {
-   int Result;
+    int Result;
 
-   if (lpString1 == lpString2)
-      return 0;
-   if (lpString1 == NULL)
-      return -1;
-   if (lpString2 == NULL)
-      return 1;
+    if (lpString1 == lpString2)
+        return 0;
+    if (lpString1 == NULL)
+        return -1;
+    if (lpString2 == NULL)
+        return 1;
 
-   Result = CompareStringA(GetThreadLocale(), NORM_IGNORECASE, lpString1, -1,
-                           lpString2, -1);
-   if (Result) Result -= 2;
+    Result = CompareStringA(GetThreadLocale(), NORM_IGNORECASE, lpString1, -1, lpString2, -1);
+    if (Result)
+        Result -= 2;
 
-   return Result;
+    return Result;
 }
 
 /*
@@ -67,11 +61,7 @@ lstrcmpiA(
  */
 LPSTR
 STDCALL
-lstrcpynA(
-	  LPSTR lpString1,
-	  LPCSTR lpString2,
-	  int iMaxLength
-	  )
+lstrcpynA(LPSTR lpString1, LPCSTR lpString2, int iMaxLength)
 {
     LPSTR d = lpString1;
     LPCSTR s = lpString2;
@@ -85,7 +75,9 @@ lstrcpynA(
             count--;
             *d++ = *s++;
         }
-        if (count) *d = 0;
+
+        if (count)
+            *d = 0;
 
         Ret = lpString1;
     }
@@ -101,10 +93,7 @@ lstrcpynA(
  */
 LPSTR
 STDCALL
-lstrcpyA(
-	 LPSTR lpString1,
-	 LPCSTR lpString2
-	 )
+lstrcpyA(LPSTR lpString1, LPCSTR lpString2)
 {
     LPSTR Ret = NULL;
 
@@ -112,7 +101,7 @@ lstrcpyA(
     {
         memmove(lpString1, lpString2, strlen(lpString2) + 1);
         Ret = lpString1;
-    }
+     }
     _SEH_HANDLE
     _SEH_END;
 
@@ -125,10 +114,7 @@ lstrcpyA(
  */
 LPSTR
 STDCALL
-lstrcatA(
-	 LPSTR lpString1,
-	 LPCSTR lpString2
-	 )
+lstrcatA(LPSTR lpString1, LPCSTR lpString2)
 {
     LPSTR Ret = NULL;
 
@@ -140,7 +126,6 @@ lstrcatA(
     _SEH_END;
 
     return Ret;
-
 }
 
 
@@ -149,9 +134,7 @@ lstrcatA(
  */
 int
 STDCALL
-lstrlenA(
-	 LPCSTR lpString
-	 )
+lstrlenA(LPCSTR lpString)
 {
     INT Ret = 0;
 
@@ -171,24 +154,22 @@ lstrlenA(
  */
 int
 STDCALL
-lstrcmpW(
-	 LPCWSTR lpString1,
-	 LPCWSTR lpString2
-	 )
+lstrcmpW(LPCWSTR lpString1, LPCWSTR lpString2)
 {
-   int Result;
+    int Result;
 
-   if (lpString1 == lpString2)
-      return 0;
-   if (lpString1 == NULL)
-      return -1;
-   if (lpString2 == NULL)
-      return 1;
+    if (lpString1 == lpString2)
+        return 0;
+    if (lpString1 == NULL)
+        return -1;
+    if (lpString2 == NULL)
+        return 1;
 
-   Result = CompareStringW(GetThreadLocale(), 0, lpString1, -1, lpString2, -1);
-   if (Result) Result -= 2;
+    Result = CompareStringW(GetThreadLocale(), 0, lpString1, -1, lpString2, -1);
+    if (Result)
+        Result -= 2;
 
-   return Result;
+    return Result;
 }
 
 
@@ -197,24 +178,22 @@ lstrcmpW(
  */
 int
 STDCALL
-lstrcmpiW(
-    LPCWSTR lpString1,
-    LPCWSTR lpString2
-    )
+lstrcmpiW(LPCWSTR lpString1, LPCWSTR lpString2)
 {
-   int Result;
+    int Result;
 
-   if (lpString1 == lpString2)
-      return 0;
-   if (lpString1 == NULL)
-      return -1;
-   if (lpString2 == NULL)
-      return 1;
+    if (lpString1 == lpString2)
+        return 0;
+    if (lpString1 == NULL)
+        return -1;
+    if (lpString2 == NULL)
+        return 1;
 
-   Result = CompareStringW(GetThreadLocale(), NORM_IGNORECASE, lpString1, -1, lpString2, -1);
-   if (Result) Result -= 2;
+    Result = CompareStringW(GetThreadLocale(), NORM_IGNORECASE, lpString1, -1, lpString2, -1);
+    if (Result)
+        Result -= 2;
 
-   return Result;
+    return Result;
 }
 
 
@@ -223,11 +202,7 @@ lstrcmpiW(
  */
 LPWSTR
 STDCALL
-lstrcpynW(
-    LPWSTR lpString1,
-    LPCWSTR lpString2,
-    int iMaxLength
-    )
+lstrcpynW(LPWSTR lpString1, LPCWSTR lpString2, int iMaxLength)
 {
     LPWSTR d = lpString1;
     LPCWSTR s = lpString2;
@@ -241,7 +216,9 @@ lstrcpynW(
             count--;
             *d++ = *s++;
         }
-        if (count) *d = 0;
+
+        if (count)
+            *d = 0;
 
         Ret = lpString1;
     }
@@ -257,10 +234,7 @@ lstrcpynW(
  */
 LPWSTR
 STDCALL
-lstrcpyW(
-    LPWSTR lpString1,
-    LPCWSTR lpString2
-    )
+lstrcpyW(LPWSTR lpString1, LPCWSTR lpString2)
 {
     LPWSTR Ret = NULL;
 
@@ -280,10 +254,7 @@ lstrcpyW(
  */
 LPWSTR
 STDCALL
-lstrcatW(
-    LPWSTR lpString1,
-    LPCWSTR lpString2
-    )
+lstrcatW(LPWSTR lpString1, LPCWSTR lpString2)
 {
     LPWSTR Ret = NULL;
 
@@ -303,9 +274,7 @@ lstrcatW(
  */
 int
 STDCALL
-lstrlenW(
-    LPCWSTR lpString
-    )
+lstrlenW(LPCWSTR lpString)
 {
     INT Ret = 0;
 
