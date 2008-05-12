@@ -273,7 +273,7 @@ typedef enum _SYSTEM_INFORMATION_CLASS
     SystemWatchDogTimerHandler,
     SystemWatchDogTimerInformation,
     SystemLogicalProcessorInformation,
-    SystemWow64SharedInformationObosolete,
+    SystemWow64SharedInformationObsolete,
     SystemRegisterFirmwareTableInformationHandler,
     SystemFirmwareTableInformation,
     SystemModuleInformationEx,
