@@ -986,6 +986,9 @@ MiGetPfnEntry(IN PFN_TYPE Pfn)
     extern PPHYSICAL_PAGE MmPageArray;
     extern ULONG MmPageArraySize;
 
+    /* Mark MmPageArraySize as unreferenced, otherwise it will appear as an unused variable on a Release build */
+    UNREFERENCED_PARAMETER(MmPageArraySize);
+
     /* Make sure the PFN number is valid */
     ASSERT(Pfn <= MmPageArraySize);
 
