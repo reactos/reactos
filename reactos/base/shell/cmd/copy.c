@@ -743,7 +743,7 @@ INT cmd_copy (LPTSTR cmd, LPTSTR param)
             _tcscpy(tmpDestPath,szDestPath);
 
             /* Can't put a file into a folder that isnt there */
-            if(!IsExistingDirectory(szDestPath))
+            if(_tcscmp (szDestPath, _T("\\\\.\\")) && !IsExistingDirectory(szDestPath))
             {
                 ConOutFormatMessage (GetLastError (), szSrcPath);
                 freep (arg);
