@@ -24,32 +24,11 @@
 static INT
 ConvertDWord (DWORD num, LPTSTR des, INT len, BOOL bSeparator)
 {
-	TCHAR temp[32];
-	INT c = 0;
-	INT n = 0;
+	ULARGE_INTEGER ui;
 
-	if (num == 0)
-	{
-		des[0] = _T('0');
-		des[1] = _T('\0');
-		n = 1;
-	}
-	else
-	{
-		temp[31] = 0;
-		while (num > 0)
-		{
-			if (bSeparator && (((c + 1) % (nNumberGroups + 1)) == 0))
-				temp[30 - c++] = cThousandSeparator;
-			temp[30 - c++] = (TCHAR)(num % 10) + _T('0');
-			num /= 10;
-		}
-
-		for (n = 0; n <= c; n++)
-			des[n] = temp[31 - c + n];
-	}
-
-	return n;
+	ui.u.LowPart = num;
+	ui.u.HighPart = 0;
+	return ConvertULargeInteger(ui, des, len, bSeparator);
 }
 
 
