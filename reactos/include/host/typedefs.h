@@ -14,14 +14,6 @@
 #include <stdlib.h>
 #include <limits.h>
 
-#if defined(_MSC_VER)
-#define W64 __w64
-#elif defined(__GNUC__)
-#define W64
-#else
-#error Unknown compiler
-#endif
-
 /* Function attributes for GCC */
 #if !defined(_MSC_VER) && !defined(__fastcall)
 #define __fastcall __attribute__((fastcall))
@@ -74,8 +66,8 @@ typedef int INT;
 typedef unsigned int UINT, *PUINT, *LPUINT, UINT_PTR, *PUINT_PTR;
 typedef UCHAR BOOLEAN, *PBOOLEAN;
 typedef int BOOL;
-typedef long int W64 LONG_PTR, *PLONG_PTR;
-typedef long unsigned int W64 ULONG_PTR, DWORD_PTR, *PULONG_PTR;
+typedef long int LONG_PTR, *PLONG_PTR;
+typedef long unsigned int ULONG_PTR, DWORD_PTR, *PULONG_PTR;
 typedef ULONG_PTR SIZE_T, *PSIZE_T;
 typedef unsigned short WCHAR, *PWCHAR, *PWSTR, *LPWSTR;
 typedef const unsigned short *PCWSTR, *LPCWSTR;
