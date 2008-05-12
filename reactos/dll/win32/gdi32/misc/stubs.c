@@ -1657,74 +1657,46 @@ GdiConvertMetaFilePict(HGLOBAL hMem)
  */
 DEVMODEW *
 STDCALL
-GdiConvertToDevmodeW(DEVMODEA *dm)
+GdiConvertToDevmodeW(DEVMODEA *dmA)
 {
-    LPDEVMODEW dmw;
+    DEVMODEW *dmW;
+    WORD dmW_size, dmA_size;
 
-    dmw = HEAP_alloc(sizeof(DEVMODEW));
-    #define COPYS(f,len) MultiByteToWideChar ( CP_THREAD_ACP, 0, (LPSTR)dm->f, len, dmw->f, len )
-    #define COPYN(f) dmw->f = dm->f
-    COPYS(dmDeviceName, CCHDEVICENAME );
-    COPYN(dmSpecVersion);
-    COPYN(dmDriverVersion);
-    switch ( dm->dmSize )
-    {
-        case SIZEOF_DEVMODEA_300:
-            dmw->dmSize = SIZEOF_DEVMODEW_300;
-            break;
-        case SIZEOF_DEVMODEA_400:
-            dmw->dmSize = SIZEOF_DEVMODEW_400;
-            break;
-        case SIZEOF_DEVMODEA_500:
-            default: /* FIXME what to do??? */
-                dmw->dmSize = SIZEOF_DEVMODEW_500;
-            break;
-    }
-    COPYN(dmDriverExtra);
-    COPYN(dmFields);
-    COPYN(dmPosition.x);
-    COPYN(dmPosition.y);
-    COPYN(dmScale);
-    COPYN(dmCopies);
-    COPYN(dmDefaultSource);
-    COPYN(dmPrintQuality);
-    COPYN(dmColor);
-    COPYN(dmDuplex);
-    COPYN(dmYResolution);
-    COPYN(dmTTOption);
-    COPYN(dmCollate);
-    COPYS(dmFormName,CCHFORMNAME);
-    COPYN(dmLogPixels);
-    COPYN(dmBitsPerPel);
-    COPYN(dmPelsWidth);
-    COPYN(dmPelsHeight);
-    COPYN(dmDisplayFlags); // aka dmNup
-    COPYN(dmDisplayFrequency);
+    dmA_size = dmA->dmSize;
 
-    if ( dm->dmSize <= SIZEOF_DEVMODEA_300 )
+    /* this is the minimal dmSize that XP accepts */
+    if (dmA_size < FIELD_OFFSET(DEVMODEA, dmFields))
+        return NULL;
+
+    if (dmA_size > sizeof(DEVMODEA))
+        dmA_size = sizeof(DEVMODEA);
+
+    dmW_size = dmA_size + CCHDEVICENAME;
+    if (dmA_size >= FIELD_OFFSET(DEVMODEA, dmFormName) + CCHFORMNAME)
+        dmW_size += CCHFORMNAME;
+
+    dmW = HeapAlloc(GetProcessHeap(), 0, dmW_size + dmA->dmDriverExtra);
+    if (!dmW) return NULL;
+
+    MultiByteToWideChar(CP_ACP, 0, (const char*) dmA->dmDeviceName, CCHDEVICENAME,
+                                   dmW->dmDeviceName, CCHDEVICENAME);
+    /* copy slightly more, to avoid long computations */
+    memcpy(&dmW->dmSpecVersion, &dmA->dmSpecVersion, dmA_size - CCHDEVICENAME);
+
+    if (dmA_size >= FIELD_OFFSET(DEVMODEA, dmFormName) + CCHFORMNAME)
     {
-        return dmw; // we're done with 0x300 fields
+        MultiByteToWideChar(CP_ACP, 0, (const char*) dmA->dmFormName, CCHFORMNAME,
+                                       dmW->dmFormName, CCHFORMNAME);
+        if (dmA_size > FIELD_OFFSET(DEVMODEA, dmLogPixels))
+            memcpy(&dmW->dmLogPixels, &dmA->dmLogPixels, dmA_size - FIELD_OFFSET(DEVMODEA, dmLogPixels));
     }
 
-    COPYN(dmICMMethod);
-    COPYN(dmICMIntent);
-    COPYN(dmMediaType);
-    COPYN(dmDitherType);
-    COPYN(dmReserved1);
-    COPYN(dmReserved2);
+    if (dmA->dmDriverExtra)
+        memcpy((char *)dmW + dmW_size, (const char *)dmA + dmA_size, dmA->dmDriverExtra);
 
-    if ( dm->dmSize <= SIZEOF_DEVMODEA_400 )
-    {
-        return dmw; // we're done with 0x400 fields
-    }
+    dmW->dmSize = dmW_size;
 
-    COPYN(dmPanningWidth);
-    COPYN(dmPanningHeight);
-
-    return dmw;
-
-    #undef COPYN
-    #undef COPYS
+    return dmW;
 }
 
 /*

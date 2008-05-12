@@ -387,6 +387,8 @@ GetDCObject( HDC hDC, INT iType)
    HGDIOBJ hGO = NULL;
    PDC_ATTR Dc_Attr;
 
+   if (!hDC) return hGO;
+
    if (!GdiGetHandleUserData((HGDIOBJ) hDC, GDI_OBJECT_TYPE_DC, (PVOID) &Dc_Attr)) return NULL;
 
    switch (iType)
