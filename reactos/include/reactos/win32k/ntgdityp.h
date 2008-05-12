@@ -271,7 +271,7 @@ typedef struct _DEVCAPS // Very similar to GDIINFO
 } DEVCAPS, *PDEVCAPS;
 
 /* Gdi Handle Cache Types and Structures */
-#define GDI_CACHED_HADNLE_TYPES 4
+#define GDI_CACHED_HANDLE_TYPES 4
 #define CACHE_BRUSH_ENTRIES  10
 #define CACHE_PEN_ENTRIES     8
 #define CACHE_REGION_ENTRIES  8
@@ -288,7 +288,7 @@ typedef enum _HANDLECACHETYPE
 typedef struct _GDIHANDLECACHE
 {
     ULONG           ulLock;
-    ULONG           ulNumHandles[GDI_CACHED_HADNLE_TYPES];
+    ULONG           ulNumHandles[GDI_CACHED_HANDLE_TYPES];
     HANDLE          Handle[CACHE_BRUSH_ENTRIES+CACHE_PEN_ENTRIES+CACHE_REGION_ENTRIES+CACHE_LFONT_ENTRIES];
 } GDIHANDLECACHE, *PGDIHANDLECACHE;
 
