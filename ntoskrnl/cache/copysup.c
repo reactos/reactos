@@ -26,6 +26,45 @@ ULONG CcFastReadResourceMiss;
 
 /* FUNCTIONS ******************************************************************/
 
+NTSTATUS
+NTAPI
+DoDeviceRead(PFILE_OBJECT FileObject,
+             LARGE_INTEGER SectorBase,
+             PCHAR SystemBuffer,
+             ULONG AlignSize,
+             ULONG *LengthRead)
+{
+    IO_STATUS_BLOCK IoStatusBlock = {{0}};
+    NTSTATUS Status;
+    KEVENT Event;
+    PMDL Mdl;
+
+    /* Create an MDL for the transfer */
+    Mdl = IoAllocateMdl(SystemBuffer, AlignSize, TRUE, FALSE, NULL);
+    MmBuildMdlForNonPagedPool(Mdl),
+    Mdl->MdlFlags |= (MDL_PAGES_LOCKED | MDL_IO_PAGE_READ);
+
+    /* Setup the event */
+    KeInitializeEvent(&Event, NotificationEvent, FALSE);
+
+    /* Read the page */
+    Status = IoPageRead(FileObject, Mdl, &SectorBase, &Event, &IoStatusBlock);
+    if (Status == STATUS_PENDING)
+    {
+        /* Do the wait */
+        KeWaitForSingleObject(&Event, Suspended, KernelMode, FALSE, NULL);
+        Status = IoStatusBlock.Status;
+    }
+
+    /* Free the MDL */
+    IoFreeMdl(Mdl);
+
+    /* Save how much we read, if needed */
+    if (LengthRead) *LengthRead = IoStatusBlock.Information;
+
+    return Status;
+}
+
 BOOLEAN
 NTAPI
 CcCopyRead(IN PFILE_OBJECT FileObject,
@@ -38,10 +77,8 @@ CcCopyRead(IN PFILE_OBJECT FileObject,
     NTSTATUS Status;
     ULONG AlignBase, AlignSize, DeltaBase;
     LARGE_INTEGER SectorBase;
-    IO_STATUS_BLOCK IoStatusBlock = {{0}};
-    KEVENT Event;
     PCHAR SystemBuffer;
-    PMDL Mdl;
+    ULONG LengthRead;
     BOOLEAN DirectRead = FALSE;
     DPRINT("CcCopyRead(FileObject 0x%p, FileOffset %I64x, "
            "Length %lx, Wait %d, Buffer 0x%p, IoStatus 0x%p)\n",
@@ -81,22 +118,9 @@ CcCopyRead(IN PFILE_OBJECT FileObject,
         DeltaBase = 0;
     }
 
-    /* Create an MDL for the transfer */
-    Mdl = IoAllocateMdl(SystemBuffer, AlignSize, TRUE, FALSE, NULL);
-    MmBuildMdlForNonPagedPool(Mdl),
-    Mdl->MdlFlags |= (MDL_PAGES_LOCKED | MDL_IO_PAGE_READ);
+    /* Do actual read from the device */
+    Status = DoDeviceRead(FileObject, SectorBase, SystemBuffer, AlignSize, &LengthRead);
 
-    /* Setup the event */
-    KeInitializeEvent(&Event, NotificationEvent, FALSE);
-
-    /* Read the page */
-    Status = IoPageRead(FileObject, Mdl, &SectorBase, &Event, &IoStatusBlock);
-    if (Status == STATUS_PENDING)
-    {
-        /* Do the wait */
-        KeWaitForSingleObject(&Event, Suspended, KernelMode, FALSE, NULL);
-        Status = IoStatusBlock.Status;
-    }
     if (!NT_SUCCESS(Status)) DPRINT1("Status: %lx\n", Status);
     ASSERT(NT_SUCCESS(Status));
 
@@ -110,14 +134,11 @@ CcCopyRead(IN PFILE_OBJECT FileObject,
         ExFreePool(SystemBuffer);
     }
 
-    /* Free the MDL */
-    IoFreeMdl(Mdl);
-
     /* Check if we read less than the caller wanted */
-    if (IoStatusBlock.Information < Length)
+    if (LengthRead < Length)
     {
         /* Only then do we write the real size */
-        IoStatus->Information = IoStatusBlock.Information;
+        IoStatus->Information = LengthRead;
     }
     else
     {
@@ -142,7 +163,7 @@ CcFastCopyRead(IN PFILE_OBJECT FileObject,
     UNIMPLEMENTED;
     while (TRUE);
 }
-
+
 BOOLEAN
 NTAPI
 CcCopyWrite(IN PFILE_OBJECT FileObject,
@@ -157,7 +178,7 @@ CcCopyWrite(IN PFILE_OBJECT FileObject,
     IO_STATUS_BLOCK IoStatusBlock;
     KEVENT Event;
     PCHAR SystemBuffer;
-    PMDL Mdl, ReadMdl;
+    PMDL Mdl;
     BOOLEAN DirectWrite = FALSE;
     DPRINT("CcCopyWrite(FileObject 0x%p, FileOffset %I64x, "
            "Length %lx, Wait %d, Buffer 0x%p)\n",
@@ -242,63 +263,28 @@ CcCopyWrite(IN PFILE_OBJECT FileObject,
         //
         if (DeltaBase)
         {
-            /* Create an MDL for the read transfer */
-            ReadMdl = IoAllocateMdl(SystemBuffer, PAGE_SIZE, TRUE, FALSE, NULL);
-            MmBuildMdlForNonPagedPool(ReadMdl),
-            ReadMdl->MdlFlags |= (MDL_PAGES_LOCKED | MDL_IO_PAGE_READ);
-
             /* We have an offset from a page boundary, so we need to do a read */
-            ReadSector = SectorBase;
-            Status = IoPageRead(FileObject,
-                                ReadMdl,
-                                &ReadSector,
-                                &Event,
-                                &IoStatusBlock);
-            if (Status == STATUS_PENDING)
-            {
-                /* Do the wait */
-                KeWaitForSingleObject(&Event, Suspended, KernelMode, FALSE, NULL);
-                Status = IoStatusBlock.Status;
-            }
+            Status = DoDeviceRead(FileObject, SectorBase, SystemBuffer,
+                PAGE_SIZE, NULL);
 
             /* This shouldn't fail */
             ASSERT(NT_SUCCESS(Status));
-
-            /* Free the MDL */
-            IoFreeMdl(ReadMdl);
         }
 
         /* Now check if we read up to a page boundary, or have an offset */
         if ((DeltaEnd))// && (Length > PAGE_SIZE))
         {
-            /* Create an MDL for the read transfer */
-            ReadMdl = IoAllocateMdl(SystemBuffer + ROUND_DOWN(Length, PAGE_SIZE),
-                                    PAGE_SIZE,
-                                    TRUE,
-                                    FALSE,
-                                    NULL);
-            MmBuildMdlForNonPagedPool(ReadMdl),
-            ReadMdl->MdlFlags |= (MDL_PAGES_LOCKED | MDL_IO_PAGE_READ);
-
             /* We have an offset from a page boundary, so we need to do a read */
+            ReadSector = SectorBase;
             ReadSector.QuadPart += ROUND_DOWN(Length, PAGE_SIZE);
-            Status = IoPageRead(FileObject,
-                                ReadMdl,
-                                &SectorBase,
-                                &Event,
-                                &IoStatusBlock);
-            if (Status == STATUS_PENDING)
-            {
-                /* Do the wait */
-                KeWaitForSingleObject(&Event, Suspended, KernelMode, FALSE, NULL);
-                Status = IoStatusBlock.Status;
-            }
+            Status = DoDeviceRead(FileObject,
+                                  ReadSector,
+                                  SystemBuffer + ROUND_DOWN(Length, PAGE_SIZE),
+                                  PAGE_SIZE,
+                                  NULL);
 
             /* This shouldn't fail */
             ASSERT(NT_SUCCESS(Status));
-
-            /* Free the MDL */
-            IoFreeMdl(ReadMdl);
         }
 
         /* Okay, now we have the original data, write our modified data on top */
