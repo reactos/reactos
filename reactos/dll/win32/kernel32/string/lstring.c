@@ -10,15 +10,6 @@
 
 #include <k32.h>
 
-static _SEH_FILTER(lstr_page_fault)
-{
-    if (_SEH_GetExceptionCode() == EXCEPTION_ACCESS_VIOLATION)
-        return _SEH_EXECUTE_HANDLER;
-    else
-        return _SEH_CONTINUE_SEARCH;
-}
-
-
 /*
  * @implemented
  */
@@ -98,10 +89,7 @@ lstrcpynA(
 
         Ret = lpString1;
     }
-    _SEH_EXCEPT(lstr_page_fault)
-    {
-        SetLastError( ERROR_INVALID_PARAMETER );
-    }
+    _SEH_HANDLE
     _SEH_END;
 
     return Ret;
@@ -125,10 +113,7 @@ lstrcpyA(
         memmove(lpString1, lpString2, strlen(lpString2) + 1);
         Ret = lpString1;
     }
-    _SEH_EXCEPT(lstr_page_fault)
-    {
-        SetLastError(ERROR_INVALID_PARAMETER);
-    }
+    _SEH_HANDLE
     _SEH_END;
 
     return Ret;
@@ -151,10 +136,7 @@ lstrcatA(
     {
         Ret = strcat(lpString1, lpString2);
     }
-    _SEH_EXCEPT(lstr_page_fault)
-    {
-        SetLastError(ERROR_INVALID_PARAMETER);
-    }
+    _SEH_HANDLE
     _SEH_END;
 
     return Ret;
@@ -177,10 +159,7 @@ lstrlenA(
     {
         Ret = strlen(lpString);
     }
-    _SEH_EXCEPT(lstr_page_fault)
-    {
-        SetLastError(ERROR_INVALID_PARAMETER);
-    }
+    _SEH_HANDLE
     _SEH_END;
 
     return Ret;
@@ -266,10 +245,7 @@ lstrcpynW(
 
         Ret = lpString1;
     }
-    _SEH_EXCEPT(lstr_page_fault)
-    {
-        SetLastError( ERROR_INVALID_PARAMETER );
-    }
+    _SEH_HANDLE
     _SEH_END;
 
     return Ret;
@@ -292,10 +268,7 @@ lstrcpyW(
     {
         Ret = wcscpy(lpString1, lpString2);
     }
-    _SEH_EXCEPT(lstr_page_fault)
-    {
-        SetLastError(ERROR_INVALID_PARAMETER);
-    }
+    _SEH_HANDLE
     _SEH_END;
 
     return Ret;
@@ -318,10 +291,7 @@ lstrcatW(
     {
         Ret = wcscat(lpString1, lpString2);
     }
-    _SEH_EXCEPT(lstr_page_fault)
-    {
-        SetLastError(ERROR_INVALID_PARAMETER);
-    }
+    _SEH_HANDLE
     _SEH_END;
 
     return Ret;
@@ -343,10 +313,7 @@ lstrlenW(
     {
         Ret = wcslen(lpString);
     }
-    _SEH_EXCEPT(lstr_page_fault)
-    {
-        SetLastError(ERROR_INVALID_PARAMETER);
-    }
+    _SEH_HANDLE
     _SEH_END;
 
     return Ret;
