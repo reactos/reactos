@@ -86,8 +86,20 @@ HDC
 STDCALL
 CreateCompatibleDC ( HDC hdc)
 {
-    /* FIXME need sharememory if it metadc */
-    return NtGdiCreateCompatibleDC(hdc);
+ HDC rhDC;
+// PDC_ATTR Dc_Attr;
+
+ rhDC = NtGdiCreateCompatibleDC(hdc);
+#if 0
+ if ( hdc && rhDC)
+ {
+    if (GdiGetHandleUserData((HGDIOBJ) hdc, GDI_OBJECT_TYPE_DC, (PVOID) &Dc_Attr))
+    {
+       if ( Dc_Attr->pvLIcm ) IcmCompatibleDC(rhDC, hdc, Dc_Attr);
+    }
+ }
+#endif
+ return rhDC;
 }
 
 /*
