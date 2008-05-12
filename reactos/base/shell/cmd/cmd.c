@@ -1529,11 +1529,6 @@ ProcessInput (BOOL bFlag)
 
 		*cp = _T('\0');
 
-		/* strip trailing spaces */
-		while ((--cp >= commandline) && _istspace (*cp));
-
-		*(cp + 1) = _T('\0');
-
 		/* JPP 19980807 */
 		/* Echo batch file line */
 		if (bEchoThisLine)
