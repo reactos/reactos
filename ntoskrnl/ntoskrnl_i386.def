@@ -3,9 +3,6 @@
 ; ReactOS Operating System
 ;
 EXPORTS
-CcRosInitializeFileCache@16
-CcRosReleaseFileCache@4
-CcRosTraceCacheMap@8
 CcCanIWrite@16
 CcCopyRead@24
 CcCopyWrite@20

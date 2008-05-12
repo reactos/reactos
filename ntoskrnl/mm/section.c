@@ -54,7 +54,6 @@
 #pragma alloc_text(INIT, MmInitSectionImplementation)
 #endif
 
-
 /* TYPES *********************************************************************/
 
 typedef struct
@@ -418,7 +417,6 @@ MmUnsharePageEntrySectionSegment(PROS_SECTION_OBJECT Section,
    if (SHARE_COUNT_FROM_SSE(Entry) == 0)
    {
       PFILE_OBJECT FileObject;
-      PBCB Bcb;
       SWAPENTRY SavedSwapEntry;
       PFN_TYPE Page;
       BOOLEAN IsImageSection;
@@ -430,24 +428,6 @@ MmUnsharePageEntrySectionSegment(PROS_SECTION_OBJECT Section,
 
       Page = PFN_FROM_SSE(Entry);
       FileObject = Section->FileObject;
-      if (FileObject != NULL &&
-            !(Segment->Characteristics & IMAGE_SCN_MEM_SHARED))
-      {
-
-         if ((FileOffset % PAGE_SIZE) == 0 &&
-               (Offset + PAGE_SIZE <= Segment->RawLength || !IsImageSection))
-         {
-            NTSTATUS Status;
-            Bcb = FileObject->SectionObjectPointer->SharedCacheMap;
-            IsDirectMapped = TRUE;
-            Status = CcRosUnmapCacheSegment(Bcb, FileOffset, Dirty);
-            if (!NT_SUCCESS(Status))
-            {
-               DPRINT1("CcRosUnmapCacheSegment failed, status = %x\n", Status);
-               KEBUGCHECK(0);
-            }
-         }
-      }
 
       SavedSwapEntry = MmGetSavedSwapEntryPage(Page);
       if (SavedSwapEntry == 0)
@@ -518,19 +498,8 @@ MmUnsharePageEntrySectionSegment(PROS_SECTION_OBJECT Section,
 BOOLEAN MiIsPageFromCache(PMEMORY_AREA MemoryArea,
                        ULONG SegOffset)
 {
-   if (!(MemoryArea->Data.SectionData.Segment->Characteristics & IMAGE_SCN_MEM_SHARED))
-   {
-      PBCB Bcb;
-      PCACHE_SEGMENT CacheSeg;
-      Bcb = MemoryArea->Data.SectionData.Section->FileObject->SectionObjectPointer->SharedCacheMap;
-      CacheSeg = CcRosLookupCacheSegment(Bcb, SegOffset + MemoryArea->Data.SectionData.Segment->FileOffset);
-      if (CacheSeg)
-      {
-         CcRosReleaseCacheSegment(Bcb, CacheSeg, CacheSeg->Valid, FALSE, TRUE);
-         return TRUE;
-      }
-   }
-   return FALSE;
+    /* Mm expects true */
+    return TRUE;
 }
 
 NTSTATUS
@@ -545,164 +514,37 @@ MiReadPage(PMEMORY_AREA MemoryArea,
  *       Offset - Offset of the page to read.
  *       Page - Variable that receives a page contains the read data.
  */
-{
-   ULONG BaseOffset;
-   ULONG FileOffset;
-   PVOID BaseAddress;
-   BOOLEAN UptoDate;
-   PCACHE_SEGMENT CacheSeg;
-   PFILE_OBJECT FileObject;
-   NTSTATUS Status;
-   ULONG RawLength;
-   PBCB Bcb;
-   BOOLEAN IsImageSection;
-   ULONG Length;
+{   
+    LARGE_INTEGER FileOffset;
+    PVOID Buffer;
+    PVOID Bcb;
+    BOOLEAN Result;
+    PFILE_OBJECT FileObject;
+    NTSTATUS Status;
+    PVOID MappedAddress;
 
-   FileObject = MemoryArea->Data.SectionData.Section->FileObject;
-   Bcb = FileObject->SectionObjectPointer->SharedCacheMap;
-   RawLength = MemoryArea->Data.SectionData.Segment->RawLength;
-   FileOffset = SegOffset + MemoryArea->Data.SectionData.Segment->FileOffset;
-   IsImageSection = MemoryArea->Data.SectionData.Section->AllocationAttributes & SEC_IMAGE ? TRUE : FALSE;
+    /* Get the file object and file offset */
+    FileObject = MemoryArea->Data.SectionData.Section->FileObject;
+    FileOffset.QuadPart = SegOffset + MemoryArea->Data.SectionData.Segment->FileOffset;    
 
-   ASSERT(Bcb);
+    /* Allocate a page */
+    Status = MmRequestPageMemoryConsumer(MC_USER, TRUE, Page);
+    if (!NT_SUCCESS(Status)) return Status;
 
-   DPRINT("%S %x\n", FileObject->FileName.Buffer, FileOffset);
+    /* Read the data */
+    Result = CcPinRead(FileObject, &FileOffset, PAGE_SIZE, TRUE, &Bcb, &Buffer);
+    if (!Result) return STATUS_UNSUCCESSFUL;
 
-   /*
-    * If the file system is letting us go directly to the cache and the
-    * memory area was mapped at an offset in the file which is page aligned
-    * then get the related cache segment.
-    */
-   if ((FileOffset % PAGE_SIZE) == 0 &&
-       (SegOffset + PAGE_SIZE <= RawLength || !IsImageSection) &&
-       !(MemoryArea->Data.SectionData.Segment->Characteristics & IMAGE_SCN_MEM_SHARED))
-   {
+    /* Create hyperspace mapping */
+    MappedAddress = MmCreateHyperspaceMapping(*Page);
 
-      /*
-       * Get the related cache segment; we use a lower level interface than
-       * filesystems do because it is safe for us to use an offset with a
-       * alignment less than the file system block size.
-       */
-      Status = CcRosGetCacheSegment(Bcb,
-                                    FileOffset,
-                                    &BaseOffset,
-                                    &BaseAddress,
-                                    &UptoDate,
-                                    &CacheSeg);
-      if (!NT_SUCCESS(Status))
-      {
-         return(Status);
-      }
-      if (!UptoDate)
-      {
-         /*
-          * If the cache segment isn't up to date then call the file
-          * system to read in the data.
-          */
-         Status = ReadCacheSegment(CacheSeg);
-         if (!NT_SUCCESS(Status))
-         {
-            CcRosReleaseCacheSegment(Bcb, CacheSeg, FALSE, FALSE, FALSE);
-            return Status;
-         }
-      }
-      /*
-       * Retrieve the page from the cache segment that we actually want.
-       */
-      (*Page) = MmGetPhysicalAddress((char*)BaseAddress +
-                                     FileOffset - BaseOffset).LowPart >> PAGE_SHIFT;
+    /* Copy the page through */
+    RtlCopyMemory(MappedAddress, Buffer, PAGE_SIZE);
 
-      CcRosReleaseCacheSegment(Bcb, CacheSeg, TRUE, FALSE, TRUE);
-   }
-   else
-   {
-      PVOID PageAddr;
-      ULONG CacheSegOffset;
-      /*
-       * Allocate a page, this is rather complicated by the possibility
-       * we might have to move other things out of memory
-       */
-      Status = MmRequestPageMemoryConsumer(MC_USER, TRUE, Page);
-      if (!NT_SUCCESS(Status))
-      {
-         return(Status);
-      }
-      Status = CcRosGetCacheSegment(Bcb,
-                                    FileOffset,
-                                    &BaseOffset,
-                                    &BaseAddress,
-                                    &UptoDate,
-                                    &CacheSeg);
-      if (!NT_SUCCESS(Status))
-      {
-         return(Status);
-      }
-      if (!UptoDate)
-      {
-         /*
-          * If the cache segment isn't up to date then call the file
-          * system to read in the data.
-          */
-         Status = ReadCacheSegment(CacheSeg);
-         if (!NT_SUCCESS(Status))
-         {
-            CcRosReleaseCacheSegment(Bcb, CacheSeg, FALSE, FALSE, FALSE);
-            return Status;
-         }
-      }
-      PageAddr = MmCreateHyperspaceMapping(*Page);
-      CacheSegOffset = BaseOffset + CacheSeg->Bcb->CacheSegmentSize - FileOffset;
-      Length = RawLength - SegOffset;
-      if (Length <= CacheSegOffset && Length <= PAGE_SIZE)
-      {
-         memcpy(PageAddr, (char*)BaseAddress + FileOffset - BaseOffset, Length);
-      }
-      else if (CacheSegOffset >= PAGE_SIZE)
-      {
-         memcpy(PageAddr, (char*)BaseAddress + FileOffset - BaseOffset, PAGE_SIZE);
-      }
-      else
-      {
-         memcpy(PageAddr, (char*)BaseAddress + FileOffset - BaseOffset, CacheSegOffset);
-         CcRosReleaseCacheSegment(Bcb, CacheSeg, TRUE, FALSE, FALSE);
-         Status = CcRosGetCacheSegment(Bcb,
-                                       FileOffset + CacheSegOffset,
-                                       &BaseOffset,
-                                       &BaseAddress,
-                                       &UptoDate,
-                                       &CacheSeg);
-         if (!NT_SUCCESS(Status))
-         {
-            MmDeleteHyperspaceMapping(PageAddr);
-            return(Status);
-         }
-         if (!UptoDate)
-         {
-            /*
-             * If the cache segment isn't up to date then call the file
-             * system to read in the data.
-             */
-            Status = ReadCacheSegment(CacheSeg);
-            if (!NT_SUCCESS(Status))
-            {
-               CcRosReleaseCacheSegment(Bcb, CacheSeg, FALSE, FALSE, FALSE);
-               MmDeleteHyperspaceMapping(PageAddr);
-               return Status;
-            }
-         }
-         if (Length < PAGE_SIZE)
-         {
-            memcpy((char*)PageAddr + CacheSegOffset, BaseAddress, Length - CacheSegOffset);
-         }
-         else
-         {
-            memcpy((char*)PageAddr + CacheSegOffset, BaseAddress, PAGE_SIZE - CacheSegOffset);
-         }
-      }
-      CcRosReleaseCacheSegment(Bcb, CacheSeg, TRUE, FALSE, FALSE);
-      MmDeleteHyperspaceMapping(PageAddr);
-   }
-   return(STATUS_SUCCESS);
+    /* Release the mapping */
+    CcUnpinData(Bcb);
+    MmDeleteHyperspaceMapping(MappedAddress);
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
@@ -1459,7 +1301,6 @@ MmPageOutSectionView(PMADDRESS_SPACE AddressSpace,
    ULONG FileOffset;
    NTSTATUS Status;
    PFILE_OBJECT FileObject;
-   PBCB Bcb = NULL;
    BOOLEAN DirectMapped;
    BOOLEAN IsImageSection;
 
@@ -1482,8 +1323,6 @@ MmPageOutSectionView(PMADDRESS_SPACE AddressSpace,
    if (FileObject != NULL &&
        !(Context.Segment->Characteristics & IMAGE_SCN_MEM_SHARED))
    {
-      Bcb = FileObject->SectionObjectPointer->SharedCacheMap;
-
       /*
        * If the file system is letting us go directly to the cache and the
        * memory area was mapped at an offset in the file which is page aligned
@@ -1621,12 +1460,6 @@ MmPageOutSectionView(PMADDRESS_SPACE AddressSpace,
       {
          DPRINT1("Found a swapentry for a non private and direct mapped page (address %x)\n",
                  Address);
-         KEBUGCHECK(0);
-      }
-      Status = CcRosUnmapCacheSegment(Bcb, FileOffset, FALSE);
-      if (!NT_SUCCESS(Status))
-      {
-         DPRINT1("CCRosUnmapCacheSegment failed, status = %x\n", Status);
          KEBUGCHECK(0);
       }
       PageOp->Status = STATUS_SUCCESS;
@@ -1814,7 +1647,6 @@ MmWritePageSectionView(PMADDRESS_SPACE AddressSpace,
    BOOLEAN Private;
    NTSTATUS Status;
    PFILE_OBJECT FileObject;
-   PBCB Bcb = NULL;
    BOOLEAN DirectMapped;
    BOOLEAN IsImageSection;
 
@@ -1835,8 +1667,6 @@ MmWritePageSectionView(PMADDRESS_SPACE AddressSpace,
    if (FileObject != NULL &&
          !(Segment->Characteristics & IMAGE_SCN_MEM_SHARED))
    {
-      Bcb = FileObject->SectionObjectPointer->SharedCacheMap;
-
       /*
        * If the file system is letting us go directly to the cache and the
        * memory area was mapped at an offset in the file which is page aligned
@@ -1900,7 +1730,9 @@ MmWritePageSectionView(PMADDRESS_SPACE AddressSpace,
    if (DirectMapped && !Private)
    {
       ASSERT(SwapEntry == 0);
-      CcRosMarkDirtyCacheSegment(Bcb, Offset + Segment->FileOffset);
+       DPRINT1("Need to mark dirty\n");
+       while (TRUE);
+      //CcRosMarkDirtyCacheSegment(Bcb, Offset + Segment->FileOffset);
       PageOp->Status = STATUS_SUCCESS;
       MmspCompleteAndReleasePageOp(PageOp);
       return(STATUS_SUCCESS);
@@ -2188,7 +2020,6 @@ MmpDeleteSection(PVOID ObjectBody)
    }
    if (Section->FileObject != NULL)
    {
-      CcRosDereferenceCache(Section->FileObject);
       ObDereferenceObject(Section->FileObject);
       Section->FileObject = NULL;
    }
@@ -2374,8 +2205,6 @@ MmCreateDataFileSection(PROS_SECTION_OBJECT *SectionObject,
    PMM_SECTION_SEGMENT Segment;
    ULONG FileAccess;
    IO_STATUS_BLOCK Iosb;
-   LARGE_INTEGER Offset;
-   CHAR Buffer;
    FILE_STANDARD_INFORMATION FileInfo;
 
    /*
@@ -2481,6 +2310,7 @@ MmCreateDataFileSection(PROS_SECTION_OBJECT *SectionObject,
       }
    }
 
+#if 0
    if (FileObject->SectionObjectPointer == NULL ||
          FileObject->SectionObjectPointer->SharedCacheMap == NULL)
    {
@@ -2514,6 +2344,7 @@ MmCreateDataFileSection(PROS_SECTION_OBJECT *SectionObject,
          return STATUS_INVALID_PARAMETER;
       }
    }
+#endif
 
    /*
     * Lock the file
@@ -2590,7 +2421,6 @@ MmCreateDataFileSection(PROS_SECTION_OBJECT *SectionObject,
    MmUnlockSectionSegment(Segment);
    Section->FileObject = FileObject;
    Section->MaximumSize = MaximumSize;
-   CcRosReferenceCache(FileObject);
    //KeSetEvent((PVOID)&FileObject->Lock, IO_NO_INCREMENT, FALSE);
    *SectionObject = Section;
    return(STATUS_SUCCESS);
@@ -3330,7 +3160,7 @@ MmCreateImageSection(PROS_SECTION_OBJECT *SectionObject,
     * Initialized caching for this file object if previously caching
     * was initialized for the same on disk file
     */
-   Status = CcTryToInitializeFileCache(FileObject);
+    Status = STATUS_SUCCESS;//CcTryToInitializeFileCache(FileObject);
 
    if (!NT_SUCCESS(Status) || FileObject->SectionObjectPointer->ImageSectionObject == NULL)
    {
@@ -3423,7 +3253,6 @@ MmCreateImageSection(PROS_SECTION_OBJECT *SectionObject,
       Status = STATUS_SUCCESS;
    }
    Section->FileObject = FileObject;
-   CcRosReferenceCache(FileObject);
    //KeSetEvent((PVOID)&FileObject->Lock, IO_NO_INCREMENT, FALSE);
    *SectionObject = Section;
    return(Status);
@@ -3828,7 +3657,9 @@ MmFreeSectionPage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address,
 {
    ULONG Entry;
    PFILE_OBJECT FileObject;
-   PBCB Bcb;
+    LARGE_INTEGER FileOffset;
+    BOOLEAN Result;
+    PVOID MappedAddress;
    ULONG Offset;
    SWAPENTRY SavedSwapEntry;
    PMM_PAGEOP PageOp;
@@ -3877,10 +3708,23 @@ MmFreeSectionPage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address,
    {
       if (Page == PFN_FROM_SSE(Entry) && Dirty)
       {
-         FileObject = MemoryArea->Data.SectionData.Section->FileObject;
-         Bcb = FileObject->SectionObjectPointer->SharedCacheMap;
-         CcRosMarkDirtyCacheSegment(Bcb, Offset + Segment->FileOffset);
-         ASSERT(SwapEntry == 0);
+          FileObject = MemoryArea->Data.SectionData.Section->FileObject;
+
+          /* Create hyperspace mapping */
+          MappedAddress = MmCreateHyperspaceMapping(Page);
+
+          /* Flush out the data immediately */
+          FileOffset.QuadPart = Offset + Segment->FileOffset;
+          Result = CcCopyWrite(FileObject,
+                               &FileOffset,
+                               PAGE_SIZE,
+                               TRUE,
+                               MappedAddress);
+          ASSERT(Result == TRUE);
+          ASSERT(SwapEntry == 0);
+
+          /* Release the mapping */
+          MmDeleteHyperspaceMapping(MappedAddress);
       }
    }
 
@@ -4706,7 +4550,7 @@ MmFlushImageSection (IN PSECTION_OBJECT_POINTERS SectionObjectPointer,
          {
             return FALSE;
          }
-         CcRosSetRemoveOnClose(SectionObjectPointer);
+
          return TRUE;
       case MmFlushForWrite:
          break;

@@ -897,7 +897,7 @@ FsRtlMdlReadCompleteDev(IN PFILE_OBJECT FileObject,
                         IN PDEVICE_OBJECT DeviceObject)
 {
     /* Call the Cache Manager */
-    CcMdlReadComplete2(MemoryDescriptorList, FileObject);
+    CcMdlReadComplete2(FileObject, MemoryDescriptorList);
     return TRUE;
 }
 
@@ -1437,4 +1437,5 @@ FsRtlRegisterFileSystemFilterCallbacks(IN PDRIVER_OBJECT FilterDriverObject,
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
+
 

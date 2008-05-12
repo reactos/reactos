@@ -158,7 +158,7 @@ NTSTATUS NTAPI VfatBuildRequest (
    {
       if (KeGetCurrentIrql() > PASSIVE_LEVEL)
       {
-         DPRINT1("Vfat is entered at irql = %d\n", KeGetCurrentIrql());
+         DPRINT("Vfat is entered at irql = %d\n", KeGetCurrentIrql());
       }
 
       FsRtlEnterFileSystem();
@@ -276,5 +276,6 @@ NTSTATUS VfatLockUserBuffer(IN PIRP Irp, IN ULONG Length, IN LOCK_OPERATION Oper
 
    return STATUS_SUCCESS;
 }
+
 
 

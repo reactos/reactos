@@ -581,14 +581,6 @@ VfatRead(PVFAT_IRP_CONTEXT IrpContext)
    Length = IrpContext->Stack->Parameters.Read.Length;
    BytesPerSector = IrpContext->DeviceExt->FatInfo.BytesPerSector;
 
-   /* fail if file is a directory and no paged read */
-   if (*Fcb->Attributes & FILE_ATTRIBUTE_DIRECTORY && !(IrpContext->Irp->Flags & IRP_PAGING_IO))
-   {
-      Status = STATUS_INVALID_PARAMETER;
-      goto ByeBye;
-   }
-
-
    DPRINT("'%wZ', Offset: %d, Length %d\n", &Fcb->PathNameU, ByteOffset.u.LowPart, Length);
 
    if (ByteOffset.u.HighPart && !(Fcb->Flags & FCB_IS_VOLUME))
@@ -810,13 +802,6 @@ NTSTATUS VfatWrite (PVFAT_IRP_CONTEXT IrpContext)
       Status = IoCallDriver(IrpContext->DeviceExt->StorageDevice, IrpContext->Irp);
       VfatFreeIrpContext(IrpContext);
       return Status;
-   }
-
-  /* fail if file is a directory and no paged read */
-   if (*Fcb->Attributes & FILE_ATTRIBUTE_DIRECTORY && !(IrpContext->Irp->Flags & IRP_PAGING_IO))
-   {
-      Status = STATUS_INVALID_PARAMETER;
-      goto ByeBye;
    }
 
    ByteOffset = IrpContext->Stack->Parameters.Write.ByteOffset;
@@ -1076,5 +1061,6 @@ ByeBye:
    DPRINT("%x\n", Status);
    return Status;
 }
+
 
 
