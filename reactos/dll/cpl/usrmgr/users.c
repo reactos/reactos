@@ -203,18 +203,29 @@ OnEndLabelEdit(LPNMLVDISPINFO pnmv)
     USER_INFO_0 useri0;
     NET_API_STATUS status;
 
+    /* Leave, if there is no valid listview item */
     if (pnmv->item.iItem == -1)
         return FALSE;
 
+    /* Get the new user name */
     ListView_GetItemText(pnmv->hdr.hwndFrom,
                          pnmv->item.iItem, 0,
                          szOldUserName,
                          UNLEN);
+
+    /* Leave, if the user canceled the edit action */
+    if (pnmv->item.pszText == NULL)
+        return FALSE;
+
+    /* Get the new user name */
     lstrcpy(szNewUserName, pnmv->item.pszText);
 
+    /* Leave, if the user name was not changed */
     if (lstrcmp(szOldUserName, szNewUserName) == 0)
         return FALSE;
 
+
+    /* Change the user name */
     useri0.usri0_name = szNewUserName;
 
 #if 0
@@ -225,11 +236,12 @@ OnEndLabelEdit(LPNMLVDISPINFO pnmv)
     if (status != NERR_Success)
     {
         TCHAR szText[256];
-        wsprintf(szText, _T("Error: %u"), status);
-        MessageBox(NULL, szText, _T("NetUserSetInfo"), MB_ICONERROR | MB_OK);
+        wsprintf(szText, TEXT("Error: %u"), status);
+        MessageBox(NULL, szText, TEXT("NetUserSetInfo"), MB_ICONERROR | MB_OK);
         return FALSE;
     }
 
+    /* Update the listview item */
     ListView_SetItemText(pnmv->hdr.hwndFrom,
                          pnmv->item.iItem, 0,
                          szNewUserName);
