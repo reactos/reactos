@@ -29,7 +29,7 @@ IopCreateEvent(IN PUNICODE_STRING EventName,
     /* Initialize the object attributes */
     InitializeObjectAttributes(&ObjectAttributes,
                                EventName,
-                               OBJ_OPENIF,
+                               OBJ_OPENIF | OBJ_KERNEL_HANDLE,
                                NULL,
                                NULL);
 
