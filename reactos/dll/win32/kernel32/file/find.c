@@ -12,10 +12,9 @@
 /* INCLUDES *****************************************************************/
 
 #include <k32.h>
+#include <wine/debug.h>
 
-#define NDEBUG
-#include <debug.h>
-
+WINE_DEFAULT_DEBUG_CHANNEL(kernel32file);
 
 /* TYPES ********************************************************************/
 
@@ -166,7 +165,7 @@ InternalCopyFindDataA(LPWIN32_FIND_DATAA            lpFindFileData,
 
     FileNameA.Buffer[FileNameA.Length] = 0;
 
-    DPRINT("lpFileInfo->ShortNameLength %d\n", lpFileInfo->ShortNameLength);
+    TRACE("lpFileInfo->ShortNameLength %d\n", lpFileInfo->ShortNameLength);
 
     FileNameU.Length = FileNameU.MaximumLength = lpFileInfo->ShortNameLength;
     FileNameU.Buffer = lpFileInfo->ShortName;
@@ -202,7 +201,7 @@ InternalFindNextFile (
     PFILE_BOTH_DIR_INFORMATION Buffer, FoundFile = NULL;
     NTSTATUS Status = STATUS_SUCCESS;
 
-    DPRINT("InternalFindNextFile(%lx, %wZ)\n", hFindFile, SearchPattern);
+    TRACE("InternalFindNextFile(%lx, %wZ)\n", hFindFile, SearchPattern);
 
     if (hFindFile != FIND_DEVICE_HANDLE)
     {
@@ -356,7 +355,7 @@ InternalFindFirstFile (
 	ULONG DeviceNameInfo;
 	HANDLE hDirectory = NULL;
 
-	DPRINT("FindFirstFileW(lpFileName %S)\n",
+	TRACE("FindFirstFileW(lpFileName %S)\n",
 	       lpFileName);
 
 	RtlZeroMemory(&PathFileName,
@@ -422,10 +421,10 @@ InternalFindFirstFile (
 	    RemovedLastChar = TRUE;
 	}
 
-	DPRINT("lpFileName: \"%ws\"\n", lpFileName);
-	DPRINT("NtPathU: \"%wZ\"\n", &NtPathU);
-	DPRINT("PathFileName: \"%wZ\"\n", &PathFileName);
-	DPRINT("RelativeTo: 0x%p\n", DirInfo.Handle);
+	TRACE("lpFileName: \"%ws\"\n", lpFileName);
+	TRACE("NtPathU: \"%wZ\"\n", &NtPathU);
+	TRACE("PathFileName: \"%wZ\"\n", &PathFileName);
+	TRACE("RelativeTo: 0x%p\n", DirInfo.Handle);
 
 	InitializeObjectAttributes (&ObjectAttributes,
 	                            &NtPathU,
@@ -597,7 +596,7 @@ FindClose (
 {
 	PKERNEL32_FIND_DATA_HEADER IHeader;
 
-	DPRINT("FindClose(hFindFile %x)\n",hFindFile);
+	TRACE("FindClose(hFindFile %x)\n",hFindFile);
 
 	if (hFindFile == FIND_DEVICE_HANDLE)
 		return TRUE;

@@ -12,10 +12,9 @@
 /* INCLUDES *****************************************************************/
 
 #include <k32.h>
+#include <wine/debug.h>
 
-#define NDEBUG
-#include <debug.h>
-
+WINE_DEFAULT_DEBUG_CHANNEL(kernel32file);
 
 /* FUNCTIONS ****************************************************************/
 
@@ -46,7 +45,7 @@ CreateHardLinkW(LPCWSTR lpFileName,
   if(RtlDetermineDosPathNameType_U((LPWSTR)lpFileName) == 1 ||
      RtlDetermineDosPathNameType_U((LPWSTR)lpExistingFileName) == 1)
   {
-    DPRINT1("CreateHardLinkW() cannot handle UNC Paths!\n");
+    WARN("CreateHardLinkW() cannot handle UNC Paths!\n");
     SetLastError(ERROR_INVALID_NAME);
     return FALSE;
   }
@@ -144,13 +143,13 @@ CreateHardLinkW(LPCWSTR lpFileName,
                 }
                 else
                 {
-                  DPRINT1("Unable to open link destination \"%wZ\"!\n", &LinkTarget);
+                  WARN("Unable to open link destination \"%wZ\"!\n", &LinkTarget);
                   SetLastErrorByStatus(Status);
                 }
               }
               else
               {
-                DPRINT1("Path \"%wZ\" must not be a mapped drive!\n", &LinkDrive);
+                WARN("Path \"%wZ\" must not be a mapped drive!\n", &LinkDrive);
                 SetLastError(ERROR_INVALID_NAME);
               }
 

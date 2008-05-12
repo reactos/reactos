@@ -13,10 +13,9 @@
 /* INCLUDES ****************************************************************/
 
 #include <k32.h>
+#include <wine/debug.h>
 
-#define NDEBUG
-#include <debug.h>
-
+WINE_DEFAULT_DEBUG_CHANNEL(kernel32file);
 
 /* FUNCTIONS ****************************************************************/
 
@@ -72,11 +71,11 @@ CopyLoop (
 		   switch (ProgressResult)
 		     {
 		     case PROGRESS_CANCEL:
-			DPRINT("Progress callback requested cancel\n");
+			TRACE("Progress callback requested cancel\n");
 			errCode = STATUS_REQUEST_ABORTED;
 			break;
 		     case PROGRESS_STOP:
-			DPRINT("Progress callback requested stop\n");
+			TRACE("Progress callback requested stop\n");
 			errCode = STATUS_REQUEST_ABORTED;
 			*KeepDest = TRUE;
 			break;
@@ -117,7 +116,7 @@ CopyLoop (
 			 }
 		       else
 			 {
-			    DPRINT("Error 0x%08x reading writing to dest\n", errCode);
+			    WARN("Error 0x%08x reading writing to dest\n", errCode);
 			 }
 		    }
 		  else if (!NT_SUCCESS(errCode))
@@ -129,7 +128,7 @@ CopyLoop (
 			 }
 		       else
 			 {
-			    DPRINT("Error 0x%08x reading from source\n", errCode);
+			    WARN("Error 0x%08x reading from source\n", errCode);
 			 }
 		    }
 	       }
@@ -137,7 +136,7 @@ CopyLoop (
 
 	if (! EndOfFileFound && (NULL != pbCancel && *pbCancel))
 	  {
-	  DPRINT("User requested cancel\n");
+	  TRACE("User requested cancel\n");
 	  errCode = STATUS_REQUEST_ABORTED;
 	  }
 
@@ -148,7 +147,7 @@ CopyLoop (
      }
    else
      {
-	DPRINT("Error 0x%08x allocating buffer of %d bytes\n", errCode, RegionSize);
+	TRACE("Error 0x%08x allocating buffer of %d bytes\n", errCode, RegionSize);
      }
 
    return errCode;
@@ -171,7 +170,7 @@ SetLastWriteTime(
 				     FileBasicInformation);
    if (!NT_SUCCESS(errCode))
      {
-	DPRINT("Error 0x%08x obtaining FileBasicInformation\n", errCode);
+	WARN("Error 0x%08x obtaining FileBasicInformation\n", errCode);
      }
    else
      {
@@ -183,7 +182,7 @@ SetLastWriteTime(
 					FileBasicInformation);
 	if (!NT_SUCCESS(errCode))
 	  {
-	     DPRINT("Error 0x%0x setting LastWriteTime\n", errCode);
+	     WARN("Error 0x%0x setting LastWriteTime\n", errCode);
 	  }
      }
 
@@ -230,7 +229,7 @@ CopyFileExW (
 					 FileStandardInformation);
 	if (!NT_SUCCESS(errCode))
 	  {
-	     DPRINT("Status 0x%08x obtaining FileStandardInformation for source\n", errCode);
+	     TRACE("Status 0x%08x obtaining FileStandardInformation for source\n", errCode);
 	     SetLastErrorByStatus(errCode);
 	  }
 	else
@@ -241,7 +240,7 @@ CopyFileExW (
 					      FileBasicInformation);
 	     if (!NT_SUCCESS(errCode))
 	       {
-		  DPRINT("Status 0x%08x obtaining FileBasicInformation for source\n", errCode);
+		  TRACE("Status 0x%08x obtaining FileBasicInformation for source\n", errCode);
 		  SetLastErrorByStatus(errCode);
 	       }
 	     else
@@ -292,7 +291,7 @@ CopyFileExW (
 		    }
 		  else
 		    {
-		    DPRINT("Error %d during opening of dest file\n", GetLastError());
+		    WARN("Error %d during opening of dest file\n", GetLastError());
 		    }
 	       }
 	  }
@@ -300,7 +299,7 @@ CopyFileExW (
      }
    else
      {
-     DPRINT("Error %d during opening of source file\n", GetLastError());
+     WARN("Error %d during opening of source file\n", GetLastError());
      }
 
    return RC;

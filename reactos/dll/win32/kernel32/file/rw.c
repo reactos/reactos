@@ -12,10 +12,9 @@
 /* INCLUDES ****************************************************************/
 
 #include <k32.h>
+#include <wine/debug.h>
 
-#define NDEBUG
-#include <debug.h>
-
+WINE_DEFAULT_DEBUG_CHANNEL(kernel32file);
 
 /* FUNCTIONS ****************************************************************/
 
@@ -31,7 +30,7 @@ WriteFile(IN HANDLE hFile,
 {
    NTSTATUS Status;
 
-   DPRINT("WriteFile(hFile %x)\n", hFile);
+   TRACE("WriteFile(hFile %x)\n", hFile);
 
    if (lpNumberOfBytesWritten != NULL)
      {
@@ -119,7 +118,7 @@ WriteFile(IN HANDLE hFile,
           }
      }
 
-   DPRINT("WriteFile() succeeded\n");
+   TRACE("WriteFile() succeeded\n");
    return TRUE;
 }
 
@@ -136,7 +135,7 @@ ReadFile(IN HANDLE hFile,
 {
    NTSTATUS Status;
 
-   DPRINT("ReadFile(hFile %x)\n", hFile);
+   TRACE("ReadFile(hFile %x)\n", hFile);
 
    if (lpNumberOfBytesRead != NULL)
      {
@@ -239,7 +238,7 @@ ReadFile(IN HANDLE hFile,
           }
      }
 
-   DPRINT("ReadFile() succeeded\n");
+   TRACE("ReadFile() succeeded\n");
    return TRUE;
 }
 

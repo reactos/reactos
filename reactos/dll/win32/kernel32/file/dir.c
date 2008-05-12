@@ -16,9 +16,9 @@
 /* INCLUDES ******************************************************************/
 
 #include <k32.h>
+#include <wine/debug.h>
 
-#define NDEBUG
-#include <debug.h>
+WINE_DEFAULT_DEBUG_CHANNEL(kernel32file);
 
 UNICODE_STRING DllDirectory = {0, 0, NULL};
 
@@ -97,7 +97,7 @@ CreateDirectoryW (
         HANDLE DirectoryHandle = NULL;
         NTSTATUS Status;
 
-        DPRINT ("lpPathName %S lpSecurityAttributes %p\n",
+        TRACE ("lpPathName %S lpSecurityAttributes %p\n",
                 lpPathName, lpSecurityAttributes);
 
         if (!RtlDosPathNameToNtPathName_U (lpPathName,
@@ -134,7 +134,7 @@ CreateDirectoryW (
 
         if (!NT_SUCCESS(Status))
         {
-                DPRINT("NtCreateFile failed with Status %lx\n", Status);
+                WARN("NtCreateFile failed with Status %lx\n", Status);
                 SetLastErrorByStatus(Status);
                 return FALSE;
         }
@@ -176,7 +176,7 @@ CreateDirectoryExW (
         DesiredAccess = FILE_LIST_DIRECTORY | SYNCHRONIZE | FILE_WRITE_ATTRIBUTES |
                         FILE_READ_ATTRIBUTES;
 
-        DPRINT ("lpTemplateDirectory %ws lpNewDirectory %ws lpSecurityAttributes %p\n",
+        TRACE ("lpTemplateDirectory %ws lpNewDirectory %ws lpSecurityAttributes %p\n",
                 lpTemplateDirectory, lpNewDirectory, lpSecurityAttributes);
 
         /*
@@ -218,14 +218,14 @@ OpenTemplateDir:
                    the directory without FILE_OPEN_REPARSE_POINT */
                 OpenOptions &= ~FILE_OPEN_REPARSE_POINT;
 
-                DPRINT("Reparse points not supported, try with less options\n");
+                TRACE("Reparse points not supported, try with less options\n");
 
                 /* try again */
                 goto OpenTemplateDir;
             }
             else
             {
-                DPRINT1("Failed to open the template directory: 0x%x\n", Status);
+                WARN("Failed to open the template directory: 0x%x\n", Status);
                 goto CleanupNoNtPath;
             }
         }
@@ -247,7 +247,7 @@ OpenTemplateDir:
                                   &NtTemplatePathU,
                                   TRUE))
         {
-            DPRINT1("Both directory paths are the same!\n");
+            WARN("Both directory paths are the same!\n");
             Status = STATUS_OBJECT_NAME_INVALID;
             goto Cleanup;
         }
@@ -272,7 +272,7 @@ OpenTemplateDir:
                                         FileBasicInformation);
         if (!NT_SUCCESS(Status))
         {
-            DPRINT1("Failed to query the basic directory attributes\n");
+            WARN("Failed to query the basic directory attributes\n");
             goto Cleanup;
         }
 
@@ -352,7 +352,7 @@ OpenTemplateDir:
 
         if (!NT_SUCCESS(Status))
         {
-            DPRINT1("Querying the EA data failed: 0x%x\n", Status);
+            WARN("Querying the EA data failed: 0x%x\n", Status);
             goto Cleanup;
         }
 
@@ -377,7 +377,7 @@ OpenTemplateDir:
                 (Status == STATUS_INVALID_PARAMETER || Status == STATUS_ACCESS_DENIED))
             {
                 /* The FS doesn't seem to support reparse points... */
-                DPRINT1("Cannot copy the hardlink, destination doesn\'t support reparse points!\n");
+                WARN("Cannot copy the hardlink, destination doesn\'t support reparse points!\n");
             }
 
             goto Cleanup;
@@ -433,7 +433,7 @@ OpenTemplateDir:
             if (!NT_SUCCESS(Status))
             {
                 /* fail, we were unable to read the reparse point data! */
-                DPRINT1("Querying or setting the reparse point failed: 0x%x\n", Status);
+                WARN("Querying or setting the reparse point failed: 0x%x\n", Status);
                 goto Cleanup;
             }
         }
@@ -501,7 +501,7 @@ RemoveDirectoryA (
 {
    PWCHAR PathNameW;
 
-   DPRINT("RemoveDirectoryA(%s)\n",lpPathName);
+   TRACE("RemoveDirectoryA(%s)\n",lpPathName);
 
    if (!(PathNameW = FilenameA2W(lpPathName, FALSE)))
        return FALSE;
@@ -526,7 +526,7 @@ RemoveDirectoryW (
         HANDLE DirectoryHandle = NULL;
         NTSTATUS Status;
 
-        DPRINT("lpPathName %S\n", lpPathName);
+        TRACE("lpPathName %S\n", lpPathName);
 
         if (!RtlDosPathNameToNtPathName_U (lpPathName,
                                            &NtPathU,
@@ -540,7 +540,7 @@ RemoveDirectoryW (
                                    NULL,
                                    NULL);
 
-        DPRINT("NtPathU '%S'\n", NtPathU.Buffer);
+        TRACE("NtPathU '%S'\n", NtPathU.Buffer);
 
         Status = NtCreateFile (&DirectoryHandle,
                                DELETE,
@@ -560,7 +560,7 @@ RemoveDirectoryW (
 
         if (!NT_SUCCESS(Status))
         {
-                CHECKPOINT;
+                WARN("Status 0x%08x\n", Status);
                 SetLastErrorByStatus (Status);
                 return FALSE;
         }
@@ -601,7 +601,7 @@ GetFullPathNameA (
    DWORD ret;
    LPWSTR FilePartW = NULL;
 
-   DPRINT("GetFullPathNameA(lpFileName %s, nBufferLength %d, lpBuffer %p, "
+   TRACE("GetFullPathNameA(lpFileName %s, nBufferLength %d, lpBuffer %p, "
         "lpFilePart %p)\n",lpFileName,nBufferLength,lpBuffer,lpFilePart);
 
    if (!lpFileName)
@@ -635,7 +635,7 @@ GetFullPathNameA (
          *lpFilePart = (FilePartW - BufferW) + lpBuffer;
    }
 
-   DPRINT("GetFullPathNameA ret: lpBuffer %s lpFilePart %s\n",
+   TRACE("GetFullPathNameA ret: lpBuffer %s lpFilePart %s\n",
         lpBuffer, (lpFilePart == NULL) ? "NULL" : *lpFilePart);
 
    return ret;
@@ -656,7 +656,7 @@ GetFullPathNameW (
 {
     ULONG Length;
 
-    DPRINT("GetFullPathNameW(lpFileName %S, nBufferLength %d, lpBuffer %p, "
+    TRACE("GetFullPathNameW(lpFileName %S, nBufferLength %d, lpBuffer %p, "
            "lpFilePart %p)\n",lpFileName,nBufferLength,lpBuffer,lpFilePart);
 
     Length = RtlGetFullPathName_U ((LPWSTR)lpFileName,
@@ -664,7 +664,7 @@ GetFullPathNameW (
                                    lpBuffer,
                                    lpFilePart);
 
-    DPRINT("GetFullPathNameW ret: lpBuffer %S lpFilePart %S Length %ld\n",
+    TRACE("GetFullPathNameW ret: lpBuffer %S lpFilePart %S Length %ld\n",
            lpBuffer, (lpFilePart == NULL) ? L"NULL" : *lpFilePart, Length / sizeof(WCHAR));
 
     return Length/sizeof(WCHAR);
@@ -732,7 +732,7 @@ GetShortPathNameW (
     UNICODE_STRING      ustr;
     WCHAR               ustr_buf[8+1+3+1];
 
-   DPRINT("GetShortPathNameW: %S\n",longpath);
+   TRACE("GetShortPathNameW: %S\n",longpath);
 
     if (!longpath)
     {
@@ -1011,7 +1011,7 @@ SearchPathW (
         LPCWSTR p;
         PWCHAR Name;
 
-        DPRINT("SearchPath\n");
+        TRACE("SearchPath\n");
 
         HasExtension = FALSE;
         p = lpFileName + wcslen(lpFileName);
@@ -1320,11 +1320,11 @@ DWORD STDCALL GetLongPathNameW( LPCWSTR shortpath, LPWSTR longpath, DWORD longle
         return 0;
     }
 
-    DPRINT("GetLongPathNameW(%s,%p,%ld)\n", shortpath, longpath, longlen);
+    TRACE("GetLongPathNameW(%s,%p,%ld)\n", shortpath, longpath, longlen);
 
     if (shortpath[0] == '\\' && shortpath[1] == '\\')
     {
-        DPRINT1("ERR: UNC pathname %s\n", shortpath);
+        WARN("ERR: UNC pathname %s\n", shortpath);
         lstrcpynW( longpath, shortpath, longlen );
         return wcslen(longpath);
     }
@@ -1365,7 +1365,7 @@ DWORD STDCALL GetLongPathNameW( LPCWSTR shortpath, LPWSTR longpath, DWORD longle
         goit = FindFirstFileW(tmplongpath, &wfd);
         if (goit == INVALID_HANDLE_VALUE)
         {
-            DPRINT("not found %s!\n", tmplongpath);
+            TRACE("not found %s!\n", tmplongpath);
             SetLastError ( ERROR_FILE_NOT_FOUND );
             return 0;
         }
@@ -1384,7 +1384,7 @@ DWORD STDCALL GetLongPathNameW( LPCWSTR shortpath, LPWSTR longpath, DWORD longle
     if (tmplen <= longlen)
     {
         wcscpy(longpath, tmplongpath);
-        DPRINT("returning %s\n", longpath);
+        TRACE("returning %s\n", longpath);
         tmplen--; /* length without 0 */
     }
 
@@ -1402,7 +1402,7 @@ DWORD STDCALL GetLongPathNameA( LPCSTR shortpath, LPSTR longpath, DWORD longlen 
     WCHAR longpathW[MAX_PATH];
     DWORD ret;
 
-    DPRINT("GetLongPathNameA %s, %i\n",shortpath,longlen );
+    TRACE("GetLongPathNameA %s, %i\n",shortpath,longlen );
 
     if (!(shortpathW = FilenameA2W( shortpath, FALSE )))
       return 0;

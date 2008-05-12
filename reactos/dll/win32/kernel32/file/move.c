@@ -17,9 +17,9 @@
 
 #include <k32.h>
 #include <malloc.h>
+#include <wine/debug.h>
 
-#define NDEBUG
-#include <debug.h>
+WINE_DEFAULT_DEBUG_CHANNEL(kernel32file);
 
 /* GLOBALS *****************************************************************/
 
@@ -92,7 +92,7 @@ static BOOL add_boot_rename_entry( LPCWSTR source, LPCWSTR dest, DWORD flags )
     WCHAR *p;
     NTSTATUS Status;
 
-    DPRINT("add_boot_rename_entry( %S, %S, %d ) \n", source, dest, flags);
+    TRACE("add_boot_rename_entry( %S, %S, %d ) \n", source, dest, flags);
 
     if(dest)
         DestLen = wcslen(dest);
@@ -138,7 +138,7 @@ static BOOL add_boot_rename_entry( LPCWSTR source, LPCWSTR dest, DWORD flags )
 
     if (!NT_SUCCESS(Status))
     {
-        DPRINT("NtCreateKey() failed (Status 0x%lx)\n", Status);
+        WARN("NtCreateKey() failed (Status 0x%lx)\n", Status);
         if (source_name.Buffer)
             RtlFreeHeap(RtlGetProcessHeap(), 0, source_name.Buffer);
         if (dest_name.Buffer)
@@ -243,7 +243,7 @@ MoveFileWithProgressW (
 	UNICODE_STRING DstPathU;
 	BOOL folder = FALSE;
 
-	DPRINT("MoveFileWithProgressW()\n");
+	TRACE("MoveFileWithProgressW()\n");
 
 	if (dwFlags & MOVEFILE_DELAY_UNTIL_REBOOT)
 		return add_boot_rename_entry( lpExistingFileName, lpNewFileName, dwFlags );
@@ -268,7 +268,7 @@ MoveFileWithProgressW (
 				           NULL,
 				           NULL))
         {
-           DPRINT("Invalid destination path\n");
+           WARN("Invalid destination path\n");
 	   CloseHandle(hFile);
            SetLastError(ERROR_PATH_NOT_FOUND);
            return FALSE;
@@ -419,7 +419,7 @@ MoveFileWithProgressW (
 		           FindClose(hFile);			     
 
 				   /* delete folder */					  				 
-				   DPRINT("MoveFileWithProgressW : Delete folder : %S\n",lpDeleteFile);
+				   TRACE("MoveFileWithProgressW : Delete folder : %S\n",lpDeleteFile);
 
 				   /* remove system folder flag other wise we can not delete the folder */
 				   Attributes = GetFileAttributesW(lpExistingFileName2);
@@ -577,7 +577,7 @@ MoveFileWithProgressW (
 			   
 			    /* copy file */
 			   
-			   DPRINT("MoveFileWithProgressW : Copy file : %S to %S\n",lpDeleteFile, lpNewFileName2);
+			   TRACE("MoveFileWithProgressW : Copy file : %S to %S\n",lpDeleteFile, lpNewFileName2);
 			   RemoveReadOnlyAttributeW(lpDeleteFile);
 			   RemoveReadOnlyAttributeW(lpNewFileName2);
 			  
@@ -592,12 +592,12 @@ MoveFileWithProgressW (
                    break;
               
                /* delete file */               		            
-			   DPRINT("MoveFileWithProgressW : remove readonly flag from file : %S\n",lpNewFileName2);
+			   TRACE("MoveFileWithProgressW : remove readonly flag from file : %S\n",lpNewFileName2);
 			   Result = RemoveReadOnlyAttributeW(lpDeleteFile);
 			   if (Result == FALSE)
 			       break;
 
-               DPRINT("MoveFileWithProgressW : Delete file : %S\n",lpDeleteFile);
+               TRACE("MoveFileWithProgressW : Delete file : %S\n",lpDeleteFile);
 			   Result = DeleteFileW(lpDeleteFile);
                if (Result == FALSE)                               
                    break;

@@ -17,10 +17,9 @@
 /* INCLUDES ******************************************************************/
 
 #include <k32.h>
+#include <wine/debug.h>
 
-#define NDEBUG
-#include <debug.h>
-
+WINE_DEFAULT_DEBUG_CHANNEL(kernel32file);
 
 /* GLOBAL VARIABLES **********************************************************/
 
@@ -90,7 +89,7 @@ SetCurrentDirectoryA (
 {
    PWCHAR PathNameW;
 
-   DPRINT("setcurrdir: %s\n",lpPathName);
+   TRACE("setcurrdir: %s\n",lpPathName);
 
    if (!(PathNameW = FilenameA2W(lpPathName, FALSE)))
       return FALSE;
@@ -171,7 +170,7 @@ GetTempPathW (
    WCHAR tmp_full_path[MAX_PATH];
    UINT ret;
 
-   DPRINT("GetTempPathW(%lu,%p)\n", count, path);
+   TRACE("GetTempPathW(%lu,%p)\n", count, path);
 
    if (!(ret = GetEnvironmentVariableW( L"TMP", tmp_path, MAX_PATH )))
      if (!(ret = GetEnvironmentVariableW( L"TEMP", tmp_path, MAX_PATH )))
@@ -210,7 +209,7 @@ GetTempPathW (
          path[0] = 0; /* avoid returning ambiguous "X:" */
    }
 
-   DPRINT("GetTempPathW returning %u, %s\n", ret, path);
+   TRACE("GetTempPathW returning %u, %s\n", ret, path);
    return ret;
 
 }
@@ -340,7 +339,7 @@ GetSystemWow64DirectoryW(
     )
 {
 #ifdef _WIN64
-    DPRINT1("GetSystemWow64DirectoryW is UNIMPLEMENTED!\n");
+    ERR("GetSystemWow64DirectoryW is UNIMPLEMENTED!\n");
     return 0;
 #else
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
