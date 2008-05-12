@@ -24,6 +24,11 @@ CreatePen(
     COLORREF crColor)
 {
     /* FIXME Some part need be done in user mode */
+    if (nPenStyle > PS_DASHDOTDOT)
+    {
+       if (nPenStyle == PS_NULL) return GetStockObject(NULL_PEN);
+       if (nPenStyle != PS_INSIDEFRAME) nPenStyle = PS_SOLID;
+    }
     return NtGdiCreatePen(nPenStyle, nWidth, crColor, NULL);
 }
 

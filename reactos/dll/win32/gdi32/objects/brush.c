@@ -16,18 +16,83 @@ ExtCreatePen(DWORD dwPenStyle,
              DWORD dwStyleCount,
              CONST DWORD *lpStyle)
 {
-    /* Call NTGDI (hack... like most of gdi32..sigh) */
-    return NtGdiExtCreatePen(dwPenStyle,
-                             dwWidth,
-                             lplb->lbStyle,
-                             lplb->lbColor,
-                             lplb->lbHatch,
-                             0,
-                             dwStyleCount,
-                             (PULONG)lpStyle,
-                             0,
-                             FALSE,
-                             NULL);
+   PVOID lpPackedDIB = NULL;
+   HPEN hPen = NULL;
+   PBITMAPINFO pConvertedInfo = NULL;
+   UINT ConvertedInfoSize = 0, lbStyle;
+   BOOL Hit = FALSE;
+
+   if ((dwPenStyle & PS_STYLE_MASK) == PS_USERSTYLE)
+   {
+      if(!lpStyle)
+      {
+         SetLastError(ERROR_INVALID_PARAMETER);
+         return 0;
+      }
+   }
+   else
+   {
+      if (dwStyleCount || lpStyle)
+      {
+         SetLastError(ERROR_INVALID_PARAMETER);
+         return 0;
+      }
+   }
+
+   lbStyle = lplb->lbStyle;
+
+   if (lplb->lbStyle > BS_HATCHED)   
+   {
+      if (lplb->lbStyle == BS_PATTERN)
+      {
+         pConvertedInfo = (PBITMAPINFO)lplb->lbHatch;
+         if (!pConvertedInfo) return 0;
+      }
+      else
+      {
+         if ((lplb->lbStyle == BS_DIBPATTERN) || (lplb->lbStyle == BS_DIBPATTERNPT))
+         {
+            if (lplb->lbStyle == BS_DIBPATTERN)
+            {
+               lbStyle = BS_DIBPATTERNPT;
+               lpPackedDIB = GlobalLock((HGLOBAL)lplb->lbHatch);
+               if (lpPackedDIB == NULL) return 0;
+            }
+            pConvertedInfo = ConvertBitmapInfo((PBITMAPINFO)lpPackedDIB,
+                                                          lplb->lbColor,
+                                                     &ConvertedInfoSize,
+                                                                   TRUE);
+            Hit = TRUE; // We converted DIB.
+         }
+         else
+            pConvertedInfo = (PBITMAPINFO)lpStyle;
+      }
+   }
+   else
+     pConvertedInfo = (PBITMAPINFO)lplb->lbHatch;
+   
+
+   hPen = NtGdiExtCreatePen(dwPenStyle,
+                               dwWidth,
+                               lbStyle,
+                         lplb->lbColor,
+                         lplb->lbHatch,
+             (ULONG_PTR)pConvertedInfo,
+                          dwStyleCount,
+                       (PULONG)lpStyle,
+                     ConvertedInfoSize,
+                                 FALSE,
+                                  NULL);
+
+
+   if (lplb->lbStyle == BS_DIBPATTERN) GlobalUnlock((HGLOBAL)lplb->lbHatch);
+
+   if (Hit)
+   {
+      if ((PBITMAPINFO)lpPackedDIB != pConvertedInfo)
+         RtlFreeHeap(RtlGetProcessHeap(), 0, pConvertedInfo);
+   }
+   return hPen;
 }
 
 /*
