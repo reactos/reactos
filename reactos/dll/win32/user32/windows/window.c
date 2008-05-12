@@ -548,12 +548,12 @@ GetForegroundWindow(VOID)
 static
 BOOL
 User32EnumWindows (
-	HDESK hDesktop,
-	HWND hWndparent,
-	WNDENUMPROC lpfn,
-	LPARAM lParam,
-	DWORD dwThreadId,
-	BOOL bChildren )
+  HDESK hDesktop,
+  HWND hWndparent,
+  WNDENUMPROC lpfn,
+  LPARAM lParam,
+  DWORD dwThreadId,
+  BOOL bChildren )
 {
   DWORD i, dwCount = 0;
   HWND* pHwnd = NULL;
@@ -569,10 +569,9 @@ User32EnumWindows (
      sort of persistent buffer and only grow it ( requiring a 2nd
      call ) when the buffer wasn't already big enough? */
   /* first get how many window entries there are */
-  SetLastError(0);
   dwCount = NtUserBuildHwndList (
     hDesktop, hWndparent, bChildren, dwThreadId, lParam, NULL, 0 );
-  if ( !dwCount || GetLastError() )
+  if ( !dwCount )
     return FALSE;
 
   /* allocate buffer to receive HWND handles */
@@ -587,10 +586,10 @@ User32EnumWindows (
   /* now call kernel again to fill the buffer this time */
   dwCount = NtUserBuildHwndList (
     hDesktop, hWndparent, bChildren, dwThreadId, lParam, pHwnd, dwCount );
-  if ( !dwCount || GetLastError() )
+  if ( !dwCount )
     {
       if ( pHwnd )
-	HeapFree ( hHeap, 0, pHwnd );
+        HeapFree ( hHeap, 0, pHwnd );
       return FALSE;
     }
 
