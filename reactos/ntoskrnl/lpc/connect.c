@@ -295,7 +295,7 @@ NtSecureConnectPort(OUT PHANDLE PortHandle,
         }
 
         /* Update the base */
-        ClientView->ViewBase = Port->ClientSectionBase;
+        ClientView->ViewBase = ClientPort->ClientSectionBase;
 
         /* Reference and remember the process */
         ClientPort->MappingProcess = PsGetCurrentProcess();
