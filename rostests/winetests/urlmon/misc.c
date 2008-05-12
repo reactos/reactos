@@ -721,6 +721,8 @@ static const BYTE secid7[] = {'f','t','p',':','w','i','n','e','h','q','.','o','r
                               3,0,0,0};
 static const BYTE secid10[] =
     {'f','i','l','e',':','s','o','m','e','%','2','0','f','i','l','e','.','j','p','g',3,0,0,0};
+static const BYTE secid10_2[] =
+    {'f','i','l','e',':','s','o','m','e',' ','f','i','l','e','.','j','p','g',3,0,0,0};
 
 static struct secmgr_test {
     LPCWSTR url;
@@ -733,7 +735,6 @@ static struct secmgr_test {
     {url1, 0,   S_OK, sizeof(secid1), secid1, S_OK},
     {url2, 100, 0x80041001, 0, NULL, E_INVALIDARG},
     {url3, 0,   S_OK, sizeof(secid1), secid1, S_OK},
-    {url10,3,   S_OK, sizeof(secid10),secid10,S_OK},
     {url5, 3,   S_OK, sizeof(secid5), secid5, S_OK},
     {url6, 3,   S_OK, sizeof(secid6), secid6, S_OK},
     {url7, 3,   S_OK, sizeof(secid7), secid7, S_OK}
@@ -779,6 +780,23 @@ static void test_SecurityManager(void)
             ok(!memcmp(buf, secmgr_tests[i].secid, size), "[%d] wrong secid\n", i);
         }
     }
+
+    zone = 100;
+    hres = IInternetSecurityManager_MapUrlToZone(secmgr, url10, &zone, 0);
+    ok(hres == S_OK, "MapUrlToZone failed: %08x, expected S_OK\n", hres);
+    ok(zone == 3, "zone=%d, expected 3\n", zone);
+
+    /* win2k3 translates %20 into a space */
+    size = sizeof(buf);
+    memset(buf, 0xf0, sizeof(buf));
+    hres = IInternetSecurityManager_GetSecurityId(secmgr, url10, buf, &size, 0);
+    ok(hres == S_OK, "GetSecurityId failed: %08x, expected S_OK\n", hres);
+    ok(size == sizeof(secid10) ||
+       size == sizeof(secid10_2), /* win2k3 */
+       "size=%d\n", size);
+    ok(!memcmp(buf, secid10, size) ||
+       !memcmp(buf, secid10_2, size), /* win2k3 */
+       "wrong secid\n");
 
     zone = 100;
     hres = IInternetSecurityManager_MapUrlToZone(secmgr, NULL, &zone, 0);

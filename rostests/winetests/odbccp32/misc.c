@@ -58,7 +58,7 @@ static void test_SQLInstallerError(void)
     sql_ret = SQLInstallerError(0, NULL, NULL, 0, NULL);
     ok(sql_ret == SQL_ERROR, "SQLInstallerError(0...) failed with %d instead of SQL_ERROR\n", sql_ret);
     /* However numbers greater than 8 do not return SQL_ERROR.
-     * I am currenly unsure as to whether it should return SQL_NO_DATA or "the same as for error 8";
+     * I am currently unsure as to whether it should return SQL_NO_DATA or "the same as for error 8";
      * I have never been able to generate 8 errors to test it
      */
     sql_ret = SQLInstallerError(65535, NULL, NULL, 0, NULL);

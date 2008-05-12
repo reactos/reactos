@@ -101,23 +101,22 @@ static void test_RtlIsDosDeviceName(void)
         { "",              0, 0 },
         { "\\\\foo\\nul",  0, 0 },
         { "c:\\nul:",      6, 6 },
-        { "c:\\nul::",     0, 0 },
+        { "c:\\nul::",     6, 6 },
+        { "c:\\nul::::::", 6, 6 },
         { "c:prn     ",    4, 6 },
         { "c:prn.......",  4, 6 },
         { "c:prn... ...",  4, 6 },
-        { "c:NUL  ....  ", 0, 0 },
+        { "c:NUL  ....  ", 4, 6 },
         { "c: . . .",      0, 0 },
         { "c:",            0, 0 },
         { " . . . :",      0, 0 },
         { ":",             0, 0 },
         { "c:nul. . . :",  4, 6 },
-        { "c:nul . . :",   0, 0 },
+        { "c:nul . . :",   4, 6 },
         { "c:nul0",        0, 0 },
-        { "c:prn:aaa",     0, 0 },
         { "c:PRN:.txt",    4, 6 },
         { "c:aux:.txt...", 4, 6 },
         { "c:prn:.txt:",   4, 6 },
-        { "c:nul:aaa",     0, 0 },
         { "con:",          0, 6 },
         { "lpt1:",         0, 8 },
         { "c:com5:",       4, 8 },
@@ -146,6 +145,18 @@ static void test_RtlIsDosDeviceName(void)
             "Wrong result (%d,%d)/(%d,%d) for %s\n",
             HIWORD(ret), LOWORD(ret), test->pos, test->len, test->path );
     }
+
+    pRtlMultiByteToUnicodeN( buffer, sizeof(buffer), NULL, "c:prn:aaa", strlen("c:prn:aaa")+1 );
+    ret = pRtlIsDosDeviceName_U( buffer );
+    ok( ret == MAKELONG( 6, 4 ) || /* NT */
+        ret == MAKELONG( 0, 0), /* win9x */
+        "Wrong result (%d,%d)/(4,6) or (0,0) for c:prn:aaa\n", HIWORD(ret), LOWORD(ret) );
+
+    pRtlMultiByteToUnicodeN( buffer, sizeof(buffer), NULL, "c:nul:aaa", strlen("c:nul:aaa")+1 );
+    ret = pRtlIsDosDeviceName_U( buffer );
+    ok( ret == MAKELONG( 6, 4 ) || /* NT */
+        ret == MAKELONG( 0, 0), /* win9x */
+        "Wrong result (%d,%d)/(4,6) or (0,0) for c:nul:aaa\n", HIWORD(ret), LOWORD(ret) );
 }
 
 static void test_RtlIsNameLegalDOS8Dot3(void)
@@ -213,7 +224,7 @@ static void test_RtlIsNameLegalDOS8Dot3(void)
             strcpy( str, test->path );
             for (i = 0; str[i]; i++) str[i] = toupper(str[i]);
             ok( oem_ret.Length == strlen(test->path), "Wrong length %d/%d for '%s'\n",
-                oem_ret.Length, strlen(test->path), test->path );
+                oem_ret.Length, lstrlenA(test->path), test->path );
             ok( !memcmp( oem_ret.Buffer, str, oem_ret.Length ),
                 "Wrong string '%.*s'/'%s'\n", oem_ret.Length, oem_ret.Buffer, str );
         }
@@ -265,7 +276,7 @@ static void test_RtlGetFullPathName_U(void)
         len= strlen(test->rname) * sizeof(WCHAR);
         pRtlMultiByteToUnicodeN(pathbufW , sizeof(pathbufW), NULL, test->path, strlen(test->path)+1 );
         ret = pRtlGetFullPathName_U( pathbufW,MAX_PATH, rbufferW, &file_part);
-        ok( ret == len, "Wrong result %ld/%d for \"%s\"\n", ret, len, test->path );
+        ok( ret == len, "Wrong result %d/%d for \"%s\"\n", ret, len, test->path );
         ok(pRtlUnicodeToMultiByteN(rbufferA,MAX_PATH,&reslen,rbufferW,(lstrlenW(rbufferW) + 1) * sizeof(WCHAR)) == STATUS_SUCCESS,
            "RtlUnicodeToMultiByteN failed\n");
         ok(lstrcmpiA(rbufferA,test->rname) == 0, "Got \"%s\" expected \"%s\"\n",rbufferA,test->rname);

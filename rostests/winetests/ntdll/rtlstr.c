@@ -62,6 +62,7 @@ static NTSTATUS (WINAPI *pRtlUpperString)(STRING *, const STRING *);
 static NTSTATUS (WINAPI *pRtlValidateUnicodeString)(long, UNICODE_STRING *);
 static NTSTATUS (WINAPI *pRtlGUIDFromString)(const UNICODE_STRING*,GUID*);
 static NTSTATUS (WINAPI *pRtlStringFromGUID)(const GUID*, UNICODE_STRING*);
+static BOOLEAN (WINAPI *pRtlIsTextUnicode)(LPVOID, INT, INT *);
 
 /*static VOID (WINAPI *pRtlFreeOemString)(PSTRING);*/
 /*static VOID (WINAPI *pRtlFreeUnicodeString)(PUNICODE_STRING);*/
@@ -82,7 +83,6 @@ static NTSTATUS (WINAPI *pRtlStringFromGUID)(const GUID*, UNICODE_STRING*);
 /*static NTSTATUS (WINAPI *pRtlUpcaseUnicodeToOemN)(LPSTR, DWORD, LPDWORD, LPCWSTR, DWORD);*/
 /*static UINT (WINAPI *pRtlOemToUnicodeSize)(const STRING *);*/
 /*static DWORD (WINAPI *pRtlAnsiStringToUnicodeSize)(const STRING *);*/
-/*static DWORD (WINAPI *pRtlIsTextUnicode)(LPVOID, DWORD, DWORD *);*/
 
 
 static WCHAR* AtoW( const char* p )
@@ -130,6 +130,7 @@ static void InitFunctionPtrs(void)
 	pRtlValidateUnicodeString = (void *)GetProcAddress(hntdll, "RtlValidateUnicodeString");
 	pRtlGUIDFromString = (void *)GetProcAddress(hntdll, "RtlGUIDFromString");
 	pRtlStringFromGUID = (void *)GetProcAddress(hntdll, "RtlStringFromGUID");
+	pRtlIsTextUnicode = (void *)GetProcAddress(hntdll, "RtlIsTextUnicode");
     }
 }
 
@@ -199,7 +200,7 @@ static void test_RtlInitUnicodeStringEx(void)
     uni.Buffer = (void *) 0xdeadbeef;
     result = pRtlInitUnicodeStringEx(&uni, teststring);
     ok(result == STATUS_SUCCESS,
-       "pRtlInitUnicodeStringEx(&uni, 0) returns %lx, expected 0\n",
+       "pRtlInitUnicodeStringEx(&uni, 0) returns %x, expected 0\n",
        result);
     ok(uni.Length == 32,
        "pRtlInitUnicodeStringEx(&uni, 0) sets Length to %u, expected %u\n",
@@ -230,7 +231,7 @@ static void test_RtlInitUnicodeStringEx(void)
     uni.Buffer = (void *) 0xdeadbeef;
     result = pRtlInitUnicodeStringEx(&uni, teststring2);
     ok(result == STATUS_NAME_TOO_LONG,
-       "pRtlInitUnicodeStringEx(&uni, 0) returns %lx, expected %lx\n",
+       "pRtlInitUnicodeStringEx(&uni, 0) returns %x, expected %x\n",
        result, STATUS_NAME_TOO_LONG);
     ok(uni.Length == 12345,
        "pRtlInitUnicodeStringEx(&uni, 0) sets Length to %u, expected %u\n",
@@ -246,12 +247,12 @@ static void test_RtlInitUnicodeStringEx(void)
     uni.MaximumLength = 12345;
     uni.Buffer = (void *) 0xdeadbeef;
     pRtlInitUnicodeString(&uni, teststring2);
-    ok(uni.Length == 33920,
+    ok(uni.Length == 33920 /* <= Win2000 */ || uni.Length == 65532 /* >= Win XP */,
        "pRtlInitUnicodeString(&uni, 0) sets Length to %u, expected %u\n",
-       uni.Length, 33920);
-    ok(uni.MaximumLength == 33922,
+       uni.Length, 65532);
+    ok(uni.MaximumLength == 33922 /* <= Win2000 */ || uni.MaximumLength == 65534 /* >= Win XP */,
        "pRtlInitUnicodeString(&uni, 0) sets MaximumLength to %u, expected %u\n",
-       uni.MaximumLength, 33922);
+       uni.MaximumLength, 65534);
     ok(uni.Buffer == teststring2,
        "pRtlInitUnicodeString(&uni, 0) sets Buffer to %p, expected %p\n",
        uni.Buffer, teststring2);
@@ -263,7 +264,7 @@ static void test_RtlInitUnicodeStringEx(void)
     uni.Buffer = (void *) 0xdeadbeef;
     result = pRtlInitUnicodeStringEx(&uni, 0);
     ok(result == STATUS_SUCCESS,
-       "pRtlInitUnicodeStringEx(&uni, 0) returns %lx, expected 0\n",
+       "pRtlInitUnicodeStringEx(&uni, 0) returns %x, expected 0\n",
        result);
     ok(uni.Length == 0,
        "pRtlInitUnicodeStringEx(&uni, 0) sets Length to %u, expected %u\n",
@@ -288,6 +289,8 @@ static void test_RtlInitUnicodeStringEx(void)
     ok(uni.Buffer == NULL,
        "pRtlInitUnicodeString(&uni, 0) sets Buffer to %p, expected %p\n",
        uni.Buffer, NULL);
+
+    free(teststring2);
 }
 
 
@@ -397,7 +400,7 @@ static void test_RtlDuplicateUnicodeString(void)
     CHAR dest_ansi_buf[257];
     STRING dest_ansi_str;
     NTSTATUS result;
-    size_t test_num;
+    unsigned int test_num;
 
     for (test_num = 0; test_num < NB_DUPL_USTR; test_num++) {
 	source_str.Length        = dupl_ustr[test_num].source_Length;
@@ -439,7 +442,7 @@ static void test_RtlDuplicateUnicodeString(void)
         dest_ansi_buf[dest_ansi_str.Length] = '\0';
         dest_ansi_str.Buffer = dest_ansi_buf;
 	ok(result == dupl_ustr[test_num].result,
-	   "(test %d): RtlDuplicateUnicodeString(%d, source, dest) has result %lx, expected %lx\n",
+           "(test %d): RtlDuplicateUnicodeString(%d, source, dest) has result %x, expected %x\n",
 	   test_num, dupl_ustr[test_num].add_nul, result, dupl_ustr[test_num].result);
 	ok(dest_str.Length == dupl_ustr[test_num].res_Length,
 	   "(test %d): RtlDuplicateUnicodeString(%d, source, dest) destination has Length %d, expected %d\n",
@@ -637,7 +640,7 @@ static void test_RtlDowncaseUnicodeString(void)
     UNICODE_STRING result_str;
     UNICODE_STRING lower_str;
 
-    for (i = 0; i <= 1024; i++) {
+    for (i = 0; i < 1024; i++) {
 	ch = (WCHAR) i;
 	if (ch >= 'A' && ch <= 'Z') {
 	    lower_ch = ch - 'A' + 'a';
@@ -678,7 +681,6 @@ static void test_RtlDowncaseUnicodeString(void)
 		case 0x38c: lower_ch = 0x3cc; break;
 		case 0x38e: lower_ch = 0x3cd; break;
 		case 0x38f: lower_ch = 0x3ce; break;
-		case 0x400: lower_ch = 0x0; break;
 		default: lower_ch = ch; break;
 	    } /* switch */
 	}
@@ -754,7 +756,7 @@ static void test_RtlUnicodeStringToAnsiString(void)
     STRING ansi_str;
     UNICODE_STRING uni_str;
     NTSTATUS result;
-    size_t test_num;
+    unsigned int test_num;
 
     for (test_num = 0; test_num < NB_USTR2ASTR; test_num++) {
 	ansi_str.Length        = ustr2astr[test_num].ansi_Length;
@@ -778,7 +780,7 @@ static void test_RtlUnicodeStringToAnsiString(void)
 	}
 	result = pRtlUnicodeStringToAnsiString(&ansi_str, &uni_str, ustr2astr[test_num].doalloc);
 	ok(result == ustr2astr[test_num].result,
-	   "(test %d): RtlUnicodeStringToAnsiString(ansi, uni, %d) has result %lx, expected %lx\n",
+           "(test %d): RtlUnicodeStringToAnsiString(ansi, uni, %d) has result %x, expected %x\n",
 	   test_num, ustr2astr[test_num].doalloc, result, ustr2astr[test_num].result);
 	ok(ansi_str.Length == ustr2astr[test_num].res_Length,
 	   "(test %d): RtlUnicodeStringToAnsiString(ansi, uni, %d) ansi has Length %d, expected %d\n",
@@ -825,7 +827,7 @@ static void test_RtlAppendAsciizToString(void)
     CHAR dest_buf[257];
     STRING dest_str;
     NTSTATUS result;
-    size_t test_num;
+    unsigned int test_num;
 
     for (test_num = 0; test_num < NB_APP_ASC2STR; test_num++) {
 	dest_str.Length        = app_asc2str[test_num].dest_Length;
@@ -839,7 +841,7 @@ static void test_RtlAppendAsciizToString(void)
 	}
 	result = pRtlAppendAsciizToString(&dest_str, app_asc2str[test_num].src);
 	ok(result == app_asc2str[test_num].result,
-	   "(test %d): RtlAppendAsciizToString(dest, src) has result %lx, expected %lx\n",
+           "(test %d): RtlAppendAsciizToString(dest, src) has result %x, expected %x\n",
 	   test_num, result, app_asc2str[test_num].result);
 	ok(dest_str.Length == app_asc2str[test_num].res_Length,
 	   "(test %d): RtlAppendAsciizToString(dest, src) dest has Length %d, expected %d\n",
@@ -897,7 +899,7 @@ static void test_RtlAppendStringToString(void)
     STRING dest_str;
     STRING src_str;
     NTSTATUS result;
-    size_t test_num;
+    unsigned int test_num;
 
     for (test_num = 0; test_num < NB_APP_STR2STR; test_num++) {
 	dest_str.Length        = app_str2str[test_num].dest_Length;
@@ -920,7 +922,7 @@ static void test_RtlAppendStringToString(void)
 	}
 	result = pRtlAppendStringToString(&dest_str, &src_str);
 	ok(result == app_str2str[test_num].result,
-	   "(test %d): RtlAppendStringToString(dest, src) has result %lx, expected %lx\n",
+           "(test %d): RtlAppendStringToString(dest, src) has result %x, expected %x\n",
 	   test_num, result, app_str2str[test_num].result);
 	ok(dest_str.Length == app_str2str[test_num].res_Length,
 	   "(test %d): RtlAppendStringToString(dest, src) dest has Length %d, expected %d\n",
@@ -978,7 +980,7 @@ static void test_RtlAppendUnicodeToString(void)
     WCHAR dest_buf[257];
     UNICODE_STRING dest_str;
     NTSTATUS result;
-    size_t test_num;
+    unsigned int test_num;
 
     for (test_num = 0; test_num < NB_APP_UNI2STR; test_num++) {
 	dest_str.Length        = app_uni2str[test_num].dest_Length;
@@ -992,7 +994,7 @@ static void test_RtlAppendUnicodeToString(void)
 	}
 	result = pRtlAppendUnicodeToString(&dest_str, (LPCWSTR) app_uni2str[test_num].src);
 	ok(result == app_uni2str[test_num].result,
-	   "(test %d): RtlAppendUnicodeToString(dest, src) has result %lx, expected %lx\n",
+           "(test %d): RtlAppendUnicodeToString(dest, src) has result %x, expected %x\n",
 	   test_num, result, app_uni2str[test_num].result);
 	ok(dest_str.Length == app_uni2str[test_num].res_Length,
 	   "(test %d): RtlAppendUnicodeToString(dest, src) dest has Length %d, expected %d\n",
@@ -1033,7 +1035,7 @@ static const app_ustr2str_t app_ustr2str[] = {
     { 4, 12, 14,     "Fake0123abcdef", 4, 6, 8,   "UstrZYXW",  8, 12, 14,   "FakeUstr\0\0cdef", STATUS_SUCCESS},
     { 4, 11, 14,     "Fake0123abcdef", 4, 6, 8,   "UstrZYXW",  8, 11, 14,   "FakeUstr\0\0cdef", STATUS_SUCCESS},
     { 4, 10, 14,     "Fake0123abcdef", 4, 6, 8,   "UstrZYXW",  8, 10, 14,   "FakeUstr\0\0cdef", STATUS_SUCCESS},
-/* In the following test the native function writes beyond MaximumLength
+/* In the following test the native function writes beyond MaximumLength 
  *  { 4,  9, 14,     "Fake0123abcdef", 4, 6, 8,   "UstrZYXW",  8,  9, 14,     "FakeUstrabcdef", STATUS_SUCCESS},
  */
     { 4,  8, 14,     "Fake0123abcdef", 4, 6, 8,   "UstrZYXW",  8,  8, 14,     "FakeUstrabcdef", STATUS_SUCCESS},
@@ -1054,7 +1056,7 @@ static void test_RtlAppendUnicodeStringToString(void)
     UNICODE_STRING dest_str;
     UNICODE_STRING src_str;
     NTSTATUS result;
-    size_t test_num;
+    unsigned int test_num;
 
     for (test_num = 0; test_num < NB_APP_USTR2STR; test_num++) {
 	dest_str.Length        = app_ustr2str[test_num].dest_Length;
@@ -1077,7 +1079,7 @@ static void test_RtlAppendUnicodeStringToString(void)
 	}
 	result = pRtlAppendUnicodeStringToString(&dest_str, &src_str);
 	ok(result == app_ustr2str[test_num].result,
-	   "(test %d): RtlAppendStringToString(dest, src) has result %lx, expected %lx\n",
+           "(test %d): RtlAppendStringToString(dest, src) has result %x, expected %x\n",
 	   test_num, result, app_ustr2str[test_num].result);
 	ok(dest_str.Length == app_ustr2str[test_num].res_Length,
 	   "(test %d): RtlAppendStringToString(dest, src) dest has Length %d, expected %d\n",
@@ -1165,8 +1167,8 @@ static void test_RtlFindCharInUnicodeString(void)
     UNICODE_STRING search_chars;
     USHORT pos;
     NTSTATUS result;
-    size_t idx;
-    size_t test_num;
+    unsigned int idx;
+    unsigned int test_num;
 
     for (test_num = 0; test_num < NB_FIND_CH_IN_USTR; test_num++) {
 	if (find_ch_in_ustr[test_num].main_str != NULL) {
@@ -1196,7 +1198,7 @@ static void test_RtlFindCharInUnicodeString(void)
 	pos = 12345;
         result = pRtlFindCharInUnicodeString(find_ch_in_ustr[test_num].flags, &main_str, &search_chars, &pos);
         ok(result == find_ch_in_ustr[test_num].result,
-           "(test %d): RtlFindCharInUnicodeString(%d, %s, %s, [out]) has result %lx, expected %lx\n",
+           "(test %d): RtlFindCharInUnicodeString(%d, %s, %s, [out]) has result %x, expected %x\n",
            test_num, find_ch_in_ustr[test_num].flags,
            find_ch_in_ustr[test_num].main_str, find_ch_in_ustr[test_num].search_chars,
            result, find_ch_in_ustr[test_num].result);
@@ -1280,7 +1282,7 @@ static const str2int_t str2int[] = {
     { 0, "0o7",                   7, STATUS_SUCCESS}, /* one digit octal */
     { 0, "0o8",                   0, STATUS_SUCCESS}, /* empty octal */
     { 0, "0o",                    0, STATUS_SUCCESS}, /* empty octal */
-    { 0, "0d1011101100",          0, STATUS_SUCCESS}, /* explizit decimal with 0d */
+    { 0, "0d1011101100",          0, STATUS_SUCCESS}, /* explicit decimal with 0d */
     { 0, "x89abcdef",             0, STATUS_SUCCESS}, /* Hex with lower case digits a-f (x-notation) */
     { 0, "xFEDCBA00",             0, STATUS_SUCCESS}, /* Hex with upper case digits A-F (x-notation) */
     { 0, "-xFEDCBA00",            0, STATUS_SUCCESS}, /* Negative Hexadecimal (x-notation) */
@@ -1335,7 +1337,7 @@ static const str2int_t str2int[] = {
 
 static void test_RtlUnicodeStringToInteger(void)
 {
-    size_t test_num;
+    unsigned int test_num;
     int value;
     NTSTATUS result;
     WCHAR *wstr;
@@ -1347,7 +1349,7 @@ static void test_RtlUnicodeStringToInteger(void)
 	pRtlInitUnicodeString(&uni, wstr);
 	result = pRtlUnicodeStringToInteger(&uni, str2int[test_num].base, &value);
 	ok(result == str2int[test_num].result,
-	   "(test %d): RtlUnicodeStringToInteger(\"%s\", %d, [out]) has result %lx, expected: %lx\n",
+           "(test %d): RtlUnicodeStringToInteger(\"%s\", %d, [out]) has result %x, expected: %x\n",
 	   test_num, str2int[test_num].str, str2int[test_num].base, result, str2int[test_num].result);
 	ok(value == str2int[test_num].value,
 	   "(test %d): RtlUnicodeStringToInteger(\"%s\", %d, [out]) assigns value %d, expected: %d\n",
@@ -1359,17 +1361,17 @@ static void test_RtlUnicodeStringToInteger(void)
     pRtlInitUnicodeString(&uni, wstr);
     result = pRtlUnicodeStringToInteger(&uni, str2int[1].base, NULL);
     ok(result == STATUS_ACCESS_VIOLATION,
-       "call failed: RtlUnicodeStringToInteger(\"%s\", %d, NULL) has result %lx\n",
+       "call failed: RtlUnicodeStringToInteger(\"%s\", %d, NULL) has result %x\n",
        str2int[1].str, str2int[1].base, result);
     result = pRtlUnicodeStringToInteger(&uni, 20, NULL);
     ok(result == STATUS_INVALID_PARAMETER,
-       "call failed: RtlUnicodeStringToInteger(\"%s\", 20, NULL) has result %lx\n",
+       "call failed: RtlUnicodeStringToInteger(\"%s\", 20, NULL) has result %x\n",
        str2int[1].str, result);
 
     uni.Length = 10; /* Make Length shorter (5 WCHARS instead of 7) */
     result = pRtlUnicodeStringToInteger(&uni, str2int[1].base, &value);
     ok(result == STATUS_SUCCESS,
-       "call failed: RtlUnicodeStringToInteger(\"12345\", %d, [out]) has result %lx\n",
+       "call failed: RtlUnicodeStringToInteger(\"12345\", %d, [out]) has result %x\n",
        str2int[1].base, result);
     ok(value == 12345,
        "didn't return expected value (test a): expected: %d, got: %d\n",
@@ -1378,7 +1380,7 @@ static void test_RtlUnicodeStringToInteger(void)
     uni.Length = 5; /* Use odd Length (2.5 WCHARS) */
     result = pRtlUnicodeStringToInteger(&uni, str2int[1].base, &value);
     ok(result == STATUS_SUCCESS,
-       "call failed: RtlUnicodeStringToInteger(\"12\", %d, [out]) has result %lx\n",
+       "call failed: RtlUnicodeStringToInteger(\"12\", %d, [out]) has result %x\n",
        str2int[1].base, result);
     ok(value == 12,
        "didn't return expected value (test b): expected: %d, got: %d\n",
@@ -1387,7 +1389,7 @@ static void test_RtlUnicodeStringToInteger(void)
     uni.Length = 2;
     result = pRtlUnicodeStringToInteger(&uni, str2int[1].base, &value);
     ok(result == STATUS_SUCCESS,
-       "call failed: RtlUnicodeStringToInteger(\"1\", %d, [out]) has result %lx\n",
+       "call failed: RtlUnicodeStringToInteger(\"1\", %d, [out]) has result %x\n",
        str2int[1].base, result);
     ok(value == 1,
        "didn't return expected value (test c): expected: %d, got: %d\n",
@@ -1399,7 +1401,7 @@ static void test_RtlUnicodeStringToInteger(void)
 
 static void test_RtlCharToInteger(void)
 {
-    size_t test_num;
+    unsigned int test_num;
     int value;
     NTSTATUS result;
 
@@ -1409,7 +1411,7 @@ static void test_RtlCharToInteger(void)
 	    value = 0xdeadbeef;
 	    result = pRtlCharToInteger(str2int[test_num].str, str2int[test_num].base, &value);
 	    ok(result == str2int[test_num].result,
-	       "(test %d): call failed: RtlCharToInteger(\"%s\", %d, [out]) has result %lx, expected: %lx\n",
+               "(test %d): call failed: RtlCharToInteger(\"%s\", %d, [out]) has result %x, expected: %x\n",
 	       test_num, str2int[test_num].str, str2int[test_num].base, result, str2int[test_num].result);
 	    ok(value == str2int[test_num].value,
 	       "(test %d): call failed: RtlCharToInteger(\"%s\", %d, [out]) assigns value %d, expected: %d\n",
@@ -1419,12 +1421,12 @@ static void test_RtlCharToInteger(void)
 
     result = pRtlCharToInteger(str2int[1].str, str2int[1].base, NULL);
     ok(result == STATUS_ACCESS_VIOLATION,
-       "call failed: RtlCharToInteger(\"%s\", %d, NULL) has result %lx\n",
+       "call failed: RtlCharToInteger(\"%s\", %d, NULL) has result %x\n",
        str2int[1].str, str2int[1].base, result);
 
     result = pRtlCharToInteger(str2int[1].str, 20, NULL);
     ok(result == STATUS_INVALID_PARAMETER,
-       "call failed: RtlCharToInteger(\"%s\", 20, NULL) has result %lx\n",
+       "call failed: RtlCharToInteger(\"%s\", 20, NULL) has result %x\n",
        str2int[1].str, result);
 }
 
@@ -1592,22 +1594,22 @@ static void one_RtlIntegerToUnicodeString_test(int test_num, const int2str_t *in
 	}
     } else {
 	ok(result == int2str->result,
-	   "(test %d): RtlIntegerToUnicodeString(%lu, %d, [out]) has result %lx, expected: %lx\n",
+           "(test %d): RtlIntegerToUnicodeString(%u, %d, [out]) has result %x, expected: %x\n",
 	   test_num, int2str->value, int2str->base, result, int2str->result);
 	if (result == STATUS_SUCCESS) {
 	    ok(unicode_string.Buffer[unicode_string.Length/sizeof(WCHAR)] == '\0',
-	       "(test %d): RtlIntegerToUnicodeString(%lu, %d, [out]) string \"%s\" is not NULL terminated\n",
+               "(test %d): RtlIntegerToUnicodeString(%u, %d, [out]) string \"%s\" is not NULL terminated\n",
 	       test_num, int2str->value, int2str->base, ansi_str.Buffer);
 	}
     }
     ok(memcmp(unicode_string.Buffer, expected_unicode_string.Buffer, STRI_BUFFER_LENGTH * sizeof(WCHAR)) == 0,
-       "(test %d): RtlIntegerToUnicodeString(%lu, %d, [out]) assigns string \"%s\", expected: \"%s\"\n",
+       "(test %d): RtlIntegerToUnicodeString(%u, %d, [out]) assigns string \"%s\", expected: \"%s\"\n",
        test_num, int2str->value, int2str->base, ansi_str.Buffer, expected_ansi_str.Buffer);
     ok(unicode_string.Length == expected_unicode_string.Length,
-       "(test %d): RtlIntegerToUnicodeString(%lu, %d, [out]) string has Length %d, expected: %d\n",
+       "(test %d): RtlIntegerToUnicodeString(%u, %d, [out]) string has Length %d, expected: %d\n",
        test_num, int2str->value, int2str->base, unicode_string.Length, expected_unicode_string.Length);
     ok(unicode_string.MaximumLength == expected_unicode_string.MaximumLength,
-       "(test %d): RtlIntegerToUnicodeString(%lu, %d, [out]) string has MaximumLength %d, expected: %d\n",
+       "(test %d): RtlIntegerToUnicodeString(%u, %d, [out]) string has MaximumLength %d, expected: %d\n",
        test_num, int2str->value, int2str->base, unicode_string.MaximumLength, expected_unicode_string.MaximumLength);
     pRtlFreeAnsiString(&expected_ansi_str);
     pRtlFreeAnsiString(&ansi_str);
@@ -1632,10 +1634,10 @@ static void one_RtlIntegerToChar_test(int test_num, const int2str_t *int2str)
     dest_str[STRI_BUFFER_LENGTH] = '\0';
     result = pRtlIntegerToChar(int2str->value, int2str->base, int2str->MaximumLength, dest_str);
     ok(result == int2str->result,
-       "(test %d): RtlIntegerToChar(%lu, %d, %d, [out]) has result %lx, expected: %lx\n",
+       "(test %d): RtlIntegerToChar(%u, %d, %d, [out]) has result %x, expected: %x\n",
        test_num, int2str->value, int2str->base, int2str->MaximumLength, result, int2str->result);
     ok(memcmp(dest_str, int2str->Buffer, STRI_BUFFER_LENGTH) == 0,
-       "(test %d): RtlIntegerToChar(%lu, %d, %d, [out]) assigns string \"%s\", expected: \"%s\"\n",
+       "(test %d): RtlIntegerToChar(%u, %d, %d, [out]) assigns string \"%s\", expected: \"%s\"\n",
        test_num, int2str->value, int2str->base, int2str->MaximumLength, dest_str, int2str->Buffer);
 }
 
@@ -1650,23 +1652,73 @@ static void test_RtlIntegerToChar(void)
 
     result = pRtlIntegerToChar(int2str[0].value, 20, int2str[0].MaximumLength, NULL);
     ok(result == STATUS_INVALID_PARAMETER,
-       "(test a): RtlIntegerToChar(%lu, %d, %d, NULL) has result %lx, expected: %lx\n",
+       "(test a): RtlIntegerToChar(%u, %d, %d, NULL) has result %x, expected: %x\n",
        int2str[0].value, 20, int2str[0].MaximumLength, result, STATUS_INVALID_PARAMETER);
 
     result = pRtlIntegerToChar(int2str[0].value, 20, 0, NULL);
     ok(result == STATUS_INVALID_PARAMETER,
-       "(test b): RtlIntegerToChar(%lu, %d, %d, NULL) has result %lx, expected: %lx\n",
+       "(test b): RtlIntegerToChar(%u, %d, %d, NULL) has result %x, expected: %x\n",
        int2str[0].value, 20, 0, result, STATUS_INVALID_PARAMETER);
 
     result = pRtlIntegerToChar(int2str[0].value, int2str[0].base, 0, NULL);
     ok(result == STATUS_BUFFER_OVERFLOW,
-       "(test c): RtlIntegerToChar(%lu, %d, %d, NULL) has result %lx, expected: %lx\n",
+       "(test c): RtlIntegerToChar(%u, %d, %d, NULL) has result %x, expected: %x\n",
        int2str[0].value, int2str[0].base, 0, result, STATUS_BUFFER_OVERFLOW);
 
     result = pRtlIntegerToChar(int2str[0].value, int2str[0].base, int2str[0].MaximumLength, NULL);
     ok(result == STATUS_ACCESS_VIOLATION,
-       "(test d): RtlIntegerToChar(%lu, %d, %d, NULL) has result %lx, expected: %lx\n",
+       "(test d): RtlIntegerToChar(%u, %d, %d, NULL) has result %x, expected: %x\n",
        int2str[0].value, int2str[0].base, int2str[0].MaximumLength, result, STATUS_ACCESS_VIOLATION);
+}
+
+static void test_RtlIsTextUnicode(void)
+{
+    char ascii[] = "A simple string";
+    WCHAR unicode[] = {'A',' ','U','n','i','c','o','d','e',' ','s','t','r','i','n','g',0};
+    WCHAR *be_unicode;
+    int flags;
+    int i;
+
+    ok(!pRtlIsTextUnicode(ascii, sizeof(ascii), NULL), "ASCII text detected as Unicode\n");
+
+    ok(pRtlIsTextUnicode(unicode, sizeof(unicode), NULL), "Text should be Unicode\n");
+    ok(!pRtlIsTextUnicode(unicode, sizeof(unicode) - 1, NULL), "Text should be Unicode\n");
+
+    flags =  IS_TEXT_UNICODE_UNICODE_MASK;
+    ok(pRtlIsTextUnicode(unicode, sizeof(unicode), &flags), "Text should not pass a Unicode\n");
+    todo_wine
+    ok(flags == (IS_TEXT_UNICODE_STATISTICS | IS_TEXT_UNICODE_CONTROLS),
+       "Expected flags 0x6, obtained %x\n", flags);
+
+    flags =  IS_TEXT_UNICODE_REVERSE_MASK;
+    ok(!pRtlIsTextUnicode(unicode, sizeof(unicode), &flags), "Text should not pass reverse Unicode tests\n");
+    ok(flags == 0, "Expected flags 0, obtained %x\n", flags);
+
+    flags = IS_TEXT_UNICODE_ODD_LENGTH;
+    ok(!pRtlIsTextUnicode(unicode, sizeof(unicode) - 1, &flags), "Odd length test should have passed\n");
+    ok(flags == IS_TEXT_UNICODE_ODD_LENGTH, "Expected flags 0x200, obtained %x\n", flags);
+
+    be_unicode = HeapAlloc(GetProcessHeap(), 0, sizeof(unicode) + sizeof(WCHAR));
+    be_unicode[0] = 0xfffe;
+    for (i = 0; i < sizeof(unicode)/sizeof(unicode[0]); i++)
+    {
+        be_unicode[i + 1] = (unicode[i] >> 8) | ((unicode[i] & 0xff) << 8);
+    }
+    ok(!pRtlIsTextUnicode(be_unicode, sizeof(unicode) + 2, NULL), "Reverse endian should not be Unicode\n");
+    todo_wine ok(!pRtlIsTextUnicode(&be_unicode[1], sizeof(unicode), NULL), "Reverse endian should not be Unicode\n");
+
+    flags = IS_TEXT_UNICODE_REVERSE_MASK;
+    ok(!pRtlIsTextUnicode(&be_unicode[1], sizeof(unicode), &flags), "Reverse endian should be Unicode\n");
+    todo_wine
+    ok(flags == (IS_TEXT_UNICODE_REVERSE_ASCII16 | IS_TEXT_UNICODE_REVERSE_STATISTICS | IS_TEXT_UNICODE_REVERSE_CONTROLS),
+       "Expected flags 0x70, obtained %x\n", flags);
+
+    flags = IS_TEXT_UNICODE_REVERSE_MASK;
+    ok(!pRtlIsTextUnicode(be_unicode, sizeof(unicode) + 2, &flags), "Reverse endian should be Unicode\n");
+    todo_wine
+    ok(flags == (IS_TEXT_UNICODE_REVERSE_CONTROLS | IS_TEXT_UNICODE_REVERSE_SIGNATURE),
+       "Expected flags 0xc0, obtained %x\n", flags);
+    HeapFree(GetProcessHeap(), 0, be_unicode);
 }
 
 static const WCHAR szGuid[] = { '{','0','1','0','2','0','3','0','4','-',
@@ -1684,14 +1736,14 @@ static void test_RtlGUIDFromString(void)
   UNICODE_STRING str;
   NTSTATUS ret;
 
-  str.Length = str.MaximumLength = (sizeof(szGuid) - 1) / sizeof(WCHAR);
+  str.Length = str.MaximumLength = sizeof(szGuid) - sizeof(WCHAR);
   str.Buffer = (LPWSTR)szGuid;
 
   ret = pRtlGUIDFromString(&str, &guid);
-  ok(ret == 0, "expected ret=0, got 0x%0lx\n", ret);
+  ok(ret == 0, "expected ret=0, got 0x%0x\n", ret);
   ok(memcmp(&guid, &IID_Endianess, sizeof(guid)) == 0, "Endianess broken\n");
 
-  str.Length = str.MaximumLength = (sizeof(szGuid2) - 1) / sizeof(WCHAR);
+  str.Length = str.MaximumLength = sizeof(szGuid2) - sizeof(WCHAR);
   str.Buffer = (LPWSTR)szGuid2;
 
   ret = pRtlGUIDFromString(&str, &guid);
@@ -1707,8 +1759,8 @@ static void test_RtlStringFromGUID(void)
   str.Buffer = NULL;
 
   ret = pRtlStringFromGUID(&IID_Endianess, &str);
-  ok(ret == 0, "expected ret=0, got 0x%0lx\n", ret);
-  ok(str.Buffer && !lstrcmpW(str.Buffer, szGuid), "Endianess broken\n");
+  ok(ret == 0, "expected ret=0, got 0x%0x\n", ret);
+  ok(str.Buffer && !lstrcmpiW(str.Buffer, szGuid), "Endianess broken\n");
 }
 
 START_TEST(rtlstr)
@@ -1741,6 +1793,8 @@ START_TEST(rtlstr)
         test_RtlGUIDFromString();
     if (pRtlStringFromGUID)
         test_RtlStringFromGUID();
+    if (pRtlIsTextUnicode)
+        test_RtlIsTextUnicode();
     if(0)
     {
 	test_RtlUpcaseUnicodeChar();

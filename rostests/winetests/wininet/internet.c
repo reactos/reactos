@@ -113,6 +113,10 @@ static void test_InternetCanonicalizeUrlA(void)
         "got %u and %u with size %u for '%s' (%d)\n",
         res, GetLastError(), dwSize, buffer, lstrlenA(buffer));
 
+    res = InternetSetOptionA(NULL, 0xdeadbeef, buffer, sizeof(buffer));
+    ok(!res, "InternetSetOptionA succeeded\n");
+    ok(GetLastError() == ERROR_INTERNET_INVALID_OPTION,
+       "InternetSetOptionA failed %u, expected ERROR_INTERNET_INVALID_OPTION\n", GetLastError());
 }
 
 /* ############################### */
@@ -285,7 +289,8 @@ static void test_null(void)
 
   sz = 0;
   r = InternetGetCookieW(NULL, NULL, NULL, &sz);
-  ok(GetLastError() == ERROR_INVALID_PARAMETER, "wrong error\n");
+  ok(GetLastError() == ERROR_INVALID_PARAMETER || GetLastError() == ERROR_INTERNET_UNRECOGNIZED_SCHEME,
+     "wrong error %u\n", GetLastError());
   ok( r == FALSE, "return wrong\n");
 
   r = InternetGetCookieW(szServer, NULL, NULL, &sz);
@@ -311,7 +316,7 @@ static void test_null(void)
   ok( r == TRUE, "return wrong\n");
 
   /* sz == lstrlenW(buffer) only in XP SP1 */
-  ok( sz == 1 + lstrlenW(buffer), "sz wrong\n");
+  ok( sz == 1 + lstrlenW(buffer) || sz == lstrlenW(buffer), "sz wrong %d\n", sz);
 
   /* before XP SP2, buffer is "server; server" */
   ok( !lstrcmpW(szExpect, buffer) || !lstrcmpW(szServer, buffer), "cookie data wrong\n");
@@ -321,6 +326,19 @@ static void test_null(void)
   ok(r == TRUE, "ret %d\n", r);
 }
 
+static void test_version(void)
+{
+    INTERNET_VERSION_INFO version;
+    DWORD size;
+    BOOL res;
+
+    size = sizeof(version);
+    res = InternetQueryOptionA(NULL, INTERNET_OPTION_VERSION, &version, &size);
+    ok(res, "Could not get version: %u\n", GetLastError());
+    ok(version.dwMajorVersion == 1, "dwMajorVersion=%d, expected 1\n", version.dwMajorVersion);
+    ok(version.dwMinorVersion == 2, "dwMinorVersion=%d, expected 2\n", version.dwMinorVersion);
+}
+
 /* ############################### */
 
 START_TEST(internet)
@@ -328,5 +346,6 @@ START_TEST(internet)
   test_InternetCanonicalizeUrlA();
   test_InternetQueryOptionA();
   test_get_cookie();
+  test_version();
   test_null();
 }

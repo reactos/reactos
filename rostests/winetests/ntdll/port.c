@@ -20,8 +20,15 @@
 #include <stdio.h>
 #include <stdarg.h>
 
-#include "ntdll_test.h"
-#include "windows.h"
+#include "ntstatus.h"
+#define WIN32_NO_STATUS
+#include "windef.h"
+#include "winbase.h"
+#include "winuser.h"
+#include "winreg.h"
+#include "winnls.h"
+#include "wine/test.h"
+#include "winternl.h"
 
 #ifndef __WINE_WINTERNL_H
 
@@ -146,10 +153,10 @@ static void ProcessConnectionRequest(PLPC_MESSAGE LpcMessage, PHANDLE pAcceptPor
     ok(!*LpcMessage->Data, "Expected empty string!\n");
 
     status = pNtAcceptConnectPort(pAcceptPortHandle, 0, LpcMessage, 1, 0, NULL);
-    ok(status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %ld\n", status);
-
+    ok(status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %d\n", status);
+    
     status = pNtCompleteConnectPort(*pAcceptPortHandle);
-    ok(status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %ld\n", status);
+    ok(status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %d\n", status);
 }
 
 static void ProcessLpcRequest(HANDLE PortHandle, PLPC_MESSAGE LpcMessage)
@@ -164,7 +171,7 @@ static void ProcessLpcRequest(HANDLE PortHandle, PLPC_MESSAGE LpcMessage)
     lstrcpy((LPSTR)LpcMessage->Data, REPLY);
 
     status = pNtReplyPort(PortHandle, LpcMessage);
-    ok(status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %ld\n", status);
+    ok(status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %d\n", status);
     ok(LpcMessage->MessageType == LPC_REQUEST,
        "Expected LPC_REQUEST, got %d\n", LpcMessage->MessageType);
     ok(!lstrcmp((LPSTR)LpcMessage->Data, REPLY),
@@ -185,22 +192,22 @@ static DWORD WINAPI test_ports_client(LPVOID arg)
     sqos.EffectiveOnly = TRUE;
 
     status = pNtConnectPort(&PortHandle, &port, &sqos, 0, 0, &len, NULL, NULL);
-    ok(status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %ld\n", status);
+    todo_wine ok(status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %d\n", status);
+    if (status != STATUS_SUCCESS) return 1;
 
     status = pNtRegisterThreadTerminatePort(PortHandle);
-    ok(status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %ld\n", status);
+    ok(status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %d\n", status);
 
     size = FIELD_OFFSET(LPC_MESSAGE, Data) + MAX_MESSAGE_LEN;
-    LpcMessage = HeapAlloc(GetProcessHeap(), 0, size);
+    LpcMessage = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, size);
     out = HeapAlloc(GetProcessHeap(), 0, size);
 
-    memset(LpcMessage, 0, size);
     LpcMessage->DataSize = lstrlen(REQUEST1) + 1;
     LpcMessage->MessageSize = FIELD_OFFSET(LPC_MESSAGE, Data) + LpcMessage->DataSize;
     lstrcpy((LPSTR)LpcMessage->Data, REQUEST1);
 
     status = pNtRequestPort(PortHandle, LpcMessage);
-    ok(status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %ld\n", status);
+    ok(status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %d\n", status);
     ok(LpcMessage->MessageType == 0, "Expected 0, got %d\n", LpcMessage->MessageType);
     ok(!lstrcmp((LPSTR)LpcMessage->Data, REQUEST1),
        "Expected %s, got %s\n", REQUEST1, LpcMessage->Data);
@@ -213,7 +220,7 @@ static DWORD WINAPI test_ports_client(LPVOID arg)
 
     /* Send the message and wait for the reply */
     status = pNtRequestWaitReplyPort(PortHandle, LpcMessage, out);
-    ok(status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %ld\n", status);
+    ok(status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %d\n", status);
     ok(!lstrcmp((LPSTR)out->Data, REPLY), "Expected %s, got %s\n", REPLY, out->Data);
     ok(out->MessageType == LPC_REPLY, "Expected LPC_REPLY, got %d\n", out->MessageType);
 
@@ -239,19 +246,19 @@ static void test_ports_server(void)
     status = pNtCreatePort(&PortHandle, &obj, 100, 100, 0);
     todo_wine
     {
-        ok(status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %ld\n", status);
+        ok(status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %d\n", status);
     }
+    if (status != STATUS_SUCCESS) return;
 
     size = FIELD_OFFSET(LPC_MESSAGE, Data) + MAX_MESSAGE_LEN;
-    LpcMessage = HeapAlloc(GetProcessHeap(), 0, size);
-    memset(LpcMessage, 0, size);
+    LpcMessage = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, size);
 
     while (TRUE)
     {
         status = pNtReplyWaitReceivePort(PortHandle, NULL, NULL, LpcMessage);
         todo_wine
         {
-            ok(status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %ld(%lx)\n", status, status);
+            ok(status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %d(%x)\n", status, status);
         }
         /* STATUS_INVALID_HANDLE: win2k without admin rights will perform an
          *                        endless loop here

@@ -27,6 +27,7 @@
 #include "winbase.h"
 #include "winerror.h"
 #include "wincrypt.h"
+#include "winreg.h"
 
 static HCRYPTPROV hProv;
 static const char szContainer[] = "winetest";
@@ -54,6 +55,33 @@ static const cryptdata cTestData[4] = {
        {'a','b','c','d','e','f','g','h','i','j','k','l',0},
        12,12,16}
 };
+
+/*
+ * 1. Take the MD5 Hash of the container name (with an extra null byte)
+ * 2. Turn the hash into a 4 DWORD hex value
+ * 3. Append a '_'
+ * 4. Add the MachineGuid
+ *
+ */
+static void uniquecontainer(char *unique)
+{
+    /* MD5 hash of "winetest\0" in 4 DWORD hex */
+    static const char szContainer_md5[] = "9d20fd8d05ed2b8455d125d0bf6d6a70";
+    static const char szCryptography[] = "Software\\Microsoft\\Cryptography";
+    static const char szMachineGuid[] = "MachineGuid";
+    HKEY hkey;
+    char guid[MAX_PATH];
+    DWORD size = MAX_PATH;
+
+    /* Get the MachineGUID */
+    RegOpenKeyA(HKEY_LOCAL_MACHINE, szCryptography, &hkey);
+    RegQueryValueExA(hkey, szMachineGuid, NULL, NULL, (LPBYTE)guid, &size);
+    RegCloseKey(hkey);
+
+    lstrcpy(unique, szContainer_md5);
+    lstrcat(unique, "_");
+    lstrcat(unique, guid);
+}
 
 static void printBytes(const char *heading, const BYTE *pb, size_t cb)
 {
@@ -1849,11 +1877,21 @@ static void test_null_provider(void)
     SetLastError(0xdeadbeef);
     result = CryptGetProvParam(prov, PP_UNIQUE_CONTAINER, (LPBYTE)szName, &dataLen, 0);
     if (!result && GetLastError() == NTE_BAD_TYPE)
+    {
         skip("PP_UNIQUE_CONTAINER is not supported (win9x or NT)\n");
+    }
     else
-        ok(result && dataLen == strlen(szContainer)+1 && strcmp(szContainer,szName) == 0,
-            "failed getting PP_UNIQUE_CONTAINER. result = %s. Error 0x%08X. returned length = %d\n",
-            (result)? "TRUE":"FALSE",GetLastError(),dataLen);
+    {
+        char container[MAX_PATH];
+
+        ok(result, "failed getting PP_UNIQUE_CONTAINER : 0x%08X\n", GetLastError());
+        uniquecontainer(container);
+        todo_wine
+        {
+            ok(dataLen == strlen(container)+1, "Expected a param length of 70, got %d\n", dataLen);
+            ok(!strcmp(container, szName), "Wrong container name : %s\n", szName);
+        }
+    }
     result = CryptGetUserKey(prov, AT_KEYEXCHANGE, &key);
     ok(!result && GetLastError() == NTE_NO_KEY,
      "Expected NTE_NO_KEY, got %08x\n", GetLastError());

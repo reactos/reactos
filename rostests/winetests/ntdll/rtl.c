@@ -130,39 +130,39 @@ static void test_RtlCompareMemoryUlong(void)
     a[2]= 0x89ab;
     a[3]= 0xcdef;
     result = pRtlCompareMemoryUlong(a, 0, 0x0123);
-    ok(result == 0, "RtlCompareMemoryUlong(%p, 0, 0x0123) returns %lu, expected 0\n", a, result);
+    ok(result == 0, "RtlCompareMemoryUlong(%p, 0, 0x0123) returns %u, expected 0\n", a, result);
     result = pRtlCompareMemoryUlong(a, 3, 0x0123);
-    ok(result == 0, "RtlCompareMemoryUlong(%p, 3, 0x0123) returns %lu, expected 0\n", a, result);
+    ok(result == 0, "RtlCompareMemoryUlong(%p, 3, 0x0123) returns %u, expected 0\n", a, result);
     result = pRtlCompareMemoryUlong(a, 4, 0x0123);
-    ok(result == 4, "RtlCompareMemoryUlong(%p, 4, 0x0123) returns %lu, expected 4\n", a, result);
+    ok(result == 4, "RtlCompareMemoryUlong(%p, 4, 0x0123) returns %u, expected 4\n", a, result);
     result = pRtlCompareMemoryUlong(a, 5, 0x0123);
-    ok(result == 4, "RtlCompareMemoryUlong(%p, 5, 0x0123) returns %lu, expected 4\n", a, result);
+    ok(result == 4, "RtlCompareMemoryUlong(%p, 5, 0x0123) returns %u, expected 4\n", a, result);
     result = pRtlCompareMemoryUlong(a, 7, 0x0123);
-    ok(result == 4, "RtlCompareMemoryUlong(%p, 7, 0x0123) returns %lu, expected 4\n", a, result);
+    ok(result == 4, "RtlCompareMemoryUlong(%p, 7, 0x0123) returns %u, expected 4\n", a, result);
     result = pRtlCompareMemoryUlong(a, 8, 0x0123);
-    ok(result == 4, "RtlCompareMemoryUlong(%p, 8, 0x0123) returns %lu, expected 4\n", a, result);
+    ok(result == 4, "RtlCompareMemoryUlong(%p, 8, 0x0123) returns %u, expected 4\n", a, result);
     result = pRtlCompareMemoryUlong(a, 9, 0x0123);
-    ok(result == 4, "RtlCompareMemoryUlong(%p, 9, 0x0123) returns %lu, expected 4\n", a, result);
+    ok(result == 4, "RtlCompareMemoryUlong(%p, 9, 0x0123) returns %u, expected 4\n", a, result);
     result = pRtlCompareMemoryUlong(a, 4, 0x0127);
-    ok(result == 0, "RtlCompareMemoryUlong(%p, 4, 0x0127) returns %lu, expected 0\n", a, result);
+    ok(result == 0, "RtlCompareMemoryUlong(%p, 4, 0x0127) returns %u, expected 0\n", a, result);
     result = pRtlCompareMemoryUlong(a, 4, 0x7123);
-    ok(result == 0, "RtlCompareMemoryUlong(%p, 4, 0x7123) returns %lu, expected 0\n", a, result);
+    ok(result == 0, "RtlCompareMemoryUlong(%p, 4, 0x7123) returns %u, expected 0\n", a, result);
     result = pRtlCompareMemoryUlong(a, 16, 0x4567);
-    ok(result == 0, "RtlCompareMemoryUlong(%p, 16, 0x4567) returns %lu, expected 0\n", a, result);
+    ok(result == 0, "RtlCompareMemoryUlong(%p, 16, 0x4567) returns %u, expected 0\n", a, result);
 
     a[1]= 0x0123;
     result = pRtlCompareMemoryUlong(a, 3, 0x0123);
-    ok(result == 0, "RtlCompareMemoryUlong(%p, 3, 0x0123) returns %lu, expected 0\n", a, result);
+    ok(result == 0, "RtlCompareMemoryUlong(%p, 3, 0x0123) returns %u, expected 0\n", a, result);
     result = pRtlCompareMemoryUlong(a, 4, 0x0123);
-    ok(result == 4, "RtlCompareMemoryUlong(%p, 4, 0x0123) returns %lu, expected 4\n", a, result);
+    ok(result == 4, "RtlCompareMemoryUlong(%p, 4, 0x0123) returns %u, expected 4\n", a, result);
     result = pRtlCompareMemoryUlong(a, 5, 0x0123);
-    ok(result == 4, "RtlCompareMemoryUlong(%p, 5, 0x0123) returns %lu, expected 4\n", a, result);
+    ok(result == 4, "RtlCompareMemoryUlong(%p, 5, 0x0123) returns %u, expected 4\n", a, result);
     result = pRtlCompareMemoryUlong(a, 7, 0x0123);
-    ok(result == 4, "RtlCompareMemoryUlong(%p, 7, 0x0123) returns %lu, expected 4\n", a, result);
+    ok(result == 4, "RtlCompareMemoryUlong(%p, 7, 0x0123) returns %u, expected 4\n", a, result);
     result = pRtlCompareMemoryUlong(a, 8, 0x0123);
-    ok(result == 8, "RtlCompareMemoryUlong(%p, 8, 0x0123) returns %lu, expected 8\n", a, result);
+    ok(result == 8, "RtlCompareMemoryUlong(%p, 8, 0x0123) returns %u, expected 8\n", a, result);
     result = pRtlCompareMemoryUlong(a, 9, 0x0123);
-    ok(result == 8, "RtlCompareMemoryUlong(%p, 9, 0x0123) returns %lu, expected 8\n", a, result);
+    ok(result == 8, "RtlCompareMemoryUlong(%p, 9, 0x0123) returns %u, expected 8\n", a, result);
 }
 
 #define COPY(len) memset(dest,0,sizeof(dest_aligned_block)); pRtlMoveMemory(dest, src, len)
@@ -266,8 +266,8 @@ static void test_RtlUlonglongByteSwap(void)
 
     result = pRtlUlonglongByteSwap( ((ULONGLONG)0x76543210 << 32) | 0x87654321 );
     ok( (((ULONGLONG)0x21436587 << 32) | 0x10325476) == result,
-       "RtlUlonglongByteSwap(0x7654321087654321) returns 0x%llx, expected 0x2143658710325476\n",
-       result);
+       "RtlUlonglongByteSwap(0x7654321087654321) returns 0x%x%08x, expected 0x2143658710325476\n",
+       (DWORD)(result >> 32), (DWORD)result);
 }
 
 
@@ -301,7 +301,7 @@ static void test_RtlUniform(void)
     expected = 0x7fffffc3;
     result = pRtlUniform(&seed);
     ok(result == expected,
-        "RtlUniform(&seed (seed == 0)) returns %lx, expected %lx\n",
+        "RtlUniform(&seed (seed == 0)) returns %x, expected %x\n",
         result, expected);
 /*
  * The algorithm is now:
@@ -322,7 +322,7 @@ static void test_RtlUniform(void)
     expected = seed * 0xffffffed + 0x7fffffc3 + 1;
     result = pRtlUniform(&seed);
     ok(result == expected,
-        "RtlUniform(&seed (seed == 1)) returns %lx, expected %lx\n",
+        "RtlUniform(&seed (seed == 1)) returns %x, expected %x\n",
         result, expected);
 /*
  * For seed = 2 the const_2 is 0x7fffffc3:
@@ -330,9 +330,21 @@ static void test_RtlUniform(void)
     seed = 2;
     expected = seed * 0xffffffed + 0x7fffffc3;
     result = pRtlUniform(&seed);
+
+/*
+ * Windows Vista uses different algorithms, so skip the rest of the tests
+ * until that is figured out. Trace output for the failures is about 10.5 MB!
+ */
+
+    if (result == 0x7fffff9f) {
+        skip("Most likely running on Windows Vista which uses a different algorithm\n");
+        return;
+    }
+
     ok(result == expected,
-        "RtlUniform(&seed (seed == 2)) returns %lx, expected %lx\n",
+        "RtlUniform(&seed (seed == 2)) returns %x, expected %x\n",
         result, expected);
+
 /*
  * More tests show that if seed is odd the result must be incremented by 1:
  */
@@ -340,21 +352,21 @@ static void test_RtlUniform(void)
     expected = seed * 0xffffffed + 0x7fffffc3 + (seed & 1);
     result = pRtlUniform(&seed);
     ok(result == expected,
-        "RtlUniform(&seed (seed == 2)) returns %lx, expected %lx\n",
+        "RtlUniform(&seed (seed == 3)) returns %x, expected %x\n",
         result, expected);
 
     seed = 0x6bca1aa;
     expected = seed * 0xffffffed + 0x7fffffc3;
     result = pRtlUniform(&seed);
     ok(result == expected,
-        "RtlUniform(&seed (seed == 0x6bca1aa)) returns %lx, expected %lx\n",
+        "RtlUniform(&seed (seed == 0x6bca1aa)) returns %x, expected %x\n",
         result, expected);
 
     seed = 0x6bca1ab;
     expected = seed * 0xffffffed + 0x7fffffc3 + 1;
     result = pRtlUniform(&seed);
     ok(result == expected,
-        "RtlUniform(&seed (seed == 0x6bca1ab)) returns %lx, expected %lx\n",
+        "RtlUniform(&seed (seed == 0x6bca1ab)) returns %x, expected %x\n",
         result, expected);
 /*
  * When seed is 0x6bca1ac there is an exception:
@@ -363,7 +375,7 @@ static void test_RtlUniform(void)
     expected = seed * 0xffffffed + 0x7fffffc3 + 2;
     result = pRtlUniform(&seed);
     ok(result == expected,
-        "RtlUniform(&seed (seed == 0x6bca1ac)) returns %lx, expected %lx\n",
+        "RtlUniform(&seed (seed == 0x6bca1ac)) returns %x, expected %x\n",
         result, expected);
 /*
  * Note that up to here const_3 is not used
@@ -375,14 +387,14 @@ static void test_RtlUniform(void)
     expected = (seed * 0xffffffed + 0x7fffffc3) & MAXLONG;
     result = pRtlUniform(&seed);
     ok(result == expected,
-        "RtlUniform(&seed (seed == 0x6bca1ad)) returns %lx, expected %lx\n",
+        "RtlUniform(&seed (seed == 0x6bca1ad)) returns %x, expected %x\n",
         result, expected);
 
     seed = 0x6bca1ae;
     expected = (seed * 0xffffffed + 0x7fffffc3 + 1) & MAXLONG;
     result = pRtlUniform(&seed);
     ok(result == expected,
-        "RtlUniform(&seed (seed == 0x6bca1ae)) returns %lx, expected %lx\n",
+        "RtlUniform(&seed (seed == 0x6bca1ae)) returns %x, expected %x\n",
         result, expected);
 /*
  * There are several ranges where for odd or even seed the result must be
@@ -410,7 +422,7 @@ static void test_RtlUniform(void)
 	    expected = (expected + (~seed & 1)) & MAXLONG;
 	} else if (seed < 0x1435e50b) {
 	    expected = expected + (seed & 1);
-	} else if (seed < 0x1af286ba) {
+	} else if (seed < 0x1af286ba) { 
 	    expected = (expected + (~seed & 1)) & MAXLONG;
 	} else if (seed < 0x21af2869) {
 	    expected = expected + (seed & 1);
@@ -490,11 +502,11 @@ static void test_RtlUniform(void)
         seed_bak = seed;
         result = pRtlUniform(&seed);
         ok(result == expected,
-                "test: %llu RtlUniform(&seed (seed == %lx)) returns %lx, expected %lx\n",
-                num, seed_bak, result, expected);
+                "test: 0x%x%08x RtlUniform(&seed (seed == %x)) returns %x, expected %x\n",
+                (DWORD)(num >> 32), (DWORD)num, seed_bak, result, expected);
         ok(seed == expected,
-                "test: %llu RtlUniform(&seed (seed == %lx)) sets seed to %lx, expected %lx\n",
-                num, seed_bak, seed, expected);
+                "test: 0x%x%08x RtlUniform(&seed (seed == %x)) sets seed to %x, expected %x\n",
+                (DWORD)(num >> 32), (DWORD)num, seed_bak, result, expected);
     } /* for */
 /*
  * Further investigation shows: In the different regions the highest bit
@@ -537,11 +549,11 @@ static void test_RtlUniform(void)
         seed_bak = seed;
         result = pRtlUniform(&seed);
         ok(result == expected,
-                "test: %llu RtlUniform(&seed (seed == %lx)) returns %lx, expected %lx\n",
-                num, seed_bak, result, expected);
+                "test: 0x%x%08x RtlUniform(&seed (seed == %x)) returns %x, expected %x\n",
+                (DWORD)(num >> 32), (DWORD)num, seed_bak, result, expected);
         ok(seed == expected,
-                "test: %llu RtlUniform(&seed (seed == %lx)) sets seed to %lx, expected %lx\n",
-                num, seed_bak, seed, expected);
+                "test: 0x%x%08x RtlUniform(&seed (seed == %x)) sets seed to %x, expected %x\n",
+                (DWORD)(num >> 32), (DWORD)num, seed_bak, result, expected);
     } /* for */
 /*
  * More tests show that RtlUniform does not return 0x7ffffffd for seed values
@@ -616,42 +628,53 @@ static void test_RtlRandom(void)
     result_expected = 0x320a1743;
     seed_expected =0x44b;
     result = pRtlRandom(&seed);
+
+/*
+ * Windows Vista uses different algorithms, so skip the rest of the tests
+ * until that is figured out. Trace output for the failures is about 10.5 MB!
+ */
+
+    if (seed == 0x3fc) {
+        skip("Most likely running on Windows Vista which uses a different algorithm\n");
+        return;
+    }
+
     ok(result == result_expected,
-        "pRtlRandom(&seed (seed == 0)) returns %lx, expected %lx\n",
+        "pRtlRandom(&seed (seed == 0)) returns %x, expected %x\n",
         result, result_expected);
     ok(seed == seed_expected,
-        "pRtlRandom(&seed (seed == 0)) sets seed to %lx, expected %lx\n",
+        "pRtlRandom(&seed (seed == 0)) sets seed to %x, expected %x\n",
         seed, seed_expected);
 /*
  * Seed is not equal to result as with RtlUniform. To see more we
- * call RtlRandom aggain with seed set to 0:
+ * call RtlRandom again with seed set to 0:
  */
     seed = 0;
     result_expected = 0x7fffffc3;
     seed_expected =0x44b;
     result = pRtlRandom(&seed);
     ok(result == result_expected,
-        "RtlRandom(&seed (seed == 0)) returns %lx, expected %lx\n",
+        "RtlRandom(&seed (seed == 0)) returns %x, expected %x\n",
         result, result_expected);
     ok(seed == seed_expected,
-        "RtlRandom(&seed (seed == 0)) sets seed to %lx, expected %lx\n",
+        "RtlRandom(&seed (seed == 0)) sets seed to %x, expected %x\n",
         seed, seed_expected);
 /*
  * Seed is set to the same value as before but the result is different.
- * To see more we call RtlRandom aggain with seed set to 0:
+ * To see more we call RtlRandom again with seed set to 0:
  */
     seed = 0;
     result_expected = 0x7fffffc3;
     seed_expected =0x44b;
     result = pRtlRandom(&seed);
     ok(result == result_expected,
-        "RtlRandom(&seed (seed == 0)) returns %lx, expected %lx\n",
+        "RtlRandom(&seed (seed == 0)) returns %x, expected %x\n",
         result, result_expected);
     ok(seed == seed_expected,
-        "RtlRandom(&seed (seed == 0)) sets seed to %lx, expected %lx\n",
+        "RtlRandom(&seed (seed == 0)) sets seed to %x, expected %x\n",
         seed, seed_expected);
 /*
- * Seed is aggain set to the same value as before. This time we also
+ * Seed is again set to the same value as before. This time we also
  * have the same result as before. Interestingly the value of the
  * result is 0x7fffffc3 which is the same value used in RtlUniform
  * as const_2. If we do
@@ -678,7 +701,7 @@ static void test_RtlRandom(void)
  * RtlRandom(&seed);
  *
  * assigns to seed. Putting these two findings together leads to
- * the concluson that RtlRandom saves the value in some variable,
+ * the conclusion that RtlRandom saves the value in some variable,
  * like in the following algorithm:
  *
  * result = saved_value;
@@ -693,10 +716,10 @@ static void test_RtlRandom(void)
     seed_expected =0x5a1;
     result = pRtlRandom(&seed);
     ok(result == result_expected,
-        "RtlRandom(&seed (seed == 1)) returns %lx, expected %lx\n",
+        "RtlRandom(&seed (seed == 1)) returns %x, expected %x\n",
         result, result_expected);
     ok(seed == seed_expected,
-        "RtlRandom(&seed (seed == 1)) sets seed to %lx, expected %lx\n",
+        "RtlRandom(&seed (seed == 1)) sets seed to %x, expected %x\n",
         seed, seed_expected);
 /*
  * If there is just one saved_value the result now would be
@@ -725,7 +748,7 @@ static void test_RtlRandom(void)
  *
  * What remains to be determined is: The size of the saved_value array,
  * the initial values of the saved_value array and the function
- * position(seed). These tests are not shown here.
+ * position(seed). These tests are not shown here. 
  * The result of these tests is: The size of the saved_value array
  * is 128, the initial values can be seen in the my_RtlRandom
  * function and the position(seed) function is (seed & 0x7f).
@@ -754,11 +777,11 @@ static void test_RtlRandom(void)
 	} /* if */
         result = pRtlRandom(&seed);
         ok(result == result_expected,
-                "test: %llu RtlUniform(&seed (seed == %lx)) returns %lx, expected %lx\n",
-                num, seed_bak, result, result_expected);
+                "test: 0x%x%08x RtlUniform(&seed (seed == %x)) returns %x, expected %x\n",
+                (DWORD)(num >> 32), (DWORD)num, seed_bak, result, result_expected);
         ok(seed == seed_expected,
-                "test: %llu RtlUniform(&seed (seed == %lx)) sets seed to %lx, expected %lx\n",
-                num, seed_bak, seed, seed_expected);
+                "test: 0x%x%08x RtlUniform(&seed (seed == %x)) sets seed to %x, expected %x\n",
+                (DWORD)(num >> 32), (DWORD)num, seed_bak, result, seed_expected);
     } /* for */
 }
 
@@ -786,14 +809,14 @@ static const all_accesses_t all_accesses[] = {
 
 static void test_RtlAreAllAccessesGranted(void)
 {
-    size_t test_num;
+    unsigned int test_num;
     BOOLEAN result;
 
     for (test_num = 0; test_num < NB_ALL_ACCESSES; test_num++) {
 	result = pRtlAreAllAccessesGranted(all_accesses[test_num].GrantedAccess,
 					   all_accesses[test_num].DesiredAccess);
 	ok(all_accesses[test_num].result == result,
-	   "(test %d): RtlAreAllAccessesGranted(%08lx, %08lx) returns %d, expected %d\n",
+           "(test %d): RtlAreAllAccessesGranted(%08x, %08x) returns %d, expected %d\n",
 	   test_num, all_accesses[test_num].GrantedAccess,
 	   all_accesses[test_num].DesiredAccess,
 	   result, all_accesses[test_num].result);
@@ -823,14 +846,14 @@ static const any_accesses_t any_accesses[] = {
 
 static void test_RtlAreAnyAccessesGranted(void)
 {
-    size_t test_num;
+    unsigned int test_num;
     BOOLEAN result;
 
     for (test_num = 0; test_num < NB_ANY_ACCESSES; test_num++) {
 	result = pRtlAreAnyAccessesGranted(any_accesses[test_num].GrantedAccess,
 					   any_accesses[test_num].DesiredAccess);
 	ok(any_accesses[test_num].result == result,
-	   "(test %d): RtlAreAnyAccessesGranted(%08lx, %08lx) returns %d, expected %d\n",
+           "(test %d): RtlAreAnyAccessesGranted(%08x, %08x) returns %d, expected %d\n",
 	   test_num, any_accesses[test_num].GrantedAccess,
 	   any_accesses[test_num].DesiredAccess,
 	   result, any_accesses[test_num].result);
@@ -844,8 +867,8 @@ static void test_RtlComputeCrc32(void)
   if (!pRtlComputeCrc32)
     return;
 
-  crc = pRtlComputeCrc32(crc, (LPBYTE)src, LEN);
-  ok(crc == 0x40861dc2,"Expected 0x40861dc2, got %8lx\n", crc);
+  crc = pRtlComputeCrc32(crc, (const BYTE *)src, LEN);
+  ok(crc == 0x40861dc2,"Expected 0x40861dc2, got %8x\n", crc);
 }
 
 
@@ -879,7 +902,7 @@ static void test_HandleTables(void)
     result = pRtlFreeHandle(&HandleTable, &MyHandle->RtlHandle);
     ok(result, "Couldn't free handle %p\n", MyHandle);
     status = pRtlDestroyHandleTable(&HandleTable);
-    ok(status == STATUS_SUCCESS, "RtlDestroyHandleTable failed with error 0x%08lx\n", status);
+    ok(status == STATUS_SUCCESS, "RtlDestroyHandleTable failed with error 0x%08x\n", status);
 }
 
 static void test_RtlAllocateAndInitializeSid(void)
@@ -889,16 +912,16 @@ static void test_RtlAllocateAndInitializeSid(void)
     PSID psid;
 
     ret = pRtlAllocateAndInitializeSid(&sia, 0, 1, 2, 3, 4, 5, 6, 7, 8, &psid);
-    ok(!ret, "RtlAllocateAndInitializeSid error %08lx\n", ret);
+    ok(!ret, "RtlAllocateAndInitializeSid error %08x\n", ret);
     ret = pRtlFreeSid(psid);
-    ok(!ret, "RtlFreeSid error %08lx\n", ret);
+    ok(!ret, "RtlFreeSid error %08x\n", ret);
 
     /* these tests crash on XP
     ret = pRtlAllocateAndInitializeSid(NULL, 0, 1, 2, 3, 4, 5, 6, 7, 8, &psid);
     ret = pRtlAllocateAndInitializeSid(&sia, 0, 1, 2, 3, 4, 5, 6, 7, 8, NULL);*/
 
     ret = pRtlAllocateAndInitializeSid(&sia, 9, 1, 2, 3, 4, 5, 6, 7, 8, &psid);
-    ok(ret == STATUS_INVALID_SID, "wrong error %08lx\n", ret);
+    ok(ret == STATUS_INVALID_SID, "wrong error %08x\n", ret);
 }
 
 START_TEST(rtl)

@@ -924,6 +924,8 @@ static void test_delegating_Invoke(IPSFactoryBuffer *ppsf)
         ok(*(DWORD*)msg.Buffer == 0xabcdef, "buf[0] %08x\n", *(DWORD*)msg.Buffer);
         ok(*((DWORD*)msg.Buffer + 1) == S_OK, "buf[1] %08x\n", *((DWORD*)msg.Buffer + 1));
     }
+    /* free the buffer allocated by delegating_invoke_chan_get_buffer */
+    HeapFree(GetProcessHeap(), 0, msg.Buffer);
     IRpcStubBuffer_Release(pstub);
 }
 

@@ -113,8 +113,10 @@ static void test_RtlExtendedMagicDivide(void)
     for (i = 0; i < NB_MAGIC_DIVIDE; i++) {
 	result = pRtlExtendedMagicDivide(magic_divide[i].a, magic_divide[i].b, magic_divide[i].shift);
 	ok(result == magic_divide[i].result,
-	   "call failed: RtlExtendedMagicDivide(%lld, %llu, %d) has result %llx, expected %llx\n",
-	   magic_divide[i].a, magic_divide[i].b, magic_divide[i].shift, result, magic_divide[i].result);
+           "call failed: RtlExtendedMagicDivide(0x%x%08x, 0x%x%08x, %d) has result 0x%x%08x, expected 0x%x%08x\n",
+	   (DWORD)(magic_divide[i].a >> 32), (DWORD)magic_divide[i].a, (DWORD)(magic_divide[i].b >> 32),
+	   (DWORD)magic_divide[i].b, magic_divide[i].shift, (DWORD)(result >> 32), (DWORD)result,
+	   (DWORD)(magic_divide[i].result >> 32), (DWORD)magic_divide[i].result);
     }
 }
 
@@ -322,23 +324,28 @@ static void one_RtlInt64ToUnicodeString_test(int test_num, const largeint2str_t 
 	} /* if */
     } else {
 	ok(result == largeint2str->result,
-	   "(test %d): RtlInt64ToUnicodeString(%llu, %d, [out]) has result %lx, expected: %lx\n",
-	   test_num, largeint2str->value, largeint2str->base, result, largeint2str->result);
+           "(test %d): RtlInt64ToUnicodeString(0x%x%08x, %d, [out]) has result %x, expected: %x\n",
+	   test_num, (DWORD)(largeint2str->value >> 32), (DWORD)largeint2str->value,
+	   largeint2str->base, result, largeint2str->result);
 	if (result == STATUS_SUCCESS) {
 	    ok(unicode_string.Buffer[unicode_string.Length/sizeof(WCHAR)] == '\0',
-	       "(test %d): RtlInt64ToUnicodeString(%llu, %d, [out]) string \"%s\" is not NULL terminated\n",
-	       test_num, largeint2str->value, largeint2str->base, ansi_str.Buffer);
+               "(test %d): RtlInt64ToUnicodeString(0x%x%08x, %d, [out]) string \"%s\" is not NULL terminated\n",
+	       test_num, (DWORD)(largeint2str->value >> 32), (DWORD)largeint2str->value,
+	       largeint2str->base, ansi_str.Buffer);
 	} /* if */
     } /* if */
     ok(memcmp(unicode_string.Buffer, expected_unicode_string.Buffer, LARGE_STRI_BUFFER_LENGTH * sizeof(WCHAR)) == 0,
-       "(test %d): RtlInt64ToUnicodeString(%llu, %d, [out]) assigns string \"%s\", expected: \"%s\"\n",
-       test_num, largeint2str->value, largeint2str->base, ansi_str.Buffer, expected_ansi_str.Buffer);
+       "(test %d): RtlInt64ToUnicodeString(0x%x%08x, %d, [out]) assigns string \"%s\", expected: \"%s\"\n",
+       test_num, (DWORD)(largeint2str->value >>32), (DWORD)largeint2str->value, largeint2str->base, 
+       ansi_str.Buffer, expected_ansi_str.Buffer);
     ok(unicode_string.Length == expected_unicode_string.Length,
-       "(test %d): RtlInt64ToUnicodeString(%llu, %d, [out]) string has Length %d, expected: %d\n",
-       test_num, largeint2str->value, largeint2str->base, unicode_string.Length, expected_unicode_string.Length);
+       "(test %d): RtlInt64ToUnicodeString(0x%x%08x, %d, [out]) string has Length %d, expected: %d\n",
+       test_num, (DWORD)(largeint2str->value >> 32), (DWORD)largeint2str->value, largeint2str->base,
+       unicode_string.Length, expected_unicode_string.Length);
     ok(unicode_string.MaximumLength == expected_unicode_string.MaximumLength,
-       "(test %d): RtlInt64ToUnicodeString(%llu, %d, [out]) string has MaximumLength %d, expected: %d\n",
-       test_num, largeint2str->value, largeint2str->base, unicode_string.MaximumLength, expected_unicode_string.MaximumLength);
+       "(test %d): RtlInt64ToUnicodeString(0x%x%08x, %d, [out]) string has MaximumLength %d, expected: %d\n",
+       test_num, (DWORD)(largeint2str->value >> 32), (DWORD)largeint2str->value, largeint2str->base,
+       unicode_string.MaximumLength, expected_unicode_string.MaximumLength);
     pRtlFreeAnsiString(&expected_ansi_str);
     pRtlFreeAnsiString(&ansi_str);
 }
@@ -369,11 +376,13 @@ static void one_RtlLargeIntegerToChar_test(int test_num, const largeint2str_t *l
 	result = pRtlLargeIntegerToChar(&value, largeint2str->base, largeint2str->MaximumLength, dest_str);
     } /* if */
     ok(result == largeint2str->result,
-       "(test %d): RtlLargeIntegerToChar(%llu, %d, %d, [out]) has result %lx, expected: %lx\n",
-       test_num, largeint2str->value, largeint2str->base, largeint2str->MaximumLength, result, largeint2str->result);
+       "(test %d): RtlLargeIntegerToChar(0x%x%08x, %d, %d, [out]) has result %x, expected: %x\n",
+       test_num, (DWORD)(largeint2str->value >> 32), (DWORD)largeint2str->value, largeint2str->base,
+       largeint2str->MaximumLength, result, largeint2str->result);
     ok(memcmp(dest_str, largeint2str->Buffer, LARGE_STRI_BUFFER_LENGTH) == 0,
-       "(test %d): RtlLargeIntegerToChar(%llu, %d, %d, [out]) assigns string \"%s\", expected: \"%s\"\n",
-       test_num, largeint2str->value, largeint2str->base, largeint2str->MaximumLength, dest_str, largeint2str->Buffer);
+       "(test %d): RtlLargeIntegerToChar(0x%x%08x, %d, %d, [out]) assigns string \"%s\", expected: \"%s\"\n",
+       test_num, (DWORD)(largeint2str->value >> 32), (DWORD)largeint2str->value, largeint2str->base,
+       largeint2str->MaximumLength, dest_str, largeint2str->Buffer);
 }
 
 
@@ -390,23 +399,27 @@ static void test_RtlLargeIntegerToChar(void)
     value = largeint2str[0].value;
     result = pRtlLargeIntegerToChar(&value, 20, largeint2str[0].MaximumLength, NULL);
     ok(result == STATUS_INVALID_PARAMETER,
-       "(test a): RtlLargeIntegerToChar(%llu, %d, %d, NULL) has result %lx, expected: %lx\n",
-       largeint2str[0].value, 20, largeint2str[0].MaximumLength, result, STATUS_INVALID_PARAMETER);
+       "(test a): RtlLargeIntegerToChar(0x%x%08x, %d, %d, NULL) has result %x, expected: %x\n",
+       (DWORD)(largeint2str[0].value >> 32), (DWORD)largeint2str[0].value, 20,
+       largeint2str[0].MaximumLength, result, STATUS_INVALID_PARAMETER);
 
     result = pRtlLargeIntegerToChar(&value, 20, 0, NULL);
     ok(result == STATUS_INVALID_PARAMETER,
-       "(test b): RtlLargeIntegerToChar(%llu, %d, %d, NULL) has result %lx, expected: %lx\n",
-       largeint2str[0].value, 20, largeint2str[0].MaximumLength, result, STATUS_INVALID_PARAMETER);
+       "(test b): RtlLargeIntegerToChar(0x%x%08x, %d, %d, NULL) has result %x, expected: %x\n",
+       (DWORD)(largeint2str[0].value >> 32), (DWORD)largeint2str[0].value, 20,
+       largeint2str[0].MaximumLength, result, STATUS_INVALID_PARAMETER);
 
     result = pRtlLargeIntegerToChar(&value, largeint2str[0].base, 0, NULL);
     ok(result == STATUS_BUFFER_OVERFLOW,
-       "(test c): RtlLargeIntegerToChar(%llu, %d, %d, NULL) has result %lx, expected: %lx\n",
-       largeint2str[0].value, largeint2str[0].base, 0, result, STATUS_BUFFER_OVERFLOW);
+       "(test c): RtlLargeIntegerToChar(0x%x%08x, %d, %d, NULL) has result %x, expected: %x\n",
+       (DWORD)(largeint2str[0].value >> 32), (DWORD)largeint2str[0].value,
+       largeint2str[0].base, 0, result, STATUS_BUFFER_OVERFLOW);
 
     result = pRtlLargeIntegerToChar(&value, largeint2str[0].base, largeint2str[0].MaximumLength, NULL);
     ok(result == STATUS_ACCESS_VIOLATION,
-       "(test d): RtlLargeIntegerToChar(%llu, %d, %d, NULL) has result %lx, expected: %lx\n",
-       largeint2str[0].value, largeint2str[0].base, largeint2str[0].MaximumLength, result, STATUS_ACCESS_VIOLATION);
+       "(test d): RtlLargeIntegerToChar(0x%x%08x, %d, %d, NULL) has result %x, expected: %x\n",
+       (DWORD)(largeint2str[0].value >> 32), (DWORD)largeint2str[0].value,
+       largeint2str[0].base, largeint2str[0].MaximumLength, result, STATUS_ACCESS_VIOLATION);
 }
 
 

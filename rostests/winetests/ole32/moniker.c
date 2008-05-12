@@ -657,10 +657,54 @@ static void test_ROT(void)
     todo_wine {
     ok(hr == CO_E_WRONG_SERVER_IDENTITY, "IRunningObjectTable_Register should have returned CO_E_WRONG_SERVER_IDENTITY instead of 0x%08x\n", hr);
     }
+    if (hr == S_OK) IRunningObjectTable_Revoke(pROT, dwCookie);
 
     hr = IRunningObjectTable_Register(pROT, 0xdeadbeef,
         (IUnknown*)&Test_ClassFactory, pMoniker, &dwCookie);
     ok(hr == E_INVALIDARG, "IRunningObjectTable_Register should have returned E_INVALIDARG instead of 0x%08x\n", hr);
+
+    IMoniker_Release(pMoniker);
+
+    IRunningObjectTable_Release(pROT);
+}
+
+static void test_ROT_multiple_entries(void)
+{
+    HRESULT hr;
+    IMoniker *pMoniker = NULL;
+    IRunningObjectTable *pROT = NULL;
+    DWORD dwCookie1, dwCookie2;
+    IUnknown *pObject = NULL;
+    static const WCHAR moniker_path[] =
+        {'\\', 'w','i','n','d','o','w','s','\\','s','y','s','t','e','m','\\','t','e','s','t','1','.','d','o','c',0};
+
+    hr = GetRunningObjectTable(0, &pROT);
+    ok_ole_success(hr, GetRunningObjectTable);
+
+    hr = CreateFileMoniker(moniker_path, &pMoniker);
+    ok_ole_success(hr, CreateFileMoniker);
+
+    hr = IRunningObjectTable_Register(pROT, 0, (IUnknown *)&Test_ClassFactory, pMoniker, &dwCookie1);
+    ok_ole_success(hr, IRunningObjectTable_Register);
+
+    hr = IRunningObjectTable_Register(pROT, 0, (IUnknown *)&Test_ClassFactory, pMoniker, &dwCookie2);
+    ok(hr == MK_S_MONIKERALREADYREGISTERED, "IRunningObjectTable_Register should have returned MK_S_MONIKERALREADYREGISTERED instead of 0x%08x\n", hr);
+
+    ok(dwCookie1 != dwCookie2, "cookie returned for registering duplicate object shouldn't match cookie of original object (0x%x)\n", dwCookie1);
+
+    hr = IRunningObjectTable_GetObject(pROT, pMoniker, &pObject);
+    ok_ole_success(hr, IRunningObjectTable_GetObject);
+    IUnknown_Release(pObject);
+
+    hr = IRunningObjectTable_Revoke(pROT, dwCookie1);
+    ok_ole_success(hr, IRunningObjectTable_Revoke);
+
+    hr = IRunningObjectTable_GetObject(pROT, pMoniker, &pObject);
+    ok_ole_success(hr, IRunningObjectTable_GetObject);
+    IUnknown_Release(pObject);
+
+    hr = IRunningObjectTable_Revoke(pROT, dwCookie2);
+    ok_ole_success(hr, IRunningObjectTable_Revoke);
 
     IMoniker_Release(pMoniker);
 
@@ -1801,6 +1845,7 @@ START_TEST(moniker)
     CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
 
     test_ROT();
+    test_ROT_multiple_entries();
     test_MkParseDisplayName();
     test_class_moniker();
     test_file_monikers();

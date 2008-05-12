@@ -36,6 +36,17 @@ static const char *progname;
 
 static HANDLE stop_event;
 
+static void (WINAPI *pNDRSContextMarshall2)(RPC_BINDING_HANDLE, NDR_SCONTEXT, void*, NDR_RUNDOWN, void*, ULONG);
+static NDR_SCONTEXT (WINAPI *pNDRSContextUnmarshall2)(RPC_BINDING_HANDLE, void*, ULONG, void*, ULONG);
+
+static void InitFunctionPointers(void)
+{
+    HMODULE hrpcrt4 = GetModuleHandleA("rpcrt4.dll");
+
+    pNDRSContextMarshall2 = (void *)GetProcAddress(hrpcrt4, "NDRSContextMarshall2");
+    pNDRSContextUnmarshall2 = (void *)GetProcAddress(hrpcrt4, "NDRSContextUnmarshall2");
+}
+
 void __RPC_FAR *__RPC_USER
 midl_user_allocate(size_t n)
 {
@@ -88,6 +99,12 @@ s_square_ref(int *x)
 
 int
 s_str_length(const char *s)
+{
+  return strlen(s);
+}
+
+int
+s_str_t_length(str_t s)
 {
   return strlen(s);
 }
@@ -316,10 +333,10 @@ s_square_encu(encu_t *eu)
   }
 }
 
-int
-s_sum_parr(int *a[3])
+void
+s_check_se2(se_t *s)
 {
-  return s_sum_pcarr(a, 3);
+  ok(s->f == E2, "check_se2\n");
 }
 
 int
@@ -329,6 +346,12 @@ s_sum_pcarr(int *a[], int n)
   for (i = 0; i < n; ++i)
     s += *a[i];
   return s;
+}
+
+int
+s_sum_parr(int *a[3])
+{
+  return s_sum_pcarr(a, 3);
 }
 
 int
@@ -497,6 +520,16 @@ s_sum_L1_norms(int n, vector_t *vs)
   return sum;
 }
 
+s123_t *
+s_get_s123(void)
+{
+  s123_t *s = MIDL_user_allocate(sizeof *s);
+  s->f1 = 1;
+  s->f2 = 2;
+  s->f3 = 3;
+  return s;
+}
+
 str_t
 s_get_filename(void)
 {
@@ -526,40 +559,40 @@ s_context_handle_test(void)
     binding = I_RpcGetCurrentCallHandle();
     ok(binding != NULL, "I_RpcGetCurrentCallHandle returned NULL\n");
 
-    h = NDRSContextUnmarshall2(binding, NULL, NDR_LOCAL_DATA_REPRESENTATION, NULL, 0);
+    h = pNDRSContextUnmarshall2(binding, NULL, NDR_LOCAL_DATA_REPRESENTATION, NULL, 0);
     ok(h != NULL, "NDRSContextUnmarshall2 returned NULL\n");
 
     /* marshal a context handle with NULL userContext */
     memset(buf, 0xcc, sizeof(buf));
-    NDRSContextMarshall2(binding, h, buf, NULL, NULL, 0);
+    pNDRSContextMarshall2(binding, h, buf, NULL, NULL, 0);
     ok(*(ULONG *)buf == 0, "attributes should have been set to 0 instead of 0x%x\n", *(ULONG *)buf);
     ok(UuidIsNil((UUID *)&buf[4], &status), "uuid should have been nil\n");
 
-    h = NDRSContextUnmarshall2(binding, NULL, NDR_LOCAL_DATA_REPRESENTATION, NULL, 0);
+    h = pNDRSContextUnmarshall2(binding, NULL, NDR_LOCAL_DATA_REPRESENTATION, NULL, 0);
     ok(h != NULL, "NDRSContextUnmarshall2 returned NULL\n");
 
     /* marshal a context handle with non-NULL userContext */
     memset(buf, 0xcc, sizeof(buf));
     h->userContext = (void *)0xdeadbeef;
-    NDRSContextMarshall2(binding, h, buf, NULL, NULL, 0);
+    pNDRSContextMarshall2(binding, h, buf, NULL, NULL, 0);
     ok(*(ULONG *)buf == 0, "attributes should have been set to 0 instead of 0x%x\n", *(ULONG *)buf);
     ok(!UuidIsNil((UUID *)&buf[4], &status), "uuid should not have been nil\n");
 
-    h = NDRSContextUnmarshall2(binding, buf, NDR_LOCAL_DATA_REPRESENTATION, NULL, 0);
+    h = pNDRSContextUnmarshall2(binding, buf, NDR_LOCAL_DATA_REPRESENTATION, NULL, 0);
     ok(h != NULL, "NDRSContextUnmarshall2 returned NULL\n");
     ok(h->userContext == (void *)0xdeadbeef, "userContext of interface didn't unmarshal properly: %p\n", h->userContext);
 
     /* marshal a context handle with an interface specified */
-    h = NDRSContextUnmarshall2(binding, NULL, NDR_LOCAL_DATA_REPRESENTATION, &server_if.InterfaceId, 0);
+    h = pNDRSContextUnmarshall2(binding, NULL, NDR_LOCAL_DATA_REPRESENTATION, &server_if.InterfaceId, 0);
     ok(h != NULL, "NDRSContextUnmarshall2 returned NULL\n");
 
     memset(buf, 0xcc, sizeof(buf));
     h->userContext = (void *)0xcafebabe;
-    NDRSContextMarshall2(binding, h, buf, NULL, &server_if.InterfaceId, 0);
+    pNDRSContextMarshall2(binding, h, buf, NULL, &server_if.InterfaceId, 0);
     ok(*(ULONG *)buf == 0, "attributes should have been set to 0 instead of 0x%x\n", *(ULONG *)buf);
     ok(!UuidIsNil((UUID *)&buf[4], &status), "uuid should not have been nil\n");
 
-    h = NDRSContextUnmarshall2(binding, buf, NDR_LOCAL_DATA_REPRESENTATION, &server_if.InterfaceId, 0);
+    h = pNDRSContextUnmarshall2(binding, buf, NDR_LOCAL_DATA_REPRESENTATION, &server_if.InterfaceId, 0);
     ok(h != NULL, "NDRSContextUnmarshall2 returned NULL\n");
     ok(h->userContext == (void *)0xcafebabe, "userContext of interface didn't unmarshal properly: %p\n", h->userContext);
 
@@ -569,7 +602,7 @@ s_context_handle_test(void)
     {
         RPC_SERVER_INTERFACE server_if_clone = server_if;
 
-        NDRSContextUnmarshall2(binding, buf, NDR_LOCAL_DATA_REPRESENTATION, &server_if_clone.InterfaceId, 0);
+        pNDRSContextUnmarshall2(binding, buf, NDR_LOCAL_DATA_REPRESENTATION, &server_if_clone.InterfaceId, 0);
     }
 
     /* test different interface data, but different pointer */
@@ -588,9 +621,9 @@ s_context_handle_test(void)
             0,
             0,
         };
-        NDRSContextMarshall2(binding, h, buf, NULL, &server_if.InterfaceId, 0);
+        pNDRSContextMarshall2(binding, h, buf, NULL, &server_if.InterfaceId, 0);
 
-        NDRSContextUnmarshall2(binding, buf, NDR_LOCAL_DATA_REPRESENTATION, &server_if2.InterfaceId, 0);
+        pNDRSContextUnmarshall2(binding, buf, NDR_LOCAL_DATA_REPRESENTATION, &server_if2.InterfaceId, 0);
     }
 }
 
@@ -634,25 +667,21 @@ make_cmdline(char buffer[MAX_PATH], const char *test)
   sprintf(buffer, "%s server %s", progname, test);
 }
 
-static int
+static void
 run_client(const char *test)
 {
   char cmdline[MAX_PATH];
   PROCESS_INFORMATION info;
   STARTUPINFOA startup;
-  DWORD exitcode;
 
   memset(&startup, 0, sizeof startup);
   startup.cb = sizeof startup;
 
   make_cmdline(cmdline, test);
   ok(CreateProcessA(NULL, cmdline, NULL, NULL, FALSE, 0L, NULL, NULL, &startup, &info), "CreateProcess\n");
-  ok(WaitForSingleObject(info.hProcess, 30000) == WAIT_OBJECT_0, "Child process termination\n");
-  ok(GetExitCodeProcess(info.hProcess, &exitcode), "GetExitCodeProcess\n");
+  winetest_wait_child_process( info.hProcess );
   ok(CloseHandle(info.hProcess), "CloseHandle\n");
   ok(CloseHandle(info.hThread), "CloseHandle\n");
-
-  return exitcode == 0;
 }
 
 static void
@@ -682,6 +711,7 @@ basic_tests(void)
   str_struct_t ss = {string};
   wstr_struct_t ws = {wstring};
   str_t str;
+  se_t se;
 
   ok(int_return() == INT_CODE, "RPC int_return\n");
 
@@ -697,6 +727,7 @@ basic_tests(void)
   ok(x == 25, "RPC square_ref\n");
 
   ok(str_length(string) == strlen(string), "RPC str_length\n");
+  ok(str_t_length(string) == strlen(string), "RPC str_length\n");
   ok(dot_self(&a) == 59, "RPC dot_self\n");
 
   ok(str_struct_len(&ss) == lstrlenA(string), "RPC str_struct_len\n");
@@ -749,6 +780,9 @@ basic_tests(void)
   ok(enum_ord(E2) == 2, "RPC enum_ord\n");
   ok(enum_ord(E3) == 3, "RPC enum_ord\n");
   ok(enum_ord(E4) == 4, "RPC enum_ord\n");
+
+  se.f = E2;
+  check_se2(&se);
 
   memset(&aligns, 0, sizeof(aligns));
   aligns.c = 3;
@@ -963,6 +997,7 @@ pointer_tests(void)
   name_t name;
   void *buffer;
   int *pa2;
+  s123_t *s123;
 
   ok(test_list_length(list) == 3, "RPC test_list_length\n");
   ok(square_puint(p1) == 121, "RPC square_puint\n");
@@ -1016,6 +1051,10 @@ pointer_tests(void)
 
   pa2 = a;
   ok(sum_pcarr2(4, &pa2) == 10, "RPC sum_pcarr2\n");
+
+  s123 = get_s123();
+  ok(s123->f1 == 1 && s123->f2 == 2 && s123->f3 == 3, "RPC get_s123\n");
+  MIDL_user_free(s123);
 }
 
 static int
@@ -1200,22 +1239,38 @@ server(void)
   static unsigned char port[] = PORT;
   static unsigned char np[] = "ncacn_np";
   static unsigned char pipe[] = PIPE;
+  RPC_STATUS status, iptcp_status, np_status;
 
-  ok(RPC_S_OK == RpcServerUseProtseqEp(iptcp, 20, port, NULL), "RpcServerUseProtseqEp\n");
-  //ok(RPC_S_OK == RpcServerRegisterIf(s_IServer_v0_0_s_ifspec, NULL, NULL), "RpcServerRegisterIf\n");
-  ok(RPC_S_OK == RpcServerListen(1, 20, TRUE), "RpcServerListen\n");
+  iptcp_status = RpcServerUseProtseqEp(iptcp, 20, port, NULL);
+  ok(iptcp_status == RPC_S_OK, "RpcServerUseProtseqEp(ncacn_ip_tcp) failed with status %ld\n", iptcp_status);
+  np_status = RpcServerUseProtseqEp(np, 0, pipe, NULL);
+  ok(np_status == RPC_S_OK, "RpcServerUseProtseqEp(ncacn_np) failed with status %ld\n", np_status);
 
+  //status = RpcServerRegisterIf(s_IServer_v0_0_s_ifspec, NULL, NULL);
+  //ok(status == RPC_S_OK, "RpcServerRegisterIf failed with status %ld\n", status);
+  status = RpcServerListen(1, 20, TRUE);
+  ok(status == RPC_S_OK, "RpcServerListen failed with status %ld\n", status);
   stop_event = CreateEvent(NULL, FALSE, FALSE, NULL);
-  ok(stop_event != NULL, "CreateEvent failed\n");
+  ok(stop_event != NULL, "CreateEvent failed with error %d\n", GetLastError());
 
-  ok(run_client("tcp_basic"), "tcp_basic client test failed\n");
+  if (iptcp_status == RPC_S_OK)
+    run_client("tcp_basic");
+  else
+    skip("tcp_basic tests skipped due to earlier failure\n");
 
-  ok(RPC_S_OK == RpcServerUseProtseqEp(np, 0, pipe, NULL), "RpcServerUseProtseqEp\n");
-  ok(run_client("np_basic"), "np_basic client test failed\n");
+  if (np_status == RPC_S_OK)
+    run_client("np_basic");
+  else
+  {
+    skip("np_basic tests skipped due to earlier failure\n");
+    /* np client is what signals stop_event, so bail out if we didn't run do it */
+    return;
+  }
 
   ok(WAIT_OBJECT_0 == WaitForSingleObject(stop_event, 60000), "WaitForSingleObject\n");
+  status = RpcMgmtWaitServerListen();
   todo_wine {
-    ok(RPC_S_OK == RpcMgmtWaitServerListen(), "RpcMgmtWaitServerListening\n");
+    ok(status == RPC_S_OK, "RpcMgmtWaitServerListening failed with status %ld\n", status);
   }
 }
 
@@ -1223,6 +1278,8 @@ START_TEST(server)
 {
   int argc;
   char **argv;
+
+  InitFunctionPointers();
 
   argc = winetest_get_mainargs(&argv);
   progname = argv[0];

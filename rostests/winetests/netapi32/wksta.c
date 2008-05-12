@@ -80,7 +80,17 @@ static void run_wkstausergetinfo_tests(void)
 
     /* Level 0 */
     ok(pNetWkstaUserGetInfo(NULL, 0, (LPBYTE *)&ui0) == NERR_Success,
-       "NetWkstaUserGetInfo is successful\n");
+       "NetWkstaUserGetInfo is unsuccessful\n");
+
+    ok(ui0 != NULL, "ui0 is NULL\n");
+    /* This failure occured when I ran sshd as service and didn't authenticate
+     * Since the test dereferences ui0, the rest of this test is worthless
+     */
+    if (!ui0)
+    {
+        return;
+    }
+
     ok(!lstrcmpW(user_name, ui0->wkui0_username), "This is really user name\n");
     pNetApiBufferSize(ui0, &dwSize);
     ok(dwSize >= (sizeof(WKSTA_USER_INFO_0) +

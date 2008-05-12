@@ -1,3 +1,6 @@
+<?xml version="1.0"?>
+<!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
+<group>
 <module name="usp10_winetest" type="win32cui" installbase="bin" installname="usp10_winetest.exe" allowwarnings="true">
     <include base="usp10_winetest">.</include>
     <define name="__USE_W32API" />
@@ -9,3 +12,4 @@
     <file>usp10.c</file>
     <file>testlist.c</file>
 </module>
+</group>

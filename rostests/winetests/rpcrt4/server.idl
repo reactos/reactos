@@ -82,6 +82,7 @@ cpp_quote("#endif")
   void square_out(int x, [out] int *y);
   void square_ref([in, out] int *x);
   int str_length([string] const char *s);
+  int str_t_length(str_t s);
   int cstr_length([string, size_is(n)] const char *s, int n);
   int dot_self(vector_t *v);
   double square_half(double x, [out] double *y);
@@ -208,11 +209,17 @@ cpp_quote("#endif")
   case E2: float f2;
   } encue_t;
 
+  typedef struct
+  {
+    e_t f;
+  } se_t;
+
   double square_encu(encu_t *eu);
   int sum_parr(int *a[3]);
   int sum_pcarr([size_is(n)] int *a[], int n);
   int enum_ord(e_t e);
   double square_encue(encue_t *eue);
+  void check_se2(se_t *s);
 
   int sum_toplev_conf_2n([size_is(n * 2)] int *x, int n);
   int sum_toplev_conf_cond([size_is(c ? a : b)] int *x, int a, int b, int c);
@@ -299,6 +306,18 @@ cpp_quote("#endif")
 
   int sum_pcarr2(int n, [size_is(, n)] int **pa);
   int sum_L1_norms(int n, [size_is(n)] vector_t *vs);
+
+  /* Don't use this except in the get_s123 test.  */
+  typedef struct
+  {
+    int f1;
+    int f2;
+    int f3;
+  } s123_t;
+
+  /* Make sure WIDL generates a type format string for a previously unseen
+     type as a return value.  */
+  s123_t *get_s123(void);
 
   void get_5numbers([in] int count, [out, length_is(count)] pints_t pn[5]);
   void get_numbers([in] int length, [in] int size, [out, length_is(length), size_is(size)] pints_t pn[]);

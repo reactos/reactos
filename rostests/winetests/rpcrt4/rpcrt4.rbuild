@@ -21,6 +21,7 @@
 	<file>generated.c</file>
 	<file>ndr_marshall.c</file>
 	<file>rpc.c</file>
+	<file>rpc_async.c</file>
 	<file>server.c</file>
 	<file>testlist.c</file>
 </module>

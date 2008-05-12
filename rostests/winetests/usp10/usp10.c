@@ -23,24 +23,60 @@
  * and filtering characters and bi-directional text with custom line breaks.
  */
 
-//#include <assert.h>
-//#include <stdio.h>
-//#include <windows.h>
-//#include <wine/test.h>
-//#include <winbase.h>
-//#include <wingdi.h>
-//#include <winuser.h>
-//#include <winerror.h>
-//#include <winnls.h>
-//#include <usp10.h>
-
+#include <assert.h>
 #include <stdio.h>
-#include <windows.h>
-#include "usp10.h"
-#include "wine/test.h"
-#include "wine/windef.h"
 
-BOOL WINAPI ShowWindow(HWND,int);
+#include <wine/test.h>
+#include <winbase.h>
+#include <wingdi.h>
+#include <winuser.h>
+#include <winerror.h>
+#include <winnls.h>
+#include <usp10.h>
+
+static void test_ScriptShape(HDC hdc)
+{
+    static const WCHAR test1[] = {'t', 'e', 's', 't',0};
+    BOOL ret;
+    HRESULT hr;
+    SCRIPT_CACHE sc = NULL;
+    WORD glyphs[4];
+    SCRIPT_VISATTR attrs[4];
+    SCRIPT_ITEM items[2];
+    int nb, widths[4];
+
+    hr = ScriptItemize(NULL, 4, 2, NULL, NULL, items, NULL);
+    ok(hr == E_INVALIDARG, "ScriptItemize should return E_INVALIDARG not %08x\n", hr);
+
+    hr = ScriptItemize(test1, 4, 2, NULL, NULL, NULL, NULL);
+    ok(hr == E_INVALIDARG, "ScriptItemize should return E_INVALIDARG not %08x\n", hr);
+
+    hr = ScriptItemize(test1, 4, 2, NULL, NULL, items, NULL);
+    ok(!hr, "ScriptItemize should return S_OK not %08x\n", hr);
+    ok(items[0].a.fNoGlyphIndex == FALSE, "fNoGlyphIndex TRUE\n");
+
+    hr = ScriptShape(hdc, &sc, test1, 4, 4, &items[0].a, glyphs, NULL, NULL, &nb);
+    ok(hr == E_INVALIDARG, "ScriptShape should return E_INVALIDARG not %08x\n", hr);
+
+    hr = ScriptShape(hdc, &sc, test1, 4, 4, &items[0].a, glyphs, NULL, attrs, NULL);
+    ok(hr == E_INVALIDARG, "ScriptShape should return E_INVALIDARG not %08x\n", hr);
+
+    hr = ScriptShape(hdc, &sc, test1, 4, 4, &items[0].a, glyphs, NULL, attrs, &nb);
+    ok(!hr, "ScriptShape should return S_OK not %08x\n", hr);
+    ok(items[0].a.fNoGlyphIndex == FALSE, "fNoGlyphIndex TRUE\n");
+
+    hr = ScriptPlace(hdc, &sc, glyphs, 4, NULL, &items[0].a, widths, NULL, NULL);
+    ok(hr == E_INVALIDARG, "ScriptPlace should return E_INVALIDARG not %08x\n", hr);
+
+    hr = ScriptPlace(hdc, &sc, glyphs, 4, attrs, &items[0].a, widths, NULL, NULL);
+    ok(!hr, "ScriptPlace should return S_OK not %08x\n", hr);
+    ok(items[0].a.fNoGlyphIndex == FALSE, "fNoGlyphIndex TRUE\n");
+
+    ret = ExtTextOutW(hdc, 1, 1, 0, NULL, glyphs, 4, widths);
+    ok(ret, "ExtTextOutW should return TRUE\n");
+
+    ScriptFreeCache(&sc);
+}
 
 static void test_ScriptItemIzeShapePlace(HDC hdc, unsigned short pwOutGlyphs[256])
 {
@@ -52,11 +88,11 @@ static void test_ScriptItemIzeShapePlace(HDC hdc, unsigned short pwOutGlyphs[256
     int             cMaxItems;
     SCRIPT_ITEM     pItem[255];
     int             pcItems;
-    WCHAR           TestItem1[] = {'T', 'e', 's', 't', 'a', 0};
-    WCHAR           TestItem2[] = {'T', 'e', 's', 't', 'b', 0};
-    WCHAR           TestItem3[] = {'T', 'e', 's', 't', 'c',' ','1','2','3',' ',' ','e','n','d',0};
+    WCHAR           TestItem1[] = {'T', 'e', 's', 't', 'a', 0}; 
+    WCHAR           TestItem2[] = {'T', 'e', 's', 't', 'b', 0}; 
+    WCHAR           TestItem3[] = {'T', 'e', 's', 't', 'c',' ','1','2','3',' ',' ','e','n','d',0}; 
     WCHAR           TestItem4[] = {'T', 'e', 's', 't', 'c',' ',0x0684,0x0694,0x06a4,' ',' ','e','n','d',0};
-    WCHAR           TestItem5[] = {0x0684,'T','e','s','t','c',' ',0x0684,0x0694,0x06a4,' ',' ','e','n','d',0};
+    WCHAR           TestItem5[] = {0x0684,'T','e','s','t','c',' ',0x0684,0x0694,0x06a4,' ',' ','e','n','d',0}; 
 
     SCRIPT_CACHE    psc;
     int             cChars;
@@ -76,7 +112,7 @@ static void test_ScriptItemIzeShapePlace(HDC hdc, unsigned short pwOutGlyphs[256
      * by checking a known value in the table                                                */
     hr = ScriptGetProperties(&ppSp, &iMaxProps);
     trace("number of script properties %d\n", iMaxProps);
-    ok (iMaxProps > 0, "Number of scripts returned should not be 0\n");
+    ok (iMaxProps > 0, "Number of scripts returned should not be 0\n"); 
     if  (iMaxProps > 0)
          ok( ppSp[5]->langid == 9, "Langid[5] not = to 9\n"); /* Check a known value to ensure   */
                                                               /* ptrs work                       */
@@ -160,7 +196,7 @@ static void test_ScriptItemIzeShapePlace(HDC hdc, unsigned short pwOutGlyphs[256
         cMaxItems = 255;
         hr = ScriptItemize(TestItem2, cInChars, cMaxItems, NULL, NULL, pItem, &pcItems);
         ok (hr == 0, "ScriptItemize should return 0, returned %08x\n", hr);
-        /*  This test is for the intertrim operation of ScriptItemize where only one SCRIPT_ITEM is *
+        /*  This test is for the interim operation of ScriptItemize where only one SCRIPT_ITEM is *
          *  returned.                                                                               */
         ok (pItem[0].iCharPos == 0 && pItem[1].iCharPos == cInChars,
                             "Start pos not = 0 (%d) or end pos not = %d (%d)\n",
@@ -241,12 +277,12 @@ static void test_ScriptItemIzeShapePlace(HDC hdc, unsigned short pwOutGlyphs[256
 
     /*
      * This test is for when the first unicode character requires bidi support
-     */
+     */ 
     cInChars = (sizeof(TestItem5)-1)/sizeof(WCHAR);
     hr = ScriptItemize(TestItem5, cInChars, cMaxItems, NULL, NULL, pItem, &pcItems);
     ok (hr == 0, "ScriptItemize should return 0, returned %08x\n", hr);
     ok (pcItems == 4, "There should have been 4 items, found %d\n", pcItems);
-    ok (pItem[0].a.s.uBidiLevel == 1, "The first character should have been bidi=1 not %d\n",
+    ok (pItem[0].a.s.uBidiLevel == 1, "The first character should have been bidi=1 not %d\n", 
                                        pItem[0].a.s.uBidiLevel);
 }
 
@@ -257,7 +293,7 @@ static void test_ScriptGetCMap(HDC hdc, unsigned short pwOutGlyphs[256])
     int             cInChars;
     int             cChars;
     unsigned short  pwOutGlyphs3[256];
-    WCHAR           TestItem1[] = {'T', 'e', 's', 't', 'a', 0};
+    WCHAR           TestItem1[] = {'T', 'e', 's', 't', 'a', 0}; 
     DWORD           dwFlags;
     int             cnt;
 
@@ -287,6 +323,7 @@ static void test_ScriptGetCMap(HDC hdc, unsigned short pwOutGlyphs[256])
     ok( hr == S_OK, "ScriptGetCMap(NULL,&psc,NULL,0,0,NULL), expected S_OK, "
                     "got %08x\n", hr);
     ok( psc != NULL, "ScritpGetCMap expected psc to be not NULL\n");
+    ScriptFreeCache( &psc);
 
     /* Set psc to NULL, to be able to check if a pointer is returned in psc */
     psc = NULL;
@@ -300,7 +337,7 @@ static void test_ScriptGetCMap(HDC hdc, unsigned short pwOutGlyphs[256])
     for (cnt=0; cnt < cChars && pwOutGlyphs[cnt] == pwOutGlyphs3[cnt]; cnt++) {}
     ok (cnt == cInChars, "Translation not correct. WCHAR %d - %04x != %04x\n",
                          cnt, pwOutGlyphs[cnt], pwOutGlyphs3[cnt]);
-
+        
     hr = ScriptFreeCache( &psc);
     ok (!psc, "psc is not null after ScriptFreeCache\n");
 
@@ -344,10 +381,11 @@ static void test_ScriptGetFontProperties(HDC hdc)
     ok( hr == E_INVALIDARG, "(hdc,&psc,NULL), expected E_INVALIDARG, got %08x\n", hr);
     ok( psc == NULL, "Expected psc to be NULL, got %p\n", psc);
 
-    /* Pass an uninitialized sfp */
+    /* Pass an invalid sfp */
     psc = NULL;
+    sfp.cBytes = sizeof(SCRIPT_FONTPROPERTIES) - 1;
     hr = ScriptGetFontProperties(hdc,&psc,&sfp);
-    ok( hr == E_INVALIDARG, "(hdc,&psc,&sfp) partly uninitialized, expected E_INVALIDARG, got %08x\n", hr);
+    ok( hr == E_INVALIDARG, "(hdc,&psc,&sfp) invalid, expected E_INVALIDARG, got %08x\n", hr);
     ok( psc != NULL, "Expected a pointer in psc, got NULL\n");
     ScriptFreeCache(&psc);
     ok( psc == NULL, "Expected psc to be NULL, got %p\n", psc);
@@ -377,7 +415,7 @@ static void test_ScriptTextOut(HDC hdc)
     int             cMaxItems;
     SCRIPT_ITEM     pItem[255];
     int             pcItems;
-    WCHAR           TestItem1[] = {'T', 'e', 's', 't', 'a', 0};
+    WCHAR           TestItem1[] = {'T', 'e', 's', 't', 'a', 0}; 
 
     SCRIPT_CACHE    psc;
     int             cChars;
@@ -460,7 +498,7 @@ static void test_ScriptTextOut(HDC hdc)
             hr = ScriptTextOut(hdc, &psc, 0, 0, 0, NULL, &pItem[0].a, NULL, 0, pwOutGlyphs1, pcGlyphs,
                                piAdvance, NULL, pGoffset);
             ok (hr == 0, "ScriptTextOut should return 0 not (%08x)\n", hr);
-            ok (psc != NULL, "psc should not be null and have SCRIPT_CACHE buffer address\n");
+            ok (psc == NULL, "psc should be null\n");
 
             /* Test Rect Rgn is acceptable */
             rect.top = 10;
@@ -470,7 +508,7 @@ static void test_ScriptTextOut(HDC hdc)
             hr = ScriptTextOut(hdc, &psc, 0, 0, 0, &rect, &pItem[0].a, NULL, 0, pwOutGlyphs1, pcGlyphs,
                                piAdvance, NULL, pGoffset);
             ok (hr == 0, "ScriptTextOut should return 0 not (%08x)\n", hr);
-            ok (psc != NULL, "psc should not be null and have SCRIPT_CACHE buffer address\n");
+            ok (psc == NULL, "psc should be null\n");
 
             iCP = 1;
             hr = ScriptCPtoX(iCP, fTrailing, cChars, pcGlyphs, (const WORD *) &pwLogClust,
@@ -480,6 +518,93 @@ static void test_ScriptTextOut(HDC hdc)
             psla = (SCRIPT_LOGATTR *)&sla;
             hr = ScriptBreak(TestItem1, cChars, &pItem[0].a, psla);
             ok(hr == S_OK, "ScriptBreak Stub should return S_OK not %08x\n", hr);
+
+            /* Clean up and go   */
+            ScriptFreeCache(&psc);
+            ok( psc == NULL, "Expected psc to be NULL, got %p\n", psc);
+        }
+    }
+}
+
+static void test_ScriptTextOut2(HDC hdc)
+{
+/*  Intent is to validate that the HDC passed into ScriptTextOut is
+ *  used instead of the (possibly) invalid cached one
+ */
+    HRESULT         hr;
+
+    HDC             hdc1, hdc2;
+    int             cInChars;
+    int             cMaxItems;
+    SCRIPT_ITEM     pItem[255];
+    int             pcItems;
+    WCHAR           TestItem1[] = {'T', 'e', 's', 't', 'a', 0};
+
+    SCRIPT_CACHE    psc;
+    int             cChars;
+    int             cMaxGlyphs;
+    unsigned short  pwOutGlyphs1[256];
+    WORD            pwLogClust[256];
+    SCRIPT_VISATTR  psva[256];
+    int             pcGlyphs;
+    int             piAdvance[256];
+    GOFFSET         pGoffset[256];
+    ABC             pABC[256];
+
+    /* Create an extra DC that will be used until the ScriptTextOut */
+    hdc1 = CreateCompatibleDC(hdc);
+    ok (hdc1 != 0, "CreateCompatibleDC failed to create a DC\n");
+    hdc2 = CreateCompatibleDC(hdc);
+    ok (hdc2 != 0, "CreateCompatibleDC failed to create a DC\n");
+
+    /* This is a valid test that will cause parsing to take place                             */
+    cInChars = 5;
+    cMaxItems = 255;
+    hr = ScriptItemize(TestItem1, cInChars, cMaxItems, NULL, NULL, pItem, &pcItems);
+    ok (hr == 0, "ScriptItemize should return 0, returned %08x\n", hr);
+    /*  This test is for the interim operation of ScriptItemize where only one SCRIPT_ITEM is *
+     *  returned.                                                                             */
+    ok (pcItems > 0, "The number of SCRIPT_ITEMS should be greater than 0\n");
+    if (pcItems > 0)
+        ok (pItem[0].iCharPos == 0 && pItem[1].iCharPos == cInChars,
+            "Start pos not = 0 (%d) or end pos not = %d (%d)\n",
+            pItem[0].iCharPos, cInChars, pItem[1].iCharPos);
+
+    /* It would appear that we have a valid SCRIPT_ANALYSIS and can continue
+     * ie. ScriptItemize has succeeded and that pItem has been set                            */
+    cInChars = 5;
+    cMaxItems = 255;
+    if (hr == 0) {
+        psc = NULL;                                   /* must be null on first call           */
+        cChars = cInChars;
+        cMaxGlyphs = cInChars;
+        cMaxGlyphs = 256;
+        hr = ScriptShape(hdc2, &psc, TestItem1, cChars,
+                         cMaxGlyphs, &pItem[0].a,
+                         pwOutGlyphs1, pwLogClust, psva, &pcGlyphs);
+        ok (hr == 0, "ScriptShape should return 0 not (%08x)\n", hr);
+        ok (psc != NULL, "psc should not be null and have SCRIPT_CACHE buffer address\n");
+        ok (pcGlyphs == cChars, "Chars in (%d) should equal Glyphs out (%d)\n", cChars, pcGlyphs);
+        if (hr ==0) {
+            /* Note hdc is needed as glyph info is not yet in psc                  */
+            hr = ScriptPlace(hdc2, &psc, pwOutGlyphs1, pcGlyphs, psva, &pItem[0].a, piAdvance,
+                             pGoffset, pABC);
+            ok (hr == 0, "Should return 0 not (%08x)\n", hr);
+
+            /*   key part!!!   cached dc is being deleted  */
+            hr = DeleteDC(hdc2);
+            ok(hr == 1, "DeleteDC should return 1 not %08x\n", hr);
+
+            /* At this point the cached hdc (hdc2) has been destroyed,
+             * however, we are passing in a *real* hdc (the original hdc).
+             * The text should be written to that DC
+             */
+            hr = ScriptTextOut(hdc1, &psc, 0, 0, 0, NULL, &pItem[0].a, NULL, 0, pwOutGlyphs1, pcGlyphs,
+                               piAdvance, NULL, pGoffset);
+            ok (hr == 0, "ScriptTextOut should return 0 not (%08x)\n", hr);
+            ok (psc != NULL, "psc should not be null and have SCRIPT_CACHE buffer address\n");
+
+            DeleteDC(hdc1);
 
             /* Clean up and go   */
             ScriptFreeCache(&psc);
@@ -572,7 +697,7 @@ static void test_ScriptXtoX(void)
     cGlyphs = 10;
     hr = ScriptCPtoX(iCP, fTrailing, cChars, cGlyphs, pwLogClust, psva, piAdvance, &psa, &piX);
     ok(hr == S_OK, "ScriptCPtoX should return S_OK not %08x\n", hr);
-    ok(piX == 1171, "iCP=%d should return piX=1171 not %d\n", iCP, piX);
+    ok(piX == 1171, "iCP=%d should return piX=1171 not %d\n", iCP, piX);   
     iCP=6;
     fTrailing = FALSE;
     cChars = 10;
@@ -593,7 +718,7 @@ static void test_ScriptXtoX(void)
     cGlyphs = 10;
     hr = ScriptCPtoX(iCP, fTrailing, cChars, cGlyphs, pwLogClust, psva, piAdvance, &psa, &piX);
     ok(hr == S_OK, "ScriptCPtoX should return S_OK not %08x\n", hr);
-    ok(piX == 1953, "iCP=%d should return piX=1953 not %d\n", iCP, piX);
+    ok(piX == 1953, "iCP=%d should return piX=1953 not %d\n", iCP, piX); 
 
 }
 
@@ -622,15 +747,16 @@ static void test_ScriptString(HDC hdc)
     const BYTE      InClass = 0;
     SCRIPT_STRING_ANALYSIS ssa = NULL;
 
-    int             X = 10;
+    int             X = 10; 
     int             Y = 100;
-    UINT            Options = 0;
-    const RECT      rc = {0, 50, 100, 100};
+    UINT            Options = 0; 
+    const RECT      rc = {0, 50, 100, 100}; 
     int             MinSel = 0;
     int             MaxSel = 0;
     BOOL            Disabled = FALSE;
     const int      *clip_len;
-    UINT           *order, i;
+    int            i;
+    UINT           *order;
 
 
     Charset = -1;     /* this flag indicates unicode input */
@@ -645,6 +771,7 @@ static void test_ScriptString(HDC hdc)
                               ReqWidth, &Control, &State, Dx, &Tabdef,
                               &InClass, &ssa);
     ok(hr == S_OK, "ScriptStringAnalyse should return S_OK not %08x\n", hr);
+    ScriptStringFree(&ssa);
 
     /* test makes sure that a call with a valid pssa still works */
     hr = ScriptStringAnalyse( hdc, teststr, len, Glyphs, Charset, Flags,
@@ -705,7 +832,7 @@ static void test_ScriptStringXtoCP_CPtoX(HDC hdc)
     BOOL            fTrailing;
 
     /* Test with hdc, this should be a valid test
-     * Here we generrate an SCRIPT_STRING_ANALYSIS that will be used as input to the
+     * Here we generate an SCRIPT_STRING_ANALYSIS that will be used as input to the
      * following character positions to X and X to character position functions.
      */
     hr = ScriptStringAnalyse( hdc, String, String_len, Glyphs, Charset, Flags,
@@ -733,7 +860,7 @@ static void test_ScriptStringXtoCP_CPtoX(HDC hdc)
             hr = ScriptStringXtoCP(ssa, X, &Ch, &iTrailing);
             ok(hr == S_OK, "ScriptStringXtoCP should return S_OK not %08x\n", hr);
             ok(Cp == Ch, "ScriptStringXtoCP should return Ch = %d not %d for X = %d\n", Cp, Ch, X);
-            ok(iTrailing == FALSE, "ScriptStringXtoCP should return iTrailing = 0 not %d for X = %d\n",
+            ok(iTrailing == FALSE, "ScriptStringXtoCP should return iTrailing = 0 not %d for X = %d\n", 
                                   iTrailing, X);
             fTrailing = TRUE;
             hr = ScriptStringCPtoX(ssa, Cp, fTrailing, &X);
@@ -747,7 +874,7 @@ static void test_ScriptStringXtoCP_CPtoX(HDC hdc)
              * again works
              */
             ok(Cp + 1 == Ch, "ScriptStringXtoCP should return Ch = %d not %d for X = %d\n", Cp + 1, Ch, X);
-            ok(iTrailing == FALSE, "ScriptStringXtoCP should return iTrailing = 0 not %d for X = %d\n",
+            ok(iTrailing == FALSE, "ScriptStringXtoCP should return iTrailing = 0 not %d for X = %d\n", 
                                    iTrailing, X);
         }
         /*
@@ -762,13 +889,13 @@ static void test_ScriptStringXtoCP_CPtoX(HDC hdc)
         hr = ScriptStringXtoCP(ssa, X, &Ch, &iTrailing);
         ok(hr == S_OK, "ScriptStringXtoCP should return S_OK not %08x\n", hr);
         ok(Cp == Ch, "ScriptStringXtoCP should return Ch = %d not %d for X = %d\n", Cp, Ch, X);
-        ok(iTrailing == TRUE, "ScriptStringXtoCP should return iTrailing = 1 not %d for X = %d\n",
+        ok(iTrailing == TRUE, "ScriptStringXtoCP should return iTrailing = 1 not %d for X = %d\n", 
                                   iTrailing, X);
 
         /*
          * This test is to check that if the X position is just outside the trailing edge of the
          * character then iTrailing will indicate the leading edge, ie. FALSE, and Ch will indicate
-         * the next character, ie. Cp + 1
+         * the next character, ie. Cp + 1 
          */
         fTrailing = TRUE;
         Cp = 3;
@@ -778,13 +905,13 @@ static void test_ScriptStringXtoCP_CPtoX(HDC hdc)
         hr = ScriptStringXtoCP(ssa, X, &Ch, &iTrailing);
         ok(hr == S_OK, "ScriptStringXtoCP should return S_OK not %08x\n", hr);
         ok(Cp + 1 == Ch, "ScriptStringXtoCP should return Ch = %d not %d for X = %d\n", Cp + 1, Ch, X);
-        ok(iTrailing == FALSE, "ScriptStringXtoCP should return iTrailing = 0 not %d for X = %d\n",
+        ok(iTrailing == FALSE, "ScriptStringXtoCP should return iTrailing = 0 not %d for X = %d\n", 
                                   iTrailing, X);
 
         /*
          * This test is to check that if the X position is just outside the leading edge of the
          * character then iTrailing will indicate the trailing edge, ie. TRUE, and Ch will indicate
-         * the next character down , ie. Cp - 1
+         * the next character down , ie. Cp - 1 
          */
         fTrailing = FALSE;
         Cp = 3;
@@ -794,11 +921,11 @@ static void test_ScriptStringXtoCP_CPtoX(HDC hdc)
         hr = ScriptStringXtoCP(ssa, X, &Ch, &iTrailing);
         ok(hr == S_OK, "ScriptStringXtoCP should return S_OK not %08x\n", hr);
         ok(Cp - 1 == Ch, "ScriptStringXtoCP should return Ch = %d not %d for X = %d\n", Cp - 1, Ch, X);
-        ok(iTrailing == TRUE, "ScriptStringXtoCP should return iTrailing = 1 not %d for X = %d\n",
+        ok(iTrailing == TRUE, "ScriptStringXtoCP should return iTrailing = 1 not %d for X = %d\n", 
                                   iTrailing, X);
 
         /*
-         * Cleanup the the SSA for the next round of tests
+         * Cleanup the SSA for the next round of tests
          */
         hr = ScriptStringFree(&ssa);
         ok(hr == S_OK, "ScriptStringFree should return S_OK not %08x\n", hr);
@@ -814,11 +941,11 @@ static void test_ScriptStringXtoCP_CPtoX(HDC hdc)
 
         /*
          * When ScriptStringCPtoX is called with a character position Cp that exceeds the
-         * string length, return E_INVALIDARG.  This also invalidates the ssa so a
+         * string length, return E_INVALIDARG.  This also invalidates the ssa so a 
          * ScriptStringFree should also fail.
          */
         fTrailing = FALSE;
-        Cp = String_len + 1;
+        Cp = String_len + 1; 
         hr = ScriptStringCPtoX(ssa, Cp, fTrailing, &X);
         ok(hr == E_INVALIDARG, "ScriptStringCPtoX should return E_INVALIDARG not %08x\n", hr);
 
@@ -826,7 +953,9 @@ static void test_ScriptStringXtoCP_CPtoX(HDC hdc)
         /*
          * ScriptStringCPtoX should free ssa, hence ScriptStringFree should fail
          */
-        ok(hr == E_INVALIDARG, "ScriptStringFree should return E_INVALIDARG not %08x\n", hr);
+        ok(hr == E_INVALIDARG ||
+           hr == E_FAIL, /* win2k3 */
+           "ScriptStringFree should return E_INVALIDARG or E_FAIL not %08x\n", hr);
     }
 }
 
@@ -849,8 +978,9 @@ static void test_ScriptCacheGetHeight(HDC hdc)
 
     hr = ScriptCacheGetHeight(hdc, &sc, &height);
     ok(hr == S_OK, "expected S_OK, got 0x%08x\n", hr);
-
     ok(height > 0, "expected height > 0\n");
+
+    ScriptFreeCache(&sc);
 }
 
 static void test_ScriptGetGlyphABCWidth(HDC hdc)
@@ -872,6 +1002,8 @@ static void test_ScriptGetGlyphABCWidth(HDC hdc)
 
     hr = ScriptGetGlyphABCWidth(hdc, &sc, 'a', &abc);
     ok(hr == S_OK, "expected S_OK, got 0x%08x\n", hr);
+
+    ScriptFreeCache(&sc);
 }
 
 static void test_ScriptLayout(void)
@@ -1216,15 +1348,14 @@ START_TEST(usp10)
      * to set up for the tests.                                                               */
     hwnd = CreateWindowExA(0, "static", "", WS_POPUP, 0,0,100,100,
                            0, 0, 0, NULL);
-    // FIXME do wine assert
-    //assert(hwnd != 0);
+    assert(hwnd != 0);
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
 
     hdc = GetDC(hwnd);                                      /* We now have a hdc             */
     ok( hdc != NULL, "HDC failed to be created %p\n", hdc);
 
-    memset(&lf, 0, sizeof(HFONT));
+    memset(&lf, 0, sizeof(LOGFONTA));
     lstrcpyA(lf.lfFaceName, "Symbol");
     lf.lfHeight = 10;
     lf.lfWeight = 3;
@@ -1236,9 +1367,11 @@ START_TEST(usp10)
     test_ScriptGetCMap(hdc, pwOutGlyphs);
     test_ScriptCacheGetHeight(hdc);
     test_ScriptGetGlyphABCWidth(hdc);
+    test_ScriptShape(hdc);
 
     test_ScriptGetFontProperties(hdc);
     test_ScriptTextOut(hdc);
+    test_ScriptTextOut2(hdc);
     test_ScriptXtoX();
     test_ScriptString(hdc);
     test_ScriptStringXtoCP_CPtoX(hdc);

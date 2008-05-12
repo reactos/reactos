@@ -11,6 +11,7 @@ extern void func_generated(void);
 extern void func_http(void);
 extern void func_internet(void);
 extern void func_url(void);
+extern void func_urlcache(void);
 
 const struct test winetest_testlist[] =
 {
@@ -19,5 +20,6 @@ const struct test winetest_testlist[] =
     { "http", func_http },
     { "internet", func_internet },
     { "url", func_url },
+    { "urlcache", func_urlcache },
     { 0, 0 }
 };

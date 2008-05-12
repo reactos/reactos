@@ -156,13 +156,19 @@ static void testGetInfo(void)
     if (!pTables)
         return;
     status = pTables->GetInfo(&PackageInfo);
-    ok(status == STATUS_SUCCESS, "status: 0x%x\n", status);
-    ok(PackageInfo.fCapabilities == 0x107b3, "fCapabilities: 0x%lx\n",
-       PackageInfo.fCapabilities);
-    ok(PackageInfo.wVersion == 1, "wVersion: %d\n", PackageInfo.wVersion);
-    ok(PackageInfo.wRPCID == 14, "wRPCID: %d\n", PackageInfo.wRPCID);
-    ok(PackageInfo.cbMaxToken == 0x4000, "cbMaxToken: 0x%lx\n",
-       PackageInfo.cbMaxToken);
+    ok(status == STATUS_SUCCESS ||
+       status == SEC_E_UNSUPPORTED_FUNCTION, /* win2k3 */
+       "status: 0x%x\n", status);
+
+    if (status == STATUS_SUCCESS)
+    {
+        ok(PackageInfo.fCapabilities == 0x107b3, "fCapabilities: 0x%lx\n",
+           PackageInfo.fCapabilities);
+        ok(PackageInfo.wVersion == 1, "wVersion: %d\n", PackageInfo.wVersion);
+        ok(PackageInfo.wRPCID == 14, "wRPCID: %d\n", PackageInfo.wRPCID);
+        ok(PackageInfo.cbMaxToken == 0x4000, "cbMaxToken: 0x%lx\n",
+           PackageInfo.cbMaxToken);
+    }
 }
 
 START_TEST(main)

@@ -449,6 +449,7 @@ static HRESULT WINAPI Protocol_Start(IInternetProtocol *iface, LPCWSTR szUrl,
         LPWSTR additional_headers = (LPWSTR)0xdeadbeef;
         BYTE sec_id[100];
         DWORD fetched = 256, size = 100;
+        DWORD tid;
 
         static const WCHAR wszMimes[] = {'*','/','*',0};
 
@@ -518,7 +519,7 @@ static HRESULT WINAPI Protocol_Start(IInternetProtocol *iface, LPCWSTR szUrl,
 
         IInternetProtocolSink_AddRef(pOIProtSink);
         protocol_sink = pOIProtSink;
-        CreateThread(NULL, 0, thread_proc, NULL, 0, NULL);
+        CreateThread(NULL, 0, thread_proc, NULL, 0, &tid);
 
         return S_OK;
     }

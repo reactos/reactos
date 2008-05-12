@@ -67,10 +67,10 @@
 	<directory name="odbccp32">
 		<xi:include href="odbccp32/odbccp32.rbuild" />
 	</directory>
-	<!--directory name="ole32">
+	<directory name="ole32">
 		<xi:include href="ole32/ole32.rbuild" />
 	</directory>
-	<directory name="oleaut32">
+	<!--<directory name="oleaut32">
 		<xi:include href="oleaut32/oleaut32.rbuild" />
 	</directory-->
 	<directory name="psapi">

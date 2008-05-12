@@ -425,13 +425,15 @@ static void test_RtlFindMostSignificantBit(void)
     ulLong <<= i;
 
     cPos = pRtlFindMostSignificantBit(ulLong);
-    ok (cPos == i, "didn't find MSB %llx %d %d\n", ulLong, i, cPos);
+    ok (cPos == i, "didn't find MSB 0x%x%08x %d %d\n",
+        (DWORD)(ulLong >> 32), (DWORD)ulLong, i, cPos);
 
     /* Set all bits lower than bit i */
     ulLong = ((ulLong - 1) << 1) | 1;
 
     cPos = pRtlFindMostSignificantBit(ulLong);
-    ok (cPos == i, "didn't find MSB %llx %d %d\n", ulLong, i, cPos);
+    ok (cPos == i, "didn't find MSB 0x%x%08x %d %d\n",
+        (DWORD)(ulLong >> 32), (DWORD)ulLong, i, cPos);
   }
   cPos = pRtlFindMostSignificantBit(0);
   ok (cPos == -1, "found bit when not set\n");
@@ -451,12 +453,14 @@ static void test_RtlFindLeastSignificantBit(void)
     ulLong = (ULONGLONG)1 << i;
 
     cPos = pRtlFindLeastSignificantBit(ulLong);
-    ok (cPos == i, "didn't find LSB %llx %d %d\n", ulLong, i, cPos);
+    ok (cPos == i, "didn't find LSB 0x%x%08x %d %d\n",
+        (DWORD)(ulLong >> 32), (DWORD)ulLong, i, cPos);
 
     ulLong = ~((ULONGLONG)0) << i;
 
     cPos = pRtlFindLeastSignificantBit(ulLong);
-    ok (cPos == i, "didn't find LSB %llx %d %d\n", ulLong, i, cPos);
+    ok (cPos == i, "didn't find LSB 0x%x%08x %d %d\n",
+        (DWORD)(ulLong >> 32), (DWORD)ulLong, i, cPos);
   }
   cPos = pRtlFindLeastSignificantBit(0);
   ok (cPos == -1, "found bit when not set\n");
@@ -528,7 +532,7 @@ static void test_RtlFindSetRuns(void)
     ULONG ulStart = 0;
 
     ulCount = pRtlFindLongestRunSet(&bm, &ulStart);
-    ok(ulCount == 33 && ulStart == 1877,"didn't find longest %ld %ld\n",ulCount,ulStart);
+    ok(ulCount == 33 && ulStart == 1877,"didn't find longest %d %d\n",ulCount,ulStart);
 
     memset(buff, 0, sizeof(buff));
     ulCount = pRtlFindLongestRunSet(&bm, &ulStart);

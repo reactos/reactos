@@ -31,18 +31,20 @@
     ok( (ERROR_PATH_NOT_FOUND == GetLastError()) || \
 	(ERROR_RESOURCE_DATA_NOT_FOUND == GetLastError()) || \
 	(ERROR_FILE_NOT_FOUND == GetLastError()) || \
-	(ERROR_BAD_PATHNAME == GetLastError()), \
+	(ERROR_BAD_PATHNAME == GetLastError()) || \
+        (ERROR_SUCCESS == GetLastError()), \
 	"Last error wrong! ERROR_RESOURCE_DATA_NOT_FOUND/ERROR_BAD_PATHNAME (98)/" \
-	"ERROR_PATH_NOT_FOUND (NT4)/ERROR_FILE_NOT_FOUND (2k3)" \
-	"expected, got %u\n", GetLastError());
+	"ERROR_PATH_NOT_FOUND (NT4)/ERROR_FILE_NOT_FOUND (2k3) " \
+        "ERROR_SUCCESS (2k) expected, got %u\n", GetLastError());
 #define EXPECT_INVALID__NOT_FOUND \
     ok( (ERROR_PATH_NOT_FOUND == GetLastError()) || \
 	(ERROR_RESOURCE_DATA_NOT_FOUND == GetLastError()) || \
 	(ERROR_FILE_NOT_FOUND == GetLastError()) || \
-	(ERROR_INVALID_PARAMETER == GetLastError()), \
+	(ERROR_INVALID_PARAMETER == GetLastError()) || \
+        (ERROR_SUCCESS == GetLastError()), \
 	"Last error wrong! ERROR_RESOURCE_DATA_NOT_FOUND/ERROR_INVALID_PARAMETER (98)/" \
-	"ERROR_PATH_NOT_FOUND (NT4)/ERROR_FILE_NOT_FOUND (2k3)" \
-	"expected, got %u\n", GetLastError());
+	"ERROR_PATH_NOT_FOUND (NT4)/ERROR_FILE_NOT_FOUND (2k3) " \
+	"ERROR_SUCCESS (2k) expected, got %u\n", GetLastError());
 
 static void create_file(const CHAR *name)
 {
@@ -122,7 +124,8 @@ static void test_info_size(void)
 	retval);
     ok( (ERROR_FILE_NOT_FOUND == GetLastError()) ||
 	(ERROR_RESOURCE_DATA_NOT_FOUND == GetLastError()) ||
-	(MY_LAST_ERROR == GetLastError()),
+	(MY_LAST_ERROR == GetLastError()) ||
+	(ERROR_SUCCESS == GetLastError()), /* win2k */
 	"Last error wrong! ERROR_FILE_NOT_FOUND/ERROR_RESOURCE_DATA_NOT_FOUND "
 	"(XP)/0x%08x (NT4) expected, got %u\n", MY_LAST_ERROR, GetLastError());
 
@@ -174,7 +177,9 @@ static void test_info_size(void)
     retval = GetFileVersionInfoSizeA("test.txt", &hdl);
     ok(retval == 0, "Expected 0, got %d\n", retval);
     ok(hdl == 0, "Expected 0, got %d\n", hdl);
-    ok(GetLastError() == ERROR_RESOURCE_DATA_NOT_FOUND,
+    ok(GetLastError() == ERROR_RESOURCE_DATA_NOT_FOUND ||
+       GetLastError() == ERROR_BAD_FORMAT || /* win9x */
+       GetLastError() == ERROR_SUCCESS, /* win2k */
        "Expected ERROR_RESOURCE_DATA_NOT_FOUND, got %d\n", GetLastError());
 
     DeleteFileA("test.txt");
@@ -480,7 +485,9 @@ static void test_VerQueryValue(void)
        GetLastError() == 0xdeadbeef /* Win9x, NT4, W2K */,
        "VerQueryValue returned %u\n", GetLastError());
     ok(p == (char *)0xdeadbeef, "expected 0xdeadbeef got %p\n", p);
-    ok(len == 0, "expected 0 got %x\n", len);
+    ok(len == 0 ||
+       len == 0xbeef, /* win9x */
+       "expected 0 got %x\n", len);
 
     p = (char *)0xdeadbeef;
     len = 0xdeadbeef;
@@ -547,7 +554,9 @@ todo_wine ok(len == 0, "VerQueryValue returned %u, expected 0\n", len);
            GetLastError() == 0xdeadbeef /* Win9x, NT4, W2K */,
            "VerQueryValue returned %u\n", GetLastError());
         ok(p == (char *)0xdeadbeef, "expected 0xdeadbeef got %p\n", p);
-        ok(len == 0, "expected 0 got %x\n", len);
+        ok(len == 0 ||
+           len == 0xbeef, /* win9x */
+           "expected 0 or 0xbeef, got %x\n", len);
     }
 
     HeapFree(GetProcessHeap(), 0, ver);

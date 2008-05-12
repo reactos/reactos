@@ -452,7 +452,7 @@ static void InternetCreateUrlA_test(void)
 		"Expected ERROR_INVALID_PARAMETER, got %d\n", GetLastError());
 	ok(len == -1, "Expected len -1, got %d\n", len);
 
-	/* test valid lpUrlComponets, NULL lpdwUrlLength */
+	/* test valid lpUrlComponents, NULL lpdwUrlLength */
 	fill_url_components(&urlComp);
 	SetLastError(0xdeadbeef);
 	ret = InternetCreateUrlA(&urlComp, 0, NULL, NULL);
@@ -461,7 +461,7 @@ static void InternetCreateUrlA_test(void)
 		"Expected ERROR_INVALID_PARAMETER, got %d\n", GetLastError());
 	ok(len == -1, "Expected len -1, got %d\n", len);
 
-	/* test valid lpUrlComponets, empty szUrl
+	/* test valid lpUrlComponents, empty szUrl
 	 * lpdwUrlLength is size of buffer required on exit, including
 	 * the terminating null when GLE == ERROR_INSUFFICIENT_BUFFER
 	 */
@@ -481,7 +481,7 @@ static void InternetCreateUrlA_test(void)
 		"Expected ERROR_INSUFFICIENT_BUFFER, got %d\n", GetLastError());
 	ok(len == 51, "Expected len 51, got %d\n", len);
 
-	/* test valid lpUrlComponets, alloced szUrl, small size */
+	/* test valid lpUrlComponents, alloc-ed szUrl, small size */
 	SetLastError(0xdeadbeef);
 	szUrl = HeapAlloc(GetProcessHeap(), 0, len);
 	len -= 2;
@@ -491,7 +491,7 @@ static void InternetCreateUrlA_test(void)
 		"Expected ERROR_INSUFFICIENT_BUFFER, got %d\n", GetLastError());
 	ok(len == 51, "Expected len 51, got %d\n", len);
 
-	/* alloced szUrl, NULL lpszScheme
+	/* alloc-ed szUrl, NULL lpszScheme
 	 * shows that it uses nScheme instead
 	 */
 	SetLastError(0xdeadbeef);
@@ -503,7 +503,7 @@ static void InternetCreateUrlA_test(void)
 	ok(len == 50, "Expected len 50, got %d\n", len);
 	ok(!strcmp(szUrl, CREATE_URL1), "Expected %s, got %s\n", CREATE_URL1, szUrl);
 
-	/* alloced szUrl, invalid nScheme
+	/* alloc-ed szUrl, invalid nScheme
 	 * any nScheme out of range seems ignored
 	 */
 	fill_url_components(&urlComp);
@@ -516,7 +516,7 @@ static void InternetCreateUrlA_test(void)
 		"Expected 0xdeadbeef, got %d\n", GetLastError());
 	ok(len == 50, "Expected len 50, got %d\n", len);
 
-	/* test valid lpUrlComponets, alloced szUrl */
+	/* test valid lpUrlComponents, alloc-ed szUrl */
 	fill_url_components(&urlComp);
 	SetLastError(0xdeadbeef);
 	len = 51;

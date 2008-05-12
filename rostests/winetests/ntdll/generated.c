@@ -16,7 +16,7 @@
 #include "wine/test.h"
 
 /***********************************************************************
- * Compability macros
+ * Compatibility macros
  */
 
 #define DWORD_PTR UINT_PTR
@@ -635,48 +635,8 @@ static void test_pack_IMAGE_LOAD_CONFIG_DIRECTORY(void)
 
 static void test_pack_IMAGE_NT_HEADERS(void)
 {
-    /* IMAGE_NT_HEADERS (pack 4) */
+    /* IMAGE_NT_HEADERS */
     TEST_TYPE(IMAGE_NT_HEADERS, 248, 4);
-    TEST_FIELD(IMAGE_NT_HEADERS, DWORD, Signature, 0, 4, 4);
-    TEST_FIELD(IMAGE_NT_HEADERS, IMAGE_FILE_HEADER, FileHeader, 4, 20, 4);
-    TEST_FIELD(IMAGE_NT_HEADERS, IMAGE_OPTIONAL_HEADER, OptionalHeader, 24, 224, 4);
-}
-
-static void test_pack_IMAGE_OPTIONAL_HEADER(void)
-{
-    /* IMAGE_OPTIONAL_HEADER (pack 4) */
-    TEST_TYPE(IMAGE_OPTIONAL_HEADER, 224, 4);
-    TEST_FIELD(IMAGE_OPTIONAL_HEADER, WORD, Magic, 0, 2, 2);
-    TEST_FIELD(IMAGE_OPTIONAL_HEADER, BYTE, MajorLinkerVersion, 2, 1, 1);
-    TEST_FIELD(IMAGE_OPTIONAL_HEADER, BYTE, MinorLinkerVersion, 3, 1, 1);
-    TEST_FIELD(IMAGE_OPTIONAL_HEADER, DWORD, SizeOfCode, 4, 4, 4);
-    TEST_FIELD(IMAGE_OPTIONAL_HEADER, DWORD, SizeOfInitializedData, 8, 4, 4);
-    TEST_FIELD(IMAGE_OPTIONAL_HEADER, DWORD, SizeOfUninitializedData, 12, 4, 4);
-    TEST_FIELD(IMAGE_OPTIONAL_HEADER, DWORD, AddressOfEntryPoint, 16, 4, 4);
-    TEST_FIELD(IMAGE_OPTIONAL_HEADER, DWORD, BaseOfCode, 20, 4, 4);
-    TEST_FIELD(IMAGE_OPTIONAL_HEADER, DWORD, BaseOfData, 24, 4, 4);
-    TEST_FIELD(IMAGE_OPTIONAL_HEADER, DWORD, ImageBase, 28, 4, 4);
-    TEST_FIELD(IMAGE_OPTIONAL_HEADER, DWORD, SectionAlignment, 32, 4, 4);
-    TEST_FIELD(IMAGE_OPTIONAL_HEADER, DWORD, FileAlignment, 36, 4, 4);
-    TEST_FIELD(IMAGE_OPTIONAL_HEADER, WORD, MajorOperatingSystemVersion, 40, 2, 2);
-    TEST_FIELD(IMAGE_OPTIONAL_HEADER, WORD, MinorOperatingSystemVersion, 42, 2, 2);
-    TEST_FIELD(IMAGE_OPTIONAL_HEADER, WORD, MajorImageVersion, 44, 2, 2);
-    TEST_FIELD(IMAGE_OPTIONAL_HEADER, WORD, MinorImageVersion, 46, 2, 2);
-    TEST_FIELD(IMAGE_OPTIONAL_HEADER, WORD, MajorSubsystemVersion, 48, 2, 2);
-    TEST_FIELD(IMAGE_OPTIONAL_HEADER, WORD, MinorSubsystemVersion, 50, 2, 2);
-    TEST_FIELD(IMAGE_OPTIONAL_HEADER, DWORD, Win32VersionValue, 52, 4, 4);
-    TEST_FIELD(IMAGE_OPTIONAL_HEADER, DWORD, SizeOfImage, 56, 4, 4);
-    TEST_FIELD(IMAGE_OPTIONAL_HEADER, DWORD, SizeOfHeaders, 60, 4, 4);
-    TEST_FIELD(IMAGE_OPTIONAL_HEADER, DWORD, CheckSum, 64, 4, 4);
-    TEST_FIELD(IMAGE_OPTIONAL_HEADER, WORD, Subsystem, 68, 2, 2);
-    TEST_FIELD(IMAGE_OPTIONAL_HEADER, WORD, DllCharacteristics, 70, 2, 2);
-    TEST_FIELD(IMAGE_OPTIONAL_HEADER, DWORD, SizeOfStackReserve, 72, 4, 4);
-    TEST_FIELD(IMAGE_OPTIONAL_HEADER, DWORD, SizeOfStackCommit, 76, 4, 4);
-    TEST_FIELD(IMAGE_OPTIONAL_HEADER, DWORD, SizeOfHeapReserve, 80, 4, 4);
-    TEST_FIELD(IMAGE_OPTIONAL_HEADER, DWORD, SizeOfHeapCommit, 84, 4, 4);
-    TEST_FIELD(IMAGE_OPTIONAL_HEADER, DWORD, LoaderFlags, 88, 4, 4);
-    TEST_FIELD(IMAGE_OPTIONAL_HEADER, DWORD, NumberOfRvaAndSizes, 92, 4, 4);
-    TEST_FIELD(IMAGE_OPTIONAL_HEADER, IMAGE_DATA_DIRECTORY[IMAGE_NUMBEROF_DIRECTORY_ENTRIES], DataDirectory, 96, 128, 4);
 }
 
 static void test_pack_IMAGE_OS2_HEADER(void)
@@ -795,19 +755,13 @@ static void test_pack_IMAGE_SYMBOL(void)
 
 static void test_pack_IMAGE_THUNK_DATA(void)
 {
-    /* IMAGE_THUNK_DATA (pack 4) */
+    /* IMAGE_THUNK_DATA */
 }
 
 static void test_pack_IMAGE_TLS_DIRECTORY(void)
 {
-    /* IMAGE_TLS_DIRECTORY (pack 4) */
+    /* IMAGE_TLS_DIRECTORY */
     TEST_TYPE(IMAGE_TLS_DIRECTORY, 24, 4);
-    TEST_FIELD(IMAGE_TLS_DIRECTORY, DWORD, StartAddressOfRawData, 0, 4, 4);
-    TEST_FIELD(IMAGE_TLS_DIRECTORY, DWORD, EndAddressOfRawData, 4, 4, 4);
-    TEST_FIELD(IMAGE_TLS_DIRECTORY, LPDWORD, AddressOfIndex, 8, 4, 4);
-    TEST_FIELD(IMAGE_TLS_DIRECTORY, PIMAGE_TLS_CALLBACK *, AddressOfCallBacks, 12, 4, 4);
-    TEST_FIELD(IMAGE_TLS_DIRECTORY, DWORD, SizeOfZeroFill, 16, 4, 4);
-    TEST_FIELD(IMAGE_TLS_DIRECTORY, DWORD, Characteristics, 20, 4, 4);
 }
 
 static void test_pack_IMAGE_VXD_HEADER(void)
@@ -920,12 +874,6 @@ static void test_pack_LONGLONG(void)
     TEST_TYPE_SIGNED(LONGLONG);
 }
 
-static void test_pack_LPTOP_LEVEL_EXCEPTION_FILTER(void)
-{
-    /* LPTOP_LEVEL_EXCEPTION_FILTER */
-    TEST_TYPE(LPTOP_LEVEL_EXCEPTION_FILTER, 4, 4);
-}
-
 static void test_pack_LUID(void)
 {
     /* LUID (pack 4) */
@@ -949,7 +897,7 @@ static void test_pack_MEMORY_BASIC_INFORMATION(void)
     TEST_FIELD(MEMORY_BASIC_INFORMATION, LPVOID, BaseAddress, 0, 4, 4);
     TEST_FIELD(MEMORY_BASIC_INFORMATION, LPVOID, AllocationBase, 4, 4, 4);
     TEST_FIELD(MEMORY_BASIC_INFORMATION, DWORD, AllocationProtect, 8, 4, 4);
-    TEST_FIELD(MEMORY_BASIC_INFORMATION, DWORD, RegionSize, 12, 4, 4);
+    TEST_FIELD(MEMORY_BASIC_INFORMATION, SIZE_T, RegionSize, 12, 4, 4);
     TEST_FIELD(MEMORY_BASIC_INFORMATION, DWORD, State, 16, 4, 4);
     TEST_FIELD(MEMORY_BASIC_INFORMATION, DWORD, Protect, 20, 4, 4);
     TEST_FIELD(MEMORY_BASIC_INFORMATION, DWORD, Type, 24, 4, 4);
@@ -1250,14 +1198,12 @@ static void test_pack_PIMAGE_NT_HEADERS(void)
 {
     /* PIMAGE_NT_HEADERS */
     TEST_TYPE(PIMAGE_NT_HEADERS, 4, 4);
-    TEST_TYPE_POINTER(PIMAGE_NT_HEADERS, 248, 4);
 }
 
 static void test_pack_PIMAGE_OPTIONAL_HEADER(void)
 {
     /* PIMAGE_OPTIONAL_HEADER */
     TEST_TYPE(PIMAGE_OPTIONAL_HEADER, 4, 4);
-    TEST_TYPE_POINTER(PIMAGE_OPTIONAL_HEADER, 224, 4);
 }
 
 static void test_pack_PIMAGE_OS2_HEADER(void)
@@ -1342,7 +1288,6 @@ static void test_pack_PIMAGE_TLS_DIRECTORY(void)
 {
     /* PIMAGE_TLS_DIRECTORY */
     TEST_TYPE(PIMAGE_TLS_DIRECTORY, 4, 4);
-    TEST_TYPE_POINTER(PIMAGE_TLS_DIRECTORY, 24, 4);
 }
 
 static void test_pack_PIMAGE_VXD_HEADER(void)
@@ -1482,7 +1427,6 @@ static void test_pack_PRTL_CRITICAL_SECTION_DEBUG(void)
 {
     /* PRTL_CRITICAL_SECTION_DEBUG */
     TEST_TYPE(PRTL_CRITICAL_SECTION_DEBUG, 4, 4);
-    TEST_TYPE_POINTER(PRTL_CRITICAL_SECTION_DEBUG, 32, 4);
 }
 
 static void test_pack_PRTL_OSVERSIONINFOEXW(void)
@@ -1503,7 +1447,6 @@ static void test_pack_PRTL_RESOURCE_DEBUG(void)
 {
     /* PRTL_RESOURCE_DEBUG */
     TEST_TYPE(PRTL_RESOURCE_DEBUG, 4, 4);
-    TEST_TYPE_POINTER(PRTL_RESOURCE_DEBUG, 32, 4);
 }
 
 static void test_pack_PSECURITY_DESCRIPTOR(void)
@@ -1580,12 +1523,6 @@ static void test_pack_PTOKEN_USER(void)
     TEST_TYPE_POINTER(PTOKEN_USER, 8, 4);
 }
 
-static void test_pack_PTOP_LEVEL_EXCEPTION_FILTER(void)
-{
-    /* PTOP_LEVEL_EXCEPTION_FILTER */
-    TEST_TYPE(PTOP_LEVEL_EXCEPTION_FILTER, 4, 4);
-}
-
 static void test_pack_PTSTR(void)
 {
     /* PTSTR */
@@ -1639,14 +1576,12 @@ static void test_pack_RTL_CRITICAL_SECTION(void)
 static void test_pack_RTL_CRITICAL_SECTION_DEBUG(void)
 {
     /* RTL_CRITICAL_SECTION_DEBUG (pack 4) */
-    TEST_TYPE(RTL_CRITICAL_SECTION_DEBUG, 32, 4);
     TEST_FIELD(RTL_CRITICAL_SECTION_DEBUG, WORD, Type, 0, 2, 2);
     TEST_FIELD(RTL_CRITICAL_SECTION_DEBUG, WORD, CreatorBackTraceIndex, 2, 2, 2);
     TEST_FIELD(RTL_CRITICAL_SECTION_DEBUG, struct _RTL_CRITICAL_SECTION *, CriticalSection, 4, 4, 4);
     TEST_FIELD(RTL_CRITICAL_SECTION_DEBUG, LIST_ENTRY, ProcessLocksList, 8, 8, 4);
     TEST_FIELD(RTL_CRITICAL_SECTION_DEBUG, DWORD, EntryCount, 16, 4, 4);
     TEST_FIELD(RTL_CRITICAL_SECTION_DEBUG, DWORD, ContentionCount, 20, 4, 4);
-    TEST_FIELD(RTL_CRITICAL_SECTION_DEBUG, DWORD[ 2 ], Spare, 24, 8, 4);
 }
 
 static void test_pack_RTL_OSVERSIONINFOEXW(void)
@@ -1681,14 +1616,12 @@ static void test_pack_RTL_OSVERSIONINFOW(void)
 static void test_pack_RTL_RESOURCE_DEBUG(void)
 {
     /* RTL_RESOURCE_DEBUG (pack 4) */
-    TEST_TYPE(RTL_RESOURCE_DEBUG, 32, 4);
     TEST_FIELD(RTL_RESOURCE_DEBUG, WORD, Type, 0, 2, 2);
     TEST_FIELD(RTL_RESOURCE_DEBUG, WORD, CreatorBackTraceIndex, 2, 2, 2);
     TEST_FIELD(RTL_RESOURCE_DEBUG, struct _RTL_CRITICAL_SECTION *, CriticalSection, 4, 4, 4);
     TEST_FIELD(RTL_RESOURCE_DEBUG, LIST_ENTRY, ProcessLocksList, 8, 8, 4);
     TEST_FIELD(RTL_RESOURCE_DEBUG, DWORD, EntryCount, 16, 4, 4);
     TEST_FIELD(RTL_RESOURCE_DEBUG, DWORD, ContentionCount, 20, 4, 4);
-    TEST_FIELD(RTL_RESOURCE_DEBUG, DWORD[ 2 ], Spare, 24, 8, 4);
 }
 
 static void test_pack_SECURITY_CONTEXT_TRACKING_MODE(void)
@@ -2029,13 +1962,6 @@ static void test_pack_LPPOINT(void)
     TEST_TYPE_POINTER(LPPOINT, 8, 4);
 }
 
-static void test_pack_LPPOINTS(void)
-{
-    /* LPPOINTS */
-    TEST_TYPE(LPPOINTS, 4, 4);
-    TEST_TYPE_POINTER(LPPOINTS, 4, 2);
-}
-
 static void test_pack_LPRECT(void)
 {
     /* LPRECT */
@@ -2079,14 +2005,6 @@ static void test_pack_POINTL(void)
     TEST_FIELD(POINTL, LONG, y, 4, 4, 4);
 }
 
-static void test_pack_POINTS(void)
-{
-    /* POINTS (pack 4) */
-    TEST_TYPE(POINTS, 4, 2);
-    TEST_FIELD(POINTS, SHORT, x, 0, 2, 2);
-    TEST_FIELD(POINTS, SHORT, y, 2, 2, 2);
-}
-
 static void test_pack_PPOINT(void)
 {
     /* PPOINT */
@@ -2099,13 +2017,6 @@ static void test_pack_PPOINTL(void)
     /* PPOINTL */
     TEST_TYPE(PPOINTL, 4, 4);
     TEST_TYPE_POINTER(PPOINTL, 8, 4);
-}
-
-static void test_pack_PPOINTS(void)
-{
-    /* PPOINTS */
-    TEST_TYPE(PPOINTS, 4, 4);
-    TEST_TYPE_POINTER(PPOINTS, 4, 2);
 }
 
 static void test_pack_PRECT(void)
@@ -2273,7 +2184,6 @@ static void test_pack(void)
     test_pack_IMAGE_LINENUMBER();
     test_pack_IMAGE_LOAD_CONFIG_DIRECTORY();
     test_pack_IMAGE_NT_HEADERS();
-    test_pack_IMAGE_OPTIONAL_HEADER();
     test_pack_IMAGE_OS2_HEADER();
     test_pack_IMAGE_RELOCATION();
     test_pack_IMAGE_RESOURCE_DATA_ENTRY();
@@ -2309,11 +2219,9 @@ static void test_pack(void)
     test_pack_LPCRECTL();
     test_pack_LPCVOID();
     test_pack_LPPOINT();
-    test_pack_LPPOINTS();
     test_pack_LPRECT();
     test_pack_LPRECTL();
     test_pack_LPSIZE();
-    test_pack_LPTOP_LEVEL_EXCEPTION_FILTER();
     test_pack_LRESULT();
     test_pack_LUID();
     test_pack_LUID_AND_ATTRIBUTES();
@@ -2391,10 +2299,8 @@ static void test_pack(void)
     test_pack_POBJECT_TYPE_LIST();
     test_pack_POINT();
     test_pack_POINTL();
-    test_pack_POINTS();
     test_pack_PPOINT();
     test_pack_PPOINTL();
-    test_pack_PPOINTS();
     test_pack_PPRIVILEGE_SET();
     test_pack_PRECT();
     test_pack_PRECTL();
@@ -2419,7 +2325,6 @@ static void test_pack(void)
     test_pack_PTOKEN_GROUPS();
     test_pack_PTOKEN_PRIVILEGES();
     test_pack_PTOKEN_USER();
-    test_pack_PTOP_LEVEL_EXCEPTION_FILTER();
     test_pack_PTSTR();
     test_pack_PULARGE_INTEGER();
     test_pack_PVECTORED_EXCEPTION_HANDLER();

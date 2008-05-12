@@ -50,8 +50,8 @@ static WCHAR sTooLongPassword[] = {'a','b','c','d','e','f','g','h','a','b','c','
     'a', 0};
 
 static WCHAR sTestUserName[] = {'t', 'e', 's', 't', 'u', 's', 'e', 'r', 0};
-static WCHAR sTestUserOldPass[] = {'o', 'l', 'd', 'p', 'a', 's', 's', 0};
-static WCHAR sTestUserNewPass[] = {'n', 'e', 'w', 'p', 'a', 's', 's', 0};
+static WCHAR sTestUserOldPass[] = {'O', 'l', 'd', 'P', 'a', 's', 's', 'W', '0', 'r', 'd', 'S', 'e', 't', '!', '~', 0};
+static WCHAR sTestUserNewPass[] = {'N', 'e', 'w', 'P', 'a', 's', 's', 'W', '0', 'r', 'd', 'S', 'e', 't', '!', '~', 0};
 static const WCHAR sBadNetPath[] = {'\\','\\','B','a',' ',' ','p','a','t','h',0};
 static const WCHAR sInvalidName[] = {'\\',0};
 static const WCHAR sInvalidName2[] = {'\\','\\',0};
@@ -301,7 +301,10 @@ static void run_userhandling_tests(void)
 
     ret = pNetUserChangePassword(NULL, sTestUserName, sTestUserOldPass,
             sTestUserOldPass);
-    ok(ret == NERR_Success,
+    /* Apparently NERR_PasswordTooShort can be returned on windows xp if a
+     * strict password policy is enforced
+     */
+    ok(ret == NERR_Success || ret == NERR_PasswordTooShort,
             "Changing old password to old password returned 0x%08x.\n", ret);
 
     ret = pNetUserChangePassword(NULL, sTestUserName, sTestUserNewPass,

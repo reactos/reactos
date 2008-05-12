@@ -21,11 +21,14 @@
 #include <stdarg.h>
 #include <stdio.h>
 
+#include <ntstatus.h>
+#define WIN32_NO_STATUS
 #include "wine/test.h"
 #include <windef.h>
 #include <winbase.h>
 #include <winnt.h>
 #include <winerror.h>
+#include <ntdef.h>
 
 #include "rpc.h"
 #include "rpcdce.h"
@@ -110,6 +113,7 @@ static void UuidConversionAndComparison(void) {
 	    ok( (UuidFromStringA((unsigned char*)str, &Uuid1) == RPC_S_INVALID_STRING_UUID), "Invalid UUID String\n" );
 	    str[i2] = x; /* change it back so remaining tests are interesting. */
 	}
+	RpcStringFree((unsigned char **)&str);
     }
 
     /* Uuid to String to Uuid (wchar) */
@@ -130,6 +134,7 @@ static void UuidConversionAndComparison(void) {
 	    ok( (UuidFromStringW(wstr, &Uuid1) == RPC_S_INVALID_STRING_UUID), "Invalid UUID WString\n" );
 	    wstr[i2] = wx; /* change it back so remaining tests are interesting. */
 	}
+	RpcStringFreeW(&wstr);
     }
 }
 
@@ -321,6 +326,12 @@ static void test_towers(void)
 
     ret = TowerConstruct(&mapi_if_id, &ndr_syntax, "ncacn_ip_tcp", "135", "10.0.0.1", &tower);
     ok(ret == RPC_S_OK, "TowerConstruct failed with error %ld\n", ret);
+    if (ret == RPC_S_INVALID_RPC_PROTSEQ)
+    {
+        /* Windows Vista fails with this error and crashes if we continue */
+        skip("TowerConstruct failed, we are most likely on Windows Vista\n");
+        return;
+    }
 
     /* first check we have the right amount of data */
     ok(tower->tower_length == sizeof(tower_data_tcp_ip1) ||
@@ -372,6 +383,272 @@ static void test_towers(void)
 
     I_RpcFree(address);
     I_RpcFree(tower);
+
+    /* test the behaviour for np with no address */
+    ret = TowerConstruct(&mapi_if_id, &ndr_syntax, "ncacn_np", "\\pipe\\test", NULL, &tower);
+    ok(ret == RPC_S_OK, "TowerConstruct failed with error %ld\n", ret);
+    ret = TowerExplode(tower, NULL, NULL, NULL, NULL, &address);
+    ok(ret == RPC_S_OK, "TowerExplode failed with error %ld\n", ret);
+    /* Windows XP SP3 sets address to NULL */
+    ok(!address || !strcmp(address, ""), "address was \"%s\" instead of \"\"\n or NULL (XP SP3)", address);
+
+    I_RpcFree(address);
+    I_RpcFree(tower);
+}
+
+static void test_I_RpcMapWin32Status(void)
+{
+    LONG win32status;
+    RPC_STATUS rpc_status;
+    BOOL w2k3_up = FALSE;
+
+    /* Windows 2003 and Vista return STATUS_UNSUCCESSFUL if given an unknown status */
+    win32status = I_RpcMapWin32Status(9999);
+    if (win32status == STATUS_UNSUCCESSFUL)
+    {
+        trace("We are on Windows 2003 or Vista\n");
+        w2k3_up = TRUE;
+    }
+
+    for (rpc_status = 0; rpc_status < 10000; rpc_status++)
+    {
+        LONG expected_win32status;
+        win32status = I_RpcMapWin32Status(rpc_status);
+        switch (rpc_status)
+        {
+        case ERROR_SUCCESS: expected_win32status = ERROR_SUCCESS; break;
+        case ERROR_ACCESS_DENIED: expected_win32status = STATUS_ACCESS_DENIED; break;
+        case ERROR_INVALID_HANDLE: expected_win32status = RPC_NT_SS_CONTEXT_MISMATCH; break;
+        case ERROR_OUTOFMEMORY: expected_win32status = STATUS_NO_MEMORY; break;
+        case ERROR_INVALID_PARAMETER: expected_win32status = STATUS_INVALID_PARAMETER; break;
+        case ERROR_INSUFFICIENT_BUFFER: expected_win32status = STATUS_BUFFER_TOO_SMALL; break;
+        case ERROR_MAX_THRDS_REACHED: expected_win32status = STATUS_NO_MEMORY; break;
+        case ERROR_NOACCESS: expected_win32status = STATUS_ACCESS_VIOLATION; break;
+        case ERROR_NOT_ENOUGH_SERVER_MEMORY: expected_win32status = STATUS_INSUFF_SERVER_RESOURCES; break;
+        case ERROR_WRONG_PASSWORD: expected_win32status = STATUS_WRONG_PASSWORD; break;
+        case ERROR_INVALID_LOGON_HOURS: expected_win32status = STATUS_INVALID_LOGON_HOURS; break;
+        case ERROR_PASSWORD_EXPIRED: expected_win32status = STATUS_PASSWORD_EXPIRED; break;
+        case ERROR_ACCOUNT_DISABLED: expected_win32status = STATUS_ACCOUNT_DISABLED; break;
+        case ERROR_INVALID_SECURITY_DESCR: expected_win32status = STATUS_INVALID_SECURITY_DESCR; break;
+        case RPC_S_INVALID_STRING_BINDING: expected_win32status = RPC_NT_INVALID_STRING_BINDING; break;
+        case RPC_S_WRONG_KIND_OF_BINDING: expected_win32status = RPC_NT_WRONG_KIND_OF_BINDING; break;
+        case RPC_S_INVALID_BINDING: expected_win32status = RPC_NT_INVALID_BINDING; break;
+        case RPC_S_PROTSEQ_NOT_SUPPORTED: expected_win32status = RPC_NT_PROTSEQ_NOT_SUPPORTED; break;
+        case RPC_S_INVALID_RPC_PROTSEQ: expected_win32status = RPC_NT_INVALID_RPC_PROTSEQ; break;
+        case RPC_S_INVALID_STRING_UUID: expected_win32status = RPC_NT_INVALID_STRING_UUID; break;
+        case RPC_S_INVALID_ENDPOINT_FORMAT: expected_win32status = RPC_NT_INVALID_ENDPOINT_FORMAT; break;
+        case RPC_S_INVALID_NET_ADDR: expected_win32status = RPC_NT_INVALID_NET_ADDR; break;
+        case RPC_S_NO_ENDPOINT_FOUND: expected_win32status = RPC_NT_NO_ENDPOINT_FOUND; break;
+        case RPC_S_INVALID_TIMEOUT: expected_win32status = RPC_NT_INVALID_TIMEOUT; break;
+        case RPC_S_OBJECT_NOT_FOUND: expected_win32status = RPC_NT_OBJECT_NOT_FOUND; break;
+        case RPC_S_ALREADY_REGISTERED: expected_win32status = RPC_NT_ALREADY_REGISTERED; break;
+        case RPC_S_TYPE_ALREADY_REGISTERED: expected_win32status = RPC_NT_TYPE_ALREADY_REGISTERED; break;
+        case RPC_S_ALREADY_LISTENING: expected_win32status = RPC_NT_ALREADY_LISTENING; break;
+        case RPC_S_NO_PROTSEQS_REGISTERED: expected_win32status = RPC_NT_NO_PROTSEQS_REGISTERED; break;
+        case RPC_S_NOT_LISTENING: expected_win32status = RPC_NT_NOT_LISTENING; break;
+        case RPC_S_UNKNOWN_MGR_TYPE: expected_win32status = RPC_NT_UNKNOWN_MGR_TYPE; break;
+        case RPC_S_UNKNOWN_IF: expected_win32status = RPC_NT_UNKNOWN_IF; break;
+        case RPC_S_NO_BINDINGS: expected_win32status = RPC_NT_NO_BINDINGS; break;
+        case RPC_S_NO_PROTSEQS: expected_win32status = RPC_NT_NO_PROTSEQS; break;
+        case RPC_S_CANT_CREATE_ENDPOINT: expected_win32status = RPC_NT_CANT_CREATE_ENDPOINT; break;
+        case RPC_S_OUT_OF_RESOURCES: expected_win32status = RPC_NT_OUT_OF_RESOURCES; break;
+        case RPC_S_SERVER_UNAVAILABLE: expected_win32status = RPC_NT_SERVER_UNAVAILABLE; break;
+        case RPC_S_SERVER_TOO_BUSY: expected_win32status = RPC_NT_SERVER_TOO_BUSY; break;
+        case RPC_S_INVALID_NETWORK_OPTIONS: expected_win32status = RPC_NT_INVALID_NETWORK_OPTIONS; break;
+        case RPC_S_NO_CALL_ACTIVE: expected_win32status = RPC_NT_NO_CALL_ACTIVE; break;
+        case RPC_S_CALL_FAILED: expected_win32status = RPC_NT_CALL_FAILED; break;
+        case RPC_S_CALL_FAILED_DNE: expected_win32status = RPC_NT_CALL_FAILED_DNE; break;
+        case RPC_S_PROTOCOL_ERROR: expected_win32status = RPC_NT_PROTOCOL_ERROR; break;
+        case RPC_S_UNSUPPORTED_TRANS_SYN: expected_win32status = RPC_NT_UNSUPPORTED_TRANS_SYN; break;
+        case RPC_S_UNSUPPORTED_TYPE: expected_win32status = RPC_NT_UNSUPPORTED_TYPE; break;
+        case RPC_S_INVALID_TAG: expected_win32status = RPC_NT_INVALID_TAG; break;
+        case RPC_S_INVALID_BOUND: expected_win32status = RPC_NT_INVALID_BOUND; break;
+        case RPC_S_NO_ENTRY_NAME: expected_win32status = RPC_NT_NO_ENTRY_NAME; break;
+        case RPC_S_INVALID_NAME_SYNTAX: expected_win32status = RPC_NT_INVALID_NAME_SYNTAX; break;
+        case RPC_S_UNSUPPORTED_NAME_SYNTAX: expected_win32status = RPC_NT_UNSUPPORTED_NAME_SYNTAX; break;
+        case RPC_S_UUID_NO_ADDRESS: expected_win32status = RPC_NT_UUID_NO_ADDRESS; break;
+        case RPC_S_DUPLICATE_ENDPOINT: expected_win32status = RPC_NT_DUPLICATE_ENDPOINT; break;
+        case RPC_S_UNKNOWN_AUTHN_TYPE: expected_win32status = RPC_NT_UNKNOWN_AUTHN_TYPE; break;
+        case RPC_S_MAX_CALLS_TOO_SMALL: expected_win32status = RPC_NT_MAX_CALLS_TOO_SMALL; break;
+        case RPC_S_STRING_TOO_LONG: expected_win32status = RPC_NT_STRING_TOO_LONG; break;
+        case RPC_S_PROTSEQ_NOT_FOUND: expected_win32status = RPC_NT_PROTSEQ_NOT_FOUND; break;
+        case RPC_S_PROCNUM_OUT_OF_RANGE: expected_win32status = RPC_NT_PROCNUM_OUT_OF_RANGE; break;
+        case RPC_S_BINDING_HAS_NO_AUTH: expected_win32status = RPC_NT_BINDING_HAS_NO_AUTH; break;
+        case RPC_S_UNKNOWN_AUTHN_SERVICE: expected_win32status = RPC_NT_UNKNOWN_AUTHN_SERVICE; break;
+        case RPC_S_UNKNOWN_AUTHN_LEVEL: expected_win32status = RPC_NT_UNKNOWN_AUTHN_LEVEL; break;
+        case RPC_S_INVALID_AUTH_IDENTITY: expected_win32status = RPC_NT_INVALID_AUTH_IDENTITY; break;
+        case RPC_S_UNKNOWN_AUTHZ_SERVICE: expected_win32status = RPC_NT_UNKNOWN_AUTHZ_SERVICE; break;
+        case EPT_S_INVALID_ENTRY: expected_win32status = EPT_NT_INVALID_ENTRY; break;
+        case EPT_S_CANT_PERFORM_OP: expected_win32status = EPT_NT_CANT_PERFORM_OP; break;
+        case EPT_S_NOT_REGISTERED: expected_win32status = EPT_NT_NOT_REGISTERED; break;
+        case EPT_S_CANT_CREATE: expected_win32status = EPT_NT_CANT_CREATE; break;
+        case RPC_S_NOTHING_TO_EXPORT: expected_win32status = RPC_NT_NOTHING_TO_EXPORT; break;
+        case RPC_S_INCOMPLETE_NAME: expected_win32status = RPC_NT_INCOMPLETE_NAME; break;
+        case RPC_S_INVALID_VERS_OPTION: expected_win32status = RPC_NT_INVALID_VERS_OPTION; break;
+        case RPC_S_NO_MORE_MEMBERS: expected_win32status = RPC_NT_NO_MORE_MEMBERS; break;
+        case RPC_S_NOT_ALL_OBJS_UNEXPORTED: expected_win32status = RPC_NT_NOT_ALL_OBJS_UNEXPORTED; break;
+        case RPC_S_INTERFACE_NOT_FOUND: expected_win32status = RPC_NT_INTERFACE_NOT_FOUND; break;
+        case RPC_S_ENTRY_ALREADY_EXISTS: expected_win32status = RPC_NT_ENTRY_ALREADY_EXISTS; break;
+        case RPC_S_ENTRY_NOT_FOUND: expected_win32status = RPC_NT_ENTRY_NOT_FOUND; break;
+        case RPC_S_NAME_SERVICE_UNAVAILABLE: expected_win32status = RPC_NT_NAME_SERVICE_UNAVAILABLE; break;
+        case RPC_S_INVALID_NAF_ID: expected_win32status = RPC_NT_INVALID_NAF_ID; break;
+        case RPC_S_CANNOT_SUPPORT: expected_win32status = RPC_NT_CANNOT_SUPPORT; break;
+        case RPC_S_NO_CONTEXT_AVAILABLE: expected_win32status = RPC_NT_NO_CONTEXT_AVAILABLE; break;
+        case RPC_S_INTERNAL_ERROR: expected_win32status = RPC_NT_INTERNAL_ERROR; break;
+        case RPC_S_ZERO_DIVIDE: expected_win32status = RPC_NT_ZERO_DIVIDE; break;
+        case RPC_S_ADDRESS_ERROR: expected_win32status = RPC_NT_ADDRESS_ERROR; break;
+        case RPC_S_FP_DIV_ZERO: expected_win32status = RPC_NT_FP_DIV_ZERO; break;
+        case RPC_S_FP_UNDERFLOW: expected_win32status = RPC_NT_FP_UNDERFLOW; break;
+        case RPC_S_FP_OVERFLOW: expected_win32status = RPC_NT_FP_OVERFLOW; break;
+        case RPC_S_CALL_IN_PROGRESS: expected_win32status = RPC_NT_CALL_IN_PROGRESS; break;
+        case RPC_S_NO_MORE_BINDINGS: expected_win32status = RPC_NT_NO_MORE_BINDINGS; break;
+        case RPC_S_CALL_CANCELLED: expected_win32status = RPC_NT_CALL_CANCELLED; break;
+        case RPC_S_INVALID_OBJECT: expected_win32status = RPC_NT_INVALID_OBJECT; break;
+        case RPC_S_INVALID_ASYNC_HANDLE: expected_win32status = RPC_NT_INVALID_ASYNC_HANDLE; break;
+        case RPC_S_INVALID_ASYNC_CALL: expected_win32status = RPC_NT_INVALID_ASYNC_CALL; break;
+        case RPC_S_GROUP_MEMBER_NOT_FOUND: expected_win32status = RPC_NT_GROUP_MEMBER_NOT_FOUND; break;
+        case RPC_X_NO_MORE_ENTRIES: expected_win32status = RPC_NT_NO_MORE_ENTRIES; break;
+        case RPC_X_SS_CHAR_TRANS_OPEN_FAIL: expected_win32status = RPC_NT_SS_CHAR_TRANS_OPEN_FAIL; break;
+        case RPC_X_SS_CHAR_TRANS_SHORT_FILE: expected_win32status = RPC_NT_SS_CHAR_TRANS_SHORT_FILE; break;
+        case RPC_X_SS_IN_NULL_CONTEXT: expected_win32status = RPC_NT_SS_IN_NULL_CONTEXT; break;
+        case RPC_X_SS_CONTEXT_DAMAGED: expected_win32status = RPC_NT_SS_CONTEXT_DAMAGED; break;
+        case RPC_X_SS_HANDLES_MISMATCH: expected_win32status = RPC_NT_SS_HANDLES_MISMATCH; break;
+        case RPC_X_SS_CANNOT_GET_CALL_HANDLE: expected_win32status = RPC_NT_SS_CANNOT_GET_CALL_HANDLE; break;
+        case RPC_X_NULL_REF_POINTER: expected_win32status = RPC_NT_NULL_REF_POINTER; break;
+        case RPC_X_ENUM_VALUE_OUT_OF_RANGE: expected_win32status = RPC_NT_ENUM_VALUE_OUT_OF_RANGE; break;
+        case RPC_X_BYTE_COUNT_TOO_SMALL: expected_win32status = RPC_NT_BYTE_COUNT_TOO_SMALL; break;
+        case RPC_X_BAD_STUB_DATA: expected_win32status = RPC_NT_BAD_STUB_DATA; break;
+        case RPC_X_PIPE_CLOSED: expected_win32status = RPC_NT_PIPE_CLOSED; break;
+        case RPC_X_PIPE_DISCIPLINE_ERROR: expected_win32status = RPC_NT_PIPE_DISCIPLINE_ERROR; break;
+        case RPC_X_PIPE_EMPTY: expected_win32status = RPC_NT_PIPE_EMPTY; break;
+        case ERROR_PASSWORD_MUST_CHANGE: expected_win32status = STATUS_PASSWORD_MUST_CHANGE; break;
+        case ERROR_ACCOUNT_LOCKED_OUT: expected_win32status = STATUS_ACCOUNT_LOCKED_OUT; break;
+        default:
+            if (w2k3_up)
+                expected_win32status = STATUS_UNSUCCESSFUL;
+            else
+                expected_win32status = rpc_status;
+        }
+        ok(win32status == expected_win32status, "I_RpcMapWin32Status(%ld) should have returned 0x%x instead of 0x%x\n",
+            rpc_status, expected_win32status, win32status);
+    }
+}
+
+static void test_RpcStringBindingParseA(void)
+{
+    static unsigned char valid_binding[] = "00000000-0000-0000-c000-000000000046@ncacn_np:.[endpoint=\\pipe\\test]";
+    static unsigned char valid_binding2[] = "00000000-0000-0000-c000-000000000046@ncacn_np:.[\\pipe\\test]";
+    static unsigned char invalid_uuid_binding[] = "{00000000-0000-0000-c000-000000000046}@ncacn_np:.[endpoint=\\pipe\\test]";
+    static unsigned char invalid_ep_binding[] = "00000000-0000-0000-c000-000000000046@ncacn_np:.[endpoint=test]";
+    static unsigned char invalid_binding[] = "00000000-0000-0000-c000-000000000046@ncacn_np";
+    RPC_STATUS status;
+    unsigned char *uuid;
+    unsigned char *protseq;
+    unsigned char *network_addr;
+    unsigned char *endpoint;
+    unsigned char *options;
+
+    /* test all parameters */
+    status = RpcStringBindingParseA(valid_binding, &uuid, &protseq, &network_addr, &endpoint, &options);
+    ok(status == RPC_S_OK, "RpcStringBindingParseA failed with error %ld\n", status);
+    ok(!strcmp((char *)uuid, "00000000-0000-0000-c000-000000000046"), "uuid should have been 00000000-0000-0000-C000-000000000046 instead of %s\n", uuid);
+    ok(!strcmp((char *)protseq, "ncacn_np"), "protseq should have been ncacn_np instead of %s\n", protseq);
+    ok(!strcmp((char *)network_addr, "."), "network_addr should have been . instead of %s\n", network_addr);
+    todo_wine
+    ok(!strcmp((char *)endpoint, "pipetest"), "endpoint should have been pipetest instead of %s\n", endpoint);
+    todo_wine
+    ok(options && !strcmp((char *)options, ""), "options should have been \"\" of \"%s\"\n", options);
+    RpcStringFreeA(&uuid);
+    RpcStringFreeA(&protseq);
+    RpcStringFreeA(&network_addr);
+    RpcStringFreeA(&endpoint);
+    RpcStringFreeA(&options);
+
+    /* test all parameters with different type of string binding */
+    status = RpcStringBindingParseA(valid_binding2, &uuid, &protseq, &network_addr, &endpoint, &options);
+    ok(status == RPC_S_OK, "RpcStringBindingParseA failed with error %ld\n", status);
+    ok(!strcmp((char *)uuid, "00000000-0000-0000-c000-000000000046"), "uuid should have been 00000000-0000-0000-C000-000000000046 instead of %s\n", uuid);
+    ok(!strcmp((char *)protseq, "ncacn_np"), "protseq should have been ncacn_np instead of %s\n", protseq);
+    ok(!strcmp((char *)network_addr, "."), "network_addr should have been . instead of %s\n", network_addr);
+    todo_wine
+    ok(!strcmp((char *)endpoint, "pipetest"), "endpoint should have been pipetest instead of %s\n", endpoint);
+    todo_wine
+    ok(options && !strcmp((char *)options, ""), "options should have been \"\" of \"%s\"\n", options);
+    RpcStringFreeA(&uuid);
+    RpcStringFreeA(&protseq);
+    RpcStringFreeA(&network_addr);
+    RpcStringFreeA(&endpoint);
+    RpcStringFreeA(&options);
+
+    /* test with as many parameters NULL as possible */
+    status = RpcStringBindingParseA(valid_binding, NULL, &protseq, NULL, NULL, NULL);
+    ok(status == RPC_S_OK, "RpcStringBindingParseA failed with error %ld\n", status);
+    ok(!strcmp((char *)protseq, "ncacn_np"), "protseq should have been ncacn_np instead of %s\n", protseq);
+    RpcStringFreeA(&protseq);
+
+    /* test with invalid uuid */
+    status = RpcStringBindingParseA(invalid_uuid_binding, NULL, &protseq, NULL, NULL, NULL);
+    todo_wine
+    ok(status == RPC_S_INVALID_STRING_UUID, "RpcStringBindingParseA should have returned RPC_S_INVALID_STRING_UUID instead of %ld\n", status);
+    todo_wine
+    ok(protseq == NULL, "protseq was %p instead of NULL\n", protseq);
+
+    /* test with invalid endpoint */
+    status = RpcStringBindingParseA(invalid_ep_binding, NULL, &protseq, NULL, NULL, NULL);
+    ok(status == RPC_S_OK, "RpcStringBindingParseA failed with error %ld\n", status);
+    RpcStringFreeA(&protseq);
+
+    /* test with invalid binding */
+    status = RpcStringBindingParseA(invalid_binding, &uuid, &protseq, &network_addr, &endpoint, &options);
+    todo_wine
+    ok(status == RPC_S_INVALID_STRING_BINDING, "RpcStringBindingParseA should have returned RPC_S_INVALID_STRING_BINDING instead of %ld\n", status);
+    todo_wine
+    ok(uuid == NULL, "uuid was %p instead of NULL\n", uuid);
+    ok(protseq == NULL, "protseq was %p instead of NULL\n", protseq);
+    todo_wine
+    ok(network_addr == NULL, "network_addr was %p instead of NULL\n", network_addr);
+    ok(endpoint == NULL, "endpoint was %p instead of NULL\n", endpoint);
+    ok(options == NULL, "options was %p instead of NULL\n", options);
+}
+
+static void test_I_RpcExceptionFilter(void)
+{
+    ULONG exception;
+    int retval;
+    int (WINAPI *pI_RpcExceptionFilter)(ULONG) = (void *)GetProcAddress(GetModuleHandle("rpcrt4.dll"), "I_RpcExceptionFilter");
+
+    if (!pI_RpcExceptionFilter)
+    {
+        skip("I_RpcExceptionFilter not exported\n");
+        return;
+    }
+
+    for (exception = 0; exception < STATUS_REG_NAT_CONSUMPTION; exception++)
+    {
+        /* skip over uninteresting bits of the number space */
+        if (exception == 2000) exception = 0x40000000;
+        if (exception == 0x40000005) exception = 0x80000000;
+        if (exception == 0x80000005) exception = 0xc0000000;
+
+        retval = pI_RpcExceptionFilter(exception);
+        switch (exception)
+        {
+        case STATUS_DATATYPE_MISALIGNMENT:
+        case STATUS_BREAKPOINT:
+        case STATUS_ACCESS_VIOLATION:
+        case STATUS_ILLEGAL_INSTRUCTION:
+        case STATUS_PRIVILEGED_INSTRUCTION:
+        case 0xc00000aa /* STATUS_INSTRUCTION_MISALIGNMENT */:
+        case STATUS_STACK_OVERFLOW:
+        case 0xc0000194 /* STATUS_POSSIBLE_DEADLOCK */:
+            ok(retval == EXCEPTION_CONTINUE_SEARCH, "I_RpcExceptionFilter(0x%x) should have returned %d instead of %d\n",
+               exception, EXCEPTION_CONTINUE_SEARCH, retval);
+            break;
+        default:
+            ok(retval == EXCEPTION_EXECUTE_HANDLER, "I_RpcExceptionFilter(0x%x) should have returned %d instead of %d\n",
+               exception, EXCEPTION_EXECUTE_HANDLER, retval);
+        }
+    }
 }
 
 START_TEST( rpc )
@@ -382,4 +659,7 @@ START_TEST( rpc )
     TestDceErrorInqText();
     test_rpc_ncacn_ip_tcp();
     test_towers();
+    test_I_RpcMapWin32Status();
+    test_RpcStringBindingParseA();
+    test_I_RpcExceptionFilter();
 }

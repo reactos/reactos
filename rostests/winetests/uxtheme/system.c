@@ -420,7 +420,9 @@ static void test_GetCurrentThemeName(void)
     if (bThemeActive)
         ok( hRes == E_POINTER || hRes == S_OK, "Expected E_POINTER or S_OK, got 0x%08x\n", hRes);
     else
-        ok( hRes == E_PROP_ID_UNSUPPORTED, "Expected E_PROP_ID_UNSUPPORTED, got 0x%08x\n", hRes);
+        ok( hRes == E_PROP_ID_UNSUPPORTED ||
+            hRes == E_POINTER, /* win2k3 */
+            "Expected E_PROP_ID_UNSUPPORTED, got 0x%08x\n", hRes);
     ok( GetLastError() == 0xdeadbeef,
         "Expected 0xdeadbeef, got 0x%08x\n",
         GetLastError());

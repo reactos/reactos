@@ -26,7 +26,6 @@
  *     Add W-function tests.
  *     Add missing function tests:
  *         FtpFindFirstFile
- *         FtpGetCurrentDirectory
  *         FtpGetFileSize
  *         FtpSetCurrentDirectory
  */
@@ -41,6 +40,10 @@
 #include "winsock.h"
 
 #include "wine/test.h"
+
+
+static BOOL (WINAPI *pFtpCommandA)(HINTERNET,BOOL,DWORD,LPCSTR,DWORD_PTR,HINTERNET*);
+
 
 static void test_getfile_no_open(void)
 {
@@ -680,10 +683,16 @@ static void test_command(HINTERNET hFtp, HINTERNET hConnect)
         { TRUE,  ERROR_SUCCESS,                 "PWD\r\n" }
     };
 
+    if (!pFtpCommandA)
+    {
+        skip("FtpCommandA() is not available. Skipping the Ftp command tests\n");
+        return;
+    }
+
     for (i = 0; i < sizeof(command_test) / sizeof(command_test[0]); i++)
     {
         SetLastError(0xdeadbeef);
-        ret = FtpCommandA(hFtp, FALSE, FTP_TRANSFER_TYPE_ASCII, command_test[i].cmd, 0, NULL);
+        ret = pFtpCommandA(hFtp, FALSE, FTP_TRANSFER_TYPE_ASCII, command_test[i].cmd, 0, NULL);
         error = GetLastError();
 
         ok(ret == command_test[i].ret, "%d: expected FtpCommandA to %s\n", i, command_test[i].ret ? "succeed" : "fail");
@@ -697,8 +706,14 @@ static void test_get_current_dir(HINTERNET hFtp, HINTERNET hConnect)
     DWORD   dwCurrentDirectoryLen = MAX_PATH;
     CHAR    lpszCurrentDirectory[MAX_PATH];
 
+    if (!pFtpCommandA)
+    {
+        skip("FtpCommandA() is not available. Skipping the Ftp get_current_dir tests\n");
+        return;
+    }
+
     /* change directories to get a more interesting pwd */
-    bRet = FtpCommandA(hFtp, FALSE, FTP_TRANSFER_TYPE_ASCII, "CWD pub/", 0, NULL);
+    bRet = pFtpCommandA(hFtp, FALSE, FTP_TRANSFER_TYPE_ASCII, "CWD pub/", 0, NULL);
     if(bRet == FALSE)
     {
         skip("Failed to change directories in test_get_current_dir(HINTERNET hFtp).\n");
@@ -771,7 +786,11 @@ static void test_get_current_dir(HINTERNET hFtp, HINTERNET hConnect)
 
 START_TEST(ftp)
 {
+    HMODULE hWininet;
     HANDLE hInternet, hFtp, hHttp;
+
+    hWininet = GetModuleHandleA("wininet.dll");
+    pFtpCommandA = (void*)GetProcAddress(hWininet, "FtpCommandA");
 
     SetLastError(0xdeadbeef);
     hInternet = InternetOpen("winetest", 0, NULL, NULL, 0);
