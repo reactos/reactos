@@ -3774,6 +3774,11 @@ MenuSetItemData(
     mii->fState |= MFS_DISABLED;
     mii->fMask |= MIIM_STATE;
   }
+  else if (Flags & MF_HILITE)
+  {
+    mii->fState |= MF_HILITE;
+    mii->fMask |= MIIM_STATE;
+  }
   else /* default state */
   {
     mii->fState |= MFS_ENABLED;
