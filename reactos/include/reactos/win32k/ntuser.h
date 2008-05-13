@@ -490,7 +490,7 @@ NtUserBuildHwndList(
   ULONG dwThreadId,
   ULONG lParam,
   HWND* pWnd,
-  ULONG* nBufSize);
+  ULONG* pBufSize);
 
 NTSTATUS NTAPI
 NtUserBuildNameList(
