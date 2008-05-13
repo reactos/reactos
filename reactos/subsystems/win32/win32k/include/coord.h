@@ -31,4 +31,6 @@ IntGdiModifyWorldTransform(PDC pDc,
                            CONST LPXFORM lpXForm,
                            DWORD Mode);
 
+VOID FASTCALL IntMirrorWindowOrg(PDC);
+
 #endif

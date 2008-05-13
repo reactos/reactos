@@ -2559,37 +2559,7 @@ NtGdiXFORMOBJ_iGetXform(
     return 0;
 }
 
- /*
- * @unimplemented
- */
-BOOL
-APIENTRY
-NtGdiSetSizeDevice(
-    IN HDC hdc,
-    IN INT cxVirtualDevice,
-    IN INT cyVirtualDevice)
-{
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
- /*
- * @unimplemented
- */
-BOOL
-APIENTRY
-NtGdiSetVirtualResolution(
-    IN HDC hdc,
-    IN INT cxVirtualDevicePixel,
-    IN INT cyVirtualDevicePixel,
-    IN INT cxVirtualDeviceMm,
-    IN INT cyVirtualDeviceMm)
-{
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
- /*
+/*
  * @unimplemented
  */
 INT
