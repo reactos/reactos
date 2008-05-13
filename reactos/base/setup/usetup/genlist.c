@@ -238,7 +238,25 @@ DrawListEntries(PGENERIC_LIST GenericList)
         ListEntry = CONTAINING_RECORD (Entry, GENERIC_LIST_ENTRY, Entry);
 
         if (coPos.Y == GenericList->Bottom)
+        {
+            coPos.X = GenericList->Right - 4;
+            coPos.Y = GenericList->Top;
+            WriteConsoleOutputCharacterA (StdOutput,
+                                         (LPCTSTR)"(\x18)",
+                                         3,
+                                         coPos,
+                                         &Written);
+
+            coPos.X = GenericList->Right - 4;
+            coPos.Y = GenericList->Bottom;
+            WriteConsoleOutputCharacterA (StdOutput,
+                                         (LPCTSTR)"(\x19)",
+                                         3,
+                                         coPos,
+                                         &Written);
             break;
+        }
+
         GenericList->LastShown = Entry;
 
         FillConsoleOutputAttribute (StdOutput,
@@ -311,12 +329,26 @@ VOID
 ScrollDownGenericList (PGENERIC_LIST List)
 {
     PLIST_ENTRY Entry;
+    COORD coPos;
+    DWORD Written;
 
     if (List->CurrentEntry == NULL)
         return;
 
     if (List->CurrentEntry->Entry.Flink != &List->ListHead)
     {
+        if (List->LastShown != &List->ListHead)
+        {
+            /* Draw lower edge */
+            coPos.X = List->Left + 1;
+            coPos.Y = List->Bottom;
+            FillConsoleOutputCharacterA (StdOutput,
+                                         0xC4, // '-',
+                                         List->Right - List->Left - 1,
+                                         coPos,
+                                         &Written);
+        }
+
         Entry = List->CurrentEntry->Entry.Flink;
         if (List->LastShown == &List->CurrentEntry->Entry)
         {
@@ -333,6 +365,8 @@ VOID
 ScrollUpGenericList (PGENERIC_LIST List)
 {
     PLIST_ENTRY Entry;
+    COORD coPos;
+    DWORD Written;
 
     if (List->CurrentEntry == NULL)
         return;
@@ -347,6 +381,17 @@ ScrollUpGenericList (PGENERIC_LIST List)
         }
         List->CurrentEntry = CONTAINING_RECORD (Entry, GENERIC_LIST_ENTRY, Entry);
         DrawListEntries(List);
+    }
+    else
+    {
+        /* Draw upper edge */
+        coPos.X = List->Left + 1;
+        coPos.Y = List->Top;
+        FillConsoleOutputCharacterA (StdOutput,
+                                     0xC4, // '-', 
+                                     List->Right - List->Left - 1,
+                                     coPos,
+                                     &Written);
     }
 }
 
