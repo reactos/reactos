@@ -53,6 +53,9 @@ DrawGenericList(PGENERIC_LIST List,
                 SHORT Bottom);
 
 VOID
+DrawScrollBarGenericLis(PGENERIC_LIST List);
+
+VOID
 ScrollDownGenericList(PGENERIC_LIST List);
 
 VOID

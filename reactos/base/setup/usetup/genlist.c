@@ -238,25 +238,7 @@ DrawListEntries(PGENERIC_LIST GenericList)
         ListEntry = CONTAINING_RECORD (Entry, GENERIC_LIST_ENTRY, Entry);
 
         if (coPos.Y == GenericList->Bottom)
-        {
-            coPos.X = GenericList->Right - 4;
-            coPos.Y = GenericList->Top;
-            WriteConsoleOutputCharacterA (StdOutput,
-                                         (LPCTSTR)"(\x18)",
-                                         3,
-                                         coPos,
-                                         &Written);
-
-            coPos.X = GenericList->Right - 4;
-            coPos.Y = GenericList->Bottom;
-            WriteConsoleOutputCharacterA (StdOutput,
-                                         (LPCTSTR)"(\x19)",
-                                         3,
-                                         coPos,
-                                         &Written);
             break;
-        }
-
         GenericList->LastShown = Entry;
 
         FillConsoleOutputAttribute (StdOutput,
@@ -302,6 +284,50 @@ DrawListEntries(PGENERIC_LIST GenericList)
     }
 }
 
+static VOID
+DrawScrollBarGenericList(PGENERIC_LIST GenericList)
+{
+    COORD coPos;
+	DWORD Written;
+
+    coPos.X = GenericList->Right + 1;
+    coPos.Y = GenericList->Top;
+
+	if (GenericList->FirstShown != GenericList->ListHead.Flink)
+	{
+        FillConsoleOutputCharacterA (StdOutput,
+                                     '\x18',
+                                     1,
+                                     coPos,
+                                     &Written);
+	}
+	else
+	{
+        FillConsoleOutputCharacterA (StdOutput,
+                                     ' ',
+                                     1,
+                                     coPos,
+                                     &Written);
+	}
+	
+	coPos.Y = GenericList->Bottom;
+	if (GenericList->LastShown != GenericList->ListHead.Blink)
+	{
+        FillConsoleOutputCharacterA (StdOutput,
+                                     '\x19',
+                                     1,
+                                     coPos,
+                                     &Written);
+	}
+	else
+	{
+        FillConsoleOutputCharacterA (StdOutput,
+                                     ' ',
+                                     1,
+                                     coPos,
+                                     &Written);
+	}
+}
 
 VOID
 DrawGenericList(PGENERIC_LIST List,
@@ -322,6 +348,7 @@ DrawGenericList(PGENERIC_LIST List,
         return;
 
     DrawListEntries(List);
+	DrawScrollBarGenericList(List);
 }
 
 
@@ -329,26 +356,12 @@ VOID
 ScrollDownGenericList (PGENERIC_LIST List)
 {
     PLIST_ENTRY Entry;
-    COORD coPos;
-    DWORD Written;
 
     if (List->CurrentEntry == NULL)
         return;
 
     if (List->CurrentEntry->Entry.Flink != &List->ListHead)
     {
-        if (List->LastShown != &List->ListHead)
-        {
-            /* Draw lower edge */
-            coPos.X = List->Left + 1;
-            coPos.Y = List->Bottom;
-            FillConsoleOutputCharacterA (StdOutput,
-                                         0xC4, // '-',
-                                         List->Right - List->Left - 1,
-                                         coPos,
-                                         &Written);
-        }
-
         Entry = List->CurrentEntry->Entry.Flink;
         if (List->LastShown == &List->CurrentEntry->Entry)
         {
@@ -357,6 +370,7 @@ ScrollDownGenericList (PGENERIC_LIST List)
         }
         List->CurrentEntry = CONTAINING_RECORD (Entry, GENERIC_LIST_ENTRY, Entry);
         DrawListEntries(List);
+		DrawScrollBarGenericList(List);
     }
 }
 
@@ -365,8 +379,6 @@ VOID
 ScrollUpGenericList (PGENERIC_LIST List)
 {
     PLIST_ENTRY Entry;
-    COORD coPos;
-    DWORD Written;
 
     if (List->CurrentEntry == NULL)
         return;
@@ -381,17 +393,7 @@ ScrollUpGenericList (PGENERIC_LIST List)
         }
         List->CurrentEntry = CONTAINING_RECORD (Entry, GENERIC_LIST_ENTRY, Entry);
         DrawListEntries(List);
-    }
-    else
-    {
-        /* Draw upper edge */
-        coPos.X = List->Left + 1;
-        coPos.Y = List->Top;
-        FillConsoleOutputCharacterA (StdOutput,
-                                     0xC4, // '-', 
-                                     List->Right - List->Left - 1,
-                                     coPos,
-                                     &Written);
+		DrawScrollBarGenericList(List);
     }
 }
 
