@@ -868,7 +868,7 @@ co_MsqDispatchOneSentMessage(PUSER_MESSAGE_QUEUE MessageQueue)
    if (Message->HookMessage)
    {
       Result = co_HOOK_CallHooks(Message->Msg.message,
-                                 (INT) Message->Msg.hwnd,
+                                 (INT)(INT_PTR)Message->Msg.hwnd,
                                  Message->Msg.wParam,
                                  Message->Msg.lParam);
    }
@@ -1499,9 +1499,9 @@ MsqDestroyMessageQueue(PUSER_MESSAGE_QUEUE MessageQueue)
    PDESKTOP_OBJECT desk;
 
    /* remove the message queue from any desktops */
-   if ((desk = (PDESKTOP_OBJECT)InterlockedExchange((LONG*)&MessageQueue->Desktop, 0)))
+   if ((desk = InterlockedExchangePointer((PVOID*)&MessageQueue->Desktop, 0)))
    {
-      InterlockedExchange((LONG*)&desk->ActiveMessageQueue, 0);
+      InterlockedExchangePointer((PVOID*)&desk->ActiveMessageQueue, 0);
       IntDereferenceMessageQueue(MessageQueue);
    }
 
