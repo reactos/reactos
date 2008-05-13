@@ -1501,7 +1501,7 @@ MsqDestroyMessageQueue(PUSER_MESSAGE_QUEUE MessageQueue)
    /* remove the message queue from any desktops */
    if ((desk = InterlockedExchangePointer((PVOID*)&MessageQueue->Desktop, 0)))
    {
-      InterlockedExchangePointer((PVOID*)&desk->ActiveMessageQueue, 0);
+      (void)InterlockedExchangePointer((PVOID*)&desk->ActiveMessageQueue, 0);
       IntDereferenceMessageQueue(MessageQueue);
    }
 
