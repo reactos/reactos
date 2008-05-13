@@ -133,12 +133,11 @@ HWND* WIN_ListChildren (HWND hWndparent)
   DWORD dwCount = 0;
   HWND* pHwnd = NULL;
   HANDLE hHeap;
+  NTSTATUS Status;
 
-  SetLastError(0);
+  Status = NtUserBuildHwndList ( NULL, hWndparent, FALSE, 0, 0, NULL, &dwCount );
 
-  dwCount = NtUserBuildHwndList ( NULL, hWndparent, FALSE, 0, 0, NULL, 0 );
-
-  if ( !dwCount || GetLastError() )
+  if ( !NT_SUCCESS( Status ) )
     return 0;
 
   /* allocate buffer to receive HWND handles */
@@ -152,12 +151,12 @@ HWND* WIN_ListChildren (HWND hWndparent)
     }
 
   /* now call kernel again to fill the buffer this time */
-  dwCount = NtUserBuildHwndList (NULL, hWndparent, FALSE, 0, 0, pHwnd, dwCount );
+  Status = NtUserBuildHwndList (NULL, hWndparent, FALSE, 0, 0, pHwnd, &dwCount );
 
-  if ( !dwCount || GetLastError() )
+  if ( !NT_SUCCESS( Status ) )
     {
       if ( pHwnd )
-	HeapFree ( hHeap, 0, pHwnd );
+        HeapFree ( hHeap, 0, pHwnd );
       return 0;
     }
 

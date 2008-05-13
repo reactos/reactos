@@ -558,6 +558,7 @@ User32EnumWindows (
   DWORD i, dwCount = 0;
   HWND* pHwnd = NULL;
   HANDLE hHeap;
+  NTSTATUS Status;
 
   if ( !lpfn )
     {
@@ -569,9 +570,9 @@ User32EnumWindows (
      sort of persistent buffer and only grow it ( requiring a 2nd
      call ) when the buffer wasn't already big enough? */
   /* first get how many window entries there are */
-  dwCount = NtUserBuildHwndList (
-    hDesktop, hWndparent, bChildren, dwThreadId, lParam, NULL, 0 );
-  if ( !dwCount )
+  Status = NtUserBuildHwndList (
+    hDesktop, hWndparent, bChildren, dwThreadId, lParam, NULL, &dwCount );
+  if ( !NT_SUCCESS( Status ) )
     return FALSE;
 
   /* allocate buffer to receive HWND handles */
@@ -584,9 +585,9 @@ User32EnumWindows (
     }
 
   /* now call kernel again to fill the buffer this time */
-  dwCount = NtUserBuildHwndList (
-    hDesktop, hWndparent, bChildren, dwThreadId, lParam, pHwnd, dwCount );
-  if ( !dwCount )
+  Status = NtUserBuildHwndList (
+    hDesktop, hWndparent, bChildren, dwThreadId, lParam, pHwnd, &dwCount );
+  if ( !NT_SUCCESS( Status ) )
     {
       if ( pHwnd )
         HeapFree ( hHeap, 0, pHwnd );

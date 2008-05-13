@@ -481,7 +481,7 @@ NTAPI
 NtUserBlockInput(
   BOOL BlockIt);
 
-ULONG
+NTSTATUS
 NTAPI
 NtUserBuildHwndList(
   HDESK hDesktop,
@@ -490,7 +490,7 @@ NtUserBuildHwndList(
   ULONG dwThreadId,
   ULONG lParam,
   HWND* pWnd,
-  ULONG nBufSize);
+  ULONG* nBufSize);
 
 NTSTATUS NTAPI
 NtUserBuildNameList(

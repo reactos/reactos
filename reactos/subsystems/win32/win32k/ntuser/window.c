@@ -1212,7 +1212,7 @@ NtUserAlterWindowStyle(DWORD Unknown0,
 /*
  * @implemented
  */
-ULONG
+NTSTATUS
 STDCALL
 NtUserBuildHwndList(
    HDESK hDesktop,
@@ -1221,10 +1221,13 @@ NtUserBuildHwndList(
    ULONG dwThreadId,
    ULONG lParam,
    HWND* pWnd,
-   ULONG nBufSize)
+   ULONG* pBufSize)
 {
    NTSTATUS Status;
    ULONG dwCount = 0;
+
+   if (pBufSize == 0)
+       return ERROR_INVALID_PARAMETER;
 
    if (hwndParent || !dwThreadId)
    {
@@ -1235,8 +1238,7 @@ NtUserBuildHwndList(
       {
          if(hDesktop == NULL && !(Desktop = IntGetActiveDesktop()))
          {
-            SetLastWin32Error(ERROR_INVALID_HANDLE);
-            return 0;
+            return ERROR_INVALID_HANDLE;
          }
 
          if(hDesktop)
@@ -1247,8 +1249,7 @@ NtUserBuildHwndList(
                                               &Desktop);
             if(!NT_SUCCESS(Status))
             {
-               SetLastWin32Error(ERROR_INVALID_HANDLE);
-               return 0;
+               return ERROR_INVALID_HANDLE;
             }
          }
          hwndParent = Desktop->DesktopWindow;
@@ -1268,7 +1269,7 @@ NtUserBuildHwndList(
          {
             if (bGoDown)
             {
-               if(dwCount++ < nBufSize && pWnd)
+               if(dwCount++ < *pBufSize && pWnd)
                {
                   _SEH_TRY
                   {
@@ -1323,15 +1324,13 @@ NtUserBuildHwndList(
       Status = PsLookupThreadByThreadId((HANDLE)dwThreadId, &Thread);
       if(!NT_SUCCESS(Status))
       {
-         SetLastWin32Error(ERROR_INVALID_PARAMETER);
-         return 0;
+         return ERROR_INVALID_PARAMETER;
       }
       if(!(W32Thread = (PW32THREAD)Thread->Tcb.Win32Thread))
       {
          ObDereferenceObject(Thread);
          DPRINT("Thread is not a GUI Thread!\n");
-         SetLastWin32Error(ERROR_INVALID_PARAMETER);
-         return 0;
+         return ERROR_INVALID_PARAMETER;
       }
 
       Current = W32Thread->WindowListHead.Flink;
@@ -1342,7 +1341,7 @@ NtUserBuildHwndList(
 
          if(bChildren || Window->hOwner != NULL)
          {
-             if(dwCount < nBufSize && pWnd)
+             if(dwCount < *pBufSize && pWnd)
              {
                 Status = MmCopyToCaller(pWnd++, &Window->hSelf, sizeof(HWND));
                 if(!NT_SUCCESS(Status))
@@ -1359,7 +1358,8 @@ NtUserBuildHwndList(
       ObDereferenceObject(Thread);
    }
 
-   return dwCount;
+   *pBufSize = dwCount;
+   return STATUS_SUCCESS;
 }
 
 
