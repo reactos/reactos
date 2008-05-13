@@ -66,6 +66,7 @@ namespace Sysreg_
 	string RosBootTest::ROS_EMU_MEM = "ROS_EMU_MEM";
 	string RosBootTest::ROS_BOOT_CMD = "ROS_BOOT_CMD";
 	string RosBootTest::XEN_CONFIG_FILE = "XEN_CONFIG_FILE";
+	string RosBootTest::XEN_CONFIG_NAME = "XEN_CONFIG_NAME";
 
 #ifdef __LINUX__
     string RosBootTest::ROS_EMU_PATH = "ROS_EMU_PATH_LIN";
@@ -662,7 +663,7 @@ namespace Sysreg_
     }
 
 //---------------------------------------------------------------------------------------
-    bool RosBootTest::configureXen()
+    bool RosBootTest::configureXen(ConfigParser &conf_parser)
     {
         if (!xenGetCaps())
         {
@@ -674,8 +675,9 @@ namespace Sysreg_
             cerr << "Xen configuration file missing" << endl;
             return false;
         }
-
-        m_Src = "xm console reactos";
+        m_Src = "xm console ";
+        string xen_name = "reactos";
+        conf_parser.getStringValue(RosBootTest::XEN_CONFIG_NAME, xen_name);
 
         m_DataSource = new PipeReader();
         m_BootCmd = m_EmuPath + "/xm create " + m_XenConfig;
@@ -740,14 +742,17 @@ namespace Sysreg_
         return true;
     }
 //---------------------------------------------------------------------------------------
-    void RosBootTest::cleanup()
+    void RosBootTest::cleanup(ConfigParser &conf_parser)
     {
         m_DataSource->closeSource();
         OsSupport::delayExecution(3);
 
         if (m_EmuType == EMU_TYPE_XEN)
         {
-            system("xm destroy reactos");
+            string xen_name = "reactos";
+            conf_parser.getStringValue(RosBootTest::XEN_CONFIG_NAME, xen_name);
+            string cmd = "xm destroy " + xen_name;
+            system(cmd.c_str ());
         }
         else
         {
@@ -791,7 +796,7 @@ namespace Sysreg_
         }
         else if (m_EmuType == EMU_TYPE_XEN)
         {
-            if (!configureXen())
+            if (!configureXen(conf_parser))
             {
                 cerr << "Error: failed to configure xen" << endl;
                 return false;
@@ -815,7 +820,7 @@ namespace Sysreg_
         if (!m_DataSource->openSource(m_Src))
         {
             cerr << "Error: failed to open data source with " << m_Src << endl;
-            cleanup();
+            cleanup(conf_parser);
             return false;
         }
 #ifdef __LINUX__
@@ -832,7 +837,7 @@ namespace Sysreg_
             if (!file)
             {
                 cerr << "Error: failed to launch emulator" << endl;
-                cleanup();
+                cleanup(conf_parser);
                 return false;
             }
             char buffer[128];
@@ -840,7 +845,7 @@ namespace Sysreg_
             {
                 cerr << "Error: pid file w/o pid!!! " << endl;
                 fclose(file);
-                cleanup();
+                cleanup(conf_parser);
                 return false;
             }
             m_Pid = atoi(buffer);
@@ -856,10 +861,10 @@ namespace Sysreg_
         OsSupport::setAlarm(m_MaxTime, GetCurrentProcessId());
 #endif
 
-        bool ret = analyzeDebugData();
-    cleanup();
+    bool ret = analyzeDebugData();
+    cleanup(conf_parser);
 
-	return ret;
+    return ret;
 }
 //---------------------------------------------------------------------------------------
     void RosBootTest::dumpCheckpoints()

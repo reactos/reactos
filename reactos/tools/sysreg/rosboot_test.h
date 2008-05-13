@@ -57,6 +57,7 @@ namespace Sysreg_
 		static string ROS_EMU_MEM;
 		static string ROS_BOOT_CMD;
 		static string XEN_CONFIG_FILE;
+		static string XEN_CONFIG_NAME;
 
 //---------------------------------------------------------------------------------------
 ///
@@ -109,10 +110,10 @@ namespace Sysreg_
     bool readConfigurationValues(ConfigParser & conf_parser);
     bool configureQemu();
     bool configureVmWare();
-	bool configureXen();
+    bool configureXen(ConfigParser &conf_parser);
     bool hasQemuNoRebootOption();
-    void cleanup();
-	bool xenGetCaps();
+    void cleanup(ConfigParser &conf_parser);
+    bool xenGetCaps();
 //---------------------------------------------------------------------------------------
 ///
 /// dumpCheckpoints
