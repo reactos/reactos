@@ -678,6 +678,7 @@ namespace Sysreg_
         m_Src = "xm console ";
         string xen_name = "reactos";
         conf_parser.getStringValue(RosBootTest::XEN_CONFIG_NAME, xen_name);
+        m_Src += xen_name;
 
         m_DataSource = new PipeReader();
         m_BootCmd = m_EmuPath + "/xm create " + m_XenConfig;
