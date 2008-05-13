@@ -95,6 +95,7 @@ namespace System_
 			free(buf);
 			return false;
 		}
+		fflush(m_File);
 		string line(buf);
 		lines.push_back(line);
 		return true;
