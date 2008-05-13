@@ -633,12 +633,11 @@ const Icon& IconCache::get_icon(int id)
 
 IconCache::~IconCache()
 {
-	for (int index = s_next_id; index >= 0; index--)
-	{
+/* We don't need to free cached resources - they are automatically freed at process termination
+	for (int index = s_next_id; index >= 0; index--) {
 		IconMap::iterator found = _icons.find(index);
 
-		if (found != _icons.end()) 
-		{
+		if (found != _icons.end()) {
 			Icon& icon = found->second;
 
 			if ((icon.get_icontype() == IT_DYNAMIC) || 
@@ -649,6 +648,7 @@ IconCache::~IconCache()
 			}
 		}
 	}
+*/
 }
 
 void IconCache::free_icon(int icon_id)
@@ -726,7 +726,7 @@ void explorer_show_frame(int cmdShow, LPTSTR lpCmdLine)
 	XMLPos explorer_options = g_Globals.get_cfg("general/explorer");
 	XS_String mdiStr = XMLString(explorer_options, "mdi");
 
-	 // If there isn't yet the "mdi" setting in the configuration, display MDI/SDI dialog.
+	 // If there isn't yet the "mdi" setting in the configuration, display the MDI/SDI dialog.
 	if (mdiStr.empty())
 		Dialog::DoModal(IDD_MDI_SDI, WINDOW_CREATOR(MdiSdiDlg), g_Globals._hwndDesktop);
 
@@ -1199,6 +1199,31 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
 #ifdef _USE_HDESK
 		g_Globals._desktops.get_current_Desktop()->_hwndDesktop = g_Globals._hwndDesktop;
 #endif
+	}
+
+	if (_tcsstr(ext_options,TEXT("-?"))) {
+		MessageBoxA(g_Globals._hwndDesktop,
+			"/e		open cabinet window in explorer mode\r\n"
+			"/root		open cabinet window in rooted mode\r\n"
+			"/mdi		open cabinet window in MDI mode\r\n"
+			"/sdi		open cabinet window in SDI mode\r\n"
+			"\r\n"
+			"-?		display command line options\r\n"
+			"\r\n"
+			"-desktop		start in desktop mode regardless of an already running shell\r\n"
+			"-nodesktop	disable desktop mode\r\n"
+			"-explorer		display cabinet window regardless of enabled desktop mode\r\n"
+			"\r\n"
+			"-install		replace previous shell application with ROS Explorer\r\n"
+			"\r\n"
+			"-noautostart	disable autostarts\r\n"
+			"-autostart	enable autostarts regardless of debug build\r\n"
+			"\r\n"
+			"-console		open debug console\r\n"
+			"\r\n"
+			"-debug		activate GDB remote debugging stub\r\n"
+			"-break		activate debugger breakpoint\r\n",
+			"ROS Explorer - command line options", MB_OK);
 	}
 
 	Thread* pSSOThread = NULL;
