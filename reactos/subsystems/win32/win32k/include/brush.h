@@ -17,12 +17,6 @@
 
 typedef struct
 {
-   ULONG AttrFlags;
-   COLORREF lbColor;
-} BRUSHATTR, *PBRUSHATTR;
-
-typedef struct
-{
   /* Header for all gdi objects in the handle table.
      Do not (re)move this. */
    BASEOBJECT    BaseObject;
@@ -33,8 +27,8 @@ typedef struct
    ULONG flAttrs;
 
    ULONG ulBrushUnique;
-   BRUSHATTR *pBrushAttr;
-   BRUSHATTR BrushAttr;
+   BRUSH_ATTR *pBrushAttr; // Just like DC_ATTR, pointer to user data
+   BRUSH_ATTR BrushAttr;   // "    "    DCOBJ, internal if pBrushAttr == Zero
    POINT ptOrigin;
    ULONG bCacheGrabbed;
    COLORREF crBack;
