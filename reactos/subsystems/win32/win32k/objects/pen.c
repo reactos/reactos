@@ -27,6 +27,16 @@
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
+PGDIBRUSHOBJ
+FASTCALL
+PENOBJ_LockPen(HGDIOBJ hBMObj)
+{
+   if (GDI_HANDLE_GET_TYPE(hBMObj) == GDI_OBJECT_TYPE_EXTPEN)
+      return GDIOBJ_LockObj( hBMObj, GDI_OBJECT_TYPE_EXTPEN);
+   else
+      return GDIOBJ_LockObj( hBMObj, GDI_OBJECT_TYPE_PEN);
+}
+
 HPEN STDCALL
 IntGdiExtCreatePen(
    DWORD dwPenStyle,
@@ -37,7 +47,7 @@ IntGdiExtCreatePen(
    IN ULONG_PTR ulHatch,
    DWORD dwStyleCount,
    PULONG pStyle,
-   IN ULONG cjDIB,
+   IN ULONG cjDIB,     // FIXME! We are shipping this too!
    IN BOOL bOldStylePen,
    IN OPTIONAL HBRUSH hbrush)
 {
@@ -48,6 +58,8 @@ IntGdiExtCreatePen(
    static const BYTE PatternDot[] = {0xE3, 0x8E, 0x38};
    static const BYTE PatternDashDot[] = {0xFF, 0x81, 0xC0};
    static const BYTE PatternDashDotDot[] = {0xFF, 0x8E, 0x38};
+
+   dwWidth = abs(dwWidth);
 
    if (bOldStylePen)
    {
@@ -66,6 +78,9 @@ IntGdiExtCreatePen(
    }
    hPen = PenObject->BaseObject.hHmgr;
 
+   // If nWidth is zero, the pen is a single pixel wide, regardless of the current transformation.
+   if ((bOldStylePen) && (!dwWidth)) dwWidth = 1;
+
    PenObject->ptPenWidth.x = dwWidth;
    PenObject->ptPenWidth.y = 0;
    PenObject->ulPenStyle = dwPenStyle;
@@ -78,6 +93,10 @@ IntGdiExtCreatePen(
 
    PenObject->flAttrs = bOldStylePen? GDIBRUSH_IS_OLDSTYLEPEN : GDIBRUSH_IS_PEN;
 
+   // If dwPenStyle is PS_COSMETIC, the width must be set to 1.
+   if ( !(bOldStylePen) && ((dwPenStyle & PS_TYPE_MASK) == PS_COSMETIC) && ( dwWidth != 1) )
+      goto EEXIT;
+
    switch (dwPenStyle & PS_STYLE_MASK)
    {
       case PS_NULL:
@@ -89,6 +108,8 @@ IntGdiExtCreatePen(
          break;
 
       case PS_ALTERNATE:
+         /* PS_ALTERNATE is applicable only for cosmetic pens */
+         if ((dwPenStyle & PS_TYPE_MASK) == PS_GEOMETRIC) goto EEXIT;
          PenObject->flAttrs |= GDIBRUSH_IS_BITMAP;
          PenObject->hbmPattern = IntGdiCreateBitmap(24, 1, 1, 1, (LPBYTE)PatternAlternate);
          break;
@@ -115,10 +136,35 @@ IntGdiExtCreatePen(
 
       case PS_INSIDEFRAME:
          /* FIXME: does it need some additional work? */
-         PenObject->flAttrs |= GDIBRUSH_IS_SOLID;
+         /* PS_INSIDEFRAME is applicable only for geometric pens */
+         if ((dwPenStyle & PS_TYPE_MASK) == PS_COSMETIC) goto EEXIT;
+         PenObject->flAttrs |= (GDIBRUSH_IS_SOLID|GDIBRUSH_IS_INSIDEFRAME);
          break;
 
       case PS_USERSTYLE:
+         if ((dwPenStyle & PS_TYPE_MASK) == PS_COSMETIC)
+         {
+            /* FIXME: PS_USERSTYLE workaround */
+            DPRINT1("PS_COSMETIC | PS_USERSTYLE not handled\n");
+            PenObject->flAttrs |= GDIBRUSH_IS_SOLID;
+            break;
+         }
+         else
+         {
+            UINT i;
+            BOOL has_neg = FALSE, all_zero = TRUE;
+
+            for(i = 0; (i < dwStyleCount) && !has_neg; i++)
+            {
+                has_neg = has_neg || (((INT)(pStyle[i])) < 0);
+                all_zero = all_zero && (pStyle[i] == 0);
+            }
+
+            if(all_zero || has_neg)
+            {
+                goto EEXIT;
+            }
+         }
          /* FIXME: what style here? */
          PenObject->flAttrs |= 0;
          break;
@@ -127,8 +173,16 @@ IntGdiExtCreatePen(
          DPRINT1("IntGdiExtCreatePen unknown penstyle %x\n", dwPenStyle);
    }
    PENOBJ_UnlockPen(PenObject);
-
    return hPen;
+
+EEXIT:
+   SetLastWin32Error(ERROR_INVALID_PARAMETER);
+   PENOBJ_UnlockPen(PenObject);
+   if (bOldStylePen)
+      PENOBJ_FreePenByHandle(hPen);
+   else
+      PENOBJ_FreeExtPenByHandle(hPen);
+   return NULL;
 }
 
 VOID FASTCALL
@@ -201,9 +255,10 @@ NtGdiCreatePen(
    COLORREF Color,
    IN HBRUSH hbr)
 {
-   if (PenStyle > PS_INSIDEFRAME)
+   if ( PenStyle < PS_SOLID || PenStyle > PS_INSIDEFRAME )
    {
-      PenStyle = PS_SOLID;
+      SetLastWin32Error(ERROR_INVALID_PARAMETER);
+      return NULL;
    }
 
    return IntGdiExtCreatePen(PenStyle,
@@ -237,8 +292,10 @@ NtGdiExtCreatePen(
    DWORD* pSafeStyle = NULL;
    HPEN hPen;
 
+   if (dwStyleCount < 0)  return 0;
    if (dwStyleCount > 16)
    {
+      SetLastWin32Error(ERROR_INVALID_PARAMETER);
       return 0;
    }
 
@@ -281,12 +338,7 @@ NtGdiExtCreatePen(
                              cjDIB,
                              bOldStylePen,
                              hBrush);
-
-   if ((!hPen) && (pSafeStyle))
-   {
-      ExFreePool(pSafeStyle);
-   }
-
+// BRUSH_Cleanup takes care of pSafeStyle
    return hPen;
 }
 

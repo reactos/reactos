@@ -1392,7 +1392,7 @@ SelectObject(HDC hDC,
             return NtGdiSelectBrush(hDC, hGdiObj);
 
         case GDI_OBJECT_TYPE_PEN:
-//        case GDI_OBJECT_TYPE_EXTPEN:
+        case GDI_OBJECT_TYPE_EXTPEN:
 #if 0 // enable this when support is ready in win32k
             hOldObj = pDc_Attr->hpen;
             pDc_Attr->ulDirty_ |= DC_PEN_DIRTY;
