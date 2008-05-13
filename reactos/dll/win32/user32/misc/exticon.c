@@ -630,6 +630,8 @@ UINT WINAPI PrivateExtractIconsA (
     UINT ret;
     INT len = MultiByteToWideChar(CP_ACP, 0, lpstrFile, -1, NULL, 0);
     LPWSTR lpwstrFile = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
+    if (lpwstrFile == NULL)
+        return 0;
 
     MultiByteToWideChar(CP_ACP, 0, lpstrFile, -1, lpwstrFile, len);
     ret = PrivateExtractIconsW(lpwstrFile, nIndex, sizeX, sizeY, phicon, piconid, nIcons, flags);
@@ -709,6 +711,8 @@ UINT WINAPI PrivateExtractIconExA (
 	UINT ret;
 	INT len = MultiByteToWideChar(CP_ACP, 0, lpstrFile, -1, NULL, 0);
 	LPWSTR lpwstrFile = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
+    if (lpwstrFile == NULL)
+        return 0;
 
 	TRACE("%s %d %p %p %d\n", lpstrFile, nIndex, phIconLarge, phIconSmall, nIcons);
 

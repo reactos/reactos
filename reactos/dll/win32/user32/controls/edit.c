@@ -656,7 +656,7 @@ static LRESULT WINAPI EditWndProc_common( HWND hwnd, UINT msg,
 		    LPSTR textA = (LPSTR)lParam;
 		    INT countW = MultiByteToWideChar(CP_ACP, 0, textA, -1, NULL, 0);
 		    if((textW = HeapAlloc(GetProcessHeap(), 0, countW * sizeof(WCHAR))))
-			MultiByteToWideChar(CP_ACP, 0, textA, -1, textW, countW);
+			    MultiByteToWideChar(CP_ACP, 0, textA, -1, textW, countW);
 		}
 
 		EDIT_EM_ReplaceSel(es, (BOOL)wParam, textW, TRUE, TRUE);
@@ -930,9 +930,9 @@ static LRESULT WINAPI EditWndProc_common( HWND hwnd, UINT msg,
 		    LPWSTR nameW = NULL;
 		    if(nameA)
 		    {
-			INT countW = MultiByteToWideChar(CP_ACP, 0, nameA, -1, NULL, 0);
-			if((nameW = HeapAlloc(GetProcessHeap(), 0, countW * sizeof(WCHAR))))
-			    MultiByteToWideChar(CP_ACP, 0, nameA, -1, nameW, countW);
+			    INT countW = MultiByteToWideChar(CP_ACP, 0, nameA, -1, NULL, 0);
+			    if((nameW = HeapAlloc(GetProcessHeap(), 0, countW * sizeof(WCHAR))))
+			        MultiByteToWideChar(CP_ACP, 0, nameA, -1, nameW, countW);
 		    }
 		    result = EDIT_WM_Create(es, nameW);
 		    HeapFree(GetProcessHeap(), 0, nameW);
@@ -1222,6 +1222,8 @@ static void EDIT_BuildLineDefs_ML(EDITSTATE *es, INT istart, INT iend, INT delta
 				/* The buffer has been expanded, create a new line and
 				   insert it into the link list */
 				LINEDEF *new_line = HeapAlloc(GetProcessHeap(), 0, sizeof(LINEDEF));
+                if (new_line == NULL)
+                    break;
 				new_line->next = previous_line->next;
 				previous_line->next = new_line;
 				current_line = new_line;
@@ -1517,6 +1519,8 @@ static INT EDIT_CallWordBreakProc(EDITSTATE *es, INT start, INT index, INT count
 
 		countA = WideCharToMultiByte(CP_ACP, 0, es->text + start, count, NULL, 0, NULL, NULL);
 		textA = HeapAlloc(GetProcessHeap(), 0, countA);
+        if (textA == NULL)
+            return 0;
 		WideCharToMultiByte(CP_ACP, 0, es->text + start, count, textA, countA, NULL, NULL);
 		TRACE_(relay)("(ANSI wordbrk=%p,str=%s,idx=%d,cnt=%d,act=%d)\n",
 			es->word_break_proc, debugstr_an(textA, countA), index, countA, action);
@@ -1723,6 +1727,8 @@ static LPWSTR EDIT_GetPasswordPointer_SL(EDITSTATE *es)
 	if (es->style & ES_PASSWORD) {
 		INT len = get_text_length(es);
 		LPWSTR text = HeapAlloc(GetProcessHeap(), 0, (len + 1) * sizeof(WCHAR));
+        if (text == NULL)
+            return NULL;
 		text[len] = '\0';
 		while(len) text[--len] = es->password_char;
 		return text;
@@ -3958,6 +3964,11 @@ static BOOL EDIT_EM_SetTabStops(EDITSTATE *es, INT count, LPINT tabs)
 		es->tabs = NULL;
 	else {
 		es->tabs = HeapAlloc(GetProcessHeap(), 0, count * sizeof(INT));
+        if (es->tabs == NULL)
+        {
+            es->tabs_count = 0;
+            return FALSE;
+        }
 		memcpy(es->tabs, tabs, count * sizeof(INT));
 	}
 	return TRUE;
@@ -4051,6 +4062,8 @@ static BOOL EDIT_EM_Undo(EDITSTATE *es)
 	ulength = strlenW(es->undo_text);
 
 	utext = HeapAlloc(GetProcessHeap(), 0, (ulength + 1) * sizeof(WCHAR));
+    if (utext == NULL)
+        return FALSE;
 
 	strcpyW(utext, es->undo_text);
 

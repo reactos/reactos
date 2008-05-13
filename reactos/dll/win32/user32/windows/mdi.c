@@ -592,11 +592,22 @@ static LRESULT MDIDestroyChild( HWND client, MDICLIENTINFO *ci,
         if (ci->child[i] == child)
         {
             HWND *new_child = HeapAlloc(GetProcessHeap(), 0, (ci->nActiveChildren - 1) * sizeof(HWND));
-            memcpy(new_child, ci->child, i * sizeof(HWND));
-            if (i + 1 < ci->nActiveChildren)
-                memcpy(new_child + i, ci->child + i + 1, (ci->nActiveChildren - i - 1) * sizeof(HWND));
-            HeapFree(GetProcessHeap(), 0, ci->child);
-            ci->child = new_child;
+            if (new_child != NULL)
+            {
+                memcpy(new_child, ci->child, i * sizeof(HWND));
+                if (i + 1 < ci->nActiveChildren)
+                    memcpy(new_child + i, ci->child + i + 1, (ci->nActiveChildren - i - 1) * sizeof(HWND));
+                HeapFree(GetProcessHeap(), 0, ci->child);
+                ci->child = new_child;
+            }
+            else
+            {
+                UINT c;
+                for (c = i; c < ci->nActiveChildren - 1; c++)
+                {
+                    ci->child[c] = ci->child[c+1];
+                }
+            }
 
             ci->nActiveChildren--;
             break;
@@ -1248,15 +1259,17 @@ static LRESULT MDIClientWndProc_common( HWND hwnd, UINT message,
         case WM_CREATE:
             if (GetWindowLongW((HWND)lParam, GWL_EXSTYLE) & WS_EX_MDICHILD)
             {
-                ci->nTotalCreated++;
-                ci->nActiveChildren++;
-
                 if (!ci->child)
                     ci->child = HeapAlloc(GetProcessHeap(), 0, sizeof(HWND));
                 else
-                    ci->child = HeapReAlloc(GetProcessHeap(), 0, ci->child, sizeof(HWND) * ci->nActiveChildren);
+                    ci->child = HeapReAlloc(GetProcessHeap(), 0, ci->child, sizeof(HWND) * (ci->nActiveChildren + 1));
 
-                ci->child[ci->nActiveChildren - 1] = (HWND)lParam;
+                if (ci->child != NULL)
+                {
+                    ci->child[ci->nActiveChildren] = (HWND)lParam;
+                    ci->nTotalCreated++;
+                    ci->nActiveChildren++;
+                }
             }
             break;
 
@@ -1343,6 +1356,8 @@ LRESULT WINAPI DefFrameProcA( HWND hwnd, HWND hwndMDIClient,
             {
                 DWORD len = MultiByteToWideChar( CP_ACP, 0, (LPSTR)lParam, -1, NULL, 0 );
                 LPWSTR text = HeapAlloc( GetProcessHeap(), 0, len * sizeof(WCHAR) );
+                if (text == NULL)
+                    return 0;
                 MultiByteToWideChar( CP_ACP, 0, (LPSTR)lParam, -1, text, len );
                 MDI_UpdateFrameText( hwnd, hwndMDIClient, text );
                 HeapFree( GetProcessHeap(), 0, text );

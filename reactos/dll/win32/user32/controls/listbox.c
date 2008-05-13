@@ -1620,8 +1620,15 @@ static LRESULT LISTBOX_InsertItem( LB_DESCR *descr, INT index,
         /* We need to grow the array */
         max_items += LB_ARRAY_GRANULARITY;
 	if (descr->items)
+    {
     	    item = HeapReAlloc( GetProcessHeap(), 0, descr->items,
                                   max_items * sizeof(LB_ITEMDATA) );
+            if (!item)
+            {
+                SEND_NOTIFICATION( descr, LBN_ERRSPACE );
+                return LB_ERRSPACE;
+            }
+    }
 	else
 	    item = HeapAlloc( GetProcessHeap(), 0,
                                   max_items * sizeof(LB_ITEMDATA) );

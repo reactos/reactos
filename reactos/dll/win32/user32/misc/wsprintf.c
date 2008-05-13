@@ -553,7 +553,10 @@ DWORD STDCALL WCSToMBEx(WORD CodePage,LPWSTR UnicodeString,LONG UnicodeSize,LPST
 	}
 	if (Allocate)
 	{
-		*MBString = RtlAllocateHeap(GetProcessHeap(), 0, MBSize);
+		LPSTR SafeString = RtlAllocateHeap(GetProcessHeap(), 0, MBSize);
+        if (SafeString == NULL)
+            return 0;
+        *MBString = SafeString;
 	}
 	if (CodePage == 0)
 	{
@@ -585,7 +588,10 @@ DWORD STDCALL MBToWCSEx(WORD CodePage,LPSTR MBString,LONG MBSize,LPWSTR *Unicode
 	}
 	if (Allocate)
 	{
-		*UnicodeString = RtlAllocateHeap(GetProcessHeap(), 0, UnicodeSize);
+		LPWSTR SafeString = RtlAllocateHeap(GetProcessHeap(), 0, UnicodeSize);
+        if (SafeString == NULL)
+            return 0;
+        *UnicodeString = SafeString;
 	}
 	UnicodeSize *= sizeof(WCHAR);
 	if (CodePage == 0)
