@@ -14,6 +14,8 @@
 
 static HWND MainDlgWnd;
 static HIMAGELIST hImgList;
+// for SaveInputLang()
+static INT OldLayoutNum;
 
 typedef struct
 {
@@ -24,6 +26,15 @@ typedef struct
     TCHAR IndName[MAX_PATH];
 } LAYOUT_ITEM, *LPLAYOUT_ITEM;
 
+
+static INT
+IsLayoutSelected()
+{
+    INT iIndex = (INT) SendMessage(GetDlgItem(MainDlgWnd, IDC_KEYLAYOUT_LIST),
+                                   LVM_GETNEXTITEM, -1, LVNI_FOCUSED);
+
+    return iIndex;
+}
 
 static HICON
 CreateLayoutIcon(LPTSTR szInd)
@@ -83,6 +94,51 @@ CreateLayoutIcon(LPTSTR szInd)
     DeleteObject(hBitmap);
 
     return hIcon;
+}
+
+static BOOL
+GetLayoutID(LPTSTR szLayoutNum, LPTSTR szLCID)
+{
+    DWORD dwBufLen;
+    DWORD dwRes;
+    HKEY hKey;
+    TCHAR szTempLCID[CCH_LAYOUT_ID + 1];
+
+    // Get the Layout ID
+    if (RegOpenKeyEx(HKEY_CURRENT_USER, _T("Keyboard Layout\\Preload"), 0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
+    {
+        dwBufLen = sizeof(szTempLCID);
+        dwRes = RegQueryValueEx(hKey, szLayoutNum, NULL, NULL, (LPBYTE)szTempLCID, &dwBufLen);
+
+        if (dwRes != ERROR_SUCCESS)
+        {
+            RegCloseKey(hKey);
+            return FALSE;
+        }
+
+        RegCloseKey(hKey);
+    }
+
+    // Look for a substitude of this layout
+    if (RegOpenKeyEx(HKEY_CURRENT_USER, _T("Keyboard Layout\\Substitutes"), 0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
+    {
+        dwBufLen = sizeof(szTempLCID);
+
+        if (RegQueryValueEx(hKey, szTempLCID, NULL, NULL, (LPBYTE)szLCID, &dwBufLen) != ERROR_SUCCESS)
+        {
+            // No substitute found, then use the old LCID
+            lstrcpy(szLCID, szTempLCID);
+        }
+
+        RegCloseKey(hKey);
+    }
+    else
+    {
+        // Substitutes key couldn't be opened, so use the old LCID
+        lstrcpy(szLCID, szTempLCID);
+    }
+
+    return TRUE;
 }
 
 BOOL
@@ -312,6 +368,195 @@ DeleteLayout(VOID)
     }
 }
 
+static VOID
+SaveInputLang(HWND hDlg)
+{
+    HKEY hKey, hSubKey;
+    TCHAR szLayoutID[CCH_LAYOUT_ID + 1], szLayoutNum[CCH_ULONG_DEC + 1],
+          szPreload[CCH_LAYOUT_ID + 1], LangID[CCH_LAYOUT_ID + 1],
+          Lang[MAX_PATH], SubPath[MAX_PATH];
+    PTSTR pts;
+    INT iLayout;
+    DWORD dwSize;
+    LANGID langid;
+
+    iLayout = SendMessage(GetDlgItem(hDlg, IDC_KB_LAYOUT_IME_COMBO), CB_GETCURSEL, 0, 0);
+    if (iLayout == CB_ERR) return;
+
+    pts = (PTSTR) SendMessage(GetDlgItem(hDlg, IDC_KB_LAYOUT_IME_COMBO), CB_GETITEMDATA, iLayout, 0);
+
+    _ultot(OldLayoutNum, szLayoutNum, 10);
+    if (!GetLayoutID(szLayoutNum, szLayoutID)) return;
+
+    // if old layout = selected layout
+    if (_tcscmp(szLayoutID, pts) == 0) return;
+
+    if (RegOpenKeyEx(HKEY_CURRENT_USER, _T("Keyboard Layout\\Preload"), 0,
+                     KEY_ALL_ACCESS, &hKey) == ERROR_SUCCESS)
+    {
+        dwSize = sizeof(szPreload);
+        if (RegQueryValueEx(hKey, szLayoutNum, NULL, NULL, (LPBYTE)szPreload, &dwSize) != ERROR_SUCCESS)
+        {
+            RegCloseKey(hKey);
+            return;
+        }
+
+        langid = (LANGID)_tcstoul(szPreload, NULL, 16);
+        GetLocaleInfo(langid, LOCALE_ILANGUAGE, Lang, sizeof(Lang) / sizeof(TCHAR));
+        wsprintf(LangID, _T("0000%s"), Lang);
+
+        if (szPreload[0] == 'd')
+        {
+            if (_tcscmp(LangID, pts) == 0)
+            {
+                if (RegOpenKeyEx(HKEY_CURRENT_USER, _T("Keyboard Layout\\Substitutes"), 0,
+                                 KEY_ALL_ACCESS, &hSubKey) == ERROR_SUCCESS)
+                {
+                    if (RegDeleteValue(hSubKey, szPreload) != ERROR_SUCCESS)
+                    {
+                        RegCloseKey(hSubKey);
+                        RegCloseKey(hKey);
+                        return;
+                    }
+                    RegCloseKey(hSubKey);
+
+                    RegSetValueEx(hKey, szLayoutNum, 0, REG_SZ, (LPBYTE)pts,
+                                  (DWORD)((CCH_LAYOUT_ID + 1) * sizeof(TCHAR)));
+                }
+            }
+            else
+            {
+                if (RegOpenKeyEx(HKEY_CURRENT_USER, _T("Keyboard Layout\\Substitutes"), 0,
+                                 KEY_ALL_ACCESS, &hSubKey) == ERROR_SUCCESS)
+                {
+                    RegSetValueEx(hSubKey, szPreload, 0, REG_SZ, (LPBYTE)pts,
+                                  (DWORD)((CCH_LAYOUT_ID + 1) * sizeof(TCHAR)));
+
+                    RegCloseKey(hSubKey);
+                }
+            }
+        }
+        else
+        {
+            if (_tcscmp(LangID, pts) == 0)
+            {
+                RegSetValueEx(hKey, szLayoutNum, 0, REG_SZ, (LPBYTE)pts,
+                              (DWORD)((CCH_LAYOUT_ID + 1) * sizeof(TCHAR)));
+            }
+            else
+            {
+                if (RegCreateKeyEx(HKEY_CURRENT_USER, _T("Keyboard Layout\\Substitutes"), 0, NULL,
+                                   REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS,
+                                   NULL, &hSubKey, NULL) == ERROR_SUCCESS)
+                {
+                    wsprintf(SubPath, _T("d%03d%s"), GetLayoutCount(Lang)-1, Lang);
+
+                    RegSetValueEx(hSubKey, SubPath, 0, REG_SZ, (LPBYTE)pts,
+                                  (DWORD)((CCH_LAYOUT_ID + 1) * sizeof(TCHAR)));
+
+                    RegSetValueEx(hKey, szLayoutNum, 0, REG_SZ, (LPBYTE)SubPath,
+                                  (DWORD)((CCH_LAYOUT_ID + 1) * sizeof(TCHAR)));
+
+                    RegCloseKey(hSubKey);
+                }
+            }
+        }
+
+        RegCloseKey(hKey);
+    }
+}
+
+static VOID
+InitInputLangPropDlg(HWND hDlg)
+{
+    HKEY hKey, hSubKey;
+    LVITEM item;
+    INT LayoutNum;
+    TCHAR szLayoutNum[10 + 1], szPreload[CCH_LAYOUT_ID + 1],
+          szTmp[CCH_LAYOUT_ID + 1], szName[MAX_PATH];
+    DWORD dwSize;
+    LANGID langid;
+
+    ZeroMemory(&item, sizeof(LVITEM));
+
+    item.mask = LVIF_PARAM;
+    item.iItem = IsLayoutSelected();
+
+    (VOID) ListView_GetItem(GetDlgItem(MainDlgWnd, IDC_KEYLAYOUT_LIST), &item);
+    LayoutNum = (INT) item.lParam;
+    OldLayoutNum = LayoutNum;
+
+    if (RegOpenKeyEx(HKEY_CURRENT_USER, _T("Keyboard Layout\\Preload"), 0,
+                     KEY_ALL_ACCESS, &hKey) == ERROR_SUCCESS)
+    {
+        _ultot(LayoutNum, szLayoutNum, 10);
+
+        dwSize = sizeof(szPreload);
+        RegQueryValueEx(hKey, szLayoutNum, NULL, NULL, (LPBYTE)szPreload, &dwSize);
+
+        langid = (LANGID)_tcstoul(szPreload, NULL, 16);
+        GetLocaleInfo(langid, LOCALE_SLANGUAGE, (LPTSTR)szName, sizeof(szName) / sizeof(TCHAR));
+        SetWindowText(GetDlgItem(hDlg, IDC_INPUT_LANG_STR), szName);
+
+        if (szPreload[0] == 'd')
+        {
+            if (RegOpenKeyEx(HKEY_CURRENT_USER, _T("Keyboard Layout\\Substitutes"), 0,
+                                     KEY_ALL_ACCESS, &hSubKey) == ERROR_SUCCESS)
+            {
+                if (RegQueryValueEx(hSubKey, szPreload, NULL, NULL, (LPBYTE)szTmp, &dwSize) != ERROR_SUCCESS)
+                {
+                    RegCloseKey(hSubKey);
+                    RegCloseKey(hKey);
+                    return;
+                }
+                lstrcpy(szPreload, szTmp);
+                RegCloseKey(hSubKey);
+            }
+        }
+
+        if (GetLayoutName(szPreload, szName))
+        {
+            SendMessage(GetDlgItem(hDlg, IDC_KB_LAYOUT_IME_COMBO),
+                        CB_SELECTSTRING, (WPARAM)-1, (LPARAM)szName);
+        }
+    }
+    RegCloseKey(hKey);
+}
+
+INT_PTR CALLBACK
+InputLangPropDlgProc(HWND hDlg,
+               UINT message,
+               WPARAM wParam,
+               LPARAM lParam)
+{
+    UNREFERENCED_PARAMETER(lParam);
+
+    switch (message)
+    {
+        case WM_INITDIALOG:
+            CreateKeyboardLayoutList(GetDlgItem(hDlg, IDC_KB_LAYOUT_IME_COMBO));
+            InitInputLangPropDlg(hDlg);
+            break;
+
+        case WM_COMMAND:
+            switch (LOWORD(wParam))
+            {
+                case IDOK:
+                    SaveInputLang(hDlg);
+                    UpdateLayoutsList();
+                    EndDialog(hDlg,LOWORD(wParam));
+                    break;
+
+                case IDCANCEL:
+                    EndDialog(hDlg,LOWORD(wParam));
+                    break;
+            }
+            break;
+    }
+
+    return FALSE;
+}
+
 /* Property page dialog callback */
 INT_PTR CALLBACK
 SettingPageProc(HWND hwndDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
@@ -329,8 +574,6 @@ SettingPageProc(HWND hwndDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
             hImgList = ImageList_Create(16, 16, ILC_COLOR8 | ILC_MASK, 0, 1);
             InitLangList(hwndDlg);
             (VOID) ListView_SetImageList(GetDlgItem(MainDlgWnd, IDC_KEYLAYOUT_LIST), hImgList, LVSIL_SMALL);
-            EnableWindow(GetDlgItem(hwndDlg, IDC_PROP_BUTTON),FALSE);
-            EnableWindow(GetDlgItem(hwndDlg, IDC_SET_DEFAULT),FALSE);
         }
             break;
         case WM_NOTIFY:
@@ -363,10 +606,15 @@ SettingPageProc(HWND hwndDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
                     break;
 
                 case IDC_PROP_BUTTON:
+                    if (IsLayoutSelected() != -1)
                     DialogBox(hApplet,
                               MAKEINTRESOURCE(IDD_INPUT_LANG_PROP),
                               hwndDlg,
                               InputLangPropDlgProc);
+                    break;
+
+                case IDC_SET_DEFAULT:
+
                     break;
             }
             break;

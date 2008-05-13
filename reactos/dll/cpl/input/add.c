@@ -36,7 +36,7 @@ SelectLayoutByLang(VOID)
     }
 }
 
-static INT
+INT
 GetLayoutCount(LPTSTR szLang)
 {
     HKEY hKey;
@@ -84,7 +84,7 @@ AddNewLayout(HWND hwndDlg)
     iLayout = SendMessage(hLayoutList, CB_GETCURSEL, 0, 0);
     if (iLayout == CB_ERR) return;
 
-    if (RegOpenKeyEx(HKEY_CURRENT_USER, _T("Keyboard Layout\\Preload"), 0, KEY_QUERY_VALUE | KEY_SET_VALUE, &hKey) == ERROR_SUCCESS)
+    if (RegOpenKeyEx(HKEY_CURRENT_USER, _T("Keyboard Layout\\Preload"), 0, KEY_ALL_ACCESS, &hKey) == ERROR_SUCCESS)
     {
         if (RegQueryInfoKey(hKey, NULL, NULL, NULL, NULL, NULL, NULL, &cValues, NULL, NULL, NULL, NULL) == ERROR_SUCCESS)
         {
@@ -111,7 +111,7 @@ AddNewLayout(HWND hwndDlg)
             if (_tcslen(SubPath) != 0)
             {
                 if (RegCreateKeyEx(HKEY_CURRENT_USER, _T("Keyboard Layout\\Substitutes"), 0, NULL,
-                                   REG_OPTION_NON_VOLATILE, KEY_QUERY_VALUE | KEY_SET_VALUE | KEY_WRITE,
+                                   REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS,
                                    NULL, &hSubKey, NULL) == ERROR_SUCCESS)
                 {
                     if (RegSetValueEx(hSubKey, SubPath, 0, REG_SZ, (LPBYTE)pts,
@@ -123,7 +123,7 @@ AddNewLayout(HWND hwndDlg)
                     }
                     RegCloseKey(hSubKey);
                 }
-                pts = SubPath;
+                lstrcpy(pts, SubPath);
             }
 
             if (RegSetValueEx(hKey,
@@ -141,7 +141,7 @@ AddNewLayout(HWND hwndDlg)
 }
 
 VOID
-CreateKeyboardLayoutList(VOID)
+CreateKeyboardLayoutList(HWND hItemsList)
 {
     HKEY hKey;
     PTSTR pstrLayoutID;
@@ -157,16 +157,16 @@ CreateKeyboardLayoutList(VOID)
         {
             GetLayoutName(szLayoutID, KeyName);
 
-            INT iIndex = (INT) SendMessage(hLayoutList, CB_ADDSTRING, 0, (LPARAM)KeyName);
+            INT iIndex = (INT) SendMessage(hItemsList, CB_ADDSTRING, 0, (LPARAM)KeyName);
 
             pstrLayoutID = (PTSTR)HeapAlloc(hProcessHeap, 0, sizeof(szLayoutID));
             lstrcpy(pstrLayoutID, szLayoutID);
-            SendMessage(hLayoutList, CB_SETITEMDATA, iIndex, (LPARAM)pstrLayoutID);
+            SendMessage(hItemsList, CB_SETITEMDATA, iIndex, (LPARAM)pstrLayoutID);
 
             // FIXME!
             if (_tcscmp(szLayoutID, _T("00000409")) == 0)
             {
-                SendMessage(hLayoutList, CB_SETCURSEL, (WPARAM)iIndex, (LPARAM)0);
+                SendMessage(hItemsList, CB_SETCURSEL, (WPARAM)iIndex, (LPARAM)0);
             }
 
             dwIndex++;
@@ -220,7 +220,7 @@ AddDlgProc(HWND hDlg,
             hLangList = GetDlgItem(hDlg, IDC_INPUT_LANG_COMBO);
             hLayoutList = GetDlgItem(hDlg, IDC_KEYBOARD_LO_COMBO);
             EnumSystemLocales(LanguagesEnumProc, LCID_INSTALLED);
-            CreateKeyboardLayoutList();
+            CreateKeyboardLayoutList(hLayoutList);
         }
         break;
 

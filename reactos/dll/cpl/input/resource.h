@@ -38,6 +38,7 @@
 #define IDC_KEYBOARD_LO_COMBO                           1011
 #define IDC_USE_SK                                      1012
 #define IDC_KB_LAYOUT_IME_COMBO                         1013
+#define IDC_INPUT_LANG_STR                              1014
 
 /* IDS */
 #define IDS_CPLSYSTEMNAME                               1

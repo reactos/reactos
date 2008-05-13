@@ -50,15 +50,13 @@ KeySettingsDlgProc(HWND hDlg,UINT message,WPARAM wParam,LPARAM lParam);
 INT_PTR CALLBACK
 AddDlgProc(HWND hDlg,UINT message,WPARAM wParam,LPARAM lParam);
 VOID
-CreateKeyboardLayoutList(VOID);
+CreateKeyboardLayoutList(HWND hItemsList);
+INT
+GetLayoutCount(LPTSTR szLang);
 
 /* changekeyseq.c */
 INT_PTR CALLBACK
 ChangeKeySeqDlgProc(HWND hDlg,UINT message,WPARAM wParam,LPARAM lParam);
-
-/* inputlangprop.c */
-INT_PTR CALLBACK
-InputLangPropDlgProc(HWND hDlg,UINT message,WPARAM wParam,LPARAM lParam);
 
 void ShowLastWin32Error(HWND hWndOwner);
 

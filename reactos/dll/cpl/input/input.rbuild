@@ -16,6 +16,5 @@
 	<file>keysettings.c</file>
 	<file>add.c</file>
 	<file>changekeyseq.c</file>
-	<file>inputlangprop.c</file>
 	<file>input.rc</file>
 </module>
