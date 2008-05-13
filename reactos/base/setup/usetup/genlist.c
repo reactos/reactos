@@ -288,45 +288,45 @@ static VOID
 DrawScrollBarGenericList(PGENERIC_LIST GenericList)
 {
     COORD coPos;
-	DWORD Written;
+    DWORD Written;
 
     coPos.X = GenericList->Right + 1;
     coPos.Y = GenericList->Top;
 
-	if (GenericList->FirstShown != GenericList->ListHead.Flink)
-	{
+    if (GenericList->FirstShown != GenericList->ListHead.Flink)
+    {
         FillConsoleOutputCharacterA (StdOutput,
                                      '\x18',
                                      1,
                                      coPos,
                                      &Written);
-	}
-	else
-	{
+    }
+    else
+    {
         FillConsoleOutputCharacterA (StdOutput,
                                      ' ',
                                      1,
                                      coPos,
                                      &Written);
-	}
-	
-	coPos.Y = GenericList->Bottom;
-	if (GenericList->LastShown != GenericList->ListHead.Blink)
-	{
+    }
+
+    coPos.Y = GenericList->Bottom;
+    if (GenericList->LastShown != GenericList->ListHead.Blink)
+    {
         FillConsoleOutputCharacterA (StdOutput,
                                      '\x19',
                                      1,
                                      coPos,
                                      &Written);
-	}
-	else
-	{
+    }
+    else
+    {
         FillConsoleOutputCharacterA (StdOutput,
                                      ' ',
                                      1,
                                      coPos,
                                      &Written);
-	}
+    }
 }
 
 VOID
@@ -348,7 +348,7 @@ DrawGenericList(PGENERIC_LIST List,
         return;
 
     DrawListEntries(List);
-	DrawScrollBarGenericList(List);
+    DrawScrollBarGenericList(List);
 }
 
 
@@ -369,8 +369,9 @@ ScrollDownGenericList (PGENERIC_LIST List)
             List->LastShown = List->LastShown->Flink;
         }
         List->CurrentEntry = CONTAINING_RECORD (Entry, GENERIC_LIST_ENTRY, Entry);
+
         DrawListEntries(List);
-		DrawScrollBarGenericList(List);
+        DrawScrollBarGenericList(List);
     }
 }
 
@@ -392,8 +393,9 @@ ScrollUpGenericList (PGENERIC_LIST List)
             List->LastShown = List->LastShown->Blink;
         }
         List->CurrentEntry = CONTAINING_RECORD (Entry, GENERIC_LIST_ENTRY, Entry);
+
         DrawListEntries(List);
-		DrawScrollBarGenericList(List);
+        DrawScrollBarGenericList(List);
     }
 }
 

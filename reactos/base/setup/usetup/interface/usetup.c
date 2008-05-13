@@ -1249,7 +1249,7 @@ LayoutSettingsPage(PINPUT_RECORD Ir)
 
     DrawGenericList(LayoutList,
                     2,
-                    15,
+                    18,
                     xScreen - 3,
                     yScreen - 3);
 
