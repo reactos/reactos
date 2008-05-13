@@ -7,14 +7,8 @@
  */
 
 #include <windows.h>
-#include <commctrl.h>
-#include <cpl.h>
 #include <tchar.h>
-
 #include "resource.h"
-
-#define MYWNDCLASS _T("CTLPANELCLASS")
-typedef LONG (CALLBACK *CPLAPPLETFUNC)(HWND hwndCPL, UINT uMsg, LPARAM lParam1, LPARAM lParam2);
 
 #define CCH_UINT_MAX   11
 #define MAX_VALUE_NAME 16383
