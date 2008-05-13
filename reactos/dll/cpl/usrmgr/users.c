@@ -1,11 +1,20 @@
-/* $Id$
- *
+/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS User Manager Control Panel
  * FILE:            dll/cpl/usrmgr/users.c
  * PURPOSE:         Users property page
  *
  * PROGRAMMERS:     Eric Kohl
+ */
+
+/*
+ * TODO:
+ *  - Add new user to the users group.
+ *  - Check a new users name for illegal characters.
+ *  - Check whether both passwords are the same for a new user.
+ *  - Remove a user from all groups.
+ *  - Implement user property pages.
+ *  - Use localized messages.
  */
 
 #include "usrmgr.h"
@@ -22,15 +31,17 @@ typedef struct _USER_DATA
 
 
 static BOOL
-SetPassword(HWND hwndDlg)
+CheckPasswords(HWND hwndDlg,
+               INT nIdDlgItem1,
+               INT nIdDlgItem2)
 {
     TCHAR szPassword1[256];
     TCHAR szPassword2[256];
     UINT uLen1;
     UINT uLen2;
 
-    uLen1 = GetDlgItemText(hwndDlg, IDC_EDIT_PASSWORD1, szPassword1, 256);
-    uLen2 = GetDlgItemText(hwndDlg, IDC_EDIT_PASSWORD2, szPassword2, 256);
+    uLen1 = GetDlgItemText(hwndDlg, nIdDlgItem1, szPassword1, 256);
+    uLen2 = GetDlgItemText(hwndDlg, nIdDlgItem2, szPassword2, 256);
 
     /* Check the passwords */
     if (uLen1 != uLen2 || _tcscmp(szPassword1, szPassword2) != 0)
@@ -64,7 +75,7 @@ ChangePasswordDlgProc(HWND hwndDlg,
             switch (LOWORD(wParam))
             {
                 case IDOK:
-                    if (SetPassword(hwndDlg))
+                    if (CheckPasswords(hwndDlg, IDC_EDIT_PASSWORD1, IDC_EDIT_PASSWORD2))
                         EndDialog(hwndDlg, 0);
                     break;
 
@@ -81,6 +92,204 @@ ChangePasswordDlgProc(HWND hwndDlg,
     return TRUE;
 }
 
+
+INT_PTR CALLBACK
+NewUserDlgProc(HWND hwndDlg,
+               UINT uMsg,
+               WPARAM wParam,
+               LPARAM lParam)
+{
+    PUSER_INFO_3 userInfo;
+    INT nLength;
+
+    UNREFERENCED_PARAMETER(wParam);
+
+    switch (uMsg)
+    {
+        case WM_INITDIALOG:
+            SetWindowLongPtr(hwndDlg, DWLP_USER, lParam);
+            CheckDlgButton(hwndDlg, IDC_USER_NEW_FORCE_CHANGE, BST_CHECKED);
+            break;
+
+        case WM_COMMAND:
+            switch (LOWORD(wParam))
+            {
+                case IDC_USER_NEW_NAME:
+                    if (HIWORD(wParam) == EN_CHANGE)
+                    {
+                        nLength = SendDlgItemMessage(hwndDlg, IDC_USER_NEW_NAME, WM_GETTEXTLENGTH, 0, 0);
+                        EnableWindow(GetDlgItem(hwndDlg, IDOK), (nLength > 0));
+                    }
+                    break;
+
+                case IDOK:
+                    userInfo = (LPUSER_INFO_3)GetWindowLongPtr(hwndDlg, DWLP_USER);
+
+                    nLength = SendDlgItemMessage(hwndDlg, IDC_USER_NEW_NAME, WM_GETTEXTLENGTH, 0, 0);
+                    if (nLength > 0)
+                    {
+                        userInfo->usri3_name = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, (nLength + 1) * sizeof(WCHAR));
+                        GetDlgItemText(hwndDlg, IDC_USER_NEW_NAME, userInfo->usri3_name, nLength + 1);
+                    }
+
+                    nLength = SendDlgItemMessage(hwndDlg, IDC_USER_NEW_FULL_NAME, WM_GETTEXTLENGTH, 0, 0);
+                    if (nLength > 0)
+                    {
+                        userInfo->usri3_full_name = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, (nLength + 1) * sizeof(WCHAR));
+                        GetDlgItemText(hwndDlg, IDC_USER_NEW_FULL_NAME, userInfo->usri3_full_name, nLength + 1);
+                    }
+
+                    nLength = SendDlgItemMessage(hwndDlg, IDC_USER_NEW_DESCRIPTION, WM_GETTEXTLENGTH, 0, 0);
+                    if (nLength > 0)
+                    {
+                        userInfo->usri3_comment = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, (nLength + 1) * sizeof(WCHAR));
+                        GetDlgItemText(hwndDlg, IDC_USER_NEW_DESCRIPTION, userInfo->usri3_comment, nLength + 1);
+                    }
+
+                    /* Store the password */
+                    nLength = SendDlgItemMessage(hwndDlg, IDC_USER_NEW_PASSWORD1, WM_GETTEXTLENGTH, 0, 0);
+                    if (nLength > 0)
+                    {
+                        userInfo->usri3_password = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, (nLength + 1) * sizeof(WCHAR));
+                        GetDlgItemText(hwndDlg, IDC_USER_NEW_PASSWORD1, userInfo->usri3_password, nLength + 1);
+                    }
+
+                    if (IsDlgButtonChecked(hwndDlg, IDC_USER_NEW_FORCE_CHANGE) == BST_CHECKED)
+                        userInfo->usri3_password_expired = TRUE;
+
+                    if (IsDlgButtonChecked(hwndDlg, IDC_USER_NEW_DISABLED) == BST_CHECKED)
+                        userInfo->usri3_flags |= UF_ACCOUNTDISABLE;
+
+                    EndDialog(hwndDlg, IDOK);
+                    break;
+
+                case IDCANCEL:
+                    EndDialog(hwndDlg, IDCANCEL);
+                    break;
+            }
+            break;
+
+        default:
+            return FALSE;
+    }
+
+    return TRUE;
+}
+
+
+static VOID
+UserNew(HWND hwndDlg)
+{
+    USER_INFO_3 user;
+    NET_API_STATUS status;
+    LV_ITEM lvi;
+    INT iItem;
+    HWND hwndLV;
+
+    ZeroMemory(&user, sizeof(USER_INFO_3));
+
+    user.usri3_priv = USER_PRIV_USER;
+    user.usri3_flags = UF_SCRIPT;
+    user.usri3_acct_expires = TIMEQ_FOREVER;
+    user.usri3_max_storage = USER_MAXSTORAGE_UNLIMITED;
+    user.usri3_primary_group_id = DOMAIN_GROUP_RID_USERS;
+
+    if (DialogBoxParam(hApplet,
+                       MAKEINTRESOURCE(IDD_USER_NEW),
+                       hwndDlg,
+                       NewUserDlgProc,
+                       (LPARAM)&user) == IDOK)
+    {
+#if 0
+        status = NetUserAdd(NULL,
+                            3,
+                            (LPBYTE)&user,
+                            NULL);
+#else
+        status = NERR_Success;
+#endif
+        if (status != NERR_Success)
+        {
+            TCHAR szText[256];
+            wsprintf(szText, TEXT("Error: %u"), status);
+            MessageBox(NULL, szText, TEXT("NetUserAdd"), MB_ICONERROR | MB_OK);
+            return;
+        }
+
+        hwndLV = GetDlgItem(hwndDlg, IDC_USERS_LIST);
+
+        ZeroMemory(&lvi, sizeof(lvi));
+        lvi.mask = LVIF_TEXT | LVIF_STATE | LVIF_IMAGE;
+        lvi.pszText = user.usri3_name;
+        lvi.state = 0;
+        lvi.iImage = (user.usri3_flags & UF_ACCOUNTDISABLE) ? 1 : 0;
+        iItem = ListView_InsertItem(hwndLV, &lvi);
+
+        ListView_SetItemText(hwndLV, iItem, 1,
+                             user.usri3_full_name);
+
+        ListView_SetItemText(hwndLV, iItem, 2,
+                             user.usri3_comment);
+    }
+
+    if (user.usri3_name)
+        HeapFree(GetProcessHeap, 0, user.usri3_name);
+
+    if (user.usri3_full_name)
+        HeapFree(GetProcessHeap, 0, user.usri3_full_name);
+
+    if (user.usri3_comment)
+        HeapFree(GetProcessHeap, 0, user.usri3_comment);
+
+    if (user.usri3_password)
+        HeapFree(GetProcessHeap, 0, user.usri3_password);
+}
+
+
+static BOOL
+UserDelete(HWND hwndDlg)
+{
+    TCHAR szUserName[UNLEN];
+    TCHAR szText[256];
+    INT nItem;
+    HWND hwndLV;
+    NET_API_STATUS status;
+
+    hwndLV = GetDlgItem(hwndDlg, IDC_USERS_LIST);
+    nItem = ListView_GetNextItem(hwndLV, -1, LVNI_SELECTED);
+    if (nItem == -1)
+        return FALSE;
+
+    /* Get the new user name */
+    ListView_GetItemText(hwndLV,
+                         nItem, 0,
+                         szUserName,
+                         UNLEN);
+
+    /* Display a warning message because the delete operation cannot be reverted */
+    wsprintf(szText, TEXT("Dou you really want to delete the user \"%s\"?"), szUserName);
+    if (MessageBox(NULL, szText, TEXT("User Accounts"), MB_ICONWARNING | MB_YESNO) == IDNO)
+        return FALSE;
+
+    /* Delete the user */
+#if 0
+    status = NetUserDel(NULL, szUserName);
+#else
+    status = NERR_Success;
+#endif
+    if (status != NERR_Success)
+    {
+        TCHAR szText[256];
+        wsprintf(szText, TEXT("Error: %u"), status);
+        MessageBox(NULL, szText, TEXT("NetUserDel"), MB_ICONERROR | MB_OK);
+        return FALSE;
+    }
+
+    /* Delete the user from the list */
+    (void)ListView_DeleteItem(hwndLV, nItem);
+
+    return TRUE;
+}
 
 
 static VOID
@@ -124,7 +333,6 @@ UpdateUsersList(HWND hwndListView)
     DWORD totalentries;
     DWORD resume_handle = 0;
     DWORD i;
-
     LV_ITEM lvi;
     INT iItem;
 
@@ -141,10 +349,9 @@ UpdateUsersList(HWND hwndListView)
         for (i = 0; i < entriesread; i++)
         {
            memset(&lvi, 0x00, sizeof(lvi));
-           lvi.mask = LVIF_TEXT | LVIF_STATE | LVIF_IMAGE; // | LVIF_PARAM;
-//           lvi.lParam = (LPARAM)VarData;
+           lvi.mask = LVIF_TEXT | LVIF_STATE | LVIF_IMAGE;
            lvi.pszText = pBuffer[i].usri20_name;
-           lvi.state = 0; //(i == 0) ? LVIS_SELECTED : 0;
+           lvi.state = 0;
            lvi.iImage = (pBuffer[i].usri20_flags & UF_ACCOUNTDISABLE) ? 1 : 0;
            iItem = ListView_InsertItem(hwndListView, &lvi);
 
@@ -189,9 +396,6 @@ OnInitDialog(HWND hwndDlg)
     SetUsersListColumns(hwndListView);
 
     UpdateUsersList(hwndListView);
-
-//    (void)ListView_SetColumnWidth(hwndListView, 3, LVSCW_AUTOSIZE_USEHEADER);
-//    (void)ListView_Update(hwndListView, 0);
 }
 
 
@@ -335,6 +539,14 @@ UsersPageProc(HWND hwndDlg,
                             (void)ListView_EditLabel(hwndLV, nItem);
                         }
                     }
+                    break;
+
+                case IDM_USER_NEW:
+                    UserNew(hwndDlg);
+                    break;
+
+                case IDM_USER_DELETE:
+                    UserDelete(hwndDlg);
                     break;
 
                 case IDM_USER_PROPERTIES:

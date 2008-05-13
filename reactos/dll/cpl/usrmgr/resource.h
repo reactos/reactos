@@ -51,6 +51,18 @@
 #define IDC_EDIT_PASSWORD2          352
 
 
+#define IDD_USER_NEW                360
+#define IDC_USER_NEW_NAME           361
+#define IDC_USER_NEW_FULL_NAME      362
+#define IDC_USER_NEW_DESCRIPTION    363
+#define IDC_USER_NEW_PASSWORD1      364
+#define IDC_USER_NEW_PASSWORD2      365
+#define IDC_USER_NEW_FORCE_CHANGE   366
+#define IDC_USER_NEW_CANNOT_CHANGE  367
+#define IDC_USER_NEW_NEVER_EXPIRES  368
+#define IDC_USER_NEW_DISABLED       369
+
+
 /* Strings */
 
 #define IDS_CPLNAME                 2000
