@@ -1048,7 +1048,7 @@ ObpIncrementUnnamedHandleCount(IN PVOID Object,
             ObjectHeader->HandleCount,
             ObjectHeader->PointerCount);
 
-    /* Lock the object type */
+    /* Lock the object */
     ObpAcquireObjectLock(ObjectHeader);
 
     /* Charge quota and remove the creator info flag */
@@ -1714,7 +1714,7 @@ ObpCloseHandle(IN HANDLE Handle,
 
         /* Detach and return success */
         if (AttachedToProcess) KeUnstackDetachProcess(&ApcState);
-        return STATUS_SUCCESS;
+        Status = STATUS_SUCCESS;
     }
     else
     {

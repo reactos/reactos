@@ -1379,7 +1379,7 @@ VOID
 NTAPI
 IoDeleteDriver(IN PDRIVER_OBJECT DriverObject)
 {
-    /* Simply derefence the Object */
+    /* Simply dereference the Object */
     ObDereferenceObject(DriverObject);
 }
 

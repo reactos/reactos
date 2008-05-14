@@ -548,7 +548,7 @@ NtQuerySymbolicLinkObject(IN HANDLE LinkHandle,
         }
         _SEH_END;
 
-        /* Unlock the object and reference the object */
+        /* Unlock and dereference the object */
         ObpReleaseObjectLock(OBJECT_TO_OBJECT_HEADER(SymlinkObject));
         ObDereferenceObject(SymlinkObject);
     }

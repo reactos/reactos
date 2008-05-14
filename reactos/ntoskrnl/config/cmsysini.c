@@ -1046,7 +1046,7 @@ CmpLoadHiveThread(IN PVOID StartContext)
         RtlAppendStringToString((PSTRING)&RegName, (PSTRING)&TempName);
     }
     
-    /* Now Add tge rest if the file name */
+    /* Now add the rest of the file name */
     RtlInitUnicodeString(&TempName, CmpMachineHiveList[i].Name);
     FileName.Length = FileStart;
     RtlAppendStringToString((PSTRING)&FileName, (PSTRING)&TempName);
@@ -1062,7 +1062,7 @@ CmpLoadHiveThread(IN PVOID StartContext)
                                      &CmpMachineHiveList[i].Allocate,
                                      0);
         if (!(NT_SUCCESS(Status)) ||
-            (!(CmHive->FileHandles[HFILE_TYPE_LOG]) && !(CmpMiniNTBoot))) // hak
+            (!(CmHive->FileHandles[HFILE_TYPE_LOG]) && !(CmpMiniNTBoot))) // HACK
         {
             /* We failed or couldn't get a log file, raise a hard error */
             ErrorParameters = &FileName;

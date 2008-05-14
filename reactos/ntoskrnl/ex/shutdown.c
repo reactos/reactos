@@ -14,14 +14,6 @@
 
 /* FUNCTIONS *****************************************************************/
 
-/* ROS Internal. Please deprecate */
-NTHALAPI
-VOID
-NTAPI
-HalReleaseDisplayOwnership(
-    VOID
-);
-
 VOID STDCALL
 KiHaltProcessorDpcRoutine(IN PKDPC Dpc,
 			  IN PVOID DeferredContext,
