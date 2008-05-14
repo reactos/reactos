@@ -621,20 +621,36 @@ LanguagePage(PINPUT_RECORD Ir)
         if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
             (Ir->Event.KeyEvent.wVirtualKeyCode == VK_DOWN))  /* DOWN */
         {
-#if 0 //Dynamically update user interface
-            SelectedLanguageId = (PWCHAR)LanguageList->CurrentEntry->UserData;
+#if 0
+            SelectedLanguageId = (PWCHAR)GetListEntryUserData(GetCurrentListEntry(LanguageList));
+
+            /* Redraw language selection page in native language */
             MUIDisplayPage(LANGUAGE_PAGE);
 #endif
+
             ScrollDownGenericList (LanguageList);
         }
         else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
                  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_UP))  /* UP */
         {
 #if 0
-            SelectedLanguageId = (PWCHAR)LanguageList->CurrentEntry->UserData;
+            SelectedLanguageId = (PWCHAR)GetListEntryUserData(GetCurrentListEntry(LanguageList));
+
+            /* Redraw language selection page in native language */
             MUIDisplayPage(LANGUAGE_PAGE);
 #endif
+
             ScrollUpGenericList (LanguageList);
+        }
+        if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
+            (Ir->Event.KeyEvent.wVirtualKeyCode == VK_NEXT))  /* PAGE DOWN */
+        {
+            ScrollPageDownGenericList (LanguageList);
+        }
+        else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
+                 (Ir->Event.KeyEvent.wVirtualKeyCode == VK_PRIOR))  /* PAGE UP */
+        {
+            ScrollPageUpGenericList (LanguageList);
         }
         else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
                  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3))  /* F3 */
@@ -1269,6 +1285,16 @@ LayoutSettingsPage(PINPUT_RECORD Ir)
         {
             ScrollUpGenericList (LayoutList);
         }
+        if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
+            (Ir->Event.KeyEvent.wVirtualKeyCode == VK_NEXT))  /* PAGE DOWN */
+        {
+            ScrollPageDownGenericList (LayoutList);
+        }
+        else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
+                 (Ir->Event.KeyEvent.wVirtualKeyCode == VK_PRIOR))  /* PAGE UP */
+        {
+            ScrollPageUpGenericList (LayoutList);
+        }
         else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
                  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3))  /* F3 */
         {
@@ -1286,6 +1312,11 @@ LayoutSettingsPage(PINPUT_RECORD Ir)
         else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D) /* ENTER */
         {
             return DEVICE_SETTINGS_PAGE;
+        }
+        else if ((Ir->Event.KeyEvent.uChar.AsciiChar > 0x60) && (Ir->Event.KeyEvent.uChar.AsciiChar < 0x7b))
+        {
+            /* a-z */
+            GenericListKeyPress (LayoutList , Ir->Event.KeyEvent.uChar.AsciiChar);
         }
     }
 

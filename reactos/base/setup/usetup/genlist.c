@@ -52,6 +52,7 @@ typedef struct _GENERIC_LIST
     SHORT Top;
     SHORT Right;
     SHORT Bottom;
+    BOOL Redraw;
 
     PGENERIC_LIST_ENTRY CurrentEntry;
     PGENERIC_LIST_ENTRY BackupEntry;
@@ -74,6 +75,7 @@ CreateGenericList(VOID)
     List->Top = 0;
     List->Right = 0;
     List->Bottom = 0;
+    List->Redraw = TRUE;
 
     List->CurrentEntry = NULL;
 
@@ -351,6 +353,47 @@ DrawGenericList(PGENERIC_LIST List,
     DrawScrollBarGenericList(List);
 }
 
+VOID
+ScrollPageDownGenericList (PGENERIC_LIST List)
+{
+    SHORT i;
+
+    /* Suspend auto-redraw */
+    List->Redraw = FALSE;
+
+    for (i = List->Top + 1; i < List->Bottom - 1; i++)
+    {
+        ScrollDownGenericList (List);
+    }
+
+    /* Update user interface */
+    DrawListEntries(List);
+    DrawScrollBarGenericList(List);
+
+    /* Re enable auto-redraw */
+    List->Redraw = TRUE;
+}
+
+VOID
+ScrollPageUpGenericList (PGENERIC_LIST List)
+{
+    SHORT i;
+
+    /* Suspend auto-redraw */
+    List->Redraw = FALSE;
+
+    for (i = List->Bottom - 1; i > List->Top + 1; i--)
+    {
+         ScrollUpGenericList (List);
+    }
+
+    /* Update user interface */
+    DrawListEntries(List);
+    DrawScrollBarGenericList(List);
+
+    /* Re enable auto-redraw */
+    List->Redraw = TRUE;
+}
 
 VOID
 ScrollDownGenericList (PGENERIC_LIST List)
@@ -370,8 +413,11 @@ ScrollDownGenericList (PGENERIC_LIST List)
         }
         List->CurrentEntry = CONTAINING_RECORD (Entry, GENERIC_LIST_ENTRY, Entry);
 
-        DrawListEntries(List);
-        DrawScrollBarGenericList(List);
+        if (List->Redraw)
+        {
+            DrawListEntries(List);
+            DrawScrollBarGenericList(List);
+        }
     }
 }
 
@@ -394,8 +440,11 @@ ScrollUpGenericList (PGENERIC_LIST List)
         }
         List->CurrentEntry = CONTAINING_RECORD (Entry, GENERIC_LIST_ENTRY, Entry);
 
-        DrawListEntries(List);
-        DrawScrollBarGenericList(List);
+        if (List->Redraw)
+        {
+            DrawListEntries(List);
+            DrawScrollBarGenericList(List);
+        }
     }
 }
 

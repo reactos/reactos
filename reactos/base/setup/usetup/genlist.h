@@ -62,6 +62,12 @@ VOID
 ScrollUpGenericList(PGENERIC_LIST List);
 
 VOID
+ScrollPageDownGenericList(PGENERIC_LIST List);
+
+VOID
+ScrollPageUpGenericList(PGENERIC_LIST List);
+
+VOID
 SetCurrentListEntry(PGENERIC_LIST List, PGENERIC_LIST_ENTRY Entry);
 
 PGENERIC_LIST_ENTRY
