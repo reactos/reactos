@@ -44,12 +44,12 @@ INT_PTR CALLBACK	WarningProc(HWND, UINT, WPARAM, LPARAM);
 
 int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
-	UNREFERENCED_PARAMETER(hPrevInstance);
-	UNREFERENCED_PARAMETER(lpCmdLine);
-
  	// TODO: Place code here.
 	MSG msg;
 	HACCEL hAccelTable;
+
+	UNREFERENCED_PARAMETER(hPrevInstance);
+	UNREFERENCED_PARAMETER(lpCmdLine);
 
 	// Initialize global strings
 	LoadString(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
@@ -143,8 +143,13 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
       return FALSE;
    }
 
-   ShowWindow(hMainWnd, nCmdShow);
+   ShowWindow(hMainWnd, (bStartMinimized) ? SW_MINIMIZE : nCmdShow);
    UpdateWindow(hMainWnd);
+
+   if (bShowWarning)
+   {
+      DialogBox (hInstance, MAKEINTRESOURCE(IDD_WARNINGDIALOG), hMainWnd, (DLGPROC)WarningProc);
+   }
 
    return TRUE;
 }
@@ -168,18 +173,21 @@ void Draw(HDC aDc)
 	RECT R;
 	RECT appRect;
 	DWORD rop = SRCCOPY;
-	HCURSOR hCursor;
-	CURSORINFO info;
+	CURSORINFO cinfo;
+    ICONINFO iinfo;
+
+    int Width, Height, AppWidth, AppHeight;
+    LONG blitAreaWidth, blitAreaHeight, blitAreaX, blitAreaY;
 
 	desktopHdc = GetWindowDC (hDesktopWindow);
 
 	GetClientRect(hMainWnd, &appRect);
 	GetWindowRect(hDesktopWindow, &R);
 
-    memset(&info, 0, sizeof(info));
-    info.cbSize = sizeof(info);
-    GetCursorInfo(&info);
-    hCursor = info.hCursor;
+    memset(&cinfo, 0, sizeof(cinfo));
+    cinfo.cbSize = sizeof(cinfo);
+    GetCursorInfo(&cinfo);
+    GetIconInfo(cinfo.hCursor, &iinfo);
 
 	 /* Create a memory DC compatible with client area DC.*/
 	HdcStrech = CreateCompatibleDC(desktopHdc);
@@ -208,21 +216,21 @@ void Draw(HDC aDc)
 	/* Draw the mouse pointer in the right position */
 	DrawIcon(
 		HdcStrech ,
-		pMouse.x - 10,
-		pMouse.y - 10,
-		hCursor);
+		pMouse.x - iinfo.xHotspot, // - 10,
+		pMouse.y - iinfo.yHotspot, // - 10,
+		cinfo.hCursor);
 
-	int Width = (R.right - R.left);
-	int Height = (R.bottom - R.top);
+	Width = (R.right - R.left);
+	Height = (R.bottom - R.top);
 
-	int AppWidth = (appRect.right - appRect.left);
-	int AppHeight = (appRect.bottom - appRect.top);
+	AppWidth = (appRect.right - appRect.left);
+	AppHeight = (appRect.bottom - appRect.top);
 
-	LONG blitAreaWidth = AppWidth / iZoom;
-	LONG blitAreaHeight = AppHeight / iZoom;
+	blitAreaWidth = AppWidth / iZoom;
+	blitAreaHeight = AppHeight / iZoom;
 
-	LONG blitAreaX = (cp.x) - (blitAreaWidth /2);
-	LONG blitAreaY = (cp.y) - (blitAreaHeight /2);
+	blitAreaX = (cp.x) - (blitAreaWidth /2);
+	blitAreaY = (cp.y) - (blitAreaHeight /2);
 
 	if (blitAreaX < 0)
 	{
@@ -302,24 +310,26 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			POINT pNewMouse;
 			POINT pNewCaret;
 			POINT pNewFocus;
+			HWND hwnd1, hwnd2, hwnd3;
+			DWORD a, b;
+			RECT controlRect;
 
 			//Get current mouse position
 			GetCursorPos (&pNewMouse);
 
 			//Get caret position
-			HWND hwnd1 = GetForegroundWindow ();
-			DWORD a = GetWindowThreadProcessId(hwnd1, NULL);
-			DWORD b = GetCurrentThreadId();
+			hwnd1 = GetForegroundWindow ();
+			a = GetWindowThreadProcessId(hwnd1, NULL);
+			b = GetCurrentThreadId();
 			AttachThreadInput (a, b, TRUE);
-			HWND hwnd2 = GetFocus();
+			hwnd2 = GetFocus();
 
 			GetCaretPos( &pNewCaret);
 			ClientToScreen (hwnd2, (LPPOINT) &pNewCaret);
 			AttachThreadInput (a, b, FALSE);
 
 			//Get current control focus
-			HWND hwnd3 = GetFocus ();
-			RECT controlRect;
+			hwnd3 = GetFocus ();
 			GetWindowRect (hwnd3 , &controlRect);
 			pNewFocus.x = controlRect.left;
 			pNewFocus.y = controlRect.top;
@@ -392,16 +402,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			//Get the desktop window
 			hDesktopWindow = GetDesktopWindow();
 
-			if (bShowWarning)
-			{
-				DialogBox (hInst, MAKEINTRESOURCE(IDD_WARNINGDIALOG), hWnd, (DLGPROC)WarningProc);
-			}
-
-			if (bStartMinimized)
-			{
-				ShowWindow (hMainWnd, SW_MINIMIZE );
-			}
-
 			//Set the timer
 			SetTimer (hWnd , 1, REPAINT_SPEED , NULL);
 			break;
@@ -473,20 +473,17 @@ INT_PTR CALLBACK OptionsProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
 			return (INT_PTR)TRUE;
 		}
 	case WM_COMMAND:
-		if (LOWORD(wParam) == IDOK || LOWORD(wParam) == IDCANCEL)
-		{
-			EndDialog(hDlg, LOWORD(wParam));
-			return (INT_PTR)TRUE;
-		}
-		if (LOWORD(wParam) == IDOK)
-		{
-		}
-		if (LOWORD(wParam) == IDHELP)
-		{
-			MessageBox(hDlg , TEXT("Magnifier help not available yet!") , TEXT("Help") , MB_OK);
-		}
 		switch(LOWORD(wParam))
 		{
+			case IDOK:
+			case IDCANCEL:
+				EndDialog(hDlg, LOWORD(wParam));
+				return (INT_PTR)TRUE;
+
+			case IDC_BUTTON_HELP:
+				/* unimplemented */
+				MessageBox(hDlg , TEXT("Magnifier help not available yet!") , TEXT("Help") , MB_OK);
+				break;
             case IDC_ZOOM:
 				if(HIWORD(wParam) == CBN_SELCHANGE)
 				{

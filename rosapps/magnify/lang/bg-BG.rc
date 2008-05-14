@@ -34,7 +34,7 @@ CAPTION "Настройки на увеличителя"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     DEFPUSHBUTTON   "Изход",IDOK,96,161,50,14
-    PUSHBUTTON      "Помощ",IDOK,38,161,50,14
+    PUSHBUTTON      "Помощ",IDC_BUTTON_HELP,38,161,50,14
     LTEXT           "Увеличение:",IDC_STATIC,6,8,68,8
     COMBOBOX        IDC_ZOOM,72,6,63,66,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     GROUPBOX        "Проследяване",IDC_STATIC,7,25,195,59
@@ -62,5 +62,6 @@ STRINGTABLE
 BEGIN
     IDS_APP_TITLE           "Увеличително стъкло"
 END
+
 
 

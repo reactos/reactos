@@ -34,7 +34,7 @@ CAPTION "Einstellungen"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     DEFPUSHBUTTON   "Beenden",IDOK,96,161,50,14
-    PUSHBUTTON      "Hilfe",IDOK,38,161,50,14
+    PUSHBUTTON      "Hilfe",IDC_BUTTON_HELP,38,161,50,14
     LTEXT           "Vergrößerungsgrad:",IDC_STATIC,6,12,68,8
     COMBOBOX        IDC_ZOOM,72,6,63,66,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     GROUPBOX        "Folgen",IDC_STATIC,7,25,139,59
@@ -54,7 +54,7 @@ FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     DEFPUSHBUTTON   "OK",IDOK,193,76,50,14
     ICON            IDI_ICON,IDC_STATIC,7,17,20,20
-    LTEXT           "Die Bildschirmlupe ist für Personen mit leichten visuellen Einschränkungen gedacht und stellt lediglich Grundfunktionen zur Verfügung. Die meisten Nutzer mit visuellen Einschränkungen werden eine Bildschirm-Lupe mit mehr Funktionen für die alltägliche Nutzung benötigen.",IDC_STATIC,36,7,207,33
+    LTEXT           "Die Bildschirmlupe ist für Personen mit leichten visuellen Einschränkungen gedacht und stellt lediglich Grundfunktionen zur Verfügung. Die meisten Nutzer werden jedoch eine Bildschirmlupe mit mehr Funktionen für die alltägliche Nutzung benötigen.",IDC_STATIC,36,7,207,33
     CONTROL         "Diese Nachricht nicht mehr anzeigen",IDC_SHOWWARNINGCHECK, "Button",BS_AUTOCHECKBOX | WS_TABSTOP,43,80,137,10
 END
 

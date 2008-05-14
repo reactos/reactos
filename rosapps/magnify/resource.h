@@ -12,7 +12,6 @@
 #define IDD_DIALOGOPTIONS               129
 #define IDD_WARNINGDIALOG               130
 #define IDC_ZOOM                        1000
-#define IDC_CHECK1                      1001
 #define IDC_FOLLOWKEYBOARDCHECK         1002
 #define IDC_FOLLOWTEXTEDITINGCHECK      1003
 #define IDC_INVERTCOLORSCHECK           1004
@@ -20,8 +19,8 @@
 #define IDC_SHOWMAGNIFIER               1006
 #define IDC_SHOWMAGNIFIERCHECK          1006
 #define IDC_FOLLOWMOUSECHECK            1007
+#define IDC_BUTTON_HELP                 1008
 #define IDC_SHOWWARNINGCHECK            1009
-#define IDC_BUTTON1                     1008
 #define ID_FILE_OPTIONS                 32771
 #define ID_OPTIONS                      32772
 #define IDM_OPTIONS                     32773

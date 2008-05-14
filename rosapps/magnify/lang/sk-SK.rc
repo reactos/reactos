@@ -39,7 +39,7 @@ CAPTION "Nastavenia Lupy"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     DEFPUSHBUTTON   "Koniec",IDOK,96,161,50,14
-    PUSHBUTTON      "Pomocník",IDOK,38,161,50,14
+    PUSHBUTTON      "Pomocník",IDC_BUTTON_HELP,38,161,50,14
     LTEXT           "Úroveò zväèšenia:",IDC_STATIC,6,8,68,8
     COMBOBOX        IDC_ZOOM,72,6,63,66,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     GROUPBOX        "Sledovanie",IDC_STATIC,7,25,139,59
