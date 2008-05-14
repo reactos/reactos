@@ -10,8 +10,6 @@
 /*
  * TODO:
  *  - Add new user to the users group.
- *  - Check a new users name for illegal characters.
- *  - Check whether both passwords are the same for a new user.
  *  - Remove a user from all groups.
  *  - Implement user property pages.
  *  - Use localized messages.
@@ -56,6 +54,31 @@ CheckPasswords(HWND hwndDlg,
 
     return TRUE;
 }
+
+
+static BOOL
+CheckUserName(HWND hwndDlg,
+              INT nIdDlgItem)
+{
+    TCHAR szUserName[256];
+    UINT uLen;
+
+    uLen = GetDlgItemText(hwndDlg, nIdDlgItem, szUserName, 256);
+
+    /* Check the user name */
+    if (uLen > 0 && _tcspbrk(szUserName, TEXT("\"*+,/\\:;<=>?[]|")) != NULL)
+    {
+        MessageBox(hwndDlg,
+                   TEXT("The user name you entered is invalid! A user name must not contain the following charecters: *+,/:;<=>?[\\]|"),
+                   TEXT("ERROR"),
+                   MB_OK | MB_ICONERROR);
+        return FALSE;
+    }
+
+
+    return TRUE;
+}
+
 
 
 INT_PTR CALLBACK
@@ -108,6 +131,7 @@ NewUserDlgProc(HWND hwndDlg,
     {
         case WM_INITDIALOG:
             SetWindowLongPtr(hwndDlg, DWLP_USER, lParam);
+            SendDlgItemMessage(hwndDlg, IDC_USER_NEW_NAME, EM_SETLIMITTEXT, 20, 0);
             CheckDlgButton(hwndDlg, IDC_USER_NEW_FORCE_CHANGE, BST_CHECKED);
             break;
 
@@ -123,6 +147,20 @@ NewUserDlgProc(HWND hwndDlg,
                     break;
 
                 case IDOK:
+                    if (!CheckUserName(hwndDlg, IDC_USER_NEW_NAME))
+                    {
+                        SetFocus(GetDlgItem(hwndDlg, IDC_USER_NEW_NAME));
+                        SendDlgItemMessage(hwndDlg, IDC_USER_NEW_NAME, EM_SETSEL, 0, -1);
+                        break;
+                    }
+
+                    if (!CheckPasswords(hwndDlg, IDC_USER_NEW_PASSWORD1, IDC_USER_NEW_PASSWORD2))
+                    {
+                        SetDlgItemText(hwndDlg, IDC_USER_NEW_PASSWORD1, TEXT(""));
+                        SetDlgItemText(hwndDlg, IDC_USER_NEW_PASSWORD2, TEXT(""));
+                        break;
+                    }
+
                     userInfo = (LPUSER_INFO_3)GetWindowLongPtr(hwndDlg, DWLP_USER);
 
                     nLength = SendDlgItemMessage(hwndDlg, IDC_USER_NEW_NAME, WM_GETTEXTLENGTH, 0, 0);
