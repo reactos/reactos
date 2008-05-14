@@ -41,6 +41,8 @@ BOOL
 GetLayoutName(LPCTSTR szLCID, LPTSTR szName);
 VOID
 UpdateLayoutsList(VOID);
+BOOL
+IsLayoutExists(LPTSTR szLayoutID, LPTSTR szLangID);
 
 /* keysettings.c */
 INT_PTR CALLBACK

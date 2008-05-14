@@ -87,6 +87,8 @@ BEGIN
 	IDS_LAYOUT               "Disposizione tastiera"
     IDS_REM_QUESTION         "Volete rimuovere la disposizione di tastiera selezionata?"
     IDS_CONFIRMATION         "Conferma"
+	IDS_LAYOUT_EXISTS        "This layout already exists."
+	IDS_LAYOUT_EXISTS2       "This layout already exists and can not be added."
 END
 
 STRINGTABLE

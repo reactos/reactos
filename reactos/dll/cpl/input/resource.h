@@ -52,6 +52,8 @@
 #define IDS_LAYOUT                                      9
 #define IDS_REM_QUESTION                                10
 #define IDS_CONFIRMATION                                11
+#define IDS_LAYOUT_EXISTS                               12
+#define IDS_LAYOUT_EXISTS2                              13
 
 /* Layouts */
 #define IDS_US_LAYOUT                                   5000

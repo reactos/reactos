@@ -36,6 +36,72 @@ IsLayoutSelected()
     return iIndex;
 }
 
+BOOL
+IsLayoutExists(LPTSTR szLayoutID, LPTSTR szLangID)
+{
+    HKEY hKey, hSubKey;
+    TCHAR szPreload[CCH_LAYOUT_ID + 1], szLayoutNum[3 + 1],
+          szTmp[CCH_LAYOUT_ID + 1], szOldLangID[CCH_LAYOUT_ID + 1];
+    DWORD dwIndex = 0, dwType, dwSize;
+    BOOL IsLangExists = FALSE;
+    LANGID langid;
+
+    if (RegOpenKeyEx(HKEY_CURRENT_USER, _T("Keyboard Layout\\Preload"),
+        0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
+    {
+        dwSize = sizeof(szLayoutNum);
+
+        while (RegEnumValue(hKey, dwIndex, szLayoutNum, &dwSize, NULL, &dwType, NULL, NULL) == ERROR_SUCCESS)
+        {
+            dwSize = sizeof(szPreload);
+            if (RegQueryValueEx(hKey, szLayoutNum, NULL, NULL, (LPBYTE)szPreload, &dwSize) != ERROR_SUCCESS)
+            {
+                RegCloseKey(hKey);
+                return FALSE;
+            }
+
+            langid = (LANGID)_tcstoul(szPreload, NULL, 16);
+            GetLocaleInfo(langid, LOCALE_ILANGUAGE, szTmp, sizeof(szTmp) / sizeof(TCHAR));
+            wsprintf(szOldLangID, _T("0000%s"), szTmp);
+
+            if (_tcscmp(szOldLangID, szLangID) == 0) IsLangExists = TRUE;
+
+            if (szPreload[0] == 'd')
+            {
+                if (RegOpenKeyEx(HKEY_CURRENT_USER, _T("Keyboard Layout\\Substitutes"),
+                                 0, KEY_QUERY_VALUE, &hSubKey) == ERROR_SUCCESS)
+                {
+                    dwSize = sizeof(szTmp);
+                    RegQueryValueEx(hSubKey, szPreload, NULL, NULL, (LPBYTE)szTmp, &dwSize);
+
+                    if ((_tcscmp(szTmp, szLayoutID) == 0)&&(IsLangExists))
+                    {
+                        RegCloseKey(hSubKey);
+                        RegCloseKey(hKey);
+                        return TRUE;
+                    }
+                }
+            }
+            else
+            {
+                if (_tcscmp(szPreload, szLayoutID) == 0)
+                {
+                    RegCloseKey(hKey);
+                    return TRUE;
+                }
+            }
+
+            IsLangExists = FALSE;
+            dwSize = sizeof(szLayoutNum);
+            dwIndex++;
+        }
+
+        RegCloseKey(hKey);
+    }
+
+    return FALSE;
+}
+
 static HICON
 CreateLayoutIcon(LPTSTR szInd)
 {
@@ -314,7 +380,7 @@ DeleteLayout(VOID)
     LVITEM item;
     HKEY hKey, hSubKey;
     HWND hLayoutList = GetDlgItem(MainDlgWnd, IDC_KEYLAYOUT_LIST);
-    TCHAR szLayoutNum[10 + 1], szTitle[MAX_PATH],
+    TCHAR szLayoutNum[3 + 1], szTitle[MAX_PATH],
           szConf[MAX_PATH], szPreload[CCH_LAYOUT_ID + 1];
     DWORD dwSize;
 
@@ -369,11 +435,39 @@ DeleteLayout(VOID)
 }
 
 static VOID
+SetDefaultLayout()
+{
+    HKL hKl;
+    TCHAR szLCID[CCH_LAYOUT_ID + 1], szLayoutNum[CCH_ULONG_DEC + 1];
+    LVITEM item;
+    INT LayoutNum;
+
+    if (IsLayoutSelected() != -1)
+    {
+        ZeroMemory(&item, sizeof(LVITEM));
+
+        item.mask = LVIF_PARAM;
+        item.iItem = IsLayoutSelected();
+
+        (VOID) ListView_GetItem(GetDlgItem(MainDlgWnd, IDC_KEYLAYOUT_LIST), &item);
+
+        LayoutNum = (INT) item.lParam;
+        _ultot(LayoutNum, szLayoutNum, 10);
+
+        if (GetLayoutID(szLayoutNum, szLCID))
+        {
+            hKl = LoadKeyboardLayout(szLCID, KLF_ACTIVATE);
+            SystemParametersInfo(SPI_SETDEFAULTINPUTLANG, 0, &hKl, SPIF_SENDWININICHANGE);
+        }
+    }
+}
+
+static VOID
 SaveInputLang(HWND hDlg)
 {
     HKEY hKey, hSubKey;
     TCHAR szLayoutID[CCH_LAYOUT_ID + 1], szLayoutNum[CCH_ULONG_DEC + 1],
-          szPreload[CCH_LAYOUT_ID + 1], LangID[CCH_LAYOUT_ID + 1],
+          szPreload[CCH_LAYOUT_ID + 1], LangID[CCH_LAYOUT_ID + 1], szMessage[MAX_PATH],
           Lang[MAX_PATH], SubPath[MAX_PATH];
     PTSTR pts;
     INT iLayout;
@@ -404,6 +498,15 @@ SaveInputLang(HWND hDlg)
         langid = (LANGID)_tcstoul(szPreload, NULL, 16);
         GetLocaleInfo(langid, LOCALE_ILANGUAGE, Lang, sizeof(Lang) / sizeof(TCHAR));
         wsprintf(LangID, _T("0000%s"), Lang);
+
+        if (IsLayoutExists(pts, LangID))
+        {
+            LoadString(hApplet, IDS_LAYOUT_EXISTS, szMessage, sizeof(szMessage) / sizeof(TCHAR));
+            MessageBox(hDlg, szMessage, NULL, MB_OK | MB_ICONINFORMATION);
+
+            RegCloseKey(hKey);
+            return;
+        }
 
         if (szPreload[0] == 'd')
         {
@@ -614,7 +717,8 @@ SettingPageProc(HWND hwndDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
                     break;
 
                 case IDC_SET_DEFAULT:
-
+                    SetDefaultLayout();
+                    UpdateLayoutsList();
                     break;
             }
             break;

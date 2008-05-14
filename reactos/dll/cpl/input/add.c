@@ -74,7 +74,7 @@ AddNewLayout(HWND hwndDlg)
 {
     TCHAR NewLayout[CCH_ULONG_DEC + 1], Lang[MAX_PATH],
           LangID[CCH_LAYOUT_ID + 1], Layout[MAX_PATH],
-          SubPath[CCH_LAYOUT_ID + 1];
+          SubPath[CCH_LAYOUT_ID + 1], szMessage[MAX_PATH];
     INT iLayout, iLang;
     HKEY hKey, hSubKey;
     DWORD cValues;
@@ -92,9 +92,19 @@ AddNewLayout(HWND hwndDlg)
 
             iLang = SendMessage(hLangList, CB_GETCURSEL, 0, 0);
             lcid = SendMessage(hLangList, CB_GETITEMDATA, iLang, 0);
+            pts = (PTSTR) SendMessage(hLayoutList, CB_GETITEMDATA, iLayout, 0);
 
             GetLocaleInfo(MAKELCID(lcid, SORT_DEFAULT), LOCALE_ILANGUAGE, Lang, sizeof(Lang) / sizeof(TCHAR));
             wsprintf(LangID, _T("0000%s"), Lang);
+
+            if (IsLayoutExists(pts, LangID))
+            {
+                LoadString(hApplet, IDS_LAYOUT_EXISTS2, szMessage, sizeof(szMessage) / sizeof(TCHAR));
+                MessageBox(hwndDlg, szMessage, NULL, MB_OK | MB_ICONINFORMATION);
+
+                RegCloseKey(hKey);
+                return;
+            }
 
             if (GetLayoutName(LangID, Layout))
             {
@@ -105,8 +115,6 @@ AddNewLayout(HWND hwndDlg)
                 }
                 else SubPath[0] = '\0';
             }
-
-            pts = (PTSTR) SendMessage(hLayoutList, CB_GETITEMDATA, iLayout, 0);
 
             if (_tcslen(SubPath) != 0)
             {

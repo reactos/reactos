@@ -92,6 +92,8 @@ BEGIN
 	IDS_LAYOUT               "Distribución del teclado"
     IDS_REM_QUESTION         "¿Quiere eliminar la distribución del teclado seleccionada?"
     IDS_CONFIRMATION         "Confirmación"
+	IDS_LAYOUT_EXISTS        "This layout already exists."
+	IDS_LAYOUT_EXISTS2       "This layout already exists and can not be added."
 END
 
 STRINGTABLE

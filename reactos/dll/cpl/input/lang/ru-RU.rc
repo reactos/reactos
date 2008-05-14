@@ -85,8 +85,10 @@ BEGIN
 	IDS_WHATS_THIS           "Что это?"
 	IDS_LANGUAGE             "Язык ввода"
 	IDS_LAYOUT               "Раскладка"
-    IDS_REM_QUESTION         "Вы действительно хотите удалить выбранную раскладку клавиатуры?"
-    IDS_CONFIRMATION         "Подтверждение"
+	IDS_REM_QUESTION         "Вы действительно хотите удалить выбранную раскладку клавиатуры?"
+	IDS_CONFIRMATION         "Подтверждение"
+	IDS_LAYOUT_EXISTS        "Такая раскладка уже существует."
+	IDS_LAYOUT_EXISTS2       "Такая раскладка уже существует и не может быть добавлена."
 END
 
 STRINGTABLE
