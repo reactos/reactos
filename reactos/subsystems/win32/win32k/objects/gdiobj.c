@@ -56,15 +56,15 @@ OBJ_TYPE_INFO ObjTypeInfo[] =
   {1, 0,                     0,                NULL},             /* 03 UNUSED2 */
   {1, sizeof(ROSRGNDATA),    TAG_REGION,       REGION_Cleanup},   /* 04 RGN */
   {1, sizeof(BITMAPOBJ),     TAG_SURFACE,      BITMAP_Cleanup},   /* 05 SURFACE */
-  {0, sizeof(DC),            TAG_CLIENTOBJ,    GDI_CleanupDummy}, /* 06 CLIENTOBJ: METADC,... FIXME: don't use DC struct */
+  {1, sizeof(CLIENTOBJ),     TAG_CLIENTOBJ,    GDI_CleanupDummy}, /* 06 CLIENTOBJ: METADC,... */
   {0, 0,                     TAG_PATH,         NULL},             /* 07 PATH, unused */
   {1, sizeof(PALGDI),        TAG_PALETTE,      PALETTE_Cleanup},  /* 08 PAL */
-  {1, sizeof(COLORSPACE),    TAG_ICMLCS,       GDI_CleanupDummy}, /* 09 ICMLCS, unused */
+  {1, sizeof(COLORSPACE),    TAG_ICMLCS,       GDI_CleanupDummy}, /* 09 ICMLCS, */
   {1, sizeof(TEXTOBJ),       TAG_LFONT,        GDI_CleanupDummy}, /* 0a LFONT */
   {0, 0,                     TAG_RFONT,        NULL},             /* 0b RFONT, unused */
   {0, 0,                     TAG_PFE,          NULL},             /* 0c PFE, unused */
   {0, 0,                     TAG_PFT,          NULL},             /* 0d PFT, unused */
-  {0, 0,                     TAG_ICMCXF,       NULL},             /* 0e ICMCXF, unused */
+  {0, sizeof(GDICLRXFORM),   TAG_ICMCXF,       GDI_CleanupDummy}, /* 0e ICMCXF, */
   {0, 0,                     TAG_SPRITE,       NULL},             /* 0f SPRITE, unused */
   {1, sizeof(GDIBRUSHOBJ),   TAG_BRUSH,        BRUSH_Cleanup},    /* 10 BRUSH, PEN, EXTPEN */
   {0, 0,                     TAG_UMPD,         NULL},             /* 11 UMPD, unused */
