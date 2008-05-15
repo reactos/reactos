@@ -59,6 +59,8 @@ GetLayoutCount(LPTSTR szLang);
 /* changekeyseq.c */
 INT_PTR CALLBACK
 ChangeKeySeqDlgProc(HWND hDlg,UINT message,WPARAM wParam,LPARAM lParam);
+BOOL
+GetHotkeys(LPTSTR szHotkey, LPTSTR szLangHotkey, LPTSTR szLayoutHotkey);
 
 void ShowLastWin32Error(HWND hWndOwner);
 

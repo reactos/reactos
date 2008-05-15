@@ -32,13 +32,19 @@
 #define IDC_KEY_SET_BTN                                 1005
 #define IDC_PRESS_CL_KEY_RB                             1006
 #define IDC_PRESS_SHIFT_KEY_RB                          1007
-#define IDC_KEY_LISTBOX                                 1008
+#define IDC_KEY_LISTVIEW                                1008
 #define IDC_CHANGE_KEY_SEQ_BTN                          1009
 #define IDC_INPUT_LANG_COMBO                            1010
 #define IDC_KEYBOARD_LO_COMBO                           1011
 #define IDC_USE_SK                                      1012
 #define IDC_KB_LAYOUT_IME_COMBO                         1013
 #define IDC_INPUT_LANG_STR                              1014
+#define IDC_SWITCH_INPUT_LANG_CB                        1015
+#define IDC_SWITCH_KBLAYOUTS_CB                         1016
+#define IDC_CTRL_LANG                                   1017
+#define IDC_CTRL_LAYOUT                                 1018
+#define IDC_LEFT_ALT_LANG                               1019
+#define IDC_LEFT_ALT_LAYOUT                             1020
 
 /* IDS */
 #define IDS_CPLSYSTEMNAME                               1
@@ -54,6 +60,9 @@
 #define IDS_CONFIRMATION                                11
 #define IDS_LAYOUT_EXISTS                               12
 #define IDS_LAYOUT_EXISTS2                              13
+#define IDS_CTRL_SHIFT                                  14
+#define IDS_LEFT_ALT_SHIFT                              15
+#define IDS_SWITCH_BET_INLANG                           16
 
 /* Layouts */
 #define IDS_US_LAYOUT                                   5000
