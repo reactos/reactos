@@ -356,7 +356,8 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 			if (getenv ( "BASEDIR" ) != NULL &&
 				(module.type == Kernel ||
 				 module.type == KernelModeDLL ||
-				 module.type == KernelModeDriver))
+				 module.type == KernelModeDriver ||
+				 module.type == KeyboardLayout))
 			{
 				string WdkBase, SdkPath, CrtPath, DdkPath;
 				WdkBase = getenv ( "BASEDIR" );
@@ -514,7 +515,8 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 			if (getenv ( "BASEDIR" ) != NULL &&
 				(module.type == Kernel ||
 				 module.type == KernelModeDLL ||
-				 module.type == KernelModeDriver))
+				 module.type == KernelModeDriver ||
+				 module.type == KeyboardLayout))
 			{
 				string WdkBase, CrtPath, DdkPath;
 				WdkBase = getenv ( "BASEDIR" );

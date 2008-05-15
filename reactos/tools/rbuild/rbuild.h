@@ -303,7 +303,8 @@ enum ModuleType
 	RpcProxy,
 	HostStaticLibrary,
 	TypeDontCare,
-	Cabinet
+	Cabinet,
+	KeyboardLayout
 };
 
 enum HostType
@@ -375,6 +376,8 @@ public:
 	FileLocation *output; // "path/foo.exe"
 	FileLocation *dependency; // "path/foo.exe" or "path/libfoo.a"
 	FileLocation *install;
+	std::string description;
+	std::string lcid;
 
 	Module ( const Project& project,
 	         const XMLElement& moduleNode,

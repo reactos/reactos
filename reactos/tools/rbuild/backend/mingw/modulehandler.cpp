@@ -190,6 +190,7 @@ MingwModuleHandler::InstanciateHandler (
 		case Win32GUI:
 			handler = new MingwWin32GUIModuleHandler ( module );
 			break;
+		case KeyboardLayout:
 		case KernelModeDLL:
 			handler = new MingwKernelModeDLLModuleHandler ( module );
 			break;
@@ -2921,7 +2922,7 @@ MingwAddImplicitLibraries( Module &module )
 	  && module.type != Win32OCX
 	  && module.type != Win32CUI
 	  && module.type != Win32GUI
-	  && module.type != Win32SCR )
+	  && module.type != Win32SCR)
 	{
 		// no implicit libraries
 		return;

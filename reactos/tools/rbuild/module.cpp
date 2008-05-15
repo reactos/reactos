@@ -466,6 +466,20 @@ Module::Module ( const Project& project,
 		}
 	}
 
+	att = moduleNode.GetAttribute ( "description", false );
+	if (att != NULL )
+	{
+		description = project.ResolveProperties(att->value);
+	}
+	else
+		description = "";
+
+	att = moduleNode.GetAttribute ( "lcid", false );
+	if (type == KeyboardLayout && att != NULL )
+		lcid = att->value;
+	else
+		lcid = "";
+
 	SetImportLibrary ( NULL );
 }
 
@@ -899,6 +913,8 @@ Module::GetModuleType ( const string& location, const XMLAttribute& attribute )
 		return NativeDLL;
 	if ( attribute.value == "nativecui" )
 		return NativeCUI;
+	if ( attribute.value == "keyboardlayout" )
+		return KeyboardLayout;
 	if ( attribute.value == "win32dll" )
 		return Win32DLL;
 	if ( attribute.value == "win32ocx" )
@@ -953,6 +969,7 @@ Module::GetTargetDirectoryTree () const
 	{
 		case Kernel:
 		case KernelModeDLL:
+		case KeyboardLayout:
 		case NativeDLL:
 		case Win32DLL:
 		case Win32OCX:
@@ -1015,6 +1032,7 @@ Module::GetDefaultModuleExtension () const
 
 		case KernelModeDLL:
 		case NativeDLL:
+		case KeyboardLayout:
 		case Win32DLL:
 			return ".dll";
 		case Win32OCX:
@@ -1057,6 +1075,7 @@ Module::GetDefaultModuleEntrypoint () const
 	{
 		case Kernel:
 			return "KiSystemStartup";
+		case KeyboardLayout:
 		case KernelModeDLL:
 		case KernelModeDriver:
 			return "DriverEntry@8";
@@ -1124,6 +1143,7 @@ Module::GetDefaultModuleBaseaddress () const
 		case Win32SCR:
 		case Win32GUI:
 			return "0x00400000";
+		case KeyboardLayout:
 		case KernelModeDLL:
 		case KernelModeDriver:
 			return "0x00010000";
@@ -1169,6 +1189,7 @@ Module::IsDLL () const
 		case Kernel:
 		case KernelModeDLL:
 		case NativeDLL:
+		case KeyboardLayout:
 		case Win32DLL:
 		case Win32OCX:
 		case KernelModeDriver:

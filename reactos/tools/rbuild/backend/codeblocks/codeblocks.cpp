@@ -640,7 +640,7 @@ CBBackend::_generate_cbproj ( const Module& module )
 			fprintf ( OUT, "\t\t\t\t\t<Add option=\"-Wl,--entry,%s%s\" />\r\n", "_", module.GetEntryPoint(false).c_str () );
 			fprintf ( OUT, "\t\t\t\t\t<Add option=\"-Wl,--image-base,%s\" />\r\n", baseaddr == "" ? "0x40000" : baseaddr.c_str () );
 
-			if ( module.type == Win32DLL )
+			if ( module.type == Win32DLL)
 				fprintf ( OUT, "\t\t\t\t\t<Add option=\"-Wl,--shared\" />\r\n" );
 			else if ( module.type == NativeDLL)
 				fprintf ( OUT, "\t\t\t\t\t<Add option=\"-Wl,--shared\" />\r\n" );
