@@ -3448,9 +3448,9 @@ static LRESULT WINAPI ListBoxWndProc_common( HWND hwnd, UINT msg,
         break;
 
     default:
-        /*if ((msg >= WM_USER) && (msg < 0xc000))
+        if ((msg >= WM_USER) && (msg < 0xc000))
             WARN("[%p]: unknown msg %04x wp %08lx lp %08lx\n",
-                 hwnd, msg, wParam, lParam );*/
+                 hwnd, msg, wParam, lParam );
         break;
     }
 
