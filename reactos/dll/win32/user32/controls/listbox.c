@@ -3101,10 +3101,10 @@ static LRESULT WINAPI ListBoxWndProc_common( HWND hwnd, UINT msg,
 #endif
     case LB_SETCURSEL:
         if (IS_MULTISELECT(descr)) return LB_ERR;
-        LISTBOX_SetCaretIndex( descr, wParam, TRUE );
+        LISTBOX_SetCaretIndex( descr, wParam, FALSE );
         ret = LISTBOX_SetSelection( descr, wParam, TRUE, FALSE );
-	if (lphc && ret != LB_ERR) ret = descr->selected_item;
-	return ret;
+        if (ret != LB_ERR) ret = descr->selected_item;
+        return ret;
 
 #ifndef __REACTOS__
     case LB_GETSELCOUNT16:
@@ -3448,9 +3448,10 @@ static LRESULT WINAPI ListBoxWndProc_common( HWND hwnd, UINT msg,
         break;
 
     default:
-        if ((msg >= WM_USER) && (msg < 0xc000))
+        /*if ((msg >= WM_USER) && (msg < 0xc000))
             WARN("[%p]: unknown msg %04x wp %08lx lp %08lx\n",
-                 hwnd, msg, wParam, lParam );
+                 hwnd, msg, wParam, lParam );*/
+        break;
     }
 
     return unicode ? DefWindowProcW( hwnd, msg, wParam, lParam ) :
