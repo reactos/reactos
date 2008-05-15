@@ -480,6 +480,18 @@ Module::Module ( const Project& project,
 	else
 		lcid = "";
 
+	att = moduleNode.GetAttribute ( "layoutid", false );
+	if (type == KeyboardLayout && att != NULL )
+		layoutId = att->value;
+	else
+		layoutId = "";
+
+	att = moduleNode.GetAttribute ( "layoutnameresid", false );
+	if (type == KeyboardLayout && att != NULL )
+		layoutNameResId = att->value;
+	else
+		layoutNameResId = "";
+
 	SetImportLibrary ( NULL );
 }
 

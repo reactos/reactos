@@ -378,6 +378,8 @@ public:
 	FileLocation *install;
 	std::string description;
 	std::string lcid;
+	std::string layoutId;
+	std::string layoutNameResId;
 
 	Module ( const Project& project,
 	         const XMLElement& moduleNode,
