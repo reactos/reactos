@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
-<module name="kbdusx" type="kernelmodedll" entrypoint="0" installbase="system32" installname="kbdusx.dll" allowwarnings="true">
+<module name="kbdusx" type="keyboardlayout" entrypoint="0" installbase="system32" installname="kbdusx.dll" allowwarnings="true">
 	<importlibrary definition="kbdusx.def" />
 	<include base="ntoskrnl">include</include>
 	<define name="_DISABLE_TIDENTS" />

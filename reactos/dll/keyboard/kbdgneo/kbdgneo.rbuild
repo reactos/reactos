@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
-<module name="kbdgneo" type="kernelmodedll" entrypoint="0" installbase="system32" installname="kbdgneo.dll" allowwarnings="true">
+<module name="kbdgneo" type="keyboardlayout" entrypoint="0" installbase="system32" installname="kbdgneo.dll" allowwarnings="true">
 	<importlibrary definition="kbdgneo.def" />
 	<include base="ntoskrnl">include</include>
 	<define name="_DISABLE_TIDENTS" />

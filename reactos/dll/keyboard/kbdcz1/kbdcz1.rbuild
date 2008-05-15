@@ -1,4 +1,4 @@
-<module name="kbdcz1" type="kernelmodedll" entrypoint="0" installbase="system32" installname="kbdcz1.dll" allowwarnings="true">
+<module name="kbdcz1" type="keyboardlayout" entrypoint="0" installbase="system32" installname="kbdcz1.dll" allowwarnings="true">
 	<importlibrary definition="kbdcz1.def" />
 	<include base="ntoskrnl">include</include>
 	<define name="_DISABLE_TIDENTS" />

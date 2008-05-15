@@ -1,4 +1,4 @@
-<module name="kbdbga" type="kernelmodedll" entrypoint="0" installbase="system32" installname="kbdbga.dll" allowwarnings="true">
+<module name="kbdbga" type="keyboardlayout" entrypoint="0" installbase="system32" installname="kbdbga.dll" allowwarnings="true">
 	<importlibrary definition="kbdbga.def" />
 	<include base="ntoskrnl">include</include>
 	<define name="_DISABLE_TIDENTS" />
