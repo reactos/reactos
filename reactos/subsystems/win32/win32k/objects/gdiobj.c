@@ -59,7 +59,7 @@ OBJ_TYPE_INFO ObjTypeInfo[] =
   {0, sizeof(DC),            TAG_CLIENTOBJ,    GDI_CleanupDummy}, /* 06 CLIENTOBJ: METADC,... FIXME: don't use DC struct */
   {0, 0,                     TAG_PATH,         NULL},             /* 07 PATH, unused */
   {1, sizeof(PALGDI),        TAG_PALETTE,      PALETTE_Cleanup},  /* 08 PAL */
-  {0, 0,                     TAG_ICMLCS,       NULL},             /* 09 ICMLCS, unused */
+  {1, sizeof(COLORSPACE),    TAG_ICMLCS,       GDI_CleanupDummy}, /* 09 ICMLCS, unused */
   {1, sizeof(TEXTOBJ),       TAG_LFONT,        GDI_CleanupDummy}, /* 0a LFONT */
   {0, 0,                     TAG_RFONT,        NULL},             /* 0b RFONT, unused */
   {0, 0,                     TAG_PFE,          NULL},             /* 0c PFE, unused */

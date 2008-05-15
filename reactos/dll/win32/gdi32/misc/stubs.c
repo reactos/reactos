@@ -638,34 +638,6 @@ CheckColorsInGamut(
 
 
 /*
- * @unimplemented
- */
-HCOLORSPACE
-STDCALL
-GetColorSpace(HDC hDc)
-{
-    UNIMPLEMENTED;
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
-}
-
-
-/*
- * @unimplemented
- */
-HCOLORSPACE
-STDCALL
-SetColorSpace(
-	HDC		a0,
-	HCOLORSPACE	a1
-	)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-/*
  * @implemented
  */
 BOOL
