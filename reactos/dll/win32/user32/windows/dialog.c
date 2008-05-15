@@ -1678,8 +1678,17 @@ DialogBoxParamA(
     HRSRC hrsrc;
     LPCDLGTEMPLATE ptr;
 
-    if (!(hrsrc = FindResourceA( hInstance, lpTemplateName, (LPCSTR)RT_DIALOG ))) return 0;
-    if (!(ptr = (LPCDLGTEMPLATE)LoadResource(hInstance, hrsrc))) return 0;
+    if (!(hrsrc = FindResourceA( hInstance, lpTemplateName, (LPCSTR)RT_DIALOG )) ||
+        !(ptr = (LPCDLGTEMPLATE)LoadResource(hInstance, hrsrc)))
+    {
+        SetLastError(ERROR_RESOURCE_NAME_NOT_FOUND);
+        return -1;
+    }
+    if (!IsWindow(hWndParent))
+    {
+        SetLastError(ERROR_INVALID_WINDOW_HANDLE);
+        return 0;
+    }
     hwnd = DIALOG_CreateIndirect(hInstance, ptr, hWndParent, lpDialogFunc, dwInitParam, FALSE, TRUE);
     if (hwnd) return DIALOG_DoDialogBox(hwnd, hWndParent);
     return -1;
@@ -1702,8 +1711,17 @@ DialogBoxParamW(
     HRSRC hrsrc;
     LPCDLGTEMPLATE ptr;
 
-    if (!(hrsrc = FindResourceW( hInstance, lpTemplateName, (LPCWSTR)RT_DIALOG ))) return 0;
-    if (!(ptr = (LPCDLGTEMPLATE)LoadResource(hInstance, hrsrc))) return 0;
+    if (!(hrsrc = FindResourceW( hInstance, lpTemplateName, (LPCWSTR)RT_DIALOG )) ||
+        !(ptr = (LPCDLGTEMPLATE)LoadResource(hInstance, hrsrc)))
+    {
+        SetLastError(ERROR_RESOURCE_NAME_NOT_FOUND);
+        return -1;
+    }
+    if (!IsWindow(hWndParent))
+    {
+        SetLastError(ERROR_INVALID_WINDOW_HANDLE);
+        return 0;
+    }
     hwnd = DIALOG_CreateIndirect(hInstance, ptr, hWndParent, lpDialogFunc, dwInitParam, TRUE, TRUE);
     if (hwnd) return DIALOG_DoDialogBox(hwnd, hWndParent);
     return -1;
