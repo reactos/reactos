@@ -9,14 +9,14 @@
 
 #include "precomp.h"
 
-typedef struct _LICINFO
+typedef struct _LIC_CONTEXT
 {
     HICON hIcon;
-} LICINFO, *PLICINFO;
+} LIC_CONTEXT, *PLIC_CONTEXT;
 
 
 static BOOL
-OnInitDialog(HWND hDlg, PLICINFO pLicInfo)
+OnInitDialog(HWND hDlg, PLIC_CONTEXT pLicInfo)
 {
     HRSRC hResInfo;
     HGLOBAL hResMem;
@@ -65,16 +65,16 @@ LicenceDlgProc(HWND hDlg,
                WPARAM wParam,
                LPARAM lParam)
 {
-    PLICINFO pLicInfo;
+    PLIC_CONTEXT pLicInfo;
 
     UNREFERENCED_PARAMETER(lParam);
 
-    pLicInfo = (PLICINFO)GetWindowLongPtr(hDlg, DWLP_USER);
+    pLicInfo = (PLIC_CONTEXT)GetWindowLongPtr(hDlg, DWLP_USER);
 
     switch (uMsg)
     {
         case WM_INITDIALOG:
-            pLicInfo = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(LICINFO));
+            pLicInfo = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(LIC_CONTEXT));
             if (pLicInfo == NULL)
             {
                 EndDialog(hDlg, 0);
