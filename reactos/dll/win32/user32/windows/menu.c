@@ -1049,6 +1049,7 @@ static LPCSTR MENUEX_ParseResource( LPCSTR res, HMENU hMenu)
 	  }
 	  mii.fMask |= MIIM_SUBMENU;
 	  mii.fType |= MF_POPUP;
+	  mii.wID = (UINT) mii.hSubMenu;
 	}
       else if(!*mii.dwTypeData && !(mii.fType & MF_SEPARATOR))
 	{
@@ -1108,6 +1109,8 @@ static LPCSTR MENU_ParseResource( LPCSTR res, HMENU hMenu, BOOL unicode )
     }
     else  /* Not a popup */
     {
+      if (flags == 0 && id == 0 && *str == 0)
+        flags = MF_SEPARATOR | MF_GRAYED;
       if(!unicode)
         AppendMenuA(hMenu, flags, id, *str ? str : NULL);
       else
@@ -3848,6 +3851,106 @@ CheckMenuItem(HMENU hmenu,
   return NtUserCheckMenuItem(hmenu, uIDCheckItem, uCheck);
 }
 
+static
+BOOL
+MenuCheckMenuRadioItem(HMENU hMenu, UINT idFirst, UINT idLast, UINT idCheck, UINT uFlags, BOOL bCheck, PUINT pChecked, PUINT pUnchecked, PUINT pMenuChanged)
+{
+  UINT ItemCount, i;
+  PROSMENUITEMINFO Items = NULL;
+  UINT cChecked, cUnchecked;
+  BOOL bRet = TRUE;
+  //ROSMENUINFO mi;
+
+  if(idFirst > idLast)
+      return FALSE;
+
+  ItemCount = GetMenuItemCount(hMenu);
+
+  //mi.cbSize = sizeof(ROSMENUINFO);
+  //if(!NtUserMenuInfo(hmenu, &mi, FALSE)) return ret;
+
+
+  if(MenuGetAllRosMenuItemInfo(hMenu, &Items) <= 0)
+  {
+    ERR("MenuGetAllRosMenuItemInfo failed\n");
+    return FALSE;
+  }
+
+  cChecked = cUnchecked = 0;
+
+  for (i = 0 ; i < ItemCount; i++)
+  {
+    BOOL check = FALSE;
+    if (0 != (Items[i].fType & MF_MENUBARBREAK)) continue;
+    if (0 != (Items[i].fType & MF_SEPARATOR)) continue;
+
+    if ((Items[i].fType & MF_POPUP) && (uFlags == MF_BYCOMMAND))
+    {
+      MenuCheckMenuRadioItem(Items[i].hSubMenu, idFirst, idLast, idCheck, uFlags, bCheck, pChecked, pUnchecked, pMenuChanged);
+      continue;
+    }
+    if (uFlags & MF_BYPOSITION)
+    {
+      if (i < idFirst || i > idLast)
+        continue;
+
+      if (i == idCheck)
+      {
+        cChecked++;
+        check = TRUE;
+      }
+      else
+      {
+        cUnchecked++;
+      }
+    }
+      else
+      {
+        if (Items[i].wID < idFirst || Items[i].wID > idLast)
+          continue;
+
+        if (Items[i].wID == idCheck)
+        {
+          cChecked++;
+          check = TRUE;
+        }
+        else
+        {
+          cUnchecked++;
+        }
+      }
+
+      if (!bCheck)
+        continue;
+
+      Items[i].fMask = MIIM_STATE | MIIM_FTYPE;
+      if (check)
+      {
+        Items[i].fType |= MFT_RADIOCHECK;
+        Items[i].fState |= MFS_CHECKED;
+      }
+      else
+      {
+        Items[i].fState &= ~MFS_CHECKED;
+      }
+
+      if(!MenuSetRosMenuItemInfo(hMenu, i ,&Items[i]))
+      {
+        ERR("MenuSetRosMenuItemInfo failed\n");
+        bRet = FALSE;
+        break;
+      }
+  }
+  MenuCleanupRosMenuItemInfo(Items);
+
+  *pChecked += cChecked;
+  *pUnchecked += cUnchecked;
+
+  if (cChecked || cUnchecked)
+    (*pMenuChanged)++;
+
+  return bRet;
+}
 
 /*
  * @implemented
@@ -3859,44 +3962,24 @@ CheckMenuRadioItem(HMENU hmenu,
 		   UINT idCheck,
 		   UINT uFlags)
 {
-  ROSMENUINFO mi;
-  PROSMENUITEMINFO Items;
-  int i;
-  BOOL ret = FALSE;
+  UINT cChecked = 0;
+  UINT cUnchecked = 0;
+  UINT cMenuChanged = 0;
 
-  mi.cbSize = sizeof(MENUINFO);
+  if (!MenuCheckMenuRadioItem(hmenu, idFirst, idLast, idCheck, uFlags, FALSE, &cChecked, &cUnchecked, &cMenuChanged))
+    return FALSE;
 
-  TRACE("CheckMenuRadioItem\n");
+  if (cMenuChanged > 1)
+    return FALSE;
 
-  if(idFirst > idLast) return ret;
+  cMenuChanged = 0;
+  cChecked = 0;
+  cUnchecked = 0;
 
-  if(!NtUserMenuInfo(hmenu, &mi, FALSE)) return ret;
+  if (!MenuCheckMenuRadioItem(hmenu, idFirst, idLast, idCheck, uFlags, TRUE, &cChecked, &cUnchecked, &cMenuChanged))
+    return FALSE;
 
-  if(MenuGetAllRosMenuItemInfo(mi.Self, &Items) <= 0) return ret;
-
-  for (i = 0 ; i < mi.MenuItemCount; i++)
-    {
-      if (0 != (Items[i].fType & MF_MENUBARBREAK)) break;
-      if ( i >= idFirst && i <= idLast )
-      {
-         Items[i].fMask = MIIM_STATE | MIIM_FTYPE;
-         if ( i == idCheck)
-         {
-             Items[i].fType |= MFT_RADIOCHECK;
-             Items[i].fState |= MFS_CHECKED;
-         }
-         else
-         {
-             Items[i].fType &= ~MFT_RADIOCHECK;
-             Items[i].fState &= ~MFS_CHECKED;
-         }
-         if(!MenuSetRosMenuItemInfo(mi.Self, i ,&Items[i]))
-             break;
-      }
-   if ( i == mi.MenuItemCount) ret = TRUE;
-    }
-  MenuCleanupRosMenuItemInfo(Items);
-  return ret;
+  return (cChecked != 0);
 }
 
 
