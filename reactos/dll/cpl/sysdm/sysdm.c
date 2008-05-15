@@ -11,6 +11,7 @@
 
 LONG CALLBACK SystemApplet(VOID);
 HINSTANCE hApplet = 0;
+HWND hCPLWindow;
 
 /* Applets */
 APPLET Applets[NUM_APPLETS] =
@@ -112,7 +113,7 @@ SystemApplet(VOID)
     ZeroMemory(&psh, sizeof(PROPSHEETHEADER));
     psh.dwSize = sizeof(PROPSHEETHEADER);
     psh.dwFlags =  PSH_PROPTITLE;
-    psh.hwndParent = NULL;
+    psh.hwndParent = hCPLWindow;
     psh.hInstance = hApplet;
     psh.hIcon = LoadIcon(hApplet, MAKEINTRESOURCE(IDI_CPLSYSTEM));
     psh.pszCaption = MAKEINTRESOURCE(IDS_CPLSYSTEMNAME);
@@ -176,6 +177,7 @@ CPlApplet(HWND hwndCPl,
             break;
 
         case CPL_DBLCLK:
+            hCPLWindow = hwndCPl;
             Applets[i].AppletProc();
             break;
     }

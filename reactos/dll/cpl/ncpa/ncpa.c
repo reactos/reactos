@@ -82,6 +82,7 @@ static INT_PTR CALLBACK NetworkPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, 
 void DisplayTCPIPProperties(HWND hParent,IP_ADAPTER_INFO *pInfo);
 
 HINSTANCE hApplet = 0;
+HWND hCPLWindow;
 
 /* Applets */
 static APPLET Applets[] =
@@ -1030,7 +1031,7 @@ DisplayApplet(VOID)
 
 	psh.dwSize = sizeof(PROPSHEETHEADER);
 	psh.dwFlags =  PSH_PROPSHEETPAGE;
-	psh.hwndParent = NULL;
+	psh.hwndParent = hCPLWindow;
 	psh.hInstance = hApplet;
 	psh.hIcon = LoadIcon(hApplet, MAKEINTRESOURCE(IDI_CPLSYSTEM));
 	psh.pszCaption = Caption;
@@ -1077,6 +1078,7 @@ CPlApplet(HWND hwndCPl, UINT uMsg, LPARAM lParam1, LPARAM lParam2)
 
 	case CPL_DBLCLK:
 		{
+            hCPLWindow = hwndCPl;
 			Applets[(int)lParam1].AppletProc();
 			break;
 		}

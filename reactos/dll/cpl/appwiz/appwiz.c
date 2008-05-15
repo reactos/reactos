@@ -36,6 +36,7 @@ LONG CALLBACK SystemApplet(VOID);
 INT_PTR CALLBACK GeneralPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 INT_PTR CALLBACK ComputerPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 HINSTANCE hApplet = 0;
+HWND hCPLWindow;
 
 /* Applets */
 
@@ -69,7 +70,7 @@ SystemApplet(VOID)
     ZeroMemory(&psh, sizeof(PROPSHEETHEADER));
     psh.dwSize = sizeof(PROPSHEETHEADER);
     psh.dwFlags =  PSH_PROPSHEETPAGE;
-    psh.hwndParent = NULL;
+    psh.hwndParent = hCPLWindow;
     psh.hInstance = hApplet;
     psh.hIcon = LoadIcon(hApplet, MAKEINTRESOURCE(IDI_CPLSYSTEM));
     psh.pszCaption = Caption;
@@ -94,8 +95,6 @@ CPlApplet(HWND hwndCPl, UINT uMsg, LPARAM lParam1, LPARAM lParam2)
     CPLINFO *CPlInfo;
     DWORD i;
 
-    UNREFERENCED_PARAMETER(hwndCPl);
-
     i = (DWORD)lParam1;
     switch (uMsg)
     {
@@ -114,6 +113,7 @@ CPlApplet(HWND hwndCPl, UINT uMsg, LPARAM lParam1, LPARAM lParam2)
             break;
 
         case CPL_DBLCLK:
+            hCPLWindow = hwndCPl;
             Applets[i].AppletProc();
             break;
     }

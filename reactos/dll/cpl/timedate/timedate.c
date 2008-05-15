@@ -76,7 +76,6 @@ Applet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
     WCHAR Caption[256];
     LONG Ret = 0;
 
-    UNREFERENCED_PARAMETER(hwnd);
     UNREFERENCED_PARAMETER(uMsg);
     UNREFERENCED_PARAMETER(wParam);
     UNREFERENCED_PARAMETER(lParam);
@@ -89,7 +88,7 @@ Applet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
         ZeroMemory(&psh, sizeof(PROPSHEETHEADERW));
         psh.dwSize = sizeof(PROPSHEETHEADERW);
         psh.dwFlags =  PSH_PROPSHEETPAGE | PSH_PROPTITLE;
-        psh.hwndParent = NULL;
+        psh.hwndParent = hwnd;
         psh.hInstance = hApplet;
         psh.hIcon = LoadIcon(hApplet, MAKEINTRESOURCEW(IDC_CPLICON));
         psh.pszCaption = Caption;

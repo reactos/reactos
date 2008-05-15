@@ -229,7 +229,7 @@ InitApplet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
 		psh.pszCaption = pConInfo->szProcessName;
   	}
 
-	psh.hwndParent = NULL;
+	psh.hwndParent = hwnd;
 	psh.hInstance = hApplet;
 	psh.hIcon = LoadIcon(hApplet, MAKEINTRESOURCE(IDC_CPLICON));
 	psh.pszCaption = 0;
