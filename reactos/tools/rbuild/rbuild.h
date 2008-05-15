@@ -658,6 +658,7 @@ public:
 	const Project& project;
 	const Module* module;
 	std::string name, value;
+	bool isInternal;
 
 	Property ( const XMLElement& node_,
 	           const Project& project_,

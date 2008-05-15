@@ -1705,6 +1705,25 @@ Property::Property ( const XMLElement& node_,
 	att = node_.GetAttribute ( "value", true );
 	assert(att);
 	value = att->value;
+
+	att = node_.GetAttribute ( "internal", false );
+	if ( att != NULL )
+	{
+		const char* p = att->value.c_str();
+		if ( !stricmp ( p, "true" ) || !stricmp ( p, "yes" ) )
+			isInternal = true;
+		else if ( !stricmp ( p, "false" ) || !stricmp ( p, "no" ) )
+			isInternal = false;
+		else
+		{
+			throw InvalidAttributeValueException (
+				node_.location,
+				"internal",
+				att->value );
+		}
+	}
+	else
+		isInternal = false;
 }
 
 Property::Property ( const Project& project_,

@@ -401,9 +401,13 @@ MingwBackend::GenerateGlobalCFlagsAndProperties (
 	for ( i = 0; i < data.properties.size(); i++ )
 	{
 		Property& prop = *data.properties[i];
-		fprintf ( fMakefile, "%s := %s\n",
-			prop.name.c_str(),
-			prop.value.c_str() );
+
+		if (!prop.isInternal)
+		{
+			fprintf ( fMakefile, "%s := %s\n",
+				prop.name.c_str(),
+				prop.value.c_str() );
+		}
 	}
 
 	if ( data.includes.size() || data.defines.size() )
