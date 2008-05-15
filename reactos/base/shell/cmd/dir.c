@@ -1590,9 +1590,7 @@ ULARGE_INTEGER u64Temp;					/* A temporary counter */
 	ptrStartNode = cmd_alloc(sizeof(DIRFINDLISTNODE));
 	if (ptrStartNode == NULL)
 	{
-#ifdef _DEBUG
-		ConErrPrintf(_T("DEBUG: Cannot allocate memory for ptrStartNode!\n"));
-#endif
+		WARN("DEBUG: Cannot allocate memory for ptrStartNode!\n");
 		return 1;	/* Error cannot allocate memory for 1st object */
 	}
 	ptrNextNode = ptrStartNode;
@@ -1610,9 +1608,7 @@ ULARGE_INTEGER u64Temp;					/* A temporary counter */
 				ptrNextNode->ptrNext = cmd_alloc(sizeof(DIRFINDLISTNODE));
 				if (ptrNextNode->ptrNext == NULL)
 				{
-#ifdef _DEBUG
-					ConErrPrintf(_T("DEBUG: Cannot allocate memory for ptrNextNode->ptrNext!\n"));
-#endif
+					WARN("DEBUG: Cannot allocate memory for ptrNextNode->ptrNext!\n");
 					while (ptrStartNode)
 					{
 						ptrNextNode = ptrStartNode->ptrNext;
@@ -1670,9 +1666,7 @@ ULARGE_INTEGER u64Temp;					/* A temporary counter */
 	ptrFileArray = cmd_alloc(sizeof(LPWIN32_FIND_DATA) * dwCount);
 	if (ptrFileArray == NULL)
 	{
-#ifdef _DEBUG
-		ConErrPrintf(_T("DEBUG: Cannot allocate memory for ptrFileArray!\n"));
-#endif
+		WARN("DEBUG: Cannot allocate memory for ptrFileArray!\n");
 		while (ptrStartNode)
 		{
 			ptrNextNode = ptrStartNode->ptrNext;
@@ -1869,27 +1863,25 @@ CommandDir(LPTSTR first, LPTSTR rest)
 
 	/* <Debug :>
 	   Uncomment this to show the final state of switch flags*/
-	#ifdef _DEBUG
-		{
-			int i;
-			ConOutPrintf(_T("Attributes mask/value %x/%x\n"),stFlags.stAttribs.dwAttribMask,stFlags.stAttribs.dwAttribVal  );
-			ConOutPrintf(_T("(B) Bare format : %i\n"), stFlags.bBareFormat );
-			ConOutPrintf(_T("(C) Thousand : %i\n"), stFlags.bTSeperator );
-			ConOutPrintf(_T("(W) Wide list : %i\n"), stFlags.bWideList );
-			ConOutPrintf(_T("(D) Wide list sort by column : %i\n"), stFlags.bWideListColSort );
-			ConOutPrintf(_T("(L) Lowercase : %i\n"), stFlags.bLowerCase );
-			ConOutPrintf(_T("(N) New : %i\n"), stFlags.bNewLongList );
-			ConOutPrintf(_T("(O) Order : %i\n"), stFlags.stOrderBy.sCriteriaCount );
-			for (i =0;i<stFlags.stOrderBy.sCriteriaCount;i++)
-				ConOutPrintf(_T(" Order Criteria [%i]: %i (Reversed: %i)\n"),i, stFlags.stOrderBy.eCriteria[i], stFlags.stOrderBy.bCriteriaRev[i] );
-			ConOutPrintf(_T("(P) Pause : %i\n"), stFlags.bPause  );
-			ConOutPrintf(_T("(Q) Owner : %i\n"), stFlags.bUser );
-			ConOutPrintf(_T("(S) Recursive : %i\n"), stFlags.bRecursive );
-			ConOutPrintf(_T("(T) Time field : %i\n"), stFlags.stTimeField.eTimeField );
-			ConOutPrintf(_T("(X) Short names : %i\n"), stFlags.bShortName );
-			ConOutPrintf(_T("Parameter : %s\n"), params[loop] );
-		}
-	#endif
+	{
+		int i;
+		TRACE("Attributes mask/value %x/%x\n",stFlags.stAttribs.dwAttribMask,stFlags.stAttribs.dwAttribVal  );
+		TRACE("(B) Bare format : %i\n", stFlags.bBareFormat );
+		TRACE("(C) Thousand : %i\n", stFlags.bTSeperator );
+		TRACE("(W) Wide list : %i\n", stFlags.bWideList );
+		TRACE("(D) Wide list sort by column : %i\n", stFlags.bWideListColSort );
+		TRACE("(L) Lowercase : %i\n", stFlags.bLowerCase );
+		TRACE("(N) New : %i\n", stFlags.bNewLongList );
+		TRACE("(O) Order : %i\n", stFlags.stOrderBy.sCriteriaCount );
+		for (i =0;i<stFlags.stOrderBy.sCriteriaCount;i++)
+			TRACE(" Order Criteria [%i]: %i (Reversed: %i)\n",i, stFlags.stOrderBy.eCriteria[i], stFlags.stOrderBy.bCriteriaRev[i] );
+		TRACE("(P) Pause : %i\n", stFlags.bPause  );
+		TRACE("(Q) Owner : %i\n", stFlags.bUser );
+		TRACE("(S) Recursive : %i\n", stFlags.bRecursive );
+		TRACE("(T) Time field : %i\n", stFlags.stTimeField.eTimeField );
+		TRACE("(X) Short names : %i\n", stFlags.bShortName );
+		TRACE("Parameter : %s\n", debugstr_aw(params[loop]) );
+	}
 
 		/* Print the drive header if the volume changed */
 		ChangedVolume = TRUE;

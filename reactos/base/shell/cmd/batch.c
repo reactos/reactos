@@ -170,7 +170,7 @@ LPTSTR BatchParams (LPTSTR s1, LPTSTR s2)
 
 VOID ExitBatch (LPTSTR msg)
 {
-	TRACE ("ExitBatch: (\'%s\')\n", msg);
+	TRACE ("ExitBatch: (\'%s\')\n", debugstr_aw(msg));
 
 	if (bc != NULL)
 	{
@@ -223,7 +223,7 @@ BOOL Batch (LPTSTR fullname, LPTSTR firstword, LPTSTR param)
 				 FILE_FLAG_SEQUENTIAL_SCAN, NULL);
 
 	TRACE ("Batch: (\'%s\', \'%s\', \'%s\')  hFile = %x\n",
-				 fullname, firstword, param, hFile);
+		debugstr_aw(fullname), debugstr_aw(firstword), debugstr_aw(param), hFile);
 
 	if (hFile == INVALID_HANDLE_VALUE)
 	{
@@ -434,7 +434,7 @@ LPTSTR ReadBatchLine (LPBOOL bLocalEcho)
 
 			continue;
 		}
-		TRACE ("ReadBatchLine(): textline: \'%s\'\n", textline);
+		TRACE ("ReadBatchLine(): textline: \'%s\'\n", debugstr_aw(textline));
 
 		/* Strip leading spaces and trailing space/control chars */
 		for (first = textline; _istspace (*first); first++)

@@ -283,7 +283,7 @@ static BOOL RunFile(LPTSTR filename)
 	MYEX        hShExt;
 	HINSTANCE   ret;
 
-	TRACE ("RunFile(%s)\n", filename);
+	TRACE ("RunFile(%s)\n", debugstr_aw(filename));
 	hShell32 = LoadLibrary(_T("SHELL32.DLL"));
 	if (!hShell32)
 	{
@@ -330,7 +330,7 @@ Execute (LPTSTR Full, LPTSTR First, LPTSTR Rest)
 	TCHAR szWindowTitle[MAX_PATH];
 	DWORD dwExitCode = 0;
 
-	TRACE ("Execute: \'%s\' \'%s\'\n", first, rest);
+	TRACE ("Execute: \'%s\' \'%s\'\n", debugstr_aw(first), debugstr_aw(rest));
 
 	/* we need biger buffer that First, Rest, Full are already
 	   need rewrite some code to use cmd_realloc when it need instead
@@ -465,7 +465,7 @@ Execute (LPTSTR Full, LPTSTR First, LPTSTR Rest)
 	dot = _tcsrchr (szFullName, _T('.'));
 	if (dot && (!_tcsicmp (dot, _T(".bat")) || !_tcsicmp (dot, _T(".cmd"))))
 	{
-		TRACE ("[BATCH: %s %s]\n", szFullName, rest);
+		TRACE ("[BATCH: %s %s]\n", debugstr_aw(szFullName), debugstr_aw(rest));
 		Batch (szFullName, first, rest);
 	}
 	else
@@ -474,7 +474,7 @@ Execute (LPTSTR Full, LPTSTR First, LPTSTR Rest)
 		PROCESS_INFORMATION prci;
 		STARTUPINFO stui;
 
-		TRACE ("[EXEC: %s %s]\n", full, rest);
+		TRACE ("[EXEC: %s %s]\n", debugstr_aw(full), debugstr_aw(rest));
 		/* build command line for CreateProcess() */
 
 		/* fill startup info */
@@ -522,11 +522,11 @@ Execute (LPTSTR Full, LPTSTR First, LPTSTR Rest)
 		}
 		else
 		{
-			TRACE ("[ShellExecute: %s]\n", full);
+			TRACE ("[ShellExecute: %s]\n", debugstr_aw(full));
 			// See if we can run this with ShellExecute() ie myfile.xls
 			if (!RunFile(full))
 			{
-				TRACE ("[ShellExecute failed!: %s]\n", full);
+				TRACE ("[ShellExecute failed!: %s]\n", debugstr_aw(full));
 				error_bad_command ();
                                 nErrorLevel = 1;
 			}
@@ -572,7 +572,7 @@ DoCommand (LPTSTR line)
 	INT cl;
 	LPCOMMAND cmdptr;
 
-	TRACE ("DoCommand: (\'%s\')\n", line);
+	TRACE ("DoCommand: (\'%s\')\n", debugstr_aw(line));
 
 	com = cmd_alloc( (_tcslen(line) +512)*sizeof(TCHAR) );
 	if (com == NULL)
@@ -707,7 +707,7 @@ VOID ParseCommandLine (LPTSTR cmd)
 	_tcscpy (cmdline, cmd);
 	s = &cmdline[0];
 
-	TRACE ("ParseCommandLine: (\'%s\')\n", s);
+	TRACE ("ParseCommandLine: (\'%s\')\n", debugstr_aw(s));
 
 #ifdef FEATURE_ALIASES
 	/* expand all aliases */
@@ -793,7 +793,7 @@ VOID ParseCommandLine (LPTSTR cmd)
 			ConErrPrintf(szMsg, in);
 			return;
 		}
-		TRACE ("Input redirected from: %s\n", in);
+		TRACE ("Input redirected from: %s\n", debugstr_aw(in));
 	}
 
 	/* Now do all but the last pipe command */
@@ -913,7 +913,7 @@ VOID ParseCommandLine (LPTSTR cmd)
 			if (GetFileType (hFile) == FILE_TYPE_DISK)
 				SetFilePointer (hFile, 0, &lHighPos, FILE_END);
 		}
-		TRACE ("Output redirected to: %s\n", out);
+		TRACE ("Output redirected to: %s\n", debugstr_aw(out));
 	}
 	else if (hOldConOut != INVALID_HANDLE_VALUE)
 	{
@@ -971,7 +971,7 @@ VOID ParseCommandLine (LPTSTR cmd)
 			if (GetFileType (hFile) == FILE_TYPE_DISK)
 				SetFilePointer (hFile, 0, &lHighPos, FILE_END);
 		}
-		TRACE ("Error redirected to: %s\n", err);
+		TRACE ("Error redirected to: %s\n", debugstr_aw(err));
 	}
 	else if (hOldConErr != INVALID_HANDLE_VALUE)
 	{
@@ -1686,7 +1686,7 @@ Initialize (int argc, const TCHAR* argv[])
 	TRACE ("[command args:\n");
 	for (i = 0; i < argc; i++)
 	{
-		TRACE ("%d. %s\n", i, argv[i]);
+		TRACE ("%d. %s\n", i, debugstr_aw(argv[i]));
 	}
 	TRACE ("]\n");
 

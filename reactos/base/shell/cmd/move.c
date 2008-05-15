@@ -191,7 +191,7 @@ INT cmd_move (LPTSTR cmd, LPTSTR param)
 	
 	/* get destination */
 	GetFullPathName (arg[argc - 1], MAX_PATH, szDestPath, NULL);
-	TRACE ("Destination: %s\n", szDestPath);
+	TRACE ("Destination: %s\n", debugstr_aw(szDestPath));
 	
 	/* get source folder */
 	GetDirectory(arg[argc - 2], szSrcDirPath, 1);
@@ -202,7 +202,7 @@ INT cmd_move (LPTSTR cmd, LPTSTR param)
 	GetFullPathName(arg[argc - 2], MAX_PATH, szSrcPath, &pszFile);
 	if (_tcscmp(szSrcDirPath,szSrcPath) == 0)
 		szSrcDirPath[pszFile - szSrcPath] = _T('\0');
-	TRACE ("Source Folder: %s\n", szSrcDirPath);
+	TRACE ("Source Folder: %s\n", debugstr_aw(szSrcDirPath));
 	
 	hFile = FindFirstFile (arg[argc - 2], &findBuffer);
 	if (hFile == INVALID_HANDLE_VALUE)
@@ -235,7 +235,7 @@ INT cmd_move (LPTSTR cmd, LPTSTR param)
 	if(szSrcPath[_tcslen(szSrcPath) -  1] != _T('\\'))
 		_tcscat (szSrcPath, _T("\\"));
 	_tcscat(szSrcPath,findBuffer.cFileName);
-	TRACE ("Source Path: %s\n", szSrcPath);
+	TRACE ("Source Path: %s\n", debugstr_aw(szSrcPath));
 	/* check if there can be found files as files have first priority */
 	if (IsExistingFile(szSrcPath)) dwMoveStatusFlags |= MOVE_SOURCE_IS_FILE;
 	else dwMoveStatusFlags |= MOVE_SOURCE_IS_DIR;
@@ -258,7 +258,7 @@ INT cmd_move (LPTSTR cmd, LPTSTR param)
 	}
 	FindClose(hFile);
 
-	TRACE ("Do we have only one file: %s\n", OnlyOneFile ? _T("TRUE") : _T("FALSE"));
+	TRACE ("Do we have only one file: %s\n", OnlyOneFile ? "TRUE" : "FALSE");
 
 	/* we have to start again to be sure we don't miss any files or folders*/
 	hFile = FindFirstFile (arg[argc - 2], &findBuffer);
@@ -293,7 +293,7 @@ INT cmd_move (LPTSTR cmd, LPTSTR param)
 	/* move it */
 	do
 	{
-		TRACE ("Found file/directory: %s\n", findBuffer.cFileName);
+		TRACE ("Found file/directory: %s\n", debugstr_aw(findBuffer.cFileName));
 		nOverwrite = 1;
 		dwMoveFlags = 0;
 		dwMoveStatusFlags &= ~MOVE_DEST_IS_FILE &
@@ -315,7 +315,7 @@ INT cmd_move (LPTSTR cmd, LPTSTR param)
 				dwMoveStatusFlags |= MOVE_SRC_CURRENT_IS_DIR; /* source is file but at the current round we found a directory */
 				continue;
 			}
-			TRACE ("Source is dir: %s\n", szSrcPath);
+			TRACE ("Source is dir: %s\n", debugstr_aw(szSrcPath));
 			dwMoveFlags = MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH | MOVEFILE_COPY_ALLOWED;
 		}
 		
@@ -324,7 +324,7 @@ INT cmd_move (LPTSTR cmd, LPTSTR param)
 		if (IsExistingDirectory(szDestPath))
 		{
 			/* destination is existing directory */
-			TRACE ("Destination is directory: %s\n", szDestPath);
+			TRACE ("Destination is directory: %s\n", debugstr_aw(szDestPath));
 			
 			dwMoveStatusFlags |= MOVE_DEST_IS_DIR;
 			
@@ -344,7 +344,7 @@ INT cmd_move (LPTSTR cmd, LPTSTR param)
 		if (IsExistingFile(szDestPath))
 		{
 			/* destination is a file */
-			TRACE ("Destination is file: %s\n", szDestPath);
+			TRACE ("Destination is file: %s\n", debugstr_aw(szDestPath));
 			
 			dwMoveStatusFlags |= MOVE_DEST_IS_FILE | MOVE_DEST_EXISTS;
 			_tcscpy (szFullDestPath, szDestPath);

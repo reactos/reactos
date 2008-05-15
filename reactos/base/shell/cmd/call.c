@@ -44,7 +44,7 @@ INT cmd_call (LPTSTR cmd, LPTSTR param)
 {
 	LPBATCH_CONTEXT n = NULL;
 
-	TRACE ("cmd_call: (\'%s\',\'%s\')\n", cmd, param);
+	TRACE ("cmd_call: (\'%s\',\'%s\')\n", debugstr_aw(cmd), debugstr_aw(param));
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
 		ConOutResPaging(TRUE,STRING_CALL_HELP);

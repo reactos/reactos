@@ -251,9 +251,7 @@ DeleteFiles(LPTSTR FileName, DWORD* dwFlags, DWORD dwAttrFlags)
 			        continue;
 
 
-#ifdef _DEBUG
-		        ConErrPrintf(_T("Full filename: %s\n"), szFullPath);
-#endif
+		        TRACE("Full filename: %s\n", debugstr_aw(szFullPath));
 
 		        /* ask for deleting */
 		        if (*dwFlags & DEL_PROMPT)

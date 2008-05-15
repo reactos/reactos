@@ -165,10 +165,10 @@ copy (TCHAR source[MAX_PATH],
     }
     else if (!append)
     {
-        TRACE ("SetFileAttributes (%s, FILE_ATTRIBUTE_NORMAL);\n", dest);
+        TRACE ("SetFileAttributes (%s, FILE_ATTRIBUTE_NORMAL);\n", debugstr_aw(dest));
         SetFileAttributes (dest, FILE_ATTRIBUTE_NORMAL);
 
-        TRACE ("DeleteFile (%s);\n", dest);
+        TRACE ("DeleteFile (%s);\n", debugstr_aw(dest));
         DeleteFile (dest);
 
         hFileDest =	CreateFile (dest, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, 0, NULL);

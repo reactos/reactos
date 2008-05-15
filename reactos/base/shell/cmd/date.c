@@ -226,7 +226,7 @@ INT cmd_date (LPTSTR cmd, LPTSTR param)
 
 			PrintDateString ();
 			ConInString (s, 40);
-			TRACE ("\'%s\'\n", s);
+			TRACE ("\'%s\'\n", debugstr_aw(s));
 			while (*s && s[_tcslen (s) - 1] < _T(' '))
 				s[_tcslen (s) - 1] = _T('\0');
 			if (ParseDate (s))

@@ -34,7 +34,7 @@ INT CommandEcho (LPTSTR cmd, LPTSTR param)
 	TCHAR szMsg[RC_STRING_MAX_SIZE];
         LPTSTR p1, p2;
 
-	TRACE ("CommandEcho '%s' : '%s'\n", cmd, param);
+	TRACE ("CommandEcho '%s' : '%s'\n", debugstr_aw(cmd), debugstr_aw(param));
 
         if (_tcsicmp (cmd, _T("echo.")) == 0)
 	{
@@ -110,7 +110,7 @@ INT CommandEcho (LPTSTR cmd, LPTSTR param)
 INT CommandEchos (LPTSTR cmd, LPTSTR param)
 {
 
-	TRACE ("CommandEchos '%s' : '%s'\n", cmd, param);
+	TRACE ("CommandEchos '%s' : '%s'\n", debugstr_aw(cmd), debugstr_aw(param));
 
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
@@ -128,7 +128,7 @@ INT CommandEchos (LPTSTR cmd, LPTSTR param)
 INT CommandEchoerr (LPTSTR cmd, LPTSTR param)
 {
 
-	TRACE ("CommandEchoerr '%s' : '%s'\n", cmd, param);
+	TRACE ("CommandEchoerr '%s' : '%s'\n", debugstr_aw(cmd), debugstr_aw(param));
 
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
@@ -155,7 +155,7 @@ INT CommandEchoerr (LPTSTR cmd, LPTSTR param)
 INT CommandEchoserr (LPTSTR cmd, LPTSTR param)
 {
 
-	TRACE ("CommandEchoserr '%s' : '%s'\n", cmd, param);
+	TRACE ("CommandEchoserr '%s' : '%s'\n", debugstr_aw(cmd), debugstr_aw(param));
 
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{

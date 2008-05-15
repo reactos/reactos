@@ -148,10 +148,8 @@ INT cmd_rename (LPTSTR cmd, LPTSTR param)
 
       srcPattern = arg[i];
 
-#ifdef _DEBUG
-      ConErrPrintf(_T("\n\nSourcePattern: %s\n"), srcPattern);
-      ConErrPrintf(_T("DestinationPattern: %s\n"), dstPattern);
-#endif
+      TRACE("\n\nSourcePattern: %s\n", debugstr_aw(srcPattern));
+      TRACE("DestinationPattern: %s\n", debugstr_aw(dstPattern));
 
       hFile = FindFirstFile(srcPattern, &f);
       if (hFile == INVALID_HANDLE_VALUE)
@@ -179,9 +177,7 @@ INT cmd_rename (LPTSTR cmd, LPTSTR param)
 	      && !(dwFlags & REN_SUBDIR))
 	    continue;
 
-#ifdef _DEBUG
-	  ConErrPrintf(_T("Found source name: %s\n"), f.cFileName);
-#endif
+	  TRACE("Found source name: %s\n", debugstr_aw(f.cFileName));
 
 	  /* build destination file name */
 	  p = f.cFileName;
@@ -220,9 +216,7 @@ INT cmd_rename (LPTSTR cmd, LPTSTR param)
 	    }
 	  *r = 0;
 
-#ifdef _DEBUG
-	  ConErrPrintf(_T("DestinationFile: %s\n"), dstFile);
-#endif
+	  TRACE("DestinationFile: %s\n", debugstr_aw(dstFile));
 
 	  if (!(dwFlags & REN_QUIET) && !(dwFlags & REN_TOTAL))
 	    ConOutPrintf(_T("%s -> %s\n"), f.cFileName, dstFile);

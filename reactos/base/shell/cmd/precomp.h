@@ -38,5 +38,10 @@
 
 #include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(cmd);
+#ifdef UNICODE
+#define debugstr_aw debugstr_w
+#else
+#define debugstr_aw debugstr_a
+#endif
 
 #endif /* __CMD_PRECOMP_H */

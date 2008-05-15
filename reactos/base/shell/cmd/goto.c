@@ -42,7 +42,7 @@ INT cmd_goto (LPTSTR cmd, LPTSTR param)
 	LPTSTR tmp, tmp2;
 	LONG   lNewPosHigh = 0;
 
-	TRACE ("cmd_goto (\'%s\', \'%s\'\n", cmd, param);
+	TRACE ("cmd_goto (\'%s\', \'%s\'\n", debugstr_aw(cmd), debugstr_aw(param));
 
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{

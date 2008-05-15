@@ -253,10 +253,10 @@ INT cmd_start (LPTSTR First, LPTSTR Rest)
         szFullCmdLine[_tcslen(szFullCmdLine)] = _T('\"');
 	}
 
-		TRACE ("[BATCH: %s %s]\n", szFullName, rest);
+		TRACE ("[BATCH: %s %s]\n", debugstr_aw(szFullName), debugstr_aw(rest));
 
 
-		TRACE ("[EXEC: %s %s]\n", szFullName, rest);
+		TRACE ("[EXEC: %s %s]\n", debugstr_aw(szFullName), debugstr_aw(rest));
 		/* build command line for CreateProcess() */
 		if (bBat == FALSE)
 		{
