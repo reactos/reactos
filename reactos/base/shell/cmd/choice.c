@@ -260,9 +260,7 @@ CommandChoice (LPTSTR cmd, LPTSTR param)
 		}
 
 		freep (arg);
-#ifdef _DEBUG
-		DebugPrintf (_T("ErrorLevel: %d\n"), nErrorLevel);
-#endif /* _DEBUG */
+		TRACE ("ErrorLevel: %d\n", nErrorLevel);
 		return 0;
 	}
 
@@ -275,25 +273,19 @@ loop:
 	switch (GCret)
 	{
 		case GC_TIMEOUT:
-#ifdef _DEBUG
-			DebugPrintf (_T("GC_TIMEOUT\n"));
-			DebugPrintf (_T("elapsed %d msecs\n"), GetTickCount () - clk);
-#endif /* _DEBUG */
+			TRACE ("GC_TIMEOUT\n");
+			TRACE ("elapsed %d msecs\n", GetTickCount () - clk);
 			break;
 
 		case GC_NOKEY:
-#ifdef _DEBUG
-			DebugPrintf(_T("GC_NOKEY\n"));
-			DebugPrintf(_T("elapsed %d msecs\n"), GetTickCount () - clk);
-#endif /* _DEBUG */
+			TRACE ("GC_NOKEY\n");
+			TRACE ("elapsed %d msecs\n", GetTickCount () - clk);
 			goto loop;
 
 		case GC_KEYREAD:
-#ifdef _DEBUG
-			DebugPrintf(_T("GC_KEYREAD\n"));
-			DebugPrintf(_T("elapsed %d msecs\n"), GetTickCount () - clk);
-			DebugPrintf(_T("read %c"), Ch);
-#endif /* _DEBUG */
+			TRACE ("GC_KEYREAD\n");
+			TRACE ("elapsed %d msecs\n", GetTickCount () - clk);
+			TRACE ("read %c", Ch);
 			if ((val=IsKeyInString(lpOptions,Ch,bCaseSensitive))==-1)
 			{
 				Beep (440, 50);
@@ -303,10 +295,8 @@ loop:
 			break;
 	}
 
-#ifdef _DEBUG
-	DebugPrintf(_T("exiting wait loop after %d msecs\n"),
+	TRACE ("exiting wait loop after %d msecs\n",
 	            GetTickCount () - clk);
-#endif /* _DEBUG */
 
 	val = IsKeyInString (lpOptions, cDefault, bCaseSensitive);
 	ConOutPrintf (_T("%c\n"), lpOptions[val]);
@@ -315,9 +305,7 @@ loop:
 
 	freep (arg);
 
-#ifdef _DEBUG
-	DebugPrintf (_T("ErrorLevel: %d\n"), nErrorLevel);
-#endif /* _DEBUG */
+	TRACE ("ErrorLevel: %d\n", nErrorLevel);
 
 	return 0;
 }

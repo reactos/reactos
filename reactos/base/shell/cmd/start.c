@@ -253,14 +253,10 @@ INT cmd_start (LPTSTR First, LPTSTR Rest)
         szFullCmdLine[_tcslen(szFullCmdLine)] = _T('\"');
 	}
 
-#ifdef _DEBUG
-		DebugPrintf (_T("[BATCH: %s %s]\n"), szFullName, rest);
-#endif
+		TRACE ("[BATCH: %s %s]\n", szFullName, rest);
 
 
-#ifdef _DEBUG
-		DebugPrintf (_T("[EXEC: %s %s]\n"), szFullName, rest);
-#endif
+		TRACE ("[EXEC: %s %s]\n", szFullName, rest);
 		/* build command line for CreateProcess() */
 		if (bBat == FALSE)
 		{

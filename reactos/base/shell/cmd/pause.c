@@ -37,9 +37,7 @@
 INT cmd_pause (LPTSTR cmd, LPTSTR param)
 {
 
-#ifdef _DEBUG
-	DebugPrintf (_T("cmd_pause: \'%s\' : \'%s\')\n"), cmd, param);
-#endif
+	TRACE ("cmd_pause: \'%s\' : \'%s\')\n", cmd, param);
 
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{

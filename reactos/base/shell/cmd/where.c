@@ -92,17 +92,13 @@ SearchForExecutableSingle (LPCTSTR pFileName, LPTSTR pFullName, LPTSTR pExtensio
 	/* initialize full name buffer */
 	*pFullName = _T('\0');
 
-#ifdef _DEBUG
-	DebugPrintf (_T("SearchForExecutableSingle: \'%s\' with ext: \'%s\'\n"), pFileName, pExtension);
-#endif
+	TRACE ("SearchForExecutableSingle: \'%s\' with ext: \'%s\'\n", pFileName, pExtension);
 
 	/* Check if valid directly on specified path */
 	if (_tcschr (pFileName, _T('\\')) != NULL)
 	{
 		LPTSTR pFilePart;
-#ifdef _DEBUG
-		DebugPrintf (_T("Absolute or relative path is given.\n"));
-#endif
+		TRACE ("Absolute or relative path is given.\n");
 
 		if (GetFullPathName (pFileName,
 			             CMDLINE_LENGTH,
@@ -118,9 +114,7 @@ SearchForExecutableSingle (LPCTSTR pFileName, LPTSTR pFullName, LPTSTR pExtensio
 
 		if (IsExistingFile (szPathBuffer))
 		{
-#ifdef _DEBUG
-			DebugPrintf (_T("Found: \'%s\'\n"), szPathBuffer);
-#endif
+			TRACE ("Found: \'%s\'\n", szPathBuffer);
 			_tcscpy (pFullName, szPathBuffer);
 			return TRUE;
 		}
@@ -141,9 +135,7 @@ SearchForExecutableSingle (LPCTSTR pFileName, LPTSTR pFullName, LPTSTR pExtensio
 
 	if (IsExistingFile (szPathBuffer))
 	{
-#ifdef _DEBUG
-		DebugPrintf (_T("Found: \'%s\'\n"), szPathBuffer);
-#endif
+		TRACE ("Found: \'%s\'\n", szPathBuffer);
 		_tcscpy (pFullName, szPathBuffer);
 		return TRUE;
 	}
@@ -191,9 +183,7 @@ SearchForExecutableSingle (LPCTSTR pFileName, LPTSTR pFullName, LPTSTR pExtensio
 
 		if (IsExistingFile (szPathBuffer))
 		{
-#ifdef _DEBUG
-			DebugPrintf (_T("Found: \'%s\'\n"), szPathBuffer);
-#endif
+			TRACE ("Found: \'%s\'\n", szPathBuffer);
 			cmd_free (pszBuffer);
 			_tcscpy (pFullName, szPathBuffer);
 			return TRUE;
@@ -212,9 +202,7 @@ SearchForExecutable (LPCTSTR pFileName, LPTSTR pFullName)
 	LPTSTR pCh;
 	LPTSTR pExt;
 	DWORD  dwBuffer;
-#ifdef _DEBUG
-	DebugPrintf (_T("SearchForExecutable: \'%s\'\n"), pFileName);
-#endif
+	TRACE ("SearchForExecutable: \'%s\'\n", pFileName);
 	/* load environment varable PATHEXT */
 	pszBuffer = (LPTSTR)cmd_alloc (ENV_BUFFER_SIZE * sizeof(TCHAR));
 	dwBuffer = GetEnvironmentVariable (_T("PATHEXT"), pszBuffer, ENV_BUFFER_SIZE);
@@ -228,9 +216,7 @@ SearchForExecutable (LPCTSTR pFileName, LPTSTR pFullName)
 		_tcscpy(pszBuffer, pszDefaultPathExt);
 	}
 
-#ifdef _DEBUG
-	DebugPrintf (_T("SearchForExecutable(): Loaded PATHEXT: %s\n"), pszBuffer);
-#endif
+	TRACE ("SearchForExecutable(): Loaded PATHEXT: %s\n", pszBuffer);
 
 	pExt = _tcsrchr(pFileName, _T('.'));
 	if (pExt != NULL)

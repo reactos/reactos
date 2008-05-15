@@ -243,9 +243,7 @@ static BOOL IsConsoleProcess(HANDLE Process)
 		&Info, sizeof(PROCESS_BASIC_INFORMATION), NULL);
 	if (! NT_SUCCESS(Status))
 	{
-#ifdef _DEBUG
-		DebugPrintf (_T("NtQueryInformationProcess failed with status %08x\n"), Status);
-#endif
+		WARN ("NtQueryInformationProcess failed with status %08x\n", Status);
 		return TRUE;
 	}
 	Status = NtReadVirtualMemoryPtr (
@@ -253,9 +251,7 @@ static BOOL IsConsoleProcess(HANDLE Process)
 		sizeof(PEB), &BytesRead);
 	if (! NT_SUCCESS(Status) || sizeof(PEB) != BytesRead)
 	{
-#ifdef _DEBUG
-		DebugPrintf (_T("Couldn't read virt mem status %08x bytes read %lu\n"), Status, BytesRead);
-#endif
+		WARN ("Couldn't read virt mem status %08x bytes read %lu\n", Status, BytesRead);
 		return TRUE;
 	}
 
@@ -287,37 +283,27 @@ static BOOL RunFile(LPTSTR filename)
 	MYEX        hShExt;
 	HINSTANCE   ret;
 
-#ifdef _DEBUG
-	DebugPrintf (_T("RunFile(%s)\n"), filename);
-#endif
+	TRACE ("RunFile(%s)\n", filename);
 	hShell32 = LoadLibrary(_T("SHELL32.DLL"));
 	if (!hShell32)
 	{
-#ifdef _DEBUG
-		DebugPrintf (_T("RunFile: couldn't load SHELL32.DLL!\n"));
-#endif
+		WARN ("RunFile: couldn't load SHELL32.DLL!\n");
 		return FALSE;
 	}
 
 	hShExt = (MYEX)(FARPROC)GetProcAddress(hShell32, SHELLEXECUTETEXT);
 	if (!hShExt)
 	{
-#ifdef _DEBUG
-		DebugPrintf (_T("RunFile: couldn't find ShellExecuteA/W in SHELL32.DLL!\n"));
-#endif
+		WARN ("RunFile: couldn't find ShellExecuteA/W in SHELL32.DLL!\n");
 		FreeLibrary(hShell32);
 		return FALSE;
 	}
 
-#ifdef _DEBUG
-	DebugPrintf (_T("RunFile: ShellExecuteA/W is at %x\n"), hShExt);
-#endif
+	TRACE ("RunFile: ShellExecuteA/W is at %x\n", hShExt);
 
 	ret = (hShExt)(NULL, _T("open"), filename, NULL, NULL, SW_SHOWNORMAL);
 
-#ifdef _DEBUG
-	DebugPrintf (_T("RunFile: ShellExecuteA/W returned %d\n"), (DWORD)ret);
-#endif
+	TRACE ("RunFile: ShellExecuteA/W returned %d\n", (DWORD)ret);
 
 	FreeLibrary(hShell32);
 	return (((DWORD)ret) > 32);
@@ -344,9 +330,7 @@ Execute (LPTSTR Full, LPTSTR First, LPTSTR Rest)
 	TCHAR szWindowTitle[MAX_PATH];
 	DWORD dwExitCode = 0;
 
-#ifdef _DEBUG
-	DebugPrintf (_T("Execute: \'%s\' \'%s\'\n"), first, rest);
-#endif
+	TRACE ("Execute: \'%s\' \'%s\'\n", first, rest);
 
 	/* we need biger buffer that First, Rest, Full are already
 	   need rewrite some code to use cmd_realloc when it need instead
@@ -481,9 +465,7 @@ Execute (LPTSTR Full, LPTSTR First, LPTSTR Rest)
 	dot = _tcsrchr (szFullName, _T('.'));
 	if (dot && (!_tcsicmp (dot, _T(".bat")) || !_tcsicmp (dot, _T(".cmd"))))
 	{
-#ifdef _DEBUG
-		DebugPrintf (_T("[BATCH: %s %s]\n"), szFullName, rest);
-#endif
+		TRACE ("[BATCH: %s %s]\n", szFullName, rest);
 		Batch (szFullName, first, rest);
 	}
 	else
@@ -492,9 +474,7 @@ Execute (LPTSTR Full, LPTSTR First, LPTSTR Rest)
 		PROCESS_INFORMATION prci;
 		STARTUPINFO stui;
 
-#ifdef _DEBUG
-		DebugPrintf (_T("[EXEC: %s %s]\n"), full, rest);
-#endif
+		TRACE ("[EXEC: %s %s]\n", full, rest);
 		/* build command line for CreateProcess() */
 
 		/* fill startup info */
@@ -542,15 +522,11 @@ Execute (LPTSTR Full, LPTSTR First, LPTSTR Rest)
 		}
 		else
 		{
-#ifdef _DEBUG
-			DebugPrintf (_T("[ShellExecute: %s]\n"), full);
-#endif
+			TRACE ("[ShellExecute: %s]\n", full);
 			// See if we can run this with ShellExecute() ie myfile.xls
 			if (!RunFile(full))
 			{
-#ifdef _DEBUG
-				DebugPrintf (_T("[ShellExecute failed!: %s]\n"), full);
-#endif
+				TRACE ("[ShellExecute failed!: %s]\n", full);
 				error_bad_command ();
                                 nErrorLevel = 1;
 			}
@@ -596,9 +572,7 @@ DoCommand (LPTSTR line)
 	INT cl;
 	LPCOMMAND cmdptr;
 
-#ifdef _DEBUG
-	DebugPrintf (_T("DoCommand: (\'%s\')\n"), line);
-#endif /* DEBUG */
+	TRACE ("DoCommand: (\'%s\')\n", line);
 
 	com = cmd_alloc( (_tcslen(line) +512)*sizeof(TCHAR) );
 	if (com == NULL)
@@ -733,9 +707,7 @@ VOID ParseCommandLine (LPTSTR cmd)
 	_tcscpy (cmdline, cmd);
 	s = &cmdline[0];
 
-#ifdef _DEBUG
-	DebugPrintf (_T("ParseCommandLine: (\'%s\')\n"), s);
-#endif /* DEBUG */
+	TRACE ("ParseCommandLine: (\'%s\')\n", s);
 
 #ifdef FEATURE_ALIASES
 	/* expand all aliases */
@@ -821,9 +793,7 @@ VOID ParseCommandLine (LPTSTR cmd)
 			ConErrPrintf(szMsg, in);
 			return;
 		}
-#ifdef _DEBUG
-		DebugPrintf (_T("Input redirected from: %s\n"), in);
-#endif
+		TRACE ("Input redirected from: %s\n", in);
 	}
 
 	/* Now do all but the last pipe command */
@@ -943,9 +913,7 @@ VOID ParseCommandLine (LPTSTR cmd)
 			if (GetFileType (hFile) == FILE_TYPE_DISK)
 				SetFilePointer (hFile, 0, &lHighPos, FILE_END);
 		}
-#ifdef _DEBUG
-		DebugPrintf (_T("Output redirected to: %s\n"), out);
-#endif
+		TRACE ("Output redirected to: %s\n", out);
 	}
 	else if (hOldConOut != INVALID_HANDLE_VALUE)
 	{
@@ -966,9 +934,7 @@ VOID ParseCommandLine (LPTSTR cmd)
 
 		if (!_tcscmp (err, out))
 		{
-#ifdef _DEBUG
-			DebugPrintf (_T("Stdout and stderr will use the same file!!\n"));
-#endif
+			TRACE ("Stdout and stderr will use the same file!!\n");
 			DuplicateHandle (GetCurrentProcess (),
 			                 GetStdHandle (STD_OUTPUT_HANDLE),
 			                 GetCurrentProcess (),
@@ -1005,9 +971,7 @@ VOID ParseCommandLine (LPTSTR cmd)
 			if (GetFileType (hFile) == FILE_TYPE_DISK)
 				SetFilePointer (hFile, 0, &lHighPos, FILE_END);
 		}
-#ifdef _DEBUG
-		DebugPrintf (_T("Error redirected to: %s\n"), err);
-#endif
+		TRACE ("Error redirected to: %s\n", err);
 	}
 	else if (hOldConErr != INVALID_HANDLE_VALUE)
 	{
@@ -1053,9 +1017,7 @@ VOID ParseCommandLine (LPTSTR cmd)
 	}
 	else
 	{
-#ifdef _DEBUG
-		DebugPrintf (_T("Can't restore STDIN! Is invalid!!\n"), out);
-#endif
+		WARN ("Can't restore STDIN! Is invalid!!\n", out);
 	}
 #endif  /* buggy implementation */
 
@@ -1066,9 +1028,7 @@ VOID ParseCommandLine (LPTSTR cmd)
 		SetStdHandle (STD_INPUT_HANDLE, hOldConIn);
 		if (hIn == INVALID_HANDLE_VALUE)
 		{
-#ifdef _DEBUG
-			DebugPrintf (_T("Previous STDIN is invalid!!\n"));
-#endif
+			WARN ("Previous STDIN is invalid!!\n");
 		}
 		else
 		{
@@ -1083,9 +1043,7 @@ VOID ParseCommandLine (LPTSTR cmd)
 				}
 				else
 				{
-#ifdef _DEBUG
-					DebugPrintf (_T("hFile[0] and hIn dont match!!!\n"));
-#endif
+					WARN ("hFile[0] and hIn dont match!!!\n");
 				}
 			}
 		}
@@ -1725,14 +1683,12 @@ Initialize (int argc, const TCHAR* argv[])
 	}
 
 
-#ifdef _DEBUG
-	DebugPrintf (_T("[command args:\n"));
+	TRACE ("[command args:\n");
 	for (i = 0; i < argc; i++)
 	{
-		DebugPrintf (_T("%d. %s\n"), i, argv[i]);
+		TRACE ("%d. %s\n", i, argv[i]);
 	}
-	DebugPrintf (_T("]\n"));
-#endif
+	TRACE ("]\n");
 
 	InitLocale ();
 

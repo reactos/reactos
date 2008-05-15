@@ -39,9 +39,7 @@
 INT cmd_shift (LPTSTR cmd, LPTSTR param)
 {
 
-#ifdef _DEBUG
-	DebugPrintf (_T("cmd_shift: (\'%s\', \'%s\')\n"), cmd, param);
-#endif
+	TRACE ("cmd_shift: (\'%s\', \'%s\')\n", cmd, param);
 
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{

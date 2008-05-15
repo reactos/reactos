@@ -44,9 +44,7 @@ INT cmd_call (LPTSTR cmd, LPTSTR param)
 {
 	LPBATCH_CONTEXT n = NULL;
 
-#ifdef _DEBUG
-	DebugPrintf (_T("cmd_call: (\'%s\',\'%s\')\n"), cmd, param);
-#endif
+	TRACE ("cmd_call: (\'%s\',\'%s\')\n", cmd, param);
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
 		ConOutResPaging(TRUE,STRING_CALL_HELP);

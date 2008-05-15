@@ -72,9 +72,7 @@ copy (TCHAR source[MAX_PATH],
     if(CheckCtrlBreak(BREAK_INPUT))
         return 0;
 
-#ifdef _DEBUG
-    DebugPrintf (_T("checking mode\n"));
-#endif
+    TRACE ("checking mode\n");
 
     if(bTouch)
     {
@@ -116,16 +114,12 @@ copy (TCHAR source[MAX_PATH],
         return 0;
     }
 
-#ifdef _DEBUG
-    DebugPrintf (_T("getting time\n"));
-#endif
+    TRACE ("getting time\n");
 
     GetFileTime (hFileSrc, &srctime, NULL, NULL);
 
-#ifdef _DEBUG
-    DebugPrintf (_T("copy: flags has %s\n"),
+    TRACE ("copy: flags has %s\n",
         lpdwFlags & COPY_ASCII ? "ASCII" : "BINARY");
-#endif
 
     /* Check to see if /D or /Z are true, if so we need a middle
        man to copy the file too to allow us to use CopyFileEx later */
@@ -165,22 +159,16 @@ copy (TCHAR source[MAX_PATH],
 
     if (!IsExistingFile (dest))
     {
-#ifdef _DEBUG
-        DebugPrintf (_T("opening/creating\n"));
-#endif
+        TRACE ("opening/creating\n");
         hFileDest =
             CreateFile (dest, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, 0, NULL);
     }
     else if (!append)
     {
-#ifdef _DEBUG
-        DebugPrintf (_T("SetFileAttributes (%s, FILE_ATTRIBUTE_NORMAL);\n"), dest);
-#endif
+        TRACE ("SetFileAttributes (%s, FILE_ATTRIBUTE_NORMAL);\n", dest);
         SetFileAttributes (dest, FILE_ATTRIBUTE_NORMAL);
 
-#ifdef _DEBUG
-        DebugPrintf (_T("DeleteFile (%s);\n"), dest);
-#endif
+        TRACE ("DeleteFile (%s);\n", dest);
         DeleteFile (dest);
 
         hFileDest =	CreateFile (dest, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, 0, NULL);
@@ -195,9 +183,7 @@ copy (TCHAR source[MAX_PATH],
             return 0;
         }
 
-#ifdef _DEBUG
-        DebugPrintf (_T("opening/appending\n"));
-#endif
+        TRACE ("opening/appending\n");
         SetFileAttributes (dest, FILE_ATTRIBUTE_NORMAL);
 
         hFileDest =
@@ -258,18 +244,14 @@ copy (TCHAR source[MAX_PATH],
     }
     while (!bEof);
 
-#ifdef _DEBUG
-    DebugPrintf (_T("setting time\n"));
-#endif
+    TRACE ("setting time\n");
     SetFileTime (hFileDest, &srctime, NULL, NULL);
 
     if ((lpdwFlags & COPY_ASCII) && !bEof)
     {
         /* we're dealing with ASCII files! */
         buffer[0] = 0x1A;
-#ifdef _DEBUG
-        DebugPrintf (_T("appending ^Z\n"));
-#endif
+        TRACE ("appending ^Z\n");
         WriteFile (hFileDest, buffer, sizeof(CHAR), &dwWritten, NULL);
     }
 
@@ -277,9 +259,7 @@ copy (TCHAR source[MAX_PATH],
     CloseHandle (hFileDest);
     CloseHandle (hFileSrc);
 
-#ifdef _DEBUG
-    DebugPrintf (_T("setting mode\n"));
-#endif
+    TRACE ("setting mode\n");
     SetFileAttributes (dest, dwAttrib);
 
     /* Now finish off the copy if needed with CopyFileEx */

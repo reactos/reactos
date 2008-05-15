@@ -134,12 +134,6 @@ LPCTSTR GetParsedEnvVar ( LPCTSTR varName, UINT* varNameLen, BOOL ModeSetA );
 VOID SetScreenColor(WORD wArgColor, BOOL bFill);
 INT CommandColor (LPTSTR, LPTSTR);
 
-
-/* Prototypes for CONSOLE.C */
-#ifdef _DEBUG
-VOID DebugPrintf (LPTSTR, ...);
-#endif /* _DEBUG */
-
 VOID ConInDummy (VOID);
 VOID ConInDisable (VOID);
 VOID ConInEnable (VOID);

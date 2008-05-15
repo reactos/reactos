@@ -55,10 +55,8 @@ VOID ConInDummy (VOID)
 	INPUT_RECORD dummy;
 	DWORD  dwRead;
 
-#ifdef _DEBUG
 	if (hInput == INVALID_HANDLE_VALUE)
-		DebugPrintf (_T("Invalid input handle!!!\n"));
-#endif /* _DEBUG */
+		WARN ("Invalid input handle!!!\n");
 	ReadConsoleInput (hInput, &dummy, 1, &dwRead);
 }
 
@@ -73,10 +71,8 @@ VOID ConInKey (PINPUT_RECORD lpBuffer)
 	HANDLE hInput = GetStdHandle (STD_INPUT_HANDLE);
 	DWORD  dwRead;
 
-#ifdef _DEBUG
 	if (hInput == INVALID_HANDLE_VALUE)
-		DebugPrintf (_T("Invalid input handle!!!\n"));
-#endif /* _DEBUG */
+		WARN ("Invalid input handle!!!\n");
 
 	do
 	{
@@ -430,24 +426,6 @@ VOID ConErrPrintf (LPTSTR szFormat, ...)
 	ConPrintf(szFormat, arg_ptr, STD_ERROR_HANDLE);
 	va_end (arg_ptr);
 }
-
-#ifdef _DEBUG
-VOID DebugPrintf (LPTSTR szFormat, ...)
-{
-	va_list arg_ptr;
-
-	va_start (arg_ptr, szFormat);
-	ConPrintf(szFormat, arg_ptr, STD_ERROR_HANDLE);
-	va_end (arg_ptr);
-#if 0
-	TCHAR szOut[OUTPUT_BUFFER_SIZE];
-	va_start (arg_ptr, szFormat);
-	_vstprintf (szOut, szFormat, arg_ptr);
-	OutputDebugString (szOut);
-	va_end (arg_ptr);
-#endif
-}
-#endif /* _DEBUG */
 
 VOID SetCursorXY (SHORT x, SHORT y)
 {

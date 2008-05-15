@@ -54,9 +54,7 @@ INT cmd_for (LPTSTR cmd, LPTSTR param)
 	TCHAR  var;
 	TCHAR szMsg[RC_STRING_MAX_SIZE];
 
-#ifdef _DEBUG
-	DebugPrintf (_T("cmd_for (\'%s\', \'%s\'\n"), cmd, param);
-#endif
+	TRACE ("cmd_for (\'%s\', \'%s\'\n", cmd, param);
 
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{

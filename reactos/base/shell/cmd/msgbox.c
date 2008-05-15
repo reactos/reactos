@@ -130,8 +130,6 @@ INT CommandMsgbox (LPTSTR cmd, LPTSTR param)
 	prompt = param;
 
 	hWnd=GetConsoleWindow ();
-//	DebugPrintf("FindWindow hWnd = %d\n",hWnd);
-//	ConErrPrintf("FindWindow hWnd = %d\n",hWnd);
 
 	switch (MessageBox(hWnd, prompt, title, uType))
 	{

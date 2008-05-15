@@ -73,6 +73,7 @@
 		<define name="ANONYMOUSUNIONS" />
 		<define name="_WIN32_WINNT">0x0501</define>
 		<library>cmd_base</library>
+		<library>wine</library>
 		<library>kernel32</library>
 		<library>advapi32</library>
 		<library>shell32</library>

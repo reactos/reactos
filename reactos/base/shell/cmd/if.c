@@ -41,9 +41,7 @@ INT cmd_if (LPTSTR cmd, LPTSTR param)
 	INT x_flag = 0; /* when set cause 'then' clause to be executed */
 	LPTSTR pp;
 
-#ifdef _DEBUG
-	DebugPrintf (_T("cmd_if: (\'%s\', \'%s\')\n"), cmd, param);
-#endif
+	TRACE ("cmd_if: (\'%s\', \'%s\')\n", cmd, param);
 
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{

@@ -36,4 +36,7 @@
 #include <reactos/buildno.h>
 #include <reactos/version.h>
 
+#include <wine/debug.h>
+WINE_DEFAULT_DEBUG_CHANNEL(cmd);
+
 #endif /* __CMD_PRECOMP_H */
