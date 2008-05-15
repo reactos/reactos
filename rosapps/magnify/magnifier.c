@@ -257,8 +257,9 @@ void Draw(HDC aDc)
 		rop = NOTSRCCOPY;
 	}
 
+	/* Blast the stretched image from memory DC to window DC.*/
 	StretchBlt(
-		HdcStrech,
+		aDc,
 		0,
 		0,
 		AppWidth,
@@ -269,18 +270,6 @@ void Draw(HDC aDc)
 		blitAreaWidth,
 		blitAreaHeight,
 		rop);
-
-	/* Blast the image from memory DC to client DC.*/
-	BitBlt (
-		aDc,
-		0 ,
-		0 ,
-		AppWidth ,
-		AppHeight ,
-		HdcStrech ,
-		0 ,
-		0 ,
-		SRCCOPY);
 
 	/* Cleanup.*/
 	SelectObject (HdcStrech, hOld);
