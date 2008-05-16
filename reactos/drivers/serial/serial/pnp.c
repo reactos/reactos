@@ -90,6 +90,11 @@ SerialAddDeviceInternal(
 		Fdo->Flags |= DO_BUFFERED_IO;
 	if (DeviceExtension->LowerDevice->Flags & DO_DIRECT_IO)
 		Fdo->Flags |= DO_DIRECT_IO;
+
+	/* Choose default strategy */
+	if ((Fdo->Flags & (DO_BUFFERED_IO | DO_DIRECT_IO)) == 0)
+		Fdo->Flags |= DO_BUFFERED_IO;
+
 	Fdo->Flags &= ~DO_DEVICE_INITIALIZING;
 	if (pFdo)
 	{

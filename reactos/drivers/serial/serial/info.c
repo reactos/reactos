@@ -68,26 +68,6 @@ SerialQueryInformation(
 			}
 			break;
 		}
-		case FileNetworkOpenInformation:
-		{
-			PFILE_NETWORK_OPEN_INFORMATION NetworkOpenInfo = (PFILE_NETWORK_OPEN_INFORMATION)SystemBuffer;
-
-			ASSERT(NetworkOpenInfo);
-
-			TRACE_(SERIAL, "IRP_MJ_QUERY_INFORMATION / FileNetworkInformation\n");
-			DbgBreakPoint();
-			if (BufferLength < sizeof(FILE_NETWORK_OPEN_INFORMATION))
-				Status = STATUS_BUFFER_OVERFLOW;
-			else if (!NetworkOpenInfo)
-				Status = STATUS_INVALID_PARAMETER;
-			else
-			{
-				RtlZeroMemory(NetworkOpenInfo, sizeof(FILE_NETWORK_OPEN_INFORMATION));
-				Information = sizeof(FILE_NETWORK_OPEN_INFORMATION);
-				Status = STATUS_SUCCESS;
-			}
-			break;
-		}
 		default:
 		{
 			TRACE_(SERIAL, "IRP_MJ_QUERY_INFORMATION: Unexpected file information class 0x%02x\n", Stack->Parameters.QueryFile.FileInformationClass);
