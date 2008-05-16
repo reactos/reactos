@@ -26,9 +26,9 @@
 		<xi:include href="hh/hh.rbuild" />
 	</directory>
 <!--
-        <directory name="iexplore">
-                <xi:include href="iexplore/iexplore.rbuild" />
-        </directory>
+	<directory name="iexplore">
+		<xi:include href="iexplore/iexplore.rbuild" />
+	</directory>
 -->
 	<directory name="kbswitch">
 		<xi:include href="kbswitch/kbswitch.rbuild" />
@@ -53,6 +53,9 @@
 	</directory>
 	<directory name="regedit">
 		<xi:include href="regedit/regedit.rbuild" />
+	</directory>
+	<directory name="regedt32">
+		<xi:include href="regedt32/regedt32.rbuild" />
 	</directory>
 	<directory name="sc">
 		<xi:include href="sc/sc.rbuild" />
