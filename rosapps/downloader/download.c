@@ -207,6 +207,10 @@ CreateDl(HWND Dlg, BOOL *pbCancelled)
     IBindStatusCallbackImpl *This;
 
     This = HeapAlloc(GetProcessHeap(), 0, sizeof(IBindStatusCallbackImpl));
+    if (!This)
+      return NULL;
+
+    ZeroMemory(This, sizeof(IBindStatusCallbackImpl));
     This->vtbl = &dlVtbl;
     This->ref = 1;
     This->hDialog = Dlg;
