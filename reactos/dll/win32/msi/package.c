@@ -416,7 +416,6 @@ static VOID set_installer_properties(MSIPACKAGE *package)
     static const WCHAR szColorBits[] = {'C','o','l','o','r','B','i','t','s',0};
     static const WCHAR szIntFormat[] = {'%','d',0};
     static const WCHAR szIntel[] = { 'I','n','t','e','l',0 };
-    static const WCHAR szAllUsers[] = { 'A','L','L','U','S','E','R','S',0 };
     static const WCHAR szUserInfo[] = {
         'S','O','F','T','W','A','R','E','\\',
         'M','i','c','r','o','s','o','f','t','\\',
@@ -542,7 +541,6 @@ static VOID set_installer_properties(MSIPACKAGE *package)
     /* in a wine environment the user is always admin and privileged */
     MSI_SetPropertyW(package,szAdminUser,szOne);
     MSI_SetPropertyW(package,szPriv,szOne);
-    MSI_SetPropertyW(package, szAllUsers, szOne);
 
     /* set the os things */
     OSVersion.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEXW);
@@ -762,6 +760,30 @@ static UINT msi_load_admin_properties(MSIPACKAGE *package)
     return r;
 }
 
+static UINT msi_set_context(MSIPACKAGE *package)
+{
+    WCHAR val[10];
+    DWORD sz = 10;
+    DWORD num;
+    UINT r;
+
+    static const WCHAR szOne[] = {'1',0};
+    static const WCHAR szAllUsers[] = {'A','L','L','U','S','E','R','S',0};
+
+    package->Context = MSIINSTALLCONTEXT_USERUNMANAGED;
+
+    r = MSI_GetPropertyW(package, szAllUsers, val, &sz);
+    if (r == ERROR_SUCCESS)
+    {
+        num = atolW(val);
+        if (num == 1 || num == 2)
+            package->Context = MSIINSTALLCONTEXT_MACHINE;
+    }
+
+    MSI_SetPropertyW(package, szAllUsers, szOne);
+    return ERROR_SUCCESS;
+}
+
 MSIPACKAGE *MSI_CreatePackage( MSIDATABASE *db, LPCWSTR base_url )
 {
     static const WCHAR szLevel[] = { 'U','I','L','e','v','e','l',0 };
@@ -801,6 +823,8 @@ MSIPACKAGE *MSI_CreatePackage( MSIDATABASE *db, LPCWSTR base_url )
 
         if (package->WordCount & MSIWORDCOUNT_ADMINISTRATIVE)
             msi_load_admin_properties( package );
+
+        msi_set_context( package );
     }
 
     return package;
@@ -1788,10 +1812,19 @@ static HRESULT WINAPI mrp_SetInstallLevel( IWineMsiRemotePackage *iface, int lev
 }
 
 static HRESULT WINAPI mrp_FormatRecord( IWineMsiRemotePackage *iface, MSIHANDLE record,
-                                 BSTR value, DWORD *size )
+                                        BSTR *value)
 {
+    DWORD size = 0;
     msi_remote_package_impl* This = mrp_from_IWineMsiRemotePackage( iface );
-    UINT r = MsiFormatRecordW(This->package, record, (LPWSTR)value, size);
+    UINT r = MsiFormatRecordW(This->package, record, NULL, &size);
+    if (r == ERROR_SUCCESS)
+    {
+        *value = SysAllocStringLen(NULL, size);
+        if (!*value)
+            return E_OUTOFMEMORY;
+        size++;
+        r = MsiFormatRecordW(This->package, record, *value, &size);
+    }
     return HRESULT_FROM_WIN32(r);
 }
 

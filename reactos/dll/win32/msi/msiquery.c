@@ -869,14 +869,11 @@ UINT MSI_DatabaseGetPrimaryKeys( MSIDATABASE *db,
         '`','T','a','b','l','e','`',' ','=',' ','\'','%','s','\'',0 };
     struct msi_primary_key_record_info info;
     MSIQUERY *query = NULL;
-    MSIVIEW *view;
     UINT r;
-    
+
     r = MSI_OpenQuery( db, &query, sql, table );
     if( r != ERROR_SUCCESS )
         return r;
-
-    view = query->view;
 
     /* count the number of primary key records */
     info.n = 0;

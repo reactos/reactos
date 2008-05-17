@@ -921,28 +921,13 @@ UINT WINAPI MsiFormatRecordW( MSIHANDLE hInstall, MSIHANDLE hRecord,
         HRESULT hr;
         IWineMsiRemotePackage *remote_package;
         BSTR value = NULL;
-        DWORD len;
         awstring wstr;
 
         remote_package = (IWineMsiRemotePackage *)msi_get_remote( hInstall );
         if (remote_package)
         {
-            len = 0;
             hr = IWineMsiRemotePackage_FormatRecord( remote_package, hRecord,
-                                                     NULL, &len );
-            if (FAILED(hr))
-                goto done;
-
-            len++;
-            value = SysAllocStringLen( NULL, len );
-            if (!value)
-            {
-                r = ERROR_OUTOFMEMORY;
-                goto done;
-            }
-
-            hr = IWineMsiRemotePackage_FormatRecord( remote_package, hRecord,
-                                                     value, &len );
+                                                     &value );
             if (FAILED(hr))
                 goto done;
 

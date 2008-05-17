@@ -77,6 +77,7 @@ static const WCHAR WHERE_W[] = { 'W','H','E','R','E',0 };
 
 /*
 ** These are the keywords
+** They MUST be in alphabetical order
 */
 static const Keyword aKeywordTable[] = {
   { ADD_W, TK_ADD },

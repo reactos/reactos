@@ -57,20 +57,7 @@ extern const WCHAR szRemoveFiles[];
 
 static const WCHAR cszTempFolder[]= {'T','e','m','p','F','o','l','d','e','r',0};
 
-struct media_info {
-    UINT disk_id;
-    UINT type;
-    UINT last_sequence;
-    LPWSTR disk_prompt;
-    LPWSTR cabinet;
-    LPWSTR first_volume;
-    LPWSTR volume_label;
-    BOOL is_continuous;
-    BOOL is_extracted;
-    WCHAR source[MAX_PATH];
-};
-
-static BOOL source_matches_volume(struct media_info *mi, LPWSTR source_root)
+static BOOL source_matches_volume(MSIMEDIAINFO *mi, LPWSTR source_root)
 {
     WCHAR volume_name[MAX_PATH + 1];
 
@@ -84,7 +71,7 @@ static BOOL source_matches_volume(struct media_info *mi, LPWSTR source_root)
     return !lstrcmpW(mi->volume_label, volume_name);
 }
 
-static UINT msi_change_media( MSIPACKAGE *package, struct media_info *mi )
+static UINT msi_change_media( MSIPACKAGE *package, MSIMEDIAINFO *mi )
 {
     LPSTR msg;
     LPWSTR error, error_dialog;
@@ -169,7 +156,7 @@ end:
 typedef struct
 {
     MSIPACKAGE* package;
-    struct media_info *mi;
+    MSIMEDIAINFO *mi;
 } CabData;
 
 static void * cabinet_alloc(ULONG cb)
@@ -265,7 +252,7 @@ static void msi_file_update_ui( MSIPACKAGE *package, MSIFILE *f, const WCHAR *ac
     ui_progress( package, 2, f->FileSize, 0, 0);
 }
 
-static UINT msi_media_get_disk_info( MSIPACKAGE *package, struct media_info *mi )
+static UINT msi_media_get_disk_info( MSIPACKAGE *package, MSIMEDIAINFO *mi )
 {
     MSIRECORD *row;
     LPWSTR ptr;
@@ -311,7 +298,7 @@ static INT_PTR cabinet_notify(FDINOTIFICATIONTYPE fdint, PFDINOTIFICATION pfdin)
     case fdintNEXT_CABINET:
     {
         CabData *data = (CabData *)pfdin->pv;
-        struct media_info *mi = data->mi;
+        MSIMEDIAINFO *mi = data->mi;
         LPWSTR cab = strdupAtoW(pfdin->psz1);
         UINT rc;
 
@@ -423,18 +410,18 @@ static INT_PTR cabinet_notify(FDINOTIFICATIONTYPE fdint, PFDINOTIFICATION pfdin)
 }
 
 /***********************************************************************
- *            extract_cabinet_file
+ *            msi_cabextract
  *
  * Extract files from a cab file.
  */
-static BOOL extract_cabinet_file(MSIPACKAGE* package, struct media_info *mi)
+BOOL msi_cabextract(MSIPACKAGE* package, MSIMEDIAINFO *mi,
+                    PFNFDINOTIFY notify, LPVOID data)
 {
     LPSTR cabinet, cab_path = NULL;
     LPWSTR ptr;
     HFDI hfdi;
     ERF erf;
     BOOL ret = FALSE;
-    CabData data;
 
     TRACE("Extracting %s\n", debugstr_w(mi->source));
 
@@ -457,10 +444,7 @@ static BOOL extract_cabinet_file(MSIPACKAGE* package, struct media_info *mi)
 
     cab_path[ptr - mi->source] = '\0';
 
-    data.package = package;
-    data.mi = mi;
-
-    ret = FDICopy(hfdi, cabinet, cab_path, 0, cabinet_notify, NULL, &data);
+    ret = FDICopy(hfdi, cabinet, cab_path, 0, notify, NULL, data);
     if (!ret)
         ERR("FDICopy failed\n");
 
@@ -495,7 +479,7 @@ static VOID set_file_source(MSIPACKAGE* package, MSIFILE* file, LPCWSTR path)
         file->SourcePath = build_directory_name(2, path, file->File);
 }
 
-static void free_media_info( struct media_info *mi )
+void msi_free_media_info( MSIMEDIAINFO *mi )
 {
     msi_free( mi->disk_prompt );
     msi_free( mi->cabinet );
@@ -504,7 +488,7 @@ static void free_media_info( struct media_info *mi )
     msi_free( mi );
 }
 
-static UINT load_media_info(MSIPACKAGE *package, MSIFILE *file, struct media_info *mi)
+UINT msi_load_media_info(MSIPACKAGE *package, MSIFILE *file, MSIMEDIAINFO *mi)
 {
     MSIRECORD *row;
     LPWSTR source_dir;
@@ -581,11 +565,11 @@ static UINT load_media_info(MSIPACKAGE *package, MSIFILE *file, struct media_inf
     }
 
     if (mi->type == DRIVE_CDROM || mi->type == DRIVE_REMOVABLE)
-        msi_package_add_media_disk(package, MSIINSTALLCONTEXT_USERUNMANAGED,
+        msi_package_add_media_disk(package, package->Context,
                                    MSICODE_PRODUCT, mi->disk_id,
                                    mi->volume_label, mi->disk_prompt);
 
-    msi_package_add_info(package, MSIINSTALLCONTEXT_USERUNMANAGED,
+    msi_package_add_info(package, package->Context,
                          options, INSTALLPROPERTY_LASTUSEDSOURCEW, source);
 
     msi_free(source_dir);
@@ -593,7 +577,7 @@ static UINT load_media_info(MSIPACKAGE *package, MSIFILE *file, struct media_inf
 }
 
 /* FIXME: search NETWORK and URL sources as well */
-static UINT find_published_source(MSIPACKAGE *package, struct media_info *mi)
+static UINT find_published_source(MSIPACKAGE *package, MSIMEDIAINFO *mi)
 {
     WCHAR source[MAX_PATH];
     WCHAR volume[MAX_PATH];
@@ -603,7 +587,7 @@ static UINT find_published_source(MSIPACKAGE *package, struct media_info *mi)
     UINT r;
 
     r = MsiSourceListGetInfoW(package->ProductCode, NULL,
-                              MSIINSTALLCONTEXT_USERUNMANAGED, MSICODE_PRODUCT,
+                              package->Context, MSICODE_PRODUCT,
                               INSTALLPROPERTY_LASTUSEDSOURCEW, source, &size);
     if (r != ERROR_SUCCESS)
         return r;
@@ -612,7 +596,7 @@ static UINT find_published_source(MSIPACKAGE *package, struct media_info *mi)
     volumesz = MAX_PATH;
     promptsz = MAX_PATH;
     while (MsiSourceListEnumMediaDisksW(package->ProductCode, NULL,
-                                        MSIINSTALLCONTEXT_USERUNMANAGED,
+                                        package->Context,
                                         MSICODE_PRODUCT, index++, &id,
                                         volume, &volumesz, prompt, &promptsz) == ERROR_SUCCESS)
     {
@@ -634,7 +618,7 @@ static UINT find_published_source(MSIPACKAGE *package, struct media_info *mi)
     return ERROR_FUNCTION_FAILED;
 }
 
-static UINT ready_media(MSIPACKAGE *package, MSIFILE *file, struct media_info *mi)
+static UINT ready_media(MSIPACKAGE *package, MSIFILE *file, MSIMEDIAINFO *mi)
 {
     UINT rc = ERROR_SUCCESS;
 
@@ -642,7 +626,7 @@ static UINT ready_media(MSIPACKAGE *package, MSIFILE *file, struct media_info *m
     if (mi->is_continuous)
         return ERROR_SUCCESS;
 
-    rc = load_media_info(package, file, mi);
+    rc = msi_load_media_info(package, file, mi);
     if (rc != ERROR_SUCCESS)
     {
         ERR("Unable to load media info\n");
@@ -808,7 +792,7 @@ static BOOL check_dest_hash_matches(MSIFILE *file)
  */
 UINT ACTION_InstallFiles(MSIPACKAGE *package)
 {
-    struct media_info *mi;
+    MSIMEDIAINFO *mi;
     UINT rc = ERROR_SUCCESS;
     MSIFILE *file;
 
@@ -825,7 +809,7 @@ UINT ACTION_InstallFiles(MSIPACKAGE *package)
      */
     msi_create_component_directories( package );
 
-    mi = msi_alloc_zero( sizeof(struct media_info) );
+    mi = msi_alloc_zero( sizeof(MSIMEDIAINFO) );
 
     LIST_FOR_EACH_ENTRY( file, &package->files, MSIFILE, entry )
     {
@@ -841,6 +825,8 @@ UINT ACTION_InstallFiles(MSIPACKAGE *package)
         if (file->Sequence > mi->last_sequence || mi->is_continuous ||
             (file->IsCompressed && !mi->is_extracted))
         {
+            CabData data;
+
             rc = ready_media(package, file, mi);
             if (rc != ERROR_SUCCESS)
             {
@@ -848,7 +834,11 @@ UINT ACTION_InstallFiles(MSIPACKAGE *package)
                 break;
             }
 
-            if (file->IsCompressed && !extract_cabinet_file(package, mi))
+            data.mi = mi;
+            data.package = package;
+
+            if (file->IsCompressed &&
+                !msi_cabextract(package, mi, cabinet_notify, &data))
             {
                 ERR("Failed to extract cabinet: %s\n", debugstr_w(mi->cabinet));
                 rc = ERROR_FUNCTION_FAILED;
@@ -881,7 +871,7 @@ UINT ACTION_InstallFiles(MSIPACKAGE *package)
         }
     }
 
-    free_media_info( mi );
+    msi_free_media_info( mi );
     return rc;
 }
 

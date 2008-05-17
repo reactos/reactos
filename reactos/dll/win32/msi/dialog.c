@@ -2055,7 +2055,8 @@ static UINT msi_dialog_seltree_handler( msi_dialog *dialog,
     LPNMTREEVIEWW tv = (LPNMTREEVIEWW)param;
     MSIRECORD *row, *rec;
     MSIFOLDER *folder;
-    LPCWSTR dir;
+    MSIFEATURE *feature;
+    LPCWSTR dir, title = NULL;
     UINT r = ERROR_SUCCESS;
 
     static const WCHAR select[] = {
@@ -2069,7 +2070,16 @@ static UINT msi_dialog_seltree_handler( msi_dialog *dialog,
 
     info->selected = tv->itemNew.hItem;
 
-    row = MSI_QueryGetRecord( dialog->package->db, select, tv->itemNew.pszText );
+    if (!(tv->itemNew.mask & TVIF_TEXT))
+    {
+        feature = msi_seltree_feature_from_item( control->hwnd, tv->itemNew.hItem );
+        if (feature)
+            title = feature->Title;
+    }
+    else
+        title = tv->itemNew.pszText;
+
+    row = MSI_QueryGetRecord( dialog->package->db, select, title );
     if (!row)
         return ERROR_FUNCTION_FAILED;
 
@@ -3471,6 +3481,9 @@ msi_dialog *msi_dialog_create( MSIPACKAGE* package,
     msi_dialog *dialog;
 
     TRACE("%p %s\n", package, debugstr_w(szDialogName));
+
+    if (!hMsiHiddenWindow)
+        msi_dialog_register_class();
 
     /* allocate the structure for the dialog to use */
     dialog = msi_alloc_zero( sizeof *dialog + sizeof(WCHAR)*strlenW(szDialogName) );

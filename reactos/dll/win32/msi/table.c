@@ -1796,9 +1796,6 @@ static UINT TABLE_find_matching_rows( struct tagMSIVIEW *view, UINT col,
 
     *row = entry->row;
 
-    if (tv->order)
-        *row = tv->order->reorder[*row];
-
     return ERROR_SUCCESS;
 }
 

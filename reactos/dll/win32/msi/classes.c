@@ -971,6 +971,8 @@ static LPCWSTR get_clsid_of_progid( const MSIPROGID *progid )
     {
         if (progid->Class)
             return progid->Class->clsid;
+        if (progid->Parent == progid)
+            break;
         progid = progid->Parent;
     }
     return NULL;

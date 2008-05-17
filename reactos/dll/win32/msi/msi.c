@@ -630,7 +630,7 @@ static UINT WINAPI MSI_GetProductInfo(LPCWSTR szProduct, LPCWSTR szAttribute,
     if (classes)
         MSIREG_OpenLocalSystemProductKey(szProduct, &userdata, FALSE);
     else
-        MSIREG_OpenInstallPropertiesKey(szProduct, &userdata, FALSE);
+        MSIREG_OpenCurrentUserInstallProps(szProduct, &userdata, FALSE);
 
     if (!lstrcmpW(szAttribute, INSTALLPROPERTY_HELPLINKW) ||
         !lstrcmpW(szAttribute, INSTALLPROPERTY_HELPTELEPHONEW) ||
@@ -939,7 +939,7 @@ UINT WINAPI MsiGetProductInfoExW(LPCWSTR szProductCode, LPCWSTR szUserSid,
     if (dwContext == MSIINSTALLCONTEXT_USERUNMANAGED)
     {
         package = INSTALLPROPERTY_LOCALPACKAGEW;
-        MSIREG_OpenInstallPropertiesKey(szProductCode, &props, FALSE);
+        MSIREG_OpenCurrentUserInstallProps(szProductCode, &props, FALSE);
 
         if (!props && !prod)
             goto done;
@@ -947,7 +947,7 @@ UINT WINAPI MsiGetProductInfoExW(LPCWSTR szProductCode, LPCWSTR szUserSid,
     else if (dwContext == MSIINSTALLCONTEXT_USERMANAGED)
     {
         package = managed_local_package;
-        MSIREG_OpenInstallPropertiesKey(szProductCode, &props, FALSE);
+        MSIREG_OpenCurrentUserInstallProps(szProductCode, &props, FALSE);
 
         if (!props && !managed)
             goto done;
@@ -1066,7 +1066,7 @@ UINT WINAPI MsiGetProductInfoExW(LPCWSTR szProductCode, LPCWSTR szUserSid,
         if (!prod && !classes)
             goto done;
 
-        /* FIME */
+        /* FIXME */
         val = strdupW(empty);
         r = msi_copy_outval(val, szValue, pcchValue);
     }
@@ -1197,7 +1197,7 @@ static BOOL msi_comp_find_package(LPCWSTR prodcode, MSIINSTALLCONTEXT context)
     if (context == MSIINSTALLCONTEXT_MACHINE)
         r = MSIREG_OpenLocalSystemProductKey(prodcode, &hkey, FALSE);
     else
-        r = MSIREG_OpenInstallPropertiesKey(prodcode, &hkey, FALSE);
+        r = MSIREG_OpenCurrentUserInstallProps(prodcode, &hkey, FALSE);
 
     if (r != ERROR_SUCCESS)
         return FALSE;
@@ -1303,57 +1303,67 @@ INSTALLSTATE WINAPI MsiQueryProductStateA(LPCSTR szProduct)
 
 INSTALLSTATE WINAPI MsiQueryProductStateW(LPCWSTR szProduct)
 {
-    UINT rc;
-    INSTALLSTATE state = INSTALLSTATE_UNKNOWN;
-    HKEY hkey = 0, props = 0;
-    DWORD sz;
-    BOOL userkey_exists = FALSE;
+    INSTALLSTATE state = INSTALLSTATE_ADVERTISED;
+    HKEY prodkey = 0, userdata = 0;
+    BOOL user = TRUE;
+    DWORD val;
+    UINT r;
 
-    static const int GUID_LEN = 38;
-    static const WCHAR szInstallProperties[] = {
-            'I','n','s','t','a','l','l','P','r','o','p','e','r','t','i','e','s',0
-    };
     static const WCHAR szWindowsInstaller[] = {
-            'W','i','n','d','o','w','s','I','n','s','t','a','l','l','e','r',0
-    };
+        'W','i','n','d','o','w','s','I','n','s','t','a','l','l','e','r',0};
 
     TRACE("%s\n", debugstr_w(szProduct));
 
-    if (!szProduct || !*szProduct || lstrlenW(szProduct) != GUID_LEN)
+    if (!szProduct || !*szProduct)
         return INSTALLSTATE_INVALIDARG;
 
-    rc = MSIREG_OpenUserProductsKey(szProduct,&hkey,FALSE);
-    if (rc == ERROR_SUCCESS)
+    if (lstrlenW(szProduct) != GUID_SIZE - 1)
+        return INSTALLSTATE_INVALIDARG;
+
+    r = MSIREG_OpenLocalManagedProductKey(szProduct, &prodkey, FALSE);
+    if (r != ERROR_SUCCESS)
     {
-        userkey_exists = TRUE;
-        state = INSTALLSTATE_ADVERTISED;
-        RegCloseKey(hkey);
+        r = MSIREG_OpenUserProductsKey(szProduct, &prodkey, FALSE);
+        if (r != ERROR_SUCCESS)
+        {
+            r = MSIREG_OpenLocalClassesProductKey(szProduct, &prodkey, FALSE);
+            if (r == ERROR_SUCCESS)
+               user = FALSE;
+        }
     }
 
-    rc = MSIREG_OpenUserDataProductKey(szProduct,&hkey,FALSE);
-    if (rc != ERROR_SUCCESS)
-        goto end;
+    if (user)
+    {
+        r = MSIREG_OpenCurrentUserInstallProps(szProduct, &userdata, FALSE);
+        if (r != ERROR_SUCCESS)
+            goto done;
+    }
+    else
+    {
+        r = MSIREG_OpenLocalSystemInstallProps(szProduct, &userdata, FALSE);
+        if (r != ERROR_SUCCESS)
+            goto done;
+    }
 
-    rc = RegOpenKeyW(hkey, szInstallProperties, &props);
-    if (rc != ERROR_SUCCESS)
-        goto end;
+    if (!msi_reg_get_val_dword(userdata, szWindowsInstaller, &val))
+        goto done;
 
-    sz = sizeof(state);
-    rc = RegQueryValueExW(props,szWindowsInstaller,NULL,NULL,(LPVOID)&state, &sz);
-    if (rc != ERROR_SUCCESS)
-        goto end;
-
-    if (state)
+    if (val)
         state = INSTALLSTATE_DEFAULT;
     else
         state = INSTALLSTATE_UNKNOWN;
 
-    if (state == INSTALLSTATE_DEFAULT && !userkey_exists)
-        state = INSTALLSTATE_ABSENT;
+done:
+    if (!prodkey)
+    {
+        state = INSTALLSTATE_UNKNOWN;
 
-end:
-    RegCloseKey(props);
-    RegCloseKey(hkey);
+        if (userdata)
+            state = INSTALLSTATE_ABSENT;
+    }
+
+    RegCloseKey(prodkey);
+    RegCloseKey(userdata);
     return state;
 }
 
@@ -1786,7 +1796,7 @@ end:
  *   szFeature     [I]  Feature's GUID string
  *
  * RETURNS
- *   INSTALLSTATE_LOCAL        Feature is installed and useable
+ *   INSTALLSTATE_LOCAL        Feature is installed and usable
  *   INSTALLSTATE_ABSENT       Feature is absent
  *   INSTALLSTATE_ADVERTISED   Feature should be installed on demand
  *   INSTALLSTATE_UNKNOWN      An error occurred
