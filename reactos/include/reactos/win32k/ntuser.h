@@ -76,6 +76,7 @@ typedef struct _WINDOWCLASS
     PCALLPROC CallProcList;
     INT ClsExtra;
     INT WndExtra;
+    PVOID Dce;
     HINSTANCE hInstance;
     HANDLE hIcon; /* FIXME - Use pointer! */
     HANDLE hIconSm; /* FIXME - Use pointer! */
