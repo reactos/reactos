@@ -63,6 +63,11 @@
 #define IDC_USER_NEW_DISABLED       369
 
 
+#define IDD_GROUP_NEW               370
+#define IDC_GROUP_NEW_NAME          371
+#define IDC_GROUP_NEW_DESCRIPTION   372
+
+
 /* Strings */
 
 #define IDS_CPLNAME                 2000

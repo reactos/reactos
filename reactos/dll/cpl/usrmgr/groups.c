@@ -1,5 +1,4 @@
-/* $Id$
- *
+/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS User Manager Control Panel
  * FILE:            dll/cpl/usrmgr/groups.c
@@ -70,10 +69,9 @@ UpdateGroupsList(HWND hwndListView)
         for (i = 0; i < entriesread; i++)
         {
            memset(&lvi, 0x00, sizeof(lvi));
-           lvi.mask = LVIF_TEXT | LVIF_STATE | LVIF_IMAGE; // | LVIF_PARAM;
-//           lvi.lParam = (LPARAM)VarData;
+           lvi.mask = LVIF_TEXT | LVIF_STATE | LVIF_IMAGE;
            lvi.pszText = pBuffer[i].lgrpi1_name;
-           lvi.state = 0; //(i == 0) ? LVIS_SELECTED : 0;
+           lvi.state = 0;
            lvi.iImage = 0;
            iItem = ListView_InsertItem(hwndListView, &lvi);
 
@@ -88,6 +86,186 @@ UpdateGroupsList(HWND hwndListView)
             break;
     }
 
+}
+
+
+INT_PTR CALLBACK
+NewGroupDlgProc(HWND hwndDlg,
+               UINT uMsg,
+               WPARAM wParam,
+               LPARAM lParam)
+{
+    PLOCALGROUP_INFO_1 groupInfo;
+    INT nLength;
+
+    UNREFERENCED_PARAMETER(wParam);
+
+    groupInfo = (PLOCALGROUP_INFO_1)GetWindowLongPtr(hwndDlg, DWLP_USER);
+
+    switch (uMsg)
+    {
+        case WM_INITDIALOG:
+            SetWindowLongPtr(hwndDlg, DWLP_USER, lParam);
+            groupInfo = (PLOCALGROUP_INFO_1)lParam;
+            SendDlgItemMessage(hwndDlg, IDC_GROUP_NEW_NAME, EM_SETLIMITTEXT, 20, 0);
+            break;
+
+        case WM_COMMAND:
+            switch (LOWORD(wParam))
+            {
+                case IDC_GROUP_NEW_NAME:
+                    if (HIWORD(wParam) == EN_CHANGE)
+                    {
+                        nLength = SendDlgItemMessage(hwndDlg, IDC_GROUP_NEW_NAME, WM_GETTEXTLENGTH, 0, 0);
+                        EnableWindow(GetDlgItem(hwndDlg, IDOK), (nLength > 0));
+                    }
+                    break;
+
+                case IDOK:
+
+                    nLength = SendDlgItemMessage(hwndDlg, IDC_GROUP_NEW_NAME, WM_GETTEXTLENGTH, 0, 0);
+                    if (nLength > 0)
+                    {
+                        groupInfo->lgrpi1_name = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, (nLength + 1) * sizeof(WCHAR));
+                        GetDlgItemText(hwndDlg, IDC_GROUP_NEW_NAME, groupInfo->lgrpi1_name, nLength + 1);
+                    }
+
+                    nLength = SendDlgItemMessage(hwndDlg, IDC_GROUP_NEW_DESCRIPTION, WM_GETTEXTLENGTH, 0, 0);
+                    if (nLength > 0)
+                    {
+                        groupInfo->lgrpi1_comment = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, (nLength + 1) * sizeof(WCHAR));
+                        GetDlgItemText(hwndDlg, IDC_GROUP_NEW_DESCRIPTION, groupInfo->lgrpi1_comment, nLength + 1);
+                    }
+
+                    EndDialog(hwndDlg, IDOK);
+                    break;
+
+                case IDCANCEL:
+                    EndDialog(hwndDlg, IDCANCEL);
+                    break;
+            }
+            break;
+
+        default:
+            return FALSE;
+    }
+
+    return TRUE;
+}
+
+
+static VOID
+GroupNew(HWND hwndDlg)
+{
+    NET_API_STATUS status;
+    LOCALGROUP_INFO_1 group;
+    LV_ITEM lvi;
+    INT iItem;
+    HWND hwndLV;
+
+    ZeroMemory(&group, sizeof(LOCALGROUP_INFO_1));
+
+    if (DialogBoxParam(hApplet,
+                       MAKEINTRESOURCE(IDD_GROUP_NEW),
+                       hwndDlg,
+                       NewGroupDlgProc,
+                       (LPARAM)&group) == IDOK)
+    {
+#if 0
+        status = NetLocalGroupAdd(NULL,
+                                  1,
+                                  (LPBYTE)&group,
+                                  NULL);
+#else
+        status = NERR_Success;
+#endif
+        if (status != NERR_Success)
+        {
+            TCHAR szText[256];
+            wsprintf(szText, TEXT("Error: %u"), status);
+            MessageBox(NULL, szText, TEXT("NetUserAdd"), MB_ICONERROR | MB_OK);
+            return;
+        }
+
+        hwndLV = GetDlgItem(hwndDlg, IDC_GROUPS_LIST);
+
+        ZeroMemory(&lvi, sizeof(lvi));
+        lvi.mask = LVIF_TEXT | LVIF_STATE | LVIF_IMAGE;
+        lvi.pszText = group.lgrpi1_name;
+        lvi.state = 0;
+        lvi.iImage = 0;
+        iItem = ListView_InsertItem(hwndLV, &lvi);
+
+        ListView_SetItemText(hwndLV, iItem, 1,
+                             group.lgrpi1_comment);
+    }
+
+    if (group.lgrpi1_name)
+        HeapFree(GetProcessHeap, 0, group.lgrpi1_name);
+
+    if (group.lgrpi1_comment)
+        HeapFree(GetProcessHeap, 0, group.lgrpi1_comment);
+}
+
+
+static VOID
+GroupRename(HWND hwndDlg)
+{
+    INT nItem;
+    HWND hwndLV;
+
+    hwndLV = GetDlgItem(hwndDlg, IDC_GROUPS_LIST);
+    nItem = ListView_GetNextItem(hwndLV, -1, LVNI_SELECTED);
+    if (nItem != -1)
+    {
+        (void)ListView_EditLabel(hwndLV, nItem);
+    }
+}
+
+
+static BOOL
+GroupDelete(HWND hwndDlg)
+{
+    TCHAR szGroupName[UNLEN];
+    TCHAR szText[256];
+    INT nItem;
+    HWND hwndLV;
+    NET_API_STATUS status;
+
+    hwndLV = GetDlgItem(hwndDlg, IDC_GROUPS_LIST);
+    nItem = ListView_GetNextItem(hwndLV, -1, LVNI_SELECTED);
+    if (nItem == -1)
+        return FALSE;
+
+    /* Get the new group name */
+    ListView_GetItemText(hwndLV,
+                         nItem, 0,
+                         szGroupName,
+                         UNLEN);
+
+    /* Display a warning message because the delete operation cannot be reverted */
+    wsprintf(szText, TEXT("Dou you really want to delete the user group \"%s\"?"), szGroupName);
+    if (MessageBox(NULL, szText, TEXT("User Groups"), MB_ICONWARNING | MB_YESNO) == IDNO)
+        return FALSE;
+
+    /* Delete the group */
+#if 0
+    status = NetLocalGroupDel(NULL, szGroupName);
+#else
+    status = NERR_Success;
+#endif
+    if (status != NERR_Success)
+    {
+        TCHAR szText[256];
+        wsprintf(szText, TEXT("Error: %u"), status);
+        MessageBox(NULL, szText, TEXT("NetLocalGroupDel"), MB_ICONERROR | MB_OK);
+        return FALSE;
+    }
+
+    /* Delete the group from the list */
+    (void)ListView_DeleteItem(hwndLV, nItem);
+
+    return TRUE;
 }
 
 
@@ -113,13 +291,80 @@ OnInitDialog(HWND hwndDlg)
     SetGroupsListColumns(hwndListView);
 
     UpdateGroupsList(hwndListView);
-
-//    (void)ListView_SetColumnWidth(hwndListView, 3, LVSCW_AUTOSIZE_USEHEADER);
-//    (void)ListView_Update(hwndListView, 0);
 }
 
 
-static VOID
+static BOOL
+OnBeginLabelEdit(LPNMLVDISPINFO pnmv)
+{
+    HWND hwndEdit;
+
+    hwndEdit = ListView_GetEditControl(pnmv->hdr.hwndFrom);
+    if (hwndEdit == NULL)
+        return TRUE;
+
+    SendMessage(hwndEdit, EM_SETLIMITTEXT, 20, 0);
+
+    return FALSE;
+}
+
+
+static BOOL
+OnEndLabelEdit(LPNMLVDISPINFO pnmv)
+{
+    TCHAR szOldGroupName[UNLEN];
+    TCHAR szNewGroupName[UNLEN];
+    LOCALGROUP_INFO_0 lgrpi0;
+    NET_API_STATUS status;
+
+    /* Leave, if there is no valid listview item */
+    if (pnmv->item.iItem == -1)
+        return FALSE;
+
+    /* Get the new user name */
+    ListView_GetItemText(pnmv->hdr.hwndFrom,
+                         pnmv->item.iItem, 0,
+                         szOldGroupName,
+                         UNLEN);
+
+    /* Leave, if the user canceled the edit action */
+    if (pnmv->item.pszText == NULL)
+        return FALSE;
+
+    /* Get the new user name */
+    lstrcpy(szNewGroupName, pnmv->item.pszText);
+
+    /* Leave, if the user name was not changed */
+    if (lstrcmp(szOldGroupName, szNewGroupName) == 0)
+        return FALSE;
+
+
+    /* Change the user name */
+    lgrpi0.lgrpi0_name = szNewGroupName;
+
+#if 0
+    status = NetLocalGroupSetInfo(NULL, szOldGroupName, 0, (LPBYTE)&lgrpi0, NULL);
+#else
+    status = NERR_Success;
+#endif
+    if (status != NERR_Success)
+    {
+        TCHAR szText[256];
+        wsprintf(szText, TEXT("Error: %u"), status);
+        MessageBox(NULL, szText, TEXT("NetLocalGroupSetInfo"), MB_ICONERROR | MB_OK);
+        return FALSE;
+    }
+
+    /* Update the listview item */
+    ListView_SetItemText(pnmv->hdr.hwndFrom,
+                         pnmv->item.iItem, 0,
+                         szNewGroupName);
+
+    return TRUE;
+}
+
+
+static BOOL
 OnNotify(HWND hwndDlg, PGROUP_DATA pGroupData, NMHDR *phdr)
 {
     LPNMLISTVIEW lpnmlv = (LPNMLISTVIEW)phdr;
@@ -147,9 +392,17 @@ OnNotify(HWND hwndDlg, PGROUP_DATA pGroupData, NMHDR *phdr)
                     TrackPopupMenu(GetSubMenu(pGroupData->hPopupMenu, (lpnmlv->iItem == -1) ? 0 : 1),
                                    TPM_LEFTALIGN, lpnmlv->ptAction.x, lpnmlv->ptAction.y, 0, hwndDlg, NULL);
                     break;
+
+                case LVN_BEGINLABELEDIT:
+                    return OnBeginLabelEdit((LPNMLVDISPINFO)phdr);
+
+                case LVN_ENDLABELEDIT:
+                    return OnEndLabelEdit((LPNMLVDISPINFO)phdr);
             }
             break;
     }
+
+    return FALSE;
 }
 
 
@@ -180,11 +433,24 @@ GroupsPageProc(HWND hwndDlg,
             break;
 
         case WM_COMMAND:
+            switch (LOWORD(wParam))
+            {
+                case IDM_GROUP_NEW:
+                    GroupNew(hwndDlg);
+                    break;
+
+                case IDM_GROUP_RENAME:
+                    GroupRename(hwndDlg);
+                    break;
+
+                case IDM_GROUP_DELETE:
+                    GroupDelete(hwndDlg);
+                    break;
+            }
             break;
 
         case WM_NOTIFY:
-            OnNotify(hwndDlg, pGroupData, (NMHDR *)lParam);
-            break;
+            return OnNotify(hwndDlg, pGroupData, (NMHDR *)lParam);
 
         case WM_DESTROY:
             DestroyMenu(pGroupData->hPopupMenu);
