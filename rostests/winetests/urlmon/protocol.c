@@ -27,6 +27,7 @@
 #include "winbase.h"
 #include "ole2.h"
 #include "urlmon.h"
+#include "wininet.h"
 
 #include "initguid.h"
 
@@ -1383,11 +1384,21 @@ static void test_file_protocol_fail(void)
     CHECK_CALLED(ReportProgress_SENDINGREQUEST);
     CHECK_CALLED(ReportResult);
 
+    SET_EXPECT(GetBindInfo);
+    hres = IInternetProtocol_Start(protocol, NULL, &protocol_sink, &bind_info, 0, 0);
+    ok(hres == E_INVALIDARG, "Start failed: %08x, expected E_INVALIDARG\n", hres);
+    CHECK_CALLED(GetBindInfo);
+
+    SET_EXPECT(GetBindInfo);
+    hres = IInternetProtocol_Start(protocol, emptyW, &protocol_sink, &bind_info, 0, 0);
+    ok(hres == E_INVALIDARG, "Start failed: %08x, expected E_INVALIDARG\n", hres);
+    CHECK_CALLED(GetBindInfo);
+
     IInternetProtocol_Release(protocol);
 }
 
 static void test_file_protocol(void) {
-    WCHAR buf[MAX_PATH];
+    WCHAR buf[INTERNET_MAX_URL_LENGTH], file_name_buf[MAX_PATH];
     DWORD size;
     ULONG len;
     HANDLE file;
@@ -1429,15 +1440,17 @@ static void test_file_protocol(void) {
     test_file_protocol_url(buf);
 
     memcpy(buf, wszFile2, sizeof(wszFile2));
-    len = sizeof(wszFile2)/sizeof(WCHAR)-1;
-    len += GetCurrentDirectoryW(sizeof(buf)/sizeof(WCHAR)-len, buf+len);
-    buf[len++] = '\\';
-    memcpy(buf+len, wszIndexHtml, sizeof(wszIndexHtml));
-
-    file_name = buf + sizeof(wszFile2)/sizeof(WCHAR)-1;
+    len = GetCurrentDirectoryW(sizeof(file_name_buf)/sizeof(WCHAR), file_name_buf);
+    file_name_buf[len++] = '\\';
+    memcpy(file_name_buf+len, wszIndexHtml, sizeof(wszIndexHtml));
+    lstrcpyW(buf+sizeof(wszFile2)/sizeof(WCHAR)-1, file_name_buf);
+    file_name = file_name_buf;
     bindf = 0;
     test_file_protocol_url(buf);
     bindf = BINDF_FROMURLMON;
+    test_file_protocol_url(buf);
+
+    buf[sizeof(wszFile2)/sizeof(WCHAR)] = '|';
     test_file_protocol_url(buf);
 
     memcpy(buf, wszFile3, sizeof(wszFile3));
