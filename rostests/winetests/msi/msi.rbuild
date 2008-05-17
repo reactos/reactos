@@ -16,15 +16,16 @@
 	<file>suminfo.c</file>
 	<file>testlist.c</file>
 	<library>wine</library>
+	<library>uuid</library>
 	<library>cabinet</library>
 	<library>msi</library>
 	<library>shell32</library>
 	<library>ole32</library>
 	<library>oleaut32</library>
+	<library>user32</library>
 	<library>advapi32</library>
 	<library>kernel32</library>
 	<library>version</library>
-	<library>uuid</library>
 	<library>ntdll</library>
 </module>
 </group>
