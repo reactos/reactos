@@ -205,6 +205,12 @@ enum msidbMoveFileOptions
     msidbMoveFileOptionsMove = 0x00000001,
 };
 
+enum msidbAssemblyAttributes
+{
+    msidbAssemblyAttributesURT = 0x00000000,
+    msidbAssemblyAttributesWin32 = 0x00000001,
+};
+
 /*
  * Windows SDK braindamage alert
  *
