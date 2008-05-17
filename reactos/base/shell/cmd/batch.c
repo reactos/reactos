@@ -292,6 +292,9 @@ BOOL Batch (LPTSTR fullname, LPTSTR firstword, LPTSTR param)
         return FALSE;
     }
 
+    /* Don't print a newline for this command */
+    bIgnoreEcho = TRUE;
+
 	TRACE ("Batch: returns TRUE\n");
 
 	return TRUE;

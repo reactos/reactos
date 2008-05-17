@@ -157,6 +157,7 @@ VOID ConOutChar (TCHAR c)
 VOID ConPuts(LPTSTR szText, DWORD nStdHandle)
 {
 	DWORD dwWritten;
+    HANDLE hStdHandle;
 	PCHAR pBuf;
 	INT len;
 
@@ -167,12 +168,14 @@ VOID ConPuts(LPTSTR szText, DWORD nStdHandle)
 #else
 	pBuf = szText;
 #endif
-	WriteFile (GetStdHandle (nStdHandle),
+    hStdHandle = GetStdHandle(nStdHandle);
+
+	WriteFile (hStdHandle,
 	           pBuf,
 	           len,
 	           &dwWritten,
 	           NULL);
-	WriteFile (GetStdHandle (nStdHandle),
+	WriteFile (hStdHandle,
 	           _T("\n"),
 	           1,
 	           &dwWritten,

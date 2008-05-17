@@ -795,14 +795,14 @@ DirPrintFileDateTime(TCHAR *lpDate,
 	{
 		case 0: /* 12 hour format */
 		default:
-			_stprintf (szTime,_T("  %02d%c%02u%c"),
+			_stprintf (szTime,_T("%02d%c%02u%c"),
 					(dt.wHour == 0 ? 12 : (dt.wHour <= 12 ? dt.wHour : dt.wHour - 12)),
 					cTimeSeparator,
 					 dt.wMinute, (dt.wHour <= 11 ? _T('a') : _T('p')));
 			break;
 
 		case 1: /* 24 hour format */
-			_stprintf (szTime, _T("  %02d%c%02u"),
+			_stprintf (szTime, _T("%02d%c%02u"),
 					dt.wHour, cTimeSeparator, dt.wMinute);
 			break;
 	}
@@ -1024,7 +1024,7 @@ DirPrintNewList(LPWIN32_FIND_DATA ptrFiles[],	/* [IN]Files' Info */
     /* Print the line */
     if(lpFlags->bPause)
 	{
-		if (ConOutPrintfPaging(FALSE,_T("%10s  %-8s    %*s%s %s\n"),
+		if (ConOutPrintfPaging(FALSE,_T("%10s  %-6s    %*s%s %s\n"),
 							szDate,
 							szTime,
 							iSizeFormat,
@@ -1034,7 +1034,7 @@ DirPrintNewList(LPWIN32_FIND_DATA ptrFiles[],	/* [IN]Files' Info */
 			return ;
 	}
 	else
-		ConOutPrintf(_T("%10s  %-8s    %*s%s %s\n"),
+		ConOutPrintf(_T("%10s  %-6s    %*s%s %s\n"),
 							szDate,
 							szTime,
 							iSizeFormat,
@@ -1656,7 +1656,7 @@ ULARGE_INTEGER u64Temp;					/* A temporary counter */
 				}
 			}
 		}
-	}while(FindNextFile(hSearch, &wfdFileInfo));
+	} while(FindNextFile(hSearch, &wfdFileInfo));
 	FindClose(hSearch);
 
 	/* Terminate list */
@@ -1692,7 +1692,7 @@ ULARGE_INTEGER u64Temp;					/* A temporary counter */
 
 	/* Sort Data if requested*/
 	if (lpFlags->stOrderBy.sCriteriaCount > 0)
-		QsortFiles(ptrFileArray, 0, dwCount-1,lpFlags);
+		QsortFiles(ptrFileArray, 0, dwCount-1, lpFlags);
 
 	/* Print Data */
 	DirPrintFiles(ptrFileArray, dwCount, szFullPath, lpFlags);
