@@ -116,6 +116,36 @@ ChangePasswordDlgProc(HWND hwndDlg,
 }
 
 
+static VOID
+UpdateUserOptions(HWND hwndDlg,
+                  PUSER_INFO_3 userInfo,
+                  BOOL bInit)
+{
+    EnableWindow(GetDlgItem(hwndDlg, IDC_USER_NEW_CANNOT_CHANGE),
+                 !userInfo->usri3_password_expired);
+    EnableWindow(GetDlgItem(hwndDlg, IDC_USER_NEW_NEVER_EXPIRES),
+                 !userInfo->usri3_password_expired);
+
+    EnableWindow(GetDlgItem(hwndDlg, IDC_USER_NEW_FORCE_CHANGE),
+                 (userInfo->usri3_flags & (UF_PASSWD_CANT_CHANGE | UF_DONT_EXPIRE_PASSWD)) == 0);
+
+    if (bInit)
+    {
+        CheckDlgButton(hwndDlg, IDC_USER_NEW_FORCE_CHANGE,
+                       userInfo->usri3_password_expired ? BST_CHECKED : BST_UNCHECKED);
+
+        CheckDlgButton(hwndDlg, IDC_USER_NEW_CANNOT_CHANGE,
+                       (userInfo->usri3_flags & UF_PASSWD_CANT_CHANGE) ? BST_CHECKED : BST_UNCHECKED);
+
+        CheckDlgButton(hwndDlg, IDC_USER_NEW_NEVER_EXPIRES,
+                       (userInfo->usri3_flags & UF_DONT_EXPIRE_PASSWD) ? BST_CHECKED : BST_UNCHECKED);
+
+        CheckDlgButton(hwndDlg, IDC_USER_NEW_DISABLED,
+                       (userInfo->usri3_flags & UF_ACCOUNTDISABLE) ? BST_CHECKED : BST_UNCHECKED);
+    }
+}
+
+
 INT_PTR CALLBACK
 NewUserDlgProc(HWND hwndDlg,
                UINT uMsg,
@@ -127,12 +157,15 @@ NewUserDlgProc(HWND hwndDlg,
 
     UNREFERENCED_PARAMETER(wParam);
 
+    userInfo = (PUSER_INFO_3)GetWindowLongPtr(hwndDlg, DWLP_USER);
+
     switch (uMsg)
     {
         case WM_INITDIALOG:
+            userInfo = (PUSER_INFO_3)lParam;
             SetWindowLongPtr(hwndDlg, DWLP_USER, lParam);
             SendDlgItemMessage(hwndDlg, IDC_USER_NEW_NAME, EM_SETLIMITTEXT, 20, 0);
-            CheckDlgButton(hwndDlg, IDC_USER_NEW_FORCE_CHANGE, BST_CHECKED);
+            UpdateUserOptions(hwndDlg, userInfo, TRUE);
             break;
 
         case WM_COMMAND:
@@ -144,6 +177,25 @@ NewUserDlgProc(HWND hwndDlg,
                         nLength = SendDlgItemMessage(hwndDlg, IDC_USER_NEW_NAME, WM_GETTEXTLENGTH, 0, 0);
                         EnableWindow(GetDlgItem(hwndDlg, IDOK), (nLength > 0));
                     }
+                    break;
+
+                case IDC_USER_NEW_FORCE_CHANGE:
+                    userInfo->usri3_password_expired = !userInfo->usri3_password_expired;
+                    UpdateUserOptions(hwndDlg, userInfo, FALSE);
+                    break;
+
+                case IDC_USER_NEW_CANNOT_CHANGE:
+                    userInfo->usri3_flags ^= UF_PASSWD_CANT_CHANGE;
+                    UpdateUserOptions(hwndDlg, userInfo, FALSE);
+                    break;
+
+                case IDC_USER_NEW_NEVER_EXPIRES:
+                    userInfo->usri3_flags ^= UF_DONT_EXPIRE_PASSWD;
+                    UpdateUserOptions(hwndDlg, userInfo, FALSE);
+                    break;
+
+                case IDC_USER_NEW_DISABLED:
+                    userInfo->usri3_flags ^= UF_ACCOUNTDISABLE;
                     break;
 
                 case IDOK:
@@ -161,8 +213,7 @@ NewUserDlgProc(HWND hwndDlg,
                         break;
                     }
 
-                    userInfo = (LPUSER_INFO_3)GetWindowLongPtr(hwndDlg, DWLP_USER);
-
+                    /* Store the user name */
                     nLength = SendDlgItemMessage(hwndDlg, IDC_USER_NEW_NAME, WM_GETTEXTLENGTH, 0, 0);
                     if (nLength > 0)
                     {
@@ -170,6 +221,7 @@ NewUserDlgProc(HWND hwndDlg,
                         GetDlgItemText(hwndDlg, IDC_USER_NEW_NAME, userInfo->usri3_name, nLength + 1);
                     }
 
+                    /* Store the full user name */
                     nLength = SendDlgItemMessage(hwndDlg, IDC_USER_NEW_FULL_NAME, WM_GETTEXTLENGTH, 0, 0);
                     if (nLength > 0)
                     {
@@ -177,6 +229,7 @@ NewUserDlgProc(HWND hwndDlg,
                         GetDlgItemText(hwndDlg, IDC_USER_NEW_FULL_NAME, userInfo->usri3_full_name, nLength + 1);
                     }
 
+                    /* Store the description */
                     nLength = SendDlgItemMessage(hwndDlg, IDC_USER_NEW_DESCRIPTION, WM_GETTEXTLENGTH, 0, 0);
                     if (nLength > 0)
                     {
@@ -191,12 +244,6 @@ NewUserDlgProc(HWND hwndDlg,
                         userInfo->usri3_password = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, (nLength + 1) * sizeof(WCHAR));
                         GetDlgItemText(hwndDlg, IDC_USER_NEW_PASSWORD1, userInfo->usri3_password, nLength + 1);
                     }
-
-                    if (IsDlgButtonChecked(hwndDlg, IDC_USER_NEW_FORCE_CHANGE) == BST_CHECKED)
-                        userInfo->usri3_password_expired = TRUE;
-
-                    if (IsDlgButtonChecked(hwndDlg, IDC_USER_NEW_DISABLED) == BST_CHECKED)
-                        userInfo->usri3_flags |= UF_ACCOUNTDISABLE;
 
                     EndDialog(hwndDlg, IDOK);
                     break;
@@ -231,6 +278,8 @@ UserNew(HWND hwndDlg)
     user.usri3_acct_expires = TIMEQ_FOREVER;
     user.usri3_max_storage = USER_MAXSTORAGE_UNLIMITED;
     user.usri3_primary_group_id = DOMAIN_GROUP_RID_USERS;
+
+    user.usri3_password_expired = TRUE;
 
     if (DialogBoxParam(hApplet,
                        MAKEINTRESOURCE(IDD_USER_NEW),
