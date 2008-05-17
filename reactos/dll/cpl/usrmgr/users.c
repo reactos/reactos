@@ -58,15 +58,20 @@ CheckPasswords(HWND hwndDlg,
 
 static BOOL
 CheckUserName(HWND hwndDlg,
-              INT nIdDlgItem)
+              INT nIdDlgItem,
+              LPTSTR lpUserName)
 {
     TCHAR szUserName[256];
     UINT uLen;
 
-    uLen = GetDlgItemText(hwndDlg, nIdDlgItem, szUserName, 256);
+    if (lpUserName)
+        uLen = _tcslen(lpUserName);
+    else
+        uLen = GetDlgItemText(hwndDlg, nIdDlgItem, szUserName, 256);
 
     /* Check the user name */
-    if (uLen > 0 && _tcspbrk(szUserName, TEXT("\"*+,/\\:;<=>?[]|")) != NULL)
+    if (uLen > 0 &&
+        _tcspbrk((lpUserName) ? lpUserName : szUserName, TEXT("\"*+,/\\:;<=>?[]|")) != NULL)
     {
         MessageBox(hwndDlg,
                    TEXT("The user name you entered is invalid! A user name must not contain the following charecters: *+,/:;<=>?[\\]|"),
@@ -199,7 +204,7 @@ NewUserDlgProc(HWND hwndDlg,
                     break;
 
                 case IDOK:
-                    if (!CheckUserName(hwndDlg, IDC_USER_NEW_NAME))
+                    if (!CheckUserName(hwndDlg, IDC_USER_NEW_NAME, NULL))
                     {
                         SetFocus(GetDlgItem(hwndDlg, IDC_USER_NEW_NAME));
                         SendDlgItemMessage(hwndDlg, IDC_USER_NEW_NAME, EM_SETSEL, 0, -1);
@@ -330,6 +335,24 @@ UserNew(HWND hwndDlg)
 
     if (user.usri3_password)
         HeapFree(GetProcessHeap, 0, user.usri3_password);
+}
+
+
+static VOID
+UserRename(HWND hwndDlg)
+{
+    HWND hwndLV;
+    INT nItem;
+
+    hwndLV = GetDlgItem(hwndDlg, IDC_USERS_LIST);
+    if (hwndLV == NULL)
+        return;
+
+    nItem = ListView_GetNextItem(hwndLV, -1, LVNI_SELECTED);
+    if (nItem != -1)
+    {
+        (void)ListView_EditLabel(hwndLV, nItem);
+    }
 }
 
 
@@ -530,6 +553,9 @@ OnEndLabelEdit(LPNMLVDISPINFO pnmv)
     if (lstrcmp(szOldUserName, szNewUserName) == 0)
         return FALSE;
 
+    /* Check the user name for illegal characters */
+    if (!CheckUserName(NULL, 0, szNewUserName))
+        return FALSE;
 
     /* Change the user name */
     useri0.usri0_name = szNewUserName;
@@ -633,17 +659,7 @@ UsersPageProc(HWND hwndDlg,
                     break;
 
                 case IDM_USER_RENAME:
-                    {
-                        INT nItem;
-                        HWND hwndLV;
-
-                        hwndLV = GetDlgItem(hwndDlg, IDC_USERS_LIST);
-                        nItem = ListView_GetNextItem(hwndLV, -1, LVNI_SELECTED);
-                        if (nItem != -1)
-                        {
-                            (void)ListView_EditLabel(hwndLV, nItem);
-                        }
-                    }
+                    UserRename(hwndDlg);
                     break;
 
                 case IDM_USER_NEW:
