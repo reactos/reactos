@@ -591,7 +591,7 @@ BOOL DeleteFolder(LPTSTR FileName)
 INT cmd_rmdir (LPTSTR cmd, LPTSTR param)
 {
 	TCHAR dir[MAX_PATH];		/* pointer to the directory to change to */
-	char ch;
+	TCHAR ch;
 	INT args;
 	LPTSTR *arg = NULL;
 	INT i;
@@ -622,20 +622,22 @@ INT cmd_rmdir (LPTSTR cmd, LPTSTR param)
 	}
 
 	dir[0] = 0;
+
 	/* check for options anywhere in command line */
 	for (i = 0; i < args; i++)
 	{
-		if (*arg[i] == _T('/'))
+		if (*arg[i] == '/')
 		{
 			/*found a command, but check to make sure it has something after it*/
 			if (_tcslen (arg[i]) == 2)
 			{
 				ch = _totupper (arg[i][1]);
-				if (ch == _T('S'))
+
+				if (ch == 'S')
 				{
 					RD_SUB = TRUE;
 				}
-				else if (ch == _T('Q'))
+				else if (ch == 'Q')
 				{
 					RD_QUIET = TRUE;
 				}
@@ -648,7 +650,7 @@ INT cmd_rmdir (LPTSTR cmd, LPTSTR param)
 		}
 	}
 
-	if (dir[0] == _T('\0'))
+	if (dir[0] == '\0')
 	{
 		/* No folder to remove */
 		ConErrResPuts(STRING_ERROR_REQ_PARAM_MISSING);
@@ -657,9 +659,10 @@ INT cmd_rmdir (LPTSTR cmd, LPTSTR param)
 	}
 
 	GetFullPathName(dir,MAX_PATH,szFullPath,NULL);
+
 	/* remove trailing \ if any, but ONLY if dir is not the root dir */
-	if (_tcslen (szFullPath) >= 2 && szFullPath[_tcslen (szFullPath) - 1] == _T('\\'))
-		szFullPath[_tcslen(szFullPath) - 1] = _T('\0');
+	if (_tcslen (szFullPath) >= 2 && szFullPath[_tcslen (szFullPath) - 1] == '\\')
+		szFullPath[_tcslen(szFullPath) - 1] = '\0';
 
 	if(RD_SUB)
 	{
@@ -695,11 +698,11 @@ INT cmd_rmdir (LPTSTR cmd, LPTSTR param)
 				FindClose (hFile);
 				nErrorLevel = 1;
 				return 1;
-			}while (FindNextFile (hFile, &f));
+			} while (FindNextFile (hFile, &f));
 			FindClose (hFile);
 		}
 		/* reovme the \\* */
-		szFullPath[_tcslen(szFullPath) - 2] = _T('\0');
+		szFullPath[_tcslen(szFullPath) - 2] = '\0';
 	}
 
 	if (!DeleteFolder(szFullPath))

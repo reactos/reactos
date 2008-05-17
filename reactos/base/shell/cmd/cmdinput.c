@@ -518,7 +518,7 @@ VOID ReadCommand (LPTSTR str, INT maxlen)
 				else
 				{
 					LPCTSTR last = PeekHistory(-1);
-					if (last && charcount < _tcslen (last))
+					if (last && charcount < (INT)_tcslen (last))
 					{
 						PreviousChar = last[current];
 						ConOutChar(PreviousChar);

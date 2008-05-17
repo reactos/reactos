@@ -1849,7 +1849,7 @@ CommandDir(LPTSTR first, LPTSTR rest)
 
 	prev_volume[0] = _T('\0');
 
-	for(loop = 0; loop < entries; loop++)
+	for(loop = 0; loop < (UINT)entries; loop++)
 	{
 		if (CheckCtrlBreak(BREAK_INPUT))
 		{
