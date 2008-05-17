@@ -119,6 +119,9 @@ static HRESULT WINAPI FileProtocol_Start(IInternetProtocol *iface, LPCWSTR szUrl
 
     ReleaseBindInfo(&bindinfo);
 
+    if(!szUrl || !*szUrl)
+        return E_INVALIDARG;
+
     if(lstrlenW(szUrl) < sizeof(wszFile)/sizeof(WCHAR)
             || memcmp(szUrl, wszFile, sizeof(wszFile)))
         return MK_E_SYNTAX;
@@ -153,6 +156,9 @@ static HRESULT WINAPI FileProtocol_Start(IInternetProtocol *iface, LPCWSTR szUrl
                 break;
             }
         }
+
+        if(file_name[1] == '|')
+            file_name[1] = ':';
 
         This->file = CreateFileW(file_name, GENERIC_READ, FILE_SHARE_READ, NULL,
                                  OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
