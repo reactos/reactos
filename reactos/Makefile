@@ -126,6 +126,9 @@
 #    ROS_AUTOMAKE
 #        Alternate name of makefile.auto
 #
+#    ROS_BUILDENGINE
+#        The Build engine to be used. The variable defaults to rbuild (RBUILD_TARGET)
+#
 
 # check for versions of make that don't have features we need...
 # the function "eval" is only available in 3.80+, which happens to be the minimum
@@ -395,14 +398,19 @@ PREAUTO := \
 	$(BUILDNO_H) \
 	$(GENDIB_DIB_FILES) \
 	$(NCI_SERVICE_FILES)
+
 ifeq ($(ARCH),powerpc)
 PREAUTO += $(OFW_INTERFACE_SERVICE_FILES) $(PPCMMU_TARGETS)
 endif
 
-$(ROS_AUTOMAKE): $(RBUILD_TARGET) $(XMLBUILDFILES) | $(PREAUTO)
+ifeq ($(ROS_BUILDENGINE),)
+ROS_BUILDENGINE=$(RBUILD_TARGET)
+endif
+
+$(ROS_AUTOMAKE): $(ROS_BUILDENGINE) $(XMLBUILDFILES) | $(PREAUTO)
 	${mkdir} $(OUTPUT_)media$(SEP)inf 2>$(NUL)
 	$(ECHO_RBUILD)
-	$(Q)$(RBUILD_TARGET) $(RBUILD_FLAGS) $(ROS_RBUILDFLAGS) mingw
+	$(Q)$(ROS_BUILDENGINE) $(RBUILD_FLAGS) $(ROS_RBUILDFLAGS) mingw
 
 world: all bootcd livecd
 
@@ -435,143 +443,143 @@ rgenstat: $(RGENSTAT_TARGET)
 	$(Q)$(RGENSTAT_TARGET) apistatus.lst apistatus.xml
 
 .PHONY: cb
-cb: $(RBUILD_TARGET)
+cb: $(ROS_BUILDENGINE)
 	$(ECHO_RBUILD)
-	$(Q)$(RBUILD_TARGET) $(RBUILD_FLAGS) $(ROS_RBUILDFLAGS) cb
+	$(Q)$(ROS_BUILDENGINE) $(RBUILD_FLAGS) $(ROS_RBUILDFLAGS) cb
 
 .PHONY: msbuild
-msbuild: $(RBUILD_TARGET)
+msbuild: $(ROS_BUILDENGINE)
 	$(ECHO_RBUILD)
-	$(Q)$(RBUILD_TARGET) $(RBUILD_FLAGS) $(ROS_RBUILDFLAGS) msbuild
+	$(Q)$(ROS_BUILDENGINE) $(RBUILD_FLAGS) $(ROS_RBUILDFLAGS) msbuild
 
 .PHONY: msbuild_clean
-msbuild_clean: $(RBUILD_TARGET)
+msbuild_clean: $(ROS_BUILDENGINE)
 	$(ECHO_RBUILD)
-	$(Q)$(RBUILD_TARGET) $(RBUILD_FLAGS) $(ROS_RBUILDFLAGS) -c msbuild
+	$(Q)$(ROS_BUILDENGINE) $(RBUILD_FLAGS) $(ROS_RBUILDFLAGS) -c msbuild
 
 .PHONY: depmap
-depmap: $(RBUILD_TARGET)
+depmap: $(ROS_BUILDENGINE)
 	$(ECHO_RBUILD)
-	$(Q)$(RBUILD_TARGET) $(RBUILD_FLAGS) $(ROS_RBUILDFLAGS) depmap
+	$(Q)$(ROS_BUILDENGINE) $(RBUILD_FLAGS) $(ROS_RBUILDFLAGS) depmap
 
 .PHONY: vreport
-vreport:$(RBUILD_TARGET)
+vreport:$(ROS_BUILDENGINE)
 	$(ECHO_RBUILD)
-	$(Q)$(RBUILD_TARGET) $(RBUILD_FLAGS) $(ROS_RBUILDFLAGS) vreport
+	$(Q)$(ROS_BUILDENGINE) $(RBUILD_FLAGS) $(ROS_RBUILDFLAGS) vreport
 
 .PHONY: msvc
-msvc: $(RBUILD_TARGET)
+msvc: $(ROS_BUILDENGINE)
 	$(ECHO_RBUILD)
-	$(Q)$(RBUILD_TARGET) $(RBUILD_FLAGS) $(ROS_RBUILDFLAGS) msvc
+	$(Q)$(ROS_BUILDENGINE) $(RBUILD_FLAGS) $(ROS_RBUILDFLAGS) msvc
 
 .PHONY: msvc6
-msvc6: $(RBUILD_TARGET)
+msvc6: $(ROS_BUILDENGINE)
 	$(ECHO_RBUILD)
-	$(Q)$(RBUILD_TARGET) $(RBUILD_FLAGS) $(ROS_RBUILDFLAGS) -vs6.00 -voversionconfiguration msvc
+	$(Q)$(ROS_BUILDENGINE) $(RBUILD_FLAGS) $(ROS_RBUILDFLAGS) -vs6.00 -voversionconfiguration msvc
 
 .PHONY: msvc7
-msvc7: $(RBUILD_TARGET)
+msvc7: $(ROS_BUILDENGINE)
 	$(ECHO_RBUILD)
-	$(Q)$(RBUILD_TARGET) $(RBUILD_FLAGS) $(ROS_RBUILDFLAGS) -vs7.00 -voversionconfiguration msvc
+	$(Q)$(ROS_BUILDENGINE) $(RBUILD_FLAGS) $(ROS_RBUILDFLAGS) -vs7.00 -voversionconfiguration msvc
 
 .PHONY: msvc71
-msvc71: $(RBUILD_TARGET)
+msvc71: $(ROS_BUILDENGINE)
 	$(ECHO_RBUILD)
-	$(Q)$(RBUILD_TARGET) $(RBUILD_FLAGS) $(ROS_RBUILDFLAGS) -vs7.10 -voversionconfiguration msvc
+	$(Q)$(ROS_BUILDENGINE) $(RBUILD_FLAGS) $(ROS_RBUILDFLAGS) -vs7.10 -voversionconfiguration msvc
 
 .PHONY: msvc8
-msvc8: $(RBUILD_TARGET)
+msvc8: $(ROS_BUILDENGINE)
 	$(ECHO_RBUILD)
-	$(Q)$(RBUILD_TARGET) $(RBUILD_FLAGS) $(ROS_RBUILDFLAGS) -vs8.00 -voversionconfiguration msvc
+	$(Q)$(ROS_BUILDENGINE) $(RBUILD_FLAGS) $(ROS_RBUILDFLAGS) -vs8.00 -voversionconfiguration msvc
 
 .PHONY: msvc9
-msvc9: $(RBUILD_TARGET)
+msvc9: $(ROS_BUILDENGINE)
 	$(ECHO_RBUILD)
-	$(Q)$(RBUILD_TARGET) $(RBUILD_FLAGS) $(ROS_RBUILDFLAGS) -vs9.00 -voversionconfiguration msvc
+	$(Q)$(ROS_BUILDENGINE) $(RBUILD_FLAGS) $(ROS_RBUILDFLAGS) -vs9.00 -voversionconfiguration msvc
 
 .PHONY: msvc6_clean
-msvc6_clean: $(RBUILD_TARGET)
+msvc6_clean: $(ROS_BUILDENGINE)
 	$(ECHO_RBUILD)
-	$(Q)$(RBUILD_TARGET) $(RBUILD_FLAGS) $(ROS_RBUILDFLAGS) -c -vs6.00 -voversionconfiguration msvc
+	$(Q)$(ROS_BUILDENGINE) $(RBUILD_FLAGS) $(ROS_RBUILDFLAGS) -c -vs6.00 -voversionconfiguration msvc
 
 .PHONY: msvc7_clean
-msvc7_clean: $(RBUILD_TARGET)
+msvc7_clean: $(ROS_BUILDENGINE)
 	$(ECHO_RBUILD)
-	$(Q)$(RBUILD_TARGET) $(RBUILD_FLAGS) $(ROS_RBUILDFLAGS) -c -vs7.00 -voversionconfiguration msvc
+	$(Q)$(ROS_BUILDENGINE) $(RBUILD_FLAGS) $(ROS_RBUILDFLAGS) -c -vs7.00 -voversionconfiguration msvc
 
 .PHONY: msvc71_clean
-msvc71_clean: $(RBUILD_TARGET)
+msvc71_clean: $(ROS_BUILDENGINE)
 	$(ECHO_RBUILD)
-	$(Q)$(RBUILD_TARGET) $(RBUILD_FLAGS) $(ROS_RBUILDFLAGS) -c -vs7.10 -voversionconfiguration msvc
+	$(Q)$(ROS_BUILDENGINE) $(RBUILD_FLAGS) $(ROS_RBUILDFLAGS) -c -vs7.10 -voversionconfiguration msvc
 
 .PHONY: msvc8_clean
-msvc8_clean: $(RBUILD_TARGET)
+msvc8_clean: $(ROS_BUILDENGINE)
 	$(ECHO_RBUILD)
-	$(Q)$(RBUILD_TARGET) $(RBUILD_FLAGS) $(ROS_RBUILDFLAGS) -c -vs8.00 -voversionconfiguration msvc
+	$(Q)$(ROS_BUILDENGINE) $(RBUILD_FLAGS) $(ROS_RBUILDFLAGS) -c -vs8.00 -voversionconfiguration msvc
 
 .PHONY: msvc9_clean
-msvc9_clean: $(RBUILD_TARGET)
+msvc9_clean: $(ROS_BUILDENGINE)
 	$(ECHO_RBUILD)
-	$(Q)$(RBUILD_TARGET) $(RBUILD_FLAGS) $(ROS_RBUILDFLAGS) -c -vs9.00 -voversionconfiguration msvc
+	$(Q)$(ROS_BUILDENGINE) $(RBUILD_FLAGS) $(ROS_RBUILDFLAGS) -c -vs9.00 -voversionconfiguration msvc
 
 .PHONY: msvc_clean
-msvc_clean: $(RBUILD_TARGET)
+msvc_clean: $(ROS_BUILDENGINE)
 	$(ECHO_RBUILD)
-	$(Q)$(RBUILD_TARGET) $(RBUILD_FLAGS) $(ROS_RBUILDFLAGS) -c msvc
+	$(Q)$(ROS_BUILDENGINE) $(RBUILD_FLAGS) $(ROS_RBUILDFLAGS) -c msvc
 
 .PHONY: msvc_clean_all
-msvc_clean_all: $(RBUILD_TARGET)
+msvc_clean_all: $(ROS_BUILDENGINE)
 	$(ECHO_RBUILD)
-	$(Q)$(RBUILD_TARGET) $(RBUILD_FLAGS) $(ROS_RBUILDFLAGS) -c -vs6.00 -voversionconfiguration msvc
-	$(Q)$(RBUILD_TARGET) $(RBUILD_FLAGS) $(ROS_RBUILDFLAGS) -c -vs7.00 -voversionconfiguration msvc
-	$(Q)$(RBUILD_TARGET) $(RBUILD_FLAGS) $(ROS_RBUILDFLAGS) -c -vs7.10 -voversionconfiguration msvc
-	$(Q)$(RBUILD_TARGET) $(RBUILD_FLAGS) $(ROS_RBUILDFLAGS) -c -vs8.10 -voversionconfiguration msvc
+	$(Q)$(ROS_BUILDENGINE) $(RBUILD_FLAGS) $(ROS_RBUILDFLAGS) -c -vs6.00 -voversionconfiguration msvc
+	$(Q)$(ROS_BUILDENGINE) $(RBUILD_FLAGS) $(ROS_RBUILDFLAGS) -c -vs7.00 -voversionconfiguration msvc
+	$(Q)$(ROS_BUILDENGINE) $(RBUILD_FLAGS) $(ROS_RBUILDFLAGS) -c -vs7.10 -voversionconfiguration msvc
+	$(Q)$(ROS_BUILDENGINE) $(RBUILD_FLAGS) $(ROS_RBUILDFLAGS) -c -vs8.10 -voversionconfiguration msvc
 
 .PHONY: msvc7_install_debug
-msvc7_install_debug: $(RBUILD_TARGET)
+msvc7_install_debug: $(ROS_BUILDENGINE)
 	$(ECHO_RBUILD)
-	$(Q)$(RBUILD_TARGET) $(RBUILD_FLAGS) $(ROS_RBUILDFLAGS) -vs7.00 -vcdebug -voversionconfiguration msvc
+	$(Q)$(ROS_BUILDENGINE) $(RBUILD_FLAGS) $(ROS_RBUILDFLAGS) -vs7.00 -vcdebug -voversionconfiguration msvc
 
 .PHONY: msvc7_install_release
-msvc7_install_release: $(RBUILD_TARGET)
+msvc7_install_release: $(ROS_BUILDENGINE)
 	$(ECHO_RBUILD)
-	$(Q)$(RBUILD_TARGET) $(RBUILD_FLAGS) $(ROS_RBUILDFLAGS) -vs7.00 -vcrelease -voversionconfiguration msvc
+	$(Q)$(ROS_BUILDENGINE) $(RBUILD_FLAGS) $(ROS_RBUILDFLAGS) -vs7.00 -vcrelease -voversionconfiguration msvc
 
 .PHONY: msvc7_install_speed
-msvc7_install_speed: $(RBUILD_TARGET)
+msvc7_install_speed: $(ROS_BUILDENGINE)
 	$(ECHO_RBUILD)
-	$(Q)$(RBUILD_TARGET) $(RBUILD_FLAGS) $(ROS_RBUILDFLAGS) -vs7.00 -vcspeed -voversionconfiguration msvc
+	$(Q)$(ROS_BUILDENGINE) $(RBUILD_FLAGS) $(ROS_RBUILDFLAGS) -vs7.00 -vcspeed -voversionconfiguration msvc
 
 .PHONY: msvc71_install_debug
-msvc71_install_debug: $(RBUILD_TARGET)
+msvc71_install_debug: $(ROS_BUILDENGINE)
 	$(ECHO_RBUILD)
-	$(Q)$(RBUILD_TARGET) $(RBUILD_FLAGS) $(ROS_RBUILDFLAGS) -vs7.10 -vcdebug -voversionconfiguration msvc
+	$(Q)$(ROS_BUILDENGINE) $(RBUILD_FLAGS) $(ROS_RBUILDFLAGS) -vs7.10 -vcdebug -voversionconfiguration msvc
 
 .PHONY: msvc71_install_release
-msvc71_install_release: $(RBUILD_TARGET)
+msvc71_install_release: $(ROS_BUILDENGINE)
 	$(ECHO_RBUILD)
-	$(Q)$(RBUILD_TARGET) $(RBUILD_FLAGS) $(ROS_RBUILDFLAGS) -vs7.10 -vcrelease -voversionconfiguration msvc
+	$(Q)$(ROS_BUILDENGINE) $(RBUILD_FLAGS) $(ROS_RBUILDFLAGS) -vs7.10 -vcrelease -voversionconfiguration msvc
 
 
 .PHONY: msvc71_install_speed
-msvc71_install_speed: $(RBUILD_TARGET)
+msvc71_install_speed: $(ROS_BUILDENGINE)
 	$(ECHO_RBUILD)
-	$(Q)$(RBUILD_TARGET) $(RBUILD_FLAGS) $(ROS_RBUILDFLAGS) -vs7.10 -vcspeed -voversionconfiguration msvc
+	$(Q)$(ROS_BUILDENGINE) $(RBUILD_FLAGS) $(ROS_RBUILDFLAGS) -vs7.10 -vcspeed -voversionconfiguration msvc
 
 .PHONY: msvc8_install_debug
-msvc8_install_debug: $(RBUILD_TARGET)
+msvc8_install_debug: $(ROS_BUILDENGINE)
 	$(ECHO_RBUILD)
-	$(Q)$(RBUILD_TARGET) $(RBUILD_FLAGS) $(ROS_RBUILDFLAGS) -vs8.00 -vcdebug -voversionconfiguration msvc
+	$(Q)$(ROS_BUILDENGINE) $(RBUILD_FLAGS) $(ROS_RBUILDFLAGS) -vs8.00 -vcdebug -voversionconfiguration msvc
 
 .PHONY: msvc8_install_release
-msvc8_install_release: $(RBUILD_TARGET)
+msvc8_install_release: $(ROS_BUILDENGINE)
 	$(ECHO_RBUILD)
-	$(Q)$(RBUILD_TARGET) $(RBUILD_FLAGS) $(ROS_RBUILDFLAGS) -vs8.00 -vcrelease -voversionconfiguration msvc
+	$(Q)$(ROS_BUILDENGINE) $(RBUILD_FLAGS) $(ROS_RBUILDFLAGS) -vs8.00 -vcrelease -voversionconfiguration msvc
 
 .PHONY: msvc8_install_speed
-msvc8_install_speed: $(RBUILD_TARGET)
+msvc8_install_speed: $(ROS_BUILDENGINE)
 	$(ECHO_RBUILD)
-	$(Q)$(RBUILD_TARGET) $(RBUILD_FLAGS) $(ROS_RBUILDFLAGS) -vs8.00 -vcspeed -voversionconfiguration msvc
+	$(Q)$(ROS_BUILDENGINE) $(RBUILD_FLAGS) $(ROS_RBUILDFLAGS) -vs8.00 -vcspeed -voversionconfiguration msvc
 
 .PHONY: makefile_auto_clean
 makefile_auto_clean:
@@ -581,6 +589,6 @@ makefile_auto_clean:
 clean: makefile_auto_clean
 
 .PHONY: depends
-depends: $(RBUILD_TARGET)
+depends: $(ROS_BUILDENGINE)
 	$(ECHO_RBUILD)
-	$(Q)$(RBUILD_TARGET) $(RBUILD_FLAGS) $(ROS_RBUILDFLAGS) mingw
+	$(Q)$(ROS_BUILDENGINE) $(RBUILD_FLAGS) $(ROS_RBUILDFLAGS) mingw
