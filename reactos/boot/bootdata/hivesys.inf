@@ -50,9 +50,9 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00020401","Layout File",
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00020401","Layout Text",0x00000000,"Arabic (102) AZERTY"
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00020401","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5086"
 
-HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00040402","Layout File",0x00000000,"kbdbgm.dll"
-HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00040402","Layout Text",0x00000000,"Bulgarian BDS 5237-1978"
-HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00040402","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5136"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000402","Layout File",0x00000000,"kbdbgm.dll"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000402","Layout Text",0x00000000,"Bulgarian BDS 5237-1978"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000402","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5136"
 
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00020402","Layout File",0x00000000,"kbdbgt.dll"
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00020402","Layout Text",0x00000000,"Bulgarian phonetic classic"
