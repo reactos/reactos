@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #include <windows.h>
@@ -130,7 +130,7 @@ guiStep (va_list ap)
 {
     const int pgID = IDC_ST0 + progressGroup * 2;
     char *str = vstrmake (NULL, ap);
-
+    
     progressCurr++;
     SetDlgItemText (dialog, pgID, str);
     SendDlgItemMessage (dialog, pgID+1, PBM_SETPOS,
@@ -323,7 +323,7 @@ EditTagProc (HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
     return CallWindowProcA (DefEditProc, hwnd, msg, wParam, lParam);
 }
 
-static BOOL CALLBACK
+static INT_PTR CALLBACK
 AskTagProc (HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     int len;
@@ -376,7 +376,7 @@ qAsk (va_list ap)
     return MBdefault (va_arg (ap, int));
 }
 
-static BOOL CALLBACK
+static INT_PTR CALLBACK
 AboutProc (HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     switch (msg) {
@@ -390,7 +390,7 @@ AboutProc (HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
     return FALSE;
 }
 
-static BOOL CALLBACK
+static INT_PTR CALLBACK
 DlgProc (HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     switch (msg) {
@@ -518,7 +518,7 @@ report (enum report_type t, ...)
             }
         }
     }
-
+        
     va_start (ap, t);
     if (t < sizeof text_funcs / sizeof text_funcs[0] &&
         t < sizeof GUI_funcs / sizeof GUI_funcs[0]) ret = funcs[t](ap);

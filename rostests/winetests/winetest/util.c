@@ -16,7 +16,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #include <unistd.h>
@@ -38,6 +38,13 @@ void *xrealloc (void *op, size_t len)
 
     if (len && !p) report (R_FATAL, "Out of memory.");
     return p;
+}
+
+char *xstrdup( const char *str )
+{
+    char *res = strdup( str );
+    if (!res) report (R_FATAL, "Out of memory.");
+    return res;
 }
 
 static char *vstrfmtmake (size_t *lenp, const char *fmt, va_list ap)

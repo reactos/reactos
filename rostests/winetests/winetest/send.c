@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #include <winsock.h>
@@ -107,7 +107,7 @@ send_file (const char *name)
     SOCKET s;
     FILE *f;
 #define BUFLEN 8192
-    unsigned char buffer[BUFLEN+1];
+    char buffer[BUFLEN+1];
     size_t bytes_read, total, filesize;
     char *str;
     int ret;
@@ -137,11 +137,11 @@ send_file (const char *name)
     }
     fseek (f, 0, SEEK_END);
     filesize = ftell (f);
-    if (filesize > 1024*1024) {
+    if (filesize > 1.5*1024*1024) {
         report (R_WARNING,
-                "File too big (%.1f MB > 1 MB); submitting partial report.",
+                "File too big (%.1f MB > 1.5 MB); submitting partial report.",
                 filesize/1024.0/1024);
-        filesize = 1024*1024;
+        filesize = 1.5*1024*1024;
     }
     fseek (f, 0, SEEK_SET);
 
@@ -178,7 +178,7 @@ send_file (const char *name)
     if (send_buf (s, body2, sizeof body2 - 1)) {
         report (R_WARNING, "Error sending trailer: %d, %d",
                 errno, WSAGetLastError ());
-        goto abort2;
+        goto abort1;
     }
     report (R_DELTA, 0, "Network transfer: Done");
 

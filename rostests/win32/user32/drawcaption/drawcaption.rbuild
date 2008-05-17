@@ -1,3 +1,6 @@
+<?xml version="1.0"?>
+<!DOCTYPE project SYSTEM "tools/rbuild/project.dtd">
+<group>
 <module name="drawcap" type="win32cui" installbase="system32" installname="drawcap.exe">
 	<include base="drawcap">.</include>
 	<define name="__USE_W32API" />
@@ -27,3 +30,4 @@
 	<file>capicon.c</file>
 	<file>capicon.rc</file>
 </module>
+</group>

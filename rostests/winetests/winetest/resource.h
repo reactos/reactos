@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #define IDI_WINE 1
@@ -23,6 +23,8 @@
 #define IDD_STATUS 100
 #define IDD_ABOUT  101
 #define IDD_TAG    102
+
+#define IDC_STATIC -1
 
 #define IDC_ST0 1000
 #define IDC_PB0 1001
@@ -39,6 +41,8 @@
 
 #define IDC_EDIT  4000
 #define IDC_ABOUT 4001
+
+#define IDS_BUILD_ID 1
 
 /* Resource types */
 

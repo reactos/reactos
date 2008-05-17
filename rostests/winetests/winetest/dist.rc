@@ -15,11 +15,17 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #include "winetest.rc"
+#include "tests.rc"
 
-WINE_BUILD STRINGRES "build.id"
-BUILD_INFO STRINGRES "build.nfo"
-TESTS_URL  STRINGRES "tests.url"
+/* @makedep: build.id */
+//WINE_BUILD STRINGRES "build.id"
+
+/* @makedep: build.nfo */
+//BUILD_INFO STRINGRES "build.nfo"
+
+/* @makedep: tests.url */
+//TESTS_URL  STRINGRES "tests.url"
