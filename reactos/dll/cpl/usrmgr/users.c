@@ -487,6 +487,21 @@ OnInitDialog(HWND hwndDlg)
 
 
 static BOOL
+OnBeginLabelEdit(LPNMLVDISPINFO pnmv)
+{
+    HWND hwndEdit;
+
+    hwndEdit = ListView_GetEditControl(pnmv->hdr.hwndFrom);
+    if (hwndEdit == NULL)
+        return TRUE;
+
+    SendMessage(hwndEdit, EM_SETLIMITTEXT, 20, 0);
+
+    return FALSE;
+}
+
+
+static BOOL
 OnEndLabelEdit(LPNMLVDISPINFO pnmv)
 {
     TCHAR szOldUserName[UNLEN];
@@ -564,14 +579,17 @@ OnNotify(HWND hwndDlg, PUSER_DATA pUserData, NMHDR *phdr)
                 case NM_DBLCLK:
                     break;
 
-                case LVN_ENDLABELEDIT:
-                    return OnEndLabelEdit((LPNMLVDISPINFO)phdr);
-
                 case NM_RCLICK:
                     ClientToScreen(GetDlgItem(hwndDlg, IDC_USERS_LIST), &lpnmlv->ptAction);
                     TrackPopupMenu(GetSubMenu(pUserData->hPopupMenu, (lpnmlv->iItem == -1) ? 0 : 1),
                                    TPM_LEFTALIGN, lpnmlv->ptAction.x, lpnmlv->ptAction.y, 0, hwndDlg, NULL);
                     break;
+
+                case LVN_BEGINLABELEDIT:
+                    return OnBeginLabelEdit((LPNMLVDISPINFO)phdr);
+
+                case LVN_ENDLABELEDIT:
+                    return OnEndLabelEdit((LPNMLVDISPINFO)phdr);
             }
             break;
     }
