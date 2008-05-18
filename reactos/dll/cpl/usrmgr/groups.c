@@ -122,6 +122,12 @@ NewGroupDlgProc(HWND hwndDlg,
                     break;
 
                 case IDOK:
+                    if (!CheckAccountName(hwndDlg, IDC_GROUP_NEW_NAME, NULL))
+                    {
+                        SetFocus(GetDlgItem(hwndDlg, IDC_GROUP_NEW_NAME));
+                        SendDlgItemMessage(hwndDlg, IDC_GROUP_NEW_NAME, EM_SETSEL, 0, -1);
+                        break;
+                    }
 
                     nLength = SendDlgItemMessage(hwndDlg, IDC_GROUP_NEW_NAME, WM_GETTEXTLENGTH, 0, 0);
                     if (nLength > 0)
@@ -338,6 +344,9 @@ OnEndLabelEdit(LPNMLVDISPINFO pnmv)
     if (lstrcmp(szOldGroupName, szNewGroupName) == 0)
         return FALSE;
 
+    /* Check the group name for illegal characters */
+    if (!CheckAccountName(NULL, 0, szNewGroupName))
+        return FALSE;
 
     /* Change the user name */
     lgrpi0.lgrpi0_name = szNewGroupName;

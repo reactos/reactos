@@ -56,36 +56,6 @@ CheckPasswords(HWND hwndDlg,
 }
 
 
-static BOOL
-CheckUserName(HWND hwndDlg,
-              INT nIdDlgItem,
-              LPTSTR lpUserName)
-{
-    TCHAR szUserName[256];
-    UINT uLen;
-
-    if (lpUserName)
-        uLen = _tcslen(lpUserName);
-    else
-        uLen = GetDlgItemText(hwndDlg, nIdDlgItem, szUserName, 256);
-
-    /* Check the user name */
-    if (uLen > 0 &&
-        _tcspbrk((lpUserName) ? lpUserName : szUserName, TEXT("\"*+,/\\:;<=>?[]|")) != NULL)
-    {
-        MessageBox(hwndDlg,
-                   TEXT("The user name you entered is invalid! A user name must not contain the following charecters: *+,/:;<=>?[\\]|"),
-                   TEXT("ERROR"),
-                   MB_OK | MB_ICONERROR);
-        return FALSE;
-    }
-
-
-    return TRUE;
-}
-
-
-
 INT_PTR CALLBACK
 ChangePasswordDlgProc(HWND hwndDlg,
                       UINT uMsg,
@@ -204,7 +174,7 @@ NewUserDlgProc(HWND hwndDlg,
                     break;
 
                 case IDOK:
-                    if (!CheckUserName(hwndDlg, IDC_USER_NEW_NAME, NULL))
+                    if (!CheckAccountName(hwndDlg, IDC_USER_NEW_NAME, NULL))
                     {
                         SetFocus(GetDlgItem(hwndDlg, IDC_USER_NEW_NAME));
                         SendDlgItemMessage(hwndDlg, IDC_USER_NEW_NAME, EM_SETSEL, 0, -1);
@@ -554,7 +524,7 @@ OnEndLabelEdit(LPNMLVDISPINFO pnmv)
         return FALSE;
 
     /* Check the user name for illegal characters */
-    if (!CheckUserName(NULL, 0, szNewUserName))
+    if (!CheckAccountName(NULL, 0, szNewUserName))
         return FALSE;
 
     /* Change the user name */
