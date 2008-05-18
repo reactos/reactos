@@ -673,6 +673,10 @@ NtGdiUMPDEngFreeUserMem                          1
 NtGdiDrawStream                                  3
 #
 #
+# Vista Syscall add on
+NtGdiConfigureOPMProtectedOutput                 4
+#
+#
 #ReactOS specific syscalls
 NtGdiSetDIBits                          7
 NtGdiSetViewportExtEx                   4

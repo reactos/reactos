@@ -658,4 +658,10 @@ typedef struct _DRIVER_FUNCTIONS
     PGD_ENABLEDRIVER               EnableDriver; //ReactOS Extra
 } DRIVER_FUNCTIONS, *PDRIVER_FUNCTIONS;
 
+/* FIXME move to more proper place, Vista syscall */
+DWORD
+STDCALL
+NtGdiConfigureOPMProtectedOutput(DWORD x1, DWORD x2, DWORD x3, DWORD x4);
+
+
 #endif

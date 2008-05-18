@@ -2964,3 +2964,13 @@ EngControlSprites(
   UNIMPLEMENTED;
   return FALSE;
 }
+
+
+/* Vista Syscall that are stub */
+DWORD
+STDCALL
+NtGdiConfigureOPMProtectedOutput(DWORD x1, DWORD x2, DWORD x3, DWORD x4)
+{
+	UNIMPLEMENTED;
+	return 0
+}
