@@ -356,6 +356,7 @@ Win32CsrHardError(IN PCSRSS_PROCESS_DATA ProcessData,
         LPSTR NtStatusString;
         UNICODE_STRING MessageU;
         ANSI_STRING MessageA;
+        USHORT CaptionSize = 0;
 
         if( !MessageResource->Flags ) {
             /* we've got an ansi string */
@@ -369,7 +370,6 @@ Win32CsrHardError(IN PCSRSS_PROCESS_DATA ProcessData,
             RtlUnicodeStringToAnsiString(&MessageA, &MessageU, TRUE);
         }
 
-        USHORT CaptionSize = 0;
         // check whether a caption exists
         if( *MessageA.Buffer == '{' ) {
             // get size of the caption
@@ -464,7 +464,10 @@ Win32CsrHardError(IN PCSRSS_PROCESS_DATA ProcessData,
 
             RtlFreeHeap (RtlGetProcessHeap(), 0, NtStatusString);
         }
-        RtlFreeAnsiString(&MessageA);
+        if( MessageResource->Flags ) {
+            /* we've got a unicode string */
+            RtlFreeAnsiString(&MessageA);
+        }
     }
     if( ClientFileNameU.Buffer ) {
         RtlFreeHeap (RtlGetProcessHeap(), 0, ClientFileNameU.Buffer);
