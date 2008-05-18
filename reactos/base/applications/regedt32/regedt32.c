@@ -3,6 +3,8 @@
 #include <shellapi.h>
 #include <shlwapi.h>
 
+#define REGEDIT  _T("regedit.exe")
+
 int WINAPI _tWinMain(HINSTANCE hCurInst, HINSTANCE hPrevInst,
                      LPTSTR lpsCmdLine, int nCmdShow)
 {
@@ -10,8 +12,12 @@ int WINAPI _tWinMain(HINSTANCE hCurInst, HINSTANCE hPrevInst,
 
     if(GetWindowsDirectory(szPath, MAX_PATH))
     {
-        PathAppend(szPath, _T("regedit.exe"));
+        PathAppend(szPath, REGEDIT);
         ShellExecute(NULL, NULL, szPath, lpsCmdLine, NULL, nCmdShow);
+    }
+    else
+    {
+        ShellExecute(NULL, NULL, REGEDIT, lpsCmdLine, NULL, nCmdShow);
     }
 
     return 0;
