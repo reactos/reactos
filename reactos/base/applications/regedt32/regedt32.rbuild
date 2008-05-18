@@ -4,6 +4,7 @@
 	<include base="regedt32">.</include>
 	<library>kernel32</library>
 	<library>shell32</library>
+	<library>shlwapi</library>
 	<file>regedt32.c</file>
 	<file>resource.rc</file>
 </module>
