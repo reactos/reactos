@@ -170,6 +170,8 @@ static ULONG WINAPI ISVBgCm_fnRelease(IContextMenu2 *iface)
 * ISVBgCm_fnQueryContextMenu()
 */
 
+VOID INewItem_SetParent(LPSHELLFOLDER pSFParent); /* FIXME: remove that, shouldn't be needed */
+
 static HRESULT WINAPI ISVBgCm_fnQueryContextMenu(
 	IContextMenu2 *iface,
 	HMENU hMenu,
@@ -225,8 +227,7 @@ static HRESULT WINAPI ISVBgCm_fnQueryContextMenu(
      * FIXME
      * load other shell extensions
      */
-#if 0    
-    if (SUCCEEDED(INewItem_Constructor(This->pSFParent, &IID_IContextMenu2, (LPVOID*)&icm)))
+    if (SUCCEEDED(INewItem_Constructor(NULL, &IID_IContextMenu2, (LPVOID*)&icm)))
     {
         if (SUCCEEDED(IContextMenu_QueryContextMenu(icm, hMenu, 10, idCmdFirst, idCmdLast, uFlags)))
         {
@@ -238,7 +239,10 @@ static HRESULT WINAPI ISVBgCm_fnQueryContextMenu(
             This->icm_new = NULL;
         }
     }
-#endif
+
+    /* Prepare 'New item' shell extension */
+    /* FIXME: shouldn't be needed... */
+    INewItem_SetParent(This->pSFParent);
 
     if (This->bDesktop)
     {
