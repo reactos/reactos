@@ -1684,7 +1684,7 @@ DialogBoxParamA(
         SetLastError(ERROR_RESOURCE_NAME_NOT_FOUND);
         return -1;
     }
-    if (!IsWindow(hWndParent))
+    if (hWndParent != NULL && !IsWindow(hWndParent))
     {
         SetLastError(ERROR_INVALID_WINDOW_HANDLE);
         return 0;
@@ -1717,7 +1717,7 @@ DialogBoxParamW(
         SetLastError(ERROR_RESOURCE_NAME_NOT_FOUND);
         return -1;
     }
-    if (!IsWindow(hWndParent))
+    if (hWndParent != NULL && !IsWindow(hWndParent))
     {
         SetLastError(ERROR_INVALID_WINDOW_HANDLE);
         return 0;
