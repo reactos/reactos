@@ -659,9 +659,80 @@ typedef struct _DRIVER_FUNCTIONS
 } DRIVER_FUNCTIONS, *PDRIVER_FUNCTIONS;
 
 /* FIXME move to more proper place, Vista syscall */
-DWORD
-STDCALL
-NtGdiConfigureOPMProtectedOutput(DWORD x1, DWORD x2, DWORD x3, DWORD x4);
+DWORD STDCALL NtGdiConfigureOPMProtectedOutput(DWORD x1, DWORD x2, DWORD x3, DWORD x4);
+DWORD STDCALL NtGdiCreateOPMProtectedOutputs(DWORD x1, DWORD x2, DWORD x3, DWORD x4, DWORD x5);
+
+/* Doc exists in msdn see ReactOS def file which D3DKMT* it is, rember I have not check if the doc are correct, 
+ * it is for the drv, which api it should export. 
+ * comucate way 
+ * gdi32.dll -- Direcly syscall --> win33k.sys 
+ * win33k.sys -- doing direct call to -->dxkrnl.sys (note dxkrnl doing allot work here) 
+ * dxkrnl.sys (note dxkrnl doing allot work here) -- the drv export function --> graphic drv,
+ * this api should move to more proper place later. 
+ */
+DWORD STDCALL NtGdiDdDDICheckExclusiveOwnership();
+DWORD STDCALL NtGdiDdDDICheckMonitorPowerState(DWORD x1);
+DWORD STDCALL NtGdiDdDDICheckOcclusion(DWORD x1);
+DWORD STDCALL NtGdiDdDDICloseAdapter(DWORD x1);
+DWORD STDCALL NtGdiDdDDICreateAllocation(DWORD x1);
+DWORD STDCALL NtGdiDdDDICreateContext(DWORD x1);
+DWORD STDCALL NtGdiDdDDICreateDCFromMemory(DWORD x1);
+DWORD STDCALL NtGdiDdDDICreateDevice(DWORD x1);
+DWORD STDCALL NtGdiDdDDICreateOverlay(DWORD x1);
+DWORD STDCALL NtGdiDdDDICreateSynchronizationObject(DWORD x1);
+DWORD STDCALL NtGdiDdDDIDestroyAllocation(DWORD x1);
+DWORD STDCALL NtGdiDdDDIDestroyContext(DWORD x1);
+DWORD STDCALL NtGdiDdDDIDestroyDCFromMemory(DWORD x1);
+DWORD STDCALL NtGdiDdDDIDestroyDevice(DWORD x1);
+DWORD STDCALL NtGdiDdDDIDestroyOverlay(DWORD x1);
+DWORD STDCALL NtGdiDdDDIDestroySynchronizationObject(DWORD x1);
+DWORD STDCALL NtGdiDdDDIEscape(DWORD x1);
+DWORD STDCALL NtGdiDdDDIFlipOverlay(DWORD x1);
+DWORD STDCALL NtGdiDdDDIGetContextSchedulingPriority(DWORD x1);
+DWORD STDCALL NtGdiDdDDIGetDeviceState(DWORD x1);
+DWORD STDCALL NtGdiDdDDIGetDisplayModeList(DWORD x1);
+DWORD STDCALL NtGdiDdDDIGetMultisampleMethodList(DWORD x1);
+DWORD STDCALL NtGdiDdDDIGetPresentHistory(DWORD x1);
+DWORD STDCALL NtGdiDdDDIGetProcessSchedulingPriorityClass(DWORD x1, DWORD x2);
+DWORD STDCALL NtGdiDdDDIGetRuntimeData(DWORD x1);
+DWORD STDCALL NtGdiDdDDIGetScanLine(DWORD x1);
+DWORD STDCALL NtGdiDdDDIGetSharedPrimaryHandle(DWORD x1);
+DWORD STDCALL NtGdiDdDDIInvalidateActiveVidPn(DWORD x1);
+DWORD STDCALL NtGdiDdDDILock(DWORD x1);
+DWORD STDCALL NtGdiDdDDIOpenAdapterFromDeviceName(DWORD x1);
+DWORD STDCALL NtGdiDdDDIOpenAdapterFromHdc(DWORD x1);
+DWORD STDCALL NtGdiDdDDIOpenResource(DWORD x1);
+DWORD STDCALL NtGdiDdDDIPollDisplayChildren(DWORD x1);
+DWORD STDCALL NtGdiDdDDIPresent(DWORD x1);
+DWORD STDCALL NtGdiDdDDIQueryAdapterInfo(DWORD x1);
+DWORD STDCALL NtGdiDdDDIQueryAllocationResidency(DWORD x1);
+DWORD STDCALL NtGdiDdDDIQueryResourceInfo(DWORD x1);
+DWORD STDCALL NtGdiDdDDIQueryStatistics(DWORD x1);
+DWORD STDCALL NtGdiDdDDIReleaseProcessVidPnSourceOwners(DWORD x1);
+DWORD STDCALL NtGdiDdDDIRender(DWORD x1);
+DWORD STDCALL NtGdiDdDDISetAllocationPriority(DWORD x1);
+DWORD STDCALL NtGdiDdDDISetContextSchedulingPriority(DWORD x1);
+DWORD STDCALL NtGdiDdDDISetDisplayMode(DWORD x1);
+DWORD STDCALL NtGdiDdDDISetDisplayPrivateDriverFormat(DWORD x1);
+DWORD STDCALL NtGdiDdDDISetGammaRamp(DWORD x1);
+DWORD STDCALL NtGdiDdDDISetProcessSchedulingPriorityClass(DWORD x1, x2);
+DWORD STDCALL NtGdiDdDDISetQueuedLimit(DWORD x1);
+DWORD STDCALL NtGdiDdDDISetVidPnSourceOwner(DWORD x1);
+DWORD STDCALL NtGdiDdDDISharedPrimaryLockNotification(DWORD x1);
+DWORD STDCALL NtGdiDdDDISharedPrimaryUnLockNotification(DWORD x1);
+DWORD STDCALL NtGdiDdDDISignalSynchronizationObject(DWORD x1);
+DWORD STDCALL NtGdiDdDDIUnlock(DWORD x1);
+DWORD STDCALL NtGdiDdDDIUpdateOverlay(DWORD x1);
+DWORD STDCALL NtGdiDdDDIWaitForIdle(DWORD x1);
+DWORD STDCALL NtGdiDdDDIWaitForSynchronizationObject(DWORD x1);
+DWORD STDCALL NtGdiDdDDIWaitForVerticalBlankEvent(DWORD x1);
+DWORD STDCALL NtGdiDDCCIGetCapabilitiesString(DWORD x1, DWORD x2, DWORD x3);
+DWORD STDCALL NtGdiDDCCIGetCapabilitiesStringLength(DWORD x1, DWORD x2);
+DWORD STDCALL NtGdiDDCCIGetTimingReport(DWORD x1, DWORD x2);
+DWORD STDCALL NtGdiDDCCIGetVCPFeature(DWORD x1, DWORD x2, DWORD x3, DWORD x4);
+DWORD STDCALL NtGdiDDCCISaveCurrentSettings(DWORD x1);
+DWORD STDCALL NtGdiDDCCISetVCPFeature(DWORD x1, DWORD x2, DWORD x3);
+
 
 
 #endif

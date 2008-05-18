@@ -674,7 +674,70 @@ NtGdiDrawStream                                  3
 #
 #
 # Vista Syscall add on
-NtGdiConfigureOPMProtectedOutput                 4
+NtGdiConfigureOPMProtectedOutput                4
+NtGdiCreateOPMProtectedOutputs                  5
+NtGdiDdDDICheckExclusiveOwnership               0
+NtGdiDdDDICheckMonitorPowerState                1
+NtGdiDdDDICheckOcclusion                        1
+NtGdiDdDDICloseAdapter                          1
+NtGdiDdDDICreateAllocation                      1
+NtGdiDdDDICreateContext                         1
+NtGdiDdDDICreateDCFromMemory                    1
+NtGdiDdDDICreateDevice                          1
+NtGdiDdDDICreateOverlay                         1
+NtGdiDdDDICreateSynchronizationObject           1
+NtGdiDdDDIDestroyAllocation                     1
+NtGdiDdDDIDestroyContext                        1
+NtGdiDdDDIDestroyDCFromMemory                   1
+NtGdiDdDDIDestroyDevice                         1
+NtGdiDdDDIDestroyOverlay                        1
+NtGdiDdDDIDestroySynchronizationObject          1
+NtGdiDdDDIEscape                                1
+NtGdiDdDDIFlipOverlay                           1
+NtGdiDdDDIGetContextSchedulingPriority          1
+NtGdiDdDDIGetDeviceState                        1
+NtGdiDdDDIGetDisplayModeList                    1
+NtGdiDdDDIGetMultisampleMethodList              1
+NtGdiDdDDIGetPresentHistory                     1
+NtGdiDdDDIGetProcessSchedulingPriorityClass     2
+NtGdiDdDDIGetRuntimeData                        1
+NtGdiDdDDIGetScanLine                           1
+NtGdiDdDDIGetSharedPrimaryHandle                1
+NtGdiDdDDIInvalidateActiveVidPn                 1
+NtGdiDdDDILock                                  1
+NtGdiDdDDIOpenAdapterFromDeviceName             1
+NtGdiDdDDIOpenAdapterFromHdc                    1
+NtGdiDdDDIOpenResource                          1
+NtGdiDdDDIPollDisplayChildren                   1
+NtGdiDdDDIPresent                               1
+NtGdiDdDDIQueryAdapterInfo                      1
+NtGdiDdDDIQueryAllocationResidency              1 
+NtGdiDdDDIQueryResourceInfo                     1
+NtGdiDdDDIQueryStatistics                       1
+NtGdiDdDDIReleaseProcessVidPnSourceOwners       1
+NtGdiDdDDIRender                                1
+NtGdiDdDDISetAllocationPriority                 1
+NtGdiDdDDISetContextSchedulingPriority          1
+NtGdiDdDDISetDisplayMode                        1
+NtGdiDdDDISetDisplayPrivateDriverFormat         1
+NtGdiDdDDISetGammaRamp                          1
+NtGdiDdDDISetProcessSchedulingPriorityClass     1
+NtGdiDdDDISetQueuedLimit                        1
+NtGdiDdDDISetVidPnSourceOwner                   1
+NtGdiDdDDISharedPrimaryLockNotification         1
+NtGdiDdDDISharedPrimaryUnLockNotification       1
+NtGdiDdDDISignalSynchronizationObject           1
+NtGdiDdDDIUnlock                                1
+NtGdiDdDDIUpdateOverlay                         1
+NtGdiDdDDIWaitForIdle                           1
+NtGdiDdDDIWaitForSynchronizationObject          1
+NtGdiDdDDIWaitForVerticalBlankEvent             1
+NtGdiDDCCIGetCapabilitiesString                 3
+NtGdiDDCCIGetCapabilitiesStringLength           2
+NtGdiDDCCIGetTimingReport                       2
+NtGdiDDCCIGetVCPFeature                         4
+NtGdiDDCCISaveCurrentSettings                   1
+NtGdiDDCCISetVCPFeature                         3
 #
 #
 #ReactOS specific syscalls
