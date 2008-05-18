@@ -48,19 +48,9 @@
     <Compile Include="Factory\CommandFactory.cs" />
     <Compile Include="Commands\Base\Command.cs" />
     <Compile Include="Commands\Base\XmlCommand.cs" />
-    <Compile Include="Commands\BugCommand.cs" />
     <Compile Include="Commands\HelpCommand.cs" />
-    <Compile Include="Commands\HResultCommand.cs" />
-    <Compile Include="Commands\NtStatusCommand.cs" />
-    <Compile Include="Commands\ReactOSBugUrl.cs" />
-    <Compile Include="Commands\SambaBugUrl.cs" />
-    <Compile Include="Commands\SvnCommand.cs" />
-    <Compile Include="Commands\WineBugUrl.cs" />
-    <Compile Include="Commands\WinerrorCommand.cs" />
-    <Compile Include="Commands\WMCommand.cs" />
     <Compile Include="MessageContext.cs" />
     <Compile Include="NumberParser.cs" />
-    <Compile Include="ParametersParser.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ServiceOutput.cs" />
     <Compile Include="Settings.cs" />
@@ -78,10 +68,6 @@
     <Reference Include="System.XML" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\CHMLibrary\CHMLibrary.csproj">
-      <Project>{72E5CCA1-6318-4D62-964D-CB23A5C743B5}</Project>
-      <Name>CHMLibrary</Name>
-    </ProjectReference>
     <ProjectReference Include="..\TechBot.IRCLibrary\TechBot.IRCLibrary.csproj">
       <Project>{D2A57931-DF04-4BC3-BD11-75DF4F3B0A88}</Project>
       <Name>TechBot.IRCLibrary</Name>

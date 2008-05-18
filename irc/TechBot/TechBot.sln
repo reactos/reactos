@@ -13,6 +13,12 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TechBot.IRCLibrary", "TechB
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TechBot.Library", "TechBot.Library\TechBot.Library.csproj", "{1114F34D-F388-4F38-AE27-C0EE1B10B777}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TechBot.Commands.Common", "TechBot.Commands.Common\TechBot.Commands.Common.csproj", "{041B5F06-BF97-4981-B024-3A7B6DD9F6AE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TechBot.Commands.MSDN", "TechBot.Commands.MSDN\TechBot.Commands.MSDN.csproj", "{ADBF1ED6-A586-4707-BD59-4CD53448D0FE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TechBot.Commands.RBuild", "TechBot.Commands.RBuild\TechBot.Commands.RBuild.csproj", "{D676FEDE-62DD-4B4D-94C6-308598E827F9}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -43,6 +49,18 @@ Global
 		{1114F34D-F388-4F38-AE27-C0EE1B10B777}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1114F34D-F388-4F38-AE27-C0EE1B10B777}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1114F34D-F388-4F38-AE27-C0EE1B10B777}.Release|Any CPU.Build.0 = Release|Any CPU
+		{041B5F06-BF97-4981-B024-3A7B6DD9F6AE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{041B5F06-BF97-4981-B024-3A7B6DD9F6AE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{041B5F06-BF97-4981-B024-3A7B6DD9F6AE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{041B5F06-BF97-4981-B024-3A7B6DD9F6AE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{ADBF1ED6-A586-4707-BD59-4CD53448D0FE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{ADBF1ED6-A586-4707-BD59-4CD53448D0FE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{ADBF1ED6-A586-4707-BD59-4CD53448D0FE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{ADBF1ED6-A586-4707-BD59-4CD53448D0FE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D676FEDE-62DD-4B4D-94C6-308598E827F9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D676FEDE-62DD-4B4D-94C6-308598E827F9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D676FEDE-62DD-4B4D-94C6-308598E827F9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D676FEDE-62DD-4B4D-94C6-308598E827F9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace TechBot.Library {
+namespace TechBot.Commands.Common {
     
     
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
@@ -65,15 +65,6 @@ namespace TechBot.Library {
         public string SVNRoot {
             get {
                 return ((string)(this["SVNRoot"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("@")]
-        public string CommandPrefix {
-            get {
-                return ((string)(this["CommandPrefix"]));
             }
         }
     }

@@ -17,11 +17,10 @@ namespace TechBot.Console
 
     public class ConsoleTechBotService : TechBotService
     {
-        public ConsoleTechBotService(
-                          string chmPath,
-                          string mainChm)
-            : base(new ConsoleServiceOutput(), chmPath, mainChm)
+        public ConsoleTechBotService()
+            : base(new ConsoleServiceOutput())
         {
+            System.Console.WriteLine("TechBot running console service...");
         }
 
         public override void Run()
@@ -31,8 +30,7 @@ namespace TechBot.Console
 
             while (true)
             {
-                string s = System.Console.ReadLine();
-                InjectMessage(null, s);
+                InjectMessage(System.Console.ReadLine());
             }
         }
     }

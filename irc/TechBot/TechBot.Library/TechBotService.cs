@@ -11,17 +11,11 @@ namespace TechBot.Library
 {
 	public abstract class TechBotService
 	{
-		protected IServiceOutput serviceOutput;
-		private string chmPath;
-		private string mainChm;
+		protected IServiceOutput m_ServiceOutput;
 		
-		public TechBotService(IServiceOutput serviceOutput,
-		                      string chmPath,
-		                      string mainChm)
+		public TechBotService(IServiceOutput serviceOutput)
 		{
-			this.serviceOutput = serviceOutput;
-			this.chmPath = chmPath;
-			this.mainChm = mainChm;
+			m_ServiceOutput = serviceOutput;
 		}
 
         public virtual void Run()
@@ -31,7 +25,7 @@ namespace TechBot.Library
 
         public IServiceOutput ServiceOutput
         {
-            get { return serviceOutput; }
+            get { return m_ServiceOutput; }
         }
 
         public CommandBuilderCollection Commands
@@ -47,8 +41,13 @@ namespace TechBot.Library
 		
 		private bool IsCommandMessage(string message)
 		{
-			return message.StartsWith("!");
+            return message.StartsWith(Settings.Default.CommandPrefix);
 		}
+
+        public void InjectMessage(string message)
+        {
+            ParseCommandMessage(null, message);
+        }
 
 		public void ParseCommandMessage(MessageContext context,
 		                                string message)
@@ -77,8 +76,22 @@ namespace TechBot.Library
 
                     cmd.TechBot = this;
                     cmd.Context = context;
-                    cmd.ParseParameters(message);
-                    cmd.ExecuteCommand();
+                    cmd.Parameters = commandParams;
+
+                    try
+                    {
+                        cmd.Initialize();
+                        cmd.ExecuteCommand();
+                        cmd.DeInitialize();
+                    }
+                    catch (Exception e)
+                    {
+                        ServiceOutput.WriteLine(context, string.Format("Uops! Just crashed with exception '{0}' at {1}",
+                            e.Message,
+                            e.Source));
+
+                        ServiceOutput.WriteLine(context, e.StackTrace);
+                    }
 
                     return;
                 }

@@ -14,6 +14,7 @@ namespace TechBot.Library
         {
             if (context is ChannelMessageContext)
             {
+                Thread.Sleep (500);
                 ChannelMessageContext channelContext = context as ChannelMessageContext;
                 channelContext.Channel.Talk(message);
             }
@@ -37,8 +38,6 @@ namespace TechBot.Library
 		private string channelnames;
 		private string botname;
 		private string password;
-        private string chmPath;
-        private string mainChm;
 		private IrcClient m_IrcClient;
 		private ArrayList channels = new ArrayList();
 		private bool isStopped = false;
@@ -47,10 +46,8 @@ namespace TechBot.Library
 		                  int port,
 		                  string channelnames,
 		                  string botname,
-		                  string password,
-		                  string chmPath,
-		                  string mainChm)
-            : base (new IrcServiceOutput() , chmPath , mainChm)
+		                  string password)
+            : base (new IrcServiceOutput())
 		{
 			this.hostname = hostname;
 			this.port = port;
@@ -60,8 +57,6 @@ namespace TechBot.Library
 				this.password = null;
 			else
 				this.password = password;
-			this.chmPath = chmPath;
-			this.mainChm = mainChm;
 		}
 
         public override void Run()

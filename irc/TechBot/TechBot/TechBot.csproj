@@ -39,6 +39,10 @@
   -->
   <ItemGroup>
     <None Include="App.config" />
+    <None Include="Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AssemblyInfo.cs" />
@@ -46,6 +50,11 @@
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="ServiceThread.cs" />
+    <Compile Include="Settings.Designer.cs">
+      <DependentUpon>Settings.settings</DependentUpon>
+      <AutoGen>True</AutoGen>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+    </Compile>
     <Compile Include="TechBotService.cs">
       <SubType>Component</SubType>
     </Compile>

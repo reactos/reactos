@@ -13,6 +13,7 @@ namespace TechBot.Library
 		private string m_name = "";
 		private string m_description = "";
         private bool m_Required = true;
+        private bool m_Default = false;
 		#endregion
 
 		#region Public Properties
@@ -25,6 +26,12 @@ namespace TechBot.Library
 		public string Description	{ get { return m_description; } }
 
         public bool Required { get { return m_Required; } }
+
+        public bool DefaultParameter 
+        {
+            get { return m_Default; }
+            set { m_Default = value; }
+        }
 
 		#endregion
 

@@ -28,6 +28,8 @@ namespace TechBot.Library
         {
             Assembly assPlugin = Assembly.LoadFile(sFile);
 
+            Console.WriteLine("Loading plugins from : {0}", assPlugin.Location);
+
             if (assPlugin != null)
             {
                 foreach (Type pluginType in assPlugin.GetTypes())
@@ -36,6 +38,12 @@ namespace TechBot.Library
                     {
                         if (pluginType.IsAbstract == false)
                         {
+                            CommandBuilder cmdBuilder = new CommandBuilder(pluginType);
+
+                            Console.WriteLine("{0}:{1}", 
+                                cmdBuilder.Name,
+                                cmdBuilder.Description);
+
                             //Add it to the list.
                             Commands.Add(new CommandBuilder(pluginType));
                         }

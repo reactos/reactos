@@ -1,4 +1,5 @@
 using System;
+using System.Text.RegularExpressions;
 
 namespace TechBot.Library
 {
@@ -6,6 +7,7 @@ namespace TechBot.Library
     {
         protected TechBotService m_TechBotService = null;
         protected MessageContext m_Context = null;
+        protected string m_Params = null;
 
         public TechBotService TechBot
         {
@@ -30,10 +32,15 @@ namespace TechBot.Library
             }
         }
 
-        public void ParseParameters(string paramaters)
+        public string Parameters
         {
-            ParametersParser parser = new ParametersParser(paramaters, this);
-            parser.Parse();
+            get { return m_Params; }
+            set { m_Params = value; }
+        }
+
+        protected virtual void Say()
+        {
+            TechBot.ServiceOutput.WriteLine(Context, string.Empty);
         }
 
         protected virtual void Say(string message)
@@ -47,5 +54,13 @@ namespace TechBot.Library
         }
 
         public abstract void ExecuteCommand();
+
+        public virtual void Initialize()
+        {
+        }
+
+        public virtual void DeInitialize()
+        {
+        }
     }
 }

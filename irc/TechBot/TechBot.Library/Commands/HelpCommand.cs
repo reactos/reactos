@@ -1,9 +1,10 @@
 using System;
+using System.Reflection;
 using System.Collections;
 
 namespace TechBot.Library
 {
-    [Command("help", Help = "!help")]
+    [Command("help", Help = "!help or !help -name:[CommandName]", Description = "Shows this help , type 'help -name:[CommandName]'")]
 	public class HelpCommand : Command
 	{
         private string m_CommandName = null;
@@ -15,8 +16,8 @@ namespace TechBot.Library
         [CommandParameter("Name", "The command name to show help")]
         public string CommandName
         {
-            get { return m_CommandName; }
-            set { m_CommandName = value; }
+            get { return Parameters; }
+            set { Parameters = value; }
         }
 
         public override void ExecuteCommand()
@@ -27,7 +28,8 @@ namespace TechBot.Library
 
                 foreach (CommandBuilder command in TechBot.Commands)
                 {
-                    Say("!{0} - {1}",
+                    Say("{0}{1} - {2}",
+                        Settings.Default.CommandPrefix,
                         command.Name,
                         command.Description);
                 }
@@ -43,7 +45,29 @@ namespace TechBot.Library
                 else
                 {
                     Say("Command '{0}' help:", CommandName);
-                    Say("");
+                    Say();
+                    Say(cmdBuilder.Description);
+                    Say();
+                    Say(cmdBuilder.Help);
+                    Say();
+                    Say("Parameters :");
+                    Say();
+
+                    PropertyInfo[] propertyInfoArray = cmdBuilder.Type.GetProperties(BindingFlags.Public | BindingFlags.Instance);
+                    foreach (PropertyInfo propertyInfo in propertyInfoArray)
+                    {
+                        CommandParameterAttribute[] commandAttributes = (CommandParameterAttribute[])
+                            Attribute.GetCustomAttributes(propertyInfo, typeof(CommandParameterAttribute));
+
+                        foreach (CommandParameterAttribute parameter in commandAttributes)
+                        {
+                            Say("\t-{0}: [{1}]", 
+                                parameter.Name, 
+                                parameter.Description);
+                        }
+                    }
+
+                    Say();
                 }
             }
         }

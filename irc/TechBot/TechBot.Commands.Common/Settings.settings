@@ -1,5 +1,5 @@
 ﻿<?xml version='1.0' encoding='utf-8'?>
-<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="TechBot.Library" GeneratedClassName="Settings">
+<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="TechBot.Commands.Common" GeneratedClassName="Settings">
   <Profiles />
   <Settings>
     <Setting Name="NtStatusXml" Type="System.String" Scope="Application">
@@ -16,9 +16,6 @@
     </Setting>
     <Setting Name="SVNRoot" Type="System.String" Scope="Application">
       <Value Profile="(Default)">svn://svn.reactos.org/trunk/reactos</Value>
-    </Setting>
-    <Setting Name="CommandPrefix" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">@</Value>
     </Setting>
   </Settings>
 </SettingsFile>
