@@ -24,6 +24,139 @@ HKCU,"Control Panel\Desktop","Wallpaper",0x00000000,""
 HKCU,"Control Panel\International",,0x00000012
 HKCU,"Control Panel\International","Locale",0x00000000,"0409"
 
+;Cursors Schemes
+HKCU,"Control Panel\Cursors",,,"ReactOS Default"
+HKCU,"Control Panel\Cursors","Scheme Source",0x00010001,0x00000002
+
+; Color schemes
+HKCU,"Control Panel\Current","Color Schemes",0x00020000,"ReactOS Standard"
+HKCU,"Control Panel\Appearance","Current",0x00020000,"ReactOS Standard"
+HKCU,"Control Panel\Appearance","NewCurrent",0x00020000,"ReactOS Standard"
+HKCU,"Control Panel\Appearance\New Schemes","SelectedStyle",0x00020000,"0"
+; ReactOS Standard
+HKCU,"Control Panel\Appearance\New Schemes\0","DisplayName",0x00020000,"@themeui.dll,-883"
+HKCU,"Control Panel\Appearance\New Schemes\0","SelectedSize",0x00020000,"0"
+HKCU,"Control Panel\Appearance\New Schemes\0\Sizes\0","DisplayName",0x00020000,"@themeui.dll,-2019"
+HKCU,"Control Panel\Appearance\New Schemes\0\Sizes\0","Flat Menus",0x00010001,0x00000000
+HKCU,"Control Panel\Appearance\New Schemes\0\Sizes\0","Font #0",0x00000001,f5,ff,ff,ff,00,00,00,\
+00,00,00,00,00,00,00,00,00,bc,02,00,00,00,00,00,00,00,00,00,00,54,00,61,00,68,00,6f,00,6d,00,61,\
+00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,\
+00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00
+HKCU,"Control Panel\Appearance\New Schemes\0\Sizes\0","Font #1",0x00000001,f5,ff,ff,ff,00,00,00,\
+00,00,00,00,00,00,00,00,00,bc,02,00,00,00,00,00,00,00,00,00,00,54,00,61,00,68,00,6f,00,6d,00,61,\
+00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,\
+00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00
+HKCU,"Control Panel\Appearance\New Schemes\0\Sizes\0","Font #2",0x00000001,f5,ff,ff,ff,00,00,00,\
+00,00,00,00,00,00,00,00,00,90,01,00,00,00,00,00,00,00,00,00,00,54,00,61,00,68,00,6f,00,6d,00,61,\
+00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,\
+00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00
+HKCU,"Control Panel\Appearance\New Schemes\0\Sizes\0","Font #4",0x00000001,f5,ff,ff,ff,00,00,00,\
+00,00,00,00,00,00,00,00,00,90,01,00,00,00,00,00,00,00,00,00,00,54,00,61,00,68,00,6f,00,6d,00,61,\
+00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,\
+00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00
+HKCU,"Control Panel\Appearance\New Schemes\0\Sizes\0","Font #5",0x00000001,f5,ff,ff,ff,00,00,00,\
+00,00,00,00,00,00,00,00,00,90,01,00,00,00,00,00,00,00,00,00,00,54,00,61,00,68,00,6f,00,6d,00,61,\
+00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,\
+00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00
+HKCU,"Control Panel\Appearance\New Schemes\0\Sizes\0","Font #3",0x00000001,f5,ff,ff,ff,00,00,00,\
+00,00,00,00,00,00,00,00,00,90,01,00,00,00,00,00,00,00,00,00,00,54,00,61,00,68,00,6f,00,6d,00,61,\
+00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,\
+00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00
+HKCU,"Control Panel\Appearance\New Schemes\0\Sizes\0","Color #0",0x00010001,0x00c8d0d4
+HKCU,"Control Panel\Appearance\New Schemes\0\Sizes\0","Color #1",0x00010001,0x00a56e3a
+HKCU,"Control Panel\Appearance\New Schemes\0\Sizes\0","Color #2",0x00010001,0x006a240a
+HKCU,"Control Panel\Appearance\New Schemes\0\Sizes\0","Color #3",0x00010001,0x00808080
+HKCU,"Control Panel\Appearance\New Schemes\0\Sizes\0","Color #4",0x00010001,0x00c8d0d4
+HKCU,"Control Panel\Appearance\New Schemes\0\Sizes\0","Color #5",0x00010001,0x00ffffff
+HKCU,"Control Panel\Appearance\New Schemes\0\Sizes\0","Color #6",0x00010001,0x00000000
+HKCU,"Control Panel\Appearance\New Schemes\0\Sizes\0","Color #7",0x00010001,0x00000000
+HKCU,"Control Panel\Appearance\New Schemes\0\Sizes\0","Color #8",0x00010001,0x00000000
+HKCU,"Control Panel\Appearance\New Schemes\0\Sizes\0","Color #9",0x00010001,0x00ffffff
+HKCU,"Control Panel\Appearance\New Schemes\0\Sizes\0","Color #10",0x00010001,0x00c8d0d4
+HKCU,"Control Panel\Appearance\New Schemes\0\Sizes\0","Color #11",0x00010001,0x00c8d0d4
+HKCU,"Control Panel\Appearance\New Schemes\0\Sizes\0","Color #12",0x00010001,0x00808080
+HKCU,"Control Panel\Appearance\New Schemes\0\Sizes\0","Color #13",0x00010001,0x006a240a
+HKCU,"Control Panel\Appearance\New Schemes\0\Sizes\0","Color #14",0x00010001,0x00ffffff
+HKCU,"Control Panel\Appearance\New Schemes\0\Sizes\0","Color #15",0x00010001,0x00c8d0d4
+HKCU,"Control Panel\Appearance\New Schemes\0\Sizes\0","Color #16",0x00010001,0x00808080
+HKCU,"Control Panel\Appearance\New Schemes\0\Sizes\0","Color #17",0x00010001,0x00808080
+HKCU,"Control Panel\Appearance\New Schemes\0\Sizes\0","Color #18",0x00010001,0x00000000
+HKCU,"Control Panel\Appearance\New Schemes\0\Sizes\0","Color #19",0x00010001,0x00c8d0d4
+HKCU,"Control Panel\Appearance\New Schemes\0\Sizes\0","Color #20",0x00010001,0x00ffffff
+HKCU,"Control Panel\Appearance\New Schemes\0\Sizes\0","Color #21",0x00010001,0x00404040
+HKCU,"Control Panel\Appearance\New Schemes\0\Sizes\0","Color #22",0x00010001,0x00c8d0d4
+HKCU,"Control Panel\Appearance\New Schemes\0\Sizes\0","Color #23",0x00010001,0x00000000
+HKCU,"Control Panel\Appearance\New Schemes\0\Sizes\0","Color #24",0x00010001,0x00e1ffff
+HKCU,"Control Panel\Appearance\New Schemes\0\Sizes\0","Color #25",0x00010001,0x00b5b5b5
+HKCU,"Control Panel\Appearance\New Schemes\0\Sizes\0","Color #26",0x00010001,0x00800000
+HKCU,"Control Panel\Appearance\New Schemes\0\Sizes\0","Color #27",0x00010001,0x00f0caa6
+HKCU,"Control Panel\Appearance\New Schemes\0\Sizes\0","Color #28",0x00010001,0x00c0c0c0
+HKCU,"Control Panel\Appearance\New Schemes\0\Sizes\0","Color #29",0x00010001,0x006a240a
+HKCU,"Control Panel\Appearance\New Schemes\0\Sizes\0","Color #30",0x00010001,0x00c8d0d4
+HKCU,"Control Panel\Appearance\New Schemes\0\Sizes\0","Contrast",0x00010001,0x00000000
+HKCU,"Control Panel\Appearance\New Schemes\0\Sizes\0","LegacyName",0x00020000,"ReactOS Standard"
+; ReactOS Classic
+HKCU,"Control Panel\Appearance\New Schemes\1","DisplayName",0x00020000,"@themeui.dll,-880"
+HKCU,"Control Panel\Appearance\New Schemes\1\Sizes\0","DisplayName",0x00020000,"@themeui.dll,-2019"
+HKCU,"Control Panel\Appearance\New Schemes\1\Sizes\0","Flat Menus",0x00010001,0x00000000
+HKCU,"Control Panel\Appearance\New Schemes\1\Sizes\0","Font #0",0x00000001,f5,ff,ff,ff,00,00,00,\
+00,00,00,00,00,00,00,00,00,bc,02,00,00,00,00,00,00,00,00,00,00,4d,00,69,00,63,00,72,00,6f,00,73,\
+00,6f,00,66,00,74,00,20,00,53,00,61,00,6e,00,73,00,20,00,53,00,65,00,72,00,69,00,66,00,00,00,fc,\
+7f,22,14,fc,7f,b0,fe,12,00,00,00,00,00,00,00,00,00,98,23,eb,77
+HKCU,"Control Panel\Appearance\New Schemes\1\Sizes\0","Font #1",0x00000001,f5,ff,ff,ff,00,00,00,\
+00,00,00,00,00,00,00,00,00,bc,02,00,00,00,00,00,00,00,00,00,00,4d,00,69,00,63,00,72,00,6f,00,73,\
+00,6f,00,66,00,74,00,20,00,53,00,61,00,6e,00,73,00,20,00,53,00,65,00,72,00,69,00,66,00,00,00,f0,\
+77,00,20,14,00,00,00,00,10,80,05,14,00,f0,1f,14,00,00,00,14,00
+HKCU,"Control Panel\Appearance\New Schemes\1\Sizes\0","Font #2",0x00000001,f5,ff,ff,ff,00,00,00,\
+00,00,00,00,00,00,00,00,00,90,01,00,00,00,00,00,00,00,00,00,00,4d,00,69,00,63,00,72,00,6f,00,73,\
+00,6f,00,66,00,74,00,20,00,53,00,61,00,6e,00,73,00,20,00,53,00,65,00,72,00,69,00,66,00,00,00,14,\
+00,88,fb,e8,77,02,02,00,00,ac,b9,f0,77,00,00,00,00,20,00,00,00
+HKCU,"Control Panel\Appearance\New Schemes\1\Sizes\0","Font #4",0x00000001,f5,ff,ff,ff,00,00,00,\
+00,00,00,00,00,00,00,00,00,90,01,00,00,00,00,00,00,00,00,00,00,4d,00,69,00,63,00,72,00,6f,00,73,\
+00,6f,00,66,00,74,00,20,00,53,00,61,00,6e,00,73,00,20,00,53,00,65,00,72,00,69,00,66,00,00,00,00,\
+00,00,00,00,00,00,00,00,00,00,00,00,00,7c,6b,e8,77,00,00,00,00
+HKCU,"Control Panel\Appearance\New Schemes\1\Sizes\0","Font #5",0x00000001,f5,ff,ff,ff,00,00,00,\
+00,00,00,00,00,00,00,00,00,90,01,00,00,00,00,00,00,00,00,00,00,4d,00,69,00,63,00,72,00,6f,00,73,\
+00,6f,00,66,00,74,00,20,00,53,00,61,00,6e,00,73,00,20,00,53,00,65,00,72,00,69,00,66,00,00,00,00,\
+00,06,00,00,00,18,00,00,00,ff,ff,ff,ff,f0,4b,21,fc,00,c4,f0,77
+HKCU,"Control Panel\Appearance\New Schemes\1\Sizes\0","Font #3",0x00000001,f5,ff,ff,ff,00,00,00,\
+00,00,00,00,00,00,00,00,00,90,01,00,00,00,00,00,00,00,00,00,00,4d,00,69,00,63,00,72,00,6f,00,73,\
+00,6f,00,66,00,74,00,20,00,53,00,61,00,6e,00,73,00,20,00,53,00,65,00,72,00,69,00,66,00,00,00,14,\
+00,0b,00,00,00,00,ff,12,00,50,00,00,00,c0,fe,12,00,0c,10,00,01
+HKCU,"Control Panel\Appearance\New Schemes\1\Sizes\0","Color #0",0x00010001,0x00c0c0c0
+HKCU,"Control Panel\Appearance\New Schemes\1\Sizes\0","Color #1",0x00010001,0x00a56e3a
+HKCU,"Control Panel\Appearance\New Schemes\1\Sizes\0","Color #2",0x00010001,0x00800000
+HKCU,"Control Panel\Appearance\New Schemes\1\Sizes\0","Color #3",0x00010001,0x00808080
+HKCU,"Control Panel\Appearance\New Schemes\1\Sizes\0","Color #4",0x00010001,0x00c0c0c0
+HKCU,"Control Panel\Appearance\New Schemes\1\Sizes\0","Color #5",0x00010001,0x00ffffff
+HKCU,"Control Panel\Appearance\New Schemes\1\Sizes\0","Color #6",0x00010001,0x00000000
+HKCU,"Control Panel\Appearance\New Schemes\1\Sizes\0","Color #7",0x00010001,0x00000000
+HKCU,"Control Panel\Appearance\New Schemes\1\Sizes\0","Color #8",0x00010001,0x00000000
+HKCU,"Control Panel\Appearance\New Schemes\1\Sizes\0","Color #9",0x00010001,0x00ffffff
+HKCU,"Control Panel\Appearance\New Schemes\1\Sizes\0","Color #10",0x00010001,0x00c0c0c0
+HKCU,"Control Panel\Appearance\New Schemes\1\Sizes\0","Color #11",0x00010001,0x00c0c0c0
+HKCU,"Control Panel\Appearance\New Schemes\1\Sizes\0","Color #12",0x00010001,0x00808080
+HKCU,"Control Panel\Appearance\New Schemes\1\Sizes\0","Color #13",0x00010001,0x00800000
+HKCU,"Control Panel\Appearance\New Schemes\1\Sizes\0","Color #14",0x00010001,0x00ffffff
+HKCU,"Control Panel\Appearance\New Schemes\1\Sizes\0","Color #15",0x00010001,0x00c0c0c0
+HKCU,"Control Panel\Appearance\New Schemes\1\Sizes\0","Color #16",0x00010001,0x00808080
+HKCU,"Control Panel\Appearance\New Schemes\1\Sizes\0","Color #17",0x00010001,0x00808080
+HKCU,"Control Panel\Appearance\New Schemes\1\Sizes\0","Color #18",0x00010001,0x00000000
+HKCU,"Control Panel\Appearance\New Schemes\1\Sizes\0","Color #19",0x00010001,0x00c0c0c0
+HKCU,"Control Panel\Appearance\New Schemes\1\Sizes\0","Color #20",0x00010001,0x00ffffff
+HKCU,"Control Panel\Appearance\New Schemes\1\Sizes\0","Color #21",0x00010001,0x00000000
+HKCU,"Control Panel\Appearance\New Schemes\1\Sizes\0","Color #22",0x00010001,0x00c0c0c0
+HKCU,"Control Panel\Appearance\New Schemes\1\Sizes\0","Color #23",0x00010001,0x00000000
+HKCU,"Control Panel\Appearance\New Schemes\1\Sizes\0","Color #24",0x00010001,0x00e1ffff
+HKCU,"Control Panel\Appearance\New Schemes\1\Sizes\0","Color #25",0x00010001,0x00c0c0c0
+HKCU,"Control Panel\Appearance\New Schemes\1\Sizes\0","Color #26",0x00010001,0x00800000
+HKCU,"Control Panel\Appearance\New Schemes\1\Sizes\0","Color #27",0x00010001,0x00d08410
+HKCU,"Control Panel\Appearance\New Schemes\1\Sizes\0","Color #28",0x00010001,0x00b5b5b5
+HKCU,"Control Panel\Appearance\New Schemes\1\Sizes\0","Color #29",0x00010001,0x00800000
+HKCU,"Control Panel\Appearance\New Schemes\1\Sizes\0","Color #30",0x00010001,0x00c0c0c0
+HKCU,"Control Panel\Appearance\New Schemes\1\Sizes\0","Contrast",0x00010001,0x00000000
+HKCU,"Control Panel\Appearance\New Schemes\1\Sizes\0","LegacyName",0x00020000,"ReactOS Classic"
+
 HKCU,"Environment",,0x00000012
 HKCU,"Environment","TEMP",0x00020000,"%USERPROFILE%\Local Settings\Temp"
 HKCU,"Environment","TMP",0x00020000,"%USERPROFILE%\Local Settings\Temp"
