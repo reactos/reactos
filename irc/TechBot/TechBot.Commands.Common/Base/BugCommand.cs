@@ -20,7 +20,7 @@ namespace TechBot.Commands.Common
 
         public override void ExecuteCommand()
         {
-            if (Parameters == null)
+            if (string.IsNullOrEmpty(BugID))
             {
                 Say("Please provide a valid bug number.");
             }

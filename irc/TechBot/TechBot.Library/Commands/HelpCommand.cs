@@ -7,8 +7,6 @@ namespace TechBot.Library
     [Command("help", Help = "!help or !help -name:[CommandName]", Description = "Shows this help , type 'help -name:[CommandName]'")]
 	public class HelpCommand : Command
 	{
-        private string m_CommandName = null;
-
         public HelpCommand()
 		{
 		}
@@ -22,7 +20,7 @@ namespace TechBot.Library
 
         public override void ExecuteCommand()
         {
-            if (CommandName == null)
+            if (string.IsNullOrEmpty(CommandName))
             {
                 Say("I support the following commands:");
 

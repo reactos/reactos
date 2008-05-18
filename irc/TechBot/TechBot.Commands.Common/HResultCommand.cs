@@ -19,7 +19,7 @@ namespace TechBot.Commands.Common
 
 		public override void ExecuteCommand()
 		{
-            if (Text == null)
+            if (string.IsNullOrEmpty(Text))
             {
                 Say("Please provide a valid HRESULT value.");
             }

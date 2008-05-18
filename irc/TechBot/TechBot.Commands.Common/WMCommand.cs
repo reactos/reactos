@@ -26,7 +26,7 @@ namespace TechBot.Commands.Common
 
 		public override void ExecuteCommand()
 		{
-            if (WMText == null)
+            if (string.IsNullOrEmpty(WMText))
             {
                 Say("Please provide a valid window message value or name.");
 
