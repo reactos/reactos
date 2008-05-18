@@ -7,6 +7,9 @@ HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders"
 
 [AddReg]
 
+; Default locale for the keyboard layout
+HKU,".DEFAULT\Keyboard Layout\Preload","1",0x00020000,"00000409"
+
 ; Cdfs (ISO96660) filesystem driver
 HKLM,"SYSTEM\CurrentControlSet\Services\Cdfs","Start",0x00010001,0x00000000
 
