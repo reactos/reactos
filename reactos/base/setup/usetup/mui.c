@@ -274,6 +274,90 @@ MUIGetString(ULONG Number)
 }
 
 static BOOLEAN
+AddHotkeySettings(IN LPCWSTR Hotkey, IN LPCWSTR LangHotkey, IN LPCWSTR LayoutHotkey)
+{
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    UNICODE_STRING KeyName;
+    UNICODE_STRING ValueName;
+    HANDLE KeyHandle;
+    ULONG Disposition;
+    NTSTATUS Status;
+
+    RtlInitUnicodeString(&KeyName,
+                         L"\\Registry\\User\\.DEFAULT\\Keyboard Layout\\Toggle");
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &KeyName,
+                               OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
+
+    Status =  NtCreateKey(&KeyHandle,
+                          KEY_ALL_ACCESS,
+                          &ObjectAttributes,
+                          0,
+                          NULL,
+                          0,
+                          &Disposition);
+
+    if(!NT_SUCCESS(Status))
+    {
+        DPRINT1("NtCreateKey() failed (Status %lx)\n", Status);
+        return FALSE;
+    }
+
+    RtlInitUnicodeString(&ValueName,
+                         L"Hotkey");
+
+    Status = NtSetValueKey(KeyHandle,
+                           &ValueName,
+                           0,
+                           REG_SZ,
+                           (PVOID)Hotkey,
+                           (1 + 1) * sizeof(WCHAR));
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("NtSetValueKey() failed (Status %lx)\n", Status);
+        NtClose(KeyHandle);
+        return FALSE;
+    }
+
+    RtlInitUnicodeString(&ValueName,
+                         L"Language Hotkey");
+
+    Status = NtSetValueKey(KeyHandle,
+                           &ValueName,
+                           0,
+                           REG_SZ,
+                           (PVOID)LangHotkey,
+                           (1 + 1) * sizeof(WCHAR));
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("NtSetValueKey() failed (Status %lx)\n", Status);
+        NtClose(KeyHandle);
+        return FALSE;
+    }
+
+    RtlInitUnicodeString(&ValueName,
+                         L"Layout Hotkey");
+
+    Status = NtSetValueKey(KeyHandle,
+                           &ValueName,
+                           0,
+                           REG_SZ,
+                           (PVOID)LayoutHotkey,
+                           (1 + 1) * sizeof(WCHAR));
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("NtSetValueKey() failed (Status %lx)\n", Status);
+        NtClose(KeyHandle);
+        return FALSE;
+    }
+
+    NtClose(KeyHandle);
+    return TRUE;
+}
+
+static BOOLEAN
 AddKbLayoutsToRegistry(IN LPCWSTR DefKbLayout, IN LPCWSTR SecKbLayout)
 {
     OBJECT_ATTRIBUTES ObjectAttributes;
@@ -374,7 +458,14 @@ AddKbLayoutsToRegistry(IN LPCWSTR DefKbLayout, IN LPCWSTR SecKbLayout)
             NtClose(KeyHandle);
             return FALSE;
         }
+
+        /*
+            Switching input languages - Ctrl + Shift
+            Switching keyboard layouts - Left Alt + Shift
+        */
+        AddHotkeySettings(L"2", L"2", L"1");
     }
+    else AddHotkeySettings(L"3", L"3", L"3"); // Off all hotkeys
 
     NtClose(KeyHandle);
     return TRUE;
