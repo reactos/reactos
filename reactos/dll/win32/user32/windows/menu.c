@@ -1109,8 +1109,15 @@ static LPCSTR MENU_ParseResource( LPCSTR res, HMENU hMenu, BOOL unicode )
     }
     else  /* Not a popup */
     {
-      if (flags == 0 && id == 0 && *str == 0)
-        flags = MF_SEPARATOR | MF_GRAYED;
+      if (*str == 0)
+        flags = MF_SEPARATOR;
+
+      if (flags & MF_SEPARATOR)
+      {
+        if (!(flags & (MF_GRAYED | MF_DISABLED)))
+          flags |= MF_GRAYED | MF_DISABLED;
+      }
+
       if(!unicode)
         AppendMenuA(hMenu, flags, id, *str ? str : NULL);
       else
@@ -3705,19 +3712,38 @@ MenuSetItemData(
  */
   if(Flags & MF_BITMAP)
   {
-    mii->fMask |= MIIM_BITMAP;   /* Use the new way of seting hbmpItem.*/
-    mii->hbmpItem = (HBITMAP) NewItem;
-    mii->fType &= ~MFT_BITMAP;  /* just incase, Kill the old way */
+     if (mii->fType & MFT_BITMAP)
+     {
+       /* use old way of storing bitmap */
+       mii->fMask |= (MIIM_TYPE  | MIIM_FTYPE);
+       mii->fType |= MF_BITMAP;
+       mii->dwTypeData = (LPWSTR)NewItem;
+     }
+     else
+     {
+         /* use new way of storing type */
+         mii->hbmpItem = (HBITMAP) NewItem;
+         mii->fType |= MFT_BITMAP;
+         mii->fMask |= MIIM_BITMAP;
+     }
+
+     if (Flags & MF_HELP)
+     {
+         /* increase ident */
+         mii->fType |= MF_HELP;
+     }
   }
   else if(Flags & MF_OWNERDRAW)
   {
     mii->fType |= MFT_OWNERDRAW;
-    mii->fMask |= MIIM_DATA;
-    mii->dwItemData = (DWORD) NewItem;
+    mii->fMask |= (MIIM_TYPE  | MIIM_FTYPE);
+    mii->dwTypeData = (LPWSTR) NewItem;
   }
   else if (Flags & MF_SEPARATOR)
   {
     mii->fType |= MFT_SEPARATOR;
+    if (!(Flags & (MF_GRAYED|MF_DISABLED)))
+      Flags |= MF_GRAYED|MF_DISABLED;
   }
   else /* Default action MF_STRING. */
   {
@@ -3742,15 +3768,23 @@ MenuSetItemData(
              NewItem = (LPCWSTR) NewItemA;
           }
        }
+
+       if (Flags & MF_HELP)
+         mii->fType |= MF_HELP;
+       mii->fMask |= MIIM_STRING;
+       mii->fType |= MFT_STRING; /* Zero */
+       mii->dwTypeData = (LPWSTR)NewItem;
+       if (Unicode)
+         mii->cch = (NULL == NewItem ? 0 : strlenW(NewItem));
+       else
+         mii->cch = (NULL == NewItem ? 0 : strlen((LPCSTR)NewItem));
     }
-    mii->fMask |= MIIM_STRING;
-    mii->fType |= MFT_STRING; /* Zero */
-    mii->dwTypeData = (LPWSTR)NewItem;
-    if (Unicode)
-       mii->cch = (NULL == NewItem ? 0 : strlenW(NewItem));
     else
-       mii->cch = (NULL == NewItem ? 0 : strlen((LPCSTR)NewItem));
-    mii->hbmpItem = NULL;
+    {
+      mii->fType |= MFT_SEPARATOR;
+      if (!(Flags & (MF_GRAYED|MF_DISABLED)))
+        Flags |= MF_GRAYED|MF_DISABLED;
+    }
   }
 
   if(Flags & MF_RIGHTJUSTIFY) /* Same as MF_HELP */
@@ -3767,14 +3801,14 @@ MenuSetItemData(
     mii->fType |= MFT_MENUBARBREAK;
   }
 
-  if(Flags & MF_GRAYED)
+  if(Flags & MF_GRAYED || Flags & MF_DISABLED)
   {
-    mii->fState |= MFS_GRAYED;
-    mii->fMask |= MIIM_STATE;
-  }
-  else if(Flags & MF_DISABLED)
-  {
-    mii->fState |= MFS_DISABLED;
+    if (Flags & MF_GRAYED)
+      mii->fState |= MF_GRAYED;
+
+    if (Flags & MF_DISABLED)
+      mii->fState |= MF_DISABLED;
+
     mii->fMask |= MIIM_STATE;
   }
   else if (Flags & MF_HILITE)
@@ -4213,6 +4247,7 @@ GetMenuItemInfoA(
       miiW.dwTypeData = RtlAllocateHeap(GetProcessHeap(), 0,
                                         miiW.cch * sizeof(WCHAR));
       if (miiW.dwTypeData == NULL) return FALSE;
+      miiW.dwTypeData[0] = 0;
    }
 
    if (!NtUserMenuItemInfo(Menu, Item, ByPosition, (PROSMENUITEMINFO)&miiW, FALSE))
@@ -4233,13 +4268,27 @@ GetMenuItemInfoA(
 
    if ((miiW.fMask & MIIM_STRING) || (IS_STRING_ITEM(miiW.fType)))
    {
-      WideCharToMultiByte(CP_ACP, 0, miiW.dwTypeData, miiW.cch, AnsiBuffer,
-                             mii->cch, NULL, NULL);
+      if (miiW.cch)
+      {
+         if (!WideCharToMultiByte(CP_ACP, 0, miiW.dwTypeData, miiW.cch, AnsiBuffer, mii->cch, NULL, NULL))
+         {
+            AnsiBuffer[0] = 0;
+         }
+         if (Count > miiW.cch)
+         {
+            AnsiBuffer[miiW.cch] = 0;
+         }
+         mii->cch = mii->cch;
+      }
+   }
+   else
+   {
+      AnsiBuffer[0] = 0;
    }
 
    RtlFreeHeap(GetProcessHeap(), 0, miiW.dwTypeData);
    mii->dwTypeData = AnsiBuffer;
-   mii->cch = strlen(AnsiBuffer);
+ 
    return TRUE;
 }
 
@@ -4281,6 +4330,7 @@ GetMenuItemInfoW(
       miiW.dwTypeData = RtlAllocateHeap(GetProcessHeap(), 0,
                                         miiW.cch * sizeof(WCHAR));
       if (miiW.dwTypeData == NULL) return FALSE;
+      miiW.dwTypeData[0] = 0;
    }
 
    if (!NtUserMenuItemInfo(Menu, Item, ByPosition, (PROSMENUITEMINFO) &miiW, FALSE))
