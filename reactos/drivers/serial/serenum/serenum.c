@@ -37,55 +37,16 @@ IrpStub(
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PIRP Irp)
 {
-	NTSTATUS Status = STATUS_NOT_SUPPORTED;
-
 	if (((PCOMMON_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->IsFDO)
 	{
-		/* Forward some IRPs to lower device */
-		switch (IoGetCurrentIrpStackLocation(Irp)->MajorFunction)
-		{
-			case IRP_MJ_CREATE:
-			case IRP_MJ_CLOSE:
-			case IRP_MJ_CLEANUP:
-			case IRP_MJ_QUERY_INFORMATION:
-			case IRP_MJ_READ:
-			case IRP_MJ_WRITE:
-			case IRP_MJ_DEVICE_CONTROL:
-				return ForwardIrpToLowerDeviceAndForget(DeviceObject, Irp);
-			default:
-			{
-				WARN_(SERENUM, "FDO stub for major function 0x%lx\n",
-					IoGetCurrentIrpStackLocation(Irp)->MajorFunction);
-				ASSERT(FALSE);
-				return ForwardIrpToLowerDeviceAndForget(DeviceObject, Irp);
-			}
-		}
+		/* Forward IRPs to lower device */
+		return ForwardIrpToLowerDeviceAndForget(DeviceObject, Irp);
 	}
 	else
 	{
-		/* Forward some IRPs to attached FDO */
-		switch (IoGetCurrentIrpStackLocation(Irp)->MajorFunction)
-		{
-			case IRP_MJ_CREATE:
-			case IRP_MJ_CLOSE:
-			case IRP_MJ_CLEANUP:
-			case IRP_MJ_READ:
-			case IRP_MJ_WRITE:
-			case IRP_MJ_DEVICE_CONTROL:
-				return ForwardIrpToAttachedFdoAndForget(DeviceObject, Irp);
-			default:
-			{
-				WARN_(SERENUM, "PDO stub for major function 0x%lx\n",
-					IoGetCurrentIrpStackLocation(Irp)->MajorFunction);
-				ASSERT(FALSE);
-				return ForwardIrpToAttachedFdoAndForget(DeviceObject, Irp);
-			}
-		}
+		/* Forward IRPs to attached FDO */
+		return ForwardIrpToAttachedFdoAndForget(DeviceObject, Irp);
 	}
-
-	Irp->IoStatus.Status = Status;
-	IoCompleteRequest(Irp, IO_NO_INCREMENT);
-	return Status;
 }
 
 /*
