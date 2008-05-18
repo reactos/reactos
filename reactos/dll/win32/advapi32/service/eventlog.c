@@ -34,6 +34,8 @@ typedef struct _LOG_INFO
     BOOL bLocal;
 } LOG_INFO, *PLOG_INFO;
 
+static RPC_UNICODE_STRING EmptyString = { 0, 0, L"" };
+
 /******************************************************************************
  * BackupEventLogA [ADVAPI32.@]
  */
@@ -560,7 +562,7 @@ OpenEventLogW(
         pLog->BindingHandle,
         (LPWSTR)lpUNCServerName,
         &SourceName,
-        NULL,
+        &EmptyString,
         0,
         0,
         &pLog->LogHandle);
@@ -777,7 +779,7 @@ RegisterEventSourceW(
         pLog->BindingHandle,
         (LPWSTR)lpUNCServerName,
         &SourceName,
-        NULL,
+        &EmptyString,
         0,
         0,
         &pLog->LogHandle);
