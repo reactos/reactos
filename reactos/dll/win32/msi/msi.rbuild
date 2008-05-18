@@ -70,13 +70,13 @@
 	<library>kernel32</library>
 	<library>odbccp32</library>
 	<library>ntdll</library>
-	<dependency>msi_msiserver_typelib</dependency>
-	<dependency>msi_msiserver_header</dependency>
+	<dependency>msiserver</dependency>
+	<dependency>msiheader</dependency>
 </module>
-<module name="msi_msiserver_header" type="idlheader">
+<module name="msiserver" type="embeddedtypelib" allowwarnings="true">
 	<file>msiserver.idl</file>
 </module>
-<module name="msi_msiserver_typelib" type="embeddedtypelib" allowwarnings="true">
+<module name="msiheader" type="idlheader">
 	<file>msiserver.idl</file>
 </module>
 </group>
