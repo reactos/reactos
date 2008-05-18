@@ -10,15 +10,6 @@
 
 #include "eventlog.h"
 
-#ifdef __GNUC__
-/* HACK as long as idl compiler doesn't support well PUNICODE_STRING args */
-#define PANSI_STRING LPSTR
-#define PUNICODE_STRING LPWSTR
-#define BINDING_HANDLE handle_t BindingHandle,
-#else
-#define BINDING_HANDLE
-#endif
-
 /* FUNCTIONS ****************************************************************/
 
 DWORD STDCALL RpcThreadRoutine(LPVOID lpParameter)
@@ -50,169 +41,168 @@ DWORD STDCALL RpcThreadRoutine(LPVOID lpParameter)
     return 0;
 }
 
-/* Function 0x00 */
+
+/* Function 0 */
 NTSTATUS ElfrClearELFW(
-    BINDING_HANDLE
-    /* [in] */  LOGHANDLE Handle,
-    /* [in] */  PUNICODE_STRING BackupName)
+    handle_t BindingHandle,
+    IELF_HANDLE LogHandle,
+    PRPC_UNICODE_STRING BackupFileName)
 {
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
 
-/* Function 0x01 */
+
+/* Function 1 */
 NTSTATUS ElfrBackupELFW(
-    BINDING_HANDLE
-    /* [in] */  LOGHANDLE Handle,
-    /* [in] */  PUNICODE_STRING BackupName)
+    handle_t BindingHandle,
+    IELF_HANDLE LogHandle,
+    PRPC_UNICODE_STRING BackupFileName)
 {
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
 
 
-/* Function 0x02 */
+/* Function 2 */
 NTSTATUS ElfrCloseEL(
-    BINDING_HANDLE
-    /* [out][in] */ PLOGHANDLE Handle)
+    handle_t BindingHandle,
+    IELF_HANDLE *LogHandle)
 {
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
 
 
-/* Function 0x03 */
+/* Function 3 */
 NTSTATUS ElfrDeregisterEventSource(
-    BINDING_HANDLE
-    /* [out][in] */ PLOGHANDLE Handle)
+    handle_t BindingHandle,
+    IELF_HANDLE *LogHandle)
 {
     UNIMPLEMENTED;
     return STATUS_SUCCESS;
 }
 
 
-/* Function 0x04 */
+/* Function 4 */
 NTSTATUS ElfrNumberOfRecords(
-    BINDING_HANDLE
-    /* [in] */  LOGHANDLE Handle,
-    /* [out] */ long __RPC_FAR * NumberOfRecords)
+    handle_t BindingHandle,
+    IELF_HANDLE LogHandle,
+    DWORD *NumberOfRecords)
 {
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
 
 
-/* Function 0x05 */
+/* Function 5 */
 NTSTATUS ElfrOldestRecord(
-    BINDING_HANDLE
-    /* [in] */  LOGHANDLE LogHandle,
-    /* [out] */ long __RPC_FAR * OldestRecNumber)
+    handle_t BindingHandle,
+    IELF_HANDLE LogHandle,
+    DWORD *OldestRecordNumber)
 {
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
 
 
-/* Function 0x06 */
-NTSTATUS ElfrChangeNotify(void)
+/* Function 6 */
+NTSTATUS ElfrChangeNotify(
+    handle_t BindingHandle,
+    IELF_HANDLE *LogHandle,
+    RPC_CLIENT_ID ClientId,
+    DWORD Event)
 {
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
 
 
-/* Function 0x07 */
+/* Function 7 */
 NTSTATUS ElfrOpenELW(
-    BINDING_HANDLE
-    /* [unique][in] */  LPWSTR ServerName,
-    /* [in] */  PUNICODE_STRING FileName,
-    /* [in] */  PUNICODE_STRING NullStr,
-    /* [in] */  long MajorVer,
-    /* [in] */  long MinorVer,
-    /* [out] */ PLOGHANDLE Handle)
+    handle_t BindingHandle,
+    EVENTLOG_HANDLE_W UNCServerName,
+    PRPC_UNICODE_STRING ModuleName,
+    PRPC_UNICODE_STRING RegModuleName,
+    DWORD MajorVersion,
+    DWORD MinorVersion,
+    IELF_HANDLE *LogHandle)
 {
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
 
 
-/* Function 0x08 */
+/* Function 8 */
 NTSTATUS ElfrRegisterEventSourceW(
-    BINDING_HANDLE
-    /* [unique][in] */  LPWSTR ServerName,
-    /* [in] */  PUNICODE_STRING LogName,
-    /* [in] */  PUNICODE_STRING NullStr,
-    /* [in] */  long MajorVer,
-    /* [in] */  long MinorVer,
-    /* [out] */ PLOGHANDLE Handle)
+    handle_t BindingHandle,
+    EVENTLOG_HANDLE_W UNCServerName,
+    PRPC_UNICODE_STRING ModuleName,
+    PRPC_UNICODE_STRING RegModuleName,
+    DWORD MajorVersion,
+    DWORD MinorVersion,
+    IELF_HANDLE *LogHandle)
 {
     UNIMPLEMENTED;
-    *Handle = 1;
+    *LogHandle = 1;
     return STATUS_SUCCESS;
 }
 
 
-/* Function 0x09 */
+/* Function 9 */
 NTSTATUS ElfrOpenBELW(
-    BINDING_HANDLE
-    /* [unique][in] */  LPWSTR ServerName,
-    /* [in] */  PUNICODE_STRING BackupName,
-    /* [in] */  long MajorVer,
-    /* [in] */  long MinorVer,
-    /* [out] */ PLOGHANDLE Handle)
+    handle_t BindingHandle,
+    EVENTLOG_HANDLE_W UNCServerName,
+    PRPC_UNICODE_STRING BackupFileName,
+    DWORD MajorVersion,
+    DWORD MinorVersion,
+    IELF_HANDLE *LogHandle)
 {
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
 
 
-/* Function 0x0a */
+/* Function 10 */
 NTSTATUS ElfrReadELW(
-    BINDING_HANDLE
-    /* [in] */  LOGHANDLE Handle,
-    /* [in] */  long Flags,
-    /* [in] */  long Offset,
-    /* [in] */  long BufSize,
-    /* [size_is][out] */unsigned char __RPC_FAR * Buffer,
-    /* [out] */ long __RPC_FAR * BytesRead,
-    /* [out] */ long __RPC_FAR * BytesNeeded)
+    handle_t BindingHandle,
+    IELF_HANDLE LogHandle,
+    DWORD ReadFlags,
+    DWORD RecordOffset,
+    RULONG NumberOfBytesToRead,
+    BYTE *Buffer,
+    DWORD *NumberOfBytesRead,
+    DWORD *MinNumberOfBytesNeeded)
 {
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
 
 
-/* Function 0x0b */
+/* Function 11 */
 NTSTATUS ElfrReportEventW(
-    BINDING_HANDLE
-    /* [in] */  LOGHANDLE Handle,
-    /* [in] */  long Time,
-    /* [in] */  short Type,
-    /* [in] */  short Category,
-    /* [in] */  long ID,
-    /* [in] */  short NumStrings,
-    /* [in] */  long DataSize,
-    /* [in] */  PUNICODE_STRING ComputerName,
-    /* [unique][in] */          unsigned char __RPC_FAR * SID,
-    /* [unique][size_is][in] */ PUNICODE_STRING __RPC_FAR Strings[],
-    /* [unique][size_is][in] */ unsigned char __RPC_FAR * Data,
-    /* [in] */                  short Flags,
-    /* [unique][out][in] */     long __RPC_FAR * unknown1,
-    /* [unique][out][in] */     long __RPC_FAR * unknown2)
+    handle_t BindingHandle,
+    IELF_HANDLE LogHandle,
+    DWORD Time,
+    USHORT EventType,
+    USHORT EventCategory,
+    DWORD EventID,
+    USHORT NumStrings,
+    DWORD DataSize,
+    PRPC_UNICODE_STRING ComputerName,
+    PRPC_SID UserSID,
+    PRPC_UNICODE_STRING Strings[],
+    BYTE *Data,
+    USHORT Flags,
+    DWORD *RecordNumber,
+    DWORD *TimeWritten)
 {
-    short i;
+    USHORT i;
 
     /* partial stub */
-
-    if (NumStrings == 0)
-        return STATUS_SUCCESS;
-
-    if (Strings == NULL)
-        return STATUS_SUCCESS;
-
     for (i = 0; i < NumStrings; i++)
     {
-        switch (Type)
+        switch (EventType)
         {
             case EVENTLOG_SUCCESS:
                 DPRINT1("Success: %S\n", Strings[i]);
@@ -231,7 +221,7 @@ NTSTATUS ElfrReportEventW(
                 break;
 
             default:
-                DPRINT1("Type %hu: %S\n", Type, Strings[i]);
+                DPRINT1("Type %hu: %S\n", EventType, Strings[i]);
                 break;
         }
     }
@@ -240,184 +230,236 @@ NTSTATUS ElfrReportEventW(
 }
 
 
-/* Function 0x0c */
+/* Function 12 */
 NTSTATUS ElfrClearELFA(
-    BINDING_HANDLE
-    /* [in] */          LOGHANDLE Handle,
-    /* [unique][in] */  PANSI_STRING BackupName)
+    handle_t BindingHandle,
+    IELF_HANDLE LogHandle,
+    PRPC_STRING BackupFileName)
 {
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
 
 
-/* Function 0x0d */
+/* Function 13 */
 NTSTATUS ElfrBackupELFA(
-    BINDING_HANDLE
-    /* [in] */  LOGHANDLE Handle,
-    /* [in] */  PANSI_STRING BackupName)
+    handle_t BindingHandle,
+    IELF_HANDLE LogHandle,
+    PRPC_STRING BackupFileName)
 {
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
 
 
-/* Function 0x0e */
+/* Function 14 */
 NTSTATUS ElfrOpenELA(
-    BINDING_HANDLE
-    /* [unique][in] */  LPSTR ServerName,
-    /* [in] */  PANSI_STRING LogName,
-    /* [in] */  PANSI_STRING NullStr,
-    /* [in] */  long MajorVer,
-    /* [in] */  long MinorVer,
-    /* [out] */ PLOGHANDLE Handle)
+    handle_t BindingHandle,
+    EVENTLOG_HANDLE_A UNCServerName,
+    PRPC_STRING ModuleName,
+    PRPC_STRING RegModuleName,
+    DWORD MajorVersion,
+    DWORD MinorVersion,
+    IELF_HANDLE *LogHandle)
 {
-    UNICODE_STRING logname = { 0, }, servername = { 0, }, StrNull = { 0, };
-    NTSTATUS status;
+    UNICODE_STRING UNCServerNameW = { 0, };
+    UNICODE_STRING ModuleNameW = { 0, };
+    UNICODE_STRING RegModuleNameW = { 0, };
+    NTSTATUS Status;
 
-    if (LogName && !RtlCreateUnicodeStringFromAsciiz(&logname, LogName))
+    if (UNCServerName &&
+        !RtlCreateUnicodeStringFromAsciiz(&UNCServerNameW, UNCServerName))
     {
         return STATUS_NO_MEMORY;
     }
 
-    if (ServerName &&
-        !RtlCreateUnicodeStringFromAsciiz(&servername, ServerName))
+    if (ModuleName &&
+        !RtlAnsiStringToUnicodeString(&ModuleNameW, (PANSI_STRING)ModuleName, TRUE))
     {
-        RtlFreeUnicodeString(&logname);
+        RtlFreeUnicodeString(&UNCServerNameW);
         return STATUS_NO_MEMORY;
     }
 
-    status = ElfrOpenELW(BindingHandle, servername.Buffer, logname.Buffer,
-                         StrNull.Buffer, MajorVer, MinorVer, Handle);
+    if (RegModuleName &&
+        !RtlAnsiStringToUnicodeString(&RegModuleNameW, (PANSI_STRING)RegModuleName, TRUE))
+    {
+        RtlFreeUnicodeString(&UNCServerNameW);
+        RtlFreeUnicodeString(&ModuleNameW);
+        return STATUS_NO_MEMORY;
+    }
 
-    RtlFreeUnicodeString(&servername);
-    RtlFreeUnicodeString(&logname);
+    Status = ElfrOpenELW(
+        BindingHandle,
+        UNCServerName ? UNCServerNameW.Buffer : NULL,
+        ModuleName ? (PRPC_UNICODE_STRING)&ModuleNameW : NULL,
+        RegModuleName ? (PRPC_UNICODE_STRING)&RegModuleNameW : NULL,
+        MajorVersion,
+        MinorVersion,
+        LogHandle);
 
-    return status;
+    RtlFreeUnicodeString(&UNCServerNameW);
+    RtlFreeUnicodeString(&ModuleNameW);
+    RtlFreeUnicodeString(&RegModuleNameW);
+
+    return Status;
 }
 
 
-/* Function 0x0f */
+/* Function 15 */
 NTSTATUS ElfrRegisterEventSourceA(
-    BINDING_HANDLE
-    /* [unique][in] */  LPSTR ServerName,
-    /* [in] */  PANSI_STRING LogName,
-    /* [in] */  PANSI_STRING NullStr,
-    /* [in] */  long MajorVer,
-    /* [in] */  long MinorVer,
-    /* [out] */ PLOGHANDLE Handle)
+    handle_t BindingHandle,
+    EVENTLOG_HANDLE_A UNCServerName,
+    PRPC_STRING ModuleName,
+    PRPC_STRING RegModuleName,
+    DWORD MajorVersion,
+    DWORD MinorVersion,
+    IELF_HANDLE *LogHandle)
 {
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
 
 
-/* Function 0x10 */
+/* Function 16 */
 NTSTATUS ElfrOpenBELA(
-    BINDING_HANDLE
-    /* [unique][in] */  LPSTR ServerName,
-    /* [in] */  PANSI_STRING BakckupName,
-    /* [in] */  long MajorVer,
-    /* [in] */  long MinorVer,
-    /* [out] */ PLOGHANDLE Handle)
+    handle_t BindingHandle,
+    EVENTLOG_HANDLE_A UNCServerName,
+    PRPC_STRING BackupFileName,
+    DWORD MajorVersion,
+    DWORD MinorVersion,
+    IELF_HANDLE *LogHandle)
 {
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
 
 
-/* Function 0x11 */
+/* Function 17 */
 NTSTATUS ElfrReadELA(
-    BINDING_HANDLE
-    /* [in] */  LOGHANDLE Handle,
-    /* [in] */  long Flags,
-    /* [in] */  long Offset,
-    /* [in] */  long BufSize,
-    /* [size_is][out] */unsigned char __RPC_FAR * Buffer,
-    /* [out] */ long __RPC_FAR * BytesRead,
-    /* [out] */ long __RPC_FAR * BytesNeeded)
+    handle_t BindingHandle,
+    IELF_HANDLE LogHandle,
+    DWORD ReadFlags,
+    DWORD RecordOffset,
+    RULONG NumberOfBytesToRead,
+    BYTE *Buffer,
+    DWORD *NumberOfBytesRead,
+    DWORD *MinNumberOfBytesNeeded)
 {
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
 
 
-/* Function 0x12 */
+/* Function 18 */
 NTSTATUS ElfrReportEventA(
-    BINDING_HANDLE
-    /* [in] */  LOGHANDLE Handle,
-    /* [in] */  long Time,
-    /* [in] */  short Type,
-    /* [in] */  short Category,
-    /* [in] */  long ID,
-    /* [in] */  short NumStrings,
-    /* [in] */  long DataSize,
-    /* [in] */  PANSI_STRING ComputerName,
-    /* [unique][in] */  unsigned char __RPC_FAR * SID,
-    /* [unique][size_is][in] */ PANSI_STRING __RPC_FAR Strings[],
-    /* [unique][size_is][in] */ unsigned char __RPC_FAR * Data,
-    /* [in] */                  short Flags,
-    /* [unique][out][in] */     long __RPC_FAR * unknown1,
-    /* [unique][out][in] */     long __RPC_FAR * unknown2)
+    handle_t BindingHandle,
+    IELF_HANDLE LogHandle,
+    DWORD Time,
+    USHORT EventType,
+    USHORT EventCategory,
+    DWORD EventID,
+    USHORT NumStrings,
+    DWORD DataSize,
+    PRPC_STRING ComputerName,
+    PRPC_SID UserSID,
+    PRPC_STRING Strings[],
+    BYTE *Data,
+    USHORT Flags,
+    DWORD *RecordNumber,
+    DWORD *TimeWritten)
 {
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
 
 
-/* Function 0x13 */
-NTSTATUS ElfrRegisterClusterSvc(void)
+/* Function 19 */
+NTSTATUS ElfrRegisterClusterSvc(
+    handle_t BindingHandle)
 {
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
 
 
-/* Function 0x14 */
-NTSTATUS ElfrDeregisterClusterSvc(void)
+/* Function 20 */
+NTSTATUS ElfrDeregisterClusterSvc(
+    handle_t BindingHandle)
 {
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
 
 
-/* Function 0x15 */
-NTSTATUS ElfrWriteClusterEvents(void)
+/* Function 21 */
+NTSTATUS ElfrWriteClusterEvents(
+    handle_t BindingHandle)
 {
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
 
 
-/* Function 0x16 */
+/* Function 22 */
 NTSTATUS ElfrGetLogInformation(
-    BINDING_HANDLE
-    /* [in] */  LOGHANDLE Handle,
-    /* [in] */  long InfoLevel,
-    /* [size_is][out] */unsigned char __RPC_FAR * Buffer,
-    /* [in] */  long BufSize,
-    /* [out] */ long __RPC_FAR * BytesNeeded)
+    handle_t BindingHandle,
+    IELF_HANDLE LogHandle,
+    DWORD InfoLevel,
+    BYTE *Buffer,
+    DWORD cbBufSize,
+    DWORD *pcbBytesNeeded)
 {
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
 
 
-/* Function 0x17 */
+/* Function 23 */
 NTSTATUS ElfrFlushEL(
-    BINDING_HANDLE
-    /* [in] */  LOGHANDLE Handle)
+    handle_t BindingHandle,
+    IELF_HANDLE LogHandle)
 {
-    DbgPrint("EventLogFlush UNIMPLEMENTED\n");
+    UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
+
+
+/* Function 24 */
+NTSTATUS ElfrReportEventAndSourceW(
+    handle_t BindingHandle,
+    IELF_HANDLE LogHandle,
+    DWORD Time,
+    USHORT EventType,
+    USHORT EventCategory,
+    ULONG EventID,
+    PRPC_UNICODE_STRING SourceName,
+    USHORT NumStrings,
+    DWORD DataSize,
+    PRPC_UNICODE_STRING ComputerName,
+    PRPC_SID UserSID,
+    PRPC_UNICODE_STRING Strings[],
+    BYTE *Data,
+    USHORT Flags,
+    DWORD *RecordNumber,
+    DWORD *TimeWritten)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
 
 void __RPC_FAR *__RPC_USER midl_user_allocate(size_t len)
 {
     return HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, len);
 }
 
+
 void __RPC_USER midl_user_free(void __RPC_FAR * ptr)
 {
     HeapFree(GetProcessHeap(), 0, ptr);
+}
+
+
+void __RPC_USER IELF_HANDLE_rundown(IELF_HANDLE LogHandle)
+{
 }
