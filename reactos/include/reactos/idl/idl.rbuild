@@ -7,7 +7,7 @@
 <module name="pnp_client" type="rpcclient">
 	<file>pnp.idl</file>
 </module>
-<module name="scm_server" type="rpcserver">
+<module name="scm_server" type="rpcserver" allowwarnings="true">
 	<file>svcctl.idl</file>
 </module>
 <module name="scm_client" type="rpcclient">
@@ -19,7 +19,7 @@
 <module name="eventlog_client" type="rpcclient" >
 	<file>eventlogrpc.idl</file>
 </module>
-<module name="lsa_server" type="rpcserver">
+<module name="lsa_server" type="rpcserver" allowwarnings="true">
 	<file>lsa.idl</file>
 </module>
 <module name="lsa_client" type="rpcclient">
