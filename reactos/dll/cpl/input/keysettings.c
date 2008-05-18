@@ -12,6 +12,8 @@
 #include "resource.h"
 #include "input.h"
 
+static HWND hKeySettingsWnd;
+
 static VOID
 AddListColumn(HWND hDlg)
 {
@@ -57,6 +59,27 @@ GetAttributes()
 }
 
 static VOID
+SaveKeySettings(HWND hDlg)
+{
+    HKEY hKey;
+    DWORD dwValue;
+
+    if (SendDlgItemMessage(hDlg, IDC_PRESS_CL_KEY_RB, BM_GETCHECK, 0, 0) == BST_CHECKED)
+        dwValue = 0x0;
+    else
+        dwValue = 0x10000;
+
+    if (RegCreateKeyEx(HKEY_CURRENT_USER, _T("Keyboard Layout"), 0, NULL,
+                       REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS,
+                       NULL, &hKey, NULL) == ERROR_SUCCESS)
+    {
+        RegSetValueEx(hKey, _T("Attributes"), 0, REG_DWORD, (LPBYTE)&dwValue, sizeof(DWORD));
+
+        RegCloseKey(hKey);
+    }
+}
+
+static VOID
 InitKeySettingsDlg(HWND hDlg)
 {
     TCHAR szHotkey[1 + 1], szLangHotkey[1 + 1], szLayoutHotkey[1 + 1],
@@ -78,8 +101,10 @@ InitKeySettingsDlg(HWND hDlg)
 
     if (_tcscmp(szLangHotkey, _T("2")) == 0)
         LoadString(hApplet, IDS_CTRL_SHIFT, szText, sizeof(szText) / sizeof(TCHAR));
-    else
+    else if (_tcscmp(szLangHotkey, _T("1")) == 0)
         LoadString(hApplet, IDS_LEFT_ALT_SHIFT, szText, sizeof(szText) / sizeof(TCHAR));
+    else
+        LoadString(hApplet, IDS_NONE, szText, sizeof(szText) / sizeof(TCHAR));
 
     item.mask = LVIF_TEXT | LVIF_PARAM | LVIF_STATE;
     item.pszText = szTitle;
@@ -90,6 +115,13 @@ InitKeySettingsDlg(HWND hDlg)
 
     (VOID) ListView_SetHotItem(hHotkeyList, i);
     ListView_SetItemState(hHotkeyList, i, LVIS_SELECTED, LVIS_OVERLAYMASK);
+}
+
+VOID
+UpdateKeySettingsList()
+{
+    (VOID) ListView_DeleteAllItems(GetDlgItem(hKeySettingsWnd, IDC_KEY_LISTVIEW));
+    InitKeySettingsDlg(hKeySettingsWnd);
 }
 
 INT_PTR CALLBACK
@@ -103,6 +135,7 @@ KeySettingsDlgProc(HWND hDlg,
     switch (message)
     {
         case WM_INITDIALOG:
+            hKeySettingsWnd = hDlg;
             AddListColumn(hDlg);
             (VOID) ListView_SetExtendedListViewStyle(GetDlgItem(hDlg, IDC_KEY_LISTVIEW),
                                                      LVS_EX_FULLROWSELECT);
@@ -120,6 +153,8 @@ KeySettingsDlgProc(HWND hDlg,
                     break;
 
                 case IDOK:
+                    SaveKeySettings(hDlg);
+                    EndDialog(hDlg, LOWORD(wParam));
                     break;
 
                 case IDCANCEL:

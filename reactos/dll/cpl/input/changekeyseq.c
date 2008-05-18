@@ -20,7 +20,7 @@ GetHotkeys(LPTSTR szHotkey, LPTSTR szLangHotkey, LPTSTR szLayoutHotkey)
     if (RegOpenKeyEx(HKEY_CURRENT_USER, _T("Keyboard Layout\\Toggle"),
                      0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
     {
-        dwSize = sizeof(szHotkey);
+        dwSize = (1 + 1) * sizeof(TCHAR);
         if (RegQueryValueEx(hKey, _T("Hotkey"), NULL, NULL,
                             (LPBYTE)szHotkey, &dwSize) != ERROR_SUCCESS)
         {
@@ -28,7 +28,7 @@ GetHotkeys(LPTSTR szHotkey, LPTSTR szLangHotkey, LPTSTR szLayoutHotkey)
             return FALSE;
         }
 
-        dwSize = sizeof(szLangHotkey);
+        dwSize = (1 + 1) * sizeof(TCHAR);
         if (RegQueryValueEx(hKey, _T("Language Hotkey"), NULL, NULL,
                             (LPBYTE)szLangHotkey, &dwSize) != ERROR_SUCCESS)
         {
@@ -36,7 +36,7 @@ GetHotkeys(LPTSTR szHotkey, LPTSTR szLangHotkey, LPTSTR szLayoutHotkey)
             return FALSE;
         }
 
-        dwSize = sizeof(szLayoutHotkey);
+        dwSize = (1 + 1) * sizeof(TCHAR);
         if (RegQueryValueEx(hKey, _T("Layout Hotkey"), NULL, NULL,
                             (LPBYTE)szLayoutHotkey, &dwSize) != ERROR_SUCCESS)
         {
@@ -49,6 +49,66 @@ GetHotkeys(LPTSTR szHotkey, LPTSTR szLangHotkey, LPTSTR szLayoutHotkey)
     else return FALSE;
 
     return TRUE;
+}
+
+static VOID
+SaveKeySeq(HWND hDlg)
+{
+    TCHAR szLang[1 + 1], szLayout[1 + 1];
+    HKEY hKey;
+
+    if (SendDlgItemMessage(hDlg, IDC_SWITCH_INPUT_LANG_CB, BM_GETCHECK, 0, 0) == BST_CHECKED)
+    {
+        if (SendDlgItemMessage(hDlg, IDC_CTRL_LANG, BM_GETCHECK, 0, 0) == BST_CHECKED)
+            _tcscpy(szLang, _T("2"));
+        else
+            _tcscpy(szLang, _T("1"));
+    }
+    else
+    {
+        _tcscpy(szLang, _T("3"));
+    }
+
+    if (SendDlgItemMessage(hDlg, IDC_SWITCH_KBLAYOUTS_CB, BM_GETCHECK, 0, 0) == BST_CHECKED)
+    {
+        if (SendDlgItemMessage(hDlg, IDC_CTRL_LAYOUT, BM_GETCHECK, 0, 0) == BST_CHECKED)
+            _tcscpy(szLayout, _T("2"));
+        else
+            _tcscpy(szLayout, _T("1"));
+    }
+    else
+    {
+        _tcscpy(szLayout, _T("3"));
+    }
+
+    if (RegCreateKeyEx(HKEY_CURRENT_USER, _T("Keyboard Layout\\Toggle"), 0, NULL,
+                       REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS,
+                       NULL, &hKey, NULL) == ERROR_SUCCESS)
+    {
+        if (RegSetValueEx(hKey, _T("Hotkey"), 0, REG_SZ, (LPBYTE)szLang,
+                          (DWORD)((1 + 1) * sizeof(TCHAR))) != ERROR_SUCCESS)
+        {
+            RegCloseKey(hKey);
+            return;
+        }
+
+        if (RegSetValueEx(hKey, _T("Language Hotkey"), 0, REG_SZ, (LPBYTE)szLang,
+                          (DWORD)((1 + 1) * sizeof(TCHAR))) != ERROR_SUCCESS)
+        {
+            RegCloseKey(hKey);
+            return;
+        }
+
+        if (RegSetValueEx(hKey, _T("Layout Hotkey"), 0, REG_SZ, (LPBYTE)szLayout,
+                          (DWORD)((1 + 1) * sizeof(TCHAR))) != ERROR_SUCCESS)
+        {
+            RegCloseKey(hKey);
+            return;
+        }
+
+        RegCloseKey(hKey);
+        UpdateKeySettingsList();
+    }
 }
 
 static VOID
@@ -174,6 +234,8 @@ ChangeKeySeqDlgProc(HWND hDlg,
                     break;
 
                 case IDOK:
+                    SaveKeySeq(hDlg);
+                    EndDialog(hDlg, LOWORD(wParam));
                     break;
 
                 case IDCANCEL:
