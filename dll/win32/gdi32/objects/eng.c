@@ -9,15 +9,7 @@
 
 #include "precomp.h"
 
-/*
- * @implemented
- */
-VOID
-STDCALL
-EngAcquireSemaphore ( IN HSEMAPHORE hsem )
-{
-    RtlEnterCriticalSection((PRTL_CRITICAL_SECTION)hsem);
-}
+
 
 
 /*
@@ -128,15 +120,6 @@ EngFindResource(HANDLE h,
 /*
  * @implemented
  */
-VOID STDCALL
-EngFreeModule(HANDLE h)
-{
-    FreeLibrary(h);
-}
-
-/*
- * @implemented
- */
 
 VOID STDCALL
 EngGetCurrentCodePage( OUT PUSHORT OemCodePage,
@@ -223,19 +206,6 @@ EngQueryLocalTime(PENG_TIME_FIELDS etf)
   etf->usSecond  = SystemTime.wSecond;
   etf->usMilliseconds = SystemTime.wMilliseconds;
 }
-
-/*
- * @implemented
- */
-VOID
-STDCALL
-EngReleaseSemaphore ( IN HSEMAPHORE hsem )
-{
-  RtlLeaveCriticalSection( (PRTL_CRITICAL_SECTION) hsem);
-}
-
-
-
 
 /*
  * @implemented
