@@ -129,7 +129,8 @@ NTSTATUS ElfrOpenELW(
     IELF_HANDLE *LogHandle)
 {
     UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    *LogHandle = 1;
+    return STATUS_SUCCESS;
 }
 
 
