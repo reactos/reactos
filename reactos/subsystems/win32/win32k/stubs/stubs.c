@@ -4,7 +4,6 @@
 
 #include <w32k.h>
 
-#define STUB(x) void x(void) { DbgPrint("WIN32K: Stub for %s\n", #x); }
 #define UNIMPLEMENTED DbgPrint("(%s:%i) WIN32K: %s UNIMPLEMENTED\n", __FILE__, __LINE__, __FUNCTION__ )
 
 
@@ -776,13 +775,6 @@ XFORMOBJ_iGetXform(
   return 0;
 }
 
-// below here aren't in DDK!!!
-
-STUB(FLOATOBJ_AddFloatObj)
-STUB(FLOATOBJ_DivFloatObj)
-STUB(FLOATOBJ_MulFloatObj)
-STUB(FLOATOBJ_SubFloatObj)
-
 /*
  * @unimplemented
  */
@@ -841,7 +833,8 @@ APIENTRY
 EngClearEvent(
    IN PEVENT Event)
 {
-   UNIMPLEMENTED;
+    /* Forward to the kernel */
+    KeClearEvent((PKEVENT)Event);
 }
 
 /*
@@ -2933,4 +2926,141 @@ EngControlSprites(
 {
   UNIMPLEMENTED;
   return FALSE;
+}
+
+PVOID
+APIENTRY
+EngFntCacheAlloc(IN ULONG FastCheckSum,
+                 IN ULONG ulSize)
+{
+    UNIMPLEMENTED;
+    return NULL;
+}
+ 
+VOID
+APIENTRY
+EngFntCacheFault(IN ULONG ulFastCheckSum,
+                 IN ULONG iFaultMode)
+{
+    UNIMPLEMENTED;
+}
+ 
+PVOID
+APIENTRY
+EngFntCacheLookUp(IN ULONG FastCheckSum,
+                  OUT PULONG pulSize)
+{
+    UNIMPLEMENTED;
+    return NULL;
+}
+
+VOID
+APIENTRY
+FLOATOBJ_AddFloatObj(PFLOATOBJ pFloatObj1,
+                     PFLOATOBJ pFloatObj2)
+{
+    UNIMPLEMENTED;
+}
+ 
+VOID
+APIENTRY
+FLOATOBJ_DivFloatObj(PFLOATOBJ pFloatObj1,
+                     PFLOATOBJ pFloatObj2)
+{
+    UNIMPLEMENTED;
+}
+ 
+VOID
+APIENTRY
+FLOATOBJ_MulFloatObj(PFLOATOBJ pFloatObj1,
+                     PFLOATOBJ pFloatObj2)
+{
+    UNIMPLEMENTED;
+}
+ 
+VOID
+APIENTRY
+FLOATOBJ_SubFloatObj(PFLOATOBJ pFloatObj1,
+                     PFLOATOBJ pFloatObj2)
+{
+    UNIMPLEMENTED;
+}
+ 
+PVOID
+APIENTRY
+EngAllocSectionMem(IN PVOID SectionObject,
+                   IN ULONG Flags,
+                   IN SIZE_T MemSize,
+                   IN ULONG Tag)
+{
+    UNIMPLEMENTED;
+    return NULL;
+}
+ 
+NTSTATUS
+APIENTRY
+EngFileIoControl(IN PFILE_OBJECT FileObject,
+                 IN ULONG IoControlCode,
+                 IN PVOID InputBuffer,
+                 IN SIZE_T InputBufferLength,
+                 OUT PVOID OutputBuffer,
+                 IN SIZE_T OutputBufferLength,
+                 OUT PULONG Information)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+ 
+VOID
+APIENTRY
+EngFileWrite(IN PFILE_OBJECT FileObject,
+             IN PVOID Buffer,
+             IN SIZE_T Length,
+             IN PSIZE_T BytesWritten)
+{
+    UNIMPLEMENTED;
+}
+ 
+BOOLEAN
+APIENTRY
+EngFreeSectionMem(IN PVOID SectionObject OPTIONAL,
+                  IN PVOID MappedBase)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+ 
+ULONGLONG
+APIENTRY
+EngGetTickCount(VOID)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+ 
+BOOLEAN
+APIENTRY
+EngMapSection(IN PVOID Section,
+              IN BOOLEAN Map,
+              IN HANDLE Process,
+              IN PVOID* BaseAddress)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+ 
+BOOLEAN
+APIENTRY
+EngNineGrid(IN SURFOBJ* pDestSurfaceObj,
+            IN SURFOBJ* pSourceSurfaceObj,
+            IN CLIPOBJ* pClipObj,
+            IN XLATEOBJ* pXlateObj,
+            IN RECTL* prclSource,
+            IN RECTL* prclDest,
+            PVOID pvUnknown1,
+            PVOID pvUnknown2,
+            DWORD dwReserved)
+{
+    UNIMPLEMENTED;
+    return FALSE;
 }
