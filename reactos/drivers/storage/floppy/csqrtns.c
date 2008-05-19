@@ -39,7 +39,6 @@
  */
 
 #include <ntddk.h>
-#define NDEBUG
 #include <debug.h>
 
 #include "floppy.h"
@@ -70,7 +69,7 @@ VOID NTAPI CsqRemoveIrp(PIO_CSQ UnusedCsq,
  */
 {
   UNREFERENCED_PARAMETER(UnusedCsq);
-  DPRINT("CSQ: Removing IRP 0x%p\n", Irp);
+  TRACE_(FLOPPY, "CSQ: Removing IRP 0x%p\n", Irp);
   RemoveEntryList(&Irp->Tail.Overlay.ListEntry);
 }
 
@@ -93,7 +92,7 @@ PIRP NTAPI CsqPeekNextIrp(PIO_CSQ UnusedCsq,
 {
   UNREFERENCED_PARAMETER(UnusedCsq);
   UNREFERENCED_PARAMETER(PeekContext);
-  DPRINT(("CSQ: Peeking for next IRP\n"));
+  TRACE_(FLOPPY, "CSQ: Peeking for next IRP\n");
 
   if(Irp)
     return CONTAINING_RECORD(&Irp->Tail.Overlay.ListEntry.Flink, IRP, Tail.Overlay.ListEntry);
@@ -115,7 +114,7 @@ VOID NTAPI CsqAcquireLock(PIO_CSQ UnusedCsq,
  */
 {
   UNREFERENCED_PARAMETER(UnusedCsq);
-  DPRINT(("CSQ: Acquiring spin lock\n"));
+  INFO_(FLOPPY, "CSQ: Acquiring spin lock\n");
   KeAcquireSpinLock(&IrpQueueLock, Irql);
 }
 
@@ -130,7 +129,7 @@ VOID NTAPI CsqReleaseLock(PIO_CSQ UnusedCsq,
  */
 {
   UNREFERENCED_PARAMETER(UnusedCsq);
-  DPRINT(("CSQ: Releasing spin lock\n"));
+  INFO_(FLOPPY, "CSQ: Releasing spin lock\n");
   KeReleaseSpinLock(&IrpQueueLock, Irql);
 }
 
@@ -148,7 +147,7 @@ VOID NTAPI CsqCompleteCanceledIrp(PIO_CSQ UnusedCsq,
  */
 {
   UNREFERENCED_PARAMETER(UnusedCsq);
-  DPRINT("CSQ: Canceling irp 0x%p\n", Irp);
+  TRACE_(FLOPPY, "CSQ: Canceling irp 0x%p\n", Irp);
   Irp->IoStatus.Status = STATUS_CANCELLED;
   Irp->IoStatus.Information = 0;
   IoCompleteRequest(Irp, IO_NO_INCREMENT);
@@ -173,7 +172,7 @@ VOID NTAPI CsqInsertIrp(PIO_CSQ UnusedCsq,
  */
 {
   UNREFERENCED_PARAMETER(UnusedCsq);
-  DPRINT("CSQ: Inserting IRP 0x%p\n", Irp);
+  TRACE_(FLOPPY, "CSQ: Inserting IRP 0x%p\n", Irp);
   InsertTailList(&IrpQueue, &Irp->Tail.Overlay.ListEntry);
   KeReleaseSemaphore(&QueueSemaphore, 0, 1, FALSE);
 }
