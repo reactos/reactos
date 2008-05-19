@@ -720,6 +720,16 @@ LockHandle:
             {
                 DPRINT1("Attempted to free global gdi handle 0x%x, caller needs to get ownership first!!!\n", hObj);
                 DPRINT1("Type = 0x%lx, KernelData = 0x%p, ProcessId = 0x%p\n", Entry->Type, Entry->KernelData, Entry->ProcessId);
+
+                /* HACK: Ugly and nasty */
+                if ((ULONG_PTR)Entry->KernelData < 0x1000)
+                {
+                    /* It's a memory-corruption bug (probably?),
+                       overcome it by just saying "yes, object destroyed" */
+                    DPRINT1("Bad kerneldata!!! Blame Win32k developers!\n");
+                    return TRUE;
+                }
+
             }
             else
             {
