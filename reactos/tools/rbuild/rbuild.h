@@ -102,6 +102,7 @@ class AutoRegister;
 
 class SourceFileTest;
 class Metadata;
+class Bootsector;
 
 typedef std::map<std::string,Directory*> directory_map;
 
@@ -352,6 +353,7 @@ public:
 	ModuleType type;
 	ImportLibrary* importLibrary;
 	Metadata* metadata;
+	Bootsector* bootSector;
 	bool mangledSymbols;
 	bool underscoreSymbols;
 	bool isUnicode;
@@ -546,6 +548,21 @@ public:
 	             const Module& _module );
 
 	void ProcessXML();
+};
+
+class Bootsector
+{
+public:
+	const XMLElement& node;
+	const Module* module;
+	const Module* bootSectorModule;
+
+	Bootsector ( const XMLElement& _node,
+	             const Module* _module );
+
+	void ProcessXML();
+private:
+	bool IsSupportedModuleType ( ModuleType type );
 };
 
 class Metadata

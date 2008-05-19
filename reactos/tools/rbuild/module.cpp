@@ -242,12 +242,15 @@ Module::Module ( const Project& project,
 	  node (moduleNode),
 	  importLibrary (NULL),
 	  metadata (NULL),
+	  bootSector (NULL),
 	  bootstrap (NULL),
 	  autoRegister(NULL),
 	  linkerScript (NULL),
 	  pch (NULL),
 	  cplusplus (false),
-	  host (HostDefault)
+	  host (HostDefault),
+	  output (NULL),
+	  install (NULL)
 {
 	if ( node.name != "module" )
 		throw InvalidOperationException ( __FILE__,
@@ -417,13 +420,31 @@ Module::Module ( const Project& project,
 		                            att->value,
 		                            &moduleNode );
 	}
-	else
+
+	att = moduleNode.GetAttribute ( "output", false );
+	if ( att != NULL )
 	{
-		install = NULL;
+		if (output != NULL)
+		{
+			printf ( "%s: WARNING: 'installname' overrides 'output' also defined for this module.\n",
+				moduleNode.location.c_str() );
+		}
+		else
+		{
+			output = new FileLocation ( GetTargetDirectoryTree (),
+										modulePath,
+										att->value,
+										&moduleNode );
+		}
+	}
+
+	/* If no one has set the output file for this module set it automatically */
+	if (output == NULL)
+	{
 		output = new FileLocation ( GetTargetDirectoryTree (),
-		                            modulePath,
-		                            name + extension,
-		                            &moduleNode );
+									modulePath,
+									name + extension,
+									&moduleNode );
 	}
 
 	att = moduleNode.GetAttribute ( "allowwarnings", false );
@@ -520,6 +541,8 @@ Module::~Module ()
 		delete bootstrap;
 	if ( importLibrary )
 		delete importLibrary;
+	if ( bootSector )
+		delete 	bootSector;
 	if ( dependency )
 		delete 	dependency;
 	if ( autoRegister )
@@ -741,6 +764,17 @@ Module::ProcessXMLSubElement ( const XMLElement& e,
 				"<dependency> is not a valid sub-element of <if>" );
 		}
 		dependencies.push_back ( new Dependency ( e, *this ) );
+		subs_invalid = true;
+	}
+	else if ( e.name == "bootsector" )
+	{
+		if ( parseContext.ifData )
+		{
+			throw XMLInvalidBuildFileException (
+				e.location,
+				"<bootsector> is not a valid sub-element of <if>" );
+		}
+		bootSector = new Bootsector ( e, this );
 		subs_invalid = true;
 	}
 	else if ( e.name == "importlibrary" )
@@ -1592,6 +1626,57 @@ Dependency::ProcessXML()
 	}
 }
 
+Bootsector::Bootsector ( const XMLElement& _node,
+                         const Module* _module )
+	: node (_node),
+	  module (_module),
+	  bootSectorModule (NULL)
+{
+	if ( !IsSupportedModuleType ( module->type ) )
+	{
+		throw XMLInvalidBuildFileException (
+			node.location,
+			"<bootsector> is not applicable for this module type." );
+	}
+
+	bootSectorModule = module->project.LocateModule ( node.value );
+	if ( bootSectorModule == NULL )
+	{
+		throw XMLInvalidBuildFileException (
+			node.location,
+			"module '%s' depend on non-existant module '%s'",
+			module->name.c_str(),
+			node.value.c_str() );
+	}
+
+	if (bootSectorModule->type != BootSector)
+	{
+		throw XMLInvalidBuildFileException (
+			node.location,
+			"module '%s' is referencing non BootSector module '%s'",
+			module->name.c_str(),
+			node.value.c_str() );
+	}
+}
+
+void
+Bootsector::ProcessXML()
+{
+}
+
+bool
+Bootsector::IsSupportedModuleType ( ModuleType type )
+{
+	if ( type == Iso ||
+	     type == LiveIso ||
+ 	     type == IsoRegTest ||
+		 type == LiveIsoRegTest )
+	{
+		return true;
+	}
+
+	return false;
+}
 
 Metadata::Metadata ( const XMLElement& _node,
                      const Module& _module )

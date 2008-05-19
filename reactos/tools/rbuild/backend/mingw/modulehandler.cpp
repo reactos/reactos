@@ -3480,10 +3480,16 @@ MingwIsoModuleHandler::GenerateIsoModuleTarget ()
 		vSourceFiles.push_back ( srcunattend );
 
 	// bootsector
-	const Module* bootModule;
-	bootModule = module.project.LocateModule ( module.type == IsoRegTest
-	                                               ? "isobtrt"
-	                                               : "isoboot" );
+	const Module* bootModule = module.bootSector->bootSectorModule;
+
+	if (!bootModule)
+	{
+		throw InvalidOperationException ( module.node.location.c_str(),
+										  0,
+										  "Invalid bootsector. module '%s' requires <bootsector>",
+										  module.name.c_str ());
+	}
+
 	const FileLocation *isoboot = bootModule->output;
 	vSourceFiles.push_back ( *isoboot );
 
@@ -3497,13 +3503,11 @@ MingwIsoModuleHandler::GenerateIsoModuleTarget ()
 
 	vSourceFiles.push_back ( reactosDff );
 
-	string IsoName;
-
-	if (module.type == IsoRegTest)
-		IsoName = "ReactOS-RegTest.iso";
-	else
-		IsoName = "ReactOS.iso";
-
+	/* 
+		We use only the name and not full FileLocation(ouput) because Iso/LiveIso are an exception to the general rule.
+		Iso/LiveIso outputs are generated in code base root 
+	*/
+	string IsoName = module.output->name;
 
 	string sourceFiles = v2s ( backend, vSourceFiles, 5 );
 
@@ -3667,15 +3671,24 @@ MingwLiveIsoModuleHandler::GenerateLiveIsoModuleTarget ()
 
 	string IsoName;
 
-	const Module* bootModule;
-	bootModule = module.project.LocateModule ( module.name == "livecdregtest"
-	                                               ? "isobtrt"
-	                                               : "isoboot" );
+	// bootsector
+	const Module* bootModule = module.bootSector->bootSectorModule;
+
+	if (!bootModule)
+	{
+		throw InvalidOperationException ( module.node.location.c_str(),
+										  0,
+										  "Invalid bootsector. module '%s' requires <bootsector>",
+										  module.name.c_str ());
+	}
+
 	const FileLocation *isoboot = bootModule->output;
-	if (module.name == "livecdregtest")
-		IsoName = "ReactOS-LiveCD-RegTest.iso";
-	else
-		IsoName = "ReactOS-LiveCD.iso";
+
+	/* 
+		We use only the name and not full FileLocation(ouput) because Iso/LiveIso are an exception to the general rule.
+		Iso/LiveIso outputs are generated in code base root 
+	*/
+	IsoName = module.output->name;
 
 	string reactosDirectory = "reactos";
 	string livecdReactosNoFixup = livecdDirectory + sSep + reactosDirectory;
