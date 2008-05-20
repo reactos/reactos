@@ -67,7 +67,7 @@ EngFreeModule@4
 EngFreePrivateUserMem@8
 EngFreeSectionMem@8
 EngFreeUserMem@4
-EngGetCurrentCodePage@8=ntoskrnl.RtlGetCurrentCodePage
+EngGetCurrentCodePage@8
 EngGetCurrentProcessId@0
 EngGetCurrentThreadId@0
 EngGetDriverName@4
@@ -104,7 +104,7 @@ EngMarkBandingSurface@4
 EngModifySurface@32
 EngMovePointer@16
 EngMulDiv@12
-EngMultiByteToUnicodeN@20=ntoskrnl.RtlMultiByteToUnicodeN
+EngMultiByteToUnicodeN@20=NTOSKRNL.RtlMultiByteToUnicodeN
 EngMultiByteToWideChar@20
 EngNineGrid@36
 EngPaint@20
@@ -133,7 +133,7 @@ EngStrokeAndFillPath@40
 EngStrokePath@32
 EngTextOut@40
 EngTransparentBlt@32
-EngUnicodeToMultiByteN@20=ntoskrnl.RtlUnicodeToMultiByteN
+EngUnicodeToMultiByteN@20=NTOSKRNL.RtlUnicodeToMultiByteN
 EngUnloadImage@4
 EngUnlockDirectDrawSurface@4
 EngUnlockDriverObj@4
@@ -176,7 +176,7 @@ FONTOBJ_pfdg@4
 FONTOBJ_pifi@4
 FONTOBJ_pjOpenTypeTablePointer@12
 FONTOBJ_pvTrueTypeFontFile@8
-;FONTOBJ_pwszFontFilePaths@4
+FONTOBJ_pwszFontFilePaths@8
 FONTOBJ_pxoGetXform@4
 FONTOBJ_vGetInfo@12
 HT_ComputeRGBGammaTable@24

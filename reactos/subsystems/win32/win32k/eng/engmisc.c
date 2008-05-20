@@ -243,4 +243,13 @@ EngGetProcessHandle(VOID)
   return NULL;
 }
 
+VOID
+APIENTRY
+EngGetCurrentCodePage(OUT PUSHORT OemCodePage,
+                      OUT PUSHORT AnsiCodePage)
+{
+    /* Forward to kernel */
+    return RtlGetDefaultCodePage(AnsiCodePage, OemCodePage);
+}
+
 /* EOF */
