@@ -281,15 +281,15 @@ ActivateLayout(HWND hwnd, ULONG uLayoutNum)
     HKL hKl;
     TCHAR szLayoutNum[CCH_ULONG_DEC + 1];
     TCHAR szLCID[CCH_LAYOUT_ID + 1];
-    TCHAR szName[MAX_PATH];
+    TCHAR szLangName[MAX_PATH];
 
     _ultot(uLayoutNum, szLayoutNum, 10);
     GetLayoutID(szLayoutNum, szLCID);
-    GetLayoutName(szLayoutNum, szName);
     CreateTrayIcon(szLCID);
 
     // Switch to the new keyboard layout
-    UpdateTrayIcon(hwnd, szLCID, szName);
+    GetLocaleInfo((LANGID)_tcstoul(szLCID, NULL, 16), LOCALE_SLANGUAGE, (LPTSTR)szLangName, sizeof(szLangName) / sizeof(TCHAR));
+    UpdateTrayIcon(hwnd, szLCID, szLangName);
     hKl = LoadKeyboardLayout(szLCID, KLF_ACTIVATE);
 
     EnumWindows(EnumWindowsProc, (LPARAM) hKl);
@@ -397,13 +397,6 @@ DeleteHooks()
     if (hDllLib) FreeLibrary(hDllLib);
 }
 
-BOOL CALLBACK
-EnumChildProc(HWND hwnd, LPARAM lParam)
-{
-    SendMessage(hwnd, WM_INPUTLANGCHANGEREQUEST, 0, lParam);
-    return TRUE;
-}
-
 ULONG
 GetNextLayout()
 {
@@ -438,7 +431,7 @@ LRESULT CALLBACK
 WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 {
     static HMENU hLeftPopupMenu, hRightPopupMenu;
-    static TCHAR szLCID[MAX_PATH];
+    static TCHAR szLCID[MAX_PATH], szLangName[MAX_PATH];
 
     switch (Message)
     {
@@ -454,7 +447,8 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
         case WM_LANG_CHANGED:
         {
             GetLayoutIDByHkl((HKL)lParam, szLCID);
-            UpdateTrayIcon(hwnd, szLCID, _T(""));
+            GetLocaleInfo((LANGID)_tcstoul(szLCID, NULL, 16), LOCALE_SLANGUAGE, (LPTSTR)szLangName, sizeof(szLangName) / sizeof(TCHAR));
+            UpdateTrayIcon(hwnd, szLCID, szLangName);
         }
         break;
 
@@ -467,7 +461,8 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
         case WM_WINDOW_ACTIVATE:
         {
             GetLayoutIDByHkl(GetKeyboardLayout(GetWindowThreadProcessId((HWND)wParam, 0)), szLCID);
-            UpdateTrayIcon(hwnd, szLCID, _T(""));
+            GetLocaleInfo((LANGID)_tcstoul(szLCID, NULL, 16), LOCALE_SLANGUAGE, (LPTSTR)szLangName, sizeof(szLangName) / sizeof(TCHAR));
+            UpdateTrayIcon(hwnd, szLCID, szLangName);
         }
         break;
 
