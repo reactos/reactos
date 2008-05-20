@@ -201,7 +201,7 @@ void *rva_to_ptr(DWORD rva)
    unsigned int i;
 
    for (i = 0, section_header = IMAGE_FIRST_SECTION(nt_header);
-        i < dtohl(nt_header->OptionalHeader.NumberOfRvaAndSizes);
+        i < dtohl(nt_header->FileHeader.NumberOfSections);
         i++, section_header++)
    {
       if (rva >= dtohl(section_header->VirtualAddress) &&
