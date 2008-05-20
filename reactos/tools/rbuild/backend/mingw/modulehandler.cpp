@@ -242,6 +242,9 @@ MingwModuleHandler::InstanciateHandler (
 		case Alias:
 			handler = new MingwAliasModuleHandler ( module );
 			break;
+		case MessageHeader:
+			handler = new MingwMessageHeaderModuleHandler (module);
+			break;
 		case IdlHeader:
 			handler = new MingwIdlHeaderModuleHandler ( module );
 			break;
@@ -394,6 +397,8 @@ MingwModuleHandler::ReferenceObjects (
 	if ( module.type == RpcProxy )
 		return true;
 	if ( module.type == IdlHeader )
+		return true;
+	if ( module.type == MessageHeader)
 		return true;
 	return false;
 }
@@ -2309,22 +2314,31 @@ MingwModuleHandler::GetDefaultDependencies (
 		dependencies.push_back ( "$(DXSDK_TARGET) $(dxsdk_HEADERS)" );
 	}
 
-	/* Check if any dependent library relies on the generated headers */
-	for ( size_t i = 0; i < module.project.modules.size (); i++ )
+	if (module.name != "errcodes" && 
+		module.name != "bugcodes" &&
+		module.name != "ntstatus")
 	{
-		const Module& m = *module.project.modules[i];
-		for ( size_t j = 0; j < m.non_if_data.compilationUnits.size (); j++ )
-		{
-			CompilationUnit& compilationUnit = *m.non_if_data.compilationUnits[j];
-			const FileLocation& sourceFile = compilationUnit.GetFilename ();
-			string extension = GetExtension ( sourceFile );
-			if (extension == ".mc" || extension == ".MC" )
-			{
-				string dependency = ssprintf ( "$(%s_MCHEADERS)", m.name.c_str () );
-				dependencies.push_back ( dependency );
-			}
-		}
+		dependencies.push_back ( "$(ERRCODES_TARGET) $(ERRCODES_MCHEADERS)" );
+		dependencies.push_back ( "$(BUGCODES_TARGET) $(BUGCODES_MCHEADERS)" );
+		dependencies.push_back ( "$(NTSTATUS_TARGET) $(NTSTATUS_MCHEADERS)" );
 	}
+
+	///* Check if any dependent library relies on the generated headers */
+	//for ( size_t i = 0; i < module.project.modules.size (); i++ )
+	//{
+	//	const Module& m = *module.project.modules[i];
+	//	for ( size_t j = 0; j < m.non_if_data.compilationUnits.size (); j++ )
+	//	{
+	//		CompilationUnit& compilationUnit = *m.non_if_data.compilationUnits[j];
+	//		const FileLocation& sourceFile = compilationUnit.GetFilename ();
+	//		string extension = GetExtension ( sourceFile );
+	//		if (extension == ".mc" || extension == ".MC" )
+	//		{
+	//			string dependency = ssprintf ( "$(%s_MCHEADERS)", m.name.c_str () );
+	//			dependencies.push_back ( dependency );
+	//		}
+	//	}
+	//}
 }
 
 void
@@ -3825,6 +3839,19 @@ MingwAliasModuleHandler::MingwAliasModuleHandler (
 void
 MingwAliasModuleHandler::Process ()
 {
+}
+
+MingwMessageHeaderModuleHandler::MingwMessageHeaderModuleHandler (
+	const Module& module_ )
+
+	: MingwModuleHandler ( module_ )
+{
+}
+
+void
+MingwMessageHeaderModuleHandler::Process ()
+{
+	GenerateRules ();
 }
 
 MingwIdlHeaderModuleHandler::MingwIdlHeaderModuleHandler (

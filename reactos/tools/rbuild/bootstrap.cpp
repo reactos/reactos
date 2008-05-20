@@ -71,6 +71,7 @@ Bootstrap::IsSupportedModuleType ( ModuleType type )
 		case RpcProxy:
 		case Alias:
 		case IdlHeader:
+		case MessageHeader:
 		case EmbeddedTypeLib:
 		case ElfExecutable:
 			return false;

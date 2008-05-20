@@ -305,7 +305,8 @@ enum ModuleType
 	HostStaticLibrary,
 	TypeDontCare,
 	Cabinet,
-	KeyboardLayout
+	KeyboardLayout,
+	MessageHeader
 };
 
 enum HostType

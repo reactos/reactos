@@ -469,6 +469,13 @@ public:
 	virtual void Process ();
 };
 
+class MingwMessageHeaderModuleHandler : public MingwModuleHandler
+{
+public:
+	MingwMessageHeaderModuleHandler ( const Module& module );
+	virtual HostType DefaultHost() { return HostFalse; }
+	virtual void Process ();
+};
 
 class MingwAliasModuleHandler : public MingwModuleHandler
 {

@@ -1003,6 +1003,8 @@ Module::GetModuleType ( const string& location, const XMLAttribute& attribute )
 		return ElfExecutable;
 	if ( attribute.value == "cabinet" )
 		return Cabinet;
+	if ( attribute.value == "messageheader" )
+		return MessageHeader;
 	throw InvalidAttributeValueException ( location,
 	                                       attribute.name,
 	                                       attribute.value );
@@ -1045,6 +1047,7 @@ Module::GetTargetDirectoryTree () const
 		case RpcProxy:
 		case Alias:
 		case IdlHeader:
+		case MessageHeader:
 			return IntermediateDirectory;
 		case TypeDontCare:
 			break;
@@ -1104,6 +1107,7 @@ Module::GetDefaultModuleExtension () const
 		case Alias:
 		case ElfExecutable:
 		case IdlHeader:
+		case MessageHeader:
 			return "";
 		case EmbeddedTypeLib:
 			return ".tlb";
@@ -1160,6 +1164,7 @@ Module::GetDefaultModuleEntrypoint () const
 		case Alias:
 		case BootProgram:
 		case IdlHeader:
+		case MessageHeader:
 		case ElfExecutable:
 		case EmbeddedTypeLib:
 		case Cabinet:
@@ -1211,6 +1216,7 @@ Module::GetDefaultModuleBaseaddress () const
 		case Alias:
 		case BootProgram:
 		case IdlHeader:
+		case MessageHeader:
 		case EmbeddedTypeLib:
 		case Cabinet:
 			return "";
@@ -1261,6 +1267,7 @@ Module::IsDLL () const
 		case RpcProxy:
 		case Alias:
 		case IdlHeader:
+		case MessageHeader:
 		case EmbeddedTypeLib:
 		case ElfExecutable:
 		case Cabinet:

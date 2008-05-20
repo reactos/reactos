@@ -32,6 +32,7 @@
 	<library>kdcom</library>
 	<library>bootvid</library>
 	<library>wdmguid</library>
+	<dependency>bugcodes</dependency>
 	<directory name="include">
 		<pch>ntoskrnl.h</pch>
 	</directory>
@@ -440,7 +441,6 @@
 	<directory name="wmi">
 		<file>wmi.c</file>
 	</directory>
-	<file>bugcodes.mc</file>
 	<file>ntoskrnl.rc</file>
 	<linkerflag>-nostartfiles</linkerflag>
 	<linkerflag>-nostdlib</linkerflag>
