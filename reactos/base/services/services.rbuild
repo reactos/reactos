@@ -13,6 +13,9 @@
 	<directory name="rpcss">
 		<xi:include href="rpcss/rpcss.rbuild" />
 	</directory>
+	<directory name="svchost">
+		<xi:include href="svchost/svchost.rbuild" />
+	</directory>
 	<directory name="tcpsvcs">
 		<xi:include href="tcpsvcs/tcpsvcs.rbuild" />
 	</directory>

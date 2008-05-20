@@ -9,6 +9,8 @@
 /* INCLUDES ******************************************************************/
 
 #include "svchost.h"
+
+#define NDEBUG
 #include <debug.h>
 
 #ifdef _MSC_VER
