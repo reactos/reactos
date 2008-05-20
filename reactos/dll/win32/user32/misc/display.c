@@ -62,13 +62,14 @@ EnumDisplayDevicesA(
       return FALSE;
     }
 
+  RtlZeroMemory(&DisplayDeviceW, sizeof(DISPLAY_DEVICEW));
   DisplayDeviceW.cb = sizeof(DISPLAY_DEVICEW);
   rc = NtUserEnumDisplayDevices (
     &Device,
     iDevNum,
     &DisplayDeviceW,
     dwFlags );
-  if (!rc)
+  if (rc)
     {
       /* Copy result from DisplayDeviceW to lpDisplayDevice */
       lpDisplayDevice->StateFlags = DisplayDeviceW.StateFlags;
@@ -169,6 +170,8 @@ EnumDisplayMonitors(
   if (iCount <= 0)
     {
       /* FIXME: SetLastError() */
+      HeapFree(hHeap, 0, hMonitorList);
+      HeapFree(hHeap, 0, pRectList);
       return FALSE;
     }
 
@@ -188,7 +191,8 @@ EnumDisplayMonitors(
       if (!lpfnEnum(hMonitor, hMonitorDC, pMonitorRect, dwData))
         break;
     }
-
+  HeapFree(hHeap, 0, hMonitorList);
+  HeapFree(hHeap, 0, pRectList);
   return TRUE;
 }
 
