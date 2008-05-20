@@ -10,7 +10,8 @@
 
 #define WM_NOTIFYICONMSG (WM_USER + 248)
 
-TCHAR szKbSwitcherName[] = _T("kbswitcher");
+PROC KbSwitchSetHooks    = NULL;
+PROC KbSwitchDeleteHooks = NULL;
 
 
 static BOOL
@@ -21,6 +22,8 @@ GetLayoutName(LPTSTR szLayoutNum, LPTSTR szName);
 
 HINSTANCE hInst;
 HANDLE    hProcessHeap;
+HMODULE   hDllLib;
+ULONG     ulCurrentLayoutNum = 1;
 
 static HICON
 CreateTrayIcon(LPTSTR szLCID)
@@ -135,7 +138,7 @@ UpdateTrayIcon(HWND hwnd, LPTSTR szLCID, LPTSTR szName)
     tnid.cbSize = sizeof(NOTIFYICONDATA);
     tnid.hWnd = hwnd;
     tnid.uID = 1;
-    tnid.uFlags = NIF_ICON | NIF_MESSAGE |NIF_TIP;
+    tnid.uFlags = NIF_ICON | NIF_MESSAGE | NIF_TIP;
     tnid.uCallbackMessage = WM_NOTIFYICONMSG;
     tnid.hIcon = CreateTrayIcon(szLCID);
 
@@ -187,6 +190,16 @@ GetLayoutID(LPTSTR szLayoutNum, LPTSTR szLCID)
     }
 
     return TRUE;
+}
+
+VOID
+GetLayoutIDByHkl(HKL hKl, LPTSTR szLayoutID)
+{
+    /*
+        FIXME!!! This way of getting layout ID incorrect!
+                 This will not work correctly for 0001040a, 00010410, etc
+    */
+    wsprintf(szLayoutID, _T("00000%x"), LOWORD(hKl));
 }
 
 static BOOL
@@ -258,7 +271,7 @@ GetLayoutName(LPTSTR szLayoutNum, LPTSTR szName)
 BOOL CALLBACK
 EnumWindowsProc(HWND hwnd, LPARAM lParam)
 {
-    SendMessage(hwnd, WM_INPUTLANGCHANGEREQUEST, 0, lParam);
+    PostMessage(hwnd, WM_INPUTLANGCHANGEREQUEST, 0, lParam);
     return TRUE;
 }
 
@@ -278,8 +291,10 @@ ActivateLayout(HWND hwnd, ULONG uLayoutNum)
     // Switch to the new keyboard layout
     UpdateTrayIcon(hwnd, szLCID, szName);
     hKl = LoadKeyboardLayout(szLCID, KLF_ACTIVATE);
-    SystemParametersInfo(SPI_SETDEFAULTINPUTLANG, 0, &hKl, SPIF_SENDWININICHANGE);
+
     EnumWindows(EnumWindowsProc, (LPARAM) hKl);
+
+    ulCurrentLayoutNum = uLayoutNum;
 }
 
 static HMENU
@@ -360,18 +375,101 @@ BuildRightPopupMenu()
     return hMenu;
 }
 
+BOOL
+SetHooks()
+{
+    hDllLib = LoadLibrary(_T("kbsdll.dll"));
+    if (!hDllLib) return FALSE;
+
+    KbSwitchSetHooks    = (PROC) GetProcAddress(hDllLib, MAKEINTRESOURCEA(1));
+    KbSwitchDeleteHooks = (PROC) GetProcAddress(hDllLib, MAKEINTRESOURCEA(2));
+
+    if ((KbSwitchSetHooks == NULL)||(KbSwitchDeleteHooks == NULL))
+        return FALSE;
+
+    return KbSwitchSetHooks();
+}
+
+VOID
+DeleteHooks()
+{
+    if (KbSwitchDeleteHooks) KbSwitchDeleteHooks();
+    if (hDllLib) FreeLibrary(hDllLib);
+}
+
+BOOL CALLBACK
+EnumChildProc(HWND hwnd, LPARAM lParam)
+{
+    SendMessage(hwnd, WM_INPUTLANGCHANGEREQUEST, 0, lParam);
+    return TRUE;
+}
+
+ULONG
+GetNextLayout()
+{
+    TCHAR szLayoutNum[3 + 1], szLayoutID[CCH_LAYOUT_ID + 1];
+    ULONG Ret = ulCurrentLayoutNum;
+
+    _ultot(ulCurrentLayoutNum, szLayoutNum, 10);
+    if (!GetLayoutID(szLayoutNum, szLayoutID))
+    {
+        return -1;
+    }
+
+    _ultot(Ret + 1, szLayoutNum, 10);
+
+    if (GetLayoutID(szLayoutNum, szLayoutID))
+    {
+        return (Ret + 1);
+    }
+    else
+    {
+        _ultot(Ret - 1, szLayoutNum, 10);
+        if (GetLayoutID(szLayoutNum, szLayoutID))
+            return (Ret - 1);
+        else
+            return -1;
+    }
+
+    return -1;
+}
+
 LRESULT CALLBACK
 WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 {
     static HMENU hLeftPopupMenu, hRightPopupMenu;
+    static TCHAR szLCID[MAX_PATH];
 
     switch (Message)
     {
         case WM_CREATE:
+        {
+            SetHooks();
             AddTrayIcon(hwnd);
             hLeftPopupMenu = BuildLeftPopupMenu(hwnd);
             hRightPopupMenu = BuildRightPopupMenu(hwnd);
-            break;
+        }
+        break;
+
+        case WM_LANG_CHANGED:
+        {
+            GetLayoutIDByHkl((HKL)lParam, szLCID);
+            UpdateTrayIcon(hwnd, szLCID, _T(""));
+        }
+        break;
+
+        case WM_LOAD_LAYOUT:
+        {
+            ActivateLayout(hwnd, GetNextLayout());
+        }
+        break;
+
+        case WM_WINDOW_ACTIVATE:
+        {
+            GetLayoutIDByHkl(GetKeyboardLayout(GetWindowThreadProcessId((HWND)wParam, 0)), szLCID);
+            UpdateTrayIcon(hwnd, szLCID, _T(""));
+        }
+        break;
 
         case WM_NOTIFYICONMSG:
             switch (lParam)
@@ -388,8 +486,8 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
                     else
                         TrackPopupMenu(hRightPopupMenu, 0, pt.x, pt.y, 0, hwnd, NULL);
                     PostMessage(hwnd, WM_NULL, 0, 0);
-                    break;
                 }
+                break;
             }
             break;
 
@@ -412,9 +510,8 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 
                     if (!ShellExecuteEx(&shInputDll))
                         MessageBox(hwnd, _T("Can't start input.dll"), NULL, MB_OK | MB_ICONERROR);
-
-                    break;
                 }
+                break;
 
                 default:
                     ActivateLayout(hwnd, LOWORD(wParam));
@@ -428,15 +525,18 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
                 {
                      //FIXME: Should detect default language changes by CPL applet or by other tools and update UI
                 }
-            }
-            break;
+        }
+        break;
 
         case WM_DESTROY:
+        {
+            DeleteHooks();
             DestroyMenu(hLeftPopupMenu);
             DestroyMenu(hRightPopupMenu);
             DelTrayIcon(hwnd);
             PostQuitMessage(0);
-            break;
+        }
+        break;
     }
 
     return DefWindowProc(hwnd, Message, wParam, lParam);
