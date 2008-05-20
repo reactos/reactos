@@ -18,11 +18,6 @@ VOID NTAPI KeRosDumpStackFrames(PULONG, ULONG);
 
 //#define GDI_DEBUG
 
-#ifdef GDI_DEBUG
-BOOLEAN STDCALL KiRosPrintAddress(PVOID Address);
-NTSYSAPI ULONG NTAPI RtlWalkFrameChain(OUT PVOID *Callers, IN ULONG Count, IN ULONG Flags);
-#endif
-
 #define GDI_ENTRY_TO_INDEX(ht, e)                                              \
   (((ULONG_PTR)(e) - (ULONG_PTR)&((ht)->Entries[0])) / sizeof(GDI_TABLE_ENTRY))
 #define GDI_HANDLE_GET_ENTRY(HandleTable, h)                                   \
@@ -89,151 +84,7 @@ static LARGE_INTEGER ShortDelay;
 
 /** DEBUGGING *****************************************************************/
 
-#ifdef GDI_DEBUG
-
-static int leak_reported = 0;
-#define GDI_STACK_LEVELS 12
-static ULONG GDIHandleAllocator[GDI_HANDLE_COUNT][GDI_STACK_LEVELS+1];
-static ULONG GDIHandleLocker[GDI_HANDLE_COUNT][GDI_STACK_LEVELS+1];
-struct DbgOpenGDIHandle
-{
-    ULONG idx;
-    int count;
-};
-#define H 1024
-static struct DbgOpenGDIHandle h[H];
-
-void IntDumpHandleTable(PGDI_HANDLE_TABLE HandleTable)
-{
-    int i, n = 0, j, k, J;
-
-    if (leak_reported)
-    {
-        DPRINT1("gdi handle abusers already reported!\n");
-        return;
-    }
-
-    leak_reported = 1;
-    DPRINT1("reporting gdi handle abusers:\n");
-
-    /* step through GDI handle table and find out who our culprit is... */
-    for (i = RESERVE_ENTRIES_COUNT; i < GDI_HANDLE_COUNT; i++)
-    {
-        for (j = 0; j < n; j++)
-        {
-next:
-            J = h[j].idx;
-            for (k = 0; k < GDI_STACK_LEVELS; k++)
-            {
-                if (GDIHandleAllocator[i][k]
-                        != GDIHandleAllocator[J][k])
-                {
-                    if (++j == n)
-                        goto done;
-                    else
-                        goto next;
-                }
-            }
-            goto done;
-        }
-done:
-        if (j < H)
-        {
-            if (j == n)
-            {
-                h[j].idx = i;
-                h[j].count = 1;
-                n = n + 1;
-            }
-            else
-                h[j].count++;
-        }
-    }
-    /* bubble sort time! weeeeee!! */
-    for (i = 0; i < n-1; i++)
-    {
-        if (h[i].count < h[i+1].count)
-        {
-            struct DbgOpenGDIHandle t;
-            t = h[i+1];
-            h[i+1] = h[i];
-            j = i;
-            while (j > 0 && h[j-1].count < t.count)
-                j--;
-            h[j] = t;
-        }
-    }
-    /* print the worst offenders... */
-    DbgPrint("Worst GDI Handle leak offenders (out of %i unique locations):\n", n);
-    for (i = 0; i < n && h[i].count > 1; i++)
-    {
-        int j;
-        DbgPrint(" %i allocs: ", h[i].count);
-        for (j = 0; j < GDI_STACK_LEVELS; j++)
-        {
-            ULONG Addr = GDIHandleAllocator[h[i].idx][j];
-            if (!KiRosPrintAddress((PVOID)Addr))
-                DbgPrint("<%X>", Addr);
-        }
-        DbgPrint("\n");
-    }
-    if (i < n && h[i].count == 1)
-        DbgPrint("(list terminated - the remaining entries have 1 allocation only)\n");
-}
-
-ULONG
-CaptureStackBackTace(PVOID* pFrames, ULONG nFramesToCapture)
-{
-    ULONG nFrameCount;
-
-    memset(pFrames, 0x00, (nFramesToCapture + 1) * sizeof(PVOID));
-
-    nFrameCount = RtlCaptureStackBackTrace(1, nFramesToCapture, pFrames, NULL);
-
-    if (nFrameCount < nFramesToCapture)
-    {
-        nFrameCount += RtlWalkFrameChain(pFrames + nFrameCount, nFramesToCapture - nFrameCount, 1);
-    }
-
-    return nFrameCount;
-}
-
-#define GDIDBG_TRACECALLER() \
-  DPRINT1("-> called from:\n"); \
-  KeRosDumpStackFrames(NULL, 20);
-#define GDIDBG_TRACEALLOCATOR(index) \
-  DPRINT1("-> allocated from:\n"); \
-  KeRosDumpStackFrames(GDIHandleAllocator[index], GDI_STACK_LEVELS);
-#define GDIDBG_TRACELOCKER(index) \
-  DPRINT1("-> locked from:\n"); \
-  KeRosDumpStackFrames(GDIHandleLocker[index], GDI_STACK_LEVELS);
-#define GDIDBG_CAPTUREALLOCATOR(index) \
-  CaptureStackBackTace((PVOID*)GDIHandleAllocator[index], GDI_STACK_LEVELS);
-#define GDIDBG_CAPTURELOCKER(index) \
-  CaptureStackBackTace((PVOID*)GDIHandleLocker[index], GDI_STACK_LEVELS);
-#define GDIDBG_DUMPHANDLETABLE() \
-  IntDumpHandleTable(GdiHandleTable)
-#define GDIDBG_INITLOOPTRACE() \
-  ULONG Attempts = 0;
-#define GDIDBG_TRACELOOP(Handle, PrevThread, Thread) \
-  if ((++Attempts % 20) == 0) \
-  { \
-    DPRINT1("[%d] Handle 0x%p Locked by 0x%x (we're 0x%x)\n", Attempts, Handle, PrevThread, Thread); \
-  }
-
-#else
-
-#define GDIDBG_TRACECALLER()
-#define GDIDBG_TRACEALLOCATOR(index)
-#define GDIDBG_TRACELOCKER(index)
-#define GDIDBG_CAPTUREALLOCATOR(index)
-#define GDIDBG_CAPTURELOCKER(index)
-#define GDIDBG_DUMPHANDLETABLE()
-#define GDIDBG_INITLOOPTRACE()
-#define GDIDBG_TRACELOOP(Handle, PrevThread, Thread)
-
-#endif /* GDI_DEBUG */
-
+#include "gdidbg.c"
 
 /** INTERNAL FUNCTIONS ********************************************************/
 
@@ -716,25 +567,19 @@ LockHandle:
     {
         if (!Silent)
         {
-            if (((ULONG_PTR)PrevProcId & ~0x1) == 0)
+            if ((Entry->Type & GDI_ENTRY_BASETYPE_MASK) == 0)
+            {
+                DPRINT1("Attempted to free gdi handle 0x%x that is already deleted!\n", hObj);
+            }
+            else if (((ULONG_PTR)PrevProcId & ~0x1) == 0)
             {
                 DPRINT1("Attempted to free global gdi handle 0x%x, caller needs to get ownership first!!!\n", hObj);
-                DPRINT1("Type = 0x%lx, KernelData = 0x%p, ProcessId = 0x%p\n", Entry->Type, Entry->KernelData, Entry->ProcessId);
-
-                /* HACK: Ugly and nasty */
-                if ((ULONG_PTR)Entry->KernelData < 0x1000)
-                {
-                    /* It's a memory-corruption bug (probably?),
-                       overcome it by just saying "yes, object destroyed" */
-                    DPRINT1("Bad kerneldata!!! Blame Win32k developers!\n");
-                    return TRUE;
-                }
-
             }
             else
             {
                 DPRINT1("Attempted to free foreign handle: 0x%x Owner: 0x%x from Caller: 0x%x\n", hObj, (ULONG_PTR)PrevProcId & ~0x1, (ULONG_PTR)ProcessId & ~0x1);
             }
+            DPRINT1("Type = 0x%lx, KernelData = 0x%p, ProcessId = 0x%p\n", Entry->Type, Entry->KernelData, Entry->ProcessId);
             GDIDBG_TRACECALLER();
             GDIDBG_TRACEALLOCATOR(GDI_HANDLE_GET_INDEX(hObj));
         }
@@ -782,6 +627,57 @@ NtGdiDeleteObject(HGDIOBJ hObject)
     }
 }
 
+VOID
+FASTCALL
+IntDeleteHandlesForProcess(struct _EPROCESS *Process, ULONG ObjectType)
+{
+    PGDI_TABLE_ENTRY Entry, End;
+    ULONG Index = RESERVE_ENTRIES_COUNT;
+    HANDLE ProcId;
+    PW32PROCESS W32Process;
+
+    W32Process = (PW32PROCESS)Process->Win32Process;
+    ASSERT(W32Process);
+
+    if (W32Process->GDIObjects > 0)
+    {
+       ProcId = Process->UniqueProcessId;
+
+    /* FIXME - Instead of building the handle here and delete it using GDIOBJ_FreeObj
+               we should delete it directly here! */
+
+        End = &GdiHandleTable->Entries[GDI_HANDLE_COUNT];
+        for (Entry = &GdiHandleTable->Entries[RESERVE_ENTRIES_COUNT];
+             Entry != End;
+             Entry++, Index++)
+        {
+            /* ignore the lock bit */
+            if ( (HANDLE)((ULONG_PTR)Entry->ProcessId & ~0x1) == ProcId)
+            {
+                if ( (Entry->Type & GDI_ENTRY_BASETYPE_MASK) == ObjectType ||
+                     ObjectType == GDI_OBJECT_TYPE_DONTCARE)
+                {
+                    HGDIOBJ ObjectHandle;
+
+                    /* Create the object handle for the entry, the lower(!) 16 bit of the
+                       Type field includes the type of the object including the stock
+                       object flag - but since stock objects don't have a process id we can
+                       simply ignore this fact here. */
+                    ObjectHandle = (HGDIOBJ)(Index | (Entry->Type << GDI_ENTRY_UPPER_SHIFT));
+
+                    if (GDIOBJ_FreeObjByHandle(ObjectHandle, GDI_OBJECT_TYPE_DONTCARE) &&
+                        W32Process->GDIObjects == 0)
+                    {
+                        /* there are no more gdi handles for this process, bail */
+                        break;
+                    }
+                }
+            }
+        }
+    }
+}
+
+
 /*!
  * Internal function. Called when the process is destroyed to free the remaining GDI handles.
  * \param	Process - PID of the process that will be destroyed.
@@ -789,11 +685,7 @@ NtGdiDeleteObject(HGDIOBJ hObject)
 BOOL INTERNAL_CALL
 GDI_CleanupForProcess(struct _EPROCESS *Process)
 {
-    PGDI_TABLE_ENTRY Entry, End;
     PEPROCESS CurrentProcess;
-    PW32PROCESS W32Process;
-    HANDLE ProcId;
-    ULONG Index = RESERVE_ENTRIES_COUNT;
 
     DPRINT("Starting CleanupForProcess prochandle %x Pid %d\n", Process, Process->UniqueProcessId);
     CurrentProcess = PsGetCurrentProcess();
@@ -801,46 +693,23 @@ GDI_CleanupForProcess(struct _EPROCESS *Process)
     {
         KeAttachProcess(&Process->Pcb);
     }
-    W32Process = (PW32PROCESS)Process->Win32Process;
-    ASSERT(W32Process);
 
-    if (W32Process->GDIObjects > 0)
-    {
-        /* FIXME - Instead of building the handle here and delete it using GDIOBJ_FreeObj
-                   we should delete it directly here! */
-        ProcId = Process->UniqueProcessId;
+    /* Delete objects. Begin with types that are not referenced by other types */
+    IntDeleteHandlesForProcess(Process, GDILoObjType_LO_DC_TYPE);
+    IntDeleteHandlesForProcess(Process, GDILoObjType_LO_BRUSH_TYPE);
+    IntDeleteHandlesForProcess(Process, GDILoObjType_LO_BITMAP_TYPE);
 
-        End = &GdiHandleTable->Entries[GDI_HANDLE_COUNT];
-        for (Entry = &GdiHandleTable->Entries[RESERVE_ENTRIES_COUNT];
-                Entry != End;
-                Entry++, Index++)
-        {
-            /* ignore the lock bit */
-            if ( (HANDLE)((ULONG_PTR)Entry->ProcessId & ~0x1) == ProcId &&
-                 (Entry->Type & ~GDI_ENTRY_REUSE_MASK) != 0 )
-            {
-                HGDIOBJ ObjectHandle;
-
-                /* Create the object handle for the entry, the lower(!) 16 bit of the
-                   Type field includes the type of the object including the stock
-                   object flag - but since stock objects don't have a process id we can
-                   simply ignore this fact here. */
-                ObjectHandle = (HGDIOBJ)(Index | (Entry->Type << GDI_ENTRY_UPPER_SHIFT));
-
-                if (GDIOBJ_FreeObjByHandle(ObjectHandle, GDI_OBJECT_TYPE_DONTCARE) &&
-                        W32Process->GDIObjects == 0)
-                {
-                    /* there are no more gdi handles for this process, bail */
-                    break;
-                }
-            }
-        }
-    }
+    /* Finally finish with what's left */
+    IntDeleteHandlesForProcess(Process, GDI_OBJECT_TYPE_DONTCARE);
 
     if (CurrentProcess != Process)
     {
         KeDetachProcess();
     }
+
+#ifdef GDI_DEBUG
+	GdiDbgHTIntegrityCheck();
+#endif
 
     DPRINT("Completed cleanup for process %d\n", Process->UniqueProcessId);
 
@@ -1240,11 +1109,12 @@ LockHandle:
                         }
                     }
 
-                    /* remove the process id lock and make it global */
-                    (void)_InterlockedExchangePointer((PVOID*)&Entry->ProcessId, GDI_GLOBAL_PROCESS);
-
                     hObj = (HGDIOBJ)((ULONG)(hObj) | GDI_HANDLE_STOCK_MASK);
                     *phObj = hObj;
+                    Object->hHmgr = hObj;
+
+                    /* remove the process id lock and make it global */
+                    (void)_InterlockedExchangePointer((PVOID*)&Entry->ProcessId, GDI_GLOBAL_PROCESS);
 
                     /* we're done, successfully converted the object */
                     return TRUE;
