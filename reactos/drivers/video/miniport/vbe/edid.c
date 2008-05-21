@@ -125,7 +125,7 @@ VBEReadEdidUsingSCI(
    VBEDeviceExtension->Int10Interface.Int10CallBios(
       VBEDeviceExtension->Int10Interface.Context,
       &BiosRegisters);
-   if (BiosRegisters.Eax != VBE_SUCCESS)
+   if (VBE_GETRETURNCODE(BiosRegisters.Eax) != VBE_SUCCESS)
       return FALSE;
    VideoPortDebugPrint(Info, "VBEMP: VBE/SCI version %x\n", BiosRegisters.Ecx);
    if ((BiosRegisters.Ebx & 0xF) != 0xF)
@@ -141,7 +141,7 @@ VBEReadEdidUsingSCI(
    VBEDeviceExtension->Int10Interface.Int10CallBios(
       VBEDeviceExtension->Int10Interface.Context,
       &BiosRegisters);
-   if (BiosRegisters.Eax != VBE_SUCCESS)
+   if (VBE_GETRETURNCODE(BiosRegisters.Eax) != VBE_SUCCESS)
       return FALSE;
 
    /*
@@ -198,7 +198,7 @@ VBEReadEdid(
       VBEDeviceExtension->Int10Interface.Context,
       &BiosRegisters);
 
-   if (BiosRegisters.Eax != VBE_SUCCESS)
+   if (VBE_GETRETURNCODE(BiosRegisters.Eax) != VBE_SUCCESS)
       return FALSE;
 
    /*
