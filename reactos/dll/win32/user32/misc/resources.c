@@ -116,11 +116,13 @@ int STDCALL LoadStringA
   INT retSize;
 
   /* parameter validation */
-  if
-  (
-    (nBufferMax < 1) ||
-    (IsBadWritePtr(lpBuffer, nBufferMax * sizeof(lpBuffer[0])))
-  )
+
+  if(nBufferMax < 1)
+  {
+    return -1;
+  }
+
+  if(IsBadWritePtr(lpBuffer, nBufferMax * sizeof(lpBuffer[0])))
   {
     SetLastError(ERROR_INVALID_PARAMETER);
     return 0;
@@ -196,7 +198,8 @@ int STDCALL LoadStringW
   /* parameter validation */
   if
   (
-    (nBufferMax < 1) ||
+    (nBufferMax < 0) ||
+    (lpBuffer == NULL) ||
     ((nBufferMax > 0)  && IsBadWritePtr(lpBuffer, nBufferMax * sizeof(lpBuffer[0]))) ||
     /* undocumented: If nBufferMax is 0, LoadStringW will copy a pointer to the
        in-memory image of the string to the specified buffer and return the length
