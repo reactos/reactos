@@ -1250,7 +1250,7 @@ MingwModuleHandler::GetPrecompiledHeaderFilename () const
 		return NULL;
 	return new FileLocation ( IntermediateDirectory,
 	                          module.pch->file->relative_path,
-	                          ReplaceExtension ( module.pch->file->name, "_" + module.name + ".gch" ) );
+	                          module.pch->file->name + ".gch" );
 }
 
 Rule arRule1 ( "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).a: $($(module_name)_OBJS) | $(INTERMEDIATE)$(SEP)$(source_dir)\n",
