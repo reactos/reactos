@@ -7,7 +7,6 @@
 	<define name="_NTOSKRNL_" />
 	<define name="_NTSYSTEM_" />
 	<define name="NASSERT" />
-	<pch>cmlib.h</pch>
 	<file>cminit.c</file>
 	<file>hivebin.c</file>
 	<file>hivecell.c</file>
@@ -26,7 +25,6 @@
 	<compilerflag>-Wwrite-strings</compilerflag>
 	<compilerflag>-Wpointer-arith</compilerflag>
 	<define name="CMLIB_HOST" />
-	<pch>cmlib.h</pch>
 	<file>cminit.c</file>
 	<file>hivebin.c</file>
 	<file>hivecell.c</file>
