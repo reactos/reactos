@@ -353,16 +353,20 @@ OpenFileMappingW(DWORD dwDesiredAccess,
 BOOL
 NTAPI
 FlushViewOfFile(LPCVOID lpBaseAddress,
-                DWORD dwNumberOfBytesToFlush)
+                SIZE_T dwNumberOfBytesToFlush)
 {
+    SIZE_T NumberOfBytesToFlush;
     NTSTATUS Status;
-    ULONG NumberOfBytesFlushed;
+    IO_STATUS_BLOCK IoStatusBlock;
+
+    /* Save amount of bytes to flush to a local var */
+    NumberOfBytesToFlush = dwNumberOfBytesToFlush;
 
     /* Flush the view */
     Status = NtFlushVirtualMemory(NtCurrentProcess(),
                                   (LPVOID)lpBaseAddress,
-                                  dwNumberOfBytesToFlush,
-                                  &NumberOfBytesFlushed);
+                                  &NumberOfBytesToFlush,
+                                  &IoStatusBlock);
     if (!NT_SUCCESS(Status))
     {
         /* We failed */
