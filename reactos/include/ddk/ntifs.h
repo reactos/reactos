@@ -643,7 +643,7 @@ typedef struct _KAPC_STATE {
 
 typedef struct _BITMAP_RANGE {
     LIST_ENTRY      Links;
-    LARGE_INTEGER   BasePage;
+    LONGLONG        BasePage;
     ULONG           FirstDirtyPage;
     ULONG           LastDirtyPage;
     ULONG           DirtyPages;
