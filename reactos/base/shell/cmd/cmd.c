@@ -182,8 +182,7 @@ INT
 ConvertULargeInteger (ULARGE_INTEGER num, LPTSTR des, INT len, BOOL bPutSeperator)
 {
 	TCHAR temp[32];
-	INT c = 0;
-	INT n = 0;
+	UINT  n, iTarget;
 
 	if (len <= 1)
 		return 0;
@@ -192,24 +191,29 @@ ConvertULargeInteger (ULARGE_INTEGER num, LPTSTR des, INT len, BOOL bPutSeperato
 	{
 		des[0] = _T('0');
 		des[1] = _T('\0');
-		n = 1;
+		return 1;
 	}
-	else
-	{
-		temp[31] = 0;
-		while (num.QuadPart > 0)
-		{
-			if ((((c + 1) % (nNumberGroups + 1)) == 0) && (bPutSeperator))
-				temp[30 - c++] = cThousandSeparator;
-                        temp[30 - c++] = (TCHAR)(num.QuadPart % 10) + _T('0');
-			num.QuadPart /= 10;
-		}
-        if (c>len)
-			c=len;
 
-		for (n = 0; n <= c; n++)
-			des[n] = temp[31 - c + n];
+	n = 0;
+	iTarget = nNumberGroups;
+	if (!nNumberGroups)
+		bPutSeperator = FALSE;
+
+	while (num.QuadPart > 0)
+	{
+		if (iTarget == n && bPutSeperator)
+		{
+			iTarget += nNumberGroups + 1;
+			temp[31 - n++] = cThousandSeparator;
+		}
+		temp[31 - n++] = (TCHAR)(num.QuadPart % 10) + _T('0');
+		num.QuadPart /= 10;
 	}
+	if (n > len-1)
+		n = len-1;
+
+	memcpy(des, temp + 32 - n, n * sizeof(TCHAR));
+	des[n] = _T('\0');
 
 	return n;
 }
