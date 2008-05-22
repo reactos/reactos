@@ -1,6 +1,6 @@
 #ifdef GDI_DEBUG
 
-BOOLEAN STDCALL KiRosPrintAddress(PVOID Address);
+NTSYSAPI VOID NTAPI KeRosDumpStackFrames(PULONG, ULONG);
 NTSYSAPI ULONG NTAPI RtlWalkFrameChain(OUT PVOID *Callers, IN ULONG Count, IN ULONG Flags);
 
 static int leak_reported = 0;
@@ -79,14 +79,13 @@ done:
     DbgPrint("Worst GDI Handle leak offenders (out of %i unique locations):\n", n);
     for (i = 0; i < n && h[i].count > 1; i++)
     {
-        int j;
+        /* Print out the allocation count */
         DbgPrint(" %i allocs: ", h[i].count);
-        for (j = 0; j < GDI_STACK_LEVELS; j++)
-        {
-            ULONG Addr = GDIHandleAllocator[h[i].idx][j];
-            if (!KiRosPrintAddress((PVOID)Addr))
-                DbgPrint("<%X>", Addr);
-        }
+
+        /* Dump the frames */
+        KeRosDumpStackFrames(GDIHandleAllocator[h[i].idx], GDI_STACK_LEVELS);
+
+        /* Print new line for better readability */
         DbgPrint("\n");
     }
     if (i < n && h[i].count == 1)

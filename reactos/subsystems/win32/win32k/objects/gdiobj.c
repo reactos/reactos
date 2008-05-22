@@ -9,14 +9,8 @@
 /** INCLUDES ******************************************************************/
 
 #include <w32k.h>
-
 #define NDEBUG
 #include <debug.h>
-
-/* FIXME include right header for KeRosDumpStackFrames */
-VOID NTAPI KeRosDumpStackFrames(PULONG, ULONG);
-
-//#define GDI_DEBUG
 
 #define GDI_ENTRY_TO_INDEX(ht, e)                                              \
   (((ULONG_PTR)(e) - (ULONG_PTR)&((ht)->Entries[0])) / sizeof(GDI_TABLE_ENTRY))
@@ -83,7 +77,7 @@ OBJ_TYPE_INFO ObjTypeInfo[] =
 static LARGE_INTEGER ShortDelay;
 
 /** DEBUGGING *****************************************************************/
-
+//#define GDI_DEBUG
 #include "gdidbg.c"
 
 /** INTERNAL FUNCTIONS ********************************************************/
