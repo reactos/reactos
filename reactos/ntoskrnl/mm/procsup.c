@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
- * FILE:            ntoskrnl/mm/procsup.c
+ * FILE:            ntoskrnl/mm/process.c
  * PURPOSE:         Memory functions related to Processes
  *
  * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
@@ -615,24 +615,20 @@ MmInitializeProcessAddressSpace(IN PEPROCESS Process,
         /* Determine the image file name and save it to EPROCESS */
         DPRINT("Getting Image name\n");
         FileName = SectionObject->FileObject->FileName;
-        szSrc = (PWCHAR)((PCHAR)FileName.Buffer + FileName.Length);
-        if (FileName.Buffer)
+        szSrc = (PWCHAR)(FileName.Buffer + FileName.Length);
+        while (szSrc >= FileName.Buffer)
         {
-            /* Loop the file name*/
-            while (szSrc > FileName.Buffer)
+            /* Make sure this isn't a backslash */
+            if (*--szSrc == OBJ_NAME_PATH_SEPARATOR)
             {
-                /* Make sure this isn't a backslash */
-                if (*--szSrc == OBJ_NAME_PATH_SEPARATOR)
-                {
-                    /* If so, stop it here */
-                    szSrc++;
-                    break;
-                }
-                else
-                {
-                    /* Otherwise, keep going */
-                    lnFName++;
-                }
+                /* If so, stop it here */
+                szSrc++;
+                break;
+            }
+            else
+            {
+                /* Otherwise, keep going */
+                lnFName++;
             }
         }
 
@@ -724,4 +720,3 @@ MmDeleteProcessAddressSpace(PEPROCESS Process)
    DPRINT("Finished MmReleaseMmInfo()\n");
    return(STATUS_SUCCESS);
 }
-
