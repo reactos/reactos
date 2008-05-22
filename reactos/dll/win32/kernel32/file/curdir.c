@@ -166,16 +166,19 @@ GetTempPathW (
    LPWSTR   path
 	)
 {
-   WCHAR tmp_path[MAX_PATH];
-   WCHAR tmp_full_path[MAX_PATH];
-   UINT ret;
+    static const WCHAR tmp[]  = { 'T', 'M', 'P', 0 };
+    static const WCHAR temp[] = { 'T', 'E', 'M', 'P', 0 };
+    static const WCHAR userprofile[] = { 'U','S','E','R','P','R','O','F','I','L','E',0 };
+    WCHAR tmp_path[MAX_PATH];
+    UINT ret;
 
-   TRACE("GetTempPathW(%lu,%p)\n", count, path);
+    TRACE("%u,%p\n", count, path);
 
-   if (!(ret = GetEnvironmentVariableW( L"TMP", tmp_path, MAX_PATH )))
-     if (!(ret = GetEnvironmentVariableW( L"TEMP", tmp_path, MAX_PATH )))
-         if (!(ret = GetCurrentDirectoryW( MAX_PATH, tmp_path )))
-             return 0;
+    if (!(ret = GetEnvironmentVariableW( tmp, tmp_path, MAX_PATH )) &&
+        !(ret = GetEnvironmentVariableW( temp, tmp_path, MAX_PATH )) &&
+        !(ret = GetEnvironmentVariableW( userprofile, tmp_path, MAX_PATH )) &&
+        !(ret = GetWindowsDirectoryW( tmp_path, MAX_PATH )))
+        return 0;
 
    if (ret > MAX_PATH)
    {
@@ -183,7 +186,7 @@ GetTempPathW (
      return 0;
    }
 
-   ret = GetFullPathNameW(tmp_path, MAX_PATH, tmp_full_path, NULL);
+   ret = GetFullPathNameW(tmp_path, MAX_PATH, tmp_path, NULL);
    if (!ret) return 0;
 
    if (ret > MAX_PATH - 2)
@@ -192,17 +195,17 @@ GetTempPathW (
      return 0;
    }
 
-   if (tmp_full_path[ret-1] != '\\')
+   if (tmp_path[ret-1] != '\\')
    {
-     tmp_full_path[ret++] = '\\';
-     tmp_full_path[ret]   = '\0';
+     tmp_path[ret++] = '\\';
+     tmp_path[ret]   = '\0';
    }
 
    ret++; /* add space for terminating 0 */
 
    if (count)
    {
-     lstrcpynW(path, tmp_full_path, count);
+     lstrcpynW(path, tmp_path, count);
      if (count >= ret)
          ret--; /* return length without 0 */
      else if (count < 4)
