@@ -12,7 +12,6 @@
 	<define name="_MSVCRT_" />
 	<define name="_MT" />
 	<define name="__NO_CTYPE_INLINES" />
-	<pch>precomp.h</pch>
 	<directory name="conio">
 		<file>cgets.c</file>
 		<file>cprintf.c</file>

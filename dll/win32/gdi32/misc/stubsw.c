@@ -48,20 +48,6 @@ GetLogColorSpaceW(
 	return FALSE;
 }
 
-/*
- * @unimplemented
- */
-HCOLORSPACE
-STDCALL
-CreateColorSpaceW(
-	LPLOGCOLORSPACEW	a0
-	)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
 
 /*
  * @unimplemented

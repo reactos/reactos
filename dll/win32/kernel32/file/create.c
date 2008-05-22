@@ -15,10 +15,9 @@
 /* INCLUDES *****************************************************************/
 
 #include <k32.h>
+#include <wine/debug.h>
 
-#define NDEBUG
-#include <debug.h>
-
+WINE_DEFAULT_DEBUG_CHANNEL(kernel32file);
 
 #define SYMLINK_FLAG_RELATIVE   1
 
@@ -66,7 +65,7 @@ HANDLE STDCALL CreateFileA (LPCSTR			lpFileName,
    PWCHAR FileNameW;
    HANDLE FileHandle;
 
-   DPRINT("CreateFileA(lpFileName %s)\n",lpFileName);
+   TRACE("CreateFileA(lpFileName %s)\n",lpFileName);
 
    if (!(FileNameW = FilenameA2W(lpFileName, FALSE)))
       return INVALID_HANDLE_VALUE;
@@ -104,7 +103,7 @@ HANDLE STDCALL CreateFileW (LPCWSTR			lpFileName,
    PVOID EaBuffer = NULL;
    ULONG EaLength = 0;
 
-   DPRINT("CreateFileW(lpFileName %S)\n",lpFileName);
+   TRACE("CreateFileW(lpFileName %S)\n",lpFileName);
 
    /* validate & translate the creation disposition */
    switch (dwCreationDisposition)
@@ -232,12 +231,12 @@ HANDLE STDCALL CreateFileW (LPCWSTR			lpFileName,
 				      NULL,
 				      NULL))
    {
-     DPRINT("Invalid path\n");
+     WARN("Invalid path\n");
      SetLastError(ERROR_PATH_NOT_FOUND);
      return INVALID_HANDLE_VALUE;
    }
 
-   DPRINT("NtPathU \'%wZ\'\n", &NtPathU);
+   TRACE("NtPathU \'%wZ\'\n", &NtPathU);
 
    if (hTemplateFile != NULL)
    {

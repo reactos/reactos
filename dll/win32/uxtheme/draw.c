@@ -196,7 +196,6 @@ static PTHEME_PROPERTY UXTHEME_SelectImage(HTHEME hTheme, HDC hdc, int iPartId, 
                 WCHAR szPath[MAX_PATH];
                 int imagelayout = IL_HORIZONTAL;
                 int imagecount = 1;
-                int imagenum;
                 BITMAP bmp;
                 HBITMAP hBmp;
                 BOOL hasAlpha;
@@ -209,7 +208,6 @@ static PTHEME_PROPERTY UXTHEME_SelectImage(HTHEME hTheme, HDC hdc, int iPartId, 
                 GetThemeEnumValue(hTheme, iPartId, iStateId, TMT_IMAGELAYOUT, &imagelayout);
                 GetThemeInt(hTheme, iPartId, iStateId, TMT_IMAGECOUNT, &imagecount);
 
-                imagenum = max (min (imagecount, iStateId), 1) - 1;
                 GetObjectW(hBmp, sizeof(bmp), &bmp);
                 if(imagelayout == IL_VERTICAL) {
                     reqsize.x = bmp.bmWidth;
@@ -340,27 +338,81 @@ static inline BOOL UXTHEME_SizedBlt (HDC hdcDst, int nXOriginDst, int nYOriginDs
 {
     if (sizingtype == ST_TILE)
     {
-        int yOfs = nYOriginDst;
-        int yRemaining = nHeightDst;
-        while (yRemaining > 0)
+        HDC hdcTemp;
+        BOOL result = FALSE;
+
+        if (!nWidthSrc || !nHeightSrc) return TRUE;
+
+        /* For destination width/height less than or equal to source
+           width/height, do not bother with memory bitmap optimization */
+        if (nWidthSrc >= nWidthDst && nHeightSrc >= nHeightDst)
         {
-            int bltHeight = min (yRemaining, nHeightSrc);
-            int xOfs = nXOriginDst;
-            int xRemaining = nWidthDst;
+            int bltWidth = min (nWidthDst, nWidthSrc);
+            int bltHeight = min (nHeightDst, nHeightSrc);
+
+            return UXTHEME_Blt (hdcDst, nXOriginDst, nYOriginDst, bltWidth, bltHeight,
+                                hdcSrc, nXOriginSrc, nYOriginSrc,
+                                transparent, transcolor);
+        }
+
+        /* Create a DC with a bitmap consisting of a tiling of the source
+           bitmap, with standard GDI functions. This is faster than an
+           iteration with UXTHEME_Blt(). */
+        hdcTemp = CreateCompatibleDC(hdcSrc);
+        if (hdcTemp != 0)
+        {
+            HBITMAP bitmapTemp;
+            HBITMAP bitmapOrig;
+            int nWidthTemp, nHeightTemp;
+            int xOfs, xRemaining;
+            int yOfs, yRemaining;
+            int growSize;
+
+            /* Calculate temp dimensions of integer multiples of source dimensions */
+            nWidthTemp = ((nWidthDst + nWidthSrc - 1) / nWidthSrc) * nWidthSrc;
+            nHeightTemp = ((nHeightDst + nHeightSrc - 1) / nHeightSrc) * nHeightSrc;
+            bitmapTemp = CreateCompatibleBitmap(hdcSrc, nWidthTemp, nHeightTemp);
+            bitmapOrig = SelectObject(hdcTemp, bitmapTemp);
+
+            /* Initial copy of bitmap */
+            BitBlt(hdcTemp, 0, 0, nWidthSrc, nHeightSrc, hdcSrc, nXOriginSrc, nYOriginSrc, SRCCOPY);
+
+            /* Extend bitmap in the X direction. Growth of width is exponential */
+            xOfs = nWidthSrc;
+            xRemaining = nWidthTemp - nWidthSrc;
+            growSize = nWidthSrc;
             while (xRemaining > 0)
             {
-                int bltWidth = min (xRemaining, nWidthSrc);
-                if (!UXTHEME_Blt (hdcDst, xOfs, yOfs, bltWidth, bltHeight,
-                                  hdcSrc, nXOriginSrc, nYOriginSrc, 
-                                  transparent, transcolor))
-                    return FALSE;
-                xOfs += nWidthSrc;
-                xRemaining -= nWidthSrc;
+                growSize = min(growSize, xRemaining);
+                BitBlt(hdcTemp, xOfs, 0, growSize, nHeightSrc, hdcTemp, 0, 0, SRCCOPY);
+                xOfs += growSize;
+                xRemaining -= growSize;
+                growSize *= 2;
             }
-            yOfs += nHeightSrc;
-            yRemaining -= nHeightSrc;
+
+            /* Extend bitmap in the Y direction. Growth of height is exponential */
+            yOfs = nHeightSrc;
+            yRemaining = nHeightTemp - nHeightSrc;
+            growSize = nHeightSrc;
+            while (yRemaining > 0)
+            {
+                growSize = min(growSize, yRemaining);
+                BitBlt(hdcTemp, 0, yOfs, nWidthTemp, growSize, hdcTemp, 0, 0, SRCCOPY);
+                yOfs += growSize;
+                yRemaining -= growSize;
+                growSize *= 2;
+            }
+
+            /* Use temporary hdc for source */
+            result = UXTHEME_Blt (hdcDst, nXOriginDst, nYOriginDst, nWidthDst, nHeightDst,
+                          hdcTemp, 0, 0,
+                          transparent, transcolor);
+
+            SelectObject(hdcTemp, bitmapOrig);
+            DeleteObject(bitmapTemp);
         }
-        return TRUE;
+        DeleteDC(hdcTemp);
+        return result;
     }
     else
     {
@@ -853,7 +905,7 @@ static HRESULT UXTHEME_DrawBackgroundFill(HTHEME hTheme, HDC hdc, int iPartId,
         /* FIXME: This only accounts for 2 gradient colors (out of 5) and ignores
             the gradient ratios (no idea how those work)
             Few themes use this, and the ones I've seen only use 2 colors with
-            a gradient ratio of 0 and 255 respectivly
+            a gradient ratio of 0 and 255 respectively
         */
 
         COLORREF gradient1 = RGB(0,0,0);

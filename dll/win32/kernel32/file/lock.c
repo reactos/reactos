@@ -14,10 +14,9 @@
 /* INCLUDES ****************************************************************/
 
 #include <k32.h>
-
 #include <wine/debug.h>
 
-WINE_DEFAULT_DEBUG_CHANNEL(kernel32);
+WINE_DEFAULT_DEBUG_CHANNEL(kernel32file);
 
 /* FUNCTIONS ****************************************************************/
 

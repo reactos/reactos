@@ -318,6 +318,8 @@ CheckDebug:
     test byte ptr [eax+KTHREAD_DEBUG_ACTIVE], 0xFF
     jnz RestoreDebug
 
+RestoreStack:
+
     /* Get TSS */
     mov edx, fs:[KPCR_TSS]
 
@@ -379,10 +381,25 @@ NotV86:
     jmp CheckDebug
 
 RestoreDebug:
+    /* Get a pointer to thread's trap frame */
+    mov esi, [eax+KTHREAD_TRAP_FRAME]
 
-    /* Not yet supported */
-    int 3
-    jmp $
+    /* Copy debug registers data from it */
+    mov edx, [esi+KTRAP_FRAME_DR0]
+    mov [edi+KTRAP_FRAME_DR0], edx
+    mov edx, [esi+KTRAP_FRAME_DR1]
+    mov [edi+KTRAP_FRAME_DR1], edx
+    mov edx, [esi+KTRAP_FRAME_DR2]
+    mov [edi+KTRAP_FRAME_DR2], edx
+    mov edx, [esi+KTRAP_FRAME_DR3]
+    mov [edi+KTRAP_FRAME_DR3], edx
+    mov edx, [esi+KTRAP_FRAME_DR6]
+    mov [edi+KTRAP_FRAME_DR6], edx
+    mov edx, [esi+KTRAP_FRAME_DR7]
+    mov [edi+KTRAP_FRAME_DR7], edx
+
+    /* Jump back */
+    jmp RestoreStack
 
 NoStack:
 

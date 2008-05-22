@@ -18,18 +18,18 @@ BOOLEAN
 NTAPI
 CmpDoFlushAll(IN BOOLEAN ForceFlush)
 {
-    NTSTATUS Status;
     PLIST_ENTRY NextEntry;
     PCMHIVE Hive;
-    BOOLEAN Result = TRUE;    
+    NTSTATUS Status;
+    BOOLEAN Result = TRUE;
 
     /* Make sure that the registry isn't read-only now */
     if (CmpNoWrite) return TRUE;
-    
+
     /* Otherwise, acquire the hive list lock and disable force flush */
     CmpForceForceFlush = FALSE;
     ExAcquirePushLockShared(&CmpHiveListHeadLock);
-    
+
     /* Loop the hive list */
     NextEntry = CmpHiveListHead.Flink;
     while (NextEntry != &CmpHiveListHead)
@@ -43,6 +43,8 @@ CmpDoFlushAll(IN BOOLEAN ForceFlush)
 
             /* Do the sync */
             Status = HvSyncHive(&Hive->Hive);
+
+            /* If something failed - set the flag and continue looping*/
             if (!NT_SUCCESS(Status)) Result = FALSE;
 
             /* Release the flusher lock */
@@ -52,7 +54,7 @@ CmpDoFlushAll(IN BOOLEAN ForceFlush)
         /* Try the next entry */
         NextEntry = NextEntry->Flink;
     }
-    
+
     /* Release lock and return */
     ExReleasePushLock(&CmpHiveListHeadLock);
     return Result;

@@ -40,6 +40,7 @@ Applet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam);
 
 
 HINSTANCE hApplet = 0;
+HWND hCPLWindow;
 HINF hSetupInf = INVALID_HANDLE_VALUE;
 DWORD IsUnattendedSetupEnabled = 0;
 DWORD UnattendLCID = 0;
@@ -142,7 +143,7 @@ Applet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
     ZeroMemory(&psh, sizeof(PROPSHEETHEADER));
     psh.dwSize = sizeof(PROPSHEETHEADER);
     psh.dwFlags =  PSH_PROPSHEETPAGE | PSH_PROPTITLE;
-    psh.hwndParent = NULL;
+    psh.hwndParent = hCPLWindow;
     psh.hInstance = hApplet;
     psh.hIcon = LoadIcon(hApplet, MAKEINTRESOURCE(IDC_CPLICON));
     psh.pszCaption = Caption;
@@ -188,6 +189,7 @@ CPlApplet(HWND hwndCpl,
         case CPL_DBLCLK:
         {
             UINT uAppIndex = (UINT)lParam1;
+            hCPLWindow = hwndCpl;
             Applets[uAppIndex].AppletProc(hwndCpl, uMsg, lParam1, lParam2);
             break;
         }

@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
-<module name="kbdne" type="kernelmodedll" entrypoint="0" installbase="system32" installname="kbdne.dll" allowwarnings="true">
+<module name="kbdne" type="keyboardlayout" entrypoint="0" installbase="system32" installname="kbdne.dll" allowwarnings="true">
 	<importlibrary definition="kbdne.def" />
 	<include base="ntoskrnl">include</include>
 	<define name="_DISABLE_TIDENTS" />

@@ -97,7 +97,7 @@ typedef struct _SHARED_CACHE_MAP
     LARGE_INTEGER ValidDataLength;
     LARGE_INTEGER ValidDataGoal;
     PVACB InitialVacbs[4];
-    PVACB Vacbs;
+    PVACB *Vacbs;
     PFILE_OBJECT FileObject;
     PVACB ActiveVacb;
     PVOID NeedToZero;
@@ -117,7 +117,7 @@ typedef struct _SHARED_CACHE_MAP
     LONGLONG BeyondLastFlush;
     PCACHE_MANAGER_CALLBACKS Callbacks;
     PVOID LazyWriteContext;
-    PLIST_ENTRY PrivateList;
+    LIST_ENTRY PrivateList;
     PVOID LogHandle;
     PVOID FlushToLsnRoutine;
     ULONG DirtyPageThreshold;

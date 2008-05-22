@@ -322,21 +322,6 @@ typedef struct _VFATFCB
 {
   /* FCB header required by ROS/NT */
   FSRTL_COMMON_FCB_HEADER RFCB;
-    ULONG PadPad;
-    ULONG PadPad2;
-    ULONG PadPad3;
-    ULONG PadPad4;
-    ULONG PadPad5;
-    ULONG PadPad50;
-    ULONG PadPad51;
-    ULONG PadPad52;
-    ULONG PadPad53;
-    ULONG PadPad54;
-    ULONG PadPad55;
-    ULONG PadPad56;
-    ULONG PadPad6;
-    ULONG PadPad7;
-    ULONG PadPad8;
   SECTION_OBJECT_POINTERS SectionObjectPointers;
   ERESOURCE MainResource;
   ERESOURCE PagingIoResource;

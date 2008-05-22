@@ -1424,7 +1424,10 @@ OpenServiceW(SC_HANDLE hSCManager,
                             (SC_RPC_HANDLE *)&hService);
     if (dwError != ERROR_SUCCESS)
     {
-        ERR("ROpenServiceW() failed (Error %lu)\n", dwError);
+        if (dwError == ERROR_SERVICE_DOES_NOT_EXIST)
+            WARN("ROpenServiceW() failed (Error %lu)\n", dwError);
+        else
+            ERR("ROpenServiceW() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
         return NULL;
     }
@@ -1524,7 +1527,10 @@ QueryServiceConfigW(SC_HANDLE hService,
                                    pcbBytesNeeded);
     if (dwError != ERROR_SUCCESS)
     {
-        ERR("RQueryServiceConfigW() failed (Error %lu)\n", dwError);
+        if (dwError == ERROR_INSUFFICIENT_BUFFER)
+            WARN("RQueryServiceConfigW() failed (Error %lu)\n", dwError);
+        else
+            ERR("RQueryServiceConfigW() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
         return FALSE;
     }

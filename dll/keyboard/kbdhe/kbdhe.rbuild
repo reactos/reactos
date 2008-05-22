@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
-<module name="kbdhe" type="kernelmodedll" entrypoint="0" installbase="system32" installname="kbdhe.dll" allowwarnings="true">
+<module name="kbdhe" type="keyboardlayout" entrypoint="0" installbase="system32" installname="kbdhe.dll" allowwarnings="true">
 	<importlibrary definition="kbdhe.def" />
 	<include base="ntoskrnl">include</include>
 	<define name="_DISABLE_TIDENTS" />

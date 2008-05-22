@@ -28,13 +28,13 @@
 	<file>rsrc.rc</file>
 	<file>urlmon.spec</file>
 	<library>wine</library>
+	<library>uuid</library>
 	<library>ole32</library>
 	<library>shlwapi</library>
 	<library>wininet</library>
 	<library>user32</library>
 	<library>advapi32</library>
 	<library>kernel32</library>
-	<library>uuid</library>
 	<library>ntdll</library>
 </module>
 </group>

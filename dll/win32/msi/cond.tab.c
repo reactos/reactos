@@ -218,13 +218,13 @@ static int cond_lex( void *COND_lval, COND_input *info);
 static const WCHAR szEmpty[] = { 0 };
 
 static INT compare_int( INT a, INT operator, INT b );
-static INT compare_string( LPCWSTR a, INT operator, LPCWSTR b );
+static INT compare_string( LPCWSTR a, INT operator, LPCWSTR b, BOOL convert );
 
-static INT compare_and_free_strings( LPWSTR a, INT op, LPWSTR b )
+static INT compare_and_free_strings( LPWSTR a, INT op, LPWSTR b, BOOL convert )
 {
     INT r;
 
-    r = compare_string( a, op, b );
+    r = compare_string( a, op, b, convert );
     msi_free( a );
     msi_free( b );
     return r;
@@ -538,8 +538,8 @@ static const unsigned short int yyrline[] =
      175,   182,   186,   190,   195,   199,   208,   217,   221,   225,
      229,   233,   238,   243,   251,   252,   253,   254,   255,   256,
      257,   258,   259,   260,   261,   262,   263,   264,   265,   266,
-     267,   268,   272,   276,   283,   292,   296,   305,   314,   323,
-     335,   342,   356,   365
+     267,   268,   272,   276,   283,   292,   296,   305,   314,   327,
+     339,   346,   360,   369
 };
 #endif
 
@@ -1467,28 +1467,28 @@ yyreduce:
   case 17:
 #line 218 "cond.y"
     {
-            (yyval.value) = compare_and_free_strings( (yyvsp[-2].string), (yyvsp[-1].value), (yyvsp[0].string) );
+            (yyval.value) = compare_and_free_strings( (yyvsp[-2].string), (yyvsp[-1].value), (yyvsp[0].string), TRUE );
         ;}
     break;
 
   case 18:
 #line 222 "cond.y"
     {
-            (yyval.value) = compare_and_free_strings( (yyvsp[-2].string), (yyvsp[-1].value), (yyvsp[0].string) );
+            (yyval.value) = compare_and_free_strings( (yyvsp[-2].string), (yyvsp[-1].value), (yyvsp[0].string), TRUE );
         ;}
     break;
 
   case 19:
 #line 226 "cond.y"
     {
-            (yyval.value) = compare_and_free_strings( (yyvsp[-2].string), (yyvsp[-1].value), (yyvsp[0].string) );
+            (yyval.value) = compare_and_free_strings( (yyvsp[-2].string), (yyvsp[-1].value), (yyvsp[0].string), TRUE );
         ;}
     break;
 
   case 20:
 #line 230 "cond.y"
     {
-            (yyval.value) = compare_and_free_strings( (yyvsp[-2].string), (yyvsp[-1].value), (yyvsp[0].string) );
+            (yyval.value) = compare_and_free_strings( (yyvsp[-2].string), (yyvsp[-1].value), (yyvsp[0].string), FALSE );
         ;}
     break;
 
@@ -1666,13 +1666,17 @@ yyreduce:
             INSTALLSTATE install = INSTALLSTATE_UNKNOWN, action = INSTALLSTATE_UNKNOWN;
       
             MSI_GetFeatureStateW(cond->package, (yyvsp[0].string), &install, &action );
-            (yyval.value) = action;
+            if (action == INSTALLSTATE_UNKNOWN)
+                (yyval.value) = MSICONDITION_FALSE;
+            else
+                (yyval.value) = action;
+
             msi_free( (yyvsp[0].string) );
         ;}
     break;
 
   case 49:
-#line 324 "cond.y"
+#line 328 "cond.y"
     {
             COND_input* cond = (COND_input*) info;
             INSTALLSTATE install = INSTALLSTATE_UNKNOWN, action = INSTALLSTATE_UNKNOWN;
@@ -1684,7 +1688,7 @@ yyreduce:
     break;
 
   case 50:
-#line 336 "cond.y"
+#line 340 "cond.y"
     {
             COND_input* cond = (COND_input*) info;
 
@@ -1694,7 +1698,7 @@ yyreduce:
     break;
 
   case 51:
-#line 343 "cond.y"
+#line 347 "cond.y"
     {
             UINT len = GetEnvironmentVariableW( (yyvsp[0].string), NULL, 0 );
             (yyval.string) = NULL;
@@ -1708,7 +1712,7 @@ yyreduce:
     break;
 
   case 52:
-#line 357 "cond.y"
+#line 361 "cond.y"
     {
             (yyval.string) = COND_GetString(&(yyvsp[0].str));
             if( !(yyval.string) )
@@ -1717,7 +1721,7 @@ yyreduce:
     break;
 
   case 53:
-#line 366 "cond.y"
+#line 370 "cond.y"
     {
             LPWSTR szNum = COND_GetString(&(yyvsp[0].str));
             if( !szNum )
@@ -1732,7 +1736,7 @@ yyreduce:
     }
 
 /* Line 1126 of yacc.c.  */
-#line 1736 "cond.tab.c"
+#line 1740 "cond.tab.c"
 
   yyvsp -= yylen;
   yyssp -= yylen;
@@ -2000,7 +2004,7 @@ yyreturn:
 }
 
 
-#line 375 "cond.y"
+#line 379 "cond.y"
 
 
 
@@ -2032,6 +2036,9 @@ static WCHAR *strstriW( const WCHAR *str, const WCHAR *sub )
 static BOOL str_is_number( LPCWSTR str )
 {
     int i;
+
+    if (!*str)
+        return FALSE;
 
     for (i = 0; i < lstrlenW( str ); i++)
         if (!isdigitW(str[i]))
@@ -2079,7 +2086,7 @@ static INT compare_substring( LPCWSTR a, INT operator, LPCWSTR b )
     return 0;
 }
 
-static INT compare_string( LPCWSTR a, INT operator, LPCWSTR b )
+static INT compare_string( LPCWSTR a, INT operator, LPCWSTR b, BOOL convert )
 {
     if (operator >= COND_SS && operator <= COND_RHS)
         return compare_substring( a, operator, b );
@@ -2087,6 +2094,9 @@ static INT compare_string( LPCWSTR a, INT operator, LPCWSTR b )
     /* null and empty string are equivalent */
     if (!a) a = szEmpty;
     if (!b) b = szEmpty;
+
+    if (convert && str_is_number(a) && str_is_number(b))
+        return compare_int( atoiW(a), operator, atoiW(b) );
 
     /* a or b may be NULL */
     switch (operator)

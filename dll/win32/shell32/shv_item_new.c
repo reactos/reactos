@@ -756,8 +756,8 @@ INewItem_IContextMenu_fnHandleMenuMsg(IContextMenu2 *iface,
 	                     LPARAM lParam)
 {
     INewMenuImpl *This = impl_from_IContextMenu(iface);
-    DRAWITEMSTRUCT * lpids = (DRAWITEMSTRUCT*) lParam;
-    MEASUREITEMSTRUCT *lpmis = (MEASUREITEMSTRUCT*) lParam;
+    //DRAWITEMSTRUCT * lpids = (DRAWITEMSTRUCT*) lParam;
+    //MEASUREITEMSTRUCT *lpmis = (MEASUREITEMSTRUCT*) lParam;
 
 	TRACE("INewItem_IContextMenu_fnHandleMenuMsg (%p)->(msg=%x wp=%lx lp=%lx)\n",This, uMsg, wParam, lParam);
 
@@ -789,11 +789,11 @@ static const IContextMenu2Vtbl cmvt =
 	INewItem_IContextMenu_fnHandleMenuMsg
 };
 
+static INewMenuImpl *cached_ow;
 HRESULT WINAPI INewItem_Constructor(IUnknown * pUnkOuter, REFIID riid, LPVOID *ppv)
 {
     INewMenuImpl * ow;
     HRESULT res;
-    static INewMenuImpl *cached_ow;
 
     if (!cached_ow)
     {
@@ -814,13 +814,17 @@ HRESULT WINAPI INewItem_Constructor(IUnknown * pUnkOuter, REFIID riid, LPVOID *p
     }
 
     TRACE("(%p)->()\n",cached_ow);
+
+    res = INewItem_fnQueryInterface( cached_ow, riid, ppv );
+    return res;
+}
+
+VOID INewItem_SetParent(LPSHELLFOLDER pSFParent)
+{
     if (cached_ow->pSFParent)
     {
         IShellFolder_Release(cached_ow->pSFParent);
     }
- //   cached_ow->pSFParent = pSFParent;
- //   IShellFolder_AddRef(pSFParent);
-
-    res = INewItem_fnQueryInterface( cached_ow, riid, ppv );
-    return res;
+    cached_ow->pSFParent = pSFParent;
+    IShellFolder_AddRef(pSFParent);
 }

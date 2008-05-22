@@ -41,24 +41,28 @@ BOOL
 GetLayoutName(LPCTSTR szLCID, LPTSTR szName);
 VOID
 UpdateLayoutsList(VOID);
+BOOL
+IsLayoutExists(LPTSTR szLayoutID, LPTSTR szLangID);
 
 /* keysettings.c */
 INT_PTR CALLBACK
 KeySettingsDlgProc(HWND hDlg,UINT message,WPARAM wParam,LPARAM lParam);
+VOID
+UpdateKeySettingsList();
 
 /* add.c */
 INT_PTR CALLBACK
 AddDlgProc(HWND hDlg,UINT message,WPARAM wParam,LPARAM lParam);
 VOID
-CreateKeyboardLayoutList(VOID);
+CreateKeyboardLayoutList(HWND hItemsList);
+INT
+GetLayoutCount(LPTSTR szLang);
 
 /* changekeyseq.c */
 INT_PTR CALLBACK
 ChangeKeySeqDlgProc(HWND hDlg,UINT message,WPARAM wParam,LPARAM lParam);
-
-/* inputlangprop.c */
-INT_PTR CALLBACK
-InputLangPropDlgProc(HWND hDlg,UINT message,WPARAM wParam,LPARAM lParam);
+BOOL
+GetHotkeys(LPTSTR szHotkey, LPTSTR szLangHotkey, LPTSTR szLayoutHotkey);
 
 void ShowLastWin32Error(HWND hWndOwner);
 

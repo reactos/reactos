@@ -12,10 +12,9 @@
 /* INCLUDES ****************************************************************/
 
 #include <k32.h>
+#include <wine/debug.h>
 
-#define NDEBUG
-#include <debug.h>
-
+WINE_DEFAULT_DEBUG_CHANNEL(kernel32file);
 
 /* FUNCTIONS ****************************************************************/
 
@@ -53,7 +52,7 @@ DeleteFileW (
 	HANDLE FileHandle;
 	NTSTATUS Status;
 
-	DPRINT("DeleteFileW (lpFileName %S)\n",lpFileName);
+	TRACE("DeleteFileW (lpFileName %S)\n",lpFileName);
 
 	if (!RtlDosPathNameToNtPathName_U (lpFileName,
 	                                   &NtPathU,
@@ -64,7 +63,7 @@ DeleteFileW (
 		return FALSE;
    }
 
-	DPRINT("NtPathU \'%wZ\'\n", &NtPathU);
+	TRACE("NtPathU \'%wZ\'\n", &NtPathU);
 
         InitializeObjectAttributes(&ObjectAttributes,
                                    &NtPathU,
@@ -90,7 +89,7 @@ DeleteFileW (
 
 	if (!NT_SUCCESS(Status))
 	{
-		CHECKPOINT;
+		WARN("Status 0x%08x\n", Status);
 		SetLastErrorByStatus (Status);
 		return FALSE;
 	}
@@ -104,7 +103,7 @@ DeleteFileW (
 	                               FileDispositionInformation);
 	if (!NT_SUCCESS(Status))
 	{
-		CHECKPOINT;
+		WARN("Status 0x%08x\n", Status);
 		NtClose (FileHandle);
 		SetLastErrorByStatus (Status);
 		return FALSE;
@@ -113,7 +112,7 @@ DeleteFileW (
 	Status = NtClose (FileHandle);
 	if (!NT_SUCCESS (Status))
 	{
-		CHECKPOINT;
+		WARN("Status 0x%08x\n", Status);
 		SetLastErrorByStatus (Status);
 		return FALSE;
 	}

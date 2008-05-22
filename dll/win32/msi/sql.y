@@ -142,9 +142,8 @@ oneinsert:
         {
             SQL_input *sql = (SQL_input*) info;
             MSIVIEW *insert = NULL;
-            UINT r;
 
-            r = INSERT_CreateView( sql->db, &insert, $3, $5, $9, FALSE );
+            INSERT_CreateView( sql->db, &insert, $3, $5, $9, FALSE );
             if( !insert )
                 YYABORT;
             $$ = insert;

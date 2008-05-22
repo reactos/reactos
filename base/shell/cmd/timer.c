@@ -37,9 +37,7 @@ PrintElapsedTime (DWORD time,INT format)
 	TCHAR szMsg[RC_STRING_MAX_SIZE];
 	DWORD h,m,s,ms;
 
-#ifdef _DEBUG
-	DebugPrintf(_T("PrintTime(%d,%d)"),time,format);
-#endif
+	TRACE ("PrintElapsedTime(%d,%d)",time,format);
 
 	switch (format)
 	{

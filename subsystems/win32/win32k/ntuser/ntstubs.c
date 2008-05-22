@@ -321,8 +321,8 @@ NtUserGetMouseMovePointsEx(
 DWORD
 STDCALL
 NtUserGetTitleBarInfo(
-   DWORD Unknown0,
-   DWORD Unknown1)
+   HWND hwnd,
+   PTITLEBARINFO pti)
 {
    UNIMPLEMENTED
 

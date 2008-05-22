@@ -1169,15 +1169,16 @@ UINT MSI_SetInstallLevel( MSIPACKAGE *package, int iInstallLevel )
 
     TRACE("%p %i\n", package, iInstallLevel);
 
-    if (iInstallLevel<1 || iInstallLevel>32767)
+    if (iInstallLevel > 32767)
         return ERROR_INVALID_PARAMETER;
+
+    if (iInstallLevel < 1)
+        return MSI_SetFeatureStates( package );
 
     sprintfW( level, fmt, iInstallLevel );
     r = MSI_SetPropertyW( package, szInstallLevel, level );
     if ( r == ERROR_SUCCESS )
-    {
         r = MSI_SetFeatureStates( package );
-    }
 
     return r;
 }

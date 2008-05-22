@@ -54,6 +54,7 @@
 	<include base="msi" root="intermediate">.</include>
 	<file>msi.spec</file>
 	<library>wine</library>
+	<library>uuid</library>
 	<library>urlmon</library>
 	<library>wininet</library>
 	<library>comctl32</library>
@@ -68,7 +69,6 @@
 	<library>advapi32</library>
 	<library>kernel32</library>
 	<library>odbccp32</library>
-	<library>uuid</library>
 	<library>ntdll</library>
 	<dependency>msiserver</dependency>
 	<dependency>msiheader</dependency>

@@ -1,5 +1,5 @@
 #ifndef _WINDBGKD_
-#define _WINDBGKG_
+#define _WINDBGKD_
 
 //
 // Dependencies

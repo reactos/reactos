@@ -19,7 +19,7 @@
  */
 
 /*
- * Here are helper functions formally in action.c that are used by a variaty of
+ * Here are helper functions formally in action.c that are used by a variety of
  * actions and functions.
  */
 
@@ -31,6 +31,8 @@
 #include "wine/debug.h"
 #include "msipriv.h"
 #include "winuser.h"
+#include "winreg.h"
+#include "shlwapi.h"
 #include "wine/unicode.h"
 #include "msidefs.h"
 
@@ -885,7 +887,7 @@ LPWSTR create_component_advertise_string(MSIPACKAGE* package,
     return output;
 }
 
-/* update compoennt state based on a feature change */
+/* update component state based on a feature change */
 void ACTION_UpdateComponentStates(MSIPACKAGE *package, LPCWSTR szFeature)
 {
     INSTALLSTATE newstate;
@@ -1053,4 +1055,123 @@ void msi_ui_error( DWORD msg_id, DWORD type )
         return;
 
     MessageBoxW( NULL, text, title, type );
+}
+
+typedef struct
+{
+    MSIPACKAGE *package;
+    MSIMEDIAINFO *mi;
+    MSIFILE *file;
+    LPWSTR destination;
+} CabData;
+
+static INT_PTR cabinet_notify(FDINOTIFICATIONTYPE fdint, PFDINOTIFICATION pfdin)
+{
+    TRACE("(%d)\n", fdint);
+
+    switch (fdint)
+    {
+    case fdintNEXT_CABINET:
+    {
+        ERR("continuous cabinets not handled\n");
+        return 0;
+    }
+
+    case fdintCOPY_FILE:
+    {
+        CabData *data = (CabData*) pfdin->pv;
+        LPWSTR file, path;
+        DWORD attrs, size;
+        HANDLE handle;
+        MSIFILE *f;
+
+        file = strdupAtoW(pfdin->psz1);
+        f = get_loaded_file(data->package, file);
+        msi_free(file);
+
+        if (!f)
+        {
+            WARN("unknown file in cabinet (%s)\n",debugstr_a(pfdin->psz1));
+            return 0;
+        }
+
+        if (lstrcmpW(f->File, data->file->File))
+            return 0;
+
+        size = lstrlenW(data->destination) + lstrlenW(data->file->FileName) + 2;
+        path = msi_alloc(size * sizeof(WCHAR));
+        lstrcpyW(path, data->destination);
+        PathAddBackslashW(path);
+        lstrcatW(path, data->file->FileName);
+
+        TRACE("extracting %s\n", debugstr_w(path));
+
+        attrs = f->Attributes & (FILE_ATTRIBUTE_READONLY|FILE_ATTRIBUTE_HIDDEN|FILE_ATTRIBUTE_SYSTEM);
+        if (!attrs) attrs = FILE_ATTRIBUTE_NORMAL;
+
+        handle = CreateFileW(path, GENERIC_READ | GENERIC_WRITE, 0,
+                             NULL, CREATE_ALWAYS, attrs, NULL);
+        if (handle == INVALID_HANDLE_VALUE)
+        {
+            if (GetFileAttributesW(path) == INVALID_FILE_ATTRIBUTES)
+                ERR("failed to create %s (error %d)\n",
+                    debugstr_w(path), GetLastError());
+
+            msi_free(path);
+            return 0;
+        }
+
+        msi_free(path);
+        return (INT_PTR)handle;
+    }
+
+    case fdintCLOSE_FILE_INFO:
+    {
+        FILETIME ft;
+        FILETIME ftLocal;
+        HANDLE handle = (HANDLE)pfdin->hf;
+
+        if (!DosDateTimeToFileTime(pfdin->date, pfdin->time, &ft))
+            return -1;
+        if (!LocalFileTimeToFileTime(&ft, &ftLocal))
+            return -1;
+        if (!SetFileTime(handle, &ftLocal, 0, &ftLocal))
+            return -1;
+        CloseHandle(handle);
+        return 1;
+    }
+
+    default:
+        return 0;
+    }
+}
+
+UINT msi_extract_file(MSIPACKAGE *package, MSIFILE *file, LPWSTR destdir)
+{
+    MSIMEDIAINFO *mi;
+    CabData data;
+    UINT r;
+
+    mi = msi_alloc_zero(sizeof(MSIMEDIAINFO));
+    if (!mi)
+        return ERROR_OUTOFMEMORY;
+
+    r = msi_load_media_info(package, file, mi);
+    if (r != ERROR_SUCCESS)
+        goto done;
+
+    data.package = package;
+    data.mi = mi;
+    data.file = file;
+    data.destination = destdir;
+
+    if (!msi_cabextract(package, mi, cabinet_notify, &data))
+    {
+        ERR("Failed to extract cabinet file\n");
+        r = ERROR_FUNCTION_FAILED;
+    }
+
+done:
+    msi_free_media_info(mi);
+    return r;
 }

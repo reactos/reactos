@@ -147,7 +147,7 @@ STATIC CONST struct
    /* Others */
    { NULL, NULL, "Others", NULL },
    { "bugcheck", "bugcheck", "Bugchecks the system.", KdbpCmdBugCheck },
-   { "filter", "filter componentname [error|warning|trace|info|level] [on|off]", "Enable/disable debug channels", KdbpCmdFilter },
+   { "filter", "filter [error|warning|trace|info|level]+|-[componentname|default]", "Enable/disable debug channels", KdbpCmdFilter },
    { "set", "set [var] [value]", "Sets var to value or displays value of var.", KdbpCmdSet },
    { "help", "help", "Display help screen.", KdbpCmdHelp }
 };
@@ -377,68 +377,78 @@ KdbpCmdEvalExpression(ULONG Argc, PCHAR Argv[])
 STATIC BOOLEAN
 KdbpCmdFilter(ULONG Argc, PCHAR Argv[])
 {
-   ULONG ComponentId, Level;
-   BOOLEAN State;
-   PCHAR pend;
+    ULONG i, j, ComponentId, Level;
+    ULONG set = DPFLTR_MASK, clear = DPFLTR_MASK;
+    PCHAR pend;
+    LPCSTR opt, p;
+    static struct {
+        LPCSTR Name;
+        ULONG Level;
+    } debug_classes[] = {
+        { "error", 1 << DPFLTR_ERROR_LEVEL },
+        { "warning", 1 << DPFLTR_WARNING_LEVEL },
+        { "trace", 1 << DPFLTR_TRACE_LEVEL },
+        { "info", 1 << DPFLTR_INFO_LEVEL },
+    };
 
-   if (Argc < 2)
-   {
-      KdbpPrint("filter: component name argument required!\n");
-      return TRUE;
-   }
-   if (!KdbpGetComponentId(Argv[1], &ComponentId))
-   {
-      KdbpPrint("filter: '%s' is not a valid component name!\n", Argv[1]);
-      return TRUE;
-   }
+    for (i = 1; i < Argc; i++)
+    {
+        opt = Argv[i];
+        p = opt + strcspn(opt, "+-");
+        if (!p[0]) p = opt; /* assume it's a debug channel name */
 
-   if (Argc < 3)
-   {
-      KdbpPrint("filter: level argument required!\n");
-      return TRUE;
-   }
-   if (_stricmp(Argv[2], "error") == 0)
-      Level = DPFLTR_ERROR_LEVEL;
-   else if (_stricmp(Argv[2], "warning") == 0)
-      Level = DPFLTR_WARNING_LEVEL;
-   else if (_stricmp(Argv[2], "trace") == 0)
-      Level = DPFLTR_TRACE_LEVEL;
-   else if (_stricmp(Argv[2], "info") == 0)
-      Level = DPFLTR_INFO_LEVEL;
-   else
-   {
-      Level = strtoul(Argv[2], &pend, 0);
-      if (Argv[2] == pend || *pend != '\0')
-      {
-         KdbpPrint("filter: '%s' is not a valid level!\n", Argv[2]);
-         return TRUE;
-      }
-   }
+        if (p > opt)
+        {
+            for (j = 0; j < sizeof(debug_classes) / sizeof(debug_classes[0]); j++)
+            {
+                SIZE_T len = strlen(debug_classes[j].Name);
+                if (len != (p - opt))
+                    continue;
+                if (_strnicmp(opt, debug_classes[j].Name, len) == 0) /* found it */
+                {
+                    if (*p == '+')
+                        set |= debug_classes[j].Level;
+                    else
+                        clear |= debug_classes[j].Level;
+                    break;
+                }
+            }
+            if (j == sizeof(debug_classes) / sizeof(debug_classes[0]))
+            {
+                Level = strtoul(opt, &pend, 0);
+                if (pend != p)
+                {
+                    KdbpPrint("filter: bad class name '%.*s'\n", p - opt, opt);
+                    continue;
+                }
+                if (*p == '+')
+                    set |= Level;
+                else
+                    clear |= Level;
+            }
+        }
+        else
+        {
+            if (*p == '-')
+                clear = ~0;
+            else
+                set = ~0;
+        }
+        if (*p == '+' || *p == '-')
+            p++;
 
-   if (Argc < 4)
-   {
-      /* Display the state of the filter */
-      if (NtQueryDebugFilterState(ComponentId, Level))
-         KdbpPrint("Debug messages are enabled.\n");
-      else
-         KdbpPrint("Debug messages are disabled.\n");
-      return TRUE;
-   }
-   else
-   {
-      /* Set the filter state */
-      if (_stricmp(Argv[3], "on") == 0)
-         State = TRUE;
-      else if (_stricmp(Argv[3], "off") == 0)
-         State = FALSE;
-      else
-      {
-         KdbpPrint("filter: '%s' is not a valid state!\n", Argv[3]);
-         return TRUE;
-      }
+        if (!KdbpGetComponentId(p, &ComponentId))
+        {
+            KdbpPrint("filter: '%s' is not a valid component name!\n", p);
+            return TRUE;
+        }
 
-      return NT_SUCCESS(NtSetDebugFilterState(ComponentId, Level, State));
-   }
+        /* Get current mask value */
+        NtSetDebugFilterState(ComponentId, set, TRUE);
+        NtSetDebugFilterState(ComponentId, clear, FALSE);
+    }
+
+    return TRUE;
 }
 
 /*!\brief Disassembles 10 instructions at eip or given address or

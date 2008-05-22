@@ -10,10 +10,9 @@
  */
 
 #include <k32.h>
+#include <wine/debug.h>
 
-#define NDEBUG
-#include <debug.h>
-
+WINE_DEFAULT_DEBUG_CHANNEL(kernel32file);
 
 /*
  * @implemented
@@ -179,7 +178,7 @@ GetOverlappedResult (
 
     if (WaitStatus == WAIT_FAILED)
     {
-      DPRINT("Wait failed!\n");
+      WARN("Wait failed!\n");
       /* WaitForSingleObjectEx sets the last error */
       return FALSE;
     }

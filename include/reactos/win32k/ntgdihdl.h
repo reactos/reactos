@@ -200,16 +200,15 @@
 typedef struct _GDI_TABLE_ENTRY
 {
     PVOID KernelData; /* Points to the kernel mode structure */
-    SHORT ProcessId;  /* process id that created the object, 0 for stock objects */
-    SHORT nCount;     /* usage count of object handles */
+    DWORD ProcessId;  /* process id that created the object, 0 for stock objects */
     union{            // temp union structure.
     LONG  Type;       /* the first 16 bit is the object type including the stock obj flag, the last 16 bits is just the object type */
     struct{
-    SHORT FullUnique;
-    CHAR  ObjectType;
-    CHAR  Flags;
+    SHORT FullUnique; // unique
+    CHAR  ObjectType; // objt
+    CHAR  Flags;      // Flags
     };};
-    PVOID UserData;   /* Points to the user mode structure, usually NULL though */
+    PVOID UserData;   /* pUser Points to the user mode structure, usually NULL though */
 } GDI_TABLE_ENTRY, *PGDI_TABLE_ENTRY;
 
 //

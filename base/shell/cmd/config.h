@@ -12,9 +12,6 @@
 #ifndef _CONFIG_H_INCLUDED_
 #define _CONFIG_H_INCLUDED_
 
-/* Define to enable debugging code */
-//#define _DEBUG
-
 #define WIN32_LEAN_AND_MEAN
 
 //#define NT4_INTERNAL_COMMANDS

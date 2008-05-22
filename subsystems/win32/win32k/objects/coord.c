@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id$
+/*
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -558,27 +558,167 @@ NtGdiOffsetWindowOrgEx(HDC  hDC,
 BOOL
 STDCALL
 NtGdiScaleViewportExtEx(HDC  hDC,
-                             int  Xnum,
-                             int  Xdenom,
-                             int  Ynum,
-                             int  Ydenom,
-                             LPSIZE  Size)
+                       int  Xnum,
+                     int  Xdenom,
+                       int  Ynum,
+                     int  Ydenom,
+                    LPSIZE pSize)
 {
-   UNIMPLEMENTED;
-   return FALSE;
+  PDC pDC;
+  PDC_ATTR pDc_Attr;
+  BOOL Ret = FALSE;
+  LONG X, Y;
+  
+  pDC = DC_LockDc(hDC);
+  if (!pDC)
+  {
+      SetLastWin32Error(ERROR_INVALID_HANDLE);
+      return FALSE;
+  }
+  pDc_Attr = pDC->pDc_Attr;
+  if(!pDc_Attr) pDc_Attr = &pDC->Dc_Attr;
+
+  if ( pSize )
+  {
+     NTSTATUS Status = STATUS_SUCCESS;
+
+     _SEH_TRY
+     {
+       ProbeForWrite(pSize,
+            sizeof(LPSIZE),
+                         1);
+
+       pSize->cx = pDc_Attr->szlViewportExt.cx;
+       pSize->cy = pDc_Attr->szlViewportExt.cy;
+     }
+     _SEH_HANDLE
+     {
+         Status = _SEH_GetExceptionCode();
+     }
+     _SEH_END;
+
+     if(!NT_SUCCESS(Status))
+     {
+        SetLastNtError(Status);
+        DC_UnlockDc(pDC);
+        return FALSE;
+     }
+  }
+
+  if (pDc_Attr->iMapMode > MM_TWIPS)
+  { 
+     if ( ( Xdenom ) && ( Ydenom ) )
+     {
+        X = Xnum * pDc_Attr->szlViewportExt.cx / Xdenom;
+        if ( X )
+        {
+           Y = Ynum * pDc_Attr->szlViewportExt.cy / Ydenom;
+           if ( Y )
+           {
+              pDc_Attr->szlViewportExt.cx = X; 
+              pDc_Attr->szlViewportExt.cy = Y;
+
+              IntMirrorWindowOrg(pDC);
+              
+              pDc_Attr->flXform |= (PAGE_EXTENTS_CHANGED|INVALIDATE_ATTRIBUTES|DEVICE_TO_WORLD_INVALID);
+
+              if (pDc_Attr->iMapMode == MM_ISOTROPIC) IntFixIsotropicMapping(pDC);
+              DC_UpdateXforms(pDC);
+
+              Ret = TRUE;
+           }
+        }
+     }
+  }
+  else
+    Ret = TRUE;
+
+  DC_UnlockDc(pDC);
+  return Ret;
 }
 
 BOOL
 STDCALL
 NtGdiScaleWindowExtEx(HDC  hDC,
-                           int  Xnum,
-                           int  Xdenom,
-                           int  Ynum,
-                           int  Ydenom,
-                           LPSIZE  Size)
+                     int  Xnum,
+                   int  Xdenom,
+                     int  Ynum,
+                   int  Ydenom,
+                  LPSIZE pSize)
 {
-   UNIMPLEMENTED;
-   return FALSE;
+  PDC pDC;
+  PDC_ATTR pDc_Attr;
+  BOOL Ret = FALSE;
+  LONG X, Y;
+  
+  pDC = DC_LockDc(hDC);
+  if (!pDC)
+  {
+      SetLastWin32Error(ERROR_INVALID_HANDLE);
+      return FALSE;
+  }
+  pDc_Attr = pDC->pDc_Attr;
+  if(!pDc_Attr) pDc_Attr = &pDC->Dc_Attr;
+
+  if ( pSize )
+  {
+     NTSTATUS Status = STATUS_SUCCESS;
+
+     _SEH_TRY
+     {
+       ProbeForWrite(pSize,
+            sizeof(LPSIZE),
+                         1);
+
+       X = pDc_Attr->szlWindowExt.cx;
+       if (pDc_Attr->dwLayout & LAYOUT_RTL) X = -X;
+       pSize->cx = X;
+       pSize->cy = pDc_Attr->szlWindowExt.cy;
+     }
+     _SEH_HANDLE
+     {
+         Status = _SEH_GetExceptionCode();
+     }
+     _SEH_END;
+
+     if(!NT_SUCCESS(Status))
+     {
+        SetLastNtError(Status);
+        DC_UnlockDc(pDC);
+        return FALSE;
+     }
+  }
+
+  if (pDc_Attr->iMapMode > MM_TWIPS)
+  { 
+     if (( Xdenom ) && ( Ydenom ))
+     {
+        X = Xnum * pDc_Attr->szlWindowExt.cx / Xdenom;
+        if ( X )
+        {
+           Y = Ynum * pDc_Attr->szlWindowExt.cy / Ydenom;
+           if ( Y )
+           {
+              pDc_Attr->szlWindowExt.cx = X;
+              pDc_Attr->szlWindowExt.cy = Y;
+
+              IntMirrorWindowOrg(pDC);
+              
+              pDc_Attr->flXform |= (PAGE_EXTENTS_CHANGED|INVALIDATE_ATTRIBUTES|DEVICE_TO_WORLD_INVALID);
+
+              if (pDc_Attr->iMapMode == MM_ISOTROPIC) IntFixIsotropicMapping(pDC);
+              DC_UpdateXforms(pDC);
+
+              Ret = TRUE;
+           }
+        }
+     }
+  }
+  else
+    Ret = TRUE;
+
+  DC_UnlockDc(pDC);
+  return Ret;
 }
 
 int
@@ -1031,6 +1171,70 @@ NtGdiMirrorWindowOrg(
   IntMirrorWindowOrg(dc);
   DC_UnlockDc(dc);
   return TRUE;
+}
+
+/*
+ * @implemented
+ */
+BOOL
+APIENTRY
+NtGdiSetSizeDevice(
+    IN HDC hdc,
+    IN INT cxVirtualDevice,
+    IN INT cyVirtualDevice)
+{
+    PDC dc;
+    PDC_ATTR pDc_Attr;
+
+    if (!cxVirtualDevice ||
+        !cyVirtualDevice  ) return FALSE;
+
+    dc = DC_LockDc(hdc);
+    if (!dc) return FALSE;
+    
+    pDc_Attr = dc->pDc_Attr;
+    if(!pDc_Attr) pDc_Attr = &dc->Dc_Attr;
+
+    pDc_Attr->szlVirtualDeviceSize.cx = cxVirtualDevice;
+    pDc_Attr->szlVirtualDeviceSize.cy = cyVirtualDevice;
+
+//    DC_UpdateXforms(dc);    
+    DC_UnlockDc(dc);
+
+    return TRUE;
+}
+
+/*
+ * @implemented
+ */
+BOOL
+APIENTRY
+NtGdiSetVirtualResolution(
+    IN HDC hdc,
+    IN INT cxVirtualDevicePixel,
+    IN INT cyVirtualDevicePixel,
+    IN INT cxVirtualDeviceMm,
+    IN INT cyVirtualDeviceMm)
+{
+    PDC dc;
+    PDC_ATTR pDc_Attr;
+
+    // Need test types for zeros and non zeros
+
+    dc = DC_LockDc(hdc);
+    if (!dc) return FALSE;
+    
+    pDc_Attr = dc->pDc_Attr;
+    if(!pDc_Attr) pDc_Attr = &dc->Dc_Attr;
+
+    pDc_Attr->szlVirtualDevicePixel.cx = cxVirtualDevicePixel;
+    pDc_Attr->szlVirtualDevicePixel.cy = cyVirtualDevicePixel;
+    pDc_Attr->szlVirtualDeviceMm.cx = cxVirtualDeviceMm;
+    pDc_Attr->szlVirtualDeviceMm.cy = cyVirtualDeviceMm;
+
+//    DC_UpdateXforms(dc);    
+    DC_UnlockDc(dc);
+    return TRUE;
 }
 
 /* EOF */

@@ -29,6 +29,11 @@ INT_PTR CALLBACK UsersPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
 INT_PTR CALLBACK GroupsPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 INT_PTR CALLBACK ExtraPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
+/* misc.c */
+BOOL
+CheckAccountName(HWND hwndDlg,
+                 INT nIdDlgItem,
+                 LPTSTR lpAccountName);
 
 #endif /* __CPL_DESK_H__ */
 

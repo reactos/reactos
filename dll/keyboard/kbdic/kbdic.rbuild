@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
-<module name="kbdic" type="kernelmodedll" entrypoint="0" installbase="system32" installname="kbdic.dll" allowwarnings="true">
+<module name="kbdic" type="keyboardlayout" entrypoint="0" installbase="system32" installname="kbdic.dll" allowwarnings="true">
 	<importlibrary definition="kbdic.def" />
 	<include base="ntoskrnl">include</include>
 	<define name="_DISABLE_TIDENTS" />

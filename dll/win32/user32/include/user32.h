@@ -39,8 +39,8 @@
 /* Internal User32 Headers */
 #include "user32p.h"
 
-#include <libs/pseh/pseh.h>
-#include <libs/pseh/framebased.h>
+/* SEH Support with PSEH */
+#include <pseh/pseh.h>
 
 /* FIXME: Use ntgdi.h then cleanup... */
 HGDIOBJ STDCALL  NtGdiSelectObject(HDC  hDC, HGDIOBJ  hGDIObj);

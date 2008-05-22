@@ -1171,7 +1171,7 @@ HRESULT WINAPI EnumThemeSizes(LPWSTR pszThemeFileName, LPWSTR pszColorName,
  *     0x800706488 (Unknown property) when enumeration is canceled from callback
  *
  * NOTES
- * When pszUnknown is NULL the callback is never called, the value does not seem to surve
+ * When pszUnknown is NULL the callback is never called, the value does not seem to serve
  * any other purpose
  */
 HRESULT WINAPI ParseThemeIniFile(LPCWSTR pszIniFileName, LPWSTR pszUnknown,

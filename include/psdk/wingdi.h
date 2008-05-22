@@ -966,6 +966,10 @@ extern "C" {
 #define LCS_GM_BUSINESS	1
 #define LCS_GM_GRAPHICS	2
 #define LCS_GM_IMAGES	4
+#define LCS_GM_ABS_COLORIMETRIC 8
+#define LCS_SIGNATURE   0x50534F43 // 'PSOC'
+#define LCS_sRGB        'sRGB'
+#define LCS_WINDOWS_COLOR_SPACE 'Win '
 #define RASTER_FONTTYPE	1
 #define DEVICE_FONTTYPE	2
 #define TRUETYPE_FONTTYPE	4

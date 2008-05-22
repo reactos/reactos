@@ -11,3 +11,10 @@
 
 // Maximum Character Count of a ULONG in decimal
 #define CCH_ULONG_DEC    10
+
+#define WM_KEY_PRESSED     (WM_USER + 10100)
+#define WM_LANG_CHANGED    (WM_USER + 10200)
+#define WM_WINDOW_ACTIVATE (WM_USER + 10300)
+#define WM_LOAD_LAYOUT     (WM_USER + 10400)
+
+TCHAR szKbSwitcherName[] = _T("kbswitcher");

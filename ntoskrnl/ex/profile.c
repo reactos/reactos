@@ -216,7 +216,14 @@ NtCreateProfile(OUT PHANDLE ProfileHandle,
                             0,
                             sizeof(EPROFILE) + sizeof(KPROFILE),
                             (PVOID*)&Profile);
-    if (!NT_SUCCESS(Status)) return(Status);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Dereference the process object if it was specified */
+        if (Process) ObDereferenceObject(Process);
+
+        /* Return Status */
+        return Status;
+    }
 
     /* Initialize it */
     Profile->RangeBase = RangeBase;

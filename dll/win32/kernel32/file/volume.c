@@ -20,10 +20,9 @@
  */
 
 #include <k32.h>
+#include <wine/debug.h>
 
-#define NDEBUG
-#include <debug.h>
-
+WINE_DEFAULT_DEBUG_CHANNEL(kernel32file);
 
 #define MAX_DOS_DRIVES 26
 
@@ -43,7 +42,7 @@ InternalOpenDirW(LPCWSTR DirName,
 				    NULL,
 				    NULL))
     {
-	DPRINT("Invalid path\n");
+	WARN("Invalid path\n");
 	SetLastError(ERROR_BAD_PATHNAME);
 	return INVALID_HANDLE_VALUE;
     }
@@ -474,7 +473,7 @@ GetDriveTypeW(LPCWSTR lpRootPathName)
 			return DRIVE_FIXED;
         }
 
-        DPRINT1("Returning DRIVE_UNKNOWN for device type %d\n", FileFsDevice.DeviceType);
+        ERR("Returning DRIVE_UNKNOWN for device type %d\n", FileFsDevice.DeviceType);
 
 	return DRIVE_UNKNOWN;
 }
@@ -646,8 +645,8 @@ GetVolumeInformationW(
   FileFsVolume = (PFILE_FS_VOLUME_INFORMATION)Buffer;
   FileFsAttribute = (PFILE_FS_ATTRIBUTE_INFORMATION)Buffer;
 
-  DPRINT("FileFsVolume %p\n", FileFsVolume);
-  DPRINT("FileFsAttribute %p\n", FileFsAttribute);
+  TRACE("FileFsVolume %p\n", FileFsVolume);
+  TRACE("FileFsAttribute %p\n", FileFsAttribute);
 
   if (!lpRootPathName || !wcscmp(lpRootPathName, L""))
   {
@@ -665,7 +664,7 @@ GetVolumeInformationW(
       return FALSE;
     }
 
-  DPRINT("hFile: %x\n", hFile);
+  TRACE("hFile: %x\n", hFile);
   errCode = NtQueryVolumeInformationFile(hFile,
                                          &IoStatusBlock,
                                          FileFsVolume,
@@ -673,7 +672,7 @@ GetVolumeInformationW(
                                          FileFsVolumeInformation);
   if ( !NT_SUCCESS(errCode) )
     {
-      DPRINT("Status: %x\n", errCode);
+      WARN("Status: %x\n", errCode);
       CloseHandle(hFile);
       SetLastErrorByStatus (errCode);
       return FALSE;
@@ -707,7 +706,7 @@ GetVolumeInformationW(
   CloseHandle(hFile);
   if (!NT_SUCCESS(errCode))
     {
-      DPRINT("Status: %x\n", errCode);
+      WARN("Status: %x\n", errCode);
       SetLastErrorByStatus (errCode);
       return FALSE;
     }
@@ -824,7 +823,7 @@ SetVolumeLabelW(
 
    if (!NT_SUCCESS(Status))
      {
-	DPRINT("Status: %x\n", Status);
+	WARN("Status: %x\n", Status);
 	CloseHandle(hFile);
 	SetLastErrorByStatus(Status);
 	return FALSE;

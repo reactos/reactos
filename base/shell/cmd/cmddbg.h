@@ -31,5 +31,6 @@ cmd_exit(int code);
 #define cmd_free(ptr) free(ptr)
 #define cmd_dup(str) _tcsdup(str)
 #define cmd_checkbuffer(ptr)
+#define cmd_exit(code) ExitProcess(code)
 
 #endif

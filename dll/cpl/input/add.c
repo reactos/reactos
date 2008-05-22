@@ -36,7 +36,7 @@ SelectLayoutByLang(VOID)
     }
 }
 
-static INT
+INT
 GetLayoutCount(LPTSTR szLang)
 {
     HKEY hKey;
@@ -74,7 +74,7 @@ AddNewLayout(HWND hwndDlg)
 {
     TCHAR NewLayout[CCH_ULONG_DEC + 1], Lang[MAX_PATH],
           LangID[CCH_LAYOUT_ID + 1], Layout[MAX_PATH],
-          SubPath[CCH_LAYOUT_ID + 1];
+          SubPath[CCH_LAYOUT_ID + 1], szMessage[MAX_PATH];
     INT iLayout, iLang;
     HKEY hKey, hSubKey;
     DWORD cValues;
@@ -84,7 +84,7 @@ AddNewLayout(HWND hwndDlg)
     iLayout = SendMessage(hLayoutList, CB_GETCURSEL, 0, 0);
     if (iLayout == CB_ERR) return;
 
-    if (RegOpenKeyEx(HKEY_CURRENT_USER, _T("Keyboard Layout\\Preload"), 0, KEY_QUERY_VALUE | KEY_SET_VALUE, &hKey) == ERROR_SUCCESS)
+    if (RegOpenKeyEx(HKEY_CURRENT_USER, _T("Keyboard Layout\\Preload"), 0, KEY_ALL_ACCESS, &hKey) == ERROR_SUCCESS)
     {
         if (RegQueryInfoKey(hKey, NULL, NULL, NULL, NULL, NULL, NULL, &cValues, NULL, NULL, NULL, NULL) == ERROR_SUCCESS)
         {
@@ -92,9 +92,19 @@ AddNewLayout(HWND hwndDlg)
 
             iLang = SendMessage(hLangList, CB_GETCURSEL, 0, 0);
             lcid = SendMessage(hLangList, CB_GETITEMDATA, iLang, 0);
+            pts = (PTSTR) SendMessage(hLayoutList, CB_GETITEMDATA, iLayout, 0);
 
             GetLocaleInfo(MAKELCID(lcid, SORT_DEFAULT), LOCALE_ILANGUAGE, Lang, sizeof(Lang) / sizeof(TCHAR));
             wsprintf(LangID, _T("0000%s"), Lang);
+
+            if (IsLayoutExists(pts, LangID))
+            {
+                LoadString(hApplet, IDS_LAYOUT_EXISTS2, szMessage, sizeof(szMessage) / sizeof(TCHAR));
+                MessageBox(hwndDlg, szMessage, NULL, MB_OK | MB_ICONINFORMATION);
+
+                RegCloseKey(hKey);
+                return;
+            }
 
             if (GetLayoutName(LangID, Layout))
             {
@@ -106,12 +116,10 @@ AddNewLayout(HWND hwndDlg)
                 else SubPath[0] = '\0';
             }
 
-            pts = (PTSTR) SendMessage(hLayoutList, CB_GETITEMDATA, iLayout, 0);
-
             if (_tcslen(SubPath) != 0)
             {
                 if (RegCreateKeyEx(HKEY_CURRENT_USER, _T("Keyboard Layout\\Substitutes"), 0, NULL,
-                                   REG_OPTION_NON_VOLATILE, KEY_QUERY_VALUE | KEY_SET_VALUE | KEY_WRITE,
+                                   REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS,
                                    NULL, &hSubKey, NULL) == ERROR_SUCCESS)
                 {
                     if (RegSetValueEx(hSubKey, SubPath, 0, REG_SZ, (LPBYTE)pts,
@@ -123,7 +131,7 @@ AddNewLayout(HWND hwndDlg)
                     }
                     RegCloseKey(hSubKey);
                 }
-                pts = SubPath;
+                lstrcpy(pts, SubPath);
             }
 
             if (RegSetValueEx(hKey,
@@ -141,7 +149,7 @@ AddNewLayout(HWND hwndDlg)
 }
 
 VOID
-CreateKeyboardLayoutList(VOID)
+CreateKeyboardLayoutList(HWND hItemsList)
 {
     HKEY hKey;
     PTSTR pstrLayoutID;
@@ -157,16 +165,16 @@ CreateKeyboardLayoutList(VOID)
         {
             GetLayoutName(szLayoutID, KeyName);
 
-            INT iIndex = (INT) SendMessage(hLayoutList, CB_ADDSTRING, 0, (LPARAM)KeyName);
+            INT iIndex = (INT) SendMessage(hItemsList, CB_ADDSTRING, 0, (LPARAM)KeyName);
 
             pstrLayoutID = (PTSTR)HeapAlloc(hProcessHeap, 0, sizeof(szLayoutID));
             lstrcpy(pstrLayoutID, szLayoutID);
-            SendMessage(hLayoutList, CB_SETITEMDATA, iIndex, (LPARAM)pstrLayoutID);
+            SendMessage(hItemsList, CB_SETITEMDATA, iIndex, (LPARAM)pstrLayoutID);
 
             // FIXME!
             if (_tcscmp(szLayoutID, _T("00000409")) == 0)
             {
-                SendMessage(hLayoutList, CB_SETCURSEL, (WPARAM)iIndex, (LPARAM)0);
+                SendMessage(hItemsList, CB_SETCURSEL, (WPARAM)iIndex, (LPARAM)0);
             }
 
             dwIndex++;
@@ -220,7 +228,7 @@ AddDlgProc(HWND hDlg,
             hLangList = GetDlgItem(hDlg, IDC_INPUT_LANG_COMBO);
             hLayoutList = GetDlgItem(hDlg, IDC_KEYBOARD_LO_COMBO);
             EnumSystemLocales(LanguagesEnumProc, LCID_INSTALLED);
-            CreateKeyboardLayoutList();
+            CreateKeyboardLayoutList(hLayoutList);
         }
         break;
 

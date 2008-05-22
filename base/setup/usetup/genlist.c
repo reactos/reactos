@@ -52,6 +52,7 @@ typedef struct _GENERIC_LIST
     SHORT Top;
     SHORT Right;
     SHORT Bottom;
+    BOOL Redraw;
 
     PGENERIC_LIST_ENTRY CurrentEntry;
     PGENERIC_LIST_ENTRY BackupEntry;
@@ -74,6 +75,7 @@ CreateGenericList(VOID)
     List->Top = 0;
     List->Right = 0;
     List->Bottom = 0;
+    List->Redraw = TRUE;
 
     List->CurrentEntry = NULL;
 
@@ -284,6 +286,50 @@ DrawListEntries(PGENERIC_LIST GenericList)
     }
 }
 
+static VOID
+DrawScrollBarGenericList(PGENERIC_LIST GenericList)
+{
+    COORD coPos;
+    DWORD Written;
+
+    coPos.X = GenericList->Right + 1;
+    coPos.Y = GenericList->Top;
+
+    if (GenericList->FirstShown != GenericList->ListHead.Flink)
+    {
+        FillConsoleOutputCharacterA (StdOutput,
+                                     '\x18',
+                                     1,
+                                     coPos,
+                                     &Written);
+    }
+    else
+    {
+        FillConsoleOutputCharacterA (StdOutput,
+                                     ' ',
+                                     1,
+                                     coPos,
+                                     &Written);
+    }
+
+    coPos.Y = GenericList->Bottom;
+    if (GenericList->LastShown != GenericList->ListHead.Blink)
+    {
+        FillConsoleOutputCharacterA (StdOutput,
+                                     '\x19',
+                                     1,
+                                     coPos,
+                                     &Written);
+    }
+    else
+    {
+        FillConsoleOutputCharacterA (StdOutput,
+                                     ' ',
+                                     1,
+                                     coPos,
+                                     &Written);
+    }
+}
 
 VOID
 DrawGenericList(PGENERIC_LIST List,
@@ -304,8 +350,50 @@ DrawGenericList(PGENERIC_LIST List,
         return;
 
     DrawListEntries(List);
+    DrawScrollBarGenericList(List);
 }
 
+VOID
+ScrollPageDownGenericList (PGENERIC_LIST List)
+{
+    SHORT i;
+
+    /* Suspend auto-redraw */
+    List->Redraw = FALSE;
+
+    for (i = List->Top + 1; i < List->Bottom - 1; i++)
+    {
+        ScrollDownGenericList (List);
+    }
+
+    /* Update user interface */
+    DrawListEntries(List);
+    DrawScrollBarGenericList(List);
+
+    /* Re enable auto-redraw */
+    List->Redraw = TRUE;
+}
+
+VOID
+ScrollPageUpGenericList (PGENERIC_LIST List)
+{
+    SHORT i;
+
+    /* Suspend auto-redraw */
+    List->Redraw = FALSE;
+
+    for (i = List->Bottom - 1; i > List->Top + 1; i--)
+    {
+         ScrollUpGenericList (List);
+    }
+
+    /* Update user interface */
+    DrawListEntries(List);
+    DrawScrollBarGenericList(List);
+
+    /* Re enable auto-redraw */
+    List->Redraw = TRUE;
+}
 
 VOID
 ScrollDownGenericList (PGENERIC_LIST List)
@@ -324,7 +412,12 @@ ScrollDownGenericList (PGENERIC_LIST List)
             List->LastShown = List->LastShown->Flink;
         }
         List->CurrentEntry = CONTAINING_RECORD (Entry, GENERIC_LIST_ENTRY, Entry);
-        DrawListEntries(List);
+
+        if (List->Redraw)
+        {
+            DrawListEntries(List);
+            DrawScrollBarGenericList(List);
+        }
     }
 }
 
@@ -346,7 +439,12 @@ ScrollUpGenericList (PGENERIC_LIST List)
             List->LastShown = List->LastShown->Blink;
         }
         List->CurrentEntry = CONTAINING_RECORD (Entry, GENERIC_LIST_ENTRY, Entry);
-        DrawListEntries(List);
+
+        if (List->Redraw)
+        {
+            DrawListEntries(List);
+            DrawScrollBarGenericList(List);
+        }
     }
 }
 

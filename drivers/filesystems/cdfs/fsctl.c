@@ -16,8 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id$
- *
+/*
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/fs/cdfs/fsctl.c
@@ -515,6 +514,27 @@ CdfsVerifyVolume(PDEVICE_OBJECT DeviceObject,
 }
 
 
+NTSTATUS NTAPI
+CdfsSetCompression(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PIRP Irp)
+{
+    PIO_STACK_LOCATION Stack;
+    USHORT CompressionState;
+
+    Stack = IoGetCurrentIrpStackLocation(Irp);
+
+    if (Stack->Parameters.DeviceIoControl.InputBufferLength != sizeof(CompressionState))
+        return STATUS_INVALID_DEVICE_REQUEST;
+
+    CompressionState = *(USHORT *)Irp->AssociatedIrp.SystemBuffer;
+    if (CompressionState != COMPRESSION_FORMAT_NONE)
+        return STATUS_INVALID_PARAMETER;
+
+    return STATUS_SUCCESS;
+}
+
+
 NTSTATUS STDCALL
 CdfsFileSystemControl(PDEVICE_OBJECT DeviceObject,
 		      PIRP Irp)
@@ -528,10 +548,20 @@ CdfsFileSystemControl(PDEVICE_OBJECT DeviceObject,
 
   switch (Stack->MinorFunction)
     {
-      case IRP_MN_USER_FS_REQUEST:
-	DPRINT1("CDFS: IRP_MN_USER_FS_REQUEST\n");
-	Status = STATUS_INVALID_DEVICE_REQUEST;
-	break;
+        case IRP_MN_USER_FS_REQUEST:
+            switch (Stack->Parameters.DeviceIoControl.IoControlCode)
+            {
+                case FSCTL_SET_COMPRESSION:
+                    DPRINT("CDFS: IRP_MN_USER_FS_REQUEST / FSCTL_SET_COMPRESSION\n");
+                    Status = CdfsSetCompression(DeviceObject, Irp);
+                    break;
+
+                default:
+                    DPRINT1("CDFS: IRP_MN_USER_FS_REQUEST / Unknown IoControlCode 0x%x\n",
+                        Stack->Parameters.DeviceIoControl.IoControlCode);
+                    Status = STATUS_INVALID_DEVICE_REQUEST;
+            }
+            break;
 
       case IRP_MN_MOUNT_VOLUME:
 	DPRINT("CDFS: IRP_MN_MOUNT_VOLUME\n");

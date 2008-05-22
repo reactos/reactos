@@ -172,6 +172,4 @@
 		<file>wcsstr.c</file>
 		<file>wcsrev.c</file>
 	</directory>
-
-	<pch>precomp.h</pch>
 </module>

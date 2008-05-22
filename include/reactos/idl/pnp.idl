@@ -2,7 +2,7 @@
  * Plug and Play Manager RPC interface definition
  */
 
-#include "include/reactos/idl/wtypes.idl"
+#include <ms-dtyp.idl>
 
 const unsigned long PNP_MAX_STRING_LEN = 32767;
 const unsigned long PNP_MAX_DEVICE_ID_LEN = 200;

@@ -371,7 +371,7 @@ static UINT save_summary_info( const MSISUMMARYINFO * si, IStream *stm )
     LPBYTE data = NULL;
     ULONG count, sz;
     HRESULT r;
-    int i, n;
+    int i;
 
     /* write the header */
     sz = sizeof set_hdr;
@@ -397,7 +397,6 @@ static UINT save_summary_info( const MSISUMMARYINFO * si, IStream *stm )
     section_hdr.cbSection = sizeof section_hdr;
     section_hdr.cbSection += (get_property_count( si->property ) * sizeof idofs[0]);
     section_hdr.cProperties = 0;
-    n = 0;
     for( i = 0; i < MSI_MAX_PROPS; i++ )
     {
         sz = write_property_to_data( &si->property[i], NULL );

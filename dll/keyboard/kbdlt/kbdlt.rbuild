@@ -1,4 +1,4 @@
-<module name="kbdlt" type="kernelmodedll" entrypoint="0" installbase="system32" installname="kbdlt.dll" allowwarnings="true">
+<module name="kbdlt" type="keyboardlayout" entrypoint="0" installbase="system32" installname="kbdlt.dll" allowwarnings="true">
 	<importlibrary definition="kbdlt.def" />
 	<include base="ntoskrnl">include</include>
 	<define name="_DISABLE_TIDENTS" />

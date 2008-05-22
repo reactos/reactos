@@ -244,8 +244,15 @@ static const WORD *DIALOG_GetControl32( const WORD *p, DLG_CONTROL_INFO *info,
     if (GET_WORD(p) == 0xffff)  /* Is it an integer id? */
     {
         info->windowName = HeapAlloc( GetProcessHeap(), 0, sizeof(L"#65535") );
-        swprintf((LPWSTR)info->windowName, L"#%d", GET_WORD(p + 1));
-        info->windowNameFree = TRUE;
+        if (info->windowName != NULL)
+        {
+            swprintf((LPWSTR)info->windowName, L"#%d", GET_WORD(p + 1));
+            info->windowNameFree = TRUE;
+        }
+        else
+        {
+            info->windowNameFree = FALSE;
+        }
         p += 2;
     }
     else
@@ -280,7 +287,7 @@ static BOOL DIALOG_CreateControls32( HWND hwnd, LPCSTR template, const DLG_TEMPL
     HWND hwndCtrl, hwndDefButton = 0;
     INT items = dlgTemplate->nbItems;
 
-    if (!(dlgInfo = GETDLGINFO(hwnd))) return -1;
+    if (!(dlgInfo = GETDLGINFO(hwnd))) return FALSE;
 
     while (items--)
     {
@@ -313,22 +320,30 @@ static BOOL DIALOG_CreateControls32( HWND hwnd, LPCSTR template, const DLG_TEMPL
             {
                 DWORD len = WideCharToMultiByte( CP_ACP, 0, info.className, -1, NULL, 0, NULL, NULL );
                 class = HeapAlloc( GetProcessHeap(), 0, len );
-                WideCharToMultiByte( CP_ACP, 0, info.className, -1, class, len, NULL, NULL );
+                if (class != NULL)
+                    WideCharToMultiByte( CP_ACP, 0, info.className, -1, class, len, NULL, NULL );
             }
             if (HIWORD(caption))
             {
                 DWORD len = WideCharToMultiByte( CP_ACP, 0, info.windowName, -1, NULL, 0, NULL, NULL );
                 caption = HeapAlloc( GetProcessHeap(), 0, len );
-                WideCharToMultiByte( CP_ACP, 0, info.windowName, -1, caption, len, NULL, NULL );
+                if (caption != NULL)
+                    WideCharToMultiByte( CP_ACP, 0, info.windowName, -1, caption, len, NULL, NULL );
             }
-            hwndCtrl = CreateWindowExA( info.exStyle | WS_EX_NOPARENTNOTIFY,
-                                        class, caption, info.style | WS_CHILD,
-                                        MulDiv(info.x, dlgInfo->xBaseUnit, 4),
-                                        MulDiv(info.y, dlgInfo->yBaseUnit, 8),
-                                        MulDiv(info.cx, dlgInfo->xBaseUnit, 4),
-                                        MulDiv(info.cy, dlgInfo->yBaseUnit, 8),
-                                        hwnd, (HMENU)info.id,
-                                        hInst, (LPVOID)info.data );
+
+            if (class != NULL && caption != NULL)
+            {
+                hwndCtrl = CreateWindowExA( info.exStyle | WS_EX_NOPARENTNOTIFY,
+                                            class, caption, info.style | WS_CHILD,
+                                            MulDiv(info.x, dlgInfo->xBaseUnit, 4),
+                                            MulDiv(info.y, dlgInfo->yBaseUnit, 8),
+                                            MulDiv(info.cx, dlgInfo->xBaseUnit, 4),
+                                            MulDiv(info.cy, dlgInfo->yBaseUnit, 8),
+                                            hwnd, (HMENU)info.id,
+                                            hInst, (LPVOID)info.data );
+            }
+            else
+                hwndCtrl = NULL;
             if (HIWORD(class)) HeapFree( GetProcessHeap(), 0, class );
             if (HIWORD(caption)) HeapFree( GetProcessHeap(), 0, caption );
         }
@@ -750,19 +765,27 @@ static HWND DIALOG_CreateIndirect( HINSTANCE hInst, LPCVOID dlgTemplate,
         {
             DWORD len = WideCharToMultiByte( CP_ACP, 0, template.className, -1, NULL, 0, NULL, NULL );
             class = HeapAlloc( GetProcessHeap(), 0, len );
-            WideCharToMultiByte( CP_ACP, 0, template.className, -1, class, len, NULL, NULL );
+            if (class != NULL)
+                WideCharToMultiByte( CP_ACP, 0, template.className, -1, class, len, NULL, NULL );
         }
         if (HIWORD(caption))
         {
             DWORD len = WideCharToMultiByte( CP_ACP, 0, template.caption, -1, NULL, 0, NULL, NULL );
             caption = HeapAlloc( GetProcessHeap(), 0, len );
-            WideCharToMultiByte( CP_ACP, 0, template.caption, -1, caption, len, NULL, NULL );
+            if (caption != NULL)
+                WideCharToMultiByte( CP_ACP, 0, template.caption, -1, caption, len, NULL, NULL );
         }
-        hwnd = User32CreateWindowEx(template.exStyle, class, caption,
-                                    template.style & ~WS_VISIBLE,
-                                    rect.left, rect.top, rect.right, rect.bottom,
-                                    owner, hMenu, hInst, NULL,
-                                    FALSE);
+
+        if (class != NULL && caption != NULL)
+        {
+            hwnd = User32CreateWindowEx(template.exStyle, class, caption,
+                                        template.style & ~WS_VISIBLE,
+                                        rect.left, rect.top, rect.right, rect.bottom,
+                                        owner, hMenu, hInst, NULL,
+                                        FALSE);
+        }
+        else
+            hwnd = NULL;
         if (HIWORD(class)) HeapFree( GetProcessHeap(), 0, class );
         if (HIWORD(caption)) HeapFree( GetProcessHeap(), 0, caption );
     }
@@ -1196,6 +1219,7 @@ static INT DIALOG_DlgDirListW( HWND hDlg, LPWSTR spec, INT idLBox,
     {
         WCHAR *p, *p2;
         p = spec;
+        if ((p2 = strchrW( p, ':' ))) p = p2 + 1;
         if ((p2 = strrchrW( p, '\\' ))) p = p2;
         if ((p2 = strrchrW( p, '/' ))) p = p2;
         if (p != spec)
@@ -1215,28 +1239,29 @@ static INT DIALOG_DlgDirListW( HWND hDlg, LPWSTR spec, INT idLBox,
 
     if (idLBox && ((hwnd = GetDlgItem( hDlg, idLBox )) != 0))
     {
+        if (attrib == DDL_DRIVES) attrib |= DDL_EXCLUSIVE;
+
         SENDMSG( combo ? CB_RESETCONTENT : LB_RESETCONTENT, 0, 0 );
         if (attrib & DDL_DIRECTORY)
         {
             if (!(attrib & DDL_EXCLUSIVE))
             {
-                if (SENDMSG( combo ? CB_DIR : LB_DIR,
-                             attrib & ~(DDL_DIRECTORY | DDL_DRIVES),
-                             (LPARAM)spec ) == LB_ERR)
-                    return FALSE;
+                SENDMSG( combo ? CB_DIR : LB_DIR,
+                         attrib & ~(DDL_DIRECTORY | DDL_DRIVES),
+                         (LPARAM)spec );
             }
-            if (SENDMSG( combo ? CB_DIR : LB_DIR,
-                       (attrib & (DDL_DIRECTORY | DDL_DRIVES)) | DDL_EXCLUSIVE,
-                         (LPARAM)any ) == LB_ERR)
-                return FALSE;
+            SENDMSG( combo ? CB_DIR : LB_DIR,
+                   (attrib & (DDL_DIRECTORY | DDL_DRIVES)) | DDL_EXCLUSIVE,
+                   (LPARAM)any );
         }
         else
         {
-            if (SENDMSG( combo ? CB_DIR : LB_DIR, attrib,
-                         (LPARAM)spec ) == LB_ERR)
-                return FALSE;
+            SENDMSG( combo ? CB_DIR : LB_DIR, attrib, (LPARAM)spec );
         }
     }
+
+    /* Convert path specification to uppercase */
+    if (spec) CharUpperW(spec);
 
     if (idStatic && ((hwnd = GetDlgItem( hDlg, idStatic )) != 0))
     {
@@ -1270,6 +1295,8 @@ static INT DIALOG_DlgDirListA( HWND hDlg, LPSTR spec, INT idLBox,
     {
         INT ret, len = MultiByteToWideChar( CP_ACP, 0, spec, -1, NULL, 0 );
         LPWSTR specW = HeapAlloc( GetProcessHeap(), 0, len * sizeof(WCHAR) );
+        if (specW == NULL)
+            return FALSE;
         MultiByteToWideChar( CP_ACP, 0, spec, -1, specW, len );
         ret = DIALOG_DlgDirListW( hDlg, specW, idLBox, idStatic, attrib, combo );
         WideCharToMultiByte( CP_ACP, 0, specW, -1, spec, 0x7fffffff, NULL, NULL );
@@ -1300,7 +1327,7 @@ static BOOL DIALOG_DlgDirSelect( HWND hwnd, LPWSTR str, INT len,
     size = SendMessageW(listbox, combo ? CB_GETLBTEXTLEN : LB_GETTEXTLEN, 0, 0 );
     if (size == LB_ERR) return FALSE;
 
-    if (!(buffer = HeapAlloc( GetProcessHeap(), 0, size+1 ))) return FALSE;
+    if (!(buffer = HeapAlloc( GetProcessHeap(), 0, (size+2) * sizeof(WCHAR) ))) return FALSE;
 
     SendMessageW( listbox, combo ? CB_GETLBTEXT : LB_GETTEXT, item, (LPARAM)buffer );
 
@@ -1318,14 +1345,25 @@ static BOOL DIALOG_DlgDirSelect( HWND hwnd, LPWSTR str, INT len,
             ptr = buffer + 1;
         }
     }
-    else ptr = buffer;
+    else
+    {
+        /* Filenames without a dot extension must have one tacked at the end */
+        if (strchrW(buffer, '.') == NULL)
+        {
+            buffer[strlenW(buffer)+1] = '\0';
+            buffer[strlenW(buffer)] = '.';
+        }
+        ptr = buffer;
+    }
 
-    if (unicode)
+    if (!unicode)
     {
         if (len > 0 && !WideCharToMultiByte( CP_ACP, 0, ptr, -1, (LPSTR)str, len, 0, 0 ))
             ((LPSTR)str)[len-1] = 0;
     }
-    else lstrcpynW( str, ptr, len );
+    else
+        lstrcpynW( str, ptr, len );
+
     HeapFree( GetProcessHeap(), 0, buffer );
     TRACE("Returning %d '%s'\n", ret, str );
     return ret;
@@ -1640,8 +1678,17 @@ DialogBoxParamA(
     HRSRC hrsrc;
     LPCDLGTEMPLATE ptr;
 
-    if (!(hrsrc = FindResourceA( hInstance, lpTemplateName, (LPCSTR)RT_DIALOG ))) return 0;
-    if (!(ptr = (LPCDLGTEMPLATE)LoadResource(hInstance, hrsrc))) return 0;
+    if (!(hrsrc = FindResourceA( hInstance, lpTemplateName, (LPCSTR)RT_DIALOG )) ||
+        !(ptr = (LPCDLGTEMPLATE)LoadResource(hInstance, hrsrc)))
+    {
+        SetLastError(ERROR_RESOURCE_NAME_NOT_FOUND);
+        return -1;
+    }
+    if (hWndParent != NULL && !IsWindow(hWndParent))
+    {
+        SetLastError(ERROR_INVALID_WINDOW_HANDLE);
+        return 0;
+    }
     hwnd = DIALOG_CreateIndirect(hInstance, ptr, hWndParent, lpDialogFunc, dwInitParam, FALSE, TRUE);
     if (hwnd) return DIALOG_DoDialogBox(hwnd, hWndParent);
     return -1;
@@ -1664,8 +1711,17 @@ DialogBoxParamW(
     HRSRC hrsrc;
     LPCDLGTEMPLATE ptr;
 
-    if (!(hrsrc = FindResourceW( hInstance, lpTemplateName, (LPCWSTR)RT_DIALOG ))) return 0;
-    if (!(ptr = (LPCDLGTEMPLATE)LoadResource(hInstance, hrsrc))) return 0;
+    if (!(hrsrc = FindResourceW( hInstance, lpTemplateName, (LPCWSTR)RT_DIALOG )) ||
+        !(ptr = (LPCDLGTEMPLATE)LoadResource(hInstance, hrsrc)))
+    {
+        SetLastError(ERROR_RESOURCE_NAME_NOT_FOUND);
+        return -1;
+    }
+    if (hWndParent != NULL && !IsWindow(hWndParent))
+    {
+        SetLastError(ERROR_INVALID_WINDOW_HANDLE);
+        return 0;
+    }
     hwnd = DIALOG_CreateIndirect(hInstance, ptr, hWndParent, lpDialogFunc, dwInitParam, TRUE, TRUE);
     if (hwnd) return DIALOG_DoDialogBox(hwnd, hWndParent);
     return -1;

@@ -93,7 +93,7 @@ GetClipboardData(UINT uFormat)
             hGlobal = GlobalAlloc(GMEM_DDESHARE | GMEM_MOVEABLE, size);
             pGlobal = GlobalLock(hGlobal);
 
-            size = (DWORD)NtUserGetClipboardData(uFormat, (DWORD)pGlobal);
+            size = (DWORD)NtUserGetClipboardData(uFormat, pGlobal);
 
             GlobalUnlock(hGlobal);
         }
@@ -114,12 +114,7 @@ GetClipboardFormatNameA(UINT format, LPSTR lpszFormatName, int cchMaxCount)
 {
     LPWSTR lpBuffer;
     UNICODE_STRING FormatName;
-    ANSI_STRING FormatNameA;
     INT Length;
-    ANSI_STRING ClassName;
-
-    ClassName.MaximumLength = cchMaxCount;
-    ClassName.Buffer = lpszFormatName;
 
     lpBuffer = RtlAllocateHeap(RtlGetProcessHeap(), 0, cchMaxCount * sizeof(WCHAR));
     if (!lpBuffer)
@@ -137,16 +132,16 @@ GetClipboardFormatNameA(UINT format, LPSTR lpszFormatName, int cchMaxCount)
 
    if (Length != 0)
    {
-       FormatNameA.Length = 0;
-       FormatNameA.MaximumLength = cchMaxCount;
-       FormatNameA.Buffer = lpszFormatName;
-
-       RtlUnicodeStringToAnsiString(&FormatNameA, &FormatName, FALSE);
-
-       return FormatNameA.Length;
+       if (!WideCharToMultiByte(CP_ACP, 0, lpBuffer, Length, lpszFormatName, cchMaxCount, NULL, NULL))
+       {
+          /* clear result string */
+          lpszFormatName[0] = '\0';
+          Length = 0;
+       }
    }
 
-   return 0;
+   RtlFreeHeap(RtlGetProcessHeap(), 0, lpBuffer);
+   return Length;
 }
 
 /*

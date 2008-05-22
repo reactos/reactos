@@ -7,6 +7,7 @@
 	<file>dispex.idl</file>
 	<file>docobj.idl</file>
 	<file>downloadmgr.idl</file>
+	<file>fusion.idl</file>
 	<file>hlink.idl</file>
 	<file>htiframe.idl</file>
 	<file>iads.idl</file>

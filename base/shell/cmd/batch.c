@@ -85,9 +85,7 @@ LPTSTR FindArg (INT n)
 {
 	LPTSTR pp;
 
-#ifdef _DEBUG
-	DebugPrintf (_T("FindArg: (%d)\n"), n);
-#endif
+	TRACE ("FindArg: (%d)\n", n);
 
 	if (bc == NULL)
 		return NULL;
@@ -172,9 +170,7 @@ LPTSTR BatchParams (LPTSTR s1, LPTSTR s2)
 
 VOID ExitBatch (LPTSTR msg)
 {
-#ifdef _DEBUG
-	DebugPrintf (_T("ExitBatch: (\'%s\')\n"), msg);
-#endif
+	TRACE ("ExitBatch: (\'%s\')\n", debugstr_aw(msg));
 
 	if (bc != NULL)
 	{
@@ -226,10 +222,8 @@ BOOL Batch (LPTSTR fullname, LPTSTR firstword, LPTSTR param)
 			    OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL |
 				 FILE_FLAG_SEQUENTIAL_SCAN, NULL);
 
-#ifdef _DEBUG
-	DebugPrintf (_T("Batch: (\'%s\', \'%s\', \'%s\')  hFile = %x\n"),
-				 fullname, firstword, param, hFile);
-#endif
+	TRACE ("Batch: (\'%s\', \'%s\', \'%s\')  hFile = %x\n",
+		debugstr_aw(fullname), debugstr_aw(firstword), debugstr_aw(param), hFile);
 
 	if (hFile == INVALID_HANDLE_VALUE)
 	{
@@ -298,9 +292,10 @@ BOOL Batch (LPTSTR fullname, LPTSTR firstword, LPTSTR param)
         return FALSE;
     }
 
-#ifdef _DEBUG
-	DebugPrintf (_T("Batch: returns TRUE\n"));
-#endif
+    /* Don't print a newline for this command */
+    bIgnoreEcho = TRUE;
+
+	TRACE ("Batch: returns TRUE\n");
 
 	return TRUE;
 }
@@ -339,9 +334,7 @@ LPTSTR ReadBatchLine (LPBOOL bLocalEcho)
 	if (bc == NULL)
 		return NULL;
 
-#ifdef _DEBUG
-	DebugPrintf (_T("ReadBatchLine ()\n"));
-#endif
+	TRACE ("ReadBatchLine ()\n");
 
 	while (1)
 	{
@@ -435,9 +428,7 @@ LPTSTR ReadBatchLine (LPBOOL bLocalEcho)
 
 		if (!FileGetString (bc->hBatchFile, textline, sizeof (textline) / sizeof (textline[0])))
 		{
-#ifdef _DEBUG
-			DebugPrintf (_T("ReadBatchLine(): Reached EOF!\n"));
-#endif
+			TRACE ("ReadBatchLine(): Reached EOF!\n");
 			/* End of file.... */
 			ExitBatch (NULL);
 
@@ -446,9 +437,7 @@ LPTSTR ReadBatchLine (LPBOOL bLocalEcho)
 
 			continue;
 		}
-#ifdef _DEBUG
-		DebugPrintf (_T("ReadBatchLine(): textline: \'%s\'\n"), textline);
-#endif
+		TRACE ("ReadBatchLine(): textline: \'%s\'\n", debugstr_aw(textline));
 
 		/* Strip leading spaces and trailing space/control chars */
 		for (first = textline; _istspace (*first); first++)

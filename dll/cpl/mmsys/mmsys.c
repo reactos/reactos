@@ -103,7 +103,6 @@ MmSysApplet(HWND hwnd,
     UNREFERENCED_PARAMETER(lParam);
     UNREFERENCED_PARAMETER(wParam);
     UNREFERENCED_PARAMETER(uMsg);
-    UNREFERENCED_PARAMETER(hwnd);
 
     LoadString(hApplet,
                IDS_CPLNAME,
@@ -112,7 +111,7 @@ MmSysApplet(HWND hwnd,
 
     psh.dwSize = sizeof(PROPSHEETHEADER);
     psh.dwFlags =  PSH_PROPSHEETPAGE | PSH_PROPTITLE;
-    psh.hwndParent = NULL;
+    psh.hwndParent = hwnd;
     psh.hInstance = hApplet;
     psh.hIcon = LoadIcon(hApplet,
                          MAKEINTRESOURCE(IDI_CPLICON));

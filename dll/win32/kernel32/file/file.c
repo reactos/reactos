@@ -13,10 +13,9 @@
 /* INCLUDES *****************************************************************/
 
 #include <k32.h>
+#include <wine/debug.h>
 
-#define NDEBUG
-#include <debug.h>
-
+WINE_DEFAULT_DEBUG_CHANNEL(kernel32file);
 
 /* GLOBALS ******************************************************************/
 
@@ -233,7 +232,7 @@ OpenFile(LPCSTR lpFileName,
 	PWCHAR FilePart;
 	ULONG Len;
 
-	DPRINT("OpenFile('%s', lpReOpenBuff %x, uStyle %x)\n", lpFileName, lpReOpenBuff, uStyle);
+	TRACE("OpenFile('%s', lpReOpenBuff %x, uStyle %x)\n", lpFileName, lpReOpenBuff, uStyle);
 
 	if (lpReOpenBuff == NULL)
 	{
@@ -385,7 +384,7 @@ SetFilePointer(HANDLE hFile,
    IO_STATUS_BLOCK IoStatusBlock;
    LARGE_INTEGER Distance;
 
-   DPRINT("SetFilePointer(hFile %x, lDistanceToMove %d, dwMoveMethod %d)\n",
+   TRACE("SetFilePointer(hFile %x, lDistanceToMove %d, dwMoveMethod %d)\n",
 	  hFile,lDistanceToMove,dwMoveMethod);
 
    if(IsConsoleHandle(hFile))
@@ -861,7 +860,7 @@ GetFileAttributesExW(LPCWSTR lpFileName,
   NTSTATUS Status;
   WIN32_FILE_ATTRIBUTE_DATA* FileAttributeData;
 
-  DPRINT("GetFileAttributesExW(%S) called\n", lpFileName);
+  TRACE("GetFileAttributesExW(%S) called\n", lpFileName);
 
 
   if (fInfoLevelId != GetFileExInfoStandard || lpFileInformation == NULL)
@@ -876,7 +875,7 @@ GetFileAttributesExW(LPCWSTR lpFileName,
 				     NULL,
 				     NULL))
     {
-      DPRINT1 ("Invalid path '%S'\n", lpFileName);
+      WARN ("Invalid path '%S'\n", lpFileName);
       SetLastError (ERROR_BAD_PATHNAME);
       return FALSE;
     }
@@ -895,7 +894,7 @@ GetFileAttributesExW(LPCWSTR lpFileName,
   RtlFreeUnicodeString (&FileName);
   if (!NT_SUCCESS (Status))
     {
-      DPRINT ("NtQueryFullAttributesFile() failed (Status %lx)\n", Status);
+      WARN ("NtQueryFullAttributesFile() failed (Status %lx)\n", Status);
       SetLastErrorByStatus (Status);
       return FALSE;
     }
@@ -959,7 +958,7 @@ GetFileAttributesW(LPCWSTR lpFileName)
   WIN32_FILE_ATTRIBUTE_DATA FileAttributeData;
   BOOL Result;
 
-  DPRINT ("GetFileAttributeW(%S) called\n", lpFileName);
+  TRACE ("GetFileAttributeW(%S) called\n", lpFileName);
 
   Result = GetFileAttributesExW(lpFileName, GetFileExInfoStandard, &FileAttributeData);
 
@@ -1080,7 +1079,7 @@ SetFileAttributesW(LPCWSTR lpFileName,
   HANDLE FileHandle;
   NTSTATUS Status;
 
-  DPRINT ("SetFileAttributeW(%S, 0x%lx) called\n", lpFileName, dwFileAttributes);
+  TRACE ("SetFileAttributeW(%S, 0x%lx) called\n", lpFileName, dwFileAttributes);
 
   /* Validate and translate the filename */
   if (!RtlDosPathNameToNtPathName_U (lpFileName,
@@ -1088,11 +1087,11 @@ SetFileAttributesW(LPCWSTR lpFileName,
 				     NULL,
 				     NULL))
     {
-      DPRINT ("Invalid path\n");
+      WARN ("Invalid path\n");
       SetLastError (ERROR_BAD_PATHNAME);
       return FALSE;
     }
-  DPRINT ("FileName: \'%wZ\'\n", &FileName);
+  TRACE ("FileName: \'%wZ\'\n", &FileName);
 
   /* build the object attributes */
   InitializeObjectAttributes (&ObjectAttributes,
@@ -1111,7 +1110,7 @@ SetFileAttributesW(LPCWSTR lpFileName,
   RtlFreeUnicodeString (&FileName);
   if (!NT_SUCCESS (Status))
     {
-      DPRINT ("NtOpenFile() failed (Status %lx)\n", Status);
+      WARN ("NtOpenFile() failed (Status %lx)\n", Status);
       SetLastErrorByStatus (Status);
       return FALSE;
     }
@@ -1123,7 +1122,7 @@ SetFileAttributesW(LPCWSTR lpFileName,
 				  FileBasicInformation);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT ("SetFileAttributes NtQueryInformationFile failed with status 0x%08x\n", Status);
+      WARN ("SetFileAttributes NtQueryInformationFile failed with status 0x%08x\n", Status);
       NtClose (FileHandle);
       SetLastErrorByStatus (Status);
       return FALSE;
@@ -1138,7 +1137,7 @@ SetFileAttributesW(LPCWSTR lpFileName,
   NtClose (FileHandle);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT ("SetFileAttributes NtSetInformationFile failed with status 0x%08x\n", Status);
+      WARN ("SetFileAttributes NtSetInformationFile failed with status 0x%08x\n", Status);
       SetLastErrorByStatus (Status);
       return FALSE;
     }
@@ -1216,7 +1215,7 @@ UINT WINAPI GetTempFileNameW( LPCWSTR path, LPCWSTR prefix, UINT unique, LPWSTR 
                                   CREATE_NEW, FILE_ATTRIBUTE_NORMAL, 0 );
             if (handle != INVALID_HANDLE_VALUE)
             {  /* We created it */
-                DPRINT("created %S\n", buffer);
+                TRACE("created %S\n", buffer);
                 CloseHandle( handle );
                 break;
             }
@@ -1227,7 +1226,7 @@ UINT WINAPI GetTempFileNameW( LPCWSTR path, LPCWSTR prefix, UINT unique, LPWSTR 
         } while (unique != num);
     }
 
-    DPRINT("returning %S\n", buffer);
+    TRACE("returning %S\n", buffer);
     return unique;
 }
 

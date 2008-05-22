@@ -4,6 +4,9 @@
 	<directory name="idl">
 		<xi:include href="idl/idl.rbuild" />
 	</directory>
+	<directory name="mc">
+		<xi:include href="mc/mc.rbuild" />
+	</directory>
 	<directory name="wine">
 		<xi:include href="wine/wineheaders.rbuild" />
 	</directory>

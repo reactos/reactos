@@ -10,10 +10,11 @@
 /* INCLUDES *****************************************************************/
 
 #include <k32.h>
+#include <wine/debug.h>
 
-#define NDEBUG
+WINE_DEFAULT_DEBUG_CHANNEL(kernel32file);
+
 //#define USING_PROPER_NPFS_WAIT_SEMANTICS
-#include <debug.h>
 
 /* FUNCTIONS ****************************************************************/
 
@@ -103,8 +104,8 @@ CreateNamedPipeW(LPCWSTR lpName,
         return INVALID_HANDLE_VALUE;
     }
 
-    DPRINT("Pipe name: %wZ\n", &NamedPipeName);
-    DPRINT("Pipe name: %S\n", NamedPipeName.Buffer);
+    TRACE("Pipe name: %wZ\n", &NamedPipeName);
+    TRACE("Pipe name: %S\n", NamedPipeName.Buffer);
 
     /* Always case insensitive, check if we got extra attributes */
     Attributes = OBJ_CASE_INSENSITIVE;
@@ -228,7 +229,7 @@ CreateNamedPipeW(LPCWSTR lpName,
     if (!NT_SUCCESS(Status))
     {
         /* Failed to create it */
-        DPRINT1("NtCreateNamedPipe failed (Status %x)!\n", Status);
+        WARN("NtCreateNamedPipe failed (Status %x)!\n", Status);
         SetLastErrorByStatus (Status);
         return INVALID_HANDLE_VALUE;
     }
@@ -294,7 +295,7 @@ WaitNamedPipeW(LPCWSTR lpNamedPipeName,
     PFILE_PIPE_WAIT_FOR_BUFFER WaitPipeInfo;
 
     /* Start by making a unicode string of the name */
-    DPRINT("Sent path: %S\n", lpNamedPipeName);
+    TRACE("Sent path: %S\n", lpNamedPipeName);
     RtlCreateUnicodeString(&NamedPipeName, lpNamedPipeName);
     NameLength = NamedPipeName.Length / sizeof(WCHAR);
 
@@ -321,7 +322,7 @@ WaitNamedPipeW(LPCWSTR lpNamedPipeName,
         NewName.Length -= 9 * sizeof(WCHAR);
 
         /* Initialize the Dos Devices name */
-        DPRINT("NewName: %wZ\n", &NewName);
+        TRACE("NewName: %wZ\n", &NewName);
         RtlInitUnicodeString(&DevicePath, L"\\DosDevices\\pipe\\");
     }
     else if (Type == RtlPathTypeRootLocalDevice)
@@ -348,7 +349,7 @@ WaitNamedPipeW(LPCWSTR lpNamedPipeName,
         else
         {
             /* The name is invalid */
-            DPRINT1("Invalid name!\n");
+            WARN("Invalid name!\n");
             SetLastErrorByStatus(STATUS_OBJECT_PATH_SYNTAX_BAD);
             return FALSE;
         }
@@ -357,7 +358,7 @@ WaitNamedPipeW(LPCWSTR lpNamedPipeName,
     }
     else
     {
-        DPRINT1("Invalid path type\n");
+        WARN("Invalid path type\n");
         SetLastErrorByStatus(STATUS_OBJECT_PATH_SYNTAX_BAD);
         return FALSE;
     }
@@ -373,7 +374,7 @@ WaitNamedPipeW(LPCWSTR lpNamedPipeName,
     }
 
     /* Initialize the object attributes */
-    DPRINT("Opening: %wZ\n", &DevicePath);
+    TRACE("Opening: %wZ\n", &DevicePath);
     InitializeObjectAttributes(&ObjectAttributes,
                                &DevicePath,
                                OBJ_CASE_INSENSITIVE,
@@ -390,7 +391,7 @@ WaitNamedPipeW(LPCWSTR lpNamedPipeName,
     if (!NT_SUCCESS(Status))
     {
         /* Fail; couldn't open */
-        DPRINT1("Status: %lx\n", Status);
+        WARN("Status: %lx\n", Status);
         SetLastErrorByStatus(Status);
         RtlFreeUnicodeString(&NamedPipeName);
         RtlFreeHeap(RtlGetProcessHeap(), 0, WaitPipeInfo);
@@ -449,7 +450,7 @@ WaitNamedPipeW(LPCWSTR lpNamedPipeName,
     if (!NT_SUCCESS(Status))
     {
         /* Failure to wait on the pipe */
-        DPRINT1("Status: %lx\n", Status);
+        WARN("Status: %lx\n", Status);
         SetLastErrorByStatus (Status);
         return FALSE;
      }

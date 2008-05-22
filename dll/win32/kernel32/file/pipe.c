@@ -11,9 +11,9 @@
 /* INCLUDES *****************************************************************/
 
 #include <k32.h>
+#include <wine/debug.h>
 
-#define NDEBUG
-#include <debug.h>
+WINE_DEFAULT_DEBUG_CHANNEL(kernel32file);
 
 /* GLOBALS ******************************************************************/
 
@@ -97,7 +97,7 @@ CreatePipe(PHANDLE hReadPipe,
     if (!NT_SUCCESS(Status))
     {
         /* Convert error and fail */
-        DPRINT1("Status: %lx\n", Status);
+        WARN("Status: %lx\n", Status);
         SetLastErrorByStatus(Status);
         return FALSE;
     }
@@ -112,7 +112,7 @@ CreatePipe(PHANDLE hReadPipe,
     if (!NT_SUCCESS(Status))
     {
         /* Convert error and fail */
-        DPRINT1("Status: %lx\n", Status);
+        WARN("Status: %lx\n", Status);
         NtClose(ReadPipeHandle);
         SetLastErrorByStatus(Status);
         return FALSE;

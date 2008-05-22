@@ -11,9 +11,9 @@
 /* INCLUDES *****************************************************************/
 
 #include <k32.h>
+#include <wine/debug.h>
 
-#define NDEBUG
-#include <debug.h>
+WINE_DEFAULT_DEBUG_CHANNEL(kernel32file);
 
 /* FUNCTIONS ****************************************************************/
 
@@ -73,7 +73,7 @@ CreateMailslotW(LPCWSTR lpName,
 	return(INVALID_HANDLE_VALUE);
      }
 
-   DPRINT("Mailslot name: %wZ\n", &MailslotName);
+   TRACE("Mailslot name: %wZ\n", &MailslotName);
 
    if(lpSecurityAttributes)
      {
@@ -115,7 +115,7 @@ CreateMailslotW(LPCWSTR lpName,
 
    if (!NT_SUCCESS(Status))
      {
-	DPRINT("NtCreateMailslot failed (Status %x)!\n", Status);
+	WARN("NtCreateMailslot failed (Status %x)!\n", Status);
 	SetLastErrorByStatus (Status);
 	return(INVALID_HANDLE_VALUE);
      }
@@ -145,7 +145,7 @@ GetMailslotInfo(HANDLE hMailslot,
 				   FileMailslotQueryInformation);
    if (!NT_SUCCESS(Status))
      {
-	DPRINT("NtQueryInformationFile failed (Status %x)!\n", Status);
+	WARN("NtQueryInformationFile failed (Status %x)!\n", Status);
 	SetLastErrorByStatus (Status);
 	return(FALSE);
      }
@@ -207,7 +207,7 @@ SetMailslotInfo(HANDLE hMailslot,
 				 FileMailslotSetInformation);
    if (!NT_SUCCESS(Status))
      {
-	DPRINT("NtSetInformationFile failed (Status %x)!\n", Status);
+	WARN("NtSetInformationFile failed (Status %x)!\n", Status);
 	SetLastErrorByStatus (Status);
 	return(FALSE);
      }

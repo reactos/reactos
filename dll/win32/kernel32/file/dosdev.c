@@ -12,10 +12,9 @@
 /* INCLUDES ******************************************************************/
 
 #include <k32.h>
+#include <wine/debug.h>
 
-#define NDEBUG
-#include <debug.h>
-
+WINE_DEFAULT_DEBUG_CHANNEL(kernel32file);
 
 /* FUNCTIONS *****************************************************************/
 
@@ -200,7 +199,7 @@ QueryDosDeviceW(
 				  &ObjectAttributes);
   if (!NT_SUCCESS (Status))
   {
-    DPRINT ("NtOpenDirectoryObject() failed (Status %lx)\n", Status);
+    WARN ("NtOpenDirectoryObject() failed (Status %lx)\n", Status);
     SetLastErrorByStatus (Status);
     return 0;
   }
@@ -222,7 +221,7 @@ QueryDosDeviceW(
 				       &ObjectAttributes);
     if (!NT_SUCCESS (Status))
     {
-      DPRINT ("NtOpenSymbolicLinkObject() failed (Status %lx)\n", Status);
+      WARN ("NtOpenSymbolicLinkObject() failed (Status %lx)\n", Status);
       NtClose (DirectoryHandle);
       SetLastErrorByStatus (Status);
       return 0;
@@ -241,14 +240,14 @@ QueryDosDeviceW(
     NtClose (DirectoryHandle);
     if (!NT_SUCCESS (Status))
     {
-      DPRINT ("NtQuerySymbolicLinkObject() failed (Status %lx)\n", Status);
+      WARN ("NtQuerySymbolicLinkObject() failed (Status %lx)\n", Status);
       SetLastErrorByStatus (Status);
       return 0;
     }
 
-    DPRINT ("ReturnLength: %lu\n", ReturnLength);
-    DPRINT ("TargetLength: %hu\n", UnicodeString.Length);
-    DPRINT ("Target: '%wZ'\n", &UnicodeString);
+    TRACE ("ReturnLength: %lu\n", ReturnLength);
+    TRACE ("TargetLength: %hu\n", UnicodeString.Length);
+    TRACE ("Target: '%wZ'\n", &UnicodeString);
 
     Length = ReturnLength / sizeof(WCHAR);
     if (Length < ucchMax)
@@ -259,7 +258,7 @@ QueryDosDeviceW(
     }
     else
     {
-      DPRINT ("Buffer is too small\n");
+      TRACE ("Buffer is too small\n");
       SetLastErrorByStatus (STATUS_BUFFER_TOO_SMALL);
       return 0;
     }
@@ -300,7 +299,7 @@ QueryDosDeviceW(
 
       if (!wcscmp (DirInfo->TypeName.Buffer, L"SymbolicLink"))
       {
-	DPRINT ("Name: '%wZ'\n", &DirInfo->Name);
+	TRACE ("Name: '%wZ'\n", &DirInfo->Name);
 
 	NameLength = DirInfo->Name.Length / sizeof(WCHAR);
 	if (Length + NameLength + 1 >= ucchMax)

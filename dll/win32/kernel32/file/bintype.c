@@ -13,9 +13,9 @@
 /* INCLUDES *****************************************************************/
 
 #include <k32.h>
+#include <wine/debug.h>
 
-#define NDEBUG
-#include <debug.h>
+WINE_DEFAULT_DEBUG_CHANNEL(kernel32file);
 
 /* FUNCTIONS ****************************************************************/
 
@@ -68,7 +68,7 @@ InternalIsOS2OrOldWin(HANDLE hFile, IMAGE_DOS_HEADER *mz, IMAGE_OS2_HEADER *ne)
   }
 
   broken:
-  DPRINT("InternalIsOS2OrOldWin(): Binary file seems to be broken\n");
+  WARN("InternalIsOS2OrOldWin(): Binary file seems to be broken\n");
 
   done:
   HeapFree(GetProcessHeap(), 0, modtab);
@@ -288,7 +288,7 @@ GetBinaryTypeW (
     }
   }
 
-  DPRINT1("Invalid binary type returned!\n", BinType);
+  ERR("Invalid binary type returned!\n", BinType);
   return FALSE;
 }
 

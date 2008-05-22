@@ -909,7 +909,7 @@ void dump_edd_directdraw_global(EDD_DIRECTDRAW_GLOBAL *pEddgbl)
     DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->d3dNtHalCallbacks3                             : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, d3dNtHalCallbacks3),pEddgbl->d3dNtHalCallbacks3);
     DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_544                                        : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_544), pEddgbl->unk_544);
     DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_548                                        : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_548), pEddgbl->unk_548);
-    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_54c[0]                                     : 0x%08lx\n",( ( (DWORD)&pEddgbl->unk_54c[0] ) - (DWORD)pEddgbl),pEddgbl->unk_54c[0]);
+    DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_54c[0]                                     : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_54c[0]),pEddgbl->unk_54c[0]);
     DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_54c[1]                                     : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_54c[1]),pEddgbl->unk_54c[1]);
     DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_54c[2]                                     : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_54c[2]),pEddgbl->unk_54c[2]);
     DPRINT1("0x%08lx ????? PEDD_DIRECTDRAW_GLOBAL->unk_54c[3]                                     : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, unk_54c[3]),pEddgbl->unk_54c[3]);
@@ -1083,7 +1083,7 @@ dump_halinfo(DD_HALINFO *pHalInfo)
         DPRINT1(" pHalInfo4->vmiData->dwTextureAlign                 : 0x%08lx\n",(long)pHalInfo4->vmiData.dwTextureAlign);
         DPRINT1(" pHalInfo4->vmiData->dwZBufferAlign                 : 0x%08lx\n",(long)pHalInfo4->vmiData.dwZBufferAlign);
         DPRINT1(" pHalInfo4->vmiData->dwAlphaAlign                   : 0x%08lx\n",(long)pHalInfo4->vmiData.dwAlphaAlign);
-        DPRINT1(" pHalInfo4->vmiData->pvPrimary                      : 0x%08lx\n",(long)pHalInfo4->vmiData.pvPrimary);
+        DPRINT1(" pHalInfo4->vmiData->pvPrimary                      : 0x%p\n",pHalInfo4->vmiData.pvPrimary);
 
         DPRINT1(" pHalInfo4->ddCaps.dwSize                           : 0x%08lx\n",pHalInfo4->ddCaps.dwSize);
         DPRINT1(" pHalInfo4->ddCaps.dwCaps                           : 0x%08lx\n",pHalInfo4->ddCaps.dwCaps);
@@ -1151,7 +1151,7 @@ dump_halinfo(DD_HALINFO *pHalInfo)
         DPRINT1(" pHalInfo4->ddCaps.dwSVBCaps2                       : 0x%08lx\n",pHalInfo4->ddCaps.dwSVBCaps2);
 
 
-        DPRINT1(" pHalInfo4->GetDriverInfo                           : 0x%08lx\n",(long)pHalInfo4->GetDriverInfo);
+        DPRINT1(" pHalInfo4->GetDriverInfo                           : 0x%p\n",pHalInfo4->GetDriverInfo);
         DPRINT1(" pHalInfo4->dwFlags                                 : 0x%08lx\n",(long)pHalInfo4->dwFlags);
 
     }
@@ -1185,7 +1185,7 @@ dump_halinfo(DD_HALINFO *pHalInfo)
         DPRINT1(" pHalInfo->vmiData->dwTextureAlign                 : 0x%08lx\n",(long)pHalInfo->vmiData.dwTextureAlign);
         DPRINT1(" pHalInfo->vmiData->dwZBufferAlign                 : 0x%08lx\n",(long)pHalInfo->vmiData.dwZBufferAlign);
         DPRINT1(" pHalInfo->vmiData->dwAlphaAlign                   : 0x%08lx\n",(long)pHalInfo->vmiData.dwAlphaAlign);
-        DPRINT1(" pHalInfo->vmiData->pvPrimary                      : 0x%08lx\n",(long)pHalInfo->vmiData.pvPrimary);
+        DPRINT1(" pHalInfo->vmiData->pvPrimary                      : 0x%p\n",pHalInfo->vmiData.pvPrimary);
 
         DPRINT1(" pHalInfo->ddCaps.dwSize                           : 0x%08lx\n",pHalInfo->ddCaps.dwSize);
         DPRINT1(" pHalInfo->ddCaps.dwCaps                           : ");
@@ -1482,7 +1482,7 @@ dump_halinfo(DD_HALINFO *pHalInfo)
         DPRINT1(" pHalInfo->ddCaps.dwSSBRops[0x%04x]                : 0x%08lx\n",t,pHalInfo->ddCaps.dwSSBRops[t]);
         }
 
-        DPRINT1(" pHalInfo->GetDriverInfo                           : 0x%08lx\n",(long)pHalInfo->GetDriverInfo);
+        DPRINT1(" pHalInfo->GetDriverInfo                           : 0x%p\n",pHalInfo->GetDriverInfo);
         DPRINT1(" pHalInfo->dwFlags                                 : ");
 
         flag = pHalInfo->dwFlags;
@@ -1493,9 +1493,9 @@ dump_halinfo(DD_HALINFO *pHalInfo)
         checkflag(flag,DDHALINFO_GETDRIVERINFO2,"DDHALINFO_GETDRIVERINFO2");
         endcheckflag(flag,"pHalInfo->dwFlags");
 
-        DPRINT1(" pHalInfo->lpD3DGlobalDriverData                   : 0x%08lx\n",(long)pHalInfo->lpD3DGlobalDriverData);
-        DPRINT1(" pHalInfo->lpD3DHALCallbacks                       : 0x%08lx\n",(long)pHalInfo->lpD3DHALCallbacks);
-        DPRINT1(" pHalInfo->lpD3DBufCallbacks                       : 0x%08lx\n",(long)pHalInfo->lpD3DBufCallbacks);
+        DPRINT1(" pHalInfo->lpD3DGlobalDriverData                   : 0x%p\n",pHalInfo->lpD3DGlobalDriverData);
+        DPRINT1(" pHalInfo->lpD3DHALCallbacks                       : 0x%p\n",pHalInfo->lpD3DHALCallbacks);
+        DPRINT1(" pHalInfo->lpD3DBufCallbacks                       : 0x%p\n",pHalInfo->lpD3DBufCallbacks);
     }
     else
     {

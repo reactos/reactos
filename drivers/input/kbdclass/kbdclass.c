@@ -798,9 +798,6 @@ HandleReadIrp(
 		/* Go to next packet and complete this request */
 		Irp->IoStatus.Status = Status;
 
-		if (IsInStartIo)
-			IoStartNextPacket(DeviceObject, TRUE);
-
 		(VOID)IoSetCancelRoutine(Irp, NULL);
 		IoCompleteRequest(Irp, IO_KEYBOARD_INCREMENT);
 		DeviceExtension->PendingIrp = NULL;
@@ -818,8 +815,6 @@ HandleReadIrp(
 			IoMarkIrpPending(Irp);
 			DeviceExtension->PendingIrp = Irp;
 			Status = STATUS_PENDING;
-			if (!IsInStartIo)
-				IoStartPacket(DeviceObject, Irp, NULL, NULL);
 		}
 	}
 	return Status;

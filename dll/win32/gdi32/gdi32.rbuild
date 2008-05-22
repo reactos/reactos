@@ -39,6 +39,7 @@
 		<file>eng.c</file>
 		<file>enhmfile.c</file>
 		<file>font.c</file>
+		<file>icm.c</file>
 		<file>linedda.c</file>
 		<file>metafile.c</file>
 		<file>painting.c</file>

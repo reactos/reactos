@@ -1847,7 +1847,8 @@ static char *strdupA(LPCSTR str)
 
     len = strlen(str);
     ret = HeapAlloc(GetProcessHeap(), 0, len + 1);
-    memcpy(ret, str, len + 1);
+    if (ret != NULL)
+        memcpy(ret, str, len + 1);
     return ret;
 }
 

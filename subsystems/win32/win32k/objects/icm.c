@@ -16,20 +16,75 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id$ */
 
 #include <w32k.h>
 
 #define NDEBUG
 #include <debug.h>
 
+HCOLORSPACE hStockColorSpace = NULL;
+
+
+HCOLORSPACE
+FASTCALL
+IntGdiCreateColorSpace(
+    PLOGCOLORSPACEEXW pLogColorSpace)
+{
+  PCOLORSPACE pCS;
+  HCOLORSPACE hCS;
+
+  pCS = COLORSPACEOBJ_AllocCSWithHandle();
+  hCS = pCS->BaseObject.hHmgr;
+
+  pCS->lcsColorSpace = pLogColorSpace->lcsColorSpace;
+  pCS->dwFlags = pLogColorSpace->dwFlags;
+
+  COLORSPACEOBJ_UnlockCS(pCS);
+  return hCS;
+}
+
+BOOL
+FASTCALL
+IntGdiDeleteColorSpace(
+    HCOLORSPACE hColorSpace)
+{
+  BOOL Ret = FALSE;
+
+  if ( hColorSpace != hStockColorSpace )
+  {
+     Ret = COLORSPACEOBJ_FreeCSByHandle(hColorSpace);
+     if ( !Ret ) SetLastWin32Error(ERROR_INVALID_PARAMETER);
+  }
+  return Ret;
+}
+
 HANDLE
 APIENTRY
 NtGdiCreateColorSpace(
     IN PLOGCOLORSPACEEXW pLogColorSpace)
 {
-  UNIMPLEMENTED;
-  return 0;
+  LOGCOLORSPACEEXW Safelcs;
+  NTSTATUS Status = STATUS_SUCCESS;
+
+  _SEH_TRY
+  {
+     ProbeForRead( pLogColorSpace,
+                    sizeof(LOGCOLORSPACEEXW),
+                    1);
+     RtlCopyMemory(&Safelcs, pLogColorSpace, sizeof(LOGCOLORSPACEEXW));
+  }
+  _SEH_HANDLE
+  {
+     Status = _SEH_GetExceptionCode();
+  }
+  _SEH_END;
+
+  if (!NT_SUCCESS(Status))
+  {
+     SetLastNtError(Status);
+     return NULL;
+  }
+  return IntGdiCreateColorSpace(&Safelcs);
 }
 
 BOOL
@@ -37,8 +92,7 @@ APIENTRY
 NtGdiDeleteColorSpace(
     IN HANDLE hColorSpace)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+  return IntGdiDeleteColorSpace(hColorSpace);
 }
 
 BOOL
@@ -136,8 +190,43 @@ STDCALL
 NtGdiSetColorSpace(IN HDC hdc,
                    IN HCOLORSPACE hColorSpace)
 {
-  UNIMPLEMENTED;
-  return 0;
+  PDC pDC;
+  PDC_ATTR pDc_Attr;
+  PCOLORSPACE pCS;
+
+  pDC = DC_LockDc(hdc);
+  if (!pDC)
+  {
+     SetLastWin32Error(ERROR_INVALID_HANDLE);
+     return FALSE;
+  }
+  pDc_Attr = pDC->pDc_Attr;
+  if(!pDc_Attr) pDc_Attr = &pDC->Dc_Attr;
+
+  if (pDc_Attr->hColorSpace == hColorSpace)
+  {
+     DC_UnlockDc(pDC);
+     return TRUE; 
+  }
+  
+  pCS = COLORSPACEOBJ_LockCS(hColorSpace);
+  if (!pCS)
+  {
+     SetLastWin32Error(ERROR_INVALID_HANDLE);
+     return FALSE;
+  }
+  
+  if (pDC->DcLevel.pColorSpace)
+  {
+     GDIOBJ_ShareUnlockObjByPtr((POBJ) pDC->DcLevel.pColorSpace);
+  }
+
+  pDC->DcLevel.pColorSpace = pCS;
+  pDc_Attr->hColorSpace = hColorSpace;
+
+  COLORSPACEOBJ_UnlockCS(pCS);
+  DC_UnlockDc(pDC);
+  return TRUE;
 }
 
 BOOL

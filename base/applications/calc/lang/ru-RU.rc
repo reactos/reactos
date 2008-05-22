@@ -240,7 +240,7 @@ BEGIN
     LTEXT           "Калькулятор ReactOS",IDC_STATIC,120,12,132,8,
                     SS_CENTERIMAGE
     LTEXT           "Версия ",IDC_TEXT_VERSION,120,20,132,8,SS_CENTERIMAGE
-    LTEXT           "Написано Карло Брамини",IDC_STATIC,120,32,132,8,
+    LTEXT           "Автор: Карло Брамини",IDC_STATIC,120,32,132,8,
                     SS_CENTERIMAGE
     GROUPBOX        "",IDC_STATIC,112,0,148,52
     GROUPBOX        "",IDC_STATIC,4,56,256,88

@@ -30,9 +30,11 @@ WINE_DECLARE_DEBUG_CHANNEL(eventlog);
 typedef struct _LOG_INFO
 {
     RPC_BINDING_HANDLE BindingHandle;
-    LOGHANDLE LogHandle;
+    IELF_HANDLE LogHandle;
     BOOL bLocal;
 } LOG_INFO, *PLOG_INFO;
+
+static RPC_UNICODE_STRING EmptyString = { 0, 0, L"" };
 
 /******************************************************************************
  * BackupEventLogA [ADVAPI32.@]
@@ -44,11 +46,13 @@ BackupEventLogA(
 {
     PLOG_INFO pLog;
     NTSTATUS Status;
-    ANSI_STRING BackupFileName;
+    RPC_STRING BackupFileName;
 
     TRACE("%p, %s\n", hEventLog, lpBackupFileName);
 
-    RtlInitAnsiString(&BackupFileName, lpBackupFileName);
+    BackupFileName.Buffer = (LPSTR)lpBackupFileName;
+    BackupFileName.Length = BackupFileName.MaximumLength =
+        lpBackupFileName ? strlen(lpBackupFileName) : 0;
 
     pLog = (PLOG_INFO)hEventLog;
     if (!pLog)
@@ -59,7 +63,7 @@ BackupEventLogA(
     Status = ElfrBackupELFA(
         pLog->BindingHandle,
         pLog->LogHandle,
-        BackupFileName.Buffer);
+        &BackupFileName);
 
     if (!NT_SUCCESS(Status))
     {
@@ -83,11 +87,13 @@ BackupEventLogW(
 {
     PLOG_INFO pLog;
     NTSTATUS Status;
-    UNICODE_STRING BackupFileName;
+    RPC_UNICODE_STRING BackupFileName;
 
-    TRACE("%p, %s\n", hEventLog, lpBackupFileName);
+    TRACE("%p, %s\n", hEventLog, debugstr_w(lpBackupFileName));
 
-    RtlInitUnicodeString(&BackupFileName, lpBackupFileName);
+    BackupFileName.Buffer = (LPWSTR)lpBackupFileName;
+    BackupFileName.Length = BackupFileName.MaximumLength =
+        lpBackupFileName ? wcslen(lpBackupFileName) * sizeof(WCHAR) : 0;
 
     pLog = (PLOG_INFO)hEventLog;
     if (!pLog)
@@ -98,7 +104,7 @@ BackupEventLogW(
     Status = ElfrBackupELFW(
         pLog->BindingHandle,
         pLog->LogHandle,
-        BackupFileName.Buffer);
+        &BackupFileName);
 
     if (!NT_SUCCESS(Status))
     {
@@ -119,11 +125,13 @@ ClearEventLogA(
 {
     PLOG_INFO pLog;
     NTSTATUS Status;
-    ANSI_STRING BackupFileName;
+    RPC_STRING BackupFileName;
 
     TRACE("%p, %s\n", hEventLog, lpBackupFileName);
 
-    RtlInitAnsiString(&BackupFileName, lpBackupFileName);
+    BackupFileName.Buffer = (LPSTR)lpBackupFileName;
+    BackupFileName.Length = BackupFileName.MaximumLength =
+        lpBackupFileName ? strlen(lpBackupFileName) : 0;
 
     pLog = (PLOG_INFO)hEventLog;
     if (!pLog)
@@ -134,7 +142,7 @@ ClearEventLogA(
     Status = ElfrClearELFA(
         pLog->BindingHandle,
         pLog->LogHandle,
-        BackupFileName.Buffer);
+        &BackupFileName);
 
     if (!NT_SUCCESS(Status))
     {
@@ -155,11 +163,13 @@ ClearEventLogW(
 {
     PLOG_INFO pLog;
     NTSTATUS Status;
-    UNICODE_STRING BackupFileName;
+    RPC_UNICODE_STRING BackupFileName;
 
-    TRACE("%p, %s\n", hEventLog, lpBackupFileName);
+    TRACE("%p, %s\n", hEventLog, debugstr_w(lpBackupFileName));
 
-    RtlInitUnicodeString(&BackupFileName, lpBackupFileName);
+    BackupFileName.Buffer = (LPWSTR)lpBackupFileName;
+    BackupFileName.Length = BackupFileName.MaximumLength =
+        lpBackupFileName ? wcslen(lpBackupFileName) * sizeof(WCHAR) : 0;
 
     pLog = (PLOG_INFO)hEventLog;
     if (!pLog)
@@ -170,7 +180,7 @@ ClearEventLogW(
     Status = ElfrClearELFW(
         pLog->BindingHandle,
         pLog->LogHandle,
-        BackupFileName.Buffer);
+        &BackupFileName);
 
     if (!NT_SUCCESS(Status))
     {
@@ -191,7 +201,7 @@ CloseEventLog(
     PLOG_INFO pLog;
     NTSTATUS Status;
 
-    TRACE("%p", hEventLog);
+    TRACE("%p\n", hEventLog);
 
     pLog = (PLOG_INFO)hEventLog;
     if (!pLog)
@@ -271,7 +281,7 @@ GetNumberOfEventLogRecords(
 {
     PLOG_INFO pLog;
     NTSTATUS Status;
-    long Records;
+    DWORD Records;
 
     TRACE("%p, %p\n", hEventLog, NumberOfRecords);
 
@@ -310,7 +320,7 @@ GetOldestEventLogRecord(
 {
     PLOG_INFO pLog;
     NTSTATUS Status;
-    long Oldest;
+    DWORD Oldest;
 
     TRACE("%p, %p\n", hEventLog, OldestRecord);
 
@@ -405,13 +415,13 @@ OpenBackupEventLogW(
 {
     PLOG_INFO pLog;
     NTSTATUS Status;
-    UNICODE_STRING UNCServerName;
-    UNICODE_STRING FileName;
+    RPC_UNICODE_STRING FileName;
 
-    TRACE("%s, %s\n", lpUNCServerName, lpFileName);
+    TRACE("%s, %s\n", debugstr_w(lpUNCServerName), debugstr_w(lpFileName));
 
-    RtlInitUnicodeString(&UNCServerName, lpUNCServerName);
-    RtlInitUnicodeString(&FileName, lpFileName);
+    FileName.Buffer = (LPWSTR)lpFileName;
+    FileName.Length = FileName.MaximumLength =
+        lpFileName ? wcslen(lpFileName) * sizeof(WCHAR) : 0;
 
     pLog = HeapAlloc(GetProcessHeap(), 0, sizeof(LOG_INFO));
     if (!pLog)
@@ -446,8 +456,8 @@ OpenBackupEventLogW(
 
     Status = ElfrOpenBELW(
         pLog->BindingHandle,
-        UNCServerName.Buffer,
-        FileName.Buffer,
+        (LPWSTR)lpUNCServerName,
+        &FileName,
         0,
         0,
         &pLog->LogHandle);
@@ -509,13 +519,13 @@ OpenEventLogW(
 {
     PLOG_INFO pLog;
     NTSTATUS Status;
-    UNICODE_STRING UNCServerName;
-    UNICODE_STRING SourceName;
+    RPC_UNICODE_STRING SourceName;
 
-    TRACE("%s, %s\n", lpUNCServerName, lpSourceName);
+    TRACE("%s, %s\n", debugstr_w(lpUNCServerName), debugstr_w(lpSourceName));
 
-    RtlInitUnicodeString(&UNCServerName, lpUNCServerName);
-    RtlInitUnicodeString(&SourceName, lpSourceName);
+    SourceName.Buffer = (LPWSTR)lpSourceName;
+    SourceName.Length = SourceName.MaximumLength =
+        lpSourceName ? wcslen(lpSourceName) * sizeof(WCHAR) : 0;
 
     pLog = HeapAlloc(GetProcessHeap(), 0, sizeof(LOG_INFO));
     if (!pLog)
@@ -550,9 +560,9 @@ OpenEventLogW(
 
     Status = ElfrOpenELW(
         pLog->BindingHandle,
-        UNCServerName.Buffer,
-        SourceName.Buffer,
-        NULL,
+        (LPWSTR)lpUNCServerName,
+        &SourceName,
+        &EmptyString,
         0,
         0,
         &pLog->LogHandle);
@@ -582,7 +592,7 @@ ReadEventLogA(
 {
     PLOG_INFO pLog;
     NTSTATUS Status;
-    long bytesRead, minNumberOfBytesNeeded;
+    DWORD bytesRead, minNumberOfBytesNeeded;
 
     TRACE("%p, %lu, %lu, %p, %lu, %p, %p\n",
         hEventLog, dwReadFlags, dwRecordOffset, lpBuffer,
@@ -639,7 +649,7 @@ ReadEventLogW(
 {
     PLOG_INFO pLog;
     NTSTATUS Status;
-    long bytesRead, minNumberOfBytesNeeded;
+    DWORD bytesRead, minNumberOfBytesNeeded;
 
     TRACE("%p, %lu, %lu, %p, %lu, %p, %p\n",
         hEventLog, dwReadFlags, dwRecordOffset, lpBuffer,
@@ -726,13 +736,13 @@ RegisterEventSourceW(
 {
     PLOG_INFO pLog;
     NTSTATUS Status;
-    UNICODE_STRING UNCServerName;
-    UNICODE_STRING SourceName;
+    RPC_UNICODE_STRING SourceName;
 
-    TRACE("%s, %s\n", lpUNCServerName, lpSourceName);
+    TRACE("%s, %s\n", debugstr_w(lpUNCServerName), debugstr_w(lpSourceName));
 
-    RtlInitUnicodeString(&UNCServerName, lpUNCServerName);
-    RtlInitUnicodeString(&SourceName, lpSourceName);
+    SourceName.Buffer = (LPWSTR)lpSourceName;
+    SourceName.Length = SourceName.MaximumLength =
+        lpSourceName ? wcslen(lpSourceName) * sizeof(WCHAR) : 0;
 
     pLog = HeapAlloc(GetProcessHeap(), 0, sizeof(LOG_INFO));
     if (!pLog)
@@ -767,9 +777,9 @@ RegisterEventSourceW(
 
     Status = ElfrRegisterEventSourceW(
         pLog->BindingHandle,
-        UNCServerName.Buffer,
-        SourceName.Buffer,
-        L"",
+        (LPWSTR)lpUNCServerName,
+        &SourceName,
+        &EmptyString,
         0,
         0,
         &pLog->LogHandle);

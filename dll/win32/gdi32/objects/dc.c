@@ -86,8 +86,20 @@ HDC
 STDCALL
 CreateCompatibleDC ( HDC hdc)
 {
-    /* FIXME need sharememory if it metadc */
-    return NtGdiCreateCompatibleDC(hdc);
+ HDC rhDC;
+// PDC_ATTR Dc_Attr;
+
+ rhDC = NtGdiCreateCompatibleDC(hdc);
+#if 0
+ if ( hdc && rhDC)
+ {
+    if (GdiGetHandleUserData((HGDIOBJ) hdc, GDI_OBJECT_TYPE_DC, (PVOID) &Dc_Attr))
+    {
+       if ( Dc_Attr->pvLIcm ) IcmCompatibleDC(rhDC, hdc, Dc_Attr);
+    }
+ }
+#endif
+ return rhDC;
 }
 
 /*
@@ -1380,7 +1392,7 @@ SelectObject(HDC hDC,
             return NtGdiSelectBrush(hDC, hGdiObj);
 
         case GDI_OBJECT_TYPE_PEN:
-//        case GDI_OBJECT_TYPE_EXTPEN:
+        case GDI_OBJECT_TYPE_EXTPEN:
 #if 0 // enable this when support is ready in win32k
             hOldObj = pDc_Attr->hpen;
             pDc_Attr->ulDirty_ |= DC_PEN_DIRTY;

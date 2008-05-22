@@ -76,6 +76,7 @@ typedef struct _WINDOWCLASS
     PCALLPROC CallProcList;
     INT ClsExtra;
     INT WndExtra;
+    PVOID Dce;
     HINSTANCE hInstance;
     HANDLE hIcon; /* FIXME - Use pointer! */
     HANDLE hIconSm; /* FIXME - Use pointer! */
@@ -481,7 +482,7 @@ NTAPI
 NtUserBlockInput(
   BOOL BlockIt);
 
-ULONG
+NTSTATUS
 NTAPI
 NtUserBuildHwndList(
   HDESK hDesktop,
@@ -490,7 +491,7 @@ NtUserBuildHwndList(
   ULONG dwThreadId,
   ULONG lParam,
   HWND* pWnd,
-  ULONG nBufSize);
+  ULONG* pBufSize);
 
 NTSTATUS NTAPI
 NtUserBuildNameList(
@@ -1164,6 +1165,13 @@ NTAPI
 NtUserGetClassName(HWND hWnd,
 		   PUNICODE_STRING ClassName,
                    BOOL Ansi);
+#if 0 // Real NtUserGetClassName
+INT
+NTAPI
+NtUserGetClassName(HWND hWnd,
+                   BOOL Unknown, // 0 GetClassNameW, 1 RealGetWindowClassA/W
+                   PUNICODE_STRING ClassName);
+#endif
 
 HANDLE
 NTAPI
@@ -1472,8 +1480,8 @@ NtUserGetThreadState(
 DWORD
 NTAPI
 NtUserGetTitleBarInfo(
-  DWORD Unknown0,
-  DWORD Unknown1);
+  HWND hwnd,
+  PTITLEBARINFO pti);
 
 BOOL NTAPI
 NtUserGetUpdateRect(HWND hWnd, LPRECT lpRect, BOOL fErase);

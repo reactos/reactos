@@ -104,6 +104,8 @@
 #define VBE_NOT_SUPPORTED                     0x24F
 #define VBE_FUNCTION_INVALID                  0x34F
 
+#define VBE_GETRETURNCODE(x) (x & 0xFFFF)
+
 /*
  * VBE specification defined structure for general adapter info
  * returned by function VBE_GET_CONTROLLER_INFORMATION command.

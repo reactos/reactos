@@ -1049,6 +1049,7 @@ static LPCSTR MENUEX_ParseResource( LPCSTR res, HMENU hMenu)
 	  }
 	  mii.fMask |= MIIM_SUBMENU;
 	  mii.fType |= MF_POPUP;
+	  mii.wID = (UINT) mii.hSubMenu;
 	}
       else if(!*mii.dwTypeData && !(mii.fType & MF_SEPARATOR))
 	{
@@ -1108,6 +1109,15 @@ static LPCSTR MENU_ParseResource( LPCSTR res, HMENU hMenu, BOOL unicode )
     }
     else  /* Not a popup */
     {
+      if (*str == 0)
+        flags = MF_SEPARATOR;
+
+      if (flags & MF_SEPARATOR)
+      {
+        if (!(flags & (MF_GRAYED | MF_DISABLED)))
+          flags |= MF_GRAYED | MF_DISABLED;
+      }
+
       if(!unicode)
         AppendMenuA(hMenu, flags, id, *str ? str : NULL);
       else
@@ -3702,19 +3712,38 @@ MenuSetItemData(
  */
   if(Flags & MF_BITMAP)
   {
-    mii->fMask |= MIIM_BITMAP;   /* Use the new way of seting hbmpItem.*/
-    mii->hbmpItem = (HBITMAP) NewItem;
-    mii->fType &= ~MFT_BITMAP;  /* just incase, Kill the old way */
+     if (mii->fType & MFT_BITMAP)
+     {
+       /* use old way of storing bitmap */
+       mii->fMask |= (MIIM_TYPE  | MIIM_FTYPE);
+       mii->fType |= MF_BITMAP;
+       mii->dwTypeData = (LPWSTR)NewItem;
+     }
+     else
+     {
+         /* use new way of storing type */
+         mii->hbmpItem = (HBITMAP) NewItem;
+         mii->fType |= MFT_BITMAP;
+         mii->fMask |= MIIM_BITMAP;
+     }
+
+     if (Flags & MF_HELP)
+     {
+         /* increase ident */
+         mii->fType |= MF_HELP;
+     }
   }
   else if(Flags & MF_OWNERDRAW)
   {
     mii->fType |= MFT_OWNERDRAW;
-    mii->fMask |= MIIM_DATA;
-    mii->dwItemData = (DWORD) NewItem;
+    mii->fMask |= (MIIM_TYPE  | MIIM_FTYPE);
+    mii->dwTypeData = (LPWSTR) NewItem;
   }
   else if (Flags & MF_SEPARATOR)
   {
     mii->fType |= MFT_SEPARATOR;
+    if (!(Flags & (MF_GRAYED|MF_DISABLED)))
+      Flags |= MF_GRAYED|MF_DISABLED;
   }
   else /* Default action MF_STRING. */
   {
@@ -3739,15 +3768,23 @@ MenuSetItemData(
              NewItem = (LPCWSTR) NewItemA;
           }
        }
+
+       if (Flags & MF_HELP)
+         mii->fType |= MF_HELP;
+       mii->fMask |= MIIM_STRING;
+       mii->fType |= MFT_STRING; /* Zero */
+       mii->dwTypeData = (LPWSTR)NewItem;
+       if (Unicode)
+         mii->cch = (NULL == NewItem ? 0 : strlenW(NewItem));
+       else
+         mii->cch = (NULL == NewItem ? 0 : strlen((LPCSTR)NewItem));
     }
-    mii->fMask |= MIIM_STRING;
-    mii->fType |= MFT_STRING; /* Zero */
-    mii->dwTypeData = (LPWSTR)NewItem;
-    if (Unicode)
-       mii->cch = (NULL == NewItem ? 0 : strlenW(NewItem));
     else
-       mii->cch = (NULL == NewItem ? 0 : strlen((LPCSTR)NewItem));
-    mii->hbmpItem = NULL;
+    {
+      mii->fType |= MFT_SEPARATOR;
+      if (!(Flags & (MF_GRAYED|MF_DISABLED)))
+        Flags |= MF_GRAYED|MF_DISABLED;
+    }
   }
 
   if(Flags & MF_RIGHTJUSTIFY) /* Same as MF_HELP */
@@ -3764,14 +3801,19 @@ MenuSetItemData(
     mii->fType |= MFT_MENUBARBREAK;
   }
 
-  if(Flags & MF_GRAYED)
+  if(Flags & MF_GRAYED || Flags & MF_DISABLED)
   {
-    mii->fState |= MFS_GRAYED;
+    if (Flags & MF_GRAYED)
+      mii->fState |= MF_GRAYED;
+
+    if (Flags & MF_DISABLED)
+      mii->fState |= MF_DISABLED;
+
     mii->fMask |= MIIM_STATE;
   }
-  else if(Flags & MF_DISABLED)
+  else if (Flags & MF_HILITE)
   {
-    mii->fState |= MFS_DISABLED;
+    mii->fState |= MF_HILITE;
     mii->fMask |= MIIM_STATE;
   }
   else /* default state */
@@ -3843,6 +3885,106 @@ CheckMenuItem(HMENU hmenu,
   return NtUserCheckMenuItem(hmenu, uIDCheckItem, uCheck);
 }
 
+static
+BOOL
+MenuCheckMenuRadioItem(HMENU hMenu, UINT idFirst, UINT idLast, UINT idCheck, UINT uFlags, BOOL bCheck, PUINT pChecked, PUINT pUnchecked, PUINT pMenuChanged)
+{
+  UINT ItemCount, i;
+  PROSMENUITEMINFO Items = NULL;
+  UINT cChecked, cUnchecked;
+  BOOL bRet = TRUE;
+  //ROSMENUINFO mi;
+
+  if(idFirst > idLast)
+      return FALSE;
+
+  ItemCount = GetMenuItemCount(hMenu);
+
+  //mi.cbSize = sizeof(ROSMENUINFO);
+  //if(!NtUserMenuInfo(hmenu, &mi, FALSE)) return ret;
+
+
+  if(MenuGetAllRosMenuItemInfo(hMenu, &Items) <= 0)
+  {
+    ERR("MenuGetAllRosMenuItemInfo failed\n");
+    return FALSE;
+  }
+
+  cChecked = cUnchecked = 0;
+
+  for (i = 0 ; i < ItemCount; i++)
+  {
+    BOOL check = FALSE;
+    if (0 != (Items[i].fType & MF_MENUBARBREAK)) continue;
+    if (0 != (Items[i].fType & MF_SEPARATOR)) continue;
+
+    if ((Items[i].fType & MF_POPUP) && (uFlags == MF_BYCOMMAND))
+    {
+      MenuCheckMenuRadioItem(Items[i].hSubMenu, idFirst, idLast, idCheck, uFlags, bCheck, pChecked, pUnchecked, pMenuChanged);
+      continue;
+    }
+    if (uFlags & MF_BYPOSITION)
+    {
+      if (i < idFirst || i > idLast)
+        continue;
+
+      if (i == idCheck)
+      {
+        cChecked++;
+        check = TRUE;
+      }
+      else
+      {
+        cUnchecked++;
+      }
+    }
+      else
+      {
+        if (Items[i].wID < idFirst || Items[i].wID > idLast)
+          continue;
+
+        if (Items[i].wID == idCheck)
+        {
+          cChecked++;
+          check = TRUE;
+        }
+        else
+        {
+          cUnchecked++;
+        }
+      }
+
+      if (!bCheck)
+        continue;
+
+      Items[i].fMask = MIIM_STATE | MIIM_FTYPE;
+      if (check)
+      {
+        Items[i].fType |= MFT_RADIOCHECK;
+        Items[i].fState |= MFS_CHECKED;
+      }
+      else
+      {
+        Items[i].fState &= ~MFS_CHECKED;
+      }
+
+      if(!MenuSetRosMenuItemInfo(hMenu, i ,&Items[i]))
+      {
+        ERR("MenuSetRosMenuItemInfo failed\n");
+        bRet = FALSE;
+        break;
+      }
+  }
+  MenuCleanupRosMenuItemInfo(Items);
+
+  *pChecked += cChecked;
+  *pUnchecked += cUnchecked;
+
+  if (cChecked || cUnchecked)
+    (*pMenuChanged)++;
+
+  return bRet;
+}
 
 /*
  * @implemented
@@ -3854,44 +3996,24 @@ CheckMenuRadioItem(HMENU hmenu,
 		   UINT idCheck,
 		   UINT uFlags)
 {
-  ROSMENUINFO mi;
-  PROSMENUITEMINFO Items;
-  int i;
-  BOOL ret = FALSE;
+  UINT cChecked = 0;
+  UINT cUnchecked = 0;
+  UINT cMenuChanged = 0;
 
-  mi.cbSize = sizeof(MENUINFO);
+  if (!MenuCheckMenuRadioItem(hmenu, idFirst, idLast, idCheck, uFlags, FALSE, &cChecked, &cUnchecked, &cMenuChanged))
+    return FALSE;
 
-  TRACE("CheckMenuRadioItem\n");
+  if (cMenuChanged > 1)
+    return FALSE;
 
-  if(idFirst > idLast) return ret;
+  cMenuChanged = 0;
+  cChecked = 0;
+  cUnchecked = 0;
 
-  if(!NtUserMenuInfo(hmenu, &mi, FALSE)) return ret;
+  if (!MenuCheckMenuRadioItem(hmenu, idFirst, idLast, idCheck, uFlags, TRUE, &cChecked, &cUnchecked, &cMenuChanged))
+    return FALSE;
 
-  if(MenuGetAllRosMenuItemInfo(mi.Self, &Items) <= 0) return ret;
-
-  for (i = 0 ; i < mi.MenuItemCount; i++)
-    {
-      if (0 != (Items[i].fType & MF_MENUBARBREAK)) break;
-      if ( i >= idFirst && i <= idLast )
-      {
-         Items[i].fMask = MIIM_STATE | MIIM_FTYPE;
-         if ( i == idCheck)
-         {
-             Items[i].fType |= MFT_RADIOCHECK;
-             Items[i].fState |= MFS_CHECKED;
-         }
-         else
-         {
-             Items[i].fType &= ~MFT_RADIOCHECK;
-             Items[i].fState &= ~MFS_CHECKED;
-         }
-         if(!MenuSetRosMenuItemInfo(mi.Self, i ,&Items[i]))
-             break;
-      }
-   if ( i == mi.MenuItemCount) ret = TRUE;
-    }
-  MenuCleanupRosMenuItemInfo(Items);
-  return ret;
+  return (cChecked != 0);
 }
 
 
@@ -4125,6 +4247,7 @@ GetMenuItemInfoA(
       miiW.dwTypeData = RtlAllocateHeap(GetProcessHeap(), 0,
                                         miiW.cch * sizeof(WCHAR));
       if (miiW.dwTypeData == NULL) return FALSE;
+      miiW.dwTypeData[0] = 0;
    }
 
    if (!NtUserMenuItemInfo(Menu, Item, ByPosition, (PROSMENUITEMINFO)&miiW, FALSE))
@@ -4145,13 +4268,27 @@ GetMenuItemInfoA(
 
    if ((miiW.fMask & MIIM_STRING) || (IS_STRING_ITEM(miiW.fType)))
    {
-      WideCharToMultiByte(CP_ACP, 0, miiW.dwTypeData, miiW.cch, AnsiBuffer,
-                             mii->cch, NULL, NULL);
+      if (miiW.cch)
+      {
+         if (!WideCharToMultiByte(CP_ACP, 0, miiW.dwTypeData, miiW.cch, AnsiBuffer, mii->cch, NULL, NULL))
+         {
+            AnsiBuffer[0] = 0;
+         }
+         if (Count > miiW.cch)
+         {
+            AnsiBuffer[miiW.cch] = 0;
+         }
+         mii->cch = mii->cch;
+      }
+   }
+   else
+   {
+      AnsiBuffer[0] = 0;
    }
 
    RtlFreeHeap(GetProcessHeap(), 0, miiW.dwTypeData);
    mii->dwTypeData = AnsiBuffer;
-   mii->cch = strlen(AnsiBuffer);
+ 
    return TRUE;
 }
 
@@ -4193,6 +4330,7 @@ GetMenuItemInfoW(
       miiW.dwTypeData = RtlAllocateHeap(GetProcessHeap(), 0,
                                         miiW.cch * sizeof(WCHAR));
       if (miiW.dwTypeData == NULL) return FALSE;
+      miiW.dwTypeData[0] = 0;
    }
 
    if (!NtUserMenuItemInfo(Menu, Item, ByPosition, (PROSMENUITEMINFO) &miiW, FALSE))

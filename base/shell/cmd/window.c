@@ -158,9 +158,7 @@ static INT ServiceActivate (LPTSTR param, HWND hWnd)
 
 	if (iAction & A_CLOSE)
 	{
-#ifdef _DEBUG
-		ConErrPrintf(_T("!!!FIXME:  CLOSE Not implemented!!!\n"));
-#endif
+		FIXME("!!!FIXME:  CLOSE Not implemented!!!\n");
 	}
 
 	wp.length = sizeof(WINDOWPLACEMENT);

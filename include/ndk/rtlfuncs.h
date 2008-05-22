@@ -2886,6 +2886,14 @@ RtlWriteRegistryValue(
 NTSYSAPI
 VOID
 NTAPI
+RtlGetDefaultCodePage(
+    OUT PUSHORT AnsiCodePage,
+    OUT PUSHORT OemCodePage
+);
+
+NTSYSAPI
+VOID
+NTAPI
 RtlInitNlsTables(
     IN PUSHORT AnsiTableBase,
     IN PUSHORT OemTableBase,

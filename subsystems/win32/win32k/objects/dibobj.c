@@ -994,6 +994,8 @@ HBITMAP STDCALL NtGdiCreateDIBSection(HDC hDC,
   DC *dc;
   BOOL bDesktopDC = FALSE;
 
+  if (!bmi) return hbitmap; // Make sure.
+
   // If the reference hdc is null, take the desktop dc
   if (hDC == 0)
   {

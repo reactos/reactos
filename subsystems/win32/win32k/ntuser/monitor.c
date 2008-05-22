@@ -174,7 +174,7 @@ IntAttachMonitor(IN GDIDEVICE *pGdiDevice,
       return STATUS_INSUFFICIENT_RESOURCES;
    }
 
-   _snwprintf(Buffer, CCHDEVICENAME, L"\\??\\DISPLAY%d", DisplayNumber + 1);
+   _snwprintf(Buffer, CCHDEVICENAME, L"\\\\.\\DISPLAY%d", DisplayNumber + 1);
    if (!RtlCreateUnicodeString(&Monitor->DeviceName, Buffer))
    {
       DPRINT("Couldn't duplicate monitor name!\n");
@@ -322,7 +322,7 @@ IntGetMonitorsFromRect(OPTIONAL IN LPCRECT pRect,
                        OPTIONAL IN DWORD listSize,
                        OPTIONAL IN DWORD flags)
 {
-   PMONITOR_OBJECT Monitor, NearestMonitor = NULL;
+   PMONITOR_OBJECT Monitor, NearestMonitor = NULL, PrimaryMonitor = NULL;
    UINT iCount = 0;
    LONG iNearestDistanceX = 0x7fffffff, iNearestDistanceY = 0x7fffffff;
 
@@ -384,6 +384,11 @@ IntGetMonitorsFromRect(OPTIONAL IN LPCRECT pRect,
          IntersectionRect = MonitorRect;
       }
 
+      if (flags == MONITOR_DEFAULTTOPRIMARY && Monitor->IsPrimary)
+      {
+         PrimaryMonitor = Monitor;
+      }
+
       if (iCount < listSize)
       {
          if (hMonitorList != NULL)
@@ -403,7 +408,15 @@ IntGetMonitorsFromRect(OPTIONAL IN LPCRECT pRect,
       }
       iCount++;
    }
-
+   else if (iCount == 0 && flags == MONITOR_DEFAULTTOPRIMARY)
+   {
+      if (iCount < listSize)
+      {
+         if (hMonitorList != NULL)
+            hMonitorList[iCount] = PrimaryMonitor->Handle;
+      }
+      iCount++;
+   }
    return iCount;
 }
 
@@ -878,7 +891,12 @@ NtUserMonitorFromWindow(
 
    if (!(Window = UserGetWindowObject(hWnd)))
    {
-      RETURN(NULL);
+      if (dwFlags == MONITOR_DEFAULTTONULL)
+      {
+         RETURN(hMonitor);
+      }
+      IntGetMonitorsFromRect(NULL, &hMonitor, NULL, 1, dwFlags);
+      RETURN(hMonitor);
    }
 
    Rect.left = Rect.right = Window->Wnd->WindowRect.left;

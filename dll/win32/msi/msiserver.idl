@@ -70,7 +70,7 @@ interface IWineMsiRemotePackage : IUnknown
     HRESULT SetComponentState( [in] BSTR component, [in] INSTALLSTATE state );
     HRESULT GetLanguage( [out] LANGID *language );
     HRESULT SetInstallLevel( [in] int level );
-    HRESULT FormatRecord( [in] MSIHANDLE record, [out] BSTR value, [out] DWORD *size );
+    HRESULT FormatRecord( [in] MSIHANDLE record, [out] BSTR *value );
     HRESULT EvaluateCondition( [in] BSTR condition );
 }
 

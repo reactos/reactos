@@ -230,7 +230,7 @@ VBEInitialize(PVOID HwDeviceExtension)
       VBEDeviceExtension->Int10Interface.Context,
       &BiosRegisters);
 
-   if (BiosRegisters.Eax == VBE_SUCCESS)
+   if (VBE_GETRETURNCODE(BiosRegisters.Eax) == VBE_SUCCESS)
    {
       VBEDeviceExtension->Int10Interface.Int10ReadMemory(
          VBEDeviceExtension->Int10Interface.Context,
@@ -341,7 +341,7 @@ VBEInitialize(PVOID HwDeviceExtension)
       VbeModeInfo = VBEDeviceExtension->ModeInfo + SuitableModeCount;
 
       /* Is this mode acceptable? */
-      if (BiosRegisters.Eax == VBE_SUCCESS &&
+      if (VBE_GETRETURNCODE(BiosRegisters.Eax) == VBE_SUCCESS &&
           VbeModeInfo->XResolution >= 640 &&
           VbeModeInfo->YResolution >= 480 &&
           (VbeModeInfo->MemoryModel == VBE_MEMORYMODEL_PACKEDPIXEL ||
@@ -626,9 +626,9 @@ VBEGetPowerState(
       VBEDeviceExtension->Int10Interface.Context,
       &BiosRegisters);
 
-   if (BiosRegisters.Eax == VBE_NOT_SUPPORTED)
+   if ( VBE_GETRETURNCODE(BiosRegisters.Eax) == VBE_NOT_SUPPORTED)
       return ERROR_DEV_NOT_EXIST;
-   if (BiosRegisters.Eax != VBE_SUCCESS)
+   if (VBE_GETRETURNCODE(BiosRegisters.Eax) != VBE_SUCCESS)
       return ERROR_INVALID_FUNCTION;
 
    /*
@@ -644,7 +644,7 @@ VBEGetPowerState(
       VBEDeviceExtension->Int10Interface.Context,
       &BiosRegisters);
 
-   if (BiosRegisters.Eax == VBE_SUCCESS)
+   if (VBE_GETRETURNCODE(BiosRegisters.Eax) == VBE_SUCCESS)
    {
       VideoPowerControl->DPMSVersion = BiosRegisters.Ebx & 0xFF;
       switch (BiosRegisters.Ebx >> 8)
@@ -708,9 +708,9 @@ VBESetPowerState(
       VBEDeviceExtension->Int10Interface.Context,
       &BiosRegisters);
 
-   if (BiosRegisters.Eax == VBE_NOT_SUPPORTED)
+   if (VBE_GETRETURNCODE(BiosRegisters.Eax) == VBE_NOT_SUPPORTED)
       return ERROR_DEV_NOT_EXIST;
-   if (BiosRegisters.Eax != VBE_SUCCESS)
+   if (VBE_GETRETURNCODE(BiosRegisters.Eax) != VBE_SUCCESS)
       return ERROR_INVALID_FUNCTION;
 
    return VBE_SUCCESS;
@@ -742,7 +742,7 @@ VBESetCurrentMode(
       DeviceExtension->Int10Interface.Context,
       &BiosRegisters);
 
-   if (BiosRegisters.Eax == VBE_SUCCESS)
+   if (VBE_GETRETURNCODE(BiosRegisters.Eax) == VBE_SUCCESS)
    {
       DeviceExtension->CurrentMode = RequestedMode->RequestedMode;
    }
@@ -752,7 +752,7 @@ VBESetCurrentMode(
       DeviceExtension->CurrentMode = -1;
    }
 
-   return BiosRegisters.Eax == VBE_SUCCESS;
+   return VBE_GETRETURNCODE(BiosRegisters.Eax) == VBE_SUCCESS;
 }
 
 /*
@@ -776,7 +776,7 @@ VBEResetDevice(
       DeviceExtension->Int10Interface.Context,
       &BiosRegisters);
 
-   return BiosRegisters.Eax == VBE_SUCCESS;
+   return VBE_GETRETURNCODE(BiosRegisters.Eax) == VBE_SUCCESS;
 }
 
 /*
@@ -1080,6 +1080,6 @@ VBESetColorRegisters(
          DeviceExtension->Int10Interface.Context,
          &BiosRegisters);
 
-      return BiosRegisters.Eax == VBE_SUCCESS;
+      return VBE_GETRETURNCODE(BiosRegisters.Eax) == VBE_SUCCESS;
    }
 }

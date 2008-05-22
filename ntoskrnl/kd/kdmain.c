@@ -337,6 +337,7 @@ NtSetDebugFilterState(IN ULONG ComponentId,
     /* Convert Level to mask if it isn't already one */
     if (Level < 32)
         Level = 1 << Level;
+    Level &= ~DPFLTR_MASK;
 
     /* Check if it is the default component */
     if (ComponentId == DPFLTR_DEFAULT_ID)

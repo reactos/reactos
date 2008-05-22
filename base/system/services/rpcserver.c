@@ -2597,7 +2597,7 @@ DWORD REnumServiceGroupW(
     LPBOUNDED_DWORD_256K pcbBytesNeeded,
     LPBOUNDED_DWORD_256K lpServicesReturned,
     LPBOUNDED_DWORD_256K lpResumeIndex,
-    LPWSTR pszGroupName)
+    LPCWSTR pszGroupName)
 {
     UNIMPLEMENTED;
     return ERROR_CALL_NOT_IMPLEMENTED;
@@ -2893,7 +2893,7 @@ DWORD REnumServicesStatusExA(
     LPBOUNDED_DWORD_256K pcbBytesNeeded,
     LPBOUNDED_DWORD_256K lpServicesReturned,
     LPBOUNDED_DWORD_256K lpResumeIndex,
-    LPSTR pszGroupName)
+    LPCSTR pszGroupName)
 {
     UNIMPLEMENTED;
     *pcbBytesNeeded = 0;
@@ -2914,7 +2914,7 @@ DWORD REnumServicesStatusExW(
     LPBOUNDED_DWORD_256K pcbBytesNeeded,
     LPBOUNDED_DWORD_256K lpServicesReturned,
     LPBOUNDED_DWORD_256K lpResumeIndex,
-    LPWSTR pszGroupName)
+    LPCWSTR pszGroupName)
 {
     PMANAGER_HANDLE hManager;
     PSERVICE lpService;

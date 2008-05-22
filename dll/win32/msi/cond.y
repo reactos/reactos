@@ -67,13 +67,13 @@ static int cond_lex( void *COND_lval, COND_input *info);
 static const WCHAR szEmpty[] = { 0 };
 
 static INT compare_int( INT a, INT operator, INT b );
-static INT compare_string( LPCWSTR a, INT operator, LPCWSTR b );
+static INT compare_string( LPCWSTR a, INT operator, LPCWSTR b, BOOL convert );
 
-static INT compare_and_free_strings( LPWSTR a, INT op, LPWSTR b )
+static INT compare_and_free_strings( LPWSTR a, INT op, LPWSTR b, BOOL convert )
 {
     INT r;
 
-    r = compare_string( a, op, b );
+    r = compare_string( a, op, b, convert );
     msi_free( a );
     msi_free( b );
     return r;
@@ -216,19 +216,19 @@ boolean_factor:
         }
   | symbol_s operator symbol_s
         {
-            $$ = compare_and_free_strings( $1, $2, $3 );
+            $$ = compare_and_free_strings( $1, $2, $3, TRUE );
         }
   | symbol_s operator literal
         {
-            $$ = compare_and_free_strings( $1, $2, $3 );
+            $$ = compare_and_free_strings( $1, $2, $3, TRUE );
         }
   | literal operator symbol_s
         {
-            $$ = compare_and_free_strings( $1, $2, $3 );
+            $$ = compare_and_free_strings( $1, $2, $3, TRUE );
         }
   | literal operator literal
         {
-            $$ = compare_and_free_strings( $1, $2, $3 );
+            $$ = compare_and_free_strings( $1, $2, $3, FALSE );
         }
   | literal operator value_i
         {
@@ -408,6 +408,9 @@ static BOOL str_is_number( LPCWSTR str )
 {
     int i;
 
+    if (!*str)
+        return FALSE;
+
     for (i = 0; i < lstrlenW( str ); i++)
         if (!isdigitW(str[i]))
             return FALSE;
@@ -454,7 +457,7 @@ static INT compare_substring( LPCWSTR a, INT operator, LPCWSTR b )
     return 0;
 }
 
-static INT compare_string( LPCWSTR a, INT operator, LPCWSTR b )
+static INT compare_string( LPCWSTR a, INT operator, LPCWSTR b, BOOL convert )
 {
     if (operator >= COND_SS && operator <= COND_RHS)
         return compare_substring( a, operator, b );
@@ -462,6 +465,9 @@ static INT compare_string( LPCWSTR a, INT operator, LPCWSTR b )
     /* null and empty string are equivalent */
     if (!a) a = szEmpty;
     if (!b) b = szEmpty;
+
+    if (convert && str_is_number(a) && str_is_number(b))
+        return compare_int( atoiW(a), operator, atoiW(b) );
 
     /* a or b may be NULL */
     switch (operator)

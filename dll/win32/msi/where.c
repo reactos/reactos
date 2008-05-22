@@ -86,6 +86,9 @@ static UINT find_entry_in_hash(MSIHASHENTRY **table, UINT row, UINT *val)
 {
     MSIHASHENTRY *entry;
 
+    if (!table)
+        return ERROR_SUCCESS;
+
     if (!(entry = table[row % MSI_HASH_TABLE_SIZE]))
     {
         WARN("Row not found in hash table!\n");
@@ -503,15 +506,12 @@ static UINT WHERE_modify( struct tagMSIVIEW *view, MSIMODIFY eModifyMode,
                           MSIRECORD *rec, UINT row )
 {
     MSIWHEREVIEW *wv = (MSIWHEREVIEW*)view;
-    UINT r;
 
     TRACE("%p %d %p\n", wv, eModifyMode, rec);
 
-    r = WHERE_execute(view, NULL);
-    if (r != ERROR_SUCCESS)
-        return r;
-
     find_entry_in_hash(wv->reorder, row - 1, &row);
+    row++;
+
     return wv->table->ops->modify( wv->table, eModifyMode, rec, row );
 }
 

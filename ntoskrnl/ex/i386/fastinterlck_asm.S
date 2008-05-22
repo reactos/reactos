@@ -539,7 +539,6 @@ _ExpInterlockedPopEntrySListEnd@0:
  *                                IN ULONG Value)
  */
 .global @Exfi386InterlockedExchangeUlong@8
-.global @InterlockedExchange@8
 @Exfi386InterlockedExchangeUlong@8:
 
 #ifdef CONFIG_SMP

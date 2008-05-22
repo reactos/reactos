@@ -16,7 +16,10 @@ SerialGetUserBuffer(IN PIRP Irp)
 {
 	ASSERT(Irp);
 
-	return Irp->AssociatedIrp.SystemBuffer;
+	if (Irp->MdlAddress)
+		return Irp->MdlAddress;
+	else
+		return Irp->AssociatedIrp.SystemBuffer;
 }
 
 static VOID

@@ -47,6 +47,11 @@ typedef struct _BASEOBJECT
   PW32THREAD  Tid;
 } BASEOBJECT, *POBJ;
 
+typedef struct _CLIENTOBJ
+{
+  BASEOBJECT BaseObject;
+} CLIENTOBJ, *PCLIENTOBJ;
+
 enum BASEFLAGS
 {
     BASEFLAG_LOOKASIDE = 0x80

@@ -52,28 +52,27 @@ GetC1Type(WCHAR Ch)
  */
 LPSTR
 WINAPI
-CharLowerA(LPSTR x)
+CharLowerA(LPSTR str)
 {
-    if (!HIWORD(x)) return (LPSTR)tolower((char)(int)x);
-    CharLowerBuffA(x, strlen(x));
-/*
-    __TRY
+    if (!HIWORD(str))
     {
-        LPSTR s = x;
-        while (*s)
-        {
-            *s=tolower(*s);
-            s++;
-        }
+        char ch = LOWORD(str);
+        CharLowerBuffA( &ch, 1 );
+        return (LPSTR)(UINT_PTR)(BYTE)ch;
     }
-    __EXCEPT(page_fault)
+
+    _SEH_TRY
+    {
+        CharLowerBuffA( str, strlen(str) );
+    }
+    _SEH_HANDLE
     {
         SetLastError( ERROR_INVALID_PARAMETER );
         return NULL;
     }
-    __ENDTRY
- */
-    return x;
+    _SEH_END;
+
+    return str;
 }
 
 /*
@@ -119,11 +118,8 @@ LPWSTR
 WINAPI
 CharLowerW(LPWSTR x)
 {
-    if (HIWORD(x)) {
-        return _wcslwr(x);
-    } else {
-        return (LPWSTR)(INT)towlower((WORD)(((DWORD)(x)) & 0xFFFF));
-    }
+    if (HIWORD(x)) return strlwrW(x);
+    else return (LPWSTR)((UINT_PTR)tolowerW(LOWORD(x)));
 }
 
 /*
@@ -256,11 +252,27 @@ CharToOemW(LPCWSTR s, LPSTR d)
 /*
  * @implemented
  */
-LPSTR WINAPI CharUpperA(LPSTR x)
+LPSTR WINAPI CharUpperA(LPSTR str)
 {
-    if (!HIWORD(x)) return (LPSTR)toupper((char)(int)x);
-    CharUpperBuffA(x, strlen(x));
-    return x;
+    if (!HIWORD(str))
+    {
+        char ch = LOWORD(str);
+        CharUpperBuffA( &ch, 1 );
+        return (LPSTR)(UINT_PTR)(BYTE)ch;
+    }
+
+    _SEH_TRY
+    {
+        CharUpperBuffA( str, strlen(str) );
+    }
+    _SEH_HANDLE
+    {
+        SetLastError( ERROR_INVALID_PARAMETER );
+        return NULL;
+    }
+    _SEH_END;
+
+    return str;
 }
 
 /*
@@ -306,8 +318,8 @@ LPWSTR
 WINAPI
 CharUpperW(LPWSTR x)
 {
-    if (HIWORD(x)) return _wcsupr(x);
-    else return (LPWSTR)(UINT)towlower((WORD)(((DWORD)(x)) & 0xFFFF));
+    if (HIWORD(x)) return struprW(x);
+    else return (LPWSTR)((UINT_PTR)toupperW(LOWORD(x)));
 }
 
 /*

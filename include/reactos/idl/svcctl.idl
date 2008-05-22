@@ -2,7 +2,7 @@
  * Service Control Manager (SCM) interface definition
  */
 
-#include "include/reactos/idl/wtypes.idl"
+#include <ms-dtyp.idl>
 
 const unsigned int MAX_SERVICE_NAME_LENGTH = 255;
 const unsigned short SC_MAX_DEPEND_SIZE = 4 * 1024;

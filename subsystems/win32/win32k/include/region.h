@@ -38,6 +38,9 @@ INT STDCALL IntGdiGetRgnBox(HRGN, LPRECT);
 BOOL FASTCALL IntGdiPaintRgn(PDC, HRGN );
 HRGN FASTCALL GdiCreatePolyPolygonRgn(CONST PPOINT, CONST PINT, INT, INT );
 
+INT FASTCALL IntGdiCombineRgn(PROSRGNDATA, PROSRGNDATA, PROSRGNDATA, INT);
+INT FASTCALL REGION_Complexity(PROSRGNDATA);
+
 #define UnsafeIntCreateRectRgnIndirect(prc) \
   NtGdiCreateRectRgn((prc)->left, (prc)->top, (prc)->right, (prc)->bottom)
 

@@ -28,6 +28,7 @@
 	<include>include/ndk</include>
 	<include>include/reactos</include>
 	<include root="intermediate">include/reactos</include>
+	<include root="intermediate">include/reactos/mc</include>
 	<include>include/reactos/libs</include>
 
 	<directory name="base">

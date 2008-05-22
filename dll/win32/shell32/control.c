@@ -353,7 +353,11 @@ static	void	Control_DoLaunch(CPanel* panel, HWND hWnd, LPCWSTR wszCmd)
     LPWSTR	extraPmts = NULL;
     int        quoted = 0;
     BOOL	spSet = FALSE;
+	HANDLE hMutex;
 
+    hMutex = CreateMutex(NULL, FALSE, (LPCTSTR) wszCmd);
+ 	if ((!hMutex) || (GetLastError() == ERROR_ALREADY_EXISTS))
+        return NULL;
     buffer = HeapAlloc(GetProcessHeap(), 0, (lstrlenW(wszCmd) + 1) * sizeof(*wszCmd));
     if (!buffer) return;
 
@@ -412,6 +416,7 @@ static	void	Control_DoLaunch(CPanel* panel, HWND hWnd, LPCWSTR wszCmd)
        }
        Control_UnloadApplet(applet);
     }
+	ReleaseMutex(hMutex);
     HeapFree(GetProcessHeap(), 0, buffer);
 }
 

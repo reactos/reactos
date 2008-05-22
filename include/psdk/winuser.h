@@ -1023,6 +1023,10 @@ extern "C" {
 #if(_WIN32_WINNT >= 0x0501)
 #define SM_CXFOCUSBORDER 83
 #define SM_CYFOCUSBORDER 84
+#define SM_TABLETPC      86
+#define SM_MEDIACENTER   87
+#define SM_STARTER       88
+#define SM_SERVERR2      89
 #define SM_SHUTTINGDOWN 0x2000
 #define SM_REMOTECONTROL 0x2001
 #endif /* _WIN32_WINNT >= 0x0501 */

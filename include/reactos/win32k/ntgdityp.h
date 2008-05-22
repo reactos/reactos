@@ -195,6 +195,11 @@ typedef DWORD LFTYPE;
 #define C1_CMYK_ABLE      0x1000
 #define C1_SLOW_CARD      0x2000
 
+// NtGdiGetRandomRgn iCodes
+#define CLIPRGN 1 // GetClipRgn
+#define METARGN 2 // GetMetaRgn
+#define APIRGN  3
+
 /* TYPES *********************************************************************/
 
 typedef PVOID KERNEL_PVOID;

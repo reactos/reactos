@@ -216,6 +216,16 @@ CreateUserProfileW (PSID Sid,
       return FALSE;
     }
 
+  /* create the profiles directory if it does not yet exist */
+  if (!CreateDirectoryW(szProfilesPath, NULL))
+    {
+      if (GetLastError () != ERROR_ALREADY_EXISTS)
+      {
+        DPRINT1("Error: %lu\n", GetLastError());
+        return FALSE;
+      }
+    }
+
   /* Get default user path */
   dwLength = MAX_PATH * sizeof(WCHAR);
   Error = RegQueryValueExW (hKey,

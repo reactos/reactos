@@ -54,8 +54,6 @@ INT cmd_cls (LPTSTR cmd, LPTSTR param)
 	                           coPos, &dwWritten);
 	SetConsoleCursorPosition(hConsole, coPos);
 
-	bIgnoreEcho = TRUE;
-
 	return 0;
 }
 #endif

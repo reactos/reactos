@@ -164,7 +164,7 @@ EndPath@4
 EngAcquireSemaphore@4
 EngAlphaBlend@28=NtGdiEngAlphaBlend@28
 EngAssociateSurface@12=NtGdiEngAssociateSurface@12
-EngBitBlt=NtGdiEngBitBlt@44
+EngBitBlt@44=NtGdiEngBitBlt@44
 EngCheckAbort@4=NtGdiEngCheckAbort@4
 EngComputeGlyphSet@12
 EngCopyBits@24=NtGdiEngCopyBits@24

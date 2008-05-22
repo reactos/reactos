@@ -483,6 +483,20 @@ IntDumpRegion(HRGN hRgn)
 }
 #endif /* not NDEBUG */
 
+
+INT
+FASTCALL
+REGION_Complexity( PROSRGNDATA obj )
+{
+    switch(obj->rdh.nCount)
+    {
+       DPRINT("Region Complexity -> %d",obj->rdh.nCount);
+       case 0:  return NULLREGION;
+       case 1:  return SIMPLEREGION;
+       default: return COMPLEXREGION;
+    }
+}
+
 static
 BOOL
 FASTCALL
@@ -2064,6 +2078,62 @@ REGION_Cleanup(PVOID ObjectBody)
         ExFreePool(pRgn->Buffer);
     return TRUE;
 }
+
+INT
+FASTCALL
+IntGdiCombineRgn(PROSRGNDATA destRgn,
+                 PROSRGNDATA src1Rgn,
+                 PROSRGNDATA src2Rgn,
+                    INT  CombineMode)
+{
+  INT result = ERROR;
+
+  if (destRgn)
+  {
+     if (src1Rgn)
+     {
+        if (CombineMode == RGN_COPY)
+        {
+           if ( !REGION_CopyRegion(destRgn, src1Rgn) )
+               return ERROR;
+           result = destRgn->rdh.iType;
+        }
+        else
+        {
+           if (src2Rgn)
+           {
+              switch (CombineMode)
+              {
+                 case RGN_AND:
+                     REGION_IntersectRegion(destRgn, src1Rgn, src2Rgn);
+                     break;
+                 case RGN_OR:
+                     REGION_UnionRegion(destRgn, src1Rgn, src2Rgn);
+                     break;
+                 case RGN_XOR:
+                     REGION_XorRegion(destRgn, src1Rgn, src2Rgn);
+                     break;
+                 case RGN_DIFF:
+                     REGION_SubtractRegion(destRgn, src1Rgn, src2Rgn);
+                     break;
+              }
+              result = destRgn->rdh.iType;
+           }
+           else if (src2Rgn == NULL)
+           {
+               DPRINT1("IntGdiCombineRgn requires hSrc2 != NULL for combine mode %d!\n", CombineMode);
+           }
+        }
+     }
+  }
+  else
+  {
+     DPRINT("IntGdiCombineRgn: hDest unavailable\n");
+     result = ERROR;
+  }
+  return result;
+}
+
 
 // NtGdi Exported Functions
 INT
