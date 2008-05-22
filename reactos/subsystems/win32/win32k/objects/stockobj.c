@@ -144,15 +144,15 @@ CreateStockObjects(void)
   (void) TextIntCreateFontIndirect(&SystemFixedFont, (HFONT*)&StockObjects[SYSTEM_FIXED_FONT]);
   (void) TextIntCreateFontIndirect(&DefaultGuiFont, (HFONT*)&StockObjects[DEFAULT_GUI_FONT]);
 
-  StockObjects[DEFAULT_PALETTE] = (HGDIOBJ*)PALETTE_Init();
+  StockObjects[DEFAULT_PALETTE] = (HGDIOBJ)PALETTE_Init();
 
   for (Object = 0; Object < NB_STOCK_OBJECTS; Object++)
+  {
+    if (NULL != StockObjects[Object])
     {
-      if (NULL != StockObjects[Object])
-	{
-	  GDIOBJ_ConvertToStockObj(&StockObjects[Object]);
-	}
+      GDIOBJ_ConvertToStockObj(&StockObjects[Object]);
     }
+  }
 
   DPRINT("Completed creation of stock objects\n");
 }
