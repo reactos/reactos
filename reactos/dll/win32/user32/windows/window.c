@@ -978,14 +978,13 @@ GetProcessDefaultLayout(DWORD *pdwDefaultLayout)
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL STDCALL
 GetTitleBarInfo(HWND hwnd,
 		PTITLEBARINFO pti)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+  return NtUserGetTitleBarInfo(hwnd,pti);
 }
 
 

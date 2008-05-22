@@ -1480,8 +1480,8 @@ NtUserGetThreadState(
 DWORD
 NTAPI
 NtUserGetTitleBarInfo(
-  DWORD Unknown0,
-  DWORD Unknown1);
+  HWND hwnd,
+  PTITLEBARINFO pti);
 
 BOOL NTAPI
 NtUserGetUpdateRect(HWND hWnd, LPRECT lpRect, BOOL fErase);
