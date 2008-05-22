@@ -3,9 +3,6 @@
 ; ReactOS Operating System
 ;
 EXPORTS
-CcRosInitializeFileCache
-CcRosReleaseFileCache
-CcRosTraceCacheMap
 CcCanIWrite
 CcCopyRead
 CcCopyWrite
@@ -960,7 +957,6 @@ READ_REGISTER_USHORT
 READ_REGISTER_BUFFER_UCHAR
 READ_REGISTER_BUFFER_ULONG
 READ_REGISTER_BUFFER_USHORT
-KiRosPrintAddress
 KeRosDumpStackFrames
 RtlAbsoluteToSelfRelativeSD
 RtlAddAccessAllowedAce
