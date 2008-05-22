@@ -86,6 +86,8 @@ KeInsertByKeyDeviceQueue(IN PKDEVICE_QUEUE DeviceQueue,
 {
     KLOCK_QUEUE_HANDLE DeviceLock;
     BOOLEAN Inserted;
+    PLIST_ENTRY NextEntry;
+    PKDEVICE_QUEUE_ENTRY LastEntry;
     ASSERT_DEVICE_QUEUE(DeviceQueue);
 
     DPRINT("KeInsertByKeyDeviceQueue() DevQueue %p, Entry %p, SortKey 0x%x\n", DeviceQueue, DeviceQueueEntry, SortKey);
@@ -105,12 +107,34 @@ KeInsertByKeyDeviceQueue(IN PKDEVICE_QUEUE DeviceQueue,
     }
     else
     {
-        /* Insert new entry after the last entry with SortKey less or equal to passed-in SortKey */
-        InsertAscendingListFIFO(&DeviceQueue->DeviceListHead,
-                                DeviceQueueEntry,
-                                KDEVICE_QUEUE_ENTRY,
-                                DeviceListEntry,
-                                SortKey);
+        /* Make sure the list isn't empty */
+        NextEntry = &DeviceQueue->DeviceListHead;
+        if (!IsListEmpty(NextEntry))
+        {
+            /* Get the last entry */
+            LastEntry = CONTAINING_RECORD(NextEntry->Blink,
+                                          KDEVICE_QUEUE_ENTRY,
+                                          DeviceListEntry);
+
+            /* Check if our sort key is lower */
+            if (SortKey < LastEntry->SortKey)
+            {
+                /* Loop each sort key */
+                do
+                {
+                    /* Get the next entry */
+                    NextEntry = NextEntry->Flink;
+                    LastEntry = CONTAINING_RECORD(NextEntry,
+                                                  KDEVICE_QUEUE_ENTRY,
+                                                  DeviceListEntry);
+
+                    /* Keep looping until we find a place to insert */
+                } while (SortKey >= LastEntry->SortKey);
+            }
+        }
+
+        /* Now insert us */
+        InsertTailList(NextEntry, &DeviceQueueEntry->DeviceListEntry);
         Inserted = TRUE;
     }
 
@@ -199,39 +223,33 @@ KeRemoveByKeyDeviceQueue(IN PKDEVICE_QUEUE DeviceQueue,
                                         KDEVICE_QUEUE_ENTRY,
                                         DeviceListEntry);
 
-        if (SortKey >= ReturnEntry->SortKey)
+        /* Check if we can just get the first entry */
+        if (ReturnEntry->SortKey <= SortKey)
         {
+            /* Get the first entry */
             ReturnEntry = CONTAINING_RECORD(ListEntry->Flink,
                                             KDEVICE_QUEUE_ENTRY,
                                             DeviceListEntry);
-
-            /* Remove it from the list */
-            RemoveEntryList(&ReturnEntry->DeviceListEntry);
         }
         else
         {
-            /* Find entry with SortKey greater than or equal to the passed-in SortKey */
-            LIST_FOR_EACH(ReturnEntry, &DeviceQueue->DeviceListHead, KDEVICE_QUEUE_ENTRY, DeviceListEntry) 
+            /* Loop the list */
+            ListEntry = DeviceQueue->DeviceListHead.Flink;
+            while (TRUE)
             {
-                /* Check if keys match */
-                if (ReturnEntry->SortKey >= SortKey)
-                {
-                    /* We found it, so just remove it */
-                    RemoveEntryList(&ReturnEntry->DeviceListEntry);
-                    break;
-                }
-            }
-
-            /* Check if we found something */
-            if (!ReturnEntry)
-            {
-                /*  Not found, return the first entry */
-                ListEntry = RemoveHeadList(&DeviceQueue->DeviceListHead);
+                /* Get the next entry and check if the key is low enough */
                 ReturnEntry = CONTAINING_RECORD(ListEntry,
                                                 KDEVICE_QUEUE_ENTRY,
                                                 DeviceListEntry);
+                if (SortKey <= ReturnEntry->SortKey) break;
+
+                /* Try the next one */
+                ListEntry = ListEntry->Flink;
             }
         }
+
+        /* We have an entry, remove it now */
+        RemoveEntryList(&ReturnEntry->DeviceListEntry);
 
         /* Set it as non-inserted */
         ReturnEntry->Inserted = FALSE;

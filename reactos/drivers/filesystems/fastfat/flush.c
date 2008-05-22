@@ -52,7 +52,6 @@ NTSTATUS VfatFlushVolume(PDEVICE_EXTENSION DeviceExt, PVFATFCB VolumeFcb)
        ListEntry = ListEntry->Flink;
        if (!vfatFCBIsDirectory(Fcb))
          {
-             if (Fcb->PadPad51) continue; // Corrupt FCB
            ExAcquireResourceExclusiveLite(&Fcb->MainResource, TRUE);
            Status = VfatFlushFile(DeviceExt, Fcb);
            ExReleaseResourceLite (&Fcb->MainResource);
