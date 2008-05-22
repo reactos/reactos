@@ -65,6 +65,14 @@ IntSystemParametersInfo(
    static UINT FocusBorderHeight = 1;
    static UINT FocusBorderWidth = 1;
    static ANIMATIONINFO anim;
+   static STICKYKEYS StickyKeys = {sizeof(STICKYKEYS), 0x1fa};
+   static FILTERKEYS FilterKeys = {sizeof(FILTERKEYS), 0, 0, 0, 0, 0};
+   static TOGGLEKEYS ToggleKeys = {sizeof(TOGGLEKEYS), 0};
+   static MOUSEKEYS MouseKeys = {sizeof(MOUSEKEYS), 0, 0, 0, 0, 0, 0};
+   static BOOL KeyboardPref = FALSE;
+   static BOOL ShowSounds = FALSE;
+   static ACCESSTIMEOUT AccessTimeout = {sizeof(ACCESSTIMEOUT), 0, 0};
+   static SERIALKEYS SerialKeys = {sizeof(SERIALKEYS), 0, 0, 0, 0, 0, 0};
 
    if (!bInitialized)
    {
@@ -587,6 +595,94 @@ IntSystemParametersInfo(
       case SPI_SETFOCUSBORDERWIDTH:
          {
             FocusBorderWidth = (UINT)pvParam;
+            bChanged = TRUE;
+            break;
+         }
+      case SPI_GETSTICKYKEYS:
+         {
+            *((STICKYKEYS*)pvParam) = StickyKeys;
+            break;
+         }
+      case SPI_SETSTICKYKEYS:
+         {
+            StickyKeys = *((STICKYKEYS*)pvParam);
+            bChanged = TRUE;
+            break;
+         }
+      case SPI_GETFILTERKEYS:
+         {
+            *((FILTERKEYS*)pvParam) = FilterKeys;
+            break;
+         }
+      case SPI_SETFILTERKEYS:
+         {
+            FilterKeys = *((FILTERKEYS*)pvParam);
+            bChanged = TRUE;
+            break;
+         }
+      case SPI_GETTOGGLEKEYS:
+         {
+            *((TOGGLEKEYS*)pvParam) = ToggleKeys;
+            break;
+         }
+      case SPI_SETTOGGLEKEYS:
+         {
+            ToggleKeys = *((TOGGLEKEYS*)pvParam);
+            bChanged = TRUE;
+            break;
+         }
+      case SPI_GETSERIALKEYS:
+         {
+            *((SERIALKEYS*)pvParam) = SerialKeys;
+            break;
+         }
+      case SPI_SETSERIALKEYS:
+         {
+            SerialKeys = *((SERIALKEYS*)pvParam);
+            bChanged = TRUE;
+            break;
+         }
+      case SPI_GETMOUSEKEYS:
+         {
+            *((MOUSEKEYS*)pvParam) = MouseKeys;
+            break;
+         }
+      case SPI_SETMOUSEKEYS:
+         {
+            MouseKeys = *((MOUSEKEYS*)pvParam);
+            bChanged = TRUE;
+            break;
+         }
+      case SPI_GETKEYBOARDPREF:
+         {
+            *((BOOL*)pvParam) = KeyboardPref;
+            break;
+         }
+      case SPI_SETKEYBOARDPREF:
+         {
+            KeyboardPref = (BOOL)uiParam;
+            bChanged = TRUE;
+            break;
+         }
+      case SPI_GETSHOWSOUNDS:
+         {
+            *((BOOL*)pvParam) = ShowSounds;
+            break;
+         }
+      case SPI_SETSHOWSOUNDS:
+         {
+            ShowSounds = (BOOL)uiParam;
+            bChanged = TRUE;
+            break;
+         }
+      case SPI_GETACCESSTIMEOUT:
+         {
+            *((ACCESSTIMEOUT*)pvParam) = AccessTimeout;
+            break;
+         }
+      case SPI_SETACCESSTIMEOUT:
+         {
+            AccessTimeout = *((ACCESSTIMEOUT*)pvParam);
             bChanged = TRUE;
             break;
          }
