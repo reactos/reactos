@@ -26,6 +26,8 @@
 		<file>volinfo.c</file>
 		<file>write.c</file>
 	</directory>
+	<directory name="inc">
+		<pch>ext2fsd.h</pch>
+	</directory>
 	<file>ext2fs.rc</file>
-	<pch>inc/ext2fsd.h</pch>
 </module>
