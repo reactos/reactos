@@ -15,9 +15,11 @@
 
 /* PSDK/NDK Headers */
 #define WIN32_NO_STATUS
+#define _WMI_SOURCE_
 #include <windows.h>
 #include <accctrl.h>
 #include <aclapi.h>
+#include <evntrace.h>
 #include <sddl.h>
 #define NTOS_MODE_USER
 #include <ndk/ntndk.h>

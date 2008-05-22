@@ -292,7 +292,7 @@ GetSiteSidFromToken@4
 GetTokenInformation@20
 ;GetTraceEnableFlags
 ;GetTraceEnableLevel
-;GetTraceLoggerHandle
+GetTraceLoggerHandle@4
 GetTrusteeFormA@4
 GetTrusteeFormW@4
 GetTrusteeNameA@4
@@ -651,7 +651,7 @@ SystemFunction035@8
 SystemFunction036@8
 SystemFunction040@12
 SystemFunction041@12
-;TraceEvent
+TraceEvent@12
 ;TraceEventInstance
 TraceMessage
 ;TraceMessageVa
