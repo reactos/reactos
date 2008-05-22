@@ -29,7 +29,10 @@ Author:
 //
 // Don't include WMI headers just for one define
 //
+#ifndef PEVENT_TRACE_HEADER_DEFINED
+#define PEVENT_TRACE_HEADER_DEFINED
 typedef struct _EVENT_TRACE_HEADER *PEVENT_TRACE_HEADER;
+#endif
 
 #ifndef NTOS_MODE_USER
 //

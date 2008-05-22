@@ -1,5 +1,15 @@
-#ifndef ENVTRACE_H
-#define ENVTRACE_H
+#ifndef _EVNTRACE_
+#define _EVNTRACE_
+
+#ifndef WMIAPI
+#ifndef MIDL_PASS
+#ifdef _WMI_SOURCE_
+#define WMIAPI __stdcall
+#else
+#define WMIAPI DECLSPEC_IMPORT __stdcall
+#endif
+#endif
+#endif
 
 typedef struct _EVENT_TRACE_HEADER
 {
@@ -37,7 +47,20 @@ typedef struct _EVENT_TRACE_HEADER
     };
     ULONG64  ProcessorTime;
   };
-} EVENT_TRACE_HEADER, *PEVENT_TRACE_HEADER;
+} EVENT_TRACE_HEADER;
+
+#ifndef PEVENT_TRACE_HEADER_DEFINED
+#define PEVENT_TRACE_HEADER_DEFINED
+typedef struct _EVENT_TRACE_HEADER *PEVENT_TRACE_HEADER;
+#endif
+
+
+typedef ULONG64 TRACEHANDLE, *PTRACEHANDLE;
+
+
+ULONG WMIAPI TraceEvent(TRACEHANDLE,PEVENT_TRACE_HEADER);
+TRACEHANDLE WMIAPI GetTraceLoggerHandle(PVOID);
+
 
 #endif /* ENVTRACE_H */
 
