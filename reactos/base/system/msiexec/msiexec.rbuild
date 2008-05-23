@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
-<module name="msiexec" type="win32cui" installbase="system32" installname="msiexec.exe" allowwarnings="true">
+<module name="msiexec" type="win32gui" installbase="system32" installname="msiexec.exe" allowwarnings="true">
 	<include base="msiexec">.</include>
 	<include base="ReactOS">include/wine</include>
 	<define name="_WIN32_IE">0x501</define>
