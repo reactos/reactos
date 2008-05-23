@@ -1477,7 +1477,7 @@ NTAPI
 NtUserGetThreadState(
   DWORD Routine);
 
-DWORD
+BOOLEAN
 NTAPI
 NtUserGetTitleBarInfo(
   HWND hwnd,

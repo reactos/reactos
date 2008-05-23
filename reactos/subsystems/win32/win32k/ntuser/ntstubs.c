@@ -318,16 +318,7 @@ NtUserGetMouseMovePointsEx(
    return 0;
 }
 
-DWORD
-STDCALL
-NtUserGetTitleBarInfo(
-   HWND hwnd,
-   PTITLEBARINFO pti)
-{
-   UNIMPLEMENTED
 
-   return 0;
-}
 
 DWORD
 STDCALL

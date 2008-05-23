@@ -1390,6 +1390,146 @@ IntCleanupMenus(struct _EPROCESS *Process, PW32PROCESS Win32Process)
    return TRUE;
 }
 
+VOID STDCALL
+co_InflateRect(LPRECT rect, int dx, int dy)
+{
+    rect->left -= dx;
+    rect->top -= dy;
+    rect->right += dx;
+    rect->bottom += dy;
+}
+
+BOOLEAN STDCALL
+intGetTitleBarInfo(PWINDOW_OBJECT pWindowObject, PTITLEBARINFO bti)
+{
+
+    DWORD dwStyle = 0;
+    DWORD dwExStyle = 0;
+    BOOLEAN retValue = TRUE;
+
+    if (bti->cbSize == sizeof(TITLEBARINFO))
+    {
+        RtlZeroMemory(&bti->rgstate[0],sizeof(DWORD)*(CCHILDREN_TITLEBAR+1));
+
+        bti->rgstate[0] = STATE_SYSTEM_FOCUSABLE;
+
+        dwStyle = pWindowObject->Wnd->Style;
+        dwExStyle = pWindowObject->Wnd->ExStyle;
+
+        bti->rcTitleBar.top  = 0;
+        bti->rcTitleBar.left = 0;
+        bti->rcTitleBar.right  = pWindowObject->Wnd->WindowRect.right - pWindowObject->Wnd->WindowRect.left;
+        bti->rcTitleBar.bottom = pWindowObject->Wnd->WindowRect.bottom - pWindowObject->Wnd->WindowRect.top;
+
+        /* is it iconiced ? */ 
+        if ((dwStyle & WS_ICONIC)!=WS_ICONIC)
+        {
+            /* Remove frame from rectangle */
+            if (HAS_THICKFRAME( dwStyle, dwExStyle ))
+            {
+                /* FIXME : Note this value should exists in pWindowObject for UserGetSystemMetrics(SM_CXFRAME) and UserGetSystemMetrics(SM_CYFRAME) */
+                co_InflateRect( &bti->rcTitleBar, -UserGetSystemMetrics(SM_CXFRAME), -UserGetSystemMetrics(SM_CYFRAME) );
+            }
+            else if (HAS_DLGFRAME( dwStyle, dwExStyle ))
+            {
+                /* FIXME : Note this value should exists in pWindowObject for UserGetSystemMetrics(SM_CXDLGFRAME) and UserGetSystemMetrics(SM_CYDLGFRAME) */
+                co_InflateRect( &bti->rcTitleBar, -UserGetSystemMetrics(SM_CXDLGFRAME), -UserGetSystemMetrics(SM_CYDLGFRAME));
+            }
+            else if (HAS_THINFRAME( dwStyle, dwExStyle))
+            {
+                /* FIXME : Note this value should exists in pWindowObject for UserGetSystemMetrics(SM_CXBORDER) and UserGetSystemMetrics(SM_CYBORDER) */
+                co_InflateRect( &bti->rcTitleBar, -UserGetSystemMetrics(SM_CXBORDER), -UserGetSystemMetrics(SM_CYBORDER) );
+            }
+
+            /* We have additional border information if the window
+             * is a child (but not an MDI child) */
+            if ( (dwStyle & WS_CHILD)  &&
+                 ((dwExStyle & WS_EX_MDICHILD) == 0 ) )
+            {
+                if (dwExStyle & WS_EX_CLIENTEDGE)
+                {
+                    /* FIXME : Note this value should exists in pWindowObject for UserGetSystemMetrics(SM_CXEDGE) and UserGetSystemMetrics(SM_CYEDGE) */
+                    co_InflateRect (&bti->rcTitleBar, -UserGetSystemMetrics(SM_CXEDGE), -UserGetSystemMetrics(SM_CYEDGE));
+                }
+
+                if (dwExStyle & WS_EX_STATICEDGE)
+                {
+                    /* FIXME : Note this value should exists in pWindowObject for UserGetSystemMetrics(SM_CXBORDER) and UserGetSystemMetrics(SM_CYBORDER) */
+                    co_InflateRect (&bti->rcTitleBar, -UserGetSystemMetrics(SM_CXBORDER), -UserGetSystemMetrics(SM_CYBORDER));
+                }
+            }
+        }
+
+        bti->rcTitleBar.top += pWindowObject->Wnd->WindowRect.top;
+        bti->rcTitleBar.left += pWindowObject->Wnd->WindowRect.left;
+        bti->rcTitleBar.right += pWindowObject->Wnd->WindowRect.left;
+
+        bti->rcTitleBar.bottom = bti->rcTitleBar.top;
+        if (dwExStyle & WS_EX_TOOLWINDOW)
+        {
+            /* FIXME : Note this value should exists in pWindowObject for UserGetSystemMetrics(SM_CYSMCAPTION) */
+            bti->rcTitleBar.bottom += UserGetSystemMetrics(SM_CYSMCAPTION);
+        }
+        else 
+        {
+            /* FIXME : Note this value should exists in pWindowObject for UserGetSystemMetrics(SM_CYCAPTION) and UserGetSystemMetrics(SM_CXSIZE) */
+            bti->rcTitleBar.bottom += UserGetSystemMetrics(SM_CYCAPTION);
+            bti->rcTitleBar.left += UserGetSystemMetrics(SM_CXSIZE);
+        }
+
+        if (dwStyle & WS_CAPTION) 
+        {
+            bti->rgstate[1] = STATE_SYSTEM_INVISIBLE;
+            if (dwStyle & WS_SYSMENU) 
+            {
+                if (!(dwStyle & (WS_MINIMIZEBOX|WS_MAXIMIZEBOX))) 
+                {
+                    bti->rgstate[2] = STATE_SYSTEM_INVISIBLE;
+                    bti->rgstate[3] = STATE_SYSTEM_INVISIBLE;
+                }
+                else 
+                {
+                    if (!(dwStyle & WS_MINIMIZEBOX))
+                    {
+                        bti->rgstate[2] = STATE_SYSTEM_UNAVAILABLE;
+                    }
+                    if (!(dwStyle & WS_MAXIMIZEBOX))
+                    {
+                        bti->rgstate[3] = STATE_SYSTEM_UNAVAILABLE;
+                    }
+                }
+
+                if (!(dwExStyle & WS_EX_CONTEXTHELP))
+                {
+                    bti->rgstate[4] = STATE_SYSTEM_INVISIBLE;
+                }
+                if (pWindowObject->Wnd->Class->Style & CS_NOCLOSE)
+                {
+                    bti->rgstate[5] = STATE_SYSTEM_UNAVAILABLE;
+                }
+            }
+            else 
+            {
+                bti->rgstate[2] = STATE_SYSTEM_INVISIBLE;
+                bti->rgstate[3] = STATE_SYSTEM_INVISIBLE;
+                bti->rgstate[4] = STATE_SYSTEM_INVISIBLE;
+                bti->rgstate[5] = STATE_SYSTEM_INVISIBLE;
+            }
+        }
+        else
+        {
+            bti->rgstate[0] |= STATE_SYSTEM_INVISIBLE;
+        }
+    }
+    else
+    {
+        SetLastWin32Error(ERROR_INVALID_PARAMETER);
+        retValue = FALSE;
+    }
+
+    return retValue;
+}
+
 /* FUNCTIONS *****************************************************************/
 
 
@@ -1530,6 +1670,73 @@ CLEANUP:
    DPRINT("Leave NtUserDeleteMenu, ret=%i\n",_ret_);
    UserLeave();
    END_CLEANUP;
+}
+
+/*
+ * @implemented
+ */
+BOOLEAN STDCALL
+NtUserGetTitleBarInfo(
+    HWND hwnd,
+    PTITLEBARINFO bti)
+{
+    PWINDOW_OBJECT WindowObject;
+    TITLEBARINFO bartitleinfo;
+    DECLARE_RETURN(BOOLEAN);
+    BOOLEAN retValue = FALSE;
+
+    DPRINT("Enter NtUserGetTitleBarInfo\n");
+    UserEnterExclusive();
+
+    /* Vaildate the windows handle */
+    if (!(WindowObject = UserGetWindowObject(hwnd)))
+    {
+        SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
+        retValue = FALSE;
+    }
+
+    _SEH_TRY
+    {
+        /* Copy our usermode buffer bti to local buffer bartitleinfo */
+        ProbeForRead(bti, sizeof(TITLEBARINFO), 1);
+        RtlCopyMemory(&bartitleinfo, bti, sizeof(TITLEBARINFO));
+    }
+    _SEH_HANDLE
+    {
+        /* Fail copy the data */ 
+        SetLastWin32Error(ERROR_INVALID_PARAMETER);
+        retValue = FALSE;
+    }
+    _SEH_END
+
+    /* Get the tile bar info */ 
+    if (retValue)
+    {
+        retValue = intGetTitleBarInfo(WindowObject, &bartitleinfo);   
+        if (retValue)
+        {
+            _SEH_TRY
+            {
+                /* Copy our buffer to user mode buffer bti */
+                ProbeForWrite(bti, sizeof(TITLEBARINFO), 1);
+                RtlCopyMemory(bti, &bartitleinfo, sizeof(TITLEBARINFO));
+            }
+            _SEH_HANDLE
+            {
+                /* Fail copy the data */ 
+                SetLastWin32Error(ERROR_INVALID_PARAMETER);
+                retValue = FALSE;
+            }
+            _SEH_END
+        }
+    }
+
+    RETURN( retValue );
+
+CLEANUP:
+    DPRINT("Leave NtUserGetTitleBarInfo, ret=%i\n",_ret_);
+    UserLeave();
+    END_CLEANUP;
 }
 
 
