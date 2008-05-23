@@ -1683,7 +1683,7 @@ NtUserGetTitleBarInfo(
     PWINDOW_OBJECT WindowObject;
     TITLEBARINFO bartitleinfo;
     DECLARE_RETURN(BOOLEAN);
-    BOOLEAN retValue = FALSE;
+    BOOLEAN retValue = TRUE;
 
     DPRINT("Enter NtUserGetTitleBarInfo\n");
     UserEnterExclusive();
@@ -1712,7 +1712,7 @@ NtUserGetTitleBarInfo(
     /* Get the tile bar info */ 
     if (retValue)
     {
-        retValue = intGetTitleBarInfo(WindowObject, &bartitleinfo);   
+        retValue = intGetTitleBarInfo(WindowObject, &bartitleinfo);
         if (retValue)
         {
             _SEH_TRY
