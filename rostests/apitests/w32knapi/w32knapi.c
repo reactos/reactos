@@ -87,6 +87,8 @@ WinMain(HINSTANCE hInstance,
 	GdiHandleTable = MyGdiQueryTable();
 	if(!GdiHandleTable)
 	{
+		FreeLibrary(g_hModule);
+		printf("GdiHandleTable not found!\n");
 		return -1;
 	}
 
