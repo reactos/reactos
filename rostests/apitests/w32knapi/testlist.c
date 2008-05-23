@@ -41,6 +41,7 @@
 #include "ntuser/NtUserScrollDC.c"
 #include "ntuser/NtUserSystemParametersInfo.c"
 #include "ntuser/NtUserToUnicodeEx.c"
+#include "ntuser/NtUserGetTitleBarInfo.c"
 
 /* The List of tests */
 TESTENTRY TestList[] =
@@ -86,7 +87,8 @@ TESTENTRY TestList[] =
 	{ L"NtUserRedrawWindow", Test_NtUserRedrawWindow },
 	{ L"NtUserScrollDC", Test_NtUserScrollDC },
 	{ L"NtUserSystemParametersInfo", Test_NtUserSystemParametersInfo },
-	{ L"NtUserToUnicodeEx", Test_NtUserToUnicodeEx }
+	{ L"NtUserToUnicodeEx", Test_NtUserToUnicodeEx },
+	{ L"NtUserGetTitleBarInfo", Test_NtUserGetTitleBarInfo }
 };
 
 /* The function that gives us the number of tests */
@@ -94,4 +96,5 @@ INT NumTests(void)
 {
 	return sizeof(TestList) / sizeof(TESTENTRY);
 }
+
 
