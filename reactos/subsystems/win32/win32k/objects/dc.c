@@ -107,7 +107,7 @@ NtGdiCreateCompatibleDC(HDC hDC)
   if(!nDc_Attr) nDc_Attr = &NewDC->Dc_Attr;
 
   /* Copy information from original DC to new DC  */
-  NewDC->hSelf = hNewDC;
+  NewDC->DcLevel.hdcSave = hNewDC;
 
   NewDC->PDev = OrigDC->PDev;
 
@@ -1001,7 +1001,7 @@ IntGdiDeleteDC(HDC hDC, BOOL Force)
   }
 
   /*  First delete all saved DCs  */
-  while (DCToDelete->saveLevel)
+  while (DCToDelete->DcLevel.lSaveDepth)
   {
     PDC  savedDC;
     HDC  savedHDC;
@@ -1013,7 +1013,7 @@ IntGdiDeleteDC(HDC hDC, BOOL Force)
       break;
     }
     DC_SetNextDC (DCToDelete, DC_GetNextDC (savedDC));
-    DCToDelete->saveLevel--;
+    DCToDelete->DcLevel.lSaveDepth--;
     DC_UnlockDc( savedDC );
     IntGdiDeleteDC(savedHDC, Force);
   }
@@ -1376,7 +1376,7 @@ IntGdiCopyToSaveState(PDC dc, PDC newdc)
   nDc_Attr->ptlViewportOrg  = Dc_Attr->ptlViewportOrg;
   nDc_Attr->szlViewportExt  = Dc_Attr->szlViewportExt;
 
-  newdc->saveLevel = 0;
+  newdc->DcLevel.lSaveDepth = 0;
   newdc->DC_Type = dc->DC_Type;
 
 #if 0
@@ -1518,7 +1518,7 @@ IntGdiGetDCState(HDC  hDC)
   /* FIXME - newdc can be NULL!!!! Don't assert here!!! */
   ASSERT( newdc );
 
-  newdc->hSelf = hnewdc;
+  newdc->DcLevel.hdcSave = hnewdc;
   IntGdiCopyToSaveState( dc, newdc);
 
   DC_UnlockDc( newdc );
@@ -1541,7 +1541,7 @@ IntGdiSetDCState ( HDC hDC, HDC hDCSave )
     {
       if ( dcs->w.flags & DC_SAVED )
       {
-        IntGdiCopyFromSaveState( dc, dcs, dc->hSelf);
+        IntGdiCopyFromSaveState( dc, dcs, dc->DcLevel.hdcSave);
       }
       else
       {
@@ -1805,16 +1805,16 @@ NtGdiRestoreDC(HDC  hDC, INT  SaveLevel)
   }
 
   if (SaveLevel < 0)
-      SaveLevel = dc->saveLevel + SaveLevel + 1;
+      SaveLevel = dc->DcLevel.lSaveDepth + SaveLevel + 1;
 
-  if(SaveLevel < 0 || dc->saveLevel<SaveLevel)
+  if(SaveLevel < 0 || dc->DcLevel.lSaveDepth<SaveLevel)
   {
     DC_UnlockDc(dc);
     return FALSE;
   }
 
   success=TRUE;
-  while (dc->saveLevel >= SaveLevel)
+  while (dc->DcLevel.lSaveDepth >= SaveLevel)
   {
      HDC hdcs = DC_GetNextDC (dc);
 
@@ -1828,7 +1828,7 @@ NtGdiRestoreDC(HDC  hDC, INT  SaveLevel)
      DC_SetNextDC (dc, DC_GetNextDC (dcs));
      dcs->hNext = 0;
 
-     if (--dc->saveLevel < SaveLevel)
+     if (--dc->DcLevel.lSaveDepth < SaveLevel)
      {
          DC_UnlockDc( dc );
          DC_UnlockDc( dcs );
@@ -1903,7 +1903,7 @@ NtGdiSaveDC(HDC  hDC)
 
   DC_SetNextDC (dcs, DC_GetNextDC (dc));
   DC_SetNextDC (dc, hdcs);
-  ret = ++dc->saveLevel;
+  ret = ++dc->DcLevel.lSaveDepth;
   DC_UnlockDc( dcs );
   DC_UnlockDc( dc );
 

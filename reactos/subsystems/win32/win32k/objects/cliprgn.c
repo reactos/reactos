@@ -225,13 +225,6 @@ NtGdiGetAppClipBox(HDC hDC, LPRECT rc)
   return Ret;
 }
 
-int STDCALL NtGdiGetMetaRgn(HDC  hDC,
-                    HRGN  hrgn)
-{
-  UNIMPLEMENTED;
-  return 0;
-}
-
 int STDCALL NtGdiExcludeClipRect(HDC  hDC,
                          int  LeftRect,
                          int  TopRect,
@@ -430,10 +423,146 @@ BOOL STDCALL NtGdiRectVisible(HDC  hDC,
    return Result;
 }
 
+int
+FASTCALL 
+IntGdiSetMetaRgn(PDC pDC)
+{
+  INT Ret = ERROR;
+  PROSRGNDATA TempRgn;
+
+  if ( pDC->DcLevel.prgnMeta )
+  {
+     if ( pDC->DcLevel.prgnClip )
+     {
+        TempRgn = REGION_AllocRgnWithHandle(1);
+
+        if (TempRgn)
+        {
+           REGION_SetRectRgn(TempRgn, 0, 0, 0, 0);
+           Ret = IntGdiCombineRgn( TempRgn,
+                     pDC->DcLevel.prgnMeta,
+                     pDC->DcLevel.prgnClip,
+                                   RGN_AND);
+           if ( Ret )
+           {
+              REGION_UnlockRgn(TempRgn);
+              TempRgn = GDIOBJ_ShareLockObj(TempRgn->BaseObject.hHmgr,
+                                              GDI_OBJECT_TYPE_REGION);
+
+              GDIOBJ_ShareUnlockObjByPtr(pDC->DcLevel.prgnMeta);
+              if (!((PROSRGNDATA)pDC->DcLevel.prgnMeta)->BaseObject.ulShareCount)
+                 REGION_FreeRgn(pDC->DcLevel.prgnMeta);
+
+              pDC->DcLevel.prgnMeta = TempRgn;
+
+              GDIOBJ_ShareUnlockObjByPtr(pDC->DcLevel.prgnClip);
+              if (!((PROSRGNDATA)pDC->DcLevel.prgnClip)->BaseObject.ulShareCount)
+                 REGION_FreeRgn(pDC->DcLevel.prgnClip);
+
+              pDC->DcLevel.prgnClip = NULL;
+
+              pDC->DC_Flags |= DC_FLAG_DIRTY_RAO;
+              pDC->erclClip.left   = 0;
+              pDC->erclClip.top    = 0;
+              pDC->erclClip.right  = 0;
+              pDC->erclClip.bottom = 0;
+              
+           }
+           else
+              REGION_FreeRgn(TempRgn);
+        }
+     }
+     else
+        Ret = REGION_Complexity(pDC->DcLevel.prgnMeta);
+  }
+  else
+  {
+     if ( pDC->DcLevel.prgnClip )
+     {
+        Ret = REGION_Complexity(pDC->DcLevel.prgnClip);
+        pDC->DcLevel.prgnMeta = pDC->DcLevel.prgnClip;
+        pDC->DcLevel.prgnClip = NULL;
+     }
+     else 
+       Ret = SIMPLEREGION;
+  }
+  return Ret;
+}
+
+
 int STDCALL NtGdiSetMetaRgn(HDC  hDC)
 {
-  UNIMPLEMENTED;
-  return 0;
+  INT Ret;
+  PDC pDC = DC_LockDc(hDC);
+
+  if (!pDC)
+  {
+     SetLastWin32Error(ERROR_INVALID_PARAMETER);
+     return ERROR;
+  }
+  Ret = IntGdiSetMetaRgn(pDC);
+
+  DC_UnlockDc(pDC);
+  return Ret;
+}
+
+INT FASTCALL
+NEW_CLIPPING_UpdateGCRegion(PDC pDC)
+{
+  CLIPOBJ * co;
+
+  if (!pDC->prgnVis) return 0;
+
+  if (pDC->prgnAPI)
+  {
+     REGION_FreeRgn(pDC->prgnAPI);
+     pDC->prgnAPI = REGION_AllocRgnWithHandle(1);
+     REGION_SetRectRgn(pDC->prgnAPI, 0, 0, 0, 0);
+  }
+
+  if (pDC->prgnRao)
+  {
+     REGION_FreeRgn(pDC->prgnRao);
+     pDC->prgnRao = REGION_AllocRgnWithHandle(1);
+     REGION_SetRectRgn(pDC->prgnRao, 0, 0, 0, 0);
+  }
+  
+  if (pDC->DcLevel.prgnMeta && pDC->DcLevel.prgnClip)
+  {
+     IntGdiCombineRgn( pDC->prgnAPI,
+              pDC->DcLevel.prgnClip,
+              pDC->DcLevel.prgnMeta,
+                            RGN_AND);
+  }
+  else
+  {
+     if (pDC->DcLevel.prgnClip)
+        IntGdiCombineRgn( pDC->prgnAPI,
+                 pDC->DcLevel.prgnClip,
+                                  NULL,
+                              RGN_COPY);
+     else if (pDC->DcLevel.prgnMeta)
+        IntGdiCombineRgn( pDC->prgnAPI,
+                 pDC->DcLevel.prgnMeta,
+                                  NULL,
+                              RGN_COPY);
+  }
+
+  IntGdiCombineRgn( pDC->prgnRao,
+                    pDC->prgnVis,
+                    pDC->prgnAPI,
+                         RGN_AND);
+
+  RtlCopyMemory(&pDC->erclClip, &((PROSRGNDATA)pDC->prgnRao)->rdh.rcBound , sizeof(RECTL));
+  pDC->DC_Flags &= ~DC_FLAG_DIRTY_RAO;
+
+//  if (Dc->CombinedClip != NULL) IntEngDeleteClipRegion(Dc->CombinedClip);
+  
+  co = IntEngCreateClipRegion( ((PROSRGNDATA)pDC->prgnRao)->rdh.nCount,
+                           (PRECTL)((PROSRGNDATA)pDC->prgnRao)->Buffer,
+                                 (PRECTL)&pDC->erclClip);
+
+  return REGION_Complexity(pDC->prgnRao);
 }
 
 /* EOF */

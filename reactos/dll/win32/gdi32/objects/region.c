@@ -232,7 +232,7 @@ GetClipRgn(
         HRGN    hrgn
         )
 {
-  INT Ret = NtGdiGetRandomRgn(hdc, hrgn, 1);
+  INT Ret = NtGdiGetRandomRgn(hdc, hrgn, CLIPRGN);
 //  if (Ret)
 //  {
 //     if(GetLayout(hdc) & LAYOUT_RTL) MirrorRgnDC(hdc,(HRGN)Ret, NULL);
@@ -248,7 +248,7 @@ STDCALL
 GetMetaRgn(HDC hdc,
            HRGN hrgn)
 {
-    return NtGdiGetRandomRgn(hdc,hrgn,2);
+    return NtGdiGetRandomRgn(hdc, hrgn, METARGN);
 }
 
 /*

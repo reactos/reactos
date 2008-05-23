@@ -115,7 +115,7 @@ typedef struct _DC
   PVOID       prfnt; // RFONT*
   unsigned    co_[31]; // CLIPOBJ
   PVOID       pPFFList; // PPFF*
-  PVOID       ClrxFormObj;
+  PVOID       ClrxFormLnk;
   INT         ipfdDevMax;
   ULONG       ulCopyCount;
   PVOID       pSurfInfo;
@@ -128,9 +128,6 @@ typedef struct _DC
   CLIPOBJ     *CombinedClip;
   XLATEOBJ    *XlateBrush;
   XLATEOBJ    *XlatePen;
-
-  INT         saveLevel; // DCLEVEL lSaveDepth
-  HDC         hSelf;  // DCLEVEL hdcSave Used only for MemoryDC & SaveDC.
 
   UNICODE_STRING    DriverName;
 } DC, *PDC;
@@ -263,5 +260,6 @@ VOID FASTCALL IntGdiReferencePdev(PGDIDEVICE pPDev);
 VOID FASTCALL IntGdiUnreferencePdev(PGDIDEVICE pPDev, DWORD CleanUpType);
 HDC FASTCALL IntGdiCreateDisplayDC(HDEV hDev, ULONG DcType, BOOL EmptyDC);
 BOOL FASTCALL IntGdiCleanDC(HDC hDC);
+
 
 #endif /* not __WIN32K_DC_H */

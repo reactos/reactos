@@ -138,7 +138,7 @@ SOFTWARE.
   (pReg)->rdh.nCount = 0; \
   (pReg)->rdh.rcBound.left = (pReg)->rdh.rcBound.top = 0; \
   (pReg)->rdh.rcBound.right = (pReg)->rdh.rcBound.bottom = 0; \
-  (pReg)->rdh.iType = NULLREGION; \
+  (pReg)->rdh.iType = RDH_RECTANGLES; \
 }
 
 #define REGION_NOT_EMPTY(pReg) pReg->rdh.nCount
@@ -542,7 +542,7 @@ REGION_SetExtents(ROSRGNDATA *pReg)
         pReg->rdh.rcBound.top = 0;
         pReg->rdh.rcBound.right = 0;
         pReg->rdh.rcBound.bottom = 0;
-        pReg->rdh.iType = NULLREGION;
+        pReg->rdh.iType = RDH_RECTANGLES;
         return;
     }
 
@@ -570,7 +570,7 @@ REGION_SetExtents(ROSRGNDATA *pReg)
             pExtents->right = pRect->right;
         pRect++;
     }
-    pReg->rdh.iType = (1 == pReg->rdh.nCount ? SIMPLEREGION : COMPLEXREGION);
+    pReg->rdh.iType = RDH_RECTANGLES;
 }
 
 // FIXME: This seems to be wrong
@@ -724,7 +724,7 @@ REGION_CropAndOffsetRegion(
         rgnDst->rdh.rcBound.top = ((PRECT)rgnDst->Buffer)->top;
         rgnDst->rdh.rcBound.bottom = ((PRECT)rgnDst->Buffer + j)->bottom;
 
-        rgnDst->rdh.iType = (j >= 1) ? COMPLEXREGION : SIMPLEREGION;
+        rgnDst->rdh.iType = RDH_RECTANGLES;
     }
 
     return TRUE;
@@ -1181,11 +1181,6 @@ REGION_RegionOp(
             ASSERT(newReg->Buffer);
         }
     }
-
-    if (newReg->rdh.nCount == 0)
-        newReg->rdh.iType = NULLREGION;
-    else
-        newReg->rdh.iType = (newReg->rdh.nCount > 1)? COMPLEXREGION : SIMPLEREGION;
 
     if (oldRects != &newReg->rdh.rcBound)
         ExFreePool(oldRects);
@@ -1886,7 +1881,7 @@ REGION_CreateFrameRgn(
         return FALSE;
     }
 
-    if (srcObj->rdh.iType == SIMPLEREGION)
+    if (REGION_Complexity(srcObj) == SIMPLEREGION)
     {
         if (!REGION_CreateSimpleFrameRgn(destObj, x, y))
         {
@@ -2096,7 +2091,7 @@ IntGdiCombineRgn(PROSRGNDATA destRgn,
         {
            if ( !REGION_CopyRegion(destRgn, src1Rgn) )
                return ERROR;
-           result = destRgn->rdh.iType;
+           result = REGION_Complexity(destRgn);
         }
         else
         {
@@ -2117,7 +2112,7 @@ IntGdiCombineRgn(PROSRGNDATA destRgn,
                      REGION_SubtractRegion(destRgn, src1Rgn, src2Rgn);
                      break;
               }
-              result = destRgn->rdh.iType;
+              result = REGION_Complexity(destRgn);
            }
            else if (src2Rgn == NULL)
            {
@@ -2156,7 +2151,7 @@ NtGdiCombineRgn(HRGN  hDest,
             {
                 if ( !REGION_CopyRegion(destRgn, src1Rgn) )
                     return ERROR;
-                result = destRgn->rdh.iType;
+                result = REGION_Complexity(destRgn);
             }
             else
             {
@@ -2179,7 +2174,7 @@ NtGdiCombineRgn(HRGN  hDest,
                         break;
                     }
                     REGION_UnlockRgn(src2Rgn);
-                    result = destRgn->rdh.iType;
+                    result = REGION_Complexity(destRgn);
                 }
                 else if (hSrc2 == NULL)
                 {
@@ -2554,7 +2549,7 @@ REGION_GetRgnBox(
     if (Rgn)
     {
         *pRect = Rgn->rdh.rcBound;
-        ret = Rgn->rdh.iType;
+        ret = REGION_Complexity(Rgn);
 
         return ret;
     }
@@ -2562,7 +2557,21 @@ REGION_GetRgnBox(
 }
 
 
-/* See wine, msdn, osr and  Feng Yuan - Windows Graphics Programming Win32 Gdi And Directdraw */
+/* See wine, msdn, osr and  Feng Yuan - Windows Graphics Programming Win32 Gdi And Directdraw
+
+   1st: http://www.codeproject.com/gdi/cliprgnguide.asp is wrong!
+
+   The intersection of the clip with the meta region is not Rao it's API!
+   Go back and read 7.2 Clipping pages 418-19:
+   Rao = API & Vis:
+   1) The Rao region is the intersection of the API region and the system region,
+      named after the Microsoft engineer who initially proposed it.
+   2) The Rao region can be calculated from the API region and the system region.
+
+   API:
+      API region is the intersection of the meta region and the clipping region,
+      clearly named after the fact that it is controlled by GDI API calls.
+*/
 INT STDCALL
 NtGdiGetRandomRgn(
     HDC hDC,
@@ -2584,16 +2593,14 @@ NtGdiGetRandomRgn(
 
     switch (iCode)
     {
-    case 1:
+    case CLIPRGN:
         hSrc = pDC->w.hClipRgn;
+//        if (dc->DcLevel.prgnClip) hSrc = ((PROSRGNDATA)dc->DcLevel.prgnClip)->BaseObject.hHmgr;
         break;
-    case 2:
-        //hSrc = dc->hMetaRgn;
-        DPRINT1("hMetaRgn not implemented\n");
-        DC_UnlockDc(pDC);
-        return -1;
+    case METARGN:
+        if (pDC->DcLevel.prgnMeta) hSrc = ((PROSRGNDATA)pDC->DcLevel.prgnMeta)->BaseObject.hHmgr;
         break;
-    case 3:
+    case APIRGN:
         DPRINT1("hMetaRgn not implemented\n");
         //hSrc = dc->hMetaClipRgn;
         if (!hSrc)
@@ -2601,9 +2608,11 @@ NtGdiGetRandomRgn(
             hSrc = pDC->w.hClipRgn;
         }
         //if (!hSrc) rgn = dc->hMetaRgn;
+//        if (dc->prgnAPI) hSrc = ((PROSRGNDATA)dc->prgnAPI)->BaseObject.hHmgr;
         break;
-    case 4:
+    case SYSRGN:
         hSrc = pDC->w.hVisRgn;
+//        if (dc->prgnVis) hSrc = ((PROSRGNDATA)dc->prgnVis)->BaseObject.hHmgr;
         break;
     default:
         hSrc = 0;
@@ -2768,7 +2777,7 @@ NtGdiOffsetRgn(
             }
         }
     }
-    ret = rgn->rdh.iType;
+    ret = REGION_Complexity(rgn);
     REGION_UnlockRgn(rgn);
     return ret;
 }
@@ -2984,7 +2993,7 @@ REGION_SetRectRgn(
         firstRect->right = rgn->rdh.rcBound.right = RightRect;
         firstRect->bottom = rgn->rdh.rcBound.bottom = BottomRect;
         rgn->rdh.nCount = 1;
-        rgn->rdh.iType = SIMPLEREGION;
+        rgn->rdh.iType = RDH_RECTANGLES;
     }
     else
         EMPTY_REGION(rgn);

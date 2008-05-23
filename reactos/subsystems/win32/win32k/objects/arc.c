@@ -38,26 +38,6 @@ IntGdiArcInternal(
   IntGdiSetRect(&rc, LeftRect, TopRect, RightRect, BottomRect);
   IntGdiSetRect(&rc1, XStartArc, YStartArc, XEndArc, YEndArc);
 
-  if (dc->w.flags & DCX_WINDOW) //window rectangle instead of client rectangle
-  {
-    HWND hWnd;
-    PWINDOW_OBJECT Window;
-
-    hWnd = IntWindowFromDC((HDC) dc->BaseObject.hHmgr);
-    Window = UserGetWindowObject(hWnd);
-    if(!Window) return FALSE;
-
-    rc.left += Window->Wnd->ClientRect.left;
-    rc.top += Window->Wnd->ClientRect.top;
-    rc.right += Window->Wnd->ClientRect.left;
-    rc.bottom += Window->Wnd->ClientRect.top;
-
-    rc1.left += Window->Wnd->ClientRect.left;
-    rc1.top += Window->Wnd->ClientRect.top;
-    rc1.right += Window->Wnd->ClientRect.left;
-    rc1.bottom += Window->Wnd->ClientRect.top;
-  }
-
   rx = (rc.right - rc.left)/2 - 1;
   ry = (rc.bottom - rc.top)/2 -1;
   rc.left += rx;
