@@ -1350,19 +1350,23 @@ Rule widlTlbRule ( "$(source): ${$(module_name)_precondition}\n"
                    "\t$(ECHO_WIDL)\n"
                    "\t$(Q)$(WIDL_TARGET) $($(module_name)_WIDLFLAGS) -t -T $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).tlb $(source)\n",
                    "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)", NULL );
-Rule gccRule ( "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).o: $(source) ${$(module_name)_precondition}$(dependencies) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
+Rule gccRule ( "$(source): ${$(module_name)_precondition}\n"
+               "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).o: $(source)$(dependencies) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
                "\t$(ECHO_CC)\n"
                "\t${gcc} -c $< -o $@ $($(module_name)_CFLAGS)$(compiler_flags)\n",
                "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).o", NULL );
-Rule gccHostRule ( "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).o: $(source) ${$(module_name)_precondition}$(dependencies) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
+Rule gccHostRule ( "$(source): ${$(module_name)_precondition}\n"
+                   "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).o: $(source)$(dependencies) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
                    "\t$(ECHO_CC)\n"
                    "\t${host_gcc} -c $< -o $@ $($(module_name)_CFLAGS)$(compiler_flags)\n",
                    "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).o", NULL );
-Rule gppRule ( "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).o: $(source) ${$(module_name)_precondition}$(dependencies) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
+Rule gppRule ( "$(source): ${$(module_name)_precondition}\n"
+               "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).o: $(source)$(dependencies) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
                "\t$(ECHO_CC)\n"
                "\t${gpp} -c $< -o $@ $($(module_name)_CFLAGS)$(compiler_flags)\n",
                "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).o", NULL );
-Rule gppHostRule ( "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).o: $(source) ${$(module_name)_precondition}$(dependencies) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
+Rule gppHostRule ( "$(source): ${$(module_name)_precondition}\n"
+                   "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).o: $(source)$(dependencies) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
                    "\t$(ECHO_CC)\n"
                    "\t${host_gpp} -c $< -o $@ $($(module_name)_CFLAGS)$(compiler_flags)\n",
                    "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).o", NULL );
@@ -1844,10 +1848,9 @@ MingwModuleHandler::GenerateObjectFileTargets ()
 		if ( rpcDependencies.size () > 0 )
 			dependencies += " " + v2s ( backend, rpcDependencies, 5 );
 		fprintf ( fMakefile,
-		          "%s: %s ${%s_precondition} | %s\n",
+		          "%s: %s | %s\n",
 		          backend->GetFullName ( *pchFilename ).c_str(),
 		          dependencies.c_str(),
-		          module.name.c_str (),
 		          backend->GetFullPath ( *pchFilename ).c_str() );
 		fprintf ( fMakefile, "\t$(ECHO_PCH)\n" );
 		fprintf ( fMakefile,
