@@ -38,6 +38,61 @@
 
 /* Type definitions ***********************************************************/
 
+typedef enum tagGdiPathState
+{
+   PATH_Null,
+   PATH_Open,
+   PATH_Closed
+} GdiPathState;
+
+typedef struct tagGdiPath
+{
+   GdiPathState state;
+   POINT        *pPoints;
+   BYTE         *pFlags;
+   int          numEntriesUsed, numEntriesAllocated;
+   BOOL         newStroke;
+} GdiPath;
+
+typedef struct _WIN_DC_INFO
+{
+  int      flags;
+
+  HRGN     hClipRgn;     /* Clip region (may be 0) */
+  HRGN     hrgnMeta;     /* Meta region (may be 0) */
+  HRGN     hMetaClipRgn; /* Intersection of meta and clip regions (may be 0) */
+  HRGN     hVisRgn;      /* Should me to DC. Visible region (must never be 0) */
+
+  HRGN     hGCClipRgn;   /* GC clip region (ClipRgn AND VisRgn) */
+  HBITMAP  hBitmap;
+  HBITMAP  hFirstBitmap; /* Bitmap selected at creation of the DC */
+
+/* #if 0 */
+    GdiPath       path;
+/* #endif */
+
+  RECT   totalExtent;
+  BYTE   bitsPerPixel;
+
+  INT  DCOrgX;            /* DC origin */
+  INT  DCOrgY;
+
+  XFORM  xformWorld2Wnd;    /* World-to-window transformation */
+  XFORM  xformWorld2Vport;  /* World-to-viewport transformation */
+  XFORM  xformVport2World;  /* Inverse of the above transformation */
+  BOOL   vport2WorldValid;  /* Is xformVport2World valid? */
+} WIN_DC_INFO;
+
+typedef struct _XCLIPOBJ
+{
+  CLIPOBJ co;          // Std Clip object.
+  DWORD   Unknown[6];
+  PVOID   pClipRgn;    // prgnRao_ or (prgnVis_ if (prgnRao_ == z))
+  DWORD   Unknown1[16];
+  DWORD   nComplexity; // count/mode based on # of rect in regions scan.
+  DWORD   Unknown2;
+} XCLIPOBJ, *PXCLIPOBJ;
+
 typedef struct _DCLEVEL
 {
   HPALETTE          hpal;
@@ -112,8 +167,8 @@ typedef struct _DC
   HFONT       hlfntCur;
   FLONG       flSimulationFlags;
   LONG        lEscapement;
-  PVOID       prfnt; // RFONT*
-  unsigned    co_[31]; // CLIPOBJ
+  PVOID       prfnt;    // RFONT*
+  XCLIPOBJ    co;       // CLIPOBJ
   PVOID       pPFFList; // PPFF*
   PVOID       ClrxFormLnk;
   INT         ipfdDevMax;
