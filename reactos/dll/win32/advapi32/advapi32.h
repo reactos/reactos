@@ -19,6 +19,7 @@
 #include <windows.h>
 #include <accctrl.h>
 #include <aclapi.h>
+#include <wmistr.h>
 #include <evntrace.h>
 #include <sddl.h>
 #define NTOS_MODE_USER

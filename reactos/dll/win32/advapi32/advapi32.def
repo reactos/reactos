@@ -290,8 +290,8 @@ GetSidSubAuthority@8
 GetSidSubAuthorityCount@4
 GetSiteSidFromToken@4
 GetTokenInformation@20
-;GetTraceEnableFlags
-;GetTraceEnableLevel
+GetTraceEnableFlags@8
+GetTraceEnableLevel@8
 GetTraceLoggerHandle@4
 GetTrusteeFormA@4
 GetTrusteeFormW@4
@@ -546,8 +546,8 @@ RegisterServiceCtrlHandlerA@8
 RegisterServiceCtrlHandlerExA@12
 RegisterServiceCtrlHandlerExW@12
 RegisterServiceCtrlHandlerW@8
-;RegisterTraceGuidsA
-;RegisterTraceGuidsW
+RegisterTraceGuidsA@32
+RegisterTraceGuidsW@32
 ;RemoveTraceCallback
 RemoveUsersFromEncryptedFile@8
 ReportEventA@36
@@ -662,7 +662,7 @@ TreeResetNamedSecurityInfoW@44
 ;UninstallApplication
 UnlockServiceDatabase@4
 ;UnregisterIdleTask
-;UnregisterTraceGuids
+UnregisterTraceGuids@8
 ;UpdateTraceA
 ;UpdateTraceW
 ;WdmWmiServiceMain

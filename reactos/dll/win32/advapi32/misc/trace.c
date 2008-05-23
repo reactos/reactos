@@ -55,5 +55,69 @@ TraceEvent(
     return ERROR_SUCCESS;
 }
 
+ULONG
+WMIAPI
+GetTraceEnableFlags(
+    TRACEHANDLE TraceHandle
+)
+{
+    DPRINT1("GetTraceEnableFlags stub()\n");
+    return 0xFF;
+}
+
+UCHAR
+WMIAPI
+GetTraceEnableLevel(
+    TRACEHANDLE TraceHandle
+)
+{
+    DPRINT1("GetTraceEnableLevel stub()\n");
+    return 0xFF;
+}
+
+ULONG
+WMIAPI
+UnregisterTraceGuids(
+    TRACEHANDLE RegistrationHandle
+)
+{
+    DPRINT1("UnregisterTraceGuids stub()\n");
+    return ERROR_SUCCESS;
+}
+
+ULONG
+WMIAPI
+RegisterTraceGuidsA(
+    WMIDPREQUEST RequestAddress,
+    PVOID RequestContext,
+    LPCGUID ControlGuid,
+    ULONG GuidCount,
+    PTRACE_GUID_REGISTRATION TraceGuidReg,
+    LPCSTR MofImagePath,
+    LPCSTR MofResourceName,
+    PTRACEHANDLE RegistrationHandle
+)
+{
+    DPRINT1("RegisterTraceGuidsA stub()\n");
+    return ERROR_SUCCESS;
+}
+
+ULONG
+WMIAPI
+RegisterTraceGuidsW(
+    WMIDPREQUEST RequestAddress,
+    PVOID RequestContext,
+    LPCGUID ControlGuid,
+    ULONG GuidCount,
+    PTRACE_GUID_REGISTRATION TraceGuidReg,
+    LPCWSTR MofImagePath,
+    LPCWSTR MofResourceName,
+    PTRACEHANDLE RegistrationHandle
+)
+{
+    DPRINT1("RegisterTraceGuidsW stub()\n");
+    return ERROR_SUCCESS;
+}
+
 
 /* EOF */
