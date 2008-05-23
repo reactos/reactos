@@ -47,7 +47,7 @@
  * over a bitmap. If CACHE_BITMAP is used, the size of the mdl mapping region
  * must be reduced (ntoskrnl\mm\mdl.c, MI_MDLMAPPING_REGION_SIZE).
  */
-#define CACHE_BITMAP
+//#define CACHE_BITMAP
 
 static LIST_ENTRY DirtySegmentListHead;
 static LIST_ENTRY CacheSegmentListHead;
@@ -58,7 +58,7 @@ ULONG DirtyPageCount=0;
 KGUARDED_MUTEX ViewLock;
 
 #ifdef CACHE_BITMAP
-#define	CI_CACHESEG_MAPPING_REGION_SIZE	(256*1024*1024)
+#define	CI_CACHESEG_MAPPING_REGION_SIZE	(128*1024*1024)
 
 static PVOID CiCacheSegMappingRegionBase = NULL;
 static RTL_BITMAP CiCacheSegMappingRegionAllocMap;
@@ -564,12 +564,10 @@ CcRosCreateCacheSegment(PBCB Bcb,
   PCACHE_SEGMENT current;
   PCACHE_SEGMENT previous;
   PLIST_ENTRY current_entry;
+  NTSTATUS Status;
   KIRQL oldIrql;
 #ifdef CACHE_BITMAP
   ULONG StartingOffset;
-#else
-  ULONG_PTR GuardArea;
-  NTSTATUS Status;
 #endif
   PHYSICAL_ADDRESS BoundaryAddressMultiple;
 
@@ -679,8 +677,7 @@ CcRosCreateCacheSegment(PBCB Bcb,
      KEBUGCHECKCC;
   }
 
-  current->BaseAddress = (PVOID)((ULONG_PTR)CiCacheSegMappingRegionBase +
-      StartingOffset * PAGE_SIZE);
+  current->BaseAddress = CiCacheSegMappingRegionBase + StartingOffset * PAGE_SIZE;
 
   if (CiCacheSegMappingRegionHint == StartingOffset)
   {
@@ -889,7 +886,7 @@ CcRosInternalFreeCacheSegment(PCACHE_SEGMENT CacheSeg)
   for (i = 0; i < RegionSize; i++)
     {
       MmDeleteVirtualMapping(NULL,
-			     (PVOID)((ULONG_PTR)CacheSeg->BaseAddress + (i * PAGE_SIZE)),
+			     CacheSeg->BaseAddress + (i * PAGE_SIZE),
 			     FALSE,
 			     NULL,
 			     &Page);
@@ -898,8 +895,7 @@ CcRosInternalFreeCacheSegment(PCACHE_SEGMENT CacheSeg)
 
   KeAcquireSpinLock(&CiCacheSegMappingRegionLock, &oldIrql);
   /* Deallocate all the pages used. */
-  Base = ((ULONG_PTR)CacheSeg->BaseAddress -
-      (ULONG_PTR)CiCacheSegMappingRegionBase) / PAGE_SIZE;
+  Base = (ULONG)(CacheSeg->BaseAddress - CiCacheSegMappingRegionBase) / PAGE_SIZE;
 
   RtlClearBits(&CiCacheSegMappingRegionAllocMap, Base, RegionSize);
 
