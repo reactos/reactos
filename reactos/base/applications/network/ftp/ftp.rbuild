@@ -5,7 +5,6 @@
 	<define name="lint" />
 	<library>kernel32</library>
 	<library>ws2_32</library>
-	<library>crtdll</library>
 	<library>iphlpapi</library>
 	<file>cmds.c</file>
 	<file>cmdtab.c</file>
