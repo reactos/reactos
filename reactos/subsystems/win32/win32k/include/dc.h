@@ -77,14 +77,15 @@ typedef struct _WIN_DC_INFO
   BOOL   vport2WorldValid;  /* Is xformVport2World valid? */
 } WIN_DC_INFO;
 
+// EXtended CLip and Window Region Object
 typedef struct _XCLIPOBJ
 {
-  CLIPOBJ co;          // Std Clip object.
-  DWORD   Unknown[6];
+  WNDOBJ  eClipWnd;
   PVOID   pClipRgn;    // prgnRao_ or (prgnVis_ if (prgnRao_ == z))
   DWORD   Unknown1[16];
   DWORD   nComplexity; // count/mode based on # of rect in regions scan.
-  DWORD   Unknown2;
+  PVOID   pUnknown;    // UnK pointer to a large drawing structure.
+                       // We will use it for CombinedClip ptr.
 } XCLIPOBJ, *PXCLIPOBJ;
 
 typedef struct _DCLEVEL
