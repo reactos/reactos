@@ -1019,7 +1019,7 @@ IntGdiDeleteDC(HDC hDC, BOOL Force)
   }
 
   /*  Free GDI resources allocated to this DC  */
-  if (!(DCToDelete->w.flags & DC_SAVED))
+  if (!(DCToDelete->DcLevel.flPath & DCPATH_SAVE))
   {
     /*
     NtGdiSelectPen (DCHandle, STOCK_BLACK_PEN);
@@ -1332,7 +1332,7 @@ IntGdiCopyToSaveState(PDC dc, PDC newdc)
   nDc_Attr = newdc->pDc_Attr;
   if(!nDc_Attr) nDc_Attr = &newdc->Dc_Attr;
 
-  newdc->w.flags            = dc->w.flags | DC_SAVED;
+  newdc->DcLevel.flPath     = dc->DcLevel.flPath | DCPATH_SAVE;
   nDc_Attr->dwLayout        = Dc_Attr->dwLayout;
   nDc_Attr->hpen            = Dc_Attr->hpen;
   nDc_Attr->hbrush          = Dc_Attr->hbrush;
@@ -1405,7 +1405,7 @@ IntGdiCopyFromSaveState(PDC dc, PDC dcs, HDC hDC)
   sDc_Attr = dcs->pDc_Attr;
   if(!sDc_Attr) sDc_Attr = &dcs->Dc_Attr;
 
-  dc->w.flags              = dcs->w.flags & ~DC_SAVED;
+  dc->DcLevel.flPath       = dcs->DcLevel.flPath & ~DCPATH_SAVE;
 
   dc->w.hFirstBitmap       = dcs->w.hFirstBitmap;
 
@@ -1539,7 +1539,7 @@ IntGdiSetDCState ( HDC hDC, HDC hDCSave )
     dcs = DC_LockDc ( hDCSave );
     if ( dcs )
     {
-      if ( dcs->w.flags & DC_SAVED )
+      if ( dcs->DcLevel.flPath & DCPATH_SAVE )
       {
         IntGdiCopyFromSaveState( dc, dcs, dc->DcLevel.hdcSave);
       }
@@ -2156,7 +2156,7 @@ IntGdiSetHookFlags(HDC hDC, WORD Flags)
       return 0;
     }
 
-  wRet = dc->w.flags & DC_DIRTY;
+  wRet = dc->DC_Flags & DC_FLAG_DIRTY_RAO; // Fixme wrong flag!
 
   /* "Undocumented Windows" info is slightly confusing.
    */
@@ -2164,12 +2164,12 @@ IntGdiSetHookFlags(HDC hDC, WORD Flags)
   DPRINT("DC %p, Flags %04x\n", hDC, Flags);
 
   if (Flags & DCHF_INVALIDATEVISRGN)
-    {
-      dc->w.flags |= DC_DIRTY;
+    { /* hVisRgn has to be updated */
+      dc->DC_Flags |= DC_FLAG_DIRTY_RAO;
     }
   else if (Flags & DCHF_VALIDATEVISRGN || 0 == Flags)
     {
-      dc->w.flags &= ~DC_DIRTY;
+      dc->DC_Flags &= ~DC_FLAG_DIRTY_RAO;
     }
 
   DC_UnlockDc(dc);

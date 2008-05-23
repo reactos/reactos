@@ -76,8 +76,8 @@ IntGdiSelectVisRgn(HDC hdc, HRGN hrgn)
   	return ERROR;
   }
 
-  dc->w.flags &= ~DC_DIRTY;
-
+  dc->DC_Flags &= ~DC_FLAG_DIRTY_RAO;
+  
   if (dc->w.hVisRgn == NULL)
   {
     dc->w.hVisRgn = NtGdiCreateRectRgn(0, 0, 0, 0);
@@ -101,7 +101,7 @@ int STDCALL IntGdiExtSelectClipRgn(PDC dc,
                                 int fnMode)
 {
   int retval;
-  //  dc->w.flags &= ~DC_DIRTY;
+  //  dc->DC_Flags &= ~DC_FLAG_DIRTY_RAO;
 
   if (!hrgn)
   {

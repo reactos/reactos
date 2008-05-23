@@ -14,10 +14,6 @@
 #define DCPATH_SAVE      0x0002
 #define DCPATH_CLOCKWISE 0x0004
 
-  /* DC flags */
-#define DC_SAVED      0x0002   /* It is a saved DC */
-#define DC_DIRTY      0x0004   /* hVisRgn has to be updated */
-
 // GDIDEVICE flags
 #define PDEV_DISPLAY             0x00000001 // Display device
 #define PDEV_HARDWARE_POINTER    0x00000002 // Supports hardware cursor
@@ -56,8 +52,6 @@ typedef struct tagGdiPath
 
 typedef struct _WIN_DC_INFO
 {
-  int      flags;
-
   HRGN     hClipRgn;     /* Clip region (may be 0) */
   HRGN     hrgnMeta;     /* Meta region (may be 0) */
   HRGN     hMetaClipRgn; /* Intersection of meta and clip regions (may be 0) */
