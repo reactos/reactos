@@ -118,6 +118,7 @@ GetAppCompatFlags(HTASK hTask)
     return ti->AppCompatFlags;
 }
 
+
 /*
  * @implemented
  */
@@ -129,6 +130,10 @@ GetAppCompatFlags2(HTASK hTask)
 
     /* If there is no threadinfo (?!), then return 0 */
     if (!ti) return 0;
+
+    /* return value for bit
+     * 0x200 GdiBatchLimit is Activate in gdi32
+     */
 
     return ti->AppCompatFlags2;
 }

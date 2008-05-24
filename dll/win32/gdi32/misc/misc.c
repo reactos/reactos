@@ -28,10 +28,7 @@
 
 #include "precomp.h"
 
-PGDI_TABLE_ENTRY GdiHandleTable = NULL;
-PGDI_SHARED_HANDLE_TABLE GdiSharedHandleTable = NULL;
-HANDLE CurrentProcessId = NULL;
-DWORD GDI_BatchLimit = 1;
+
 
 
 BOOL
@@ -171,7 +168,7 @@ DWORD
 STDCALL
 GdiSetBatchLimit(DWORD	Limit)
 {
-    DWORD OldLimit = GDI_BatchLimit;
+    DWORD OldLimit = GdiBatchLimit;
 
     if ( (!Limit) ||
          (Limit >= GDI_BATCH_LIMIT))
@@ -180,7 +177,7 @@ GdiSetBatchLimit(DWORD	Limit)
     }
 
     GdiFlush();
-    GDI_BatchLimit = Limit;
+    GdiBatchLimit = Limit;
     return OldLimit;
 }
 
@@ -192,7 +189,7 @@ DWORD
 STDCALL
 GdiGetBatchLimit()
 {
-    return GDI_BatchLimit;
+    return GdiBatchLimit;
 }
 
 /*

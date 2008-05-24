@@ -347,7 +347,7 @@ DeleteObject(HGDIOBJ hObject)
 
              pTeb->GdiTebBatch.Offset += sizeof(GDIBSOBJECT);
              pTeb->GdiBatchCount++;
-             if (pTeb->GdiBatchCount >= GDI_BatchLimit) NtGdiFlush();
+             if (pTeb->GdiBatchCount >= GdiBatchLimit) NtGdiFlush();
              return TRUE;
           }
        break;
@@ -1404,7 +1404,7 @@ SelectObject(HDC hDC,
               pTeb->GdiTebBatch.Offset += sizeof(GDIBSOBJECT);
               pTeb->GdiTebBatch.HDC = (ULONG)hDC;
               pTeb->GdiBatchCount++;
-              if (pTeb->GdiBatchCount >= GDI_BatchLimit) NtGdiFlush();
+              if (pTeb->GdiBatchCount >= GdiBatchLimit) NtGdiFlush();
               return pDc_Attr->hlfntNew;
             }
 #endif

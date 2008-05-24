@@ -8,13 +8,15 @@
 
 
 /* DATA **********************************************************************/
+#include <dll/user32/user32_ros.h>
 
 extern PGDI_TABLE_ENTRY GdiHandleTable;
-extern PGDI_SHARED_HANDLE_TABLE GdiSharedHandleTable;
+extern PGDI_SHARED_HANDLE_TABLE pGdiSharedHandleTable;
+extern PGDI_SHARED_HANDLE_TABLE pGdiSharedMemory;
 extern HANDLE hProcessHeap;
 extern HANDLE CurrentProcessId;
-extern DWORD GDI_BatchLimit;
-extern PDEVCAPS GdiDevCaps;
+extern DWORD GdiBatchLimit;
+extern PDEVCAPS pGdiDevCaps;
 
 typedef INT
 (CALLBACK* EMFPLAYPROC)(

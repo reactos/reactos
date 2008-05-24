@@ -344,7 +344,7 @@ SetBrushOrgEx(HDC hdc,
        pTeb->GdiBatchCount++;
        DPRINT("Loading the Flush!! COUNT-> %d\n", pTeb->GdiBatchCount);
 
-       if (pTeb->GdiBatchCount >= GDI_BatchLimit)
+       if (pTeb->GdiBatchCount >= GdiBatchLimit)
        {
        DPRINT("Call GdiFlush!!\n");
        NtGdiFlush();

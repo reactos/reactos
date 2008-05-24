@@ -2022,7 +2022,7 @@ ULONG
 STDCALL
 DdQueryDisplaySettingsUniqueness()
 {
- return GdiSharedHandleTable->flDeviceUniq;
+ return pGdiSharedMemory->flDeviceUniq;
 }
 
 /*

@@ -11,8 +11,18 @@
 
 extern HGDIOBJ stock_objects[];
 BOOL SetStockObjects = FALSE;
-PDEVCAPS GdiDevCaps = NULL;
+
+PGDI_TABLE_ENTRY GdiHandleTable = NULL;
+HANDLE CurrentProcessId = NULL;
+
+/* Note match vista */
+PDEVCAPS pGdiDevCaps = NULL;
 PGDIHANDLECACHE GdiHandleCache = NULL;
+PGDI_SHARED_HANDLE_TABLE pGdiSharedHandleTable = NULL;
+PGDI_SHARED_HANDLE_TABLE pGdiSharedMemory = NULL;
+DWORD GdiBatchLimit = 20;
+
+
 
 /*
  * GDI32.DLL does have an entry point for disable threadlibrarycall,. The initialization is done by a call
@@ -37,20 +47,33 @@ DllMain (
     return TRUE;
 }
 
-
 VOID
 WINAPI
 GdiProcessSetup (VOID)
 {
-    hProcessHeap = GetProcessHeap();
 
-        /* map the gdi handle table to user space */
-        GdiHandleTable = NtCurrentTeb()->ProcessEnvironmentBlock->GdiSharedHandleTable;
-        GdiSharedHandleTable = NtCurrentTeb()->ProcessEnvironmentBlock->GdiSharedHandleTable;
-        GdiDevCaps = &GdiSharedHandleTable->DevCaps;
-        CurrentProcessId = NtCurrentTeb()->Cid.UniqueProcess;
-        GDI_BatchLimit = (DWORD) NtCurrentTeb()->ProcessEnvironmentBlock->GdiDCAttributeList;
-        GdiHandleCache = (PGDIHANDLECACHE)NtCurrentTeb()->ProcessEnvironmentBlock->GdiHandleBuffer;
+    hProcessHeap = GetProcessHeap();
+    CurrentProcessId = NtCurrentTeb()->Cid.UniqueProcess;
+
+    /* map the gdi handle table to user space */
+    pGdiSharedMemory = NtCurrentTeb()->ProcessEnvironmentBlock->GdiSharedHandleTable;
+    pGdiSharedHandleTable = NtCurrentTeb()->ProcessEnvironmentBlock->GdiSharedHandleTable;
+    GdiHandleTable = NtCurrentTeb()->ProcessEnvironmentBlock->GdiSharedHandleTable;
+    pGdiDevCaps = &pGdiSharedMemory->DevCaps;
+    GdiHandleCache = (PGDIHANDLECACHE)NtCurrentTeb()->ProcessEnvironmentBlock->GdiHandleBuffer;
+
+    /* why does vista send down 0x400 to GetAppCompatFlags2 no doc in msdn found 
+     * 0x200 GdiBatchLimit is ON if this is not set in AppCompatFlags2 no GdiBatchLimit is active */
+
+    if ((GetAppCompatFlags2( (HTASK) 0x400) & 0x200) == 0x200)
+    {
+        GdiBatchLimit = (DWORD) NtCurrentTeb()->ProcessEnvironmentBlock->GdiDCAttributeList;
+    }
+    else
+    {
+        /* GdiBatchLimit set to 0 */
+        GdiBatchLimit = 0;
+    }
 }
 
 
