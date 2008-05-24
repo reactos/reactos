@@ -715,7 +715,7 @@ DWORD STDCALL NtGdiDdDDISetContextSchedulingPriority(DWORD x1);
 DWORD STDCALL NtGdiDdDDISetDisplayMode(DWORD x1);
 DWORD STDCALL NtGdiDdDDISetDisplayPrivateDriverFormat(DWORD x1);
 DWORD STDCALL NtGdiDdDDISetGammaRamp(DWORD x1);
-DWORD STDCALL NtGdiDdDDISetProcessSchedulingPriorityClass(DWORD x1, x2);
+DWORD STDCALL NtGdiDdDDISetProcessSchedulingPriorityClass(DWORD x1, DWORD x2);
 DWORD STDCALL NtGdiDdDDISetQueuedLimit(DWORD x1);
 DWORD STDCALL NtGdiDdDDISetVidPnSourceOwner(DWORD x1);
 DWORD STDCALL NtGdiDdDDISharedPrimaryLockNotification(DWORD x1);
