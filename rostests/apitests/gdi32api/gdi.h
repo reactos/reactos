@@ -200,4 +200,14 @@ typedef struct
 //  RECT        VisRectRegion;         // 1b8
 } DC_ATTR, *PDC_ATTR;
 
+HDC WINAPI GdiConvertBitmap(HDC hdc);
+HBRUSH WINAPI GdiConvertBrush(HBRUSH hbr);
+HDC WINAPI GdiConvertDC(HDC hdc);
+HFONT WINAPI GdiConvertFont(HFONT hfont);
+HPALETTE WINAPI GdiConvertPalette(HPALETTE hpal);
+HRGN WINAPI GdiConvertRegion(HRGN hregion);
+HBRUSH WINAPI GdiGetLocalBrush(HBRUSH hbr);
+HDC WINAPI GdiGetLocalDC(HDC hdc);
+
+
 
