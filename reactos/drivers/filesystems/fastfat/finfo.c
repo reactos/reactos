@@ -835,7 +835,7 @@ NTSTATUS VfatQueryInformation(PVFAT_IRP_CONTEXT IrpContext)
       RC = STATUS_NOT_IMPLEMENTED;
       break;
     default:
-      RC = STATUS_NOT_SUPPORTED;
+      RC = STATUS_INVALID_PARAMETER;
     }
 
   if (!(FCB->Flags & FCB_IS_PAGE_FILE))

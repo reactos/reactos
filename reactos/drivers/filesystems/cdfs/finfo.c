@@ -390,7 +390,7 @@ CdfsQueryInformation(PDEVICE_OBJECT DeviceObject,
 
       default:
 	DPRINT("Unimplemented information class %u\n", FileInformationClass);
-	Status = STATUS_NOT_SUPPORTED;
+	Status = STATUS_INVALID_PARAMETER;
 	break;
     }
 
