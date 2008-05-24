@@ -2,7 +2,7 @@
 <!DOCTYPE group SYSTEM "../../tools/rbuild/project.dtd">
 <group>
 	<module name="hal" type="kernelmodedll">
-		<importlibrary basename="hal" definition="hal_$(ARCH).def" />
+		<importlibrary definition="hal_$(ARCH).def" />
 		<include base="ntoskrnl">include</include>
 		<library>ntoskrnl</library>
 		<define name="_NTHAL_" />
