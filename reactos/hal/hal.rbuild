@@ -6,7 +6,12 @@
 	</directory>
 	<if property="ARCH" value="i386">
 		<directory name="halx86">
-			<xi:include href="halx86/directory.rbuild" />
+			<xi:include href="halx86/hal_generic.rbuild" />
+			<xi:include href="halx86/hal_generic_up.rbuild" />
+			<xi:include href="halx86/hal_generic_pc.rbuild" />
+			<xi:include href="halx86/halup.rbuild" />
+			<xi:include href="halx86/halmp.rbuild" />
+			<xi:include href="halx86/halxbox.rbuild" />
 		</directory>
 	</if>
 	<if property="ARCH" value="powerpc">
