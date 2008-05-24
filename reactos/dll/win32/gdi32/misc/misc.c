@@ -226,3 +226,12 @@ GdiSetLastError(DWORD dwErrCode)
 {
     NtCurrentTeb ()->LastErrorValue = (ULONG) dwErrCode;
 }
+
+BOOL
+STDCALL
+GdiAddGlsBounds(HDC hdc,LPRECT prc)
+{
+    //FIXME: Lookup what 0x8000 means
+    return NtGdiSetBoundsRect(hdc, prc, 0x8000 |  DCB_ACCUMULATE ) ? TRUE : FALSE;
+}
+

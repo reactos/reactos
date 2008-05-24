@@ -1084,20 +1084,6 @@ EndFormPage(HDC hdc)
 	return 0;
 }
 
-
-
-/*
- * @unimplemented
- */
-DWORD
-STDCALL
-GdiAddGlsBounds(HDC hdc,LPRECT prc)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
 /*
  * @unimplemented
  */
