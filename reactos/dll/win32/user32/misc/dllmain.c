@@ -1,6 +1,9 @@
 #include <user32.h>
 
 #include <wine/debug.h>
+WINE_DEFAULT_DEBUG_CHANNEL(user32);
+
+#define KEY_LENGTH 1024
 
 static ULONG User32TlsIndex;
 HINSTANCE User32Instance;
@@ -9,6 +12,7 @@ PUSER_HANDLE_ENTRY gHandleEntries = NULL;
 PW32PROCESSINFO g_pi = NULL; /* User Mode Pointer */
 PW32PROCESSINFO g_kpi = NULL; /* Kernel Mode Pointer */
 PSERVERINFO g_psi = NULL;
+WCHAR szAppInit[KEY_LENGTH];
 
 PW32PROCESSINFO
 GetW32ProcessInfo(VOID);
@@ -17,6 +21,137 @@ PUSER32_THREAD_DATA
 User32GetThreadData()
 {
    return ((PUSER32_THREAD_DATA)TlsGetValue(User32TlsIndex));
+}
+
+
+BOOL
+GetDllList()
+{
+    NTSTATUS Status;
+    OBJECT_ATTRIBUTES Attributes;
+    BOOL bRet = FALSE;
+    BOOL bLoad;
+    HANDLE hKey = NULL;
+    DWORD dwSize;
+    PKEY_VALUE_PARTIAL_INFORMATION kvpInfo = NULL;
+
+    UNICODE_STRING szKeyName = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\Software\\Microsoft\\Windows NT\\CurrentVersion\\Windows");
+    UNICODE_STRING szLoadName = RTL_CONSTANT_STRING(L"LoadAppInit_DLLs");
+    UNICODE_STRING szDllsName = RTL_CONSTANT_STRING(L"AppInit_DLLs");
+
+    InitializeObjectAttributes(&Attributes, &szKeyName, OBJ_CASE_INSENSITIVE, NULL, NULL);
+    Status = NtOpenKey(&hKey, KEY_READ, &Attributes);
+    if (NT_SUCCESS(Status))
+    {
+        dwSize = sizeof(KEY_VALUE_PARTIAL_INFORMATION) + sizeof(DWORD);
+        kvpInfo = HeapAlloc(GetProcessHeap(), 0, dwSize);
+        if (!kvpInfo)
+            goto end;
+
+        Status = NtQueryValueKey(hKey,
+                                 &szLoadName,
+                                 KeyValuePartialInformation,
+                                 kvpInfo,
+                                 dwSize,
+                                 &dwSize);
+        if (!NT_SUCCESS(Status))
+            goto end;
+
+        RtlMoveMemory(&bLoad,
+                      kvpInfo->Data,
+                      kvpInfo->DataLength);
+
+        HeapFree(GetProcessHeap(), 0, kvpInfo);
+        kvpInfo = NULL;
+
+        if (bLoad)
+        {
+            Status = NtQueryValueKey(hKey,
+                                     &szDllsName,
+                                     KeyValuePartialInformation,
+                                     NULL,
+                                     0,
+                                     &dwSize);
+            if (Status != STATUS_BUFFER_TOO_SMALL)
+                goto end;
+
+            kvpInfo = HeapAlloc(GetProcessHeap(), 0, dwSize);
+            if (!kvpInfo)
+                goto end;
+
+            Status = NtQueryValueKey(hKey,
+                                     &szDllsName,
+                                     KeyValuePartialInformation,
+                                     kvpInfo,
+                                     dwSize,
+                                     &dwSize);
+            if (NT_SUCCESS(Status))
+            {
+                LPWSTR lpBuffer = (LPWSTR)kvpInfo->Data;
+                if (lpBuffer != UNICODE_NULL)
+                {
+                    RtlMoveMemory(szAppInit,
+                                  kvpInfo->Data,
+                                  min(kvpInfo->DataLength, KEY_LENGTH));
+                    bRet = TRUE;
+                }
+            }
+        }
+    }
+
+end:
+    if (hKey)
+        NtClose(hKey);
+
+    if (kvpInfo)
+        HeapFree(GetProcessHeap(), 0, kvpInfo);
+
+    return bRet;
+}
+
+
+VOID
+LoadAppInitDlls()
+{
+    szAppInit[0] = UNICODE_NULL;
+
+    if (GetDllList())
+    {
+        WCHAR buffer[KEY_LENGTH];
+        LPWSTR ptr;
+        LPWSTR seps = L" ,";
+
+        RtlCopyMemory(buffer, szAppInit, KEY_LENGTH);;
+
+        ptr = wcstok(buffer, seps);
+        while (ptr)
+        {
+            LoadLibraryW(ptr);
+            ptr = wcstok(NULL, seps);
+        }
+    }
+}
+
+VOID
+UnloadAppInitDlls()
+{
+    if (szAppInit[0] != UNICODE_NULL)
+    {
+        WCHAR buffer[KEY_LENGTH];
+        HMODULE hModule;
+        LPWSTR ptr;
+        LPWSTR seps = L" ,";
+
+        RtlCopyMemory(buffer, szAppInit, KEY_LENGTH);
+
+        ptr = wcstok(buffer, seps);
+        while (ptr)
+        {
+            hModule = GetModuleHandleW(ptr);
+            FreeLibrary(hModule);
+            ptr = wcstok(NULL, seps);
+        }
+    }
 }
 
 BOOL
@@ -77,6 +212,7 @@ Init(VOID)
             InitializeCriticalSection(&U32AccelCacheLock);
             GdiDllInitialize(NULL, DLL_PROCESS_ATTACH, NULL);
             InitStockObjects();
+            LoadAppInitDlls();
 
             return TRUE;
          }
@@ -95,6 +231,7 @@ Cleanup(VOID)
    MenuCleanup();
    MessageCleanup();
    DeleteFrameBrushes();
+   UnloadAppInitDlls();
    GdiDllInitialize(NULL, DLL_PROCESS_DETACH, NULL);
    TlsFree(User32TlsIndex);
 }
