@@ -791,7 +791,7 @@ Module::ProcessXMLSubElement ( const XMLElement& e,
 				e.location,
 				"Only one <importlibrary> is valid per module" );
 		}
-		SetImportLibrary ( new ImportLibrary ( project, e, *this ) );
+		SetImportLibrary ( new ImportLibrary ( project, e, this ) );
 		subs_invalid = true;
 	}
 	else if ( e.name == "if" )
@@ -1748,31 +1748,67 @@ ImportLibrary::~ImportLibrary ()
 
 ImportLibrary::ImportLibrary ( const Project& project,
                                const XMLElement& node,
-                               const Module& module )
+                               const Module* module )
 	: XmlNode ( project, node ),
 	  module (module)
 {
+	DirectoryLocation directory = SourceDirectory;
+	const Module* base = module;
 	const XMLAttribute* dllname = node.GetAttribute ( "dllname", false );
 	const XMLAttribute* definition = node.GetAttribute ( "definition", true );
 	assert ( definition );
 
+	string relative_path;
+	const XMLAttribute* att = node.GetAttribute ( "base", false );
+	if ( att )
+	{
+			base = project.LocateModule ( att->value );
+			if ( !base )
+				throw XMLInvalidBuildFileException (
+					node.location,
+					"<importlibrary> attribute 'base' references non-existant module '%s'",
+					att->value.c_str() );
+
+	}
+
+	if ( base )
+	{
+		relative_path = base->output->relative_path;
+		if ( node.value.length () > 0 && node.value != "." )
+			relative_path += sSep + node.value;
+	}
+	else
+		relative_path = node.value;
+
+	att = node.GetAttribute ( "root", false );
+	if ( att )
+	{
+		if ( att->value == "intermediate" )
+			directory = IntermediateDirectory;
+		else
+			throw InvalidAttributeValueException ( node.location,
+			                                       "root",
+			                                       att->value );
+	}
+	else
+	{
+		size_t index = definition->value.rfind ( ".spec.def" );
+		if ( index != string::npos )
+			directory = IntermediateDirectory;
+	}
+
 	if ( dllname )
 		this->dllname = dllname->value;
-	else if ( module.type == StaticLibrary || module.type == HostStaticLibrary )
+	else if ( module->type == StaticLibrary || module->type == HostStaticLibrary )
 		throw XMLInvalidBuildFileException (
 		    node.location,
 		    "<importlibrary> dllname attribute required." );
 
-	DirectoryLocation directory = SourceDirectory;
-	size_t index = definition->value.rfind ( ".spec.def" );
-	if ( index != string::npos )
-		directory = IntermediateDirectory;
-
-	index = definition->value.find_last_of ( "/\\" );
+	size_t index = definition->value.find_last_of ( "/\\" );
 	if ( index == string::npos )
 	{
 		source = new FileLocation ( directory,
-		                            module.output->relative_path,
+		                            base->output->relative_path,
 		                            definition->value,
 		                            &node );
 	}
@@ -1781,7 +1817,7 @@ ImportLibrary::ImportLibrary ( const Project& project,
 		string dir = definition->value.substr ( 0, index );
 		string name = definition->value.substr ( index + 1);
 		source = new FileLocation ( directory,
-		                            NormalizeFilename ( module.output->relative_path + sSep + dir ),
+		                            NormalizeFilename ( base->output->relative_path + sSep + dir ),
 		                            name,
 		                            &node );
 	}

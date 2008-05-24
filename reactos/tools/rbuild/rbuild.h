@@ -588,13 +588,13 @@ public:
 class ImportLibrary : public XmlNode
 {
 public:
-	const Module& module;
+	const Module* module;
 	std::string dllname;
 	FileLocation *source;
 
 	ImportLibrary ( const Project& project,
 	                const XMLElement& node,
-	                const Module& module );
+	                const Module* module );
 	~ImportLibrary ();
 };
 
