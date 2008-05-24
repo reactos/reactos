@@ -45,22 +45,7 @@
 
 	<metadata description="ReactOS Display ControlPanel Applet" />
 
-	<!-- Module localizations -->
-	<localization isoname="bg-BG">lang/bg-BG.rc</localization>
-	<localization isoname="cs-CZ">lang/cs-CZ.rc</localization>
-	<localization isoname="de-DE">lang/de-DE.rc</localization>
-	<localization isoname="el-GR" dirty="true">lang/el-GR.rc</localization>
-	<localization isoname="en-US">lang/en-US.rc</localization>
-	<localization isoname="es-ES">lang/es-ES.rc</localization>
-	<localization isoname="fr-FR">lang/fr-FR.rc</localization>
-	<localization isoname="hu-HU">lang/hu-HU.rc</localization>
-	<localization isoname="id-ID">lang/id-ID.rc</localization>
-	<localization isoname="it-IT">lang/it-IT.rc</localization>
-	<localization isoname="ja-JP">lang/ja-JP.rc</localization>
-	<localization isoname="nl-NL">lang/nl-NL.rc</localization>
-	<localization isoname="pl-PL" dirty="true">lang/pl-PL.rc</localization>
-	<localization isoname="ru-RU">lang/ru-RU.rc</localization>
-	<localization isoname="sk-SK">lang/sk-SK.rc</localization>
-	<localization isoname="sv-SE">lang/sv-SE.rc</localization>
-	<localization isoname="uk-UA">lang/uk-UA.rc</localization>
+	<directory name="lang">
+		<xi:include href="lang/lang.rbuild" />
+	</directory>
 </module>
