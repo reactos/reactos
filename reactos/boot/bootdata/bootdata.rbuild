@@ -12,15 +12,6 @@
 	<bootstrapfile>txtsetup.sif</bootstrapfile>
 	<bootstrapfile>unattend.inf</bootstrapfile>
 	
-	<!--
-	<cdfile installbase="reactos">hivecls.inf</cdfile>
-	<cdfile installbase="reactos">hivedef.inf</cdfile>
-	<cdfile installbase="reactos">hivesft.inf</cdfile>
-	<cdfile installbase="reactos">hivesys.inf</cdfile>
-	<cdfile installbase="reactos">txtsetup.sif</cdfile>
-	<cdfile installbase="reactos">unattend.inf</cdfile>
-	-->
-
 	<directory name="bootcd">
 		<xi:include href="bootcd/bootcd.rbuild" />
 	</directory>
