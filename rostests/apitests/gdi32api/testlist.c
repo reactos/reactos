@@ -18,8 +18,11 @@
 #include "tests/GdiConvertFont.c"
 #include "tests/GdiConvertPalette.c"
 #include "tests/GdiConvertRegion.c"
+#include "tests/GdiDeleteLocalDC.c"
 #include "tests/GdiGetLocalBrush.c"
 #include "tests/GdiGetLocalDC.c"
+#include "tests/GdiReleaseLocalDC.c"
+#include "tests/GdiSetAttrs.c"
 #include "tests/GetClipRgn.c"
 #include "tests/GetCurrentObject.c"
 #include "tests/GetDIBits.c"
@@ -29,6 +32,7 @@
 #include "tests/SetDCPenColor.c"
 #include "tests/SetSysColors.c"
 #include "tests/SetWorldTransform.c"
+
 
 
 
@@ -55,8 +59,11 @@ TESTENTRY TestList[] =
 	{ L"GdiConvertFont", Test_GdiConvertFont },
 	{ L"GdiConvertPalette", Test_GdiConvertPalette },
 	{ L"GdiConvertRegion", Test_GdiConvertRegion },
+	{ L"GdiDeleteLocalDC", Test_GdiDeleteLocalDC },
 	{ L"GdiGetLocalBrush", Test_GdiGetLocalBrush },
 	{ L"GdiGetLocalDC", Test_GdiGetLocalDC },
+	{ L"GdiReleaseLocalDC", Test_GdiReleaseLocalDC },
+	{ L"GdiSetAttrs", Test_GdiSetAttrs },
 	{ L"GetClipRgn", Test_GetClipRgn },
 	{ L"GetCurrentObject", Test_GetCurrentObject },
 	{ L"GetDIBits", Test_GetDIBits },

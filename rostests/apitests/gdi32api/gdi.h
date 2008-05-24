@@ -208,6 +208,9 @@ HPALETTE WINAPI GdiConvertPalette(HPALETTE hpal);
 HRGN WINAPI GdiConvertRegion(HRGN hregion);
 HBRUSH WINAPI GdiGetLocalBrush(HBRUSH hbr);
 HDC WINAPI GdiGetLocalDC(HDC hdc);
+BOOL WINAPI GdiDeleteLocalDC(HDC hdc);
+BOOL WINAPI GdiReleaseLocalDC(HDC hdc);
+BOOL WINAPI GdiSetAttrs(HDC hdc);
 
 
 
