@@ -37,15 +37,6 @@
 #include "crypt.h"
 
 
-typedef struct
-{
-    unsigned int buf[4];
-    unsigned int i[2];
-    unsigned char in[64];
-    unsigned char digest[16];
-} MD4_CTX;
-
-
 /* The three core functions */
 
 #define rotl32(x,n)  (((x) << ((unsigned int)(n))) | ((x) >> (32 - (unsigned int)(n))))

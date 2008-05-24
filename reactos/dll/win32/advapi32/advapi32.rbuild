@@ -19,6 +19,7 @@
 	<pch>advapi32.h</pch>
 	<directory name="crypt">
 			<file>crypt.c</file>
+			<file>crypt_arc4.c</file>
 			<file>crypt_des.c</file>
 			<file>crypt_lmhash.c</file>
 			<file>crypt_md4.c</file>

@@ -96,6 +96,23 @@ struct ustring {
     unsigned char *Buffer;
 };
 
-NTSTATUS WINAPI SystemFunction032(struct ustring *data, struct ustring *key);
+typedef struct {
+    unsigned int buf[4];
+    unsigned int i[2];
+    unsigned char in[64];
+    unsigned char digest[16];
+} MD4_CTX;
+
+typedef struct tag_arc4_info {
+    unsigned char state[256];
+    unsigned char x, y;
+} arc4_info;
+
+VOID WINAPI MD4Init( MD4_CTX *ctx );
+VOID WINAPI MD4Update( MD4_CTX *ctx, const unsigned char *buf, unsigned int len );
+VOID WINAPI MD4Final(MD4_CTX *ctx);
+void arc4_init(arc4_info *a4i, const BYTE *key, unsigned int keyLen);
+void arc4_ProcessString(arc4_info *a4i, BYTE *inoutString, unsigned int length);
+
 
 #endif /* __WINE_CRYPT_H_ */
