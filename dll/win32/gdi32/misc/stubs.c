@@ -2325,3 +2325,12 @@ cGetTTFFromFOT(DWORD x1 ,DWORD x2 ,DWORD x3, DWORD x4, DWORD x5, DWORD x6, DWORD
     return 0;
 }
 
+DWORD
+WINAPI
+D3DKMTOpenAdapterFromGdiDisplayName(DWORD x1)
+{
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+

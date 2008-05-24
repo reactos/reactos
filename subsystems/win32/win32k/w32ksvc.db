@@ -721,7 +721,7 @@ NtGdiDdDDISetContextSchedulingPriority          1
 NtGdiDdDDISetDisplayMode                        1
 NtGdiDdDDISetDisplayPrivateDriverFormat         1
 NtGdiDdDDISetGammaRamp                          1
-NtGdiDdDDISetProcessSchedulingPriorityClass     1
+NtGdiDdDDISetProcessSchedulingPriorityClass     2
 NtGdiDdDDISetQueuedLimit                        1
 NtGdiDdDDISetVidPnSourceOwner                   1
 NtGdiDdDDISharedPrimaryLockNotification         1
@@ -735,7 +735,7 @@ NtGdiDdDDIWaitForVerticalBlankEvent             1
 NtGdiDDCCIGetCapabilitiesString                 3
 NtGdiDDCCIGetCapabilitiesStringLength           2
 NtGdiDDCCIGetTimingReport                       2
-NtGdiDDCCIGetVCPFeature                         4
+NtGdiDDCCIGetVCPFeature                         5
 NtGdiDDCCISaveCurrentSettings                   1
 NtGdiDDCCISetVCPFeature                         3
 #

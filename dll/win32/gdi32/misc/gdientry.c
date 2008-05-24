@@ -2072,3 +2072,4 @@ DdSetGammaRamp(LPDDRAWI_DIRECTDRAW_LCL pDDraw,
 
 
 
+

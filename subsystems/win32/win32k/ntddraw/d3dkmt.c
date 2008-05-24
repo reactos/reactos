@@ -100,10 +100,12 @@ NtGdiDdDDIDestroyAllocation(DWORD x1)
 	return 0;
 }
 
+DWORD
+STDCALL
 NtGdiDdDDIDestroyContext(DWORD x1)
 {
 	UNIMPLEMENTED;
-    return 0;
+	return 0;
 }
 
 DWORD
@@ -196,7 +198,7 @@ NtGdiDdDDIGetPresentHistory(DWORD x1)
 
 DWORD
 STDCALL
-NtGdiDdDDIGetProcessSchedulingPriorityClass
+NtGdiDdDDIGetProcessSchedulingPriorityClass(DWORD x1, DWORD x2)
 {
 	UNIMPLEMENTED;
 	return 0;
@@ -372,7 +374,7 @@ NtGdiDdDDISetGammaRamp(DWORD x1)
 
 DWORD
 STDCALL
-NtGdiDdDDISetProcessSchedulingPriorityClass(DWORD x1, x2)
+NtGdiDdDDISetProcessSchedulingPriorityClass(DWORD x1, DWORD x2)
 {
 	UNIMPLEMENTED;
 	return 0;
@@ -407,7 +409,7 @@ STDCALL
 NtGdiDdDDISharedPrimaryUnLockNotification(DWORD x1)
 {
 	UNIMPLEMENTED;
-	return 0
+	return 0;
 }
 
 DWORD
@@ -415,7 +417,7 @@ STDCALL
 NtGdiDdDDISignalSynchronizationObject(DWORD x1)
 {
 	UNIMPLEMENTED;
-	return 0
+	return 0;
 }
 
 DWORD
@@ -423,7 +425,7 @@ STDCALL
 NtGdiDdDDIUnlock(DWORD x1)
 {
 	UNIMPLEMENTED;
-	return 0
+	return 0;
 }
 
 DWORD
@@ -484,7 +486,7 @@ NtGdiDDCCIGetTimingReport(DWORD x1, DWORD x2)
 
 DWORD
 STDCALL
-NtGdiDDCCIGetVCPFeature(DWORD x1, DWORD x2, DWORD x3, DWORD x4)
+NtGdiDDCCIGetVCPFeature(DWORD x1, DWORD x2, DWORD x3, DWORD x4, DWORD x5)
 {
 	UNIMPLEMENTED;
 	return 0;
@@ -498,10 +500,9 @@ NtGdiDDCCISaveCurrentSettings(DWORD x1)
 	return 0;
 }
 
-DWORD
-STDCALL
-NtGdiDDCCISetVCPFeature(DWORD x1, DWORD x2, DWORD x3)
+DWORD STDCALL NtGdiDDCCISetVCPFeature(DWORD x1, DWORD x2, DWORD x3)
 {
 	UNIMPLEMENTED;
 	return 0;
 }
+
