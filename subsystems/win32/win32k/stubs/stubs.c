@@ -2972,7 +2972,7 @@ STDCALL
 NtGdiConfigureOPMProtectedOutput(DWORD x1, DWORD x2, DWORD x3, DWORD x4)
 {
 	UNIMPLEMENTED;
-	return 0
+	return 0;
 }
 
 DWORD
@@ -2980,5 +2980,5 @@ STDCALL
 NtGdiCreateOPMProtectedOutputs(DWORD x1, DWORD x2, DWORD x3, DWORD x4, DWORD x5)
 {
 	UNIMPLEMENTED;
-	return 0
+	return 0;
 }

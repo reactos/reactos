@@ -100,6 +100,7 @@
 		<file>mocomp.c</file>
 		<file>eng.c</file>
 		<file>dxeng.c</file>
+		<file>d3dkmt.c</file>
 	</directory>
 	<directory name="ntuser">
 		<file>accelerator.c</file>
