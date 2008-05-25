@@ -7,4 +7,5 @@
 	<library>ntoskrnl</library>
 	<library>hal</library>
 	<file>test.c</file>
+    <file>devname.c</file>
 </module>
