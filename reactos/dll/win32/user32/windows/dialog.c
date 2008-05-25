@@ -42,7 +42,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(user32);
 #define DF_OWNERENABLED 0x0002
 #define CW_USEDEFAULT16 ((short)0x8000)
 #define DWLP_ROS_DIALOGINFO (DWLP_USER+sizeof(ULONG_PTR))
-#define GETDLGINFO(hwnd) (DIALOGINFO*)GetWindowLongPtrW((hwnd),DWLP_ROS_DIALOGINFO)
+#define GETDLGINFO(hwnd) DIALOG_get_info(hwnd, FALSE)
 #define SETDLGINFO(hwnd, info) SetWindowLongPtrW((hwnd), DWLP_ROS_DIALOGINFO, (LONG_PTR)(info))
 #define GET_WORD(ptr)  (*(WORD *)(ptr))
 #define GET_DWORD(ptr) (*(DWORD *)(ptr))
@@ -138,7 +138,38 @@ const struct builtin_class_descr DIALOG_builtin_class =
 
 /* INTERNAL FUNCTIONS ********************************************************/
 
- /***********************************************************************
+/***********************************************************************
+*               DIALOG_get_info
+*
+* Get the DIALOGINFO structure of a window, allocating it if needed
+* and 'create' is TRUE.
+*/
+DIALOGINFO * DIALOG_get_info( HWND hWnd, BOOL create )
+{
+    PWINDOW pWindow;
+    DIALOGINFO* dlgInfo = (DIALOGINFO *)GetWindowLongPtrW( hWnd, DWLP_ROS_DIALOGINFO );
+
+    if(!dlgInfo && create)
+    {
+        pWindow = ValidateHwnd( hWnd );
+
+        if (pWindow && pWindow->ExtraDataSize >= DLGWINDOWEXTRA && hWnd != GetDesktopWindow())
+        {
+            if (!(dlgInfo = HeapAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*dlgInfo) )))
+                return NULL;
+
+            SETDLGINFO( hWnd, dlgInfo );
+        }
+        else
+        {
+            HeapFree( GetProcessHeap(), 0, dlgInfo );
+            return NULL;
+        }
+    }
+    return dlgInfo;
+}
+
+/***********************************************************************
  *           DIALOG_EnableOwner
  *
  * Helper function for modal dialogs to enable again the
@@ -802,17 +833,21 @@ static HWND DIALOG_CreateIndirect( HINSTANCE hInst, LPCVOID dlgTemplate,
     will be valid only after WM_CREATE message has been handled in DefDlgProc
     All the members of the structure get filled here using temp variables */
 
-//    dlgInfo = DIALOG_get_info( hwnd, TRUE );
+    dlgInfo = DIALOG_get_info( hwnd, TRUE );
+    if (dlgInfo == NULL)
+    {
+        if (hUserFont) DeleteObject( hUserFont );
+        if (hMenu) DestroyMenu( hMenu );
+        if (modal && (flags & DF_OWNERENABLED)) DIALOG_EnableOwner(owner);
+        return 0;
+    }
 
-    if (!(dlgInfo = HeapAlloc( GetProcessHeap(), 0, sizeof(*dlgInfo) ))) return 0;
-    SETDLGINFO(hwnd, dlgInfo);
-
-    dlgInfo->hwndFocus   = 0;
+//    dlgInfo->hwndFocus   = 0;
     dlgInfo->hUserFont   = hUserFont;
     dlgInfo->hMenu       = hMenu;
     dlgInfo->xBaseUnit   = xBaseUnit;
     dlgInfo->yBaseUnit   = yBaseUnit;
-    dlgInfo->idResult    = 0;
+//    dlgInfo->idResult    = 0;
     dlgInfo->flags       = flags;
 //    dlgInfo->hDialogHeap = 0;
 
@@ -1500,7 +1535,7 @@ DefDlgProcA(
     DIALOGINFO * dlgInfo;
 
 	/* if there's no dialog info property then call default windows proc?? */
-    if (!(dlgInfo = GETDLGINFO(hDlg)))
+    if (!(dlgInfo = DIALOG_get_info(hDlg, TRUE)))
 	    return DefWindowProcA( hDlg, Msg, wParam, lParam );
 
     SetWindowLongPtrW( hDlg, DWLP_MSGRESULT, 0 );
@@ -1561,7 +1596,7 @@ DefDlgProcW(
     DIALOGINFO * dlgInfo;
 
 	/* if there's no dialog info property then call default windows proc?? */
-    if (!(dlgInfo = GETDLGINFO(hDlg)))
+    if (!(dlgInfo = DIALOG_get_info(hDlg, TRUE)))
 	    return DefWindowProcW( hDlg, Msg, wParam, lParam );
 
     SetWindowLongPtrW( hDlg, DWLP_MSGRESULT, 0 );
