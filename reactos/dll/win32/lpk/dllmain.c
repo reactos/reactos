@@ -21,7 +21,7 @@ DllMain (
     LPVOID  lpReserved)
 {
 
-    return TRUE;
+    return LpkDllInitialize(hDll,dwReason,lpReserved);
 }
 
 BOOL
@@ -31,5 +31,18 @@ LpkDllInitialize (
     DWORD   dwReason,
     LPVOID  lpReserved)
 {
-    return DllMain(hDll,dwReason,lpReserved);
+    switch(dwReason)
+    {
+        case DLL_PROCESS_ATTACH:
+            DisableThreadLibraryCalls(hDll);
+            /* Tell usp10 it is activated usp10 */
+            LpkPresent();
+            break;
+
+        default:
+            break;
+    }
+
+    return TRUE;
 }
+

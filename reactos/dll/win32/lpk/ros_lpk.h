@@ -11,6 +11,9 @@
 #include <windows.h>
 #include <ndk/ntndk.h>
 
+/* FIXME USP10 api that does not have prototype in any include file */
+VOID WINAPI LpkPresent();
+
 /* FIXME move _LPK_LPEDITCONTROL_LIST to global place so user32 can access it */
 typedef struct _LPK_LPEDITCONTROL_LIST
 {
