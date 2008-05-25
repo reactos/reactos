@@ -346,6 +346,9 @@
 <directory name="version">
 	<xi:include href="version/version.rbuild" />
 </directory>
+<directory name="wdmaud.drv">
+	<xi:include href="wdmaud.drv/wdmaud.rbuild" />
+</directory>
 <directory name="winfax">
 	<xi:include href="winfax/winfax.rbuild" />
 </directory>
