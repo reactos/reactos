@@ -11,7 +11,6 @@
  * TODO:
  *  - Add new user to the users group.
  *  - Remove a user from all groups.
- *  - Implement user property pages.
  *  - Use localized messages.
  */
 
@@ -564,15 +563,18 @@ OnNotify(HWND hwndDlg, PUSER_DATA pUserData, NMHDR *phdr)
             {
                 case NM_CLICK:
                     pUserData->iCurrentItem = lpnmlv->iItem;
-                    if (lpnmlv->iItem == -1)
-                    {
-                    }
-                    else
-                    {
-                    }
                     break;
 
                 case NM_DBLCLK:
+                    if (lpnmlv->iItem != -1)
+                    {
+                        UINT uItem;
+
+                        uItem =  GetMenuDefaultItem(GetSubMenu(pUserData->hPopupMenu, 1),
+                                                    FALSE, 0);
+                        if (uItem != (UINT)-1)
+                            SendMessage(hwndDlg, WM_COMMAND, MAKEWPARAM(uItem, 0), 0);
+                    }
                     break;
 
                 case NM_RCLICK:
@@ -615,6 +617,9 @@ UsersPageProc(HWND hwndDlg,
             pUserData->hPopupMenu = LoadMenu(hApplet, MAKEINTRESOURCE(IDM_POPUP_USER));
 
             OnInitDialog(hwndDlg);
+            SetMenuDefaultItem(GetSubMenu(pUserData->hPopupMenu, 1),
+                               IDM_USER_PROPERTIES,
+                               FALSE);
             break;
 
         case WM_COMMAND:
@@ -641,7 +646,7 @@ UsersPageProc(HWND hwndDlg,
                     break;
 
                 case IDM_USER_PROPERTIES:
-                    MessageBeep(-1);
+                    UserProperties(hwndDlg);
                     break;
             }
             break;

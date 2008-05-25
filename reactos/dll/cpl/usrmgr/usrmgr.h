@@ -35,5 +35,9 @@ CheckAccountName(HWND hwndDlg,
                  INT nIdDlgItem,
                  LPTSTR lpAccountName);
 
+/* userprops.c */
+VOID
+UserProperties(HWND hwndDlg);
+
 #endif /* __CPL_DESK_H__ */
 

@@ -16,6 +16,7 @@
 	<file>extra.c</file>
 	<file>groups.c</file>
 	<file>misc.c</file>
+	<file>userprops.c</file>
 	<file>users.c</file>
 	<file>usrmgr.c</file>
 	<file>usrmgr.rc</file>

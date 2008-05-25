@@ -35,15 +35,15 @@
 
 /* Dialogs */
 
-#define IDD_USER_GENERAL            310
-#define IDC_USER_NAME               311
-#define IDC_USER_FULLNAME           312
-#define IDC_USER_DESCRIPTION        313
-#define IDC_USER_PW_CHANGE          314
-#define IDC_USER_PW_NOCHANGE        315
-#define IDC_USER_PW_EXPIRE          316
-#define IDC_USER_DEACTIVATE         317
-#define IDC_USER_LOCK               318
+#define IDD_USER_GENERAL               310
+#define IDC_USER_GENERAL_NAME          311
+#define IDC_USER_GENERAL_FULL_NAME     312
+#define IDC_USER_GENERAL_DESCRIPTION   313
+#define IDC_USER_GENERAL_FORCE_CHANGE  314
+#define IDC_USER_GENERAL_CANNOT_CHANGE 315
+#define IDC_USER_GENERAL_NEVER_EXPIRES 316
+#define IDC_USER_GENERAL_DISABLED      317
+#define IDC_USER_GENERAL_LOCKED        318
 
 
 #define IDD_CHANGE_PASSWORD         350
