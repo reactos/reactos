@@ -135,9 +135,9 @@ GetClipboardFormatNameA(UINT format, LPSTR lpszFormatName, int cchMaxCount)
        if (!WideCharToMultiByte(CP_ACP, 0, lpBuffer, Length, lpszFormatName, cchMaxCount, NULL, NULL))
        {
           /* clear result string */
-          lpszFormatName[0] = '\0';
           Length = 0;
        }
+       lpszFormatName[Length] = '\0';
    }
 
    RtlFreeHeap(RtlGetProcessHeap(), 0, lpBuffer);
