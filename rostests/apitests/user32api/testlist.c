@@ -6,6 +6,7 @@
 #include "user32api.h"
 
 /* include the tests */
+#include "tests/InitializeLpkHooks.c"
 #include "tests/ScrollDC.c"
 #include "tests/ScrollWindowEx.c"
 #include "tests/RealGetWindowClass.c"
@@ -13,6 +14,7 @@
 /* The List of tests */
 TESTENTRY TestList[] =
 {
+    { L"InitializeLpkHooks", Test_InitializeLpkHooks },
     { L"ScrollDC", Test_ScrollDC },
     { L"ScrollWindowEx", Test_ScrollWindowEx },
     { L"RealGetWindowClass", Test_RealGetWindowClass },
