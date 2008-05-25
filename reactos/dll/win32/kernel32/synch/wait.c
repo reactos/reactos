@@ -66,7 +66,7 @@ WaitForSingleObjectEx(IN HANDLE hHandle,
     }
 
     /* Check for console handle */
-    if ((IsConsoleHandle(hHandle)) && (!VerifyConsoleIoHandle(hHandle)))
+    if ((IsConsoleHandle(hHandle)) && (VerifyConsoleIoHandle(hHandle)))
     {
         /* Get the real wait handle */
         hHandle = GetConsoleInputWaitHandle();
@@ -186,7 +186,7 @@ WaitForMultipleObjectsEx(IN DWORD nCount,
 
         /* Check for console handle */
         if ((IsConsoleHandle(HandleBuffer[i])) &&
-            (!VerifyConsoleIoHandle(HandleBuffer[i])))
+            (VerifyConsoleIoHandle(HandleBuffer[i])))
         {
             /* Get the real wait handle */
             HandleBuffer[i] = GetConsoleInputWaitHandle();
@@ -278,7 +278,7 @@ SignalObjectAndWait(IN HANDLE hObjectToSignal,
 
     /* Check for console handle */
     if ((IsConsoleHandle(hObjectToWaitOn)) &&
-        (!VerifyConsoleIoHandle(hObjectToWaitOn)))
+        (VerifyConsoleIoHandle(hObjectToWaitOn)))
     {
         /* Get the real wait handle */
         hObjectToWaitOn = GetConsoleInputWaitHandle();
