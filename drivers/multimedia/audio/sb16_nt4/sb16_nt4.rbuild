@@ -6,7 +6,5 @@
 	<importlibrary definition="sb16_nt4.def" />
 	<library>ntoskrnl</library>
 	<library>hal</library>
-	<file>main.c</file>
-	<file>control.c</file>
-	<file>interrupt.c</file>
+	<file>test.c</file>
 </module>

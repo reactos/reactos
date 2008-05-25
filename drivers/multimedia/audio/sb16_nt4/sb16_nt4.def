@@ -1,5 +1,5 @@
 ;
-; Exports definition file for sb16_ks.sys
+; Exports definition file for NT4 Sound Blaster driver
 ;
 EXPORTS
 DriverEntry@8
