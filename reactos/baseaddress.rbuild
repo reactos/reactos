@@ -89,6 +89,7 @@
   <property name="BASEADDRESS_WINFAX" value="0x722C0000" />
   <property name="BASEADDRESS_WINSCARD" value="0x723d0000" />
   <property name="BASEADDRESS_DEVMGR" value="0x72a90000" />
+  <property name="BASEADDRESS_WDMAUD" value="0x72d20000" />
   <property name="BASEADDRESS_WINSPOOL" value="0x72f50000" />
   <property name="BASEADDRESS_MSDMO" value="0x73670000" />
   <property name="BASEADDRESS_AVIFIL32" value="0x73ac0000" />
