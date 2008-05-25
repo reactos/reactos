@@ -121,6 +121,9 @@
 <directory name="kernel32">
 	<xi:include href="kernel32/kernel32.rbuild" />
 </directory>
+<directory name="lpk">
+	<xi:include href="lpk/lpk.rbuild" />
+</directory>
 <directory name="lsasrv">
 	<xi:include href="lsasrv/lsasrv.rbuild" />
 </directory>

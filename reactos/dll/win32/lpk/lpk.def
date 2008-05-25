@@ -1,0 +1,20 @@
+; $Id: gdi32.def 33598 2008-05-19 10:20:39Z greatlrd $
+;
+; lpk.def
+;
+; ReactOS Operating System
+;
+LIBRARY lpk.dll
+EXPORTS
+LpkInitialize@4
+LpkTabbedTextOut@48
+LpkDllInitialize@12
+LpkDrawTextEx@40
+LpkEditControl@0
+LpkExtTextOut@36
+LpkGetCharacterPlacement@28
+LpkGetTextExtentExPoint@36
+LpkPSMTextOut@24
+LpkUseGDIWidthCache@20
+ftsWordBreak@20
+
