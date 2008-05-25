@@ -1,4 +1,4 @@
-<module name="wdmaud.drv" type="win32dll" baseaddress="${BASEADDRESS_RASDLG}" installbase="system32" installname="wdmaud.drv">
+<module name="wdmaud.drv" type="win32dll" baseaddress="${BASEADDRESS_WDMAUD}" installbase="system32" installname="wdmaud.drv">
 	<importlibrary definition="wdmaud.def" />
 	<include base="wdmaud.drv">.</include>
 	<define name="_DISABLE_TIDENTS" />
