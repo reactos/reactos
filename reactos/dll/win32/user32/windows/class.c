@@ -421,15 +421,22 @@ GetClassNameA(
   LPSTR lpClassName,
   int nMaxCount)
 {
-    ANSI_STRING ClassName;
-    int Result;
+    UNICODE_STRING ClassName;
+    INT Result;
 
-    ClassName.MaximumLength = nMaxCount;
-    ClassName.Buffer = lpClassName;
+    ClassName.MaximumLength = nMaxCount * sizeof(WCHAR);
+    ClassName.Buffer = LocalAlloc(LMEM_FIXED, ClassName.MaximumLength);
+    if (ClassName.Buffer == NULL)
+    {
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        return 0;
+    }
 
-    Result = NtUserGetClassName(hWnd,
-                                (PUNICODE_STRING)&ClassName,
-                                TRUE);
+    Result = NtUserGetClassName(hWnd, FALSE, &ClassName);
+
+    WideCharToMultiByte(CP_ACP, 0, ClassName.Buffer, Result, lpClassName, nMaxCount - 1, NULL, NULL);
+    lpClassName[nMaxCount - 1] = '\0';
+    LocalFree(ClassName.Buffer);
 
     TRACE("%p class/atom: %s/%04x %x\n", hWnd,
         IS_ATOM(lpClassName) ? NULL : lpClassName,
@@ -456,9 +463,7 @@ GetClassNameW(
     ClassName.MaximumLength = nMaxCount * sizeof(WCHAR);
     ClassName.Buffer = lpClassName;
 
-    Result = NtUserGetClassName(hWnd,
-                                &ClassName,
-                                FALSE);
+    Result = NtUserGetClassName(hWnd, FALSE, &ClassName);
 
     TRACE("%p class/atom: %S/%04x %x\n", hWnd,
         IS_ATOM(lpClassName) ? NULL : lpClassName,
@@ -629,12 +634,24 @@ SetWindowWord ( HWND hWnd,int nIndex,WORD wNewWord )
 UINT
 STDCALL
 RealGetWindowClassW(
-  HWND  hwnd,
+  HWND  hWnd,
   LPWSTR pszType,
   UINT  cchType)
 {
-	/* FIXME: Implement correct functionality of RealGetWindowClass */
-	return GetClassNameW(hwnd,pszType,cchType);
+    UNICODE_STRING ClassName;
+    UINT Length;
+
+    ClassName.MaximumLength = cchType * sizeof(WCHAR);
+    ClassName.Buffer = pszType;
+
+    Length = NtUserGetClassName(hWnd, TRUE, &ClassName);
+
+    TRACE("%p class/atom: %S/%04x %x\n", hWnd,
+        IS_ATOM(pszType) ? NULL : pszType,
+        IS_ATOM(pszType) ? pszType : 0,
+        cchType);
+
+    return Length;
 }
 
 
@@ -644,12 +661,33 @@ RealGetWindowClassW(
 UINT
 STDCALL
 RealGetWindowClassA(
-  HWND  hwnd,
+  HWND  hWnd,
   LPSTR pszType,
   UINT  cchType)
 {
-	/* FIXME: Implement correct functionality of RealGetWindowClass */
-	return GetClassNameA(hwnd,pszType,cchType);
+    UNICODE_STRING ClassName;
+    UINT Length;
+
+    ClassName.MaximumLength = cchType * sizeof(WCHAR);
+    ClassName.Buffer = LocalAlloc(LMEM_FIXED, ClassName.MaximumLength);
+    if (ClassName.Buffer == NULL)
+    {
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        return 0;
+    }
+
+    Length = NtUserGetClassName(hWnd, TRUE, &ClassName);
+
+    WideCharToMultiByte(CP_ACP, 0, ClassName.Buffer, Length, pszType, cchType - 1, NULL, NULL);
+    pszType[cchType - 1] = '\0';
+    LocalFree(ClassName.Buffer);
+
+    TRACE("%p class/atom: %s/%04x %x\n", hWnd,
+        IS_ATOM(pszType) ? NULL : pszType,
+        IS_ATOM(pszType) ? pszType : 0,
+        cchType);
+
+    return Length;
 }
 
 /*

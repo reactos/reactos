@@ -1255,118 +1255,39 @@ UserUnregisterClass(IN PUNICODE_STRING ClassName,
 
 INT
 UserGetClassName(IN PWINDOWCLASS Class,
-                 IN OUT PUNICODE_STRING ClassName,
-                 IN BOOL Ansi)
+                 IN OUT PUNICODE_STRING ClassName)
 {
     NTSTATUS Status = STATUS_SUCCESS;
-    WCHAR szStaticTemp[32];
-    PWSTR szTemp = NULL;
-    ULONG BufLen = sizeof(szStaticTemp);
+    ULONG BufLen;
     INT Ret = 0;
 
     /* Note: Accessing the buffer in ClassName may raise an exception! */
 
     _SEH_TRY
     {
-        if (Ansi)
+        BufLen = ClassName->MaximumLength;
+
+        /* query the atom name */
+        Status = RtlQueryAtomInAtomTable(gAtomTable,
+                                         Class->Atom,
+                                         NULL,
+                                         NULL,
+                                         ClassName->Buffer,
+                                         &BufLen);
+
+        if (!NT_SUCCESS(Status))
         {
-            PANSI_STRING AnsiClassName = (PANSI_STRING)ClassName;
-            UNICODE_STRING UnicodeClassName;
-
-            /* limit the size of the static buffer on the stack to the
-               size of the buffer provided by the caller */
-            if (BufLen / sizeof(WCHAR) > AnsiClassName->MaximumLength)
-            {
-                BufLen = AnsiClassName->MaximumLength * sizeof(WCHAR);
-            }
-
-            /* find out how big the buffer needs to be */
-            Status = RtlQueryAtomInAtomTable(gAtomTable,
-                                             Class->Atom,
-                                             NULL,
-                                             NULL,
-                                             szStaticTemp,
-                                             &BufLen);
-            if (Status == STATUS_BUFFER_TOO_SMALL)
-            {
-                if (BufLen / sizeof(WCHAR) > AnsiClassName->MaximumLength)
-                {
-                    /* the buffer required exceeds the ansi buffer provided,
-                       pretend like we're using the ansi buffer and limit the
-                       size to the buffer size provided */
-                    BufLen = AnsiClassName->MaximumLength * sizeof(WCHAR);
-                }
-
-                /* allocate a temporary buffer that can hold the unicode class name */
-                szTemp = ExAllocatePool(PagedPool,
-                                        BufLen);
-                if (szTemp == NULL)
-                {
-                    SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
-                    _SEH_LEAVE;
-                }
-
-                /* query the class name */
-                Status = RtlQueryAtomInAtomTable(gAtomTable,
-                                                 Class->Atom,
-                                                 NULL,
-                                                 NULL,
-                                                 szTemp,
-                                                 &BufLen);
-            }
-            else
-                szTemp = szStaticTemp;
-
-            if (NT_SUCCESS(Status))
-            {
-                /* convert the atom name to ansi */
-
-                RtlInitUnicodeString(&UnicodeClassName,
-                                     szTemp);
-
-                Status = RtlUnicodeStringToAnsiString(AnsiClassName,
-                                                      &UnicodeClassName,
-                                                      FALSE);
-                if (!NT_SUCCESS(Status))
-                {
-                    SetLastNtError(Status);
-                    _SEH_LEAVE;
-                }
-            }
-
-            Ret = BufLen / sizeof(WCHAR);
+            SetLastNtError(Status);
+            _SEH_LEAVE;
         }
-        else /* !Ansi */
-        {
-            BufLen = ClassName->MaximumLength;
 
-            /* query the atom name */
-            Status = RtlQueryAtomInAtomTable(gAtomTable,
-                                             Class->Atom,
-                                             NULL,
-                                             NULL,
-                                             ClassName->Buffer,
-                                             &BufLen);
-
-            if (!NT_SUCCESS(Status))
-            {
-                SetLastNtError(Status);
-                _SEH_LEAVE;
-            }
-
-            Ret = BufLen / sizeof(WCHAR);
-        }
+        Ret = BufLen / sizeof(WCHAR);
     }
     _SEH_HANDLE
     {
         SetLastNtError(_SEH_GetExceptionCode());
     }
     _SEH_END;
-
-    if (Ansi && szTemp != NULL && szTemp != szStaticTemp)
-    {
-        ExFreePool(szTemp);
-    }
 
     return Ret;
 }
@@ -2265,10 +2186,10 @@ Cleanup:
 
 
 
-INT NTAPI
-NtUserGetClassName (IN HWND hWnd,
-                    OUT PUNICODE_STRING ClassName,
-                    IN BOOL Ansi)
+UINT NTAPI
+NtUserGetClassName(IN HWND hWnd,
+                   IN BOOL bGetRealClass, // 0 GetClassNameA/W, 1 RealGetWindowClassA/W
+                   OUT PUNICODE_STRING ClassName)
 {
     PWINDOW_OBJECT Window;
     UNICODE_STRING CapturedClassName;
@@ -2284,10 +2205,11 @@ NtUserGetClassName (IN HWND hWnd,
             ProbeForWriteUnicodeString(ClassName);
             CapturedClassName = *ClassName;
 
+            /* TODO: Get real class name here if bGetRealClass == TRUE */
+
             /* get the class name */
             Ret = UserGetClassName(Window->Wnd->Class,
-                                   &CapturedClassName,
-                                   Ansi);
+                                   &CapturedClassName);
 
             if (Ret != 0)
             {
