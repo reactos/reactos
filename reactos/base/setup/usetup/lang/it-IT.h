@@ -382,12 +382,12 @@ static MUI_ENTRY itITDevicePageEntries[] =
     {
         8,
         16,
-        "      Accettare:",
+        "       Conferma:",
         TEXT_STYLE_NORMAL
     },
     {
         25, 
-        16, "Accettare la configurazione delle periferiche",
+        16, "Procedere con questa configurazione",
         TEXT_STYLE_NORMAL
     },
     {
@@ -417,7 +417,7 @@ static MUI_ENTRY itITDevicePageEntries[] =
     {
         6, 
         24,
-        "\"Accettare la configurazione delle periferiche\" e premere INVIO.",
+        "\"Confermare la configurazione delle periferiche\" e premere INVIO.",
         TEXT_STYLE_NORMAL
     },
     {

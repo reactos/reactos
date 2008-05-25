@@ -1,0 +1,13 @@
+/* Translation by Vytis "CMan" Girdþijauskas (cman@cman.us) */
+
+LANGUAGE LANG_LITHUANIAN, SUBLANG_DEFAULT
+
+IDR_POPUP MENU
+BEGIN
+    POPUP "popup"
+    BEGIN
+        MENUITEM SEPARATOR
+        MENUITEM "&Nuostatos...",  ID_PREFERENCES
+        MENUITEM "&Baigti",        ID_EXIT
+    END
+END
