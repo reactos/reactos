@@ -1,0 +1,8 @@
+# Copyright (C) 2001-2005, International Business Machines
+# Corporation and others.  All Rights Reserved.
+# This is a sample FontMap file for Linux.
+# Fonts are specified by file names.
+
+ DEVANAGARI: raghu.ttf
+       THAI: angsd___.ttf
+	DEFAULT: CODE2000.TTF

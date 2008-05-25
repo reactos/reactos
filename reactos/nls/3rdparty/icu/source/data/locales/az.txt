@@ -1,0 +1,48 @@
+﻿// ***************************************************************************
+// *
+// * Copyright (C) 2007 International Business Machines
+// * Corporation and others.  All Rights Reserved.
+// * Tool: com.ibm.icu.dev.tool.cldr.LDML2ICUConverter.java
+// * Source File:<path>/common/main/az.xml
+// *
+// ***************************************************************************
+/**
+ *  ICU <specials> source: <path>/xml/main/az.xml
+ */
+az{
+    AuxExemplarCharacters{"[w]"}
+    Countries{
+        AZ{"Azərbaycan"}
+        BR{"Braziliya"}
+        CN{"Çin"}
+        DE{"Almaniya"}
+        FR{"Fransa"}
+        IN{"Hindistan"}
+        IT{"İtaliya"}
+        JP{"Yaponiya"}
+        RU{"Rusiya"}
+        US{"Amerika Birləşmiş Ştatları"}
+    }
+    Currencies{
+        AZM{
+            "man.",
+            "Manat",
+        }
+    }
+    ExemplarCharacters{"[a-c ç d e ə f g ğ h i İ ı j-o ö p-s ş t u ü v x-z]"}
+    Languages{
+        az{"azərbaycanca"}
+        de{"almanca"}
+        en{"ingiliscə"}
+        es{"ispanca"}
+        fr{"fransızca"}
+        ja{"yaponca"}
+        pt{"portuqalca"}
+        ru{"rusca"}
+        zh{"çincə"}
+    }
+    LocaleScript{
+        "Latn",
+    }
+    Version{"1.48"}
+}

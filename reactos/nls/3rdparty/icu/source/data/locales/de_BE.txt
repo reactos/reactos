@@ -1,0 +1,67 @@
+﻿// ***************************************************************************
+// *
+// * Copyright (C) 2007 International Business Machines
+// * Corporation and others.  All Rights Reserved.
+// * Tool: com.ibm.icu.dev.tool.cldr.LDML2ICUConverter.java
+// * Source File:<path>/common/main/de_BE.xml
+// *
+// ***************************************************************************
+de_BE{
+    Currencies{
+        FRF{
+            "FF",
+            "Franken",
+        }
+    }
+    Version{"1.49"}
+    calendar{
+        gregorian{
+            DateTimeElements:intvector{
+                2,
+                4,
+            }
+            DateTimePatterns{
+                "HH 'h' mm 'min' ss 's' v",
+                "HH:mm:ss z",
+                "HH:mm:ss",
+                "HH:mm",
+                "EEEE d MMMM yyyy",
+                "d MMMM yyyy",
+                "dd.MM.yyyy",
+                "d/MM/yy",
+                "{1} {0}",
+            }
+            dayNames{
+                format{
+                    abbreviated{
+                        "Son",
+                        "Mon",
+                        "Die",
+                        "Mit",
+                        "Don",
+                        "Fre",
+                        "Sam",
+                    }
+                }
+            }
+            monthNames{
+                format{
+                    abbreviated{
+                        "Jan",
+                        "Feb",
+                        "Mär",
+                        "Apr",
+                        "Mai",
+                        "Jun",
+                        "Jul",
+                        "Aug",
+                        "Sep",
+                        "Okt",
+                        "Nov",
+                        "Dez",
+                    }
+                }
+            }
+        }
+    }
+}

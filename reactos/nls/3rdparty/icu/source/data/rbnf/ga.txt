@@ -1,0 +1,337 @@
+﻿// ***************************************************************************
+// *
+// *   Copyright (C) 2004, International Business Machines
+// *   Corporation and others.  All Rights Reserved.
+// *
+// ***************************************************************************
+// 
+
+ga {   
+     SpelloutRules {
+
+        // Maoluimhreacha
+        "%default:\n"
+        "-x: míneas >>;\n"
+        "x.x: << pointe >>;\n"
+        "a náid; a haon; a dó; a trí; a ceathair; a cúig;\n"
+        "a sé; a seacht; a hocht; a naoi; a deich;\n"
+        "a haon déag; a dó dhéag;\n"
+        ">> déag;\n"
+        "20: fiche[ >>];\n"
+        "30: tríocha[ >>];\n"
+        "40: daichead[ >>];\n"
+        "50: caoga[ >>];\n"
+        "60: seasca[ >>];\n"
+        "70: seachtó[ >>];\n"
+        "80: ochtó[ >>];\n"
+        "90: nócha[ >>];\n"
+        "100: <%%hundreds<[ >%%hundreds_is>];\n"
+        "1,000: <%%thousands<[, >>];\n"
+        "1,000,000: <%%millions<[, >>];\n"
+        "1,000,000,000: <%%billions<[, >>];\n"
+        "1,000,000,000,000: <%%trillions<[, >>];\n"
+        "1,000,000,000,000,000: =#,##0=;\n"
+
+        "%%cardwithnumber:"
+        " ; aon; dhá; trí; ceithre; cúig; sé; seacht; ocht; naoi; deich;\n"
+        " aon; dhá; trí; ceithre; cúig; sé; seacht; ocht; naoi;\n"
+        "20: fiche[ is >>];\n"
+        "30: tríocha[ is >>];\n"
+        "40: daichead[ is >>];\n"
+        "50: caoga[ is >>];\n"
+        "60: seasca[ is >>];\n"
+        "70: seachtó[ is >>];\n"
+        "80: ochtó[ is >>];\n"
+        "90: nócha[ is >>];\n"
+        "100: <%%hundreds<[ >%%hundreds_is>];\n"
+        "1,000: <%%thousands<[ >%%cardwithnumber>];\n"
+        "1,000,000: <%%millions<[ >%%cardwithnumber>];\n"
+        "1,000,000,000: <%%billions<[ >%%cardwithnumber>];\n"
+        "1,000,000,000,000: <%%trillions<[ >%%cardwithnumber>];\n"
+        "1,000,000,000,000,000: =#,##0=;\n"
+
+        // rules to give hundreds value
+        "%%hundreds:\n"
+        "1: céad;\n"
+        "2: <%%cardwithnumber< chéad;\n"
+        "7: <%%cardwithnumber< gcéad;\n"
+        // Put in "is" after céad when a multiple of 10
+        "%%hundreds_is:\n"
+        "0:;\n"
+        "=%default=;\n"
+        "20: is =%default=;\n"
+        "21: =%default=;\n"
+        "30: is =%default=;\n"
+        "31: =%default=;\n"
+        "40: is =%default=;\n"
+        "41: =%default=;\n"
+        "50: is =%default=;\n"
+        "51: =%default=;\n"
+        "60: is =%default=;\n"
+        "61: =%default=;\n"
+        "70: is =%default=;\n"
+        "71: =%default=;\n"
+        "80: is =%default=;\n"
+        "81: =%default=;\n"
+        "90: is =%default=;\n"
+        "91: =%default=;\n"
+
+        // rules to give thousands value
+        "%%thousands:\n"
+        "0: míle;\n"
+        "2: <%%cardwithnumber< mhíle;\n"
+        "7: <%%cardwithnumber< míle;\n"
+        "11>: <%%cardwithnumber< mhíle dhéag;\n"
+        "17>: <%%cardwithnumber< míle dhéag;\n"
+        "20>: <%%cardwithnumber< míle;\n"
+        "21>: <%%cardwithnumber< mhíle;\n"
+        "27>: <%%cardwithnumber< míle;\n"
+        "31>: <%%cardwithnumber< mhíle;\n"
+        "37>: <%%cardwithnumber< míle;\n"
+        "41>: <%%cardwithnumber< mhíle;\n"
+        "47>: <%%cardwithnumber< míle;\n"
+        "51>: <%%cardwithnumber< mhíle;\n"
+        "57>: <%%cardwithnumber< míle;\n"
+        "61>: <%%cardwithnumber< mhíle;\n"
+        "67>: <%%cardwithnumber< míle;\n"
+        "71>: <%%cardwithnumber< mhíle;\n"
+        "77>: <%%cardwithnumber< míle;\n"
+        "81>: <%%cardwithnumber< mhíle;\n"
+        "87>: <%%cardwithnumber< míle;\n"
+        "91>: <%%cardwithnumber< mhíle;\n"
+        "97>: <%%cardwithnumber< míle;\n"
+        "   100: <%%hundreds< >%%thousands_is>;\n"
+
+        // Put in "is" after míle when a multiple of 10
+        "%%thousands_is:\n"
+        "0: míle;\n"
+        "1: is =%%cardwithnumber= mhíle;\n"
+        "7: is =%%cardwithnumber= míle;\n"
+        "11>: is <%%thousands<;\n"
+        "20: is =%%thousands=;\n"
+        "21: =%%thousands=;\n"
+        "30: is =%%thousands=;\n"
+        "31: =%%thousands=;\n"
+        "40: is =%%thousands=;\n"
+        "41: =%%thousands=;\n"
+        "50: is =%%thousands=;\n"
+        "51: =%%thousands=;\n"
+        "60: is =%%thousands=;\n"
+        "61: =%%thousands=;\n"
+        "70: is =%%thousands=;\n"
+        "71: =%%thousands=;\n"
+        "80: is =%%thousands=;\n"
+        "81: =%%thousands=;\n"
+        "90: is =%%thousands=;\n"
+        "91: =%%thousands=;\n"
+
+
+        // rules to give millions value
+        "%%millions:\n"
+        "1: milliún;\n"
+        "2: <%%cardwithnumber< mhilliún;\n"
+        "7: <%%cardwithnumber< milliún;\n"
+        "11>: <%%cardwithnumber< mhilliún déag;\n"
+        "17>: <%%cardwithnumber< milliún déag;\n"
+        "20>: <%%cardwithnumber< milliún;\n"
+        "21>: <%%cardwithnumber< mhilliún;\n"
+        "27>: <%%cardwithnumber< milliún;\n"
+        "31>: <%%cardwithnumber< mhilliún;\n"
+        "37>: <%%cardwithnumber< milliún;\n"
+        "41>: <%%cardwithnumber< mhilliún;\n"
+        "47>: <%%cardwithnumber< milliún;\n"
+        "51>: <%%cardwithnumber< mhilliún;\n"
+        "57>: <%%cardwithnumber< milliún;\n"
+        "61>: <%%cardwithnumber< mhilliún;\n"
+        "67>: <%%cardwithnumber< milliún;\n"
+        "71>: <%%cardwithnumber< mhilliún;\n"
+        "77>: <%%cardwithnumber< milliún;\n"
+        "81>: <%%cardwithnumber< mhilliún;\n"
+        "87>: <%%cardwithnumber< milliún;\n"
+        "91>: <%%cardwithnumber< mhilliún;\n"
+        "97>: <%%cardwithnumber< milliún;\n"
+        "   100: <%%hundreds< >%%millions_is>;\n"
+
+        // Put in "is" after milliún when a multiple of 10
+        "%%millions_is:\n"
+        "0: milliún;\n"
+        "1: is =%%cardwithnumber= mhilliún;\n"
+        "7: is =%%cardwithnumber= milliún;\n"
+        "11>: is <%%millions<;\n"
+        "20: is =%%millions=;\n"
+        "21: =%%millions=;\n"
+        "30: is =%%millions=;\n"
+        "31: =%%millions=;\n"
+        "40: is =%%millions=;\n"
+        "41: =%%millions=;\n"
+        "50: is =%%millions=;\n"
+        "51: =%%millions=;\n"
+        "60: is =%%millions=;\n"
+        "61: =%%millions=;\n"
+        "70: is =%%millions=;\n"
+        "71: =%%millions=;\n"
+        "80: is =%%millions=;\n"
+        "81: =%%millions=;\n"
+        "90: is =%%millions=;\n"
+        "91: =%%millions=;\n"
+
+
+        // rules to give billions value
+        // to avoid ambiguity, no eclipsis or aspiration!
+        "%%billions:\n"
+        "1: billiún; <%%cardwithnumber< billiún;\n"
+        "11>: <%%cardwithnumber< billiún déag;\n"
+        "20>: <%%cardwithnumber< billiún;\n"
+        "100: <%%hundreds< >%%billions_is>;\n"
+
+        // Put in "is" after billiún when a multiple of 10
+        "%%billions_is:\n"
+        "0: billiún;\n"
+        "1: is =%%cardwithnumber= billiún;\n"
+        "7: is =%%cardwithnumber= billiún;\n"
+        "11>: is <%%billions<;\n"
+        "20: is =%%billions=;\n"
+        "21: =%%billions=;\n"
+        "30: is =%%billions=;\n"
+        "31: =%%billions=;\n"
+        "40: is =%%billions=;\n"
+        "41: =%%billions=;\n"
+        "50: is =%%billions=;\n"
+        "51: =%%billions=;\n"
+        "60: is =%%billions=;\n"
+        "61: =%%billions=;\n"
+        "70: is =%%billions=;\n"
+        "71: =%%billions=;\n"
+        "80: is =%%billions=;\n"
+        "81: =%%billions=;\n"
+        "90: is =%%billions=;\n"
+        "91: =%%billions=;\n"
+
+        // rules to give trillions value
+        "%%trillions:\n"
+        "1: milliún;\n"
+        "2: <%%cardwithnumber< thrilliún;\n"
+        "7: <%%cardwithnumber< dtrilliún;\n"
+        "11>: <%%cardwithnumber< thrilliún déag;\n"
+        "17>: <%%cardwithnumber< dtrilliún déag;\n"
+        "20>: <%%cardwithnumber< dtrilliún;\n"
+        "21>: <%%cardwithnumber< thrilliún;\n"
+        "27>: <%%cardwithnumber< dtrilliún;\n"
+        "31>: <%%cardwithnumber< thrilliún;\n"
+        "37>: <%%cardwithnumber< dtrilliún;\n"
+        "41>: <%%cardwithnumber< thrilliún;\n"
+        "47>: <%%cardwithnumber< dtrilliún;\n"
+        "51>: <%%cardwithnumber< thrilliún;\n"
+        "57>: <%%cardwithnumber< dtrilliún;\n"
+        "61>: <%%cardwithnumber< thrilliún;\n"
+        "67>: <%%cardwithnumber< dtrilliún;\n"
+        "71>: <%%cardwithnumber< thrilliún;\n"
+        "77>: <%%cardwithnumber< dtrilliún;\n"
+        "81>: <%%cardwithnumber< thrilliún;\n"
+        "87>: <%%cardwithnumber< dtrilliún;\n"
+        "91>: <%%cardwithnumber< thrilliún;\n"
+        "97>: <%%cardwithnumber< dtrilliún;\n"
+        "   100: <%%hundreds< >%%trillions_is;\n"
+
+        // Put in "is" after trilliún when a multiple of 10
+        "%%trillions_is:\n"
+        "0: trilliún;\n"
+        "1: is =%%cardwithnumber= thrilliún;\n"
+        "7: is =%%cardwithnumber= dtrilliún;\n"
+        "11>: is <%%trillions<;\n"
+        "20: is =%%trillions=;\n"
+        "21: =%%trillions=;\n"
+        "30: is =%%trillions=;\n"
+        "31: =%%trillions=;\n"
+        "40: is =%%trillions=;\n"
+        "41: =%%trillions=;\n"
+        "50: is =%%trillions=;\n"
+        "51: =%%trillions=;\n"
+        "60: is =%%trillions=;\n"
+        "61: =%%trillions=;\n"
+        "70: is =%%trillions=;\n"
+        "71: =%%trillions=;\n"
+        "80: is =%%trillions=;\n"
+        "81: =%%trillions=;\n"
+        "90: is =%%trillions=;\n"
+        "91: =%%trillions=;\n"
+
+        "%%lenient-parse:\n"
+        "& ' ' , ',' ;\n"
+    }
+
+    // This rule set formats a number of seconds in sexagesimal notation
+    // (i.e., hours, minutes, and seconds).  %with-words formats it with
+    // words (3,740 is "1 uair, 2 nóiméad, 20 soicind") and %in-numerals
+    // formats it entirely in numerals (3,740 is "1:02:20").
+    // (Based on en rules)
+    DurationRules {
+        // main rule set for formatting with words
+        "%with-words:\n"
+             // seconds
+        "=0= soicind;\n"
+             // use %%min to format values greater than 60 seconds
+        "60/60: <%%min<[, >>];\n"
+               // use %%hr to format values greater than 3,600 seconds
+               // (the ">>>" below causes us to see the number of minutes
+               // when when there are zero minutes)
+        "3600/60: <%%hr<[, >>>];\n"
+        // minutes
+        "%%min:\n"
+        "=0= nóiméad;\n"
+        // hours
+        "%%hr:\n"
+             // casta -- fch. l.40 Caighdeán Oifigiúil
+        "0: =0= uair;\n"
+        "3: =0= huaire;\n"
+        "5: =0= uaire;\n"
+        "6: =0= huaire;\n"
+        "7: =0= n-uaire;\n"
+        "10: =0= n-uair;\n"
+        "11: =0= >%%uaire>;\n"
+        // Tricky bit: next rule does numbers ending in 0; see Gillam's paper
+        // where it explains minor substitutions for 101 to understand.
+        "20: =0= uair; =0= >%%uaire>;\n"
+
+        // "uaire", except after nos. ending in 1, 2 or 0 when "uair"
+        "%%uaire:\n"
+        "1: uair;\n"
+        "3: huaire;\n"
+        "5: uaire;\n"
+        "6: huaire;\n"
+        "7: n-uaire;\n"
+
+        // rules giving hh:mm:ss with all fields shown always
+        "%hms:\n"
+        "0: :=00=;\n"
+        "60/60: :<00<>>>;\n"
+        "3600/60: <#,##0<>>>;\n"
+
+        // main rule set for formatting in numerals
+        "%in-numerals:\n"
+               // values below 60 seconds are shown with "s"
+        "=0=s;\n"
+               // higher values are shown with colons: %%min-sec is used for
+               // values below 3,600 seconds...
+        "60: =%%min-sec=;\n"
+               // ...and %%hr-min-sec is used for values of 3,600 seconds
+               // and above
+        "3600: =%%hr-min-sec=;\n"
+        // this rule causes values of less than 10 minutes to show without
+        // a leading zero
+        "%%min-sec:\n"
+        "0: :=00=;\n"
+        "60/60: <0<>>;\n"
+        // this rule set is used for values of 3,600 or more.  Minutes are always
+        // shown, and always shown with two digits
+        "%%hr-min-sec:\n"
+        "0: :=00=;\n"
+        "60/60: <00<>>;\n"
+        "3600/60: <#,##0<:>>>;\n"
+        // the lenient-parse rules allow several different characters to be used
+        // as delimiters between hours, minutes, and seconds
+        "%%lenient-parse:\n"
+        "& ':' = '.' = ' ' = '-';\n"
+    }
+
+}

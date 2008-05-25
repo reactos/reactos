@@ -1,0 +1,58 @@
+﻿// ***************************************************************************
+// *
+// * Copyright (C) 2007 International Business Machines
+// * Corporation and others.  All Rights Reserved.
+// * Tool: com.ibm.icu.dev.tool.cldr.LDML2ICUConverter.java
+// * Source File:<path>/common/main/de_CH.xml
+// *
+// ***************************************************************************
+de_CH{
+    Countries{
+        BD{"Bangladesh"}
+        BN{"Brunei"}
+        BW{"Botswana"}
+        CV{"Kapverden"}
+        DJ{"Djibouti"}
+        GB{"Grossbritannien"}
+        MH{"Marshall-Inseln"}
+        RW{"Rwanda"}
+        SB{"Salomon-Inseln"}
+        ST{"Sao Tomé und Principe"}
+        ZW{"Zimbabwe"}
+    }
+    NumberElements{
+        ".",
+        "'",
+        ";",
+        "%",
+        "0",
+        "#",
+        "-",
+        "E",
+        "‰",
+        "∞",
+        "NaN",
+        "+",
+    }
+    NumberPatterns{
+        "#,##0.###",
+        "¤ #,##0.00;¤-#,##0.00",
+        "#,##0 %",
+        "#E0",
+    }
+    Version{"1.50"}
+    calendar{
+        gregorian{
+            DateTimeElements:intvector{
+                2,
+                4,
+            }
+        }
+    }
+    delimiters{
+        alternateQuotationEnd{"›"}
+        alternateQuotationStart{"‹"}
+        quotationEnd{"»"}
+        quotationStart{"«"}
+    }
+}

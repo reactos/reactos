@@ -1,0 +1,32 @@
+﻿// ***************************************************************************
+// *
+// * Copyright (C) 2007 International Business Machines
+// * Corporation and others.  All Rights Reserved.
+// * Tool: com.ibm.icu.dev.tool.cldr.LDML2ICUConverter.java
+// * Source File:<path>/common/main/sr_Latn_ME.xml
+// *
+// ***************************************************************************
+sr_Latn_ME{
+    NumberPatterns{
+        "#,##0.###",
+        "¤ #,##0.00",
+        "#,##0%",
+        "#E0",
+    }
+    Version{"1.12"}
+    calendar{
+        gregorian{
+            DateTimePatterns{
+                "HH.mm.ss v",
+                "HH.mm.ss z",
+                "HH.mm.ss",
+                "HH.mm",
+                "EEEE, dd. MMMM yyyy.",
+                "d.MM.yyyy.",
+                "dd.MM.yyyy.",
+                "d.M.yy.",
+                "{1} {0}",
+            }
+        }
+    }
+}

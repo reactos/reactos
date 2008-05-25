@@ -1,0 +1,105 @@
+﻿// Copyright (c) 2007 International Business Machines
+// Corporation and others. All Rights Reserved.
+format:table(nofallback) {
+    Info {
+        Description { "These are the data driven format tests" }
+        LongDescription {   "Data for data driven format tests." }
+    }
+    TestData {
+        TestDateFormatBasic {
+            Info {
+                Description { "Test data for format and parse :" }
+            }
+            Settings {
+                // options: 'format', or 'parse'.  One can be omitted if this is a 1 way test.
+                {
+                    Type { "date_format" }
+                },
+                {
+                    Type { "date_parse" }
+                },
+            }
+            Headers { "locale","spec", "date", "str"}
+            // locale: locale including calendar type
+            // spec:   either 'PATTERN=y mm h' etc, or 'DATE=SHORT,TIME=LONG'
+            // date:   either 'MILLIS=####' where #### is an unsigned long (millis), or a calendar spec ERA=0,YEAR=1, etc.. applied to the calendar type specified by the locale
+            // str:   the expected unicode string
+            Cases { 
+               {
+                    "en_US@calendar=gregorian",         
+                    "DATE=SHORT,TIME=SHORT",
+                    "ERA=1,YEAR=2007,MONTH=AUGUST,DATE=8,HOUR_OF_DAY=18,MINUTE=54,SECOND=0",
+                    "8/8/07 6:54 PM"
+               },
+               {
+                    "zh_TW@calendar=taiwan",
+                    "DATE=LONG",
+                    "ERA=1,YEAR=98,MONTH=0,DATE=24",
+                    "民國98年1月24日",
+               },
+               {
+                    //民國前2年1月24日 -> 1910-1-24 
+                    "zh_TW@calendar=taiwan",
+                    "DATE=LONG",
+                    "ERA=0,YEAR=2,MONTH=0,DATE=24",
+                    "民國前2年1月24日",
+               },
+            }
+        }
+        TestFormatRelative {
+            Info {
+                Description { "relative format :" }
+            }
+            Settings {
+                {
+                    Type { "date_format" }
+                },
+            }
+            Headers { "locale","spec", "date", "str"}
+            Cases { 
+               {
+                    "en_US@calendar=gregorian",         
+                    "DATE=RELATIVE_SHORT",
+                    "RELATIVE_MILLIS=86410000", // one day from now
+                    "Tomorrow"
+               },
+               {
+                    "en_US@calendar=gregorian",         
+                    "DATE=RELATIVE_SHORT",
+                    "RELATIVE_MILLIS=0", // one day before now
+                    "Today"
+               },
+               {
+                    "en_US@calendar=gregorian",         
+                    "DATE=RELATIVE_SHORT",
+                    "RELATIVE_MILLIS=-86410000", // one day before now
+                    "Yesterday"
+               },
+               {
+                    "mt_MT@calendar=gregorian",         
+                    "DATE=RELATIVE_SHORT",
+                    "RELATIVE_MILLIS=86410000", // one day from now
+                    "Għada"
+               },
+               {
+                    "mt_MT@calendar=gregorian",         
+                    "DATE=RELATIVE_SHORT",
+                    "RELATIVE_MILLIS=0", // one day before now
+                    "Illum"
+               },
+               {
+                    "mt_MT@calendar=gregorian",         
+                    "DATE=RELATIVE_SHORT",
+                    "RELATIVE_MILLIS=-86410000", // one day before now
+                    "Lbieraħ"
+               },
+               {
+                    "ru",
+                    "DATE=RELATIVE_SHORT",
+                    "RELATIVE_MILLIS=-172810000", // 2 days ago
+                    "Позавчера"
+               },
+            }
+        }
+    }
+}

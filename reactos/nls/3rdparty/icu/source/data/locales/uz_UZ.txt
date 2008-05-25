@@ -1,0 +1,14 @@
+﻿// ***************************************************************************
+// *
+// * Copyright (C) 2007 International Business Machines
+// * Corporation and others.  All Rights Reserved.
+// * Tool: com.ibm.icu.dev.tool.cldr.LDML2ICUConverter.java
+// * Source File:<path>/common/main/uz_UZ.xml
+// *
+// ***************************************************************************
+/**
+ *  ICU <specials> source: <path>/xml/main/uz_UZ.xml
+ */
+uz_UZ{
+    "%%ALIAS"{"uz_Cyrl_UZ"}
+}

@@ -1,0 +1,98 @@
+﻿// ***************************************************************************
+// *
+// * Copyright (C) 2007 International Business Machines
+// * Corporation and others.  All Rights Reserved.
+// * Tool: com.ibm.icu.dev.tool.cldr.LDML2ICUConverter.java
+// * Source File:<path>/common/main/gv.xml
+// *
+// ***************************************************************************
+/**
+ *  ICU <specials> source: <path>/xml/main/gv.xml
+ */
+gv{
+    Countries{
+        GB{"Rywvaneth Unys"}
+    }
+    ExemplarCharacters{"[a-c ç d-z]"}
+    Languages{
+        gv{"Gaelg"}
+    }
+    LocaleScript{
+        "Latn",
+    }
+    NumberPatterns{
+        "#,##0.###",
+        "¤#,##0.00",
+        "#,##0%",
+        "#E0",
+    }
+    Version{"1.47"}
+    calendar{
+        gregorian{
+            AmPmMarkers{
+                "a.m.",
+                "p.m.",
+            }
+            dayNames{
+                format{
+                    abbreviated{
+                        "Jed",
+                        "Jel",
+                        "Jem",
+                        "Jerc",
+                        "Jerd",
+                        "Jeh",
+                        "Jes",
+                    }
+                    wide{
+                        "Jedoonee",
+                        "Jelhein",
+                        "Jemayrt",
+                        "Jercean",
+                        "Jerdein",
+                        "Jeheiney",
+                        "Jesarn",
+                    }
+                }
+            }
+            eras{
+                abbreviated{
+                    "RC",
+                    "AD",
+                }
+            }
+            monthNames{
+                format{
+                    abbreviated{
+                        "J-guer",
+                        "T-arree",
+                        "Mayrnt",
+                        "Avrril",
+                        "Boaldyn",
+                        "M-souree",
+                        "J-souree",
+                        "Luanistyn",
+                        "M-fouyir",
+                        "J-fouyir",
+                        "M.Houney",
+                        "M.Nollick",
+                    }
+                    wide{
+                        "Jerrey-geuree",
+                        "Toshiaght-arree",
+                        "Mayrnt",
+                        "Averil",
+                        "Boaldyn",
+                        "Mean-souree",
+                        "Jerrey-souree",
+                        "Luanistyn",
+                        "Mean-fouyir",
+                        "Jerrey-fouyir",
+                        "Mee Houney",
+                        "Mee ny Nollick",
+                    }
+                }
+            }
+        }
+    }
+}

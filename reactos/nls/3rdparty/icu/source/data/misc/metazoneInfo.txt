@@ -1,0 +1,3719 @@
+﻿// ***************************************************************************
+// *
+// * Copyright (C) 2007 International Business Machines
+// * Corporation and others.  All Rights Reserved.
+// * Tool: com.ibm.icu.dev.tool.cldr.LDML2ICUConverter.java
+// * Source File:<path>/metazoneInfo.xml
+// *
+// ***************************************************************************
+metazoneInfo:table(nofallback){
+    metazoneMappings{
+        "Africa:Abidjan"{
+            mz0{
+                "GMT",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Africa:Accra"{
+            mz0{
+                "GMT",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Africa:Addis_Ababa"{
+            mz0{
+                "Africa_Eastern",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Africa:Algiers"{
+            mz0{
+                "Europe_Western",
+                "1970-01-01 00:00",
+                "1977-10-20 23:00",
+            }
+            mz1{
+                "Europe_Central",
+                "1977-10-20 23:00",
+                "1979-10-25 23:00",
+            }
+            mz2{
+                "Europe_Western",
+                "1979-10-25 23:00",
+                "1981-05-01 00:00",
+            }
+            mz3{
+                "Europe_Central",
+                "1981-05-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Africa:Asmera"{
+            mz0{
+                "Africa_Eastern",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Africa:Bamako"{
+            mz0{
+                "GMT",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Africa:Bangui"{
+            mz0{
+                "Africa_Western",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Africa:Banjul"{
+            mz0{
+                "GMT",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Africa:Bissau"{
+            mz0{
+                "Africa_FarWestern",
+                "1970-01-01 00:00",
+                "1975-01-01 01:00",
+            }
+            mz1{
+                "GMT",
+                "1975-01-01 01:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Africa:Blantyre"{
+            mz0{
+                "Africa_Central",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Africa:Brazzaville"{
+            mz0{
+                "Africa_Western",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Africa:Bujumbura"{
+            mz0{
+                "Africa_Central",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Africa:Cairo"{
+            mz0{
+                "Europe_Eastern",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Africa:Casablanca"{
+            mz0{
+                "Europe_Western",
+                "1970-01-01 00:00",
+                "1984-03-16 00:00",
+            }
+            mz1{
+                "Europe_Central",
+                "1984-03-16 00:00",
+                "1985-12-31 23:00",
+            }
+            mz2{
+                "Europe_Western",
+                "1985-12-31 23:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Africa:Ceuta"{
+            mz0{
+                "Europe_Western",
+                "1970-01-01 00:00",
+                "1984-03-16 00:00",
+            }
+            mz1{
+                "Europe_Central",
+                "1984-03-16 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Africa:Conakry"{
+            mz0{
+                "GMT",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Africa:Dakar"{
+            mz0{
+                "GMT",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Africa:Dar_es_Salaam"{
+            mz0{
+                "Africa_Eastern",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Africa:Djibouti"{
+            mz0{
+                "Africa_Eastern",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Africa:Douala"{
+            mz0{
+                "Africa_Western",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Africa:El_Aaiun"{
+            mz0{
+                "Africa_FarWestern",
+                "1970-01-01 00:00",
+                "1976-04-14 01:00",
+            }
+            mz1{
+                "Europe_Western",
+                "1976-04-14 01:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Africa:Freetown"{
+            mz0{
+                "GMT",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Africa:Gaborone"{
+            mz0{
+                "Africa_Central",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Africa:Harare"{
+            mz0{
+                "Africa_Central",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Africa:Johannesburg"{
+            mz0{
+                "Africa_Southern",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Africa:Kampala"{
+            mz0{
+                "Africa_Eastern",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Africa:Khartoum"{
+            mz0{
+                "Africa_Central",
+                "1970-01-01 00:00",
+                "2000-01-15 10:00",
+            }
+            mz1{
+                "Africa_Eastern",
+                "2000-01-15 10:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Africa:Kigali"{
+            mz0{
+                "Africa_Central",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Africa:Kinshasa"{
+            mz0{
+                "Africa_Western",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Africa:Lagos"{
+            mz0{
+                "Africa_Western",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Africa:Libreville"{
+            mz0{
+                "Africa_Western",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Africa:Lome"{
+            mz0{
+                "GMT",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Africa:Luanda"{
+            mz0{
+                "Africa_Western",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Africa:Lubumbashi"{
+            mz0{
+                "Africa_Central",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Africa:Lusaka"{
+            mz0{
+                "Africa_Central",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Africa:Malabo"{
+            mz0{
+                "Africa_Western",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Africa:Maputo"{
+            mz0{
+                "Africa_Central",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Africa:Maseru"{
+            mz0{
+                "Africa_Southern",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Africa:Mbabane"{
+            mz0{
+                "Africa_Southern",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Africa:Mogadishu"{
+            mz0{
+                "Africa_Eastern",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Africa:Monrovia"{
+            mz0{
+                "Liberia",
+                "1970-01-01 00:00",
+                "1972-05-01 00:45",
+            }
+            mz1{
+                "GMT",
+                "1972-05-01 00:45",
+                "9999-12-31 23:59",
+            }
+        }
+        "Africa:Nairobi"{
+            mz0{
+                "Africa_Eastern",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Africa:Ndjamena"{
+            mz0{
+                "Africa_Western",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Africa:Niamey"{
+            mz0{
+                "Africa_Western",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Africa:Nouakchott"{
+            mz0{
+                "GMT",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Africa:Ouagadougou"{
+            mz0{
+                "GMT",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Africa:Porto-Novo"{
+            mz0{
+                "Africa_Western",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Africa:Sao_Tome"{
+            mz0{
+                "GMT",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Africa:Tripoli"{
+            mz0{
+                "Europe_Eastern",
+                "1970-01-01 00:00",
+                "1981-12-31 22:00",
+            }
+            mz1{
+                "Europe_Central",
+                "1981-12-31 22:00",
+                "1990-05-03 23:00",
+            }
+            mz2{
+                "Europe_Eastern",
+                "1990-05-03 23:00",
+                "1996-09-29 22:00",
+            }
+            mz3{
+                "Europe_Central",
+                "1996-09-29 22:00",
+                "1997-10-03 22:00",
+            }
+            mz4{
+                "Europe_Eastern",
+                "1997-10-03 22:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Africa:Tunis"{
+            mz0{
+                "Europe_Central",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Africa:Windhoek"{
+            mz0{
+                "Africa_Southern",
+                "1970-01-01 00:00",
+                "1990-03-20 22:00",
+            }
+            mz1{
+                "Africa_Central",
+                "1990-03-20 22:00",
+                "1994-04-02 22:00",
+            }
+            mz2{
+                "Africa_Western",
+                "1994-04-02 22:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:Adak"{
+            mz0{
+                "Bering",
+                "1970-01-01 00:00",
+                "1983-10-30 12:00",
+            }
+            mz1{
+                "Hawaii_Aleutian",
+                "1983-10-30 12:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:Anchorage"{
+            mz0{
+                "Alaska_Hawaii",
+                "1970-01-01 00:00",
+                "1983-10-30 11:00",
+            }
+            mz1{
+                "Alaska",
+                "1983-10-30 11:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:Anguilla"{
+            mz0{
+                "Atlantic",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:Antigua"{
+            mz0{
+                "Atlantic",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:Araguaina"{
+            mz0{
+                "Brasilia",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:Argentina:La_Rioja"{
+            mz0{
+                "Argentina",
+                "1970-01-01 00:00",
+                "1991-03-01 02:00",
+            }
+            mz1{
+                "Argentina_Western",
+                "1991-03-01 02:00",
+                "1991-05-07 04:00",
+            }
+            mz2{
+                "Argentina",
+                "1991-05-07 04:00",
+                "2004-06-01 03:00",
+            }
+            mz3{
+                "Argentina_Western",
+                "2004-06-01 03:00",
+                "2004-06-20 04:00",
+            }
+            mz4{
+                "Argentina",
+                "2004-06-20 04:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:Argentina:Rio_Gallegos"{
+            mz0{
+                "Argentina",
+                "1970-01-01 00:00",
+                "2004-06-01 03:00",
+            }
+            mz1{
+                "Argentina_Western",
+                "2004-06-01 03:00",
+                "2004-06-20 04:00",
+            }
+            mz2{
+                "Argentina",
+                "2004-06-20 04:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:Argentina:San_Juan"{
+            mz0{
+                "Argentina",
+                "1970-01-01 00:00",
+                "1991-03-01 02:00",
+            }
+            mz1{
+                "Argentina_Western",
+                "1991-03-01 02:00",
+                "1991-05-07 04:00",
+            }
+            mz2{
+                "Argentina",
+                "1991-05-07 04:00",
+                "2004-05-31 03:00",
+            }
+            mz3{
+                "Argentina_Western",
+                "2004-05-31 03:00",
+                "2004-07-25 04:00",
+            }
+            mz4{
+                "Argentina",
+                "2004-07-25 04:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:Argentina:Tucuman"{
+            mz0{
+                "Argentina",
+                "1970-01-01 00:00",
+                "1991-03-03 02:00",
+            }
+            mz1{
+                "Argentina_Western",
+                "1991-03-03 02:00",
+                "1991-10-20 04:00",
+            }
+            mz2{
+                "Argentina",
+                "1991-10-20 04:00",
+                "2004-06-01 03:00",
+            }
+            mz3{
+                "Argentina_Western",
+                "2004-06-01 03:00",
+                "2004-06-13 04:00",
+            }
+            mz4{
+                "Argentina",
+                "2004-06-13 04:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:Argentina:Ushuaia"{
+            mz0{
+                "Argentina",
+                "1970-01-01 00:00",
+                "2004-05-30 03:00",
+            }
+            mz1{
+                "Argentina_Western",
+                "2004-05-30 03:00",
+                "2004-06-20 04:00",
+            }
+            mz2{
+                "Argentina",
+                "2004-06-20 04:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:Aruba"{
+            mz0{
+                "Atlantic",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:Asuncion"{
+            mz0{
+                "Paraguay",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:Bahia"{
+            mz0{
+                "Brasilia",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:Barbados"{
+            mz0{
+                "Atlantic",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:Belem"{
+            mz0{
+                "Brasilia",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:Belize"{
+            mz0{
+                "America_Central",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:Blanc-Sablon"{
+            mz0{
+                "Atlantic",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:Boa_Vista"{
+            mz0{
+                "Amazon",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:Bogota"{
+            mz0{
+                "Colombia",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:Boise"{
+            mz0{
+                "America_Mountain",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:Buenos_Aires"{
+            mz0{
+                "Argentina",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:Cambridge_Bay"{
+            mz0{
+                "America_Mountain",
+                "1970-01-01 00:00",
+                "1999-10-31 08:00",
+            }
+            mz1{
+                "America_Central",
+                "1999-10-31 08:00",
+                "2000-10-29 07:00",
+            }
+            mz2{
+                "America_Eastern",
+                "2000-10-29 07:00",
+                "2000-11-05 05:00",
+            }
+            mz3{
+                "America_Central",
+                "2000-11-05 05:00",
+                "2001-04-01 09:00",
+            }
+            mz4{
+                "America_Mountain",
+                "2001-04-01 09:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:Campo_Grande"{
+            mz0{
+                "Amazon",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:Cancun"{
+            mz0{
+                "America_Central",
+                "1970-01-01 00:00",
+                "1981-12-23 06:00",
+            }
+            mz1{
+                "America_Eastern",
+                "1981-12-23 06:00",
+                "1998-08-02 06:00",
+            }
+            mz2{
+                "America_Central",
+                "1998-08-02 06:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:Caracas"{
+            mz0{
+                "Venezuela",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:Catamarca"{
+            mz0{
+                "Argentina",
+                "1970-01-01 00:00",
+                "1991-03-03 02:00",
+            }
+            mz1{
+                "Argentina_Western",
+                "1991-03-03 02:00",
+                "1991-10-20 04:00",
+            }
+            mz2{
+                "Argentina",
+                "1991-10-20 04:00",
+                "2004-06-01 03:00",
+            }
+            mz3{
+                "Argentina_Western",
+                "2004-06-01 03:00",
+                "2004-06-20 04:00",
+            }
+            mz4{
+                "Argentina",
+                "2004-06-20 04:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:Cayenne"{
+            mz0{
+                "French_Guiana",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:Cayman"{
+            mz0{
+                "America_Eastern",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:Chicago"{
+            mz0{
+                "America_Central",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:Chihuahua"{
+            mz0{
+                "America_Central",
+                "1970-01-01 00:00",
+                "1998-04-05 09:00",
+            }
+            mz1{
+                "America_Mountain",
+                "1998-04-05 09:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:Coral_Harbour"{
+            mz0{
+                "America_Eastern",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:Cordoba"{
+            mz0{
+                "Argentina",
+                "1970-01-01 00:00",
+                "1991-03-03 02:00",
+            }
+            mz1{
+                "Argentina_Western",
+                "1991-03-03 02:00",
+                "1991-10-20 04:00",
+            }
+            mz2{
+                "Argentina",
+                "1991-10-20 04:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:Costa_Rica"{
+            mz0{
+                "America_Central",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:Cuiaba"{
+            mz0{
+                "Amazon",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:Curacao"{
+            mz0{
+                "Atlantic",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:Danmarkshavn"{
+            mz0{
+                "Greenland_Western",
+                "1970-01-01 00:00",
+                "1996-01-01 03:00",
+            }
+            mz1{
+                "GMT",
+                "1996-01-01 03:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:Dawson"{
+            mz0{
+                "Yukon",
+                "1970-01-01 00:00",
+                "1973-10-28 09:00",
+            }
+            mz1{
+                "America_Pacific",
+                "1973-10-28 09:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:Dawson_Creek"{
+            mz0{
+                "America_Pacific",
+                "1970-01-01 00:00",
+                "1972-08-30 09:00",
+            }
+            mz1{
+                "America_Mountain",
+                "1972-08-30 09:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:Denver"{
+            mz0{
+                "America_Mountain",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:Detroit"{
+            mz0{
+                "America_Eastern",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:Dominica"{
+            mz0{
+                "Atlantic",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:Edmonton"{
+            mz0{
+                "America_Mountain",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:Eirunepe"{
+            mz0{
+                "Acre",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:El_Salvador"{
+            mz0{
+                "America_Central",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:Fortaleza"{
+            mz0{
+                "Brasilia",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:Glace_Bay"{
+            mz0{
+                "Atlantic",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:Godthab"{
+            mz0{
+                "Greenland_Western",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:Goose_Bay"{
+            mz0{
+                "Atlantic",
+                "1970-01-01 00:00",
+                "1988-04-03 04:01",
+            }
+            mz1{
+                "Goose_Bay",
+                "1988-04-03 04:01",
+                "1988-10-30 02:01",
+            }
+            mz2{
+                "Atlantic",
+                "1988-10-30 02:01",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:Grand_Turk"{
+            mz0{
+                "America_Eastern",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:Grenada"{
+            mz0{
+                "Atlantic",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:Guadeloupe"{
+            mz0{
+                "Atlantic",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:Guatemala"{
+            mz0{
+                "America_Central",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:Guayaquil"{
+            mz0{
+                "Ecuador",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:Guyana"{
+            mz0{
+                "Guyana",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:Halifax"{
+            mz0{
+                "Atlantic",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:Havana"{
+            mz0{
+                "Cuba",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:Hermosillo"{
+            mz0{
+                "America_Pacific",
+                "1970-01-01 00:00",
+                "1970-01-01 08:00",
+            }
+            mz1{
+                "America_Mountain",
+                "1970-01-01 08:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:Indiana:Knox"{
+            mz0{
+                "America_Central",
+                "1970-01-01 00:00",
+                "1991-10-27 07:00",
+            }
+            mz1{
+                "America_Eastern",
+                "1991-10-27 07:00",
+                "2006-04-02 07:00",
+            }
+            mz2{
+                "America_Central",
+                "2006-04-02 07:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:Indiana:Marengo"{
+            mz0{
+                "America_Eastern",
+                "1970-01-01 00:00",
+                "1974-01-06 07:00",
+            }
+            mz1{
+                "America_Central",
+                "1974-01-06 07:00",
+                "1974-10-27 07:00",
+            }
+            mz2{
+                "America_Eastern",
+                "1974-10-27 07:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:Indiana:Petersburg"{
+            mz0{
+                "America_Central",
+                "1970-01-01 00:00",
+                "1977-10-30 07:00",
+            }
+            mz1{
+                "America_Eastern",
+                "1977-10-30 07:00",
+                "2006-04-02 07:00",
+            }
+            mz2{
+                "America_Central",
+                "2006-04-02 07:00",
+                "2007-11-04 07:00",
+            }
+            mz3{
+                "America_Eastern",
+                "2007-11-04 07:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:Indiana:Tell_City"{
+            mz0{
+                "America_Eastern",
+                "1970-01-01 00:00",
+                "2006-04-02 07:00",
+            }
+            mz1{
+                "America_Central",
+                "2006-04-02 07:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:Indiana:Vevay"{
+            mz0{
+                "America_Eastern",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:Indiana:Vincennes"{
+            mz0{
+                "America_Eastern",
+                "1970-01-01 00:00",
+                "2006-04-02 07:00",
+            }
+            mz1{
+                "America_Central",
+                "2006-04-02 07:00",
+                "2007-11-04 07:00",
+            }
+            mz2{
+                "America_Eastern",
+                "2007-11-04 07:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:Indiana:Winamac"{
+            mz0{
+                "America_Eastern",
+                "1970-01-01 00:00",
+                "2006-04-02 07:00",
+            }
+            mz1{
+                "America_Central",
+                "2006-04-02 07:00",
+                "2007-03-11 08:00",
+            }
+            mz2{
+                "America_Eastern",
+                "2007-03-11 08:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:Indianapolis"{
+            mz0{
+                "America_Eastern",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:Inuvik"{
+            mz0{
+                "America_Pacific",
+                "1970-01-01 00:00",
+                "1979-04-29 10:00",
+            }
+            mz1{
+                "America_Mountain",
+                "1979-04-29 10:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:Iqaluit"{
+            mz0{
+                "America_Eastern",
+                "1970-01-01 00:00",
+                "1999-10-31 06:00",
+            }
+            mz1{
+                "America_Central",
+                "1999-10-31 06:00",
+                "2000-10-29 07:00",
+            }
+            mz2{
+                "America_Eastern",
+                "2000-10-29 07:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:Jamaica"{
+            mz0{
+                "America_Eastern",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:Jujuy"{
+            mz0{
+                "Argentina",
+                "1970-01-01 00:00",
+                "1990-03-04 02:00",
+            }
+            mz1{
+                "Argentina_Western",
+                "1990-03-04 02:00",
+                "1991-10-06 04:00",
+            }
+            mz2{
+                "Argentina",
+                "1991-10-06 04:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:Juneau"{
+            mz0{
+                "America_Pacific",
+                "1970-01-01 00:00",
+                "1983-10-30 09:00",
+            }
+            mz1{
+                "Alaska",
+                "1983-10-30 09:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:Kentucky:Monticello"{
+            mz0{
+                "America_Central",
+                "1970-01-01 00:00",
+                "2000-10-29 07:00",
+            }
+            mz1{
+                "America_Eastern",
+                "2000-10-29 07:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:La_Paz"{
+            mz0{
+                "Bolivia",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:Lima"{
+            mz0{
+                "Peru",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:Los_Angeles"{
+            mz0{
+                "America_Pacific",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:Louisville"{
+            mz0{
+                "America_Eastern",
+                "1970-01-01 00:00",
+                "1974-01-06 07:00",
+            }
+            mz1{
+                "America_Central",
+                "1974-01-06 07:00",
+                "1974-10-27 07:00",
+            }
+            mz2{
+                "America_Eastern",
+                "1974-10-27 07:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:Maceio"{
+            mz0{
+                "Brasilia",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:Managua"{
+            mz0{
+                "America_Central",
+                "1970-01-01 00:00",
+                "1973-05-01 06:00",
+            }
+            mz1{
+                "America_Eastern",
+                "1973-05-01 06:00",
+                "1975-02-16 05:00",
+            }
+            mz2{
+                "America_Central",
+                "1975-02-16 05:00",
+                "1992-01-01 10:00",
+            }
+            mz3{
+                "America_Eastern",
+                "1992-01-01 10:00",
+                "1992-09-24 05:00",
+            }
+            mz4{
+                "America_Central",
+                "1992-09-24 05:00",
+                "1993-01-01 06:00",
+            }
+            mz5{
+                "America_Eastern",
+                "1993-01-01 06:00",
+                "1997-01-01 05:00",
+            }
+            mz6{
+                "America_Central",
+                "1997-01-01 05:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:Manaus"{
+            mz0{
+                "Amazon",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:Martinique"{
+            mz0{
+                "Atlantic",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:Mazatlan"{
+            mz0{
+                "America_Pacific",
+                "1970-01-01 00:00",
+                "1970-01-01 08:00",
+            }
+            mz1{
+                "America_Mountain",
+                "1970-01-01 08:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:Mendoza"{
+            mz0{
+                "Argentina",
+                "1970-01-01 00:00",
+                "1990-03-04 02:00",
+            }
+            mz1{
+                "Argentina_Western",
+                "1990-03-04 02:00",
+                "1992-10-18 04:00",
+            }
+            mz2{
+                "Argentina",
+                "1992-10-18 04:00",
+                "2004-05-23 03:00",
+            }
+            mz3{
+                "Argentina_Western",
+                "2004-05-23 03:00",
+                "2004-09-26 04:00",
+            }
+            mz4{
+                "Argentina",
+                "2004-09-26 04:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:Menominee"{
+            mz0{
+                "America_Eastern",
+                "1970-01-01 00:00",
+                "1973-04-29 07:00",
+            }
+            mz1{
+                "America_Central",
+                "1973-04-29 07:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:Merida"{
+            mz0{
+                "America_Central",
+                "1970-01-01 00:00",
+                "1981-12-23 06:00",
+            }
+            mz1{
+                "America_Eastern",
+                "1981-12-23 06:00",
+                "1982-12-02 05:00",
+            }
+            mz2{
+                "America_Central",
+                "1982-12-02 05:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:Mexico_City"{
+            mz0{
+                "America_Central",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:Miquelon"{
+            mz0{
+                "Atlantic",
+                "1970-01-01 00:00",
+                "1980-05-01 04:00",
+            }
+            mz1{
+                "Pierre_Miquelon",
+                "1980-05-01 04:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:Moncton"{
+            mz0{
+                "Atlantic",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:Monterrey"{
+            mz0{
+                "America_Central",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:Montevideo"{
+            mz0{
+                "Uruguay",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:Montreal"{
+            mz0{
+                "America_Eastern",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:Montserrat"{
+            mz0{
+                "Atlantic",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:Nassau"{
+            mz0{
+                "America_Eastern",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:New_York"{
+            mz0{
+                "America_Eastern",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:Nipigon"{
+            mz0{
+                "America_Eastern",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:Nome"{
+            mz0{
+                "Bering",
+                "1970-01-01 00:00",
+                "1983-10-30 12:00",
+            }
+            mz1{
+                "Alaska",
+                "1983-10-30 12:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:Noronha"{
+            mz0{
+                "Noronha",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:North_Dakota:Center"{
+            mz0{
+                "America_Mountain",
+                "1970-01-01 00:00",
+                "1992-10-25 08:00",
+            }
+            mz1{
+                "America_Central",
+                "1992-10-25 08:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:North_Dakota:New_Salem"{
+            mz0{
+                "America_Mountain",
+                "1970-01-01 00:00",
+                "2003-10-26 08:00",
+            }
+            mz1{
+                "America_Central",
+                "2003-10-26 08:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:Panama"{
+            mz0{
+                "America_Eastern",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:Pangnirtung"{
+            mz0{
+                "Atlantic",
+                "1970-01-01 00:00",
+                "1995-04-02 06:00",
+            }
+            mz1{
+                "America_Eastern",
+                "1995-04-02 06:00",
+                "1999-10-31 06:00",
+            }
+            mz2{
+                "America_Central",
+                "1999-10-31 06:00",
+                "2000-10-29 07:00",
+            }
+            mz3{
+                "America_Eastern",
+                "2000-10-29 07:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:Paramaribo"{
+            mz0{
+                "Dutch_Guiana",
+                "1970-01-01 00:00",
+                "1975-11-20 03:30",
+            }
+            mz1{
+                "Suriname",
+                "1975-11-20 03:30",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:Phoenix"{
+            mz0{
+                "America_Mountain",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:Port-au-Prince"{
+            mz0{
+                "America_Eastern",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:Port_of_Spain"{
+            mz0{
+                "Atlantic",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:Porto_Velho"{
+            mz0{
+                "Amazon",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:Puerto_Rico"{
+            mz0{
+                "Atlantic",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:Rainy_River"{
+            mz0{
+                "America_Central",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:Rankin_Inlet"{
+            mz0{
+                "America_Central",
+                "1970-01-01 00:00",
+                "2000-10-29 07:00",
+            }
+            mz1{
+                "America_Eastern",
+                "2000-10-29 07:00",
+                "2001-04-01 08:00",
+            }
+            mz2{
+                "America_Central",
+                "2001-04-01 08:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:Recife"{
+            mz0{
+                "Brasilia",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:Regina"{
+            mz0{
+                "America_Central",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:Resolute"{
+            mz0{
+                "America_Central",
+                "1970-01-01 00:00",
+                "2000-10-29 07:00",
+            }
+            mz1{
+                "America_Eastern",
+                "2000-10-29 07:00",
+                "2001-04-01 08:00",
+            }
+            mz2{
+                "America_Central",
+                "2001-04-01 08:00",
+                "2006-10-29 07:00",
+            }
+            mz3{
+                "America_Eastern",
+                "2006-10-29 07:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:Rio_Branco"{
+            mz0{
+                "Acre",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:Santiago"{
+            mz0{
+                "Chile",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:Santo_Domingo"{
+            mz0{
+                "Dominican",
+                "1970-01-01 00:00",
+                "1974-10-27 05:00",
+            }
+            mz1{
+                "Atlantic",
+                "1974-10-27 05:00",
+                "2000-10-29 06:00",
+            }
+            mz2{
+                "America_Eastern",
+                "2000-10-29 06:00",
+                "2000-12-03 06:00",
+            }
+            mz3{
+                "Atlantic",
+                "2000-12-03 06:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:Sao_Paulo"{
+            mz0{
+                "Brasilia",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:Scoresbysund"{
+            mz0{
+                "Greenland_Central",
+                "1970-01-01 00:00",
+                "1981-03-29 02:00",
+            }
+            mz1{
+                "Greenland_Eastern",
+                "1981-03-29 02:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:Shiprock"{
+            mz0{
+                "America_Mountain",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:St_Johns"{
+            mz0{
+                "Newfoundland",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:St_Kitts"{
+            mz0{
+                "Atlantic",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:St_Lucia"{
+            mz0{
+                "Atlantic",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:St_Thomas"{
+            mz0{
+                "Atlantic",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:St_Vincent"{
+            mz0{
+                "Atlantic",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:Swift_Current"{
+            mz0{
+                "America_Mountain",
+                "1970-01-01 00:00",
+                "1972-04-30 09:00",
+            }
+            mz1{
+                "America_Central",
+                "1972-04-30 09:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:Tegucigalpa"{
+            mz0{
+                "America_Central",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:Thule"{
+            mz0{
+                "Atlantic",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:Thunder_Bay"{
+            mz0{
+                "America_Eastern",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:Tijuana"{
+            mz0{
+                "America_Pacific",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:Toronto"{
+            mz0{
+                "America_Eastern",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:Tortola"{
+            mz0{
+                "Atlantic",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:Vancouver"{
+            mz0{
+                "America_Pacific",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:Whitehorse"{
+            mz0{
+                "America_Pacific",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:Winnipeg"{
+            mz0{
+                "America_Central",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:Yakutat"{
+            mz0{
+                "Yukon",
+                "1970-01-01 00:00",
+                "1983-10-30 10:00",
+            }
+            mz1{
+                "Alaska",
+                "1983-10-30 10:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "America:Yellowknife"{
+            mz0{
+                "America_Mountain",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Antarctica:Casey"{
+            mz0{
+                "Australia_Western",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Antarctica:Davis"{
+            mz0{
+                "Davis",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Antarctica:DumontDUrville"{
+            mz0{
+                "DumontDUrville",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Antarctica:Mawson"{
+            mz0{
+                "Mawson",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Antarctica:McMurdo"{
+            mz0{
+                "New_Zealand",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Antarctica:Palmer"{
+            mz0{
+                "Argentina",
+                "1970-01-01 00:00",
+                "1982-05-01 03:00",
+            }
+            mz1{
+                "Chile",
+                "1982-05-01 03:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Antarctica:Rothera"{
+            mz0{
+                "Rothera",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Antarctica:Syowa"{
+            mz0{
+                "Syowa",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Antarctica:Vostok"{
+            mz0{
+                "Vostok",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Arctic:Longyearbyen"{
+            mz0{
+                "Europe_Central",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Asia:Aden"{
+            mz0{
+                "Arabian",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Asia:Almaty"{
+            mz0{
+                "Almaty",
+                "1970-01-01 00:00",
+                "2005-03-14 18:00",
+            }
+            mz1{
+                "Kazakhstan_Eastern",
+                "2005-03-14 18:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Asia:Amman"{
+            mz0{
+                "Europe_Eastern",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Asia:Anadyr"{
+            mz0{
+                "Anadyr",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Asia:Aqtau"{
+            mz0{
+                "Shevchenko",
+                "1970-01-01 00:00",
+                "1991-12-15 19:00",
+            }
+            mz1{
+                "Aqtau",
+                "1991-12-15 19:00",
+                "2005-03-14 20:00",
+            }
+            mz2{
+                "Kazakhstan_Western",
+                "2005-03-14 20:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Asia:Aqtobe"{
+            mz0{
+                "Aktyubinsk",
+                "1970-01-01 00:00",
+                "1991-12-15 19:00",
+            }
+            mz1{
+                "Aqtobe",
+                "1991-12-15 19:00",
+                "2005-03-14 19:00",
+            }
+            mz2{
+                "Kazakhstan_Western",
+                "2005-03-14 19:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Asia:Ashgabat"{
+            mz0{
+                "Ashkhabad",
+                "1970-01-01 00:00",
+                "1991-10-26 20:00",
+            }
+            mz1{
+                "Turkmenistan",
+                "1991-10-26 20:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Asia:Baghdad"{
+            mz0{
+                "Arabian",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Asia:Bahrain"{
+            mz0{
+                "Gulf",
+                "1970-01-01 00:00",
+                "1972-05-31 20:00",
+            }
+            mz1{
+                "Arabian",
+                "1972-05-31 20:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Asia:Baku"{
+            mz0{
+                "Baku",
+                "1970-01-01 00:00",
+                "1991-08-29 20:00",
+            }
+            mz1{
+                "Azerbaijan",
+                "1991-08-29 20:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Asia:Bangkok"{
+            mz0{
+                "Indochina",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Asia:Beirut"{
+            mz0{
+                "Europe_Eastern",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Asia:Bishkek"{
+            mz0{
+                "Frunze",
+                "1970-01-01 00:00",
+                "1991-08-30 20:00",
+            }
+            mz1{
+                "Kyrgystan",
+                "1991-08-30 20:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Asia:Brunei"{
+            mz0{
+                "Brunei",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Asia:Calcutta"{
+            mz0{
+                "India",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Asia:Choibalsan"{
+            mz0{
+                "Mongolia",
+                "1970-01-01 00:00",
+                "1983-03-31 16:00",
+            }
+            mz1{
+                "Choibalsan",
+                "1983-03-31 16:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Asia:Chongqing"{
+            mz0{
+                "Long_Shu",
+                "1970-01-01 00:00",
+                "1980-04-30 17:00",
+            }
+            mz1{
+                "China",
+                "1980-04-30 17:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Asia:Colombo"{
+            mz0{
+                "India",
+                "1970-01-01 00:00",
+                "1996-05-24 18:30",
+            }
+            mz1{
+                "Lanka",
+                "1996-05-24 18:30",
+                "2006-04-14 18:30",
+            }
+            mz2{
+                "India",
+                "2006-04-14 18:30",
+                "9999-12-31 23:59",
+            }
+        }
+        "Asia:Damascus"{
+            mz0{
+                "Europe_Eastern",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Asia:Dhaka"{
+            mz0{
+                "Dacca",
+                "1970-01-01 00:00",
+                "1971-03-25 18:00",
+            }
+            mz1{
+                "Bangladesh",
+                "1971-03-25 18:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Asia:Dili"{
+            mz0{
+                "East_Timor",
+                "1970-01-01 00:00",
+                "1976-05-02 15:00",
+            }
+            mz1{
+                "Indonesia_Central",
+                "1976-05-02 15:00",
+                "2000-09-16 16:00",
+            }
+            mz2{
+                "East_Timor",
+                "2000-09-16 16:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Asia:Dubai"{
+            mz0{
+                "Gulf",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Asia:Dushanbe"{
+            mz0{
+                "Dushanbe",
+                "1970-01-01 00:00",
+                "1991-09-08 21:00",
+            }
+            mz1{
+                "Tajikistan",
+                "1991-09-08 21:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Asia:Gaza"{
+            mz0{
+                "Israel",
+                "1970-01-01 00:00",
+                "1995-12-31 22:00",
+            }
+            mz1{
+                "Europe_Eastern",
+                "1995-12-31 22:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Asia:Harbin"{
+            mz0{
+                "Changbai",
+                "1970-01-01 00:00",
+                "1980-04-30 15:30",
+            }
+            mz1{
+                "China",
+                "1980-04-30 15:30",
+                "9999-12-31 23:59",
+            }
+        }
+        "Asia:Hong_Kong"{
+            mz0{
+                "Hong_Kong",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Asia:Hovd"{
+            mz0{
+                "Hovd",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Asia:Irkutsk"{
+            mz0{
+                "Irkutsk",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Asia:Jakarta"{
+            mz0{
+                "Indonesia_Western",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Asia:Jayapura"{
+            mz0{
+                "Indonesia_Eastern",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Asia:Jerusalem"{
+            mz0{
+                "Israel",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Asia:Kabul"{
+            mz0{
+                "Afghanistan",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Asia:Kamchatka"{
+            mz0{
+                "Kamchatka",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Asia:Karachi"{
+            mz0{
+                "Karachi",
+                "1970-01-01 00:00",
+                "1971-03-25 19:00",
+            }
+            mz1{
+                "Pakistan",
+                "1971-03-25 19:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Asia:Kashgar"{
+            mz0{
+                "Kashgar",
+                "1970-01-01 00:00",
+                "1980-04-30 19:00",
+            }
+            mz1{
+                "China",
+                "1980-04-30 19:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Asia:Katmandu"{
+            mz0{
+                "Nepal",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Asia:Krasnoyarsk"{
+            mz0{
+                "Krasnoyarsk",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Asia:Kuala_Lumpur"{
+            mz0{
+                "Malaya",
+                "1970-01-01 00:00",
+                "1981-12-31 16:30",
+            }
+            mz1{
+                "Malaysia",
+                "1981-12-31 16:30",
+                "9999-12-31 23:59",
+            }
+        }
+        "Asia:Kuching"{
+            mz0{
+                "Borneo",
+                "1970-01-01 00:00",
+                "1981-12-31 16:00",
+            }
+            mz1{
+                "Malaysia",
+                "1981-12-31 16:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Asia:Kuwait"{
+            mz0{
+                "Arabian",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Asia:Macau"{
+            mz0{
+                "Macau",
+                "1970-01-01 00:00",
+                "1999-12-19 16:00",
+            }
+            mz1{
+                "China",
+                "1999-12-19 16:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Asia:Magadan"{
+            mz0{
+                "Magadan",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Asia:Makassar"{
+            mz0{
+                "Indonesia_Central",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Asia:Manila"{
+            mz0{
+                "Philippines",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Asia:Muscat"{
+            mz0{
+                "Gulf",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Asia:Nicosia"{
+            mz0{
+                "Europe_Eastern",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Asia:Novosibirsk"{
+            mz0{
+                "Novosibirsk",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Asia:Omsk"{
+            mz0{
+                "Omsk",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Asia:Oral"{
+            mz0{
+                "Uralsk",
+                "1970-01-01 00:00",
+                "1991-12-15 20:00",
+            }
+            mz1{
+                "Oral",
+                "1991-12-15 20:00",
+                "2005-03-14 20:00",
+            }
+            mz2{
+                "Kazakhstan_Western",
+                "2005-03-14 20:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Asia:Phnom_Penh"{
+            mz0{
+                "Indochina",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Asia:Pontianak"{
+            mz0{
+                "Indonesia_Central",
+                "1970-01-01 00:00",
+                "1987-12-31 16:00",
+            }
+            mz1{
+                "Indonesia_Western",
+                "1987-12-31 16:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Asia:Pyongyang"{
+            mz0{
+                "Korea",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Asia:Qatar"{
+            mz0{
+                "Gulf",
+                "1970-01-01 00:00",
+                "1972-05-31 20:00",
+            }
+            mz1{
+                "Arabian",
+                "1972-05-31 20:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Asia:Qyzylorda"{
+            mz0{
+                "Kizilorda",
+                "1970-01-01 00:00",
+                "1991-12-15 19:00",
+            }
+            mz1{
+                "Qyzylorda",
+                "1991-12-15 19:00",
+                "2005-03-14 18:00",
+            }
+            mz2{
+                "Kazakhstan_Eastern",
+                "2005-03-14 18:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Asia:Rangoon"{
+            mz0{
+                "Myanmar",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Asia:Riyadh"{
+            mz0{
+                "Arabian",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Asia:Saigon"{
+            mz0{
+                "Indochina",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Asia:Sakhalin"{
+            mz0{
+                "Sakhalin",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Asia:Samarkand"{
+            mz0{
+                "Samarkand",
+                "1970-01-01 00:00",
+                "1981-09-30 18:00",
+            }
+            mz1{
+                "Tashkent",
+                "1981-09-30 18:00",
+                "1982-03-31 18:00",
+            }
+            mz2{
+                "Samarkand",
+                "1982-03-31 18:00",
+                "1991-08-31 18:00",
+            }
+            mz3{
+                "Uzbekistan",
+                "1991-08-31 18:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Asia:Seoul"{
+            mz0{
+                "Korea",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Asia:Shanghai"{
+            mz0{
+                "China",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Asia:Singapore"{
+            mz0{
+                "Singapore",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Asia:Taipei"{
+            mz0{
+                "China",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Asia:Tashkent"{
+            mz0{
+                "Tashkent",
+                "1970-01-01 00:00",
+                "1991-08-31 18:00",
+            }
+            mz1{
+                "Uzbekistan",
+                "1991-08-31 18:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Asia:Tbilisi"{
+            mz0{
+                "Tbilisi",
+                "1970-01-01 00:00",
+                "1991-04-08 20:00",
+            }
+            mz1{
+                "Georgia",
+                "1991-04-08 20:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Asia:Tehran"{
+            mz0{
+                "Iran",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Asia:Thimphu"{
+            mz0{
+                "India",
+                "1970-01-01 00:00",
+                "1987-09-30 18:30",
+            }
+            mz1{
+                "Bhutan",
+                "1987-09-30 18:30",
+                "9999-12-31 23:59",
+            }
+        }
+        "Asia:Tokyo"{
+            mz0{
+                "Japan",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Asia:Ulaanbaatar"{
+            mz0{
+                "Mongolia",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Asia:Urumqi"{
+            mz0{
+                "Urumqi",
+                "1970-01-01 00:00",
+                "1980-04-30 18:00",
+            }
+            mz1{
+                "China",
+                "1980-04-30 18:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Asia:Vientiane"{
+            mz0{
+                "Indochina",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Asia:Vladivostok"{
+            mz0{
+                "Vladivostok",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Asia:Yakutsk"{
+            mz0{
+                "Yakutsk",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Asia:Yekaterinburg"{
+            mz0{
+                "Sverdlovsk",
+                "1970-01-01 00:00",
+                "1992-01-18 22:00",
+            }
+            mz1{
+                "Yekaterinburg",
+                "1992-01-18 22:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Asia:Yerevan"{
+            mz0{
+                "Yerevan",
+                "1970-01-01 00:00",
+                "1991-09-22 20:00",
+            }
+            mz1{
+                "Armenia",
+                "1991-09-22 20:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Atlantic:Azores"{
+            mz0{
+                "Azores",
+                "1970-01-01 00:00",
+                "1992-09-27 02:00",
+            }
+            mz1{
+                "Europe_Western",
+                "1992-09-27 02:00",
+                "1993-03-28 01:00",
+            }
+            mz2{
+                "Azores",
+                "1993-03-28 01:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Atlantic:Bermuda"{
+            mz0{
+                "Atlantic",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Atlantic:Canary"{
+            mz0{
+                "Europe_Western",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Atlantic:Cape_Verde"{
+            mz0{
+                "Cape_Verde",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Atlantic:Faeroe"{
+            mz0{
+                "Europe_Western",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Atlantic:Jan_Mayen"{
+            mz0{
+                "Europe_Central",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Atlantic:Madeira"{
+            mz0{
+                "Europe_Western",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Atlantic:Reykjavik"{
+            mz0{
+                "GMT",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Atlantic:South_Georgia"{
+            mz0{
+                "South_Georgia",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Atlantic:St_Helena"{
+            mz0{
+                "GMT",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Atlantic:Stanley"{
+            mz0{
+                "Falkland",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Australia:Adelaide"{
+            mz0{
+                "Australia_Central",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Australia:Brisbane"{
+            mz0{
+                "Australia_Eastern",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Australia:Broken_Hill"{
+            mz0{
+                "Australia_Central",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Australia:Currie"{
+            mz0{
+                "Australia_Eastern",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Australia:Darwin"{
+            mz0{
+                "Australia_Central",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Australia:Eucla"{
+            mz0{
+                "Australia_CentralWestern",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Australia:Hobart"{
+            mz0{
+                "Australia_Eastern",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Australia:Lindeman"{
+            mz0{
+                "Australia_Eastern",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Australia:Lord_Howe"{
+            mz0{
+                "Australia_Eastern",
+                "1970-01-01 00:00",
+                "1981-02-28 14:00",
+            }
+            mz1{
+                "Lord_Howe",
+                "1981-02-28 14:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Australia:Melbourne"{
+            mz0{
+                "Australia_Eastern",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Australia:Perth"{
+            mz0{
+                "Australia_Western",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Australia:Sydney"{
+            mz0{
+                "Australia_Eastern",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Europe:Amsterdam"{
+            mz0{
+                "Europe_Central",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Europe:Andorra"{
+            mz0{
+                "Europe_Central",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Europe:Athens"{
+            mz0{
+                "Europe_Eastern",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Europe:Belgrade"{
+            mz0{
+                "Europe_Central",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Europe:Berlin"{
+            mz0{
+                "Europe_Central",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Europe:Bratislava"{
+            mz0{
+                "Europe_Central",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Europe:Brussels"{
+            mz0{
+                "Europe_Central",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Europe:Bucharest"{
+            mz0{
+                "Europe_Eastern",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Europe:Budapest"{
+            mz0{
+                "Europe_Central",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Europe:Chisinau"{
+            mz0{
+                "Moscow",
+                "1970-01-01 00:00",
+                "1990-05-05 21:00",
+            }
+            mz1{
+                "Europe_Eastern",
+                "1990-05-05 21:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Europe:Copenhagen"{
+            mz0{
+                "Europe_Central",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Europe:Dublin"{
+            mz0{
+                "Irish",
+                "1970-01-01 00:00",
+                "1971-10-31 02:00",
+            }
+            mz1{
+                "GMT",
+                "1971-10-31 02:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Europe:Gibraltar"{
+            mz0{
+                "Europe_Central",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Europe:Guernsey"{
+            mz0{
+                "British",
+                "1970-01-01 00:00",
+                "1971-10-31 02:00",
+            }
+            mz1{
+                "GMT",
+                "1971-10-31 02:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Europe:Helsinki"{
+            mz0{
+                "Europe_Eastern",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Europe:Isle_of_Man"{
+            mz0{
+                "British",
+                "1970-01-01 00:00",
+                "1971-10-31 02:00",
+            }
+            mz1{
+                "GMT",
+                "1971-10-31 02:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Europe:Istanbul"{
+            mz0{
+                "Europe_Eastern",
+                "1970-01-01 00:00",
+                "1978-10-14 21:00",
+            }
+            mz1{
+                "Turkey",
+                "1978-10-14 21:00",
+                "1985-04-19 21:00",
+            }
+            mz2{
+                "Europe_Eastern",
+                "1985-04-19 21:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Europe:Jersey"{
+            mz0{
+                "British",
+                "1970-01-01 00:00",
+                "1971-10-31 02:00",
+            }
+            mz1{
+                "GMT",
+                "1971-10-31 02:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Europe:Kaliningrad"{
+            mz0{
+                "Moscow",
+                "1970-01-01 00:00",
+                "1991-03-30 23:00",
+            }
+            mz1{
+                "Europe_Eastern",
+                "1991-03-30 23:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Europe:Kiev"{
+            mz0{
+                "Moscow",
+                "1970-01-01 00:00",
+                "1990-06-30 23:00",
+            }
+            mz1{
+                "Europe_Eastern",
+                "1990-06-30 23:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Europe:Lisbon"{
+            mz0{
+                "Europe_Central",
+                "1970-01-01 00:00",
+                "1976-09-26 00:00",
+            }
+            mz1{
+                "Europe_Western",
+                "1976-09-26 00:00",
+                "1992-09-27 01:00",
+            }
+            mz2{
+                "Europe_Central",
+                "1992-09-27 01:00",
+                "1996-03-31 01:00",
+            }
+            mz3{
+                "Europe_Western",
+                "1996-03-31 01:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Europe:Ljubljana"{
+            mz0{
+                "Europe_Central",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Europe:London"{
+            mz0{
+                "British",
+                "1970-01-01 00:00",
+                "1971-10-31 02:00",
+            }
+            mz1{
+                "GMT",
+                "1971-10-31 02:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Europe:Luxembourg"{
+            mz0{
+                "Europe_Central",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Europe:Madrid"{
+            mz0{
+                "Europe_Central",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Europe:Malta"{
+            mz0{
+                "Europe_Central",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Europe:Mariehamn"{
+            mz0{
+                "Europe_Eastern",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Europe:Minsk"{
+            mz0{
+                "Moscow",
+                "1970-01-01 00:00",
+                "1991-03-30 23:00",
+            }
+            mz1{
+                "Europe_Eastern",
+                "1991-03-30 23:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Europe:Monaco"{
+            mz0{
+                "Europe_Central",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Europe:Moscow"{
+            mz0{
+                "Moscow",
+                "1970-01-01 00:00",
+                "1991-03-30 23:00",
+            }
+            mz1{
+                "Europe_Eastern",
+                "1991-03-30 23:00",
+                "1992-01-19 00:00",
+            }
+            mz2{
+                "Moscow",
+                "1992-01-19 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Europe:Oslo"{
+            mz0{
+                "Europe_Central",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Europe:Paris"{
+            mz0{
+                "Europe_Central",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Europe:Podgorica"{
+            mz0{
+                "Europe_Central",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Europe:Prague"{
+            mz0{
+                "Europe_Central",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Europe:Riga"{
+            mz0{
+                "Moscow",
+                "1970-01-01 00:00",
+                "1989-03-25 23:00",
+            }
+            mz1{
+                "Europe_Eastern",
+                "1989-03-25 23:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Europe:Rome"{
+            mz0{
+                "Europe_Central",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Europe:Samara"{
+            mz0{
+                "Kuybyshev",
+                "1970-01-01 00:00",
+                "1991-10-20 00:00",
+            }
+            mz1{
+                "Samara",
+                "1991-10-20 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Europe:San_Marino"{
+            mz0{
+                "Europe_Central",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Europe:Sarajevo"{
+            mz0{
+                "Europe_Central",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Europe:Simferopol"{
+            mz0{
+                "Moscow",
+                "1970-01-01 00:00",
+                "1990-06-30 23:00",
+            }
+            mz1{
+                "Europe_Eastern",
+                "1990-06-30 23:00",
+                "1994-04-30 21:00",
+            }
+            mz2{
+                "Moscow",
+                "1994-04-30 21:00",
+                "1997-03-30 01:00",
+            }
+            mz3{
+                "Europe_Eastern",
+                "1997-03-30 01:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Europe:Skopje"{
+            mz0{
+                "Europe_Central",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Europe:Sofia"{
+            mz0{
+                "Europe_Eastern",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Europe:Stockholm"{
+            mz0{
+                "Europe_Central",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Europe:Tallinn"{
+            mz0{
+                "Moscow",
+                "1970-01-01 00:00",
+                "1989-03-25 23:00",
+            }
+            mz1{
+                "Europe_Eastern",
+                "1989-03-25 23:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Europe:Tirane"{
+            mz0{
+                "Europe_Central",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Europe:Uzhgorod"{
+            mz0{
+                "Moscow",
+                "1970-01-01 00:00",
+                "1990-06-30 23:00",
+            }
+            mz1{
+                "Europe_Central",
+                "1990-06-30 23:00",
+                "1991-03-31 02:00",
+            }
+            mz2{
+                "Europe_Eastern",
+                "1991-03-31 02:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Europe:Vaduz"{
+            mz0{
+                "Europe_Central",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Europe:Vatican"{
+            mz0{
+                "Europe_Central",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Europe:Vienna"{
+            mz0{
+                "Europe_Central",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Europe:Vilnius"{
+            mz0{
+                "Moscow",
+                "1970-01-01 00:00",
+                "1991-03-30 23:00",
+            }
+            mz1{
+                "Europe_Eastern",
+                "1991-03-30 23:00",
+                "1998-03-29 01:00",
+            }
+            mz2{
+                "Europe_Central",
+                "1998-03-29 01:00",
+                "1999-10-31 01:00",
+            }
+            mz3{
+                "Europe_Eastern",
+                "1999-10-31 01:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Europe:Volgograd"{
+            mz0{
+                "Volgograd",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Europe:Warsaw"{
+            mz0{
+                "Europe_Central",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Europe:Zagreb"{
+            mz0{
+                "Europe_Central",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Europe:Zaporozhye"{
+            mz0{
+                "Moscow",
+                "1970-01-01 00:00",
+                "1991-03-30 23:00",
+            }
+            mz1{
+                "Europe_Eastern",
+                "1991-03-30 23:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Europe:Zurich"{
+            mz0{
+                "Europe_Central",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Indian:Antananarivo"{
+            mz0{
+                "Africa_Eastern",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Indian:Chagos"{
+            mz0{
+                "Indian_Ocean",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Indian:Christmas"{
+            mz0{
+                "Christmas",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Indian:Cocos"{
+            mz0{
+                "Cocos",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Indian:Comoro"{
+            mz0{
+                "Africa_Eastern",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Indian:Kerguelen"{
+            mz0{
+                "French_Southern",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Indian:Mahe"{
+            mz0{
+                "Seychelles",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Indian:Maldives"{
+            mz0{
+                "Maldives",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Indian:Mauritius"{
+            mz0{
+                "Mauritius",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Indian:Mayotte"{
+            mz0{
+                "Africa_Eastern",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Indian:Reunion"{
+            mz0{
+                "Reunion",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Pacific:Apia"{
+            mz0{
+                "Bering",
+                "1970-01-01 00:00",
+                "1983-10-30 12:00",
+            }
+            mz1{
+                "Samoa",
+                "1983-10-30 12:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Pacific:Auckland"{
+            mz0{
+                "New_Zealand",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Pacific:Chatham"{
+            mz0{
+                "Chatham",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Pacific:Easter"{
+            mz0{
+                "Easter",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Pacific:Efate"{
+            mz0{
+                "Vanuatu",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Pacific:Enderbury"{
+            mz0{
+                "Phoenix_Islands",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Pacific:Fakaofo"{
+            mz0{
+                "Tokelau",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Pacific:Fiji"{
+            mz0{
+                "Fiji",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Pacific:Funafuti"{
+            mz0{
+                "Tuvalu",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Pacific:Galapagos"{
+            mz0{
+                "Ecuador",
+                "1970-01-01 00:00",
+                "1986-01-01 05:00",
+            }
+            mz1{
+                "Galapagos",
+                "1986-01-01 05:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Pacific:Gambier"{
+            mz0{
+                "Gambier",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Pacific:Guadalcanal"{
+            mz0{
+                "Solomon",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Pacific:Guam"{
+            mz0{
+                "Guam",
+                "1970-01-01 00:00",
+                "2000-12-22 14:00",
+            }
+            mz1{
+                "Chamorro",
+                "2000-12-22 14:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Pacific:Honolulu"{
+            mz0{
+                "Alaska_Hawaii",
+                "1970-01-01 00:00",
+                "1983-10-30 11:00",
+            }
+            mz1{
+                "Hawaii_Aleutian",
+                "1983-10-30 11:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Pacific:Johnston"{
+            mz0{
+                "Alaska_Hawaii",
+                "1970-01-01 00:00",
+                "1983-10-30 11:00",
+            }
+            mz1{
+                "Hawaii_Aleutian",
+                "1983-10-30 11:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Pacific:Kiritimati"{
+            mz0{
+                "Line_Islands",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Pacific:Kosrae"{
+            mz0{
+                "Kosrae",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Pacific:Kwajalein"{
+            mz0{
+                "Kwajalein",
+                "1970-01-01 00:00",
+                "1993-08-20 12:00",
+            }
+            mz1{
+                "Marshall_Islands",
+                "1993-08-20 12:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Pacific:Majuro"{
+            mz0{
+                "Marshall_Islands",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Pacific:Marquesas"{
+            mz0{
+                "Marquesas",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Pacific:Midway"{
+            mz0{
+                "Bering",
+                "1970-01-01 00:00",
+                "1983-10-30 12:00",
+            }
+            mz1{
+                "Samoa",
+                "1983-10-30 12:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Pacific:Nauru"{
+            mz0{
+                "Nauru",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Pacific:Niue"{
+            mz0{
+                "Niue",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Pacific:Norfolk"{
+            mz0{
+                "Norfolk",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Pacific:Noumea"{
+            mz0{
+                "New_Caledonia",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Pacific:Pago_Pago"{
+            mz0{
+                "Bering",
+                "1970-01-01 00:00",
+                "1983-10-30 12:00",
+            }
+            mz1{
+                "Samoa",
+                "1983-10-30 12:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Pacific:Palau"{
+            mz0{
+                "Palau",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Pacific:Pitcairn"{
+            mz0{
+                "Pitcairn",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Pacific:Ponape"{
+            mz0{
+                "Ponape",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Pacific:Port_Moresby"{
+            mz0{
+                "Papua_New_Guinea",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Pacific:Rarotonga"{
+            mz0{
+                "Cook",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Pacific:Saipan"{
+            mz0{
+                "North_Mariana",
+                "1970-01-01 00:00",
+                "2000-12-22 14:00",
+            }
+            mz1{
+                "Chamorro",
+                "2000-12-22 14:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Pacific:Tahiti"{
+            mz0{
+                "Tahiti",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Pacific:Tarawa"{
+            mz0{
+                "Gilbert_Islands",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Pacific:Tongatapu"{
+            mz0{
+                "Tonga",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Pacific:Truk"{
+            mz0{
+                "Truk",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Pacific:Wake"{
+            mz0{
+                "Wake",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+        "Pacific:Wallis"{
+            mz0{
+                "Wallis",
+                "1970-01-01 00:00",
+                "9999-12-31 23:59",
+            }
+        }
+    }
+}

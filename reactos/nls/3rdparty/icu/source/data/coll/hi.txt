@@ -1,0 +1,29 @@
+﻿// ***************************************************************************
+// *
+// * Copyright (C) 2007 International Business Machines
+// * Corporation and others.  All Rights Reserved.
+// * Tool: com.ibm.icu.dev.tool.cldr.LDML2ICUConverter.java
+// * Source File:<path>/common/collation/hi.xml
+// *
+// ***************************************************************************
+/**
+ *  ICU <specials> source: <path>/xml/collation/hi.xml
+ */
+hi{
+    Version{"1.23"}
+    collations{
+        direct{
+            Sequence{
+                "&[last regular ]<ँ<ं<ः<अ<आ<इ<ई<उ<ऊ<ऋ<ऌ<ऍ<ऎ<ए<ऐ<ऑ<ऒ<ओ<औ<क<ख<ग<घ<ङ<च<छ"
+                "<ज<झ<ञ<ट<ठ<ड<ढ<ण<त<थ<द<ध<न<ऩ<प<फ<ब<भ<म<य<र<ऱ<ल<ळ<ऴ<व<श<ष<स<ह<़<ऽ<ा<ि"
+                "<ी<ु<ू<ृ<ॄ<ॅ<ॆ<े<ै<ॉ<ॊ<ो<ौ<्<ॐ<॑<॒<॓<॔<क़<ख़<ग़<ज़<ड़<ढ़<फ़<य़<ॠ<ॡ<ॢ"
+                "<ॣ<।<॥<०<१<२<३<४<५<६<७<८<९<॰"
+            }
+            Version{"1.5"}
+        }
+        standard{
+            Sequence{" [normalization on ]&[before 1]0<ॐ<।<॥<॰&ह<़<ँ<ं<ः<॑<॒<॓<॔&ऽ<्"}
+            Version{"1.5"}
+        }
+    }
+}

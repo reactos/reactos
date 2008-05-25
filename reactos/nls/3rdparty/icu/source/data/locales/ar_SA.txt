@@ -1,0 +1,47 @@
+﻿// ***************************************************************************
+// *
+// * Copyright (C) 2007 International Business Machines
+// * Corporation and others.  All Rights Reserved.
+// * Tool: com.ibm.icu.dev.tool.cldr.LDML2ICUConverter.java
+// * Source File:<path>/common/main/ar_SA.xml
+// *
+// ***************************************************************************
+ar_SA{
+    NumberPatterns{
+        "#0.###;#0.###-",
+        "¤#0.00",
+        "#,##0%",
+        "#E0",
+    }
+    Scripts{
+        Ital{"اللأيطالية القديمة"}
+    }
+    Version{"1.47"}
+    calendar{
+        gregorian{
+            DateTimeElements:intvector{
+                7,
+                1,
+            }
+            dayNames{
+                format{
+                    abbreviated{
+                        "الأحد",
+                        "الاثنين",
+                        "الثلاثاء",
+                        "الأربعاء",
+                        "الخميس",
+                        "الجمعة",
+                        "السبت",
+                    }
+                }
+            }
+            weekend:intvector{
+                5,
+                0,
+                6,
+                86400000,
+            }
+        }
+    }
+}

@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+ Copyright (c) 2002-2007 International Business Machines Corporation and others. All rights reserved.
+-->
+<!DOCTYPE ldml SYSTEM "http://www.unicode.org/cldr/dtd/1.5/ldml.dtd"
+[
+   <!ENTITY % icu SYSTEM " http://www.unicode.org/cldr/dtd/1.5/ldmlICU.dtd">
+   %icu;
+]
+>
+<ldml>
+    <identity>
+        <version number="$Revision: 1.30 $"/>
+        <generation date="$Date: 2007/05/25 01:05:56 $"/>
+        <language type="root"/> 
+    </identity>
+    <characters>
+        <special xmlns:icu="http://www.icu-project.org/">
+            <icu:scripts>
+                <icu:script type="1">Zyyy</icu:script>
+            </icu:scripts>
+        </special>
+    </characters>
+  <dates>
+    <calendars>
+        <calendar type="chinese">
+            <special xmlns:icu="http://www.icu-project.org/">
+                <!--
+                 IsLeapMonth {
+                        "",
+                        "*"
+                   }
+                 -->
+                <icu:isLeapMonth>
+                    <icu:nonLeapSymbol/>
+                    <icu:leapSymbol>*</icu:leapSymbol>
+                </icu:isLeapMonth>
+            </special>
+        </calendar>
+        <calendar type="taiwan">
+            <months>
+                <alias source="locale" path="../../calendar[@type='gregorian']/months"/>
+            </months>
+            <days>
+                <alias source="locale" path="../../calendar[@type='gregorian']/days"/>
+            </days>
+            <quarters>
+                <alias source="locale" path="../../calendar[@type='gregorian']/quarters"/>
+            </quarters>
+            <eras>
+                <eraNames>
+                    <alias source="locale" path="../eraAbbr"/>
+                </eraNames>
+                <eraAbbr>
+                    <era type="0">Before Minguo</era>
+                    <era type="1">Minguo</era>
+                    <!-- = 1912 AD     gregorian. See: http://en.wikipedia.org/wiki/Minguo_calendar -->
+                </eraAbbr>
+                <eraNarrow>
+                    <alias source="locale" path="../eraAbbr"/>
+                </eraNarrow>
+            </eras>
+            <dateFormats>
+                <default choice="medium"/>
+                <dateFormatLength type="full">
+                    <dateFormat>
+                        <pattern>EEEE, MMMM d, G y</pattern>
+                    </dateFormat>
+                </dateFormatLength>
+                <dateFormatLength type="long">
+                    <dateFormat>
+                        <pattern>MMMM d, G y</pattern>
+                    </dateFormat>
+                </dateFormatLength>
+                <dateFormatLength type="medium">
+                    <dateFormat>
+                        <pattern>MMM d, G y</pattern>
+                    </dateFormat>
+                </dateFormatLength>
+                <dateFormatLength type="short">
+                    <dateFormat>
+                        <pattern>G y/M/d</pattern>
+                    </dateFormat>
+                </dateFormatLength>
+            </dateFormats>
+<!--            <timeFormats>
+                <alias source="locale" path="../../calendar[@type='gregorian']/timeFormats"/>
+            </timeFormats>
+            <dateTimeFormats>
+                <alias source="locale" path="../../calendar[@type='gregorian']/dateTimeFormats"/>
+            </dateTimeFormats> -->
+        </calendar>
+        <calendar type="indian">
+            <!-- we rely on ICU behavior that falls back to Gregorian rather than putting in explicit
+                aliases for all types here. -->
+            <months>
+                <default choice="format"/>
+                <monthContext type="format">
+                    <default choice="wide"/>
+                    <monthWidth type="abbreviated">
+                        <alias source="locale" path="../monthWidth[@type='wide']"/>
+                    </monthWidth>
+                    <monthWidth type="narrow">
+                        <alias source="locale" path="../../monthContext[@type='stand-alone']/monthWidth[@type='narrow']"/>
+                    </monthWidth>
+                    <monthWidth type="wide">
+                        <month type="1">Chaitra</month>
+                        <month type="2">Vaisakha</month>
+                        <month type="3">Jyaistha</month>
+                        <month type="4">Asadha</month>
+                        <month type="5">Sravana</month>
+                        <month type="6">Bhadra</month>
+                        <month type="7">Asvina</month>
+                        <month type="8">Kartika</month>
+                        <month type="9">Agrahayana</month>
+                        <month type="10">Pausa</month>
+                        <month type="11">Magha</month>
+                        <month type="12">Phalguna</month>
+                    </monthWidth>
+                </monthContext>
+                <monthContext type="stand-alone">
+                    <monthWidth type="abbreviated">
+                        <alias source="locale" path="../../monthContext[@type='format']/monthWidth[@type='abbreviated']"/>
+                    </monthWidth>
+                    <monthWidth type="narrow">
+                        <month type="1">1</month>
+                        <month type="2">2</month>
+                        <month type="3">3</month>
+                        <month type="4">4</month>
+                        <month type="5">5</month>
+                        <month type="6">6</month>
+                        <month type="7">7</month>
+                        <month type="8">8</month>
+                        <month type="9">9</month>
+                        <month type="10">10</month>
+                        <month type="11">11</month>
+                        <month type="12">12</month>
+                    </monthWidth>
+                    <monthWidth type="wide">
+                        <alias source="locale" path="../../monthContext[@type='format']/monthWidth[@type='wide']"/>
+                    </monthWidth>
+                </monthContext>
+            </months>
+            <days>
+                <alias source="locale" path="../../calendar[@type='gregorian']/days"/>
+            </days>
+            <quarters>
+                <alias source="locale" path="../../calendar[@type='gregorian']/quarters"/>
+            </quarters>
+            <eras>
+                <eraNames>
+                    <alias source="locale" path="../eraAbbr"/>
+                </eraNames>
+                <eraAbbr>
+                    <era type="0">SAKA</era>
+                </eraAbbr>
+                <eraNarrow>
+                    <alias source="locale" path="../eraAbbr"/>
+                </eraNarrow>
+            </eras>
+        </calendar>
+    </calendars>
+    <timeZoneNames>
+      <zone type="">
+        <long>
+          <standard/>
+          <daylight/>
+        </long>
+        <short>
+          <standard/>
+          <daylight/>
+        </short>
+        <exemplarCity/>
+      </zone>
+    </timeZoneNames>
+  </dates>
+</ldml>
+

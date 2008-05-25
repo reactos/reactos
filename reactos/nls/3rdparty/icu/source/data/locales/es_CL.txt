@@ -1,0 +1,53 @@
+﻿// ***************************************************************************
+// *
+// * Copyright (C) 2007 International Business Machines
+// * Corporation and others.  All Rights Reserved.
+// * Tool: com.ibm.icu.dev.tool.cldr.LDML2ICUConverter.java
+// * Source File:<path>/common/main/es_CL.xml
+// *
+// ***************************************************************************
+es_CL{
+    Countries{
+        005{"Sudamérica"}
+        EH{"Sahara Occidental"}
+    }
+    Currencies{
+        CLP{
+            "$",
+            "Peso Chileno",
+        }
+    }
+    NumberPatterns{
+        "#,##0.###",
+        "¤#,##0.00;¤-#,##0.00",
+        "#,##0%",
+        "#E0",
+    }
+    Scripts{
+        Bali{"balinés"}
+    }
+    Types{
+        collation{
+            phonebook{"orden de directorio telefónico"}
+        }
+    }
+    Variants{
+        1996{"Ortografía alemana de 1996"}
+    }
+    Version{"1.53"}
+    calendar{
+        gregorian{
+            DateTimePatterns{
+                "HH:mm:ss v",
+                "H:mm:ss z",
+                "H:mm:ss",
+                "H:mm",
+                "EEEE d 'de' MMMM 'de' yyyy",
+                "d 'de' MMMM 'de' yyyy",
+                "dd-MM-yyyy",
+                "dd-MM-yy",
+                "{1} {0}",
+            }
+        }
+    }
+}

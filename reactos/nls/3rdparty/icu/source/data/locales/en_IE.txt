@@ -1,0 +1,50 @@
+﻿// ***************************************************************************
+// *
+// * Copyright (C) 2007 International Business Machines
+// * Corporation and others.  All Rights Reserved.
+// * Tool: com.ibm.icu.dev.tool.cldr.LDML2ICUConverter.java
+// * Source File:<path>/common/main/en_IE.xml
+// *
+// ***************************************************************************
+en_IE{
+    Currencies{
+        GBP{
+            "GBP",
+            "British Pound Sterling",
+        }
+        IEP{
+            "£",
+            "Irish Pound",
+        }
+    }
+    NumberPatterns{
+        "#,##0.###",
+        "¤#,##0.00",
+        "#,##0%",
+        "#E0",
+    }
+    Version{"1.52"}
+    calendar{
+        gregorian{
+            AmPmMarkers{
+                "a.m.",
+                "p.m.",
+            }
+            DateTimeElements:intvector{
+                1,
+                1,
+            }
+            DateTimePatterns{
+                "HH:mm:ss v",
+                "HH:mm:ss z",
+                "HH:mm:ss",
+                "HH:mm",
+                "EEEE d MMMM yyyy",
+                "d MMMM yyyy",
+                "d MMM yyyy",
+                "dd/MM/yyyy",
+                "{1} {0}",
+            }
+        }
+    }
+}

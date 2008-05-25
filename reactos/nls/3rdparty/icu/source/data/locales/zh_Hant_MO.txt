@@ -1,0 +1,30 @@
+﻿// ***************************************************************************
+// *
+// * Copyright (C) 2007 International Business Machines
+// * Corporation and others.  All Rights Reserved.
+// * Tool: com.ibm.icu.dev.tool.cldr.LDML2ICUConverter.java
+// * Source File:<path>/common/main/zh_Hant_MO.xml
+// *
+// ***************************************************************************
+zh_Hant_MO{
+    Version{"1.53"}
+    calendar{
+        gregorian{
+            DateTimeElements:intvector{
+                1,
+                1,
+            }
+            DateTimePatterns{
+                "ahh時mm分ss秒 v",
+                "ahh時mm分ss秒 z",
+                "ahh:mm:ss",
+                "ah:mm",
+                "yyyy年MM月dd日 EEEE",
+                "yyyy年MM月dd日",
+                "yyyy年M月d日",
+                "yy年M月d日",
+                "{1} {0}",
+            }
+        }
+    }
+}

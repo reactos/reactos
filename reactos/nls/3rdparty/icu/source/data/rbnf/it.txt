@@ -1,0 +1,172 @@
+// ***************************************************************************
+// *
+// *   Copyright (C) 2004, 2007 International Business Machines
+// *   Corporation and others.  All Rights Reserved.
+// *
+// ***************************************************************************
+// 
+
+it {
+    //------------------------------------------------------------
+    // Rule Based Number Format Support
+    //------------------------------------------------------------
+
+//   * Spellout rules for Italian.  Like German, most Italian numbers are
+//   * written as single words.  What makes these rules complicated is the rule
+//   * that says that when a word ending in a vowel and a word beginning with
+//   * a vowel are combined into a compound, the vowel is dropped from the
+//   * end of the first word: 180 is "centottanta," not "centoottanta."
+//   * The complexity of this rule set is to produce this behavior.
+
+//   * The "no-final" stanzas are used to deal with the fact that the number
+//   * three ( "tre" ) takes an accent when it is at the end of a word
+//   * like 23 ( ventitr<e-accent> ), but would NOT take an accent
+//   * in the context of a thousands or millions, for example,
+//   * 23,000 would be ventitremila, and would not have an accent on the "tre".
+//
+    SpelloutRules {
+        // main rule set.  Follows the patterns of the preceding rule sets,
+        // except that the final vowel is omitted from words ending in
+        // vowels when they are followed by another word; instead, we have
+        // separate rule sets that are identical to this one, except that
+        // all the words that don't begin with a vowel have a vowel tacked
+        // onto them at the front.  A word ending in a vowel calls a
+        // substitution that will supply that vowel, unless that vowel is to
+        // be elided.
+        "%main:\n"
+            "-x: meno >>;\n"
+            "x.x: << virgola >>;\n"
+            "zero; uno; due; tre; quattro; cinque; sei; sette; otto; nove;\n"
+            "dieci; undici; dodici; tredici; quattordici; quindici; sedici;\n"
+            "    diciasette; diciotto; diciannove;\n"
+            "20: venti; vent>%%with-i>;\n"
+            "30: trenta; trent>%%with-a>;\n"
+            "40: quaranta; quarant>%%with-a>;\n"
+            "50: cinquanta; cinquant>%%with-a>;\n"
+            "60: sessanta; sessant>%%with-a>;\n"
+            "70: settanta; settant>%%with-a>;\n"
+            "80: ottanta; ottant>%%with-a>;\n"
+            "90: novanta; novant>%%with-a>;\n"
+            "100: cento; cent[>%%with-o>];\n"
+            "200: <<cento; <<cent[>%%with-o>];\n"
+            "1000: mille; mille>>;\n"
+            "2000: <%%no-final<mila; <%%no-final<mil>%%with-a>;\n"
+            "100,000>>: <%%no-final<mila[ >>];\n"
+            "1,000,000: un milione; un milione >>;\n"
+            "2,000,000: << milioni[ >>];\n"
+            "1,000,000,000: un miliardo; un miliardo >>;\n"
+            "2,000,000,000: << miliardi[ >>];\n"
+            "1,000,000,000,000: =#,##0= (incomplete data);\n"
+        "%%no-final:\n"
+            "zero; uno; due; tre; quattro; cinque; sei; sette; otto; nove;\n"
+            "dieci; undici; dodici; tredici; quattordici; quindici; sedici;\n"
+            "    diciasette; diciotto; diciannove;\n"
+            "20: venti; vent>%%with-i-nofinal>;\n"
+            "30: trenta; trent>%%with-a-nofinal>;\n"
+            "40: quaranta; quarant>%%with-a-nofinal>;\n"
+            "50: cinquanta; cinquant>%%with-a-nofinal>;\n"
+            "60: sessanta; sessant>%%with-a-nofinal>;\n"
+            "70: settanta; settant>%%with-a-nofinal>;\n"
+            "80: ottanta; ottant>%%with-a-nofinal>;\n"
+            "90: novanta; novant>%%with-a-nofinal>;\n"
+            "100: cento; cent[>%%with-o-nofinal>];\n"
+            "200: <<cento; <<cent[>%%with-o-nofinal>];\n"
+            "1,000: =%main=;\n"
+        "%%with-a:\n"
+            "azero; uno; adue; atr\u00E9; aquattro; acinque; asei; asette; otto; anove;\n"
+            "adieci; undici; adodici; atredici; aquattordici; aquindici; asedici;\n"
+            "    adiciasette; adiciotto; adiciannove;\n"
+            "20: aventi; avent>%%with-i>;\n"
+            "30: atrenta; atrent>%%with-a>;\n"
+            "40: aquaranta; aquarant>%%with-a>;\n"
+            "50: acinquanta; acinquant>%%with-a>;\n"
+            "60: asessanta; asessant>%%with-a>;\n"
+            "70: asettanta; asettant>%%with-a>;\n"
+            "80: ottanta; ottant>%%with-a>;\n"
+            "90: anovanta; anovant>%%with-a>;\n"
+            "100: acento; acent[>%%with-o>];\n"
+            "200: <%%with-a<cento; <%%with-a<cent[>%%with-o>];\n"
+            "1000: amille; amill[>%%with-i>];\n"
+            "2000: <%%with-a<mila; <%%with-a<mil[>%%with-a>];\n"
+            "100,000: =%main=;\n"
+        "%%with-a-nofinal:\n"
+            "azero; uno; adue; atre; aquattro; acinque; asei; asette; otto; anove;\n"
+            "adieci; undici; adodici; atredici; aquattordici; aquindici; asedici;\n"
+            "    adiciasette; adiciotto; adiciannove;\n"
+            "20: aventi; avent>%%with-i-nofinal>;\n"
+            "30: atrenta; atrent>%%with-a-nofinal>;\n"
+            "40: aquaranta; aquarant>%%with-a-nofinal>;\n"
+            "50: acinquanta; acinquant>%%with-a-nofinal>;\n"
+            "60: asessanta; asessant>%%with-a-nofinal>;\n"
+            "70: asettanta; asettant>%%with-a-nofinal>;\n"
+            "80: ottanta; ottant>%%with-a-nofinal>;\n"
+            "90: anovanta; anovant>%%with-a-nofinal>;\n"
+            "100: acento; acent[>%%with-o-nofinal>];\n"
+            "200: <%%with-a-nofinal<cento; <%%with-a-nofinal<cent[>%%with-o-nofinal>];\n"
+            "1,000: =%main=;\n"
+        "%%with-i:\n"
+            "izero; uno; idue; itr\u00E9; iquattro; icinque; isei; isette; otto; inove;\n"
+            "idieci; undici; idodici; itredici; iquattordici; iquindici; isedici;\n"
+            "    idiciasette; idiciotto; idiciannove;\n"
+            "20: iventi; ivent>%%with-i>;\n"
+            "30: itrenta; itrent>%%with-a>;\n"
+            "40: iquaranta; iquarant>%%with-a>;\n"
+            "50: icinquanta; icinquant>%%with-a>;\n"
+            "60: isessanta; isessant>%%with-a>;\n"
+            "70: isettanta; isettant>%%with-a>;\n"
+            "80: ottanta; ottant>%%with-a>;\n"
+            "90: inovanta; inovant>%%with-a>;\n"
+            "100: icento; icent[>%%with-o>];\n"
+            "200: <%%with-i<cento; <%%with-i<cent[>%%with-o>];\n"
+            "1000: imille; imill[>%%with-i>];\n"
+            "2000: <%%with-i<mila; <%%with-i<mil[>%%with-a>];\n"
+            "100,000: =%main=;\n"
+        "%%with-i-nofinal:\n"
+            "izero; uno; idue; itre; iquattro; icinque; isei; isette; otto; inove;\n"
+            "idieci; undici; idodici; itredici; iquattordici; iquindici; isedici;\n"
+            "    idiciasette; idiciotto; idiciannove;\n"
+            "20: iventi; ivent>%%with-i-nofinal>;\n"
+            "30: itrenta; itrent>%%with-a-nofinal>;\n"
+            "40: iquaranta; iquarant>%%with-a-nofinal>;\n"
+            "50: icinquanta; icinquant>%%with-a-nofinal>;\n"
+            "60: isessanta; isessant>%%with-a-nofinal>;\n"
+            "70: isettanta; isettant>%%with-a-nofinal>;\n"
+            "80: ottanta; ottant>%%with-a-nofinal>;\n"
+            "90: inovanta; inovant>%%with-a-nofinal>;\n"
+            "100: icento; icent[>%%with-o-nofinal>];\n"
+            "200: <%%with-i-nofinal<cento; <%%with-i-nofinal<cent[>%%with-o-nofinal>];\n"
+            "1,000: =%main=;\n"
+        "%%with-o:\n"
+            "ozero; uno; odue; otr\u00E9; oquattro; ocinque; osei; osette; otto; onove;\n"
+            "odieci; undici; ododici; otredici; oquattordici; oquindici; osedici;\n"
+            "    odiciasette; odiciotto; odiciannove;\n"
+            "20: oventi; ovent>%%with-i>;\n"
+            "30: otrenta; otrent>%%with-a>;\n"
+            "40: oquaranta; oquarant>%%with-a>;\n"
+            "50: ocinquanta; ocinquant>%%with-a>;\n"
+            "60: osessanta; osessant>%%with-a>;\n"
+            "70: osettanta; osettant>%%with-a>;\n"
+            "80: ottanta; ottant>%%with-a>;\n"
+            "90: onovanta; onovant>%%with-a>;\n"
+            "100: ocento; ocent[>%%with-o>];\n"
+            "200: <%%with-o<cento; <%%with-o<cent[>%%with-o>];\n"
+            "1000: omille; omill[>%%with-i>];\n"
+            "2000: <%%with-o<mila; <%%with-o<mil[>%%with-a>];\n"
+            "100,000: =%main=;\n" 
+        "%%with-o-nofinal:\n"
+            "ozero; uno; odue; otre; oquattro; ocinque; osei; osette; otto; onove;\n"
+            "odieci; undici; ododici; otredici; oquattordici; oquindici; osedici;\n"
+            "    odiciasette; odiciotto; odiciannove;\n"
+            "20: oventi; ovent>%%with-i-nofinal>;\n"
+            "30: otrenta; otrent>%%with-a-nofinal>;\n"
+            "40: oquaranta; oquarant>%%with-a-nofinal>;\n"
+            "50: ocinquanta; ocinquant>%%with-a-nofinal>;\n"
+            "60: osessanta; osessant>%%with-a-nofinal>;\n"
+            "70: osettanta; osettant>%%with-a-nofinal>;\n"
+            "80: ottanta; ottant>%%with-a-nofinal>;\n"
+            "90: onovanta; onovant>%%with-a-nofinal>;\n"
+            "100: ocento; ocent[>%%with-o-nofinal>];\n"
+            "200: <%%with-o-nofinal<cento; <%%with-o-nofinal<cent[>%%with-o-nofinal>];\n"
+            "1,000: =%main=;\n" 
+    }
+}

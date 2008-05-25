@@ -1,0 +1,29 @@
+﻿// ***************************************************************************
+// *
+// * Copyright (C) 2007 International Business Machines
+// * Corporation and others.  All Rights Reserved.
+// * Tool: com.ibm.icu.dev.tool.cldr.LDML2ICUConverter.java
+// * Source File:<path>/common/main/so_ET.xml
+// *
+// ***************************************************************************
+so_ET{
+    Currencies{
+        ETB{
+            "$",
+            "ETB",
+        }
+        SOS{
+            "SOS",
+            "SOS",
+        }
+    }
+    Version{"1.45"}
+    calendar{
+        gregorian{
+            DateTimeElements:intvector{
+                7,
+                1,
+            }
+        }
+    }
+}

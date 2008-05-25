@@ -1,0 +1,248 @@
+﻿// ***************************************************************************
+// *
+// * Copyright (C) 2007 International Business Machines
+// * Corporation and others.  All Rights Reserved.
+// * Tool: com.ibm.icu.dev.tool.cldr.LDML2ICUConverter.java
+// * Source File:<path>/common/main/so.xml
+// *
+// ***************************************************************************
+/**
+ *  ICU <specials> source: <path>/xml/main/so.xml
+ */
+so{
+    Countries{
+        AE{"Imaaraadka Carabta ee Midoobay"}
+        AF{"Afgaanistaan"}
+        AM{"Armeeniya"}
+        AO{"Angoola"}
+        AT{"Osteeriya"}
+        AU{"Awstraaliya"}
+        BA{"Boosniya Heersigoviina"}
+        BB{"Baarbadoos"}
+        BD{"Bangaala-Deesh"}
+        BE{"Beljiyam"}
+        BH{"Baxrayn"}
+        BJ{"Beniin"}
+        BR{"Braasiil"}
+        CA{"Kanada"}
+        CH{"Swiiserlaand"}
+        CL{"Jili"}
+        CM{"Kameruun"}
+        CN{"Shiinaha"}
+        CU{"Kuuba"}
+        DE{"Jarmal"}
+        DJ{"Jabuuti"}
+        DK{"Danmaark"}
+        EG{"Masar"}
+        ES{"Isbeyn"}
+        ET{"Itoobiya"}
+        FI{"Fiinlaand"}
+        FR{"Faransiis"}
+        GD{"Giriinaada"}
+        GN{"Gini"}
+        GR{"Giriigga"}
+        HR{"Korweeshiya"}
+        HU{"Hangeri"}
+        ID{"Indoneesiya"}
+        IE{"Ayrlaanda"}
+        IN{"Hindiya"}
+        IQ{"Ciraaq"}
+        IR{"Iiraan"}
+        IS{"Iislaand"}
+        IT{"Talyaani"}
+        JM{"Jameyka"}
+        JO{"Urdun"}
+        JP{"Jabbaan"}
+        KE{"Kiiniya"}
+        KH{"Kamboodiya"}
+        KP{"Kuuriyada Waqooyi"}
+        KR{"Kuuriyada Koonfureed"}
+        KW{"Kuwayt"}
+        KZ{"Kasaakhistaan"}
+        LB{"Lubnaan"}
+        LK{"Siirilaanka"}
+        LR{"Laybeeriya"}
+        LS{"Losooto"}
+        LU{"Luksemboorg"}
+        LV{"Laatfiya"}
+        LY{"Liibiya"}
+        MA{"Marooko"}
+        MC{"Moonako"}
+        MK{"Makadooniya"}
+        ML{"Maali"}
+        MR{"Muritaaniya"}
+        MT{"Maalda"}
+        MV{"Maaldiqeen"}
+        MW{"Malaawi"}
+        MX{"Meksiko"}
+        MZ{"Musambiig"}
+        NA{"Namiibiya"}
+        NG{"Nayjeeriya"}
+        NI{"Nikaraaguwa"}
+        NO{"Noorweey"}
+        NZ{"Neyuusilaand"}
+        OM{"Cumaan"}
+        PH{"Filibiin"}
+        PK{"Bakistaan"}
+        PL{"Booland"}
+        PT{"Bortuqaal"}
+        QA{"Qadar"}
+        RO{"Rumaaniya"}
+        RU{"Ruush"}
+        SA{"Sacuudi Carabiya"}
+        SD{"Sudaan"}
+        SE{"Iswidhan"}
+        SL{"Siraaliyoon"}
+        SO{"Soomaaliya"}
+        SY{"Suuriya"}
+        TD{"Jaad"}
+        TG{"Toogo"}
+        TH{"Taylaand"}
+        TN{"Tuniisiya"}
+        TR{"Turki"}
+        TZ{"Tansaaniya"}
+        UG{"Ugaanda"}
+        US{"Qaramada Midoobey ee Maraykanka"}
+        VA{"Faatikaan"}
+        VE{"Fenisuweela"}
+        VN{"Fiyetnaam"}
+        YE{"Yaman"}
+        ZA{"Koonfur Afrika"}
+        ZM{"Saambiya"}
+        ZW{"Simbaabwe"}
+        ZZ{"Far aan la aqoon amase aan saxnayn"}
+    }
+    Currencies{
+        KES{
+            "Ksh",
+            "KES",
+        }
+        SOS{
+            "$",
+            "SOS",
+        }
+    }
+    ExemplarCharacters{"[a-z]"}
+    Languages{
+        ar{"Carabi"}
+        de{"Jarmal"}
+        es{"Isbaanish"}
+        fa{"Faarisi"}
+        fr{"Faransiis"}
+        fy{"Firiisiyan Galbeed"}
+        it{"Talyaani"}
+        so{"Soomaali"}
+    }
+    LocaleScript{
+        "Latn",
+    }
+    NumberElements{
+        ".",
+        ",",
+        ";",
+        "%",
+        "0",
+        "#",
+        "-",
+        "E",
+        "‰",
+        "∞",
+        "NaN",
+        "+",
+    }
+    NumberPatterns{
+        "#,##0.###",
+        "¤#,##0.00",
+        "#,##0%",
+        "#E0",
+    }
+    Scripts{
+        Zxxx{"Aan la qorin"}
+        Zzzz{"Far aan la aqoon amase aan saxnayn"}
+    }
+    Version{"1.52"}
+    calendar{
+        gregorian{
+            AmPmMarkers{
+                "sn",
+                "gn",
+            }
+            DateTimePatterns{
+                "h:mm:ss a v",
+                "h:mm:ss a z",
+                "h:mm:ss a",
+                "h:mm a",
+                "EEEE, MMMM dd, yyyy",
+                "dd MMMM yyyy",
+                "dd-MMM-yyyy",
+                "dd/MM/yy",
+                "{1} {0}",
+            }
+            dayNames{
+                format{
+                    abbreviated{
+                        "Axa",
+                        "Isn",
+                        "Sal",
+                        "Arb",
+                        "Kha",
+                        "Jim",
+                        "Sab",
+                    }
+                    wide{
+                        "Axad",
+                        "Isniin",
+                        "Salaaso",
+                        "Arbaco",
+                        "Khamiis",
+                        "Jimco",
+                        "Sabti",
+                    }
+                }
+            }
+            eras{
+                abbreviated{
+                    "Ciise ka hor",
+                    "Ciise ka dib",
+                }
+            }
+            monthNames{
+                format{
+                    abbreviated{
+                        "Kob",
+                        "Lab",
+                        "Sad",
+                        "Afr",
+                        "Sha",
+                        "Lix",
+                        "Tod",
+                        "Sid",
+                        "Sag",
+                        "Tob",
+                        "KIT",
+                        "LIT",
+                    }
+                    wide{
+                        "Bisha Koobaad",
+                        "Bisha Labaad",
+                        "Bisha Saddexaad",
+                        "Bisha Afraad",
+                        "Bisha Shanaad",
+                        "Bisha Lixaad",
+                        "Bisha Todobaad",
+                        "Bisha Sideedaad",
+                        "Bisha Sagaalaad",
+                        "Bisha Tobnaad",
+                        "Bisha Kow iyo Tobnaad",
+                        "Bisha Laba iyo Tobnaad",
+                    }
+                }
+            }
+        }
+    }
+    zoneStrings{
+        "Etc:Unknown"{
+            ec{"Far aan la aqoon amase aan saxnayn"}
+        }
+    }
+}

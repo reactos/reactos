@@ -1,0 +1,118 @@
+﻿// ***************************************************************************
+// *
+// * Copyright (C) 2007 International Business Machines
+// * Corporation and others.  All Rights Reserved.
+// * Tool: com.ibm.icu.dev.tool.cldr.LDML2ICUConverter.java
+// * Source File:<path>/common/main/sv_FI.xml
+// *
+// ***************************************************************************
+sv_FI{
+    AuxExemplarCharacters{"[à ã ç é ë í ñ ó š w ÿ ü ž]"}
+    Countries{
+        UM{"USA:s yttre öar"}
+    }
+    Version{"1.50"}
+    calendar{
+        gregorian{
+            DateTimeElements:intvector{
+                2,
+                4,
+            }
+            fields{
+                dayperiod{
+                    dn{"dagsperiod"}
+                }
+            }
+        }
+        hebrew{
+            monthNames{
+                format{
+                    abbreviated{
+                        "tishrí",
+                        "heshván",
+                        "kislév",
+                        "tevét",
+                        "shevát",
+                        "adár",
+                        "adár II",
+                        "nisán",
+                        "ijjár",
+                        "siván",
+                        "tammúz",
+                        "ab",
+                        "elúl",
+                    }
+                    wide{
+                        "tishrí",
+                        "heshván",
+                        "kislév",
+                        "tevét",
+                        "shevát",
+                        "adár",
+                        "adár II",
+                        "nisán",
+                        "ijjár",
+                        "siván",
+                        "tammúz",
+                        "ab",
+                        "elúl",
+                    }
+                }
+            }
+        }
+        islamic{
+            monthNames{
+                format{
+                    abbreviated{
+                        "muharram",
+                        "safar",
+                        "rabi’ al-awwal",
+                        "rabi’ al-akhir",
+                        "jumada-l-ula",
+                        "jumada-l-akhira",
+                        "rajab",
+                        "sha’ban",
+                        "ramadan",
+                        "shawwal",
+                        "dhu-l-ga’da",
+                        "dhu-l-hijja",
+                    }
+                    wide{
+                        "muharram",
+                        "safar",
+                        "rabi’ al-awwal",
+                        "rabi’ al-akhir",
+                        "jumada-l-ula",
+                        "jumada-l-akhira",
+                        "rajab",
+                        "sha’ban",
+                        "ramadan",
+                        "shawwal",
+                        "dhu-l-ga’da",
+                        "dhu-l-hijja",
+                    }
+                }
+            }
+        }
+        islamic-civil{
+            monthNames{
+                format{
+                    wide{
+                        "muharram",
+                        "safar",
+                        "rabi’ al-awwal",
+                        "rabi’ al-akhir",
+                        "jumada-l-ula",
+                        "jumada-l-akhira",
+                        "rajab",
+                        "sha’ban",
+                        "ramadan",
+                        "shawwal",
+                        "dhu-l-ga’da",
+                        "dhu-l-hijja",
+                    }
+                }
+            }
+        }
+    }
+}

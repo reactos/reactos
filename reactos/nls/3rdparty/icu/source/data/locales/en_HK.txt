@@ -1,0 +1,40 @@
+﻿// ***************************************************************************
+// *
+// * Copyright (C) 2007 International Business Machines
+// * Corporation and others.  All Rights Reserved.
+// * Tool: com.ibm.icu.dev.tool.cldr.LDML2ICUConverter.java
+// * Source File:<path>/common/main/en_HK.xml
+// *
+// ***************************************************************************
+en_HK{
+    Currencies{
+        HKD{
+            "$",
+            "Hong Kong Dollar",
+        }
+        USD{
+            "US$",
+            "USD",
+        }
+    }
+    Version{"1.44"}
+    calendar{
+        gregorian{
+            DateTimeElements:intvector{
+                1,
+                1,
+            }
+            DateTimePatterns{
+                "h:mm:ss a v",
+                "h:mm:ss a z",
+                "h:mm:ss a",
+                "h:mm a",
+                "EEEE, d MMMM yyyy",
+                "d MMMM yyyy",
+                "d MMM yyyy",
+                "dd/MM/yyyy",
+                "{1} {0}",
+            }
+        }
+    }
+}

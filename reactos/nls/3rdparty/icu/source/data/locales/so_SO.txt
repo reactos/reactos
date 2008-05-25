@@ -1,0 +1,19 @@
+﻿// ***************************************************************************
+// *
+// * Copyright (C) 2007 International Business Machines
+// * Corporation and others.  All Rights Reserved.
+// * Tool: com.ibm.icu.dev.tool.cldr.LDML2ICUConverter.java
+// * Source File:<path>/common/main/so_SO.xml
+// *
+// ***************************************************************************
+so_SO{
+    Version{"1.44"}
+    calendar{
+        gregorian{
+            DateTimeElements:intvector{
+                7,
+                1,
+            }
+        }
+    }
+}

@@ -1,0 +1,5 @@
+LIBRARY	"normaliz"
+
+EXPORTS
+	NormalizeString=NormalizeString@20
+	IsNormalizedString=IsNormalizedString@12

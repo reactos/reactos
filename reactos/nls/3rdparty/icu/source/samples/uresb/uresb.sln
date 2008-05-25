@@ -1,0 +1,28 @@
+Microsoft Visual Studio Solution File, Format Version 9.00
+# Visual Studio 2005
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "resources", "resources.vcproj", "{69437707-2FEF-4E2C-8C3F-6E6B3D241366}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "uresb", "uresb.vcproj", "{92580BF4-F4DA-4024-B3F8-444F982BC72F}"
+	ProjectSection(ProjectDependencies) = postProject
+		{69437707-2FEF-4E2C-8C3F-6E6B3D241366} = {69437707-2FEF-4E2C-8C3F-6E6B3D241366}
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{69437707-2FEF-4E2C-8C3F-6E6B3D241366}.Debug|Win32.ActiveCfg = Debug|Win32
+		{69437707-2FEF-4E2C-8C3F-6E6B3D241366}.Debug|Win32.Build.0 = Debug|Win32
+		{69437707-2FEF-4E2C-8C3F-6E6B3D241366}.Release|Win32.ActiveCfg = Release|Win32
+		{69437707-2FEF-4E2C-8C3F-6E6B3D241366}.Release|Win32.Build.0 = Release|Win32
+		{92580BF4-F4DA-4024-B3F8-444F982BC72F}.Debug|Win32.ActiveCfg = Debug|Win32
+		{92580BF4-F4DA-4024-B3F8-444F982BC72F}.Debug|Win32.Build.0 = Debug|Win32
+		{92580BF4-F4DA-4024-B3F8-444F982BC72F}.Release|Win32.ActiveCfg = Release|Win32
+		{92580BF4-F4DA-4024-B3F8-444F982BC72F}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

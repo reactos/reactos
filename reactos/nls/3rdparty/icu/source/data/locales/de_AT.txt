@@ -1,0 +1,68 @@
+﻿// ***************************************************************************
+// *
+// * Copyright (C) 2007 International Business Machines
+// * Corporation and others.  All Rights Reserved.
+// * Tool: com.ibm.icu.dev.tool.cldr.LDML2ICUConverter.java
+// * Source File:<path>/common/main/de_AT.xml
+// *
+// ***************************************************************************
+de_AT{
+    NumberPatterns{
+        "#,##0.###",
+        "¤ #,##0.00",
+        "#,##0 %",
+        "#E0",
+    }
+    Version{"1.49"}
+    calendar{
+        gregorian{
+            DateTimeElements:intvector{
+                2,
+                4,
+            }
+            DateTimePatterns{
+                "HH:mm:ss v",
+                "HH:mm:ss z",
+                "HH:mm:ss",
+                "HH:mm",
+                "EEEE, dd. MMMM yyyy",
+                "dd. MMMM yyyy",
+                "dd.MM.yyyy",
+                "dd.MM.yy",
+                "{1} {0}",
+            }
+            monthNames{
+                format{
+                    abbreviated{
+                        "Jän",
+                        "Feb",
+                        "Mär",
+                        "Apr",
+                        "Mai",
+                        "Jun",
+                        "Jul",
+                        "Aug",
+                        "Sep",
+                        "Okt",
+                        "Nov",
+                        "Dez",
+                    }
+                    wide{
+                        "Jänner",
+                        "Februar",
+                        "März",
+                        "April",
+                        "Mai",
+                        "Juni",
+                        "Juli",
+                        "August",
+                        "September",
+                        "Oktober",
+                        "November",
+                        "Dezember",
+                    }
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,30 @@
+﻿// ***************************************************************************
+// *
+// * Copyright (C) 2007 International Business Machines
+// * Corporation and others.  All Rights Reserved.
+// * Tool: com.ibm.icu.dev.tool.cldr.LDML2ICUConverter.java
+// * Source File:<path>/common/main/uz.xml
+// *
+// ***************************************************************************
+/**
+ *  ICU <specials> source: <path>/xml/main/uz.xml
+ */
+uz{
+    AuxExemplarCharacters{"[ц щ ы ь]"}
+    Countries{
+        UZ{"Ўзбекистон"}
+    }
+    ExemplarCharacters{"[а-г ғ д е ё ж-к қ л-у ў ф х ҳ ч ш ъ э-я]"}
+    Languages{
+        uz{"Ўзбек"}
+    }
+    LocaleScript{
+        "Cyrl",
+    }
+    Version{"1.42"}
+    zoneStrings{
+        "Asia:Kabul"{
+            ec{"کابل"}
+        }
+    }
+}

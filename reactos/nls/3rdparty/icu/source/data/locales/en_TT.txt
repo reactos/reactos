@@ -1,0 +1,25 @@
+﻿// ***************************************************************************
+// *
+// * Copyright (C) 2007 International Business Machines
+// * Corporation and others.  All Rights Reserved.
+// * Tool: com.ibm.icu.dev.tool.cldr.LDML2ICUConverter.java
+// * Source File:<path>/common/main/en_TT.xml
+// *
+// ***************************************************************************
+en_TT{
+    NumberPatterns{
+        "#,##0.###",
+        "¤#,##0.00",
+        "#,##0%",
+        "#E0",
+    }
+    Version{"1.37"}
+    calendar{
+        gregorian{
+            DateTimeElements:intvector{
+                1,
+                1,
+            }
+        }
+    }
+}

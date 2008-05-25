@@ -1,0 +1,11 @@
+# Copyright (C) 2001-2005, International Business Machines
+# Corporation and others.  All Rights Reserved.
+#
+# This is a sample FontMap file for Windows.
+# Fonts are specified by font name, as shown
+# in the "Fonts" folder.
+
+ DEVANAGARI: Raghindi
+       THAI: AngsanaDSE
+    DEFAULT: Code2000
+

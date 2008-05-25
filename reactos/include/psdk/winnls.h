@@ -543,6 +543,15 @@ typedef struct _numberfmtW {
 	LPWSTR lpThousandSep;
 	UINT NegativeOrder;
 } NUMBERFMTW,*LPNUMBERFMTW;
+#if (WINVER >= 0x0600)
+typedef enum _NORM_FORM {
+	NormalizationOther = 0,
+	NormalizationC = 0x1,
+	NormalizationD = 0x2,
+	NormalizationKC = 0x5,
+	NormalizationKD = 0x6
+} NORM_FORM;
+#endif /* (WINVER >= 0x0600) */
 
 int WINAPI CompareStringA(LCID,DWORD,LPCSTR,int,LPCSTR,int);
 int WINAPI CompareStringW(LCID,DWORD,LPCWSTR,int,LPCWSTR,int);
@@ -623,6 +632,10 @@ LANGID WINAPI GetSystemDefaultUILanguage(void);
 LANGID WINAPI GetUserDefaultUILanguage(void);
 BOOL WINAPI IsValidLanguageGroup(LGRPID,DWORD);
 #endif /* (WINVER >= 0x0500) */
+#if (WINVER >= 0x0600)
+int WINAPI NormalizeString(NORM_FORM,LPCWSTR,int,LPWSTR,int);
+BOOL WINAPI IsNormalizedString(NORM_FORM,LPCWSTR,int);
+#endif /* (WINVER >= 0x0600) */
 
 #ifdef UNICODE
 #define CALINFO_ENUMPROC CALINFO_ENUMPROCW
@@ -661,11 +674,11 @@ typedef LPNUMBERFMTW LPNUMBERFMT;
 #define SetCalendarInfo  SetCalendarInfoW
 #define SetLocaleInfo SetLocaleInfoW
 #if (WINVER >= 0x0500)
-#define EnumCalendarInfoEx EnumCalendarInfoExW;
-#define EnumDateFormatsEx EnumDateFormatsExW;
-#define EnumSystemLanguageGroups EnumSystemLanguageGroupsW;
-#define EnumLanguageGroupLocales EnumLanguageGroupLocalesW;
-#define EnumUILanguages EnumUILanguagesW;
+#define EnumCalendarInfoEx EnumCalendarInfoExW
+#define EnumDateFormatsEx EnumDateFormatsExW
+#define EnumSystemLanguageGroups EnumSystemLanguageGroupsW
+#define EnumLanguageGroupLocales EnumLanguageGroupLocalesW
+#define EnumUILanguages EnumUILanguagesW
 #endif /* (WINVER >= 0x0500) */
 #else
 #define CALINFO_ENUMPROC CALINFO_ENUMPROCA
@@ -704,11 +717,11 @@ typedef LPNUMBERFMTA LPNUMBERFMT;
 #define SetCalendarInfo SetCalendarInfoA
 #define SetLocaleInfo SetLocaleInfoA
 #if (WINVER >= 0x0500)
-#define EnumCalendarInfoEx EnumCalendarInfoExA;
-#define EnumDateFormatsEx EnumDateFormatsExA;
-#define EnumSystemLanguageGroups EnumSystemLanguageGroupsA;
-#define EnumLanguageGroupLocales EnumLanguageGroupLocalesA;
-#define EnumUILanguages EnumUILanguagesA;
+#define EnumCalendarInfoEx EnumCalendarInfoExA
+#define EnumDateFormatsEx EnumDateFormatsExA
+#define EnumSystemLanguageGroups EnumSystemLanguageGroupsA
+#define EnumLanguageGroupLocales EnumLanguageGroupLocalesA
+#define EnumUILanguages EnumUILanguagesA
 #endif /* (WINVER >= 0x0500) */
 #endif /* UNICODE */
 #endif /* RC_INVOKED */

@@ -1,0 +1,108 @@
+﻿// ***************************************************************************
+// *
+// * Copyright (C) 2007 International Business Machines
+// * Corporation and others.  All Rights Reserved.
+// * Tool: com.ibm.icu.dev.tool.cldr.LDML2ICUConverter.java
+// * Source File:<path>/common/main/haw.xml
+// *
+// ***************************************************************************
+/**
+ *  ICU <specials> source: <path>/xml/main/haw.xml
+ */
+haw{
+    AuxExemplarCharacters{"[b-d f g j q-t v x-z]"}
+    Countries{
+        AU{"Nūhōlani"}
+        CA{"Kanakā"}
+        CN{"Kina"}
+        DE{"Kelemānia"}
+        DK{"Kenemaka"}
+        ES{"Kepania"}
+        FR{"Palani"}
+        GB{"Aupuni Mōʻī Hui Pū ʻIa"}
+        GR{"Helene"}
+        IE{"ʻIlelani"}
+        IL{"ʻIseraʻela"}
+        IN{"ʻĪnia"}
+        IT{"ʻĪkālia"}
+        JP{"Iāpana"}
+        MX{"Mekiko"}
+        NL{"Hōlani"}
+        NZ{"Aotearoa"}
+        PH{"ʻĀina Pilipino"}
+        RU{"Lūkia"}
+        US{"ʻAmelika Hui Pū ʻIa"}
+    }
+    ExemplarCharacters{"[a ā e ē i ī o ō u ū h k-n p w ʻ]"}
+    Languages{
+        haw{"ʻōlelo Hawaiʻi"}
+    }
+    LocaleScript{
+        "Latn",
+    }
+    NumberPatterns{
+        "#,##0.###",
+        "¤#,##0.00;(¤#,##0.00)",
+        "#,##0%",
+        "#E0",
+    }
+    Version{"1.35"}
+    calendar{
+        gregorian{
+            dayNames{
+                format{
+                    abbreviated{
+                        "LP",
+                        "P1",
+                        "P2",
+                        "P3",
+                        "P4",
+                        "P5",
+                        "P6",
+                    }
+                    wide{
+                        "Lāpule",
+                        "Poʻakahi",
+                        "Poʻalua",
+                        "Poʻakolu",
+                        "Poʻahā",
+                        "Poʻalima",
+                        "Poʻaono",
+                    }
+                }
+            }
+            monthNames{
+                format{
+                    abbreviated{
+                        "Ian.",
+                        "Pep.",
+                        "Mal.",
+                        "ʻAp.",
+                        "Mei",
+                        "Iun.",
+                        "Iul.",
+                        "ʻAu.",
+                        "Kep.",
+                        "ʻOk.",
+                        "Now.",
+                        "Kek.",
+                    }
+                    wide{
+                        "Ianuali",
+                        "Pepeluali",
+                        "Malaki",
+                        "ʻApelila",
+                        "Mei",
+                        "Iune",
+                        "Iulai",
+                        "ʻAukake",
+                        "Kepakemapa",
+                        "ʻOkakopa",
+                        "Nowemapa",
+                        "Kekemapa",
+                    }
+                }
+            }
+        }
+    }
+}

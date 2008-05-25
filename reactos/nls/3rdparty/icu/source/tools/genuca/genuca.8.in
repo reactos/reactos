@@ -1,0 +1,94 @@
+.\" Hey, Emacs! This is -*-nroff-*- you know...
+.\"
+.\" genuca.8: manual page for the genuca utility
+.\"
+.\" Copyright (C) 2000-2001 IBM, Inc. and others.
+.\"
+.TH GENUCA 8 "22 February 2001" "ICU MANPAGE" "ICU @VERSION@ Manual"
+.SH NAME
+.B genuca
+\- create the UCA data table
+.SH SYNOPSIS
+.B genuca
+[
+.BR "\-h\fP, \fB\-?\fP, \fB\-\-help"
+]
+[
+.BR "\-V\fP, \fB\-\-version"
+]
+[
+.BR "\-v\fP, \fB\-\-verbose"
+]
+[
+.BI "\-c\fP, \fB\-\-copyright"
+]
+[
+.BI "\-s\fP, \fB\-\-sourcedir" " source"
+]
+[
+.BI "\-d\fP, \fB\-\-destdir" " destination"
+]
+[
+.IR file
+]
+.SH DESCRIPTION
+.B genuca
+compiles the Unicode Collation Algorithm (UCA) data from
+.I file
+(or from
+.B FractionalUCA.txt
+if
+.I file
+is omitted) into its binary form, the files
+.B ucadata.dat
+and
+.BR invuca.dat .
+These binary files can then be read directly by ICU, or used by
+.BR pkgdata (8)
+for incorporation into a larger archive or library.
+.SH OPTIONS
+.TP
+.BR "\-h\fP, \fB\-?\fP, \fB\-\-help"
+Print help about usage and exit.
+.TP
+.BR "\-V\fP, \fB\-\-version"
+Print the version of
+.B genuca
+and exit.
+.TP
+.BR "\-v\fP, \fB\-\-verbose"
+Display extra informative messages during execution.
+.TP
+.BI "\-c\fP, \fB\-\-copyright"
+Include a copyright notice into the binary data.
+.TP
+.BI "\-s\fP, \fB\-\-sourcedir" " source"
+Set the source directory to
+.IR source .
+The default source directory is specified by the environment variable
+.BR ICU_DATA .
+.TP
+.BI "\-d\fP, \fB\-\-destdir" " destination"
+Set the destination directory to
+.IR destination .
+The default destination directory is specified by the environment variable
+.BR ICU_DATA .
+.SH ENVIRONMENT
+.TP 10
+.B ICU_DATA
+Specifies the directory containing ICU data. Defaults to
+.BR @thepkgicudatadir@/@PACKAGE@/@VERSION@/ .
+Some tools in ICU depend on the presence of the trailing slash. It is thus
+important to make sure that it is present if
+.B ICU_DATA
+is set.
+.SH FILES
+.TP 15
+.B FractionalUCA.txt
+Machine-readable file containing data for the Unicode collation algorithm.
+.SH VERSION
+@VERSION@
+.SH COPYRIGHT
+Copyright (C) 2001 IBM, Inc. and others.
+.SH SEE ALSO
+.BR pkgdata (8)

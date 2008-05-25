@@ -1,0 +1,197 @@
+﻿// ***************************************************************************
+// *
+// * Copyright (C) 2007 International Business Machines
+// * Corporation and others.  All Rights Reserved.
+// * Tool: com.ibm.icu.dev.tool.cldr.LDML2ICUConverter.java
+// * Source File:<path>/common/main/sw.xml
+// *
+// ***************************************************************************
+/**
+ *  ICU <specials> source: <path>/xml/main/sw.xml
+ */
+sw{
+    Countries{
+        AE{"Muugano wa Falme za Nchi za Kiarabu"}
+        AG{"Antigua na Barbuda"}
+        AR{"Ajentina"}
+        BA{"Bosnia na Herzegowina"}
+        BE{"Ubelgiji"}
+        BR{"Brazili"}
+        BS{"Visiwa vya Bahama"}
+        CA{"Kanada"}
+        CF{"Jamhuri ya Afrika ya Kati"}
+        CG{"Kongo"}
+        CH{"Uswisi"}
+        CI{"Pwani ya Pembe"}
+        CM{"Kamerun"}
+        CN{"Uchina"}
+        CO{"Kolombia"}
+        CS{"Serbiya da Montenegro"}
+        CV{"Rasi Verde"}
+        CZ{"Jamhuri ya Czech"}
+        DE{"Udachi"}
+        DJ{"Jibuti"}
+        DK{"Udenmarki"}
+        DM{"Dominika"}
+        DO{"Jamhuri ya Dominikan"}
+        EC{"Ekvado"}
+        EG{"Misri"}
+        ES{"Uhispania"}
+        ET{"Uhabeshi"}
+        FR{"Ufaransa"}
+        GB{"Uingereza"}
+        GQ{"Guinea ya Ikweta"}
+        HR{"Kroatia"}
+        HU{"Hungaria"}
+        IL{"Uyahudi"}
+        IN{"Uhindi"}
+        IQ{"Iraki"}
+        IR{"Uajemi"}
+        IS{"Barafu"}
+        IT{"Uitaliani"}
+        JM{"Jamaika"}
+        JP{"Ujapani"}
+        KE{"Kenya"}
+        KH{"Kampuchea"}
+        KM{"Visiwa vya Komoro"}
+        KN{"Saint Kitts na Nevis"}
+        KP{"Korea ya Kaskazini"}
+        KR{"Korea ya Kusini"}
+        LU{"Luksemburg"}
+        MA{"Moroko"}
+        MC{"Monako"}
+        MH{"Visiwa vya Marshall"}
+        MX{"Meksiko"}
+        MY{"Malasya"}
+        MZ{"Msumbiji"}
+        NI{"Nikaragua"}
+        NL{"Uholanzi"}
+        NO{"Unorwe"}
+        NP{"Nepali"}
+        PG{"Papua Guinea Mpya"}
+        PH{"Filipino"}
+        PT{"Ureno"}
+        PY{"Paragwai"}
+        RU{"Urusi"}
+        SA{"Arabuni Saudi"}
+        SB{"Visiwa vya Solomon"}
+        SC{"Visiwa vya Shelisheli"}
+        SE{"Uswidi"}
+        SO{"Somali"}
+        ST{"Sao Tome na Principe"}
+        TD{"Chadi"}
+        TL{"Timor ya Mashariki"}
+        TR{"Uturuki"}
+        TT{"Trinidad na Tobago"}
+        TZ{"Tanzania"}
+        US{"Muungano wa Nchi za Amerika"}
+        UY{"Urugwai"}
+        VA{"Vatikano"}
+        VC{"Saint Vincent na Grenadines"}
+        YE{"Yemeni"}
+        ZA{"Afrika ya Kusini"}
+    }
+    Currencies{
+        KES{
+            "KSh",
+            "KES",
+        }
+        TZS{
+            "TSh",
+            "TZS",
+        }
+    }
+    ExemplarCharacters{"[a-d {dh} e-n {ng} {ng'} {ny} o p r s {sh} t {th} u-w y z]"}
+    Languages{
+        de{"kijerumani"}
+        en{"kiingereza"}
+        es{"kihispania"}
+        fr{"kifaransa"}
+        it{"kiitaliano"}
+        ja{"kijapani"}
+        pt{"kireno"}
+        ru{"kirusi"}
+        sw{"Kiswahili"}
+        zh{"kichina"}
+    }
+    LocaleScript{
+        "Latn",
+    }
+    NumberPatterns{
+        "#,##0.###",
+        "#,##0.00 ¤",
+        "#,##0%",
+        "#E0",
+    }
+    Version{"1.60"}
+    calendar{
+        gregorian{
+            dayNames{
+                format{
+                    abbreviated{
+                        "Jpi",
+                        "Jtt",
+                        "Jnn",
+                        "Jtn",
+                        "Alh",
+                        "Iju",
+                        "Jmo",
+                    }
+                    wide{
+                        "Jumapili",
+                        "Jumatatu",
+                        "Jumanne",
+                        "Jumatano",
+                        "Alhamisi",
+                        "Ijumaa",
+                        "Jumamosi",
+                    }
+                }
+            }
+            eras{
+                abbreviated{
+                    "KK",
+                    "BK",
+                }
+            }
+            monthNames{
+                format{
+                    abbreviated{
+                        "Jan",
+                        "Feb",
+                        "Mac",
+                        "Apr",
+                        "Mei",
+                        "Jun",
+                        "Jul",
+                        "Ago",
+                        "Sep",
+                        "Okt",
+                        "Nov",
+                        "Des",
+                    }
+                    wide{
+                        "Januari",
+                        "Februari",
+                        "Machi",
+                        "Aprili",
+                        "Mei",
+                        "Juni",
+                        "Julai",
+                        "Agosti",
+                        "Septemba",
+                        "Oktoba",
+                        "Novemba",
+                        "Desemba",
+                    }
+                }
+            }
+        }
+    }
+    zoneStrings{
+        "meta:Africa_Eastern"{
+            ls{"Saa za Africa Mashariki"}
+            ss{"EAT"}
+        }
+    }
+}

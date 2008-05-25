@@ -1,0 +1,10 @@
+#
+# Copyright (c) 2006 International Business Machines
+# Corporation and others. All Rights Reserved.
+#
+# This doesn't always work because ICU upstream doesn't always have
+# the latest version in the latest directory.  See debian bug 375138
+# for details.
+
+version=3
+ftp://ftp.software.ibm.com/software/globalization/icu/(?:\d+\.[\d\.]+)/icu-([\d\.]+).tgz

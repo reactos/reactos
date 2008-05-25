@@ -1,0 +1,1527 @@
+﻿// ***************************************************************************
+// *
+// * Copyright (C) 2007 International Business Machines
+// * Corporation and others.  All Rights Reserved.
+// * Tool: com.ibm.icu.dev.tool.cldr.LDML2ICUConverter.java
+// * Source File:<path>/common/main/ga.xml
+// *
+// ***************************************************************************
+/**
+ *  ICU <specials> source: <path>/xml/main/ga.xml
+ */
+ga{
+    AuxExemplarCharacters{"[ḃ ċ ḋ ḟ ġ ṁ ṗ ṡ ṫ]"}
+    Countries{
+        001{"An Domhan"}
+        002{"An Afraic"}
+        009{"An Aigéine"}
+        013{"Meiriceá Láir"}
+        017{"An Afraic Láir"}
+        019{"Na Meiriceánna"}
+        053{"An Astráil agus an Nua-Shéalainn"}
+        054{"An Mheilinéis"}
+        057{"An Réigiún Micrinéiseach"}
+        061{"An Pholainéis"}
+        142{"An Áise"}
+        143{"An Áise Láir"}
+        150{"An Eoraip"}
+        172{"Comhlathas na Stát Neamhspleácha"}
+        419{"Meiriceá Laidineach agus an Mhuir Chairib"}
+        AD{"Andóra"}
+        AE{"Aontas na nÉimíríochtaí Arabacha"}
+        AF{"An Afganastáin"}
+        AG{"Aintíge agus Barbúda"}
+        AI{"Anguilla"}
+        AL{"An Albáin"}
+        AM{"An Airméin"}
+        AN{"Antillí na hÍsiltíre"}
+        AO{"Angóla"}
+        AQ{"An Antartaice"}
+        AR{"An Airgintín"}
+        AS{"Samó Meiriceánach"}
+        AT{"An Ostair"}
+        AU{"An Astráil"}
+        AW{"Arúba"}
+        AX{"Oileáin Alaind"}
+        AZ{"An Asarbaiseáin"}
+        BA{"An Bhoisnia agus Heirseagóvéin"}
+        BB{"Barbadós"}
+        BD{"An Bhanglaidéis"}
+        BE{"An Bheilg"}
+        BF{"Buircíne Fasó"}
+        BG{"An Bhulgáir"}
+        BH{"Bairéin"}
+        BI{"An Bhurúin"}
+        BJ{"Beinin"}
+        BM{"Beirmiúda"}
+        BN{"Brúiné"}
+        BO{"An Bholaiv"}
+        BR{"An Bhrasaíl"}
+        BS{"Na Bahámaí"}
+        BT{"An Bhútáin"}
+        BV{"Oileán Bouvet"}
+        BW{"An Bhotsuáin"}
+        BY{"An Bhealarúis"}
+        BZ{"An Bheilís"}
+        CA{"Ceanada"}
+        CC{"Oileáin na gCócónna"}
+        CD{"Poblacht Dhaonlathach an Chongó"}
+        CF{"Poblacht na hAfraice Láir"}
+        CG{"An Congó"}
+        CH{"An Eilvéis"}
+        CI{"An Cósta Eabhair"}
+        CK{"Oileáin Cook"}
+        CL{"An tSile"}
+        CM{"Camarún"}
+        CN{"An tSín"}
+        CO{"An Cholóim"}
+        CR{"Cósta Ríce"}
+        CS{"An tSeirbia agus Montainéagró"}
+        CU{"Cúba"}
+        CV{"An Rinn Ghlas"}
+        CX{"Oileán na Nollag"}
+        CY{"An Chipir"}
+        CZ{"Poblacht na Seice"}
+        DE{"An Ghearmáin"}
+        DJ{"Djibouti"}
+        DK{"An Danmhairg"}
+        DM{"Doiminice"}
+        DO{"An Phoblacht Dhoiminiceach"}
+        DZ{"An Ailgéir"}
+        EC{"Eacuadór"}
+        EE{"An Eastóin"}
+        EG{"An Éigipt"}
+        EH{"An Sahára Thiar"}
+        ER{"An Eiritré"}
+        ES{"An Spáinn"}
+        ET{"An Aetóip"}
+        FI{"An Fhionlainn"}
+        FJ{"Fidsí"}
+        FK{"Oileáin Fháclainne"}
+        FM{"An Mhicrinéis"}
+        FO{"Oileáin Fharó"}
+        FR{"An Fhrainc"}
+        GA{"An Ghabúin"}
+        GB{"An Ríocht Aontaithe"}
+        GD{"Grenada"}
+        GE{"An tSeoirsia"}
+        GF{"An Ghuáin Fhrancach"}
+        GG{"Geansaí"}
+        GH{"Gána"}
+        GI{"Giobráltar"}
+        GL{"An Ghraonlainn"}
+        GM{"An Ghaimbia"}
+        GN{"An Ghuine"}
+        GP{"Guadalúip"}
+        GQ{"An Ghuine Mheánchriosach"}
+        GR{"An Ghréig"}
+        GS{"An tSeoirsia Theas agus Oileáin Sandwich Theas"}
+        GT{"Guatamala"}
+        GU{"Guam"}
+        GW{"An Ghuine-Bhissau"}
+        GY{"An Ghuáin"}
+        HK{"R.R.S. na Síne Hong Cong"}
+        HM{"Oileán Heard agus Oileáin McDonald"}
+        HN{"Hondúras"}
+        HR{"An Chróit"}
+        HT{"Háití"}
+        HU{"An Ungáir"}
+        ID{"An Indinéis"}
+        IE{"Éire"}
+        IL{"Iosrael"}
+        IM{"Oileán Mhanann"}
+        IN{"An India"}
+        IO{"Críocha Briotanacha an Aigéin Indiagh"}
+        IQ{"An Iaráic"}
+        IR{"An Iaráin"}
+        IS{"An Íoslainn"}
+        IT{"An Iodáil"}
+        JE{"Geirsí"}
+        JM{"Iamáice"}
+        JO{"An Iordáin"}
+        JP{"An tSeapáin"}
+        KE{"An Chéinia"}
+        KG{"An Chirgeastáin"}
+        KH{"An Chambóid"}
+        KI{"Ciribeas"}
+        KM{"Oileáin Chomóra"}
+        KN{"Saint Kitts agus Nevis"}
+        KP{"An Chóiré Thuaidh"}
+        KR{"An Chóiré Theas"}
+        KW{"Cuáit"}
+        KY{"Oileáin na gCadhman"}
+        KZ{"An Chasacstáin"}
+        LA{"Laos"}
+        LB{"An Liobáin"}
+        LC{"San Lúisia"}
+        LI{"Lichtinstéin"}
+        LK{"Srí Lanca"}
+        LR{"An Libéir"}
+        LS{"Leosóta"}
+        LT{"An Liotuáin"}
+        LU{"Lucsamburg"}
+        LV{"An Laitvia"}
+        LY{"An Libia"}
+        MA{"Maracó"}
+        MC{"Monacó"}
+        MD{"An Mholdóiv"}
+        ME{"Montainéagró"}
+        MG{"Madagascar"}
+        MH{"Oileáin Marshall"}
+        MK{"An Mhacadóin"}
+        ML{"Mailí"}
+        MM{"Maenmar"}
+        MN{"An Mhongóil"}
+        MO{"R.R.S. na Síne Macáó"}
+        MP{"Oileáin Mariana Thuaidh"}
+        MQ{"Martainíc"}
+        MR{"An Mharatáin"}
+        MS{"Montsarat"}
+        MT{"Málta"}
+        MU{"Oileán Mhuirís"}
+        MV{"Na Maildiví"}
+        MW{"An Mhaláiv"}
+        MX{"Meicsiceo"}
+        MY{"An Mhalaeisia"}
+        MZ{"Mósaimbíc"}
+        NA{"An Namaib"}
+        NC{"An Nua-Chaladóin"}
+        NE{"An Nígir"}
+        NF{"Oileán Norfolk"}
+        NG{"An Nigéir"}
+        NI{"Nicearagua"}
+        NL{"An Ísiltír"}
+        NO{"An Iorua"}
+        NP{"Neipeal"}
+        NR{"Nárú"}
+        NU{"Nívé"}
+        NZ{"An Nua-Shéalainn"}
+        OM{"Óman"}
+        PA{"Panama"}
+        PE{"Peiriú"}
+        PF{"An Pholainéis Fhrancach"}
+        PG{"Nua-Ghuine Phapua"}
+        PH{"Na hOileáin Fhilipíneacha"}
+        PK{"An Phacastáin"}
+        PL{"An Pholainn"}
+        PM{"Saint Pierre agus Miquelon"}
+        PN{"Pitcairn"}
+        PR{"Portó Ríce"}
+        PS{"Na Críocha Pailistíneacha"}
+        PT{"An Phortaingéil"}
+        PW{"Palau"}
+        PY{"Paragua"}
+        QA{"Catar"}
+        QO{"An Aigéine Imeallach"}
+        QU{"An tAontas Eorpach"}
+        RE{"Réunion"}
+        RO{"An Rómáin"}
+        RS{"An tSeirbia"}
+        RU{"Cónaidhm na Rúise"}
+        RW{"Ruanda"}
+        SA{"An Araib Shádach"}
+        SB{"Oileáin Sholaimh"}
+        SC{"Na Séiséil"}
+        SD{"An tSúdáin"}
+        SE{"An tSualainn"}
+        SG{"Singeapór"}
+        SH{"San Héilin"}
+        SI{"An tSlóvéin"}
+        SJ{"Svalbard agus Jan Mayen"}
+        SK{"An tSlóvaic"}
+        SL{"Siarra Leon"}
+        SM{"San Mairíne"}
+        SN{"An tSeineagáil"}
+        SO{"An tSomáil"}
+        SR{"Suranam"}
+        ST{"Sao Tome agus Principe"}
+        SV{"An tSalvadóir"}
+        SY{"An tSiria"}
+        SZ{"An tSuasalainn"}
+        TC{"Oileáin Turks agus Caicos"}
+        TD{"Sead"}
+        TF{"Críocha Deisceartacha na Fraince"}
+        TG{"Tóga"}
+        TH{"An Téalainn"}
+        TJ{"An Táidsíceastáin"}
+        TK{"Tócalá"}
+        TL{"Tíomór Thoir"}
+        TM{"An Tuircméanastáin"}
+        TN{"An Túinéis"}
+        TO{"Tonga"}
+        TR{"An Tuirc"}
+        TT{"Oileáin na Tríonóide agus Tobága"}
+        TV{"Túválú"}
+        TW{"An Téaváin"}
+        TZ{"An Tansáin"}
+        UA{"An Úcráin"}
+        UG{"Úganda"}
+        UM{"Mion-Oileáin Imeallacha S.A.M."}
+        US{"Stáit Aontaithe Mheiriceá"}
+        UY{"Urugua"}
+        UZ{"Úisbéiceastáin"}
+        VA{"An Vatacáin"}
+        VC{"Saint Vincent agus na Grenadines"}
+        VE{"Veiniséala"}
+        VG{"Oileáin Bhriotanacha na Maighdean"}
+        VI{"Oileáin na Maighdean S.A.M."}
+        VN{"Vít Neam"}
+        VU{"Vanuatú"}
+        WF{"Oileáin Vailís agus Futúna"}
+        WS{"Samó"}
+        YE{"Éimin"}
+        YT{"Mayotte"}
+        ZA{"An Afraic Theas"}
+        ZM{"An tSaimbia"}
+        ZW{"An tSiombáib"}
+        ZZ{"Réigiún Anaithnid nó Neamhbhailí"}
+    }
+    Currencies{
+        ADP{
+            "ADP",
+            "Peseta Andóra",
+        }
+        AED{
+            "AED",
+            "Dirham Aontas na nÉimíríochtaí Arabacha",
+        }
+        AFA{
+            "AFA",
+            "Afgainí (1927-2002)",
+        }
+        AFN{
+            "Af",
+            "Afgainí",
+        }
+        ALL{
+            "lek",
+            "Lek Albánach",
+        }
+        AMD{
+            "dram",
+            "Dram Airméanach",
+        }
+        ANG{
+            "AÍ f.",
+            "Guilder na nAntillí Ísiltíreach",
+        }
+        AOA{
+            "AOA",
+            "Kwanza Angólach",
+        }
+        AOK{
+            "AOK",
+            "Kwanza Angólach (1977-1990)",
+        }
+        AON{
+            "AON",
+            "Kwanza Nua Angólach (1990-2000)",
+        }
+        AOR{
+            "AOR",
+            "Kwanza Reajustado Angólach (1995-1999)",
+        }
+        ARA{
+            "ARA",
+            "Austral Airgintíneach",
+        }
+        ARP{
+            "ARP",
+            "Peso na Airgintíne (1983-1985)",
+        }
+        ARS{
+            "Arg$",
+            "Peso na Airgintíne",
+        }
+        ATS{
+            "ATS",
+            "Scilling Ostarach",
+        }
+        AUD{
+            "A$",
+            "Dollar Astrálach",
+        }
+        AWG{
+            "AWG",
+            "Guilder Aruba",
+        }
+        AZM{
+            "AZM",
+            "Manat Asarbaiseánach",
+        }
+        BAD{
+            "BAD",
+            "Dínear Bhoisnia-Heirseagaivéin",
+        }
+        BAM{
+            "KM",
+            "Marc Inathraithe Bhoisnia-Heirseagaivéin",
+        }
+        BBD{
+            "BDS$",
+            "Dollar Bharbadóis",
+        }
+        BDT{
+            "Tk",
+            "Taka Bhanglaidéiseach",
+        }
+        BEC{
+            "BEC",
+            "Franc Beilgeach (inathraithe)",
+        }
+        BEF{
+            "BF",
+            "Franc Beilgeach",
+        }
+        BEL{
+            "BEL",
+            "Franc Beilgeach (airgeadúil)",
+        }
+        BGL{
+            "lev",
+            "Lev Bulgárach Crua",
+        }
+        BGN{
+            "BGN",
+            "Lev Nua Bulgárach",
+        }
+        BHD{
+            "BD",
+            "Dínear na Bairéine",
+        }
+        BIF{
+            "Fbu",
+            "Franc na Burúine",
+        }
+        BMD{
+            "Ber$",
+            "Dollar Bheirmiúda",
+        }
+        BND{
+            "BND",
+            "Dollar Bhrúiné",
+        }
+        BOB{
+            "Bs",
+            "Boliviano",
+        }
+        BOP{
+            "BOP",
+            "Peso na Bolaive",
+        }
+        BOV{
+            "BOV",
+            "Mvdol Bolavach",
+        }
+        BRB{
+            "BRB",
+            "Cruzeiro Novo Brasaíleach (1967-1986)",
+        }
+        BRC{
+            "BRC",
+            "Cruzado Brasaíleach",
+        }
+        BRE{
+            "BRE",
+            "Cruzeiro Brasaíleach (1990-1993)",
+        }
+        BRL{
+            "R$",
+            "Real Brasaíleach",
+        }
+        BRN{
+            "BRN",
+            "Cruzado Novo Brasaíleach",
+        }
+        BRR{
+            "BRR",
+            "Cruzeiro Brasaíleach",
+        }
+        BSD{
+            "BSD",
+            "Dollar na mBahámaí",
+        }
+        BTN{
+            "Nu",
+            "Ngultrum Bútánach",
+        }
+        BUK{
+            "BUK",
+            "Kyat Burmach",
+        }
+        BWP{
+            "BWP",
+            "Pula Botsuánach",
+        }
+        BYB{
+            "BYB",
+            "Rúbal Nua Béalarúiseach (1994-1999)",
+        }
+        BYR{
+            "Rbl",
+            "Rúbal Béalarúiseach",
+        }
+        BZD{
+            "BZ$",
+            "Dollar na Beilíse",
+        }
+        CAD{
+            "Can$",
+            "Dollar Ceanada",
+        }
+        CDF{
+            "CDF",
+            "Franc Congolais an Chongó",
+        }
+        CHF{
+            "CHF",
+            "Franc na hEilvéise",
+        }
+        CLF{
+            "CLF",
+            "Unidades de Fomento na Sile",
+        }
+        CLP{
+            "Ch$",
+            "Peso na Sile",
+        }
+        CNY{
+            "Y",
+            "Yuan Renminbi Síneach",
+        }
+        COP{
+            "Col$",
+            "Peso na Colóime",
+        }
+        CRC{
+            "C",
+            "Colon Chósta Ríce",
+        }
+        CSK{
+            "CSK",
+            "Koruna Crua na Seicslóvaice",
+        }
+        CUP{
+            "CUP",
+            "Peso Cúba",
+        }
+        CVE{
+            "CVEsc",
+            "Escudo na Rinne Verde",
+        }
+        CYP{
+            "£C",
+            "Punt na Cipire",
+        }
+        CZK{
+            "CZK",
+            "Koruna Phoblacht na Seice",
+        }
+        DDM{
+            "DDM",
+            "Ostmark na hOirGhearmáine",
+        }
+        DEM{
+            "DEM",
+            "Deutsche Mark",
+        }
+        DJF{
+            "DF",
+            "Franc Djibouti",
+        }
+        DKK{
+            "DKr",
+            "Krone Danmhargach",
+        }
+        DOP{
+            "RD$",
+            "Peso Doimineacach",
+        }
+        DZD{
+            "DA",
+            "Dínear na hAilgéire",
+        }
+        ECS{
+            "ECS",
+            "Sucre Eacuadóir",
+        }
+        ECV{
+            "ECV",
+            "Unidad de Valor Constante (UVC) Eacuadóir",
+        }
+        EEK{
+            "EEK",
+            "Kroon na hEastóine",
+        }
+        EGP{
+            "EGP",
+            "Punt na hÉigipte",
+        }
+        ESP{
+            "ESP",
+            "Peseta Spáinneach",
+        }
+        ETB{
+            "Br",
+            "Birr na hAetóipe",
+        }
+        EUR{
+            "€",
+            "Euro",
+        }
+        FIM{
+            "FIM",
+            "Markka Fionnlannach",
+        }
+        FJD{
+            "F$",
+            "Dollar Fhidsí",
+        }
+        FKP{
+            "FKP",
+            "Punt Oileáin Fháclainne",
+        }
+        FRF{
+            "FRF",
+            "Franc Francach",
+        }
+        GBP{
+            "UK£",
+            "Punt Steirling",
+        }
+        GEK{
+            "GEK",
+            "Kupon Larit na Grúise",
+        }
+        GEL{
+            "lari",
+            "Lari na Grúise",
+        }
+        GHC{
+            "GHC",
+            "Cedi Ghána",
+        }
+        GIP{
+            "GIP",
+            "Punt Ghiobráltair",
+        }
+        GMD{
+            "GMD",
+            "Dalasi Gaimbia",
+        }
+        GNF{
+            "GF",
+            "Franc Guine",
+        }
+        GNS{
+            "GNS",
+            "Syli Guine",
+        }
+        GQE{
+            "GQE",
+            "Ekwele Guineana na Guine Meánchriosaí",
+        }
+        GRD{
+            "GRD",
+            "Drachma Gréagach",
+        }
+        GTQ{
+            "Q",
+            "Quetzal Guatamala",
+        }
+        GWE{
+            "GWE",
+            "Escudo na Guine Portaingéalaí",
+        }
+        GWP{
+            "GWP",
+            "Peso Guine-Bhissau",
+        }
+        GYD{
+            "G$",
+            "Dollar na Guáine",
+        }
+        HKD{
+            "HK$",
+            "Dollar Hong Cong",
+        }
+        HNL{
+            "L",
+            "Lempira Hondúrais",
+        }
+        HRD{
+            "HRD",
+            "Dínear na Cróite",
+        }
+        HRK{
+            "HRK",
+            "Kuna Crótach",
+        }
+        HTG{
+            "HTG",
+            "Gourde Háití",
+        }
+        HUF{
+            "Ft",
+            "Forint Ungárach",
+        }
+        IDR{
+            "Rp",
+            "Rupiah Indinéiseach",
+        }
+        IEP{
+            "£",
+            "Punt Éireannach",
+        }
+        ILP{
+            "ILP",
+            "Punt Iosraelach",
+        }
+        ILS{
+            "ILS",
+            "Sheqel Nua Iosraelach",
+        }
+        INR{
+            "=0#Rs.|1#Re.|1<Rs." /** (choice)  */,
+            "Rúipí India",
+        }
+        IQD{
+            "ID",
+            "Dínear Irácach",
+        }
+        IRR{
+            "RI",
+            "Rial Iaránach",
+        }
+        ISK{
+            "ISK",
+            "Krona Íoslannach",
+        }
+        ITL{
+            "IT₤",
+            "Lira Iodálach",
+        }
+        JMD{
+            "J$",
+            "Dollar Iamácach",
+        }
+        JOD{
+            "JD",
+            "Dínear Iordánach",
+        }
+        JPY{
+            "JP¥",
+            "Yen Seapánach",
+        }
+        KES{
+            "K Sh",
+            "Scilling Céiniach",
+        }
+        KGS{
+            "som",
+            "Som na Cirgeastáine",
+        }
+        KHR{
+            "CR",
+            "Riel na Cambóide",
+        }
+        KMF{
+            "CF",
+            "Franc Chomóra",
+        }
+        KPW{
+            "KPW",
+            "Won na Cóiré Thuaidh",
+        }
+        KRW{
+            "KRW",
+            "Won na Cóiré Theas",
+        }
+        KWD{
+            "KD",
+            "Dínear Cuátach",
+        }
+        KYD{
+            "KYD",
+            "Dollar Oileáin Cayman",
+        }
+        KZT{
+            "T",
+            "Tenge Casacstánach",
+        }
+        LAK{
+            "LAK",
+            "Kip Laosach",
+        }
+        LBP{
+            "LL",
+            "Punt na Liobáine",
+        }
+        LKR{
+            "SL Re",
+            "Rúipí Srí Lanca",
+        }
+        LRD{
+            "LRD",
+            "Dollar na Libéire",
+        }
+        LSL{
+            "M",
+            "Loti Leosóta",
+        }
+        LTL{
+            "LTL",
+            "Lita Liotuánach",
+        }
+        LTT{
+            "LTT",
+            "Talonas Liotuánach",
+        }
+        LUF{
+            "LUF",
+            "Franc Lucsamburg",
+        }
+        LVL{
+            "LVL",
+            "Lats Laitviach",
+        }
+        LVR{
+            "LVR",
+            "Rúbal Laitviach",
+        }
+        LYD{
+            "LD",
+            "Dínear Libia",
+        }
+        MAD{
+            "MAD",
+            "Dirham Mharacó",
+        }
+        MAF{
+            "MAF",
+            "Franc Mharacó",
+        }
+        MDL{
+            "MDL",
+            "Leu Moldóvach",
+        }
+        MGA{
+            "MGA",
+            "Ariary Madagascar",
+        }
+        MGF{
+            "MGF",
+            "Franc Madagascar",
+        }
+        MKD{
+            "MDen",
+            "Denar na Macadóine",
+        }
+        MLF{
+            "MLF",
+            "Franc Mhailí",
+        }
+        MMK{
+            "MMK",
+            "Kyat Mhaenmar",
+        }
+        MNT{
+            "Tug",
+            "Tugrik Mongólach",
+        }
+        MOP{
+            "MOP",
+            "Pataca Macao",
+        }
+        MRO{
+            "UM",
+            "Ouguiya na Maratáine",
+        }
+        MTL{
+            "Lm",
+            "Lira Maltach",
+        }
+        MTP{
+            "MTP",
+            "Punt Maltach",
+        }
+        MUR{
+            "MUR",
+            "Rúipí Oileán Mhuirís",
+        }
+        MVR{
+            "MVR",
+            "Maldive Islands Rufiyaa",
+        }
+        MWK{
+            "MK",
+            "Kwacha na Maláive",
+        }
+        MXN{
+            "MEX$",
+            "Peso Meicsiceo",
+        }
+        MXP{
+            "MXP",
+            "Peso Airgid Meicsiceo (1861-1992)",
+        }
+        MXV{
+            "MXV",
+            "Unidad de Inversion (UDI) Meicsiceo",
+        }
+        MYR{
+            "RM",
+            "Ringgit Malaeisia",
+        }
+        MZE{
+            "MZE",
+            "Escudo Mósaimbíce",
+        }
+        MZM{
+            "Mt",
+            "Metical Mósaimbíce",
+        }
+        NAD{
+            "N$",
+            "Dollar na Namaibe",
+        }
+        NGN{
+            "NGN",
+            "Naira Nígéarach",
+        }
+        NIC{
+            "NIC",
+            "Cordoba Nicearagua",
+        }
+        NIO{
+            "NIO",
+            "Cordoba Oro Nicearagua",
+        }
+        NLG{
+            "NLG",
+            "Guilder Ísiltíreach",
+        }
+        NOK{
+            "NKr",
+            "Krone Ioruach",
+        }
+        NPR{
+            "Nrs",
+            "Rúipí Neipeáil",
+        }
+        NZD{
+            "$NZ",
+            "Dollar na Nua-Shéalainne",
+        }
+        OMR{
+            "RO",
+            "Rial Omain",
+        }
+        PAB{
+            "PAB",
+            "Balboa Panamach",
+        }
+        PEI{
+            "PEI",
+            "Inti Pheiriú",
+        }
+        PEN{
+            "PEN",
+            "Sol Nuevo Pheiriú",
+        }
+        PES{
+            "PES",
+            "Sol Pheiriú",
+        }
+        PGK{
+            "PGK",
+            "Kina Nua-Ghuine Phapua",
+        }
+        PHP{
+            "PHP",
+            "Peso Filipíneach",
+        }
+        PKR{
+            "Pra",
+            "Rúipí na Pacastáine",
+        }
+        PLN{
+            "Zl",
+            "Zloty Polannach",
+        }
+        PLZ{
+            "PLZ",
+            "Zloty Polannach (1950-1995)",
+        }
+        PTE{
+            "PTE",
+            "Escudo Portaingélach",
+        }
+        PYG{
+            "PYG",
+            "Guarani Pharagua",
+        }
+        QAR{
+            "QR",
+            "Rial Catarach",
+        }
+        ROL{
+            "leu",
+            "Leu Rómánach",
+        }
+        RUB{
+            "RUB",
+            "Rúbal Rúiseach",
+        }
+        RUR{
+            "RUR",
+            "Rúbal Rúiseach (1991-1998)",
+        }
+        RWF{
+            "RWF",
+            "Franc Ruanda",
+        }
+        SAR{
+            "SRl",
+            "Riyal Sádach",
+        }
+        SBD{
+            "SI$",
+            "Dollar Oileáin Solomon",
+        }
+        SCR{
+            "SR",
+            "Rúipí na Séiséil",
+        }
+        SDD{
+            "SDD",
+            "Dínear na Súdáine",
+        }
+        SDP{
+            "SDP",
+            "Punt na Súdáine",
+        }
+        SEK{
+            "SKr",
+            "Krona Sualannach",
+        }
+        SGD{
+            "S$",
+            "Dollar Singeapóir",
+        }
+        SHP{
+            "SHP",
+            "Punt San Héilin",
+        }
+        SIT{
+            "SIT",
+            "Tolar Slóvénach",
+        }
+        SKK{
+            "Sk",
+            "Koruna na Slóvaice",
+        }
+        SLL{
+            "SLL",
+            "Leone Shiarra Leon",
+        }
+        SOS{
+            "So. Sh.",
+            "Scilling na Sómáile",
+        }
+        SRG{
+            "Sf",
+            "Guilder Shuranaim",
+        }
+        STD{
+            "Db",
+            "Dobra Sao Tome agus Principe",
+        }
+        SUR{
+            "SUR",
+            "Rúbal Sóvéadach",
+        }
+        SVC{
+            "SVC",
+            "Colon na Salvadóire",
+        }
+        SYP{
+            "LS",
+            "Punt Siria",
+        }
+        SZL{
+            "E",
+            "Lilangeni na Suasalainne",
+        }
+        THB{
+            "THB",
+            "Baht na Téalainne",
+        }
+        TJR{
+            "TJR",
+            "Rúbal na Táidsíceastáine",
+        }
+        TJS{
+            "TJS",
+            "Somoni na Táidsíceastáine",
+        }
+        TMM{
+            "TMM",
+            "Manat na An Tuircméanastáine",
+        }
+        TND{
+            "TND",
+            "Dínear na Túinéise",
+        }
+        TOP{
+            "T$",
+            "Paʻanga Tonga",
+        }
+        TPE{
+            "TPE",
+            "Escudo Tíomóir",
+        }
+        TRL{
+            "TL",
+            "Lira Turcach",
+        }
+        TTD{
+            "TT$",
+            "Dollar Oileáin na Tríonóide agus Tobága",
+        }
+        TWD{
+            "NT$",
+            "Dollar Nua na Téaváine",
+        }
+        TZS{
+            "T Sh",
+            "Scilling na Tansáine",
+        }
+        UAH{
+            "UAH",
+            "Hryvnia Úcránach",
+        }
+        UAK{
+            "UAK",
+            "Karbovanetz Úcránach",
+        }
+        UGS{
+            "UGS",
+            "Scilling Uganda (1966-1987)",
+        }
+        UGX{
+            "U Sh",
+            "Scilling Uganda",
+        }
+        USD{
+            "US$",
+            "Dollar S.A.M.",
+        }
+        USN{
+            "USN",
+            "Dollar S.A.M. (an chéad lá eile)",
+        }
+        USS{
+            "USS",
+            "Dollar S.A.M. (an la céanna)",
+        }
+        UYP{
+            "UYP",
+            "Peso Uragua (1975-1993)",
+        }
+        UYU{
+            "Ur$",
+            "Peso Uruguayo Uragua",
+        }
+        UZS{
+            "UZS",
+            "Sum na hÚisbéiceastáine",
+        }
+        VEB{
+            "Be",
+            "Bolivar Veiniséala",
+        }
+        VND{
+            "VND",
+            "Dong Vítneamach",
+        }
+        VUV{
+            "VT",
+            "Vatu Vanuatú",
+        }
+        WST{
+            "WST",
+            "Tala Samó Thiar",
+        }
+        XAF{
+            "XAF",
+            "CFA Franc BEAC",
+        }
+        XAU{
+            "XAU",
+            "Ór",
+        }
+        XBA{
+            "XBA",
+            "Aonad Ilchodach Eorpach",
+        }
+        XBB{
+            "XBB",
+            "Aonad Airgeadaíochta Eorpach",
+        }
+        XBC{
+            "XBC",
+            "Aonad Cuntais Eorpach (XBC)",
+        }
+        XBD{
+            "XBD",
+            "Aonad Cuntais Eorpach (XBD)",
+        }
+        XCD{
+            "EC$",
+            "Dollar Oirthear na Cairibe",
+        }
+        XDR{
+            "XDR",
+            "Cearta Speisialta Tarraingthe",
+        }
+        XEU{
+            "XEU",
+            "Aonad Airgeadra Eorpach",
+        }
+        XFO{
+            "XFO",
+            "Franc Ór Francach",
+        }
+        XFU{
+            "XFU",
+            "UIC-Franc Francach",
+        }
+        XOF{
+            "XOF",
+            "CFA Franc BCEAO",
+        }
+        XPF{
+            "CFPF",
+            "CFP Franc",
+        }
+        YDD{
+            "YDD",
+            "Dínear Éimin",
+        }
+        YER{
+            "YRl",
+            "Rial Éimin",
+        }
+        YUD{
+            "YUD",
+            "Dínear Crua Iúgslavach",
+        }
+        YUM{
+            "YUM",
+            "Noviy Dinar Iúgslavach",
+        }
+        YUN{
+            "YUN",
+            "Dínear Inathraithe Iúgslavach",
+        }
+        ZAL{
+            "ZAL",
+            "Rand na hAfraice Theas (airgeadúil)",
+        }
+        ZAR{
+            "R",
+            "Rand na hAfraice Theas",
+        }
+        ZMK{
+            "ZMK",
+            "Kwacha Saimbiach",
+        }
+        ZRN{
+            "ZRN",
+            "Zaire Nua Sáíreach",
+        }
+        ZRZ{
+            "ZRZ",
+            "Zaire Sáíreach",
+        }
+        ZWD{
+            "Z$",
+            "Dollar Siombábach",
+        }
+    }
+    ExemplarCharacters{"[a á b-e é f-i í j-o ó p-u ú v-z]"}
+    Languages{
+        aa{"aa"}
+        ab{"Abcáisis"}
+        ae{"Aivéistis"}
+        af{"Afracáinis"}
+        am{"Amarais"}
+        ar{"Araibis"}
+        as{"Asaimis"}
+        az{"Asarbaiseáinis"}
+        ba{"Baiscíris"}
+        be{"Bealarúisis"}
+        bg{"Bulgáiris"}
+        bh{"Bihairis"}
+        bn{"Beangáilis"}
+        bo{"Tibéadais"}
+        br{"Briotáinis"}
+        bs{"Boisnis"}
+        ca{"Catalóinis"}
+        ce{"Sisinis"}
+        co{"Corsaicis"}
+        cr{"Craíais"}
+        cs{"Seicis"}
+        cu{"Slavais na hEaglaise"}
+        cv{"Suvaisis"}
+        cy{"Breatnais"}
+        da{"Danmhairgis"}
+        de{"Gearmáinis"}
+        el{"Gréigis"}
+        en{"Béarla"}
+        eo{"Esperanto"}
+        es{"Spáinnis"}
+        et{"Eastóinis"}
+        eu{"Bascais"}
+        fa{"Peirsis"}
+        fi{"Fionlainnis"}
+        fil{"fil"}
+        fj{"Fidsis"}
+        fo{"Faróis"}
+        fr{"Fraincis"}
+        fy{"Freaslainnis Iartharach"}
+        ga{"Gaeilge"}
+        gd{"Gaeilge na hAlban"}
+        gl{"Gailísis"}
+        gn{"Guaráinis"}
+        gu{"Gúisearáitis"}
+        gv{"Mannainis"}
+        haw{"Haváíais"}
+        he{"Eabhrais"}
+        hi{"Hiondúis"}
+        hr{"Cróitis"}
+        hu{"Ungáiris"}
+        hy{"Airméinis"}
+        ia{"Interlingua"}
+        id{"Indinéisis"}
+        ie{"Interlingue"}
+        ik{"Inupiaq"}
+        io{"Ido"}
+        is{"Íoslainnis"}
+        it{"Iodáilis"}
+        iu{"Ionúitis"}
+        ja{"Seapáinis"}
+        jv{"Iávais"}
+        ka{"Seoirsis"}
+        kk{"Casachais"}
+        km{"Cambóidis"}
+        kn{"Cannadais"}
+        ko{"Cóiréis"}
+        ks{"Caismíris"}
+        ku{"Coirdis"}
+        kw{"Cornais"}
+        ky{"Cirgeasais"}
+        la{"Laidin"}
+        lb{"Leitseabuirgis"}
+        ln{"ln"}
+        lo{"Laosais"}
+        lt{"Liotuáinis"}
+        lv{"Laitvis"}
+        mg{"Malagásais"}
+        mi{"Maorais"}
+        mk{"Macadóinis"}
+        ml{"Mailéalaimis"}
+        mn{"Mongóilis"}
+        mo{"Moldáivis"}
+        mr{"Maraitis"}
+        ms{"Malaeis"}
+        mt{"Maltais"}
+        my{"Burmais"}
+        na{"Nárúis"}
+        nb{"Ioruais Bokmål"}
+        ne{"Neipealais"}
+        nl{"Ollainnis"}
+        nn{"Ioruais Nynorsk"}
+        no{"Ioruais"}
+        nv{"Navachóis"}
+        oc{"Ocatáinis"}
+        or{"Oraisis"}
+        os{"Óiséitis"}
+        pa{"Puinseáibis"}
+        pl{"Polainnis"}
+        ps{"Paistis"}
+        pt{"Portaingéilis"}
+        pt_BR{"Portaingéilis Bhrasaíleach"}
+        pt_PT{"Portaingéilis Ibéireach"}
+        qu{"Ceatsuais"}
+        ro{"Rómáinis"}
+        ru{"Rúisis"}
+        sa{"Sanscrait"}
+        sc{"Sairdínis"}
+        sd{"Sindis"}
+        se{"Sáimis Thuaidh"}
+        sh{"Seirbea-Chróitis"}
+        si{"Siolóinis"}
+        sk{"Slóvaicis"}
+        sl{"Slóivéinis"}
+        sm{"Samóis"}
+        so{"Somáilis"}
+        sq{"Albáinis"}
+        sr{"Seirbis"}
+        st{"Sótais Dheisceartach"}
+        su{"Sundais"}
+        sv{"Sualainnis"}
+        sw{"Svahaílis"}
+        ta{"Tamailis"}
+        te{"Teileagúis"}
+        th{"Téalainnis"}
+        ti{"Tigrinis"}
+        tk{"Tuircméinis"}
+        tl{"Tagálaigis"}
+        tlh{"Klingon"}
+        tr{"Tuircis"}
+        tt{"Tatarais"}
+        tw{"Tvís"}
+        ty{"Taihítis"}
+        ug{"ug"}
+        uk{"Úcráinis"}
+        und{"Teanga Anaithnid nó Neamhbhailí"}
+        ur{"Urdais"}
+        uz{"Úisbéicis"}
+        vi{"Vítneamais"}
+        wa{"Vallúnais"}
+        xh{"Cósais"}
+        yi{"Giúdais"}
+        zh{"Sínis"}
+        zh_Hans{"Sínis Shimplithe"}
+        zh_Hant{"Sínis Thraidisiúnta"}
+        zu{"Súlúis"}
+    }
+    LocaleScript{
+        "Latn",
+    }
+    NumberPatterns{
+        "#,##0.###",
+        "¤#,##0.00",
+        "#,##0%",
+        "#E0",
+    }
+    Version{"1.61"}
+    calendar{
+        gregorian{
+            AmPmMarkers{
+                "a.m.",
+                "p.m.",
+            }
+            dayNames{
+                format{
+                    abbreviated{
+                        "Domh",
+                        "Luan",
+                        "Máirt",
+                        "Céad",
+                        "Déar",
+                        "Aoine",
+                        "Sath",
+                    }
+                    wide{
+                        "Dé Domhnaigh",
+                        "Dé Luain",
+                        "Dé Máirt",
+                        "Dé Céadaoin",
+                        "Déardaoin",
+                        "Dé hAoine",
+                        "Dé Sathairn",
+                    }
+                }
+            }
+            eras{
+                abbreviated{
+                    "RC",
+                    "AD",
+                }
+            }
+            monthNames{
+                format{
+                    abbreviated{
+                        "Ean",
+                        "Feabh",
+                        "Márta",
+                        "Aib",
+                        "Beal",
+                        "Meith",
+                        "Iúil",
+                        "Lún",
+                        "MFómh",
+                        "DFómh",
+                        "Samh",
+                        "Noll",
+                    }
+                    wide{
+                        "Eanáir",
+                        "Feabhra",
+                        "Márta",
+                        "Aibreán",
+                        "Bealtaine",
+                        "Meitheamh",
+                        "Iúil",
+                        "Lúnasa",
+                        "Meán Fómhair",
+                        "Deireadh Fómhair",
+                        "Samhain",
+                        "Nollaig",
+                    }
+                }
+                stand-alone{
+                    narrow{
+                        "E",
+                        "F",
+                        "M",
+                        "A",
+                        "B",
+                        "M",
+                        "I",
+                        "L",
+                        "M",
+                        "D",
+                        "S",
+                        "N",
+                    }
+                }
+            }
+            quarters{
+                format{
+                    abbreviated{
+                        "R1",
+                        "R2",
+                        "R3",
+                        "R4",
+                    }
+                    wide{
+                        "1ú ráithe",
+                        "2ú ráithe",
+                        "3ú ráithe",
+                        "4ú ráithe",
+                    }
+                }
+            }
+        }
+    }
+    zoneStrings{
+        "Europe:Dublin"{
+            ec{"Baile Átha Cliath"}
+            ld{"Am Samhraidh na hÉireann"}
+            sd{"ASÉ"}
+        }
+        "Europe:London"{
+            ec{"Londain"}
+            ld{"Am Samhraidh na Breataine"}
+            sd{"ASB"}
+        }
+        "meta:GMT"{
+            ls{"Meán-Am Greenwich"}
+            ss{"MAG"}
+        }
+    }
+}

@@ -1,0 +1,17 @@
+﻿// ***************************************************************************
+// *
+// * Copyright (C) 2007 International Business Machines
+// * Corporation and others.  All Rights Reserved.
+// * Tool: com.ibm.icu.dev.tool.cldr.LDML2ICUConverter.java
+// * Source File:<path>/common/main/es_VE.xml
+// *
+// ***************************************************************************
+es_VE{
+    NumberPatterns{
+        "#,##0.###",
+        "¤#,##0.00;¤ -#,##0.00",
+        "#,##0%",
+        "#E0",
+    }
+    Version{"1.49"}
+}

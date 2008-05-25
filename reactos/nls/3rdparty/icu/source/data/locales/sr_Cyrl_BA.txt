@@ -1,0 +1,72 @@
+﻿// ***************************************************************************
+// *
+// * Copyright (C) 2007 International Business Machines
+// * Corporation and others.  All Rights Reserved.
+// * Tool: com.ibm.icu.dev.tool.cldr.LDML2ICUConverter.java
+// * Source File:<path>/common/main/sr_Cyrl_BA.xml
+// *
+// ***************************************************************************
+sr_Cyrl_BA{
+    Currencies{
+        BAM{
+            "КМ.",
+            "Конвертибилна Марка",
+        }
+    }
+    Version{"1.29"}
+    calendar{
+        gregorian{
+            DateTimePatterns{
+                "HH 'часова', mm 'минута', ss 'секунди' v",
+                "HH.mm.ss z",
+                "HH:mm:ss",
+                "HH:mm",
+                "EEEE, dd. MMMM yyyy.",
+                "dd. MMMM yyyy.",
+                "yyyy-MM-dd",
+                "yy-MM-dd",
+                "{1} {0}",
+            }
+            dayNames{
+                format{
+                    abbreviated{
+                        "нед",
+                        "пон",
+                        "уто",
+                        "сри",
+                        "чет",
+                        "пет",
+                        "суб",
+                    }
+                    wide{
+                        "недеља",
+                        "понедељак",
+                        "уторак",
+                        "сриједа",
+                        "четвртак",
+                        "петак",
+                        "субота",
+                    }
+                }
+            }
+            monthNames{
+                format{
+                    wide{
+                        "јануар",
+                        "фебруар",
+                        "март",
+                        "април",
+                        "мај",
+                        "јуни",
+                        "јули",
+                        "август",
+                        "септембар",
+                        "октобар",
+                        "новембар",
+                        "децембар",
+                    }
+                }
+            }
+        }
+    }
+}

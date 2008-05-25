@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="Windows-1252"?>
+<VisualStudioProject
+	ProjectType="Visual C++"
+	Version="8.00"
+	Name="makedata"
+	ProjectGUID="{D9DF7F2F-93B7-4810-B5CD-96F4F33C079B}"
+	Keyword="MakeFileProj"
+	>
+	<Platforms>
+		<Platform
+			Name="Win32"
+		/>
+	</Platforms>
+	<ToolFiles>
+	</ToolFiles>
+	<Configurations>
+		<Configuration
+			Name="Release|Win32"
+			OutputDirectory=".\Release"
+			IntermediateDirectory=".\Release"
+			ConfigurationType="0"
+			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
+			UseOfMFC="0"
+			ATLMinimizesCRunTimeLibraryUsage="false"
+			BuildLogFile=".\out\tmp\ReleaseBuildLog.html"
+			>
+			<Tool
+				Name="VCNMakeTool"
+				BuildCommandLine="NMAKE /f makedata.mak ICUMAKE=&quot;$(ProjectDir)\&quot; CFG=release"
+				ReBuildCommandLine="NMAKE /f makedata.mak ICUMAKE=&quot;$(ProjectDir)\&quot; CFG=release clean all"
+				CleanCommandLine="NMAKE /f makedata.mak ICUMAKE=&quot;$(ProjectDir)\&quot; CFG=release clean"
+				Output=""
+				PreprocessorDefinitions=""
+				IncludeSearchPath=""
+				ForcedIncludes=""
+				AssemblySearchPath=""
+				ForcedUsingAssemblies=""
+				CompileAsManaged=""
+			/>
+		</Configuration>
+		<Configuration
+			Name="Debug|Win32"
+			OutputDirectory=".\Debug"
+			IntermediateDirectory=".\Debug"
+			ConfigurationType="0"
+			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
+			UseOfMFC="0"
+			ATLMinimizesCRunTimeLibraryUsage="false"
+			BuildLogFile=".\out\tmp\DebugBuildLog.html"
+			>
+			<Tool
+				Name="VCNMakeTool"
+				BuildCommandLine="NMAKE /f makedata.mak ICUMAKE=&quot;$(ProjectDir)\&quot; CFG=debug"
+				ReBuildCommandLine="NMAKE /f makedata.mak ICUMAKE=&quot;$(ProjectDir)\&quot; CFG=debug clean all"
+				CleanCommandLine="NMAKE /f makedata.mak ICUMAKE=&quot;$(ProjectDir)\&quot; CFG=debug clean"
+				Output=""
+				PreprocessorDefinitions=""
+				IncludeSearchPath=""
+				ForcedIncludes=""
+				AssemblySearchPath=""
+				ForcedUsingAssemblies=""
+				CompileAsManaged=""
+			/>
+		</Configuration>
+	</Configurations>
+	<References>
+	</References>
+	<Files>
+		<Filter
+			Name="Resource Files"
+			Filter="ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe"
+			>
+		</Filter>
+		<Filter
+			Name="Make Files"
+			Filter="mak;mk"
+			>
+			<File
+				RelativePath=".\brkitr\brkfiles.mk"
+				>
+			</File>
+			<File
+				RelativePath=".\coll\colfiles.mk"
+				>
+			</File>
+			<File
+				RelativePath=".\makedata.mak"
+				>
+			</File>
+			<File
+				RelativePath=".\misc\miscfiles.mk"
+				>
+			</File>
+			<File
+				RelativePath=".\rbnf\rbnffiles.mk"
+				>
+			</File>
+			<File
+				RelativePath=".\locales\resfiles.mk"
+				>
+			</File>
+			<File
+				RelativePath="..\test\testdata\testdata.mak"
+				>
+			</File>
+			<File
+				RelativePath=".\translit\trnsfiles.mk"
+				>
+			</File>
+			<File
+				RelativePath="..\test\testdata\tstfiles.mk"
+				>
+			</File>
+			<File
+				RelativePath=".\mappings\ucmcore.mk"
+				>
+			</File>
+			<File
+				RelativePath=".\mappings\ucmebcdic.mk"
+				>
+			</File>
+			<File
+				RelativePath=".\mappings\ucmfiles.mk"
+				>
+			</File>
+		</Filter>
+	</Files>
+	<Globals>
+	</Globals>
+</VisualStudioProject>

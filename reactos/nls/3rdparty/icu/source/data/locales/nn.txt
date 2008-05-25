@@ -1,0 +1,1120 @@
+﻿// ***************************************************************************
+// *
+// * Copyright (C) 2007 International Business Machines
+// * Corporation and others.  All Rights Reserved.
+// * Tool: com.ibm.icu.dev.tool.cldr.LDML2ICUConverter.java
+// * Source File:<path>/common/main/nn.xml
+// *
+// ***************************************************************************
+/**
+ *  ICU <specials> source: <path>/xml/main/nn.xml
+ */
+nn{
+    AuxExemplarCharacters{"[á ǎ č ç đ è ê ń ñ ŋ š ŧ ü ž ä ö]"}
+    Countries{
+        001{"verda"}
+        002{"Afrika"}
+        003{"Nord-Amerika"}
+        005{"Sør-Amerika"}
+        009{"Oseania"}
+        011{"Vest-Afrika"}
+        013{"Sentral-Amerika"}
+        014{"Aust-Afrika"}
+        015{"Nord-Afrika"}
+        017{"Sentral-Afrika"}
+        018{"Sørlege Afrika"}
+        019{"Amerika"}
+        021{"nordlege Amerika"}
+        029{"Karibia"}
+        030{"Aust-Asia"}
+        034{"Sør-Asia"}
+        035{"Søraust-Asia"}
+        039{"Sør-Europa"}
+        053{"Australia og New Zealand"}
+        054{"Melanesia"}
+        057{"Mikronesia"}
+        061{"Polynesia"}
+        062{"Sørlege Sentral-Asia"}
+        142{"Asia"}
+        143{"Sentral-Asia"}
+        145{"Vest-Asia"}
+        150{"Europa"}
+        151{"Aust-Europa"}
+        154{"Nord-Europa"}
+        155{"Vest-Europa"}
+        172{"Samveldet av uavhengige statar"}
+        419{"Latin-Amerika og Karibia"}
+        830{"Kanaløyane"}
+        AD{"Andorra"}
+        AE{"Dei sameinte arabiske emirata"}
+        AF{"Afghanistan"}
+        AG{"Antigua og Barbuda"}
+        AI{"Anguilla"}
+        AL{"Albania"}
+        AM{"Armenia"}
+        AN{"Dei nederlandske Antillane"}
+        AO{"Angola"}
+        AQ{"Antarktis"}
+        AR{"Argentina"}
+        AS{"Amerikansk Samoa"}
+        AT{"Austerrike"}
+        AU{"Australia"}
+        AW{"Aruba"}
+        AX{"Åland"}
+        AZ{"Aserbajdsjan"}
+        BA{"Bosnia og Hercegovina"}
+        BB{"Barbados"}
+        BD{"Bangladesh"}
+        BE{"Belgia"}
+        BF{"Burkina Faso"}
+        BG{"Bulgaria"}
+        BH{"Bahrain"}
+        BI{"Burundi"}
+        BJ{"Benin"}
+        BM{"Bermuda"}
+        BN{"Brunei Darussalam"}
+        BO{"Bolivia"}
+        BR{"Brasil"}
+        BS{"Bahamas"}
+        BT{"Bhutan"}
+        BV{"Bouvetøya"}
+        BW{"Botswana"}
+        BY{"Kviterussland"}
+        BZ{"Belize"}
+        CA{"Canada"}
+        CC{"Kokosøyane"}
+        CD{"Kongo-Kinshasa"}
+        CF{"Den sentralafrikanske republikken"}
+        CG{"Kongo-Brazzaville"}
+        CH{"Sveits"}
+        CI{"Elfenbeinskysten"}
+        CK{"Cookøyane"}
+        CL{"Chile"}
+        CM{"Kamerun"}
+        CN{"Kina"}
+        CO{"Colombia"}
+        CR{"Costa Rica"}
+        CS{"Serbia og Montenegro"}
+        CU{"Cuba"}
+        CV{"Kapp Verde"}
+        CX{"Christmasøya"}
+        CY{"Kypros"}
+        CZ{"Tsjekkia"}
+        DE{"Tyskland"}
+        DJ{"Djibouti"}
+        DK{"Danmark"}
+        DM{"Dominica"}
+        DO{"Den dominikanske republikken"}
+        DZ{"Algerie"}
+        EC{"Ecuador"}
+        EE{"Estland"}
+        EG{"Egypt"}
+        EH{"Vest-Sahara"}
+        ER{"Eritrea"}
+        ES{"Spania"}
+        ET{"Etiopia"}
+        FI{"Finland"}
+        FJ{"Fiji"}
+        FK{"Falklandsøyane"}
+        FM{"Mikronesiaføderasjonen"}
+        FO{"Færøyane"}
+        FR{"Frankrike"}
+        GA{"Gabon"}
+        GB{"Storbritannia"}
+        GD{"Grenada"}
+        GE{"Georgia"}
+        GF{"Fransk Guyana"}
+        GG{"Guernsey"}
+        GH{"Ghana"}
+        GI{"Gibraltar"}
+        GL{"Grønland"}
+        GM{"Gambia"}
+        GN{"Guinea"}
+        GP{"Guadeloupe"}
+        GQ{"Ekvatorial-Guinea"}
+        GR{"Hellas"}
+        GS{"Sør-Georgia og Sør-Sandwich-øyane"}
+        GT{"Guatemala"}
+        GU{"Guam"}
+        GW{"Guinea-Bissau"}
+        GY{"Guyana"}
+        HK{"Hong Kong S.A.R. (Kina)"}
+        HM{"Heard- og McDonaldsøyane"}
+        HN{"Honduras"}
+        HR{"Kroatia"}
+        HT{"Haiti"}
+        HU{"Ungarn"}
+        ID{"Indonesia"}
+        IE{"Irland"}
+        IL{"Israel"}
+        IM{"Man"}
+        IN{"India"}
+        IO{"Britiske område i Det indiske hav"}
+        IQ{"Irak"}
+        IR{"Iran"}
+        IS{"Island"}
+        IT{"Italia"}
+        JE{"Jersey"}
+        JM{"Jamaica"}
+        JO{"Jordan"}
+        JP{"Japan"}
+        KE{"Kenya"}
+        KG{"Kirgisistan"}
+        KH{"Kambodsja"}
+        KI{"Kiribati"}
+        KM{"Komorene"}
+        KN{"St. Christopher og Nevis"}
+        KP{"Nord-Korea"}
+        KR{"Sør-Korea"}
+        KW{"Kuwait"}
+        KY{"Caymanøyane"}
+        KZ{"Kasakhstan"}
+        LA{"Laos"}
+        LB{"Libanon"}
+        LC{"St. Lucia"}
+        LI{"Liechtenstein"}
+        LK{"Sri Lanka"}
+        LR{"Liberia"}
+        LS{"Lesotho"}
+        LT{"Litauen"}
+        LU{"Luxembourg"}
+        LV{"Latvia"}
+        LY{"Libya"}
+        MA{"Marokko"}
+        MC{"Monaco"}
+        MD{"Moldova"}
+        ME{"Montenegro"}
+        MG{"Madagaskar"}
+        MH{"Marshalløyane"}
+        MK{"Makedonia"}
+        ML{"Mali"}
+        MM{"Myanmar"}
+        MN{"Mongolia"}
+        MO{"Macao S.A.R. (Kina)"}
+        MP{"Nord-Marianane"}
+        MQ{"Martinique"}
+        MR{"Mauritania"}
+        MS{"Montserrat"}
+        MT{"Malta"}
+        MU{"Mauritius"}
+        MV{"Maldivane"}
+        MW{"Malawi"}
+        MX{"Mexico"}
+        MY{"Malaysia"}
+        MZ{"Mosambik"}
+        NA{"Namibia"}
+        NC{"Ny-Caledonia"}
+        NE{"Niger"}
+        NF{"Norfolkøyane"}
+        NG{"Nigeria"}
+        NI{"Nicaragua"}
+        NL{"Nederland"}
+        NO{"Noreg"}
+        NP{"Nepal"}
+        NR{"Nauru"}
+        NU{"Niue"}
+        NZ{"New Zealand"}
+        OM{"Oman"}
+        PA{"Panama"}
+        PE{"Peru"}
+        PF{"Fransk Polynesia"}
+        PG{"Papua Ny-Guinea"}
+        PH{"Filippinane"}
+        PK{"Pakistan"}
+        PL{"Polen"}
+        PM{"St. Pierre og Miquelon"}
+        PN{"Pitcairn"}
+        PR{"Puerto Rico"}
+        PS{"Palestinsk territorium"}
+        PT{"Portugal"}
+        PW{"Palau"}
+        PY{"Paraguay"}
+        QA{"Qatar"}
+        QO{"Ytre Oseania"}
+        RE{"Réunion"}
+        RO{"Romania"}
+        RS{"Serbia"}
+        RU{"Russland"}
+        RW{"Rwanda"}
+        SA{"Saudi Arabia"}
+        SB{"Salomonøyane"}
+        SC{"Seychellane"}
+        SD{"Sudan"}
+        SE{"Sverige"}
+        SG{"Singapore"}
+        SH{"Saint Helena"}
+        SI{"Slovenia"}
+        SJ{"Svalbard og Jan Mayen"}
+        SK{"Slovakia"}
+        SL{"Sierra Leone"}
+        SM{"San Marino"}
+        SN{"Senegal"}
+        SO{"Somalia"}
+        SR{"Surinam"}
+        ST{"São Tomé og Príncipe"}
+        SV{"El Salvador"}
+        SY{"Syria"}
+        SZ{"Swaziland"}
+        TC{"Turks- og Caicosøyane"}
+        TD{"Tchad"}
+        TF{"Franske sørområde"}
+        TG{"Togo"}
+        TH{"Thailand"}
+        TJ{"Tadsjikistan"}
+        TK{"Tokelau"}
+        TL{"Aust-Timor"}
+        TM{"Turkmenistan"}
+        TN{"Tunisia"}
+        TO{"Tonga"}
+        TR{"Tyrkia"}
+        TT{"Trinidad og Tobago"}
+        TV{"Tuvalu"}
+        TW{"Taiwan"}
+        TZ{"Tanzania"}
+        UA{"Ukraina"}
+        UG{"Uganda"}
+        UM{"USAs ytre småøyar"}
+        US{"USA"}
+        UY{"Uruguay"}
+        UZ{"Usbekistan"}
+        VA{"Vatikanstaten"}
+        VC{"St. Vincent og Grenadinane"}
+        VE{"Venezuela"}
+        VG{"Jomfruøyane (britisk)"}
+        VI{"Jomfruøyene (USA)"}
+        VN{"Vietnam"}
+        VU{"Vanuatu"}
+        WF{"Wallis og Futuna"}
+        WS{"Samoa"}
+        YE{"Yemen"}
+        YT{"Mayotte"}
+        ZA{"Sør-Afrika"}
+        ZM{"Zambia"}
+        ZW{"Zimbabwe"}
+    }
+    Currencies{
+        EUR{
+            "€",
+            "euro",
+        }
+        NOK{
+            "kr",
+            "NOK",
+        }
+        XXX{
+            "XXX",
+            "ukjend eller ugyldig valuta",
+        }
+    }
+    ExemplarCharacters{"[a à b-e é f-o ó ò ô p-z æ ø å]"}
+    Keys{
+        calendar{"kalender"}
+        collation{"kollasjon"}
+        currency{"valuta"}
+    }
+    Languages{
+        aa{"afar"}
+        ab{"abkhasisk"}
+        ace{"achinesisk"}
+        ach{"acoli"}
+        ada{"adangme"}
+        ady{"adyghe"}
+        ae{"avestisk"}
+        af{"afrikaans"}
+        afa{"afroasiatisk språk (anna)"}
+        afh{"afrihili"}
+        ain{"ainu"}
+        ak{"akan"}
+        akk{"akkadisk"}
+        ale{"aleutisk"}
+        alg{"algonkinsk språk"}
+        alt{"sør-altai"}
+        am{"amharisk"}
+        an{"aragonsk"}
+        ang{"gammalengelsk"}
+        anp{"angika"}
+        apa{"apache-språk"}
+        ar{"arabisk"}
+        arc{"arameisk"}
+        arn{"araukansk"}
+        arp{"arapaho"}
+        art{"kunstig (anna)"}
+        arw{"arawak"}
+        as{"assamisk"}
+        ast{"asturisk"}
+        ath{"athapaskansk språk"}
+        aus{"australsk språk"}
+        av{"avarisk"}
+        awa{"awadhi"}
+        ay{"aymara"}
+        az{"aserbajdsjansk"}
+        ba{"basjkirsk"}
+        bad{"banda"}
+        bai{"bamilekisk språk"}
+        bal{"baluchi"}
+        ban{"balinesisk"}
+        bas{"basa"}
+        bat{"baltisk (anna)"}
+        be{"kviterussisk"}
+        bej{"beja"}
+        bem{"bemba"}
+        ber{"berbisk"}
+        bg{"bulgarsk"}
+        bh{"bihari"}
+        bho{"bhojpuri"}
+        bi{"bislama"}
+        bik{"bikol"}
+        bin{"bini"}
+        bla{"siksika"}
+        bm{"bambara"}
+        bn{"bengali"}
+        bnt{"bantu"}
+        bo{"tibetansk"}
+        br{"bretonsk"}
+        bra{"braj"}
+        bs{"bosnisk"}
+        btk{"batak"}
+        bua{"burjatisk"}
+        bug{"buginesisk"}
+        byn{"blin"}
+        ca{"katalansk"}
+        cad{"caddo"}
+        cai{"sentralamerikansk indiansk (anna)"}
+        car{"karibisk"}
+        cau{"kaukasisk (anna)"}
+        cch{"atsam"}
+        ce{"tsjetsjensk"}
+        ceb{"cebuansk"}
+        cel{"keltisk (anna)"}
+        ch{"chamorro"}
+        chb{"chibcha"}
+        chg{"chagatai"}
+        chk{"chuukesisk"}
+        chm{"mari"}
+        chn{"chinook"}
+        cho{"choctaw"}
+        chp{"chipewiansk"}
+        chr{"cherokee"}
+        chy{"cheyenne"}
+        cmc{"kamisk språk"}
+        co{"korsikansk"}
+        cop{"koptisk"}
+        cpe{"kreolsk og pidgin, engelskbasert (anna)"}
+        cpf{"kreolsk og pidgin, franskbasert (anna)"}
+        cpp{"kreolsk og pidgin, portugisiskbasert (anna)"}
+        cr{"cree"}
+        crh{"krimtatarisk"}
+        crp{"kreolsk og pidgin (anna)"}
+        cs{"tsjekkisk"}
+        csb{"kasjubisk"}
+        cu{"kyrkjeslavisk"}
+        cus{"kusjitisk språk (anna)"}
+        cv{"tsjuvansk"}
+        cy{"walisisk"}
+        da{"dansk"}
+        dak{"dakota"}
+        dar{"dargwa"}
+        day{"dayak"}
+        de{"tysk"}
+        del{"delaware"}
+        den{"slavej"}
+        dgr{"dogrib"}
+        din{"dinka"}
+        doi{"dogri"}
+        dra{"dravidisk språk (anna)"}
+        dsb{"lågsorbisk"}
+        dua{"duala"}
+        dum{"mellumnederlandsk"}
+        dv{"divehi"}
+        dyu{"dyula"}
+        dz{"dzongkha"}
+        ee{"ewe"}
+        efi{"efik"}
+        egy{"gammalegyptisk"}
+        eka{"ekajuk"}
+        el{"gresk"}
+        elx{"elamittisk"}
+        en{"engelsk"}
+        enm{"mellomengelsk"}
+        eo{"esperanto"}
+        es{"spansk"}
+        et{"estisk"}
+        eu{"baskisk"}
+        ewo{"ewondo"}
+        fa{"persisk"}
+        fan{"fang"}
+        fat{"fanti"}
+        ff{"fulani"}
+        fi{"finsk"}
+        fil{"filippinsk"}
+        fiu{"finsk-ugrisk språk (anna)"}
+        fj{"fijiansk"}
+        fo{"færøysk"}
+        fon{"fon"}
+        fr{"fransk"}
+        frm{"mellomfransk"}
+        fro{"gammalfransk"}
+        frr{"nordfrisisk"}
+        frs{"austfrisisk"}
+        fur{"friuliansk"}
+        fy{"vestfrisisk"}
+        ga{"irsk"}
+        gaa{"ga"}
+        gay{"gayo"}
+        gba{"gbaya"}
+        gd{"skotsk-gælisk"}
+        gem{"germansk språk (anna)"}
+        gez{"ges"}
+        gil{"kiribatisk"}
+        gl{"galicisk"}
+        gmh{"mellomhøgtysk"}
+        gn{"guarani"}
+        goh{"gammalhøgtysk"}
+        gon{"gondi"}
+        gor{"gorontalo"}
+        got{"gotisk"}
+        grb{"grebo"}
+        grc{"gammalgresk"}
+        gsw{"sveitsertysk"}
+        gu{"gujarati"}
+        gv{"manx"}
+        gwi{"gwichin"}
+        ha{"hausa"}
+        hai{"haida"}
+        haw{"hawaiisk"}
+        he{"hebraisk"}
+        hi{"hindi"}
+        hil{"hiligaynon"}
+        him{"himachali"}
+        hit{"hettittisk"}
+        hmn{"hmong"}
+        ho{"hiri motu"}
+        hr{"kroatisk"}
+        hsb{"høgsorbisk"}
+        ht{"haitisk"}
+        hu{"ungarsk"}
+        hup{"hupa"}
+        hy{"armensk"}
+        hz{"herero"}
+        ia{"interlingua"}
+        iba{"iban"}
+        id{"indonesisk"}
+        ie{"interlingue"}
+        ig{"ibo"}
+        ii{"sichuan-yi"}
+        ijo{"ijo"}
+        ik{"inupiak"}
+        ilo{"iloko"}
+        inc{"indisk språk (anna)"}
+        ine{"indo-europeisk språk (anna)"}
+        inh{"ingusjisk"}
+        io{"ido"}
+        ira{"iransk"}
+        iro{"irokansk språk"}
+        is{"islandsk"}
+        it{"italiensk"}
+        iu{"inuktitut"}
+        ja{"japansk"}
+        jbo{"lojban"}
+        jpr{"jødepersisk"}
+        jrb{"jødearabisk"}
+        jv{"javanesisk"}
+        ka{"georgisk"}
+        kaa{"karakalpakisk"}
+        kab{"kabylsk"}
+        kac{"kachin"}
+        kam{"kamba"}
+        kar{"karensk"}
+        kaw{"kawi"}
+        kbd{"kabardisk"}
+        kg{"kikongo"}
+        kha{"khasi"}
+        khi{"khoisanspråk (anna)"}
+        kho{"khotanesisk"}
+        ki{"kikuyu"}
+        kj{"kuanyama"}
+        kk{"kasakhisk"}
+        kl{"kalaallisut; grønlandsk"}
+        km{"khmer"}
+        kmb{"kimbundu"}
+        kn{"kannada"}
+        ko{"koreansk"}
+        kok{"konkani"}
+        kos{"kosraeansk"}
+        kpe{"kpelle"}
+        kr{"kanuri"}
+        krc{"karachay-balkar"}
+        krl{"karelsk"}
+        kro{"kru"}
+        kru{"kurukh"}
+        ks{"kasjmiri"}
+        ku{"kurdisk"}
+        kum{"kumyk"}
+        kut{"kutenai"}
+        kv{"komi"}
+        kw{"kornisk"}
+        ky{"kirgisisk"}
+        la{"latin"}
+        lad{"ladinsk"}
+        lah{"lahnda"}
+        lam{"lamba"}
+        lb{"luxemburgsk"}
+        lez{"lezghian"}
+        lg{"ganda"}
+        li{"limburgisk"}
+        ln{"lingala"}
+        lo{"laotisk"}
+        lol{"mongo"}
+        loz{"lozi"}
+        lt{"litauisk"}
+        lu{"luba-katanga"}
+        lua{"luba-lulua"}
+        lui{"luiseno"}
+        lun{"lunda"}
+        luo{"luo"}
+        lus{"lushai"}
+        lv{"latvisk"}
+        mad{"maduresisk"}
+        mag{"magahi"}
+        mai{"maithili"}
+        mak{"makasar"}
+        man{"mandingo"}
+        map{"austronesisk"}
+        mas{"masai"}
+        mdf{"moksha"}
+        mdr{"mandar"}
+        men{"mende"}
+        mg{"madagassisk"}
+        mga{"mellomirsk"}
+        mh{"marshallesisk"}
+        mi{"maori"}
+        mic{"micmac"}
+        min{"minangkabau"}
+        mis{"anna språk"}
+        mk{"makedonsk"}
+        mkh{"mon-khmerspråk (anna)"}
+        ml{"malayalam"}
+        mn{"mongolsk"}
+        mnc{"mandsju"}
+        mni{"manipuri"}
+        mno{"manobospråk"}
+        mo{"moldavisk"}
+        moh{"mohawk"}
+        mos{"mossi"}
+        mr{"marathi"}
+        ms{"malayisk"}
+        mt{"maltesisk"}
+        mul{"fleire språk"}
+        mun{"mundaspråk"}
+        mus{"creek"}
+        mwl{"mirandesisk"}
+        mwr{"marwari"}
+        my{"burmesisk"}
+        myn{"mayaspråk"}
+        myv{"erzya"}
+        na{"nauru"}
+        nah{"nahuatl"}
+        nai{"nordamerikansk indiansk språk (anna)"}
+        nap{"napolitansk"}
+        nb{"bokmål"}
+        nd{"nord-ndebele"}
+        nds{"lågtysk"}
+        ne{"nepalsk"}
+        new{"newari"}
+        ng{"ndonga"}
+        nia{"nias"}
+        nic{"niger-kordofaniansk språk (anna)"}
+        niu{"niueansk"}
+        nl{"nederlandsk"}
+        nn{"nynorsk"}
+        no{"norsk"}
+        nog{"nogai"}
+        non{"gammalnorsk"}
+        nr{"sør-ndebele"}
+        nso{"nordsotho"}
+        nub{"nubisk språk"}
+        nv{"navajo"}
+        nwc{"klassisk newarisk"}
+        ny{"nyanja"}
+        nym{"nyamwezi"}
+        nyn{"nyankole"}
+        nyo{"nyoro"}
+        nzi{"nzima"}
+        oc{"oksitansk"}
+        oj{"ojibwa"}
+        om{"oromo"}
+        or{"oriya"}
+        os{"ossetisk"}
+        osa{"osage"}
+        ota{"ottomansk tyrkisk"}
+        oto{"otomisk språk"}
+        pa{"panjabi"}
+        paa{"papuisk språk (anna)"}
+        pag{"pangasinan"}
+        pal{"pahlavi"}
+        pam{"pampanga"}
+        pap{"papiamento"}
+        pau{"palauisk"}
+        peo{"gammalpersisk"}
+        phi{"filippinsk språk (anna)"}
+        phn{"fønikisk"}
+        pi{"pali"}
+        pl{"polsk"}
+        pon{"ponapisk"}
+        pra{"prakrit-språk"}
+        pro{"gammalprovençalsk"}
+        ps{"pashto"}
+        pt{"portugisisk"}
+        qu{"quechua"}
+        raj{"rajasthani"}
+        rap{"rapanui"}
+        rar{"rarotongansk"}
+        rm{"retoromansk"}
+        rn{"rundi"}
+        ro{"rumensk"}
+        roa{"romansk språk (anna)"}
+        rom{"romani"}
+        root{"rot"}
+        ru{"russisk"}
+        rup{"aromansk"}
+        rw{"kinjarwanda"}
+        sa{"sanskrit"}
+        sad{"sandawe"}
+        sah{"jakutsk"}
+        sai{"søramerikansk indiansk språk (anna)"}
+        sal{"salishansk språk"}
+        sam{"samaritansk arameisk"}
+        sas{"sasak"}
+        sat{"santali"}
+        sc{"sardinsk"}
+        scn{"siciliansk"}
+        sco{"skotsk"}
+        sd{"sindhi"}
+        se{"nordsamisk"}
+        sel{"selkupisk"}
+        sem{"semittisk språk (anna)"}
+        sg{"sango"}
+        sga{"gammalirsk"}
+        sgn{"teiknspråk"}
+        shn{"shan"}
+        si{"singalesisk"}
+        sid{"sidamo"}
+        sio{"sioux-språk"}
+        sit{"sino-tibetansk språk (anna)"}
+        sk{"slovakisk"}
+        sl{"slovensk"}
+        sla{"slavisk språk (anna)"}
+        sm{"samoansk"}
+        sma{"sørsamisk"}
+        smi{"samisk språk (anna)"}
+        smj{"lulesamisk"}
+        smn{"enaresamisk"}
+        sms{"skoltesamisk"}
+        sn{"shona"}
+        snk{"soninke"}
+        so{"somali"}
+        sog{"sogdisk"}
+        son{"songhai"}
+        sq{"albansk"}
+        sr{"serbisk"}
+        srn{"sranan tongo"}
+        srr{"serer"}
+        ss{"swati"}
+        ssa{"nilo-saharaspråk (anna)"}
+        st{"sørsotho"}
+        su{"sundanesisk"}
+        suk{"sukuma"}
+        sus{"susu"}
+        sux{"sumerisk"}
+        sv{"svensk"}
+        sw{"swahili"}
+        syr{"syrisk"}
+        ta{"tamil"}
+        tai{"taispråk (anna)"}
+        te{"telugu"}
+        tem{"temne"}
+        ter{"tereno"}
+        tet{"tetum"}
+        tg{"tatsjikisk"}
+        th{"thai"}
+        ti{"tigrinja"}
+        tig{"tigré"}
+        tiv{"tivi"}
+        tk{"turkmensk"}
+        tkl{"tokelau"}
+        tl{"tagalog"}
+        tlh{"klingon"}
+        tli{"tlingit"}
+        tmh{"tamasjek"}
+        tn{"tswana"}
+        to{"tonga (Tonga-øyane)"}
+        tog{"tonga (Nyasa)"}
+        tpi{"tok pisin"}
+        tr{"tyrkisk"}
+        ts{"tsonga"}
+        tsi{"tsimshian"}
+        tt{"tatarisk"}
+        tum{"tumbuka"}
+        tup{"tupi-språk"}
+        tut{"altaisk (anna)"}
+        tvl{"tuvalu"}
+        tw{"twi"}
+        ty{"tahitisk"}
+        tyv{"tuvinisk"}
+        udm{"udmurt"}
+        ug{"uigurisk"}
+        uga{"ugaritisk"}
+        uk{"ukrainsk"}
+        umb{"umbundu"}
+        und{"ikkje bestemt"}
+        ur{"urdu"}
+        uz{"usbekisk"}
+        vai{"vai"}
+        ve{"venda"}
+        vi{"vietnamesisk"}
+        vo{"volapyk"}
+        vot{"votisk"}
+        wa{"vallonsk"}
+        wak{"wakasjansk språk"}
+        wal{"walamo"}
+        war{"waray"}
+        was{"washo"}
+        wen{"sorbisk språk"}
+        wo{"wolof"}
+        xal{"kalmyk"}
+        xh{"xhosa"}
+        yao{"yao"}
+        yap{"yapesisk"}
+        yi{"jiddisk"}
+        yo{"joruba"}
+        ypk{"jupisk språk"}
+        za{"zhuang"}
+        zap{"zapotec"}
+        zen{"zenaga"}
+        zh{"kinesisk"}
+        zh_Hant{"tradisjonell kinesisk"}
+        znd{"zande"}
+        zu{"zulu"}
+        zun{"zuni"}
+        zxx{"utan språkleg innhald"}
+        zza{"zaza"}
+    }
+    LocaleScript{
+        "Latn",
+    }
+    NumberElements{
+        ",",
+        " ",
+        ";",
+        "%",
+        "0",
+        "#",
+        "-",
+        "E",
+        "‰",
+        "∞",
+        "NaN",
+        "+",
+    }
+    NumberPatterns{
+        "#,##0.###",
+        "#,##0.00 ¤",
+        "#,##0 %",
+        "#E0",
+    }
+    Scripts{
+        Arab{"arabisk"}
+        Armn{"armensk"}
+        Bali{"balinesisk"}
+        Batk{"batak"}
+        Beng{"bengali"}
+        Blis{"blissymbol"}
+        Bopo{"bopomofo"}
+        Brah{"brahmi"}
+        Brai{"braille"}
+        Bugi{"buginesisk"}
+        Buhd{"buhid"}
+        Cans{"felles kanadiske urspråksstavingar"}
+        Cari{"karisk"}
+        Cham{"cham"}
+        Cher{"cherokee"}
+        Cirt{"cirth"}
+        Copt{"koptisk"}
+        Cprt{"kypriotisk"}
+        Cyrl{"kyrillisk"}
+        Cyrs{"kyrillisk (kyrkjeslavisk variant)"}
+        Deva{"devanagari"}
+        Dsrt{"deseret"}
+        Egyd{"egyptisk demotisk"}
+        Egyh{"egyptisk hieratisk"}
+        Egyp{"egyptiske hieroglyfar"}
+        Ethi{"etiopisk"}
+        Geok{"khutsuri (asomtavruli og nuskhuri)"}
+        Geor{"georgisk"}
+        Glag{"glagolittisk"}
+        Goth{"gotisk"}
+        Grek{"gresk"}
+        Gujr{"gujarati"}
+        Guru{"gurmukhi"}
+        Hang{"hangul"}
+        Hani{"han"}
+        Hano{"hanunoo"}
+        Hans{"forenkla kinesisk"}
+        Hant{"tradisjonell kinesisk"}
+        Hebr{"hebraisk"}
+        Hira{"hiragana"}
+        Hmng{"pahawk hmong"}
+        Hrkt{"katakana eller hiragana"}
+        Hung{"gammalungarsk"}
+        Inds{"indus (Harappan)"}
+        Ital{"gammalitalisk"}
+        Java{"javanesisk"}
+        Jpan{"japansk"}
+        Kali{"kayah li"}
+        Kana{"katakana"}
+        Khar{"kharoshthi"}
+        Khmr{"khmer"}
+        Knda{"kannada"}
+        Lana{"lanna"}
+        Laoo{"laotisk"}
+        Latf{"latinsk (frakturvariant)"}
+        Latg{"latinsk (gælisk variant)"}
+        Latn{"latinsk"}
+        Lepc{"lepcha (róng)"}
+        Limb{"lumbu"}
+        Lina{"lineær A"}
+        Linb{"lineær B"}
+        Lyci{"lykisk"}
+        Lydi{"lydisk"}
+        Mand{"mandaisk"}
+        Maya{"maya-hieroglyfar"}
+        Mero{"meroitisk"}
+        Mlym{"malayalam"}
+        Mong{"mongolsk"}
+        Moon{"moon"}
+        Mtei{"meitei-mayek"}
+        Mymr{"myanmar"}
+        Nkoo{"n'ko"}
+        Ogam{"ogham"}
+        Olck{"ol-chiki"}
+        Orkh{"orkhon"}
+        Orya{"oriya"}
+        Osma{"osmanya"}
+        Perm{"gammalpermisk"}
+        Phag{"phags-pa"}
+        Phnx{"fønikisk"}
+        Plrd{"pollard-fonetisk"}
+        Qaai{"nedarva"}
+        Rjng{"rejang"}
+        Roro{"rongorongo"}
+        Runr{"runer"}
+        Sara{"sarati"}
+        Saur{"saurashtra"}
+        Sgnw{"teiknskrift"}
+        Shaw{"shavisk"}
+        Sinh{"sinhala"}
+        Sund{"sundanesisk"}
+        Sylo{"syloti nagri"}
+        Syrc{"syriakisk"}
+        Syre{"syriakisk (estrangelo-variant)"}
+        Syrj{"syriakisk (vestleg variant)"}
+        Syrn{"syriakisk (austleg variant)"}
+        Tagb{"tagbanwa"}
+        Tale{"tai le"}
+        Talu{"ny tai lue"}
+        Taml{"tamilsk"}
+        Telu{"telugu"}
+        Teng{"tengwar"}
+        Tfng{"tifinagh (berber)"}
+        Tglg{"tagalog"}
+        Thaa{"thaana"}
+        Thai{"thai"}
+        Tibt{"tibetansk"}
+        Ugar{"ugaritisk"}
+        Vaii{"vai"}
+        Visp{"synleg tale"}
+        Xpeo{"gammalpersisk"}
+        Xsux{"sumero-akkadisk kileskrift"}
+        Yiii{"yi"}
+        Zxxx{"kode for språk utan skrift"}
+        Zyyy{"felles"}
+        Zzzz{"ukjend eller ugyldig skrift"}
+    }
+    Types{
+        calendar{
+            buddhist{"buddhistisk kalender"}
+            chinese{"kinesisk kalender"}
+            gregorian{"gregoriansk kalender"}
+            hebrew{"hebraisk kalender"}
+            islamic{"islamsk kalender"}
+            islamic-civil{"islamsk sivil kalender"}
+            japanese{"japansk kalender"}
+        }
+        collation{
+            big5han{"tradisjonell kinesisk sortering"}
+            direct{"direkte sortering"}
+            gb2312han{"forenkla kinesisk sortering"}
+            phonebook{"telefonkatalogsortering"}
+            pinyin{"pinyin-sortering"}
+            stroke{"streksortering"}
+            traditional{"tradisjonell sortering"}
+        }
+    }
+    Variants{
+        1901{"tradisjonell tysk ortografi"}
+        1996{"tysk ortografi frå 1996"}
+        AREVELA{"austarmensk"}
+        AREVMDA{"vestarmensk"}
+        BOONT{"boontling"}
+        FONIPA{"det internasjonale fonetiske alfabetet (IPA)"}
+        MONOTON{"monotonisk rettskriving"}
+        POLYTON{"polytonisk rettskriving"}
+        REVISED{"revidert rettskriving"}
+        ROZAJ{"resisk dialekt"}
+    }
+    Version{"1.77"}
+    calendar{
+        gregorian{
+            DateTimePatterns{
+                "'kl'. HH.mm.ss v",
+                "HH.mm.ss z",
+                "HH.mm.ss",
+                "HH.mm",
+                "EEEE d. MMMM yyyy",
+                "d. MMMM yyyy",
+                "d. MMM. yyyy",
+                "dd.MM.yy",
+                "{1} {0}",
+            }
+            dayNames{
+                format{
+                    abbreviated{
+                        "su",
+                        "må",
+                        "ty",
+                        "on",
+                        "to",
+                        "fr",
+                        "la",
+                    }
+                    wide{
+                        "sundag",
+                        "måndag",
+                        "tysdag",
+                        "onsdag",
+                        "torsdag",
+                        "fredag",
+                        "laurdag",
+                    }
+                }
+                stand-alone{
+                    narrow{
+                        "S",
+                        "M",
+                        "T",
+                        "O",
+                        "T",
+                        "F",
+                        "L",
+                    }
+                }
+            }
+            eras{
+                abbreviated{
+                    "f.Kr.",
+                    "e.Kr.",
+                }
+            }
+            fields{
+                dayperiod{
+                    dn{"f.m./e.m.-val"}
+                }
+            }
+            monthNames{
+                format{
+                    abbreviated{
+                        "jan",
+                        "feb",
+                        "mar",
+                        "apr",
+                        "mai",
+                        "jun",
+                        "jul",
+                        "aug",
+                        "sep",
+                        "okt",
+                        "nov",
+                        "des",
+                    }
+                    wide{
+                        "januar",
+                        "februar",
+                        "mars",
+                        "april",
+                        "mai",
+                        "juni",
+                        "juli",
+                        "august",
+                        "september",
+                        "oktober",
+                        "november",
+                        "desember",
+                    }
+                }
+            }
+            quarters{
+                format{
+                    abbreviated{
+                        "K1",
+                        "K2",
+                        "K3",
+                        "K4",
+                    }
+                    wide{
+                        "1. kvartal",
+                        "2. kvartal",
+                        "3. kvartal",
+                        "4. kvartal",
+                    }
+                }
+            }
+        }
+    }
+    measurementSystemNames{
+        US{"amerikansk"}
+        metric{"metrisk"}
+    }
+    zoneStrings{
+        "America:Godthab"{
+            ec{"Godthåb"}
+        }
+        "America:Mexico_City"{
+            ec{"Mexico by"}
+        }
+        "Antarctica:South_Pole"{
+            ec{"Sørpolen"}
+        }
+        "Asia:Tashkent"{
+            ec{"Tasjkent"}
+        }
+        "Asia:Ulaanbaatar"{
+            ec{"Ulan Bator"}
+        }
+        "Atlantic:Azores"{
+            ec{"Azorane"}
+        }
+        "Atlantic:Canary"{
+            ec{"Kanariøyane"}
+        }
+        "Europe:Lisbon"{
+            ec{"Lisboa"}
+        }
+        "Europe:Moscow"{
+            ec{"Moskva"}
+        }
+        "Pacific:Easter"{
+            ec{"Påskeøya"}
+        }
+        hourFormat{"+HH.mm;-HH.mm"}
+    }
+}

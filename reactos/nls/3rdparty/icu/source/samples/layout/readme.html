@@ -1,0 +1,157 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=us-ascii" />
+  <meta name="COPYRIGHT" content=
+  "Copyright (c) 2001-2006 IBM Corporation and others. All Rights Reserved." />
+  <meta name="Author" content="Eric Mader" />
+
+  <title>Readme file for the ICU LayoutEngine demo</title>
+</head>
+
+<body>
+  <h2>What is the layout demo?</h2>
+
+  <p>The layout demo displays a paragraph of text that is laid out using the
+  LayoutEngine. There are two versions of this demo, "layout.exe" which runs on
+  Windows 2000, and "gnomelayout" which runs on Linux. Both programs read a
+  file containing the Unicode text to display, and a file that says which font
+  to use to display each script.</p>
+
+  <h2>How do I build the layout demo?</h2>First, you need to build ICU,
+  including the LayoutEngine.
+
+  <p>On Windows, the layout project should be listed as a dependency of all, so
+  layout will build when you build all. If it doesn't for some reason, just
+  select the layout project in the project toolbar and build it.</p>
+
+  <p>On Linux systems, you need to add the "--enable-layout=yes" option when
+  you invoke the runConfigureICU script. When you've done that, layout should
+  build when you do "make all install"</p>
+
+  <p>To build the demo on Windows, just open the layout project in
+  &lt;icu&gt;\source\samples\layout and build it.</p>
+
+  <p>On Linux systems, connect to &lt;top-build-dir&gt;/samples/layout and do
+  "make all". To build the layout demo on Linux, you'll need the
+  gnome-libs-devel and freetype-devel packages, which should be part of your
+  Linux distribution. The demo uses the FreeType 1 library, and the make files
+  assume that the FreeType header files are in /usr/include/freetype1, and that
+  the freetype library is /usr/lib/libttf.so. This is how RedHat Linux 7.2
+  installs FreeType 1. If your system is different, you may need to add sym
+  links to where the files are stored on your system, or modify
+  &lt;top-src-dir&gt;/samples/layout/Makefile.in to reference the files
+  correctly for your system.</p>
+
+  <h2>How do I run the demo?</h2>
+
+  <p>Before you can run the demo, you'll need to get the fonts it uses. For
+  legal reasons, we can't include these fonts with ICU, but you can download
+  them from the web. To do this, you'll need access to a computer running
+  Windows. Here's how to get the fonts:</p>
+
+  <p>First, download the Thai font. Go to <a href=
+  "http://www.into-asia.com/thai_language/thaifont/">into-asia.com</a> and
+  click on the link for the Angsana font. This will download a .ZIP file.
+  Extract the font file, angsd___.ttf On Windows, copy this font file to your
+  Fonts folder, on Linux, copy this font file to the directory from which
+  you'll run the layout demo.</p>
+
+  <p>Next is the Hindi font. Go to the NCST site and download <a href=
+  "http://rohini.ncst.ernet.in/indix/download/font/raghu.ttf">raghu.ttf</a>. Be
+  sure to look at the <a href=
+  "http://rohini.ncst.ernet.in/indix/download/font/README">README</a> file
+  before you download the font. On Linux, you can download raghu.ttf into the
+  directory from which you'll run the layout demo. On Windows, you'll need to
+  install it in your Fonts folder.</p>
+
+  <p>There's still one more font to get, the Code2000 Unicode font. Go to James
+  Kass' <a href="http://www.code2000.net/">Unicode Support In Your
+  Browser</a> page and click on the link that says "Click Here to download
+  Code2000 shareware demo Unicode font." This will download a .ZIP file which
+  contains CODE2000.TTF and CODE2000.HTM. Expand this .ZIP file. If you're
+  going to run the layout demo on Linux, put the CODE2000.TTF file in the
+  directory from which you'll run the demo. On Windows, copy the font to your
+  fonts folder.</p>
+
+  <p><strong>Note:</strong> The Code2000 font is shareware. If you want to use
+  it for longer than a trial period, you should send a shareware fee to James.
+  Directions for how to do this are in CODE2000.HTM.</p>
+
+  <p>That's it! Now all you have to do is run letest (CTRL+F5 in Visual C++, or
+  "./gnomelayout" in Linux)</p>
+
+  <h2>How can I customize the layout demo?</h2>
+
+  <p>The text that the layout demo displays is read from the file "Sample.txt."
+  You can change the text by editing this file using a Unicode-aware text
+  editor. (it is in UTF8 format with a BOM as the first character; the demo can
+  also read UTF16 and UTF32 format files) Remember that the text will be
+  displayed in a single paragraph; you can include CR and LF characters in the
+  text, but they will be ignored.</p>
+
+  <p>If you add scripts to the text other than Arabic, Devanagari, Latin or
+  Thai, you'll need to find a font which contains the characters in that
+  script, and add an entry to the FontMap file ("FontMap.GDI" on Windows,
+  "FontMap.Gnome" on Linux) This file contains a single entry per line. Each
+  entry contains a script name followed by a colon, and then a font name.</p>
+
+  <p>Here is the list of legal script names:</p>
+
+  <blockquote>
+    <tt>ARABIC</tt><br />
+    <tt>ARMENIAN</tt><br />
+    <tt>BENGALI</tt><br />
+    <tt>BOPOMOFO</tt><br />
+    <span style="font-family: monospace;">BUHID</span><br />
+    <tt>CANADIAN_ABORIGINAL</tt><br />
+    <tt>CHEROKEE</tt><br />
+    <tt>CYRILLIC</tt><br />
+    <tt>DESERET</tt><br />
+    <tt>DEVANAGARI</tt><br />
+    <tt>ETHIOPIC</tt><br />
+    <tt>GEORGIAN</tt><br />
+    <tt>GOTHIC</tt><br />
+    <tt>GREEK</tt><br />
+    <tt>GUJARATI</tt><br />
+    <tt>GURMUKHI</tt><br />
+    <tt>HAN</tt><br />
+    <tt>HANGUL</tt><br />
+    <span style="font-family: monospace;">HANUNOO</span><br />
+    <tt>HEBREW</tt><br />
+    <tt>HIRAGANA</tt><br />
+    <tt>KANNADA</tt><br />
+    <tt>KATAKANA</tt><br />
+    <tt>KHMER</tt><br />
+    <tt>LATIN</tt><br />
+    <tt>MALAYALAM</tt><br />
+    <tt>MONGOLIAN</tt><br />
+    <tt>MYANMAR</tt><br />
+    <tt>OGHAM</tt><br />
+    <tt>OLD_ITALIC</tt><br />
+    <tt>ORIYA</tt><br />
+    <tt>RUNIC</tt><br />
+    <tt>SINHALA</tt><br />
+    <tt>SYRIAC</tt><br />
+    <span style="font-family: monospace;">TAGALOG<br />
+    TAGBANWA</span><br />
+    <tt>TAMIL</tt><br />
+    <tt>TELUGU</tt><br />
+    <tt>THAANA</tt><br />
+    <tt>THAI</tt><br />
+    <tt>TIBETAN</tt><br />
+    <tt>YI<br /></tt>
+  </blockquote>
+
+  <p>You can also use the script name "DEFAULT" to represent all scripts which
+  you don't explicitly list in the FontMap file.</p>
+
+  <p>On Windows use the full name of the font as it appears in the Windows
+  Fonts folder (eg. "Times New Roman") On Linux, use the file name of the font
+  file (e.g. "Times.TTF") If you're running on Windows, you'll need to install
+  the new fonts in your Fonts folder. If you're running on Linux, put them in
+  the directory from which you'll run the demo.</p><br />
+</body>
+</html>

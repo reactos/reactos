@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="Windows-1252"?>
+<VisualStudioProject
+	ProjectType="Visual C++"
+	Version="8.00"
+	Name="resources"
+	ProjectGUID="{69437707-2FEF-4E2C-8C3F-6E6B3D241366}"
+	Keyword="MakeFileProj"
+	>
+	<Platforms>
+		<Platform
+			Name="Win32"
+		/>
+	</Platforms>
+	<ToolFiles>
+	</ToolFiles>
+	<Configurations>
+		<Configuration
+			Name="Debug|Win32"
+			OutputDirectory=".\resources_Win32_Debug"
+			IntermediateDirectory=".\resources_Win32_Debug"
+			ConfigurationType="0"
+			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
+			>
+			<Tool
+				Name="VCNMakeTool"
+				BuildCommandLine="nmake /f &quot;resources.mak&quot;"
+				ReBuildCommandLine="nmake /f &quot;resources.mak&quot; /a"
+				CleanCommandLine="nmake /f &quot;resources.mak&quot; clean"
+				Output="uresb_root.res"
+				PreprocessorDefinitions=""
+				IncludeSearchPath=""
+				ForcedIncludes=""
+				AssemblySearchPath=""
+				ForcedUsingAssemblies=""
+				CompileAsManaged=""
+			/>
+		</Configuration>
+		<Configuration
+			Name="Release|Win32"
+			OutputDirectory=".\resources_Win32_Release"
+			IntermediateDirectory=".\resources_Win32_Release"
+			ConfigurationType="0"
+			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
+			>
+			<Tool
+				Name="VCNMakeTool"
+				BuildCommandLine="nmake /f &quot;resources.mak&quot;"
+				ReBuildCommandLine="nmake /f &quot;resources.mak&quot; /a"
+				CleanCommandLine="nmake /f &quot;resources.mak&quot; clean"
+				Output="uresb_root.res"
+				PreprocessorDefinitions=""
+				IncludeSearchPath=""
+				ForcedIncludes=""
+				AssemblySearchPath=""
+				ForcedUsingAssemblies=""
+				CompileAsManaged=""
+			/>
+		</Configuration>
+	</Configurations>
+	<References>
+	</References>
+	<Files>
+		<Filter
+			Name="Resource Files"
+			Filter="ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;txt"
+			>
+			<File
+				RelativePath=".\en.txt"
+				>
+			</File>
+			<File
+				RelativePath=".\root.txt"
+				>
+			</File>
+			<File
+				RelativePath=".\sr.txt"
+				>
+			</File>
+		</Filter>
+		<Filter
+			Name="Build Script"
+			>
+			<File
+				RelativePath=".\resources.mak"
+				>
+			</File>
+		</Filter>
+	</Files>
+	<Globals>
+	</Globals>
+</VisualStudioProject>

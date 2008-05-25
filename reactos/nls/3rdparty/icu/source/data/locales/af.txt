@@ -1,0 +1,272 @@
+﻿// ***************************************************************************
+// *
+// * Copyright (C) 2007 International Business Machines
+// * Corporation and others.  All Rights Reserved.
+// * Tool: com.ibm.icu.dev.tool.cldr.LDML2ICUConverter.java
+// * Source File:<path>/common/main/af.xml
+// *
+// ***************************************************************************
+/**
+ *  ICU <specials> source: <path>/xml/main/af.xml
+ */
+af{
+    Countries{
+        AE{"Verenigde Arabiese Emirate"}
+        AF{"Afganistan"}
+        AG{"Antigua en Barbuda"}
+        AL{"Albanië"}
+        AM{"Armenië"}
+        AR{"Argentinië"}
+        AT{"Oostenryk"}
+        AU{"Australië"}
+        AZ{"Aserbeidjan"}
+        BA{"Bosnië en Herzegowina"}
+        BD{"Bangladesj"}
+        BE{"België"}
+        BF{"Boerkina Fasso"}
+        BG{"Bulgarye"}
+        BH{"Bahrein"}
+        BN{"Broenei"}
+        BO{"Bolivië"}
+        BR{"Brasilië"}
+        BT{"Bhoetan"}
+        BY{"Wit-Rusland"}
+        CA{"Kanada"}
+        CF{"Sentraal-Afrikaanse Republiek"}
+        CG{"Kongo"}
+        CH{"Switserland"}
+        CI{"Ivoorkus"}
+        CL{"Chili"}
+        CM{"Kameroen"}
+        CN{"Sjina"}
+        CU{"Kuba"}
+        CV{"Kaap Verde"}
+        CY{"Ciprus"}
+        CZ{"Tjeggiese Republiek"}
+        DE{"Duitsland"}
+        DJ{"Djiboeti"}
+        DK{"Denemarke"}
+        DO{"Dominikaanse Republiek"}
+        DZ{"Algerië"}
+        EE{"Estland"}
+        EG{"Egipte"}
+        EH{"Wes-Sahara"}
+        ES{"Spanje"}
+        ET{"Ethiopië"}
+        FJ{"Fidji"}
+        FM{"Mikronesië"}
+        FR{"Frankryk"}
+        GA{"Gaboen"}
+        GB{"Groot-Brittanje"}
+        GE{"Georgië"}
+        GM{"Gambië"}
+        GN{"Guinee"}
+        GQ{"Ekwatoriaal-Guinee"}
+        GR{"Griekeland"}
+        GW{"Guinee-Bissau"}
+        HR{"Kroasië"}
+        HT{"Haïti"}
+        HU{"Hongarye"}
+        ID{"Indonesië"}
+        IE{"Ierland"}
+        IN{"Indië"}
+        IQ{"Irak"}
+        IS{"Ysland"}
+        IT{"Italië"}
+        JM{"Jamaika"}
+        JO{"Jordanië"}
+        JP{"Japan"}
+        KE{"Kenia"}
+        KG{"Kirgisië"}
+        KH{"Kambodja"}
+        KM{"Comore"}
+        KN{"Saint Kitts en Nevis"}
+        KP{"Noord-Korea"}
+        KR{"Suid-Korea"}
+        KW{"Koeweit"}
+        KZ{"Kasakstan"}
+        LB{"Libanon"}
+        LR{"Liberië"}
+        LT{"Litaue"}
+        LU{"Luxemburg"}
+        LV{"Letland"}
+        LY{"Libië"}
+        MA{"Marokko"}
+        MG{"Madagaskar"}
+        MH{"Marshall-eilande"}
+        MK{"Macedonië"}
+        MN{"Mongolië"}
+        MR{"Mouritanië"}
+        MV{"Maldive"}
+        MX{"Meksiko"}
+        MY{"Maleisië"}
+        MZ{"Mosambiek"}
+        NA{"Namibië"}
+        NL{"Nederland"}
+        NO{"Noorweë"}
+        NR{"Naoeroe"}
+        NZ{"Nieu-Seeland"}
+        PG{"Papoea Nieu-Guinee"}
+        PH{"Filippyne"}
+        PL{"Pole"}
+        QA{"Katar"}
+        RO{"Roemenië"}
+        RU{"Rusland"}
+        SA{"Saoedi-Arabië"}
+        SB{"Solomon Eilande"}
+        SC{"Seychelle"}
+        SD{"Soedan"}
+        SE{"Swede"}
+        SG{"Singapoer"}
+        SI{"Slowenië"}
+        SK{"Slowakye"}
+        SO{"Somalië"}
+        ST{"Sao Tome en Principe"}
+        SV{"Salvador"}
+        SY{"Sirië"}
+        TD{"Tsjaad"}
+        TJ{"Tadjikistan"}
+        TM{"Turkmenië"}
+        TN{"Tunisië"}
+        TO{"Tonga"}
+        TR{"Turkye"}
+        TT{"Trinidad en Tobago"}
+        TZ{"Tanzanië"}
+        UA{"Oekraine"}
+        US{"Verenigde State van Amerika"}
+        UZ{"Oesbekistan"}
+        VA{"Vatikaan"}
+        VC{"Saint Vincent en die Grenadine"}
+        VN{"Viëtnam"}
+        YE{"Jemen"}
+        ZA{"Suid-Afrika"}
+        ZM{"Zambië"}
+    }
+    Currencies{
+        ZAR{
+            "R",
+            "Rand",
+        }
+    }
+    ExemplarCharacters{"[a á â b-e é è ê ë f-i î ï j-o ô ö p-u û v-z ŉ]"}
+    Languages{
+        af{"Afrikaans"}
+        am{"Amharies"}
+        de{"Duits"}
+        en{"Engels"}
+        es{"Spaans"}
+        et{"Estnies"}
+        fr{"Frans"}
+        he{"Hebreeus"}
+        it{"Italiaans"}
+        ja{"Japannees"}
+        ku{"Koerdies"}
+        pt{"Portugees"}
+        ro{"Roemeens"}
+        ru{"Russies"}
+        zh{"Sjinees"}
+    }
+    LocaleScript{
+        "Latn",
+    }
+    NumberElements{
+        ",",
+        " ",
+        ";",
+        "%",
+        "0",
+        "#",
+        "-",
+        "E",
+        "‰",
+        "∞",
+        "NaN",
+        "+",
+    }
+    NumberPatterns{
+        "#,##0.###",
+        "¤#,##0.00",
+        "#,##0%",
+        "#E0",
+    }
+    Version{"1.60"}
+    calendar{
+        gregorian{
+            AmPmMarkers{
+                "vm.",
+                "nm.",
+            }
+            DateTimePatterns{
+                "h:mm:ss a v",
+                "h:mm:ss a z",
+                "HH:mm:ss",
+                "HH:mm",
+                "EEEE, yyyy MMMM dd",
+                "yyyy MMMM d",
+                "yyyy MMM d",
+                "yyyy-MM-dd",
+                "{1} {0}",
+            }
+            dayNames{
+                format{
+                    abbreviated{
+                        "So",
+                        "Ma",
+                        "Di",
+                        "Wo",
+                        "Do",
+                        "Vr",
+                        "Sa",
+                    }
+                    wide{
+                        "Sondag",
+                        "Maandag",
+                        "Dinsdag",
+                        "Woensdag",
+                        "Donderdag",
+                        "Vrydag",
+                        "Saterdag",
+                    }
+                }
+            }
+            eras{
+                abbreviated{
+                    "v.C.",
+                    "n.C.",
+                }
+            }
+            monthNames{
+                format{
+                    abbreviated{
+                        "Jan",
+                        "Feb",
+                        "Mar",
+                        "Apr",
+                        "Mei",
+                        "Jun",
+                        "Jul",
+                        "Aug",
+                        "Sep",
+                        "Okt",
+                        "Nov",
+                        "Des",
+                    }
+                    wide{
+                        "Januarie",
+                        "Februarie",
+                        "Maart",
+                        "April",
+                        "Mei",
+                        "Junie",
+                        "Julie",
+                        "Augustus",
+                        "September",
+                        "Oktober",
+                        "November",
+                        "Desember",
+                    }
+                }
+            }
+        }
+    }
+}

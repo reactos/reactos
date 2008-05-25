@@ -1,0 +1,46 @@
+﻿// ***************************************************************************
+// *
+// * Copyright (C) 2007 International Business Machines
+// * Corporation and others.  All Rights Reserved.
+// * Tool: com.ibm.icu.dev.tool.cldr.LDML2ICUConverter.java
+// * Source File:<path>/common/main/en_SG.xml
+// *
+// ***************************************************************************
+en_SG{
+    Currencies{
+        SGD{
+            "$",
+            "Singapore Dollar",
+        }
+        USD{
+            "US$",
+            "USD",
+        }
+    }
+    NumberPatterns{
+        "#,##0.###",
+        "¤#,##0.00",
+        "#,##0%",
+        "#E0",
+    }
+    Version{"1.50"}
+    calendar{
+        gregorian{
+            DateTimeElements:intvector{
+                1,
+                1,
+            }
+            DateTimePatterns{
+                "a hh:mm:ss v",
+                "a hh:mm:ss z",
+                "a hh:mm:ss",
+                "h:mm a",
+                "EEEE, MMMM d, yyyy",
+                "MMMM d, yyyy",
+                "dd-MMM-yyyy",
+                "M/d/yy",
+                "{1} {0}",
+            }
+        }
+    }
+}

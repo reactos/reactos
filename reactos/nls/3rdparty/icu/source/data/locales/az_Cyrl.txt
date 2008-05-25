@@ -1,0 +1,49 @@
+﻿// ***************************************************************************
+// *
+// * Copyright (C) 2007 International Business Machines
+// * Corporation and others.  All Rights Reserved.
+// * Tool: com.ibm.icu.dev.tool.cldr.LDML2ICUConverter.java
+// * Source File:<path>/common/main/az_Cyrl.xml
+// *
+// ***************************************************************************
+/**
+ *  ICU <specials> source: <path>/xml/main/az_Cyrl.xml
+ */
+az_Cyrl{
+    AuxExemplarCharacters{"[ц щ ъ ь-я]"}
+    Countries{
+        AZ{"Азәрбајҹан"}
+        BR{"Бразилија"}
+        CN{"Чин"}
+        DE{"Алманија"}
+        FR{"Франса"}
+        IN{"Һиндистан"}
+        IT{"Италија"}
+        JP{"Јапонија"}
+        RU{"Русија"}
+        US{"Америка Бирләшмиш Штатлары"}
+    }
+    Currencies{
+        AZM{
+            "ман.",
+            "Manat",
+        }
+    }
+    ExemplarCharacters{"[а ә б-г ғ д-й ј к ҝ л-о ө п-у ү ф х һ ч ҹ ш ы]"}
+    Languages{
+        az{"Азәрбајҹан"}
+        de{"алманҹа"}
+        en{"инҝилисҹә"}
+        es{"испанҹа"}
+        fr{"франсызҹа"}
+        it{"италјанҹа"}
+        ja{"јапонҹа"}
+        pt{"португалҹа"}
+        ru{"русҹа"}
+        zh{"чинҹә"}
+    }
+    LocaleScript{
+        "Cyrl",
+    }
+    Version{"1.23"}
+}

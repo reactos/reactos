@@ -1,0 +1,27 @@
+// ***************************************************************************
+// *
+// *   Copyright (C) 2004, International Business Machines
+// *   Corporation and others.  All Rights Reserved.
+// *
+// ***************************************************************************
+// 
+
+root {
+    //------------------------------------------------------------
+    // Rule Based Number Format Support
+    //------------------------------------------------------------
+
+    /*
+     * Default used to be English (US) rules, but now default just formats
+     * like DecimalFormat.  The former default rules are now the _en rules.
+     */
+    SpelloutRules {
+        "=#,##0.######=;\n"
+    }
+    OrdinalRules {
+        "=#,##0=;\n"
+    }
+    DurationRules {
+        "=#,##0=;\n"
+    }
+}

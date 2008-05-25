@@ -1,0 +1,51 @@
+#!/usr/bin/make -f
+#
+# Copyright (c) 2000-2006 International Business Machines
+# Corporation and others. All Rights Reserved.
+#
+# To distinguish variables that are truly local to this file (rather
+# than for use by cdbs), we adopt the convention of starting local
+# variables' names with l_.
+
+l_PWD := $(shell pwd)
+l_STAMPS := debian/l_stamps
+l_RUN_CHECK := 1
+
+# Variables used by cdbs
+
+VERSION := $(shell dpkg-parsechangelog | \
+             awk '/Version:/ {print $$2}' | cut -d- -f 1)
+
+DEB_TAR_SRCDIR = icu/source
+DEB_CONFIGURE_USER_FLAGS = --disable-samples --enable-static
+DEB_COMPRESS_EXCLUDE = html examples
+DEB_INSTALL_EXAMPLES_libicu36-dev = \
+	build-tree/$(DEB_TAR_SRCDIR)/samples/*
+# Include cdbs rules files.
+include /usr/share/cdbs/1/rules/tarball.mk
+include /usr/share/cdbs/1/rules/simple-patchsys.mk
+include /usr/share/cdbs/1/rules/debhelper.mk
+include /usr/share/cdbs/1/class/autotools.mk
+
+DEB_MAKE_INSTALL_TARGET += install-doc
+
+cleanbuilddir::
+	$(RM) -r $(l_STAMPS)
+
+# As 0.4.21, cdbs creates but doesn't remove debian/compat.  It
+# creates it conditionally, so this doesn't have a trivial fix.
+clean::
+	$(RM) debian/compat *.cdbs-config_list
+
+# As per upstream, icuswap is deprecated and should not be
+# distributed.
+binary-post-install/libicu36-dev::
+	find debian/$(cdbs_curpkg) -type f -name .cvsignore | xargs rm
+	rm debian/$(cdbs_curpkg)/usr/sbin/icuswap
+
+# Install lintian override files
+binary-post-install/%::
+	if [ -f debian/$*.lintian ]; then \
+	    mkdir -p debian/$*/usr/share/lintian/overrides && \
+	    cp -p debian/$*.lintian debian/$*/usr/share/lintian/overrides/$*; \
+	fi

@@ -1,0 +1,234 @@
+﻿// ***************************************************************************
+// *
+// * Copyright (C) 2007 International Business Machines
+// * Corporation and others.  All Rights Reserved.
+// * Tool: com.ibm.icu.dev.tool.cldr.LDML2ICUConverter.java
+// * Source File:<path>/common/main/eu.xml
+// *
+// ***************************************************************************
+/**
+ *  ICU <specials> source: <path>/xml/main/eu.xml
+ */
+eu{
+    Countries{
+        AE{"Arabiar Emirrerri Batuak"}
+        AF{"Afganistan"}
+        AG{"Antigua eta Barbuda"}
+        AQ{"Antartika"}
+        BA{"Bosnia-Herzegovina"}
+        BE{"Belgika"}
+        BO{"Bolibia"}
+        BR{"Brasil"}
+        BS{"Bahamak"}
+        BY{"Bielorrusia"}
+        CA{"Kanada"}
+        CF{"Afrika Erdiko Errepublika"}
+        CG{"Kongo"}
+        CH{"Suitza"}
+        CI{"Boli Kosta"}
+        CL{"Txile"}
+        CM{"Kamerun"}
+        CN{"Txina"}
+        CO{"Kolonbia"}
+        CS{"Serbia eta Montenegro"}
+        CU{"Kuba"}
+        CV{"Cabo Verde"}
+        CY{"Zipre"}
+        CZ{"Txekiar errepublika"}
+        DE{"Alemania"}
+        DJ{"Djibuti"}
+        DK{"Danimarka"}
+        DM{"Dominika"}
+        DO{"Dominikar Errepublika"}
+        DZ{"Aljeria"}
+        EC{"Ekuador"}
+        EG{"Egipto"}
+        EH{"Mendebaldeko Sahara"}
+        ES{"Espainia"}
+        ET{"Etiopia"}
+        FI{"Finlandia"}
+        FM{"Mikronesia"}
+        FR{"Frantzia"}
+        GN{"Ginea"}
+        GQ{"Ekuatore Ginea"}
+        GR{"Grezia"}
+        GW{"Ginea-Bissau"}
+        HR{"Kroazia"}
+        HU{"Hungaria"}
+        IE{"Irlanda"}
+        IN{"India"}
+        IQ{"Irak"}
+        IS{"Islandia"}
+        IT{"Italia"}
+        JM{"Jamaika"}
+        JO{"Jordania"}
+        JP{"Japonia"}
+        KE{"Kenia"}
+        KG{"Kirgizistan"}
+        KH{"Kanbodia"}
+        KM{"Komoreak"}
+        KN{"Saint Kitts eta Nevis"}
+        KP{"Ipar Korea"}
+        KR{"Hego Korea"}
+        LB{"Libano"}
+        LC{"Santa Luzia"}
+        LT{"Lituania"}
+        LU{"Luxenburgo"}
+        LV{"Letonia"}
+        LY{"Libia"}
+        MA{"Maroko"}
+        MC{"Monako"}
+        MD{"Moldavia"}
+        MG{"Madagaskar"}
+        MH{"Marshall uharteak"}
+        MK{"Mazedonia"}
+        MU{"Maurizio"}
+        MV{"Maldivak"}
+        MX{"Mexiko"}
+        MY{"Malasia"}
+        MZ{"Mozambike"}
+        NI{"Nikaragua"}
+        NL{"Herbehereak"}
+        NO{"Norvegia"}
+        NZ{"Zeelanda Berria"}
+        PG{"Papua Ginea Berria"}
+        PH{"Filipinak"}
+        PL{"Polonia"}
+        PY{"Paraguai"}
+        QA{"Katar"}
+        RO{"Errumania"}
+        RU{"Errusia"}
+        RW{"Ruanda"}
+        SB{"Salomon uharteak"}
+        SC{"Seychelleak"}
+        SE{"Suedia"}
+        SG{"Singapur"}
+        SI{"Eslovenia"}
+        SK{"Eslovakia"}
+        SL{"Sierra Leona"}
+        SR{"Surinam"}
+        ST{"Sao Tomé eta Principe"}
+        SY{"Siria"}
+        SZ{"Swazilandia"}
+        TD{"Txad"}
+        TH{"Tailandia"}
+        TJ{"Tadjikistan"}
+        TR{"Turkia"}
+        TT{"Trinidad eta Tobago"}
+        UA{"Ukraina"}
+        US{"Ameriketako Estatu Batuak"}
+        UY{"Uruguai"}
+        VA{"Vatikano"}
+        VC{"Saint Vincent eta Grenadinak"}
+        ZA{"Hegoafrika"}
+    }
+    Currencies{
+        ESP{
+            "₧",
+            "ESP",
+            {
+                /**
+                 * Duplicated from NumberPatterns resource
+                 */
+                "#,##0.00 ¤",
+                ",",
+                ".",
+            }
+        }
+    }
+    ExemplarCharacters{"[a-c ç d-n ñ o-z]"}
+    Languages{
+        de{"alemanera"}
+        en{"ingelera"}
+        es{"espainiera"}
+        eu{"euskara"}
+        fr{"frantsesera"}
+        it{"italiera"}
+        ja{"japoniera"}
+        pt{"portugalera"}
+        ru{"errusiera"}
+        zh{"txinera"}
+    }
+    LocaleScript{
+        "Latn",
+    }
+    NumberElements{
+        ",",
+        ".",
+        ";",
+        "%",
+        "0",
+        "#",
+        "-",
+        "E",
+        "‰",
+        "∞",
+        "NaN",
+        "+",
+    }
+    NumberPatterns{
+        "#,##0.###",
+        "#,##0.00 ¤",
+        "#,##0%",
+        "#E0",
+    }
+    Version{"1.62"}
+    calendar{
+        gregorian{
+            dayNames{
+                format{
+                    abbreviated{
+                        "ig",
+                        "al",
+                        "as",
+                        "az",
+                        "og",
+                        "or",
+                        "lr",
+                    }
+                    wide{
+                        "igandea",
+                        "astelehena",
+                        "asteartea",
+                        "asteazkena",
+                        "osteguna",
+                        "ostirala",
+                        "larunbata",
+                    }
+                }
+            }
+            monthNames{
+                format{
+                    abbreviated{
+                        "urt",
+                        "ots",
+                        "mar",
+                        "api",
+                        "mai",
+                        "eka",
+                        "uzt",
+                        "abu",
+                        "ira",
+                        "urr",
+                        "aza",
+                        "abe",
+                    }
+                    wide{
+                        "urtarrila",
+                        "otsaila",
+                        "martxoa",
+                        "apirila",
+                        "maiatza",
+                        "ekaina",
+                        "uztaila",
+                        "abuztua",
+                        "iraila",
+                        "urria",
+                        "azaroa",
+                        "abendua",
+                    }
+                }
+            }
+        }
+    }
+}

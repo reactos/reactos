@@ -1,0 +1,74 @@
+########################################################################
+# Copyright (c) 2006-2007, International Business Machines
+# Corporation and others.  All Rights Reserved.
+########################################################################
+#   file name:      SyntheticPropertyValueAliases.txt
+#   encoding:       US-ASCII
+#   tab size:       8 (not used)
+#   indentation:    4
+#   created by:     gensvpa.pl
+########################################################################
+
+# This file follows the format of PropertyValueAliases.txt
+# It contains synthetic property value aliases not present
+# in the UCD.  Unlike PropertyValueAliases.txt, it should
+# NOT contain a version number.
+
+########################################################################
+#  THIS FILE IS MACHINE-GENERATED, DON'T PLAY WITH IT IF YOU DON'T KNOW
+#  WHAT YOU ARE DOING, OTHERWISE VERY BAD THINGS WILL HAPPEN!
+########################################################################
+
+# set the same names as short and long names to fit the syntax without 
+# inventing names that we would have to support forever
+
+# Script (sc)
+
+sc ; Batk ; Batk 
+sc ; Blis ; Blis 
+sc ; Brah ; Brah 
+sc ; Cari ; Cari
+sc ; Cham ; Cham 
+sc ; Cirt ; Cirt 
+sc ; Cyrs ; Cyrs 
+sc ; Egyd ; Egyd 
+sc ; Egyh ; Egyh 
+sc ; Egyp ; Egyp 
+sc ; Geok ; Geok 
+sc ; Hans ; Hans 
+sc ; Hant ; Hant 
+sc ; Hmng ; Hmng 
+sc ; Hung ; Hung 
+sc ; Inds ; Inds 
+sc ; Java ; Java 
+sc ; Jpan ; Jpan 
+sc ; Kali ; Kali 
+sc ; Lana ; Lana
+sc ; Latf ; Latf 
+sc ; Latg ; Latg 
+sc ; Lepc ; Lepc 
+sc ; Lina ; Lina 
+sc ; Lyci ; Lyci
+sc ; Lydi ; Lydi 
+sc ; Mand ; Mand 
+sc ; Maya ; Maya 
+sc ; Mero ; Mero 
+sc ; Moon ; Moon 
+sc ; Mtei ; Mtei 
+sc ; Olck ; Olck 
+sc ; Orkh ; Orkh 
+sc ; Perm ; Perm 
+sc ; Plrd ; Plrd 
+sc ; Rjng ; Rjng 
+sc ; Roro ; Roro 
+sc ; Sara ; Sara 
+sc ; Saur ; Saur
+sc ; Sgnw ; Sgnw
+sc ; Sund ; Sund 
+sc ; Syre ; Syre 
+sc ; Syrj ; Syrj 
+sc ; Syrn ; Syrn 
+sc ; Teng ; Teng 
+sc ; Vaii ; Vaii 
+sc ; Visp ; Visp 
+sc ; Zxxx ; Zxxx 

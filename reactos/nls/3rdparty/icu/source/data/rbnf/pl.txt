@@ -1,0 +1,44 @@
+// ***************************************************************************
+// *
+// *   Copyright (C) 2004, International Business Machines
+// *   Corporation and others.  All Rights Reserved.
+// *
+// ***************************************************************************
+// 
+
+pl {
+   SpelloutRules {
+        "-x: minus >>;\n"
+        "zero; jeden; dwa; trzy; cztery; pi\u0119\u0107;\n"
+        "sze\u015B\u0107; siedem; osiem; dziewi\u0119\u0107; dziesi\u0119\u0107;\n"
+        "jedena\u015Bcie; dwana\u015Bcie; trzyna\u015Bcie; czterna\u015Bcie; pi\u0119tna\u015Bcie;\n"
+        "szesna\u015Bcie; siedemna\u015Bcie; osiemna\u015Bcie; dziewi\u0119tna\u015Bcie;\n"
+        "20: dwadzie\u015Bcia[ >>];\n"
+        "30: trzydzie\u015Bci[ >>];\n"
+        "40: czterdzie\u015Bci[ >>];\n"
+        "50: pi\u0119\u0107dziesi\u0105t[ >>];\n"
+        "60: sze\u015B\u0107dziesi\u0105t[ >>];\n"
+        "70: siedemdziesi\u0105t[ >>];\n"
+        "80: osiemdziesi\u0105t[ >>];\n"
+        "90: dziewi\u0119\u0107dziesi\u0105t[ >>];\n"
+        "100: sto[ >>];\n"
+        "200: dwie\u015Bcie[ >>];\n"
+        "300: trzysta[ >>];\n"
+        "400: czterysta[ >>];\n"
+        "500: pi\u0119\u0107set[ >>];\n"
+        "600: sze\u015B\u0107set[ >>];\n"
+        "700: siedemset[ >>];\n"
+        "800: osiemset[ >>];\n"
+        "900: dziewi\u0119\u0107set[ >>];\n"
+        "1000: tysi\u0105c[ >>];\n"
+        "2000: << tysi\u0105cy[ >>];\n"
+        "1,000,000: milion[ >>];\n"
+        "2,000,000: << miliony[ >>];\n"
+        "1,000,000,000: bilion[ >>];\n"
+        "2,000,000,000: << biliony[ >>];\n"
+        "1,000,000,000,000: trylion[ >>];\n"
+        "2,000,000,000,000: << tryliony[ >>];\n"
+        "1,000,000,000,000,000: =#,##0=;" 
+    }
+
+}

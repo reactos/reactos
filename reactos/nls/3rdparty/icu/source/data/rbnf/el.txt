@@ -1,0 +1,57 @@
+// ***************************************************************************
+// *
+// *   Copyright (C) 2004, International Business Machines
+// *   Corporation and others.  All Rights Reserved.
+// *
+// ***************************************************************************
+// 
+
+el {
+/*
+ * omit rules for Greek until we have complete and valid data.
+
+    // * Spellout rules for Greek.  Again in Greek we have to supply the words
+    // * for the multiples of 100 because they can't be derived algorithmically.
+    // * Also, the tens digit changes form when followed by a ones digit: an
+    // * accent mark disappears from the tens digit and moves to the ones digit.
+    // * Therefore, instead of using the [] notation, we actually have to use
+    // * two separate rules for each multiple of 10 to show the two forms of
+    // * the word.
+
+    // Can someone supply me with information on negatives and decimals?
+
+    SpelloutRules {
+        "\u03bc\u03b7\u03b4\u03ad\u03bd; \u03ad\u03bd\u03b1; \u03b4\u03cd\u03bf; \u03c4\u03c1\u03af\u03b1; "
+        "\u03c4\u03ad\u03c3\u03c3\u03b5\u03c1\u03b1; \u03c0\u03ad\u03bd\u03c4\u03b5; "
+        "\u03ad\u03be\u03b9; \u03b5\u03c0\u03c4\u03ac; \u03bf\u03ba\u03c4\u03ce; "
+        "\u03b5\u03bd\u03bd\u03ad\u03b1;\n"
+        "10: \u03b4\u03ad\u03ba\u03b1; "
+            "\u03ad\u03bd\u03c4\u03b5\u03ba\u03b1; \u03b4\u03ce\u03b4\u03b5\u03ba\u03b1; "
+            "\u03b4\u03b5\u03ba\u03b1>>;\n"
+        "20: \u03b5\u03af\u03ba\u03bf\u03c3\u03b9; \u03b5\u03b9\u03ba\u03bf\u03c3\u03b9>>;\n"
+        "30: \u03c4\u03c1\u03b9\u03ac\u03bd\u03c4\u03b1; \u03c4\u03c1\u03b9\u03b1\u03bd\u03c4\u03b1>>;\n"
+        "40: \u03c3\u03b1\u03c1\u03ac\u03bd\u03c4\u03b1; \u03c3\u03b1\u03c1\u03b1\u03bd\u03c4\u03b1>>;\n"
+        "50: \u03c0\u03b5\u03bd\u03ae\u03bd\u03c4\u03b1; \u03c0\u03b5\u03bd\u03b7\u03bd\u03c4\u03b1>>;\n"
+        "60: \u03b5\u03be\u03ae\u03bd\u03c4\u03b1; \u03b5\u03be\u03b7\u03bd\u03c4\u03b1>>;\n"
+        "70: \u03b5\u03b2\u03b4\u03bf\u03bc\u03ae\u03bd\u03c4\u03b1; "
+            "\u03b5\u03b2\u03b4\u03bf\u03bc\u03b7\u03bd\u03c4\u03b1>>;\n"
+        "80: \u03bf\u03b3\u03b4\u03cc\u03bd\u03c4\u03b1; \u03bf\u03b3\u03b4\u03bf\u03bd\u03c4\u03b1>>;\n"
+        "90: \u03b5\u03bd\u03bd\u03b5\u03bd\u03ae\u03bd\u03c4\u03b1; "
+            "\u03b5\u03bd\u03bd\u03b5\u03bd\u03b7\u03bd\u03c4\u03b1>>;\n"
+        "100: \u03b5\u03ba\u03b1\u03c4\u03cc[\u03bd >>];\n"
+        "200: \u03b4\u03b9\u03b1\u03ba\u03cc\u03c3\u03b9\u03b1[ >>];\n"
+        "300: \u03c4\u03c1\u03b9\u03b1\u03ba\u03cc\u03c3\u03b9\u03b1[ >>];\n"
+        "400: \u03c4\u03b5\u03c4\u03c1\u03b1\u03ba\u03cc\u03c3\u03b9\u03b1[ >>];\n"
+        "500: \u03c0\u03b5\u03bd\u03c4\u03b1\u03ba\u03cc\u03c3\u03b9\u03b1[ >>];\n"
+        "600: \u03b5\u03be\u03b1\u03ba\u03cc\u03c3\u03b9\u03b1[ >>];\n"
+        "700: \u03b5\u03c0\u03c4\u03b1\u03ba\u03cc\u03c3\u03b9\u03b1[ >>];\n"
+        "800: \u03bf\u03ba\u03c4\u03b1\u03ba\u03cc\u03c3\u03b9\u03b1[ >>];\n"
+        "900: \u03b5\u03bd\u03bd\u03b9\u03b1\u03ba\u03cc\u03c3\u03b9\u03b1[ >>];\n"
+        "1000: \u03c7\u03af\u03bb\u03b9\u03b1[ >>];\n"
+        "2000: << \u03c7\u03af\u03bb\u03b9\u03b1[ >>];\n"
+        "1,000,000: << \u03b5\u03ba\u03b1\u03c4\u03bf\u03bc\u03bc\u03cd\u03c1\u03b9\u03bf[ >>];\n"
+        "1,000,000,000: << \u03b4\u03b9\u03c3\u03b5\u03ba\u03b1\u03c4\u03bf\u03bc\u03bc\u03cd\u03c1\u03b9\u03bf[ >>];\n"
+        "1,000,000,000,000: =#,##0="
+    }
+*/
+}

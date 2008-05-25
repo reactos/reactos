@@ -1,0 +1,1145 @@
+﻿// ***************************************************************************
+// *
+// * Copyright (C) 2007 International Business Machines
+// * Corporation and others.  All Rights Reserved.
+// * Tool: com.ibm.icu.dev.tool.cldr.LDML2ICUConverter.java
+// * Source File:<path>/common/main/lt.xml
+// *
+// ***************************************************************************
+/**
+ *  ICU <specials> source: <path>/xml/main/lt.xml
+ */
+lt{
+    AuxExemplarCharacters{"[{į̇} {i̇} {i̇́} {i̇̀} {i̇̃} {j̇} q w x]"}
+    Countries{
+        001{"Pasaulis"}
+        002{"Afrika"}
+        005{"Pietų Amerika"}
+        009{"Okeanija"}
+        011{"Vakarų Afrika"}
+        013{"Centrinė Amerika"}
+        014{"Rytų Afrika"}
+        015{"Šiaurės Afrika"}
+        017{"Vidurio Afrika"}
+        018{"Pietų Afrika [018]"}
+        019{"Amerika"}
+        021{"Šiaurės Amerika"}
+        029{"Karibai"}
+        030{"Rytų Azija"}
+        034{"Pietų Azija"}
+        035{"Pietryčių Azija"}
+        039{"Pietų Europa"}
+        053{"Australija ir Naujoji Zelandija"}
+        054{"Melanezija"}
+        057{"Mikronezija [057]"}
+        061{"Polinezija"}
+        142{"Azija"}
+        143{"Centrinė Azija"}
+        145{"Vakarų Azija"}
+        150{"Europa"}
+        151{"Rytų Europa"}
+        154{"Šiaurės Europa"}
+        155{"Vakarų Europa"}
+        172{"Nepriklausomų Valstybių Sandrauga"}
+        200{"Čekoslovakija"}
+        419{"Lotynų Amerika ir Karibai"}
+        AD{"Andora"}
+        AE{"Jungtiniai Arabų Emyratai"}
+        AF{"Afganistanas"}
+        AG{"Antigva ir Barbuda"}
+        AI{"Angilija"}
+        AL{"Albanija"}
+        AM{"Armėnija"}
+        AN{"Olandijos Antilai"}
+        AO{"Angola"}
+        AQ{"Antarktis"}
+        AR{"Argentina"}
+        AS{"Amerikos Samoa"}
+        AT{"Austrija"}
+        AU{"Australija"}
+        AW{"Aruba"}
+        AZ{"Azerbaidžanas"}
+        BA{"Bosnija ir Hercegovina"}
+        BB{"Barbadosas"}
+        BD{"Bangladešas"}
+        BE{"Belgija"}
+        BF{"Burkina Fasas"}
+        BG{"Bulgarija"}
+        BH{"Bahreinas"}
+        BI{"Burundis"}
+        BJ{"Beninas"}
+        BM{"Bermuda"}
+        BN{"Brunėjus"}
+        BO{"Bolivija"}
+        BR{"Brazilija"}
+        BS{"Bahamos"}
+        BT{"Butanas"}
+        BV{"Bouvet sala"}
+        BW{"Botsvana"}
+        BY{"Baltarusija"}
+        BZ{"Belizas"}
+        CA{"Kanada"}
+        CC{"Kokosų salos"}
+        CD{"Kongo Demokratinė Respublika"}
+        CF{"Centrinės Afrikos Respublika"}
+        CG{"Kongas"}
+        CH{"Šveicarija"}
+        CI{"Dramblio Kaulo Krantas"}
+        CK{"Kuko salos"}
+        CL{"Čilė"}
+        CM{"Kamerūnas"}
+        CN{"Kinija"}
+        CO{"Kolumbija"}
+        CR{"Kosta Rika"}
+        CS{"Serbija ir Juodkalnija"}
+        CU{"Kuba"}
+        CV{"Žaliasis Kyšulys"}
+        CX{"Kalėdų sala"}
+        CY{"Kipras"}
+        CZ{"Čekija"}
+        DE{"Vokietija"}
+        DJ{"Džibutis"}
+        DK{"Danija"}
+        DM{"Dominika"}
+        DO{"Dominikos Respublika"}
+        DZ{"Alžyras"}
+        EC{"Ekvadoras"}
+        EE{"Estija"}
+        EG{"Egiptas"}
+        EH{"Vakarų Sachara"}
+        ER{"Eritrėja"}
+        ES{"Ispanija"}
+        ET{"Etiopija"}
+        FI{"Suomija"}
+        FJ{"Fidžis"}
+        FK{"Falklando salos"}
+        FM{"Mikronezija"}
+        FO{"Farerų salos"}
+        FR{"Prancūzija"}
+        GA{"Gabonas"}
+        GB{"Didžioji Britanija"}
+        GD{"Grenada"}
+        GE{"Gruzija"}
+        GF{"Prancūzijos Gviana"}
+        GG{"Guernsey"}
+        GH{"Gana"}
+        GI{"Gibraltaras"}
+        GL{"Grenlandija"}
+        GM{"Gambija"}
+        GN{"Gvinėja"}
+        GP{"Gvadelupė"}
+        GQ{"Pusiaujo Gvinėja"}
+        GR{"Graikija"}
+        GS{"Rytų Džordžija ir Rytų Sandwich salos"}
+        GT{"Gvatemala"}
+        GU{"Guamas"}
+        GW{"Bisau Gvinėja"}
+        GY{"Gajana"}
+        HK{"Kinijos S.A.R.Honkongas"}
+        HM{"Heardo ir McDonaldo Salų Sritis"}
+        HN{"Hondūras"}
+        HR{"Kroatija"}
+        HT{"Haitis"}
+        HU{"Vengrija"}
+        ID{"Indonezija"}
+        IE{"Airija"}
+        IL{"Izraelis"}
+        IM{"Isle of Man"}
+        IN{"Indija"}
+        IO{"Indijos vandenyno britų sritis"}
+        IQ{"Irakas"}
+        IR{"Iranas"}
+        IS{"Islandija"}
+        IT{"Italija"}
+        JE{"Džersis"}
+        JM{"Jamaika"}
+        JO{"Jordanija"}
+        JP{"Japonija"}
+        KE{"Kenija"}
+        KG{"Kirgiztanas"}
+        KH{"Kambodža"}
+        KI{"Kiribatis"}
+        KM{"Komorai"}
+        KN{"Sent Kitsas ir Nevis"}
+        KP{"Šiaurės Korėja"}
+        KR{"Pietų Korėja"}
+        KW{"Kuveitas"}
+        KY{"Kaimanų salos"}
+        KZ{"Kazachstanas"}
+        LA{"Laosas"}
+        LB{"Libanas"}
+        LC{"Šventoji Liucija"}
+        LI{"Lichtenšteinas"}
+        LK{"Šri Lanka"}
+        LR{"Liberija"}
+        LS{"Lesotas"}
+        LT{"Lietuva"}
+        LU{"Liuksemburgas"}
+        LV{"Latvija"}
+        LY{"Libija"}
+        MA{"Marokas"}
+        MC{"Monakas"}
+        MD{"Moldova"}
+        ME{"Juodkalnija"}
+        MG{"Madagaskaras"}
+        MH{"Maršalo Salos"}
+        MK{"Makedonija"}
+        ML{"Malis"}
+        MM{"Mianmaras"}
+        MN{"Mongolija"}
+        MO{"Macao"}
+        MP{"Marianos šiaurinės salos"}
+        MQ{"Martinika"}
+        MR{"Mauritanija"}
+        MS{"Montserratas"}
+        MT{"Malta"}
+        MU{"Mauricijus"}
+        MV{"Maldivai"}
+        MW{"Malavis"}
+        MX{"Meksika"}
+        MY{"Malaizija"}
+        MZ{"Mozambikas"}
+        NA{"Namibija"}
+        NC{"Naujoji Kaledonija"}
+        NE{"Nigeris"}
+        NF{"Norfolko sala"}
+        NG{"Nigerija"}
+        NI{"Nikaragva"}
+        NL{"Nyderlandai"}
+        NO{"Norvegija"}
+        NP{"Nepalas"}
+        NR{"Nauru"}
+        NU{"Niue"}
+        NZ{"Naujoji Zelandija"}
+        OM{"Omanas"}
+        PA{"Panama"}
+        PE{"Peru"}
+        PF{"Prancūzų Polinezija"}
+        PG{"Papua Naujoji Gvinėja"}
+        PH{"Filipinai"}
+        PK{"Pakistanas"}
+        PL{"Lenkija"}
+        PM{"Sen Pjeras ir Mikelonas"}
+        PN{"Pitkernas"}
+        PR{"Puerto Rikas"}
+        PS{"Palestinos teritorija"}
+        PT{"Portugalija"}
+        PW{"Palau"}
+        PY{"Paragvajus"}
+        QA{"Kataras"}
+        RE{"Reunionas"}
+        RO{"Rumunija"}
+        RS{"Serbija"}
+        RU{"Rusijos Federacija"}
+        RW{"Ruanda"}
+        SA{"Saudo Arabija"}
+        SB{"Saliamono salos"}
+        SC{"Seišeliai"}
+        SD{"Sudanas"}
+        SE{"Švedija"}
+        SG{"Singapūras"}
+        SH{"Šventoji Elena"}
+        SI{"Slovėnija"}
+        SJ{"Svalbardo ir Jan Majen salos"}
+        SK{"Slovakija"}
+        SL{"Siera Leonė"}
+        SM{"San Marinas"}
+        SN{"Senegalas"}
+        SO{"Somalis"}
+        SR{"Surinamas"}
+        ST{"San Tomė ir Principė"}
+        SV{"Salvadoras"}
+        SY{"Sirija"}
+        SZ{"Svazilendas"}
+        TC{"Turkso ir Caicoso salos"}
+        TD{"Čadas"}
+        TF{"Prancūzijos Pietų sritys"}
+        TG{"Togas"}
+        TH{"Tailandas"}
+        TJ{"Tadžikistanas"}
+        TK{"Tokelau"}
+        TL{"Rytų Timoras"}
+        TM{"Turkmėnistanas"}
+        TN{"Tunisas"}
+        TO{"Tonga"}
+        TR{"Turkija"}
+        TT{"Trinidadas ir Tobagas"}
+        TV{"Tuvalu"}
+        TW{"Taivanas"}
+        TZ{"Tanzanija"}
+        UA{"Ukraina"}
+        UG{"Uganda"}
+        UM{"Jungtinių Valstijų mažosios aplinkinės salos"}
+        US{"Jungtinės Valstijos"}
+        UY{"Urugvajus"}
+        UZ{"Uzbekistanas"}
+        VA{"Vatikanas"}
+        VC{"Šventasis Vincentas ir Grenadinai"}
+        VE{"Venesuela"}
+        VG{"Didžiosios Britanijos Mergelių salos"}
+        VI{"Mergelių salos (JAV)"}
+        VN{"Vietnamas"}
+        VU{"Vanuatu"}
+        WF{"Wallisas ir Futuna"}
+        WS{"Samoa"}
+        YE{"Jemenas"}
+        YT{"Mayotte’as"}
+        ZA{"Pietų Afrika"}
+        ZM{"Zambija"}
+        ZW{"Zimbabvė"}
+    }
+    Currencies{
+        BRL{
+            "R$",
+            "Brazilijos realas",
+        }
+        CNY{
+            "CNY",
+            "Ženminbi juanis",
+        }
+        EUR{
+            "€",
+            "Euras",
+        }
+        GBP{
+            "UK£",
+            "Svaras sterlingų",
+        }
+        INR{
+            "=0#Rs.|1#Re.|1<Rs." /** (choice)  */,
+            "Indijos rupija",
+        }
+        JPY{
+            "JP¥",
+            "Jena",
+        }
+        LTL{
+            "Lt",
+            "Litas",
+        }
+        RUB{
+            "RUB",
+            "Rusijos rublis",
+        }
+        USD{
+            "US$",
+            "JAV doleris",
+        }
+    }
+    ExemplarCharacters{"[a ą b c č d e ę ė f-i į y j-p r s š t u ų ū v z ž]"}
+    Keys{
+        calendar{"kalendorius"}
+        currency{"valiuta"}
+    }
+    Languages{
+        ab{"Abchazų"}
+        ady{"Adygėjų"}
+        ale{"Aleutų"}
+        ang{"Senoji anglų (450-1100)"}
+        ar{"arabų"}
+        art{"Dirbtinė (kita)"}
+        aus{"Australų kalbos"}
+        az{"Azerbaidžaniečių"}
+        ba{"Baškirų"}
+        bat{"Baltų (kita)"}
+        be{"Baltarusių"}
+        ber{"Berberų"}
+        bg{"bulgarų"}
+        bn{"bengalų"}
+        bnt{"Bantų"}
+        bo{"Tibetiečių"}
+        br{"Bretonų"}
+        bs{"Bosnių"}
+        bua{"Buriatų"}
+        ca{"Katalonų"}
+        cai{"Centrinės Amerikos indėnų (kita)"}
+        cau{"Kaukaziečių (kita)"}
+        ce{"Čečėnų"}
+        cel{"Keltų (kita)"}
+        co{"Korsikiečių"}
+        crh{"Krymo turkų; Krymo totorių"}
+        cs{"čekų"}
+        cu{"Bažnytinė slavų"}
+        cv{"Čiuvašų"}
+        cy{"Valų"}
+        da{"danų"}
+        de{"vokiečių"}
+        el{"graikų"}
+        en{"anglų"}
+        es{"ispanų"}
+        et{"estų"}
+        eu{"Baskų"}
+        fa{"Persų"}
+        fi{"suomių"}
+        fiu{"Finougrų (kita)"}
+        fr{"prancūzų"}
+        fro{"Senoji prancūzų"}
+        fy{"Fryzų"}
+        ga{"Airių"}
+        gem{"Germanų (kita)"}
+        got{"Gotų"}
+        grc{"Senovės graikų"}
+        he{"hebrajų"}
+        hi{"hindi"}
+        hr{"kroatų"}
+        hu{"vengrų"}
+        hy{"Armėnų"}
+        id{"Indoneziečių"}
+        ine{"Indoeuropiečių (kita)"}
+        inh{"Ingušų"}
+        ira{"Iraniečių"}
+        is{"Islandų"}
+        it{"italų"}
+        ja{"japonų"}
+        ka{"Gruzinų"}
+        kaa{"Karakalpakų"}
+        kbd{"Kabardinų"}
+        kk{"Kazachų"}
+        km{"Khmerų"}
+        ko{"korėjiečių"}
+        ku{"Kurdų"}
+        ky{"Kirgizų"}
+        la{"Lotynų"}
+        lb{"Liuksemburgiečių"}
+        lez{"Lezginų"}
+        lt{"lietuvių"}
+        lv{"latvių"}
+        mis{"Įvairios kalbos"}
+        mk{"Makedonų"}
+        mn{"Mongolų"}
+        mo{"Moldavų"}
+        ms{"Malajų"}
+        mul{"Kelios kalbos"}
+        nai{"Šiaurės Amerikos indėnų (kita)"}
+        nap{"Neapoliečių"}
+        nl{"olandų"}
+        no{"norvegų"}
+        os{"Osetinų"}
+        paa{"Papuasų (kita)"}
+        peo{"Senoji persų"}
+        pl{"lenkų"}
+        pt{"portugalų"}
+        ro{"rumunų"}
+        ru{"rusų"}
+        sa{"Sanskritas"}
+        sah{"Jakutų"}
+        sc{"Sardiniečių"}
+        scn{"Siciliečių"}
+        sco{"Škotų"}
+        sga{"Senoji airių"}
+        sk{"slovakų"}
+        sl{"slovėnų"}
+        sla{"Slavų (kita)"}
+        sq{"Albanų"}
+        sr{"Serbų"}
+        sux{"Šumerų"}
+        sv{"švedų"}
+        ta{"Tamilų"}
+        th{"tajų"}
+        tk{"Turkmėnų"}
+        tr{"turkų"}
+        tt{"Totorių"}
+        tyv{"Tuvių"}
+        udm{"Udmurtų"}
+        uk{"Ukrainiečių"}
+        und{"Nenustatyta"}
+        uz{"Uzbekų"}
+        vi{"Vietnamiečių"}
+        vo{"Volapiuk"}
+        wa{"Valonų"}
+        xal{"Kalmukų"}
+        yi{"Jidiš"}
+        zh{"kinų"}
+    }
+    LocaleScript{
+        "Latn",
+    }
+    NumberElements{
+        ",",
+        ".",
+        ";",
+        "%",
+        "0",
+        "#",
+        "-",
+        "E",
+        "‰",
+        "∞",
+        "NaN",
+        "+",
+    }
+    NumberPatterns{
+        "#,##0.###",
+        "#,##0.00 ¤",
+        "#,##0%",
+        "#E0",
+    }
+    Scripts{
+        Arab{"Arabų"}
+        Armn{"Armėnų"}
+        Beng{"Bengalų"}
+        Cyrl{"Kirilica"}
+        Cyrs{"Kirilica (senasis bažnytinis variantas)"}
+        Egyp{"Egipto hieroglifai"}
+        Ethi{"Etiopų"}
+        Geor{"Gruzinų"}
+        Goth{"Gotų"}
+        Grek{"Graikų"}
+        Hebr{"Hebrajų"}
+        Hung{"Senasis vengrų"}
+        Ital{"Senasis italų"}
+        Kana{"Katakana"}
+        Khmr{"Khmerų"}
+        Latn{"Lotynų"}
+        Mong{"Mongolų"}
+        Runr{"Runų"}
+    }
+    Version{"1.86"}
+    calendar{
+        gregorian{
+            AmPmMarkers{
+                "priešpiet",
+                "popiet",
+            }
+            DateTimePatterns{
+                "HH:mm:ss v",
+                "HH:mm:ss z",
+                "HH:mm:ss",
+                "HH:mm",
+                "yyyy 'm'. MMMM d 'd'.,EEEE",
+                "yyyy 'm'. MMMM d 'd'.",
+                "yyyy.MM.dd",
+                "yyyy-MM-dd",
+                "{1} {0}",
+            }
+            dayNames{
+                format{
+                    abbreviated{
+                        "Sk",
+                        "Pr",
+                        "An",
+                        "Tr",
+                        "Kt",
+                        "Pn",
+                        "Št",
+                    }
+                    wide{
+                        "sekmadienis",
+                        "pirmadienis",
+                        "antradienis",
+                        "trečiadienis",
+                        "ketvirtadienis",
+                        "penktadienis",
+                        "šeštadienis",
+                    }
+                }
+                stand-alone{
+                    narrow{
+                        "S",
+                        "P",
+                        "A",
+                        "T",
+                        "K",
+                        "P",
+                        "Š",
+                    }
+                }
+            }
+            eras{
+                abbreviated{
+                    "pr. Kr.",
+                    "po Kr.",
+                }
+            }
+            fields{
+                day{
+                    dn{"diena"}
+                }
+                dayperiod{
+                    dn{"dienos metas"}
+                }
+                era{
+                    dn{"era"}
+                }
+                hour{
+                    dn{"valanda"}
+                }
+                minute{
+                    dn{"minutė"}
+                }
+                month{
+                    dn{"mėnuo"}
+                }
+                second{
+                    dn{"Sekundė"}
+                }
+                week{
+                    dn{"savaitė"}
+                }
+                weekday{
+                    dn{"savaitės diena"}
+                }
+                year{
+                    dn{"metai"}
+                }
+                zone{
+                    dn{"juosta"}
+                }
+            }
+            monthNames{
+                format{
+                    abbreviated{
+                        "Sau",
+                        "Vas",
+                        "Kov",
+                        "Bal",
+                        "Geg",
+                        "Bir",
+                        "Lie",
+                        "Rgp",
+                        "Rgs",
+                        "Spl",
+                        "Lap",
+                        "Grd",
+                    }
+                    wide{
+                        "sausio",
+                        "vasario",
+                        "kovo",
+                        "balandžio",
+                        "gegužės",
+                        "birželio",
+                        "liepos",
+                        "rugpjūčio",
+                        "rugsėjo",
+                        "spalio",
+                        "lapkričio",
+                        "gruodžio",
+                    }
+                }
+                stand-alone{
+                    narrow{
+                        "S",
+                        "V",
+                        "K",
+                        "B",
+                        "G",
+                        "B",
+                        "L",
+                        "R",
+                        "R",
+                        "S",
+                        "L",
+                        "G",
+                    }
+                    wide{
+                        "Sausis",
+                        "Vasaris",
+                        "Kovas",
+                        "Balandis",
+                        "Gegužė",
+                        "Birželis",
+                        "Liepa",
+                        "Rugpjūtis",
+                        "Rugsėjis",
+                        "Spalis",
+                        "Lapkritis",
+                        "Gruodis",
+                    }
+                }
+            }
+            quarters{
+                format{
+                    abbreviated{
+                        "K1",
+                        "K2",
+                        "K3",
+                        "K4",
+                    }
+                    wide{
+                        "pirmas ketvirtis",
+                        "antras ketvirtis",
+                        "trečias ketvirtis",
+                        "ketvirtas ketvirtis",
+                    }
+                }
+            }
+        }
+    }
+    delimiters{
+        alternateQuotationEnd{"“"}
+        alternateQuotationStart{"„"}
+        quotationEnd{"“"}
+        quotationStart{"„"}
+    }
+    zoneStrings{
+        "Africa:Abidjan"{
+            ec{"Abidžanas"}
+        }
+        "Africa:Addis_Ababa"{
+            ec{"Addis Abeba"}
+        }
+        "Africa:Asmera"{
+            ec{"Asmara"}
+        }
+        "Africa:Brazzaville"{
+            ec{"Brazavilis"}
+        }
+        "Africa:Cairo"{
+            ec{"Kairas"}
+        }
+        "Africa:Casablanca"{
+            ec{"Kasablanka"}
+        }
+        "Africa:Conakry"{
+            ec{"Konakris"}
+        }
+        "Africa:Dakar"{
+            ec{"Dakaras"}
+        }
+        "Africa:Djibouti"{
+            ec{"Džibutis"}
+        }
+        "Africa:Freetown"{
+            ec{"Frytaunas"}
+        }
+        "Africa:Gaborone"{
+            ec{"Gaboronas"}
+        }
+        "Africa:Johannesburg"{
+            ec{"Johanesburgas"}
+        }
+        "Africa:Khartoum"{
+            ec{"Chartumas"}
+        }
+        "Africa:Kinshasa"{
+            ec{"Kinšasa"}
+        }
+        "Africa:Libreville"{
+            ec{"Librevilis"}
+        }
+        "Africa:Mogadishu"{
+            ec{"Mogadišas"}
+        }
+        "Africa:Monrovia"{
+            ec{"Monrovija"}
+        }
+        "Africa:Nairobi"{
+            ec{"Nairobis"}
+        }
+        "Africa:Ndjamena"{
+            ec{"Ndžamena"}
+        }
+        "Africa:Porto-Novo"{
+            ec{"Porto Novas"}
+        }
+        "Africa:Sao_Tome"{
+            ec{"San Tomė"}
+        }
+        "Africa:Tripoli"{
+            ec{"Tripolis"}
+        }
+        "Africa:Tunis"{
+            ec{"Tunisas"}
+        }
+        "America:Asuncion"{
+            ec{"Asunsjonas"}
+        }
+        "America:Barbados"{
+            ec{"Barbadosas"}
+        }
+        "America:Belem"{
+            ec{"Belemas"}
+        }
+        "America:Belize"{
+            ec{"Belizas"}
+        }
+        "America:Buenos_Aires"{
+            ec{"Buenos Airės"}
+        }
+        "America:Caracas"{
+            ec{"Karakasas"}
+        }
+        "America:Cayenne"{
+            ec{"Kajenas"}
+        }
+        "America:Cayman"{
+            ec{"Kaimanas"}
+        }
+        "America:Chicago"{
+            ec{"Čikaga"}
+        }
+        "America:Costa_Rica"{
+            ec{"Kosta Rika"}
+        }
+        "America:Cuiaba"{
+            ec{"Kujaba"}
+        }
+        "America:Danmarkshavn"{
+            ec{"Danmarkshavn’as"}
+        }
+        "America:Denver"{
+            ec{"Denveris"}
+        }
+        "America:Dominica"{
+            ec{"Dominika"}
+        }
+        "America:El_Salvador"{
+            ec{"Salvadoras"}
+        }
+        "America:Godthab"{
+            ec{"Godthabas"}
+        }
+        "America:Grand_Turk"{
+            ec{"Grand Terkas"}
+        }
+        "America:Guatemala"{
+            ec{"Gvatemala"}
+        }
+        "America:Guyana"{
+            ec{"Gajana"}
+        }
+        "America:Indiana:Petersburg"{
+            ec{"Peterburgas"}
+        }
+        "America:Jamaica"{
+            ec{"Jamaika"}
+        }
+        "America:La_Paz"{
+            ec{"La Pasas"}
+        }
+        "America:Los_Angeles"{
+            ec{"Los Andželas"}
+        }
+        "America:Managua"{
+            ec{"Managva"}
+        }
+        "America:Martinique"{
+            ec{"Martinika"}
+        }
+        "America:Moncton"{
+            ec{"Monktonas"}
+        }
+        "America:Montevideo"{
+            ec{"Montevidëjas"}
+        }
+        "America:Montserrat"{
+            ec{"Montseratas"}
+        }
+        "America:New_York"{
+            ec{"Niujorkas"}
+        }
+        "America:Phoenix"{
+            ec{"Fyniksas"}
+        }
+        "America:Port_of_Spain"{
+            ec{"Port of Speinas"}
+        }
+        "America:Puerto_Rico"{
+            ec{"Puerto Rikas"}
+        }
+        "America:Santiago"{
+            ec{"Santjagas"}
+        }
+        "America:Santo_Domingo"{
+            ec{"Santo Domingas"}
+        }
+        "America:Sao_Paulo"{
+            ec{"San Paulas"}
+        }
+        "America:St_Kitts"{
+            ec{"St. Kitsas"}
+        }
+        "America:St_Lucia"{
+            ec{"St. Lucia"}
+        }
+        "America:St_Thomas"{
+            ec{"St. Thomas"}
+        }
+        "America:St_Vincent"{
+            ec{"Sant Vincentė"}
+        }
+        "America:Thule"{
+            ec{"Tūla"}
+        }
+        "Antarctica:DumontDUrville"{
+            ec{"Dumont D'Urville"}
+        }
+        "Antarctica:South_Pole"{
+            ec{"Pietų ašigalis"}
+        }
+        "Asia:Aden"{
+            ec{"Adenas"}
+        }
+        "Asia:Almaty"{
+            ec{"Alma Ata"}
+        }
+        "Asia:Amman"{
+            ec{"Amanas"}
+        }
+        "Asia:Aqtobe"{
+            ec{"Aktiubinskas"}
+        }
+        "Asia:Ashgabat"{
+            ec{"Ašchabadas"}
+        }
+        "Asia:Baghdad"{
+            ec{"Bagdadas"}
+        }
+        "Asia:Bahrain"{
+            ec{"Bahreinas"}
+        }
+        "Asia:Bangkok"{
+            ec{"Bankokas"}
+        }
+        "Asia:Beirut"{
+            ec{"Beirutas"}
+        }
+        "Asia:Bishkek"{
+            ec{"Biškekas"}
+        }
+        "Asia:Brunei"{
+            ec{"Brunėjus"}
+        }
+        "Asia:Colombo"{
+            ec{"Kolombo"}
+        }
+        "Asia:Damascus"{
+            ec{"Damaskas"}
+        }
+        "Asia:Dhaka"{
+            ec{"Daka"}
+        }
+        "Asia:Dili"{
+            ec{"Dilis"}
+        }
+        "Asia:Dubai"{
+            ec{"Dubajus"}
+        }
+        "Asia:Dushanbe"{
+            ec{"Dušanbė"}
+        }
+        "Asia:Gaza"{
+            ec{"Gazos ruožas"}
+        }
+        "Asia:Hong_Kong"{
+            ec{"Honkongas"}
+        }
+        "Asia:Jakarta"{
+            ec{"Džakarta"}
+        }
+        "Asia:Kabul"{
+            ec{"Kabulas"}
+        }
+        "Asia:Kuwait"{
+            ec{"Kuveitas"}
+        }
+        "Asia:Macau"{
+            ec{"Makao"}
+        }
+        "Asia:Muscat"{
+            ec{"Maskatas"}
+        }
+        "Asia:Nicosia"{
+            ec{"Nikosija"}
+        }
+        "Asia:Qatar"{
+            ec{"Kataras"}
+        }
+        "Asia:Rangoon"{
+            ec{"Rangūnas"}
+        }
+        "Asia:Riyadh"{
+            ec{"Rijadas"}
+        }
+        "Asia:Seoul"{
+            ec{"Seulas"}
+        }
+        "Asia:Singapore"{
+            ec{"Singapūras"}
+        }
+        "Asia:Tashkent"{
+            ec{"Taškentas"}
+        }
+        "Asia:Tbilisi"{
+            ec{"Tbilisis"}
+        }
+        "Asia:Tehran"{
+            ec{"Teheranas"}
+        }
+        "Asia:Ulaanbaatar"{
+            ec{"Ulan-Batoras"}
+        }
+        "Asia:Vientiane"{
+            ec{"Vientianas"}
+        }
+        "Asia:Yerevan"{
+            ec{"Jerevanas"}
+        }
+        "Atlantic:Azores"{
+            ec{"Azorai"}
+        }
+        "Atlantic:Bermuda"{
+            ec{"Bermudų salos"}
+        }
+        "Atlantic:Canary"{
+            ec{"Kanarų salos"}
+        }
+        "Atlantic:Faeroe"{
+            ec{"Farerai"}
+        }
+        "Atlantic:Reykjavik"{
+            ec{"Reikjavikas"}
+        }
+        "Atlantic:St_Helena"{
+            ec{"Šv. Helena"}
+        }
+        "Atlantic:Stanley"{
+            ec{"Stenlis"}
+        }
+        "Europe:Amsterdam"{
+            ec{"Amsterdamas"}
+        }
+        "Europe:Berlin"{
+            ec{"Berlynas"}
+        }
+        "Europe:Brussels"{
+            ec{"Briuselis"}
+        }
+        "Europe:Bucharest"{
+            ec{"Bukareštas"}
+        }
+        "Europe:Budapest"{
+            ec{"Budapeštas"}
+        }
+        "Europe:Copenhagen"{
+            ec{"Kopenhaga"}
+        }
+        "Europe:Dublin"{
+            ec{"Dublinas"}
+        }
+        "Europe:Gibraltar"{
+            ec{"Gibraltaras"}
+        }
+        "Europe:Helsinki"{
+            ec{"Helsinkis"}
+        }
+        "Europe:Istanbul"{
+            ec{"Stambulas"}
+        }
+        "Europe:Kiev"{
+            ec{"Kijevas"}
+        }
+        "Europe:Lisbon"{
+            ec{"Lisabona"}
+        }
+        "Europe:London"{
+            ec{"Londonas"}
+        }
+        "Europe:Luxembourg"{
+            ec{"Liuksemburgas"}
+        }
+        "Europe:Madrid"{
+            ec{"Madridas"}
+        }
+        "Europe:Minsk"{
+            ec{"Minskas"}
+        }
+        "Europe:Monaco"{
+            ec{"Monakas"}
+        }
+        "Europe:Oslo"{
+            ec{"Oslas"}
+        }
+        "Europe:Paris"{
+            ec{"Paryžius"}
+        }
+        "Europe:Riga"{
+            ec{"Ryga"}
+        }
+        "Europe:Rome"{
+            ec{"Roma"}
+        }
+        "Europe:Sofia"{
+            ec{"Sofija"}
+        }
+        "Europe:Stockholm"{
+            ec{"Stokholmas"}
+        }
+        "Europe:Tallinn"{
+            ec{"Talinas"}
+        }
+        "Europe:Tirane"{
+            ec{"Tirana"}
+        }
+        "Europe:Vaduz"{
+            ec{"Vaducas"}
+        }
+        "Europe:Vienna"{
+            ec{"Viena"}
+        }
+        "Europe:Warsaw"{
+            ec{"Varšuva"}
+        }
+        "Europe:Zurich"{
+            ec{"Ciurichas"}
+        }
+        "Indian:Antananarivo"{
+            ec{"Antananarivas"}
+        }
+        "Indian:Comoro"{
+            ec{"Komoras"}
+        }
+        "Indian:Mauritius"{
+            ec{"Mauricijus"}
+        }
+        "Indian:Mayotte"{
+            ec{"Majotas"}
+        }
+        "Indian:Reunion"{
+            ec{"Reunionas"}
+        }
+        "Pacific:Apia"{
+            ec{"Apija"}
+        }
+        "Pacific:Easter"{
+            ec{"Velykų sala"}
+        }
+        "Pacific:Efate"{
+            ec{"Efatas"}
+        }
+        "Pacific:Enderbury"{
+            ec{"Enderburis"}
+        }
+        "Pacific:Fiji"{
+            ec{"Fidžis"}
+        }
+        "Pacific:Galapagos"{
+            ec{"Galapagai"}
+        }
+        "Pacific:Guadalcanal"{
+            ec{"Gvadalkanalas"}
+        }
+        "Pacific:Guam"{
+            ec{"Guamas"}
+        }
+        "Pacific:Johnston"{
+            ec{"Džonstonas"}
+        }
+        "Pacific:Norfolk"{
+            ec{"Norfolkas"}
+        }
+        "Pacific:Ponape"{
+            ec{"Ponapė"}
+        }
+        "Pacific:Saipan"{
+            ec{"Saipanas"}
+        }
+        "Pacific:Tahiti"{
+            ec{"Taitis"}
+        }
+        "Pacific:Tarawa"{
+            ec{"Tarava"}
+        }
+    }
+}

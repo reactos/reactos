@@ -1,0 +1,187 @@
+﻿// ***************************************************************************
+// *
+// * Copyright (C) 2007 International Business Machines
+// * Corporation and others.  All Rights Reserved.
+// * Tool: com.ibm.icu.dev.tool.cldr.LDML2ICUConverter.java
+// * Source File:<path>/common/main/uz_Latn.xml
+// *
+// ***************************************************************************
+/**
+ *  ICU <specials> source: <path>/xml/main/uz_Latn.xml
+ */
+uz_Latn{
+    Countries{
+        AF{"Afgʿoniston"}
+        BR{"Braziliya"}
+        CN{"Xitoy"}
+        DE{"Olmoniya"}
+        FR{"Fransiya"}
+        GB{"Birlashgan Qirollik"}
+        IN{"Hindiston"}
+        IT{"Italiya"}
+        JP{"Yaponiya"}
+        RU{"Rossiya"}
+        US{"Qo'shma Shtatlar"}
+        UZ{"Oʿzbekiston"}
+    }
+    Currencies{
+        BRL{
+            "R$",
+            "Brazil reali",
+        }
+        CNY{
+            "CNY",
+            "Xitoy yuani",
+        }
+        EUR{
+            "€",
+            "Evro",
+        }
+        GBP{
+            "UK£",
+            "Ingliz funt sterlingi",
+        }
+        INR{
+            "=0#Rs.|1#Re.|1<Rs." /** (choice)  */,
+            "Hind rupiyasi",
+        }
+        JPY{
+            "JP¥",
+            "Yapon yenasi",
+        }
+        RUB{
+            "RUB",
+            "Rus rubli",
+        }
+        USD{
+            "US$",
+            "AQSH dollari",
+        }
+        UZS{
+            "soʿm",
+            "Oʿzbekiston soʿm",
+        }
+    }
+    ExemplarCharacters{"[a-v x-z ʿ]"}
+    Languages{
+        ar{"arabcha"}
+        de{"olmoncha"}
+        en{"inglizcha"}
+        es{"ispancha"}
+        fr{"fransuzcha"}
+        hi{"hindcha"}
+        it{"italyancha"}
+        ja{"yaponcha"}
+        pt{"portugalcha"}
+        ru{"ruscha"}
+        uz{"o'zbekcha"}
+        zh{"xitoycha"}
+    }
+    LocaleScript{
+        "Latn",
+    }
+    Scripts{
+        Cyrl{"Kiril"}
+        Latn{"Lotin"}
+    }
+    Version{"1.17"}
+    calendar{
+        gregorian{
+            dayNames{
+                format{
+                    abbreviated{
+                        "Yaksh",
+                        "Dush",
+                        "Sesh",
+                        "Chor",
+                        "Pay",
+                        "Jum",
+                        "Shan",
+                    }
+                    wide{
+                        "yakshanba",
+                        "dushanba",
+                        "seshanba",
+                        "chorshanba",
+                        "payshanba",
+                        "juma",
+                        "shanba",
+                    }
+                }
+                stand-alone{
+                    narrow{
+                        "Y",
+                        "D",
+                        "S",
+                        "C",
+                        "P",
+                        "J",
+                        "S",
+                    }
+                }
+            }
+            monthNames{
+                format{
+                    abbreviated{
+                        "Yanv",
+                        "Fev",
+                        "Mar",
+                        "Apr",
+                        "May",
+                        "Iyun",
+                        "Iyul",
+                        "Avg",
+                        "Sen",
+                        "Okt",
+                        "Noya",
+                        "Dek",
+                    }
+                    wide{
+                        "Muharram",
+                        "Safar",
+                        "Rabiul-avval",
+                        "Rabiul-oxir",
+                        "Jumodiul-ulo",
+                        "Jumodiul-uxro",
+                        "Rajab",
+                        "Shaʿbon",
+                        "Ramazon",
+                        "Shavvol",
+                        "Zil-qaʿda",
+                        "Zil-hijja",
+                    }
+                }
+                stand-alone{
+                    narrow{
+                        "Y",
+                        "F",
+                        "M",
+                        "A",
+                        "M",
+                        "I",
+                        "I",
+                        "A",
+                        "S",
+                        "O",
+                        "N",
+                        "D",
+                    }
+                    wide{
+                        "Yanvar",
+                        "2",
+                        "3",
+                        "4",
+                        "5",
+                        "6",
+                        "7",
+                        "8",
+                        "9",
+                        "10",
+                        "11",
+                        "12",
+                    }
+                }
+            }
+        }
+    }
+}

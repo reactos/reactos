@@ -1,0 +1,64 @@
+// ***************************************************************************
+// *
+// *   Copyright (C) 2004-2006, International Business Machines
+// *   Corporation and others.  All Rights Reserved.
+// *
+// ***************************************************************************
+// 
+
+ja {
+
+    // Spellout rules for Japanese.
+    //
+    // In Japanese, there really isn't any distinction between a number written 
+    // out in digits and a number written out in words. The kanji are both
+    // digits and words. This rule set provides two variants:  
+    //
+    //  %traditional
+    //      Traditional CJK numerals for everyday usage.
+    //
+    //  %financial
+    //      Alternate numerals that are harder to alter than the traditional 
+    //      numerals to prevent fraud (e.g. changing a traditional one to a
+    //      three by adding two strokes). Additionally, items that are usually 
+    //      dropped or shortened in the traditional form are supplied in full 
+    //      (e.g. 128 is 1 x 100, 2 x 10, 8 instead of just 100, 2 x 10, 8).
+    //
+    // Note that the Japanese spell out rules, although similar, are different 
+    // to those for Chinese. For instance, Japanese omits powers of ten which
+    // are zero, however in Chinese they are included.
+
+    SpelloutRules {
+        "%financial:\n"
+            "-x: \u30de\u30a4\u30ca\u30b9>>;\n"
+            "x.x: <<\u70b9>>;\n"
+            "\u96f6; \u58f1; \u5f10; \u53c2; \u56db; \u4f0d; \u516d; \u4e03; \u516b; \u4e5d;\n"
+            "\u62fe; \u62fe[>>];\n"
+            "20: <<\u62fe[>>];\n"
+            "100: <<\u767e[>>];\n"
+            "1000: <<\u5343[>>];\n"
+            "10,000: <<\u842c[>>];\n"
+            "100,000,000: <<\u5104[>>];\n"
+            "1,000,000,000,000: <<\u5146[>>];\n"
+            "10,000,000,000,000,000: =#,##0=;\n"
+//            "10,000,000,000,000,000: <<\u4eac[>>];\n"
+//            "100,000,000,000,000,000,000: =#,##0=;"
+        "%traditional:\n"
+            "-x: \u30de\u30a4\u30ca\u30b9>>;\n"
+            "x.x: <<\u30fb>>;\n"
+            "\u3007; \u4e00; \u4e8c; \u4e09; \u56db; \u4e94; \u516d; \u4e03; \u516b; \u4e5d;\n"
+            "\u5341; \u5341[>>];\n"
+            "20: <<\u5341[>>];\n"
+            "100: \u767e[>>];\n"
+            "200: <<\u767e[>>];\n"
+            "1000: \u5343[>>];\n"
+            "2000: <<\u5343[>>];\n"
+            "10,000: <<\u4e07[>>];\n"
+            "100,000,000: <<\u5104[>>];\n"
+            "1,000,000,000,000: <<\u5146[>>];\n"
+            "10,000,000,000,000,000: =#,##0=;" 
+//            "10,000,000,000,000,000: <<\u4eac[>>];\n"
+//            "100,000,000,000,000,000,000: =#,##0=;"
+    }
+
+}

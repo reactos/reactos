@@ -1,0 +1,266 @@
+
+#*****************************************************************************
+#
+#   Copyright (C) 2002-2003, International Business Machines Corporation and others.
+#   All Rights Reserved.
+#
+#*****************************************************************************
+#
+#  file:  regexcst.txt
+#  ICU Regular Expression Parser State Table
+#
+#     This state table is used when reading and parsing a regular expression pattern
+#     The pattern parser uses a state machine; the data in this file define the
+#     state transitions that occur for each input character.
+#
+#     *** This file defines the regex pattern grammar.   This is it.
+#     *** The determination of what is accepted is here.
+#
+#     This file is processed by a perl script "regexcst.pl" to produce initialized C arrays
+#     that are then built with the rule parser.
+#
+
+#
+# Here is the syntax of the state definitions in this file:
+#
+#
+#StateName:
+#   input-char           n next-state           ^push-state     action    
+#   input-char           n next-state           ^push-state     action    
+#       |                |   |                      |             |
+#       |                |   |                      |             |--- action to be performed by state machine
+#       |                |   |                      |                  See function RBBIRuleScanner::doParseActions()
+#       |                |   |                      |
+#       |                |   |                      |--- Push this named state onto the state stack.
+#       |                |   |                           Later, when next state is specified as "pop",
+#       |                |   |                           the pushed state will become the current state.
+#       |                |   |
+#       |                |   |--- Transition to this state if the current input character matches the input
+#       |                |        character or char class in the left hand column.  "pop" causes the next
+#       |                |        state to be popped from the state stack.
+#       |                |
+#       |                |--- When making the state transition specified on this line, advance to the next
+#       |                     character from the input only if 'n' appears here.
+#       |
+#       |--- Character or named character classes to test for.  If the current character being scanned
+#            matches, peform the actions and go to the state specified on this line.
+#            The input character is tested sequentally, in the order written.  The characters and
+#            character classes tested for do not need to be mutually exclusive.  The first match wins.
+#            
+
+
+
+
+#
+#  start state, scan position is at the beginning of the pattern.
+#
+start:
+   default                 term                                     doPatStart
+    
+
+    
+    
+#
+#  term.  At a position where we can accept the start most items in a pattern.
+#
+term:
+    quoted               n expr-quant                               doLiteralChar
+    rule_char            n expr-quant                               doLiteralChar
+    '['                  n expr-quant                               doScanUnicodeSet
+    '('                  n open-paren                     
+    '.'                  n expr-quant                               doDotAny
+    '^'                  n term                                     doCaret
+    '$'                  n term                                     doDollar
+    '\'                  n backslash
+    '|'                  n  term                                    doOrOperator
+    ')'                  n  pop                                     doCloseParen
+    eof	                   term                                     doPatFinish
+    default                errorDeath                               doRuleError
+    
+
+
+#
+#   expr-quant    We've just finished scanning a term, now look for the optional
+#                 trailing quantifier - *, +, ?, *?,  etc.
+#
+expr-quant:
+    '*'                  n  quant-star                       
+    '+'                  n  quant-plus                              
+    '?'                  n  quant-opt     
+    '{'                  n  interval-open                          doIntervalInit
+    '('                  n  open-paren-quant
+    default                 expr-cont 
+    
+    
+#
+#  expr-cont      Expression, continuation.  At a point where additional terms are
+#                                            allowed, but not required.  No Quantifiers
+#
+expr-cont:
+    '|'                  n  term                                    doOrOperator
+    ')'                  n  pop                                     doCloseParen
+    default                 term                                    
+    
+
+#
+#   open-paren-quant   Special case handling for comments appearing before a quantifier,
+#                        e.g.   x(?#comment )*
+#                      Open parens from expr-quant come here; anything but a (?# comment
+#                      branches into the normal parenthesis sequence as quickly as possible.
+#
+open-paren-quant:
+    '?'                  n  open-paren-quant2                      doSuppressComments
+    default                 open-paren
+    
+open-paren-quant2:
+    '#'                  n  paren-comment   ^expr-quant
+    default                 open-paren-extended
+    
+ 
+#
+#   open-paren    We've got an open paren.  We need to scan further to
+#                 determine what kind of quantifier it is - plain (, (?:, (?>, or whatever.
+#
+open-paren:
+    '?'                  n  open-paren-extended                     doSuppressComments
+    default                 term            ^expr-quant             doOpenCaptureParen
+    
+open-paren-extended:
+    ':'                  n  term            ^expr-quant             doOpenNonCaptureParen  #  (?:
+    '>'                  n  term            ^expr-quant             doOpenAtomicParen      #  (?>
+    '='                  n  term            ^expr-cont              doOpenLookAhead        #  (?=
+    '!'                  n  term            ^expr-cont              doOpenLookAheadNeg     #  (?!
+    '<'                  n  open-paren-lookbehind
+    '#'                  n  paren-comment   ^term
+    'i'                     paren-flag                              doBeginMatchMode
+    'm'                     paren-flag                              doBeginMatchMode
+    's'                     paren-flag                              doBeginMatchMode
+    'w'                     paren-flag                              doBeginMatchMode
+    'x'                     paren-flag                              doBeginMatchMode
+    '-'                     paren-flag                              doBeginMatchMode
+    '('                  n  errorDeath                              doConditionalExpr
+    '{'                  n  errorDeath                              doPerlInline
+    default                 errorDeath                              doBadOpenParenType
+    
+open-paren-lookbehind:
+    '='                  n  term            ^expr-cont              doOpenLookBehind       #  (?<=
+    '!'                  n  term            ^expr-cont              doOpenLookBehindNeg    #  (?<!
+    default                 errorDeath                              doBadOpenParenType
+    
+
+#
+#   paren-comment    We've got a (?# ... )  style comment.  Eat pattern text till we get to the ')'
+#                    TODO:  should parens nest here?  Check what perl does.
+#
+paren-comment:
+    ')'                  n  pop
+    eof		                errorDeath                              doMismatchedParenErr
+    default              n  paren-comment
+
+#
+#  paren-flag    Scanned a (?ismx-ismx  flag setting 
+#                 
+paren-flag:
+    'i'                  n  paren-flag                              doMatchMode
+    'm'                  n  paren-flag                              doMatchMode
+    's'                  n  paren-flag                              doMatchMode
+    'w'                  n  paren-flag                              doMatchMode
+    'x'                  n  paren-flag                              doMatchMode
+    '-'                  n  paren-flag                              doMatchMode
+    ')'                  n  term                                    doSetMatchMode
+    ':'                  n  term              ^expr-quant           doMatchModeParen
+    default                 errorDeath                              doBadModeFlag
+    
+    
+#
+#  quant-star     Scanning a '*' quantifier.  Need to look ahead to decide
+#                 between plain '*', '*?', '*+'
+#
+quant-star:
+     '?'                 n  expr-cont                               doNGStar               #  *?
+     '+'                 n  expr-cont                               doPossessiveStar       #  *+
+     default                expr-cont                               doStar
+
+
+#
+#  quant-plus     Scanning a '+' quantifier.  Need to look ahead to decide
+#                 between plain '+', '+?', '++'
+#
+quant-plus:
+     '?'                 n  expr-cont                               doNGPlus               #  *?
+     '+'                 n  expr-cont                               doPossessivePlus       #  *+
+     default                expr-cont                               doPlus
+
+
+#
+#  quant-opt  Scanning a '?' quantifier.  Need to look ahead to decide
+#                  between plain '?', '??', '?+'
+#
+quant-opt:
+     '?'                 n  expr-cont                               doNGOpt                 #  ??
+     '+'                 n  expr-cont                               doPossessiveOpt         #  ?+
+     default                expr-cont                               doOpt                   #  ?
+
+
+#
+#   Interval         scanning a '{', the opening delimiter for an interval specification
+#                                   {number} or {min, max} or {min, }
+#
+interval-open:
+    white_space          n  interval-open                                  # TODO:  is white space allowed here in non-free mode?
+    digit_char              interval-lower                          
+    default                 errorDeath                              doIntervalError
+    
+interval-lower:
+    digit_char           n  interval-lower                          doIntevalLowerDigit
+    ','			         n  interval-upper
+    '}'                  n  interval-type                           doIntervalSame             # {n}
+    default                 errorDeath                              doIntervalError
+
+interval-upper:
+    digit_char           n  interval-upper                          doIntervalUpperDigit
+    '}'                  n  interval-type
+    default                 errorDeath                              doIntervalError
+    
+interval-type:
+    '?'                  n  expr-cont                               doNGInterval                # {n,m}?
+    '+'                  n  expr-cont                               doPossessiveInterval        # {n,m}+
+    default                 expr-cont                               doInterval                  # {m,n}
+    
+    
+#
+#  backslash        #  Backslash.  Figure out which of the \thingies we have encountered.
+#                                  The low level next-char function will have preprocessed
+#                                  some of them already; those won't come here.
+backslash:
+   'A'                   n  term                                    doBackslashA
+   'B'                   n  term                                    doBackslashB
+   'b'                   n  term                                    doBackslashb
+   'd'                   n  expr-quant                              doBackslashd
+   'D'                   n  expr-quant                              doBackslashD
+   'G'                   n  term                                    doBackslashG
+   'N'                      expr-quant                              doProperty       #   \N{NAME}  named char
+   'p'                      expr-quant                              doProperty       #   \p{Lu}  style property
+   'P'                      expr-quant                              doProperty
+   'Q'                   n  term                                    doEnterQuoteMode
+   'S'                   n  expr-quant                              doBackslashS
+   's'                   n  expr-quant                              doBackslashs
+   'W'                   n  expr-quant                              doBackslashW
+   'w'                   n  expr-quant                              doBackslashw
+   'X'                   n  expr-quant                              doBackslashX
+   'Z'                   n  term                                    doBackslashZ
+   'z'                   n  term                                    doBackslashz
+   digit_char	         n  expr-quant                              doBackRef         #  Will scan multiple digits
+   eof                      errorDeath                              doEscapeError
+   default               n  expr-quant		                    doLiteralChar     #  Escaped literal char.		       
+
+    
+#
+# errorDeath.   This state is specified as the next state whenever a syntax error
+#               in the source rules is detected.  Barring bugs, the state machine will never
+#               actually get here, but will stop because of the action associated with the error.
+#               But, just in case, this state asks the state machine to exit.
+errorDeath:
+    default              n errorDeath                               doExit
+
+

@@ -1,0 +1,491 @@
+﻿// ***************************************************************************
+// *
+// * Copyright (C) 2007 International Business Machines
+// * Corporation and others.  All Rights Reserved.
+// * Tool: com.ibm.icu.dev.tool.cldr.LDML2ICUConverter.java
+// * Source File:<path>/common/main/lv.xml
+// *
+// ***************************************************************************
+/**
+ *  ICU <specials> source: <path>/xml/main/lv.xml
+ */
+lv{
+    AuxExemplarCharacters{"[y q w x]"}
+    Countries{
+        172{"Neatkarīgo Valstu Savienība"}
+        AD{"Andora"}
+        AE{"Apvienotie Arābu Emirāti"}
+        AF{"Afganistāna"}
+        AG{"Antigva un Barbuda"}
+        AI{"Angilja"}
+        AL{"Albānija"}
+        AM{"Armēnija"}
+        AN{"Antiļas"}
+        AO{"Angola"}
+        AQ{"Antarktika"}
+        AR{"Argentīna"}
+        AS{"Amerikāņu Samoa"}
+        AT{"Austrija"}
+        AU{"Austrālija"}
+        AW{"Aruba"}
+        AX{"Olandes salas"}
+        AZ{"Azerbaidžāna"}
+        BA{"Bosnija un Hercegovina"}
+        BB{"Barbadosa"}
+        BD{"Bangladeša"}
+        BE{"Beļģija"}
+        BF{"Burkinafaso"}
+        BG{"Bulgārija"}
+        BH{"Bahreina"}
+        BI{"Burundi"}
+        BJ{"Benina"}
+        BM{"Bermudu salas"}
+        BN{"Bruneja"}
+        BO{"Bolīvija"}
+        BR{"Brazīlija"}
+        BS{"Bahamas"}
+        BT{"Butāna"}
+        BV{"Buvē sala"}
+        BW{"Botsvāna"}
+        BY{"Baltkrievija"}
+        BZ{"Beliza"}
+        CA{"Kanāda"}
+        CC{"Kokosu (Kīlinga) salas"}
+        CD{"Kongo Demokrātiskā Republika"}
+        CF{"Centrālāfrikas Republika"}
+        CG{"Kongo"}
+        CH{"Šveice"}
+        CI{"Kotdivuāra"}
+        CK{"Kuka salas"}
+        CL{"Čīle"}
+        CM{"Kamerūna"}
+        CN{"Ķīna"}
+        CO{"Kolumbija"}
+        CR{"Kostarika"}
+        CS{"Serbija un Melnkalne"}
+        CU{"Kuba"}
+        CV{"Kaboverde"}
+        CX{"Ziemsvētku sala"}
+        CY{"Kipra"}
+        CZ{"Čehija"}
+        DE{"Vācija"}
+        DJ{"Džibutija"}
+        DK{"Dānija"}
+        DM{"Dominika"}
+        DO{"Dominikānas Republika"}
+        DZ{"Alžīrija"}
+        EC{"Ekvadora"}
+        EE{"Igaunija"}
+        EG{"Ēģipte"}
+        EH{"Rietumsahāra"}
+        ER{"Eritreja"}
+        ES{"Spānija"}
+        ET{"Etiopija"}
+        FI{"Somija"}
+        FJ{"Fidži"}
+        FK{"Folklenda salas"}
+        FM{"Mikronēzijas Federatīvās Valstis"}
+        FO{"Farēru salas"}
+        FR{"Francija"}
+        GA{"Gabona"}
+        GB{"Lielbritānija"}
+        GD{"Grenāda"}
+        GE{"Gruzija"}
+        GF{"Franču Gviāna"}
+        GG{"Gērnsija"}
+        GH{"Gana"}
+        GI{"Gibraltārs"}
+        GL{"Grenlande"}
+        GM{"Gambija"}
+        GN{"Gvineja"}
+        GP{"Gvadelupa"}
+        GQ{"Ekvatoriālā Gvineja"}
+        GR{"Grieķija"}
+        GS{"Dienviddžordžija un Dienvidsendviču salas"}
+        GT{"Gvatemala"}
+        GU{"Guama"}
+        GW{"Gvineja-Bisava"}
+        GY{"Gajāna"}
+        HK{"Honkonga, Ķīnas īpašās pārvaldes apgabals"}
+        HM{"Hērda un Makdonalda salas"}
+        HN{"Hondurasa"}
+        HR{"Horvātija"}
+        HT{"Haiti"}
+        HU{"Ungārija"}
+        ID{"Indonēzija"}
+        IE{"Īrija"}
+        IL{"Izraēla"}
+        IM{"Mena"}
+        IN{"Indija"}
+        IO{"Britu Indijas okeāna teritorija"}
+        IQ{"Irāka"}
+        IR{"Irāna"}
+        IS{"Islande"}
+        IT{"Itālija"}
+        JE{"Džērsija"}
+        JM{"Jamaika"}
+        JO{"Jordānija"}
+        JP{"Japāna"}
+        KE{"Kenija"}
+        KG{"Kirgīzija"}
+        KH{"Kambodža"}
+        KI{"Kiribati"}
+        KM{"Komoru salas"}
+        KN{"Sentkitsa un Nevisa"}
+        KP{"Ziemeļkoreja"}
+        KR{"Dienvidkoreja"}
+        KW{"Kuveita"}
+        KY{"Kaimanu salas"}
+        KZ{"Kazahstāna"}
+        LA{"Laosa"}
+        LB{"Libāna"}
+        LC{"Sentlūsija"}
+        LI{"Lihtenšteina"}
+        LK{"Šrilanka"}
+        LR{"Libērija"}
+        LS{"Lesoto"}
+        LT{"Lietuva"}
+        LU{"Luksemburga"}
+        LV{"Latvija"}
+        LY{"Lībija"}
+        MA{"Maroka"}
+        MC{"Monako"}
+        MD{"Moldova"}
+        ME{"Melnkalne"}
+        MG{"Madagaskara"}
+        MH{"Māršala salas"}
+        MK{"Maķedonija"}
+        ML{"Mali"}
+        MM{"Mjanma"}
+        MN{"Mongolija"}
+        MO{"Makao, Ķīnas īpašās pārvaldes apgabals"}
+        MP{"Ziemeļu Marianas"}
+        MQ{"Martinika"}
+        MR{"Mauritānija"}
+        MS{"Montserrata"}
+        MT{"Malta"}
+        MU{"Maurīcija"}
+        MV{"Maldīvija"}
+        MW{"Malāvija"}
+        MX{"Meksika"}
+        MY{"Malaizija"}
+        MZ{"Mozambika"}
+        NA{"Namībija"}
+        NC{"Jaunkaledonija"}
+        NE{"Nigēra"}
+        NF{"Norfolka"}
+        NG{"Nigērija"}
+        NI{"Nikaragva"}
+        NL{"Nīderlande"}
+        NO{"Norvēģija"}
+        NP{"Nepāla"}
+        NR{"Nauru"}
+        NU{"Niue"}
+        NZ{"Jaunzēlande"}
+        OM{"Omāna"}
+        PA{"Panama"}
+        PE{"Peru"}
+        PF{"Franču Polinēzija"}
+        PG{"Papua-Jaungvineja"}
+        PH{"Filipīnas"}
+        PK{"Pakistāna"}
+        PL{"Polija"}
+        PM{"Senpjēra un Mikelona"}
+        PN{"Pitkērna"}
+        PR{"Puertoriko"}
+        PS{"Palestīniešu pašpārvaldes teritorija"}
+        PT{"Portugāle"}
+        PW{"Palau"}
+        PY{"Paragvaja"}
+        QA{"Katara"}
+        RE{"Reinjona"}
+        RO{"Rumānija"}
+        RS{"Serbija"}
+        RU{"Krievija"}
+        RW{"Ruanda"}
+        SA{"Saūda Arābija"}
+        SB{"Zālamana salas"}
+        SC{"Seišeļu salas"}
+        SD{"Sudāna"}
+        SE{"Zviedrija"}
+        SG{"Singapūra"}
+        SH{"Sv. Helēnas sala"}
+        SI{"Slovēnija"}
+        SJ{"Svalbāra un Jana Majena sala"}
+        SK{"Slovākija"}
+        SL{"Sjerraleone"}
+        SM{"Sanmarīno"}
+        SN{"Senegāla"}
+        SO{"Somālija"}
+        SR{"Surinama"}
+        ST{"Santome un Prinsipi"}
+        SV{"Salvadora"}
+        SY{"Sīrija"}
+        SZ{"Svazilenda"}
+        TC{"Tērksas un Kaikosas salas"}
+        TD{"Čada"}
+        TF{"Franču dienvidu teritorijas"}
+        TG{"Togo"}
+        TH{"Taizeme"}
+        TJ{"Tadžikistāna"}
+        TK{"Tokelau"}
+        TL{"Austrumtimora"}
+        TM{"Turkmenistāna"}
+        TN{"Tunisija"}
+        TO{"Tonga"}
+        TR{"Turcija"}
+        TT{"Trinidāda un Tobāgo"}
+        TV{"Tuvalu"}
+        TW{"Taivāna"}
+        TZ{"Tanzānija"}
+        UA{"Ukraina"}
+        UG{"Uganda"}
+        UM{"ASV mazās aizjūras teritorijas"}
+        US{"United States"}
+        UY{"Urugvaja"}
+        UZ{"Uzbekistāna"}
+        VA{"Vatikāns"}
+        VC{"Sentvinsenta un Grenadīnas"}
+        VE{"Venecuēla"}
+        VG{"Britu Virdžīnu salas"}
+        VI{"Amerikāņu Virdžīnu salas"}
+        VN{"Vjetnama"}
+        VU{"Vanuatu"}
+        WF{"Volisa un Futuna"}
+        WS{"Samoa"}
+        YE{"Jemena"}
+        YT{"Majota"}
+        ZA{"Dienvidāfrika"}
+        ZM{"Zambija"}
+        ZW{"Zimbabve"}
+    }
+    Currencies{
+        LVL{
+            "Ls",
+            "LVL",
+        }
+    }
+    ExemplarCharacters{"[a ā b c č d e ē f g ģ h i ī j k ķ l ļ m n ņ o p r s š t u ū v z ž]"}
+    Keys{
+        calendar{"Kalendārs"}
+        currency{"Valūta"}
+    }
+    Languages{
+        ar{"arābu"}
+        bg{"bulgāru"}
+        bn{"bengāļu"}
+        cs{"čehu"}
+        da{"dāņu"}
+        de{"vācu"}
+        el{"grieķu"}
+        en{"angļu"}
+        es{"spāņu"}
+        et{"igauņu"}
+        fi{"somu"}
+        fr{"franču"}
+        ga{"īru"}
+        he{"ivrits"}
+        hi{"hindi"}
+        hr{"horvātu"}
+        hu{"ungāru"}
+        it{"itāliešu"}
+        ja{"japāņu"}
+        ko{"korejiešu"}
+        lt{"lietuviešu"}
+        lv{"latviešu"}
+        mt{"maltiešu"}
+        nl{"holandiešu"}
+        no{"norvēģu"}
+        pl{"poļu"}
+        pt{"portugāļu"}
+        ro{"rumāņu"}
+        ru{"krievu"}
+        sk{"slovāku"}
+        sl{"slovēņu"}
+        sv{"zviedru"}
+        th{"taju"}
+        tr{"turku"}
+        und{"nezināma vai nederīga valoda"}
+        zh{"ķīniešu"}
+        zh_Hans{"ķīniešu vienkāršotā"}
+        zh_Hant{"ķīniešu tradicionālā"}
+    }
+    LocaleScript{
+        "Latn",
+    }
+    NumberElements{
+        ",",
+        " ",
+        ";",
+        "%",
+        "0",
+        "#",
+        "-",
+        "E",
+        "‰",
+        "∞",
+        "NaN",
+        "+",
+    }
+    NumberPatterns{
+        "#,##0.###",
+        "#,##0.00 ¤",
+        "#,##0%",
+        "#E0",
+    }
+    Version{"1.70"}
+    calendar{
+        gregorian{
+            DateTimePatterns{
+                "HH:mm:ss v",
+                "HH:mm:ss z",
+                "HH:mm:ss",
+                "HH:mm",
+                "EEEE, yyyy. 'gada' d. MMMM",
+                "yyyy. 'gada' d. MMMM",
+                "yyyy.d.M",
+                "yy.d.M",
+                "{1} {0}",
+            }
+            dayNames{
+                format{
+                    abbreviated{
+                        "Sv",
+                        "P",
+                        "O",
+                        "T",
+                        "C",
+                        "Pk",
+                        "S",
+                    }
+                    wide{
+                        "svētdiena",
+                        "pirmdiena",
+                        "otrdiena",
+                        "trešdiena",
+                        "ceturtdiena",
+                        "piektdiena",
+                        "sestdiena",
+                    }
+                }
+            }
+            eras{
+                abbreviated{
+                    "pmē",
+                    "mē",
+                }
+                narrow{
+                    "p.m.ē.",
+                    "m.ē.",
+                }
+                wide{
+                    "pirms mūsu ēras",
+                    "mūsu ērā",
+                }
+            }
+            fields{
+                day{
+                    relative{
+                        "-1"{"vakar"}
+                        "-2"{"aizvakar"}
+                        "0"{"šodien"}
+                        "1"{"rīt"}
+                        "2"{"parīt"}
+                        "3"{"aizparīt"}
+                    }
+                }
+            }
+            monthNames{
+                format{
+                    abbreviated{
+                        "Jan",
+                        "Feb",
+                        "Mar",
+                        "Apr",
+                        "Mai",
+                        "Jūn",
+                        "Jūl",
+                        "Aug",
+                        "Sep",
+                        "Okt",
+                        "Nov",
+                        "Dec",
+                    }
+                    wide{
+                        "janvāris",
+                        "februāris",
+                        "marts",
+                        "aprīlis",
+                        "maijs",
+                        "jūnijs",
+                        "jūlijs",
+                        "augusts",
+                        "septembris",
+                        "oktobris",
+                        "novembris",
+                        "decembris",
+                    }
+                }
+            }
+            quarters{
+                format{
+                    abbreviated{
+                        "C1",
+                        "C2",
+                        "C3",
+                        "C4",
+                    }
+                }
+            }
+        }
+    }
+    delimiters{
+        quotationEnd{"”"}
+        quotationStart{"“"}
+    }
+    measurementSystemNames{
+        US{"britu"}
+        metric{"metriskā"}
+    }
+    zoneStrings{
+        "America:Chicago"{
+            ec{"Čikāga"}
+        }
+        "America:Denver"{
+            ec{"Denvera"}
+        }
+        "America:Indianapolis"{
+            ec{"Indianapolisa"}
+        }
+        "America:Los_Angeles"{
+            ec{"Losandželosa"}
+        }
+        "America:New_York"{
+            ec{"Ņujorka"}
+        }
+        "America:Phoenix"{
+            ec{"Fīniksa"}
+        }
+        "America:Rio_Branco"{
+            ec{"Riobranko"}
+        }
+        "America:Sao_Paulo"{
+            ec{"Sanpaulu"}
+        }
+        "Asia:Almaty"{
+            ec{"Almati"}
+        }
+        "Asia:Anadyr"{
+            ec{"Anadira"}
+        }
+        "Australia:Adelaide"{
+            ec{"Adelaida"}
+        }
+        "Etc:Unknown"{
+            ec{"Nezināma"}
+        }
+        "Pacific:Auckland"{
+            ec{"Oklenda"}
+        }
+    }
+}

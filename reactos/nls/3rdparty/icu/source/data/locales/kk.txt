@@ -1,0 +1,120 @@
+﻿// ***************************************************************************
+// *
+// * Copyright (C) 2007 International Business Machines
+// * Corporation and others.  All Rights Reserved.
+// * Tool: com.ibm.icu.dev.tool.cldr.LDML2ICUConverter.java
+// * Source File:<path>/common/main/kk.xml
+// *
+// ***************************************************************************
+/**
+ *  ICU <specials> source: <path>/xml/main/kk.xml
+ */
+kk{
+    AuxExemplarCharacters{"[һ]"}
+    Countries{
+        KZ{"Қазақстан"}
+    }
+    Currencies{
+        KZT{
+            "тңг.",
+            "KZT",
+        }
+    }
+    ExemplarCharacters{"[а ә б-е ё ж-й і к қ л-н ң о-у ұ ү ф-я]"}
+    Languages{
+        kk{"Қазақ"}
+    }
+    LocaleScript{
+        "Cyrl",
+    }
+    NumberElements{
+        ",",
+        " ",
+        ";",
+        "%",
+        "0",
+        "#",
+        "-",
+        "E",
+        "‰",
+        "∞",
+        "NaN",
+        "+",
+    }
+    NumberPatterns{
+        "#,##0.###",
+        "#,##0.00 ¤;-¤ #,##0.00",
+        "#,##0%",
+        "#E0",
+    }
+    Version{"1.50"}
+    calendar{
+        gregorian{
+            DateTimePatterns{
+                "HH:mm:ss v",
+                "HH:mm:ss z",
+                "HH:mm:ss",
+                "HH:mm",
+                "EEEE, d MMMM yyyy 'ж'.",
+                "d MMMM yyyy 'ж'.",
+                "dd.MM.yyyy",
+                "dd.MM.yy",
+                "{1} {0}",
+            }
+            dayNames{
+                format{
+                    abbreviated{
+                        "жс.",
+                        "дс.",
+                        "сс.",
+                        "ср.",
+                        "бс.",
+                        "жм.",
+                        "сһ.",
+                    }
+                    wide{
+                        "жексені",
+                        "дуйсенбі",
+                        "сейсенбі",
+                        "сәренбі",
+                        "бейсенбі",
+                        "жұма",
+                        "сенбі",
+                    }
+                }
+            }
+            monthNames{
+                format{
+                    abbreviated{
+                        "қаң.",
+                        "ақп.",
+                        "нау.",
+                        "сәу.",
+                        "мам.",
+                        "мау.",
+                        "шіл.",
+                        "там.",
+                        "қыр.",
+                        "қаз.",
+                        "қар.",
+                        "желт.",
+                    }
+                    wide{
+                        "қаңтар",
+                        "ақпан",
+                        "наурыз",
+                        "сәуір",
+                        "мамыр",
+                        "маусым",
+                        "шілде",
+                        "тамыз",
+                        "қыркүйек",
+                        "қазан",
+                        "қараша",
+                        "желтоқсан",
+                    }
+                }
+            }
+        }
+    }
+}

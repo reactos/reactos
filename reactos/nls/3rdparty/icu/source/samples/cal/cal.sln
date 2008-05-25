@@ -1,0 +1,19 @@
+Microsoft Visual Studio Solution File, Format Version 9.00
+# Visual Studio 2005
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "cal", "cal.vcproj", "{F7659D77-09CF-4FE9-ACEE-927287AA9509}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{F7659D77-09CF-4FE9-ACEE-927287AA9509}.Debug|Win32.ActiveCfg = Debug|Win32
+		{F7659D77-09CF-4FE9-ACEE-927287AA9509}.Debug|Win32.Build.0 = Debug|Win32
+		{F7659D77-09CF-4FE9-ACEE-927287AA9509}.Release|Win32.ActiveCfg = Release|Win32
+		{F7659D77-09CF-4FE9-ACEE-927287AA9509}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

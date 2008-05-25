@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+ Copyright (c) 2002-2007 International Business Machines Corporation and others. All rights reserved.
+-->
+<!DOCTYPE ldml SYSTEM "http://www.unicode.org/cldr/dtd/1.5/ldml.dtd"
+[
+   <!ENTITY % icu SYSTEM " http://www.unicode.org/cldr/dtd/1.5/ldmlICU.dtd">
+   %icu;
+]
+>
+<ldml>
+	<identity>
+		<version number="$Revision: 1.23 $"/>
+		<generation date="$Date: 2007/05/25 01:05:54 $"/>
+		<language type="ko"/> 
+	</identity>
+	<characters>
+		<special xmlns:icu="http://www.icu-project.org/">
+			<icu:scripts>
+				<icu:script type="1">Hang</icu:script>
+				<icu:script type="2">Hani</icu:script>
+			</icu:scripts>
+		</special>
+	</characters>
+    <dates>
+        <calendars>
+            <calendar type="taiwan">
+                <eras>
+                    <eraAbbr>
+                        <era type="0">중화민국전</era>
+                        <era type="1">중화민국</era>
+                    </eraAbbr>
+                </eras>
+                <dateFormats>
+                    <dateFormatLength type="full">
+                        <dateFormat>
+                            <pattern>G y'년' M'월' d'일'</pattern>
+                        </dateFormat>
+                    </dateFormatLength>
+                    <dateFormatLength type="long">
+                        <dateFormat>
+                            <pattern>G y'년' M'월' d'일'</pattern>
+                        </dateFormat>
+                    </dateFormatLength>
+                    <dateFormatLength type="medium">
+                        <dateFormat>
+                            <pattern>G y. M. d</pattern>
+                        </dateFormat>
+                    </dateFormatLength>
+                    <dateFormatLength type="short">
+                        <dateFormat>
+                            <pattern>G y. M. d</pattern>
+                        </dateFormat>
+                    </dateFormatLength>
+                </dateFormats>
+            </calendar>
+        </calendars>
+    </dates>
+</ldml>
+

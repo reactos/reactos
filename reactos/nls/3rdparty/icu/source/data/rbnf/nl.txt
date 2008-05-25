@@ -1,0 +1,35 @@
+// ***************************************************************************
+// *
+// *   Copyright (C) 2004, International Business Machines
+// *   Corporation and others.  All Rights Reserved.
+// *
+// ***************************************************************************
+// 
+
+nl {
+    //------------------------------------------------------------
+    // Rule Based Number Format Support
+    //------------------------------------------------------------
+
+    SpelloutRules {
+        "-x: min >>;\n"
+        "x.x: << komma >>;\n"
+        "nul; een; twee; drie; vier; vijf; zes; zeven; acht; negen;\n"
+        "tien; elf; twaalf; dertien; veertien; vijftien; zestien;\n"
+        "zeventien; achtien; negentien;\n"
+        "20: [>> en ]twintig;\n"
+        "30: [>> en ]dertig;\n"
+        "40: [>> en ]veertig;\n"
+        "50: [>> en ]vijftig;\n"
+        "60: [>> en ]zestig;\n"
+        "70: [>> en ]zeventig;\n"
+        "80: [>> en ]tachtig;\n"
+        "90: [>> en ]negentig;\n"
+        "100: << honderd[ >>];\n"
+        "1000: << duizend[ >>];\n"
+        "1,000,000: << miljoen[ >>];\n"
+        "1,000,000,000: << miljard[ >>];\n"
+        "1,000,000,000,000: << biljoen[ >>];\n"
+        "1,000,000,000,000,000: =#,##0="
+    }
+}

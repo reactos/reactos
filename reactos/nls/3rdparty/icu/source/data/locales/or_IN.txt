@@ -1,0 +1,21 @@
+﻿// ***************************************************************************
+// *
+// * Copyright (C) 2007 International Business Machines
+// * Corporation and others.  All Rights Reserved.
+// * Tool: com.ibm.icu.dev.tool.cldr.LDML2ICUConverter.java
+// * Source File:<path>/common/main/or_IN.xml
+// *
+// ***************************************************************************
+or_IN{
+    Version{"1.34"}
+    calendar{
+        gregorian{
+            weekend:intvector{
+                1,
+                0,
+                1,
+                86400000,
+            }
+        }
+    }
+}

@@ -1,0 +1,536 @@
+﻿// ***************************************************************************
+// *
+// * Copyright (C) 2007 International Business Machines
+// * Corporation and others.  All Rights Reserved.
+// * Tool: com.ibm.icu.dev.tool.cldr.LDML2ICUConverter.java
+// * Source File:<path>/common/main/ca.xml
+// *
+// ***************************************************************************
+/**
+ *  ICU <specials> source: <path>/xml/main/ca.xml
+ */
+ca{
+    Countries{
+        AD{"Andorra"}
+        AE{"Unió dels Emirats Àrabs"}
+        AF{"Afganistan"}
+        AI{"Anguilla"}
+        AL{"Albània"}
+        AM{"Armènia"}
+        AN{"Antilles Holandeses"}
+        AO{"Angola"}
+        AR{"Argentina"}
+        AT{"Àustria"}
+        AU{"Austràlia"}
+        AW{"Aruba"}
+        AZ{"Azerbaidjan"}
+        BA{"Bòsnia i Hercegovina"}
+        BB{"Barbados"}
+        BD{"Bangla Desh"}
+        BE{"Bèlgica"}
+        BF{"Burkina Faso"}
+        BG{"Bulgària"}
+        BH{"Bahrain"}
+        BI{"Burundi"}
+        BJ{"Benin"}
+        BM{"Bermudes"}
+        BN{"Brunei"}
+        BO{"Bolívia"}
+        BR{"Brasil"}
+        BS{"Bahames"}
+        BT{"Bhutan"}
+        BW{"Botswana"}
+        BY{"Bielorússia"}
+        BZ{"Belize"}
+        CA{"Canadà"}
+        CF{"República Centrafricana"}
+        CG{"Congo"}
+        CH{"Switzerland"}
+        CI{"Costa d’Ivori"}
+        CL{"Xile"}
+        CM{"Camerun"}
+        CN{"Xina"}
+        CO{"Colòmbia"}
+        CR{"Costa Rica"}
+        CS{"Sèrbia i Montenegro"}
+        CU{"Cuba"}
+        CV{"Cap Verd"}
+        CY{"Xipre"}
+        CZ{"República Txeca"}
+        DE{"Alemanya"}
+        DJ{"Djibouti"}
+        DK{"Dinamarca"}
+        DM{"Dominica"}
+        DO{"República Dominicana"}
+        DZ{"Algèria"}
+        EC{"Equador"}
+        EE{"Estònia"}
+        EG{"Egipte"}
+        EH{"Sàhara Occidental"}
+        ER{"Eritrea"}
+        ES{"Espanya"}
+        ET{"Etiòpia"}
+        FI{"Finlàndia"}
+        FJ{"Fiji"}
+        FM{"Micronèsia"}
+        FR{"França"}
+        GA{"Gabon"}
+        GB{"Regne Unit"}
+        GE{"Geòrgia"}
+        GF{"Guaiana Francesa"}
+        GH{"Ghana"}
+        GM{"Gàmbia"}
+        GN{"Guinea"}
+        GP{"Guadeloupe"}
+        GQ{"Guinea Equatorial"}
+        GR{"Grècia"}
+        GT{"Guatemala"}
+        GW{"Guinea Bissau"}
+        GY{"Guyana"}
+        HK{"Hong Kong"}
+        HN{"Hondures"}
+        HR{"Croàcia"}
+        HT{"Haití"}
+        HU{"Hongria"}
+        ID{"Indonèsia"}
+        IE{"Irlanda"}
+        IL{"Israel"}
+        IN{"Índia"}
+        IQ{"Iraq"}
+        IR{"Iran"}
+        IS{"Islàndia"}
+        IT{"Itàlia"}
+        JM{"Jamaica"}
+        JO{"Jordània"}
+        JP{"Japó"}
+        KE{"Kenya"}
+        KG{"Kirgizistan"}
+        KH{"Cambodja"}
+        KI{"Kiribati"}
+        KM{"Comores"}
+        KP{"Corea del Nord"}
+        KR{"Corea del Sud"}
+        KW{"Kuwait"}
+        KZ{"Kazakhstan"}
+        LA{"Laos"}
+        LB{"Líban"}
+        LI{"Liechtenstein"}
+        LK{"Sri Lanka"}
+        LR{"Libèria"}
+        LS{"Lesotho"}
+        LT{"Lituània"}
+        LU{"Luxemburg"}
+        LV{"Letònia"}
+        LY{"Líbia"}
+        MA{"Marroc"}
+        MC{"Mònaco"}
+        MD{"Moldàvia"}
+        MG{"Madagascar"}
+        MK{"Macedònia"}
+        ML{"Mali"}
+        MM{"Myanmar"}
+        MN{"Mongòlia"}
+        MQ{"Martinica"}
+        MR{"Mauritània"}
+        MS{"Montserrat"}
+        MT{"Malta"}
+        MU{"Maurici"}
+        MX{"Mèxic"}
+        MY{"Malàisia"}
+        MZ{"Moçambic"}
+        NA{"Namíbia"}
+        NC{"Nova Caledònia"}
+        NE{"Níger"}
+        NG{"Nigèria"}
+        NI{"Nicaragua"}
+        NL{"Països Baixos"}
+        NO{"Noruega"}
+        NP{"Nepal"}
+        NU{"Niue"}
+        NZ{"Nova Zelanda"}
+        OM{"Oman"}
+        PA{"Panamà"}
+        PE{"Perú"}
+        PF{"Polinèsia Francesa"}
+        PG{"Papua Nova Guinea"}
+        PH{"Filipines"}
+        PK{"Pakistan"}
+        PL{"Polònia"}
+        PR{"Puerto Rico"}
+        PT{"Portugal"}
+        PY{"Paraguai"}
+        QA{"Qatar"}
+        RO{"Romania"}
+        RU{"Rússia"}
+        RW{"Rwanda"}
+        SA{"Aràbia Saudí"}
+        SC{"Seychelles"}
+        SD{"Sudan"}
+        SE{"Suècia"}
+        SG{"Singapur"}
+        SI{"Eslovènia"}
+        SK{"Eslovàquia"}
+        SL{"Sierra Leone"}
+        SN{"Senegal"}
+        SO{"Somàlia"}
+        SR{"Surinam"}
+        SV{"El Salvador"}
+        SY{"Síria"}
+        SZ{"Swazilàndia"}
+        TD{"Txad"}
+        TF{"Territoris Meridionals Francesos"}
+        TG{"Togo"}
+        TH{"Tailàndia"}
+        TJ{"Tadjikistan"}
+        TK{"Tokelau"}
+        TL{"Timor"}
+        TM{"Turkmenistan"}
+        TN{"Tunísia"}
+        TO{"Tonga"}
+        TR{"Turquia"}
+        TT{"Trinitat i Tobago"}
+        TW{"Taiwan"}
+        TZ{"Tanzània"}
+        UA{"Ucraïna"}
+        UG{"Uganda"}
+        US{"Estats Units"}
+        UY{"Uruguai"}
+        UZ{"Uzbekistan"}
+        VA{"Vaticà"}
+        VE{"Veneçuela"}
+        VG{"Illes Verges Britàniques"}
+        VI{"Illes Verges dels USA"}
+        VN{"Vietnam"}
+        VU{"Vanuatu"}
+        YE{"Iemen"}
+        YT{"Mayotte"}
+        ZA{"Sud-àfrica"}
+        ZM{"Zàmbia"}
+        ZW{"Zimbabwe"}
+    }
+    Currencies{
+        ADP{
+            "ADP",
+            "Pesseta d'Andorra",
+        }
+        ARS{
+            "ARS",
+            "Peso argentí",
+        }
+        BRL{
+            "R$",
+            "Real brasiler",
+        }
+        CNY{
+            "CNY",
+            "Iuan renmimbi xinès",
+        }
+        ESP{
+            "₧",
+            "ESP",
+            {
+                /**
+                 * Duplicated from NumberPatterns resource
+                 */
+                "#,##0.00 ¤",
+                ",",
+                ".",
+            }
+        }
+        EUR{
+            "€",
+            "Euro",
+        }
+        GBP{
+            "UK£",
+            "Lliura esterlina britànica",
+        }
+        INR{
+            "=0#Rs.|1#Re.|1<Rs." /** (choice)  */,
+            "Rupia índia",
+        }
+        JPY{
+            "JP¥",
+            "Ien japonès",
+        }
+        RUB{
+            "RUB",
+            "Ruble rus",
+        }
+        USD{
+            "US$",
+            "Dòlar EUA",
+        }
+    }
+    ExemplarCharacters{"[a à b c ç d e é è f-i í ï j-n ñ o ó ò p-u ú ü v-z]"}
+    Languages{
+        aa{"àfar"}
+        ab{"abkhaz"}
+        af{"afrikaans"}
+        am{"amhàric"}
+        ar{"àrab"}
+        as{"assamès"}
+        ay{"aimara"}
+        az{"àzeri"}
+        ba{"baixkir"}
+        be{"bielorús"}
+        bg{"búlgar"}
+        bh{"bihari"}
+        bi{"bislama"}
+        bn{"bengalí"}
+        bo{"tibetà"}
+        br{"bretó"}
+        ca{"català"}
+        co{"cors"}
+        cs{"txec"}
+        cy{"gal·lès"}
+        da{"danès"}
+        de{"alemany"}
+        dz{"bhutanès"}
+        el{"grec"}
+        en{"anglès"}
+        eo{"esperanto"}
+        es{"espanyol"}
+        et{"estonià"}
+        eu{"basc"}
+        fa{"persa"}
+        fi{"finès"}
+        fj{"fijià"}
+        fo{"feroès"}
+        fr{"francès"}
+        fy{"frisó"}
+        ga{"irlandès"}
+        gd{"escocès"}
+        gl{"gallec"}
+        gn{"guaraní"}
+        gu{"gujarati"}
+        ha{"hausa"}
+        he{"hebreu"}
+        hi{"hindi"}
+        hr{"croat"}
+        hu{"hongarès"}
+        hy{"armeni"}
+        ia{"interlingua"}
+        id{"indonesi"}
+        ie{"interlingue"}
+        ik{"inupiak"}
+        is{"islandès"}
+        it{"italià"}
+        iu{"inuktitut"}
+        ja{"japonès"}
+        jv{"javanès"}
+        ka{"georgià"}
+        kk{"kazakh"}
+        kl{"greenlandès"}
+        km{"cambodjà"}
+        kn{"kannada"}
+        ko{"coreà"}
+        ks{"caixmiri"}
+        ku{"kurd"}
+        ky{"kirguís"}
+        la{"llatí"}
+        ln{"lingala"}
+        lo{"laosià"}
+        lt{"lituà"}
+        lv{"letó"}
+        mg{"malgaix"}
+        mi{"maori"}
+        mk{"macedoni"}
+        ml{"malaialam"}
+        mn{"mongol"}
+        mo{"moldau"}
+        mr{"marathi"}
+        ms{"malai"}
+        mt{"maltès"}
+        my{"birmà"}
+        na{"nauruà"}
+        ne{"nepalès"}
+        nl{"neerlandès"}
+        no{"noruec"}
+        oc{"occità"}
+        om{"oromo (afan)"}
+        or{"oriya"}
+        pa{"panjabi"}
+        pl{"polonès"}
+        ps{"paixto"}
+        pt{"portuguès"}
+        qu{"quètxua"}
+        rm{"retoromànic"}
+        rn{"kirundi"}
+        ro{"romanès"}
+        ru{"rus"}
+        rw{"kinyarwanda"}
+        sa{"sànscrit"}
+        sd{"sindhi"}
+        sg{"sango"}
+        sh{"serbo-croat"}
+        si{"sinhalès"}
+        sk{"eslovac"}
+        sl{"eslovè"}
+        sm{"samoà"}
+        sn{"shona"}
+        so{"somali"}
+        sq{"albanès"}
+        sr{"serbi"}
+        ss{"siswati"}
+        st{"sotho"}
+        su{"sundanès"}
+        sv{"suec"}
+        sw{"swahili"}
+        ta{"tàmil"}
+        te{"telugu"}
+        tg{"tadjik"}
+        th{"thai"}
+        ti{"tigrinya"}
+        tk{"turcman"}
+        tl{"tagàlog"}
+        tn{"tswana"}
+        to{"tonga"}
+        tr{"turc"}
+        ts{"tsonga"}
+        tt{"tàtar"}
+        tw{"twi"}
+        ug{"uigur"}
+        uk{"ucraïnès"}
+        ur{"urdú"}
+        uz{"uzbek"}
+        vi{"vietnamita"}
+        vo{"volapuk"}
+        wo{"wòlof"}
+        xh{"xosa"}
+        yi{"jiddish"}
+        yo{"ioruba"}
+        za{"zhuang"}
+        zh{"xinés"}
+        zu{"zulu"}
+    }
+    LocaleScript{
+        "Latn",
+    }
+    NumberElements{
+        ",",
+        ".",
+        ";",
+        "%",
+        "0",
+        "#",
+        "-",
+        "E",
+        "‰",
+        "∞",
+        "NaN",
+        "+",
+    }
+    NumberPatterns{
+        "#,##0.###",
+        "#,##0.00 ¤",
+        "#,##0%",
+        "#E0",
+    }
+    Scripts{
+        Latn{"Llatí"}
+    }
+    Version{"1.78"}
+    calendar{
+        gregorian{
+            DateTimePatterns{
+                "H:mm:ss v",
+                "H:mm:ss z",
+                "H:mm:ss",
+                "H:mm",
+                "EEEE d 'de' MMMM 'de' yyyy",
+                "d 'de' MMMM 'de' yyyy",
+                "dd/MM/yyyy",
+                "dd/MM/yy",
+                "{1} {0}",
+            }
+            dayNames{
+                format{
+                    abbreviated{
+                        "dg.",
+                        "dl.",
+                        "dt.",
+                        "dc.",
+                        "dj.",
+                        "dv.",
+                        "ds.",
+                    }
+                    wide{
+                        "diumenge",
+                        "dilluns",
+                        "dimarts",
+                        "dimecres",
+                        "dijous",
+                        "divendres",
+                        "dissabte",
+                    }
+                }
+            }
+            eras{
+                abbreviated{
+                    "aC",
+                    "dC",
+                }
+            }
+            monthNames{
+                format{
+                    abbreviated{
+                        "gen.",
+                        "febr.",
+                        "març",
+                        "abr.",
+                        "maig",
+                        "juny",
+                        "jul.",
+                        "ag.",
+                        "set.",
+                        "oct.",
+                        "nov.",
+                        "des.",
+                    }
+                    wide{
+                        "gener",
+                        "febrer",
+                        "març",
+                        "abril",
+                        "maig",
+                        "juny",
+                        "juliol",
+                        "agost",
+                        "setembre",
+                        "octubre",
+                        "novembre",
+                        "desembre",
+                    }
+                }
+            }
+            quarters{
+                format{
+                    abbreviated{
+                        "1T",
+                        "2T",
+                        "3T",
+                        "4T",
+                    }
+                    wide{
+                        "1r trimestre",
+                        "2n trimestre",
+                        "3r trimestre",
+                        "4t trimestre",
+                    }
+                }
+            }
+        }
+    }
+    delimiters{
+        alternateQuotationEnd{"”"}
+        alternateQuotationStart{"“"}
+        quotationEnd{"’"}
+        quotationStart{"‘"}
+    }
+    zoneStrings{
+        "Pacific:Galapagos"{
+            ec{"Galápagos"}
+        }
+    }
+}

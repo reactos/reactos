@@ -1,0 +1,39 @@
+Source: icu
+Section: libs
+Priority: optional
+Maintainer: Jay Berkenbilt <qjb@debian.org>
+Standards-Version: 3.7.2
+Build-Depends: cdbs, debhelper (>= 4.1.0), doxygen
+
+Package: libicu36
+Section: libs
+Architecture: any
+Depends: ${shlibs:Depends}
+Replaces: icu, icu-locales
+Conflicts: icu, icu-locales
+Description: International Components for Unicode (libraries)
+ ICU is a C++ and C library that provides robust and full-featured
+ Unicode and locale support.  This package contains the runtime
+ libraries for ICU.
+
+Package: libicu36-dev
+Section: libdevel
+Architecture: any
+Depends: libicu36 (= ${Source-Version}), libc6-dev | libc-dev
+Provides: libicu-dev, libicu34-dev
+Replaces: libicu21-dev, libicu28-dev, icu-data, icu-i18ndata, libicu34-dev
+Conflicts: libicu21-dev, libicu28-dev, libicu-dev, icu-data, icu-i18ndata, libicu34-dev
+Suggests: icu-doc
+Description: International Components for Unicode (development files)
+ ICU is a C++ and C library that provides robust and full-featured
+ Unicode and locale support.  This package contains the development
+ files for ICU along with programs used to manipulate data files found
+ in the ICU sources.
+
+Package: icu-doc
+Section: doc
+Architecture: all
+Description: API documentation for ICU classes and functions
+ ICU is a C++ and C library that provides robust and full-featured
+ Unicode and locale support.  This package contains HTML files
+ documenting the ICU APIs.

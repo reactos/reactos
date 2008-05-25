@@ -1,0 +1,79 @@
+// ***************************************************************************
+// *
+// *   Copyright (C) 2004, International Business Machines
+// *   Corporation and others.  All Rights Reserved.
+// *
+// ***************************************************************************
+// 
+
+fr {
+    
+    //------------------------------------------------------------
+    // Rule Based Number Format Support
+    //------------------------------------------------------------
+
+    // * Spellout rules for French.  French adds some interesting quirks of its
+    // * own: 1) The word "et" is interposed between the tens and ones digits,
+    // * but only if the ones digit if 1: 20 is "vingt," and 2 is "vingt-deux,"
+    // * but 21 is "vingt-et-un."  2)  There are no words for 70, 80, or 90.
+    // * "quatre-vingts" ("four twenties") is used for 80, and values proceed
+    // * by score from 60 to 99 (e.g., 73 is "soixante-treize" ["sixty-thirteen"]).
+    // * Numbers from 1,100 to 1,199 are rendered as hundreds rather than
+    // * thousands: 1,100 is "onze cents" ("eleven hundred"), rather than
+    // * "mille cent" ("one thousand one hundred")
+
+    SpelloutRules {
+        // the main rule set
+        "%main:\n"
+            "-x: moins >>;\n"
+            "x.x: << virgule >>;\n"
+               // words for numbers from 0 to 10
+            "z\u00e9ro; un; deux; trois; quatre; cinq; six; sept; huit; neuf;\n"
+            "dix; onze; douze; treize; quatorze; quinze; seize;\n"
+            "    dix-sept; dix-huit; dix-neuf;\n"
+               // ords for the multiples of 10: %%alt-ones inserts "et"
+               // when needed
+            "20: vingt[->%%alt-ones>];\n"
+            "30: trente[->%%alt-ones>];\n"
+            "40: quarante[->%%alt-ones>];\n"
+            "50: cinquante[->%%alt-ones>];\n"
+               // rule for 60.  The /20 causes this rule's multiplier to be
+               // 20 rather than 10, allowinhg us to recurse for all values
+               // from 60 to 79...
+            "60/20: soixante[->%%alt-ones>];\n"
+               // ...except for 71, which must be special-cased
+            "71: soixante et onze;\n"
+               // at 72, we have to repeat the rule for 60 to get us to 79
+            "72/20: soixante->%%alt-ones>;\n"
+               // at 80, we state a new rule with the phrase for 80.  Since
+               // it changes form when there's a ones digit, we need a second
+               // rule at 81.  This rule also includes "/20," allowing it to
+               // be used correctly for all values up to 99
+            "80: quatre-vingts; 81/20: quatre-vingt->>;\n"
+               // "cent" becomes plural when preceded by a multiplier, and
+               // the multiplier is omitted from the singular form
+            "100: cent[ >>];\n"
+            "200: << cents[ >>];\n"
+            "1000: mille[ >>];\n"
+               // values from 1,100 to 1,199 are rendered as "onze cents..."
+               // instead of "mille cent..."  The > after "1000" decreases
+               // the rule's exponent, causing its multiplier to be 100 instead
+               // of 1,000.  This prevents us from getting "onze cents cent
+               // vingt-deux" ("eleven hundred one hundred twenty-two").
+            "1100>: onze cents[ >>];\n"
+               // at 1,200, we go back to formating in thousands, so we
+               // repeat the rule for 1,000
+            "1200: mille >>;\n"
+               // at 2,000, the multiplier is added
+            "2000: << mille[ >>];\n"
+            "1,000,000: << million[ >>];\n"
+            "1,000,000,000: << milliard[ >>];\n"
+            "1,000,000,000,000: << billion[ >>];\n"
+            "1,000,000,000,000,000: =#,##0=;\n"
+        // %%alt-ones is used to insert "et" when the ones digit is 1
+        "%%alt-ones:\n"
+            "; et-un; =%main=;\n" 
+        "%%lenient-parse:\n"
+            "&\u0000 << ' ' << ',' << '-';\n"
+    }
+}

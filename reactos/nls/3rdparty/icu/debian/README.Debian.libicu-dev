@@ -1,0 +1,11 @@
+Copyright (C) 2000-2006, International Business Machines
+Corporation and others.  All Rights Reserved.
+
+libicu-dev for Debian
+---------------------
+
+The documentation in /usr/share/doc/libicu-dev/docs/ provides a high-level
+overview of ICU. Detailed API documentation is provided by the icu-docs
+package.
+
+ -- Yves Arrouye <yves@debian.org>, Wed, 11 Oct 2000 19:37:57 -0700

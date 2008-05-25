@@ -1,0 +1,116 @@
+﻿// ***************************************************************************
+// *
+// * Copyright (C) 2007 International Business Machines
+// * Corporation and others.  All Rights Reserved.
+// * Tool: com.ibm.icu.dev.tool.cldr.LDML2ICUConverter.java
+// * Source File:<path>/common/main/gl.xml
+// *
+// ***************************************************************************
+/**
+ *  ICU <specials> source: <path>/xml/main/gl.xml
+ */
+gl{
+    Countries{
+        ES{"España"}
+    }
+    Currencies{
+        ESP{
+            "₧",
+            "ESP",
+            {
+                /**
+                 * Duplicated from NumberPatterns resource
+                 */
+                "#,##0.00 ¤",
+                ",",
+                ".",
+            }
+        }
+    }
+    ExemplarCharacters{"[a á b-e é f-i í j-n ñ o ó p-u ú ü v-z]"}
+    Languages{
+        gl{"galego"}
+    }
+    LocaleScript{
+        "Latn",
+    }
+    NumberElements{
+        ",",
+        ".",
+        ";",
+        "%",
+        "0",
+        "#",
+        "-",
+        "E",
+        "‰",
+        "∞",
+        "NaN",
+        "+",
+    }
+    NumberPatterns{
+        "#,##0.###",
+        "#,##0.00 ¤",
+        "#,##0%",
+        "#E0",
+    }
+    Version{"1.52"}
+    calendar{
+        gregorian{
+            dayNames{
+                format{
+                    abbreviated{
+                        "Dom",
+                        "Lun",
+                        "Mar",
+                        "Mér",
+                        "Xov",
+                        "Ven",
+                        "Sáb",
+                    }
+                    wide{
+                        "Domingo",
+                        "Luns",
+                        "Martes",
+                        "Mércores",
+                        "Xoves",
+                        "Venres",
+                        "Sábado",
+                    }
+                }
+            }
+            monthNames{
+                format{
+                    abbreviated{
+                        "Xan",
+                        "Feb",
+                        "Mar",
+                        "Abr",
+                        "Mai",
+                        "Xuñ",
+                        "Xul",
+                        "Ago",
+                        "Set",
+                        "Out",
+                        "Nov",
+                        "Dec",
+                    }
+                    wide{
+                        "Xaneiro",
+                        "Febreiro",
+                        "Marzo",
+                        "Abril",
+                        "Maio",
+                        "Xuño",
+                        "Xullo",
+                        "Agosto",
+                        "Setembro",
+                        "Outubro",
+                        "Novembro",
+                        "Decembro",
+                    }
+                }
+            }
+        }
+    }
+}

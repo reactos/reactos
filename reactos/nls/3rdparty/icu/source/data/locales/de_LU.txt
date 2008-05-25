@@ -1,0 +1,33 @@
+﻿// ***************************************************************************
+// *
+// * Copyright (C) 2007 International Business Machines
+// * Corporation and others.  All Rights Reserved.
+// * Tool: com.ibm.icu.dev.tool.cldr.LDML2ICUConverter.java
+// * Source File:<path>/common/main/de_LU.xml
+// *
+// ***************************************************************************
+de_LU{
+    Currencies{
+        LUF{
+            "F",
+            "Luxemburgischer Franc",
+            {
+                /**
+                 * Duplicated from NumberPatterns resource
+                 */
+                "#,##0.00 ¤",
+                ".",
+                ",",
+            }
+        }
+    }
+    Version{"1.49"}
+    calendar{
+        gregorian{
+            DateTimeElements:intvector{
+                2,
+                4,
+            }
+        }
+    }
+}

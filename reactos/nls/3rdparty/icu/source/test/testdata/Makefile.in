@@ -1,0 +1,220 @@
+#******************************************************************************
+#
+#   Copyright (C) 1998-2007, International Business Machines
+#   Corporation and others.  All Rights Reserved.
+#
+#******************************************************************************
+## Top-level Makefile.in for ICU
+## Stephen F. Booth
+
+## Source directory information
+srcdir = @srcdir@
+top_srcdir = @top_srcdir@
+
+top_builddir = ../..
+
+include $(top_builddir)/icudefs.mk
+
+## Build directory information
+subdir = test/testdata
+
+## Files to remove for 'make clean'
+CLEANFILES = *~ 
+
+SUBDIRS = 
+
+## List of phony targets
+.PHONY : all all-local all-recursive install install-local	\
+install-recursive clean clean-local clean-recursive distclean	\
+distclean-local distclean-recursive doc dist dist-local dist-recursive	\
+check check-local check-recursive build-dir java-output
+
+.NOTPARALLEL: build-dir
+
+## Clear suffix list
+.SUFFIXES :
+
+## List of standard targets
+all: all-local
+install: install-local
+clean: clean-local
+distclean : distclean-local
+dist: dist-local
+check: all check-local
+
+all-local: build-dir build-testdata testdata packagetest
+
+install-local: 
+
+dist-local:
+
+clean-local:
+	test -z "$(CLEANFILES)" || $(RMV) $(CLEANFILES)
+	$(RMV) $(TESTOUTDIR)
+
+distclean-local: clean-local
+	$(RMV) Makefile pkgdata.inc
+
+check-local:
+
+Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
+	cd $(top_builddir) \
+	&& CONFIG_FILES=$(subdir)/$@ CONFIG_HEADERS= $(SHELL) ./config.status
+
+pkgdata.inc: $(srcdir)/pkgdata.inc.in Makefile $(top_builddir)/config.status
+	cd $(top_builddir) \
+	&& CONFIG_FILES=$(subdir)/$@ CONFIG_HEADERS= $(SHELL) ./config.status
+
+
+#########################################################################
+############################## Test ## stuff ############################
+
+ifeq ($(PKGDATA_OPTS),)
+PKGDATA_OPTS = -O $(top_builddir)/test/testdata/pkgdata.inc
+endif
+
+# relative lib links from pkgdata are the same as for tmp
+GENRBOPTS=-k
+TOOLDIR=$(top_builddir)/tools
+SRCDATADIR=$(top_srcdir)/data
+UNICODEDATADIR=$(SRCDATADIR)/unidata
+OUTDIR=$(top_builddir)/data/out
+OUTTMPDIR=$(top_builddir)/data/out/tmp
+BUILDDIR=$(OUTDIR)/build/$(ICUDATA_PLATFORM_NAME)
+TESTSRCDATADIR=$(top_srcdir)/test/testdata
+TESTOUTDIR=$(top_builddir)/test/testdata/out
+BUILD_DIRS = $(TESTOUTDIR) $(TESTBUILDDIR) $(TESTOUTDIR)/$(TESTDT)
+
+ifeq ($(PKGDATA_MODE),common)
+ICU_DATA_OPT = -i $(OUTDIR)
+else
+ifeq ($(PKGDATA_MODE),dll)
+ifneq ($(ENABLE_SHARED),YES)
+ICU_DATA_OPT = -i $(BUILDDIR)
+else
+ICU_DATA_OPT =
+endif
+else
+ICU_DATA_OPT = -i $(BUILDDIR)
+endif
+endif
+
+PKGDATA = $(BINDIR)/pkgdata $(PKGDATA_OPTS) -q -c -s $(CURDIR)/out/build/$(ICUDATA_PLATFORM_NAME)
+PKGDATA_INVOKE:=$(INVOKE) $(PKGDATA_INVOKE_OPTS)
+
+# Contains all 'intermediate' files (and temp files) except for 'unpackaged data' below
+TESTBUILDDIR=$(TESTOUTDIR)/build
+
+# unpackaged files  - live in 'out' so that the path can find them as part of the pkg
+UNPACKAGEDTESTDATA=$(TESTOUTDIR)/$(TESTDT)/nam.typ
+
+# pkg name for testdata
+TESTDATA=testdata
+# prefix for files that are testdata
+TESTDT=$(TESTDATA)
+
+# File definitions 
+TEST_DAT_FILES=$(TESTBUILDDIR)/test.icu
+TEST_SPP_FILES=$(TESTBUILDDIR)/nfscsi.spp $(TESTBUILDDIR)/nfscss.spp $(TESTBUILDDIR)/nfscis.spp $(TESTBUILDDIR)/nfsmxs.spp $(TESTBUILDDIR)/nfsmxp.spp
+
+TEST_UCM_SOURCE= test1.ucm test3.ucm test4.ucm test4x.ucm ibm9027.ucm
+TEST_UCM_FILES=$(TEST_UCM_SOURCE:%=$(TESTSRCDATADIR)/data/%)
+TEST_CNV_FILES=$(TEST_UCM_SOURCE:%.ucm=$(TESTBUILDDIR)/%.cnv)
+
+# import the shared .mk file
+include $(TESTSRCDATADIR)/tstfiles.mk
+
+# TEST_RES_SOURCE comes from tstfiles.mk
+TEST_RES = $(TEST_RES_SOURCE) casing.txt mc.txt root.txt sh.txt sh_YU.txt te.txt te_IN.txt te_IN_REVISED.txt testtypes.txt testaliases.txt testempty.txt structLocale.txt idna_rules.txt conversion.txt icuio.txt testtable32.txt
+TEST_RES_FILES=$(TEST_RES:%.txt=$(TESTBUILDDIR)/%.res) $(TESTBUILDDIR)/iscii.res $(TESTBUILDDIR)/icu26_testtypes.res $(TESTBUILDDIR)/icu26e_testtypes.res
+
+ALL_TEST_FILES = $(TEST_DAT_FILES) $(TEST_SPP_FILES) $(TEST_BRK_FILES) $(TEST_CNV_FILES) $(TEST_RES_FILES) $(TESTOUTDIR)/$(TESTDT)/nam.typ
+
+# list
+
+$(TESTBUILDDIR)/testdata.lst: $(SRCLISTDEPS)
+	@echo "generating $@ (list of data files)"
+	@-$(RMV) $@
+	@for file in $(TEST_RES_FILES:$(TESTBUILDDIR)/%.res=%.res) $(TEST_DAT_FILES:$(TESTBUILDDIR)/%.icu=%.icu) $(TEST_SPP_FILES:$(TESTBUILDDIR)/%.spp=%.spp) $(TEST_CNV_FILES:$(TESTBUILDDIR)/%.cnv=%.cnv); do \
+	  echo $$file >> $@; \
+	done;
+
+
+build-testdata: build-dir $(ALL_TEST_FILES) $(TESTBUILDDIR)/testdata.lst $(TESTBUILDDIR)/iscii.res
+
+# test.icu
+$(TESTBUILDDIR)/test.icu: $(TOOLDIR)/gentest/gentest$(EXEEXT)
+	$(INVOKE) $(TOOLDIR)/gentest/gentest -d $(TESTBUILDDIR) 
+
+$(TESTBUILDDIR)/testtable32.txt:  $(TOOLDIR)/gentest/gentest$(EXEEXT)
+	$(INVOKE) $(TOOLDIR)/gentest/gentest -r -d $(TESTBUILDDIR) 
+
+# java output
+java-output: $(JAVA_OUT_DIR)/DebugUtilitiesData.java
+
+$(JAVA_OUT_DIR)/DebugUtilitiesData.java:  $(TOOLDIR)/gentest/gentest$(EXEEXT)
+	$(MKINSTALLDIRS) $(JAVA_OUT_DIR)
+	$(INVOKE) $(TOOLDIR)/gentest/gentest -j -d $(JAVA_OUT_DIR)
+
+
+$(TESTBUILDDIR)/testtable32.res: $(TESTBUILDDIR)/testtable32.txt $(BINDIR)/genrb$(EXEEXT)
+	$(INVOKE) $(BINDIR)/genrb $(GENRBOPTS) -s $(TESTBUILDDIR) $(ICU_DATA_OPT) -d $(TESTBUILDDIR) $(<F)
+
+# Targets for nfscsi.spp
+$(TESTBUILDDIR)/nfscsi.spp: $(BINDIR)/gensprep$(EXEEXT) $(TESTSRCDATADIR)/nfs4_cs_prep_ci.txt
+	@echo Building nfscsi.icu
+	$(INVOKE) $(BINDIR)/gensprep -s $(TESTSRCDATADIR) $(ICU_DATA_OPT) -d $(TESTBUILDDIR) -b nfscsi -u 3.2.0 nfs4_cs_prep_ci.txt
+
+# Targets for nfscss.spp
+$(TESTBUILDDIR)/nfscss.spp: $(BINDIR)/gensprep$(EXEEXT) $(TESTSRCDATADIR)/nfs4_cs_prep_cs.txt
+	@echo Building nfscss.icu
+	$(INVOKE) $(BINDIR)/gensprep -s $(TESTSRCDATADIR) $(ICU_DATA_OPT) -d $(TESTBUILDDIR) -b nfscss -u 3.2.0 nfs4_cs_prep_cs.txt
+
+# Targets for nfscis.spp
+$(TESTBUILDDIR)/nfscis.spp: $(BINDIR)/gensprep$(EXEEXT) $(TESTSRCDATADIR)/nfs4_cis_prep.txt
+	@echo Building nfscis.spp
+	$(INVOKE) $(BINDIR)/gensprep -s $(TESTSRCDATADIR) $(ICU_DATA_OPT) -d $(TESTBUILDDIR) -b nfscis -k -n $(UNICODEDATADIR) -u 3.2.0 nfs4_cis_prep.txt
+
+# Targets for nfsmxs.spp
+$(TESTBUILDDIR)/nfsmxs.spp: $(BINDIR)/gensprep$(EXEEXT) $(TESTSRCDATADIR)/nfs4_mixed_prep_s.txt
+	@echo Building nfsmxs.spp
+	$(INVOKE) $(BINDIR)/gensprep -s $(TESTSRCDATADIR) $(ICU_DATA_OPT) -d $(TESTBUILDDIR) -b nfsmxs -k -n $(UNICODEDATADIR) -u 3.2.0 nfs4_mixed_prep_s.txt
+
+# Targets for nfsmxp.spp
+$(TESTBUILDDIR)/nfsmxp.spp: $(BINDIR)/gensprep$(EXEEXT) $(TESTSRCDATADIR)/nfs4_mixed_prep_p.txt
+	@echo Building nfsmxp.spp
+	$(INVOKE) $(BINDIR)/gensprep -s $(TESTSRCDATADIR) $(ICU_DATA_OPT) -d $(TESTBUILDDIR) -b nfsmxp -k -n $(UNICODEDATADIR) -u 3.2.0 nfs4_mixed_prep_p.txt
+
+$(TESTBUILDDIR)/%.cnv: $(TESTSRCDATADIR)/%.ucm $(BINDIR)/makeconv$(EXEEXT)
+	$(INVOKE) $(BINDIR)/makeconv -c -d $(TESTBUILDDIR) $(TESTSRCDATADIR)/$(<F)
+
+$(TESTBUILDDIR)/%.res: $(TESTSRCDATADIR)/%.txt $(BINDIR)/genrb$(EXEEXT) $(DAT_FILES)
+	$(INVOKE) $(BINDIR)/genrb $(GENRBOPTS) -q -s $(TESTSRCDATADIR) $(ICU_DATA_OPT) -d $(TESTBUILDDIR) $(<F)
+
+$(TESTBUILDDIR)/iscii.res:  $(TESTSRCDATADIR)/iscii.bin $(BINDIR)/genrb$(EXEEXT)
+	@echo Testing genrb -e option
+	@ICU_DATA=$(BUILDDIR) $(INVOKE) $(BINDIR)/genrb $(GENRBOPTS) -s $(TESTSRCDATADIR) -eISCII,version=0 -d $(TESTBUILDDIR) $(<F) >/dev/null  || ( echo "WARNING: could not open ISCII - it may have been disabled." | tee $@ )
+	@echo Finished testing genrb -e option
+
+################################################################### TYP
+# TYP FILES
+
+$(TESTOUTDIR)/$(TESTDT)/nam.typ: $(TESTBUILDDIR)/te_IN.res
+	cp $< $@
+$(TESTBUILDDIR)/icu26_testtypes.res: $(TESTSRCDATADIR)/icu26_testtypes.res
+	cp $< $@
+$(TESTBUILDDIR)/icu26e_testtypes.res: $(TESTSRCDATADIR)/icu26e_testtypes.res
+	cp $< $@
+
+testdata: build-dir $(ALL_TEST_FILES) $(UNPACKAGEDTESTDATA)
+
+#$(ALL_TEST_FILES) $(TESTBUILDDIR)/testtable32.txt $(TESTBUILDDIR)/testdata.lst: build-dir
+
+packagetest: build-dir testdata pkgdata.inc $(TESTBUILDDIR)/testdata.lst 
+	$(PKGDATA_INVOKE) $(PKGDATA) -T $(TESTBUILDDIR) -d $(TESTOUTDIR) -s $(TESTBUILDDIR) -p $(TESTDATA) -m common $(TESTBUILDDIR)/testdata.lst
+
+build-dir: $(BUILD_DIRS)
+$(BUILD_DIRS):
+	-$(MKINSTALLDIRS) $(BUILD_DIRS)
+
+

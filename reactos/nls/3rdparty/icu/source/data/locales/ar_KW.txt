@@ -1,0 +1,28 @@
+﻿// ***************************************************************************
+// *
+// * Copyright (C) 2007 International Business Machines
+// * Corporation and others.  All Rights Reserved.
+// * Tool: com.ibm.icu.dev.tool.cldr.LDML2ICUConverter.java
+// * Source File:<path>/common/main/ar_KW.xml
+// *
+// ***************************************************************************
+ar_KW{
+    Scripts{
+        Ital{"اللأيطالية القديمة"}
+    }
+    Version{"1.45"}
+    calendar{
+        gregorian{
+            DateTimeElements:intvector{
+                7,
+                1,
+            }
+            weekend:intvector{
+                5,
+                0,
+                6,
+                86400000,
+            }
+        }
+    }
+}

@@ -1,0 +1,1499 @@
+﻿// ***************************************************************************
+// *
+// * Copyright (C) 2007 International Business Machines
+// * Corporation and others.  All Rights Reserved.
+// * Tool: com.ibm.icu.dev.tool.cldr.LDML2ICUConverter.java
+// * Source File:<path>/common/main/sk.xml
+// *
+// ***************************************************************************
+/**
+ *  ICU <specials> source: <path>/xml/main/sk.xml
+ */
+sk{
+    Countries{
+        001{"Svet"}
+        002{"Afrika"}
+        005{"Južná Amerika"}
+        011{"Západná Afrika"}
+        013{"Stredná Amerika"}
+        014{"Východná Afrika"}
+        015{"Severná Afrika"}
+        017{"Stredná Afrika"}
+        018{"Južná Afrika [018]"}
+        019{"Americký kontinent"}
+        021{"Severná Amerika"}
+        029{"Karibik"}
+        030{"Východná Ázia"}
+        035{"Juhovýchodná Ázia"}
+        039{"Južná Európa"}
+        053{"Austrália a Nový Zéland"}
+        054{"Melanézia"}
+        057{"Mikronésia"}
+        061{"Polynézia"}
+        062{"Južná Ázia"}
+        142{"Ázia"}
+        145{"Západná Ázia"}
+        150{"Európa"}
+        151{"Východná Európa"}
+        154{"Severná Európa"}
+        155{"Západná Európa"}
+        200{"Československo"}
+        830{"Kanál La Manche"}
+        AD{"Andorra"}
+        AE{"Spojené arabské emiráty"}
+        AF{"Afganistan"}
+        AG{"Antigua a Barbados"}
+        AI{"Anguilla"}
+        AL{"Albánsko"}
+        AM{"Arménsko"}
+        AN{"Holandské Antily"}
+        AO{"Angola"}
+        AQ{"Antarctica"}
+        AR{"Argentína"}
+        AS{"Americká Samoa"}
+        AT{"Rakúsko"}
+        AU{"Austrália"}
+        AW{"Aruba"}
+        AX{"Alandské ostrovy"}
+        AZ{"Azerbajdžan"}
+        BA{"Bosna a Hercegovina"}
+        BB{"Barbados"}
+        BD{"Bangladéš"}
+        BE{"Belgicko"}
+        BF{"Burkina Faso"}
+        BG{"Bulharsko"}
+        BH{"Bahrajn"}
+        BI{"Burundi"}
+        BJ{"Benin"}
+        BM{"Bermudy"}
+        BN{"Brunej"}
+        BO{"Bolívia"}
+        BR{"Brazília"}
+        BS{"Bahamy"}
+        BT{"Bután"}
+        BV{"Bouvetov ostrov"}
+        BW{"Botswana"}
+        BY{"Bielorusko"}
+        BZ{"Belize"}
+        CA{"Kanada"}
+        CC{"Kokosové (Keelingove) ostrovy"}
+        CD{"Konžská demokratická republika"}
+        CF{"Stredoafrická republika"}
+        CG{"Kongo"}
+        CH{"Švajčiarsko"}
+        CI{"Pobrežie Slonoviny"}
+        CK{"Cookove ostrovy"}
+        CL{"Čile"}
+        CM{"Kamerun"}
+        CN{"Čína"}
+        CO{"Kolumbia"}
+        CR{"Kostarika"}
+        CS{"Srbsko a Čierna Hora"}
+        CU{"Kuba"}
+        CV{"Kapverdy"}
+        CX{"Vianočný ostrov"}
+        CY{"Cyprus"}
+        CZ{"Česká republika"}
+        DE{"Nemecko"}
+        DJ{"Džibuti"}
+        DK{"Dánsko"}
+        DM{"Dominika"}
+        DO{"Dominikánska republika"}
+        DZ{"Alžírsko"}
+        EC{"Ekvádor"}
+        EE{"Estónsko"}
+        EG{"Egypt"}
+        EH{"Západná Sahara"}
+        ER{"Eritrea"}
+        ES{"Španielsko"}
+        ET{"Etiópia"}
+        FI{"Fínsko"}
+        FJ{"Fidži"}
+        FK{"Falklandské ostrovy"}
+        FM{"Mikronézia, Federatívne štáty"}
+        FO{"Faerské ostrovy"}
+        FR{"Francúzsko"}
+        GA{"Gabon"}
+        GB{"Spojené kráľovstvo"}
+        GD{"Grenada"}
+        GE{"Gruzínsko"}
+        GF{"Francúzska Guayana"}
+        GH{"Ghana"}
+        GI{"Gibraltár"}
+        GL{"Grónsko"}
+        GM{"Gambia"}
+        GN{"Guinea"}
+        GP{"Guadeloupe"}
+        GQ{"Rovníková Guinea"}
+        GR{"Grécko"}
+        GS{"Južná Georgia a Južné Sandwichove ostrovy"}
+        GT{"Guatemala"}
+        GU{"Guam"}
+        GW{"Guinea-Bissau"}
+        GY{"Guayana"}
+        HK{"Hong Kong S.A.R. Číny"}
+        HM{"Heardove ostrovy a McDonaldove ostrovy"}
+        HN{"Honduras"}
+        HR{"Chorvátsko"}
+        HT{"Haiti"}
+        HU{"Maďarsko"}
+        ID{"Indonézia"}
+        IE{"Írsko"}
+        IL{"Izrael"}
+        IM{"Ostrov Man"}
+        IN{"India"}
+        IO{"Britské územie v Indickom oceáne"}
+        IQ{"Irak"}
+        IR{"Irán"}
+        IS{"Island"}
+        IT{"Taliansko"}
+        JM{"Jamajka"}
+        JO{"Jordánsko"}
+        JP{"Japonsko"}
+        KE{"Keňa"}
+        KG{"Kirgizsko"}
+        KH{"Kambodža"}
+        KI{"Kiribati"}
+        KM{"Komory"}
+        KN{"Saint Kitts a Nevis"}
+        KP{"Kórea, Severná"}
+        KR{"Kórea, Južná"}
+        KW{"Kuvajt"}
+        KY{"Kajmanské ostrovy"}
+        KZ{"Kazachstan"}
+        LA{"Laoská ľudovodemokratická republika"}
+        LB{"Libanon"}
+        LC{"Svätá Lucia"}
+        LI{"Lichtenštajnsko"}
+        LK{"Srí Lanka"}
+        LR{"Libéria"}
+        LS{"Lesotho"}
+        LT{"Litva"}
+        LU{"Luxembursko"}
+        LV{"Lotyšsko"}
+        LY{"Lýbijská arabská džamahírija"}
+        MA{"Maroko"}
+        MC{"Monako"}
+        MD{"Moldavsko, republika"}
+        MG{"Madagaskar"}
+        MH{"Marshallove ostrovy"}
+        MK{"Macedónsko, republika"}
+        ML{"Mali"}
+        MM{"Mjanmarsko"}
+        MN{"Mongolsko"}
+        MO{"Makao S.A.R. Číny"}
+        MP{"Severné Mariány"}
+        MQ{"Martinik"}
+        MR{"Mauritánia"}
+        MS{"Montserrat"}
+        MT{"Malta"}
+        MU{"Maurícius"}
+        MV{"Maldivy"}
+        MW{"Malawi"}
+        MX{"Mexiko"}
+        MY{"Malajzia"}
+        MZ{"Mozambik"}
+        NA{"Namíbia"}
+        NC{"Nová Kaledónia"}
+        NE{"Niger"}
+        NF{"Norfolkov ostrov"}
+        NG{"Nigéria"}
+        NI{"Nikaragua"}
+        NL{"Holandsko"}
+        NO{"Nórsko"}
+        NP{"Nepál"}
+        NR{"Nauru"}
+        NU{"Niue"}
+        NZ{"Nový Zéland"}
+        OM{"Omán"}
+        PA{"Panama"}
+        PE{"Peru"}
+        PF{"Francúzska Polynézia"}
+        PG{"Papua Nová Guinea"}
+        PH{"Filipíny"}
+        PK{"Pakistan"}
+        PL{"Poľsko"}
+        PM{"Saint Pierre a Miquelon"}
+        PN{"Pitcairnove ostrovy"}
+        PR{"Portoriko"}
+        PS{"Palestínske územie"}
+        PT{"Portugalsko"}
+        PW{"Palau"}
+        PY{"Paraguaj"}
+        QA{"Katar"}
+        QO{"Tichomorie - ostatné"}
+        RE{"Reunion"}
+        RO{"Rumunsko"}
+        RU{"Ruská federácia"}
+        RW{"Rwanda"}
+        SA{"Saudská Arábia"}
+        SB{"Šalamúnove ostrovy"}
+        SC{"Seychelské ostrovy"}
+        SD{"Sudán"}
+        SE{"Švédsko"}
+        SG{"Singapur"}
+        SH{"Svätá Helena"}
+        SI{"Slovinsko"}
+        SJ{"Špicbergy a Jan Mayen"}
+        SK{"Slovenská republika"}
+        SL{"Sierra Leone"}
+        SM{"San Maríno"}
+        SN{"Senegal"}
+        SO{"Somálsko"}
+        SR{"Surinam"}
+        ST{"Svätý Tomáš a Princove ostrovy"}
+        SV{"Salvador"}
+        SY{"Sýrska arabská republika"}
+        SZ{"Svazijsko"}
+        TC{"Turks a Caicos"}
+        TD{"Čad"}
+        TF{"Francúzske južné územia"}
+        TG{"Togo"}
+        TH{"Thajsko"}
+        TJ{"Tadžikistan"}
+        TK{"Tokelau"}
+        TL{"Východný Timor"}
+        TM{"Turkménsko"}
+        TN{"Tunisko"}
+        TO{"Tonga"}
+        TR{"Turecko"}
+        TT{"Trinidad a Tobago"}
+        TV{"Tuvalu"}
+        TW{"Tajwan"}
+        TZ{"Tanzánia"}
+        UA{"Ukrajina"}
+        UG{"Uganda"}
+        UM{"Menšie odľahlé ostrovy USA"}
+        US{"Spojené štáty"}
+        UY{"Uruguaj"}
+        UZ{"Uzbekistan"}
+        VA{"Svätá stolica (Vatikánsky mestský štát)"}
+        VC{"Svätý Vincent a Grenadíny"}
+        VE{"Venezuela"}
+        VG{"Britské panenské ostrovy"}
+        VI{"Panenské ostrovy - USA"}
+        VN{"Vietnam"}
+        VU{"Vanuatu"}
+        WF{"Wallis a Futuna"}
+        WS{"Samoa"}
+        YE{"Jemen"}
+        YT{"Mayotte"}
+        ZA{"Južná Afrika"}
+        ZM{"Zambia"}
+        ZW{"Zimbabwe"}
+    }
+    Currencies{
+        ADP{
+            "ADP",
+            "Andorská peseta",
+        }
+        AED{
+            "AED",
+            "UAE dirham",
+        }
+        ALL{
+            "lek",
+            "Albánsky lek",
+        }
+        AMD{
+            "dram",
+            "Armenský dram",
+        }
+        ANG{
+            "NA f.",
+            "Nizozemský Antilský guilder",
+        }
+        AOA{
+            "AOA",
+            "Angolská kwanza",
+        }
+        AOK{
+            "AOK",
+            "Angolská kwanza (1977-1990)",
+        }
+        AON{
+            "AON",
+            "Angolská nová kwanza (1990-2000)",
+        }
+        AOR{
+            "AOR",
+            "Angolská kwanza Reajustado (1995-1999)",
+        }
+        ARA{
+            "ARA",
+            "Argentinský austral",
+        }
+        ARP{
+            "ARP",
+            "Argentinské peso (1983-1985)",
+        }
+        ARS{
+            "Arg$",
+            "Argentinské peso",
+        }
+        ATS{
+            "ATS",
+            "Rakúsky šiling",
+        }
+        AUD{
+            "$A",
+            "Austrálsky dolár",
+        }
+        AWG{
+            "AWG",
+            "Arubský guilder",
+        }
+        AZM{
+            "AZM",
+            "Azerbaidžanský manat",
+        }
+        BAD{
+            "BAD",
+            "Bosnianský dinár",
+        }
+        BAM{
+            "KM",
+            "Bosnianský konvertibilná marka",
+        }
+        BBD{
+            "BDS$",
+            "Barbadoský dolár",
+        }
+        BDT{
+            "Tk",
+            "Bangladéšska taka",
+        }
+        BEC{
+            "BEC",
+            "Belgický frank (konvertibilný)",
+        }
+        BEF{
+            "BF",
+            "Belgický frank",
+        }
+        BEL{
+            "BEL",
+            "Belgický frank (finančný)",
+        }
+        BGL{
+            "lev",
+            "Bulharský leva",
+        }
+        BGN{
+            "BGN",
+            "Bulharský leva nový",
+        }
+        BHD{
+            "BD",
+            "Bahraiský dinár",
+        }
+        BIF{
+            "Fbu",
+            "Burundský frank",
+        }
+        BMD{
+            "Ber$",
+            "Bermudský dolár",
+        }
+        BND{
+            "BND",
+            "Bruneiský dolár",
+        }
+        BOP{
+            "BOP",
+            "Bolivíjske peso",
+        }
+        BOV{
+            "BOV",
+            "Bolivíjske mvdol",
+        }
+        BRB{
+            "BRB",
+            "Bolivíjske Cruzeiro Novo (1967-1986)",
+        }
+        BRC{
+            "BRC",
+            "Bolivíjske cruzado",
+        }
+        BRE{
+            "BRE",
+            "Bolivíjske cruzeiro (1990-1993)",
+        }
+        BRL{
+            "R$",
+            "Bolivíjsky real",
+        }
+        BRN{
+            "BRN",
+            "Brazílske Cruzado Novo",
+        }
+        BRR{
+            "BRR",
+            "Brazílske cruzeiro",
+        }
+        BSD{
+            "BSD",
+            "Bahamský dolár",
+        }
+        BTN{
+            "Nu",
+            "Bhutansky ngultrum",
+        }
+        BUK{
+            "BUK",
+            "Burmese Kyat",
+        }
+        BWP{
+            "BWP",
+            "Botswanan Pula",
+        }
+        BYB{
+            "BYB",
+            "Belarussian nový rubeľ (1994-1999)",
+        }
+        BYR{
+            "Rbl",
+            "Belarussian rubeľ",
+        }
+        BZD{
+            "BZ$",
+            "Belize dolár",
+        }
+        CAD{
+            "Can$",
+            "Kanadský dolár",
+        }
+        CDF{
+            "CDF",
+            "Konžský frank Congolais",
+        }
+        CHF{
+            "SwF",
+            "Švajčiarský frank",
+        }
+        CLF{
+            "CLF",
+            "Čílske Unidades de Fomento",
+        }
+        CLP{
+            "Ch$",
+            "Čílske peso",
+        }
+        CNY{
+            "Y",
+            "Čínsky Yuan Renminbi",
+        }
+        COP{
+            "Col$",
+            "Colombijské peso",
+        }
+        CRC{
+            "C",
+            "Kostarikský colon",
+        }
+        CSK{
+            "CSK",
+            "Československá koruna",
+        }
+        CUP{
+            "CUP",
+            "Kubánske peso",
+        }
+        CVE{
+            "CVEsc",
+            "Cape Verde eskudo",
+        }
+        CYP{
+            "£C",
+            "Cypruská libra",
+        }
+        CZK{
+            "CZK",
+            "Česká koruna",
+        }
+        DDM{
+            "DDM",
+            "Východonemecká marka",
+        }
+        DEM{
+            "DEM",
+            "Nemecká marka",
+        }
+        DJF{
+            "DF",
+            "Džibutský frank",
+        }
+        DKK{
+            "DKr",
+            "Dánska krone",
+        }
+        DOP{
+            "RD$",
+            "Dominikánske peso",
+        }
+        DZD{
+            "DA",
+            "Alžírsky dinár",
+        }
+        ECS{
+            "ECS",
+            "Ekuadorský sucre",
+        }
+        ECV{
+            "ECV",
+            "Ekuadorský Unidad de Valor Constante (UVC)",
+        }
+        EEK{
+            "EEK",
+            "Estónska kroon",
+        }
+        EGP{
+            "EGP",
+            "Egyptská libra",
+        }
+        ERN{
+            "ERN",
+            "Eritrejská nakfa",
+        }
+        ESP{
+            "ESP",
+            "Španielská peseta",
+        }
+        ETB{
+            "Br",
+            "Ethiopský birr",
+        }
+        EUR{
+            "€",
+            "Euro",
+        }
+        FIM{
+            "FIM",
+            "Finská marka",
+        }
+        FJD{
+            "F$",
+            "Fiji dolár",
+        }
+        FKP{
+            "FKP",
+            "Falklandská libra",
+        }
+        FRF{
+            "FRF",
+            "Francúzsky frank",
+        }
+        GBP{
+            "UK£",
+            "Britská libra",
+        }
+        GEK{
+            "GEK",
+            "Gruzínsky Kupon Larit",
+        }
+        GEL{
+            "lari",
+            "Gruzínsky lari",
+        }
+        GHC{
+            "GHC",
+            "Ghanský cedi",
+        }
+        GIP{
+            "GIP",
+            "Gibraltarská libra",
+        }
+        GMD{
+            "GMD",
+            "Gambský dalasi",
+        }
+        GNF{
+            "GF",
+            "Guinejský frank",
+        }
+        GNS{
+            "GNS",
+            "Guinejský syli",
+        }
+        GQE{
+            "GQE",
+            "Rovníková Guinea Ekwele Guineana",
+        }
+        GRD{
+            "GRD",
+            "Grécka drachma",
+        }
+        GTQ{
+            "Q",
+            "Guatemalský quetzal",
+        }
+        GWE{
+            "GWE",
+            "Portugalská Guinea eskudo",
+        }
+        GWP{
+            "GWP",
+            "Guinea-Bissau peso",
+        }
+        GYD{
+            "G$",
+            "Guyanský dolár",
+        }
+        HKD{
+            "HK$",
+            "Hong Kongský dolár",
+        }
+        HNL{
+            "L",
+            "Hoduraská lempira",
+        }
+        HRD{
+            "HRD",
+            "Chorvátsky dinár",
+        }
+        HRK{
+            "HRK",
+            "Chorvátska kuna",
+        }
+        HTG{
+            "HTG",
+            "Haitské gourde",
+        }
+        HUF{
+            "Ft",
+            "Maďarský forint",
+        }
+        IDR{
+            "Rp",
+            "Indonézska rupia",
+        }
+        IEP{
+            "IR£",
+            "Írska libra",
+        }
+        ILP{
+            "ILP",
+            "Izraelská libra",
+        }
+        ILS{
+            "ILS",
+            "Izraelský šekel",
+        }
+        INR{
+            "INR",
+            "Indijská rupia",
+        }
+        IQD{
+            "ID",
+            "Iracký dinár",
+        }
+        IRR{
+            "RI",
+            "Iránsky rial",
+        }
+        ISK{
+            "ISK",
+            "Islandská krona",
+        }
+        ITL{
+            "IT₤",
+            "Talianská lira",
+        }
+        JMD{
+            "J$",
+            "Jamajský dolár",
+        }
+        JOD{
+            "JD",
+            "Jordánsky dinár",
+        }
+        JPY{
+            "JP¥",
+            "Japonský yen",
+        }
+        KES{
+            "K Sh",
+            "Keňský šiling",
+        }
+        KGS{
+            "som",
+            "Kyrgyský som",
+        }
+        KHR{
+            "CR",
+            "Kambodžský riel",
+        }
+        KMF{
+            "CF",
+            "Comoro frank",
+        }
+        KPW{
+            "KPW",
+            "Severokórejský won",
+        }
+        KRW{
+            "KRW",
+            "Juhokórejský won",
+        }
+        KWD{
+            "KD",
+            "Kuvaitský dinár",
+        }
+        KYD{
+            "KYD",
+            "Kajmanský dolár",
+        }
+        KZT{
+            "T",
+            "Kazažský tenge",
+        }
+        LAK{
+            "LAK",
+            "Laoský kip",
+        }
+        LBP{
+            "LL",
+            "Libanonská libra",
+        }
+        LKR{
+            "SL Re",
+            "Šrilanská rupia",
+        }
+        LRD{
+            "LRD",
+            "Libérský dolár",
+        }
+        LSL{
+            "M",
+            "Lesothský loti",
+        }
+        LTL{
+            "LTL",
+            "Litevská lita",
+        }
+        LTT{
+            "LTT",
+            "Litevský talonas",
+        }
+        LUF{
+            "LUF",
+            "Luxemburský frank",
+        }
+        LVL{
+            "LVL",
+            "Lotyšský lats",
+        }
+        LVR{
+            "LVR",
+            "Lotyšský rubeľ",
+        }
+        LYD{
+            "LD",
+            "Libyjský dinár",
+        }
+        MAD{
+            "MAD",
+            "Marocký dirham",
+        }
+        MAF{
+            "MAF",
+            "Marocký frank",
+        }
+        MDL{
+            "MDL",
+            "Moldavský leu",
+        }
+        MGA{
+            "MGA",
+            "Madagaskarský ariary",
+        }
+        MGF{
+            "MGF",
+            "Madagaskarský frank",
+        }
+        MKD{
+            "MDen",
+            "Macedónsky denár",
+        }
+        MLF{
+            "MLF",
+            "Malský frank",
+        }
+        MMK{
+            "MMK",
+            "Myanmarský kyat",
+        }
+        MNT{
+            "Tug",
+            "Mongolský tugrik",
+        }
+        MOP{
+            "MOP",
+            "Macao Pataca",
+        }
+        MRO{
+            "UM",
+            "Mauritania Ouguiya",
+        }
+        MTL{
+            "Lm",
+            "Maltská lira",
+        }
+        MTP{
+            "MTP",
+            "Maltská libra",
+        }
+        MUR{
+            "MUR",
+            "Mauritská rupia",
+        }
+        MVR{
+            "MVR",
+            "Maldivská rufiyaa",
+        }
+        MWK{
+            "MK",
+            "Malavská kwacha",
+        }
+        MXN{
+            "MEX$",
+            "Mexické peso",
+        }
+        MXP{
+            "MXP",
+            "Mexické striborné peso (1861-1992)",
+        }
+        MXV{
+            "MXV",
+            "Mexické Unidad de Inversion (UDI)",
+        }
+        MYR{
+            "RM",
+            "Malajský ringgit",
+        }
+        MZE{
+            "MZE",
+            "Mozambijské eskudo",
+        }
+        MZM{
+            "Mt",
+            "Mozambijské metical",
+        }
+        NAD{
+            "N$",
+            "Namibský dolár",
+        }
+        NGN{
+            "NGN",
+            "Nigerská naira",
+        }
+        NIC{
+            "NIC",
+            "Nikaragujská cordoba",
+        }
+        NIO{
+            "NIO",
+            "Nikaragujská Cordoba Oro",
+        }
+        NLG{
+            "NLG",
+            "Nizozemský guilder",
+        }
+        NOK{
+            "NKr",
+            "Nórksy krone",
+        }
+        NPR{
+            "Nrs",
+            "Nepálska rupia",
+        }
+        NZD{
+            "$NZ",
+            "Novozélandský dolár",
+        }
+        OMR{
+            "RO",
+            "Ománský rial",
+        }
+        PAB{
+            "PAB",
+            "Panamská balboa",
+        }
+        PEI{
+            "PEI",
+            "Peruvský inti",
+        }
+        PEN{
+            "PEN",
+            "Peruvský sol Nuevo",
+        }
+        PES{
+            "PES",
+            "Peruvský sol",
+        }
+        PGK{
+            "PGK",
+            "Papua Nová Guinea kina",
+        }
+        PHP{
+            "PHP",
+            "Filipínske peso",
+        }
+        PKR{
+            "Pra",
+            "Pakistanská rupia",
+        }
+        PLN{
+            "Zl",
+            "Polský zloty",
+        }
+        PLZ{
+            "PLZ",
+            "Polský zloty (1950-1995)",
+        }
+        PTE{
+            "PTE",
+            "Portugalské eskudo",
+        }
+        PYG{
+            "PYG",
+            "Paraguayské guarani",
+        }
+        QAR{
+            "QR",
+            "Qatarský rial",
+        }
+        ROL{
+            "leu",
+            "Rumunský leu",
+        }
+        RUB{
+            "RUB",
+            "Ruský rubeľ",
+        }
+        RUR{
+            "RUR",
+            "Ruský rubeľ (1991-1998)",
+        }
+        RWF{
+            "RWF",
+            "Rwandský frank",
+        }
+        SAR{
+            "SRl",
+            "Saudský riyal",
+        }
+        SBD{
+            "SI$",
+            "Solomon Islands dolár",
+        }
+        SCR{
+            "SR",
+            "Sejšelská rupia",
+        }
+        SDD{
+            "SDD",
+            "Sudánsky dinár",
+        }
+        SDP{
+            "SDP",
+            "Sudánska libra",
+        }
+        SEK{
+            "SKr",
+            "Švédska krona",
+        }
+        SGD{
+            "S$",
+            "Singapúrsky dolár",
+        }
+        SHP{
+            "SHP",
+            "Libra",
+        }
+        SIT{
+            "SIT",
+            "Slovinský Tolar",
+        }
+        SKK{
+            "Sk",
+            "Slovenská koruna",
+        }
+        SLL{
+            "SLL",
+            "Sierra Leone Leone",
+        }
+        SOS{
+            "So. Sh.",
+            "Somálsky šiling",
+        }
+        SRG{
+            "Sf",
+            "Surinamský guilder",
+        }
+        STD{
+            "Db",
+            "Sao Tome a Principe dobra",
+        }
+        SUR{
+            "SUR",
+            "Sovietský rubeľ",
+        }
+        SVC{
+            "SVC",
+            "El Salvadorský colon",
+        }
+        SYP{
+            "LS",
+            "Syrská libra",
+        }
+        SZL{
+            "E",
+            "Swaziland lilangeni",
+        }
+        THB{
+            "THB",
+            "Thajský bát",
+        }
+        TJR{
+            "TJR",
+            "Tadžikistanský rubeľ",
+        }
+        TJS{
+            "TJS",
+            "Tadžikistanský somoni",
+        }
+        TMM{
+            "TMM",
+            "Turkménsky manat",
+        }
+        TND{
+            "TND",
+            "Tuniský dinár",
+        }
+        TOP{
+            "T$",
+            "Tonga Paʻanga",
+        }
+        TPE{
+            "TPE",
+            "Timorské eskudo",
+        }
+        TRL{
+            "TL",
+            "Turecká lira",
+        }
+        TTD{
+            "TT$",
+            "Trinidad a Tobago dolár",
+        }
+        TWD{
+            "NT$",
+            "Taiwanský nový dolár",
+        }
+        TZS{
+            "T Sh",
+            "Tanzanský šiling",
+        }
+        UAH{
+            "UAH",
+            "Ukrainská hrivna",
+        }
+        UAK{
+            "UAK",
+            "Ukrainský karbovanetz",
+        }
+        UGS{
+            "UGS",
+            "Ugandan šiling (1966-1987)",
+        }
+        UGX{
+            "U Sh",
+            "Ugandský šiling",
+        }
+        USD{
+            "US$",
+            "US dolár",
+        }
+        USN{
+            "USN",
+            "US dolár (Next day)",
+        }
+        USS{
+            "USS",
+            "US dolár (Same day)",
+        }
+        UYP{
+            "UYP",
+            "Uruguajské peso (1975-1993)",
+        }
+        UYU{
+            "Ur$",
+            "Uruguajské peso Uruguayo",
+        }
+        UZS{
+            "UZS",
+            "Uzbekistanský sum",
+        }
+        VEB{
+            "Be",
+            "Venezuelský bolivar",
+        }
+        VND{
+            "VND",
+            "Vietnamský dong",
+        }
+        VUV{
+            "VT",
+            "Vanuatu vatu",
+        }
+        WST{
+            "WST",
+            "Západná Samoa tala",
+        }
+        XAF{
+            "XAF",
+            "CFA frank BEAC",
+        }
+        XAU{
+            "XAU",
+            "Zlato",
+        }
+        XCD{
+            "EC$",
+            "East Caribbean dolár",
+        }
+        XDR{
+            "XDR",
+            "Špeciálne práva čerpania",
+        }
+        XFO{
+            "XFO",
+            "Francúzsky zlatý frank",
+        }
+        XFU{
+            "XFU",
+            "Francúzsky UIC-frank",
+        }
+        XOF{
+            "XOF",
+            "CFA frank BCEAO",
+        }
+        XPF{
+            "CFPF",
+            "CFP frank",
+        }
+        YDD{
+            "YDD",
+            "Jemenský dinár",
+        }
+        YER{
+            "YRl",
+            "Jemenský rial",
+        }
+        YUD{
+            "YUD",
+            "Juhoslávsky dinár [YUD]",
+        }
+        YUM{
+            "YUM",
+            "Juhoslávsky Noviy dinár",
+        }
+        YUN{
+            "YUN",
+            "Juhoslávsky dinár",
+        }
+        ZAL{
+            "ZAL",
+            "Juhoafrický rand (financial)",
+        }
+        ZAR{
+            "R",
+            "Juhoafrický rand",
+        }
+        ZMK{
+            "ZMK",
+            "Zambská kwacha",
+        }
+        ZRN{
+            "ZRN",
+            "Zairský nový zaire",
+        }
+        ZRZ{
+            "ZRZ",
+            "Zairský Zaire",
+        }
+        ZWD{
+            "Z$",
+            "Zimbabský dolár",
+        }
+    }
+    ExemplarCharacters{
+        "[a á ä b c č d ď e é f-h {ch} i í j-l ĺ ľ m n ň o ó ô p-r ŕ s š t ť u ú v-y "
+        "ý z ž]"
+    }
+    Keys{
+        calendar{"Kalendár"}
+        collation{"Triedenie"}
+        currency{"Mena"}
+    }
+    Languages{
+        ar{"arabský"}
+        bg{"bulharský"}
+        cs{"český"}
+        da{"dánsky"}
+        de{"nemecký"}
+        el{"grécky"}
+        en{"anglický"}
+        es{"španielsky"}
+        et{"estónsky"}
+        fi{"fínsky"}
+        fr{"francúzsky"}
+        he{"hebrejský"}
+        hr{"chorvátsky"}
+        hu{"maďarský"}
+        it{"taliansky"}
+        ja{"japonský"}
+        ko{"kórejský"}
+        lt{"litovský"}
+        lv{"lotyšský"}
+        nl{"holandský"}
+        no{"nórsky"}
+        pl{"poľský"}
+        pt{"portugalský"}
+        ro{"rumunský"}
+        ru{"ruský"}
+        sk{"slovenský"}
+        sl{"slovinský"}
+        sv{"švédsky"}
+        tr{"turecký"}
+        zh{"čínsky"}
+    }
+    LocaleScript{
+        "Latn",
+    }
+    NumberElements{
+        ",",
+        " ",
+        ";",
+        "%",
+        "0",
+        "#",
+        "-",
+        "E",
+        "‰",
+        "∞",
+        "NaN",
+        "+",
+    }
+    NumberPatterns{
+        "#,##0.###",
+        "#,##0.00 ¤",
+        "#,##0%",
+        "#E0",
+    }
+    Scripts{
+        Arab{"Arabský"}
+        Armn{"Arménsky"}
+        Cyrl{"Cyrilika"}
+        Grek{"Grécky"}
+        Zyyy{"Obecný"}
+    }
+    Types{
+        calendar{
+            buddhist{"Buddhistický kalendár"}
+            chinese{"Čínsky kalendár"}
+            gregorian{"Gregoriánsky kalendár"}
+            hebrew{"Židovský kalendár"}
+            islamic{"Islamský kalendár"}
+            islamic-civil{"Islamský občiansky kalendár"}
+            japanese{"Japonský kalendár"}
+        }
+        collation{
+            direct{"Priame triedenie"}
+            phonebook{"Lexikografické triedenie"}
+            pinyin{"Triedenie pinyin"}
+            stroke{"Tiedenie podľa ťahov"}
+            traditional{"Tradičné"}
+        }
+    }
+    Version{"1.76"}
+    calendar{
+        gregorian{
+            DateTimePatterns{
+                "H:mm:ss v",
+                "H:mm:ss z",
+                "H:mm:ss",
+                "H:mm",
+                "EEEE, d. MMMM yyyy",
+                "d. MMMM yyyy",
+                "d.M.yyyy",
+                "d.M.yyyy",
+                "{1} {0}",
+            }
+            dayNames{
+                format{
+                    abbreviated{
+                        "Ne",
+                        "Po",
+                        "Ut",
+                        "St",
+                        "Št",
+                        "Pi",
+                        "So",
+                    }
+                    wide{
+                        "Nedeľa",
+                        "Pondelok",
+                        "Utorok",
+                        "Streda",
+                        "Štvrtok",
+                        "Piatok",
+                        "Sobota",
+                    }
+                }
+                stand-alone{
+                    narrow{
+                        "N",
+                        "P",
+                        "U",
+                        "S",
+                        "Š",
+                        "P",
+                        "S",
+                    }
+                }
+            }
+            eras{
+                abbreviated{
+                    "pred n.l.",
+                    "n.l.",
+                }
+            }
+            monthNames{
+                format{
+                    abbreviated{
+                        "jan",
+                        "feb",
+                        "mar",
+                        "apr",
+                        "máj",
+                        "jún",
+                        "júl",
+                        "aug",
+                        "sep",
+                        "okt",
+                        "nov",
+                        "dec",
+                    }
+                    wide{
+                        "január",
+                        "február",
+                        "marec",
+                        "apríl",
+                        "máj",
+                        "jún",
+                        "júl",
+                        "august",
+                        "september",
+                        "október",
+                        "november",
+                        "december",
+                    }
+                }
+                stand-alone{
+                    narrow{
+                        "j",
+                        "f",
+                        "m",
+                        "a",
+                        "m",
+                        "j",
+                        "j",
+                        "a",
+                        "s",
+                        "o",
+                        "n",
+                        "d",
+                    }
+                }
+            }
+            quarters{
+                format{
+                    wide{
+                        "1. štvrťrok",
+                        "2. štvrťrok",
+                        "3. štvrťrok",
+                        "4. štvrťrok",
+                    }
+                }
+            }
+        }
+    }
+    delimiters{
+        alternateQuotationEnd{"“"}
+        alternateQuotationStart{"„"}
+        quotationEnd{"‘"}
+        quotationStart{"‚"}
+    }
+    zoneStrings{
+        "Antarctica:South_Pole"{
+            ec{"Južný pól"}
+        }
+        "Asia:Irkutsk"{
+            ec{"Irkutsko"}
+        }
+        "Asia:Kamchatka"{
+            ec{"Kamčatka"}
+        }
+        "Asia:Krasnoyarsk"{
+            ec{"Krasnojarsko"}
+        }
+        "Asia:Sakhalin"{
+            ec{"Sachalin"}
+        }
+        "Asia:Shanghai"{
+            ec{"Šanghaj"}
+        }
+        "Asia:Tashkent"{
+            ec{"Taškent"}
+        }
+        "Asia:Ulaanbaatar"{
+            ec{"Ulanbátar"}
+        }
+        "Asia:Yakutsk"{
+            ec{"Jakutsko"}
+        }
+        "Asia:Yekaterinburg"{
+            ec{"Jekaterinburg"}
+        }
+        "Atlantic:Azores"{
+            ec{"Azorské ostrovy"}
+        }
+        "Atlantic:Canary"{
+            ec{"Kanárske ostrovy"}
+        }
+        "Europe:Kiev"{
+            ec{"Kyjev"}
+        }
+        "Europe:Lisbon"{
+            ec{"Lisabon"}
+        }
+        "Europe:London"{
+            ec{"Londýn"}
+        }
+        "Europe:Moscow"{
+            ec{"Moskva"}
+        }
+        "Europe:Uzhgorod"{
+            ec{"Užhorod"}
+        }
+        "Europe:Zaporozhye"{
+            ec{"Záporožie"}
+        }
+        "Pacific:Galapagos"{
+            ec{"Galapágy"}
+        }
+        hourFormat{"+HHmm;-HHmm"}
+    }
+}

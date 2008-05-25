@@ -1,0 +1,92 @@
+// Copyright (c) 2007 International Business Machines
+// Corporation and others. All Rights Reserved.
+calendar:table(nofallback) {
+    Info {
+        Description { "These are the data driven calendar tests" }
+        LongDescription {   "Data for data driven calendar tests." }
+    }
+    TestData {
+        TestCalendarConversion {
+            Headers { "locale","from","to" }
+            Info {
+                Description { "Test data for calendar conversion :" }
+            }
+            Settings {
+                {
+                    ToCalendar { "en_US@calendar=gregorian" }
+                    Type { "convert_fwd" }
+                },
+                {
+                    ToCalendar { "en_US@calendar=gregorian" }
+                    Type { "convert_rev" }
+                },
+            }
+            //   "0/1/1912/june/4 == gregorian year=1912, ERA=AD, same month, same day 
+            Cases { 
+               {
+                    "en_US@calendar=taiwan",         
+                    "ERA=1,YEAR=1,MONTH=JUNE,DATE=4",  // tw  
+                    "ERA=1,YEAR=1912,MONTH=,DATE="     // greg
+               },
+               {
+                    "en_US@calendar=taiwan",         
+                    "ERA=1,YEAR=3,MONTH=FEBRUARY,DATE=12",  // tw  
+                    "ERA=1,YEAR=1914,MONTH=,DATE="     // greg
+               },
+               {
+                    "en_US@calendar=taiwan",         
+                    "ERA=1,YEAR=96,MONTH=FEBRUARY,DATE=12",  // tw  
+                    "ERA=1,YEAR=2007,MONTH=,DATE="     // greg
+               },
+               // before 1912:
+               // [before minguo]2   1[month] 24[day] -> 1910-1-24 
+               {
+                    "en_US@calendar=taiwan", 
+                    "ERA=0,YEAR=2,MONTH=JANUARY,DATE=24", // tw
+                    "ERA=1,YEAR=1910,MONTH=JANUARY,DATE=24", // greg
+               }
+            }
+        }
+        TestCalendarOperations {
+            Headers { "locale","from","operation","params","to" }
+            Info {
+                Description { "Test data for calendar operation :" }
+            }
+            Settings {
+                {
+                    Type { "ops" }
+                },
+            }
+            Cases { 
+               {
+                    "en_US@calendar=taiwan",         
+                    "ERA=1,YEAR=1,MONTH=JUNE,DATE=4",  // tw  
+                    "roll",
+                    "DATE=1", // date + 1
+                    "ERA=1,YEAR=1,MONTH=JUNE,DATE=5",  // tw  
+               },
+               {
+                    "en_US@calendar=taiwan",         
+                    "ERA=1,YEAR=1,MONTH=JUNE,DATE=4",  // tw  
+                    "add",
+                    "DATE=1", // date + 1
+                    "ERA=1,YEAR=1,MONTH=JUNE,DATE=5",  // tw  
+               },
+               {
+                    "en_US@calendar=taiwan",         
+                    "ERA=1,YEAR=1,MONTH=JUNE,DATE=4",  // tw  
+                    "roll",
+                    "YEAR=1", // date + 1
+                    "ERA=1,YEAR=2,MONTH=JUNE,DATE=4",  // tw  
+               },
+               {
+                    "en_US@calendar=taiwan",         
+                    "ERA=1,YEAR=1,MONTH=JUNE,DATE=4",  // tw  
+                    "add",
+                    "YEAR=1", // date + 1
+                    "ERA=1,YEAR=2,MONTH=JUNE,DATE=4",  // tw  
+               },
+	    }
+        }	          
+    }	    
+}
