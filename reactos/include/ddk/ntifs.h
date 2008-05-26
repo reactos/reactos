@@ -1819,9 +1819,15 @@ typedef enum _FS_FILTER_SECTION_SYNC_TYPE {
     SyncTypeCreateSection
 } FS_FILTER_SECTION_SYNC_TYPE, *PFS_FILTER_SECTION_SYNC_TYPE;
 
+typedef enum _FS_FILTER_STREAM_FO_NOTIFICATION_TYPE {
+    NotifyTypeCreate = 0,
+    NotifyTypeRetired
+} FS_FILTER_STREAM_FO_NOTIFICATION_TYPE, *PFS_FILTER_STREAM_FO_NOTIFICATION_TYPE;
+
 typedef union _FS_FILTER_PARAMETERS {
     struct {
         PLARGE_INTEGER  EndingOffset;
+        PERESOURCE *ResourceToRelease;
     } AcquireForModifiedPageWriter;
 
     struct {
@@ -1832,6 +1838,11 @@ typedef union _FS_FILTER_PARAMETERS {
         FS_FILTER_SECTION_SYNC_TYPE  SyncType;
         ULONG  PageProtection;
     } AcquireForSectionSynchronization;
+
+    struct {
+        FS_FILTER_STREAM_FO_NOTIFICATION_TYPE NotificationType;
+        BOOLEAN POINTER_ALIGNMENT SafeToRecurse;
+    } NotifyStreamFileObject;
 
     struct {
         PVOID  Argument1;
@@ -2278,7 +2289,7 @@ CcSetFileSizes (
 
 typedef VOID (NTAPI *PFLUSH_TO_LSN) (
     IN PVOID            LogHandle,
-    IN PLARGE_INTEGER   Lsn
+    IN LARGE_INTEGER    Lsn
 );
 
 NTKERNELAPI
