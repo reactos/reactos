@@ -1,4 +1,3 @@
-
 /*
  *  ReactOS W32 Subsystem
  *  Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003 ReactOS Team
@@ -152,13 +151,12 @@ NtGdiCreateCompatibleDC(HDC hDC)
   DC_UnlockDc(NewDC);
   DC_UnlockDc(OrigDC);
   if (NULL != DisplayDC)
-    {
-      NtGdiDeleteObjectApp(DisplayDC);
-    }
+  {
+     NtGdiDeleteObjectApp(DisplayDC);
+  }
 
   hVisRgn = NtGdiCreateRectRgn(0, 0, 1, 1);
   IntGdiSelectVisRgn(hNewDC, hVisRgn);
-  NtGdiDeleteObject(hVisRgn);
   if (Layout) NtGdiSetLayout( hNewDC, -1, Layout);
 
   DC_InitDC(hNewDC);
