@@ -21,4 +21,5 @@
 	<file>sysreg.cpp</file>
 	<file>file_reader.cpp</file>
 	<file>os_support.cpp</file>
+	<file>timer_command_callback.cpp</file>
 </module>
