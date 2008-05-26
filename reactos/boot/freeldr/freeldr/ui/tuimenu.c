@@ -292,6 +292,35 @@ TuiDrawMenuBox(PUI_MENU_INFO MenuInfo)
                        ATTR(UiMenuFgColor, UiMenuBgColor));
         }
     }
+    else
+    {
+        //
+        // Erase the timeout string with spaces, and 0-terminate for sure
+        //
+        for (i=0; i<sizeof(MenuLineText)-1; i++)
+        {
+            MenuLineText[i] = ' ';
+        }
+        MenuLineText[sizeof(MenuLineText)-1] = 0;
+
+        //
+        // Draw this "empty" string to erase
+        //
+        if (UiCenterMenu)
+        {
+            UiDrawText(MenuInfo->Right - strlen(MenuLineText) - 1,
+                       MenuInfo->Bottom,
+                       MenuLineText,
+                       ATTR(UiMenuFgColor, UiMenuBgColor));
+        }
+        else
+        {
+            UiDrawText(0,
+                       MenuInfo->Bottom + 3,
+                       MenuLineText,
+                       ATTR(UiMenuFgColor, UiMenuBgColor));
+        }
+    }
 
     //
     // Loop each item
