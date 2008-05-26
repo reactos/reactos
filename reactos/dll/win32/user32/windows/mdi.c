@@ -305,7 +305,7 @@ void MDI_CalcDefaultChildPos( HWND hwndClient, INT total, LPPOINT lpPos, INT del
     {
         MDICLIENTINFO *ci = get_client_info(hwndClient);
         total = ci ? ci->nTotalCreated : 0;
-        *id = ci->idFirstChild + ci->nActiveChildren;
+        *id = ci ? ci->idFirstChild + ci->nActiveChildren : 0;
         TRACE("MDI child id %04x\n", *id);
     }
 
