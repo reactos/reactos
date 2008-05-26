@@ -341,6 +341,11 @@ IntGetMonitorsFromRect(OPTIONAL IN LPCRECT pRect,
       DPRINT("MonitorRect: left = %d, top = %d, right = %d, bottom = %d\n",
              MonitorRect.left, MonitorRect.top, MonitorRect.right, MonitorRect.bottom);
 
+      if (flags == MONITOR_DEFAULTTOPRIMARY && Monitor->IsPrimary)
+      {
+         PrimaryMonitor = Monitor;
+      }
+
       if (pRect != NULL)
       {
          BOOL intersects = TRUE;
@@ -382,11 +387,6 @@ IntGetMonitorsFromRect(OPTIONAL IN LPCRECT pRect,
       else
       {
          IntersectionRect = MonitorRect;
-      }
-
-      if (flags == MONITOR_DEFAULTTOPRIMARY && Monitor->IsPrimary)
-      {
-         PrimaryMonitor = Monitor;
       }
 
       if (iCount < listSize)
