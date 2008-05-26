@@ -466,7 +466,7 @@ CreateDesktopA(LPCSTR lpszDesktop,
   ANSI_STRING DesktopNameA;
   UNICODE_STRING DesktopNameU;
   HDESK hDesktop;
-  LPDEVMODEW DevmodeW;
+  LPDEVMODEW DevmodeW = NULL;
 
   if (lpszDesktop != NULL)
     {
@@ -478,7 +478,10 @@ CreateDesktopA(LPCSTR lpszDesktop,
       RtlInitUnicodeString(&DesktopNameU, NULL);
     }
 
-  DevmodeW = GdiConvertToDevmodeW(pDevmode);
+  if (pDevmode)
+    {
+      DevmodeW = GdiConvertToDevmodeW(pDevmode);
+    }
 
   hDesktop = CreateDesktopW(DesktopNameU.Buffer,
 			    NULL,
