@@ -162,7 +162,6 @@ DIALOGINFO * DIALOG_get_info( HWND hWnd, BOOL create )
         }
         else
         {
-            HeapFree( GetProcessHeap(), 0, dlgInfo );
             return NULL;
         }
     }
