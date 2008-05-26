@@ -842,7 +842,6 @@ IntGdiCreateDC(PUNICODE_STRING Driver,
     hVisRgn = NtGdiCreateRectRgn(0, 0, ((PGDIDEVICE)NewDC->pPDev)->GDIInfo.ulHorzRes,
                                  ((PGDIDEVICE)NewDC->pPDev)->GDIInfo.ulVertRes);
     IntGdiSelectVisRgn(hNewDC, hVisRgn);
-    NtGdiDeleteObject(hVisRgn);
 
     /*  Initialize the DC state  */
     DC_InitDC(hNewDC);
@@ -1994,7 +1993,6 @@ NtGdiSelectBitmap(
     hVisRgn = NtGdiCreateRectRgn(0, 0, pBmp->SurfObj.sizlBitmap.cx, pBmp->SurfObj.sizlBitmap.cy);
     BITMAPOBJ_UnlockBitmap(pBmp);
     IntGdiSelectVisRgn(hDC, hVisRgn);
-    NtGdiDeleteObject(hVisRgn);
 
     return hOrgBmp;
 }
