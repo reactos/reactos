@@ -4,9 +4,12 @@
 #include <include/dc.h>
 #include <include/region.h>
 
-INT FASTCALL IntGdiGetClipBox(HDC hDC, LPRECT rc);
-INT STDCALL IntGdiSelectVisRgn(HDC hdc, HRGN hrgn);
-INT STDCALL IntGdiExtSelectClipRgn (PDC dc, HRGN hrgn, int fnMode);
+INT FASTCALL IntGdiGetClipBox(PDC, LPRECT rc);
+INT FASTCALL IntGdiSelectVisRgn(PDC, PROSRGNDATA);
+INT FASTCALL IntGdiExtSelectClipRgn (PDC, PROSRGNDATA, int);
 
+INT FASTCALL GdiGetClipBox(HDC hDC, LPRECT rc);
+INT FASTCALL GdiSelectVisRgn(HDC hdc, HRGN hrgn);
+INT FASTCALL GdiExtSelectClipRgn (PDC dc, HRGN hrgn, int fnMode);
 
 #endif /* not __WIN32K_CLIPRGN_H */

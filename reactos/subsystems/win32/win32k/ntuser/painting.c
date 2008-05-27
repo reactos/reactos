@@ -1158,7 +1158,7 @@ UserScrollDC(HDC hDC, INT dx, INT dy, const RECT *prcScroll,
    RECT rcScroll, rcClip, rcSrc, rcDst;
    INT Result;
 
-   IntGdiGetClipBox(hDC, &rcClip);
+   GdiGetClipBox(hDC, &rcClip);
    rcScroll = rcClip;
    if (prcClip)
    {

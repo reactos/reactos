@@ -16,7 +16,6 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id$ */
 
 #include <w32k.h>
 
@@ -59,8 +58,8 @@ CLIPPING_UpdateGCRegion(DC* Dc)
    return NtGdiOffsetRgn(Dc->w.hGCClipRgn, -Dc->w.DCOrgX, -Dc->w.DCOrgY);
 }
 
-INT STDCALL
-IntGdiSelectVisRgn(HDC hdc, HRGN hrgn)
+INT FASTCALL
+GdiSelectVisRgn(HDC hdc, HRGN hrgn)
 {
   int retval;
   DC *dc;
@@ -96,9 +95,9 @@ IntGdiSelectVisRgn(HDC hdc, HRGN hrgn)
 }
 
 
-int STDCALL IntGdiExtSelectClipRgn(PDC dc,
-                                HRGN hrgn,
-                                int fnMode)
+int FASTCALL GdiExtSelectClipRgn(PDC dc,
+                              HRGN hrgn,
+                             int fnMode)
 {
   int retval;
   //  dc->DC_Flags &= ~DC_FLAG_DIRTY_RAO;
@@ -151,8 +150,8 @@ int STDCALL IntGdiExtSelectClipRgn(PDC dc,
 
 
 int STDCALL NtGdiExtSelectClipRgn(HDC  hDC,
-                          HRGN  hrgn,
-                          int  fnMode)
+                                HRGN  hrgn,
+                               int  fnMode)
 {
   int retval;
   DC *dc;
@@ -163,14 +162,14 @@ int STDCALL NtGdiExtSelectClipRgn(HDC  hDC,
   	return ERROR;
   }
 
-  retval = IntGdiExtSelectClipRgn ( dc, hrgn, fnMode );
+  retval = GdiExtSelectClipRgn ( dc, hrgn, fnMode );
 
   DC_UnlockDc(dc);
   return retval;
 }
 
 INT FASTCALL
-IntGdiGetClipBox(HDC hDC, LPRECT rc)
+GdiGetClipBox(HDC hDC, LPRECT rc)
 {
    PROSRGNDATA Rgn;
    INT retval;
@@ -201,7 +200,7 @@ NtGdiGetAppClipBox(HDC hDC, LPRECT rc)
   NTSTATUS Status = STATUS_SUCCESS;
   RECT Saferect;
 
-  Ret = IntGdiGetClipBox(hDC, &Saferect);
+  Ret = GdiGetClipBox(hDC, &Saferect);
 
   _SEH_TRY
   {
@@ -434,18 +433,15 @@ IntGdiSetMetaRgn(PDC pDC)
   {
      if ( pDC->DcLevel.prgnClip )
      {
-        TempRgn = REGION_AllocRgnWithHandle(1);
-
+        TempRgn = IntGdiCreateRectRgn(0,0,0,0);
         if (TempRgn)
-        {
-           REGION_SetRectRgn(TempRgn, 0, 0, 0, 0);
+        {        
            Ret = IntGdiCombineRgn( TempRgn,
                      pDC->DcLevel.prgnMeta,
                      pDC->DcLevel.prgnClip,
                                    RGN_AND);
            if ( Ret )
            {
-              REGION_UnlockRgn(TempRgn);
               TempRgn = GDIOBJ_ShareLockObj(TempRgn->BaseObject.hHmgr,
                                               GDI_OBJECT_TYPE_REGION);
 
@@ -465,8 +461,7 @@ IntGdiSetMetaRgn(PDC pDC)
               pDC->erclClip.left   = 0;
               pDC->erclClip.top    = 0;
               pDC->erclClip.right  = 0;
-              pDC->erclClip.bottom = 0;
-              
+              pDC->erclClip.bottom = 0;              
            }
            else
               REGION_FreeRgn(TempRgn);

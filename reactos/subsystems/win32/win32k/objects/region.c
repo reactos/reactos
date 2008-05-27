@@ -1181,6 +1181,7 @@ REGION_RegionOp(
             ASSERT(newReg->Buffer);
         }
     }
+    newReg->rdh.iType = RDH_RECTANGLES;
 
     if (oldRects != &newReg->rdh.rcBound)
         ExFreePool(oldRects);
@@ -2209,6 +2210,21 @@ NtGdiCreateEllipticRgn(
                                    Right - Left, Bottom - Top);
 }
 
+PROSRGNDATA
+FASTCALL
+IntGdiCreateRectRgn(INT LeftRect, INT TopRect, INT RightRect, INT BottomRect)
+{
+  PROSRGNDATA pRgn;
+
+  if (!(pRgn = REGION_AllocRgnWithHandle(1))) return NULL;
+
+  REGION_SetRectRgn(pRgn, LeftRect, TopRect, RightRect, BottomRect);
+  REGION_UnlockRgn(pRgn);
+
+  return pRgn;
+}
+
+
 HRGN STDCALL
 NtGdiCreateRectRgn(INT LeftRect, INT TopRect, INT RightRect, INT BottomRect)
 {
@@ -2227,8 +2243,8 @@ NtGdiCreateRectRgn(INT LeftRect, INT TopRect, INT RightRect, INT BottomRect)
     REGION_UnlockRgn(pRgn);
 
     return hRgn;
-
 }
+
 
 HRGN
 STDCALL
@@ -2595,7 +2611,7 @@ NtGdiGetRandomRgn(
     {
     case CLIPRGN:
         hSrc = pDC->w.hClipRgn;
-//        if (dc->DcLevel.prgnClip) hSrc = ((PROSRGNDATA)dc->DcLevel.prgnClip)->BaseObject.hHmgr;
+//        if (pDC->DcLevel.prgnClip) hSrc = ((PROSRGNDATA)pDC->DcLevel.prgnClip)->BaseObject.hHmgr;
         break;
     case METARGN:
         if (pDC->DcLevel.prgnMeta) hSrc = ((PROSRGNDATA)pDC->DcLevel.prgnMeta)->BaseObject.hHmgr;
@@ -2603,16 +2619,15 @@ NtGdiGetRandomRgn(
     case APIRGN:
         DPRINT1("hMetaRgn not implemented\n");
         //hSrc = dc->hMetaClipRgn;
-        if (!hSrc)
-        {
-            hSrc = pDC->w.hClipRgn;
-        }
+        if (!hSrc) hSrc = pDC->w.hClipRgn;
         //if (!hSrc) rgn = dc->hMetaRgn;
-//        if (dc->prgnAPI) hSrc = ((PROSRGNDATA)dc->prgnAPI)->BaseObject.hHmgr;
+//        if (pDC->prgnAPI) hSrc = ((PROSRGNDATA)pDC->prgnAPI)->BaseObject.hHmgr;
+//        else if (pDC->DcLevel.prgnClip) hSrc = ((PROSRGNDATA)pDC->DcLevel.prgnClip)->BaseObject.hHmgr;
+//        else if (pDC->DcLevel.prgnMeta) hSrc = ((PROSRGNDATA)pDC->DcLevel.prgnMeta)->BaseObject.hHmgr;
         break;
     case SYSRGN:
         hSrc = pDC->w.hVisRgn;
-//        if (dc->prgnVis) hSrc = ((PROSRGNDATA)dc->prgnVis)->BaseObject.hHmgr;
+//        if (pDC->prgnVis) hSrc = ((PROSRGNDATA)pDC->prgnVis)->BaseObject.hHmgr;
         break;
     default:
         hSrc = 0;
@@ -3568,17 +3583,17 @@ IntCreatePolyPolgonRgn(
 {
     HRGN hrgn;
     ROSRGNDATA *region;
-    EdgeTableEntry *pAET;   /* Active Edge Table       */
-    INT y;                /* current scanline        */
-    int iPts = 0;           /* number of pts in buffer */
-    EdgeTableEntry *pWETE;  /* Winding Edge Table Entry*/
-    ScanLineList *pSLL;     /* current scanLineList    */
-    POINT *pts;           /* output buffer           */
-    EdgeTableEntry *pPrevAET;        /* ptr to previous AET     */
-    EdgeTable ET;                    /* header node for ET      */
-    EdgeTableEntry AET;              /* header node for AET     */
-    EdgeTableEntry *pETEs;           /* EdgeTableEntries pool   */
-    ScanLineListBlock SLLBlock;      /* header for scanlinelist */
+    EdgeTableEntry *pAET;     /* Active Edge Table       */
+    INT y;                    /* current scanline        */
+    int iPts = 0;             /* number of pts in buffer */
+    EdgeTableEntry *pWETE;    /* Winding Edge Table Entry*/
+    ScanLineList *pSLL;       /* current scanLineList    */
+    POINT *pts;               /* output buffer           */
+    EdgeTableEntry *pPrevAET; /* ptr to previous AET     */
+    EdgeTable ET;             /* header node for ET      */
+    EdgeTableEntry AET;       /* header node for AET     */
+    EdgeTableEntry *pETEs;    /* EdgeTableEntries pool   */
+    ScanLineListBlock SLLBlock; /* header for scanlinelist */
     int fixWAET = FALSE;
     POINTBLOCK FirstPtBlock, *curPtBlock; /* PtBlock buffers    */
     POINTBLOCK *tmpPtBlock;

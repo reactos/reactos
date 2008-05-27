@@ -367,7 +367,7 @@ BOOL STDCALL NtGdiSelectClipPath(HDC  hDC,
  /* Construct a region from the path */
  else if( PATH_PathToRegion( &dc->w.path, Dc_Attr->jFillMode, &hrgnPath ) )
  {
-   success = IntGdiExtSelectClipRgn( dc, hrgnPath, Mode ) != ERROR;
+   success = GdiExtSelectClipRgn( dc, hrgnPath, Mode ) != ERROR;
    NtGdiDeleteObject( hrgnPath );
 
    /* Empty the path */

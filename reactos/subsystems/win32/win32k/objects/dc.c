@@ -156,7 +156,7 @@ NtGdiCreateCompatibleDC(HDC hDC)
   }
 
   hVisRgn = NtGdiCreateRectRgn(0, 0, 1, 1);
-  IntGdiSelectVisRgn(hNewDC, hVisRgn);
+  GdiSelectVisRgn(hNewDC, hVisRgn);
   if (Layout) NtGdiSetLayout( hNewDC, -1, Layout);
 
   DC_InitDC(hNewDC);
@@ -841,7 +841,7 @@ IntGdiCreateDC(PUNICODE_STRING Driver,
 
     hVisRgn = NtGdiCreateRectRgn(0, 0, ((PGDIDEVICE)NewDC->pPDev)->GDIInfo.ulHorzRes,
                                  ((PGDIDEVICE)NewDC->pPDev)->GDIInfo.ulVertRes);
-    IntGdiSelectVisRgn(hNewDC, hVisRgn);
+    GdiSelectVisRgn(hNewDC, hVisRgn);
 
     /*  Initialize the DC state  */
     DC_InitDC(hNewDC);
@@ -1472,7 +1472,7 @@ IntGdiCopyFromSaveState(PDC dc, PDC dcs, HDC hDC)
   }
   DC_UnlockDc ( dc );
 #else
-  IntGdiExtSelectClipRgn(dc, dcs->w.hClipRgn, RGN_COPY);
+  GdiExtSelectClipRgn(dc, dcs->w.hClipRgn, RGN_COPY);
   DC_UnlockDc ( dc );
 #endif
   if(!hDC) return; // Not a MemoryDC or SaveLevel DC, return.
@@ -1992,7 +1992,7 @@ NtGdiSelectBitmap(
 
     hVisRgn = NtGdiCreateRectRgn(0, 0, pBmp->SurfObj.sizlBitmap.cx, pBmp->SurfObj.sizlBitmap.cy);
     BITMAPOBJ_UnlockBitmap(pBmp);
-    IntGdiSelectVisRgn(hDC, hVisRgn);
+    GdiSelectVisRgn(hDC, hVisRgn);
 
     return hOrgBmp;
 }
