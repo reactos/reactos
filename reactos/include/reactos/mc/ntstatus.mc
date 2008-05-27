@@ -279,6 +279,23 @@ Language=English
 The specified process is part of a job.
 
 .
+MessageId=0x125
+Severity=Success
+Facility=System
+SymbolicName=STATUS_VOLSNAP_HIBERNATE_READY 
+Language=English
+{Volume Shadow Copy Service}
+The system is now ready for hibernation.
+
+.
+MessageId=0x126
+Severity=Success
+Facility=System
+SymbolicName=STATUS_FSFILTER_OP_COMPLETED_SUCCESSFULLY 
+Language=English
+A file system or file system filter driver has successfully completed an FsFilter operation.
+
+.
 MessageId=0x367
 Severity=Success
 Facility=System
