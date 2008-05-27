@@ -84,7 +84,6 @@ void __wine_stub_msvcrt_dll_437(void) { __wine_spec_unimplemented_stub(__wine_sp
 void __wine_stub_msvcrt_dll_455(void) { __wine_spec_unimplemented_stub(__wine_spec_file_name, "_stat64"); }
 void __wine_stub_msvcrt_dll_542(void) { __wine_spec_unimplemented_stub(__wine_spec_file_name, "_wperror"); }
 void __wine_stub_msvcrt_dll_543(void) { __wine_spec_unimplemented_stub(__wine_spec_file_name, "_wpgmptr"); }
-void __wine_stub_msvcrt_dll_551(void) { __wine_spec_unimplemented_stub(__wine_spec_file_name, "_wsetlocale"); }
 void __wine_stub_msvcrt_dll_553(void) { __wine_spec_unimplemented_stub(__wine_spec_file_name, "_wspawnl"); }
 void __wine_stub_msvcrt_dll_554(void) { __wine_spec_unimplemented_stub(__wine_spec_file_name, "_wspawnle"); }
 void __wine_stub_msvcrt_dll_555(void) { __wine_spec_unimplemented_stub(__wine_spec_file_name, "_wspawnlp"); }

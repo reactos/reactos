@@ -554,7 +554,7 @@ EXPORTS
   _write @548
   _wrmdir @549
   _wsearchenv @550
-  _wsetlocale=__wine_stub_msvcrt_dll_551 @551
+  _wsetlocale @551
   _wsopen @552
   _wspawnl=__wine_stub_msvcrt_dll_553 @553
   _wspawnle=__wine_stub_msvcrt_dll_554 @554
