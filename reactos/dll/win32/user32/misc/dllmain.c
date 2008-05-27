@@ -88,7 +88,7 @@ GetDllList()
             if (NT_SUCCESS(Status))
             {
                 LPWSTR lpBuffer = (LPWSTR)kvpInfo->Data;
-                if (lpBuffer != UNICODE_NULL)
+                if (*lpBuffer != UNICODE_NULL)
                 {
                     INT bytesToCopy, nullPos;
 
