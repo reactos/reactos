@@ -104,9 +104,9 @@ GetDllList()
 
                         /* ensure string is terminated */
                         szAppInit[nullPos] = UNICODE_NULL;
-                    }
 
-                    bRet = TRUE;
+                        bRet = TRUE;
+                    }
                 }
             }
         }
