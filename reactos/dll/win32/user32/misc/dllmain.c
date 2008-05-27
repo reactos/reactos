@@ -90,9 +90,22 @@ GetDllList()
                 LPWSTR lpBuffer = (LPWSTR)kvpInfo->Data;
                 if (lpBuffer != UNICODE_NULL)
                 {
-                    RtlMoveMemory(szAppInit,
-                                  kvpInfo->Data,
-                                  min(kvpInfo->DataLength, KEY_LENGTH));
+                    INT bytesToCopy, nullPos;
+
+                    bytesToCopy = min(kvpInfo->DataLength, KEY_LENGTH * sizeof(WCHAR));
+
+                    if (bytesToCopy != 0)
+                    {
+                        RtlMoveMemory(szAppInit,
+                                      kvpInfo->Data,
+                                      bytesToCopy);
+
+                        nullPos = (bytesToCopy / sizeof(WCHAR)) - 1;
+
+                        /* ensure string is terminated */
+                        szAppInit[nullPos] = UNICODE_NULL;
+                    }
+
                     bRet = TRUE;
                 }
             }
