@@ -51,7 +51,6 @@
  */
 /*@{*/
 #define GDI_OBJECT_TYPE_DC            0x00010000
-#define GDI_OBJECT_TYPE_DIRECTDRAW    0x00020000 /* Should be moved away from gdi objects */
 #define GDI_OBJECT_TYPE_DD_SURFACE    0x00030000 /* Should be moved away from gdi objects */
 #define GDI_OBJECT_TYPE_REGION        0x00040000
 #define GDI_OBJECT_TYPE_BITMAP        0x00050000
@@ -66,9 +65,13 @@
 #define GDI_OBJECT_TYPE_DD_MOTIONCOMP 0x00140000 /* Should be moved away from gdi objects */
 #define GDI_OBJECT_TYPE_ENUMFONT      0x00160000
 
+/* Confrim on XP value is taken from NtGdiCreateDirectDrawObject */
+#define GDI_OBJECT_TYPE_DIRECTDRAW  0x00200000
+
 /* Following object types are derived types from the above base types
    use 0x001f0000 as mask to get the base type */
 #define GDI_OBJECT_TYPE_EMF         0x00210000
+
 #define GDI_OBJECT_TYPE_METAFILE    0x00260000
 #define GDI_OBJECT_TYPE_ENHMETAFILE 0x00460000
 #define GDI_OBJECT_TYPE_PEN         0x00300000
