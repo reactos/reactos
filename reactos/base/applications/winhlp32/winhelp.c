@@ -1001,7 +1001,7 @@ static LRESULT CALLBACK WINHELP_MainWndProc(HWND hWnd, UINT msg, WPARAM wParam, 
                         }
                         pt.x = (int)(short)LOWORD(msgf->lParam);
                         pt.y = (int)(short)HIWORD(msgf->lParam);
-                        ClientToScreen(hWnd, &pt);
+                        ClientToScreen(msgf->nmhdr.hwndFrom, &pt);
                         TrackPopupMenu(GetSubMenu(hMenu, 0), TPM_LEFTALIGN|TPM_TOPALIGN,
                                        pt.x, pt.y, 0, hWnd, NULL);
                         DestroyMenu(hMenu);

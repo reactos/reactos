@@ -3,6 +3,7 @@
  *
  * Copyright 1997 Henrik Olsen
  * Copyright 2002 Sylvain Petreolle <spetreolle@yahoo.fr>
+ * Copyright 2008 Jens Albretsen<jens@albretsen.dk>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -24,7 +25,7 @@
 MAIN_MENU MENU LANGUAGE LANG_DANISH, SUBLANG_DEFAULT
 {
  POPUP "&Filer" {
-  MENUITEM "Å&bn...", MNID_FILE_OPEN
+  MENUITEM "Å&ben...", MNID_FILE_OPEN
   MENUITEM SEPARATOR
   MENUITEM "&Udskriv emne", MNID_FILE_PRINT
   MENUITEM "&Indstil printer", MNID_FILE_SETUP
@@ -43,16 +44,24 @@ MAIN_MENU MENU LANGUAGE LANG_DANISH, SUBLANG_DEFAULT
    MENUITEM "&Brug af Hjælp", MNID_HELP_HELPON
    MENUITEM "Altid &øverst", MNID_HELP_HELPTOP
    MENUITEM SEPARATOR
-   MENUITEM "&Info...", MNID_HELP_ABOUT
+   MENUITEM "&Information...", MNID_HELP_ABOUT
 #ifdef WINELIB
    MENUITEM "Om &WINE", MNID_HELP_WINE
 #endif
  }
 }
 
+IDD_INDEX DIALOG DISCARDABLE 0, 0, 200, 190 LANGUAGE LANG_DANISH, SUBLANG_DEFAULT
+STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "Index"
+{
+    LISTBOX IDC_INDEXLIST, 10, 10, 180, 150, LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_BORDER
+    PUSHBUTTON "&OK", IDOK, 40, 170, 50, 12
+    PUSHBUTTON "&Annuller", IDCANCEL, 120, 170, 50, 12
+}
 
 /* Strings */
-
 STRINGTABLE DISCARDABLE LANGUAGE LANG_DANISH, SUBLANG_DEFAULT
 {
 STID_WINE_HELP, 	"WINE Hjælp"
@@ -65,9 +74,9 @@ STID_CONTENTS, 		"&Indhold"
 STID_SEARCH, 		"&Søg"
 STID_BACK, 		"&Tilbage"
 STID_HISTORY, 		"&Oversigt"
-STID_TOPICS, 		"To&pics"
+STID_TOPICS, 		"&Emner"
 STID_ALL_FILES, 	"Alle filer (*.*)"
 STID_HELP_FILES_HLP, 	"Hjælpe filer (*.hlp)"
-STID_FILE_NOT_FOUND_s	"Cannot find '%s'. Do you want to find this file yourself?"
-STID_NO_RICHEDIT	"Cannot find a richedit implementation... Aborting"
+STID_FILE_NOT_FOUND_s	"Kan ikke finde '%s'. Vil du selv finde filen?"
+STID_NO_RICHEDIT	"Kan ikke finde en 'richedit' implementering... Afbryder"
 }

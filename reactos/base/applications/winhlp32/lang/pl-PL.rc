@@ -80,3 +80,27 @@ STID_HELP_FILES_HLP, 	"Pliki pomocy (*.hlp)"
 STID_FILE_NOT_FOUND_s	"Cannot find '%s'. Do you want to find this file yourself?"
 STID_NO_RICHEDIT	"Cannot find a richedit implementation... Aborting"
 }
+
+
+CONTEXT_MENU MENU LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
+BEGIN
+	POPUP ""
+	BEGIN
+		MENUITEM "Adnotacja...",       MNID_CTXT_ANNOTATE
+		MENUITEM "Kopiuj",                MNID_CTXT_COPY
+		MENUITEM "Drukuj...",            MNID_CTXT_PRINT
+		POPUP    "Czcionka"
+		BEGIN
+			MENUITEM "Ma³a",       MNID_CTXT_FONTS_SMALL
+			MENUITEM "Normalna",      MNID_CTXT_FONTS_NORMAL
+			MENUITEM "Du¿a",       MNID_CTXT_FONTS_LARGE
+		END
+		POPUP   "Pomoc zawsze widoczna"
+		BEGIN
+			MENUITEM "Domyœlnie",     MNID_CTXT_HELP_DEFAULT
+			MENUITEM "Widoczna",     MNID_CTXT_HELP_VISIBLE
+			MENUITEM "Niewidoczna", MNID_CTXT_HELP_NONVISIBLE
+		END
+		MENUITEM "U¿yj kolorów systemowych",   MNID_CTXT_SYSTEM_COLORS
+	END
+END

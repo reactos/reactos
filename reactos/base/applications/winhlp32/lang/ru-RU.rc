@@ -76,5 +76,28 @@ STID_TOPICS,		"&Указатель"
 STID_ALL_FILES, 	"Все файлы (*.*)"
 STID_HELP_FILES_HLP, 	"Файлы справки (*.hlp)"
 STID_FILE_NOT_FOUND_s	"Не могу найти '%s'. Вы хотите найти этот файл самостоятельно?"
-STID_NO_RICHEDIT	"Cannot find a richedit implementation... Aborting"
+STID_NO_RICHEDIT	"Не могу найти richedit"
 }
+
+CONTEXT_MENU MENU LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
+BEGIN
+	POPUP ""
+	BEGIN
+		MENUITEM "Заметки...",       MNID_CTXT_ANNOTATE
+		MENUITEM "Копировать",                MNID_CTXT_COPY
+		MENUITEM "Печать...",            MNID_CTXT_PRINT
+		POPUP    "Шрифт"
+		BEGIN
+			MENUITEM "Мелкий",       MNID_CTXT_FONTS_SMALL
+			MENUITEM "Обычный",      MNID_CTXT_FONTS_NORMAL
+			MENUITEM "Крупный",       MNID_CTXT_FONTS_LARGE
+		END
+		POPUP   "Видимость окна справки"
+		BEGIN
+			MENUITEM "По умолчанию",     MNID_CTXT_HELP_DEFAULT
+			MENUITEM "Наверху",     MNID_CTXT_HELP_VISIBLE
+			MENUITEM "Не наверху", MNID_CTXT_HELP_NONVISIBLE
+		END
+		MENUITEM "Использовать системные цвета",   MNID_CTXT_SYSTEM_COLORS
+	END
+END

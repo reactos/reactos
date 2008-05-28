@@ -73,10 +73,33 @@ STID_HLPFILE_ERROR_s, 	"Fehler beim Lesen der Hilfe-Datei `%s'"
 STID_CONTENTS, 		"&Inhalt"
 STID_SEARCH, 		"&Suchen"
 STID_BACK, 		"&Zurück"
-STID_HISTORY, 		"&Bisher"
+STID_HISTORY, 		"&Chronik"
 STID_TOPICS, 		"&Themen"
 STID_ALL_FILES, 	"Alle Dateien (*.*)"
 STID_HELP_FILES_HLP, 	"Hilfe-Dateien (*.hlp)"
 STID_FILE_NOT_FOUND_s	"'%s' konnte nicht gefunden werden. Wollen Sie selber nach dieser Datei suchen?"
-STID_NO_RICHEDIT	"Cannot find a richedit implementation... Aborting"
+STID_NO_RICHEDIT	"Die Richedit Implementation konnte nicht gefunden werden... Breche ab."
 }
+
+CONTEXT_MENU MENU LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
+BEGIN
+POPUP ""
+BEGIN
+MENUITEM "Anmerken...",       MNID_CTXT_ANNOTATE
+MENUITEM "Kopieren",                MNID_CTXT_COPY
+MENUITEM "Drucken...",            MNID_CTXT_PRINT
+POPUP    "Schriftgröße"
+BEGIN
+MENUITEM "Klein",       MNID_CTXT_FONTS_SMALL
+MENUITEM "Normal",      MNID_CTXT_FONTS_NORMAL
+MENUITEM "Groß",       MNID_CTXT_FONTS_LARGE
+END
+POPUP   "Hilfe immer sichtbar"
+BEGIN
+MENUITEM "Standard",     MNID_CTXT_HELP_DEFAULT
+MENUITEM "Sichtbar",     MNID_CTXT_HELP_VISIBLE
+MENUITEM "Nicht sichtbar", MNID_CTXT_HELP_NONVISIBLE
+END
+MENUITEM "Systemfarben verwenden",   MNID_CTXT_SYSTEM_COLORS
+END
+END
