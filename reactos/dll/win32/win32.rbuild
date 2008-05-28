@@ -292,6 +292,9 @@
 <directory name="shfolder">
 	<xi:include href="shfolder/shfolder.rbuild" />
 </directory>
+<directory name="shimgvw">
+	<xi:include href="shimgvw/shimgvw.rbuild" />
+</directory>
 <directory name="shlwapi">
 	<xi:include href="shlwapi/shlwapi.rbuild" />
 </directory>
