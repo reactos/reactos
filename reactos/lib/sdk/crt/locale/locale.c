@@ -724,3 +724,8 @@ int __crtLCMapStringA(
    */
   return LCMapStringA(lcid,mapflags,src,srclen,dst,dstlen);
 }
+
+int CDECL _getmbcp(void)
+{
+    return MSVCRT___lc_codepage;
+}

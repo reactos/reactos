@@ -22,13 +22,15 @@
 #include <stdarg.h>
 #include <ctype.h>
 #include <string.h>
+#include <signal.h>
+#include <stdlib.h>
 
+#include "float.h"
 #include "windef.h"
 #include "winbase.h"
 #include "winerror.h"
 #include "winnls.h"
 
-//#include "msvcrt/string.h"
 #include "eh.h"
 
 typedef unsigned short MSVCRT_wchar_t;
@@ -132,6 +134,9 @@ extern void msvcrt_free_console(void);
 extern void msvcrt_init_args(void);
 extern void msvcrt_free_args(void);
 
+#define MSVCRT__OUT_TO_DEFAULT 0
+#define MSVCRT__REPORT_ERRMODE 3
+
 /* run-time error codes */
 #define _RT_STACK       0
 #define _RT_NULLPTR     1
@@ -182,6 +187,17 @@ struct MSVCRT___JUMP_BUFFER {
     unsigned long UnwindData[6];
 };
 #endif /* __i386__ */
+
+typedef void (*float_handler)(int, int);
+
+void _default_handler(int signal);
+
+typedef struct _sig_element
+{
+   int signal;
+   char *signame;
+   __p_sig_fn_t handler;
+}sig_element;
 
 typedef void* (*malloc_func_t)(size_t);
 typedef void  (*free_func_t)(void*);

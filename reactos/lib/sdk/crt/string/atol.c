@@ -10,3 +10,10 @@ _ttol(const _TCHAR *str)
 {
   return _tcstol(str, 0, 10);
 }
+
+int _atoldbl(long double *value, const char *str)
+{
+    /* FIXME needs error checking for huge/small values */
+   //*value = strtold(str,0);
+   return 0;
+}

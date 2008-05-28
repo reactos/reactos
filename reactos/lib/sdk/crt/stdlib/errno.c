@@ -3,6 +3,7 @@
  */
 #include <precomp.h>
 #include "doserrmap.h"
+#include <internal/wine/msvcrt.h>
 
 /*
  * @implemented
@@ -69,6 +70,42 @@ void _dosmaperr(unsigned long oserror)
 	}
 	/* EINVAL appears to be the default */
 	__set_errno(EINVAL);
+}
+
+/******************************************************************************
+*              _set_error_mode (MSVCRT.@)
+*
+* Set the error mode, which describes where the C run-time writes error
+* messages.
+*
+* PARAMS
+*   mode - the new error mode
+*
+* RETURNS
+*   The old error mode.
+*
+* TODO
+*  This function does not have a proper implementation; the error mode is
+*  never used.
+*/
+int CDECL _set_error_mode(int mode)
+{
+    static int current_mode = MSVCRT__OUT_TO_DEFAULT;
+
+    const int old = current_mode;
+    if ( MSVCRT__REPORT_ERRMODE != mode ) {
+        current_mode = mode;
+
+    }
+    return old;
+}
+
+/******************************************************************************
+*              _seterrormode (MSVCRT.@)
+*/
+void CDECL _seterrormode(int mode)
+{
+    SetErrorMode( mode );
 }
 
 /* EOF */

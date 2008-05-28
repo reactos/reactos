@@ -138,8 +138,8 @@ void _CxxThrowException(exception*,const cxx_exception_type*);
 static inline const char *dbgstr_type_info( const type_info *info )
 {
     if (!info) return "{}";
-    return wine_dbg_sprintf( "{vtable=%p name=%s (%s)}",
-                             info->vtable, info->mangled, info->name ? info->name : "" );
+    return "{}";/*sprintf( "{vtable=%p name=%s (%s)}",
+                             info->vtable, info->mangled, info->name ? info->name : "" );*/
 }
 
 /* compute the this pointer for a base class of a given type */

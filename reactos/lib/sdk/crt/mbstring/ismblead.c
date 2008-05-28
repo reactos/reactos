@@ -64,3 +64,11 @@ int _ismbslead( const unsigned char *str, const unsigned char *t)
 	return _ismbblead( *s);
 }
 
+/*
+ * @implemented
+ */
+unsigned char *__p__mbctype(void)
+{
+	return _mbctype;
+}
+

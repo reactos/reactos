@@ -39,6 +39,7 @@
 	</directory>
 	<directory name="except">
 		<file>abnorter.c</file>
+		<file>checkesp.c</file>
 		<file>cpp.c</file>
 		<file>cppexcept.c</file>
 		<file>matherr.c</file>
@@ -416,6 +417,7 @@
 			<file>wcsnlen.c</file>
 			<file>wcsrchr.c</file>
 		</ifnot>
+		<file>atol.c</file>
 		<file>atof.c</file>
 		<file>ctype.c</file>
 		<file>lasttok.c</file>

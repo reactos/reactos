@@ -34,6 +34,7 @@
 #include "wine/debug.h"
 #include <malloc.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 #include <internal/wine/msvcrt.h>
 #include <internal/wine/cppexcept.h>

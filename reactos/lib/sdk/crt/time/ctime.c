@@ -1436,3 +1436,25 @@ mktime(struct tm * tmp)
 {
   return time1(tmp, localsub, 0L);
 }
+
+/*
+ * @implemented
+ */
+char **
+__p__tzname(void)
+{
+  return _tzname;
+}
+
+/*********************************************************************
+ *              _dstbias (MSVCRT.@)
+ */
+int _dstbias = 0;
+
+/*********************************************************************
+ *              __p_dstbias (MSVCRT.@)
+ */
+int * __p__dstbias(void)
+{
+    return &_dstbias;
+}

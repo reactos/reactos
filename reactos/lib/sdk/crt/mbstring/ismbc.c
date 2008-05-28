@@ -133,3 +133,23 @@ int _ismbcl2(unsigned int c)
 {
   return 0;
 }
+
+/*
+ * @unimplemented
+ */
+int _ismbcgraph(unsigned int ch)
+{
+    //wchar_t wch = msvcrt_mbc_to_wc( ch );
+    //return (get_char_typeW( wch ) & (C1_UPPER | C1_LOWER | C1_DIGIT | C1_PUNCT | C1_ALPHA));
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+int _ismbcpunct(unsigned int ch)
+{
+    //wchar_t wch = msvcrt_mbc_to_wc( ch );
+    //return (get_char_typeW( wch ) & C1_PUNCT);
+    return 0;
+}

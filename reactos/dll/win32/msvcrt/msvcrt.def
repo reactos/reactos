@@ -7,11 +7,14 @@ EXPORTS
   $I10_OUTPUT=MSVCRT_I10_OUTPUT @1
   ??0__non_rtti_object@@QAE@ABV0@@Z=__thiscall_MSVCRT___non_rtti_object_copy_ctor @2
   ??0__non_rtti_object@@QAE@PBD@Z=__thiscall_MSVCRT___non_rtti_object_ctor @3
+  ;??0bad_cast@@AAE@PBQBD@Z
   ??0bad_cast@@QAE@ABQBD@Z=__thiscall_MSVCRT_bad_cast_ctor @4
   ??0bad_cast@@QAE@ABV0@@Z=__thiscall_MSVCRT_bad_cast_copy_ctor @5
+  ;??0bad_cast@@QAE@PBD@Z
   ??0bad_typeid@@QAE@ABV0@@Z=__thiscall_MSVCRT_bad_typeid_copy_ctor @6
   ??0bad_typeid@@QAE@PBD@Z=__thiscall_MSVCRT_bad_typeid_ctor @7
   ??0exception@@QAE@ABQBD@Z=__thiscall_MSVCRT_exception_ctor @8
+  ;??0exception@@QAE@ABQBDH@Z
   ??0exception@@QAE@ABV0@@Z=__thiscall_MSVCRT_exception_copy_ctor @9
   ??0exception@@QAE@XZ=__thiscall_MSVCRT_exception_default_ctor @10
   ??1__non_rtti_object@@UAE@XZ=__thiscall_MSVCRT___non_rtti_object_dtor @11
@@ -37,6 +40,8 @@ EXPORTS
   ??_Ebad_cast@@UAEPAXI@Z=__thiscall_MSVCRT_bad_cast_vector_dtor @31
   ??_Ebad_typeid@@UAEPAXI@Z=__thiscall_MSVCRT_bad_typeid_vector_dtor @32
   ??_Eexception@@UAEPAXI@Z=__thiscall_MSVCRT_exception_vector_dtor @33
+  ;??_Fbad_cast@@QAEXXZ
+  ;??_Fbad_typeid@@QAEXXZ
   ??_G__non_rtti_object@@UAEPAXI@Z=__thiscall_MSVCRT___non_rtti_object_scalar_dtor @34
   ??_Gbad_cast@@UAEPAXI@Z=__thiscall_MSVCRT_bad_cast_scalar_dtor @35
   ??_Gbad_typeid@@UAEPAXI@Z=__thiscall_MSVCRT_bad_typeid_scalar_dtor @36
@@ -79,703 +84,743 @@ EXPORTS
   _HUGE @73 DATA
   _Strftime @74
   _XcptFilter @75
-  __CxxFrameHandler @76
-  __CxxLongjmpUnwind=__CxxLongjmpUnwind@4 @77
-  __RTCastToVoid=MSVCRT___RTCastToVoid @78
-  __RTDynamicCast=MSVCRT___RTDynamicCast @79
-  __RTtypeid=MSVCRT___RTtypeid @80
-  __STRINGTOLD=__wine_stub_msvcrt_dll_81 @81
-  __argc @82 DATA
-  __argv @83 DATA
-  __badioinfo @84 DATA
-  __crtCompareStringA @85
-  __crtCompareStringW=__wine_stub_msvcrt_dll_86 @86
-  __crtGetLocaleInfoW @87
-  __crtLCMapStringA @88
-  __dllonexit @89
-  __doserrno @90
-  __fpecode @91
-  __get_app_type=__wine_stub_msvcrt_dll_92 @92
-  __getmainargs @93
-  __initenv @94 DATA
-  __isascii=ntdll.__isascii @95
-  __iscsym=ntdll.__iscsym @96
-  __iscsymf=ntdll.__iscsymf @97
-  __lc_codepage @98 DATA
-  __lc_collate=__wine_stub_msvcrt_dll_99 @99
-  __lc_collate_cp @100 DATA
-  __lc_handle @101 DATA
-  __lconv_init @102
-  __mb_cur_max @103 DATA
-  __p___argc @104
-  __p___argv @105
-  __p___initenv @106
-  __p___mb_cur_max @107
-  __p___wargv @108
-  __p___winitenv @109
-  __p__acmdln @110
-  __p__amblksiz @111
-  __p__commode @112
-  __p__daylight @113
-  __p__dstbias @114
-  __p__environ @115
-  __p__fileinfo=__wine_stub_msvcrt_dll_116 @116
-  __p__fmode @117
-  __p__iob @118
-  __p__mbcasemap=__wine_stub_msvcrt_dll_119 @119
-  __p__mbctype=_mbctype @120
-  __p__osver @121
-  __p__pctype @122
-  __p__pgmptr @123
-  __p__pwctype=__wine_stub_msvcrt_dll_124 @124
-  __p__timezone @125
-  __p__tzname=_tzname @126
-  __p__wcmdln @127
-  __p__wenviron @128
-  __p__winmajor @129
-  __p__winminor @130
-  __p__winver @131
-  __p__wpgmptr @132
-  __pioinfo @133 DATA
-  __pxcptinfoptrs=__wine_stub_msvcrt_dll_134 @134
-  __set_app_type @135
-  __setlc_active @136 DATA
-  __setusermatherr @137
-  __threadhandle @138
-  __threadid @139
-  __toascii=ntdll.__toascii @140
-  __unDName @141
-  __unDNameEx @142
-  __unguarded_readlc_active @143 DATA
-  __wargv @144 DATA
-  __wgetmainargs @145
-  __winitenv @146 DATA
-  _abnormal_termination @147
-  _access @148
-  _acmdln @149 DATA
-  _adj_fdiv_m16i=__wine_stub_msvcrt_dll_150 @150
-  _adj_fdiv_m32=_adj_fdiv_m32@4 @151
-  _adj_fdiv_m32i=_adj_fdiv_m32i@4 @152
-  _adj_fdiv_m64=_adj_fdiv_m64@8 @153
-  _adj_fdiv_r @154
-  _adj_fdivr_m16i=__wine_stub_msvcrt_dll_155 @155
-  _adj_fdivr_m32=_adj_fdivr_m32@4 @156
-  _adj_fdivr_m32i=_adj_fdivr_m32i@4 @157
-  _adj_fdivr_m64=_adj_fdivr_m64@8 @158
-  _adj_fpatan=__wine_stub_msvcrt_dll_159 @159
-  _adj_fprem=__wine_stub_msvcrt_dll_160 @160
-  _adj_fprem1=__wine_stub_msvcrt_dll_161 @161
-  _adj_fptan=__wine_stub_msvcrt_dll_162 @162
-  _adjust_fdiv @163 DATA
-  _aligned_free=__wine_stub_msvcrt_dll_164 @164
-  _aligned_malloc=__wine_stub_msvcrt_dll_165 @165
-  _aligned_offset_malloc=__wine_stub_msvcrt_dll_166 @166
-  _aligned_offset_realloc=__wine_stub_msvcrt_dll_167 @167
-  _aligned_realloc=__wine_stub_msvcrt_dll_168 @168
-  _amsg_exit @169
-  _assert @170
-  _atodbl=__wine_stub_msvcrt_dll_171 @171
-  _atoi64=ntdll._atoi64 @172
-  _atoldbl=__wine_stub_msvcrt_dll_173 @173
-  _beep @174
-  _beginthread @175
-  _beginthreadex @176
-  _c_exit @177
-  _cabs @178
-  _callnewh=__wine_stub_msvcrt_dll_179 @179
-  _cexit @180
-  _cgets @181
-  _chdir @182
-  _chdrive @183
-  _chgsign @184
-  _chkesp=__wine_stub_msvcrt_dll_185 @185
-  _chmod @186
-  _chsize @187
-  _clearfp @188
-  _close @189
-  _commit @190
-  _commode @191 DATA
-  _control87 @192
-  _controlfp @193
-  _copysign @194
-  _cprintf @195
-  _cputs @196
-  _creat @197
-  _cscanf @198
-  _ctype @199 DATA
-  _cwait @200
-  _daylight @201 DATA
-  _dstbias=__wine_stub_msvcrt_dll_202 @202
-  _dup @203
-  _dup2 @204
-  _ecvt @205
-  _endthread @206
-  _endthreadex @207
-  _environ @208 DATA
-  _eof @209
-  _errno @210
-  _except_handler2 @211
-  _except_handler3 @212
-  _execl @213
-  _execle @214
-  _execlp @215
-  _execlpe @216
-  _execv @217
-  _execve @218
-  _execvp @219
-  _execvpe @220
-  _exit @221
-  _expand @222
-  _fcloseall @223
-  _fcvt @224
-  _fdopen @225
-  _fgetchar @226
-  _fgetwchar @227
-  _filbuf @228
-  _filelength @229
-  _filelengthi64 @230
-  _fileno @231
-  _findclose @232
-  _findfirst @233
-  _findfirsti64 @234
-  _findnext @235
-  _findnexti64 @236
-  _finite @237
-  _flsbuf @238
-  _flushall @239
-  _fmode @240 DATA
-  _fpclass @241
-  _fpieee_flt=__wine_stub_msvcrt_dll_242 @242
-  _fpreset @243
-  _fputchar @244
-  _fputwchar @245
-  _fsopen @246
-  _fstat @247
-  _fstat64=__wine_stub_msvcrt_dll_248 @248
-  _fstati64 @249
-  _ftime @250
-  _ftol=ntdll._ftol @251
-  _fullpath @252
-  _futime @253
-  _gcvt @254
-  _get_osfhandle @255
-  _get_sbh_threshold=__wine_stub_msvcrt_dll_256 @256
-  _get_terminate=__wine_stub_msvcrt_dll_257 @257
-  _get_unexpected=__wine_stub_msvcrt_dll_258 @258
-  _getch @259
-  _getche @260
-  _getcwd @261
-  _getdcwd @262
-  _getdiskfree @263
-  _getdllprocaddr @264
-  _getdrive @265
-  _getdrives=kernel32.GetLogicalDrives @266
-  _getmaxstdio=__wine_stub_msvcrt_dll_267 @267
-  _getmbcp=__wine_stub_msvcrt_dll_268 @268
-  _getpid=kernel32.GetCurrentProcessId @269
-  _getsystime=__wine_stub_msvcrt_dll_270 @270
-  _getw @271
-  _getws @272
-  _global_unwind2 @273
-  _heapadd @274
-  _heapchk @275
-  _heapmin @276
-  _heapset @277
-  _heapused=__wine_stub_msvcrt_dll_278 @278
-  _heapwalk @279
-  _hypot @280
-  _i64toa=ntdll._i64toa @281
-  _i64tow=ntdll._i64tow @282
-  _initterm @283
-  _inp=__wine_stub_msvcrt_dll_284 @284
-  _inpd=__wine_stub_msvcrt_dll_285 @285
-  _inpw=__wine_stub_msvcrt_dll_286 @286
-  _iob @287 DATA
-  _isatty @288
-  _isctype @289
-  _ismbbalnum=__wine_stub_msvcrt_dll_290 @290
-  _ismbbalpha=__wine_stub_msvcrt_dll_291 @291
-  _ismbbgraph=__wine_stub_msvcrt_dll_292 @292
-  _ismbbkalnum=__wine_stub_msvcrt_dll_293 @293
-  _ismbbkana @294
-  _ismbbkprint=__wine_stub_msvcrt_dll_295 @295
-  _ismbbkpunct=__wine_stub_msvcrt_dll_296 @296
-  _ismbblead @297
-  _ismbbprint=__wine_stub_msvcrt_dll_298 @298
-  _ismbbpunct=__wine_stub_msvcrt_dll_299 @299
-  _ismbbtrail @300
-  _ismbcalnum @301
-  _ismbcalpha @302
-  _ismbcdigit @303
-  _ismbcgraph=__wine_stub_msvcrt_dll_304 @304
-  _ismbchira @305
-  _ismbckata @306
-  _ismbcl0=__wine_stub_msvcrt_dll_307 @307
-  _ismbcl1=__wine_stub_msvcrt_dll_308 @308
-  _ismbcl2=__wine_stub_msvcrt_dll_309 @309
-  _ismbclegal=__wine_stub_msvcrt_dll_310 @310
-  _ismbclower @311
-  _ismbcprint @312
-  _ismbcpunct=__wine_stub_msvcrt_dll_313 @313
-  _ismbcspace @314
-  _ismbcsymbol @315
-  _ismbcupper @316
-  _ismbslead @317
-  _ismbstrail @318
-  _isnan @319
-  _itoa=ntdll._itoa @320
-  _itow=ntdll._itow @321
-  _j0 @322
-  _j1 @323
-  _jn @324
-  _kbhit @325
-  _lfind @326
-  _loaddll @327
-  _local_unwind2 @328
-  _lock @329
-  _locking @330
-  _logb @331
-  _longjmpex=__wine_stub_msvcrt_dll_332 @332
-  _lrotl @333
-  _lrotr @334
-  _lsearch @335
-  _lseek @336
-  _lseeki64 @337
-  _ltoa=ntdll._ltoa @338
-  _ltow @339
-  _makepath @340
-  _matherr=__wine_stub_msvcrt_dll_341 @341
-  _mbbtombc @342
-  _mbbtype @343
-  _mbccpy @344
-  _mbcjistojms @345
-  _mbcjmstojis @346
-  _mbclen @347
-  _mbctohira @348
-  _mbctokata @349
-  _mbctolower @350
-  _mbctombb @351
-  _mbctoupper @352
-  _mbctype @353 DATA
-  _mbsbtype @354
-  _mbscat @355
-  _mbschr @356
-  _mbscmp @357
-  _mbscoll @358
-  _mbscpy @359
-  _mbscspn @360
-  _mbsdec @361
-  _mbsdup=_strdup @362
-  _mbsicmp @363
-  _mbsicoll @364
-  _mbsinc @365
-  _mbslen @366
-  _mbslwr @367
-  _mbsnbcat @368
-  _mbsnbcmp @369
-  _mbsnbcnt @370
-  _mbsnbcoll @371
-  _mbsnbcpy @372
-  _mbsnbcpy_s=__wine_stub_msvcrt_dll_373 @373
-  _mbsnbicmp @374
-  _mbsnbicoll @375
-  _mbsnbset @376
-  _mbsncat @377
-  _mbsnccnt @378
-  _mbsncmp @379
-  _mbsncoll @380
-  _mbsncpy @381
-  _mbsnextc @382
-  _mbsnicmp @383
-  _mbsnicoll @384
-  _mbsninc @385
-  _mbsnset @386
-  _mbspbrk @387
-  _mbsrchr @388
-  _mbsrev @389
-  _mbsset @390
-  _mbsspn @391
-  _mbsspnp @392
-  _mbsstr @393
-  _mbstok @394
-  _mbstrlen @395
-  _mbsupr @396
-  _memccpy @397
-  _memicmp=ntdll._memicmp @398
-  _mkdir @399
-  _mktemp @400
-  _msize @401
-  _nextafter @402
-  _onexit @403
-  _open @404
-  _open_osfhandle @405
-  _osver @406 DATA
-  _outp=__wine_stub_msvcrt_dll_407 @407
-  _outpd=__wine_stub_msvcrt_dll_408 @408
-  _outpw=__wine_stub_msvcrt_dll_409 @409
-  _pclose @410
-  _pctype @411 DATA
-  _pgmptr @412 DATA
-  _pipe @413
-  _popen @414
-  _purecall @415
-  _putch @416
-  _putenv @417
-  _putw @418
-  _putws @419
-  _read @420
-  _rmdir @421
-  _rmtmp @422
-  _rotl @423
-  _rotr @424
-  _safe_fdiv=__wine_stub_msvcrt_dll_425 @425
-  _safe_fdivr=__wine_stub_msvcrt_dll_426 @426
-  _safe_fprem=__wine_stub_msvcrt_dll_427 @427
-  _safe_fprem1=__wine_stub_msvcrt_dll_428 @428
-  _scalb @429
-  _searchenv @430
-  _seh_longjmp_unwind=_seh_longjmp_unwind@4 @431
-  _set_error_mode=__wine_stub_msvcrt_dll_432 @432
-  _set_sbh_threshold=__wine_stub_msvcrt_dll_433 @433
-  _seterrormode @434
-  _setjmp @435
-  _setjmp3 @436
-  _setmaxstdio=__wine_stub_msvcrt_dll_437 @437
-  _setmbcp @438
-  _setmode @439
-  _setsystime @440
-  _sleep @441
-  _snprintf=crt__snprintf @442
-  _snwprintf=crt__snwprintf @443
-  _sopen @444
-  _spawnl @445
-  _spawnle @446
-  _spawnlp @447
-  _spawnlpe @448
-  _spawnv @449
-  _spawnve @450
-  _spawnvp @451
-  _spawnvpe @452
-  _splitpath=ntdll._splitpath @453
-  _stat @454
-  _stat64=__wine_stub_msvcrt_dll_455 @455
-  _stati64 @456
-  _statusfp @457
-  _strcmpi @458
-  _strdate @459
-  _strdup @460
-  _strerror @461
-  _stricmp=ntdll._stricmp @462
-  _stricoll @463
-  _strlwr=ntdll._strlwr @464
-  _strncoll @465
-  _strnicmp=ntdll._strnicmp @466
-  _strnicoll @467
-  _strnset @468
-  _strrev @469
-  _strset @470
-  _strtime @471
-  _strupr @472
-  _swab @473
-  _sys_errlist @474 DATA
-  _sys_nerr @475 DATA
-  _tell @476
-  _telli64 @477
-  _tempnam @478
-  _timezone @479 DATA
-  _tolower=ntdll._tolower @480
-  _toupper=ntdll._toupper @481
-  _tzname @482 DATA
-  _tzset @483
-  _ui64toa=ntdll._ui64toa @484
-  _ui64tow=ntdll._ui64tow @485
-  _ultoa=ntdll._ultoa @486
-  _ultow=ntdll._ultow @487
-  _umask @488
-  _ungetch @489
-  _unlink @490
-  _unloaddll @491
-  _unlock @492
-  _utime @493
-  _vsnprintf @494
-  _vsnwprintf @495
-  _waccess @496
-  _wasctime @497
-  _wchdir @498
-  _wchmod @499
-  _wcmdln @500 DATA
-  _wcreat @501
-  _wcsdup @502
-  _wcsicmp @503
-  _wcsicoll @504
-  _wcslwr @505
-  _wcsncoll @506
-  _wcsnicmp @507
-  _wcsnicoll @508
-  _wcsnset @509
-  _wcsrev @510
-  _wcsset @511
-  _wcsupr @512
-  _wctime @513
-  _wenviron @514 DATA
-  _wexecl @515
-  _wexecle @516
-  _wexeclp @517
-  _wexeclpe @518
-  _wexecv @519
-  _wexecve @520
-  _wexecvp @521
-  _wexecvpe @522
-  _wfdopen @523
-  _wfindfirst @524
-  _wfindfirsti64 @525
-  _wfindnext @526
-  _wfindnexti64 @527
-  _wfopen @528
-  _wfreopen @529
-  _wfsopen @530
-  _wfullpath @531
-  _wgetcwd @532
-  _wgetdcwd @533
-  _wgetenv @534
-  _winmajor @535 DATA
-  _winminor @536 DATA
-  _winver @537 DATA
-  _wmakepath @538
-  _wmkdir @539
-  _wmktemp @540
-  _wopen @541
-  _wperror=__wine_stub_msvcrt_dll_542 @542
-  _wpgmptr=__wine_stub_msvcrt_dll_543 @543
-  _wpopen @544
-  _wputenv @545
-  _wremove @546
-  _wrename @547
-  _write @548
-  _wrmdir @549
-  _wsearchenv @550
-  _wsetlocale @551
-  _wsopen @552
-  _wspawnl=__wine_stub_msvcrt_dll_553 @553
-  _wspawnle=__wine_stub_msvcrt_dll_554 @554
-  _wspawnlp=__wine_stub_msvcrt_dll_555 @555
-  _wspawnlpe=__wine_stub_msvcrt_dll_556 @556
-  _wspawnv @557
-  _wspawnve @558
-  _wspawnvp @559
-  _wspawnvpe @560
-  _wsplitpath @561
-  _wstat @562
-  _wstati64 @563
-  _wstat64=__wine_stub_msvcrt_dll_564 @564
-  _wstrdate @565
-  _wstrtime @566
-  _wsystem=__wine_stub_msvcrt_dll_567 @567
-  _wtempnam @568
-  _wtmpnam=__wine_stub_msvcrt_dll_569 @569
-  _wtoi=ntdll._wtoi @570
-  _wtoi64=ntdll._wtoi64 @571
-  _wtol=ntdll._wtol @572
-  _wunlink @573
-  _wutime @574
-  _y0 @575
-  _y1 @576
-  _yn @577
-  abort @578
-  abs=ntdll.abs @579
-  acos @580
-  asctime @581
-  asin @582
-  atan=ntdll.atan @583
-  atan2 @584
-  atexit @585
-  atof @586
-  atoi=ntdll.atoi @587
-  atol=ntdll.atol @588
-  bsearch=ntdll.bsearch @589
-  calloc @590
-  ceil=ntdll.ceil @591
-  clearerr @592
-  clock @593
-  cos=ntdll.cos @594
-  cosh @595
-  ctime @596
-  difftime @597
-  div @598
-  exit @599
-  exp @600
-  fabs=ntdll.fabs @601
-  fclose @602
-  feof @603
-  ferror @604
-  fflush @605
-  fgetc @606
-  fgetpos @607
-  fgets @608
-  fgetwc @609
-  fgetws @610
-  floor=ntdll.floor @611
-  fmod @612
-  fopen @613
-  fprintf @614
-  fputc @615
-  fputs @616
-  fputwc @617
-  fputws @618
-  fread @619
-  free @620
-  freopen @621
-  frexp @622
-  fscanf @623
-  fseek @624
-  fsetpos @625
-  ftell @626
-  fwprintf @627
-  fwrite @628
-  fwscanf @629
-  getc @630
-  getchar @631
-  getenv @632
-  gets @633
-  getwc @634
-  getwchar @635
-  gmtime @636
-  is_wctype @637
-  isalnum=ntdll.isalnum @638
-  isalpha=ntdll.isalpha @639
-  iscntrl=ntdll.iscntrl @640
-  isdigit=ntdll.isdigit @641
-  isgraph=ntdll.isgraph @642
-  isleadbyte @643
-  islower=ntdll.islower @644
-  isprint=ntdll.isprint @645
-  ispunct=ntdll.ispunct @646
-  isspace=ntdll.isspace @647
-  isupper=ntdll.isupper @648
-  iswalnum @649
-  iswalpha=ntdll.iswalpha @650
-  iswascii @651
-  iswcntrl @652
-  iswctype=ntdll.iswctype @653
-  iswdigit=ntdll.iswdigit @654
-  iswgraph @655
-  iswlower=ntdll.iswlower @656
-  iswprint @657
-  iswpunct @658
-  iswspace=ntdll.iswspace @659
-  iswupper @660
-  iswxdigit=ntdll.iswxdigit @661
-  isxdigit=ntdll.isxdigit @662
-  labs=ntdll.labs @663
-  ldexp @664
-  ldiv @665
-  localeconv @666
-  localtime @667
-  log=ntdll.log @668
-  log10 @669
-  longjmp @670
-  malloc @671
-  mblen @672
-  mbstowcs=ntdll.mbstowcs @673
-  mbtowc @674
-  memchr @675
-  memcmp @676
-  memcpy @677
-  memmove @678
-  memset @679
-  mktime @680
-  modf @681
-  perror @682
-  pow=ntdll.pow @683
-  printf @684
-  putc @685
-  putchar @686
-  puts @687
-  putwc @688
-  putwchar @689
-  qsort=ntdll.qsort @690
-  raise @691
-  rand @692
-  realloc @693
-  remove @694
-  rename @695
-  rewind @696
-  scanf @697
-  setbuf @698
-  setlocale @699
-  setvbuf @700
-  signal @701
-  sin=ntdll.sin @702
-  sinh @703
-  sprintf=crt_sprintf @704
-  sqrt=ntdll.sqrt @705
-  srand @706
-  sscanf=crt_sscanf @707
-  strcat=ntdll.strcat @708
-  strcat_s=__wine_stub_msvcrt_dll_709 @709
-  strchr @710
-  strcmp=ntdll.strcmp @711
-  strcoll @712
-  strcpy @713
-  strcpy_s=__wine_stub_msvcrt_dll_714 @714
-  strcspn @715
-  strerror @716
-  strftime @717
-  strlen @718
-  strncat @719
-  strncmp @720
-  strncpy @721
-  strpbrk @722
-  strrchr @723
-  strspn @724
-  strstr @725
-  strtod @726
-  strtok @727
-  strtol=ntdll.strtol @728
-  strtoul @729
-  _strtoui64=strtoull @730
-  strxfrm @731
-  swprintf=crt_swprintf @732
-  swscanf @733
-  system @734
-  tan=ntdll.tan @735
-  tanh @736
-  time @737
-  tmpfile @738
-  tmpnam @739
-  tolower=ntdll.tolower @740
-  toupper=ntdll.toupper @741
-  towlower=ntdll.towlower @742
-  towupper=ntdll.towupper @743
-  ungetc @744
-  ungetwc @745
-  vfprintf @746
-  vfwprintf @747
-  vprintf @748
-  vsprintf @749
-  vswprintf @750
-  vwprintf @751
-  wcscat @752
-  wcschr @753
-  wcscmp @754
-  wcscoll @755
-  wcscpy @756
-  wcscspn @757
-  wcsftime @758
-  wcslen @759
-  wcsncat @760
-  wcsncmp @761
-  wcsncpy @762
-  wcspbrk @763
-  wcsrchr=ntdll.wcsrchr @764
-  wcsspn=ntdll.wcsspn @765
-  wcsstr=ntdll.wcsstr @766
-  wcstod @767
-  wcstok @768
-  wcstol=ntdll.wcstol @769
-  wcstombs @770
-  wcstoul=ntdll.wcstoul @771
-  wcsxfrm @772
-  wctomb @773
-  wprintf @774
-  wscanf @775
+  __CppXcptFilter @76
+  ;__CxxCallUnwindDtor
+  ;__CxxCallUnwindVecDtor
+  __CxxDetectRethrow @77
+  ;__CxxExceptionFilter
+  __CxxFrameHandler @78
+  ;_CxxFrameHandler2
+  __CxxLongjmpUnwind@4 @79
+  __CxxQueryExceptionSize @80
+  ;__CxxRegisterExceptionObject
+  ;__CxxUnregisterExceptionObject
+  ;__DestructExceptionObject
+  __RTCastToVoid=MSVCRT___RTCastToVoid @81
+  __RTDynamicCast=MSVCRT___RTDynamicCast @82
+  __RTtypeid=MSVCRT___RTtypeid @83
+  __STRINGTOLD @84
+  __argc @85 DATA
+  __argv @86 DATA
+  __badioinfo @87 DATA
+  __crtCompareStringA=kernel32.CompareStringA @88
+  __crtCompareStringW=kernel32.CompareStringW @89
+  __crtGetLocaleInfoW=kernel32.GetLocaleInfo @90
+  __crtGetStringTypeW=kernel32.GeStringTypeW @779
+  __crtLCMapStringA @91
+  ;__crtLCMapStringW
+  __dllonexit @92
+  __doserrno @93
+  __fpecode @94
+  __getmainargs @96
+  __initenv @97 DATA
+  ;__iob_func
+  __isascii @98
+  __iscsym @99
+  __iscsymf @100
+  __lc_codepage @101 DATA
+  __lc_collate_cp @103 DATA
+  __lc_handle @104 DATA
+  ;__lc_handle_func
+  __lconv_init @105
+  __mb_cur_max @106 DATA
+  __p___argc @107
+  __p___argv @108
+  __p___initenv @109
+  __p___mb_cur_max @110
+  __p___wargv @111
+  __p___winitenv @112
+  __p__acmdln @113
+  __p__amblksiz @114
+  __p__commode @115
+  __p__daylight @116
+  __p__dstbias @117
+  __p__environ @118
+  __p__fmode @120
+  __p__iob @121
+  ;__p__mbcasemap stub
+  __p__mbctype @123
+  __p__osver @124
+  __p__pctype @125
+  __p__pgmptr @126
+  __p__timezone @128
+  __p__tzname @129
+  __p__wcmdln @130
+  __p__wenviron @131
+  __p__winmajor @132
+  __p__winminor @133
+  __p__winver @134
+  __p__wpgmptr @135
+  ;__pctype_func
+  __pioinfo @136 DATA
+  ;__pwctype_func
+  ;__pwcptinfoptrs
+  __set_app_type @138
+  __setlc_active @139 DATA
+  ;___setlc_active_func
+  __setusermatherr @140
+  __threadhandle @141
+  __threadid @142
+  __toascii @143
+  __unDName @144
+  __unDNameEx @145
+  ;__uncaught_exception
+  __unguarded_readlc_active @146 DATA
+  __wargv @147 DATA
+  ;__wcserror
+  __wgetmainargs @148
+  __winitenv @149 DATA
+  _abnormal_termination @150
+  ;_abs64
+  _access @151
+  _acmdln @152 DATA
+  _adj_fdiv_m16i@4 @153
+  _adj_fdiv_m32@4 @154
+  _adj_fdiv_m32i@4 @155
+  _adj_fdiv_m64@8 @156
+  _adj_fdiv_r @157
+  _adj_fdivr_m16i@4 @158
+  _adj_fdivr_m32@4 @159
+  _adj_fdivr_m32i@4 @160
+  _adj_fdivr_m64@8 @161
+  _adj_fpatan @162
+  _adj_fprem @163
+  _adj_fprem1 @164
+  _adj_fptan @165
+  _adjust_fdiv @166 DATA
+  ;aexit_rtn
+  _aligned_free @167
+  _aligned_malloc @168
+  _aligned_offset_malloc @169
+  _aligned_offset_realloc @170
+  _aligned_realloc @171
+  _amsg_exit @172
+  _assert @173
+  ;atoidbl
+  _atoi64=ntdll._atoi64 @175
+  _atoldbl @176
+  _beep @177
+  _beginthread @178
+  _beginthreadex @179
+  _c_exit @180
+  _cabs @181
+  _callnewh @182
+  _cexit @183
+  _cgets @184
+  _chdir @185
+  _chdrive @186
+  _chgsign @187
+  _chkesp @188
+  _chmod @189
+  _chsize @190
+  _clearfp @191
+  _close @192
+  _commit @193
+  _commode @194 DATA
+  _control87 @195
+  _controlfp @196
+  _copysign @197
+  _cprintf @198
+  _cputs @199
+  _creat @200
+  _cscanf @201
+  _ctype @202 DATA
+  _cwait @203
+  ;_cwprintf
+  ;_cwscanf
+  _daylight @204 DATA
+  _dstbias @205 DATA
+  _dup @206
+  _dup2 @207
+  _ecvt @208
+  _endthread @209
+  _endthreadex @210
+  _environ @211 DATA
+  _eof @212
+  _errno @213
+  _except_handler2 @214
+  _except_handler3 @215
+  _execl @216
+  _execle @217
+  _execlp @218
+  _execlpe @219
+  _execv @220
+  _execve @221
+  _execvp @222
+  _execvpe @223
+  _exit @224
+  _expand @225
+  _fcloseall @226
+  _fcvt @227
+  _fdopen @228
+  _fgetchar @229
+  _fgetwchar @230
+  _filbuf @231
+  _filelength @232
+  _filelengthi64 @233
+  _fileno @234
+  _findclose @235
+  _findfirst @236
+  _findfirsti64 @237
+  _findnext @238
+  ;_findnext64
+  _findnexti64 @239
+  _finite @240
+  _flsbuf @241
+  _flushall @242
+  _fmode @243 DATA
+  _fpclass @244
+  ;_fpieee_flt stub
+  _fpreset @246
+  _fputchar @247
+  _fputwchar @248
+  _fsopen @249
+  _fstat @250
+  _fstat64 @251
+  _fstati64 @252
+  _ftime @253
+  _ftol=ntdll._ftol @254
+  _fullpath @255
+  _futime @256
+  ;_futime64
+  _gcvt @257
+  ;_get_heap_handle
+  _get_osfhandle @258
+  _get_sbh_threshold @259
+  _getch @262
+  _getche @263
+  _getcwd @264
+  _getdcwd @265
+  _getdiskfree @266
+  _getdllprocaddr @267
+  _getdrive @268
+  _getdrives  @269
+  _getmaxstdio @270
+  _getmbcp @271
+  _getpid  @272
+  ;_getsystime stub
+  _getw @274
+  ;_getwch
+  ;_getwche
+  _getws @275
+  _global_unwind2 @276
+  _heapadd @277
+  _heapchk @278
+  _heapmin @279
+  _heapset @280
+  _heapwalk @282
+  _hypot @283
+  _i64toa=ntdll._i64toa @284
+  _i64tow=ntdll._i64tow @285
+  _initterm @286
+  ;_inp stub
+  ;_inpd stub
+  ;_inpw stub
+  _iob @290 DATA
+  _isatty @291
+  _isctype @292
+  ;_ismbbalnum stub
+  ;_ismbbalpha stub
+  ;_ismbbgraph stub
+  ;_ismbbkalnum stub
+  _ismbbkana @297
+  ;_ismbbkprint
+  ;_ismbbkpunct
+  _ismbblead @300
+  ;_ismbbprint stub
+  ;_ismbbpunct stub
+  _ismbbtrail @303
+  _ismbcalnum @304
+  _ismbcalpha @305
+  _ismbcdigit @306
+  _ismbcgraph @307
+  _ismbchira @308
+  _ismbckata @309
+  ;_ismbcl0 stub
+  ;_ismbcl1 stub
+  ;_ismbcl2 stub
+  ;_ismbclegal stub
+  _ismbclower @314
+  _ismbcprint @315
+  _ismbcpunct @316
+  _ismbcspace @317
+  _ismbcsymbol @318
+  _ismbcupper @319
+  _ismbslead @320
+  _ismbstrail @321
+  _isnan @322
+  _itoa=ntdll._itoa @323
+  _itow=ntdll._itow @324
+  _j0 @325
+  _j1 @326
+  _jn @327
+  _kbhit @328
+  _lfind @329
+  _loaddll @330
+  _local_unwind2 @331
+  ;_localtime64
+  _lock @332
+  _locking @333
+  _logb @334
+  _longjmpex=longjmp @335 ;wine
+  _lrotl @336
+  _lrotr @337
+  _lsearch @338
+  _lseek @339
+  _lseeki64 @340
+  _ltoa=ntdll._ltoa @341
+  _ltow=ntdll._ltow @342
+  _makepath @343
+  ;_matherr @344 ;not in msvcrt, but in wine, why?
+  _mbbtombc @345
+  _mbbtype @346
+  ;_mbcasemap
+  _mbccpy @347
+  _mbclen @350
+  _mbctohira @351
+  _mbctokata @352
+  _mbctolower @353
+  _mbctoupper @355
+  _mbctype @356 DATA
+  _mbsbtype @357
+  _mbscat @358
+  _mbschr @359
+  _mbscmp @360
+  _mbscoll @361
+  _mbscpy @362
+  _mbscspn @363
+  _mbsdec @364
+  _mbsdup=_strdup @365
+  _mbsicmp @366
+  _mbsicoll @367
+  _mbsinc @368
+  _mbslen @369
+  _mbslwr @370
+  _mbsnbcat @371
+  _mbsnbcmp @372
+  _mbsnbcnt @373
+  _mbsnbcoll @374
+  _mbsnbcpy @375
+  ;_mbsnbcpy_s @376 wine
+  _mbsnbicmp @377
+  _mbsnbicoll @378
+  _mbsnbset @379
+  _mbsncat @380
+  _mbsnccnt @381
+  _mbsncmp @382
+  _mbsncpy @384
+  _mbsnextc @385
+  _mbsnicmp @386
+  _mbsnicoll @387
+  _mbsninc @388
+  _mbsnset @389
+  _mbspbrk @390
+  _mbsrchr @391
+  _mbsrev @392
+  _mbsset @393
+  _mbsspn @394
+  _mbsspnp @395
+  _mbsstr @396
+  _mbstok @397
+  _mbstrlen @398
+  _mbsupr @399
+  _memccpy=ntdll._memccpy @400
+  _memicmp=ntdll._memicmp @401
+  _mkdir @402
+  ;_mkgmtime
+  ;_mkgmtime64
+  _mktemp @403
+  ;_mktime64
+  _msize @404
+  _nextafter @405
+  _onexit @406
+  _open @407
+  _open_osfhandle @408
+  ;_osplatform
+  _osver @409 DATA
+  _pclose @413
+  _pctype @414 DATA
+  _pgmptr @415 DATA
+  _pipe @416
+  _popen @417
+  _purecall @418
+  _putch @419
+  _putenv @420
+  _putw @421
+  ;_putwch
+  _putws @422
+  ;_pectype
+  _read @423
+  ;_resetstkoflw
+  _rmdir @424
+  _rmtmp @425
+  _rotl @426
+  ;_rotl64
+  _rotr @427
+  ;_rotr64
+  _safe_fdiv @428
+  _safe_fdivr @429
+  _safe_fprem @430
+  _safe_fprem1 @431
+  _scalb @432
+  ;_scprintf
+  ;_scwprintf
+  _searchenv @433
+  _seh_longjmp_unwind@4 @434
+  ;_set_SSE2_enable
+  _set_error_mode @435
+  _set_sbh_threshold @436
+  _seterrormode @437
+  _setjmp @438
+  _setjmp3 @439
+  _setmaxstdio @440
+  _setmbcp @441
+  _setmode @442
+  _sleep @444
+  _snprintf @445
+  _snwprintf @446
+  ;_snwscanf
+  _sopen @447
+  _spawnl @448
+  _spawnle @449
+  _spawnlp @450
+  _spawnlpe @451
+  _spawnv @452
+  _spawnve @453
+  _spawnvp @454
+  _spawnvpe @455
+  _splitpath=ntdll._splitpath @456
+  _stat @457
+  _stat64 @458
+  _stati64 @459
+  _statusfp @460
+  _strcmpi=ntdll._strcmpi @461
+  _strdate @462
+  _strdup @463
+  _strerror @464
+  _stricmp=ntdll._stricmp @465
+  _stricoll @466
+  _strlwr=ntdll._strlwr @467
+  _strnicmp=ntdll._strnicmp @469
+  _strtoui64=strtoull @470
+  _strnset @471
+  _strrev @472
+  _strset @473
+  _strtime @474
+  ;_strtoi64
+  _strupr=ntdll._strupr @475
+  _swab @476
+  _sys_errlist @477 DATA
+  _sys_nerr @478 DATA
+  _tell @479
+  _telli64 @480
+  _tempnam @481
+  ;_time64
+  _timezone @482 DATA
+  _tolower @483
+  _toupper @484
+  _tzname @485 DATA
+  _tzset @486
+  _ui64toa=ntdll._ui64toa @487
+  _ui64tow=ntdll._ui64tow @488
+  _ultoa=ntdll._ultoa @489
+  _ultow=ntdll._ultow @490
+  _umask @491
+  _ungetch @492
+  ;_ungetwch
+  _unlink @493
+  _unloaddll @494
+  _unlock @495
+  _utime @496
+  ;_utime64
+  ;_vscprintf
+  ;_vscwprintf
+  _vsnprintf @497
+  _vsnwprintf @498
+  _waccess @499
+  _wasctime @500
+  _wchdir @501
+  _wchmod @502
+  _wcmdln @503 DATA
+  _wcreat @504
+  _wcsdup @505
+  ;_wcserror
+  _wcsicmp=ntdll._wcsicmp @506
+  _wcsicoll @507
+  _wcslwr=ntdll._wcslwr @508
+  _wcsncoll @509
+  _wcsnicmp=ntdll._wcsnicmp @510
+  _wcsnicoll @511
+  _wcsnset @512
+  _wcsrev @513
+  _wcsset @514
+  ;_wcstoi64
+  ;_wcstoui64
+  _wcsupr=ntdll._wcsupr @515
+  _wctime @516
+  ;_wctime64
+  ;_wctype
+  _wenviron @517 DATA
+  _wexecl @518
+  _wexecle @519
+  _wexeclp @520
+  _wexeclpe @521
+  _wexecv @522
+  _wexecve @523
+  _wexecvp @524
+  _wexecvpe @525
+  _wfdopen @526
+  _wfindfirst @527
+  ;_wfindfirst64
+  _wfindfirsti64 @528
+  _wfindnext @529
+  ;_wfindnext64
+  _wfindnexti64 @530
+  _wfopen @531
+  _wfsopen @533
+  _wfullpath @534
+  _wgetcwd @535
+  _wgetdcwd @536
+  _wgetenv @537
+  _winmajor @538 DATA
+  _winminor @539 DATA
+  _winver @540 DATA
+  _wmakepath @541
+  _wmkdir @542
+  _wmktemp @543
+  _wopen @544
+  ;_wperror stub
+  _wpgmptr @546 DATA
+  _wpopen @547
+  _wputenv @548
+  _wremove @549
+  _wrename @550
+  _write @551
+  _wrmdir @552
+  _wsearchenv @553
+  _wsetlocale @554
+  _wsopen @555
+  _wspawnl @556
+  _wspawnle @557
+  _wspawnlp @558
+  _wspawnlpe @559
+  _wspawnv @560
+  _wspawnve @561
+  _wspawnvp @562
+  _wspawnvpe @563
+  _wsplitpath @564
+  _wstat @565
+  _wstati64 @566
+  _wstat64 @567
+  _wstrdate @568
+  _wstrtime @569
+  _wsystem @570
+  _wtempnam @571
+  ;_wtmpnam stub
+  ;_wtof
+  _wtoi=ntdll._wtoi @573
+  _wtoi64=ntdll._wtoi64 @574
+  _wtol=ntdll._wtol @575
+  _wunlink @576
+  _wutime @577
+  _y0 @578
+  _y1 @579
+  _yn @580
+  abort @581
+  abs=ntdll.abs @582
+  acos @583
+  asctime @584
+  asin @585
+  atan @586
+  atan2 @587
+  atexit @588
+  atof @589
+  atoi=ntdll.atoi @590
+  atol=ntdll.atol @591
+  bsearch=ntdll.bsearch @592
+  calloc @593
+  ceil @594
+  clearerr @595
+  clock @596
+  cos @597
+  cosh @598
+  ctime @599
+  difftime @600
+  div @601
+  exit @602
+  exp @603
+  fabs @604
+  fclose @605
+  feof @606
+  ferror @607
+  fflush @608
+  fgetc @609
+  fgetpos @610
+  fgets @611
+  fgetwc @612
+  fgetws @613
+  floor @614
+  fmod @615
+  fopen @616
+  fprintf @617
+  fputc @618
+  fputs @619
+  fputwc @620
+  fputws @621
+  fread @622
+  free @623
+  freopen @624
+  frexp @625
+  fscanf @626
+  fseek @627
+  fsetpos @628
+  ftell @629
+  fwprintf @630
+  fwrite @631
+  fwscanf @632
+  getc @633
+  getchar @634
+  getenv @635
+  gets @636
+  getwc @637
+  getwchar @638
+  gmtime @639
+  is_wctype=ntdll.iswctype @640
+  isalnum @641
+  isalpha @642
+  iscntrl @643
+  isdigit @644
+  isgraph @645
+  isleadbyte @646
+  islower @647
+  isprint @648
+  ispunct @649
+  isspace  @650
+  isupper @651
+  iswalnum @652
+  iswalpha=ntdll.iswalpha @653
+  iswascii @654
+  iswcntrl @655
+  iswctype=ntdll.iswctype @656
+  iswdigit @657
+  iswgraph @658
+  iswlower @659
+  iswprint @660
+  iswpunct @661
+  iswspace @662
+  iswupper @663
+  iswxdigit @664
+  isxdigit @665
+  labs=ntdll.labs @666
+  ldexp @667
+  ldiv @668
+  localeconv @669
+  localtime @670
+  log @671
+  log10 @672
+  longjmp @673
+  malloc @674
+  mblen @675
+  mbstowcs=ntdll.mbstowcs @676
+  mbtowc @677
+  memchr=ntdll.memchr @678
+  memcmp=ntdll.memcmp @679
+  memcpy=ntdll.memcpy @680
+  memmove=ntdll.memmove @681
+  memset=ntdll.memset @682
+  mktime @683
+  modf @684
+  perror @685
+  pow @686
+  printf @687
+  putc @688
+  putchar @689
+  puts @690
+  putwc @691
+  putwchar=_fputwchar @692
+  qsort=ntdll.qsort @693
+  raise @694
+  rand @695
+  realloc @696
+  remove @697
+  rename @698
+  rewind @699
+  scanf @700
+  setbuf @701
+  setlocale @702
+  setvbuf @703
+  signal @704
+  sin @705
+  sinh @706
+  sprintf @707
+  sqrt @708
+  srand @709
+  sscanf @710
+  strcat=ntdll.strcat @711
+  ;strcat_s @712 wine
+  strchr=ntdll.strchr @713
+  strcmp=ntdll.strcmp @714
+  strcoll @715
+  strcpy=ntdll.strcpy @716
+  ;strcpy_s @717 wine
+  strcspn=ntdll.strcspn @718
+  strerror @719
+  strftime @720
+  strlen=ntdll.strlen @721
+  strncat=ntdll.strncat @722
+  strncmp=ntdll.strncmp @723
+  strncpy=ntdll.strncpy @724
+  strpbrk=ntdll.strpbrk @725
+  strrchr=ntdll.strrchr @726
+  strspn=ntdll.strspn @727
+  strstr=ntdll.strstr @728
+  strtod @729
+  strtok @730
+  strtol=ntdll.strtol @731
+  strtoul=ntdll.strtoul @732
+  strxfrm @733
+  swprintf @734
+  swscanf @735
+  system @736
+  tan @737
+  tanh @738
+  time @739
+  tmpfile @740
+  tmpnam @741
+  tolower=ntdll.tolower @742
+  toupper=ntdll.toupper @743
+  towlower=ntdll.towlower @744
+  towupper=ntdll.towupper @745
+  ungetc @746
+  ungetwc @747
+  vfprintf @748
+  vfwprintf @749
+  vprintf @750
+  vsprintf @751
+  vswprintf @752
+  vwprintf @753
+  wcscat=ntdll.wcscat @754
+  wcschr=ntdll.wcschr @755
+  wcscmp=ntdll.wcscmp @756
+  wcscoll @757
+  wcscpy=ntdll.wcscpy @758
+  ;wcscpy_s @759 wine
+  wcscspn=ntdll.wcscspn @760
+  wcsftime @761
+  wcslen=ntdll.wcslen @762
+  wcsncat=ntdll.wcsncat @763
+  wcsncmp=ntdll.wcsncmp @764
+  wcsncpy=ntdll.wcsncpy @765
+  wcspbrk @766
+  wcsrchr=ntdll.wcsrchr @767
+  wcsspn=ntdll.wcsspn @768
+  wcsstr=ntdll.wcsstr @769
+  wcstod @770
+  wcstok @771
+  wcstol=ntdll.wcstol @772
+  wcstombs=ntdll.wcstombs @773
+  wcstoul=ntdll.wcstoul @774
+  wcsxfrm @775
+  wctomb @776
+  wprintf @777
+  wscanf @778

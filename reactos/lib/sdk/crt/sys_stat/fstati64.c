@@ -11,6 +11,8 @@
 
 #include <precomp.h>
 #include <sys/stat.h>
+#define NDEBUG
+#include <debug.h>
 
 /*
  * @implemented
@@ -77,4 +79,10 @@ int _fstati64(int fd, struct _stati64* statbuf)
     return -1;
   }
   return 0;
+}
+
+int _fstat64(int fd, struct __stat64* buf)
+{
+    DPRINT1("stub\n");
+    return -1;
 }
