@@ -348,6 +348,7 @@ EngLineTo(SURFOBJ *DestObj,
     INTENG_ENTER_LEAVE EnterLeave;
     RECT_ENUM RectEnum;
     BOOL EnumMore;
+    CLIPOBJ *pcoPriv = NULL;
 
     if (x1 < x2)
     {
@@ -373,6 +374,15 @@ EngLineTo(SURFOBJ *DestObj,
     if (! IntEngEnter(&EnterLeave, DestObj, &DestRect, FALSE, &Translate, &OutputObj))
     {
         return FALSE;
+    }
+
+    if (!Clip)
+    {
+        Clip = pcoPriv = IntEngCreateClipRegion(0, 0, RectBounds);
+        if (!Clip)
+        {
+            return FALSE;
+        }
     }
 
     x1 += Translate.x;
@@ -485,6 +495,11 @@ EngLineTo(SURFOBJ *DestObj,
                 SEtoNW(OutputObj, Clip, Brush, x, y, deltax, deltay, &Translate);
             }
         }
+    }
+
+    if (pcoPriv)
+    {
+        IntEngDeleteClipRegion(pcoPriv);
     }
 
     return IntEngLeave(&EnterLeave);
