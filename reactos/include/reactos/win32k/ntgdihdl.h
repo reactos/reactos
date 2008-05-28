@@ -41,6 +41,9 @@
 #define GDI_ENTRY_REUSECNT_SHIFT 8
 #define GDI_ENTRY_UPPER_SHIFT 16
 
+/* GDI Entry Flags */
+#define GDI_ENTRY_FLAG_NEED_UPDATE 4
+
 /*! \defgroup GDI object types
  *
  *  GDI object types
