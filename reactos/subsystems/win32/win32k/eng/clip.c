@@ -266,7 +266,7 @@ IntEngCreateClipRegion(ULONG count, PRECTL pRect, PRECTL rcBounds)
 CLIPOBJ * STDCALL
 EngCreateClip(VOID)
 {
-  CLIPGDI *Clip = EngAllocMem(FL_ZERO_MEMORY, sizeof(CLIPOBJ), TAG_CLIPOBJ);
+  CLIPGDI *Clip = EngAllocMem(FL_ZERO_MEMORY, sizeof(CLIPGDI), TAG_CLIPOBJ);
   if(Clip != NULL)
   {
     return GDIToObj(Clip, CLIP);
