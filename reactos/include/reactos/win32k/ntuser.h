@@ -276,6 +276,7 @@ PW32PROCESSINFO GetW32ProcessInfo(VOID);
 #define FNID_STATIC      0x02A8
 #define FNID_IME         0x02A9
 
+#define FNID_DDEML       0x2000 // Registers DDEML
 #define FNID_DESTROY     0x4000 // This is sent when WM_NCDESTROY or in the support routine.
                                 // Seen during WM_CREATE on error exit too.
 
@@ -1873,7 +1874,7 @@ NtUserRegisterClassExWOW(
     BOOL bUnicodeClass,
     WNDPROC wpExtra,
     DWORD dwUnknown4,
-    DWORD dwUnknown5,
+    DWORD fnID,
     DWORD dwUnknown6,
     DWORD dwUnknown7);
 
