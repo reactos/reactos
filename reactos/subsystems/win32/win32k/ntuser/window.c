@@ -4159,17 +4159,41 @@ CLEANUP:
 
 
 /*
- * @unimplemented
+ * @implemented
  */
-DWORD STDCALL
-NtUserSetWindowFNID(DWORD Unknown0,
-                    DWORD Unknown1)
+BOOL STDCALL
+NtUserSetWindowFNID(HWND hWnd,
+                    WORD fnID)
 {
-   UNIMPLEMENTED
+   PWINDOW_OBJECT Window;
+   PWINDOW Wnd;
+   DECLARE_RETURN(BOOL);
 
-   return 0;
+   DPRINT("Enter NtUserSetWindowFNID\n");
+   UserEnterExclusive();
+
+   if (!(Window = UserGetWindowObject(hWnd)))
+   {
+      RETURN( FALSE);
+   }
+   Wnd = Window->Wnd;
+
+   if (Wnd->Class)
+   {  // From user land we only set these.
+      if ((fnID != FNID_DESTROY) || ((fnID < FNID_BUTTON) && (fnID > FNID_IME)) )
+      {
+         RETURN( FALSE);
+      }
+      else
+         Wnd->Class->fnID |= fnID;
+   }
+   RETURN( TRUE);
+
+CLEANUP:
+   DPRINT("Leave NtUserSetWindowFNID\n");
+   UserLeave();
+   END_CLEANUP;
 }
-
 
 
 /*

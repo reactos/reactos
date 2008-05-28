@@ -77,6 +77,7 @@ typedef struct _WINDOWCLASS
     INT ClsExtra;
     INT WndExtra;
     PVOID Dce;
+    DWORD fnID;
     HINSTANCE hInstance;
     HANDLE hIcon; /* FIXME - Use pointer! */
     HANDLE hIconSm; /* FIXME - Use pointer! */
@@ -263,6 +264,32 @@ typedef struct _W32CLIENTINFO
 
 PW32THREADINFO GetW32ThreadInfo(VOID);
 PW32PROCESSINFO GetW32ProcessInfo(VOID);
+
+// FNID's for NtUserSetWindowFNID
+#define FNID_BUTTON      0x02A1
+#define FNID_COMBOBOX    0x02A2
+#define FNID_COMBOLBOX   0x02A3
+#define FNID_DIALOG      0x02A4
+#define FNID_EDIT        0x02A5
+#define FNID_LISTBOX     0x02A6
+#define FNID_MDICLIENT   0x02A7
+#define FNID_STATIC      0x02A8
+#define FNID_IME         0x02A9
+
+#define FNID_DESTROY     0x4000 // This is sent when WM_NCDESTROY or in the support routine.
+                                // Seen during WM_CREATE on error exit too.
+
+// ICLS's for NtUserGetClassName FNID to ICLS
+#define ICLS_BUTTON      0
+#define ICLS_EDIT        1
+#define ICLS_STATIC      2
+#define ICLS_LISTBOX     3
+#define ICLS_COMBOBOX    5
+#define ICLS_MDICLIENT   6
+#define ICLS_COMBOLBOX   7
+#define ICLS_IME         15
+#define ICLS_DIALOG      17
+#define ICLS_END         31
 
 DWORD
 NTAPI
@@ -2186,11 +2213,11 @@ NtUserSetTimer
  TIMERPROC lpTimerFunc
 );
 
-DWORD
+BOOL
 NTAPI
 NtUserSetWindowFNID(
-  DWORD Unknown0,
-  DWORD Unknown1);
+  HWND hWnd,
+  WORD fnID);
 
 LONG
 NTAPI
