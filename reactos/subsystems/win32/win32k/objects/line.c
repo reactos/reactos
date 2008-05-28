@@ -129,7 +129,7 @@ IntGdiLineTo(DC  *dc,
 
         IntLPtoDP(dc, Points, 2);
 
-        /* FIXME: Is it correct to do this after the transformation? */
+        /* The DCOrg is in device coordinates */
         Points[0].x += dc->w.DCOrgX;
         Points[0].y += dc->w.DCOrgY;
         Points[1].x += dc->w.DCOrgX;
