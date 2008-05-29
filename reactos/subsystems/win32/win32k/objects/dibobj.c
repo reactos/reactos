@@ -812,7 +812,12 @@ NtGdiStretchDIBitsInternal(
 
    pDC = DC_LockDc(hdcMem);
 
-   IntSetDIBits(pDC, hBitmap, 0, BitsInfo->bmiHeader.biHeight, Bits,
+   /* Note BitsInfo->bmiHeader.biHeight is the number of scanline, 
+    * if it negitve we getting to many scanline for scanline is UINT not
+    * a INT, so we need make the negtive value to positve and that make the
+    * count correct for negtive bitmap, TODO : we need testcase for this api */
+
+   IntSetDIBits(pDC, hBitmap, 0, abs(BitsInfo->bmiHeader.biHeight), Bits,
                   BitsInfo, Usage);
 
    DC_UnlockDc(pDC);
