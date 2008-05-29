@@ -60,7 +60,6 @@ NtGdiCreateCompatibleDC(HDC hDC)
 {
   PDC  NewDC, OrigDC;
   PDC_ATTR nDc_Attr, oDc_Attr;
-  HBITMAP  hBitmap;
   HDC hNewDC, DisplayDC;
   HRGN hVisRgn;
   UNICODE_STRING DriverName;
@@ -118,21 +117,8 @@ NtGdiCreateCompatibleDC(HDC hDC)
   nDc_Attr->ptlViewportOrg = oDc_Attr->ptlViewportOrg;
   nDc_Attr->szlViewportExt = oDc_Attr->szlViewportExt;
 
-  /* Create default bitmap */
-  if (!(hBitmap = IntGdiCreateBitmap( 1, 1, 1, NewDC->w.bitsPerPixel, NULL )))
-    {
-      DC_UnlockDc( OrigDC );
-      DC_UnlockDc( NewDC );
-      DC_FreeDC( hNewDC );
-      if (NULL != DisplayDC)
-        {
-          NtGdiDeleteObjectApp(DisplayDC);
-        }
-      return NULL;
-    }
   NewDC->DC_Type        = DC_TYPE_MEMORY; // Always!
-  NewDC->w.hBitmap      = hBitmap;
-  NewDC->w.hFirstBitmap = hBitmap;
+  NewDC->w.hBitmap      = NtGdiGetStockObject(DEFAULT_BITMAP);
   NewDC->pPDev          = OrigDC->pPDev;
 
   NewDC->DcLevel.hpal = OrigDC->DcLevel.hpal;
@@ -1024,10 +1010,6 @@ IntGdiDeleteDC(HDC hDC, BOOL Force)
     NtGdiSelectBrush (DCHandle, STOCK_WHITE_BRUSH);
     NtGdiSelectFont (DCHandle, STOCK_SYSTEM_FONT);
     DC_LockDC (DCHandle); NtGdiSelectXxx does not recognize stock objects yet  */
-    if (DCToDelete->DC_Type == DC_TYPE_MEMORY)
-    {
-      NtGdiDeleteObject (DCToDelete->w.hFirstBitmap);
-    }
     if (DCToDelete->XlateBrush != NULL)
       EngDeleteXlate(DCToDelete->XlateBrush);
     if (DCToDelete->XlatePen != NULL)
@@ -1042,9 +1024,9 @@ IntGdiDeleteDC(HDC hDC, BOOL Force)
     NtGdiDeleteObject (DCToDelete->w.hVisRgn);
   }
   if (NULL != DCToDelete->CombinedClip)
-    {
-      IntEngDeleteClipRegion(DCToDelete->CombinedClip);
-    }
+  {
+    IntEngDeleteClipRegion(DCToDelete->CombinedClip);
+  }
   if (DCToDelete->w.hGCClipRgn)
   {
     NtGdiDeleteObject (DCToDelete->w.hGCClipRgn);
@@ -1336,7 +1318,6 @@ IntGdiCopyToSaveState(PDC dc, PDC newdc)
   nDc_Attr->hbrush          = Dc_Attr->hbrush;
   nDc_Attr->hlfntNew        = Dc_Attr->hlfntNew;
   newdc->w.hBitmap          = dc->w.hBitmap;
-  newdc->w.hFirstBitmap     = dc->w.hFirstBitmap;
   newdc->DcLevel.hpal       = dc->DcLevel.hpal;
   newdc->w.totalExtent      = dc->w.totalExtent;
   newdc->w.bitsPerPixel     = dc->w.bitsPerPixel;
@@ -1404,8 +1385,6 @@ IntGdiCopyFromSaveState(PDC dc, PDC dcs, HDC hDC)
   if(!sDc_Attr) sDc_Attr = &dcs->Dc_Attr;
 
   dc->DcLevel.flPath       = dcs->DcLevel.flPath & ~DCPATH_SAVE;
-
-  dc->w.hFirstBitmap       = dcs->w.hFirstBitmap;
 
   Dc_Attr->dwLayout        = sDc_Attr->dwLayout;
   dc->w.totalExtent        = dcs->w.totalExtent;

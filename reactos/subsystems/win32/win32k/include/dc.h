@@ -59,7 +59,6 @@ typedef struct _WIN_DC_INFO
 
   HRGN     hGCClipRgn;   /* GC clip region (ClipRgn AND VisRgn) */
   HBITMAP  hBitmap;
-  HBITMAP  hFirstBitmap; /* Bitmap selected at creation of the DC */
 
 /* #if 0 */
     GdiPath       path;
