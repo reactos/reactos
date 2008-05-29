@@ -177,15 +177,15 @@ BEGIN
 	EDITTEXT 14009, 79, 75, 150, 14, ES_AUTOHSCROLL
 	LTEXT "I&niciar en:", 14010, 8, 96, 57, 10
 	EDITTEXT 14011, 79, 94, 150, 14, ES_AUTOHSCROLL
-	LTEXT "&Tecla de método abreviado:", 14014, 8, 111, 57, 11
+	LTEXT "&Tecla de método abreviado:", 14014, 8, 111, 57, 14
 	EDITTEXT 14015, 79, 112, 150, 14, ES_LEFT
 	LTEXT "&Ejecutar:", 14016, 8, 134, 57, 10
 	EDITTEXT 14017, 79, 131, 150, 14, ES_AUTOHSCROLL
 	LTEXT "C&omentario:", 14018, 8, 152, 57, 10
 	EDITTEXT 14019, 79, 149, 150, 14, ES_AUTOHSCROLL
-	PUSHBUTTON "&Buscar destino...", 14020, 9, 172, 70, 14, ES_LEFT
-	PUSHBUTTON "Cambiar &icono...", 14021, 84, 172, 70, 14, ES_LEFT
-	PUSHBUTTON "Propiedades avan&zadas...", 14022, 149, 172, 80, 14, ES_LEFT
+	PUSHBUTTON "&Buscar destino...", 14020, 9, 172, 62, 14, ES_LEFT
+	PUSHBUTTON "Cambiar &icono...", 14021, 76, 172, 62, 14, ES_LEFT
+	PUSHBUTTON "Propiedades avan&zadas...", 14022, 144, 172, 85, 14, ES_LEFT
 END
 
 SHELL_EXTENDED_SHORTCUT_DLG DIALOGEX 0, 0, 230, 150
@@ -193,7 +193,7 @@ STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
 CAPTION "Propiedades avanzadas"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-	LTEXT "Elija las propiedades avanzadas que desee para este acceso directo.", -1, 5, 30, 210, 10
+	LTEXT "Elija las propiedades avanzadas que desee para este acceso directo.", -1, 5, 25, 210, 14
 	CHECKBOX "Ejecutar con credenciales diferentes", 14000, 25, 50, 150, 10
 	LTEXT "Esta opción puede permitirle ejecutar este acceso directo como otro usuario, o continuar como usted mismo mientras protege su equipo y datos de una actividad de programa no autorizada.", -1, 50, 60, 175, 40
 	CHECKBOX "Ejecutar en otro espacio de memoria", 14001, 25, 100, 90, 10, WS_DISABLED

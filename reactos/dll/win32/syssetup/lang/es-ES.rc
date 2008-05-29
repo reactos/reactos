@@ -141,8 +141,8 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Instalación de ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Registrando componentes", IDC_STATIC, 53, 7, 253, 20
-    LTEXT "", IDC_STATIC, 53, 29, 253, 20
+    LTEXT "", IDC_ACTIVITY, 53, 7, 253, 20
+    LTEXT "", IDC_ITEM, 53, 29, 253, 20
     CONTROL "", IDC_PROCESSPROGRESS, "msctls_progress32",
             PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 53, 70, 253, 8
 END
@@ -156,6 +156,7 @@ BEGIN
     LTEXT "El asistente de Instalación de ReactOS ha terminado", IDC_FINISHTITLE, 115, 8, 195, 24
     LTEXT "Usted ha finalizado con éxito la instalación de ReactOS.\n\n" \
           "Cuando pulse Terminar, su equipo será reiniciado.", IDC_STATIC, 115, 40, 195, 100
+    CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 138, 188, 12
     LTEXT "Si hay un CD en su lector, quítelo. Luego, reinicie su equipo "\
           "pulsando Terminar.", IDC_STATIC, 115, 169, 195, 17
 END

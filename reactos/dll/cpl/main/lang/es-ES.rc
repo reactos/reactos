@@ -18,9 +18,9 @@ BEGIN
   CONTROL "",IDC_SLIDER_REPEAT_RATE, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 65, 75, 130, 17
   LTEXT "&Haga clic aquí y mantenga presionada una tecla para probar la velocidad de repetición:", -1, 15, 94, 180, 14
   EDITTEXT IDC_EDIT_REPEAT_RATE, 15, 115, 200, 15, WS_CHILD | WS_VISIBLE | WS_GROUP
-  GROUPBOX "&Velocidad de intermitencia del cursor: ", -1, 5, 145, 230, 50
+  GROUPBOX "&Velocidad de intermitencia del cursor ", -1, 5, 145, 230, 50
   LTEXT "", IDC_TEXT_CURSOR_BLINK, 20, 165, 1, 8
-  LTEXT "Ninguna", -1, 40, 165, 31, 10
+  LTEXT "Ninguna", -1, 39, 165, 31, 10
   LTEXT "Rápida", -1, 200, 165, 30, 10
   CONTROL "",IDC_SLIDER_CURSOR_BLINK, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 65, 165, 130, 17
 END
@@ -57,7 +57,7 @@ BEGIN
   LTEXT "Activar esta casilla de verificación para asignar al botón de la derecha del ratón las funciones principales, tales como seleccionar y arrastrar", -1, 10, 30, 150, 30
   GROUPBOX "Velocidad de doble clic ", -1, 5, 75, 230, 70
   LTEXT "Haga Doble clic en la carpeta para probar su configuración. Si la carpeta no se abre o cierra, intente utilizar una configuración más lenta.", -1, 10, 85, 150, 30
-  LTEXT "&Velocidad:   Lenta", -1, 10, 120, 91, 8
+  LTEXT "&Velocidad: Lenta", -1, 10, 120, 91, 8
   LTEXT "Rápida", -1, 137, 120, 30, 8
   CONTROL "",IDC_SLIDER_DOUBLE_CLICK_SPEED, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 65, 120, 70, 17
   CONTROL "", IDC_IMAGE_DOUBLE_CLICK_SPEED, "Static", SS_ICON | SS_NOTIFY | SS_CENTERIMAGE | WS_VISIBLE, 165, 85, 65, 57, WS_EX_STATICEDGE
@@ -89,7 +89,7 @@ STYLE DS_SHELLFONT | WS_CAPTION | WS_SYSMENU
 CAPTION "Guardar combinación"
 FONT 8, "MS Shell Dlg"
 BEGIN
-  LTEXT "Guardar esta combinación de cursores como:", -1, 5, 5, 140, 10
+  LTEXT "Guardar esta combinación de cursores como:", -1, 5, 5, 150, 10
   EDITTEXT IDC_EDIT_SCHEME_NAME, 5, 15, 180, 15, WS_CHILD | WS_VISIBLE | WS_GROUP
   PUSHBUTTON "&Aceptar", IDOK, 60, 45, 50, 15
   PUSHBUTTON "&Cancelar", IDCANCEL, 115, 45, 50, 15

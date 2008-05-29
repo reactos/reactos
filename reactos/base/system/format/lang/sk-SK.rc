@@ -32,11 +32,11 @@ STRING_FMIFS_FAIL  "Could not located FMIFS entry points.\n\n"
 
 STRING_UNKNOW_ARG  "Nezn·my argument: %S\n"
 
-STRING_DRIVE_PARM  "Required drive parameter is missing.\n\n"
+STRING_DRIVE_PARM  "Ch˝ba nevyhnutn˝ parameter jednotky.\n\n"
 
 STRING_ERROR_DRIVE_TYPE  "Could not get drive type"
 
-STRING_INSERT_DISK       "Insert a new floppy in drive %C:\nand press Enter when ready..."
+STRING_INSERT_DISK       "Vloûte nov˙ disketu do jednotky %C:\na potom stlaËte ENTER..."
 
 STRING_NO_VOLUME         "Could not query volume"
 
@@ -44,30 +44,30 @@ STRING_NO_VOLUME_SIZE    "Could not query volume size"
 
 STRING_FILESYSTEM        "Typ systÈmu s˙borov je %S.\n"
 
-STRING_LABEL_NAME_EDIT  "Enter current volume label for drive %C: "
+STRING_LABEL_NAME_EDIT  "Vloûte s˙Ëasn˙ menovku zv‰zku pre jednotku %C: "
 
 STRING_ERROR_LABEL     "Bola zadan· nespr·vna menovka zv‰zku pre t˙to jednotku.\n"
 
 STRING_YN_FORMAT       "\nWARNING, ALL DATA ON NON_REMOVABLE DISK\n\
-DRIVE %C: WILL BE LOST!\nProceed with Format (Y/N)? "
+DRIVE %C: WILL BE LOST!\nProceed with Format (A/N)? "
 
-STRING_YES_NO_FAQ      "YN"
+STRING_YES_NO_FAQ      "AN"
 
 STRING_VERIFYING       "Overovanie"
 
 STRING_FAST_FMT        "R˝chle form·tovanie"
 
-STRING_CREATE_FSYS     "Creating file system structures.\n"
+STRING_CREATE_FSYS     "Vytv·ram ötrukt˙ru s˙borovÈho systÈmu.\n"
 
 STRING_FMT_COMPLETE    "Form·tovanie dokonËenÈ.\n"
 
-STRING_VOL_COMPRESS    "Volume does not support compression.\n"
+STRING_VOL_COMPRESS    "Zv‰zok nepodporuje kompresiu.\n"
 
 STRING_ENTER_LABEL     "Menovka zv‰zku (11 znakov, ak nechcete zadaù tak iba Enter)? "
 
-STRING_NO_LABEL        "Could not label volume"
+STRING_NO_LABEL        "Zv‰zok sa ned· pomenovaù"
 
-STRING_FREE_SPACE     "\n%I64d bytes total disk space.\n%I64d bytes available on disk.\n"
+STRING_FREE_SPACE     "\nCelkovÈ diskovÈ miesto: %I64d bajtov.\nDostupnÈ miesto na disku: %I64d bajtov.\n"
 
 STRING_SERIAL_NUMBER   "\nSÈriovÈ ËÌslo zv‰zku je %04X-%04X\n"
 END

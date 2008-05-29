@@ -1,7 +1,7 @@
 /* TRANSLATOR:  M rio KaŸm r /Mario Kacmar/ aka Kario (kario@szm.sk)
  * DATE OF TR:  22-01-2008
  * Encoding  :  Latin II (852)
- * LastChange:  24-04-08
+ * LastChange:  25-05-08
  */
 
 #ifndef LANG_SK_SK_H__
@@ -584,7 +584,7 @@ static MUI_ENTRY skSKFlushPageEntries[] =
     {
         0,
         0,
-        "Vypr zdåujem cache", //Flushing cache (zapisuje sa na disk obsah cache)
+        "Vypr zdåujem cache", //Flushing cache (zapisuje sa na disk obsah cache, doslovne "Preplachovanie cashe")
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1311,7 +1311,7 @@ MUI_ERROR skSKErrorEntries[] =
     },
     {
         //ERROR_DRIVE_INFORMATION
-        "Setup could not retrieve system drive information.\n",
+        "Inçtal tor nemohol z¡skaœ inform cie o syst‚movìch diskoch.\n",
         "ENTER = Reçtart poŸ¡taŸa"
     },
     {
@@ -1427,7 +1427,7 @@ MUI_ERROR skSKErrorEntries[] =
     },
     {
         //ERROR_CREATE_DIR,
-        "Setup could not create install directories.",
+        "Inçtal tor nemohol vytvoriœ inçtalaŸn‚ adres re.",
         "ENTER = Reçtart poŸ¡taŸa"
     },
     {
@@ -1444,7 +1444,7 @@ MUI_ERROR skSKErrorEntries[] =
     },
     {
         //ERROR_CREATE_INSTALL_DIR
-        "Setup could not create the install directory.",
+        "Inçtal tor nemohol vytvoriœ inçtalaŸnì adres r.", //could not = nemohol
         "ENTER = Reçtart poŸ¡taŸa"
     },
     {
@@ -1460,7 +1460,7 @@ MUI_ERROR skSKErrorEntries[] =
     },
     {
         //ERROR_ADDING_CODEPAGE,
-        "Setup failed to add codepage to registry.\n"
+        "Inçtal tor zlyhal pri prid van¡ k¢dovej str nky do registrov.\n"
         "ENTER = Reçtart poŸ¡taŸa"
     },
     {
@@ -1470,7 +1470,7 @@ MUI_ERROR skSKErrorEntries[] =
     },
     {
         //ERROR_ADDING_KBLAYOUTS,
-        "Inçtal tor zlyhal pri prid van¡ rozlo§eni¡ kl vesnice do registrov.\n"
+        "Inçtal tor zlyhal pri prid van¡ rozlo§en¡ kl vesnice do registrov.\n"
         "ENTER = Reçtart poŸ¡taŸa"
     },
     {
@@ -1625,13 +1625,13 @@ MUI_STRING skSKStrings[] =
     {STRING_IMPORTFILE,
     "   Importujem %S..."},
     {STRING_DISPLAYETTINGSUPDATE,
-    "   Updating display registry settings..."},
+    "   Aktualizujem nastavenia obrazovky v registrov..."}, //display registry settings
     {STRING_LOCALESETTINGSUPDATE,
     "   Aktualizujem miestne nastavenia..."},
     {STRING_KEYBOARDSETTINGSUPDATE,
     "   Aktualizujem nastavenia rozlo§enia kl vesnice..."},
     {STRING_CODEPAGEINFOUPDATE,
-    "   Adding codepage information to registry..."},
+    "   Prid vam do registrov inform cie o k¢dov‚j str nke..."},
     {STRING_DONE,
     "   Hotovo..."},
     {STRING_REBOOTCOMPUTER2,
@@ -1639,7 +1639,7 @@ MUI_STRING skSKStrings[] =
     {STRING_CONSOLEFAIL1,
     "Nemo§no otvoriœ konzolu\n\n"},
     {STRING_CONSOLEFAIL2,
-    "The most common cause of this is using an USB keyboard\n"},
+    "Najbe§nejçou pr¡Ÿinou tohto je pou§itie USB kl vesnice\n"},
     {STRING_CONSOLEFAIL3,
     "USB kl vesnica eçte nie je plne podporovan \n"},
     {STRING_FORMATTINGDISK,
