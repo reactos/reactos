@@ -1547,6 +1547,7 @@ NtGdiExtTextOutW(
    POINT Start;
    BOOL DoBreak = FALSE;
    LPCWSTR String, SafeString = NULL;
+   HPALETTE hDestPalette;
 
    // TODO: Write test-cases to exactly match real Windows in different
    // bad parameters (e.g. does Windows check the DC or the RECT first?).
@@ -1629,7 +1630,9 @@ NtGdiExtTextOutW(
    YStart = Start.y + dc->w.DCOrgY;
 
    /* Create the brushes */
-   PalDestGDI = PALETTE_LockPalette(dc->DcLevel.hpal);
+   hDestPalette = BitmapObj->hDIBPalette;
+   if (!hDestPalette) hDestPalette = PrimarySurface.DevInfo.hpalDefault;
+   PalDestGDI = PALETTE_LockPalette(hDestPalette);
    if ( !PalDestGDI )
       Mode = PAL_RGB;
    else
@@ -1637,7 +1640,7 @@ NtGdiExtTextOutW(
       Mode = PalDestGDI->Mode;
       PALETTE_UnlockPalette(PalDestGDI);
    }
-   XlateObj = (XLATEOBJ*)IntEngCreateXlate(Mode, PAL_RGB, dc->DcLevel.hpal, NULL);
+   XlateObj = (XLATEOBJ*)IntEngCreateXlate(Mode, PAL_RGB, hDestPalette, NULL);
    if ( !XlateObj )
    {
       goto fail;
@@ -1667,7 +1670,7 @@ NtGdiExtTextOutW(
       }
       IntGdiInitBrushInstance(&BrushBgInst, BrushBg, NULL);
    }
-   XlateObj2 = (XLATEOBJ*)IntEngCreateXlate(PAL_RGB, Mode, NULL, dc->DcLevel.hpal);
+   XlateObj2 = (XLATEOBJ*)IntEngCreateXlate(PAL_RGB, Mode, NULL, hDestPalette);
    if ( !XlateObj2 )
    {
       goto fail;

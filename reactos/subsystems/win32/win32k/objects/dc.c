@@ -29,7 +29,7 @@
 
 //  ---------------------------------------------------------  File Statics
 
-static GDIDEVICE PrimarySurface;
+GDIDEVICE PrimarySurface;
 static PGDIDEVICE pPrimarySurface = NULL;
 static KEVENT VideoDriverNeedsPreparation;
 static KEVENT VideoDriverPrepared;
@@ -829,7 +829,8 @@ IntGdiCreateDC(PUNICODE_STRING Driver,
 
   if (!CreateAsIC)
   {
-    NewDC->DcLevel.hpal = PrimarySurface.DevInfo.hpalDefault;
+    NewDC->DcLevel.hpal = NtGdiGetStockObject(DEFAULT_PALETTE);
+
     nDc_Attr->jROP2 = R2_COPYPEN;
 
     NewDC->erclWindow.top = NewDC->erclWindow.left = 0;
@@ -1957,12 +1958,10 @@ NtGdiSelectBitmap(
     if(pBmp->dib)
     {
         pDC->w.bitsPerPixel = pBmp->dib->dsBmih.biBitCount;
-        pDC->DcLevel.hpal = pBmp->hDIBPalette;
     }
     else
     {
         pDC->w.bitsPerPixel = BitsPerFormat(pBmp->SurfObj.iBitmapFormat);
-        pDC->DcLevel.hpal = ((GDIDEVICE *)pDC->pPDev)->DevInfo.hpalDefault;
     }
 
     /* Regenerate the XLATEOBJs. */

@@ -1492,6 +1492,7 @@ IntGdiGradientFill(
     POINTL DitherOrg;
     ULONG Mode, i;
     BOOL Ret;
+    HPALETTE hDestPalette;
 
     ASSERT(dc);
     ASSERT(pVertex);
@@ -1550,13 +1551,19 @@ IntGdiGradientFill(
     /* FIXME - BitmapObj can be NULL!!! Don't assert but handle this case gracefully! */
     ASSERT(BitmapObj);
 
-    PalDestGDI = PALETTE_LockPalette(dc->DcLevel.hpal);
-    /* FIXME - PalDestGDI can be NULL!!! Don't assert but handle this case gracefully! */
-    ASSERT(PalDestGDI);
-    Mode = PalDestGDI->Mode;
-    PALETTE_UnlockPalette(PalDestGDI);
+    hDestPalette = BitmapObj->hDIBPalette;
+    if (!hDestPalette) hDestPalette = PrimarySurface.DevInfo.hpalDefault;
 
-    XlateObj = (XLATEOBJ*)IntEngCreateXlate(Mode, PAL_RGB, dc->DcLevel.hpal, NULL);
+    PalDestGDI = PALETTE_LockPalette(hDestPalette);
+    if (PalDestGDI)
+    {
+        Mode = PalDestGDI->Mode;
+        PALETTE_UnlockPalette(PalDestGDI);
+    }
+    else
+        Mode = PAL_RGB;
+
+    XlateObj = (XLATEOBJ*)IntEngCreateXlate(Mode, PAL_RGB, hDestPalette, NULL);
     ASSERT(XlateObj);
 
     Ret = IntEngGradientFill(&BitmapObj->SurfObj,

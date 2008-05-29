@@ -311,5 +311,6 @@ VOID FASTCALL IntGdiUnreferencePdev(PGDIDEVICE pPDev, DWORD CleanUpType);
 HDC FASTCALL IntGdiCreateDisplayDC(HDEV hDev, ULONG DcType, BOOL EmptyDC);
 BOOL FASTCALL IntGdiCleanDC(HDC hDC);
 
+extern GDIDEVICE PrimarySurface;
 
 #endif /* not __WIN32K_DC_H */
