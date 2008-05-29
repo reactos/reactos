@@ -50,6 +50,7 @@ BOOL FASTCALL IsMetaFile(HDC);
 
 extern PW32PROCESSINFO g_pi;
 extern PW32PROCESSINFO g_kpi;
+extern PSERVERINFO g_psi;
 
 static __inline PVOID
 SharedPtrToUser(PVOID Ptr)

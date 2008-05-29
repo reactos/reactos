@@ -33,7 +33,6 @@
 #include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(user32);
-extern PSERVERINFO g_psi;
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
