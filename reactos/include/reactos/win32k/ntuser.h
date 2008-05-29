@@ -493,17 +493,17 @@ NtUserAttachThreadInput(
 HDC NTAPI
 NtUserBeginPaint(HWND hWnd, PAINTSTRUCT* lPs);
 
-DWORD
+BOOL
 NTAPI
 NtUserBitBltSysBmp(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2,
-  DWORD Unknown3,
-  DWORD Unknown4,
-  DWORD Unknown5,
-  DWORD Unknown6,
-  DWORD Unknown7);
+  HDC hdc,
+  INT nXDest,
+  INT nYDest,
+  INT nWidth,
+  INT nHeight,
+  INT nXSrc,
+  INT nYSrc,
+  DWORD dwRop );
 
 BOOL
 NTAPI

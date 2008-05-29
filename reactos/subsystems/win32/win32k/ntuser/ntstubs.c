@@ -36,21 +36,39 @@ NtUserAttachThreadInput(
    return 0;
 }
 
-DWORD
-STDCALL
+//
+// Works like BitBlt, http://msdn.microsoft.com/en-us/library/ms532278(VS.85).aspx
+//
+BOOL
+NTAPI
 NtUserBitBltSysBmp(
-   DWORD Unknown0,
-   DWORD Unknown1,
-   DWORD Unknown2,
-   DWORD Unknown3,
-   DWORD Unknown4,
-   DWORD Unknown5,
-   DWORD Unknown6,
-   DWORD Unknown7)
+   HDC hdc,
+   INT nXDest,
+   INT nYDest,
+   INT nWidth,
+   INT nHeight,
+   INT nXSrc,
+   INT nYSrc,
+   DWORD dwRop )
 {
+   BOOL Ret = FALSE;
+   UserEnterExclusive();
    UNIMPLEMENTED
-
-   return 0;
+#if 0
+   Ret = NtGdiBitBlt( hdc,
+                   nXDest,
+                   nYDest,
+                   nWidth, 
+                  nHeight, 
+                hSystemBM,
+                    nXSrc, 
+                    nYSrc, 
+                    dwRop,
+                        0,
+                        0);
+#endif
+   UserLeave();
+   return Ret;
 }
 
 DWORD
