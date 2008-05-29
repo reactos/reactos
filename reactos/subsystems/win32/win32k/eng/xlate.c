@@ -443,10 +443,67 @@ IntEngGetXlatePalette(XLATEOBJ *XlateObj,
    return 0;
 }
 
+XLATEOBJ*
+FASTCALL
+IntCreateXlateForBlt(PDC pDCDest, PDC pDCSrc, BITMAPOBJ* pDestSurf, BITMAPOBJ* pSrcSurf)
+{
+	XLATEOBJ *XlateObj;
+	HPALETTE DestPalette, SourcePalette;
+	PDC_ATTR pDc_Attr;
+
+	DPRINT("Enter IntCreateXlateFromDCs\n");
+
+	if (pDestSurf == pSrcSurf)
+	{
+		return NULL;
+	}
+
+	DestPalette = pDestSurf->hDIBPalette;
+	if (!DestPalette) DestPalette = PrimarySurface.DevInfo.hpalDefault;
+
+	SourcePalette = pSrcSurf->hDIBPalette;
+	if (!SourcePalette) SourcePalette = PrimarySurface.DevInfo.hpalDefault;
+
+	DPRINT("DestPalette = %p, SourcePalette = %p, DefaultPatelle = %p\n", DestPalette, SourcePalette, NtGdiGetStockObject((INT)DEFAULT_PALETTE));
+
+	/* KB41464 details how to convert between mono and color */
+	if (pDestSurf->SurfObj.iBitmapFormat == BMF_1BPP)
+	{
+		if (pSrcSurf->SurfObj.iBitmapFormat == BMF_1BPP)
+		{
+			XlateObj = NULL;
+		}
+		else
+		{
+			pDc_Attr = pDCSrc->pDc_Attr;
+			if (!pDc_Attr) pDc_Attr = &pDCSrc->Dc_Attr;
+			XlateObj = IntEngCreateMonoXlate(0, DestPalette, SourcePalette, pDc_Attr->crBackgroundClr);
+		}
+	}
+	else
+	{
+		if (pSrcSurf->SurfObj.iBitmapFormat == BMF_1BPP)
+		{
+			pDc_Attr = pDCDest->pDc_Attr;
+			if (!pDc_Attr) pDc_Attr = &pDCDest->Dc_Attr;
+			XlateObj = IntEngCreateSrcMonoXlate(DestPalette, pDc_Attr->crBackgroundClr, pDc_Attr->crForegroundClr);
+		}
+		else
+		{
+			XlateObj = IntEngCreateXlate(0, 0, DestPalette, SourcePalette);
+		}
+		if (!XlateObj)
+		{
+			return (XLATEOBJ*)-1;
+		}
+	}
+	return XlateObj;
+}
+
 /* PUBLIC FUNCTIONS ***********************************************************/
 
 /*
- * @implemented
+ * @implemented /// this is not a public function!
  */
 VOID FASTCALL
 EngDeleteXlate(XLATEOBJ *XlateObj)
