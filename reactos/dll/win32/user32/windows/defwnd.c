@@ -1,4 +1,4 @@
-/* $Id$
+/*
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -33,10 +33,6 @@ void FASTCALL MenuInitSysMenuPopup(HMENU Menu, DWORD Style, DWORD ClsStyle, LONG
 
 /* GLOBALS *******************************************************************/
 
-COLORREF SysColors[NUM_SYSCOLORS] = {0};
-HPEN SysPens[NUM_SYSCOLORS] = {0};
-HBRUSH SysBrushes[NUM_SYSCOLORS] = {0};
-
 /* Bits in the dwKeyData */
 #define KEYDATA_ALT             0x2000
 #define KEYDATA_PREVSTATE       0x4000
@@ -55,13 +51,8 @@ InitStockObjects(void)
              we should rather map the table into usermode. But it only affects the
              SysColors table - the pens, brushes and stock objects are not affected
              as their handles never change. But it'd be faster to map them, too. */
-  if(SysBrushes[0] == NULL)
-  {
-    /* only initialize once */
-    (void)NtUserGetSysColors(SysColors, NUM_SYSCOLORS);
-    (void)NtUserGetSysColorPens(SysPens, NUM_SYSCOLORS);
-    (void)NtUserGetSysColorBrushes(SysBrushes, NUM_SYSCOLORS);
-  }
+
+ // Done! g_psi!
 }
 
 /*
@@ -72,7 +63,7 @@ GetSysColor(int nIndex)
 {
   if(nIndex >= 0 && nIndex <= NUM_SYSCOLORS)
   {
-    return SysColors[nIndex];
+    return g_psi->SysColors[nIndex];
   }
 
   SetLastError(ERROR_INVALID_PARAMETER);
@@ -87,7 +78,7 @@ GetSysColorPen(int nIndex)
 {
   if(nIndex >= 0 && nIndex <= NUM_SYSCOLORS)
   {
-    return SysPens[nIndex];
+    return g_psi->SysColorPens[nIndex];
   }
 
   SetLastError(ERROR_INVALID_PARAMETER);
@@ -102,7 +93,7 @@ GetSysColorBrush(int nIndex)
 {
   if(nIndex >= 0 && nIndex <= NUM_SYSCOLORS)
   {
-    return SysBrushes[nIndex];
+    return g_psi->SysColorBrushes[nIndex];
   }
 
   SetLastError(ERROR_INVALID_PARAMETER);
@@ -132,11 +123,6 @@ SetSysColors(
   if(cElements > 0)
   {
     Ret = NtUserSetSysColors(&ChangeSysColors, cElements);
-    if(Ret)
-    {
-      /* FIXME - just change it in the usermode structure, too, instead of asking win32k again */
-      (void)NtUserGetSysColors(SysColors, NUM_SYSCOLORS);
-    }
   }
   else
   {

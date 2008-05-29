@@ -28,6 +28,8 @@
 #define NDEBUG
 #include <debug.h>
 
+extern PSERVERINFO gpsi;
+
 static COLORREF SysColors[] =
 {
   RGB(212, 208, 200), /* COLOR_SCROLLBAR  */
@@ -64,8 +66,11 @@ static COLORREF SysColors[] =
 };
 #define NUM_SYSCOLORS (sizeof(SysColors) / sizeof(SysColors[0]))
 
-static HPEN SysColorPens[NUM_SYSCOLORS];
-static HBRUSH SysColorBrushes[NUM_SYSCOLORS];
+//static HPEN SysColorPens[NUM_SYSCOLORS];
+//static HBRUSH SysColorBrushes[NUM_SYSCOLORS];
+
+// System Bitmap DC and System Display DC...
+HDC hSystemBM, hSystemDisplayDC;
 
 /*  GDI stock objects */
 
@@ -182,9 +187,9 @@ IntSetSysColors(UINT nColors, INT *Elements, COLORREF *Colors)
   {
     if((UINT)(*Elements) < NUM_SYSCOLORS)
     {
-      SysColors[*Elements] = *Colors;
-      IntGdiSetSolidBrushColor(SysColorBrushes[*Elements], *Colors);
-      IntGdiSetSolidPenColor(SysColorPens[*Elements], *Colors);
+      gpsi->SysColors[*Elements] = *Colors;
+      IntGdiSetSolidBrushColor(gpsi->SysColorBrushes[*Elements], *Colors);
+      IntGdiSetSolidPenColor(gpsi->SysColorPens[*Elements], *Colors);
     }
     Elements++;
     Colors++;
@@ -209,7 +214,7 @@ IntGetSysColorBrushes(HBRUSH *Brushes, UINT nBrushes)
 
   for(i = 0; i < nBrushes; i++)
   {
-    *(Brushes++) = SysColorBrushes[i];
+    *(Brushes++) = gpsi->SysColorBrushes[i];
   }
 
   return nBrushes > 0;
@@ -218,7 +223,7 @@ IntGetSysColorBrushes(HBRUSH *Brushes, UINT nBrushes)
 HGDIOBJ FASTCALL
 IntGetSysColorBrush(INT Object)
 {
-  return ((Object < 0) || (NUM_SYSCOLORS <= Object)) ? NULL : SysColorBrushes[Object];
+  return ((Object < 0) || (NUM_SYSCOLORS <= Object)) ? NULL : gpsi->SysColorBrushes[Object];
 }
 
 BOOL FASTCALL
@@ -236,7 +241,7 @@ IntGetSysColorPens(HPEN *Pens, UINT nPens)
 
   for(i = 0; i < nPens; i++)
   {
-    *(Pens++) = SysColorPens[i];
+    *(Pens++) = gpsi->SysColorPens[i];
   }
 
   return nPens > 0;
@@ -256,7 +261,7 @@ IntGetSysColors(COLORREF *Colors, UINT nColors)
     return FALSE;
   }
 
-  col = &SysColors[0];
+  col = &gpsi->SysColors[0];
   for(i = 0; i < nColors; i++)
   {
     *(Colors++) = *(col++);
@@ -268,7 +273,7 @@ IntGetSysColors(COLORREF *Colors, UINT nColors)
 DWORD FASTCALL
 IntGetSysColor(INT nIndex)
 {
-  return (NUM_SYSCOLORS <= (UINT)nIndex) ? 0 : SysColors[nIndex];
+  return (NUM_SYSCOLORS <= (UINT)nIndex) ? 0 : gpsi->SysColors[nIndex];
 }
 
 VOID FASTCALL
@@ -277,15 +282,20 @@ CreateSysColorObjects(VOID)
   UINT i;
   LOGPEN Pen;
 
+  for(i = 0; i < NUM_SYSCOLORS; i++)
+  {
+    gpsi->SysColors[i] = SysColors[i];
+  }
+
   /* Create the syscolor brushes */
   for(i = 0; i < NUM_SYSCOLORS; i++)
   {
-    if(SysColorBrushes[i] == NULL)
+    if(gpsi->SysColorBrushes[i] == NULL)
     {
-      SysColorBrushes[i] = IntGdiCreateSolidBrush(SysColors[i]);
-      if(SysColorBrushes[i] != NULL)
+      gpsi->SysColorBrushes[i] = IntGdiCreateSolidBrush(SysColors[i]);
+      if(gpsi->SysColorBrushes[i] != NULL)
       {
-        GDIOBJ_ConvertToStockObj((HGDIOBJ*)&SysColorBrushes[i]);
+        GDIOBJ_ConvertToStockObj((HGDIOBJ*)&gpsi->SysColorBrushes[i]);
       }
     }
   }
@@ -296,13 +306,13 @@ CreateSysColorObjects(VOID)
   Pen.lopnWidth.y = 0;
   for(i = 0; i < NUM_SYSCOLORS; i++)
   {
-    if(SysColorPens[i] == NULL)
+    if(gpsi->SysColorPens[i] == NULL)
     {
       Pen.lopnColor = SysColors[i];
-      SysColorPens[i] = IntGdiExtCreatePen(Pen.lopnStyle, Pen.lopnWidth.x, BS_SOLID, Pen.lopnColor, 0, 0, 0, NULL, 0, TRUE, NULL);
-      if(SysColorPens[i] != NULL)
+      gpsi->SysColorPens[i] = IntGdiExtCreatePen(Pen.lopnStyle, Pen.lopnWidth.x, BS_SOLID, Pen.lopnColor, 0, 0, 0, NULL, 0, TRUE, NULL);
+      if(gpsi->SysColorPens[i] != NULL)
       {
-        GDIOBJ_ConvertToStockObj((HGDIOBJ*)&SysColorPens[i]);
+        GDIOBJ_ConvertToStockObj((HGDIOBJ*)&gpsi->SysColorPens[i]);
       }
     }
   }

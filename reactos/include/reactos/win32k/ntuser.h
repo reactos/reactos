@@ -171,8 +171,12 @@ typedef struct _WINDOW
 
 typedef struct _SERVERINFO
 {
-  DWORD SrvEventActivity;
-
+//  DWORD    SystemMetrics[SM_CMETRICS];       // System Metrics
+//  COLORREF SystemColorCopy[COLOR_MENUBAR+1]; // Backup Copy of system colors.
+  COLORREF SysColors[COLOR_MENUBAR+1];       // GetSysColor
+  HBRUSH   SysColorBrushes[COLOR_MENUBAR+1]; // GetSysColorBrush
+  HPEN     SysColorPens[COLOR_MENUBAR+1];    // ReactOS exclusive
+  DWORD    SrvEventActivity;
 } SERVERINFO, *PSERVERINFO;
 
 typedef struct _W32PROCESSINFO
