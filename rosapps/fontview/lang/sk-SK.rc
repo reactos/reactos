@@ -1,0 +1,18 @@
+/* TRANSLATOR:  Mário Kaèmár /Mario Kacmar/ aka Kario (kario@szm.sk)
+ * DATE OF TR:  31-07-2007
+ * UPDATED   :  28-05-2008
+ */
+
+LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
+
+STRINGTABLE DISCARDABLE
+BEGIN
+	IDS_QUIT, "Hotovo"
+	IDS_PRINT, "Tlaèi"
+	IDS_STRING, "Kàde¾ ïat¾ov uèí koòa ra kôru. 1234567890"
+	IDS_ERROR, "Chyba"
+	IDS_ERROR_NOMEM, "Na vykonanie tejto operácie nie je dostatok vo¾nej pamäte."
+	IDS_ERROR_NOFONT, "Poadovanı súbor %1 nie je platnım súborom písiem."
+	IDS_ERROR_NOCLASS, "Nepodarilo sa inicializova triedu window."
+	IDS_ERROR_BADCMD, "Nebol zadanı iadny súbor písiem.\nPouitie:\n  fontview.exe <súbor písiem>"
+END
