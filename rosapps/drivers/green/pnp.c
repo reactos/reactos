@@ -343,7 +343,7 @@ GreenQueryId(
 			{
 				UNICODE_STRING SourceU, String;
 				RtlInitUnicodeString(&SourceU, Source);
-				Status = RtlDuplicateUnicodeString(
+				Status = GreenDuplicateUnicodeString(
 					RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE,
 					&SourceU,
 					&String);
@@ -377,7 +377,7 @@ GreenQueryId(
 			if (SourceU.Length)
 			{
 				UNICODE_STRING String;
-				Status = RtlDuplicateUnicodeString(
+				Status = GreenDuplicateUnicodeString(
 					RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE,
 					&SourceU,
 					&String);
@@ -559,4 +559,5 @@ GreenPnp(
 
 	return Status;
 }
+
 

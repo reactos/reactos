@@ -9,15 +9,8 @@ typedef struct _SECURITY_ATTRIBUTES SECURITY_ATTRIBUTES, *PSECURITY_ATTRIBUTES;
 #include <wincon.h>
 #include <drivers/blue/ntddblue.h>
 
-NTSYSAPI
-NTSTATUS
-NTAPI
-RtlDuplicateUnicodeString(
-    IN ULONG Flags,
-    IN PCUNICODE_STRING SourceString,
-    OUT PUNICODE_STRING DestinationString
-);
 #define RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE         1
+#define RTL_DUPLICATE_UNICODE_STRING_ALLOCATE_NULL_STRING   2
 
 #define INFINITE -1
 #define KEYBOARD_BUFFER_SIZE 100
@@ -190,3 +183,11 @@ NTSTATUS
 ScreenDeviceControl(
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PIRP Irp);
+
+/************************************ green.c */
+
+NTSTATUS
+GreenDuplicateUnicodeString(
+    IN ULONG Flags,
+    IN PCUNICODE_STRING SourceString,
+    OUT PUNICODE_STRING DestinationString);
