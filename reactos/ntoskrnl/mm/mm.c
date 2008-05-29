@@ -27,7 +27,7 @@ MM_STATS MmStats;
 /*
  * @implemented
  */
-BOOLEAN STDCALL MmIsNonPagedSystemAddressValid(PVOID VirtualAddress)
+BOOLEAN NTAPI MmIsNonPagedSystemAddressValid(PVOID VirtualAddress)
 {
    return MmIsAddressValid(VirtualAddress);
 }
@@ -35,7 +35,7 @@ BOOLEAN STDCALL MmIsNonPagedSystemAddressValid(PVOID VirtualAddress)
 /*
  * @implemented
  */
-BOOLEAN STDCALL MmIsAddressValid(PVOID VirtualAddress)
+BOOLEAN NTAPI MmIsAddressValid(PVOID VirtualAddress)
 /*
  * FUNCTION: Checks whether the given address is valid for a read or write
  * ARGUMENTS:
@@ -353,22 +353,10 @@ MmCommitPagedPoolAddress(PVOID Address, BOOLEAN Locked)
 /*
  * @unimplemented
  */
-ULONG STDCALL
+ULONG NTAPI
 MmAdjustWorkingSetSize (ULONG Unknown0,
                         ULONG Unknown1,
                         ULONG Unknown2)
-{
-   UNIMPLEMENTED;
-   return (0);
-}
-
-
-ULONG
-STDCALL
-MmDbgTranslatePhysicalAddress (
-   ULONG Unknown0,
-   ULONG Unknown1
-)
 {
    UNIMPLEMENTED;
    return (0);
@@ -378,7 +366,7 @@ MmDbgTranslatePhysicalAddress (
  * @unimplemented
  */
 BOOLEAN
-STDCALL
+NTAPI
 MmSetAddressRangeModified (
     IN PVOID    Address,
     IN ULONG    Length
