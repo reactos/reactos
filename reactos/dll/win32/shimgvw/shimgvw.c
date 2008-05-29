@@ -17,6 +17,7 @@
 #include <commctrl.h>
 #include <gdiplus.h>
 #include <tchar.h>
+#include <debug.h>
 
 #include "shimgvw.h"
 
@@ -55,12 +56,34 @@ ImageView_DrawImage(HWND hwnd)
     HDC hdc;
 
     if (GetFileAttributesW(szOpenFileName) == 0xFFFFFFFF)
+    {
+        DPRINT1("File %s not found!\n", szOpenFileName);
         return;
+    }
 
     hdc = BeginPaint(hwnd, &ps);
+    if (!hdc)
+    {
+        DPRINT1("BeginPaint() failed\n");
+        return;
+    }
 
     GdipCreateFromHDC(hdc, &graphics);
+    if (!graphics)
+    {
+        DPRINT1("GdipCreateFromHDC() failed\n");
+        DeleteDC(hdc);
+        return;
+    }
+
     GdipLoadImageFromFile(szOpenFileName, &image);
+    if (!image)
+    {
+        DPRINT1("GdipLoadImageFromFile() failed\n");
+        DeleteDC(hdc);
+        return;
+    }
+
     GdipGetImageWidth(image, &uImgWidth);
     GdipGetImageHeight(image, &uImgHeight);
 
@@ -128,9 +151,7 @@ ImageView_DrawImage(HWND hwnd)
             }
         }
 
-        //TCHAR szBuf[MAX_PATH];
-        //wsprintf(szBuf, _T("x = %d\ny = %d\nWidth = %d\nHeight = %d\n\nrect.right = %d\nrect.bottom = %d\n\nuImgWidth = %d\nuImgHeight = %d"), x, y, width, height, rect.right, rect.bottom, uImgWidth, uImgHeight);
-        //MessageBox(0, szBuf, NULL, MB_OK);
+        DPRINT1("x = %d\ny = %d\nWidth = %d\nHeight = %d\n\nrect.right = %d\nrect.bottom = %d\n\nuImgWidth = %d\nuImgHeight = %d", x, y, width, height, rect.right, rect.bottom, uImgWidth, uImgHeight);
         GdipDrawImageRect(graphics, image, x, y, width, height);
     }
 
@@ -443,39 +464,51 @@ ImageView_CreateWindow(HWND hwnd, LPWSTR szFileName)
     return -1;
 }
 
-LONG
-CALLBACK
-ImageView_FullscreenW(HWND hwnd, UINT uMsg, LPARAM lParam1, LPARAM lParam2)
+VOID
+ImageView_FullscreenW(HWND hwnd, HINSTANCE hInst, LPCWSTR path, int nShow)
 {
-    return ImageView_CreateWindow(hwnd, (LPWSTR)lParam1);
+    ImageView_CreateWindow(hwnd, (LPWSTR)path);
 }
 
-LONG
-CALLBACK
-ImageView_Fullscreen(HWND hwnd, UINT uMsg, LPARAM lParam1, LPARAM lParam2)
+VOID
+ImageView_Fullscreen(HWND hwnd, HINSTANCE hInst, LPCWSTR path, int nShow)
+{
+    ImageView_CreateWindow(hwnd, (LPWSTR)path);
+}
+
+VOID
+ImageView_FullscreenA(HWND hwnd, HINSTANCE hInst, LPCSTR path, int nShow)
 {
     WCHAR szFile[MAX_PATH];
 
-    if (MultiByteToWideChar(CP_ACP, 0, (char*)lParam1, strlen((char*)lParam1)+1, szFile, MAX_PATH))
+    if (MultiByteToWideChar(CP_ACP, 0, (char*)path, strlen((char*)path)+1, szFile, MAX_PATH))
     {
-        return ImageView_CreateWindow(hwnd, (LPWSTR)szFile);
+        ImageView_CreateWindow(hwnd, (LPWSTR)szFile);
     }
-
-    return -1;
 }
 
-LONG
-CALLBACK
-ImageView_FullscreenA(HWND hwnd, UINT uMsg, LPARAM lParam1, LPARAM lParam2)
+VOID
+ImageView_PrintTo(HWND hwnd, HINSTANCE hInst, LPCWSTR path, int nShow)
 {
-    WCHAR szFile[MAX_PATH];
+    DPRINT("ImageView_PrintTo() not implemented\n");
+}
 
-    if (MultiByteToWideChar(CP_ACP, 0, (char*)lParam1, strlen((char*)lParam1)+1, szFile, MAX_PATH))
-    {
-        return ImageView_CreateWindow(hwnd, (LPWSTR)szFile);
-    }
+VOID
+ImageView_PrintToA(HWND hwnd, HINSTANCE hInst, LPCSTR path, int nShow)
+{
+    DPRINT("ImageView_PrintToA() not implemented\n");
+}
 
-    return -1;
+VOID
+ImageView_PrintToW(HWND hwnd, HINSTANCE hInst, LPCWSTR path, int nShow)
+{
+    DPRINT("ImageView_PrintToW() not implemented\n");
+}
+
+VOID
+imageview_fullscreenW(HWND hwnd, HINSTANCE hInst, LPCWSTR path, int nShow)
+{
+    DPRINT("ImageView_fullscreenW() not implemented\n");
 }
 
 BOOL WINAPI
