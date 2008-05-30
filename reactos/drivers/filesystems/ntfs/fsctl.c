@@ -45,9 +45,9 @@ NtfsHasFileSystem(PDEVICE_OBJECT DeviceToMount)
 {
   PARTITION_INFORMATION PartitionInfo;
   DISK_GEOMETRY DiskGeometry;
+  ULONG ClusterSize, Size, k;
   PBOOT_SECTOR BootSector;
   NTSTATUS Status;
-  ULONG Size, k;
 
   DPRINT1("NtfsHasFileSystem() called\n");
 
@@ -91,7 +91,7 @@ NtfsHasFileSystem(PDEVICE_OBJECT DeviceToMount)
 
   DPRINT1("BytesPerSector: %lu\n", DiskGeometry.BytesPerSector);
   BootSector = ExAllocatePoolWithTag(NonPagedPool,
-                              DiskGeometry.BytesPerSector, TAG_NTFS);
+                                     DiskGeometry.BytesPerSector, TAG_NTFS);
   if (BootSector == NULL)
   {
     return(STATUS_INSUFFICIENT_RESOURCES);
@@ -137,6 +137,17 @@ NtfsHasFileSystem(PDEVICE_OBJECT DeviceToMount)
       Status = STATUS_UNRECOGNIZED_VOLUME;
       goto ByeBye;
     }
+  }
+  /* Check cluster size */
+  ClusterSize = BootSector->BPB.BytesPerSector * BootSector->BPB.SectorsPerCluster;
+  if (ClusterSize != 512 && ClusterSize != 1024 && 
+      ClusterSize != 2048 && ClusterSize != 4096)
+  {
+    DPRINT1("Cluster size failed: %hu, %hu, %hu\n", BootSector->BPB.BytesPerSector,
+                                                    BootSector->BPB.SectorsPerCluster,
+                                                    ClusterSize);
+    Status = STATUS_UNRECOGNIZED_VOLUME;
+    goto ByeBye;
   }
 
 ByeBye:
