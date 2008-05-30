@@ -431,7 +431,7 @@ EnumLanguageGroupLocalesW(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 STDCALL
@@ -440,13 +440,59 @@ EnumSystemCodePagesW (
     DWORD               dwFlags
     )
 {
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
+    WCHAR szNumber[5 + 1], szValue[MAX_PATH];
+    HKEY hKey;
+    BOOL bContinue = TRUE;
+    ULONG ulIndex = 1;
+
+    DPRINT("(%p,0x%08X)\n", lpCodePageEnumProc, dwFlags);
+
+    if ((!dwFlags & CP_INSTALLED)&&(!dwFlags & CP_SUPPORTED))
+    {
+        SetLastError(ERROR_INVALID_FLAGS);
+        return FALSE;
+    }
+
+    if (!lpCodePageEnumProc)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    hKey = NLS_RegOpenKey(0, L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Control\\NLS\\CodePage");
+    if (!hKey)
+    {
+        DPRINT1("NLS_RegOpenKey() failed\n");
+        return FALSE;
+    }
+
+    while (bContinue)
+    {
+        if (NLS_RegEnumValue(hKey, ulIndex, szNumber, sizeof(szNumber),
+                             szValue, sizeof(szValue)))
+        {
+            if (((dwFlags & CP_SUPPORTED)&&(wcslen(szValue) < 1))||
+                ((dwFlags & CP_INSTALLED)&&(wcslen(szValue) > 1)))
+                    if (!lpCodePageEnumProc(szNumber))
+                        break;
+
+            ulIndex++;
+
+        } else bContinue = FALSE;
+
+        if (!bContinue)
+            break;
+    }
+
+    if (hKey)
+        NtClose(hKey);
+
+    return TRUE;
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 STDCALL
@@ -455,8 +501,58 @@ EnumSystemCodePagesA (
     DWORD              dwFlags
     )
 {
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
+    WCHAR szNumber[5 + 1], szValue[MAX_PATH];
+    HKEY hKey;
+    BOOL bContinue = TRUE;
+    ULONG ulIndex = 1;
+
+    DPRINT("(%p,0x%08X)\n", lpCodePageEnumProc, dwFlags);
+
+    if ((!dwFlags & CP_INSTALLED)&&(!dwFlags & CP_SUPPORTED))
+    {
+        SetLastError(ERROR_INVALID_FLAGS);
+        return FALSE;
+    }
+
+    if (!lpCodePageEnumProc)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    hKey = NLS_RegOpenKey(0, L"\\Machine\\SYSTEM\\CurrentControlSet\\Control\\NLS\\CodePage");
+    if (!hKey)
+    {
+        DPRINT("NLS_RegOpenKey() failed\n");
+        return FALSE;
+    }
+
+    while (bContinue)
+    {
+        if (NLS_RegEnumValue(hKey, ulIndex, szNumber, sizeof(szNumber),
+                             szValue, sizeof(szValue)))
+        {
+            char szNumberA[sizeof(szNumber)/sizeof(WCHAR)];
+
+            WideCharToMultiByte(CP_ACP, 0, szNumber, -1, szNumberA, sizeof(szNumberA), 0, 0);
+
+            if (((dwFlags & CP_SUPPORTED)&&(wcslen(szValue) < 1))||
+                ((dwFlags & CP_INSTALLED)&&(wcslen(szValue) > 1)))
+                    if (!lpCodePageEnumProc(szNumberA))
+                        break;
+
+            ulIndex++;
+
+        } else bContinue = FALSE;
+
+        if (!bContinue)
+            break;
+    }
+
+    if (hKey)
+        NtClose(hKey);
+
+    return TRUE;
 }
 
 
