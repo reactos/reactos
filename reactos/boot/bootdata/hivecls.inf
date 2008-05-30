@@ -132,6 +132,31 @@ HKCR,".ico","",0x00000000,"icofile"
 HKCR,"icofile","",0x00000000,"Icon"
 HKCR,"icofile\DefaultIcon","",0x00000000,"%1"
 
+; JPEG Images
+HKCR,".jpg","",0x00000000,"jpegfile"
+HKCR,".jpeg","",0x00000000,"jpegfile"
+HKCR,"jpegfile","",0x00000000,"JPEG Image"
+HKCR,"jpegfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shimgvw.dll,-1"
+HKCR,"jpegfile\shell\open\command","",0x00020000,"rundll32.exe %SystemRoot%\system32\shimgvw.dll,ImageView_Fullscreen %1"
+
+; Bitmap Images
+HKCR,".bmp","",0x00000000,"bmpfile"
+HKCR,"bmpfile","",0x00000000,"Bitmap Image"
+HKCR,"bmpfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shimgvw.dll,-1"
+HKCR,"bmpfile\shell\open\command","",0x00020000,"rundll32.exe %SystemRoot%\system32\shimgvw.dll,ImageView_Fullscreen %1"
+
+; PNG Images
+HKCR,".png","",0x00000000,"pngfile"
+HKCR,"pngfile","",0x00000000,"PNG Image"
+HKCR,"pngfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shimgvw.dll,-1"
+HKCR,"pngfile\shell\open\command","",0x00020000,"rundll32.exe %SystemRoot%\system32\shimgvw.dll,ImageView_Fullscreen %1"
+
+; GIF Images
+HKCR,".gif","",0x00000000,"giffile"
+HKCR,"giffile","",0x00000000,"GIF Image"
+HKCR,"giffile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shimgvw.dll,-1"
+HKCR,"giffile\shell\open\command","",0x00020000,"rundll32.exe %SystemRoot%\system32\shimgvw.dll,ImageView_Fullscreen %1"
+
 ; Configuration Files
 HKCR,".ini","",0x00000000,"inifile"
 HKCR,"inifile","",0x00000000,"Configuration Settings"
@@ -164,12 +189,23 @@ HKCR,"lnkfile\shellex\ContextMenuHandlers\{00021401-0000-0000-C000-000000000046}
 ; Text Documents
 HKCR,".log","",0x00000000,"txtfile"
 HKCR,".txt","",0x00000000,"txtfile"
+HKCR,".c","",0x00000000,"txtfile"
+HKCR,".cpp","",0x00000000,"txtfile"
+HKCR,".h","",0x00000000,"txtfile"
+HKCR,".hpp","",0x00000000,"txtfile"
 HKCR,".txt\shellnew","",0x00000000,""
 HKCR,".txt\shellnew","NullFile",0x00020000,""
 HKCR,"txtfile","",0x00000000,"Text Document"
 HKCR,".txt","Content Type",0x00000000,"text/plain"
 HKCR,"txtfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-152"
 HKCR,"txtfile\shell\open\command","",0x00020000,"%SystemRoot%\system32\notepad.exe %1"
+
+; XML Documents
+HKCR,".xml","",0x00000000,"xmlfile"
+HKCR,"xmlfile","",0x00000000,"XML Document"
+HKCR,".xml","Content Type",0x00000000,"text/xml"
+HKCR,"xmlfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-151"
+HKCR,"xmlfile\shell\open\command","",0x00020000,"%SystemRoot%\system32\notepad.exe %1"
 
 ; MSI files
 HKCR,".msi","",0x00000000,"MSI.Package"
