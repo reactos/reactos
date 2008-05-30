@@ -53,7 +53,6 @@ NtUserBitBltSysBmp(
 {
    BOOL Ret = FALSE;
    UserEnterExclusive();
-   UNIMPLEMENTED
 
    Ret = NtGdiBitBlt( hdc,
                    nXDest,
