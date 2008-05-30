@@ -422,6 +422,7 @@ GeneralPageProc(HWND hwndDlg,
 
                     /* Set new locale */
                     SetNewLocale(NewLcid);
+                    SetNonUnicodeLang(hwndDlg, NewLcid);
                 }
             }
             break;

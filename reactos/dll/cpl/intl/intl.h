@@ -32,6 +32,8 @@ LanguagesPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 /* advanced.c */
 INT_PTR CALLBACK
 AdvancedPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
+VOID
+SetNonUnicodeLang(HWND hwnd, LCID lcid);
 
 /* currency.c */
 INT_PTR CALLBACK
