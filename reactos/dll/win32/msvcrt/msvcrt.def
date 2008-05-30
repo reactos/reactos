@@ -4,35 +4,33 @@
 LIBRARY msvcrt.dll
 
 EXPORTS
-  $I10_OUTPUT=MSVCRT_I10_OUTPUT @1
-  ??0__non_rtti_object@@QAE@ABV0@@Z=__thiscall_MSVCRT___non_rtti_object_copy_ctor @2
-  ??0__non_rtti_object@@QAE@PBD@Z=__thiscall_MSVCRT___non_rtti_object_ctor @3
-  ;??0bad_cast@@AAE@PBQBD@Z
+  $I10_OUTPUT=MSVCRT_I10_OUTPUT @0
+  ??0__non_rtti_object@@QAE@ABV0@@Z=__thiscall_MSVCRT___non_rtti_object_copy_ctor @1
+  ??0__non_rtti_object@@QAE@PBD@Z=__thiscall_MSVCRT___non_rtti_object_ctor @2
+;  ??0bad_cast@@AAE@PBQBD@Z @3
   ??0bad_cast@@QAE@ABQBD@Z=__thiscall_MSVCRT_bad_cast_ctor @4
   ??0bad_cast@@QAE@ABV0@@Z=__thiscall_MSVCRT_bad_cast_copy_ctor @5
-  ;??0bad_cast@@QAE@PBD@Z
-  ??0bad_typeid@@QAE@ABV0@@Z=__thiscall_MSVCRT_bad_typeid_copy_ctor @6
-  ??0bad_typeid@@QAE@PBD@Z=__thiscall_MSVCRT_bad_typeid_ctor @7
-  ??0exception@@QAE@ABQBD@Z=__thiscall_MSVCRT_exception_ctor @8
-  ;??0exception@@QAE@ABQBDH@Z
-  ??0exception@@QAE@ABV0@@Z=__thiscall_MSVCRT_exception_copy_ctor @9
-  ??0exception@@QAE@XZ=__thiscall_MSVCRT_exception_default_ctor @10
-  ??1__non_rtti_object@@UAE@XZ=__thiscall_MSVCRT___non_rtti_object_dtor @11
-  ??1bad_cast@@UAE@XZ=__thiscall_MSVCRT_bad_cast_dtor @12
-  ??1bad_typeid@@UAE@XZ=__thiscall_MSVCRT_bad_typeid_dtor @13
-  ??1exception@@UAE@XZ=__thiscall_MSVCRT_exception_dtor @14
-  ??1type_info@@UAE@XZ=__thiscall_MSVCRT_type_info_dtor @15
-  ??2@YAPAXI@Z=MSVCRT_operator_new @16
-  ??_U@YAPAXI@Z=MSVCRT_operator_new @17
-  ??3@YAXPAX@Z=MSVCRT_operator_delete @18
-  ??_V@YAXPAX@Z=MSVCRT_operator_delete @19
+;  ??0bad_cast@@QAE@PBD@Z @6
+  ??0bad_typeid@@QAE@ABV0@@Z=__thiscall_MSVCRT_bad_typeid_copy_ctor @7
+  ??0bad_typeid@@QAE@PBD@Z=__thiscall_MSVCRT_bad_typeid_ctor @8
+  ??0exception@@QAE@ABQBD@Z=__thiscall_MSVCRT_exception_ctor @9
+;  ??0exception@@QAE@ABQBDH@Z @10
+  ??0exception@@QAE@ABV0@@Z=__thiscall_MSVCRT_exception_copy_ctor @11
+  ??0exception@@QAE@XZ=__thiscall_MSVCRT_exception_default_ctor @12
+  ??1__non_rtti_object@@UAE@XZ=__thiscall_MSVCRT___non_rtti_object_dtor @13
+  ??1bad_cast@@UAE@XZ=__thiscall_MSVCRT_bad_cast_dtor @14
+  ??1bad_typeid@@UAE@XZ=__thiscall_MSVCRT_bad_typeid_dtor @15
+  ??1exception@@UAE@XZ=__thiscall_MSVCRT_exception_dtor @16
+  ??1type_info@@UAE@XZ=__thiscall_MSVCRT_type_info_dtor @17
+  ??2@YAPAXI@Z=MSVCRT_operator_new @18
+  ??3@YAXPAX@Z=MSVCRT_operator_delete @19
   ??4__non_rtti_object@@QAEAAV0@ABV0@@Z=__thiscall_MSVCRT___non_rtti_object_opequals @20
   ??4bad_cast@@QAEAAV0@ABV0@@Z=__thiscall_MSVCRT_bad_cast_opequals @21
-  ??4bad_typeid@@QAEAAV0@ABV0@@Z=__thiscall_MSVCRT_bad_typeid_opequals @22
+  ???4bad_typeid@@QAEAAV0@ABV0@@Z=__thiscall_MSVCRT_bad_typeid_opequals @22
   ??4exception@@QAEAAV0@ABV0@@Z=__thiscall_MSVCRT_exception_opequals @23
   ??8type_info@@QBEHABV0@@Z=__thiscall_MSVCRT_type_info_opequals_equals @24
   ??9type_info@@QBEHABV0@@Z=__thiscall_MSVCRT_type_info_opnot_equals @25
-  ??_7__non_rtti_object@@6B@=MSVCRT___non_rtti_object_vtable @26 DATA
+  ??_7__non_rtti_object@@6B@=MSVCRT___non_rtti_object_vtable@@6B@ @26 DATA
   ??_7bad_cast@@6B@=MSVCRT_bad_cast_vtable @27 DATA
   ??_7bad_typeid@@6B@=MSVCRT_bad_typeid_vtable @28 DATA
   ??_7exception@@6B@=MSVCRT_exception_vtable @29 DATA
@@ -40,26 +38,28 @@ EXPORTS
   ??_Ebad_cast@@UAEPAXI@Z=__thiscall_MSVCRT_bad_cast_vector_dtor @31
   ??_Ebad_typeid@@UAEPAXI@Z=__thiscall_MSVCRT_bad_typeid_vector_dtor @32
   ??_Eexception@@UAEPAXI@Z=__thiscall_MSVCRT_exception_vector_dtor @33
-  ;??_Fbad_cast@@QAEXXZ
-  ;??_Fbad_typeid@@QAEXXZ
-  ??_G__non_rtti_object@@UAEPAXI@Z=__thiscall_MSVCRT___non_rtti_object_scalar_dtor @34
-  ??_Gbad_cast@@UAEPAXI@Z=__thiscall_MSVCRT_bad_cast_scalar_dtor @35
-  ??_Gbad_typeid@@UAEPAXI@Z=__thiscall_MSVCRT_bad_typeid_scalar_dtor @36
-  ??_Gexception@@UAEPAXI@Z=__thiscall_MSVCRT_exception_scalar_dtor @37
-  ?_query_new_handler@@YAP6AHI@ZXZ=MSVCRT__query_new_handler @38
-  ?_query_new_mode@@YAHXZ=MSVCRT__query_new_mode @39
-  ?_set_new_handler@@YAP6AHI@ZP6AHI@Z@Z=MSVCRT__set_new_handler @40
-  ?_set_new_mode@@YAHH@Z=MSVCRT__set_new_mode @41
-  ?_set_se_translator@@YAP6AXIPAU_EXCEPTION_POINTERS@@@ZP6AXI0@Z@Z=MSVCRT__set_se_translator @42
-  ?before@type_info@@QBEHABV1@@Z=__thiscall_MSVCRT_type_info_before @43
-  ?name@type_info@@QBEPBDXZ=__thiscall_MSVCRT_type_info_name @44
-  ?raw_name@type_info@@QBEPBDXZ=__thiscall_MSVCRT_type_info_raw_name @45
-  ?set_new_handler@@YAP6AXXZP6AXXZ@Z=MSVCRT__set_new_handler @46
-  ?set_terminate@@YAP6AXXZP6AXXZ@Z=MSVCRT_set_terminate @47
-  ?set_unexpected@@YAP6AXXZP6AXXZ@Z=MSVCRT_set_unexpected @48
-  ?terminate@@YAXXZ=MSVCRT_terminate @49
-  ?unexpected@@YAXXZ=MSVCRT_unexpected @50
-  ?what@exception@@UBEPBDXZ=__thiscall_MSVCRT_what_exception @51
+;  ??_Fbad_cast@@QAEXXZ @34
+;  ??_Fbad_typeid@@QAEXXZ @35
+  ??_G__non_rtti_object@@UAEPAXI@Z=__thiscall_MSVCRT___non_rtti_object_scalar_dtor @36
+  ??_Gbad_cast@@UAEPAXI@Z=__thiscall_MSVCRT_bad_cast_scalar_dtor @37
+  ??_Gbad_typeid@@UAEPAXI@Z=__thiscall_MSVCRT_bad_typeid_scalar_dtor @38
+  ??_Gexception@@UAEPAXI@Z=__thiscall_MSVCRT_exception_scalar_dtor @39
+  ??_U@YAPAXI@Z=MSVCRT_operator_new @40
+  ??_V@YAXPAX@Z=MSVCRT_operator_delete @41
+  ?_query_new_handler@@YAP6AHI@ZXZ=MSVCRT__query_new_handler @42
+  ?_query_new_mode@@YAHXZ=MSVCRT__query_new_mode @43
+  ?_set_new_handler@@YAP6AHI@ZP6AHI@Z@Z=MSVCRT__set_new_handler @44
+  ?_set_new_mode@@YAHH@Z=MSVCRT__set_new_mode @45
+  ?_set_se_translator@@YAP6AXIPAU_EXCEPTION_POINTERS@@@ZP6AXI0@Z@Z=MSVCRT__set_se_translator @46
+  ?before@type_info@@QBEHABV1@@Z=__thiscall_MSVCRT_type_info_before @47
+  ?name@type_info@@QBEPBDXZ=__thiscall_MSVCRT_type_info_name @48
+  ?raw_name@type_info@@QBEPBDXZ=__thiscall_MSVCRT_type_info_raw_name @49
+  ?set_new_handler@@YAP6AXXZP6AXXZ@Z=MSVCRT__set_new_handler @50
+  ?set_terminate@@YAP6AXXZP6AXXZ@Z=MSVCRT_set_terminate @51
+  ?set_unexpected@@YAP6AXXZP6AXXZ@Z=MSVCRT_set_unexpected @52
+  ?terminate@@YAXXZ=MSVCRT_terminate @53
+  ?unexpected@@YAXXZ=MSVCRT_unexpected @54
+  ?what@exception@@UBEPBDXZ=__thiscall_MSVCRT_what_exception @55
   _CIacos @56
   _CIasin @57
   _CIatan @58
