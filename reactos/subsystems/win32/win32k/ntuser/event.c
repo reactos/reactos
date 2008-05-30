@@ -4,7 +4,6 @@
 #define NDEBUG
 #include <debug.h>
 
-extern PSERVERINFO gpsi;
 //static PEVENTTABLE GlobalEvents;
 
 

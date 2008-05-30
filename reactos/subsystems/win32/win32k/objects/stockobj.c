@@ -27,7 +27,6 @@
 #define NDEBUG
 #include <debug.h>
 
-extern PSERVERINFO gpsi;
 
 static COLORREF SysColors[] =
 {

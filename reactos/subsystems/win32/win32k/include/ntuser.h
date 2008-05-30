@@ -10,6 +10,7 @@
 #define UserEnterCo UserEnterExclusive
 #define UserLeaveCo UserLeave
 
+extern PSERVERINFO gpsi;
 
 NTSTATUS FASTCALL InitUserImpl(VOID);
 VOID FASTCALL CleanupUserImpl(VOID);

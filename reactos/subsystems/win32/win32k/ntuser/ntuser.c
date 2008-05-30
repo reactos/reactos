@@ -57,6 +57,9 @@ NTSTATUS FASTCALL InitUserImpl(VOID)
       return Status;
    }
 
+   gpsi = UserHeapAlloc(sizeof(SERVERINFO));
+   if (gpsi) RtlZeroMemory(gpsi, sizeof(SERVERINFO));
+
    return STATUS_SUCCESS;
 }
 

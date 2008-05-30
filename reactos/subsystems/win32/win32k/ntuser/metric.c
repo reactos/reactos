@@ -34,7 +34,6 @@
 #define NDEBUG
 #include <debug.h>
 
-extern PSERVERINFO gpsi;
 
 static BOOL Setup = FALSE;
 
