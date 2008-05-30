@@ -47,6 +47,8 @@
 	<installfile installbase="media/fonts">LiberationSerif-Italic.ttf</installfile>
 	<installfile installbase="media/fonts">LiberationSerif-Regular.ttf</installfile>
 	<installfile installbase="media/fonts">Marlett.ttf</installfile>
+	<installfile installbase="media/fonts">tahoma.ttf</installfile>
+	<installfile installbase="media/fonts">tahomabd.ttf</installfile>
 	<installfile installbase="media/fonts">timr____.ttf</installfile>
 	<installfile installbase="media/fonts">UTB_____.ttf</installfile>
 	<installfile installbase="media/fonts">UTBI____.ttf</installfile>
