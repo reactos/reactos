@@ -684,7 +684,7 @@ static __inline__ __attribute__((always_inline)) unsigned short _rotl16(const un
 static __inline__ __attribute__((always_inline)) unsigned short _rotl(const unsigned long value, const unsigned char shift)
 {
 	unsigned short retval;
-	__asm__("roll %b[shift], %w[retval]" : [retval] "=rm" (retval) : "[retval]" (value), [shift] "Nc" (shift));
+	__asm__("roll %b[shift], %k[retval]" : [retval] "=rm" (retval) : "[retval]" (value), [shift] "Nc" (shift));
 	return retval;
 }
 #endif
