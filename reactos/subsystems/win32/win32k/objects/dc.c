@@ -2642,29 +2642,31 @@ DC_InvertXform(const XFORM *xformSrc,
   return  TRUE;
 }
 
-VOID FASTCALL
+BOOL
+FASTCALL
 DC_SetOwnership(HDC hDC, PEPROCESS Owner)
 {
     PDC pDC;
 
-    GDIOBJ_SetOwnership(hDC, Owner);
+    if(!GDIOBJ_SetOwnership(hDC, Owner)) return FALSE;
     pDC = DC_LockDc(hDC);
     if (pDC)
     {
         if (pDC->w.hClipRgn)
         {
-            GDIOBJ_SetOwnership(pDC->w.hClipRgn, Owner);
+            if(!GDIOBJ_SetOwnership(pDC->w.hClipRgn, Owner)) return FALSE;
         }
         if (pDC->w.hVisRgn)
         {
-            GDIOBJ_SetOwnership(pDC->w.hVisRgn, Owner);
+           if(!GDIOBJ_SetOwnership(pDC->w.hVisRgn, Owner)) return FALSE;
         }
         if (pDC->w.hGCClipRgn)
         {
-            GDIOBJ_SetOwnership(pDC->w.hGCClipRgn, Owner);
+            if(!GDIOBJ_SetOwnership(pDC->w.hGCClipRgn, Owner)) return FALSE;
         }
         DC_UnlockDc(pDC);
     }
+    return TRUE;
 }
 
 //

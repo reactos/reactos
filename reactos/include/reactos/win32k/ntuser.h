@@ -169,10 +169,12 @@ typedef struct _WINDOW
     UINT HideAccel : 1;
 } WINDOW, *PWINDOW;
 
+#define SRVINFO_METRICS 0x0020
+
 typedef struct _SERVERINFO
 {
-//  DWORD    SystemMetrics[SM_CMETRICS];       // System Metrics
-//  COLORREF SystemColorCopy[COLOR_MENUBAR+1]; // Backup Copy of system colors.
+  DWORD    SRVINFO_Flags;
+  DWORD    SystemMetrics[SM_CMETRICS];       // System Metrics
   COLORREF SysColors[COLOR_MENUBAR+1];       // GetSysColor
   HBRUSH   SysColorBrushes[COLOR_MENUBAR+1]; // GetSysColorBrush
   HPEN     SysColorPens[COLOR_MENUBAR+1];    // ReactOS exclusive

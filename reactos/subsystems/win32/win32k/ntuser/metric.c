@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id$
+/*
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -34,9 +34,243 @@
 #define NDEBUG
 #include <debug.h>
 
+extern PSERVERINFO gpsi;
+
+static BOOL Setup = FALSE;
+
 /* FUNCTIONS *****************************************************************/
 
-/* FIXME:  Alot of thse values should NOT be hardcoded but they are */
+BOOL
+FASTCALL
+InitMetrics(VOID)
+{
+  INT Index;
+  NTSTATUS Status;
+  PWINSTATION_OBJECT WinStaObject;
+  ULONG Width = 640, Height = 480;
+
+  for (Index = 0; Index < SM_CMETRICS; Index++)
+  {
+      switch (Index)
+      {
+       case SM_CXSCREEN:
+         {
+            HDC ScreenDCHandle;
+            PDC ScreenDC;
+
+            ScreenDCHandle = IntGdiCreateDC(NULL, NULL, NULL, NULL, TRUE);
+            if (NULL != ScreenDCHandle)
+            {
+               ScreenDC = DC_LockDc(ScreenDCHandle);
+               if (NULL != ScreenDC)
+               {
+                  Width = ((PGDIDEVICE)ScreenDC->pPDev)->GDIInfo.ulHorzRes;
+                  Height = ((PGDIDEVICE)ScreenDC->pPDev)->GDIInfo.ulVertRes;
+                  DC_UnlockDc(ScreenDC);
+               }
+               NtGdiDeleteObjectApp(ScreenDCHandle);
+            }
+            gpsi->SystemMetrics[Index] = Width;
+            break;
+         }
+       case SM_CYSCREEN:
+          gpsi->SystemMetrics[Index] = Height;
+          break;
+       case SM_ARRANGE:
+          gpsi->SystemMetrics[Index] = 8;
+          break;
+       case SM_CLEANBOOT:
+          gpsi->SystemMetrics[Index] = 0;
+          break;
+       case SM_CMOUSEBUTTONS:
+          gpsi->SystemMetrics[Index] = 2;
+          break;
+       case SM_CXBORDER:
+       case SM_CYBORDER:
+          gpsi->SystemMetrics[Index] = 1;
+          break;
+       case SM_CXCURSOR:
+       case SM_CYCURSOR:
+          gpsi->SystemMetrics[Index] = 32;
+          break;
+       case SM_CXDLGFRAME:
+       case SM_CYDLGFRAME:
+          gpsi->SystemMetrics[Index] = 3;
+          break;
+       case SM_CXDOUBLECLK:
+       case SM_CYDOUBLECLK:
+       case SM_SWAPBUTTON:
+         {
+            PSYSTEM_CURSORINFO CurInfo;
+            Status = IntValidateWindowStationHandle(PsGetCurrentProcess()->Win32WindowStation,
+                                                    KernelMode,
+                                                    0,
+                                                    &WinStaObject);
+            if (!NT_SUCCESS(Status))
+               gpsi->SystemMetrics[Index] = 0xFFFFFFFF;
+               break;
+
+            CurInfo = IntGetSysCursorInfo(WinStaObject);
+            switch(Index)
+            {
+               case SM_CXDOUBLECLK:
+                  gpsi->SystemMetrics[Index] = CurInfo->DblClickWidth;
+                  break;
+               case SM_CYDOUBLECLK:
+                  gpsi->SystemMetrics[Index] = CurInfo->DblClickWidth;
+                  break;
+               case SM_SWAPBUTTON:
+                  gpsi->SystemMetrics[Index] = CurInfo->SwapButtons;
+                  break;
+            }
+
+            ObDereferenceObject(WinStaObject);
+            break;
+          }
+       case SM_CXDRAG:
+       case SM_CYDRAG:
+          gpsi->SystemMetrics[Index] = 2;
+          break;
+       case SM_CXEDGE:
+       case SM_CYEDGE:
+          gpsi->SystemMetrics[Index] = 2;
+          break;
+       case SM_CXFRAME:
+       case SM_CYFRAME:
+          gpsi->SystemMetrics[Index] = 4;
+          break;
+       case SM_CXFULLSCREEN:
+          /* FIXME: shouldn't we take borders etc into account??? */
+          gpsi->SystemMetrics[Index] = gpsi->SystemMetrics[SM_CXSCREEN];
+          break;
+       case SM_CYFULLSCREEN:
+          gpsi->SystemMetrics[Index] = gpsi->SystemMetrics[SM_CYSCREEN];
+          break;
+       case SM_CXHSCROLL:
+       case SM_CYHSCROLL:
+          gpsi->SystemMetrics[Index] = 16;
+          break;
+       case SM_CYVTHUMB:
+       case SM_CXHTHUMB:
+          gpsi->SystemMetrics[Index] = 16;
+          break;
+        case SM_CXICON:
+        case SM_CYICON:
+          gpsi->SystemMetrics[Index] = 32;
+          break;
+       case SM_CXICONSPACING:
+       case SM_CYICONSPACING:
+          gpsi->SystemMetrics[Index] = 64;
+          break;
+       case SM_CXMAXIMIZED:
+     /* This seems to be 8 pixels greater than the screen width */
+          gpsi->SystemMetrics[Index] = gpsi->SystemMetrics[SM_CXSCREEN] + 8;
+          break;
+       case SM_CYMAXIMIZED:
+     /* This seems to be 20 pixels less than the screen height, taskbar maybe? */
+          gpsi->SystemMetrics[Index] = gpsi->SystemMetrics[SM_CYSCREEN] - 20;
+          break;
+       case SM_CXMAXTRACK:
+          gpsi->SystemMetrics[Index] = gpsi->SystemMetrics[SM_CYSCREEN] + 12;
+          break;
+       case SM_CYMAXTRACK:
+          gpsi->SystemMetrics[Index] = gpsi->SystemMetrics[SM_CYSCREEN] + 12;
+          break;
+       case SM_CXMENUCHECK:
+       case SM_CYMENUCHECK:
+          gpsi->SystemMetrics[Index] = 13;
+          break;
+       case SM_CXMENUSIZE:
+       case SM_CYMENUSIZE:
+          gpsi->SystemMetrics[Index] = 18;
+          break;
+       case SM_CXMIN:
+          gpsi->SystemMetrics[Index] = 112;
+          break;
+       case SM_CYMIN:
+          gpsi->SystemMetrics[Index] = 27;
+          break;
+       case SM_CXMINIMIZED:
+          gpsi->SystemMetrics[Index] = 160;
+          break;
+       case SM_CYMINIMIZED:
+          gpsi->SystemMetrics[Index] = 24;
+          break;
+       case SM_CXMINSPACING:
+          gpsi->SystemMetrics[Index] = 160;
+          break;
+       case SM_CYMINSPACING:
+          gpsi->SystemMetrics[Index] = 24;
+          break;
+       case SM_CXMINTRACK:
+          gpsi->SystemMetrics[Index] = 112;
+          break;
+       case SM_CYMINTRACK:
+          gpsi->SystemMetrics[Index] = 27;
+          break;
+       case SM_CXSIZE:
+       case SM_CYSIZE:
+          gpsi->SystemMetrics[Index] = 18;
+          break;
+       case SM_CXSMICON:
+       case SM_CYSMICON:
+          gpsi->SystemMetrics[Index] = 16;
+          break;
+       case SM_CXSMSIZE:
+          gpsi->SystemMetrics[Index] = 12;
+          break;
+       case SM_CYSMSIZE:
+          gpsi->SystemMetrics[Index] = 14;
+          break;
+       case SM_CXVSCROLL:
+       case SM_CYVSCROLL:
+          gpsi->SystemMetrics[Index] = 16;
+          break;
+       case SM_CYCAPTION:
+          gpsi->SystemMetrics[Index] = 19;
+          break;
+       case SM_CYKANJIWINDOW:
+          gpsi->SystemMetrics[Index] = 0;
+          break;
+       case SM_CYMENU:
+          gpsi->SystemMetrics[Index] = 19;
+          break;
+       case SM_CYSMCAPTION:
+          gpsi->SystemMetrics[Index] = 15;
+          break;
+       case SM_DBCSENABLED:
+       case SM_DEBUG:
+       case SM_MENUDROPALIGNMENT:
+       case SM_MIDEASTENABLED:
+          gpsi->SystemMetrics[Index] = 0;
+          break;
+       case SM_MOUSEPRESENT:
+          gpsi->SystemMetrics[Index] = 1;
+          break;
+       case SM_NETWORK:
+          gpsi->SystemMetrics[Index] = 3;
+          break;
+       case SM_PENWINDOWS:
+       case SM_SECURE:
+       case SM_SHOWSOUNDS:
+       case SM_SLOWMACHINE:
+          gpsi->SystemMetrics[Index] = 0;
+          break;
+       case SM_CMONITORS:
+          gpsi->SystemMetrics[Index] = 1;
+          break;
+       case SM_REMOTESESSION:
+          gpsi->SystemMetrics[Index] = 0;
+          break;
+       default:
+          gpsi->SystemMetrics[Index] = 0xFFFFFFFF;
+      }
+  }
+  gpsi->SRVINFO_Flags |= SRVINFO_METRICS;
+  Setup = TRUE;
+  return TRUE;
+}
+
 ULONG FASTCALL
 UserGetSystemMetrics(ULONG Index)
 {
@@ -44,6 +278,11 @@ UserGetSystemMetrics(ULONG Index)
    PWINSTATION_OBJECT WinStaObject;
    ULONG Width, Height, Result;
 
+//  DPRINT1("UserGetSystemMetrics -> %d\n",Index);
+  if (gpsi && Setup)
+     return gpsi->SystemMetrics[Index];
+  else
+  {
    Result = 0;
    switch (Index)
    {
@@ -176,6 +415,7 @@ UserGetSystemMetrics(ULONG Index)
             return SM_CXSCREEN == Index ? Width : Height;
          }
       case SM_CXSIZE:
+         InitMetrics();
       case SM_CYSIZE:
          return(18);
       case SM_CXSMICON:
@@ -218,11 +458,9 @@ UserGetSystemMetrics(ULONG Index)
       default:
          return(0xFFFFFFFF);
    }
+  }
 }
 
-
-
-/* FIXME:  Alot of thse values should NOT be hardcoded but they are */
 ULONG STDCALL
 NtUserGetSystemMetrics(ULONG Index)
 {
@@ -238,4 +476,6 @@ CLEANUP:
    UserLeave();
    END_CLEANUP;
 }
+
+
 /* EOF */

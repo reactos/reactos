@@ -19,7 +19,6 @@
 /*
  * STOCKOBJ.C - GDI Stock Objects
  *
- * $Id$
  *
  */
 
@@ -66,11 +65,8 @@ static COLORREF SysColors[] =
 };
 #define NUM_SYSCOLORS (sizeof(SysColors) / sizeof(SysColors[0]))
 
-//static HPEN SysColorPens[NUM_SYSCOLORS];
-//static HBRUSH SysColorBrushes[NUM_SYSCOLORS];
-
-// System Bitmap DC and System Display DC...
-HDC hSystemBM, hSystemDisplayDC;
+// System Bitmap DC
+HDC hSystemBM;
 
 /*  GDI stock objects */
 

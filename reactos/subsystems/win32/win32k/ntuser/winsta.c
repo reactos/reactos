@@ -290,6 +290,8 @@ IntGetWindowStationObject(PWINSTATION_OBJECT Object)
    return NT_SUCCESS(Status);
 }
 
+extern HDC hSystemBM;
+
 BOOL FASTCALL
 co_IntInitializeDesktopGraphics(VOID)
 {
@@ -304,11 +306,15 @@ co_IntInitializeDesktopGraphics(VOID)
       IntDestroyPrimarySurface();
       return FALSE;
    }
-   DC_FreeDcAttr(ScreenDeviceContext);         // Free the dcattr!
-   DC_SetOwnership(ScreenDeviceContext, NULL); // This hDC is inaccessible!
+   IntGdiSetDCOwnerEx(ScreenDeviceContext, GDI_OBJ_HMGR_PUBLIC, FALSE);
 
    /* Setup the cursor */
    co_IntLoadDefaultCursors();
+
+   hSystemBM = NtGdiCreateCompatibleDC(ScreenDeviceContext);
+
+   NtGdiSelectFont( hSystemBM, NtGdiGetStockObject(SYSTEM_FONT));
+   IntGdiSetDCOwnerEx( hSystemBM, GDI_OBJ_HMGR_PUBLIC, FALSE);
 
    return TRUE;
 }

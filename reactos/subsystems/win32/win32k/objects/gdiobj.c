@@ -1151,12 +1151,13 @@ LockHandle:
     return FALSE;
 }
 
-void INTERNAL_CALL
+BOOL INTERNAL_CALL
 GDIOBJ_SetOwnership(HGDIOBJ ObjectHandle, PEPROCESS NewOwner)
 {
     PGDI_TABLE_ENTRY Entry;
     HANDLE ProcessId, LockedProcessId, PrevProcId;
     PW32THREAD Thread;
+    BOOL Ret = TRUE;
 
     GDIDBG_INITLOOPTRACE();
 
@@ -1223,7 +1224,7 @@ LockHandle:
                     (void)_InterlockedExchangePointer((PVOID*)&Entry->ProcessId, ProcessId);
 
                     /* we're done! */
-                    return;
+                    return Ret;
                 }
                 else
                 {
@@ -1245,6 +1246,7 @@ LockHandle:
             {
                 DPRINT1("Attempted to change ownership of an object 0x%x currently being destroyed!!!\n", ObjectHandle);
                 DPRINT1("Entry->Type = 0x%lx, Entry->KernelData = 0x%p\n", Entry->Type, Entry->KernelData);
+                Ret = FALSE;
             }
         }
         else if (PrevProcId == LockedProcessId)
@@ -1267,20 +1269,24 @@ LockHandle:
         else if ((HANDLE)((ULONG_PTR)PrevProcId & ~0x1) != PsGetCurrentProcessId())
         {
             DPRINT1("Attempted to change ownership of object 0x%x (pid: 0x%x) from pid 0x%x!!!\n", ObjectHandle, (ULONG_PTR)PrevProcId & ~0x1, PsGetCurrentProcessId());
+            Ret = FALSE;
         }
         else
         {
             DPRINT1("Attempted to change owner of invalid handle: 0x%x\n", ObjectHandle);
+            Ret = FALSE;
         }
     }
+    return Ret;
 }
 
-void INTERNAL_CALL
+BOOL INTERNAL_CALL
 GDIOBJ_CopyOwnership(HGDIOBJ CopyFrom, HGDIOBJ CopyTo)
 {
     PGDI_TABLE_ENTRY FromEntry;
     PW32THREAD Thread;
     HANDLE FromProcessId, FromLockedProcessId, FromPrevProcId;
+    BOOL Ret = TRUE;
 
     GDIDBG_INITLOOPTRACE();
 
@@ -1351,6 +1357,7 @@ LockHandleFrom:
             else
             {
                 DPRINT1("Attempted to copy ownership from an object 0x%x currently being destroyed!!!\n", CopyFrom);
+                Ret = FALSE;
             }
         }
         else if (FromPrevProcId == FromLockedProcessId)
@@ -1374,8 +1381,10 @@ LockHandleFrom:
         else
         {
             DPRINT1("Attempted to copy ownership from invalid handle: 0x%x\n", CopyFrom);
+            Ret = FALSE;
         }
     }
+    return Ret;
 }
 
 PVOID INTERNAL_CALL
@@ -1410,6 +1419,60 @@ GDI_MapHandleTable(PSECTION_OBJECT SectionObject, PEPROCESS Process)
 
 /** PUBLIC FUNCTIONS **********************************************************/
 
+BOOL
+FASTCALL
+IntGdiSetBrushOwner(PGDIBRUSHOBJ pbr, DWORD OwnerMask)
+{
+  // Inc/Dec share locks and process counts.
+  return TRUE;
+}
+
+
+BOOL
+FASTCALL
+IntGdiSetDCOwnerEx( HDC hDC, DWORD OwnerMask, BOOL NoSetBrush)
+{
+  PDC pDC;
+  BOOL Ret = FALSE;
+
+  if (!hDC || (GDI_HANDLE_GET_TYPE(hDC) != GDI_OBJECT_TYPE_DC)) return FALSE;
+
+  if ((OwnerMask == GDI_OBJ_HMGR_PUBLIC) || OwnerMask == GDI_OBJ_HMGR_NONE)
+  {
+     pDC = DC_LockDc ( hDC );
+     MmCopyFromCaller(&pDC->Dc_Attr, pDC->pDc_Attr, sizeof(DC_ATTR));
+     DC_UnlockDc( pDC );
+
+     DC_FreeDcAttr( hDC );         // Free the dcattr!
+
+     if (!DC_SetOwnership( hDC, NULL )) // This hDC is inaccessible!
+        return Ret;
+  }
+
+  if (OwnerMask == GDI_OBJ_HMGR_POWNED)
+  {
+     pDC = DC_LockDc ( hDC );
+     if ( !pDC->pDc_Attr ) Ret = TRUE; // Must be zero.
+     DC_UnlockDc( pDC );
+     if (!Ret) return Ret;
+
+     if (!DC_SetOwnership( hDC, PsGetCurrentProcess() )) return Ret;
+
+     DC_AllocateDcAttr( hDC );      // Allocate new dcattr
+
+     DCU_SynchDcAttrtoUser( hDC );  // Copy data from dc to dcattr
+  }
+
+  if ((OwnerMask != GDI_OBJ_HMGR_NONE) && !NoSetBrush)
+  {
+     pDC = DC_LockDc ( hDC );
+     if (IntGdiSetBrushOwner((PGDIBRUSHOBJ)pDC->DcLevel.pbrFill, OwnerMask))
+         IntGdiSetBrushOwner((PGDIBRUSHOBJ)pDC->DcLevel.pbrLine, OwnerMask);
+     DC_UnlockDc( pDC );
+  }
+  return TRUE;
+}
+
 W32KAPI
 HANDLE
 APIENTRY
@@ -1417,11 +1480,6 @@ NtGdiCreateClientObj(
     IN ULONG ulType
 )
 {
-// ATM we use DC object for KernelData. This is wrong.
-// The real type consists of BASEOBJECT and a pointer.
-// The UserData is set in user mode, so it is always NULL.
-// HANDLE should be HGDIOBJ
-//
     POBJ pObject;
     HANDLE handle;
 
@@ -1521,13 +1579,6 @@ IntGdiGetObject(IN HANDLE Handle,
 }
 
 
-BOOL
-FASTCALL
-IntGdiSetDCOwnerEx( HGDIOBJ hObject, DWORD OwnerMask, BOOL NoSetBrush)
-{
-   UNIMPLEMENTED;
-   return FALSE;
-}
 
 W32KAPI
 INT
