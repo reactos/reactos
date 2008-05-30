@@ -141,7 +141,9 @@ NtfsHasFileSystem(PDEVICE_OBJECT DeviceToMount)
   /* Check cluster size */
   ClusterSize = BootSector->BPB.BytesPerSector * BootSector->BPB.SectorsPerCluster;
   if (ClusterSize != 512 && ClusterSize != 1024 && 
-      ClusterSize != 2048 && ClusterSize != 4096)
+      ClusterSize != 2048 && ClusterSize != 4096 &&
+      ClusterSize != 8192 && ClusterSize != 16384 &&
+      ClusterSize != 32768 && ClusterSize != 65536)
   {
     DPRINT1("Cluster size failed: %hu, %hu, %hu\n", BootSector->BPB.BytesPerSector,
                                                     BootSector->BPB.SectorsPerCluster,
