@@ -290,7 +290,6 @@ IntGetWindowStationObject(PWINSTATION_OBJECT Object)
    return NT_SUCCESS(Status);
 }
 
-extern HDC hSystemBM;
 
 BOOL FASTCALL
 co_IntInitializeDesktopGraphics(VOID)

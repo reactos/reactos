@@ -5,6 +5,8 @@
 
 /* Brush functions */
 
+extern HDC hSystemBM;
+
 XLATEOBJ* FASTCALL
 IntGdiCreateBrushXlate(PDC Dc, GDIBRUSHOBJ *BrushObj, BOOLEAN *Failed);
 
