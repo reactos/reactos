@@ -27,7 +27,7 @@ FONT 8, "MS Shell Dlg"
 {
  LTEXT "Введите имя пользователя и пароль:", -1, 40, 6, 150, 15
  LTEXT "Прокси", -1, 40, 26, 50, 10
- LTEXT "Realm", -1, 40, 46, 50, 10
+ LTEXT "Домен", -1, 40, 46, 50, 10
  LTEXT "Пользователь", -1, 40, 66, 50, 10
  LTEXT "Пароль", -1, 40, 86, 50, 10
  LTEXT "" IDC_PROXY, 80, 26, 150, 14, 0
@@ -38,4 +38,9 @@ FONT 8, "MS Shell Dlg"
            80, 106, 150, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
  PUSHBUTTON "OK", IDOK, 98, 126, 56, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
  PUSHBUTTON "Отмена", IDCANCEL, 158, 126, 56, 14, WS_GROUP | WS_TABSTOP
+}
+
+STRINGTABLE DISCARDABLE
+{
+  IDS_LANCONNECTION "Сетевое подключение"
 }

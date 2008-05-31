@@ -23,6 +23,12 @@
 #include "config.h"
 #include "wine/port.h"
 
+#ifdef HAVE_POLL_H
+#include <poll.h>
+#endif
+#ifdef HAVE_SYS_POLL_H
+# include <sys/poll.h>
+#endif
 #ifdef HAVE_SYS_TIME_H
 # include <sys/time.h>
 #endif
@@ -49,18 +55,16 @@
 #include "winerror.h"
 #include "wincrypt.h"
 
+#include "wine/debug.h"
+#include "internet.h"
+
 /* To avoid conflicts with the Unix socket headers. we only need it for
  * the error codes anyway. */
 #define USE_WS_PREFIX
 #include "winsock2.h"
 
-#include "wine/debug.h"
-#include "internet.h"
-
 #define RESPONSE_TIMEOUT        30            /* FROM internet.c */
 #define sock_get_error(x) WSAGetLastError()
-#undef FIONREAD
-
 
 WINE_DEFAULT_DEBUG_CHANNEL(wininet);
 
@@ -115,7 +119,7 @@ BOOL NETCON_init(WININET_NETCONNECTION *connection, BOOL useSSL)
     connection->socketFD = -1;
     if (useSSL)
     {
-#ifdef SONAME_LIBSSL
+#if defined(SONAME_LIBSSL) && defined(SONAME_LIBCRYPTO)
         TRACE("using SSL connection\n");
 	if (OpenSSL_ssl_handle) /* already initialized everything */
             return TRUE;
@@ -202,10 +206,11 @@ BOOL NETCON_connected(WININET_NETCONNECTION *connection)
         return TRUE;
 }
 
-#ifndef __REACTOS__
+#if 0
 /* translate a unix error code into a winsock one */
 static int sock_get_error( int err )
 {
+#if !defined(__MINGW32__) && !defined (_MSC_VER)
     switch (err)
     {
         case EINTR:             return WSAEINTR;
@@ -265,6 +270,8 @@ static int sock_get_error( int err )
 #endif
     default: errno=err; perror("sock_set_error"); return WSAEFAULT;
     }
+#endif
+    return err;
 }
 #endif
 
@@ -588,7 +595,7 @@ BOOL NETCON_query_data_available(WININET_NETCONNECTION *connection, DWORD *avail
     if (!connection->useSSL)
     {
         int unread;
-        int retval = ioctl(connection->socketFD, FIONREAD, &unread);
+        int retval = ioctlsocket(connection->socketFD, FIONREAD, &unread);
         if (!retval)
         {
             TRACE("%d bytes of queued, but unread data\n", unread);
@@ -749,7 +756,7 @@ LPCVOID NETCON_GetCert(WININET_NETCONNECTION *connection)
 #endif
 }
 
-BOOL NETCON_set_timeout(WININET_NETCONNECTION *connection, BOOL send, int value)
+DWORD NETCON_set_timeout(WININET_NETCONNECTION *connection, BOOL send, int value)
 {
     int result;
     struct timeval tv;
@@ -757,7 +764,7 @@ BOOL NETCON_set_timeout(WININET_NETCONNECTION *connection, BOOL send, int value)
     /* FIXME: we should probably store the timeout in the connection to set
      * when we do connect */
     if (!NETCON_connected(connection))
-        return TRUE;
+        return ERROR_SUCCESS;
 
     /* value is in milliseconds, convert to struct timeval */
     tv.tv_sec = value / 1000;
@@ -770,9 +777,8 @@ BOOL NETCON_set_timeout(WININET_NETCONNECTION *connection, BOOL send, int value)
     if (result == -1)
     {
         WARN("setsockopt failed (%s)\n", strerror(errno));
-        INTERNET_SetLastError(sock_get_error(errno));
-        return FALSE;
+        return sock_get_error(errno);
     }
 
-    return TRUE;
+    return ERROR_SUCCESS;
 }

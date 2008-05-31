@@ -37,7 +37,6 @@
 
 #include "wine/debug.h"
 #include "internet.h"
-#define CP_UNIXCP CP_THREAD_ACP
 
 WINE_DEFAULT_DEBUG_CHANNEL(wininet);
 
@@ -72,6 +71,7 @@ time_t ConvertTimeString(LPCWSTR asctime)
     tmpChar[22]='\0';
     tmpChar[25]='\0';
 
+    memset( &t, 0, sizeof(t) );
     t.tm_year = atoiW(tmpChar+12) - 1900;
     t.tm_mday = atoiW(tmpChar+5);
     t.tm_hour = atoiW(tmpChar+17);
@@ -163,7 +163,7 @@ BOOL GetAddress(LPCWSTR lpszServerName, INTERNET_PORT nServerPort,
     memset(psa,0,sizeof(struct sockaddr_in));
     memcpy((char *)&psa->sin_addr, phe->h_addr, phe->h_length);
     psa->sin_family = phe->h_addrtype;
-    psa->sin_port = htons((u_short)nServerPort);
+    psa->sin_port = htons(nServerPort);
 
     return TRUE;
 }

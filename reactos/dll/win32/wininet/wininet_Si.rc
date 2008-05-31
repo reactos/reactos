@@ -1,5 +1,5 @@
 /*
- * Copyright 2003 Rok Mandeljc <rok.mandeljc@gimb.org>
+ * Copyright 2003, 2008 Rok Mandeljc
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -16,24 +16,33 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#pragma code_page(65001)
+
 LANGUAGE LANG_SLOVENIAN, SUBLANG_DEFAULT
 
 IDD_PROXYDLG DIALOG LOADONCALL MOVEABLE DISCARDABLE 36, 24, 250, 154
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Vnos omreûnega gesla"
+CAPTION "Vnos omre≈ænega gesla"
 FONT 8, "MS Shell Dlg"
 {
- LTEXT "Vnesite uporabniöko ime in geslo:", -1, 40, 6, 150, 15
- LTEXT "Proxy", -1, 40, 26, 50, 10
- LTEXT "Realm", -1, 40, 46, 50, 10
- LTEXT "Uporabniöko ime", -1, 40, 66, 50, 10
+ LTEXT "Vnesite uporabni≈°ko ime in geslo:", -1, 40, 6, 150, 15
+ LTEXT "Proksi", -1, 40, 26, 50, 10
+ LTEXT "Kraljestvo", -1, 40, 46, 50, 10
+ LTEXT "Uporabni≈°ko ime", -1, 40, 66, 50, 10
  LTEXT "Geslo", -1, 40, 86, 50, 10
  LTEXT "" IDC_PROXY, 80, 26, 150, 14, 0
  LTEXT "" IDC_REALM, 80, 46, 150, 14, 0
  EDITTEXT IDC_USERNAME, 80, 66, 150, 14, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP
  EDITTEXT IDC_PASSWORD, 80, 86, 150, 14, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP | ES_PASSWORD
- CHECKBOX "&Shrani geslo (nezaöËiteno)", IDC_SAVEPASSWORD,
+ CHECKBOX "&Shrani geslo (neza≈°ƒçiteno)", IDC_SAVEPASSWORD,
            80, 106, 150, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
  PUSHBUTTON "V redu", IDOK, 98, 126, 56, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
- PUSHBUTTON "PrekliËi", IDCANCEL, 158, 126, 56, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Prekliƒçi", IDCANCEL, 158, 126, 56, 14, WS_GROUP | WS_TABSTOP
 }
+
+STRINGTABLE DISCARDABLE
+{
+  IDS_LANCONNECTION "LAN povezava"
+}
+
+#pragma code_page(default)

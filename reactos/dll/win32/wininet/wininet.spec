@@ -116,8 +116,8 @@
 @ stdcall InternetAutodial(long ptr)
 @ stub InternetAutodialCallback
 @ stdcall InternetAutodialHangup(long)
-@ stdcall InternetCanonicalizeUrlA(str str ptr long)
-@ stdcall InternetCanonicalizeUrlW(wstr wstr ptr long)
+@ stdcall InternetCanonicalizeUrlA(str ptr ptr long)
+@ stdcall InternetCanonicalizeUrlW(wstr ptr ptr long)
 @ stdcall InternetCheckConnectionA(ptr long long)
 @ stdcall InternetCheckConnectionW(ptr long long)
 @ stdcall InternetClearAllPerSiteCookieDecisions()
