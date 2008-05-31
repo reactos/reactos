@@ -243,7 +243,8 @@ GetARPInfo(LPCWSTR szName, LPWSTR szPath, LPWSTR szSize, LPWSTR szLastUsed)
                 {
                     if (((int)localtime.wYear > 1900) && ((int)localtime.wYear < 3000))
                     {
-                        swprintf(szLastUsed, L"%02d.%02d.%02d", localtime.wMonth, localtime.wDay, localtime.wYear);
+                        GetDateFormat(LOCALE_USER_DEFAULT, DATE_SHORTDATE, &localtime,
+                                      NULL, szLastUsed, 256);
                     }
                     else wcscpy(szLastUsed,L"---");
                 }
