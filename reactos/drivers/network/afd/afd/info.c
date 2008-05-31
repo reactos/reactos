@@ -48,6 +48,14 @@ AfdGetInfo( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	    InfoReq->Information.Ulong = 0;
 	    break;
 
+    case AFD_INFO_RECEIVE_CONTENT_SIZE:
+        /* Only touch InfoReq if we actually have a valid connection.
+           Behaviour was verified under WinXP SP2. */
+        if(FCB->Connection.Handle)
+            InfoReq->Information.Ulong = FCB->Recv.Content - FCB->Recv.BytesUsed;
+
+        break;
+
 	default:
 	    AFD_DbgPrint(MID_TRACE,("Unknown info id %x\n",
 				    InfoReq->InformationClass));

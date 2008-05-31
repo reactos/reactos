@@ -1517,6 +1517,9 @@ WSPIoctl(
 				Handle, Socket->SharedData.NonBlocking));
 	return 0;
 
+    case FIONREAD:
+        return GetSocketInformation(Socket, AFD_INFO_RECEIVE_CONTENT_SIZE, (PULONG)lpvOutBuffer, NULL);
+
     default:
 	*lpErrno = WSAEINVAL;
 	return SOCKET_ERROR;
