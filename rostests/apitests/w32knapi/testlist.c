@@ -22,6 +22,7 @@
 #include "ntgdi/NtGdiSelectFont.c"
 #include "ntgdi/NtGdiSelectPen.c"
 #include "ntgdi/NtGdiSetBitmapBits.c"
+#include "ntgdi/NtGdiSetDIBitsToDeviceInternal.c"
 //#include "ntgdi/NtGdiSTROBJ_vEnumStart.c"
 #include "ntgdi/NtGdiGetDIBits.c"
 #include "ntgdi/NtGdiGetStockObject.c"
@@ -64,6 +65,7 @@ TESTENTRY TestList[] =
 	{ L"NtGdiGetFontResourceInfoInternalW", Test_NtGdiGetFontResourceInfoInternalW },
 	{ L"NtGdiGetRandomRgn", Test_NtGdiGetRandomRgn },
 	{ L"NtGdiSetBitmapBits", Test_NtGdiSetBitmapBits },
+	{ L"NtGdiSetDIBitsToDeviceInternal", Test_NtGdiSetDIBitsToDeviceInternal },
 	{ L"NtGdiSelectBitmap", Test_NtGdiSelectBitmap },
 	{ L"NtGdiSelectBrush", Test_NtGdiSelectBrush },
 	{ L"NtGdiSelectFont", Test_NtGdiSelectFont },
