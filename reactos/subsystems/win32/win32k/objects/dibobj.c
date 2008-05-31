@@ -665,9 +665,7 @@ NtGdiGetDIBitsInternal(HDC hDC,
             }
             else
             {
-
                 ScanLines = min(ScanLines, BitmapObj->SurfObj.sizlBitmap.cy - StartScan);
-                
                 DestSize.cx = BitmapObj->SurfObj.sizlBitmap.cx;
                 DestSize.cy = ScanLines;
 
@@ -688,9 +686,9 @@ NtGdiGetDIBitsInternal(HDC hDC,
 
                 if (Info->bmiHeader.biSize == sizeof(BITMAPINFOHEADER))
                 {
-
                     hDestBitmap = EngCreateBitmap(DestSize,
-                                                  DIB_GetDIBWidthBytes(DestSize.cx, Info->bmiHeader.biBitCount),
+                                                  /* DIB_GetDIBWidthBytes(DestSize.cx, Info->bmiHeader.biBitCount), */
+                                                  DestSize.cx * (Info->bmiHeader.biBitCount >> 3), /* HACK */
                                                   BitmapFormat(Info->bmiHeader.biBitCount, Info->bmiHeader.biCompression),
                                                   0 < Info->bmiHeader.biHeight ? 0 : BMF_TOPDOWN,
                                                   Bits);
@@ -1220,12 +1218,7 @@ DIB_CreateDIBSection(
  */
 INT FASTCALL DIB_GetDIBWidthBytes (INT width, INT depth)
 {
-    /* http://www.osronline.com/DDKx/graphics/gdifncs_9pgn.htm say it must be exacly 
-     * number of byte to next scanline in the bitmap
-     */
-    UINT bytes = ((UINT)(abs(width)) * (UINT)depth) >> 3;
-    // FIXME : this is wrong return (width * depth + 31) & ~31) >> 3;
-    return (INT)bytes;
+  return ((width * depth + 31) & ~31) >> 3;
 }
 
 /***********************************************************************
