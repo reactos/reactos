@@ -28,82 +28,11 @@
 #include "interface/consup.h"
 #include "errorcode.h"
 #include "mui.h"
+#include "muifonts.h"
+#include "muilanguages.h"
 
 #define NDEBUG
 #include <debug.h>
-
-#include "lang/bg-BG.h"
-#include "lang/cs-CZ.h"
-#include "lang/en-US.h"
-#include "lang/de-DE.h"
-#include "lang/el-GR.h"
-#include "lang/es-ES.h"
-#include "lang/fr-FR.h"
-#include "lang/it-IT.h"
-#include "lang/pl-PL.h"
-#include "lang/ru-RU.h"
-#include "lang/sk-SK.h"
-#include "lang/sv-SE.h"
-#include "lang/uk-UA.h"
-#include "lang/lt-LT.h"
-
-static const MUI_LANGUAGE LanguageList[] =
-{
-  /* Lang ID,   DefKbdLayout, SecKbLayout, ANSI CP, OEM CP, MAC CP,   Language Name,        page strgs,error strings,    other strings */
-  {L"00000409", L"00000409",  NULL,        L"1252", L"437", L"10000", L"English",           enUSPages, enUSErrorEntries, enUSStrings },
-  {L"0000041C", L"0000041C",  L"00000409", L"1250", L"852", L"10029", L"Albanian",          enUSPages, enUSErrorEntries, enUSStrings },
-  {L"00000401", L"00000401",  L"00000409", L"1256", L"720", L"10004", L"Arabic",            enUSPages, enUSErrorEntries, enUSStrings },
-  {L"0000042B", L"0000042B",  L"00000409", L"0",    L"1",   L"2",     L"Armenian Eastern",  enUSPages, enUSErrorEntries, enUSStrings },
-  {L"0000082C", L"0000082C",  L"00000409", L"1251", L"866", L"10007", L"Azeri Cyrillic",    enUSPages, enUSErrorEntries, enUSStrings },
-  {L"0000042C", L"0000042C",  L"00000409", L"1254", L"857", L"10081", L"Azeri Latin",       enUSPages, enUSErrorEntries, enUSStrings },
-  {L"00000423", L"00000423",  L"00000409", L"1251", L"866", L"10007", L"Belarusian",        enUSPages, enUSErrorEntries, enUSStrings },
-  {L"00000813", L"00000813",  L"00000409", L"1252", L"850", L"10000", L"Belgian (Dutch)",   enUSPages, enUSErrorEntries, enUSStrings },
-  {L"0000080C", L"0000080C",  L"00000409", L"1252", L"850", L"10000", L"Belgian (French)",  enUSPages, enUSErrorEntries, enUSStrings },
-  {L"00000416", L"00010416",  L"00000409", L"1252", L"850", L"10000", L"Brazilian",         enUSPages, enUSErrorEntries, enUSStrings },
-  {L"00000402", L"00000402",  L"00000409", L"1251", L"866", L"10007", L"Bulgarian",         bgBGPages, bgBGErrorEntries, bgBGStrings },
-  {L"00000455", L"00000455",  L"00000409", L"0",    L"1",   L"2",     L"Burmese",           enUSPages, enUSErrorEntries, enUSStrings },// Unicode only
-  {L"00000C0C", L"00000C0C",  L"00000409", L"1252", L"850", L"10000", L"Canadian (French)", enUSPages, enUSErrorEntries, enUSStrings },
-  {L"00000403", L"0000040A",  L"00000409", L"1252", L"850", L"10000", L"Catalan",           enUSPages, enUSErrorEntries, enUSStrings },
-  {L"00000804", L"00000804",  L"00000409", L"936",  L"936", L"10008", L"Chinese (PRC)",     enUSPages, enUSErrorEntries, enUSStrings },
-  {L"00000405", L"00000405",  L"00000409", L"1250", L"852", L"10029", L"Czech",             csCZPages, csCZErrorEntries, csCZStrings },
-  {L"00000406", L"00000406",  L"00000409", L"1252", L"850", L"10000", L"Danish",            enUSPages, enUSErrorEntries, enUSStrings },
-  {L"00000407", L"00000407",  L"00000409", L"1252", L"850", L"10000", L"Deutsch",           deDEPages, deDEErrorEntries, deDEStrings },
-  {L"00000413", L"00000813",  L"00000409", L"1252", L"850", L"10000", L"Dutch",             enUSPages, enUSErrorEntries, enUSStrings },
-  {L"00000425", L"00000425",  L"00000409", L"1257", L"775", L"10029", L"Estonian",          enUSPages, enUSErrorEntries, enUSStrings },
-  {L"0000040B", L"0000040B",  L"00000409", L"1252", L"850", L"10000", L"Finnish",           enUSPages, enUSErrorEntries, enUSStrings },
-  {L"0000040C", L"0000040C",  L"00000409", L"1252", L"850", L"10000", L"French",            frFRPages, frFRErrorEntries, frFRStrings },
-  {L"00000437", L"00000437",  L"00000409", L"0",    L"1",   L"2",     L"Georgian",          enUSPages, enUSErrorEntries, enUSStrings },// Unicode only
-  {L"00000408", L"00000408",  L"00000409", L"1253", L"737", L"10006", L"Greek",             elGRPages, elGRErrorEntries, elGRStrings },
-  {L"0000040D", L"0000040D",  L"00000409", L"1255", L"862", L"10005", L"Hebrew",            enUSPages, enUSErrorEntries, enUSStrings },
-  {L"0000040E", L"0000040E",  L"00000409", L"1250", L"852", L"10029", L"Hungarian",         enUSPages, enUSErrorEntries, enUSStrings },
-  {L"0000040F", L"0000040F",  L"00000409", L"1252", L"850", L"10079", L"Icelandic",         enUSPages, enUSErrorEntries, enUSStrings },
-  {L"00000410", L"00000410",  L"00000409", L"1252", L"850", L"10000", L"Italian",           itITPages, itITErrorEntries, itITStrings },
-  {L"00000411", L"00000411",  L"00000409", L"932",  L"932", L"10001", L"Japanese",          enUSPages, enUSErrorEntries, enUSStrings },
-  {L"0000043F", L"0000043F",  L"00000409", L"1251", L"866", L"10007", L"Kazakh",            enUSPages, enUSErrorEntries, enUSStrings },
-  {L"00000412", L"00000412",  L"00000409", L"949",  L"949", L"10003", L"Korean",            enUSPages, enUSErrorEntries, enUSStrings },
-  {L"00000426", L"00000426",  L"00000409", L"1257", L"775", L"10029", L"Latvian",           enUSPages, enUSErrorEntries, enUSStrings },
-  {L"00000427", L"00000427",  L"00000409", L"1257", L"775", L"10029", L"Lithuanian",        ltLTPages, ltLTErrorEntries, ltLTStrings },
-  {L"0000042F", L"0000042F",  L"00000409", L"1251", L"866", L"10007", L"Macedonian",        enUSPages, enUSErrorEntries, enUSStrings },
-  {L"00000414", L"00000414",  L"00000409", L"1252", L"850", L"10000", L"Norwegian",         enUSPages, enUSErrorEntries, enUSStrings },
-  {L"00000418", L"00000418",  L"00000409", L"1250", L"852", L"10029", L"Romanian",          enUSPages, enUSErrorEntries, enUSStrings },
-  {L"00000419", L"00000419",  L"00000409", L"1251", L"866", L"10007", L"Russkij",           ruRUPages, ruRUErrorEntries, ruRUStrings },
-  {L"00000415", L"00000415",  L"00000409", L"1250", L"852", L"10029", L"Polski",            plPLPages, plPLErrorEntries, plPLStrings },
-  {L"00000816", L"00000816",  L"00000409", L"1252", L"850", L"10000", L"Portuguese",        enUSPages, enUSErrorEntries, enUSStrings },
-  {L"00000C1A", L"00000C1A",  L"00000409", L"1251", L"855", L"10007", L"Serbian (Cyrillic)",enUSPages, enUSErrorEntries, enUSStrings },
-  {L"0000081A", L"0000081A",  L"00000409", L"1250", L"852", L"10029", L"Serbian (Latin)",   enUSPages, enUSErrorEntries, enUSStrings },
-  {L"0000041B", L"0000041B",  L"00000409", L"1250", L"852", L"10029", L"Slovak",            skSKPages, skSKErrorEntries, skSKStrings },
-  {L"0000040A", L"0000040A",  L"00000409", L"1252", L"850", L"10000", L"Spanish",           esESPages, esESErrorEntries, esESStrings },
-  {L"00000807", L"00000807",  L"00000409", L"1252", L"850", L"10000", L"Swiss (German)",    enUSPages, enUSErrorEntries, enUSStrings },
-  {L"0000041D", L"0000041D",  L"00000409", L"1252", L"850", L"10000", L"Swedish",           svSEPages, svSEErrorEntries, svSEStrings },
-  {L"00000444", L"00000444",  L"00000409", L"1251", L"866", L"10007", L"Tatar",             enUSPages, enUSErrorEntries, enUSStrings },
-  {L"0000041E", L"0000041E",  L"00000409", L"874",  L"874", L"10021", L"Thai",              enUSPages, enUSErrorEntries, enUSStrings },
-  {L"0000041F", L"0000041F",  L"00000409", L"1254", L"857", L"10081", L"Turkish",           enUSPages, enUSErrorEntries, enUSStrings },
-  {L"00000422", L"00000422",  L"00000409", L"1251", L"866", L"10017", L"Ukrainian",         ukUAPages, ukUAErrorEntries, ukUAStrings },
-  {L"00000809", L"00000809",  L"00000409", L"1252", L"850", L"10000", L"United Kingdom",    enUSPages, enUSErrorEntries, enUSStrings },
-  {L"00000843", L"00000843",  L"00000409", L"1251", L"866", L"10007", L"Uzbek",             enUSPages, enUSErrorEntries, enUSStrings },
-  {L"0000042A", L"0000042A",  L"00000409", L"1258", L"1258",L"10000", L"Vietnamese",        enUSPages, enUSErrorEntries, enUSStrings },
-  {NULL, NULL, NULL, NULL, NULL, NULL}
-};
 
 extern
 VOID
@@ -122,7 +51,7 @@ FindLanguageIndex()
     {
         /* default to english */
         return 0;
-    } 
+    }
 
     do
     {
@@ -566,6 +495,57 @@ AddCodepageToRegistry(IN LPCWSTR ACPage, IN LPCWSTR OEMCPage, IN LPCWSTR MACCPag
     return TRUE;
 }
 
+static BOOLEAN
+AddFontsSettingsToRegistry(IN const MUI_SUBFONT * MuiSubFonts)
+{
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    UNICODE_STRING KeyName;
+    UNICODE_STRING ValueName;
+    HANDLE KeyHandle;
+    NTSTATUS Status;
+    ULONG uIndex = 0;
+
+    RtlInitUnicodeString(&KeyName,
+                         L"\\Registry\\Machine\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\SysFontSubstitutes");
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &KeyName,
+                               OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
+    Status =  NtOpenKey(&KeyHandle,
+                        KEY_WRITE,
+                        &ObjectAttributes);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("NtOpenKey() failed (Status %lx)\n", Status);
+        return FALSE;
+    }
+
+    do
+    {
+        RtlInitUnicodeString(&ValueName, MuiSubFonts[uIndex].FontName);
+        Status = NtSetValueKey(KeyHandle,
+                               &ValueName,
+                               0,
+                               REG_SZ,
+                               (PVOID)MuiSubFonts[uIndex].SubFontName,
+                               wcslen(MuiSubFonts[uIndex].SubFontName) * sizeof(PWCHAR));
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("NtSetValueKey() failed (Status = %lx, uIndex = %d)\n", Status, uIndex);
+            NtClose(KeyHandle);
+            return FALSE;
+        }
+
+        uIndex++;
+    }
+    while (MuiSubFonts[uIndex].FontName != NULL);
+
+    NtClose(KeyHandle);
+
+    return TRUE;
+}
+
 BOOLEAN
 AddCodePage(VOID)
 {
@@ -574,9 +554,17 @@ AddCodePage(VOID)
     {
         if (_wcsicmp(LanguageList[lngIndex].LanguageID , SelectedLanguageId) == 0)
         {
-            return AddCodepageToRegistry(LanguageList[lngIndex].ACPage,
-                                         LanguageList[lngIndex].OEMCPage,
-                                         LanguageList[lngIndex].MACCPage);
+            if (AddCodepageToRegistry(LanguageList[lngIndex].ACPage,
+                                      LanguageList[lngIndex].OEMCPage,
+                                      LanguageList[lngIndex].MACCPage)&&
+                AddFontsSettingsToRegistry(LanguageList[lngIndex].MuiSubFonts))
+            {
+                return TRUE;
+            }
+            else
+            {
+                return FALSE;
+            }
         }
 
         lngIndex++;

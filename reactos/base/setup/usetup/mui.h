@@ -19,13 +19,19 @@ typedef struct
 {
     LONG Number;
     MUI_ENTRY * MuiEntry;
-}MUI_PAGE;
+} MUI_PAGE;
 
 typedef struct
 {
     LONG Number;
     LPSTR String;
 } MUI_STRING;
+
+typedef struct
+{
+    LPCWSTR FontName;
+    LPCWSTR SubFontName;   
+} MUI_SUBFONT;
 
 typedef struct
 {
@@ -39,7 +45,8 @@ typedef struct
     const MUI_PAGE * MuiPages;
     const MUI_ERROR * MuiErrors;
     const MUI_STRING * MuiStrings;
-}MUI_LANGUAGE;
+    const MUI_SUBFONT * MuiSubFonts;
+} MUI_LANGUAGE;
 
 VOID
 MUIDisplayPage (ULONG PageNumber);
