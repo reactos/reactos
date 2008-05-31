@@ -29,7 +29,14 @@ INT_PTR CALLBACK UsersPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
 INT_PTR CALLBACK GroupsPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 INT_PTR CALLBACK ExtraPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
+/* groupprops.c */
+VOID
+GroupProperties(HWND hwndDlg);
+
 /* misc.c */
+VOID
+DebugPrintf(LPTSTR szFormat, ...);
+
 BOOL
 CheckAccountName(HWND hwndDlg,
                  INT nIdDlgItem,

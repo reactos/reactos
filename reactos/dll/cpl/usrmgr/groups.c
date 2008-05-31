@@ -53,10 +53,8 @@ UpdateGroupsList(HWND hwndListView)
     DWORD totalentries;
     DWORD resume_handle = 0;
     DWORD i;
-
     LV_ITEM lvi;
     INT iItem;
-
 
     for (;;)
     {
@@ -385,15 +383,18 @@ OnNotify(HWND hwndDlg, PGROUP_DATA pGroupData, NMHDR *phdr)
             {
                 case NM_CLICK:
                     pGroupData->iCurrentItem = lpnmlv->iItem;
-                    if (lpnmlv->iItem == -1)
-                    {
-                    }
-                    else
-                    {
-                    }
                     break;
 
                 case NM_DBLCLK:
+                    if (lpnmlv->iItem != -1)
+                    {
+                        UINT uItem;
+
+                        uItem =  GetMenuDefaultItem(GetSubMenu(pGroupData->hPopupMenu, 1),
+                                                    FALSE, 0);
+                        if (uItem != (UINT)-1)
+                            SendMessage(hwndDlg, WM_COMMAND, MAKEWPARAM(uItem, 0), 0);
+                    }
                     break;
 
                 case NM_RCLICK:
@@ -439,6 +440,9 @@ GroupsPageProc(HWND hwndDlg,
             pGroupData->hPopupMenu = LoadMenu(hApplet, MAKEINTRESOURCE(IDM_POPUP_GROUP));
 
             OnInitDialog(hwndDlg);
+            SetMenuDefaultItem(GetSubMenu(pGroupData->hPopupMenu, 1),
+                               IDM_GROUP_PROPERTIES,
+                               FALSE);
             break;
 
         case WM_COMMAND:
@@ -454,6 +458,10 @@ GroupsPageProc(HWND hwndDlg,
 
                 case IDM_GROUP_DELETE:
                     GroupDelete(hwndDlg);
+                    break;
+
+                case IDM_GROUP_PROPERTIES:
+                    GroupProperties(hwndDlg);
                     break;
             }
             break;
