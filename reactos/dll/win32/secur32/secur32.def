@@ -51,8 +51,8 @@ QueryContextAttributesW@12
 ;QueryCredentialsAttributesA@12
 ;QueryCredentialsAttributesW@12
 ;@QuerySecurityContextToken
-;@QuerySecurityPackageInfoA
-;@QuerySecurityPackageInfoW
+QuerySecurityPackageInfoA@8
+QuerySecurityPackageInfoW@8
 ;RevertSecurityContext@4
 ;@SaslAcceptSecurityContext
 ;@SaslEnumerateProfilesA

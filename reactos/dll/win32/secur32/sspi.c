@@ -225,3 +225,25 @@ VerifySignature(
 	DPRINT1("%s() not implemented!\n", __FUNCTION__);
 	return ERROR_CALL_NOT_IMPLEMENTED;
 }
+
+SECURITY_STATUS
+SEC_ENTRY
+QuerySecurityPackageInfoA(
+    SEC_CHAR* pszPackageName,
+    PSecPkgInfoA* ppPackageInfo
+)
+{
+	DPRINT1("%s() not implemented!\n", __FUNCTION__);
+	return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+SECURITY_STATUS
+SEC_ENTRY
+QuerySecurityPackageInfoW(
+    SEC_WCHAR* pszPackageName,
+    PSecPkgInfoW* ppPackageInfo
+)
+{
+	DPRINT1("%s() not implemented!\n", __FUNCTION__);
+	return ERROR_CALL_NOT_IMPLEMENTED;
+}
