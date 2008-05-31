@@ -85,9 +85,12 @@ static NTSTATUS TryToSatisfyRecvRequestFromBuffer( PAFD_FCB FCB,
 
 	    MmUnmapLockedPages( Map[i].BufferAddress, Map[i].Mdl );
 
-	    FCB->Recv.BytesUsed += BytesToCopy;
-	    *TotalBytesCopied += BytesToCopy;
-	    BytesAvailable -= BytesToCopy;
+            *TotalBytesCopied += BytesToCopy;
+
+            if (!(RecvReq->TdiFlags & TDI_RECEIVE_PEEK)) {
+                FCB->Recv.BytesUsed += BytesToCopy;
+                BytesAvailable -= BytesToCopy;
+            }
 	}
     }
 
@@ -405,8 +408,11 @@ SatisfyPacketRecvRequest( PAFD_FCB FCB, PIRP Irp,
 
 	MmUnmapLockedPages( Map[0].BufferAddress, Map[0].Mdl );
 
-	FCB->Recv.BytesUsed = 0;
-	*TotalBytesCopied = BytesToCopy;
+        *TotalBytesCopied = BytesToCopy;
+
+        if (!RecvReq->TdiFlags & TDI_RECEIVE_PEEK) {
+            FCB->Recv.BytesUsed = 0;
+        }
     }
 
     Status = Irp->IoStatus.Status = STATUS_SUCCESS;
