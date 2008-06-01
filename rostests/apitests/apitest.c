@@ -1,17 +1,30 @@
 #include "apitest.h"
 
-const char szFileHeader[] = "<html><head><style>\ntd.red {color:red}\ntd.green{color:green}\n</style>\n</head>\n<body>\n<head>\n";
-const char szTableHeader[] = "<table width = '800'><tr><th align='left'>Function</th><th align='left'>Status</th><th align='left'>Tests (all/passed/failed)</th><th align='left'>Regressions</th></tr>";
+const char szFileHeader1[] = "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">\n"
+                             "<html xmlns=\"http://www.w3.org/1999/xhtml\">\n"
+                             "<head>\n"
+                             "<meta http-equiv=\"content-type\" content=\"text/html; charset=utf-8\" />\n";
+const char szFileHeader2[] = "<style type=\"text/css\">\n"
+                             "body {font-family: sans-serif;}\n"
+                             "table {width: 100%;}\n"
+                             "th {text-align: left;}\n"
+                             "td.red {color: red;}\n"
+                             "td.green {color: green;}\n"
+                             "</style>\n"
+                             "</head>\n"
+                             "<body>\n";
+const char szTableHeader[] = "<table><tr><th>Function</th><th>Status</th><th>Tests (all/passed/failed)</th><th>Regressions</th></tr>";
 const char szFileFooter[] = "</table></body></html>";
 
 void
 OutputUsage(LPWSTR pszName)
 {
 	printf("\nUsage:\n\n");
-	printf("%ls.exe <TestName> - perform individual test\n", pszName);
-	printf("%ls.exe all - perform all tests\n", pszName);
-	printf("%ls.exe status - create api status file\n", pszName);
-	printf("%ls.exe -r ... - perform regression testing\n", pszName);
+	printf("%ls.exe <TestName> - Perform individual test\n", pszName);
+	printf("%ls.exe all        - Perform all tests\n", pszName);
+	printf("%ls.exe tests      - List the valid test names\n", pszName);
+	printf("%ls.exe status     - Create api status file\n", pszName);
+	printf("%ls.exe -r ...     - Perform regression testing\n", pszName);
 	printf("\n");
 }
 
@@ -20,10 +33,16 @@ WriteFileHeader(UINT hFile, LPWSTR pszModule)
 {
 	char szHeader[100];
 
-	_write(hFile, szFileHeader, strlen(szFileHeader));
-	sprintf(szHeader, "<H1>Test results for %ls</H1>", pszModule);
+	_write(hFile, szFileHeader1, strlen(szFileHeader1));
+	sprintf(szHeader, "<title>%ls Test results</title>", pszModule);
 	_write(hFile, szHeader, strlen(szHeader));
+	_write(hFile, szFileHeader2, strlen(szFileHeader2));
+
+	sprintf(szHeader, "<h1>Test results for %ls</h1>", pszModule);
+	_write(hFile, szHeader, strlen(szHeader));
+
 	_write(hFile, szTableHeader, strlen(szTableHeader));
+
 	return TRUE;
 }
 
@@ -37,19 +56,19 @@ WriteRow(UINT hFile, LPWSTR pszFunction, PTESTINFO pti)
 	switch(pti->nApiStatus)
 	{
 		case APISTATUS_NOT_FOUND:
-			strcat(szLine, "<td class='red'>not found</td>");
+			strcat(szLine, "<td class=\"red\">not found</td>");
 			break;
 		case APISTATUS_UNIMPLEMENTED:
-			strcat(szLine, "<td class='red'>unimplemented</td>");
+			strcat(szLine, "<td class=\"red\">unimplemented</td>");
 			break;
 		case APISTATUS_ASSERTION_FAILED:
-			strcat(szLine, "<td class='red'>assertion failed</td>");
+			strcat(szLine, "<td class=\"red\">assertion failed</td>");
 			break;
 		case APISTATUS_REGRESSION:
-			strcat(szLine, "<td class='red'>Regression!</td>");
+			strcat(szLine, "<td class=\"red\">Regression!</td>");
 			break;
 		case APISTATUS_NORMAL:
-			strcat(szLine, "<td class='green'>Implemented</td>");
+			strcat(szLine, "<td class=\"green\">Implemented</td>");
 			break;
 	}
 
@@ -98,6 +117,16 @@ TestMain(LPWSTR pszName, LPWSTR pszModule)
 		{
 			bAll = TRUE;
 			bStatus = TRUE;
+		}
+		else if (_wcsicmp(argv[i], L"tests") == 0)
+		{
+			/* List all the tests and exit */
+			printf("Valid test names:\n\n");
+
+			for (i = 0; i < NumTests(); i++)
+				printf("%ls\n", TestList[i].Test);
+
+			return 0;
 		}
 	}
 
