@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <group xmlns:xi="http://www.w3.org/2001/XInclude">
-	<installfile base="system32">downloader.xml</installfile>
+	<installfile installbase="system32">downloader.xml</installfile>
 	<module name="downloader" type="win32gui" installbase="system32" installname="downloader.exe" unicode="yes">
 		<include base="downloader">.</include>
 		<include base="expat">.</include>
