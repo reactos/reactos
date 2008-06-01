@@ -2170,7 +2170,7 @@ ServiceMain(DWORD argc, LPTSTR *argv)
 
     hThread = CreateThread(NULL,
                            0,
-                           DeviceInstallThread,
+                           RpcServerThread,
                            NULL,
                            0,
                            &dwThreadId);
@@ -2179,7 +2179,7 @@ ServiceMain(DWORD argc, LPTSTR *argv)
 
     hThread = CreateThread(NULL,
                            0,
-                           RpcServerThread,
+                           DeviceInstallThread,
                            NULL,
                            0,
                            &dwThreadId);
