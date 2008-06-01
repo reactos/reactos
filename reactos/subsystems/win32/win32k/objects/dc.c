@@ -3405,14 +3405,14 @@ NtGdiGetDhpdev(
   if (!pGdiDevice) return NULL;
   if ( pGdiDevice < (PGDIDEVICE)MmSystemRangeStart) return NULL;
   pPDev = &PrimarySurface;
-  KeEnterCriticalRegion();
+  IntGdiAcquireSemaphore(hsemDriverMgmt);
   do
   {
     if (pGdiDevice == pPDev) break;
     else
       pPDev = pPDev->ppdevNext;
   } while (pPDev != NULL);
-  KeLeaveCriticalRegion();
+  IntGdiReleaseSemaphore(hsemDriverMgmt);
   if (!pPDev) return NULL;
   return pGdiDevice->hPDev;
 }

@@ -2894,15 +2894,14 @@ NtGdiUnloadPrinterDriver(
 }
 
  /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 APIENTRY
 NtGdiUnmapMemFont(
     IN PVOID pvView)
 {
-    UNIMPLEMENTED;
-    return FALSE;
+    return TRUE;
 }
 
 BOOL
