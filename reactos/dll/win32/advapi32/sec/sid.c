@@ -1047,7 +1047,7 @@ EqualDomainSid(IN PSID pSid1,
                IN PSID pSid2,
                OUT BOOL* pfEqual)
 {
-    FIXME("%s() not implemented!\n", __FUNCTION__);
+    UNIMPLEMENTED;
     return FALSE;
 }
 
@@ -1060,7 +1060,7 @@ GetWindowsAccountDomainSid(IN PSID pSid,
                            OUT PSID ppDomainSid,
                            IN OUT DWORD* cbSid)
 {
-    FIXME("%s() not implemented!\n", __FUNCTION__);
+    UNIMPLEMENTED;
     return FALSE;
 }
 
@@ -1238,7 +1238,7 @@ ConvertStringSidToSidW(
 	BOOL ret;
 	SID* pisid;
 
-	TRACE("%s %p\n", StringSid, sid);
+	TRACE("%s %p\n", debugstr_w(StringSid), sid);
 
 	if (!StringSid)
 	{
