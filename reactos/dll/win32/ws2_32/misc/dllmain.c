@@ -166,7 +166,7 @@ socket(IN  INT af,
        IN  INT type,
        IN  INT protocol)
 {
-    return WSASocketA(af,
+    return WSASocketW(af,
                       type,
                       protocol,
                       NULL,
