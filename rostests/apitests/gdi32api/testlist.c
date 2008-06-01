@@ -11,6 +11,7 @@
 #include "tests/CreateFont.c"
 #include "tests/CreatePen.c"
 #include "tests/CreateRectRgn.c"
+#include "tests/EngCreateSemaphore.c"
 #include "tests/ExtCreatePen.c"
 #include "tests/GdiConvertBitmap.c"
 #include "tests/GdiConvertBrush.c"
@@ -51,6 +52,7 @@ TESTENTRY TestList[] =
 	{ L"CreateCompatibleDC", Test_CreateCompatibleDC },
 	{ L"CreateFont", Test_CreateFont },
 	{ L"CreatePen", Test_CreatePen },
+	{ L"EngCreateSemaphore", Test_EngCreateSemaphore },
 	{ L"CreateRectRgn", Test_CreateRectRgn },
 	{ L"ExtCreatePen", Test_ExtCreatePen },
 	{ L"GdiConvertBitmap", Test_GdiConvertBitmap },
