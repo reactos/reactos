@@ -1668,19 +1668,6 @@ NtGdiCreateServerMetaFile(
  /*
  * @unimplemented
  */
-
-HDC
-APIENTRY
-NtGdiCreateMetafileDC(IN HDC hdc)
-{
-    UNIMPLEMENTED;
-    return NULL;
-}
-
-
- /*
- * @unimplemented
- */
 HBITMAP
 APIENTRY
 NtGdiClearBitmapAttributes(
