@@ -12,6 +12,9 @@
 #include "tests/CreatePen.c"
 #include "tests/CreateRectRgn.c"
 #include "tests/EngCreateSemaphore.c"
+#include "tests/EngAcquireSemaphore.c"
+#include "tests/EngDeleteSemaphore.c"
+#include "tests/EngReleaseSemaphore.c"
 #include "tests/ExtCreatePen.c"
 #include "tests/GdiConvertBitmap.c"
 #include "tests/GdiConvertBrush.c"
@@ -53,6 +56,9 @@ TESTENTRY TestList[] =
 	{ L"CreateFont", Test_CreateFont },
 	{ L"CreatePen", Test_CreatePen },
 	{ L"EngCreateSemaphore", Test_EngCreateSemaphore },
+	{ L"EngAcquireSemaphore", Test_EngAcquireSemaphore },
+	{ L"EngDeleteSemaphore", Test_EngDeleteSemaphore },
+	{ L"EngReleaseSemaphore", Test_EngReleaseSemaphore },
 	{ L"CreateRectRgn", Test_CreateRectRgn },
 	{ L"ExtCreatePen", Test_ExtCreatePen },
 	{ L"GdiConvertBitmap", Test_GdiConvertBitmap },
