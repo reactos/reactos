@@ -29,25 +29,25 @@ OutputUsage(LPWSTR pszName)
 }
 
 BOOL
-WriteFileHeader(UINT hFile, LPWSTR pszModule)
+WriteFileHeader(HANDLE hFile, LPDWORD lpdwBytesWritten, LPWSTR pszModule)
 {
 	char szHeader[100];
 
-	_write(hFile, szFileHeader1, strlen(szFileHeader1));
+	WriteFile(hFile, szFileHeader1, strlen(szFileHeader1), lpdwBytesWritten, NULL);
 	sprintf(szHeader, "<title>%ls Test results</title>", pszModule);
-	_write(hFile, szHeader, strlen(szHeader));
-	_write(hFile, szFileHeader2, strlen(szFileHeader2));
+	WriteFile(hFile, szHeader, strlen(szHeader), lpdwBytesWritten, NULL);
+	WriteFile(hFile, szFileHeader2, strlen(szFileHeader2), lpdwBytesWritten, NULL);
 
 	sprintf(szHeader, "<h1>Test results for %ls</h1>", pszModule);
-	_write(hFile, szHeader, strlen(szHeader));
+	WriteFile(hFile, szHeader, strlen(szHeader), lpdwBytesWritten, NULL);
 
-	_write(hFile, szTableHeader, strlen(szTableHeader));
+	WriteFile(hFile, szTableHeader, strlen(szTableHeader), lpdwBytesWritten, NULL);
 
 	return TRUE;
 }
 
 BOOL
-WriteRow(UINT hFile, LPWSTR pszFunction, PTESTINFO pti)
+WriteRow(HANDLE hFile, LPDWORD lpdwBytesWritten, LPWSTR pszFunction, PTESTINFO pti)
 {
 	char szLine[500];
 
@@ -75,7 +75,8 @@ WriteRow(UINT hFile, LPWSTR pszFunction, PTESTINFO pti)
 	sprintf(szLine + strlen(szLine), "<td>%d / %d / %d</td><td>%d</td></tr>\n",
 	        pti->passed+pti->failed, pti->passed, pti->failed, pti->rfailed);
 
-	_write(hFile, szLine, strlen(szLine));
+	WriteFile(hFile, szLine, strlen(szLine), lpdwBytesWritten, NULL);
+
 	return TRUE;
 }
 
@@ -87,7 +88,8 @@ TestMain(LPWSTR pszName, LPWSTR pszModule)
 	TESTINFO ti;
 	INT opassed, ofailed, orfailed;
 	BOOL bAll, bStatus;
-	UINT hFile = 0;
+	HANDLE hFile = NULL;
+	DWORD dwBytesWritten;
 
 	ti.bRegress = FALSE;
 	bAll = FALSE;
@@ -132,16 +134,20 @@ TestMain(LPWSTR pszName, LPWSTR pszModule)
 
 	if (bStatus)
 	{
+		WCHAR szOutputFile[MAX_PATH];
+
 		ti.bRegress = TRUE;
-		char szOutputFile[MAX_PATH];
-		wsprintf(szOutputFile, "%ls.html", pszName);
-		hFile = _open(szOutputFile, O_CREAT | O_TRUNC | O_RDWR, 00700);
-		if (hFile == -1)
+		wcscpy(szOutputFile, pszName);
+		wcscat(szOutputFile, L".html");
+		hFile = CreateFileW(szOutputFile, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+
+		if (hFile == INVALID_HANDLE_VALUE)
 		{
 			printf("Could not create output file.\n");
 			return 0;
 		}
-		WriteFileHeader(hFile, pszModule);
+
+		WriteFileHeader(hFile, &dwBytesWritten, pszModule);
 	}
 
 	for (i = 0; i < NumTests(); i++)
@@ -171,7 +177,7 @@ TestMain(LPWSTR pszName, LPWSTR pszModule)
 				{
 					if (ti.rfailed > 0)
 						ti.nApiStatus = APISTATUS_REGRESSION;
-					WriteRow(hFile, TestList[i].Test, &ti);
+					WriteRow(hFile, &dwBytesWritten, TestList[i].Test, &ti);
 				}
 				break;
 			}
@@ -187,8 +193,8 @@ TestMain(LPWSTR pszName, LPWSTR pszModule)
 
 	if (bStatus)
 	{
-		_write(hFile, szFileFooter, strlen(szFileFooter));
-		_close(hFile);
+		WriteFile(hFile, szFileFooter, strlen(szFileFooter), &dwBytesWritten, NULL);
+		CloseHandle(hFile);
 	}
 
 	if (ti.bRegress)

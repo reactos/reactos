@@ -4,10 +4,7 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include <stdio.h>
-#include <fcntl.h>
 #include <windows.h>
-
-#define open _open
 
 #define APISTATUS_NORMAL 0
 #define APISTATUS_NOT_FOUND 1
