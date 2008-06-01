@@ -380,12 +380,14 @@ CreateFreeLoaderIniForReactos(PWCHAR IniPath,
 		    L"ReactOS_Debug",
 		    L"\"ReactOS (Debug)\"");
 
+#ifdef DBG
   /* ReactOS_WinLdr="ReactOS (WinLdr)" */
   IniCacheInsertKey(IniSection,
 		    NULL,
 		    INSERT_LAST,
 		    L"ReactOS_WinLdr",
 		    L"\"ReactOS (WinLdr)\"");
+#endif
 
   /* Create "ReactOS" section */
   IniSection = IniCacheAppendSection(IniCache,
@@ -437,6 +439,7 @@ CreateFreeLoaderIniForReactos(PWCHAR IniPath,
 		    L"Options",
 		    L"/DEBUG /DEBUGPORT=COM1 /BAUDRATE=115200 /SOS");
 
+#ifdef DBG
   /* Create "ReactOS_WinLdr" section */
   IniSection = IniCacheAppendSection(IniCache,
 				     L"ReactOS_WinLdr");
@@ -461,6 +464,7 @@ CreateFreeLoaderIniForReactos(PWCHAR IniPath,
 		    INSERT_LAST,
 		    L"Options",
 		    L"/DEBUG /DEBUGPORT=COM1 /BAUDRATE=115200 /SOS");
+#endif
 
   /* Save the ini file */
   IniCacheSave(IniCache, IniPath);
