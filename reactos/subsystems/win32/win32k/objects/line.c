@@ -142,8 +142,12 @@ IntGdiLineTo(DC  *dc,
 
         /* get BRUSHOBJ from current pen. */
         PenBrushObj = PENOBJ_LockPen( Dc_Attr->hpen );
-        /* FIXME - PenBrushObj can be NULL!!!! Don't assert here! */
-        ASSERT(PenBrushObj);
+        if (!PenBrushObj)
+        {
+            /* default to BLACK_PEN */
+            PenBrushObj = PENOBJ_LockPen(NtGdiGetStockObject(BLACK_PEN));
+            ASSERT(PenBrushObj);
+        }
 
         if (!(PenBrushObj->flAttrs & GDIBRUSH_IS_NULL))
         {
