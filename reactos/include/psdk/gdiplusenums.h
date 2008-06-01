@@ -259,15 +259,33 @@ enum HotkeyPrefix
 
 enum ImageCodecFlags
 {
-    ImageCodecFlagsEncoder		= 1,
-    ImageCodecFlagsDecoder		= 2,
-    ImageCodecFlagsSupportBitmap	= 4,
-    ImageCodecFlagsSupportVector	= 8,
-    ImageCodecFlagsSeekableEncode	= 16,
-    ImageCodecFlagsBlockingDecode	= 32,
-    ImageCodecFlagsBuiltin		= 65536,
-    ImageCodecFlagsSystem	        = 131072,
-    ImageCodecFlagsUser		        = 262144
+    ImageCodecFlagsEncoder          = 1,
+    ImageCodecFlagsDecoder          = 2,
+    ImageCodecFlagsSupportBitmap    = 4,
+    ImageCodecFlagsSupportVector    = 8,
+    ImageCodecFlagsSeekableEncode   = 16,
+    ImageCodecFlagsBlockingDecode   = 32,
+    ImageCodecFlagsBuiltin          = 65536,
+    ImageCodecFlagsSystem           = 131072,
+    ImageCodecFlagsUser             = 262144
+};
+
+enum ImageFlags
+{
+    ImageFlagsNone              = 0,
+    ImageFlagsScalable          = 0x0001,
+    ImageFlagsHasAlpha          = 0x0002,
+    ImageFlagsHasTranslucent    = 0x0004,
+    ImageFlagsPartiallyScalable = 0x0008,
+    ImageFlagsColorSpaceRGB     = 0x0010,
+    ImageFlagsColorSpaceCMYK    = 0x0020,
+    ImageFlagsColorSpaceGRAY    = 0x0040,
+    ImageFlagsColorSpaceYCBCR   = 0x0080,
+    ImageFlagsColorSpaceYCCK    = 0x0100,
+    ImageFlagsHasRealDPI        = 0x1000,
+    ImageFlagsHasRealPixelSize  = 0x2000,
+    ImageFlagsReadOnly          = 0x00010000,
+    ImageFlagsCaching           = 0x00020000
 };
 
 enum CombineMode
@@ -297,6 +315,7 @@ typedef enum DashCap DashCap;
 typedef enum DashStyle DashStyle;
 typedef enum MatrixOrder MatrixOrder;
 typedef enum ImageType ImageType;
+typedef enum ImageFlags ImageFlags;
 typedef enum WrapMode WrapMode;
 typedef enum MetafileType MetafileType;
 typedef enum LinearGradientMode LinearGradientMode;

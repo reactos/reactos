@@ -53,6 +53,7 @@ GpStatus WINGDIPAPI GdipSetPenWidth(GpPen*,REAL);
 GpStatus WINGDIPAPI GdipCreateFromHDC(HDC,GpGraphics**);
 GpStatus WINGDIPAPI GdipCreateFromHDC2(HDC,HANDLE,GpGraphics**);
 GpStatus WINGDIPAPI GdipCreateFromHWND(HWND,GpGraphics**);
+GpStatus WINGDIPAPI GdipCreateFromHWNDICM(HWND,GpGraphics**);
 GpStatus WINGDIPAPI GdipCreateLineBrush(GDIPCONST GpPointF*,GDIPCONST GpPointF*,
     ARGB,ARGB,GpWrapMode,GpLineGradient**);
 GpStatus WINGDIPAPI GdipCreateLineBrushI(GDIPCONST GpPoint*,GDIPCONST GpPoint*,
@@ -122,7 +123,9 @@ GpStatus WINGDIPAPI GdipFillRectangleI(GpGraphics*,GpBrush*,INT,INT,INT,INT);
 GpStatus WINGDIPAPI GdipFillRectangles(GpGraphics*,GpBrush*,GDIPCONST GpRectF*,INT);
 GpStatus WINGDIPAPI GdipFillRectanglesI(GpGraphics*,GpBrush*,GDIPCONST GpRect*,INT);
 GpStatus WINGDIPAPI GdipGetCompositingMode(GpGraphics*,CompositingMode*);
+GpStatus WINGDIPAPI GdipGetClip(GpGraphics*,GpRegion*);
 GpStatus WINGDIPAPI GdipGetCompositingQuality(GpGraphics*,CompositingQuality*);
+GpStatus WINGDIPAPI GdipGetDC(GpGraphics*,HDC*);
 GpStatus WINGDIPAPI GdipGetImageDimension(GpImage*,REAL*,REAL*);
 GpStatus WINGDIPAPI GdipGetInterpolationMode(GpGraphics*,InterpolationMode*);
 GpStatus WINGDIPAPI GdipGetPageScale(GpGraphics*,REAL*);
@@ -133,6 +136,7 @@ GpStatus WINGDIPAPI GdipGetTextRenderingHint(GpGraphics*,TextRenderingHint*);
 GpStatus WINGDIPAPI GdipGetWorldTransform(GpGraphics*,GpMatrix*);
 GpStatus WINGDIPAPI GdipMeasureString(GpGraphics*,GDIPCONST WCHAR*,INT,
     GDIPCONST GpFont*,GDIPCONST RectF*,GDIPCONST GpStringFormat*,RectF*,INT*,INT*);
+GpStatus WINGDIPAPI GdipReleaseDC(GpGraphics*,HDC);
 GpStatus WINGDIPAPI GdipRestoreGraphics(GpGraphics*,GraphicsState);
 GpStatus WINGDIPAPI GdipRotateWorldTransform(GpGraphics*,REAL,GpMatrixOrder);
 GpStatus WINGDIPAPI GdipSaveGraphics(GpGraphics*,GraphicsState*);
@@ -209,6 +213,8 @@ GpStatus WINGDIPAPI GdipAddPathLine2(GpPath*,GDIPCONST GpPointF*,INT);
 GpStatus WINGDIPAPI GdipAddPathLine2I(GpPath*,GDIPCONST GpPoint*,INT);
 GpStatus WINGDIPAPI GdipAddPathLineI(GpPath*,INT,INT,INT,INT);
 GpStatus WINGDIPAPI GdipAddPathPath(GpPath*,GDIPCONST GpPath*,BOOL);
+GpStatus WINGDIPAPI GdipAddPathRectangle(GpPath*,REAL,REAL,REAL,REAL);
+GpStatus WINGDIPAPI GdipAddPathRectangleI(GpPath*,INT,INT,INT,INT);
 GpStatus WINGDIPAPI GdipClonePath(GpPath*,GpPath**);
 GpStatus WINGDIPAPI GdipClosePathFigure(GpPath*);
 GpStatus WINGDIPAPI GdipClosePathFigures(GpPath*);
@@ -301,6 +307,7 @@ GpStatus WINGDIPAPI GdipGetImageRawFormat(GpImage*,GUID*);
 GpStatus WINGDIPAPI GdipGetImageType(GpImage*,ImageType*);
 GpStatus WINGDIPAPI GdipGetImageVerticalResolution(GpImage*,REAL*);
 GpStatus WINGDIPAPI GdipGetImageWidth(GpImage*,UINT*);
+GpStatus WINGDIPAPI GdipGetImageFlags(GpImage*,UINT*);
 GpStatus WINGDIPAPI GdipGetMetafileHeaderFromEmf(HENHMETAFILE,MetafileHeader*);
 GpStatus WINGDIPAPI GdipGetMetafileHeaderFromFile(GDIPCONST WCHAR*,MetafileHeader*);
 GpStatus WINGDIPAPI GdipGetMetafileHeaderFromMetafile(GpMetafile*,MetafileHeader*);
@@ -351,6 +358,14 @@ GpStatus WINGDIPAPI GdipCloneStringFormat(GDIPCONST GpStringFormat*,GpStringForm
 
 GpStatus WINGDIPAPI GdipGetDpiX(GpGraphics*,REAL*);
 GpStatus WINGDIPAPI GdipGetDpiY(GpGraphics*,REAL*);
+
+GpStatus WINGDIPAPI GdipCreateRegion(GpRegion **);
+GpStatus WINGDIPAPI GdipCreateRegionPath(GpPath *, GpRegion **);
+GpStatus WINGDIPAPI GdipDeleteRegion(GpRegion *);
+GpStatus WINGDIPAPI GdipGetRegionHRgn(GpRegion *, GpGraphics *, HRGN *);
+GpStatus WINGDIPAPI GdipSetEmpty(GpRegion *);
+GpStatus WINGDIPAPI GdipSetInfinite(GpRegion *);
+
 
 #ifdef __cplusplus
 }
