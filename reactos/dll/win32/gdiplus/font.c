@@ -68,7 +68,7 @@ GpStatus WINGDIPAPI GdipCreateFontFromLogfontA(HDC hdc,
     if(!lfa || !font)
         return InvalidParameter;
 
-    memcpy(&lfw, lfa, sizeof(LOGFONTA));
+    memcpy(&lfw, lfa, FIELD_OFFSET(LOGFONTA,lfFaceName) );
 
     if(!MultiByteToWideChar(CP_ACP, 0, lfa->lfFaceName, -1, lfw.lfFaceName, LF_FACESIZE))
         return GenericError;

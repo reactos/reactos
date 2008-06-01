@@ -25,8 +25,8 @@
 @ stub GdipAddPathPieI
 @ stub GdipAddPathPolygon
 @ stub GdipAddPathPolygonI
-@ stub GdipAddPathRectangle
-@ stub GdipAddPathRectangleI
+@ stdcall GdipAddPathRectangle(ptr long long long long)
+@ stdcall GdipAddPathRectangleI(ptr long long long long)
 @ stub GdipAddPathRectangles
 @ stub GdipAddPathRectanglesI
 @ stub GdipAddPathString
@@ -92,7 +92,7 @@
 @ stdcall GdipCreateFromHDC2(long long ptr)
 @ stdcall GdipCreateFromHDC(long ptr)
 @ stdcall GdipCreateFromHWND(long ptr)
-@ stub GdipCreateFromHWNDICM
+@ stdcall GdipCreateFromHWNDICM(long ptr)
 @ stdcall GdipCreateHBITMAPFromBitmap(ptr ptr long)
 @ stub GdipCreateHICONFromBitmap
 @ stub GdipCreateHalftonePalette
@@ -122,9 +122,9 @@
 @ stdcall GdipCreatePathIter(ptr ptr)
 @ stdcall GdipCreatePen1(long long long ptr)
 @ stdcall GdipCreatePen2(ptr long long ptr)
-@ stub GdipCreateRegion
+@ stdcall GdipCreateRegion(ptr)
 @ stub GdipCreateRegionHrgn
-@ stub GdipCreateRegionPath
+@ stdcall GdipCreateRegionPath(ptr ptr)
 @ stub GdipCreateRegionRect
 @ stub GdipCreateRegionRectI
 @ stub GdipCreateRegionRgnData
@@ -148,7 +148,7 @@
 @ stdcall GdipDeletePathIter(ptr)
 @ stdcall GdipDeletePen(ptr)
 @ stub GdipDeletePrivateFontCollection
-@ stub GdipDeleteRegion
+@ stdcall GdipDeleteRegion(ptr)
 @ stdcall GdipDeleteStringFormat(ptr)
 @ stdcall GdipDisposeImage(ptr)
 @ stdcall GdipDisposeImageAttributes(ptr)
@@ -244,7 +244,7 @@
 @ stdcall GdipGetBrushType(ptr ptr)
 @ stub GdipGetCellAscent
 @ stub GdipGetCellDescent
-@ stub GdipGetClip
+@ stdcall GdipGetClip(ptr ptr)
 @ stub GdipGetClipBounds
 @ stub GdipGetClipBoundsI
 @ stdcall GdipGetCompositingMode(ptr ptr)
@@ -255,7 +255,7 @@
 @ stub GdipGetCustomLineCapStrokeJoin
 @ stub GdipGetCustomLineCapType
 @ stub GdipGetCustomLineCapWidthScale
-@ stub GdipGetDC
+@ stdcall GdipGetDC(ptr ptr)
 @ stdcall GdipGetDpiX(ptr ptr)
 @ stdcall GdipGetDpiY(ptr ptr)
 @ stub GdipGetEffectParameterSize
@@ -286,7 +286,7 @@
 @ stdcall GdipGetImageDimension(ptr ptr ptr)
 @ stdcall GdipGetImageEncoders(long long ptr)
 @ stdcall GdipGetImageEncodersSize(ptr ptr)
-@ stub GdipGetImageFlags
+@ stdcall GdipGetImageFlags(ptr ptr)
 @ stdcall GdipGetImageGraphicsContext(ptr ptr)
 @ stdcall GdipGetImageHeight(ptr ptr)
 @ stdcall GdipGetImageHorizontalResolution(ptr ptr)
@@ -379,7 +379,7 @@
 @ stub GdipGetRegionBoundsI
 @ stub GdipGetRegionData
 @ stub GdipGetRegionDataSize
-@ stub GdipGetRegionHRgn
+@ stdcall GdipGetRegionHRgn(ptr ptr ptr)
 @ stub GdipGetRegionScans
 @ stub GdipGetRegionScansCount
 @ stub GdipGetRegionScansI
@@ -436,7 +436,7 @@
 @ stub GdipIsVisibleRegionRect
 @ stub GdipIsVisibleRegionRectI
 @ stdcall GdipLoadImageFromFile(wstr ptr)
-@ stub GdipLoadImageFromFileICM
+@ stdcall GdipLoadImageFromFileICM(wstr ptr)
 @ stdcall GdipLoadImageFromStream(ptr ptr)
 @ stdcall GdipLoadImageFromStreamICM(ptr ptr)
 @ stub GdipMeasureCharacterRanges
@@ -472,7 +472,7 @@
 @ stub GdipRecordMetafileI
 @ stub GdipRecordMetafileStream
 @ stub GdipRecordMetafileStreamI
-@ stub GdipReleaseDC
+@ stdcall GdipReleaseDC(ptr ptr)
 @ stdcall GdipRemovePropertyItem(ptr long)
 @ stub GdipResetClip
 @ stub GdipResetImageAttributes

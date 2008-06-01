@@ -797,6 +797,12 @@ GpStatus WINGDIPAPI GdipCreateFromHWND(HWND hwnd, GpGraphics **graphics)
     return Ok;
 }
 
+/* FIXME: no icm handling */
+GpStatus WINGDIPAPI GdipCreateFromHWNDICM(HWND hwnd, GpGraphics **graphics)
+{
+    return GdipCreateFromHWND(hwnd, graphics);
+}
+
 GpStatus WINGDIPAPI GdipCreateMetafileFromEmf(HENHMETAFILE hemf, BOOL delete,
     GpMetafile **metafile)
 {
@@ -932,22 +938,7 @@ GpStatus WINGDIPAPI GdipDrawArc(GpGraphics *graphics, GpPen *pen, REAL x,
 GpStatus WINGDIPAPI GdipDrawArcI(GpGraphics *graphics, GpPen *pen, INT x,
     INT y, INT width, INT height, REAL startAngle, REAL sweepAngle)
 {
-    INT save_state, num_pts;
-    GpPointF points[MAX_ARC_PTS];
-    GpStatus retval;
-
-    if(!graphics || !pen || width <= 0 || height <= 0)
-        return InvalidParameter;
-
-    num_pts = arc2polybezier(points, x, y, width, height, startAngle, sweepAngle);
-
-    save_state = prepare_dc(graphics, pen);
-
-    retval = draw_polybezier(graphics, pen, points, num_pts, TRUE);
-
-    restore_dc(graphics, save_state);
-
-    return retval;
+    return GdipDrawArc(graphics,pen,(REAL)x,(REAL)y,(REAL)width,(REAL)height,startAngle,sweepAngle);
 }
 
 GpStatus WINGDIPAPI GdipDrawBezier(GpGraphics *graphics, GpPen *pen, REAL x1,
@@ -2435,4 +2426,26 @@ GpStatus WINGDIPAPI GdipMultiplyWorldTransform(GpGraphics *graphics, GDIPCONST G
         *(graphics->worldtrans) = m;
 
     return ret;
+}
+
+GpStatus WINGDIPAPI GdipGetDC(GpGraphics *graphics, HDC *hdc)
+{
+    FIXME("(%p, %p): stub\n", graphics, hdc);
+
+    *hdc = NULL;
+    return NotImplemented;
+}
+
+GpStatus WINGDIPAPI GdipReleaseDC(GpGraphics *graphics, HDC hdc)
+{
+    FIXME("(%p, %p): stub\n", graphics, hdc);
+
+    return NotImplemented;
+}
+
+GpStatus WINGDIPAPI GdipGetClip(GpGraphics *graphics, GpRegion *region)
+{
+   FIXME("(%p, %p): stub\n", graphics, region);
+
+   return NotImplemented;
 }

@@ -149,6 +149,7 @@ struct GpCustomLineCap{
 struct GpImage{
     IPicture* picture;
     ImageType type;
+    UINT flags;
 };
 
 struct GpMetafile{

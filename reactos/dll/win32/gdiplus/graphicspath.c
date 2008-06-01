@@ -708,3 +708,53 @@ GpStatus WINGDIPAPI GdipTransformPath(GpPath *path, GpMatrix *matrix)
     return GdipTransformMatrixPoints(matrix, path->pathdata.Points,
                                      path->pathdata.Count);
 }
+
+GpStatus WINGDIPAPI GdipAddPathRectangle(GpPath *path, REAL x, REAL y,
+    REAL width, REAL height)
+{
+    GpPath *backup;
+    GpPointF ptf[2];
+    GpStatus retstat;
+    BOOL old_new;
+
+    if(!path || width < 0.0 || height < 0.0)
+        return InvalidParameter;
+
+    /* make a backup copy of path data */
+    if((retstat = GdipClonePath(path, &backup)) != Ok)
+        return retstat;
+
+    /* rectangle should start as new path */
+    old_new = path->newfigure;
+    path->newfigure = TRUE;
+    if((retstat = GdipAddPathLine(path,x,y,x+width,y)) != Ok){
+        path->newfigure = old_new;
+        goto fail;
+    }
+
+    ptf[0].X = x+width;
+    ptf[0].Y = y+height;
+    ptf[1].X = x;
+    ptf[1].Y = y+height;
+
+    if((retstat = GdipAddPathLine2(path,(GDIPCONST GpPointF*)&ptf,2)) != Ok)  goto fail;
+    path->pathdata.Types[path->pathdata.Count-1] |= PathPointTypeCloseSubpath;
+
+    /* free backup */
+    GdipDeletePath(backup);
+    return Ok;
+
+fail:
+    /* reverting */
+    GdipDeletePath(path);
+    GdipClonePath(backup, &path);
+    GdipDeletePath(backup);
+
+    return retstat;
+}
+
+GpStatus WINGDIPAPI GdipAddPathRectangleI(GpPath *path, INT x, INT y,
+    INT width, INT height)
+{
+    return GdipAddPathRectangle(path,(REAL)x,(REAL)y,(REAL)width,(REAL)height);
+}
