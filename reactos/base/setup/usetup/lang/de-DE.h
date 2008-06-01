@@ -1,6 +1,13 @@
 #ifndef LANG_DE_DE_H__
 #define LANG_DE_DE_H__
 
+MUI_LAYOUTS deDELayouts[] =
+{
+    { L"0407", L"00000407" },
+    { L"0409", L"00000409" },
+    { NULL, NULL }
+};
+
 static MUI_ENTRY deDELanguagePageEntries[] =
 {
     {
@@ -1072,7 +1079,7 @@ static MUI_ENTRY deDELayoutSettingsEntries[] =
     {
         6,
         8,
-        "Sie wollen das Tastaturlayout „ndern, der installiert wird.",
+        "Please select a layout to be installed by default.",
         TEXT_STYLE_NORMAL
     },
     {

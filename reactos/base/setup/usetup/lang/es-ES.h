@@ -1,6 +1,13 @@
 #ifndef LANG_ES_ES_H__
 #define LANG_ES_ES_H__
 
+MUI_LAYOUTS esESLayouts[] =
+{
+    { L"040A", L"0000040A" },
+    { L"0409", L"00000409" },
+    { NULL, NULL }
+};
+
 static MUI_ENTRY esESLanguagePageEntries[] =
 {
     {
@@ -1072,7 +1079,7 @@ static MUI_ENTRY esESLayoutSettingsEntries[] =
     {
         6,
         8,
-        "Desea cambiar la disposici¢n del teclado a instalar.",
+        "Please select a layout to be installed by default.",
         TEXT_STYLE_NORMAL
     },
     {

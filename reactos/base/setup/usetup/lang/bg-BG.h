@@ -1,6 +1,13 @@
 #ifndef LANG_BG_BG_H__
 #define LANG_BG_BG_H__
 
+MUI_LAYOUTS bgBGLayouts[] =
+{
+    { L"0402", L"00000402" },
+    { L"0409", L"00000409" },
+    { NULL, NULL }
+};
+
 static MUI_ENTRY bgBGLanguagePageEntries[] =
 {
     {
@@ -1079,7 +1086,7 @@ static MUI_ENTRY bgBGLayoutSettingsEntries[] =
     {
         6,
         8,
-        "Искате да смените клавиатурната подредба.",
+        "Please select a layout to be installed by default.",
         TEXT_STYLE_NORMAL
     },
     {

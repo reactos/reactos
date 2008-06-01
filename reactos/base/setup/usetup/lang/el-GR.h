@@ -1,6 +1,13 @@
 #ifndef LANG_EL_GR_H__
 #define LANG_EL_GR_H__
 
+MUI_LAYOUTS elGRLayouts[] =
+{
+    { L"0408", L"00000408" },
+    { L"0409", L"00000409" },
+    { NULL, NULL }
+};
+
 static MUI_ENTRY elGRLanguagePageEntries[] =
 {
     {
@@ -1101,7 +1108,7 @@ static MUI_ENTRY elGRLayoutSettingsEntries[] =
     {
         6,
         8,
-        "‡â¢œ«œ ¤˜ ˜¢¢á¥œ«œ «ž¤ › á«˜¥ž «¦¬ §¢ž¡«¨¦¢¦šå¦¬ §¦¬ Ÿ˜ œš¡˜«˜©«˜Ÿœå.",
+        "Please select a layout to be installed by default.",
         TEXT_STYLE_NORMAL
     },
     {

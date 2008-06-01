@@ -10,6 +10,13 @@
 #ifndef LANG_LT_LT_H__
 #define LANG_LT_LT_H__
 
+MUI_LAYOUTS ltLTLayouts[] =
+{
+    { L"0427", L"00000427" },
+    { L"0409", L"00000409" },
+    { NULL, NULL }
+};
+
 static MUI_ENTRY ltLTLanguagePageEntries[] =
 {
     {
@@ -1081,7 +1088,7 @@ static MUI_ENTRY ltLTLayoutSettingsEntries[] =
     {
         6,
         8,
-        "You want to change the keyboard layout to be installed.",
+        "Please select a layout to be installed by default.",
         TEXT_STYLE_NORMAL
     },
     {

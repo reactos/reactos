@@ -1,6 +1,13 @@
 #ifndef LANG_RU_RU_H__
 #define LANG_RU_RU_H__
 
+MUI_LAYOUTS ruRULayouts[] =
+{
+    { L"0419", L"00000419" },
+    { L"0409", L"00000409" },
+    { NULL, NULL }
+};
+
 static MUI_ENTRY ruRULanguagePageEntries[] =
 {
     {
@@ -1072,7 +1079,7 @@ static MUI_ENTRY ruRULayoutSettingsEntries[] =
     {
         6,
         8,
-        "Выбор устанавливаемой раскладки клавиатуры.",
+        "Пожалуйста выберите раскладку, которая будет установлена по умолчанию.",
         TEXT_STYLE_NORMAL
     },
     {

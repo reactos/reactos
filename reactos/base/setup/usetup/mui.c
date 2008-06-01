@@ -109,7 +109,14 @@ LPCWSTR
 MUIDefaultKeyboardLayout(VOID)
 {
     ULONG lngIndex = max(FindLanguageIndex(), 0);
-    return LanguageList[lngIndex].LanguageKeyboardLayoutID;
+    return LanguageList[lngIndex].MuiLayouts[0].LayoutID;
+}
+
+const MUI_LAYOUTS *
+MUIGetLayoutsList(VOID)
+{
+    ULONG lngIndex = max(FindLanguageIndex(), 0);
+    return LanguageList[lngIndex].MuiLayouts;
 }
 
 VOID
@@ -286,16 +293,21 @@ AddHotkeySettings(IN LPCWSTR Hotkey, IN LPCWSTR LangHotkey, IN LPCWSTR LayoutHot
     return TRUE;
 }
 
-static BOOLEAN
-AddKbLayoutsToRegistry(IN LPCWSTR DefKbLayout, IN LPCWSTR SecKbLayout)
+BOOLEAN
+AddKbLayoutsToRegistry(IN const MUI_LAYOUTS * MuiLayouts)
 {
     OBJECT_ATTRIBUTES ObjectAttributes;
     UNICODE_STRING KeyName;
     UNICODE_STRING ValueName;
     HANDLE KeyHandle;
+    HANDLE SubKeyHandle;
     NTSTATUS Status;
     ULONG Disposition;
+    ULONG uIndex = 0;
+    ULONG uCount = 0;
     WCHAR szKeyName[48] = L"\\Registry\\User\\.DEFAULT\\Keyboard Layout";
+    WCHAR szValueName[3 + 1];
+    WCHAR szLangID[8 + 1];
 
     // Open the keyboard layout key
     RtlInitUnicodeString(&KeyName,
@@ -352,50 +364,100 @@ AddKbLayoutsToRegistry(IN LPCWSTR DefKbLayout, IN LPCWSTR SecKbLayout)
         return FALSE;
     }
 
-    /* Set def keyboard layout */
-    RtlInitUnicodeString(&ValueName,
-                         L"1");
+    RtlInitUnicodeString(&KeyName, L"\\Registry\\User\\.DEFAULT\\Keyboard Layout\\Substitutes");
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &KeyName,
+                               OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
 
-    Status = NtSetValueKey(KeyHandle,
-                           &ValueName,
-                           0,
-                           REG_SZ,
-                           (PVOID)DefKbLayout,
-                           (8 + 1) * sizeof(WCHAR));
-    if (!NT_SUCCESS(Status))
+    Status =  NtCreateKey(&SubKeyHandle,
+                          KEY_ALL_ACCESS,
+                          &ObjectAttributes,
+                          0,
+                          NULL,
+                          0,
+                          &Disposition);
+
+    if(!NT_SUCCESS(Status))
     {
-        DPRINT1("NtSetValueKey() failed (Status %lx)\n", Status);
+        DPRINT1("NtCreateKey() failed (Status %lx)\n", Status);
+        NtClose(SubKeyHandle);
         NtClose(KeyHandle);
         return FALSE;
     }
 
-    if (SecKbLayout != NULL)
+    do
     {
-        /* Set second keyboard layout */
-        RtlInitUnicodeString(&ValueName,
-                             L"2");
+        if (uIndex > 19) break;
 
-        Status = NtSetValueKey(KeyHandle,
-                               &ValueName,
-                               0,
-                               REG_SZ,
-                               (PVOID)SecKbLayout,
-                               (8 + 1) * sizeof(WCHAR));
-        if (!NT_SUCCESS(Status))
+        swprintf(szValueName, L"%d", uIndex + 1);
+        RtlInitUnicodeString(&ValueName, szValueName);
+
+        swprintf(szLangID, L"0000%s", MuiLayouts[uIndex].LangID);
+
+        if (wcscmp(szLangID, MuiLayouts[uIndex].LayoutID) == 0)
         {
-            DPRINT1("NtSetValueKey() failed (Status %lx)\n", Status);
-            NtClose(KeyHandle);
-            return FALSE;
+            Status = NtSetValueKey(KeyHandle,
+                                   &ValueName,
+                                   0,
+                                   REG_SZ,
+                                   (PVOID)MuiLayouts[uIndex].LayoutID,
+                                   wcslen(MuiLayouts[uIndex].LayoutID) * sizeof(WCHAR));
+            if (!NT_SUCCESS(Status))
+            {
+                DPRINT1("NtSetValueKey() failed (Status = %lx, uIndex = %d)\n", Status, uIndex);
+                NtClose(SubKeyHandle);
+                NtClose(KeyHandle);
+                return FALSE;
+            }
+        }
+        else
+        {
+            swprintf(szLangID, L"d%03d%s", uCount, MuiLayouts[uIndex].LangID);
+            Status = NtSetValueKey(KeyHandle,
+                                   &ValueName,
+                                   0,
+                                   REG_SZ,
+                                   (PVOID)szLangID,
+                                   wcslen(szLangID) * sizeof(WCHAR));
+            if (!NT_SUCCESS(Status))
+            {
+                DPRINT1("NtSetValueKey() failed (Status = %lx, uIndex = %d)\n", Status, uIndex);
+                NtClose(SubKeyHandle);
+                NtClose(KeyHandle);
+                return FALSE;
+            }
+
+            RtlInitUnicodeString(&ValueName, szLangID);
+
+            Status = NtSetValueKey(SubKeyHandle,
+                                   &ValueName,
+                                   0,
+                                   REG_SZ,
+                                   (PVOID)MuiLayouts[uIndex].LayoutID,
+                                   wcslen(MuiLayouts[uIndex].LayoutID) * sizeof(WCHAR));
+            if (!NT_SUCCESS(Status))
+            {
+                DPRINT1("NtSetValueKey() failed (Status = %lx, uIndex = %d)\n", Status, uIndex);
+                NtClose(SubKeyHandle);
+                NtClose(KeyHandle);
+                return FALSE;
+            }
+
+            uCount++;
         }
 
-        /*
-            Switching input languages - Ctrl + Shift
-            Switching keyboard layouts - Left Alt + Shift
-        */
-        AddHotkeySettings(L"2", L"2", L"1");
+        uIndex++;
     }
-    else AddHotkeySettings(L"3", L"3", L"3"); // Off all hotkeys
+    while (MuiLayouts[uIndex].LangID != NULL);
 
+    if (uIndex > 1)
+        AddHotkeySettings(L"2", L"2", L"1");
+    else
+        AddHotkeySettings(L"3", L"3", L"3");
+
+    NtClose(SubKeyHandle);
     NtClose(KeyHandle);
     return TRUE;
 }
@@ -408,8 +470,7 @@ AddKeyboardLayouts(VOID)
     {
         if (_wcsicmp(LanguageList[lngIndex].LanguageID , SelectedLanguageId) == 0)
         {
-            return AddKbLayoutsToRegistry(LanguageList[lngIndex].LanguageKeyboardLayoutID,
-                                          LanguageList[lngIndex].SecondLangKbLayoutID);
+            return AddKbLayoutsToRegistry(LanguageList[lngIndex].MuiLayouts);
         }
 
         lngIndex++;
@@ -529,7 +590,7 @@ AddFontsSettingsToRegistry(IN const MUI_SUBFONT * MuiSubFonts)
                                0,
                                REG_SZ,
                                (PVOID)MuiSubFonts[uIndex].SubFontName,
-                               wcslen(MuiSubFonts[uIndex].SubFontName) * sizeof(PWCHAR));
+                               (wcslen(MuiSubFonts[uIndex].SubFontName)+1) * sizeof(WCHAR));
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("NtSetValueKey() failed (Status = %lx, uIndex = %d)\n", Status, uIndex);

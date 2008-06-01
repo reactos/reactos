@@ -7,6 +7,13 @@
 #ifndef LANG_SK_SK_H__
 #define LANG_SK_SK_H__
 
+MUI_LAYOUTS skSKLayouts[] =
+{
+    { L"041B", L"0000041B" },
+    { L"0409", L"00000409" },
+    { NULL, NULL }
+};
+
 static MUI_ENTRY skSKLanguagePageEntries[] =
 {
     {
@@ -1079,7 +1086,7 @@ static MUI_ENTRY skSKLayoutSettingsEntries[] =
     {
         6,
         8,
-        "Chcete zmeniœ rozlo§enie kl vesnice, ktor‚ m  byœ nainçtalovan‚.",
+        "Please select a layout to be installed by default.",
         TEXT_STYLE_NORMAL
     },
     {

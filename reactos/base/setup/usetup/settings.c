@@ -811,6 +811,8 @@ CreateKeyboardLayoutList(HINF InfFile, WCHAR * DefaultKBLayout)
     PWCHAR KeyName;
     PWCHAR KeyValue;
     PWCHAR UserData;
+    const MUI_LAYOUTS * LayoutsList;
+    ULONG uIndex = 0;
 
     /* Get default layout id */
     if (!SetupFindFirstLineW (InfFile, L"NLS", L"DefaultLayout", &Context))
@@ -825,163 +827,97 @@ CreateKeyboardLayoutList(HINF InfFile, WCHAR * DefaultKBLayout)
     if (List == NULL)
         return NULL;
 
-    if (!SetupFindFirstLineW (InfFile, L"KeyboardLayout", NULL, &Context))
-    {
-        DestroyGenericList(List, FALSE);
-        return NULL;
-    }
+    LayoutsList = MUIGetLayoutsList();
 
     do
     {
-        if (!INF_GetData (&Context, &KeyName, &KeyValue))
+        if (!SetupFindFirstLineW(InfFile, L"KeyboardLayout", NULL, &Context))
         {
-            /* FIXME: Handle error! */
-            DPRINT("INF_GetData() failed\n");
             DestroyGenericList(List, FALSE);
-            break;
+            return NULL;
         }
 
-        UserData = (WCHAR*) RtlAllocateHeap(ProcessHeap,
-                                            0,
-                                            (wcslen(KeyName) + 1) * sizeof(WCHAR));
-
-        if (UserData == NULL)
+        do
         {
-            /* FIXME: Handle error! */
-        }
+            if (!INF_GetData (&Context, &KeyName, &KeyValue))
+            {
+                /* FIXME: Handle error! */
+                DPRINT("INF_GetData() failed\n");
+                DestroyGenericList(List, FALSE);
+                break;
+            }
 
-        wcscpy(UserData, KeyName);
+            if (_wcsicmp(LayoutsList[uIndex].LayoutID, KeyName) == 0)
+            {
+                UserData = (WCHAR*) RtlAllocateHeap(ProcessHeap,
+                                                0,
+                                                (wcslen(KeyName) + 1) * sizeof(WCHAR));
 
-        sprintf(Buffer, "%S", KeyValue);
-        AppendGenericListEntry(List,
-                               Buffer,
-                               UserData,
-                               _wcsicmp(KeyName, DefaultKBLayout) ? FALSE : TRUE);
-    } while (SetupFindNextLine(&Context, &Context));
+                if (UserData == NULL)
+                {
+                    /* FIXME: Handle error! */
+                }
+
+                wcscpy(UserData, KeyName);
+
+                sprintf(Buffer, "%S", KeyValue);
+                AppendGenericListEntry(List,
+                                       Buffer,
+                                       UserData,
+                                       _wcsicmp(KeyName, DefaultKBLayout) ? FALSE : TRUE);
+            }
+            
+        } while (SetupFindNextLine(&Context, &Context));
+
+        uIndex++;
+
+    } while (LayoutsList[uIndex].LangID != NULL);
 
     return List;
 }
-
 
 BOOLEAN
 ProcessKeyboardLayoutRegistry(PGENERIC_LIST List)
 {
     PGENERIC_LIST_ENTRY Entry;
-    PWCHAR LanguageId;
-    WCHAR CurrentLangId[8 + 1];
-    OBJECT_ATTRIBUTES ObjectAttributes;
-    UNICODE_STRING KeyName;
-    UNICODE_STRING ValueName;
-    ULONG ResLength, Length;
-    HANDLE KeyHandle;
-    NTSTATUS Status;
-    PKEY_VALUE_PARTIAL_INFORMATION ValueInfo;
+    PWCHAR LayoutId;
+    const MUI_LAYOUTS * LayoutsList;
+    MUI_LAYOUTS NewLayoutsList[20];
+    ULONG uIndex = 0;
+    ULONG uOldPos = 0;
 
     Entry = GetCurrentListEntry(List);
     if (Entry == NULL)
         return FALSE;
 
-    LanguageId = (PWCHAR)GetListEntryUserData(Entry);
-    if (LanguageId == NULL)
+    LayoutId = (PWCHAR)GetListEntryUserData(Entry);
+    if (LayoutId == NULL)
         return FALSE;
 
-    RtlInitUnicodeString(&KeyName, L"\\Registry\\User\\.DEFAULT\\Keyboard Layout\\Preload");
+    LayoutsList = MUIGetLayoutsList();
 
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &KeyName,
-                               OBJ_CASE_INSENSITIVE,
-                               NULL,
-                               NULL);
-
-    Status =  NtOpenKey(&KeyHandle,
-                        KEY_ALL_ACCESS,
-                        &ObjectAttributes);
-
-    if(!NT_SUCCESS(Status))
+    if (_wcsicmp(LayoutsList[0].LayoutID, LayoutId) != 0)
     {
-        DPRINT1("NtOpenKey() failed (Status %lx)\n", Status);
-        NtClose(KeyHandle);
-        return FALSE;
-    }
-
-    /* Get current keyboard layout */
-    RtlInitUnicodeString(&ValueName,
-                         L"1");
-
-    Length = sizeof(KEY_VALUE_PARTIAL_INFORMATION) + (8 + 1) * sizeof(WCHAR);
-
-    ValueInfo = (KEY_VALUE_PARTIAL_INFORMATION*) RtlAllocateHeap(RtlGetProcessHeap(),
-                                                                 0,
-                                                                 Length);
-
-    if (ValueInfo == NULL)
-    {
-        DPRINT("RtlAllocateHeap() failed\n");
-        NtClose(KeyHandle);
-        return FALSE;
-    }
-
-    Status = NtQueryValueKey(KeyHandle,
-                             &ValueName,
-                             KeyValuePartialInformation,
-                             ValueInfo,
-                             Length,
-                             &ResLength);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("NtQueryValueKey() failed (Status %lx)\n", Status);
-        NtClose(KeyHandle);
-        return FALSE;
-    }
-
-    RtlCopyMemory(CurrentLangId,
-                  ValueInfo->Data,
-                  (8 + 1) * sizeof(WCHAR));
-
-    CurrentLangId[8 + 1] = 0;
-
-    RtlFreeHeap(RtlGetProcessHeap(),
-                0,
-                ValueInfo);
-
-    if (wcscmp(CurrentLangId, LanguageId) != 0)
-    {
-        RtlInitUnicodeString(&ValueName,
-                             L"1");
-
-        Status = NtSetValueKey(KeyHandle,
-                               &ValueName,
-                               0,
-                               REG_SZ,
-                               (PVOID)LanguageId,
-                               (8 + 1) * sizeof(WCHAR));
-
-        if (!NT_SUCCESS(Status))
+        do
         {
-            DPRINT1("NtSetValueKey() failed (Status %lx)\n", Status);
-            NtClose(KeyHandle);
-            return FALSE;
-        }
+            if (_wcsicmp(LayoutsList[uIndex].LayoutID, LayoutId) == 0)
+            {
+                uOldPos = uIndex;
+            }
 
-        RtlInitUnicodeString(&ValueName,
-                             L"2");
+            uIndex++;
 
-        Status = NtSetValueKey(KeyHandle,
-                               &ValueName,
-                               0,
-                               REG_SZ,
-                               (PVOID)CurrentLangId,
-                               (8 + 1) * sizeof(WCHAR));
+        } while (LayoutsList[uIndex].LangID != NULL);
 
-        if (!NT_SUCCESS(Status))
-        {
-            DPRINT1("NtSetValueKey() failed (Status %lx)\n", Status);
-            NtClose(KeyHandle);
-            return FALSE;
-        }
+        NewLayoutsList[uIndex].LangID    = NULL;
+        NewLayoutsList[uIndex].LayoutID  = NULL;
+        NewLayoutsList[uOldPos].LangID   = LayoutsList[0].LangID;
+        NewLayoutsList[uOldPos].LayoutID = LayoutsList[0].LayoutID;
+        NewLayoutsList[0].LangID         = LayoutsList[uOldPos].LangID;
+        NewLayoutsList[0].LayoutID       = LayoutsList[uOldPos].LayoutID;
+
+        return AddKbLayoutsToRegistry(NewLayoutsList);
     }
-
-    NtClose(KeyHandle);
 
     return TRUE;
 }

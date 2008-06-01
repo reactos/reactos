@@ -1,6 +1,12 @@
 #ifndef LANG_EN_US_H__
 #define LANG_EN_US_H__
 
+MUI_LAYOUTS enUSLayouts[] =
+{
+    { L"0409", L"00000409" },
+    { NULL, NULL }
+};
+
 static MUI_ENTRY enUSLanguagePageEntries[] =
 {
     {
@@ -1072,7 +1078,7 @@ static MUI_ENTRY enUSLayoutSettingsEntries[] =
     {
         6,
         8,
-        "You want to change the keyboard layout to be installed.",
+        "Please select a layout to be installed by default.",
         TEXT_STYLE_NORMAL
     },
     {

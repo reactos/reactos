@@ -1,6 +1,13 @@
 #ifndef LANG_IT_IT_H__
 #define LANG_IT_IT_H__
 
+MUI_LAYOUTS itITLayouts[] =
+{
+    { L"0410", L"00000410" },
+    { L"0409", L"00000409" },
+    { NULL, NULL }
+};
+
 static MUI_ENTRY itITLanguagePageEntries[] =
 {
     {
@@ -1072,7 +1079,7 @@ static MUI_ENTRY itITLayoutSettingsEntries[] =
     {
         6,
         8,
-        "Volete cambiare il tipo di layout di tastiera da installare.",
+        "Please select a layout to be installed by default.",
         TEXT_STYLE_NORMAL
     },
     {

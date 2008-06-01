@@ -1,6 +1,13 @@
 #ifndef LANG_SV_SE_H__
 #define LANG_SV_SE_H__
 
+MUI_LAYOUTS svSELayouts[] =
+{
+    { L"041D", L"0000041D" },
+    { L"0409", L"00000409" },
+    { NULL, NULL }
+};
+
 static MUI_ENTRY svSELanguagePageEntries[] =
 {
     {
@@ -1072,7 +1079,7 @@ static MUI_ENTRY svSELayoutSettingsEntries[] =
     {
         6,
         8,
-        "You want to change the keyboard layout to be installed.",
+        "Please select a layout to be installed by default.",
         TEXT_STYLE_NORMAL
     },
     {

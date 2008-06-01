@@ -7,6 +7,13 @@
 #ifndef LANG_CS_CZ_H__
 #define LANG_CS_CZ_H__
 
+MUI_LAYOUTS csCZLayouts[] =
+{
+    { L"0405", L"00000405" },
+    { L"0409", L"00000409" },
+    { NULL, NULL }
+};
+
 static MUI_ENTRY csCZLanguagePageEntries[] =
 {
     {
@@ -1078,7 +1085,7 @@ static MUI_ENTRY csCZLayoutSettingsEntries[] =
     {
         6,
         8,
-        "Chcete zmØnit rozlo§en¡ kl ves, kter‚ bude nainstalov no.",
+        "Please select a layout to be installed by default.",
         TEXT_STYLE_NORMAL
     },
     {

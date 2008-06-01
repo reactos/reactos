@@ -1,6 +1,13 @@
 #ifndef LANG_FR_FR_H__
 #define LANG_FR_FR_H__
 
+MUI_LAYOUTS frFRLayouts[] =
+{
+    { L"040C", L"0000040C" },
+    { L"0409", L"00000409" },
+    { NULL, NULL }
+};
+
 static MUI_ENTRY frFRLanguagePageEntries[] =
 {
     {
@@ -1084,7 +1091,7 @@ static MUI_ENTRY frFRLayoutSettingsEntries[] =
     {
         6,
         8,
-        "Vous voulez changer la disposition du clavier.",
+        "Please select a layout to be installed by default.",
         TEXT_STYLE_NORMAL
     },
     {

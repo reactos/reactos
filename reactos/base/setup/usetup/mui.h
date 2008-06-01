@@ -29,15 +29,19 @@ typedef struct
 
 typedef struct
 {
-    LPCWSTR FontName;
-    LPCWSTR SubFontName;   
+    PWCHAR FontName;
+    PWCHAR SubFontName;   
 } MUI_SUBFONT;
 
 typedef struct
 {
+    PWCHAR LangID; // Language ID (like "0409")
+    PWCHAR LayoutID; // Layout ID (like "00000409")
+} MUI_LAYOUTS;
+
+typedef struct
+{
     PWCHAR LanguageID;
-    PWCHAR LanguageKeyboardLayoutID;
-    PWCHAR SecondLangKbLayoutID;
     PWCHAR ACPage;
     PWCHAR OEMCPage;
     PWCHAR MACCPage;
@@ -46,6 +50,7 @@ typedef struct
     const MUI_ERROR * MuiErrors;
     const MUI_STRING * MuiStrings;
     const MUI_SUBFONT * MuiSubFonts;
+    const MUI_LAYOUTS * MuiLayouts;
 } MUI_LANGUAGE;
 
 VOID
@@ -56,6 +61,12 @@ MUIDisplayError (ULONG ErrorNum, PINPUT_RECORD Ir, ULONG WaitEvent);
 
 LPCWSTR
 MUIDefaultKeyboardLayout(VOID);
+
+const MUI_LAYOUTS *
+MUIGetLayoutsList(VOID);
+
+BOOLEAN
+AddKbLayoutsToRegistry(IN const MUI_LAYOUTS * MuiLayouts);
 
 BOOLEAN
 AddCodePage(VOID);

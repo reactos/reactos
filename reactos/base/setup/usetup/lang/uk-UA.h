@@ -1,6 +1,13 @@
 #ifndef LANG_UK_UA_H__
 #define LANG_UK_UA_H__
 
+MUI_LAYOUTS ukUALayouts[] =
+{
+    { L"0422", L"00000422" },
+    { L"0409", L"00000409" },
+    { NULL, NULL }
+};
+
 static MUI_ENTRY ukUALanguagePageEntries[] =
 {
     {

@@ -8,6 +8,14 @@
 #ifndef LANG_PL_PL_H__
 #define LANG_PL_PL_H__
 
+MUI_LAYOUTS plPLLayouts[] =
+{
+    { L"0415", L"00000415" },
+    { L"0415", L"00010415" },
+    { L"0409", L"00000409" },
+    { NULL, NULL }
+};
+
 static MUI_ENTRY plPLLanguagePageEntries[] =
 {
     {
@@ -1079,7 +1087,7 @@ static MUI_ENTRY plPLLayoutSettingsEntries[] =
     {
         6,
         8,
-        "Chcesz zmieni† ukˆad klawiatury, jaki ma by† zainstalowany.",
+        "Please select a layout to be installed by default.",
         TEXT_STYLE_NORMAL
     },
     {
