@@ -335,3 +335,90 @@ DriverVer = 05/29/2008,0.1
 
 52936 = "52936 (HZ-GB2312 Simplified Chinese)"
 54936 = "54936 (GB18030 Simplified Chinese)"
+
+[LanguageGroups]
+1  = "Western Europe and United States",
+2  = "Central Europe",
+3  = "Baltic",
+4  = "Greek",
+5  = "Cyrillic",
+6  = "Turkic",
+7  = "Japanese",lang
+8  = "Korean",lang
+9  = "Traditional Chinese",lang
+10 = "Simplified Chinese",lang
+11 = "Thai",
+12 = "Hebrew",
+13 = "Arabic",
+14 = "Vietnamese",
+15 = "Indic",
+16 = "Georgian",
+17 = "Armenian",
+
+[LG_INSTALL_1]
+
+[LG_REMOVE_1]
+
+[LG_INSTALL_2]
+
+[LG_REMOVE_2]
+
+[LG_INSTALL_3]
+
+[LG_REMOVE_3]
+
+[LG_INSTALL_4]
+
+[LG_REMOVE_4]
+
+[LG_INSTALL_5]
+
+[LG_REMOVE_5]
+
+[LG_INSTALL_6]
+
+[LG_REMOVE_6]
+
+[LG_INSTALL_7]
+
+[LG_REMOVE_7]
+
+[LG_INSTALL_8]
+
+[LG_REMOVE_8]
+
+[LG_INSTALL_9]
+
+[LG_REMOVE_9]
+
+[LG_INSTALL_10]
+
+[LG_REMOVE_10]
+
+[LG_INSTALL_11]
+
+[LG_REMOVE_11]
+
+[LG_INSTALL_12]
+
+[LG_REMOVE_12]
+
+[LG_INSTALL_13]
+
+[LG_REMOVE_13]
+
+[LG_INSTALL_14]
+
+[LG_REMOVE_14]
+
+[LG_INSTALL_15]
+
+[LG_REMOVE_15]
+
+[LG_INSTALL_16]
+
+[LG_REMOVE_16]
+
+[LG_INSTALL_17]
+
+[LG_REMOVE_17]
