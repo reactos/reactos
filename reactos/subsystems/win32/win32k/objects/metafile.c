@@ -1,34 +1,35 @@
 /*
- *  ReactOS W32 Subsystem
- *  Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003 ReactOS Team
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * PROJECT:         ReactOS Win32k Subsystem
+ * LICENSE:         GPL - See COPYING in the top level directory
+ * FILE:            win32k/objects/metafile.c
+ * PURPOSE:         Metafile Implementation
+ * PROGRAMMERS:     ...
  */
-/* $Id$ */
+
+/* INCLUDES ******************************************************************/
 
 #include <w32k.h>
 
 #define NDEBUG
 #include <debug.h>
 
+/* System Service Calls ******************************************************/
 
-//
-//
-// Rewrite is in progress, this function is subject to change at any time.
-// 04/30/2007
-//
+/*
+ * @unimplemented
+ */
+LONG
+APIENTRY
+NtGdiConvertMetafileRect(IN HDC hDC,
+                         IN OUT PRECTL pRect)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
 HDC
 STDCALL
 NtGdiCreateMetafileDC(IN HDC hdc)
@@ -236,5 +237,37 @@ NtGdiCreateMetafileDC(IN HDC hdc)
 #endif
 }
 
+/*
+ * @unimplemented
+ */
+HANDLE
+APIENTRY
+NtGdiCreateServerMetaFile(IN DWORD iType,
+                          IN ULONG cjData,
+                          IN PBYTE pjData,
+                          IN DWORD mm,
+                          IN DWORD xExt,
+                          IN DWORD yExt)
+{
+    UNIMPLEMENTED;
+    return NULL;
+}
+ 
+/*
+ * @unimplemented
+ */
+ULONG
+APIENTRY
+NtGdiGetServerMetaFileBits(IN HANDLE hmo,
+                           IN ULONG cjData,
+                           OUT OPTIONAL PBYTE pjData,
+                           OUT PDWORD piType,
+                           OUT PDWORD pmm,
+                           OUT PDWORD pxExt,
+                           OUT PDWORD pyExt)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
 
 /* EOF */

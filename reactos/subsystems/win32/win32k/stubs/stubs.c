@@ -1650,24 +1650,6 @@ NtGdiCheckBitmapBits(
  /*
  * @unimplemented
  */
-HANDLE
-APIENTRY
-NtGdiCreateServerMetaFile(
-    IN DWORD iType,
-    IN ULONG cjData,
-    IN LPBYTE pjData,
-    IN DWORD mm,
-    IN DWORD xExt,
-    IN DWORD yExt)
-{
-    UNIMPLEMENTED;
-    return NULL;
-}
-
-
- /*
- * @unimplemented
- */
 HBITMAP
 APIENTRY
 NtGdiClearBitmapAttributes(
@@ -1844,19 +1826,6 @@ NtGdiConsoleTextOut(
 {
     UNIMPLEMENTED;
     return FALSE;
-}
-
- /*
- * @unimplemented
- */
-LONG
-APIENTRY
-NtGdiConvertMetafileRect(
-    IN HDC hdc,
-    IN OUT PRECTL prect)
-{
-    UNIMPLEMENTED;
-    return 0;
 }
 
  /*
@@ -2433,24 +2402,6 @@ NtGdiPolyTextOutW(
 {
     UNIMPLEMENTED;
     return FALSE;
-}
-
- /*
- * @unimplemented
- */
-ULONG
-APIENTRY
-NtGdiGetServerMetaFileBits(
-    IN HANDLE hmo,
-    IN ULONG cjData,
-    OUT OPTIONAL LPBYTE pjData,
-    OUT PDWORD piType,
-    OUT PDWORD pmm,
-    OUT PDWORD pxExt,
-    OUT PDWORD pyExt)
-{
-    UNIMPLEMENTED;
-    return 0;
 }
 
  /*
