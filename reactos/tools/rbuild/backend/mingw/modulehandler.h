@@ -84,7 +84,6 @@ protected:
 	virtual void GetModuleSpecificCompilationUnits ( std::vector<CompilationUnit*>& compilationUnits );
 	std::string GetWorkingDirectory () const;
 	std::string GetBasename ( const std::string& filename ) const;
-	const FileLocation* GetActualSourceFilename ( const FileLocation* file ) const;
 	std::string GetExtraDependencies ( const FileLocation *file ) const;
 	std::string GetCompilationUnitDependencies ( const CompilationUnit& compilationUnit ) const;
 	const FileLocation* GetModuleArchiveFilename () const;
@@ -94,9 +93,6 @@ protected:
 	                  string_list& targets );
 	void GetModuleDependencies ( string_list& dependencies );
 	std::string GetAllDependencies () const;
-	void GetSourceFilenames ( std::vector<FileLocation>& list,
-	                          bool includeGeneratedFiles ) const;
-	void GetSourceFilenamesWithoutGeneratedFiles ( std::vector<FileLocation>& list ) const;
 	const FileLocation* GetObjectFilename ( const FileLocation* sourceFile,
 	                                        const Module& module ) const;
 

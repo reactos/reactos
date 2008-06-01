@@ -281,49 +281,6 @@ MingwModuleHandler::GetBasename ( const string& filename ) const
 	return "";
 }
 
-/* caller needs to delete the returned object */
-const FileLocation*
-MingwModuleHandler::GetActualSourceFilename (
-	const FileLocation* file ) const
-{
-	string filename = file->name;
-
-	string extension = GetExtension ( *file );
-	if ( extension == ".spec" || extension == ".SPEC" )
-	{
-		const FileLocation *objectFile = GetObjectFilename ( file, module );
-		FileLocation *sourceFile = new FileLocation (
-			objectFile->directory,
-			objectFile->relative_path,
-			ReplaceExtension ( objectFile->name, ".c" ) );
-		delete objectFile;
-		return sourceFile;
-	}
-	else if ( ( extension == ".idl" || extension == ".IDL" ) &&
-	          ( module.type == RpcServer || module.type == RpcClient || module.type == RpcProxy ) )
-	{
-		const FileLocation *objectFile = GetObjectFilename ( file, module );
-		FileLocation *sourceFile = new FileLocation (
-			objectFile->directory,
-			objectFile->relative_path,
-			ReplaceExtension ( objectFile->name, ".c" ) );
-		delete objectFile;
-		return sourceFile;
-	}
-	else if ( extension == ".mc" || extension == ".MC" )
-	{
-		const FileLocation *objectFile = GetObjectFilename ( file, module );
-		FileLocation *sourceFile = new FileLocation (
-			objectFile->directory,
-			objectFile->relative_path,
-			ReplaceExtension ( objectFile->name, ".rc" ) );
-		delete objectFile;
-		return sourceFile;
-	}
-	else
-		return new FileLocation ( *file );
-}
-
 string
 MingwModuleHandler::GetExtraDependencies (
 	const FileLocation *file ) const
@@ -486,56 +443,6 @@ MingwModuleHandler::GetModuleDependencies (
 		const FileLocation& file = v[i];
 		dependencies.push_back ( backend->GetFullName ( file ) );
 	}
-}
-
-void
-MingwModuleHandler::GetSourceFilenames ( vector<FileLocation>& list,
-                                         bool includeGeneratedFiles ) const
-{
-	size_t i;
-
-	const vector<CompilationUnit*>& compilationUnits = module.non_if_data.compilationUnits;
-	for ( i = 0; i < compilationUnits.size (); i++ )
-	{
-		if ( includeGeneratedFiles || !compilationUnits[i]->IsGeneratedFile () )
-		{
-			const FileLocation& compilationName = compilationUnits[i]->GetFilename ();
-			const FileLocation* sourceFileLocation = GetActualSourceFilename ( &compilationName );
-			list.push_back ( *sourceFileLocation );
-			delete sourceFileLocation;
-		}
-	}
-	// intentionally make a copy so that we can append more work in
-	// the middle of processing without having to go recursive
-	vector<If*> v = module.non_if_data.ifs;
-	for ( i = 0; i < v.size (); i++ )
-	{
-		size_t j;
-		If& rIf = *v[i];
-		// check for sub-ifs to add to list
-		const vector<If*>& ifs = rIf.data.ifs;
-		for ( j = 0; j < ifs.size (); j++ )
-			v.push_back ( ifs[j] );
-		const vector<CompilationUnit*>& compilationUnits = rIf.data.compilationUnits;
-		for ( j = 0; j < compilationUnits.size (); j++ )
-		{
-			CompilationUnit& compilationUnit = *compilationUnits[j];
-			if ( includeGeneratedFiles || !compilationUnit.IsGeneratedFile () )
-			{
-				const FileLocation& compilationName = compilationUnit.GetFilename ();
-				const FileLocation* sourceFileLocation = GetActualSourceFilename ( &compilationName );
-				list.push_back ( *sourceFileLocation );
-				delete sourceFileLocation;
-			}
-		}
-	}
-}
-
-void
-MingwModuleHandler::GetSourceFilenamesWithoutGeneratedFiles (
-	vector<FileLocation>& list ) const
-{
-	GetSourceFilenames ( list, false );
 }
 
 /* caller needs to delete the returned object */
@@ -1265,7 +1172,7 @@ Rule arHostRule2 ( "\t$(ECHO_AR)\n"
 Rule gasRule ( "$(source): ${$(module_name)_precondition}\n"
                "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).o: $(source)$(dependencies) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
                "\t$(ECHO_GAS)\n"
-               "\t${gcc} -x assembler-with-cpp -c $< -o $@ -D__ASM__ $($(module_name)_CFLAGS)\n",
+               "\t${gcc} -x assembler-with-cpp -o $@ -D__ASM__ $($(module_name)_CFLAGS) -c $<\n",
                "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).o",
                "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)", NULL );
 Rule bootRule ( "$(source): ${$(module_name)_precondition}\n"
@@ -1289,10 +1196,12 @@ Rule windresRule ( "$(source): ${$(module_name)_precondition}\n"
                    "\t-@${rm} $(TEMPORARY)$(SEP)$(module_name).$(source_name_noext).res.tmp 2>$(NUL)\n",
                    "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).coff",
                    "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)", NULL );
-Rule wmcRule ( "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).rc $(INTERMEDIATE)$(SEP)include$(SEP)reactos$(SEP)$(source_name_noext).h: $(WMC_TARGET) $(source)\n"
+Rule wmcRule ( "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).rc $(INTERMEDIATE)$(SEP)include$(SEP)reactos$(SEP)$(source_name_noext).h: $(WMC_TARGET) $(source) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
                "\t$(ECHO_WMC)\n"
                "\t$(Q)$(WMC_TARGET) -i -H $(INTERMEDIATE)$(SEP)include$(SEP)reactos$(SEP)$(source_name_noext).h -o $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).rc $(source)\n",
-               "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).rc", "$(INTERMEDIATE)$(SEP)include$(SEP)reactos$(SEP)$(source_name_noext).h", NULL );
+               "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).rc",
+               "$(INTERMEDIATE)$(SEP)include$(SEP)reactos$(SEP)$(source_name_noext).h",
+               "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)", NULL );
 Rule winebuildRule ( "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).spec.def: $(source)$(dependencies) $(WINEBUILD_TARGET) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
                      "\t$(ECHO_WINEBLD)\n"
                      "\t$(Q)$(WINEBUILD_TARGET) $(WINEBUILD_FLAGS) -o $(INTERMEDIATE)$(SEP)$(source_path)$(SEP)$(source_name_noext).spec.def --def -E $(source)\n"
@@ -1301,7 +1210,7 @@ Rule winebuildRule ( "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noex
                      "\t$(Q)$(WINEBUILD_TARGET) $(WINEBUILD_FLAGS) -o $(INTERMEDIATE)$(SEP)$(source_path)$(SEP)$(source_name_noext).stubs.c --pedll $(source_path)$(SEP)$(source_name_noext).spec\n"
                      "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).stubs.o: $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).stubs.c$(dependencies) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
                      "\t$(ECHO_CC)\n"
-                     "\t${gcc} -c $< -o $@ $($(module_name)_CFLAGS)$(compiler_flags)\n",
+                     "\t${gcc} -o $@ $($(module_name)_CFLAGS)$(compiler_flags) -c $<\n",
                      "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).spec.def",
                      "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).stubs.c",
                      "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).stubs.o",
@@ -1318,7 +1227,7 @@ Rule widlServerRule ( "$(source): ${$(module_name)_precondition}\n"
                       "\t$(Q)$(WIDL_TARGET) $($(module_name)_WIDLFLAGS) -h -H $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_s.h -s -S $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_s.c $(source)\n"
                       "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_s.o: $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_s.c $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_s.h$(dependencies) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
                       "\t$(ECHO_CC)\n"
-                      "\t${gcc} -c $< -o $@ $($(module_name)_CFLAGS)$(compiler_flags)\n",
+                      "\t${gcc} -o $@ $($(module_name)_CFLAGS)$(compiler_flags) -c $<\n",
                       "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_s.h",
                       "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_s.c",
                       "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_s.o",
@@ -1329,7 +1238,7 @@ Rule widlClientRule ( "$(source): ${$(module_name)_precondition}\n"
                       "\t$(Q)$(WIDL_TARGET) $($(module_name)_WIDLFLAGS) -h -H $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_c.h -c -C $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_c.c $(source)\n"
                       "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_c.o: $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_c.c $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_c.h$(dependencies) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
                       "\t$(ECHO_CC)\n"
-                      "\t${gcc} -c $< -o $@ $($(module_name)_CFLAGS)$(compiler_flags)\n",
+                      "\t${gcc} -o $@ $($(module_name)_CFLAGS)$(compiler_flags) -c $<\n",
                       "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_c.h",
                       "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_c.c",
                       "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_c.o",
@@ -1340,7 +1249,7 @@ Rule widlProxyRule ( "$(source): ${$(module_name)_precondition}\n"
                      "\t$(Q)$(WIDL_TARGET) $($(module_name)_WIDLFLAGS) -h -H $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_p.h -p -P $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_p.c $(source)\n"
                      "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_p.o: $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_p.c $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_p.h$(dependencies) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
                       "\t$(ECHO_CC)\n"
-                      "\t${gcc} -c $< -o $@ $($(module_name)_CFLAGS)$(compiler_flags)\n",
+                      "\t${gcc} -o $@ $($(module_name)_CFLAGS)$(compiler_flags) -c $<\n",
                      "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_p.h",
                      "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_p.c",
                      "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_p.o",
@@ -1353,22 +1262,22 @@ Rule widlTlbRule ( "$(source): ${$(module_name)_precondition}\n"
 Rule gccRule ( "$(source): ${$(module_name)_precondition}\n"
                "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).o: $(source)$(dependencies) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
                "\t$(ECHO_CC)\n"
-               "\t${gcc} -c $< -o $@ $($(module_name)_CFLAGS)$(compiler_flags)\n",
+               "\t${gcc} -o $@ $($(module_name)_CFLAGS)$(compiler_flags) -c $<\n",
                "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).o", NULL );
 Rule gccHostRule ( "$(source): ${$(module_name)_precondition}\n"
                    "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).o: $(source)$(dependencies) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
                    "\t$(ECHO_CC)\n"
-                   "\t${host_gcc} -c $< -o $@ $($(module_name)_CFLAGS)$(compiler_flags)\n",
+                   "\t${host_gcc} -o $@ $($(module_name)_CFLAGS)$(compiler_flags) -c $<\n",
                    "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).o", NULL );
 Rule gppRule ( "$(source): ${$(module_name)_precondition}\n"
                "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).o: $(source)$(dependencies) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
                "\t$(ECHO_CC)\n"
-               "\t${gpp} -c $< -o $@ $($(module_name)_CFLAGS)$(compiler_flags)\n",
+               "\t${gpp} -o $@ $($(module_name)_CFLAGS)$(compiler_flags) -c $<\n",
                "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).o", NULL );
 Rule gppHostRule ( "$(source): ${$(module_name)_precondition}\n"
                    "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).o: $(source)$(dependencies) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
                    "\t$(ECHO_CC)\n"
-                   "\t${host_gpp} -c $< -o $@ $($(module_name)_CFLAGS)$(compiler_flags)\n",
+                   "\t${host_gpp} -o $@ $($(module_name)_CFLAGS)$(compiler_flags) -c $<\n",
                    "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).o", NULL );
 Rule emptyRule ( "", NULL );
 
@@ -1378,7 +1287,6 @@ MingwModuleHandler::GenerateGccCommand (
 	const Rule *rule,
 	const string& extraDependencies )
 {
-	const FileLocation *generatedSourceFileName = GetActualSourceFilename ( sourceFile );
 	const FileLocation *pchFilename = GetPrecompiledHeaderFilename ();
 	string dependencies = extraDependencies;
 
@@ -1401,9 +1309,7 @@ MingwModuleHandler::GenerateGccCommand (
 	if ( rpcDependencies.size () > 0 )
 		dependencies += " " + v2s ( backend, rpcDependencies, 5 );
 
-	rule->Execute ( fMakefile, backend, module, generatedSourceFileName, clean_files, dependencies, flags );
-
-	delete generatedSourceFileName;
+	rule->Execute ( fMakefile, backend, module, sourceFile, clean_files, dependencies, flags );
 }
 
 string
@@ -2348,8 +2254,6 @@ void
 MingwModuleHandler::GeneratePreconditionDependencies ()
 {
 	string preconditionDependenciesName = GetPreconditionDependenciesName ();
-	vector<FileLocation> sourceFilenames;
-	GetSourceFilenamesWithoutGeneratedFiles ( sourceFilenames );
 	string_list dependencies;
 	GetDefaultDependencies ( dependencies );
 	GetModuleDependencies ( dependencies );
