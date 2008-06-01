@@ -15,18 +15,26 @@ PDEVCAPS GdiDevCaps = NULL;
 PGDIHANDLECACHE GdiHandleCache = NULL;
 
 /*
- * GDI32.DLL doesn't have an entry point. The initialization is done by a call
+ * GDI32.DLL does have an entry point for disable threadlibrarycall,. The initialization is done by a call
  * to GdiDllInitialize(). This call is done from the entry point of USER32.DLL.
  */
 BOOL
 WINAPI
 DllMain (
-	HANDLE	hDll,
-	DWORD	dwReason,
-	LPVOID	lpReserved
-	)
+    HANDLE  hDll,
+    DWORD   dwReason,
+    LPVOID  lpReserved)
 {
-	return TRUE;
+    switch (dwReason)
+    {
+        case DLL_PROCESS_ATTACH :
+                DisableThreadLibraryCalls(hDll);
+                break;
+
+        default:
+                break;
+    }
+    return TRUE;
 }
 
 
@@ -34,15 +42,15 @@ VOID
 WINAPI
 GdiProcessSetup (VOID)
 {
-	hProcessHeap = GetProcessHeap();
+    hProcessHeap = GetProcessHeap();
 
-        /* map the gdi handle table to user space */
-	GdiHandleTable = NtCurrentTeb()->ProcessEnvironmentBlock->GdiSharedHandleTable;
-	GdiSharedHandleTable = NtCurrentTeb()->ProcessEnvironmentBlock->GdiSharedHandleTable;
-	GdiDevCaps = &GdiSharedHandleTable->DevCaps;
-	CurrentProcessId = NtCurrentTeb()->Cid.UniqueProcess;
-	GDI_BatchLimit = (DWORD) NtCurrentTeb()->ProcessEnvironmentBlock->GdiDCAttributeList;
-	GdiHandleCache = (PGDIHANDLECACHE)NtCurrentTeb()->ProcessEnvironmentBlock->GdiHandleBuffer;
+    /* map the gdi handle table to user space */
+    GdiHandleTable = NtCurrentTeb()->ProcessEnvironmentBlock->GdiSharedHandleTable;
+    GdiSharedHandleTable = NtCurrentTeb()->ProcessEnvironmentBlock->GdiSharedHandleTable;
+    GdiDevCaps = &GdiSharedHandleTable->DevCaps;
+    CurrentProcessId = NtCurrentTeb()->Cid.UniqueProcess;
+    GDI_BatchLimit = (DWORD) NtCurrentTeb()->ProcessEnvironmentBlock->GdiDCAttributeList;
+    GdiHandleCache = (PGDIHANDLECACHE)NtCurrentTeb()->ProcessEnvironmentBlock->GdiHandleBuffer;
 }
 
 
@@ -52,34 +60,33 @@ GdiProcessSetup (VOID)
 BOOL
 WINAPI
 GdiDllInitialize (
-	HANDLE	hDll,
-	DWORD	dwReason,
-	LPVOID	lpReserved
-	)
+    HANDLE hDll,
+    DWORD dwReason,
+    LPVOID lpReserved)
 {
-	switch (dwReason)
-	{
-		case DLL_PROCESS_ATTACH:
-			GdiProcessSetup ();
-			break;
+    switch (dwReason)
+    {
+        case DLL_PROCESS_ATTACH:
+            GdiProcessSetup ();
+            break;
 
-		case DLL_THREAD_ATTACH:
-                        NtCurrentTeb()->GdiTebBatch.Offset = 0;
-                        NtCurrentTeb()->GdiBatchCount = 0;
-			break;
+        case DLL_THREAD_ATTACH:
+            NtCurrentTeb()->GdiTebBatch.Offset = 0;
+            NtCurrentTeb()->GdiBatchCount = 0;
+            break;
 
-		default:
-			return FALSE;
-	}
+        default:
+            return FALSE;
+    }
 
-  // Very simple, the list will fill itself as it is needed.
-        if(!SetStockObjects)
-        {
-          RtlZeroMemory( &stock_objects, NB_STOCK_OBJECTS); //Assume Ros is dirty.
-          SetStockObjects = TRUE;
-        }
+    // Very simple, the list will fill itself as it is needed.
+    if(!SetStockObjects)
+    {
+        RtlZeroMemory( &stock_objects, NB_STOCK_OBJECTS); //Assume Ros is dirty.
+        SetStockObjects = TRUE;
+    }
 
-	return TRUE;
+    return TRUE;
 }
 
 /* EOF */
