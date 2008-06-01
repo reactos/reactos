@@ -6,6 +6,7 @@ BEGIN
     BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Параметры...",    ID_PREFERENCES
+        MENUITEM SEPARATOR
         MENUITEM "&Выход",           ID_EXIT
     END
 END

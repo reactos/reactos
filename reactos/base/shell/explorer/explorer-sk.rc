@@ -1,9 +1,9 @@
 /*
-* FILE:        base/shell/explorer/explorer-sk.rc
-* PURPOSE:     Slovak Language File for explorer
-* TRANSLATOR:  Kario (kario@szm.sk)
-* DATE OF TR:  08-08-2007
-* LAST CHANG:  22-01-2008
+* FILE       :  base/shell/explorer/explorer-sk.rc
+* PURPOSE    :  Slovak Language File for explorer
+* TRANSLATOR :  Kario (kario@szm.sk)
+* DATE OF TR.:  08-08-2007
+* LAST CHANGE:  30-05-2008
 * _______________________________________________
 * NOTE:        this file need to be fixed
 */
@@ -185,23 +185,23 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT           "Vyberte si uprednostÚovan˝ spÙsob zarovnania ikÙn:",
                     IDC_STATIC,7,7,166,8
-    CONTROL         "zæava zhora\ndole",IDC_ICON_ALIGN_0,"Button",BS_OWNERDRAW |
+    CONTROL         "zæava zhora dole",IDC_ICON_ALIGN_0,"Button",BS_OWNERDRAW |
                     BS_BOTTOM | WS_TABSTOP,7,25,46,44
-    CONTROL         "zæava zhora\nvpravo",IDC_ICON_ALIGN_1,"Button",BS_OWNERDRAW |
+    CONTROL         "zæava zhora vpravo",IDC_ICON_ALIGN_1,"Button",BS_OWNERDRAW |
                     BS_BOTTOM | WS_TABSTOP,57,25,46,44
-    CONTROL         "zprava zhora\nvæavo",IDC_ICON_ALIGN_2,"Button",BS_OWNERDRAW |
+    CONTROL         "zprava zhora væavo",IDC_ICON_ALIGN_2,"Button",BS_OWNERDRAW |
                     BS_BOTTOM | WS_TABSTOP,110,25,46,44
-    CONTROL         "zprava zhora\ndole",IDC_ICON_ALIGN_3,"Button",BS_OWNERDRAW |
+    CONTROL         "zprava zhora dole",IDC_ICON_ALIGN_3,"Button",BS_OWNERDRAW |
                     BS_BOTTOM | WS_TABSTOP,159,25,46,44
-    CONTROL         "zæava zdola\nhore",IDC_ICON_ALIGN_4,"Button",BS_OWNERDRAW |
+    CONTROL         "zæava zdola hore",IDC_ICON_ALIGN_4,"Button",BS_OWNERDRAW |
                     BS_BOTTOM | WS_TABSTOP,7,73,46,44
-    CONTROL         "zæava zdola\nvpravo",IDC_ICON_ALIGN_5,"Button",BS_OWNERDRAW |
+    CONTROL         "zæava zdola vpravo",IDC_ICON_ALIGN_5,"Button",BS_OWNERDRAW |
                     BS_BOTTOM | WS_TABSTOP,57,73,46,44
-    CONTROL         "zprava zdola\nvæavo",IDC_ICON_ALIGN_6,"Button",BS_OWNERDRAW |
+    CONTROL         "zprava zdola væavo",IDC_ICON_ALIGN_6,"Button",BS_OWNERDRAW |
                     BS_BOTTOM | WS_TABSTOP,110,73,46,44
-    CONTROL         "zprava zdola\nhore",IDC_ICON_ALIGN_7,"Button",BS_OWNERDRAW |
+    CONTROL         "zprava zdola hore",IDC_ICON_ALIGN_7,"Button",BS_OWNERDRAW |
                     BS_BOTTOM | WS_TABSTOP,159,73,46,44
-    CONTROL         "po okrajoch\ndole",IDC_ICON_ALIGN_8,"Button",BS_OWNERDRAW |
+    CONTROL         "po okrajoch dole",IDC_ICON_ALIGN_8,"Button",BS_OWNERDRAW |
                     BS_BOTTOM | WS_TABSTOP,7,121,46,44
     CONTROL         "po okrajoch H/V",IDC_ICON_ALIGN_9,"Button",BS_OWNERDRAW |
                     BS_BOTTOM | WS_TABSTOP,57,121,46,44
@@ -358,7 +358,7 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
     IDS_STARTMENU           "Ponuka ätart"
-    IDS_MINIMIZE_ALL        "minimalizovaù vöetke okn·"
+    IDS_MINIMIZE_ALL        "Minimalizovaù vöetke okn·"
     IDS_DESKTOP_NUM         "Pracovn· plocha %d"
     IDS_VOLUME              "Hlasitosù"
     IDS_ITEMS_CUR           "s˙ËasnÈ poloûky"
@@ -408,6 +408,7 @@ END
 
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
+
 
 
 

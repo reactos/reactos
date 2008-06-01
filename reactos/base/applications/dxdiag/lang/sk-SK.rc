@@ -1,6 +1,6 @@
 /* TRANSLATOR :  M·rio KaËm·r /Mario Kacmar/ aka Kario (kario@szm.sk)
  * DATE OF TR.:  24-04-2008
- * LAST CHANGE:  25-05-2008
+ * LAST CHANGE:  30-05-2008
  */
 
 LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
@@ -36,7 +36,7 @@ BEGIN
     LTEXT "Procesor:", -1, 70, 140, 80, 10, SS_RIGHT
     LTEXT "Pam‰ù:", -1, 70, 150, 80, 10, SS_RIGHT
     LTEXT "Str·nkovacÌ s˙bor:", -1, 70, 160, 80, 10, SS_RIGHT
-    LTEXT "ReactX - versia:", -1, 70, 170, 80, 10, SS_RIGHT
+    LTEXT "ReactX - verzia:", -1, 70, 170, 80, 10, SS_RIGHT
     LTEXT "", IDC_STATIC_TIME, 155, 70, 195, 10, SS_LEFT
     LTEXT "", IDC_STATIC_COMPUTER, 155, 80, 195, 10, SS_LEFT
     LTEXT "", IDC_STATIC_OS, 155, 90, 195, 10, SS_LEFT

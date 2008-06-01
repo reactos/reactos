@@ -6,6 +6,7 @@ BEGIN
     BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Preferences...",  ID_PREFERENCES
+        MENUITEM SEPARATOR
         MENUITEM "&Exit",            ID_EXIT
     END
 END

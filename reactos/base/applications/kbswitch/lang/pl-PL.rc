@@ -13,6 +13,7 @@ BEGIN
     BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Ustawienia...",  ID_PREFERENCES
+        MENUITEM SEPARATOR
         MENUITEM "&Wyjœcie",        ID_EXIT
     END
 END
