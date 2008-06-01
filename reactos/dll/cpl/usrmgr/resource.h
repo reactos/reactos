@@ -67,10 +67,21 @@
 #define IDC_USER_NEW_NEVER_EXPIRES  368
 #define IDC_USER_NEW_DISABLED       369
 
+#define IDD_USER_MEMBERSHIP         370
+#define IDC_USER_MEMBERSHIP_LIST    371
 
-#define IDD_GROUP_NEW               370
-#define IDC_GROUP_NEW_NAME          371
-#define IDC_GROUP_NEW_DESCRIPTION   372
+#define IDD_USER_PROFILE             380
+#define IDC_USER_PROFILE_PATH        381
+#define IDC_USER_PROFILE_SCRIPT      382
+#define IDC_USER_PROFILE_LOCAL       383
+#define IDC_USER_PROFILE_REMOTE      384
+#define IDC_USER_PROFILE_LOCAL_PATH  385
+#define IDC_USER_PROFILE_DRIVE       386
+#define IDC_USER_PROFILE_REMOTE_PATH 387
+
+#define IDD_GROUP_NEW                390
+#define IDC_GROUP_NEW_NAME           391
+#define IDC_GROUP_NEW_DESCRIPTION    392
 
 
 /* Strings */
