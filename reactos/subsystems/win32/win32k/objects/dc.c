@@ -1336,10 +1336,10 @@ IntGdiCopyToSaveState(PDC dc, PDC newdc)
   nDc_Attr->ptlCurrent      = Dc_Attr->ptlCurrent;
   nDc_Attr->ptfxCurrent     = Dc_Attr->ptfxCurrent;
   newdc->DcLevel.flPath     = dc->DcLevel.flPath;
-  newdc->w.xformWorld2Wnd   = dc->w.xformWorld2Wnd;
-  newdc->w.xformWorld2Vport = dc->w.xformWorld2Vport;
-  newdc->w.xformVport2World = dc->w.xformVport2World;
-  newdc->w.vport2WorldValid = dc->w.vport2WorldValid;
+  newdc->DcLevel.xformWorld2Wnd   = dc->DcLevel.xformWorld2Wnd;
+  newdc->DcLevel.xformWorld2Vport = dc->DcLevel.xformWorld2Vport;
+  newdc->DcLevel.xformVport2World = dc->DcLevel.xformVport2World;
+  nDc_Attr->flXform         = Dc_Attr->flXform;
   nDc_Attr->ptlWindowOrg    = Dc_Attr->ptlWindowOrg;
   nDc_Attr->szlWindowExt    = Dc_Attr->szlWindowExt;
   nDc_Attr->ptlViewportOrg  = Dc_Attr->ptlViewportOrg;
@@ -1403,10 +1403,10 @@ IntGdiCopyFromSaveState(PDC dc, PDC dcs, HDC hDC)
   Dc_Attr->ptlCurrent      = sDc_Attr->ptlCurrent;
   Dc_Attr->ptfxCurrent     = sDc_Attr->ptfxCurrent;
   dc->DcLevel.flPath       = dcs->DcLevel.flPath;
-  dc->w.xformWorld2Wnd     = dcs->w.xformWorld2Wnd;
-  dc->w.xformWorld2Vport   = dcs->w.xformWorld2Vport;
-  dc->w.xformVport2World   = dcs->w.xformVport2World;
-  dc->w.vport2WorldValid   = dcs->w.vport2WorldValid;
+  dc->DcLevel.xformWorld2Wnd     = dcs->DcLevel.xformWorld2Wnd;
+  dc->DcLevel.xformWorld2Vport   = dcs->DcLevel.xformWorld2Vport;
+  dc->DcLevel.xformVport2World   = dcs->DcLevel.xformVport2World;
+  Dc_Attr->flXform         = sDc_Attr->flXform;
   Dc_Attr->ptlWindowOrg    = sDc_Attr->ptlWindowOrg;
   Dc_Attr->szlWindowExt    = sDc_Attr->szlWindowExt;
   Dc_Attr->ptlViewportOrg  = sDc_Attr->ptlViewportOrg;
@@ -2405,16 +2405,14 @@ DC_AllocDC(PUNICODE_STRING Driver)
   if(!Dc_Attr) Dc_Attr = &NewDC->Dc_Attr;
 
   NewDC->BaseObject.hHmgr = (HGDIOBJ) hDC; // Save the handle for this DC object.
-  NewDC->w.xformWorld2Wnd.eM11 = 1.0f;
-  NewDC->w.xformWorld2Wnd.eM12 = 0.0f;
-  NewDC->w.xformWorld2Wnd.eM21 = 0.0f;
-  NewDC->w.xformWorld2Wnd.eM22 = 1.0f;
-  NewDC->w.xformWorld2Wnd.eDx = 0.0f;
-  NewDC->w.xformWorld2Wnd.eDy = 0.0f;
-  NewDC->w.xformWorld2Vport = NewDC->w.xformWorld2Wnd;
-  NewDC->w.xformVport2World = NewDC->w.xformWorld2Wnd;
-  NewDC->w.vport2WorldValid = TRUE;
-
+  NewDC->DcLevel.xformWorld2Wnd.eM11 = 1.0f;
+  NewDC->DcLevel.xformWorld2Wnd.eM12 = 0.0f;
+  NewDC->DcLevel.xformWorld2Wnd.eM21 = 0.0f;
+  NewDC->DcLevel.xformWorld2Wnd.eM22 = 1.0f;
+  NewDC->DcLevel.xformWorld2Wnd.eDx = 0.0f;
+  NewDC->DcLevel.xformWorld2Wnd.eDy = 0.0f;
+  NewDC->DcLevel.xformWorld2Vport = NewDC->DcLevel.xformWorld2Wnd;
+  NewDC->DcLevel.xformVport2World = NewDC->DcLevel.xformWorld2Wnd;
 // Setup syncing bits for the dcattr data packets.
   Dc_Attr->flXform = DEVICE_TO_PAGE_INVALID;
 
@@ -2603,10 +2601,13 @@ DC_UpdateXforms(PDC  dc)
   xformWnd2Vport.eDy  = (FLOAT)Dc_Attr->ptlViewportOrg.y - scaleY * (FLOAT)Dc_Attr->ptlWindowOrg.y;
 
   /* Combine with the world transformation */
-  IntGdiCombineTransform(&dc->w.xformWorld2Vport, &dc->w.xformWorld2Wnd, &xformWnd2Vport);
+  IntGdiCombineTransform(&dc->DcLevel.xformWorld2Vport, &dc->DcLevel.xformWorld2Wnd, &xformWnd2Vport);
 
   /* Create inverse of world-to-viewport transformation */
-  dc->w.vport2WorldValid = DC_InvertXform(&dc->w.xformWorld2Vport, &dc->w.xformVport2World);
+  if (DC_InvertXform(&dc->DcLevel.xformWorld2Vport, &dc->DcLevel.xformVport2World))
+     Dc_Attr->flXform &= ~DEVICE_TO_WORLD_INVALID;
+  else
+     Dc_Attr->flXform |= DEVICE_TO_WORLD_INVALID;
 }
 
 BOOL FASTCALL

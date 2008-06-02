@@ -150,10 +150,10 @@ CoordDPtoLP(PDC Dc, LPPOINT Point)
 FLOAT x, y;
   x = (FLOAT)Point->x;
   y = (FLOAT)Point->y;
-  Point->x = x * Dc->w.xformVport2World.eM11 +
-    y * Dc->w.xformVport2World.eM21 + Dc->w.xformVport2World.eDx;
-  Point->y = x * Dc->w.xformVport2World.eM12 +
-    y * Dc->w.xformVport2World.eM22 + Dc->w.xformVport2World.eDy;
+  Point->x = x * Dc->DcLevel.xformVport2World.eM11 +
+    y * Dc->DcLevel.xformVport2World.eM21 + Dc->DcLevel.xformVport2World.eDx;
+  Point->y = x * Dc->DcLevel.xformVport2World.eM12 +
+    y * Dc->DcLevel.xformVport2World.eM22 + Dc->DcLevel.xformVport2World.eDy;
 }
 
 VOID
@@ -190,24 +190,24 @@ IntGdiModifyWorldTransform(PDC pDc,
    switch(Mode)
    {
      case MWT_IDENTITY:
-       pDc->w.xformWorld2Wnd.eM11 = 1.0f;
-       pDc->w.xformWorld2Wnd.eM12 = 0.0f;
-       pDc->w.xformWorld2Wnd.eM21 = 0.0f;
-       pDc->w.xformWorld2Wnd.eM22 = 1.0f;
-       pDc->w.xformWorld2Wnd.eDx  = 0.0f;
-       pDc->w.xformWorld2Wnd.eDy  = 0.0f;
+       pDc->DcLevel.xformWorld2Wnd.eM11 = 1.0f;
+       pDc->DcLevel.xformWorld2Wnd.eM12 = 0.0f;
+       pDc->DcLevel.xformWorld2Wnd.eM21 = 0.0f;
+       pDc->DcLevel.xformWorld2Wnd.eM22 = 1.0f;
+       pDc->DcLevel.xformWorld2Wnd.eDx  = 0.0f;
+       pDc->DcLevel.xformWorld2Wnd.eDy  = 0.0f;
        break;
 
      case MWT_LEFTMULTIPLY:
-       IntGdiCombineTransform(&pDc->w.xformWorld2Wnd, lpXForm, &pDc->w.xformWorld2Wnd );
+       IntGdiCombineTransform(&pDc->DcLevel.xformWorld2Wnd, lpXForm, &pDc->DcLevel.xformWorld2Wnd );
        break;
 
      case MWT_RIGHTMULTIPLY:
-       IntGdiCombineTransform(&pDc->w.xformWorld2Wnd, &pDc->w.xformWorld2Wnd, lpXForm);
+       IntGdiCombineTransform(&pDc->DcLevel.xformWorld2Wnd, &pDc->DcLevel.xformWorld2Wnd, lpXForm);
        break;
 
      case MWT_MAX+1: // Must be MWT_SET????
-       pDc->w.xformWorld2Wnd = *lpXForm; // Do it like Wine.
+       pDc->DcLevel.xformWorld2Wnd = *lpXForm; // Do it like Wine.
        break;
 
      default:
@@ -248,7 +248,7 @@ NtGdiGetTransform(HDC  hDC,
    switch(iXform)
    {
      case GdiWorldSpaceToPageSpace:
-        *XForm = dc->w.xformWorld2Wnd;
+        *XForm = dc->DcLevel.xformWorld2Wnd;
      break;
      default:
      break;
@@ -275,10 +275,10 @@ CoordLPtoDP ( PDC Dc, LPPOINT Point )
 
   x = (FLOAT)Point->x;
   y = (FLOAT)Point->y;
-  Point->x = x * Dc->w.xformWorld2Vport.eM11 +
-    y * Dc->w.xformWorld2Vport.eM21 + Dc->w.xformWorld2Vport.eDx;
-  Point->y = x * Dc->w.xformWorld2Vport.eM12 +
-    y * Dc->w.xformWorld2Vport.eM22 + Dc->w.xformWorld2Vport.eDy;
+  Point->x = x * Dc->DcLevel.xformWorld2Vport.eM11 +
+    y * Dc->DcLevel.xformWorld2Vport.eM21 + Dc->DcLevel.xformWorld2Vport.eDx;
+  Point->y = x * Dc->DcLevel.xformWorld2Vport.eM12 +
+    y * Dc->DcLevel.xformWorld2Vport.eM22 + Dc->DcLevel.xformWorld2Vport.eDy;
 }
 
 VOID

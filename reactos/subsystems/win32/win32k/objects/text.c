@@ -2613,7 +2613,7 @@ NtGdiGetGlyphOutline(
    }
   Dc_Attr = dc->pDc_Attr;
   if(!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
-  eM11 = dc->w.xformWorld2Vport.eM11;
+  eM11 = dc->DcLevel.xformWorld2Vport.eM11;
   hFont = Dc_Attr->hlfntNew;
   TextObj = TEXTOBJ_LockText(hFont);
   DC_UnlockDc(dc);

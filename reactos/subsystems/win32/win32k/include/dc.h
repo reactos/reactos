@@ -65,11 +65,6 @@ typedef struct _WIN_DC_INFO
 /* #endif */
 
   BYTE   bitsPerPixel;
-
-  XFORM  xformWorld2Wnd;    /* World-to-window transformation */
-  XFORM  xformWorld2Vport;  /* World-to-viewport transformation */
-  XFORM  xformVport2World;  /* Inverse of the above transformation */
-  BOOL   vport2WorldValid;  /* Is xformVport2World valid? */
 } WIN_DC_INFO;
 
 // EXtended CLip and Window Region Object
@@ -107,9 +102,18 @@ typedef struct _DCLEVEL
   DWORD             unk4_00000000[11];
   FLONG             fl;
   FLONG             flBrush;
+  union{
   MATRIX_S          mxWorldToDevice;
+  XFORM             xformWorld2Vport; /* World-to-viewport transformation */
+  };
+  union{
   MATRIX_S          mxDeviceToWorld;
+  XFORM             xformVport2World; /* Inverse of the above transformation */
+  };
+  union{  
   MATRIX_S          mxWorldToPage;
+  XFORM             xformWorld2Wnd;   /* World-to-window transformation */
+  };
   EFLOAT_S          efM11PtoD;
   EFLOAT_S          efM22PtoD;
   EFLOAT_S          efDxPtoD;

@@ -33,12 +33,12 @@ static __inline void INTERNAL_LPTODP_FLOAT(DC *dc, FLOAT_POINT *point)
     /* Perform the transformation */
     x = point->x;
     y = point->y;
-    point->x = x * dc->w.xformWorld2Vport.eM11 +
-               y * dc->w.xformWorld2Vport.eM21 +
-	       dc->w.xformWorld2Vport.eDx;
-    point->y = x * dc->w.xformWorld2Vport.eM12 +
-               y * dc->w.xformWorld2Vport.eM22 +
-	       dc->w.xformWorld2Vport.eDy;
+    point->x = x * dc->DcLevel.xformWorld2Vport.eM11 +
+               y * dc->DcLevel.xformWorld2Vport.eM21 +
+	       dc->DcLevel.xformWorld2Vport.eDx;
+    point->y = x * dc->DcLevel.xformWorld2Vport.eM12 +
+               y * dc->DcLevel.xformWorld2Vport.eM22 +
+	       dc->DcLevel.xformWorld2Vport.eDy;
 }
 
 /* Performs a viewport-to-world transformation on the specified point (which
