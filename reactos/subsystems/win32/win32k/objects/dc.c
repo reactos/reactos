@@ -1134,15 +1134,6 @@ NtGdiGetDCObject(HDC  hDC, INT  ObjectType)
   return SelObject;
 }
 
-BOOL FASTCALL
-IntGdiGetDCOrgEx(DC *dc, LPPOINT  Point)
-{
-  Point->x = dc->w.DCOrgX;
-  Point->y = dc->w.DCOrgY;
-
-  return  TRUE;
-}
-
 LONG FASTCALL
 IntCalcFillOrigin(PDC pdc)
 {
@@ -1261,7 +1252,7 @@ NtGdiGetDCPoint( HDC hDC, UINT iPoint, PPOINTL Point)
       IntGetWindowOrgEx(dc, &SafePoint);
       break;
     case GdiGetDCOrg:
-      Ret = IntGdiGetDCOrgEx(dc, &SafePoint);
+      Ret = IntGdiGetDCOrg(dc, &SafePoint);
       break;
     case GdiGetAspectRatioFilter:
       Ret = IntGetAspectRatioFilter(dc, &Size);
@@ -1319,7 +1310,6 @@ IntGdiCopyToSaveState(PDC dc, PDC newdc)
   nDc_Attr->hlfntNew        = Dc_Attr->hlfntNew;
   newdc->w.hBitmap          = dc->w.hBitmap;
   newdc->DcLevel.hpal       = dc->DcLevel.hpal;
-  newdc->w.totalExtent      = dc->w.totalExtent;
   newdc->w.bitsPerPixel     = dc->w.bitsPerPixel;
   nDc_Attr->jROP2           = Dc_Attr->jROP2;
   nDc_Attr->jFillMode       = Dc_Attr->jFillMode;
@@ -1340,8 +1330,8 @@ IntGdiCopyToSaveState(PDC dc, PDC newdc)
   nDc_Attr->iGraphicsMode   = Dc_Attr->iGraphicsMode;
 #if 0
   /* Apparently, the DC origin is not changed by [GS]etDCState */
-  newdc->w.DCOrgX           = dc->w.DCOrgX;
-  newdc->w.DCOrgY           = dc->w.DCOrgY;
+  newdc->ptlDCOrig.x           = dc->ptlDCOrig.x;
+  newdc->ptlDCOrig.y           = dc->ptlDCOrig.y;
 #endif
   nDc_Attr->ptlCurrent      = Dc_Attr->ptlCurrent;
   nDc_Attr->ptfxCurrent     = Dc_Attr->ptfxCurrent;
@@ -1387,7 +1377,6 @@ IntGdiCopyFromSaveState(PDC dc, PDC dcs, HDC hDC)
   dc->DcLevel.flPath       = dcs->DcLevel.flPath & ~DCPATH_SAVE;
 
   Dc_Attr->dwLayout        = sDc_Attr->dwLayout;
-  dc->w.totalExtent        = dcs->w.totalExtent;
   Dc_Attr->jROP2           = sDc_Attr->jROP2;
   Dc_Attr->jFillMode       = sDc_Attr->jFillMode;
   Dc_Attr->jStretchBltMode = sDc_Attr->jStretchBltMode;
@@ -1408,8 +1397,8 @@ IntGdiCopyFromSaveState(PDC dc, PDC dcs, HDC hDC)
   Dc_Attr->iGraphicsMode   = sDc_Attr->iGraphicsMode;
 #if 0
 /* Apparently, the DC origin is not changed by [GS]etDCState */
-  dc->w.DCOrgX             = dcs->w.DCOrgX;
-  dc->w.DCOrgY             = dcs->w.DCOrgY;
+  dc->ptlDCOrig.x             = dcs->ptlDCOrig.x;
+  dc->ptlDCOrig.y             = dcs->ptlDCOrig.y;
 #endif
   Dc_Attr->ptlCurrent      = sDc_Attr->ptlCurrent;
   Dc_Attr->ptfxCurrent     = sDc_Attr->ptfxCurrent;

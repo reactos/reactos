@@ -34,7 +34,7 @@ CLIPPING_UpdateGCRegion(DC* Dc)
       NtGdiCombineRgn(Dc->w.hGCClipRgn, Dc->w.hVisRgn, 0, RGN_COPY);
    else
       NtGdiCombineRgn(Dc->w.hGCClipRgn, Dc->w.hClipRgn, Dc->w.hVisRgn, RGN_AND);
-   NtGdiOffsetRgn(Dc->w.hGCClipRgn, Dc->w.DCOrgX, Dc->w.DCOrgY);
+   NtGdiOffsetRgn(Dc->w.hGCClipRgn, Dc->ptlDCOrig.x, Dc->ptlDCOrig.y);
 
    if((CombinedRegion = REGION_LockRgn(Dc->w.hGCClipRgn)))
    {
@@ -55,7 +55,7 @@ CLIPPING_UpdateGCRegion(DC* Dc)
        return ERROR;
    }
 
-   return NtGdiOffsetRgn(Dc->w.hGCClipRgn, -Dc->w.DCOrgX, -Dc->w.DCOrgY);
+   return NtGdiOffsetRgn(Dc->w.hGCClipRgn, -Dc->ptlDCOrig.x, -Dc->ptlDCOrig.y);
 }
 
 INT FASTCALL
@@ -86,7 +86,7 @@ GdiSelectVisRgn(HDC hdc, HRGN hrgn)
   retval = NtGdiCombineRgn(dc->w.hVisRgn, hrgn, 0, RGN_COPY);
   if ( retval != ERROR )
   {
-    NtGdiOffsetRgn(dc->w.hVisRgn, -dc->w.DCOrgX, -dc->w.DCOrgY);
+    NtGdiOffsetRgn(dc->w.hVisRgn, -dc->ptlDCOrig.x, -dc->ptlDCOrig.y);
     CLIPPING_UpdateGCRegion(dc);
   }
   DC_UnlockDc(dc);

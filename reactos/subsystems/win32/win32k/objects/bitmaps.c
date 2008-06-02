@@ -256,8 +256,8 @@ NtGdiGetPixel(HDC hDC, INT XPos, INT YPos)
 		DC_UnlockDc(dc);
 		return Result;
 	}
-	XPos += dc->w.DCOrgX;
-	YPos += dc->w.DCOrgY;
+	XPos += dc->ptlDCOrig.x;
+	YPos += dc->ptlDCOrig.y;
 	if ( IN_RECT(dc->CombinedClip->rclBounds,XPos,YPos) )
 	{
 		bInRect = TRUE;

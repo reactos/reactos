@@ -64,11 +64,7 @@ typedef struct _WIN_DC_INFO
     GdiPath       path;
 /* #endif */
 
-  RECT   totalExtent;
   BYTE   bitsPerPixel;
-
-  INT  DCOrgX;            /* DC origin */
-  INT  DCOrgY;
 
   XFORM  xformWorld2Wnd;    /* World-to-window transformation */
   XFORM  xformWorld2Vport;  /* World-to-viewport transformation */

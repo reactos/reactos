@@ -1626,8 +1626,8 @@ NtGdiExtTextOutW(
    Start.x = XStart; Start.y = YStart;
    IntLPtoDP(dc, &Start, 1);
 
-   RealXStart = (Start.x + dc->w.DCOrgX) << 6;
-   YStart = Start.y + dc->w.DCOrgY;
+   RealXStart = (Start.x + dc->ptlDCOrig.x) << 6;
+   YStart = Start.y + dc->ptlDCOrig.y;
 
    /* Create the brushes */
    hDestPalette = BitmapObj->hDIBPalette;
@@ -1685,10 +1685,10 @@ NtGdiExtTextOutW(
 
    if ((fuOptions & ETO_OPAQUE) && lprc)
    {
-      DestRect.left   = SpecifiedDestRect.left   + dc->w.DCOrgX;
-      DestRect.top    = SpecifiedDestRect.top    + dc->w.DCOrgY;
-      DestRect.right  = SpecifiedDestRect.right  + dc->w.DCOrgX;
-      DestRect.bottom = SpecifiedDestRect.bottom + dc->w.DCOrgY;
+      DestRect.left   = SpecifiedDestRect.left   + dc->ptlDCOrig.x;
+      DestRect.top    = SpecifiedDestRect.top    + dc->ptlDCOrig.y;
+      DestRect.right  = SpecifiedDestRect.right  + dc->ptlDCOrig.x;
+      DestRect.bottom = SpecifiedDestRect.bottom + dc->ptlDCOrig.y;
       IntLPtoDP(dc, (LPPOINT)&DestRect, 2);
       IntEngBitBlt(
          &BitmapObj->SurfObj,
@@ -1956,12 +1956,6 @@ NtGdiExtTextOutW(
       DestRect.top = TextTop + yoff - realglyph2->top;
       DestRect.bottom = DestRect.top + realglyph2->bitmap.rows;
 
-//      DbgPrint("lrtb %d %d %d %d\n", DestRect.left, DestRect.right,
-//                                     DestRect.top, DestRect.bottom);
-//      DbgPrint("specified lrtb %d %d %d %d\n", SpecifiedDestRect.left, SpecifiedDestRect.right,
-//                                     SpecifiedDestRect.top, SpecifiedDestRect.bottom);
-//      DbgPrint ("dc->w.DCOrgX: %d\n", dc->w.DCOrgX);
-
       bitSize.cx = realglyph2->bitmap.width;
       bitSize.cy = realglyph2->bitmap.rows;
       MaskRect.right = realglyph2->bitmap.width;
@@ -2005,12 +1999,12 @@ NtGdiExtTextOutW(
 
       if (lprc &&
           (fuOptions & ETO_CLIPPED) &&
-          DestRect.right >= SpecifiedDestRect.right + dc->w.DCOrgX)
+          DestRect.right >= SpecifiedDestRect.right + dc->ptlDCOrig.x)
       {
          // We do the check '>=' instead of '>' to possibly save an iteration
          // through this loop, since it's breaking after the drawing is done,
          // and x is always incremented.
-         DestRect.right = SpecifiedDestRect.right + dc->w.DCOrgX;
+         DestRect.right = SpecifiedDestRect.right + dc->ptlDCOrig.x;
          DoBreak = TRUE;
       }
 

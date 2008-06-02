@@ -2645,7 +2645,7 @@ NtGdiGetRandomRgn(
     }
     if (iCode == SYSRGN)
     {
-        IntGdiGetDCOrgEx(pDC, &org);
+        IntGdiGetDCOrg(pDC, &org);
         NtGdiOffsetRgn(hDest, org.x, org.y );
     }
 
@@ -2828,7 +2828,7 @@ IntGdiPaintRgn(
 
     /* ei enable later
       // Transform region into device co-ords
-      if (!REGION_LPTODP(hDC, tmpVisRgn, hRgn) || NtGdiOffsetRgn(tmpVisRgn, dc->w.DCOrgX, dc->w.DCOrgY) == ERROR)
+      if (!REGION_LPTODP(hDC, tmpVisRgn, hRgn) || NtGdiOffsetRgn(tmpVisRgn, dc->ptlDCOrig.x, dc->ptlDCOrig.y) == ERROR)
       {
         NtGdiDeleteObject(tmpVisRgn);
         DC_UnlockDc(dc);

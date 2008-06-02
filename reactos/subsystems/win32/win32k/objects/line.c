@@ -130,10 +130,10 @@ IntGdiLineTo(DC  *dc,
         IntLPtoDP(dc, Points, 2);
 
         /* The DCOrg is in device coordinates */
-        Points[0].x += dc->w.DCOrgX;
-        Points[0].y += dc->w.DCOrgY;
-        Points[1].x += dc->w.DCOrgX;
-        Points[1].y += dc->w.DCOrgY;
+        Points[0].x += dc->ptlDCOrig.x;
+        Points[0].y += dc->ptlDCOrig.y;
+        Points[1].x += dc->ptlDCOrig.x;
+        Points[1].y += dc->ptlDCOrig.y;
 
         Bounds.left = min(Points[0].x, Points[1].x);
         Bounds.top = min(Points[0].y, Points[1].y);
@@ -281,8 +281,8 @@ IntGdiPolyline(DC      *dc,
             /* Offset the array of point by the dc->w.DCOrg */
             for (i = 0; i < Count; i++)
             {
-                Points[i].x += dc->w.DCOrgX;
-                Points[i].y += dc->w.DCOrgY;
+                Points[i].x += dc->ptlDCOrig.x;
+                Points[i].y += dc->ptlDCOrig.y;
             }
 
             IntGdiInitBrushInstance(&PenBrushInst, PenBrushObj, dc->XlatePen);

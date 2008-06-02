@@ -87,10 +87,10 @@ NtGdiAlphaBlend(
 	}
 
 	/* Offset the destination and source by the origin of their DCs. */
-	XOriginDest += DCDest->w.DCOrgX;
-	YOriginDest += DCDest->w.DCOrgY;
-	XOriginSrc += DCSrc->w.DCOrgX;
-	YOriginSrc += DCSrc->w.DCOrgY;
+	XOriginDest += DCDest->ptlDCOrig.x;
+	YOriginDest += DCDest->ptlDCOrig.y;
+	XOriginSrc += DCSrc->ptlDCOrig.x;
+	YOriginSrc += DCSrc->ptlDCOrig.y;
 
 	DestRect.left   = XOriginDest;
 	DestRect.top    = YOriginDest;
@@ -228,12 +228,12 @@ NtGdiBitBlt(
 	if (!Dc_Attr) Dc_Attr = &DCDest->Dc_Attr;
 
 	/* Offset the destination and source by the origin of their DCs. */
-	XDest += DCDest->w.DCOrgX;
-	YDest += DCDest->w.DCOrgY;
+        XDest += DCDest->ptlDCOrig.x;
+        YDest += DCDest->ptlDCOrig.y;
 	if (UsesSource)
 	{
-		XSrc += DCSrc->w.DCOrgX;
-		YSrc += DCSrc->w.DCOrgY;
+		XSrc += DCSrc->ptlDCOrig.x;
+		YSrc += DCSrc->ptlDCOrig.y;
 	}
 
 	DestRect.left   = XDest;
@@ -392,10 +392,10 @@ NtGdiTransparentBlt(
   }
 
   /* Offset positions */
-  xDst += DCDest->w.DCOrgX;
-  yDst += DCDest->w.DCOrgY;
-  xSrc += DCSrc->w.DCOrgX;
-  ySrc += DCSrc->w.DCOrgY;
+  xDst += DCDest->ptlDCOrig.x;
+  yDst += DCDest->ptlDCOrig.y;
+  xSrc += DCSrc->ptlDCOrig.x;
+  ySrc += DCSrc->ptlDCOrig.y;
 
   BitmapDest = BITMAPOBJ_LockBitmap(DCDest->w.hBitmap);
   if (!BitmapDest)
@@ -796,13 +796,13 @@ NtGdiStretchBlt(
 	}
 
 	/* Offset the destination and source by the origin of their DCs. */
-	// FIXME: DCOrg is in device coordinates!
-	XOriginDest += DCDest->w.DCOrgX;
-	YOriginDest += DCDest->w.DCOrgY;
+	// FIXME: ptlDCOrig is in device coordinates!
+	XOriginDest += DCDest->ptlDCOrig.x;
+	YOriginDest += DCDest->ptlDCOrig.y;
 	if (UsesSource)
 	{
-		XOriginSrc += DCSrc->w.DCOrgX;
-		YOriginSrc += DCSrc->w.DCOrgY;
+		XOriginSrc += DCSrc->ptlDCOrig.x;
+		YOriginSrc += DCSrc->ptlDCOrig.y;
 	}
 
 	DestRect.left   = XOriginDest;
@@ -964,30 +964,30 @@ IntPatBlt(
    {
       if (Width > 0)
       {
-         DestRect.left = XLeft + dc->w.DCOrgX;
-         DestRect.right = XLeft + Width + dc->w.DCOrgX;
+         DestRect.left = XLeft + dc->ptlDCOrig.x;
+         DestRect.right = XLeft + Width + dc->ptlDCOrig.x;
       }
       else
       {
-         DestRect.left = XLeft + Width + 1 + dc->w.DCOrgX;
-         DestRect.right = XLeft + dc->w.DCOrgX + 1;
+         DestRect.left = XLeft + Width + 1 + dc->ptlDCOrig.x;
+         DestRect.right = XLeft + dc->ptlDCOrig.x + 1;
       }
 
       if (Height > 0)
       {
-         DestRect.top = YLeft + dc->w.DCOrgY;
-         DestRect.bottom = YLeft + Height + dc->w.DCOrgY;
+         DestRect.top = YLeft + dc->ptlDCOrig.y;
+         DestRect.bottom = YLeft + Height + dc->ptlDCOrig.y;
       }
       else
       {
-         DestRect.top = YLeft + Height + dc->w.DCOrgY + 1;
-         DestRect.bottom = YLeft + dc->w.DCOrgY + 1;
+         DestRect.top = YLeft + Height + dc->ptlDCOrig.y + 1;
+         DestRect.bottom = YLeft + dc->ptlDCOrig.y + 1;
       }
 
       IntLPtoDP(dc, (LPPOINT)&DestRect, 2);
 
-      BrushOrigin.x = BrushObj->ptOrigin.x + dc->w.DCOrgX;
-      BrushOrigin.y = BrushObj->ptOrigin.y + dc->w.DCOrgY;
+      BrushOrigin.x = BrushObj->ptOrigin.x + dc->ptlDCOrig.x;
+      BrushOrigin.y = BrushObj->ptOrigin.y + dc->ptlDCOrig.y;
 
       IntGdiInitBrushInstance(&BrushInst, BrushObj, dc->XlateBrush);
 

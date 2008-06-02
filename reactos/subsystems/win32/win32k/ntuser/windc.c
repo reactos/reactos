@@ -167,21 +167,21 @@ DceSetDrawable(PWINDOW_OBJECT Window OPTIONAL, HDC hDC, ULONG Flags,
 
   if (Window == NULL)
   {
-      dc->w.DCOrgX = 0;
-      dc->w.DCOrgY = 0;
+      dc->ptlDCOrig.x = 0;
+      dc->ptlDCOrig.y = 0;
   }
   else
   {
       Wnd = Window->Wnd;
       if (Flags & DCX_WINDOW)
       {
-         dc->w.DCOrgX = Wnd->WindowRect.left;
-         dc->w.DCOrgY = Wnd->WindowRect.top;
+         dc->ptlDCOrig.x = Wnd->WindowRect.left;
+         dc->ptlDCOrig.y = Wnd->WindowRect.top;
       }
       else
       {
-         dc->w.DCOrgX = Wnd->ClientRect.left;
-         dc->w.DCOrgY = Wnd->ClientRect.top;
+         dc->ptlDCOrig.x = Wnd->ClientRect.left;
+         dc->ptlDCOrig.y = Wnd->ClientRect.top;
       }
   }
   DC_UnlockDc(dc);
@@ -726,17 +726,17 @@ DceResetActiveDCEs(PWINDOW_OBJECT Window)
          {
             if (pDCE->DCXFlags & DCX_WINDOW)
             {
-               DeltaX = CurrentWindow->Wnd->WindowRect.left - dc->w.DCOrgX;
-               DeltaY = CurrentWindow->Wnd->WindowRect.top - dc->w.DCOrgY;
-               dc->w.DCOrgX = CurrentWindow->Wnd->WindowRect.left;
-               dc->w.DCOrgY = CurrentWindow->Wnd->WindowRect.top;
+               DeltaX = CurrentWindow->Wnd->WindowRect.left - dc->ptlDCOrig.x;
+               DeltaY = CurrentWindow->Wnd->WindowRect.top - dc->ptlDCOrig.y;
+               dc->ptlDCOrig.x = CurrentWindow->Wnd->WindowRect.left;
+               dc->ptlDCOrig.y = CurrentWindow->Wnd->WindowRect.top;
             }
             else
             {
-               DeltaX = CurrentWindow->Wnd->ClientRect.left - dc->w.DCOrgX;
-               DeltaY = CurrentWindow->Wnd->ClientRect.top - dc->w.DCOrgY;
-               dc->w.DCOrgX = CurrentWindow->Wnd->ClientRect.left;
-               dc->w.DCOrgY = CurrentWindow->Wnd->ClientRect.top;
+               DeltaX = CurrentWindow->Wnd->ClientRect.left - dc->ptlDCOrig.x;
+               DeltaY = CurrentWindow->Wnd->ClientRect.top - dc->ptlDCOrig.y;
+               dc->ptlDCOrig.x = CurrentWindow->Wnd->ClientRect.left;
+               dc->ptlDCOrig.y = CurrentWindow->Wnd->ClientRect.top;
             }
             if (NULL != dc->w.hClipRgn)
             {

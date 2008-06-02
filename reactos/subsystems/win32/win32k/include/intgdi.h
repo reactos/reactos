@@ -135,7 +135,7 @@ BOOL FASTCALL IntGdiGradientFill(DC *dc,
 /* DC functions */
 
 BOOL FASTCALL
-IntGdiGetDCOrgEx(DC *dc, LPPOINT  Point);
+IntGdiGetDCOrg(PDC pDC, PPOINTL pPointl);
 
 INT FASTCALL
 IntGdiGetObject(HANDLE handle, INT count, LPVOID buffer);
