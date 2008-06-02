@@ -1001,6 +1001,12 @@ ExReleasePushLock(PEX_PUSH_LOCK PushLock)
 
 /* OTHER FUNCTIONS **********************************************************/
 
+BOOLEAN
+NTAPI
+ExTryToAcquireResourceExclusiveLite(
+    IN PERESOURCE Resource
+);
+
 LONGLONG
 FASTCALL
 ExfpInterlockedExchange64(

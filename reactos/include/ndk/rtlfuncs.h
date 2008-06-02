@@ -1628,8 +1628,6 @@ RtlDowncaseUnicodeString(
     IN BOOLEAN AllocateDestinationString
 );
 
-#endif
-
 NTSYSAPI
 NTSTATUS
 NTAPI
@@ -1638,6 +1636,8 @@ RtlDuplicateUnicodeString(
     IN PCUNICODE_STRING SourceString,
     OUT PUNICODE_STRING DestinationString
 );
+
+#endif
 
 NTSYSAPI
 BOOLEAN
@@ -1754,6 +1754,14 @@ NTSYSAPI
 VOID
 NTAPI
 RtlInitAnsiString(
+    PANSI_STRING DestinationString,
+    PCSZ SourceString
+);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlInitAnsiStringEx(
     PANSI_STRING DestinationString,
     PCSZ SourceString
 );

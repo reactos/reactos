@@ -97,16 +97,6 @@ ExfUnblockPushLock(
 );
 
 //
-// Resource Functions
-//
-NTKERNELAPI
-BOOLEAN
-NTAPI
-ExTryToAcquireResourceExclusiveLite(
-    IN PERESOURCE Resource
-);
-
-//
 // Handle Table Functions
 //
 NTKERNELAPI

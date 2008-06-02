@@ -21,6 +21,7 @@ GENERATE_ARM_STUB KeFlushEntireTb
 GENERATE_ARM_STUB KeGetRecommendedSharedDataAlignment 
 GENERATE_ARM_STUB KeIcacheFlushCount 
 GENERATE_ARM_STUB KeInitializeInterrupt 
+GENERATE_ARM_STUB KeInvalidateAllCaches
 GENERATE_ARM_STUB KeNumberProcessors 
 GENERATE_ARM_STUB KeQueryActiveProcessors 
 GENERATE_ARM_STUB KeRaiseUserException 

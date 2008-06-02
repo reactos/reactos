@@ -82,7 +82,7 @@ ExDeleteResourceLite@4
 ExDesktopObjectType
 ExDisableResourceBoostLite@4
 @ExEnterCriticalRegionAndAcquireFastMutexUnsafe@4
-;ExEnterCriticalRegionAndAcquireResourceExclusive
+ExEnterCriticalRegionAndAcquireResourceExclusive@4
 ;ExEnterCriticalRegionAndAcquireResourceShared
 ;ExEnterCriticalRegionAndAcquireSharedWaitForExclusive
 ExEnumHandleTable@16
@@ -137,7 +137,7 @@ ExRegisterCallback@12
 ExReinitializeResourceLite@4
 @ExReleaseFastMutexUnsafe@4
 @ExReleaseFastMutexUnsafeAndLeaveCriticalRegion@4
-;ExReleaseResourceAndLeaveCriticalRegion
+@ExReleaseResourceAndLeaveCriticalRegion@4
 ExReleaseResourceForThreadLite@8
 @ExReleaseResourceLite@4
 ExReleaseRundownProtection=@ExfReleaseRundownProtection@4
@@ -158,8 +158,8 @@ ExVerifySuite@4
 ExWaitForRundownProtectionRelease=@ExfWaitForRundownProtectionRelease@4
 ExWaitForRundownProtectionReleaseCacheAware=@ExfWaitForRundownProtectionReleaseCacheAware@4
 ExWindowStationObjectType DATA
-;ExfAcquirePushLockExclusive
-;ExfAcquirePushLockShared
+@ExfAcquirePushLockExclusive@4
+@ExfAcquirePushLockShared@4
 @ExfInterlockedAddUlong@12
 @ExfInterlockedCompareExchange64@12
 @ExfInterlockedInsertHeadList@12
@@ -167,11 +167,11 @@ ExWindowStationObjectType DATA
 @ExfInterlockedPopEntryList@8
 @ExfInterlockedPushEntryList@12
 @ExfInterlockedRemoveHeadList@8
-;ExfReleasePushLock
-;ExfReleasePushLockExclusive
-;ExfReleasePushLockShared
-;ExfTryToWakePushLock
-;ExfUnblockPushLock
+@ExfReleasePushLock@4
+@ExfReleasePushLockExclusive@4
+@ExfReleasePushLockShared@4
+@ExfTryToWakePushLock@4
+@ExfUnblockPushLock@8
 @Exfi386InterlockedDecrementLong@4
 @Exfi386InterlockedExchangeUlong@8
 @Exfi386InterlockedIncrementLong@4
@@ -199,7 +199,7 @@ FsRtlCheckLockForWriteAccess@8
 FsRtlCheckOplock
 FsRtlCopyRead
 FsRtlCopyWrite
-;FsRtlCreateSectionForDataScan
+FsRtlCreateSectionForDataScan@40
 FsRtlCurrentBatchOplock
 FsRtlDeleteKeyFromTunnelCache
 FsRtlDeleteTunnelCache
@@ -549,7 +549,7 @@ KeAcquireInterruptSpinLock@4
 KeAcquireSpinLockAtDpcLevel@4
 ;KeAcquireSpinLockForDpc
 KeAddSystemServiceTable@20
-;KeAreAllApcsDisabled
+KeAreAllApcsDisabled@0
 KeAreApcsDisabled@0
 KeAttachProcess@4
 KeBugCheck@4
@@ -606,8 +606,8 @@ KeInsertHeadQueue@8
 KeInsertQueue@8
 KeInsertQueueApc@16
 KeInsertQueueDpc@12
-;KeInvalidateAllCaches
-;KeIpiGenericCall
+KeInvalidateAllCaches@0
+KeIpiGenericCall@8
 KeIsAttachedProcess@0
 KeIsExecutingDpc@0
 ;KeIsWaitListEmpty
@@ -682,7 +682,7 @@ KeTerminateThread@4
 ;KeTestSpinLock
 KeTickCount DATA
 @KeTryToAcquireGuardedMutex@4
-;KeTryToAcquireSpinLockAtDpcLevel
+@KeTryToAcquireSpinLockAtDpcLevel@4
 KeUnstackDetachProcess@4
 KeUpdateRunTime@4
 KeUpdateSystemTime@0
@@ -888,11 +888,11 @@ ObQueryObjectAuditingByHandle@8
 ObReferenceObjectByHandle@24
 ObReferenceObjectByName@32
 ObReferenceObjectByPointer@16
-;ObReferenceSecurityDescriptor@8
+ObReferenceSecurityDescriptor@8
 ObReleaseObjectSecurity@8
 ;ObSetHandleAttributes@12
-;ObSetSecurityDescriptorInfo@24
-;ObSetSecurityObjectByPointer@12
+ObSetSecurityDescriptorInfo@24
+ObSetSecurityObjectByPointer@12
 @ObfDereferenceObject@4
 @ObfReferenceObject@4
 ;PfxFindPrefix
@@ -974,7 +974,7 @@ PsGetVersion@16
 PsImpersonateClient@20
 PsInitialSystemProcess DATA
 PsIsProcessBeingDebugged@4
-;PsIsSystempProcess
+;PsIsSystemProcess
 PsIsSystemThread@4
 PsIsThreadImpersonating@4
 PsIsThreadTerminating@4
@@ -1018,7 +1018,7 @@ READ_REGISTER_USHORT@4
 KeRosDumpStackFrames@8
 RtlAbsoluteToSelfRelativeSD@12
 RtlAddAccessAllowedAce@16
-;RtlAddAccessAllowedAceEx
+RtlAddAccessAllowedAceEx@20
 RtlAddAce@20
 RtlAddAtomToAtomTable@12
 RtlAddRange@36
@@ -1140,11 +1140,11 @@ RtlHashUnicodeString@16
 RtlImageDirectoryEntryToData@16
 RtlImageNtHeader@4
 RtlInitAnsiString@8
-;RtlInitAnsiStringEx
+RtlInitAnsiStringEx@8
 RtlInitCodePageTable@8
 RtlInitString@8
 RtlInitUnicodeString@8
-;RtlInitUnicodeStringEx
+RtlInitUnicodeStringEx@8
 RtlInitializeBitMap@12
 RtlInitializeGenericTable@20
 RtlInitializeGenericTableAvl@20

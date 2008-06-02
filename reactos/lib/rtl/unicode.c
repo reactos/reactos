@@ -432,6 +432,30 @@ RtlInitAnsiString(IN OUT PANSI_STRING DestinationString,
     DestinationString->Buffer = (PCHAR)SourceString;
 }
 
+NTSTATUS
+NTAPI
+RtlInitAnsiStringEx(IN OUT PANSI_STRING DestinationString,
+                    IN PCSZ SourceString)
+{
+    ULONG DestSize;
+
+    if(SourceString)
+    {
+        DestSize = strlen(SourceString);
+        if (DestSize >= 0xFFFF) return STATUS_NAME_TOO_LONG;
+        DestinationString->Length = (USHORT)DestSize;
+        DestinationString->MaximumLength = (USHORT)DestSize + sizeof(CHAR);
+    }
+    else
+    {
+        DestinationString->Length = 0;
+        DestinationString->MaximumLength = 0;
+    }
+
+    DestinationString->Buffer = (PCHAR)SourceString;
+    return STATUS_SUCCESS;
+
+}
 /*
  * @implemented
  *
