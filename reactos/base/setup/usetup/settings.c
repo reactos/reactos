@@ -742,7 +742,15 @@ CreateKeyboardDriverList(HINF InfFile)
     return List;
 }
 
-PGENERIC_LIST 
+ULONG DefaultLanguageIndex = 0;
+
+ULONG
+GetDefaultLanguageIndex(VOID)
+{
+    return DefaultLanguageIndex;
+}
+
+PGENERIC_LIST
 CreateLanguageList(HINF InfFile, WCHAR * DefaultLanguage) 
 {
     CHAR Buffer[128];
@@ -751,6 +759,7 @@ CreateLanguageList(HINF InfFile, WCHAR * DefaultLanguage)
     PWCHAR KeyName;
     PWCHAR KeyValue;
     PWCHAR UserData;
+    ULONG uIndex = 0;
 
     /* Get default language id */
     if (!SetupFindFirstLineW (InfFile, L"NLS", L"DefaultLanguage", &Context))
@@ -769,7 +778,7 @@ CreateLanguageList(HINF InfFile, WCHAR * DefaultLanguage)
 
     if (!SetupFindFirstLineW (InfFile, L"Language", NULL, &Context))
     {
-        DestroyGenericList(List, FALSE); 
+        DestroyGenericList(List, FALSE);
         return NULL; 
     }
 
@@ -792,11 +801,14 @@ CreateLanguageList(HINF InfFile, WCHAR * DefaultLanguage)
 
         wcscpy(UserData, KeyName);
 
+        if (!_wcsicmp(KeyName, DefaultLanguage)) DefaultLanguageIndex = uIndex;
+
         sprintf(Buffer, "%S", KeyValue);
         AppendGenericListEntry(List,
                                Buffer,
                                UserData,
-                               _wcsicmp(KeyName, DefaultLanguage) ? FALSE : TRUE);
+                               FALSE);
+        uIndex++;
     } while (SetupFindNextLine(&Context, &Context));
 
     return List;

@@ -49,7 +49,10 @@ PGENERIC_LIST
 CreateKeyboardLayoutList(HINF InfFile, WCHAR *DefaultKBLayout);
 
 PGENERIC_LIST 
-CreateLanguageList(HINF InfFile, WCHAR * DefaultLanguage); 
+CreateLanguageList(HINF InfFile, WCHAR * DefaultLanguage);
+
+ULONG
+GetDefaultLanguageIndex(VOID);
 
 BOOLEAN
 ProcessLocaleRegistry(PGENERIC_LIST List);

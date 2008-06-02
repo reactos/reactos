@@ -423,6 +423,39 @@ ScrollDownGenericList (PGENERIC_LIST List)
 
 
 VOID
+ScrollToPositionGenericList (PGENERIC_LIST List, ULONG uIndex)
+{
+    PLIST_ENTRY Entry;
+    ULONG uCount = 0;
+
+    if (List->CurrentEntry == NULL)
+        return;
+
+    do
+    {
+        if (List->CurrentEntry->Entry.Flink != &List->ListHead)
+        {
+            Entry = List->CurrentEntry->Entry.Flink;
+            if (List->LastShown == &List->CurrentEntry->Entry)
+            {
+                List->FirstShown = List->FirstShown->Flink;
+                List->LastShown = List->LastShown->Flink;
+            }
+            List->CurrentEntry = CONTAINING_RECORD (Entry, GENERIC_LIST_ENTRY, Entry);
+        }
+        uCount++;
+    }
+    while (uIndex != uCount);
+
+    if (List->Redraw)
+    {
+        DrawListEntries(List);
+        DrawScrollBarGenericList(List);
+    }
+}
+
+
+VOID
 ScrollUpGenericList (PGENERIC_LIST List)
 {
     PLIST_ENTRY Entry;

@@ -612,6 +612,8 @@ LanguagePage(PINPUT_RECORD Ir)
                     xScreen - 3,
                     yScreen - 3);
 
+    ScrollToPositionGenericList (LanguageList, GetDefaultLanguageIndex());
+
     MUIDisplayPage(LANGUAGE_PAGE);
 
     while(TRUE)
