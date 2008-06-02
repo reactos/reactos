@@ -159,6 +159,8 @@ DIALOGINFO * DIALOG_get_info( HWND hWnd, BOOL create )
                 return NULL;
 
             SETDLGINFO( hWnd, dlgInfo );
+
+            NtUserSetWindowFNID( hWnd, FNID_DIALOG );
         }
         else
         {
