@@ -99,7 +99,10 @@ typedef struct _DCLEVEL
   COLORADJUSTMENT   ca;
   FLONG             flFontState;
   UNIVERSAL_FONT_ID ufi;
-  DWORD             unk4_00000000[11];
+  UNIVERSAL_FONT_ID ufiLoc[4]; // Local List.
+  UNIVERSAL_FONT_ID *pUFI;
+  ULONG             uNumUFIs;
+  BOOL              ufiSet;
   FLONG             fl;
   FLONG             flBrush;
   union{
