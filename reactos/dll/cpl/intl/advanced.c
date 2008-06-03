@@ -60,13 +60,6 @@ GetSupportedCP(VOID)
                 continue;
             }
 
-            /*_stprintf(Section, _T("%s%d"), _T("CODEPAGE_REMOVE_"), uiCPage);
-            if ((uiCPage == GetACP()) || (uiCPage == GetOEMCP()) || 
-                (!SetupFindFirstLine(hIntlInf, Section, _T("AddReg"), &infCont)))
-            {
-                lpCPage->Status |= (0x0001 | 0x0002);
-            }*/
-
             lpCPage->NextItem = PCPage;
             PCPage = lpCPage;
         }
@@ -336,6 +329,8 @@ AdvancedPageProc(HWND hwndDlg,
                 LCID lcid;
                 INT iIndex;
 
+                PropSheet_UnChanged(GetParent(hwndDlg), hwndDlg);
+
                 iIndex = SendMessage(hLangList, CB_GETCURSEL, 0, 0);
                 if (iIndex == CB_ERR)
                     break;
@@ -345,7 +340,6 @@ AdvancedPageProc(HWND hwndDlg,
                     break;
 
                 SetNonUnicodeLang(hwndDlg, lcid);
-                PropSheet_UnChanged(GetParent(hwndDlg), hwndDlg);
             }
         }
         break;

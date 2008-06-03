@@ -235,7 +235,6 @@ SetNewLocale(LCID lcid)
 }
 
 /* Location enumerate procedure */
-#if 0
 BOOL
 CALLBACK
 LocationsEnumProc(GEOID gId)
@@ -256,14 +255,12 @@ LocationsEnumProc(GEOID gId)
 
     return TRUE;
 }
-#endif
 
 /* Enumerate all system locations identifiers */
 static
 VOID
 CreateLocationsList(HWND hWnd)
 {
-#if 0
     GEOID userGeoID;
     TCHAR loc[MAX_STR_SIZE];
 
@@ -283,7 +280,6 @@ CreateLocationsList(HWND hWnd)
                 CB_SELECTSTRING,
                 (WPARAM) -1,
                 (LPARAM)loc);
-#endif
 }
 
 DWORD
@@ -370,6 +366,12 @@ GeneralPageProc(HWND hwndDlg,
                     }
                     break;
 
+                case IDC_LOCATION_COMBO:
+                    if (HIWORD(wParam) == CBN_SELCHANGE)
+                    {
+                        PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+                    }
+                    break;
                 case IDC_SETUP_BUTTON:
                     {
                         LCID NewLcid;
@@ -403,7 +405,10 @@ GeneralPageProc(HWND hwndDlg,
                 {
                     /* Apply changes */
                     LCID NewLcid;
+                    GEOID NewGeoID;
                     INT iCurSel;
+
+                    PropSheet_UnChanged(GetParent(hwndDlg), hwndDlg);
 
                     /* Acquire new value */
                     iCurSel = SendMessage(hList,
@@ -420,8 +425,23 @@ GeneralPageProc(HWND hwndDlg,
                     if (NewLcid == (LCID)CB_ERR)
                         break;
 
+                    iCurSel = SendMessage(GetDlgItem(hwndDlg, IDC_LOCATION_COMBO),
+                                          CB_GETCURSEL,
+                                          0,
+                                          0);
+                    if (iCurSel == CB_ERR)
+                        break;
+
+                    NewGeoID = SendMessage(GetDlgItem(hwndDlg, IDC_LOCATION_COMBO),
+                                           CB_GETITEMDATA,
+                                           iCurSel,
+                                           0);
+                    if (NewGeoID == (GEOID)CB_ERR)
+                        break;
+
                     /* Set new locale */
                     SetNewLocale(NewLcid);
+                    SetUserGeoID(NewGeoID);
                     SetNonUnicodeLang(hwndDlg, NewLcid);
                 }
             }
