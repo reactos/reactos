@@ -785,6 +785,168 @@ HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\DateTime\Servers","6",0x00000000
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\DateTime\Servers","7",0x00000000,"time.windows.com"
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\DateTime\Servers","8",0x00000000,"time.nist.gov"
 
+; Country Codes
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List",,0x00000012
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List","CountryListVersion",0x00010001,0x00000019
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\1","CountryCode",0x00010001,0x00000001
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\1","Name",0x00000000,"United States of America"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\106","CountryCode",0x00010001,0x00000001
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\106","Name",0x00000000,"British Virgin Islands"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\107","CountryCode",0x00010001,0x00000001
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\107","Name",0x00000000,"Canada"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\109","CountryCode",0x00010001,0x00000001
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\109","Name",0x00000000,"Dominica"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\110","CountryCode",0x00010001,0x00000001
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\110","Name",0x00000000,"Dominican Republic"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\20","CountryCode",0x00010001,0x00000014
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\20","Name",0x00000000,"Egypt"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\268","CountryCode",0x00010001,0x0000010c
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\268","Name",0x00000000,"Swaziland"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\27","CountryCode",0x00010001,0x0000001b
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\27","Name",0x00000000,"South Africa"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\30","CountryCode",0x00010001,0x0000001e
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\30","Name",0x00000000,"Greece"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\31","CountryCode",0x00010001,0x0000001f
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\31","Name",0x00000000,"Netherlands"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\32","CountryCode",0x00010001,0x00000020
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\32","Name",0x00000000,"Belgium"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\33","CountryCode",0x00010001,0x00000021
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\33","Name",0x00000000,"France"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\34","CountryCode",0x00010001,0x00000022
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\34","Name",0x00000000,"Spain"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\351","CountryCode",0x00010001,0x0000015f
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\351","Name",0x00000000,"Portugal"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\352","CountryCode",0x00010001,0x00000160
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\352","Name",0x00000000,"Luxembourg"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\353","CountryCode",0x00010001,0x00000161
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\353","Name",0x00000000,"Ireland"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\354","CountryCode",0x00010001,0x00000162
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\354","Name",0x00000000,"Iceland"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\355","CountryCode",0x00010001,0x00000163
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\355","Name",0x00000000,"Albania"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\358","CountryCode",0x00010001,0x00000166
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\358","Name",0x00000000,"Finland"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\359","CountryCode",0x00010001,0x00000167
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\359","Name",0x00000000,"Bulgaria"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\36","CountryCode",0x00010001,0x00000024
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\36","Name",0x00000000,"Hungary"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\370","CountryCode",0x00010001,0x00000172
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\370","Name",0x00000000,"Lithuania"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\371","CountryCode",0x00010001,0x00000173
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\371","Name",0x00000000,"Latvia"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\372","CountryCode",0x00010001,0x00000174
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\372","Name",0x00000000,"Estonia"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\373","CountryCode",0x00010001,0x00000175
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\373","Name",0x00000000,"Moldova"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\374","CountryCode",0x00010001,0x00000176
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\374","Name",0x00000000,"Armenia"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\380","CountryCode",0x00010001,0x0000017c
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\380","Name",0x00000000,"Ukraine"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\381","CountryCode",0x00010001,0x0000017d
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\381","Name",0x00000000,"Yugoslavia"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\385","CountryCode",0x00010001,0x00000181
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\385","Name",0x00000000,"Croatia"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\386","CountryCode",0x00010001,0x00000182
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\386","Name",0x00000000,"Slovenia"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\387","CountryCode",0x00010001,0x00000183
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\387","Name",0x00000000,"Bosnia and Herzegovina"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\39","CountryCode",0x00010001,0x00000027
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\39","Name",0x00000000,"Italy"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\40","CountryCode",0x00010001,0x00000028
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\40","Name",0x00000000,"Romania"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\41","CountryCode",0x00010001,0x00000029
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\41","Name",0x00000000,"Switzerland"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\420","CountryCode",0x00010001,0x000001a4
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\420","Name",0x00000000,"Czech Republic"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\421","CountryCode",0x00010001,0x000001a5
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\421","Name",0x00000000,"Slovakia"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\423","CountryCode",0x00010001,0x000001a7
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\423","Name",0x00000000,"Liechtenstein"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\43","CountryCode",0x00010001,0x0000002b
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\43","Name",0x00000000,"Austria"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\44","CountryCode",0x00010001,0x0000002c
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\44","Name",0x00000000,"United Kingdom"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\46","CountryCode",0x00010001,0x0000002e
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\46","Name",0x00000000,"Sweden"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\47","CountryCode",0x00010001,0x0000002f
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\47","Name",0x00000000,"Norway"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\48","CountryCode",0x00010001,0x00000030
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\48","Name",0x00000000,"Poland"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\49","CountryCode",0x00010001,0x00000031
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\49","Name",0x00000000,"Germany"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\52","CountryCode",0x00010001,0x00000034
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\52","Name",0x00000000,"Mexico"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\54","CountryCode",0x00010001,0x00000036
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\54","Name",0x00000000,"Argentina"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\55","CountryCode",0x00010001,0x00000037
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\55","Name",0x00000000,"Brazil"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\56","CountryCode",0x00010001,0x00000038
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\56","Name",0x00000000,"Chile"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\57","CountryCode",0x00010001,0x00000039
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\57","Name",0x00000000,"Colombia"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\58","CountryCode",0x00010001,0x0000003a
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\58","Name",0x00000000,"Venezuela"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\60","CountryCode",0x00010001,0x0000003c
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\60","Name",0x00000000,"Malaysia"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\61","CountryCode",0x00010001,0x0000003d
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\61","Name",0x00000000,"Australia"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\62","CountryCode",0x00010001,0x0000003e
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\62","Name",0x00000000,"Indonesia"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\63","CountryCode",0x00010001,0x0000003f
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\63","Name",0x00000000,"Philippines"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\64","CountryCode",0x00010001,0x00000040
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\64","Name",0x00000000,"New Zealand"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\7","CountryCode",0x00010001,0x00000007
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\7","Name",0x00000000,"Russia"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\705","CountryCode",0x00010001,0x00000007
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\705","Name",0x00000000,"Kazakhstan"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\708","CountryCode",0x00010001,0x00000007
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\708","Name",0x00000000,"Tajikistan"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\81","CountryCode",0x00010001,0x00000051
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\81","Name",0x00000000,"Japan"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\82","CountryCode",0x00010001,0x00000052
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\82","Name",0x00000000,"Korea (Republic of)"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\850","CountryCode",0x00010001,0x00000352
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\850","Name",0x00000000,"Korea (North)"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\86","CountryCode",0x00010001,0x00000056
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\86","Name",0x00000000,"China"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\886","CountryCode",0x00010001,0x00000376
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\886","Name",0x00000000,"Taiwan"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\90","CountryCode",0x00010001,0x0000005a
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\90","Name",0x00000000,"Turkey"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\91","CountryCode",0x00010001,0x0000005b
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\91","Name",0x00000000,"India"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\93","CountryCode",0x00010001,0x0000005d
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\93","Name",0x00000000,"Afghanistan"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\960","CountryCode",0x00010001,0x000003c0
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\960","Name",0x00000000,"Maldives"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\964","CountryCode",0x00010001,0x000003c4
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\964","Name",0x00000000,"Iraq"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\966","CountryCode",0x00010001,0x000003c6
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\966","Name",0x00000000,"Saudi Arabia"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\971","CountryCode",0x00010001,0x000003cb
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\971","Name",0x00000000,"United Arab Emirates"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\972","CountryCode",0x00010001,0x000003cc
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\972","Name",0x00000000,"Israel"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\974","CountryCode",0x00010001,0x000003ce
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\974","Name",0x00000000,"Qatar"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\976","CountryCode",0x00010001,0x000003d0
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\976","Name",0x00000000,"Mongolia"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\977","CountryCode",0x00010001,0x000003d1
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\977","Name",0x00000000,"Nepal"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\98","CountryCode",0x00010001,0x00000062
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\98","Name",0x00000000,"Iran"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\993","CountryCode",0x00010001,0x000003e1
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\993","Name",0x00000000,"Turkmenistan"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\994","CountryCode",0x00010001,0x000003e2
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\994","Name",0x00000000,"Azerbaijan"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\995","CountryCode",0x00010001,0x000003e3
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\995","Name",0x00000000,"Georgia"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\996","CountryCode",0x00010001,0x000003e4
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\996","Name",0x00000000,"Kyrgyzstan"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\998","CountryCode",0x00010001,0x000003e6
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\998","Name",0x00000000,"Uzbekistan"
+
 ;Cursors Schemes
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Control Panel\Cursors\Schemes","ReactOS Default",0x00020000,"\",,,,,,,,,,,,,\""
 
