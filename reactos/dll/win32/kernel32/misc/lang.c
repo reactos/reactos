@@ -45,7 +45,9 @@ typedef struct
     LONG_PTR param;
 } ENUM_UILANG_CALLBACK;
 
-static const WCHAR szLocaleKeyName[] = {
+static const WCHAR szLocaleKeyName[] = 
+
+{
     'M','a','c','h','i','n','e','\\','S','y','s','t','e','m','\\',
     'C','u','r','r','e','n','t','C','o','n','t','r','o','l','S','e','t','\\',
     'C','o','n','t','r','o','l','\\','N','l','s','\\','L','o','c','a','l','e',0
@@ -280,6 +282,50 @@ static HANDLE NLS_RegOpenKey(HANDLE hRootKey, LPCWSTR szKeyName)
     return hkey;
 }
 
+static BOOL NLS_RegEnumSubKey(HANDLE hKey, UINT ulIndex, LPWSTR szKeyName,
+                              ULONG keyNameSize)
+{
+    BYTE buffer[80];
+    KEY_BASIC_INFORMATION *info = (KEY_BASIC_INFORMATION *)buffer;
+    DWORD dwLen;
+
+    if (NtEnumerateKey( hKey, ulIndex, KeyBasicInformation, buffer,
+                        sizeof(buffer), &dwLen) != STATUS_SUCCESS ||
+        info->NameLength > keyNameSize)
+    {
+        return FALSE;
+    }
+
+    DPRINT("info->Name %s info->NameLength %d\n", info->Name, info->NameLength);
+
+    memcpy( szKeyName, info->Name, info->NameLength);
+    szKeyName[info->NameLength / sizeof(WCHAR)] = '\0';
+
+    DPRINT("returning %s\n", szKeyName);
+    return TRUE;
+}
+
+static BOOL NLS_RegGetDword(HANDLE hKey, LPCWSTR szValueName, DWORD *lpVal)
+{
+    BYTE buffer[128];
+    const KEY_VALUE_PARTIAL_INFORMATION *info = (KEY_VALUE_PARTIAL_INFORMATION *)buffer;
+    DWORD dwSize = sizeof(buffer);
+    UNICODE_STRING valueName;
+
+    RtlInitUnicodeString( &valueName, szValueName );
+
+    DPRINT("%p, %s\n", hKey, szValueName);
+    if (NtQueryValueKey( hKey, &valueName, KeyValuePartialInformation,
+                         buffer, dwSize, &dwSize ) == STATUS_SUCCESS &&
+        info->DataLength == sizeof(DWORD))
+    {
+        memcpy(lpVal, info->Data, sizeof(DWORD));
+        return TRUE;
+    }
+
+    return FALSE;
+}
+
 
 /* Callback function ptrs for EnumLanguageGrouplocalesA/W */
 typedef struct
@@ -471,8 +517,8 @@ EnumSystemCodePagesW (
         if (NLS_RegEnumValue(hKey, ulIndex, szNumber, sizeof(szNumber),
                              szValue, sizeof(szValue)))
         {
-            if (((dwFlags & CP_SUPPORTED)&&(wcslen(szValue) < 1))||
-                ((dwFlags & CP_INSTALLED)&&(wcslen(szValue) > 1)))
+            if ((dwFlags & CP_SUPPORTED)||
+                ((dwFlags & CP_INSTALLED)&&(wcslen(szValue) > 2)))
                     if (!lpCodePageEnumProc(szNumber))
                         break;
 
@@ -523,7 +569,7 @@ EnumSystemCodePagesA (
     hKey = NLS_RegOpenKey(0, L"\\Machine\\SYSTEM\\CurrentControlSet\\Control\\NLS\\CodePage");
     if (!hKey)
     {
-        DPRINT("NLS_RegOpenKey() failed\n");
+        DPRINT1("NLS_RegOpenKey() failed\n");
         return FALSE;
     }
 
@@ -536,7 +582,7 @@ EnumSystemCodePagesA (
 
             WideCharToMultiByte(CP_ACP, 0, szNumber, -1, szNumberA, sizeof(szNumberA), 0, 0);
 
-            if (((dwFlags & CP_SUPPORTED)&&(wcslen(szValue) < 1))||
+            if ((dwFlags & CP_SUPPORTED)||
                 ((dwFlags & CP_INSTALLED)&&(wcslen(szValue) > 1)))
                     if (!lpCodePageEnumProc(szNumberA))
                         break;
@@ -557,39 +603,61 @@ EnumSystemCodePagesA (
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 STDCALL
 EnumSystemGeoID(
     GEOCLASS        GeoClass,
-    GEOID           ParentGeoId,
+    GEOID           ParentGeoId, // reserved
     GEO_ENUMPROC    lpGeoEnumProc)
 {
-  if(!lpGeoEnumProc)
-  {
-    SetLastError(ERROR_INVALID_PARAMETER);
-    return FALSE;
-  }
+    WCHAR szNumber[5 + 1];
+    ULONG ulIndex = 0;
+    HANDLE hKey;
 
-  switch(GeoClass)
-  {
-    case GEOCLASS_NATION:
-      /*RtlEnterCriticalSection(&DllLock);
+    DPRINT("(0x%08X,0x%08X,%p)\n", GeoClass, ParentGeoId, lpGeoEnumProc);
 
-        FIXME - Get GEO IDs calling Csr
+    if(!lpGeoEnumProc || GeoClass != GEOCLASS_NATION)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
 
-      RtlLeaveCriticalSection(&DllLock);*/
+    hKey = NLS_RegOpenKey(0, L"\\Registry\\Machine\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Telephony\\Country List");
+    if (!hKey)
+    {
+        DPRINT1("NLS_RegOpenKey() failed\n");
+        return FALSE;
+    }
 
-      SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-      break;
+    while (NLS_RegEnumSubKey(hKey, ulIndex, szNumber, sizeof(szNumber)))
+    {
+        BOOL bContinue = TRUE;
+        DWORD dwGeoId;
+        HANDLE hSubKey = NLS_RegOpenKey(hKey, szNumber);
 
-    default:
-      SetLastError(ERROR_INVALID_FLAGS);
-      return FALSE;
-  }
+        if (hSubKey)
+        {
+            if (NLS_RegGetDword(hSubKey, L"CountryCode", &dwGeoId))
+            {
+                if (!lpGeoEnumProc(dwGeoId))
+                    bContinue = FALSE;
+            }
 
-  return FALSE;
+            NtClose(hSubKey);
+        }
+
+        if (!bContinue)
+            break;
+
+        ulIndex++;
+    }
+
+    if (hKey)
+        NtClose(hKey);
+
+    return TRUE;
 }
 
 
@@ -603,6 +671,20 @@ EnumSystemLanguageGroupsA(
     DWORD                   dwFlags,
     LONG_PTR                lParam)
 {
+    DPRINT("(%p,0x%08X,0x%08lX)\n", pLangGroupEnumProc, dwFlags, lParam);
+
+    if ((!dwFlags & LGRPID_INSTALLED)&&(!dwFlags & LGRPID_SUPPORTED))
+    {
+        SetLastError(ERROR_INVALID_FLAGS);
+        return FALSE;
+    }
+
+    if (!pLangGroupEnumProc)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return 0;
 }
@@ -618,6 +700,20 @@ EnumSystemLanguageGroupsW(
     DWORD                   dwFlags,
     LONG_PTR                lParam)
 {
+    DPRINT("(%p,0x%08X,0x%08lX)\n", pLangGroupEnumProc, dwFlags, lParam);
+
+    if ((!dwFlags & LGRPID_INSTALLED)&&(!dwFlags & LGRPID_SUPPORTED))
+    {
+        SetLastError(ERROR_INVALID_FLAGS);
+        return FALSE;
+    }
+
+    if (!pLangGroupEnumProc)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return 0;
 }
@@ -1056,6 +1152,80 @@ GetCPInfoExA(
     return 0;
 }
 
+static int
+NLS_GetGeoFriendlyName(GEOID Location, LPWSTR szFriendlyName, int cchData)
+{
+    HANDLE hKey;
+    WCHAR szPath[MAX_PATH];
+    UNICODE_STRING ValueName;
+    KEY_VALUE_PARTIAL_INFORMATION *info;
+    static const int info_size = FIELD_OFFSET(KEY_VALUE_PARTIAL_INFORMATION, Data);
+    DWORD dwSize;
+    NTSTATUS Status;
+    int Ret;
+
+    swprintf(szPath, L"\\Registry\\Machine\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Telephony\\Country List\\%d", Location);
+
+    hKey = NLS_RegOpenKey(0, szPath);
+    if (!hKey)
+    {
+        DPRINT1("NLS_RegOpenKey() failed\n");
+        return 0;
+    }
+
+    dwSize = info_size + cchData * sizeof(WCHAR);
+
+    if (!(info = HeapAlloc(GetProcessHeap(), 0, dwSize)))
+    {
+        NtClose(hKey);
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        return 0;
+    }
+
+    RtlInitUnicodeString(&ValueName, L"Name");
+
+    Status = NtQueryValueKey(hKey, &ValueName, KeyValuePartialInformation,
+                             (LPBYTE)info, dwSize, &dwSize);
+
+    if (!Status)
+    {
+        Ret = (dwSize - info_size) / sizeof(WCHAR);
+
+        if (!Ret || ((WCHAR *)info->Data)[Ret-1])
+        {
+            if (Ret < cchData || !szFriendlyName) Ret++;
+            else
+            {
+                SetLastError(ERROR_INSUFFICIENT_BUFFER);
+                Ret = 0;
+            }
+        }
+
+        if (Ret && szFriendlyName)
+        {
+            memcpy(szFriendlyName, info->Data, (Ret-1) * sizeof(WCHAR));
+            szFriendlyName[Ret-1] = 0;
+        }
+    }
+    else if (Status == STATUS_BUFFER_OVERFLOW && !szFriendlyName)
+    {
+        Ret = (dwSize - info_size) / sizeof(WCHAR) + 1;
+    }
+    else if (Status == STATUS_OBJECT_NAME_NOT_FOUND)
+    {
+        Ret = -1;
+    }
+    else
+    {
+        SetLastError(RtlNtStatusToDosError(Status));
+        Ret = 0;
+    }
+
+    NtClose(hKey);
+    HeapFree(GetProcessHeap(), 0, info);
+
+    return Ret;
+}
 
 /*
  * @unimplemented
@@ -1065,11 +1235,35 @@ STDCALL
 GetGeoInfoW(
     GEOID       Location,
     GEOTYPE     GeoType,
-    LPWSTR     lpGeoData,
+    LPWSTR      lpGeoData,
     int         cchData,
     LANGID      LangId)
 {
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    DPRINT1("%d %d %p %d %d\n", Location, GeoType, lpGeoData, cchData, LangId);
+
+    if ((GeoType == GEO_TIMEZONES)||(GeoType == GEO_OFFICIALLANGUAGES))
+    {
+        SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    }
+
+    switch (GeoType)
+    {
+        case GEO_FRIENDLYNAME:
+        {
+            return NLS_GetGeoFriendlyName(Location, lpGeoData, cchData);
+        }
+        case GEO_NATION:
+        case GEO_LATITUDE:
+        case GEO_LONGITUDE:
+        case GEO_ISO2:
+        case GEO_ISO3:
+        case GEO_RFC1766:
+        case GEO_LCID:
+        case GEO_OFFICIALNAME:
+            SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+        break;
+    }
+
     return 0;
 }
 
@@ -1082,11 +1276,44 @@ STDCALL
 GetGeoInfoA(
     GEOID       Location,
     GEOTYPE     GeoType,
-    LPSTR     lpGeoData,
+    LPSTR       lpGeoData,
     int         cchData,
     LANGID      LangId)
 {
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    DPRINT1("%d %d %p %d %d\n", Location, GeoType, lpGeoData, cchData, LangId);
+
+    if ((GeoType == GEO_TIMEZONES)||(GeoType == GEO_OFFICIALLANGUAGES))
+    {
+        SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    }
+
+    switch (GeoType)
+    {
+        case GEO_FRIENDLYNAME:
+        {
+            WCHAR szBuffer[MAX_PATH];
+            int Ret;
+        
+            Ret = NLS_GetGeoFriendlyName(Location, szBuffer, cchData);
+            char szBufferA[sizeof(szBuffer)/sizeof(WCHAR)];
+
+            WideCharToMultiByte(CP_ACP, 0, szBuffer, -1, szBufferA, sizeof(szBufferA), 0, 0);
+            strcpy(lpGeoData, szBufferA);
+
+            return Ret;
+        }
+        case GEO_NATION:
+        case GEO_LATITUDE:
+        case GEO_LONGITUDE:
+        case GEO_ISO2:
+        case GEO_ISO3:
+        case GEO_RFC1766:
+        case GEO_LCID:
+        case GEO_OFFICIALNAME:
+            SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+        break;
+    }
+
     return 0;
 }
 
