@@ -53,6 +53,13 @@ static const WCHAR szLocaleKeyName[] =
     'C','o','n','t','r','o','l','\\','N','l','s','\\','L','o','c','a','l','e',0
 };
 
+static const WCHAR szLangGroupsKeyName[] = {
+    'M','a','c','h','i','n','e','\\','S','y','s','t','e','m','\\',
+    'C','u','r','r','e','n','t','C','o','n','t','r','o','l','S','e','t','\\',
+    'C','o','n','t','r','o','l','\\','N','l','s','\\',
+    'L','a','n','g','u','a','g','e',' ','G','r','o','u','p','s',0
+};
+
 /******************************************************************************
  * @implemented
  * RIPPED FROM WINE's dlls\kernel\locale.c rev 1.42
@@ -326,6 +333,47 @@ static BOOL NLS_RegGetDword(HANDLE hKey, LPCWSTR szValueName, DWORD *lpVal)
     return FALSE;
 }
 
+static BOOL NLS_GetLanguageGroupName(LGRPID lgrpid, LPWSTR szName, ULONG nameSize)
+{
+    LANGID  langId;
+    LPCWSTR szResourceName = MAKEINTRESOURCEW(((lgrpid + 0x2000) >> 4) + 1);
+    HRSRC   hResource;
+    BOOL    bRet = FALSE;
+
+    /* FIXME: Is it correct to use the system default langid? */
+    langId = GetSystemDefaultLangID();
+
+    if (SUBLANGID(langId) == SUBLANG_NEUTRAL)
+        langId = MAKELANGID( PRIMARYLANGID(langId), SUBLANG_DEFAULT );
+
+    hResource = FindResourceExW( hCurrentModule, (LPWSTR)RT_STRING, szResourceName, langId );
+
+    if (hResource)
+    {
+        HGLOBAL hResDir = LoadResource( hCurrentModule, hResource );
+
+        if (hResDir)
+        {
+            ULONG   iResourceIndex = lgrpid & 0xf;
+            LPCWSTR lpResEntry = LockResource( hResDir );
+            ULONG   i;
+
+            for (i = 0; i < iResourceIndex; i++)
+                lpResEntry += *lpResEntry + 1;
+
+            if (*lpResEntry < nameSize)
+            {
+                memcpy( szName, lpResEntry + 1, *lpResEntry * sizeof(WCHAR) );
+                szName[*lpResEntry] = '\0';
+                bRet = TRUE;
+            }
+
+        }
+        FreeResource( hResource );
+    }
+    return bRet;
+}
+
 
 /* Callback function ptrs for EnumLanguageGrouplocalesA/W */
 typedef struct
@@ -364,7 +412,10 @@ static BOOL NLS_EnumLanguageGroupLocales(ENUMLANGUAGEGROUPLOCALE_CALLBACKS *lpPr
     hKey = NLS_RegOpenKey( 0, szLocaleKeyName );
 
     if (!hKey)
-        DPRINT("NLS registry key not found. Please apply the default registry file 'wine.inf'\n");
+    {
+        DPRINT1("NLS_RegOpenKey() failed\n");
+        return FALSE;
+    }
 
     while (bContinue)
     {
@@ -661,8 +712,108 @@ EnumSystemGeoID(
 }
 
 
+/* Callback function ptrs for EnumSystemLanguageGroupsA/W */
+typedef struct
+{
+  LANGUAGEGROUP_ENUMPROCA procA;
+  LANGUAGEGROUP_ENUMPROCW procW;
+  DWORD    dwFlags;
+  LONG_PTR lParam;
+} ENUMLANGUAGEGROUP_CALLBACKS;
+
+
+/* Internal implementation of EnumSystemLanguageGroupsA/W */
+static BOOL NLS_EnumSystemLanguageGroups(ENUMLANGUAGEGROUP_CALLBACKS *lpProcs)
+{
+    WCHAR szNumber[10], szValue[4];
+    HANDLE hKey;
+    BOOL bContinue = TRUE;
+    ULONG ulIndex = 0;
+
+    if (!lpProcs)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    switch (lpProcs->dwFlags)
+    {
+    case 0:
+        /* Default to LGRPID_INSTALLED */
+        lpProcs->dwFlags = LGRPID_INSTALLED;
+        /* Fall through... */
+    case LGRPID_INSTALLED:
+    case LGRPID_SUPPORTED:
+        break;
+    default:
+        SetLastError(ERROR_INVALID_FLAGS);
+        return FALSE;
+    }
+
+    hKey = NLS_RegOpenKey( 0, szLangGroupsKeyName );
+
+    if (!hKey)
+    {
+        DPRINT1("NLS_RegOpenKey() failed\n");
+        return FALSE;
+    }
+
+    while (bContinue)
+    {
+        if (NLS_RegEnumValue( hKey, ulIndex, szNumber, sizeof(szNumber),
+                              szValue, sizeof(szValue) ))
+        {
+            BOOL bInstalled = szValue[0] == '1' ? TRUE : FALSE;
+            LGRPID lgrpid = wcstoul( szNumber, NULL, 16 );
+
+            DPRINT("grpid %s (%sinstalled)\n", szNumber,
+                   bInstalled ? "" : "not ");
+
+            if (lpProcs->dwFlags == LGRPID_SUPPORTED || bInstalled)
+            {
+                WCHAR szGrpName[48];
+
+                if (!NLS_GetLanguageGroupName( lgrpid, szGrpName, sizeof(szGrpName) / sizeof(WCHAR) ))
+                    szGrpName[0] = '\0';
+
+                if (lpProcs->procW)
+                    bContinue = lpProcs->procW( lgrpid, szNumber, szGrpName, lpProcs->dwFlags,
+                                                lpProcs->lParam );
+                else
+                {
+                    char szNumberA[sizeof(szNumber)/sizeof(WCHAR)];
+                    char szGrpNameA[48];
+
+                    /* FIXME: MSDN doesn't say which code page the W->A translation uses,
+                     *        or whether the language names are ever localised. Assume CP_ACP.
+                     */
+
+                    WideCharToMultiByte(CP_ACP, 0, szNumber, -1, szNumberA, sizeof(szNumberA), 0, 0);
+                    WideCharToMultiByte(CP_ACP, 0, szGrpName, -1, szGrpNameA, sizeof(szGrpNameA), 0, 0);
+
+                    bContinue = lpProcs->procA( lgrpid, szNumberA, szGrpNameA, lpProcs->dwFlags,
+                                                lpProcs->lParam );
+                }
+            }
+
+            ulIndex++;
+        }
+        else
+            bContinue = FALSE;
+
+        if (!bContinue)
+            break;
+    }
+
+    if (hKey)
+        NtClose( hKey );
+
+    return TRUE;
+}
+
+
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 STDCALL
@@ -671,27 +822,21 @@ EnumSystemLanguageGroupsA(
     DWORD                   dwFlags,
     LONG_PTR                lParam)
 {
+    ENUMLANGUAGEGROUP_CALLBACKS procs;
+
     DPRINT("(%p,0x%08X,0x%08lX)\n", pLangGroupEnumProc, dwFlags, lParam);
 
-    if ((!dwFlags & LGRPID_INSTALLED)&&(!dwFlags & LGRPID_SUPPORTED))
-    {
-        SetLastError(ERROR_INVALID_FLAGS);
-        return FALSE;
-    }
+    procs.procA = pLangGroupEnumProc;
+    procs.procW = NULL;
+    procs.dwFlags = dwFlags;
+    procs.lParam = lParam;
 
-    if (!pLangGroupEnumProc)
-    {
-        SetLastError(ERROR_INVALID_PARAMETER);
-        return FALSE;
-    }
-
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
+    return NLS_EnumSystemLanguageGroups( pLangGroupEnumProc ? &procs : NULL);
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 STDCALL
@@ -700,27 +845,99 @@ EnumSystemLanguageGroupsW(
     DWORD                   dwFlags,
     LONG_PTR                lParam)
 {
+    ENUMLANGUAGEGROUP_CALLBACKS procs;
+
     DPRINT("(%p,0x%08X,0x%08lX)\n", pLangGroupEnumProc, dwFlags, lParam);
 
-    if ((!dwFlags & LGRPID_INSTALLED)&&(!dwFlags & LGRPID_SUPPORTED))
-    {
-        SetLastError(ERROR_INVALID_FLAGS);
-        return FALSE;
-    }
+    procs.procA = NULL;
+    procs.procW = pLangGroupEnumProc;
+    procs.dwFlags = dwFlags;
+    procs.lParam = lParam;
 
-    if (!pLangGroupEnumProc)
+    return NLS_EnumSystemLanguageGroups( pLangGroupEnumProc ? &procs : NULL);
+}
+
+
+/* Callback function ptrs for EnumSystemLocalesA/W */
+typedef struct
+{
+  LOCALE_ENUMPROCA procA;
+  LOCALE_ENUMPROCW procW;
+  DWORD            dwFlags;
+} ENUMSYSTEMLOCALES_CALLBACKS;
+
+
+/* Internal implementation of EnumSystemLocalesA/W */
+static BOOL NLS_EnumSystemLocales(ENUMSYSTEMLOCALES_CALLBACKS *lpProcs)
+{
+    WCHAR szNumber[10], szValue[4];
+    HANDLE hKey;
+    BOOL bContinue = TRUE;
+    ULONG ulIndex = 0;
+
+    if (!lpProcs)
     {
         SetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
     }
 
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
+    switch (lpProcs->dwFlags)
+    {
+        case LCID_INSTALLED:
+        case LCID_SUPPORTED:
+        case LCID_ALTERNATE_SORTS:
+            break;
+        default:
+            SetLastError(ERROR_INVALID_FLAGS);
+            return FALSE;
+    }
+
+    hKey = NLS_RegOpenKey(0, L"\\Registry\\Machine\\System\\CurrentControlSet\\Control\\Nls\\Locale");
+
+    if (!hKey)
+    {
+        DPRINT1("NLS_RegOpenKey() failed\n");
+        return FALSE;
+    }
+
+    while (bContinue)
+    {
+        if (NLS_RegEnumValue( hKey, ulIndex, szNumber, sizeof(szNumber),
+                              szValue, sizeof(szValue)))
+        {
+            if ((lpProcs->dwFlags == LCID_SUPPORTED)||
+                ((lpProcs->dwFlags == LCID_INSTALLED)&&(wcslen(szValue) > 0)))
+            {
+                if (lpProcs->procW)
+                {
+                    bContinue = lpProcs->procW(szNumber);
+                }
+                else
+                {
+                    char szNumberA[sizeof(szNumber)/sizeof(WCHAR)];
+
+                    WideCharToMultiByte(CP_ACP, 0, szNumber, -1, szNumberA, sizeof(szNumberA), 0, 0);
+                    bContinue = lpProcs->procA(szNumberA);
+                }
+            }
+
+            ulIndex++;
+        }
+        else
+            bContinue = FALSE;
+
+        if (!bContinue)
+            break;
+    }
+
+    if (hKey)
+        NtClose(hKey);
+
+    return TRUE;
 }
 
-
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 STDCALL
@@ -729,8 +946,15 @@ EnumSystemLocalesA (
     DWORD            dwFlags
     )
 {
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
+    ENUMSYSTEMLOCALES_CALLBACKS procs;
+
+    DPRINT("(%p,0x%08X)\n", lpLocaleEnumProc, dwFlags);
+
+    procs.procA = lpLocaleEnumProc;
+    procs.procW = NULL;
+    procs.dwFlags = dwFlags;
+
+    return NLS_EnumSystemLocales(lpLocaleEnumProc ? &procs : NULL);
 }
 
 
@@ -744,89 +968,15 @@ EnumSystemLocalesW (
     DWORD            dwFlags
     )
 {
-	NTSTATUS result;
-	HANDLE langKey;
-	UNICODE_STRING langKeyName = RTL_CONSTANT_STRING(
-    L"\\Registry\\Machine\\System\\CurrentControlSet\\Control\\Nls\\Locale");
-	OBJECT_ATTRIBUTES objectAttributes;
-	ULONG index, length;
-	unsigned char fullInfo[sizeof(KEY_VALUE_FULL_INFORMATION)+255*2]; //FIXME: MAX_PATH*2
-	PKEY_VALUE_FULL_INFORMATION pFullInfo;
+    ENUMSYSTEMLOCALES_CALLBACKS procs;
 
-	//TODO: Combine with EnumSystemLocalesA - maybe by having one common part, driven by some
-	//      unicode/non-unicode flag.
+    DPRINT("(%p,0x%08X)\n", lpLocaleEnumProc, dwFlags);
 
-	//FIXME: dwFlags is really not used, sorry
+    procs.procA = NULL;
+    procs.procW = lpLocaleEnumProc;
+    procs.dwFlags = dwFlags;
 
-	// Check if enum proc is a real one
-	if (lpLocaleEnumProc == NULL)
-	{
-		SetLastError(ERROR_INVALID_PARAMETER);
-		return FALSE;
-	}
-
-	// Open language registry key
-	//FIXME: Should we use critical section here?
-
-	InitializeObjectAttributes(&objectAttributes,
-			     &langKeyName,
-			     OBJ_CASE_INSENSITIVE,
-			     NULL,
-			     NULL);
-
-	result = NtOpenKey(&langKey,
-			 KEY_READ,
-			 &objectAttributes);
-
-	if (!NT_SUCCESS(result))
-		return result;
-
-	DPRINT("Registry key succesfully opened\n");
-
-	length = sizeof(KEY_VALUE_FULL_INFORMATION) + 255*2;//MAX_PATH*sizeof(WCHAR);
-	pFullInfo = (PKEY_VALUE_FULL_INFORMATION)&fullInfo;
-	RtlZeroMemory(pFullInfo, length);
-
-	index = 0;
-
-	result = NtEnumerateValueKey(langKey,
-								index,
-								KeyValueFullInformation,
-								pFullInfo,
-								length,
-								&length);
-
-	DPRINT("First enumerate call result=%x\n", result);
-	while (result != STATUS_NO_MORE_ENTRIES)
-	{
-		int i;
-		WCHAR lpLocale[9];
-
-		// TODO: Here we should check, in case dwFlags & LCID_INSTALLED is specified,
-		// if this locale is really installed
-		// but for now we skip it
-
-		for (i=0; i<8; i++)
-			lpLocale[i] = pFullInfo->Name[i];
-
-		lpLocale[8]=0;
-
-		DPRINT("Locale=%S\n", lpLocale);
-
-		// Call Enum func
-		if (!lpLocaleEnumProc((LPWSTR)lpLocale))
-            break;
-
-		// Zero previous values
-		RtlZeroMemory(pFullInfo, length);
-
-		index++;
-		result = NtEnumerateValueKey(langKey, index,KeyValueFullInformation, pFullInfo, length, &length);
-	}
-
-	NtClose(langKey);
-
-	return STATUS_SUCCESS;
+    return NLS_EnumSystemLocales(lpLocaleEnumProc ? &procs : NULL);
 }
 
 
