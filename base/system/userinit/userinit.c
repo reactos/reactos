@@ -22,7 +22,6 @@
  * FILE:        base/system/userinit/userinit.c
  * PROGRAMMERS: Thomas Weidenmueller (w3seek@users.sourceforge.net)
  *              Hervé Poussineau (hpoussin@reactos.org)
- *              Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 
 #include "userinit.h"
@@ -183,58 +182,6 @@ GetShell(
     }
 }
 
-static VOID
-StartAutoApplications(
-    IN INT clsid)
-{
-    WCHAR szPath[MAX_PATH] = {0};
-    HRESULT hResult;
-    HANDLE hFind;
-    WIN32_FIND_DATAW findData;
-    size_t len;
-
-    TRACE("(%d)\n", clsid);
-
-    hResult = SHGetFolderPathW(NULL, clsid, NULL, SHGFP_TYPE_CURRENT, szPath);
-    len = wcslen(szPath);
-    if (!SUCCEEDED(hResult) || len == 0)
-    {
-        WARN("SHGetFolderPath() failed with error %lu\n", GetLastError());
-        return;
-    }
-
-    wcscat(szPath, L"\\*");
-    hFind = FindFirstFileW(szPath, &findData);
-    if (hFind == INVALID_HANDLE_VALUE)
-    {
-        WARN("FindFirstFile(%s) failed with error %lu\n", debugstr_w(szPath), GetLastError());
-        return;
-    }
-
-    do
-    {
-        // Ignore "." and ".."
-        if (wcscmp(findData.cFileName, L".") == 0 ||
-            wcscmp(findData.cFileName, L"..") == 0)
-        {
-            continue;
-        }
-
-        // Don't run hidden files
-        if (findData.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN)
-            continue;
-
-        // Make the path
-        wcscpy(&szPath[len + 1], findData.cFileName);
-
-        TRACE("Executing %s in directory %s\n",
-            debugstr_w(findData.cFileName), debugstr_w(szPath));
-
-        ShellExecuteW(NULL, NULL, szPath, NULL, NULL, SW_SHOWDEFAULT);
-    } while (FindNextFileW(hFind, &findData));
-    FindClose(hFind);
-}
-
 static BOOL
 TryToStartShell(
     IN LPCWSTR Shell)
@@ -268,8 +215,7 @@ TryToStartShell(
         return FALSE;
     }
 
-    StartAutoApplications(CSIDL_STARTUP);
-    StartAutoApplications(CSIDL_COMMON_STARTUP);
+    // NOTE: Auto Startup codes are moved to base/shell/explorer/startup.cpp
     CloseHandle(pi.hProcess);
     CloseHandle(pi.hThread);
     return TRUE;

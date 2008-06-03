@@ -2,6 +2,7 @@
  * Copyright (C) 2002 Andreas Mohr
  * Copyright (C) 2002 Shachar Shemesh
  * Copyright (C) 2013 Edijs Kolesnikovics
+ * Copyright (C) 2018 Katayama Hirofumi MZ
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -259,6 +260,71 @@ end:
     return res == ERROR_SUCCESS ? TRUE : FALSE;
 }
 
+static BOOL
+AutoStartupApplications(INT nCSIDL_Folder)
+{
+    WCHAR szPath[MAX_PATH] = { 0 };
+    HRESULT hResult;
+    HANDLE hFind;
+    WIN32_FIND_DATAW FoundData;
+    size_t cchPathLen;
+
+    TRACE("(%d)\n", clsid);
+
+    // Get the special folder path
+    hResult = SHGetFolderPathW(NULL, nCSIDL_Folder, NULL, SHGFP_TYPE_CURRENT, szPath);
+    cchPathLen = wcslen(szPath);
+    if (!SUCCEEDED(hResult) || cchPathLen == 0)
+    {
+        WARN("SHGetFolderPath() failed with error %lu\n", GetLastError());
+        return FALSE;
+    }
+
+    // Build a path with wildcard
+    wcscatW(szPath, L"\\*");
+
+    // Start enumeration of files
+    hFind = FindFirstFileW(szPath, &FoundData);
+    if (hFind == INVALID_HANDLE_VALUE)
+    {
+        WARN("FindFirstFile(%s) failed with error %lu\n", debugstr_w(szPath), GetLastError());
+        return FALSE;
+    }
+
+    // Enumerate the files
+    do
+    {
+        // Ignore "." and ".."
+        if (wcscmp(FoundData.cFileName, L".") == 0 || wcscmp(FoundData.cFileName, L"..") == 0)
+            continue;
+
+        // Don't run hidden files
+        if (FoundData.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN)
+            continue;
+
+        // Build the path
+        wcscpy(&szPath[cchPathLen + 1], FoundData.cFileName);
+
+        TRACE("Executing %s in directory %s\n", debugstr_w(FoundData.cFileName), debugstr_w(szPath));
+
+        DWORD dwType;
+        if (GetBinaryTypeW(szPath, &dwType) )
+        {
+            runCmd(szPath, NULL, TRUE, FALSE);
+        }
+        else
+        {
+            SHELLEXECUTEINFOW ExecInfo;
+            ZeroMemory(&ExecInfo, sizeof(ExecInfo));
+            ExecInfo.cbSize = sizeof(ExecInfo);
+            ExecInfo.lpFile = szPath;
+            ShellExecuteExW(&ExecInfo);
+        }
+    } while (FindNextFileW(hFind, &FoundData));
+
+    FindClose(hFind);
+    return TRUE;
+}
 
 int
 ProcessStartupItems(VOID)
@@ -320,9 +386,11 @@ ProcessStartupItems(VOID)
     if (res && bNormalBoot && (SHRestricted(REST_NOCURRENTUSERRUNONCE) == 0))
         res = ProcessRunKeys(HKEY_CURRENT_USER, L"Run", FALSE, FALSE);
 
-    /* TODO: All users Startup folder */
+    /* All users Startup folder */
+    AutoStartupApplications(CSIDL_COMMON_STARTUP);
 
-    /* TODO: Current user Startup folder */
+    /* Current user Startup folder */
+    AutoStartupApplications(CSIDL_STARTUP);
 
     /* TODO: HKCU\RunOnce runs even if StartupHasBeenRun exists */
     if (res && bNormalBoot && (SHRestricted(REST_NOCURRENTUSERRUNONCE) == 0))
