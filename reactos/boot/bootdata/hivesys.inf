@@ -611,6 +611,24 @@ HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Locale","00000843",0x00000000,"5"
 ;HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Locale","00000455",0x00000000,""
 HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Locale","00000456",0x00000000,"1"
 
+HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language Groups","1",0x00000000,"1"
+HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language Groups","2",0x00000000,"1"
+HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language Groups","3",0x00000000,"1"
+HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language Groups","4",0x00000000,"1"
+HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language Groups","5",0x00000000,"1"
+HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language Groups","6",0x00000000,"1"
+HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language Groups","7",0x00000000,"1"
+HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language Groups","8",0x00000000,"1"
+HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language Groups","9",0x00000000,"1"
+HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language Groups","10",0x00000000,"1"
+HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language Groups","11",0x00000000,"1"
+HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language Groups","a",0x00000000,"1"
+HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language Groups","b",0x00000000,"1"
+HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language Groups","c",0x00000000,"1"
+HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language Groups","d",0x00000000,"1"
+HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language Groups","e",0x00000000,"1"
+HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language Groups","f",0x00000000,"1"
+
 ; Some installers check for SP6
 HKLM,"SYSTEM\CurrentControlSet\Control\Windows","CSDVersion",0x00010001,0x00000600
 
