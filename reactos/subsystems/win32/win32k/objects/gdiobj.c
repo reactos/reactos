@@ -171,6 +171,7 @@ LockErrorDebugOutput(HGDIOBJ hObj, PGDI_TABLE_ENTRY Entry, LPSTR Function)
     if ((Entry->Type & GDI_ENTRY_BASETYPE_MASK) == 0)
     {
         DPRINT1("%s: Attempted to lock object 0x%x that is deleted!\n", Function, hObj);
+        GDIDBG_TRACEDELETER(hObj);
     }
     else if (GDI_HANDLE_GET_REUSECNT(hObj) != GDI_ENTRY_GET_REUSECNT(Entry->Type))
     {
@@ -527,6 +528,7 @@ LockHandle:
                 /* Now it's time to free the memory */
                 GDIOBJ_FreeObj(Object, TypeIndex);
 
+                GDIDBG_CAPTUREDELETER(hObj);
                 return Ret;
             }
             else
@@ -589,7 +591,7 @@ IsObjectDead(HGDIOBJ hObject)
     INT Index = GDI_HANDLE_GET_INDEX(hObject);
     PGDI_TABLE_ENTRY Entry = &GdiHandleTable->Entries[Index];
     // We check to see if the objects are knocking on deaths door.
-    if ((Entry->Type & ~GDI_ENTRY_REUSE_MASK) != 0 && Entry->KernelData != NULL)
+    if ((Entry->Type & GDI_ENTRY_BASETYPE_MASK) != 0)
         return FALSE;
     else
     {
@@ -747,7 +749,8 @@ GDIOBJ_LockObj(HGDIOBJ hObj, DWORD ExpectedType)
         DPRINT1("Attempted to lock object 0x%x of wrong type (Handle: 0x%x, requested: 0x%x)\n",
                 hObj, HandleType, ExpectedType);
         GDIDBG_TRACECALLER();
-        GDIDBG_TRACEALLOCATOR(GDI_HANDLE_GET_INDEX(hObj));
+        GDIDBG_TRACEALLOCATOR(hObj);
+        GDIDBG_TRACEDELETER(hObj);
         return NULL;
     }
 
@@ -1009,7 +1012,7 @@ GDIOBJ_OwnedByCurrentProcess(HGDIOBJ ObjectHandle)
 
         Entry = GDI_HANDLE_GET_ENTRY(GdiHandleTable, ObjectHandle);
         Ret = Entry->KernelData != NULL &&
-              (Entry->Type & ~GDI_ENTRY_REUSE_MASK) != 0 &&
+              (Entry->Type & GDI_ENTRY_BASETYPE_MASK) != 0 &&
               (HANDLE)((ULONG_PTR)Entry->ProcessId & ~0x1) == ProcessId;
 
         return Ret;
@@ -1179,7 +1182,7 @@ LockHandle:
         {
             PW32THREAD PrevThread;
 
-            if ((Entry->Type & ~GDI_ENTRY_REUSE_MASK) != 0 && Entry->KernelData != NULL)
+            if ((Entry->Type & GDI_ENTRY_BASETYPE_MASK) != 0)
             {
                 POBJ Object = Entry->KernelData;
 
@@ -1309,7 +1312,7 @@ LockHandleFrom:
             PW32THREAD PrevThread;
             POBJ Object;
 
-            if ((FromEntry->Type & ~GDI_ENTRY_REUSE_MASK) != 0 && FromEntry->KernelData != NULL)
+            if ((FromEntry->Type & GDI_ENTRY_BASETYPE_MASK) != 0)
             {
                 Object = FromEntry->KernelData;
 

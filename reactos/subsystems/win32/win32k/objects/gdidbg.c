@@ -7,6 +7,7 @@ static int leak_reported = 0;
 #define GDI_STACK_LEVELS 12
 static ULONG GDIHandleAllocator[GDI_HANDLE_COUNT][GDI_STACK_LEVELS+1];
 static ULONG GDIHandleLocker[GDI_HANDLE_COUNT][GDI_STACK_LEVELS+1];
+static ULONG GDIHandleDeleter[GDI_HANDLE_COUNT][GDI_STACK_LEVELS+1];
 struct DbgOpenGDIHandle
 {
     ULONG idx;
@@ -236,16 +237,21 @@ GdiDbgHTIntegrityCheck()
 #define GDIDBG_TRACECALLER() \
   DPRINT1("-> called from:\n"); \
   KeRosDumpStackFrames(NULL, 20);
-#define GDIDBG_TRACEALLOCATOR(index) \
+#define GDIDBG_TRACEALLOCATOR(handle) \
   DPRINT1("-> allocated from:\n"); \
-  KeRosDumpStackFrames(GDIHandleAllocator[index], GDI_STACK_LEVELS);
-#define GDIDBG_TRACELOCKER(index) \
+  KeRosDumpStackFrames(GDIHandleAllocator[GDI_HANDLE_GET_INDEX(handle)], GDI_STACK_LEVELS);
+#define GDIDBG_TRACELOCKER(handle) \
   DPRINT1("-> locked from:\n"); \
-  KeRosDumpStackFrames(GDIHandleLocker[index], GDI_STACK_LEVELS);
-#define GDIDBG_CAPTUREALLOCATOR(index) \
-  CaptureStackBackTace((PVOID*)GDIHandleAllocator[index], GDI_STACK_LEVELS);
-#define GDIDBG_CAPTURELOCKER(index) \
-  CaptureStackBackTace((PVOID*)GDIHandleLocker[index], GDI_STACK_LEVELS);
+  KeRosDumpStackFrames(GDIHandleLocker[GDI_HANDLE_GET_INDEX(handle)], GDI_STACK_LEVELS);
+#define GDIDBG_TRACEDELETER(handle) \
+  DPRINT1("-> deleted from:\n"); \
+  KeRosDumpStackFrames(GDIHandleDeleter[GDI_HANDLE_GET_INDEX(handle)], GDI_STACK_LEVELS);
+#define GDIDBG_CAPTUREALLOCATOR(handle) \
+  CaptureStackBackTace((PVOID*)GDIHandleAllocator[GDI_HANDLE_GET_INDEX(handle)], GDI_STACK_LEVELS);
+#define GDIDBG_CAPTURELOCKER(handle) \
+  CaptureStackBackTace((PVOID*)GDIHandleLocker[GDI_HANDLE_GET_INDEX(handle)], GDI_STACK_LEVELS);
+#define GDIDBG_CAPTUREDELETER(handle) \
+  CaptureStackBackTace((PVOID*)GDIHandleDeleter[GDI_HANDLE_GET_INDEX(handle)], GDI_STACK_LEVELS);
 #define GDIDBG_DUMPHANDLETABLE() \
   IntDumpHandleTable(GdiHandleTable)
 #define GDIDBG_INITLOOPTRACE() \
@@ -263,9 +269,11 @@ GdiDbgHTIntegrityCheck()
 #define GDIDBG_TRACELOCKER(index)
 #define GDIDBG_CAPTUREALLOCATOR(index)
 #define GDIDBG_CAPTURELOCKER(index)
+#define GDIDBG_CAPTUREDELETER(handle)
 #define GDIDBG_DUMPHANDLETABLE()
 #define GDIDBG_INITLOOPTRACE()
 #define GDIDBG_TRACELOOP(Handle, PrevThread, Thread)
+#define GDIDBG_TRACEDELETER(handle)
 
 #endif /* GDI_DEBUG */
 
