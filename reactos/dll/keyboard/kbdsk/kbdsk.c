@@ -1,9 +1,9 @@
 /*
- * ReactOS Slovak ASCII Keyboard layout
+ * ReactOS Slovak Keyboard layout
  * Copyright (C) 2005 ReactOS
  * License: LGPL, see: LGPL.txt
  *
- * Created by Malin (malin23@atlas.sk)
+ * Created by Milan Margus (malin23@atlas.sk)
  * Thanks to creators of others kbdxx.dll
  */
 
@@ -39,13 +39,13 @@ ROSDATA USHORT scancode_to_vk[] = {
   VK_EMPTY,     VK_ESCAPE,    '1',          '2',
   '3',          '4',          '5',          '6',
   '7',          '8',          '9',          '0',
- VK_OEM_MINUS, VK_OEM_PLUS,  VK_BACK,
+  VK_OEM_MINUS, VK_OEM_PLUS,  VK_BACK,
   /* - 0f - */
   /* First Letters Row */
   VK_TAB,       'Q',          'W',          'E',
   'R',          'T',          'Y',          'U',
   'I',          'O',          'P',
-  VK_OEM_4,     VK_OEM_6,	VK_RETURN,
+  VK_OEM_4,     VK_OEM_6,     VK_RETURN,
   /* - 1d - */
   /* Second Letters Row */
   VK_LCONTROL,
@@ -107,11 +107,45 @@ ROSDATA USHORT scancode_to_vk[] = {
 };
 
 ROSDATA VSC_VK extcode0_to_vk[] = {
-  {0x1c, VK_RETURN|KEXT},	//Keypad return
-  {0x1d, VK_RCONTROL|KEXT},//Right control key
-  {0x35, VK_DIVIDE|KEXT}, 	// Numpad div
-  {0x38, VK_RMENU|KEXT},  //AltGr?
-  {0, 0},
+  { 0x10, VK_MEDIA_PREV_TRACK | KEXT },
+  { 0x19, VK_MEDIA_NEXT_TRACK | KEXT },
+  { 0x1D, VK_RCONTROL | KEXT },
+  { 0x20, VK_VOLUME_MUTE | KEXT },
+  { 0x21, VK_LAUNCH_APP2 | KEXT },
+  { 0x22, VK_MEDIA_PLAY_PAUSE | KEXT },
+  { 0x24, VK_MEDIA_STOP | KEXT },
+  { 0x2E, VK_VOLUME_DOWN | KEXT },
+  { 0x30, VK_VOLUME_UP | KEXT },
+  { 0x32, VK_BROWSER_HOME | KEXT },
+  { 0x35, VK_DIVIDE | KEXT },
+  { 0x37, VK_SNAPSHOT | KEXT },
+  { 0x38, VK_RMENU | KEXT },
+  { 0x47, VK_HOME | KEXT },
+  { 0x48, VK_UP | KEXT },
+  { 0x49, VK_PRIOR | KEXT },
+  { 0x4B, VK_LEFT | KEXT },
+  { 0x4D, VK_RIGHT | KEXT },
+  { 0x4F, VK_END | KEXT },
+  { 0x50, VK_DOWN | KEXT },
+  { 0x51, VK_NEXT | KEXT },
+  { 0x52, VK_INSERT | KEXT },
+  { 0x53, VK_DELETE | KEXT },
+  { 0x5B, VK_LWIN | KEXT },
+  { 0x5C, VK_RWIN | KEXT },
+  { 0x5D, VK_APPS | KEXT },
+  { 0x5F, VK_SLEEP | KEXT },
+  { 0x65, VK_BROWSER_SEARCH | KEXT },
+  { 0x66, VK_BROWSER_FAVORITES | KEXT },
+  { 0x67, VK_BROWSER_REFRESH | KEXT },
+  { 0x68, VK_BROWSER_STOP | KEXT },
+  { 0x69, VK_BROWSER_FORWARD | KEXT },
+  { 0x6A, VK_BROWSER_BACK | KEXT },
+  { 0x6B, VK_LAUNCH_APP1 | KEXT },
+  { 0x6C, VK_LAUNCH_MAIL | KEXT },
+  { 0x6D, VK_LAUNCH_MEDIA_SELECT | KEXT },
+  { 0x1C, VK_RETURN | KEXT },
+  { 0x46, VK_CANCEL | KEXT },
+  { 0, 0 },
 };
 
 ROSDATA VSC_VK extcode1_to_vk[] = {
@@ -128,7 +162,7 @@ ROSDATA VK_TO_BIT modifier_keys[] = {
 ROSDATA MODIFIERS modifier_bits = {
   modifier_keys,
   7,
-  { 0, 1, 2, 3 ,0, 0,4,5} /* Modifier bit order, NONE, SHIFT, CTRL, SHIFT+CTRL,ALT(not used),SHIFT-ALT (not used), CTR+ALT, SHIFT-CTRL-ALT*/
+  { 0, 1, 2, 0 ,0, 0,3,0} /* Modifier bit order, NONE, SHIFT, CTRL, SHIFT+CTRL,ALT(not used),SHIFT-ALT (not used), CTR+ALT, SHIFT-CTRL-ALT*/
 };
 
 #define NOCAPS 0
@@ -136,31 +170,8 @@ ROSDATA MODIFIERS modifier_bits = {
 
 ROSDATA VK_TO_WCHARS2 key_to_chars_2mod[] = {
   /* Normal vs Shifted */
-  /* The numbers */
-  { '1',		NOCAPS, {'+', '1'} },
-  { '2',		NOCAPS, {0x013e, '2'} },  // l with caron
-  { '3',		NOCAPS, {0x0161, '3'} },  // s with caron
-  { '4',		NOCAPS, {0x010d, '4'} },  // c with caron
-  { '5',		NOCAPS, {0x0165, '5'} },  // t with caron
-  { '6',		NOCAPS, {0x017e, '6'} },  // z with caron
-  { '7',		NOCAPS, {0x00fd, '7'} },  // y with acute
-  { '8',		NOCAPS, {0x00e1, '8'} },  // a with acute
-  { '9',		NOCAPS, {0x00ed, '9'} },  // i with acute
-  { '0',		NOCAPS, {0x00e9, '0'} },  // e with acute
-  { VK_OEM_PLUS,	NOCAPS, {WCH_DEAD, WCH_DEAD} },  // dead letters - acute, caron
-  { VK_EMPTY,		0,	{0x00b4, 0x02c7} },  // VK_OEM_PLUS death
-  { VK_OEM_MINUS,	NOCAPS, {'=', '%'} },
-  { VK_OEM_1,		NOCAPS, {0x00f4, '\"'} },  // o with circumflex
-  { VK_OEM_2,		NOCAPS, {'-', '_'} },
-  { VK_OEM_3,		NOCAPS, {0x00a7, '!'} },  // section sign
-  { VK_OEM_4,		NOCAPS, {0x00fa, '/'} },  // u with acute
-  { VK_OEM_5,		NOCAPS, {'&', '*'} },
-  { VK_OEM_6,		NOCAPS, {0x00E4, '('} },  // a with diaeresis
-  { VK_OEM_7,		NOCAPS, {0x0148, ')'} },  // n with caron
   { VK_OEM_8,		NOCAPS, {';', WCH_DEAD} },  // degree sign
   { VK_EMPTY,		0,	{WCH_NONE, 0x00b0} },  // VK_OEM_8 death
-  { VK_OEM_COMMA,	NOCAPS, {',', '?'} },
-  { VK_OEM_PERIOD,	NOCAPS, {'.', ':'} },
 
   /* Keys that do not have shift states */
   { VK_TAB,		NOCAPS, {'\t','\t'} },
@@ -181,35 +192,69 @@ ROSDATA VK_TO_WCHARS3 key_to_chars_3mod[] = {
 };
 
 ROSDATA VK_TO_WCHARS4 key_to_chars_4mod[] = {
-  /* Normal, Shifted, Ctrl, C-Shift */
+  /* Normal, Shifted, Ctrl, Ctrl+Alt */
 
+  /* The numbers */
+  { '1',		NOCAPS, {'+', '1', WCH_NONE, '~'} },
+  { '2',		NOCAPS, {0x013e, '2', WCH_NONE, WCH_DEAD} },  // l with caron
+  { VK_EMPTY,		0,	{WCH_NONE, WCH_NONE, WCH_NONE, 0x02c7} },  // 2 death
+  { '3',		NOCAPS, {0x0161, '3', WCH_NONE, WCH_DEAD} },  // s with caron
+  { VK_EMPTY,		0,	{WCH_NONE, WCH_NONE, WCH_NONE, 0x005e} },  // 3 death
+  { '4',		NOCAPS, {0x010d, '4', WCH_NONE, WCH_DEAD} },  // c with caron
+  { VK_EMPTY,		0,	{WCH_NONE, WCH_NONE, WCH_NONE, 0x02d8} },  // 4 death
+  { '5',		NOCAPS, {0x0165, '5', WCH_NONE, WCH_DEAD} },  // t with caron
+  { VK_EMPTY,		0,	{WCH_NONE, WCH_NONE, WCH_NONE, 0x00b0} },  // 5 death
+  { '6',		NOCAPS, {0x017e, '6', WCH_NONE, WCH_DEAD} },  // z with caron
+  { VK_EMPTY,		0,	{WCH_NONE, WCH_NONE, WCH_NONE, 0x02db} },  // 6 death
+  { '7',		NOCAPS, {0x00fd, '7', WCH_NONE, '`'} },       // y with acute
+  { '8',		NOCAPS, {0x00e1, '8', WCH_NONE, WCH_DEAD} },  // a with acute
+  { VK_EMPTY,		0,	{WCH_NONE, WCH_NONE, WCH_NONE, 0x02d9} },  // 8 death
+  { '9',		NOCAPS, {0x00ed, '9', WCH_NONE, WCH_DEAD} },  // i with acute
+  { VK_EMPTY,		0,	{WCH_NONE, WCH_NONE, WCH_NONE, 0x00b4} },  // 9 death
+  { '0',		NOCAPS, {0x00e9, '0', WCH_NONE, WCH_DEAD} },  // e with acute
+  { VK_EMPTY,		0,	{WCH_NONE, WCH_NONE, WCH_NONE, 0x02dd} },  // 0 death
+  { VK_OEM_MINUS,	NOCAPS, {'=', '%', WCH_NONE, WCH_DEAD} },
+  { VK_EMPTY,		0,	{WCH_NONE, WCH_NONE, WCH_NONE, 0x00a8} },  // = death
+  { VK_OEM_PLUS,	NOCAPS, {WCH_DEAD, WCH_DEAD, WCH_NONE, WCH_DEAD} },  // dead letters - acute, caron
+  { VK_EMPTY,		0,	{0x00b4, 0x02c7, WCH_NONE, 0x00b8} },  // dead letters death :)
+
+  { VK_OEM_1,	NOCAPS, {0x00f4, '\"', WCH_NONE, '$'} },  // o with circumflex
+  { VK_OEM_2,	NOCAPS, {'-', '_', WCH_NONE, '*'} },
+  { VK_OEM_3,	NOCAPS, {0x00a7, '!', WCH_NONE, 0x00df} },  // section sign
+  { VK_OEM_4,	NOCAPS, {0x00fa, '/', WCH_NONE, 0x00f7} },  // u with acute
+  { VK_OEM_5,	NOCAPS, {'&', '*', WCH_NONE, '<'} },
+  { VK_OEM_6,	NOCAPS, {0x00E4, '(', WCH_NONE, 0x00d7} },  // a with diaeresis
+  { VK_OEM_7,	NOCAPS, {0x0148, ')', WCH_NONE, 0x00a4} },  // n with caron
+  { VK_OEM_COMMA,	NOCAPS, {',', '?', WCH_NONE, '<'} },
+  { VK_OEM_PERIOD,	NOCAPS, {'.', ':', WCH_NONE, '>'} },
+  
   /* The alphabet */
-  { 'A',	CAPS,   {'a', 'A', 0x01, 0x01} },
-  { 'B',	CAPS,   {'b', 'B', 0x02, 0x02} },
-  { 'C',	CAPS,   {'c', 'C', 0x03, 0x03} },
-  { 'D',	CAPS,   {'d', 'D', 0x04, 0x04} },
-  { 'E',	CAPS,   {'e', 'E', 0x05, 0x05} },
-  { 'F',	CAPS,   {'f', 'F', 0x06, 0x06} },
-  { 'G',	CAPS,   {'g', 'G', 0x07, 0x07} },
-  { 'H',	CAPS,   {'h', 'H', 0x08, 0x08} },
-  { 'I',	CAPS,   {'i', 'I', 0x09, 0x09} },
-  { 'J',	CAPS,   {'j', 'J', 0x0a, 0x0a} },
-  { 'K',	CAPS,   {'k', 'K', 0x0b, 0x0b} },
-  { 'L',	CAPS,   {'l', 'L', 0x0c, 0x0c} },
-  { 'M',	CAPS,   {'m', 'M', 0x0d, 0x0d} },
-  { 'N',	CAPS,   {'n', 'N', 0x0e, 0x0e} },
-  { 'O',	CAPS,   {'o', 'O', 0x0f, 0x0f} },
-  { 'P',	CAPS,   {'p', 'P', 0x10, 0x10} },
-  { 'Q',	CAPS,   {'q', 'Q', 0x11, 0x11} },
-  { 'R',	CAPS,   {'r', 'R', 0x12, 0x12} },
-  { 'S',	CAPS,   {'s', 'S', 0x13, 0x13} },
-  { 'T',	CAPS,   {'t', 'T', 0x14, 0x14} },
-  { 'U',	CAPS,   {'u', 'U', 0x15, 0x15} },
-  { 'V',	CAPS,   {'v', 'V', 0x16, 0x16} },
-  { 'W',	CAPS,   {'w', 'W', 0x17, 0x17} },
-  { 'X',	CAPS,   {'x', 'X', 0x18, 0x18} },
-  { 'Y',	CAPS,   {'z', 'Z', 0x1a, 0x1a} },  // qwertZ
-  { 'Z',	CAPS,   {'y', 'Y', 0x19, 0x19} },
+  { 'A',	CAPS,   {'a', 'A', 0x01, WCH_NONE} },
+  { 'B',	CAPS,   {'b', 'B', 0x02, '{'} },
+  { 'C',	CAPS,   {'c', 'C', 0x03, '&'} },
+  { 'D',	CAPS,   {'d', 'D', 0x04, 0x0110} },
+  { 'E',	CAPS,   {'e', 'E', 0x05, 0x20ac} },
+  { 'F',	CAPS,   {'f', 'F', 0x06, '['} },
+  { 'G',	CAPS,   {'g', 'G', 0x07, ']'} },
+  { 'H',	CAPS,   {'h', 'H', 0x08, WCH_NONE} },
+  { 'I',	CAPS,   {'i', 'I', 0x09, WCH_NONE} },
+  { 'J',	CAPS,   {'j', 'J', 0x0a, WCH_NONE} },
+  { 'K',	CAPS,   {'k', 'K', 0x0b, 0x0142} },
+  { 'L',	CAPS,   {'l', 'L', 0x0c, 0x0141} },
+  { 'M',	CAPS,   {'m', 'M', 0x0d, WCH_NONE} },
+  { 'N',	CAPS,   {'n', 'N', 0x0e, '}'} },
+  { 'O',	CAPS,   {'o', 'O', 0x0f, WCH_NONE} },
+  { 'P',	CAPS,   {'p', 'P', 0x10, '\''} },
+  { 'Q',	CAPS,   {'q', 'Q', 0x11, '\\'} },
+  { 'R',	CAPS,   {'r', 'R', 0x12, WCH_NONE} },
+  { 'S',	CAPS,   {'s', 'S', 0x13, 0x0111} },
+  { 'T',	CAPS,   {'t', 'T', 0x14, WCH_NONE} },
+  { 'U',	CAPS,   {'u', 'U', 0x15, WCH_NONE} },
+  { 'V',	CAPS,   {'v', 'V', 0x16, '@'} },
+  { 'W',	CAPS,   {'w', 'W', 0x17, '|'} },
+  { 'X',	CAPS,   {'x', 'X', 0x18, '#'} },
+  { 'Y',	CAPS,   {'z', 'Z', 0x1a, WCH_NONE} },  // qwertZ
+  { 'Z',	CAPS,   {'y', 'Y', 0x19, '>'} },
   { 0, 0 }
 };
 
@@ -358,20 +403,30 @@ ROSDATA DEADKEY dead_key[] = {
    { DEADTRANS(0x0079, 0x00b4, 0x00fd, 0x0000) },  // y with acute
    { DEADTRANS(0x0020, 0x00b4, 0x00b4, 0x0000) },  // space > acute
 
-   { DEADTRANS(0x004f, 0x02c6, 0x00d4, 0x0000) },  // O with circumflex
-   { DEADTRANS(0x006f, 0x02c6, 0x00f4, 0x0000) },  // o with circumflex
-   { DEADTRANS(0x0020, 0x02c6, 0x02c6, 0x0000) },  // space > circumflex
+   { DEADTRANS(0x004f, 0x005e, 0x00d4, 0x0000) },  // O with circumflex
+   { DEADTRANS(0x006f, 0x005e, 0x00f4, 0x0000) },  // o with circumflex
+   { DEADTRANS(0x0020, 0x005e, 0x005e, 0x0000) },  // space > circumflex
 
-   { DEADTRANS(0x0055, 0x00b0, 0x016e, 0x0000) },  // U >
-   { DEADTRANS(0x0075, 0x00b0, 0x016f, 0x0000) },  // u >
+   { DEADTRANS(0x0041, 0x00a8, 0x00c4, 0x0000) },  // A with diaeresis
+   { DEADTRANS(0x0061, 0x00a8, 0x00e4, 0x0000) },  // a with diaeresis
+   { DEADTRANS(0x0045, 0x00a8, 0x00cb, 0x0000) },  // E with diaeresis
+   { DEADTRANS(0x0065, 0x00a8, 0x00eb, 0x0000) },  // e with diaeresis
+   { DEADTRANS(0x004f, 0x00a8, 0x00d6, 0x0000) },  // O with diaeresis
+   { DEADTRANS(0x006f, 0x00a8, 0x00f6, 0x0000) },  // o with diaeresis
+   { DEADTRANS(0x0055, 0x00a8, 0x00dc, 0x0000) },  // U with diaeresis
+   { DEADTRANS(0x0075, 0x00a8, 0x00fc, 0x0000) },  // u with diaeresis
+   { DEADTRANS(0x0020, 0x00a8, 0x00a8, 0x0000) },  // space > diaeresis
+
+   { DEADTRANS(0x0055, 0x00b0, 0x016e, 0x0000) },  // U with round
+   { DEADTRANS(0x0075, 0x00b0, 0x016f, 0x0000) },  // u with round
    { DEADTRANS(0x0020, 0x00b0, 0x00b0, 0x0000) },  // space > degree
    { 0, 0, 0 },
 };
 
 ROSDATA DEADKEY_LPWSTR dead_key_names[] = {
-    L"\x00a1"	L"\x004D\x00E4\x006B\x010D\x0065\x0148",  // caron
-    L"\x00b4"	L"\x0044\x013A\x017E\x0065\x0148",        // acute
-    L"\x005e"	L"\x0056\x006F\x006B\x00E1\x0148",        // circumflex
+    L"\x02c7"	L"\x004D\x00E4\x006B\x010D\x0065\x0148",  // mäkčeň - caron
+    L"\x00b4"	L"\x0044\x013A\x017E\x0065\x0148",        // dĺžeň - acute
+    L"\x005e"	L"\x0056\x006F\x006B\x00E1\x0148",        // vokáň - circumflex
     NULL
 };
 
