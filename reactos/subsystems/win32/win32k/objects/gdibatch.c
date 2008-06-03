@@ -149,10 +149,10 @@ NtGdiFlushUserBatch(VOID)
       PCHAR pHdr = (PCHAR)&pTeb->GdiTebBatch.Buffer[0];
       PDC pDC = NULL;
 
-            if (hDC && !IsObjectDead(hDC))
-            {
-                pDC = DC_LockDc(hDC);
-            }
+      if (hDC && !IsObjectDead(hDC))
+      {
+          pDC = DC_LockDc(hDC);
+      }
 
        // No need to init anything, just go!
        for (; GdiBatchCount > 0; GdiBatchCount--)
