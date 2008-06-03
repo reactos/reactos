@@ -10,7 +10,7 @@
 #endif
 
 /* metrics */
-#define PROPSHEETWIDTH  	250
+#define PROPSHEETWIDTH  	260
 #define PROPSHEETHEIGHT 	120
 #define PROPSHEETPADDING        6
 #define SYSTEM_COLUMN   	(18 * PROPSHEETPADDING)

@@ -7,8 +7,8 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Vaizdo Tvarkyklës Ádiegimas"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-  LTEXT "ReactOS nustatë, kad Jûs diegiate ReactOS virtualioje VMware(r) maðinoje.", -1, 100, 8, 160, 24
-  LTEXT "Jei norite ádiegti VMware(r) SVGA vaizdo tvarkyklæ, spauskite 'Next', kitu atveju spauskite 'Cancel'.", -1, 100, 140, 160, 24
+  LTEXT "ReactOS nustatë, kad Jûs diegiate ReactOS virtualioje VMware(r) maðinoje.", -1, 117, 8, 140, 24
+  LTEXT "Jei norite ádiegti VMware(r) SVGA vaizdo tvarkyklæ, spauskite 'Next', kitu atveju spauskite 'Cancel'.", -1, 117, 140, 140, 24
 END
 
 IDD_INSERT_VMWARE_TOOLS DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT

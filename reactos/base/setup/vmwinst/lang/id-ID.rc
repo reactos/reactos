@@ -5,8 +5,8 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Instalasi Driver Video"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-  LTEXT "Setup ReactOS mendeteksi bahwa anda menjalankan ReactOS di dalam VMware(r).", -1, 100, 8, 160, 24
-  LTEXT "Jika anda ingin menginstalasi VMware(r) SVGA driver klik 'Lanjut', sebaliknya klik 'Batal'.", -1, 100, 140, 160, 17
+  LTEXT "Setup ReactOS mendeteksi bahwa anda menjalankan ReactOS di dalam VMware(r).", -1, 117, 8, 140, 24
+  LTEXT "Jika anda ingin menginstalasi VMware(r) SVGA driver klik 'Lanjut', sebaliknya klik 'Batal'.", -1, 117, 140, 140, 17
 END
 
 IDD_INSERT_VMWARE_TOOLS DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT

@@ -6,8 +6,8 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Video meghajtó telepítése"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-  LTEXT "A ReactOS telepítõ felismerte, hogy VMware(r) alól futtatod a ReactOS-t.", -1, 100, 8, 160, 34
-  LTEXT "Ha szeretnéd feltelepíteni a VMware(r) SVGA meghajtót, kattints a 'Tovább' gombra, ha nem akkor a  'Mégse' gombra.", -1, 100, 120, 160, 32
+  LTEXT "A ReactOS telepítõ felismerte, hogy VMware(r) alól futtatod a ReactOS-t.", -1, 117, 8, 140, 34
+  LTEXT "Ha szeretnéd feltelepíteni a VMware(r) SVGA meghajtót, kattints a 'Tovább' gombra, ha nem akkor a  'Mégse' gombra.", -1, 117, 120, 140, 32
 END
 
 IDD_INSERT_VMWARE_TOOLS DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT

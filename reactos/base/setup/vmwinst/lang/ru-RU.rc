@@ -5,8 +5,8 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Установка видеодрайвера"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-  LTEXT "Программа установки обнаружила, что ReactOS работает под управлением виртуальной машины VMware(r).", -1, 100, 8, 160, 24
-  LTEXT "Для установки SVGA-драйвера VMware(r) нажмите кнопку ""Далее"", иначе нажмите ""Отмена"".", -1, 100, 125, 160, 22
+  LTEXT "Программа установки обнаружила, что ReactOS работает под управлением виртуальной машины VMware(r).", -1, 117, 8, 140, 24
+  LTEXT "Для установки SVGA-драйвера VMware(r) нажмите кнопку ""Далее"", иначе нажмите ""Отмена"".", -1, 117, 125, 140, 22
 END
 
 IDD_INSERT_VMWARE_TOOLS DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT

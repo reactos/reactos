@@ -5,8 +5,8 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Installation du pilote vidéo"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-  LTEXT "L'installateur de ReactOS a détecté que vous exécutez ReactOS sous VMware(r).", -1, 100, 8, 160, 24
-  LTEXT "Si vous désirez installer le pilote SVGA de VMware(r) SVGA, cliquez sur 'Suivant', autrement cliquez sur 'Annuler'.", -1, 100, 140, 160, 24
+  LTEXT "L'installateur de ReactOS a détecté que vous exécutez ReactOS sous VMware(r).", -1, 117, 8, 140, 24
+  LTEXT "Si vous désirez installer le pilote SVGA de VMware(r) SVGA, cliquez sur 'Suivant', autrement cliquez sur 'Annuler'.", -1, 117, 140, 140, 24
 END
 
 IDD_INSERT_VMWARE_TOOLS DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT

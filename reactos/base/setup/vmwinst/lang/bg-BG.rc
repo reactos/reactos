@@ -5,8 +5,8 @@ STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Слагане на видео водач"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-  LTEXT "РеактОС установи, че сте го пуснали във VMware(r).", -1, 100, 8, 160, 24
-  LTEXT "Ако искате да сложите SVGA водача (driver) VMware(r), натиснете „Напред”, в противен случай натиснете „Отказ”.", -1, 100, 140, 160, 24
+  LTEXT "РеактОС установи, че сте го пуснали във VMware(r).", -1, 117, 8, 140, 24
+  LTEXT "Ако искате да сложите SVGA водача (driver) VMware(r), натиснете „Напред”, в противен случай натиснете „Отказ”.", -1, 117, 140, 140, 24
 END
 
 IDD_INSERT_VMWARE_TOOLS DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT

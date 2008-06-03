@@ -5,8 +5,8 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Εγκατάσταση Οδηγού Βίντεο"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-  LTEXT "Η εγκατάσταση του ReactOS ανίχνευσε ότι τρέχετε το ReactOS μέσα από το VMware(r).", -1, 100, 8, 160, 24
-  LTEXT "Αν θέλετε να εγκαταστήσετε την VMware(r) SVGA driver πατήστε 'Επόμενο', αλλιώς πατήστε 'Ακύρωση'.", -1, 100, 140, 160, 24
+  LTEXT "Η εγκατάσταση του ReactOS ανίχνευσε ότι τρέχετε το ReactOS μέσα από το VMware(r).", -1, 117, 8, 140, 24
+  LTEXT "Αν θέλετε να εγκαταστήσετε την VMware(r) SVGA driver πατήστε 'Επόμενο', αλλιώς πατήστε 'Ακύρωση'.", -1, 117, 140, 140, 24
 END
 
 IDD_INSERT_VMWARE_TOOLS DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT

@@ -5,8 +5,8 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "ビデオ ドライバのインストール"
 FONT 9, "MS UI Gothic", 0, 0, 0x0
 BEGIN
-  LTEXT "ReactOS セットアップは ReactOS が VMware(R) 内で起動されていることを検出しました。", -1, 100, 8, 160, 24
-  LTEXT "VMware(R) SVGA ドライバをインストールする場合には [次へ] を、インストールしない場合には [キャンセル] をクリックしてください。", -1, 100, 140, 160, 17
+  LTEXT "ReactOS セットアップは ReactOS が VMware(R) 内で起動されていることを検出しました。", -1, 117, 8, 140, 24
+  LTEXT "VMware(R) SVGA ドライバをインストールする場合には [次へ] を、インストールしない場合には [キャンセル] をクリックしてください。", -1, 117, 140, 140, 17
 END
 
 IDD_INSERT_VMWARE_TOOLS DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
