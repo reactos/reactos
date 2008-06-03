@@ -575,6 +575,7 @@ DceFreeDCE(PDCE pdce, BOOLEAN Force)
 {
   DCE *ret;
   BOOL Hit = FALSE;
+  NTSTATUS Status = STATUS_SUCCESS;
 
   if (NULL == pdce) return NULL;
 
@@ -603,8 +604,23 @@ DceFreeDCE(PDCE pdce, BOOLEAN Force)
   {
       NtGdiDeleteObject(pdce->hClipRgn);
   }
+  // Temp fix until we know where the problem is, most likely in windc.
+  _SEH_TRY
+  {            
+      RemoveEntryList(&pdce->List);
+  }
+  _SEH_HANDLE
+  {
+      Status = _SEH_GetExceptionCode();
+  }
+  _SEH_END
+  if (!NT_SUCCESS(Status))
+  {
+     SetLastNtError(Status);
+     DPRINT1("CRASHED DCE! -> %x\n" , pdce);
+     return 0; // Give it up and bail~!
+  }
 
-  RemoveEntryList(&pdce->List);
   ExFreePoolWithTag(pdce, TAG_PDCE);
 
   return ret;
@@ -677,10 +693,16 @@ DceFreeWindowDCE(PWINDOW_OBJECT Window)
 VOID FASTCALL
 DceEmptyCache()
 {
-   while (FirstDce != NULL)
+   PDCE pDCE = FirstDce;
+   KeEnterCriticalRegion();
+   do
    {
-      FirstDce = DceFreeDCE(FirstDce, TRUE);
-   }
+      if(!pDCE) break;
+      pDCE = DceFreeDCE(pDCE, TRUE);
+      if(!pDCE) break;
+   } while (pDCE != FirstDce);
+   KeLeaveCriticalRegion();
+   FirstDce = NULL;
 }
 
 VOID FASTCALL
