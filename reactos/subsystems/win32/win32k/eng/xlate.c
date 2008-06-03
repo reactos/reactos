@@ -459,10 +459,10 @@ IntCreateXlateForBlt(PDC pDCDest, PDC pDCSrc, BITMAPOBJ* pDestSurf, BITMAPOBJ* p
 	}
 
 	DestPalette = pDestSurf->hDIBPalette;
-	if (!DestPalette) DestPalette = PrimarySurface.DevInfo.hpalDefault;
+	if (!DestPalette) DestPalette = pPrimarySurface->DevInfo.hpalDefault;
 
 	SourcePalette = pSrcSurf->hDIBPalette;
-	if (!SourcePalette) SourcePalette = PrimarySurface.DevInfo.hpalDefault;
+	if (!SourcePalette) SourcePalette = pPrimarySurface->DevInfo.hpalDefault;
 
 	DPRINT("DestPalette = %p, SourcePalette = %p, DefaultPatelle = %p\n", DestPalette, SourcePalette, NtGdiGetStockObject((INT)DEFAULT_PALETTE));
 

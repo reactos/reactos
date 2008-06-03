@@ -140,7 +140,7 @@ typedef struct _DC
   INT         DC_Type;
   INT         DC_Flags;
   PVOID       pPDev;  // PGDIDEVICE aka PDEVOBJ
-  PVOID       hSem;   // PERESOURCE
+  PVOID       hSem;   // PERESOURCE aka HSEMAPHORE
   FLONG       flGraphics;
   FLONG       flGraphics2;
   PDC_ATTR    pDc_Attr;
@@ -254,14 +254,6 @@ typedef struct _GDIDEVICE
   struct _EDD_DIRECTDRAW_GLOBAL * pEDDgpl;
 } GDIDEVICE, *PGDIDEVICE;
 
-/* For Metafile and MetaEnhFile not in windows this struct taken from wine cvs 15/9-2006*/
-typedef struct
-{
-  LPENHMETAHEADER  emh;
-  BOOL    on_disk;   /* true if metafile is on disk */
-} DD_ENHMETAFILEOBJ, *PDD_ENHMETAFILEOBJ;
-
-
 /* Internal functions *********************************************************/
 
 #define  DC_LockDc(hDC)  \
@@ -313,6 +305,6 @@ VOID FASTCALL IntGdiUnreferencePdev(PGDIDEVICE pPDev, DWORD CleanUpType);
 HDC FASTCALL IntGdiCreateDisplayDC(HDEV hDev, ULONG DcType, BOOL EmptyDC);
 BOOL FASTCALL IntGdiCleanDC(HDC hDC);
 
-extern GDIDEVICE PrimarySurface;
+extern PGDIDEVICE pPrimarySurface;
 
 #endif /* not __WIN32K_DC_H */

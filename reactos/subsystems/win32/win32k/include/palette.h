@@ -82,5 +82,7 @@ INT      FASTCALL PALETTE_ToPhysical (PDC dc, COLORREF color);
 INT FASTCALL PALETTE_GetObject(PPALGDI pGdiObject, INT cbCount, LPLOGBRUSH lpBuffer);
 
 PPALETTEENTRY FASTCALL ReturnSystemPalette (VOID);
+HPALETTE FASTCALL GdiSelectPalette(HDC, HPALETTE, BOOL);
+
 
 #endif /* not _WIN32K_PALETTE_H */

@@ -128,7 +128,7 @@ IntGdiCreateBrushXlate(PDC Dc, GDIBRUSHOBJ *BrushObj, BOOLEAN *Failed)
       hPalette = pSurface->hDIBPalette;
       BITMAPOBJ_UnlockBitmap(pSurface);
    }
-   if (!hPalette) hPalette = PrimarySurface.DevInfo.hpalDefault;
+   if (!hPalette) hPalette = pPrimarySurface->DevInfo.hpalDefault;
 
    if (BrushObj->flAttrs & GDIBRUSH_IS_NULL)
    {

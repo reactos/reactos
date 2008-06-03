@@ -1552,7 +1552,7 @@ IntGdiGradientFill(
     ASSERT(BitmapObj);
 
     hDestPalette = BitmapObj->hDIBPalette;
-    if (!hDestPalette) hDestPalette = PrimarySurface.DevInfo.hpalDefault;
+    if (!hDestPalette) hDestPalette = pPrimarySurface->DevInfo.hpalDefault;
 
     PalDestGDI = PALETTE_LockPalette(hDestPalette);
     if (PalDestGDI)

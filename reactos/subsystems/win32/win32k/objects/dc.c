@@ -29,8 +29,8 @@
 
 //  ---------------------------------------------------------  File Statics
 
-GDIDEVICE PrimarySurface;
-static PGDIDEVICE pPrimarySurface = NULL;
+static GDIDEVICE PrimarySurface;
+PGDIDEVICE pPrimarySurface = &PrimarySurface;
 static KEVENT VideoDriverNeedsPreparation;
 static KEVENT VideoDriverPrepared;
 static PDC defaultDCstate = NULL;
@@ -347,7 +347,7 @@ IntPrepareDriver()
 
       RtlZeroMemory(&PrimarySurface, sizeof(PrimarySurface));
 
-      if (!pPrimarySurface) pPrimarySurface = ExAllocatePoolWithTag(PagedPool, sizeof(GDIDEVICE), TAG_GDIPDEV);
+//      if (!pPrimarySurface) pPrimarySurface = ExAllocatePoolWithTag(PagedPool, sizeof(GDIDEVICE), TAG_GDIPDEV);
 
       PrimarySurface.VideoFileObject = DRIVER_FindMPDriver(DisplayNumber);
 
@@ -3394,7 +3394,7 @@ NtGdiGetDhpdev(
   PGDIDEVICE pPDev, pGdiDevice = (PGDIDEVICE) hdev;
   if (!pGdiDevice) return NULL;
   if ( pGdiDevice < (PGDIDEVICE)MmSystemRangeStart) return NULL;
-  pPDev = &PrimarySurface;
+  pPDev = pPrimarySurface;
   IntGdiAcquireSemaphore(hsemDriverMgmt);
   do
   {
