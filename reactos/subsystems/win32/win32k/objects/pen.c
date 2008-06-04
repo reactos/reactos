@@ -177,11 +177,7 @@ IntGdiExtCreatePen(
 
 ExitCleanup:
    SetLastWin32Error(ERROR_INVALID_PARAMETER);
-   if (PenObject->pStyle)
-   {
-      ExFreePool(PenObject->pStyle);
-      PenObject->pStyle = NULL;
-   }
+   PenObject->pStyle = NULL;
    PENOBJ_UnlockPen(PenObject);
    if (bOldStylePen)
       PENOBJ_FreePenByHandle(hPen);
@@ -343,7 +339,10 @@ NtGdiExtCreatePen(
                              cjDIB,
                              bOldStylePen,
                              hBrush);
-
+   if (!hPen && pSafeStyle)
+   {
+      ExFreePool(pSafeStyle);
+   }
    return hPen;
 }
 
