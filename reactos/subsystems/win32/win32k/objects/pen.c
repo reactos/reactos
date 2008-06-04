@@ -301,7 +301,7 @@ NtGdiExtCreatePen(
 
    if (dwStyleCount > 0)
    {
-      pSafeStyle = ExAllocatePoolWithTag(NonPagedPool, dwStyleCount * sizeof(DWORD), TAG_EXTPEN);
+      pSafeStyle = ExAllocatePoolWithTag(NonPagedPool, dwStyleCount * sizeof(DWORD), TAG_PENSTYLES);
       if (!pSafeStyle)
       {
          SetLastNtError(ERROR_NOT_ENOUGH_MEMORY);
@@ -338,7 +338,12 @@ NtGdiExtCreatePen(
                              cjDIB,
                              bOldStylePen,
                              hBrush);
-// BRUSH_Cleanup takes care of pSafeStyle
+
+   if (!hPen && pSafeStyle)
+   {
+      ExFreePool(pSafeStyle);
+   }
+// BRUSH_Cleanup takes care of pSafeStyle when deleteing the pen
    return hPen;
 }
 

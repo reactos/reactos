@@ -62,7 +62,6 @@
 #define TAG_COORD       TAG('C', 'O', 'R', 'D') /* coords */
 #define TAG_GDIDEV      TAG('G', 'd', 'e', 'v') /* gdi dev support*/
 #define TAG_GDIPDEV     TAG('G', 'D', 'e', 'v') /* gdi PDev */
-#define TAG_GDIOBJ      TAG('G', 'D', 'I', 'O') /* gdi obj */
 #define TAG_GDIHNDTBLE  TAG('G', 'D', 'I', 'H') /* gdi handle table */
 #define TAG_GDIICM      TAG('G', 'i', 'c', 'm') /* gdi Icm */
 #define TAG_DIB         TAG('D', 'I', 'B', ' ') /* dib */
@@ -71,13 +70,13 @@
 #define TAG_PALETTEMAP  TAG('P', 'A', 'L', 'M') /* palette mapping */
 #define TAG_PRINT       TAG('P', 'R', 'N', 'T') /* print */
 #define TAG_GDITEXT     TAG('T', 'X', 'T', 'O') /* text */
-#define TAG_EXTPEN      TAG('X', 'P', 'E', 'N') /* extpen */
+#define TAG_PENSTYLES   TAG('G', 's', 't', 'y') /* pen styles */
 
 /* Eng objects */
 #define TAG_CLIPOBJ     TAG('C', 'L', 'P', 'O') /* clip object */
 #define TAG_DRIVEROBJ   TAG('D', 'R', 'V', 'O') /* driver object */
 #define TAG_FONT        TAG('F', 'N', 'T', 'E') /* font entry */
-#define TAG_FONTOBJ     TAG('F', 'N', 'T', 'O') /* font object */
+#define TAG_FONTOBJ     TAG('G', 'f', 'n', 't') /* font object */
 #define TAG_WNDOBJ      TAG('W', 'N', 'D', 'O') /* window object */
 #define TAG_XLATEOBJ    TAG('X', 'L', 'A', 'O') /* xlate object */
 #define TAG_BITMAPOBJ   TAG('B', 'M', 'P', 'O') /* bitmap object */
