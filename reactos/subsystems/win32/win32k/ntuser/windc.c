@@ -632,6 +632,7 @@ DceFreeWindowDCE(PWINDOW_OBJECT Window)
   KeEnterCriticalRegion();
   do
   {
+      if (!pDCE) break;
       if (pDCE->hwndCurrent == Window->hSelf)
       {
          if (!(pDCE->DCXFlags & DCX_CACHE)) /* owned or Class DCE*/
@@ -651,6 +652,7 @@ DceFreeWindowDCE(PWINDOW_OBJECT Window)
                      Window->Wnd->Style & CS_OWNDC) /* owned DCE*/
             {
                pDCE = DceFreeDCE(pDCE, FALSE);
+               if (!pDCE) break;
                Window->Dce = NULL;
                continue;
             }
