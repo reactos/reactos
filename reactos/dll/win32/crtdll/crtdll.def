@@ -502,7 +502,7 @@ sinh
 sprintf=crt_sprintf
 sqrt=NTDLL.sqrt
 srand
-sscanf=crt_sscanf
+sscanf
 strcat
 strchr
 strcmp=NTDLL.strcmp
