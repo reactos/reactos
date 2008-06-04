@@ -1422,11 +1422,107 @@ GDI_MapHandleTable(PSECTION_OBJECT SectionObject, PEPROCESS Process)
 
 /** PUBLIC FUNCTIONS **********************************************************/
 
+/*
+  Since Brush/Pen and Region objects are sharable,,, we can just use
+  UserHeapAlloc to allocate the small attribute objects.
+
+   Example Allocating:
+
+    // Save Kernel Space Pointer
+    (PGDIBRUSHOBJ)->pBrushAttr = IntGdiAllocObjAttr(GDIObjType_BRUSH_TYPE);
+
+    // Kernel Space to User Space Pointer
+    (PGDI_TABLE_ENTRY)->UserData = UserHeapAddressToUser(pBrushAttr);
+
+   Example Freeing:
+
+    (PGDI_TABLE_ENTRY)->UserData = NULL;      // Zero the user ptr.
+    UserHeapFree((PGDIBRUSHOBJ)->pBrushAttr); // Free from kernel ptr.
+    (PGDIBRUSHOBJ)->pBrushAttr = NULL;
+
+   Notes:
+    Testing with DC_ATTR works but has drawing difficulties. This could be due
+    to a bug in user share heap allocation and deallocation. The test did not
+    include additional deallocations until the DC was freed. So it was always
+    allocated to the DC. Space between allocations was not even and at less
+    than sizeof(DC_ATTR).
+
+ */
+PVOID
+FASTCALL
+IntGdiAllocObjAttr(GDIOBJTYPE Type)
+{
+  PVOID pMemAttr = NULL;
+
+  switch( Type )
+  {
+     case GDIObjType_DC_TYPE:
+        pMemAttr = UserHeapAlloc(sizeof(DC_ATTR));
+        if (pMemAttr) RtlZeroMemory(pMemAttr, sizeof(DC_ATTR));
+        break;
+     case GDIObjType_RGN_TYPE:
+        pMemAttr = UserHeapAlloc(sizeof(RGN_ATTR));
+        if (pMemAttr) RtlZeroMemory(pMemAttr, sizeof(RGN_ATTR));
+        break;
+     case GDIObjType_BRUSH_TYPE: 
+        pMemAttr = UserHeapAlloc(sizeof(BRUSH_ATTR));
+        if (pMemAttr) RtlZeroMemory(pMemAttr, sizeof(BRUSH_ATTR));
+        break;
+     default:
+        break;
+  }
+  return pMemAttr;
+}
+
+
 BOOL
 FASTCALL
 IntGdiSetBrushOwner(PGDIBRUSHOBJ pbr, DWORD OwnerMask)
 {
-  // Inc/Dec share locks and process counts.
+  HBRUSH hBR;
+  PEPROCESS Owner = NULL;
+  PGDI_TABLE_ENTRY pEntry = NULL;
+
+  if (!pbr) return FALSE;
+
+  hBR = pbr->BaseObject.hHmgr;
+
+  if (!hBR || (GDI_HANDLE_GET_TYPE(hBR) != GDI_OBJECT_TYPE_BRUSH))
+     return FALSE;
+  else
+  {
+     INT Index = GDI_HANDLE_GET_INDEX((HGDIOBJ)hBR);
+     pEntry = &GdiHandleTable->Entries[Index];
+  }
+
+  if (pbr->flAttrs & GDIBRUSH_IS_GLOBAL)
+  {
+     GDIOBJ_ShareUnlockObjByPtr((POBJ)pbr);
+     return TRUE;
+  }
+
+  if ((OwnerMask == GDI_OBJ_HMGR_PUBLIC) || OwnerMask == GDI_OBJ_HMGR_NONE)
+  {
+     // Set this Brush to inaccessible mode and to an Owner of NONE.
+//     if (OwnerMask == GDI_OBJ_HMGR_NONE) Owner = OwnerMask;
+
+     // Deny user access to User Data.
+     pEntry->UserData = NULL; // This hBR is inaccessible!
+     if (!GDIOBJ_SetOwnership((HGDIOBJ) hBR, Owner))
+        return FALSE;
+
+     // Deny user access to User Data.
+     pEntry->UserData = NULL; // This hBR is inaccessible!
+  }
+
+  if (OwnerMask == GDI_OBJ_HMGR_POWNED)
+  {
+     if (!GDIOBJ_SetOwnership((HGDIOBJ) hBR, PsGetCurrentProcess() ))
+        return FALSE;
+
+     // Allow user access to User Data.
+     pEntry->UserData = pbr->pBrushAttr;    
+  }
   return TRUE;
 }
 
