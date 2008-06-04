@@ -575,7 +575,6 @@ DceFreeDCE(PDCE pdce, BOOLEAN Force)
 {
   DCE *ret;
   BOOL Hit = FALSE;
-  NTSTATUS Status = STATUS_SUCCESS;
 
   if (NULL == pdce) return NULL;
 
@@ -588,7 +587,7 @@ DceFreeDCE(PDCE pdce, BOOLEAN Force)
   if (Force && !GDIOBJ_OwnedByCurrentProcess(pdce->hDC))
   {
      DPRINT1("Change ownership for DCE!\n");
-
+     // Note: Windows sets W32PF_OWNDCCLEANUP and moves on.
      if (!IsObjectDead((HGDIOBJ) pdce->hDC))
          DC_SetOwnership( pdce->hDC, PsGetCurrentProcess());
      else
@@ -604,21 +603,14 @@ DceFreeDCE(PDCE pdce, BOOLEAN Force)
   {
       NtGdiDeleteObject(pdce->hClipRgn);
   }
-  // Temp fix until we know where the problem is, most likely in windc.
-  _SEH_TRY
-  {            
-      RemoveEntryList(&pdce->List);
-  }
-  _SEH_HANDLE
+
+  RemoveEntryList(&pdce->List);
+
+  if (IsListEmpty(&pdce->List))
   {
-      Status = _SEH_GetExceptionCode();
-  }
-  _SEH_END
-  if (!NT_SUCCESS(Status))
-  {
-     SetLastNtError(Status);
-     DPRINT1("CRASHED DCE! -> %x\n" , pdce);
-     return 0; // Give it up and bail~!
+      DPRINT1("List is Empty! DCE! -> %x\n" , pdce);
+      FirstDce = NULL;
+      ret = NULL;
   }
 
   ExFreePoolWithTag(pdce, TAG_PDCE);
