@@ -379,7 +379,7 @@ int iscntrl(int c)
  */
 int __iscsym(int c)
 {
-   return(isalnum(c)||(c == '_'));
+   return (c < 127 && (isalnum(c) || (c == '_')));
 }
 
 /*
@@ -387,7 +387,7 @@ int __iscsym(int c)
  */
 int __iscsymf(int c)
 {
-   return(isalpha(c)||(c == '_'));
+   return (c < 127 && (isalpha(c) || (c == '_')));
 }
 
 /*
