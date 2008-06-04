@@ -57,6 +57,7 @@ static int wchar2digit(wchar_t c, int base) {
     return -1;
 }
 
+#ifndef _LIBCNT_
 /* vfscanf */
 #undef WIDE_SCANF
 #undef CONSOLE
@@ -68,6 +69,7 @@ static int wchar2digit(wchar_t c, int base) {
 #undef CONSOLE
 #undef STRING
 #include "scanf.h"
+#endif
 
 /* vsscanf */
 #undef WIDE_SCANF
@@ -81,6 +83,7 @@ static int wchar2digit(wchar_t c, int base) {
 #define STRING 1
 #include "scanf.h"
 
+#ifndef _LIBCNT_
 /* vcscanf */
 #undef WIDE_SCANF
 #define CONSOLE 1
@@ -144,6 +147,7 @@ int wscanf(const wchar_t *format, ...)
     va_end(valist);
     return res;
 }
+#endif
 
 
 /*********************************************************************
@@ -175,7 +179,7 @@ int swscanf(const wchar_t *str, const wchar_t *format, ...)
     return res;
 }
 
-
+#ifndef _LIBCNT_
 /*********************************************************************
  *		_cscanf (MSVCRT.@)
  */
@@ -189,3 +193,4 @@ int _cscanf(/*const*/ char *format, ...)
     va_end(valist);
     return res;
 }
+#endif
