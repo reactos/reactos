@@ -148,7 +148,6 @@
 		<file>itow.c</file>
 		<file>mbstowcs_nt.c</file>
 		<file>splitp.c</file>
-		<file>sscanf.c</file>
 		<file>strtol.c</file>
 		<file>strtoul.c</file>
 		<file>strtoull.c</file>
@@ -158,6 +157,10 @@
 		<file>wtoi64.c</file>
 		<file>wtoi.c</file>
 		<file>wtol.c</file>
+	</directory>
+
+	<directory name="wine">
+		<file>scanf.c</file>
 	</directory>
 
 	<directory name="wstring">
