@@ -1454,7 +1454,7 @@ IntGdiCopyFromSaveState(PDC dc, PDC dcs, HDC hDC)
   IntGdiSetBkColor( hDC, sDc_Attr->crBackgroundClr);
   IntGdiSetTextColor( hDC, sDc_Attr->crForegroundClr);
 
-  NtUserSelectPalette( hDC, dcs->DcLevel.hpal, FALSE );
+  GdiSelectPalette( hDC, dcs->DcLevel.hpal, FALSE );
 
 #if 0
   GDISelectPalette16( hDC, dcs->DcLevel.hpal, FALSE );
@@ -2105,6 +2105,50 @@ NtGdiSelectPen(
     DC_UnlockDc(pDC);
 
     return hOrgPen;
+}
+
+HPALETTE 
+FASTCALL 
+GdiSelectPalette(HDC  hDC,
+           HPALETTE  hpal,
+    BOOL  ForceBackground)
+{
+    PDC dc;
+    HPALETTE oldPal = NULL;
+    PPALGDI PalGDI;
+
+    // FIXME: mark the palette as a [fore\back]ground pal
+    dc = DC_LockDc(hDC);
+    if (!dc)
+    {
+        return NULL;
+    }
+
+    /* Check if this is a valid palette handle */
+    PalGDI = PALETTE_LockPalette(hpal);
+    if (!PalGDI)
+    {
+        DC_UnlockDc(dc);
+        return NULL;
+    }
+
+    /* Is this a valid palette for this depth? */
+    if ((dc->w.bitsPerPixel <= 8 && PalGDI->Mode == PAL_INDEXED) ||
+        (dc->w.bitsPerPixel > 8  && PalGDI->Mode != PAL_INDEXED))
+    {
+        oldPal = dc->DcLevel.hpal;
+        dc->DcLevel.hpal = hpal;
+    }
+    else if (8 < dc->w.bitsPerPixel && PAL_INDEXED == PalGDI->Mode)
+    {
+        oldPal = dc->DcLevel.hpal;
+        dc->DcLevel.hpal = hpal;
+    }
+
+    PALETTE_UnlockPalette(PalGDI);
+    DC_UnlockDc(dc);
+
+    return oldPal;
 }
 
 WORD STDCALL

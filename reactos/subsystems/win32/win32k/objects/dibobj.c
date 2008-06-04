@@ -794,7 +794,7 @@ NtGdiStretchDIBitsInternal(
    if(Usage == DIB_PAL_COLORS)
    {
       hPal = NtGdiGetDCObject(hDC, GDI_OBJECT_TYPE_PALETTE);
-      hPal = NtUserSelectPalette(hdcMem, hPal, FALSE);
+      hPal = GdiSelectPalette(hdcMem, hPal, FALSE);
    }
 
    if (BitsInfo->bmiHeader.biCompression == BI_RLE4 ||
@@ -835,7 +835,7 @@ NtGdiStretchDIBitsInternal(
                       SrcWidth, SrcHeight, ROP, 0);
 
    if(hPal)
-      NtUserSelectPalette(hdcMem, hPal, FALSE);
+      GdiSelectPalette(hdcMem, hPal, FALSE);
 
    NtGdiSelectBitmap(hdcMem, hOldBitmap);
    NtGdiDeleteObjectApp(hdcMem);
