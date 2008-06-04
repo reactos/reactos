@@ -1506,8 +1506,6 @@ IntGdiSetBrushOwner(PGDIBRUSHOBJ pbr, DWORD OwnerMask)
      // Set this Brush to inaccessible mode and to an Owner of NONE.
 //     if (OwnerMask == GDI_OBJ_HMGR_NONE) Owner = OwnerMask;
 
-     // Deny user access to User Data.
-     pEntry->UserData = NULL; // This hBR is inaccessible!
      if (!GDIOBJ_SetOwnership((HGDIOBJ) hBR, Owner))
         return FALSE;
 
