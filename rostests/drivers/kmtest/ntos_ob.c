@@ -487,7 +487,6 @@ ObtReferenceTests()
 /* PUBLIC FUNCTIONS ***********************************************************/
 
 VOID
-FASTCALL
 NtoskrnlObTest()
 {
     StartTest();

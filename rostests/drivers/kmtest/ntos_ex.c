@@ -173,7 +173,6 @@ ExTimerTest()
 /* PUBLIC FUNCTIONS ***********************************************************/
 
 VOID
-FASTCALL
 NtoskrnlExecutiveTests()
 {
     ExTimerTest();

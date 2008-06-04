@@ -10,5 +10,6 @@
 	<file>ntos_ex.c</file>
 	<file>ntos_io.c</file>
 	<file>ntos_ob.c</file>
+	<file>ntos_pools.c</file>
 	<file>kmtest.rc</file>
 </module>

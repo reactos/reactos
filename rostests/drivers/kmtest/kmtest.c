@@ -103,10 +103,11 @@ int kmtest_ok(int condition, const char *msg, ... )
 /*
  * Test Declarations
  */
-VOID FASTCALL NtoskrnlIoMdlTest();
-VOID FASTCALL NtoskrnlIoDeviceInterface();
-VOID FASTCALL NtoskrnlObTest();
-VOID FASTCALL NtoskrnlExecutiveTests();
+VOID NtoskrnlIoMdlTest();
+VOID NtoskrnlIoDeviceInterface();
+VOID NtoskrnlObTest();
+VOID NtoskrnlExecutiveTests();
+VOID NtoskrnlPoolsTest();
 
 /*
  * DriverEntry
@@ -117,10 +118,12 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
             PUNICODE_STRING RegistryPath)
 {
     DbgPrint("\n===============================================\nKernel Mode Regression Test driver starting...\n");
-    NtoskrnlExecutiveTests();
-    NtoskrnlIoDeviceInterface();
-    NtoskrnlIoMdlTest();
-    NtoskrnlObTest();
+    //NtoskrnlExecutiveTests();
+    //NtoskrnlIoDeviceInterface();
+    //NtoskrnlIoMdlTest();
+    //NtoskrnlObTest();
+    //NtoskrnlObTest();
+    NtoskrnlPoolsTest();
 
-    return STATUS_UNSUCCESSFUL;
+    return STATUS_SUCCESS;
 }

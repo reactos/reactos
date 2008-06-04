@@ -30,7 +30,7 @@
 
 /* PUBLIC FUNCTIONS ***********************************************************/
 
-VOID FASTCALL NtoskrnlIoMdlTest()
+VOID NtoskrnlIoMdlTest()
 {
     PMDL Mdl;
     PIRP Irp;
