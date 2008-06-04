@@ -95,7 +95,7 @@ IntGdiExtCreatePen(
 
    // If dwPenStyle is PS_COSMETIC, the width must be set to 1.
    if ( !(bOldStylePen) && ((dwPenStyle & PS_TYPE_MASK) == PS_COSMETIC) && ( dwWidth != 1) )
-      goto EEXIT;
+      goto ExitCleanup;
 
    switch (dwPenStyle & PS_STYLE_MASK)
    {
@@ -109,7 +109,7 @@ IntGdiExtCreatePen(
 
       case PS_ALTERNATE:
          /* PS_ALTERNATE is applicable only for cosmetic pens */
-         if ((dwPenStyle & PS_TYPE_MASK) == PS_GEOMETRIC) goto EEXIT;
+         if ((dwPenStyle & PS_TYPE_MASK) == PS_GEOMETRIC) goto ExitCleanup;
          PenObject->flAttrs |= GDIBRUSH_IS_BITMAP;
          PenObject->hbmPattern = IntGdiCreateBitmap(24, 1, 1, 1, (LPBYTE)PatternAlternate);
          break;
@@ -137,7 +137,7 @@ IntGdiExtCreatePen(
       case PS_INSIDEFRAME:
          /* FIXME: does it need some additional work? */
          /* PS_INSIDEFRAME is applicable only for geometric pens */
-         if ((dwPenStyle & PS_TYPE_MASK) == PS_COSMETIC) goto EEXIT;
+         if ((dwPenStyle & PS_TYPE_MASK) == PS_COSMETIC) goto ExitCleanup;
          PenObject->flAttrs |= (GDIBRUSH_IS_SOLID|GDIBRUSH_IS_INSIDEFRAME);
          break;
 
@@ -162,7 +162,7 @@ IntGdiExtCreatePen(
 
             if(all_zero || has_neg)
             {
-                goto EEXIT;
+                goto ExitCleanup;
             }
          }
          /* FIXME: what style here? */
@@ -175,8 +175,13 @@ IntGdiExtCreatePen(
    PENOBJ_UnlockPen(PenObject);
    return hPen;
 
-EEXIT:
+ExitCleanup:
    SetLastWin32Error(ERROR_INVALID_PARAMETER);
+   if (PenObject->pStyle)
+   {
+      ExFreePool(PenObject->pStyle);
+      PenObject->pStyle = NULL;
+   }
    PENOBJ_UnlockPen(PenObject);
    if (bOldStylePen)
       PENOBJ_FreePenByHandle(hPen);
@@ -339,11 +344,6 @@ NtGdiExtCreatePen(
                              bOldStylePen,
                              hBrush);
 
-   if (!hPen && pSafeStyle)
-   {
-      ExFreePool(pSafeStyle);
-   }
-// BRUSH_Cleanup takes care of pSafeStyle when deleteing the pen
    return hPen;
 }
 
