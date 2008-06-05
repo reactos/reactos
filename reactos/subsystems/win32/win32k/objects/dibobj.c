@@ -372,8 +372,14 @@ NtGdiSetDIBitsToDeviceInternal(
 
     rcDest.left = XDest;
     rcDest.top = YDest;
-    rcDest.right = XDest + Width;
-    rcDest.bottom = YDest + Height;
+    if (bTransformCoordinates)
+    {
+        CoordLPtoDP(pDC, (LPPOINT)&rcDest);
+    }
+    rcDest.left += pDC->ptlDCOrig.x;
+    rcDest.top += pDC->ptlDCOrig.y;
+    rcDest.right = rcDest.left + Width;
+    rcDest.bottom = rcDest.top + Height;
     ptSource.x = XSrc;
     ptSource.y = YSrc;
 

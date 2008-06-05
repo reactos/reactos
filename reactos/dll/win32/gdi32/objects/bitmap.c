@@ -447,8 +447,9 @@ SetDIBitsToDevice(
                                           ColorUse,
                                           lpbmi->bmiHeader.biSizeImage,
                                           lpbmi->bmiHeader.biSize,
-                                          FALSE,
+                                          TRUE,
                                           NULL);
 }
+
 
 
