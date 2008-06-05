@@ -121,9 +121,9 @@ EXPORTS
   __getmainargs @114
   __initenv @115
 ;  __iob_func @116
-  __isascii @117
-  __iscsym @118
-  __iscsymf @119
+  __isascii=ntdll.__isascii @117
+  __iscsym=ntdll.__iscsym @118
+  __iscsymf=ntdll.__iscsymf @119
   __lc_codepage @120 DATA
   __lc_collate_cp @121 DATA
   __lc_handle @122 DATA
@@ -167,7 +167,7 @@ EXPORTS
   __setusermatherr @160
   __threadhandle @161
   __threadid @162
-  __toascii @163
+  __toascii=ntdll.__toascii @163
   __unDName @164
   __unDNameEx @165
 ;  __uncaught_exception @166
@@ -291,7 +291,7 @@ EXPORTS
   _fstati64 @284
   _ftime @285
 ;  _ftime64 @286
-  _ftol @287
+  _ftol=ntdll._ftol @287
   _fullpath @288
   _futime @289
 ;  _futime64 @290
@@ -306,10 +306,10 @@ EXPORTS
   _getdiskfree @299
   _getdllprocaddr @300
   _getdrive @301
-  _getdrives @302
+  _getdrives=kernel32.GetLogicalDrives @302
   _getmaxstdio @303
   _getmbcp @304
-  _getpid @305
+  _getpid=kernel32.GetCurrentProcessId @305
   _getsystime @306
   _getw @307
 ;  _getwch @308
@@ -485,7 +485,7 @@ EXPORTS
 ;  _scprintf @478
 ;  _scwprintf @479
   _searchenv @480
-;  _seh_longjmp_unwind @481
+  _seh_longjmp_unwind=_seh_longjmp_unwind@4 @481
 ;  _set_SSE2_enable @482
   _set_error_mode @483
   _set_sbh_threshold @484
@@ -497,9 +497,9 @@ EXPORTS
   _setmode @490
   _setsystime @491
   _sleep @492
-  _snprintf @493
+  _snprintf=crt__snprintf @493
 ;  _snscanf @494
-  _snwprintf @495
+  _snwprintf=crt__snwprintf @495
 ;  _snwscanf @496
   _sopen @497
   _spawnl @498
@@ -540,8 +540,8 @@ EXPORTS
   _tempnam @533
 ;  _time64 @534
   _timezone @535 DATA
-  _tolower @536
-  _toupper @537
+  _tolower=ntdll._tolower @536
+  _toupper=ntdll._toupper @537
   _tzname @538 DATA
   _tzset @539
   _ui64toa=ntdll._ui64toa @540
@@ -656,7 +656,7 @@ EXPORTS
   acos @649
   asctime @650
   asin @651
-  atan @652
+  atan=ntdll.atan @652
   atan2 @653
   atexit @654
   atof @655
@@ -664,17 +664,17 @@ EXPORTS
   atol=ntdll.atol @657
   bsearch=ntdll.bsearch @658
   calloc @659
-  ceil @660
+  ceil=ntdll.ceil @660
   clearerr @661
   clock @662
-  cos @663
+  cos=ntdll.cos @663
   cosh @664
   ctime @665
   difftime @666
   div @667
   exit @668
   exp @669
-  fabs @670
+  fabs=ntdll.fabs @670
   fclose @671
   feof @672
   ferror @673
@@ -684,7 +684,7 @@ EXPORTS
   fgets @677
   fgetwc @678
   fgetws @679
-  floor @680
+  floor=ntdll.floor @680
   fmod @681
   fopen @682
   fprintf @683
@@ -711,37 +711,37 @@ EXPORTS
   getwchar @704
   gmtime @705
   is_wctype=ntdll.iswctype @706
-  isalnum @707
-  isalpha @708
-  iscntrl @709
-  isdigit @710
-  isgraph @711
+  isalnum=ntdll.isalnum @707
+  isalpha=ntdll.isalpha @708
+  iscntrl=ntdll.iscntrl @709
+  isdigit=ntdll.isdigit @710
+  isgraph=ntdll.isgraph @711
   isleadbyte @712
-  islower @713
-  isprint @714
-  ispunct @715
-  isspace @716
-  isupper @717
+  islower=ntdll.islower @713
+  isprint=ntdll.isprint @714
+  ispunct=ntdll.ispunct @715
+  isspace=ntdll.isspace @716
+  isupper=ntdll.isupper @717
   iswalnum @718
   iswalpha=ntdll.iswalpha @719
   iswascii @720
   iswcntrl @721
   iswctype=ntdll.iswctype @722
-  iswdigit @723
+  iswdigit=ntdll.iswdigit @723
   iswgraph @724
-  iswlower @725
+  iswlower=ntdll.iswlower @725
   iswprint @726
   iswpunct @727
-  iswspace @728
+  iswspace=ntdll.iswspace @728
   iswupper @729
-  iswxdigit @730
-  isxdigit @731
+  iswxdigit=ntdll.iswxdigit @730
+  isxdigit=ntdll.isxdigit @731
   labs=ntdll.labs @732
   ldexp @733
   ldiv @734
   localeconv @735
   localtime @736
-  log @737
+  log=ntdll.log @737
   log10 @738
   longjmp @739
   malloc @740
@@ -756,7 +756,7 @@ EXPORTS
   mktime @749
   modf @750
   perror @751
-  pow @752
+  pow=ntdll.pow @752
   printf @753
   putc @754
   putchar @755
@@ -775,10 +775,10 @@ EXPORTS
   setlocale @768
   setvbuf @769
   signal @770
-  sin @771
+  sin=ntdll.sin @771
   sinh @772
-  sprintf @773
-  sqrt @774
+  sprintf=crt_sprintf @773
+  sqrt=ntdll.sqrt @774
   srand @775
   sscanf @776
   strcat=ntdll.strcat @777
@@ -802,10 +802,10 @@ EXPORTS
   strtol=ntdll.strtol @795
   strtoul=ntdll.strtoul @796
   strxfrm @797
-  swprintf @798
+  swprintf=crt_swprintf @798
   swscanf @799
   system @800
-  tan @801
+  tan=ntdll.tan @801
   tanh @802
   time @803
   tmpfile @804
