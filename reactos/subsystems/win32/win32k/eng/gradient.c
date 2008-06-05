@@ -481,6 +481,17 @@ EngGradientFill(
     IN ULONG  ulMode)
 {
   ULONG i;
+  CLIPOBJ *pcoPriv = NULL;
+  BOOL ret = FALSE;
+
+  if (!pco)
+  {
+    pco = pcoPriv = IntEngCreateClipRegion(0, 0, prclExtents);
+    if (!pco)
+    {
+      return FALSE;
+    }
+  }
 
   switch(ulMode)
   {
@@ -493,10 +504,11 @@ EngGradientFill(
         if(!IntEngGradientFillRect(psoDest, pco, pxlo, pVertex, nVertex, gr, prclExtents,
                                    pptlDitherOrg, (ulMode == GRADIENT_FILL_RECT_H)))
         {
-          return FALSE;
+          break;
         }
       }
-      return TRUE;
+      ret = TRUE;
+      break;
     }
     case GRADIENT_FILL_TRIANGLE:
     {
@@ -511,13 +523,20 @@ EngGradientFill(
         if(!IntEngGradientFillTriangle(psoDest, pco, pxlo, pVertex, nVertex, gt, prclExtents,
                                        pptlDitherOrg))
         {
-          return FALSE;
+          break;
         }
       }
-      return TRUE;
+      ret = TRUE;
+      break;
     }
   }
-  return FALSE;
+
+  if (pcoPriv)
+  {
+    IntEngDeleteClipRegion(pcoPriv);
+  }
+
+  return ret;
 }
 
 BOOL STDCALL
@@ -536,7 +555,6 @@ IntEngGradientFill(
   BOOL Ret;
   BITMAPOBJ *pboDest;
   ASSERT(psoDest);
-  ASSERT(pco);
 
   pboDest = CONTAINING_RECORD(psoDest, BITMAPOBJ, SurfObj);
   ASSERT(pboDest);
