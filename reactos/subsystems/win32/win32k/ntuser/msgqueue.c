@@ -262,7 +262,7 @@ MsqIsDblClk(LPMSG Msg, BOOL Remove)
 BOOL static STDCALL
 co_MsqTranslateMouseMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd, UINT FilterLow, UINT FilterHigh,
                             PUSER_MESSAGE Message, BOOL Remove, PBOOL Freed,
-                            PWINDOW_OBJECT ScopeWin, PPOINT ScreenPoint, BOOL FromGlobalQueue)
+                            PWINDOW_OBJECT ScopeWin, PPOINT ScreenPoint, BOOL FromGlobalQueue, PLIST_ENTRY *Next)
 {
    USHORT Msg = Message->Msg.message;
    PWINDOW_OBJECT Window = NULL;
@@ -319,6 +319,7 @@ co_MsqTranslateMouseMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd, UINT Fi
             MessageQueue->MouseMoveMsg = NULL;
          }
       }
+      // when FromGlobalQueue is true, the caller has already removed the Message
       ExFreePool(Message);
       *Freed = TRUE;
       return(FALSE);
@@ -386,7 +387,7 @@ co_MsqTranslateMouseMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd, UINT Fi
    *ScreenPoint = Message->Msg.pt;
 
    if((hWnd != NULL && Window->hSelf != hWnd) ||
-         ((FilterLow != 0 || FilterLow != 0) && (Msg < FilterLow || Msg > FilterHigh)))
+         ((FilterLow != 0 || FilterHigh != 0) && (Msg < FilterLow || Msg > FilterHigh)))
    {
       /* Reject the message because it doesn't match the filter */
 
@@ -410,6 +411,11 @@ co_MsqTranslateMouseMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd, UINT Fi
             /* delete the old message */
             RemoveEntryList(&Window->MessageQueue->MouseMoveMsg->ListEntry);
             ExFreePool(Window->MessageQueue->MouseMoveMsg);
+            if (!FromGlobalQueue)
+            {
+               // We might have deleted the next one in our queue, so fix next
+               *Next = Message->ListEntry.Flink;
+            }
          }
          /* always save a pointer to this WM_MOUSEMOVE message here because we're
             sure that the message is in the private queue */
@@ -521,7 +527,7 @@ co_MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd,
 
          Accept = co_MsqTranslateMouseMessage(MessageQueue, hWnd, FilterLow, FilterHigh,
                                               Current, Remove, &Freed,
-                                              DesktopWindow, &ScreenPoint, FALSE);
+                                              DesktopWindow, &ScreenPoint, FALSE, &CurrentEntry);
          if (Accept)
          {
             if (Remove)
@@ -621,7 +627,7 @@ co_MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd,
          /* Translate the message. */
          Accept = co_MsqTranslateMouseMessage(MessageQueue, hWnd, FilterLow, FilterHigh,
                                               Current, Remove, &Freed,
-                                              DesktopWindow, &ScreenPoint, TRUE);
+                                              DesktopWindow, &ScreenPoint, TRUE, NULL);
          if (Accept)
          {
             /* Check for no more messages in the system queue. */
