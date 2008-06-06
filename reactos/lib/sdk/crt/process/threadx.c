@@ -3,7 +3,7 @@
 /*
  * @unimplemented
  */
-unsigned long _beginthreadex(
+unsigned long CDECL _beginthreadex(
     void* security,
     unsigned stack_size,
     unsigned (__stdcall *start_address)(void*),
@@ -32,7 +32,7 @@ unsigned long _beginthreadex(
 /*
  * @implemented
  */
-void _endthreadex(unsigned retval)
+void CDECL _endthreadex(unsigned retval)
 {
   /*
    * Just call the API function. Any CRT specific processing is done in

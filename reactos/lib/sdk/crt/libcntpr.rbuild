@@ -131,6 +131,7 @@
 			<file>wcsrchr.c</file>
 		</ifnot>
 		<file>ctype.c</file>
+		<file>scanf.c</file>
 		<file>strcspn.c</file>
 		<file>stricmp.c</file>
 		<file>strnicmp.c</file>
@@ -157,10 +158,6 @@
 		<file>wtoi64.c</file>
 		<file>wtoi.c</file>
 		<file>wtol.c</file>
-	</directory>
-
-	<directory name="wine">
-		<file>scanf.c</file>
 	</directory>
 
 	<directory name="wstring">

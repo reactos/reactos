@@ -143,10 +143,12 @@ kernel32 -
   reactos/dll/win32/kernel32/misc/lcformat.c    # Out of sync
 
 msvcrt -
-  reactos/dll/win32/msvcrt/wine/*.c             # Out of sync
   reactos/lib/sdk/crt/cpp.c                     # Synced at 20071111
   reactos/lib/sdk/crt/cppexcept.c               # Synced at 20071111
+  reactos/lib/sdk/crt/strings/scanf.c/h         # Synced at 20080604
+  reactos/lib/sdk/crt/wine/heap.c               # Synced at 20080529
   reactos/lib/sdk/crt/wine                      # Synced at XXXXXXXX
+  reactos/lib/sdk/crt/thread/thread.c           # Synced at 20080604
 
 User32 -
   reactos/dll/win32/user32/controls/button.c    # Synced at 20071022

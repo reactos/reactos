@@ -421,6 +421,7 @@
 		<file>atof.c</file>
 		<file>ctype.c</file>
 		<file>lasttok.c</file>
+		<file>scanf.c</file>
 		<file>strcoll.c</file>
 		<file>strdup.c</file>
 		<file>strerror.c</file>
@@ -484,8 +485,6 @@
 	</directory>
 	<directory name="wine">
 		<file>heap.c</file>
-		<file>scanf.c</file>
-		<file>thread.c</file>
 		<file>undname.c</file>
 	</directory>
 </module>
