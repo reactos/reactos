@@ -261,6 +261,8 @@ typedef struct _GDIDEVICE
 #define  DC_UnlockDc(pDC)  \
   GDIOBJ_UnlockObjByPtr ((POBJ)pDC)
 
+extern PDC defaultDCstate;
+
 NTSTATUS FASTCALL InitDcImpl(VOID);
 PGDIDEVICE FASTCALL IntEnumHDev(VOID);
 HDC  FASTCALL DC_AllocDC(PUNICODE_STRING  Driver);

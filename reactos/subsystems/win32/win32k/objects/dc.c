@@ -33,7 +33,7 @@ static GDIDEVICE PrimarySurface;
 PGDIDEVICE pPrimarySurface = &PrimarySurface;
 static KEVENT VideoDriverNeedsPreparation;
 static KEVENT VideoDriverPrepared;
-static PDC defaultDCstate = NULL;
+PDC defaultDCstate = NULL;
 
 
 NTSTATUS FASTCALL
@@ -952,10 +952,11 @@ BOOL FASTCALL
 IntGdiCleanDC(HDC hDC)
 {
   PDC dc;
+  if (!hDC) return FALSE;
   dc = DC_LockDc ( hDC );
+  if (!dc) return FALSE;
   // Clean the DC
   if (defaultDCstate) IntGdiCopyFromSaveState(dc, defaultDCstate, hDC );
-  DC_UnlockDc(dc);
   return TRUE;
 }
 

@@ -19,7 +19,6 @@
 /* NOTE - I think we should store this per window station (including gdi objects) */
 
 static PDCE FirstDce = NULL;
-static PDC defaultDCstate = NULL;
 //static INT DCECount = 0; // Count of DCE in system.
 
 #define DCX_CACHECOMPAREMASK (DCX_CLIPSIBLINGS | DCX_CLIPCHILDREN | \
@@ -228,13 +227,11 @@ DceReleaseDC(DCE* dce, BOOL EndPaint)
    {
      if (!(dce->DCXFlags & DCX_NORESETATTRS))
      {
-       PDC dc;
        /* make the DC clean so that SetDCState doesn't try to update the vis rgn */
        IntGdiSetHookFlags(dce->hDC, DCHF_VALIDATEVISRGN);
 
-       dc = DC_LockDc ( dce->hDC );
        // Clean the DC
-       IntGdiCopyFromSaveState(dc, defaultDCstate, dce->hDC ); // Was SetDCState.
+       if (!IntGdiCleanDC(dce->hDC)) return 0;
 
        dce->DCXFlags &= ~DCX_DCEBUSY;
        if (dce->DCXFlags & DCX_DCEDIRTY)
