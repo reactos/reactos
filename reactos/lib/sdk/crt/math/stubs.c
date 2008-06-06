@@ -1,5 +1,5 @@
+#include <precomp.h>
 #include <math.h>
-#include <internal/debug.h>
 
 double	_CIsin(double x);
 double	_CIcos(double x);
@@ -135,85 +135,86 @@ double	_CIfmod(double x, double y)
 /* The following functions are likely workarounds for the pentium fdiv bug */
 void __stdcall _adj_fdiv_m32( unsigned int arg )
 {
-    DPRINT("_adj_fdiv_m32 stub\n");
+    FIXME("_adj_fdiv_m32 stub\n");
 }
 void __stdcall _adj_fdiv_m32i( int arg )
 {
-    DPRINT1("_adj_fdiv_m32i stub\n");
+    FIXME("_adj_fdiv_m32i stub\n");
 }
 
 void __stdcall _adj_fdiv_m64( unsigned __int64 arg )
 {
-    DPRINT1("_adj_fdiv_m64 stub\n");
+    FIXME("_adj_fdiv_m64 stub\n");
 }
 
 void _adj_fdiv_r(void)
 {
-    DPRINT1("_adj_fdiv_r stub\n");
+    FIXME("_adj_fdiv_r stub\n");
 }
 
 void __stdcall _adj_fdivr_m32( unsigned int arg )
 {
-    DPRINT1("_adj_fdivr_m32i stub\n");
+    FIXME("_adj_fdivr_m32i stub\n");
 }
 
 void __stdcall _adj_fdivr_m32i( int arg )
 {
-    DPRINT1("_adj_fdivr_m32i stub\n");
+    FIXME("_adj_fdivr_m32i stub\n");
 }
 
 void __stdcall _adj_fdivr_m64( unsigned __int64 arg )
 {
-    DPRINT1("_adj_fdivr_m64 stub\n");
+    FIXME("_adj_fdivr_m64 stub\n");
 }
 
 void _adj_fpatan(void)
 {
-    DPRINT1("_adj_fpatan stub\n");
+    FIXME("_adj_fpatan stub\n");
 }
 
 void __stdcall _adj_fdiv_m16i( short arg )
 {
-    DPRINT("_adj_fdiv_m16i stub\n");
+    FIXME("_adj_fdiv_m16i stub\n");
 }
 
 void __stdcall _adj_fdivr_m16i( short arg )
 {
-    DPRINT("_adj_fdivr_m16i stub\n");
+    FIXME("_adj_fdivr_m16i stub\n");
 }
 
 void _adj_fprem(void)
 {
-    DPRINT("_adj_fprem stub\n");
+    FIXME("_adj_fprem stub\n");
 }
 
 void _adj_fprem1(void)
 {
-    DPRINT("_adj_fprem1 stub\n");
+    FIXME("_adj_fprem1 stub\n");
 }
 
 void _adj_fptan(void)
 {
-    DPRINT("_adj_fptan stub\n");
+    FIXME("_adj_fptan stub\n");
 }
 
 void _safe_fdiv(void)
 {
-    DPRINT("_safe_fdiv stub\n");
+    FIXME("_safe_fdiv stub\n");
 }
 
 void _safe_fdivr(void)
 {
-    DPRINT("_safe_fdivr stub\n");
+    FIXME("_safe_fdivr stub\n");
 }
 
 void _safe_fprem(void)
 {
-    DPRINT("_safe_fprem stub\n");
+    FIXME("_safe_fprem stub\n");
 }
 
 void _safe_fprem1(void)
 {
-    DPRINT("_safe_fprem1 stub\n");
+    FIXME("_safe_fprem1 stub\n");
 }
+
 

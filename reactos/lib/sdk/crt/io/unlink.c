@@ -10,16 +10,12 @@
 
 #include <precomp.h>
 
-#define NDEBUG
-#include <internal/debug.h>
-
-
 /*
  * @implemented
  */
 int _unlink(const char* filename)
 {
-    DPRINT("_unlink('%s')\n", filename);
+    TRACE("_unlink('%s')\n", filename);
     if (!DeleteFileA(filename)) {
 		_dosmaperr(GetLastError());
         return -1;

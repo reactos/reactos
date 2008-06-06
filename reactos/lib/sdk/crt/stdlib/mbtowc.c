@@ -10,53 +10,36 @@
 
 #include <precomp.h>
 
-#if 1
 
 /*
  * @implemented
  */
-int mbtowc(wchar_t *dst, const char *str, size_t n)
+
+int mbtowc (wchar_t *charptr, const char *address, size_t number)
 {
-//    printf("\t\t\tmbtowc(%p, %p, %d) called.\n", dst, str, n);
+    int bytes;
 
-    if (n <= 0 || !str)
-        return 0;
+    if (address == 0)
+	return 0;
 
-    *dst = *str;
+    if ((bytes = mblen (address, number)) < 0)
+	return bytes;
 
-    if (!*str)
-        return 0;
-    return 1;
-}
-
-#else
-
-int mbtowc(wchar_t *dst, const char *str, size_t n)
-{
-    if (n <= 0 || !str)
-        return 0;
-    if (!MultiByteToWideChar(CP_ACP, 0, str, n, dst, (dst == NULL) ? 0 : 1)) {
-        DWORD err = GetLastError();
-        switch (err) {
-        case ERROR_INSUFFICIENT_BUFFER:
-            break;
-        case ERROR_INVALID_FLAGS:
-            break;
-        case ERROR_INVALID_PARAMETER:
-            break;
-        case ERROR_NO_UNICODE_TRANSLATION:
-            break;
-        default:
-            return 1;
-        }
-        return -1;
+    if (charptr) {
+	switch (bytes) {
+	case 0:
+	    if (number > 0) 
+		*charptr = (wchar_t) '\0';
+	    break;
+	case 1:
+	    *charptr = (wchar_t) ((unsigned char) address[0]);
+	    break;
+	case 2:
+	    *charptr = (wchar_t) (((unsigned char) address[0] << 8)
+				  | (unsigned char) address[1]);
+	    break;
+	}
     }
-    /* return the number of bytes from src that have been used */
-    if (!*str)
-        return 0;
-    if (n >= 2 && isleadbyte(*str) && str[1])
-        return 2;
-    return 1;
-}
 
-#endif
+    return bytes;
+}

@@ -46,6 +46,7 @@
 #define CPP_CONST
 #endif
 
+#undef P
 #define P(s)        s
 #define alloc_size_t    size_t
 #define qsort_size_t    size_t

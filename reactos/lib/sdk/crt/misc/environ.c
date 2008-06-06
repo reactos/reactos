@@ -1,6 +1,6 @@
 /* $Id$
  *
- * dllmain.c
+ * environ.c
  *
  * ReactOS MSVCRT.DLL Compatibility Library
  */
@@ -9,9 +9,6 @@
 #include <internal/tls.h>
 #include <stdlib.h>
 #include <string.h>
-
-#define NDEBUG
-#include <internal/debug.h>
 
 
 unsigned int _osver = 0;
@@ -44,7 +41,7 @@ int BlockEnvToEnvironA(void)
    char **envptr;
    int count = 1, len;
 
-   DPRINT("BlockEnvToEnvironA()\n");
+   TRACE("BlockEnvToEnvironA()\n");
 
    environment_strings = GetEnvironmentStringsA();
    if (environment_strings == NULL) {
@@ -95,7 +92,7 @@ int BlockEnvToEnvironW(void)
    wchar_t **envptr;
    int count = 1, len;
 
-   DPRINT("BlockEnvToEnvironW()\n");
+   TRACE("BlockEnvToEnvironW()\n");
 
    environment_strings = GetEnvironmentStringsW();
    if (environment_strings == NULL) {

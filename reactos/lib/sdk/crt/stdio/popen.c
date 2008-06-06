@@ -11,10 +11,13 @@
 #include <precomp.h>
 #include <tchar.h>
 
-#define NDEBUG
-#include <internal/debug.h>
+#ifdef _UNICODE
+   #define sT "S"
+#else
+   #define sT "s"
+#endif
 
-
+#define MK_STR(s) #s
 /*
  * @implemented
  */
@@ -131,4 +134,5 @@ int _pclose (FILE *pp)
 }
 
 #endif
+
 

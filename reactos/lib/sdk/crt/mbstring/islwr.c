@@ -1,26 +1,22 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
- * FILE:        lib/msvcrt/mbstring/islwr.c
+ * FILE:        lib/sdk/crt/mbstring/ishwr.c
  * PURPOSE:
- * PROGRAMER:   Ariadne
+ * PROGRAMER:
  * UPDATE HISTORY:
- *              12/04/99: Created
+ *              12/04/99: Ariadne Created
+ *              05/30/08: Samuel Serapion adapted from PROJECT C Library
+ *
  */
 
 #include <precomp.h>
 
 /*
- * code page 952 only
- *
  * @implemented
  */
 int _ismbclower( unsigned int c )
 {
-	if ((c & 0xFF00) != 0) {
-		if ( c >= 0x829A && c<= 0x829A )
-			return 1;
-	}
+    return ((c) >= 0x8281 && (c) <= 0x829a);
 
-	return islower(c);
 }

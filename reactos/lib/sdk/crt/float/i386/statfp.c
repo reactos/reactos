@@ -9,21 +9,34 @@
  */
 
 #include <precomp.h>
+#include "float.h"
 
-/*
- * @implemented
+//WTF IS HAPPENING WITH float.h !??!?!
+#define _SW_INVALID    0x00000010 /* invalid */
+#define _SW_ZERODIVIDE 0x00000008 /* zero divide */
+#define _SW_UNDERFLOW  0x00000002 /* underflow */
+#define _SW_OVERFLOW   0x00000004 /* overflow */
+#define _SW_INEXACT    0x00000001 /* inexact (precision) */
+#define _SW_DENORMAL    0x00080000 /* denormal status bit */
+
+/**********************************************************************
+ *		_statusfp (MSVCRT.@)
  */
-unsigned int	_statusfp (void)
+unsigned int CDECL _statusfp(void)
 {
+   unsigned int retVal = 0;
+#if defined(__GNUC__) && defined(__i386__)
+  unsigned int fpword;
 
-register unsigned short __res;
-#ifdef __GNUC__
-__asm__ __volatile__ (
-	"fstsw	%0 \n\t"
-//	"movzwl %ax, %eax"
-	:"=a" (__res)
-	);
+  __asm__ __volatile__( "fstsw %0" : "=m" (fpword) : );
+  if (fpword & 0x1)  retVal |= _SW_INVALID;
+  if (fpword & 0x2)  retVal |= _SW_DENORMAL;
+  if (fpword & 0x4)  retVal |= _SW_ZERODIVIDE;
+  if (fpword & 0x8)  retVal |= _SW_OVERFLOW;
+  if (fpword & 0x10) retVal |= _SW_UNDERFLOW;
+  if (fpword & 0x20) retVal |= _SW_INEXACT;
 #else
-#endif /*__GNUC__*/
-	return __res;
+  FIXME(":Not implemented!\n");
+#endif
+  return retVal;
 }

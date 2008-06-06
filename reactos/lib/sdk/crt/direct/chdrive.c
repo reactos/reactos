@@ -1,9 +1,9 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
- * FILE:        lib/crt/??????
- * PURPOSE:     Unknown
- * PROGRAMER:   Unknown
+ * FILE:        lib/crt/chdrive.c
+ * PURPOSE:     Change the current drive.
+ * PROGRAMER:   WINE
  * UPDATE HISTORY:
  *              25/11/05: Added license header
  */

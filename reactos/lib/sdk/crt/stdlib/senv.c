@@ -13,8 +13,13 @@
 #include <string.h>
 #include <tchar.h>
 
-#define NDEBUG
-#include <internal/debug.h>
+#ifdef _UNICODE
+   #define sT "S"
+#else
+   #define sT "s"
+#endif
+
+#define MK_STR(s) #s
 
 
 /*
@@ -27,7 +32,7 @@ void _tsearchenv(const _TCHAR* file,const _TCHAR* var,_TCHAR* path)
     _TCHAR* y;
     _TCHAR* FilePart;
 
-    DPRINT(MK_STR(_tsearchenv)"()\n");
+    TRACE(MK_STR(_tsearchenv)"()\n");
 
     x = _tcschr(env,'=');
     if ( x != NULL ) {

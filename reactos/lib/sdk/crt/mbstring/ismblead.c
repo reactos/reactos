@@ -1,54 +1,26 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
- * FILE:        lib/msvcrt/mbstring/ismblead.c
- * PURPOSE:     Checks for a lead byte
- * PROGRAMER:   Ariadne
+ * FILE:        lib/sdk/crt/mbstring/iskana.c
+ * PURPOSE: 
+ * PROGRAMER:
  * UPDATE HISTORY:
- *		Modified from Taiji Yamada japanese code system utilities
- *              12/04/99: Created
+ *              12/04/99:  Ariadne, Taiji Yamada Created
+ *              05/30/08:  Samuel Serapion adapted from PROJECT C Library
+ *
  */
 
-#include <mbstring.h>
-#include <stdlib.h>
-#include <mbctype.h>
-#include <internal/mbstring.h>
+#include <precomp.h>
 
 size_t _mbclen2(const unsigned int s);
 
-unsigned char _mbctype[257] = {
-/*-1*/  ___,
-/*0x*/  ___,___,___,___,___,___,___,___,___,___,___,___,___,___,___,___,
-/*1x*/  ___,___,___,___,___,___,___,___,___,___,___,___,___,___,___,___,
-/*2x*/  ___,___,___,___,___,___,___,___,___,___,___,___,___,___,___,___,
-/*3x*/  ___,___,___,___,___,___,___,___,___,___,___,___,___,___,___,___,
-/*4x*/  __2,__2,__2,__2,__2,__2,__2,__2,__2,__2,__2,__2,__2,__2,__2,__2,
-/*5x*/  __2,__2,__2,__2,__2,__2,__2,__2,__2,__2,__2,__2,__2,__2,__2,__2,
-/*6x*/  __2,__2,__2,__2,__2,__2,__2,__2,__2,__2,__2,__2,__2,__2,__2,__2,
-/*7x*/  __2,__2,__2,__2,__2,__2,__2,__2,__2,__2,__2,__2,__2,__2,__2,___,
-/*8x*/  __2,_12,_12,_12,_12,_12,_12,_12,_12,_12,_12,_12,_12,_12,_12,_12,
-/*9x*/  _12,_12,_12,_12,_12,_12,_12,_12,_12,_12,_12,_12,_12,_12,_12,_12,
-/*Ax*/  __2,_P2,_P2,_P2,_P2,_P2,_M2,_M2,_M2,_M2,_M2,_M2,_M2,_M2,_M2,_M2,
-/*Bx*/  _M2,_M2,_M2,_M2,_M2,_M2,_M2,_M2,_M2,_M2,_M2,_M2,_M2,_M2,_M2,_M2,
-/*Cx*/  _M2,_M2,_M2,_M2,_M2,_M2,_M2,_M2,_M2,_M2,_M2,_M2,_M2,_M2,_M2,_M2,
-/*Dx*/  _M2,_M2,_M2,_M2,_M2,_M2,_M2,_M2,_M2,_M2,_M2,_M2,_M2,_M2,_M2,_M2,
-/*Ex*/  _12,_12,_12,_12,_12,_12,_12,_12,_12,_12,_12,_12,_12,_12,_12,_12,
-/*Fx*/  _12,_12,_12,_12,_12,_12,_12,_12,_12,_12,_12,_12,_12,___,___,___
-};
-
-//unsigned char _mbctype = _jctype;
 /*
  * @implemented
  */
 int _ismbblead(unsigned int c)
 {
-   return ((_mbctype+1)[(unsigned char)(c)] & _KNJ_1);
+   return (_mbctype[c & 0xff] & _MLEAD);
 }
-//int _ismbblead(unsigned int byte)
-//{
-//
-//	return (int)IsDBCSLeadByte(byte)
-//}
 
 /*
  * @implemented
@@ -67,8 +39,9 @@ int _ismbslead( const unsigned char *str, const unsigned char *t)
 /*
  * @implemented
  */
-unsigned char *__p__mbctype(void)
+const unsigned char *__p__mbctype(void)
 {
 	return _mbctype;
 }
+
 

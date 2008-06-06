@@ -8,9 +8,7 @@
  *              12/04/99: Created
  */
 
-#include <mbstring.h>
-#include <mbctype.h>
-#include <internal/mbstring.h>
+#include <precomp.h>
 
 size_t _mbclen2(const unsigned int s);
 
@@ -21,13 +19,8 @@ size_t _mbclen2(const unsigned int s);
  */
 int _ismbbtrail(unsigned int c)
 {
-   return ((_mbctype+1)[(unsigned char)(c)] & _KNJ_2);
+   return (_mbctype[c & 0xff] & _MTRAIL);
 }
-
-//int _ismbbtrail( unsigned int b)
-//{
-//	return ((b >= 0x40 && b <= 0x7e ) || (b >= 0x80 && b <= 0xfc ) );
-//}
 
 
 /*

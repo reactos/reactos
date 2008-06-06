@@ -1,6 +1,5 @@
 #include <precomp.h>
 #include <direct.h>
-#include <internal/debug.h>
 #include <tchar.h>
 
 /*
@@ -59,4 +58,5 @@ _TCHAR* _tgetdcwd(int drive, _TCHAR * buf, int size)
   }
   return buf;
 }
+
 

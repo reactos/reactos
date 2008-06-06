@@ -14,8 +14,7 @@
 #include <string.h>
 #include <process.h>
 
-#define NDEBUG
-#include<internal/debug.h>
+
 /*
  * @implemented
  */
@@ -117,6 +116,6 @@ int system(const char *command)
 
 int CDECL _wsystem(const wchar_t* cmd)
 {
-    DPRINT1("_wsystem stub\n");
+    FIXME("_wsystem stub\n");
     return -1;
 }

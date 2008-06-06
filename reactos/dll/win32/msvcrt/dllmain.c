@@ -22,10 +22,11 @@
 
 #include <precomp.h>
 #include <internal/wine/msvcrt.h>
+#include <locale.h>
+#include <mbctype.h>
 
-#define NDEBUG
-#include <internal/debug.h>
-
+#include "wine/debug.h"
+WINE_DEFAULT_DEBUG_CHANNEL(msvcrt);
 
 /* EXTERNAL PROTOTYPES ********************************************************/
 
@@ -96,20 +97,22 @@ DllMain(PVOID hinstDll, ULONG dwReason, PVOID reserved)
 
         /* FIXME: more initializations... */
 
-        /* FIXME: Initialization of the WINE code */
+        /* Initialization of the WINE code */
         msvcrt_init_mt_locks();
+        setlocale(0, "C");
+        //_setmbcp(_MB_CP_LOCALE);
 
-        DPRINT("Attach done\n");
+        TRACE("Attach done\n");
         break;
 
-    case DLL_THREAD_ATTACH://2
+    case DLL_THREAD_ATTACH:
         break;
 
-    case DLL_THREAD_DETACH://4
+    case DLL_THREAD_DETACH:
         FreeThreadData(NULL);
         break;
 
-    case DLL_PROCESS_DETACH://0
+    case DLL_PROCESS_DETACH:
         //DPRINT1("Detach %d\n", nAttachCount);
         //DPRINT("Detach\n");
         /* FIXME: more cleanup... */
@@ -132,7 +135,7 @@ DllMain(PVOID hinstDll, ULONG dwReason, PVOID reserved)
         /* destroy heap */
         HeapDestroy(hHeap);
 
-        DPRINT("Detach done\n");
+        TRACE("Detach done\n");
         break;
     }
 

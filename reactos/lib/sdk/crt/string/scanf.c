@@ -28,10 +28,10 @@
 #include <wchar.h>
 #include <ctype.h>
 
-#define NDEBUG
-#include <internal/debug.h>
-
-#define WARN DPRINT1
+// HACK for LIBCNT
+#ifndef debugstr_a
+#define debugstr_a
+#endif
 
 extern FILE _iob[];
 

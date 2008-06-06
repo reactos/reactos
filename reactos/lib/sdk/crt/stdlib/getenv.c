@@ -9,10 +9,6 @@
  */
 
 #include <precomp.h>
-
-#define NDEBUG
-#include <internal/debug.h>
-
 #undef environ
 
 /*

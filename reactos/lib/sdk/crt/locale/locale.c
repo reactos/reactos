@@ -6,11 +6,8 @@
 
 #include <precomp.h>
 #include <locale.h>
-#include <internal/mtdll.h>
 
-
-#define NDEBUG
-#include <internal/debug.h>
+#include "mbctype.h"
 
 // mtdll.h
 #define _SETLOCALE_LOCK 19
@@ -30,6 +27,29 @@
  */
 #define MAX_ELEM_LEN 64 /* Max length of country/language/CP string */
 #define MAX_LOCALE_LENGTH 256
+
+unsigned char MSVCRT_mbctype[257];
+static int g_mbcp_is_multibyte = 0;
+
+/* It seems that the data about valid trail bytes is not available from kernel32
+ * so we have to store is here. The format is the same as for lead bytes in CPINFO */
+struct cp_extra_info_t
+{
+    int cp;
+    BYTE TrailBytes[MAX_LEADBYTES];
+};
+
+static struct cp_extra_info_t g_cpextrainfo[] =
+{
+    {932, {0x40, 0x7e, 0x80, 0xfc, 0, 0}},
+    {936, {0x40, 0xfe, 0, 0}},
+    {949, {0x41, 0xfe, 0, 0}},
+    {950, {0x40, 0x7e, 0xa1, 0xfe, 0, 0}},
+    {20932, {1, 255, 0, 0}},  /* seems to give different results on different systems */
+    {0, {1, 255, 0, 0}}       /* match all with FIXME */
+};
+
+
 char MSVCRT_current_lc_all[MAX_LOCALE_LENGTH];
 LCID MSVCRT_current_lc_all_lcid;
 int MSVCRT___lc_codepage;
@@ -354,7 +374,7 @@ char *setlocale(int category, const char *locale)
 
   if (locale[0] == 'L' && locale[1] == 'C' && locale[2] == '_')
   {
-    DPRINT1(":restore previous locale not implemented!\n");
+    WARN(":restore previous locale not implemented!\n");
     /* FIXME: Easiest way to do this is parse the string and
      * call this function recursively with its elements,
      * Where they differ for each lc_ type.
@@ -449,7 +469,7 @@ char *setlocale(int category, const char *locale)
 
   if (haveCP && !haveCountry && !haveLang)
   {
-    DPRINT1(":Codepage only locale not implemented\n");
+    ERR(":Codepage only locale not implemented\n");
     /* FIXME: Use default lang/country and skip locale_to_LCID()
      * call below...
      */
@@ -500,7 +520,7 @@ wchar_t* _wsetlocale(int category, const wchar_t* locale)
     'E','n','g','l','i','s','h','_','U','n','i','t','e','d',' ',
     'S','t','a','t','e','s','.','1','2','5','2',0 };
 
-  DPRINT1("%d %S\n", category, locale);
+  TRACE("%d %S\n", category, locale);
 
   return fake;
 }
@@ -609,13 +629,127 @@ struct lconv *localeconv(void)
 
 /*********************************************************************
  *		_setmbcp (MSVCRT.@)
- *
- * @unimplemented
+ * @implemented
  */
-void _setmbcp(int cp)
+int CDECL _setmbcp(int cp)
 {
-DPRINT1("_setmbcp - stub\n");
-return;
+  int newcp;
+  CPINFO cpi;
+  BYTE *bytes;
+  WORD chartypes[256];
+  WORD *curr_type;
+  char bufA[256];
+  WCHAR bufW[256];
+  int charcount;
+  int ret;
+  int i;
+
+  TRACE("_setmbcp %d\n",cp);
+  switch (cp)
+  {
+    case _MB_CP_ANSI:
+      newcp = GetACP();
+      break;
+    case _MB_CP_OEM:
+      newcp = GetOEMCP();
+      break;
+    case _MB_CP_LOCALE:
+      newcp = MSVCRT___lc_codepage;
+      break;
+    case _MB_CP_SBCS:
+      newcp = 20127;   /* ASCII */
+      break;
+    default:
+      newcp = cp;
+      break;
+  }
+
+  if (!GetCPInfo(newcp, &cpi))
+  {
+    ERR("Codepage %d not found\n", newcp);
+    __set_errno(EINVAL);
+    return -1;
+  }
+
+  /* setup the _mbctype */
+  memset(MSVCRT_mbctype, 0, sizeof(MSVCRT_mbctype));
+
+  bytes = cpi.LeadByte;
+  while (bytes[0] || bytes[1])
+  {
+    for (i = bytes[0]; i <= bytes[1]; i++)
+      MSVCRT_mbctype[i + 1] |= _M1;
+    bytes += 2;
+  }
+
+  if (cpi.MaxCharSize > 1)
+  {
+    /* trail bytes not available through kernel32 but stored in a structure in msvcrt */
+    struct cp_extra_info_t *cpextra = g_cpextrainfo;
+
+    g_mbcp_is_multibyte = 1;
+    while (TRUE)
+    {
+      if (cpextra->cp == 0 || cpextra->cp == newcp)
+      {
+        if (cpextra->cp == 0)
+          ERR("trail bytes data not available for DBCS codepage %d - assuming all bytes\n", newcp);
+
+        bytes = cpextra->TrailBytes;
+        while (bytes[0] || bytes[1])
+        {
+          for (i = bytes[0]; i <= bytes[1]; i++)
+            MSVCRT_mbctype[i + 1] |= _M2;
+          bytes += 2;
+        }
+        break;
+      }
+      cpextra++;
+    }
+  }
+  else
+    g_mbcp_is_multibyte = 0;
+
+  /* we can't use GetStringTypeA directly because we don't have a locale - only a code page
+   */
+  charcount = 0;
+  for (i = 0; i < 256; i++)
+    if (!(MSVCRT_mbctype[i + 1] & _M1))
+      bufA[charcount++] = i;
+
+  ret = MultiByteToWideChar(newcp, 0, bufA, charcount, bufW, charcount);
+  if (ret != charcount)
+    ERR("MultiByteToWideChar of chars failed for cp %d, ret=%d (exp %d), error=%d\n", newcp, ret, charcount, GetLastError());
+
+  GetStringTypeW(CT_CTYPE1, bufW, charcount, chartypes);
+
+  curr_type = chartypes;
+  for (i = 0; i < 256; i++)
+    if (!(MSVCRT_mbctype[i + 1] & _M1))
+    {
+	if ((*curr_type) & C1_UPPER)
+	    MSVCRT_mbctype[i + 1] |= _SBUP;
+	if ((*curr_type) & C1_LOWER)
+	    MSVCRT_mbctype[i + 1] |= _SBLOW;
+	curr_type++;
+    }
+
+  if (newcp == 932)   /* CP932 only - set _MP and _MS */
+  {
+    /* On Windows it's possible to calculate the _MP and _MS from CT_CTYPE1
+     * and CT_CTYPE3. But as of Wine 0.9.43 we return wrong values what makes
+     * it hard. As this is set only for codepage 932 we hardcode it what gives
+     * also faster execution.
+     */
+    for (i = 161; i <= 165; i++)
+      MSVCRT_mbctype[i + 1] |= _MP;
+    for (i = 166; i <= 223; i++)
+      MSVCRT_mbctype[i + 1] |= _MS;
+  }
+
+  MSVCRT___lc_collate_cp = MSVCRT___lc_codepage = newcp;
+  TRACE("(%d) -> %d\n", cp, MSVCRT___lc_codepage);
+  return 0;
 }
 
 
@@ -626,7 +760,7 @@ return;
  */
 void __lc_collate_cp(int cp)
 {
-DPRINT1("__lc_collate_cp - stub\n");
+FIXME("__lc_collate_cp - stub\n");
 return;
 }
 
@@ -638,7 +772,7 @@ return;
  */
 void __lc_handle(void)
 {
-DPRINT1("__lc_handle - stub\n");
+FIXME("__lc_handle - stub\n");
 return;
 }
 
@@ -650,7 +784,7 @@ return;
  */
 void __lc_codepage(void)
 {
-DPRINT1("__lc_codepage - stub\n");
+FIXME("__lc_codepage - stub\n");
 return;
 }
 
@@ -660,7 +794,7 @@ return;
  */
 void *_Gettnames(void)
 {
-  DPRINT1("(void), stub!\n");
+  FIXME("(void), stub!\n");
   return NULL;
 }
 
@@ -669,7 +803,7 @@ void *_Gettnames(void)
  */
 void __lconv_init(void)
 {
-  DPRINT1(" stub\n");
+  FIXME(" stub\n");
 }
 
 
@@ -680,7 +814,7 @@ const char* _Strftime(char *out, unsigned int len, const char *fmt,
                                      const void *tm, void *foo)
 {
   /* FIXME: */
-  DPRINT1("(%p %d %s %p %p) stub\n", out, len, fmt, tm, foo);
+  FIXME("(%p %d %s %p %p) stub\n", out, len, fmt, tm, foo);
   return "";
 }
 
@@ -693,7 +827,7 @@ const char* _Getdays(void)
   static const char *MSVCRT_days = ":Sun:Sunday:Mon:Monday:Tue:Tuesday:Wed:"
                             "Wednesday:Thu:Thursday:Fri:Friday:Sat:Saturday";
   /* FIXME: Use locale */
-  DPRINT1("(void) semi-stub\n");
+  FIXME("(void) semi-stub\n");
   return MSVCRT_days;
 }
 
@@ -706,7 +840,7 @@ const char* _Getmonths(void)
                 "April:May:May:Jun:June:Jul:July:Aug:August:Sep:September:Oct:"
                 "October:Nov:November:Dec:December";
   /* FIXME: Use locale */
-  DPRINT1("(void) semi-stub\n");
+  FIXME("(void) semi-stub\n");
   return MSVCRT_months;
 }
 
@@ -717,12 +851,25 @@ int __crtLCMapStringA(
   LCID lcid, DWORD mapflags, const char* src, int srclen, char* dst,
   int dstlen, unsigned int codepage, int xflag
 ) {
-  DPRINT1("(lcid %lx, flags %lx, %s(%d), %p(%d), %x, %d), partial stub!\n",
+  TRACE("(lcid %lx, flags %lx, %s(%d), %p(%d), %x, %d), partial stub!\n",
         lcid,mapflags,src,srclen,dst,dstlen,codepage,xflag);
   /* FIXME: A bit incorrect. But msvcrt itself just converts its
    * arguments to wide strings and then calls LCMapStringW
    */
   return LCMapStringA(lcid,mapflags,src,srclen,dst,dstlen);
+}
+
+/*********************************************************************
+ *    __crtLCMapStringW (MSVCRT.@)
+ */
+int __crtLCMapStringW(
+  LCID lcid, DWORD mapflags, LPCWSTR src, int srclen, LPWSTR dst,
+  int dstlen, unsigned int codepage, int xflag
+) {
+  TRACE("(lcid %lx, flags %lx, %s(%d), %p(%d), %x, %d), partial stub!\n",
+        lcid,mapflags,src,srclen,dst,dstlen,codepage,xflag);
+
+  return LCMapStringW(lcid,mapflags,src,srclen,dst,dstlen);
 }
 
 int CDECL _getmbcp(void)

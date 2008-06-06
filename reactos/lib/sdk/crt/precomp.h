@@ -32,11 +32,27 @@
   #include <stdint.h>
 #endif
 
+#include "wine/unicode.h"
+
+/* kernelmode libcnt should not include Wine-debugging crap */
+#ifndef _LIBCNT_
+#include "wine/debug.h"
+WINE_DEFAULT_DEBUG_CHANNEL(msvcrt);
+#else
+#include <debug.h>
+#define TRACE DPRINT
+#define WARN DPRINT1
+#endif
+
 /* CRT Internal data */
 #include <internal/atexit.h>
 #include <internal/console.h>
 #include <internal/file.h>
 #include <internal/ieee.h>
+#include <internal/math.h>
+#include <internal/mbstring.h>
+#include <internal/mtdll.h>
+#include <internal/rterror.h>
 #include <internal/tls.h>
 
 #endif /* _CRT_PRECOMP_H */

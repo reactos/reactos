@@ -12,12 +12,15 @@
 #include <sys/stat.h>
 #include <tchar.h>
 
-#define NDEBUG
-#include <internal/debug.h>
-
-
 #define mode_t int
 
+#define MK_STR(s) #s
+
+#ifdef _UNICODE
+ #define sT "S"
+#else
+ #define sT "s"
+#endif
 
 /*
  * @implemented
@@ -27,10 +30,10 @@ int _tchmod(const _TCHAR* filename, mode_t mode)
     DWORD FileAttributes = 0;
     BOOLEAN Set = FALSE;
 
-    DPRINT(MK_STR(_tchmod)"('%"sT"', %x)\n", filename, mode);
+    TRACE(MK_STR(_tchmod)"('%"sT"', %x)\n", filename, mode);
 
     FileAttributes = GetFileAttributes(filename);
-    if ( FileAttributes == (DWORD)-1 ) {
+    if ( FileAttributes == INVALID_FILE_ATTRIBUTES ) {
     	_dosmaperr(GetLastError());
         return -1;
     }

@@ -2,10 +2,10 @@
 #include <mbstring.h>
 
 /*
- * @unimplemented
+ * @implemented
  */
-int isleadbyte(int byte)
+int isleadbyte(int c)
 {
-	return 0;
-	//return IsDBCSLeadByteEx(0,*c);
+    return _isctype( c, _MLEAD );
+
 }

@@ -10,8 +10,6 @@
 
 #include <precomp.h>
 
-#define NDEBUG
-#include <internal/debug.h>
 
 #define BUFSIZE 4096
 /*
@@ -40,7 +38,7 @@ int _write(int _fd, const void* _buf, unsigned int _nbyte)
    unsigned int count;
    DWORD wbyte;
 
-   DPRINT("_write(fd %d, buf %x, nbyte %d)\n", _fd, _buf, _nbyte);
+   TRACE("_write(fd %d, buf %x, nbyte %d)\n", _fd, _buf, _nbyte);
    if (__fileno_getmode(_fd) & O_TEXT) {
       result = _nbyte;
       tmp = (char*) malloc(BUFSIZE);

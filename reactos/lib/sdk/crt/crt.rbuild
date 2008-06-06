@@ -82,7 +82,7 @@
 		<file>chsize.c</file>
 		<file>close.c</file>
 		<file>commit.c</file>
-		<file>create.c</file>
+		<file>creat.c</file>
 		<file>dup.c</file>
 		<file>dup2.c</file>
 		<file>eof.c</file>
@@ -108,7 +108,7 @@
 		<file>utime.c</file>
 		<file>waccess.c</file>
 		<file>wchmod.c</file>
-		<file>wcreate.c</file>
+		<file>wcreat.c</file>
 		<file>wfind.c</file>
 		<file>wmktemp.c</file>
 		<file>wopen.c</file>
@@ -285,6 +285,7 @@
 		<file>fgets.c</file>
 		<file>fgetws.c</file>
 		<file>filbuf.c</file>
+		<file>file.c</file>
 		<file>fileno.c</file>
 		<file>flsbuf.c</file>
 		<file>fopen.c</file>

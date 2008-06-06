@@ -7,6 +7,8 @@
  * UPDATE HISTORY:
  *              12/04/99: Created
  */
+
+#include <precomp.h>
 #include <mbstring.h>
 #include <ctype.h>
 
@@ -18,39 +20,57 @@ unsigned int _mbbtoupper(unsigned int c)
 	return c;
 }
 
-// codepage 952
-#define CASE_DIFF (0x8281 - 0x8260)
-
 /*
  * @implemented
  */
 unsigned int _mbctoupper(unsigned int c)
 {
+    return _ismbclower (c) ? c - 0x21 : c;
+}
 
-        if ((c & 0xFF00) != 0) {
-// true multibyte case conversion needed
-	if ( _ismbcupper(c) )
-		return c + CASE_DIFF;
+unsigned char *_mbset (unsigned char *string, int c)
+{
+    unsigned char *save = string;
 
-        } else
-		return _mbbtoupper(c);
+    if (_MBIS16 (c)) {
 
-	return 0;
+	if (_MBLMASK (c) == 0) {
+	    *string++ = '\0';
+	    *string++ = '\0';
+	}
+	else {
+	    *string++ = _MBGETH (c);
+	    *string++ = _MBGETL (c);
+	}
+
+    }
+    else {
+
+	*string++ = c;
+
+    }
+
+    return save;
 }
 
 /*
  * @implemented
  */
-unsigned char * _mbsupr(unsigned char *x)
+unsigned char *_mbsupr (unsigned char *string)
 {
-	unsigned char  *y=x;
-        while (*y) {
-		if (!_ismbblead(*y) )
-			*y = toupper(*y);
-		else {
-                	*y=_mbctoupper(*(unsigned short *)y);
-                	y++;
-		}
-        }
-        return x;
+    int c;
+    unsigned char *save = string;
+
+    while ((c = _mbsnextc (string))) {
+
+	if (_MBIS16 (c) == 0)
+	    c = toupper (c);
+
+	_mbset (string, c);
+
+	string = _mbsinc (string);
+
+    }
+
+    return save;
 }

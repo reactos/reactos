@@ -10,12 +10,14 @@
 
 #include <precomp.h>
 
-/*
- * @unimplemented
+/*********************************************************************
+ *		_fpreset (MSVCRT.@)
  */
-void _fpreset(void)
+void CDECL _fpreset(void)
 {
-  /* FIXME: This causes an exception */
-//	__asm__ __volatile__("fninit\n\t");
-  return;
+#if defined(__GNUC__) && defined(__i386__)
+  __asm__ __volatile__( "fninit" );
+#else
+  FIXME(":Not Implemented!\n");
+#endif
 }

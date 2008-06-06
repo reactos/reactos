@@ -1,7 +1,5 @@
 #include <precomp.h>
 
-#define NDEBUG
-#include <internal/debug.h>
 
 /*
  * @implemented

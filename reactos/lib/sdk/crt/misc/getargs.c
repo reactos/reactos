@@ -362,10 +362,3 @@ wchar_t*** __p___wargv(void)
    return &__wargv;
 }
 
-
-#if 0
-int _chkstk(void)
-{
-   return 0;
-}
-#endif

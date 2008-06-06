@@ -18,6 +18,7 @@
 	<define name="__MINGW_IMPORT">"extern __attribute__ ((dllexport))"</define>
 
 	<library>crt</library>
+	<library>wine</library>
 	<library>kernel32</library>
 	<library>ntdll</library>
 	<pch>precomp.h</pch>

@@ -1,26 +1,21 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
- * FILE:        lib/msvcrt/mbstring/isuppr.c
+ * FILE:        lib/sdk/crt/mbstring/isuppr.c
  * PURPOSE:
- * PROGRAMER:   Ariadne
+ * PROGRAMER:
  * UPDATE HISTORY:
- *              12/04/99: Created
+ *              12/04/99: Ariadne Created
+ *              05/30/08: Samuel Serapion adapted from PROJECT C Library
+ *
  */
 
 #include <precomp.h>
 
 /*
- * code page 952 only
- *
  * @implemented
  */
 int _ismbcupper( unsigned int c )
 {
-	if ((c & 0xFF00) != 0) {
-		if ( c >= 0x8260 && c<= 0x8279 )
-			return 1;
-	}
-
-	return isupper(c);
+    return ((c) >= 0x8260 && (c) <= 0x8279);
 }

@@ -1,6 +1,6 @@
 #include <precomp.h>
-#include "include/internal/wine/msvcrt.h"
-#include "include/internal/wine/cppexcept.h"
+#include "internal/wine/msvcrt.h"
+#include "internal/wine/cppexcept.h"
 
 typedef void (*sighandler_t)(int);
 static sighandler_t sighandlers[NSIG] = { SIG_DFL };
@@ -100,6 +100,7 @@ int CDECL __CppXcptFilter(NTSTATUS ex, PEXCEPTION_POINTERS ptr)
      if (ex != CXX_EXCEPTION) return EXCEPTION_CONTINUE_SEARCH;
      return _XcptFilter( ex, ptr );
 }
+
 
 
 

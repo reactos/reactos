@@ -1,22 +1,43 @@
 #ifndef __CRT_INTERNAL_MBSTRING_H
 #define __CRT_INTERNAL_MBSTRING_H
 
-#define _KNJ_M  ((char)0x01)    /* Non-punctuation of Kana-set */
-#define _KNJ_P  ((char)0x02)    /* Punctuation of Kana-set */
-#define _KNJ_1  ((char)0x04)    /* Legal 1st byte of double byte stream */
-#define _KNJ_2  ((char)0x08)    /* Legal 2nd btye of double byte stream */
+#define _MALPHA 0x01
+#define _MBLANK 0x02
+#define _MDIGIT 0x04
+#define _MKMOJI 0x08
+#define _MKPNCT 0x10
+#define _MLEAD  0x20
+#define _MPUNCT 0x40
+#define _MTRAIL 0x80
 
+#define _MBALNUM (_MALPHA | _MDIGIT | _MKPNCT | _MKMOJI)
+#define _MBALPHA (_MALPHA | _MKPNCT | _MKMOJI)
+#define _MBGRAPH (_MALPHA | _MDIGIT | _MPUNCT | _MKPNCT | _MKMOJI)
+#define _MBKANA  (_MKPNCT | _MKMOJI)
+#define _MBPRINT (_MALPHA | _MDIGIT | _MPUNCT | _MBLANK | _MKPNCT | _MKMOJI)
+#define _MBPUNCT (_MPUNCT | _MKPNCT)
 
-#define ___     0
-#define _1_     _KNJ_1 /* Legal 1st byte of double byte code */
-#define __2     _KNJ_2 /* Legal 2nd byte of double byte code */
-#define _M_     _KNJ_M /* Non-puntuation in Kana-set */
-#define _P_     _KNJ_P /* Punctuation of Kana-set */
-#define _12     (_1_|__2)
-#ifndef _M2
-#define _M2     (_M_|__2)
-#endif
-#define _P2     (_P_|__2)
+#define _MBLMASK(c) ((c) &  255)
+#define _MBHMASK(c) ((c) & ~255)
+#define _MBGETL(c)  ((c) &  255)
+#define _MBGETH(c)  (((c) >> 8) & 255)
+
+#define _MBIS16(c) ((c) & 0xff00)
+
+/* Macros */
+#define B _MBLANK
+#define D _MDIGIT
+#define P _MPUNCT
+#define T _MTRAIL
+
+/* Macros */
+#define AT (_MALPHA | _MTRAIL)
+#define GT (_MKPNCT | _MTRAIL)
+#define KT (_MKMOJI | _MTRAIL)
+#define LT (_MLEAD  | _MTRAIL)
+#define PT (_MPUNCT | _MTRAIL)
+
+extern unsigned char _mbctype[257];
 
 #if defined (_MSC_VER)
 

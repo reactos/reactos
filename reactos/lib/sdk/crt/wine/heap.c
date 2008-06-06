@@ -23,13 +23,6 @@
 
 #include <precomp.h>
 
-#include <malloc.h>
-#include <stdlib.h>
-#include <internal/mtdll.h>
-
-#define NDEBUG
-#include <debug.h>
-
 /* MT */
 #define LOCK_HEAP   _mlock( _HEAP_LOCK )
 #define UNLOCK_HEAP _munlock( _HEAP_LOCK )
@@ -55,7 +48,7 @@ static size_t MSVCRT_sbh_threshold = 0;
 void* MSVCRT_operator_new(unsigned long size)
 {
   void *retval = malloc(size);
-  DPRINT("(%ld) returning %p\n", size, retval);
+  TRACE("(%ld) returning %p\n", size, retval);
   LOCK_HEAP;
   if(!retval && MSVCRT_new_handler)
     (*MSVCRT_new_handler)(size);
@@ -68,7 +61,7 @@ void* MSVCRT_operator_new(unsigned long size)
  */
 void MSVCRT_operator_delete(void *mem)
 {
-  DPRINT("(%p)\n", mem);
+  TRACE("(%p)\n", mem);
   free(mem);
 }
 
@@ -108,7 +101,7 @@ MSVCRT_new_handler_func MSVCRT__set_new_handler(MSVCRT_new_handler_func func)
  */
 MSVCRT_new_handler_func MSVCRT_set_new_handler(void *func)
 {
-  DPRINT("(%p)\n",func);
+  TRACE("(%p)\n",func);
   MSVCRT__set_new_handler(NULL);
   return NULL;
 }
@@ -158,7 +151,7 @@ int CDECL _set_sbh_threshold(size_t threshold)
  */
 int _heapadd(void* mem, size_t size)
 {
-  DPRINT("(%p,%d) unsupported in Win32\n", mem,size);
+  TRACE("(%p,%d) unsupported in Win32\n", mem,size);
   *_errno() = ENOSYS;
   return -1;
 }

@@ -26,6 +26,5 @@
 	<library>ntdll</library>
 	<pch>precomp.h</pch>
 	<file>dllmain.c</file>
-	<file>stubs.c</file>
 	<file>msvcrt.rc</file>
 </module>

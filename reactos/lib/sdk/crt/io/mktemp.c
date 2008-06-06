@@ -15,9 +15,6 @@
 
 #include <precomp.h>
 
-#define NDEBUG
-#include <internal/debug.h>
-
 /*
  * @implemented
  */
@@ -27,7 +24,7 @@ char* _mktemp(char* _template)
   char *cp, *dp;
   int i, len, xcount, loopcnt;
 
-  DPRINT("_mktemp('%s')\n", _template);
+  TRACE("_mktemp('%s')\n", _template);
   len = strlen (_template);
   cp = _template + len;
 

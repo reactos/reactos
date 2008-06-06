@@ -10,15 +10,12 @@
 
 #include <precomp.h>
 
-#define NDEBUG
-#include <internal/debug.h>
-
 /*
  * @implemented
  */
 int _wunlink(const wchar_t* filename)
 {
-    DPRINT("_wunlink('%S')\n", filename);
+    TRACE("_wunlink('%S')\n", filename);
     if (!DeleteFileW(filename)) {
     	_dosmaperr(GetLastError());
         return -1;

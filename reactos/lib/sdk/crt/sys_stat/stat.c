@@ -12,9 +12,6 @@
 #include <sys/stat.h>
 #include <direct.h>
 
-#define NDEBUG
-#include <internal/debug.h>
-
 /* for stat mode, permissions apply to all,owner and group */
 #define ALL_S_IREAD  (S_IREAD  | (S_IREAD  >> 3) | (S_IREAD  >> 6))
 #define ALL_S_IWRITE (S_IWRITE | (S_IWRITE >> 3) | (S_IWRITE >> 6))
@@ -139,7 +136,7 @@ int CDECL _stat64(const char* path, struct __stat64 * buf)
 
     if (!GetFileAttributesExA(path, GetFileExInfoStandard, &hfi))
     {
-        DPRINT1("failed (%d)\n",GetLastError());
+        ERR("failed (%d)\n",GetLastError());
         *_errno() = ERROR_FILE_NOT_FOUND;
         return -1;
     }
@@ -186,10 +183,11 @@ int CDECL _stat64(const char* path, struct __stat64 * buf)
     RtlTimeToSecondsSince1970((LARGE_INTEGER *)&hfi.ftLastWriteTime, &dw);
     buf->st_mtime = buf->st_ctime = dw;
 
-    DPRINT("%d %d 0x%08lx%08lx %ld %ld %ld\n", buf->st_mode,buf->st_nlink,
+    TRACE("%d %d 0x%08lx%08lx %ld %ld %ld\n", buf->st_mode,buf->st_nlink,
         (long)(buf->st_size >> 32),(long)buf->st_size,
         (long)buf->st_atime,(long)buf->st_mtime,(long)buf->st_ctime);
 
     return 0;
 }
+
 

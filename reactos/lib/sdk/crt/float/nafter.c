@@ -15,6 +15,7 @@
  */
 double _nextafter( double x, double y )
 {
+    WARN("This function is not implemented correctly\n");
 	if ( x == y)
 		return x;
 

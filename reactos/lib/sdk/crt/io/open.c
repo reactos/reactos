@@ -46,10 +46,6 @@
 #include <string.h>
 #include <share.h>
 
-#define NDEBUG
-#include <internal/debug.h>
-
-
 
 FDINFO first_bucket[FDINFO_ENTRIES_PER_BUCKET];
 FDINFO* __pioinfo[FDINFO_BUCKETS] = {first_bucket};
@@ -96,12 +92,12 @@ __inline BOOL is_valid_fd(int fd)
    if (!b){
       if (fd >= 0 && fd < g_fdend)
       {
-         DPRINT1("not valid fd %i, g_fdend %i, fdinfo %x, bucket %x, fdflags %x\n",
+         ERR("not valid fd %i, g_fdend %i, fdinfo %x, bucket %x, fdflags %x\n",
                  fd,g_fdend,fdinfo(fd),fdinfo_bucket(fd),fdinfo(fd)->fdflags);
       }
       else
       {
-         DPRINT1("not valid fd %i, g_fdend %i\n",fd,g_fdend);
+         ERR("not valid fd %i, g_fdend %i\n",fd,g_fdend);
       }
 
    }
@@ -128,7 +124,7 @@ char split_oflags(int oflags)
     if (oflags & ~(_O_BINARY|_O_TEXT|_O_APPEND|_O_TRUNC|
                    _O_EXCL|_O_CREAT|_O_RDWR|_O_WRONLY|
                    _O_TEMPORARY|_O_NOINHERIT))
-        DPRINT1(":unsupported oflags 0x%04x\n",oflags);
+        ERR(":unsupported oflags 0x%04x\n",oflags);
 
     return fdflags;
 }
@@ -145,113 +141,26 @@ char __is_text_file(FILE* p)
    return (!((p)->_flag&_IOSTRG) && (fdinfo((p)->_file)->fdflags & FTEXT));
 }
 
-/*
- * @implemented
+
+/*********************************************************************
+ *              _open (MSVCRT.@)
  */
-int _open(const char* _path, int _oflag,...)
+int CDECL _open( const char *path, int flags, ... )
 {
-#if !defined(NDEBUG) && defined(DBG)
-   va_list arg;
-   int pmode;
-#endif
-   HANDLE hFile;
-   DWORD dwDesiredAccess = 0;
-   DWORD dwShareMode = 0;
-   DWORD dwCreationDistribution = 0;
-   DWORD dwFlagsAndAttributes = 0;
-   SECURITY_ATTRIBUTES sa = {sizeof(SECURITY_ATTRIBUTES), NULL, TRUE};
+  va_list ap;
 
-#if !defined(NDEBUG) && defined(DBG)
-   va_start(arg, _oflag);
-   pmode = va_arg(arg, int);
-#endif
-
-
-   TRACE("_open('%s', %x, (%x))\n", _path, _oflag);
-
-
-   if ((_oflag & S_IREAD ) == S_IREAD)
-     dwShareMode = FILE_SHARE_READ;
-   else if ((_oflag & S_IWRITE) == S_IWRITE) {
-      dwShareMode = FILE_SHARE_READ | FILE_SHARE_WRITE;
-   }
-   /*
-    *
-    * _O_BINARY   Opens file in binary (untranslated) mode. (See fopen for a description of binary mode.)
-    * _O_TEXT   Opens file in text (translated) mode. (For more information, see Text and Binary Mode File I/O and fopen.)
-    *
-    * _O_APPEND   Moves file pointer to end of file before every write operation.
-    */
-#ifdef _OLD_BUILD_
-   if ((_oflag & _O_RDWR) == _O_RDWR)
-     dwDesiredAccess |= GENERIC_WRITE|GENERIC_READ;
-   else if ((_oflag & O_RDONLY) == O_RDONLY)
-     dwDesiredAccess |= GENERIC_READ;
-   else if ((_oflag & _O_WRONLY) == _O_WRONLY)
-     dwDesiredAccess |= GENERIC_WRITE ;
-#else
-   if ((_oflag & _O_WRONLY) == _O_WRONLY )
-     dwDesiredAccess |= GENERIC_WRITE ;
-   else if ((_oflag & _O_RDWR) == _O_RDWR )
-     dwDesiredAccess |= GENERIC_WRITE|GENERIC_READ;
-   else //if ((_oflag & O_RDONLY) == O_RDONLY)
-     dwDesiredAccess |= GENERIC_READ;
-#endif
-
-   if (( _oflag & (_O_CREAT | _O_EXCL)) == (_O_CREAT | _O_EXCL))
-     dwCreationDistribution |= CREATE_NEW;
-
-   else if ((_oflag &  O_TRUNC ) == O_TRUNC) {
-      if ((_oflag &  O_CREAT ) ==  O_CREAT)
-    dwCreationDistribution |= CREATE_ALWAYS;
-      else if ((_oflag & O_RDONLY ) != O_RDONLY)
-    dwCreationDistribution |= TRUNCATE_EXISTING;
-   }
-   else if ((_oflag & _O_APPEND) == _O_APPEND)
-     dwCreationDistribution |= OPEN_EXISTING;
-   else if ((_oflag &  _O_CREAT) == _O_CREAT)
-     dwCreationDistribution |= OPEN_ALWAYS;
-   else
-     dwCreationDistribution |= OPEN_EXISTING;
-
-   if ((_oflag &  _O_RANDOM) == _O_RANDOM )
-     dwFlagsAndAttributes |= FILE_FLAG_RANDOM_ACCESS;
-   if ((_oflag &  _O_SEQUENTIAL) == _O_SEQUENTIAL)
-     dwFlagsAndAttributes |= FILE_FLAG_SEQUENTIAL_SCAN;
-   if ((_oflag &  _O_TEMPORARY) == _O_TEMPORARY) {
-     dwFlagsAndAttributes |= FILE_FLAG_DELETE_ON_CLOSE;
-     DPRINT("FILE_FLAG_DELETE_ON_CLOSE\n");
-   }
-   if ((_oflag &  _O_SHORT_LIVED) == _O_SHORT_LIVED) {
-     dwFlagsAndAttributes |= FILE_FLAG_DELETE_ON_CLOSE;
-     DPRINT("FILE_FLAG_DELETE_ON_CLOSE\n");
-   }
-   if (_oflag & _O_NOINHERIT)
-     sa.bInheritHandle = FALSE;
-
-   if (dwCreationDistribution == OPEN_EXISTING &&
-       (dwDesiredAccess & (GENERIC_WRITE|GENERIC_READ)) == GENERIC_READ) {
-      /* Allow always shared read for a file which is opened for read only */
-      dwShareMode |= FILE_SHARE_READ;
-   }
-
-   hFile = CreateFileA(_path,
-               dwDesiredAccess,
-               dwShareMode,
-               &sa,
-               dwCreationDistribution,
-               dwFlagsAndAttributes,
-               NULL);
-	if (hFile == (HANDLE)-1) {
-		_dosmaperr(GetLastError());
-      return( -1);
-	}
-   DPRINT("OK\n");
-   if (!(_oflag & (_O_TEXT|_O_BINARY))) {
-       _oflag |= _fmode;
-   }
-   return(alloc_fd(hFile, split_oflags(_oflag)));
+  if (flags & O_CREAT)
+  {
+    int pmode;
+    va_start(ap, flags);
+    pmode = va_arg(ap, int);
+    va_end(ap);
+    return _sopen( path, flags, SH_DENYNO, pmode );
+  }
+  else
+    return _sopen( path, flags, SH_DENYNO);
 }
+
 
 
 
@@ -299,7 +208,7 @@ static int alloc_fd_from(HANDLE hand, char flag, int fd)
 
    if (fd >= FDINFO_ENTRIES)
    {
-      DPRINT1("files exhausted!\n");
+      ERR("files exhausted!\n");
       return -1;
    }
 
@@ -358,7 +267,7 @@ static int alloc_fd_from(HANDLE hand, char flag, int fd)
       alloc_init_bucket(g_fdstart);
    }
 
-   DPRINT("fdstart is %d, fdend is %d\n", g_fdstart, g_fdend);
+   TRACE("fdstart is %d, fdend is %d\n", g_fdstart, g_fdend);
 
    switch (fd)
    {
@@ -685,45 +594,4 @@ unsigned create_io_inherit_block(STARTUPINFOA* si)
   return( TRUE );
 }
 
-
-
-
-/*
- * @implemented
- */
-int _setmode(int fd, int newmode)
-{
-   int prevmode;
-
-   TRACE("_setmode(%d, %d)", fd, newmode);
-
-   if (!is_valid_fd(fd))
-   {
-      DPRINT1("_setmode: inval fd (%d)\n",fd);
-      //errno = EBADF;
-      return(-1);
-   }
-
-   if (newmode & ~(_O_TEXT|_O_BINARY))
-   {
-      DPRINT1("_setmode: fd (%d) mode (0x%08x) unknown\n",fd,newmode);
-      /* FIXME: Should we fail with EINVAL here? */
-   }
-
-   prevmode = fdinfo(fd)->fdflags & FTEXT ? _O_TEXT : _O_BINARY;
-
-   if ((newmode & _O_TEXT) == _O_TEXT)
-   {
-      fdinfo(fd)->fdflags |= FTEXT;
-   }
-   else
-   {
-      /* FIXME: If both _O_TEXT and _O_BINARY are set, we get here.
-       * Should we fail with EINVAL instead? -Gunnar
-       */
-      fdinfo(fd)->fdflags &= ~FTEXT;
-   }
-
-   return(prevmode);
-}
 

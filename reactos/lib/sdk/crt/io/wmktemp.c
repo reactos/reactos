@@ -15,9 +15,6 @@
 
 #include <precomp.h>
 
-#define NDEBUG
-#include <internal/debug.h>
-
 
 /*
  * @implemented
@@ -28,7 +25,7 @@ wchar_t* _wmktemp (wchar_t *_template)
   wchar_t *cp, *dp;
   int i, len, xcount, loopcnt;
 
-  DPRINT("_wmktemp('%S')\n", _template);
+  TRACE("_wmktemp('%S')\n", _template);
   len = wcslen (_template);
   cp = _template + len;
 

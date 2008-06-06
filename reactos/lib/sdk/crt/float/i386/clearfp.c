@@ -12,18 +12,17 @@
 
 unsigned int _statusfp( void );
 
-/*
- * @implemented
+/*********************************************************************
+ *		_clearfp (MSVCRT.@)
  */
-unsigned int _clearfp (void)
+unsigned int CDECL _clearfp(void)
 {
-  unsigned short __res = _statusfp();
-#ifdef __GNUC__
-__asm__ __volatile__ (
-	"fclex \n\t"
-	);
+  unsigned int retVal = _statusfp();
+#if defined(__GNUC__) && defined(__i386__)
+  __asm__ __volatile__( "fnclex" );
 #else
-#endif /*__GNUC__*/
-  return __res;
+  FIXME(":Not Implemented\n");
+#endif
+  return retVal;
 }
 

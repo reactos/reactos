@@ -1,4 +1,9 @@
-/* $Id$
+/*
+ * COPYRIGHT:   See COPYING in the top level directory
+ * PROJECT:     ReactOS system libraries
+ * FILE:        lib/crt/errno.c
+ * PURPOSE:     Unknown
+ * PROGRAMER:   Unknown
  *
  */
 #include <precomp.h>

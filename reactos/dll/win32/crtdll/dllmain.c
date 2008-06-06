@@ -23,9 +23,11 @@
 #include <precomp.h>
 #include <internal/wine/msvcrt.h>
 #include <sys/stat.h>
+#include <locale.h>
+#include <mbctype.h>
 
-#define NDEBUG
-#include <internal/debug.h>
+#include "wine/debug.h"
+WINE_DEFAULT_DEBUG_CHANNEL(crtdll);
 
 
 /* EXTERNAL PROTOTYPES ********************************************************/
@@ -114,7 +116,7 @@ DllMain(PVOID hinstDll, ULONG dwReason, PVOID reserved)
     {
     case DLL_PROCESS_ATTACH://1
         /* initialize version info */
-        DPRINT("Attach %d\n", nAttachCount);
+        //TRACE("Attach %d\n", nAttachCount);
 
         _osver = GetVersion();
 
@@ -157,8 +159,10 @@ DllMain(PVOID hinstDll, ULONG dwReason, PVOID reserved)
 
         /* FIXME: Initialization of the WINE code */
         msvcrt_init_mt_locks();
+        setlocale(0, "C");
+        //_setmbcp(_MB_CP_LOCALE);
 
-        DPRINT("Attach done\n");
+        TRACE("Attach done\n");
         break;
 
     case DLL_THREAD_ATTACH://2
@@ -169,7 +173,7 @@ DllMain(PVOID hinstDll, ULONG dwReason, PVOID reserved)
         break;
 
     case DLL_PROCESS_DETACH://0
-        DPRINT("Detach %d\n", nAttachCount);
+        //TRACE("Detach %d\n", nAttachCount);
         /* FIXME: more cleanup... */
         _fcloseall();
         _atexit_cleanup();
@@ -190,7 +194,7 @@ DllMain(PVOID hinstDll, ULONG dwReason, PVOID reserved)
         /* destroy heap */
         HeapDestroy(hHeap);
 
-        DPRINT("Detach done\n");
+        TRACE("Detach done\n");
         break;
     }
 

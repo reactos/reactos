@@ -1,15 +1,15 @@
 #include <precomp.h>
 #include <tchar.h>
 
-#define NDEBUG
-#include <internal/debug.h>
-
 #ifdef _UNICODE
  #define _TS S
+ #define sT "S"
 #else
  #define _TS s
+ #define sT "s"
 #endif
 
+#define MK_STR(s) #s
 
 /*
  * @implemented
@@ -17,9 +17,9 @@
 int _taccess( const _TCHAR *_path, int _amode )
 {
     DWORD Attributes = GetFileAttributes(_path);
-    DPRINT(MK_STR(_taccess)"('%"sT"', %x)\n", _path, _amode);
+    TRACE(MK_STR(_taccess)"('%"sT"', %x)\n", _path, _amode);
 
-    if (Attributes == (DWORD)-1) {
+    if (!_path || Attributes == INVALID_FILE_ATTRIBUTES) {
     	_dosmaperr(GetLastError());
         return -1;
     }
@@ -33,15 +33,13 @@ int _taccess( const _TCHAR *_path, int _amode )
     return 0;
 }
 
-
-
 /*
  * INTERNAL
  */
 int access_dirT(const _TCHAR *_path)
 {
     DWORD Attributes = GetFileAttributes(_path);
-    DPRINT(MK_STR(is_dirT)"('%"sT"')\n", _path);
+    TRACE(MK_STR(is_dirT)"('%"sT"')\n", _path);
 
     if (Attributes == (DWORD)-1) {
          _dosmaperr(GetLastError());
@@ -56,4 +54,5 @@ int access_dirT(const _TCHAR *_path)
 
    return 0;
 }
+
 

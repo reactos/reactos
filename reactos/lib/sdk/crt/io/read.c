@@ -14,9 +14,6 @@
 
 #include <precomp.h>
 
-#define NDEBUG
-#include <internal/debug.h>
-
 /*
  * @implemented
  */
@@ -27,7 +24,7 @@ int _read(int _fd, void *_buf, unsigned int _nbyte)
    HANDLE hfile;
    int istext, error;
 
-   DPRINT("_read(fd %d, buf %x, nbyte %d)\n", _fd, _buf, _nbyte);
+   TRACE("_read(fd %d, buf %x, nbyte %d)\n", _fd, _buf, _nbyte);
 
    /* null read */
    if(_nbyte == 0)
@@ -95,6 +92,6 @@ int _read(int _fd, void *_buf, unsigned int _nbyte)
       /* ignore the carriage returns */
       _rbyte -= cr;
    }
-   DPRINT("%d\n", _rbyte);
+   TRACE("%d\n", _rbyte);
    return _rbyte;
 }

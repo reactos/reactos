@@ -1,6 +1,7 @@
 /* Copyright (C) 1995 DJ Delorie, see COPYING.DJ for details */
 
 #include <precomp.h>
+#include <float.h>
 
 #define X87_CW_IM   (1<<0)      /* Invalid operation mask */
 #define X87_CW_DM   (1<<1)      /* Denormal operand mask */
@@ -25,150 +26,83 @@
 /*
  * @implemented
  */
-unsigned int _controlfp(unsigned int unNew, unsigned int unMask)
+
+unsigned int CDECL _controlfp(unsigned int newval, unsigned int mask)
 {
-  return _control87(unNew,unMask);
+#ifdef __i386__
+  return _control87( newval, mask & ~_EM_DENORMAL );
+#else
+  FIXME(":Not Implemented!\n");
+  return 0;
+#endif
 }
 
-/*
- * @implemented
+/*********************************************************************
+ *		_control87 (MSVCRT.@)
  */
-unsigned int _control87(unsigned int unNew, unsigned int unMask)
+unsigned int CDECL _control87(unsigned int newval, unsigned int mask)
 {
-  unsigned int FpuCw;
-  unsigned int DummyCw = 0;
+#if defined(__GNUC__) && defined(__i386__)
+  unsigned int fpword = 0;
+  unsigned int flags = 0;
 
-  /* get the controlword */
-  asm volatile("fstcw %0\n\t" : "=m"(FpuCw));
-  FpuCw &= 0x0000ffff;
+  TRACE("(%08x, %08x): Called\n", newval, mask);
 
-  /* translate it into _control87 format */
-  if (FpuCw & X87_CW_IM)
-    DummyCw |= _EM_INVALID;
-  if (FpuCw & X87_CW_DM)
-    DummyCw |= _EM_DENORMAL;
-  if (FpuCw & X87_CW_ZM)
-    DummyCw |= _EM_ZERODIVIDE;
-  if (FpuCw & X87_CW_OM)
-    DummyCw |= _EM_OVERFLOW;
-  if (FpuCw & X87_CW_UM)
-    DummyCw |= _EM_UNDERFLOW;
-  if (FpuCw & X87_CW_PM)
-    DummyCw |= _EM_INEXACT;
+  /* Get fp control word */
+  __asm__ __volatile__( "fstcw %0" : "=m" (fpword) : );
 
-  switch (FpuCw & X87_CW_PC_MASK)
-  {
-  case X87_CW_PC24:
-    DummyCw |= _PC_24;
-    break;
-  case X87_CW_PC53:
-    DummyCw |= _PC_53;
-    break;
-  case X87_CW_PC64:
-    DummyCw |= _PC_64;
-    break;
+  TRACE("Control word before : %08x\n", fpword);
+
+  /* Convert into mask constants */
+  if (fpword & 0x1)  flags |= _EM_INVALID;
+  if (fpword & 0x2)  flags |= _EM_DENORMAL;
+  if (fpword & 0x4)  flags |= _EM_ZERODIVIDE;
+  if (fpword & 0x8)  flags |= _EM_OVERFLOW;
+  if (fpword & 0x10) flags |= _EM_UNDERFLOW;
+  if (fpword & 0x20) flags |= _EM_INEXACT;
+  switch(fpword & 0xC00) {
+  case 0xC00: flags |= _RC_UP|_RC_DOWN; break;
+  case 0x800: flags |= _RC_UP; break;
+  case 0x400: flags |= _RC_DOWN; break;
   }
-
-  switch (FpuCw & X87_CW_RC_MASK)
-  {
-  case X87_CW_RC_NEAREST:
-    DummyCw |= _RC_NEAR;
-    break;
-  case X87_CW_RC_DOWN:
-    DummyCw |= _RC_DOWN;
-    break;
-  case X87_CW_RC_UP:
-    DummyCw |= _RC_UP;
-    break;
-  case X87_CW_RC_ZERO:
-    DummyCw |= _RC_CHOP;
-    break;
+  switch(fpword & 0x300) {
+  case 0x0:   flags |= _PC_24; break;
+  case 0x200: flags |= _PC_53; break;
+  case 0x300: flags |= _PC_64; break;
   }
+  if (fpword & 0x1000) flags |= _IC_AFFINE;
 
-  /* unset (un)masked bits */
-  DummyCw &= ~unMask;
-  unNew &= unMask;
+  /* Mask with parameters */
+  flags = (flags & ~mask) | (newval & mask);
 
-  /* set new bits */
-  DummyCw |= unNew;
-
-  /* translate back into x87 format
-   * FIXME: translate infinity control!
-   */
-  FpuCw = 0;
-  if (DummyCw & _EM_INVALID)
-    FpuCw |= X87_CW_IM;
-  if (DummyCw & _EM_DENORMAL)
-    FpuCw |= X87_CW_DM;
-  if (DummyCw & _EM_ZERODIVIDE)
-    FpuCw |= X87_CW_ZM;
-  if (DummyCw & _EM_OVERFLOW)
-    FpuCw |= X87_CW_OM;
-  if (DummyCw & _EM_UNDERFLOW)
-    FpuCw |= X87_CW_UM;
-  if (DummyCw & _EM_INEXACT)
-    FpuCw |= X87_CW_PM;
-
-  switch (DummyCw & _MCW_PC)
-  {
-  case _PC_24:
-    FpuCw |= X87_CW_PC24;
-    break;
-  case _PC_53:
-    FpuCw |= X87_CW_PC53;
-    break;
-  case _PC_64:
-  default:
-    FpuCw |= X87_CW_PC64;
-    break;
+  /* Convert (masked) value back to fp word */
+  fpword = 0;
+  if (flags & _EM_INVALID)    fpword |= 0x1;
+  if (flags & _EM_DENORMAL)   fpword |= 0x2;
+  if (flags & _EM_ZERODIVIDE) fpword |= 0x4;
+  if (flags & _EM_OVERFLOW)   fpword |= 0x8;
+  if (flags & _EM_UNDERFLOW)  fpword |= 0x10;
+  if (flags & _EM_INEXACT)    fpword |= 0x20;
+  switch(flags & (_RC_UP | _RC_DOWN)) {
+  case _RC_UP|_RC_DOWN: fpword |= 0xC00; break;
+  case _RC_UP:          fpword |= 0x800; break;
+  case _RC_DOWN:        fpword |= 0x400; break;
   }
-
-  switch (DummyCw & _MCW_RC)
-  {
-  case _RC_NEAR:
-    FpuCw |= X87_CW_RC_NEAREST;
-    break;
-  case _RC_DOWN:
-    FpuCw |= X87_CW_RC_DOWN;
-    break;
-  case _RC_UP:
-    FpuCw |= X87_CW_RC_UP;
-    break;
-  case _RC_CHOP:
-    FpuCw |= X87_CW_RC_ZERO;
-    break;
+  switch (flags & (_PC_24 | _PC_53)) {
+  case _PC_64: fpword |= 0x300; break;
+  case _PC_53: fpword |= 0x200; break;
+  case _PC_24: fpword |= 0x0; break;
   }
+  if (flags & _IC_AFFINE) fpword |= 0x1000;
 
-  /* set controlword */
-  asm volatile("fldcw %0" : : "m"(FpuCw));
+  TRACE("Control word after  : %08x\n", fpword);
 
-  return DummyCw;
+  /* Put fp control word */
+  __asm__ __volatile__( "fldcw %0" : : "m" (fpword) );
 
-#if 0 /* The follwing is the original code, broken I think! -blight */
-register unsigned int __res;
-#ifdef __GNUC__
-__asm__ __volatile__ (
-	"pushl	%%eax \n\t"		/* make room on stack */
-	"fstcw	(%%esp) \n\t"
-	"fwait \n\t"
-	"popl	%%eax \n\t"
-	"andl	$0xffff, %%eax	\n\t"   /* OK;  we have the old value ready */
-
-	"movl	%1, %%ecx \n\t"
-	"notl	%%ecx \n\t"
-	"andl	%%eax, %%ecx \n\t"	/* the bits we want to keep */
-
-	"movl	%2, %%edx \n\t"
-	"andl	%1, %%edx \n\t"	/* the bits we want to change */
-
-	"orl	%%ecx, %%edx\n\t"		/* the new value */
-	"pushl	%%edx \n\t"
-	"fldcw	(%%esp) \n\t"
-	"popl	%%edx \n\t"
-
-	:"=a" (__res):"r" (unNew),"r" (unMask): "dx", "cx");
+  return flags;
 #else
-#endif /*__GNUC__*/
-	return __res;
+  FIXME(":Not Implemented!\n");
+  return 0;
 #endif
 }
