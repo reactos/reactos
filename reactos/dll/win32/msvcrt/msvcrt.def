@@ -112,7 +112,7 @@ EXPORTS
   __crtCompareStringA=kernel32.CompareStringA @105
   __crtCompareStringW=kernel32.CompareStringW @106
   __crtGetLocaleInfoW=kernel32.GetLocaleInfo @107
-  __crtGetStringTypeW=kernel32.GeStringTypeW @108
+  __crtGetStringTypeW=kernel32.GetStringTypeW @108
   __crtLCMapStringA @109
 ;  __crtLCMapStringW @110
   __dllonexit @111
