@@ -1690,12 +1690,12 @@ RtlInitUnicodeStringEx(
 );
 
 NTSYSAPI
-ULONG
+BOOLEAN
 NTAPI
 RtlIsTextUnicode(
-    PVOID Buffer,
-    ULONG Length,
-    ULONG *Flags
+    LPCVOID Buffer,
+    INT Length,
+    INT *Flags
 );
 
 NTSYSAPI

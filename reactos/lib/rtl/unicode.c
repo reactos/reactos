@@ -1055,57 +1055,84 @@ RtlUnicodeStringToOemString(
  * RETURNS
  *  The length of the string if all tests were passed, 0 otherwise.
  */
-ULONG NTAPI
-RtlIsTextUnicode (PVOID Buffer,
-                  ULONG Length,
-                  ULONG *Flags)
+BOOLEAN
+NTAPI
+RtlIsTextUnicode( LPCVOID buf, INT len, INT *pf )
 {
-   PWSTR s = Buffer;
-   ULONG in_flags = (ULONG)-1;
-   ULONG out_flags = 0;
-
-   if (Length == 0)
-      goto done;
-
-   if (Flags != 0)
-      in_flags = *Flags;
-
-   /*
-    * Apply various tests to the text string. According to the
-    * docs, each test "passed" sets the corresponding flag in
-    * the output flags. But some of the tests are mutually
-    * exclusive, so I don't see how you could pass all tests ...
-    */
-
-   /* Check for an odd length ... pass if even. */
-   if (!(Length & 1))
-      out_flags |= IS_TEXT_UNICODE_ODD_LENGTH;
-
-   /* Check for the BOM (byte order mark). */
-   if (*s == 0xFEFF)
-      out_flags |= IS_TEXT_UNICODE_SIGNATURE;
-
-#if 0
-   /* Check for the reverse BOM (byte order mark). */
-   if (*s == 0xFFFE)
-      out_flags |= IS_TEXT_UNICODE_REVERSE_SIGNATURE;
-#endif
-
-   /* FIXME: Add more tests */
-
-   /*
-    * Check whether the string passed all of the tests.
-    */
-   in_flags &= ITU_IMPLEMENTED_TESTS;
-   if ((out_flags & in_flags) != in_flags)
-      Length = 0;
-
-done:
-   if (Flags != 0)
-      *Flags = out_flags;
-
-   return Length;
+    const WCHAR *s = buf;
+    int i;
+    unsigned int flags = ~0U, out_flags = 0;
+    
+    if (len < sizeof(WCHAR))
+    {
+        /* FIXME: MSDN documents IS_TEXT_UNICODE_BUFFER_TOO_SMALL but there is no such thing... */
+        if (pf) *pf = 0;
+        return FALSE;
+    }
+    if (pf)
+        flags = *pf;
+    /*
+     * Apply various tests to the text string. According to the
+     * docs, each test "passed" sets the corresponding flag in
+     * the output flags. But some of the tests are mutually
+     * exclusive, so I don't see how you could pass all tests ...
+     */
+    
+    /* Check for an odd length ... pass if even. */
+    if (len & 1) out_flags |= IS_TEXT_UNICODE_ODD_LENGTH;
+    
+    if (((char *)buf)[len - 1] == 0)
+        len--;  /* Windows seems to do something like that to avoid e.g. false IS_TEXT_UNICODE_NULL_BYTES  */
+    
+    len /= sizeof(WCHAR);
+    /* Windows only checks the first 256 characters */
+    if (len > 256) len = 256;
+    
+    /* Check for the special byte order unicode marks. */
+    if (*s == 0xFEFF) out_flags |= IS_TEXT_UNICODE_SIGNATURE;
+    if (*s == 0xFFFE) out_flags |= IS_TEXT_UNICODE_REVERSE_SIGNATURE;
+    
+    /* apply some statistical analysis */
+    if (flags & IS_TEXT_UNICODE_STATISTICS)
+    {
+        int stats = 0;
+        /* FIXME: checks only for ASCII characters in the unicode stream */
+        for (i = 0; i < len; i++)
+        {
+            if (s[i] <= 255) stats++;
+        }
+        if (stats > len / 2)
+            out_flags |= IS_TEXT_UNICODE_STATISTICS;
+    }
+    
+    /* Check for unicode NULL chars */
+    if (flags & IS_TEXT_UNICODE_NULL_BYTES)
+    {
+        for (i = 0; i < len; i++)
+        {
+            if (!(s[i] & 0xff) || !(s[i] >> 8))
+            {
+                out_flags |= IS_TEXT_UNICODE_NULL_BYTES;
+                break;
+            }
+        }
+    }
+    
+    if (pf)
+    {
+        out_flags &= *pf;
+        *pf = out_flags;
+    }
+    /* check for flags that indicate it's definitely not valid Unicode */
+    if (out_flags & (IS_TEXT_UNICODE_REVERSE_MASK | IS_TEXT_UNICODE_NOT_UNICODE_MASK)) return FALSE;
+    /* now check for invalid ASCII, and assume Unicode if so */
+    if (out_flags & IS_TEXT_UNICODE_NOT_ASCII_MASK) return TRUE;
+    /* now check for Unicode flags */
+    if (out_flags & IS_TEXT_UNICODE_UNICODE_MASK) return TRUE;
+    /* no flags set */
+    return FALSE;
 }
+
 
 /*
  * @implemented
