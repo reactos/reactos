@@ -1070,10 +1070,18 @@ NtGdiPatBlt(
    DWORD ROP)
 {
    PGDIBRUSHOBJ BrushObj;
-   DC *dc = DC_LockDc(hDC);
+   DC *dc;
    PDC_ATTR Dc_Attr;
+   BOOL UsesSource = ROP3_USES_SOURCE(ROP);
    BOOL ret;
 
+   if (UsesSource)
+   {
+       /* in this case we call on GdiMaskBlt */
+       return NtGdiMaskBlt(hDC, XLeft, YLeft, Width, Height, 0,0,0,0,0,0,ROP,0);
+   }
+
+   dc = DC_LockDc(hDC);
    if (dc == NULL)
    {
       SetLastWin32Error(ERROR_INVALID_HANDLE);
