@@ -301,7 +301,7 @@ NtGdiBitBlt(
 	}
 
 	/* Perform the bitblt operation */
-	Status = IntEngBitBlt(&BitmapDest->SurfObj, &BitmapSrc->SurfObj, NULL,
+    Status = IntEngBitBlt( BitmapDest ? &BitmapDest->SurfObj : NULL, BitmapSrc ? &BitmapSrc->SurfObj : NULL, NULL,
                           DCDest->CombinedClip, XlateObj, &DestRect,
                           &SourcePoint, NULL,
                           BrushObj ? &BrushInst.BrushObject : NULL,
