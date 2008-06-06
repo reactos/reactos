@@ -115,7 +115,7 @@ DbgkpQueueMessage(IN PEPROCESS Process,
     KeInitializeEvent(&DebugEvent->ContinueEvent, SynchronizationEvent, FALSE);
     DebugEvent->Process = Process;
     DebugEvent->Thread = Thread;
-    RtlCopyMemory(&DebugEvent->ApiMsg, Message, sizeof(DBGKM_MSG));
+    DebugEvent->ApiMsg = *Message;
     DebugEvent->ClientId = Thread->Cid;
 
     /* Check if we have a port object */
@@ -176,7 +176,7 @@ DbgkpQueueMessage(IN PEPROCESS Process,
                                   NULL);
 
             /* Copy API Message back */
-            RtlCopyMemory(Message, &DebugEvent->ApiMsg, sizeof(DBGKM_MSG));
+            *Message = DebugEvent->ApiMsg;
 
             /* Set return status */
             Status = DebugEvent->Status;
@@ -1079,8 +1079,6 @@ DbgkpCloseObject(IN PEPROCESS OwnerProcess OPTIONAL,
     DBGKTRACE(DBGK_OBJECT_DEBUG, "OwnerProcess: %p DebugObject: %p\n",
               OwnerProcess, DebugObject);
 
-    DPRINT("APC DISABLE: %d\n", ((PETHREAD)KeGetCurrentThread())->Tcb.CombinedApcDisable);
-
     /* If this isn't the last handle, do nothing */
     if (SystemHandleCount > 1) return;
 
@@ -1124,13 +1122,13 @@ DbgkpCloseObject(IN PEPROCESS OwnerProcess OPTIONAL,
             if (DebugPortCleared)
             {
                 /* Mark this in the PEB */
-                DbgkpMarkProcessPeb(OwnerProcess);
+                DbgkpMarkProcessPeb(Process);
 
                 /* Check if we terminate on exit */
                 if (DebugObject->KillProcessOnExit)
                 {
                     /* Terminate the process */
-                    PsTerminateProcess(OwnerProcess, STATUS_DEBUGGER_INACTIVE);
+                    PsTerminateProcess(Process, STATUS_DEBUGGER_INACTIVE);
                 }
 
                 /* Dereference the debug object */
@@ -1192,6 +1190,7 @@ DbgkpSetProcessDebugObject(IN PEPROCESS Process,
     if (NT_SUCCESS(Status))
     {
         /* Acquire the global lock */
+ThreadScan:
         GlobalHeld = TRUE;
         ExAcquireFastMutex(&DbgkpProcessDebugPortMutex);
 
@@ -1203,7 +1202,6 @@ DbgkpSetProcessDebugObject(IN PEPROCESS Process,
         }
         else
         {
-ThreadScan:
             /* Otherwise, set the port and reference the thread */
             Process->DebugPort = DebugObject;
             ObReferenceObject(LastThread);
@@ -1235,14 +1233,7 @@ ThreadScan:
                 {
                     /* Dereference the first thread and re-acquire the lock */
                     ObDereferenceObject(FirstThread);
-                    GlobalHeld = TRUE;
-                    ExAcquireFastMutex(&DbgkpProcessDebugPortMutex);
-
-                    /* Check if we should loop again */
-                    if (!Process->DebugPort) goto ThreadScan;
-
-                    /* Otherwise, we already have a port */
-                    Status = STATUS_PORT_ALREADY_SET;
+                    goto ThreadScan;
                 }
             }
         }
@@ -1265,8 +1256,7 @@ ThreadScan:
         {
             /* Set the process flags */
             InterlockedOr((PLONG)&Process->Flags,
-                          PSF_NO_DEBUG_INHERIT_BIT |
-                          PSF_CREATE_REPORTED_BIT);
+                          PSF_NO_DEBUG_INHERIT_BIT | PSF_CREATE_REPORTED_BIT);
 
             /* Reference the debug object */
             ObDereferenceObject(DebugObject);
@@ -2012,7 +2002,7 @@ NtWaitForDebugEvent(IN HANDLE DebugHandle,
                 StartTime = NewTime;
 
                 /* Check if we've timed out */
-                if (SafeTimeOut.QuadPart > 0)
+                if (SafeTimeOut.QuadPart >= 0)
                 {
                     /* We have, break out of the loop */
                     Status = STATUS_TIMEOUT;
@@ -2037,9 +2027,7 @@ NtWaitForDebugEvent(IN HANDLE DebugHandle,
     _SEH_TRY
     {
         /* Return our wait state change structure */
-        RtlCopyMemory(StateChange,
-                      &WaitStateChange,
-                      sizeof(DBGUI_WAIT_STATE_CHANGE));
+        *StateChange = WaitStateChange;
     }
     _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
     {
