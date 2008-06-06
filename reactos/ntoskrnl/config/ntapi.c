@@ -27,18 +27,55 @@ NtCreateKey(OUT PHANDLE KeyHandle,
             IN ULONG CreateOptions,
             OUT PULONG Disposition)
 {
-    NTSTATUS Status;
+    NTSTATUS Status = STATUS_SUCCESS;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     CM_PARSE_CONTEXT ParseContext = {0};
     HANDLE Handle;
     PAGED_CODE();
     DPRINT("NtCreateKey(OB 0x%wZ)\n", ObjectAttributes->ObjectName);
 
+    /* Prepare to probe parameters */
+    _SEH_TRY
+    {
+        /* Check for user-mode caller */
+        if (PreviousMode == UserMode)
+        {
+            /* Check if we have a class */
+            if (Class)
+            {
+                /* Probe it */
+                ProbeForReadUnicodeString(Class);
+                ProbeForRead(ParseContext.Class.Buffer,
+                             ParseContext.Class.Length,
+                             sizeof(WCHAR));
+                ParseContext.Class = *Class;
+            }
+            
+            /* Probe the key handle */
+            ProbeForWriteHandle(KeyHandle);
+            *KeyHandle = NULL;
+            
+            /* Probe object attributes */
+            ProbeForRead(ObjectAttributes, sizeof(OBJECT_ATTRIBUTES), 4);
+        }
+        else
+        {
+            /* Save the class directly */
+            if (Class) ParseContext.Class = *Class;
+        }
+    }
+    _SEH_HANDLE
+    {
+        /* Get the status */
+        Status = _SEH_GetExceptionCode();
+    }
+    _SEH_END;
+    if (!NT_SUCCESS(Status)) return Status;
+    
     /* Setup the parse context */
     ParseContext.CreateOperation = TRUE;
     ParseContext.CreateOptions = CreateOptions;
-    if (Class) ParseContext.Class = *Class;
-    
+        
     /* Do the create */
     Status = ObOpenObjectByName(ObjectAttributes,
                                 CmpKeyObjectType,
@@ -62,9 +99,32 @@ NtOpenKey(OUT PHANDLE KeyHandle,
 {
     CM_PARSE_CONTEXT ParseContext = {0};
     HANDLE Handle;
-    NTSTATUS Status;
+    NTSTATUS Status = STATUS_SUCCESS;
+    KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     PAGED_CODE();
     DPRINT("NtOpenKey(OB 0x%wZ)\n", ObjectAttributes->ObjectName);
+
+    /* Prepare to probe parameters */
+    _SEH_TRY
+    {
+        /* Check for user-mode caller */
+        if (PreviousMode == UserMode)
+        {            
+            /* Probe the key handle */
+            ProbeForWriteHandle(KeyHandle);
+            *KeyHandle = NULL;
+            
+            /* Probe object attributes */
+            ProbeForRead(ObjectAttributes, sizeof(OBJECT_ATTRIBUTES), 4);
+        }
+    }
+    _SEH_HANDLE
+    {
+        /* Get the status */
+        Status = _SEH_GetExceptionCode();
+    }
+    _SEH_END;
+    if (!NT_SUCCESS(Status)) return Status;
 
     /* Just let the object manager handle this */
     Status = ObOpenObjectByName(ObjectAttributes,

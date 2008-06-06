@@ -860,7 +860,7 @@ CmpCreateRegistryRoot(VOID)
     }
 
     /* Create '\Registry' key. */
-    RtlInitUnicodeString(&KeyName, L"\\Registry");
+    RtlInitUnicodeString(&KeyName, L"\\REGISTRY");
     SecurityDescriptor = CmpHiveRootSecurityDescriptor();
     InitializeObjectAttributes(&ObjectAttributes,
                                &KeyName,
@@ -885,7 +885,7 @@ CmpCreateRegistryRoot(VOID)
     if (!KeyCell) return FALSE;
 
     /* Create the KCB */
-    RtlInitUnicodeString(&KeyName, L"Registry");
+    RtlInitUnicodeString(&KeyName, L"\\REGISTRY");
     Kcb = CmpCreateKeyControlBlock(&CmiVolatileHive->Hive,
                                    RootIndex,
                                    KeyCell,
