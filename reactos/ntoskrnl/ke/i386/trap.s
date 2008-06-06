@@ -646,11 +646,19 @@ _DispatchNoParam:
     call _CommonDispatchException
 .endfunc
 
-.func DispatchOneParam
-_DispatchOneParam:
+.func DispatchOneParamZero
+_DispatchOneParamZero:
     /* Call the common dispatcher */
     xor edx, edx
     mov ecx, 1
+    call _CommonDispatchException
+.endfunc
+
+.func DispatchTwoParamZero
+_DispatchTwoParamZero:
+    /* Call the common dispatcher */
+    xor edx, edx
+    mov ecx, 2
     call _CommonDispatchException
 .endfunc
 
@@ -1223,14 +1231,13 @@ CheckError:
 
     /* Raise exception */
     mov eax, STATUS_FLOAT_INVALID_OPERATION
-    jmp _DispatchOneParam
+    jmp _DispatchOneParamZero
 
 InvalidStack:
 
     /* Raise exception */
     mov eax, STATUS_FLOAT_STACK_CHECK
-    xor edx, edx
-    jmp _DispatchTwoParam
+    jmp _DispatchTwoParamZero
 
 ValidNpxOpcode:
 
@@ -1240,7 +1247,7 @@ ValidNpxOpcode:
 
     /* Raise exception */
     mov eax, STATUS_FLOAT_DIVIDE_BY_ZERO
-    jmp _DispatchOneParam
+    jmp _DispatchOneParamZero
 
 1:
     /* Check for denormal */
@@ -1249,7 +1256,7 @@ ValidNpxOpcode:
 
     /* Raise exception */
     mov eax, STATUS_FLOAT_INVALID_OPERATION
-    jmp _DispatchOneParam
+    jmp _DispatchOneParamZero
 
 1:
     /* Check for overflow */
@@ -1258,7 +1265,7 @@ ValidNpxOpcode:
 
     /* Raise exception */
     mov eax, STATUS_FLOAT_OVERFLOW
-    jmp _DispatchOneParam
+    jmp _DispatchOneParamZero
 
 1:
     /* Check for underflow */
@@ -1267,7 +1274,7 @@ ValidNpxOpcode:
 
     /* Raise exception */
     mov eax, STATUS_FLOAT_UNDERFLOW
-    jmp _DispatchOneParam
+    jmp _DispatchOneParamZero
 
 1:
     /* Check for precision fault */
@@ -1276,7 +1283,7 @@ ValidNpxOpcode:
 
     /* Raise exception */
     mov eax, STATUS_FLOAT_INEXACT_RESULT
-    jmp _DispatchOneParam
+    jmp _DispatchOneParamZero
 
 UnexpectedNpx:
 
@@ -1446,11 +1453,7 @@ _KiTrap13:
 
     /* Otherwise, something is very wrong, raise an exception */
     sti
-    mov ebx, [ebp+KTRAP_FRAME_EIP]
-    mov esi, -1
-    mov eax, STATUS_ACCESS_VIOLATION
-    xor edx, edx
-    jmp _DispatchTwoParam
+    jmp SetException
 
 RaiseIrql:
 
@@ -1494,7 +1497,7 @@ NotV86Trap:
 NotV86:
     /* Enter trap */
     TRAP_PROLOG kitd_a, kitd_t
-
+    
     /* Check if this was from kernel-mode */
     test dword ptr [ebp+KTRAP_FRAME_CS], MODE_MASK
     jnz UserModeGpf
@@ -1594,8 +1597,7 @@ TrapCopy:
     mov esi, [ebp+KTRAP_FRAME_ERROR_CODE]
     and esi, 0xFFFF
     mov eax, STATUS_ACCESS_VIOLATION
-    xor edx, edx
-    jmp _DispatchTwoParam
+    jmp _DispatchTwoParamZero
 
 MsrCheck:
 
@@ -1741,19 +1743,95 @@ InstLoop:
 
     /* If it's not a prefix byte, check other instructions */
     jnz NotPrefixByte
+    
+    /* Keep looping */
+    loop InstLoop
+    
+    /* Fixup the stack */
+    pop PCR[KPCR_EXCEPTION_LIST]
+    add esp, 8
 
-    /* FIXME */
-    UNHANDLED_PATH
+    /* Illegal instruction */
+    jmp KmodeOpcode
 
 NotPrefixByte:
-    /* FIXME: Check if it's a HLT */
+    /* Check if it's a HLT */
+    cmp al, 0x0F4
+    je IsPrivInstruction
 
     /* Check if the instruction has two bytes */
     cmp al, 0xF
     jne CheckRing3Io
-
-    /* FIXME */
-    UNHANDLED_PATH
+    
+    /* Check if this is a LLDT or LTR */
+    lods byte ptr [esi]
+    cmp al, 0
+    jne NotLldt
+    
+    /* Check if this is an LLDT */
+    lods byte ptr [esi]
+    and al, 0x38
+    cmp al, 0x10
+    je IsPrivInstruction
+    
+    /* Check if this is an LTR */
+    cmp al, 0x18
+    je IsPrivInstruction
+    
+    /* Otherwise, access violation */
+    jmp NotIoViolation
+    
+NotLldt:
+    /* Check if this is LGDT or LIDT or LMSW */
+    cmp al, 0x01
+    jne NotGdt
+    
+    /* Check if this is an LGDT */
+    lods byte ptr [esi]
+    and al, 0x38
+    cmp al, 0x10
+    je IsPrivInstruction
+    
+    /* Check if this is an LIDT */
+    cmp al, 0x18
+    je IsPrivInstruction
+    
+    /* Check if this is an LMSW */
+    cmp al, 0x30
+    je IsPrivInstruction
+    
+    /* Otherwise, access violation */
+    jmp NotIoViolation
+    
+NotGdt:
+    /* Check if it's INVD or WBINVD */
+    cmp al, 0x8
+    je IsPrivInstruction
+    cmp al, 0x9
+    je IsPrivInstruction
+    
+    /* Check if it's sysexit */
+    cmp al, 0x35
+    je IsPrivInstruction
+    
+    /* Check if it's a DR move */
+    cmp al, 0x26
+    je IsPrivInstruction
+    
+    /* Check if it's a CLTS */
+    cmp al, 0x6
+    je IsPrivInstruction
+    
+    /* Check if it's a CR move */
+    cmp al, 0x20
+    jb NotIoViolation
+    
+    /* Check if it's a DR move */
+    cmp al, 0x24
+    jbe IsPrivInstruction
+    
+    /* Everything else is an access violation */
+    jmp NotIoViolation
 
 CheckRing3Io:
     /* Get EFLAGS and IOPL */
@@ -1804,8 +1882,7 @@ SetException:
     mov ebx, [ebp+KTRAP_FRAME_EIP]
     mov esi, -1
     mov eax, STATUS_ACCESS_VIOLATION
-    xor edx, edx
-    jmp _DispatchTwoParam
+    jmp _DispatchTwoParamZero
 
 DispatchV86Gpf:
     /* FIXME */
@@ -2123,7 +2200,7 @@ XmmiMakeCr0Dirty:
 
     /* Raise exception */
     mov eax, STATUS_FLOAT_MULTIPLE_TRAPS
-    jmp _DispatchOneParam
+    jmp _DispatchOneParamZero
 
 1:
     /* Check for zero divide */
@@ -2132,7 +2209,7 @@ XmmiMakeCr0Dirty:
 
     /* Raise exception */
     mov eax, STATUS_FLOAT_MULTIPLE_TRAPS
-    jmp _DispatchOneParam
+    jmp _DispatchOneParamZero
 
 1:
     /* Check for denormal */
@@ -2141,7 +2218,7 @@ XmmiMakeCr0Dirty:
 
     /* Raise exception */
     mov eax, STATUS_FLOAT_MULTIPLE_TRAPS
-    jmp _DispatchOneParam
+    jmp _DispatchOneParamZero
 
 1:
     /* Check for overflow*/
@@ -2150,7 +2227,7 @@ XmmiMakeCr0Dirty:
 
     /* Raise exception */
     mov eax, STATUS_FLOAT_MULTIPLE_FAULTS
-    jmp _DispatchOneParam
+    jmp _DispatchOneParamZero
 
 1:
     /* Check for denormal */
@@ -2159,7 +2236,7 @@ XmmiMakeCr0Dirty:
 
     /* Raise exception */
     mov eax, STATUS_FLOAT_MULTIPLE_FAULTS
-    jmp _DispatchOneParam
+    jmp _DispatchOneParamZero
 
 1:
     /* Check for Precision */
@@ -2168,7 +2245,7 @@ XmmiMakeCr0Dirty:
 
     /* Raise exception */
     mov eax, STATUS_FLOAT_MULTIPLE_FAULTS
-    jmp _DispatchOneParam
+    jmp _DispatchOneParamZero
 
 UnexpectedXmmi:
     /* Strange result, bugcheck the OS */

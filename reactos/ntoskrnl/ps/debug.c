@@ -11,18 +11,7 @@
 
 #include <ntoskrnl.h>
 #define NDEBUG
-#include <internal/debug.h>
-
-/* GLOBALS *****************************************************************/
-
-/* Thread "Set/Get Context" Context Structure */
-typedef struct _GET_SET_CTX_CONTEXT
-{
-    KAPC Apc;
-    KEVENT Event;
-    KPROCESSOR_MODE Mode;
-    CONTEXT Context;
-} GET_SET_CTX_CONTEXT, *PGET_SET_CTX_CONTEXT;
+#include <debug.h>
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
@@ -100,62 +89,6 @@ PspDumpThreads(BOOLEAN IncludeSystem)
     }
 }
 #endif
-
-VOID
-NTAPI
-PspGetOrSetContextKernelRoutine(IN PKAPC Apc,
-                                IN OUT PKNORMAL_ROUTINE* NormalRoutine,
-                                IN OUT PVOID* NormalContext,
-                                IN OUT PVOID* SystemArgument1,
-                                IN OUT PVOID* SystemArgument2)
-{
-#if defined(_M_IX86)
-    PGET_SET_CTX_CONTEXT GetSetContext;
-    PKEVENT Event;
-    PCONTEXT Context;
-    PKTHREAD Thread;
-    KPROCESSOR_MODE Mode;
-    PKTRAP_FRAME TrapFrame;
-    PAGED_CODE();
-
-    /* Get the Context Structure */
-    GetSetContext = CONTAINING_RECORD(Apc, GET_SET_CTX_CONTEXT, Apc);
-    Context = &GetSetContext->Context;
-    Event = &GetSetContext->Event;
-    Mode = GetSetContext->Mode;
-    Thread = Apc->SystemArgument2;
-
-    /* Get the trap frame */
-    TrapFrame = (PKTRAP_FRAME)((ULONG_PTR)KeGetCurrentThread()->InitialStack -
-                               sizeof (FX_SAVE_AREA) - sizeof (KTRAP_FRAME));
-
-    /* Sanity check */
-    ASSERT(((TrapFrame->SegCs & MODE_MASK) != KernelMode) ||
-        (TrapFrame->EFlags & EFLAGS_V86_MASK));
-
-    /* Check if it's a set or get */
-    if (SystemArgument1)
-    {
-        /* Get the Context */
-        KeTrapFrameToContext(TrapFrame, NULL, Context);
-    }
-    else
-    {
-        /* Set the Context */
-        KeContextToTrapFrame(Context,
-                             NULL,
-                             TrapFrame,
-                             Context->ContextFlags,
-                             Mode);
-    }
-
-    /* Notify the Native API that we are done */
-    KeSetEvent(Event, IO_NO_INCREMENT, FALSE);
-#else
-    DPRINT1("PspGetOrSetContextKernelRoutine() not implemented!");
-    for (;;);
-#endif
-}
 
 /* PUBLIC FUNCTIONS **********************************************************/
 

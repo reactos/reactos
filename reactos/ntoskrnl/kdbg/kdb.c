@@ -57,7 +57,7 @@ STATIC KDB_ENTER_CONDITION KdbEnterConditions[][2] =
 {
    /* First chance       Last chance */
    { KdbDoNotEnter,      KdbEnterFromKmode },   /* Zero devide */
-   { KdbEnterAlways,     KdbDoNotEnter },       /* Debug trap */
+   { KdbEnterFromKmode,  KdbDoNotEnter },       /* Debug trap */
    { KdbDoNotEnter,      KdbEnterAlways },      /* NMI */
    { KdbEnterFromKmode,  KdbDoNotEnter },       /* INT3 */
    { KdbDoNotEnter,      KdbEnterFromKmode },   /* Overflow */
@@ -1485,7 +1485,7 @@ KdbEnterDebuggerException(
       {
          if (!EnterConditionMet)
          {
-            return ContinueType;
+            return kdDoNotHandleException;
          }
          DbgPrint("Entered debugger on unexpected debug trap!\n");
       }
@@ -1499,7 +1499,7 @@ KdbEnterDebuggerException(
       }
       if (!EnterConditionMet)
       {
-         return ContinueType;
+         return kdDoNotHandleException;
       }
 
       DbgPrint("Entered debugger on embedded INT3 at 0x%04x:0x%08x.\n",

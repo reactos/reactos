@@ -162,20 +162,11 @@ KdpEnterDebuggerException(IN PKTRAP_FRAME TrapFrame,
     /* Bump EIP over int 3 if debugger did not already change it */
     if (ExceptionRecord->ExceptionCode == STATUS_BREAKPOINT)
     {
-#ifdef KDBG
-        if (Context->Eip == EipOld)
-            Context->Eip++;
-#else
-        /* We simulate the original behaviour when KDBG is turned off.
-           Return var is set to kdHandleException, thus we always return FALSE */
-#ifdef _M_IX86
-        Context->Eip = EipOld;
-#endif
-#endif
+        //DPRINT1("Address: %p. Return: %d\n", EipOld, Return);
     }
 
     /* Convert return to BOOLEAN */
-    if (Return == kdContinue) return TRUE;
+    if (Return == kdDoNotHandleException) return FALSE;
     return FALSE;
 }
 
@@ -204,7 +195,7 @@ KdpCallGdb(IN PKTRAP_FRAME TrapFrame,
     }
 
     /* Convert return to BOOLEAN */
-    if (Return == kdContinue) return TRUE;
+    if (Return == kdDoNotHandleException) return FALSE;
     return FALSE;
 }
 

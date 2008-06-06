@@ -593,8 +593,8 @@ KeContextToTrapFrame(IN PCONTEXT Context,
         /* If we're in user-mode */
         if (PreviousMode != KernelMode)
         {
-            /* FIXME: Save the mask */
-            //KeGetCurrentThread()->DispatcherHeader.DebugActive = DrMask;
+            /* Save the mask */
+            KeGetCurrentThread()->DispatcherHeader.DebugActive = DrMask;
         }
     }
 
@@ -782,7 +782,7 @@ KeTrapFrameToContext(IN PKTRAP_FRAME TrapFrame,
             Context->Dr6 = TrapFrame->Dr6;
 
             /* Update DR7 */
-            //Context->Dr7 = KiUpdateDr7(TrapFrame->Dr7);
+            Context->Dr7 = KiUpdateDr7(TrapFrame->Dr7);
         }
         else
         {
@@ -947,21 +947,21 @@ KiDispatchException(IN PEXCEPTION_RECORD ExceptionRecord,
         /* User mode exception, was it first-chance? */
         if (FirstChance)
         {
-            /* Enter Debugger if available */
-            if (PsGetCurrentProcess()->DebugPort)
+            /* Make sure a debugger is present, and ignore user-mode if requested */
+            if ((KiDebugRoutine) &&
+                (!(PsGetCurrentProcess()->DebugPort)))
             {
-                /* FIXME : TODO */
-                //KEBUGCHECK(0);
-            }
-            else if (KiDebugRoutine(TrapFrame,
-                                    ExceptionFrame,
-                                    ExceptionRecord,
-                                    &Context,
-                                    PreviousMode,
-                                    FALSE))
-            {
-                /* Exception was handled */
-                goto Handled;
+                /* Call the debugger */
+                if (KiDebugRoutine(TrapFrame,
+                                   ExceptionFrame,
+                                   ExceptionRecord,
+                                   &Context,
+                                   PreviousMode,
+                                   FALSE))
+                {
+                    /* Exception was handled */
+                    goto Handled;
+                }
             }
 
             /* Forward exception to user mode debugger */

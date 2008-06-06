@@ -71,6 +71,17 @@
 #define PSP_JOB_SCHEDULING_CLASSES              10
 
 //
+// Thread "Set/Get Context" Context Structure
+//
+typedef struct _GET_SET_CTX_CONTEXT
+{
+    KAPC Apc;
+    KEVENT Event;
+    KPROCESSOR_MODE Mode;
+    CONTEXT Context;
+} GET_SET_CTX_CONTEXT, *PGET_SET_CTX_CONTEXT;
+
+//
 // Initialization Functions
 //
 VOID
@@ -348,6 +359,16 @@ NTAPI
 PsSuspendThread(
     IN PETHREAD Thread,
     OUT PULONG PreviousCount OPTIONAL
+);
+
+VOID
+NTAPI
+PspGetOrSetContextKernelRoutine(
+    IN PKAPC Apc,
+    IN OUT PKNORMAL_ROUTINE* NormalRoutine,
+    IN OUT PVOID* NormalContext,
+    IN OUT PVOID* SystemArgument1,
+    IN OUT PVOID* SystemArgument2
 );
 
 //

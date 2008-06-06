@@ -398,6 +398,11 @@
 		<file>events.c</file>
 	</directory>
 	<directory name="ps">
+		<if property="ARCH" value="i386">
+			<directory name="i386">
+				<file>psctx.c</file>
+			</directory>
+		</if>
 		<file>debug.c</file>
 		<file>job.c</file>
 		<file>kill.c</file>
