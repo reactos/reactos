@@ -124,6 +124,9 @@ CreateDIBSection(
    return hBitmap;
 }
 
+
+
+
 /*
  * @implemented
  */
@@ -139,6 +142,12 @@ BitBlt(HDC hdcDest,      /* handle to destination DC */
        int nYSrc,        /* y-coordinate of source upper-left corner */
        DWORD dwRop)      /* raster operation code */
 {
+    /* use patBlt for no source blt  Like windows does */
+    if (!ROP_USES_SOURCE(dwRop))
+    {
+         return PatBlt(hdcDest, nXOriginDest, nYOriginDest, nWidthDest, nHeightDest, dwRop);
+    }
+
     return NtGdiBitBlt(hdcDest,
                        nXOriginDest,
                        nYOriginDest,

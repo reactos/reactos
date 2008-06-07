@@ -30,6 +30,9 @@ typedef INT
 #define METAFILE_MEMORY 1
 #define METAFILE_DISK   2
 
+/* MACRO ********************************************************************/
+#define ROP_USES_SOURCE(Rop)   ((Rop << 2) ^ Rop) & 0xCC0000
+
 /* TYPES *********************************************************************/
 
 // Based on wmfapi.h and Wine.
