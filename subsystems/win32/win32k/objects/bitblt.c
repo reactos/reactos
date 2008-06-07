@@ -958,6 +958,7 @@ IntPatBlt(
    BOOL ret = TRUE;
 
    ASSERT(BrushObj);
+   ASSERT(dc);
 
    BitmapObj = BITMAPOBJ_LockBitmap(dc->w.hBitmap);
    if (BitmapObj == NULL)
