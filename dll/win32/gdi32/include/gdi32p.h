@@ -25,6 +25,10 @@ typedef INT
     HANDLE hPageQuery
 );
 
+/* MACRO ********************************************************************/
+#define ROP_USES_SOURCE(Rop)  (Rop & 0x00330000)
+
+
 /* DEFINES *******************************************************************/
 
 #define HANDLE_LIST_INC 20
