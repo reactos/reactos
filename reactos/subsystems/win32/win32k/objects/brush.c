@@ -178,14 +178,7 @@ IntGdiInitBrushInstance(GDIBRUSHINST *BrushInst, PGDIBRUSHOBJ BrushObj, XLATEOBJ
    }
    else if (BrushObj->flAttrs & GDIBRUSH_IS_SOLID)
    {
-      if (XlateObj)
-      {
          BrushInst->BrushObject.iSolidColor = XLATEOBJ_iXlate(XlateObj, BrushObj->BrushAttr.lbColor);
-      }
-      else
-      {
-          BrushInst->BrushObject.iSolidColor = 0xFFFFFFFF;
-      }
    }
    else
    {
