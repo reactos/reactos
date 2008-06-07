@@ -1069,13 +1069,10 @@ NtGdiPatBlt(
    INT Height,
    DWORD ROP)
 {
-    /* FIXME PatBlt code is wrong, we using NtGdiBitBlt to workaround this bug for now, like random crash, and so on */
-#if 0
    PGDIBRUSHOBJ BrushObj;
    DC *dc;
    PDC_ATTR Dc_Attr;
    BOOL ret;
-#endif
 
    BOOL UsesSource = ROP3_USES_SOURCE(ROP);
    if (UsesSource)
@@ -1084,9 +1081,6 @@ NtGdiPatBlt(
        return NtGdiMaskBlt(hDC, XLeft, YLeft, Width, Height, 0,0,0,0,0,0,ROP,0);
    }
 
-   return NtGdiBitBlt( hDC, XLeft, YLeft, Width, Height,  0, 0, 0, ROP, 0, 0);
-    
-#if 0
    dc = DC_LockDc(hDC);
    if (dc == NULL)
    {
@@ -1123,7 +1117,6 @@ NtGdiPatBlt(
    DC_UnlockDc(dc);
 
    return ret;
-#endif
 }
 
 BOOL STDCALL
