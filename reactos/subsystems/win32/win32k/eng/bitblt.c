@@ -601,7 +601,6 @@ IntEngBitBltEx(SURFOBJ *DestSurf,
     if (DestSurf == NULL)
         return FALSE;
 
-    ASSERT(DestSurf);
     DestObj = CONTAINING_RECORD(DestSurf, BITMAPOBJ, SurfObj);
     ASSERT(DestObj);
 
