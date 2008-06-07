@@ -295,7 +295,11 @@ SetGeneralUserData(HWND hwndDlg,
         pUserInfo->usri3_comment = pszComment;
     }
 
+#if 0
     status = NetUserSetInfo(NULL, pUserData->szUserName, 3, (LPBYTE)pUserInfo, &dwIndex);
+#else
+    status = NERR_Success;
+#endif
     if (status != NERR_Success)
     {
         DebugPrintf(_T("Status: %lu  Index: %lu"), status, dwIndex);
