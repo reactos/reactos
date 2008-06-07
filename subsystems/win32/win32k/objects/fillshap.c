@@ -73,8 +73,8 @@ IntGdiPolygon(PDC    dc,
     IntLPtoDP(dc, UnsafePoints, Count);
     for (CurrentPoint = 0; CurrentPoint < Count; CurrentPoint++)
     {
-        UnsafePoints[CurrentPoint].x += dc->w.DCOrgX;
-        UnsafePoints[CurrentPoint].y += dc->w.DCOrgY;
+        UnsafePoints[CurrentPoint].x += dc->ptlDCOrig.x;
+        UnsafePoints[CurrentPoint].y += dc->ptlDCOrig.y;
     }
 
     if (PATH_IsPathOpen(dc->w.path))
@@ -157,7 +157,8 @@ IntGdiPolyPolygon(DC      *dc,
                   LPINT   PolyCounts,
                   int     Count)
 {
-    while (--Count >=0)
+    /* crash in POLYGONFILL_MakeEdgeList if we process point 0 */
+    while (--Count >=1)
     {
         if (!IntGdiPolygon ( dc, Points, *PolyCounts ))
             return FALSE;
@@ -273,10 +274,10 @@ NtGdiEllipse(
 
     IntLPtoDP(dc, (LPPOINT)&RectBounds, 2);
 
-    RectBounds.left += dc->w.DCOrgX;
-    RectBounds.right += dc->w.DCOrgX;
-    RectBounds.top += dc->w.DCOrgY;
-    RectBounds.bottom += dc->w.DCOrgY;
+    RectBounds.left += dc->ptlDCOrig.x;
+    RectBounds.right += dc->ptlDCOrig.x;
+    RectBounds.top += dc->ptlDCOrig.y;
+    RectBounds.bottom += dc->ptlDCOrig.y;
 
     RadiusX = max((RectBounds.right - RectBounds.left) >> 1, 1);
     RadiusY = max((RectBounds.bottom - RectBounds.top) >> 1, 1);
@@ -683,14 +684,14 @@ NtGdiPie(HDC  hDC,
         return FALSE;
     }
 
-    Left += dc->w.DCOrgX;
-    Right += dc->w.DCOrgX;
-    Top += dc->w.DCOrgY;
-    Bottom += dc->w.DCOrgY;
-    XRadialStart += dc->w.DCOrgX;
-    YRadialStart += dc->w.DCOrgY;
-    XRadialEnd += dc->w.DCOrgX;
-    YRadialEnd += dc->w.DCOrgY;
+    Left += dc->ptlDCOrig.x;
+    Right += dc->ptlDCOrig.x;
+    Top += dc->ptlDCOrig.y;
+    Bottom += dc->ptlDCOrig.y;
+    XRadialStart += dc->ptlDCOrig.x;
+    YRadialStart += dc->ptlDCOrig.y;
+    XRadialEnd += dc->ptlDCOrig.x;
+    YRadialEnd += dc->ptlDCOrig.y;
 
     RectBounds.left = Left;
     RectBounds.right = Right;
@@ -1047,10 +1048,10 @@ IntRectangle(PDC dc,
     }
     else
     {
-        LeftRect   += dc->w.DCOrgX;
-        RightRect  += dc->w.DCOrgX - 1;
-        TopRect    += dc->w.DCOrgY;
-        BottomRect += dc->w.DCOrgY - 1;
+        LeftRect   += dc->ptlDCOrig.x;
+        RightRect  += dc->ptlDCOrig.x - 1;
+        TopRect    += dc->ptlDCOrig.y;
+        BottomRect += dc->ptlDCOrig.y - 1;
 
         DestRect.left = LeftRect;
         DestRect.right = RightRect;
@@ -1207,10 +1208,10 @@ IntRoundRect(
     xradius = xCurveDiameter >> 1;
     yradius = yCurveDiameter >> 1;
 
-    left += dc->w.DCOrgX;
-    right += dc->w.DCOrgX;
-    top += dc->w.DCOrgY;
-    bottom += dc->w.DCOrgY;
+    left += dc->ptlDCOrig.x;
+    right += dc->ptlDCOrig.x;
+    top += dc->ptlDCOrig.y;
+    bottom += dc->ptlDCOrig.y;
 
     RectBounds.left = left;
     RectBounds.right = right;
@@ -1492,6 +1493,7 @@ IntGdiGradientFill(
     POINTL DitherOrg;
     ULONG Mode, i;
     BOOL Ret;
+    HPALETTE hDestPalette;
 
     ASSERT(dc);
     ASSERT(pVertex);
@@ -1539,8 +1541,8 @@ IntGdiGradientFill(
         Extent.bottom = max(Extent.bottom, (pVertex + i)->y);
     }
 
-    DitherOrg.x = dc->w.DCOrgX;
-    DitherOrg.y = dc->w.DCOrgY;
+    DitherOrg.x = dc->ptlDCOrig.x;
+    DitherOrg.y = dc->ptlDCOrig.y;
     Extent.left += DitherOrg.x;
     Extent.right += DitherOrg.x;
     Extent.top += DitherOrg.y;
@@ -1550,13 +1552,19 @@ IntGdiGradientFill(
     /* FIXME - BitmapObj can be NULL!!! Don't assert but handle this case gracefully! */
     ASSERT(BitmapObj);
 
-    PalDestGDI = PALETTE_LockPalette(dc->DcLevel.hpal);
-    /* FIXME - PalDestGDI can be NULL!!! Don't assert but handle this case gracefully! */
-    ASSERT(PalDestGDI);
-    Mode = PalDestGDI->Mode;
-    PALETTE_UnlockPalette(PalDestGDI);
+    hDestPalette = BitmapObj->hDIBPalette;
+    if (!hDestPalette) hDestPalette = pPrimarySurface->DevInfo.hpalDefault;
 
-    XlateObj = (XLATEOBJ*)IntEngCreateXlate(Mode, PAL_RGB, dc->DcLevel.hpal, NULL);
+    PalDestGDI = PALETTE_LockPalette(hDestPalette);
+    if (PalDestGDI)
+    {
+        Mode = PalDestGDI->Mode;
+        PALETTE_UnlockPalette(PalDestGDI);
+    }
+    else
+        Mode = PAL_RGB;
+
+    XlateObj = (XLATEOBJ*)IntEngCreateXlate(Mode, PAL_RGB, hDestPalette, NULL);
     ASSERT(XlateObj);
 
     Ret = IntEngGradientFill(&BitmapObj->SurfObj,

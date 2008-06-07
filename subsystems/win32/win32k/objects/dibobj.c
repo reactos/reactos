@@ -372,8 +372,14 @@ NtGdiSetDIBitsToDeviceInternal(
 
     rcDest.left = XDest;
     rcDest.top = YDest;
-    rcDest.right = XDest + Width;
-    rcDest.bottom = YDest + Height;
+    if (bTransformCoordinates)
+    {
+        CoordLPtoDP(pDC, (LPPOINT)&rcDest);
+    }
+    rcDest.left += pDC->ptlDCOrig.x;
+    rcDest.top += pDC->ptlDCOrig.y;
+    rcDest.right = rcDest.left + Width;
+    rcDest.bottom = rcDest.top + Height;
     ptSource.x = XSrc;
     ptSource.y = YSrc;
 
@@ -758,7 +764,7 @@ cleanup:
 INT
 APIENTRY
 NtGdiStretchDIBitsInternal(
-    HDC  hDC,
+    HDC  hdc,
     INT  XDest,
     INT  YDest,
     INT  DestWidth,
@@ -779,6 +785,7 @@ NtGdiStretchDIBitsInternal(
    HDC hdcMem;
    HPALETTE hPal = NULL;
    PDC pDC;
+   HDC hDC = hdc;
 
    if (!Bits || !BitsInfo)
    {
@@ -786,15 +793,33 @@ NtGdiStretchDIBitsInternal(
       return 0;
    }
 
+   /* if hdc is null we get it, for NtGdiCreateCompatibleDC can not handle NULL hdc */
+   if (hDC == NULL)
+   {
+       DPRINT1("hdc is NULL we using GetDC(NULL) hdc\n");
+       hDC = NtUserGetDC(NULL);
+   }
+
    hdcMem = NtGdiCreateCompatibleDC(hDC);
+   if (hdcMem == NULL)
+   {
+       DPRINT1("Waring : NtGdiCreateCompatibleDC fails \n");
+   }
+
    hBitmap = NtGdiCreateCompatibleBitmap(hDC, BitsInfo->bmiHeader.biWidth,
                                          BitsInfo->bmiHeader.biHeight);
+
+   if (hBitmap == NULL)
+   {
+       DPRINT1("Waring : NtGdiCreateCompatibleBitmap fails \n");
+   }
+
    hOldBitmap = NtGdiSelectBitmap(hdcMem, hBitmap);
 
    if(Usage == DIB_PAL_COLORS)
    {
       hPal = NtGdiGetDCObject(hDC, GDI_OBJECT_TYPE_PALETTE);
-      hPal = NtUserSelectPalette(hdcMem, hPal, FALSE);
+      hPal = GdiSelectPalette(hdcMem, hPal, FALSE);
    }
 
    if (BitsInfo->bmiHeader.biCompression == BI_RLE4 ||
@@ -811,12 +836,18 @@ NtGdiStretchDIBitsInternal(
    }
 
    pDC = DC_LockDc(hdcMem);
+   if (pDC != NULL)
+   {
+        /* Note BitsInfo->bmiHeader.biHeight is the number of scanline, 
+         * if it negitve we getting to many scanline for scanline is UINT not
+         * a INT, so we need make the negtive value to positve and that make the
+         * count correct for negtive bitmap, TODO : we need testcase for this api */
 
-   IntSetDIBits(pDC, hBitmap, 0, BitsInfo->bmiHeader.biHeight, Bits,
+         IntSetDIBits(pDC, hBitmap, 0, abs(BitsInfo->bmiHeader.biHeight), Bits,
                   BitsInfo, Usage);
 
-   DC_UnlockDc(pDC);
-
+         DC_UnlockDc(pDC);
+   }
 
    /* Origin for DIBitmap may be bottom left (positive biHeight) or top
       left (negative biHeight) */
@@ -830,11 +861,18 @@ NtGdiStretchDIBitsInternal(
                       SrcWidth, SrcHeight, ROP, 0);
 
    if(hPal)
-      NtUserSelectPalette(hdcMem, hPal, FALSE);
+      GdiSelectPalette(hdcMem, hPal, FALSE);
 
    NtGdiSelectBitmap(hdcMem, hOldBitmap);
-   NtGdiDeleteObjectApp(hdcMem);
-   NtGdiDeleteObject(hBitmap);
+
+   if (hdcMem)
+        NtGdiDeleteObjectApp(hdcMem);
+
+   if (hBitmap)
+        NtGdiDeleteObject(hBitmap);
+
+   if (hdc == NULL)
+      UserReleaseDC(NULL, hDC, FALSE);
 
    return SrcHeight;
 }
@@ -993,6 +1031,8 @@ HBITMAP STDCALL NtGdiCreateDIBSection(HDC hDC,
   HBITMAP hbitmap = 0;
   DC *dc;
   BOOL bDesktopDC = FALSE;
+
+  if (!bmi) return hbitmap; // Make sure.
 
   // If the reference hdc is null, take the desktop dc
   if (hDC == 0)

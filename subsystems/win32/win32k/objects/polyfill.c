@@ -281,6 +281,7 @@ POLYGONFILL_MakeEdgeList(PPOINT Points, int Count)
     else
       list->Edges[list->Count++] = e;
   }
+  /* notes pionts does not come with paris from IntGdiPolyPolygon */
   e = POLYGONFILL_MakeEdge ( Points[CurPt-1], Points[0] );
   if ( !e )
     goto fail;
