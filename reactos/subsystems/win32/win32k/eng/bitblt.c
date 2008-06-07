@@ -1081,10 +1081,13 @@ EngAlphaBlend(IN SURFOBJ *Dest,
 
     /* Validate input */
 
+    /* FIXME when WindowOrg.x or .y are negitve this check are not vaild, 
+     * we need convert the inputRect to the windows org and do it right */
     InputRect = *SourceRect;
     if ( (InputRect.top < 0) || (InputRect.bottom < 0) ||
          (InputRect.left < 0) || (InputRect.right < 0) )
     {
+        SetLastWin32Error(ERROR_INVALID_PARAMETER);
         return FALSE;
     }
 
