@@ -781,7 +781,7 @@ NtGdiStretchDIBitsInternal(
     UINT cjMaxBits,
     HANDLE hcmXform)
 {
-   HBITMAP hBitmap, hOldBitmap;
+   HBITMAP hBitmap, hOldBitmap = NULL;
    HDC hdcMem;
    HPALETTE hPal = NULL;
    PDC pDC;
@@ -793,9 +793,22 @@ NtGdiStretchDIBitsInternal(
    }
 
    hdcMem = NtGdiCreateCompatibleDC(hDC);
+   if (hdcMem == NULL)
+   {
+       DPRINT1("NtGdiCreateCompatibleDC fail create hdc\n");
+       return 0;
+   }
+
    hBitmap = NtGdiCreateCompatibleBitmap(hDC, BitsInfo->bmiHeader.biWidth,
                                          BitsInfo->bmiHeader.biHeight);
-   hOldBitmap = NtGdiSelectBitmap(hdcMem, hBitmap);
+   if (hBitmap == NULL)
+   {
+       DPRINT1("NtGdiCreateCompatibleBitmap fail create bitmap\n");
+       DPRINT1("hDC : 0x%08x \n", hDC);
+       DPRINT1("BitsInfo->bmiHeader.biWidth : 0x%08x \n", BitsInfo->bmiHeader.biWidth);
+       DPRINT1("BitsInfo->bmiHeader.biWidth : 0x%08x \n", BitsInfo->bmiHeader.biHeight);
+       return 0;
+   }
 
    if(Usage == DIB_PAL_COLORS)
    {
@@ -817,16 +830,18 @@ NtGdiStretchDIBitsInternal(
    }
 
    pDC = DC_LockDc(hdcMem);
+   if (pDC != NULL) 
+   {
+        /* Note BitsInfo->bmiHeader.biHeight is the number of scanline, 
+         * if it negitve we getting to many scanline for scanline is UINT not
+         * a INT, so we need make the negtive value to positve and that make the
+         * count correct for negtive bitmap, TODO : we need testcase for this api */
 
-   /* Note BitsInfo->bmiHeader.biHeight is the number of scanline, 
-    * if it negitve we getting to many scanline for scanline is UINT not
-    * a INT, so we need make the negtive value to positve and that make the
-    * count correct for negtive bitmap, TODO : we need testcase for this api */
-
-   IntSetDIBits(pDC, hBitmap, 0, abs(BitsInfo->bmiHeader.biHeight), Bits,
+         IntSetDIBits(pDC, hBitmap, 0, abs(BitsInfo->bmiHeader.biHeight), Bits,
                   BitsInfo, Usage);
 
-   DC_UnlockDc(pDC);
+        DC_UnlockDc(pDC);
+   }
 
 
    /* Origin for DIBitmap may be bottom left (positive biHeight) or top
@@ -840,11 +855,17 @@ NtGdiStretchDIBitsInternal(
                       hdcMem, XSrc, abs(BitsInfo->bmiHeader.biHeight) - SrcHeight - YSrc,
                       SrcWidth, SrcHeight, ROP, 0);
 
+    /* cleanup */
    if(hPal)
       GdiSelectPalette(hdcMem, hPal, FALSE);
 
-   NtGdiSelectBitmap(hdcMem, hOldBitmap);
+   if (hOldBitmap != NULL)
+   {
+        NtGdiSelectBitmap(hdcMem, hOldBitmap);
+   }
+
    NtGdiDeleteObjectApp(hdcMem);
+
    NtGdiDeleteObject(hBitmap);
 
    return SrcHeight;
