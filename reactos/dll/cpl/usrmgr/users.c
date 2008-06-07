@@ -596,6 +596,46 @@ OnNotify(HWND hwndDlg, PUSER_DATA pUserData, NMHDR *phdr)
 }
 
 
+static VOID
+UpdateUserProperties(HWND hwndDlg)
+{
+    TCHAR szUserName[UNLEN];
+    INT iItem;
+    HWND hwndLV;
+    NET_API_STATUS status;
+    PUSER_INFO_2 pUserInfo = NULL;
+    LV_ITEM lvi;
+
+    hwndLV = GetDlgItem(hwndDlg, IDC_USERS_LIST);
+    iItem = ListView_GetNextItem(hwndLV, -1, LVNI_SELECTED);
+    if (iItem == -1)
+        return;
+
+    /* Get the new user name */
+    ListView_GetItemText(hwndLV,
+                         iItem, 0,
+                         szUserName,
+                         UNLEN);
+
+    status = NetUserGetInfo(NULL, szUserName, 2, (LPBYTE*)&pUserInfo);
+
+    memset(&lvi, 0x00, sizeof(lvi));
+    lvi.iItem = iItem;
+    lvi.iSubItem = 0;
+    lvi.mask = LVIF_IMAGE;
+    lvi.iImage = (pUserInfo->usri2_flags & UF_ACCOUNTDISABLE) ? 1 : 0;
+    (void)ListView_SetItem(hwndLV, &lvi);
+
+    ListView_SetItemText(hwndLV, iItem, 1,
+                         pUserInfo->usri2_full_name);
+
+    ListView_SetItemText(hwndLV, iItem, 2,
+                         pUserInfo->usri2_comment);
+
+    NetApiBufferFree(pUserInfo);
+}
+
+
 INT_PTR CALLBACK
 UsersPageProc(HWND hwndDlg,
               UINT uMsg,
@@ -646,7 +686,10 @@ UsersPageProc(HWND hwndDlg,
                     break;
 
                 case IDM_USER_PROPERTIES:
-                    UserProperties(hwndDlg);
+                    if (UserProperties(hwndDlg))
+                    {
+                        UpdateUserProperties(hwndDlg);
+                    }
                     break;
             }
             break;

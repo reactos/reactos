@@ -9,6 +9,16 @@
 
 #include "usrmgr.h"
 
+typedef struct _GENERAL_USER_DATA
+{
+    DWORD dwFlags;
+    DWORD dwPasswordExpired;
+    TCHAR szUserName[1];
+} GENERAL_USER_DATA, *PGENERAL_USER_DATA;
+
+#define VALID_GENERAL_FLAGS (UF_PASSWD_CANT_CHANGE | UF_DONT_EXPIRE_PASSWD | UF_ACCOUNTDISABLE | UF_LOCKOUT)
+
+
 
 static VOID
 GetProfileData(HWND hwndDlg, LPTSTR lpUserName)
@@ -187,48 +197,116 @@ UserMembershipPageProc(HWND hwndDlg,
 
 static VOID
 UpdateUserOptions(HWND hwndDlg,
-                  PUSER_INFO_3 userInfo,
+                  PGENERAL_USER_DATA pUserData,
                   BOOL bInit)
 {
     EnableWindow(GetDlgItem(hwndDlg, IDC_USER_GENERAL_CANNOT_CHANGE),
-                 !userInfo->usri3_password_expired);
+                 !pUserData->dwPasswordExpired);
     EnableWindow(GetDlgItem(hwndDlg, IDC_USER_GENERAL_NEVER_EXPIRES),
-                 !userInfo->usri3_password_expired);
+                 !pUserData->dwPasswordExpired);
     EnableWindow(GetDlgItem(hwndDlg, IDC_USER_GENERAL_FORCE_CHANGE),
-                 (userInfo->usri3_flags & (UF_PASSWD_CANT_CHANGE | UF_DONT_EXPIRE_PASSWD)) == 0);
+                 (pUserData->dwFlags & (UF_PASSWD_CANT_CHANGE | UF_DONT_EXPIRE_PASSWD)) == 0);
+
+    EnableWindow(GetDlgItem(hwndDlg, IDC_USER_GENERAL_LOCKED),
+                 (pUserData->dwFlags & UF_LOCKOUT) != 0);
 
     if (bInit)
     {
         CheckDlgButton(hwndDlg, IDC_USER_GENERAL_FORCE_CHANGE,
-                       userInfo->usri3_password_expired ? BST_CHECKED : BST_UNCHECKED);
+                       pUserData->dwPasswordExpired ? BST_CHECKED : BST_UNCHECKED);
 
         CheckDlgButton(hwndDlg, IDC_USER_GENERAL_CANNOT_CHANGE,
-                       (userInfo->usri3_flags & UF_PASSWD_CANT_CHANGE) ? BST_CHECKED : BST_UNCHECKED);
+                       (pUserData->dwFlags & UF_PASSWD_CANT_CHANGE) ? BST_CHECKED : BST_UNCHECKED);
 
         CheckDlgButton(hwndDlg, IDC_USER_GENERAL_NEVER_EXPIRES,
-                       (userInfo->usri3_flags & UF_DONT_EXPIRE_PASSWD) ? BST_CHECKED : BST_UNCHECKED);
+                       (pUserData->dwFlags & UF_DONT_EXPIRE_PASSWD) ? BST_CHECKED : BST_UNCHECKED);
 
         CheckDlgButton(hwndDlg, IDC_USER_GENERAL_DISABLED,
-                       (userInfo->usri3_flags & UF_ACCOUNTDISABLE) ? BST_CHECKED : BST_UNCHECKED);
+                       (pUserData->dwFlags & UF_ACCOUNTDISABLE) ? BST_CHECKED : BST_UNCHECKED);
+
+        CheckDlgButton(hwndDlg, IDC_USER_GENERAL_LOCKED,
+                       (pUserData->dwFlags & UF_LOCKOUT) ? BST_CHECKED : BST_UNCHECKED);
     }
 }
 
 
 static VOID
-GetUserData(HWND hwndDlg, LPTSTR lpUserName, PUSER_INFO_3 *usrInfo)
+GetGeneralUserData(HWND hwndDlg,
+                   PGENERAL_USER_DATA pUserData)
 {
-    PUSER_INFO_3 userInfo = NULL;
+    PUSER_INFO_3 pUserInfo = NULL;
 
-    SetDlgItemText(hwndDlg, IDC_USER_GENERAL_NAME, lpUserName);
+    SetDlgItemText(hwndDlg, IDC_USER_GENERAL_NAME, pUserData->szUserName);
 
-    NetUserGetInfo(NULL, lpUserName, 3, (LPBYTE*)&userInfo);
+    NetUserGetInfo(NULL, pUserData->szUserName, 3, (LPBYTE*)&pUserInfo);
 
-    SetDlgItemText(hwndDlg, IDC_USER_GENERAL_FULL_NAME, userInfo->usri3_full_name);
-    SetDlgItemText(hwndDlg, IDC_USER_GENERAL_DESCRIPTION, userInfo->usri3_comment);
+    SetDlgItemText(hwndDlg, IDC_USER_GENERAL_FULL_NAME, pUserInfo->usri3_full_name);
+    SetDlgItemText(hwndDlg, IDC_USER_GENERAL_DESCRIPTION, pUserInfo->usri3_comment);
 
-    UpdateUserOptions(hwndDlg, userInfo, TRUE);
+    pUserData->dwFlags = pUserInfo->usri3_flags;
+    pUserData->dwPasswordExpired = pUserInfo->usri3_password_expired;
 
-    *usrInfo = userInfo;
+    NetApiBufferFree(pUserInfo);
+
+    UpdateUserOptions(hwndDlg, pUserData, TRUE);
+}
+
+
+static BOOL
+SetGeneralUserData(HWND hwndDlg,
+                   PGENERAL_USER_DATA pUserData)
+{
+    PUSER_INFO_3 pUserInfo = NULL;
+    LPTSTR pszFullName = NULL;
+    LPTSTR pszComment = NULL;
+    NET_API_STATUS status;
+    DWORD dwIndex;
+    INT nLength;
+
+    NetUserGetInfo(NULL, pUserData->szUserName, 3, (LPBYTE*)&pUserInfo);
+
+    pUserInfo->usri3_flags =
+        (pUserData->dwFlags & VALID_GENERAL_FLAGS) |
+        (pUserInfo->usri3_flags & ~VALID_GENERAL_FLAGS);
+
+    pUserInfo->usri3_password_expired = pUserData->dwPasswordExpired;
+
+    nLength = GetWindowTextLength(GetDlgItem(hwndDlg, IDC_USER_GENERAL_FULL_NAME));
+    if (nLength == 0)
+    {
+        pUserInfo->usri3_full_name = NULL;
+    }
+    else
+    {
+        pszFullName = HeapAlloc(GetProcessHeap(), 0, (nLength + 1) * sizeof(TCHAR));
+        GetDlgItemText(hwndDlg, IDC_USER_GENERAL_FULL_NAME, pszFullName, nLength + 1);
+        pUserInfo->usri3_full_name = pszFullName;
+    }
+
+    nLength = GetWindowTextLength(GetDlgItem(hwndDlg, IDC_USER_GENERAL_DESCRIPTION));
+    if (nLength == 0)
+    {
+        pUserInfo->usri3_full_name = NULL;
+    }
+    else
+    {
+        pszComment = HeapAlloc(GetProcessHeap(), 0, (nLength + 1) * sizeof(TCHAR));
+        GetDlgItemText(hwndDlg, IDC_USER_GENERAL_DESCRIPTION, pszComment, nLength + 1);
+        pUserInfo->usri3_comment = pszComment;
+    }
+
+    status = NetUserSetInfo(NULL, pUserData->szUserName, 3, (LPBYTE)pUserInfo, &dwIndex);
+    if (status != NERR_Success)
+    {
+        DebugPrintf(_T("Status: %lu  Index: %lu"), status, dwIndex);
+    }
+
+    if (pszFullName)
+        HeapFree(GetProcessHeap(), 0, pszFullName);
+
+    NetApiBufferFree(pUserInfo);
+
+    return (status == NERR_Success);
 }
 
 
@@ -238,52 +316,72 @@ UserGeneralPageProc(HWND hwndDlg,
                     WPARAM wParam,
                     LPARAM lParam)
 {
-    PUSER_INFO_3 userInfo;
+    PGENERAL_USER_DATA pUserData;
 
     UNREFERENCED_PARAMETER(lParam);
     UNREFERENCED_PARAMETER(wParam);
     UNREFERENCED_PARAMETER(hwndDlg);
 
-    userInfo = (PUSER_INFO_3)GetWindowLongPtr(hwndDlg, DWLP_USER);
+    pUserData= (PGENERAL_USER_DATA)GetWindowLongPtr(hwndDlg, DWLP_USER);
 
     switch (uMsg)
     {
         case WM_INITDIALOG:
-            GetUserData(hwndDlg,
-                        (LPTSTR)((PROPSHEETPAGE *)lParam)->lParam,
-                        &userInfo);
-            SetWindowLongPtr(hwndDlg, DWLP_USER, (INT_PTR)userInfo);
+            pUserData = (PGENERAL_USER_DATA)HeapAlloc(GetProcessHeap(),
+                                                      HEAP_ZERO_MEMORY,
+                                                      sizeof(GENERAL_USER_DATA) + 
+                                                      lstrlen((LPTSTR)((PROPSHEETPAGE *)lParam)->lParam) * sizeof(TCHAR));
+            lstrcpy(pUserData->szUserName, (LPTSTR)((PROPSHEETPAGE *)lParam)->lParam);
+
+            GetGeneralUserData(hwndDlg,
+                               pUserData);
+
+            SetWindowLongPtr(hwndDlg, DWLP_USER, (INT_PTR)pUserData);
             break;
 
         case WM_COMMAND:
             switch (LOWORD(wParam))
             {
                 case IDC_USER_GENERAL_FORCE_CHANGE:
-                    userInfo->usri3_password_expired = !userInfo->usri3_password_expired;
-                    UpdateUserOptions(hwndDlg, userInfo, FALSE);
+                    pUserData->dwPasswordExpired = !pUserData->dwPasswordExpired;
+                    UpdateUserOptions(hwndDlg, pUserData, FALSE);
+                    PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                     break;
 
                 case IDC_USER_GENERAL_CANNOT_CHANGE:
-                    userInfo->usri3_flags ^= UF_PASSWD_CANT_CHANGE;
-                    UpdateUserOptions(hwndDlg, userInfo, FALSE);
+                    pUserData->dwFlags ^= UF_PASSWD_CANT_CHANGE;
+                    UpdateUserOptions(hwndDlg, pUserData, FALSE);
+                    PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                     break;
 
                 case IDC_USER_GENERAL_NEVER_EXPIRES:
-                    userInfo->usri3_flags ^= UF_DONT_EXPIRE_PASSWD;
-                    UpdateUserOptions(hwndDlg, userInfo, FALSE);
+                    pUserData->dwFlags ^= UF_DONT_EXPIRE_PASSWD;
+                    UpdateUserOptions(hwndDlg, pUserData, FALSE);
+                    PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                     break;
 
                 case IDC_USER_GENERAL_DISABLED:
-                    userInfo->usri3_flags ^= UF_ACCOUNTDISABLE;
+                    pUserData->dwFlags ^= UF_ACCOUNTDISABLE;
+                    PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                     break;
 
                 case IDC_USER_GENERAL_LOCKED:
+                    pUserData->dwFlags ^= UF_LOCKOUT;
+                    PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                     break;
             }
             break;
 
+        case WM_NOTIFY:
+            if (((LPPSHNOTIFY)lParam)->hdr.code == PSN_APPLY)
+            {
+                SetGeneralUserData(hwndDlg, pUserData);
+                return TRUE;
+            }
+            break;
+
         case WM_DESTROY:
-            NetApiBufferFree(userInfo);
+            HeapFree(GetProcessHeap(), 0, pUserData);
             break;
     }
 
@@ -304,7 +402,7 @@ InitPropSheetPage(PROPSHEETPAGE *psp, WORD idDlg, DLGPROC DlgProc, LPTSTR pszUse
 }
 
 
-VOID
+BOOL
 UserProperties(HWND hwndDlg)
 {
     PROPSHEETPAGE psp[3];
@@ -316,7 +414,7 @@ UserProperties(HWND hwndDlg)
     hwndLV = GetDlgItem(hwndDlg, IDC_USERS_LIST);
     nItem = ListView_GetNextItem(hwndLV, -1, LVNI_SELECTED);
     if (nItem == -1)
-        return;
+        return FALSE;
 
     /* Get the new user name */
     ListView_GetItemText(hwndLV,
@@ -339,5 +437,5 @@ UserProperties(HWND hwndDlg)
     InitPropSheetPage(&psp[1], IDD_USER_MEMBERSHIP, (DLGPROC)UserMembershipPageProc, szUserName);
     InitPropSheetPage(&psp[2], IDD_USER_PROFILE, (DLGPROC)UserProfilePageProc, szUserName);
 
-    PropertySheet(&psh);
+    return (PropertySheet(&psh) == IDOK);
 }

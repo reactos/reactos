@@ -9,6 +9,56 @@
 
 #include "usrmgr.h"
 
+typedef struct _GENERAL_GROUP_DATA
+{
+    TCHAR szGroupName[1];
+} GENERAL_GROUP_DATA, *PGENERAL_GROUP_DATA;
+
+
+static VOID
+GetTextSid(PSID pSid,
+           LPTSTR pTextSid)
+{
+    PSID_IDENTIFIER_AUTHORITY psia;
+    DWORD dwSubAuthorities;
+    DWORD dwSidRev = SID_REVISION;
+    DWORD dwCounter;
+    DWORD dwSidSize;
+
+    psia = GetSidIdentifierAuthority(pSid);
+
+    dwSubAuthorities = *GetSidSubAuthorityCount(pSid);
+
+    dwSidSize = wsprintf(pTextSid, TEXT("S-%lu-"), dwSidRev);
+
+    if ((psia->Value[0] != 0) || (psia->Value[1] != 0))
+    {
+        dwSidSize += wsprintf(pTextSid + lstrlen(pTextSid),
+                              TEXT("0x%02hx%02hx%02hx%02hx%02hx%02hx"),
+                              (USHORT)psia->Value[0],
+                              (USHORT)psia->Value[1],
+                              (USHORT)psia->Value[2],
+                              (USHORT)psia->Value[3],
+                              (USHORT)psia->Value[4],
+                              (USHORT)psia->Value[5]);
+    }
+    else
+    {
+        dwSidSize += wsprintf(pTextSid + lstrlen(pTextSid),
+                              TEXT("%lu"),
+                              (ULONG)(psia->Value[5]) +
+                              (ULONG)(psia->Value[4] <<  8) +
+                              (ULONG)(psia->Value[3] << 16) +
+                              (ULONG)(psia->Value[2] << 24));
+    }
+
+    for (dwCounter = 0 ; dwCounter < dwSubAuthorities ; dwCounter++)
+    {
+        dwSidSize += wsprintf(pTextSid + dwSidSize, TEXT("-%lu"),
+                              *GetSidSubAuthority(pSid, dwCounter));
+    }
+}
+
 
 static VOID
 GetGroupData(HWND hwndDlg, LPTSTR lpGroupName)
@@ -25,6 +75,8 @@ GetGroupData(HWND hwndDlg, LPTSTR lpGroupName)
     RECT rect;
     HIMAGELIST hImgList;
     HICON hIcon;
+    TCHAR szGroupName[256];
+
 
     hwndLV = GetDlgItem(hwndDlg, IDC_GROUP_GENERAL_MEMBERS);
 
@@ -69,6 +121,21 @@ GetGroupData(HWND hwndDlg, LPTSTR lpGroupName)
         lvi.state = 0;
         lvi.iImage = (membersInfo[i].lgrmi1_sidusage == SidTypeGroup ||
                       membersInfo[i].lgrmi1_sidusage == SidTypeWellKnownGroup) ? 1 : 0;
+
+        if (membersInfo[i].lgrmi1_sidusage == SidTypeWellKnownGroup)
+        {
+            TCHAR szSid[256];
+
+            GetTextSid(membersInfo[i].lgrmi1_sid, szSid);
+
+            wsprintf(szGroupName,
+                     TEXT("%s\\%s (%s)"),
+                     
+                     membersInfo[i].lgrmi1_name,
+                     szSid);
+
+            lvi.pszText = szGroupName;
+        }
 
         (void)ListView_InsertItem(hwndLV, &lvi);
     }
@@ -118,7 +185,7 @@ InitPropSheetPage(PROPSHEETPAGE *psp, WORD idDlg, DLGPROC DlgProc, LPTSTR pszGro
 }
 
 
-VOID
+BOOL
 GroupProperties(HWND hwndDlg)
 {
     PROPSHEETPAGE psp[1];
@@ -130,7 +197,7 @@ GroupProperties(HWND hwndDlg)
     hwndLV = GetDlgItem(hwndDlg, IDC_GROUPS_LIST);
     nItem = ListView_GetNextItem(hwndLV, -1, LVNI_SELECTED);
     if (nItem == -1)
-        return;
+        return FALSE;
 
     /* Get the new user name */
     ListView_GetItemText(hwndLV,
@@ -151,5 +218,5 @@ GroupProperties(HWND hwndDlg)
 
     InitPropSheetPage(&psp[0], IDD_GROUP_GENERAL, (DLGPROC)GroupGeneralPageProc, szGroupName);
 
-    PropertySheet(&psh);
+    return (PropertySheet(&psh) == IDOK);
 }

@@ -30,7 +30,7 @@ INT_PTR CALLBACK GroupsPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM l
 INT_PTR CALLBACK ExtraPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 /* groupprops.c */
-VOID
+BOOL
 GroupProperties(HWND hwndDlg);
 
 /* misc.c */
@@ -43,7 +43,7 @@ CheckAccountName(HWND hwndDlg,
                  LPTSTR lpAccountName);
 
 /* userprops.c */
-VOID
+BOOL
 UserProperties(HWND hwndDlg);
 
 #endif /* __CPL_DESK_H__ */
