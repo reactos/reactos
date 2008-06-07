@@ -173,11 +173,25 @@ IntGdiInitBrushInstance(GDIBRUSHINST *BrushInst, PGDIBRUSHOBJ BrushObj, XLATEOBJ
    ASSERT(BrushInst);
    ASSERT(BrushObj);
    if (BrushObj->flAttrs & GDIBRUSH_IS_NULL)
+   {
       BrushInst->BrushObject.iSolidColor = 0;
+   }
    else if (BrushObj->flAttrs & GDIBRUSH_IS_SOLID)
-      BrushInst->BrushObject.iSolidColor = XLATEOBJ_iXlate(XlateObj, BrushObj->BrushAttr.lbColor);
+   {
+      if (XlateObj)
+      {
+         BrushInst->BrushObject.iSolidColor = XLATEOBJ_iXlate(XlateObj, BrushObj->BrushAttr.lbColor);
+      }
+      else
+      {
+          BrushInst->BrushObject.iSolidColor = 0xFFFFFFFF;
+      }
+   }
    else
+   {
       BrushInst->BrushObject.iSolidColor = 0xFFFFFFFF;
+   }
+
    BrushInst->BrushObject.pvRbrush = BrushObj->ulRealization;
    BrushInst->BrushObject.flColorType = 0;
    BrushInst->GdiBrushObject = BrushObj;
