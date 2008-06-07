@@ -260,7 +260,9 @@ SetGeneralUserData(HWND hwndDlg,
     LPTSTR pszFullName = NULL;
     LPTSTR pszComment = NULL;
     NET_API_STATUS status;
+#if 0
     DWORD dwIndex;
+#endif
     INT nLength;
 
     NetUserGetInfo(NULL, pUserData->szUserName, 3, (LPBYTE*)&pUserInfo);
@@ -297,13 +299,13 @@ SetGeneralUserData(HWND hwndDlg,
 
 #if 0
     status = NetUserSetInfo(NULL, pUserData->szUserName, 3, (LPBYTE)pUserInfo, &dwIndex);
-#else
-    status = NERR_Success;
-#endif
     if (status != NERR_Success)
     {
         DebugPrintf(_T("Status: %lu  Index: %lu"), status, dwIndex);
     }
+#else
+    status = NERR_Success;
+#endif
 
     if (pszFullName)
         HeapFree(GetProcessHeap(), 0, pszFullName);
