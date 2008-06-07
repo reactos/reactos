@@ -195,8 +195,8 @@ Win32CsrHardError(IN PCSRSS_PROCESS_DATA ProcessData,
 
     HardErrorMessage->Response = ResponseNotHandled;
 
-    DPRINT1("NumberOfParameters = %d\n", HardErrorMessage->NumberOfParameters);
-    DPRINT1("Status = %lx\n", HardErrorMessage->Status);
+    DPRINT("NumberOfParameters = %d\n", HardErrorMessage->NumberOfParameters);
+    DPRINT("Status = %lx\n", HardErrorMessage->Status);
 
     // open client process
     InitializeObjectAttributes(&ObjectAttributes, NULL, 0, NULL, NULL);
@@ -514,6 +514,7 @@ Win32CsrHardError(IN PCSRSS_PROCESS_DATA ProcessData,
     }
 
     // FIXME: We should not use MessageBox !!!!
+    DPRINT1("%S\n", szxMessageBody);
     MessageBoxResponse = MessageBoxW(0, szxMessageBody, szxCaptionText, responce|MB_ICONERROR|MB_SYSTEMMODAL|MB_SETFOREGROUND);
 
     RtlFreeHeap (RtlGetProcessHeap(), 0, szxMessageBody);
