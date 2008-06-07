@@ -806,9 +806,12 @@ NtGdiStretchDIBitsInternal(
        DPRINT1("NtGdiCreateCompatibleBitmap fail create bitmap\n");
        DPRINT1("hDC : 0x%08x \n", hDC);
        DPRINT1("BitsInfo->bmiHeader.biWidth : 0x%08x \n", BitsInfo->bmiHeader.biWidth);
-       DPRINT1("BitsInfo->bmiHeader.biWidth : 0x%08x \n", BitsInfo->bmiHeader.biHeight);
+       DPRINT1("BitsInfo->bmiHeader.biHeight : 0x%08x \n", BitsInfo->bmiHeader.biHeight);
        return 0;
    }
+
+   /* Select the bitmap into hdcMem, and save a handle to the old bitmap */
+   hOldBitmap = NtGdiSelectBitmap(hdcMem, hBitmap);
 
    if(Usage == DIB_PAL_COLORS)
    {
@@ -859,10 +862,8 @@ NtGdiStretchDIBitsInternal(
    if(hPal)
       GdiSelectPalette(hdcMem, hPal, FALSE);
 
-   if (hOldBitmap != NULL)
-   {
-        NtGdiSelectBitmap(hdcMem, hOldBitmap);
-   }
+   if (hOldBitmap)
+      NtGdiSelectBitmap(hdcMem, hOldBitmap);
 
    NtGdiDeleteObjectApp(hdcMem);
 
