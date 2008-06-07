@@ -30,10 +30,8 @@ typedef struct tagDCE
     HWND         hwndCurrent;
     HWND         hwndDC;
     HRGN         hClipRgn;
-    PVOID        Class;
     DWORD        DCXFlags;
     PEPROCESS    pProcess;
-    DWORD        Count;
     HANDLE       Self;
 } DCE;  /* PDCE already declared at top of file */
 
@@ -58,5 +56,6 @@ PDCE FASTCALL DceFreeDCE(PDCE dce, BOOLEAN Force);
 void FASTCALL DceFreeWindowDCE(PWINDOW_OBJECT Window);
 void FASTCALL DceEmptyCache(void);
 VOID FASTCALL DceResetActiveDCEs(PWINDOW_OBJECT Window);
+void FASTCALL DceFreeClassDCE(HDC);
 
 #endif /* _WIN32K_DCE_H */

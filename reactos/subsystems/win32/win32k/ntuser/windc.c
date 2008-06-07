@@ -73,29 +73,8 @@ DceAllocDCE(PWINDOW_OBJECT Window OPTIONAL, DCE_TYPE Type)
 {
   PDCE pDce;
   PWINDOW Wnd = NULL;
-  PVOID Class = NULL;
 
   if (Window) Wnd = Window->Wnd;
-
-  if (Wnd) Class = Wnd->Class;
-
-  if (Type == DCE_CLASS_DC)
-  {
-     PDCE pdce;
-     KeEnterCriticalRegion();
-     pdce = FirstDce;
-     do
-     {
-        if (pdce->Class == Class)
-        {
-           pdce->Count++;
-           KeLeaveCriticalRegion();
-           return pdce;
-        }
-        pdce = (PDCE)pdce->List.Flink;
-     } while (pdce != FirstDce);
-     KeLeaveCriticalRegion();
-  }
 
   pDce = ExAllocatePoolWithTag(PagedPool, sizeof(DCE), TAG_PDCE);
   if(!pDce)
@@ -111,8 +90,6 @@ DceAllocDCE(PWINDOW_OBJECT Window OPTIONAL, DCE_TYPE Type)
   pDce->hwndCurrent = (Window ? Window->hSelf : NULL);
   pDce->hClipRgn = NULL;
   pDce->pProcess = NULL;
-  pDce->Class = Class;
-  pDce->Count = 1;
 
   KeEnterCriticalRegion();
   if (FirstDce == NULL)
@@ -233,7 +210,6 @@ DceReleaseDC(DCE* dce, BOOL EndPaint)
        // Clean the DC
        if (!IntGdiCleanDC(dce->hDC)) return 0;
 
-       dce->DCXFlags &= ~DCX_DCEBUSY;
        if (dce->DCXFlags & DCX_DCEDIRTY)
        {
          /* don't keep around invalidated entries
@@ -254,12 +230,13 @@ DceReleaseDC(DCE* dce, BOOL EndPaint)
          DC_UnlockDc(dc);
        }
      }
+     dce->DCXFlags &= ~DCX_DCEBUSY;
      DPRINT("Exit!!!!! DCX_CACHE!!!!!!   hDC-> %x \n", dce->hDC);
      if (!IntGdiSetDCOwnerEx( dce->hDC, GDI_OBJ_HMGR_NONE, FALSE))
         return 0;
      dce->pProcess = NULL;            // Reset ownership.
    }
-   return 1;
+   return 1; // Released!
 }
 
 static VOID FASTCALL
@@ -352,40 +329,54 @@ UserGetDCEx(PWINDOW_OBJECT Window OPTIONAL, HANDLE ClipRegion, ULONG Flags)
 {
    PWINDOW_OBJECT Parent;
    ULONG DcxFlags;
-   DCE* Dce;
+   DCE* Dce = NULL;
    BOOL UpdateVisRgn = TRUE;
    BOOL UpdateClipOrigin = FALSE;
    PWINDOW Wnd = NULL;
+   HDC hDC = NULL;   
 
    if (NULL == Window)
-   {  // Do the same as GetDC with a NULL.
-//      Window = UserGetWindowObject(IntGetDesktopWindow());
-//      if (Window) Wnd = Window->Wnd;
-//      else
-         Flags &= ~DCX_USESTYLE;
+   {
+      Flags &= ~DCX_USESTYLE;
+      Flags |= DCX_CACHE;
    }
    else
        Wnd = Window->Wnd;
 
-   if (NULL == Window || NULL == Window->Dce)
-   {
-      Flags |= DCX_CACHE;
-   }
+   if (Flags & (DCX_WINDOW | DCX_PARENTCLIP)) Flags |= DCX_CACHE;
 
+   // When GetDC is called with hWnd nz, DCX_CACHE & _WINDOW are clear w _USESTYLE set.
    if (Flags & DCX_USESTYLE)
    {
       Flags &= ~(DCX_CLIPCHILDREN | DCX_CLIPSIBLINGS | DCX_PARENTCLIP);
-
-      if (Wnd->Style & WS_CLIPSIBLINGS)
-      {
-         Flags |= DCX_CLIPSIBLINGS;
-      }
-
-      if (!(Flags & DCX_WINDOW))
+      if (!(Flags & DCX_WINDOW)) // not window rectangle
       {
          if (Wnd->Class->Style & CS_PARENTDC)
          {
             Flags |= DCX_PARENTCLIP;
+         }
+
+         if (!(Flags & DCX_CACHE) && // Not on the cheap wine list.
+             !(Wnd->Class->Style & CS_OWNDC) )
+         {
+            if (!(Wnd->Class->Style & CS_CLASSDC))
+            // The window is not POWNED or has any CLASS, so we are looking for cheap wine.
+               Flags |= DCX_CACHE;
+            else
+            {
+               if (Wnd->Class->Dce) hDC = ((PDCE)Wnd->Class->Dce)->hDC;
+               DPRINT("We have CLASS!!\n");
+            }
+         }
+/*         else // For Testing!
+         {
+            DPRINT1("We have POWNER!!\n");
+            if (Window->Dce) DPRINT1("We have POWNER with DCE!!\n");
+         }
+*/
+         if (Wnd->Style & WS_CLIPSIBLINGS)
+         {
+            Flags |= DCX_CLIPSIBLINGS;
          }
 
          if (Wnd->Style & WS_CLIPCHILDREN &&
@@ -396,9 +387,12 @@ UserGetDCEx(PWINDOW_OBJECT Window OPTIONAL, HANDLE ClipRegion, ULONG Flags)
       }
       else
       {
+         if (Wnd->Style & WS_CLIPSIBLINGS) Flags |= DCX_CLIPSIBLINGS;
          Flags |= DCX_CACHE;
       }
    }
+
+   if (Flags & DCX_WINDOW) Flags &= ~DCX_CLIPCHILDREN;
 
    if (Flags & DCX_NOCLIPCHILDREN)
    {
@@ -406,20 +400,19 @@ UserGetDCEx(PWINDOW_OBJECT Window OPTIONAL, HANDLE ClipRegion, ULONG Flags)
       Flags &= ~(DCX_PARENTCLIP | DCX_CLIPCHILDREN);
    }
 
-   if (Flags & DCX_WINDOW)
-   {
-      Flags = (Flags & ~DCX_CLIPCHILDREN) | DCX_CACHE;
-   }
-
    Parent = (Window ? Window->Parent : NULL);
 
    if (NULL == Window || !(Wnd->Style & WS_CHILD) || NULL == Parent)
    {
       Flags &= ~DCX_PARENTCLIP;
+      Flags |= DCX_CLIPSIBLINGS;
    }
-   else if (Flags & DCX_PARENTCLIP)
+
+   /* it seems parent clip is ignored when clipping siblings or children */
+   if (Flags & (DCX_CLIPSIBLINGS | DCX_CLIPCHILDREN)) Flags &= ~DCX_PARENTCLIP;
+
+   if (Flags & DCX_PARENTCLIP)
    {
-      Flags |= DCX_CACHE;
       if ((Wnd->Style & WS_VISIBLE) &&
           (Parent->Wnd->Style & WS_VISIBLE))
       {
@@ -431,10 +424,26 @@ UserGetDCEx(PWINDOW_OBJECT Window OPTIONAL, HANDLE ClipRegion, ULONG Flags)
       }
    }
 
+   // Window nz, check to see if we still own this or it is just cheap wine tonight.
+   if (!(Flags & DCX_CACHE))
+   {
+      if ( Wnd->ti != GetW32ThreadInfo()) Flags |= DCX_CACHE; // Ah~ Not Powned! Forced to be cheap~
+      // Can only have one POWNED or CLASS.
+      if ( !Window->Dce && (Wnd->Class->Style & CS_OWNDC))
+         Window->Dce = DceAllocDCE(NULL, DCE_WINDOW_DC);
+      else
+         Flags |= DCX_CACHE;
+
+      if ( !Wnd->Class->Dce && (Wnd->Class->Style & CS_CLASSDC))
+         Wnd->Class->Dce = DceAllocDCE(NULL, DCE_CLASS_DC);
+      else
+         Flags |= DCX_CACHE;
+   }
+
    DcxFlags = Flags & DCX_CACHECOMPAREMASK;
 
    if (Flags & DCX_CACHE)
-   {
+   { // Scan the cheap wine list for our match.
       DCE* DceEmpty = NULL;
       DCE* DceUnused = NULL;
       KeEnterCriticalRegion();
@@ -444,6 +453,7 @@ UserGetDCEx(PWINDOW_OBJECT Window OPTIONAL, HANDLE ClipRegion, ULONG Flags)
 // The reason for this you may ask?
 // Well, it seems ReactOS calls GetDC with out first creating a desktop DC window!
 // Need to test for null here. Not sure if this is a bug or a feature.
+// First time use hax, need to use DceAllocDCE during window display init.
          if (!Dce) break;
 
          if ((Dce->DCXFlags & (DCX_CACHE | DCX_DCEBUSY)) == DCX_CACHE)
@@ -474,26 +484,41 @@ UserGetDCEx(PWINDOW_OBJECT Window OPTIONAL, HANDLE ClipRegion, ULONG Flags)
       {
          Dce = DceAllocDCE(NULL, DCE_CACHE_DC);
       }
+
+      Dce->hwndCurrent = (Window ? Window->hSelf : NULL);
    }
-   else
+   else // If we are here, we are POWNED or having CLASS.
    {
-      Dce = Window->Dce;
+      KeEnterCriticalRegion();
+      Dce = FirstDce;
+      do
+      {   // Check for Window handle than HDC match for CLASS.
+          if ((Dce->hwndCurrent == Window->hSelf) || (Dce->hDC == hDC)) break;
+          Dce = (PDCE)Dce->List.Flink;
+      } while (Dce != FirstDce);
+      KeLeaveCriticalRegion();
+
+      DPRINT("DCX:Flags -> %x:%x\n",Dce->DCXFlags & DCX_CACHE, Flags & DCX_CACHE);
+
       if (Dce->hwndCurrent == Window->hSelf)
       {
-         UpdateVisRgn = FALSE; /* updated automatically, via DCHook() */
+          DPRINT("Owned DCE!\n");
+          UpdateVisRgn = FALSE; /* updated automatically, via DCHook() */
       }
       else
       {
+          DPRINT("Owned/Class DCE\n");
       /* we should free dce->clip_rgn here, but Windows apparently doesn't */
-         Dce->DCXFlags &= ~(DCX_EXCLUDERGN | DCX_INTERSECTRGN);
-         Dce->hClipRgn = NULL;
+          Dce->DCXFlags &= ~(DCX_EXCLUDERGN | DCX_INTERSECTRGN);
+          Dce->hClipRgn = NULL;
       }
+
 #if 1 /* FIXME */
       UpdateVisRgn = TRUE;
 #endif
-
    }
 
+// First time use hax, need to use DceAllocDCE during window display init.
    if (NULL == Dce)
    {
       return(NULL);
@@ -501,15 +526,14 @@ UserGetDCEx(PWINDOW_OBJECT Window OPTIONAL, HANDLE ClipRegion, ULONG Flags)
 
    if (!GDIOBJ_ValidateHandle(Dce->hDC, GDI_OBJECT_TYPE_DC))
    {
-      DPRINT1("FIXME: Got DCE with invalid hDC!\n");
+      DPRINT1("FIXME: Got DCE with invalid hDC! 0x%x\n", Dce->hDC);
       Dce->hDC = DceCreateDisplayDC();
       /* FIXME: Handle error */
    }
 
-   Dce->hwndCurrent = (Window ? Window->hSelf : NULL);
    Dce->DCXFlags = Flags | DCX_DCEBUSY;
-
-   if (0 == (Flags & (DCX_EXCLUDERGN | DCX_INTERSECTRGN)) && NULL != ClipRegion)
+   
+   if (!(Flags & (DCX_EXCLUDERGN | DCX_INTERSECTRGN)) && ClipRegion)
    {
       if (!(Flags & DCX_KEEPCLIPRGN))
          NtGdiDeleteObject(ClipRegion);
@@ -583,10 +607,12 @@ DceFreeDCE(PDCE pdce, BOOLEAN Force)
 
   if (Force && !GDIOBJ_OwnedByCurrentProcess(pdce->hDC))
   {
-     DPRINT1("Change ownership for DCE!\n");
+     DPRINT("Change ownership for DCE! -> %x\n" , pdce);
      // Note: Windows sets W32PF_OWNDCCLEANUP and moves on.
      if (!IsObjectDead((HGDIOBJ) pdce->hDC))
+     {
          DC_SetOwnership( pdce->hDC, PsGetCurrentProcess());
+     }
      else
      {
          DPRINT1("Attempted to change ownership of an DCEhDC 0x%x currently being destroyed!!!\n",pdce->hDC);
@@ -614,6 +640,7 @@ DceFreeDCE(PDCE pdce, BOOLEAN Force)
 
   return ret;
 }
+
 
 /***********************************************************************
  *           DceFreeWindowDCE
@@ -681,6 +708,25 @@ DceFreeWindowDCE(PWINDOW_OBJECT Window)
   KeLeaveCriticalRegion();
 }
 
+void FASTCALL
+DceFreeClassDCE(HDC hDC)
+{
+   PDCE pDCE = FirstDce;
+   KeEnterCriticalRegion();
+   do
+   {
+       if(!pDCE) break;
+       if (pDCE->hDC == hDC)
+       {
+          pDCE = DceFreeDCE(pDCE, FALSE);
+          if(!pDCE) break;
+          continue;
+       }
+       pDCE = (PDCE)pDCE->List.Flink;
+   } while (pDCE != FirstDce);
+   KeLeaveCriticalRegion();
+}
+
 VOID FASTCALL
 DceEmptyCache()
 {
@@ -713,6 +759,7 @@ DceResetActiveDCEs(PWINDOW_OBJECT Window)
    if(!pDCE) return; // Another null test!
    do
    {
+      if(!pDCE) break;
       if (0 == (pDCE->DCXFlags & DCX_DCEEMPTY))
       {
          if (Window->hSelf == pDCE->hwndCurrent)
@@ -776,23 +823,6 @@ DceResetActiveDCEs(PWINDOW_OBJECT Window)
    } while (pDCE != FirstDce);
 }
 
-HDC
-FASTCALL
-IntGetDC(PWINDOW_OBJECT Window)
-{
-  if (!Window)
-  {  // MSDN:
-     //"hWnd [in] Handle to the window whose DC is to be retrieved.
-     // If this value is NULL, GetDC retrieves the DC for the entire screen."
-     Window = UserGetWindowObject(IntGetDesktopWindow());
-     if (Window)
-        return UserGetDCEx(Window, NULL, DCX_CACHE | DCX_WINDOW);
-     else
-        return NULL;
-  }
-  return UserGetDCEx(Window, NULL, DCX_USESTYLE);
-}
-
 HWND FASTCALL
 IntWindowFromDC(HDC hDc)
 {
@@ -825,6 +855,7 @@ UserReleaseDC(PWINDOW_OBJECT Window, HDC hDc, BOOL EndPaint)
   KeEnterCriticalRegion();
   do
   {
+     if(!dce) break;
      if (dce->hDC == hDc)
      {
         Hit = TRUE;
@@ -863,7 +894,6 @@ NtUserGetDCEx(HWND hWnd OPTIONAL, HANDLE ClipRegion, ULONG Flags)
   {
       RETURN(NULL);
   }
-
   RETURN( UserGetDCEx(Wnd, ClipRegion, Flags));
 
 CLEANUP:
@@ -893,7 +923,8 @@ NtUserGetWindowDC(HWND hWnd)
 HDC STDCALL
 NtUserGetDC(HWND hWnd)
 {
-// We have a problem here! Should call IntGetDC.
+ DPRINT("NtUGetDC -> %x:%x\n", hWnd, !hWnd ? DCX_CACHE | DCX_WINDOW : DCX_USESTYLE );
+
   return NtUserGetDCEx(hWnd, NULL, NULL == hWnd ? DCX_CACHE | DCX_WINDOW : DCX_USESTYLE);
 }
 

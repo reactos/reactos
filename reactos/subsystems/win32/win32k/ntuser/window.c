@@ -1791,9 +1791,11 @@ AllocErr:
    InsertTailList (&PsGetCurrentThreadWin32Thread()->WindowListHead, &Window->ThreadListEntry);
 
    /*  Handle "CS_CLASSDC", it is tested first. */
-   if (dwStyle & CS_CLASSDC) Window->Dce = DceAllocDCE(Window, DCE_CLASS_DC);
+   if ((Wnd->Class->Style & CS_CLASSDC) && !(Wnd->Class->Dce)) // One DCE per class to have CLASS.
+      Wnd->Class->Dce = DceAllocDCE(Window, DCE_CLASS_DC);
    /* Allocate a DCE for this window. */
-   else if (dwStyle & CS_OWNDC) Window->Dce = DceAllocDCE(Window, DCE_WINDOW_DC);
+   else if ( Wnd->Class->Style & CS_OWNDC)
+      Window->Dce = DceAllocDCE(Window, DCE_WINDOW_DC);
 
    Pos.x = x;
    Pos.y = y;

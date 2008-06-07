@@ -76,6 +76,12 @@ IntDestroyClass(IN OUT PWINDOWCLASS Class)
             CallProc = NextCallProc;
         }
 
+        if (Class->Dce)
+        {
+           DceFreeClassDCE(((PDCE)Class->Dce)->hDC);
+           Class->Dce = NULL;
+        }
+
         IntFreeClassMenuName(Class);
     }
 
