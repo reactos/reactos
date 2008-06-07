@@ -1064,20 +1064,33 @@ EngAlphaBlend(IN SURFOBJ *Dest,
            BlendObj->BlendFunction.BlendFlags, BlendObj->BlendFunction.SourceConstantAlpha,
            BlendObj->BlendFunction.AlphaFormat);
 
+
     /* Validate input */
-    if (DestRect->left >= DestRect->right || DestRect->top >= DestRect->bottom)
+    OutputRect = *DestRect;
+    if (OutputRect.right < OutputRect.left)
     {
-        DPRINT1("Empty destination rectangle!\n");
+        OutputRect.left = DestRect->right;
+        OutputRect.right = DestRect->left;
+    }
+    if (OutputRect.bottom < OutputRect.top)
+    {
+        OutputRect.left = DestRect->right;
+        OutputRect.right = DestRect->left;
+    }
+
+
+    /* Validate input */
+
+    InputRect = *SourceRect;
+    if ( (InputRect.top < 0) || (InputRect.bottom < 0) ||
+         (InputRect.left < 0) || (InputRect.right < 0) )
+    {
         return FALSE;
     }
-    if (SourceRect->left >= SourceRect->right || SourceRect->top >= SourceRect->bottom)
-    {
-        DPRINT1("Empty source rectangle!\n");
-        return FALSE;
-    }
+
     if (Dest == Source &&
-            !(DestRect->left >= SourceRect->right || SourceRect->left >= DestRect->right ||
-              DestRect->top >= SourceRect->bottom || SourceRect->top >= DestRect->bottom))
+            !(OutputRect.left >= SourceRect->right || InputRect.left >= OutputRect.right ||
+              OutputRect.top >= SourceRect->bottom || InputRect.top >= OutputRect.bottom))
     {
         DPRINT1("Source and destination rectangles overlap!\n");
         return FALSE;
@@ -1109,11 +1122,11 @@ EngAlphaBlend(IN SURFOBJ *Dest,
     }
 
     /* Stretch source if needed */
-    if (DestRect->right - DestRect->left != SourceRect->right - SourceRect->left ||
-            DestRect->bottom - DestRect->top != SourceRect->bottom - SourceRect->top)
+    if (OutputRect.right - OutputRect.left != InputRect.right - InputRect.left ||
+            OutputRect.bottom - OutputRect.top != InputRect.bottom - InputRect.top)
     {
-        SourceStretchedSize.cx = DestRect->right - DestRect->left;
-        SourceStretchedSize.cy = DestRect->bottom - DestRect->top;
+        SourceStretchedSize.cx = OutputRect.right - OutputRect.left;
+        SourceStretchedSize.cy = OutputRect.bottom - OutputRect.top;
         Width = DIB_GetDIBWidthBytes(SourceStretchedSize.cx, BitsPerFormat(Source->iBitmapFormat));
         /* FIXME: Maybe it is a good idea to use EngCreateDeviceBitmap and IntEngStretchBlt
                   if possible to get a HW accelerated stretch. */
@@ -1142,7 +1155,7 @@ EngAlphaBlend(IN SURFOBJ *Dest,
                               NULL, &SourceStretchedRect, SourceRect, NULL,
                               NULL, NULL, COLORONCOLOR))*/
         if (!EngStretchBlt(SourceStretchedObj, Source, NULL, NULL, NULL,
-                           NULL, NULL, &SourceStretchedRect, SourceRect,
+                           NULL, NULL, &SourceStretchedRect, &InputRect,
                            NULL, COLORONCOLOR))
         {
             DPRINT1("EngStretchBlt failed!\n");
@@ -1151,15 +1164,14 @@ EngAlphaBlend(IN SURFOBJ *Dest,
             EngDeleteSurface((HSURF)SourceStretchedBitmap);
             return FALSE;
         }
-        SourceRect = &SourceStretchedRect;
+        InputRect.top = SourceStretchedRect.top;
+        InputRect.bottom = SourceStretchedRect.bottom;
+        InputRect.left = SourceStretchedRect.left;
+        InputRect.right = SourceStretchedRect.right;
         Source = SourceStretchedObj;
     }
 
     /* Now call the DIB function */
-    InputRect.left = SourceRect->left;
-    InputRect.right = SourceRect->right;
-    InputRect.top = SourceRect->top;
-    InputRect.bottom = SourceRect->bottom;
     if (!IntEngEnter(&EnterLeaveSource, Source, &InputRect, TRUE, &Translate, &InputObj))
     {
         if (SourceStretchedObj != NULL)
@@ -1173,15 +1185,11 @@ EngAlphaBlend(IN SURFOBJ *Dest,
         }
         return FALSE;
     }
-    InputRect.left = SourceRect->left + Translate.x;
-    InputRect.right = SourceRect->right + Translate.x;
-    InputRect.top = SourceRect->top + Translate.y;
-    InputRect.bottom = SourceRect->bottom + Translate.y;
+    InputRect.left +=  Translate.x;
+    InputRect.right +=  Translate.x;
+    InputRect.top +=  Translate.y;
+    InputRect.bottom +=  Translate.y;
 
-    OutputRect.left = DestRect->left;
-    OutputRect.right = DestRect->right;
-    OutputRect.top = DestRect->top;
-    OutputRect.bottom = DestRect->bottom;
     if (!IntEngEnter(&EnterLeaveDest, Dest, &OutputRect, FALSE, &Translate, &OutputObj))
     {
         IntEngLeave(&EnterLeaveSource);
@@ -1196,10 +1204,10 @@ EngAlphaBlend(IN SURFOBJ *Dest,
         }
         return FALSE;
     }
-    OutputRect.left = DestRect->left + Translate.x;
-    OutputRect.right = DestRect->right + Translate.x;
-    OutputRect.top = DestRect->top + Translate.y;
-    OutputRect.bottom = DestRect->bottom + Translate.y;
+    OutputRect.left += Translate.x;
+    OutputRect.right += Translate.x;
+    OutputRect.top += Translate.y;
+    OutputRect.bottom += Translate.y;
 
     Ret = FALSE;
     ClippingType = (ClipRegion == NULL) ? DC_TRIVIAL : ClipRegion->iDComplexity;
