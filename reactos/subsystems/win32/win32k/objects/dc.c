@@ -72,6 +72,7 @@ NtGdiCreateCompatibleDC(HDC hDC)
       DisplayDC = IntGdiCreateDC(&DriverName, NULL, NULL, NULL, TRUE);
       if (NULL == DisplayDC)
         {
+          DPRINT1("Failed to create DisplayDC\n");
           return NULL;
         }
       hDC = DisplayDC;
@@ -85,11 +86,13 @@ NtGdiCreateCompatibleDC(HDC hDC)
         {
           NtGdiDeleteObjectApp(DisplayDC);
         }
+      DPRINT1("Failed to lock hDC\n");
       return NULL;
     }
   hNewDC = DC_AllocDC(&OrigDC->DriverName);
   if (NULL == hNewDC)
     {
+      DPRINT1("Failed to create hNewDC\n");
       DC_UnlockDc(OrigDC);
       if (NULL != DisplayDC)
         {
@@ -98,6 +101,13 @@ NtGdiCreateCompatibleDC(HDC hDC)
       return  NULL;
     }
   NewDC = DC_LockDc( hNewDC );
+
+  if(!NewDC)
+  {
+    DPRINT1("Failed to lock hNewDC\n");
+    NtGdiDeleteObjectApp(hNewDC);
+    return NULL;
+  }
 
   oDc_Attr = OrigDC->pDc_Attr;
   if(!oDc_Attr) oDc_Attr = &OrigDC->Dc_Attr;
@@ -142,7 +152,11 @@ NtGdiCreateCompatibleDC(HDC hDC)
   }
 
   hVisRgn = NtGdiCreateRectRgn(0, 0, 1, 1);
-  GdiSelectVisRgn(hNewDC, hVisRgn);
+  if (hVisRgn)
+  {
+    GdiSelectVisRgn(hNewDC, hVisRgn);
+    NtGdiDeleteObject(hVisRgn);
+  }
   if (Layout) NtGdiSetLayout( hNewDC, -1, Layout);
 
   DC_InitDC(hNewDC);
@@ -779,13 +793,16 @@ IntGdiCreateDC(PUNICODE_STRING Driver,
   /*  Check for existing DC object  */
   if ((hNewDC = DC_FindOpenDC(Driver)) != NULL)
   {
-    hDC = hNewDC;
-    return  NtGdiCreateCompatibleDC(hDC);
+    hDC = NtGdiCreateCompatibleDC(hNewDC);
+    if (!hDC)
+       DPRINT1("NtGdiCreateCompatibleDC() failed\n");
+    return hDC;
   }
 
   /*  Allocate a DC object  */
   if ((hNewDC = DC_AllocDC(Driver)) == NULL)
   {
+    DPRINT1("DC_AllocDC() failed\n");
     return  NULL;
   }
 
@@ -793,6 +810,7 @@ IntGdiCreateDC(PUNICODE_STRING Driver,
   if ( !NewDC )
   {
     DC_FreeDC( hNewDC );
+    DPRINT1("DC_LockDc() failed\n");
     return NULL;
   }
 
@@ -828,7 +846,11 @@ IntGdiCreateDC(PUNICODE_STRING Driver,
 
     hVisRgn = NtGdiCreateRectRgn(0, 0, ((PGDIDEVICE)NewDC->pPDev)->GDIInfo.ulHorzRes,
                                  ((PGDIDEVICE)NewDC->pPDev)->GDIInfo.ulVertRes);
-    GdiSelectVisRgn(hNewDC, hVisRgn);
+    if (hVisRgn)
+    {
+      GdiSelectVisRgn(hNewDC, hVisRgn);
+      NtGdiDeleteObject(hVisRgn);
+    }
 
     /*  Initialize the DC state  */
     DC_InitDC(hNewDC);
@@ -1960,7 +1982,12 @@ NtGdiSelectBitmap(
 
     hVisRgn = NtGdiCreateRectRgn(0, 0, pBmp->SurfObj.sizlBitmap.cx, pBmp->SurfObj.sizlBitmap.cy);
     BITMAPOBJ_UnlockBitmap(pBmp);
-    GdiSelectVisRgn(hDC, hVisRgn);
+
+    if (hVisRgn)
+    {
+      GdiSelectVisRgn(hDC, hVisRgn);
+      NtGdiDeleteObject(hVisRgn);
+    }
 
     return hOrgBmp;
 }
@@ -2422,6 +2449,7 @@ DC_AllocDC(PUNICODE_STRING Driver)
     Buf = ExAllocatePoolWithTag(PagedPool, Driver->MaximumLength, TAG_DC);
     if(!Buf)
     {
+      DPRINT1("ExAllocatePoolWithTag failed\n");
       return NULL;
     }
     RtlCopyMemory(Buf, Driver->Buffer, Driver->MaximumLength);
@@ -2434,6 +2462,7 @@ DC_AllocDC(PUNICODE_STRING Driver)
     {
       ExFreePool(Buf);
     }
+    DPRINT1("GDIOBJ_AllocObjWithHandle failed\n");
     return NULL;
   }
 
