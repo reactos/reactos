@@ -25,6 +25,9 @@
 	<directory name="gdi32">
 		<xi:include href="gdi32/gdi32.rbuild" />
 	</directory>
+	<directory name="gdiplus">
+		<xi:include href="gdiplus/gdiplus.rbuild" />
+	</directory>
 	<directory name="hlink">
 		<xi:include href="hlink/hlink.rbuild" />
 	</directory>
