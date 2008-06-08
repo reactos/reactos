@@ -33,231 +33,239 @@
 #include <debug.h>
 
 static __inline int
-CompareRightDown(const PRECT r1, const PRECT r2)
+CompareRightDown(
+    const PRECT r1,
+    const PRECT r2)
 {
-  int Cmp;
+    int Cmp;
 
-  if (r1->top < r2->top)
+    if (r1->top < r2->top)
     {
-      Cmp = -1;
+        Cmp = -1;
     }
-  else if (r2->top < r1->top)
+    else if (r2->top < r1->top)
     {
-      Cmp = +1;
+        Cmp = +1;
     }
-  else
+    else
     {
-      ASSERT(r1->bottom == r2->bottom);
-      if (r1->left < r2->left)
-	{
-	  Cmp = -1;
-	}
-      else if (r2->left < r1->left)
-	{
-	  Cmp = +1;
-	}
-      else
-	{
-	  ASSERT(r1->right == r2->right);
-	  Cmp = 0;
-	}
+        ASSERT(r1->bottom == r2->bottom);
+        if (r1->left < r2->left)
+        {
+            Cmp = -1;
+        }
+        else if (r2->left < r1->left)
+        {
+            Cmp = +1;
+        }
+        else
+        {
+            ASSERT(r1->right == r2->right);
+            Cmp = 0;
+        }
     }
 
-  return Cmp;
+    return Cmp;
 }
 
 static __inline int
-CompareRightUp(const PRECT r1, const PRECT r2)
+CompareRightUp(
+    const PRECT r1,
+    const PRECT r2)
 {
-  int Cmp;
+    int Cmp;
 
-  if (r1->bottom < r2->bottom)
+    if (r1->bottom < r2->bottom)
     {
-      Cmp = +1;
+        Cmp = +1;
     }
-  else if (r2->bottom < r1->bottom)
+    else if (r2->bottom < r1->bottom)
     {
-      Cmp = -1;
+        Cmp = -1;
     }
-  else
+    else
     {
-      ASSERT(r1->top == r2->top);
-      if (r1->left < r2->left)
-	{
-	  Cmp = -1;
-	}
-      else if (r2->left < r1->left)
-	{
-	  Cmp = +1;
-	}
-      else
-	{
-	  ASSERT(r1->right == r2->right);
-	  Cmp = 0;
-	}
+        ASSERT(r1->top == r2->top);
+        if (r1->left < r2->left)
+        {
+            Cmp = -1;
+        }
+        else if (r2->left < r1->left)
+        {
+            Cmp = +1;
+        }
+        else
+        {
+            ASSERT(r1->right == r2->right);
+            Cmp = 0;
+        }
     }
 
-  return Cmp;
+    return Cmp;
 }
 
 static __inline int
-CompareLeftDown(const PRECT r1, const PRECT r2)
+CompareLeftDown(
+    const PRECT r1,
+    const PRECT r2)
 {
-  int Cmp;
+    int Cmp;
 
-  if (r1->top < r2->top)
+    if (r1->top < r2->top)
     {
-      Cmp = -1;
+        Cmp = -1;
     }
-  else if (r2->top < r1->top)
+    else if (r2->top < r1->top)
     {
-      Cmp = +1;
+        Cmp = +1;
     }
-  else
+    else
     {
-      ASSERT(r1->bottom == r2->bottom);
-      if (r1->right < r2->right)
-	{
-	  Cmp = +1;
-	}
-      else if (r2->right < r1->right)
-	{
-	  Cmp = -1;
-	}
-      else
-	{
-	  ASSERT(r1->left == r2->left);
-	  Cmp = 0;
-	}
+        ASSERT(r1->bottom == r2->bottom);
+        if (r1->right < r2->right)
+        {
+            Cmp = +1;
+        }
+        else if (r2->right < r1->right)
+        {
+            Cmp = -1;
+        }
+        else
+        {
+            ASSERT(r1->left == r2->left);
+            Cmp = 0;
+        }
     }
 
-  return Cmp;
+    return Cmp;
 }
 
 static __inline int
-CompareLeftUp(const PRECT r1, const PRECT r2)
+CompareLeftUp(
+    const PRECT r1,
+    const PRECT r2)
 {
-  int Cmp;
+    int Cmp;
 
-  if (r1->bottom < r2->bottom)
+    if (r1->bottom < r2->bottom)
     {
-      Cmp = +1;
+        Cmp = +1;
     }
-  else if (r2->bottom < r1->bottom)
+    else if (r2->bottom < r1->bottom)
     {
-      Cmp = -1;
+        Cmp = -1;
     }
-  else
+    else
     {
-      ASSERT(r1->top == r2->top);
-      if (r1->right < r2->right)
-	{
-	  Cmp = +1;
-	}
-      else if (r2->right < r1->right)
-	{
-	  Cmp = -1;
-	}
-      else
-	{
-	  ASSERT(r1->left == r2->left);
-	  Cmp = 0;
-	}
+        ASSERT(r1->top == r2->top);
+        if (r1->right < r2->right)
+        {
+            Cmp = +1;
+        }
+        else if (r2->right < r1->right)
+        {
+            Cmp = -1;
+        }
+        else
+        {
+            ASSERT(r1->left == r2->left);
+            Cmp = 0;
+        }
     }
-
-  return Cmp;
+    return Cmp;
 }
 
 static __inline int
-CompareSpans(const PSPAN Span1, const PSPAN Span2)
+CompareSpans(
+    const PSPAN Span1,
+    const PSPAN Span2)
 {
-  int Cmp;
+    int Cmp;
 
-  if (Span1->Y < Span2->Y)
+    if (Span1->Y < Span2->Y)
     {
-      Cmp = -1;
+        Cmp = -1;
     }
-  else if (Span2->Y < Span1->Y)
+    else if (Span2->Y < Span1->Y)
     {
-      Cmp = +1;
+        Cmp = +1;
     }
-  else
+    else
     {
-      if (Span1->X < Span2->X)
-	{
-	  Cmp = -1;
-	}
-      else if (Span2->X < Span1->X)
-	{
-	  Cmp = +1;
-	}
-      else
-	{
-	  Cmp = 0;
-	}
+        if (Span1->X < Span2->X)
+        {
+            Cmp = -1;
+        }
+        else if (Span2->X < Span1->X)
+        {
+            Cmp = +1;
+        }
+        else
+        {
+            Cmp = 0;
+        }
     }
 
-  return Cmp;
+    return Cmp;
 }
 
 VOID FASTCALL
 IntEngDeleteClipRegion(CLIPOBJ *ClipObj)
 {
-  EngFreeMem(ObjToGDI(ClipObj, CLIP));
+    EngFreeMem(ObjToGDI(ClipObj, CLIP));
 }
 
 CLIPOBJ* FASTCALL
 IntEngCreateClipRegion(ULONG count, PRECTL pRect, PRECTL rcBounds)
 {
-  CLIPGDI *Clip;
+    CLIPGDI *Clip;
 
-  if(count > 1)
-  {
-    RECTL *dest;
-
-    Clip = EngAllocMem(0, sizeof(CLIPGDI) + ((count - 1) * sizeof(RECTL)), TAG_CLIPOBJ);
-
-    if(Clip != NULL)
+    if(count > 1)
     {
-      Clip->EnumRects.c = count;
-      Clip->EnumOrder = CD_ANY;
-      for(dest = Clip->EnumRects.arcl;
-          count > 0;
-          count--, dest++, pRect++)
-      {
-        *dest = *pRect;
-      }
+        RECTL *dest;
 
-      Clip->ClipObj.iDComplexity = DC_COMPLEX;
-      Clip->ClipObj.iFComplexity = ((Clip->EnumRects.c <= 4) ? FC_RECT4 : FC_COMPLEX);
-      Clip->ClipObj.iMode = TC_RECTANGLES;
-      Clip->ClipObj.rclBounds = *rcBounds;
+        Clip = EngAllocMem(0, sizeof(CLIPGDI) + ((count - 1) * sizeof(RECTL)), TAG_CLIPOBJ);
 
-      return GDIToObj(Clip, CLIP);
+        if(Clip != NULL)
+        {
+            Clip->EnumRects.c = count;
+            Clip->EnumOrder = CD_ANY;
+            for(dest = Clip->EnumRects.arcl;count > 0; count--, dest++, pRect++)
+            {
+                *dest = *pRect;
+            }
+
+            Clip->ClipObj.iDComplexity = DC_COMPLEX;
+            Clip->ClipObj.iFComplexity = ((Clip->EnumRects.c <= 4) ? FC_RECT4 : FC_COMPLEX);
+            Clip->ClipObj.iMode = TC_RECTANGLES;
+            Clip->ClipObj.rclBounds = *rcBounds;
+
+            return GDIToObj(Clip, CLIP);
+        }
     }
-  }
-  else
-  {
-    Clip = EngAllocMem(0, sizeof(CLIPGDI), TAG_CLIPOBJ);
-
-    if(Clip != NULL)
+    else
     {
-      Clip->EnumRects.c = 1;
-      Clip->EnumOrder = CD_ANY;
-      Clip->EnumRects.arcl[0] = *rcBounds;
+        Clip = EngAllocMem(0, sizeof(CLIPGDI), TAG_CLIPOBJ);
 
-      Clip->ClipObj.iDComplexity = (((rcBounds->top == rcBounds->bottom) &&
-                                     (rcBounds->left == rcBounds->right))
-                                    ? DC_TRIVIAL : DC_RECT);
-      Clip->ClipObj.iFComplexity = FC_RECT;
-      Clip->ClipObj.iMode = TC_RECTANGLES;
-      Clip->ClipObj.rclBounds = *rcBounds;
+        if(Clip != NULL)
+        {
+            Clip->EnumRects.c = 1;
+            Clip->EnumOrder = CD_ANY;
+            Clip->EnumRects.arcl[0] = *rcBounds;
 
-      return GDIToObj(Clip, CLIP);
+            Clip->ClipObj.iDComplexity = (((rcBounds->top == rcBounds->bottom) &&
+                                         (rcBounds->left == rcBounds->right))
+                                         ? DC_TRIVIAL : DC_RECT);
+
+            Clip->ClipObj.iFComplexity = FC_RECT;
+            Clip->ClipObj.iMode = TC_RECTANGLES;
+            Clip->ClipObj.rclBounds = *rcBounds;
+
+            return GDIToObj(Clip, CLIP);
+        }
     }
-  }
 
-  return NULL;
+    return NULL;
 }
 
 /*
@@ -266,13 +274,13 @@ IntEngCreateClipRegion(ULONG count, PRECTL pRect, PRECTL rcBounds)
 CLIPOBJ * STDCALL
 EngCreateClip(VOID)
 {
-  CLIPGDI *Clip = EngAllocMem(FL_ZERO_MEMORY, sizeof(CLIPGDI), TAG_CLIPOBJ);
-  if(Clip != NULL)
-  {
-    return GDIToObj(Clip, CLIP);
-  }
+    CLIPGDI *Clip = EngAllocMem(FL_ZERO_MEMORY, sizeof(CLIPGDI), TAG_CLIPOBJ);
+    if(Clip != NULL)
+    {
+        return GDIToObj(Clip, CLIP);
+    }
 
-  return NULL;
+    return NULL;
 }
 
 /*
@@ -281,196 +289,202 @@ EngCreateClip(VOID)
 VOID STDCALL
 EngDeleteClip(CLIPOBJ *ClipRegion)
 {
-  EngFreeMem(ObjToGDI(ClipRegion, CLIP));
+    EngFreeMem(ObjToGDI(ClipRegion, CLIP));
 }
 
 /*
  * @implemented
  */
 ULONG STDCALL
-CLIPOBJ_cEnumStart(IN CLIPOBJ* ClipObj,
-		   IN BOOL ShouldDoAll,
-		   IN ULONG ClipType,
-		   IN ULONG BuildOrder,
-		   IN ULONG MaxRects)
+CLIPOBJ_cEnumStart(
+    IN CLIPOBJ* ClipObj,
+    IN BOOL ShouldDoAll,
+    IN ULONG ClipType,
+    IN ULONG BuildOrder,
+    IN ULONG MaxRects)
 {
-  CLIPGDI *ClipGDI = ObjToGDI(ClipObj, CLIP);
-  SORTCOMP CompareFunc;
+    CLIPGDI *ClipGDI = ObjToGDI(ClipObj, CLIP);
+    SORTCOMP CompareFunc;
 
-  ClipGDI->EnumPos = 0;
-  ClipGDI->EnumMax = (MaxRects > 0) ? MaxRects : ClipGDI->EnumRects.c;
+    ClipGDI->EnumPos = 0;
+    ClipGDI->EnumMax = (MaxRects > 0) ? MaxRects : ClipGDI->EnumRects.c;
 
-  if (CD_ANY != BuildOrder && ClipGDI->EnumOrder != BuildOrder)
+    if (CD_ANY != BuildOrder && ClipGDI->EnumOrder != BuildOrder)
     {
-      switch (BuildOrder)
-	{
-	case CD_RIGHTDOWN:
-	  CompareFunc = (SORTCOMP) CompareRightDown;
-	  break;
-	case CD_RIGHTUP:
-	  CompareFunc = (SORTCOMP) CompareRightUp;
-	  break;
-	case CD_LEFTDOWN:
-	  CompareFunc = (SORTCOMP) CompareLeftDown;
-	  break;
-	case CD_LEFTUP:
-	  CompareFunc = (SORTCOMP) CompareLeftUp;
-	  break;
-	default:
-	  DPRINT1("Invalid BuildOrder %d\n", BuildOrder);
-	  BuildOrder = ClipGDI->EnumOrder;
-	  CompareFunc = NULL;
-	  break;
-	}
+        switch (BuildOrder)
+        {
+            case CD_RIGHTDOWN:
+                CompareFunc = (SORTCOMP) CompareRightDown;
+                break;
 
-      if (NULL != CompareFunc)
-	{
-	  EngSort((PBYTE) ClipGDI->EnumRects.arcl, sizeof(RECTL), ClipGDI->EnumRects.c,
-	          CompareFunc);
-	}
+            case CD_RIGHTUP:
+                CompareFunc = (SORTCOMP) CompareRightUp;
+                break;
 
-      ClipGDI->EnumOrder = BuildOrder;
+            case CD_LEFTDOWN:
+                CompareFunc = (SORTCOMP) CompareLeftDown;
+                break;
+
+            case CD_LEFTUP:
+                CompareFunc = (SORTCOMP) CompareLeftUp;
+                break;
+
+            default:
+                DPRINT1("Invalid BuildOrder %d\n", BuildOrder);
+                BuildOrder = ClipGDI->EnumOrder;
+                CompareFunc = NULL;
+                break;
+        }
+
+        if (NULL != CompareFunc)
+        {
+            EngSort((PBYTE) ClipGDI->EnumRects.arcl, sizeof(RECTL), ClipGDI->EnumRects.c, CompareFunc);
+        }
+
+        ClipGDI->EnumOrder = BuildOrder;
     }
 
-  /* Return the number of rectangles enumerated */
-  if ((MaxRects > 0) && (ClipGDI->EnumRects.c > MaxRects))
+    /* Return the number of rectangles enumerated */
+    if ((MaxRects > 0) && (ClipGDI->EnumRects.c > MaxRects))
     {
-      return 0xFFFFFFFF;
+        return 0xFFFFFFFF;
     }
 
-  return ClipGDI->EnumRects.c;
+    return ClipGDI->EnumRects.c;
 }
 
 /*
  * @implemented
  */
 BOOL STDCALL
-CLIPOBJ_bEnum(IN CLIPOBJ* ClipObj,
-	      IN ULONG ObjSize,
-	      OUT ULONG *EnumRects)
+CLIPOBJ_bEnum(
+    IN CLIPOBJ* ClipObj,
+    IN ULONG ObjSize,
+    OUT ULONG *EnumRects)
 {
-  RECTL *dest, *src;
-  CLIPGDI *ClipGDI = ObjToGDI(ClipObj, CLIP);
-  ULONG nCopy, i;
-  ENUMRECTS* pERects = (ENUMRECTS*)EnumRects;
+    RECTL *dest, *src;
+    CLIPGDI *ClipGDI = ObjToGDI(ClipObj, CLIP);
+    ULONG nCopy, i;
+    ENUMRECTS* pERects = (ENUMRECTS*)EnumRects;
 
-  //calculate how many rectangles we should copy
-  nCopy = min( ClipGDI->EnumMax - ClipGDI->EnumPos,
-               min( ClipGDI->EnumRects.c - ClipGDI->EnumPos,
-                    (ObjSize - sizeof(ULONG)) / sizeof(RECTL)));
-  if(nCopy == 0)
-  {
-    return FALSE;
-  }
+    //calculate how many rectangles we should copy
+    nCopy = min( ClipGDI->EnumMax - ClipGDI->EnumPos,
+            min( ClipGDI->EnumRects.c - ClipGDI->EnumPos,
+            (ObjSize - sizeof(ULONG)) / sizeof(RECTL)));
 
-  /* copy rectangles */
-  src = ClipGDI->EnumRects.arcl + ClipGDI->EnumPos;
-  for(i = 0, dest = pERects->arcl;
-      i < nCopy;
-      i++, dest++, src++)
-  {
-    *dest = *src;
-  }
+    if(nCopy == 0)
+    {
+        return FALSE;
+    }
 
-  pERects->c = nCopy;
+    /* copy rectangles */
+    src = ClipGDI->EnumRects.arcl + ClipGDI->EnumPos;
+    for(i = 0, dest = pERects->arcl; i < nCopy; i++, dest++, src++)
+    {
+        *dest = *src;
+    }
 
-  ClipGDI->EnumPos+=nCopy;
+    pERects->c = nCopy;
 
-  return ClipGDI->EnumPos < ClipGDI->EnumRects.c;
+    ClipGDI->EnumPos+=nCopy;
+
+    return ClipGDI->EnumPos < ClipGDI->EnumRects.c;
 }
 
 BOOLEAN FASTCALL
-ClipobjToSpans(PSPAN *Spans, UINT *Count, CLIPOBJ *ClipRegion, PRECTL Boundary)
+ClipobjToSpans(
+    PSPAN *Spans,
+    UINT *Count,
+    CLIPOBJ *ClipRegion,
+    PRECTL Boundary)
 {
-  BOOL EnumMore;
-  UINT i, NewCount;
-  RECT_ENUM RectEnum;
-  PSPAN NewSpans;
-  RECTL *Rect;
+    BOOL EnumMore;
+    UINT i, NewCount;
+    RECT_ENUM RectEnum;
+    PSPAN NewSpans;
+    RECTL *Rect;
 
-  ASSERT(Boundary->top <= Boundary->bottom && Boundary->left <= Boundary->right);
+    ASSERT(Boundary->top <= Boundary->bottom && Boundary->left <= Boundary->right);
 
-  *Spans = NULL;
-  if (NULL == ClipRegion || DC_TRIVIAL == ClipRegion->iDComplexity)
+    *Spans = NULL;
+    if (NULL == ClipRegion || DC_TRIVIAL == ClipRegion->iDComplexity)
     {
-      *Count = Boundary->bottom - Boundary->top;
-      if (0 != *Count)
+        *Count = Boundary->bottom - Boundary->top;
+        if (0 != *Count)
         {
-          *Spans = ExAllocatePoolWithTag(PagedPool, *Count * sizeof(SPAN), TAG_CLIP);
-          if (NULL == *Spans)
+            *Spans = ExAllocatePoolWithTag(PagedPool, *Count * sizeof(SPAN), TAG_CLIP);
+            if (NULL == *Spans)
             {
-              *Count = 0;
-              return FALSE;
+                *Count = 0;
+                return FALSE;
             }
-          for (i = 0; i < Boundary->bottom - Boundary->top; i++)
+            for (i = 0; i < Boundary->bottom - Boundary->top; i++)
             {
-              (*Spans)[i].X = Boundary->left;
-              (*Spans)[i].Y = Boundary->top + i;
-              (*Spans)[i].Width = Boundary->right - Boundary->left;
+                (*Spans)[i].X = Boundary->left;
+                (*Spans)[i].Y = Boundary->top + i;
+                (*Spans)[i].Width = Boundary->right - Boundary->left;
             }
         }
 
       return TRUE;
     }
 
-  *Count = 0;
-  CLIPOBJ_cEnumStart(ClipRegion, FALSE, CT_RECTANGLES, CD_ANY, 0);
-  do
+    *Count = 0;
+    CLIPOBJ_cEnumStart(ClipRegion, FALSE, CT_RECTANGLES, CD_ANY, 0);
+    do
     {
-      EnumMore = CLIPOBJ_bEnum(ClipRegion, (ULONG) sizeof(RECT_ENUM), (PVOID) &RectEnum);
+        EnumMore = CLIPOBJ_bEnum(ClipRegion, (ULONG) sizeof(RECT_ENUM), (PVOID) &RectEnum);
 
-      NewCount = *Count;
-      for (i = 0; i < RectEnum.c; i++)
+        NewCount = *Count;
+        for (i = 0; i < RectEnum.c; i++)
         {
-          NewCount += RectEnum.arcl[i].bottom - RectEnum.arcl[i].top;
+            NewCount += RectEnum.arcl[i].bottom - RectEnum.arcl[i].top;
         }
-      if (NewCount != *Count)
+        if (NewCount != *Count)
         {
-          NewSpans = ExAllocatePoolWithTag(PagedPool, NewCount * sizeof(SPAN), TAG_CLIP);
-          if (NULL == NewSpans)
+            NewSpans = ExAllocatePoolWithTag(PagedPool, NewCount * sizeof(SPAN), TAG_CLIP);
+            if (NULL == NewSpans)
             {
-              if (NULL != *Spans)
+                if (NULL != *Spans)
                 {
-                  ExFreePool(*Spans);
-                  *Spans = NULL;
+                    ExFreePool(*Spans);
+                    *Spans = NULL;
                 }
-              *Count = 0;
-              return FALSE;
+                *Count = 0;
+                return FALSE;
             }
-          if (0 != *Count)
+            if (0 != *Count)
             {
-              PSPAN dest, src;
-              UINT i = *Count;
-              for(dest = NewSpans, src = *Spans;
-                  i > 0;
-                  i--)
-              {
-                *dest++ = *src++;
-              }
-              ExFreePool(*Spans);
+                PSPAN dest, src;
+                UINT i = *Count;
+                for(dest = NewSpans, src = *Spans;i > 0; i--)
+                {
+                    *dest++ = *src++;
+                }
+                ExFreePool(*Spans);
             }
-          *Spans = NewSpans;
+            *Spans = NewSpans;
         }
-      for (Rect = RectEnum.arcl; Rect < RectEnum.arcl + RectEnum.c; Rect++)
+        for (Rect = RectEnum.arcl; Rect < RectEnum.arcl + RectEnum.c; Rect++)
         {
-          for (i = 0; i < Rect->bottom - Rect->top; i++)
+            for (i = 0; i < Rect->bottom - Rect->top; i++)
             {
-              (*Spans)[*Count].X = Rect->left;
-              (*Spans)[*Count].Y = Rect->top + i;
-              (*Spans)[*Count].Width = Rect->right - Rect->left;
-              (*Count)++;
+                (*Spans)[*Count].X = Rect->left;
+                (*Spans)[*Count].Y = Rect->top + i;
+                (*Spans)[*Count].Width = Rect->right - Rect->left;
+                (*Count)++;
             }
         }
-      ASSERT(*Count == NewCount);
+        ASSERT(*Count == NewCount);
     }
-  while (EnumMore);
+    while (EnumMore);
 
-  if (0 != *Count)
+    if (0 != *Count)
     {
-      EngSort((PBYTE) *Spans, sizeof(SPAN), *Count, (SORTCOMP) CompareSpans);
+        EngSort((PBYTE) *Spans, sizeof(SPAN), *Count, (SORTCOMP) CompareSpans);
     }
 
-  return TRUE;
+    return TRUE;
 }
 
 /* EOF */
