@@ -197,9 +197,14 @@ static void test_SHCreateStreamOnFileA(DWORD mode, DWORD stgm)
     IStream * stream;
     HRESULT ret;
     ULONG refcount;
-    static const char * test_file = "c:\\test.txt";
+    char test_file[MAX_PATH];
+    static const CHAR testA_txt[] = "\\testA.txt";
 
     trace("SHCreateStreamOnFileA: testing mode %d, STGM flags %08x\n", mode, stgm);
+
+    /* Don't used a fixed path for the testA.txt file */
+    GetTempPathA(MAX_PATH, test_file);
+    lstrcatA(test_file, testA_txt);
 
     /* invalid arguments */
 
@@ -284,9 +289,14 @@ static void test_SHCreateStreamOnFileW(DWORD mode, DWORD stgm)
     IStream * stream;
     HRESULT ret;
     ULONG refcount;
-    static const WCHAR test_file[] = { 'c', ':', '\\', 't', 'e', 's', 't', '.', 't', 'x', 't', '\0' };
+    WCHAR test_file[MAX_PATH];
+    static const WCHAR testW_txt[] = { '\\', 't', 'e', 's', 't', 'W', '.', 't', 'x', 't', '\0' };
 
     trace("SHCreateStreamOnFileW: testing mode %d, STGM flags %08x\n", mode, stgm);
+
+    /* Don't used a fixed path for the testW.txt file */
+    GetTempPathW(MAX_PATH, test_file);
+    lstrcatW(test_file, testW_txt);
 
     /* invalid arguments */
 

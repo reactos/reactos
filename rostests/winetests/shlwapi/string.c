@@ -957,4 +957,6 @@ START_TEST(string)
   test_SHAnsiToAnsi();
   test_SHUnicodeToUnicode();
   test_StrXXX_overflows();
+
+  CoUninitialize();
 }
