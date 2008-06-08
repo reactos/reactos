@@ -348,17 +348,17 @@ NtUserImpersonateDdeClientWindow(
    return 0;
 }
 
-DWORD
+NTSTATUS
 STDCALL
 NtUserInitializeClientPfnArrays(
-   DWORD Unknown0,
-   DWORD Unknown1,
-   DWORD Unknown2,
-   DWORD Unknown3)
+  PPFNCLIENT pfnClientA,
+  PPFNCLIENT pfnClientW,
+  PPFNCLIENTWORKER pfnClientWorker,
+  HINSTANCE hmodUser)
 {
    UNIMPLEMENTED
 
-   return 0;
+   return STATUS_UNSUCCESSFUL;
 }
 
 DWORD

@@ -169,6 +169,93 @@ typedef struct _WINDOW
     UINT HideAccel : 1;
 } WINDOW, *PWINDOW;
 
+typedef struct _PFNCLIENT
+{
+   PROC pfnScrollBarC;
+   PROC pfnDefWndC;
+   PROC pfnMenuC;
+   PROC pfnDesktopC;
+   PROC pfnDefWnd1C;
+   PROC pfnDefWnd2C;
+   PROC pfnDefWnd3C;
+   PROC pfnButtomC;
+   PROC pfnComboBoxC;
+   PROC pfnComboListBoxC;
+   PROC pfnDefDlgC;
+   PROC pfnEditC;
+   PROC pfnListBoxC;
+   PROC pfnMDIClientC;
+   PROC pfnStaticC;
+   PROC pfnImeC;
+   PROC pfnHkINLPCWPSTRUCT;
+   PROC pfnHkINLPCWPRETSTRUCT;
+   PROC pfnDispatchHookC;
+   PROC pfnDispatchDefC;
+} PFNCLIENT, *PPFNCLIENT;
+
+typedef struct _PFNCLIENTWORKER
+{
+   PROC pfnButtonCW;
+   PROC pfnComboBoxCW;
+   PROC pfnComboListBoxCW;
+   PROC pfnDefDlgCW;
+   PROC pfnEditCW;
+   PROC pfnListBoxCW;
+   PROC pfnMDIClientCW;
+   PROC pfnStaticCW;
+   PROC pfnImeCW;
+} PFNCLIENTWORKER, *PPFNCLIENTWORKER;
+
+
+// FNID's for NtUserSetWindowFNID
+#define FNID_SCROLLBAR   0x029A
+#define FNID_ICONTITLE   0x029B
+#define FNID_MENU        0x029C
+#define FNID_DESKTOP     0x029D
+#define FNID_SWITCH      0x02A0
+#define FNID_BUTTON      0x02A1
+#define FNID_COMBOBOX    0x02A2
+#define FNID_COMBOLBOX   0x02A3
+#define FNID_DIALOG      0x02A4
+#define FNID_EDIT        0x02A5
+#define FNID_LISTBOX     0x02A6
+#define FNID_MDICLIENT   0x02A7
+#define FNID_STATIC      0x02A8
+#define FNID_IME         0x02A9
+#define FNID_TOOLTIPS    0x02B5
+#define FNID_UNKNOWN     0x02B6
+ 
+#define FNID_DDEML       0x2000 // Registers DDEML
+#define FNID_DESTROY     0x4000 // This is sent when WM_NCDESTROY or in the support routine.
+                                // Seen during WM_CREATE on error exit too.
+
+// ICLS's for NtUserGetClassName FNID to ICLS, NtUserInitializeClientPfnArrays
+#define ICLS_BUTTON       0
+#define ICLS_EDIT         1
+#define ICLS_STATIC       2
+#define ICLS_LISTBOX      3
+#define ICLS_SCROLLBAR    4
+#define ICLS_COMBOBOX     5
+#define ICLS_MDICLIENT    6
+#define ICLS_COMBOLBOX    7
+#define ICLS_DDEMLEVENT   8
+#define ICLS_DDEMLMOTHER  9
+#define ICLS_DDEML16BIT   10
+#define ICLS_DDEMLCLIENTA 11
+#define ICLS_DDEMLCLIENTW 12
+#define ICLS_DDEMLSERVERA 13
+#define ICLS_DDEMLSERVERW 14
+#define ICLS_IME          15
+#define ICLS_DESKTOP      16
+#define ICLS_DIALOG       17
+#define ICLS_MENU         18
+#define ICLS_SWITCH       19
+#define ICLS_ICONTITLE    20
+#define ICLS_TOOLTIPS     21
+#define ICLS_UNKNOWN      22
+#define ICLS_NOTUSED      23
+#define ICLS_END          31
+
 #define SRVINFO_METRICS 0x0020
 
 typedef struct _SERVERINFO
@@ -271,32 +358,6 @@ typedef struct _W32CLIENTINFO
 PW32THREADINFO GetW32ThreadInfo(VOID);
 PW32PROCESSINFO GetW32ProcessInfo(VOID);
 
-// FNID's for NtUserSetWindowFNID
-#define FNID_BUTTON      0x02A1
-#define FNID_COMBOBOX    0x02A2
-#define FNID_COMBOLBOX   0x02A3
-#define FNID_DIALOG      0x02A4
-#define FNID_EDIT        0x02A5
-#define FNID_LISTBOX     0x02A6
-#define FNID_MDICLIENT   0x02A7
-#define FNID_STATIC      0x02A8
-#define FNID_IME         0x02A9
-
-#define FNID_DDEML       0x2000 // Registers DDEML
-#define FNID_DESTROY     0x4000 // This is sent when WM_NCDESTROY or in the support routine.
-                                // Seen during WM_CREATE on error exit too.
-
-// ICLS's for NtUserGetClassName FNID to ICLS
-#define ICLS_BUTTON      0
-#define ICLS_EDIT        1
-#define ICLS_STATIC      2
-#define ICLS_LISTBOX     3
-#define ICLS_COMBOBOX    5
-#define ICLS_MDICLIENT   6
-#define ICLS_COMBOLBOX   7
-#define ICLS_IME         15
-#define ICLS_DIALOG      17
-#define ICLS_END         31
 
 DWORD
 NTAPI
@@ -1557,13 +1618,13 @@ NtUserInitialize(
     DWORD dwUnknown2,
     DWORD dwUnknown3);
 
-DWORD
+NTSTATUS
 NTAPI
 NtUserInitializeClientPfnArrays(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2,
-  DWORD Unknown3);
+  PPFNCLIENT pfnClientA, 
+  PPFNCLIENT pfnClientW,
+  PPFNCLIENTWORKER pfnClientWorker,
+  HINSTANCE hmodUser);
 
 DWORD
 NTAPI
