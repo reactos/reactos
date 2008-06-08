@@ -61,7 +61,8 @@ GetTextSid(PSID pSid,
 
 
 static VOID
-GetGroupData(HWND hwndDlg, LPTSTR lpGroupName)
+GetGeneralGroupData(HWND hwndDlg,
+                    PGENERAL_GROUP_DATA pGroupData)
 {
     PLOCALGROUP_INFO_1 groupInfo = NULL;
     PLOCALGROUP_MEMBERS_INFO_1 membersInfo = NULL;
@@ -101,15 +102,15 @@ GetGroupData(HWND hwndDlg, LPTSTR lpGroupName)
     (void)ListView_InsertColumn(hwndLV, 0, &column);
 
     /* Set group name */
-    SetDlgItemText(hwndDlg, IDC_GROUP_GENERAL_NAME, lpGroupName);
+    SetDlgItemText(hwndDlg, IDC_GROUP_GENERAL_NAME, pGroupData->szGroupName);
 
     /* Set group description */
-    NetLocalGroupGetInfo(NULL, lpGroupName, 1, (LPBYTE*)&groupInfo);
+    NetLocalGroupGetInfo(NULL, pGroupData->szGroupName, 1, (LPBYTE*)&groupInfo);
     SetDlgItemText(hwndDlg, IDC_GROUP_GENERAL_DESCRIPTION, groupInfo->lgrpi1_comment);
     NetApiBufferFree(groupInfo);
 
     /* Set group members */
-    NetLocalGroupGetMembers(NULL, lpGroupName, 1, (LPBYTE*)&membersInfo,
+    NetLocalGroupGetMembers(NULL, pGroupData->szGroupName, 1, (LPBYTE*)&membersInfo,
                             MAX_PREFERRED_LENGTH, &dwRead, &dwTotal,
                             &resumeHandle);
 
@@ -130,7 +131,6 @@ GetGroupData(HWND hwndDlg, LPTSTR lpGroupName)
 
             wsprintf(szGroupName,
                      TEXT("%s\\%s (%s)"),
-                     
                      membersInfo[i].lgrmi1_name,
                      szSid);
 
@@ -144,27 +144,91 @@ GetGroupData(HWND hwndDlg, LPTSTR lpGroupName)
 }
 
 
+static BOOL
+SetGeneralGroupData(HWND hwndDlg,
+                    PGENERAL_GROUP_DATA pGroupData)
+{
+    LOCALGROUP_INFO_1 groupInfo;
+    LPTSTR pszComment = NULL;
+    INT nLength;
+    NET_API_STATUS status;
+    DWORD dwIndex;
+
+    /* Get the group description */
+    nLength = GetWindowTextLength(GetDlgItem(hwndDlg, IDC_GROUP_GENERAL_DESCRIPTION));
+    if (nLength == 0)
+    {
+        groupInfo.lgrpi1_comment = NULL;
+    }
+    else
+    {
+        pszComment = HeapAlloc(GetProcessHeap(), 0, (nLength + 1) * sizeof(TCHAR));
+        GetDlgItemText(hwndDlg, IDC_GROUP_GENERAL_DESCRIPTION, pszComment, nLength + 1);
+        groupInfo.lgrpi1_comment = pszComment;
+    }
+
+    status = NetLocalGroupSetInfo(NULL, pGroupData->szGroupName, 1, (LPBYTE)&groupInfo, &dwIndex);
+    if (status != NERR_Success)
+    {
+        DebugPrintf(_T("Status: %lu  Index: %lu"), status, dwIndex);
+    }
+
+    if (pszComment)
+        HeapFree(GetProcessHeap(), 0, pszComment);
+
+    return TRUE;
+}
+
+
 INT_PTR CALLBACK
 GroupGeneralPageProc(HWND hwndDlg,
                      UINT uMsg,
                      WPARAM wParam,
                      LPARAM lParam)
 {
+    PGENERAL_GROUP_DATA pGroupData;
+
     UNREFERENCED_PARAMETER(lParam);
     UNREFERENCED_PARAMETER(wParam);
     UNREFERENCED_PARAMETER(hwndDlg);
 
+    pGroupData= (PGENERAL_GROUP_DATA)GetWindowLongPtr(hwndDlg, DWLP_USER);
+
     switch (uMsg)
     {
         case WM_INITDIALOG:
-            GetGroupData(hwndDlg,
-                         (LPTSTR)((PROPSHEETPAGE *)lParam)->lParam);
+            pGroupData = (PGENERAL_GROUP_DATA)HeapAlloc(GetProcessHeap(),
+                                                        HEAP_ZERO_MEMORY,
+                                                        sizeof(GENERAL_GROUP_DATA) + 
+                                                        lstrlen((LPTSTR)((PROPSHEETPAGE *)lParam)->lParam) * sizeof(TCHAR));
+            lstrcpy(pGroupData->szGroupName, (LPTSTR)((PROPSHEETPAGE *)lParam)->lParam);
+
+            SetWindowLongPtr(hwndDlg, DWLP_USER, (INT_PTR)pGroupData);
+
+            GetGeneralGroupData(hwndDlg,
+                                pGroupData);
             break;
 
         case WM_COMMAND:
+            switch (LOWORD(wParam))
+            {
+                case IDC_GROUP_GENERAL_DESCRIPTION:
+                    if (HIWORD(wParam) == EN_CHANGE)
+                        PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+                    break;
+            }
+            break;
+
+        case WM_NOTIFY:
+            if (((LPPSHNOTIFY)lParam)->hdr.code == PSN_APPLY)
+            {
+                SetGeneralGroupData(hwndDlg, pGroupData);
+                return TRUE;
+            }
             break;
 
         case WM_DESTROY:
+            HeapFree(GetProcessHeap(), 0, pGroupData);
             break;
     }
 

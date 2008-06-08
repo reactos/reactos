@@ -310,6 +310,9 @@ SetGeneralUserData(HWND hwndDlg,
     if (pszFullName)
         HeapFree(GetProcessHeap(), 0, pszFullName);
 
+    if (pszComment)
+        HeapFree(GetProcessHeap(), 0, pszComment);
+
     NetApiBufferFree(pUserInfo);
 
     return (status == NERR_Success);
@@ -339,15 +342,21 @@ UserGeneralPageProc(HWND hwndDlg,
                                                       lstrlen((LPTSTR)((PROPSHEETPAGE *)lParam)->lParam) * sizeof(TCHAR));
             lstrcpy(pUserData->szUserName, (LPTSTR)((PROPSHEETPAGE *)lParam)->lParam);
 
+            SetWindowLongPtr(hwndDlg, DWLP_USER, (INT_PTR)pUserData);
+
             GetGeneralUserData(hwndDlg,
                                pUserData);
-
-            SetWindowLongPtr(hwndDlg, DWLP_USER, (INT_PTR)pUserData);
             break;
 
         case WM_COMMAND:
             switch (LOWORD(wParam))
             {
+                case IDC_USER_GENERAL_FULL_NAME:
+                case IDC_USER_GENERAL_DESCRIPTION:
+                    if (HIWORD(wParam) == EN_CHANGE)
+                        PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+                    break;
+
                 case IDC_USER_GENERAL_FORCE_CHANGE:
                     pUserData->dwPasswordExpired = !pUserData->dwPasswordExpired;
                     UpdateUserOptions(hwndDlg, pUserData, FALSE);

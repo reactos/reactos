@@ -87,6 +87,35 @@ UpdateGroupsList(HWND hwndListView)
 }
 
 
+static VOID
+UpdateGroupProperties(HWND hwndDlg)
+{
+    TCHAR szGroupName[UNLEN];
+    INT iItem;
+    HWND hwndLV;
+    NET_API_STATUS status;
+    PLOCALGROUP_INFO_1 pGroupInfo = NULL;
+
+    hwndLV = GetDlgItem(hwndDlg, IDC_GROUPS_LIST);
+    iItem = ListView_GetNextItem(hwndLV, -1, LVNI_SELECTED);
+    if (iItem == -1)
+        return;
+
+    /* Get the group name */
+    ListView_GetItemText(hwndLV,
+                         iItem, 0,
+                         szGroupName,
+                         UNLEN);
+
+    status = NetLocalGroupGetInfo(NULL, szGroupName, 1, (LPBYTE*)&pGroupInfo);
+
+    ListView_SetItemText(hwndLV, iItem, 1,
+                         pGroupInfo->lgrpi1_comment);
+
+    NetApiBufferFree(pGroupInfo);
+}
+
+
 INT_PTR CALLBACK
 NewGroupDlgProc(HWND hwndDlg,
                UINT uMsg,
@@ -461,7 +490,8 @@ GroupsPageProc(HWND hwndDlg,
                     break;
 
                 case IDM_GROUP_PROPERTIES:
-                    GroupProperties(hwndDlg);
+                    if (GroupProperties(hwndDlg) == IDOK)
+                        UpdateGroupProperties(hwndDlg);
                     break;
             }
             break;
