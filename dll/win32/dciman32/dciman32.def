@@ -1,0 +1,29 @@
+; $Id: gdi32.def 33598 2008-05-19 10:20:39Z greatlrd $
+;
+; gdi32.def
+;
+; ReactOS Operating System
+; dciman32.def.
+;
+LIBRARY dciman32.dll
+EXPORTS
+DCIBeginAccess@20
+DCICloseProvider@4
+DCICreateOffscreen@40
+DCICreateOverlay@12
+DCICreatePrimary@8
+DCIDestroy@4
+DCIDraw@4
+DCIEndAccess@4
+DCIEnum@20
+DCIOpenProvider@0
+DCISetClipList@8
+DCISetDestination@12=DCICreateOverlay
+DCISetSrcDestClip@16
+GetDCRegionData@12
+GetWindowRegionData@12
+WinWatchClose@4
+WinWatchDidStatusChange@4
+WinWatchGetClipList@16
+WinWatchNotify@12
+WinWatchOpen@4
