@@ -22,9 +22,7 @@
 #include <stdarg.h>
 #include <stdio.h> 
 
-#include "windef.h"
-#include "winbase.h"
-#include "winerror.h"
+#include "windows.h"
 #include "dciman.h"
 #include "wine/debug.h"
 
