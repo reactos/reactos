@@ -1,4 +1,4 @@
-/* $Id$
+/*
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -11,6 +11,7 @@
  *                  Alex Ionescu
  *                  Richard Campbell
  *                  James Tabor
+ *                  Dmitry Chapyshev
  * UPDATE HISTORY:
  *                  Created 21/09/2003
  */
@@ -281,7 +282,7 @@ static HANDLE NLS_RegOpenKey(HANDLE hRootKey, LPCWSTR szKeyName)
     HANDLE hkey;
 
     RtlInitUnicodeString( &keyName, szKeyName );
-    InitializeObjectAttributes(&attr, &keyName, 0, hRootKey, NULL);
+    InitializeObjectAttributes(&attr, &keyName, OBJ_CASE_INSENSITIVE, hRootKey, NULL);
 
     if (NtOpenKey( &hkey, KEY_ALL_ACCESS, &attr ) != STATUS_SUCCESS)
         hkey = 0;
@@ -527,33 +528,36 @@ EnumLanguageGroupLocalesW(
 }
 
 
-/*
- * @implemented
- */
-BOOL
-STDCALL
-EnumSystemCodePagesW (
-    CODEPAGE_ENUMPROCW  lpCodePageEnumProc,
-    DWORD               dwFlags
-    )
+/* Callback function ptrs for EnumSystemCodePagesA/W */
+typedef struct
+{
+  CODEPAGE_ENUMPROCA procA;
+  CODEPAGE_ENUMPROCW procW;
+  DWORD    dwFlags;
+} ENUMSYSTEMCODEPAGES_CALLBACKS;
+
+/* Internal implementation of EnumSystemCodePagesA/W */
+static BOOL NLS_EnumSystemCodePages(ENUMSYSTEMCODEPAGES_CALLBACKS *lpProcs)
 {
     WCHAR szNumber[5 + 1], szValue[MAX_PATH];
-    HKEY hKey;
+    HANDLE hKey;
     BOOL bContinue = TRUE;
-    ULONG ulIndex = 1;
+    ULONG ulIndex = 0;
 
-    DPRINT("(%p,0x%08X)\n", lpCodePageEnumProc, dwFlags);
-
-    if ((!dwFlags & CP_INSTALLED)&&(!dwFlags & CP_SUPPORTED))
-    {
-        SetLastError(ERROR_INVALID_FLAGS);
-        return FALSE;
-    }
-
-    if (!lpCodePageEnumProc)
+    if (!lpProcs)
     {
         SetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
+    }
+
+    switch (lpProcs->dwFlags)
+    {
+        case CP_INSTALLED:
+        case CP_SUPPORTED:
+            break;
+        default:
+            SetLastError(ERROR_INVALID_FLAGS);
+            return FALSE;
     }
 
     hKey = NLS_RegOpenKey(0, L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Control\\NLS\\CodePage");
@@ -568,10 +572,21 @@ EnumSystemCodePagesW (
         if (NLS_RegEnumValue(hKey, ulIndex, szNumber, sizeof(szNumber),
                              szValue, sizeof(szValue)))
         {
-            if ((dwFlags & CP_SUPPORTED)||
-                ((dwFlags & CP_INSTALLED)&&(wcslen(szValue) > 2)))
-                    if (!lpCodePageEnumProc(szNumber))
-                        break;
+            if ((lpProcs->dwFlags == CP_SUPPORTED)||
+                ((lpProcs->dwFlags == CP_INSTALLED)&&(wcslen(szValue) > 2)))
+            {
+                if (lpProcs->procW)
+                {
+                    bContinue = lpProcs->procW(szNumber);
+                }
+                else
+                {
+                    char szNumberA[sizeof(szNumber)/sizeof(WCHAR)];
+
+                    WideCharToMultiByte(CP_ACP, 0, szNumber, -1, szNumberA, sizeof(szNumberA), 0, 0);
+                    bContinue = lpProcs->procA(szNumberA);
+                }
+            }
 
             ulIndex++;
 
@@ -587,6 +602,27 @@ EnumSystemCodePagesW (
     return TRUE;
 }
 
+/*
+ * @implemented
+ */
+BOOL
+STDCALL
+EnumSystemCodePagesW (
+    CODEPAGE_ENUMPROCW  lpCodePageEnumProc,
+    DWORD               dwFlags
+    )
+{
+    ENUMSYSTEMCODEPAGES_CALLBACKS procs;
+
+    DPRINT("(%p,0x%08X,0x%08lX)\n", lpCodePageEnumProc, dwFlags);
+
+    procs.procA = NULL;
+    procs.procW = lpCodePageEnumProc;
+    procs.dwFlags = dwFlags;
+
+    return NLS_EnumSystemCodePages(lpCodePageEnumProc ? &procs : NULL);
+}
+
 
 /*
  * @implemented
@@ -598,58 +634,15 @@ EnumSystemCodePagesA (
     DWORD              dwFlags
     )
 {
-    WCHAR szNumber[5 + 1], szValue[MAX_PATH];
-    HKEY hKey;
-    BOOL bContinue = TRUE;
-    ULONG ulIndex = 1;
+    ENUMSYSTEMCODEPAGES_CALLBACKS procs;
 
-    DPRINT("(%p,0x%08X)\n", lpCodePageEnumProc, dwFlags);
+    DPRINT("(%p,0x%08X,0x%08lX)\n", lpCodePageEnumProc, dwFlags);
 
-    if ((!dwFlags & CP_INSTALLED)&&(!dwFlags & CP_SUPPORTED))
-    {
-        SetLastError(ERROR_INVALID_FLAGS);
-        return FALSE;
-    }
+    procs.procA = lpCodePageEnumProc;
+    procs.procW = NULL;
+    procs.dwFlags = dwFlags;
 
-    if (!lpCodePageEnumProc)
-    {
-        SetLastError(ERROR_INVALID_PARAMETER);
-        return FALSE;
-    }
-
-    hKey = NLS_RegOpenKey(0, L"\\Machine\\SYSTEM\\CurrentControlSet\\Control\\NLS\\CodePage");
-    if (!hKey)
-    {
-        DPRINT1("NLS_RegOpenKey() failed\n");
-        return FALSE;
-    }
-
-    while (bContinue)
-    {
-        if (NLS_RegEnumValue(hKey, ulIndex, szNumber, sizeof(szNumber),
-                             szValue, sizeof(szValue)))
-        {
-            char szNumberA[sizeof(szNumber)/sizeof(WCHAR)];
-
-            WideCharToMultiByte(CP_ACP, 0, szNumber, -1, szNumberA, sizeof(szNumberA), 0, 0);
-
-            if ((dwFlags & CP_SUPPORTED)||
-                ((dwFlags & CP_INSTALLED)&&(wcslen(szValue) > 1)))
-                    if (!lpCodePageEnumProc(szNumberA))
-                        break;
-
-            ulIndex++;
-
-        } else bContinue = FALSE;
-
-        if (!bContinue)
-            break;
-    }
-
-    if (hKey)
-        NtClose(hKey);
-
-    return TRUE;
+    return NLS_EnumSystemCodePages(lpCodePageEnumProc ? &procs : NULL);
 }
 
 
@@ -675,7 +668,7 @@ EnumSystemGeoID(
         return FALSE;
     }
 
-    hKey = NLS_RegOpenKey(0, L"\\Registry\\Machine\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Telephony\\Country List");
+    hKey = NLS_RegOpenKey(0, L"\\REGISTRY\\Machine\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Telephony\\Country List");
     if (!hKey)
     {
         DPRINT1("NLS_RegOpenKey() failed\n");
@@ -883,9 +876,9 @@ static BOOL NLS_EnumSystemLocales(ENUMSYSTEMLOCALES_CALLBACKS *lpProcs)
 
     switch (lpProcs->dwFlags)
     {
+        case LCID_ALTERNATE_SORTS:
         case LCID_INSTALLED:
         case LCID_SUPPORTED:
-        case LCID_ALTERNATE_SORTS:
             break;
         default:
             SetLastError(ERROR_INVALID_FLAGS);
@@ -1314,7 +1307,7 @@ NLS_GetGeoFriendlyName(GEOID Location, LPWSTR szFriendlyName, int cchData)
     NTSTATUS Status;
     int Ret;
 
-    swprintf(szPath, L"\\Registry\\Machine\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Telephony\\Country List\\%d", Location);
+    swprintf(szPath, L"\\REGISTRY\\Machine\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Telephony\\Country List\\%d", Location);
 
     hKey = NLS_RegOpenKey(0, szPath);
     if (!hKey)
@@ -1389,7 +1382,7 @@ GetGeoInfoW(
     int         cchData,
     LANGID      LangId)
 {
-    DPRINT1("%d %d %p %d %d\n", Location, GeoType, lpGeoData, cchData, LangId);
+    DPRINT("%d %d %p %d %d\n", Location, GeoType, lpGeoData, cchData, LangId);
 
     if ((GeoType == GEO_TIMEZONES)||(GeoType == GEO_OFFICIALLANGUAGES))
     {
@@ -1430,7 +1423,7 @@ GetGeoInfoA(
     int         cchData,
     LANGID      LangId)
 {
-    DPRINT1("%d %d %p %d %d\n", Location, GeoType, lpGeoData, cchData, LangId);
+    DPRINT("%d %d %p %d %d\n", Location, GeoType, lpGeoData, cchData, LangId);
 
     if ((GeoType == GEO_TIMEZONES)||(GeoType == GEO_OFFICIALLANGUAGES))
     {
@@ -1792,69 +1785,69 @@ static int compare_unicode_string(
     
     if (String1 && String2)
     {
-      len1 = String1->Length / sizeof(WCHAR);
-      len2 = String2->Length / sizeof(WCHAR);
-      s1 = String1->Buffer;
-      s2 = String2->Buffer;
+        len1 = String1->Length / sizeof(WCHAR);
+        len2 = String2->Length / sizeof(WCHAR);
+        s1 = String1->Buffer;
+        s2 = String2->Buffer;
 
-      while (len1 > 0 && len2 > 0)
-      {
-        if (Flags & NORM_IGNORESYMBOLS)
+        while (len1 > 0 && len2 > 0)
         {
-            int skip = 0;
-            /* FIXME: not tested */
-            if (iswctype(*s1, _SPACE | _PUNCT))
+            if (Flags & NORM_IGNORESYMBOLS)
             {
-                s1++;
-                len1--;
-                skip = 1;
-            }
-            if (iswctype(*s2, _SPACE | _PUNCT))
-            {
-                s2++;
-                len2--;
-                skip = 1;
-            }
-            if (skip) continue;
-        }
-
-       /* hyphen and apostrophe are treated differently depending on
-        * whether SORT_STRINGSORT specified or not
-        */
-        if (!(Flags & SORT_STRINGSORT))
-        {
-            if (*s1 == '-' || *s1 == '\'')
-            {
-                if (*s2 != '-' && *s2 != '\'')
+                int skip = 0;
+                /* FIXME: not tested */
+                if (iswctype(*s1, _SPACE | _PUNCT))
                 {
                     s1++;
                     len1--;
+                    skip = 1;
+                }
+                if (iswctype(*s2, _SPACE | _PUNCT))
+                {
+                    s2++;
+                    len2--;
+                    skip = 1;
+                }
+                if (skip) continue;
+            }
+
+            /* hyphen and apostrophe are treated differently depending on
+             * whether SORT_STRINGSORT specified or not
+             */
+            if (!(Flags & SORT_STRINGSORT))
+            {
+                if (*s1 == '-' || *s1 == '\'')
+                {
+                    if (*s2 != '-' && *s2 != '\'')
+                    {
+                        s1++;
+                        len1--;
+                        continue;
+                    }
+                }
+                else if (*s2 == '-' || *s2 == '\'')
+                {
+                    s2++;
+                    len2--;
                     continue;
                 }
             }
-            else if (*s2 == '-' || *s2 == '\'')
+            if (Flags & NORM_IGNORECASE)
             {
-                s2++;
-                len2--;
-                continue;
+                c1 = len1-- ? RtlUpcaseUnicodeChar(*s1++) : 0;
+                c2 = len2-- ? RtlUpcaseUnicodeChar(*s2++) : 0;
+                if (!c1 || !c2 || c1 != c2)
+                return c1 - c2;
+            }
+            else
+            {
+                c1 = len1-- ? *s1++ : 0;
+                c2 = len2-- ? *s2++ : 0;
+                if (!c1 || !c2 || c1 != c2)
+                return c1 - c2;
             }
         }
-        if (Flags & NORM_IGNORECASE)
-        {
-            c1 = len1-- ? RtlUpcaseUnicodeChar(*s1++) : 0;
-            c2 = len2-- ? RtlUpcaseUnicodeChar(*s2++) : 0;
-            if (!c1 || !c2 || c1 != c2)
-               return c1 - c2;
-        }
-        else
-        {
-            c1 = len1-- ? *s1++ : 0;
-            c2 = len2-- ? *s2++ : 0;
-            if (!c1 || !c2 || c1 != c2)
-               return c1 - c2;
-        }
-      }
-      return (int) len1 - (int) len2;
+        return (int) len1 - (int) len2;
     }
     return 0;
 }
@@ -1994,7 +1987,7 @@ INT STDCALL GetLocaleInfoA( LCID lcid, LCTYPE lctype, LPSTR buffer, INT len )
 LANGID STDCALL
 GetSystemDefaultLangID(VOID)
 {
-  return LANGIDFROMLCID(GetSystemDefaultLCID());
+    return LANGIDFROMLCID(GetSystemDefaultLCID());
 }
 
 
@@ -2004,11 +1997,11 @@ GetSystemDefaultLangID(VOID)
 LCID STDCALL
 GetSystemDefaultLCID(VOID)
 {
-  LCID lcid;
+    LCID lcid;
 
-  NtQueryDefaultLocale(FALSE, &lcid);
+    NtQueryDefaultLocale(FALSE, &lcid);
 
-  return lcid;
+    return lcid;
 }
 
 
@@ -2018,17 +2011,17 @@ GetSystemDefaultLCID(VOID)
 LANGID STDCALL
 GetSystemDefaultUILanguage(VOID)
 {
-  LANGID LanguageId;
-  NTSTATUS Status;
+    LANGID LanguageId;
+    NTSTATUS Status;
 
-  Status = NtQueryInstallUILanguage(&LanguageId);
-  if (!NT_SUCCESS(Status))
+    Status = NtQueryInstallUILanguage(&LanguageId);
+    if (!NT_SUCCESS(Status))
     {
       SetLastErrorByStatus(Status);
       return 0;
     }
 
-  return LanguageId;
+    return LanguageId;
 }
 
 
@@ -2038,7 +2031,7 @@ GetSystemDefaultUILanguage(VOID)
 LCID STDCALL
 GetThreadLocale(VOID)
 {
-  return NtCurrentTeb()->CurrentLocale;
+    return NtCurrentTeb()->CurrentLocale;
 }
 
 
@@ -2048,7 +2041,7 @@ GetThreadLocale(VOID)
 LANGID STDCALL
 GetUserDefaultLangID(VOID)
 {
-  return LANGIDFROMLCID(GetUserDefaultLCID());
+    return LANGIDFROMLCID(GetUserDefaultLCID());
 }
 
 
@@ -2058,14 +2051,14 @@ GetUserDefaultLangID(VOID)
 LCID STDCALL
 GetUserDefaultLCID(VOID)
 {
-  LCID lcid;
-  NTSTATUS Status;
+    LCID lcid;
+    NTSTATUS Status;
 
-  Status = NtQueryDefaultLocale(TRUE, &lcid);
-  if (!NT_SUCCESS(Status))
+    Status = NtQueryDefaultLocale(TRUE, &lcid);
+    if (!NT_SUCCESS(Status))
     {
-      SetLastErrorByStatus(Status);
-      return 0;
+        SetLastErrorByStatus(Status);
+        return 0;
     }
 
   return lcid;
@@ -2078,17 +2071,17 @@ GetUserDefaultLCID(VOID)
 LANGID STDCALL
 GetUserDefaultUILanguage(VOID)
 {
-  LANGID LangId;
-  NTSTATUS Status;
+    LANGID LangId;
+    NTSTATUS Status;
 
-  Status = NtQueryDefaultUILanguage(&LangId);
-  if (!NT_SUCCESS(Status))
+    Status = NtQueryDefaultUILanguage(&LangId);
+    if (!NT_SUCCESS(Status))
     {
-      SetLastErrorByStatus(Status);
-      return 0;
+        SetLastErrorByStatus(Status);
+        return 0;
     }
 
-  return LangId;
+    return LangId;
 }
 
 
@@ -2185,7 +2178,7 @@ IsValidLanguageGroup(
 {
     static const WCHAR szFormat[] = { '%','x','\0' };
     UNICODE_STRING szNlsKeyName = 
-        RTL_CONSTANT_STRING(L"\\Registry\\Machine\\System\\CurrentControlSet\\Control\\Nls");
+        RTL_CONSTANT_STRING(L"\\REGISTRY\\Machine\\System\\CurrentControlSet\\Control\\Nls");
     UNICODE_STRING szLangGroupsKeyName = 
         RTL_CONSTANT_STRING(L"Language Groups");
     const int MAX_VALUE_NAME = 16;
@@ -2285,103 +2278,103 @@ BOOL STDCALL
 IsValidLocale(LCID Locale,
 	      DWORD dwFlags)
 {
-  OBJECT_ATTRIBUTES ObjectAttributes;
-  PKEY_VALUE_PARTIAL_INFORMATION KeyInfo;
-  WCHAR ValueNameBuffer[9];
-  UNICODE_STRING KeyName;
-  UNICODE_STRING ValueName;
-  ULONG KeyInfoSize;
-  ULONG ReturnedSize;
-  HANDLE KeyHandle;
-  PWSTR ValueData;
-  NTSTATUS Status;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    PKEY_VALUE_PARTIAL_INFORMATION KeyInfo;
+    WCHAR ValueNameBuffer[9];
+    UNICODE_STRING KeyName;
+    UNICODE_STRING ValueName;
+    ULONG KeyInfoSize;
+    ULONG ReturnedSize;
+    HANDLE KeyHandle;
+    PWSTR ValueData;
+    NTSTATUS Status;
 
-  DPRINT("IsValidLocale() called\n");
+    DPRINT("IsValidLocale() called\n");
 
-  if ((dwFlags & ~(LCID_SUPPORTED | LCID_INSTALLED)) ||
-      (dwFlags == (LCID_SUPPORTED | LCID_INSTALLED)))
+    if ((dwFlags & ~(LCID_SUPPORTED | LCID_INSTALLED)) ||
+        (dwFlags == (LCID_SUPPORTED | LCID_INSTALLED)))
     {
-      DPRINT("Invalid flags: %lx\n", dwFlags);
-      return FALSE;
+        DPRINT("Invalid flags: %lx\n", dwFlags);
+        return FALSE;
     }
 
-  if (Locale & 0xFFFF0000)
+    if (Locale & 0xFFFF0000)
     {
-      RtlInitUnicodeString(&KeyName,
-			   L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Control\\Nls\\Locale\\Alternate Sorts");
+        RtlInitUnicodeString(&KeyName,
+			   L"\\REGISTRY\\Machine\\SYSTEM\\CurrentControlSet\\Control\\Nls\\Locale\\Alternate Sorts");
     }
-  else
+    else
     {
-      RtlInitUnicodeString(&KeyName,
-			   L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Control\\Nls\\Locale");
+        RtlInitUnicodeString(&KeyName,
+			   L"\\REGISTRY\\Machine\\SYSTEM\\CurrentControlSet\\Control\\Nls\\Locale");
     }
 
-  InitializeObjectAttributes(&ObjectAttributes,
+    InitializeObjectAttributes(&ObjectAttributes,
 			     &KeyName,
 			     OBJ_CASE_INSENSITIVE,
 			     NULL,
 			     NULL);
 
-  Status = NtOpenKey(&KeyHandle,
+    Status = NtOpenKey(&KeyHandle,
 		     KEY_QUERY_VALUE,
 		     &ObjectAttributes);
-  if (!NT_SUCCESS(Status))
+    if (!NT_SUCCESS(Status))
     {
-      DPRINT("NtOpenKey() failed (Status %lx)\n", Status);
-      return FALSE;
+        DPRINT("NtOpenKey() failed (Status %lx)\n", Status);
+        return FALSE;
     }
 
-  swprintf(ValueNameBuffer, L"%08lx", (ULONG)Locale);
-  RtlInitUnicodeString(&ValueName, ValueNameBuffer);
+    swprintf(ValueNameBuffer, L"%08lx", (ULONG)Locale);
+    RtlInitUnicodeString(&ValueName, ValueNameBuffer);
 
-  KeyInfoSize = sizeof(KEY_VALUE_PARTIAL_INFORMATION) + 4 * sizeof(WCHAR);
-  KeyInfo = RtlAllocateHeap(RtlGetProcessHeap(),
+    KeyInfoSize = sizeof(KEY_VALUE_PARTIAL_INFORMATION) + 4 * sizeof(WCHAR);
+    KeyInfo = RtlAllocateHeap(RtlGetProcessHeap(),
 			    HEAP_ZERO_MEMORY,
 			    KeyInfoSize);
-  if (KeyInfo == NULL)
+    if (KeyInfo == NULL)
     {
-      DPRINT("RtlAllocateHeap() failed (Status %lx)\n", Status);
-      NtClose(KeyHandle);
-      return FALSE;
+        DPRINT("RtlAllocateHeap() failed (Status %lx)\n", Status);
+        NtClose(KeyHandle);
+        return FALSE;
     }
 
-  Status = NtQueryValueKey(KeyHandle,
+    Status = NtQueryValueKey(KeyHandle,
 			   &ValueName,
 			   KeyValuePartialInformation,
 			   KeyInfo,
 			   KeyInfoSize,
 			   &ReturnedSize);
-  NtClose(KeyHandle);
+    NtClose(KeyHandle);
 
-  if (!NT_SUCCESS(Status))
+    if (!NT_SUCCESS(Status))
     {
-      DPRINT("NtQueryValueKey() failed (Status %lx)\n", Status);
-      RtlFreeHeap(RtlGetProcessHeap(), 0, KeyInfo);
-      return FALSE;
+        DPRINT("NtQueryValueKey() failed (Status %lx)\n", Status);
+        RtlFreeHeap(RtlGetProcessHeap(), 0, KeyInfo);
+        return FALSE;
     }
 
-  if (dwFlags & LCID_SUPPORTED)
+    if (dwFlags & LCID_SUPPORTED)
     {
-      DPRINT("Locale is supported\n");
-      RtlFreeHeap(RtlGetProcessHeap(), 0, KeyInfo);
-      return TRUE;
+        DPRINT("Locale is supported\n");
+        RtlFreeHeap(RtlGetProcessHeap(), 0, KeyInfo);
+        return TRUE;
     }
 
-  ValueData = (PWSTR)&KeyInfo->Data[0];
-  if ((KeyInfo->Type == REG_SZ) &&
-      (KeyInfo->DataLength == 2 * sizeof(WCHAR)) &&
-      (ValueData[0] == L'1'))
+    ValueData = (PWSTR)&KeyInfo->Data[0];
+    if ((KeyInfo->Type == REG_SZ) &&
+        (KeyInfo->DataLength == 2 * sizeof(WCHAR)) &&
+        (ValueData[0] == L'1'))
     {
-      DPRINT("Locale is supported and installed\n");
-      RtlFreeHeap(RtlGetProcessHeap(), 0, KeyInfo);
-      return TRUE;
+        DPRINT("Locale is supported and installed\n");
+        RtlFreeHeap(RtlGetProcessHeap(), 0, KeyInfo);
+        return TRUE;
     }
 
-  RtlFreeHeap(RtlGetProcessHeap(), 0, KeyInfo);
+    RtlFreeHeap(RtlGetProcessHeap(), 0, KeyInfo);
 
-  DPRINT("IsValidLocale() called\n");
+    DPRINT("IsValidLocale() called\n");
 
-  return FALSE;
+    return FALSE;
 }
 
 
@@ -2399,6 +2392,12 @@ LCMapStringA (
     int cchDest
     )
 {
+    if (!lpSrcStr || !cchSrc || cchDest < 0)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return 0;
+    }
+
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return 0;
 }
@@ -2418,6 +2417,24 @@ LCMapStringW (
     int cchDest
     )
 {
+    if (!lpSrcStr || !cchSrc || cchDest < 0)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return 0;
+    }
+
+    /* mutually exclusive flags */
+    if ((dwMapFlags & (LCMAP_LOWERCASE | LCMAP_UPPERCASE)) == (LCMAP_LOWERCASE | LCMAP_UPPERCASE) ||
+        (dwMapFlags & (LCMAP_HIRAGANA | LCMAP_KATAKANA)) == (LCMAP_HIRAGANA | LCMAP_KATAKANA) ||
+        (dwMapFlags & (LCMAP_HALFWIDTH | LCMAP_FULLWIDTH)) == (LCMAP_HALFWIDTH | LCMAP_FULLWIDTH) ||
+        (dwMapFlags & (LCMAP_TRADITIONAL_CHINESE | LCMAP_SIMPLIFIED_CHINESE)) == (LCMAP_TRADITIONAL_CHINESE | LCMAP_SIMPLIFIED_CHINESE))
+    {
+        SetLastError(ERROR_INVALID_FLAGS);
+        return 0;
+    }
+
+    if (!cchDest) lpDestStr = NULL;
+
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return 0;
 }
@@ -2432,10 +2449,27 @@ SetCalendarInfoA(
     LCID     Locale,
     CALID    Calendar,
     CALTYPE  CalType,
-    LPCSTR  lpCalData)
+    LPCSTR   lpCalData)
 {
+    if (!Locale || !lpCalData)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    switch (CalType)
+    {
+        case CAL_NOUSEROVERRIDE:
+        case CAL_RETURN_NUMBER:
+        case CAL_USE_CP_ACP:
+            break;
+        default:
+            SetLastError(ERROR_INVALID_FLAGS);
+            return FALSE;
+    }
+
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
+    return FALSE;
 }
 
 /*
@@ -2449,8 +2483,25 @@ SetCalendarInfoW(
     CALTYPE  CalType,
     LPCWSTR  lpCalData)
 {
+    if (!Locale || !lpCalData)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    switch (CalType)
+    {
+        case CAL_NOUSEROVERRIDE:
+        case CAL_RETURN_NUMBER:
+        case CAL_USE_CP_ACP:
+            break;
+        default:
+            SetLastError(ERROR_INVALID_FLAGS);
+            return FALSE;
+    }
+
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
+    return FALSE;
 }
 
 
@@ -2739,6 +2790,3 @@ VerLanguageNameW (
 {
     return GetLocaleInfoW( MAKELCID(wLang, SORT_DEFAULT), LOCALE_SENGLANGUAGE, szLang, nSize );
 }
-
-
-
