@@ -62,7 +62,7 @@ HRESULT WINAPI SHInvokeCommand(HWND,IShellFolder*,LPCITEMIDLIST,BOOL);
 BOOL    WINAPI SHAboutInfoW(LPWSTR,DWORD);
 
 /*
- NOTES: Most functions exported by ordinal seem to be superflous.
+ NOTES: Most functions exported by ordinal seem to be superfluous.
  The reason for these functions to be there is to provide a wrapper
  for unicode functions to provide these functions on systems without
  unicode functions eg. win95/win98. Since we have such functions we just
@@ -1492,11 +1492,11 @@ HRESULT WINAPI IUnknown_QueryService(IUnknown* lpUnknown, REFGUID sid, REFIID ri
  */
 BOOL WINAPI SHLoadMenuPopup(HINSTANCE hInst, LPCWSTR szName)
 {
-  HMENU hMenu, hSubMenu;
+  HMENU hMenu;
 
   if ((hMenu = LoadMenuW(hInst, szName)))
   {
-    if ((hSubMenu = GetSubMenu(hMenu, 0)))
+    if (GetSubMenu(hMenu, 0))
       RemoveMenu(hMenu, 0, MF_BYPOSITION);
 
     DestroyMenu(hMenu);
@@ -1959,7 +1959,7 @@ DWORD WINAPI SHFillRectClr(HDC hDC, LPCRECT pRect, COLORREF cRef)
 /*************************************************************************
  *      @	[SHLWAPI.198]
  *
- * Return the value asociated with a key in a map.
+ * Return the value associated with a key in a map.
  *
  * PARAMS
  *  lpKeys   [I] A list of keys of length iLen
@@ -2101,7 +2101,7 @@ typedef struct
 /*************************************************************************
  *      @	[SHLWAPI.208]
  *
- * Initialize an FDSA arrary. 
+ * Initialize an FDSA array.
  */
 BOOL WINAPI FDSA_Initialize(DWORD block_size, DWORD inc, FDSA_info *info, void *mem,
                             DWORD init_blocks)
@@ -2543,7 +2543,7 @@ DWORD WINAPI SHGetRestriction(LPCWSTR lpSubKey, LPCWSTR lpSubName, LPCWSTR lpVal
  * NOTES
  *  This function is used by the native SHRestricted function to search for the
  *  policy and cache it once retrieved. The current Wine implementation uses a
- *  different POLICYDATA structure and implements a similar algorithme adapted to
+ *  different POLICYDATA structure and implements a similar algorithm adapted to
  *  that structure.
  */
 DWORD WINAPI SHRestrictionLookup(
@@ -3433,7 +3433,7 @@ COLORREF WINAPI ColorAdjustLuma(COLORREF cRGB, int dwLuma, BOOL bUnknown)
 
     FIXME("Ignoring luma adjustment\n");
 
-    /* FIXME: The ajdustment is not linear */
+    /* FIXME: The adjustment is not linear */
 
     cRGB = ColorHLSToRGB(wH, wL, wS);
   }

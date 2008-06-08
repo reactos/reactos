@@ -25,6 +25,7 @@
 
 #include "version.rc"
 
+#include "shlwapi_Da.rc"
 #include "shlwapi_De.rc"
 #include "shlwapi_En.rc"
 #include "shlwapi_Eo.rc"
@@ -41,6 +42,7 @@
 #include "shlwapi_Pt.rc"
 #include "shlwapi_Ro.rc"
 #include "shlwapi_Ru.rc"
+#include "shlwapi_Si.rc"
 #include "shlwapi_Sv.rc"
 #include "shlwapi_Tr.rc"
 #include "shlwapi_Uk.rc"

@@ -25,6 +25,7 @@
 	<file>shlwapi.rc</file>
 	<file>shlwapi.spec</file>
 	<library>wine</library>
+	<library>uuid</library>
 	<library>user32</library>
 	<library>gdi32</library>
 	<library>advapi32</library>
@@ -39,7 +40,6 @@
 	<library>shell32</library>
 	<library>winmm</library>
 	<library>version</library>
-	<library>uuid</library>
 	<library>ntdll</library>
 </module>
 </group>

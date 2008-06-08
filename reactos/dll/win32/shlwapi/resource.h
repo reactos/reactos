@@ -25,7 +25,7 @@
 #define IDS_TIME_INTERVAL_MINUTES 66
 #define IDS_TIME_INTERVAL_SECONDS 67
 
-/* These numbers match native ID's and shouldn't be abitrarily changed */
+/* These numbers match native ID's and shouldn't be arbitrarily changed */
 #define IDD_ERR_DIALOG    0x1200
 #define IDS_ERR_USER_MSG  0x1201
 #define IDC_ERR_DONT_SHOW 0x1202

@@ -119,13 +119,10 @@ static HRESULT WINAPI IStream_fnRead(IStream *iface, void* pv, ULONG cb, ULONG* 
 
   TRACE("(%p,%p,0x%08x,%p)\n", This, pv, cb, pcbRead);
 
-  if (!pv)
-    return STG_E_INVALIDPOINTER;
-
   if (!ReadFile(This->hFile, pv, cb, &dwRead, NULL))
   {
-    ERR("error %d reading file\n", GetLastError());
-    return HRESULT_FROM_WIN32(GetLastError());
+    WARN("error %d reading file\n", GetLastError());
+    return S_FALSE;
   }
   if (pcbRead)
     *pcbRead = dwRead;
@@ -142,16 +139,13 @@ static HRESULT WINAPI IStream_fnWrite(IStream *iface, const void* pv, ULONG cb, 
 
   TRACE("(%p,%p,0x%08x,%p)\n", This, pv, cb, pcbWritten);
 
-  if (!pv)
-    return STG_E_INVALIDPOINTER;
-
   switch (STGM_ACCESS_MODE(This->dwMode))
   {
   case STGM_WRITE:
   case STGM_READWRITE:
     break;
   default:
-    return E_FAIL;
+    return STG_E_ACCESSDENIED;
   }
 
   if (!WriteFile(This->hFile, pv, cb, &dwWritten, NULL))
@@ -176,7 +170,7 @@ static HRESULT WINAPI IStream_fnSeek(IStream *iface, LARGE_INTEGER dlibMove,
   IStream_fnCommit(iface, 0); /* If ever buffered, this will be needed */
   dwPos = SetFilePointer(This->hFile, dlibMove.u.LowPart, NULL, dwOrigin);
   if( dwPos == INVALID_SET_FILE_POINTER )
-     return E_FAIL;
+     return HRESULT_FROM_WIN32(GetLastError());
 
   if (pNewPos)
   {
@@ -224,7 +218,7 @@ static HRESULT WINAPI IStream_fnCopyTo(IStream *iface, IStream* pstm, ULARGE_INT
     pcbWritten->QuadPart = 0;
 
   if (!pstm)
-    return STG_E_INVALIDPOINTER;
+    return S_OK;
 
   IStream_fnCommit(iface, 0); /* If ever buffered, this will be needed */
 
@@ -418,9 +412,6 @@ HRESULT WINAPI SHCreateStreamOnFileEx(LPCWSTR lpszPath, DWORD dwMode,
 
   *lppStream = NULL;
 
-  if (dwMode & STGM_TRANSACTED)
-    return E_INVALIDARG;
-
   /* Access */
   switch (STGM_ACCESS_MODE(dwMode))
   {
@@ -440,6 +431,9 @@ HRESULT WINAPI SHCreateStreamOnFileEx(LPCWSTR lpszPath, DWORD dwMode,
   /* Sharing */
   switch (STGM_SHARE_MODE(dwMode))
   {
+  case 0:
+    dwShare = FILE_SHARE_READ|FILE_SHARE_WRITE;
+    break;
   case STGM_SHARE_DENY_READ:
     dwShare = FILE_SHARE_WRITE;
     break;
@@ -459,7 +453,7 @@ HRESULT WINAPI SHCreateStreamOnFileEx(LPCWSTR lpszPath, DWORD dwMode,
   switch(STGM_CREATE_MODE(dwMode))
   {
   case STGM_FAILIFTHERE:
-    dwCreate = OPEN_EXISTING;
+    dwCreate = bCreate ? CREATE_NEW : OPEN_EXISTING;
     break;
   case STGM_CREATE:
     dwCreate = CREATE_ALWAYS;
@@ -473,12 +467,7 @@ HRESULT WINAPI SHCreateStreamOnFileEx(LPCWSTR lpszPath, DWORD dwMode,
                       dwAttributes, 0);
 
   if(hFile == INVALID_HANDLE_VALUE)
-  {
-    HRESULT hRet = (HRESULT)GetLastError();
-    if(hRet > 0)
-      hRet = HRESULT_FROM_WIN32(hRet);
-    return hRet;
-  }
+    return HRESULT_FROM_WIN32(GetLastError());
 
   *lppStream = IStream_Create(lpszPath, hFile, dwMode);
 
@@ -501,6 +490,9 @@ HRESULT WINAPI SHCreateStreamOnFileW(LPCWSTR lpszPath, DWORD dwMode,
   TRACE("(%s,%d,%p)\n", debugstr_w(lpszPath), dwMode, lppStream);
 
   if (!lpszPath || !lppStream)
+    return E_INVALIDARG;
+
+  if ((dwMode & (STGM_CONVERT|STGM_DELETEONRELEASE|STGM_TRANSACTED)) != 0)
     return E_INVALIDARG;
 
   return SHCreateStreamOnFileEx(lpszPath, dwMode, 0, FALSE, NULL, lppStream);
@@ -528,7 +520,8 @@ HRESULT WINAPI SHCreateStreamOnFileA(LPCSTR lpszPath, DWORD dwMode,
   TRACE("(%s,%d,%p)\n", debugstr_a(lpszPath), dwMode, lppStream);
 
   if (!lpszPath)
-    return E_INVALIDARG;
+    return HRESULT_FROM_WIN32(ERROR_PATH_NOT_FOUND);
+
   MultiByteToWideChar(0, 0, lpszPath, -1, szPath, MAX_PATH);
   return SHCreateStreamOnFileW(szPath, dwMode, lppStream);
 }

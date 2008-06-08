@@ -1,7 +1,7 @@
 /*
- * Swedish resources for shlwapi
+ * Slovenian resources for shlwapi
  *
- * Copyright 2007 Daniel Nylander
+ * Copyright 2008 Rok Mandeljc
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -18,26 +18,30 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-LANGUAGE LANG_SWEDISH, SUBLANG_NEUTRAL
+#pragma code_page(65001)
+
+LANGUAGE LANG_SLOVENIAN, SUBLANG_DEFAULT
 
 IDD_ERR_DIALOG DIALOG MOVEABLE DISCARDABLE 0, 0, 220, 60
 STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Fel!"
+CAPTION "Napak!"
 FONT 8, "MS Shell Dlg"
 {
  LTEXT "", IDS_ERR_USER_MSG2, 15, 5, 28, 20
  LTEXT "", IDS_ERR_USER_MSG, 15, 5, 210, 8
- CHECKBOX "Visa inte &det h�r meddelandet igen", IDC_ERR_DONT_SHOW, 5, 20, 210, 10, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
- PUSHBUTTON L"&OK" IDOK, 105, 40, 50, 14, WS_GROUP | WS_TABSTOP
- PUSHBUTTON L"&Avbryt" IDCANCEL, 160, 40, 50, 14, WS_GROUP | WS_TABSTOP
- PUSHBUTTON L"&Ja" IDYES, 105, 40, 50, 14, WS_GROUP | WS_TABSTOP
- PUSHBUTTON L"&Nej" IDNO, 160, 40, 50, 14, WS_GROUP | WS_TABSTOP
+ CHECKBOX "Tega sporočila ne &kaži več", IDC_ERR_DONT_SHOW, 5, 20, 210, 10, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+ PUSHBUTTON L"&V redu" IDOK, 105, 40, 50, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON L"&Prekliči" IDCANCEL, 160, 40, 50, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON L"&Da" IDYES, 105, 40, 50, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON L"&Ne" IDNO, 160, 40, 50, 14, WS_GROUP | WS_TABSTOP
 }
 
 STRINGTABLE DISCARDABLE
 {
-    IDS_BYTES_FORMAT    "%ld byte"
-    IDS_TIME_INTERVAL_HOURS    " h"
+    IDS_BYTES_FORMAT    "%ld bajtov"
+    IDS_TIME_INTERVAL_HOURS    " ur"
     IDS_TIME_INTERVAL_MINUTES  " min"
-    IDS_TIME_INTERVAL_SECONDS  " s"
+    IDS_TIME_INTERVAL_SECONDS  " sek"
 }
+
+#pragma code_page(default)

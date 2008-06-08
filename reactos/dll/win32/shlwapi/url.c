@@ -750,7 +750,7 @@ HRESULT WINAPI UrlCombineW(LPCWSTR pszBase, LPCWSTR pszRelative,
 	}
 	process_case = 1;
 	break;
-    } while(FALSE); /* a litte trick to allow easy exit from nested if's */
+    } while(FALSE); /* a little trick to allow easy exit from nested if's */
 
     ret = S_OK;
     switch (process_case) {
@@ -2153,7 +2153,6 @@ HRESULT WINAPI UrlGetPartW(LPCWSTR pszIn, LPWSTR pszOut, LPDWORD pcchOut,
 BOOL WINAPI PathIsURLA(LPCSTR lpstrPath)
 {
     PARSEDURLA base;
-    DWORD res1;
 
     TRACE("%s\n", debugstr_a(lpstrPath));
 
@@ -2161,7 +2160,7 @@ BOOL WINAPI PathIsURLA(LPCSTR lpstrPath)
 
     /* get protocol        */
     base.cbSize = sizeof(base);
-    res1 = ParseURLA(lpstrPath, &base);
+    ParseURLA(lpstrPath, &base);
     return (base.nScheme != URL_SCHEME_INVALID);
 }
 
@@ -2173,7 +2172,6 @@ BOOL WINAPI PathIsURLA(LPCSTR lpstrPath)
 BOOL WINAPI PathIsURLW(LPCWSTR lpstrPath)
 {
     PARSEDURLW base;
-    DWORD res1;
 
     TRACE("%s\n", debugstr_w(lpstrPath));
 
@@ -2181,7 +2179,7 @@ BOOL WINAPI PathIsURLW(LPCWSTR lpstrPath)
 
     /* get protocol        */
     base.cbSize = sizeof(base);
-    res1 = ParseURLW(lpstrPath, &base);
+    ParseURLW(lpstrPath, &base);
     return (base.nScheme != URL_SCHEME_INVALID);
 }
 
@@ -2312,7 +2310,7 @@ HRESULT WINAPI SHAutoComplete(HWND hwndEdit, DWORD dwFlags)
  *  dwDestLen   [I] Length of lpszDest
  *
  * RETURNS
- *  Success: S_OK. lpszDest constains the resource Url.
+ *  Success: S_OK. lpszDest contains the resource Url.
  *  Failure: E_INVALIDARG, if any argument is invalid, or
  *           E_FAIL if dwDestLen is too small.
  */

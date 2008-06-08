@@ -445,11 +445,11 @@ int WINAPI StrCmpW(LPCWSTR lpszStr, LPCWSTR lpszComp)
 /*************************************************************************
  * StrCatW	[SHLWAPI.@]
  *
- * Concatanate two strings.
+ * Concatenate two strings.
  *
  * PARAMS
  *  lpszStr [O] Initial string
- *  lpszSrc [I] String to concatanate
+ *  lpszSrc [I] String to concatenate
  *
  * RETURNS
  *  lpszStr.

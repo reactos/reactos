@@ -894,7 +894,7 @@ VOID WINAPI PathRemoveBlanksW(LPWSTR lpszPath)
 /*************************************************************************
  * PathQuoteSpacesA [SHLWAPI.@]
  *
- * Surround a path containg spaces in quotes.
+ * Surround a path containing spaces in quotes.
  *
  * PARAMS
  *  lpszPath [I/O] Path to quote
@@ -2040,7 +2040,7 @@ BOOL WINAPI PathIsContentTypeW(LPCWSTR lpszPath, LPCWSTR lpszContentType)
  * Determine if a path is a file specification.
  *
  * PARAMS
- *  lpszPath [I] Path to chack
+ *  lpszPath [I] Path to check
  *
  * RETURNS
  *  TRUE  If lpszPath is a file specification (i.e. Contains no directories).
@@ -2323,7 +2323,7 @@ BOOL WINAPI PathIsUNCServerShareW(LPCWSTR lpszPath)
  *
  * PARAMS
  *  lpszBuf  [O] Output path
- *  lpszPath [I] Path to cnonicalize
+ *  lpszPath [I] Path to canonicalize
  *
  * RETURNS
  *  Success: TRUE.  lpszBuf contains the output path,
@@ -3344,7 +3344,7 @@ HRESULT WINAPI PathCreateFromUrlW(LPCWSTR pszUrl, LPWSTR pszPath,
  *
  * RETURNS
  *  TRUE  If a relative path can be formed. lpszPath contains the new path
- *  FALSE If the paths are not relavtive or any parameters are invalid
+ *  FALSE If the paths are not relative or any parameters are invalid
  *
  * NOTES
  *  lpszTo should be at least MAX_PATH in length.
