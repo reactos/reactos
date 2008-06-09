@@ -590,10 +590,13 @@ IntDereferenceClass(IN OUT PWINDOWCLASS Class,
                 else
                     PrevLink = &pi->LocalClassList;
 
-                while (*PrevLink != BaseClass)
+                CurrentClass = *PrevLink;
+                while (CurrentClass != BaseClass)
                 {
-                    ASSERT(*PrevLink != NULL);
-                    PrevLink = &BaseClass->Next;
+                    ASSERT(CurrentClass != NULL);
+
+                    PrevLink = &CurrentClass->Next;
+                    CurrentClass = CurrentClass->Next;
                 }
 
                 ASSERT(*PrevLink == BaseClass);
