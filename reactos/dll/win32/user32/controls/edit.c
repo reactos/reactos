@@ -4084,6 +4084,27 @@ static BOOL EDIT_EM_Undo(EDITSTATE *es)
 	return TRUE;
 }
 
+/* Helper function for WM_CHAR
+ *
+ * According to an MSDN blog article titled "Just because you're a control
+ * doesn't mean that you're necessarily inside a dialog box," multiline edit
+ * controls without ES_WANTRETURN would attempt to detect whether it is inside
+ * a dialog box or not.
+ */
+static BOOL EDIT_IsInsideDialog(EDITSTATE *es)
+{
+    if (es->hwndParent && es->hwndParent != GetDesktopWindow())
+    {
+        PWINDOW pParent = ValidateHwnd( es->hwndParent );
+
+        /* TODO: This should really check fnID instead of ExtraDataSize I guess */
+        if (pParent && pParent->ExtraDataSize >= DLGWINDOWEXTRA)
+        {
+            return TRUE;
+        }
+    }
+    return FALSE;
+}
 
 /*********************************************************************
  *
@@ -4717,21 +4738,36 @@ static LRESULT EDIT_WM_KeyDown(EDITSTATE *es, INT key)
 		} else if (control)
 			EDIT_WM_Copy(es);
 		break;
-	case VK_RETURN:
-	    /* If the edit doesn't want the return send a message to the default object */
-	    if(!(es->style & ES_WANTRETURN))
+    case VK_RETURN:
+        /* If the edit doesn't want the return send a message to the default object */
+        if(!(es->style & ES_MULTILINE) || !(es->style & ES_WANTRETURN))
 	    {
-		HWND hwndParent = GetParent(es->hwndSelf);
-		DWORD dw = SendMessageW( hwndParent, DM_GETDEFID, 0, 0 );
-		if (HIWORD(dw) == DC_HASDEFID)
-		{
-		    SendMessageW( hwndParent, WM_COMMAND,
-				  MAKEWPARAM( LOWORD(dw), BN_CLICKED ),
- 			      (LPARAM)GetDlgItem( hwndParent, LOWORD(dw) ) );
-		}
-	    }
-	    break;
-	}
+            HWND hwndParent;
+            DWORD dw;
+
+            if (!EDIT_IsInsideDialog(es)) return 1;
+            if (control) break;
+
+            hwndParent = GetParent(es->hwndSelf);
+            dw = SendMessageW( hwndParent, DM_GETDEFID, 0, 0 );
+            if (HIWORD(dw) == DC_HASDEFID)
+            {
+                SendMessageW( hwndParent, WM_COMMAND,
+                      MAKEWPARAM( LOWORD(dw), BN_CLICKED ),
+                      (LPARAM)GetDlgItem( hwndParent, LOWORD(dw) ) );
+            }
+            else
+                SendMessageW( hwndParent, WM_COMMAND, IDOK, (LPARAM)GetDlgItem( hwndParent, IDOK ) );
+        }
+        break;
+    case VK_ESCAPE:
+        if (!(es->style & ES_MULTILINE))
+            SendMessageW(GetParent(es->hwndSelf), WM_COMMAND, IDCANCEL, (LPARAM)GetDlgItem( GetParent(es->hwndSelf), IDCANCEL ) );
+        break;
+    case VK_TAB:
+        SendMessageW(es->hwndParent, WM_NEXTDLGCTL, shift, 0);
+        break;
+    }
 	return 0;
 }
 
