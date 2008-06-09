@@ -4137,6 +4137,8 @@ static BOOL EDIT_WM_Char(EDITSTATE *es, WCHAR c)
 		if ((es->style & ES_MULTILINE) && !(es->style & ES_READONLY))
 		{
 			static const WCHAR tabW[] = {'\t',0};
+			if (EDIT_IsInsideDialog(es))
+				break;
 			EDIT_EM_ReplaceSel(es, TRUE, tabW, TRUE, TRUE);
 		}
 		break;
