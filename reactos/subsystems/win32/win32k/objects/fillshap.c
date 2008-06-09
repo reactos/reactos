@@ -166,6 +166,8 @@ IntGdiPolyPolygon(DC      *dc,
     return TRUE;
 }
 
+
+
 /******************************************************************************/
 
 /*
@@ -205,12 +207,22 @@ NtGdiEllipse(
     PDC dc;
     PDC_ATTR Dc_Attr;
     BOOL ret = TRUE, Cond1, Cond2;
-
+/*                  top
+            ___________________
+          +|                   |
+           |                   |
+           |                   |
+      left |                   | right
+           |                   |
+           |                   |
+          0|___________________|
+            0     bottom       +
+ */
     /*
      * Check the parameters.
      */
-
-    if (nRightRect <= nLeftRect || nBottomRect <= nTopRect)
+    DPRINT("nLeftRect: %d, nTopRect: %d, nRightRect: %d, nBottomRect: %d\n",nLeftRect,nTopRect,nRightRect,nBottomRect);
+    if (nRightRect <= nLeftRect || nTopRect <= nBottomRect)
     {
         SetLastWin32Error(ERROR_INVALID_PARAMETER);
         return FALSE;
@@ -272,28 +284,25 @@ NtGdiEllipse(
     RectBounds.bottom = nBottomRect;
 
     IntLPtoDP(dc, (LPPOINT)&RectBounds, 2);
+    DPRINT("1: Left: %d, Top: %d, Right: %d, Bottom: %d\n",
+               RectBounds.left,RectBounds.top,RectBounds.right,RectBounds.bottom);
 
     RectBounds.left += dc->ptlDCOrig.x;
     RectBounds.right += dc->ptlDCOrig.x;
     RectBounds.top += dc->ptlDCOrig.y;
     RectBounds.bottom += dc->ptlDCOrig.y;
+    DPRINT("2: Left: %d, Top: %d, Right: %d, Bottom: %d\n",
+               RectBounds.left,RectBounds.top,RectBounds.right,RectBounds.bottom);
 
-    RadiusX = max((RectBounds.right - RectBounds.left) >> 1, 1);
-    RadiusY = max((RectBounds.bottom - RectBounds.top) >> 1, 1);
+    RadiusX = (RectBounds.right - RectBounds.left)/2;
+    RadiusY = (RectBounds.bottom - RectBounds.top)/2;
     CenterX = RectBounds.left + RadiusX;
     CenterY = RectBounds.top + RadiusY;
+    DPRINT("3: RadiusX: %d, RadiusY: %d, CenterX: %d, CenterY: %d\n",
+           RadiusX,RadiusY,CenterX,CenterY);
 
-    if (RadiusX > RadiusY)
-    {
-        nx = RadiusX;
-        ny = RadiusY;
-    }
-    else
-    {
-        nx = RadiusY;
-        ny = RadiusX;
-    }
-
+    nx = RadiusX;
+    ny = -RadiusY;
     da = -1;
     db = 0xFFFF;
     ix = 0;
@@ -389,7 +398,7 @@ NtGdiEllipse(
     BRUSHOBJ_UnlockBrush(FillBrush);
     PENOBJ_UnlockPen(PenBrush);
     DC_UnlockDc(dc);
-
+    DPRINT("NtGdiEllipse exit \n");
     return ret;
 }
 
