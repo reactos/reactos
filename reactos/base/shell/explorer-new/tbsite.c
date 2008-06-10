@@ -332,7 +332,8 @@ ITrayBandSiteImpl_ProcessMessage(IN OUT ITrayBandSite *iface,
                     {
                         LPNMMOUSE nmm = (LPNMMOUSE)lParam;
 
-                        if (nmm->dwHitInfo == RBHT_CLIENT || nmm->dwItemSpec == (DWORD_PTR)-1)
+                        if (nmm->dwHitInfo == RBHT_CLIENT || nmm->dwHitInfo == RBHT_NOWHERE ||
+                            nmm->dwItemSpec == (DWORD_PTR)-1)
                         {
                             /* Make the rebar control appear transparent so the user
                                can drag the tray window */

@@ -1294,17 +1294,14 @@ ITrayWindowImpl_CreateStartButtonBitmap(IN OUT ITrayWindowImpl *This)
     if (hIconStart != NULL)
         Flags |= DC_ICON;
 
-    hUser32 = LoadLibrary(TEXT("USER32.DLL"));
+    hUser32 = GetModuleHandle(TEXT("USER32.DLL"));
     if (hUser32 != NULL)
     {
         DRAWCAPTEMP DrawCapTemp;
-        LONG ord = 187;
-#ifndef UNICODE
-        ord = 186;
-#endif
+
         /* DrawCaptionTemp */
         DrawCapTemp = (DRAWCAPTEMP)GetProcAddress(hUser32,
-                                                  (LPCSTR)ord);
+                                                  PROC_NAME_DRAWCAPTIONTEMP);
         if (DrawCapTemp != NULL)
         {
             Ret = DrawCapTemp(NULL,
@@ -1315,8 +1312,6 @@ ITrayWindowImpl_CreateStartButtonBitmap(IN OUT ITrayWindowImpl *This)
                               szStartCaption,
                               Flags);
         }
-
-        FreeLibrary(hUser32);
     }
 
     SelectObject(hDC,
@@ -1761,7 +1756,7 @@ ITrayWindowImpl_Lock(IN OUT ITrayWindow *iface,
                                               bLock)))
             {
                 /* Reset?? */
-                This->Locked = bLock;
+                This->Locked = bPrevLock;
             }
         }
     }

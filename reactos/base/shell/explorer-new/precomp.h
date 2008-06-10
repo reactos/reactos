@@ -26,7 +26,13 @@
 
 /* dynamic imports due to lack of support in msvc linker libs */
 typedef INT (STDCALL *REGSHELLHOOK)(HWND, DWORD);
+#ifdef UNICODE
+#define PROC_NAME_DRAWCAPTIONTEMP "DrawCaptionTempW"
 typedef BOOL (STDCALL *DRAWCAPTEMP)(HWND, HDC, const RECT*, HFONT, HICON, LPCWSTR, UINT);
+#else
+#define PROC_NAME_DRAWCAPTIONTEMP "DrawCaptionTempA"
+typedef BOOL (STDCALL *DRAWCAPTEMP)(HWND, HDC, const RECT*, HFONT, HICON, LPCSTR, UINT);
+#endif
 typedef HRESULT (STDCALL *SHINVDEFCMD)(HWND, IShellFolder*, LPCITEMIDLIST);
 
 static ULONG __inline

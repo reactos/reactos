@@ -26,7 +26,7 @@
 
 /* Set DUMP_TASKS to 1 to enable a dump of the tasks and task groups every
    5 seconds */
-#define DUMP_TASKS  1
+#define DUMP_TASKS  0
 
 static const TCHAR szTaskSwitchWndClass[] = TEXT("MSTaskSwWClass");
 static const TCHAR szRunningApps[] = TEXT("Running Applications");
@@ -1169,19 +1169,25 @@ TaskSwitchWnd_RedrawTask(IN OUT PTASK_SWITCH_WND This,
 static INT
 TaskSwitchWnd_UpdateTbButtonSpacing(IN OUT PTASK_SWITCH_WND This,
                                     IN BOOL bHorizontal,
+                                    IN UINT uiRows,
                                     IN UINT uiBtnsPerLine)
 {
     TBMETRICS tbm;
 
     tbm.cbSize = sizeof(tbm);
-    tbm.dwMask = TBMF_BUTTONSPACING;
+    tbm.dwMask = TBMF_BARPAD | TBMF_BUTTONSPACING;
+
+    tbm.cxBarPad = tbm.cyBarPad = 0;
 
     if (bHorizontal || uiBtnsPerLine > 1)
         tbm.cxButtonSpacing = (3 * GetSystemMetrics(SM_CXEDGE) / 2);
     else
         tbm.cxButtonSpacing = 0;
 
-    tbm.cyButtonSpacing = (3 * GetSystemMetrics(SM_CYEDGE) / 2);
+    if (!bHorizontal || uiRows > 1)
+        tbm.cyButtonSpacing = (3 * GetSystemMetrics(SM_CYEDGE) / 2);
+    else
+        tbm.cyButtonSpacing = 0;
 
     SendMessage(This->hWndToolbar,
                 TB_SETMETRICS,
@@ -1209,8 +1215,9 @@ TaskSwitchWnd_UpdateButtonsSize(IN OUT PTASK_SWITCH_WND This,
     {
         if (This->ToolbarBtnCount > 0)
         {
+            ZeroMemory (&tbm, sizeof (tbm));
             tbm.cbSize = sizeof(tbm);
-            tbm.dwMask = TBMF_PAD | TBMF_BUTTONSPACING;
+            tbm.dwMask = TBMF_BUTTONSPACING;
             SendMessage(This->hWndToolbar,
                         TB_GETMETRICS,
                         0,
@@ -1230,6 +1237,7 @@ TaskSwitchWnd_UpdateButtonsSize(IN OUT PTASK_SWITCH_WND This,
             /* We might need to update the button spacing */
             tbm.cxButtonSpacing = TaskSwitchWnd_UpdateTbButtonSpacing(This,
                                                                       Horizontal,
+                                                                      uiRows,
                                                                       uiBtnsPerLine);
 
             /* Calculate the ideal width and make sure it's within the allowed range */
@@ -1410,7 +1418,7 @@ TaskSwitchWnd_Create(IN OUT PTASK_SWITCH_WND This)
                                      BtnSize.cy));
 
         /* We don't want to see partially clipped buttons...not that we could see them... */
-#if 1
+#if 0
         SendMessage(This->hWndToolbar,
                     TB_SETEXTENDEDSTYLE,
                     0,
@@ -1420,6 +1428,7 @@ TaskSwitchWnd_Create(IN OUT PTASK_SWITCH_WND This)
         /* Set proper spacing between buttons */
         TaskSwitchWnd_UpdateTbButtonSpacing(This,
                                             ITrayWindow_IsHorizontal(This->Tray),
+                                            0,
                                             0);
 
         /* Register the shell hook */
@@ -1899,6 +1908,7 @@ TaskSwitchWndProc(IN HWND hwnd,
                 /* Update the button spacing */
                 TaskSwitchWnd_UpdateTbButtonSpacing(This,
                                                     ITrayWindow_IsHorizontal(This->Tray),
+                                                    0,
                                                     0);
                 break;
             }
@@ -2025,6 +2035,13 @@ ForwardContextMenuMsg:
                                     lParam);
                 break;
         }
+    }
+    else
+    {
+        Ret = DefWindowProc(hwnd,
+                            uMsg,
+                            wParam,
+                            lParam);
     }
 
     return Ret;
