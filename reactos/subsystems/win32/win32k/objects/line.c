@@ -376,21 +376,6 @@ IntGdiPolyPolyline(DC      *dc,
 /******************************************************************************/
 
 BOOL
-APIENTRY
-NtGdiAngleArc(
-    IN HDC hdc,
-    IN INT x,
-    IN INT y,
-    IN DWORD dwRadius,
-    IN DWORD dwStartAngle,
-    IN DWORD dwSweepAngle)
-{
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
-
-BOOL
 STDCALL
 NtGdiLineTo(HDC  hDC,
             int  XEnd,

@@ -467,6 +467,38 @@ IntGdiArcInternal(
 }
 
 BOOL
+APIENTRY
+NtGdiAngleArc(
+    IN HDC hdc,
+    IN INT x,
+    IN INT y,
+    IN DWORD dwRadius,
+    IN DWORD dwStartAngle,
+    IN DWORD dwSweepAngle)
+{
+  DC *dc;
+  BOOL Ret = FASLE;
+
+  dc = DC_LockDc (hDC);
+  if(!dc)
+  {
+    SetLastWin32Error(ERROR_INVALID_HANDLE);
+    return FALSE;
+  }
+  if (dc->DC_Type == DC_TYPE_INFO)
+  {
+    DC_UnlockDc(dc);
+    /* Yes, Windows really returns TRUE in this case */
+    return TRUE;
+  }
+
+
+  DC_UnlockDc( dc );
+  return Ret;
+
+}
+
+BOOL
 STDCALL
 NtGdiArcInternal(
         ARCTYPE arctype,
