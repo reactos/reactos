@@ -2113,26 +2113,11 @@ void StartMenuHandler::ShowSearchComputer()
 
 void StartMenuHandler::ShowLaunchDialog(HWND hwndOwner)
 {
-	 ///@todo All text phrases should be put into the resources.
-	static LPCSTR szTitle = "Run";
-	static LPCSTR szText = "Type the name of a program, folder, document, or Internet resource, and Explorer will open it for you.";
-
 	static DynamicFct<RUNFILEDLG> RunFileDlg(TEXT("SHELL32"), 61);
 
 	 // Show "Run..." dialog
 	if (RunFileDlg) {
-#ifndef _ROS_ /* FIXME: our shell32 always expects Ansi strings */
-		if ((HIWORD(GetVersion())>>14) == W_VER_NT) {
-			WCHAR wTitle[40], wText[256];
-
-			MultiByteToWideChar(CP_ACP, 0, szTitle, -1, wTitle, 40);
-			MultiByteToWideChar(CP_ACP, 0, szText, -1, wText, 256);
-
-			(*RunFileDlg)(hwndOwner, 0, NULL, (LPCSTR)wTitle, (LPCSTR)wText, RFF_CALCDIRECTORY);
-		}
-		else
-#endif
-			(*RunFileDlg)(hwndOwner, 0, NULL, szTitle, szText, RFF_CALCDIRECTORY);
+		(*RunFileDlg)(hwndOwner, 0, NULL, NULL, NULL, RFF_CALCDIRECTORY);
 	}
 }
 

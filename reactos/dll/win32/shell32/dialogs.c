@@ -330,7 +330,10 @@ static INT_PTR CALLBACK RunDlgProc (HWND hwnd, UINT message, WPARAM wParam, LPAR
         {
         case WM_INITDIALOG :
             prfdp = (RUNFILEDLGPARAMS *)lParam ;
-            SetWindowTextA (hwnd, prfdp->lpstrTitle) ;
+
+            if (prfdp->lpstrTitle)
+                SetWindowTextA (hwnd, prfdp->lpstrTitle) ;
+
             SetClassLongPtrW (hwnd, GCLP_HICON, (LPARAM)prfdp->hIcon) ;
             SendMessageW (GetDlgItem (hwnd, 12297), STM_SETICON,
                           (WPARAM)LoadIconW (NULL, (LPCWSTR)IDI_WINLOGO), 0);
