@@ -18,10 +18,16 @@ typedef struct _GENERAL_USER_DATA
 
 #define VALID_GENERAL_FLAGS (UF_PASSWD_CANT_CHANGE | UF_DONT_EXPIRE_PASSWD | UF_ACCOUNTDISABLE | UF_LOCKOUT)
 
+typedef struct _PROFILE_USER_DATA
+{
+    TCHAR szUserName[1];
+} PROFILE_USER_DATA, *PPROFILE_USER_DATA;
+
 
 
 static VOID
-GetProfileData(HWND hwndDlg, LPTSTR lpUserName)
+GetUserProfileData(HWND hwndDlg,
+                   PPROFILE_USER_DATA pUserData)
 {
     PUSER_INFO_3 userInfo = NULL;
     NET_API_STATUS status;
@@ -30,7 +36,7 @@ GetProfileData(HWND hwndDlg, LPTSTR lpUserName)
     INT i;
     INT nSel;
 
-    status = NetUserGetInfo(NULL, lpUserName, 3, (LPBYTE*)&userInfo);
+    status = NetUserGetInfo(NULL, pUserData->szUserName, 3, (LPBYTE*)&userInfo);
     if (status != NERR_Success)
         return;
 
@@ -70,27 +76,156 @@ GetProfileData(HWND hwndDlg, LPTSTR lpUserName)
 }
 
 
+static BOOL
+SetUserProfileData(HWND hwndDlg,
+                   PPROFILE_USER_DATA pUserData)
+{
+    PUSER_INFO_3 pUserInfo = NULL;
+    LPTSTR pszProfilePath = NULL;
+    LPTSTR pszScriptPath = NULL;
+    LPTSTR pszHomeDir = NULL;
+    LPTSTR pszHomeDrive = NULL;
+    NET_API_STATUS status;
+#if 0
+    DWORD dwIndex;
+#endif
+    INT nLength;
+    INT nIndex;
+
+    NetUserGetInfo(NULL, pUserData->szUserName, 3, (LPBYTE*)&pUserInfo);
+
+    /* Get the profile path */
+    nLength = GetWindowTextLength(GetDlgItem(hwndDlg, IDC_USER_PROFILE_PATH));
+    if (nLength == 0)
+    {
+        pUserInfo->usri3_profile = NULL;
+    }
+    else
+    {
+        pszProfilePath = HeapAlloc(GetProcessHeap(), 0, (nLength + 1) * sizeof(TCHAR));
+        GetDlgItemText(hwndDlg, IDC_USER_PROFILE_PATH, pszProfilePath, nLength + 1);
+        pUserInfo->usri3_profile = pszProfilePath;
+    }
+
+    /* Get the script path */
+    nLength = GetWindowTextLength(GetDlgItem(hwndDlg, IDC_USER_PROFILE_SCRIPT));
+    if (nLength == 0)
+    {
+        pUserInfo->usri3_script_path = NULL;
+    }
+    else
+    {
+        pszScriptPath = HeapAlloc(GetProcessHeap(), 0, (nLength + 1) * sizeof(TCHAR));
+        GetDlgItemText(hwndDlg, IDC_USER_PROFILE_SCRIPT, pszScriptPath, nLength + 1);
+        pUserInfo->usri3_script_path = pszScriptPath;
+    }
+
+    if (IsDlgButtonChecked(hwndDlg, IDC_USER_PROFILE_LOCAL) == BST_CHECKED)
+    {
+        /* Local home directory */
+        nLength = GetWindowTextLength(GetDlgItem(hwndDlg, IDC_USER_PROFILE_LOCAL_PATH));
+        if (nLength == 0)
+        {
+            pUserInfo->usri3_home_dir = NULL;
+        }
+        else
+        {
+            pszHomeDir = HeapAlloc(GetProcessHeap(), 0, (nLength + 1) * sizeof(TCHAR));
+            GetDlgItemText(hwndDlg, IDC_USER_PROFILE_LOCAL_PATH, pszHomeDir, nLength + 1);
+            pUserInfo->usri3_home_dir = pszHomeDir;
+        }
+    }
+    else
+    {
+        /* Remote home directory */
+        nLength = GetWindowTextLength(GetDlgItem(hwndDlg, IDC_USER_PROFILE_REMOTE_PATH));
+        if (nLength == 0)
+        {
+            pUserInfo->usri3_home_dir = NULL;
+        }
+        else
+        {
+            pszHomeDir = HeapAlloc(GetProcessHeap(), 0, (nLength + 1) * sizeof(TCHAR));
+            GetDlgItemText(hwndDlg, IDC_USER_PROFILE_REMOTE_PATH, pszHomeDir, nLength + 1);
+            pUserInfo->usri3_home_dir = pszHomeDir;
+        }
+
+        nIndex = SendMessage(GetDlgItem(hwndDlg, IDC_USER_PROFILE_DRIVE), CB_GETCURSEL, 0, 0);
+        if (nIndex != CB_ERR)
+        {
+            nLength = SendMessage(GetDlgItem(hwndDlg, IDC_USER_PROFILE_DRIVE), CB_GETLBTEXTLEN, nIndex, 0);
+            pszHomeDrive = HeapAlloc(GetProcessHeap(), 0, (nLength + 1) * sizeof(TCHAR));
+            SendMessage(GetDlgItem(hwndDlg, IDC_USER_PROFILE_DRIVE), CB_GETLBTEXT, nIndex, (LPARAM)pszHomeDrive);
+            pUserInfo->usri3_home_dir_drive = pszHomeDrive;
+        }
+    }
+
+#if 0
+    status = NetUserSetInfo(NULL, pUserData->szUserName, 3, (LPBYTE)pUserInfo, &dwIndex);
+    if (status != NERR_Success)
+    {
+        DebugPrintf(_T("Status: %lu  Index: %lu"), status, dwIndex);
+    }
+#else
+    status = NERR_Success;
+#endif
+
+    if (pszProfilePath)
+        HeapFree(GetProcessHeap(), 0, pszProfilePath);
+
+    if (pszScriptPath)
+        HeapFree(GetProcessHeap(), 0, pszScriptPath);
+
+    if (pszHomeDir)
+        HeapFree(GetProcessHeap(), 0, pszHomeDir);
+
+    if (pszHomeDrive)
+        HeapFree(GetProcessHeap(), 0, pszHomeDrive);
+
+    NetApiBufferFree(pUserInfo);
+
+    return (status == NERR_Success);
+}
+
+
 INT_PTR CALLBACK
 UserProfilePageProc(HWND hwndDlg,
                     UINT uMsg,
                     WPARAM wParam,
                     LPARAM lParam)
 {
+    PPROFILE_USER_DATA pUserData;
 
     UNREFERENCED_PARAMETER(lParam);
     UNREFERENCED_PARAMETER(wParam);
     UNREFERENCED_PARAMETER(hwndDlg);
 
+    pUserData= (PPROFILE_USER_DATA)GetWindowLongPtr(hwndDlg, DWLP_USER);
+
     switch (uMsg)
     {
         case WM_INITDIALOG:
-            GetProfileData(hwndDlg,
-                           (LPTSTR)((PROPSHEETPAGE *)lParam)->lParam);
+            pUserData = (PPROFILE_USER_DATA)HeapAlloc(GetProcessHeap(),
+                                                      HEAP_ZERO_MEMORY,
+                                                      sizeof(PROFILE_USER_DATA) + 
+                                                      lstrlen((LPTSTR)((PROPSHEETPAGE *)lParam)->lParam) * sizeof(TCHAR));
+            lstrcpy(pUserData->szUserName, (LPTSTR)((PROPSHEETPAGE *)lParam)->lParam);
+
+            SetWindowLongPtr(hwndDlg, DWLP_USER, (INT_PTR)pUserData);
+
+            GetUserProfileData(hwndDlg,
+                               pUserData);
             break;
 
         case WM_COMMAND:
             switch (LOWORD(wParam))
             {
+                case IDC_USER_PROFILE_PATH:
+                case IDC_USER_PROFILE_SCRIPT:
+                    if (HIWORD(wParam) == EN_CHANGE)
+                        PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+                    break;
+
                 case IDC_USER_PROFILE_LOCAL:
                     EnableWindow(GetDlgItem(hwndDlg, IDC_USER_PROFILE_LOCAL_PATH), TRUE);
                     EnableWindow(GetDlgItem(hwndDlg, IDC_USER_PROFILE_DRIVE), FALSE);
@@ -102,6 +237,18 @@ UserProfilePageProc(HWND hwndDlg,
                     EnableWindow(GetDlgItem(hwndDlg, IDC_USER_PROFILE_DRIVE), TRUE);
                     EnableWindow(GetDlgItem(hwndDlg, IDC_USER_PROFILE_REMOTE_PATH), TRUE);
                     break;
+            }
+            break;
+
+        case WM_DESTROY:
+            HeapFree(GetProcessHeap(), 0, pUserData);
+            break;
+
+        case WM_NOTIFY:
+            if (((LPPSHNOTIFY)lParam)->hdr.code == PSN_APPLY)
+            {
+                SetUserProfileData(hwndDlg, pUserData);
+                return TRUE;
             }
             break;
     }
@@ -231,7 +378,7 @@ UpdateUserOptions(HWND hwndDlg,
 
 
 static VOID
-GetGeneralUserData(HWND hwndDlg,
+GetUserGeneralData(HWND hwndDlg,
                    PGENERAL_USER_DATA pUserData)
 {
     PUSER_INFO_3 pUserInfo = NULL;
@@ -253,7 +400,7 @@ GetGeneralUserData(HWND hwndDlg,
 
 
 static BOOL
-SetGeneralUserData(HWND hwndDlg,
+SetUserGeneralData(HWND hwndDlg,
                    PGENERAL_USER_DATA pUserData)
 {
     PUSER_INFO_3 pUserInfo = NULL;
@@ -344,7 +491,7 @@ UserGeneralPageProc(HWND hwndDlg,
 
             SetWindowLongPtr(hwndDlg, DWLP_USER, (INT_PTR)pUserData);
 
-            GetGeneralUserData(hwndDlg,
+            GetUserGeneralData(hwndDlg,
                                pUserData);
             break;
 
@@ -390,7 +537,7 @@ UserGeneralPageProc(HWND hwndDlg,
         case WM_NOTIFY:
             if (((LPPSHNOTIFY)lParam)->hdr.code == PSN_APPLY)
             {
-                SetGeneralUserData(hwndDlg, pUserData);
+                SetUserGeneralData(hwndDlg, pUserData);
                 return TRUE;
             }
             break;
