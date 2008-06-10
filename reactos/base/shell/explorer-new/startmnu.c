@@ -478,7 +478,7 @@ IStartMenuSiteImpl_Execute(IN OUT IStartMenuCallback *iface,
 
     DbgPrint("IStartMenuCallback::Execute\n");
 
-    hShlwapi = LoadLibrary(TEXT("SHLWAPI.DLL"));
+    hShlwapi = GetModuleHandle(TEXT("SHLWAPI.DLL"));
     if (hShlwapi != NULL)
     {
         SHINVDEFCMD SHInvokeDefCmd;
@@ -492,8 +492,6 @@ IStartMenuSiteImpl_Execute(IN OUT IStartMenuCallback *iface,
                                  pShellFolder,
                                  pidl);
         }
-
-        FreeLibrary(hShlwapi);
     }
 
     return ret;
