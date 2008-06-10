@@ -521,17 +521,39 @@ NtUserSetRipFlags(
    return 0;
 }
 
-DWORD
+BOOL
 STDCALL
 NtUserSetSysColors(
-   DWORD Unknown0,
-   DWORD Unknown1,
-   DWORD Unknown2,
+   int cElements,
+   IN INT *lpaElements,
+   IN COLORREF *lpaRgbValues,
    DWORD Unknown3)
 {
-   UNIMPLEMENTED
-
-   return 0;
+  DWORD Ret = FALSE;
+  NTSTATUS Status = STATUS_SUCCESS;
+  UserEnterExclusive();
+  _SEH_TRY
+  {
+     ProbeForRead(lpaElements,
+                   sizeof(INT),
+                   1);
+     ProbeForRead(lpaRgbValues,
+                   sizeof(INT),
+                   1);
+     Ret = IntSetSysColors(cElements, lpaElements, lpaRgbValues);
+  }
+  _SEH_HANDLE
+  {
+      Status = _SEH_GetExceptionCode();
+  }
+  _SEH_END;
+  if (!NT_SUCCESS(Status))
+  {
+      SetLastNtError(Status);
+      Ret = FALSE;
+  }
+  UserLeave();
+  return Ret;
 }
 
 DWORD

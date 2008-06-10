@@ -110,27 +110,7 @@ SetSysColors(
   CONST INT *lpaElements,
   CONST COLORREF *lpaRgbValues)
 {
-  BOOL Ret;
-  struct
-  {
-    INT *Elements;
-    COLORREF *Colors;
-  } ChangeSysColors;
-
-  ChangeSysColors.Elements = (INT*)lpaElements;
-  ChangeSysColors.Colors = (COLORREF*)lpaRgbValues;
-
-  if(cElements > 0)
-  {
-    Ret = NtUserSetSysColors(&ChangeSysColors, cElements);
-  }
-  else
-  {
-    SetLastError(ERROR_INVALID_PARAMETER);
-    Ret = FALSE;
-  }
-
-  return Ret;
+  return NtUserSetSysColors(cElements, lpaElements, lpaRgbValues, 0);
 }
 
 void

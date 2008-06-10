@@ -2230,12 +2230,12 @@ NtUserSetShellWindowEx(
   HWND hwndShell,
   HWND hwndShellListView);
 
-DWORD
+BOOL
 NTAPI
 NtUserSetSysColors(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2,
+  int cElements,
+  IN INT *lpaElements,
+  IN COLORREF *lpaRgbValues,
   DWORD Unknown3);
 
 BOOL
@@ -2639,7 +2639,6 @@ typedef struct tagKMDDELPARAM
 #define TWOPARAM_ROUTINE_GETSYSCOLORBRUSHES 0xfffd0063
 #define TWOPARAM_ROUTINE_GETSYSCOLORPENS    0xfffd0064
 #define TWOPARAM_ROUTINE_GETSYSCOLORS       0xfffd0065
-#define TWOPARAM_ROUTINE_SETSYSCOLORS       0xfffd0066 // use NtUserSetSysColors
 #define TWOPARAM_ROUTINE_ROS_SHOWWINDOW     0x1000
 #define TWOPARAM_ROUTINE_ROS_ISACTIVEICON   0x1001
 #define TWOPARAM_ROUTINE_ROS_NCDESTROY      0x1002

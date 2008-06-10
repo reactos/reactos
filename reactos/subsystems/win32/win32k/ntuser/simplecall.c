@@ -612,53 +612,6 @@ NtUserCallTwoParam(
       case TWOPARAM_ROUTINE_REGISTERLOGONPROC:
          RETURN( (DWORD)co_IntRegisterLogonProcess((HANDLE)Param1, (BOOL)Param2));
 
-      case TWOPARAM_ROUTINE_SETSYSCOLORS:
-         {
-            DWORD Ret = 0;
-            PVOID Buffer;
-            struct
-            {
-               INT *Elements;
-               COLORREF *Colors;
-            }
-            ChangeSysColors;
-
-            /* FIXME - we should make use of SEH here... */
-
-            Status = MmCopyFromCaller(&ChangeSysColors, (PVOID)Param1, sizeof(ChangeSysColors));
-            if(!NT_SUCCESS(Status))
-            {
-               SetLastNtError(Status);
-               RETURN( 0);
-            }
-
-            Buffer = ExAllocatePool(PagedPool, (Param2 * sizeof(INT)) + (Param2 * sizeof(COLORREF)));
-            if(Buffer != NULL)
-            {
-               INT *Elements = (INT*)Buffer;
-               COLORREF *Colors = (COLORREF*)Buffer + Param2;
-
-               Status = MmCopyFromCaller(Elements, ChangeSysColors.Elements, Param2 * sizeof(INT));
-               if(NT_SUCCESS(Status))
-               {
-                  Status = MmCopyFromCaller(Colors, ChangeSysColors.Colors, Param2 * sizeof(COLORREF));
-                  if(NT_SUCCESS(Status))
-                  {
-                     Ret = (DWORD)IntSetSysColors((UINT)Param2, Elements, Colors);
-                  }
-                  else
-                     SetLastNtError(Status);
-               }
-               else
-                  SetLastNtError(Status);
-
-               ExFreePool(Buffer);
-            }
-
-
-            RETURN( Ret);
-         }
-
       case TWOPARAM_ROUTINE_GETSYSCOLORBRUSHES:
       case TWOPARAM_ROUTINE_GETSYSCOLORPENS:
       case TWOPARAM_ROUTINE_GETSYSCOLORS:

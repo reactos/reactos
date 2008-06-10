@@ -69,9 +69,6 @@
 #define NtUserGetSysColors(ColorRefs, count) \
   (BOOL)NtUserCallTwoParam((DWORD)(ColorRefs), (DWORD)(count), TWOPARAM_ROUTINE_GETSYSCOLORS)
 
-#define NtUserSetSysColors(ColorRefs, count) \
-  (BOOL)NtUserCallTwoParam((DWORD)(ColorRefs), (DWORD)(count), TWOPARAM_ROUTINE_SETSYSCOLORS)
-
 #define NtUserSetCaretBlinkTime(uMSeconds) \
   (BOOL)NtUserCallOneParam((DWORD)uMSeconds, ONEPARAM_ROUTINE_SETCARETBLINKTIME)
 
