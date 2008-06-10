@@ -469,26 +469,6 @@ GdiComment(
  */
 BOOL
 STDCALL
-AngleArc(
-	HDC	hdc,
-	int	a1,
-	int	a2,
-	DWORD	a3,
-	FLOAT	a4,
-	FLOAT	a5
-	)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
 SetColorAdjustment(
 	HDC			hdc,
 	CONST COLORADJUSTMENT	*a1

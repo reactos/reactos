@@ -51,6 +51,45 @@ Arc(
 	                        nYEndArc);
 }
 
+
+/*
+ * @implemented
+ */
+BOOL
+STDCALL
+AngleArc(HDC   hDC,
+         int   X,
+         int   Y,
+         DWORD Radius,
+         FLOAT StartAngle,
+         FLOAT SweepAngle)
+{
+#if 0
+// Handle something other than a normal dc object.
+ if (GDI_HANDLE_GET_TYPE(hDC) != GDI_OBJECT_TYPE_DC)
+ {
+    if (GDI_HANDLE_GET_TYPE(hDC) == GDI_OBJECT_TYPE_METADC)
+      return FALSE; //No meta support for AngleArc
+    else
+    {
+      PLDC pLDC = GdiGetLDC(hDC);
+      if ( !pLDC )
+      {
+         SetLastError(ERROR_INVALID_HANDLE);
+         return FALSE;
+      }
+      if (pLDC->iType == LDC_EMFLDC)
+      {
+        BOOL Ret = EMFDRV_AngleArc( hDC, X, Y, Radius, StartAngle, SweepAngle);
+        return Ret;
+      }
+      return FALSE;
+    }
+ }
+#endif
+ return NtGdiAngleArc(hDC, X, Y, Radius, (DWORD)StartAngle, (DWORD)SweepAngle);
+}
+
 BOOL
 WINAPI
 ArcTo(
