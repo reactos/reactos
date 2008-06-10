@@ -99,6 +99,9 @@ LogFontW2A(LPLOGFONTA pA, CONST LOGFONTW *pW)
 int STDCALL
 GetSystemMetrics(int nIndex)
 {
+//  FIXME("Global Sever Data -> %x\n",g_psi);
+  if (g_psi) return g_psi->SystemMetrics[nIndex];
+  else
   return(NtUserGetSystemMetrics(nIndex));
 }
 

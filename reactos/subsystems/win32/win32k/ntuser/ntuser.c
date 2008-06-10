@@ -57,9 +57,15 @@ NTSTATUS FASTCALL InitUserImpl(VOID)
       return Status;
    }
 
-   gpsi = UserHeapAlloc(sizeof(SERVERINFO));
-   if (gpsi) RtlZeroMemory(gpsi, sizeof(SERVERINFO));
-
+   if (!gpsi)
+   {
+      gpsi = UserHeapAlloc(sizeof(SERVERINFO));
+      if (gpsi)
+      {
+         RtlZeroMemory(gpsi, sizeof(SERVERINFO));
+         DPRINT1("Gloabal Server Data -> %x\n", gpsi);
+      }
+   }
    return STATUS_SUCCESS;
 }
 
