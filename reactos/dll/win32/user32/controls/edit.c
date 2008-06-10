@@ -4095,13 +4095,8 @@ static BOOL EDIT_IsInsideDialog(EDITSTATE *es)
 {
     if (es->hwndParent && es->hwndParent != GetDesktopWindow())
     {
-        PWINDOW pParent = ValidateHwnd( es->hwndParent );
-
-        /* TODO: This should really check fnID instead of ExtraDataSize I guess */
-        if (pParent && pParent->ExtraDataSize >= DLGWINDOWEXTRA)
-        {
+        if (GetClassLongW (es->hwndParent, GCW_ATOM) == (DWORD)MAKEINTATOM(32770))
             return TRUE;
-        }
     }
     return FALSE;
 }
