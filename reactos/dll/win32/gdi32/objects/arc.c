@@ -64,6 +64,11 @@ AngleArc(HDC   hDC,
          FLOAT StartAngle,
          FLOAT SweepAngle)
 {
+  gxf_long worker, worker1;
+
+  worker.f  = StartAngle;
+  worker1.f = SweepAngle;
+
 #if 0
 // Handle something other than a normal dc object.
  if (GDI_HANDLE_GET_TYPE(hDC) != GDI_OBJECT_TYPE_DC)
@@ -87,7 +92,7 @@ AngleArc(HDC   hDC,
     }
  }
 #endif
- return NtGdiAngleArc(hDC, X, Y, Radius, (DWORD)StartAngle, (DWORD)SweepAngle);
+  return NtGdiAngleArc(hDC, X, Y, Radius, (DWORD)worker.l, (DWORD)worker1.l);
 }
 
 BOOL

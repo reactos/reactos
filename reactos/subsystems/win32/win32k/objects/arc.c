@@ -469,7 +469,7 @@ IntGdiArcInternal(
 BOOL
 APIENTRY
 NtGdiAngleArc(
-    IN HDC hdc,
+    IN HDC hDC,
     IN INT x,
     IN INT y,
     IN DWORD dwRadius,
@@ -477,7 +477,8 @@ NtGdiAngleArc(
     IN DWORD dwSweepAngle)
 {
   DC *dc;
-  BOOL Ret = FASLE;
+  BOOL Ret = FALSE;
+  gxf_long worker, worker1;
 
   dc = DC_LockDc (hDC);
   if(!dc)
@@ -491,11 +492,11 @@ NtGdiAngleArc(
     /* Yes, Windows really returns TRUE in this case */
     return TRUE;
   }
-
+  worker.l  = dwStartAngle;
+  worker1.l = dwSweepAngle;
 
   DC_UnlockDc( dc );
   return Ret;
-
 }
 
 BOOL
