@@ -219,7 +219,7 @@ STRINGTABLE
 BEGIN
 	IDS_SYS_TOOLS        "Systemprogramme"
 	IDS_CMT_CHARMAP      "Zeichentabelle"
-	IDS_CMT_KBSWITCH     "Keyboard Layout Switcher"
+	IDS_CMT_KBSWITCH     "Tastaturlayout-Umschalter"
 END
 
 
@@ -259,7 +259,7 @@ BEGIN
     IDS_SHORT_CHARMAP    "Zeichentabelle.lnk"
     IDS_SHORT_MAGNIFY    "Bildschirmlupe.lnk"
     IDS_SHORT_RDESKTOP   "Remote Desktop.lnk"
-	IDS_SHORT_KBSWITCH   "Keyboard Layout Switcher.lnk"
+    IDS_SHORT_KBSWITCH   "Tastaturlayout-Umschalter.lnk"
 END
 
 STRINGTABLE

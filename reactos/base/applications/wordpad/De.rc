@@ -78,7 +78,7 @@ BEGIN
         MENUITEM "Sch&riftart...",               ID_FONTSETTINGS
         MENUITEM "Auf&zählungszeichen"           ID_BULLET
         MENUITEM "&Absatz..."                    ID_PARAFORMAT
-        MENUITEM "&Tabsstopps..."                ID_TABSTOPS
+        MENUITEM "&Tabstopps..."                 ID_TABSTOPS
         POPUP "&Hintergrund"
         BEGIN
             MENUITEM "&System\tStrg+1",         ID_BACK_1
