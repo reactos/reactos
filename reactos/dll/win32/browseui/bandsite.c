@@ -299,7 +299,8 @@ static HRESULT WINAPI BandSite_AddBand(IBandSite *iface, IUnknown *punk)
     INT i;
     LONG NewAllocated;
     struct BandObject *NewBand = NULL;
-    IDeskBand *DeskBand;
+    IDeskBand *DeskBand = NULL;
+    IObjectWithSite *ObjWithSite = NULL;
     HRESULT hRet;
 
     TRACE("(%p, %p)\n", iface, punk);
@@ -311,7 +312,12 @@ static HRESULT WINAPI BandSite_AddBand(IBandSite *iface, IUnknown *punk)
                                    &IID_IDeskBand,
                                    (PVOID*)&DeskBand);
     if (!SUCCEEDED(hRet) || DeskBand == NULL)
-        return E_FAIL;
+        goto Cleanup;
+    hRet = IUnknown_QueryInterface(punk,
+                                   &IID_IObjectWithSite,
+                                   (PVOID*)&ObjWithSite);
+    if (!SUCCEEDED(hRet) || ObjWithSite == NULL)
+        goto Cleanup;
 
     hRet = S_OK;
     if (This->BandsAllocated > This->BandsCount)
@@ -387,11 +393,21 @@ static HRESULT WINAPI BandSite_AddBand(IBandSite *iface, IUnknown *punk)
 
         This->BandsCount++;
 
+        hRet = ObjWithSite->lpVtbl->SetSite(ObjWithSite,
+                                            (IUnknown*)iface);
+        if (!SUCCEEDED(hRet))
+            ERR("IBandSite::AddBand(): Call to IDeskBand::SetSite() failed: %x\n", hRet);
+
+        if (ObjWithSite != NULL)
+            ObjWithSite->lpVtbl->Release(ObjWithSite);
+
         return (HRESULT)((SHORT)(NewBand - This->Bands));
     }
 Cleanup:
     if (DeskBand != NULL)
         DeskBand->lpVtbl->Release(DeskBand);
+    if (ObjWithSite != NULL)
+        ObjWithSite->lpVtbl->Release(ObjWithSite);
     return hRet;
 }
 
