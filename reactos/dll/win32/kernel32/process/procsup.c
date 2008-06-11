@@ -1105,15 +1105,15 @@ GetAppName:
     /* FIXME: Check if Machine Type and SubSys Version Match */
 
     /* We don't support POSIX or anything else for now */
-    if (IMAGE_SUBSYSTEM_WINDOWS_GUI != SectionImageInfo.SubsystemType && 
-        IMAGE_SUBSYSTEM_WINDOWS_CUI != SectionImageInfo.SubsystemType)
+    if (IMAGE_SUBSYSTEM_WINDOWS_GUI != SectionImageInfo.SubSystemType && 
+        IMAGE_SUBSYSTEM_WINDOWS_CUI != SectionImageInfo.SubSystemType)
     {
-        DPRINT1("Invalid subsystem %d\n", SectionImageInfo.SubsystemType);
+        DPRINT1("Invalid subsystem %d\n", SectionImageInfo.SubSystemType);
         SetLastError(ERROR_BAD_EXE_FORMAT);
         goto Cleanup;
     }
     
-    if (IMAGE_SUBSYSTEM_WINDOWS_GUI == SectionImageInfo.SubsystemType)
+    if (IMAGE_SUBSYSTEM_WINDOWS_GUI == SectionImageInfo.SubSystemType)
     {
         /* Do not create a console for GUI applications */
         dwCreationFlags &= ~CREATE_NEW_CONSOLE;
@@ -1329,7 +1329,7 @@ GetAppName:
 
     /* Duplicate the handles if needed */
     if (!bInheritHandles && !(StartupInfo.dwFlags & STARTF_USESTDHANDLES) &&
-        SectionImageInfo.SubsystemType == IMAGE_SUBSYSTEM_WINDOWS_CUI)
+        SectionImageInfo.SubSystemType == IMAGE_SUBSYSTEM_WINDOWS_CUI)
     {
         PRTL_USER_PROCESS_PARAMETERS RemoteParameters;
         
