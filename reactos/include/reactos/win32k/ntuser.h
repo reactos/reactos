@@ -2234,8 +2234,8 @@ BOOL
 NTAPI
 NtUserSetSysColors(
   int cElements,
-  IN INT *lpaElements,
-  IN COLORREF *lpaRgbValues,
+  IN CONST INT *lpaElements,
+  IN CONST COLORREF *lpaRgbValues,
   DWORD Unknown3);
 
 BOOL

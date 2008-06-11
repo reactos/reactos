@@ -525,8 +525,8 @@ BOOL
 STDCALL
 NtUserSetSysColors(
    int cElements,
-   IN INT *lpaElements,
-   IN COLORREF *lpaRgbValues,
+   IN CONST INT *lpaElements,
+   IN CONST COLORREF *lpaRgbValues,
    DWORD Unknown3)
 {
   DWORD Ret = FALSE;
@@ -540,7 +540,7 @@ NtUserSetSysColors(
      ProbeForRead(lpaRgbValues,
                    sizeof(INT),
                    1);
-     Ret = IntSetSysColors(cElements, lpaElements, lpaRgbValues);
+     Ret = IntSetSysColors(cElements, (INT*)lpaElements, (COLORREF*)lpaRgbValues);
   }
   _SEH_HANDLE
   {
