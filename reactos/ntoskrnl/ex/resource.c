@@ -895,7 +895,7 @@ ExAcquireResourceSharedLite(IN PERESOURCE Resource,
 {
     KLOCK_QUEUE_HANDLE LockHandle;
     ERESOURCE_THREAD Thread;
-    POWNER_ENTRY Owner;
+    POWNER_ENTRY Owner = NULL;
     BOOLEAN FirstEntryBusy;
 
     /* Get the thread */

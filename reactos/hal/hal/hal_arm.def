@@ -42,6 +42,7 @@ HalGetAdapter
 HalGetBusData
 HalGetBusDataByOffset
 HalGetEnvironmentVariable
+HalGetInterruptSource
 HalGetInterruptVector
 HalHandleNMI
 HalInitSystem

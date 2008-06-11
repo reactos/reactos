@@ -83,6 +83,12 @@ static __inline__ __attribute__((always_inline)) long _InterlockedExchange(volat
 	return a;
 }
 
+
+static __inline__ __attribute__((always_inline)) void * _InterlockedExchangePointer(void * volatile * const Target, void * const Value)
+{
+    return _InterlockedExchange(Target, Value);
+}
+
 static __inline__ __attribute__((always_inline)) char _InterlockedAnd8(volatile char * const value, const char mask)
 {
 	char x;
@@ -275,6 +281,14 @@ static __inline__ __attribute__((always_inline)) void _enable(void)
      "msr cpsr, r1;"
     );
 }
+
+#ifndef __MSVCRT__
+static __inline__ __attribute__((always_inline)) unsigned long _rotl(const unsigned long value, const unsigned char shift)
+{
+	return (((value) << ((int)(shift))) | ((value) >> (32 - (int)(shift))));
+}
+#endif
+
 
 #endif
 /* EOF */

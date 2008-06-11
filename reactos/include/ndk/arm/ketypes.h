@@ -78,8 +78,8 @@ typedef struct _KTRAP_FRAME
     ULONG SvcSp;
     ULONG SvcLr;
     ULONG Pc;
-//    UCHAR OldIrql;
-//    UCHAR PreviousMode;
+    ULONG OldIrql;
+//  UCHAR PreviousMode;
 //    ULONG Fpscr;
 //    ULONG FpExc;
 //    ULONG S[33];

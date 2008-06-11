@@ -403,6 +403,11 @@
 				<file>psctx.c</file>
 			</directory>
 		</if>
+		<if property="ARCH" value="arm">
+			<directory name="arm">
+				<file>psctx.c</file>
+			</directory>
+		</if>
 		<file>debug.c</file>
 		<file>job.c</file>
 		<file>kill.c</file>

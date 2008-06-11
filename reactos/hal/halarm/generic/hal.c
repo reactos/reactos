@@ -414,7 +414,7 @@ HalpGetParameters(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 // CLOCK_LEVEL - 0x10 (everything disabled except 4)
 // POWER_LEVEL, IPI_LEVEL, HIGH_LEVEL - 0x00 (everything disabled)
 
-ULONG HalpIrqlTable[] =
+ULONG HalpIrqlTable[HIGH_LEVEL + 1] =
 {
     0xFFFFFFFF, // IRQL 0 PASSIVE_LEVEL
     0xFFFFFFFD, // IRQL 1 APC_LEVEL
@@ -450,6 +450,64 @@ ULONG HalpIrqlTable[] =
     0x00,       // IRQL 31 HIGH_LEVEL
 };
 
+UCHAR HalpMaskTable[HIGH_LEVEL + 1] =
+{
+    PROFILE_LEVEL,
+    APC_LEVEL,
+    DISPATCH_LEVEL,
+    IPI_LEVEL,
+    CLOCK2_LEVEL,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23,
+    24,
+    25,
+    26,
+    26,
+    26
+};
+
+#define VICINTSTATUS     (PVOID)0xE0040000
+#define VICINTENABLE     (PVOID)0xE0040010
+#define VICINTENCLEAR    (PVOID)0xE0040014
+#define VICSOFTINT       (PVOID)0xE0040018
+#define VICSOFTINTCLEAR  (PVOID)0xE004001C
+
+
+#define _clz(a) \
+({ ULONG __value, __arg = (a); \
+        asm ("clz\t%0, %1": "=r" (__value): "r" (__arg)); \
+        __value; })
+
+ULONG
+HalGetInterruptSource(VOID)
+{
+    ULONG InterruptStatus;
+    
+    //
+    // Get the interrupt status, and return the highest bit set
+    //
+    InterruptStatus = READ_REGISTER_ULONG(VICINTSTATUS);
+    return 31 - _clz(InterruptStatus);
+}
 
 VOID
 HalpStallInterrupt(VOID)
@@ -461,20 +519,16 @@ HalpStallInterrupt(VOID)
 VOID
 HalpInitializeInterrupts(VOID)
 {
-    ULONG i;
     PKPCR Pcr = (PKPCR)KeGetPcr();
     
     //
     // Fill out the IRQL mappings
     //
-    for (i = 0; i < (HIGH_LEVEL + 1); i++)
-    {
-        //
-        // Save the valeue in the PCR
-        //
-        Pcr->IrqlTable[i] = HalpIrqlTable[i];
-    }
-    
+    RtlCopyMemory(Pcr->IrqlTable, HalpIrqlTable, sizeof(Pcr->IrqlTable));
+    RtlCopyMemory(Pcr->IrqlMask, HalpMaskTable, sizeof(Pcr->IrqlMask));
+//    Pcr->IrqlTable = HalpIrqlTable;
+  //  Pcr->IrqlMask = HalpMaskTable;
+
     //
     // Setup the clock and profile interrupt
     //
@@ -484,10 +538,6 @@ HalpInitializeInterrupts(VOID)
 
 ULONG HalpCurrentTimeIncrement, HalpNextTimeIncrement, HalpNextIntervalCount;
 
-#define VICINTENABLE     (PVOID)0xE0040010
-#define VICINTENCLEAR    (PVOID)0xE0040014
-#define VICSOFTINT       (PVOID)0xE0040018
-#define VICSOFTINTCLEAR  (PVOID)0xE004001C
 
 /*
  * @implemented
@@ -714,13 +764,38 @@ HalRequestSoftwareInterrupt(IN KIRQL Request)
     WRITE_REGISTER_ULONG(VICSOFTINT, Interrupt);
 }
 
-VOID FASTCALL
-HalClearSoftwareInterrupt(
-  IN KIRQL Request)
+VOID
+FASTCALL
+HalClearSoftwareInterrupt(IN KIRQL Request)
 {
-  UNIMPLEMENTED;
+    ULONG Interrupt = 0;
+    
+    //
+    // Get the interrupt that maches this IRQL level
+    //
+    switch (Request)
+    {
+        case APC_LEVEL:
+            
+            Interrupt = 1 << 1;
+            break;
+            
+        case DISPATCH_LEVEL:
+            
+            Interrupt = 1 << 2;
+            break;
+            
+        default:
+            
+            ASSERT(FALSE);
+    }
+    
+    //
+    // Force a software interrupt
+    //
+    DPRINT1("About to kill interrupt mask: %d\n", Interrupt);
+    WRITE_REGISTER_ULONG(VICSOFTINTCLEAR, Interrupt);
 }
-
 
 VOID
 NTAPI

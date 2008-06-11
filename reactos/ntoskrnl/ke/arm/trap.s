@@ -142,6 +142,11 @@
     mov r2, sp
     
     //
+    // Dummy OldIrql
+    //
+    //str r0, [sp, #-4]!
+    
+    //
     // Save the abort lr
     //
     str r0, [sp, #-4]!
@@ -217,6 +222,91 @@ AbortExit:
     NESTED_ENTRY KiInterruptException
     PROLOG_END KiInterruptException
     
+    //
+    // Fixup lr
+    //
+    sub lr, lr, #4
+    
+    //
+    // Save the bottom 4 registers
+    //
+    stmdb sp, {r0-r3}
+    
+    //
+    // Save the IRQ lr, sp, spsr, cpsr
+    //
+    mov r0, lr
+    mov r1, sp
+    mrs r2, cpsr
+    mrs r3, spsr
+    
+    //
+    // Switch to SVC mode
+    //
+    bic r2, r2, #CPSR_MODES
+    orr r2, r2, #CPSR_SVC_MODE
+    msr cpsr_c, r2
+    
+    //
+    // Save the SVC sp before we modify it
+    //
+    mov r2, sp
+    
+    //
+    // Dummy OldIrql
+    //
+    //str r0, [sp, #-4]!
+    
+    //
+    // Save the IRQ lr
+    //
+    str r0, [sp, #-4]!
+    
+    //
+    // Save the SVC lr and sp
+    //
+    str lr, [sp, #-4]!
+    str r2, [sp, #-4]!
+    
+    //
+    // Restore the saved SPSR
+    //
+    msr spsr_all, r3
+    
+    //
+    // Restore our 4 registers
+    //
+    ldmdb r1, {r0-r3}
+    
+    //
+    // Make space for the trap frame
+    //
+    sub sp, sp, #(4*15) // TrapFrameLength
+    
+    //
+    // Save user-mode registers
+    //
+    stmia sp, {r0-r12}
+    add r0, sp, #(4*13)
+    stmia r0, {r13-r14}^
+    mov r0, r0
+    
+    //
+    // Save SPSR
+    //
+    mrs r0, spsr_all
+    str r0, [sp, #-4]!
+
+    //
+    // Call the C handler
+    //
+    adr lr, IntExit
+    mov r0, sp
+    mov r1, #0
+    ldr pc, =KiInterruptHandler
+    
+IntExit:
+
     //
     // FIXME: TODO
     //

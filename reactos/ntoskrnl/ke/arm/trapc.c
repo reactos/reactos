@@ -28,6 +28,166 @@ KiSystemCall(
 
 /* FUNCTIONS ******************************************************************/
 
+ULONG
+HalGetInterruptSource(VOID);
+
+VOID FASTCALL
+HalClearSoftwareInterrupt(IN KIRQL Request);
+
+VOID
+KiDispatchInterrupt(VOID)
+{
+    PKPCR Pcr;
+    PKTHREAD NewThread, OldThread;
+    
+    //
+    // Get the PCR and disable interrupts
+    //
+    Pcr = (PKPCR)KeGetPcr();
+    _disable();
+    
+    //
+    //Check if we have to deliver DPCs, timers, or deferred threads
+    //
+    if ((Pcr->Prcb->DpcData[0].DpcQueueDepth) ||
+        (Pcr->Prcb->TimerRequest) ||
+        (Pcr->Prcb->DeferredReadyListHead.Next))
+    {
+        //
+        // FIXME: TODO
+        //
+        DPRINT1("DPC/Timer Delivery!\n");
+        while (TRUE);
+    }
+    
+    //
+    // Re-enable interrupts
+    //
+    _enable();
+    
+    //
+    // Check for quantum end
+    //
+    if (Pcr->Prcb->QuantumEnd)
+    {
+        //
+        // FIXME: TODO
+        //
+        DPRINT1("Quantum End!\n");
+        while (TRUE);
+        return;
+    }
+    
+    //
+    // Check if we have a thread to swap to
+    //
+    if (Pcr->Prcb->NextThread)
+    {
+        DPRINT1("Switching threads!\n");
+        
+        //
+        // Next is now current
+        //
+        OldThread = Pcr->Prcb->CurrentThread;
+        NewThread = Pcr->Prcb->NextThread;
+        Pcr->Prcb->CurrentThread = NewThread;
+        Pcr->Prcb->NextThread = NULL;
+        
+        //
+        // Update thread states
+        //
+        NewThread->State = Running;
+        OldThread->WaitReason = WrDispatchInt;
+        
+        //
+        // Make the old thread ready
+        //
+        DPRINT1("Queueing the ready thread\n");
+        KxQueueReadyThread(OldThread, Pcr->Prcb);
+        
+        //
+        // Swap to the new thread
+        //
+        DPRINT1("Swapping context!\n");
+        //KiSwapContextInternal();
+        while (TRUE);
+    }
+}
+
+VOID
+KiInterruptHandler(IN PKTRAP_FRAME TrapFrame,
+                   IN ULONG Reserved)
+{
+    KIRQL OldIrql, Irql;
+    ULONG InterruptCause, InterruptMask;
+    PKPCR Pcr;
+    
+    //
+    // Get the old IRQL
+    //
+    OldIrql = TrapFrame->OldIrql;
+    
+    //
+    // Get the interrupt source
+    //
+    InterruptCause = HalGetInterruptSource();
+    DPRINT1("Interrupt (%x) @ %p %p\n", InterruptCause, TrapFrame->SvcLr, TrapFrame->Pc);
+
+    //
+    // Get the new IRQL and Interrupt Mask
+    //
+    Pcr = (PKPCR)KeGetPcr();
+    Irql = Pcr->IrqlMask[InterruptCause];
+    InterruptMask = Pcr->IrqlTable[Irql];
+    DPRINT1("IRQL (%x) MASK (%x)\n", Irql, InterruptMask);
+    
+    //
+    // Make sure the IRQL is valid
+    //
+    //if (OldIrql < Irql)
+    //{
+        //
+        // We should just return, probably
+        //
+        //DPRINT1("IRQL Race!\n");
+        //while (TRUE);
+    //}
+    
+    //
+    // Check if this interrupt is at DISPATCH or higher
+    //
+    if (Irql > DISPATCH_LEVEL)
+    {
+        //
+        // ISR Handling Code
+        //
+        DPRINT1("ISR!\n");
+        while (TRUE);
+    }
+    
+    //
+    // We know this is APC or DPC.
+    // Clear the software interrupt.
+    // Reenable interrupts and update the IRQL
+    //
+    HalClearSoftwareInterrupt(Irql);
+    _enable();
+    Pcr->CurrentIrql = Irql;
+    
+    //
+    // Increment interrupt count
+    //
+    Pcr->Prcb->InterruptCount++;
+    
+    //
+    // Call the registered interrupt routine
+    //
+    DPRINT1("Calling handler\n");
+    Pcr->InterruptRoutine[Irql]();
+    DPRINT1("Done!\n");
+    while (TRUE);
+}
+
 NTSTATUS
 KiDataAbortHandler(IN PKTRAP_FRAME TrapFrame)
 {

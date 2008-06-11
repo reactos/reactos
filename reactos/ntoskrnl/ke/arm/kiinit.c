@@ -142,7 +142,7 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
         //
         // Point to the same template
         //
-        Pcr->InterruptRoutine[i] = &KxUnexpectedInterrupt.DispatchCode;
+        Pcr->InterruptRoutine[i] = (PVOID)&KxUnexpectedInterrupt.DispatchCode;
     }
     
     //

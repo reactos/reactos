@@ -33,7 +33,7 @@
 #define debugstr_a
 #endif
 
-extern FILE _iob[];
+//extern FILE _iob[];
 
 /* helper function for *scanf.  Returns the value of character c in the
  * given base, or -1 if the given character is not a digit of the base.

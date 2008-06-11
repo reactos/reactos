@@ -42,7 +42,6 @@ GENERATE_ARM_STUB RtlInitializeContext
 //
 // Internal Ke Arch-Specific Helpers
 //
-GENERATE_ARM_STUB KiDispatchInterrupt
 GENERATE_ARM_STUB KiSaveProcessorControlState
 GENERATE_ARM_STUB KiInitializeUserApc
 GENERATE_ARM_STUB KeDisableInterrupts
@@ -69,3 +68,4 @@ GENERATE_ARM_STUB DebugService2
 GENERATE_ARM_STUB RtlpGetStackLimits
 
 GENERATE_ARM_STUB KdpGdbStubInit
+GENERATE_ARM_STUB MmDbgTranslatePhysicalAddress

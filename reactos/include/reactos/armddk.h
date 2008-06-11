@@ -53,7 +53,9 @@ typedef struct _KFLOATING_SAVE
 // On ARM, it's actually readable from user-mode, much like KUSER_SHARED_DATA
 //
 #ifdef _WINNT_H
-#define PKINTERRUPT_ROUTINE PVOID // Hack!
+typedef
+VOID
+(*PKINTERRUPT_ROUTINE)(VOID);
 #endif
 typedef struct _KPCR
 {
@@ -85,7 +87,7 @@ typedef struct _KPCR
     PVOID InstructionBusError;
     ULONG CachePolicy;
     ULONG AlignedCachePolicy;
-//    UCHAR IrqlMask[64];
+    UCHAR IrqlMask[HIGH_LEVEL + 1];
     ULONG IrqlTable[HIGH_LEVEL + 1];
     UCHAR CurrentIrql;
     KAFFINITY SetMember;
