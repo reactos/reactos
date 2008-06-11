@@ -1269,7 +1269,7 @@ KdbpGetExceptionNumberFromStatus(IN NTSTATUS ExceptionCode)
  *
  * \param ExceptionRecord  Unused.
  * \param PreviousMode     UserMode if the exception was raised from umode, otherwise KernelMode.
- * \param Context          Unused.
+ * \param Context          Context, IN/OUT parameter.
  * \param TrapFrame        Exception TrapFrame.
  * \param FirstChance      TRUE when called before exception frames were serached,
  *                         FALSE for the second call.
@@ -1280,7 +1280,7 @@ KD_CONTINUE_TYPE
 KdbEnterDebuggerException(
    IN PEXCEPTION_RECORD ExceptionRecord  OPTIONAL,
    IN KPROCESSOR_MODE PreviousMode,
-   IN PCONTEXT Context  OPTIONAL,
+   IN PCONTEXT Context,
    IN OUT PKTRAP_FRAME TrapFrame,
    IN BOOLEAN FirstChance)
 {
@@ -1324,12 +1324,6 @@ KdbEnterDebuggerException(
 
       if (ExceptionCode == STATUS_BREAKPOINT)
       {
-         /*
-          * The breakpoint will point to the next instruction by default so
-          * point it back to the start of original instruction.
-          */
-         //TrapFrame->Eip--;
-
          /*
           * ... and restore the original instruction.
           */
@@ -1618,6 +1612,8 @@ continue_execution:
       /* Clear dr6 status flags. */
       TrapFrame->Dr6 &= ~0x0000e00f;
 
+      /* Skip the current instruction */
+      Context->Eip++;
    }
 
    return ContinueType;

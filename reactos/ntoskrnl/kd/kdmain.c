@@ -167,7 +167,7 @@ KdpEnterDebuggerException(IN PKTRAP_FRAME TrapFrame,
 
     /* Convert return to BOOLEAN */
     if (Return == kdDoNotHandleException) return FALSE;
-    return FALSE;
+    return TRUE;
 }
 
 BOOLEAN
@@ -196,7 +196,7 @@ KdpCallGdb(IN PKTRAP_FRAME TrapFrame,
 
     /* Convert return to BOOLEAN */
     if (Return == kdDoNotHandleException) return FALSE;
-    return FALSE;
+    return TRUE;
 }
 
 /* PUBLIC FUNCTIONS *********************************************************/
