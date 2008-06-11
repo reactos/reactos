@@ -24,7 +24,6 @@ KiSystemCall(
     IN PULONG Arguments,
     IN ULONG ArgumentCount
 );
- 
 
 /* FUNCTIONS ******************************************************************/
 
@@ -33,6 +32,18 @@ HalGetInterruptSource(VOID);
 
 VOID FASTCALL
 HalClearSoftwareInterrupt(IN KIRQL Request);
+
+VOID
+KiSwapContextInternal(IN PKTHREAD OldThread,
+                      IN PKTHREAD NewThread)
+{
+    //
+    // FIXME: TODO
+    //
+    DPRINT1("Switching from: %p to %p\n", OldThread, NewThread);
+    DPRINT1("Stacks: %p %p\n", OldThread->KernelStack, NewThread->KernelStack);
+    while (TRUE);
+}
 
 VOID
 KiDispatchInterrupt(VOID)
@@ -107,9 +118,12 @@ KiDispatchInterrupt(VOID)
         
         //
         // Swap to the new thread
+        // On ARM we call KiSwapContext instead of KiSwapContextInternal,
+        // because we're calling this from C code and not assembly.
+        // This is similar to how it gets called for unwaiting, on x86
         //
         DPRINT1("Swapping context!\n");
-        //KiSwapContextInternal();
+        KiSwapContext(OldThread, NewThread);
         while (TRUE);
     }
 }

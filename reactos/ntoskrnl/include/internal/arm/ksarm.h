@@ -55,6 +55,11 @@
  */
 .equ PcCurrentIrql,        0x14C
 
+/*
+ * KTHREAD Offsets
+ */
+.equ ThKernelStack,        0x20
+
 #else
 
 /*

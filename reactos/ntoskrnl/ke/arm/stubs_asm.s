@@ -12,17 +12,14 @@ GENERATE_ARM_STUB _local_unwind2
 //
 // Exported Ke Arch-Specific APIs
 //
-GENERATE_ARM_STUB KiSwapContext
 GENERATE_ARM_STUB DbgBreakPointWithStatus 
 GENERATE_ARM_STUB KeConnectInterrupt 
-GENERATE_ARM_STUB KeDcacheFlushCount 
 GENERATE_ARM_STUB KeDisconnectInterrupt 
 GENERATE_ARM_STUB KeFlushEntireTb 
 GENERATE_ARM_STUB KeGetRecommendedSharedDataAlignment 
 GENERATE_ARM_STUB KeIcacheFlushCount 
 GENERATE_ARM_STUB KeInitializeInterrupt 
 GENERATE_ARM_STUB KeInvalidateAllCaches
-GENERATE_ARM_STUB KeNumberProcessors 
 GENERATE_ARM_STUB KeQueryActiveProcessors 
 GENERATE_ARM_STUB KeRaiseUserException 
 GENERATE_ARM_STUB KeSaveStateForHibernate 
