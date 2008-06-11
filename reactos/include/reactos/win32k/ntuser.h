@@ -1255,11 +1255,18 @@ NtUserGetClassInfo(HINSTANCE hInstance,
 		   LPWSTR *ppszMenuName,
 		   BOOL Ansi);
 
-UINT
+INT
 NTAPI
 NtUserGetClassName(HWND hWnd,
-                   BOOL bGetRealClass, // 0 GetClassNameA/W, 1 RealGetWindowClassA/W
+		   PUNICODE_STRING ClassName,
+                   BOOL Ansi);
+#if 0 // Real NtUserGetClassName
+INT
+NTAPI
+NtUserGetClassName(HWND hWnd,
+                   BOOL Unknown, // 0 GetClassNameW, 1 RealGetWindowClassA/W
                    PUNICODE_STRING ClassName);
+#endif
 
 HANDLE
 NTAPI
