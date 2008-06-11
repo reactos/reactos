@@ -304,17 +304,17 @@ typedef struct _SECTION_IMAGE_INFORMATION
     ULONG ZeroBits;
     ULONG MaximumStackSize;
     ULONG CommittedStackSize;
-    ULONG SubsystemType;
+    ULONG SubSystemType;
     USHORT SubSystemMinorVersion;
     USHORT SubSystemMajorVersion;
     ULONG GpValue;
     USHORT ImageCharacteristics;
-    USHORT DllChracteristics;
+    USHORT DllCharacteristics;
     USHORT Machine;
     UCHAR ImageContainsCode;
     UCHAR Spare1;
     ULONG LoaderFlags;
-    ULONG ImageFileSIze;
+    ULONG ImageFileSize;
     ULONG Reserved[1];
 } SECTION_IMAGE_INFORMATION, *PSECTION_IMAGE_INFORMATION;
 
@@ -369,7 +369,7 @@ typedef struct _SEGMENT
     ULONG NumberOfCommittedPages;
     PMMEXTEND_INFO ExtendInfo;
     SEGMENT_FLAGS SegmentFlags;
-    PVOID BaseAddress;
+    PVOID BasedAddress;
     union
     {
         SIZE_T ImageCommitment;

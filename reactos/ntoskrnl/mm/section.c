@@ -4262,7 +4262,7 @@ NtQuerySection(IN HANDLE SectionHandle,
                   Sii->TransferAddress = (PVOID)ImageSectionObject->EntryPoint;
                   Sii->MaximumStackSize = ImageSectionObject->StackReserve;
                   Sii->CommittedStackSize = ImageSectionObject->StackCommit;
-                  Sii->SubsystemType = ImageSectionObject->Subsystem;
+                  Sii->SubSystemType = ImageSectionObject->Subsystem;
                   Sii->SubSystemMinorVersion = ImageSectionObject->MinorSubsystemVersion;
                   Sii->SubSystemMajorVersion = ImageSectionObject->MajorSubsystemVersion;
                   Sii->ImageCharacteristics = ImageSectionObject->ImageCharacteristics;
