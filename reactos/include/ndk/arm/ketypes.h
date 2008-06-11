@@ -59,6 +59,12 @@ Author:
 //
 typedef struct _KTRAP_FRAME
 {
+    ULONG OldIrql;
+    //  UCHAR PreviousMode;
+    //    ULONG Fpscr;
+    //    ULONG FpExc;
+    //    ULONG S[33];
+    //    ULONG FpExtra[8];    
     ULONG Spsr;
     ULONG R0;
     ULONG R1;
@@ -78,12 +84,6 @@ typedef struct _KTRAP_FRAME
     ULONG SvcSp;
     ULONG SvcLr;
     ULONG Pc;
-    ULONG OldIrql;
-//  UCHAR PreviousMode;
-//    ULONG Fpscr;
-//    ULONG FpExc;
-//    ULONG S[33];
-//    ULONG FpExtra[8];
 } KTRAP_FRAME, *PKTRAP_FRAME;
 
 #ifndef NTOS_MODE_USER

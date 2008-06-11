@@ -68,10 +68,20 @@
     str r0, [sp, #-4]!
     
     //
+    // Make space for IRQL
+    //
+    sub sp, sp, #4
+    
+    //
     // Call the C handler
     //
     mov r0, sp
     bl KiSoftwareInterruptHandler
+    
+    //
+    // Skip IRQL
+    //
+    add sp, sp, #(4)
     
     //
     // Get the SPSR and restore it
@@ -140,12 +150,7 @@
     // Save the SVC sp before we modify it
     //
     mov r2, sp
-    
-    //
-    // Dummy OldIrql
-    //
-    //str r0, [sp, #-4]!
-    
+        
     //
     // Save the abort lr
     //
@@ -185,6 +190,11 @@
     //
     mrs r0, spsr_all
     str r0, [sp, #-4]!
+    
+    //
+    // Make space for IRQL
+    //
+    sub sp, sp, #4
 
     //
     // Call the C handler
@@ -194,6 +204,11 @@
     ldr pc, =KiDataAbortHandler
 
 AbortExit:
+    
+    //
+    // Skip IRQL
+    //
+    add sp, sp, #(4)
 
     //
     // Get the SPSR and restore it
@@ -253,11 +268,6 @@ AbortExit:
     mov r2, sp
     
     //
-    // Dummy OldIrql
-    //
-    //str r0, [sp, #-4]!
-    
-    //
     // Save the IRQ lr
     //
     str r0, [sp, #-4]!
@@ -296,6 +306,11 @@ AbortExit:
     //
     mrs r0, spsr_all
     str r0, [sp, #-4]!
+    
+    //
+    // Make space for IRQL
+    //
+    sub sp, sp, #4
 
     //
     // Call the C handler

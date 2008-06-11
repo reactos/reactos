@@ -35,9 +35,9 @@
 //
 #define KeGetCurrentProcessorNumber()  PCR->Number
 #define KeGetCurrentIrql()             PCR->CurrentIrql
-#define _KeGetCurrentThread()           PCR->CurrentThread
-#define _KeGetPreviousMode()            PCR->CurrentThread->PreviousMode
-#define _KeIsExecutingDpc()             (PCR->DpcRoutineActive != 0)
+#define _KeGetCurrentThread()          PCR->CurrentThread
+#define _KeGetPreviousMode()           PCR->CurrentThread->PreviousMode
+#define _KeIsExecutingDpc()            (PCR->DpcRoutineActive != 0)
 #define KeGetDcacheFillSize()          PCR->DcacheFillSize
 
 //

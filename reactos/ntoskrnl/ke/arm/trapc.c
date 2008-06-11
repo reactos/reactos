@@ -125,13 +125,15 @@ KiInterruptHandler(IN PKTRAP_FRAME TrapFrame,
     //
     // Get the old IRQL
     //
-    OldIrql = TrapFrame->OldIrql;
+    OldIrql = KeGetCurrentIrql();
+    TrapFrame->OldIrql = OldIrql;
     
     //
     // Get the interrupt source
     //
     InterruptCause = HalGetInterruptSource();
     DPRINT1("Interrupt (%x) @ %p %p\n", InterruptCause, TrapFrame->SvcLr, TrapFrame->Pc);
+    DPRINT1("OLD IRQL: %x\n", OldIrql);
 
     //
     // Get the new IRQL and Interrupt Mask
@@ -144,14 +146,14 @@ KiInterruptHandler(IN PKTRAP_FRAME TrapFrame,
     //
     // Make sure the IRQL is valid
     //
-    //if (OldIrql < Irql)
-    //{
+    if (OldIrql < Irql)
+    {
         //
         // We should just return, probably
         //
-        //DPRINT1("IRQL Race!\n");
-        //while (TRUE);
-    //}
+        DPRINT1("IRQL Race!\n");
+        while (TRUE);
+    }
     
     //
     // Check if this interrupt is at DISPATCH or higher

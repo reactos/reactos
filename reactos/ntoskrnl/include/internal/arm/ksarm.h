@@ -50,6 +50,11 @@
  */
 .equ KiPcr,                0xFFFFF000
 
+/*
+ * PCR Offsets
+ */
+.equ PcCurrentIrql,        0x14C
+
 #else
 
 /*
