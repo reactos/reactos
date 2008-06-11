@@ -1,13 +1,10 @@
-This file contains information about the status the MSVCRT runtime in ReactOS.
+Big chunks of this CRT library are taken from Wine's msvcrt implementation,
+you can find a list of synced files in README.WINE file.
 
-Please note that all of the MSVCRT.DLL runtime sources are license GPL unless
-otherwise noted. The sources from WINE are dual licensed GPL/LGPL. 
-If you update a function in the ~/wine directory please send a patch to wine-patches@winehq.com
-
-TODO List:
-Implement the remaining functions that are commented out in the .def file
-Update source code headers for the license information.
-Complete the W32API conversion for all source files.
-Write a decent regression test suite.
-Convert all C++ style comments to C style comments.
-????
+Notes:
+1. When syncing, omit MSVCRT_ prefix where possible, Wine has to keep this
+because they are linking with *both* original crt, and ms crt implementation.
+ReactOS has the only CRT, so no need to make distinct functions.
+2. ReactOS compiles two versions of the CRT library, one for usermode
+(called just "crt"), and one version for kernelmode usage (called "libcntpr").
+In order to separate the code, you can use #ifdef _LIBCNT_ for libcntpr code.

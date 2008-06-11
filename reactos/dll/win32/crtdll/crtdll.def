@@ -309,8 +309,8 @@ _setjmp
 _setmode
 _setsystime
 _sleep
-_snprintf=crt__snprintf
-_snwprintf=crt__snwprintf
+_snprintf
+_snwprintf
 _sopen
 _spawnl
 _spawnle
@@ -499,7 +499,7 @@ setvbuf
 signal
 sin=NTDLL.sin
 sinh
-sprintf=crt_sprintf
+sprintf
 sqrt=NTDLL.sqrt
 srand
 sscanf
@@ -525,7 +525,7 @@ strtol=NTDLL.strtol
 strtoul
 strtoull
 strxfrm
-swprintf=crt_swprintf
+swprintf
 swscanf
 system
 tan=NTDLL.tan

@@ -30,25 +30,3 @@ void stub(void)
    FIXME("stub\n");
 }
 
-/*********************************************************************
- *              _getmaxstdio (MSVCRT.@)
- */
-int CDECL _getmaxstdio(void)
-{
-    FIXME("stub, always returns 512\n");
-    return 512;
-}
-
-/*********************************************************************
-*              _setmaxstdio_ (MSVCRT.@)
-*/
-int CDECL _setmaxstdio(int newmax)
-{
-    int res;
-    if( newmax > 2048)
-        res = -1;
-    else
-        res = newmax;
-    FIXME("stub: setting new maximum for number of simultaneously open files not implemented,returning %d\n",res);
-    return res;
-}

@@ -30,9 +30,16 @@
 
 
 /* Flags for the iobuf structure  */
-#define	_IOREAD	1 /* currently reading */
-#define	_IOWRT	2 /* currently writing */
-#define	_IORW	0x0080 /* opened as "r+w" */
+#define _IOREAD   0x0001 /* currently reading */
+#define _IOWRT    0x0002 /* currently writing */
+#define _IOMYBUF  0x0008 /* stdio malloc()'d buffer */
+#define _IOEOF    0x0010 /* EOF reached on read */
+#define _IOERR    0x0020 /* I/O error from system */
+#define _IOSTRG   0x0040 /* Strange or no file descriptor */
+#define _IORW     0x0080 /* opened as "r+w" */
+#ifdef _POSIX_SOURCE
+# define _IOAPPEND 0x0200
+#endif
 
 
 /*
@@ -87,13 +94,6 @@
 #define _IOLBF    0x0040  /* line buffered */
 #define _IONBF    0x0004  /* not buffered */
 
-#define _IOMYBUF  0x0008  /* stdio malloc()'d buffer */
-#define _IOEOF    0x0010  /* EOF reached on read */
-#define _IOERR    0x0020  /* I/O error from system */
-#define _IOSTRG   0x0040  /* Strange or no file descriptor */
-#ifdef _POSIX_SOURCE
-# define _IOAPPEND 0x0200
-#endif
 /*
  * The buffer size as used by setbuf such that it is equivalent to
  * (void) setvbuf(fileSetBuffer, caBuffer, _IOFBF, BUFSIZ).
@@ -456,7 +456,7 @@ _CRTIMP wchar_t* __cdecl __MINGW_NOTHROW _getws (wchar_t*);
 _CRTIMP wint_t __cdecl __MINGW_NOTHROW	putwc (wint_t, FILE*);
 _CRTIMP int __cdecl __MINGW_NOTHROW	_putws (const wchar_t*);
 _CRTIMP wint_t __cdecl __MINGW_NOTHROW	putwchar (wint_t);
-_CRTIMP FILE* __cdecl __MINGW_NOTHROW	_wfdopen(int, wchar_t *);
+_CRTIMP FILE* __cdecl __MINGW_NOTHROW	_wfdopen(int, const wchar_t *);
 _CRTIMP FILE* __cdecl __MINGW_NOTHROW	_wfopen (const wchar_t*, const wchar_t*);
 _CRTIMP FILE* __cdecl __MINGW_NOTHROW	_wfreopen (const wchar_t*, const wchar_t*, FILE*);
 _CRTIMP FILE* __cdecl __MINGW_NOTHROW	_wfsopen (const wchar_t*, const wchar_t*, int);

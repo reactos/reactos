@@ -76,46 +76,6 @@
 			</directory>
 		</if>
 	</directory>
-	<directory name="io">
-		<file>access.c</file>
-		<file>chmod.c</file>
-		<file>chsize.c</file>
-		<file>close.c</file>
-		<file>commit.c</file>
-		<file>creat.c</file>
-		<file>dup.c</file>
-		<file>dup2.c</file>
-		<file>eof.c</file>
-		<file>filelen.c</file>
-		<file>fileleni.c</file>
-		<file>find.c</file>
-		<file>fmode.c</file>
-		<file>isatty.c</file>
-		<file>locking.c</file>
-		<file>lseek.c</file>
-		<file>lseeki64.c</file>
-		<file>mktemp.c</file>
-		<file>open.c</file>
-		<file>pipe.c</file>
-		<file>read.c</file>
-		<file>setmode.c</file>
-		<file>sopen.c</file>
-		<file>stubs.c</file>
-		<file>tell.c</file>
-		<file>telli64.c</file>
-		<file>umask.c</file>
-		<file>unlink.c</file>
-		<file>utime.c</file>
-		<file>waccess.c</file>
-		<file>wchmod.c</file>
-		<file>wcreat.c</file>
-		<file>wfind.c</file>
-		<file>wmktemp.c</file>
-		<file>wopen.c</file>
-		<file>write.c</file>
-		<file>wunlink.c</file>
-		<file>wutime.c</file>
-	</directory>
 	<directory name="locale">
 		<file>locale.c</file>
 	</directory>
@@ -272,79 +232,20 @@
 		<file>xcptinfo.c</file>
 	</directory>
 	<directory name="stdio">
-		<file>allocfil.c</file>
-		<file>clearerr.c</file>
-		<file>fclose.c</file>
-		<file>fdopen.c</file>
-		<file>feof.c</file>
-		<file>ferror.c</file>
-		<file>fflush.c</file>
-		<file>fgetc.c</file>
-		<file>fgetchar.c</file>
-		<file>fgetpos.c</file>
-		<file>fgets.c</file>
-		<file>fgetws.c</file>
-		<file>filbuf.c</file>
+		<file>access.c</file>
 		<file>file.c</file>
-		<file>fileno.c</file>
-		<file>flsbuf.c</file>
-		<file>fopen.c</file>
-		<file>fprintf.c</file>
-		<file>fputc.c</file>
-		<file>fputchar.c</file>
-		<file>fputs.c</file>
-		<file>fputws.c</file>
-		<file>fread.c</file>
-		<file>freopen.c</file>
-		<file>fseek.c</file>
-		<file>fsetpos.c</file>
-		<file>fsopen.c</file>
-		<file>ftell.c</file>
-		<file>fwalk.c</file>
-		<file>fwprintf.c</file>
-		<file>fwrite.c</file>
-		<file>getc.c</file>
-		<file>getchar.c</file>
-		<file>gets.c</file>
-		<file>getw.c</file>
+		<file>find.c</file>
+		<file>fmode.c</file>
+		<file>lnx_sprintf.c</file>
+		<file>lnx_vfprintf.c</file>
+		<file>lnx_vfwprint.c</file>
+		<file>lnx_vsprintf.c</file>
+		<file>lnx_vswprintf.c</file>
 		<file>perror.c</file>
 		<file>popen.c</file>
-		<file>printf.c</file>
-		<file>putc.c</file>
-		<file>putchar.c</file>
-		<file>puts.c</file>
-		<file>putw.c</file>
-		<file>putwchar.c</file>
-		<file>remove.c</file>
-		<file>rename.c</file>
-		<file>rewind.c</file>
-		<file>rmtmp.c</file>
-		<file>setbuf.c</file>
-		<file>setvbuf.c</file>
-		<file>sprintf.c</file>
-		<file>swprintf.c</file>
-		<file>stdhnd.c</file>
-		<file>tempnam.c</file>
-		<file>tmpfile.c</file>
-		<file>tmpnam.c</file>
-		<file>ungetc.c</file>
-		<file>ungetwc.c</file>
-		<file>vfprintf.c</file>
-		<file>vfwprint.c</file>
-		<file>vprintf.c</file>
-		<file>vsprintf.c</file>
-		<file>vswprintf.c</file>
-		<file>vwprintf.c</file>
-		<file>wfdopen.c</file>
-		<file>wfopen.c</file>
-		<file>wfreopen.c</file>
-		<file>wfsopen.c</file>
+		<file>waccess.c</file>
+		<file>wfind.c</file>
 		<file>wpopen.c</file>
-		<file>wprintf.c</file>
-		<file>wremove.c</file>
-		<file>wrename.c</file>
-		<file>wtempnam.c</file>
-		<file>wtmpnam.c</file>
 	</directory>
 	<directory name="stdlib">
 		<file>_exit.c</file>
@@ -440,17 +341,12 @@
 		<file>strtoull.c</file>
 		<file>strupr.c</file>
 		<file>strxfrm.c</file>
-		<file>wcstod.c</file>
 		<file>wcstombs.c</file>
 		<file>wctomb.c</file>
 		<file>wsplitp.c</file>
+		<file>wcs.c</file>
 	</directory>
 	<directory name="sys_stat">
-		<file>fstat.c</file>
-		<file>fstati64.c</file>
-		<file>futime.c</file>
-		<file>stat.c</file>
-		<file>wstat.c</file>
 		<file>systime.c</file>
 	</directory>
 	<directory name="time">
@@ -470,13 +366,9 @@
 	<directory name="wstring">
 		<file>wcscoll.c</file>
 		<file>wcscspn.c</file>
-		<file>wcsdup.c</file>
 		<file>wcsicmp.c</file>
 		<file>wcslwr.c</file>
 		<file>wcsnicmp.c</file>
-		<file>wcspbrk.c</file>
-		<file>wcsrev.c</file>
-		<file>wcsset.c</file>
 		<file>wcsspn.c</file>
 		<file>wcsstr.c</file>
 		<file>wcstok.c</file>

@@ -18,6 +18,10 @@
 #endif
 
 #define MK_STR(s) #s
+
+int alloc_fd(HANDLE hand, int flag); //FIXME: Remove
+unsigned split_oflags(unsigned oflags); //FIXME: Remove
+
 /*
  * @implemented
  */
@@ -128,8 +132,8 @@ int _pclose (FILE *pp)
   TRACE("_pclose(%x)",pp);
 
   fclose(pp);
-  if (!TerminateProcess(pp->_tmpfname ,0))
-    return( -1 );
+  //if (!TerminateProcess(pp->_tmpfname ,0))
+  //  return( -1 );
   return( 0 );
 }
 

@@ -37,22 +37,17 @@
 #define WRITE_STREAM(f) ((((f)->_flag & _IOWRT) == _IOWRT))
 #define READ_STREAM(f) ((((f)->_flag & _IOREAD) == _IOREAD))
 
-char __validfp(FILE*);
 int __set_errno(int err);
 int __set_doserrno(int error);
 void* filehnd(int fn);
 char __is_text_file(FILE*);
-int alloc_fd(void* hFile, char mode);
 int _doprnt(const char* fmt, va_list args, FILE *);
 int _doscan(FILE* iop, const char* fmt, va_list argp);
 int __fileno_dup2(int handle1, int handle2);
 char __fileno_getmode(int _fd);
 int __fileno_setmode(int _fd, int _newmode);
-void free_fd(int _fd);
 void sigabort_handler(int sig);
-char split_oflags(int oflags);
 
-unsigned create_io_inherit_block(STARTUPINFOA* si);
 void UnixTimeToFileTime(time_t unix_time, FILETIME* filetime, DWORD remainder);
 time_t FileTimeToUnixTime(const FILETIME* filetime, DWORD *remainder);
 
@@ -106,14 +101,12 @@ typedef struct _FDINFO
 /* get fdinfo ptr. from an fd */
 #define fdinfo(i) (fdinfo_bucket(i) + fdinfo_bucket_entry_idx(i))
 
-extern FDINFO* __pioinfo[];
-
+//extern FDINFO* __pioinfo[];
 
 void _dosmaperr(unsigned long oserrcode);
 
 
 
-FILE* __alloc_file(void);
 
 
 
@@ -127,8 +120,6 @@ int access_dirW(const wchar_t *_path);
 #endif
 
 
-
-void _fwalk(void (*func)(FILE*)); // not exported
 
 
 

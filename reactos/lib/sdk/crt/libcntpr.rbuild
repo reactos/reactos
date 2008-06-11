@@ -152,6 +152,7 @@
 		<file>strtol.c</file>
 		<file>strtoul.c</file>
 		<file>strtoull.c</file>
+		<file>wcs.c</file>
 		<file>wcstol.c</file>
 		<file>wcstombs_nt.c</file>
 		<file>wcstoul.c</file>
@@ -166,10 +167,7 @@
 		<file>wcsnicmp.c</file>
 		<file>wcsupr.c</file>
 		<file>wcscspn.c</file>
-		<file>wcspbrk.c</file>
-		<file>wcsset.c</file>
 		<file>wcsspn.c</file>
 		<file>wcsstr.c</file>
-		<file>wcsrev.c</file>
 	</directory>
 </module>

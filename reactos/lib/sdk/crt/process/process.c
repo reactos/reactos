@@ -1,6 +1,15 @@
+/*
+ * PROJECT:         ReactOS CRT library
+ * LICENSE:         GPL (?) - See COPYING in the top level directory
+ * FILE:            lib/sdk/crt/process/process.c
+ * PURPOSE:         Process management functions
+ * PROGRAMMERS:     ???
+ */
+
 #include <precomp.h>
 #include <process.h>
 #include <tchar.h>
+#include <internal/wine/msvcrt.h>
 
 #ifdef _UNICODE
    #define sT "S"
@@ -205,7 +214,7 @@ do_spawnT(int mode, const _TCHAR* cmdname, const _TCHAR* args, const _TCHAR* env
       return(-1);
    }
 
-   //memset (&StartupInfo, 0, sizeof(StartupInfo));
+   memset (&StartupInfo, 0, sizeof(StartupInfo));
    StartupInfo.cb = sizeof(StartupInfo);
 
 #if 0
@@ -265,7 +274,7 @@ do_spawnT(int mode, const _TCHAR* cmdname, const _TCHAR* args, const _TCHAR* env
    }
 #endif
 
-   create_io_inherit_block((STARTUPINFOA*) &StartupInfo);
+   create_io_inherit_block(&StartupInfo.cbReserved2, &StartupInfo.lpReserved2);
 
    bResult = CreateProcess((_TCHAR *)cmdname,
                             (_TCHAR *)args,

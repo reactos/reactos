@@ -497,9 +497,9 @@ EXPORTS
   _setmode @490
   _setsystime @491
   _sleep @492
-  _snprintf=crt__snprintf @493
+  _snprintf @493
 ;  _snscanf @494
-  _snwprintf=crt__snwprintf @495
+  _snwprintf @495
 ;  _snwscanf @496
   _sopen @497
   _spawnl @498
@@ -761,7 +761,7 @@ EXPORTS
   putc @754
   putchar @755
   puts @756
-  putwc @757
+  putwc=fputwc @757
   putwchar=_fputwchar @758
   qsort=ntdll.qsort @759
   raise @760
@@ -777,7 +777,7 @@ EXPORTS
   signal @770
   sin=ntdll.sin @771
   sinh @772
-  sprintf=crt_sprintf @773
+  sprintf @773
   sqrt=ntdll.sqrt @774
   srand @775
   sscanf @776
@@ -802,7 +802,7 @@ EXPORTS
   strtol=ntdll.strtol @795
   strtoul=ntdll.strtoul @796
   strxfrm @797
-  swprintf=crt_swprintf @798
+  swprintf @798
   swscanf @799
   system @800
   tan=ntdll.tan @801

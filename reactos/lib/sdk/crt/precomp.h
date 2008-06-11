@@ -20,6 +20,7 @@
 #include <limits.h>
 
 #include <sys/stat.h>
+#include <sys/locking.h>
 #include <share.h>
 
 /* PSDK/NDK Headers */
@@ -54,5 +55,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(msvcrt);
 #include <internal/mtdll.h>
 #include <internal/rterror.h>
 #include <internal/tls.h>
+#include <internal/printf.h>
 
 #endif /* _CRT_PRECOMP_H */

@@ -2,7 +2,7 @@
  *
  * dllmain.c
  *
- * ReactOS MSVCRT.DLL Compatibility Library
+ * ReactOS CRTDLL.DLL Compatibility Library
  *
  *  THIS SOFTWARE IS NOT COPYRIGHTED
  *
@@ -13,10 +13,6 @@
  *  WITHOUT ANY WARRANTY. ALL WARRENTIES, EXPRESS OR IMPLIED ARE HEREBY
  *  DISCLAMED. This includes but is not limited to warrenties of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *
- * $Revision: 1.24 $
- * $Author: mf $
- * $Date: 2005-01-06 14:58:04 +0100 (Thu, 06 Jan 2005) $
  *
  */
 
@@ -32,8 +28,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(crtdll);
 
 /* EXTERNAL PROTOTYPES ********************************************************/
 
-//void __fileno_init(void);
-extern BOOL __fileno_init(void);
 extern int BlockEnvToEnvironA(void);
 extern int BlockEnvToEnvironW(void);
 extern void FreeEnvironment(char **environment);
@@ -136,8 +130,6 @@ DllMain(PVOID hinstDll, ULONG dwReason, PVOID reserved)
         hHeap = HeapCreate(0, 100000, 0);
         if (hHeap == NULL)
             return FALSE;
-        if (!__fileno_init())
-            return FALSE;
 
         /* create tls stuff */
         if (!CreateThreadData())
@@ -159,6 +151,7 @@ DllMain(PVOID hinstDll, ULONG dwReason, PVOID reserved)
 
         /* FIXME: Initialization of the WINE code */
         msvcrt_init_mt_locks();
+        msvcrt_init_io();
         setlocale(0, "C");
         //_setmbcp(_MB_CP_LOCALE);
 
@@ -174,8 +167,9 @@ DllMain(PVOID hinstDll, ULONG dwReason, PVOID reserved)
 
     case DLL_PROCESS_DETACH://0
         //TRACE("Detach %d\n", nAttachCount);
-        /* FIXME: more cleanup... */
-        _fcloseall();
+        /* Deinit of the WINE code */
+        msvcrt_free_io();
+        msvcrt_free_mt_locks();
         _atexit_cleanup();
 
         /* destroy tls stuff */
