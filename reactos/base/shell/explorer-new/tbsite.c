@@ -573,6 +573,8 @@ ITrayBandSiteImpl_QueryBand(IN OUT IBandSite *iface,
         if (ppstb != NULL)
             *ppstb = pstb;
     }
+    else if (ppstb != NULL)
+        *ppstb = NULL;
 
     return hRet;
 }
@@ -730,7 +732,7 @@ ITrayBandSiteImpl_BroadcastOleCommandExec(IN OUT ITrayBandSiteImpl *This,
                                          &dwBandID)))
     {
         if (SUCCEEDED(IBandSite_GetBandObject(This->BandSite,
-                                              uBand,
+                                              dwBandID,
                                               &IID_IOleCommandTarget,
                                               (PVOID*)&pOct)))
         {
