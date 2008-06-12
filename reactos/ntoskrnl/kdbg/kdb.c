@@ -1479,7 +1479,7 @@ KdbEnterDebuggerException(
       {
          if (!EnterConditionMet)
          {
-            return kdDoNotHandleException;
+            return kdHandleException;
          }
          DbgPrint("Entered debugger on unexpected debug trap!\n");
       }
@@ -1493,7 +1493,7 @@ KdbEnterDebuggerException(
       }
       if (!EnterConditionMet)
       {
-         return kdDoNotHandleException;
+         return kdHandleException;
       }
 
       DbgPrint("Entered debugger on embedded INT3 at 0x%04x:0x%08x.\n",

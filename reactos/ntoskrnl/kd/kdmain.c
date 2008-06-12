@@ -165,8 +165,10 @@ KdpEnterDebuggerException(IN PKTRAP_FRAME TrapFrame,
         //DPRINT1("Address: %p. Return: %d\n", EipOld, Return);
     }
 
-    /* Convert return to BOOLEAN */
-    if (Return == kdDoNotHandleException) return FALSE;
+    /* Debugger didn't handle it, please handle! */
+    if (Return == kdHandleException) return FALSE;
+
+    /* Debugger handled it */
     return TRUE;
 }
 
@@ -194,8 +196,10 @@ KdpCallGdb(IN PKTRAP_FRAME TrapFrame,
                                                   TrapFrame);
     }
 
-    /* Convert return to BOOLEAN */
-    if (Return == kdDoNotHandleException) return FALSE;
+    /* Debugger didn't handle it, please handle! */
+    if (Return == kdHandleException) return FALSE;
+
+    /* Debugger handled it */
     return TRUE;
 }
 
