@@ -261,6 +261,7 @@ IDM_WINEFILE MENU FIXED IMPURE
         MENUITEM "Pesquisar...",                ID_HELP
         MENUITEM "&Usar a ajuda",             ID_HELP_USING
         MENUITEM SEPARATOR
+        MENUITEM "&Sobre o Winefile...",        ID_ABOUT
     }
 }
 
@@ -343,6 +344,12 @@ STRINGTABLE
  IDS_TITLEFMT               "%s - %s"
  IDS_NO_IMPL                "Ainda não implementado"
  IDS_WINE_FILE              "Wine File"
+ IDS_COL_NAME               "Nome"
+ IDS_COL_SIZE               "Tamanho"
+ IDS_COL_CDATE              "CData"
+ IDS_COL_ADATE              "AData"
+ IDS_COL_MDATE              "MData"
+ IDS_COL_IDX                "Índice/Inode"
 }
 
 LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE
@@ -358,19 +365,21 @@ STRINGTABLE
  IDS_TITLEFMT               "%s - %s"
  IDS_NO_IMPL                "Ainda não implementado"
  IDS_WINE_FILE              "Ficheiro Wine"
-}
-
-LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
-
-STRINGTABLE
-{
  IDS_COL_NAME               "Nome"
  IDS_COL_SIZE               "Tamanho"
  IDS_COL_CDATE              "CData"
  IDS_COL_ADATE              "AData"
  IDS_COL_MDATE              "MData"
  IDS_COL_IDX                "Índice/Inode"
+}
+
+LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
+
+STRINGTABLE
+{
  IDS_COL_LINKS              "Ligações"
  IDS_COL_ATTR               "Atributos"
  IDS_COL_SEC                "Segurança"
+
+ IDS_FREE_SPACE_FMT         "%s of %s free"
 }

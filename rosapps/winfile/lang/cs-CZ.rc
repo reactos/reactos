@@ -206,4 +206,6 @@ STRINGTABLE
     IDS_COL_LINKS           "Linky"
     IDS_COL_ATTR            "Atributy"
     IDS_COL_SEC             "Zabezpeèení"
+
+    IDS_FREE_SPACE_FMT      "%s z %s volného"
 }

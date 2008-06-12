@@ -196,15 +196,8 @@ static const TCHAR sQMarks[] = {'?','?','?','\0'};
 static const TCHAR sWINEFILEFRAME[] = {'W','F','S','_','F','r','a','m','e','\0'};
 static const TCHAR sWINEFILETREE[] = {'W','F','S','_','T','r','e','e','\0'};
 
-#ifdef _MSC_VER
-/* #define LONGLONGARG _T("I64") */
 static const TCHAR sLongHexFmt[] = {'%','I','6','4','X','\0'};
-static const TCHAR sLongNumFmt[] = {'%','I','6','4','d','\0'};
-#else
-/* #define LONGLONGARG _T("L") */
-static const TCHAR sLongHexFmt[] = {'%','L','X','\0'};
-static const TCHAR sLongNumFmt[] = {'%','L','d','\0'};
-#endif
+static const TCHAR sLongNumFmt[] = {'%','I','6','4','u','\0'};
 
 
 /* load resource string */

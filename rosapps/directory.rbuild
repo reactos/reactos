@@ -91,8 +91,8 @@
 		<xi:include href="templates/directory.rbuild" />
 	</directory>
 
-	<directory name="winefile">
-		<xi:include href="winefile/winefile.rbuild" />
+	<directory name="winfile">
+		<xi:include href="winfile/winfile.rbuild" />
 	</directory>
 
 	<directory name="winver">

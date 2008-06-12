@@ -191,7 +191,7 @@ BEGIN
     CONTROL         "&Autres fichiers",IDC_VIEW_TYPE_OTHERS,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,13,65,70,10
     CONTROL         "Montrer les fichiers cachés/&système",IDC_VIEW_TYPE_HIDDEN,
-                    "Bouton",BS_AUTOCHECKBOX | WS_TABSTOP,7,81,106,9
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,81,106,9
     DEFPUSHBUTTON   "OK",IDOK,104,7,50,14
     PUSHBUTTON      "Annuler",IDCANCEL,104,24,50,14
 END

@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-LANGUAGE LANG_SWEDISH, SUBLANG_DEFAULT
+LANGUAGE LANG_SWEDISH, SUBLANG_NEUTRAL
 
 /* Menu */
 
@@ -200,4 +200,6 @@ STRINGTABLE
     IDS_COL_LINKS           "Länkar"
     IDS_COL_ATTR            "Attribut"
     IDS_COL_SEC             "Säkerhet"
+
+    IDS_FREE_SPACE_FMT      "%s of %s free"
 }

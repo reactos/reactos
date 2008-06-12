@@ -27,23 +27,23 @@ IDM_WINEFILE MENU FIXED IMPURE
 {
     POPUP "&Fil"  {
         MENUITEM "&Åpne\tEnter",                ID_ACTIVATE
-        MENUITEM "&Flytt . . .\tF7",                ID_FILE_MOVE
-        MENUITEM "&Kopier . . .\tF8",                ID_FILE_COPY
-        MENUITEM "&I utklippstavlen . . .\tF9",        118
+        MENUITEM "&Flytt...\tF7",                ID_FILE_MOVE
+        MENUITEM "&Kopier...\tF8",                ID_FILE_COPY
+        MENUITEM "&I utklippstavlen...\tF9",        118
         MENUITEM "&Slett\tDel",                ID_FILE_DELETE
-        MENUITEM "Gi &nytt navn . . .",                  109
-        MENUITEM "&Egenskaper . . .\tAlt+Enter",   ID_EDIT_PROPERTIES
+        MENUITEM "Gi &nytt navn...",                  109
+        MENUITEM "&Egenskaper...\tAlt+Enter",   ID_EDIT_PROPERTIES
         MENUITEM SEPARATOR
-        MENUITEM "K&omprimer . . .",                119
-        MENUITEM "De&komprimer . . .",              120
+        MENUITEM "K&omprimer...",                119
+        MENUITEM "De&komprimer...",              120
         MENUITEM SEPARATOR
-        MENUITEM "Kjø&r . . .",                     ID_EXECUTE
-        MENUITEM "Skriv &ut . . .",                   102
-        MENUITEM "Tilknytt . . .",                103
+        MENUITEM "Kjø&r...",                     ID_EXECUTE
+        MENUITEM "Skriv &ut...",                   102
+        MENUITEM "Tilknytt...",                103
         MENUITEM SEPARATOR
-        MENUITEM "Oppr&et katalog . . .",        111
-        MENUITEM "S&øk . . .",                  104
-        MENUITEM "&Velg filer . . .",            116
+        MENUITEM "Oppr&et katalog...",        111
+        MENUITEM "S&øk...",                  104
+        MENUITEM "&Velg filer...",            116
         MENUITEM SEPARATOR
 #ifndef _NO_EXTENSIONS
         MENUITEM "&Avslutt\tAlt+X",                ID_FILE_EXIT
@@ -53,21 +53,21 @@ IDM_WINEFILE MENU FIXED IMPURE
     }
 
     POPUP "&Stasjon"  {
-        MENUITEM "&Kopier stasjon . . .",               201
-        MENUITEM "Gi vol&umnavn . . .",              202
+        MENUITEM "&Kopier stasjon...",               201
+        MENUITEM "Gi vol&umnavn...",              202
         MENUITEM SEPARATOR
-        MENUITEM "&Formater stasjon . . .",             ID_FORMAT_DISK
+        MENUITEM "&Formater stasjon...",             ID_FORMAT_DISK
 #ifdef _WIN95
-        MENUITEM "Opprett syste&mdisk . . .", -1 /*TODO*/
+        MENUITEM "Opprett syste&mdisk...", -1 /*TODO*/
 #endif
         MENUITEM SEPARATOR
         MENUITEM "Koble til &nettverksstasjon",      ID_CONNECT_NETWORK_DRIVE
         MENUITEM "Koble &fra nettverksstasjon",   ID_DISCONNECT_NETWORK_DRIVE
         MENUITEM SEPARATOR
-        MENUITEM "Del som . . .",                 254
-        MENUITEM "Fje&rn delt ressurs . . .",            255
+        MENUITEM "Del som...",                 254
+        MENUITEM "Fje&rn delt ressurs...",            255
         MENUITEM SEPARATOR
-        MENUITEM "Velg &stasjon . . .",            251
+        MENUITEM "Velg &stasjon...",            251
     }
 
     POPUP "Kataloge&r"  {
@@ -88,20 +88,20 @@ IDM_WINEFILE MENU FIXED IMPURE
         MENUITEM SEPARATOR
         MENUITEM "&Navn",                       ID_VIEW_NAME
         MENUITEM "&Alle fildetaljer",           ID_VIEW_ALL_ATTRIBUTES, CHECKED
-        MENUITEM "Del&vise detaljer . . .",         ID_VIEW_SELECTED_ATTRIBUTES
+        MENUITEM "Del&vise detaljer...",         ID_VIEW_SELECTED_ATTRIBUTES
         MENUITEM SEPARATOR
         MENUITEM "&Sorter etter navn",               ID_VIEW_SORT_NAME
         MENUITEM "Sorter etter &type",               ID_VIEW_SORT_TYPE
         MENUITEM "Sorter etter st&ørrelse",               ID_VIEW_SORT_SIZE
         MENUITEM "Sorter etter &dato",               ID_VIEW_SORT_DATE
         MENUITEM SEPARATOR
-        MENUITEM "Filtrer med '&' . . .",              ID_VIEW_FILTER
+        MENUITEM "Filtrer med '&'...",              ID_VIEW_FILTER
     }
 
     POPUP "&Innstillinger"  {
-        MENUITEM "&Bekreftelse . . .",            501
-        MENUITEM "Skri&ft . . .",                    ID_SELECT_FONT
-        MENUITEM "Tilpass &verktøylinjen . . .",       512
+        MENUITEM "&Bekreftelse...",            501
+        MENUITEM "Skri&ft...",                    ID_SELECT_FONT
+        MENUITEM "Tilpass &verktøylinjen...",       512
         MENUITEM SEPARATOR
         MENUITEM "Verk&tøylinje",                    ID_VIEW_TOOL_BAR, CHECKED
         MENUITEM "Stas&jonslinje",                   ID_VIEW_DRIVE_BAR, CHECKED
@@ -116,9 +116,9 @@ IDM_WINEFILE MENU FIXED IMPURE
 
 
     POPUP "&Sikkerhet"  {
-        MENUITEM "Tilg&ang . . .",                  605
-        MENUITEM "&Loggføring . . .",                 606
-        MENUITEM "&Eier . . .",                   607
+        MENUITEM "Tilg&ang...",                  605
+        MENUITEM "&Loggføring...",                 606
+        MENUITEM "&Eier...",                   607
     }
 
     POPUP "Vind&u"  {
@@ -135,10 +135,10 @@ IDM_WINEFILE MENU FIXED IMPURE
 
     POPUP "&Hjelp"  {
         MENUITEM "Emner i &hjelp\tF1",            ID_HELP
-        MENUITEM "&Søk i hjelp . . .\tF1",         ID_HELP
+        MENUITEM "&Søk i hjelp...\tF1",         ID_HELP
         MENUITEM "Br&uk av hjelp\tF1",             ID_HELP_USING
         MENUITEM SEPARATOR
-        MENUITEM "&Informasjon om Filbehandling . . .",     ID_ABOUT
+        MENUITEM "&Informasjon om Filbehandling...",     ID_ABOUT
     }
 }
 
