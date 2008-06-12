@@ -21,8 +21,10 @@
 #include <precomp.h>
 
 HINSTANCE hExplorerInstance;
+HMODULE hUser32;
 HANDLE hProcessHeap;
 HKEY hkExplorer = NULL;
+DRAWCAPTEMP DrawCapTemp = NULL;
 
 /* undoc GUID */
 DEFINE_GUID(CLSID_RebarBandSite, 0xECD4FC4D, 0x521C, 0x11D0, 0xB7, 0x92, 0x00, 0xA0, 0xC9, 0x03, 0x12, 0xE1);
@@ -288,6 +290,13 @@ _tWinMain(IN HINSTANCE hInstance,
 
     hExplorerInstance = hInstance;
     hProcessHeap = GetProcessHeap();
+
+    hUser32 = GetModuleHandle(TEXT("USER32.DLL"));
+    if (hUser32 != NULL)
+    {
+        DrawCapTemp = (DRAWCAPTEMP)GetProcAddress(hUser32,
+                                                  PROC_NAME_DRAWCAPTIONTEMP);
+    }
 
     InitCommonControls();
     OleInitialize(NULL);

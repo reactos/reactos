@@ -1223,7 +1223,6 @@ ITrayWindowImpl_CreateStartButtonBitmap(IN OUT ITrayWindowImpl *This)
     BOOL Ret;
     UINT Flags;
     RECT rcButton;
-    HMODULE hUser32;
 
     /* NOTE: This is the backwards compatibility code that is used if the
              Common Controls Version 6.0 are not available! */
@@ -1294,24 +1293,15 @@ ITrayWindowImpl_CreateStartButtonBitmap(IN OUT ITrayWindowImpl *This)
     if (hIconStart != NULL)
         Flags |= DC_ICON;
 
-    hUser32 = GetModuleHandle(TEXT("USER32.DLL"));
-    if (hUser32 != NULL)
+    if (DrawCapTemp != NULL)
     {
-        DRAWCAPTEMP DrawCapTemp;
-
-        /* DrawCaptionTemp */
-        DrawCapTemp = (DRAWCAPTEMP)GetProcAddress(hUser32,
-                                                  PROC_NAME_DRAWCAPTIONTEMP);
-        if (DrawCapTemp != NULL)
-        {
-            Ret = DrawCapTemp(NULL,
-                              hDC,
-                              &rcButton,
-                              This->hStartBtnFont,
-                              hIconStart,
-                              szStartCaption,
-                              Flags);
-        }
+        Ret = DrawCapTemp(NULL,
+                          hDC,
+                          &rcButton,
+                          This->hStartBtnFont,
+                          hIconStart,
+                          szStartCaption,
+                          Flags);
     }
 
     SelectObject(hDC,

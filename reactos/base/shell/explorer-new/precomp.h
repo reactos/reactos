@@ -77,8 +77,10 @@ Win32DbgPrint(const char *filename, int line, const char *lpFormat, ...)
     Win32DbgPrint(__FILE__, __LINE__, fmt, ##__VA_ARGS__);
 
 extern HINSTANCE hExplorerInstance;
+extern HMODULE hUser32;
 extern HANDLE hProcessHeap;
 extern HKEY hkExplorer;
+extern DRAWCAPTEMP DrawCapTemp;
 
 /*
  * dragdrop.c

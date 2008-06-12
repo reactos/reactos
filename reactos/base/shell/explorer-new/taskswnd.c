@@ -1640,7 +1640,6 @@ TaskSwichWnd_HandleItemPaint(IN OUT PTASK_SWITCH_WND This,
 {
     HFONT hCaptionFont, hBoldCaptionFont;
     LRESULT Ret = CDRF_DODEFAULT;
-    HMODULE hUser32;
     PTASK_GROUP TaskGroup;
     PTASK_ITEM TaskItem;
 
@@ -1701,25 +1700,16 @@ TaskSwichWnd_HandleItemPaint(IN OUT PTASK_SWITCH_WND This,
                     uidctFlags |= DC_ACTIVE;
             }
 
-            hUser32 = GetModuleHandle(TEXT("USER32.DLL"));
-            if (hUser32 != NULL)
+            if (DrawCapTemp != NULL)
             {
-                DRAWCAPTEMP DrawCapTemp;
-
-                /* DrawCaptionTemp */
-                DrawCapTemp = (DRAWCAPTEMP)GetProcAddress(hUser32,
-                                                          PROC_NAME_DRAWCAPTIONTEMP);
-                if (DrawCapTemp != NULL)
-                {
-                    /* Draw the button content */
-                    TaskItem->DisplayTooltip = !DrawCapTemp(TaskItem->hWnd,
-                                                            nmtbcd->nmcd.hdc,
-                                                            &nmtbcd->nmcd.rc,
-                                                            hCaptionFont,
-                                                            NULL,
-                                                            NULL,
-                                                            uidctFlags);
-                }
+                /* Draw the button content */
+                TaskItem->DisplayTooltip = !DrawCapTemp(TaskItem->hWnd,
+                                                        nmtbcd->nmcd.hdc,
+                                                        &nmtbcd->nmcd.rc,
+                                                        hCaptionFont,
+                                                        NULL,
+                                                        NULL,
+                                                        uidctFlags);
             }
 
             return CDRF_SKIPDEFAULT;
