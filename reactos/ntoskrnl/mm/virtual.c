@@ -67,7 +67,7 @@ MiDoMappedCopy(IN PEPROCESS SourceProcess,
                IN KPROCESSOR_MODE PreviousMode,
                OUT PULONG ReturnSize)
 {
-    PFN_NUMBER MdlBuffer[(sizeof(MDL) / sizeof(PFN_NUMBER)) + (MI_MAPPED_COPY_PAGES >> PAGE_SHIFT) + 1];
+    PFN_NUMBER MdlBuffer[(sizeof(MDL) / sizeof(PFN_NUMBER)) + MI_MAPPED_COPY_PAGES + 1];
     PMDL Mdl = (PMDL)MdlBuffer;
     ULONG TotalSize, CurrentSize, RemainingSize;
     BOOLEAN FailedInProbe = FALSE, FailedInMapping = FALSE, FailedInMoving;
@@ -82,8 +82,8 @@ MiDoMappedCopy(IN PEPROCESS SourceProcess,
     /* Calculate the maximum amount of data to move */
     TotalSize = (MI_MAPPED_COPY_PAGES - 2) * PAGE_SIZE;
     if (BufferSize <= TotalSize) TotalSize = BufferSize;
-    CurrentSize = BufferSize;
-    RemainingSize = TotalSize;
+    CurrentSize = TotalSize;
+    RemainingSize = BufferSize;
 
     /* Loop as long as there is still data */
     while (RemainingSize > 0)
@@ -117,7 +117,7 @@ MiDoMappedCopy(IN PEPROCESS SourceProcess,
             }
 
             /* Initialize and probe and lock the MDL */
-            MmInitializeMdl (Mdl, CurrentAddress, CurrentSize);           
+            MmInitializeMdl (Mdl, CurrentAddress, CurrentSize);
             MmProbeAndLockPages (Mdl, PreviousMode, IoReadAccess);
             PagesLocked = TRUE;
 
@@ -236,8 +236,8 @@ MiDoPoolCopy(IN PEPROCESS SourceProcess,
     /* Calculate the maximum amount of data to move */
     TotalSize = MI_MAX_TRANSFER_SIZE;
     if (BufferSize <= MI_MAX_TRANSFER_SIZE) TotalSize = BufferSize;
-    CurrentSize = BufferSize;
-    RemainingSize = TotalSize;
+    CurrentSize = TotalSize;
+    RemainingSize = BufferSize;
 
     /* Check if we can use the stack */
     if (BufferSize <= MI_POOL_COPY_BYTES)
