@@ -1701,17 +1701,14 @@ TaskSwichWnd_HandleItemPaint(IN OUT PTASK_SWITCH_WND This,
                     uidctFlags |= DC_ACTIVE;
             }
 
-            hUser32 = LoadLibrary(TEXT("USER32.DLL"));
+            hUser32 = GetModuleHandle(TEXT("USER32.DLL"));
             if (hUser32 != NULL)
             {
                 DRAWCAPTEMP DrawCapTemp;
-                LONG ord = 187;
-#ifndef UNICODE
-                ord = 186;
-#endif
+
                 /* DrawCaptionTemp */
                 DrawCapTemp = (DRAWCAPTEMP)GetProcAddress(hUser32,
-                                                          (LPCSTR)ord);
+                                                          PROC_NAME_DRAWCAPTIONTEMP);
                 if (DrawCapTemp != NULL)
                 {
                     /* Draw the button content */
@@ -1723,8 +1720,6 @@ TaskSwichWnd_HandleItemPaint(IN OUT PTASK_SWITCH_WND This,
                                                             NULL,
                                                             uidctFlags);
                 }
-
-                FreeLibrary(hUser32);
             }
 
             return CDRF_SKIPDEFAULT;
