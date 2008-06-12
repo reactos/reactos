@@ -1082,6 +1082,11 @@ typedef struct _SHChangeNotifyEntry
 #define SHCNF_PATH              WINELIB_NAME_AW(SHCNF_PATH)
 #define SHCNF_PRINTER           WINELIB_NAME_AW(SHCNF_PRINTER)
 
+#define SHCNRF_InterruptLevel   0x1
+#define SHCNRF_ShellLevel   0x2
+#define SHCNRF_RecursiveInterrupt   0x1000
+#define SHCNRF_NewDelivery  0x8000
+
 void WINAPI SHChangeNotify(LONG wEventId, UINT uFlags, LPCVOID dwItem1, LPCVOID dwItem2);
 
 typedef enum {
