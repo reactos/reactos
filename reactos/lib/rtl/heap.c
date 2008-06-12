@@ -596,14 +596,12 @@ static BOOL HEAP_InitSubHeap( HEAP *heap, LPVOID address, DWORD flags,
     int i;
     NTSTATUS Status;
 
-#if 1
-    if (address==NULL && ZwAllocateVirtualMemory( NtCurrentProcess(), &address, 0,
+    if (!address && ZwAllocateVirtualMemory( NtCurrentProcess(), &address, 0,
                                  &commitSize, MEM_COMMIT, PAGE_READWRITE ))
     {
         WARN("Could not commit %08lx bytes for sub-heap %p\n", commitSize, address );
         return FALSE;
     }
-#endif
 
     /* Fill the sub-heap structure */
 
@@ -1596,26 +1594,21 @@ NTSTATUS NTAPI
 RtlEnumProcessHeaps(PHEAP_ENUMERATION_ROUTINE HeapEnumerationRoutine,
                     PVOID lParam)
 {
+    NTSTATUS Status = STATUS_SUCCESS;
 
-#if 1
-   NTSTATUS Status = STATUS_SUCCESS;
+    struct list *ptr=NULL;
+    RtlEnterHeapLock(&processHeap->critSection);
+    Status=HeapEnumerationRoutine(processHeap,lParam);
 
-   struct list *ptr=NULL;
-   RtlEnterHeapLock(&processHeap->critSection);
-   Status=HeapEnumerationRoutine(processHeap,lParam);
-      LIST_FOR_EACH( ptr, &processHeap->entry )
-      {
-             if (!NT_SUCCESS(Status))
-                break;
-          Status = HeapEnumerationRoutine(ptr,lParam);
+    LIST_FOR_EACH( ptr, &processHeap->entry )
+    {
+        if (!NT_SUCCESS(Status)) break;
+        Status = HeapEnumerationRoutine(ptr,lParam);
+    }
 
-      }
+    RtlLeaveHeapLock(&processHeap->critSection);
 
-
-   RtlLeaveHeapLock(&processHeap->critSection);
-
-   return Status;
-#endif
+    return Status;
 }
 
 
@@ -1637,13 +1630,9 @@ RtlGetProcessHeaps(ULONG count,
         i++;
         LIST_FOR_EACH( ptr, &processHeap->entry )
         {
-            if(i>=count)
-            {
-                break;
-            }
+            if (i >= count) break;
             i++;
             *(heaps++) = LIST_ENTRY( ptr, HEAP, entry );
-
         }
     }
     RtlLeaveHeapLock( &processHeap->critSection );
@@ -1657,11 +1646,8 @@ RtlGetProcessHeaps(ULONG count,
 BOOLEAN NTAPI
 RtlValidateProcessHeaps(VOID)
 {
-
-#if 1
    BOOLEAN Result = TRUE;
    HEAP ** pptr;
-
 
    RtlEnterHeapLock( &processHeap->critSection );
 
@@ -1674,10 +1660,8 @@ RtlValidateProcessHeaps(VOID)
       }
    }
 
-
-    RtlLeaveHeapLock( &processHeap->critSection );
+   RtlLeaveHeapLock( &processHeap->critSection );
    return Result;
-#endif
 }
 
 
