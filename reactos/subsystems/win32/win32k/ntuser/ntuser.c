@@ -63,7 +63,7 @@ NTSTATUS FASTCALL InitUserImpl(VOID)
       if (gpsi)
       {
          RtlZeroMemory(gpsi, sizeof(SERVERINFO));
-         DPRINT1("Gloabal Server Data -> %x\n", gpsi);
+         DPRINT("Global Server Data -> %x\n", gpsi);
       }
    }
    return STATUS_SUCCESS;

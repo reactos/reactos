@@ -335,7 +335,8 @@ static HEAP *HEAP_GetPtr(
     HEAP *heapPtr = (HEAP *)heap;
     if (!heapPtr || (heapPtr->magic != HEAP_MAGIC))
     {
-        ERR("Invalid heap %p!\n", heap );
+        ERR("Invalid heap %p, magic:%4s!\n", heap,heapPtr->magic );
+        //KeDumpStackFrames(NULL);
         return NULL;
     }
     if (TRACE_ON(heap) && !HEAP_IsRealArena( heapPtr, 0, NULL, NOISY ))
@@ -595,8 +596,8 @@ static BOOL HEAP_InitSubHeap( HEAP *heap, LPVOID address, DWORD flags,
     int i;
     NTSTATUS Status;
 
-#if 0
-    if (ZwAllocateVirtualMemory( NtCurrentProcess(), &address, 0,
+#if 1
+    if (address==NULL && ZwAllocateVirtualMemory( NtCurrentProcess(), &address, 0,
                                  &commitSize, MEM_COMMIT, PAGE_READWRITE ))
     {
         WARN("Could not commit %08lx bytes for sub-heap %p\n", commitSize, address );
@@ -775,7 +776,7 @@ static ARENA_FREE *HEAP_FindFreeBlock( HEAP *heap, SIZE_T size,
 
     if (!(heap->flags & HEAP_GROWABLE))
     {
-        WARN("Not enough space in heap %p for %08lx bytes\n", heap, size );
+        ERR("Not enough space in heap %p for %08lx bytes\n", heap, size );
         return NULL;
     }
     /* make sure that we have a big enough size *committed* to fit another
@@ -1595,26 +1596,23 @@ NTSTATUS NTAPI
 RtlEnumProcessHeaps(PHEAP_ENUMERATION_ROUTINE HeapEnumerationRoutine,
                     PVOID lParam)
 {
-    DPRINT1("UNIMPLEMENTED\n");
-    DPRINT1("UNIMPLEMENTED\n");
-    DPRINT1("UNIMPLEMENTED\n");
-    DPRINT1("UNIMPLEMENTED\n");
-    DbgBreakPoint();
-    return STATUS_SUCCESS;
-#if 0
+
+#if 1
    NTSTATUS Status = STATUS_SUCCESS;
-   HEAP** pptr;
 
-   RtlEnterHeapLock(&RtlpProcessHeapsListLock);
+   struct list *ptr=NULL;
+   RtlEnterHeapLock(&processHeap->critSection);
+   Status=HeapEnumerationRoutine(processHeap,lParam);
+      LIST_FOR_EACH( ptr, &processHeap->entry )
+      {
+             if (!NT_SUCCESS(Status))
+                break;
+          Status = HeapEnumerationRoutine(ptr,lParam);
 
-   for (pptr = (HEAP**)&NtCurrentPeb()->ProcessHeaps; *pptr; pptr = &(*pptr)->next)
-   {
-      Status = HeapEnumerationRoutine(*pptr,lParam);
-      if (!NT_SUCCESS(Status))
-         break;
-   }
+      }
 
-   RtlLeaveHeapLock(&RtlpProcessHeapsListLock);
+
+   RtlLeaveHeapLock(&processHeap->critSection);
 
    return Status;
 #endif
@@ -1630,17 +1628,26 @@ RtlGetProcessHeaps(ULONG count,
 {
     ULONG total = 1;  /* main heap */
     struct list *ptr;
-
+    ULONG i=0;
     RtlEnterHeapLock( &processHeap->critSection );
     LIST_FOR_EACH( ptr, &processHeap->entry ) total++;
-    if (total <= count)
+    //if (total <= count)
     {
-        *heaps++ = processHeap;
+        *(heaps++) = processHeap;
+        i++;
         LIST_FOR_EACH( ptr, &processHeap->entry )
-            *heaps++ = LIST_ENTRY( ptr, HEAP, entry );
+        {
+            if(i>=count)
+            {
+                break;
+            }
+            i++;
+            *(heaps++) = LIST_ENTRY( ptr, HEAP, entry );
+
+        }
     }
     RtlLeaveHeapLock( &processHeap->critSection );
-    return total;
+    return i;
 }
 
 
@@ -1650,19 +1657,15 @@ RtlGetProcessHeaps(ULONG count,
 BOOLEAN NTAPI
 RtlValidateProcessHeaps(VOID)
 {
-    DPRINT1("UNIMPLEMENTED\n");
-    DPRINT1("UNIMPLEMENTED\n");
-    DPRINT1("UNIMPLEMENTED\n");
-    DPRINT1("UNIMPLEMENTED\n");
-    DbgBreakPoint();
-    return STATUS_SUCCESS;
-#if 0
+
+#if 1
    BOOLEAN Result = TRUE;
    HEAP ** pptr;
 
-   RtlEnterHeapLock(&RtlpProcessHeapsListLock);
 
-   for (pptr = (HEAP**)&NtCurrentPeb()->ProcessHeaps; *pptr; pptr = &(*pptr)->next)
+   RtlEnterHeapLock( &processHeap->critSection );
+
+   for (pptr = (HEAP**)&NtCurrentPeb()->ProcessHeaps; *pptr; pptr++)
    {
       if (!RtlValidateHeap(*pptr, 0, NULL))
       {
@@ -1671,8 +1674,8 @@ RtlValidateProcessHeaps(VOID)
       }
    }
 
-   RtlLeaveHeapLock (&RtlpProcessHeapsListLock);
 
+    RtlLeaveHeapLock( &processHeap->critSection );
    return Result;
 #endif
 }
