@@ -504,7 +504,7 @@ MonthCalPaint(IN PMONTHCALWND infoPtr,
             if (crOldCtrlText == CLR_INVALID)
             {
                 crOldCtrlText = SetTextColor(hDC,
-                                             infoPtr->Enabled ? MONTHCAL_CTRLFG : MONTHCAL_DISABLED_CTRLFG);
+                                             GetSysColor(infoPtr->Enabled ? MONTHCAL_CTRLFG : MONTHCAL_DISABLED_CTRLFG));
             }
 
             for (x = prcUpdate->left / infoPtr->CellSize.cx;

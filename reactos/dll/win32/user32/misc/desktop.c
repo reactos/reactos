@@ -100,9 +100,11 @@ int STDCALL
 GetSystemMetrics(int nIndex)
 {
 //  FIXME("Global Sever Data -> %x\n",g_psi);
-  if (g_psi) return g_psi->SystemMetrics[nIndex];
+  if (nIndex < 0 || nIndex >= SM_CMETRICS) return 0;
+  if (g_psi)
+    return g_psi->SystemMetrics[nIndex];
   else
-  return(NtUserGetSystemMetrics(nIndex));
+    return(NtUserGetSystemMetrics(nIndex));
 }
 
 

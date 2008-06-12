@@ -278,6 +278,13 @@ UserGetSystemMetrics(ULONG Index)
    ULONG Width, Height, Result;
 
 //  DPRINT1("UserGetSystemMetrics -> %d\n",Index);
+
+  if (Index >= SM_CMETRICS)
+  {
+     DPRINT1("UserGetSystemMetrics() called with invalid index %d\n", Index);
+     return 0;
+  }
+
   if (gpsi && Setup)
      return gpsi->SystemMetrics[Index];
   else
