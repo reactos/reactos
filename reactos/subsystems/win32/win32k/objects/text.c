@@ -362,7 +362,7 @@ IntGdiAddFontResource(PUNICODE_STRING FileName, DWORD Characteristics)
    /* FIXME: Complete text metrics */
     XScale = Face->size->metrics.x_scale;
     YScale = Face->size->metrics.y_scale;
-#if 1 /* This (Wine) code doesn't seem to work correctly for us */
+#if 0 /* This (Wine) code doesn't seem to work correctly for us */
     FontGDI->TextMetric.tmAscent =  (FT_MulFix(Face->ascender, YScale) + 32) >> 6;
     FontGDI->TextMetric.tmDescent = (FT_MulFix(Face->descender, YScale) + 32) >> 6;
     FontGDI->TextMetric.tmHeight =  (FT_MulFix(Face->ascender, YScale) -
@@ -644,10 +644,10 @@ FillTM(TEXTMETRICW *TM, FT_Face Face, TT_OS2 *pOS2, TT_HoriHeader *pHori)
       Descent = pOS2->usWinDescent;
     }
 
-#if 1 /* This (Wine) code doesn't seem to work correctly for us, cmd issue */
+#if 0 /* This (Wine) code doesn't seem to work correctly for us, cmd issue */
   TM->tmAscent = (FT_MulFix(Ascent, YScale) + 32) >> 6;
   TM->tmDescent = (FT_MulFix(Descent, YScale) + 32) >> 6;
-#else /* This (ros) code doesn't seem to work correctly for us for it miss 2-3 pixel draw of the font*/
+#else /* This (ros) code was previously affected by a FreeType bug, but it works now */
   TM->tmAscent = (Face->size->metrics.ascender + 32) >> 6; /* units above baseline */
   TM->tmDescent = (32 - Face->size->metrics.descender) >> 6; /* units below baseline */
 #endif

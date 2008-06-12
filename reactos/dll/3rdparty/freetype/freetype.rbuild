@@ -24,7 +24,7 @@
 			<file>ftsystem.c</file>
 			<file>ftinit.c</file>
 			<file>ftdebug.c</file>
-			<file>ftbase.c</file>
+			<file>_ftbase_ros.c</file>
 			<file>ftbbox.c</file>
 			<file>ftglyph.c</file>
 			<file>ftbdf.c</file>
