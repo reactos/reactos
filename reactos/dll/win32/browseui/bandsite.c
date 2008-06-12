@@ -138,9 +138,88 @@ static DWORD GetBandSiteViewMode(BandSite *This)
         return DBIF_VIEWMODE_NORMAL;
 }
 
+static VOID BuildRebarBandInfo(BandSite *This, struct BandObject *Band, REBARBANDINFOW *prbi)
+{
+    ZeroMemory(prbi, sizeof(*prbi));
+    prbi->cbSize = sizeof(*prbi);
+
+    prbi->fMask = RBBIM_ID;
+    prbi->wID = GetBandID(This,
+                          Band);
+
+    if (Band->dbi.dwMask & DBIM_MINSIZE)
+    {
+        prbi->fMask |= RBBIM_CHILDSIZE;
+        prbi->cxMinChild = Band->dbi.ptMinSize.x;
+        prbi->cyMinChild = Band->dbi.ptMinSize.y;
+    }
+
+    if (Band->dbi.dwMask & DBIM_MAXSIZE)
+    {
+        prbi->fMask |= RBBIM_CHILDSIZE;
+        prbi->cyMaxChild = Band->dbi.ptMaxSize.y;
+    }
+
+    if ((Band->dbi.dwMask & (DBIM_INTEGRAL | DBIM_MODEFLAGS)) == (DBIM_INTEGRAL | DBIM_MODEFLAGS) &&
+        (Band->dbi.dwModeFlags & DBIMF_VARIABLEHEIGHT))
+    {
+        prbi->fMask |= RBBIM_CHILDSIZE;
+        prbi->cyIntegral = Band->dbi.ptIntegral.y;
+    }
+
+    if (Band->dbi.dwMask & DBIM_ACTUAL)
+    {
+        prbi->fMask |= RBBIM_IDEALSIZE | RBBIM_SIZE | RBBIM_CHILDSIZE;
+        prbi->cxIdeal = Band->dbi.ptActual.x;
+        prbi->cx = Band->dbi.ptActual.x;
+        prbi->cyChild = Band->dbi.ptActual.y;
+    }
+
+    if (Band->dbi.dwMask & DBIM_TITLE)
+    {
+        prbi->fMask |= RBBIM_TEXT;
+        prbi->lpText = Band->dbi.wszTitle;
+        prbi->cch = wcslen(Band->dbi.wszTitle);
+    }
+
+    if (Band->dbi.dwMask & DBIM_MODEFLAGS)
+    {
+        prbi->fMask |= RBBIM_STYLE;
+
+        if (Band->dbi.dwModeFlags & DBIMF_FIXED)
+            prbi->fStyle |= RBBS_FIXEDSIZE | RBBS_NOGRIPPER;
+        if (Band->dbi.dwModeFlags & DBIMF_FIXEDBMP)
+            prbi->fStyle |= RBBS_FIXEDBMP;
+        if (Band->dbi.dwModeFlags & DBIMF_VARIABLEHEIGHT)
+            prbi->fStyle |= RBBS_VARIABLEHEIGHT;
+        if (Band->dbi.dwModeFlags & DBIMF_DEBOSSED)
+            prbi->fStyle |= RBBS_CHILDEDGE;
+        if (Band->dbi.dwModeFlags & DBIMF_USECHEVRON)
+            prbi->fStyle |= RBBS_USECHEVRON;
+        if (Band->dbi.dwModeFlags & DBIMF_BREAK)
+            prbi->fStyle |= RBBS_BREAK;
+        if (Band->dbi.dwModeFlags & DBIMF_TOPALIGN)
+            prbi->fStyle |= RBBS_TOPALIGN;
+        if (Band->dbi.dwModeFlags & DBIMF_NOGRIPPER)
+            prbi->fStyle |= RBBS_NOGRIPPER;
+        if (Band->dbi.dwModeFlags & DBIMF_ALWAYSGRIPPER)
+            prbi->fStyle |= RBBS_GRIPPERALWAYS;
+    }
+
+    if ((Band->dbi.dwMask & (DBIM_BKCOLOR | DBIM_MODEFLAGS)) == (DBIM_BKCOLOR | DBIM_MODEFLAGS) &&
+        (Band->dbi.dwModeFlags & DBIMF_BKCOLOR))
+    {
+        prbi->fMask |= RBBIM_COLORS;
+        prbi->clrFore = (COLORREF)(COLOR_WINDOWTEXT + 1);
+        prbi->clrBack = Band->dbi.crBkgnd;
+    }
+}
+
 static HRESULT UpdateSingleBand(BandSite *This, struct BandObject *Band)
 {
+    REBARBANDINFOW rbi;
     DWORD dwViewMode;
+    UINT uBand;
     HRESULT hRet;
 
     ZeroMemory (&Band->dbi, sizeof(Band->dbi));
@@ -156,6 +235,34 @@ static HRESULT UpdateSingleBand(BandSite *This, struct BandObject *Band)
                                  &Band->dbi);
     if (SUCCEEDED(hRet))
     {
+        BuildRebarBandInfo(This,
+                           Band,
+                           &rbi);
+        if (SUCCEEDED(IOleWindow_GetWindow(Band->OleWindow,
+                                           &rbi.hwndChild)) &&
+            rbi.hwndChild != NULL)
+        {
+            rbi.fMask |= RBBIM_CHILD;
+            WARN ("ReBar band uses child window 0x%p\n", rbi.hwndChild);
+        }
+
+        uBand = (UINT)SendMessageW(This->hWndRebar,
+                                   RB_IDTOINDEX,
+                                   (WPARAM)rbi.wID,
+                                   0);
+        if (uBand != (UINT)-1)
+        {
+            if (!SendMessageW(This->hWndRebar,
+                              RB_SETBANDINFOW,
+                              (WPARAM)uBand,
+                              (LPARAM)&rbi))
+            {
+                WARN("Failed to update the rebar band!\n");
+            }
+        }
+        else
+            WARN("Failed to map rebar band id to index!\n");
+
     }
 
     return hRet;
@@ -441,33 +548,52 @@ static HRESULT WINAPI BandSite_AddBand(IBandSite *iface, IUnknown *punk)
     {
         ASSERT(NewBand != NULL);
 
-        /* Create the ReBar band */
-        rbi.cbSize = sizeof(rbi);
-        rbi.fMask = RBBIM_ID;
-        rbi.wID = GetBandID(This,
-                            NewBand);
-        if (!SendMessageW(This->hWndRebar,
-                          RB_INSERTBANDW,
-                          (WPARAM)((UINT)-1),
-                         ( LPARAM)&rbi))
-        {
-            hRet = E_FAIL;
-            goto Cleanup;
-        }
-
+        This->BandsCount++;
         NewBand->DeskBand = DeskBand;
         NewBand->OleWindow = OleWindow;
         NewBand->WndEvtHandler = WndEvtHandler;
 
-        This->BandsCount++;
-
         DeskBand = NULL;
         OleWindow = NULL;
         WndEvtHandler = NULL;
+
+        /* Create the ReBar band */
         hRet = IObjectWithSite_SetSite(ObjWithSite,
                                        (IUnknown*)iface);
         if (SUCCEEDED(hRet))
         {
+            uBand = (UINT)-1;
+            if (SUCCEEDED(UpdateSingleBand(This,
+                                           NewBand)))
+            {
+                if (NewBand->dbi.dwMask & DBIM_MODEFLAGS)
+                {
+                    if (NewBand->dbi.dwModeFlags & DBIMF_ADDTOFRONT)
+                        uBand = 0;
+                }
+            }
+
+            BuildRebarBandInfo(This,
+                               NewBand,
+                               &rbi);
+
+            if (SUCCEEDED(IOleWindow_GetWindow(NewBand->OleWindow,
+                                               &rbi.hwndChild)) &&
+                rbi.hwndChild != NULL)
+            {
+                rbi.fMask |= RBBIM_CHILD;
+                WARN ("ReBar band uses child window 0x%p\n", rbi.hwndChild);
+            }
+
+            if (!SendMessageW(This->hWndRebar,
+                              RB_INSERTBANDW,
+                              (WPARAM)uBand,
+                              (LPARAM)&rbi))
+            {
+                hRet = E_FAIL;
+                goto Cleanup;
+            }
+
             hRet = (HRESULT)((USHORT)GetBandID(This,
                                                NewBand));
         }
@@ -702,6 +828,16 @@ static HRESULT WINAPI BandSite_ProcessMessage(IWindowEventHandler *iface, HWND h
     if (This->hWndRebar == NULL)
         return E_FAIL;
 
+    if (hWnd == This->hWndRebar)
+    {
+        /* FIXME: Just send the message? */
+        *plrResult = SendMessageW(hWnd,
+                                  uMsg,
+                                  wParam,
+                                  lParam);
+        return S_OK;
+    }
+
     Band = GetBandFromHwnd(This,
                            hWnd);
     if (Band != NULL)
@@ -714,7 +850,7 @@ static HRESULT WINAPI BandSite_ProcessMessage(IWindowEventHandler *iface, HWND h
                                                   plrResult);
     }
 
-    return S_FALSE;
+    return E_FAIL;
 }
 
 static HRESULT WINAPI BandSite_ContainsWindow(IWindowEventHandler *iface, HWND hWnd)
