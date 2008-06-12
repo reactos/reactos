@@ -33,11 +33,14 @@ HalGetInterruptSource(VOID);
 VOID FASTCALL
 HalClearSoftwareInterrupt(IN KIRQL Request);
 
-VOID
+BOOLEAN
 KiSwapContextInternal(IN PKTHREAD OldThread,
                       IN PKTHREAD NewThread)
 {
     PKEXCEPTION_FRAME ExFrame = NewThread->KernelStack;
+    PKPCR Pcr = (PKPCR)KeGetPcr();
+    PKPRCB Prcb = Pcr->Prcb;
+    PKPROCESS OldProcess, NewProcess;
     DPRINT1("Switching from: %p to %p\n", OldThread, NewThread);
     DPRINT1("Stacks: %p %p\n", OldThread->KernelStack, NewThread->KernelStack);
     DPRINT1("Thread Registers:\n"
@@ -61,10 +64,91 @@ KiSwapContextInternal(IN PKTHREAD OldThread,
             ExFrame->R11,
             ExFrame->Psr,
             ExFrame->Lr);
+    DPRINT1("Old priority: %lx\n", OldThread->Priority);
     
     //
-    // FIXME: Todo
+    // Increase context switch count
     //
+    Pcr->ContextSwitches++;
+    
+    //
+    // Check if WMI tracing is enabled
+    //
+    if (Pcr->PerfGlobalGroupMask)
+    {
+        //
+        // FIXME: TODO
+        //
+        DPRINT1("WMI Tracing not supported\n");
+        while (TRUE);
+    }
+    
+    //
+    // Check if the processes are also different
+    //
+    OldProcess = OldThread->ApcState.Process;
+    NewProcess = NewThread->ApcState.Process;
+    if (OldProcess != NewProcess)
+    {
+        //
+        // Check if address space switch is needed
+        //
+        if (OldProcess->DirectoryTableBase.LowPart !=
+            NewProcess->DirectoryTableBase.LowPart)
+        {
+            //
+            // FIXME: TODO
+            //
+            DPRINT1("Address space switch not implemented\n");
+            while (TRUE);
+        }
+    }
+    
+    //
+    // Increase thread context switches
+    //
+    NewThread->ContextSwitches++;
+    
+    //
+    // Set us as the current thread
+    // NOTE: On RISC Platforms, there is both a KPCR CurrentThread, and a
+    // KPRCB CurrentThread.
+    // The latter is set just like on x86-based builds, the former is only set
+    // when actually doing the context switch (here).
+    // Recall that the reason for the latter is due to the fact that the KPCR
+    // is shared with user-mode (read-only), so that information is exposed
+    // there as well.
+    //
+    Pcr->CurrentThread = NewThread;
+    
+    //
+    // DPCs shouldn't be active
+    //
+    if (Prcb->DpcRoutineActive)
+    {
+        //
+        // FIXME: FAIL
+        //
+        DPRINT1("DPCS ACTIVE!!!\n");
+        while (TRUE);
+    }
+    
+    //
+    // Kernel APCs may be pending
+    //
+    if (NewThread->ApcState.KernelApcPending)
+    {
+        //
+        // FIXME: TODO
+        //
+        DPRINT1("APCs pending!\n");
+        while (TRUE);
+    }
+    
+    //
+    // Return
+    //
+    return FALSE;
 }
 
 VOID

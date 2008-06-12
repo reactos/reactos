@@ -1269,7 +1269,7 @@ Phase1InitializationDiscard(IN PVOID Context)
     DPRINT1("*** Phase 1 Initialization Thread\n");
     DPRINT1("Beginning consistency checks...\n");
     // CHECK STACKS, IRQLS, DISPATCHER AND MAKE SURE WE ARE GOOD TO GO!
-    while (TRUE);
+    //while (TRUE);
 #endif
 
     /* Allocate the initialization buffer */

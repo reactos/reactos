@@ -111,6 +111,8 @@ typedef struct _KPCR
     PVOID InitialStack;
     PVOID StackLimit;
     ULONG QuantumEnd;
+    PVOID PerfGlobalGroupMask;
+    ULONG ContextSwitches;
 } KPCR, *PKPCR;
 
 //
