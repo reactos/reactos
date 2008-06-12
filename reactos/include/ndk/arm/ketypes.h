@@ -101,11 +101,11 @@ typedef struct _KEXCEPTION_FRAME
     ULONG R9;
     ULONG R10;
     ULONG R11;
-    ULONG R12;
+//    ULONG R12;
 //    ULONG Sp;
-//    ULONG Psr;
+    ULONG Psr;
     ULONG Lr;
-    ULONG SwapReturn;
+//    ULONG SwapReturn;
 } KEXCEPTION_FRAME, *PKEXCEPTION_FRAME;
 
 //

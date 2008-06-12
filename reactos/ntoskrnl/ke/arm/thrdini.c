@@ -30,15 +30,7 @@ typedef struct _KKINIT_FRAME
 
 VOID
 NTAPI
-KiThreadStartup(IN PKSYSTEM_ROUTINE SystemRoutine,
-                IN PKSTART_ROUTINE StartRoutine,
-                IN PVOID StartContext,
-                IN BOOLEAN UserThread,
-                IN KTRAP_FRAME TrapFrame)
-{
-    UNIMPLEMENTED;
-    return;
-}
+KiThreadStartup(VOID);
 
 VOID
 NTAPI
@@ -112,7 +104,7 @@ KeArmInitThreadWithContext(IN PKTHREAD Thread,
         //
         // Set the previous mode as kernel
         //
-        //Thread->PreviousMode = KernelMode;
+        Thread->PreviousMode = KernelMode;
         
         //
         // Context switch frame to setup below
@@ -123,7 +115,7 @@ KeArmInitThreadWithContext(IN PKTHREAD Thread,
     //
     // Now setup the context switch frame
     //
-    CtxSwitchFrame->SwapReturn = (ULONG)KiThreadStartup;
+    CtxSwitchFrame->Lr = (ULONG)KiThreadStartup;
     CtxSwitchFrame->R11 = (ULONG)(ExceptionFrame ? ExceptionFrame : CtxSwitchFrame);
 
     //
@@ -138,4 +130,5 @@ KeArmInitThreadWithContext(IN PKTHREAD Thread,
     // Save back the new value of the kernel stack
     //
     Thread->KernelStack = (PVOID)CtxSwitchFrame;
+    DPRINT1("NEW THREAD %p WITH EX FRAME AT: %p\n", Thread, Thread->KernelStack);
 }

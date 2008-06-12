@@ -21,6 +21,11 @@
     //
     // Save volatile registers for the OLD thread
     //
+    sub sp, sp, #(4*8)
+    mrs ip, spsr_all
+    stmia sp, {ip, lr}
+    sub sp, sp, #(4*2)
+    stmia sp, {r4-r11}
     
     //
     // Switch stacks
@@ -32,19 +37,46 @@
     // Call the C context switch code
     //
     bl KiSwapContextInternal
-    
+
     //
     // Restore volatile registers for the NEW thread
     //
+    ldmia sp, {r4-r11}
+    add sp, sp, #(4*8)
+    ldmia sp, {ip, lr}
+    msr spsr_all, ip
+    add sp, sp, #(4*2)
     
     //
     // Jump to saved restore address
     //
+    mov pc, lr
+
+    ENTRY_END KiSwapContext
+
+    NESTED_ENTRY KiThreadStartup
+    PROLOG_END KiThreadStartup
     
     //
-    // FIXME: TODO
+    // FIXME: Make space on stack and clean it up?
+    //
+    
+    //
+    // Lower to APC_LEVEL
+    //
+    mov a1, #1
+    bl KeLowerIrql
+    
+    //
+    // Set the start address and startup context
+    //
+    mov a1, r6
+    mov a2, r5
+    blx r7
+    
+    //
+    // Oh noes, we are back!
     //
     b .
     
-    ENTRY_END KiSwapContext
-
+    ENTRY_END KiThreadStartup
