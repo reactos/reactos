@@ -27,9 +27,9 @@ BEGIN
         MENUITEM "M&entés\tCtrl+S",       ID_FILE_SAVE
         MENUITEM "Mentés má&sként...",        ID_FILE_SAVEAS
         MENUITEM SEPARATOR
-        MENUITEM "&Print . . .\tCtrl+P",  ID_PRINT
-        MENUITEM "Print previe&w . . .",  ID_PREVIEW
-        MENUITEM "Page setup . . .",      ID_PRINTSETUP
+        MENUITEM "&Print...\tCtrl+P",  ID_PRINT
+        MENUITEM "Print previe&w...",  ID_PREVIEW
+        MENUITEM "Page setup...",      ID_PRINTSETUP
         MENUITEM SEPARATOR
         MENUITEM "&Kilépés",      ID_FILE_EXIT
     END
@@ -44,9 +44,9 @@ BEGIN
         MENUITEM "Tör&lés\tDel",                ID_EDIT_CLEAR
         MENUITEM "M&indet kijelöli\tCtrl+A",    ID_EDIT_SELECTALL
         MENUITEM SEPARATOR
-        MENUITEM "&Find . . .\tCrtl+F",         ID_FIND
+        MENUITEM "&Find...\tCrtl+F",         ID_FIND
         MENUITEM "Find &next\tF3",              ID_FIND_NEXT
-        MENUITEM "&Replace . . .\tCtrl+H",      ID_REPLACE
+        MENUITEM "&Replace...\tCtrl+H",      ID_REPLACE
         MENUITEM SEPARATOR
         MENUITEM "Csak &olvasható",             ID_EDIT_READONLY
         MENUITEM "Mó&dosítva",                  ID_EDIT_MODIFIED
@@ -67,18 +67,18 @@ BEGIN
         MENUITEM "&Ruler",          ID_TOGGLE_RULER
         MENUITEM "&Statusbar",      ID_TOGGLE_STATUSBAR
         MENUITEM SEPARATOR
-        MENUITEM "&Options . . .",  ID_VIEWPROPERTIES
+        MENUITEM "&Options...",  ID_VIEWPROPERTIES
     END
     POPUP "&Insert"
     BEGIN
-        MENUITEM "&Date and time . . .",  ID_DATETIME
+        MENUITEM "&Date and time...",  ID_DATETIME
     END
     POPUP "F&ormátum"
     BEGIN
-        MENUITEM "&Font . . .",                  ID_FONTSETTINGS
+        MENUITEM "&Font...",                  ID_FONTSETTINGS
         MENUITEM "&Bullet points"                ID_BULLET
-        MENUITEM "&Paragraph . . ."              ID_PARAFORMAT
-        MENUITEM "&Tabs . . ."                   ID_TABSTOPS
+        MENUITEM "&Paragraph..."              ID_PARAFORMAT
+        MENUITEM "&Tabs..."                   ID_TABSTOPS
         POPUP "&Háttér"
         BEGIN
             MENUITEM "&Rendszer\tCtrl+1",         ID_BACK_1
@@ -100,7 +100,7 @@ BEGIN
         MENUITEM "&Beillesztés\tCtrl+V", ID_EDIT_PASTE
         MENUITEM SEPARATOR
         MENUITEM "&Bullet points"        ID_BULLET
-        MENUITEM "&Paragraph . . ."      ID_PARAFORMAT
+        MENUITEM "&Paragraph..."      ID_PARAFORMAT
     END
 END
 

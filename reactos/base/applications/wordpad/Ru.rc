@@ -27,9 +27,9 @@ BEGIN
         MENUITEM "&Сохранить\tCtrl+S", ID_FILE_SAVE
         MENUITEM "Сохранить &как...",  ID_FILE_SAVEAS
         MENUITEM SEPARATOR
-        MENUITEM "&Печать . . .\tCtrl+P",            ID_PRINT
-        MENUITEM "Пред&варительный просмотр . . .",  ID_PREVIEW
-        MENUITEM "&Макет страницы . . .",            ID_PRINTSETUP
+        MENUITEM "&Печать...\tCtrl+P",            ID_PRINT
+        MENUITEM "Пред&варительный просмотр...",  ID_PREVIEW
+        MENUITEM "&Макет страницы...",            ID_PRINTSETUP
         MENUITEM SEPARATOR
         MENUITEM "В&ыход",                           ID_FILE_EXIT
     END
@@ -44,9 +44,9 @@ BEGIN
         MENUITEM "&Удалить\tDEL",               ID_EDIT_CLEAR
         MENUITEM "Выделить в&се\tCtrl+A",       ID_EDIT_SELECTALL
         MENUITEM SEPARATOR
-        MENUITEM "&Найти . . .\tCrtl+F",        ID_FIND
+        MENUITEM "&Найти...\tCrtl+F",           ID_FIND
         MENUITEM "На&йти далее\tF3",            ID_FIND_NEXT
-        MENUITEM "&Заменить . . .\tCtrl+H",     ID_REPLACE
+        MENUITEM "&Заменить...\tCtrl+H",        ID_REPLACE
         MENUITEM SEPARATOR
         MENUITEM "&Только для чтения",          ID_EDIT_READONLY
         MENUITEM "&Изменен",                    ID_EDIT_MODIFIED
@@ -67,18 +67,18 @@ BEGIN
         MENUITEM "&Линейка",                            ID_TOGGLE_RULER
         MENUITEM "&Строка состояния",                   ID_TOGGLE_STATUSBAR
         MENUITEM SEPARATOR
-        MENUITEM "&Параметры . . .",                    ID_VIEWPROPERTIES
+        MENUITEM "&Параметры...",                       ID_VIEWPROPERTIES
     END
     POPUP "Вст&авка"
     BEGIN
-        MENUITEM "&Дата и время . . .",                 ID_DATETIME
+        MENUITEM "&Дата и время...",                    ID_DATETIME
     END
     POPUP "Фор&мат"
     BEGIN
-        MENUITEM "&Шрифт . . .",                        ID_FONTSETTINGS
+        MENUITEM "&Шрифт...",                           ID_FONTSETTINGS
         MENUITEM "&Маркер"                              ID_BULLET
-        MENUITEM "&Абзац . . ."                         ID_PARAFORMAT
-        MENUITEM "&Табуляция . . ."                     ID_TABSTOPS
+        MENUITEM "&Абзац..."                            ID_PARAFORMAT
+        MENUITEM "&Табуляция..."                        ID_TABSTOPS
         POPUP "&Фон"
         BEGIN
             MENUITEM "&Системный\tCtrl+1",              ID_BACK_1
@@ -100,7 +100,7 @@ BEGIN
         MENUITEM "Вст&авить",           ID_EDIT_PASTE
         MENUITEM SEPARATOR
         MENUITEM "&Маркер"              ID_BULLET
-        MENUITEM "&Абзац . . ."         ID_PARAFORMAT
+        MENUITEM "&Абзац..."            ID_PARAFORMAT
     END
 END
 

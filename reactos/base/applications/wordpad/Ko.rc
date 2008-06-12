@@ -29,9 +29,9 @@ BEGIN
         MENUITEM "저장(&S)\tCtrl+S",         ID_FILE_SAVE
         MENUITEM "다른 이름으로 저장(&A)...", ID_FILE_SAVEAS
         MENUITEM SEPARATOR
-        MENUITEM "인쇄(&P) . . .\tCtrl+P",    ID_PRINT
-        MENUITEM "인쇄 미리보기(&W) . . .",    ID_PREVIEW
-        MENUITEM " 인쇄 설정(&E) . . .",       ID_PRINTSETUP
+        MENUITEM "인쇄(&P)...\tCtrl+P",    ID_PRINT
+        MENUITEM "인쇄 미리보기(&W)...",    ID_PREVIEW
+        MENUITEM " 인쇄 설정(&E)...",       ID_PRINTSETUP
         MENUITEM SEPARATOR
         MENUITEM "나가기(&X)",         ID_FILE_EXIT
     END
@@ -46,9 +46,9 @@ BEGIN
         MENUITEM "지우기(&C)\tDEL",                 ID_EDIT_CLEAR
         MENUITEM "모두 선택(&S)\tCtrl+A",         ID_EDIT_SELECTALL
         MENUITEM SEPARATOR
-        MENUITEM "찾기(&F). . .\tCrtl+F",         ID_FIND
+        MENUITEM "찾기(&F)...\tCrtl+F",         ID_FIND
         MENUITEM "다음 찾기(&N)\tF3",              ID_FIND_NEXT
-	MENUITEM " 바꾸기(&R) . . .\tCtrl+H",      ID_REPLACE
+	MENUITEM " 바꾸기(&R)...\tCtrl+H",      ID_REPLACE
         MENUITEM SEPARATOR
         MENUITEM "읽기 전용(&O)",                  ID_EDIT_READONLY
         MENUITEM "수정 가능(&M)",                   ID_EDIT_MODIFIED
@@ -69,18 +69,18 @@ BEGIN
         MENUITEM "&Ruler",          ID_TOGGLE_RULER
         MENUITEM "상태바(&S)",      ID_TOGGLE_STATUSBAR
         MENUITEM SEPARATOR
-        MENUITEM " 옵션(&O) . . .",  ID_VIEWPROPERTIES
+        MENUITEM " 옵션(&O)...",  ID_VIEWPROPERTIES
     END
     POPUP "집어넣기(&I)"
     BEGIN
-        MENUITEM "날짜와 시간(&D) . . .",  ID_DATETIME
+        MENUITEM "날짜와 시간(&D)...",  ID_DATETIME
     END
     POPUP "형식(&O)"
     BEGIN
-	MENUITEM "글꼴(&F) . . .",                  ID_FONTSETTINGS
+	MENUITEM "글꼴(&F)...",                  ID_FONTSETTINGS
         MENUITEM "강조 점(&U)"                ID_BULLET
-        MENUITEM "단락(&P) . . ."              ID_PARAFORMAT
-        MENUITEM "탭(&T) . . ."                   ID_TABSTOPS
+        MENUITEM "단락(&P)..."              ID_PARAFORMAT
+        MENUITEM "탭(&T)..."                   ID_TABSTOPS
         POPUP "배경(&B)"
         BEGIN
             MENUITEM "시스템(&S)\tCtrl+1",         ID_BACK_1
@@ -102,7 +102,7 @@ BEGIN
         MENUITEM "붙여넣기(&P)",          ID_EDIT_PASTE
         MENUITEM SEPARATOR
         MENUITEM "강조점(&B)"        ID_BULLET
-        MENUITEM "단락(&P) . . ."      ID_PARAFORMAT
+        MENUITEM "단락(&P)..."      ID_PARAFORMAT
     END
 END
 

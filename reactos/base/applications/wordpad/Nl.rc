@@ -27,9 +27,9 @@ BEGIN
         MENUITEM "O&pslaan\tCtrl+S",      ID_FILE_SAVE
         MENUITEM "Ops&laan als...",       ID_FILE_SAVEAS
         MENUITEM SEPARATOR
-        MENUITEM "&Print . . .\tCtrl+P",  ID_PRINT
-        MENUITEM "Print previe&w . . .",  ID_PREVIEW
-        MENUITEM "Pag&e setup . . .",     ID_PRINTSETUP
+        MENUITEM "&Print...\tCtrl+P",     ID_PRINT
+        MENUITEM "Print previe&w...",     ID_PREVIEW
+        MENUITEM "Pag&e setup...",        ID_PRINTSETUP
         MENUITEM SEPARATOR
         MENUITEM "&Afsluiten",    ID_FILE_EXIT
     END
@@ -44,9 +44,9 @@ BEGIN
         MENUITEM "&Verwijderen\tDel",           ID_EDIT_CLEAR
         MENUITEM "&Alles selecteren\tCtrl+A",   ID_EDIT_SELECTALL
         MENUITEM SEPARATOR
-        MENUITEM "&Find . . .\tCrtl+F",         ID_FIND
+        MENUITEM "&Find...\tCrtl+F",            ID_FIND
         MENUITEM "Find &next\tF3",              ID_FIND_NEXT
-        MENUITEM "&Replace . . .\tCtrl+H",      ID_REPLACE
+        MENUITEM "&Replace...\tCtrl+H",         ID_REPLACE
         MENUITEM SEPARATOR
         MENUITEM "Alleen &lezen",               ID_EDIT_READONLY
         MENUITEM "&Gewijzigd",                  ID_EDIT_MODIFIED
@@ -67,18 +67,18 @@ BEGIN
         MENUITEM "&Ruler",          ID_TOGGLE_RULER
         MENUITEM "&Statusbar",      ID_TOGGLE_STATUSBAR
         MENUITEM SEPARATOR
-        MENUITEM "&Options . . .",  ID_VIEWPROPERTIES
+        MENUITEM "&Options...",     ID_VIEWPROPERTIES
     END
     POPUP "&Insert"
     BEGIN
-        MENUITEM "&Date and time . . .",  ID_DATETIME
+        MENUITEM "&Date and time...",     ID_DATETIME
     END
     POPUP "&Opmaak"
     BEGIN
-        MENUITEM "&Font . . .",                  ID_FONTSETTINGS
+        MENUITEM "&Font...",                     ID_FONTSETTINGS
         MENUITEM "&Bullet points"                ID_BULLET
-        MENUITEM "&Paragraph . . ."              ID_PARAFORMAT
-        MENUITEM "&Tabs . . ."                   ID_TABSTOPS
+        MENUITEM "&Paragraph..."                 ID_PARAFORMAT
+        MENUITEM "&Tabs..."                      ID_TABSTOPS
         POPUP "&Achtergrond"
         BEGIN
             MENUITEM "&Systeem\tCtrl+1",   ID_BACK_1
@@ -100,7 +100,7 @@ BEGIN
         MENUITEM "&Plakken",            ID_EDIT_PASTE
         MENUITEM SEPARATOR
         MENUITEM "&Bullet points"        ID_BULLET
-        MENUITEM "&Paragraph . . ."      ID_PARAFORMAT
+        MENUITEM "&Paragraph...",        ID_PARAFORMAT
     END
 END
 

@@ -1200,7 +1200,7 @@ static int current_units_to_twips(float number)
 
 static void append_current_units(LPWSTR buffer)
 {
-    static const WCHAR space[] = {' '};
+    static const WCHAR space[] = {' ', 0};
     lstrcatW(buffer, space);
     lstrcatW(buffer, units_cmW);
 }

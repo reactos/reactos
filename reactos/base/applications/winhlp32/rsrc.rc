@@ -46,6 +46,7 @@ IDI_WINHELP ICON DISCARDABLE winhelp.ico
 #include "lang/nb-NO.rc"
 #include "lang/pl-PL.rc"
 #include "lang/pt-BR.rc"
+//#include "lang/rm-RM.rc"
 #include "lang/ru-RU.rc"
 #include "lang/sl-SI.rc"
 #include "lang/sk-SK.rc"

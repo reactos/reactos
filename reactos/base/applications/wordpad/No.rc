@@ -23,13 +23,13 @@ BEGIN
     POPUP "&Fil"
     BEGIN
         MENUITEM "&Ny...\tCtrl+N",            ID_FILE_NEW
-        MENUITEM "&Åpne . . .\tCtrl+O",       ID_FILE_OPEN
+        MENUITEM "&Åpne...\tCtrl+O",       ID_FILE_OPEN
         MENUITEM "&Lagre\tCtrl+S",            ID_FILE_SAVE
-        MENUITEM "Lagre &som . . .",          ID_FILE_SAVEAS
+        MENUITEM "Lagre &som...",          ID_FILE_SAVEAS
         MENUITEM SEPARATOR
-        MENUITEM "&Skriv ut . . .\tCtrl+P",   ID_PRINT
-        MENUITEM "&Forhåndsvisning . . .",    ID_PREVIEW
-        MENUITEM "&Utskriftformat . . .",     ID_PRINTSETUP
+        MENUITEM "&Skriv ut...\tCtrl+P",   ID_PRINT
+        MENUITEM "&Forhåndsvisning...",    ID_PREVIEW
+        MENUITEM "&Utskriftformat...",     ID_PRINTSETUP
         MENUITEM SEPARATOR
         MENUITEM "&Avslutt",                  ID_FILE_EXIT
     END
@@ -44,9 +44,9 @@ BEGIN
         MENUITEM "&Fjern\tDEL",               ID_EDIT_CLEAR
         MENUITEM "&Merk alt\tCtrl+A",         ID_EDIT_SELECTALL
         MENUITEM SEPARATOR
-        MENUITEM "&Søk etter . . .\tCrtl+F",  ID_FIND
+        MENUITEM "&Søk etter...\tCrtl+F",  ID_FIND
         MENUITEM "Søk etter &neste\tF3",      ID_FIND_NEXT
-        MENUITEM "E&rstatt . . .\tCtrl+H",    ID_REPLACE
+        MENUITEM "E&rstatt...\tCtrl+H",    ID_REPLACE
         MENUITEM SEPARATOR
         MENUITEM "S&krivebeskyttet",          ID_EDIT_READONLY
         MENUITEM "E&ndret",                   ID_EDIT_MODIFIED
@@ -67,18 +67,18 @@ BEGIN
         MENUITEM "&Linjal",           ID_TOGGLE_RULER
         MENUITEM "&Statuslinje",      ID_TOGGLE_STATUSBAR
         MENUITEM SEPARATOR
-        MENUITEM "&Alternativer . . .", ID_VIEWPROPERTIES
+        MENUITEM "&Alternativer...", ID_VIEWPROPERTIES
     END
     POPUP "Sett &inn"
     BEGIN
-        MENUITEM "&Dato og klokkeslett . . .",  ID_DATETIME
+        MENUITEM "&Dato og klokkeslett...",  ID_DATETIME
     END
     POPUP "F&ormat"
     BEGIN
-        MENUITEM "&Skrift . . .",               ID_FONTSETTINGS
+        MENUITEM "&Skrift...",               ID_FONTSETTINGS
         MENUITEM "&Punktmerking"                ID_BULLET
-        MENUITEM "&Avsnitt . . ."               ID_PARAFORMAT
-        MENUITEM "&Tabulatorer . . ."           ID_TABSTOPS
+        MENUITEM "&Avsnitt..."               ID_PARAFORMAT
+        MENUITEM "&Tabulatorer..."           ID_TABSTOPS
         POPUP "&Bakgrunn"
         BEGIN
             MENUITEM "&System\tCtrl+1",         ID_BACK_1
@@ -100,7 +100,7 @@ BEGIN
         MENUITEM "&Lim inn"       ID_EDIT_PASTE
         MENUITEM SEPARATOR
         MENUITEM "&Punktmerking"  ID_BULLET
-        MENUITEM "&Avsnitt . . ." ID_PARAFORMAT
+        MENUITEM "&Avsnitt..." ID_PARAFORMAT
     END
 END
 

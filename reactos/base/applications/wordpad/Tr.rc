@@ -28,11 +28,10 @@ BEGIN
         MENUITEM "&Aç...\tCtrl+O",        ID_FILE_OPEN
         MENUITEM "&Kaydet\tCtrl+S",       ID_FILE_SAVE
         MENUITEM "&Farklý Kaydet...",     ID_FILE_SAVEAS
-        MENUITEM "Pag&e setup . . .",     ID_PRINTSETUP
         MENUITEM SEPARATOR
-        MENUITEM "&Print . . .\tCtrl+P",  ID_PRINT
-        MENUITEM "Pag&e setup . . .",     ID_PRINTSETUP
-        MENUITEM "Print previe&w . . .",  ID_PREVIEW
+        MENUITEM "&Print...\tCtrl+P",     ID_PRINT
+        MENUITEM "Print previe&w...",     ID_PREVIEW
+        MENUITEM "Pag&e setup...",        ID_PRINTSETUP
         MENUITEM SEPARATOR
         MENUITEM "&Çýk",          ID_FILE_EXIT
     END
@@ -47,9 +46,9 @@ BEGIN
         MENUITEM "&Sil\tDel",                   ID_EDIT_CLEAR
         MENUITEM "&Tümünü seç\tCtrl+A",         ID_EDIT_SELECTALL
         MENUITEM SEPARATOR
-        MENUITEM "&Find . . .\tCrtl+F",         ID_FIND
+        MENUITEM "&Find...\tCrtl+F",            ID_FIND
         MENUITEM "Find &next\tF3",              ID_FIND_NEXT
-        MENUITEM "&Replace . . .\tCtrl+H",      ID_REPLACE
+        MENUITEM "&Replace...\tCtrl+H",         ID_REPLACE
         MENUITEM SEPARATOR
         MENUITEM "Salt-&okunur",                ID_EDIT_READONLY
         MENUITEM "&Deðiþmiþ",                   ID_EDIT_MODIFIED
@@ -70,18 +69,18 @@ BEGIN
         MENUITEM "&Ruler",          ID_TOGGLE_RULER
         MENUITEM "&Statusbar",      ID_TOGGLE_STATUSBAR
         MENUITEM SEPARATOR
-        MENUITEM "&Options . . .",  ID_VIEWPROPERTIES
+        MENUITEM "&Options...",     ID_VIEWPROPERTIES
     END
     POPUP "&Insert"
     BEGIN
-        MENUITEM "&Date and time . . .",  ID_DATETIME
+        MENUITEM "&Date and time...",            ID_DATETIME
     END
     POPUP "&Biçim"
     BEGIN
-        MENUITEM "&Font . . .",                  ID_FONTSETTINGS
+        MENUITEM "&Font...",                     ID_FONTSETTINGS
         MENUITEM "&Bullet points"                ID_BULLET
-        MENUITEM "&Paragraph . . ."              ID_PARAFORMAT
-        MENUITEM "&Tabs . . ."                   ID_TABSTOPS
+        MENUITEM "&Paragraph..."                 ID_PARAFORMAT
+        MENUITEM "&Tabs..."                      ID_TABSTOPS
         POPUP "&Arkaplan"
         BEGIN
             MENUITEM "S&istem\tCtrl+1",         ID_BACK_1
@@ -102,8 +101,8 @@ BEGIN
         MENUITEM "&Kopyala",             ID_EDIT_COPY
         MENUITEM "Ya&pýþtýr",            ID_EDIT_PASTE
         MENUITEM SEPARATOR
-        MENUITEM "&Bullet points"        ID_BULLET
-        MENUITEM "&Paragraph . . ."      ID_PARAFORMAT
+        MENUITEM "&Bullet points",       ID_BULLET
+        MENUITEM "&Paragraph...",        ID_PARAFORMAT
     END
 END
 
