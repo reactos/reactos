@@ -57,6 +57,9 @@ extern HINSTANCE browseui_hinstance;
 
 struct BandObject {
     IDeskBand *DeskBand;
+    IOleWindow *OleWindow;
+    IWindowEventHandler *WndEvtHandler;
+    DESKBANDINFO dbi;
 };
 
 typedef struct tagBandSite {
@@ -93,6 +96,11 @@ static inline BandSite *impl_from_IOleCommandTarget(IOleCommandTarget *iface)
     return (BandSite *)((char *)iface - FIELD_OFFSET(BandSite, oletargetVtbl));
 }
 
+static UINT GetBandID(BandSite *This, struct BandObject *Band)
+{
+    return (UINT)(Band - This->Bands);
+}
+
 static struct BandObject* GetBandByID(BandSite *This, DWORD dwBandID)
 {
     if (dwBandID >= This->BandsAllocated)
@@ -106,7 +114,12 @@ static struct BandObject* GetBandByID(BandSite *This, DWORD dwBandID)
 
 static void FreeBand(BandSite *This, struct BandObject *Band)
 {
-    IUnknown_Release(Band->DeskBand);
+    ASSERT(Band->DeskBand != NULL);
+    ASSERT(Band->OleWindow != NULL);
+    ASSERT(Band->WndEvtHandler != NULL);
+    IDeskBand_Release(Band->DeskBand);
+    IOleWindow_Release(Band->OleWindow);
+    IWindowEventHandler_Release(Band->WndEvtHandler);
     ZeroMemory(Band, sizeof(*Band));
     This->BandsCount--;
 }
@@ -125,27 +138,40 @@ static DWORD GetBandSiteViewMode(BandSite *This)
         return DBIF_VIEWMODE_NORMAL;
 }
 
-static HRESULT UpdateAllBands(BandSite *This)
+static HRESULT UpdateSingleBand(BandSite *This, struct BandObject *Band)
 {
-    DESKBANDINFO dbi;
     DWORD dwViewMode;
-    LONG i;
     HRESULT hRet;
 
+    ZeroMemory (&Band->dbi, sizeof(Band->dbi));
+    Band->dbi.dwMask = DBIM_MINSIZE | DBIM_MAXSIZE | DBIM_INTEGRAL |
+        DBIM_ACTUAL | DBIM_TITLE | DBIM_MODEFLAGS | DBIM_BKCOLOR;
+
     dwViewMode = GetBandSiteViewMode(This);
+
+    hRet = IDeskBand_GetBandInfo(Band->DeskBand,
+                                 (DWORD)GetBandID(This,
+                                                  Band),
+                                 dwViewMode,
+                                 &Band->dbi);
+    if (SUCCEEDED(hRet))
+    {
+    }
+
+    return hRet;
+}
+
+static HRESULT UpdateAllBands(BandSite *This)
+{
+    LONG i;
+    HRESULT hRet;
 
     for (i = 0; i < This->BandsAllocated; i++)
     {
         if (This->Bands[i].DeskBand != NULL)
         {
-            ZeroMemory (&dbi, sizeof(dbi));
-            dbi.dwMask = 0;
-            /* FIXME */
-
-            hRet = IDeskBand_GetBandInfo(This->Bands[i].DeskBand,
-                                         i,
-                                         dwViewMode,
-                                         &dbi);
+            hRet = UpdateSingleBand(This,
+                                    &This->Bands[i]);
             if (!SUCCEEDED(hRet))
                 return hRet;
         }
@@ -157,26 +183,37 @@ static HRESULT UpdateAllBands(BandSite *This)
 static HRESULT UpdateBand(BandSite *This, DWORD dwBandID)
 {
     struct BandObject *Band;
-    DESKBANDINFO dbi;
-    DWORD dwViewMode;
-
-    FIXME("UpdateBand(%x)\n", dwBandID);
 
     Band = GetBandByID(This,
                        dwBandID);
     if (Band == NULL)
         return E_FAIL;
 
-    /* FIXME */
-    ZeroMemory (&dbi, sizeof(dbi));
-    dbi.dwMask = 0;
+    return UpdateSingleBand(This,
+                            Band);
+}
 
-    dwViewMode = GetBandSiteViewMode(This);
+static struct BandObject* GetBandFromHwnd(BandSite *This, HWND hwnd)
+{
+    HRESULT hRet;
+    HWND hWndBand;
+    LONG i;
 
-    return IDeskBand_GetBandInfo(Band->DeskBand,
-                                 dwBandID,
-                                 dwViewMode,
-                                 &dbi);
+    for (i = 0; i < This->BandsAllocated; i++)
+    {
+        if (This->Bands[i].DeskBand != NULL)
+        {
+            ASSERT(This->Bands[i].OleWindow);
+
+            hWndBand = NULL;
+            hRet = IOleWindow_GetWindow(This->Bands[i].OleWindow,
+                                        &hWndBand);
+            if (SUCCEEDED(hRet) && hWndBand == hwnd)
+                return &This->Bands[i];
+        }
+    }
+
+    return NULL;
 }
 
 HRESULT WINAPI BandSite_Constructor(IUnknown *pUnkOuter, IUnknown **ppOut)
@@ -301,11 +338,15 @@ static HRESULT WINAPI BandSite_AddBand(IBandSite *iface, IUnknown *punk)
     struct BandObject *NewBand = NULL;
     IDeskBand *DeskBand = NULL;
     IObjectWithSite *ObjWithSite = NULL;
+    IOleWindow *OleWindow = NULL;
+    IWindowEventHandler *WndEvtHandler = NULL;
+    REBARBANDINFOW rbi;
     HRESULT hRet;
+    UINT uBand;
 
     TRACE("(%p, %p)\n", iface, punk);
 
-    if (punk == NULL)
+    if (punk == NULL || This->hWndRebar == NULL)
         return E_FAIL;
 
     hRet = IUnknown_QueryInterface(punk,
@@ -317,6 +358,16 @@ static HRESULT WINAPI BandSite_AddBand(IBandSite *iface, IUnknown *punk)
                                    &IID_IObjectWithSite,
                                    (PVOID*)&ObjWithSite);
     if (!SUCCEEDED(hRet) || ObjWithSite == NULL)
+        goto Cleanup;
+    hRet = IUnknown_QueryInterface(punk,
+                                   &IID_IOleWindow,
+                                   (PVOID*)&OleWindow);
+    if (!SUCCEEDED(hRet) || OleWindow == NULL)
+        goto Cleanup;
+    hRet = IUnknown_QueryInterface(punk,
+                                   &IID_IWindowEventHandler,
+                                   (PVOID*)&WndEvtHandler);
+    if (!SUCCEEDED(hRet) || WndEvtHandler == NULL)
         goto Cleanup;
 
     hRet = S_OK;
@@ -389,25 +440,75 @@ static HRESULT WINAPI BandSite_AddBand(IBandSite *iface, IUnknown *punk)
     if (SUCCEEDED(hRet))
     {
         ASSERT(NewBand != NULL);
+
+        /* Create the ReBar band */
+        rbi.cbSize = sizeof(rbi);
+        rbi.fMask = RBBIM_ID;
+        rbi.wID = GetBandID(This,
+                            NewBand);
+        if (!SendMessageW(This->hWndRebar,
+                          RB_INSERTBANDW,
+                          (WPARAM)((UINT)-1),
+                         ( LPARAM)&rbi))
+        {
+            hRet = E_FAIL;
+            goto Cleanup;
+        }
+
         NewBand->DeskBand = DeskBand;
+        NewBand->OleWindow = OleWindow;
+        NewBand->WndEvtHandler = WndEvtHandler;
 
         This->BandsCount++;
 
-        hRet = ObjWithSite->lpVtbl->SetSite(ObjWithSite,
-                                            (IUnknown*)iface);
-        if (!SUCCEEDED(hRet))
-            ERR("IBandSite::AddBand(): Call to IDeskBand::SetSite() failed: %x\n", hRet);
+        DeskBand = NULL;
+        OleWindow = NULL;
+        WndEvtHandler = NULL;
+        hRet = IObjectWithSite_SetSite(ObjWithSite,
+                                       (IUnknown*)iface);
+        if (SUCCEEDED(hRet))
+        {
+            hRet = (HRESULT)((USHORT)GetBandID(This,
+                                               NewBand));
+        }
+        else
+        {
+            WARN("IBandSite::AddBand(): Call to IDeskBand::SetSite() failed: %x\n", hRet);
 
-        if (ObjWithSite != NULL)
-            ObjWithSite->lpVtbl->Release(ObjWithSite);
+            /* Remove the band from the ReBar control */
+            uBand = (UINT)SendMessageW(This->hWndRebar,
+                                       RB_IDTOINDEX,
+                                       (WPARAM)rbi.wID,
+                                       0);
+            if (uBand != (UINT)-1)
+            {
+                if (!SendMessageW(This->hWndRebar,
+                                  RB_DELETEBAND,
+                                  (WPARAM)uBand,
+                                  0))
+                {
+                    ERR("Failed to delete band!\n");
+                }
+            }
+            else
+                ERR("Failed to map band id to index!\n");
 
-        return (HRESULT)((SHORT)(NewBand - This->Bands));
+            FreeBand(This,
+                     NewBand);
+
+            hRet = E_FAIL;
+            /* goto Cleanup; */
+        }
     }
 Cleanup:
     if (DeskBand != NULL)
-        DeskBand->lpVtbl->Release(DeskBand);
+        IDeskBand_Release(DeskBand);
     if (ObjWithSite != NULL)
-        ObjWithSite->lpVtbl->Release(ObjWithSite);
+        IObjectWithSite_Release(ObjWithSite);
+    if (OleWindow != NULL)
+        IOleWindow_Release(OleWindow);
+    if (WndEvtHandler != NULL)
+        IWindowEventHandler_Release(WndEvtHandler);
     return hRet;
 }
 
@@ -491,12 +592,34 @@ static HRESULT WINAPI BandSite_RemoveBand(IBandSite *iface, DWORD dwBandID)
 {
     BandSite *This = (BandSite *)iface;
     struct BandObject *Band;
+    UINT uBand;
 
     TRACE("(%p, %u)\n", iface, dwBandID);
+
+    if (This->hWndRebar == NULL)
+        return E_FAIL;
 
     Band = GetBandByID(This, dwBandID);
     if (Band == NULL)
         return E_FAIL;
+
+    uBand = (UINT)SendMessageW(This->hWndRebar,
+                               RB_IDTOINDEX,
+                               (WPARAM)GetBandID(This,
+                                                 Band),
+                               0);
+    if (uBand != (UINT)-1)
+    {
+        if (!SendMessageW(This->hWndRebar,
+                          RB_DELETEBAND,
+                          (WPARAM)uBand,
+                          0))
+        {
+            ERR("Could not delete band!\n");
+        }
+    }
+    else
+        ERR("Could not map band id to index!\n");
 
     FreeBand(This, Band);
     return S_OK;
@@ -516,7 +639,7 @@ static HRESULT WINAPI BandSite_GetBandObject(IBandSite *iface, DWORD dwBandID, R
         return E_FAIL;
     }
 
-    return Band->DeskBand->lpVtbl->QueryInterface(Band->DeskBand, riid, ppv);
+    return IDeskBand_QueryInterface(Band->DeskBand, riid, ppv);
 }
 
 static HRESULT WINAPI BandSite_SetBandSiteInfo(IBandSite *iface, const BANDSITEINFO *pbsinfo)
@@ -570,14 +693,46 @@ static ULONG WINAPI BandSite_IWindowEventHandler_Release(IWindowEventHandler *if
 
 static HRESULT WINAPI BandSite_ProcessMessage(IWindowEventHandler *iface, HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *plrResult)
 {
-    FIXME("(%p, %p, %u, %p, %p, %p)\n", iface, hWnd, uMsg, wParam, lParam, plrResult);
-    return E_NOTIMPL;
+    BandSite *This = impl_from_IWindowEventHandler(iface);
+    struct BandObject *Band;
+
+    TRACE("(%p, %p, %u, %p, %p, %p)\n", iface, hWnd, uMsg, wParam, lParam, plrResult);
+
+    *plrResult = 0;
+    if (This->hWndRebar == NULL)
+        return E_FAIL;
+
+    Band = GetBandFromHwnd(This,
+                           hWnd);
+    if (Band != NULL)
+    {
+        return IWindowEventHandler_ProcessMessage(Band->WndEvtHandler,
+                                                  hWnd,
+                                                  uMsg,
+                                                  wParam,
+                                                  lParam,
+                                                  plrResult);
+    }
+
+    return S_FALSE;
 }
 
 static HRESULT WINAPI BandSite_ContainsWindow(IWindowEventHandler *iface, HWND hWnd)
 {
-    FIXME("(%p, %p)\n", iface, hWnd);
-    return E_NOTIMPL;
+    BandSite *This = impl_from_IWindowEventHandler(iface);
+    struct BandObject *Band;
+
+    TRACE("(%p, %p)\n", iface, hWnd);
+
+    if (This->hWndRebar == NULL)
+        return E_FAIL;
+
+    Band = GetBandFromHwnd(This,
+                           hWnd);
+    if (Band != NULL)
+        return S_OK;
+
+    return S_FALSE;
 }
 
 static const IWindowEventHandlerVtbl BandSite_EventHandlerVtbl =
