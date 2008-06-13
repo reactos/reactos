@@ -3712,20 +3712,8 @@ MenuSetItemData(
  */
   if(Flags & MF_BITMAP)
   {
-     if (mii->fType & MFT_BITMAP)
-     {
-       /* use old way of storing bitmap */
-       mii->fMask |= (MIIM_TYPE  | MIIM_FTYPE);
-       mii->fType |= MF_BITMAP;
-       mii->dwTypeData = (LPWSTR)NewItem;
-     }
-     else
-     {
-         /* use new way of storing type */
-         mii->hbmpItem = (HBITMAP) NewItem;
-         mii->fType |= MFT_BITMAP;
-         mii->fMask |= MIIM_BITMAP;
-     }
+     mii->fMask |= MIIM_BITMAP;   /* Use the new way of seting hbmpItem.*/
+     mii->hbmpItem = (HBITMAP) NewItem;
 
      if (Flags & MF_HELP)
      {
@@ -3736,8 +3724,8 @@ MenuSetItemData(
   else if(Flags & MF_OWNERDRAW)
   {
     mii->fType |= MFT_OWNERDRAW;
-    mii->fMask |= (MIIM_TYPE  | MIIM_FTYPE);
-    mii->dwTypeData = (LPWSTR) NewItem;
+    mii->fMask |= MIIM_DATA;
+    mii->dwItemData = (DWORD) NewItem;
   }
   else if (Flags & MF_SEPARATOR)
   {
