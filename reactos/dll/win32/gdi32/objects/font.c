@@ -1615,16 +1615,19 @@ STDCALL
 GdiGetCharDimensions(HDC hdc, LPTEXTMETRICW lptm, LONG *height)
 {
     SIZE sz;
+    TEXTMETRICW tm;
     static const WCHAR alphabet[] = {
         'a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q',
         'r','s','t','u','v','w','x','y','z','A','B','C','D','E','F','G','H',
         'I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z',0};
 
-    if(lptm && !GetTextMetricsW(hdc, lptm)) return 0;
+    if(!GetTextMetricsW(hdc, &tm)) return 0;
 
     if(!GetTextExtentPointW(hdc, alphabet, 52, &sz)) return 0;
 
-    if (height) *height = sz.cy;
+    if (lptm) *lptm = tm;
+    if (height) *height = tm.tmHeight;
+
     return (sz.cx / 26 + 1) / 2;
 }
 
