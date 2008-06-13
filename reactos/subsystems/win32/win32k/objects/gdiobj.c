@@ -1432,7 +1432,8 @@ GDI_MapHandleTable(PSECTION_OBJECT SectionObject, PEPROCESS Process)
     (PGDIBRUSHOBJ)->pBrushAttr = IntGdiAllocObjAttr(GDIObjType_BRUSH_TYPE);
 
     // Kernel Space to User Space Pointer
-    (PGDI_TABLE_ENTRY)->UserData = UserHeapAddressToUser(pBrushAttr);
+    (PGDI_TABLE_ENTRY)->UserData = pBrushAttr;
+    // Gdi will adjust for heap delta.
 
    Example Freeing:
 
@@ -1441,11 +1442,9 @@ GDI_MapHandleTable(PSECTION_OBJECT SectionObject, PEPROCESS Process)
     (PGDIBRUSHOBJ)->pBrushAttr = NULL;
 
    Notes:
-    Testing with DC_ATTR works but has drawing difficulties. This could be due
-    to a bug in user share heap allocation and deallocation. The test did not
-    include additional deallocations until the DC was freed. So it was always
-    allocated to the DC. Space between allocations was not even and at less
-    than sizeof(DC_ATTR).
+    Testing with DC_ATTR works but has drawing difficulties. 
+    Base on observation, (Over looking the obvious) we need to supply heap delta
+    to user space gdi. Now, with testing, looks all normal.
 
  */
 PVOID
