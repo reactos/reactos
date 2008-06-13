@@ -189,10 +189,10 @@
  197 stub -noname SHGlobalDefect
  198 stdcall -noname SHAbortInvokeCommand()
  199 stub SHGetFileIcon
- 200 stdcall SHLocalAlloc(long long)
- 201 stdcall SHLocalFree(ptr)
- 202 stdcall SHLocalReAlloc(ptr long long)
- 203 stdcall AddCommasW(long str)
+ 200 stub SHLocalAlloc
+ 201 stub SHLocalFree
+ 202 stub SHLocalReAlloc
+ 203 stub AddCommasW
  204 stub ShortSizeFormatW
  205 stdcall Printer_LoadIconsW(wstr ptr ptr)
  206 stub Link_AddExtraDataSection
