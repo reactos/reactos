@@ -843,6 +843,73 @@ VOID WINAPI Printers_UnregisterWindow(HANDLE hClassPidl, HWND hwnd)
 
 /*************************************************************************/
 
+/*************************************************************************
+ * AddCommasW      [SHELL32.203]
+ */
+LPWSTR WINAPI AddCommasW(DWORD lValue, LPWSTR szRet)
+{
+    WCHAR szValue[MAX_PATH], szSeparator[8 + 1];
+    NUMBERFMTW numFormat;
+    LCID lcid = GetUserDefaultLCID();
+
+    GetLocaleInfoW(lcid,
+                   LOCALE_STHOUSAND,
+                   szSeparator,
+                   8 + 1);
+
+    numFormat.NumDigits     = 0;
+    numFormat.LeadingZero   = 0;
+    numFormat.Grouping      = 0;
+    numFormat.lpDecimalSep  = szSeparator;
+    numFormat.lpThousandSep = szSeparator;
+    numFormat.NegativeOrder = 0;
+
+    swprintf(szValue, L"%llu", lValue);
+    //_ultow(lValue, szValue, 16);
+
+    if (GetNumberFormatW(lcid,
+                         0,
+                         szValue,
+                         &numFormat,
+                         szRet,
+                         wcslen(szRet)) != 0)
+    {
+        return szRet;
+    }
+
+    wcscpy(szRet, szValue);
+    return szRet;
+}
+
+
+/*************************************************************************
+ * SHLocalAlloc      [SHELL32.200]
+ */
+HLOCAL WINAPI SHLocalAlloc(UINT uFlags, SIZE_T uBytes)
+{
+    return LocalAlloc(uFlags, uBytes);
+}
+
+/*************************************************************************
+ * SHLocalFree      [SHELL32.201]
+ */
+HLOCAL WINAPI SHLocalFree(HLOCAL hMem)
+{
+    return LocalFree(hMem);
+}
+
+/*************************************************************************
+ * SHLocalAlloc      [SHELL32.202]
+ */
+HLOCAL WINAPI SHLocalReAlloc(HLOCAL hMem, SIZE_T uBytes, UINT uFlags)
+{
+    return LocalReAlloc(hMem, uBytes, uFlags);
+}
+
+
+/*************************************************************************/
+
+
 typedef struct
 {
     LPCWSTR  szApp;
