@@ -99,21 +99,21 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Einstellungen"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "Verschieben Sie die Monitor-Symbole, sodass sie der physikalischen Anordnung Ihrer Monitore entsprechen.",-1,3,3,240,10
-    CONTROL         "",IDC_SETTINGS_MONSEL,"MONITORSELWNDCLASS",WS_CHILD|WS_VISIBLE|WS_TABSTOP,3,16,240,82,WS_EX_CLIENTEDGE
-    LTEXT           "&Anzeige:",1820,3,100,30,8
-    LTEXT           "<kein>",IDC_SETTINGS_DEVICE,9,109,224,8
-    GROUPBOX        "Bi&ldschirmauflösung",1818,3,120,115,43
+    LTEXT           "Verschieben Sie die Monitor-Symbole, sodass sie der physikalischen Anordnung Ihrer Monitore entsprechen.",-1,3,1,240,16
+    CONTROL         "",IDC_SETTINGS_MONSEL,"MONITORSELWNDCLASS",WS_CHILD|WS_VISIBLE|WS_TABSTOP,3,20,240,82,WS_EX_CLIENTEDGE
+    LTEXT           "&Anzeige:",1820,3,106,30,8
+    LTEXT           "<kein>",IDC_SETTINGS_DEVICE,9,115,224,8
+    GROUPBOX        "Bi&ldschirmauflösung",1818,3,126,115,43
     CONTROL         "",IDC_SETTINGS_RESOLUTION,"msctls_trackbar32",
-                    TBS_AUTOTICKS | WS_TABSTOP, 30, 130, 58, 17
-    LTEXT           "Niedrig",1815,9,135,21,8,NOT WS_GROUP
-    LTEXT           "Hoch",1816,93,135,21,8,NOT WS_GROUP
-    LTEXT           "",IDC_SETTINGS_RESOLUTION_TEXT,10,150,100,10,NOT WS_GROUP | SS_CENTER
-    GROUPBOX        "&Farbqualität",1817,125,120,115,43
-    COMBOBOX        IDC_SETTINGS_BPP,131,130,103,80,CBS_DROPDOWNLIST | CBS_AUTOHSCROLL |
+                    TBS_AUTOTICKS | WS_TABSTOP, 30, 136, 58, 17
+    LTEXT           "Niedrig",1815,9,141,21,8,NOT WS_GROUP
+    LTEXT           "Hoch",1816,93,141,21,8,NOT WS_GROUP
+    LTEXT           "",IDC_SETTINGS_RESOLUTION_TEXT,10,156,100,10,NOT WS_GROUP | SS_CENTER
+    GROUPBOX        "&Farbqualität",1817,125,126,115,43
+    COMBOBOX        IDC_SETTINGS_BPP,131,136,103,80,CBS_DROPDOWNLIST | CBS_AUTOHSCROLL |
                     WS_VSCROLL | WS_TABSTOP
-    CONTROL         "",IDC_SETTINGS_SPECTRUM,"Static",SS_OWNERDRAW | SS_SUNKEN,131,148,103,9
-    PUSHBUTTON      "&Erweitert",IDC_SETTINGS_ADVANCED,170,165,70,14
+    CONTROL         "",IDC_SETTINGS_SPECTRUM,"Static",SS_OWNERDRAW | SS_SUNKEN,131,150,103,9
+    PUSHBUTTON      "&Erweitert",IDC_SETTINGS_ADVANCED,170,171,70,14
 END
 
 IDD_ADVANCED_GENERAL DIALOGEX DISCARDABLE 0, 0, 253, 204
