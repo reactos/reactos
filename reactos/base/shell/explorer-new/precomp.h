@@ -25,15 +25,21 @@
 #include "undoc.h"
 
 /* dynamic imports due to lack of support in msvc linker libs */
-typedef INT (STDCALL *REGSHELLHOOK)(HWND, DWORD);
+typedef INT (APIENTRY *REGSHELLHOOK)(HWND, DWORD);
 #ifdef UNICODE
 #define PROC_NAME_DRAWCAPTIONTEMP "DrawCaptionTempW"
-typedef BOOL (STDCALL *DRAWCAPTEMP)(HWND, HDC, const RECT*, HFONT, HICON, LPCWSTR, UINT);
+typedef BOOL (APIENTRY *DRAWCAPTEMP)(HWND, HDC, const RECT*, HFONT, HICON, LPCWSTR, UINT);
 #else
 #define PROC_NAME_DRAWCAPTIONTEMP "DrawCaptionTempA"
-typedef BOOL (STDCALL *DRAWCAPTEMP)(HWND, HDC, const RECT*, HFONT, HICON, LPCSTR, UINT);
+typedef BOOL (APIENTRY *DRAWCAPTEMP)(HWND, HDC, const RECT*, HFONT, HICON, LPCSTR, UINT);
 #endif
-typedef HRESULT (STDCALL *SHINVDEFCMD)(HWND, IShellFolder*, LPCITEMIDLIST);
+typedef HRESULT (APIENTRY *SHINVDEFCMD)(HWND, IShellFolder*, LPCITEMIDLIST);
+typedef void (APIENTRY *RUNFILEDLG)(HWND, HICON, LPCWSTR, LPCWSTR, LPCWSTR, UINT);
+typedef void (APIENTRY *EXITWINDLG)(HWND);
+typedef HRESULT (APIENTRY *SHWINHELP)(HWND, LPWSTR, UINT, DWORD);
+
+/* Constants for RunFileDlg */
+#define RFF_CALCDIRECTORY   0x04    /* Calculates the working directory from the file name. */
 
 static ULONG __inline
 Win32DbgPrint(const char *filename, int line, const char *lpFormat, ...)

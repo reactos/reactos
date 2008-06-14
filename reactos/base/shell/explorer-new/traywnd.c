@@ -2260,7 +2260,45 @@ HandleTrayContextMenu:
                                                             lParam,
                                                             &Ret)))
                 {
-                    /* FIXME: Handle own commands */
+                    switch(LOWORD(wParam))
+                    {
+                        /* FIXME: Handle these commands as well */
+                        case IDM_TASKBARANDSTARTMENU:
+                        case IDM_SEARCH:
+                        case IDM_HELPANDSUPPORT:
+                            break;
+
+                        case IDM_RUN:
+                        {
+                            HANDLE hShell32;
+                            RUNFILEDLG RunFileDlg;
+
+                            hShell32 = GetModuleHandle(TEXT("SHELL32.DLL"));
+                            RunFileDlg = (RUNFILEDLG)GetProcAddress(hShell32, (LPCSTR)61);
+
+                            RunFileDlg(hwnd, NULL, NULL, NULL, NULL, RFF_CALCDIRECTORY);
+                            break;
+                        }
+
+                        /* FIXME: Handle these commands as well */
+                        case IDM_SYNCHRONIZE:
+                        case IDM_LOGOFF:
+                        case IDM_DISCONNECT:
+                        case IDM_UNDOCKCOMPUTER:
+                            break;
+
+                        case IDM_SHUTDOWN:
+                        {
+                            HANDLE hShell32;
+                            EXITWINDLG ExitWinDlg;
+
+                            hShell32 = GetModuleHandle(TEXT("SHELL32.DLL"));
+                            ExitWinDlg = (EXITWINDLG)GetProcAddress(hShell32, (LPCSTR)60);
+
+                            ExitWinDlg(hwnd);
+                            break;
+                        }
+                    }
                 }
                 break;
 
