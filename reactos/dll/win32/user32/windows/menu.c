@@ -3963,7 +3963,7 @@ MenuCheckMenuRadioItem(HMENU hMenu, UINT idFirst, UINT idLast, UINT idCheck, UIN
         break;
       }
   }
-  MenuCleanupRosMenuItemInfo(Items);
+  HeapFree(GetProcessHeap(), 0, Items);
 
   *pChecked += cChecked;
   *pUnchecked += cUnchecked;
