@@ -498,13 +498,18 @@ UCHAR HalpMaskTable[HIGH_LEVEL + 1] =
 #define TIMER_INT_MASK        (PVOID)0xE00E2014
 #define TIMER_BACKGROUND_LOAD (PVOID)0xE00E2018
 
+#define TIMER2_LOAD            (PVOID)0xE00E3000
+#define TIMER2_VALUE           (PVOID)0xE00E3004
+#define TIMER2_CONTROL         (PVOID)0xE00E3008
+#define TIMER2_INT_CLEAR       (PVOID)0xE00E300C
+#define TIMER2_INT_STATUS      (PVOID)0xE00E3010
+#define TIMER2_INT_MASK        (PVOID)0xE00E3014
+#define TIMER2_BACKGROUND_LOAD (PVOID)0xE00E3018
 
 #define _clz(a) \
 ({ ULONG __value, __arg = (a); \
         asm ("clz\t%0, %1": "=r" (__value): "r" (__arg)); \
         __value; })
-
-ULONG HalpStallStart, HalpStallEnd, HalpStallScaleFactor;
 
 ULONG
 HalGetInterruptSource(VOID)
@@ -535,37 +540,7 @@ HalpStallInterrupt(VOID)
     //
     // Clear the interrupt
     //
-    DPRINT1("STALL INTERRUPT!!!: %lx %lx\n", HalpStallStart, HalpStallEnd);
     WRITE_REGISTER_ULONG(TIMER_INT_CLEAR, 1);
-
-    //
-    // Check if this is our first time here
-    //
-    if (!(HalpStallStart + HalpStallEnd))
-    {
-        //
-        // Remember that we've been hit once
-        //
-        HalpStallEnd = 1;
-    }
-    else if (!(HalpStallStart) && (HalpStallEnd))
-    {
-        //
-        // Okay, this is our second time here!
-        // Load the stall execution count that was setup for us...
-        // And get ready to hit the case below
-        //
-        HalpStallStart = PCR->StallExecutionCount;
-        HalpStallEnd = 0;
-    }
-    else if ((HalpStallStart) && !(HalpStallEnd))
-    {
-        //
-        // This our third time here!
-        // Now we can just save the stall execution count at end time
-        //
-        HalpStallEnd = PCR->StallExecutionCount;
-    }
 }
 
 VOID
@@ -693,6 +668,11 @@ HalInitSystem(IN ULONG BootPhase,
     }
     else if (BootPhase == 1)
     {
+        //
+        // Switch to real clock interrupt
+        //
+        PCR->InterruptRoutine[CLOCK2_LEVEL] = HalpClockInterrupt;
+        
         UNIMPLEMENTED;
         while (TRUE);
     }
@@ -1084,23 +1064,33 @@ KeQueryPerformanceCounter(
 
 VOID
 NTAPI
-KeStallExecutionProcessor(
-  ULONG Microseconds)
+KeStallExecutionProcessor(IN ULONG Microseconds)
 {
-    ULONG Index;
- 
     //
-    // Calculate how many times we should loop
+    // Configure the interval to xxx Micrseconds
+    //  (INTERVAL (xxx us) * TIMCLKfreq (1MHz))
+    // ---------------------------------------
+    //  (TIMCLKENXdiv (1) * PRESCALEdiv (1))
     //
-    Index = Microseconds * PCR->StallScaleFactor;
-    while (Index)
-    {
-        //
-        // Do one stall cycle
-        //
-        PCR->StallExecutionCount++;
-        Index--;
-    };
+    // This works out great, since 1MHz * 1 us = 1!
+    //
+    
+    //
+    // Enable the timer
+    //
+    WRITE_REGISTER_ULONG(TIMER2_LOAD, Microseconds);
+    WRITE_REGISTER_ULONG(TIMER2_CONTROL,
+                         1 << 0 | // one-shot mode
+                         1 << 1 | // 32-bit mode
+                         0 << 2 | // 0 stages of prescale, divided by 1
+                         0 << 5 | // no interrupt
+                         1 << 6 | // periodic mode
+                         1 << 7); // enable it   
+    
+    //
+    // Now we will loop until the timer reached 0
+    //
+    while (READ_REGISTER_ULONG(TIMER2_VALUE));
 }
 
 VOID
@@ -1127,7 +1117,7 @@ KfLowerIrql(IN KIRQL NewIrql)
     // Setup the interrupt mask for this IRQL
     //
     InterruptMask = KeGetPcr()->IrqlTable[NewIrql];
-    DPRINT1("[LOWER] IRQL: %d InterruptMask: %lx\n", NewIrql, InterruptMask);
+//    DPRINT1("[LOWER] IRQL: %d InterruptMask: %lx\n", NewIrql, InterruptMask);
     
     //
     // Clear interrupts associated to the old IRQL
@@ -1172,7 +1162,7 @@ KfRaiseIrql(IN KIRQL NewIrql)
     // Setup the interrupt mask for this IRQL
     //
     InterruptMask = KeGetPcr()->IrqlTable[NewIrql];
-    DPRINT1("[RAISE] IRQL: %d InterruptMask: %lx\n", NewIrql, InterruptMask);
+  //  DPRINT1("[RAISE] IRQL: %d InterruptMask: %lx\n", NewIrql, InterruptMask);
     ASSERT(NewIrql >= OldIrql);
     
     //

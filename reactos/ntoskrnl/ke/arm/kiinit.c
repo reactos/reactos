@@ -52,7 +52,7 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
     LARGE_INTEGER PageDirectory;
     PKPCR Pcr;
     ULONG i;
-    DPRINT1("%s Process: %p Thread: %p Stack: %p PRCB: %p Number: %d LoaderBlock: %p\n",
+    DPRINT1("[INIT] Process: %p Thread: %p Stack: %p PRCB: %p Number: %d LoaderBlock: %p\n",
             __FUNCTION__, InitProcess, InitThread, IdleStack, Prcb, Number, LoaderBlock);
 
     //

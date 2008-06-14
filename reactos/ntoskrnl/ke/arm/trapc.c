@@ -333,7 +333,7 @@ KiInterruptHandler(IN PKTRAP_FRAME TrapFrame,
     // Get the interrupt source
     //
     InterruptCause = HalGetInterruptSource();
-    DPRINT1("[INT] (%x) @ %p %p\n", InterruptCause, TrapFrame->SvcLr, TrapFrame->Pc);
+//    DPRINT1("[INT] (%x) @ %p %p\n", InterruptCause, TrapFrame->SvcLr, TrapFrame->Pc);
 
     //
     // Get the new IRQL and Interrupt Mask
@@ -354,14 +354,14 @@ KiInterruptHandler(IN PKTRAP_FRAME TrapFrame,
         //
         // FIXME: Switch to interrupt stack
         //
-        DPRINT1("[ISR]\n");
+        //DPRINT1("[ISR]\n");
     }
     else
     {
         //
         // We know this is APC or DPC.
         //
-        DPRINT1("[DPC/APC]\n");
+        //DPRINT1("[DPC/APC]\n");
         HalClearSoftwareInterrupt(Irql);
     }
         
@@ -369,7 +369,7 @@ KiInterruptHandler(IN PKTRAP_FRAME TrapFrame,
     // Call the registered interrupt routine
     //
     Pcr->InterruptRoutine[Irql]();
-    DPRINT1("[ISR RETURN]\n");
+//    DPRINT1("[ISR RETURN]\n");
     
     //
     // Re-enable interrupts and return IRQL
