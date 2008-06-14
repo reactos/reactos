@@ -1359,6 +1359,9 @@ IoUnregisterShutdownNotification(PDEVICE_OBJECT DeviceObject)
         NextEntry = NextEntry->Flink;
     }
 
+    /* Release the shutdown lock */
+    KeReleaseSpinLock(&ShutdownListLock, OldIrql);
+
     /* Now remove the flag */
     DeviceObject->Flags &= ~DO_SHUTDOWN_REGISTERED;
 }
