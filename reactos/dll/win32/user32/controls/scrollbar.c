@@ -69,7 +69,8 @@ static BOOL ScrollTrackVertical;
 
 HBRUSH DefWndControlColor(HDC hDC, UINT ctlType);
 
-static LRESULT WINAPI ScrollBarWndProc( HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam );
+static LRESULT WINAPI ScrollBarWndProcW( HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam );
+static LRESULT WINAPI ScrollBarWndProcA( HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam );
 
 UINT STDCALL SetSystemTimer(HWND,UINT_PTR,UINT,TIMERPROC);
 BOOL STDCALL KillSystemTimer(HWND,UINT_PTR);
@@ -81,8 +82,8 @@ const struct builtin_class_descr SCROLL_builtin_class =
 {
     L"ScrollBar",           /* name */
     CS_DBLCLKS | CS_VREDRAW | CS_HREDRAW | CS_PARENTDC, /* style */
-    ScrollBarWndProc,       /* procW */
-    NULL,                   /* procA (winproc is Unicode only) */
+    ScrollBarWndProcW,      /* procW */
+    ScrollBarWndProcA,      /* procA */
     0,                      /* extra */
     IDC_ARROW,              /* cursor */
     0                       /* brush */
@@ -1252,7 +1253,7 @@ ScrollTrackScrollBar(HWND Wnd, INT SBType, POINT Pt)
  *           ScrollBarWndProc
  */
 static LRESULT WINAPI
-ScrollBarWndProc(HWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam)
+ScrollBarWndProc(WNDPROC DefWindowProc, HWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 {
   if (! IsWindow(Wnd))
     {
@@ -1454,10 +1455,22 @@ ScrollBarWndProc(HWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam)
           {
             WARN("unknown msg %04x wp=%04lx lp=%08lx\n", Msg, wParam, lParam);
           }
-        return DefWindowProcW(Wnd, Msg, wParam, lParam );
+        return DefWindowProc(Wnd, Msg, wParam, lParam );
     }
 
   return 0;
+}
+
+static LRESULT WINAPI
+ScrollBarWndProcW(HWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam)
+{
+  return ScrollBarWndProc(DefWindowProcW, Wnd, Msg, wParam, lParam);
+}
+
+static LRESULT WINAPI
+ScrollBarWndProcA(HWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam)
+{
+  return ScrollBarWndProc(DefWindowProcA, Wnd, Msg, wParam, lParam);
 }
 
 
