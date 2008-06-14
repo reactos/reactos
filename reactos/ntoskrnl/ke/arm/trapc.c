@@ -33,6 +33,81 @@ HalGetInterruptSource(VOID);
 VOID FASTCALL
 HalClearSoftwareInterrupt(IN KIRQL Request);
 
+VOID
+KiIdleLoop(VOID)
+{
+    PKPCR Pcr = (PKPCR)KeGetPcr();
+    PKPRCB Prcb = Pcr->Prcb;
+    PKTHREAD OldThread, NewThread;
+    
+    //
+    // Loop forever... that's why this is an idle loop
+    //
+    while (TRUE)
+    {
+        //
+        // Cycle interrupts
+        //
+        _disable();
+        _enable();
+    
+        //
+        // Check if there's DPC work to do
+        //
+        if ((Prcb->DpcData[0].DpcQueueDepth) ||
+            (Prcb->TimerRequest) ||
+            (Prcb->DeferredReadyListHead.Next))
+        {
+            //
+            // Clear the pending interrupt
+            //
+            HalClearSoftwareInterrupt(DISPATCH_LEVEL);
+        
+            //
+            // FIXME: TODO
+            //
+            DPRINT1("DPC/Timer Delivery!\n");
+            while (TRUE);
+        }
+    
+        //
+        // Check if there's a thread to schedule
+        //
+        if (Prcb->NextThread)
+        {
+            //
+            // Out with the old, in with the new...
+            //
+            OldThread = Prcb->CurrentThread;
+            NewThread = Prcb->NextThread;        
+            Prcb->CurrentThread = NewThread;
+            Prcb->NextThread = NULL;
+        
+            //
+            // Update thread state
+            //
+            NewThread->State = Running;
+        
+            //
+            // Swap to the new thread
+            // On ARM we call KiSwapContext instead of KiSwapContextInternal,
+            // because we're calling this from C code and not assembly.
+            // This is similar to how it gets called for unwaiting, on x86
+            //
+            DPRINT1("Swapping context!\n");
+            KiSwapContext(OldThread, NewThread);
+            DPRINT1("Back\n");
+            while (TRUE);
+        }
+        else
+        {
+            //
+            // FIXME: Wait-For-Interrupt ARM Opcode
+            //
+        }
+    }
+}
+
 BOOLEAN
 KiSwapContextInternal(IN PKTHREAD OldThread,
                       IN PKTHREAD NewThread)
@@ -155,20 +230,22 @@ VOID
 KiDispatchInterrupt(VOID)
 {
     PKPCR Pcr;
+    PKPRCB Prcb;
     PKTHREAD NewThread, OldThread;
     
     //
     // Get the PCR and disable interrupts
     //
     Pcr = (PKPCR)KeGetPcr();
+    Prcb = Pcr->Prcb;
     _disable();
     
     //
     //Check if we have to deliver DPCs, timers, or deferred threads
     //
-    if ((Pcr->Prcb->DpcData[0].DpcQueueDepth) ||
-        (Pcr->Prcb->TimerRequest) ||
-        (Pcr->Prcb->DeferredReadyListHead.Next))
+    if ((Prcb->DpcData[0].DpcQueueDepth) ||
+        (Prcb->TimerRequest) ||
+        (Prcb->DeferredReadyListHead.Next))
     {
         //
         // FIXME: TODO
@@ -185,7 +262,7 @@ KiDispatchInterrupt(VOID)
     //
     // Check for quantum end
     //
-    if (Pcr->Prcb->QuantumEnd)
+    if (Prcb->QuantumEnd)
     {
         //
         // FIXME: TODO
@@ -198,15 +275,15 @@ KiDispatchInterrupt(VOID)
     //
     // Check if we have a thread to swap to
     //
-    if (Pcr->Prcb->NextThread)
+    if (Prcb->NextThread)
     {       
         //
         // Next is now current
         //
-        OldThread = Pcr->Prcb->CurrentThread;
-        NewThread = Pcr->Prcb->NextThread;
-        Pcr->Prcb->CurrentThread = NewThread;
-        Pcr->Prcb->NextThread = NULL;
+        OldThread = Prcb->CurrentThread;
+        NewThread = Prcb->NextThread;
+        Prcb->CurrentThread = NewThread;
+        Prcb->NextThread = NULL;
         
         //
         // Update thread states
@@ -217,7 +294,7 @@ KiDispatchInterrupt(VOID)
         //
         // Make the old thread ready
         //
-        KxQueueReadyThread(OldThread, Pcr->Prcb);
+        KxQueueReadyThread(OldThread, Prcb);
         
         //
         // Swap to the new thread
@@ -227,6 +304,7 @@ KiDispatchInterrupt(VOID)
         //
         DPRINT1("Swapping context!\n");
         KiSwapContext(OldThread, NewThread);
+        DPRINT1("Back\n");
         while (TRUE);
     }
 }

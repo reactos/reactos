@@ -24,6 +24,9 @@ extern PVOID KiArmVectorTable;
 /* FUNCTIONS ******************************************************************/
 
 VOID
+KiIdleLoop(VOID);
+
+VOID
 DebugService(IN ULONG ServiceType,
              IN PCHAR Buffer,
              IN ULONG Length,
@@ -495,5 +498,5 @@ KiInitializeSystem(IN ULONG Magic,
     //
     // Jump to idle loop
     //
-    while (TRUE);
+    KiIdleLoop();
 }
