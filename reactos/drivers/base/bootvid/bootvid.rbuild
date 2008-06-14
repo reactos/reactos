@@ -6,9 +6,18 @@
 	<include base="bootvid">.</include>
 	<library>ntoskrnl</library>
 	<library>hal</library>
-	<file>bootvid.c</file>
-	<file>bootdata.c</file>
-	<file>vga.c</file>
+		<if property="ARCH" value="i386">
+			<directory name="i386">
+                <file>bootvid.c</file>
+                <file>bootdata.c</file>
+                <file>vga.c</file>
+            </directory>
+        </if>
+		<if property="ARCH" value="arm">
+			<directory name="arm">
+                <file>bootvid.c</file>
+            </directory>
+        </if>
 	<file>bootvid.rc</file>
-	<pch>precomp.h</pch>
+    <pch>precomp.h</pch>
 </module>

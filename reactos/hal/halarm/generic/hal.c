@@ -672,9 +672,6 @@ HalInitSystem(IN ULONG BootPhase,
         // Switch to real clock interrupt
         //
         PCR->InterruptRoutine[CLOCK2_LEVEL] = HalpClockInterrupt;
-        
-        UNIMPLEMENTED;
-        while (TRUE);
     }
     
     //
