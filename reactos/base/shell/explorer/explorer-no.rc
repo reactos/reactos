@@ -381,6 +381,9 @@ BEGIN
     IDS_DESKTOPBAR_SETTINGS "Skrivebord Innstillinger"
     IDS_DESKTOP             "Skrivebord"
     IDS_TASKBAR             "Oppgavelinje"
+    IDS_NAMECOLUMN          "Name"
+    IDS_PATHCOLUMN          "Path"
+    IDS_MENUCOLUMN          "Menu path"
 END
 
 #endif    // Norwegian (N.O.) resources

@@ -381,6 +381,9 @@ BEGIN
     IDS_DESKTOPBAR_SETTINGS "Desktop Settings"
     IDS_DESKTOP             "Desktop"
     IDS_TASKBAR             "Taskbar"
+    IDS_NAMECOLUMN          "Name"
+    IDS_PATHCOLUMN          "Path"
+    IDS_MENUCOLUMN          "Menu path"
 END
 
 #endif    // English (U.S.) resources

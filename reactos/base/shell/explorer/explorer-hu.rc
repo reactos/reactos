@@ -381,6 +381,9 @@ BEGIN
     IDS_DESKTOPBAR_SETTINGS "Asztal beállításai"
     IDS_DESKTOP             "Asztal"
     IDS_TASKBAR             "Taskbar"
+    IDS_NAMECOLUMN          "Name"
+    IDS_PATHCOLUMN          "Path"
+    IDS_MENUCOLUMN          "Menu path"
 END
 
 #endif    // Hungarian (unknown sub-lang: 0x0) resources

@@ -49,6 +49,9 @@
 #define IDS_HIDE_ICONS                  44
 #define IDS_TERMINATE                   45
 #define IDS_RESTART                     46
+#define IDS_NAMECOLUMN                  47
+#define IDS_PATHCOLUMN                  48
+#define IDS_MENUCOLUMN                  49
 #define IDI_REACTOS                     100
 #define IDI_EXPLORER                    101
 #define IDI_STARTMENU                   102

@@ -381,6 +381,9 @@ BEGIN
     IDS_DESKTOPBAR_SETTINGS "Настройки рабочего стола"
     IDS_DESKTOP             "Рабочий стол"
     IDS_TASKBAR             "Панель задач"
+    IDS_NAMECOLUMN          "Name"
+    IDS_PATHCOLUMN          "Path"
+    IDS_MENUCOLUMN          "Menu path"
 END
 
 #endif    // Russian resources

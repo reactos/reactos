@@ -380,6 +380,9 @@ BEGIN
     IDS_DESKTOPBAR_SETTINGS "Ρυθμίσεις Επιφάνειας Εργασίας"
     IDS_DESKTOP             "Επιφάνεια Εργασίας"
     IDS_TASKBAR             "Γραμμή εργασιών"
+    IDS_NAMECOLUMN          "Name"
+    IDS_PATHCOLUMN          "Path"
+    IDS_MENUCOLUMN          "Menu path"
 END
 
 #endif    // Greek resources

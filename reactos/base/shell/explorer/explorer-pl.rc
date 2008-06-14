@@ -381,6 +381,9 @@ BEGIN
     IDS_DESKTOPBAR_SETTINGS "W³aœciwoœci pulpitu"
     IDS_DESKTOP             "Pulpit"
     IDS_TASKBAR             "Pasek zadañ"
+    IDS_NAMECOLUMN          "Name"
+    IDS_PATHCOLUMN          "Path"
+    IDS_MENUCOLUMN          "Menu path"
 END
 
 #endif    // Polish (PL) resources

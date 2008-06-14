@@ -387,6 +387,9 @@ BEGIN
     IDS_DESKTOPBAR_SETTINGS "Desktop-Einstellungen"
     IDS_DESKTOP             "Desktop"
     IDS_TASKBAR             "Taskbar"
+    IDS_NAMECOLUMN          "Name"
+    IDS_PATHCOLUMN          "Pfad"
+    IDS_MENUCOLUMN          "Menüpfad"
 END
 
 #endif    // German (Germany) resources

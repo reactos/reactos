@@ -379,6 +379,9 @@ BEGIN
     IDS_DESKTOPBAR_SETTINGS "바탕화면 설정"
     IDS_DESKTOP             "바탕화면"
     IDS_TASKBAR             "작업 표시줄"
+    IDS_NAMECOLUMN          "Name"
+    IDS_PATHCOLUMN          "Path"
+    IDS_MENUCOLUMN          "Menu path"
 END
 
 #endif    // Korean resources by manatails007(www.manatails007.org)

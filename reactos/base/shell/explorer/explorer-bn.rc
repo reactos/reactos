@@ -378,6 +378,9 @@ BEGIN
     IDS_DESKTOPBAR_SETTINGS "‡W¯‹Uc wbqš¿b"
     IDS_DESKTOP             "‡W¯‹Uc"
     IDS_TASKBAR             "Kvh©Kvix `Û"
+    IDS_NAMECOLUMN          "Name"
+    IDS_PATHCOLUMN          "Path"
+    IDS_MENUCOLUMN          "Menu path"
 END
 
 #endif    // Bengali resources

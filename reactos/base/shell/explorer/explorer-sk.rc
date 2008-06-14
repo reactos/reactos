@@ -392,6 +392,9 @@ BEGIN
     IDS_DESKTOPBAR_SETTINGS "Nastavenia plochy"
     IDS_DESKTOP             "Pracovná plocha"
     IDS_TASKBAR             "Panel úloh"
+    IDS_NAMECOLUMN          "Name"
+    IDS_PATHCOLUMN          "Path"
+    IDS_MENUCOLUMN          "Menu path"
 END
 
 #endif    // Slovak resources

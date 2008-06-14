@@ -376,6 +376,9 @@ BEGIN
     IDS_DESKTOPBAR_SETTINGS "Skrivbordsinställningar"
     IDS_DESKTOP             "Skrivbord"
     IDS_TASKBAR             "Aktivitetsfält"
+    IDS_NAMECOLUMN          "Name"
+    IDS_PATHCOLUMN          "Path"
+    IDS_MENUCOLUMN          "Menu path"
 END
 
 #endif    // Swedish resources

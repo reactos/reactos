@@ -381,6 +381,9 @@ BEGIN
     IDS_DESKTOPBAR_SETTINGS "桌面设置"
     IDS_DESKTOP             "桌面"
     IDS_TASKBAR             "任务栏"
+    IDS_NAMECOLUMN          "Name"
+    IDS_PATHCOLUMN          "Path"
+    IDS_MENUCOLUMN          "Menu path"
 END
 
 #endif    // Chinese (P.R.C.) resources
