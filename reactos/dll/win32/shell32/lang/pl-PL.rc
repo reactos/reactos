@@ -56,7 +56,7 @@ BEGIN
 		END
 		MENUITEM "&Wyrównaj ikony",         FCIDM_SHVIEW_SNAPTOGRID
 		MENUITEM SEPARATOR
-		MENUITEM "&Odœwierz",               FCIDM_SHVIEW_REFRESH
+		MENUITEM "&Odœwie¿",               FCIDM_SHVIEW_REFRESH
 		MENUITEM SEPARATOR
 		MENUITEM "W&klej",                  FCIDM_SHVIEW_INSERT
 		MENUITEM "Wklej s&krót",            FCIDM_SHVIEW_INSERTLINK
