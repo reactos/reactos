@@ -496,6 +496,7 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
             {
                 MoveWindow(SolWnd, 0, 0, nWidth, nHeight - nStatusHeight, TRUE);
                 MoveWindow(hwndStatus, 0, nHeight - nStatusHeight, nWidth, nHeight, TRUE);
+                SendMessage(hwndStatus, WM_SIZE, wParam, lParam);
             }
             else
             {
