@@ -100,7 +100,7 @@ BEGIN
     LTEXT "Um die lokalen Nutzer- oder Systemeinstellungen zu ändern, klicken Sie auf Einstellen.",
           IDC_STATIC, 53, 57, 188, 15
     PUSHBUTTON "&Einstellen...", IDC_CUSTOMLOCALE, 245, 57, 50, 14
-    LTEXT "Das Tastaturlayout gibt vor, welche Zeichen ein Tastendruck bewirkt.",
+    LTEXT "Das Tastaturlayout gibt vor, welches Zeichen ein Tastendruck bewirkt.",
           IDC_STATIC, 53, 86, 253, 8
     LTEXT "", IDC_LAYOUTTEXT, 53, 100, 250, 16
     LTEXT "Um das Tastaturlayout zu ändern, klicken Sie auf Einstellen.",

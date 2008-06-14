@@ -184,7 +184,7 @@ BEGIN
 	LTEXT "K&ommentar:", 14018, 8, 152, 57, 10
 	EDITTEXT 14019, 79, 149, 150, 14, ES_AUTOHSCROLL
 	PUSHBUTTON "&Ziel finden...", 14020, 9, 172, 70, 14, ES_LEFT
-	PUSHBUTTON "I&con wechseln...", 14021, 84, 172, 70, 14, ES_LEFT
+	PUSHBUTTON "S&ymbol wechseln...", 14021, 84, 172, 70, 14, ES_LEFT
 	PUSHBUTTON "Er&weitert...", 14022, 159, 172, 70, 14, ES_LEFT
 END
 
@@ -311,7 +311,7 @@ BEGIN
 	LTEXT "Welches Benutzerkonto wollen Sie zum Starten dieser Anwendung verwenden?", -1, 10, 20, 220, 20
 	CHECKBOX "Aktueller Benutzer %s", 14000, 10, 45, 150, 10
 	LTEXT "Computer vor unauthorisierten Programmaktiviäten schützen", -1, 25, 57, 200, 10, WS_DISABLED
-	CHECKBOX "Diese Einstellung kann Computerviren daran hindern, ihrem Computer oder Ihren persönlichen Daten zu schaden, aber es kann auch Programme daran hindern, Ordnungsgemäß zu arbeiten.", 14001, 25, 68, 200, 30, WS_DISABLED | BS_MULTILINE
+	CHECKBOX "Diese Einstellung kann Computerviren daran hindern, ihrem Computer oder Ihren persönlichen Daten zu schaden, aber es kann auch Programme daran hindern, ordnungsgemäß zu arbeiten.", 14001, 25, 68, 200, 30, WS_DISABLED | BS_MULTILINE
 	CHECKBOX "Folgender Benutzer:", 14002,  10, 100, 90, 10
 	LTEXT "Benutzername:", -1, 20, 118, 54, 10
 	COMBOBOX 14003, 75, 115, 100, 15, CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
@@ -659,7 +659,7 @@ BEGIN
 	IDS_FOLDER_OPTIONS          "Ordneroptionen"
 	IDS_RECYCLEBIN_LOCATION     "Papierkorbpfad"
 	IDS_RECYCLEBIN_DISKSPACE    "freier Speicher"
-	IDS_PICK_ICON_TITLE         "Choose Icon"
+	IDS_PICK_ICON_TITLE         "Symbol auswählen"
 	IDS_PICK_ICON_FILTER        "Symboldateien(*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0"
 	IDS_OPEN_WITH_FILTER        "Programme\0*.exe\0"
 	IDS_DIRECTORY               "Dateiordner"

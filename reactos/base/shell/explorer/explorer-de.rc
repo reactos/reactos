@@ -341,7 +341,7 @@ BEGIN
     IDS_START_HELP          "Hilfe"
     IDS_SEARCH_FILES        "Suche Dateien..."
     IDS_DOCUMENTS           "Dokumente"
-    IDS_FAVORITES           "Lesezeichen"
+    IDS_FAVORITES           "Favoriten"
     IDS_PROGRAMS            "Programme"
     IDS_SETTINGS            "Einstellungen"
     IDS_EXPLORE             "Explore"
