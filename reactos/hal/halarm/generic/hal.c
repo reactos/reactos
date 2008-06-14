@@ -504,6 +504,8 @@ UCHAR HalpMaskTable[HIGH_LEVEL + 1] =
         asm ("clz\t%0, %1": "=r" (__value): "r" (__arg)); \
         __value; })
 
+ULONG HalpStallStart, HalpStallEnd, HalpStallScaleFactor;
+
 ULONG
 HalGetInterruptSource(VOID)
 {
@@ -517,15 +519,53 @@ HalGetInterruptSource(VOID)
 }
 
 VOID
-HalpStallInterrupt(VOID)
-{
-    DPRINT1("STALL INTERRUPT!!!\n");
-    
+HalpClockInterrupt(VOID)
+{   
     //
     // Clear the interrupt
     //
+    DPRINT1("CLOCK INTERRUPT!!!\n");
     WRITE_REGISTER_ULONG(TIMER_INT_CLEAR, 1);    
     while (TRUE);
+}
+
+VOID
+HalpStallInterrupt(VOID)
+{   
+    //
+    // Clear the interrupt
+    //
+    DPRINT1("STALL INTERRUPT!!!: %lx %lx\n", HalpStallStart, HalpStallEnd);
+    WRITE_REGISTER_ULONG(TIMER_INT_CLEAR, 1);
+
+    //
+    // Check if this is our first time here
+    //
+    if (!(HalpStallStart + HalpStallEnd))
+    {
+        //
+        // Remember that we've been hit once
+        //
+        HalpStallEnd = 1;
+    }
+    else if (!(HalpStallStart) && (HalpStallEnd))
+    {
+        //
+        // Okay, this is our second time here!
+        // Load the stall execution count that was setup for us...
+        // And get ready to hit the case below
+        //
+        HalpStallStart = PCR->StallExecutionCount;
+        HalpStallEnd = 0;
+    }
+    else if ((HalpStallStart) && !(HalpStallEnd))
+    {
+        //
+        // This our third time here!
+        // Now we can just save the stall execution count at end time
+        //
+        HalpStallEnd = PCR->StallExecutionCount;
+    }
 }
 
 VOID
@@ -553,7 +593,7 @@ HalpInitializeInterrupts(VOID)
     //  (TIMCLKENXdiv (1) * PRESCALEdiv (1))
     //
     ClockInterval = 0x2710;
-    
+
     //
     // Enable the timer
     //
@@ -766,66 +806,22 @@ VOID
 FASTCALL
 HalRequestSoftwareInterrupt(IN KIRQL Request)
 {
-    ULONG Interrupt = 0;
-
-    //
-    // Get the interrupt that maches this IRQL level
-    //
-    switch (Request)
-    {
-        case APC_LEVEL:
-            
-            Interrupt = 1 << 1;
-            break;
-            
-        case DISPATCH_LEVEL:
-            
-            Interrupt = 1 << 2;
-            break;
-            
-        default:
-            
-            ASSERT(FALSE);
-    }
-    
     //
     // Force a software interrupt
     //
-    DPRINT1("About to force interrupt mask: %d\n", Interrupt);
-    WRITE_REGISTER_ULONG(VICSOFTINT, Interrupt);
+    DPRINT1("[SOFTINT]: %d\n", Request);
+    WRITE_REGISTER_ULONG(VICSOFTINT, 1 << Request);
 }
 
 VOID
 FASTCALL
 HalClearSoftwareInterrupt(IN KIRQL Request)
-{
-    ULONG Interrupt = 0;
-    
-    //
-    // Get the interrupt that maches this IRQL level
-    //
-    switch (Request)
-    {
-        case APC_LEVEL:
-            
-            Interrupt = 1 << 1;
-            break;
-            
-        case DISPATCH_LEVEL:
-            
-            Interrupt = 1 << 2;
-            break;
-            
-        default:
-            
-            ASSERT(FALSE);
-    }
-    
+{    
     //
     // Force a software interrupt
     //
-    DPRINT1("About to kill interrupt mask: %d\n", Interrupt);
-    WRITE_REGISTER_ULONG(VICSOFTINTCLEAR, Interrupt);
+    DPRINT1("[SOFTINTC] %d\n", Request);
+    WRITE_REGISTER_ULONG(VICSOFTINTCLEAR, 1 << Request);
 }
 
 VOID
@@ -1091,7 +1087,20 @@ NTAPI
 KeStallExecutionProcessor(
   ULONG Microseconds)
 {
-  UNIMPLEMENTED;
+    ULONG Index;
+ 
+    //
+    // Calculate how many times we should loop
+    //
+    Index = Microseconds * PCR->StallScaleFactor;
+    while (Index)
+    {
+        //
+        // Do one stall cycle
+        //
+        PCR->StallExecutionCount++;
+        Index--;
+    };
 }
 
 VOID
