@@ -199,9 +199,7 @@ KiDispatchInterrupt(VOID)
     // Check if we have a thread to swap to
     //
     if (Pcr->Prcb->NextThread)
-    {
-        DPRINT1("Switching threads!\n");
-        
+    {       
         //
         // Next is now current
         //
@@ -219,7 +217,6 @@ KiDispatchInterrupt(VOID)
         //
         // Make the old thread ready
         //
-        DPRINT1("Queueing the ready thread\n");
         KxQueueReadyThread(OldThread, Pcr->Prcb);
         
         //
@@ -241,6 +238,12 @@ KiInterruptHandler(IN PKTRAP_FRAME TrapFrame,
     KIRQL OldIrql, Irql;
     ULONG InterruptCause, InterruptMask;
     PKPCR Pcr;
+
+    //
+    // Increment interrupt count
+    //
+    Pcr = (PKPCR)KeGetPcr();
+    Pcr->Prcb->InterruptCount++;
     
     //
     // Get the old IRQL
@@ -252,62 +255,49 @@ KiInterruptHandler(IN PKTRAP_FRAME TrapFrame,
     // Get the interrupt source
     //
     InterruptCause = HalGetInterruptSource();
-    DPRINT1("Interrupt (%x) @ %p %p\n", InterruptCause, TrapFrame->SvcLr, TrapFrame->Pc);
-    DPRINT1("OLD IRQL: %x\n", OldIrql);
+    DPRINT1("[INT] (%x) @ %p %p\n", InterruptCause, TrapFrame->SvcLr, TrapFrame->Pc);
 
     //
     // Get the new IRQL and Interrupt Mask
     //
-    Pcr = (PKPCR)KeGetPcr();
     Irql = Pcr->IrqlMask[InterruptCause];
     InterruptMask = Pcr->IrqlTable[Irql];
-    DPRINT1("IRQL (%x) MASK (%x)\n", Irql, InterruptMask);
     
     //
-    // Make sure the IRQL is valid
+    // Raise to the new IRQL
     //
-    if (OldIrql < Irql)
-    {
-        //
-        // We should just return, probably
-        //
-        DPRINT1("IRQL Race!\n");
-        while (TRUE);
-    }
-    
+    KfRaiseIrql(Irql);
+
     //
     // Check if this interrupt is at DISPATCH or higher
     //
     if (Irql > DISPATCH_LEVEL)
+    {        
+        //
+        // FIXME: Switch to interrupt stack
+        //
+        DPRINT1("[ISR]\n");
+    }
+    else
     {
         //
-        // ISR Handling Code
+        // We know this is APC or DPC.
         //
-        DPRINT1("ISR!\n");
-        while (TRUE);
+        DPRINT1("[DPC/APC]\n");
+        HalClearSoftwareInterrupt(Irql);
     }
-    
-    //
-    // We know this is APC or DPC.
-    // Clear the software interrupt.
-    // Reenable interrupts and update the IRQL
-    //
-    HalClearSoftwareInterrupt(Irql);
-    _enable();
-    Pcr->CurrentIrql = Irql;
-    
-    //
-    // Increment interrupt count
-    //
-    Pcr->Prcb->InterruptCount++;
-    
+        
     //
     // Call the registered interrupt routine
     //
-    DPRINT1("Calling handler\n");
     Pcr->InterruptRoutine[Irql]();
-    DPRINT1("Done!\n");
-    while (TRUE);
+    DPRINT1("[ISR RETURN]\n");
+    
+    //
+    // Re-enable interrupts and return IRQL
+    //
+    KeLowerIrql(OldIrql);
+    _enable();
 }
 
 NTSTATUS
@@ -315,8 +305,8 @@ KiDataAbortHandler(IN PKTRAP_FRAME TrapFrame)
 {
     NTSTATUS Status;
     PVOID Address = (PVOID)KeArmFaultAddressRegisterGet();
-    DPRINT1("Data Abort (%x) @ %p %p\n", Address, TrapFrame->SvcLr, TrapFrame->Pc);
-    DPRINT1("Abort Reason: %d\n", KeArmFaultStatusRegisterGet());
+    DPRINT1("[ABORT] (%x) @ %p/%p/%p\n",
+            KeArmFaultStatusRegisterGet(), Address, TrapFrame->SvcLr, TrapFrame->Pc);
     
     //
     // Check if this is a page fault
@@ -327,10 +317,10 @@ KiDataAbortHandler(IN PKTRAP_FRAME TrapFrame)
                                Address,
                                KernelMode,
                                TrapFrame);
-        DPRINT1("Status: %x\n", Status);
         if (Status == STATUS_SUCCESS) return Status;
     }
     
+    UNIMPLEMENTED;
     while (TRUE);
     return STATUS_SUCCESS;
 }
@@ -358,7 +348,7 @@ KiSystemService(IN PKTHREAD Thread,
     // Get the system call ID
     //
     Id = Instruction & 0xFFFFF;
-    DPRINT1("System call (%X) from thread: %p (%d) \n", Id, Thread, Thread->PreviousMode);
+    DPRINT1("[SWI] (%x) %p (%d) \n", Id, Thread, Thread->PreviousMode);
     
     //
     // Get the descriptor table
@@ -367,7 +357,6 @@ KiSystemService(IN PKTHREAD Thread,
     Offset = ((Id >> SERVICE_TABLE_SHIFT) & SERVICE_TABLE_MASK);
     ServiceTable += Offset;
     DescriptorTable = (PVOID)ServiceTable;
-    DPRINT1("Descriptor Table: %p (Count %d)\n", DescriptorTable, DescriptorTable->Limit);
     
     //
     // Get the service call number and validate it
@@ -386,8 +375,6 @@ KiSystemService(IN PKTHREAD Thread,
     // Save the function responsible for handling this system call
     //
     SystemCall = (PVOID)DescriptorTable->Base[Number];
-    DPRINT1("Handler: %p\n", SystemCall);
-    DPRINT1("NtClose: %p\n", NtClose);
     
     //
     // Check if this is a GUI call
@@ -404,10 +391,8 @@ KiSystemService(IN PKTHREAD Thread,
     //
     // Check how many arguments this system call takes
     //
-    DPRINT1("Number: %d\n", Number);
     ArgumentCount = DescriptorTable->Number[Number] / 4;
     ASSERT(ArgumentCount <= 20);
-    DPRINT1("Argument Count: %d\n", ArgumentCount);
     
     //
     // Copy the register-arguments first
@@ -421,7 +406,6 @@ KiSystemService(IN PKTHREAD Thread,
         //
         Arguments[i] = *Argument;
         Argument++;
-        DPRINT1("Argument %d: %x\n", i, Arguments[i]);
     }
     
     //
@@ -432,7 +416,6 @@ KiSystemService(IN PKTHREAD Thread,
         //
         // FIXME: Validate the user stack
         //
-        DPRINT1("User stack: %p\n", TrapFrame->UserSp);
         
         //
         // Copy the rest
@@ -445,7 +428,6 @@ KiSystemService(IN PKTHREAD Thread,
             //
             Arguments[i] = *Argument;
             Argument++;
-            DPRINT1("Argument %d: %x\n", i, Arguments[i]);
         }
     }
     
@@ -461,7 +443,6 @@ KiSoftwareInterruptHandler(IN PKTRAP_FRAME TrapFrame)
     PKTHREAD Thread;
     KPROCESSOR_MODE PreviousMode;
     ULONG Instruction;
-    DPRINT1("SWI @ %p %p \n", TrapFrame->Pc, TrapFrame->UserLr);
     
     //
     // Get the current thread

@@ -81,7 +81,6 @@ KdComPortInUse=_KdComPortInUse DATA
 KeFlushWriteBuffer
 KeGetCurrentIrql
 KeLowerIrql
-KeSwapIrql
 KeQueryPerformanceCounter
 KeRaiseIrql
 KeRaiseIrqlToDpcLevel

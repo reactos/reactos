@@ -273,7 +273,7 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
     //
     // Raise to Dispatch
     //
-    KeSwapIrql(DISPATCH_LEVEL);
+    KfRaiseIrql(DISPATCH_LEVEL);
     
     //
     // Set the Idle Priority to 0. This will jump into Phase 1
@@ -290,7 +290,7 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
     //
     // Raise back to HIGH_LEVEL
     //
-    KeSwapIrql(HIGH_LEVEL);
+    KfRaiseIrql(HIGH_LEVEL);
 }
 
 VOID

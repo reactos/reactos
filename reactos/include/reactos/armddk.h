@@ -128,7 +128,12 @@ struct _TEB* NtCurrentTeb(VOID)
 // IRQL Support on ARM is similar to MIPS/ALPHA
 //
 KIRQL
-KeSwapIrql(
+KfRaiseIrql(
+    IN KIRQL NewIrql
+);
+
+VOID
+KfLowerIrql(
     IN KIRQL NewIrql
 );
 
@@ -142,8 +147,8 @@ KeRaiseIrqlToDpcLevel(
     VOID
 );
 
-#define KeLowerIrql(NewIrql) KeSwapIrql(NewIrql)
-#define KeRaiseIrql(NewIrql, OldIrql) *(OldIrql) = KeSwapIrql(NewIrql)
+#define KeLowerIrql(NewIrql) KfLowerIrql(NewIrql)
+#define KeRaiseIrql(NewIrql, OldIrql) *(OldIrql) = KfRaiseIrql(NewIrql)
 
 //
 // Cache clean and flush

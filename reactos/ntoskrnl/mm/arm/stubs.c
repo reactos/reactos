@@ -350,8 +350,7 @@ MmCreateVirtualMappingForKernel(IN PVOID Address,
     MMPTE TempPte, TempPde;
     NTSTATUS Status;
     PFN_NUMBER Pfn;
-    DPRINT1("MmCreateVirtualMappingForKernel(%x, %x, %x, %d)\n",
-            Address, Protection, *Pages, PageCount);
+    DPRINT1("[KMAP]: %p %d\n", Address, PageCount);
     ASSERT(Address >= MmSystemRangeStart);
 
     //
@@ -466,9 +465,6 @@ MmCreateVirtualMappingUnsafe(IN PEPROCESS Process,
                              IN PPFN_TYPE Pages,
                              IN ULONG PageCount)
 {
-    DPRINT1("MmCreateVirtualMappingUnsafe(%p %x, %x, %x, %d)\n",
-            Process, Address, Protection, *Pages, PageCount);
-    
     //
     // Are we only handling the kernel?
     //
@@ -499,9 +495,7 @@ MmCreateVirtualMapping(IN PEPROCESS Process,
                        IN ULONG PageCount)
 {
     ULONG i;
-    DPRINT1("MmCreateVirtualMapping(%p %x, %x, %x, %d)\n",
-            Process, Address, Protection, *Pages, PageCount);
-    
+
     //
     // Loop each page
     //
@@ -556,7 +550,6 @@ MmGetPhysicalAddress(IN PVOID Address)
 {
     PHYSICAL_ADDRESS PhysicalAddress = {{0}};
     PMMPTE PointerPte;
-    DPRINT1("MmGetPhysicalAddress(%lx)\n", Address);
 
     //
     // Early boot PCR check
@@ -570,7 +563,6 @@ MmGetPhysicalAddress(IN PVOID Address)
         ASSERT(PointerPte->u.Hard.L1.Section.Type == SectionPte);
         PhysicalAddress.QuadPart = PointerPte->u.Hard.L1.Section.BaseAddress;
         PhysicalAddress.QuadPart <<= CPT_SHIFT;
-        DPRINT1("Base: %p\n", PhysicalAddress.LowPart);
         PhysicalAddress.LowPart += BYTE_OFFSET(Address);
         return PhysicalAddress;
     }
@@ -605,7 +597,6 @@ MmCreateHyperspaceMapping(IN PFN_TYPE Page)
     PMMPTE PointerPte, FirstPte, LastPte;
     MMPTE TempPte;
     PVOID Address;
-    DPRINT1("MmCreateHyperspaceMapping(%lx)\n", Page);
 
     //
     // Loop hyperspace PTEs (1MB)
@@ -650,7 +641,7 @@ MmCreateHyperspaceMapping(IN PFN_TYPE Page)
     //
     Address = HYPER_SPACE + ((PointerPte - FirstPte) * PAGE_SIZE);
     KiFlushSingleTb(FALSE, Address);
-    DPRINT1("MmCreateHyperspaceMapping(%lx)\n", Address);
+    DPRINT1("[HMAP]: %p %lx\n", Address, Page);
     return Address;
 }
 
@@ -660,7 +651,7 @@ MmDeleteHyperspaceMapping(IN PVOID Address)
 {
     PFN_TYPE Pfn;
     PMMPTE PointerPte;
-    DPRINT1("MmDeleteHyperspaceMapping(%lx)\n", Address);
+    DPRINT1("[HUNMAP]: %p\n", Address);
     
     //
     // Get the PTE
@@ -740,7 +731,6 @@ MiInitPageDirectoryMap(VOID)
     PHYSICAL_ADDRESS BoundaryAddressMultiple;
     PVOID BaseAddress;
     NTSTATUS Status;
-    DPRINT1("MiInitPageDirectoryMap()\n");
 
     //
     // Create memory area for the PTE area

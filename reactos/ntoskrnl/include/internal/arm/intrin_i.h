@@ -74,6 +74,14 @@ KeArmCacheRegisterGet(VOID)
     return Value;
 }
 
+FORCEINLINE
+ARM_STATUS_REGISTER
+KeArmStatusRegisterGet(VOID)
+{
+    ARM_STATUS_REGISTER Value;
+    __asm__ __volatile__ ("mrs %0, cpsr" : "=r"(Value.AsUlong) : : "cc");
+    return Value;    
+}
 
 FORCEINLINE
 VOID

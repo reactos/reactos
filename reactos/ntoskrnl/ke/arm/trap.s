@@ -323,10 +323,32 @@ AbortExit:
 IntExit:
 
     //
-    // FIXME: TODO
+    // Skip IRQL
     //
-    b .
+    add sp, sp, #(4)
+
+    //
+    // Get the SPSR and restore it
+    //
+    ldr r0, [sp], #4
+    msr spsr_all, r0
     
+    //
+    // Restore the registers
+    //
+    ldmia sp, {r0-r14}^
+    mov r0, r0
+    
+    //
+    // Advance in the trap frame
+    //
+    add sp, sp, #(4*15)
+    
+    //
+    // Restore program execution state
+    //
+    ldmia sp, {sp, lr, pc}^
+    b .    
     ENTRY_END KiInterruptException
 
     NESTED_ENTRY KiFastInterruptException

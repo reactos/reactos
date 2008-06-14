@@ -24,6 +24,31 @@ typedef union _ARM_TTB_REGISTER
     ULONG AsUlong;
 } ARM_TTB_REGISTER;
 
+typedef union _ARM_STATUS_REGISTER
+{
+    
+    struct
+    {
+        ULONG Mode:5;
+        ULONG State:1;
+        ULONG FiqDisable:1;
+        ULONG IrqDisable:1;
+        ULONG ImpreciseAbort:1;
+        ULONG Endianness:1;
+        ULONG Sbz:6;
+        ULONG GreaterEqual:4;
+        ULONG Sbz1:4;
+        ULONG Java:1;
+        ULONG Sbz2:2;
+        ULONG StickyOverflow:1;
+        ULONG Overflow:1;
+        ULONG CarryBorrowExtend:1;
+        ULONG Zero:1;
+        ULONG NegativeLessThan:1;
+    };
+    ULONG AsUlong;
+} ARM_STATUS_REGISTER;
+
 typedef union _ARM_DOMAIN_REGISTER
 {
     struct

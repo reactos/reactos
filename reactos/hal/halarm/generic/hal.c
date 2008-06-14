@@ -393,7 +393,6 @@ HalpGetParameters(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     }
 }
 
-
 //
 // INTs on the Versatile:
 //
@@ -491,6 +490,14 @@ UCHAR HalpMaskTable[HIGH_LEVEL + 1] =
 #define VICSOFTINT       (PVOID)0xE0040018
 #define VICSOFTINTCLEAR  (PVOID)0xE004001C
 
+#define TIMER_LOAD            (PVOID)0xE00E2000
+#define TIMER_VALUE           (PVOID)0xE00E2004
+#define TIMER_CONTROL         (PVOID)0xE00E2008
+#define TIMER_INT_CLEAR       (PVOID)0xE00E200C
+#define TIMER_INT_STATUS      (PVOID)0xE00E2010
+#define TIMER_INT_MASK        (PVOID)0xE00E2014
+#define TIMER_BACKGROUND_LOAD (PVOID)0xE00E2018
+
 
 #define _clz(a) \
 ({ ULONG __value, __arg = (a); \
@@ -513,6 +520,11 @@ VOID
 HalpStallInterrupt(VOID)
 {
     DPRINT1("STALL INTERRUPT!!!\n");
+    
+    //
+    // Clear the interrupt
+    //
+    WRITE_REGISTER_ULONG(TIMER_INT_CLEAR, 1);    
     while (TRUE);
 }
 
@@ -520,20 +532,39 @@ VOID
 HalpInitializeInterrupts(VOID)
 {
     PKPCR Pcr = (PKPCR)KeGetPcr();
+    ULONG ClockInterval;
     
     //
     // Fill out the IRQL mappings
     //
     RtlCopyMemory(Pcr->IrqlTable, HalpIrqlTable, sizeof(Pcr->IrqlTable));
     RtlCopyMemory(Pcr->IrqlMask, HalpMaskTable, sizeof(Pcr->IrqlMask));
-//    Pcr->IrqlTable = HalpIrqlTable;
-  //  Pcr->IrqlMask = HalpMaskTable;
 
     //
     // Setup the clock and profile interrupt
     //
     Pcr->InterruptRoutine[CLOCK2_LEVEL] = HalpStallInterrupt;
     //    Pcr->InterruptRoutine[PROFILE_LEVEL] = HalpCountInterrupt;
+    
+    //
+    // Configure the interval to 10ms
+    //  (INTERVAL (10ms) * TIMCLKfreq (1MHz))
+    // --------------------------------------- == 10^4
+    //  (TIMCLKENXdiv (1) * PRESCALEdiv (1))
+    //
+    ClockInterval = 0x2710;
+    
+    //
+    // Enable the timer
+    //
+    WRITE_REGISTER_ULONG(TIMER_LOAD, ClockInterval);
+    WRITE_REGISTER_ULONG(TIMER_CONTROL,
+                         0 << 0 | // wrapping mode
+                         1 << 1 | // 32-bit mode
+                         0 << 2 | // 0 stages of prescale, divided by 1
+                         1 << 5 | // enable interrupt
+                         1 << 6 | // periodic mode
+                         1 << 7); // enable it
 }
 
 ULONG HalpCurrentTimeIncrement, HalpNextTimeIncrement, HalpNextIntervalCount;
@@ -1068,11 +1099,14 @@ FASTCALL
 KfLowerIrql(IN KIRQL NewIrql)
 {
     ULONG InterruptMask;
+    ARM_STATUS_REGISTER Flags;
     PKPCR Pcr = (PKPCR)KeGetPcr();
     
     //
     // Validate the new IRQL
     //
+    Flags = KeArmStatusRegisterGet();
+    _disable();
     ASSERT(NewIrql <= Pcr->CurrentIrql);
     
     //
@@ -1084,7 +1118,7 @@ KfLowerIrql(IN KIRQL NewIrql)
     // Setup the interrupt mask for this IRQL
     //
     InterruptMask = KeGetPcr()->IrqlTable[NewIrql];
-    DPRINT1("New IRQL: %d InterruptMask: %lx\n", NewIrql, InterruptMask);
+    DPRINT1("[LOWER] IRQL: %d InterruptMask: %lx\n", NewIrql, InterruptMask);
     
     //
     // Clear interrupts associated to the old IRQL
@@ -1101,6 +1135,7 @@ KfLowerIrql(IN KIRQL NewIrql)
     // Save the new IRQL
     //
     Pcr->CurrentIrql = NewIrql;
+    if (!Flags.IrqDisable) _enable();
 }
 
 KIRQL
@@ -1109,11 +1144,14 @@ KfRaiseIrql(IN KIRQL NewIrql)
 {
     KIRQL OldIrql;
     ULONG InterruptMask;
+    ARM_STATUS_REGISTER Flags;
     PKPCR Pcr = (PKPCR)KeGetPcr();
     
     //
     // Save the current IRQL
     //
+    Flags = KeArmStatusRegisterGet();
+    _disable();
     OldIrql = Pcr->CurrentIrql;
     
     //
@@ -1125,8 +1163,13 @@ KfRaiseIrql(IN KIRQL NewIrql)
     // Setup the interrupt mask for this IRQL
     //
     InterruptMask = KeGetPcr()->IrqlTable[NewIrql];
-    DPRINT1("New IRQL: %d InterruptMask: %lx\n", NewIrql, InterruptMask);
-    //ASSERT(NewIrql >= OldIrql);
+    DPRINT1("[RAISE] IRQL: %d InterruptMask: %lx\n", NewIrql, InterruptMask);
+    ASSERT(NewIrql >= OldIrql);
+    
+    //
+    // Clear interrupts associated to the old IRQL
+    //
+    WRITE_REGISTER_ULONG(VICINTENCLEAR, 0xFFFFFFFF);
     
     //
     // Set the new interrupt mask
@@ -1138,6 +1181,7 @@ KfRaiseIrql(IN KIRQL NewIrql)
     // Save the new IRQL
     //
     Pcr->CurrentIrql = NewIrql;
+    if (!Flags.IrqDisable) _enable();
     return OldIrql;
 }
 
@@ -1268,15 +1312,6 @@ WRITE_PORT_USHORT(
 }
 
 KIRQL
-KeSwapIrql(IN KIRQL Irql)
-{
-    //
-    // Call the generic routine
-    //
-    return KfRaiseIrql(Irql);
-}
-
-KIRQL
 KeRaiseIrqlToDpcLevel(VOID)
 {
     //
@@ -1317,7 +1352,6 @@ HalpIdentifyProcessor(VOID)
     //
     HalpTestCleanSupported = (IdRegister.Architecture == 6);
 }
-
 
 VOID
 HalSweepDcache(VOID)
