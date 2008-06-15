@@ -1,7 +1,7 @@
 /* FILE:        setup/usetup/lang/cs-CZ.rc
  * TRANSLATOR:  Radek Liska aka Black_Fox (radekliska at gmail dot com)
  * THANKS TO:   preston
- * UPDATED:     2008-04-09
+ * UPDATED:     2008-06-05
  */
 
 #ifndef LANG_CS_CZ_H__
@@ -1085,7 +1085,7 @@ static MUI_ENTRY csCZLayoutSettingsEntries[] =
     {
         6,
         8,
-        "Please select a layout to be installed by default.",
+        "Pros¡m zvolte rozlo§en¡, kter‚ bude implicitnØ nainstalov no.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1476,7 +1476,7 @@ MUI_ERROR csCZErrorEntries[] =
     },
     {
         //ERROR_ADDING_KBLAYOUTS,
-        "Setup failed to add keyboard layouts to registry.\n"
+        "Nepodaýilo se pýidat rozlo§en¡ kl vesnice do registru.\n"
         "ENTER = Restartovat poŸ¡taŸ"
     },
     {
@@ -1699,7 +1699,7 @@ MUI_STRING csCZStrings[] =
     {STRING_GB,
     "GB"},
     {STRING_ADDKBLAYOUTS,
-    "Adding keyboard layouts"},
+    "Pýid v m rozlo§en¡ kl ves"},
     {0, 0}
 };
 

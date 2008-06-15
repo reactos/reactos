@@ -1079,7 +1079,7 @@ static MUI_ENTRY deDELayoutSettingsEntries[] =
     {
         6,
         8,
-        "Please select a layout to be installed by default.",
+        "Bitte w„hlen Sie ein zu installierendes Standard Layout.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1615,11 +1615,11 @@ MUI_STRING deDEStrings[] =
     {STRING_SETUPCOPYINGFILES,
      "Setup kopiert Dateien..."},
     {STRING_PAGEDMEM,
-     "Ausg. Speicher"},
+     "Ausgel. Sp."},
     {STRING_NONPAGEDMEM,
-     "Nicht ausg. Speich."},
+     "Nicht ausgel. Sp."},
     {STRING_FREEMEM,
-     "Freier Speicher"},
+     "Freier Sp."},
     {STRING_REGHIVEUPDATE,
     "   Registry hives werden aktualisiert..."},
     {STRING_IMPORTFILE,
