@@ -1689,7 +1689,9 @@ static DWORD HTTP_ReadChunked(WININETHTTPREQW *req, void *buffer, DWORD size, DW
 
         if (req->lpszCacheFile)
         {
-            if (!WriteFile(req->hCacheFile, p, bytes_read, NULL, NULL))
+            DWORD dwBytesWritten;
+
+            if (!WriteFile(req->hCacheFile, p, bytes_read, &dwBytesWritten, NULL))
                 WARN("WriteFile failed: %u\n", GetLastError());
         }
         p += bytes_read;
