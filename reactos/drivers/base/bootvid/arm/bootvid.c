@@ -23,6 +23,16 @@
 #define WRITE_REGISTER_USHORT(r, v) (*(volatile USHORT *)(r) = (v))
 
 PUSHORT VgaArmBase;
+UCHAR VidpTextColor = 0xF;
+ULONG VidpCurrentX = 0;
+ULONG VidpCurrentY = 0;
+ULONG VidpScrollRegion[4] =
+{
+    0,
+    0,
+    640 - 1,
+    480 - 1
+};
 
 typedef struct _VGA_COLOR
 {
@@ -69,7 +79,7 @@ VidpBuildColor(IN UCHAR Color)
     //
     // Build the 16-bit color mask
     //
-    return ((Blue & 0x1F) << 11) | ((Green & 0x1F) << 6) | ((Red & 0x1F));
+    return ((Red & 0x1F) << 11) | ((Green & 0x1F) << 6) | ((Blue & 0x1F));
 }
 
 
@@ -182,9 +192,18 @@ ULONG
 NTAPI
 VidSetTextColor(ULONG Color)
 {
-    UNIMPLEMENTED;
-    while (TRUE);
-    return 0;
+    UCHAR OldColor;
+    
+    //
+    // Save the old, set the new
+    //
+    OldColor = VidpTextColor;
+    VidpTextColor = Color;
+    
+    //
+    // Return the old text color
+    //
+    return OldColor;
 }
 
 /*
@@ -211,8 +230,19 @@ VidSetScrollRegion(ULONG x1,
                    ULONG x2,
                    ULONG y2)
 {
-    UNIMPLEMENTED;
-    while (TRUE);
+    /* Assert alignment */
+    ASSERT((x1 & 0x7) == 0);
+    ASSERT((x2 & 0x7) == 7);
+    
+    /* Set Scroll Region */
+    VidpScrollRegion[0] = x1;
+    VidpScrollRegion[1] = y1;
+    VidpScrollRegion[2] = x2;
+    VidpScrollRegion[3] = y2;
+    
+    /* Set current X and Y */
+    VidpCurrentX = x1;
+    VidpCurrentY = y1;
 }
 
 /*
@@ -293,6 +323,22 @@ VidSolidColorFill(IN ULONG Left,
                   IN ULONG Bottom,
                   IN UCHAR Color)
 {
-    UNIMPLEMENTED;
-    while (TRUE);
+    int y, x;
+    
+    //
+    // Loop along the Y-axis
+    //
+	for (y = Top; y <= Bottom; y++)
+	{
+        //
+        // Loop along the X-axis
+        //
+        for (x = Left; x <= Right; x++)
+        {
+            //
+            // Draw the pixel
+            //
+            VidpSetPixel(x, y, Color);
+        }
+	}    
 }
