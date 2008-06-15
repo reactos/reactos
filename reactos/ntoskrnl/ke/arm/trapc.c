@@ -27,12 +27,6 @@ KiSystemCall(
 
 /* FUNCTIONS ******************************************************************/
 
-ULONG
-HalGetInterruptSource(VOID);
-
-VOID FASTCALL
-HalClearSoftwareInterrupt(IN KIRQL Request);
-
 VOID
 KiIdleLoop(VOID)
 {

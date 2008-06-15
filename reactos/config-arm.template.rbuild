@@ -14,15 +14,16 @@
 
 
 <!--
-	Sub-architecture to build for. Specify one of:
+	Sub-architecture (board) to build for. Specify one of:
+		kurobox versatile
 		
 -->
-<property name="SARCH" value="" />
+<property name="SARCH" value="versatile" />
 
 
 <!--
 	Which CPU ReactOS should be optimized for. Specify one of:
-		armv4, armv4t, armv5, armv5te
+		armv5te
 
 	See GCC manual for more CPU names and which CPUs GCC can optimize for.
 -->

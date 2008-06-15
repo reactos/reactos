@@ -12,8 +12,14 @@
 	<define name="_ARM_" />
 	<define name="__arm__" />
 
+	<include>include/reactos/arm</include>
+
 	<property name="WINEBUILD_FLAGS" value="--kill-at"/>
 	<property name="NTOSKRNL_SHARED" value="-Wl,--file-alignment,0x1000 -Wl,--section-alignment,0x1000 -nostartfiles -shared"/>
+
+	<if property="SARCH" value="versatile">
+		<define name="BOARD_CONFIG_VERSATILE"/>
+	</if>
 
 	<if property="OPTIMIZE" value="1">
 		<compilerflag>-Os</compilerflag>

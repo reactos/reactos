@@ -137,6 +137,12 @@ HalBeginSystemInterrupt(
     PKIRQL OldIrql
 );
 
+VOID
+FASTCALL
+HalClearSoftwareInterrupt(
+    IN KIRQL Request
+);
+
 NTHALAPI
 BOOLEAN
 NTAPI
@@ -161,6 +167,13 @@ HalEndSystemInterrupt(
     KIRQL Irql,
     ULONG Vector
 );
+
+#ifdef _ARM_ // FIXME: ndk/arm? armddk.h?
+ULONG
+HalGetInterruptSource(
+    VOID
+);
+#endif
 
 NTHALAPI
 VOID
