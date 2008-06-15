@@ -289,6 +289,10 @@ static __inline__ __attribute__((always_inline)) unsigned long _rotl(const unsig
 }
 #endif
 
+#define _clz(a) \
+({ ULONG __value, __arg = (a); \
+asm ("clz\t%0, %1": "=r" (__value): "r" (__arg)); \
+__value; })
 
 #endif
 /* EOF */

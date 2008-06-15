@@ -1,28 +1,14 @@
 /*
- * COPYRIGHT:        See COPYING in the top level directory
- * PROJECT:          ReactOS kernel
- * FILE:             hal/hal.c
- * PURPOSE:          Hardware Abstraction Layer DLL
- * PROGRAMMER:       Casper S. Hornstrup (chorns@users.sourceforge.net)
- * REVISION HISTORY:
- *    01-08-2001 CSH Created
+ * PROJECT:         ReactOS HAL
+ * LICENSE:         GPL - See COPYING in the top level directory
+ * FILE:            hal/halarm/generic/hal.c
+ * PURPOSE:         Hardware Abstraction Layer
+ * PROGRAMMERS:     ReactOS Portable Systems Group
  */
 
-/* INCLUDES ******************************************************************/
+/* INCLUDES *******************************************************************/
 
-#include <ntddk.h>
-#include <ntdddisk.h>
-#include <arc/arc.h>
-#include <intrin.h>
-#include <ndk/halfuncs.h>
-#include <ndk/iofuncs.h>
-#include <ndk/kdfuncs.h>
-#include <ndk/kefuncs.h>
-#include <ndk/rtlfuncs.h>
-#include <internal/arm/ke.h>
-#include <internal/arm/intrin_i.h>
-#include <bugcodes.h>
-
+#include <hal.h>
 #define NDEBUG
 #include <debug.h>
 
@@ -41,6 +27,77 @@
 /* DATA **********************************************************************/
 
 ULONG _KdComPortInUse = 0;
+
+ULONG HalpIrqlTable[HIGH_LEVEL + 1] =
+{
+    0xFFFFFFFF, // IRQL 0 PASSIVE_LEVEL
+    0xFFFFFFFD, // IRQL 1 APC_LEVEL
+    0xFFFFFFF9, // IRQL 2 DISPATCH_LEVEL
+    0xFFFFFFD9, // IRQL 3
+    0xFFFFFF99, // IRQL 4
+    0xFFFFFF19, // IRQL 5
+    0xFFFFFE19, // IRQL 6
+    0xFFFFFC19, // IRQL 7
+    0xFFFFF819, // IRQL 8
+    0xFFFFF019, // IRQL 9
+    0xFFFFE019, // IRQL 10
+    0xFFFFC019, // IRQL 11
+    0xFFFF8019, // IRQL 12
+    0xFFFF0019, // IRQL 13
+    0xFFFE0019, // IRQL 14
+    0xFFFC0019, // IRQL 15
+    0xFFF80019, // IRQL 16
+    0xFFF00019, // IRQL 17
+    0xFFE00019, // IRQL 18
+    0xFFC00019, // IRQL 19
+    0xFF800019, // IRQL 20
+    0xFF000019, // IRQL 21
+    0xFE000019, // IRQL 22
+    0xFC000019, // IRQL 23
+    0xF0000019, // IRQL 24
+    0x80000019, // IRQL 25
+    0x19,       // IRQL 26
+    0x18,       // IRQL 27 PROFILE_LEVEL
+    0x10,       // IRQL 28 CLOCK2_LEVEL
+    0x00,       // IRQL 29 IPI_LEVEL
+    0x00,       // IRQL 30 POWER_LEVEL
+    0x00,       // IRQL 31 HIGH_LEVEL
+};
+
+UCHAR HalpMaskTable[HIGH_LEVEL + 1] =
+{
+    PROFILE_LEVEL, // INT 0 WATCHDOG
+    APC_LEVEL,     // INT 1 SOFTWARE INTERRUPT
+    DISPATCH_LEVEL,// INT 2 COMM RX
+    IPI_LEVEL,     // INT 3 COMM TX
+    CLOCK2_LEVEL,  // INT 4 TIMER 0
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23,
+    24,
+    25,
+    26,
+    26,
+    26
+};
 
 /* FUNCTIONS *****************************************************************/
 
@@ -396,124 +453,6 @@ HalpGetParameters(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     }
 }
 
-//
-// INTs on the Versatile:
-//
-// 0 WATCHDOG -> We use it for profiling
-// 1 SOFTWARE INTERRUPT -> We use it for APC delivery
-// 2 COMM RX -> We use it for DPC delivery
-// 3 COMM TX -> We use it for IPI delivery
-// 4 TIMER0/1 -> Use for Clock Interrupt.
-// 5+ XXX -> Mapped to to actual device
-//
-// So we have the following IRQL masks:
-// PASSIVE_LEVEL - 0xFFFFFFFF (enable all interrupts)
-// APC_LEVEL - 0xFFFFFFFD (disable interrupt 1)
-// DISPATCH_LEVEL - 0xFFFFFFF9 (disable interrupts 1, 2)
-// DEVICE_LEVEL_0 - 0xFFFFFFD9 (disable interrupts 1, 2, 5)
-// DEVICE_LEVEL_N - 0x19 (everything disabled except 0, 3, 4)
-// PROFILE_LEVEL - 0x18 (everything disabled except, 3, 4)
-// CLOCK_LEVEL - 0x10 (everything disabled except 4)
-// POWER_LEVEL, IPI_LEVEL, HIGH_LEVEL - 0x00 (everything disabled)
-
-ULONG HalpIrqlTable[HIGH_LEVEL + 1] =
-{
-    0xFFFFFFFF, // IRQL 0 PASSIVE_LEVEL
-    0xFFFFFFFD, // IRQL 1 APC_LEVEL
-    0xFFFFFFF9, // IRQL 2 DISPATCH_LEVEL
-    0xFFFFFFD9, // IRQL 3
-    0xFFFFFF99, // IRQL 4
-    0xFFFFFF19, // IRQL 5
-    0xFFFFFE19, // IRQL 6
-    0xFFFFFC19, // IRQL 7
-    0xFFFFF819, // IRQL 8
-    0xFFFFF019, // IRQL 9
-    0xFFFFE019, // IRQL 10
-    0xFFFFC019, // IRQL 11
-    0xFFFF8019, // IRQL 12
-    0xFFFF0019, // IRQL 13
-    0xFFFE0019, // IRQL 14
-    0xFFFC0019, // IRQL 15
-    0xFFF80019, // IRQL 16
-    0xFFF00019, // IRQL 17
-    0xFFE00019, // IRQL 18
-    0xFFC00019, // IRQL 19
-    0xFF800019, // IRQL 20
-    0xFF000019, // IRQL 21
-    0xFE000019, // IRQL 22
-    0xFC000019, // IRQL 23
-    0xF0000019, // IRQL 24
-    0x80000019, // IRQL 25
-    0x19,       // IRQL 26
-    0x18,       // IRQL 27 PROFILE_LEVEL
-    0x10,       // IRQL 28 CLOCK2_LEVEL
-    0x00,       // IRQL 29 IPI_LEVEL
-    0x00,       // IRQL 30 POWER_LEVEL
-    0x00,       // IRQL 31 HIGH_LEVEL
-};
-
-UCHAR HalpMaskTable[HIGH_LEVEL + 1] =
-{
-    PROFILE_LEVEL,
-    APC_LEVEL,
-    DISPATCH_LEVEL,
-    IPI_LEVEL,
-    CLOCK2_LEVEL,
-    3,
-    4,
-    5,
-    6,
-    7,
-    8,
-    9,
-    10,
-    11,
-    12,
-    13,
-    14,
-    15,
-    16,
-    17,
-    18,
-    19,
-    20,
-    21,
-    22,
-    23,
-    24,
-    25,
-    26,
-    26,
-    26
-};
-
-#define VICINTSTATUS     (PVOID)0xE0040000
-#define VICINTENABLE     (PVOID)0xE0040010
-#define VICINTENCLEAR    (PVOID)0xE0040014
-#define VICSOFTINT       (PVOID)0xE0040018
-#define VICSOFTINTCLEAR  (PVOID)0xE004001C
-
-#define TIMER_LOAD            (PVOID)0xE00E2000
-#define TIMER_VALUE           (PVOID)0xE00E2004
-#define TIMER_CONTROL         (PVOID)0xE00E2008
-#define TIMER_INT_CLEAR       (PVOID)0xE00E200C
-#define TIMER_INT_STATUS      (PVOID)0xE00E2010
-#define TIMER_INT_MASK        (PVOID)0xE00E2014
-#define TIMER_BACKGROUND_LOAD (PVOID)0xE00E2018
-
-#define TIMER2_LOAD            (PVOID)0xE00E3000
-#define TIMER2_VALUE           (PVOID)0xE00E3004
-#define TIMER2_CONTROL         (PVOID)0xE00E3008
-#define TIMER2_INT_CLEAR       (PVOID)0xE00E300C
-#define TIMER2_INT_STATUS      (PVOID)0xE00E3010
-#define TIMER2_INT_MASK        (PVOID)0xE00E3014
-#define TIMER2_BACKGROUND_LOAD (PVOID)0xE00E3018
-
-#define _clz(a) \
-({ ULONG __value, __arg = (a); \
-        asm ("clz\t%0, %1": "=r" (__value): "r" (__arg)); \
-        __value; })
-
 ULONG
 HalGetInterruptSource(VOID)
 {
@@ -522,7 +461,7 @@ HalGetInterruptSource(VOID)
     //
     // Get the interrupt status, and return the highest bit set
     //
-    InterruptStatus = READ_REGISTER_ULONG(VICINTSTATUS);
+    InterruptStatus = READ_REGISTER_ULONG(VIC_INT_STATUS);
     return 31 - _clz(InterruptStatus);
 }
 
@@ -533,7 +472,7 @@ HalpClockInterrupt(VOID)
     // Clear the interrupt
     //
     //DPRINT1("CLOCK INTERRUPT!!!\n");
-    WRITE_REGISTER_ULONG(TIMER_INT_CLEAR, 1);    
+    WRITE_REGISTER_ULONG(TIMER0_INT_CLEAR, 1);    
     //while (TRUE);
 }
 
@@ -543,7 +482,7 @@ HalpStallInterrupt(VOID)
     //
     // Clear the interrupt
     //
-    WRITE_REGISTER_ULONG(TIMER_INT_CLEAR, 1);
+    WRITE_REGISTER_ULONG(TIMER0_INT_CLEAR, 1);
 }
 
 VOID
@@ -551,18 +490,18 @@ HalpInitializeInterrupts(VOID)
 {
     PKPCR Pcr = (PKPCR)KeGetPcr();
     ULONG ClockInterval;
+    SP804_CONTROL_REGISTER ControlRegister;
     
     //
     // Fill out the IRQL mappings
     //
     RtlCopyMemory(Pcr->IrqlTable, HalpIrqlTable, sizeof(Pcr->IrqlTable));
     RtlCopyMemory(Pcr->IrqlMask, HalpMaskTable, sizeof(Pcr->IrqlMask));
-
+    
     //
     // Setup the clock and profile interrupt
     //
     Pcr->InterruptRoutine[CLOCK2_LEVEL] = HalpStallInterrupt;
-    //    Pcr->InterruptRoutine[PROFILE_LEVEL] = HalpCountInterrupt;
     
     //
     // Configure the interval to 10ms
@@ -571,18 +510,21 @@ HalpInitializeInterrupts(VOID)
     //  (TIMCLKENXdiv (1) * PRESCALEdiv (1))
     //
     ClockInterval = 0x2710;
-
+    
+    //
+    // Configure the timer
+    //
+    ControlRegister.AsUlong = 0;
+    ControlRegister.Wide = TRUE;
+    ControlRegister.Periodic = TRUE;
+    ControlRegister.Interrupt = TRUE;
+    ControlRegister.Enabled = TRUE;
+    
     //
     // Enable the timer
     //
-    WRITE_REGISTER_ULONG(TIMER_LOAD, ClockInterval);
-    WRITE_REGISTER_ULONG(TIMER_CONTROL,
-                         0 << 0 | // wrapping mode
-                         1 << 1 | // 32-bit mode
-                         0 << 2 | // 0 stages of prescale, divided by 1
-                         1 << 5 | // enable interrupt
-                         1 << 6 | // periodic mode
-                         1 << 7); // enable it
+    WRITE_REGISTER_ULONG(TIMER0_LOAD, ClockInterval);
+    WRITE_REGISTER_ULONG(TIMER0_CONTROL, ControlRegister.AsUlong);
 }
 
 ULONG HalpCurrentTimeIncrement, HalpNextTimeIncrement, HalpNextIntervalCount;
@@ -805,7 +747,7 @@ HalRequestSoftwareInterrupt(IN KIRQL Request)
     // Force a software interrupt
     //
     DPRINT1("[SOFTINT]: %d\n", Request);
-    WRITE_REGISTER_ULONG(VICSOFTINT, 1 << Request);
+    WRITE_REGISTER_ULONG(VIC_SOFT_INT, 1 << Request);
 }
 
 VOID
@@ -816,7 +758,7 @@ HalClearSoftwareInterrupt(IN KIRQL Request)
     // Force a software interrupt
     //
     DPRINT1("[SOFTINTC] %d\n", Request);
-    WRITE_REGISTER_ULONG(VICSOFTINTCLEAR, 1 << Request);
+    WRITE_REGISTER_ULONG(VIC_SOFT_INT_CLEAR, 1 << Request);
 }
 
 VOID
@@ -1081,31 +1023,27 @@ VOID
 NTAPI
 KeStallExecutionProcessor(IN ULONG Microseconds)
 {
-    //
-    // Configure the interval to xxx Micrseconds
-    //  (INTERVAL (xxx us) * TIMCLKfreq (1MHz))
-    // ---------------------------------------
-    //  (TIMCLKENXdiv (1) * PRESCALEdiv (1))
-    //
-    // This works out great, since 1MHz * 1 us = 1!
-    //
+    SP804_CONTROL_REGISTER ControlRegister;
     
     //
     // Enable the timer
     //
-    WRITE_REGISTER_ULONG(TIMER2_LOAD, Microseconds);
-    WRITE_REGISTER_ULONG(TIMER2_CONTROL,
-                         1 << 0 | // one-shot mode
-                         1 << 1 | // 32-bit mode
-                         0 << 2 | // 0 stages of prescale, divided by 1
-                         0 << 5 | // no interrupt
-                         1 << 6 | // periodic mode
-                         1 << 7); // enable it   
+    WRITE_REGISTER_ULONG(TIMER1_LOAD, Microseconds);
+    
+    //
+    // Configure the timer
+    //
+    ControlRegister.AsUlong = 0;
+    ControlRegister.OneShot = TRUE;
+    ControlRegister.Wide = TRUE;
+    ControlRegister.Periodic = TRUE;
+    ControlRegister.Enabled = TRUE;
+    WRITE_REGISTER_ULONG(TIMER1_CONTROL, ControlRegister.AsUlong);
     
     //
     // Now we will loop until the timer reached 0
     //
-    while (READ_REGISTER_ULONG(TIMER2_VALUE));
+    while (READ_REGISTER_ULONG(TIMER1_VALUE));
 }
 
 VOID
@@ -1137,13 +1075,13 @@ KfLowerIrql(IN KIRQL NewIrql)
     //
     // Clear interrupts associated to the old IRQL
     //
-    WRITE_REGISTER_ULONG(VICINTENCLEAR, 0xFFFFFFFF);
+    WRITE_REGISTER_ULONG(VIC_INT_CLEAR, 0xFFFFFFFF);
     
     //
     // Set the new interrupt mask
     // PL190 VIC support only for now
     //
-    WRITE_REGISTER_ULONG(VICINTENABLE, InterruptMask);
+    WRITE_REGISTER_ULONG(VIC_INT_ENABLE, InterruptMask);
     
     //
     // Save the new IRQL
@@ -1183,13 +1121,13 @@ KfRaiseIrql(IN KIRQL NewIrql)
     //
     // Clear interrupts associated to the old IRQL
     //
-    WRITE_REGISTER_ULONG(VICINTENCLEAR, 0xFFFFFFFF);
+    WRITE_REGISTER_ULONG(VIC_INT_CLEAR, 0xFFFFFFFF);
     
     //
     // Set the new interrupt mask
     // PL190 VIC support only for now
     //
-    WRITE_REGISTER_ULONG(VICINTENABLE, InterruptMask);
+    WRITE_REGISTER_ULONG(VIC_INT_ENABLE, InterruptMask);
     
     //
     // Save the new IRQL

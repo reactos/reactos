@@ -1,9 +1,9 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS Hardware Abstraction Layer
- * FILE:            hal/halx86/include/hal.h
- * PURPOSE:         HAL Header
- * PROGRAMMER:      Alex Ionescu (alex@relsoft.net)
+ * PROJECT:         ReactOS HAL
+ * LICENSE:         GPL - See COPYING in the top level directory
+ * FILE:            hal/halarm/include/hal.h
+ * PURPOSE:         Hardware Abstraction Layer Header
+ * PROGRAMMERS:     ReactOS Portable Systems Group
  */
 
 /* INCLUDES ******************************************************************/
