@@ -492,13 +492,27 @@ KiSystemService(IN PKTHREAD Thread,
     if (ArgumentCount > 4)
     {
         //
-        // FIXME: Validate the user stack
+        // Check where the stack is
         //
-        
+        if (Thread->PreviousMode == UserMode)
+        {
+            //
+            // FIXME: Validate the user stack
+            //
+            Argument = (PULONG)TrapFrame->UserSp;
+        }
+        else
+        {
+            //
+            // We were called from the kernel
+            //
+            Argument = (PULONG)TrapFrame->SvcSp;
+        }
+
         //
         // Copy the rest
         //
-        Argument = (PULONG)TrapFrame->UserSp;
+        DPRINT1("Stack: %p\n", Argument);
         for (i = 4; i < ArgumentCount; i++)
         {
             //

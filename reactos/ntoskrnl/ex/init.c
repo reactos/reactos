@@ -1265,12 +1265,6 @@ Phase1InitializationDiscard(IN PVOID Context)
     OBJECT_ATTRIBUTES ObjectAttributes;
     HANDLE KeyHandle, OptionHandle;
     PRTL_USER_PROCESS_PARAMETERS ProcessParameters = NULL;
-#ifdef _ARM_
-    DPRINT1("*** Phase 1 Initialization Thread\n");
-    DPRINT1("Beginning consistency checks...\n");
-    // CHECK STACKS, IRQLS, DISPATCHER AND MAKE SURE WE ARE GOOD TO GO!
-    //while (TRUE);
-#endif
 
     /* Allocate the initialization buffer */
     InitBuffer = ExAllocatePoolWithTag(NonPagedPool,

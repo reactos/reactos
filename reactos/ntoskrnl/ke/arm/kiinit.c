@@ -42,6 +42,16 @@ DebugService(IN ULONG ServiceType,
 
 VOID
 NTAPI
+KiInitMachineDependent(VOID)
+{
+    //
+    // There is nothing to do on ARM
+    //
+    return;
+}
+
+VOID
+NTAPI
 KiInitializeKernel(IN PKPROCESS InitProcess,
                    IN PKTHREAD InitThread,
                    IN PVOID IdleStack,

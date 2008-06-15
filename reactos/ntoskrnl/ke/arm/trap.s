@@ -400,7 +400,7 @@ CopyLoop:
     cmp r6, #4
     //strne sp, [r5], #4
     //subne r6, r6, #1
-    beq .
+    bge .
 
     //
     // Now do the system call

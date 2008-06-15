@@ -18,6 +18,7 @@
 #include <ndk/iofuncs.h>
 #include <ndk/kdfuncs.h>
 #include <ndk/kefuncs.h>
+#include <ndk/rtlfuncs.h>
 #include <internal/arm/ke.h>
 #include <internal/arm/intrin_i.h>
 #include <bugcodes.h>
@@ -135,13 +136,15 @@ HalAdjustResourceList(
 }
 
 
+/*
+ * @implemented
+ */
 BOOLEAN
 NTAPI
 HalAllProcessorsStarted(VOID)
 {
-  UNIMPLEMENTED;
-
-  return TRUE;
+    /* Do nothing */
+    return TRUE;
 }
 
 
@@ -733,16 +736,31 @@ HalQueryDisplayParameters(
   UNIMPLEMENTED;
 }
 
+#define RTC_DATA   (PVOID)0xE00E8000
 
 BOOLEAN
 NTAPI
-HalQueryRealTimeClock(
-  PTIME_FIELDS Time)
+HalQueryRealTimeClock(IN PTIME_FIELDS Time)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+    LARGE_INTEGER LargeTime;
+    ULONG Seconds;
+    
+    //
+    // Query the RTC value
+    //
+    Seconds = READ_REGISTER_ULONG(RTC_DATA);
+    
+    //
+    // Convert to time
+    //
+    RtlSecondsSince1970ToTime(Seconds, &LargeTime);
+    
+    //
+    // Convert to time-fields
+    //
+    RtlTimeToTimeFields(&LargeTime, Time);
+    return TRUE;
 }
-
 
 ULONG
 NTAPI

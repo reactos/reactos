@@ -126,6 +126,11 @@
 				<file>cmhardwr.c</file>
 			</directory>
 		</if>
+		<if property="ARCH" value="arm">
+			<directory name="arm">
+				<file>cmhardwr.c</file>
+			</directory>
+		</if>
 		<if property="ARCH" value="powerpc">
 			<directory name="powerpc">
 				<file>cmhardwr.c</file>

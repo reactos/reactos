@@ -45,9 +45,7 @@ GENERATE_ARM_STUB KeDisableInterrupts
 GENERATE_ARM_STUB KiDispatchException
 GENERATE_ARM_STUB KiSwapProcess
 GENERATE_ARM_STUB KeSwitchKernelStack
-GENERATE_ARM_STUB KiInitMachineDependent
 GENERATE_ARM_STUB KiComputeTimerTableIndex
-GENERATE_ARM_STUB CmpInitializeMachineDependentConfiguration
 
 //
 // Traps, Debugging and Execeptions
