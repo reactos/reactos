@@ -16,6 +16,7 @@
 		<if property="ARCH" value="arm">
 			<directory name="arm">
                 <file>bootvid.c</file>
+                <file>bootdata.c</file>
             </directory>
         </if>
 	<file>bootvid.rc</file>
