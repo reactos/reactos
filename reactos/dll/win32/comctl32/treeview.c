@@ -3207,7 +3207,7 @@ TREEVIEW_Collapse(TREEVIEW_INFO *infoPtr, TREEVIEW_ITEM *wineItem,
     {
         scrollRect.top = nextItem->rect.top;
 
-        ScrollWindowEx (infoPtr->hwnd, 0, scrollDist, &scrollRect, NULL,
+        ScrollWindowEx (infoPtr->hwnd, 0, scrollDist, &scrollRect, &scrollRect,
                        NULL, NULL, SW_ERASE | SW_INVALIDATE);
         TREEVIEW_Invalidate(infoPtr, wineItem);
     } else {
