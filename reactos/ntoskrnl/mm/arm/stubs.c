@@ -583,7 +583,7 @@ MmGetPhysicalAddress(IN PVOID Address)
     //
     // Return the information
     //
-    ASSERT(PointerPte->u.Hard.L2.Small.Type != SmallPte);
+    ASSERT(PointerPte->u.Hard.L2.Small.Type == SmallPte);
     PhysicalAddress.QuadPart = PointerPte->u.Hard.L2.Small.BaseAddress;
     PhysicalAddress.QuadPart <<= PAGE_SHIFT;
     PhysicalAddress.LowPart += BYTE_OFFSET(Address);

@@ -529,9 +529,9 @@ HalpClockInterrupt(VOID)
     //
     // Clear the interrupt
     //
-    DPRINT1("CLOCK INTERRUPT!!!\n");
+    //DPRINT1("CLOCK INTERRUPT!!!\n");
     WRITE_REGISTER_ULONG(TIMER_INT_CLEAR, 1);    
-    while (TRUE);
+    //while (TRUE);
 }
 
 VOID
