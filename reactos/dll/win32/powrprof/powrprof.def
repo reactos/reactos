@@ -1,0 +1,23 @@
+LIBRARY powrprof.dll
+EXPORTS
+CallNtPowerInformation@20
+CanUserWritePwrScheme@0
+DeletePwrScheme@4
+EnumPwrSchemes@8
+GetActivePwrScheme@4
+GetCurrentPowerPolicies@8
+GetPwrCapabilities@4
+GetPwrDiskSpindownRange
+IsAdminOverrideActive
+IsPwrHibernateAllowed
+IsPwrShutdownAllowed
+IsPwrSuspendAllowed
+ReadGlobalPwrPolicy@4
+ReadProcessorPwrScheme
+ReadPwrScheme@8
+SetActivePwrScheme@12
+SetSuspendState
+WriteGlobalPwrPolicy@4
+WriteProcessorPwrScheme
+WritePwrScheme
+ValidatePowerPolicies@8
