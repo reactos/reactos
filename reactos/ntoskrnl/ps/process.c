@@ -374,7 +374,7 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
     ULONG MinWs, MaxWs;
     ACCESS_STATE LocalAccessState;
     PACCESS_STATE AccessState = &LocalAccessState;
-    AUX_DATA AuxData;
+    AUX_ACCESS_DATA AuxData;
     UCHAR Quantum;
     BOOLEAN Result, SdAllocated;
     PSECURITY_DESCRIPTOR SecurityDescriptor;
@@ -1334,7 +1334,7 @@ NtOpenProcess(OUT PHANDLE ProcessHandle,
     PEPROCESS Process = NULL;
     NTSTATUS Status = STATUS_SUCCESS;
     ACCESS_STATE AccessState;
-    AUX_DATA AuxData;
+    AUX_ACCESS_DATA AuxData;
     PAGED_CODE();
     PSTRACE(PS_PROCESS_DEBUG,
             "ClientId: %p Attributes: %p\n", ClientId, ObjectAttributes);

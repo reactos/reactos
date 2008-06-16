@@ -1449,7 +1449,7 @@ ObpCreateHandle(IN OB_OPEN_REASON OpenReason,
     PVOID HandleTable;
     NTSTATUS Status;
     ACCESS_MASK DesiredAccess, GrantedAccess;
-    PAUX_DATA AuxData;
+    PAUX_ACCESS_DATA AuxData;
     PAGED_CODE();
 
     /* Get the object header and type */
@@ -2097,7 +2097,7 @@ ObDuplicateObject(IN PEPROCESS SourceProcess,
     ACCESS_MASK TargetAccess, SourceAccess;
     ACCESS_STATE AccessState;
     PACCESS_STATE PassedAccessState = NULL;
-    AUX_DATA AuxData;
+    AUX_ACCESS_DATA AuxData;
     PHANDLE_TABLE HandleTable;
     OBJECT_HANDLE_INFORMATION HandleInformation;
     ULONG AuditMask;
@@ -2590,7 +2590,7 @@ ObOpenObjectByPointer(IN PVOID Object,
     POBJECT_HEADER Header;
     NTSTATUS Status;
     ACCESS_STATE AccessState;
-    AUX_DATA AuxData;
+    AUX_ACCESS_DATA AuxData;
     PAGED_CODE();
 
     /* Assume failure */
@@ -2789,7 +2789,7 @@ ObInsertObject(IN PVOID Object,
     POBJECT_HEADER_NAME_INFO ObjectNameInfo;
     OBP_LOOKUP_CONTEXT Context;
     ACCESS_STATE LocalAccessState;
-    AUX_DATA AuxData;
+    AUX_ACCESS_DATA AuxData;
     OB_OPEN_REASON OpenReason;
     KPROCESSOR_MODE PreviousMode;
     NTSTATUS Status = STATUS_SUCCESS, RealStatus;

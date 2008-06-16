@@ -352,7 +352,7 @@ ObpCheckObjectReference(IN PVOID Object,
                                     &AccessState->SubjectSecurityContext,
                                     AccessState->RemainingDesiredAccess |
                                     AccessState->PreviouslyGrantedAccess,
-                                    ((PAUX_DATA)(AccessState->AuxData))->
+                                    ((PAUX_ACCESS_DATA)(AccessState->AuxData))->
                                     PrivilegeSet,
                                     Result,
                                     AccessMode);

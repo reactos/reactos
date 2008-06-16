@@ -154,7 +154,7 @@ typedef struct _OB_TEMP_BUFFER
     ACCESS_STATE LocalAccessState;
     OBJECT_CREATE_INFORMATION ObjectCreateInfo;
     OBP_LOOKUP_CONTEXT LookupContext;
-    AUX_DATA AuxData;
+    AUX_ACCESS_DATA AuxData;
 } OB_TEMP_BUFFER, *POB_TEMP_BUFFER;
 
 //

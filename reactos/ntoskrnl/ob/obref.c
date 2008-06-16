@@ -388,7 +388,7 @@ ObReferenceObjectByName(IN PUNICODE_STRING ObjectPath,
     UNICODE_STRING ObjectName;
     NTSTATUS Status;
     OBP_LOOKUP_CONTEXT Context;
-    AUX_DATA AuxData;
+    AUX_ACCESS_DATA AuxData;
     ACCESS_STATE AccessState;
     PAGED_CODE();
 

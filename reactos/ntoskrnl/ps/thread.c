@@ -193,7 +193,7 @@ PspCreateThread(OUT PHANDLE ThreadHandle,
     HANDLE_TABLE_ENTRY CidEntry;
     ACCESS_STATE LocalAccessState;
     PACCESS_STATE AccessState = &LocalAccessState;
-    AUX_DATA AuxData;
+    AUX_ACCESS_DATA AuxData;
     BOOLEAN Result, SdAllocated;
     PSECURITY_DESCRIPTOR SecurityDescriptor;
     SECURITY_SUBJECT_CONTEXT SubjectContext;
@@ -952,7 +952,7 @@ NtOpenThread(OUT PHANDLE ThreadHandle,
     PETHREAD Thread;
     BOOLEAN HasObjectName = FALSE;
     ACCESS_STATE AccessState;
-    AUX_DATA AuxData;
+    AUX_ACCESS_DATA AuxData;
     PAGED_CODE();
     PSTRACE(PS_THREAD_DEBUG,
             "ClientId: %p ObjectAttributes: %p\n", ClientId, ObjectAttributes);

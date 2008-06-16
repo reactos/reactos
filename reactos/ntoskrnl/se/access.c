@@ -121,7 +121,7 @@ NTAPI
 SeCreateAccessStateEx(IN PETHREAD Thread,
                       IN PEPROCESS Process,
                       IN OUT PACCESS_STATE AccessState,
-                      IN PAUX_DATA AuxData,
+                      IN PAUX_ACCESS_DATA AuxData,
                       IN ACCESS_MASK Access,
                       IN PGENERIC_MAPPING GenericMapping)
 {
@@ -177,7 +177,7 @@ SeCreateAccessStateEx(IN PETHREAD Thread,
 NTSTATUS
 STDCALL
 SeCreateAccessState(IN OUT PACCESS_STATE AccessState,
-                    IN PAUX_DATA AuxData,
+                    IN PAUX_ACCESS_DATA AuxData,
                     IN ACCESS_MASK Access,
                     IN PGENERIC_MAPPING GenericMapping)
 {
@@ -199,7 +199,7 @@ VOID
 STDCALL
 SeDeleteAccessState(IN PACCESS_STATE AccessState)
 {
-    PAUX_DATA AuxData;
+    PAUX_ACCESS_DATA AuxData;
     PAGED_CODE();
 
     /* Get the Auxiliary Data */
@@ -233,7 +233,7 @@ SeSetAccessStateGenericMapping(IN PACCESS_STATE AccessState,
     PAGED_CODE();
 
     /* Set the Generic Mapping */
-    ((PAUX_DATA)AccessState->AuxData)->GenericMapping = *GenericMapping;
+    ((PAUX_ACCESS_DATA)AccessState->AuxData)->GenericMapping = *GenericMapping;
 }
 
 /*

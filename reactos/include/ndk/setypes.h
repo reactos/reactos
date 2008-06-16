@@ -160,12 +160,12 @@ typedef struct _TOKEN
     ULONG VariablePart;                               /* 0xA0 */
 } TOKEN, *PTOKEN;
 
-typedef struct _AUX_DATA
+typedef struct _AUX_ACCESS_DATA
 {
     PPRIVILEGE_SET PrivilegeSet;
     GENERIC_MAPPING GenericMapping;
     ULONG Reserved;
-} AUX_DATA, *PAUX_DATA;
+} AUX_ACCESS_DATA, *PAUX_ACCESS_DATA;
 
 //
 // External SRM Data

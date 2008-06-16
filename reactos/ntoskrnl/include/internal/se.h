@@ -139,7 +139,7 @@ SeCreateAccessStateEx(
     IN PETHREAD Thread,
     IN PEPROCESS Process,
     IN OUT PACCESS_STATE AccessState,
-    IN PAUX_DATA AuxData,
+    IN PAUX_ACCESS_DATA AuxData,
     IN ACCESS_MASK Access,
     IN PGENERIC_MAPPING GenericMapping
 );

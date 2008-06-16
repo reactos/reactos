@@ -57,7 +57,7 @@ NTSTATUS
 NTAPI
 SeCreateAccessState(
     PACCESS_STATE AccessState,
-    PAUX_DATA AuxData,
+    PAUX_ACCESS_DATA AuxData,
     ACCESS_MASK Access,
     PGENERIC_MAPPING GenericMapping
 );
