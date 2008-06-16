@@ -13,7 +13,7 @@ Test_AddFontResourceEx(PTESTINFO pti)
 
 	/* Test "" filename */
 	SetLastError(ERROR_SUCCESS);
-	TEST(AddFontResourceExW(L"", 0, 0) == 0);
+	RTEST(AddFontResourceExW(L"", 0, 0) == 0);
 	TEST(GetLastError() == ERROR_INVALID_PARAMETER);
 
 	GetEnvironmentVariableW(L"systemroot", szFileName, MAX_PATH);
@@ -22,11 +22,11 @@ Test_AddFontResourceEx(PTESTINFO pti)
 	/* Test flags = 0 */
 	SetLastError(ERROR_SUCCESS);
 	TEST(AddFontResourceExW(szFileName, 0, 0) != 0);
-	TEST(GetLastError() == ERROR_SUCCESS);
+	RTEST(GetLastError() == ERROR_SUCCESS);
 
 	SetLastError(ERROR_SUCCESS);
-	TEST(AddFontResourceExW(szFileName, 256, 0) == 0);
-	TEST(GetLastError() == ERROR_INVALID_PARAMETER);
+	RTEST(AddFontResourceExW(szFileName, 256, 0) == 0);
+	RTEST(GetLastError() == ERROR_INVALID_PARAMETER);
 
 	/* Test invalid pointer as last parameter */
 	TEST(AddFontResourceExW(szFileName, 0, (void*)-1) != 0);

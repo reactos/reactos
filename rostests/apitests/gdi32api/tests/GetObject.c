@@ -11,50 +11,50 @@ Test_General(PTESTINFO pti)
 
 	/* Test null pointer and invalid handles */
 	SetLastError(ERROR_SUCCESS);
-	TEST(GetObjectA(0, 0, NULL) == 0);
-	TEST(GetObjectA((HANDLE)-1, 0, NULL) == 0);
-	TEST(GetObjectA((HANDLE)0x00380000, 0, NULL) == 0);
-	TEST(GetLastError() == ERROR_SUCCESS);
+	RTEST(GetObjectA(0, 0, NULL) == 0);
+	RTEST(GetObjectA((HANDLE)-1, 0, NULL) == 0);
+	RTEST(GetObjectA((HANDLE)0x00380000, 0, NULL) == 0);
+	RTEST(GetLastError() == ERROR_SUCCESS);
 
 	SetLastError(ERROR_SUCCESS);
-	TEST(GetObjectA((HANDLE)GDI_OBJECT_TYPE_DC, 0, NULL) == 0);
-	TEST(GetLastError() == ERROR_INVALID_HANDLE);
+	RTEST(GetObjectA((HANDLE)GDI_OBJECT_TYPE_DC, 0, NULL) == 0);
+	RTEST(GetLastError() == ERROR_INVALID_HANDLE);
 	SetLastError(ERROR_SUCCESS);
-	TEST(GetObjectW((HANDLE)GDI_OBJECT_TYPE_DC, 0, NULL) == 0);
-	TEST(GetLastError() == ERROR_INVALID_HANDLE);
+	RTEST(GetObjectW((HANDLE)GDI_OBJECT_TYPE_DC, 0, NULL) == 0);
+	RTEST(GetLastError() == ERROR_INVALID_HANDLE);
 	SetLastError(ERROR_SUCCESS);
-	TEST(GetObjectA((HANDLE)GDI_OBJECT_TYPE_REGION, 0, NULL) == 0);
-	TEST(GetLastError() == ERROR_INVALID_HANDLE);
+	RTEST(GetObjectA((HANDLE)GDI_OBJECT_TYPE_REGION, 0, NULL) == 0);
+	RTEST(GetLastError() == ERROR_INVALID_HANDLE);
 	SetLastError(ERROR_SUCCESS);
-	TEST(GetObjectW((HANDLE)GDI_OBJECT_TYPE_REGION, 0, NULL) == 0);
-	TEST(GetLastError() == ERROR_INVALID_HANDLE);
+	RTEST(GetObjectW((HANDLE)GDI_OBJECT_TYPE_REGION, 0, NULL) == 0);
+	RTEST(GetLastError() == ERROR_INVALID_HANDLE);
 	SetLastError(ERROR_SUCCESS);
-	TEST(GetObjectA((HANDLE)GDI_OBJECT_TYPE_EMF, 0, NULL) == 0);
-	TEST(GetLastError() == ERROR_INVALID_HANDLE);
+	RTEST(GetObjectA((HANDLE)GDI_OBJECT_TYPE_EMF, 0, NULL) == 0);
+	RTEST(GetLastError() == ERROR_INVALID_HANDLE);
 	SetLastError(ERROR_SUCCESS);
-	TEST(GetObjectW((HANDLE)GDI_OBJECT_TYPE_EMF, 0, NULL) == 0);
-	TEST(GetLastError() == ERROR_INVALID_HANDLE);
+	RTEST(GetObjectW((HANDLE)GDI_OBJECT_TYPE_EMF, 0, NULL) == 0);
+	RTEST(GetLastError() == ERROR_INVALID_HANDLE);
 	SetLastError(ERROR_SUCCESS);
-	TEST(GetObjectA((HANDLE)GDI_OBJECT_TYPE_METAFILE, 0, NULL) == 0);
-	TEST(GetLastError() == ERROR_INVALID_HANDLE);
+	RTEST(GetObjectA((HANDLE)GDI_OBJECT_TYPE_METAFILE, 0, NULL) == 0);
+	RTEST(GetLastError() == ERROR_INVALID_HANDLE);
 	SetLastError(ERROR_SUCCESS);
-	TEST(GetObjectW((HANDLE)GDI_OBJECT_TYPE_METAFILE, 0, NULL) == 0);
-	TEST(GetLastError() == ERROR_INVALID_HANDLE);
+	RTEST(GetObjectW((HANDLE)GDI_OBJECT_TYPE_METAFILE, 0, NULL) == 0);
+	RTEST(GetLastError() == ERROR_INVALID_HANDLE);
 	SetLastError(ERROR_SUCCESS);
-	TEST(GetObjectA((HANDLE)GDI_OBJECT_TYPE_ENHMETAFILE, 0, NULL) == 0);
-	TEST(GetLastError() == ERROR_INVALID_HANDLE);
+	RTEST(GetObjectA((HANDLE)GDI_OBJECT_TYPE_ENHMETAFILE, 0, NULL) == 0);
+	RTEST(GetLastError() == ERROR_INVALID_HANDLE);
 	SetLastError(ERROR_SUCCESS);
-	TEST(GetObjectW((HANDLE)GDI_OBJECT_TYPE_ENHMETAFILE, 0, NULL) == 0);
-	TEST(GetLastError() == ERROR_INVALID_HANDLE);
+	RTEST(GetObjectW((HANDLE)GDI_OBJECT_TYPE_ENHMETAFILE, 0, NULL) == 0);
+	RTEST(GetLastError() == ERROR_INVALID_HANDLE);
 
 	/* Test need of alignment */
 	hBrush = GetStockObject(WHITE_BRUSH);
 	plogbrush = (PVOID)((ULONG_PTR)&TestStruct.logbrush);
-	TEST(GetObject(hBrush, sizeof(LOGBRUSH), plogbrush) == sizeof(LOGBRUSH));
+	RTEST(GetObject(hBrush, sizeof(LOGBRUSH), plogbrush) == sizeof(LOGBRUSH));
 	plogbrush = (PVOID)((ULONG_PTR)&TestStruct.logbrush + 2);
-	TEST(GetObject(hBrush, sizeof(LOGBRUSH), plogbrush) == sizeof(LOGBRUSH));
+	RTEST(GetObject(hBrush, sizeof(LOGBRUSH), plogbrush) == sizeof(LOGBRUSH));
 	plogbrush = (PVOID)((ULONG_PTR)&TestStruct.logbrush + 1);
-	TEST(GetObject(hBrush, sizeof(LOGBRUSH), plogbrush) == 0);
+	RTEST(GetObject(hBrush, sizeof(LOGBRUSH), plogbrush) == 0);
 
     return TRUE;
 }
@@ -73,21 +73,21 @@ Test_Bitmap(PTESTINFO pti)
 	if (!hBitmap) return FALSE;
 
 	SetLastError(ERROR_SUCCESS);
-	TEST(GetObjectA((HANDLE)GDI_OBJECT_TYPE_BITMAP, 0, NULL) == sizeof(BITMAP));
-	TEST(GetObjectW((HANDLE)GDI_OBJECT_TYPE_BITMAP, 0, NULL) == sizeof(BITMAP));
-	TEST(GetObjectA((HANDLE)GDI_OBJECT_TYPE_BITMAP, sizeof(BITMAP), NULL) == sizeof(BITMAP));
-	TEST(GetObjectA(hBitmap, sizeof(DIBSECTION), NULL) == sizeof(BITMAP));
-	TEST(GetObjectA(hBitmap, 0, NULL) == sizeof(BITMAP));
-	TEST(GetObjectA((HANDLE)((UINT)hBitmap & 0x0000ffff), 0, NULL) == sizeof(BITMAP));
-	TEST(GetObjectA(hBitmap, 5, NULL) == sizeof(BITMAP));
-	TEST(GetObjectA(hBitmap, -5, NULL) == sizeof(BITMAP));
-	TEST(GetObjectA(hBitmap, 0, Buffer) == 0);
-	TEST(GetObjectA(hBitmap, 5, Buffer) == 0);
-	TEST(GetObjectA(hBitmap, sizeof(BITMAP), &bitmap) == sizeof(BITMAP));
-	TEST(GetObjectA(hBitmap, sizeof(BITMAP)+2, &bitmap) == sizeof(BITMAP));
-	TEST(GetObjectA(hBitmap, sizeof(DIBSECTION), &dibsection) == sizeof(BITMAP));
-	TEST(GetObjectA(hBitmap, -5, &bitmap) == sizeof(BITMAP));
-	TEST(GetLastError() == ERROR_SUCCESS);
+	RTEST(GetObjectA((HANDLE)GDI_OBJECT_TYPE_BITMAP, 0, NULL) == sizeof(BITMAP));
+	RTEST(GetObjectW((HANDLE)GDI_OBJECT_TYPE_BITMAP, 0, NULL) == sizeof(BITMAP));
+	RTEST(GetObjectA((HANDLE)GDI_OBJECT_TYPE_BITMAP, sizeof(BITMAP), NULL) == sizeof(BITMAP));
+	RTEST(GetObjectA(hBitmap, sizeof(DIBSECTION), NULL) == sizeof(BITMAP));
+	RTEST(GetObjectA(hBitmap, 0, NULL) == sizeof(BITMAP));
+	RTEST(GetObjectA((HANDLE)((UINT)hBitmap & 0x0000ffff), 0, NULL) == sizeof(BITMAP));
+	RTEST(GetObjectA(hBitmap, 5, NULL) == sizeof(BITMAP));
+	RTEST(GetObjectA(hBitmap, -5, NULL) == sizeof(BITMAP));
+	RTEST(GetObjectA(hBitmap, 0, Buffer) == 0);
+	RTEST(GetObjectA(hBitmap, 5, Buffer) == 0);
+	RTEST(GetObjectA(hBitmap, sizeof(BITMAP), &bitmap) == sizeof(BITMAP));
+	RTEST(GetObjectA(hBitmap, sizeof(BITMAP)+2, &bitmap) == sizeof(BITMAP));
+	RTEST(GetObjectA(hBitmap, sizeof(DIBSECTION), &dibsection) == sizeof(BITMAP));
+	RTEST(GetObjectA(hBitmap, -5, &bitmap) == sizeof(BITMAP));
+	RTEST(GetLastError() == ERROR_SUCCESS);
 
 	// todo: test invalid handle + buffer
 
@@ -109,18 +109,18 @@ Test_Dibsection(PTESTINFO pti)
 	if(!hBitmap) return FALSE;
 
 	SetLastError(ERROR_SUCCESS);
-	TEST(GetObject(hBitmap, sizeof(DIBSECTION), NULL) == sizeof(BITMAP));
-	TEST(GetObject(hBitmap, 0, NULL) == sizeof(BITMAP));
-	TEST(GetObject(hBitmap, 5, NULL) == sizeof(BITMAP));
-	TEST(GetObject(hBitmap, -5, NULL) == sizeof(BITMAP));
-	TEST(GetObject(hBitmap, 0, &dibsection) == 0);
-	TEST(GetObject(hBitmap, 5, &dibsection) == 0);
-	TEST(GetObject(hBitmap, sizeof(BITMAP), &dibsection) == sizeof(BITMAP));
-	TEST(GetObject(hBitmap, sizeof(BITMAP)+2, &dibsection) == sizeof(BITMAP));
-	TEST(GetObject(hBitmap, sizeof(DIBSECTION), &dibsection) == sizeof(DIBSECTION));
-	TEST(GetObject(hBitmap, sizeof(DIBSECTION)+2, &dibsection) == sizeof(DIBSECTION));
-	TEST(GetObject(hBitmap, -5, &dibsection) == sizeof(DIBSECTION));
-	TEST(GetLastError() == ERROR_SUCCESS);
+	RTEST(GetObject(hBitmap, sizeof(DIBSECTION), NULL) == sizeof(BITMAP));
+	RTEST(GetObject(hBitmap, 0, NULL) == sizeof(BITMAP));
+	RTEST(GetObject(hBitmap, 5, NULL) == sizeof(BITMAP));
+	RTEST(GetObject(hBitmap, -5, NULL) == sizeof(BITMAP));
+	RTEST(GetObject(hBitmap, 0, &dibsection) == 0);
+	RTEST(GetObject(hBitmap, 5, &dibsection) == 0);
+	RTEST(GetObject(hBitmap, sizeof(BITMAP), &dibsection) == sizeof(BITMAP));
+	RTEST(GetObject(hBitmap, sizeof(BITMAP)+2, &dibsection) == sizeof(BITMAP));
+	RTEST(GetObject(hBitmap, sizeof(DIBSECTION), &dibsection) == sizeof(DIBSECTION));
+	RTEST(GetObject(hBitmap, sizeof(DIBSECTION)+2, &dibsection) == sizeof(DIBSECTION));
+	RTEST(GetObject(hBitmap, -5, &dibsection) == sizeof(DIBSECTION));
+	RTEST(GetLastError() == ERROR_SUCCESS);
 	DeleteObject(hBitmap);
 	ReleaseDC(0, hDC);
 
@@ -145,18 +145,18 @@ Test_Palette(PTESTINFO pti)
 	if (!hPalette) return FALSE;
 
 	SetLastError(ERROR_SUCCESS);
-	TEST(GetObjectA((HANDLE)GDI_OBJECT_TYPE_PALETTE, 0, NULL) == sizeof(WORD));
-	TEST(GetObjectW((HANDLE)GDI_OBJECT_TYPE_PALETTE, 0, NULL) == sizeof(WORD));
-	TEST(GetObject(hPalette, sizeof(WORD), NULL) == sizeof(WORD));
-	TEST(GetObject(hPalette, 0, NULL) == sizeof(WORD));
-	TEST(GetObject(hPalette, 5, NULL) == sizeof(WORD));
-	TEST(GetObject(hPalette, -5, NULL) == sizeof(WORD));
-	TEST(GetObject(hPalette, sizeof(WORD), &wPalette) == sizeof(WORD));
-	TEST(GetObject(hPalette, sizeof(WORD)+2, &wPalette) == sizeof(WORD));
-	TEST(GetObject(hPalette, 0, &wPalette) == 0);
-	TEST(GetObject(hPalette, 1, &wPalette) == 0);
-	TEST(GetObject(hPalette, -1, &wPalette) == sizeof(WORD));
-	TEST(GetLastError() == ERROR_SUCCESS);
+	RTEST(GetObjectA((HANDLE)GDI_OBJECT_TYPE_PALETTE, 0, NULL) == sizeof(WORD));
+	RTEST(GetObjectW((HANDLE)GDI_OBJECT_TYPE_PALETTE, 0, NULL) == sizeof(WORD));
+	RTEST(GetObject(hPalette, sizeof(WORD), NULL) == sizeof(WORD));
+	RTEST(GetObject(hPalette, 0, NULL) == sizeof(WORD));
+	RTEST(GetObject(hPalette, 5, NULL) == sizeof(WORD));
+	RTEST(GetObject(hPalette, -5, NULL) == sizeof(WORD));
+	RTEST(GetObject(hPalette, sizeof(WORD), &wPalette) == sizeof(WORD));
+	RTEST(GetObject(hPalette, sizeof(WORD)+2, &wPalette) == sizeof(WORD));
+	RTEST(GetObject(hPalette, 0, &wPalette) == 0);
+	RTEST(GetObject(hPalette, 1, &wPalette) == 0);
+	RTEST(GetObject(hPalette, -1, &wPalette) == sizeof(WORD));
+	RTEST(GetLastError() == ERROR_SUCCESS);
 	DeleteObject(hPalette);
 	return TRUE;
 }
@@ -172,10 +172,10 @@ Test_Brush(PTESTINFO pti)
 	if (!hBrush) return FALSE;
 
 	SetLastError(ERROR_SUCCESS);
-	TEST(GetObjectA((HANDLE)GDI_OBJECT_TYPE_BRUSH, 0, NULL) == sizeof(LOGBRUSH));
-	TEST(GetObjectW((HANDLE)GDI_OBJECT_TYPE_BRUSH, 0, NULL) == sizeof(LOGBRUSH));
-	TEST(GetObject(hBrush, sizeof(WORD), NULL) == sizeof(LOGBRUSH));
-	TEST(GetObject(hBrush, 0, NULL) == sizeof(LOGBRUSH));
+	RTEST(GetObjectA((HANDLE)GDI_OBJECT_TYPE_BRUSH, 0, NULL) == sizeof(LOGBRUSH));
+	RTEST(GetObjectW((HANDLE)GDI_OBJECT_TYPE_BRUSH, 0, NULL) == sizeof(LOGBRUSH));
+	RTEST(GetObject(hBrush, sizeof(WORD), NULL) == sizeof(LOGBRUSH));
+	RTEST(GetObject(hBrush, 0, NULL) == sizeof(LOGBRUSH));
 	RTEST(GetObject(hBrush, 5, NULL) == sizeof(LOGBRUSH));
 	RTEST(GetObject(hBrush, -5, NULL) == sizeof(LOGBRUSH));
 
@@ -311,38 +311,38 @@ Test_Font(PTESTINFO pti)
 	hFont = CreateFontA(8, 8, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
 		ANSI_CHARSET, OUT_CHARACTER_PRECIS, CLIP_CHARACTER_PRECIS,
 		ANTIALIASED_QUALITY, DEFAULT_PITCH, "testfont");
-	TEST(hFont);
+	RTEST(hFont);
 
 	SetLastError(ERROR_SUCCESS);
-	TEST(GetObjectA((HANDLE)GDI_OBJECT_TYPE_FONT, 0, NULL) == sizeof(LOGFONTA));
-	TEST(GetObjectW((HANDLE)GDI_OBJECT_TYPE_FONT, 0, NULL) == sizeof(LOGFONTW));
-	TEST(GetObjectA((HANDLE)GDI_OBJECT_TYPE_FONT, sizeof(LOGFONTA), NULL) == sizeof(LOGFONTA)); // 60
-	TEST(GetObjectA((HANDLE)GDI_OBJECT_TYPE_FONT, sizeof(ENUMLOGFONTA), NULL) == sizeof(LOGFONTA)); // 156
-	TEST(GetObjectA((HANDLE)GDI_OBJECT_TYPE_FONT, sizeof(ENUMLOGFONTEXA), NULL) == sizeof(LOGFONTA)); // 188
-	TEST(GetObjectA((HANDLE)GDI_OBJECT_TYPE_FONT, sizeof(EXTLOGFONTA), NULL) == sizeof(LOGFONTA)); // 192
-	TEST(GetObjectA((HANDLE)GDI_OBJECT_TYPE_FONT, sizeof(ENUMLOGFONTEXDVA), NULL) == sizeof(LOGFONTA)); // 260
-	TEST(GetObjectA((HANDLE)GDI_OBJECT_TYPE_FONT, sizeof(ENUMLOGFONTEXDVA)+1, NULL) == sizeof(LOGFONTA)); // 260
-	TEST(GetObjectW((HANDLE)GDI_OBJECT_TYPE_FONT, sizeof(LOGFONTW), NULL) == sizeof(LOGFONTW)); // 92
-	TEST(GetObjectW((HANDLE)GDI_OBJECT_TYPE_FONT, sizeof(ENUMLOGFONTW), NULL) == sizeof(LOGFONTW)); // 284
-	TEST(GetObjectW((HANDLE)GDI_OBJECT_TYPE_FONT, sizeof(EXTLOGFONTW), NULL) == sizeof(LOGFONTW)); // 320
-	TEST(GetObjectW((HANDLE)GDI_OBJECT_TYPE_FONT, sizeof(ENUMLOGFONTEXW), NULL) == sizeof(LOGFONTW)); // 348
-	TEST(GetObjectW((HANDLE)GDI_OBJECT_TYPE_FONT, sizeof(ENUMLOGFONTEXDVW), NULL) == sizeof(LOGFONTW)); // 420
-	TEST(GetObjectW((HANDLE)GDI_OBJECT_TYPE_FONT, sizeof(ENUMLOGFONTEXDVW)+1, NULL) == sizeof(LOGFONTW)); // 356!
+	RTEST(GetObjectA((HANDLE)GDI_OBJECT_TYPE_FONT, 0, NULL) == sizeof(LOGFONTA));
+	RTEST(GetObjectW((HANDLE)GDI_OBJECT_TYPE_FONT, 0, NULL) == sizeof(LOGFONTW));
+	RTEST(GetObjectA((HANDLE)GDI_OBJECT_TYPE_FONT, sizeof(LOGFONTA), NULL) == sizeof(LOGFONTA)); // 60
+	RTEST(GetObjectA((HANDLE)GDI_OBJECT_TYPE_FONT, sizeof(ENUMLOGFONTA), NULL) == sizeof(LOGFONTA)); // 156
+	RTEST(GetObjectA((HANDLE)GDI_OBJECT_TYPE_FONT, sizeof(ENUMLOGFONTEXA), NULL) == sizeof(LOGFONTA)); // 188
+	RTEST(GetObjectA((HANDLE)GDI_OBJECT_TYPE_FONT, sizeof(EXTLOGFONTA), NULL) == sizeof(LOGFONTA)); // 192
+	RTEST(GetObjectA((HANDLE)GDI_OBJECT_TYPE_FONT, sizeof(ENUMLOGFONTEXDVA), NULL) == sizeof(LOGFONTA)); // 260
+	RTEST(GetObjectA((HANDLE)GDI_OBJECT_TYPE_FONT, sizeof(ENUMLOGFONTEXDVA)+1, NULL) == sizeof(LOGFONTA)); // 260
+	RTEST(GetObjectW((HANDLE)GDI_OBJECT_TYPE_FONT, sizeof(LOGFONTW), NULL) == sizeof(LOGFONTW)); // 92
+	RTEST(GetObjectW((HANDLE)GDI_OBJECT_TYPE_FONT, sizeof(ENUMLOGFONTW), NULL) == sizeof(LOGFONTW)); // 284
+	RTEST(GetObjectW((HANDLE)GDI_OBJECT_TYPE_FONT, sizeof(EXTLOGFONTW), NULL) == sizeof(LOGFONTW)); // 320
+	RTEST(GetObjectW((HANDLE)GDI_OBJECT_TYPE_FONT, sizeof(ENUMLOGFONTEXW), NULL) == sizeof(LOGFONTW)); // 348
+	RTEST(GetObjectW((HANDLE)GDI_OBJECT_TYPE_FONT, sizeof(ENUMLOGFONTEXDVW), NULL) == sizeof(LOGFONTW)); // 420
+	RTEST(GetObjectW((HANDLE)GDI_OBJECT_TYPE_FONT, sizeof(ENUMLOGFONTEXDVW)+1, NULL) == sizeof(LOGFONTW)); // 356!
 
-	TEST(GetObjectA(hFont, sizeof(LOGFONTA), NULL) == sizeof(LOGFONTA));
-	TEST(GetObjectA(hFont, 0, NULL) == sizeof(LOGFONTA));
-	TEST(GetObjectA(hFont, 5, NULL) == sizeof(LOGFONTA));
-	TEST(GetObjectA(hFont, -5, NULL) == sizeof(LOGFONTA));
-	TEST(GetObjectA(hFont, 0, &logfonta) == 0);
-	TEST(logfonta.lfHeight == 0x77777777);
+	RTEST(GetObjectA(hFont, sizeof(LOGFONTA), NULL) == sizeof(LOGFONTA));
+	RTEST(GetObjectA(hFont, 0, NULL) == sizeof(LOGFONTA));
+	RTEST(GetObjectA(hFont, 5, NULL) == sizeof(LOGFONTA));
+	RTEST(GetObjectA(hFont, -5, NULL) == sizeof(LOGFONTA));
+	RTEST(GetObjectA(hFont, 0, &logfonta) == 0);
+	RTEST(logfonta.lfHeight == 0x77777777);
 
 	TEST(GetObjectA(hFont, 5, &logfonta) == 5);
 	TEST(logfonta.lfHeight == 8);
 	TEST(logfonta.lfWidth == 0x77777708);
 
-	TEST(GetObjectA(hFont, sizeof(LOGFONTA), &logfonta) == sizeof(LOGFONTA)); // 60
+	RTEST(GetObjectA(hFont, sizeof(LOGFONTA), &logfonta) == sizeof(LOGFONTA)); // 60
 	TEST(GetObjectA(hFont, sizeof(LOGFONTW), &logfontw) == sizeof(LOGFONTA)); // 92
-	TEST(GetObjectA(hFont, sizeof(EXTLOGFONTA), &extlogfonta) == sizeof(EXTLOGFONTA)); // 192
+	RTEST(GetObjectA(hFont, sizeof(EXTLOGFONTA), &extlogfonta) == sizeof(EXTLOGFONTA)); // 192
 	TEST(GetObjectA(hFont, sizeof(EXTLOGFONTA)+1, &extlogfonta) == sizeof(EXTLOGFONTA)+1); // 192
 	TEST(GetObjectA(hFont, sizeof(EXTLOGFONTW), &extlogfontw) == sizeof(ENUMLOGFONTEXDVA)); // 320
 
@@ -351,29 +351,29 @@ Test_Font(PTESTINFO pti)
 	/* LOGFONT / GetObjectW */
 	FillMemory(&logfontw, sizeof(LOGFONTW), 0x77);
 
-	TEST(GetObjectW(hFont, sizeof(LOGFONTW), NULL) == sizeof(LOGFONTW));
-	TEST(GetObjectW(hFont, 0, NULL) == sizeof(LOGFONTW));
-	TEST(GetObjectW(hFont, 5, NULL) == sizeof(LOGFONTW));
-	TEST(GetObjectW(hFont, -5, NULL) == sizeof(LOGFONTW));
-	TEST(GetObjectW(hFont, 0, &logfontw) == 0);
-	TEST(logfontw.lfHeight == 0x77777777);
+	RTEST(GetObjectW(hFont, sizeof(LOGFONTW), NULL) == sizeof(LOGFONTW));
+	RTEST(GetObjectW(hFont, 0, NULL) == sizeof(LOGFONTW));
+	RTEST(GetObjectW(hFont, 5, NULL) == sizeof(LOGFONTW));
+	RTEST(GetObjectW(hFont, -5, NULL) == sizeof(LOGFONTW));
+	RTEST(GetObjectW(hFont, 0, &logfontw) == 0);
+	RTEST(logfontw.lfHeight == 0x77777777);
 
 	TEST(GetObjectW(hFont, 5, &logfontw) == 5);
 	TEST(logfontw.lfHeight == 8);
 	TEST(logfontw.lfWidth == 0x77777708);
 
-	TEST(GetObjectA(hFont, sizeof(LOGFONTA), &logfonta) == sizeof(LOGFONTA)); // 60
-	TEST(logfonta.lfHeight == 8);
-	TEST(GetObjectA(hFont, sizeof(ENUMLOGFONTA), &enumlogfonta) == sizeof(ENUMLOGFONTA)); // 156
-	TEST(GetObjectA(hFont, sizeof(ENUMLOGFONTEXA), &enumlogfontexa) == sizeof(ENUMLOGFONTEXA)); // 188
-	TEST(GetObjectA(hFont, sizeof(EXTLOGFONTA), &extlogfonta) == sizeof(EXTLOGFONTA)); // 192
-	TEST(GetObjectA(hFont, sizeof(ENUMLOGFONTEXDVA), &enumlogfontexdva) == sizeof(ENUMLOGFONTEXDVA)); // 260
+	RTEST(GetObjectA(hFont, sizeof(LOGFONTA), &logfonta) == sizeof(LOGFONTA)); // 60
+	RTEST(logfonta.lfHeight == 8);
+	RTEST(GetObjectA(hFont, sizeof(ENUMLOGFONTA), &enumlogfonta) == sizeof(ENUMLOGFONTA)); // 156
+	RTEST(GetObjectA(hFont, sizeof(ENUMLOGFONTEXA), &enumlogfontexa) == sizeof(ENUMLOGFONTEXA)); // 188
+	RTEST(GetObjectA(hFont, sizeof(EXTLOGFONTA), &extlogfonta) == sizeof(EXTLOGFONTA)); // 192
+	RTEST(GetObjectA(hFont, sizeof(ENUMLOGFONTEXDVA), &enumlogfontexdva) == sizeof(ENUMLOGFONTEXDVA)); // 260
 	TEST(GetObjectA(hFont, sizeof(ENUMLOGFONTEXDVA)+1, &enumlogfontexdva) == sizeof(ENUMLOGFONTEXDVA)); // 260
 
-	TEST(GetObjectW(hFont, sizeof(LOGFONTW), &logfontw) == sizeof(LOGFONTW)); // 92
-	TEST(GetObjectW(hFont, sizeof(ENUMLOGFONTW), &enumlogfontw) == sizeof(ENUMLOGFONTW)); // 284
-	TEST(GetObjectW(hFont, sizeof(EXTLOGFONTW), &extlogfontw) == sizeof(EXTLOGFONTW)); // 320
-	TEST(GetObjectW(hFont, sizeof(ENUMLOGFONTEXW), &enumlogfontexw) == sizeof(ENUMLOGFONTEXW)); // 348
+	RTEST(GetObjectW(hFont, sizeof(LOGFONTW), &logfontw) == sizeof(LOGFONTW)); // 92
+	RTEST(GetObjectW(hFont, sizeof(ENUMLOGFONTW), &enumlogfontw) == sizeof(ENUMLOGFONTW)); // 284
+	RTEST(GetObjectW(hFont, sizeof(EXTLOGFONTW), &extlogfontw) == sizeof(EXTLOGFONTW)); // 320
+	RTEST(GetObjectW(hFont, sizeof(ENUMLOGFONTEXW), &enumlogfontexw) == sizeof(ENUMLOGFONTEXW)); // 348
 	TEST(GetObjectW(hFont, sizeof(ENUMLOGFONTEXDVW), &enumlogfontexdvw) == sizeof(ENUMLOGFONTEXW) + 2*sizeof(DWORD)); // 420
 	TEST(GetObjectW(hFont, sizeof(ENUMLOGFONTEXDVW)+1, &enumlogfontexdvw) == sizeof(ENUMLOGFONTEXW) + 2*sizeof(DWORD)); // 356!
 
@@ -392,7 +392,7 @@ Test_Colorspace(PTESTINFO pti)
 	TEST(GetObjectA((HANDLE)GDI_OBJECT_TYPE_COLORSPACE, 0, NULL) == 60);// FIXME: what structure?
 	TEST(GetLastError() == ERROR_INSUFFICIENT_BUFFER);
 	SetLastError(ERROR_SUCCESS);
-	TEST(GetObjectW((HANDLE)GDI_OBJECT_TYPE_COLORSPACE, 0, NULL) == 0);
+	RTEST(GetObjectW((HANDLE)GDI_OBJECT_TYPE_COLORSPACE, 0, NULL) == 0);
 	TEST(GetLastError() == ERROR_INSUFFICIENT_BUFFER);
 
 	return TRUE;
@@ -410,11 +410,11 @@ Test_MetaDC(PTESTINFO pti)
 	if(((UINT)hMetaDC & GDI_HANDLE_TYPE_MASK) != GDI_OBJECT_TYPE_METADC) return FALSE;
 
 	SetLastError(ERROR_SUCCESS);
-	TEST(GetObjectA((HANDLE)GDI_OBJECT_TYPE_METADC, 0, NULL) == 0);
-	TEST(GetObjectA((HANDLE)GDI_OBJECT_TYPE_METADC, 100, &buffer) == 0);
-	TEST(GetObjectA(hMetaDC, 0, NULL) == 0);
-	TEST(GetObjectA(hMetaDC, 100, &buffer) == 0);
-	TEST(GetLastError() == ERROR_SUCCESS);
+	RTEST(GetObjectA((HANDLE)GDI_OBJECT_TYPE_METADC, 0, NULL) == 0);
+	RTEST(GetObjectA((HANDLE)GDI_OBJECT_TYPE_METADC, 100, &buffer) == 0);
+	RTEST(GetObjectA(hMetaDC, 0, NULL) == 0);
+	RTEST(GetObjectA(hMetaDC, 100, &buffer) == 0);
+	RTEST(GetLastError() == ERROR_SUCCESS);
 	return TRUE;
 }
 
@@ -425,8 +425,8 @@ Test_GetObject(PTESTINFO pti)
     HRGN hRgn;
 	hRgn = CreateRectRgn(0,0,5,5);
 	SetLastError(ERROR_SUCCESS);
-	TEST(GetObjectW(hRgn, 0, NULL) == 0);
-	TEST(GetLastError() == ERROR_INVALID_HANDLE);
+	RTEST(GetObjectW(hRgn, 0, NULL) == 0);
+	RTEST(GetLastError() == ERROR_INVALID_HANDLE);
 	DeleteObject(hRgn);
 
 	Test_Font(pti);

@@ -23,16 +23,16 @@ Test_SelectObject(PTESTINFO pti)
 	SetLastError(ERROR_SUCCESS);
 	hNewObj = GetStockObject(GRAY_BRUSH);
 	hOldObj = SelectObject((HDC)GDI_HANDLE_GET_INDEX(hDC), hNewObj);
-	TEST(GetLastError() == ERROR_INVALID_HANDLE);
-	TEST(hOldObj == NULL);
-	TEST(pDc_Attr->hbrush == GetStockObject(WHITE_BRUSH));
+	RTEST(GetLastError() == ERROR_INVALID_HANDLE);
+	RTEST(hOldObj == NULL);
+	RTEST(pDc_Attr->hbrush == GetStockObject(WHITE_BRUSH));
 	SelectObject(hDC, hOldObj);
 
 	/* Test incomplete hobj handle works */
 	hNewObj = GetStockObject(GRAY_BRUSH);
 	hOldObj = SelectObject(hDC, (HGDIOBJ)GDI_HANDLE_GET_INDEX(hNewObj));
-	TEST(hOldObj == GetStockObject(WHITE_BRUSH));
-	TEST(pDc_Attr->hbrush == hNewObj);
+	RTEST(hOldObj == GetStockObject(WHITE_BRUSH));
+	RTEST(pDc_Attr->hbrush == hNewObj);
 	SelectObject(hDC, hOldObj);
 
 	/* Test wrong hDC handle type */
@@ -41,9 +41,9 @@ Test_SelectObject(PTESTINFO pti)
 	hDC2 = (HDC)((UINT_PTR)hDC & ~GDI_HANDLE_TYPE_MASK);
 	hDC2 = (HDC)((UINT_PTR)hDC2 | GDI_OBJECT_TYPE_PEN);
 	hOldObj = SelectObject(hDC2, hNewObj);
-	TEST(GetLastError() == ERROR_INVALID_HANDLE);
-	TEST(hOldObj == NULL);
-	TEST(pDc_Attr->hbrush == GetStockObject(WHITE_BRUSH));
+	RTEST(GetLastError() == ERROR_INVALID_HANDLE);
+	RTEST(hOldObj == NULL);
+	RTEST(pDc_Attr->hbrush == GetStockObject(WHITE_BRUSH));
 
 	/* Test wrong hobj handle type */
 	SetLastError(ERROR_SUCCESS);
@@ -51,46 +51,46 @@ Test_SelectObject(PTESTINFO pti)
 	hNewObj = (HGDIOBJ)((UINT_PTR)hNewObj & ~GDI_HANDLE_TYPE_MASK);
 	hNewObj = (HGDIOBJ)((UINT_PTR)hNewObj | GDI_OBJECT_TYPE_PEN);
 	hOldObj = SelectObject(hDC, hNewObj);
-	TEST(GetLastError() == ERROR_SUCCESS);
-	TEST(hOldObj == NULL);
-	TEST(pDc_Attr->hbrush == GetStockObject(WHITE_BRUSH));
+	RTEST(GetLastError() == ERROR_SUCCESS);
+	RTEST(hOldObj == NULL);
+	RTEST(pDc_Attr->hbrush == GetStockObject(WHITE_BRUSH));
 
 	SetLastError(ERROR_SUCCESS);
 	hNewObj = (HGDIOBJ)0x00761234;
 	hOldObj = SelectObject(hDC, hNewObj);
-	TEST(hOldObj == NULL);
-	TEST(GetLastError() == ERROR_SUCCESS);
+	RTEST(hOldObj == NULL);
+	RTEST(GetLastError() == ERROR_SUCCESS);
 	SelectObject(hDC, hOldObj);
 
 	/* Test DC */
 	SetLastError(ERROR_SUCCESS);
 	hOldObj = SelectObject(hDC, hScreenDC);
-	TEST(hOldObj == NULL);
+	RTEST(hOldObj == NULL);
 	TEST(GetLastError() == ERROR_SUCCESS);
 
 	/* Test REGION */
 	SetLastError(ERROR_SUCCESS);
 	hNewObj = CreateRectRgn(0,0,0,0);
 	hOldObj = SelectObject(hDC, hNewObj);
-	TEST((UINT_PTR)hOldObj == NULLREGION);
+	RTEST((UINT_PTR)hOldObj == NULLREGION);
 	DeleteObject(hNewObj);
 
 	hNewObj = CreateRectRgn(0,0,10,10);
-	TEST((UINT_PTR)SelectObject(hDC, hNewObj) == SIMPLEREGION);
+	RTEST((UINT_PTR)SelectObject(hDC, hNewObj) == SIMPLEREGION);
 	hOldObj = CreateRectRgn(5,5,20,20);
-	TEST(CombineRgn(hNewObj, hNewObj, hOldObj, RGN_OR) == COMPLEXREGION);
+	RTEST(CombineRgn(hNewObj, hNewObj, hOldObj, RGN_OR) == COMPLEXREGION);
 	DeleteObject(hOldObj);
-	TEST((UINT_PTR)SelectObject(hDC, hNewObj) == SIMPLEREGION); // ??? Why this?
+	RTEST((UINT_PTR)SelectObject(hDC, hNewObj) == SIMPLEREGION); // ??? Why this?
 	DeleteObject(hNewObj);
-	TEST(GetLastError() == ERROR_SUCCESS);
+	RTEST(GetLastError() == ERROR_SUCCESS);
 
 	/* Test BITMAP */
 	hNewObj = CreateBitmap(2, 2, 1, 1, &bmBits);
 	ASSERT(hNewObj != NULL);
 	hOldObj = SelectObject(hDC, hNewObj);
-	TEST(GDI_HANDLE_GET_TYPE(hOldObj) == GDI_OBJECT_TYPE_BITMAP);
+	RTEST(GDI_HANDLE_GET_TYPE(hOldObj) == GDI_OBJECT_TYPE_BITMAP);
 	hOldObj = SelectObject(hDC, hOldObj);
-	TEST(hOldObj == hNewObj);
+	RTEST(hOldObj == hNewObj);
 
 	/* Test CLIOBJ */
 
@@ -100,8 +100,8 @@ Test_SelectObject(PTESTINFO pti)
 	SetLastError(ERROR_SUCCESS);
 	hNewObj = GetStockObject(DEFAULT_PALETTE);
 	hOldObj = SelectObject(hDC, hNewObj);
-	TEST(hOldObj == NULL);
-	TEST(GetLastError() == ERROR_INVALID_FUNCTION);
+	RTEST(hOldObj == NULL);
+	RTEST(GetLastError() == ERROR_INVALID_FUNCTION);
 
 	/* Test COLORSPACE */
 
@@ -112,15 +112,15 @@ Test_SelectObject(PTESTINFO pti)
 	/* Test BRUSH */
 	hNewObj = GetStockObject(GRAY_BRUSH);
 	hOldObj = SelectObject(hDC, hNewObj);
-	TEST(hOldObj == GetStockObject(WHITE_BRUSH));
-	TEST(pDc_Attr->hbrush == hNewObj);
-	TEST(GDI_HANDLE_GET_TYPE(hOldObj) == GDI_OBJECT_TYPE_BRUSH);
+	RTEST(hOldObj == GetStockObject(WHITE_BRUSH));
+	RTEST(pDc_Attr->hbrush == hNewObj);
+	RTEST(GDI_HANDLE_GET_TYPE(hOldObj) == GDI_OBJECT_TYPE_BRUSH);
 	SelectObject(hDC, hOldObj);
 
 	/* Test DC_BRUSH */
 	hNewObj = GetStockObject(DC_BRUSH);
 	hOldObj = SelectObject(hDC, hNewObj);
-	TEST(pDc_Attr->hbrush == hNewObj);
+	RTEST(pDc_Attr->hbrush == hNewObj);
 	SelectObject(hDC, hOldObj);
 
 	/* Test BRUSH color xform */
@@ -136,9 +136,9 @@ Test_SelectObject(PTESTINFO pti)
 	/* Test PEN */
 	hNewObj = GetStockObject(GRAY_BRUSH);
 	hOldObj = SelectObject(hDC, hNewObj);
-	TEST(hOldObj == GetStockObject(WHITE_BRUSH));
-	TEST(pDc_Attr->hbrush == hNewObj);
-	TEST(GDI_HANDLE_GET_TYPE(hOldObj) == GDI_OBJECT_TYPE_BRUSH);
+	RTEST(hOldObj == GetStockObject(WHITE_BRUSH));
+	RTEST(pDc_Attr->hbrush == hNewObj);
+	RTEST(GDI_HANDLE_GET_TYPE(hOldObj) == GDI_OBJECT_TYPE_BRUSH);
 	SelectObject(hDC, hOldObj);
 
 

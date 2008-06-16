@@ -29,12 +29,12 @@ Test_EngReleaseSemaphore(PTESTINFO pti)
     EngDeleteSemaphore(hsem);
 
     /* try with deleted Semaphore */
-    EngReleaseSemaphore(hsem);
+//    EngReleaseSemaphore(hsem);  -> this leads to heap correuption
 //    RTEST (lpcrit->LockCount > 0);
-    RTEST (lpcrit->RecursionCount != 0);
-    RTEST (lpcrit->OwningThread == 0);
-    RTEST (lpcrit->LockSemaphore == 0);
-    RTEST (lpcrit->SpinCount == 0);
+//    RTEST (lpcrit->RecursionCount != 0);
+//    RTEST (lpcrit->OwningThread == 0);
+//    RTEST (lpcrit->LockSemaphore == 0);
+//    RTEST (lpcrit->SpinCount == 0);
 
 //    ASSERT(lpcrit->DebugInfo != NULL);
 //    RTEST (lpcrit->DebugInfo->Type != 0);

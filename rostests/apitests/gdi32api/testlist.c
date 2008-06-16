@@ -23,6 +23,7 @@
 #include "tests/GdiConvertPalette.c"
 #include "tests/GdiConvertRegion.c"
 #include "tests/GdiDeleteLocalDC.c"
+#include "tests/GdiGetCharDimensions.c"
 #include "tests/GdiGetLocalBrush.c"
 #include "tests/GdiGetLocalDC.c"
 #include "tests/GdiReleaseLocalDC.c"
@@ -63,11 +64,12 @@ TESTENTRY TestList[] =
 	{ L"ExtCreatePen", Test_ExtCreatePen },
 	{ L"GdiConvertBitmap", Test_GdiConvertBitmap },
 	{ L"GdiConvertBrush", Test_GdiConvertBrush },
-	{ L"GdiConvertBrush", Test_GdiConvertDC },
+	{ L"GdiConvertDC", Test_GdiConvertDC },
 	{ L"GdiConvertFont", Test_GdiConvertFont },
 	{ L"GdiConvertPalette", Test_GdiConvertPalette },
 	{ L"GdiConvertRegion", Test_GdiConvertRegion },
 	{ L"GdiDeleteLocalDC", Test_GdiDeleteLocalDC },
+	{ L"GdiGetCharDimensions", Test_GdiGetCharDimensions },
 	{ L"GdiGetLocalBrush", Test_GdiGetLocalBrush },
 	{ L"GdiGetLocalDC", Test_GdiGetLocalDC },
 	{ L"GdiReleaseLocalDC", Test_GdiReleaseLocalDC },

@@ -15,13 +15,13 @@ Test_GetClipRgn(PTESTINFO pti)
 
 	/* Test invalid DC */
 	SetLastError(ERROR_SUCCESS);
-	TEST(GetClipRgn((HDC)0x12345, hrgn) == -1);
+	RTEST(GetClipRgn((HDC)0x12345, hrgn) == -1);
 	TEST(GetLastError() == ERROR_INVALID_PARAMETER);
 
 	/* Test invalid hrgn */
 	SetLastError(ERROR_SUCCESS);
-	TEST(GetClipRgn(hDC, (HRGN)0x12345) == 0);
-	TEST(GetLastError() == ERROR_SUCCESS);
+	RTEST(GetClipRgn(hDC, (HRGN)0x12345) == 0);
+	RTEST(GetLastError() == ERROR_SUCCESS);
 
 	ReleaseDC(hWnd, hDC);
 	DestroyWindow(hWnd);
