@@ -12,13 +12,13 @@ Test_EngDeleteSemaphore(PTESTINFO pti)
     lpcrit = (PRTL_CRITICAL_SECTION) hsem;
     EngDeleteSemaphore(hsem);
 
-    RTEST (lpcrit->LockCount > 0);
+//    RTEST (lpcrit->LockCount > 0); doesn't work on XP
     RTEST (lpcrit->RecursionCount == 0);
     RTEST (lpcrit->OwningThread == 0);
     RTEST (lpcrit->LockSemaphore == 0);
     RTEST (lpcrit->SpinCount == 0);
 
-    ASSERT(lpcrit->DebugInfo != NULL);
+//    ASSERT(lpcrit->DebugInfo != NULL); doesn't work on XP
     RTEST (lpcrit->DebugInfo->Type != 0);
     RTEST (lpcrit->DebugInfo->CreatorBackTraceIndex != 0);
     RTEST (lpcrit->DebugInfo->EntryCount != 0);

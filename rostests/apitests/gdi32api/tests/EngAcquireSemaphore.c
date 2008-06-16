@@ -13,7 +13,7 @@ Test_EngAcquireSemaphore(PTESTINFO pti)
 
     /* real data test */
     EngAcquireSemaphore(hsem);
-    RTEST (lpcrit->LockCount == -2);
+//    RTEST (lpcrit->LockCount == -2); doesn't work on XP
     RTEST (lpcrit->RecursionCount == 1);
     RTEST (lpcrit->OwningThread != 0);
     RTEST (lpcrit->LockSemaphore == 0);
