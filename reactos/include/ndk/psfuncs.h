@@ -25,6 +25,10 @@ Author:
 #include <umtypes.h>
 #include <pstypes.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #ifndef NTOS_MODE_USER
 
 //
@@ -743,5 +747,9 @@ ZwTerminateJobObject(
     HANDLE JobHandle,
     NTSTATUS ExitStatus
 );
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

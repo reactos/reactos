@@ -994,7 +994,7 @@ SetPolyFillMode(HDC hdc,
 #endif
   if (!GdiGetHandleUserData((HGDIOBJ) hdc, GDI_OBJECT_TYPE_DC, (PVOID) &Dc_Attr)) return 0;
 
-  if (NtCurrentTeb()->GdiTebBatch.HDC == (ULONG)hdc)
+  if (NtCurrentTeb()->GdiTebBatch.HDC == hdc)
   {
      if (Dc_Attr->ulDirty_ & DC_MODE_DIRTY)
      {
@@ -1041,7 +1041,7 @@ SetGraphicsMode(HDC hdc,
 
   if (iMode == Dc_Attr->iGraphicsMode) return iMode;
 
-  if (NtCurrentTeb()->GdiTebBatch.HDC == (ULONG)hdc)
+  if (NtCurrentTeb()->GdiTebBatch.HDC == hdc)
   {
      if (Dc_Attr->ulDirty_ & DC_MODE_DIRTY)
      {
@@ -1444,6 +1444,3 @@ SelectObject(HDC hDC,
 
     return NULL;
 }
-
-
-

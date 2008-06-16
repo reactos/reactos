@@ -472,7 +472,7 @@ SetTextCharacterExtra(
 #endif
   if (!GdiGetHandleUserData((HGDIOBJ) hDC, GDI_OBJECT_TYPE_DC, (PVOID) &Dc_Attr)) return cExtra;
 
-  if (NtCurrentTeb()->GdiTebBatch.HDC == (ULONG)hDC)
+  if (NtCurrentTeb()->GdiTebBatch.HDC == hDC)
   {
      if (Dc_Attr->ulDirty_ & DC_FONTTEXT_DIRTY)
      {
@@ -629,7 +629,7 @@ SetTextJustification(
 #endif
   if (!GdiGetHandleUserData((HGDIOBJ) hdc, GDI_OBJECT_TYPE_DC, (PVOID) &Dc_Attr)) return FALSE;
 
-  if (NtCurrentTeb()->GdiTebBatch.HDC == (ULONG)hdc)
+  if (NtCurrentTeb()->GdiTebBatch.HDC == hdc)
   {
      if (Dc_Attr->ulDirty_ & DC_FONTTEXT_DIRTY)
      {
@@ -641,5 +641,3 @@ SetTextJustification(
   Dc_Attr->lBreakExtra = extra;
   return TRUE;
 }
-
-

@@ -9,6 +9,7 @@
 		<define name="_WIN32_WINNT">0x0600</define>
 		<define name="__NO_CTYPE_INLINES" />
 		<define name="WINVER">0x609</define>
+		<define name="NTDDI_VERSION">0x05020100</define>
 		<dependency>errcodes</dependency>
 		<pch>k32.h</pch>
 		<directory name="debug">

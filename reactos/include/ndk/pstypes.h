@@ -293,6 +293,12 @@ typedef enum _PROCESSINFOCLASS
     ProcessCycleTime,
     ProcessPagePriority,
     ProcessInstrumentationCallback,
+    ProcessThreadStackAllocation,
+    ProcessWorkingSetWatchEx,
+    ProcessImageFileNameWin32,
+    ProcessImageFileMapping,
+    ProcessAffinityUpdateMode,
+    ProcessMemoryAllocationMode,
     MaxProcessInfoClass
 } PROCESSINFOCLASS;
 
@@ -680,7 +686,7 @@ typedef struct _PEB
 typedef struct _GDI_TEB_BATCH
 {
     ULONG Offset;
-    ULONG HDC;
+    HANDLE HDC;
     ULONG Buffer[0x136];
 } GDI_TEB_BATCH, *PGDI_TEB_BATCH;
 
@@ -735,7 +741,11 @@ typedef struct _TEB
     PVOID SystemReserved1[0x36];
     LONG ExceptionCode;
     struct _ACTIVATION_CONTEXT_STACK *ActivationContextStackPointer;
+#ifdef _WIN64
+    UCHAR SpareBytes1[24];
+#else
     UCHAR SpareBytes1[0x24];
+#endif
     ULONG TxFsContext;
     GDI_TEB_BATCH GdiTebBatch;
     CLIENT_ID RealClientId;
@@ -743,9 +753,9 @@ typedef struct _TEB
     ULONG GdiClientPID;
     ULONG GdiClientTID;
     PVOID GdiThreadLocalInfo;
-    ULONG Win32ClientInfo[62];
+    SIZE_T Win32ClientInfo[62];
     PVOID glDispatchTable[0xE9];
-    ULONG glReserved1[0x1D];
+    SIZE_T glReserved1[0x1D];
     PVOID glReserved2;
     PVOID glSectionInfo;
     PVOID glSection;
@@ -762,10 +772,17 @@ typedef struct _TEB
     PVOID ReservedForNtRpc;
     PVOID DbgSsReserved[0x2];
     ULONG HardErrorDisabled;
+#ifdef _WIN64
+    PVOID Instrumentation[11];
+#else
     PVOID Instrumentation[9];
+#endif
     GUID ActivityId;
     PVOID SubProcessTag;
     PVOID EtwTraceData;
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    PVOID EtwLocalData;
+#endif
     PVOID WinSockData;
     ULONG GdiBatchCount;
 #if (NTDDI_VERSION >= NTDDI_LONGHORN)

@@ -855,24 +855,24 @@ typedef struct _SYSTEM_PROCESS_INFORMATION
     HANDLE InheritedFromUniqueProcessId;
     ULONG HandleCount;
     ULONG SessionId;
-    ULONG UniqueProcessKey;
+    ULONG_PTR PageDirectoryBase;
 
     //
     // This part corresponds to VM_COUNTERS_EX.
     // NOTE: *NOT* THE SAME AS VM_COUNTERS!
     //
-    ULONG PeakVirtualSize;
+    SIZE_T PeakVirtualSize;
     ULONG VirtualSize;
-    ULONG PageFaultCount;
-    ULONG PeakWorkingSetSize;
-    ULONG WorkingSetSize;
-    ULONG QuotaPeakPagedPoolUsage;
-    ULONG QuotaPagedPoolUsage;
-    ULONG QuotaPeakNonPagedPoolUsage;
-    ULONG QuotaNonPagedPoolUsage;
-    ULONG PagefileUsage;
-    ULONG PeakPagefileUsage;
-    ULONG PrivatePageCount;
+    SIZE_T PageFaultCount;
+    SIZE_T PeakWorkingSetSize;
+    SIZE_T WorkingSetSize;
+    SIZE_T QuotaPeakPagedPoolUsage;
+    SIZE_T QuotaPagedPoolUsage;
+    SIZE_T QuotaPeakNonPagedPoolUsage;
+    SIZE_T QuotaNonPagedPoolUsage;
+    SIZE_T PagefileUsage;
+    SIZE_T PeakPagefileUsage;
+    SIZE_T PrivatePageCount;
 
     //
     // This part corresponds to IO_COUNTERS

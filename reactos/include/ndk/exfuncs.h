@@ -26,6 +26,10 @@ Author:
 #include <pstypes.h>
 #include <extypes.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 //
 // Don't include WMI headers just for one define
 //
@@ -1017,4 +1021,9 @@ ZwTraceEvent(
     IN ULONG TraceHeaderLength,
     IN PEVENT_TRACE_HEADER TraceHeader
 );
+
+#ifdef __cplusplus
+}
+#endif
+
 #endif

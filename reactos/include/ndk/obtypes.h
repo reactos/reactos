@@ -19,9 +19,6 @@ Author:
 #ifndef _OBTYPES_H
 #define _OBTYPES_H
 
-#undef NTDDI_VERSION
-#define NTDDI_VERSION NTDDI_WS03SP1
-
 //
 // Dependencies
 //
@@ -298,6 +295,12 @@ typedef struct _OBJECT_TYPE_INFORMATION
     ULONG DefaultPagedPoolCharge;
     ULONG DefaultNonPagedPoolCharge;
 } OBJECT_TYPE_INFORMATION, *POBJECT_TYPE_INFORMATION;
+
+typedef struct _OBJECT_ALL_TYPES_INFORMATION
+{
+    ULONG NumberOfTypes;
+    //OBJECT_TYPE_INFORMATION TypeInformation[1];
+} OBJECT_ALL_TYPES_INFORMATION, *POBJECT_ALL_TYPES_INFORMATION;
 
 #ifdef NTOS_MODE_USER
 

@@ -53,7 +53,9 @@ Author:
 //
 #ifndef _MANAGED
 #if defined(_M_IX86)
+#ifndef FASTCALL
 #define FASTCALL                        _fastcall
+#endif
 #else
 #define FASTCALL
 #endif

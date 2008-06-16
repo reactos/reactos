@@ -317,7 +317,7 @@ SetROP2(HDC hdc,
 #endif
  if (!GdiGetHandleUserData((HGDIOBJ) hdc, GDI_OBJECT_TYPE_DC, (PVOID) &Dc_Attr)) return FALSE;
 
- if (NtCurrentTeb()->GdiTebBatch.HDC == (ULONG) hdc)
+ if (NtCurrentTeb()->GdiTebBatch.HDC == hdc)
  {
     if (Dc_Attr->ulDirty_ & DC_MODE_DIRTY)
     {
@@ -390,7 +390,7 @@ SetBrushOrgEx(HDC hdc,
     if ((nXOrg == Dc_Attr->ptlBrushOrigin.x) && (nYOrg == Dc_Attr->ptlBrushOrigin.y))
        return TRUE;
 
-    if(((pTeb->GdiTebBatch.HDC == 0) || (pTeb->GdiTebBatch.HDC == (ULONG)hdc)) &&
+    if(((pTeb->GdiTebBatch.HDC == NULL) || (pTeb->GdiTebBatch.HDC == hdc)) &&
        ((pTeb->GdiTebBatch.Offset + sizeof(GDIBSSETBRHORG)) <= GDIBATCHBUFSIZE) &&
        (!(Dc_Attr->ulDirty_ & DC_DIBSECTION)) )
     {
@@ -405,7 +405,7 @@ SetBrushOrgEx(HDC hdc,
        pgSBO->ptlBrushOrigin = Dc_Attr->ptlBrushOrigin;
        
        pTeb->GdiTebBatch.Offset += sizeof(GDIBSSETBRHORG);
-       pTeb->GdiTebBatch.HDC = (ULONG)hdc;
+       pTeb->GdiTebBatch.HDC = hdc;
        pTeb->GdiBatchCount++;
        DPRINT("Loading the Flush!! COUNT-> %d\n", pTeb->GdiBatchCount);
 
@@ -420,4 +420,3 @@ SetBrushOrgEx(HDC hdc,
  }
  return NtGdiSetBrushOrg(hdc,nXOrg,nYOrg,lppt);
 }
-
