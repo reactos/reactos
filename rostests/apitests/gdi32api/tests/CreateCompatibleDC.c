@@ -10,26 +10,26 @@ Test_CreateCompatibleDC(PTESTINFO pti)
 	/* Test NULL DC handle */
 	SetLastError(ERROR_SUCCESS);
 	hDC = CreateCompatibleDC(NULL);
-	TEST(hDC != NULL);
-	TEST(GetLastError() == ERROR_SUCCESS);
+	RTEST(hDC != NULL);
+	RTEST(GetLastError() == ERROR_SUCCESS);
 	if(hDC) DeleteDC(hDC);
 
 	/* Test invalid DC handle */
 	SetLastError(ERROR_SUCCESS);
 	hDC = CreateCompatibleDC((HDC)0x123456);
-	TEST(hDC == NULL);
-	TEST(GetLastError() == ERROR_SUCCESS);
+	RTEST(hDC == NULL);
+	RTEST(GetLastError() == ERROR_SUCCESS);
 	if(hDC) DeleteDC(hDC);
 
 	hDC = CreateCompatibleDC(hDCScreen);
 	RTEST(hDC != NULL);
 
 	// Test if first selected pen is BLACK_PEN (? or same as screen DC's pen?)
-	TEST(SelectObject(hDC, GetStockObject(DC_PEN)) == GetStockObject(BLACK_PEN));
-	TEST(SelectObject(hDC, GetStockObject(BLACK_PEN)) == GetStockObject(DC_PEN));
+	RTEST(SelectObject(hDC, GetStockObject(DC_PEN)) == GetStockObject(BLACK_PEN));
+	RTEST(SelectObject(hDC, GetStockObject(BLACK_PEN)) == GetStockObject(DC_PEN));
 
 	// Test for the starting Color == RGB(0,0,0)
-	TEST(SetDCPenColor(hDC, RGB(1,2,3)) == RGB(0,0,0));
+	RTEST(SetDCPenColor(hDC, RGB(1,2,3)) == RGB(0,0,0));
 
 	// Check for reuse counter
 	hOldDC = hDC;
