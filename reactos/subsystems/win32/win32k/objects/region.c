@@ -2053,6 +2053,7 @@ REGION_AllocRgnWithHandle(INT nReg)
         pReg->Buffer = ExAllocatePoolWithTag(PagedPool, nReg * sizeof(RECT), TAG_REGION);
         if (!pReg->Buffer)
         {
+            REGION_UnlockRgn(pReg);
             GDIOBJ_FreeObjByHandle(hReg, GDI_OBJECT_TYPE_REGION);
             return NULL;
         }

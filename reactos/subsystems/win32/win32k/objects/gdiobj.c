@@ -323,7 +323,11 @@ GDIOBJ_AllocObjWithHandle(ULONG ObjectType)
     /* HACK HACK HACK: simplest-possible quota implementation - don't allow a process
        to take too many GDI objects, itself. */
     if (W32Process && W32Process->GDIObjects >= 0x2710)
+    {
+        DPRINT1("Too many objects for process!!!\n");
+        GDIDBG_DUMPHANDLETABLE();
         return NULL;
+    }
 
     ASSERT(ObjectType != GDI_OBJECT_TYPE_DONTCARE);
 
@@ -539,6 +543,7 @@ LockHandle:
                 DPRINT1("Object->cExclusiveLock = %d\n", Object->cExclusiveLock);
                 GDIDBG_TRACECALLER();
                 GDIDBG_TRACELOCKER(GDI_HANDLE_GET_INDEX(hObj));
+                (void)_InterlockedExchangePointer((PVOID*)&Entry->ProcessId, PrevProcId);
                 /* do not assert here for it will call again from dxg.sys it being call twice */
                 //ASSERT(FALSE);
             }
