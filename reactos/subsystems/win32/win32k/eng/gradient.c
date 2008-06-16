@@ -571,11 +571,12 @@ IntEngGradientFill(
     Ret = GDIDEVFUNCS(psoDest).GradientFill(
       psoDest, pco, pxlo, pVertex, nVertex, pMesh, nMesh,
       prclExtents, pptlDitherOrg, ulMode);
-    MouseSafetyOnDrawEnd(psoDest);
-    return Ret;
   }
-  Ret = EngGradientFill(psoDest, pco, pxlo, pVertex, nVertex, pMesh, nMesh, prclExtents,
-                        pptlDitherOrg, ulMode);
+  else
+  {
+    Ret = EngGradientFill(psoDest, pco, pxlo, pVertex, nVertex, pMesh, nMesh, prclExtents,
+                          pptlDitherOrg, ulMode);
+  }
   MouseSafetyOnDrawEnd(psoDest);
   BITMAPOBJ_UnlockBitmapBits(pboDest);
 
