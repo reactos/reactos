@@ -136,7 +136,13 @@ SetMiterLimit(
 	PFLOAT	a2
 	)
 {
-	return NtGdiSetMiterLimit ( hdc, a1, (PDWORD)a2 );
+  BOOL Ret;
+  gxf_long worker, worker1;
+
+  worker.f  = a1;
+  Ret = NtGdiSetMiterLimit ( hdc, worker.l, a2 ? &worker1.l : NULL  );
+  if (a2 && Ret) *a2 = worker1.f;
+  return Ret;
 }
 
 

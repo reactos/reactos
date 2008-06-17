@@ -195,8 +195,39 @@ NtGdiGetMiterLimit(
     IN HDC hdc,
     OUT PDWORD pdwOut)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+  DC *pDc;
+  gxf_long worker;
+  NTSTATUS Status = STATUS_SUCCESS;
+
+  if(!(pDc = DC_LockDc(hdc))) return FALSE;
+
+  worker.f = pDc->DcLevel.laPath.eMiterLimit;
+
+  if (pdwOut)
+  {
+      _SEH_TRY
+      {
+          ProbeForWrite(pdwOut,
+                 sizeof(DWORD),
+                             1);
+          *pdwOut = worker.l;
+      }
+      _SEH_HANDLE
+      {
+          Status = _SEH_GetExceptionCode();
+      }
+       _SEH_END;
+      if (!NT_SUCCESS(Status))
+      {
+         SetLastNtError(Status);
+         DC_UnlockDc(pDc);
+         return FALSE;
+      }
+  }
+
+  DC_UnlockDc(pDc);
+  return TRUE;
+
 }
 
 INT
@@ -298,8 +329,40 @@ NtGdiSetMiterLimit(
     IN DWORD dwNew,
     IN OUT OPTIONAL PDWORD pdwOut)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+  DC *pDc;
+  gxf_long worker, worker1;
+  NTSTATUS Status = STATUS_SUCCESS;
+
+  if(!(pDc = DC_LockDc(hdc))) return FALSE;
+
+  worker.l  = dwNew;
+  worker1.f = pDc->DcLevel.laPath.eMiterLimit;
+  pDc->DcLevel.laPath.eMiterLimit = worker.f;
+
+  if (pdwOut)
+  {
+      _SEH_TRY
+      {
+          ProbeForWrite(pdwOut,
+                 sizeof(DWORD),
+                             1);
+          *pdwOut = worker1.l;
+      }
+      _SEH_HANDLE
+      {
+          Status = _SEH_GetExceptionCode();
+      }
+       _SEH_END;
+      if (!NT_SUCCESS(Status))
+      {
+         SetLastNtError(Status);
+         DC_UnlockDc(pDc);
+         return FALSE;
+      }
+  }
+
+  DC_UnlockDc(pDc);
+  return TRUE;
 }
 
 BOOL
