@@ -2243,7 +2243,7 @@ NtUserSetSysColors(
   int cElements,
   IN CONST INT *lpaElements,
   IN CONST COLORREF *lpaRgbValues,
-  DWORD Unknown3);
+  FLONG Flags);
 
 BOOL
 NTAPI
