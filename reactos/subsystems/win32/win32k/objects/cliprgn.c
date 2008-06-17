@@ -442,29 +442,22 @@ IntGdiSetMetaRgn(PDC pDC)
                                    RGN_AND);
            if ( Ret )
            {
-              TempRgn = GDIOBJ_ShareLockObj(TempRgn->BaseObject.hHmgr,
-                                              GDI_OBJECT_TYPE_REGION);
-
               GDIOBJ_ShareUnlockObjByPtr(pDC->DcLevel.prgnMeta);
               if (!((PROSRGNDATA)pDC->DcLevel.prgnMeta)->BaseObject.ulShareCount)
-                 REGION_FreeRgn(pDC->DcLevel.prgnMeta);
+                 REGION_Delete(pDC->DcLevel.prgnMeta);
 
               pDC->DcLevel.prgnMeta = TempRgn;
 
               GDIOBJ_ShareUnlockObjByPtr(pDC->DcLevel.prgnClip);
               if (!((PROSRGNDATA)pDC->DcLevel.prgnClip)->BaseObject.ulShareCount)
-                 REGION_FreeRgn(pDC->DcLevel.prgnClip);
+                 REGION_Delete(pDC->DcLevel.prgnClip);
 
               pDC->DcLevel.prgnClip = NULL;
 
-              pDC->DC_Flags |= DC_FLAG_DIRTY_RAO;
-              pDC->erclClip.left   = 0;
-              pDC->erclClip.top    = 0;
-              pDC->erclClip.right  = 0;
-              pDC->erclClip.bottom = 0;              
+              IntGdiReleaseRaoRgn(pDC);
            }
            else
-              REGION_FreeRgn(TempRgn);
+              REGION_Delete(TempRgn);
         }
      }
      else
@@ -510,16 +503,14 @@ NEW_CLIPPING_UpdateGCRegion(PDC pDC)
 
   if (pDC->prgnAPI)
   {
-     REGION_FreeRgn(pDC->prgnAPI);
-     pDC->prgnAPI = REGION_AllocRgnWithHandle(1);
-     REGION_SetRectRgn(pDC->prgnAPI, 0, 0, 0, 0);
+     REGION_Delete(pDC->prgnAPI);
+     pDC->prgnAPI = IntGdiCreateRectRgn(0,0,0,0);
   }
 
   if (pDC->prgnRao)
   {
-     REGION_FreeRgn(pDC->prgnRao);
-     pDC->prgnRao = REGION_AllocRgnWithHandle(1);
-     REGION_SetRectRgn(pDC->prgnRao, 0, 0, 0, 0);
+     REGION_Delete(pDC->prgnRao);
+     pDC->prgnRao = IntGdiCreateRectRgn(0,0,0,0);
   }
   
   if (pDC->DcLevel.prgnMeta && pDC->DcLevel.prgnClip)

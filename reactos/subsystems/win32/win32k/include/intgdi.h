@@ -6,6 +6,7 @@
 /* Brush functions */
 
 extern HDC hSystemBM;
+extern HSEMAPHORE hsemDriverMgmt;
 
 XLATEOBJ* FASTCALL
 IntGdiCreateBrushXlate(PDC Dc, GDIBRUSHOBJ *BrushObj, BOOLEAN *Failed);

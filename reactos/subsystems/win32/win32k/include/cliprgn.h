@@ -5,7 +5,6 @@
 #include <include/region.h>
 
 INT FASTCALL IntGdiGetClipBox(PDC, LPRECT rc);
-INT FASTCALL IntGdiSelectVisRgn(PDC, PROSRGNDATA);
 INT FASTCALL IntGdiExtSelectClipRgn (PDC, PROSRGNDATA, int);
 
 INT FASTCALL GdiGetClipBox(HDC hDC, LPRECT rc);

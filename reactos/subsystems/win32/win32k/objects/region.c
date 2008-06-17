@@ -118,6 +118,9 @@ SOFTWARE.
 #define NDEBUG
 #include <debug.h>
 
+PROSRGNDATA prgnDefault = NULL;
+HRGN        hrgnDefault = NULL;
+
 // Internal Functions
 
 #if 1
@@ -488,6 +491,7 @@ INT
 FASTCALL
 REGION_Complexity( PROSRGNDATA obj )
 {
+    if (!obj) return NULLREGION;
     switch(obj->rdh.nCount)
     {
        DPRINT("Region Complexity -> %d",obj->rdh.nCount);
@@ -2076,6 +2080,73 @@ REGION_Cleanup(PVOID ObjectBody)
     return TRUE;
 }
 
+VOID FASTCALL
+REGION_Delete(PROSRGNDATA pRgn)
+{
+  if ( pRgn == prgnDefault) return;
+  return REGION_FreeRgn(pRgn);
+}
+
+
+VOID FASTCALL
+IntGdiReleaseRaoRgn(PDC pDC)
+{
+  INT Index = GDI_HANDLE_GET_INDEX(pDC->BaseObject.hHmgr);
+  PGDI_TABLE_ENTRY Entry = &GdiHandleTable->Entries[Index];
+  pDC->DC_Flags |= DC_FLAG_DIRTY_RAO;
+  Entry->Flags |= GDI_ENTRY_FLAG_NEED_UPDATE;
+  IntGdiSetEmptyRect((PRECT)&pDC->erclClip);
+}
+
+
+VOID FASTCALL
+IntGdiReleaseVisRgn(PDC pDC)
+{
+  INT Index = GDI_HANDLE_GET_INDEX(pDC->BaseObject.hHmgr);
+  PGDI_TABLE_ENTRY Entry = &GdiHandleTable->Entries[Index];
+  pDC->DC_Flags |= DC_FLAG_DIRTY_RAO;
+  Entry->Flags |= GDI_ENTRY_FLAG_NEED_UPDATE;
+  IntGdiSetEmptyRect((PRECT)&pDC->erclClip);
+  REGION_Delete(pDC->prgnVis);
+  pDC->prgnVis = prgnDefault;
+}
+
+VOID FASTCALL
+IntUpdateVisRectRgn(PDC pDC, PROSRGNDATA pRgn)
+{
+  INT Index = GDI_HANDLE_GET_INDEX(pDC->BaseObject.hHmgr);
+  PGDI_TABLE_ENTRY Entry = &GdiHandleTable->Entries[Index];
+  PDC_ATTR pDc_Attr;
+  RECTL rcl;
+
+  if (Entry->Flags & GDI_ENTRY_FLAG_NEED_UPDATE)
+  {
+     pDc_Attr = pDC->pDc_Attr;
+     if ( !pDc_Attr ) pDc_Attr = &pDC->Dc_Attr; 
+
+     pDc_Attr->VisRectRegion.Flags = REGION_Complexity(pRgn);
+
+     if (pRgn && pDc_Attr->VisRectRegion.Flags != NULLREGION)
+     {
+        rcl.left   = pRgn->rdh.rcBound.left;
+        rcl.top    = pRgn->rdh.rcBound.top;
+        rcl.right  = pRgn->rdh.rcBound.right;
+        rcl.bottom = pRgn->rdh.rcBound.bottom;
+
+        rcl.left   -= pDC->erclWindow.left;
+        rcl.top    -= pDC->erclWindow.top;
+        rcl.right  -= pDC->erclWindow.left;
+        rcl.bottom -= pDC->erclWindow.top;
+     }
+     else
+        IntGdiSetEmptyRect((PRECT)&rcl);
+
+     pDc_Attr->VisRectRegion.Rect = rcl;
+
+     Entry->Flags &= ~GDI_ENTRY_FLAG_NEED_UPDATE;
+  }
+}
+
 INT
 FASTCALL
 IntGdiCombineRgn(PROSRGNDATA destRgn,
@@ -2221,6 +2292,8 @@ IntGdiCreateRectRgn(INT LeftRect, INT TopRect, INT RightRect, INT BottomRect)
 
   REGION_SetRectRgn(pRgn, LeftRect, TopRect, RightRect, BottomRect);
   REGION_UnlockRgn(pRgn);
+  // Return pointer with Share locks.
+  pRgn = GDIOBJ_ShareLockObj(pRgn->BaseObject.hHmgr, GDI_OBJECT_TYPE_REGION);
 
   return pRgn;
 }

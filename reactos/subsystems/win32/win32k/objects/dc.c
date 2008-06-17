@@ -2785,7 +2785,6 @@ IntEnumHDev(VOID)
    return &PrimarySurface;
 }
 
-HSEMAPHORE hsemDriverMgmt = NULL; // Hax, should be in dllmain.c and global.
 
 VOID FASTCALL
 IntGdiReferencePdev(PGDIDEVICE pPDev)
