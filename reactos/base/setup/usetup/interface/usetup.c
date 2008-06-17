@@ -1494,6 +1494,8 @@ DrawInputField(ULONG FieldLength,
 
 
 #define PARTITION_SIZE_INPUT_FIELD_LENGTH 6
+/* Restriction for MaxSize: pow(10, PARTITION_SIZE_INPUT_FIELD_LENGTH)-1 */
+#define PARTITION_MAXSIZE 999999
 
 static VOID
 ShowPartitionSizeInputBox(SHORT Left,
@@ -1692,6 +1694,9 @@ CreatePartitionPage (PINPUT_RECORD Ir)
     while (TRUE)
     {
         MaxSize = (PartEntry->UnpartitionedLength + (1 << 19)) >> 20;  /* in MBytes (rounded) */
+
+        if (MaxSize > PARTITION_MAXSIZE) MaxSize = PARTITION_MAXSIZE;
+
         ShowPartitionSizeInputBox (12, 14, xScreen - 12, 17, /* left, top, right, bottom */
                                    MaxSize, InputBuffer, &Quit, &Cancel);
 
