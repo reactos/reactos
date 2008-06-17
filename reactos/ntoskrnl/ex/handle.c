@@ -405,10 +405,14 @@ ExpAllocateHandleTable(IN PEPROCESS Process OPTIONAL,
     HandleTable->Flags = 0;
 
     /* Loop all the handle table locks */
-    for (i = 0; i < 4; i++) HandleTable->HandleTableLock[i].Value = 0;
+    for (i = 0; i < 4; i++)
+    {
+        /* Initialize the handle table lock */
+        ExInitializePushLock((PULONG_PTR)&HandleTable->HandleTableLock[i]);
+    }
 
     /* Initialize the contention event lock and return the lock */
-    HandleTable->HandleContentionEvent.Value = 0;
+    ExInitializePushLock((PULONG_PTR)&HandleTable->HandleContentionEvent);
     return HandleTable;
 }
 
