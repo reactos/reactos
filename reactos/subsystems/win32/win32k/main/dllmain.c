@@ -40,6 +40,8 @@ PSECTION_OBJECT GlobalUserHeapSection = NULL;
 
 PSERVERINFO gpsi = NULL; // Global User Server Information.
 
+HSEMAPHORE hsemDriverMgmt = NULL;
+
 extern ULONG_PTR Win32kSSDT[];
 extern UCHAR Win32kSSPT[];
 extern ULONG Win32kNumberOfSysCalls;
@@ -409,6 +411,8 @@ DriverEntry (
 
   /* Initialize a list of loaded drivers in Win32 subsystem */
   InitializeListHead(&GlobalDriverListHead);
+
+  if(!hsemDriverMgmt) hsemDriverMgmt = EngCreateSemaphore();
 
   Status = InitUserImpl();
   if (!NT_SUCCESS(Status))
