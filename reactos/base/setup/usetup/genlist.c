@@ -538,42 +538,59 @@ VOID
 GenericListKeyPress (PGENERIC_LIST GenericList, CHAR AsciChar)
 {
     PGENERIC_LIST_ENTRY ListEntry;
-    PLIST_ENTRY Entry;
+    PGENERIC_LIST_ENTRY OldListEntry;
+    BOOLEAN Flag = FALSE;
 
-    Entry = &GenericList->CurrentEntry->Entry;
-    ListEntry = CONTAINING_RECORD (Entry, GENERIC_LIST_ENTRY, Entry);
+    ListEntry = GenericList->CurrentEntry;
+    OldListEntry = GenericList->CurrentEntry;
 
-Reset:
+    GenericList->Redraw = FALSE;
 
-    if (tolower(ListEntry->Text[0]) != AsciChar)
-        Entry = GenericList->ListHead.Flink;
-
-    while (Entry != &GenericList->ListHead)
+    if ((strlen(ListEntry->Text) > 0) && (tolower(ListEntry->Text[0]) == AsciChar) &&
+         (GenericList->CurrentEntry->Entry.Flink != &GenericList->ListHead))
     {
-        ListEntry = CONTAINING_RECORD (Entry, GENERIC_LIST_ENTRY, Entry);
+        ScrollDownGenericList(GenericList);
+        ListEntry = GenericList->CurrentEntry;
 
         if ((strlen(ListEntry->Text) > 0) && (tolower(ListEntry->Text[0]) == AsciChar))
+            goto End;
+    }
+
+    while (GenericList->CurrentEntry->Entry.Blink != &GenericList->ListHead)
+        ScrollUpGenericList(GenericList);
+
+    ListEntry = GenericList->CurrentEntry;
+
+    for (;;)
+    {
+        if ((strlen(ListEntry->Text) > 0) && (tolower(ListEntry->Text[0]) == AsciChar))
         {
-            if (CONTAINING_RECORD (Entry, GENERIC_LIST_ENTRY, Entry) == GenericList->CurrentEntry)
-            {
-                Entry = Entry->Flink;
-                if (Entry == &GenericList->ListHead)
-                    goto Reset;
-
-                ListEntry = CONTAINING_RECORD (Entry, GENERIC_LIST_ENTRY, Entry);
-                if ((strlen(ListEntry->Text) < 1) || (tolower(ListEntry->Text[0]) != AsciChar))
-                    goto Reset;
-            }
-
-            GenericList->CurrentEntry = CONTAINING_RECORD (Entry, GENERIC_LIST_ENTRY, Entry);
+            Flag = TRUE;
             break;
         }
 
-        Entry = Entry->Flink;
+        if (GenericList->CurrentEntry->Entry.Flink == &GenericList->ListHead)
+            break;
+
+        ScrollDownGenericList(GenericList);
+        ListEntry = GenericList->CurrentEntry;
     }
 
-    if (Entry)
-        DrawListEntries(GenericList);
+    if (!Flag)
+    {
+        while (GenericList->CurrentEntry->Entry.Blink != &GenericList->ListHead)
+        {
+            if (GenericList->CurrentEntry != OldListEntry)
+                ScrollUpGenericList(GenericList);
+            else
+                break;
+        }
+    }
+End:
+    DrawListEntries(GenericList);
+    DrawScrollBarGenericList(GenericList);
+
+    GenericList->Redraw = TRUE;
 }
 
 
