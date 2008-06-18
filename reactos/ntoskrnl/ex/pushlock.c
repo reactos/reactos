@@ -343,9 +343,10 @@ ExTimedWaitForUnblockPushLock(IN PEX_PUSH_LOCK PushLock,
                                        KernelMode,
                                        FALSE,
                                        Timeout);
-        if (!NT_SUCCESS(Status))
+        /* Check if the wait was satisfied */
+        if (Status != STATUS_SUCCESS)
         {
-            /* Try unblocking the pushlock */
+            /* Try unblocking the pushlock if it was not */
             ExfUnblockPushLock(PushLock, WaitBlock);
         }
     }
@@ -432,7 +433,7 @@ ExBlockPushLock(PEX_PUSH_LOCK PushLock,
         if (OldValue.Ptr == NewValue.Ptr) break;
 
         /* Try again with the new value */
-        NewValue = OldValue;
+        OldValue = NewValue;
     }
 }
 
@@ -657,7 +658,7 @@ ExfAcquirePushLockShared(PEX_PUSH_LOCK PushLock)
             if (NewValue.Value != OldValue.Value)
             {
                 /* Retry */
-                OldValue = NewValue;
+                OldValue = *PushLock;
                 continue;
             }
 
@@ -721,7 +722,7 @@ ExfAcquirePushLockShared(PEX_PUSH_LOCK PushLock)
             if (NewValue.Ptr != OldValue.Ptr)
             {
                 /* Retry */
-                OldValue = NewValue;
+                OldValue = *PushLock;
                 continue;
             }
 
@@ -1088,7 +1089,7 @@ ExfReleasePushLockExclusive(PEX_PUSH_LOCK PushLock)
                                                              OldValue.Ptr);
 
             /* Check if the value changed behind our back */
-            if (NewValue.Value != OldValue.Value)
+            if (NewValue.Value == OldValue.Value)
             {
                 /* Wake the Pushlock */
                 ExfWakePushLock(PushLock, WakeValue);
