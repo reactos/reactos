@@ -10,7 +10,7 @@ BEGIN
 
 IDS_Copy, "ReactOS Dateiexpansionsprogramm Version 1.0\n\
 Copyright Victor Schneider 1997\n\n\
-Verwendung: %s infile [outfile]\n"
+Verwendung: %s Eingabedatei [Ausgabedatei]\n"
 
 IDS_FAILS "LZCopy fehlgeschlagen: Rückgabe ist %ld\n"
 END

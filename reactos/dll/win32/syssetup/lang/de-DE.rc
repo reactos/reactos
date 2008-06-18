@@ -190,7 +190,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_CMT_DOWNLOADER  "Downloaden und installeren verschiedener Anwendungen"
+    IDS_CMT_DOWNLOADER  "Downloaden und installieren verschiedener Anwendungen"
 END
 
 STRINGTABLE

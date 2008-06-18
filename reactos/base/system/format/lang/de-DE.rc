@@ -12,19 +12,19 @@ BEGIN
 
 
 
-STRING_HELP,  "Usage: %S drive: [-FS:file-system] [-V:label] [-Q] [-A:size] [-C]\n\n\
+STRING_HELP,  "Syntax: %S Datenträger: [-FS:Dateisystem] [-V:Label] [-Q] [-A:Größe] [-C]\n\n\
   [Datenträger:]   Legt das zu formatierende Laufwerk fest.\n\
-  -FS:file-system  Legt das Dateisystem fest (%s).\n\
-  -V:label         Legt den Datenträgernamen fest.\n\
+  -FS:Dateisystem  Legt das Dateisystem fest (%s).\n\
+  -V:Label         Legt den Datenträgernamen fest.\n\
   -Q               Führt eine Schnellformatierung durch.\n\
-  -A:size          Überschreibt Anweisung für Standardblockgrösse. Es wird dringend\n\
+  -A:Größe         Überschreibt Anweisung für Standardblockgröße. Es wird dringend\n\
                    empfohlen, grundsätzlich Standardeinstellungen zu verwenden!\n\
                    NTFS unterstützt 512, 1024, 2048, 4096, 8192, 16K, 32K, 64K.\n\
                    FAT unterstützt 8192, 16K, 32K, 64K, 128K, 256K.\n\
                    NTFS-Kompression wird für Blockgrössen über 4096 nicht\n\
                    unterstützt.\n\
   -C               Auf dem neuen Datenträger erstellte Dateien werden\n\
-                   standardmässig komprimiert.\n\n"
+                   standardmäßig komprimiert.\n\n"
 
 STRING_COMPLETE   "%lu Prozent komplett.\r"
 
@@ -48,9 +48,9 @@ STRING_NO_VOLUME_SIZE    "Kann Mediumsgröße nicht abfragen"
 
 STRING_FILESYSTEM        "Der Typ des Dateisystems ist %S.\n"
 
-STRING_LABEL_NAME_EDIT  "Geben Sie die aktuelle Volumebezeichnung für Datenträger %C: ein"
+STRING_LABEL_NAME_EDIT  "Geben Sie die aktuelle Datenträgerbezeichnung für Datenträger %C: ein"
 
-STRING_ERROR_LABEL     "Eine unzulässige Volumebezeichnung wurde für diesen Datenträger eingegeben.\n"
+STRING_ERROR_LABEL     "Eine unzulässige Datenträgerbezeichnung wurde für diesen Datenträger eingegeben.\n"
 
 STRING_YN_FORMAT       "\nACHTUNG, beim Formatieren werden ALLE Daten auf dem Datenträger %C: gelöscht!\nMit Formatierung fortfahren? (Ja/Nein)? "
 
@@ -66,11 +66,11 @@ STRING_FMT_COMPLETE    "Formatierung abgeschlossen.\n"
 
 STRING_VOL_COMPRESS    "Medium unterstützt keine Kompression.\n"
 
-STRING_ENTER_LABEL     "Volumebezeichnung (11 Zeichen, Enter für keine)? "
+STRING_ENTER_LABEL     "Datenträgerbezeichnung (11 Zeichen, Enter für keine)? "
 
 STRING_NO_LABEL        "Konnte Datenträger nicht benennen"
 
 STRING_FREE_SPACE     "\n%I64d bytes Speicherkapazität.\n%I64d bytes freier Speicher.\n"
 
-STRING_SERIAL_NUMBER   "\nVolume Seriennummer ist %04X-%04X\n"
+STRING_SERIAL_NUMBER   "\nDatenträger Seriennummer ist %04X-%04X\n"
 END
