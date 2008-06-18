@@ -514,7 +514,7 @@ ExfAcquirePushLockExclusive(PEX_PUSH_LOCK PushLock)
                                   PtrToUlong(WaitBlock);
 
                 /* Check if the pushlock was already waking */
-                if (OldValue.Waking) NeedWake = TRUE;
+                if (!OldValue.Waking) NeedWake = TRUE;
             }
             else
             {
