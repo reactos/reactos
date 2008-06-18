@@ -1049,6 +1049,18 @@ HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\998","Nam
 ;Cursors Schemes
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Control Panel\Cursors\Schemes","ReactOS Default",0x00020000,"\",,,,,,,,,,,,,\""
 
+;PowerCfg
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Controls Folder\PowerCfg","LastID",0x00000002,"0"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Controls Folder\PowerCfg","DiskSpinDownMax",0x00000002,"3600"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Controls Folder\PowerCfg","DiskSpinDownMin",0x00000002,"3"
+
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Controls Folder\PowerCfg\GlobalPowerPolicy","Policies",0x00000001,\
+01,00,00,00,01,00,00,00,01,00,00,00,03,00,00,00
+
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Controls Folder\PowerCfg\PowerPolicies\0","Policies",0x00000001,\
+01,00,00,00,02,00,00,00,04,00,00,00,02,00,00,00,02,00,00,00,00,00,00,00,84,03,00,00,00,00,00,00,84,03,\
+00,00,32,32,00,00,02,00,00,00,04,00,00,c0,00,00,00,00,02,00,00,00,04,00,00,c0,00,00,00,00
+
 ; deskadp.dll shell extension
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Controls Folder\Device\shellex\PropertySheetHandlers\Display Adapter CPL Extension","",0x00000000,"{42071712-76d4-11d1-8b24-00a0c9068ff3}"
 

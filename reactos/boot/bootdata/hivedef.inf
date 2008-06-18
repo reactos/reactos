@@ -29,6 +29,23 @@ HKCU,"Control Panel\International\Geo","Nation",0x00000000,"1"
 HKCU,"Control Panel\Cursors",,,"ReactOS Default"
 HKCU,"Control Panel\Cursors","Scheme Source",0x00010001,0x00000002
 
+;PowerCfg
+HKCU,"Control Panel\PowerCfg","CurrentPowerPolicy",0x00000002,"0"
+HKCU,"Control Panel\PowerCfg\GlobalPowerPolicy","Policies",0x00000001,01,00,00,00,03,\
+00,00,00,03,00,00,00,00,00,00,00,03,00,00,00,03,00,00,00,00,00,00,00,02,00,00,00,03,\
+00,00,00,00,00,00,00,02,00,00,00,03,00,00,00,00,00,00,00,00,00,00,00,01,00,00,00,00,\
+00,00,80,00,00,00,00,01,00,00,00,00,00,00,80,01,00,00,00,03,00,00,00,02,00,00,00,04,\
+00,00,c0,01,00,00,00,04,00,00,00,01,00,00,00,0a,00,00,00,00,00,00,00,03,00,00,00,01,\
+00,01,00,01,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,02,00,00,\
+00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,03,00,00,00,00,00,16,\
+00,00,00
+HKCU,"Control Panel\PowerCfg\PowerPolicies\0","Name",0x00020000,"Home/Office Desk"
+HKCU,"Control Panel\PowerCfg\PowerPolicies\0","Description",0x00020000,"This scheme is suited to most home or desktop computers that are left plugged in all the time."
+HKCU,"Control Panel\PowerCfg\PowerPolicies\0","Policies",0x00000001,01,00,00,00,02,\
+00,00,00,01,00,00,00,00,00,00,00,02,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,2c,\
+01,00,00,32,32,00,03,04,00,00,00,04,00,00,00,00,00,00,00,00,00,00,00,b0,04,00,00,2c,\
+01,00,00,00,00,00,00,58,02,00,00,01,01,64,50,64,64,00,00
+
 ; Color schemes
 HKCU,"Control Panel\Current","Color Schemes",0x00020000,"ReactOS Standard"
 HKCU,"Control Panel\Appearance","Current",0x00020000,"ReactOS Standard"

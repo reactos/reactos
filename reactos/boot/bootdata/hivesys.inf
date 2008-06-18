@@ -339,8 +339,6 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Network\{4D36E974-E325-11CE-BFC1-08002BE1
 HKLM,"SYSTEM\CurrentControlSet\Control\Network\{4D36E975-E325-11CE-BFC1-08002BE10318}",,0x00000000,"Network Protocol"
 HKLM,"SYSTEM\CurrentControlSet\Control\Network\{4D36E975-E325-11CE-BFC1-08002BE10318}","Class",0x00000000,"NetTrans"
 
-
-
 ; NLS Files
 HKLM,"SYSTEM\CurrentControlSet\Control\NLS\CodePage","37",0x00000000,"c_037.nls"
 HKLM,"SYSTEM\CurrentControlSet\Control\NLS\CodePage","424",0x00000000,"c_424.nls"
@@ -395,9 +393,6 @@ HKLM,"SYSTEM\CurrentControlSet\Control\NLS\CodePage","28596",0x00000000,"c_28596
 HKLM,"SYSTEM\CurrentControlSet\Control\NLS\CodePage","28597",0x00000000,"c_28597.nls"
 HKLM,"SYSTEM\CurrentControlSet\Control\NLS\CodePage","28598",0x00000000,"c_28598.nls"
 HKLM,"SYSTEM\CurrentControlSet\Control\NLS\CodePage","28599",0x00000000,"c_28599.nls"
-HKLM,"SYSTEM\CurrentControlSet\Control\NLS\CodePage","ACP",0x00000000,"1252"
-HKLM,"SYSTEM\CurrentControlSet\Control\NLS\CodePage","OEMCP",0x00000000,"437"
-HKLM,"SYSTEM\CurrentControlSet\Control\NLS\CodePage","MACCP",0x00000000,"10000"
 
 ; NLS Language settings
 HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language","0402",0x00000000,"l_intl.nls"
@@ -628,6 +623,14 @@ HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language Groups","c",0x00000000,"1"
 HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language Groups","d",0x00000000,"1"
 HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language Groups","e",0x00000000,"1"
 HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language Groups","f",0x00000000,"1"
+
+HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Locale\Alternate Sorts","00010407",0x00000000,"1"
+HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Locale\Alternate Sorts","0001040e",0x00000000,"2"
+HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Locale\Alternate Sorts","00010437",0x00000000,""
+HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Locale\Alternate Sorts","00020804",0x00000000,""
+HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Locale\Alternate Sorts","00021004",0x00000000,""
+HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Locale\Alternate Sorts","00021404",0x00000000,""
+HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Locale\Alternate Sorts","00030404",0x00000000,""
 
 ; Some installers check for SP6
 HKLM,"SYSTEM\CurrentControlSet\Control\Windows","CSDVersion",0x00010001,0x00000600
