@@ -1190,6 +1190,40 @@ GetOEMCP(VOID)
 }
 
 /**
+ * @name SetCPGlobal
+ *
+ * Set the current Ansi code page Id for the system.
+ *
+ * PARAMS
+ *    CodePage [I] code page ID to be the new ACP.
+ *
+ * RETURNS
+ *    The previous ACP.
+ */
+UINT STDCALL SetCPGlobal(UINT CodePage)
+{
+    PCODEPAGE_ENTRY New;
+    LIST_ENTRY CodePagelist;
+    UINT Ret = GetACP();
+
+    CodePagelist = CodePageListHead;
+
+    while (!IsListEmpty(&CodePagelist))
+    {
+        New = CONTAINING_RECORD(CodePagelist.Flink, CODEPAGE_ENTRY, Entry);
+
+        if ((New->SectionHandle != NULL) && (New->CodePage == CodePage))
+        {
+            AnsiCodePage = *New;
+            break;
+        }
+        RemoveHeadList(&CodePagelist);
+    }
+
+    return Ret;
+}
+
+/**
  * @name IsDBCSLeadByteEx
  *
  * Determine if passed byte is lead byte in specified code page.

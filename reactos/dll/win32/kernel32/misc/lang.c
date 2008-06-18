@@ -22,6 +22,7 @@
 #include <debug.h>
 
 #include "lcformat_private.h"
+#include "lang.h"
 
 /* FIXME:  these are included in winnls.h, however including this file causes alot of
            conflicting type errors. */
@@ -2789,4 +2790,111 @@ VerLanguageNameW (
     )
 {
     return GetLocaleInfoW( MAKELCID(wLang, SORT_DEFAULT), LOCALE_SENGLANGUAGE, szLang, nSize );
+}
+
+
+/*
+ * @implemented
+ */
+int
+STDCALL
+FoldStringW (
+    DWORD   dwMapFlags,
+    LPCWSTR lpSrcStr,
+    int cchSrc,
+    LPWSTR  lpDestStr,
+    int cchDest
+    )
+{
+    int ret;
+
+    switch (dwMapFlags & (MAP_COMPOSITE | MAP_PRECOMPOSED | MAP_EXPAND_LIGATURES))
+    {
+        case 0:
+            if (dwMapFlags)
+            break;
+        /* Fall through for dwMapFlags == 0 */
+        case MAP_PRECOMPOSED | MAP_COMPOSITE:
+        case MAP_PRECOMPOSED | MAP_EXPAND_LIGATURES:
+        case MAP_COMPOSITE | MAP_EXPAND_LIGATURES:
+            SetLastError(ERROR_INVALID_FLAGS);
+            return 0;
+    }
+
+    if (!lpSrcStr || !cchSrc || cchDest < 0 || (cchDest && !lpDestStr) || lpSrcStr == lpDestStr)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return 0;
+    }
+
+    ret = FoldString_Worker(dwMapFlags, lpSrcStr, cchSrc, lpDestStr, cchDest);
+
+    if (!ret)
+        SetLastError(ERROR_INSUFFICIENT_BUFFER);
+
+    return ret;
+}
+
+
+/*
+ * @implemented
+ */
+int
+STDCALL
+FoldStringA (
+    DWORD   dwMapFlags,
+    LPCSTR  lpSrcStr,
+    int cchSrc,
+    LPSTR   lpDestStr,
+    int cchDest
+    )
+{
+    INT ret = 0, srclenW = 0;
+    WCHAR *srcW = NULL, *dstW = NULL;
+
+    if (!lpSrcStr || !cchSrc || cchDest < 0 || (cchDest && !lpDestStr) || lpSrcStr == lpDestStr)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return 0;
+    }
+
+    srclenW = MultiByteToWideChar(CP_ACP, dwMapFlags & MAP_COMPOSITE ? MB_COMPOSITE : 0,
+                                  lpSrcStr, cchSrc, NULL, 0);
+    srcW = HeapAlloc(GetProcessHeap(), 0, srclenW * sizeof(WCHAR));
+
+    if (!srcW)
+    {
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        goto FoldStringA_exit;
+    }
+
+    MultiByteToWideChar(CP_ACP, dwMapFlags & MAP_COMPOSITE ? MB_COMPOSITE : 0,
+                        lpSrcStr, cchSrc, srcW, srclenW);
+
+    dwMapFlags = (dwMapFlags & ~MAP_PRECOMPOSED) | MAP_FOLDCZONE;
+
+    ret = FoldStringW(dwMapFlags, srcW, srclenW, NULL, 0);
+    if (ret && cchDest)
+    {
+        dstW = HeapAlloc(GetProcessHeap(), 0, ret * sizeof(WCHAR));
+
+        if (!dstW)
+        {
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            goto FoldStringA_exit;
+        }
+
+        ret = FoldStringW(dwMapFlags, srcW, srclenW, dstW, ret);
+        if (!WideCharToMultiByte(CP_ACP, 0, dstW, ret, lpDestStr, cchDest, NULL, NULL))
+        {
+            ret = 0;
+            SetLastError(ERROR_INSUFFICIENT_BUFFER);
+        }
+    }
+
+    HeapFree(GetProcessHeap(), 0, dstW);
+
+FoldStringA_exit:
+    HeapFree(GetProcessHeap(), 0, srcW);
+    return ret;
 }
