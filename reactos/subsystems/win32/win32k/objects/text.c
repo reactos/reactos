@@ -3452,10 +3452,13 @@ TextIntGetTextExtentPoint(PDC dc,
   PFONTGDI FontGDI;
   FT_Face face;
   FT_GlyphSlot glyph;
+  FT_Glyph realglyph;
   INT error, n, glyph_index, i, previous;
   ULONGLONG TotalWidth = 0;
   FT_CharMap charmap, found = NULL;
   BOOL use_kerning;
+  FT_Render_Mode RenderMode;
+  BOOLEAN Render;
 
   FontGDI = ObjToGDI(TextObj->Font, FONT);
 
@@ -3465,6 +3468,7 @@ TextIntGetTextExtentPoint(PDC dc,
       *Fit = 0;
     }
 
+  IntLockFreeType;
   if (face->charmap == NULL)
     {
       DPRINT("WARNING: No charmap selected!\n");
@@ -3486,23 +3490,25 @@ TextIntGetTextExtentPoint(PDC dc,
 	  DPRINT1("WARNING: Could not find desired charmap!\n");
 	}
 
-      IntLockFreeType;
       error = FT_Set_Charmap(face, found);
-      IntUnLockFreeType;
       if (error)
 	{
 	  DPRINT1("WARNING: Could not set the charmap!\n");
 	}
     }
 
-  IntLockFreeType;
+  Render = IntIsFontRenderingEnabled();
+  if (Render)
+    RenderMode = IntGetFontRenderMode(&TextObj->logfont.elfEnumLogfontEx.elfLogFont);
+  else
+    RenderMode = FT_RENDER_MODE_MONO;
+
   error = FT_Set_Pixel_Sizes(face,
                              TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfWidth,
                              /* FIXME should set character height if neg */
                              (TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight < 0 ?
                               - TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight :
                               TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight == 0 ? 11 : TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight));
-  IntUnLockFreeType;
   if (error)
     {
       DPRINT1("Error in setting pixel sizes: %u\n", error);
@@ -3513,27 +3519,36 @@ TextIntGetTextExtentPoint(PDC dc,
 
   for (i = 0; i < Count; i++)
     {
-      IntLockFreeType;
       glyph_index = FT_Get_Char_Index(face, *String);
-      error = FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT);
-      IntUnLockFreeType;
-      if (error)
-	{
-	  DPRINT1("WARNING: Failed to load and render glyph! [index: %u]\n", glyph_index);
-	}
-      glyph = face->glyph;
+      if (!(realglyph = NtGdiGlyphCacheGet(face, glyph_index,
+          TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight)))
+        {
+          error = FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT);
+          if (error)
+            {
+              DPRINT1("WARNING: Failed to load and render glyph! [index: %u]\n", glyph_index);
+              break;
+            }
+
+          glyph = face->glyph;
+          realglyph = NtGdiGlyphCacheSet(face, glyph_index,
+             TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight, glyph, RenderMode);
+          if (!realglyph)
+            {
+              DPRINT1("Failed to render glyph! [index: %u]\n", glyph_index);
+              break;
+            }
+        }
 
       /* retrieve kerning distance */
       if (use_kerning && previous && glyph_index)
 	{
 	  FT_Vector delta;
-          IntLockFreeType;
 	  FT_Get_Kerning(face, previous, glyph_index, 0, &delta);
-          IntUnLockFreeType;
 	  TotalWidth += delta.x;
 	}
 
-      TotalWidth += glyph->advance.x;
+      TotalWidth += realglyph->advance.x >> 10;
 
       if (((TotalWidth + 32) >> 6) <= MaxExtent && NULL != Fit)
 	{
@@ -3547,6 +3562,7 @@ TextIntGetTextExtentPoint(PDC dc,
       previous = glyph_index;
       String++;
     }
+  IntUnLockFreeType;
 
   Size->cx = (TotalWidth + 32) >> 6;
   Size->cy = (TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight < 0 ? - TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight : TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight);
