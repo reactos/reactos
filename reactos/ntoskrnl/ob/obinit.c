@@ -298,7 +298,7 @@ ObPostPhase0:
     if (!NT_SUCCESS(Status)) return FALSE;
 
     /* Initialize lookup context */
-    ObpInitializeDirectoryLookup(&Context);
+    ObpInitializeLookupContext(&Context);
 
     /* Lock it */
     ObpAcquireDirectoryLockExclusive(ObpTypeDirectoryObject, &Context);
@@ -339,7 +339,7 @@ ObPostPhase0:
     }
 
     /* Cleanup after lookup */
-    ObpCleanupDirectoryLookup(&Context);
+    ObpReleaseLookupContext(&Context);
 
     /* Initialize DOS Devices Directory and related Symbolic Links */
     Status = ObpCreateDosDevicesDirectory();

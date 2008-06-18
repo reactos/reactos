@@ -80,7 +80,7 @@ ObpDeallocateObject(IN PVOID Object)
         if (Header->ObjectCreateInfo)
         {
             /* Free it */
-            ObpFreeAndReleaseCapturedAttributes(Header->ObjectCreateInfo);
+            ObpFreeObjectCreateInformation(Header->ObjectCreateInfo);
             Header->ObjectCreateInfo = NULL;
         }
     }
@@ -311,7 +311,7 @@ ObpAllocateObjectNameBuffer(IN ULONG Length,
     {
         /* Allocate from the lookaside */
         //MaximumLength = 248; <= hack, we should actually set this...!
-        Buffer = ObpAllocateCapturedAttributes(LookasideNameBufferList);
+        Buffer = ObpAllocateObjectCreateInfoBuffer(LookasideNameBufferList);
     }
 
     /* Setup the string */
@@ -418,7 +418,7 @@ ObpCaptureObjectName(IN OUT PUNICODE_STRING CapturedName,
 
 NTSTATUS
 NTAPI
-ObpCaptureObjectAttributes(IN POBJECT_ATTRIBUTES ObjectAttributes,
+ObpCaptureObjectCreateInformation(IN POBJECT_ATTRIBUTES ObjectAttributes,
                            IN KPROCESSOR_MODE AccessMode,
                            IN BOOLEAN AllocateFromLookaside,
                            IN POBJECT_CREATE_INFORMATION ObjectCreateInfo,
@@ -541,7 +541,7 @@ ObpCaptureObjectAttributes(IN POBJECT_ATTRIBUTES ObjectAttributes,
     }
 
     /* Cleanup if we failed */
-    if (!NT_SUCCESS(Status)) ObpReleaseCapturedAttributes(ObjectCreateInfo);
+    if (!NT_SUCCESS(Status)) ObpFreeObjectCreateInformation(ObjectCreateInfo);
 
     /* Return status to caller */
     return Status;
@@ -916,15 +916,15 @@ ObCreateObject(IN KPROCESSOR_MODE ProbeMode OPTIONAL,
     POBJECT_HEADER Header;
 
     /* Allocate a capture buffer */
-    ObjectCreateInfo = ObpAllocateCapturedAttributes(LookasideCreateInfoList);
+    ObjectCreateInfo = ObpAllocateObjectCreateInfoBuffer(LookasideCreateInfoList);
     if (!ObjectCreateInfo) return STATUS_INSUFFICIENT_RESOURCES;
 
     /* Capture all the info */
-    Status = ObpCaptureObjectAttributes(ObjectAttributes,
-                                        ProbeMode,
-                                        FALSE,
-                                        ObjectCreateInfo,
-                                        &ObjectName);
+    Status = ObpCaptureObjectCreateInformation(ObjectAttributes,
+                                               ProbeMode,
+                                               FALSE,
+                                               ObjectCreateInfo,
+                                               &ObjectName);
     if (NT_SUCCESS(Status))
     {
         /* Validate attributes */
@@ -984,7 +984,7 @@ ObCreateObject(IN KPROCESSOR_MODE ProbeMode OPTIONAL,
         }
 
         /* Release the Capture Info, we don't need it */
-        ObpReleaseCapturedAttributes(ObjectCreateInfo);
+        ObpFreeObjectCreateInformation(ObjectCreateInfo);
         if (ObjectName.Buffer) ObpFreeObjectNameBuffer(&ObjectName);
     }
 
@@ -1038,7 +1038,7 @@ ObCreateObjectType(IN PUNICODE_STRING TypeName,
     }
 
     /* Setup a lookup context */
-    ObpInitializeDirectoryLookup(&Context);
+    ObpInitializeLookupContext(&Context);
 
     /* Check if we've already created the directory of types */
     if (ObpTypeDirectoryObject)
@@ -1054,7 +1054,7 @@ ObCreateObjectType(IN PUNICODE_STRING TypeName,
                                     &Context))
         {
             /* We have already created it, so fail */
-            ObpCleanupDirectoryLookup(&Context);
+            ObpReleaseLookupContext(&Context);
             return STATUS_OBJECT_NAME_COLLISION;
         }
     }
@@ -1066,7 +1066,7 @@ ObCreateObjectType(IN PUNICODE_STRING TypeName,
     if (!ObjectName.Buffer)
     {
         /* Out of memory, fail */
-        ObpCleanupDirectoryLookup(&Context);
+        ObpReleaseLookupContext(&Context);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
@@ -1084,7 +1084,7 @@ ObCreateObjectType(IN PUNICODE_STRING TypeName,
     if (!NT_SUCCESS(Status))
     {
         /* Free the name and fail */
-        ObpCleanupDirectoryLookup(&Context);
+        ObpReleaseLookupContext(&Context);
         ExFreePool(ObjectName.Buffer);
         return Status;
     }
@@ -1224,7 +1224,7 @@ ObCreateObjectType(IN PUNICODE_STRING TypeName,
         }
 
         /* Cleanup the lookup context */
-        ObpCleanupDirectoryLookup(&Context);
+        ObpReleaseLookupContext(&Context);
 
         /* Return the object type and success */
         *ObjectType = LocalObjectType;
@@ -1232,7 +1232,7 @@ ObCreateObjectType(IN PUNICODE_STRING TypeName,
     }
 
     /* If we got here, then we failed */
-    ObpCleanupDirectoryLookup(&Context);
+    ObpReleaseLookupContext(&Context);
     return STATUS_INSUFFICIENT_RESOURCES;
 }
 

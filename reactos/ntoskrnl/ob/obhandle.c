@@ -1467,7 +1467,7 @@ ObpCreateHandle(IN OB_OPEN_REASON OpenReason,
     if ((Type) && (ObjectType != Type))
     {
         /* They don't, cleanup */
-        if (Context) ObpCleanupDirectoryLookup(Context);
+        if (Context) ObpReleaseLookupContext(Context);
         return STATUS_OBJECT_TYPE_MISMATCH;
     }
 
@@ -1508,7 +1508,7 @@ ObpCreateHandle(IN OB_OPEN_REASON OpenReason,
          * We failed (meaning security failure, according to NT Internals)
          * detach and return
          */
-        if (Context) ObpCleanupDirectoryLookup(Context);
+        if (Context) ObpReleaseLookupContext(Context);
         if (AttachedToProcess) KeUnstackDetachProcess(&ApcState);
         return Status;
     }
@@ -1545,7 +1545,7 @@ ObpCreateHandle(IN OB_OPEN_REASON OpenReason,
     }
 
     /* Now we can release the object */
-    if (Context) ObpCleanupDirectoryLookup(Context);
+    if (Context) ObpReleaseLookupContext(Context);
 
     /* Save the access mask */
     NewEntry.GrantedAccess = GrantedAccess;
@@ -2417,11 +2417,11 @@ ObOpenObjectByName(IN POBJECT_ATTRIBUTES ObjectAttributes,
     if (!TempBuffer) return STATUS_INSUFFICIENT_RESOURCES;
 
     /* Capture all the info */
-    Status = ObpCaptureObjectAttributes(ObjectAttributes,
-                                        AccessMode,
-                                        TRUE,
-                                        &TempBuffer->ObjectCreateInfo,
-                                        &ObjectName);
+    Status = ObpCaptureObjectCreateInformation(ObjectAttributes,
+                                               AccessMode,
+                                               TRUE,
+                                               &TempBuffer->ObjectCreateInfo,
+                                               &ObjectName);
     if (!NT_SUCCESS(Status))
     {
         /* Fail */
@@ -2467,7 +2467,7 @@ ObOpenObjectByName(IN POBJECT_ATTRIBUTES ObjectAttributes,
     if (!NT_SUCCESS(Status))
     {
         /* Cleanup after lookup */
-        ObpCleanupDirectoryLookup(&TempBuffer->LookupContext);
+        ObpReleaseLookupContext(&TempBuffer->LookupContext);
         goto Cleanup;
     }
 
@@ -2482,7 +2482,7 @@ ObOpenObjectByName(IN POBJECT_ATTRIBUTES ObjectAttributes,
         if (ObjectHeader->ObjectCreateInfo)
         {
             /* Free it */
-            ObpFreeAndReleaseCapturedAttributes(ObjectHeader->
+            ObpFreeObjectCreateInformation(ObjectHeader->
                                                 ObjectCreateInfo);
             ObjectHeader->ObjectCreateInfo = NULL;
         }
@@ -2501,7 +2501,7 @@ ObOpenObjectByName(IN POBJECT_ATTRIBUTES ObjectAttributes,
         Status = STATUS_INVALID_PARAMETER;
 
         /* Cleanup after lookup */
-        ObpCleanupDirectoryLookup(&TempBuffer->LookupContext);
+        ObpReleaseLookupContext(&TempBuffer->LookupContext);
 
         /* Dereference the object */
         ObDereferenceObject(Object);
@@ -2531,7 +2531,7 @@ Cleanup:
 
 Quickie:
     /* Release the object attributes and temporary buffer */
-    ObpReleaseCapturedAttributes(&TempBuffer->ObjectCreateInfo);
+    ObpReleaseObjectCreateInformation(&TempBuffer->ObjectCreateInfo);
     if (ObjectName.Buffer) ObpFreeObjectNameBuffer(&ObjectName);
     ExFreePool(TempBuffer);
 
@@ -2813,7 +2813,7 @@ ObInsertObject(IN PVOID Object,
 
     /* Get the create and name info, as well as the object type */
     ObjectCreateInfo = ObjectHeader->ObjectCreateInfo;
-    ObjectNameInfo = ObpAcquireNameInformation(ObjectHeader);
+    ObjectNameInfo = ObpReferenceNameInfo(ObjectHeader);
     ObjectType = ObjectHeader->Type;
     ObjectName = NULL;
 
@@ -2849,10 +2849,10 @@ ObInsertObject(IN PVOID Object,
                                         Handle);
 
         /* Free the create information */
-        ObpFreeAndReleaseCapturedAttributes(ObjectCreateInfo);
+        ObpFreeObjectCreateInformation(ObjectCreateInfo);
 
         /* Release the object name information */
-        ObpReleaseNameInformation(ObjectNameInfo);
+        ObpDereferenceNameInfo(ObjectNameInfo);
 
         /* Remove the extra keep-alive reference */
         ObDereferenceObject(Object);
@@ -2878,7 +2878,7 @@ ObInsertObject(IN PVOID Object,
         if (!NT_SUCCESS(Status))
         {
             /* Fail */
-            ObpReleaseNameInformation(ObjectNameInfo);
+            ObpDereferenceNameInfo(ObjectNameInfo);
             ObDereferenceObject(Object);
             return Status;
         }
@@ -2892,13 +2892,13 @@ ObInsertObject(IN PVOID Object,
     if (!NT_SUCCESS(Status))
     {
         /* Fail */
-        ObpReleaseNameInformation(ObjectNameInfo);
+        ObpDereferenceNameInfo(ObjectNameInfo);
         ObDereferenceObject(Object);
         return Status;
     }
 
     /* Setup a lookup context */
-    ObpInitializeDirectoryLookup(&Context);
+    ObpInitializeLookupContext(&Context);
     InsertObject = Object;
     OpenReason = ObCreateHandle;
 
@@ -2959,10 +2959,10 @@ ObInsertObject(IN PVOID Object,
         if (!NT_SUCCESS(Status))
         {
             /* Cleanup after lookup */
-            ObpCleanupDirectoryLookup(&Context);
+            ObpReleaseLookupContext(&Context);
 
             /* Remove query reference that we added */
-            ObpReleaseNameInformation(ObjectNameInfo);
+            ObpDereferenceNameInfo(ObjectNameInfo);
 
             /* Dereference the object and delete the access state */
             ObDereferenceObject(Object);
@@ -3038,10 +3038,10 @@ ObInsertObject(IN PVOID Object,
             }
 
             /* Cleanup the lookup */
-            ObpCleanupDirectoryLookup(&Context);
+            ObpReleaseLookupContext(&Context);
 
             /* Remove query reference that we added */
-            ObpReleaseNameInformation(ObjectNameInfo);
+            ObpDereferenceNameInfo(ObjectNameInfo);
 
             /* Dereference the object and delete the access state */
             ObDereferenceObject(Object);
@@ -3086,7 +3086,7 @@ ObInsertObject(IN PVOID Object,
         }
 
         /* Remove a query reference */
-        ObpReleaseNameInformation(ObjectNameInfo);
+        ObpDereferenceNameInfo(ObjectNameInfo);
 
         /* Remove the extra keep-alive reference */
         ObDereferenceObject(Object);
@@ -3109,7 +3109,7 @@ ObInsertObject(IN PVOID Object,
     }
 
     /* We can delete the Create Info now */
-    ObpFreeAndReleaseCapturedAttributes(ObjectCreateInfo);
+    ObpFreeObjectCreateInformation(ObjectCreateInfo);
 
     /* Check if we created our own access state and delete it if so */
     if (AccessState == &LocalAccessState) SeDeleteAccessState(AccessState);

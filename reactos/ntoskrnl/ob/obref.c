@@ -429,7 +429,7 @@ ObReferenceObjectByName(IN PUNICODE_STRING ObjectPath,
                                  &Object);
 
     /* Cleanup after lookup */
-    ObpCleanupDirectoryLookup(&Context);
+    ObpReleaseLookupContext(&Context);
 
     /* Check if the lookup succeeded */
     if (NT_SUCCESS(Status))

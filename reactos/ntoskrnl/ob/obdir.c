@@ -262,7 +262,7 @@ Quickie:
     {
         /* Get the object name information */
         ObjectHeader = OBJECT_TO_OBJECT_HEADER(FoundObject);
-        ObpAcquireNameInformation(ObjectHeader);
+        ObpReferenceNameInfo(ObjectHeader);
 
         /* Reference the object being looked up */
         ObReferenceObject(FoundObject);
@@ -281,7 +281,7 @@ Quickie:
         /* We already did a lookup, so remove this object's query reference */
         ObjectHeader = OBJECT_TO_OBJECT_HEADER(Context->Object);
         HeaderNameInfo = OBJECT_HEADER_TO_NAME_INFO(ObjectHeader);
-        ObpReleaseNameInformation(HeaderNameInfo);
+        ObpDereferenceNameInfo(HeaderNameInfo);
 
         /* Also dereference the object itself */
         ObDereferenceObject(Context->Object);
@@ -480,7 +480,7 @@ NtQueryDirectoryObject(IN HANDLE DirectoryHandle,
     PAGED_CODE();
 
     /* Initialize lookup */
-    ObpInitializeDirectoryLookup(&LookupContext);
+    ObpInitializeLookupContext(&LookupContext);
 
     /* Check if we need to do any probing */
     if (PreviousMode != KernelMode)

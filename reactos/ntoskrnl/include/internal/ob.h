@@ -562,7 +562,7 @@ ObpCaptureObjectName(
 
 NTSTATUS
 NTAPI
-ObpCaptureObjectAttributes(
+ObpCaptureObjectCreateInformation(
     IN POBJECT_ATTRIBUTES ObjectAttributes,
     IN KPROCESSOR_MODE AccessMode,
     IN BOOLEAN AllocateFromLookaside,

@@ -66,7 +66,7 @@
 // We can call the Ob Inlined API, it's the same thing
 //
 #define IopAllocateMdlFromLookaside                     \
-    ObpAllocateCapturedAttributes
+    ObpAllocateObjectCreateInfoBuffer
 #define IopFreeMdlFromLookaside                         \
     ObpFreeCapturedAttributes
 

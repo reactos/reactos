@@ -179,7 +179,7 @@ ObpDeleteNameCheck(IN PVOID Object)
 
     /* Get object structures */
     ObjectHeader = OBJECT_TO_OBJECT_HEADER(Object);
-    ObjectNameInfo = ObpAcquireNameInformation(ObjectHeader);
+    ObjectNameInfo = ObpReferenceNameInfo(ObjectHeader);
     ObjectType = ObjectHeader->Type;
 
     /*
@@ -193,7 +193,7 @@ ObpDeleteNameCheck(IN PVOID Object)
          !(ObjectHeader->Flags & OB_FLAG_PERMANENT))
     {
         /* Setup a lookup context */
-        ObpInitializeDirectoryLookup(&Context);
+        ObpInitializeLookupContext(&Context);
 
         /* Lock the directory */
         ObpAcquireDirectoryLockExclusive(ObjectNameInfo->Directory, &Context);
@@ -242,16 +242,16 @@ ObpDeleteNameCheck(IN PVOID Object)
         }
 
         /* Cleanup after lookup */
-        ObpCleanupDirectoryLookup(&Context);
+        ObpReleaseLookupContext(&Context);
 
         /* Remove another query reference since we added one on top */
-        ObpReleaseNameInformation(ObjectNameInfo);
+        ObpDereferenceNameInfo(ObjectNameInfo);
 
         /* Check if we were inserted in a directory */
         if (Directory)
         {
             /* We were, so first remove the extra reference we had added */
-            ObpReleaseNameInformation(ObjectNameInfo);
+            ObpDereferenceNameInfo(ObjectNameInfo);
 
             /* Now dereference the object as well */
             ObDereferenceObject(Object);
@@ -260,7 +260,7 @@ ObpDeleteNameCheck(IN PVOID Object)
     else
     {
         /* Remove the reference we added */
-        ObpReleaseNameInformation(ObjectNameInfo);
+        ObpDereferenceNameInfo(ObjectNameInfo);
     }
 }
 
@@ -300,7 +300,7 @@ ObpLookupObjectName(IN HANDLE RootHandle OPTIONAL,
             InsertObject);
 
     /* Initialize starting state */
-    ObpInitializeDirectoryLookup(LookupContext);
+    ObpInitializeLookupContext(LookupContext);
     *FoundObject = NULL;
     Status = STATUS_SUCCESS;
     Object = NULL;
@@ -755,7 +755,7 @@ ReparseObject:
                 InterlockedExchangeAdd(&ObjectHeader->PointerCount, 1);
 
                 /* Cleanup from the first lookup */
-                ObpCleanupDirectoryLookup(LookupContext);
+                ObpReleaseLookupContext(LookupContext);
 
                 /* Check if we have a referenced directory */
                 if (ReferencedDirectory)
@@ -931,7 +931,7 @@ ReparseObject:
     if (!NT_SUCCESS(Status))
     {
         /* Cleanup after lookup */
-        ObpCleanupDirectoryLookup(LookupContext);
+        ObpReleaseLookupContext(LookupContext);
     }
 
     /* Check if we have a device map and dereference it if so */

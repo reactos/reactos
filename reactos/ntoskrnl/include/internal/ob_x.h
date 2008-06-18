@@ -79,7 +79,7 @@ ObpReleaseObjectLock(IN POBJECT_HEADER ObjectHeader)
 
 POBJECT_HEADER_NAME_INFO
 FORCEINLINE
-ObpAcquireNameInformation(IN POBJECT_HEADER ObjectHeader)
+ObpReferenceNameInfo(IN POBJECT_HEADER ObjectHeader)
 {
     POBJECT_HEADER_NAME_INFO ObjectNameInfo;
     ULONG NewValue, References;
@@ -120,7 +120,7 @@ ObpAcquireNameInformation(IN POBJECT_HEADER ObjectHeader)
 
 VOID
 FORCEINLINE
-ObpReleaseNameInformation(IN POBJECT_HEADER_NAME_INFO HeaderNameInfo)
+ObpDereferenceNameInfo(IN POBJECT_HEADER_NAME_INFO HeaderNameInfo)
 {
     POBJECT_DIRECTORY Directory;
 
@@ -198,7 +198,7 @@ ObpReleaseDirectoryLock(IN POBJECT_DIRECTORY Directory,
 
 VOID
 FORCEINLINE
-ObpInitializeDirectoryLookup(IN POBP_LOOKUP_CONTEXT Context)
+ObpInitializeLookupContext(IN POBP_LOOKUP_CONTEXT Context)
 {
     /* Initialize a null context */
     Context->Object = NULL;
@@ -222,7 +222,7 @@ ObpReleaseLookupContextObject(IN POBP_LOOKUP_CONTEXT Context)
         HeaderNameInfo = OBJECT_HEADER_TO_NAME_INFO(ObjectHeader);
 
         /* release the name information */
-        ObpReleaseNameInformation(HeaderNameInfo);
+        ObpDereferenceNameInfo(HeaderNameInfo);
 
         /* Dereference the object */
         ObDereferenceObject(Context->Object);
@@ -232,7 +232,7 @@ ObpReleaseLookupContextObject(IN POBP_LOOKUP_CONTEXT Context)
 
 VOID
 FORCEINLINE
-ObpCleanupDirectoryLookup(IN POBP_LOOKUP_CONTEXT Context)
+ObpReleaseLookupContext(IN POBP_LOOKUP_CONTEXT Context)
 {
     /* Check if we came back with the directory locked */
     if (Context->DirectoryLocked)
@@ -273,7 +273,7 @@ ObpLeaveObjectTypeMutex(IN POBJECT_TYPE ObjectType)
 
 VOID
 FORCEINLINE
-ObpReleaseCapturedAttributes(IN POBJECT_CREATE_INFORMATION ObjectCreateInfo)
+ObpReleaseObjectCreateInformation(IN POBJECT_CREATE_INFORMATION ObjectCreateInfo)
 {
     /* Check if we have a security descriptor */
     if (ObjectCreateInfo->SecurityDescriptor)
@@ -288,7 +288,7 @@ ObpReleaseCapturedAttributes(IN POBJECT_CREATE_INFORMATION ObjectCreateInfo)
 
 PVOID
 FORCEINLINE
-ObpAllocateCapturedAttributes(IN PP_NPAGED_LOOKASIDE_NUMBER Type)
+ObpAllocateObjectCreateInfoBuffer(IN PP_NPAGED_LOOKASIDE_NUMBER Type)
 {
     PVOID Buffer;
     PNPAGED_LOOKASIDE_LIST List;
@@ -369,10 +369,10 @@ ObpFreeCapturedAttributes(IN PVOID Buffer,
 
 VOID
 FORCEINLINE
-ObpFreeAndReleaseCapturedAttributes(IN POBJECT_CREATE_INFORMATION ObjectCreateInfo)
+ObpFreeObjectCreateInformation(IN POBJECT_CREATE_INFORMATION ObjectCreateInfo)
 {
     /* First release the attributes, then free them from the lookaside list */
-    ObpReleaseCapturedAttributes(ObjectCreateInfo);
+    ObpReleaseObjectCreateInformation(ObjectCreateInfo);
     ObpFreeCapturedAttributes(ObjectCreateInfo, LookasideCreateInfoList);
 }
 
