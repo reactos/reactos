@@ -393,6 +393,9 @@ HKLM,"SYSTEM\CurrentControlSet\Control\NLS\CodePage","28596",0x00000000,"c_28596
 HKLM,"SYSTEM\CurrentControlSet\Control\NLS\CodePage","28597",0x00000000,"c_28597.nls"
 HKLM,"SYSTEM\CurrentControlSet\Control\NLS\CodePage","28598",0x00000000,"c_28598.nls"
 HKLM,"SYSTEM\CurrentControlSet\Control\NLS\CodePage","28599",0x00000000,"c_28599.nls"
+HKLM,"SYSTEM\CurrentControlSet\Control\NLS\CodePage","ACP",0x00000000,"1252"
+HKLM,"SYSTEM\CurrentControlSet\Control\NLS\CodePage","OEMCP",0x00000000,"437"
+HKLM,"SYSTEM\CurrentControlSet\Control\NLS\CodePage","MACCP",0x00000000,"10000"
 
 ; NLS Language settings
 HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language","0402",0x00000000,"l_intl.nls"
