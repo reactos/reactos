@@ -11,10 +11,11 @@ extern HINSTANCE hInstance;
 
 typedef struct _MAIN_WND_INFO
 {
-    HWND  hMainWnd;
-    HWND  hBrowseDlg;
-    HWND  hStatus;
-    int   nCmdShow;
+    HWND hMainWnd;
+    HWND hBrowseDlg;
+    HWND hBrowseTV;
+    HWND hStatus;
+    int  nCmdShow;
 
     HICON hSmIcon;
     HICON hBgIcon;
@@ -25,14 +26,19 @@ typedef struct _MAIN_WND_INFO
     BOOL bIsUserAnAdmin;
 
     LPWSTR lpDllList;
+    INT numDlls;
 
 } MAIN_WND_INFO, *PMAIN_WND_INFO;
+
+/* dll exports */
+wchar_t *GetTestName();
 
 
 /* browsewnd.c */
 BOOL CALLBACK BrowseDlgProc(HWND hDlg, UINT Message, WPARAM wParam, LPARAM lParam);
 
 /* misc.c */
+HIMAGELIST InitImageList(UINT StartResource, UINT EndResource, UINT Width, UINT Height);
 VOID DisplayString(LPWSTR lpMsg);
 VOID DisplayError(INT err);
 

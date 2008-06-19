@@ -3,7 +3,7 @@
 #define IDM_ABOUT                       104
 #define IDM_EXIT                        105
 #define IDI_ICON                        107
-#define IDI_SMALL                       108
+#define IDI_TESTS                       108
 #define IDC_DELETE                      109
 #define IDR_MAINFRAME                   128
 #define IDC_LIST                        1000

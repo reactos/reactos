@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Character Map
+ * PROJECT:     ReactOS API Test GUI
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        
  * PURPOSE:     main dialog implementation

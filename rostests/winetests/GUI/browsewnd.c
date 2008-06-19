@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Character Map
+ * PROJECT:     ReactOS API Test GUI
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        
  * PURPOSE:     browse dialog implementation
@@ -10,6 +10,10 @@
 #include <precomp.h>
 
 #define DLL_SEARCH_DIR L"\\Debug\\testlibs\\*"
+#define IL_MAIN 0
+#define IL_TEST 1
+
+typedef wchar_t *(__cdecl *DLLNAME)();
 
 static INT
 GetNumberOfDllsInFolder(LPWSTR lpFolder)
@@ -128,31 +132,67 @@ InsertIntoTreeView(HWND hTreeView,
 static VOID
 PopulateTreeView(PMAIN_WND_INFO pInfo)
 {
-    HWND hTreeView;
     HTREEITEM hRoot;
-    HBITMAP hComp;
-    TCHAR ComputerName[MAX_PATH];
-    DWORD dwSize = MAX_PATH;
-    INT RootImage;
+    HIMAGELIST hImgList;
+    DLLNAME GetTestName;
+    HMODULE hDll;
+    LPWSTR lpDllPath;
+    LPWSTR lpTestName;
+    INT RootImage, i;
 
-    hTreeView = GetDlgItem(pInfo->hBrowseDlg, IDC_TREEVIEW);
+    pInfo->hBrowseTV = GetDlgItem(pInfo->hBrowseDlg, IDC_TREEVIEW);
 
-    (void)TreeView_DeleteAllItems(hTreeView);
+    (void)TreeView_DeleteAllItems(pInfo->hBrowseTV);
 
-        /* insert the root item into the tree */
-    hRoot = InsertIntoTreeView(hTreeView,
+    hImgList = InitImageList(IDI_ICON,
+                             IDI_TESTS,
+                             16,
+                             16);
+    if (!hImgList) return;
+
+    (void)TreeView_SetImageList(pInfo->hBrowseTV,
+                                hImgList,
+                                TVSIL_NORMAL);
+
+    /* insert the root item into the tree */
+    hRoot = InsertIntoTreeView(pInfo->hBrowseTV,
                                NULL,
-                               ComputerName,
+                               L"Full",
                                NULL,
-                               0);//RootImage);
+                               IL_MAIN);
+
+    for (i = 0; i < pInfo->numDlls; i++)
+    {
+        lpDllPath = pInfo->lpDllList + (MAX_PATH * i);
+
+        hDll = LoadLibraryW(lpDllPath);
+        if (hDll)
+        {
+            GetTestName = (DLLNAME)GetProcAddress(hDll, "GetTestName");
+            if (GetTestName)
+            {
+                lpTestName = GetTestName();
+
+                InsertIntoTreeView(pInfo->hBrowseTV,
+                                   hRoot,
+                                   lpTestName,
+                                   lpDllPath,
+                                   IL_TEST);
+
+                // add individual tests as children
+
+            }
+
+            FreeLibrary(hDll);
+        }
+    }
 }
 
 static VOID
 PopulateTestList(PMAIN_WND_INFO pInfo)
 {
-    INT numFiles;
-
-    if ((numFiles = GetListOfTestDlls(pInfo)))
+    pInfo->numDlls = GetListOfTestDlls(pInfo);
+    if (pInfo->numDlls)
     {
         PopulateTreeView(pInfo);
     }

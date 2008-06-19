@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Services
+ * PROJECT:     ReactOS API Test GUI
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        
  * PURPOSE:     miscallanous functions
@@ -221,15 +221,15 @@ InitImageList(UINT StartResource,
               UINT Width,
               UINT Height)
 {
-    HBITMAP hBitmap;
+    HICON hIcon;
     HIMAGELIST hImageList;
     UINT i;
-	INT Ret;
+    INT Ret;
 
     /* Create the toolbar icon image list */
     hImageList = ImageList_Create(Width,
                                   Height,
-                                  ILC_MASK | ILC_COLOR24,
+                                  ILC_MASK | ILC_COLOR32,
                                   EndResource - StartResource,
                                   0);
     if (hImageList == NULL)
@@ -238,23 +238,26 @@ InitImageList(UINT StartResource,
     /* Add all icons to the image list */
     for (i = StartResource; i <= EndResource; i++)
     {
-        hBitmap = (HBITMAP)LoadImage(hInstance,
-                                     MAKEINTRESOURCE(i),
-                                     IMAGE_BITMAP,
-                                     Width,
-                                     Height,
-                                     LR_LOADTRANSPARENT);
-        if (hBitmap == NULL)
-            return NULL;
+        hIcon = (HBITMAP)LoadImage(hInstance,
+                                   MAKEINTRESOURCE(i),
+                                   IMAGE_ICON,
+                                   Width,
+                                   Height,
+                                   LR_DEFAULTCOLOR);
+        if (hIcon == NULL)
+            goto fail;
 
-        Ret = ImageList_AddMasked(hImageList,
-                                  hBitmap,
-                                  RGB(255, 0, 128));
+        Ret = ImageList_AddIcon(hImageList,
+                                hIcon);
         if (Ret == -1)
-            return NULL;
+            goto fail;
 
-        DeleteObject(hBitmap);
+        DestroyIcon(hIcon);
     }
 
     return hImageList;
+
+fail:
+    ImageList_Destroy(hImageList);
+    return NULL;
 }
