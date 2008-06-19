@@ -2515,6 +2515,7 @@ DC_AllocDC(PUNICODE_STRING Driver)
   TextIntRealizeFont(Dc_Attr->hlfntNew);
 
   NewDC->DcLevel.hpal = NtGdiGetStockObject(DEFAULT_PALETTE);
+  NewDC->DcLevel.laPath.eMiterLimit = 10.0;
 
   DC_UnlockDc(NewDC);
 
