@@ -14,6 +14,7 @@
 #define IL_TEST 1
 
 typedef wchar_t *(__cdecl *DLLNAME)();
+typedef int (_cdecl *MODULES)(char **);
 
 static INT
 GetNumberOfDllsInFolder(LPWSTR lpFolder)
@@ -135,6 +136,7 @@ PopulateTreeView(PMAIN_WND_INFO pInfo)
     HTREEITEM hRoot;
     HIMAGELIST hImgList;
     DLLNAME GetTestName;
+    MODULES GetModulesInTest;
     HMODULE hDll;
     LPWSTR lpDllPath;
     LPWSTR lpTestName;
@@ -171,16 +173,47 @@ PopulateTreeView(PMAIN_WND_INFO pInfo)
             GetTestName = (DLLNAME)GetProcAddress(hDll, "GetTestName");
             if (GetTestName)
             {
+                HTREEITEM hParent;
+                LPSTR lpModules, ptr;
+                LPWSTR lpModW;
+                INT numMods;
+
                 lpTestName = GetTestName();
 
-                InsertIntoTreeView(pInfo->hBrowseTV,
-                                   hRoot,
-                                   lpTestName,
-                                   lpDllPath,
-                                   IL_TEST);
+                hParent = InsertIntoTreeView(pInfo->hBrowseTV,
+                                             hRoot,
+                                             lpTestName,
+                                             lpDllPath,
+                                             IL_TEST);
 
-                // add individual tests as children
+                if (hParent)
+                {
+                    GetModulesInTest = (MODULES)GetProcAddress(hDll, "GetModulesInTest");
+                    if ((numMods = GetModulesInTest(&lpModules)))
+                    {
+                        ptr = lpModules;
+                        while (numMods && *ptr != '\0')
+                        {
+                            if (AnsiToUnicode(ptr, &lpModW))
+                            {
+                                InsertIntoTreeView(pInfo->hBrowseTV,
+                                                   hParent,
+                                                   lpModW,
+                                                   lpModW,
+                                                   IL_TEST);
 
+                                HeapFree(GetProcessHeap(), 0, lpModW);
+                            }
+
+                            while (*(ptr++) != '\0')
+                                ;
+
+                            numMods--;
+                        }
+
+                        HeapFree(GetProcessHeap(), 0, lpModules);
+                    }
+                }
             }
 
             FreeLibrary(hDll);

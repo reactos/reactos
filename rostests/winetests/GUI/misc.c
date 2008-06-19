@@ -24,7 +24,7 @@ LengthOfStrResource(IN HINSTANCE hInst,
     }
 
     /* There are always blocks of 16 strings */
-    lpName = (LPWSTR)MAKEINTRESOURCE((uID >> 4) + 1);
+    lpName = (LPWSTR)MAKEINTRESOURCEW((uID >> 4) + 1);
 
     /* Find the string table block */
     if ((hrSrc = FindResourceW(hInst, lpName, (LPWSTR)RT_STRING)) &&
@@ -238,12 +238,12 @@ InitImageList(UINT StartResource,
     /* Add all icons to the image list */
     for (i = StartResource; i <= EndResource; i++)
     {
-        hIcon = (HBITMAP)LoadImage(hInstance,
-                                   MAKEINTRESOURCE(i),
-                                   IMAGE_ICON,
-                                   Width,
-                                   Height,
-                                   LR_DEFAULTCOLOR);
+        hIcon = (HBITMAP)LoadImageW(hInstance,
+                                    MAKEINTRESOURCEW(i),
+                                    IMAGE_ICON,
+                                    Width,
+                                    Height,
+                                    LR_DEFAULTCOLOR);
         if (hIcon == NULL)
             goto fail;
 
@@ -260,4 +260,22 @@ InitImageList(UINT StartResource,
 fail:
     ImageList_Destroy(hImageList);
     return NULL;
+}
+
+DWORD
+AnsiToUnicode(LPCSTR lpSrcStr,
+              LPWSTR *lpDstStr)
+{
+    INT length;
+    INT ret = 0;
+
+    length = strlen(lpSrcStr) + 1;
+
+    *lpDstStr = (LPWSTR)HeapAlloc(GetProcessHeap(), 0, length * sizeof(WCHAR));
+    if (*lpDstStr)
+    {
+        ret = MultiByteToWideChar(CP_ACP, 0, lpSrcStr, -1, *lpDstStr, length);
+    }
+
+    return ret;
 }
