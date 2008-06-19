@@ -109,14 +109,10 @@ RtlAssert(
 
     #define UNIMPLEMENTED       DbgPrint("WARNING:  %s at %s:%d is UNIMPLEMENTED!\n",__FUNCTION__,__FILE__,__LINE__);
 
-    #define ERR_(ch, ...)       DbgPrintEx(DPFLTR_##ch##_ID, DPFLTR_ERROR_LEVEL, "(%s:%d) ", __FILE__, __LINE__), \
-                                DbgPrintEx(DPFLTR_##ch##_ID, DPFLTR_ERROR_LEVEL, __VA_ARGS__)
-    #define WARN_(ch, ...)      DbgPrintEx(DPFLTR_##ch##_ID, DPFLTR_WARNING_LEVEL, "(%s:%d) ", __FILE__, __LINE__), \
-                                DbgPrintEx(DPFLTR_##ch##_ID, DPFLTR_WARNING_LEVEL, __VA_ARGS__)
-    #define TRACE_(ch, ...)     DbgPrintEx(DPFLTR_##ch##_ID, DPFLTR_TRACE_LEVEL, "(%s:%d) ", __FILE__, __LINE__), \
-                                DbgPrintEx(DPFLTR_##ch##_ID, DPFLTR_TRACE_LEVEL, __VA_ARGS__)
-    #define INFO_(ch, ...)      DbgPrintEx(DPFLTR_##ch##_ID, DPFLTR_INFO_LEVEL, "(%s:%d) ", __FILE__, __LINE__), \
-                                DbgPrintEx(DPFLTR_##ch##_ID, DPFLTR_INFO_LEVEL, __VA_ARGS__)
+    #define ERR_(ch, fmt, ...)    DbgPrintEx(DPFLTR_##ch##_ID, DPFLTR_ERROR_LEVEL, "(%s:%d) " fmt, __FILE__, __LINE__, ##__VA_ARGS__)
+    #define WARN_(ch, fmt, ...)   DbgPrintEx(DPFLTR_##ch##_ID, DPFLTR_WARNING_LEVEL, "(%s:%d) " fmt, __FILE__, __LINE__, ##__VA_ARGS__)
+    #define TRACE_(ch, fmt, ...)  DbgPrintEx(DPFLTR_##ch##_ID, DPFLTR_TRACE_LEVEL, "(%s:%d) " fmt, __FILE__, __LINE__, ##__VA_ARGS__)
+    #define INFO_(ch, fmt, ...)   DbgPrintEx(DPFLTR_##ch##_ID, DPFLTR_INFO_LEVEL, "(%s:%d) " fmt, __FILE__, __LINE__, ##__VA_ARGS__)
 #else
 
     /* On non-debug builds, we never show these */
