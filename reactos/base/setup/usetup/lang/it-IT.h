@@ -381,9 +381,9 @@ static MUI_ENTRY itITDevicePageEntries[] =
         TEXT_STYLE_NORMAL
     },
     {
-        8,
+        3,
         14,
-        "Layout tastiera:",
+        "Nazionalit… tastiera:",
         TEXT_STYLE_NORMAL
     },
     {
@@ -573,7 +573,7 @@ static MUI_ENTRY itITFlushPageEntries[] =
     {
         10,
         8,
-        "Questo potrebbe impiegare un minuto",
+        "Questo potrebbe impiegare qualche minuto",
         TEXT_STYLE_NORMAL
     },
     {
@@ -809,7 +809,7 @@ static MUI_ENTRY itITSelectPartitionEntries[] =
     {
         8,
         11,
-        "\x07  Premere SU o GIU' per per selezionare un elemento della lista.",
+        "\x07  Premere SU o GIë per selezionare un elemento della lista.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -827,7 +827,7 @@ static MUI_ENTRY itITSelectPartitionEntries[] =
     {
         8,
         17,
-        "\x07  Premere D per cancellare una nuova partizione.",
+        "\x07  Premere D per cancellare una partizione esistente.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -861,7 +861,7 @@ static MUI_ENTRY itITFormatPartitionEntries[] =
     {
         6,
         10,
-        "Setup formattera la partizione. Premere INVIO per continuare.",
+        "Setup formatter… la partizione. Premere INVIO per continuare.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -895,7 +895,7 @@ static MUI_ENTRY itITInstallDirectoryEntries[] =
     {
         6,
         9,
-        "Scegliere una cartella dove volete che ReactOS verr… installato:",
+        "Scegliere una cartella dove volete che ReactOS sia installato:",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1033,7 +1033,7 @@ static MUI_ENTRY itITKeyboardSettingsEntries[] =
     {
         8,
         10,
-        "\x07  Premere SU o GIU' per per selezionare il tipo di tastiera desiderato.",
+        "\x07  Premere SU o GIë per selezionare il tipo di tastiera desiderato.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1079,13 +1079,13 @@ static MUI_ENTRY itITLayoutSettingsEntries[] =
     {
         6,
         8,
-        "Please select a layout to be installed by default.",
+        "Selezionare la nazionalit… predefinita della tastiera.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         10,
-        "\x07  Premere SU o GIU' per per selezionare il tipo di layout di tastiera",
+        "\x07  Premere SU o GIë per selezionare il tipo di tastiera",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1097,13 +1097,13 @@ static MUI_ENTRY itITLayoutSettingsEntries[] =
     {
         8,
         13,
-        "\x07  Premere ESC per tornare allapagina precedente senza modificare",
+        "\x07  Premere ESC per tornare alla pagina precedente senza modificare",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         14,
-        "   il layout di tastiera.",
+        "   la nazionalit… della tastiera.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1132,7 +1132,7 @@ static MUI_ENTRY itITPrepareCopyEntries[] =
     {
         6,
         8,
-        "Setup prepara il computer per la copia dei file di ReactOS. ",
+        "Setup sta preparando il computer per la copia dei file di ReactOS. ",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1167,7 +1167,7 @@ static MUI_ENTRY itITSelectFSEntries[] =
     {
         8,
         19,
-        "\x07  Premere SU o GIU' per selezionare un filesystem.",
+        "\x07  Premere SU o GIë per selezionare un filesystem.",
         0
     },
     {
@@ -1336,12 +1336,12 @@ MUI_ERROR itITErrorEntries[] =
     },
     {
         //ERROR_LOAD_KBLAYOUT,
-        "Setup non ha potuto caricare l'elenco di tipi di layout di tastiera.\n",
+        "Setup non ha potuto caricare l'elenco delle nazionalit… di tastiera.\n",
         "INVIO = Riavviare il computer"
     },
     {
         //ERROR_WARN_PARTITION,
-        "Setup ha trovato che al meno un disco fisso contiene una tabella delle\n"
+        "Setup ha trovato che almeno un disco fisso contiene una tabella delle\n"
         "partizioni incompatibile che non pu• essere gestita correttamente!\n"
         "\n"
         "Il creare o cancellare partizioni pu• distruggere la tabella delle partizioni.\n"
@@ -1360,7 +1360,7 @@ MUI_ERROR itITErrorEntries[] =
     },
     {
         //ERROR_DELETE_SPACE,
-        "Non si pu• cancellare spazio di disco non partizionato!\n"
+        "Non si pu• cancellare spazio in un disco non partizionato!\n"
         "\n"
         "  * Premere un tasto qualsiasi per continuare.",
         NULL
@@ -1377,7 +1377,7 @@ MUI_ERROR itITErrorEntries[] =
     },
     {
         //ERROR_UPDATE_KBSETTINGS,
-        "Setup non ha potuto aggiornare la configurazione di layout di tastiera.",
+        "Setup non ha potuto aggiornare la nazionalit… della tastiera.",
         "INVIO = Riavviare il computer"
     },
     {
@@ -1460,7 +1460,7 @@ MUI_ERROR itITErrorEntries[] =
     },
     {
         //ERROR_ADDING_CODEPAGE,
-        "Setup non ha potuto aggiungere la codepage al registry.\n"
+        "Setup non ha potuto aggiungere la codepage al registro.\n"
         "INVIO = Riavviare il computer"
     },
     {
@@ -1470,7 +1470,7 @@ MUI_ERROR itITErrorEntries[] =
     },
     {
         //ERROR_ADDING_KBLAYOUTS,
-        "Impossibile aggiungere le disposizioni di tastiera al registry.\n"
+        "Impossibile aggiungere le nazionalit… di tastiera al registro.\n"
         "INVIO = Riavviare il computer"
     },
     {
@@ -1597,11 +1597,11 @@ MUI_STRING itITStrings[] =
     {STRING_CREATEPARTITION,
      "   INVIO = Creare la partizione   ESC = Annulla   F3 = Esci"},
     {STRING_PARTFORMAT,
-    "Questa partizione verrà formattata successivamente."},
+    "Questa partizione sar… formattata successivamente."},
     {STRING_NONFORMATTEDPART,
     "Avete scelto di installare ReactOS su una partizione nuova o non formattata."},
     {STRING_INSTALLONPART,
-    "Setup installerà ReactOS sulla partitione"},
+    "Setup installer… ReactOS sulla partitione"},
     {STRING_CHECKINGPART,
     "Setup sta controllando la partizione selezionata."},
     {STRING_QUITCONTINUE,
@@ -1621,11 +1621,11 @@ MUI_STRING itITStrings[] =
     {STRING_FREEMEM,
      "Memoria libera"},
     {STRING_REGHIVEUPDATE,
-    "   Aggiornamento del registry hives..."},
+    "   Aggiornamento degli hives del registro..."},
     {STRING_IMPORTFILE,
     "   Importazione di %S..."},
     {STRING_DISPLAYETTINGSUPDATE,
-    "   Aggiornamento delle impostazioni del display nel registry..."},
+    "   Aggiornamento delle impostazioni dello schermo nel registro..."},
     {STRING_LOCALESETTINGSUPDATE,
     "   Aggiornamento delle impostazioni di regionalizzazione..."},
     {STRING_KEYBOARDSETTINGSUPDATE,
@@ -1639,9 +1639,9 @@ MUI_STRING itITStrings[] =
     {STRING_CONSOLEFAIL1,
     "Impossibile aprire la console\n\n"},
     {STRING_CONSOLEFAIL2,
-    "La causa piu' frequente di questo e' l'uso di una tastiera USB\n"},
+    "La causa pi— frequente di questo Š l'uso di una tastiera USB\n"},
     {STRING_CONSOLEFAIL3,
-    "le tastiere USB non sono ancora supportate per intero\n"},
+    "le tastiere USB non sono ancora completamente supportate\n"},
     {STRING_FORMATTINGDISK,
     "Setup sta formattando il disco"},
     {STRING_CHECKINGDISK,
@@ -1693,7 +1693,7 @@ MUI_STRING itITStrings[] =
     {STRING_GB,
     "GB"},
     {STRING_ADDKBLAYOUTS,
-    "Aggiunta delle disposizioni di tastiera"},
+    "Aggiunta delle nazionalit… di tastiera"},
     {0, 0}
 };
 

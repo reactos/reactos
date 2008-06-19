@@ -51,7 +51,7 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LTEXT       "I privilegi di amministrazione sono necessari per la maggior parte delle impostazioni seguenti.", IDC_STATIC, 12, 5, 236, 8
     GROUPBOX    "Prestazioni", IDC_STATIC, 6, 18, 244, 50
-    LTEXT       "Le opzioni di controllo delle prestazioni definiscono come è usata lamemoria dalle applicazioni, ha un effetto sulla velocità del computer.", IDC_STATIC, 16, 29, 210, 17
+    LTEXT       "Queste opzioni definiscono come è usata la memoria dalle applicazioni, ha un effetto sulla velocità del computer.", IDC_STATIC, 16, 29, 210, 17
     PUSHBUTTON  "Impostazioni", IDC_PERFOR, 194, 48, 50, 14
 
     GROUPBOX    "Profili utente", IDC_STATIC, 6,75,244,48

@@ -233,7 +233,7 @@ STRINGTABLE
 BEGIN
     IDS_CPLNAME "Suoni e Dispositivi audio"
     IDS_CPLDESCRIPTION "Cambia lo schema dei suoni per il tuo computer o configura le impostazioni per gli altoparlanti e i dispositivi di registrazione."
-    IDS_NO_SOUND "(None)"
+    IDS_NO_SOUND "(nessuno)"
 
     5825 "Errore del programma"
     5826 "Chiudere il programma"
@@ -248,9 +248,9 @@ BEGIN
     5835 "Menu popup"
     5836 "Minimizzare"
     5837 "Notifica nuova email"
-    5838 "Iniziare avigazione"
+    5838 "Iniziare navigazione"
     5839 "Aprire programma"
-    5840 "Stama completata"
+    5840 "Stampa completata"
     5841 "Ripristinare giù"
     5842 "Ripristinare su"
     5843 "Asterisco"

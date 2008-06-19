@@ -31,7 +31,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Installazione Video Driver"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-  LTEXT "The VMware(r) SVGA driver has been successfully installed. Please choose your favorite screen resolution:",-1,25,5,225,20
+  LTEXT "Il driver SVGA di VMware(r) è stato installato con successo, ora scegliere la risoluzione desiderata:",-1,25,5,225,20
   PUSHBUTTON "640x480", 1120, 25, 30, 65, 15, BS_AUTORADIOBUTTON
   PUSHBUTTON "800x600", 1400, 25, 45, 65, 15, BS_AUTORADIOBUTTON
   PUSHBUTTON "1024x768", 1792, 25, 60, 65, 15, BS_AUTORADIOBUTTON
