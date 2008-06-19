@@ -329,6 +329,10 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000081a","Layout File",
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000081a","Layout Text",0x00000000,"Serbian (Latin)"
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000081a","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5038"
 
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000412","Layout File",0x00000000,"kbdko.dll"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000412","Layout Text",0x00000000,"Korean"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000412","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5063"
+
 ; Network
 HKLM,"SYSTEM\CurrentControlSet\Control\Network\{4D36E972-E325-11CE-BFC1-08002BE10318}",,0x00000000,"Network Adapters"
 HKLM,"SYSTEM\CurrentControlSet\Control\Network\{4D36E972-E325-11CE-BFC1-08002BE10318}","Class",0x00000000,"Net"

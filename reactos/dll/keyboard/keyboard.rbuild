@@ -214,4 +214,7 @@
 	<directory name="kbdycl">
 		<xi:include href="kbdycl/kbdycl.rbuild" />
 	</directory>
+	<directory name="kbdko">
+		<xi:include href="kbdko/kbdko.rbuild" />
+	</directory>
 </group>
