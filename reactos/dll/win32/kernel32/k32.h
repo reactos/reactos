@@ -30,7 +30,6 @@
 #include <ctype.h>
 #include <stdio.h>
 #include <wchar.h>
-#include <tchar.h>
 
 /* DDK Driver Headers */
 #include <ntddbeep.h>

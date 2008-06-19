@@ -128,6 +128,42 @@ ExtendVirtualBuffer (
 /*
  * @unimplemented
  */
+int
+STDCALL
+FoldStringW (
+    DWORD   dwMapFlags,
+    LPCWSTR lpSrcStr,
+    int cchSrc,
+    LPWSTR  lpDestStr,
+    int cchDest
+    )
+{
+    STUB;
+    return 0;
+}
+
+
+/*
+ * @unimplemented
+ */
+int
+STDCALL
+FoldStringA (
+    DWORD   dwMapFlags,
+    LPCSTR  lpSrcStr,
+    int cchSrc,
+    LPSTR   lpDestStr,
+    int cchDest
+    )
+{
+    STUB;
+    return 0;
+}
+
+
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 FreeVirtualBuffer (
@@ -393,7 +429,7 @@ FindVolumeClose(
     )
 {
     STUB;
-    return HeapFree( GetProcessHeap(), 0, hFindVolume );
+    return 0;
 }
 
 /*
@@ -406,7 +442,7 @@ FindVolumeMountPointClose(
     )
 {
     STUB;
-    return HeapFree( GetProcessHeap(), 0, hFindVolumeMountPoint );
+    return 0;
 }
 
 /*
@@ -602,31 +638,8 @@ ReadFileScatter(
     LPOVERLAPPED lpOverlapped
     )
 {
-    PIO_STATUS_BLOCK io_status;
-    LARGE_INTEGER offset;
-    NTSTATUS status;
-
-    DPRINT("(%p %p %u %p)\n", hFile, aSegmentArray, nNumberOfBytesToRead, lpOverlapped);
-
-    offset.u.LowPart    = lpOverlapped->Offset;
-    offset.u.HighPart   = lpOverlapped->OffsetHigh;
-    io_status           = (PIO_STATUS_BLOCK)lpOverlapped;
-    io_status->Status = STATUS_PENDING;
-    io_status->Information = 0;
-
-    status = NtReadFileScatter(hFile,
-                               NULL,
-                               NULL,
-                               NULL,
-                               io_status,
-                               aSegmentArray,
-                               nNumberOfBytesToRead,
-                               &offset,
-                               NULL);
-
-    if (status) SetLastError(RtlNtStatusToDosError(status));
-
-    return !status;
+    STUB;
+    return 0;
 }
 
 /*
@@ -728,9 +741,23 @@ SetThreadExecutionState(
     return old;
 }
 
+/*
+ * @unimplemented
+ */
+BOOL
+STDCALL
+TzSpecificLocalTimeToSystemTime(
+    CONST TIME_ZONE_INFORMATION *lpTimeZoneInformation,
+    CONST SYSTEMTIME *lpLocalTime,
+    LPSYSTEMTIME lpUniversalTime
+    )
+{
+    STUB;
+    return 0;
+}
 
 /*
- * @implemented
+ * @unimplemented
  */
 BOOL
 STDCALL
@@ -742,31 +769,8 @@ WriteFileGather(
     LPOVERLAPPED lpOverlapped
     )
 {
-    PIO_STATUS_BLOCK io_status;
-    LARGE_INTEGER offset;
-    NTSTATUS Status;
-
-    DPRINT("%p %p %u %p\n", hFile, aSegmentArray, nNumberOfBytesToWrite, lpOverlapped);
-
-    offset.u.LowPart  = lpOverlapped->Offset;
-    offset.u.HighPart = lpOverlapped->OffsetHigh;
-    io_status         = (PIO_STATUS_BLOCK) lpOverlapped;
-    io_status->Status = STATUS_PENDING;
-    io_status->Information = 0;
-
-    Status = NtWriteFileGather(hFile,
-                               NULL,
-                               NULL,
-                               NULL,
-                               io_status,
-                               aSegmentArray,
-                               nNumberOfBytesToWrite,
-                               &offset,
-                               NULL);
-
-    if (Status) SetLastError(RtlNtStatusToDosError(Status));
-
-    return !Status;
+    STUB;
+    return 0;
 }
 
 /*
@@ -780,6 +784,39 @@ DeleteVolumeMountPointW(
 {
     STUB;
     return 0;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL
+STDCALL
+DnsHostnameToComputerNameW (
+	LPCWSTR hostname,
+    LPWSTR computername,
+	LPDWORD size
+    )
+{
+    DWORD len;
+
+    DPRINT("(%s, %p, %p): stub\n", hostname, computername, size);
+
+    if (!hostname || !size) return FALSE;
+    len = lstrlenW(hostname);
+
+    if (len > MAX_COMPUTERNAME_LENGTH)
+        len = MAX_COMPUTERNAME_LENGTH;
+
+    if (*size < len)
+    {
+        *size = len;
+        return FALSE;
+    }
+    if (!computername) return FALSE;
+
+    memcpy( computername, hostname, len * sizeof(WCHAR) );
+    computername[len + 1] = 0;
+    return TRUE;
 }
 
 /*
@@ -950,6 +987,24 @@ GetVolumePathNamesForVolumeNameW(
  */
 BOOL
 STDCALL
+ReplaceFileW(
+    LPCWSTR lpReplacedFileName,
+    LPCWSTR lpReplacementFileName,
+    LPCWSTR lpBackupFileName,
+    DWORD   dwReplaceFlags,
+    LPVOID  lpExclude,
+    LPVOID  lpReserved
+    )
+{
+    STUB;
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL
+STDCALL
 SetFirmwareEnvironmentVariableW(
     LPCWSTR lpName,
     LPCWSTR lpGuid,
@@ -982,6 +1037,21 @@ BOOL
 STDCALL
 DeleteVolumeMountPointA(
     LPCSTR lpszVolumeMountPoint
+    )
+{
+    STUB;
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL
+STDCALL
+DnsHostnameToComputerNameA (
+    LPCSTR Hostname,
+    LPSTR ComputerName,
+    LPDWORD nSize
     )
 {
     STUB;
@@ -1132,6 +1202,24 @@ GetVolumePathNamesForVolumeNameA(
  */
 BOOL
 STDCALL
+ReplaceFileA(
+    LPCSTR  lpReplacedFileName,
+    LPCSTR  lpReplacementFileName,
+    LPCSTR  lpBackupFileName,
+    DWORD   dwReplaceFlags,
+    LPVOID  lpExclude,
+    LPVOID  lpReserved
+    )
+{
+    STUB;
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL
+STDCALL
 SetFirmwareEnvironmentVariableA(
     LPCSTR lpName,
     LPCSTR lpGuid,
@@ -1256,9 +1344,18 @@ BOOL STDCALL IsValidUILanguage(LANGID langid)
 /*
  * @unimplemented
  */
-VOID STDCALL NlsConvertIntegerToString(ULONG Value, ULONG Base, ULONG strsize, LPWSTR str, ULONG strsize2)
+VOID STDCALL NlsConvertIntegerToString(ULONG Value,ULONG Base,ULONG strsize, LPWSTR str, ULONG strsize2)
 {
     STUB;
+}
+
+/*
+ * @unimplemented
+ */
+UINT STDCALL SetCPGlobal(UINT CodePage)
+{
+    STUB;
+    return 0;
 }
 
 /*

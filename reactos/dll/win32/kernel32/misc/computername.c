@@ -35,9 +35,9 @@
 /* FUNCTIONS *****************************************************************/
 
 static BOOL GetComputerNameFromRegistry( LPWSTR RegistryKey,
-                     LPWSTR ValueNameStr,
-                     LPWSTR lpBuffer,
-                     LPDWORD nSize ) {
+					 LPWSTR ValueNameStr,
+					 LPWSTR lpBuffer,
+					 LPDWORD nSize ) {
     PKEY_VALUE_PARTIAL_INFORMATION KeyInfo;
     OBJECT_ATTRIBUTES ObjectAttributes;
     UNICODE_STRING KeyName;
@@ -49,61 +49,62 @@ static BOOL GetComputerNameFromRegistry( LPWSTR RegistryKey,
 
     RtlInitUnicodeString (&KeyName,RegistryKey);
     InitializeObjectAttributes (&ObjectAttributes,
-                &KeyName,
-                OBJ_CASE_INSENSITIVE,
-                NULL,
-                NULL);
+				&KeyName,
+				OBJ_CASE_INSENSITIVE,
+				NULL,
+				NULL);
     Status = ZwOpenKey (&KeyHandle,
-            KEY_READ,
-            &ObjectAttributes);
+			KEY_READ,
+			&ObjectAttributes);
     if (!NT_SUCCESS(Status))
     {
-    SetLastErrorByStatus (Status);
-    return FALSE;
+	SetLastErrorByStatus (Status);
+	return FALSE;
     }
 
-    KeyInfoSize = sizeof(KEY_VALUE_PARTIAL_INFORMATION) + *nSize * sizeof(WCHAR);
+    KeyInfoSize = sizeof(KEY_VALUE_PARTIAL_INFORMATION) +
+	*nSize * sizeof(WCHAR);
     KeyInfo = RtlAllocateHeap (RtlGetProcessHeap (),
-                               0,
-                               KeyInfoSize);
+			       0,
+			       KeyInfoSize);
     if (KeyInfo == NULL)
     {
-        ZwClose (KeyHandle);
-        SetLastError (ERROR_OUTOFMEMORY);
-        return FALSE;
+	ZwClose (KeyHandle);
+	SetLastError (ERROR_OUTOFMEMORY);
+	return FALSE;
     }
 
     RtlInitUnicodeString (&ValueName,ValueNameStr);
 
     Status = ZwQueryValueKey (KeyHandle,
-                  &ValueName,
-                  KeyValuePartialInformation,
-                  KeyInfo,
-                  KeyInfoSize,
-                  &ReturnSize);
+			      &ValueName,
+			      KeyValuePartialInformation,
+			      KeyInfo,
+			      KeyInfoSize,
+			      &ReturnSize);
     if (!NT_SUCCESS(Status))
     {
-        RtlFreeHeap (RtlGetProcessHeap (),
-                     0,
-                     KeyInfo);
-        ZwClose (KeyHandle);
-        SetLastErrorByStatus (Status);
-        return FALSE;
+	RtlFreeHeap (RtlGetProcessHeap (),
+		     0,
+		     KeyInfo);
+	ZwClose (KeyHandle);
+	SetLastErrorByStatus (Status);
+	return FALSE;
     }
 
-    if( *nSize > (KeyInfo->DataLength / sizeof(WCHAR)) )
-    {
-        *nSize = KeyInfo->DataLength / sizeof(WCHAR);
-        lpBuffer[*nSize] = 0;
+    if( *nSize > (KeyInfo->DataLength / sizeof(WCHAR)) ) {
+	*nSize = KeyInfo->DataLength / sizeof(WCHAR);
+	lpBuffer[*nSize] = 0;
     }
 
     RtlCopyMemory (lpBuffer,
-                   KeyInfo->Data,
-                   *nSize * sizeof(WCHAR));
+		   KeyInfo->Data,
+		   *nSize * sizeof(WCHAR));
 
     RtlFreeHeap (RtlGetProcessHeap (),
-                 0,
-                 KeyInfo);
+		 0,
+		 KeyInfo)
+;
     ZwClose (KeyHandle);
 
     return TRUE;
@@ -124,102 +125,94 @@ GetComputerNameExW (
     RTL_QUERY_REGISTRY_TABLE QueryTable[2];
     NTSTATUS Status;
 
-    switch( NameType )
-    {
-        case ComputerNameNetBIOS:
-            return GetComputerNameFromRegistry(
-                            L"\\Registry\\Machine\\System\\CurrentControlSet"
-                            L"\\Control\\ComputerName\\ComputerName",
-                            L"ComputerName",
-                            lpBuffer,
-                            nSize);
+    switch( NameType ) {
+    case ComputerNameNetBIOS:
+	return GetComputerNameFromRegistry
+	    ( L"\\Registry\\Machine\\System\\CurrentControlSet"
+	      L"\\Control\\ComputerName\\ComputerName",
+	      L"ComputerName",
+	      lpBuffer,
+	      nSize );
 
-        case ComputerNameDnsDomain:
-            return GetComputerNameFromRegistry(
-                            L"\\Registry\\Machine\\System\\CurrentControlSet"
-                            L"\\Services\\Tcpip\\Parameters",
-                            L"Domain",
-                            lpBuffer,
-                            nSize);
+    case ComputerNameDnsDomain:
+	return GetComputerNameFromRegistry
+	    ( L"\\Registry\\Machine\\System\\CurrentControlSet"
+	      L"\\Services\\Tcpip\\Parameters",
+	      L"Domain",
+	      lpBuffer,
+	      nSize );
 
-        case ComputerNameDnsFullyQualified:
-            ResultString.Length = 0;
-            ResultString.MaximumLength = (USHORT)*nSize * sizeof(WCHAR);
-            ResultString.Buffer = lpBuffer;
+    case ComputerNameDnsFullyQualified:
+        ResultString.Length = 0;
+        ResultString.MaximumLength = (USHORT)*nSize * sizeof(WCHAR);
+        ResultString.Buffer = lpBuffer;
 
-            RtlZeroMemory(QueryTable, sizeof(QueryTable));
+        RtlZeroMemory(QueryTable, sizeof(QueryTable));
+        RtlInitUnicodeString(&DomainPart, NULL);
+        QueryTable[0].Name = L"HostName";
+        QueryTable[0].Flags = RTL_QUERY_REGISTRY_DIRECT;
+        QueryTable[0].EntryContext = &DomainPart;
+	
+        Status = RtlQueryRegistryValues(RTL_REGISTRY_ABSOLUTE,
+                                        L"\\Registry\\Machine\\System"
+                                        L"\\CurrentControlSet\\Services\\Tcpip"
+                                        L"\\Parameters",
+                                        QueryTable, NULL, NULL);
+
+        if( NT_SUCCESS(Status) ) {
+            RtlAppendUnicodeStringToString(&ResultString, &DomainPart);
+            RtlAppendUnicodeToString(&ResultString, L".");
+            RtlFreeUnicodeString(&DomainPart);
+
             RtlInitUnicodeString(&DomainPart, NULL);
-            QueryTable[0].Name = L"HostName";
+            QueryTable[0].Name = L"Domain";
             QueryTable[0].Flags = RTL_QUERY_REGISTRY_DIRECT;
             QueryTable[0].EntryContext = &DomainPart;
-    
+
             Status = RtlQueryRegistryValues(RTL_REGISTRY_ABSOLUTE,
                                             L"\\Registry\\Machine\\System"
                                             L"\\CurrentControlSet\\Services\\Tcpip"
                                             L"\\Parameters",
                                             QueryTable, NULL, NULL);
 
-            if( NT_SUCCESS(Status) )
-            {
+            if( NT_SUCCESS(Status) ) {
                 RtlAppendUnicodeStringToString(&ResultString, &DomainPart);
-                RtlAppendUnicodeToString(&ResultString, L".");
                 RtlFreeUnicodeString(&DomainPart);
-
-                RtlInitUnicodeString(&DomainPart, NULL);
-                QueryTable[0].Name = L"Domain";
-                QueryTable[0].Flags = RTL_QUERY_REGISTRY_DIRECT;
-                QueryTable[0].EntryContext = &DomainPart;
-
-                Status = RtlQueryRegistryValues(RTL_REGISTRY_ABSOLUTE,
-                                                L"\\Registry\\Machine\\System"
-                                                L"\\CurrentControlSet\\Services\\Tcpip"
-                                                L"\\Parameters",
-                                                QueryTable, NULL, NULL);
-
-                if( NT_SUCCESS(Status) )
-                {
-                    RtlAppendUnicodeStringToString(&ResultString, &DomainPart);
-                    RtlFreeUnicodeString(&DomainPart);
-                    *nSize = ResultString.Length / sizeof(WCHAR);
-                    return TRUE;
-                }
+                *nSize = ResultString.Length / sizeof(WCHAR);
+                return TRUE;
             }
-        return FALSE;
+        }
+	return FALSE;
 
-        case ComputerNameDnsHostname:
-            return GetComputerNameFromRegistry(
-                                L"\\Registry\\Machine\\System\\CurrentControlSet"
-                                L"\\Services\\Tcpip\\Parameters",
-                                L"Hostname",
-                                lpBuffer,
-                                nSize);
+    case ComputerNameDnsHostname:
+	return GetComputerNameFromRegistry
+	    ( L"\\Registry\\Machine\\System\\CurrentControlSet"
+	      L"\\Services\\Tcpip\\Parameters",
+	      L"Hostname",
+	      lpBuffer,
+	      nSize );
 
-        case ComputerNamePhysicalDnsDomain:
-            return GetComputerNameFromRegistry(
-                                L"\\Registry\\Machine\\System\\CurrentControlSet"
-                                L"\\Services\\Tcpip\\Parameters",
-                                L"Domain",
-                                lpBuffer,
-                                nSize);
+    case ComputerNamePhysicalDnsDomain:
+	return GetComputerNameFromRegistry
+	    ( L"\\Registry\\Machine\\System\\CurrentControlSet"
+	      L"\\Services\\Tcpip\\Parameters",
+	      L"Domain",
+	      lpBuffer,
+	      nSize );
 
-        /* XXX Redo these */
-        case ComputerNamePhysicalDnsFullyQualified:
-            return GetComputerNameExW(ComputerNameDnsFullyQualified,
-                                      lpBuffer,
-                                      nSize);
+	/* XXX Redo these */
+    case ComputerNamePhysicalDnsFullyQualified:
+	return GetComputerNameExW( ComputerNameDnsFullyQualified,
+				   lpBuffer, nSize );
+    case ComputerNamePhysicalDnsHostname:
+	return GetComputerNameExW( ComputerNameDnsHostname,
+				   lpBuffer, nSize );
+    case ComputerNamePhysicalNetBIOS:
+	return GetComputerNameExW( ComputerNameNetBIOS,
+				   lpBuffer, nSize );
 
-        case ComputerNamePhysicalDnsHostname:
-            return GetComputerNameExW(ComputerNameDnsHostname,
-                                      lpBuffer,
-                                      nSize);
-
-        case ComputerNamePhysicalNetBIOS:
-            return GetComputerNameExW(ComputerNameNetBIOS,
-                                      lpBuffer,
-                                      nSize);
-
-        case ComputerNameMax:
-            return FALSE;
+    case ComputerNameMax:
+	return FALSE;
     }
 
     return FALSE;
@@ -241,9 +234,8 @@ GetComputerNameExA (
     BOOL Result;
     PWCHAR TempBuffer = RtlAllocateHeap( GetProcessHeap(), 0, *nSize * sizeof(WCHAR) );
 
-    if( !TempBuffer )
-    {
-        return ERROR_OUTOFMEMORY;
+    if( !TempBuffer ) {
+	return ERROR_OUTOFMEMORY;
     }
 
     AnsiString.MaximumLength = (USHORT)*nSize;
@@ -252,15 +244,14 @@ GetComputerNameExA (
 
     Result = GetComputerNameExW( NameType, TempBuffer, nSize );
 
-    if( Result )
-    {
-        UnicodeString.MaximumLength = (USHORT)*nSize * sizeof(WCHAR);
-        UnicodeString.Length = (USHORT)*nSize * sizeof(WCHAR);
-        UnicodeString.Buffer = TempBuffer;
+    if( Result ) {
+	UnicodeString.MaximumLength = (USHORT)*nSize * sizeof(WCHAR);
+	UnicodeString.Length = (USHORT)*nSize * sizeof(WCHAR);
+	UnicodeString.Buffer = TempBuffer;
 
-        RtlUnicodeStringToAnsiString (&AnsiString,
-                                      &UnicodeString,
-                                      FALSE);
+	RtlUnicodeStringToAnsiString (&AnsiString,
+				      &UnicodeString,
+				      FALSE);
     }
 
     HeapFree( GetProcessHeap(), 0, TempBuffer );
@@ -273,7 +264,7 @@ GetComputerNameExA (
  */
 BOOL STDCALL
 GetComputerNameA (LPSTR lpBuffer,
-          LPDWORD lpnSize)
+		  LPDWORD lpnSize)
 {
     return GetComputerNameExA( ComputerNameNetBIOS, lpBuffer, lpnSize );
 }
@@ -284,7 +275,7 @@ GetComputerNameA (LPSTR lpBuffer,
  */
 BOOL STDCALL
 GetComputerNameW (LPWSTR lpBuffer,
-          LPDWORD lpnSize)
+		  LPDWORD lpnSize)
 {
     return GetComputerNameExW( ComputerNameNetBIOS, lpBuffer, lpnSize );
 }
@@ -298,41 +289,43 @@ IsValidComputerName (
     COMPUTER_NAME_FORMAT NameType,
     LPCWSTR lpComputerName)
 {
-    PWCHAR p;
-    ULONG Length;
+  PWCHAR p;
+  ULONG Length;
 
-    /* FIXME: do verification according to NameType */
-    Length = 0;
-    p = (PWCHAR)lpComputerName;
-    while (*p != 0)
+  /* FIXME: do verification according to NameType */
+
+  Length = 0;
+  p = (PWCHAR)lpComputerName;
+  while (*p != 0)
     {
-        if ((!iswctype (*p, _ALPHA) && !iswctype (*p, _DIGIT)) ||
-            *p == L'!' ||
-            *p == L'@' ||
-            *p == L'#' ||
-            *p == L'$' ||
-            *p == L'%' ||
-            *p == L'^' ||
-            *p == L'&' ||
-            *p == L'\'' ||
-            *p == L')' ||
-            *p == L'(' ||
-            *p == L'.' ||
-            *p == L'-' ||
-            *p == L'_' ||
-            *p == L'{' ||
-            *p == L'}' ||
-            *p == L'~')
-                return FALSE;
+      if ((!iswctype (*p, _ALPHA) && !iswctype (*p, _DIGIT)) ||
+	    *p == L'!' ||
+	    *p == L'@' ||
+	    *p == L'#' ||
+	    *p == L'$' ||
+	    *p == L'%' ||
+	    *p == L'^' ||
+	    *p == L'&' ||
+	    *p == L'\'' ||
+	    *p == L')' ||
+	    *p == L'(' ||
+	    *p == L'.' ||
+	    *p == L'-' ||
+	    *p == L'_' ||
+	    *p == L'{' ||
+	    *p == L'}' ||
+	    *p == L'~')
+	return FALSE;
 
-        Length++;
-        p++;
+      Length++;
+      p++;
     }
 
-    if (Length == 0 || Length > MAX_COMPUTERNAME_LENGTH)
-        return FALSE;
+  if (Length == 0 ||
+      Length > MAX_COMPUTERNAME_LENGTH)
+    return FALSE;
 
-    return TRUE;
+  return TRUE;
 }
 
 
@@ -349,14 +342,14 @@ static BOOL SetComputerNameToRegistry(
 
     RtlInitUnicodeString (&KeyName, RegistryKey);
     InitializeObjectAttributes (&ObjectAttributes,
-                                &KeyName,
-                                OBJ_CASE_INSENSITIVE,
-                                NULL,
-                                NULL);
+        &KeyName,
+        OBJ_CASE_INSENSITIVE,
+        NULL,
+        NULL );
 
     Status = NtOpenKey (&KeyHandle,
-                        KEY_WRITE,
-                        &ObjectAttributes);
+        KEY_WRITE,
+        &ObjectAttributes);
     if (!NT_SUCCESS(Status))
     {
         SetLastErrorByStatus (Status);
@@ -366,11 +359,11 @@ static BOOL SetComputerNameToRegistry(
     RtlInitUnicodeString (&ValueName, ValueNameStr);
 
     Status = NtSetValueKey (KeyHandle,
-                            &ValueName,
-                            0,
-                            REG_SZ,
-                            (PVOID)lpBuffer,
-                            (wcslen (lpBuffer) + 1) * sizeof(WCHAR));
+        &ValueName,
+        0,
+        REG_SZ,
+        (PVOID)lpBuffer,
+        (wcslen (lpBuffer) + 1) * sizeof(WCHAR));
     if (!NT_SUCCESS(Status))
     {
         ZwClose (KeyHandle);
@@ -417,7 +410,7 @@ SetComputerNameExA (
     BOOL bResult;
 
     RtlCreateUnicodeStringFromAsciiz (&Buffer,
-                    (LPSTR)lpBuffer);
+				    (LPSTR)lpBuffer);
 
     bResult = SetComputerNameExW (NameType, Buffer.Buffer);
 
@@ -435,107 +428,38 @@ SetComputerNameExW (
     COMPUTER_NAME_FORMAT NameType,
     LPCWSTR lpBuffer)
 {
-    if (!IsValidComputerName (NameType, lpBuffer))
+  if (!IsValidComputerName (NameType, lpBuffer))
     {
+      SetLastError (ERROR_INVALID_PARAMETER);
+      return FALSE;
+    }
+
+  switch( NameType ) {
+    case ComputerNamePhysicalDnsDomain:
+      return SetComputerNameToRegistry
+        ( L"\\Registry\\Machine\\System\\CurrentControlSet"
+          L"\\Services\\Tcpip\\Parameters",
+          L"Domain",
+          lpBuffer );
+
+    case ComputerNamePhysicalDnsHostname:
+      return SetComputerNameToRegistry
+        ( L"\\Registry\\Machine\\System\\CurrentControlSet"
+          L"\\Services\\Tcpip\\Parameters",
+          L"Hostname",
+          lpBuffer );
+
+    case ComputerNamePhysicalNetBIOS:
+      return SetComputerNameToRegistry
+        ( L"\\Registry\\Machine\\System\\CurrentControlSet"
+          L"\\Control\\ComputerName\\ComputerName",
+          L"ComputerName",
+          lpBuffer );
+
+    default:
         SetLastError (ERROR_INVALID_PARAMETER);
         return FALSE;
-    }
-
-    switch( NameType )
-    {
-        case ComputerNamePhysicalDnsDomain:
-            return SetComputerNameToRegistry(
-                            L"\\Registry\\Machine\\System\\CurrentControlSet"
-                            L"\\Services\\Tcpip\\Parameters",
-                            L"Domain",
-                            lpBuffer);
-
-        case ComputerNamePhysicalDnsHostname:
-            return SetComputerNameToRegistry(
-                            L"\\Registry\\Machine\\System\\CurrentControlSet"
-                            L"\\Services\\Tcpip\\Parameters",
-                            L"Hostname",
-                            lpBuffer);
-
-        case ComputerNamePhysicalNetBIOS:
-            return SetComputerNameToRegistry(
-                            L"\\Registry\\Machine\\System\\CurrentControlSet"
-                            L"\\Control\\ComputerName\\ComputerName",
-                            L"ComputerName",
-                            lpBuffer);
-
-        default:
-            SetLastError (ERROR_INVALID_PARAMETER);
-            return FALSE;
-    }
-}
-
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-DnsHostnameToComputerNameW (
-	LPCWSTR Hostname,
-    LPWSTR ComputerName,
-	LPDWORD nSize
-    )
-{
-    DWORD len;
-
-    DPRINT1("(%s, %p, %p): stub\n", Hostname, ComputerName, nSize);
-
-    if (!Hostname || !nSize) return FALSE;
-    len = wcslen(Hostname);
-
-    if (len > MAX_COMPUTERNAME_LENGTH)
-        len = MAX_COMPUTERNAME_LENGTH;
-
-    if (*nSize < len)
-    {
-        *nSize = len;
-        return FALSE;
-    }
-    if (!ComputerName) return FALSE;
-
-    memcpy( ComputerName, Hostname, len * sizeof(WCHAR) );
-    ComputerName[len + 1] = 0;
-    return TRUE;
-}
-
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-DnsHostnameToComputerNameA (
-    LPCSTR Hostname,
-    LPSTR ComputerName,
-    LPDWORD nSize
-    )
-{
-    DWORD len;
-
-    DPRINT1("(%s, %p, %p): stub\n", Hostname, ComputerName, nSize);
-
-    if (!Hostname || !nSize) return FALSE;
-    len = _tcslen(Hostname);
-
-    if (len > MAX_COMPUTERNAME_LENGTH)
-        len = MAX_COMPUTERNAME_LENGTH;
-
-    if (*nSize < len)
-    {
-        *nSize = len;
-        return FALSE;
-    }
-    if (!ComputerName) return FALSE;
-
-    memcpy( ComputerName, Hostname, len * sizeof(WCHAR) );
-    ComputerName[len + 1] = 0;
-    return TRUE;
+  }
 }
 
 /* EOF */
