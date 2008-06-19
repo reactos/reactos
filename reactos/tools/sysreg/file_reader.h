@@ -14,6 +14,10 @@
 #include "user_types.h"
 #include "data_source.h"
 #include <vector>
+#include <cassert>
+#include <cstdio>
+#include <cstring>
+
 namespace System_
 {
 	using std::vector;

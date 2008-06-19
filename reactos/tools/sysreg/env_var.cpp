@@ -9,9 +9,6 @@
 
 
 #include "env_var.h"
-#include <iostream>
-#include <cstdlib>
-#include <cstring>
 
 namespace System_
 {

@@ -13,7 +13,28 @@
 #include "conf_parser.h"
 #include "os_support.h"
 #include "user_types.h"
+#include "pipe_reader.h"
+#include "namedpipe_reader.h"
+#include "file_reader.h"
+#include "os_support.h"
+#include "env_var.h"
 #include <vector>
+#include <iostream>
+#include <vector>
+#include <fstream>
+#include <cassert>
+#include <cfloat>
+#include <cmath>
+#include <csignal>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <ctime>
+#ifndef __LINUX__
+#include <io.h>
+#include <errno.h>
+#endif
+
 #ifdef __LINUX__
 #include <unistd.h>
 #include <sys/types.h>

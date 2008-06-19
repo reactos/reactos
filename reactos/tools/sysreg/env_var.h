@@ -12,7 +12,9 @@
 
 #include "user_types.h"
 #include <map>
-
+#include <iostream>
+#include <cstdlib>
+#include <cstring>
 
 namespace System_
 {

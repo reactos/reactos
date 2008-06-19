@@ -16,8 +16,11 @@
 #include "user_types.h"
 #include "data_source.h"
 #include <vector>
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstdlib>
+#include <iostream>
+#include <cassert>
+#include <cstring>
 
 #if defined(WIN32)
 #include <windows.h>
@@ -25,8 +28,6 @@
 #else
 #include <unistd.h>
 #include <fcntl.h>
-#include <stdio.h>
-#include <stdlib.h>
 #define NULLVAL 0
 #define DWORD unsigned long
 #define HANDLE long

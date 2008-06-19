@@ -22,6 +22,7 @@
 #include "user_types.h"
 #include <ctime>
 #include <vector>
+#include <cstdlib>
 
 #ifndef _MSC_VER
 #include <sys/time.h>

@@ -15,7 +15,11 @@
 #include "user_types.h"
 #include "data_source.h"
 #include <cstdio>
-//#include <stdlib.h>
+#include <iostream>
+#include <cassert>
+#include <cstdlib>
+#include <cstring>
+#include <limits.h>
 
 namespace System_
 {

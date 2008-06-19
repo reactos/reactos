@@ -9,9 +9,6 @@
 
 #include "pipe_reader.h"
 
-#include <iostream>
-#include <assert.h>
-
 namespace System_
 {
 	using std::vector;

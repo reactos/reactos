@@ -10,28 +10,6 @@
 
 
 #include "rosboot_test.h"
-#include "pipe_reader.h"
-#include "namedpipe_reader.h"
-//#include "sym_file.h"
-#include "file_reader.h"
-#include "os_support.h"
-#include "env_var.h"
-
-#include <iostream>
-#include <vector>
-#include <fstream>
-#include <cassert>
-#include <cfloat>
-#include <cmath>
-#include <csignal>
-#include <cstdio>
-#include <cstdlib>
-#include <cstring>
-#include <ctime>
-#ifndef __LINUX__
-#include <io.h>
-#include <errno.h>
-#endif
 
 namespace Sysreg_
 {

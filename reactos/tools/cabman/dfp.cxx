@@ -1373,8 +1373,8 @@ void CDFParser::NextToken()
                 return;
             }
             i = 0;
-            while ((CurrentChar + i < LineLength) &&
-                (((ch = Line[CurrentChar + i]) >= 'a') && (ch <= 'z')) ||
+            while (((CurrentChar + i < LineLength) &&
+                (((ch = Line[CurrentChar + i]) >= 'a') && (ch <= 'z'))) ||
                 ((ch >= 'A') && (ch <= 'Z')) || (ch == '_'))
             {
                 CurrentString[i] = ch;

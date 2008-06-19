@@ -8,7 +8,6 @@
  */
 
 #include "os_support.h"
-#include <cstdlib>
 
 namespace System_
 {

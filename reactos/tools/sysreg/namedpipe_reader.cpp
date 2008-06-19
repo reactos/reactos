@@ -10,10 +10,6 @@
 
 #include "namedpipe_reader.h"
 
-#include <iostream>
-#include <cassert>
-#include <cstring>
-
 namespace System_
 {
 #define MIN(a, b)  (((a) < (b)) ? (a) : (b))

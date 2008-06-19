@@ -12,6 +12,11 @@
 
 #include "user_types.h"
 #include <map>
+#include <iostream>
+#include <sstream>
+#include <fstream>
+#include <cstdio>
+#include <cstdlib>
 
 namespace Sysreg_
 {
