@@ -121,9 +121,9 @@ EXPORTS
   __getmainargs @114
   __initenv @115
 ;  __iob_func @116
-  __isascii=ntdll.__isascii @117
-  __iscsym=ntdll.__iscsym @118
-  __iscsymf=ntdll.__iscsymf @119
+  __isascii @117
+  __iscsym @118
+  __iscsymf @119
   __lc_codepage @120 DATA
   __lc_collate_cp @121 DATA
   __lc_handle @122 DATA
@@ -167,7 +167,7 @@ EXPORTS
   __setusermatherr @160
   __threadhandle @161
   __threadid @162
-  __toascii=ntdll.__toascii @163
+  __toascii @163
   __unDName @164
   __unDNameEx @165
 ;  __uncaught_exception @166
@@ -203,7 +203,7 @@ EXPORTS
   _amsg_exit @196
   _assert @197
 ;  _atodbl @198
-  _atoi64=ntdll._atoi64 @199
+  _atoi64 @199
   _atoldbl @200
   _beep @201
   _beginthread @202
@@ -291,7 +291,7 @@ EXPORTS
   _fstati64 @284
   _ftime @285
 ;  _ftime64 @286
-  _ftol=ntdll._ftol @287
+  _ftol @287
   _fullpath @288
   _futime @289
 ;  _futime64 @290
@@ -324,8 +324,8 @@ EXPORTS
 ;  _heapused @317
   _heapwalk @318
   _hypot @319
-  _i64toa=ntdll._i64toa @320
-  _i64tow=ntdll._i64tow @321
+  _i64toa @320
+  _i64tow @321
   _initterm @322
 ;  _inp @323
 ;  _inpd @324
@@ -363,8 +363,8 @@ EXPORTS
   _ismbslead @356
   _ismbstrail @357
   _isnan @358
-  _itoa=ntdll._itoa @359
-  _itow=ntdll._itow @360
+  _itoa @359
+  _itow @360
   _j0 @361
   _j1 @362
   _jn @363
@@ -382,8 +382,8 @@ EXPORTS
   _lsearch @375
   _lseek @376
   _lseeki64 @377
-  _ltoa=ntdll._ltoa @378
-  _ltow=ntdll._ltow @379
+  _ltoa @378
+  _ltow @379
   _makepath @380
   _mbbtombc @381
   _mbbtype @382
@@ -440,8 +440,8 @@ EXPORTS
   _mbstok @433
   _mbstrlen @434
   _mbsupr @435
-  _memccpy=ntdll._memccpy @436
-  _memicmp=ntdll._memicmp @437
+  _memccpy @436
+  _memicmp @437
   _mkdir @438
 ;  _mkgmtime @439
 ;  _mkgmtime64 @440
@@ -510,20 +510,20 @@ EXPORTS
   _spawnve @503
   _spawnvp @504
   _spawnvpe @505
-  _splitpath=ntdll._splitpath @506
+  _splitpath @506
   _stat @507
   _stat64 @508
   _stati64 @509
   _statusfp @510
-  _strcmpi=ntdll._strcmpi @511
+  _strcmpi @511
   _strdate @512
   _strdup @513
   _strerror @514
-  _stricmp=ntdll._stricmp @515
+  _stricmp @515
   _stricoll @516
-  _strlwr=ntdll._strlwr @517
+  _strlwr @517
   _strncoll @518
-  _strnicmp=ntdll._strnicmp @519
+  _strnicmp @519
   _strnicoll @520
   _strnset @521
   _strrev @522
@@ -531,7 +531,7 @@ EXPORTS
   _strtime @524
 ;  _strtoi64 @525
   _strtoui64=strtoull @526
-  _strupr=ntdll._strupr @527
+  _strupr @527
   _swab @528
   _sys_errlist @529 DATA
   _sys_nerr @530 DATA
@@ -540,14 +540,14 @@ EXPORTS
   _tempnam @533
 ;  _time64 @534
   _timezone @535 DATA
-  _tolower=ntdll._tolower @536
-  _toupper=ntdll._toupper @537
+  _tolower @536
+  _toupper @537
   _tzname @538 DATA
   _tzset @539
-  _ui64toa=ntdll._ui64toa @540
-  _ui64tow=ntdll._ui64tow @541
-  _ultoa=ntdll._ultoa @542
-  _ultow=ntdll._ultow @543
+  _ui64toa @540
+  _ui64tow @541
+  _ultoa @542
+  _ultow @543
   _umask @544
   _ungetch @545
 ;  _ungetwch @546
@@ -568,18 +568,18 @@ EXPORTS
   _wcreat @561
   _wcsdup @562
 ;  _wcserror @563
-  _wcsicmp=ntdll._wcsicmp @564
+  _wcsicmp @564
   _wcsicoll @565
-  _wcslwr=ntdll._wcslwr @566
+  _wcslwr @566
   _wcsncoll @567
-  _wcsnicmp=ntdll._wcsnicmp @568
+  _wcsnicmp @568
   _wcsnicoll @569
   _wcsnset @570
   _wcsrev @571
   _wcsset @572
 ;  _wcstoi64 @573
 ;  _wcstoui64 @574
-  _wcsupr=ntdll._wcsupr @575
+  _wcsupr @575
   _wctime @576
 ;  _wctime64 @577
 ;  _wctype @578
@@ -642,9 +642,9 @@ EXPORTS
   _wtempnam @635
   _wtmpnam @636
 ;  _wtof @637
-  _wtoi=ntdll._wtoi @638
-  _wtoi64=ntdll._wtoi64 @639
-  _wtol=ntdll._wtol @640
+  _wtoi @638
+  _wtoi64 @639
+  _wtol @640
   _wunlink @641
   _wutime @642
 ;  _wutime64 @643
@@ -652,29 +652,29 @@ EXPORTS
   _y1 @645
   _yn @646
   abort @647
-  abs=ntdll.abs @648
+  abs @648
   acos @649
   asctime @650
   asin @651
-  atan=ntdll.atan @652
+  atan @652
   atan2 @653
   atexit @654
   atof @655
-  atoi=ntdll.atoi @656
-  atol=ntdll.atol @657
-  bsearch=ntdll.bsearch @658
+  atoi @656
+  atol @657
+  bsearch @658
   calloc @659
-  ceil=ntdll.ceil @660
+  ceil @660
   clearerr @661
   clock @662
-  cos=ntdll.cos @663
+  cos @663
   cosh @664
   ctime @665
   difftime @666
   div @667
   exit @668
   exp @669
-  fabs=ntdll.fabs @670
+  fabs @670
   fclose @671
   feof @672
   ferror @673
@@ -684,7 +684,7 @@ EXPORTS
   fgets @677
   fgetwc @678
   fgetws @679
-  floor=ntdll.floor @680
+  floor @680
   fmod @681
   fopen @682
   fprintf @683
@@ -710,60 +710,60 @@ EXPORTS
   getwc @703
   getwchar @704
   gmtime @705
-  is_wctype=ntdll.iswctype @706
-  isalnum=ntdll.isalnum @707
-  isalpha=ntdll.isalpha @708
-  iscntrl=ntdll.iscntrl @709
-  isdigit=ntdll.isdigit @710
-  isgraph=ntdll.isgraph @711
+  is_wctype @706
+  isalnum @707
+  isalpha @708
+  iscntrl @709
+  isdigit @710
+  isgraph @711
   isleadbyte @712
-  islower=ntdll.islower @713
-  isprint=ntdll.isprint @714
-  ispunct=ntdll.ispunct @715
-  isspace=ntdll.isspace @716
-  isupper=ntdll.isupper @717
+  islower @713
+  isprint @714
+  ispunct @715
+  isspace @716
+  isupper @717
   iswalnum @718
-  iswalpha=ntdll.iswalpha @719
+  iswalpha @719
   iswascii @720
   iswcntrl @721
-  iswctype=ntdll.iswctype @722
-  iswdigit=ntdll.iswdigit @723
+  iswctype @722
+  iswdigit @723
   iswgraph @724
-  iswlower=ntdll.iswlower @725
+  iswlower @725
   iswprint @726
   iswpunct @727
-  iswspace=ntdll.iswspace @728
+  iswspace @728
   iswupper @729
-  iswxdigit=ntdll.iswxdigit @730
-  isxdigit=ntdll.isxdigit @731
-  labs=ntdll.labs @732
+  iswxdigit @730
+  isxdigit @731
+  labs @732
   ldexp @733
   ldiv @734
   localeconv @735
   localtime @736
-  log=ntdll.log @737
+  log @737
   log10 @738
   longjmp @739
   malloc @740
   mblen @741
-  mbstowcs=ntdll.mbstowcs @742
+  mbstowcs @742
   mbtowc @743
-  memchr=ntdll.memchr @744
-  memcmp=ntdll.memcmp @745
-  memcpy=ntdll.memcpy @746
-  memmove=ntdll.memmove @747
-  memset=ntdll.memset @748
+  memchr @744
+  memcmp @745
+  memcpy @746
+  memmove @747
+  memset @748
   mktime @749
   modf @750
   perror @751
-  pow=ntdll.pow @752
+  pow @752
   printf @753
   putc @754
   putchar @755
   puts @756
   putwc=fputwc @757
   putwchar=_fputwchar @758
-  qsort=ntdll.qsort @759
+  qsort @759
   raise @760
   rand @761
   realloc @762
@@ -775,45 +775,45 @@ EXPORTS
   setlocale @768
   setvbuf @769
   signal @770
-  sin=ntdll.sin @771
+  sin @771
   sinh @772
   sprintf @773
-  sqrt=ntdll.sqrt @774
+  sqrt @774
   srand @775
   sscanf @776
-  strcat=ntdll.strcat @777
-  strchr=ntdll.strchr @778
-  strcmp=ntdll.strcmp @779
+  strcat @777
+  strchr @778
+  strcmp @779
   strcoll @780
-  strcpy=ntdll.strcpy @781
-  strcspn=ntdll.strcspn @782
+  strcpy @781
+  strcspn @782
   strerror @783
   strftime @784
-  strlen=ntdll.strlen @785
-  strncat=ntdll.strncat @786
-  strncmp=ntdll.strncmp @787
-  strncpy=ntdll.strncpy @788
-  strpbrk=ntdll.strpbrk @789
-  strrchr=ntdll.strrchr @790
-  strspn=ntdll.strspn @791
-  strstr=ntdll.strstr @792
+  strlen @785
+  strncat @786
+  strncmp @787
+  strncpy @788
+  strpbrk @789
+  strrchr @790
+  strspn @791
+  strstr @792
   strtod @793
   strtok @794
-  strtol=ntdll.strtol @795
-  strtoul=ntdll.strtoul @796
+  strtol @795
+  strtoul @796
   strxfrm @797
   swprintf @798
   swscanf @799
   system @800
-  tan=ntdll.tan @801
+  tan @801
   tanh @802
   time @803
   tmpfile @804
   tmpnam @805
-  tolower=ntdll.tolower @806
-  toupper=ntdll.toupper @807
-  towlower=ntdll.towlower @808
-  towupper=ntdll.towupper @809
+  tolower @806
+  toupper @807
+  towlower @808
+  towupper @809
   ungetc @810
   ungetwc @811
   vfprintf @812
@@ -822,26 +822,26 @@ EXPORTS
   vsprintf @815
   vswprintf @816
   vwprintf @817
-  wcscat=ntdll.wcscat @818
-  wcschr=ntdll.wcschr @819
-  wcscmp=ntdll.wcscmp @820
+  wcscat @818
+  wcschr @819
+  wcscmp @820
   wcscoll @821
-  wcscpy=ntdll.wcscpy @822
-  wcscspn=ntdll.wcscspn @823
+  wcscpy @822
+  wcscspn @823
   wcsftime @824
-  wcslen=ntdll.wcslen @825
-  wcsncat=ntdll.wcsncat @826
-  wcsncmp=ntdll.wcsncmp @827
-  wcsncpy=ntdll.wcsncpy @828
+  wcslen @825
+  wcsncat @826
+  wcsncmp @827
+  wcsncpy @828
   wcspbrk @829
-  wcsrchr=ntdll.wcsrchr @830
-  wcsspn=ntdll.wcsspn @831
-  wcsstr=ntdll.wcsstr @832
+  wcsrchr @830
+  wcsspn @831
+  wcsstr @832
   wcstod @833
   wcstok @834
-  wcstol=ntdll.wcstol @835
-  wcstombs=ntdll.wcstombs @836
-  wcstoul=ntdll.wcstoul @837
+  wcstol @835
+  wcstombs @836
+  wcstoul @837
   wcsxfrm @838
   wctomb @839
   wprintf @840

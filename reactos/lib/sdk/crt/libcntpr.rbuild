@@ -156,6 +156,7 @@
 		<file>wcstol.c</file>
 		<file>wcstombs_nt.c</file>
 		<file>wcstoul.c</file>
+		<file>wsplitp.c</file>
 		<file>wtoi64.c</file>
 		<file>wtoi.c</file>
 		<file>wtol.c</file>

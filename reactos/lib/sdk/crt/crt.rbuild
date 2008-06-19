@@ -190,6 +190,7 @@
 			<file>memset.c</file>
 		</ifnot>
 		<file>memcmp.c</file>
+		<file>memccpy.c</file>
 		<file>memicmp.c</file>
 	</directory>
 
@@ -217,6 +218,7 @@
 		<file>wprocess.c</file>
 	</directory>
 	<directory name="search">
+		<file>bsearch.c</file>
 		<file>lfind.c</file>
 		<file>lsearch.c</file>
 	</directory>
@@ -262,6 +264,7 @@
 		<file>makepath.c</file>
 		<file>malloc.c</file>
 		<file>mbtowc.c</file>
+		<file>mbstowcs.c</file>
 		<file>obsol.c</file>
 		<file>putenv.c</file>
 		<file>rot.c</file>
@@ -319,12 +322,18 @@
 			<file>wcsnlen.c</file>
 			<file>wcsrchr.c</file>
 		</ifnot>
-		<file>atol.c</file>
 		<file>atof.c</file>
+		<file>atoi.c</file>
+		<file>atoi64.c</file>
+		<file>atol.c</file>
 		<file>ctype.c</file>
+		<file>itoa.c</file>
+		<file>itow.c</file>
 		<file>lasttok.c</file>
 		<file>scanf.c</file>
+		<file>splitp.c</file>
 		<file>strcoll.c</file>
+		<file>strcspn.c</file>
 		<file>strdup.c</file>
 		<file>strerror.c</file>
 		<file>stricmp.c</file>
@@ -334,17 +343,24 @@
 		<file>strpbrk.c</file>
 		<file>strrev.c</file>
 		<file>strset.c</file>
+		<file>strspn.c</file>
 		<file>strstr.c</file>
 		<file>strtod.c</file>
 		<file>strtok.c</file>
+		<file>strtol.c</file>
 		<file>strtoul.c</file>
 		<file>strtoull.c</file>
 		<file>strupr.c</file>
 		<file>strxfrm.c</file>
+		<file>wcs.c</file>
+		<file>wcstol.c</file>
 		<file>wcstombs.c</file>
+		<file>wcstoul.c</file>
 		<file>wctomb.c</file>
 		<file>wsplitp.c</file>
-		<file>wcs.c</file>
+		<file>wtoi.c</file>
+		<file>wtoi64.c</file>
+		<file>wtol.c</file>
 	</directory>
 	<directory name="sys_stat">
 		<file>systime.c</file>
