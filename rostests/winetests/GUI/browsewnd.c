@@ -141,6 +141,8 @@ TraverseTreeView(PMAIN_WND_INFO pInfo,
     {
         HTREEITEM hChildItem;
 
+        FreeItemTag(pInfo, hItem);
+
         hChildItem = TreeView_GetChild(pInfo->hBrowseTV,
                                        hItem);
 
