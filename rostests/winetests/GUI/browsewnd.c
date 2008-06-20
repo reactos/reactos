@@ -88,8 +88,6 @@ GetListOfTestDlls(PMAIN_WND_INFO pInfo)
     {
         if (!(findFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
         {
-            //MessageBoxW(NULL, findFileData.cFileName, NULL, 0);
-
             /* set the path */
             wcscpy(ptr, szDllPath);
 
@@ -124,11 +122,9 @@ FreeItemTag(PMAIN_WND_INFO pInfo,
             HTREEITEM hItem)
 {
     TV_ITEM tvItem;
-    WCHAR buf[256];
 
     tvItem.hItem = hItem;
-    tvItem.mask = TVIF_PARAM | TVIF_TEXT;
-    tvItem.pszText = buf;
+    tvItem.mask = TVIF_PARAM;
 
     (void)TreeView_GetItem(pInfo->hBrowseTV, &tvItem);
 
@@ -217,8 +213,10 @@ BuildTestItemData(LPWSTR lpDll,
                                   sizeof(TEST_ITEM));
     if (pItem)
     {
-        wcsncpy(pItem->szSelectedDll, lpDll, MAX_PATH);
-        wcsncpy(pItem->szRunString, lpRun, MAX_RUN_CMD);
+        if (lpDll)
+            wcsncpy(pItem->szSelectedDll, lpDll, MAX_PATH);
+        if (lpRun)
+            wcsncpy(pItem->szRunString, lpRun, MAX_RUN_CMD);
     }
 
     return pItem;
@@ -229,6 +227,7 @@ PopulateTreeView(PMAIN_WND_INFO pInfo)
 {
     HTREEITEM hRoot;
     HIMAGELIST hImgList;
+    PTEST_ITEM pTestItem;
     DLLNAME GetTestName;
     MODULES GetModulesInTest;
     HMODULE hDll;
@@ -250,11 +249,13 @@ PopulateTreeView(PMAIN_WND_INFO pInfo)
                                 hImgList,
                                 TVSIL_NORMAL);
 
+    pTestItem = BuildTestItemData(L"", L"Full");
+
     /* insert the root item into the tree */
     hRoot = InsertIntoTreeView(pInfo->hBrowseTV,
                                NULL,
                                L"Full",
-                               0,
+                               pTestItem,
                                IL_MAIN,
                                HAS_CHILD);
 
@@ -272,7 +273,6 @@ PopulateTreeView(PMAIN_WND_INFO pInfo)
                 LPSTR lpModules, ptr;
                 LPWSTR lpModW;
                 INT numMods;
-                PTEST_ITEM pTestItem;
 
                 lpTestName = GetTestName();
 
@@ -383,14 +383,43 @@ BrowseDlgProc(HWND hDlg,
 
         case WM_COMMAND:
         {
-            if ((LOWORD(wParam) == IDOK) || (LOWORD(wParam) == IDCANCEL))
+            switch (LOWORD(wParam))
             {
-                HeapFree(GetProcessHeap(), 0, pInfo->lpDllList);
-                pInfo->lpDllList = NULL;
+                case IDOK:
+                {
+                    TV_ITEM tvItem;
 
-                EndDialog(hDlg,
-                          LOWORD(wParam));
-                return TRUE;
+                    tvItem.hItem = TreeView_GetSelection(pInfo->hBrowseTV);
+                    tvItem.mask = TVIF_PARAM;
+
+                    if (TreeView_GetItem(pInfo->hBrowseTV, &tvItem))
+                    {
+                        PTEST_ITEM pItem;
+
+                        pItem = (PTEST_ITEM)tvItem.lParam;
+                        if (pItem)
+                            CopyMemory(&pInfo->SelectedTest, pItem, sizeof(TEST_ITEM));
+
+                        EndDialog(hDlg,
+                                  LOWORD(wParam));
+                    }
+                    else
+                    {
+                        DisplayMessage(L"Please select an item");
+                    }
+
+                    break;
+                }
+
+                case IDCANCEL:
+                {
+                    HeapFree(GetProcessHeap(), 0, pInfo->lpDllList);
+                    pInfo->lpDllList = NULL;
+
+                    EndDialog(hDlg,
+                              LOWORD(wParam));
+                    return TRUE;
+                }
             }
 
             break;

@@ -32,7 +32,7 @@ typedef struct _MAIN_WND_INFO
     LPWSTR lpDllList;
     INT numDlls;
 
-    PTEST_ITEM SelectedTest;
+    TEST_ITEM SelectedTest;
 
 } MAIN_WND_INFO, *PMAIN_WND_INFO;
 
@@ -46,7 +46,7 @@ BOOL CALLBACK BrowseDlgProc(HWND hDlg, UINT Message, WPARAM wParam, LPARAM lPara
 
 /* misc.c */
 HIMAGELIST InitImageList(UINT StartResource, UINT EndResource, UINT Width, UINT Height);
-VOID DisplayString(LPWSTR lpMsg);
+VOID DisplayMessage(LPWSTR lpMsg);
 VOID DisplayError(INT err);
 DWORD AnsiToUnicode(LPCSTR lpSrcStr, LPWSTR *lpDstStr);
 

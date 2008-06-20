@@ -208,7 +208,7 @@ VOID DisplayError(INT err)
     LocalFree(lpMsgBuf);
 }
 
-VOID DisplayString(LPWSTR lpMsg)
+VOID DisplayMessage(LPWSTR lpMsg)
 {
     MessageBoxW(NULL, lpMsg, L"Note!", MB_ICONEXCLAMATION|MB_OK);
 }
