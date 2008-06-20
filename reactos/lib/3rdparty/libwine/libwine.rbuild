@@ -3,6 +3,6 @@
 <module name="wine" type="staticlibrary">
 	<define name="_DISABLE_TIDENTS" />
 	<file>config.c</file>
-	<file>debug.c</file>
+	<file>debug_ros.c</file>
 	<file>string.c</file>
 </module>
