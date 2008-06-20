@@ -130,7 +130,7 @@ typedef struct _FCB
   SECTION_OBJECT_POINTERS SectionObjectPointers;
 
   PFILE_OBJECT FileObject;
-  PDEVICE_EXTENSION DevExt;
+  PNTFS_VCB Vcb;
 
   WCHAR *ObjectName;		/* point on filename (250 chars max) in PathName */
   WCHAR PathName[MAX_PATH];	/* path+filename 260 max */
@@ -428,7 +428,7 @@ NtfsRelReadAhead(PVOID Context);
 /* fcb.c */
 
 PNTFS_FCB
-NtfsCreateFCB(PCWSTR FileName);
+NtfsCreateFCB(PCWSTR FileName, PNTFS_VCB Vcb);
 
 VOID
 NtfsDestroyFCB(PNTFS_FCB Fcb);

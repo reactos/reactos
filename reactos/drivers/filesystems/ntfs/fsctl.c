@@ -190,7 +190,7 @@ NtfsGetVolumeData(PDEVICE_OBJECT DeviceObject,
 
   DPRINT("BytesPerSector: %lu\n", DiskGeometry.BytesPerSector);
   BootSector = ExAllocatePoolWithTag(NonPagedPool,
-                              DiskGeometry.BytesPerSector, TAG_NTFS);
+                                     DiskGeometry.BytesPerSector, TAG_NTFS);
   if (BootSector == NULL)
   {
     return(STATUS_INSUFFICIENT_RESOURCES);
@@ -235,7 +235,7 @@ NtfsGetVolumeData(PDEVICE_OBJECT DeviceObject,
   ExFreePool(BootSector);
 
   MftRecord = ExAllocatePoolWithTag(NonPagedPool,
-                             NtfsInfo->BytesPerFileRecord, TAG_NTFS);
+                                    NtfsInfo->BytesPerFileRecord, TAG_NTFS);
   if (MftRecord == NULL)
   {
     return STATUS_INSUFFICIENT_RESOURCES;
@@ -347,8 +347,7 @@ NtfsMountVolume(PDEVICE_OBJECT DeviceObject,
   Status = IoCreateDevice(NtfsGlobalData->DriverObject,
                           sizeof(DEVICE_EXTENSION),
                           NULL,
-                          FILE_DEVICE_FILE_SYSTEM,
-//                          FILE_DEVICE_DISK_FILE_SYSTEM,
+                          FILE_DEVICE_DISK_FILE_SYSTEM,
                           0,
                           FALSE,
                           &NewDeviceObject);
@@ -380,7 +379,7 @@ NtfsMountVolume(PDEVICE_OBJECT DeviceObject,
                                                    Vcb->StorageDevice);
 
 
-  Fcb = NtfsCreateFCB(NULL);
+  Fcb = NtfsCreateFCB(NULL, Vcb);
   if (Fcb == NULL)
   {
     Status = STATUS_INSUFFICIENT_RESOURCES;
@@ -407,7 +406,7 @@ NtfsMountVolume(PDEVICE_OBJECT DeviceObject,
   Vcb->StreamFileObject->Vpb = Vcb->Vpb;
   Ccb->PtrFileObject = Vcb->StreamFileObject;
   Fcb->FileObject = Vcb->StreamFileObject;
-  Fcb->DevExt = (PDEVICE_EXTENSION)Vcb->StorageDevice;
+  Fcb->Vcb = (PDEVICE_EXTENSION)Vcb->StorageDevice;
 
   Fcb->Flags = FCB_IS_VOLUME_STREAM;
 
@@ -425,7 +424,6 @@ NtfsMountVolume(PDEVICE_OBJECT DeviceObject,
                        Fcb);
 
   ExInitializeResourceLite(&Vcb->DirResource);
-//  ExInitializeResourceLite(&DeviceExt->FatResource);
 
   KeInitializeSpinLock(&Vcb->FcbListLock);
   InitializeListHead(&Vcb->FcbListHead);

@@ -68,7 +68,7 @@ NtfsWSubString(PWCHAR pTarget, const PWCHAR pSource, size_t pLength)
 
 
 PNTFS_FCB
-NtfsCreateFCB(PCWSTR FileName)
+NtfsCreateFCB(PCWSTR FileName, PNTFS_VCB Vcb)
 {
   PNTFS_FCB Fcb;
 
@@ -77,6 +77,8 @@ NtfsCreateFCB(PCWSTR FileName)
 
   Fcb->Identifier.Type = NTFS_TYPE_FCB;
   Fcb->Identifier.Size = sizeof(NTFS_TYPE_FCB);
+  
+  Fcb->Vcb = Vcb;
 
   if (FileName)
   {
@@ -92,6 +94,10 @@ NtfsCreateFCB(PCWSTR FileName)
   }
 
   ExInitializeResourceLite(&Fcb->MainResource);
+  
+  Fcb->RFCB.Resource = &(Fcb->MainResource);
+  
+  InsertTailList(&(Vcb->FcbListHead), &(Fcb->FcbListEntry));
 
   return(Fcb);
 }
@@ -155,7 +161,7 @@ NtfsReleaseFCB(PNTFS_VCB Vcb,
   if (Fcb->RefCount <= 0 && !NtfsFCBIsDirectory(Fcb))
   {
     RemoveEntryList(&Fcb->FcbListEntry);
-    CcUninitializeCacheMap (Fcb->FileObject, NULL, NULL);
+    CcUninitializeCacheMap(Fcb->FileObject, NULL, NULL);
     NtfsDestroyFCB(Fcb);
   }
   KeReleaseSpinLock(&Vcb->FcbListLock, oldIrql);
@@ -169,7 +175,7 @@ NtfsAddFCBToTable(PNTFS_VCB Vcb,
   KIRQL  oldIrql;
 
   KeAcquireSpinLock(&Vcb->FcbListLock, &oldIrql);
-  Fcb->DevExt = Vcb;
+  Fcb->Vcb = Vcb;
   InsertTailList(&Vcb->FcbListHead, &Fcb->FcbListEntry);
   KeReleaseSpinLock(&Vcb->FcbListLock, oldIrql);
 }
@@ -242,7 +248,7 @@ NtfsFCBInitializeCache(PNTFS_VCB Vcb,
   FileObject->FsContext2 = newCCB;
   newCCB->PtrFileObject = FileObject;
   Fcb->FileObject = FileObject;
-  Fcb->DevExt = Vcb;
+  Fcb->Vcb = Vcb;
 
   Status = STATUS_SUCCESS;
   CcInitializeCacheMap(FileObject,
@@ -263,7 +269,7 @@ NtfsMakeRootFCB(PNTFS_VCB Vcb)
 {
   PNTFS_FCB Fcb;
 
-  Fcb = NtfsCreateFCB(L"\\");
+  Fcb = NtfsCreateFCB(L"\\", Vcb);
 
 //  memset(Fcb->entry.Filename, ' ', 11);
 
@@ -371,7 +377,7 @@ NtfsMakeFCBFromDirEntry(PVCB Vcb,
       wcscat(pathName, entryName);
     }
 
-  rcFCB = NtfsCreateFCB(pathName);
+  rcFCB = NtfsCreateFCB(pathName, Vcb);
   memcpy(&rcFCB->Entry, Record, sizeof(DIR_RECORD));
 
   Size = rcFCB->Entry.DataLengthL;
@@ -411,7 +417,7 @@ NtfsAttachFCBToFileObject(PNTFS_VCB Vcb,
   FileObject->FsContext = Fcb;
   FileObject->FsContext2 = newCCB;
   newCCB->PtrFileObject = FileObject;
-  Fcb->DevExt = Vcb;
+  Fcb->Vcb = Vcb;
 
   if (!(Fcb->Flags & FCB_CACHE_INITIALIZED))
   {
