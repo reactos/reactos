@@ -13,6 +13,9 @@
 #define IL_MAIN 0
 #define IL_TEST 1
 
+#define HAS_NO_CHILD 0
+#define HAS_CHILD 1
+
 typedef wchar_t *(__cdecl *DLLNAME)();
 typedef int (_cdecl *MODULES)(char **);
 
@@ -102,12 +105,86 @@ GetListOfTestDlls(PMAIN_WND_INFO pInfo)
     return numFiles;
 }
 
+static BOOL
+NodeHasChild(PMAIN_WND_INFO pInfo,
+             HTREEITEM hItem)
+{
+    TV_ITEM tvItem;
+
+    tvItem.hItem = hItem;
+    tvItem.mask = TVIF_CHILDREN;
+
+    (void)TreeView_GetItem(pInfo->hBrowseTV, &tvItem);
+
+    return (tvItem.cChildren == 1);
+}
+
+static VOID
+FreeItemTag(PMAIN_WND_INFO pInfo,
+            HTREEITEM hItem)
+{
+    TV_ITEM tvItem;
+    WCHAR buf[256];
+
+    tvItem.hItem = hItem;
+    tvItem.mask = TVIF_PARAM | TVIF_TEXT;
+    tvItem.pszText = buf;
+
+    (void)TreeView_GetItem(pInfo->hBrowseTV, &tvItem);
+
+    HeapFree(GetProcessHeap(),
+             0,
+             (PTEST_ITEM)tvItem.lParam);
+}
+
+static VOID
+TraverseTreeView(PMAIN_WND_INFO pInfo,
+                 HTREEITEM hItem)
+{
+    while (NodeHasChild(pInfo, hItem))
+    {
+        HTREEITEM hChildItem;
+
+        hChildItem = TreeView_GetChild(pInfo->hBrowseTV,
+                                       hItem);
+
+        TraverseTreeView(pInfo,
+                         hChildItem);
+
+        hItem = TreeView_GetNextSibling(pInfo->hBrowseTV,
+                                        hItem);
+    }
+
+    if (hItem)
+    {
+        /* loop the child items and free the tags */
+        while (TRUE)
+        {
+            HTREEITEM hOldItem;
+
+            FreeItemTag(pInfo, hItem);
+            hOldItem = hItem;
+            hItem = TreeView_GetNextSibling(pInfo->hBrowseTV,
+                                            hItem);
+            if (hItem == NULL)
+            {
+                hItem = hOldItem;
+                break;
+            }
+        }
+
+        hItem = TreeView_GetParent(pInfo->hBrowseTV,
+                                   hItem);
+    }
+}
+
 static HTREEITEM
 InsertIntoTreeView(HWND hTreeView,
                    HTREEITEM hRoot,
                    LPWSTR lpLabel,
-                   LPWSTR lpDllPath,
-                   INT Image)
+                   LPARAM Tag,
+                   INT Image,
+                   INT Child)
 {
     TV_ITEM tvi;
     TV_INSERTSTRUCT tvins;
@@ -115,19 +192,36 @@ InsertIntoTreeView(HWND hTreeView,
     ZeroMemory(&tvi, sizeof(tvi));
     ZeroMemory(&tvins, sizeof(tvins));
 
-    tvi.mask = TVIF_TEXT | TVIF_PARAM | TVIF_IMAGE | TVIF_SELECTEDIMAGE;
+    tvi.mask = TVIF_TEXT | TVIF_PARAM | TVIF_IMAGE | TVIF_CHILDREN | TVIF_SELECTEDIMAGE;
     tvi.pszText = lpLabel;
     tvi.cchTextMax = lstrlen(lpLabel);
-    tvi.lParam = (LPARAM)lpDllPath;
+    tvi.lParam = Tag;
     tvi.iImage = Image;
     tvi.iSelectedImage = Image;
-
-    //tvi.stateMask = TVIS_OVERLAYMASK;
+    tvi.cChildren = Child;
 
     tvins.item = tvi;
     tvins.hParent = hRoot;
 
     return TreeView_InsertItem(hTreeView, &tvins);
+}
+
+static PTEST_ITEM
+BuildTestItemData(LPWSTR lpDll,
+                  LPWSTR lpRun)
+{
+    PTEST_ITEM pItem;
+
+    pItem = (PTEST_ITEM)HeapAlloc(GetProcessHeap(),
+                                  0,
+                                  sizeof(TEST_ITEM));
+    if (pItem)
+    {
+        wcsncpy(pItem->szSelectedDll, lpDll, MAX_PATH);
+        wcsncpy(pItem->szRunString, lpRun, MAX_RUN_CMD);
+    }
+
+    return pItem;
 }
 
 static VOID
@@ -160,8 +254,9 @@ PopulateTreeView(PMAIN_WND_INFO pInfo)
     hRoot = InsertIntoTreeView(pInfo->hBrowseTV,
                                NULL,
                                L"Full",
-                               NULL,
-                               IL_MAIN);
+                               0,
+                               IL_MAIN,
+                               HAS_CHILD);
 
     for (i = 0; i < pInfo->numDlls; i++)
     {
@@ -177,34 +272,47 @@ PopulateTreeView(PMAIN_WND_INFO pInfo)
                 LPSTR lpModules, ptr;
                 LPWSTR lpModW;
                 INT numMods;
+                PTEST_ITEM pTestItem;
 
                 lpTestName = GetTestName();
+
+                pTestItem = BuildTestItemData(lpDllPath, lpTestName);
 
                 hParent = InsertIntoTreeView(pInfo->hBrowseTV,
                                              hRoot,
                                              lpTestName,
-                                             lpDllPath,
-                                             IL_TEST);
-
+                                             pTestItem,
+                                             IL_TEST,
+                                             HAS_CHILD);
                 if (hParent)
                 {
+                    /* Get the list of modules a dll offers. This is returned as list of
+                     * Ansi null-terminated strings, terminated with an empty string (double null) */
                     GetModulesInTest = (MODULES)GetProcAddress(hDll, "GetModulesInTest");
                     if ((numMods = GetModulesInTest(&lpModules)))
                     {
                         ptr = lpModules;
                         while (numMods && *ptr != '\0')
                         {
+                            /* convert the string to unicode */
                             if (AnsiToUnicode(ptr, &lpModW))
                             {
+                                WCHAR szRunCmd[MAX_RUN_CMD];
+
+                                _snwprintf(szRunCmd, MAX_RUN_CMD, L"%s:%s", lpTestName, lpModW);
+                                pTestItem = BuildTestItemData(lpDllPath, szRunCmd);
+
                                 InsertIntoTreeView(pInfo->hBrowseTV,
                                                    hParent,
                                                    lpModW,
-                                                   lpModW,
-                                                   IL_TEST);
+                                                   pTestItem,
+                                                   IL_TEST,
+                                                   HAS_NO_CHILD);
 
                                 HeapFree(GetProcessHeap(), 0, lpModW);
                             }
 
+                            /* move onto next string */
                             while (*(ptr++) != '\0')
                                 ;
 
@@ -284,6 +392,15 @@ BrowseDlgProc(HWND hDlg,
                           LOWORD(wParam));
                 return TRUE;
             }
+
+            break;
+        }
+
+        case WM_DESTROY:
+        {
+            HTREEITEM hItem = TreeView_GetRoot(pInfo->hBrowseTV);
+
+            TraverseTreeView(pInfo, hItem);
 
             break;
         }

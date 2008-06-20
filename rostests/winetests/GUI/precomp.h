@@ -9,6 +9,15 @@
 
 extern HINSTANCE hInstance;
 
+#define MAX_RUN_CMD 256
+
+typedef struct _TEST_ITEM
+{
+    WCHAR szSelectedDll[MAX_PATH];
+    WCHAR szRunString[MAX_RUN_CMD];
+
+} TEST_ITEM, *PTEST_ITEM;
+
 typedef struct _MAIN_WND_INFO
 {
     HWND hMainWnd;
@@ -20,13 +29,10 @@ typedef struct _MAIN_WND_INFO
     HICON hSmIcon;
     HICON hBgIcon;
 
-    INT SelectedItem;/* selection number in the list view */
-    BOOL bDlgOpen;
-    BOOL bInMenuLoop;
-    BOOL bIsUserAnAdmin;
-
     LPWSTR lpDllList;
     INT numDlls;
+
+    PTEST_ITEM SelectedTest;
 
 } MAIN_WND_INFO, *PMAIN_WND_INFO;
 
