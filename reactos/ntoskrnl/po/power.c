@@ -440,6 +440,22 @@ NtPowerInformation(IN POWER_INFORMATION_LEVEL PowerInformationLevel,
             Status = STATUS_SUCCESS;
             break;
         }
+		case SystemPowerCapabilities:
+        {
+            PSYSTEM_POWER_CAPABILITIES PowerCapabilities = (PSYSTEM_POWER_CAPABILITIES)OutputBuffer;
+
+            if (InputBuffer != NULL)
+                return STATUS_INVALID_PARAMETER;
+            if (OutputBufferLength < sizeof(SYSTEM_POWER_CAPABILITIES))
+                return STATUS_BUFFER_TOO_SMALL;
+
+            /* Just zero the struct (and thus set BatteryState->BatteryPresent = FALSE) */
+            RtlZeroMemory(PowerCapabilities, sizeof(SYSTEM_POWER_CAPABILITIES));
+            //PowerCapabilities->SystemBatteriesPresent = 0;
+
+            Status = STATUS_SUCCESS;
+            break;
+        }
 
         default:
             Status = STATUS_NOT_IMPLEMENTED;
