@@ -72,6 +72,9 @@ NtfsCreateFCB(PCWSTR FileName, PNTFS_VCB Vcb)
 {
   PNTFS_FCB Fcb;
 
+  ASSERT(Vcb);
+  ASSERT(Vcb->Identifier.Type == NTFS_TYPE_VCB);
+
   Fcb = ExAllocatePoolWithTag(NonPagedPool, sizeof(NTFS_FCB), TAG_FCB);
   RtlZeroMemory(Fcb, sizeof(NTFS_FCB));
 

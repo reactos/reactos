@@ -378,6 +378,7 @@ NtfsMountVolume(PDEVICE_OBJECT DeviceObject,
   Vcb->StreamFileObject = IoCreateStreamFileObject(NULL,
                                                    Vcb->StorageDevice);
 
+  InitializeListHead(&Vcb->FcbListHead);
 
   Fcb = NtfsCreateFCB(NULL, Vcb);
   if (Fcb == NULL)
@@ -426,7 +427,6 @@ NtfsMountVolume(PDEVICE_OBJECT DeviceObject,
   ExInitializeResourceLite(&Vcb->DirResource);
 
   KeInitializeSpinLock(&Vcb->FcbListLock);
-  InitializeListHead(&Vcb->FcbListHead);
 
   /* Get serial number */
   NewDeviceObject->Vpb->SerialNumber = Vcb->NtfsInfo.SerialNumber;
