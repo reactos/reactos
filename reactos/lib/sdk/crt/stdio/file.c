@@ -3081,7 +3081,7 @@ int CDECL vfprintf(FILE* file, const char *format, va_list valist)
    * Return the number of bytes that would have been written
    * The code below handles both cases
    */
-  while ((written = vsnprintf(mem, resize, format, valist)) == -1 ||
+  while ((written = _vsnprintf(mem, resize, format, valist)) == -1 ||
           written > resize)
   {
     resize = (written == -1 ? resize * 2 : written + 1);
@@ -3107,7 +3107,7 @@ int CDECL vfwprintf(FILE* file, const wchar_t *format, va_list valist)
   wchar_t buf[2048], *mem = buf;
   int written, resize = sizeof(buf) / sizeof(wchar_t), retval;
   /* See vfprintf comments */
-  while ((written = vsnwprintf(mem, resize, format, valist)) == -1 ||
+  while ((written = _vsnwprintf(mem, resize, format, valist)) == -1 ||
           written > resize)
   {
     resize = (written == -1 ? resize * 2 : written + sizeof(wchar_t));

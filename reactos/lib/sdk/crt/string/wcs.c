@@ -774,7 +774,7 @@ int CDECL _vsnprintf( char *str, unsigned int len,
  */
 int CDECL vsprintf( char *str, const char *format, va_list valist)
 {
-    return vsnprintf(str, INT_MAX, format, valist);
+    return _vsnprintf(str, INT_MAX, format, valist);
 }
 
 /*********************************************************************
@@ -785,7 +785,7 @@ int CDECL _snprintf(char *str, unsigned int len, const char *format, ...)
     int retval;
     va_list valist;
     va_start(valist, format);
-    retval = vsnprintf(str, len, format, valist);
+    retval = _vsnprintf(str, len, format, valist);
     va_end(valist);
     return retval;
 }
@@ -814,7 +814,7 @@ int CDECL _snwprintf( wchar_t *str, unsigned int len, const wchar_t *format, ...
     int retval;
     va_list valist;
     va_start(valist, format);
-    retval = vsnwprintf(str, len, format, valist);
+    retval = _vsnwprintf(str, len, format, valist);
     va_end(valist);
     return retval;
 }
@@ -828,7 +828,7 @@ int CDECL sprintf( char *str, const char *format, ... )
     int r;
 
     va_start( ap, format );
-    r = vsnprintf( str, INT_MAX, format, ap );
+    r = _vsnprintf( str, INT_MAX, format, ap );
     va_end( ap );
     return r;
 }
@@ -842,7 +842,7 @@ int CDECL swprintf( wchar_t *str, const wchar_t *format, ... )
     int r;
 
     va_start( ap, format );
-    r = vsnwprintf( str, INT_MAX, format, ap );
+    r = _vsnwprintf( str, INT_MAX, format, ap );
     va_end( ap );
     return r;
 }
@@ -852,7 +852,7 @@ int CDECL swprintf( wchar_t *str, const wchar_t *format, ... )
  */
 int CDECL vswprintf( wchar_t* str, const wchar_t* format, va_list args )
 {
-    return vsnwprintf( str, INT_MAX, format, args );
+    return _vsnwprintf( str, INT_MAX, format, args );
 }
 #endif
 /*********************************************************************
