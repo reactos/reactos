@@ -2473,8 +2473,25 @@ size_t CDECL fwrite(const void *ptr, size_t size, size_t nmemb, FILE* file)
 wint_t CDECL fputwc(wint_t wc, FILE* file)
 {
   wchar_t mwc=wc;
-  if (fwrite( &mwc, sizeof(mwc), 1, file) != 1)
-    return WEOF;
+  char mbchar[10]; // MB_CUR_MAX_CONST
+  int mb_return;
+
+  if (file->_flag & _IOBINARY)
+  {
+    if (fwrite( &mwc, sizeof(mwc), 1, file) != 1)
+      return WEOF;
+  }
+  else
+  {
+    /* Convert to multibyte in text mode */
+    mb_return = wctomb(mbchar, mwc);
+    if (mb_return == -1) return WEOF;
+
+    /* Output all characters */
+    if (fwrite( mbchar, 1, mb_return, file) != 1)
+        return WEOF;
+  }
+
   return wc;
 }
 
@@ -3105,6 +3122,7 @@ int CDECL vfprintf(FILE* file, const char *format, va_list valist)
 int CDECL vfwprintf(FILE* file, const wchar_t *format, va_list valist)
 {
   wchar_t buf[2048], *mem = buf;
+  char mbbuf[2048], *mbmem = mbbuf;
   int written, resize = sizeof(buf) / sizeof(wchar_t), retval;
   /* See vfprintf comments */
   while ((written = _vsnwprintf(mem, resize, format, valist)) == -1 ||
@@ -3116,9 +3134,30 @@ int CDECL vfwprintf(FILE* file, const wchar_t *format, va_list valist)
     if (!(mem = malloc(resize*sizeof(*mem))))
       return EOF;
   }
-  retval = fwrite(mem, sizeof(*mem), written, file);
+
+  /* Check if outputting to a text-file */
+  if (fdesc[file->_file].wxflag & WX_TEXT)
+  {
+      /* Convert to multibyte then */
+      written = wcstombs(NULL, mem, 0);
+
+      if (written >= sizeof(mbbuf) && (written != (int)-1))
+          mbmem = malloc(written + 1);
+
+      wcstombs(mbmem, mem, written);
+      retval = fwrite(mbmem, 1, written, file);
+
+      if (mbmem != mbbuf)
+        free(mbmem);
+  }
+  else
+  {
+    retval = fwrite(mem, sizeof(*mem), written, file);
+  }
+
   if (mem != buf)
     free (mem);
+
   return retval;
 }
 
