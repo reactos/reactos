@@ -11,15 +11,13 @@
 
 HINSTANCE hInstance;
 
-
-
+typedef int (_cdecl *RUNTEST)(char **);
 
 static BOOL
 OnInitMainDialog(HWND hDlg,
                  LPARAM lParam)
 {
     PMAIN_WND_INFO pInfo;
-    //HMENU hSysMenu;
     LPWSTR lpAboutText;
 
     pInfo = (PMAIN_WND_INFO)lParam;
@@ -32,11 +30,11 @@ OnInitMainDialog(HWND hDlg,
                      (LONG_PTR)pInfo);
 
     pInfo->hSmIcon = LoadImageW(hInstance,
-                         MAKEINTRESOURCEW(IDI_ICON),
-                         IMAGE_ICON,
-                         16,
-                         16,
-                         0);
+                                MAKEINTRESOURCEW(IDI_ICON),
+                                IMAGE_ICON,
+                                16,
+                                16,
+                                0);
     if (pInfo->hSmIcon)
     {
          SendMessageW(hDlg,
@@ -46,11 +44,11 @@ OnInitMainDialog(HWND hDlg,
     }
 
     pInfo->hBgIcon = LoadImageW(hInstance,
-                         MAKEINTRESOURCEW(IDI_ICON),
-                         IMAGE_ICON,
-                         32,
-                         32,
-                         0);
+                                MAKEINTRESOURCEW(IDI_ICON),
+                                IMAGE_ICON,
+                                32,
+                                32,
+                                0);
     if (pInfo->hBgIcon)
     {
         SendMessageW(hDlg,
@@ -62,6 +60,132 @@ OnInitMainDialog(HWND hDlg,
     return TRUE;
 }
 
+static VOID
+RunSelectedTest(PMAIN_WND_INFO pInfo)
+{
+    HWND hRunCmd;
+    WCHAR szTextCmd[MAX_RUN_CMD];
+    LPWSTR lpDllPath;
+    INT sel, len;
+
+    hRunCmd = GetDlgItem(pInfo->hMainWnd, IDC_TESTSELECTION);
+
+    sel = SendMessageW(hRunCmd,
+                       CB_GETCURSEL,
+                       0,
+                       0);
+    if (sel != CB_ERR)
+    {
+        if (SendMessageW(hRunCmd,
+                         CB_GETLBTEXT,
+                         sel,
+                         szTextCmd) != CB_ERR)
+        {
+            lpDllPath = SendMessage(hRunCmd,
+                                    CB_GETITEMDATA,
+                                    0,
+                                    0);
+            if (lpDllPath)
+            {
+                LPWSTR module = szTextCmd;
+                LPSTR lpTest;
+
+                while (*(module++) != L':' && *module != L'\0')
+                    ;
+
+                if (*module)
+                {
+                    if (UnicodeToAnsi(module, &lpTest))
+                    {
+                        HMODULE hDll;
+                        RUNTEST RunTest;
+
+                        hDll = LoadLibraryW(lpDllPath);
+                        if (hDll)
+                        {
+                            RunTest = (RUNTEST)GetProcAddress(hDll, "RunTest");
+                            if (RunTest)
+                            {
+                                RunTest(lpTest);
+                            }
+
+                            FreeLibrary(hDll);
+                        }
+                        DisplayError(GetLastError());
+
+                        HeapFree(GetProcessHeap(), 0, lpTest);
+                    }
+                }
+
+            }
+        }
+    }
+}
+
+static VOID
+AddTestToCombo(PMAIN_WND_INFO pInfo)
+{
+    HWND hRunCmd;
+    LPWSTR lpDllPath;
+    INT len;
+
+    hRunCmd = GetDlgItem(pInfo->hMainWnd, IDC_TESTSELECTION);
+    if (hRunCmd)
+    {
+        SendMessageW(hRunCmd,
+                     CB_INSERTSTRING,
+                     0,
+                     pInfo->SelectedTest.szRunString);
+
+        len = (wcslen(pInfo->SelectedTest.szSelectedDll) + 1) * sizeof(WCHAR);
+        lpDllPath = HeapAlloc(GetProcessHeap(), 0, len);
+        if (lpDllPath)
+        {
+            wcsncpy(lpDllPath,
+                    pInfo->SelectedTest.szSelectedDll,
+                    len / sizeof(WCHAR));
+        }
+
+        SendMessageW(hRunCmd,
+                     CB_SETITEMDATA,
+                     0,
+                     lpDllPath);
+        SendMessageW(hRunCmd,
+                     CB_SETCURSEL,
+                     0,
+                     0);
+    }
+}
+
+static VOID
+FreeTestCmdStrings(PMAIN_WND_INFO pInfo)
+{
+    HWND hRunCmd;
+    WCHAR szTextCmd[MAX_RUN_CMD];
+    LPWSTR lpDllPath;
+    INT cnt, i;
+
+    hRunCmd = GetDlgItem(pInfo->hMainWnd, IDC_TESTSELECTION);
+
+    cnt = SendMessageW(hRunCmd,
+                       CB_GETCOUNT,
+                       0,
+                       0);
+    if (cnt != CB_ERR)
+    {
+        for (i = 0; i < cnt; i++)
+        {
+            lpDllPath = SendMessage(hRunCmd,
+                                    CB_GETITEMDATA,
+                                    i,
+                                    0);
+            if (lpDllPath)
+            {
+                HeapFree(GetProcessHeap(), 0, lpDllPath);
+            }
+        }
+    }
+}
 
 static BOOL CALLBACK
 MainDlgProc(HWND hDlg,
@@ -89,27 +213,45 @@ MainDlgProc(HWND hDlg,
             switch(LOWORD(wParam))
             {
                 case IDC_BROWSE:
-                    DialogBoxParamW(hInstance,
-                                    MAKEINTRESOURCEW(IDD_TESTBROWSER),
-                                    hDlg,
-                                    (DLGPROC)BrowseDlgProc,
-                                    (LPARAM)pInfo);
+                {
+                    INT_PTR ret;
 
+                    ret = DialogBoxParamW(hInstance,
+                                          MAKEINTRESOURCEW(IDD_TESTBROWSER),
+                                          hDlg,
+                                          (DLGPROC)BrowseDlgProc,
+                                          (LPARAM)pInfo);
+                    if (ret == IDOK)
+                    {
+                        AddTestToCombo(pInfo);
+                    }
+
+                    break;
+                }
+
+                case IDC_RUN:
+                    RunSelectedTest(pInfo);
                     break;
 
                 case IDOK:
                     EndDialog(hDlg, 0);
-                break;
+                    break;
             }
         }
         break;
 
         case WM_CLOSE:
-            if (pInfo->hSmIcon)
+            EndDialog(hDlg, 0);
+            break;
+
+        case WM_DESTROY:
+             if (pInfo->hSmIcon)
                 DestroyIcon(pInfo->hSmIcon);
             if (pInfo->hBgIcon)
                 DestroyIcon(pInfo->hBgIcon);
-            EndDialog(hDlg, 0);
+
+            FreeTestCmdStrings(pInfo);
+
             break;
 
 HandleDefaultMessage:

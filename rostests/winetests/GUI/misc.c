@@ -274,7 +274,37 @@ AnsiToUnicode(LPCSTR lpSrcStr,
     *lpDstStr = (LPWSTR)HeapAlloc(GetProcessHeap(), 0, length * sizeof(WCHAR));
     if (*lpDstStr)
     {
-        ret = MultiByteToWideChar(CP_ACP, 0, lpSrcStr, -1, *lpDstStr, length);
+        ret = MultiByteToWideChar(CP_ACP,
+                                  0,
+                                  lpSrcStr,
+                                  -1,
+                                  *lpDstStr,
+                                  length);
+    }
+
+    return ret;
+}
+
+DWORD
+UnicodeToAnsi(LPCWSTR lpSrcStr,
+              LPSTR *lpDstStr)
+{
+    INT length;
+    INT ret = 0;
+
+    length = wcslen(lpSrcStr) + 1;
+
+    *lpDstStr = (LPWSTR)HeapAlloc(GetProcessHeap(), 0, length);
+    if (*lpDstStr)
+    {
+        ret = WideCharToMultiByte(CP_ACP,
+                                  0,
+                                  lpSrcStr,
+                                  -1,
+                                  *lpDstStr,
+                                  length,
+                                  NULL,
+                                  NULL);
     }
 
     return ret;

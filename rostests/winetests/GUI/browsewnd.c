@@ -63,7 +63,9 @@ GetListOfTestDlls(PMAIN_WND_INFO pInfo)
     numFiles = GetNumberOfDllsInFolder(szDllPath);
     if (!numFiles) return 0;
 
-    pInfo->lpDllList = HeapAlloc(GetProcessHeap(), 0, numFiles * (MAX_PATH * sizeof(WCHAR)));
+    pInfo->lpDllList = HeapAlloc(GetProcessHeap(),
+                                 0,
+                                 numFiles * (MAX_PATH * sizeof(WCHAR)));
     if (!pInfo->lpDllList)
         return 0;
 
@@ -329,6 +331,13 @@ PopulateTreeView(PMAIN_WND_INFO pInfo)
             FreeLibrary(hDll);
         }
     }
+
+    if (hRoot)
+    {
+        TreeView_Expand(pInfo->hBrowseTV,
+                        hRoot,
+                        TVE_EXPAND);
+    }
 }
 
 static VOID
@@ -340,7 +349,6 @@ PopulateTestList(PMAIN_WND_INFO pInfo)
         PopulateTreeView(pInfo);
     }
 }
-
 
 static BOOL
 OnInitBrowseDialog(HWND hDlg,
@@ -360,7 +368,6 @@ OnInitBrowseDialog(HWND hDlg,
 
     return TRUE;
 }
-
 
 BOOL CALLBACK
 BrowseDlgProc(HWND hDlg,
@@ -432,6 +439,8 @@ BrowseDlgProc(HWND hDlg,
             HTREEITEM hItem = TreeView_GetRoot(pInfo->hBrowseTV);
 
             TraverseTreeView(pInfo, hItem);
+
+            pInfo->hBrowseDlg = NULL;
 
             break;
         }

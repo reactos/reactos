@@ -39,6 +39,7 @@ typedef struct _MAIN_WND_INFO
 /* dll exports */
 wchar_t *GetTestName();
 int GetModulesInTest(char **modules);
+int RunTest(const char *lpTest);
 
 
 /* browsewnd.c */
@@ -49,5 +50,6 @@ HIMAGELIST InitImageList(UINT StartResource, UINT EndResource, UINT Width, UINT 
 VOID DisplayMessage(LPWSTR lpMsg);
 VOID DisplayError(INT err);
 DWORD AnsiToUnicode(LPCSTR lpSrcStr, LPWSTR *lpDstStr);
+DWORD UnicodeToAnsi(LPCWSTR lpSrcStr, LPSTR *lpDstStr);
 
 #endif /* __WINETESTGUI_PRECOMP_H */
