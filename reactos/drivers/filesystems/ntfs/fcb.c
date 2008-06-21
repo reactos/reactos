@@ -109,7 +109,12 @@ NtfsCreateFCB(PCWSTR FileName, PNTFS_VCB Vcb)
 VOID
 NtfsDestroyFCB(PNTFS_FCB Fcb)
 {
+  ASSERT(Fcb);
+  ASSERT(Fcb->Identifier.Type == NTFS_TYPE_FCB);
+
   ExDeleteResourceLite(&Fcb->MainResource);
+
+  RemoveEntryList(&(Fcb->FcbListEntry));
 
   ExFreePool(Fcb);
 }

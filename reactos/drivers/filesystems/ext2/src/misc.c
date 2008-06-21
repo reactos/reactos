@@ -895,6 +895,8 @@ PtrExt2FCB						PtrFCB)
 	ExDeleteResourceLite( &PtrFCB->NTRequiredFCB.MainResource );
 	ExDeleteResourceLite( &PtrFCB->NTRequiredFCB.PagingIoResource );
 
+	RemoveEntryList(&(PtrFCB->NextFCB));
+
 	if( PtrFCB->FCBName )
 	{
 		Ext2ReleaseObjectName( PtrFCB->FCBName );
