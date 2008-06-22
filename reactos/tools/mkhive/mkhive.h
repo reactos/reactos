@@ -32,6 +32,9 @@
 
 #include <host/typedefs.h>
 
+#define USE_HOST_WCSFUNCS
+#include <host/wcsfuncs.h>
+
 // Definitions copied from <ntstatus.h>
 // We only want to include host headers, so we define them manually
 #define STATUS_SUCCESS                   ((NTSTATUS)0x00000000)
@@ -95,13 +98,6 @@ extern LIST_ENTRY CmiHiveListHead;
 #else//_MSC_VER
 #define GCC_PACKED __attribute__((packed))
 #endif//_MSC_VER
-
-/* rtl.c */
-PWSTR
-xwcschr(
-   PWSTR String,
-   WCHAR Char
-);
 
 #endif /* __MKHIVE_H__ */
 

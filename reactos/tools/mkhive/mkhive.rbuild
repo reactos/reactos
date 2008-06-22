@@ -11,6 +11,7 @@
 	<compilerflag>-fshort-wchar</compilerflag>
 	<library>inflibhost</library>
 	<library>cmlibhost</library>
+	<library>host_wcsfuncs</library>
 	<file>binhive.c</file>
 	<file>cmi.c</file>
 	<file>mkhive.c</file>

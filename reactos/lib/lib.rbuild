@@ -22,6 +22,9 @@
 	<directory name="fslib">
 		<xi:include href="fslib/directory.rbuild" />
 	</directory>
+	<directory name="host">
+		<xi:include href="host/directory.rbuild" />
+	</directory>
 	<directory name="inflib">
 		<xi:include href="inflib/inflib.rbuild" />
 	</directory>

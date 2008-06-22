@@ -127,7 +127,7 @@ RegpOpenOrCreateKey(
 	LocalKeyName = (PWSTR)KeyName;
 	for (;;)
 	{
-		End = (PWSTR) xwcschr(LocalKeyName, '\\');
+		End = (PWSTR) utf16_wcschr(LocalKeyName, '\\');
 		if (End)
 		{
 			KeyString.Buffer = LocalKeyName;
@@ -138,9 +138,9 @@ RegpOpenOrCreateKey(
 			RtlInitUnicodeString(&KeyString, LocalKeyName);
 
 		/* Redirect from 'CurrentControlSet' to 'ControlSet001' */
-		if (!xwcsncmp(LocalKeyName, L"CurrentControlSet", 17) &&
-                    ParentKey->NameSize == 12 &&
-                    !memcmp(ParentKey->Name, L"SYSTEM", 12))
+		if (!utf16_wcsncmp(LocalKeyName, L"CurrentControlSet", 17) &&
+                           ParentKey->NameSize == 12 &&
+                           !memcmp(ParentKey->Name, L"SYSTEM", 12))
 			RtlInitUnicodeString(&KeyString, L"ControlSet001");
 
 		/* Check subkey in memory structure */
