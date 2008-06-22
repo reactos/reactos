@@ -1551,9 +1551,13 @@ void
 MingwModuleHandler::GenerateRunRsymCode () const
 {
 	fprintf ( fMakefile,
+             "ifneq ($(ROS_GENERATE_RSYM),no)\n" );
+	fprintf ( fMakefile,
 	          "\t$(ECHO_RSYM)\n" );
 	fprintf ( fMakefile,
 	          "\t$(Q)$(RSYM_TARGET) $@ $@\n\n" );
+	fprintf ( fMakefile,
+             "endif\n" );
 }
 
 void
