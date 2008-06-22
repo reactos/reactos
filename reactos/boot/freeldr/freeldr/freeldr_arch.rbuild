@@ -1,15 +1,24 @@
 <?xml version="1.0"?>
 <!DOCTYPE directory SYSTEM "../../../tools/rbuild/project.dtd">
-<directory name="arch">
-	<directory name="i386">
-		<if property="ARCH" value="i386">
-			<module name="freeldr_arch" type="objectlibrary">
-				<include base="freeldr_base">include</include>
-				<include base="freeldr_base">cache</include>
-				<include base="ntoskrnl">include</include>
-				<define name="_NTHAL_" />
-				<compilerflag>-fno-inline</compilerflag>
-				<compilerflag>-fno-zero-initialized-in-bss</compilerflag>
+<module name="freeldr_arch" type="objectlibrary">
+	<include base="freeldr_base">include</include>
+	<include base="freeldr_base">cache</include>
+	<include base="ntoskrnl">include</include>
+	<include base="ReactOS">include/reactos/libs</include>
+	<include base="ReactOS">include/reactos/elf</include>
+	<define name="_NTHAL_" />
+	<compilerflag>-fno-inline</compilerflag>
+	<compilerflag>-fno-zero-initialized-in-bss</compilerflag>
+
+	<if property="ARCH" value="arm">
+		<compilerflag>-ffreestanding</compilerflag>
+		<compilerflag>-fno-builtin</compilerflag>
+		<compilerflag>-Os</compilerflag>
+	</if>
+
+	<directory name="arch">
+		<directory name="i386">
+			<if property="ARCH" value="i386">
 				<file>_alloca.S</file>
 				<file>archmach.c</file>
 				<file>hardware.c</file>
@@ -35,23 +44,10 @@
 				<file>xboxmem.c</file>
 				<file>xboxrtc.c</file>
 				<file>xboxvideo.c</file>
-			</module>
-		</if>
-	</directory>
-	<directory name="powerpc">
-		<if property="ARCH" value="powerpc">
-			<module name="freeldr_arch" type="objectlibrary">
-				<include base="freeldr_base">include</include>
-				<include base="freeldr_base">cache</include>
-				<include base="ntoskrnl">include</include>
-				<include base="ReactOS">include/reactos/libs</include>
-				<include base="ReactOS">include/reactos/elf</include>
-				<define name="_NTHAL_" />
-				<compilerflag>-ffreestanding</compilerflag>
-				<compilerflag>-fno-builtin</compilerflag>
-				<compilerflag>-fno-inline</compilerflag>
-				<compilerflag>-fno-zero-initialized-in-bss</compilerflag>
-				<compilerflag>-Os</compilerflag>
+			</if>
+		</directory>
+		<directory name="powerpc">
+			<if property="ARCH" value="powerpc">
 				<file>boot.s</file>
 				<file>loader.c</file>
 				<file>mach.c</file>
@@ -65,47 +61,16 @@
 				<file>prep_ide.c</file>
 				<file>prep_pci.c</file>
 				<file>prep_vga.c</file>
-			</module>
-		</if>
-	</directory>
-	<directory name="mips">
-		<if property="ARCH" value="mips">
-			<module name="freeldr_arch" type="objectlibrary">
-				<include base="freeldr_base">include</include>
-				<include base="freeldr_base">cache</include>
-				<include base="ntoskrnl">include</include>
-				<define name="DEBUG" />
-				<define name="_NTHAL_" />
-				<file>boot.s</file>
-				<file>console.c</file>
-				<file>disk.c</file>
-				<file>hardware.c</file>
-				<file>loader.c</file>
-				<file>mach.c</file>
-				<file>portio.c</file>
-				<file>video.c</file>
-			</module>
-		</if>
-	</directory>
-	<directory name="arm">
-		<if property="ARCH" value="arm">
-			<module name="freeldr_arch" type="objectlibrary">
-				<include base="freeldr_base">include</include>
-				<include base="freeldr_base">cache</include>
-				<include base="ntoskrnl">include</include>
-				<compilerflag>-ffreestanding</compilerflag>
-				<compilerflag>-fno-builtin</compilerflag>
-				<compilerflag>-fno-inline</compilerflag>
-				<compilerflag>-fno-zero-initialized-in-bss</compilerflag>
-				<compilerflag>-Os</compilerflag>
-				<define name="DEBUG" />
-				<define name="_NTHAL_" />
+			</if>
+		</directory>
+		<directory name="arm">
+			<if property="ARCH" value="arm">
 				<file>boot.s</file>
 				<file>ferouart.c</file>
 				<file>loader.c</file>
 				<file>macharm.c</file>
 				<file>versuart.c</file>
-			</module>
-		</if>
+			</if>
+		</directory>
 	</directory>
-</directory>
+</module>
