@@ -63,6 +63,23 @@ NtCreateKey(OUT PHANDLE KeyHandle,
             /* Save the class directly */
             if (Class) ParseContext.Class = *Class;
         }
+
+        /* Setup the parse context */
+        ParseContext.CreateOperation = TRUE;
+        ParseContext.CreateOptions = CreateOptions;
+
+        /* Do the create */
+        Status = ObOpenObjectByName(ObjectAttributes,
+                                    CmpKeyObjectType,
+                                    PreviousMode,
+                                    NULL,
+                                    DesiredAccess,
+                                    &ParseContext,
+                                    &Handle);
+        if (NT_SUCCESS(Status)) *KeyHandle = Handle;
+
+        /* Return data to user */
+        if (Disposition) *Disposition = ParseContext.Disposition;
     }
     _SEH_HANDLE
     {
@@ -70,24 +87,8 @@ NtCreateKey(OUT PHANDLE KeyHandle,
         Status = _SEH_GetExceptionCode();
     }
     _SEH_END;
-    if (!NT_SUCCESS(Status)) return Status;
-    
-    /* Setup the parse context */
-    ParseContext.CreateOperation = TRUE;
-    ParseContext.CreateOptions = CreateOptions;
-        
-    /* Do the create */
-    Status = ObOpenObjectByName(ObjectAttributes,
-                                CmpKeyObjectType,
-                                PreviousMode,
-                                NULL,
-                                DesiredAccess,
-                                &ParseContext,
-                                &Handle);
-    if (NT_SUCCESS(Status)) *KeyHandle = Handle;
-    
-    /* Return data to user */
-    if (Disposition) *Disposition = ParseContext.Disposition;
+
+    /* Return status */
     return Status;
 }
 
@@ -109,14 +110,24 @@ NtOpenKey(OUT PHANDLE KeyHandle,
     {
         /* Check for user-mode caller */
         if (PreviousMode == UserMode)
-        {            
+        {
             /* Probe the key handle */
             ProbeForWriteHandle(KeyHandle);
             *KeyHandle = NULL;
-            
+
             /* Probe object attributes */
             ProbeForRead(ObjectAttributes, sizeof(OBJECT_ATTRIBUTES), 4);
         }
+
+        /* Just let the object manager handle this */
+        Status = ObOpenObjectByName(ObjectAttributes,
+                                    CmpKeyObjectType,
+                                    ExGetPreviousMode(),
+                                    NULL,
+                                    DesiredAccess,
+                                    &ParseContext,
+                                    &Handle);
+        if (NT_SUCCESS(Status)) *KeyHandle = Handle;
     }
     _SEH_HANDLE
     {
@@ -124,18 +135,7 @@ NtOpenKey(OUT PHANDLE KeyHandle,
         Status = _SEH_GetExceptionCode();
     }
     _SEH_END;
-    if (!NT_SUCCESS(Status)) return Status;
 
-    /* Just let the object manager handle this */
-    Status = ObOpenObjectByName(ObjectAttributes,
-                                CmpKeyObjectType,
-                                ExGetPreviousMode(),
-                                NULL,
-                                DesiredAccess,
-                                &ParseContext,
-                                &Handle);
-    if (NT_SUCCESS(Status)) *KeyHandle = Handle;
-    
     /* Return status */
     return Status;
 }
