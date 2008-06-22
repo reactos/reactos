@@ -388,6 +388,9 @@
 <directory name="wshirda">
 	<xi:include href="wshirda/wshirda.rbuild" />
 </directory>
+<directory name="wshtcpip">
+	<xi:include href="wshtcpip/wshtcpip.rbuild" />
+</directory>
 <directory name="wsock32">
 	<xi:include href="wsock32/wsock32.rbuild" />
 </directory>

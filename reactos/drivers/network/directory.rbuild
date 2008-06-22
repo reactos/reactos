@@ -16,7 +16,4 @@
 <directory name="tdi">
 	<xi:include href="tdi/tdi.rbuild" />
 </directory>
-<directory name="wshtcpip">
-	<xi:include href="wshtcpip/wshtcpip.rbuild" />
-</directory>
 </group>

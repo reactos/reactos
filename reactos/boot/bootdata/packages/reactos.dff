@@ -343,6 +343,7 @@ dll\win32\wldap32\wldap32.dll                       1
 dll\win32\ws2_32\ws2_32.dll                         1
 dll\win32\ws2help\ws2help.dll                       1
 dll\win32\wshirda\wshirda.dll                       1
+dll\win32\wshtcpip\wshtcpip.dll                     1
 dll\win32\wsock32\wsock32.dll                       1
 dll\win32\wtsapi32\wtsapi32.dll                     1
 dll\win32\winmm\midimap\midimap.dll                 1
@@ -375,7 +376,6 @@ drivers\network\afd\afd.sys                         2
 drivers\network\ndis\ndis.sys                       2
 drivers\network\tcpip\tcpip.sys                     2
 drivers\network\tdi\tdi.sys                         2
-drivers\network\wshtcpip\wshtcpip.dll               1
 drivers\network\dd\ne2000\ne2000.sys                2
 drivers\network\dd\pcnet\pcnet.sys                  2
 
