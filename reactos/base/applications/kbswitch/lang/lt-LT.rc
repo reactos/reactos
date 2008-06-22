@@ -6,7 +6,6 @@ IDR_POPUP MENU
 BEGIN
     POPUP "popup"
     BEGIN
-        MENUITEM SEPARATOR
         MENUITEM "&Nuostatos...",  ID_PREFERENCES
         MENUITEM SEPARATOR
         MENUITEM "&Baigti",        ID_EXIT

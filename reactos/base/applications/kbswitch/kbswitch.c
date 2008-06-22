@@ -142,7 +142,7 @@ UpdateTrayIcon(HWND hwnd, LPTSTR szLCID, LPTSTR szName)
     tnid.uCallbackMessage = WM_NOTIFYICONMSG;
     tnid.hIcon = CreateTrayIcon(szLCID);
 
-	lstrcpyn(tnid.szTip, szName, sizeof(tnid.szTip));
+    lstrcpyn(tnid.szTip, szName, sizeof(tnid.szTip));
 
     Shell_NotifyIcon(NIM_MODIFY, &tnid);
 }
@@ -210,7 +210,7 @@ GetLayoutName(LPTSTR szLayoutNum, LPTSTR szName)
     TCHAR szBuf[MAX_PATH], szDispName[MAX_PATH], szIndex[MAX_PATH], szPath[MAX_PATH];
     TCHAR szLCID[CCH_LAYOUT_ID + 1];
     HANDLE hLib;
-    int i, j, k;
+    UINT i, j, k;
 
     if(!GetLayoutID(szLayoutNum, szLCID))
         return FALSE;
@@ -329,52 +329,6 @@ BuildLeftPopupMenu()
     return hMenu;
 }
 
-static HMENU
-BuildRightPopupMenu()
-{
-    HMENU hMenu;
-    HMENU hMenuTemplate;
-    DWORD dwIndex;
-    LPTSTR pszMenuItem;
-    MENUITEMINFO mii;
-
-    // Add the keyboard layouts to the popup menu
-    hMenu = BuildLeftPopupMenu();
-
-    // Add the menu items from the popup menu template
-    hMenuTemplate = GetSubMenu(LoadMenu(hInst, MAKEINTRESOURCE(IDR_POPUP)), 0);
-    dwIndex = 0;
-
-    mii.cbSize = sizeof(mii);
-    mii.fMask = MIIM_FTYPE | MIIM_STRING | MIIM_ID;
-    mii.dwTypeData = NULL;
-
-    while(GetMenuItemInfo(hMenuTemplate, dwIndex, TRUE, &mii))
-    {
-        if(mii.cch > 0)
-        {
-            mii.cch++;
-            pszMenuItem = (LPTSTR)HeapAlloc(hProcessHeap, 0, mii.cch * sizeof(TCHAR));
-
-            mii.dwTypeData = pszMenuItem;
-            GetMenuItemInfo(hMenuTemplate, dwIndex, TRUE, &mii);
-
-            AppendMenu(hMenu, mii.fType, mii.wID, mii.dwTypeData);
-
-            HeapFree(hProcessHeap, 0, pszMenuItem);
-            mii.dwTypeData = NULL;
-        }
-        else
-        {
-            AppendMenu(hMenu, mii.fType, 0, NULL);
-        }
-
-        dwIndex++;
-    }
-
-    return hMenu;
-}
-
 BOOL
 SetHooks()
 {
@@ -430,7 +384,7 @@ GetNextLayout()
 LRESULT CALLBACK
 WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 {
-    static HMENU hLeftPopupMenu, hRightPopupMenu;
+    static HMENU hRightPopupMenu;
     static TCHAR szLCID[MAX_PATH], szLangName[MAX_PATH];
 
     switch (Message)
@@ -439,32 +393,35 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
         {
             SetHooks();
             AddTrayIcon(hwnd);
-            hLeftPopupMenu = BuildLeftPopupMenu(hwnd);
-            hRightPopupMenu = BuildRightPopupMenu(hwnd);
+            hRightPopupMenu = GetSubMenu(LoadMenu(hInst, MAKEINTRESOURCE(IDR_POPUP)), 0);
+
+            return 0;
         }
-        break;
 
         case WM_LANG_CHANGED:
         {
             GetLayoutIDByHkl((HKL)lParam, szLCID);
             GetLocaleInfo((LANGID)_tcstoul(szLCID, NULL, 16), LOCALE_SLANGUAGE, (LPTSTR)szLangName, sizeof(szLangName) / sizeof(TCHAR));
             UpdateTrayIcon(hwnd, szLCID, szLangName);
+
+            return 0;
         }
-        break;
 
         case WM_LOAD_LAYOUT:
         {
             ActivateLayout(hwnd, GetNextLayout());
+
+            return 0;
         }
-        break;
 
         case WM_WINDOW_ACTIVATE:
         {
             GetLayoutIDByHkl(GetKeyboardLayout(GetWindowThreadProcessId((HWND)wParam, 0)), szLCID);
             GetLocaleInfo((LANGID)_tcstoul(szLCID, NULL, 16), LOCALE_SLANGUAGE, (LPTSTR)szLangName, sizeof(szLangName) / sizeof(TCHAR));
             UpdateTrayIcon(hwnd, szLCID, szLangName);
+
+            return 0;
         }
-        break;
 
         case WM_NOTIFYICONMSG:
             switch (lParam)
@@ -476,13 +433,25 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 
                     GetCursorPos(&pt);
                     SetForegroundWindow(hwnd);
+
                     if (lParam == WM_LBUTTONDOWN)
+                    {
+                        HMENU hLeftPopupMenu;
+
+                        /* Rebuild the left popup menu on every click to take care of keyboard layout changes */
+                        hLeftPopupMenu = BuildLeftPopupMenu();
                         TrackPopupMenu(hLeftPopupMenu, 0, pt.x, pt.y, 0, hwnd, NULL);
+                        DestroyMenu(hLeftPopupMenu);
+                    }
                     else
+                    {
                         TrackPopupMenu(hRightPopupMenu, 0, pt.x, pt.y, 0, hwnd, NULL);
+                    }
+
                     PostMessage(hwnd, WM_NULL, 0, 0);
+
+                    return 0;
                 }
-                break;
             }
             break;
 
@@ -491,7 +460,7 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
             {
                 case ID_EXIT:
                     SendMessage(hwnd, WM_CLOSE, 0, 0);
-                    break;
+                    return 0;
 
                 case ID_PREFERENCES:
                 {
@@ -506,16 +475,15 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
                     if (!ShellExecuteEx(&shInputDll))
                         MessageBox(hwnd, _T("Can't start input.dll"), NULL, MB_OK | MB_ICONERROR);
                 }
-                break;
 
                 default:
                     ActivateLayout(hwnd, LOWORD(wParam));
-                    break;
+                    return 0;
             }
             break;
 
         case WM_SETTINGCHANGE:
-	    {
+        {
                 if (wParam == SPI_SETDEFAULTINPUTLANG)
                 {
                      //FIXME: Should detect default language changes by CPL applet or by other tools and update UI
@@ -526,12 +494,12 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
         case WM_DESTROY:
         {
             DeleteHooks();
-            DestroyMenu(hLeftPopupMenu);
             DestroyMenu(hRightPopupMenu);
             DelTrayIcon(hwnd);
             PostQuitMessage(0);
+
+            return 0;
         }
-        break;
     }
 
     return DefWindowProc(hwnd, Message, wParam, lParam);
