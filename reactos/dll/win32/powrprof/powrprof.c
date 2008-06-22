@@ -35,6 +35,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(powrprof);
 
 static const WCHAR szPowerCfgSubKey[] =
     L"Software\\Microsoft\\Windows\\CurrentVersion\\Controls Folder\\PowerCfg";
+static const WCHAR szPolicies[] = L"Policies";
 static const WCHAR szSemaphoreName[] = L"PowerProfileRegistrySemaphore";
 static const WCHAR szDiskMax[] = L"DiskSpindownMax";
 static const WCHAR szDiskMin[] = L"DiskSpindownMin";
@@ -119,7 +120,7 @@ DeletePwrScheme(UINT uiIndex)
 
 static BOOLEAN
 POWRPROF_GetUserPowerPolicy(LPWSTR szNum,
-                            USER_POWER_POLICY userPwrPolicy,
+                            PUSER_POWER_POLICY puserPwrPolicy,
                             DWORD dwName, LPWSTR szName,
                             DWORD dwDesc, LPWSTR szDesc)
 {
@@ -156,8 +157,8 @@ POWRPROF_GetUserPowerPolicy(LPWSTR szNum,
         return FALSE;
     }
 
-    dwSize = sizeof(userPwrPolicy);
-    Err = RegQueryValueExW(hSubKey, L"Policies", NULL, NULL, (LPBYTE)&userPwrPolicy, &dwSize);
+    dwSize = sizeof(USER_POWER_POLICY);
+    Err = RegQueryValueExW(hSubKey, L"Policies", NULL, NULL, (LPBYTE)puserPwrPolicy, &dwSize);
     if (Err != ERROR_SUCCESS)
     {
         ERR("RegQueryValueExW failed: %d\n", Err);
@@ -169,7 +170,7 @@ POWRPROF_GetUserPowerPolicy(LPWSTR szNum,
 }
 
 static BOOLEAN
-POWRPROF_GetMachinePowerPolicy(LPWSTR szNum, MACHINE_POWER_POLICY machinePwrPolicy)
+POWRPROF_GetMachinePowerPolicy(LPWSTR szNum, PMACHINE_POWER_POLICY pmachinePwrPolicy)
 {
     HKEY hKey;
     LONG Err;
@@ -186,8 +187,8 @@ POWRPROF_GetMachinePowerPolicy(LPWSTR szNum, MACHINE_POWER_POLICY machinePwrPoli
         return FALSE;
     }
 
-    dwSize = sizeof(machinePwrPolicy);
-    Err = RegQueryValueExW(hKey, L"Policies", NULL, NULL, (LPBYTE)&machinePwrPolicy, &dwSize);
+    dwSize = sizeof(MACHINE_POWER_POLICY);
+    Err = RegQueryValueExW(hKey, L"Policies", NULL, NULL, (LPBYTE)pmachinePwrPolicy, &dwSize);
     if (Err != ERROR_SUCCESS)
     {
         ERR("RegQueryValueExW failed: %d\n", Err);
@@ -204,11 +205,12 @@ EnumPwrSchemes(PWRSCHEMESENUMPROC lpfnPwrSchemesEnumProc,
 {
     HKEY hKey;
     LONG Err;
-    DWORD dwSize, dwNameSize = 0, dwDescSize = 0, dwIndex = 0;
+    DWORD dwSize, dwNameSize = MAX_PATH, dwDescSize = MAX_PATH, dwIndex = 0;
     WCHAR szNum[3 + 1], szName[MAX_PATH], szDesc[MAX_PATH];
-    PPOWER_POLICY pPwrPolicy = NULL;
+    POWER_POLICY PwrPolicy;
     USER_POWER_POLICY userPwrPolicy;
     MACHINE_POWER_POLICY machinePwrPolicy;
+    BOOLEAN ret = FALSE;
 
     if (!lpfnPwrSchemesEnumProc)
     {
@@ -230,7 +232,7 @@ EnumPwrSchemes(PWRSCHEMESENUMPROC lpfnPwrSchemesEnumProc,
 
     while (RegEnumKeyExW(hKey, dwIndex, szNum, &dwSize, NULL, NULL, NULL, NULL) == ERROR_SUCCESS)
     {
-        if (!POWRPROF_GetUserPowerPolicy(szNum, userPwrPolicy,
+        if (!POWRPROF_GetUserPowerPolicy(szNum, &userPwrPolicy,
                                          dwNameSize, szName,
                                          dwDescSize, szDesc))
         {
@@ -239,18 +241,26 @@ EnumPwrSchemes(PWRSCHEMESENUMPROC lpfnPwrSchemesEnumProc,
             return FALSE;
         }
 
-        if (!POWRPROF_GetMachinePowerPolicy(szNum, machinePwrPolicy))
+        if (!POWRPROF_GetMachinePowerPolicy(szNum, &machinePwrPolicy))
         {
             RegCloseKey(hKey);
             ReleaseSemaphore(PPRegSemaphore, 1, NULL);
             return FALSE;
         }
 
-        memcpy(&pPwrPolicy->user, &userPwrPolicy, sizeof(USER_POWER_POLICY));
-        memcpy(&pPwrPolicy->mach, &machinePwrPolicy, sizeof(MACHINE_POWER_POLICY));
+        memcpy(&PwrPolicy.user, &userPwrPolicy, sizeof(USER_POWER_POLICY));
+        memcpy(&PwrPolicy.mach, &machinePwrPolicy, sizeof(MACHINE_POWER_POLICY));
 
-        if (!lpfnPwrSchemesEnumProc(_wtoi(szNum), dwNameSize, szName, dwDescSize, szDesc, pPwrPolicy, lParam))
-            break;
+        if (!lpfnPwrSchemesEnumProc(_wtoi(szNum), dwNameSize, szName, dwDescSize, szDesc, &PwrPolicy, lParam))
+        {
+            RegCloseKey(hKey);
+            ReleaseSemaphore(PPRegSemaphore, 1, NULL);
+            return ret;
+        }
+        else
+        {
+            ret=TRUE;
+        }
 
         dwSize = sizeof(szNum) / sizeof(WCHAR);
         dwIndex++;
@@ -306,6 +316,7 @@ BOOLEAN WINAPI
 GetCurrentPowerPolicies(PGLOBAL_POWER_POLICY pGlobalPowerPolicy,
                         PPOWER_POLICY pPowerPolicy)
 {
+    /*
     SYSTEM_POWER_POLICY ACPower, DCPower;
 
     FIXME("(%p, %p) stub!\n", pGlobalPowerPolicy, pPowerPolicy);
@@ -314,6 +325,36 @@ GetCurrentPowerPolicies(PGLOBAL_POWER_POLICY pGlobalPowerPolicy,
     NtPowerInformation(SystemPowerPolicyDc, 0, 0, &DCPower, sizeof(SYSTEM_POWER_POLICY));
 
     return FALSE;
+	*/
+/*
+   Lohnegrim: I dont know why this Function shoud call NtPowerInformation, becouse as far as i know,
+      it simply returns the GlobalPowerPolicy and the AktivPowerScheme!
+ */
+    BOOLEAN ret;
+    UINT uiID;
+
+    if (pGlobalPowerPolicy != NULL)
+    {
+        ret = ReadGlobalPwrPolicy(pGlobalPowerPolicy);
+        if (!ret)
+        {
+            return FALSE;
+        }
+    }
+    if (pPowerPolicy != NULL)
+    {
+        ret = GetActivePwrScheme(&uiID);
+        if (!ret)
+        {
+            return FALSE;
+        }
+        ret = ReadPwrScheme(uiID,pPowerPolicy);
+        if (!ret)
+        {
+            return FALSE;
+        }
+    }
+    return TRUE;
 }
 
 
@@ -532,13 +573,13 @@ ReadPwrScheme(UINT uiID,
 
     swprintf(szNum, L"%d", uiID);
 
-    if (!POWRPROF_GetUserPowerPolicy(szNum, userPwrPolicy, 0, NULL, 0, NULL))
+    if (!POWRPROF_GetUserPowerPolicy(szNum, &userPwrPolicy, 0, NULL, 0, NULL))
     {
         ReleaseSemaphore(PPRegSemaphore, 1, NULL);
         return FALSE;
     }
 
-    if (!POWRPROF_GetMachinePowerPolicy(szNum, machinePwrPolicy))
+    if (!POWRPROF_GetMachinePowerPolicy(szNum, &machinePwrPolicy))
     {
         ReleaseSemaphore(PPRegSemaphore, 1, NULL);
         return FALSE;
@@ -578,9 +619,46 @@ SetSuspendState(BOOLEAN Hibernate,
 BOOLEAN WINAPI
 WriteGlobalPwrPolicy(PGLOBAL_POWER_POLICY pGlobalPowerPolicy)
 {
-    FIXME("(%p) stub!\n", pGlobalPowerPolicy);
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
+    HKEY hKey;
+    GLOBAL_USER_POWER_POLICY gupp;
+    GLOBAL_MACHINE_POWER_POLICY gmpp;
+
+    gupp = pGlobalPowerPolicy->user;
+    gmpp = pGlobalPowerPolicy->mach;
+
+    if (RegOpenKeyEx(HKEY_CURRENT_USER,
+                    L"Control Panel\\PowerCfg\\GlobalPowerPolicy",
+                    0,
+                    KEY_ALL_ACCESS,
+                    &hKey))
+        return FALSE;
+
+    if (RegSetValueExW(hKey,szPolicies,(DWORD)NULL,REG_BINARY,(const unsigned char *)&gupp,sizeof(GLOBAL_USER_POWER_POLICY)) == ERROR_SUCCESS)
+    {
+        RegCloseKey(hKey);
+
+        if (RegOpenKeyEx(HKEY_LOCAL_MACHINE,
+                       L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Controls Folder\\PowerCfg\\GlobalPowerPolicy",
+                       0,
+                       KEY_ALL_ACCESS,
+                       &hKey))
+            return FALSE;
+
+        if (RegSetValueExW(hKey,szPolicies,(DWORD)NULL,REG_BINARY,(const unsigned char *)&gmpp,sizeof(GLOBAL_MACHINE_POWER_POLICY)) == ERROR_SUCCESS)
+        {
+            RegCloseKey(hKey);
+            return TRUE;
+        }
+        else
+        {
+            return FALSE;
+        }
+    }
+    else
+    {
+        RegCloseKey(hKey);
+        return FALSE;
+    }
 }
 
 
@@ -620,20 +698,19 @@ ValidatePowerPolicies(PGLOBAL_POWER_POLICY pGPP, PPOWER_POLICY pPP)
         return FALSE;
     }
 
-    if (!pGPP)
+    if (pGPP)
     {
-        memcpy(&pGPP, &pGlobalPowerPolicy, sizeof(GLOBAL_POWER_POLICY));
+        //memcpy(&pGPP, &pGlobalPowerPolicy, sizeof(GLOBAL_POWER_POLICY));
     }
 
-    if (!pPP)
+    if (pPP)
     {
-        memcpy(&pPP, &pPowerPolicy, sizeof(POWER_POLICY));
+        //memcpy(&pPP, &pPowerPolicy, sizeof(POWER_POLICY));
     }
 
     SetLastError(ERROR_SUCCESS);
     return TRUE;
 }
-
 
 BOOL WINAPI
 DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
