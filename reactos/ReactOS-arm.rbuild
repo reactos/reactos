@@ -80,7 +80,7 @@
 		<directory name="drivers">
 			<directory name="csq">
 				<xi:include href="lib/drivers/csq/csq.rbuild" />
-/directory>
+            </directory>
 		</directory>
 		<directory name="debugsup">
 			<xi:include href="lib/debugsup/debugsup.rbuild" />

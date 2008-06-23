@@ -42,16 +42,22 @@
     
     NESTED_ENTRY KiSoftwareInterruptException
     PROLOG_END KiSoftwareInterruptException
-    
+   
     //
-    // Save return address
+    // Save the current lr
     //
     str lr, [sp, #-4]!
     
     //
+    // Save the SVC lr and sp
+    //
+    str lr, [sp, #-4]!
+    str sp, [sp, #-4]!
+
+    //
     // Make space for trap frame
     //
-    sub sp, sp, #(4*17)
+    sub sp, sp, #(4*15)
     
     //
     // Save user-mode registers
@@ -77,7 +83,7 @@
     //
     mov r0, sp
     bl KiSoftwareInterruptHandler
-    
+       
     //
     // Skip IRQL
     //
@@ -391,24 +397,65 @@ IntExit:
     //
     ldmia r5, {a1-a4}
     add r5, r5, #(4* 4)
-    //sub r6, r6, #4
     
     //
-    // Now copy the other arguments into our stack
     //
-CopyLoop:
-    cmp r6, #4
-    //strne sp, [r5], #4
-    //subne r6, r6, #1
-    bge .
+    // This code is complete shit.
+    //
+    //
 
+    //
+    // Save stack address and return address
+    //
+    mov r11, sp
+    mov r10, lr
+    
+    //
+    // Check if we have more than 4 arguments
+    //
+    cmp r6, #4
+    ble SysCall
+    
+    //
+    // Make space on stack
+    //
+    sub r6, r6, #4
+    sub sp, sp, r6, lsl #2
+    
+CopyLoop:
+    //
+    // Copy one parameter
+    //
+    ldr r7, [r5]
+    str r7, [sp]
+    add r5, r5, #4
+    add sp, sp, #4
+    
+    //
+    // Keep looping until we've copied them all
+    //
+    cmp sp, r11
+    bne CopyLoop
+    
+    //
+    // Set the stack
+    //
+    sub sp, sp, r6, lsl #2
+    
     //
     // Now do the system call
     //
+SysCall:
+    mov lr, pc
     mov pc, r4
+
+    //
+    // Restore the stack
+    //
+    mov sp, r11
     
     //
-    // Should not get here
+    // Get us back
     //
-    b .
+    mov pc, r10
     ENTRY_END KiSystemCall

@@ -476,6 +476,7 @@ KiSystemService(IN PKTHREAD Thread,
         //
         // Copy them into the kernel stack
         //
+        DPRINT1("Argument: %p\n", *Argument);
         Arguments[i] = *Argument;
         Argument++;
     }
@@ -501,17 +502,22 @@ KiSystemService(IN PKTHREAD Thread,
             // We were called from the kernel
             //
             Argument = (PULONG)TrapFrame->SvcSp;
+            
+            //
+            // Bias for the values we saved
+            //
+            Argument += 2;
         }
 
         //
         // Copy the rest
         //
-        DPRINT1("Stack: %p\n", Argument);
         for (i = 4; i < ArgumentCount; i++)
         {
             //
             // Copy into kernel stack
             //
+            DPRINT1("Argument: %p\n", *Argument);
             Arguments[i] = *Argument;
             Argument++;
         }
@@ -521,6 +527,7 @@ KiSystemService(IN PKTHREAD Thread,
     // Do the system call and save result in EAX
     //
     TrapFrame->R0 = KiSystemCall(SystemCall, Arguments, ArgumentCount);
+    DPRINT1("Returned: %lx\n", TrapFrame->R0);
 }
 
 VOID
