@@ -36,7 +36,7 @@
 #include "lang/id-ID.rc"
 #include "lang/it-IT.rc"
 #include "lang/ja-JP.rc"
-#include "lang/ko-KO.rc"
+#include "lang/ko-KR.rc"
 #include "lang/nl-NL.rc"
 #include "lang/nb-NO.rc"
 #include "lang/pl-PL.rc"
