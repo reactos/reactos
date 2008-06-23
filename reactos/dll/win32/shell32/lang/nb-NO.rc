@@ -640,7 +640,7 @@ BEGIN
 	IDS_COMMON_PICTURES         "Dokumenter\\Mine bilder"
 	IDS_COMMON_VIDEO            "Dokumenter\\Mine videoklipp"
 	IDS_CDBURN_AREA             "Lokale innstillinger\\Programdata\\Microsoft\\CD Burning"
-	IDS_NETWORKPLACE            "My Network Place"
+	IDS_NETWORKPLACE            "My Network Places"
 
 	IDS_NEWFOLDER               "Ny mappe"
 

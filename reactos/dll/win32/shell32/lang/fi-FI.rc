@@ -640,7 +640,7 @@ BEGIN
 	IDS_COMMON_PICTURES         "Dokumentit\\Omat kuvatiedostot"
 	IDS_COMMON_VIDEO            "Dokumentit\\Omat videotiedostot"
 	IDS_CDBURN_AREA             "Paikalliset Asetukset\\Ohjelmien Tiedot\\Microsoft\\CD Burning"
-	IDS_NETWORKPLACE            "My Network Place"
+	IDS_NETWORKPLACE            "My Network Places"
 
 	IDS_NEWFOLDER               "New Folder"
 

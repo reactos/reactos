@@ -643,7 +643,7 @@ BEGIN
 	IDS_COMMON_PICTURES         "Dokumentumok\\Képek"
 	IDS_COMMON_VIDEO            "Dokumentumok\\My Videos"
 	IDS_CDBURN_AREA             "Local Settings\\Application Data\\Microsoft\\CD Burning"
-	IDS_NETWORKPLACE            "My Network Place"
+	IDS_NETWORKPLACE            "My Network Places"
 
 	IDS_NEWFOLDER               "New Folder"
 

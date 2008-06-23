@@ -1,5 +1,6 @@
-/* TRANSLATOR:  M·rio KaËm·r /Mario Kacmar/ aka Kario (kario@szm.sk)
- * DATE OF TR:  02-02-2008
+/* TRANSLATOR :  M·rio KaËm·r /Mario Kacmar/ aka Kario (kario@szm.sk)
+ * DATE OF TR.:  02-02-2008
+ * LAST CHANGE:  17-06-2008
  * ______________________________________________
  * NOTE:        this file is not fully translated
  */
@@ -92,10 +93,10 @@ END
 
 IDD_CURSOR_SCHEME_SAVEAS DIALOGEX 0, 0, 200, 75
 STYLE DS_SHELLFONT | WS_CAPTION | WS_SYSMENU
-CAPTION "Save Scheme"
+CAPTION "Uloûenie schÈmy"
 FONT 8, "MS Shell Dlg"
 BEGIN
-  LTEXT "Save this cursor scheme as:", -1, 5, 5, 100, 10
+  LTEXT "Uloûiù t˙to schÈmu ukazovateæov ako:", -1, 5, 5, 100, 10
   EDITTEXT IDC_EDIT_SCHEME_NAME, 5, 15, 180, 15, WS_CHILD | WS_VISIBLE | WS_GROUP
   PUSHBUTTON "&OK", IDOK, 60, 45, 50, 15
   PUSHBUTTON "&Zruöiù", IDCANCEL, 115, 45, 50, 15
@@ -151,28 +152,28 @@ BEGIN
   IDS_CPLDESCRIPTION_1 "PrispÙsobÌ nastavenia myöi."
   IDS_CPLNAME_2 "Kl·vesnica"
   IDS_CPLDESCRIPTION_2 "PrispÙsobÌ nastavenia kl·vesnice."
-  IDS_ARROW "Normal Select"
-  IDS_HELP "Help Select"
-  IDS_APPSTARTING "Working in Background"
-  IDS_WAIT "Busy"
-  IDS_CROSSHAIR "Precision Select"
-  IDS_IBEAM "Text Select"
-  IDS_NWPEN "Handwriting"
-  IDS_NO "Unavailable"
-  IDS_SIZENS "Vertical Resize"
-  IDS_SIZEWE "Horizontal Resize"
-  IDS_SIZENWSE "Diagonal Resize 1"
-  IDS_SIZENESW "Diagonal Resize 2"
-  IDS_SIZEALL "Move"
-  IDS_UPARROW "Alternative Select"
-  IDS_HAND "Link Select"
-  IDS_NONE "(None)"
-  IDS_SYSTEM_SCHEME "(system scheme)"
+  IDS_ARROW "Norm·lny v˝ber"
+  IDS_HELP "V˝ber PomocnÌka"
+  IDS_APPSTARTING "Pracuje sa v pozadÌ"
+  IDS_WAIT "Zanepr·zdnen˝"
+  IDS_CROSSHAIR "Presn˝ v˝ber"
+  IDS_IBEAM "V˝ber textu"
+  IDS_NWPEN "Rukopis"
+  IDS_NO "Nie je k dispozÌcii"
+  IDS_SIZENS "Zvisl· zmena veækosti"
+  IDS_SIZEWE "Vodorovn· zmena veækosti"
+  IDS_SIZENWSE "UhloprieËna zmena veækosti 1"
+  IDS_SIZENESW "UhloprieËna zmena veækosti 2"
+  IDS_SIZEALL "Premiestniù"
+  IDS_UPARROW "AlternatÌvny v˝ber"
+  IDS_HAND "V˝ber prepojenia"
+  IDS_NONE "(Nie je)"
+  IDS_SYSTEM_SCHEME "(systÈmov· schÈma)"
   IDS_BROWSE_FILTER "Ukazovatele myöi (*.ani, *.cur)\0*.ani;*.cur\0AnimovanÈ ukazovatele (*.ani)\0*.ani\0StatickÈ ukazovatele (*.cur)\0*.cur\0Vöetky s˙bory\0*.*\0\0"
-  IDS_BROWSE_TITLE "Browse"
-  IDS_REMOVE_TITLE "Confirm Cursor Scheme Removal"
+  IDS_BROWSE_TITLE "Prehæad·vaù"
+  IDS_REMOVE_TITLE "Potvrdiù odstr·nenie schÈmy ukazovateæov"
   IDS_REMOVE_TEXT "Are you sure you want to remove the cursor scheme '%s'?"
-  IDS_OVERWRITE_TITLE "Confirm Cursor Scheme Overwrite"
+  IDS_OVERWRITE_TITLE "Potvrdiù prepÌsanie schÈmy ukazovateæov"
   IDS_OVERWRITE_TEXT "The cursor scheme name you chose is already in use. Do you want to overwrite the existing cursor scheme?"
-  IDS_ANIMATE_CURSOR "Animated Cursor"
+  IDS_ANIMATE_CURSOR "Animovan˝ ukazovateæ"
 END

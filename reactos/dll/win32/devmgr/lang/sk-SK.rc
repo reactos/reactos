@@ -1,5 +1,6 @@
-/* TRANSLATOR:  Mário Kaèmár /Mario Kacmar/ aka Kario (kario@szm.sk)
- * DATE OF TR:  30-05-2008
+/* TRANSLATOR :  Mário Kaèmár /Mario Kacmar/ aka Kario (kario@szm.sk)
+ * DATE OF TR.:  30-05-2008
+ * LAST CHANGE:  17-06-2008
  */
 
 LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
@@ -143,7 +144,7 @@ BEGIN
      EDITTEXT IDC_DRVDATE, 100, 53, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
      LTEXT "Verzia ovládaèa:", -1, 37, 67, 60, 8, SS_NOPREFIX
      EDITTEXT IDC_DRVVERSION, 100, 67, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
-     LTEXT "Digital Signer:", -1, 37, 81, 60, 8, SS_NOPREFIX
+     LTEXT "Digitálne podpísal:", -1, 37, 81, 60, 8, SS_NOPREFIX
      EDITTEXT IDC_DIGITALSIGNER, 100, 81, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
      PUSHBUTTON "&Driver Details...", IDC_DRIVERDETAILS, 7, 106, 70, 15
      LTEXT "To view details about the driver files.", -1, 91, 110, 154, 17, SS_NOPREFIX
@@ -156,7 +157,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_DEVICON, 7, 7, 20, 20
     LTEXT "", IDC_DEVNAME, 37, 9, 174, 16, SS_NOPREFIX
-    LTEXT "&Driver files:", -1, 7, 36, 204, 8
+    LTEXT "&Súbory ovládaèa:", -1, 7, 36, 204, 8
     CONTROL "", IDC_DRIVERFILES, "SysListView32", LVS_REPORT | LVS_NOCOLUMNHEADER |
             LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS | LVS_SORTASCENDING |
             LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 7, 46, 209, 80
@@ -164,10 +165,11 @@ BEGIN
     LTEXT "", IDC_FILEPROVIDER, 66, 134, 155, 8
     LTEXT "Verzia súboru:", -1, 14, 150, 50, 8
     LTEXT "", IDC_FILEVERSION, 66, 150, 155, 8
-    LTEXT "Copyright:", -1, 14, 166, 50, 8
+    LTEXT "Autorské práva:", -1, 14, 166, 50, 8
     LTEXT "", IDC_FILECOPYRIGHT, 66, 166, 155, 8
-    LTEXT "Digital Signer:", -1, 14, 182, 50, 8
+    LTEXT "Digitálne podpísal:", -1, 14, 182, 50, 8 //Digital Signer
     LTEXT "", IDC_DIGITALSIGNER, 66, 182, 155, 8
     PUSHBUTTON "OK", IDOK, 167, 228, 50, 14
 END
+
 

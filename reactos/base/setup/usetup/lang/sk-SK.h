@@ -1,7 +1,7 @@
 /* TRANSLATOR:  M rio KaŸm r /Mario Kacmar/ aka Kario (kario@szm.sk)
  * DATE OF TR:  22-01-2008
  * Encoding  :  Latin II (852)
- * LastChange:  25-05-08
+ * LastChange:  15-06-08
  */
 
 #ifndef LANG_SK_SK_H__
@@ -283,7 +283,7 @@ static MUI_ENTRY skSKLicensePageEntries[] =
     {
         8,
         15,
-        "Tento softv‚r prich cha BEZ ZµRUKY alebo obmedzen¡ pou§¡vania",
+        "Tento softv‚r prich dza BEZ ZµRUKY alebo obmedzen¡ pou§¡vania",
         TEXT_STYLE_NORMAL
     },
     {
@@ -325,7 +325,7 @@ static MUI_ENTRY skSKLicensePageEntries[] =
     {
         8,
         24,
-        "This is free software; see the source for copying conditions.",
+        "Toto je slobodnì softv‚r; see the source for copying conditions.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -914,7 +914,7 @@ static MUI_ENTRY skSKInstallDirectoryEntries[] =
     {
         6,
         15,
-        "znaky. Potom nap¡çte n zov adres ra, v ktor‚ho chcete aby bol",
+        "znaky. Potom nap¡çte n zov adres ra, v ktorom chcete aby bol",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1086,7 +1086,7 @@ static MUI_ENTRY skSKLayoutSettingsEntries[] =
     {
         6,
         8,
-        "Please select a layout to be installed by default.",
+        "Pros¡m, vyberte rozlo§enie, ktor‚ sa nainçtaluje ako predvolen‚.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1638,7 +1638,7 @@ MUI_STRING skSKStrings[] =
     {STRING_KEYBOARDSETTINGSUPDATE,
     "   Aktualizujem nastavenia rozlo§enia kl vesnice..."},
     {STRING_CODEPAGEINFOUPDATE,
-    "   Prid vam do registrov inform cie o k¢dov‚j str nke..."},
+    "   Prid vam do registrov inform cie o k¢dovej str nke..."},
     {STRING_DONE,
     "   Hotovo..."},
     {STRING_REBOOTCOMPUTER2,

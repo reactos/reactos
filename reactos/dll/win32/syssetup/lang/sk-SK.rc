@@ -1,6 +1,6 @@
 /* TRANSLATOR :  M·rio KaËm·r /Mario Kacmar/ aka Kario (kario@szm.sk)
  * DATE OF TR.:  09-02-2008
- * LAST CHANGE:  07-05-2008
+ * LAST CHANGE:  16-06-2008
  * THANKS TO  :  Filip Navara and Kamil Hornicek and all good people ;-)
  */
 
@@ -32,7 +32,7 @@ BEGIN
     LTEXT           "SystÈm ReactOS je vydan˝ pod licenciou GPL. Pokiaæ chcete systÈm (alebo jeho Ëasti) pouûiù "\
                     "alebo redistribuovaù, musÌte reöpektovaù GPL",
                     IDC_STATIC,15,110,228,22
-    PUSHBUTTON      "&Zobraziù GPL...",IDC_VIEWGPL,249,110,52,19
+    PUSHBUTTON      "&Zobraziù GPL...",IDC_VIEWGPL,245,110,56,19
     LTEXT           "KliknutÌm na œalej pokraËujte v inötal·cii.",IDC_STATIC,15,136,
                     195,17
 END

@@ -640,7 +640,7 @@ BEGIN
 	IDS_COMMON_PICTURES         "Belgeler\\Resimlerim"
 	IDS_COMMON_VIDEO            "Belgeler\\Videolarým"
 	IDS_CDBURN_AREA             "Local Settings\\Application Data\\Microsoft\\CD Burning"
-	IDS_NETWORKPLACE            "My Network Place"
+	IDS_NETWORKPLACE            "My Network Places"
 
 	IDS_NEWFOLDER               "New Folder"
 
