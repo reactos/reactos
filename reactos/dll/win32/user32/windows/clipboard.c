@@ -86,7 +86,7 @@ GetClipboardData(UINT uFormat)
     /* dealing with bitmap object */
     if (uFormat != CF_BITMAP)
     {
-        size = (DWORD)NtUserGetClipboardData(uFormat, QUERY_SIZE);
+        size = (DWORD)NtUserGetClipboardData(uFormat, NULL);
 
         if (size)
         {
@@ -100,7 +100,7 @@ GetClipboardData(UINT uFormat)
     }
     else
     {
-        hGlobal = NtUserGetClipboardData(CF_BITMAP, !QUERY_SIZE);
+        hGlobal = NtUserGetClipboardData(CF_BITMAP, NULL);
     }
 
     return hGlobal;

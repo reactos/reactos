@@ -294,7 +294,7 @@ static __inline int PROFILE_isspaceW(WCHAR c)
 
 static __inline ENCODING PROFILE_DetectTextEncoding(const void * buffer, int * len)
 {
-    DWORD flags = IS_TEXT_UNICODE_SIGNATURE |
+    INT flags =   IS_TEXT_UNICODE_SIGNATURE |
                   IS_TEXT_UNICODE_REVERSE_SIGNATURE |
                   IS_TEXT_UNICODE_ODD_LENGTH;
     if (*len >= (int)sizeof(bom_utf8) && !memcmp(buffer, bom_utf8, sizeof(bom_utf8)))
