@@ -67,7 +67,6 @@ wchar_t* CDECL _wcsdup( const wchar_t* str )
   }
   return ret;
 }
-#endif
 /*********************************************************************
  *		_wcsicoll (MSVCRT.@)
  */
@@ -76,7 +75,7 @@ INT CDECL _wcsicoll( const wchar_t* str1, const wchar_t* str2 )
   /* FIXME: handle collates */
   return strcmpiW( str1, str2 );
 }
-
+#endif
 /*********************************************************************
  *		_wcsnset (MSVCRT.@)
  */
@@ -102,7 +101,7 @@ wchar_t* CDECL _wcsrev( wchar_t* str )
   }
   return ret;
 }
-
+#ifndef _LIBCNT_
 /*********************************************************************
  *		_wcsset (MSVCRT.@)
  */
@@ -185,7 +184,6 @@ double CDECL wcstod(const wchar_t* lpszStr, wchar_t** end)
   return ret;
 }
 
-#ifndef _LIBCNT_
 typedef struct pf_output_t
 {
     int used;

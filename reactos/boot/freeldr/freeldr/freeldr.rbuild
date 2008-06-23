@@ -18,7 +18,7 @@
 		</module>
 	</if>
 	<if property="ARCH" value="arm">
-		<module name="freeldr" type="bootloader">
+		<module name="freeldr" type="bootloader" installbase=".." installname="freeldr.sys">
 			<bootstrap installbase="loader" />
 			<library>freeldr_startup</library>
 			<library>freeldr_base64k</library>

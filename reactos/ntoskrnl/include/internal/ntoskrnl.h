@@ -17,8 +17,10 @@
 
 #ifdef _NTOSKRNL_
 
+#ifndef _ARM_
 #define KeGetCurrentThread  _KeGetCurrentThread
 #define KeGetPreviousMode   _KeGetPreviousMode
+#endif
 #undef  PsGetCurrentProcess
 #define PsGetCurrentProcess _PsGetCurrentProcess
 
