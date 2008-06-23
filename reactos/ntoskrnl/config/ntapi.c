@@ -135,6 +135,7 @@ NtOpenKey(OUT PHANDLE KeyHandle,
             Status = _SEH_GetExceptionCode();
         }
         _SEH_END;
+        if(!NT_SUCCESS(Status)) return Status;
     }
 
     /* Just let the object manager handle this */
