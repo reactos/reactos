@@ -54,6 +54,7 @@ GENERIC_MAPPING IopFileMapping = {
     FILE_ALL_ACCESS};
 
 extern LIST_ENTRY ShutdownListHead;
+extern LIST_ENTRY LastChanceShutdownListHead;
 extern KSPIN_LOCK ShutdownListLock;
 extern NPAGED_LOOKASIDE_LIST IoCompletionPacketLookaside;
 extern POBJECT_TYPE IoAdapterObjectType;
@@ -466,6 +467,7 @@ IoInitSystem(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     InitializeListHead(&DriverReinitListHead);
     InitializeListHead(&PnpNotifyListHead);
     InitializeListHead(&ShutdownListHead);
+    InitializeListHead(&LastChanceShutdownListHead);
     InitializeListHead(&FsChangeNotifyListHead);
     InitializeListHead(&IopErrorLogListHead);
     KeInitializeSpinLock(&CancelSpinLock);
