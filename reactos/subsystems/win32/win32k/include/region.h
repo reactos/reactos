@@ -22,7 +22,7 @@ typedef struct _ROSRGNDATA
 /* Functions ******************************************************************/
 
 #define  REGION_FreeRgn(pRgn)  GDIOBJ_FreeObj((POBJ)pRgn, GDIObjType_RGN_TYPE)
-#define  REGION_FreeRgnByHandle(hRgn)  GDIOBJ_FreeObjbyHandle((HGDIOBJ)hRgn, GDI_OBJECT_TYPE_REGION)
+#define  REGION_FreeRgnByHandle(hRgn)  GDIOBJ_FreeObjByHandle((HGDIOBJ)hRgn, GDI_OBJECT_TYPE_REGION)
 #define  REGION_LockRgn(hRgn) ((PROSRGNDATA)GDIOBJ_LockObj((HGDIOBJ)hRgn, GDI_OBJECT_TYPE_REGION))
 #define  REGION_UnlockRgn(pRgn) GDIOBJ_UnlockObjByPtr((POBJ)pRgn)
 
