@@ -2,19 +2,19 @@ LIBRARY mmsys.cpl
 
 EXPORTS
 CPlApplet@16
-;mmseRunOnce
-;mmseRunOnceW
-;mmseRunOnceA
-;ShowMMCPLPropertySheet
-;ShowAudioPropertySheet
-;DllCanUnloadNow
-;DllGetClassObject
-;ShowDriverSettingsAfterFork
-;ShowDriverSettingsAfterForkW
-;ShowDriverSettingsAfterForkA
-;MediaClassInstaller
-;MediaPropPageProvider
+mmseRunOnce
+mmseRunOnceW
+mmseRunOnceA
+ShowMMCPLPropertySheet
+ShowAudioPropertySheet
+DllCanUnloadNow
+DllGetClassObject
+ShowDriverSettingsAfterFork
+ShowDriverSettingsAfterForkW
+ShowDriverSettingsAfterForkA
+MediaClassInstaller
+MediaPropPageProvider
 ;Multichannel
-;ShowFullControlPanel
+ShowFullControlPanel
 
 ; EOF

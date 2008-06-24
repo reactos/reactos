@@ -33,6 +33,7 @@
 #include <setupapi.h>
 #include <devguid.h>
 #include <cpl.h>
+#include <debug.h>
 
 #include "mmsys.h"
 #include "resource.h"
@@ -60,6 +61,125 @@ const APPLET Applets[NUM_APPLETS] =
 {
   {IDI_CPLICON, IDS_CPLNAME, IDS_CPLDESCRIPTION, MmSysApplet},
 };
+
+
+HRESULT WINAPI
+DllCanUnloadNow(VOID)
+{
+    DPRINT1("DllCanUnloadNow() stubs\n");
+    return S_OK;
+}
+
+HRESULT WINAPI
+DllGetClassObject(REFCLSID rclsid,
+                  REFIID riid,
+                  LPVOID *ppv)
+{
+    DPRINT1("DllGetClassObject() stubs\n");
+    return S_OK;
+}
+
+
+VOID WINAPI
+ShowDriverSettingsAfterForkW(HWND hwnd,
+                             HINSTANCE hInstance,
+                             LPWSTR lpszCmd,
+                             int nCmdShow)
+{
+    DPRINT1("ShowDriverSettingsAfterForkW() stubs\n");
+}
+
+VOID WINAPI
+ShowDriverSettingsAfterForkA(HWND hwnd,
+                             HINSTANCE hInstance,
+                             LPTSTR lpszCmd,
+                             int nCmdShow)
+{
+    DPRINT1("ShowDriverSettingsAfterForkA() stubs\n");
+}
+
+VOID WINAPI
+ShowDriverSettingsAfterFork(HWND hwnd,
+                            HINSTANCE hInstance,
+                            LPTSTR lpszCmd,
+                            int nCmdShow)
+{
+    DPRINT1("ShowDriverSettingsAfterFork() stubs\n");
+}
+
+BOOL WINAPI
+ShowMMCPLPropertySheet(HWND hwnd,
+                       LPCTSTR pszPropSheet,
+                       LPTSTR pszName,
+                       LPTSTR pszCaption)
+{
+    DPRINT1("ShowMMCPLPropertySheet() stubs\n");
+    return TRUE;
+}
+
+VOID WINAPI
+ShowAudioPropertySheet(HWND hwnd,
+                       HINSTANCE hInstance,
+                       LPTSTR lpszCmd,
+                       int nCmdShow)
+{
+    DPRINT1("ShowAudioPropertySheet() stubs\n");
+}
+
+VOID WINAPI
+mmseRunOnceW(HWND hwnd,
+             HINSTANCE hInstance,
+             LPWSTR lpszCmd,
+             int nCmdShow)
+{
+    DPRINT1("mmseRunOnceW() stubs\n");
+}
+
+VOID WINAPI
+mmseRunOnceA(HWND hwnd,
+             HINSTANCE hInstance,
+             LPTSTR lpszCmd,
+             int nCmdShow)
+{
+    DPRINT1("mmseRunOnceA() stubs\n");
+}
+
+VOID WINAPI
+mmseRunOnce(HWND hwnd,
+            HINSTANCE hInstance,
+            LPSTR lpszCmd,
+            int nCmdShow)
+{
+    DPRINT1("mmseRunOnce() stubs\n");
+}
+
+DWORD WINAPI
+MediaClassInstaller(DI_FUNCTION diFunction,
+                    HDEVINFO hDevInfo,
+                    PSP_DEVINFO_DATA pspDevInfoData)
+{
+    DPRINT1("MediaClassInstaller() stubs\n");
+    return 0x0;
+}
+
+BOOL WINAPI
+MediaPropPageProvider(LPVOID Info,
+                      LPFNADDPROPSHEETPAGE PropSheetPage,
+                      LPARAM lParam)
+{
+    DPRINT1("MediaPropPageProvider() stubs\n");
+    return TRUE;
+}
+
+VOID WINAPI
+ShowFullControlPanel(HWND hwnd,
+                     HINSTANCE hInstance,
+                     LPTSTR lpszCmd,
+                     int nCmdShow)
+{
+    DPRINT1("ShowFullControlPanel() stubs\n");
+}
+
 
 /* Hardware property page dialog callback */
 static INT_PTR CALLBACK
