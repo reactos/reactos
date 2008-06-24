@@ -1,31 +1,14 @@
 /*
- *  ReactOS
- *  Copyright (C) 2005 ReactOS Team
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- */
-/* $Id: main.c 12852 2005-01-06 13:58:04Z mf $
  *
  * PROJECT:         ReactOS Multimedia Control Panel
- * FILE:            lib/cpl/mmsys/mmsys.c
+ * FILE:            dll/cpl/mmsys/mmsys.c
  * PURPOSE:         ReactOS Multimedia Control Panel
  * PROGRAMMER:      Thoams Weidenmueller <w3seek@reactos.com>
  *                  Dmitry Chapyshev <dmitry@reactos.org>
  * UPDATE HISTORY:
  *      2005/11/23  Created
  */
+
 #include <windows.h>
 #include <commctrl.h>
 #include <initguid.h>
@@ -153,15 +136,6 @@ mmseRunOnce(HWND hwnd,
     DPRINT1("mmseRunOnce() stubs\n");
 }
 
-DWORD WINAPI
-MediaClassInstaller(DI_FUNCTION diFunction,
-                    HDEVINFO hDevInfo,
-                    PSP_DEVINFO_DATA pspDevInfoData)
-{
-    DPRINT1("MediaClassInstaller() stubs\n");
-    return 0x0;
-}
-
 BOOL WINAPI
 MediaPropPageProvider(LPVOID Info,
                       LPFNADDPROPSHEETPAGE PropSheetPage,
@@ -178,6 +152,69 @@ ShowFullControlPanel(HWND hwnd,
                      int nCmdShow)
 {
     DPRINT1("ShowFullControlPanel() stubs\n");
+}
+
+DWORD
+MMSYS_InstallDevice(HDEVINFO hDevInfo, PSP_DEVINFO_DATA pspDevInfoData)
+{
+    return 0x0;
+}
+
+DWORD
+MMSYS_RemoveDevice(HDEVINFO hDevInfo, PSP_DEVINFO_DATA pspDevInfoData)
+{
+    return 0x0;
+}
+
+DWORD
+MMSYS_AllowInstallDevice(HDEVINFO hDevInfo, PSP_DEVINFO_DATA pspDevInfoData)
+{
+    return 0x0;
+}
+
+DWORD
+MMSYS_SelectDevice(HDEVINFO hDevInfo, PSP_DEVINFO_DATA pspDevInfoData)
+{
+    return 0x0;
+}
+
+DWORD
+MMSYS_DetectDevice(HDEVINFO hDevInfo, PSP_DEVINFO_DATA pspDevInfoData)
+{
+    return 0x0;
+}
+
+DWORD
+MMSYS_SelectBestCompatDRV(HDEVINFO hDevInfo, PSP_DEVINFO_DATA pspDevInfoData)
+{
+    return 0x0;
+}
+
+DWORD WINAPI
+MediaClassInstaller(DI_FUNCTION diFunction,
+                    HDEVINFO hDevInfo,
+                    PSP_DEVINFO_DATA pspDevInfoData)
+{
+    switch (diFunction)
+    {
+        case DIF_INSTALLDEVICE:
+            return MMSYS_InstallDevice(hDevInfo, pspDevInfoData);
+        case DIF_REMOVE:
+            return MMSYS_RemoveDevice(hDevInfo, pspDevInfoData);
+        case DIF_ALLOW_INSTALL:
+            return MMSYS_AllowInstallDevice(hDevInfo, pspDevInfoData);
+        case DIF_SELECTDEVICE:
+            return MMSYS_SelectDevice(hDevInfo, pspDevInfoData);
+        case DIF_DETECT:
+            return MMSYS_DetectDevice(hDevInfo, pspDevInfoData);
+        case DIF_SELECTBESTCOMPATDRV:
+            return MMSYS_SelectBestCompatDRV(hDevInfo, pspDevInfoData);
+        default:
+        {
+            DPRINT1("MediaClassInstaller() not supported function\n");
+            return 0x0;
+        }
+    }
 }
 
 

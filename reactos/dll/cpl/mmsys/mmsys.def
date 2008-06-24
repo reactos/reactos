@@ -12,7 +12,7 @@ DllGetClassObject
 ShowDriverSettingsAfterFork
 ShowDriverSettingsAfterForkW
 ShowDriverSettingsAfterForkA
-MediaClassInstaller
+MediaClassInstaller@12
 MediaPropPageProvider
 ;Multichannel
 ShowFullControlPanel
