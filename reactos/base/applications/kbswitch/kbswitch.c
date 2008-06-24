@@ -395,6 +395,8 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
             AddTrayIcon(hwnd);
             hRightPopupMenu = GetSubMenu(LoadMenu(hInst, MAKEINTRESOURCE(IDR_POPUP)), 0);
 
+            ActivateLayout(hwnd, ulCurrentLayoutNum);
+
             return 0;
         }
 
@@ -484,10 +486,10 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 
         case WM_SETTINGCHANGE:
         {
-                if (wParam == SPI_SETDEFAULTINPUTLANG)
-                {
-                     //FIXME: Should detect default language changes by CPL applet or by other tools and update UI
-                }
+            if (wParam == SPI_SETDEFAULTINPUTLANG)
+            {
+                //FIXME: Should detect default language changes by CPL applet or by other tools and update UI
+            }
         }
         break;
 
