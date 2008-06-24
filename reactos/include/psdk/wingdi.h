@@ -533,6 +533,7 @@ extern "C" {
 #define PS_JOIN_BEVEL	4096
 #define PS_JOIN_MITER	8192
 #define PS_JOIN_ROUND	0
+#define PS_JOIN_MASK    0x0000F000
 #define PS_STYLE_MASK	15
 #define PS_ENDCAP_MASK	3840
 #define PS_TYPE_MASK	983040
