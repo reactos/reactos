@@ -162,22 +162,9 @@ MmDeletePageTable(IN PEPROCESS Process,
     ASSERT(PointerPde->u.Hard.L1.Fault.Type == FaultPte);
     
     //
-    // Check if this is a kernel PDE
+    // Invalidate the TLB entry
     //
-    if ((PointerPde >= (PMMPTE)PTE_BASE) && (PointerPde < (PMMPTE)PTE_BASE + (1024 * 1024)))
-    {
-        //
-        // Invalidate the TLB entry
-        //
-        KiFlushSingleTb(TRUE, Address);
-    }
-    else
-    {
-        //
-        // Process PDE, unmap it from hyperspace (will also invalidate TLB entry)
-        //
-        MmDeleteHyperspaceMapping((PVOID)PAGE_ROUND_DOWN(PointerPde));
-    }
+    KiFlushSingleTb(TRUE, Address);
 }
 
 PFN_TYPE
@@ -185,13 +172,41 @@ NTAPI
 MmGetPfnForProcess(IN PEPROCESS Process,
                    IN PVOID Address)
 {
-    PFN_TYPE Pfn = {0};
+    PMMPTE Pte;
     
     //
-    // TODO
+    // Check if this is for a different process
     //
-    UNIMPLEMENTED;
-    return Pfn;
+    if ((Process) && (Process != PsGetCurrentProcess()))
+    {
+        //
+        // TODO
+        //
+        UNIMPLEMENTED;
+        return 0;
+    }
+    
+    //
+    // Get the PDE
+    //
+    Pte = MiGetPdeAddress(Address);
+    if (Pte->u.Hard.L1.Fault.Type != FaultPte)
+    {
+        //
+        // Get the PTE
+        //
+        Pte = MiGetPteAddress(Address);
+    }
+    
+    //
+    // If PTE is invalid, return 0
+    //
+    if (Pte->u.Hard.L2.Fault.Type == FaultPte) return 0;
+    
+    //
+    // Return PFN
+    //
+    return Pte->u.Hard.L2.Small.BaseAddress;
 }
 
 VOID
@@ -323,8 +338,6 @@ MmIsPagePresent(IN PEPROCESS Process,
     // Return whether or not it's valid
     //
     return (Pte->u.Hard.L1.Fault.Type != FaultPte);
-    
-    
 }
 
 BOOLEAN
@@ -332,11 +345,36 @@ NTAPI
 MmIsPageSwapEntry(IN PEPROCESS Process,
                   IN PVOID Address)
 {
+    PMMPTE Pte;
+    
     //
-    // TODO
+    // Check if this is for a different process
     //
-    UNIMPLEMENTED;
-    return 0;
+    if ((Process) && (Process != PsGetCurrentProcess()))
+    {
+        //
+        // TODO
+        //
+        UNIMPLEMENTED;
+        return 0;
+    }
+    
+    //
+    // Get the PDE
+    //
+    Pte = MiGetPdeAddress(Address);
+    if (Pte->u.Hard.L1.Fault.Type != FaultPte)
+    {
+        //
+        // Get the PTE
+        //
+        Pte = MiGetPteAddress(Address);
+    }
+    
+    //
+    // Return whether or not it's valid
+    //
+    return ((Pte->u.Hard.L2.Fault.Type == FaultPte) && (Pte->u.Hard.AsUlong));
 }
 
 NTSTATUS
@@ -351,7 +389,7 @@ MmCreateVirtualMappingForKernel(IN PVOID Address,
     NTSTATUS Status;
     PFN_NUMBER Pfn;
     DPRINT1("[KMAP]: %p %d\n", Address, PageCount);
-    ASSERT(Address >= MmSystemRangeStart);
+    //ASSERT(Address >= MmSystemRangeStart);
 
     //
     // Get our templates
@@ -468,7 +506,7 @@ MmCreateVirtualMappingUnsafe(IN PEPROCESS Process,
     //
     // Are we only handling the kernel?
     //
-    if (!Process)
+    if (!(Process) || (Process == PsGetCurrentProcess()))
     {
         //
         // Call the kernel version
@@ -675,7 +713,6 @@ MmDeleteHyperspaceMapping(IN PVOID Address)
     //
     KiFlushSingleTb(TRUE, Address);
     return Pfn;
-    
 }
 
 VOID
