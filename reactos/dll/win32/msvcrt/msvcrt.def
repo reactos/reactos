@@ -26,7 +26,7 @@ EXPORTS
   ??3@YAXPAX@Z=MSVCRT_operator_delete @19
   ??4__non_rtti_object@@QAEAAV0@ABV0@@Z=__thiscall_MSVCRT___non_rtti_object_opequals @20
   ??4bad_cast@@QAEAAV0@ABV0@@Z=__thiscall_MSVCRT_bad_cast_opequals @21
-  ???4bad_typeid@@QAEAAV0@ABV0@@Z=__thiscall_MSVCRT_bad_typeid_opequals @22
+  ??4bad_typeid@@QAEAAV0@ABV0@@Z=__thiscall_MSVCRT_bad_typeid_opequals @22
   ??4exception@@QAEAAV0@ABV0@@Z=__thiscall_MSVCRT_exception_opequals @23
   ??8type_info@@QBEHABV0@@Z=__thiscall_MSVCRT_type_info_opequals_equals @24
   ??9type_info@@QBEHABV0@@Z=__thiscall_MSVCRT_type_info_opnot_equals @25
