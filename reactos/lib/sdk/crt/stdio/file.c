@@ -1256,6 +1256,9 @@ int CDECL _futime(int fd, struct _utimbuf *t)
   HANDLE hand = fdtoh(fd);
   FILETIME at, wt;
 
+  if (hand == INVALID_HANDLE_VALUE)
+    return -1;
+
   if (!t)
   {
     time_t currTime;
