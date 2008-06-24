@@ -246,5 +246,5 @@ INT_PTR CALLBACK SH_FileVersionDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, L
 HPROPSHEETPAGE SH_CreatePropertySheetPage(LPSTR resname, DLGPROC dlgproc, LPARAM lParam, LPWSTR szTitle);
 BOOL SH_ShowDriveProperties(WCHAR * drive);
 BOOL SH_ShowRecycleBinProperties(WCHAR sDrive);
-BOOL SH_ShowPropertiesDialog(WCHAR * lpf);
+BOOL SH_ShowPropertiesDialog(PCWSTR lpf);
 #endif

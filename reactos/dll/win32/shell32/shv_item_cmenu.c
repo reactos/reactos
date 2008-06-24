@@ -122,7 +122,7 @@ IContextMenu2 *ISvItemCm_Constructor(LPSHELLFOLDER pSFParent, LPCITEMIDLIST pidl
 	    HRESULT hr;
 	    IShellFolder_AddRef(pSFParent);
 	    cm->rfg = SFGAO_BROWSABLE | SFGAO_CANCOPY | SFGAO_CANMOVE | SFGAO_CANDELETE | SFGAO_CANRENAME | SFGAO_HASPROPSHEET;
-	    hr = IShellFolder_GetAttributesOf(pSFParent, cidl, apidl, &cm->rfg);
+	    hr = IShellFolder_GetAttributesOf(pSFParent, cidl, (LPCITEMIDLIST *)apidl, &cm->rfg);
 	    if (!SUCCEEDED(hr))
 	        cm->rfg = 0; /* No action available */
 	}
@@ -615,7 +615,7 @@ static HRESULT WINAPI ISvItemCm_fnQueryContextMenu(
     indexMenu = SH_AddStaticEntryToMenu(hmenu, indexMenu, This);
 
     SetMenuDefaultItem(hmenu, 0, MF_BYPOSITION);
-    pDataObj = IDataObject_Constructor(NULL, This->pidl, This->apidl, This->cidl);
+    pDataObj = IDataObject_Constructor(NULL, This->pidl, (LPCITEMIDLIST *)This->apidl, This->cidl);
     if (pDataObj)
     {
         indexMenu = SH_LoadContextMenuHandlers(This, pDataObj, hmenu, indexMenu);
@@ -733,7 +733,7 @@ static void DoDelete(IContextMenu2 *iface, HWND hwnd)
      PathAddBackslashW(szPath);
      IPersistFolder2_Release(psf);
 
-     szTarget = build_paths_list(szPath, This->cidl, This->apidl);
+     szTarget = build_paths_list(szPath, This->cidl, (LPCITEMIDLIST *)This->apidl);
 
      if (pidl)
      {

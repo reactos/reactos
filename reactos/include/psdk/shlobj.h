@@ -133,7 +133,7 @@ typedef struct
 #define CFSTR_SHELLURL         "UniformResourceLocator"
 #endif
 
-#define CFSTR_FILENAMEW         L"FileNameW"
+#define CFSTR_FILENAMEW         "FileNameW"
 #define CFSTR_FILENAMEA         "FileName"
 #define CFSTR_FILENAMEMAPA      "FileNameMap"             /* CF_FILENAMEMAPA */
 #define CFSTR_FILENAMEMAPW      "FileNameMapW"            /* CF_FILENAMEMAPW */

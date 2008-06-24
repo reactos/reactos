@@ -461,7 +461,7 @@ HRESULT WINAPI SHCreateDataObject(LPCITEMIDLIST pidlFolder, UINT cidl, LPCITEMID
 {
     if (IsEqualIID(riid, &IID_IDataObject))
     {
-        return CIDLData_CreateFromIDArray(pidlFolder, cidl, apidl, ppv);
+        return CIDLData_CreateFromIDArray(pidlFolder, cidl, apidl, (IDataObject**)ppv);
     }
     return E_FAIL;
 }

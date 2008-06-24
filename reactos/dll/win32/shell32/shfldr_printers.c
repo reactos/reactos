@@ -309,7 +309,7 @@ typedef struct {
     IShellFolder2Vtbl *lpVtbl;
     IPersistFolder2Vtbl *lpVtblPersistFolder2;
 
-    DWORD ref;
+    LONG ref;
 
     CLSID *pclsid;
 

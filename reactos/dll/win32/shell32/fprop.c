@@ -614,7 +614,7 @@ SH_FileGeneralDlgProc(
  */
 
 BOOL
-SH_ShowPropertiesDialog(WCHAR * lpf)
+SH_ShowPropertiesDialog(PCWSTR lpf)
 {
     PROPSHEETHEADERW pinfo;
     HPROPSHEETPAGE hppages[MAX_PROPERTY_SHEET_PAGE];
@@ -635,7 +635,7 @@ SH_ShowPropertiesDialog(WCHAR * lpf)
     if (lpf[0] == '"')
     {
         /* remove quotes from lpf */
-        LPWSTR src = lpf + 1;
+        LPCWSTR src = lpf + 1;
         LPWSTR dst = wFileName;
 
         while(*src && *src!='"')

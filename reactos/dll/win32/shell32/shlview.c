@@ -1669,7 +1669,7 @@ static LRESULT CALLBACK ShellView_WndProc(HWND hWnd, UINT uMessage, WPARAM wPara
 	      return 1;
 	    break;
       case CWM_GETISHELLBROWSER:
-          return pThis->pShellBrowser;
+          return (LRESULT)pThis->pShellBrowser;
 	}
 	return DefWindowProcW(hWnd, uMessage, wParam, lParam);
 }

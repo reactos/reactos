@@ -22,7 +22,7 @@ struct IconLocation
 
 struct IconExtraction
 {
-    ULONG ref;
+    LONG ref;
     IDefaultExtractIconInit defaultExtractIconInitImpl;
     IExtractIconW extractIconWImpl;
     IExtractIconA extractIconAImpl;
@@ -92,7 +92,7 @@ IconExtraction_DefaultExtractIconInit_AddRef(
     IDefaultExtractIconInit *This)
 {
     struct IconExtraction *s = CONTAINING_RECORD(This, struct IconExtraction, defaultExtractIconInitImpl);
-    ULONG refCount = InterlockedIncrement((PLONG)&s->ref);
+    ULONG refCount = InterlockedIncrement(&s->ref);
     TRACE("(%p)\n", This);
     return refCount;
 }
@@ -106,7 +106,7 @@ IconExtraction_DefaultExtractIconInit_Release(
 
     TRACE("(%p)\n", This);
 
-    refCount = InterlockedDecrement((PLONG)&s->ref);
+    refCount = InterlockedDecrement(&s->ref);
     if (refCount == 0)
     {
         if (s->defaultIcon.file) CoTaskMemFree(s->defaultIcon.file);
