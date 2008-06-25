@@ -23,7 +23,7 @@ namespace TechBot.Library
 
         public virtual bool AnswerInPublic
         {
-            get { return false; }
+            get { return true; }
         }
 
         public string Name

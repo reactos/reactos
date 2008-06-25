@@ -12,11 +12,6 @@ namespace TechBot.Commands.Common
 		{
 		}
 
-        public override bool AnswerInPublic
-        {
-            get { return true; }
-        }
-
         public string BugID
         {
             get { return Parameters; }

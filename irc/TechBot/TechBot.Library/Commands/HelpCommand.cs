@@ -11,7 +11,12 @@ namespace TechBot.Library
 		{
 		}
 
-        [CommandParameter("Name", "The command name to show help")]
+		public override bool AnswerInPublic
+		{
+			get { return false; }
+		}
+
+		[CommandParameter("Name", "The command name to show help")]
         public string CommandName
         {
             get { return Parameters; }
