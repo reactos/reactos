@@ -25,8 +25,6 @@ GENERATE_ARM_STUB KeRaiseUserException
 GENERATE_ARM_STUB KeSaveStateForHibernate 
 GENERATE_ARM_STUB KeSetDmaIoCoherency 
 GENERATE_ARM_STUB KeSynchronizeExecution 
-GENERATE_ARM_STUB KeUpdateRunTime 
-GENERATE_ARM_STUB KeUpdateSystemTime 
 GENERATE_ARM_STUB KeUserModeCallback 
 GENERATE_ARM_STUB NtSetLdtEntries
 GENERATE_ARM_STUB NtRaiseException
@@ -45,7 +43,6 @@ GENERATE_ARM_STUB KeDisableInterrupts
 GENERATE_ARM_STUB KiDispatchException
 GENERATE_ARM_STUB KiSwapProcess
 GENERATE_ARM_STUB KeSwitchKernelStack
-GENERATE_ARM_STUB KiComputeTimerTableIndex
 
 //
 // Traps, Debugging and Execeptions
