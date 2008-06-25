@@ -199,7 +199,7 @@ GetLayoutIDByHkl(HKL hKl, LPTSTR szLayoutID)
         FIXME!!! This way of getting layout ID incorrect!
                  This will not work correctly for 0001040a, 00010410, etc
     */
-    wsprintf(szLayoutID, _T("00000%x"), LOWORD(hKl));
+    wsprintf(szLayoutID, _T("%08x"), LOWORD(hKl));
 }
 
 static BOOL
