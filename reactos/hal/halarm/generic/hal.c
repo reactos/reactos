@@ -16,7 +16,6 @@
 #undef ExReleaseFastMutex
 #undef ExTryToAcquireFastMutex
 #undef KeAcquireSpinLock
-#undef KeGetCurrentIrql
 #undef KeLowerIrql
 #undef KeRaiseIrql
 #undef KeReleaseSpinLock
@@ -26,6 +25,7 @@
 
 /* DATA **********************************************************************/
 
+ULONG HalpCurrentTimeIncrement, HalpNextTimeIncrement, HalpNextIntervalCount;
 ULONG _KdComPortInUse = 0;
 
 ULONG HalpIrqlTable[HIGH_LEVEL + 1] =
@@ -471,9 +471,25 @@ HalpClockInterrupt(VOID)
     //
     // Clear the interrupt
     //
-    //DPRINT1("CLOCK INTERRUPT!!!\n");
-    WRITE_REGISTER_ULONG(TIMER0_INT_CLEAR, 1);    
-    //while (TRUE);
+    ASSERT(KeGetCurrentIrql() == CLOCK2_LEVEL);
+    WRITE_REGISTER_ULONG(TIMER0_INT_CLEAR, 1);
+    
+    //
+    // FIXME: Update HAL Perf counters
+    //
+    
+    //
+    // FIXME: Check if someone changed the clockrate
+    //
+    
+    //
+    // Call the kernel
+    //
+    KeUpdateSystemTime(NULL, CLOCK2_LEVEL, HalpCurrentTimeIncrement);
+    
+    //
+    // We're done
+    //
 }
 
 VOID
@@ -526,9 +542,6 @@ HalpInitializeInterrupts(VOID)
     WRITE_REGISTER_ULONG(TIMER0_LOAD, ClockInterval);
     WRITE_REGISTER_ULONG(TIMER0_CONTROL, ControlRegister.AsUlong);
 }
-
-ULONG HalpCurrentTimeIncrement, HalpNextTimeIncrement, HalpNextIntervalCount;
-
 
 /*
  * @implemented
@@ -1345,6 +1358,7 @@ HalSweepIcache(VOID)
 /*
  * @implemented
  */
+#undef KeGetCurrentIrql
 KIRQL
 NTAPI
 KeGetCurrentIrql(VOID)
