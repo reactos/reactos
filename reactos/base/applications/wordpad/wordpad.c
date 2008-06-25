@@ -558,7 +558,7 @@ static void update_window(void)
 
     GetWindowRect(hMainWnd, &rect);
 
-    (void) OnSize(hMainWnd, SIZE_RESTORED, MAKELONG(rect.bottom, rect.right));
+    (void) OnSize(hMainWnd, SIZE_RESTORED, MAKELONG(rect.right, rect.bottom));
 }
 
 static BOOL is_bar_visible(int bandId)
