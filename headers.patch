@@ -1,6 +1,6 @@
 Index: include/reactos/exeformat.h
 ===================================================================
---- include/reactos/exeformat.h	(revision 31533)
+--- include/reactos/exeformat.h	(revision 34037)
 +++ include/reactos/exeformat.h	(working copy)
 @@ -35,6 +35,7 @@
  typedef NTSTATUS (NTAPI * PEXEFMT_CB_READ_FILE)
@@ -12,9 +12,9 @@ Index: include/reactos/exeformat.h
   OUT PVOID * Data,
 Index: ntoskrnl/include/internal/mm.h
 ===================================================================
---- ntoskrnl/include/internal/mm.h	(revision 31533)
+--- ntoskrnl/include/internal/mm.h	(revision 34040)
 +++ ntoskrnl/include/internal/mm.h	(working copy)
-@@ -176,6 +176,9 @@
+@@ -187,6 +187,9 @@
      ULONG Flags;
      ULONG Characteristics;
      BOOLEAN WriteCopy;
@@ -24,7 +24,7 @@ Index: ntoskrnl/include/internal/mm.h
  } MM_SECTION_SEGMENT, *PMM_SECTION_SEGMENT;
  
  typedef struct _MM_IMAGE_SECTION_OBJECT
-@@ -192,6 +195,10 @@
+@@ -203,6 +206,10 @@
      BOOLEAN Executable;
      ULONG NrSegments;
      ULONG ImageSize;
@@ -35,7 +35,7 @@ Index: ntoskrnl/include/internal/mm.h
      PMM_SECTION_SEGMENT Segments;
  } MM_IMAGE_SECTION_OBJECT, *PMM_IMAGE_SECTION_OBJECT;
  
-@@ -210,6 +217,16 @@
+@@ -221,6 +228,16 @@
      };
  } ROS_SECTION_OBJECT, *PROS_SECTION_OBJECT;
  
@@ -52,7 +52,7 @@ Index: ntoskrnl/include/internal/mm.h
  typedef struct _MEMORY_AREA
  {
      PVOID StartingAddress;
-@@ -224,17 +241,10 @@
+@@ -235,17 +252,10 @@
      ULONG PageOpCount;
      union
      {
@@ -73,9 +73,9 @@ Index: ntoskrnl/include/internal/mm.h
  } MEMORY_AREA, *PMEMORY_AREA;
 Index: ntoskrnl/include/internal/cc.h
 ===================================================================
---- ntoskrnl/include/internal/cc.h	(revision 31533)
+--- ntoskrnl/include/internal/cc.h	(revision 34040)
 +++ ntoskrnl/include/internal/cc.h	(working copy)
-@@ -102,17 +102,29 @@
+@@ -102,19 +102,29 @@
      LONG ActivePrefetches;
  } PFSN_PREFETCHER_GLOBALS, *PPFSN_PREFETCHER_GLOBALS;
  
@@ -102,6 +102,8 @@ Index: ntoskrnl/include/internal/cc.h
 -    ULONG CacheSegmentSize;
 -    LARGE_INTEGER AllocationSize;
 -    LARGE_INTEGER FileSize;
+-    PCACHE_MANAGER_CALLBACKS Callbacks;
+-    PVOID LazyWriteContext;
 -    KSPIN_LOCK BcbLock;
 +    CC_FILE_SIZES FileSizes;
 +    BOOLEAN PinAccess;
@@ -113,7 +115,7 @@ Index: ntoskrnl/include/internal/cc.h
      ULONG RefCount;
  #if defined(DBG) || defined(KDBG)
  	BOOLEAN Trace; /* enable extra trace output for this BCB and it's cache segments */
-@@ -157,8 +169,8 @@
+@@ -159,8 +169,8 @@
  typedef struct _INTERNAL_BCB
  {
      PUBLIC_BCB PFCB;
@@ -124,37 +126,10 @@ Index: ntoskrnl/include/internal/cc.h
      CSHORT RefCount; /* (At offset 0x34 on WinNT4) */
  } INTERNAL_BCB, *PINTERNAL_BCB;
  
-Index: ntoskrnl/ntoskrnl.def
+Index: drivers/filesystems/fastfat/vfat.h
 ===================================================================
---- ntoskrnl/ntoskrnl.def	(revision 31533)
-+++ ntoskrnl/ntoskrnl.def	(working copy)
-@@ -5,9 +5,6 @@
- ; ReactOS Operating System
- ;
- EXPORTS
--CcRosInitializeFileCache@8
--CcRosReleaseFileCache@4
--CcRosTraceCacheMap@8
- CcCanIWrite@16
- CcCopyRead@24
- CcCopyWrite@20
-Index: drivers/filesystems/cdfs/cdfs.h
-===================================================================
---- drivers/filesystems/cdfs/cdfs.h	(revision 31533)
-+++ drivers/filesystems/cdfs/cdfs.h	(working copy)
-@@ -6,7 +6,7 @@
- #include <ntddcdrm.h>
- #include <ccros.h>
- 
--#define USE_ROS_CC_AND_FS
-+//#define USE_ROS_CC_AND_FS
- 
- #define CDFS_BASIC_SECTOR 2048
- #define CDFS_PRIMARY_DESCRIPTOR_LOCATION 16
-Index: drivers/filesystems/vfat/vfat.h
-===================================================================
---- drivers/filesystems/vfat/vfat.h	(revision 31533)
-+++ drivers/filesystems/vfat/vfat.h	(working copy)
+--- drivers/filesystems/fastfat/vfat.h	(revision 34037)
++++ drivers/filesystems/fastfat/vfat.h	(working copy)
 @@ -6,7 +6,7 @@
  #ifdef __GNUC__
  #include <ccros.h>
@@ -164,16 +139,3 @@ Index: drivers/filesystems/vfat/vfat.h
  #else
  #define KEBUGCHECK KeBugCheck
  #define KEBUGCHECKEX KeBugCheckEx
-Index: drivers/filesystems/ntfs/ntfs.h
-===================================================================
---- drivers/filesystems/ntfs/ntfs.h	(revision 31533)
-+++ drivers/filesystems/ntfs/ntfs.h	(working copy)
-@@ -6,7 +6,7 @@
- #include <ntdddisk.h>
- #include <ccros.h>
- 
--#define USE_ROS_CC_AND_FS
-+//#define USE_ROS_CC_AND_FS
- 
- 
- #define CACHEPAGESIZE(pDeviceExt) \

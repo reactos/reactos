@@ -1,6 +1,6 @@
 Index: mm/elf.inc.h
 ===================================================================
---- mm/elf.inc.h	(revision 32677)
+--- mm/elf.inc.h	(revision 34040)
 +++ mm/elf.inc.h	(working copy)
 @@ -1,3 +1,5 @@
 +#include <ntoskrnl.h>
@@ -18,7 +18,7 @@ Index: mm/elf.inc.h
     &pData,
 Index: mm/elf32.c
 ===================================================================
---- mm/elf32.c	(revision 32677)
+--- mm/elf32.c	(revision 34040)
 +++ mm/elf32.c	(working copy)
 @@ -6,7 +6,7 @@
   *
@@ -31,7 +31,7 @@ Index: mm/elf32.c
  
 Index: mm/elf64.c
 ===================================================================
---- mm/elf64.c	(revision 32677)
+--- mm/elf64.c	(revision 34040)
 +++ mm/elf64.c	(working copy)
 @@ -6,6 +6,6 @@
   *
@@ -43,7 +43,7 @@ Index: mm/elf64.c
  #include "elf.inc.h"
 Index: mm/freelist.c
 ===================================================================
---- mm/freelist.c	(revision 32677)
+--- mm/freelist.c	(revision 34040)
 +++ mm/freelist.c	(working copy)
 @@ -634,6 +634,12 @@
  }
@@ -60,7 +60,7 @@ Index: mm/freelist.c
  {
 Index: mm/mm.c
 ===================================================================
---- mm/mm.c	(revision 32677)
+--- mm/mm.c	(revision 34040)
 +++ mm/mm.c	(working copy)
 @@ -246,6 +246,7 @@
              break;
@@ -72,7 +72,7 @@ Index: mm/mm.c
                                                    (PVOID)Address,
 Index: mm/mminit.c
 ===================================================================
---- mm/mminit.c	(revision 32677)
+--- mm/mminit.c	(revision 34040)
 +++ mm/mminit.c	(working copy)
 @@ -67,6 +67,9 @@
  FALSE;
@@ -94,7 +94,7 @@ Index: mm/mminit.c
      return TRUE;
 Index: mm/mpw.c
 ===================================================================
---- mm/mpw.c	(revision 32677)
+--- mm/mpw.c	(revision 34040)
 +++ mm/mpw.c	(working copy)
 @@ -88,7 +88,7 @@
        MmWriteDirtyPages(128, &PagesWritten);
@@ -107,7 +107,7 @@ Index: mm/mpw.c
  
 Index: mm/pagefile.c
 ===================================================================
---- mm/pagefile.c	(revision 32677)
+--- mm/pagefile.c	(revision 34040)
 +++ mm/pagefile.c	(working copy)
 @@ -1,5 +1,4 @@
 -/*
@@ -118,7 +118,7 @@ Index: mm/pagefile.c
   *  This program is free software; you can redistribute it and/or modify
 Index: mm/pageop.c
 ===================================================================
---- mm/pageop.c	(revision 32677)
+--- mm/pageop.c	(revision 34040)
 +++ mm/pageop.c	(working copy)
 @@ -81,14 +81,23 @@
     /*
@@ -213,11 +213,10 @@ Index: mm/pageop.c
     }
     PageOp->ReferenceCount = 1;
     PageOp->Next = MmPageOpHashTable[Hash];
-@@ -257,12 +277,3 @@
-                                     TAG_MM_PAGEOP,
+@@ -258,11 +278,3 @@
                                      50);
  }
--
+ 
 -
 -
 -
@@ -228,7 +227,7 @@ Index: mm/pageop.c
 -
 Index: mm/pe.c
 ===================================================================
---- mm/pe.c	(revision 32677)
+--- mm/pe.c	(revision 34040)
 +++ mm/pe.c	(working copy)
 @@ -240,7 +240,7 @@
  	lnOffset.QuadPart = pidhDosHeader->e_lfanew;
@@ -250,7 +249,7 @@ Index: mm/pe.c
  	    DIE(("ReadFile failed with status %08X\n", nStatus));
 Index: mm/rmap.c
 ===================================================================
---- mm/rmap.c	(revision 32677)
+--- mm/rmap.c	(revision 34040)
 +++ mm/rmap.c	(working copy)
 @@ -299,6 +299,17 @@
        Status = MmPageOutVirtualMemory(AddressSpace, MemoryArea,
@@ -272,7 +271,7 @@ Index: mm/rmap.c
        KEBUGCHECK(0);
 Index: mm/section.c
 ===================================================================
---- mm/section.c	(revision 32677)
+--- mm/section.c	(revision 34040)
 +++ mm/section.c	(working copy)
 @@ -31,7 +31,7 @@
   *                  Ge van Geldorp
@@ -4361,14 +4360,14 @@ Index: mm/section.c
                              IN OUT PULONG NumberOfPages,
 Index: mm/virtual.c
 ===================================================================
---- mm/virtual.c	(revision 32677)
+--- mm/virtual.c	(revision 34040)
 +++ mm/virtual.c	(working copy)
-@@ -396,7 +396,7 @@
+@@ -594,7 +594,7 @@
      NTSTATUS Status;
- 
+     
      *NumberOfBytesToProtect =
--        PAGE_ROUND_UP((ULONG_PTR)(*BaseAddress) + (*NumberOfBytesToProtect)) -
-+        PAGE_ROUND_UP((ULONG_PTR)(*BaseAddress) + (ULONG_PTR)(*NumberOfBytesToProtect)) -
-         PAGE_ROUND_DOWN(*BaseAddress);
+-    PAGE_ROUND_UP((ULONG_PTR)(*BaseAddress) + (*NumberOfBytesToProtect)) -
++    PAGE_ROUND_UP((ULONG_PTR)(*BaseAddress) + (ULONG_PTR)(*NumberOfBytesToProtect)) -
+     PAGE_ROUND_DOWN(*BaseAddress);
      *BaseAddress = (PVOID)PAGE_ROUND_DOWN(*BaseAddress);
- 
+     
