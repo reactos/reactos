@@ -68,6 +68,7 @@ IntGdiCombineTransform(LPXFORM XFormResult,
                        LPXFORM xform1,
                        LPXFORM xform2)
 {
+  XFORM xformTemp;
   /* Check for illegal parameters */
   if (!XFormResult || !xform1 || !xform2)
   {
@@ -76,12 +77,13 @@ IntGdiCombineTransform(LPXFORM XFormResult,
 
   /* Create the result in a temporary XFORM, since xformResult may be
    * equal to xform1 or xform2 */
-  XFormResult->eM11 = xform1->eM11 * xform2->eM11 + xform1->eM12 * xform2->eM21;
-  XFormResult->eM12 = xform1->eM11 * xform2->eM12 + xform1->eM12 * xform2->eM22;
-  XFormResult->eM21 = xform1->eM21 * xform2->eM11 + xform1->eM22 * xform2->eM21;
-  XFormResult->eM22 = xform1->eM21 * xform2->eM12 + xform1->eM22 * xform2->eM22;
-  XFormResult->eDx  = xform1->eDx  * xform2->eM11 + xform1->eDy  * xform2->eM21 + xform2->eDx;
-  XFormResult->eDy  = xform1->eDx  * xform2->eM12 + xform1->eDy  * xform2->eM22 + xform2->eDy;
+  xformTemp.eM11 = xform1->eM11 * xform2->eM11 + xform1->eM12 * xform2->eM21;
+  xformTemp.eM12 = xform1->eM11 * xform2->eM12 + xform1->eM12 * xform2->eM22;
+  xformTemp.eM21 = xform1->eM21 * xform2->eM11 + xform1->eM22 * xform2->eM21;
+  xformTemp.eM22 = xform1->eM21 * xform2->eM12 + xform1->eM22 * xform2->eM22;
+  xformTemp.eDx  = xform1->eDx  * xform2->eM11 + xform1->eDy  * xform2->eM21 + xform2->eDx;
+  xformTemp.eDy  = xform1->eDx  * xform2->eM12 + xform1->eDy  * xform2->eM22 + xform2->eDy;
+  *XFormResult = xformTemp;
 
   return TRUE;
 }
@@ -90,9 +92,6 @@ BOOL STDCALL NtGdiCombineTransform(LPXFORM  UnsafeXFormResult,
                                    LPXFORM  Unsafexform1,
                                    LPXFORM  Unsafexform2)
 {
-  XFORM  xformTemp;
-  XFORM  xform1 = {0}, xform2 = {0};
-  NTSTATUS Status = STATUS_SUCCESS;
   BOOL Ret;
 
   _SEH_TRY
@@ -106,40 +105,13 @@ BOOL STDCALL NtGdiCombineTransform(LPXFORM  UnsafeXFormResult,
     ProbeForRead(Unsafexform2,
                  sizeof(XFORM),
                  1);
-    xform1 = *Unsafexform1;
-    xform2 = *Unsafexform2;
+    Ret = IntGdiCombineTransform(UnsafeXFormResult, Unsafexform1, Unsafexform2);
   }
   _SEH_HANDLE
   {
-    Status = _SEH_GetExceptionCode();
+    Ret = FALSE;
   }
   _SEH_END;
-
-  if(!NT_SUCCESS(Status))
-  {
-    SetLastNtError(Status);
-    return FALSE;
-  }
-
-  Ret = IntGdiCombineTransform(&xformTemp, &xform1, &xform2);
-
-  /* Copy the result to xformResult */
-  _SEH_TRY
-  {
-    /* pointer was already probed! */
-    *UnsafeXFormResult = xformTemp;
-  }
-  _SEH_HANDLE
-  {
-    Status = _SEH_GetExceptionCode();
-  }
-  _SEH_END;
-
-  if(!NT_SUCCESS(Status))
-  {
-    SetLastNtError(Status);
-    return FALSE;
-  }
 
   return Ret;
 }
@@ -185,7 +157,7 @@ IntGdiModifyWorldTransform(PDC pDc,
                            CONST LPXFORM lpXForm,
                            DWORD Mode)
 {
-   ASSERT(pDc && lpXForm);
+   ASSERT(pDc);
 
    switch(Mode)
    {
@@ -211,7 +183,6 @@ IntGdiModifyWorldTransform(PDC pDc,
        break;
 
      default:
-       SetLastWin32Error(ERROR_INVALID_PARAMETER);
        return FALSE;
   }
   DC_UpdateXforms(pDc);
@@ -418,13 +389,7 @@ NtGdiModifyWorldTransform(HDC hDC,
 {
    PDC dc;
    XFORM SafeXForm;
-   BOOL Ret = FALSE;
-
-   if (!UnsafeXForm)
-   {
-     SetLastWin32Error(ERROR_INVALID_PARAMETER);
-     return FALSE;
-   }
+   BOOL Ret = TRUE;
 
    dc = DC_LockDc(hDC);
    if (!dc)
@@ -433,19 +398,24 @@ NtGdiModifyWorldTransform(HDC hDC,
      return FALSE;
    }
 
-   _SEH_TRY
+   // The xform is permitted to be NULL for MWT_IDENTITY.
+   // However, if it is not NULL, then it must be valid even though it is not used.
+   if (UnsafeXForm != NULL || Mode != MWT_IDENTITY)
    {
-      ProbeForRead(UnsafeXForm, sizeof(XFORM), 1);
-      RtlCopyMemory(&SafeXForm, UnsafeXForm, sizeof(XFORM));
+      _SEH_TRY
+      {
+         ProbeForRead(UnsafeXForm, sizeof(XFORM), 1);
+         RtlCopyMemory(&SafeXForm, UnsafeXForm, sizeof(XFORM));
+      }
+      _SEH_HANDLE
+      {
+         Ret = FALSE;
+      }
+      _SEH_END;
    }
-   _SEH_HANDLE
-   {
-      SetLastNtError(_SEH_GetExceptionCode());
-   }
-   _SEH_END;
 
    // Safe to handle kernel mode data.
-   Ret = IntGdiModifyWorldTransform(dc, &SafeXForm, Mode);
+   if (Ret) Ret = IntGdiModifyWorldTransform(dc, &SafeXForm, Mode);
    DC_UnlockDc(dc);
    return Ret;
 }
