@@ -16,11 +16,10 @@ namespace TechBot.Commands.MSDN
 		private bool IsVerbose = false;
 
 		private HtmlHelpSystem chm;
-        private string name;
 
         public ApiCommand()
 		{
-			Run();
+			LoadCHM();
 		}
 
         [CommandParameter("api", "The API name")]
@@ -36,7 +35,7 @@ namespace TechBot.Commands.MSDN
                 Say(message);
 		}
 
-		private void Run()
+		private void LoadCHM()
 		{
 			string CHMFilename = Path.Combine(Settings.Default.ChmPath, Settings.Default.MainChm);
 			chm = new HtmlHelpSystem();

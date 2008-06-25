@@ -2,7 +2,9 @@ using System;
 using System.Xml;
 using System.Collections;
 
-namespace TechBot.Library
+using TechBot.Library;
+
+namespace TechBot.Commands.Common
 {
     [Command("error", Help = "!error <value>")]
 	public class ErrorCommand : Command
@@ -68,27 +70,24 @@ namespace TechBot.Library
 			return code.ToString();
 		}
 
-		public override  void Handle(MessageContext context)
-		{
-            if (Text.Equals(String.Empty))
+		public override void  ExecuteCommand()
+        {
+            if (Parameters.Equals(String.Empty))
 			{
-				TechBot.ServiceOutput.WriteLine(context,
-				                        "Please provide an Error Code.");
+				Say("Please provide an Error Code.");
 				return;
 			}
 			
-			string errorText = originalErrorText;
+			string errorText = Parameters;
 
 		retry:
 			NumberParser np = new NumberParser();
 			long error = np.Parse(errorText);
-			if (np.Error)
-			{
-                TechBot.ServiceOutput.WriteLine(context,
-				                        String.Format("{0} is not a valid Error Code.",
-													  originalErrorText));
-				return;
-			}
+            if (np.Error)
+            {
+                Say("{0} is not a valid Error Code.", Parameters);
+                return;
+            }
 			
 			ArrayList descriptions = new ArrayList();
 
@@ -159,27 +158,23 @@ namespace TechBot.Library
 					goto retry;
 				}
 
-                TechBot.ServiceOutput.WriteLine(context,
-										String.Format("I don't know about Error Code {0}.",
-													  originalErrorText));
+                Say("I don't know about Error Code {0}.",
+                                                      Parameters);
 			}
-			else if (descriptions.Count == 1)
-			{
-				string description = (string)descriptions[0];
-                TechBot.ServiceOutput.WriteLine(context,
-										String.Format("{0} is {1}.",
-													  originalErrorText,
-													  description));
-			}
-			else
-			{
-                TechBot.ServiceOutput.WriteLine(context,
-				                        String.Format("{0} could be:",
-				                                      originalErrorText));
-				
-				foreach(string description in descriptions)
-                    TechBot.ServiceOutput.WriteLine(context, String.Format("\t{0}", description));
-			}
+            else if (descriptions.Count == 1)
+            {
+                string description = (string)descriptions[0];
+                Say("{0} is {1}.",
+                                                      Parameters,
+                                                      description);
+            }
+            else
+            {
+                Say("{0} could be:", Parameters);
+
+                foreach (string description in descriptions)
+                    Say("\t{0}", description);
+            }
 		}
 	}
 }

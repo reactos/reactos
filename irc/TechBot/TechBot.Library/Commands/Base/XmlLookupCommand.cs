@@ -6,8 +6,6 @@ namespace TechBot.Library
 {
     public abstract class XmlLookupCommand : XmlCommand
     {
-        protected string m_Text = null;
-
         public virtual string Text
         {
             get { return Parameters; }

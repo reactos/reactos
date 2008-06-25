@@ -34,6 +34,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Base\BugCommand.cs" />
+    <Compile Include="ErrorCommand.cs" />
     <Compile Include="HResultCommand.cs" />
     <Compile Include="NtStatusCommand.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

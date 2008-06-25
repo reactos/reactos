@@ -21,6 +21,11 @@ namespace TechBot.Library
             set { m_Context = value; }
         }
 
+        public virtual bool AnswerInPublic
+        {
+            get { return false; }
+        }
+
         public string Name
         {
             get
@@ -51,6 +56,25 @@ namespace TechBot.Library
         protected virtual void Say(string format , params object[] args)
         {
             TechBot.ServiceOutput.WriteLine(Context, String.Format(format, args));
+        }
+
+        public void Run()
+        {
+            if (Context is ChannelMessageContext)
+            {
+                if (AnswerInPublic)
+                {
+                    ExecuteCommand();
+                }
+                else
+                {
+                    Say("Sorry, I only respond '{0}' in private , PM me!", Name);
+                }
+            }
+            else
+            {
+                ExecuteCommand();
+            }
         }
 
         public abstract void ExecuteCommand();

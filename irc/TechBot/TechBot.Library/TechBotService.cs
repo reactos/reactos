@@ -81,7 +81,7 @@ namespace TechBot.Library
                     try
                     {
                         cmd.Initialize();
-                        cmd.ExecuteCommand();
+                        cmd.Run();
                         cmd.DeInitialize();
                     }
                     catch (Exception e)

@@ -6,11 +6,16 @@ namespace TechBot.Commands.Common
 {
 	public abstract class BugCommand : Command
 	{
-        private string m_BugID = null;
+//        private string m_BugID = null;
 
 		public BugCommand()
 		{
 		}
+
+        public override bool AnswerInPublic
+        {
+            get { return true; }
+        }
 
         public string BugID
         {
