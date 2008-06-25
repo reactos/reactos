@@ -83,9 +83,6 @@ StartupWindowThread(LPVOID lpParam)
 		(LPARAM)lpParam);
 	SetThreadDesktop(OldDesk);
 
-	msg->Context->hStatusWindow = 0;
-	msg->Context->SignaledStatusWindowCreated = FALSE;
-
 	HeapFree(GetProcessHeap(), 0, lpParam);
 	return TRUE;
 }
@@ -159,6 +156,7 @@ GUIRemoveStatusMessage(
 	{
 		EndDialog(pgContext->hStatusWindow, 0);
 		pgContext->hStatusWindow = 0;
+		pgContext->SignaledStatusWindowCreated = FALSE;
 	}
 
 	return TRUE;
