@@ -51,7 +51,7 @@ namespace TechBot.Commands.Common
 		{
 			XmlElement root = base.m_XmlDocument.DocumentElement;
 			XmlNode node = root.SelectSingleNode(String.Format("Winerror[@value='{0}']",
-                                                               Text));
+                                                               winerror.ToString()));
 			if (node != null)
 			{
 				XmlAttribute text = node.Attributes["text"];
