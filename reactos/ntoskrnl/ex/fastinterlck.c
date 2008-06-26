@@ -136,7 +136,7 @@ ExfInterlockedInsertTailList(IN PLIST_ENTRY ListHead,
 {
     KIRQL OldIrql;
     PLIST_ENTRY OldHead = NULL;
-    KeAcquireSpinLock(Lock,&OldIrql);
+    KeAcquireSpinLock(Lock, &OldIrql);
     if (!IsListEmpty(ListHead)) OldHead = ListEntry->Blink;
     InsertTailList(ListHead, ListEntry);
     KeReleaseSpinLock(Lock, OldIrql);
@@ -223,7 +223,7 @@ ExInterlockedInsertHeadList(IN PLIST_ENTRY ListHead,
 {
     KIRQL OldIrql;
     PLIST_ENTRY OldHead = NULL;
-    KeAcquireSpinLock(Lock,&OldIrql);
+    KeAcquireSpinLock(Lock, &OldIrql);
     if (!IsListEmpty(ListHead)) OldHead = ListEntry->Flink;
     InsertHeadList(ListHead, ListEntry);
     KeReleaseSpinLock(Lock, OldIrql);
@@ -238,7 +238,7 @@ ExInterlockedInsertTailList(IN PLIST_ENTRY ListHead,
 {
     KIRQL OldIrql;
     PLIST_ENTRY OldHead = NULL;
-    KeAcquireSpinLock(Lock,&OldIrql);
+    KeAcquireSpinLock(Lock, &OldIrql);
     if (!IsListEmpty(ListHead)) OldHead = ListEntry->Blink;
     InsertTailList(ListHead, ListEntry);
     KeReleaseSpinLock(Lock, OldIrql);
@@ -252,8 +252,8 @@ ExInterlockedPopEntryList(IN PSINGLE_LIST_ENTRY ListHead,
 {
     KIRQL OldIrql;
     PSINGLE_LIST_ENTRY OldHead = NULL;
-    KeAcquireSpinLock(Lock,&OldIrql);
-    OldHead = PopEntryList(ListHead);
+    KeAcquireSpinLock(Lock, &OldIrql);
+    if (!ListHead->Next) OldHead = PopEntryList(ListHead);
     KeReleaseSpinLock(Lock, OldIrql);
     return OldHead;
 }
@@ -266,8 +266,8 @@ ExInterlockedPushEntryList(IN PSINGLE_LIST_ENTRY ListHead,
 {
     KIRQL OldIrql;
     PSINGLE_LIST_ENTRY OldHead = NULL;
-    KeAcquireSpinLock(Lock,&OldIrql);
-    OldHead = PushEntryList(ListHead, ListEntry);
+    KeAcquireSpinLock(Lock, &OldIrql);
+    if (!ListHead->Next) OldHead = PushEntryList(ListHead, ListEntry);
     KeReleaseSpinLock(Lock, OldIrql);
     return OldHead;
 }
@@ -279,8 +279,8 @@ ExInterlockedRemoveHeadList(IN PLIST_ENTRY ListHead,
 {
     KIRQL OldIrql;
     PLIST_ENTRY OldHead = NULL;
-    KeAcquireSpinLock(Lock,&OldIrql);
-    OldHead = RemoveHeadList(ListHead);
+    KeAcquireSpinLock(Lock, &OldIrql);
+    if (!IsListEmpty(ListHead)) OldHead = RemoveHeadList(ListHead);
     KeReleaseSpinLock(Lock, OldIrql);
     return OldHead;
 }

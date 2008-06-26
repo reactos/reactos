@@ -25,6 +25,18 @@ KiSystemCall(
     IN ULONG ArgumentCount
 );
 
+VOID
+FASTCALL
+KiRetireDpcList(
+    IN PKPRCB Prcb
+);
+
+VOID
+FASTCALL
+KiQuantumEnd(
+    VOID
+);
+
 /* FUNCTIONS ******************************************************************/
 
 VOID
@@ -58,10 +70,9 @@ KiIdleLoop(VOID)
             HalClearSoftwareInterrupt(DISPATCH_LEVEL);
         
             //
-            // FIXME: TODO
+            // Retire DPCs
             //
-            DPRINT1("DPC/Timer Delivery!\n");
-            while (TRUE);
+            KiRetireDpcList(Prcb);
         }
     
         //
@@ -242,10 +253,9 @@ KiDispatchInterrupt(VOID)
         (Prcb->DeferredReadyListHead.Next))
     {
         //
-        // FIXME: TODO
+        // Retire DPCs
         //
-        DPRINT1("DPC/Timer Delivery!\n");
-        while (TRUE);
+        KiRetireDpcList(Prcb);
     }
     
     //
@@ -259,10 +269,10 @@ KiDispatchInterrupt(VOID)
     if (Prcb->QuantumEnd)
     {
         //
-        // FIXME: TODO
+        // Handle quantum end
         //
-        DPRINT1("Quantum End!\n");
-        while (TRUE);
+        Prcb->QuantumEnd = FALSE;
+        KiQuantumEnd();
         return;
     }
     
