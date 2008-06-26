@@ -37,8 +37,12 @@ KeUpdateSystemTime(IN PKTRAP_FRAME TrapFrame,
                    IN ULONG Increment)
 {
     PKPRCB Prcb = KeGetPcr()->Prcb;
-    LARGE_INTEGER SystemTime, InterruptTime;
+    ULARGE_INTEGER SystemTime, InterruptTime;
     ULONG Hand;
+    DPRINT1("TIMEBASE: %I64d %I64d %I64d\n",
+            *(PLARGE_INTEGER)&SharedUserData->InterruptTime,
+            *(PLARGE_INTEGER)&SharedUserData->SystemTime,
+            *(PLARGE_INTEGER)&SharedUserData->TickCount);
     
     //
     // Do nothing if this tick is being skipped
@@ -70,11 +74,7 @@ KeUpdateSystemTime(IN PKTRAP_FRAME TrapFrame,
     //
     // Check for incomplete tick
     //
-    if (KiTickOffset > 0)
-    {
-        
-    }
-    else
+    if (KiTickOffset <= 0)
     {
         //
         // Update the system time
@@ -107,14 +107,15 @@ KeUpdateSystemTime(IN PKTRAP_FRAME TrapFrame,
     //
     // Check for timer expiration
     //
-    Hand = KeTickCount.LowPart & (TIMER_TABLE_SIZE - 1);
-    Hand <<= 4;
-    if (KiTimerTableListHead[Hand].Time.QuadPart > InterruptTime.QuadPart)
+    Hand = KeTickCount.LowPart % TIMER_TABLE_SIZE;
+    if (KiTimerTableListHead[Hand].Time.QuadPart <= InterruptTime.QuadPart)
     {
         //
         // Timer has expired!
         //
-        DPRINT1("TIMER EXPIRATION!!!\n");
+        DPRINT1("hand: %d\n", Hand);
+        DPRINT1("Interrupt time: %I64x\n",  InterruptTime.QuadPart);
+        DPRINT1("TIMER EXPIRATION: %I64x!!!\n", KiTimerTableListHead[Hand].Time.QuadPart);
         while (TRUE);
     }
     
