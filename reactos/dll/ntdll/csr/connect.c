@@ -375,7 +375,6 @@ CsrClientConnectToServer(PWSTR ObjectDirectory,
                                  NULL,
                                  &CsrSrvName,
                                  &hCsrSrv);
-        RtlFreeUnicodeString(&CsrSrvName);
 
         /* Now get the Server to Server routine */
         RtlInitAnsiString(&CsrServerRoutineName, "CsrCallServerFromServer");
