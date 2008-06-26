@@ -41,6 +41,22 @@ MAIN_MENU MENU LANGUAGE LANG_ESPERANTO, SUBLANG_DEFAULT
  POPUP "&Legosigno" {
    MENUITEM "&Difinu...", MNID_BKMK_DEFINE
  }
+ POPUP "&Options" {
+   POPUP	"Help always visible"
+   BEGIN
+     MENUITEM "Default",	MNID_OPTS_HELP_DEFAULT
+     MENUITEM "Visible",	MNID_OPTS_HELP_VISIBLE
+     MENUITEM "Non visible",	MNID_OPTS_HELP_NONVISIBLE
+  END
+  MENUITEM "History",		MNID_OPTS_HISTORY
+  POPUP    "Fonts"
+  BEGIN
+    MENUITEM "Small",		MNID_OPTS_FONTS_SMALL
+    MENUITEM "Normal",    	MNID_OPTS_FONTS_NORMAL
+    MENUITEM "Large",     	MNID_OPTS_FONTS_LARGE
+  END
+  MENUITEM "Use system colors",	MNID_OPTS_SYSTEM_COLORS
+ }
  POPUP "&Helpo" {
    MENUITEM "&Helpu pri helpo", MNID_HELP_HELPON
    MENUITEM "Æiam &supre", MNID_HELP_HELPTOP
@@ -64,7 +80,6 @@ STID_HLPFILE_ERROR_s, 	"Eraro dum la legado de helpdosiero `%s'"
 STID_CONTENTS, 	"&Enhavo"
 STID_SEARCH, 		"&Seræu"
 STID_BACK, 		"&Retro"
-STID_HISTORY, 		"Krono&logio"
 STID_TOPICS,		"&Temoj"
 STID_ALL_FILES, 	"Tutaj dosieroj (*.*)"
 STID_HELP_FILES_HLP, 	"Helpaj dosieroj (*.hlp)"

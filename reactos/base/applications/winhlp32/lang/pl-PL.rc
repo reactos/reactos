@@ -40,6 +40,22 @@ MAIN_MENU MENU LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
  POPUP "&Zak³adka" {
    MENUITEM "&Zdefiniuj...", MNID_BKMK_DEFINE
  }
+ POPUP "&Options" {
+   POPUP	"Help always visible"
+   BEGIN
+     MENUITEM "Default",	MNID_OPTS_HELP_DEFAULT
+     MENUITEM "Visible",	MNID_OPTS_HELP_VISIBLE
+     MENUITEM "Non visible",	MNID_OPTS_HELP_NONVISIBLE
+  END
+  MENUITEM "History",		MNID_OPTS_HISTORY
+  POPUP    "Fonts"
+  BEGIN
+    MENUITEM "Small",		MNID_OPTS_FONTS_SMALL
+    MENUITEM "Normal",    	MNID_OPTS_FONTS_NORMAL
+    MENUITEM "Large",     	MNID_OPTS_FONTS_LARGE
+  END
+  MENUITEM "Use system colors",	MNID_OPTS_SYSTEM_COLORS
+ }
  POPUP "Pomo&c" {
    MENUITEM "&Pomoc", MNID_HELP_HELPON
    MENUITEM "&Zawsze na wierzchu", MNID_HELP_HELPTOP
@@ -73,12 +89,11 @@ STID_HLPFILE_ERROR_s, 	"B³¹d w trakcie odczytu pliku pomocy `%s'"
 STID_CONTENTS, 		"&Zawartoœæ"
 STID_SEARCH, 		"&Szukaj"
 STID_BACK, 		"&Wstecz"
-STID_HISTORY, 		"&Historia"
 STID_TOPICS,		"&Tematy"
 STID_ALL_FILES, 	"Wszystkie pliki (*.*)"
 STID_HELP_FILES_HLP, 	"Pliki pomocy (*.hlp)"
-STID_FILE_NOT_FOUND_s	"Cannot find '%s'. Do you want to find this file yourself?"
-STID_NO_RICHEDIT	"Cannot find a richedit implementation... Aborting"
+STID_FILE_NOT_FOUND_s	"Nie znaleziono pliku '%s'. Czy chcesz poszukaæ tego pliku samodzielnie?"
+STID_NO_RICHEDIT	"Nie uda³o siê znaleŸæ modu³u richedit... Wyœwietlenie pomocy nie jest mo¿liwe"
 }
 
 

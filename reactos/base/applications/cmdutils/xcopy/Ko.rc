@@ -48,12 +48,12 @@ STRINGTABLE
 "XCOPY - 원본 파일이나 디렉토리 구조를 목적지로 복사\n\
 \n\
 문법:\n\
-XCOPY 원본 [대상] [/I] [/S] [/Q] [/F] [/L] [/W] [/T] [/N] [/U] \n\
+XCOPY 원본 [대상] [/I] [/S] [/Q] [/F] [/L] [/W] [/T] [/N] [/U]\n\
 \t     [/R] [/H] [/C] [/P] [/A] [/M] [/E] [/D] [/Y] [/-Y]\n\
 \n\
 Where:\n\
 \n\
-[/I]  Assume directory if destination does not exist and copying 2 or \n\
+[/I]  Assume directory if destination does not exist and copying 2 or\n\
 \tmore files\n\
 [/S]  디렉토리하고 하위 디렉토리 복사\n\
 [/E]  빈 디렉토리를 포함해서 디렉토리와 하위 디렉토리 복사\n\
@@ -71,10 +71,10 @@ Where:\n\
 [/H]  숨은 파일이나 시스템 파일도 포함해서 복사\n\
 [/C]  복사하는 동안에 에러가 발생해도 계속 진행\n\
 [/A]  오직 압축 속성이 설정되어있는 파일만 복사\n\
-[/M]  오직 압축 속성을 제거하면서  압축 속성이 설정되어있는  \n\
-\파일만 복사 \n\
+[/M]  오직 압축 속성을 제거하면서  압축 속성이 설정되어있는\n\
+\파일만 복사\n\
 [/D | /D:m-d-y] 지정된 날짜 후에 수정되거나 새로운 파일 복사.\n\
-\t\tI만약 어떠한 날짜도 지정되지 않으면,오직 원본보다 \n\
+\t\tI만약 어떠한 날짜도 지정되지 않으면,오직 원본보다\n\
 \t\t대상이 오래된 것만 복사\n\n"
 
 }

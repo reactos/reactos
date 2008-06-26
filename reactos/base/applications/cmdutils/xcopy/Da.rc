@@ -47,7 +47,7 @@ STRINGTABLE
 "XCOPY - Kopierer filer eller katalogtre til en målplassering\n\
 \n\
 Syntaks:\n\
-XCOPY kilde [mål] [/I] [/S] [/Q] [/F] [/L] [/W] [/T] [/N] [/U] \n\
+XCOPY kilde [mål] [/I] [/S] [/Q] [/F] [/L] [/W] [/T] [/N] [/U]\n\
 \t     [/R] [/H] [/C] [/P] [/A] [/M] [/E] [/D] [/Y] [/-Y]\n\
 \n\
 hvor:\n\
@@ -69,7 +69,7 @@ hvor:\n\
 [/H]  Kopier skjulte filer og systemfiler\n\
 [/C]  Fortsæt selv om det opstår fejl under kopieringen\n\
 [/A]  Kopier ikke filer som er markeret som arkiv\n\
-[/M]  Kopier kun filer som er markeret som akriv; fjerner denne markering \n\
+[/M]  Kopier kun filer som er markeret som akriv; fjerner denne markering\n\
 [/D | /D:m-d-å] Kopier kun nye filer eller dem som er ændret efter\n\
       \t\tden opgivne dato.\n\
       \t\tHvis ingen dato opgives kopieres kun de filer hvor\n\

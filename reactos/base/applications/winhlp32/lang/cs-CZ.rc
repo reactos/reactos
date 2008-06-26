@@ -43,6 +43,22 @@ MAIN_MENU MENU LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
  POPUP "&Záložka" {
    MENUITEM "Pøi&dat...", MNID_BKMK_DEFINE
  }
+ POPUP "&Options" {
+   POPUP	"Help always visible"
+   BEGIN
+     MENUITEM "Default",	MNID_OPTS_HELP_DEFAULT
+     MENUITEM "Visible",	MNID_OPTS_HELP_VISIBLE
+     MENUITEM "Non visible",	MNID_OPTS_HELP_NONVISIBLE
+  END
+  MENUITEM "History",		MNID_OPTS_HISTORY
+  POPUP    "Fonts"
+  BEGIN
+    MENUITEM "Small",		MNID_OPTS_FONTS_SMALL
+    MENUITEM "Normal",    	MNID_OPTS_FONTS_NORMAL
+    MENUITEM "Large",     	MNID_OPTS_FONTS_LARGE
+  END
+  MENUITEM "Use system colors",	MNID_OPTS_SYSTEM_COLORS
+ }
  POPUP "&Nápovìda" {
    MENUITEM "Náp&ovìda k nápovìdì", MNID_HELP_HELPON
    MENUITEM "Vždy na &vrchu", MNID_HELP_HELPTOP
@@ -66,7 +82,6 @@ STID_HLPFILE_ERROR_s, 	"Nelze pøeèíst soubor nápovìdy `%s'"
 STID_CONTENTS, 		"&Obsah"
 STID_SEARCH, 		"&Hledat"
 STID_BACK, 		"&Zpìt"
-STID_HISTORY, 		"&Historie"
 STID_TOPICS,		"&Témata"
 STID_ALL_FILES, 	"Všechny soubory (*.*)"
 STID_HELP_FILES_HLP, 	"Soubory nápovìdy (*.hlp)"

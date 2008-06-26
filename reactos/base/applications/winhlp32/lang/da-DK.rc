@@ -40,6 +40,22 @@ MAIN_MENU MENU LANGUAGE LANG_DANISH, SUBLANG_DEFAULT
  POPUP "Bog&mærke" {
    MENUITEM "&Definer...", MNID_BKMK_DEFINE
  }
+ POPUP "&Options" {
+   POPUP	"Help always visible"
+   BEGIN
+     MENUITEM "Default",	MNID_OPTS_HELP_DEFAULT
+     MENUITEM "Visible",	MNID_OPTS_HELP_VISIBLE
+     MENUITEM "Non visible",	MNID_OPTS_HELP_NONVISIBLE
+  END
+  MENUITEM "History",		MNID_OPTS_HISTORY
+  POPUP    "Fonts"
+  BEGIN
+    MENUITEM "Small",		MNID_OPTS_FONTS_SMALL
+    MENUITEM "Normal",    	MNID_OPTS_FONTS_NORMAL
+    MENUITEM "Large",     	MNID_OPTS_FONTS_LARGE
+  END
+  MENUITEM "Use system colors",	MNID_OPTS_SYSTEM_COLORS
+ }
  POPUP "&Hjælp" {
    MENUITEM "&Brug af Hjælp", MNID_HELP_HELPON
    MENUITEM "Altid &øverst", MNID_HELP_HELPTOP
@@ -73,7 +89,6 @@ STID_HLPFILE_ERROR_s, 	"Fejl ved indlæsning af filen `%s'"
 STID_CONTENTS, 		"&Indhold"
 STID_SEARCH, 		"&Søg"
 STID_BACK, 		"&Tilbage"
-STID_HISTORY, 		"&Oversigt"
 STID_TOPICS, 		"&Emner"
 STID_ALL_FILES, 	"Alle filer (*.*)"
 STID_HELP_FILES_HLP, 	"Hjælpe filer (*.hlp)"
