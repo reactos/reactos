@@ -485,7 +485,9 @@ HalpClockInterrupt(VOID)
     //
     // Call the kernel
     //
-    KeUpdateSystemTime(NULL, CLOCK2_LEVEL, HalpCurrentTimeIncrement);
+    KeUpdateSystemTime(KeGetCurrentThread()->TrapFrame,
+                       CLOCK2_LEVEL,
+                       HalpCurrentTimeIncrement);
     
     //
     // We're done
