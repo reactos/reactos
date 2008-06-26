@@ -39,6 +39,7 @@ typedef struct _ENUM_DEVICE_DRIVERS_CONTEXT
 {
   LPVOID *lpImageBase;
   DWORD nCount;
+  DWORD nTotal;
 } ENUM_DEVICE_DRIVERS_CONTEXT, *PENUM_DEVICE_DRIVERS_CONTEXT;
 
 NTSTATUS STDCALL
@@ -47,19 +48,18 @@ EnumDeviceDriversCallback(IN PRTL_PROCESS_MODULE_INFORMATION CurrentModule,
 {
   PENUM_DEVICE_DRIVERS_CONTEXT Context = (PENUM_DEVICE_DRIVERS_CONTEXT)CallbackContext;
 
-  /* no more buffer space */
-  if(Context->nCount == 0)
+  /* check if more buffer space is available */
+  if(Context->nCount != 0)
   {
-    return STATUS_INFO_LENGTH_MISMATCH;
+    /* return current module */
+    *Context->lpImageBase = CurrentModule->ImageBase;
+
+    /* go to next array slot */
+    Context->lpImageBase++;
+    Context->nCount--;
   }
 
-  /* return current module */
-  *Context->lpImageBase = CurrentModule->ImageBase;
-
-  /* go to next array slot */
-  Context->lpImageBase++;
-  Context->nCount--;
-
+  Context->nTotal++;
   return STATUS_SUCCESS;
 }
 
@@ -97,6 +97,7 @@ typedef struct _ENUM_PROCESS_MODULES_CONTEXT
 {
   HMODULE *lphModule;
   DWORD nCount;
+  DWORD nTotal;
 } ENUM_PROCESS_MODULES_CONTEXT, *PENUM_PROCESS_MODULES_CONTEXT;
 
 NTSTATUS STDCALL
@@ -106,19 +107,18 @@ EnumProcessModulesCallback(IN HANDLE ProcessHandle,
 {
   PENUM_PROCESS_MODULES_CONTEXT Context = (PENUM_PROCESS_MODULES_CONTEXT)CallbackContext;
 
-  /* no more buffer space */
-  if(Context->nCount == 0)
+  /* check if more buffer space is available */
+  if(Context->nCount != 0)
   {
-    return STATUS_INFO_LENGTH_MISMATCH;
+    /* return current process */
+    *Context->lphModule = CurrentModule->DllBase;
+
+    /* go to next array slot */
+    Context->lphModule++;
+    Context->nCount--;
   }
 
-  /* return current process */
-  *Context->lphModule = CurrentModule->DllBase;
-
-  /* go to next array slot */
-  Context->lphModule++;
-  Context->nCount--;
-
+  Context->nTotal++;
   return STATUS_SUCCESS;
 }
 
@@ -678,23 +678,18 @@ EnumDeviceDrivers(LPVOID *lpImageBase,
   ENUM_DEVICE_DRIVERS_CONTEXT Context;
   NTSTATUS Status;
 
-  if(cb == 0 || lpImageBase == NULL)
-  {
-    *lpcbNeeded = 0;
-    return TRUE;
-  }
-
   cb /= sizeof(PVOID);
 
   Context.lpImageBase = lpImageBase;
   Context.nCount = cb;
+  Context.nTotal = 0;
 
   Status = PsaEnumerateSystemModules(EnumDeviceDriversCallback, &Context);
 
-  /* return the count of bytes returned */
-  *lpcbNeeded = (cb - Context.nCount) * sizeof(PVOID);
+  /* return the count of bytes that would be needed for a complete enumeration */
+  *lpcbNeeded = Context.nTotal * sizeof(PVOID);
 
-  if(!NT_SUCCESS(Status) && (Status != STATUS_INFO_LENGTH_MISMATCH))
+  if(!NT_SUCCESS(Status))
   {
     SetLastErrorByStatus(Status);
     return FALSE;
@@ -757,21 +752,16 @@ EnumProcessModules(HANDLE hProcess,
 
   cb /= sizeof(HMODULE);
 
-  if(cb == 0 || lphModule == NULL)
-  {
-    *lpcbNeeded = 0;
-    return TRUE;
-  }
-
   Context.lphModule = lphModule;
   Context.nCount = cb;
+  Context.nTotal = 0;
 
   /* enumerate the process modules */
   Status = PsaEnumerateProcessModules(hProcess, EnumProcessModulesCallback, &Context);
 
-  *lpcbNeeded = (cb - Context.nCount) * sizeof(DWORD);
+  *lpcbNeeded = Context.nTotal * sizeof(HMODULE);
 
-  if(!NT_SUCCESS(Status) && (Status != STATUS_INFO_LENGTH_MISMATCH))
+  if(!NT_SUCCESS(Status))
   {
     SetLastErrorByStatus(Status);
     return FALSE;
