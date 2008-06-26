@@ -389,7 +389,6 @@ BUILDNO_H = $(INTERMEDIATE_)include$(SEP)reactos$(SEP)buildno.h
 
 include lib/lib.mak
 include tools/tools.mak
-include boot/freeldr/bootsect/bootsect.mak
 -include $(ROS_AUTOMAKE)
 
 PREAUTO := \
