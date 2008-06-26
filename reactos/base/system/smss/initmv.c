@@ -70,8 +70,6 @@ SmpDeleteFile( IN LPCWSTR lpFileName )
 		NULL,
 		0);
 
-	RtlFreeUnicodeString(&FileNameU);
-
 	if( !NT_SUCCESS(Status) ) {
 		DPRINT("NtCreateFile() failed (Status %lx)\n", Status);
 		return (Status);
