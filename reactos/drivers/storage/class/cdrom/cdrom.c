@@ -766,7 +766,6 @@ Return Value:
 --*/
 {
     CHAR ntNameBuffer[64];
-    UNICODE_STRING ntUnicodeString;
     NTSTATUS status;
     BOOLEAN changerDevice;
     SCSI_REQUEST_BLOCK srb;
@@ -815,7 +814,6 @@ Return Value:
         DebugPrint((1,"CreateCdRomDeviceObjects: Can not create device %s\n",
                     ntNameBuffer));
 
-        RtlFreeUnicodeString(&ntUnicodeString);
         goto CreateCdRomDeviceObjectExit;
     }
 
