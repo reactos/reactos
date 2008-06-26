@@ -7,7 +7,7 @@
  */
 #include "resource.h"
 
-LANGUAGE LANG_BASQUE, SUBLANG_NEUTRAL
+LANGUAGE LANG_BASQUE, SUBLANG_DEFAULT
 
 
 /* Dialogs */
