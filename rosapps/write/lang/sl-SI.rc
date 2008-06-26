@@ -1,7 +1,7 @@
 /*
- * French language support
+ * Slovenian language support
  *
- * Copyright (C) 2007 Jonathan Ernst
+ * Copyright (C) 2008 Rok Mandeljc
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -17,13 +17,14 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
-#pragma code_page(65001)
 
-LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
+LANGUAGE LANG_SLOVENIAN, SUBLANG_DEFAULT
+
+#pragma code_page(65001)
 
 STRINGTABLE
 {
-    IDS_FAILED, "Wordpad n'a pas pu être démarré"
+    IDS_FAILED, "Zagon programa Wordpad ni uspel"
 }
 
 #pragma code_page(default)

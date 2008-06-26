@@ -1,8 +1,6 @@
 /*
- * German language support
- *
  * Copyright (C) 2007 Mikolaj Zalewski
- * Copyright (C) 2007 Daniel Reimer
+ * Copyright (C) 2008 Michael Stefaniuc
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -22,6 +20,6 @@
 LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
 
 STRINGTABLE
-BEGIN
-    IDS_FAILED, "Wordpad konnte nicht gestartet werden"
-END
+{
+    IDS_FAILED, "Der Start von Wordpad ist fehlgeschlagen"
+}

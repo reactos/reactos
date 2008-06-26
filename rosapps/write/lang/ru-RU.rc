@@ -1,7 +1,7 @@
 /*
- * French language support
+ * Russian language support
  *
- * Copyright (C) 2007 Jonathan Ernst
+ * Copyright 2008 Andrey Esin <andrey@esin.name>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -17,13 +17,10 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
-#pragma code_page(65001)
 
-LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
+LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
 STRINGTABLE
 {
-    IDS_FAILED, "Wordpad n'a pas pu ГЄtre dГ©marrГ©"
+    IDS_FAILED, "Не удалось запустить Wordpad"
 }
-
-#pragma code_page(default)

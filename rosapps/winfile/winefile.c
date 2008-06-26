@@ -4720,11 +4720,7 @@ static void InitInstance(HINSTANCE hinstance)
 	CoInitialize(NULL);
 	CoGetMalloc(MEMCTX_TASK, &Globals.iMalloc);
 	SHGetDesktopFolder(&Globals.iDesktop);
-#ifdef __WINE__
-	Globals.cfStrFName = RegisterClipboardFormatA(CFSTR_FILENAME);
-#else
 	Globals.cfStrFName = RegisterClipboardFormat(CFSTR_FILENAME);
-#endif
 #endif
 
 	/* load column strings */

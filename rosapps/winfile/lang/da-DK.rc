@@ -27,23 +27,23 @@ IDM_WINEFILE MENU FIXED IMPURE
 {
     POPUP "&Fil"  {
         MENUITEM "&Åben\tEnter",                     ID_ACTIVATE
-        MENUITEM "&Flyt ...\tF7",                    ID_FILE_MOVE
-        MENUITEM "&Kopier ...\tF8",                  ID_FILE_COPY
-        MENUITEM "&På klippebordet ...\tF9",         118
+        MENUITEM "&Flyt...\tF7",                     ID_FILE_MOVE
+        MENUITEM "&Kopier...\tF8",                   ID_FILE_COPY
+        MENUITEM "&På klippebordet...\tF9",          118
         MENUITEM "&Slet\tDel",                       ID_FILE_DELETE
-        MENUITEM "Omdøb ...",                        109
-        MENUITEM "&Egenskaper ...\tAlt+Enter",       ID_EDIT_PROPERTIES
+        MENUITEM "Omdøb...",                         109
+        MENUITEM "&Egenskaper...\tAlt+Enter",        ID_EDIT_PROPERTIES
         MENUITEM SEPARATOR
-        MENUITEM "K&omprimer ...",                   119
-        MENUITEM "De&komprimer ...",                 120
+        MENUITEM "K&omprimer...",                    119
+        MENUITEM "De&komprimer...",                  120
         MENUITEM SEPARATOR
-        MENUITEM "Kø&r ...",                         ID_EXECUTE
-        MENUITEM "&Udskriv ...",                     102
-        MENUITEM "Associer ...",                     103
+        MENUITEM "Kø&r...",                          ID_EXECUTE
+        MENUITEM "&Udskriv...",                      102
+        MENUITEM "Associer...",                      103
         MENUITEM SEPARATOR
-        MENUITEM "Opr&et folder ...",                111
-        MENUITEM "S&øg ...",                         104
-        MENUITEM "&Vælg filer ...",                  116
+        MENUITEM "Opr&et folder...",                 111
+        MENUITEM "S&øg...",                          104
+        MENUITEM "&Vælg filer...",                   116
         MENUITEM SEPARATOR
 #ifndef _NO_EXTENSIONS
         MENUITEM "&Afslut\tAlt+X",                   ID_FILE_EXIT
@@ -53,21 +53,21 @@ IDM_WINEFILE MENU FIXED IMPURE
     }
 
     POPUP "&Diskette"  {
-        MENUITEM "&Kopier diskette ...",             201
-        MENUITEM "Sæt vol&umenavn ...",              202
+        MENUITEM "&Kopier diskette...",              201
+        MENUITEM "Sæt vol&umenavn...",               202
         MENUITEM SEPARATOR
-        MENUITEM "&Formater diskette ...",           ID_FORMAT_DISK
+        MENUITEM "&Formater diskette...",            ID_FORMAT_DISK
 #ifdef _WIN95
-        MENUITEM "Opret syste&mdiskette ...",        -1 /*TODO*/
+        MENUITEM "Opret syste&mdiskette...",         -1 /*TODO*/
 #endif
         MENUITEM SEPARATOR
         MENUITEM "&Tilslut netværksdrev",            ID_CONNECT_NETWORK_DRIVE
         MENUITEM "Frakobl &netværksdrev",            ID_DISCONNECT_NETWORK_DRIVE
         MENUITEM SEPARATOR
-        MENUITEM "Del som ...",                      254
-        MENUITEM "Fje&rn delt resourse ...",         255
+        MENUITEM "Del som...",                       254
+        MENUITEM "Fje&rn delt resourse...",          255
         MENUITEM SEPARATOR
-        MENUITEM "Vælg &enhed ...",                  251
+        MENUITEM "Vælg &enhed...",                   251
     }
 
     POPUP "Kataloge&r"  {
@@ -88,20 +88,20 @@ IDM_WINEFILE MENU FIXED IMPURE
         MENUITEM SEPARATOR
         MENUITEM "&Navn",                            ID_VIEW_NAME
         MENUITEM "&Alle fildetaljer",                ID_VIEW_ALL_ATTRIBUTES, CHECKED
-        MENUITEM "Del&vise detaljer ...",            ID_VIEW_SELECTED_ATTRIBUTES
+        MENUITEM "Del&vise detaljer...",             ID_VIEW_SELECTED_ATTRIBUTES
         MENUITEM SEPARATOR
         MENUITEM "&Sorter efter navn",               ID_VIEW_SORT_NAME
         MENUITEM "Sorter efter &type",               ID_VIEW_SORT_TYPE
         MENUITEM "Sorter efter st&ørrelse",          ID_VIEW_SORT_SIZE
         MENUITEM "Sorter efter &dato",               ID_VIEW_SORT_DATE
         MENUITEM SEPARATOR
-        MENUITEM "Filtrer med '&' ...",              ID_VIEW_FILTER
+        MENUITEM "Filtrer med '&'...",               ID_VIEW_FILTER
     }
 
     POPUP "&Indstillinger"  {
-        MENUITEM "&Bekræftelse ...",                 501
-        MENUITEM "Skri&fttype ...",                  ID_SELECT_FONT
-        MENUITEM "Tilpas &værktøjslinien ...",       512
+        MENUITEM "&Bekræftelse...",                  501
+        MENUITEM "Skri&fttype...",                   ID_SELECT_FONT
+        MENUITEM "Tilpas &værktøjslinien...",        512
         MENUITEM SEPARATOR
         MENUITEM "Værk&tøjlinie",                    ID_VIEW_TOOL_BAR, CHECKED
         MENUITEM "&Enhedslinie",                     ID_VIEW_DRIVE_BAR, CHECKED
@@ -116,9 +116,9 @@ IDM_WINEFILE MENU FIXED IMPURE
 
 
     POPUP "&Sikkerhed"  {
-        MENUITEM "Tilg&ang ...",                     605
-        MENUITEM "&Logføring ...",                   606
-        MENUITEM "&Ejer ...",                        607
+        MENUITEM "Tilg&ang...",                     605
+        MENUITEM "&Logføring...",                   606
+        MENUITEM "&Ejer...",                        607
     }
 
     POPUP "Vind&ue"  {
@@ -135,10 +135,10 @@ IDM_WINEFILE MENU FIXED IMPURE
 
     POPUP "&Hjælp"  {
         MENUITEM "Emner i &hjælp\tF1",               ID_HELP
-        MENUITEM "&Søg i hjælp ...\tF1",             ID_HELP
+        MENUITEM "&Søg i hjælp...\tF1",              ID_HELP
         MENUITEM "Br&ug af hjælp\tF1",               ID_HELP_USING
         MENUITEM SEPARATOR
-        MENUITEM "&Information om Filbehandling ...",ID_ABOUT
+        MENUITEM "&Information om Filbehandling...",ID_ABOUT
     }
 }
 

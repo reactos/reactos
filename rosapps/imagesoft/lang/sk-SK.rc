@@ -1,5 +1,6 @@
-/* TRANSLATOR:  M·rio KaËm·r /Mario Kacmar/ aka Kario (kario@szm.sk)
- * DATE OF TR:  02-02-2008
+/* TRANSLATOR :  M·rio KaËm·r /Mario Kacmar/ aka Kario (kario@szm.sk)
+ * DATE OF TR.:  02-02-2008
+ * LAST CHANGE:  21-06-2008
  * ______________________________________________
  * NOTE:        this file is not fully translated
  */
@@ -16,79 +17,79 @@ IDR_MAINMENU MENU
 BEGIN
   POPUP "&S˙bor"
   BEGIN
-    MENUITEM "&Nov˝...",             ID_NEW
-    MENUITEM "&Otvoriù...",            ID_OPEN
+    MENUITEM "&Nov˝...",              ID_NEW
+    MENUITEM "&Otvoriù...",           ID_OPEN
     MENUITEM SEPARATOR
-    MENUITEM "&Zatvoriù\tCtrl+F4",     ID_CLOSE,   GRAYED
-    MENUITEM "Zatvoriù &vöetky",          ID_CLOSEALL,GRAYED
+    MENUITEM "&Zatvoriù\tCtrl+F4",    ID_CLOSE,   GRAYED
+    MENUITEM "Zatvoriù &vöetky",      ID_CLOSEALL,GRAYED
     MENUITEM SEPARATOR
     MENUITEM "&Uloûiù",               ID_SAVE,    GRAYED
-    MENUITEM "Uloûiù &ako...",         ID_SAVEAS,  GRAYED
+    MENUITEM "Uloûiù &ako...",        ID_SAVEAS,  GRAYED
     MENUITEM SEPARATOR
-    MENUITEM "N·hæa&d pred tlaËou",      ID_PRINTPRE,GRAYED
-    MENUITEM "&TlaËiù...",           ID_PRINT,   GRAYED
+    MENUITEM "N·hæa&d pred tlaËou",   ID_PRINTPRE,GRAYED
+    MENUITEM "&TlaËiù...",            ID_PRINT,   GRAYED
     MENUITEM SEPARATOR
-    MENUITEM "V&lastnosti...",      ID_PROP,    GRAYED
+    MENUITEM "V&lastnosti...",        ID_PROP,    GRAYED
     MENUITEM SEPARATOR
-    MENUITEM "&SkonËiù\tAlt+F4",       ID_EXIT
+    MENUITEM "&SkonËiù\tAlt+F4",      ID_EXIT
   END
   POPUP "&⁄pravy"
   BEGIN
-    MENUITEM "&Sp‰ù",               ID_UNDO,    GRAYED
-    MENUITEM "&Znova",               ID_REDO,    GRAYED
+    MENUITEM "&Sp‰ù",                 ID_UNDO,    GRAYED
+    MENUITEM "&Znova",                ID_REDO,    GRAYED
     MENUITEM SEPARATOR
-    MENUITEM "&Vystrihn˙ù",                ID_CUT,     GRAYED
-    MENUITEM "&KopÌrovaù",               ID_COPY,    GRAYED
-    MENUITEM "&Paste",              ID_PASTE,   GRAYED
-    MENUITEM "Paste as new &image", ID_PASTENEWIMAGE, GRAYED
+    MENUITEM "&Vystrihn˙ù",           ID_CUT,     GRAYED
+    MENUITEM "&KopÌrovaù",            ID_COPY,    GRAYED
+    MENUITEM "&Paste",                ID_PASTE,   GRAYED
+    MENUITEM "Paste as new &image",   ID_PASTENEWIMAGE, GRAYED
     MENUITEM SEPARATOR
-    MENUITEM "Vy&braù vöetko",         ID_SELALL,  GRAYED
+    MENUITEM "Vy&braù vöetko",        ID_SELALL,  GRAYED
   END
   POPUP "&Zobraziù"
   BEGIN
-    MENUITEM "&N·stroje",              ID_TOOLS
-    MENUITEM "&Farby",             ID_COLOR
-    MENUITEM "&HistÛria",            ID_HISTORY
-    MENUITEM "Stavov˝ &riadok",         ID_STATUSBAR
+    MENUITEM "&N·stroje",             ID_TOOLS
+    MENUITEM "&Farby",                ID_COLOR
+    MENUITEM "&HistÛria",             ID_HISTORY
+    MENUITEM "Stavov˝ &riadok",       ID_STATUSBAR
   END
   POPUP "&Adjust"
   BEGIN
-    MENUITEM "Jas...",       ID_BRIGHTNESS
-    MENUITEM "Kontrast...",         ID_CONTRAST
+    MENUITEM "Jas...",                ID_BRIGHTNESS
+    MENUITEM "Kontrast...",           ID_CONTRAST
     MENUITEM "OdtieÚ/Nas˝tenie...",   -1, GRAYED
     POPUP "Color"
     BEGIN
-      MENUITEM "»ierna a biela"    ID_BLACKANDWHITE
-      MENUITEM "Invertovaù farby"      ID_INVERTCOLORS
+      MENUITEM "»ierna a biela"       ID_BLACKANDWHITE
+      MENUITEM "Invertovaù farby"     ID_INVERTCOLORS
     END
     MENUITEM SEPARATOR
-    MENUITEM "Rozmazaù",                ID_BLUR
-    MENUITEM "Zaostriù",             ID_SHARPEN
+    MENUITEM "Rozmazaù",              ID_BLUR
+    MENUITEM "Zaostriù",              ID_SHARPEN
     MENUITEM "Vyhladiù hrany",        -1, GRAYED
-    MENUITEM "Pridaù tieÚ",          -1, GRAYED
+    MENUITEM "Pridaù tieÚ",           -1, GRAYED
     MENUITEM SEPARATOR
-    MENUITEM "Image Size...",       -1, GRAYED
-    MENUITEM "Preklopiù",                -1, GRAYED
+    MENUITEM "Image Size...",         -1, GRAYED
+    MENUITEM "Preklopiù",             -1, GRAYED
     MENUITEM "Zrkadliù",              -1, GRAYED
-    MENUITEM "OtoËiù",              -1, GRAYED
+    MENUITEM "OtoËiù",                -1, GRAYED
 
   END
   POPUP "&Farby"
   BEGIN
-    MENUITEM "&Upraviù farby...", ID_EDITCOLOURS
+    MENUITEM "&Upraviù farby...",     ID_EDITCOLOURS
   END
   POPUP "&Okn·"
   BEGIN
-    MENUITEM "&Cascade",           ID_WINDOW_CASCADE
-    MENUITEM "Tile &Horizontally", ID_WINDOW_TILE_HORZ
-    MENUITEM "Tile &Vertically",   ID_WINDOW_TILE_VERT
-    MENUITEM "&Arrange Icons",     ID_WINDOW_ARRANGE
+    MENUITEM "&Cascade",              ID_WINDOW_CASCADE
+    MENUITEM "Tile &Horizontally",    ID_WINDOW_TILE_HORZ
+    MENUITEM "Tile &Vertically",      ID_WINDOW_TILE_VERT
+    MENUITEM "&Arrange Icons",        ID_WINDOW_ARRANGE
     MENUITEM SEPARATOR
-    MENUITEM "Nex&t\tCtrl+F6",     ID_WINDOW_NEXT
+    MENUITEM "Nex&t\tCtrl+F6",        ID_WINDOW_NEXT
   END
   POPUP "&PomocnÌk"
   BEGIN
-    MENUITEM "»&o je...",       ID_ABOUT
+    MENUITEM "»&o je...",             ID_ABOUT
   END
 END
 
@@ -181,10 +182,10 @@ BEGIN
   IDS_IMAGE_PALETTE     "Paleta alebo 256 farieb (8 bitov)"
   IDS_IMAGE_TRUECOLOR   "PravÈ farby (24 bitov)"
 
-  IDS_UNIT_PIXELS       "Pixels"
-  IDS_UNIT_CM           "Cm"
-  IDS_UNIT_INCHES       "Inches"
-  IDS_UNIT_DOTSCM       "Dots / Cm"
+  IDS_UNIT_PIXELS       "Pixely"
+  IDS_UNIT_CM           "Centimetre"
+  IDS_UNIT_INCHES       "Palce"
+  IDS_UNIT_DOTSCM       "Body na cm"
   IDS_UNIT_DPI          "DPI"
   IDS_UNIT_KB           "%d KB"
   IDS_UNIT_MB           "%d MB"
@@ -221,20 +222,20 @@ BEGIN
   IDS_HINT_PROP         " ZobrazÌ vlastnosti aktÌvneho obr·zka."
   IDS_HINT_EXIT         " UkonËÌ program."
 
-  IDS_HINT_TOOLS        " Shows or hides the tools floating window."
-  IDS_HINT_COLORS       " Shows or hides the colors floating window."
-  IDS_HINT_HISTORY      " Shows or hides the history floating window."
-  IDS_HINT_STATUS       " Shows or hides the status bar."
+  IDS_HINT_TOOLS        " ZobrazÌ alebo skryje pl·vaj˙ce okno n·strojov."
+  IDS_HINT_COLORS       " ZobrazÌ alebo skryje pl·vaj˙ce okno farieb."
+  IDS_HINT_HISTORY      " ZobrazÌ alebo skryje pl·vaj˙ce okno histÛrie."
+  IDS_HINT_STATUS       " ZobrazÌ alebo skryje stavov˝ riadok."
 
   IDS_HINT_CASCADE      " Arrange windows so they overlap."
   IDS_HINT_TILE_HORZ    " Arrange windows as non-overlapping tiles."
   IDS_HINT_TILE_VERT    " Arrange windows as non-overlapping tiles."
   IDS_HINT_ARRANGE      " Arrange icons at the bottom of the window."
-  IDS_HINT_NEXT         " Activates the next window."
+  IDS_HINT_NEXT         " Aktivuje Ôalöie okno v poradÌ."
 
-  IDS_HINT_SYS_RESTORE  " Restores this window to normal size."
-  IDS_HINT_SYS_MOVE     " Moves this window."
-  IDS_HINT_SYS_SIZE     " Resizes this window."
-  IDS_HINT_SYS_MINIMIZE " Collapses this window to an icon."
-  IDS_HINT_SYS_MAXIMIZE " Expands this window to fill this screen."
+  IDS_HINT_SYS_RESTORE  " ObnovÌ okno na norm·lnu veækosù."
+  IDS_HINT_SYS_MOVE     " Premiestni okno."
+  IDS_HINT_SYS_SIZE     " ZmenÌ veækosù okna."
+  IDS_HINT_SYS_MINIMIZE " ZbalÌ okno do veækosti ikony."
+  IDS_HINT_SYS_MAXIMIZE " Zv‰ËsÌ okno tak, aby zaplnilo obrazovku."
 END

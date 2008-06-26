@@ -1,4 +1,6 @@
 /*
+ * Polish language support
+ *
  * Copyright (C) 2007 Mikolaj Zalewski
  *
  * This library is free software; you can redistribute it and/or
@@ -14,16 +16,11 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
- *
- * translated by Caemyr - Olaf Siejka (Feb, 2008)
- * Use ReactOS forum PM or IRC to contact me
- * http://www.reactos.org
- * IRC: irc.freenode.net #reactos-pl;
  */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
 STRINGTABLE
-BEGIN
-    IDS_FAILED, "B³¹d podczas uruchamiania Wordpad"
-END
+{
+    IDS_FAILED, "Nie uda³o siê uruchomiæ programu Wordpad"
+}
