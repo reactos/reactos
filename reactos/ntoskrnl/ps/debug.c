@@ -78,10 +78,10 @@ PspDumpThreads(BOOLEAN IncludeSystem)
                     /* Print a new line if there's nothing */
                     if((i % 8) != 0) DbgPrint("\n");
                 }
-            }
 
-            /* Move to the next Thread */
-         CurrentThread = CurrentThread->Flink;
+                /* Move to the next Thread */
+                CurrentThread = CurrentThread->Flink;
+            }
         }
 
         /* Move to the next Process */
