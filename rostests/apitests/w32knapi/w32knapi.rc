@@ -1,5 +1,0 @@
-#include <windows.h>
-#include "resource.h"
-
-IDI_ICON ICON "resource/system.ico"
-
