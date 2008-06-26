@@ -3135,6 +3135,7 @@ RegistryPage(PINPUT_RECORD Ir)
     PWSTR Action;
     PWSTR File;
     PWSTR Section;
+    PWSTR LangId;
     BOOLEAN Delete;
     NTSTATUS Status;
 
@@ -3207,8 +3208,54 @@ RegistryPage(PINPUT_RECORD Ir)
         }
     } while (SetupFindNextLine (&InfContext, &InfContext));
 
+    /* Localize registry entries by applying of language updates */
+
+    if (!SetupFindFirstLineW(SetupInf, L"HiveLocaleInfs.Install", NULL, &InfContext))
+    {
+        DPRINT1("SetupFindFirstLine() failed\n");
+        MUIDisplayError(ERROR_FIND_REGISTRY, Ir, POPUP_WAIT_ENTER);
+        return QUIT_PAGE;
+    }
+
+    do
+    {
+        INF_GetDataField (&InfContext, 0, &Action);
+        INF_GetDataField (&InfContext, 1, &File);
+        INF_GetDataField (&InfContext, 2, &Section);
+        INF_GetDataField (&InfContext, 3, &LangId);
+
+        DPRINT("Action: %S  File: %S  Section %S LangId %S\n", Action, File, Section, LangId);
+
+        if (!_wcsicmp (Action, L"AddReg"))
+        {
+            Delete = FALSE;
+        }
+        else if (!_wcsicmp (Action, L"DelReg"))
+        {
+            Delete = TRUE;
+        }
+        else
+        {
+            continue;
+        }
+
+        if (_wcsicmp(SelectedLanguageId, LangId)) /* language id doesn't match or exist */
+            continue;
+
+        CONSOLE_SetStatusText(MUIGetString(STRING_IMPORTFILE), File);
+
+        if (!ImportRegistryFile(File, Section, Delete))
+        {
+            DPRINT("Importing %S failed\n", File);
+
+            MUIDisplayError(ERROR_IMPORT_HIVE, Ir, POPUP_WAIT_ENTER);
+            return QUIT_PAGE;
+        }
+    } while (SetupFindNextLine (&InfContext, &InfContext));
+    
+
     /* Update display registry settings */
-    CONSOLE_SetStatusText(MUIGetString(STRING_DISPLAYETTINGSUPDATE));
+    CONSOLE_SetStatusText(MUIGetString(STRING_DISPLAYSETTINGSUPDATE));
     if (!ProcessDisplayRegistry(SetupInf, DisplayList))
     {
         MUIDisplayError(ERROR_UPDATE_DISPLAY_SETTINGS, Ir, POPUP_WAIT_ENTER);

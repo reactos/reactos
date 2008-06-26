@@ -1631,7 +1631,7 @@ MUI_STRING skSKStrings[] =
     "   Aktualizujem polo§ky registrov..."},
     {STRING_IMPORTFILE,
     "   Importujem %S..."},
-    {STRING_DISPLAYETTINGSUPDATE,
+    {STRING_DISPLAYSETTINGSUPDATE,
     "   Aktualizujem nastavenia obrazovky v registrov..."}, //display registry settings
     {STRING_LOCALESETTINGSUPDATE,
     "   Aktualizujem miestne nastavenia..."},

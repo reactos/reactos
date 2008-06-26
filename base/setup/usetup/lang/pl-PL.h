@@ -1632,7 +1632,7 @@ MUI_STRING plPLStrings[] =
     "   Uaktualnianie..."},
     {STRING_IMPORTFILE,
     "   Importowanie %S..."},
-    {STRING_DISPLAYETTINGSUPDATE,
+    {STRING_DISPLAYSETTINGSUPDATE,
     "   Zmiana ustawieä ekranu w rejestrze..."},
     {STRING_LOCALESETTINGSUPDATE,
     "   Zmiana wersji j©zykowej..."},

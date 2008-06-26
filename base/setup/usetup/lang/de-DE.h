@@ -1624,7 +1624,7 @@ MUI_STRING deDEStrings[] =
     "   Registry hives werden aktualisiert..."},
     {STRING_IMPORTFILE,
     "   Importiere %S..."},
-    {STRING_DISPLAYETTINGSUPDATE,
+    {STRING_DISPLAYSETTINGSUPDATE,
     "   Bildschirm-Registryeinstellungen werden aktualisiert..."},
     {STRING_LOCALESETTINGSUPDATE,
     "   Lokalisierungseinstellungen werden aktualisiert..."},

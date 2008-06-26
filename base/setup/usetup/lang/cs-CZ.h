@@ -1630,7 +1630,7 @@ MUI_STRING csCZStrings[] =
     "   Aktualizuji registr..."},
     {STRING_IMPORTFILE,
     "   Importuji %S..."},
-    {STRING_DISPLAYETTINGSUPDATE,
+    {STRING_DISPLAYSETTINGSUPDATE,
     "   Aktualizuji nastaven¡ zobrazen¡ registru..."}, //display registry settings
     {STRING_LOCALESETTINGSUPDATE,
     "   Aktualizuji m¡stn¡ nastaven¡..."},

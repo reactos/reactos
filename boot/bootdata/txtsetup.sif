@@ -397,4 +397,7 @@ AddReg=hivedef.inf,AddReg
 AddReg=hivesft.inf,AddReg
 AddReg=hivesys.inf,AddReg
 
+[HiveLocaleInfs.Install]
+AddReg=de_DE.inf,AddReg,00000407
+
 ; EOF

@@ -1623,7 +1623,7 @@ MUI_STRING enUSStrings[] =
     "   Updating registry hives..."},
     {STRING_IMPORTFILE,
     "   Importing %S..."},
-    {STRING_DISPLAYETTINGSUPDATE,
+    {STRING_DISPLAYSETTINGSUPDATE,
     "   Updating display registry settings..."},
     {STRING_LOCALESETTINGSUPDATE,
     "   Updating locale settings..."},

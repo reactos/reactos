@@ -8,6 +8,7 @@
 	<cdfile installbase="$(CDOUTPUT)">hivedef.inf</cdfile>
 	<cdfile installbase="$(CDOUTPUT)">hivesft.inf</cdfile>
 	<cdfile installbase="$(CDOUTPUT)">hivesys.inf</cdfile>
+	<cdfile installbase="$(CDOUTPUT)">de_DE.inf</cdfile>
 	<cdfile installbase="$(CDOUTPUT)">txtsetup.sif</cdfile>
 	<cdfile installbase="$(CDOUTPUT)">unattend.inf</cdfile>
 	<directory name="bootcd">

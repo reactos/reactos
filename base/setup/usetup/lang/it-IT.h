@@ -1624,7 +1624,7 @@ MUI_STRING itITStrings[] =
     "   Aggiornamento degli hives del registro..."},
     {STRING_IMPORTFILE,
     "   Importazione di %S..."},
-    {STRING_DISPLAYETTINGSUPDATE,
+    {STRING_DISPLAYSETTINGSUPDATE,
     "   Aggiornamento delle impostazioni dello schermo nel registro..."},
     {STRING_LOCALESETTINGSUPDATE,
     "   Aggiornamento delle impostazioni di regionalizzazione..."},
