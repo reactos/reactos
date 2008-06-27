@@ -1026,7 +1026,7 @@ IntGdiDeleteDC(HDC hDC, BOOL Force)
   }
 
   /*  Free GDI resources allocated to this DC  */
-  if (!(DCToDelete->DcLevel.flPath & DCPATH_SAVE))
+  if (!(DCToDelete->DcLevel.flPath & DCPATH_SAVESTATE))
   {
     /*
     NtGdiSelectPen (DCHandle, STOCK_BLACK_PEN);
@@ -1054,7 +1054,7 @@ IntGdiDeleteDC(HDC hDC, BOOL Force)
   {
     NtGdiDeleteObject (DCToDelete->w.hGCClipRgn);
   }
-  PATH_DestroyGdiPath (&DCToDelete->w.path);
+  PATH_Delete(DCToDelete->DcLevel.hPath);
 
   DC_UnlockDc( DCToDelete );
   DC_FreeDC ( hDC );
@@ -1326,7 +1326,7 @@ IntGdiCopyToSaveState(PDC dc, PDC newdc)
   nDc_Attr = newdc->pDc_Attr;
   if(!nDc_Attr) nDc_Attr = &newdc->Dc_Attr;
 
-  newdc->DcLevel.flPath     = dc->DcLevel.flPath | DCPATH_SAVE;
+  newdc->DcLevel.flPath     = dc->DcLevel.flPath | DCPATH_SAVESTATE;
   nDc_Attr->dwLayout        = Dc_Attr->dwLayout;
   nDc_Attr->hpen            = Dc_Attr->hpen;
   nDc_Attr->hbrush          = Dc_Attr->hbrush;
@@ -1372,7 +1372,7 @@ IntGdiCopyToSaveState(PDC dc, PDC newdc)
   newdc->DC_Type = dc->DC_Type;
 
 #if 0
-  PATH_InitGdiPath( &newdc->w.path );
+  PATH_InitGdiPath( &newdc->DcLevel.hPath );
 #endif
 
   /* Get/SetDCState() don't change hVisRgn field ("Undoc. Windows" p.559). */
@@ -1397,7 +1397,7 @@ IntGdiCopyFromSaveState(PDC dc, PDC dcs, HDC hDC)
   sDc_Attr = dcs->pDc_Attr;
   if(!sDc_Attr) sDc_Attr = &dcs->Dc_Attr;
 
-  dc->DcLevel.flPath       = dcs->DcLevel.flPath & ~DCPATH_SAVE;
+  dc->DcLevel.flPath       = dcs->DcLevel.flPath & ~DCPATH_SAVESTATE;
 
   Dc_Attr->dwLayout        = sDc_Attr->dwLayout;
   Dc_Attr->jROP2           = sDc_Attr->jROP2;
@@ -1528,7 +1528,7 @@ IntGdiSetDCState ( HDC hDC, HDC hDCSave )
     dcs = DC_LockDc ( hDCSave );
     if ( dcs )
     {
-      if ( dcs->DcLevel.flPath & DCPATH_SAVE )
+      if ( dcs->DcLevel.flPath & DCPATH_SAVESTATE )
       {
         IntGdiCopyFromSaveState( dc, dcs, dc->DcLevel.hdcSave);
       }
@@ -1824,16 +1824,18 @@ NtGdiRestoreDC(HDC  hDC, INT  SaveLevel)
 
          IntGdiSetDCState(hDC, hdcs);
 
-        if (!PATH_AssignGdiPath( &dc->w.path, &dcs->w.path ))
-        {
-          /* FIXME: This might not be quite right, since we're
-           * returning FALSE but still destroying the saved DC state */
-          success = FALSE;
-        }
          dc = DC_LockDc(hDC);
          if(!dc)
          {
             return FALSE;
+         }
+         // Restore Path by removing it, if the Save flag is set.
+         // BeginPath will takecare of the rest.
+         if ( dc->DcLevel.hPath && dc->DcLevel.flPath & DCPATH_SAVE)
+         {
+            PATH_Delete(dc->DcLevel.hPath);
+            dc->DcLevel.hPath = 0;
+            dc->DcLevel.flPath &= ~DCPATH_SAVE;
          }
        }
        else
@@ -1875,20 +1877,11 @@ NtGdiSaveDC(HDC  hDC)
     return 0;
   }
 
-#if 0
-    /* Copy path. The reason why path saving / restoring is in SaveDC/
-     * RestoreDC and not in GetDCState/SetDCState is that the ...DCState
-     * functions are only in Win16 (which doesn't have paths) and that
-     * SetDCState doesn't allow us to signal an error (which can happen
-     * when copying paths).
-     */
-  if (!PATH_AssignGdiPath (&dcs->w.path, &dc->w.path))
-  {
-    NtGdiDeleteObjectApp (hdcs);
-
-    return 0;
-  }
-#endif
+  /* 
+   * Copy path.
+   */
+  dcs->DcLevel.hPath = dc->DcLevel.hPath;
+  if (dcs->DcLevel.hPath) dcs->DcLevel.flPath |= DCPATH_SAVE;
 
   DC_SetNextDC (dcs, DC_GetNextDC (dc));
   DC_SetNextDC (dc, hdcs);
@@ -2511,6 +2504,10 @@ DC_AllocDC(PUNICODE_STRING Driver)
   Dc_Attr->ulBrushClr = RGB( 255, 255, 255 ); // Do this way too.
   Dc_Attr->crBrushClr = RGB( 255, 255, 255 );
 
+//// This fixes the default brush and pen settings. See DC_InitDC.
+  Dc_Attr->hbrush = NtGdiGetStockObject( WHITE_BRUSH );
+  Dc_Attr->hpen = NtGdiGetStockObject( BLACK_PEN );
+////
   Dc_Attr->hlfntNew = NtGdiGetStockObject(SYSTEM_FONT);
   TextIntRealizeFont(Dc_Attr->hlfntNew);
 
@@ -2536,8 +2533,10 @@ DC_InitDC(HDC  DCHandle)
 {
 //  NtGdiRealizeDefaultPalette(DCHandle);
 
-  NtGdiSelectBrush(DCHandle, NtGdiGetStockObject( WHITE_BRUSH ));
-  NtGdiSelectPen(DCHandle, NtGdiGetStockObject( BLACK_PEN ));
+////  Removed for now.. See above brush and pen.
+//  NtGdiSelectBrush(DCHandle, NtGdiGetStockObject( WHITE_BRUSH ));
+//  NtGdiSelectPen(DCHandle, NtGdiGetStockObject( BLACK_PEN ));
+////
   //NtGdiSelectFont(DCHandle, hFont);
 
 /*
@@ -2728,6 +2727,10 @@ DC_SetOwnership(HDC hDC, PEPROCESS Owner)
         if (pDC->w.hGCClipRgn)
         {
             if(!GDIOBJ_SetOwnership(pDC->w.hGCClipRgn, Owner)) return FALSE;
+        }
+        if (pDC->DcLevel.hPath)
+        {
+           if(!GDIOBJ_SetOwnership(pDC->DcLevel.hPath, Owner)) return FALSE;
         }
         DC_UnlockDc(pDC);
     }

@@ -16,7 +16,6 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id$ */
 
 #include <w32k.h>
 #include "math.h"
@@ -28,425 +27,52 @@
 #define GROW_FACTOR_NUMER    2  /* Numerator of grow factor for the array */
 #define GROW_FACTOR_DENOM    1  /* Denominator of grow factor             */
 
-BOOL FASTCALL PATH_AddEntry (GdiPath *pPath, const POINT *pPoint, BYTE flags);
-BOOL FASTCALL PATH_AddFlatBezier (GdiPath *pPath, POINT *pt, BOOL closed);
-BOOL FASTCALL PATH_DoArcPart (GdiPath *pPath, FLOAT_POINT corners[], double angleStart, double angleEnd, BOOL addMoveTo);
-BOOL FASTCALL PATH_FillPath( PDC dc, GdiPath *pPath );
-BOOL FASTCALL PATH_FlattenPath (GdiPath *pPath);
+BOOL FASTCALL PATH_AddEntry (PPATH pPath, const POINT *pPoint, BYTE flags);
+BOOL FASTCALL PATH_AddFlatBezier (PPATH pPath, POINT *pt, BOOL closed);
+BOOL FASTCALL PATH_DoArcPart (PPATH pPath, FLOAT_POINT corners[], double angleStart, double angleEnd, BYTE startEntryType);
+BOOL FASTCALL PATH_FillPath( PDC dc, PPATH pPath );
+BOOL FASTCALL PATH_FlattenPath (PPATH pPath);
 VOID FASTCALL PATH_NormalizePoint (FLOAT_POINT corners[], const FLOAT_POINT *pPoint, double *pX, double *pY);
-BOOL FASTCALL PATH_PathToRegion (GdiPath *pPath, INT nPolyFillMode, HRGN *pHrgn);
-BOOL FASTCALL PATH_ReserveEntries (GdiPath *pPath, INT numEntries);
+
+BOOL FASTCALL PATH_ReserveEntries (PPATH pPath, INT numEntries);
 VOID FASTCALL PATH_ScaleNormalizedPoint (FLOAT_POINT corners[], double x, double y, POINT *pPoint);
-BOOL FASTCALL PATH_StrokePath(DC *dc, GdiPath *pPath);
+BOOL FASTCALL PATH_StrokePath(DC *dc, PPATH pPath);
 BOOL PATH_CheckCorners(DC *dc, POINT corners[], INT x1, INT y1, INT x2, INT y2);
 
-VOID FASTCALL
-IntGetCurrentPositionEx(PDC dc, LPPOINT pt);
+VOID FASTCALL IntGetCurrentPositionEx(PDC dc, LPPOINT pt);
 
-
-BOOL
-STDCALL
-NtGdiAbortPath(HDC  hDC)
-{
-  BOOL ret = TRUE;
-  PDC dc = DC_LockDc ( hDC );
-
-  if( !dc ) return FALSE;
-
-  PATH_EmptyPath(&dc->w.path);
-
-  DC_UnlockDc ( dc );
-  return ret;
-}
+/***********************************************************************
+ * Internal functions
+ */
 
 BOOL
-STDCALL
-NtGdiBeginPath( HDC  hDC )
+FASTCALL
+PATH_Delete(HPATH hPath)
 {
-  BOOL ret = TRUE;
-  PDC dc = DC_LockDc ( hDC );
-
-  if( !dc ) return FALSE;
-
-  /* If path is already open, do nothing */
-  if ( dc->w.path.state != PATH_Open )
-  {
-    /* Make sure that path is empty */
-    PATH_EmptyPath( &dc->w.path );
-
-    /* Initialize variables for new path */
-    dc->w.path.newStroke = TRUE;
-    dc->w.path.state = PATH_Open;
-  }
-
-  DC_UnlockDc ( dc );
-  return ret;
+  if (!hPath) return FALSE;
+  PPATH pPath = PATH_LockPath( hPath );
+  if (!pPath) return FALSE;
+  PATH_DestroyGdiPath( pPath );
+  PATH_UnlockPath( pPath );
+  PATH_FreeExtPathByHandle(hPath);
+  return TRUE;
 }
+
 
 VOID
 FASTCALL
-IntGdiCloseFigure(PDC pDc)
+IntGdiCloseFigure(PPATH pPath)
 {
-   ASSERT(pDc);
-   ASSERT(pDc->w.path.state == PATH_Open);
+   ASSERT(pPath->state == PATH_Open);
 
    // FIXME: Shouldn't we draw a line to the beginning of the figure?
    // Set PT_CLOSEFIGURE on the last entry and start a new stroke
-   if(pDc->w.path.numEntriesUsed)
+   if(pPath->numEntriesUsed)
    {
-      pDc->w.path.pFlags[pDc->w.path.numEntriesUsed-1]|=PT_CLOSEFIGURE;
-      pDc->w.path.newStroke=TRUE;
+      pPath->pFlags[pPath->numEntriesUsed-1]|=PT_CLOSEFIGURE;
+      pPath->newStroke=TRUE;
    }
 }
-
-BOOL
-STDCALL
-NtGdiCloseFigure(HDC hDC)
-{
-   BOOL Ret = FALSE; // default to failure
-   PDC pDc;
-
-   DPRINT("Enter %s\n", __FUNCTION__);
-
-   pDc = DC_LockDc(hDC);
-   if(!pDc) return FALSE;
-
-   if(pDc->w.path.state==PATH_Open)
-   {
-      IntGdiCloseFigure(pDc);
-      Ret = TRUE;
-   }
-   else
-   {
-      // FIXME: check if lasterror is set correctly
-      SetLastWin32Error(ERROR_CAN_NOT_COMPLETE);
-   }
-
-   DC_UnlockDc(pDc);
-
-   return Ret;
-}
-
-BOOL
-STDCALL
-NtGdiEndPath(HDC  hDC)
-{
-  BOOL ret = TRUE;
-  PDC dc = DC_LockDc ( hDC );
-
-  if ( !dc ) return FALSE;
-
-  /* Check that path is currently being constructed */
-  if( dc->w.path.state != PATH_Open )
-  {
-    ret = FALSE;
-  }
-  /* Set flag to indicate that path is finished */
-  else dc->w.path.state = PATH_Closed;
-
-  DC_UnlockDc ( dc );
-  return ret;
-}
-
-BOOL
-STDCALL
-NtGdiFillPath(HDC  hDC)
-{
-  BOOL ret = TRUE;
-  PDC dc = DC_LockDc ( hDC );
-
-  if ( !dc ) return FALSE;
-
-  ret = PATH_FillPath( dc, &dc->w.path );
-  if( ret )
-  {
-    /* FIXME: Should the path be emptied even if conversion
-       failed? */
-    PATH_EmptyPath( &dc->w.path );
-  }
-
-  DC_UnlockDc ( dc );
-  return ret;
-}
-
-BOOL
-STDCALL
-NtGdiFlattenPath(HDC  hDC)
-{
-    BOOL Ret = FALSE;
-    DC *pDc;
-
-    DPRINT("Enter %s\n", __FUNCTION__);
-
-    pDc = DC_LockDc(hDC);
-    if(!pDc) return FALSE;
-
-    if(pDc->w.path.state == PATH_Open)
-	    Ret = PATH_FlattenPath(&pDc->w.path);
-
-    DC_UnlockDc(pDc);
-    return Ret;
-}
-
-
-BOOL
-APIENTRY
-NtGdiGetMiterLimit(
-    IN HDC hdc,
-    OUT PDWORD pdwOut)
-{
-  DC *pDc;
-  gxf_long worker;
-  NTSTATUS Status = STATUS_SUCCESS;
-
-  if(!(pDc = DC_LockDc(hdc))) return FALSE;
-
-  worker.f = pDc->DcLevel.laPath.eMiterLimit;
-
-  if (pdwOut)
-  {
-      _SEH_TRY
-      {
-          ProbeForWrite(pdwOut,
-                 sizeof(DWORD),
-                             1);
-          *pdwOut = worker.l;
-      }
-      _SEH_HANDLE
-      {
-          Status = _SEH_GetExceptionCode();
-      }
-       _SEH_END;
-      if (!NT_SUCCESS(Status))
-      {
-         SetLastNtError(Status);
-         DC_UnlockDc(pDc);
-         return FALSE;
-      }
-  }
-
-  DC_UnlockDc(pDc);
-  return TRUE;
-
-}
-
-INT
-STDCALL
-NtGdiGetPath(
-   HDC hDC,
-   LPPOINT Points,
-   LPBYTE Types,
-   INT nSize)
-{
-   INT ret = -1;
-   GdiPath *pPath;
-
-   DC *dc = DC_LockDc(hDC);
-   if(!dc)
-   {
-      DPRINT1("Can't lock dc!\n");
-      return -1;
-   }
-
-   pPath = &dc->w.path;
-
-   if(pPath->state != PATH_Closed)
-   {
-      SetLastWin32Error(ERROR_CAN_NOT_COMPLETE);
-      goto done;
-   }
-
-   if(nSize==0)
-   {
-      ret = pPath->numEntriesUsed;
-   }
-   else if(nSize<pPath->numEntriesUsed)
-   {
-      SetLastWin32Error(ERROR_INVALID_PARAMETER);
-      goto done;
-   }
-   else
-   {
-      _SEH_TRY
-      {
-         memcpy(Points, pPath->pPoints, sizeof(POINT)*pPath->numEntriesUsed);
-         memcpy(Types, pPath->pFlags, sizeof(BYTE)*pPath->numEntriesUsed);
-
-         /* Convert the points to logical coordinates */
-         IntDPtoLP(dc, Points, pPath->numEntriesUsed);
-
-         ret = pPath->numEntriesUsed;
-      }
-      _SEH_HANDLE
-      {
-         SetLastNtError(_SEH_GetExceptionCode());
-      }
-      _SEH_END
-   }
-
-done:
-   DC_UnlockDc(dc);
-   return ret;
-}
-
-HRGN
-STDCALL
-NtGdiPathToRegion(HDC  hDC)
-{
-   GdiPath *pPath;
-   HRGN  hrgnRval = 0;
-   DC *pDc;
-   PDC_ATTR Dc_Attr;
-
-   DPRINT("Enter %s\n", __FUNCTION__);
-
-   pDc = DC_LockDc(hDC);
-   if(!pDc) return NULL;
-   Dc_Attr = pDc->pDc_Attr;
-   if(!Dc_Attr) Dc_Attr = &pDc->Dc_Attr;
-   pPath = &pDc->w.path;
-
-   if(pPath->state!=PATH_Closed)
-   {
-      //FIXME: check that setlasterror is being called correctly
-      SetLastWin32Error(ERROR_CAN_NOT_COMPLETE);
-   }
-   else
-   {
-      /* FIXME: Should we empty the path even if conversion failed? */
-      if(PATH_PathToRegion(pPath, Dc_Attr->jFillMode, &hrgnRval))
-           PATH_EmptyPath(pPath);
-   }
-
-   DC_UnlockDc(pDc);
-   return hrgnRval;
-}
-
-BOOL
-APIENTRY
-NtGdiSetMiterLimit(
-    IN HDC hdc,
-    IN DWORD dwNew,
-    IN OUT OPTIONAL PDWORD pdwOut)
-{
-  DC *pDc;
-  gxf_long worker, worker1;
-  NTSTATUS Status = STATUS_SUCCESS;
-
-  if(!(pDc = DC_LockDc(hdc))) return FALSE;
-
-  worker.l  = dwNew;
-  worker1.f = pDc->DcLevel.laPath.eMiterLimit;
-  pDc->DcLevel.laPath.eMiterLimit = worker.f;
-
-  if (pdwOut)
-  {
-      _SEH_TRY
-      {
-          ProbeForWrite(pdwOut,
-                 sizeof(DWORD),
-                             1);
-          *pdwOut = worker1.l;
-      }
-      _SEH_HANDLE
-      {
-          Status = _SEH_GetExceptionCode();
-      }
-       _SEH_END;
-      if (!NT_SUCCESS(Status))
-      {
-         SetLastNtError(Status);
-         DC_UnlockDc(pDc);
-         return FALSE;
-      }
-  }
-
-  DC_UnlockDc(pDc);
-  return TRUE;
-}
-
-BOOL
-STDCALL
-NtGdiStrokeAndFillPath(HDC hDC)
-{
-   DC *pDc;
-   BOOL bRet = FALSE;
-
-   DPRINT("Enter %s\n", __FUNCTION__);
-
-   if(!(pDc = DC_LockDc(hDC))) return FALSE;
-
-   bRet = PATH_FillPath(pDc, &pDc->w.path);
-   if(bRet) bRet = PATH_StrokePath(pDc, &pDc->w.path);
-   if(bRet) PATH_EmptyPath(&pDc->w.path);
-
-   DC_UnlockDc(pDc);
-   return bRet;
-}
-
-BOOL
-STDCALL
-NtGdiStrokePath(HDC hDC)
-{
-    DC *pDc;
-    BOOL bRet = FALSE;
-
-    DPRINT("Enter %s\n", __FUNCTION__);
-
-    if(!(pDc = DC_LockDc(hDC))) return FALSE;
-
-    bRet = PATH_StrokePath(pDc, &pDc->w.path);
-    PATH_EmptyPath(&pDc->w.path);
-
-    DC_UnlockDc(pDc);
-    return bRet;
-}
-
-BOOL
-STDCALL
-NtGdiWidenPath(HDC  hDC)
-{
-   UNIMPLEMENTED;
-   return FALSE;
-}
-
-BOOL STDCALL NtGdiSelectClipPath(HDC  hDC,
-                         int  Mode)
-{
- HRGN  hrgnPath;
- BOOL  success = FALSE;
- PDC dc = DC_LockDc ( hDC );
- PDC_ATTR Dc_Attr;
- 
- if( !dc ) return FALSE;
- Dc_Attr = dc->pDc_Attr;
- if(!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
- /* Check that path is closed */
- if( dc->w.path.state != PATH_Closed )
- {
-   SetLastWin32Error(ERROR_CAN_NOT_COMPLETE);
-   return FALSE;
- }
- /* Construct a region from the path */
- else if( PATH_PathToRegion( &dc->w.path, Dc_Attr->jFillMode, &hrgnPath ) )
- {
-   success = GdiExtSelectClipRgn( dc, hrgnPath, Mode ) != ERROR;
-   NtGdiDeleteObject( hrgnPath );
-
-   /* Empty the path */
-   if( success )
-     PATH_EmptyPath( &dc->w.path);
-   /* FIXME: Should this function delete the path even if it failed? */
- }
-
- DC_UnlockDc ( dc );
- return success;
-}
-
-/***********************************************************************
- * Exported functions
- */
-
 
 /* PATH_FillPath
  *
@@ -454,7 +80,7 @@ BOOL STDCALL NtGdiSelectClipPath(HDC  hDC,
  */
 BOOL
 FASTCALL
-PATH_FillPath( PDC dc, GdiPath *pPath )
+PATH_FillPath( PDC dc, PPATH pPath )
 {
   INT   mapMode, graphicsMode;
   SIZE  ptViewportExt, ptWindowExt;
@@ -534,7 +160,7 @@ PATH_FillPath( PDC dc, GdiPath *pPath )
  */
 VOID
 FASTCALL
-PATH_InitGdiPath ( GdiPath *pPath )
+PATH_InitGdiPath ( PPATH pPath )
 {
   ASSERT(pPath!=NULL);
 
@@ -551,7 +177,7 @@ PATH_InitGdiPath ( GdiPath *pPath )
  */
 VOID
 FASTCALL
-PATH_DestroyGdiPath ( GdiPath *pPath )
+PATH_DestroyGdiPath ( PPATH pPath )
 {
   ASSERT(pPath!=NULL);
 
@@ -571,7 +197,7 @@ PATH_DestroyGdiPath ( GdiPath *pPath )
  */
 BOOL
 FASTCALL
-PATH_AssignGdiPath ( GdiPath *pPathDest, const GdiPath *pPathSrc )
+PATH_AssignGdiPath ( PPATH pPathDest, const PPATH pPathSrc )
 {
   ASSERT(pPathDest!=NULL && pPathSrc!=NULL);
 
@@ -588,7 +214,6 @@ PATH_AssignGdiPath ( GdiPath *pPathDest, const GdiPath *pPathSrc )
   pPathDest->state=pPathSrc->state;
   pPathDest->numEntriesUsed=pPathSrc->numEntriesUsed;
   pPathDest->newStroke=pPathSrc->newStroke;
-
   return TRUE;
 }
 
@@ -602,15 +227,19 @@ BOOL
 FASTCALL
 PATH_MoveTo ( PDC dc )
 {
+  PPATH pPath = PATH_LockPath( dc->DcLevel.hPath );
+  if (!pPath) return FALSE;
 
   /* Check that path is open */
-  if ( dc->w.path.state != PATH_Open )
+  if ( pPath->state != PATH_Open )
+  {
+    PATH_UnlockPath( pPath );
     /* FIXME: Do we have to call SetLastError? */
     return FALSE;
-
+  }
   /* Start a new stroke */
-  dc->w.path.newStroke = TRUE;
-
+  pPath->newStroke = TRUE;
+  PATH_UnlockPath( pPath );
   return TRUE;
 }
 
@@ -625,11 +254,19 @@ BOOL
 FASTCALL
 PATH_LineTo ( PDC dc, INT x, INT y )
 {
+  BOOL Ret;
+  PPATH pPath;
   POINT point, pointCurPos;
 
+  pPath = PATH_LockPath( dc->DcLevel.hPath );
+  if (!pPath) return FALSE;
+
   /* Check that path is open */
-  if ( dc->w.path.state != PATH_Open )
+  if ( pPath->state != PATH_Open )
+  {
+    PATH_UnlockPath( pPath );
     return FALSE;
+  }
 
   /* Convert point to device coordinates */
   point.x=x;
@@ -637,17 +274,22 @@ PATH_LineTo ( PDC dc, INT x, INT y )
   CoordLPtoDP ( dc, &point );
 
   /* Add a PT_MOVETO if necessary */
-  if ( dc->w.path.newStroke )
+  if ( pPath->newStroke )
   {
-    dc->w.path.newStroke = FALSE;
+    pPath->newStroke = FALSE;
     IntGetCurrentPositionEx ( dc, &pointCurPos );
     CoordLPtoDP ( dc, &pointCurPos );
-    if ( !PATH_AddEntry(&dc->w.path, &pointCurPos, PT_MOVETO) )
+    if ( !PATH_AddEntry(pPath, &pointCurPos, PT_MOVETO) )
+    {
+      PATH_UnlockPath( pPath );
       return FALSE;
+    }
   }
 
   /* Add a PT_LINETO entry */
-  return PATH_AddEntry(&dc->w.path, &point, PT_LINETO);
+  Ret = PATH_AddEntry(pPath, &point, PT_LINETO);
+  PATH_UnlockPath( pPath );
+  return Ret;
 }
 
 /* PATH_Rectangle
@@ -659,12 +301,19 @@ BOOL
 FASTCALL
 PATH_Rectangle ( PDC dc, INT x1, INT y1, INT x2, INT y2 )
 {
+  PPATH pPath;
   POINT corners[2], pointTemp;
   INT   temp;
 
+  pPath = PATH_LockPath( dc->DcLevel.hPath );
+  if (!pPath) return FALSE;
+
   /* Check that path is open */
-  if ( dc->w.path.state != PATH_Open )
+  if ( pPath->state != PATH_Open )
+  {
+    PATH_UnlockPath( pPath );
     return FALSE;
+  }
 
   /* Convert points to device coordinates */
   corners[0].x=x1;
@@ -695,25 +344,37 @@ PATH_Rectangle ( PDC dc, INT x1, INT y1, INT x2, INT y2 )
   }
 
   /* Close any previous figure */
-  IntGdiCloseFigure(dc);
+  IntGdiCloseFigure(pPath);
 
   /* Add four points to the path */
   pointTemp.x=corners[1].x;
   pointTemp.y=corners[0].y;
-  if ( !PATH_AddEntry(&dc->w.path, &pointTemp, PT_MOVETO) )
+  if ( !PATH_AddEntry(pPath, &pointTemp, PT_MOVETO) )
+  {
+    PATH_UnlockPath( pPath );
     return FALSE;
-  if ( !PATH_AddEntry(&dc->w.path, corners, PT_LINETO) )
+  }
+  if ( !PATH_AddEntry(pPath, corners, PT_LINETO) )
+  {
+    PATH_UnlockPath( pPath );
     return FALSE;
+  }
   pointTemp.x=corners[0].x;
   pointTemp.y=corners[1].y;
-  if ( !PATH_AddEntry(&dc->w.path, &pointTemp, PT_LINETO) )
+  if ( !PATH_AddEntry(pPath, &pointTemp, PT_LINETO) )
+  {
+    PATH_UnlockPath( pPath );
     return FALSE;
-  if ( !PATH_AddEntry(&dc->w.path, corners+1, PT_LINETO) )
+  }
+  if ( !PATH_AddEntry(pPath, corners+1, PT_LINETO) )
+  {
+    PATH_UnlockPath( pPath );
     return FALSE;
+  }
 
   /* Close the rectangle figure */
-  IntGdiCloseFigure(dc) ;
-
+  IntGdiCloseFigure(pPath) ;
+  PATH_UnlockPath( pPath );
   return TRUE;
 }
 
@@ -728,51 +389,81 @@ PATH_Rectangle ( PDC dc, INT x1, INT y1, INT x2, INT y2 )
  */
 BOOL FASTCALL PATH_RoundRect(DC *dc, INT x1, INT y1, INT x2, INT y2, INT ell_width, INT ell_height)
 {
-   GdiPath *pPath = &dc->w.path;
+   PPATH pPath;
    POINT corners[2], pointTemp;
    FLOAT_POINT ellCorners[2];
 
+   pPath = PATH_LockPath( dc->DcLevel.hPath );
+   if (!pPath) return FALSE;   
+
    /* Check that path is open */
    if(pPath->state!=PATH_Open)
+   {
+      PATH_UnlockPath( pPath );
       return FALSE;
+   }
 
    if(!PATH_CheckCorners(dc,corners,x1,y1,x2,y2))
+   {
+      PATH_UnlockPath( pPath );
       return FALSE;
+   }
 
    /* Add points to the roundrect path */
    ellCorners[0].x = corners[1].x-ell_width;
    ellCorners[0].y = corners[0].y;
    ellCorners[1].x = corners[1].x;
    ellCorners[1].y = corners[0].y+ell_height;
-   if(!PATH_DoArcPart(pPath, ellCorners, 0, -M_PI_2, TRUE))
+   if(!PATH_DoArcPart(pPath, ellCorners, 0, -M_PI_2, PT_MOVETO))
+   {
+      PATH_UnlockPath( pPath );
       return FALSE;
+   }
    pointTemp.x = corners[0].x+ell_width/2;
    pointTemp.y = corners[0].y;
    if(!PATH_AddEntry(pPath, &pointTemp, PT_LINETO))
+   {
+      PATH_UnlockPath( pPath );
       return FALSE;
+   }
    ellCorners[0].x = corners[0].x;
    ellCorners[1].x = corners[0].x+ell_width;
    if(!PATH_DoArcPart(pPath, ellCorners, -M_PI_2, -M_PI, FALSE))
+   {
+      PATH_UnlockPath( pPath );
       return FALSE;
+   }
    pointTemp.x = corners[0].x;
    pointTemp.y = corners[1].y-ell_height/2;
    if(!PATH_AddEntry(pPath, &pointTemp, PT_LINETO))
+   {
+      PATH_UnlockPath( pPath );
       return FALSE;
+   }
    ellCorners[0].y = corners[1].y-ell_height;
    ellCorners[1].y = corners[1].y;
    if(!PATH_DoArcPart(pPath, ellCorners, M_PI, M_PI_2, FALSE))
+   {
+      PATH_UnlockPath( pPath );
       return FALSE;
+   }
    pointTemp.x = corners[1].x-ell_width/2;
    pointTemp.y = corners[1].y;
    if(!PATH_AddEntry(pPath, &pointTemp, PT_LINETO))
+   {
+      PATH_UnlockPath( pPath );
       return FALSE;
+   }
    ellCorners[0].x = corners[1].x-ell_width;
    ellCorners[1].x = corners[1].x;
    if(!PATH_DoArcPart(pPath, ellCorners, M_PI_2, 0, FALSE))
+   {
+      PATH_UnlockPath( pPath );
       return FALSE;
+   }
 
-   IntGdiCloseFigure(dc);
-
+   IntGdiCloseFigure(pPath);
+   PATH_UnlockPath( pPath );
    return TRUE;
 }
 
@@ -786,10 +477,17 @@ BOOL
 FASTCALL
 PATH_Ellipse ( PDC dc, INT x1, INT y1, INT x2, INT y2 )
 {
+  PPATH pPath;
   /* TODO: This should probably be revised to call PATH_AngleArc */
   /* (once it exists) */
   BOOL Ret = PATH_Arc ( dc, x1, y1, x2, y2, x1, (y1+y2)/2, x1, (y1+y2)/2, GdiTypeArc );
-  if (Ret) IntGdiCloseFigure(dc);
+  if (Ret)
+  {
+     pPath = PATH_LockPath( dc->DcLevel.hPath );
+     if (!pPath) return FALSE;
+     IntGdiCloseFigure(pPath);
+     PATH_UnlockPath( pPath );
+  }
   return Ret;
 }
 
@@ -798,8 +496,10 @@ PATH_Ellipse ( PDC dc, INT x1, INT y1, INT x2, INT y2 )
  * Should be called when a call to Arc is performed on a DC that has
  * an open path. This adds up to five Bezier splines representing the arc
  * to the path. When 'lines' is 1, we add 1 extra line to get a chord,
- * and when 'lines' is 2, we add 2 extra lines to get a pie.
- * Returns TRUE if successful, else FALSE.
+ * when 'lines' is 2, we add 2 extra lines to get a pie, and when 'lines' is
+ * -1 we add 1 extra line from the current DC position to the starting position
+ * of the arc before drawing the arc itself (arcto). Returns TRUE if successful,
+ * else FALSE.
  */
 BOOL
 FASTCALL
@@ -810,29 +510,36 @@ PATH_Arc ( PDC dc, INT x1, INT y1, INT x2, INT y2,
           /* Initialize angleEndQuadrant to silence gcc's warning */
   double  x, y;
   FLOAT_POINT corners[2], pointStart, pointEnd;
-  POINT   centre;
-  BOOL    start, end;
+  POINT   centre, pointCurPos;
+  BOOL    start, end, Ret = TRUE;
   INT     temp;
   BOOL    clockwise;
+  PPATH   pPath;
 
   /* FIXME: This function should check for all possible error returns */
   /* FIXME: Do we have to respect newStroke? */
 
   ASSERT ( dc );
 
+  pPath = PATH_LockPath( dc->DcLevel.hPath );
+  if (!pPath) return FALSE;
+
   clockwise = ((dc->DcLevel.flPath & DCPATH_CLOCKWISE) != 0);
 
   /* Check that path is open */
-  if ( dc->w.path.state != PATH_Open )
-    return FALSE;
-
-  /* FIXME: Do we have to close the current figure? */
+  if ( pPath->state != PATH_Open )
+  {
+    Ret = FALSE;
+    goto ArcExit;    
+  }
 
   /* Check for zero height / width */
   /* FIXME: Only in GM_COMPATIBLE? */
   if ( x1==x2 || y1==y2 )
-    return TRUE;
-
+  {
+    Ret = TRUE;
+    goto ArcExit;
+  }
   /* Convert points to device coordinates */
   corners[0].x=(FLOAT)x1;
   corners[0].y=(FLOAT)y1;
@@ -892,6 +599,19 @@ PATH_Arc ( PDC dc, INT x1, INT y1, INT x2, INT y2,
     corners[1].y--;
   }
 
+  /* arcto: Add a PT_MOVETO only if this is the first entry in a stroke */
+  if(lines==GdiTypeArcTo && pPath->newStroke) // -1
+  {
+     pPath->newStroke=FALSE;
+     IntGetCurrentPositionEx ( dc, &pointCurPos );
+     CoordLPtoDP(dc, &pointCurPos);
+     if(!PATH_AddEntry(pPath, &pointCurPos, PT_MOVETO))
+     {
+       Ret = FALSE;
+       goto ArcExit;
+     }
+  }
+
   /* Add the arc to the path with one Bezier spline per quadrant that the
    * arc spans */
   start=TRUE;
@@ -927,24 +647,26 @@ PATH_Arc ( PDC dc, INT x1, INT y1, INT x2, INT y2,
     }
 
     /* Add the Bezier spline to the path */
-    PATH_DoArcPart ( &dc->w.path, corners, angleStartQuadrant, angleEndQuadrant, start );
+    PATH_DoArcPart ( pPath, corners, angleStartQuadrant, angleEndQuadrant,
+       start ? (lines==GdiTypeArcTo ? PT_LINETO : PT_MOVETO) : FALSE ); // -1
     start = FALSE;
   } while(!end);
 
   /* chord: close figure. pie: add line and close figure */
-  if(lines==GdiTypeChord) // 1
-   {
-      IntGdiCloseFigure(dc);
-   }
-  else if(lines==GdiTypePie) // 2
-   {
+  if (lines==GdiTypeChord) // 1
+  {
+      IntGdiCloseFigure(pPath);
+  }
+  else if (lines==GdiTypePie) // 2
+  {
       centre.x = (corners[0].x+corners[1].x)/2;
       centre.y = (corners[0].y+corners[1].y)/2;
-      if(!PATH_AddEntry(&dc->w.path, &centre, PT_LINETO | PT_CLOSEFIGURE))
-         return FALSE;
-   }
-
-  return TRUE;
+      if(!PATH_AddEntry(pPath, &centre, PT_LINETO | PT_CLOSEFIGURE))
+         Ret = FALSE;
+  }
+ArcExit:
+  PATH_UnlockPath( pPath );
+  return Ret;
 }
 
 BOOL
@@ -953,31 +675,42 @@ PATH_PolyBezierTo ( PDC dc, const POINT *pts, DWORD cbPoints )
 {
   POINT pt;
   ULONG i;
+  PPATH pPath;
 
   ASSERT ( dc );
   ASSERT ( pts );
   ASSERT ( cbPoints );
 
+   pPath = PATH_LockPath( dc->DcLevel.hPath );
+   if (!pPath) return FALSE;
+   
   /* Check that path is open */
-  if ( dc->w.path.state != PATH_Open )
+  if ( pPath->state != PATH_Open )
+  {
+    PATH_UnlockPath( pPath );
     return FALSE;
+  }
 
   /* Add a PT_MOVETO if necessary */
-  if ( dc->w.path.newStroke )
+  if ( pPath->newStroke )
   {
-    dc->w.path.newStroke=FALSE;
+    pPath->newStroke=FALSE;
     IntGetCurrentPositionEx ( dc, &pt );
     CoordLPtoDP ( dc, &pt );
-    if ( !PATH_AddEntry(&dc->w.path, &pt, PT_MOVETO) )
+    if ( !PATH_AddEntry(pPath, &pt, PT_MOVETO) )
+    {
+        PATH_UnlockPath( pPath );
         return FALSE;
+    }
   }
 
   for(i = 0; i < cbPoints; i++)
   {
     pt = pts[i];
     CoordLPtoDP ( dc, &pt );
-    PATH_AddEntry(&dc->w.path, &pt, PT_BEZIERTO);
+    PATH_AddEntry(pPath, &pt, PT_BEZIERTO);
   }
+  PATH_UnlockPath( pPath );
   return TRUE;
 }
 
@@ -987,22 +720,29 @@ PATH_PolyBezier ( PDC dc, const POINT *pts, DWORD cbPoints )
 {
   POINT   pt;
   ULONG   i;
+  PPATH   pPath;
 
   ASSERT ( dc );
   ASSERT ( pts );
   ASSERT ( cbPoints );
 
+  pPath = PATH_LockPath( dc->DcLevel.hPath );
+  if (!pPath) return FALSE;
+
    /* Check that path is open */
-  if ( dc->w.path.state != PATH_Open )
+  if ( pPath->state != PATH_Open )
+  {
+    PATH_UnlockPath( pPath );
     return FALSE;
+  }
 
   for ( i = 0; i < cbPoints; i++ )
   {
     pt = pts[i];
     CoordLPtoDP ( dc, &pt );
-    PATH_AddEntry ( &dc->w.path, &pt, (i == 0) ? PT_MOVETO : PT_BEZIERTO );
+    PATH_AddEntry ( pPath, &pt, (i == 0) ? PT_MOVETO : PT_BEZIERTO );
   }
-
+  PATH_UnlockPath( pPath );
   return TRUE;
 }
 
@@ -1012,21 +752,28 @@ PATH_Polyline ( PDC dc, const POINT *pts, DWORD cbPoints )
 {
   POINT   pt;
   ULONG   i;
+  PPATH   pPath;
 
   ASSERT ( dc );
   ASSERT ( pts );
   ASSERT ( cbPoints );
 
-  /* Check that path is open */
-  if ( dc->w.path.state != PATH_Open )
-    return FALSE;
+  pPath = PATH_LockPath( dc->DcLevel.hPath );
+  if (!pPath) return FALSE;
 
+  /* Check that path is open */
+  if ( pPath->state != PATH_Open )
+  {
+    PATH_UnlockPath( pPath );
+    return FALSE;
+  }
   for ( i = 0; i < cbPoints; i++ )
   {
     pt = pts[i];
     CoordLPtoDP ( dc, &pt );
-    PATH_AddEntry(&dc->w.path, &pt, (i == 0) ? PT_MOVETO : PT_LINETO);
+    PATH_AddEntry(pPath, &pt, (i == 0) ? PT_MOVETO : PT_LINETO);
   }
+  PATH_UnlockPath( pPath );
   return TRUE;
 }
 
@@ -1036,32 +783,42 @@ PATH_PolylineTo ( PDC dc, const POINT *pts, DWORD cbPoints )
 {
   POINT   pt;
   ULONG   i;
+  PPATH   pPath;
 
   ASSERT ( dc );
   ASSERT ( pts );
   ASSERT ( cbPoints );
 
+  pPath = PATH_LockPath( dc->DcLevel.hPath );
+  if (!pPath) return FALSE;
+   
   /* Check that path is open */
-  if ( dc->w.path.state != PATH_Open )
+  if ( pPath->state != PATH_Open )
+  {
+    PATH_UnlockPath( pPath );
     return FALSE;
+  }
 
   /* Add a PT_MOVETO if necessary */
-  if ( dc->w.path.newStroke )
+  if ( pPath->newStroke )
   {
-    dc->w.path.newStroke = FALSE;
+    pPath->newStroke = FALSE;
     IntGetCurrentPositionEx ( dc, &pt );
     CoordLPtoDP ( dc, &pt );
-    if ( !PATH_AddEntry(&dc->w.path, &pt, PT_MOVETO) )
+    if ( !PATH_AddEntry(pPath, &pt, PT_MOVETO) )
+    {
+      PATH_UnlockPath( pPath );
       return FALSE;
+    }
   }
 
   for(i = 0; i < cbPoints; i++)
   {
     pt = pts[i];
     CoordLPtoDP ( dc, &pt );
-    PATH_AddEntry(&dc->w.path, &pt, PT_LINETO);
+    PATH_AddEntry(pPath, &pt, PT_LINETO);
   }
-
+  PATH_UnlockPath( pPath );
   return TRUE;
 }
 
@@ -1072,22 +829,30 @@ PATH_Polygon ( PDC dc, const POINT *pts, DWORD cbPoints )
 {
   POINT   pt;
   ULONG   i;
+  PPATH   pPath;
 
   ASSERT ( dc );
   ASSERT ( pts );
 
+  pPath = PATH_LockPath( dc->DcLevel.hPath );
+  if (!pPath) return FALSE;
+
   /* Check that path is open */
-  if ( dc->w.path.state != PATH_Open )
+  if ( pPath->state != PATH_Open )
+  {
+    PATH_UnlockPath( pPath );
     return FALSE;
+  }
 
   for(i = 0; i < cbPoints; i++)
   {
     pt = pts[i];
     CoordLPtoDP ( dc, &pt );
-    PATH_AddEntry(&dc->w.path, &pt, (i == 0) ? PT_MOVETO :
+    PATH_AddEntry(pPath, &pt, (i == 0) ? PT_MOVETO :
       ((i == cbPoints-1) ? PT_LINETO | PT_CLOSEFIGURE :
       PT_LINETO));
   }
+  PATH_UnlockPath( pPath );
   return TRUE;
 }
 
@@ -1097,15 +862,22 @@ PATH_PolyPolygon ( PDC dc, const POINT* pts, const INT* counts, UINT polygons )
 {
   POINT   pt, startpt;
   ULONG   poly, point, i;
+  PPATH   pPath;
 
   ASSERT ( dc );
   ASSERT ( pts );
   ASSERT ( counts );
   ASSERT ( polygons );
 
+  pPath = PATH_LockPath( dc->DcLevel.hPath );
+  if (!pPath) return FALSE;
+
   /* Check that path is open */
-  if ( dc->w.path.state != PATH_Open );
+  if ( pPath->state != PATH_Open )
+  {
+    PATH_UnlockPath( pPath );
     return FALSE;
+  }
 
   for(i = 0, poly = 0; poly < polygons; poly++)
   {
@@ -1114,11 +886,12 @@ PATH_PolyPolygon ( PDC dc, const POINT* pts, const INT* counts, UINT polygons )
       pt = pts[i];
       CoordLPtoDP ( dc, &pt );
       if(point == 0) startpt = pt;
-        PATH_AddEntry(&dc->w.path, &pt, (point == 0) ? PT_MOVETO : PT_LINETO);
+        PATH_AddEntry(pPath, &pt, (point == 0) ? PT_MOVETO : PT_LINETO);
     }
     /* win98 adds an extra line to close the figure for some reason */
-    PATH_AddEntry(&dc->w.path, &startpt, PT_LINETO | PT_CLOSEFIGURE);
+    PATH_AddEntry(pPath, &startpt, PT_LINETO | PT_CLOSEFIGURE);
   }
+  PATH_UnlockPath( pPath );
   return TRUE;
 }
 
@@ -1128,15 +901,22 @@ PATH_PolyPolyline ( PDC dc, const POINT* pts, const DWORD* counts, DWORD polylin
 {
   POINT   pt;
   ULONG   poly, point, i;
+  PPATH   pPath;
 
   ASSERT ( dc );
   ASSERT ( pts );
   ASSERT ( counts );
   ASSERT ( polylines );
 
+  pPath = PATH_LockPath( dc->DcLevel.hPath );
+  if (!pPath) return FALSE;
+
   /* Check that path is open */
-  if ( dc->w.path.state != PATH_Open )
+  if ( pPath->state != PATH_Open )
+  {
+    PATH_UnlockPath( pPath );
     return FALSE;
+  }
 
   for(i = 0, poly = 0; poly < polylines; poly++)
   {
@@ -1144,15 +924,13 @@ PATH_PolyPolyline ( PDC dc, const POINT* pts, const DWORD* counts, DWORD polylin
     {
       pt = pts[i];
       CoordLPtoDP ( dc, &pt );
-      PATH_AddEntry(&dc->w.path, &pt, (point == 0) ? PT_MOVETO : PT_LINETO);
+      PATH_AddEntry(pPath, &pt, (point == 0) ? PT_MOVETO : PT_LINETO);
     }
   }
+  PATH_UnlockPath( pPath );
   return TRUE;
 }
 
-/***********************************************************************
- * Internal functions
- */
 
 /* PATH_CheckCorners
  *
@@ -1202,7 +980,7 @@ BOOL PATH_CheckCorners(DC *dc, POINT corners[], INT x1, INT y1, INT x2, INT y2)
  */
 BOOL
 FASTCALL
-PATH_AddFlatBezier ( GdiPath *pPath, POINT *pt, BOOL closed )
+PATH_AddFlatBezier ( PPATH pPath, POINT *pt, BOOL closed )
 {
   POINT *pts;
   INT no, i;
@@ -1224,9 +1002,9 @@ PATH_AddFlatBezier ( GdiPath *pPath, POINT *pt, BOOL closed )
  */
 BOOL
 FASTCALL
-PATH_FlattenPath(GdiPath *pPath)
+PATH_FlattenPath(PPATH pPath)
 {
-  GdiPath newPath;
+  PATH newPath;
   INT srcpt;
 
   RtlZeroMemory(&newPath, sizeof(newPath));
@@ -1249,6 +1027,8 @@ PATH_FlattenPath(GdiPath *pPath)
   return TRUE;
 }
 
+
+HRGN FASTCALL IntCreatePolyPolygonRgn(POINT *Pts, INT *Count, INT nbpolygons,INT mode);
 /* PATH_PathToRegion
  *
  * Creates a region from the specified path using the specified polygon
@@ -1257,11 +1037,9 @@ PATH_FlattenPath(GdiPath *pPath)
  * error occurs, SetLastError is called with the appropriate value and
  * FALSE is returned.
  */
-
-
 BOOL
 FASTCALL
-PATH_PathToRegion ( GdiPath *pPath, INT nPolyFillMode, HRGN *pHrgn )
+PATH_PathToRegion ( PPATH pPath, INT nPolyFillMode, HRGN *pHrgn )
 {
   int    numStrokes, iStroke, i;
   INT  *pNumPointsInStroke;
@@ -1285,7 +1063,7 @@ PATH_PathToRegion ( GdiPath *pPath, INT nPolyFillMode, HRGN *pHrgn )
   pNumPointsInStroke=(int *)ExAllocatePoolWithTag(PagedPool, sizeof(int) * numStrokes, TAG_PATH);
   if(!pNumPointsInStroke)
   {
-//    SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+    SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
     return FALSE;
   }
 
@@ -1304,11 +1082,13 @@ PATH_PathToRegion ( GdiPath *pPath, INT nPolyFillMode, HRGN *pHrgn )
   }
 
   /* Create a region from the strokes */
-/*  hrgn=CreatePolyPolygonRgn(pPath->pPoints, pNumPointsInStroke,
-    numStrokes, nPolyFillMode); FIXME: reinclude when region code implemented */
+  hrgn = IntCreatePolyPolygonRgn( pPath->pPoints,
+                              pNumPointsInStroke,
+                                      numStrokes,
+                                   nPolyFillMode);
   if(hrgn==(HRGN)0)
   {
-//    SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+    SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
     return FALSE;
   }
 
@@ -1326,7 +1106,7 @@ PATH_PathToRegion ( GdiPath *pPath, INT nPolyFillMode, HRGN *pHrgn )
  */
 VOID
 FASTCALL
-PATH_EmptyPath ( GdiPath *pPath )
+PATH_EmptyPath ( PPATH pPath )
 {
   ASSERT(pPath!=NULL);
 
@@ -1342,7 +1122,7 @@ PATH_EmptyPath ( GdiPath *pPath )
  */
 BOOL
 FASTCALL
-PATH_AddEntry ( GdiPath *pPath, const POINT *pPoint, BYTE flags )
+PATH_AddEntry ( PPATH pPath, const POINT *pPoint, BYTE flags )
 {
   ASSERT(pPath!=NULL);
 
@@ -1380,7 +1160,7 @@ PATH_AddEntry ( GdiPath *pPath, const POINT *pPoint, BYTE flags )
  */
 BOOL
 FASTCALL
-PATH_ReserveEntries ( GdiPath *pPath, INT numEntries )
+PATH_ReserveEntries ( PPATH pPath, INT numEntries )
 {
   INT   numEntriesToAllocate;
   POINT *pPointsNew;
@@ -1438,14 +1218,14 @@ PATH_ReserveEntries ( GdiPath *pPath, INT numEntries )
  * Creates a Bezier spline that corresponds to part of an arc and appends the
  * corresponding points to the path. The start and end angles are passed in
  * "angleStart" and "angleEnd"; these angles should span a quarter circle
- * at most. If "addMoveTo" is true, a PT_MOVETO entry for the first control
- * point is added to the path; otherwise, it is assumed that the current
+ * at most. If "startEntryType" is non-zero, an entry of that type for the first
+ * control point is added to the path; otherwise, it is assumed that the current
  * position is equal to the first control point.
  */
 BOOL
 FASTCALL
-PATH_DoArcPart ( GdiPath *pPath, FLOAT_POINT corners[],
-   double angleStart, double angleEnd, BOOL addMoveTo )
+PATH_DoArcPart ( PPATH pPath, FLOAT_POINT corners[],
+   double angleStart, double angleEnd, BYTE startEntryType )
 {
   double  halfAngle, a;
   double  xNorm[4], yNorm[4];
@@ -1477,10 +1257,10 @@ PATH_DoArcPart ( GdiPath *pPath, FLOAT_POINT corners[],
     }
 
   /* Add starting point to path if desired */
-  if(addMoveTo)
+  if(startEntryType)
   {
     PATH_ScaleNormalizedPoint(corners, xNorm[0], yNorm[0], &point);
-    if(!PATH_AddEntry(pPath, &point, PT_MOVETO))
+    if(!PATH_AddEntry(pPath, &point, startEntryType))
       return FALSE;
   }
 
@@ -1533,7 +1313,7 @@ PATH_NormalizePoint ( FLOAT_POINT corners[],
 }
 
 
-BOOL FASTCALL PATH_StrokePath(DC *dc, GdiPath *pPath)
+BOOL FASTCALL PATH_StrokePath(DC *dc, PPATH pPath)
 {
     BOOL ret = FALSE;
     INT i=0;
@@ -1547,8 +1327,9 @@ BOOL FASTCALL PATH_StrokePath(DC *dc, GdiPath *pPath)
 
     DPRINT("Enter %s\n", __FUNCTION__);
 
-    if(pPath->state != PATH_Closed)
+    if (pPath->state != PATH_Closed)
         return FALSE;
+
     if(!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
     /* Save the mapping mode info */
     mapMode = Dc_Attr->iMapMode;
@@ -1661,8 +1442,7 @@ BOOL FASTCALL PATH_StrokePath(DC *dc, GdiPath *pPath)
         {
             pLinePts[nLinePts++] = pLinePts[0];
         }
-    }//for
-
+    }
     if(nLinePts >= 2)
         IntGdiPolyline(dc, pLinePts, nLinePts);
 
@@ -1701,6 +1481,939 @@ end:
     }
     DPRINT("Leave %s, ret=%d\n", __FUNCTION__, ret);
     return ret;
+}
+
+#define round(x) ((int)((x)>0?(x)+0.5:(x)-0.5))
+
+static
+BOOL
+FASTCALL
+PATH_WidenPath(DC *dc)
+{
+    INT i, j, numStrokes, penWidth, penWidthIn, penWidthOut, size, penStyle;
+    BOOL ret = FALSE;
+    PPATH pPath, pNewPath, *pStrokes, pUpPath, pDownPath;
+    EXTLOGPEN *elp;
+    DWORD obj_type, joint, endcap, penType;
+    PDC_ATTR Dc_Attr = dc->pDc_Attr;
+
+    pPath = PATH_LockPath( dc->DcLevel.hPath );
+    if (!pPath) return FALSE;
+
+    if(pPath->state == PATH_Open)
+    {
+       PATH_UnlockPath( pPath );
+       SetLastWin32Error(ERROR_CAN_NOT_COMPLETE);
+       return FALSE;
+    }
+
+    if(!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
+
+    PATH_FlattenPath(pPath);
+
+    size = IntGdiGetObject( Dc_Attr->hpen, 0, NULL);
+    if (!size)
+    {
+        PATH_UnlockPath( pPath );
+        SetLastWin32Error(ERROR_CAN_NOT_COMPLETE);
+        return FALSE;
+    }
+
+    elp = ExAllocatePoolWithTag(PagedPool, size, TAG_PATH);
+    (VOID) IntGdiGetObject( Dc_Attr->hpen, size, elp);
+
+    obj_type = GDIOBJ_GetObjectType(Dc_Attr->hpen);
+    if(obj_type == GDI_OBJECT_TYPE_PEN)
+    {
+        penStyle = ((LOGPEN*)elp)->lopnStyle;
+    }
+    else if(obj_type == GDI_OBJECT_TYPE_EXTPEN)
+    {
+        penStyle = elp->elpPenStyle;
+    }
+    else
+    {
+        SetLastWin32Error(ERROR_CAN_NOT_COMPLETE);
+        ExFreePool(elp);
+        PATH_UnlockPath( pPath );
+        return FALSE;
+    }
+
+    penWidth = elp->elpWidth;
+    ExFreePool(elp);
+
+    endcap = (PS_ENDCAP_MASK & penStyle);
+    joint = (PS_JOIN_MASK & penStyle);
+    penType = (PS_TYPE_MASK & penStyle);
+
+    /* The function cannot apply to cosmetic pens */
+    if(obj_type == GDI_OBJECT_TYPE_EXTPEN && penType == PS_COSMETIC)
+    {
+        PATH_UnlockPath( pPath );
+        SetLastWin32Error(ERROR_CAN_NOT_COMPLETE);
+        return FALSE;
+    }
+
+    penWidthIn = penWidth / 2;
+    penWidthOut = penWidth / 2;
+    if(penWidthIn + penWidthOut < penWidth)
+        penWidthOut++;
+
+    numStrokes = 0;
+
+    pStrokes    = ExAllocatePoolWithTag(PagedPool, sizeof(PPATH), TAG_PATH);
+    pStrokes[0] = ExAllocatePoolWithTag(PagedPool, sizeof(PATH), TAG_PATH);
+    PATH_InitGdiPath(pStrokes[0]);
+    pStrokes[0]->pFlags =   ExAllocatePoolWithTag(PagedPool, pPath->numEntriesUsed * sizeof(INT), TAG_PATH);
+    pStrokes[0]->pPoints =  ExAllocatePoolWithTag(PagedPool, pPath->numEntriesUsed * sizeof(POINT), TAG_PATH);
+    pStrokes[0]->numEntriesUsed = 0;
+
+    for(i = 0, j = 0; i < pPath->numEntriesUsed; i++, j++)
+    {
+        POINT point;
+        if((i == 0 || (pPath->pFlags[i-1] & PT_CLOSEFIGURE)) &&
+            (pPath->pFlags[i] != PT_MOVETO))
+        {
+            DPRINT1("Expected PT_MOVETO %s, got path flag %c\n",
+                i == 0 ? "as first point" : "after PT_CLOSEFIGURE",
+                pPath->pFlags[i]);
+            return FALSE;
+        }
+        switch(pPath->pFlags[i])
+        {
+            case PT_MOVETO:
+                if(numStrokes > 0)
+                {
+                    pStrokes[numStrokes - 1]->state = PATH_Closed;
+                }
+                numStrokes++;
+                j = 0;
+                ExFreePool(pStrokes);
+                pStrokes = ExAllocatePoolWithTag(PagedPool, numStrokes * sizeof(PPATH), TAG_PATH);
+                pStrokes[numStrokes - 1] = ExAllocatePoolWithTag(PagedPool, sizeof(PATH), TAG_PATH);
+
+                PATH_InitGdiPath(pStrokes[numStrokes - 1]);
+                pStrokes[numStrokes - 1]->state = PATH_Open;
+            case PT_LINETO:
+            case (PT_LINETO | PT_CLOSEFIGURE):
+                point.x = pPath->pPoints[i].x;
+                point.y = pPath->pPoints[i].y;
+                PATH_AddEntry(pStrokes[numStrokes - 1], &point, pPath->pFlags[i]);
+                break;
+            case PT_BEZIERTO:
+                /* should never happen because of the FlattenPath call */
+                DPRINT1("Should never happen\n");
+                break;
+            default:
+                DPRINT1("Got path flag %c\n", pPath->pFlags[i]);
+                return FALSE;
+        }
+    }
+
+    pNewPath = ExAllocatePoolWithTag(PagedPool, sizeof(PATH), TAG_PATH);  
+    PATH_InitGdiPath(pNewPath);
+    pNewPath->state = PATH_Open;
+
+    for(i = 0; i < numStrokes; i++)
+    {
+        pUpPath = ExAllocatePoolWithTag(PagedPool, sizeof(PATH), TAG_PATH);
+        PATH_InitGdiPath(pUpPath);
+        pUpPath->state = PATH_Open;
+        pDownPath = ExAllocatePoolWithTag(PagedPool, sizeof(PATH), TAG_PATH);
+        PATH_InitGdiPath(pDownPath);
+        pDownPath->state = PATH_Open;
+
+        for(j = 0; j < pStrokes[i]->numEntriesUsed; j++)
+        {
+            /* Beginning or end of the path if not closed */
+            if((!(pStrokes[i]->pFlags[pStrokes[i]->numEntriesUsed - 1] & PT_CLOSEFIGURE)) && (j == 0 || j == pStrokes[i]->numEntriesUsed - 1) )
+            {
+                /* Compute segment angle */
+                double xo, yo, xa, ya, theta;
+                POINT pt;
+                FLOAT_POINT corners[2];
+                if(j == 0)
+                {
+                    xo = pStrokes[i]->pPoints[j].x;
+                    yo = pStrokes[i]->pPoints[j].y;
+                    xa = pStrokes[i]->pPoints[1].x;
+                    ya = pStrokes[i]->pPoints[1].y;
+                }
+                else
+                {
+                    xa = pStrokes[i]->pPoints[j - 1].x;
+                    ya = pStrokes[i]->pPoints[j - 1].y;
+                    xo = pStrokes[i]->pPoints[j].x;
+                    yo = pStrokes[i]->pPoints[j].y;
+                }
+                theta = atan2( ya - yo, xa - xo );
+                switch(endcap)
+                {
+                    case PS_ENDCAP_SQUARE :
+                        pt.x = xo + round(sqrt(2) * penWidthOut * cos(M_PI_4 + theta));
+                        pt.y = yo + round(sqrt(2) * penWidthOut * sin(M_PI_4 + theta));
+                        PATH_AddEntry(pUpPath, &pt, (j == 0 ? PT_MOVETO : PT_LINETO) );
+                        pt.x = xo + round(sqrt(2) * penWidthIn * cos(- M_PI_4 + theta));
+                        pt.y = yo + round(sqrt(2) * penWidthIn * sin(- M_PI_4 + theta));
+                        PATH_AddEntry(pUpPath, &pt, PT_LINETO);
+                        break;
+                    case PS_ENDCAP_FLAT :
+                        pt.x = xo + round( penWidthOut * cos(theta + M_PI_2) );
+                        pt.y = yo + round( penWidthOut * sin(theta + M_PI_2) );
+                        PATH_AddEntry(pUpPath, &pt, (j == 0 ? PT_MOVETO : PT_LINETO));
+                        pt.x = xo - round( penWidthIn * cos(theta + M_PI_2) );
+                        pt.y = yo - round( penWidthIn * sin(theta + M_PI_2) );
+                        PATH_AddEntry(pUpPath, &pt, PT_LINETO);
+                        break;
+                    case PS_ENDCAP_ROUND :
+                    default :
+                        corners[0].x = xo - penWidthIn;
+                        corners[0].y = yo - penWidthIn;
+                        corners[1].x = xo + penWidthOut;
+                        corners[1].y = yo + penWidthOut;
+                        PATH_DoArcPart(pUpPath ,corners, theta + M_PI_2 , theta + 3 * M_PI_4, (j == 0 ? PT_MOVETO : FALSE));
+                        PATH_DoArcPart(pUpPath ,corners, theta + 3 * M_PI_4 , theta + M_PI, FALSE);
+                        PATH_DoArcPart(pUpPath ,corners, theta + M_PI, theta +  5 * M_PI_4, FALSE);
+                        PATH_DoArcPart(pUpPath ,corners, theta + 5 * M_PI_4 , theta + 3 * M_PI_2, FALSE);
+                        break;
+                }
+            }
+            /* Corpse of the path */
+            else
+            {
+                /* Compute angle */
+                INT previous, next;
+                double xa, ya, xb, yb, xo, yo;
+                double alpha, theta, miterWidth;
+                DWORD _joint = joint;
+                POINT pt;
+		PPATH pInsidePath, pOutsidePath;
+                if(j > 0 && j < pStrokes[i]->numEntriesUsed - 1)
+                {
+                    previous = j - 1;
+                    next = j + 1;
+                }
+                else if (j == 0)
+                {
+                    previous = pStrokes[i]->numEntriesUsed - 1;
+                    next = j + 1;
+                }
+                else
+                {
+                    previous = j - 1;
+                    next = 0;
+                }
+                xo = pStrokes[i]->pPoints[j].x;
+                yo = pStrokes[i]->pPoints[j].y;
+                xa = pStrokes[i]->pPoints[previous].x;
+                ya = pStrokes[i]->pPoints[previous].y;
+                xb = pStrokes[i]->pPoints[next].x;
+                yb = pStrokes[i]->pPoints[next].y;
+                theta = atan2( yo - ya, xo - xa );
+                alpha = atan2( yb - yo, xb - xo ) - theta;
+                if (alpha > 0) alpha -= M_PI;
+                else alpha += M_PI;
+                if(_joint == PS_JOIN_MITER && dc->DcLevel.laPath.eMiterLimit < fabs(1 / sin(alpha/2)))
+                {
+                    _joint = PS_JOIN_BEVEL;
+                }
+                if(alpha > 0)
+                {
+                    pInsidePath = pUpPath;
+                    pOutsidePath = pDownPath;
+                }
+                else if(alpha < 0)
+                {
+                    pInsidePath = pDownPath;
+                    pOutsidePath = pUpPath;
+                }
+                else
+                {
+                    continue;
+                }
+                /* Inside angle points */
+                if(alpha > 0)
+                {
+                    pt.x = xo - round( penWidthIn * cos(theta + M_PI_2) );
+                    pt.y = yo - round( penWidthIn * sin(theta + M_PI_2) );
+                }
+                else
+                {
+                    pt.x = xo + round( penWidthIn * cos(theta + M_PI_2) );
+                    pt.y = yo + round( penWidthIn * sin(theta + M_PI_2) );
+                }
+                PATH_AddEntry(pInsidePath, &pt, PT_LINETO);
+                if(alpha > 0)
+                {
+                    pt.x = xo + round( penWidthIn * cos(M_PI_2 + alpha + theta) );
+                    pt.y = yo + round( penWidthIn * sin(M_PI_2 + alpha + theta) );
+                }
+                else
+                {
+                    pt.x = xo - round( penWidthIn * cos(M_PI_2 + alpha + theta) );
+                    pt.y = yo - round( penWidthIn * sin(M_PI_2 + alpha + theta) );
+                }
+                PATH_AddEntry(pInsidePath, &pt, PT_LINETO);
+                /* Outside angle point */
+                switch(_joint)
+                {
+                     case PS_JOIN_MITER :
+                        miterWidth = fabs(penWidthOut / cos(M_PI_2 - fabs(alpha) / 2));
+                        pt.x = xo + round( miterWidth * cos(theta + alpha / 2) );
+                        pt.y = yo + round( miterWidth * sin(theta + alpha / 2) );
+                        PATH_AddEntry(pOutsidePath, &pt, PT_LINETO);
+                        break;
+                    case PS_JOIN_BEVEL :
+                        if(alpha > 0)
+                        {
+                            pt.x = xo + round( penWidthOut * cos(theta + M_PI_2) );
+                            pt.y = yo + round( penWidthOut * sin(theta + M_PI_2) );
+                        }
+                        else
+                        {
+                            pt.x = xo - round( penWidthOut * cos(theta + M_PI_2) );
+                            pt.y = yo - round( penWidthOut * sin(theta + M_PI_2) );
+                        }
+                        PATH_AddEntry(pOutsidePath, &pt, PT_LINETO);
+                        if(alpha > 0)
+                        {
+                            pt.x = xo - round( penWidthOut * cos(M_PI_2 + alpha + theta) );
+                            pt.y = yo - round( penWidthOut * sin(M_PI_2 + alpha + theta) );
+                        }
+                        else
+                        {
+                            pt.x = xo + round( penWidthOut * cos(M_PI_2 + alpha + theta) );
+                            pt.y = yo + round( penWidthOut * sin(M_PI_2 + alpha + theta) );
+                        }
+                        PATH_AddEntry(pOutsidePath, &pt, PT_LINETO);
+                        break;
+                    case PS_JOIN_ROUND :
+                    default :
+                        if(alpha > 0)
+                        {
+                            pt.x = xo + round( penWidthOut * cos(theta + M_PI_2) );
+                            pt.y = yo + round( penWidthOut * sin(theta + M_PI_2) );
+                        }
+                        else
+                        {
+                            pt.x = xo - round( penWidthOut * cos(theta + M_PI_2) );
+                            pt.y = yo - round( penWidthOut * sin(theta + M_PI_2) );
+                        }
+                        PATH_AddEntry(pOutsidePath, &pt, PT_BEZIERTO);
+                        pt.x = xo + round( penWidthOut * cos(theta + alpha / 2) );
+                        pt.y = yo + round( penWidthOut * sin(theta + alpha / 2) );
+                        PATH_AddEntry(pOutsidePath, &pt, PT_BEZIERTO);
+                        if(alpha > 0)
+                        {
+                            pt.x = xo - round( penWidthOut * cos(M_PI_2 + alpha + theta) );
+                            pt.y = yo - round( penWidthOut * sin(M_PI_2 + alpha + theta) );
+                        }
+                        else
+                        {
+                            pt.x = xo + round( penWidthOut * cos(M_PI_2 + alpha + theta) );
+                            pt.y = yo + round( penWidthOut * sin(M_PI_2 + alpha + theta) );
+                        }
+                        PATH_AddEntry(pOutsidePath, &pt, PT_BEZIERTO);
+                        break;
+                }
+            }
+        }
+        for(j = 0; j < pUpPath->numEntriesUsed; j++)
+        {
+            POINT pt;
+            pt.x = pUpPath->pPoints[j].x;
+            pt.y = pUpPath->pPoints[j].y;
+            PATH_AddEntry(pNewPath, &pt, (j == 0 ? PT_MOVETO : PT_LINETO));
+        }
+        for(j = 0; j < pDownPath->numEntriesUsed; j++)
+        {
+            POINT pt;
+            pt.x = pDownPath->pPoints[pDownPath->numEntriesUsed - j - 1].x;
+            pt.y = pDownPath->pPoints[pDownPath->numEntriesUsed - j - 1].y;
+            PATH_AddEntry(pNewPath, &pt, ( (j == 0 && (pStrokes[i]->pFlags[pStrokes[i]->numEntriesUsed - 1] & PT_CLOSEFIGURE)) ? PT_MOVETO : PT_LINETO));
+        }
+
+        PATH_DestroyGdiPath(pStrokes[i]);
+        ExFreePool(pStrokes[i]);
+        PATH_DestroyGdiPath(pUpPath);
+        ExFreePool(pUpPath);
+        PATH_DestroyGdiPath(pDownPath);
+        ExFreePool(pDownPath);
+    }
+    ExFreePool(pStrokes);
+
+    pNewPath->state = PATH_Closed;
+    if (!(ret = PATH_AssignGdiPath(pPath, pNewPath)))
+        DPRINT1("Assign path failed\n");
+    PATH_DestroyGdiPath(pNewPath);
+    ExFreePool(pNewPath);
+    return ret;
+}
+
+
+
+/***********************************************************************
+ * Exported functions
+ */
+
+BOOL
+STDCALL
+NtGdiAbortPath(HDC  hDC)
+{
+  PPATH pPath;
+  PDC dc = DC_LockDc ( hDC );
+  if ( !dc )
+  {
+     SetLastWin32Error(ERROR_INVALID_HANDLE);
+     return FALSE;
+  }
+
+  pPath = PATH_LockPath(dc->DcLevel.hPath);
+  {
+      DC_UnlockDc(dc);
+      return FALSE;
+  }
+
+  PATH_EmptyPath(pPath);
+
+  PATH_UnlockPath(pPath);
+  DC_UnlockDc ( dc );
+  return TRUE;
+}
+
+BOOL
+STDCALL
+NtGdiBeginPath( HDC  hDC )
+{
+  PPATH pPath;
+  PDC dc;
+
+  dc = DC_LockDc ( hDC );
+  if ( !dc )
+  {
+     SetLastWin32Error(ERROR_INVALID_HANDLE);
+     return FALSE;
+  }
+
+  /* If path is already open, do nothing. Check if not Save DC state */
+    if ((dc->DcLevel.flPath & DCPATH_ACTIVE) && !(dc->DcLevel.flPath & DCPATH_SAVE))
+  {
+     DC_UnlockDc ( dc );
+     return TRUE;
+  }
+
+  if ( dc->DcLevel.hPath )
+  {
+     DPRINT1("BeginPath 1 0x%x\n", dc->DcLevel.hPath);
+     if ( !(dc->DcLevel.flPath & DCPATH_SAVE) )
+     {  // Remove previous handle.
+        if (!PATH_Delete(dc->DcLevel.hPath))
+        {
+           DC_UnlockDc ( dc );
+           return FALSE;
+        }
+     }
+     else
+     {  // Clear flags and Handle.
+        dc->DcLevel.flPath &= ~(DCPATH_SAVE|DCPATH_ACTIVE);
+        dc->DcLevel.hPath = NULL;
+     }
+  }
+  pPath = PATH_AllocPathWithHandle();
+  if (!pPath)
+  {
+     SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+     return FALSE;
+  }
+  dc->DcLevel.flPath |= DCPATH_ACTIVE; // Set active ASAP!
+
+  dc->DcLevel.hPath = pPath->BaseObject.hHmgr;
+
+  DPRINT1("BeginPath 2 h 0x%x p 0x%x\n", dc->DcLevel.hPath, pPath);
+  // Path handles are shared. Also due to recursion with in the same thread.
+  GDIOBJ_UnlockObjByPtr((POBJ)pPath);       // Unlock
+  pPath = PATH_LockPath(dc->DcLevel.hPath); // Share Lock.
+
+  /* Make sure that path is empty */
+  PATH_EmptyPath( pPath );
+
+  /* Initialize variables for new path */
+  pPath->newStroke = TRUE;
+  pPath->state = PATH_Open;
+
+  PATH_UnlockPath(pPath);
+  DC_UnlockDc ( dc );
+  return TRUE;
+}
+
+BOOL
+STDCALL
+NtGdiCloseFigure(HDC hDC)
+{
+  BOOL Ret = FALSE; // default to failure
+  PDC pDc;
+  PPATH pPath;
+
+  DPRINT("Enter %s\n", __FUNCTION__);
+
+  pDc = DC_LockDc(hDC);
+  if (!pDc)
+  {
+     SetLastWin32Error(ERROR_INVALID_PARAMETER);
+     return FALSE;
+  }   
+  pPath = PATH_LockPath( pDc->DcLevel.hPath );
+  if (!pPath)
+  {
+     DC_UnlockDc(pDc);
+     return FALSE;
+  }
+
+  if (pPath->state==PATH_Open)
+  {
+     IntGdiCloseFigure(pPath);
+     Ret = TRUE;
+  }
+  else
+  {
+     // FIXME: check if lasterror is set correctly
+     SetLastWin32Error(ERROR_CAN_NOT_COMPLETE);
+  }
+
+  PATH_UnlockPath( pPath );
+  DC_UnlockDc(pDc);
+  return Ret;
+}
+
+BOOL
+STDCALL
+NtGdiEndPath(HDC  hDC)
+{
+  BOOL ret = TRUE;
+  PPATH pPath;
+  PDC dc = DC_LockDc ( hDC );
+
+  if ( !dc )
+  {
+     SetLastWin32Error(ERROR_INVALID_HANDLE);
+     return FALSE;
+  }
+
+  pPath = PATH_LockPath( dc->DcLevel.hPath );
+  if (!pPath)
+  {
+     DC_UnlockDc ( dc );
+     return FALSE;
+  }
+  /* Check that path is currently being constructed */
+  if ( (pPath->state != PATH_Open) || !(dc->DcLevel.flPath & DCPATH_ACTIVE) )
+  {
+    DPRINT1("EndPath ERROR! 0x%x\n", dc->DcLevel.hPath);
+    SetLastWin32Error(ERROR_CAN_NOT_COMPLETE);
+    ret = FALSE;
+  }
+  /* Set flag to indicate that path is finished */
+  else
+  {
+     DPRINT1("EndPath 0x%x\n", dc->DcLevel.hPath);
+     pPath->state = PATH_Closed;
+     dc->DcLevel.flPath &= ~DCPATH_ACTIVE;
+  }
+  PATH_UnlockPath( pPath );
+  DC_UnlockDc ( dc );
+  return ret;
+}
+
+BOOL
+STDCALL
+NtGdiFillPath(HDC  hDC)
+{
+  BOOL ret = TRUE;
+  PPATH pPath;
+  PDC dc = DC_LockDc ( hDC );
+ 
+  if ( !dc )
+  {
+     SetLastWin32Error(ERROR_INVALID_PARAMETER);
+     return FALSE;
+  }
+  pPath = PATH_LockPath( dc->DcLevel.hPath );
+  if (!pPath)
+  {
+     DC_UnlockDc ( dc );
+     return FALSE;
+  }
+
+  ret = PATH_FillPath( dc, pPath );
+  if ( ret )
+  {
+    /* FIXME: Should the path be emptied even if conversion
+       failed? */
+    PATH_EmptyPath( pPath );
+  }
+
+  PATH_UnlockPath( pPath );
+  DC_UnlockDc ( dc );
+  return ret;
+}
+
+BOOL
+STDCALL
+NtGdiFlattenPath(HDC  hDC)
+{
+   BOOL Ret = FALSE;
+   DC *pDc;
+   PPATH pPath;
+
+   DPRINT("Enter %s\n", __FUNCTION__);
+
+   pDc = DC_LockDc(hDC);
+   if (!pDc)
+   {
+      SetLastWin32Error(ERROR_INVALID_HANDLE);  
+      return FALSE;
+   }
+
+   pPath = PATH_LockPath( pDc->DcLevel.hPath );
+   if (!pPath)
+   {
+      DC_UnlockDc ( pDc );
+      return FALSE;
+   }
+   if (pPath->state == PATH_Open)
+      Ret = PATH_FlattenPath(pPath);
+
+   PATH_UnlockPath( pPath );
+   DC_UnlockDc(pDc);
+   return Ret;
+}
+
+
+BOOL
+APIENTRY
+NtGdiGetMiterLimit(
+    IN HDC hdc,
+    OUT PDWORD pdwOut)
+{
+  DC *pDc;
+  gxf_long worker;
+  NTSTATUS Status = STATUS_SUCCESS;
+
+  if (!(pDc = DC_LockDc(hdc)))
+  {
+     SetLastWin32Error(ERROR_INVALID_PARAMETER);
+     return FALSE;
+  }
+
+  worker.f = pDc->DcLevel.laPath.eMiterLimit;
+
+  if (pdwOut)
+  {
+      _SEH_TRY
+      {
+          ProbeForWrite(pdwOut,
+                 sizeof(DWORD),
+                             1);
+          *pdwOut = worker.l;
+      }
+      _SEH_HANDLE
+      {
+          Status = _SEH_GetExceptionCode();
+      }
+       _SEH_END;
+      if (!NT_SUCCESS(Status))
+      {
+         SetLastNtError(Status);
+         DC_UnlockDc(pDc);
+         return FALSE;
+      }
+  }
+
+  DC_UnlockDc(pDc);
+  return TRUE;
+
+}
+
+INT
+STDCALL
+NtGdiGetPath(
+   HDC hDC,
+   LPPOINT Points,
+   LPBYTE Types,
+   INT nSize)
+{
+  INT ret = -1;
+  PPATH pPath;
+
+  DC *dc = DC_LockDc(hDC);
+  if (!dc)
+  {
+     DPRINT1("Can't lock dc!\n");
+     SetLastWin32Error(ERROR_INVALID_PARAMETER);
+     return -1;
+  }
+
+  pPath = PATH_LockPath( dc->DcLevel.hPath );
+  if (!pPath)
+  {
+     DC_UnlockDc ( dc );
+     return -1;
+  }
+
+  if (pPath->state != PATH_Closed)
+  {
+     SetLastWin32Error(ERROR_CAN_NOT_COMPLETE);
+     goto done;
+  }
+
+  if (nSize==0)
+  {
+     ret = pPath->numEntriesUsed;
+  }
+  else if(nSize<pPath->numEntriesUsed)
+  {
+     SetLastWin32Error(ERROR_INVALID_PARAMETER);
+     goto done;
+  }
+  else
+  {
+      _SEH_TRY
+      {
+         memcpy(Points, pPath->pPoints, sizeof(POINT)*pPath->numEntriesUsed);
+         memcpy(Types, pPath->pFlags, sizeof(BYTE)*pPath->numEntriesUsed);
+
+         /* Convert the points to logical coordinates */
+         IntDPtoLP(dc, Points, pPath->numEntriesUsed);
+
+         ret = pPath->numEntriesUsed;
+      }
+      _SEH_HANDLE
+      {
+         SetLastNtError(_SEH_GetExceptionCode());
+      }
+      _SEH_END
+  }
+
+done:
+  PATH_UnlockPath( pPath );
+  DC_UnlockDc(dc);
+  return ret;
+}
+
+HRGN
+STDCALL
+NtGdiPathToRegion(HDC  hDC)
+{
+  PPATH pPath;
+  HRGN  hrgnRval = 0;
+  DC *pDc;
+  PDC_ATTR Dc_Attr;
+
+  DPRINT("Enter %s\n", __FUNCTION__);
+
+  pDc = DC_LockDc(hDC);
+  if (!pDc)
+  {
+     SetLastWin32Error(ERROR_INVALID_PARAMETER);
+     return NULL;
+  }
+
+  Dc_Attr = pDc->pDc_Attr;
+  if(!Dc_Attr) Dc_Attr = &pDc->Dc_Attr;
+
+  pPath = PATH_LockPath( pDc->DcLevel.hPath );
+  if (!pPath)
+  {
+     DC_UnlockDc ( pDc );
+     return NULL;
+  }
+
+  if (pPath->state!=PATH_Closed)
+  {
+     //FIXME: check that setlasterror is being called correctly
+     SetLastWin32Error(ERROR_CAN_NOT_COMPLETE);
+  }
+  else
+  {
+     /* FIXME: Should we empty the path even if conversion failed? */
+     if(PATH_PathToRegion(pPath, Dc_Attr->jFillMode, &hrgnRval))
+          PATH_EmptyPath(pPath);
+  }
+
+  PATH_UnlockPath( pPath );
+  DC_UnlockDc(pDc);
+  return hrgnRval;
+}
+
+BOOL
+APIENTRY
+NtGdiSetMiterLimit(
+    IN HDC hdc,
+    IN DWORD dwNew,
+    IN OUT OPTIONAL PDWORD pdwOut)
+{
+  DC *pDc;
+  gxf_long worker, worker1;
+  NTSTATUS Status = STATUS_SUCCESS;
+
+  if (!(pDc = DC_LockDc(hdc)))
+  {
+     SetLastWin32Error(ERROR_INVALID_PARAMETER);
+     return FALSE;
+  }
+
+  worker.l  = dwNew;
+  worker1.f = pDc->DcLevel.laPath.eMiterLimit;
+  pDc->DcLevel.laPath.eMiterLimit = worker.f;
+
+  if (pdwOut)
+  {
+      _SEH_TRY
+      {
+          ProbeForWrite(pdwOut,
+                 sizeof(DWORD),
+                             1);
+          *pdwOut = worker1.l;
+      }
+      _SEH_HANDLE
+      {
+          Status = _SEH_GetExceptionCode();
+      }
+       _SEH_END;
+      if (!NT_SUCCESS(Status))
+      {
+         SetLastNtError(Status);
+         DC_UnlockDc(pDc);
+         return FALSE;
+      }
+  }
+
+  DC_UnlockDc(pDc);
+  return TRUE;
+}
+
+BOOL
+STDCALL
+NtGdiStrokeAndFillPath(HDC hDC)
+{
+  DC *pDc;
+  PPATH pPath;
+  BOOL bRet = FALSE;
+
+  DPRINT1("Enter %s\n", __FUNCTION__);
+
+  if (!(pDc = DC_LockDc(hDC)))
+  {
+     SetLastWin32Error(ERROR_INVALID_PARAMETER);
+     return FALSE;
+  }
+  pPath = PATH_LockPath( pDc->DcLevel.hPath );
+  if (!pPath)
+  {
+     DC_UnlockDc ( pDc );
+     return FALSE;
+  }
+  bRet = PATH_FillPath(pDc, pPath);
+  if (bRet) bRet = PATH_StrokePath(pDc, pPath);
+  if (bRet) PATH_EmptyPath(pPath);
+
+  PATH_UnlockPath( pPath );
+  DC_UnlockDc(pDc);
+  return bRet;
+}
+
+BOOL
+STDCALL
+NtGdiStrokePath(HDC hDC)
+{
+  DC *pDc;
+  PPATH pPath;
+  BOOL bRet = FALSE;
+
+  DPRINT("Enter %s\n", __FUNCTION__);
+
+  if (!(pDc = DC_LockDc(hDC)))
+  {
+     SetLastWin32Error(ERROR_INVALID_PARAMETER);
+     return FALSE;
+  }
+  pPath = PATH_LockPath( pDc->DcLevel.hPath );
+  if (!pPath)
+  {
+     DC_UnlockDc ( pDc );
+     return FALSE;
+  }
+
+  bRet = PATH_StrokePath(pDc, pPath);
+  PATH_EmptyPath(pPath);
+
+  PATH_UnlockPath( pPath );
+  DC_UnlockDc(pDc);
+  return bRet;
+}
+
+BOOL
+STDCALL
+NtGdiWidenPath(HDC  hDC)
+{
+  BOOL Ret;
+  PDC pdc = DC_LockDc ( hDC );    
+  if ( !pdc )
+  {
+     SetLastWin32Error(ERROR_INVALID_PARAMETER);
+     return FALSE;
+  }
+  Ret = PATH_WidenPath(pdc);
+  DC_UnlockDc ( pdc );
+  return Ret;
+}
+
+BOOL
+STDCALL
+NtGdiSelectClipPath(HDC  hDC,
+                   int  Mode)
+{
+ HRGN  hrgnPath;
+ PPATH pPath;
+ BOOL  success = FALSE;
+ PDC_ATTR Dc_Attr;
+ PDC dc = DC_LockDc ( hDC );
+ 
+ if ( !dc )
+ {
+    SetLastWin32Error(ERROR_INVALID_PARAMETER);
+    return FALSE;
+ }
+
+ Dc_Attr = dc->pDc_Attr;
+ if(!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
+
+ pPath = PATH_LockPath( dc->DcLevel.hPath );
+ if (!pPath)
+ {
+    DC_UnlockDc ( dc );
+    return FALSE;
+ }
+ /* Check that path is closed */
+ if( pPath->state != PATH_Closed )
+ {
+   SetLastWin32Error(ERROR_CAN_NOT_COMPLETE);
+   return FALSE;
+ }
+ /* Construct a region from the path */
+ else if( PATH_PathToRegion( pPath, Dc_Attr->jFillMode, &hrgnPath ) )
+ {
+   success = GdiExtSelectClipRgn( dc, hrgnPath, Mode ) != ERROR;
+   NtGdiDeleteObject( hrgnPath );
+
+   /* Empty the path */
+   if( success )
+     PATH_EmptyPath( pPath);
+   /* FIXME: Should this function delete the path even if it failed? */
+ }
+ PATH_UnlockPath( pPath );
+ DC_UnlockDc ( dc );
+ return success;
 }
 
 /* EOF */

@@ -3648,7 +3648,7 @@ REGION_CreateETandAET(
 }
 
 HRGN FASTCALL
-IntCreatePolyPolgonRgn(
+IntCreatePolyPolygonRgn(
     POINT *Pts,
     INT *Count,
     INT nbpolygons,
@@ -3972,7 +3972,7 @@ GdiCreatePolyPolygonRgn(
     }
 
     /* now we're ready to calculate the region safely */
-    hRgn = IntCreatePolyPolgonRgn(Safept, SafePolyCounts, Count, PolyFillMode);
+    hRgn = IntCreatePolyPolygonRgn(Safept, SafePolyCounts, Count, PolyFillMode);
 
     ExFreePool(Safept);
     ExFreePool(SafePolyCounts);

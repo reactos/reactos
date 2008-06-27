@@ -55,7 +55,7 @@ IntGdiMoveToEx(DC      *dc,
     CoordLPtoDP(dc, &Dc_Attr->ptfxCurrent); // Update fx
     Dc_Attr->ulDirty_ &= ~(DIRTY_PTLCURRENT|DIRTY_PTFXCURRENT|DIRTY_STYLESTATE);
 
-    PathIsOpen = PATH_IsPathOpen(dc->w.path);
+    PathIsOpen = PATH_IsPathOpen(dc->DcLevel);
 
     if ( PathIsOpen )
         return PATH_MoveTo ( dc );
@@ -99,9 +99,10 @@ IntGdiLineTo(DC  *dc,
 
     if (!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
 
-    if (PATH_IsPathOpen(dc->w.path))
+    if (PATH_IsPathOpen(dc->DcLevel))
     {
         Ret = PATH_LineTo(dc, XEnd, YEnd);
+#if 0
         if (Ret)
         {
             // FIXME - PATH_LineTo should maybe do this...
@@ -111,6 +112,7 @@ IntGdiLineTo(DC  *dc,
             CoordLPtoDP(dc, &Dc_Attr->ptfxCurrent); // Update fx
             Dc_Attr->ulDirty_ &= ~(DIRTY_PTLCURRENT|DIRTY_PTFXCURRENT|DIRTY_STYLESTATE);
         }
+#endif
         return Ret;
     }
     else
@@ -184,7 +186,7 @@ IntGdiPolyBezier(DC      *dc,
 {
     BOOL ret = FALSE; // default to FAILURE
 
-    if ( PATH_IsPathOpen(dc->w.path) )
+    if ( PATH_IsPathOpen(dc->DcLevel) )
     {
         return PATH_PolyBezier ( dc, pt, Count );
     }
@@ -214,7 +216,7 @@ IntGdiPolyBezierTo(DC      *dc,
     PDC_ATTR Dc_Attr = dc->pDc_Attr;
 
     if (!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
-    if ( PATH_IsPathOpen(dc->w.path) )
+    if ( PATH_IsPathOpen(dc->DcLevel) )
         ret = PATH_PolyBezierTo ( dc, pt, Count );
     else /* We'll do it using PolyBezier */
     {
@@ -257,7 +259,7 @@ IntGdiPolyline(DC      *dc,
     PDC_ATTR Dc_Attr = dc->pDc_Attr;
 
     if (!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
-    if (PATH_IsPathOpen(dc->w.path))
+    if (PATH_IsPathOpen(dc->DcLevel))
         return PATH_Polyline(dc, pt, Count);
 
     /* Get BRUSHOBJ from current pen. */
@@ -316,7 +318,7 @@ IntGdiPolylineTo(DC      *dc,
     PDC_ATTR Dc_Attr = dc->pDc_Attr;
 
     if (!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
-    if (PATH_IsPathOpen(dc->w.path))
+    if (PATH_IsPathOpen(dc->DcLevel))
     {
         ret = PATH_PolylineTo(dc, pt, Count);
     }
@@ -412,6 +414,7 @@ NtGdiPolyDraw(
     IN ULONG cCount)
 {
     PDC dc;
+    PPATH pPath;
     BOOL result = FALSE;
     POINT lastmove;
     unsigned int i;
@@ -466,9 +469,14 @@ NtGdiPolyDraw(
 
             if ( lpbTypes[i] & PT_CLOSEFIGURE )
             {
-                if ( PATH_IsPathOpen(dc->w.path) )
+                if ( PATH_IsPathOpen(dc->DcLevel) )
                 {
-                    IntGdiCloseFigure( dc );
+                    pPath = PATH_LockPath( dc->DcLevel.hPath );
+                    if (pPath)
+                    {
+                       IntGdiCloseFigure( pPath );
+                       PATH_UnlockPath( pPath );
+                    }
                 }
                 else IntGdiLineTo( dc, lastmove.x, lastmove.y );
             }

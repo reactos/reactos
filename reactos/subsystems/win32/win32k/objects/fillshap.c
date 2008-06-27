@@ -77,7 +77,7 @@ IntGdiPolygon(PDC    dc,
         UnsafePoints[CurrentPoint].y += dc->ptlDCOrig.y;
     }
 
-    if (PATH_IsPathOpen(dc->w.path))
+    if (PATH_IsPathOpen(dc->DcLevel))
         ret = PATH_Polygon(dc, UnsafePoints, Count );
     else
     {
@@ -632,7 +632,7 @@ IntRectangle(PDC dc,
     Dc_Attr = dc->pDc_Attr;
     if(!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
 
-    if ( PATH_IsPathOpen(dc->w.path) )
+    if ( PATH_IsPathOpen(dc->DcLevel) )
     {
         ret = PATH_Rectangle ( dc, LeftRect, TopRect, RightRect, BottomRect );
     }
@@ -789,7 +789,7 @@ IntRoundRect(
 
     ASSERT ( dc ); // caller's responsibility to set this up
 
-    if ( PATH_IsPathOpen(dc->w.path) )
+    if ( PATH_IsPathOpen(dc->DcLevel) )
         return PATH_RoundRect ( dc, left, top, right, bottom,
                                 xCurveDiameter, yCurveDiameter );
     Dc_Attr = dc->pDc_Attr;
