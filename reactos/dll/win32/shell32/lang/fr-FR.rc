@@ -663,7 +663,7 @@ BEGIN
 	IDS_FOLDER_OPTIONS          "Options du dossier"
 	IDS_RECYCLEBIN_LOCATION     "Emplacement de la corbeille"
 	IDS_RECYCLEBIN_DISKSPACE    "Espace disponible"
-	IDS_EMPTY_BITBUCKET         "Empty Recycle Bin"
+	IDS_EMPTY_BITBUCKET         "Corbeille vide"
 	IDS_PICK_ICON_TITLE         "Choisir une icône"
 	IDS_PICK_ICON_FILTER        "Fichiers d'icônes (*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0"
 	IDS_OPEN_WITH_FILTER        "Fichiers exécutables\0*.exe\0"
@@ -680,7 +680,7 @@ BEGIN
 	IDS_FON_FILE                "Fichier police"
 	IDS_TTF_FILE                "Fichier police TrueType"
 	IDS_HLP_FILE                "Fichier d'aide"
-	IDS_INI_FILE                "Configuration Settings"
+	IDS_INI_FILE                "Fichier de configuration"
 	IDS_LNK_FILE                "Raccourci"
 	IDS_SYS_FILE                "Fichier système"
 END
