@@ -1232,7 +1232,7 @@ typedef struct _EPROCESS
 #endif
     union
     {
-        HARDWARE_PTE PagedirectoryPte;
+        HARDWARE_PTE PageDirectoryPte;
         ULONGLONG Filler;
     };
     ULONG Session;
