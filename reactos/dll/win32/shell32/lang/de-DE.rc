@@ -659,6 +659,7 @@ BEGIN
 	IDS_FOLDER_OPTIONS          "Ordneroptionen"
 	IDS_RECYCLEBIN_LOCATION     "Papierkorbpfad"
 	IDS_RECYCLEBIN_DISKSPACE    "freier Speicher"
+	IDS_EMPTY_BITBUCKET         "Papierkorb leeren"
 	IDS_PICK_ICON_TITLE         "Symbol auswählen"
 	IDS_PICK_ICON_FILTER        "Symboldateien(*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0"
 	IDS_OPEN_WITH_FILTER        "Programme\0*.exe\0"

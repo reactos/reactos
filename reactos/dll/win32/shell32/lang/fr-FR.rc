@@ -663,6 +663,7 @@ BEGIN
 	IDS_FOLDER_OPTIONS          "Options du dossier"
 	IDS_RECYCLEBIN_LOCATION     "Emplacement de la corbeille"
 	IDS_RECYCLEBIN_DISKSPACE    "Espace disponible"
+	IDS_EMPTY_BITBUCKET         "Empty Recycle Bin"
 	IDS_PICK_ICON_TITLE         "Choisir une icône"
 	IDS_PICK_ICON_FILTER        "Fichiers d'icônes (*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0"
 	IDS_OPEN_WITH_FILTER        "Fichiers exécutables\0*.exe\0"

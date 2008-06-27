@@ -665,6 +665,7 @@ BEGIN
 	IDS_FOLDER_OPTIONS          "Možnosti prieèinka"
 	IDS_RECYCLEBIN_LOCATION     "Umiestnenia Koša" //Recycle Bin Location
 	IDS_RECYCLEBIN_DISKSPACE    "Dostupné miesto"
+	IDS_EMPTY_BITBUCKET         "Empty Recycle Bin"
 	IDS_PICK_ICON_TITLE         "Choose Icon"
 	IDS_PICK_ICON_FILTER        "Súbory ikon(*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0"
 	IDS_OPEN_WITH_FILTER        "Spustite¾né súbory\0*.exe\0"

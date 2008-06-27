@@ -662,6 +662,7 @@ BEGIN
 	IDS_FOLDER_OPTIONS          "Настройки на папките"
 	IDS_RECYCLEBIN_LOCATION     "Място на кошчето"
 	IDS_RECYCLEBIN_DISKSPACE    "Свободно място"
+	IDS_EMPTY_BITBUCKET         "Empty Recycle Bin"
 	IDS_PICK_ICON_TITLE         "Изберете значе"
 	IDS_PICK_ICON_FILTER        "Файлове със значета(*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0"
 	IDS_OPEN_WITH_FILTER        "Изпълними файлове\0*.exe\0"
