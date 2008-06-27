@@ -87,23 +87,91 @@ void validate_angle2rad(calc_number_t *r)
     mpfr_clear(divs);
 }
 
+static void build_rad_const(
+    mpfr_t *mp_pi,
+    mpfr_t *mp_pi_2,
+    mpfr_t *mp_3_pi_2,
+    mpfr_t *mp_2_pi)
+{
+    mpfr_init(*mp_pi);
+    mpfr_init(*mp_pi_2);
+    mpfr_init(*mp_3_pi_2);
+    mpfr_init(*mp_2_pi);
+    mpfr_const_pi(*mp_pi, MPFR_DEFAULT_RND);
+    mpfr_div_ui(*mp_pi_2, *mp_pi, 2, MPFR_DEFAULT_RND);
+    mpfr_mul_ui(*mp_3_pi_2, *mp_pi, 3, MPFR_DEFAULT_RND);
+    mpfr_div_ui(*mp_3_pi_2, *mp_3_pi_2, 2, MPFR_DEFAULT_RND);
+    mpfr_mul_ui(*mp_2_pi, *mp_pi, 2, MPFR_DEFAULT_RND);
+}
+
 void rpn_sin(calc_number_t *c)
 {
+    mpfr_t mp_pi, mp_pi_2, mp_3_pi_2, mp_2_pi;
+
     validate_angle2rad(c);
-    mpfr_sin(c->mf, c->mf, MPFR_DEFAULT_RND);
-    if (!mpfr_number_p(c->mf)) calc.is_nan = TRUE;
+    build_rad_const(&mp_pi, &mp_pi_2, &mp_3_pi_2, &mp_2_pi);
+
+    if (rpn_is_zero(c) || !mpfr_cmp(c->mf, mp_pi) || !mpfr_cmp(c->mf, mp_2_pi))
+        rpn_zero(c);
+    else
+    if (!mpfr_cmp(c->mf, mp_3_pi_2))
+        mpfr_set_si(c->mf, -1, MPFR_DEFAULT_RND);
+    else
+    if (!mpfr_cmp(c->mf, mp_pi_2))
+        mpfr_set_si(c->mf, 1, MPFR_DEFAULT_RND);
+    else {
+        mpfr_sin(c->mf, c->mf, MPFR_DEFAULT_RND);
+        if (!mpfr_number_p(c->mf)) calc.is_nan = TRUE;
+    }
+    mpfr_clear(mp_pi);
+    mpfr_clear(mp_pi_2);
+    mpfr_clear(mp_3_pi_2);
+    mpfr_clear(mp_2_pi);
 }
 void rpn_cos(calc_number_t *c)
 {
+    mpfr_t mp_pi, mp_pi_2, mp_3_pi_2, mp_2_pi;
+
     validate_angle2rad(c);
-    mpfr_cos(c->mf, c->mf, MPFR_DEFAULT_RND);
-    if (!mpfr_number_p(c->mf)) calc.is_nan = TRUE;
+    build_rad_const(&mp_pi, &mp_pi_2, &mp_3_pi_2, &mp_2_pi);
+
+    if (!mpfr_cmp(c->mf, mp_pi_2) || !mpfr_cmp(c->mf, mp_3_pi_2))
+        rpn_zero(c);
+    else
+    if (!mpfr_cmp(c->mf, mp_pi))
+        mpfr_set_si(c->mf, -1, MPFR_DEFAULT_RND);
+    else
+    if (!mpfr_cmp(c->mf, mp_2_pi))
+        mpfr_set_si(c->mf, 1, MPFR_DEFAULT_RND);
+    else {
+        mpfr_cos(c->mf, c->mf, MPFR_DEFAULT_RND);
+        if (!mpfr_number_p(c->mf)) calc.is_nan = TRUE;
+    }
+    mpfr_clear(mp_pi);
+    mpfr_clear(mp_pi_2);
+    mpfr_clear(mp_3_pi_2);
+    mpfr_clear(mp_2_pi);
 }
 void rpn_tan(calc_number_t *c)
 {
+    mpfr_t mp_pi, mp_pi_2, mp_3_pi_2, mp_2_pi;
+
     validate_angle2rad(c);
-    mpfr_tan(c->mf, c->mf, MPFR_DEFAULT_RND);
-    if (!mpfr_number_p(c->mf)) calc.is_nan = TRUE;
+    build_rad_const(&mp_pi, &mp_pi_2, &mp_3_pi_2, &mp_2_pi);
+
+    if (!mpfr_cmp(c->mf, mp_pi_2) || !mpfr_cmp(c->mf, mp_3_pi_2))
+        calc.is_nan = TRUE;
+    else
+    if (!mpfr_cmp(c->mf, mp_pi) || !mpfr_cmp(c->mf, mp_2_pi))
+        rpn_zero(c);
+    else {
+        mpfr_tan(c->mf, c->mf, MPFR_DEFAULT_RND);
+        if (!mpfr_number_p(c->mf)) calc.is_nan = TRUE;
+    }
+    mpfr_clear(mp_pi);
+    mpfr_clear(mp_pi_2);
+    mpfr_clear(mp_3_pi_2);
+    mpfr_clear(mp_2_pi);
 }
 
 void rpn_asin(calc_number_t *c)

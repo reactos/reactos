@@ -1,3 +1,5 @@
-* Translators for the user interfaces and the help texts.
-* Use correct symbols for math functions (square root, etc...)
-* Implements conversion dialog box.
+Add missing units into conversion dialog.
+
+Add translations to html help files.
+
+Add translations of conversion stuff to various imported languages.

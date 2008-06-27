@@ -8,8 +8,19 @@
 #include <math.h>
 #include <float.h>
 #include <malloc.h>
+#ifndef DISABLE_HTMLHELP_SUPPORT
 #include <htmlhelp.h>
+#endif
 #include <limits.h>
+
+/* Messages reserved for the main dialog */
+#define WM_CLOSE_STATS      (WM_APP+1)
+#define WM_HANDLE_CLIPBOARD (WM_APP+2)
+#define WM_INSERT_STAT      (WM_APP+3)
+#define WM_LOAD_STAT        (WM_APP+4)
+#define WM_START_CONV       (WM_APP+5)
+#define WM_HANDLE_FROM      (WM_APP+6)
+#define WM_HANDLE_TO        (WM_APP+7)
 
 #ifdef ENABLE_MULTI_PRECISION
 #include <mpfr.h>
@@ -31,13 +42,7 @@
 #define IDC_STATIC  ((DWORD)-1)
 #endif
 
-#ifdef UNICODE
-#define CF_TCHAR    CF_UNICODETEXT
-#else
-#define CF_TCHAR    CF_TEXT
-#endif
-
-#define CALC_VERSION        TEXT("1.06")
+#define CALC_VERSION        TEXT("1.08")
 
 /*#define USE_KEYBOARD_HOOK*/
 
@@ -78,6 +83,7 @@ enum {
     RPN_OPERATOR_XOR,
     RPN_OPERATOR_AND,
     RPN_OPERATOR_LSH,
+    RPN_OPERATOR_RSH,
     RPN_OPERATOR_ADD,
     RPN_OPERATOR_SUB,
     RPN_OPERATOR_MULT,
@@ -97,8 +103,14 @@ typedef union {
 #endif
 } calc_number_t;
 
-void run_operator(calc_number_t *, calc_number_t *,
-                  calc_number_t *, unsigned int);
+typedef struct {
+    calc_number_t number;
+    unsigned int  operation;
+    DWORD         base;
+} calc_node_t;
+
+void run_operator(calc_node_t *result, calc_node_t *a,
+                  calc_node_t *b, unsigned int operation);
 int  exec_infix2postfix(calc_number_t *, unsigned int);
 void exec_closeparent(calc_number_t *);
 int  eval_parent_count(void);
@@ -106,6 +118,12 @@ void flush_postfix(void);
 void exec_change_infix(void);
 void start_rpn_engine(void);
 void stop_rpn_engine(void);
+
+typedef struct {
+    char *data;
+    char *ptr;
+    int   wm_msg;
+} sequence_t;
 
 typedef struct {
     calc_number_t    num;
@@ -116,6 +134,7 @@ typedef struct {
 enum {
     CALC_LAYOUT_SCIENTIFIC=0,
     CALC_LAYOUT_STANDARD,
+    CALC_LAYOUT_CONVERSION,
 };
 
 typedef struct {
@@ -129,7 +148,7 @@ typedef struct {
     TCHAR        *ptr;
     calc_number_t code;
     calc_number_t prev;
-    calc_number_t memory;
+    calc_node_t   memory;
     statistic_t  *stat;
     BOOL          is_memory;
     BOOL          is_nan;
@@ -143,21 +162,28 @@ typedef struct {
     DWORD         degr;
     DWORD         action;
     HWND          hStatWnd;
-    TCHAR        *Clipboard;
-    TCHAR        *ClipPtr;
+    HWND          hConvWnd;
+    sequence_t    Clipboard;
+    sequence_t    Convert[2];
     unsigned int  last_operator;
     unsigned int  prev_operator;
     TCHAR         sDecimal[8];
     TCHAR         sThousand[8];
     unsigned int  sDecimal_len;
     unsigned int  sThousand_len;
+    signed int    x_coord;
+    signed int    y_coord;
 } calc_t;
 
 extern calc_t calc;
 
 //
 #define CALC_E      2.7182818284590452354
+
+#define CALC_PI_2   1.57079632679489661923
 #define CALC_PI     3.14159265358979323846
+#define CALC_3_PI_2 4.71238898038468985769
+#define CALC_2_PI   6.283185307179586476925
 
 #define MODIFIER_INV    0x01
 #define MODIFIER_HYP    0x02
@@ -168,6 +194,7 @@ void validate_rad2angle(calc_number_t *c);
 void validate_angle2rad(calc_number_t *c);
 #else
 __int64 logic_dbl2int(calc_number_t *a);
+double logic_int2dbl(calc_number_t *a);
 double validate_rad2angle(double a);
 double validate_angle2rad(calc_number_t *c);
 #endif
@@ -221,5 +248,11 @@ void convert_real_integer(unsigned int base);
 //
 
 INT_PTR CALLBACK AboutDlgProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp);
+
+//
+
+void ConvExecute(HWND hWnd);
+void ConvAdjust(HWND hWnd, int n_cat);
+void ConvInit(HWND hWnd);
 
 #endif

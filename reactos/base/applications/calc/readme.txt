@@ -27,15 +27,16 @@ For ReactOS's users, it must be \ReactOS\Help (at the moment the Help directory 
 
 NOTES TO REACTOS'S USERS
 =========================
-At the time of the write of this text, the newest version of ReactOS is 0.3.3.
+At the time of the write of this text, the newest version of ReactOS is 0.3.4.
 While ReactOS Calc works fine with Microsoft's operating systems, there are some known issues with ReactOS:
-* The keyboard is only partially working.
+* The keyboard shortcuts work, but there are still some issues.
 * At startup, the focus is visible on the Inv control.
 * The selection on the various radio buttons isn't displayed correctly.
 * Into the aboutbox, the color around the ReactOS's logo isn't applied.
 * Into the aboutbox, the scroll bar used into the read-only edit control doesn't work (seen into the italian version).
 * For some reasons, the [RET] button of the statistical box doesn't set the focus on the calculator.
 * Help file and help popups don't work.
+* The floating point support into the shared runtime library is still unimplemented (ieee version only).
 
 CLOSING WORDS
 ==============
@@ -46,4 +47,4 @@ Then, the next step is the translation into other languages.
 If you would like to help in some way on these tasks, you are welcome.
 
 -------------------------------------------------------------------
-Carlo Bramini, 19-12-2007
+Carlo Bramini, 19-05-2008

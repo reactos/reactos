@@ -28,7 +28,7 @@ double asinh(double x)
 {
     return log(x+sqrt(x*x+1));
 }
- 
+
 double acosh(double x)
 {
     // must be x>=1, if not return Nan (Not a Number)
@@ -78,15 +78,45 @@ double validate_angle2rad(calc_number_t *c)
 
 void rpn_sin(calc_number_t *c)
 {
-    c->f = sin(validate_angle2rad(c));
+    double angle = validate_angle2rad(c);
+
+    if (angle == 0 || angle == CALC_PI)
+        c->f = 0;
+    else
+    if (angle == CALC_3_PI_2)
+        c->f = -1;
+    else
+    if (angle == CALC_2_PI)
+        c->f = 1;
+    else
+        c->f = sin(angle);
 }
 void rpn_cos(calc_number_t *c)
 {
-    c->f = cos(validate_angle2rad(c));
+    double angle = validate_angle2rad(c);
+
+    if (angle == CALC_PI_2 || angle == CALC_3_PI_2)
+        c->f = 0;
+    else
+    if (angle == CALC_PI)
+        c->f = -1;
+    else
+    if (angle == CALC_2_PI)
+        c->f = 1;
+    else
+        c->f = cos(angle);
 }
 void rpn_tan(calc_number_t *c)
 {
-    c->f = tan(validate_angle2rad(c));
+    double angle = validate_angle2rad(c);
+
+    if (angle == CALC_PI_2 || angle == CALC_3_PI_2)
+        calc.is_nan = TRUE;
+    else
+    if (angle == CALC_PI || angle == CALC_2_PI)
+        c->f = 0;
+    else
+        c->f = tan(angle);
 }
 
 void rpn_asin(calc_number_t *c)
@@ -219,6 +249,10 @@ __int64 logic_dbl2int(calc_number_t *a)
     }
     return (__int64)int_part;
 }
+double logic_int2dbl(calc_number_t *a)
+{
+    return (double)a->i;
+}
 
 void rpn_not(calc_number_t *c)
 {
@@ -330,8 +364,7 @@ static __int64 cbrti(__int64 x) {
 void rpn_cbrt(calc_number_t *c)
 {
     if (calc.base == IDC_RADIO_DEC)
-//#ifdef __GNUC__
-#if 0
+#if defined(__GNUC__) && !defined(__REACTOS__)
         c->f = cbrt(c->f);
 #else
         c->f = pow(c->f,1./3.);

@@ -1,3 +1,19 @@
+1.08 (20080520)
+=======================
+* Added macro DISABLE_HTMLHELP_SUPPORT for disabling the compilation of htmlhelp support.
+* Added RSH operator.
+* It is possible to change the numeric base (hex/oct/bin/dec) during a calculation.
+* Conversion layout has been implemented (HTML Help documentation is fixed too).
+* Corrected precision underflow/overflow when working with trigonometric functions.
+* cbrt() function is not used if compiling into ReactOS build system.
+* Resources are moved into /res directory.
+* Added new (partial) support for other languages: bulgarian, spanish, german, dutch, polish, russian, slovak, ukraianian.
+* Decimal precision of number with standard layout has been limited to 16 digits because the output display is smaller here (GMP version only).
+* Fixed buffer overflow with function update_lcd_display().
+* The decimal point is now preserved when switching to temporary scientific notation.
+* The content of the output display is now cleared before doing a paste from clipboard.
+* The position of the calculator on the screen is kept when switching between various working layouts (standard/conversion/scientific).
+
 1.07 (20071219)
 =======================
 * Added support for GNU multi-precision libraries. LibGMP and LibMPFR are required for compiling ReactOS Calc with big number support.

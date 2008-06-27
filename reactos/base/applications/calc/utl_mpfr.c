@@ -4,7 +4,7 @@ void prepare_rpn_result_2(calc_number_t *rpn, TCHAR *buffer, int size, int base)
 {
     char   temp[1024];
     char  *ptr, *dst;
-    int    width;
+    int    width, max_ld_width;
     unsigned long int n, q;
     mpz_t   zz;
     mpf_t   ff;
@@ -19,7 +19,15 @@ void prepare_rpn_result_2(calc_number_t *rpn, TCHAR *buffer, int size, int base)
         gmp_sprintf(temp, "%ZX", zz);
         break;
     case IDC_RADIO_DEC:
-#define MAX_LD_WIDTH    64
+        /*
+         * The output display is much shorter in standard mode,
+         * so I'm forced to reduce the precision here :(
+         */
+        if (calc.layout == CALC_LAYOUT_STANDARD)
+            max_ld_width = 16;
+        else
+            max_ld_width = 64;
+
         /* calculate the width of integer number */
         if (mpf_sgn(ff) == 0)
             width = 1;
@@ -31,10 +39,10 @@ void prepare_rpn_result_2(calc_number_t *rpn, TCHAR *buffer, int size, int base)
             width = 1 + mpfr_get_si(t, MPFR_DEFAULT_RND);
             mpfr_clear(t);
         }
-        if (calc.sci_out == TRUE || width > MAX_LD_WIDTH || width < -MAX_LD_WIDTH)
-            ptr = temp + gmp_sprintf(temp, "%*.*#Fe", 1, MAX_LD_WIDTH, ff);
+        if (calc.sci_out == TRUE || width > max_ld_width || width < -max_ld_width)
+            ptr = temp + gmp_sprintf(temp, "%*.*#Fe", 1, max_ld_width, ff);
         else {
-            ptr = temp + gmp_sprintf(temp, "%#*.*Ff", width, ((MAX_LD_WIDTH-width-1)>=0) ? MAX_LD_WIDTH-width-1 : 0, ff);
+            ptr = temp + gmp_sprintf(temp, "%#*.*Ff", width, ((max_ld_width-width-1)>=0) ? max_ld_width-width-1 : 0, ff);
             dst = strchr(temp, '.');
             while (--ptr > dst)
                 if (*ptr != '0')
@@ -47,7 +55,6 @@ void prepare_rpn_result_2(calc_number_t *rpn, TCHAR *buffer, int size, int base)
                 /* remove the dot (it will be re-added later) */
                 ptr[0] = '\0';
         }
-#undef MAX_LD_WIDTH
         break;
     case IDC_RADIO_OCT:
         gmp_sprintf(temp, "%Zo", zz);
