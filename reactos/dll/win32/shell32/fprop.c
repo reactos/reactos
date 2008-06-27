@@ -148,12 +148,16 @@ SH_FileGeneralSetFileType(HWND hwndDlg, WCHAR * filext)
         return FALSE;
     if (RegOpenKeyW(HKEY_CLASSES_ROOT, value, &hKey) == ERROR_SUCCESS)
     {
-        lvalue = lname = MAX_PATH;
-        result = RegEnumValueW(hKey,0, name, &lname, NULL, NULL, (LPBYTE)value, &lvalue);
+        if (RegLoadMUIStringW(hKey, L"FriendlyTypeName", value, MAX_PATH, NULL, 0, NULL) != ERROR_SUCCESS)
+        {
+            lvalue = lname = MAX_PATH;
+            result = RegEnumValueW(hKey,0, name, &lname, NULL, NULL, (LPBYTE)value, &lvalue);
+        }
         RegCloseKey(hKey);
     }
 
     /* file extension type */
+    value[MAX_PATH-1] = L'\0';
     SendMessageW(hDlgCtrl, WM_SETTEXT, (WPARAM)NULL, (LPARAM)value);
     return TRUE;
 }
