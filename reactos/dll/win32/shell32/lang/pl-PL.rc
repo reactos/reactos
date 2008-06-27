@@ -665,7 +665,7 @@ BEGIN
 	IDS_FOLDER_OPTIONS          "Opcje katalogów"
 	IDS_RECYCLEBIN_LOCATION     "Lokalizacja kosza"
 	IDS_RECYCLEBIN_DISKSPACE    "Pozosta³o wolnego miejsca"
-	IDS_EMPTY_BITBUCKET         "Empty Recycle Bin"
+	IDS_EMPTY_BITBUCKET         "Opró¿nij Kosz"
 	IDS_PICK_ICON_TITLE         "Wybierz ikonê"
 	IDS_PICK_ICON_FILTER        "Pliki ikon(*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0"
 	IDS_OPEN_WITH_FILTER        "Programy\0*.exe\0"
