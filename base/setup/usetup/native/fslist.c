@@ -10,7 +10,7 @@ NATIVE_CreateFileSystemList(
 	IN PFILE_SYSTEM_LIST List)
 {
 	FS_AddProvider(List, L"FAT", VfatFormat, VfatChkdsk);
-	//FS_AddProvider(List, L"EXT2", Ext2Format, Ext2Chkdsk);
+	FS_AddProvider(List, L"EXT2", Ext2Format, Ext2Chkdsk);
 	return TRUE;
 }
 
