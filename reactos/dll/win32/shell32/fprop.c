@@ -153,6 +153,49 @@ SH_FileGeneralSetFileType(HWND hwndDlg, WCHAR * filext)
             lvalue = lname = MAX_PATH;
             result = RegEnumValueW(hKey,0, name, &lname, NULL, NULL, (LPBYTE)value, &lvalue);
         }
+        lname = MAX_PATH;
+        if (RegGetValueW(hKey, L"DefaultIcon", NULL, RRF_RT_REG_SZ, NULL, name, &lname) == ERROR_SUCCESS)
+        {
+            UINT IconIndex;
+            WCHAR szBuffer[MAX_PATH];
+            WCHAR * Offset;
+            HICON hIcon = 0;
+            HRSRC hResource;
+            LPVOID pResource = NULL;
+            HGLOBAL hGlobal;
+            HANDLE hLibrary;
+
+            Offset = wcsrchr(name, L',');
+            if (Offset)
+            {
+                IconIndex = _wtoi(Offset + 2);
+                *Offset = L'\0';
+                if (ExpandEnvironmentStringsW(name, szBuffer, MAX_PATH))
+                {
+                    szBuffer[MAX_PATH] = L'\0';
+                    hLibrary = LoadLibraryExW(szBuffer, NULL, LOAD_LIBRARY_AS_DATAFILE);
+                    if (hLibrary)
+                    {
+                        hResource = FindResourceW(hLibrary, MAKEINTRESOURCEW(IconIndex), (LPCWSTR)RT_ICON);
+                        if (hResource)
+                        {
+                            hGlobal = LoadResource(shell32_hInstance, hResource);
+                            if (hGlobal)
+                            {
+                                pResource = LockResource(hGlobal);
+                                if (pResource != NULL)
+                                {
+                                    hIcon = CreateIconFromResource(pResource, SizeofResource(shell32_hInstance, hResource), TRUE, 0x00030000);
+                                    TRACE("hIcon %p,- szBuffer %s IconIndex %u error %u icon %p hResource %p pResource %p\n", hIcon, debugstr_w(szBuffer), IconIndex, MAKEINTRESOURCEW(IconIndex), hResource, pResource);
+                                    SendDlgItemMessageW(hwndDlg, 14000, STM_SETICON, (WPARAM)hIcon, 0);
+                                }
+                            }
+                        }
+                        FreeLibrary(hLibrary);
+                    }
+                }
+            }
+        }
         RegCloseKey(hKey);
     }
 
