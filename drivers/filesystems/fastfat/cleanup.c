@@ -89,6 +89,15 @@ VfatCleanupFile(PVFAT_IRP_CONTEXT IrpContext)
            CcPurgeCacheSection(FileObject->SectionObjectPointer, NULL, 0, FALSE);
 #endif
         }
+        
+        if (*pFcb->Attributes & FILE_ATTRIBUTE_DIRECTORY)
+        {
+#if 0
+            FsRtlNotifyCleanup(pVcb->NotifySync, &(pVcb->NotifyList),
+                               FileObject->FsContext2);
+#endif
+        }
+        
         /* Uninitialize file cache if. */
         if (FileObject->SectionObjectPointer->SharedCacheMap)
         {
