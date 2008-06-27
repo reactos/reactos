@@ -402,15 +402,19 @@ KiDataAbortHandler(IN PKTRAP_FRAME TrapFrame)
     //
     // Check if this is a page fault
     //
-    if (KeArmFaultStatusRegisterGet() == 21 || KeArmFaultStatusRegisterGet() == 23)
+    if ((KeArmFaultStatusRegisterGet() == 21) ||
+        (KeArmFaultStatusRegisterGet() == 23))
     {
-        Status = MmAccessFault(FALSE,
-                               Address,
-                               KernelMode,
-                               TrapFrame);
+        //
+        // Handle the fault
+        //
+        Status = MmAccessFault(FALSE, Address, KernelMode, TrapFrame);
         if (Status == STATUS_SUCCESS) return Status;
     }
     
+    //
+    // We don't handle this yet
+    //
     UNIMPLEMENTED;
     while (TRUE);
     return STATUS_SUCCESS;
@@ -439,7 +443,7 @@ KiSystemService(IN PKTHREAD Thread,
     // Get the system call ID
     //
     Id = Instruction & 0xFFFFF;
-    DPRINT1("[SWI] (%x) %p (%d) \n", Id, Thread, Thread->PreviousMode);
+    //DPRINT1("[SWI] (%x) %p (%d) \n", Id, Thread, Thread->PreviousMode);
     
     //
     // Get the descriptor table
@@ -495,7 +499,6 @@ KiSystemService(IN PKTHREAD Thread,
         //
         // Copy them into the kernel stack
         //
-        DPRINT1("Argument: %p\n", *Argument);
         Arguments[i] = *Argument;
         Argument++;
     }
@@ -536,7 +539,6 @@ KiSystemService(IN PKTHREAD Thread,
             //
             // Copy into kernel stack
             //
-            DPRINT1("Argument: %p\n", *Argument);
             Arguments[i] = *Argument;
             Argument++;
         }
@@ -546,7 +548,7 @@ KiSystemService(IN PKTHREAD Thread,
     // Do the system call and save result in EAX
     //
     TrapFrame->R0 = KiSystemCall(SystemCall, Arguments, ArgumentCount);
-    DPRINT1("Returned: %lx\n", TrapFrame->R0);
+    //DPRINT1("Returned: %lx\n", TrapFrame->R0);
 }
 
 VOID

@@ -37,7 +37,6 @@ GENERATE_ARM_STUB RtlInitializeContext
 //
 // Internal Ke Arch-Specific Helpers
 //
-GENERATE_ARM_STUB KiSaveProcessorControlState
 GENERATE_ARM_STUB KiInitializeUserApc
 GENERATE_ARM_STUB KeDisableInterrupts
 GENERATE_ARM_STUB KiDispatchException
@@ -51,7 +50,6 @@ GENERATE_ARM_STUB KiApcInterrupt
 GENERATE_ARM_STUB KiPassiveRelease 
 GENERATE_ARM_STUB KiInterruptTemplate 
 GENERATE_ARM_STUB KiUnexpectedInterrupt  
-GENERATE_ARM_STUB RtlCaptureContext 
 GENERATE_ARM_STUB RtlGetCallersAddress 
 GENERATE_ARM_STUB RtlUnwind 
 GENERATE_ARM_STUB RtlpGetExceptionAddress

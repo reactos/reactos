@@ -23,6 +23,7 @@
 #define WRITE_REGISTER_USHORT(r, v) (*(volatile USHORT *)(r) = (v))
 
 PUSHORT VgaArmBase;
+PHYSICAL_ADDRESS VgaPhysical;
 BOOLEAN NextLine = FALSE;
 UCHAR VidpTextColor = 0xF;
 ULONG VidpCurrentX = 0;
@@ -244,38 +245,15 @@ PreserveRow(IN ULONG CurrentTop,
     }
 }
 
-/* PUBLIC FUNCTIONS **********************************************************/
-
-/*
- * @implemented
- */
-BOOLEAN
+VOID
 NTAPI
-VidInitialize(IN BOOLEAN SetMode)
-{   
-    PHYSICAL_ADDRESS Physical;
-    DPRINT1("bv-arm v0.1\n");
-    
-    //
-    // Allocate framebuffer
-    // 600kb works out to 640x480@16bpp
-    //
-    Physical.QuadPart = -1;
-    VgaArmBase = MmAllocateContiguousMemory(600 * 1024, Physical);
-    if (!VgaArmBase) return FALSE;
-    
-    //
-    // Get physical address
-    //
-    Physical = MmGetPhysicalAddress(VgaArmBase);
-    if (!Physical.QuadPart) return FALSE;
-    DPRINT1("[BV-ARM] Frame Buffer @ 0x%p 0p%p\n", VgaArmBase, Physical.LowPart);
-
+VidpInitializeDisplay(VOID)
+{
     //
     // Set framebuffer address
     //
-    WRITE_REGISTER_ULONG(PL110_LCDUPBASE, Physical.LowPart);
-    WRITE_REGISTER_ULONG(PL110_LCDLPBASE, Physical.LowPart);
+    WRITE_REGISTER_ULONG(PL110_LCDUPBASE, VgaPhysical.LowPart);
+    WRITE_REGISTER_ULONG(PL110_LCDLPBASE, VgaPhysical.LowPart);
     
     //
     // Initialize timings to 640x480
@@ -291,7 +269,7 @@ VidInitialize(IN BOOLEAN SetMode)
                          LCDCONTROL_LCDTFT |
                          LCDCONTROL_LCDPWR |
                          LCDCONTROL_LCDBPP(4));
-
+    
 #if DBG
     //
     // Draw an RGB test pattern
@@ -308,7 +286,39 @@ VidInitialize(IN BOOLEAN SetMode)
         }
 	}
 #endif
+}
+
+/* PUBLIC FUNCTIONS **********************************************************/
+
+/*
+ * @implemented
+ */
+BOOLEAN
+NTAPI
+VidInitialize(IN BOOLEAN SetMode)
+{   
+    DPRINT1("bv-arm v0.1\n");
     
+    //
+    // Allocate framebuffer
+    // 600kb works out to 640x480@16bpp
+    //
+    VgaPhysical.QuadPart = -1;
+    VgaArmBase = MmAllocateContiguousMemory(600 * 1024, VgaPhysical);
+    if (!VgaArmBase) return FALSE;
+    
+    //
+    // Get physical address
+    //
+    VgaPhysical = MmGetPhysicalAddress(VgaArmBase);
+    if (!VgaPhysical.QuadPart) return FALSE;
+    DPRINT1("[BV-ARM] Frame Buffer @ 0x%p 0p%p\n", VgaArmBase, VgaPhysical.LowPart);
+
+    //
+    // Setup the display
+    //
+    VidpInitializeDisplay();
+
     //
     // We are done!
     //
@@ -322,8 +332,22 @@ VOID
 NTAPI
 VidResetDisplay(IN BOOLEAN HalReset)
 {
-    UNIMPLEMENTED;
-    while (TRUE);
+    //
+    // Clear the current position
+    //
+    VidpCurrentX = 0;
+    VidpCurrentY = 0;
+    
+    //
+    // Re-initialize the VGA Display
+    //
+    VidpInitializeDisplay();
+    
+    //
+    // Re-initialize the palette and fill the screen black
+    //
+    //InitializePalette();
+    VidSolidColorFill(0, 0, 639, 479, 0);
 }
 
 /*

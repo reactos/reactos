@@ -115,3 +115,16 @@ KeFlushTb(VOID)
     //
     KeArmFlushTlb();
 }
+
+VOID
+NTAPI
+KiSaveProcessorControlState(OUT PKPROCESSOR_STATE ProcessorState)
+{
+    //
+    // Save some critical stuff we use
+    //
+    ProcessorState->SpecialRegisters.ControlRegister = KeArmControlRegisterGet();
+    ProcessorState->SpecialRegisters.LockdownRegister = KeArmLockdownRegisterGet();
+    ProcessorState->SpecialRegisters.CacheRegister = KeArmCacheRegisterGet();
+    ProcessorState->SpecialRegisters.StatusRegister = KeArmStatusRegisterGet();
+}

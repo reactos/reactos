@@ -1,18 +1,59 @@
 /*
- * COPYRIGHT:         See COPYING in the top level directory
- * PROJECT:           ReactOS Run-Time Library
- * PURPOSE:           Debug Routines
- * FILE:              lib/rtl/arm/debug_asm.S
+ * PROJECT:         ReactOS Kernel
+ * LICENSE:         GPL - See COPYING in the top level directory
+ * FILE:            rtl/arm/debug_asm.S
+ * PURPOSE:         Cross-privilege Debugging and Exception Support for ARM
+ * PROGRAMMERS:     ReactOS Portable Systems Group
  */
 
-/* GLOBALS ********************************************************************/
+    .title "ARM Kernel/User NT Debugging and Exception"
+    .include "ntoskrnl/include/internal/arm/kxarm.h"
+    .include "ntoskrnl/include/internal/arm/ksarm.h"
 
-.globl DbgBreakPoint
-
-/* FUNCTIONS ******************************************************************/
-
-.func DbgBreakPoint
-DbgBreakPoint:
+    TEXTAREA
+    NESTED_ENTRY DbgBreakPoint
+    PROLOG_END DbgBreakPoint
+    
+    //
+    // Do a breakpoint and return
+    //
     bkpt 3
     bx lr
-.endfunc
+    ENTRY_END DbgBreakPoint
+
+    NESTED_ENTRY RtlCaptureContext
+    PROLOG_END RtlCaptureContext
+
+    //
+    // FIXME: Change to stmdb later
+    //
+    str r0, [a1, #CsR0]
+    str r1, [a1, #CsR1]
+    str r2, [a1, #CsR2]
+    str r3, [a1, #CsR3]
+    str r4, [a1, #CsR4]
+    str r5, [a1, #CsR5]
+    str r6, [a1, #CsR6]
+    str r7, [a1, #CsR7]
+    str r8, [a1, #CsR8]
+    str r9, [a1, #CsR9]
+    str r10, [a1, #CsR10]
+    str r11, [a1, #CsR11]
+    str r12, [a1, #CsR12]    
+    str sp, [a1, #CsSp]
+    str lr, [a1, #CsLr]
+    str pc, [a1, #CsPc]
+    mrs ip, spsr
+    str ip, [a1, #CsPsr]
+    
+    //
+    // Set flags
+    //
+    mov ip, #CONTEXT_FULL
+    str ip, [a1, #CsContextFlags]
+    
+    //
+    // Return
+    //
+    bx lr
+    ENTRY_END RtlCaptureContext
