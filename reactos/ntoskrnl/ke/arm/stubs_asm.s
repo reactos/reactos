@@ -46,7 +46,6 @@ GENERATE_ARM_STUB KeSwitchKernelStack
 //
 // Traps, Debugging and Execeptions
 //
-GENERATE_ARM_STUB KiApcInterrupt 
 GENERATE_ARM_STUB KiPassiveRelease 
 GENERATE_ARM_STUB KiInterruptTemplate 
 GENERATE_ARM_STUB KiUnexpectedInterrupt  

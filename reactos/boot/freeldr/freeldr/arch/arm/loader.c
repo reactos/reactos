@@ -1056,7 +1056,12 @@ ArmPrepareForReactOS(IN BOOLEAN Setup)
     ULONG Dummy, i;
     PLDR_DATA_TABLE_ENTRY LdrEntry;
     PLIST_ENTRY NextEntry, OldEntry;
-    
+    PARC_DISK_INFORMATION ArcDiskInformation;
+    PARC_DISK_SIGNATURE ArcDiskSignature;
+    ULONG ArcDiskCount = 0, Checksum = 0;
+    PMASTER_BOOT_RECORD Mbr;
+    PULONG Buffer;
+
     //
     // Allocate the ARM Shared Heap
     //
@@ -1241,10 +1246,6 @@ ArmPrepareForReactOS(IN BOOLEAN Setup)
     InsertTailList(&ArmLoaderBlock->LoadOrderListHead, &LdrEntry->InLoadOrderLinks);
     
     //
-    // TODO: Setup boot-driver data
-    //
-    
-    //
     // Build descriptors for the drivers loaded
     //
     for (i = 0; i < Drivers; i++)
@@ -1260,7 +1261,6 @@ ArmPrepareForReactOS(IN BOOLEAN Setup)
                                            &Dummy);
         if (Status != STATUS_SUCCESS) return;
     }
-    
     
     //
     // Loop driver list
@@ -1465,6 +1465,75 @@ ArmPrepareForReactOS(IN BOOLEAN Setup)
     //    
     NextEntry = ArmLoaderBlock->MemoryDescriptorListHead.Flink;
     while (NextEntry != &ArmLoaderBlock->MemoryDescriptorListHead)
+    {
+        //
+        // Remember the physical entry
+        //
+        OldEntry = NextEntry->Flink;
+        
+        //
+        // Edit the data
+        //
+        NextEntry->Flink = (PVOID)((ULONG_PTR)NextEntry->Flink | KSEG0_BASE);
+        NextEntry->Blink = (PVOID)((ULONG_PTR)NextEntry->Blink | KSEG0_BASE);
+        
+        //
+        // Keep looping
+        //
+        NextEntry = OldEntry;
+    }
+    
+    //
+    // Now edit the root itself
+    //
+    NextEntry->Flink = (PVOID)((ULONG_PTR)NextEntry->Flink | KSEG0_BASE);
+    NextEntry->Blink = (PVOID)((ULONG_PTR)NextEntry->Blink | KSEG0_BASE);
+    
+    //
+    // Allocate ARC disk structure
+    //
+    ArcDiskInformation = ArmAllocateFromSharedHeap(sizeof(ARC_DISK_INFORMATION));
+    InitializeListHead(&ArcDiskInformation->DiskSignatureListHead);
+    ArmLoaderBlock->ArcDiskInformation = (PVOID)((ULONG_PTR)ArcDiskInformation | KSEG0_BASE);
+    
+    //
+    // Read the MBR
+    //
+    MachDiskReadLogicalSectors(0x49, 0ULL, 1, (PVOID)DISKREADBUFFER);
+    Buffer = (ULONG*)DISKREADBUFFER;
+    Mbr = (PMASTER_BOOT_RECORD)DISKREADBUFFER;
+        
+    //
+    // Calculate the MBR checksum
+    //
+    for (i = 0; i < 128; i++) Checksum += Buffer[i];
+    Checksum = ~Checksum + 1;
+        
+    //
+    // Allocate a disk signature and fill it out
+    //
+    ArcDiskSignature = ArmAllocateFromSharedHeap(sizeof(ARC_DISK_SIGNATURE));
+    ArcDiskSignature->Signature = Mbr->Signature;
+    ArcDiskSignature->CheckSum = Checksum;
+    
+    //
+    // Allocare a string for the name and fill it out
+    //
+    ArcDiskSignature->ArcName = ArmAllocateFromSharedHeap(256);
+    sprintf(ArcDiskSignature->ArcName, "multi(0)disk(0)rdisk(%lu)", ArcDiskCount++);
+    ArcDiskSignature->ArcName = (PVOID)((ULONG_PTR)ArcDiskSignature->ArcName | KSEG0_BASE);
+        
+    //
+    // Insert the descriptor into the list
+    //
+    InsertTailList(&ArcDiskInformation->DiskSignatureListHead,
+                   &ArcDiskSignature->ListEntry);
+
+    //
+    // Loop ARC disk list
+    //    
+    NextEntry = ArcDiskInformation->DiskSignatureListHead.Flink;
+    while (NextEntry != &ArcDiskInformation->DiskSignatureListHead)
     {
         //
         // Remember the physical entry

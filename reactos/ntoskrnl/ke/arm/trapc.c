@@ -102,7 +102,7 @@ KiIdleLoop(VOID)
             DPRINT1("Swapping context!\n");
             KiSwapContext(OldThread, NewThread);
             DPRINT1("Back\n");
-            while (TRUE);
+            ASSERT(FALSE);
         }
         else
         {
@@ -160,7 +160,7 @@ KiSwapContextInternal(IN PKTHREAD OldThread,
         // FIXME: TODO
         //
         DPRINT1("WMI Tracing not supported\n");
-        while (TRUE);
+        ASSERT(FALSE);
     }
     
     //
@@ -180,7 +180,7 @@ KiSwapContextInternal(IN PKTHREAD OldThread,
             // FIXME: TODO
             //
             DPRINT1("Address space switch not implemented\n");
-            while (TRUE);
+            ASSERT(FALSE);
         }
     }
     
@@ -210,7 +210,7 @@ KiSwapContextInternal(IN PKTHREAD OldThread,
         // FIXME: FAIL
         //
         DPRINT1("DPCS ACTIVE!!!\n");
-        while (TRUE);
+        ASSERT(FALSE);
     }
     
     //
@@ -222,13 +222,52 @@ KiSwapContextInternal(IN PKTHREAD OldThread,
         // FIXME: TODO
         //
         DPRINT1("APCs pending!\n");
-        while (TRUE);
+        ASSERT(FALSE);
     }
     
     //
     // Return
     //
     return FALSE;
+}
+
+VOID
+KiApcInterrupt(VOID)
+{
+    KPROCESSOR_MODE PreviousMode;
+    KEXCEPTION_FRAME ExceptionFrame;
+    PKTRAP_FRAME TrapFrame = KeGetCurrentThread()->TrapFrame;
+    DPRINT1("[APC]\n");
+       
+    //
+    // Isolate previous mode
+    //
+    PreviousMode = KiGetPreviousMode(TrapFrame);
+    
+    //
+    // FIXME No use-mode support
+    //
+    if (PreviousMode == UserMode) ASSERT(FALSE);
+    
+    //
+    // Disable interrupts
+    //
+    _disable();
+
+    //
+    // Clear APC interrupt
+    //
+    HalClearSoftwareInterrupt(APC_LEVEL);
+    
+    //
+    // Re-enable interrupts
+    //
+    _enable();
+    
+    //
+    // Deliver APCs
+    //
+    KiDeliverApc(PreviousMode, &ExceptionFrame, TrapFrame);
 }
 
 VOID
@@ -309,7 +348,7 @@ KiDispatchInterrupt(VOID)
         DPRINT1("Swapping context!\n");
         KiSwapContext(OldThread, NewThread);
         DPRINT1("Back\n");
-        while (TRUE);
+        ASSERT(FALSE);
     }
 }
 
@@ -402,21 +441,17 @@ KiDataAbortHandler(IN PKTRAP_FRAME TrapFrame)
     //
     // Check if this is a page fault
     //
-    if ((KeArmFaultStatusRegisterGet() == 21) ||
-        (KeArmFaultStatusRegisterGet() == 23))
+    if (KeArmFaultStatusRegisterGet() == 21 || KeArmFaultStatusRegisterGet() == 23)
     {
-        //
-        // Handle the fault
-        //
-        Status = MmAccessFault(FALSE, Address, KernelMode, TrapFrame);
+        Status = MmAccessFault(FALSE,
+                               Address,
+                               KernelMode,
+                               TrapFrame);
         if (Status == STATUS_SUCCESS) return Status;
     }
     
-    //
-    // We don't handle this yet
-    //
     UNIMPLEMENTED;
-    while (TRUE);
+    ASSERT(FALSE);
     return STATUS_SUCCESS;
 }
 
@@ -443,7 +478,7 @@ KiSystemService(IN PKTHREAD Thread,
     // Get the system call ID
     //
     Id = Instruction & 0xFFFFF;
-    //DPRINT1("[SWI] (%x) %p (%d) \n", Id, Thread, Thread->PreviousMode);
+    DPRINT1("[SWI] (%x) %p (%d) \n", Id, Thread, Thread->PreviousMode);
     
     //
     // Get the descriptor table
@@ -463,7 +498,7 @@ KiSystemService(IN PKTHREAD Thread,
         // Check if this is a GUI call
         //
         UNIMPLEMENTED;
-        while (TRUE);
+        ASSERT(FALSE);
     }
     
     //
@@ -480,7 +515,7 @@ KiSystemService(IN PKTHREAD Thread,
         // TODO
         //
         UNIMPLEMENTED;
-        while (TRUE);
+        ASSERT(FALSE);
     }
     
     //
@@ -499,6 +534,7 @@ KiSystemService(IN PKTHREAD Thread,
         //
         // Copy them into the kernel stack
         //
+        DPRINT1("Argument: %p\n", *Argument);
         Arguments[i] = *Argument;
         Argument++;
     }
@@ -539,6 +575,7 @@ KiSystemService(IN PKTHREAD Thread,
             //
             // Copy into kernel stack
             //
+            DPRINT1("Argument: %p\n", *Argument);
             Arguments[i] = *Argument;
             Argument++;
         }
@@ -548,7 +585,7 @@ KiSystemService(IN PKTHREAD Thread,
     // Do the system call and save result in EAX
     //
     TrapFrame->R0 = KiSystemCall(SystemCall, Arguments, ArgumentCount);
-    //DPRINT1("Returned: %lx\n", TrapFrame->R0);
+    DPRINT1("Returned: %lx\n", TrapFrame->R0);
 }
 
 VOID
@@ -569,7 +606,7 @@ KiSoftwareInterruptHandler(IN PKTRAP_FRAME TrapFrame)
     PreviousMode = KiGetPreviousMode(TrapFrame);
     
     //
-    // Save old previous mode
+    // FIXME: Save old previous mode
     //
     //TrapFrame->PreviousMode = PreviousMode;
     

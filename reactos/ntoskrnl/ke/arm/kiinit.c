@@ -23,8 +23,13 @@ extern PVOID KiArmVectorTable;
 
 /* FUNCTIONS ******************************************************************/
 
+//
+// FIXME: Header cleanup
+//
 VOID
-KiIdleLoop(VOID);
+KiIdleLoop(
+    VOID
+);
 
 VOID
 DebugService(IN ULONG ServiceType,
@@ -34,7 +39,7 @@ DebugService(IN ULONG ServiceType,
              IN ULONG Level)
 {
     //
-    // ARM Bring-up Hack
+    // FIXME: ARM Bring-up Hack
     //
     void arm_kprintf(const char *fmt, ...);
     arm_kprintf("%s", Buffer);
@@ -230,7 +235,7 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
     else
     {
         //
-        // FIXME
+        // FIXME: No MP Support
         //
         DPRINT1("ARM MPCore not supported\n");
     }
