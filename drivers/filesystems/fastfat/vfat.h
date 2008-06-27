@@ -289,6 +289,10 @@ typedef struct DEVICE_EXTENSION
   /* Pointers to functions for manipulating directory entries. */
   PGET_NEXT_DIR_ENTRY GetNextDirEntry;
 
+  /* Fields used for IRP_MN_NOTIFY_CHANGE_DIRECTORY */
+  PNOTIFY_SYNC NotifySync;
+  LIST_ENTRY NotifyList;
+
   ULONG BaseDateYear;
 
   LIST_ENTRY VolumeListEntry;

@@ -471,6 +471,53 @@ static NTSTATUS DoQuery (PVFAT_IRP_CONTEXT IrpContext)
   return RC;
 }
 
+static NTSTATUS NotifyChange (PVFAT_IRP_CONTEXT IrpContext) //bug 2821
+{
+  PIRP pIrp;
+  PVFATCCB pCcb;
+  PVFATFCB pFcb;
+  PDEVICE_EXTENSION pVcb;
+  BOOLEAN	WatchTree = FALSE;
+  ULONG	CompletionFilter = 0;
+  BOOLEAN	PostRequest = FALSE;
+  NTSTATUS RC = STATUS_SUCCESS;
+
+  PIO_STACK_LOCATION Stack = IrpContext->Stack;
+  
+  pIrp = (PIRP) IrpContext->Irp;
+  pFcb = (PVFATFCB) IrpContext->FileObject->FsContext;
+  pCcb = (PVFATCCB) IrpContext->FileObject->FsContext2;
+  pVcb = (PDEVICE_EXTENSION) IrpContext->DeviceExt;
+    
+  if (!ExAcquireResourceSharedLite(&pFcb->MainResource,
+                                   (BOOLEAN)(IrpContext->Flags & IRPCONTEXT_CANWAIT)))
+  {
+    PostRequest = TRUE;
+  }
+
+  if (!PostRequest)
+  {
+    CompletionFilter = Stack->Parameters.NotifyDirectory.CompletionFilter;
+    WatchTree = (Stack->Flags & SL_WATCH_TREE ? TRUE : FALSE);
+      
+    FsRtlNotifyFullChangeDirectory(pVcb->NotifySync, &(pVcb->NotifyList), pCcb,
+                                   (PSTRING)&(pFcb->LongNameU), WatchTree, FALSE,
+                                   CompletionFilter, pIrp, NULL, NULL);
+  }
+  
+  if (PostRequest)
+  {
+    VfatQueueRequest(IrpContext);
+  }
+  else
+  {
+    VfatFreeIrpContext(IrpContext);
+    ExReleaseResourceLite(&pFcb->MainResource);
+  }
+  
+  return RC;
+}
+
 
 NTSTATUS VfatDirectoryControl (PVFAT_IRP_CONTEXT IrpContext)
 /*
@@ -486,8 +533,12 @@ NTSTATUS VfatDirectoryControl (PVFAT_IRP_CONTEXT IrpContext)
       RC = DoQuery (IrpContext);
       break;
     case IRP_MN_NOTIFY_CHANGE_DIRECTORY:
+#if 0
+      RC = NotifyChange (IrpContext);
+#else
       DPRINT (" vfat, dir : change\n");
       RC = STATUS_NOT_IMPLEMENTED;
+#endif
       break;
     default:
       // error
@@ -496,17 +547,21 @@ NTSTATUS VfatDirectoryControl (PVFAT_IRP_CONTEXT IrpContext)
       RC = STATUS_INVALID_DEVICE_REQUEST;
       break;
     }
-  if (RC == STATUS_PENDING)
+  if (IrpContext)
   {
-     RC = VfatQueueRequest(IrpContext);
-  }
-  else
-  {
-    IrpContext->Irp->IoStatus.Status = RC;
-    IoCompleteRequest (IrpContext->Irp, IO_NO_INCREMENT);
-    VfatFreeIrpContext(IrpContext);
+    if (RC == STATUS_PENDING)
+    {
+       RC = VfatQueueRequest(IrpContext);
+    }
+    else
+    {
+      IrpContext->Irp->IoStatus.Status = RC;
+      IoCompleteRequest (IrpContext->Irp, IO_NO_INCREMENT);
+      VfatFreeIrpContext(IrpContext);
+    }
   }
   return RC;
 }
+
 
 
