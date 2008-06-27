@@ -102,7 +102,7 @@ IntGdiLineTo(DC  *dc,
     if (PATH_IsPathOpen(dc->DcLevel))
     {
         Ret = PATH_LineTo(dc, XEnd, YEnd);
-#if 0
+//#if 0
         if (Ret)
         {
             // FIXME - PATH_LineTo should maybe do this...
@@ -112,7 +112,7 @@ IntGdiLineTo(DC  *dc,
             CoordLPtoDP(dc, &Dc_Attr->ptfxCurrent); // Update fx
             Dc_Attr->ulDirty_ &= ~(DIRTY_PTLCURRENT|DIRTY_PTFXCURRENT|DIRTY_STYLESTATE);
         }
-#endif
+//#endif
         return Ret;
     }
     else

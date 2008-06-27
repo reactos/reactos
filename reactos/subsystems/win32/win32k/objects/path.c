@@ -123,32 +123,32 @@ PATH_FillPath( PDC dc, PPATH pPath )
     xform = dc->DcLevel.xformWorld2Wnd;
 
     /* Set MM_TEXT */
-    IntGdiSetMapMode( dc, MM_TEXT );
-    Dc_Attr->ptlViewportOrg.x = 0;
-    Dc_Attr->ptlViewportOrg.y = 0;
-    Dc_Attr->ptlWindowOrg.x = 0;
-    Dc_Attr->ptlWindowOrg.y = 0;
+//    IntGdiSetMapMode( dc, MM_TEXT );
+//    Dc_Attr->ptlViewportOrg.x = 0;
+//    Dc_Attr->ptlViewportOrg.y = 0;
+//    Dc_Attr->ptlWindowOrg.x = 0;
+//    Dc_Attr->ptlWindowOrg.y = 0;
 
     graphicsMode = Dc_Attr->iGraphicsMode;
-    Dc_Attr->iGraphicsMode = GM_ADVANCED;
-    IntGdiModifyWorldTransform( dc, &xform, MWT_IDENTITY );
-    Dc_Attr->iGraphicsMode =  graphicsMode;
+//    Dc_Attr->iGraphicsMode = GM_ADVANCED;
+//    IntGdiModifyWorldTransform( dc, &xform, MWT_IDENTITY );
+//    Dc_Attr->iGraphicsMode =  graphicsMode;
 
     /* Paint the region */
     IntGdiPaintRgn( dc, hrgn );
     NtGdiDeleteObject( hrgn );
     /* Restore the old mapping mode */
-    IntGdiSetMapMode( dc, mapMode );
-    Dc_Attr->szlViewportExt = ptViewportExt;
-    Dc_Attr->ptlViewportOrg = ptViewportOrg;
-    Dc_Attr->szlWindowExt   = ptWindowExt;
-    Dc_Attr->ptlWindowOrg   = ptWindowOrg;
+//    IntGdiSetMapMode( dc, mapMode );
+//    Dc_Attr->szlViewportExt = ptViewportExt;
+//   Dc_Attr->ptlViewportOrg = ptViewportOrg;
+//    Dc_Attr->szlWindowExt   = ptWindowExt;
+//    Dc_Attr->ptlWindowOrg   = ptWindowOrg;
 
     /* Go to GM_ADVANCED temporarily to restore the world transform */
     graphicsMode = Dc_Attr->iGraphicsMode;
-    Dc_Attr->iGraphicsMode = GM_ADVANCED;
-    IntGdiModifyWorldTransform( dc, &xform, MWT_MAX+1 );
-    Dc_Attr->iGraphicsMode = graphicsMode;
+//    Dc_Attr->iGraphicsMode = GM_ADVANCED;
+//    IntGdiModifyWorldTransform( dc, &xform, MWT_MAX+1 );
+//    Dc_Attr->iGraphicsMode = graphicsMode;
     return TRUE;
   }
   return FALSE;

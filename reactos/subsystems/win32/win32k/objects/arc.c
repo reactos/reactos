@@ -1,4 +1,3 @@
-
 #include <w32k.h>
 
 #define NDEBUG
@@ -259,8 +258,7 @@ IntGdiArcInternal(
 
   if (arctype == GdiTypeArcTo)
   {
-     dc->ptlDCOrig.x = EfCx;
-     dc->ptlDCOrig.y = EfCy;
+     IntGdiMoveToEx(dc, EfCx, EfCy, NULL);
   }
 
   return Ret;
@@ -306,12 +304,7 @@ IntGdiAngleArc( PDC pDC,
 
   if (result)
   {
-     POINT point;
-     point.x=x2;
-     point.y=y2;
-//     CoordLPtoDP ( pDC, &point );
-     pDC->ptlDCOrig.x = point.x;
-     pDC->ptlDCOrig.y = point.y;
+     IntGdiMoveToEx(pDC, x2, y2, NULL);
   }
   return result;
 }

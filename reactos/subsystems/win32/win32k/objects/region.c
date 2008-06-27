@@ -1959,7 +1959,7 @@ REGION_CreateFrameRgn(
 
 BOOL FASTCALL
 REGION_LPTODP(
-    HDC hdc,
+    PDC  dc,
     HRGN hDest,
     HRGN hSrc)
 {
@@ -1967,7 +1967,6 @@ REGION_LPTODP(
     PROSRGNDATA srcObj = NULL;
     PROSRGNDATA destObj = NULL;
 
-    DC * dc = DC_LockDc(hdc);
     RECT tmpRect;
     BOOL ret = FALSE;
     PDC_ATTR Dc_Attr;
@@ -2027,7 +2026,6 @@ REGION_LPTODP(
     REGION_UnlockRgn(destObj);
 
 done:
-    DC_UnlockDc(dc);
     return ret;
 }
 
@@ -2878,8 +2876,7 @@ IntGdiPaintRgn(
     HRGN hRgn
 )
 {
-    //RECT box;
-    HRGN tmpVisRgn; //, prevVisRgn;
+    HRGN tmpVisRgn;
     PROSRGNDATA visrgn;
     CLIPOBJ* ClipRegion;
     BOOL bRet = FALSE;
@@ -2889,36 +2886,26 @@ IntGdiPaintRgn(
     BITMAPOBJ *BitmapObj;
     PDC_ATTR Dc_Attr;
 
-    if (!dc)
-        return FALSE;
+    if (!dc) return FALSE;
     Dc_Attr = dc->pDc_Attr;
     if (!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
 
-    if (!(tmpVisRgn = NtGdiCreateRectRgn(0, 0, 0, 0)))
+    if (!(tmpVisRgn = NtGdiCreateRectRgn(0, 0, 0, 0))) return FALSE;
+
+    // Transform region into device co-ords
+    if (!REGION_LPTODP(dc, tmpVisRgn, hRgn) || 
+         NtGdiOffsetRgn(tmpVisRgn, dc->ptlDCOrig.x, dc->ptlDCOrig.y) == ERROR)
     {
-        DC_UnlockDc(dc);
+        NtGdiDeleteObject(tmpVisRgn);
         return FALSE;
     }
 
-    /* ei enable later
-      // Transform region into device co-ords
-      if (!REGION_LPTODP(hDC, tmpVisRgn, hRgn) || NtGdiOffsetRgn(tmpVisRgn, dc->ptlDCOrig.x, dc->ptlDCOrig.y) == ERROR)
-      {
-        NtGdiDeleteObject(tmpVisRgn);
-        DC_UnlockDc(dc);
-        return FALSE;
-      }
-    */
-    /* enable when clipping is implemented
     NtGdiCombineRgn(tmpVisRgn, tmpVisRgn, dc->w.hGCClipRgn, RGN_AND);
-    */
 
-    //visrgn = REGION_LockRgn(tmpVisRgn);
-    visrgn = REGION_LockRgn(hRgn);
+    visrgn = REGION_LockRgn(tmpVisRgn);
     if (visrgn == NULL)
     {
         NtGdiDeleteObject(tmpVisRgn);
-        DC_UnlockDc(dc);
         return FALSE;
     }
 
