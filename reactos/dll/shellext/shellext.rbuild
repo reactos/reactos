@@ -10,6 +10,9 @@
 	<directory name="devcpux">
 		<xi:include href="devcpux/devcpux.rbuild" />
 	</directory>
+	<directory name="fontext">
+		<xi:include href="fontext/fontext.rbuild" />
+	</directory>
 	<directory name="slayer">
 		<xi:include href="slayer/slayer.rbuild" />
 	</directory>
