@@ -135,6 +135,11 @@ extern "C" {
 #define SNMP_AUTHAPI_INVALID_MSG_TYPE	31
 #define SNMP_AUTHAPI_TRIV_AUTH_FAILED	32
 
+#define DEFINE_SIZEOF(x)     (sizeof(x)/sizeof((x)[0]))
+#define DEFINE_OID(x)        { DEFINE_SIZEOF(x),(x) }
+#define DEFINE_NULLOID()     { 0, NULL }
+#define DEFINE_NULLOCTENTS() { NULL, 0, FALSE }
+
 #ifndef RC_INVOKED
 
 typedef INT SNMPAPI;
