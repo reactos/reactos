@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
- * FILE:             drivers/fs/vfat/dir.c
+ * FILE:             drivers/filesystems/fastfat/dir.c
  * PURPOSE:          VFAT Filesystem : directory control
  * UPDATE HISTORY:
      19-12-1998 : created
@@ -471,6 +471,7 @@ static NTSTATUS DoQuery (PVFAT_IRP_CONTEXT IrpContext)
   return RC;
 }
 
+#if 0
 static NTSTATUS NotifyChange (PVFAT_IRP_CONTEXT IrpContext) //bug 2821
 {
   PIRP pIrp;
@@ -517,6 +518,7 @@ static NTSTATUS NotifyChange (PVFAT_IRP_CONTEXT IrpContext) //bug 2821
   
   return RC;
 }
+#endif
 
 
 NTSTATUS VfatDirectoryControl (PVFAT_IRP_CONTEXT IrpContext)

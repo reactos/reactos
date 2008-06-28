@@ -19,7 +19,7 @@
 /*
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
- * FILE:             drivers/fs/vfat/fsctl.c
+ * FILE:             drivers/filesystems/fastfat/fsctl.c
  * PURPOSE:          VFAT Filesystem
  */
 
@@ -537,12 +537,21 @@ VfatMount (PVFAT_IRP_CONTEXT IrpContext)
    Fcb->RFCB.ValidDataLength = Fcb->RFCB.FileSize;
    Fcb->RFCB.AllocationSize = Fcb->RFCB.FileSize;
 
-   /* FIXME: Guard by SEH. */
-   CcInitializeCacheMap(DeviceExt->FATFileObject,
-                        (PCC_FILE_SIZES)(&Fcb->RFCB.AllocationSize),
-                        FALSE,
-                        &VfatGlobalData->CacheMgrCallbacks,
-                        Fcb);
+   _SEH_TRY
+   {
+     CcInitializeCacheMap(DeviceExt->FATFileObject,
+                          (PCC_FILE_SIZES)(&Fcb->RFCB.AllocationSize),
+                          FALSE,
+                          &VfatGlobalData->CacheMgrCallbacks,
+                          Fcb);
+   }
+   _SEH_HANDLE
+   {
+     Status = _SEH_GetExceptionCode();
+   }
+   _SEH_END;
+   if (!NT_SUCCESS(Status))
+     goto ByeBye;
 
    DeviceExt->LastAvailableCluster = 2;
    ExInitializeResourceLite(&DeviceExt->FatResource);
@@ -592,7 +601,7 @@ ByeBye:
   {
      // cleanup
      if (DeviceExt && DeviceExt->FATFileObject)
-        ObDereferenceObject (DeviceExt->FATFileObject);
+        ObDereferenceObject(DeviceExt->FATFileObject);
      if (Fcb)
         vfatDestroyFCB(Fcb);
      if (Ccb)

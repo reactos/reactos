@@ -18,7 +18,7 @@
  */
 /*
  * PROJECT:          ReactOS kernel
- * FILE:             drivers/fs/vfat/iface.c
+ * FILE:             drivers/filesystems/fastfat/iface.c
  * PURPOSE:          VFAT Filesystem
  * PROGRAMMER:       Jason Filby (jasonfilby@yahoo.com)
  */
@@ -50,28 +50,12 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
    NTSTATUS Status;
 
    Status = IoCreateDevice(DriverObject,
-			   sizeof(VFAT_GLOBAL_DATA),
-			   &DeviceName,
-			   FILE_DEVICE_DISK_FILE_SYSTEM,
-			   0,
-			   FALSE,
-			   &DeviceObject);
-
-   if (Status == STATUS_OBJECT_NAME_EXISTS ||
-       Status == STATUS_OBJECT_NAME_COLLISION)
-     {
-       /* Try an other name, if 'Fat' is already in use. 'Fat' is also used by fastfat.sys on W2K */
-       RtlInitUnicodeString(&DeviceName, L"\\RosFat");
-       Status = IoCreateDevice(DriverObject,
-                               sizeof(VFAT_GLOBAL_DATA),
-                               &DeviceName,
-                               FILE_DEVICE_DISK_FILE_SYSTEM,
-                               0,
-                               FALSE,
-                               &DeviceObject);
-     }
-
-
+                           sizeof(VFAT_GLOBAL_DATA),
+                           &DeviceName,
+                           FILE_DEVICE_DISK_FILE_SYSTEM,
+                           0,
+                           FALSE,
+                           &DeviceObject);
 
    if (!NT_SUCCESS(Status))
      {
