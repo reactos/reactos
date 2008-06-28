@@ -2,6 +2,7 @@
 #include <ntdddisk.h>
 #include <reactos/helper.h>
 #include <debug.h>
+#include <pseh/pseh.h>
 
 #ifdef __GNUC__
 #include <ccros.h>
