@@ -164,15 +164,15 @@ SH_FileGeneralSetFileType(HWND hwndDlg, WCHAR * filext)
             LPVOID pResource = NULL;
             HGLOBAL hGlobal;
             HANDLE hLibrary;
-
             Offset = wcsrchr(name, L',');
             if (Offset)
             {
                 IconIndex = _wtoi(Offset + 2);
                 *Offset = L'\0';
+                name[MAX_PATH-1] = L'\0';
                 if (ExpandEnvironmentStringsW(name, szBuffer, MAX_PATH))
                 {
-                    szBuffer[MAX_PATH] = L'\0';
+                    szBuffer[MAX_PATH-1] = L'\0';
                     hLibrary = LoadLibraryExW(szBuffer, NULL, LOAD_LIBRARY_AS_DATAFILE);
                     if (hLibrary)
                     {
