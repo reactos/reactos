@@ -657,7 +657,7 @@ BEGIN
 	IDS_FOLDER_OPTIONS          "Свойства папки"
 	IDS_RECYCLEBIN_LOCATION     "Расположение Корзины"
 	IDS_RECYCLEBIN_DISKSPACE    "Доступное пространство"
-	IDS_EMPTY_BITBUCKET         "Empty Recycle Bin"
+	IDS_EMPTY_BITBUCKET         "Очистить корзину"
 	IDS_PICK_ICON_TITLE         "Выбрать значок"
 	IDS_PICK_ICON_FILTER        "Файлы значков(*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0"
 	IDS_OPEN_WITH_FILTER        "Исполняемые файлы\0*.exe\0"
