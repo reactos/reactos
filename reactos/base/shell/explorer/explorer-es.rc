@@ -380,9 +380,9 @@ BEGIN
     IDS_DESKTOPBAR_SETTINGS "Configuracion del Escritorio"
     IDS_DESKTOP             "Escritorio"
     IDS_TASKBAR             "Barra de Tareas"
-    IDS_NAMECOLUMN          "Name"
-    IDS_PATHCOLUMN          "Path"
-    IDS_MENUCOLUMN          "Menu path"
+    IDS_NAMECOLUMN          "Nombre"
+    IDS_PATHCOLUMN          "Ruta"
+    IDS_MENUCOLUMN          "Menu ruta"
 END
 
 #endif    // Spanish (Castilian) resources

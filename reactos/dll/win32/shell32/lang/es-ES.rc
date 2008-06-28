@@ -151,11 +151,11 @@ END
 
 SHELL_RUN_DLG DIALOGEX LOADONCALL MOVEABLE DISCARDABLE 0, 0, 227, 95
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION ""
+CAPTION "Ejecutar"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	ICON "", 12297, 7, 11, 18, 20, WS_VISIBLE
-	LTEXT "Introduzca el nombre de un programa, carpeta, documento o recurso de Internet, y ReactOS lo abrirá para usted.", 12289, 36, 11, 182, 18
+	LTEXT "Introduzca el nombre de un programa, carpeta, documento o recurso de Internet, y ReactOS lo abrirá para usted.", 12289, 36, 11, 182, 24
 	LTEXT "&Abrir:", 12305, 7, 39, 24, 10
 	CONTROL "", 12298, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE | CBS_DISABLENOSCROLL | CBS_AUTOHSCROLL | CBS_DROPDOWN, 36, 37, 183, 100
 	DEFPUSHBUTTON "Aceptar", IDOK, 62, 63, 50, 14, WS_TABSTOP
@@ -661,7 +661,7 @@ BEGIN
 	IDS_FOLDER_OPTIONS          "Opciones de carpetas"
 	IDS_RECYCLEBIN_LOCATION     "Ubicación de la Papelera de reciclaje"
 	IDS_RECYCLEBIN_DISKSPACE    "Espacio disponible"
-	IDS_EMPTY_BITBUCKET         "Empty Recycle Bin"
+	IDS_EMPTY_BITBUCKET         "Vaciar Papelera de reciclaje"
 	IDS_PICK_ICON_TITLE         "Seleccione un icono"
 	IDS_PICK_ICON_FILTER        "Archivos de iconos(*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0"
 	IDS_OPEN_WITH_FILTER        "Executable Files\0*.exe\0"

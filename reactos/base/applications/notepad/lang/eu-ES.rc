@@ -25,7 +25,7 @@ BEGIN
 		MENUITEM "&Gorde\tCtrl+S",            CMD_SAVE
 		MENUITEM "Gorde &honela...",            CMD_SAVE_AS
 		MENUITEM SEPARATOR
-		MENUITEM "&Imprimatu",                   CMD_PRINT
+		MENUITEM "&Inprimatu",                   CMD_PRINT
 		MENUITEM "Prestatu &orrialdea...",       CMD_PAGE_SETUP
 		MENUITEM "Inprimatzeko &aurrebista...", CMD_PRINTER_SETUP
 		MENUITEM SEPARATOR
