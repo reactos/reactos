@@ -1,7 +1,7 @@
 /* TRANSLATOR :  M·rio KaËm·r /Mario Kacmar/ aka Kario (kario@szm.sk)
  * NOTE       :  partially translated
  * TRANSLATED :  26-12-2007
- * LAST CHANGE:  07-05-2008
+ * LAST CHANGE:  28-06-2008
  */   
 
 /*
@@ -665,7 +665,7 @@ BEGIN
 	IDS_FOLDER_OPTIONS          "Moûnosti prieËinka"
 	IDS_RECYCLEBIN_LOCATION     "Umiestnenia Koöa" //Recycle Bin Location
 	IDS_RECYCLEBIN_DISKSPACE    "DostupnÈ miesto"
-	IDS_EMPTY_BITBUCKET         "Empty Recycle Bin"
+	IDS_EMPTY_BITBUCKET         "Vypr·zniù KÙö"
 	IDS_PICK_ICON_TITLE         "Choose Icon"
 	IDS_PICK_ICON_FILTER        "S˙bory ikon(*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0"
 	IDS_OPEN_WITH_FILTER        "SpustiteænÈ s˙bory\0*.exe\0"
