@@ -232,7 +232,7 @@ GetComputerNameExA (
     UNICODE_STRING UnicodeString;
     ANSI_STRING AnsiString;
     BOOL Result;
-    PWCHAR TempBuffer = RtlAllocateHeap( GetProcessHeap(), 0, *nSize * sizeof(WCHAR) );
+    PWCHAR TempBuffer = RtlAllocateHeap( RtlGetProcessHeap(), 0, *nSize * sizeof(WCHAR) );
 
     if( !TempBuffer ) {
 	return ERROR_OUTOFMEMORY;
@@ -254,7 +254,7 @@ GetComputerNameExA (
 				      FALSE);
     }
 
-    HeapFree( GetProcessHeap(), 0, TempBuffer );
+    RtlFreeHeap( RtlGetProcessHeap(), 0, TempBuffer );
 
     return Result;
 }

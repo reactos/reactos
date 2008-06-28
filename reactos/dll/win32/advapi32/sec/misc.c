@@ -723,7 +723,6 @@ GetUserNameA( LPSTR lpszName, LPDWORD lpSize )
 
   /* apparently Win doesn't check whether lpSize is valid at all! */
 
-  NameW.Length = 0;
   NameW.MaximumLength = (*lpSize) * sizeof(WCHAR);
   NameW.Buffer = LocalAlloc(LMEM_FIXED, NameW.MaximumLength);
   if(NameW.Buffer == NULL)
@@ -740,6 +739,7 @@ GetUserNameA( LPSTR lpszName, LPDWORD lpSize )
                      lpSize);
   if(Ret)
   {
+    NameW.Length = (*lpSize) * sizeof(WCHAR);
     RtlUnicodeStringToAnsiString(&NameA, &NameW, FALSE);
     NameA.Buffer[NameA.Length] = '\0';
 
