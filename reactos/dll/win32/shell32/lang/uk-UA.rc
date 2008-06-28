@@ -546,16 +546,16 @@ END
 
 IDD_PICK_ICON_DIALOG DIALOGEX 0, 0, 237, 204
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "Change Icon"
+CAPTION "Зміна значка"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    LTEXT "Filename:", -1, 7, 14, 208, 10
-    PUSHBUTTON      "Browse...",IDC_BUTTON_PATH, 148, 24,67,14
+    LTEXT "Ім'я файла:", -1, 7, 14, 208, 10
+    PUSHBUTTON      "О&гляд...",IDC_BUTTON_PATH, 148, 24,67,14
     EDITTEXT        IDC_EDIT_PATH, 6, 24, 135, 15, ES_AUTOHSCROLL
-    LTEXT "Icons:", -1, 7, 47, 208, 10
+    LTEXT "Значки:", -1, 7, 47, 208, 10
     LISTBOX         IDC_PICKICON_LIST,7,57,208,119,LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | LBS_MULTICOLUMN | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP,WS_EX_STATICEDGE
     DEFPUSHBUTTON   "OK",IDOK, 107, 181,50, 14
-    PUSHBUTTON      "Cancel",IDCANCEL, 167, 181, 50, 14
+    PUSHBUTTON      "Скасувати",IDCANCEL, 167, 181, 50, 14
 END
 
 STRINGTABLE DISCARDABLE
@@ -658,26 +658,26 @@ BEGIN
 	FCIDM_SHVIEW_NEWFOLDER 	    "&Папку"
 	FCIDM_SHVIEW_NEWLINK 	    "&Ярлик"
 	IDS_FOLDER_OPTIONS          "Властивості папки"
-	IDS_RECYCLEBIN_LOCATION     "Recycle Bin Location"
-	IDS_RECYCLEBIN_DISKSPACE    "Space Available"
-	IDS_EMPTY_BITBUCKET         "Empty Recycle Bin"
-	IDS_PICK_ICON_TITLE         "Choose Icon"
-	IDS_PICK_ICON_FILTER        "Icon Files(*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0"
-	IDS_OPEN_WITH_FILTER        "Executable Files\0*.exe\0"
-	IDS_DIRECTORY               "Folder"
-	IDS_VIRTUAL_DRIVER          "Virtual Device Driver"
-	IDS_BAT_FILE                "ReactOS Batch File"
-	IDS_CMD_FILE                "ReactOS Command Script"
-	IDS_COM_FILE                "Dos Application"
-	IDS_CPL_FILE                "Control Panel Item"
-	IDS_CUR_FILE                "Cursor"
-	IDS_DLL_FILE                "Application Extension"
-	IDS_DRV_FILE                "Device Driver"
-	IDS_EXE_FILE                "Application"
-	IDS_FON_FILE                "Font file"
-	IDS_TTF_FILE                "TrueType Font file"
-	IDS_HLP_FILE                "Help File"
-	IDS_INI_FILE                "Configuration Settings"
-	IDS_LNK_FILE                "Shortcut"
-	IDS_SYS_FILE                "System file"
+	IDS_RECYCLEBIN_LOCATION     "Розташування Корзини"
+	IDS_RECYCLEBIN_DISKSPACE    "Доступний простір"
+	IDS_EMPTY_BITBUCKET         "Порожня корзина"
+	IDS_PICK_ICON_TITLE         "Вибрати значок"
+	IDS_PICK_ICON_FILTER        "Файли значків(*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0"
+	IDS_OPEN_WITH_FILTER        "Виконувані файли\0*.exe\0"
+	IDS_DIRECTORY               "Папка"
+	IDS_VIRTUAL_DRIVER          "Драйвер віртуального пристрою"
+	IDS_BAT_FILE                "Пакетний файл ReactOS"
+	IDS_CMD_FILE                "Командний скрипт ReactOS"
+	IDS_COM_FILE                "Додаток Dos"
+	IDS_CPL_FILE                "Елемент панелі керування"
+	IDS_CUR_FILE                "Курсор"
+	IDS_DLL_FILE                "Розширення додатку"
+	IDS_DRV_FILE                "Драйвер пристрою"
+	IDS_EXE_FILE                "Додаток"
+	IDS_FON_FILE                "Файл шрифту"
+	IDS_TTF_FILE                "Файл шрифту TrueType"
+	IDS_HLP_FILE                "Файл довідки"
+	IDS_INI_FILE                "Файл налаштувань"
+	IDS_LNK_FILE                "Ярлик"
+	IDS_SYS_FILE                "Системний файл"
 END
