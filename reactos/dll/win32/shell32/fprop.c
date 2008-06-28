@@ -667,8 +667,9 @@ SH_ShowPropertiesDialog(PCWSTR lpf)
     HPROPSHEETPAGE hppages[MAX_PROPERTY_SHEET_PAGE];
     HPROPSHEETPAGE hpage;
     WCHAR wFileName[MAX_PATH];
-	UINT num_pages = 0;
-	DWORD dwHandle = 0;
+    UINT num_pages = 0;
+    DWORD dwHandle = 0;
+    WCHAR * pFileName;
 
     TRACE("SH_ShowPropertiesDialog entered filename %s\n", debugstr_w(lpf));
 
@@ -690,10 +691,10 @@ SH_ShowPropertiesDialog(PCWSTR lpf)
 
         *dst = '\0';
     }
-	else
-	{
-	    strcpyW(wFileName, lpf);
-	}
+    else
+    {
+        strcpyW(wFileName, lpf);
+    }
 
     if (PathIsDirectoryW(wFileName) || strlenW(wFileName) == 3)
     {
@@ -708,19 +709,27 @@ SH_ShowPropertiesDialog(PCWSTR lpf)
     hppages[num_pages] = hpage;
     num_pages++;
     if ( GetFileVersionInfoSizeW(lpf, &dwHandle) )
-	{
-         if ( (hpage = SH_CreatePropertySheetPage("SHELL_FILE_VERSION_DLG",SH_FileVersionDlgProc, (LPARAM)lpf, NULL))!= NULL)
-         {
-              hppages[num_pages] = hpage;
-		      num_pages++;
-         }
-	}
+    {
+        if ( (hpage = SH_CreatePropertySheetPage("SHELL_FILE_VERSION_DLG",SH_FileVersionDlgProc, (LPARAM)wFileName, NULL))!= NULL)
+        {
+            hppages[num_pages] = hpage;
+            num_pages++;
+        }
+    }
+
+    pFileName = wcsrchr(wFileName, '\\');
+    if (!pFileName)
+        pFileName = wFileName;
+    else
+        pFileName++;
+
+
     memset(&pinfo, 0x0, sizeof(PROPSHEETHEADERW));
     pinfo.dwSize = sizeof(PROPSHEETHEADERW);
     pinfo.dwFlags = PSH_NOCONTEXTHELP | PSH_PROPTITLE;
     pinfo.nPages = num_pages;
     pinfo.u3.phpage = hppages;
-    pinfo.pszCaption = wFileName;
+    pinfo.pszCaption = pFileName;
     return (PropertySheetW(&pinfo) != -1);
 }
 /*EOF */
