@@ -75,3 +75,12 @@ HDCClassName = "Hard disks controllers"
 GenericMfg = "(Generic IDE controllers)"
 PCI\CC_0101.DeviceDesc = "Generic PCI IDE controller (double channel)"
 *PNP0600.DeviceDesc = "Generic IDE channel"
+
+[Strings.0407]
+HDCClassName = "Festplatten-Controller"
+
+GenericMfg = "(Generische IDE-Controller)"
+*PNP0600.DeviceDesc = "Generischer IDE Kanal"
+PCI\CC_0101.DeviceDesc = "Generische PCI IDE-Controller (2-Kanal)"
+
+

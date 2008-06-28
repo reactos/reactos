@@ -2,7 +2,7 @@
  * INF file parsing
  *
  * Copyright 2002 Alexandre Julliard for CodeWeavers
- *           2005-2006 Hervé Poussineau (hpoussin@reactos.org)
+ *           2005-2006 Hervï¿½ Poussineau (hpoussin@reactos.org)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -140,6 +140,7 @@ static const WCHAR Chicago[]    = {'$','C','h','i','c','a','g','o','$',0};
 static const WCHAR WindowsNT[]  = {'$','W','i','n','d','o','w','s',' ','N','T','$',0};
 static const WCHAR Windows95[]  = {'$','W','i','n','d','o','w','s',' ','9','5','$',0};
 static const WCHAR LayoutFile[] = {'L','a','y','o','u','t','F','i','l','e',0};
+static const WCHAR Strings[] = {'S','t','r','i','n','g','s',0};
 
 /* extend an array, allocating more memory if necessary */
 static void *grow_array( void *array, unsigned int *count, size_t elem )
@@ -311,10 +312,12 @@ static const WCHAR *get_string_subst( const struct inf_file *file, const WCHAR *
     struct section *strings_section;
     struct line *line;
     struct field *field;
-    unsigned int i;
+    unsigned int i,j;
     int dirid;
     WCHAR *dirid_str, *end;
     const WCHAR *ret = NULL;
+    WCHAR StringLangId[256];
+    TCHAR Lang[5];
 
     if (!*len)  /* empty string (%%) is replaced by single percent */
     {
@@ -323,16 +326,41 @@ static const WCHAR *get_string_subst( const struct inf_file *file, const WCHAR *
     }
     if (file->strings_section == -1) goto not_found;
     strings_section = file->sections[file->strings_section];
-    for (i = 0, line = strings_section->lines; i < strings_section->nb_lines; i++, line++)
+    for (j = 0, line = strings_section->lines; j < strings_section->nb_lines; j++, line++)
     {
-        if (line->key_field == -1) continue;
-        if (strncmpiW( str, file->fields[line->key_field].text, *len )) continue;
-        if (!file->fields[line->key_field].text[*len]) break;
-    }
-    if (i == strings_section->nb_lines || !line->nb_fields) goto not_found;
-    field = &file->fields[line->first_field];
-    *len = strlenW( field->text );
-    return field->text;
+	if (line->key_field == -1) continue;
+	if (strncmpiW( str, file->fields[line->key_field].text, *len )) continue;
+                if (!file->fields[line->key_field].text[*len]) break;
+     }
+     if (j == strings_section->nb_lines || !line->nb_fields) goto not_found;
+     field = &file->fields[line->first_field];
+     *len = strlenW( field->text );
+     ret = field->text;
+     GetLocaleInfo(LOCALE_SYSTEM_DEFAULT, LOCALE_ILANGUAGE, Lang, sizeof(Lang)/sizeof(TCHAR));
+     strcpyW(StringLangId, Strings);
+     strcatW(StringLangId, L".");
+     strcatW(StringLangId, Lang);
+     for (i = 0; i < file->nb_sections; i++)
+     {
+          if (!strcmpiW(file->sections[i]->name,StringLangId))
+	  {
+             strings_section = file->sections[i];
+             for (j = 0, line = strings_section->lines; j < strings_section->nb_lines; j++, line++)
+             {
+                 if (line->key_field == -1) continue;
+                 if (strncmpiW( str, file->fields[line->key_field].text, *len )) continue;
+                 if (!file->fields[line->key_field].text[*len])
+		 {
+                     field = &file->fields[line->first_field];
+                     *len = strlenW( field->text );
+		     ret = field->text;
+                     break;
+                 }
+             }
+	   }
+      }
+      return ret;
+
 
  not_found:  /* check for integer id */
     if ((dirid_str = HeapAlloc( GetProcessHeap(), 0, (*len+1) * sizeof(WCHAR) )))

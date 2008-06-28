@@ -62,3 +62,11 @@ FDCClassName = "Floppy disks controllers"
 
 GenericMfg = "(Generic floppy disk controllers)"
 *PNP0700.DeviceDesc = "Generic floppy disk controller"
+
+[Strings.0407]
+FDCClassName = "Disketten-Controller"
+
+GenericMfg = "(Generische Disketten-Controller)"
+*PNP0700.DeviceDesc = "Generischer Disketten-Controller"
+
+
