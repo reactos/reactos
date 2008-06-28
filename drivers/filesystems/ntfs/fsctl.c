@@ -392,7 +392,7 @@ NtfsMountVolume(PDEVICE_OBJECT DeviceObject,
                               TAG_CCB);
   if (Ccb == NULL)
   {
-    Status =  STATUS_INSUFFICIENT_RESOURCES;
+    Status = STATUS_INSUFFICIENT_RESOURCES;
     goto ByeBye;
   }
   RtlZeroMemory(Ccb, sizeof(NTFS_CCB));
@@ -427,6 +427,10 @@ NtfsMountVolume(PDEVICE_OBJECT DeviceObject,
   ExInitializeResourceLite(&Vcb->DirResource);
 
   KeInitializeSpinLock(&Vcb->FcbListLock);
+
+  ExAcquireResourceExclusiveLite(&NtfsGlobalData->VolumeListLock, TRUE);
+  InsertHeadList(&NtfsGlobalData->VolumeListHead, &Vcb->VolumeListEntry);
+  ExReleaseResourceLite(&NtfsGlobalData->VolumeListLock);
 
   /* Get serial number */
   NewDeviceObject->Vpb->SerialNumber = Vcb->NtfsInfo.SerialNumber;

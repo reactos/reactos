@@ -5,6 +5,7 @@
 	<include base="ntfs">.</include>
 	<library>ntoskrnl</library>
 	<library>hal</library>
+	<library>pseh</library>
 	<file>attrib.c</file>
 	<file>blockdev.c</file>
 	<file>close.c</file>

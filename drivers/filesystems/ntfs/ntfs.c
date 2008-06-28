@@ -64,8 +64,6 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
   RtlZeroMemory(NtfsGlobalData, sizeof(NTFS_GLOBAL_DATA));
   NtfsGlobalData->Identifier.Type = NTFS_TYPE_GLOBAL_DATA;
   NtfsGlobalData->Identifier.Size = sizeof(NTFS_GLOBAL_DATA);
-  
-  ExInitializeResourceLite(&NtfsGlobalData->Resource);
 
   /* Keep trace of Driver Object */
   NtfsGlobalData->DriverObject = DriverObject;
@@ -97,6 +95,9 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
   
   NtfsGlobalData->DeviceObject->Flags |= DO_DIRECT_IO;
 
+  ExInitializeResourceLite(&NtfsGlobalData->VolumeListLock);
+  InitializeListHead(&NtfsGlobalData->VolumeListHead);
+
   /* Register file system */
   IoRegisterFileSystem(NtfsGlobalData->DeviceObject);
   ObReferenceObject(NtfsGlobalData->DeviceObject);
@@ -106,7 +107,6 @@ ErrorEnd:
   {
     if (NtfsGlobalData)
     {
-      ExDeleteResourceLite(&NtfsGlobalData->Resource);
       ExFreePoolWithTag(NtfsGlobalData, TAG('N', 'D', 'R', 'G'));
     }
   }

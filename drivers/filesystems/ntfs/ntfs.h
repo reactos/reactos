@@ -5,6 +5,7 @@
 #include <ntddk.h>
 #include <ntdddisk.h>
 #include <ccros.h>
+#include <pseh/pseh.h>
 
 #define CACHEPAGESIZE(pDeviceExt) \
 	((pDeviceExt)->NtfsInfo.UCHARsPerCluster > PAGE_SIZE ? \
@@ -115,7 +116,9 @@ typedef struct
 
   NTFS_INFO NtfsInfo;
 
+  PNTFS_BCB MftBuffer;
 
+  LIST_ENTRY VolumeListEntry;
 } DEVICE_EXTENSION, *PDEVICE_EXTENSION, NTFS_VCB, *PNTFS_VCB;
 
 
@@ -173,7 +176,8 @@ typedef struct
 typedef struct
 {
   NTFSIDENTIFIER Identifier;
-  ERESOURCE      Resource;
+  ERESOURCE VolumeListLock;
+  LIST_ENTRY VolumeListHead;
   PDRIVER_OBJECT DriverObject;
   PDEVICE_OBJECT DeviceObject;
   CACHE_MANAGER_CALLBACKS CacheMgrCallbacks;
