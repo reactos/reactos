@@ -142,11 +142,11 @@ BEGIN
     LTEXT       "Sistema operativo predefinito:", IDC_STATIC, 14, 26, 100, 8
     COMBOBOX    IDC_STRECOSCOMBO, 14, 37, 224, 46, CBS_DROPDOWNLIST
     AUTOCHECKBOX "&Tempo per la visualizzazione dell'elenco dei sistemi operativi:", IDC_STRECLIST, 14, 56, 150, 8
-    EDITTEXT    IDC_STRRECLISTEDIT, 179, 54, 30, 12
+    EDITTEXT    IDC_STRRECLISTEDIT, 179, 54, 30, 12, ES_NUMBER
     CONTROL     "", IDC_STRRECLISTUPDWN, "msctls_updown32", UDS_WRAP | UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | UDS_NOTHOUSANDS | WS_CHILD | WS_VISIBLE, 0, 0, 8, 13
     LTEXT       "secondi", IDC_STATIC, 215, 56, 25, 8
     AUTOCHECKBOX "Tempo per la visualizzazione delle opzioni di recupero disponibili quando è necessario:", IDC_STRRECREC, 14, 70, 163, 8
-    EDITTEXT    IDC_STRRECRECEDIT, 179, 68, 30, 12
+    EDITTEXT    IDC_STRRECRECEDIT, 179, 68, 30, 12, ES_NUMBER
     CONTROL     "", IDC_STRRECRECUPDWN, "msctls_updown32", UDS_WRAP | UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | UDS_NOTHOUSANDS | WS_CHILD | WS_VISIBLE, 0, 0, 8, 13
     LTEXT       "secondi", IDC_STATIC, 215, 70, 25, 8
     LTEXT       "Per modificare le opzioni di avvio manualmenta , clicca Modifica.", IDC_STATIC, 14, 89, 187, 8

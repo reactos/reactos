@@ -147,11 +147,11 @@ BEGIN
     LTEXT       "&Sistema operativo predeterminado:", IDC_STATIC, 14, 26, 100, 8
     COMBOBOX    IDC_STRECOSCOMBO, 14, 37, 224, 46, CBS_DROPDOWNLIST
     AUTOCHECKBOX "&Mostrar la lista de sistemas operativos durante:", IDC_STRECLIST, 14, 56, 165, 8
-    EDITTEXT    IDC_STRRECLISTEDIT, 180, 54, 29, 12
+    EDITTEXT    IDC_STRRECLISTEDIT, 180, 54, 29, 12, ES_NUMBER
     CONTROL     "", IDC_STRRECLISTUPDWN, "msctls_updown32", UDS_WRAP | UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | UDS_NOTHOUSANDS | WS_CHILD | WS_VISIBLE, 0, 0, 8, 13
     LTEXT       "segundos", IDC_STATIC, 210, 56, 30, 8
     AUTOCHECKBOX "&Tiempo para mostrar opciones de recuperación:", IDC_STRRECREC, 14, 70, 165, 8
-    EDITTEXT    IDC_STRRECRECEDIT, 180, 68, 29, 12
+    EDITTEXT    IDC_STRRECRECEDIT, 180, 68, 29, 12, ES_NUMBER
     CONTROL     "", IDC_STRRECRECUPDWN, "msctls_updown32", UDS_WRAP | UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | UDS_NOTHOUSANDS | WS_CHILD | WS_VISIBLE, 0, 0, 8, 13
     LTEXT       "segundos", IDC_STATIC, 210, 70, 30, 8
     LTEXT       "Para editar manualmente el archivo de opciones de inicio, haga clic en Editar.", IDC_STATIC, 14, 84, 187, 17

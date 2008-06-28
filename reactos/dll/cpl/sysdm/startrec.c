@@ -26,14 +26,34 @@ SetTimeout(HWND hwndDlg, INT Timeout)
     if (Timeout == 0)
     {
         EnableWindow(GetDlgItem(hwndDlg, IDC_STRRECLISTUPDWN), FALSE);
+        EnableWindow(GetDlgItem(hwndDlg, IDC_STRRECLISTEDIT), FALSE);
     }
     else
     {
         EnableWindow(GetDlgItem(hwndDlg, IDC_STRRECLISTUPDWN), TRUE);
+        EnableWindow(GetDlgItem(hwndDlg, IDC_STRRECLISTEDIT), TRUE);
     }
-
+    SendDlgItemMessage(hwndDlg, IDC_STRRECLISTUPDWN, UDM_SETRANGE, (WPARAM) 0, (LPARAM) MAKELONG((short) 999, 0));
     SendDlgItemMessage(hwndDlg, IDC_STRRECLISTUPDWN, UDM_SETPOS, (WPARAM) 0, (LPARAM) MAKELONG((short) Timeout, 0));
 }
+
+static VOID
+SetRecoveryTimeout(HWND hwndDlg, INT Timeout)
+{
+    if (Timeout == 0)
+    {
+        EnableWindow(GetDlgItem(hwndDlg, IDC_STRRECRECUPDWN), FALSE);
+        EnableWindow(GetDlgItem(hwndDlg, IDC_STRRECRECEDIT), FALSE);
+    }
+    else
+    {
+        EnableWindow(GetDlgItem(hwndDlg, IDC_STRRECRECUPDWN), TRUE);
+        EnableWindow(GetDlgItem(hwndDlg, IDC_STRRECRECEDIT), TRUE);
+    }
+    SendDlgItemMessage(hwndDlg, IDC_STRRECRECUPDWN, UDM_SETRANGE, (WPARAM) 0, (LPARAM) MAKELONG((short) 999, 0));
+    SendDlgItemMessage(hwndDlg, IDC_STRRECRECUPDWN, UDM_SETPOS, (WPARAM) 0, (LPARAM) MAKELONG((short) Timeout, 0));
+}
+
 
 static DWORD
 GetSystemDrive(TCHAR **szSystemDrive)
@@ -685,6 +705,7 @@ StartRecDlgProc(HWND hwndDlg,
             SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)pStartInfo);
 
             LoadRecoveryOptions(hwndDlg, pStartInfo);
+            SetRecoveryTimeout(hwndDlg, 0);
             return LoadOSList(hwndDlg, pStartInfo);
 
         case WM_DESTROY:
@@ -767,6 +788,13 @@ StartRecDlgProc(HWND hwndDlg,
                         SetTimeout(hwndDlg, 30);
                     else
                         SetTimeout(hwndDlg, 0);
+                    break;
+
+                case IDC_STRRECREC:
+                    if (SendDlgItemMessage(hwndDlg, IDC_STRRECREC, BM_GETCHECK, (WPARAM)0, (LPARAM)0) == BST_CHECKED)
+                        SetRecoveryTimeout(hwndDlg, 30);
+                    else
+                        SetRecoveryTimeout(hwndDlg, 0);
                     break;
 
                 case IDC_STRRECDEBUGCOMBO:
