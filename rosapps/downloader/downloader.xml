@@ -8,11 +8,11 @@
 			<location>http://svn.reactos.org/packages/Firefox%20Setup%201.5.0.12.exe</location>
 		</application>
 		<application name="Firefox 2.0">
-			<regname>Mozilla Firefox (2.0.0.13)</regname>
+			<regname>Mozilla Firefox (2.0.0.14)</regname>
 			<licence>MPL/GPL/LGPL</licence>
-			<version>2.0.0.13</version>
+			<version>2.0.0.14</version>
 			<description>The most popular and one of the best free Web Browsers out there.</description>
-			<location>http://releases.mozilla.org/pub/mozilla.org/firefox/releases/latest-2.0/win32/en-US/Firefox%20Setup%202.0.0.13.exe</location>
+			<location>http://releases.mozilla.org/pub/mozilla.org/firefox/releases/latest-2.0/win32/en-US/Firefox%20Setup%202.0.0.14.exe</location>
 		</application>
 		<application name="Opera">
 			<regname>Opera</regname>
@@ -29,11 +29,11 @@
 			<location>http://releases.mozilla.org/pub/mozilla.org/thunderbird/releases/latest-1.5/win32/en-US/Thunderbird%20Setup%201.5.0.14.exe</location>
 		</application>
 		<application name="Thunderbird 2.0">
-			<regname>Mozilla Thunderbird (2.0.0.12)</regname>
+			<regname>Mozilla Thunderbird (2.0.0.14)</regname>
 			<licence>MPL/GPL/LGPL</licence>
-			<version>2.0.0.12</version>
+			<version>2.0.0.14</version>
 			<description>The most popular and one of the best free Mail Clients out there.</description>
-			<location>http://releases.mozilla.org/pub/mozilla.org/thunderbird/releases/latest-2.0/win32/en-US/Thunderbird%20Setup%202.0.0.12.exe</location>
+			<location>http://releases.mozilla.org/pub/mozilla.org/thunderbird/releases/2.0.0.14/win32/en-US/Thunderbird%20Setup%202.0.0.14.exe</location>
 		</application>
 		<application name="SeaMonkey">
 			<regname>SeaMonkey (1.1.9)</regname>
@@ -212,7 +212,7 @@
 			<regname>Audiograbber 1.83 SE</regname>
 			<version>1.83 SE</version>
 			<description>A very good CD Ripper/Audio File Converter.</description>
-			<location>http://www.audiograbber.de/files/342677432/agsetup183se.exe</location>
+			<location>http://www.audiograbber.de/files/4898276276/agsetup183se.exe</location>
 		</application>
 	</category>
 	<category name="Others" icon="8">
