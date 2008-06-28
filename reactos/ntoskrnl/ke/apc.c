@@ -212,9 +212,24 @@ Unwait:
                 }
                 else if (Thread->State == GateWait)
                 {
-                    /* We were in a gate wait. FIXME: Handle this */
-                    DPRINT1("Not yet supported -- Report this to Alex\n");
-                    while (TRUE);
+                    /* We were in a gate wait. Handle this. */
+                    DPRINT1("A thread was in a gate wait\n");
+
+                    /* Lock the gate */
+                    KiAcquireDispatcherObject(&Thread->GateObject->Header);
+
+                    /* Remove it from the waiters list */
+                    RemoveEntryList(&Thread->WaitBlock[0].WaitListEntry);
+
+                    /* Unlock the gate */
+                    KiReleaseDispatcherObject(&Thread->GateObject->Header);
+
+                    /* Increase the queue counter if needed */
+                    if (Thread->Queue) Thread->Queue->CurrentCount++;
+
+                    /* Put into deferred ready list with this status */
+                    Status = STATUS_KERNEL_APC;
+                    KiInsertDeferredReadyList(Thread);
                 }
             }
             else if ((Thread->State == Waiting) &&
@@ -867,7 +882,7 @@ KeRemoveQueueApc(IN PKAPC Apc)
 
         /* Acquire the dispatcher lock and remove it from the list */
         KiAcquireDispatcherLockAtDpcLevel();
-        if (RemoveEntryList(&ApcState->ApcListHead[Apc->ApcMode]))
+        if (RemoveEntryList(&Apc->ApcListEntry))
         {
             /* Set the correct state based on the APC Mode */
             if (Apc->ApcMode == KernelMode)
