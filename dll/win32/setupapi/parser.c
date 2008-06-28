@@ -140,7 +140,6 @@ static const WCHAR Chicago[]    = {'$','C','h','i','c','a','g','o','$',0};
 static const WCHAR WindowsNT[]  = {'$','W','i','n','d','o','w','s',' ','N','T','$',0};
 static const WCHAR Windows95[]  = {'$','W','i','n','d','o','w','s',' ','9','5','$',0};
 static const WCHAR LayoutFile[] = {'L','a','y','o','u','t','F','i','l','e',0};
-static const WCHAR Strings[] = {'S','t','r','i','n','g','s',0};
 
 /* extend an array, allocating more memory if necessary */
 static void *grow_array( void *array, unsigned int *count, size_t elem )
@@ -316,7 +315,7 @@ static const WCHAR *get_string_subst( const struct inf_file *file, const WCHAR *
     int dirid;
     WCHAR *dirid_str, *end;
     const WCHAR *ret = NULL;
-    WCHAR StringLangId[256];
+    WCHAR StringLangId[13] = {'S','t','r','i','n','g','s','.',0};
     TCHAR Lang[5];
 
     if (!*len)  /* empty string (%%) is replaced by single percent */
@@ -335,9 +334,7 @@ static const WCHAR *get_string_subst( const struct inf_file *file, const WCHAR *
      if (j == strings_section->nb_lines || !line->nb_fields) goto not_found;
      field = &file->fields[line->first_field];
      GetLocaleInfo(LOCALE_SYSTEM_DEFAULT, LOCALE_ILANGUAGE, Lang, sizeof(Lang)/sizeof(TCHAR)); // get the current system locale for translated strings
-     strcpyW(StringLangId, Strings); // build a new section name and use "Strings" at first
-     strcatW(StringLangId, L"."); // append a '.'
-     strcatW(StringLangId, Lang); // finally append the Language identifier from GetLocaleInfo
+     strcatW(StringLangId, Lang); // append the Language identifier from GetLocaleInfo
      // now you have e.g. Strings.0407 for german translations
      for (i = 0; i < file->nb_sections; i++) // search in all sections
      {
