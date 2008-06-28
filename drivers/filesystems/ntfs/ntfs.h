@@ -97,6 +97,8 @@ typedef struct
 } NTFSIDENTIFIER, *PNTFSIDENTIFIER;
 
 
+typedef PVOID PNTFS_BCB;
+
 typedef struct
 {
   NTFSIDENTIFIER Identifier;
