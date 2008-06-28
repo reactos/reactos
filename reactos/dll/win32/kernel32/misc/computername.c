@@ -310,7 +310,6 @@ IsValidComputerName (
 	    *p == L')' ||
 	    *p == L'(' ||
 	    *p == L'.' ||
-	    *p == L'-' ||
 	    *p == L'_' ||
 	    *p == L'{' ||
 	    *p == L'}' ||
