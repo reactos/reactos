@@ -330,35 +330,34 @@ static const WCHAR *get_string_subst( const struct inf_file *file, const WCHAR *
     {
 	if (line->key_field == -1) continue;
 	if (strncmpiW( str, file->fields[line->key_field].text, *len )) continue;
-                if (!file->fields[line->key_field].text[*len]) break;
+        if (!file->fields[line->key_field].text[*len]) break;
      }
      if (j == strings_section->nb_lines || !line->nb_fields) goto not_found;
      field = &file->fields[line->first_field];
-     *len = strlenW( field->text );
-     ret = field->text;
-     GetLocaleInfo(LOCALE_SYSTEM_DEFAULT, LOCALE_ILANGUAGE, Lang, sizeof(Lang)/sizeof(TCHAR));
-     strcpyW(StringLangId, Strings);
-     strcatW(StringLangId, L".");
-     strcatW(StringLangId, Lang);
-     for (i = 0; i < file->nb_sections; i++)
+     GetLocaleInfo(LOCALE_SYSTEM_DEFAULT, LOCALE_ILANGUAGE, Lang, sizeof(Lang)/sizeof(TCHAR)); // get the current system locale for translated strings
+     strcpyW(StringLangId, Strings); // build a new section name and use "Strings" at first
+     strcatW(StringLangId, L"."); // append a '.'
+     strcatW(StringLangId, Lang); // finally append the Language identifier from GetLocaleInfo
+     // now you have e.g. Strings.0407 for german translations
+     for (i = 0; i < file->nb_sections; i++) // search in all sections
      {
-          if (!strcmpiW(file->sections[i]->name,StringLangId))
+          if (!strcmpiW(file->sections[i]->name,StringLangId)) // if the section is a Strings.* section
 	  {
-             strings_section = file->sections[i];
-             for (j = 0, line = strings_section->lines; j < strings_section->nb_lines; j++, line++)
+             strings_section = file->sections[i]; // select this section for further use
+             for (j = 0, line = strings_section->lines; j < strings_section->nb_lines; j++, line++) // process all lines in this section
              {
-                 if (line->key_field == -1) continue;
-                 if (strncmpiW( str, file->fields[line->key_field].text, *len )) continue;
-                 if (!file->fields[line->key_field].text[*len])
+                 if (line->key_field == -1) continue; // if no key then skip
+                 if (strncmpiW( str, file->fields[line->key_field].text, *len )) continue; // if wrong key name, then skip
+                 if (!file->fields[line->key_field].text[*len]) // if value exist
 		 {
-                     field = &file->fields[line->first_field];
-                     *len = strlenW( field->text );
-		     ret = field->text;
-                     break;
+                     field = &file->fields[line->first_field]; // then extract value and
+                     break; // no more search necessary
                  }
              }
 	   }
       }
+      *len = strlenW( field->text ); // set length
+      ret = field->text; // return the english or translated string
       return ret;
 
 
