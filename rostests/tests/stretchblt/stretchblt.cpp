@@ -365,8 +365,8 @@ LRESULT CALLBACK MainWndProc(HWND HWnd, UINT Msg, WPARAM WParam,
          DeleteObject(SelectObject(HMemDC, HOldBmp));
          DeleteDC(HMemDC);
 
-		 if (bbits)
-			 delete bbits;
+         if (bbits)
+            delete[] bbits;
 
          PostQuitMessage(0);
          return 0;
