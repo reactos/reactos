@@ -50,8 +50,5 @@
 		<file>utils.c</file>
 		<file>path.c</file>
 	</directory>
-	<linkerflag>-lgcc</linkerflag>
-	<linkerflag>-nostartfiles</linkerflag>
-	<linkerflag>-nostdlib</linkerflag>
 	<file>gdi32.rc</file>
 </module>

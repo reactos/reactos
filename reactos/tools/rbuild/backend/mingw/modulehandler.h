@@ -250,7 +250,6 @@ public:
 	MingwKernelModeDLLModuleHandler ( const Module& module );
 	virtual HostType DefaultHost() { return HostFalse; }
 	virtual void Process ();
-	std::string TypeSpecificLinkerFlags() { return "-nostartfiles -nostdlib"; }
 	void AddImplicitLibraries ( Module& module );
 private:
 	void GenerateKernelModeDLLModuleTarget ();
@@ -264,7 +263,6 @@ public:
 	virtual HostType DefaultHost() { return HostFalse; }
 	virtual void Process ();
 	std::string TypeSpecificCFlags() { return "-D__NTDRIVER__"; }
-	std::string TypeSpecificLinkerFlags() { return "-nostartfiles -nostdlib"; }
 	void AddImplicitLibraries ( Module& module );
 private:
 	void GenerateKernelModeDriverModuleTarget ();
@@ -277,7 +275,6 @@ public:
 	MingwNativeDLLModuleHandler ( const Module& module );
 	virtual HostType DefaultHost() { return HostFalse; }
 	virtual void Process ();
-	std::string TypeSpecificLinkerFlags() { return "-nostartfiles -nostdlib"; }
 	void AddImplicitLibraries ( Module& module );
 private:
 	void GenerateNativeDLLModuleTarget ();
@@ -291,7 +288,6 @@ public:
 	virtual HostType DefaultHost() { return HostFalse; }
 	virtual void Process ();
 	std::string TypeSpecificCFlags() { return "-D__NTAPP__"; }
-	std::string TypeSpecificLinkerFlags() { return "-nostartfiles -nostdlib"; }
 	void AddImplicitLibraries ( Module& module );
 private:
 	void GenerateNativeCUIModuleTarget ();
@@ -304,7 +300,6 @@ public:
 	MingwWin32DLLModuleHandler ( const Module& module );
 	virtual HostType DefaultHost() { return HostFalse; }
 	virtual void Process ();
-	std::string TypeSpecificLinkerFlags() { return module.cplusplus ? "-nostartfiles -lgcc" : "-nostartfiles -nostdlib -lgcc"; }
 	void AddImplicitLibraries ( Module& module );
 private:
 	void GenerateWin32DLLModuleTarget ();
@@ -317,7 +312,6 @@ public:
 	MingwWin32OCXModuleHandler ( const Module& module );
 	virtual HostType DefaultHost() { return HostFalse; }
 	virtual void Process ();
-	std::string TypeSpecificLinkerFlags() { return module.cplusplus ? "-nostartfiles -lgcc" : "-nostartfiles -nostdlib -lgcc"; }
 	void AddImplicitLibraries ( Module& module );
 private:
 	void GenerateWin32OCXModuleTarget ();
@@ -330,7 +324,6 @@ public:
 	MingwWin32CUIModuleHandler ( const Module& module );
 	virtual HostType DefaultHost() { return HostFalse; }
 	virtual void Process ();
-	std::string TypeSpecificLinkerFlags() { return module.cplusplus ? "-nostartfiles -lgcc" : "-nostartfiles -nostdlib -lgcc"; }
 	void AddImplicitLibraries ( Module& module );
 private:
 	void GenerateWin32CUIModuleTarget ();
@@ -343,7 +336,6 @@ public:
 	MingwWin32GUIModuleHandler ( const Module& module );
 	virtual HostType DefaultHost() { return HostFalse; }
 	virtual void Process ();
-	std::string TypeSpecificLinkerFlags() { return module.cplusplus ? "-nostartfiles -lgcc" : "-nostartfiles -nostdlib -lgcc"; }
 	void AddImplicitLibraries ( Module& module );
 private:
 	void GenerateWin32GUIModuleTarget ();
@@ -431,7 +423,6 @@ public:
 	MingwTestModuleHandler ( const Module& module );
 	virtual HostType DefaultHost() { return HostFalse; }
 	virtual void Process ();
-	std::string TypeSpecificLinkerFlags() { return "-nostartfiles -nostdlib"; }
 protected:
 	virtual void GetModuleSpecificCompilationUnits ( std::vector<CompilationUnit*>& compilationUnits );
 private:

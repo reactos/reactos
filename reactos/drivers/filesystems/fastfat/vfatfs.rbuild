@@ -3,7 +3,6 @@
 <module name="fastfat" type="kernelmodedriver" installbase="system32/drivers" installname="fastfat.sys">
 	<bootstrap installbase="$(CDOUTPUT)" />
 	<include base="fastfat">.</include>
-	<linkerflag>-lgcc</linkerflag>
 	<library>ntoskrnl</library>
 	<library>hal</library>
 	<file>blockdev.c</file>

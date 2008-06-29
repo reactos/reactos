@@ -2,7 +2,6 @@
 <!DOCTYPE module SYSTEM "../../../../tools/rbuild/project.dtd">
 <module name="ramdisk" type="kernelmodedriver" installbase="system32/drivers" installname="ramdisk.sys">
 	<bootstrap installbase="$(CDOUTPUT)" />
-	<linkerflag>-lgcc</linkerflag>
 	<library>ntoskrnl</library>
 	<library>hal</library>
 	<library>class2</library>

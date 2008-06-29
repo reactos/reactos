@@ -1,16 +1,15 @@
 <?xml version="1.0"?>
 <!DOCTYPE group SYSTEM "../../../tools/rbuild/project.dtd">
 <group xmlns:xi="http://www.w3.org/2001/XInclude">
-<module name="explorer" type="win32gui" installname="explorer.exe" allowwarnings="true">
-	<linkerflag>-fexceptions</linkerflag>
+<module name="explorer" type="win32gui" installname="explorer.exe" allowwarnings="true" unicode="yes">
 	<compilerflag compiler="cpp">-Wno-non-virtual-dtor</compilerflag>
 	<include base="explorer">.</include>
-	<define name="UNICODE" />
 	<define name="WIN32" />
 	<define name="_WIN32_IE">0x0600</define>
 	<define name="_WIN32_WINNT">0x0501</define>
 	<define name="WINVER">0x0500</define>
 	<define name="__WINDRES__" />
+	<library>advapi32</library>
 	<library>kernel32</library>
 	<library>gdi32</library>
 	<library>user32</library>

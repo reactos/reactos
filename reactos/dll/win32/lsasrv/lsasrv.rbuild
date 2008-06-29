@@ -4,8 +4,6 @@
 	<include base="lsa_server">.</include>
 	<define name="WINVER">0x600</define>
 	<define name="_WIN32_WINNT">0x0600</define>
-	<linkerflag>-nostartfiles</linkerflag>
-	<linkerflag>-nostdlib</linkerflag>
 	<library>lsa_server</library>
 	<library>ntdll</library>
 	<library>kernel32</library>
