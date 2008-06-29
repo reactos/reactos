@@ -3,6 +3,7 @@
 	<define name="__USE_W32API" />
 	<library>kernel32</library>
 	<library>user32</library>
+	<library>advapi32</library>
 
 	<file>ArgumentParser.cpp</file>
 	<file>Console.cpp</file>

@@ -8,7 +8,7 @@
 	<define name="_WIN32_WINNT">0x501</define>
 	<library>kernel32</library>
 	<library>ws2_32</library>
-	<library>kernel32</library>
+	<library>user32</library>
 	<file>config.cpp</file>
 	<file>error.cpp</file>
 	<file>http.cpp</file>

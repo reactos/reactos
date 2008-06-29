@@ -6,6 +6,7 @@
 	<library>kernel32</library>
 	<library>user32</library>
 	<library>ws2_32</library>
+	<library>advapi32</library>
 
 	<file>netreg.cpp</file>
 	<file>netreg.rc</file>
