@@ -79,7 +79,7 @@ WriteProcessMemory(IN HANDLE hProcess,
                                 PAGE_WRITECOPY |
                                 PAGE_EXECUTE_READWRITE |
                                 PAGE_EXECUTE_WRITECOPY) ? FALSE : TRUE;
-        if (UnProtect)
+        if (!UnProtect)
         {
             /* Set the new protection */
             Status = NtProtectVirtualMemory(hProcess,
