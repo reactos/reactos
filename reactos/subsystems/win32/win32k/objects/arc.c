@@ -25,6 +25,8 @@
 #define Rsin(d) ((d) == 0.0 ? 0.0 : ((d) == 90.0 ? 1.0 : sin(d*M_PI/180.0)))
 #define Rcos(d) ((d) == 0.0 ? 1.0 : ((d) == 90.0 ? 0.0 : cos(d*M_PI/180.0)))
 
+BOOL FASTCALL IntFillArc( PDC dc, INT XLeft, INT YLeft, INT Width, INT Height, double StartArc, double EndArc, ARCTYPE arctype);
+
 static
 BOOL
 FASTCALL
@@ -41,10 +43,11 @@ IntArc( DC *dc,
 {
     PDC_ATTR Dc_Attr;
     RECTL RectBounds;
-    PGDIBRUSHOBJ PenBrushObj, FillBrushObj;
-    GDIBRUSHINST FillBrushInst, PenBrushInst;
+    PGDIBRUSHOBJ PenBrushObj;
+    GDIBRUSHINST PenBrushInst;
     BITMAPOBJ *BitmapObj;
     BOOL ret = TRUE;
+    LONG PenWidth, PenOrigWidth;
     double AngleStart, AngleEnd;
     LONG RadiusX, RadiusY, CenterX, CenterY;
     LONG SfCx, SfCy, EfCx, EfCy;
@@ -60,50 +63,58 @@ IntArc( DC *dc,
           0|___________________|
             0     bottom       +
  */
-    if (Right <= Left || Top <= Bottom)
+    if (Right < Left)
     {
-        DPRINT1("Arc Fail 1\n");
-        SetLastWin32Error(ERROR_INVALID_PARAMETER);
-        return FALSE;
+       INT tmp = Right; Right = Left; Left = tmp;
     }
-/*
-    if (Right - Left != Bottom - Top)
+    if (Bottom < Top)
     {
-        UNIMPLEMENTED;
+       INT tmp = Bottom; Bottom = Top; Top = tmp;
     }
-*/
+    if ((Left == Right) ||
+        (Top == Bottom) ||
+        (((arctype != GdiTypeArc) || (arctype != GdiTypeArcTo)) &&
+        ((Right - Left == 1) ||
+        (Bottom - Top == 1))))
+       return TRUE;
+
+    if (dc->DcLevel.flPath & DCPATH_CLOCKWISE)
+    { 
+       INT X, Y;
+       X = XRadialStart;
+       Y = YRadialStart;
+       XRadialStart = XRadialEnd;
+       YRadialStart = YRadialEnd;
+       XRadialEnd = X;
+       YRadialEnd = Y;
+    }
+
     Dc_Attr = dc->pDc_Attr;
     if(!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
-
-    FillBrushObj = BRUSHOBJ_LockBrush(Dc_Attr->hbrush);
-    if (NULL == FillBrushObj)
-    {
-        DPRINT1("Arc Fail 2\n");
-        SetLastWin32Error(ERROR_INTERNAL_ERROR);
-        return FALSE;
-    }
 
     PenBrushObj = PENOBJ_LockPen(Dc_Attr->hpen);
     if (NULL == PenBrushObj)
     {
-        DPRINT1("Arc Fail 3\n");
-        BRUSHOBJ_UnlockBrush(FillBrushObj);
+        DPRINT1("Arc Fail 1\n");
         SetLastWin32Error(ERROR_INTERNAL_ERROR);
         return FALSE;
     }
 
-    BitmapObj = BITMAPOBJ_LockBitmap(dc->w.hBitmap);
-    if (NULL == BitmapObj)
+    PenOrigWidth = PenWidth = PenBrushObj->ptPenWidth.x;
+    if (PenBrushObj->ulPenStyle == PS_NULL) PenWidth = 0;
+
+    if (PenBrushObj->ulPenStyle == PS_INSIDEFRAME)
     {
-        DPRINT1("Arc Fail 4\n");
-        BRUSHOBJ_UnlockBrush(FillBrushObj);
-        PENOBJ_UnlockPen(PenBrushObj);
-        SetLastWin32Error(ERROR_INTERNAL_ERROR);
-        return FALSE;
+       if (2*PenWidth > (Right - Left)) PenWidth = (Right -Left + 1)/2;
+       if (2*PenWidth > (Bottom - Top)) PenWidth = (Bottom -Top + 1)/2;
+       Left   += PenWidth / 2;
+       Right  -= (PenWidth - 1) / 2;
+       Top    += PenWidth / 2;
+       Bottom -= (PenWidth - 1) / 2;
     }
 
-    IntGdiInitBrushInstance(&FillBrushInst, FillBrushObj, dc->XlateBrush);
-    IntGdiInitBrushInstance(&PenBrushInst, PenBrushObj, dc->XlatePen);
+    if (!PenWidth) PenWidth = 1;
+    PenBrushObj->ptPenWidth.x = PenWidth;  
 
     Left   += dc->ptlDCOrig.x;
     Right  += dc->ptlDCOrig.x;
@@ -125,56 +136,103 @@ IntArc( DC *dc,
     DPRINT1("1: Left: %d, Top: %d, Right: %d, Bottom: %d\n",
                RectBounds.left,RectBounds.top,RectBounds.right,RectBounds.bottom);
 
-    if (Left == Right)
-    {
-        DPRINT1("Arc Good Exit\n");
-        PUTPIXEL(Left, Top, PenBrushInst);
-        BITMAPOBJ_UnlockBitmap(BitmapObj);
-        BRUSHOBJ_UnlockBrush(FillBrushObj);
-        PENOBJ_UnlockPen(PenBrushObj);
-        return ret;
-    }
-    RadiusX = (RectBounds.right - RectBounds.left)/2;
-    RadiusY = (RectBounds.bottom - RectBounds.top)/2;
-    CenterX = RectBounds.left + RadiusX;
-    CenterY = RectBounds.top + RadiusY;
-
-    AngleEnd   = atan2(-(YRadialEnd - CenterY), XRadialEnd - CenterX)* (180.0 / M_PI);
-    AngleStart = atan2(-(YRadialStart - CenterY), XRadialStart - CenterX)* (180.0 / M_PI);
+    RadiusX = (RectBounds.right - RectBounds.left) / 2;
+    RadiusY = (RectBounds.bottom - RectBounds.top) / 2;
+    CenterX = (RectBounds.right + RectBounds.left) / 2;
+    CenterY = (RectBounds.bottom + RectBounds.top) / 2;
+    AngleEnd   = atan2((YRadialEnd - CenterY), XRadialEnd - CenterX)*(360.0/(M_PI*2));
+    AngleStart = atan2((YRadialStart - CenterY), XRadialStart - CenterX)*(360.0/(M_PI*2));
 
     SfCx = (Rcos(AngleStart) * RadiusX);
     SfCy = (Rsin(AngleStart) * RadiusY);
-
     EfCx = (Rcos(AngleEnd) * RadiusX);
     EfCy = (Rsin(AngleEnd) * RadiusY);
+
+    if ((arctype == GdiTypePie) || (arctype == GdiTypeChord))
     {
-       FLOAT AngS = AngleStart, Factor = 1;
-       int x,y, ox = 0, oy = 0;
-
-       if (arctype == GdiTypePie)
-       {
-          PUTLINE(SfCx + CenterX, SfCy + CenterY, CenterX, CenterY, PenBrushInst);
-       }
-
-       for(; AngS < AngleEnd; AngS += Factor)
-       {
-          x = (Rcos(AngS) * RadiusX);
-          y = (Rsin(AngS) * RadiusY);
-  
-          if (arctype == GdiTypePie)
-             PUTLINE((x + CenterX) - 1, (y + CenterY) - 1, CenterX, CenterY, FillBrushInst);
-
-          PUTPIXEL (x + CenterX, y + CenterY, PenBrushInst);
-          ox = x;
-          oy = y;
-       }
-
-       if (arctype == GdiTypePie)
-           PUTLINE(EfCx + CenterX, EfCy + CenterY, CenterX, CenterY, PenBrushInst);
-
+        ret = IntFillArc( dc,
+             RectBounds.left,
+              RectBounds.top,
+             fabs(RectBounds.right-RectBounds.left), // Width
+             fabs(RectBounds.bottom-RectBounds.top), // Height
+                  AngleStart,
+                    AngleEnd,
+                     arctype);
     }
+
+    BitmapObj = BITMAPOBJ_LockBitmap(dc->w.hBitmap);
+    if (NULL == BitmapObj)
+    {
+        DPRINT1("Arc Fail 2\n");
+        PENOBJ_UnlockPen(PenBrushObj);
+        SetLastWin32Error(ERROR_INTERNAL_ERROR);
+        return FALSE;
+    }
+
+    IntGdiInitBrushInstance(&PenBrushInst, PenBrushObj, dc->XlatePen);
+
+    if (arctype == GdiTypePie)
+    {
+       PUTLINE(CenterX, CenterY, SfCx + CenterX, SfCy + CenterY, PenBrushInst);
+    }
+    {
+       double AngS = AngleStart, AngT = AngleEnd,
+       Factor = fabs(RadiusX) < 25 ? 1.0 : (25/fabs(RadiusX));
+       int x,y, ox = 0, oy = 0;
+       BOOL Start = TRUE;
+
+       if (dc->DcLevel.flPath & DCPATH_CLOCKWISE)
+       {
+          DPRINT1("Arc CW\n");
+          for (; AngS < AngT; AngS += Factor)
+          {
+              x = (RadiusX * Rcos(AngS));
+              y = (RadiusY * Rsin(AngS));
+
+              DPRINT("Arc CW -> %d, X: %d Y: %d\n",(INT)AngS,x,y);
+              if (Start)
+              {
+                 PUTPIXEL(x + CenterX, y + CenterY, PenBrushInst);
+                 ox = x;
+                 oy = y;
+                 Start = FALSE;
+                 continue;
+              }
+              PUTLINE(ox + CenterX, oy + CenterY, x + CenterX, y + CenterY, PenBrushInst);
+              ox = x;
+              oy = y;      
+          }
+       }
+       else
+       {
+          DPRINT1("Arc CCW\n");
+          for (; AngT < AngS; AngS -= Factor)
+          {
+              x = (RadiusX * Rcos(AngS));
+              y = (RadiusY * Rsin(AngS));
+
+              DPRINT("Arc CCW -> %d, X: %d Y: %d\n",(INT)AngS,x,y);
+              if (Start)
+              {
+                 PUTPIXEL(x + CenterX, y + CenterY, PenBrushInst);
+                 ox = x;
+                 oy = y;
+                 Start = FALSE;
+                 continue;
+              }
+              PUTLINE(ox + CenterX, oy + CenterY, x + CenterX, y + CenterY, PenBrushInst);
+              ox = x;
+              oy = y;
+          }        
+       }
+    }
+    if (arctype == GdiTypePie)
+       PUTLINE(EfCx + CenterX, EfCy + CenterY, CenterX, CenterY, PenBrushInst);
+    if (arctype == GdiTypeChord)
+       PUTLINE(EfCx + CenterX, EfCy + CenterY, SfCx + CenterX, SfCy + CenterY, PenBrushInst);
+
+    PenBrushObj->ptPenWidth.x = PenOrigWidth;
     BITMAPOBJ_UnlockBitmap(BitmapObj);
-    BRUSHOBJ_UnlockBrush(FillBrushObj);
     PENOBJ_UnlockPen(PenBrushObj);
     DPRINT1("IntArc Exit.\n");
     return ret;
@@ -196,9 +254,6 @@ IntGdiArcInternal(
 {
   BOOL Ret;
   RECT rc, rc1;
-  double AngleStart, AngleEnd;
-  LONG RadiusX, RadiusY, CenterX, CenterY, Width, Height;
-  LONG SfCx, SfCy, EfCx = 0, EfCy = 0;
 
   DPRINT1("StartX: %d, StartY: %d, EndX: %d, EndY: %d\n",
            XStartArc,YStartArc,XEndArc,YEndArc);
@@ -221,22 +276,10 @@ IntGdiArcInternal(
 
   if (arctype == GdiTypeArcTo)
   {
-    Width   = fabs(RightRect - LeftRect);
-    Height  = fabs(BottomRect - TopRect);
-    RadiusX = Width/2;
-    RadiusY = Height/2;
-    CenterX = RightRect > LeftRect ? LeftRect + RadiusX : RightRect + RadiusX;
-    CenterY = BottomRect > TopRect ? TopRect + RadiusY : BottomRect + RadiusY;
-
-    AngleStart = atan2((YStartArc - CenterY)/Height, (XStartArc - CenterX)/Width);
-    AngleEnd   = atan2((YEndArc - CenterY)/Height, (XEndArc - CenterX)/Width);
-
-    EfCx = GDI_ROUND(CenterX+cos(AngleEnd) * RadiusX);
-    EfCy = GDI_ROUND(CenterY+sin(AngleEnd) * RadiusY);
-    SfCx = GDI_ROUND(CenterX+cos(AngleStart) * RadiusX);
-    SfCy = GDI_ROUND(CenterY+sin(AngleStart) * RadiusY);
-
-    IntGdiLineTo(dc, SfCx, SfCy);
+    if (dc->DcLevel.flPath & DCPATH_CLOCKWISE)
+       IntGdiLineTo(dc, XEndArc, YEndArc);
+    else
+       IntGdiLineTo(dc, XStartArc, YStartArc);
   }
 
   IntGdiSetRect(&rc, LeftRect, TopRect, RightRect, BottomRect);
@@ -244,6 +287,7 @@ IntGdiArcInternal(
 
 //  IntLPtoDP(dc, (LPPOINT)&rc, 2);
 //  IntLPtoDP(dc, (LPPOINT)&rc1, 2);
+
 
   Ret = IntArc( dc,
            rc.left,
@@ -258,9 +302,11 @@ IntGdiArcInternal(
 
   if (arctype == GdiTypeArcTo)
   {
-     IntGdiMoveToEx(dc, EfCx, EfCy, NULL);
+     if (dc->DcLevel.flPath & DCPATH_CLOCKWISE)
+       IntGdiMoveToEx(dc, XStartArc, YStartArc, NULL);
+     else
+       IntGdiMoveToEx(dc, XEndArc, YEndArc, NULL);
   }
-
   return Ret;
 }
 
@@ -292,9 +338,9 @@ IntGdiAngleArc( PDC pDC,
   result = IntGdiArcInternal( GdiTypeArcTo,
                                        pDC,
                                 x-dwRadius,
-                                y+dwRadius,
-                                x+dwRadius,
                                 y-dwRadius,
+                                x+dwRadius,
+                                y+dwRadius,
                                         x1,
                                         y1,
                                         x2,
@@ -304,7 +350,7 @@ IntGdiAngleArc( PDC pDC,
 
   if (result)
   {
-     IntGdiMoveToEx(pDC, x2, y2, NULL);
+     IntGdiMoveToEx(pDC, x2, y2, NULL); // Dont forget Path.
   }
   return result;
 }

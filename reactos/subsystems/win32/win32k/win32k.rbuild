@@ -155,6 +155,7 @@
 		<file>dc.c</file>
 		<file>dcutil.c</file>
 		<file>dibobj.c</file>
+		<file>drawing.c</file>
 		<file>fillshap.c</file>
 		<file>gdibatch.c</file>
 		<file>gdiobj.c</file>
