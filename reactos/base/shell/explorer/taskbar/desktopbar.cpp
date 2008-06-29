@@ -41,7 +41,7 @@
 
 DesktopBar::DesktopBar(HWND hwnd)
  :	super(hwnd),
-#ifdef _ROS_
+#ifdef __REACTOS__
 	_trayIcon(hwnd, ID_TRAY_VOLUME)
 #else
 	WM_TASKBARCREATED(RegisterWindowMessage(WINMSG_TASKBARCREATED))
@@ -436,7 +436,7 @@ int DesktopBar::Command(int id, int code)
 			PostMessage(_hwndQuickLaunch, PM_UPDATE_DESKTOP, desktop_idx, 0);
 		break;}
 
-#ifdef _ROS_
+#ifdef __REACTOS__
 	  case ID_TRAY_VOLUME:
 		launch_file(_hwnd, TEXT("sndvol32.exe"), SW_SHOWNORMAL);	// launch volume control application
 		break;
@@ -525,7 +525,7 @@ void DesktopBar::ControlResize(WPARAM wparam, LPARAM lparam)
 }
 
 
-#ifdef _ROS_
+#ifdef __REACTOS__
 
 void DesktopBar::AddTrayIcons()
 {

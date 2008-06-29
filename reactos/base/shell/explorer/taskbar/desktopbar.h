@@ -66,14 +66,14 @@
 
  /// desktop bar window, also known as "system tray"
 struct DesktopBar : public
-#ifdef _ROS_
+#ifdef __REACTOS__
 	TrayIconControllerTemplate<
 				OwnerDrawParent<Window> >
 #else
 	OwnerDrawParent<Window>
 #endif
 {
-#ifdef _ROS_
+#ifdef __REACTOS__
 	typedef TrayIconControllerTemplate<
 				OwnerDrawParent<Window> > super;
 #else
@@ -110,7 +110,7 @@ protected:
 
 	struct StartMenuRoot* _startMenuRoot;
 
-#ifdef _ROS_
+#ifdef __REACTOS__
 	TrayIcon	_trayIcon;
 
 	void	AddTrayIcons();

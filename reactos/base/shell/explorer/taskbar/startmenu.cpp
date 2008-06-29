@@ -1766,7 +1766,7 @@ LRESULT	StartMenuRoot::Init(LPCREATESTRUCT pcs)
 #endif
 		AddButton(ResString(IDS_LOGOFF),	ICID_LOGOFF, false, IDC_LOGOFF);
 
-#ifdef _ROS_
+#ifdef __REACTOS__
 		AddButton(ResString(IDS_RESTART), ICID_RESTART, false, IDC_RESTART);
 #endif
 
@@ -1777,7 +1777,7 @@ LRESULT	StartMenuRoot::Init(LPCREATESTRUCT pcs)
 #endif
 		AddButton(ResString(IDS_SHUTDOWN),	ICID_SHUTDOWN, false, IDC_SHUTDOWN);
 
-#ifndef _ROS_
+#ifndef __REACTOS__
 	AddButton(ResString(IDS_TERMINATE),	ICID_LOGOFF, false, IDC_TERMINATE);
 #endif
 
@@ -1942,7 +1942,7 @@ int StartMenuHandler::Command(int id, int code)
 		ShowLogoffDialog(g_Globals._hwndDesktopBar);
 		break;
 
-#ifndef _ROS_
+#ifndef __REACTOS__
 	  case IDC_TERMINATE:
 		DestroyWindow(GetParent(_hwnd));
 		break;
@@ -2032,7 +2032,7 @@ int StartMenuHandler::Command(int id, int code)
 
 	  case IDC_CONNECTIONS:
 #ifndef ROSSHELL
-#ifdef _ROS_	// to be removed when RAS will be implemented
+#ifdef __REACTOS__	// to be removed when RAS will be implemented
 		MessageBox(0, TEXT("RAS folder not yet implemented in SHELL32"), ResString(IDS_TITLE), MB_OK);
 #else
 		CreateSubmenu(id, CSIDL_CONNECTIONS, ResString(IDS_CONNECTIONS));
@@ -2048,7 +2048,7 @@ int StartMenuHandler::Command(int id, int code)
 	// browse menu
 
 	  case IDC_NETWORK:
-#ifdef _ROS_	///@todo to be removed when network browsing will be implemented in shell namespace
+#ifdef __REACTOS__	///@todo to be removed when network browsing will be implemented in shell namespace
 		MessageBox(0, TEXT("network not yet implemented"), ResString(IDS_TITLE), MB_OK);
 #else
 		CreateSubmenu(id, CSIDL_NETWORK, ResString(IDS_NETWORK));
@@ -2089,7 +2089,7 @@ int StartMenuHandler::Command(int id, int code)
 
 void StartMenuHandler::ShowSearchDialog()
 {
-#ifndef _ROS_	///@todo to be removed when SHFindFiles() will be implemented in shell32.dll
+#ifndef __REACTOS__	///@todo to be removed when SHFindFiles() will be implemented in shell32.dll
 	static DynamicFct<SHFINDFILES> SHFindFiles(TEXT("SHELL32"), 90);
 
 	if (SHFindFiles)
@@ -2101,7 +2101,7 @@ void StartMenuHandler::ShowSearchDialog()
 
 void StartMenuHandler::ShowSearchComputer()
 {
-#ifndef _ROS_	///@todo to be removed when SHFindComputer() will be implemented in shell32.dll
+#ifndef __REACTOS__	///@todo to be removed when SHFindComputer() will be implemented in shell32.dll
 	static DynamicFct<SHFINDCOMPUTER> SHFindComputer(TEXT("SHELL32"), 91);
 
 	if (SHFindComputer)
@@ -2160,7 +2160,7 @@ void SettingsMenu::AddEntries()
 {
 	super::AddEntries();
 
-#if defined(ROSSHELL) || defined(_ROS_)	// _ROS_ to be removed when printer/network will be implemented
+#if defined(ROSSHELL) || defined(__REACTOS__)	// __REACTOS__ to be removed when printer/network will be implemented
 //TODO	AddButton(ResString(IDS_PRINTERS),			ICID_PRINTER, false, IDC_PRINTERS_MENU);
 	AddButton(ResString(IDS_CONNECTIONS),		ICID_NETWORK, false, IDC_CONNECTIONS);
 #else
@@ -2191,7 +2191,7 @@ void BrowseMenu::AddEntries()
 #ifndef __MINGW32__	// SHRestricted() missing in MinGW (as of 29.10.2003)
 	if (!g_Globals._SHRestricted || !SHRestricted(REST_NONETHOOD))	// or REST_NOENTIRENETWORK ?
 #endif
-#if defined(ROSSHELL) || defined(_ROS_)	// _ROS_ to be removed when printer/network will be implemented
+#if defined(ROSSHELL) || defined(__REACTOS__)	// __REACTOS__ to be removed when printer/network will be implemented
 		AddButton(ResString(IDS_NETWORK),		ICID_NETWORK, false, IDC_NETWORK);
 #else
 		AddButton(ResString(IDS_NETWORK),		ICID_NETWORK, true, IDC_NETWORK);
