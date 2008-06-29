@@ -16,6 +16,79 @@
 #include "mmsys.h"
 #include "resource.h"
 
+
+VOID
+InitAudioDlg(HWND hwnd)
+{
+    WAVEOUTCAPS waveOutputPaps;
+    WAVEINCAPS waveInputPaps;
+    MIDIOUTCAPS midiOutCaps;
+    UINT DevsNum;
+    UINT uIndex;
+    HWND hCB;
+    LRESULT Res;
+
+    // Init sound playback devices list
+    hCB = GetDlgItem(hwnd, IDC_DEVICE_PLAY_LIST);
+
+    DevsNum = waveOutGetNumDevs();
+    if (DevsNum < 1) return;
+
+    for (uIndex = 0; uIndex < DevsNum; uIndex++)
+    {
+        if (waveOutGetDevCaps(uIndex, &waveOutputPaps, sizeof(waveOutputPaps)))
+            continue;
+
+        Res = SendMessage(hCB, CB_ADDSTRING, 0, (LPARAM) waveOutputPaps.szPname);
+
+        if (CB_ERR != Res)
+        {
+            // TODO: Getting default device
+            SendMessage(hCB, CB_SETCURSEL, (WPARAM) Res, 0);
+        }
+    }
+
+    // Init sound recording devices list
+    hCB = GetDlgItem(hwnd, IDC_DEVICE_REC_LIST);
+
+    DevsNum = waveInGetNumDevs();
+    if (DevsNum < 1) return;
+
+    for (uIndex = 0; uIndex < DevsNum; uIndex++)
+    {
+        if (waveInGetDevCaps(uIndex, &waveInputPaps, sizeof(waveInputPaps)))
+            continue;
+
+        Res = SendMessage(hCB, CB_ADDSTRING, 0, (LPARAM) waveInputPaps.szPname);
+
+        if (CB_ERR != Res)
+        {
+            // TODO: Getting default device
+            SendMessage(hCB, CB_SETCURSEL, (WPARAM) Res, 0);
+        }
+    }
+
+    // Init MIDI devices list
+    hCB = GetDlgItem(hwnd, IDC_DEVICE_MIDI_LIST);
+
+    DevsNum = midiOutGetNumDevs();
+    if (DevsNum < 1) return;
+
+    for (uIndex = 0; uIndex < DevsNum; uIndex++)
+    {
+        if (midiOutGetDevCaps(uIndex, &midiOutCaps, sizeof(midiOutCaps)))
+            continue;
+
+        Res = SendMessage(hCB, CB_ADDSTRING, 0, (LPARAM) midiOutCaps.szPname);
+
+        if (CB_ERR != Res)
+        {
+            // TODO: Getting default device
+            SendMessage(hCB, CB_SETCURSEL, (WPARAM) Res, 0);
+        }
+    }
+}
+
 /* Audio property page dialog callback */
 INT_PTR CALLBACK
 AudioDlgProc(HWND hwndDlg,
@@ -45,6 +118,10 @@ AudioDlgProc(HWND hwndDlg,
                 EnableWindow(GetDlgItem(hwndDlg, IDC_ADV1_BTN),             FALSE);
                 EnableWindow(GetDlgItem(hwndDlg, IDC_VOLUME3_BTN),          FALSE);
                 EnableWindow(GetDlgItem(hwndDlg, IDC_ADV3_BTN),             FALSE);
+            }
+            else
+            {
+                InitAudioDlg(hwndDlg);
             }
         }
         break;
