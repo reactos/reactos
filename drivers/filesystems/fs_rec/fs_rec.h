@@ -27,6 +27,12 @@
 #define UDFS_AVDP_SECTOR       256
 
 //
+// Ext2 Magic
+// Taken from Linux Kernel
+//
+#define EXT2_SUPER_MAGIC	   0xEF53
+
+//
 // Conversion types and macros taken from internal ntifs headers
 //
 typedef union _UCHAR1
@@ -170,6 +176,73 @@ typedef struct _AVDP
     EXTENT ReserveVolumeDescriptorExtent;
 } AVDP, *PAVDP;
 #include <poppack.h>
+
+//
+// Ext2 Structure
+// Taken from Linux Kernel and adapted for ReactOS
+//
+/*
+ * Structure of the super block
+ */
+typedef struct _ext2_super_block
+{
+    ULONG   s_inodes_count;           /* Inodes count */
+    ULONG   s_blocks_count;           /* Blocks count */
+    ULONG   s_r_blocks_count;         /* Reserved blocks count */
+    ULONG   s_free_blocks_count;      /* Free blocks count */
+    ULONG   s_free_inodes_count;      /* Free inodes count */
+    ULONG   s_first_data_block;       /* First Data Block */
+    ULONG   s_log_block_size;         /* Block size */
+    LONG    s_log_frag_size;          /* Fragment size */
+    ULONG   s_blocks_per_group;       /* # Blocks per group */
+    ULONG   s_frags_per_group;        /* # Fragments per group */
+    ULONG   s_inodes_per_group;       /* # Inodes per group */
+    ULONG   s_mtime;                  /* Mount time */
+    ULONG   s_wtime;                  /* Write time */
+    USHORT  s_mnt_count;              /* Mount count */
+    SHORT   s_max_mnt_count;          /* Maximal mount count */
+    USHORT  s_magic;                  /* Magic signature */
+    USHORT  s_state;                  /* File system state */
+    USHORT  s_errors;                 /* Behaviour when detecting errors */
+    USHORT  s_minor_rev_level;        /* minor revision level */
+    ULONG   s_lastcheck;              /* time of last check */
+    ULONG   s_checkinterval;          /* max. time between checks */
+    ULONG   s_creator_os;             /* OS */
+    ULONG   s_rev_level;              /* Revision level */
+    USHORT  s_def_resuid;             /* Default uid for reserved blocks */
+    USHORT  s_def_resgid;             /* Default gid for reserved blocks */
+    /*
+     * These fields are for EXT2_DYNAMIC_REV superblocks only.
+     *
+     * Note: the difference between the compatible feature set and
+     * the incompatible feature set is that if there is a bit set
+     * in the incompatible feature set that the kernel doesn't
+     * know about, it should refuse to mount the filesystem.
+     * 
+     * e2fsck's requirements are more strict; if it doesn't know
+     * about a feature in either the compatible or incompatible
+     * feature set, it must abort and not try to meddle with
+     * things it doesn't understand...
+     */
+    ULONG   s_first_ino;              /* First non-reserved inode */
+    USHORT  s_inode_size;             /* size of inode structure */
+    USHORT  s_block_group_nr;         /* block group # of this superblock */
+    ULONG   s_feature_compat;         /* compatible feature set */
+    ULONG   s_feature_incompat;       /* incompatible feature set */
+    ULONG   s_feature_ro_compat;      /* readonly-compatible feature set */
+    UCHAR   s_uuid[16];               /* 128-bit uuid for volume */
+    char    s_volume_name[16];        /* volume name */
+    char    s_last_mounted[64];       /* directory where last mounted */
+    ULONG   s_algorithm_usage_bitmap; /* For compression */
+    /*
+     * Performance hints.  Directory preallocation should only
+     * happen if the EXT2_COMPAT_PREALLOC flag is on.
+     */
+    UCHAR   s_prealloc_blocks;        /* Nr of blocks to try to preallocate*/
+    UCHAR   s_prealloc_dir_blocks;    /* Nr to preallocate for dirs */
+    USHORT  s_padding1;
+    ULONG   s_reserved[204];          /* Padding to the end of the block */
+} ext2_super_block, *pext2_super_block;
 
 //
 // Filesystem Types

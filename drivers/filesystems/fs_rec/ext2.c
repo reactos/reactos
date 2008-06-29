@@ -4,6 +4,7 @@
  * FILE:             drivers/filesystems/fs_rec/ext2.c
  * PURPOSE:          EXT2 Recognizer
  * PROGRAMMER:       Eric Kohl
+ *                   Pierre Schweitzer 
  */
 
 /* INCLUDES *****************************************************************/
@@ -16,10 +17,15 @@
 
 BOOLEAN
 NTAPI
-FsRecIsExt2Volume(IN PVOID PackedBootSector)
+FsRecIsExt2Volume(IN pext2_super_block SuperBlock)
 {
-    /* For now, always return failure... */
-    return FALSE;
+    BOOLEAN Result = TRUE;
+    PAGED_CODE();
+    
+    if (SuperBlock->s_magic != EXT2_SUPER_MAGIC)
+      Result = FALSE;
+      
+    return Result;
 }
 
 NTSTATUS
@@ -30,9 +36,9 @@ FsRecExt2FsControl(IN PDEVICE_OBJECT DeviceObject,
     PIO_STACK_LOCATION Stack;
     NTSTATUS Status;
     PDEVICE_OBJECT MountDevice;
-    PVOID Bpb = NULL;
+    PVOID SuperBlock = NULL;
     ULONG SectorSize;
-    LARGE_INTEGER Offset = {{0}};
+    LARGE_INTEGER Offset = {{1024}};
     BOOLEAN DeviceError = FALSE;
     PAGED_CODE();
 
@@ -49,24 +55,24 @@ FsRecExt2FsControl(IN PDEVICE_OBJECT DeviceObject,
             MountDevice = Stack->Parameters.MountVolume.DeviceObject;
             if (FsRecGetDeviceSectorSize(MountDevice, &SectorSize))
             {
-                /* Try to read the BPB */
+                /* Try to read the Super Block */
                 if (FsRecReadBlock(MountDevice,
                                    &Offset,
-                                   512,
+                                   1024,
                                    SectorSize,
-                                   (PVOID)&Bpb,
+                                   (PVOID)&SuperBlock,
                                    &DeviceError))
                 {
                     /* Check if it's an actual EXT2 volume */
-                    if (FsRecIsExt2Volume(Bpb))
+                    if (FsRecIsExt2Volume(SuperBlock))
                     {
                         /* It is! */
                         Status = STATUS_FS_DRIVER_REQUIRED;
                     }
                 }
 
-                /* Free the boot sector if we have one */
-                ExFreePool(Bpb);
+                /* Free the Super Block if we have one */
+                ExFreePool(SuperBlock);
             }
             else
             {
