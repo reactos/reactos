@@ -706,7 +706,7 @@ MiInitChip(
 
   /* load init block and start the card */
   NdisRawWritePortUshort(Adapter->PortOffset + RAP, CSR0);
-  NdisRawWritePortUshort(Adapter->PortOffset + RDP, CSR0_STRT|CSR0_INIT);
+  NdisRawWritePortUshort(Adapter->PortOffset + RDP, CSR0_STRT|CSR0_INIT|CSR0_IENA);
 
   /* detect the media state */
   NdisRawWritePortUshort(Adapter->PortOffset + RAP, BCR4);
