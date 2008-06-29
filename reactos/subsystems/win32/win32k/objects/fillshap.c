@@ -222,10 +222,16 @@ NtGdiEllipse(
      * Check the parameters.
      */
     DPRINT("nLeftRect: %d, nTopRect: %d, nRightRect: %d, nBottomRect: %d\n",nLeftRect,nTopRect,nRightRect,nBottomRect);
-    if (nRightRect <= nLeftRect || nTopRect <= nBottomRect)
+
+    if ((nLeftRect == nRightRect) || (nTopRect == nBottomRect)) return TRUE;
+
+    if (nRightRect < nLeftRect)
     {
-        SetLastWin32Error(ERROR_INVALID_PARAMETER);
-        return FALSE;
+       INT tmp = nRightRect; nRightRect = nLeftRect; nLeftRect = tmp;
+    }
+    if (nBottomRect < nTopRect)
+    {
+       INT tmp = nBottomRect; nBottomRect = nTopRect; nTopRect = tmp;
     }
 
     /*
@@ -294,15 +300,23 @@ NtGdiEllipse(
     DPRINT("2: Left: %d, Top: %d, Right: %d, Bottom: %d\n",
                RectBounds.left,RectBounds.top,RectBounds.right,RectBounds.bottom);
 
-    RadiusX = (RectBounds.right - RectBounds.left)/2;
-    RadiusY = (RectBounds.bottom - RectBounds.top)/2;
+    RadiusX = max((RectBounds.right - RectBounds.left) >> 1, 1);
+    RadiusY = max((RectBounds.bottom - RectBounds.top) >> 1, 1);
     CenterX = RectBounds.left + RadiusX;
     CenterY = RectBounds.top + RadiusY;
     DPRINT("3: RadiusX: %d, RadiusY: %d, CenterX: %d, CenterY: %d\n",
            RadiusX,RadiusY,CenterX,CenterY);
 
-    nx = RadiusX;
-    ny = -RadiusY;
+    if (RadiusX > RadiusY) 	 
+    { 	 
+       nx = RadiusX;
+       ny = RadiusY;
+    } 	 
+    else 	 
+    { 	 
+       nx = RadiusY; 	 
+       ny = RadiusX; 	 
+    }
     da = -1;
     db = 0xFFFF;
     ix = 0;
