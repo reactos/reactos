@@ -42,7 +42,7 @@
 	<include>include/reactos/arm</include>
 
 	<property name="WINEBUILD_FLAGS" value="--kill-at"/>
-	<property name="NTOSKRNL_SHARED" value="-Wl,--file-alignment,0x1000 -Wl,--section-alignment,0x1000 -nostartfiles -shared"/>
+	<property name="NTOSKRNL_SHARED" value="-file-alignment=0x1000 -section-alignment=0x1000 -shared"/>
 
 	<if property="SARCH" value="versatile">
 		<define name="BOARD_CONFIG_VERSATILE"/>
