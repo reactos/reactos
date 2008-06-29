@@ -172,7 +172,7 @@ MiDoMappedCopy(IN PEPROCESS SourceProcess,
             {
                 /* Exit */
                 Status = _SEH_GetExceptionCode();
-                _SEH_YIELD();
+                _SEH_YIELD(return Status);
             }
 
             /* Otherwise, we failed  probably during the move */
@@ -319,7 +319,7 @@ MiDoPoolCopy(IN PEPROCESS SourceProcess,
             {
                 /* Exit */
                 Status = _SEH_GetExceptionCode();
-                _SEH_YIELD();
+                _SEH_YIELD(return Status);
             }
 
             /* Otherwise, we failed  probably during the move */
