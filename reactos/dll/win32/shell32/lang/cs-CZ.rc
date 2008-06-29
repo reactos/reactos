@@ -1,6 +1,7 @@
 /*
  * Copyright 1998 Juergen Schmied
  * Copyright 2003 Filip Navara
+ * Copyright 2008 Radek Liska
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -93,28 +94,28 @@ END
 
 SHNEWBRSFORFOLDER_MSGBOX DIALOGEX LOADONCALL MOVEABLE DISCARDABLE 15, 40, 218, 196
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-CAPTION "Browse for Folder"
+CAPTION "Proch·zet pro sloûku"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	LTEXT "", IDD_TITLE, 10, 8, 198, 24
 	LTEXT "", IDD_STATUS, 10, 25, 198, 12
-	LTEXT "Folder:", IDD_FOLDER, 10, 152, 40, 12
+	LTEXT "Sloûka:", IDD_FOLDER, 10, 152, 40, 12
 	CONTROL "", IDD_TREEVIEW, "SysTreeView32", TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | WS_BORDER | WS_TABSTOP, 12, 38, 194, 105
 	EDITTEXT IDD_FOLDERTEXT, 46, 150, 160, 14, WS_BORDER | WS_GROUP | WS_TABSTOP
-	PUSHBUTTON "&Make New Folder", IDD_MAKENEWFOLDER, 12, 174, 77, 14, WS_GROUP | WS_TABSTOP
+	PUSHBUTTON "&Vytvo¯it novou sloûku", IDD_MAKENEWFOLDER, 12, 174, 77, 14, WS_GROUP | WS_TABSTOP
 	DEFPUSHBUTTON "OK", IDOK, 102, 174, 50, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
-	PUSHBUTTON "Cancel", IDCANCEL, 156, 174, 50, 14, WS_GROUP | WS_TABSTOP
+	PUSHBUTTON "Storno", IDCANCEL, 156, 174, 50, 14, WS_GROUP | WS_TABSTOP
 END
 
 SHELL_YESTOALL_MSGBOX DIALOGEX 200, 100, 280, 90
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Message"
+CAPTION "Zpr·va"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	DEFPUSHBUTTON "&Yes", IDYES, 34, 69, 53, 14, WS_GROUP | WS_TABSTOP
-	PUSHBUTTON "Yes to &all", IDD_YESTOALL, 92, 69, 65, 14, WS_GROUP | WS_TABSTOP
-	PUSHBUTTON "&No", IDNO, 162, 69, 53, 14, WS_GROUP | WS_TABSTOP
-	PUSHBUTTON "&Cancel", IDCANCEL, 220, 69, 53, 14, WS_GROUP | WS_TABSTOP
+	DEFPUSHBUTTON "&Ano", IDYES, 34, 69, 53, 14, WS_GROUP | WS_TABSTOP
+	PUSHBUTTON "Ano &vöem", IDD_YESTOALL, 92, 69, 65, 14, WS_GROUP | WS_TABSTOP
+	PUSHBUTTON "&Ne", IDNO, 162, 69, 53, 14, WS_GROUP | WS_TABSTOP
+	PUSHBUTTON "&Storno", IDCANCEL, 220, 69, 53, 14, WS_GROUP | WS_TABSTOP
 	ICON "", IDD_ICON, 10, 10, 16, 16
 	LTEXT "", IDD_MESSAGE, 40, 10, 238, 52, 0
 END
@@ -126,14 +127,14 @@ FONT 8, "MS Shell Dlg"
 BEGIN
 	ICON "", IDC_SHELL_ABOUT_ICON, 7, 55, 21, 20
 	LTEXT "", IDC_SHELL_ABOUT_APPNAME, 35, 55, 200, 10
-	LTEXT "Version " KERNEL_VERSION_STR " (" KERNEL_VERSION_BUILD_STR ")", IDC_STATIC, 35, 65, 235, 10
+	LTEXT "Verze " KERNEL_VERSION_STR " (" KERNEL_VERSION_BUILD_STR ")", IDC_STATIC, 35, 65, 235, 10
 	LTEXT REACTOS_DEFAULT_STR_LEGAL_COPYRIGHT, IDC_STATIC, 35, 75, 210, 10
 	LTEXT "", IDC_SHELL_ABOUT_OTHERSTUFF, 35, 90, 180, 20
-	LTEXT "This ReactOS version is registered to:", IDC_STATIC, 35, 115, 180, 10
+	LTEXT "Tato verze ReactOS je zaregistrov·na na:", IDC_STATIC, 35, 115, 180, 10
 	LTEXT "", IDC_SHELL_ABOUT_REG_USERNAME, 45, 125, 180, 10
 	LTEXT "", IDC_SHELL_ABOUT_REG_ORGNAME, 45, 135, 180, 10
 	LTEXT "", IDC_STATIC, 35, 147, 235, 1, SS_ETCHEDHORZ
-	LTEXT "Installed physical memory:", IDC_STATIC, 35, 152, 130, 10
+	LTEXT "Instalovan· fyzick· pamÏù:", IDC_STATIC, 35, 152, 130, 10
 	LTEXT "", IDC_SHELL_ABOUT_PHYSMEM, 167, 152, 88, 10
 	DEFPUSHBUTTON "OK", IDOK, 220, 178, 50, 14
 	
@@ -144,7 +145,7 @@ IDD_SHELL_ABOUT_AUTHORS DIALOGEX MOVEABLE DISCARDABLE 35, 90, 235, 85
 STYLE DS_SHELLFONT | WS_CHILD
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT "ReactOS je d°lem:", IDC_STATIC, 0, 0, 180, 10
+	LTEXT "ReactOS je dÌlem:", IDC_STATIC, 0, 0, 180, 10
 	LISTBOX IDC_SHELL_ABOUT_AUTHORS_LISTBOX, 0, 10, 165, 75
 END
 
@@ -164,135 +165,135 @@ END
 
 SHELL_GENERAL_SHORTCUT_DLG DIALOGEX 0, 0, 235, 215
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Shortcut"
+CAPTION "Z·stupce"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 	ICON "", 14000, 10, 4, 30, 30, WS_VISIBLE
-	LTEXT "Target type:", 14004, 8, 38, 64, 10
+	LTEXT "Typ cÌle:", 14004, 8, 38, 64, 10
 	LTEXT "", 14005, 78, 38, 142, 10
-	LTEXT "Target location:", 14006, 8, 58, 64, 10
+	LTEXT "UmÌstÏnÌ cÌle:", 14006, 8, 58, 64, 10
 	LTEXT "", 14007, 79, 58, 141, 10
-	LTEXT "Target:", 14008, 8, 77, 45, 10
+	LTEXT "&CÌl:", 14008, 8, 77, 45, 10
 	EDITTEXT 14009, 79, 75, 150, 14, ES_AUTOHSCROLL
-	LTEXT "&Start in:", 14010, 8, 96, 57, 10
+	LTEXT "&Spustit v:", 14010, 8, 96, 57, 10
 	EDITTEXT 14011, 79, 94, 150, 14, ES_AUTOHSCROLL
-	LTEXT "Shortcut &key:", 14014, 8, 115, 57, 10
+	LTEXT "Kl·vesov· zk&ratka:", 14014, 8, 115, 57, 10 //FIXME: momentalne se zalamuje a druhe slovo neni videt
 	EDITTEXT 14015, 79, 112, 150, 14, ES_LEFT
-	LTEXT "Run:", 14016, 8, 134, 57, 10
+	LTEXT "Spustit:", 14016, 8, 134, 57, 10
 	EDITTEXT 14017, 79, 131, 150, 14, ES_AUTOHSCROLL
-	LTEXT "C&omment:", 14018, 8, 152, 57, 10
+	LTEXT "&Koment·¯:", 14018, 8, 152, 57, 10
 	EDITTEXT 14019, 79, 149, 150, 14, ES_AUTOHSCROLL
-	PUSHBUTTON "&Find Target...", 14020, 9, 172, 70, 14, ES_LEFT
-	PUSHBUTTON "&Change Icon...", 14021, 84, 172, 70, 14, ES_LEFT
-	PUSHBUTTON "A&dvanced...", 14022, 159, 172, 70, 14, ES_LEFT
+	PUSHBUTTON "&NajÌt cÌl...", 14020, 9, 172, 70, 14, ES_LEFT
+	PUSHBUTTON "&ZmÏnit ikonu...", 14021, 84, 172, 70, 14, ES_LEFT
+	PUSHBUTTON "R&ozöÌ¯enÈ...", 14022, 159, 172, 70, 14, ES_LEFT
 END
 
 SHELL_EXTENDED_SHORTCUT_DLG DIALOGEX 0, 0, 230, 150
 STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
-CAPTION "Extended Properties"
+CAPTION "RozöÌ¯enÈ vlastnosti"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-	LTEXT "Choose the advanced properties you want for this shortcut.", -1, 5, 30, 210, 10
-	CHECKBOX "Run with different credentials", 14000, 25, 50, 150, 10
-	LTEXT "This option can allow you to run the this shortcut as another user, or continue as yourself while protecting your computer and data from unauthorized program activity.", -1, 50, 60, 175, 40
-	CHECKBOX "Run in seperate memory space", 14001, 25, 100, 90, 10, WS_DISABLED
+	LTEXT "Zvolte rozöÌ¯enÈ vlastnosti, kterÈ poûadujtete pro tohoto z·stupce.", -1, 5, 30, 210, 10
+	CHECKBOX "Spustit s jin˝mi povÏ¯enÌmi", 14000, 25, 50, 150, 10
+	LTEXT "Tato moûnost umoûnÌ spustit tohoto z·stupce jako jin˝ uûivatel nebo p¯i spuötÏnÌ se souËasn˝m uûivatelem chr·nit poËÌtaË p¯ed nepovolenou aktivitou programu.", -1, 50, 60, 175, 40
+	CHECKBOX "Spustit v oddÏlenÈm pamÏùovÈm prostoru", 14001, 25, 100, 90, 10, WS_DISABLED
 	PUSHBUTTON "OK", 1, 63, 124, 50, 15, WS_VISIBLE
-	PUSHBUTTON "Abort", 2, 120, 124, 50, 15, WS_VISIBLE
+	PUSHBUTTON "Storno", 2, 120, 124, 50, 15, WS_VISIBLE
 END
 
 SHELL_FILE_GENERAL_DLG DIALOGEX 0, 0, 240, 205
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "General"
+CAPTION "ObecnÈ"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 	ICON "", 14000, 10, 3, 30, 30, WS_VISIBLE
 	EDITTEXT 14001, 70, 9, 158, 14, ES_LEFT | ES_READONLY
-	LTEXT "Type of file:", 14004, 8, 35, 50, 10
-	LTEXT "File", 14005, 68, 35, 160, 10
-	LTEXT "Opens with:", 14006, 8, 53, 50, 10
+	LTEXT "Typ souboru:", 14004, 8, 35, 50, 10
+	LTEXT "Soubor", 14005, 68, 35, 160, 10
+	LTEXT "OtevÌrat v:", 14006, 8, 53, 50, 10
 	LTEXT "", 14007, 68, 53, 160, 10
-	LTEXT "Location:", 14008, 8, 72, 45, 10
+	LTEXT "UmÌstÏnÌ:", 14008, 8, 72, 45, 10
 	LTEXT "", 14009, 68, 72, 315, 10
-	LTEXT "Size:", 14010, 8, 93, 45, 10
+	LTEXT "Velikost:", 14010, 8, 93, 45, 10
 	LTEXT "", 14011, 68, 93, 160, 10
-	LTEXT "Created:", 14014, 8, 118, 45, 10
+	LTEXT "Vytvo¯eno:", 14014, 8, 118, 45, 10
 	LTEXT "", 14015, 68, 118, 160, 10
-	LTEXT "Modified:", 14016, 8, 140, 45, 10
+	LTEXT "ZmÏnÏno:", 14016, 8, 140, 45, 10
 	LTEXT "", 14017, 68, 140, 160, 10
-	LTEXT "Accessed:", 14018, 8, 160, 45, 10
+	LTEXT "Otev¯eno:", 14018, 8, 160, 45, 10
 	LTEXT "", 14019, 68, 160, 160, 10
-	LTEXT "Attributes:", 14020, 8, 189, 45, 10
-	CHECKBOX "&Read-only", 14021, 58, 189, 67, 10
-	CHECKBOX "&Hidden", 14022, 126, 189, 50, 10
-	CHECKBOX "&Archive", 14023, 181, 189, 49, 10
+	LTEXT "Atributy:", 14020, 8, 189, 45, 10
+	CHECKBOX "&Jen pro ËtenÌ", 14021, 58, 189, 67, 10
+	CHECKBOX "&Skryt˝", 14022, 126, 189, 50, 10
+	CHECKBOX "&Archivovat", 14023, 181, 189, 49, 10
 END
 
 SHELL_FILE_VERSION_DLG DIALOGEX 0, 0, 235, 215
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Version"
+CAPTION "Verze"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-	LTEXT "File version: ", 14000, 10, 10, 55, 10
+	LTEXT "Verze souboru: ", 14000, 10, 10, 55, 10
 	LTEXT "", 14001, 77, 10, 152, 10
-	LTEXT "Description: ", 14002, 10, 27, 45, 10
+	LTEXT "Popis: ", 14002, 10, 27, 45, 10
 	LTEXT "", 14003, 77, 27, 152, 10
 	LTEXT "Copyright: ", 14004, 10, 46, 66, 10
 	LTEXT "", 14005, 77, 46, 152, 10
-	GROUPBOX "Other version information: ", 14006, 6, 70, 222, 115
-	LTEXT "Item name: ", 14007, 13, 82, 50, 10
-	LTEXT "Value: ", 14008, 112, 82, 45, 10
+	GROUPBOX "DalöÌ informace o verzi: ", 14006, 6, 70, 222, 115
+	LTEXT "N·zev poloûky: ", 14007, 13, 82, 50, 10
+	LTEXT "Hodnota: ", 14008, 112, 82, 45, 10
 	LISTBOX 14009, 12, 94, 94, 83, LBS_STANDARD | WS_TABSTOP | LBS_NOTIFY
 	EDITTEXT 14010, 112, 93, 109, 83, ES_LEFT | WS_BORDER | WS_VSCROLL | WS_GROUP | ES_MULTILINE | ES_READONLY
 END
 
 DRIVE_GENERAL_DLG DIALOGEX 0, 0, 240, 230
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "General"
+CAPTION "ObecnÈ"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 	EDITTEXT 14001, 40, 20, 190, 14, ES_LEFT|WS_BORDER|WS_GROUP
-	LTEXT "Type:", -1, 15, 55, 40, 10
+	LTEXT "Typ:", -1, 15, 55, 40, 10
 	LTEXT "", 14002, 110, 55, 100, 10
 
-	LTEXT "File system:", -1, 15, 70, 100, 10
+	LTEXT "Souborov˝ systÈm:", -1, 15, 70, 100, 10
 	LTEXT "", 14003, 110, 70, 100, 10
 
 	CONTROL "", 14013, "Static", SS_NOTIFY | SS_SUNKEN | SS_OWNERDRAW, 5, 90, 10, 10
-	LTEXT "Used space:", -1, 25, 90, 120, 10
+	LTEXT "VyuûitÈ mÌsto:", -1, 25, 90, 120, 10
 	LTEXT "", 14004, 110, 90, 120, 10
 	LTEXT "", 14005, 200, 90, 40, 10
 
 	CONTROL "", 14014, "Static", SS_NOTIFY | SS_SUNKEN | SS_OWNERDRAW, 5, 105, 10, 10
-	LTEXT "Free space:", -1, 25, 105, 70, 10
+	LTEXT "VolnÈ mÌsto:", -1, 25, 105, 70, 10
 	LTEXT "", 14006, 110, 105, 120, 10
 	LTEXT "", 14007, 200, 105, 40, 10
 
-	LTEXT "Capacity:", -1, 25, 125, 80, 10
+	LTEXT "Kapacita:", -1, 25, 125, 80, 10
 	LTEXT "", 14008, 110, 125, 120, 10
 	LTEXT "", 14009, 200, 125, 40, 10
 
 	CONTROL "", 14015, "Static", SS_NOTIFY | SS_SUNKEN | SS_OWNERDRAW, 20, 140, 200, 20
 
-	LTEXT "Drive %s", 14010, 100, 170, 40, 10
-	PUSHBUTTON "Disk Cleanup", 14011, 180, 175, 50, 15, WS_TABSTOP
-	CHECKBOX "Compress drive to save disk space", 14012, 15, 205, 180, 10, WS_DISABLED
-	CHECKBOX "Allow Indexing Service to index this disk for fast file searching", 14012, 15, 220, 200, 10, WS_DISABLED
+	LTEXT "Disk %s", 14010, 100, 170, 40, 10
+	PUSHBUTTON "VyËiötÏnÌ disku", 14011, 180, 175, 50, 15, WS_TABSTOP
+	CHECKBOX "äet¯it mÌsto na disku jeho kompresÌ", 14012, 15, 205, 180, 10, WS_DISABLED
+	CHECKBOX "Povolit indexov·nÌ disku pro rychlejöÌ vyhled·v·nÌ", 14012, 15, 220, 200, 10, WS_DISABLED
 END
 
 DRIVE_EXTRA_DLG DIALOGEX 0, 0, 240, 230
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Tools"
+CAPTION "N·stroje"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-	GROUPBOX "Error-checking", -1, 5, 5, 230, 60
-	LTEXT "This option will check the volume for\nerrors.", -1, 40, 25, 160, 20
-	PUSHBUTTON "Check Now...", 14000, 130, 45, 90, 15, WS_TABSTOP
-	GROUPBOX "Defragmentation", -1, 5, 65, 230, 60
-	LTEXT "This option will defragment files on the volume", -1, 40, 85, 160, 20
-	PUSHBUTTON "Defragment Now...", 14001, 130, 105, 90, 15, WS_TABSTOP
-	GROUPBOX "Backup", -1, 5, 130, 230, 60
-	LTEXT "This option will back up files on the volume.", -1, 40, 150, 160, 20
-	PUSHBUTTON "Backup Now...", 14002, 130, 170, 90, 15, WS_TABSTOP
+	GROUPBOX "Kontrola chyb", -1, 5, 5, 230, 60
+	LTEXT "Tento n·stroj otestuje svazek na chyby.", -1, 40, 25, 160, 20
+	PUSHBUTTON "Zkontrolovat...", 14000, 130, 45, 90, 15, WS_TABSTOP
+	GROUPBOX "Defragmentace", -1, 5, 65, 230, 60
+	LTEXT "Tento n·stroj zdefragmentuje soubory na svazku", -1, 40, 85, 160, 20
+	PUSHBUTTON "Defragmentovat...", 14001, 130, 105, 90, 15, WS_TABSTOP
+	GROUPBOX "Z·loha", -1, 5, 130, 230, 60
+	LTEXT "TÌmto n·strojem zaz·lohuje soubory na svazku.", -1, 40, 150, 160, 20
+	PUSHBUTTON "Z·lohovat...", 14002, 130, 170, 90, 15, WS_TABSTOP
 END
 
 DRIVE_HARDWARE_DLG DIALOGEX 0, 0, 240, 230
@@ -304,223 +305,223 @@ END
 
 RUN_AS_DIALOG DIALOGEX 0, 0, 240, 190
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Run As"
+CAPTION "Spustit jako"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-	LTEXT "Which user account do you want to use to run this program?", -1, 10, 20, 220, 20
-	CHECKBOX "Current User %s", 14000, 10, 45, 150, 10
-	LTEXT "Protect my computer and data from unauthorized program activity", -1, 25, 57, 200, 10, WS_DISABLED
-	CHECKBOX "This option can prevent computer viruses from harming your computer or personal data, but selecting it might cause the program to function improperly.", 14001, 25, 68, 200, 30, WS_DISABLED | BS_MULTILINE
-	CHECKBOX "The following user:", 14002, 10, 100, 90, 10
-	LTEXT "User name:", -1, 20, 118, 54, 10
+	LTEXT "Jak˝ uûivatelsk˝ ˙Ëet chcete pouûÌt ke spuötÏnÌ tohoto programu?", -1, 10, 20, 220, 20
+	CHECKBOX "SouËasn˝ uûivatel: %s", 14000, 10, 45, 150, 10
+	LTEXT "Chr·nit poËÌtaË a data p¯ed nedovolenou aktivitou programu", -1, 25, 57, 200, 10, WS_DISABLED
+	CHECKBOX "Tato volba m˘ûe zabr·nit poËÌtaËov˝m vir˘m v poökozenÌ vaöeho poËÌtaËe nebo osobnÌch dat, ale jejÌ vybr·nÌ m˘ûe zp˘sobit nespr·vnÈ fungov·nÌ programu.", 14001, 25, 68, 200, 30, WS_DISABLED | BS_MULTILINE
+	CHECKBOX "N·sledujÌcÌ uûivatel:", 14002, 10, 100, 90, 10
+	LTEXT "UûivatelskÈ jmÈno:", -1, 20, 118, 54, 10
 	COMBOBOX 14003, 75, 115, 100, 15, CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
 
 	PUSHBUTTON "...", 14004, 180, 115, 30, 14, WS_TABSTOP
-	LTEXT "Password:", -1, 20, 143, 53, 10
+	LTEXT "Heslo:", -1, 20, 143, 53, 10
 	EDITTEXT 14005, 74, 140, 100, 14, ES_LEFT | WS_BORDER | WS_GROUP
 	PUSHBUTTON "...", 14006, 180, 140, 30, 14, WS_TABSTOP
 	PUSHBUTTON "OK", 14007, 57, 170, 60, 14, WS_TABSTOP
-	PUSHBUTTON "Cancel", 14008, 122, 170, 60, 14, WS_TABSTOP
+	PUSHBUTTON "Storno", 14008, 122, 170, 60, 14, WS_TABSTOP
 END
 
 BITBUCKET_PROPERTIES_DLG DIALOGEX 0, 0, 240, 190
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Recycle Bin Properties"
+CAPTION "Vlastnosti Koöe"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 	CONTROL "", 14000, "SysListView32", LVS_REPORT | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 10, 10, 220, 50
-	GROUPBOX "Settings for selected location", -1, 10, 72, 220, 70
-	RADIOBUTTON "&Custom size:", 14001, 20, 90, 80, 10, WS_TABSTOP
+	GROUPBOX "NastavenÌ pro vybranÈ umÌstÏnÌ", -1, 10, 72, 220, 70
+	RADIOBUTTON "&Zvolen· velikost:", 14001, 20, 90, 80, 10, WS_TABSTOP
 	EDITTEXT 14002, 106, 87, 50, 14, WS_TABSTOP | ES_NUMBER
-	LTEXT "M&aximum size(MB):", -1, 20, 105, 70, 10
-	RADIOBUTTON "Do not move files to the &Recycle Bin. Remove files immediately when deleted.", 14003, 20, 117, 170, 20, BS_MULTILINE | WS_TABSTOP
-	AUTOCHECKBOX "&Display delete confirmation dialog", 14004, 20, 155, 140, 10, WS_TABSTOP
+	LTEXT "M&axim·lnÌ velikost (MB):", -1, 20, 105, 70, 10
+	RADIOBUTTON "&Nep¯esouvat soubory do Koöe, odstraÚovat okamûitÏ p¯i smaz·nÌ.", 14003, 20, 117, 170, 20, BS_MULTILINE | WS_TABSTOP
+	AUTOCHECKBOX "P¯i maz·nÌ soubor˘ û·&dat potvrzenÌ", 14004, 20, 155, 140, 10, WS_TABSTOP
 END
 
 OPEN_WITH_PROGRAMM_DLG DIALOGEX 0, 0, 264, 256
 STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
-CAPTION "Open With"
+CAPTION "Otev¯Ìt v..."
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 	ICON IDI_SHELL_OPEN_WITH, -1, 8, 12, 21, 20
-	LTEXT "Choose the program you want to use to open this file:", -1, 44, 12, 211, 10
-	LTEXT "File:    ", 14001, 44, 25, 188, 10
-	GROUPBOX "&Programs", -1, 7, 42, 249, 187
+	LTEXT "Vyberte program, ve kterÈm chcete otev¯Ìt tento soubor: ", -1, 44, 12, 211, 10
+	LTEXT "Soubor:    ", 14001, 44, 25, 188, 10
+	GROUPBOX "&Programy", -1, 7, 42, 249, 187
         LISTBOX 14002, 16 ,57, 230, 130, LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP, WS_EX_STATICEDGE
-	AUTOCHECKBOX "&Always use the selected program to open this kind of file", 14003, 20, 193, 225, 10
-	PUSHBUTTON "&Browse...", 14004, 198, 207, 50, 14
+	AUTOCHECKBOX "&Vûdy pouûÌt vybran˝ program k otev¯enÌ tohoto typu souboru", 14003, 20, 193, 225, 10
+	PUSHBUTTON "P&roch·zet...", 14004, 198, 207, 50, 14
 	PUSHBUTTON "OK", 14005, 150, 236, 50, 14
-	PUSHBUTTON "Cancel", 14006, 206, 236, 50, 14
+	PUSHBUTTON "Storno", 14006, 206, 236, 50, 14
 END
 
 FOLDER_OPTIONS_GENERAL_DLG DIALOGEX 0, 0, 264, 256
 STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
-CAPTION "General"
+CAPTION "ObecnÈ"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 
-GROUPBOX "Tasks", -1, 7, 10, 249, 45
+GROUPBOX "⁄koly", -1, 7, 10, 249, 45
 //ICON
-AUTORADIOBUTTON "Show common tasks in &folders", 14001, 40, 25, 120, 10, WS_TABSTOP
-AUTORADIOBUTTON "Use ReactOS class&ic folders", 14002, 40, 37, 120, 10, WS_TABSTOP
-GROUPBOX "Browse folders", -1, 7, 60, 249, 45, WS_TABSTOP
+AUTORADIOBUTTON "&Zobrazit bÏûnÈ operace ve sloûk·ch", 14001, 40, 25, 120, 10, WS_TABSTOP
+AUTORADIOBUTTON "PouûÌt klas&ickÈ sloûky ReactOS", 14002, 40, 37, 120, 10, WS_TABSTOP
+GROUPBOX "Proch·zenÌ sloûek", -1, 7, 60, 249, 45, WS_TABSTOP
 //ICON
-AUTORADIOBUTTON "Open each folder in the sa&me window", 14004, 40, 70, 140, 10, WS_TABSTOP
-AUTORADIOBUTTON "Open each folder in its own &window", 14005, 40, 82, 140, 10, WS_TABSTOP
-GROUPBOX "Click items as follows", -1, 7, 110, 249, 60
+AUTORADIOBUTTON "OtevÌrat kaûdou sloûku ve stejnÈ&m oknÏ", 14004, 40, 70, 140, 10, WS_TABSTOP
+AUTORADIOBUTTON "Ote&vÌrat kaûdou sloûku ve svÈm vlastnÌm oknÏ", 14005, 40, 82, 140, 10, WS_TABSTOP
+GROUPBOX "Klik·nÌ na poloûky", -1, 7, 110, 249, 60
 //ICON
-AUTORADIOBUTTON "&Single-click to open an item (point to select)", 14007, 40, 120, 170, 10, WS_TABSTOP
-AUTORADIOBUTTON "Underline icon titles consistent with my &browser", 14008, 50, 132, 170, 10, WS_TABSTOP
-AUTORADIOBUTTON "Underline icon titles only when I &point at them", 14009, 50, 144, 170, 10, WS_TABSTOP
-AUTORADIOBUTTON "&Double-click to open an item (single-click to select)", 14010, 40, 156, 170, 10, WS_TABSTOP
-PUSHBUTTON "&Restore Defaults", 14011, 180, 180, 60, 14, WS_TABSTOP
+AUTORADIOBUTTON "Jedno kliknutÌ k &otev¯enÌ poloûky (vybrat uk·z·nÌm)", 14007, 40, 120, 170, 10, WS_TABSTOP
+AUTORADIOBUTTON "Podtrh·vat n·zvy ikon podle &nastavenÌ prohlÌûeËe", 14008, 50, 132, 170, 10, WS_TABSTOP
+AUTORADIOBUTTON "Podtrh·vat n·zvy ikon jen &p¯i uk·z·nÌ na nÏ", 14009, 50, 144, 170, 10, WS_TABSTOP
+AUTORADIOBUTTON "&DvojkliknutÌ k otev¯enÌ poloûky (vybrat kliknutÌm)", 14010, 40, 156, 170, 10, WS_TABSTOP
+PUSHBUTTON "O&bnovit v˝chozÌ", 14011, 180, 180, 60, 14, WS_TABSTOP
 END
 
 FOLDER_OPTIONS_VIEW_DLG DIALOGEX 0, 0, 264, 256
 STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
-CAPTION "View"
+CAPTION "ZobrazenÌ"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-GROUPBOX "Folder views", -1, 7, 10, 249, 60
+GROUPBOX "ZobrazenÌ sloûky", -1, 7, 10, 249, 60
 //ICON
-LTEXT "You can apply the view(such as Details or Tiles) that\nyou are using for this folder to all folders.", -1, 60, 20, 180, 20
-PUSHBUTTON "Apply to A&ll Folders", 14001, 60, 50, 80, 14, WS_TABSTOP
-PUSHBUTTON "&Reset All Folders", 14002, 150, 50, 80, 14, WS_TABSTOP
-LTEXT "Advanced settings:", -1, 7, 80, 100, 10
+LTEXT "ZobrazenÌ pouûitÈ pro tuto sloûku (jako t¯eba Podrobnosti nebo Miniatury)\n lze pouûÌt pro vöechny sloûky.", -1, 60, 20, 180, 20
+PUSHBUTTON "&PouûÌt pro vöechny sloûky", 14001, 60, 50, 80, 14, WS_TABSTOP
+PUSHBUTTON "Ob&novit vöechny sloûky", 14002, 150, 50, 80, 14, WS_TABSTOP
+LTEXT "PokroËil· nastavenÌ:", -1, 7, 80, 100, 10
 CONTROL "", 14003, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_NOCOLUMNHEADER | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 7, 90, 249, 120
-PUSHBUTTON "Restore &Defaults", 14004, 180, 210, 80, 14, WS_TABSTOP
+PUSHBUTTON "Obnovit v˝chozÌ", 14004, 180, 210, 80, 14, WS_TABSTOP
 END
 
 FOLDER_OPTIONS_FILETYPES_DLG DIALOGEX 0, 0, 264, 256
 STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
-CAPTION "File Types"
+CAPTION "Typy soubor˘"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-LTEXT "Registered file &types:", -1, 7, 10, 70, 10
+LTEXT "RegistrovanÈ &typy soubor˘:", -1, 7, 10, 70, 10
 CONTROL "", 14000, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 7, 20, 249, 80
-PUSHBUTTON "&New", 14001, 120, 110, 50, 14, WS_TABSTOP
-PUSHBUTTON "&Delete", 14002, 180, 110, 50, 14, WS_TABSTOP
-GROUPBOX "Details for '%s' extension", 14003, 7, 130, 249, 70
-LTEXT "Opens with:", -1, 12, 140, 40, 10
+PUSHBUTTON "&Nov˝", 14001, 120, 110, 50, 14, WS_TABSTOP
+PUSHBUTTON "O&dstranit", 14002, 180, 110, 50, 14, WS_TABSTOP
+GROUPBOX "Podrobnosti pro typ soubor˘ '%s'", 14003, 7, 130, 249, 70
+LTEXT "OtevÌrat v:", -1, 12, 140, 40, 10
 //ICON
 LTEXT "Appname", 14005, 100, 140, 40, 10
-PUSHBUTTON "&Change...", 14006, 180, 140, 50, 14, WS_TABSTOP
-LTEXT "Files with extension '%s' are of type '%s'. To\nchange settings that affect all '%s' files, click\nAdvanced.", 14007, 12, 155, 160, 30
-PUSHBUTTON "Ad&vanced", 14008, 180, 175, 50, 14, WS_TABSTOP
+PUSHBUTTON "&ZmÏnit...", 14006, 180, 140, 50, 14, WS_TABSTOP
+LTEXT "Soubory s p¯Ìponou '%s' jsou typu '%s'. KliknutÌm\nna tlaËÌtko PokroËilÈ lze zmÏnit nastavenÌ pro vöechny\nsoubory '%s'.", 14007, 12, 155, 160, 30
+PUSHBUTTON "&PokroËilÈ", 14008, 180, 175, 50, 14, WS_TABSTOP
 END
 
 CONFIRM_FILE_REPLACE_DLG DIALOGEX 0, 0, 282, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_SETFOREGROUND | DS_CENTER | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "Confirm File Replace"
+CAPTION "Potvrdit nahrazenÌ souboru"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	DEFPUSHBUTTON "&Yes", IDYES, 20, 122, 60, 14
-	PUSHBUTTON "Yes to &All", 12807, 85, 122, 60, 14
-	PUSHBUTTON "&No", IDNO, 150, 122, 60, 14
-	PUSHBUTTON "Cancel", IDCANCEL, 215, 122, 60, 14
+	DEFPUSHBUTTON "&Ano", IDYES, 20, 122, 60, 14
+	PUSHBUTTON "Ano vö&em", 12807, 85, 122, 60, 14
+	PUSHBUTTON "&Ne", IDNO, 150, 122, 60, 14
+	PUSHBUTTON "Storno", IDCANCEL, 215, 122, 60, 14
 	ICON 146, -1, 11, 10, 21, 20, SS_REALSIZECONTROL
-	LTEXT "This folder already contains a file named '%2'.", 12291, 44, 10, 231, 22, SS_NOPREFIX
-	LTEXT "This folder already contains a read-only file named '%2'.", 12292, 41, 10, 222, 22, SS_NOPREFIX
-	LTEXT "This folder already contains a system file named '%2'.", 12293, 41, 10, 222, 22, SS_NOPREFIX
-	LTEXT "Would you like to replace the existing file", -1, 44, 35, 228, 10, SS_NOPREFIX
-	LTEXT "(unknown date and size)", 12302, 79, 51, 198, 20, SS_NOPREFIX
+	LTEXT "Tato sloûka jiû obsahuje soubor s n·zvem '%2'.", 12291, 44, 10, 231, 22, SS_NOPREFIX
+	LTEXT "Tato sloûka jiû obsahuje soubor pouze pro ËtenÌ s n·zvem '%2'.", 12292, 41, 10, 222, 22, SS_NOPREFIX
+	LTEXT "Tato sloûka jiû obsahuje systÈmov˝ soubor s n·zvem '%2'.", 12293, 41, 10, 222, 22, SS_NOPREFIX
+	LTEXT "Chcete nahradit existujÌcÌ soubor", -1, 44, 35, 228, 10, SS_NOPREFIX
+	LTEXT "(nezn·mÈ datum a velikost)", 12302, 79, 51, 198, 20, SS_NOPREFIX
 	ICON "", 12300, 50, 49, 21, 20, SS_REALSIZECONTROL
-	LTEXT "with this one?", -1, 44, 75, 228, 10, SS_NOPREFIX
-	LTEXT "(unknown date and size)", 12303, 79, 91, 198, 20, SS_NOPREFIX
+	LTEXT "tÌmto?", -1, 44, 75, 228, 10, SS_NOPREFIX
+	LTEXT "(nezn·mÈ datum a velikost)", 12303, 79, 91, 198, 20, SS_NOPREFIX
 	ICON "", 12301, 50, 89, 21, 20, SS_REALSIZECONTROL
 END
 
 LOGOFF_DLG DIALOGEX 0, 0, 190, 60
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Log Off ReactOS"
+CAPTION "Odhl·sit se ze systÈmu ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	ICON 45, 14344, 10, 10, 21, 20, SS_REALSIZECONTROL
-	LTEXT "Are you sure you want to log off?", -1, 43, 11, 140, 22
-	DEFPUSHBUTTON "&Log Off", IDOK, 57, 40, 60, 14
-	PUSHBUTTON "Cancel", IDCANCEL, 122, 40, 60, 14
+	LTEXT "Opravdu se chcete odhl·sit?", -1, 43, 11, 140, 22
+	DEFPUSHBUTTON "&Odhl·sit", IDOK, 57, 40, 60, 14
+	PUSHBUTTON "Storno", IDCANCEL, 122, 40, 60, 14
 END
 
 DISCONNECT_DLG DIALOGEX 0, 0, 190, 60
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Disconnect ReactOS"
+CAPTION "Odpojit se od systÈmu ReactOS" //jak to prelozit, kde to v realu uvidim?
 FONT 8, "MS Shell Dlg"
 BEGIN
 	ICON 49, 14346, 10, 10, 21, 20, SS_REALSIZECONTROL
-	LTEXT "Are you sure you want to disconnect?", -1, 49, 12, 137, 23
-	DEFPUSHBUTTON "&Disconnect", IDOK, 57, 40, 60, 14
-	PUSHBUTTON "Cancel", IDCANCEL, 123, 40, 60, 14
+	LTEXT "Opravdu se chcete odpojit?", -1, 49, 12, 137, 23
+	DEFPUSHBUTTON "&Odpojit", IDOK, 57, 40, 60, 14
+	PUSHBUTTON "Storno", IDCANCEL, 123, 40, 60, 14
 END
 
 AUTOPLAY1_DLG DIALOGEX 0, 0, 227, 218
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CAPTION
-CAPTION "AutoPlay"
+CAPTION "Autop¯ehr·v·nÌ"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT "&Select a content type, then choose an action for ReactOS to perform automatically when that type is used in this device:", 1000, 7, 7, 215, 20
+	LTEXT "Vyberte &typ obsahu a akci, kterou systÈm ReactOS automaticky provede kdyû se v tomto za¯ÌzenÌ objevÌ tento typ obsahu:", 1000, 7, 7, 215, 20
 	CONTROL "", 1001, "COMBOBOXEX32", WS_TABSTOP | 0x00000043, 7, 27, 212, 200
-	GROUPBOX "Actions", -1, 7, 45, 212, 146
-	AUTORADIOBUTTON "Select an action to &perform:", 1005, 14, 54, 202, 10, WS_GROUP
+	GROUPBOX "Akce", -1, 7, 45, 212, 146
+	AUTORADIOBUTTON "Zvolte akci, kter· bude &provedena:", 1005, 14, 54, 202, 10, WS_GROUP
 	CONTROL "LIST2", 1002, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C04D, 22, 66, 192, 107
-	AUTORADIOBUTTON "Prompt me each time to &choose an action", 1006, 14, 177, 202, 10
-	PUSHBUTTON "&Restore Defaults", 1008, 108, 197, 110, 14, WS_DISABLED
+	AUTORADIOBUTTON "&Vûdy se zeptat se na v˝bÏr akce", 1006, 14, 177, 202, 10
+	PUSHBUTTON "&Obnovit v˝chozÌ", 1008, 108, 197, 110, 14, WS_DISABLED
 END
 
 MIXED_CONTENT1_DLG DIALOGEX 0, 0, 227, 207
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CAPTION
-CAPTION "Mixed Content"
+CAPTION "SmÌöen˝ obsah"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	ICON "", 1000, 5, 7, 21, 20
-	LTEXT "This disk or device contains more than one type of content.", 1001, 32, 7, 191, 20
-	LTEXT "What do you want ReactOS to do?", 1002, 32, 31, 188, 8
+	LTEXT "Tento disk nebo za¯ÌzenÌ obsahuje vÌc neû jeden typ obsahu.", 1001, 32, 7, 191, 20
+	LTEXT "Co m· systÈm ReactOS provÈst?", 1002, 32, 31, 188, 8
 	CONTROL "", 1003, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C04D, 32, 43, 188, 139
 	DEFPUSHBUTTON "OK", IDOK, 96, 186, 60, 14
-	PUSHBUTTON "Cancel", IDCANCEL, 160, 186, 60, 14
+	PUSHBUTTON "Storno", IDCANCEL, 160, 186, 60, 14
 END
 
 MIXED_CONTENT2_DLG DIALOGEX 0, 0, 227, 206
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CAPTION
-CAPTION "Mixed Content"
+CAPTION "SmÌöen˝ obsah"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	ICON "", 1000, 5, 7, 21, 20
-	LTEXT "ReactOS can perform the same action each time you insert a disk or connect a device with this kind of file:", 1001, 30, 7, 193, 20
+	LTEXT "ReactOS m˘ûe provÈst stejnou akci vûdy, kdyû vloûÌte disk Ëi p¯ipojÌte za¯ÌzenÌ s tÌmto druhem souboru:", 1001, 30, 7, 193, 20
 	ICON "", 1005, 32, 27, 11, 10, SS_REALSIZECONTROL
 	EDITTEXT 1006, 49, 28, 177, 14, ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
-	LTEXT "What do you want ReactOS to do?", 1002, 32, 41, 190, 8
+	LTEXT "Co m· systÈm ReactOS provÈst?", 1002, 32, 41, 190, 8
 	CONTROL "", 1003, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C04D, 32, 55, 188, 112
-	AUTOCHECKBOX "Always do the selected action.", 1004, 32, 171, 190, 10
+	AUTOCHECKBOX "Zvolenou akci provÈst vûdy.", 1004, 32, 171, 190, 10
 	DEFPUSHBUTTON "OK", IDOK, 96, 185, 60, 14
-	PUSHBUTTON "Cancel", IDCANCEL, 160, 185, 60, 14
+	PUSHBUTTON "Storno", IDCANCEL, 160, 185, 60, 14
 END
 
 AUTOPLAY2_DLG DIALOGEX 0, 0, 227, 181
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CAPTION
-CAPTION "Autoplay"
+CAPTION "Autop¯ehr·v·nÌ"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	ICON "", 1000, 5, 7, 21, 20
-	LTEXT "ReactOS can perform the same action each time you connect this device.", 1001, 32, 7, 190, 22
-	LTEXT "&What do you want ReactOS to do?", 1002, 32, 31, 190, 8
+	LTEXT "ReactOS m˘ûe provÈst stejnou akci vûdy, kdyû p¯ipojÌte toto za¯ÌzenÌ.", 1001, 32, 7, 190, 22
+	LTEXT "&Co m· systÈm ReactOS provÈst?", 1002, 32, 31, 190, 8
 	CONTROL "", 1003, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C04D, 32, 43, 187, 96
-	AUTOCHECKBOX "&Always perform the selected action", 1004, 32, 143, 190, 8
+	AUTOCHECKBOX "Zvolenou akci provÈst &vûdy", 1004, 32, 143, 190, 8
 	DEFPUSHBUTTON "OK", IDOK, 94, 160, 60, 14
-	PUSHBUTTON "Cancel", IDCANCEL, 159, 160, 60, 14
+	PUSHBUTTON "Storno", IDCANCEL, 159, 160, 60, 14
 END
 
 SHUTDOWN_DLG DIALOGEX 0, 0, 211, 103
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Shut Down ReactOS"
+CAPTION "Vypnout ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	ICON 8240, -1, 6, 6, 21, 20, SS_REALSIZECONTROL | WS_GROUP
-	LTEXT "What do you want the computer to do?", -1, 39, 7, 167, 10
+	LTEXT "Co m· poËÌtaË provÈst?", -1, 39, 7, 167, 10
 	COMBOBOX 8224, 39, 20, 165, 200, CBS_DROPDOWNLIST | WS_VSCROLL
-	LTEXT "Maintains your session, keeping the computer running on low power with data still in memory. The computer wakes up when you press a key or move the mouse.", 8225, 39, 40, 167, 37
+	LTEXT "Uchov· toto sezenÌ, poËÌtaË pobÏûÌ se snÌûenou spot¯ebou s daty st·le v pamÏti. ProbudÌ se p¯i stisknutÌ kl·vesu nebo pohybu myöi.", 8225, 39, 40, 167, 37
 	DEFPUSHBUTTON "OK", 1, 7, 82, 60, 14, WS_GROUP
-	PUSHBUTTON "Cancel", IDCANCEL, 75, 82, 60, 14
-	PUSHBUTTON "&Help", IDHELP, 144, 82, 60, 14
+	PUSHBUTTON "Storno", IDCANCEL, 75, 82, 60, 14
+	PUSHBUTTON "&N·povÏda", IDHELP, 144, 82, 60, 14
 END
 
 FORMAT_DLG DIALOGEX 50, 50, 184, 218
@@ -528,34 +529,34 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBL
 CAPTION "Format"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	DEFPUSHBUTTON "&Start", IDOK, 53, 198, 60, 14
-	PUSHBUTTON "&Close", IDCANCEL, 118, 198, 60, 14
-	LTEXT "Ca&pacity:", -1, 7, 6, 169, 9
+	DEFPUSHBUTTON "&Spustit", IDOK, 53, 198, 60, 14
+	PUSHBUTTON "&Zav¯Ìt", IDCANCEL, 118, 198, 60, 14
+	LTEXT "&Kapacita:", -1, 7, 6, 169, 9
 	COMBOBOX 28673, 7, 17, 170, 200, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
-	LTEXT "&File system", -1, 7, 35, 170, 9
+	LTEXT "&Souborov˝ systÈm", -1, 7, 35, 170, 9
 	COMBOBOX 28677, 7, 46, 170, 200, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
 	CONTROL "", 28678, "MSCTLS_PROGRESS32", 0, 7, 181, 170, 8
-	LTEXT "&Allocation unit size", -1, 7, 64, 170, 9
+	LTEXT "&Velikost alokaËnÌ jednotky", -1, 7, 64, 170, 9
 	COMBOBOX 28680, 7, 75, 170, 200, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
-	LTEXT "Volume &label", -1, 7, 93, 170, 9
+	LTEXT "&Jmenovka svazku", -1, 7, 93, 170, 9
 	EDITTEXT 28679, 7, 103, 170, 13, ES_AUTOHSCROLL
-	GROUPBOX "Format &options", 4610, 7, 121, 170, 49
-	AUTOCHECKBOX "&Quick Format", 28674, 16, 135, 155, 10
-	AUTOCHECKBOX "&Enable Compression", 28675, 16, 152, 155, 10
+	GROUPBOX "Moûnosti &form·tov·nÌ", 4610, 7, 121, 170, 49
+	AUTOCHECKBOX "&RychlÈ form·tov·nÌ", 28674, 16, 135, 155, 10
+	AUTOCHECKBOX "&Aktivovat kompresi", 28675, 16, 152, 155, 10
 END
 
 IDD_PICK_ICON_DIALOG DIALOGEX 0, 0, 237, 204
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "Change Icon"
+CAPTION "ZmÏnit ikonu"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    LTEXT "Filename:", -1, 7, 14, 208, 10
-    PUSHBUTTON      "Browse...",IDC_BUTTON_PATH, 148, 24,67,14
+    LTEXT "N·zev souboru:", -1, 7, 14, 208, 10
+    PUSHBUTTON      "Proch·zet...",IDC_BUTTON_PATH, 148, 24,67,14
     EDITTEXT        IDC_EDIT_PATH, 6, 24, 135, 15, ES_AUTOHSCROLL
-    LTEXT "Icons:", -1, 7, 47, 208, 10
+    LTEXT "Ikony:", -1, 7, 47, 208, 10
     LISTBOX         IDC_PICKICON_LIST,7,57,208,119,LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | LBS_MULTICOLUMN | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP,WS_EX_STATICEDGE
     DEFPUSHBUTTON   "OK",IDOK, 107, 181,50, 14
-    PUSHBUTTON      "Cancel",IDCANCEL, 167, 181, 50, 14
+    PUSHBUTTON      "Storno",IDCANCEL, 167, 181, 50, 14
 END
 
 STRINGTABLE DISCARDABLE
@@ -570,16 +571,16 @@ BEGIN
 	IDS_SHV_COLUMN7             "VolnÈ mÌsto"
 	IDS_SHV_COLUMN8             "JmÈno"
 	IDS_SHV_COLUMN9             "Koment·¯"
-	IDS_SHV_COLUMN10            "Owner"
-	IDS_SHV_COLUMN11            "Group"
-	IDS_SHV_COLUMN_DELFROM      "Original location"
-	IDS_SHV_COLUMN_DELDATE      "Date deleted"
+	IDS_SHV_COLUMN10            "VlastnÌk"
+	IDS_SHV_COLUMN11            "Skupina"
+	IDS_SHV_COLUMN_DELFROM      "P˘vodnÌ umÌstÏnÌ"
+	IDS_SHV_COLUMN_DELDATE      "OdstranÏno"
 
 	/* special folders */
 	IDS_DESKTOP                 "Plocha"
 	IDS_MYCOMPUTER              "Tento poËÌtaË"
-	IDS_RECYCLEBIN_FOLDER_NAME  "Trash"
-	IDS_CONTROLPANEL            "Control Panel"
+	IDS_RECYCLEBIN_FOLDER_NAME  "Koö"
+	IDS_CONTROLPANEL            "Ovl·dacÌ panely"
 
 	/* context menus */
 	IDS_VIEW_LARGE              "&Vedle sebe"
@@ -589,95 +590,94 @@ BEGIN
 	IDS_SELECT                  "Vybrat"
 	IDS_OPEN                    "Otev¯Ìt"
 
-	IDS_CREATEFOLDER_DENIED     "Nelze vytvo¯it novou sloûku protoûe p¯istup byl odep¯en."
+	IDS_CREATEFOLDER_DENIED     "Nelze vytvo¯it novou sloûku, protoûe p¯Ìstup byl odep¯en."
 	IDS_CREATEFOLDER_CAPTION    "Chyba p¯i pokusu vytvo¯it nov˝ adres·¯"
 	IDS_DELETEITEM_CAPTION      "Potvrdit odstranÏnÌ souboru"
 	IDS_DELETEFOLDER_CAPTION    "Potvrdit odstranÏnÌ adres·¯e"
 	IDS_DELETEITEM_TEXT         "Opravdu chcete odstranit '%1'?"
 	IDS_DELETEMULTIPLE_TEXT     "Opravdu chcete odstranit tÏchto %1 poloûek?"
-	IDS_DELETESELECTED_TEXT     "Are you sure you want to delete the selected item(s)?"
-	IDS_TRASHITEM_TEXT          "Are you sure that you want to send '%1' to the Trash?"
-	IDS_TRASHFOLDER_TEXT        "Are you sure that you want to send '%1' and all its content to the Trash?"
-	IDS_TRASHMULTIPLE_TEXT      "Are you sure that you want to send these %1 items to the Trash?"
-	IDS_CANTTRASH_TEXT          "The item '%1' can't be sent to Trash. Do you want to delete it instead?"
-	IDS_OVERWRITEFILE_TEXT      "This folder already contains a file called '%1'.\n\nDo you want to replace it?"
+	IDS_DELETESELECTED_TEXT     "Opravdu chcete odstranit zvolenÈ poloûky?"
+	IDS_TRASHITEM_TEXT          "Opravdu chcete p¯esunout '%1' do Koöe?"
+	IDS_TRASHFOLDER_TEXT        "Opravdu chcete p¯esunout sloûku '%1' a vöechen jejÌ obsah do Koöe?"
+	IDS_TRASHMULTIPLE_TEXT      "Opravdu chcete p¯esunout tÏchto %1 poloûek do Koöe?"
+	IDS_CANTTRASH_TEXT          "Poloûka '%1' nem˘ûe b˝t p¯esunuta do Koöe. Chcete ji mÌsto toho smazat?"
+	IDS_OVERWRITEFILE_TEXT      "Tato sloûka jiû obsahuje soubor s n·zvem '%1'.\n\nChcete jej p¯epsat?"
 	IDS_OVERWRITEFILE_CAPTION   "Potvrdit p¯eps·nÌ souboru"
-	IDS_OVERWRITEFOLDER_TEXT    "This folder already contains a folder named '%1'.\n\n"\
-		"If the files in the destination folder have the same names as files in the\n"\
-		"selected folder they will be replaced. Do you still want to move or copy\n"\
-		"the folder?"
+	IDS_OVERWRITEFOLDER_TEXT    "Tato sloûka jiû obsahuje sloûku s n·zvem '%1'.\n\n"\
+		"Pokud majÌ soubory v cÌlovÈ sloûce stejnÈ n·zvy jako soubory ve zvolenÈ\n"\
+		"sloûce, budou p¯eps·ny. Opravdu chcete p¯esunout nebo zkopÌrovat tuto sloûku?"
 
 	/* message box strings */
-	IDS_RESTART_TITLE           "Restart"
-	IDS_RESTART_PROMPT          "Do you want to restart the system?"
-	IDS_SHUTDOWN_TITLE          "Shutdown"
-	IDS_SHUTDOWN_PROMPT         "Do you want to shutdown?"
+	IDS_RESTART_TITLE           "Restartovat"
+	IDS_RESTART_PROMPT          "Opravdu chcete restartovat systÈm?"
+	IDS_SHUTDOWN_TITLE          "Vypnout"
+	IDS_SHUTDOWN_PROMPT         "Opravdu chcete vypnout poËÌtaË?"
 
 	/* shell folder path default values */
-	IDS_PROGRAMS                "Start Menu\\Programs"
-	IDS_PERSONAL                "My Documents"
-	IDS_FAVORITES               "Favorites"
-	IDS_STARTUP                 "Start Menu\\Programs\\StartUp"
-	IDS_RECENT                  "Recent"
+	IDS_PROGRAMS                "NabÌdka Start\\Programy"
+	IDS_PERSONAL                "Dokumenty"
+	IDS_FAVORITES               "OblÌbenÈ"
+	IDS_STARTUP                 "NabÌdka Start\\Programy\\Po spuötÏnÌ"
+	IDS_RECENT                  "PoslednÌ dokumenty"
 	IDS_SENDTO                  "SendTo"
-	IDS_STARTMENU               "Start Menu"
-	IDS_MYMUSIC                 "My Music"
-	IDS_MYVIDEO                 "My Videos"
-	IDS_DESKTOPDIRECTORY        "Desktop"
-	IDS_NETHOOD                 "NetHood"
-	IDS_TEMPLATES               "Templates"
-	IDS_APPDATA                 "Application Data"
-	IDS_PRINTHOOD               "PrintHood"
-	IDS_LOCAL_APPDATA           "Local Settings\\Application Data"
+	IDS_STARTMENU               "NabÌdka Start"
+	IDS_MYMUSIC                 "Hudba"
+	IDS_MYVIDEO                 "Filmy"
+	IDS_DESKTOPDIRECTORY        "Plocha"
+	IDS_NETHOOD                 "OkolnÌ sÌù"
+	IDS_TEMPLATES               "äablony"
+	IDS_APPDATA                 "Data aplikacÌ"
+	IDS_PRINTHOOD               "OkolnÌ tisk·rny"
+	IDS_LOCAL_APPDATA           "Local Settings\\Data aplikacÌ"
 	IDS_INTERNET_CACHE          "Local Settings\\Temporary Internet Files"
 	IDS_COOKIES                 "Cookies"
 	IDS_HISTORY                 "Local Settings\\History"
 	IDS_PROGRAM_FILES           "Program Files"
-	IDS_MYPICTURES              "My Pictures"
+	IDS_MYPICTURES              "Obr·zky"
 	IDS_PROGRAM_FILES_COMMON    "Program Files\\Common Files"
-	IDS_COMMON_DOCUMENTS        "Documents"
-	IDS_ADMINTOOLS              "Start Menu\\Programs\\Administrative Tools"
-	IDS_COMMON_MUSIC            "Documents\\My Music"
-	IDS_COMMON_PICTURES         "Documents\\My Pictures"
-	IDS_COMMON_VIDEO            "Documents\\My Videos"
-	IDS_CDBURN_AREA             "Local Settings\\Application Data\\Microsoft\\CD Burning"
-	IDS_NETWORKPLACE            "My Network Places"
+	IDS_COMMON_DOCUMENTS        "Dokumenty"
+	IDS_ADMINTOOLS              "NabÌdka Start\\Programy\\N·stroje pro spr·vu"
+	IDS_COMMON_MUSIC            "Documents\\Hudba"
+	IDS_COMMON_PICTURES         "Documents\\Obr·zky"
+	IDS_COMMON_VIDEO            "Documents\\Filmy"
+	IDS_CDBURN_AREA             "Local Settings\\Data aplikacÌ\\Microsoft\\CD Burning"
+	IDS_NETWORKPLACE            "MÌsta v sÌti"
 
-	IDS_NEWFOLDER               "New Folder"
+	IDS_NEWFOLDER               "Nov· sloûka"
 
-	IDS_DRIVE_FIXED             "Local Disk"
+	IDS_DRIVE_FIXED             "MÌstnÌ disk"
 	IDS_DRIVE_CDROM             "CDROM"
-	IDS_DRIVE_NETWORK           "Network Disk"
+	IDS_DRIVE_NETWORK           "SÌùov˝ Disk"
 
-	IDS_OPEN_WITH               "Open With"
-	IDS_OPEN_WITH_CHOOSE        "Choose Program..."
+	IDS_OPEN_WITH               "Otev¯Ìt v"
+	IDS_OPEN_WITH_CHOOSE        "Zvolit program..."
 
-	IDS_SHELL_ABOUT_AUTHORS     "&Authors"
-	IDS_SHELL_ABOUT_BACK        "< &Back"
-	FCIDM_SHVIEW_NEW	    "&Nov˝"
+	IDS_SHELL_ABOUT_AUTHORS     "&Auto¯i"
+	IDS_SHELL_ABOUT_BACK        "< &ZpÏt"
+	FCIDM_SHVIEW_NEW	          "&Nov˝"
 	FCIDM_SHVIEW_NEWFOLDER 	    "Nov· &sloûka"
-	FCIDM_SHVIEW_NEWLINK 	    "Nov˝ &z·stupce"
-	IDS_FOLDER_OPTIONS          "Folder Options"
-	IDS_RECYCLEBIN_LOCATION     "Recycle Bin Location"
-	IDS_RECYCLEBIN_DISKSPACE    "Space Available"
-	IDS_EMPTY_BITBUCKET         "Empty Recycle Bin"
-	IDS_PICK_ICON_TITLE         "Choose Icon"
-	IDS_PICK_ICON_FILTER        "Icon Files(*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0"
-	IDS_OPEN_WITH_FILTER        "Executable Files\0*.exe\0"
-	IDS_DIRECTORY               "Folder"
-	IDS_VIRTUAL_DRIVER          "Virtual Device Driver"
-	IDS_BAT_FILE                "ReactOS Batch File"
-	IDS_CMD_FILE                "ReactOS Command Script"
-	IDS_COM_FILE                "Dos Application"
-	IDS_CPL_FILE                "Control Panel Item"
-	IDS_CUR_FILE                "Cursor"
-	IDS_DLL_FILE                "Application Extension"
-	IDS_DRV_FILE                "Device Driver"
-	IDS_EXE_FILE                "Application"
-	IDS_FON_FILE                "Font file"
-	IDS_TTF_FILE                "TrueType Font file"
-	IDS_HLP_FILE                "Help File"
-	IDS_INI_FILE                "Configuration Settings"
-	IDS_LNK_FILE                "Shortcut"
-	IDS_SYS_FILE                "System file"
+	FCIDM_SHVIEW_NEWLINK 	      "Nov˝ &z·stupce"
+	IDS_FOLDER_OPTIONS          "Moûnosti sloûky"
+	IDS_RECYCLEBIN_LOCATION     "UmÌstÏnÌ koöe"
+	IDS_RECYCLEBIN_DISKSPACE    "DostupnÈ mÌsto"
+	IDS_EMPTY_BITBUCKET         "Vysypat koö"
+	IDS_PICK_ICON_TITLE         "Zvolit ikonu"
+	IDS_PICK_ICON_FILTER        "Soubory ikon (*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0"
+	IDS_OPEN_WITH_FILTER        "SpustitelnÈ soubory\0*.exe\0"
+	IDS_DIRECTORY               "Sloûka"
+	IDS_VIRTUAL_DRIVER          "Virtu·lnÌ ovladaË za¯ÌzenÌ"
+	IDS_BAT_FILE                "ReactOS d·vkov˝ soubor"
+	IDS_CMD_FILE                "ReactOS p¯Ìkazov˝ skript"
+	IDS_COM_FILE                "DOSov· aplikace"
+	IDS_CPL_FILE                "Poloûka Ovl·dacÌch panel˘"
+	IDS_CUR_FILE                "Kurzor"
+	IDS_DLL_FILE                "RozöÌ¯enÌ aplikace"
+	IDS_DRV_FILE                "OvladaË za¯ÌzenÌ"
+	IDS_EXE_FILE                "Aplikace"
+	IDS_FON_FILE                "Soubor pÌsma"
+	IDS_TTF_FILE                "Soubor pÌsma TrueType"
+  IDS_HLP_FILE                "Soubor n·povÏdy"
+	IDS_INI_FILE                "KonfiguraËnÌ nastavenÌ"
+	IDS_LNK_FILE                "Z·stupce"
+	IDS_SYS_FILE                "SystÈmov˝ soubor"
 END
