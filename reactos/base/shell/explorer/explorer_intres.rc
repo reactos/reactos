@@ -91,7 +91,7 @@ BEGIN
     "IDB_IMAGES BITMAP DISCARDABLE ""res/images.bmp""\r\n"
     "IDB_TOOLBAR BITMAP DISCARDABLE ""res/toolbar.bmp""\r\n"
     "#endif\r\n"
-    "#ifndef _ROS_\r\n"
+    "#ifndef __REACTOS__\r\n"
     "LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL\r\n"
     "STRINGTABLE DISCARDABLE \r\n"
     "BEGIN\r\n"
@@ -199,7 +199,7 @@ IDI_RECENT              ICON    DISCARDABLE     "res/recent-documents.ico"
 IDB_IMAGES BITMAP DISCARDABLE "res/images.bmp"
 IDB_TOOLBAR BITMAP DISCARDABLE "res/toolbar.bmp"
 #endif
-#ifndef _ROS_
+#ifndef __REACTOS__
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 STRINGTABLE DISCARDABLE
 BEGIN
