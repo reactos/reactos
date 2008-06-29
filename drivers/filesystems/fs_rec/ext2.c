@@ -21,10 +21,10 @@ FsRecIsExt2Volume(IN pext2_super_block SuperBlock)
 {
     BOOLEAN Result = TRUE;
     PAGED_CODE();
-    
+
     if (SuperBlock->s_magic != EXT2_SUPER_MAGIC)
       Result = FALSE;
-      
+
     return Result;
 }
 
