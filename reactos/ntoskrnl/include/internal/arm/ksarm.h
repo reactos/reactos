@@ -1,6 +1,6 @@
 /*
  * PROJECT:         ReactOS Kernel
- * LICENSE:         GPL - See COPYING in the top level directory
+ * LICENSE:         BSD - See COPYING.ARM in the top level directory
  * FILE:            ntoskrnl/include/internal/arm/ksarm.h
  * PURPOSE:         Definitions and offsets for ARM Assembly and C code
  * PROGRAMMERS:     ReactOS Portable Systems Group

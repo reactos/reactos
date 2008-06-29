@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS Kernel
- * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            ntoskrnl/ex/exinrin.c
+ * LICENSE:         BSD - See COPYING.ARM in the top level directory
+ * FILE:            ntoskrnl/ex/exintrin.c
  * PURPOSE:         Exported kernel functions which are now intrinsics
  * PROGRAMMERS:     ReactOS Portable Systems Group
  */

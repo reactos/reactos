@@ -1,6 +1,6 @@
 /*
  * PROJECT:         ReactOS Kernel
- * LICENSE:         GPL - See COPYING in the top level directory
+ * LICENSE:         BSD - See COPYING.ARM in the top level directory
  * FILE:            ntoskrnl/mm/arm/stubs.c
  * PURPOSE:         ARM Memory Manager
  * PROGRAMMERS:     ReactOS Portable Systems Group
@@ -124,7 +124,7 @@ MmDeletePageTable(IN PEPROCESS Process,
     //
     // Not valid for kernel addresses
     //
-    DPRINT1("MmDeletePageTable(%p, %p)\n", Process, Address);
+    DPRINT("MmDeletePageTable(%p, %p)\n", Process, Address);
     ASSERT(Address < MmSystemRangeStart);
     
     //
@@ -388,7 +388,7 @@ MmCreateVirtualMappingForKernel(IN PVOID Address,
     MMPTE TempPte, TempPde;
     NTSTATUS Status;
     PFN_NUMBER Pfn;
-    DPRINT1("[KMAP]: %p %d\n", Address, PageCount);
+    DPRINT("[KMAP]: %p %d\n", Address, PageCount);
     //ASSERT(Address >= MmSystemRangeStart);
 
     //
@@ -679,7 +679,7 @@ MmCreateHyperspaceMapping(IN PFN_TYPE Page)
     //
     Address = HYPER_SPACE + ((PointerPte - FirstPte) * PAGE_SIZE);
     KiFlushSingleTb(FALSE, Address);
-    DPRINT1("[HMAP]: %p %lx\n", Address, Page);
+    DPRINT("[HMAP]: %p %lx\n", Address, Page);
     return Address;
 }
 
@@ -689,7 +689,7 @@ MmDeleteHyperspaceMapping(IN PVOID Address)
 {
     PFN_TYPE Pfn;
     PMMPTE PointerPte;
-    DPRINT1("[HUNMAP]: %p\n", Address);
+    DPRINT("[HUNMAP]: %p\n", Address);
     
     //
     // Get the PTE

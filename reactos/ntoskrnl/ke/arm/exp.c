@@ -1,6 +1,6 @@
 /*
  * PROJECT:         ReactOS Kernel
- * LICENSE:         GPL - See COPYING in the top level directory
+ * LICENSE:         BSD - See COPYING.ARM in the top level directory
  * FILE:            ntoskrnl/ke/arm/exp.c
  * PURPOSE:         Implements exception helper routines for ARM machines
  * PROGRAMMERS:     ReactOS Portable Systems Group

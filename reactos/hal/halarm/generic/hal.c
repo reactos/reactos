@@ -1,6 +1,6 @@
 /*
  * PROJECT:         ReactOS HAL
- * LICENSE:         GPL - See COPYING in the top level directory
+ * LICENSE:         BSD - See COPYING.ARM in the top level directory
  * FILE:            hal/halarm/generic/hal.c
  * PURPOSE:         Hardware Abstraction Layer
  * PROGRAMMERS:     ReactOS Portable Systems Group

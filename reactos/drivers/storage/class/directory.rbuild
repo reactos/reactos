@@ -10,4 +10,7 @@
 	<directory name="disk">
 		<xi:include href="disk/disk.rbuild" />
 	</directory>
+	<directory name="ramdisk">
+		<xi:include href="ramdisk/ramdisk.rbuild" />
+	</directory>
 </group>

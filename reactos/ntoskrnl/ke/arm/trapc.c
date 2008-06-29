@@ -1,6 +1,6 @@
 /*
  * PROJECT:         ReactOS Kernel
- * LICENSE:         GPL - See COPYING in the top level directory
+ * LICENSE:         BSD - See COPYING.ARM in the top level directory
  * FILE:            ntoskrnl/ke/arm/trapc.c
  * PURPOSE:         Implements the various trap handlers for ARM exceptions
  * PROGRAMMERS:     ReactOS Portable Systems Group

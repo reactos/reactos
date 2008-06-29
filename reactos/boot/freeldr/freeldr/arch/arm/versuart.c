@@ -1,6 +1,6 @@
 /*
  * PROJECT:         ReactOS Boot Loader
- * LICENSE:         GPL - See COPYING in the top level directory
+ * LICENSE:         BSD - See COPYING.ARM in the top level directory
  * FILE:            boot/freeldr/arch/arm/versuart.c
  * PURPOSE:         Implements code for Versatile boards using the PL011 UART
  * PROGRAMMERS:     ReactOS Portable Systems Group
