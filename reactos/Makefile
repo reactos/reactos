@@ -118,6 +118,7 @@
 #            -c           Clean as you go. Delete generated files as soon as they are not needed anymore.
 #            -dd          Disable automatic dependencies.
 #            -dm{module}  Check only automatic dependencies for this module.
+#            -hd          Disable precompiled headers.
 #            -mi          Let make handle creation of install directories. Rbuild will not generate the directories.
 #            -ps          Generate proxy makefiles in source tree instead of the output tree.
 #            -ud          Disable compilation units.

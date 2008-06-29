@@ -160,6 +160,7 @@ public:
 	bool AutomaticDependencies;
 	bool CheckDependenciesForModuleOnly;
 	bool CompilationUnitsEnabled;
+	bool PrecompiledHeadersEnabled;
 	std::string CheckDependenciesForModuleOnlyModule;
 	std::string VSProjectVersion;
 	std::string VSConfigurationType;

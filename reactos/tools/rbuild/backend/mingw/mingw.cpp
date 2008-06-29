@@ -1074,30 +1074,38 @@ MingwBackend::DetectPCHSupport ()
 {
 	printf ( "Detecting compiler pre-compiled header support..." );
 
-	string path = "tools" + sSep + "rbuild" + sSep + "backend" + sSep + "mingw" + sSep + "pch_detection.h";
-	string cmd = ssprintf (
-		"%s -c %s 1>%s 2>%s",
-		FixSeparatorForSystemCommand(compilerCommand).c_str (),
-		path.c_str (),
-		NUL,
-		NUL );
-	system ( cmd.c_str () );
-	path += ".gch";
-
-	FILE* f = fopen ( path.c_str (), "rb" );
-	if ( f )
+	if ( configuration.PrecompiledHeadersEnabled )
 	{
-		use_pch = true;
-		fclose ( f );
-		unlink ( path.c_str () );
+		string path = "tools" + sSep + "rbuild" + sSep + "backend" + sSep + "mingw" + sSep + "pch_detection.h";
+		string cmd = ssprintf (
+			"%s -c %s 1>%s 2>%s",
+			FixSeparatorForSystemCommand(compilerCommand).c_str (),
+			path.c_str (),
+			NUL,
+			NUL );
+		system ( cmd.c_str () );
+		path += ".gch";
+	
+		FILE* f = fopen ( path.c_str (), "rb" );
+		if ( f )
+		{
+			use_pch = true;
+			fclose ( f );
+			unlink ( path.c_str () );
+		}
+		else
+			use_pch = false;
+
+		if ( use_pch )
+			printf ( "detected\n" );
+		else
+			printf ( "not detected\n" );
 	}
 	else
+	{
 		use_pch = false;
-
-	if ( use_pch )
-		printf ( "detected\n" );
-	else
-		printf ( "not detected\n" );
+		printf ( "disabled\n" );
+	}
 }
 
 void

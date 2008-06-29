@@ -83,6 +83,24 @@ ParseCompilationUnitSwitch (
 }
 
 bool
+ParsePrecompiledHeaderSwitch (
+	char switchChar2,
+	char* switchStart )
+{
+	switch ( switchChar2 )
+	{
+		case 'd':
+			configuration.PrecompiledHeadersEnabled = false;
+			break;
+		default:
+			printf ( "Unknown switch -h%c\n",
+			         switchChar2 );
+			return false;
+	}
+	return true;
+}
+
+bool
 ParseVCProjectSwitch (
 	char switchChar2,
 	char* switchStart )
@@ -214,6 +232,11 @@ ParseSwitch ( int argc, char** argv, int index )
 			return ParseAutomaticDependencySwitch (
 				switchChar2,
 				argv[index] );
+		case 'h':
+			return ParsePrecompiledHeaderSwitch (
+				switchChar2,
+				argv[index] );
+
 		case 'u':
 			return ParseCompilationUnitSwitch (
 				switchChar2,
