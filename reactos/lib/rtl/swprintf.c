@@ -689,21 +689,9 @@ int __cdecl _vsnwprintf(wchar_t *buf, size_t cnt, const wchar_t *fmt, va_list ar
 	}
 	if (str <= end)
 		*str = L'\0';
-    else if (cnt > 0)
-	{
+	else if (cnt > 0)
 		/* don't write out a null byte if the buf size is zero */
-		//*end = '\0';
-	   if (str-buf >cnt )
-       {
-		 *end = L'\0';
-       }
-       else
-       {
-           end++;
-          *end = L'\0';
-       }
-
-    }
+		*end = L'\0';
 	return str-buf;
 }
 
