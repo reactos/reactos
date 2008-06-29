@@ -168,6 +168,7 @@ InitApplet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
 	PROPSHEETHEADER psh;
 	INT i=0;
 	PConsoleInfo pConInfo;
+	WCHAR szTitle[100];
 	PConsoleInfo pSharedInfo = (PConsoleInfo)wParam;
 
 	UNREFERENCED_PARAMETER(uMsg);
@@ -222,17 +223,24 @@ InitApplet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
 	ZeroMemory(&psh, sizeof(PROPSHEETHEADER));
 	psh.dwSize = sizeof(PROPSHEETHEADER);
 	psh.dwFlags =  PSH_PROPSHEETPAGE | PSH_NOAPPLYNOW;
-
 	if(_tcslen(pConInfo->szProcessName))
 	{
 		psh.dwFlags |= PSH_PROPTITLE;
 		psh.pszCaption = pConInfo->szProcessName;
-  	}
+	}
+	else
+	{
+		if (!GetConsoleTitleW(szTitle, sizeof(szTitle)/sizeof(WCHAR)))
+		{
+			_tcscpy(szTitle, _T("cmd.exe"));
+		}
+		szTitle[(sizeof(szTitle)/sizeof(WCHAR))-1] = _T('\0');
+		psh.pszCaption = szTitle;
+	}
 
 	psh.hwndParent = hwnd;
 	psh.hInstance = hApplet;
 	psh.hIcon = LoadIcon(hApplet, MAKEINTRESOURCE(IDC_CPLICON));
-	psh.pszCaption = 0;
 	psh.nPages = 4;
 	psh.nStartPage = 0;
 	psh.ppsp = psp;
