@@ -1590,7 +1590,7 @@ MingwModuleHandler::GenerateLinkerCommand (
 
 	string linkerScriptArgument;
 	if ( module.linkerScript != NULL )
-		linkerScriptArgument = ssprintf ( " -T=%s", backend->GetFullName ( *module.linkerScript->file ).c_str () );
+		linkerScriptArgument = ssprintf ( " -T %s", backend->GetFullName ( *module.linkerScript->file ).c_str () );
 	else
 		linkerScriptArgument = "";
 
