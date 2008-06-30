@@ -279,7 +279,6 @@ IntGdiAddFontResource(PUNICODE_STRING FileName, DWORD Characteristics)
    PSECTION_OBJECT SectionObject;
    ULONG ViewSize = 0;
    FT_Fixed XScale, YScale;
-   UNICODE_STRING FileNameCopy;
 
    /* Open the font file */
 
@@ -355,8 +354,18 @@ IntGdiAddFontResource(PUNICODE_STRING FileName, DWORD Characteristics)
       return 0;
    }
 
-   RtlDuplicateUnicodeString(RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE, FileName, &FileNameCopy);
-   FontGDI->Filename = FileNameCopy.Buffer;
+   FontGDI->Filename = ExAllocatePool(PagedPool, FileName->Length + sizeof(WCHAR));
+   if (FontGDI->Filename == NULL)
+   {
+      EngFreeMem(FontGDI);
+      FT_Done_Face(Face);
+      ObDereferenceObject(SectionObject);
+      ExFreePool(Entry);
+      SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+      return 0;      
+   }
+   memcpy(FontGDI->Filename, FileName->Buffer, FileName->Length);
+   FontGDI->Filename[FileName->Length / sizeof(WCHAR)] = L'\0';
    FontGDI->face = Face;
 
    /* FIXME: Complete text metrics */

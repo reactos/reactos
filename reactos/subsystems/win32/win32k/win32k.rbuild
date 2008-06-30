@@ -182,7 +182,7 @@
 	<library>win32k_base</library>
 	<library>pseh</library>
 	<library>ntoskrnl</library>
-	<library>ntdll</library>
+	<library>libcntpr</library>
 	<library>hal</library>
 	<library>freetype</library>
 	<library>dxguid</library>

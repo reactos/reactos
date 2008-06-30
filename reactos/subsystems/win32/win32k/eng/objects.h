@@ -70,7 +70,7 @@ typedef struct _FLOATGDI {
 typedef struct _FONTGDI {
   FONTOBJ FontObj;
 
-  LPCWSTR Filename;
+  LPWSTR Filename;
   FT_Face face;
   TEXTMETRICW TextMetric;
 } FONTGDI, *PFONTGDI;
