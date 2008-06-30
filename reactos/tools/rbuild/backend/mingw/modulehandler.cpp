@@ -1608,7 +1608,7 @@ MingwModuleHandler::GenerateLinkerCommand (
 	if ( !module.HasImportLibrary() )
 	{
 		fprintf ( fMakefile,
-		          "\t%s %s%s %s %s%s%s %s -o %s\n",
+		          "\t%s %s%s %s %s%s %s %s -o %s\n",
 		          linker.c_str (),
 		          linkerParameters.c_str (),
 		          linkerScriptArgument.c_str (),
@@ -1635,7 +1635,7 @@ MingwModuleHandler::GenerateLinkerCommand (
 		          module.underscoreSymbols ? " --add-underscore" : "" );
 
 		fprintf ( fMakefile,
-		          "\t%s %s%s %s %s %s%s%s %s -o %s\n",
+		          "\t%s %s%s %s %s %s%s %s %s -o %s\n",
 		          linker.c_str (),
 		          linkerParameters.c_str (),
 		          linkerScriptArgument.c_str (),
