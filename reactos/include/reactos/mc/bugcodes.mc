@@ -1436,6 +1436,14 @@ Language=English
 CRITICAL_OBJECT_TERMINATION
 .
 
+MessageId=0xF8
+Severity=Success
+Facility=System
+SymbolicName=RAMDISK_BOOT_INITIALIZATION_FAILED
+Language=English
+An initialization failure occurred while attempting to boot from the RAM disk.
+.
+
 MessageId=0xFC
 Severity=Success
 Facility=System
