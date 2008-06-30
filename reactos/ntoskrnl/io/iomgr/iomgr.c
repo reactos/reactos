@@ -514,7 +514,7 @@ IoInitSystem(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
                                            BusRelations);
     
     /* Check if this was a ramdisk boot */
-    if (RtlEqualMemory(LoaderBlock->ArcBootDeviceName, "ramdisk(0)", 10))
+    if (!_strnicmp(LoaderBlock->ArcBootDeviceName, "ramdisk(0)", 10))
     {
         /* Initialize the ramdisk driver */
         IopStartRamdisk(LoaderBlock);
