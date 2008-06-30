@@ -5,24 +5,10 @@
 	<cdfile>icon.ico</cdfile>
 	<cdfile>readme.txt</cdfile>
 
-	<if property="ARCH" value="i386">
-		<directory name="i386">
-			<xi:include href="i386/directory.rbuild" />
-		</directory>
-	</if>
-<!--
-	<if property="ARCH" value="powerpc">
-		<directory name="ppc">
-			<xi:include href="ppc/directory.rbuild" />
-		</directory>
-	</if>
--->
-	<if property="ARCH" value="arm">
-		<directory name="arm">
-			<xi:include href="arm/directory.rbuild" />
-		</directory>
-	</if>
-
+	<cdfile installbase="$(CDOUTPUT)">hivecls_$(ARCH).inf</cdfile>
+	<cdfile installbase="$(CDOUTPUT)">hivedef_$(ARCH).inf</cdfile>
+	<cdfile installbase="$(CDOUTPUT)">hivesft_$(ARCH).inf</cdfile>
+	<cdfile installbase="$(CDOUTPUT)">hivesys_$(ARCH).inf</cdfile>
 	<cdfile installbase="$(CDOUTPUT)">txtsetup.sif</cdfile>
 	<cdfile installbase="$(CDOUTPUT)">unattend.inf</cdfile>
 
