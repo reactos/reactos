@@ -16,6 +16,7 @@
 
 #define ISSPACE(a)	(a == ' ' || a == '\t')
 
+extern void __main();
 extern int PASCAL wWinMain (HINSTANCE hInst, HINSTANCE hPrevInst,
                             LPWSTR szCmdLine, int nShow);
 
@@ -25,6 +26,12 @@ wmain (int argc, const wchar_t *argv[], const wchar_t *environ[])
   wchar_t *szCmd;
   STARTUPINFOW startinfo;
   int nRet;
+
+#ifdef __GNUC__
+  /* C++ initialization. (gcc inserts this call automatically for
+   * a function called "main", but not for "wmain") */
+  __main();
+#endif
 
   /* Get the command line passed to the process. */
   szCmd = GetCommandLineW ();
