@@ -53,7 +53,6 @@ GENERATE_ARM_STUB RtlGetCallersAddress
 GENERATE_ARM_STUB RtlUnwind 
 GENERATE_ARM_STUB RtlpGetExceptionAddress
 GENERATE_ARM_STUB RtlDispatchException
-GENERATE_ARM_STUB DebugService2
 GENERATE_ARM_STUB RtlpGetStackLimits
 
 GENERATE_ARM_STUB KdpGdbStubInit

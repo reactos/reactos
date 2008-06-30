@@ -240,10 +240,91 @@ MmDeleteVirtualMapping(IN PEPROCESS Process,
                        OUT PBOOLEAN WasDirty,
                        OUT PPFN_TYPE Page)
 {
+    PMMPTE PointerPte, PointerPde;
+    MMPTE Pte;
+    
     //
-    // TODO
+    // Check if this is for a different process
     //
-    UNIMPLEMENTED;
+    if ((Process) && (Process != PsGetCurrentProcess()))
+    {
+        //
+        // TODO
+        //
+        UNIMPLEMENTED;
+        return;
+    }
+    
+    //
+    // Get the PDE
+    //
+    PointerPde = MiGetPdeAddress(Address);
+    if (PointerPde->u.Hard.L1.Fault.Type == FaultPte)
+    {
+        //
+        // Invalid PDE
+        //
+        if (WasDirty) *WasDirty = FALSE;
+        if (Page) *Page = 0;
+        return;
+    }
+    
+    //
+    // Get the PTE
+    //
+    PointerPte = MiGetPteAddress(Address);
+    ASSERT(PointerPte->u.Hard.L2.Small.Type == SmallPte);
+    
+    //
+    // Save the PTE
+    //
+    Pte = *PointerPte;
+    
+    //
+    // Destroy the PTE
+    //
+    PointerPte->u.Hard.AsUlong = 0;
+    ASSERT(PointerPte->u.Hard.L2.Fault.Type == FaultPte);
+
+    //
+    // Flush the TLB
+    //
+    KiFlushSingleTb(TRUE, Address);
+    
+    //
+    // Check if the PTE was valid
+    //
+    if (Pte.u.Hard.L2.Fault.Type != FaultPte)
+    {
+        //
+        // Mark the page as unmapped
+        //
+        MmMarkPageUnmapped(Pte.u.Hard.L2.Small.BaseAddress);
+    }
+    else
+    {
+        //
+        // Make it sane
+        //
+        Pte.u.Hard.L2.Small.BaseAddress = 0;
+    }
+    
+    //
+    // Check if this was our page, and valid
+    //
+    if ((FreePage) && (Pte.u.Hard.L2.Fault.Type != FaultPte))
+    {
+        //
+        // Release it
+        //
+        MmReleasePageMemoryConsumer(MC_NPPOOL, Pte.u.Hard.L2.Small.BaseAddress);
+    }
+    
+    //
+    // Return if the page was dirty
+    //
+    if (WasDirty) *WasDirty = TRUE; // LIE!!!
+    if (Page) *Page = Pte.u.Hard.L2.Small.BaseAddress;
 }
 
 VOID

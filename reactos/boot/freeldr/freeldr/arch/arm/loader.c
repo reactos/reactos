@@ -30,7 +30,6 @@ CHAR ArmArcBootPath[64];
 CHAR ArmArcHalPath[64];
 CHAR ArmNtHalPath[64];
 CHAR ArmNtBootPath[64];
-WCHAR ArmModuleName[64];
 PNLS_DATA_BLOCK ArmNlsDataBlock;
 PLOADER_PARAMETER_EXTENSION ArmExtension;
 BIOS_MEMORY_DESCRIPTOR ArmBoardMemoryDescriptors[16] = {{0}};
@@ -48,6 +47,7 @@ extern ROS_KERNEL_ENTRY_POINT KernelEntryPoint;
 extern ULONG_PTR KernelBase;
 extern ULONG_PTR AnsiData, OemData, UnicodeData, RegistryData, KernelData, HalData, DriverData[16];
 extern ULONG RegistrySize, AnsiSize, OemSize, UnicodeSize, KernelSize, HalSize, DriverSize[16];
+extern PCHAR DriverName[16];
 extern ULONG Drivers;
 extern ULONG BootStack, TranslationTableStart, TranslationTableEnd;
 
@@ -1061,6 +1061,7 @@ ArmPrepareForReactOS(IN BOOLEAN Setup)
     ULONG ArcDiskCount = 0, Checksum = 0;
     PMASTER_BOOT_RECORD Mbr;
     PULONG Buffer;
+    PWCHAR ArmModuleName;
 
     //
     // Allocate the ARM Shared Heap
@@ -1231,6 +1232,7 @@ ArmPrepareForReactOS(IN BOOLEAN Setup)
     //
     // Setup loader entry for the kernel
     //
+    ArmModuleName = ArmAllocateFromSharedHeap(64 * sizeof(WCHAR));
     wcscpy(ArmModuleName, L"ntoskrnl.exe");
     LdrEntry = ArmAllocateFromSharedHeap(sizeof(LDR_DATA_TABLE_ENTRY));
     RtlZeroMemory(LdrEntry, sizeof(LDR_DATA_TABLE_ENTRY));
@@ -1244,12 +1246,55 @@ ArmPrepareForReactOS(IN BOOLEAN Setup)
     LdrEntry->FullDllName.Buffer = (PVOID)((ULONG_PTR)LdrEntry->FullDllName.Buffer | KSEG0_BASE);
     LdrEntry->BaseDllName.Buffer = (PVOID)((ULONG_PTR)LdrEntry->BaseDllName.Buffer | KSEG0_BASE);
     InsertTailList(&ArmLoaderBlock->LoadOrderListHead, &LdrEntry->InLoadOrderLinks);
+
+    //
+    // Setup loader entry for the HAL
+    //
+    ArmModuleName = ArmAllocateFromSharedHeap(64 * sizeof(WCHAR));
+    wcscpy(ArmModuleName, L"hal.dll");
+    LdrEntry = ArmAllocateFromSharedHeap(sizeof(LDR_DATA_TABLE_ENTRY));
+    RtlZeroMemory(LdrEntry, sizeof(LDR_DATA_TABLE_ENTRY));
+    LdrEntry->DllBase = (PVOID)(HalData | KSEG0_BASE);
+    LdrEntry->SizeOfImage = HalSize;
+    LdrEntry->EntryPoint = (PVOID)RtlImageNtHeader((PVOID)HalData)->
+                                  OptionalHeader.AddressOfEntryPoint;
+    LdrEntry->EntryPoint = (PVOID)((ULONG_PTR)LdrEntry->EntryPoint | KSEG0_BASE);
+    LdrEntry->LoadCount = 1;
+    LdrEntry->Flags = LDRP_IMAGE_DLL | LDRP_ENTRY_PROCESSED;
+    RtlInitUnicodeString(&LdrEntry->FullDllName, ArmModuleName);
+    RtlInitUnicodeString(&LdrEntry->BaseDllName, ArmModuleName);
+    LdrEntry->FullDllName.Buffer = (PVOID)((ULONG_PTR)LdrEntry->FullDllName.Buffer | KSEG0_BASE);
+    LdrEntry->BaseDllName.Buffer = (PVOID)((ULONG_PTR)LdrEntry->BaseDllName.Buffer | KSEG0_BASE);
+    InsertTailList(&ArmLoaderBlock->LoadOrderListHead, &LdrEntry->InLoadOrderLinks);
     
     //
     // Build descriptors for the drivers loaded
     //
     for (i = 0; i < Drivers; i++)
     {
+        //
+        // Setup loader entry for the driver
+        //
+        LdrEntry = ArmAllocateFromSharedHeap(sizeof(LDR_DATA_TABLE_ENTRY));
+        RtlZeroMemory(LdrEntry, sizeof(LDR_DATA_TABLE_ENTRY));
+        LdrEntry->DllBase = (PVOID)(DriverData[i] | KSEG0_BASE);
+        LdrEntry->SizeOfImage = DriverSize[i];
+        LdrEntry->EntryPoint = (PVOID)RtlImageNtHeader((PVOID)DriverData[i])->
+                                      OptionalHeader.AddressOfEntryPoint;
+        LdrEntry->EntryPoint = (PVOID)((ULONG_PTR)LdrEntry->EntryPoint | KSEG0_BASE);
+        LdrEntry->LoadCount = 1;
+        LdrEntry->Flags = LDRP_IMAGE_DLL | LDRP_ENTRY_PROCESSED;
+        ArmModuleName = ArmAllocateFromSharedHeap(64 * sizeof(WCHAR));
+        RtlZeroMemory(ArmModuleName, 64 * sizeof(WCHAR));
+        LdrEntry->FullDllName.Length = strlen(DriverName[i]) * sizeof(WCHAR);
+        LdrEntry->FullDllName.MaximumLength = LdrEntry->FullDllName.Length;
+        LdrEntry->FullDllName.Buffer = ArmModuleName;
+        LdrEntry->BaseDllName = LdrEntry->FullDllName;
+        while (*DriverName[i]) *ArmModuleName++ = *DriverName[i]++;
+        LdrEntry->FullDllName.Buffer = (PVOID)((ULONG_PTR)LdrEntry->FullDllName.Buffer | KSEG0_BASE);
+        LdrEntry->BaseDllName.Buffer = (PVOID)((ULONG_PTR)LdrEntry->BaseDllName.Buffer | KSEG0_BASE);
+        InsertTailList(&ArmLoaderBlock->LoadOrderListHead, &LdrEntry->InLoadOrderLinks);
+
         //
         // Build a descriptor for the driver
         //

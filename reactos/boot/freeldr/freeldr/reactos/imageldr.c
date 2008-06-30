@@ -19,6 +19,7 @@ extern BOOLEAN FrLdrLoadDriver(PCHAR szFileName, INT nPos);
 ULONG Drivers;
 PVOID AnsiData, OemData, UnicodeData, RegistryData, KernelData, HalData, DriverData[16];
 ULONG RegistrySize, AnsiSize, OemSize, UnicodeSize, KernelSize, HalSize, DriverSize[16];
+PCHAR DriverName[16];
 
 /* MODULE MANAGEMENT **********************************************************/
 
@@ -568,6 +569,7 @@ FrLdrMapImage(IN FILE *Image,
     }
     else
     {
+        DriverName[Drivers] = reactos_module_strings[ImageId];
         DriverData[Drivers] = (PVOID)NextModuleBase;
         DriverSize[Drivers] = ImageSize;
         Drivers++;

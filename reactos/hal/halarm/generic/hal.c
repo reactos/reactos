@@ -11,6 +11,7 @@
 #include <hal.h>
 #define NDEBUG
 #include <debug.h>
+#include <ndk/inbvfuncs.h>
 
 #undef ExAcquireFastMutex
 #undef ExReleaseFastMutex
@@ -173,15 +174,6 @@ ExTryToAcquireFastMutex(
 }
 
 
-VOID
-NTAPI
-HalAcquireDisplayOwnership(
-  PHAL_RESET_DISPLAY_PARAMETERS ResetDisplayParameters)
-{
-  UNIMPLEMENTED;
-}
-
-
 NTSTATUS
 NTAPI
 HalAdjustResourceList(
@@ -295,15 +287,49 @@ HalDisableSystemInterrupt(
   return TRUE;
 }
 
+VOID
+NTAPI
+HalAcquireDisplayOwnership(IN PHAL_RESET_DISPLAY_PARAMETERS ResetDisplayParameters)
+{
+    //
+    // Stub since Windows XP implemented Inbv
+    //
+    return;
+}
 
 VOID
 NTAPI
-HalDisplayString(
-  PCH String)
+HalDisplayString(IN PCH String)
 {
-  UNIMPLEMENTED;
+    //
+    // Call the Inbv driver
+    //
+    InbvDisplayString(String);
 }
 
+VOID
+NTAPI
+HalQueryDisplayParameters(OUT PULONG DispSizeX,
+                          OUT PULONG DispSizeY,
+                          OUT PULONG CursorPosX,
+                          OUT PULONG CursorPosY)
+{
+    //
+    // Stub since Windows XP implemented Inbv
+    //
+    return;
+}
+
+VOID
+NTAPI
+HalSetDisplayParameters(IN ULONG CursorPosX,
+                        IN ULONG CursorPosY)
+{
+    //
+    // Stub since Windows XP implemented Inbv
+    //
+    return;
+}
 
 BOOLEAN
 NTAPI
@@ -672,27 +698,6 @@ HalProcessorIdle(VOID)
 }
 
 
-BOOLEAN
-NTAPI
-HalQueryDisplayOwnership(VOID)
-{
-  UNIMPLEMENTED;
-
-  return FALSE;
-}
-
-
-VOID
-NTAPI
-HalQueryDisplayParameters(
-  OUT PULONG DispSizeX,
-  OUT PULONG DispSizeY,
-  OUT PULONG CursorPosX,
-  OUT PULONG CursorPosY)
-{
-  UNIMPLEMENTED;
-}
-
 #define RTC_DATA   (PVOID)0xE00E8000
 
 BOOLEAN
@@ -729,13 +734,6 @@ HalReadDmaCounter(
   return 0;
 }
 
-
-VOID
-NTAPI
-HalReleaseDisplayOwnership(VOID)
-{
-  UNIMPLEMENTED;
-}
 
 VOID
 NTAPI
@@ -813,16 +811,6 @@ HalSetBusDataByOffset(
   UNIMPLEMENTED;
 
   return 0;
-}
-
-
-VOID
-NTAPI
-HalSetDisplayParameters(
-  ULONG CursorPosX,
-  ULONG CursorPosY)
-{
-  UNIMPLEMENTED;
 }
 
 

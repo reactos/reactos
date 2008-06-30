@@ -46,6 +46,18 @@ DebugService(IN ULONG ServiceType,
 }
 
 VOID
+DebugService2(IN ULONG Arg1,
+              IN ULONG Arg2,
+              IN ULONG Service)
+{
+    //
+    // FIXME: ARM Bring-up Hack
+    //
+    void arm_kprintf(const char *fmt, ...);
+    arm_kprintf("Loading symbols for %Z...\n", (PCHAR)Arg1);
+}
+
+VOID
 NTAPI
 KiInitMachineDependent(VOID)
 {
