@@ -297,7 +297,6 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
     PCHAR BootDeviceName, CommandLine;
     PDEVICE_OBJECT PhysicalDeviceObject;
     NTSTATUS Status;
-    DPRINT1("RAMDISK Class Driver\n");
     
     //
     // Query ramdisk parameters
