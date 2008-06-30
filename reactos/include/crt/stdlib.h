@@ -420,8 +420,9 @@ _CRTIMP wchar_t* __cdecl __MINGW_NOTHROW  _itow (int, wchar_t*, int);
 _CRTIMP wchar_t* __cdecl __MINGW_NOTHROW  _ltow (long, wchar_t*, int);
 _CRTIMP wchar_t* __cdecl __MINGW_NOTHROW  _ultow (unsigned long, wchar_t*, int);
 
-#ifdef __MSVCRT__
 _CRTIMP __int64 __cdecl __MINGW_NOTHROW	_atoi64(const char *);
+    
+#ifdef __MSVCRT__
 _CRTIMP char* __cdecl __MINGW_NOTHROW	_i64toa(__int64, char *, int);
 _CRTIMP char* __cdecl __MINGW_NOTHROW	_ui64toa(unsigned __int64, char *, int);
 _CRTIMP __int64 __cdecl __MINGW_NOTHROW	_wtoi64(const wchar_t *);
