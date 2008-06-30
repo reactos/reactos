@@ -23,6 +23,9 @@
 		</directory>
 	</if>
 
+	<cdfile installbase="$(CDOUTPUT)">txtsetup.sif</cdfile>
+	<cdfile installbase="$(CDOUTPUT)">unattend.inf</cdfile>
+
 	<directory name="bootcd">
 		<xi:include href="bootcd/bootcd.rbuild" />
 	</directory>
