@@ -1,3 +1,9 @@
+1.09 (20080630)
+=======================
+* Fixed bug with Conversion function: "Category" type must be found like "from" and "to" because the combobox sorts its items alphabetically.
+* Fixed bug with memory function and GNU multi-precision libraries: the memory must be initialized to zero when the calculator starts, otherwise "MP" will crash.
+* Fixed bug when closing an expression with right parentheses.
+
 1.08 (20080520)
 =======================
 * Added macro DISABLE_HTMLHELP_SUPPORT for disabling the compilation of htmlhelp support.

@@ -387,6 +387,7 @@ void exec_closeparent(calc_number_t *number)
 {
     stack_node_t *op, ip;
 
+    rpn_alloc(&ip.node.number);
     rpn_copy(&ip.node.number, number);
     while (!is_stack_empty()) {
         op = pop();
@@ -401,6 +402,7 @@ void exec_closeparent(calc_number_t *number)
         }
     }
     rpn_copy(number, &ip.node.number);
+    rpn_free(&ip.node.number);
 }
 
 int eval_parent_count(void)
@@ -434,6 +436,7 @@ void start_rpn_engine(void)
     mpfr_init(calc.prev.mf);
     mpfr_init(calc.memory.number.mf);
     mpfr_init(temp.node.number.mf);
+    rpn_zero(&calc.memory.number);
 }
 
 void stop_rpn_engine(void)

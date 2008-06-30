@@ -467,7 +467,7 @@ static const conv_category_t conv_table[] = {
 void ConvExecute(HWND hWnd)
 {
     DWORD         c_cat = (DWORD)SendDlgItemMessage(hWnd, IDC_COMBO_CATEGORY, CB_GETCURSEL, 0, 0);
-    const conv_t *items = conv_table[c_cat].items;
+    const conv_t *items = NULL;
     DWORD         from  = SendDlgItemMessage(hWnd, IDC_COMBO_FROM, CB_GETCURSEL, 0, 0);
     DWORD         to    = SendDlgItemMessage(hWnd, IDC_COMBO_TO,   CB_GETCURSEL, 0, 0);
     TCHAR         txt_cb[128];
@@ -478,6 +478,16 @@ void ConvExecute(HWND hWnd)
     if (from == to)
         return;
 
+    /* Search correct category, since it can be sorted too */
+    SendDlgItemMessage(hWnd, IDC_COMBO_CATEGORY, CB_GETLBTEXT, c_cat, (LPARAM)txt_cb);
+    for (c_cat=0; c_cat < SIZEOF(conv_table); c_cat++) {
+        LoadString(calc.hInstance, conv_table[c_cat].category, txt, SIZEOF(txt));
+        if (!_tcscmp(txt_cb, txt)) {
+            items = conv_table[c_cat].items;
+            break;
+        }
+    }
+    
     /* The units can be sorted, so I must search the exact match */
     item = items;
     SendDlgItemMessage(hWnd, IDC_COMBO_FROM, CB_GETLBTEXT, from, (LPARAM)txt_cb);
@@ -550,4 +560,5 @@ void ConvInit(HWND hWnd)
     SendMessage(hCatWnd, CB_SETCURSEL, 0, 0);
     ConvAdjust(hWnd, 0);
 }
+
 

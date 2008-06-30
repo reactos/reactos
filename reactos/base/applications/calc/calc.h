@@ -42,7 +42,7 @@
 #define IDC_STATIC  ((DWORD)-1)
 #endif
 
-#define CALC_VERSION        TEXT("1.08")
+#define CALC_VERSION        TEXT("1.09")
 
 /*#define USE_KEYBOARD_HOOK*/
 
