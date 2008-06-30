@@ -537,21 +537,11 @@ VfatMount (PVFAT_IRP_CONTEXT IrpContext)
    Fcb->RFCB.ValidDataLength = Fcb->RFCB.FileSize;
    Fcb->RFCB.AllocationSize = Fcb->RFCB.FileSize;
 
-   _SEH_TRY
-   {
-     CcInitializeCacheMap(DeviceExt->FATFileObject,
-                          (PCC_FILE_SIZES)(&Fcb->RFCB.AllocationSize),
-                          FALSE,
-                          &VfatGlobalData->CacheMgrCallbacks,
-                          Fcb);
-   }
-   _SEH_HANDLE
-   {
-     Status = _SEH_GetExceptionCode();
-   }
-   _SEH_END;
-   if (!NT_SUCCESS(Status))
-     goto ByeBye;
+   CcInitializeCacheMap(DeviceExt->FATFileObject,
+                        (PCC_FILE_SIZES)(&Fcb->RFCB.AllocationSize),
+                        FALSE,
+                        &VfatGlobalData->CacheMgrCallbacks,
+                        Fcb);
 
    DeviceExt->LastAvailableCluster = 2;
    ExInitializeResourceLite(&DeviceExt->FatResource);
