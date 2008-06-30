@@ -4,12 +4,25 @@
 	<cdfile>autorun.inf</cdfile>
 	<cdfile>icon.ico</cdfile>
 	<cdfile>readme.txt</cdfile>
-	<cdfile installbase="$(CDOUTPUT)">hivecls.inf</cdfile>
-	<cdfile installbase="$(CDOUTPUT)">hivedef.inf</cdfile>
-	<cdfile installbase="$(CDOUTPUT)">hivesft.inf</cdfile>
-	<cdfile installbase="$(CDOUTPUT)">hivesys.inf</cdfile>
-	<cdfile installbase="$(CDOUTPUT)">txtsetup.sif</cdfile>
-	<cdfile installbase="$(CDOUTPUT)">unattend.inf</cdfile>
+
+	<if property="ARCH" value="i386">
+		<directory name="i386">
+			<xi:include href="i386/directory.rbuild" />
+		</directory>
+	</if>
+<!--
+	<if property="ARCH" value="powerpc">
+		<directory name="ppc">
+			<xi:include href="ppc/directory.rbuild" />
+		</directory>
+	</if>
+-->
+	<if property="ARCH" value="arm">
+		<directory name="arm">
+			<xi:include href="arm/directory.rbuild" />
+		</directory>
+	</if>
+
 	<directory name="bootcd">
 		<xi:include href="bootcd/bootcd.rbuild" />
 	</directory>
