@@ -52,17 +52,6 @@ IntArc( DC *dc,
     LONG RadiusX, RadiusY, CenterX, CenterY;
     LONG SfCx, SfCy, EfCx, EfCy;
 
-/*                  top
-            ___________________
-          +|                   |
-           |                   |
-           |                   |
-      left |                   | right
-           |                   |
-           |                   |
-          0|___________________|
-            0     bottom       +
- */
     if (Right < Left)
     {
        INT tmp = Right; Right = Left; Left = tmp;
@@ -126,7 +115,7 @@ IntArc( DC *dc,
     XRadialEnd   += dc->ptlDCOrig.x;
     YRadialEnd   += dc->ptlDCOrig.y;
 
-    DPRINT1("1: StartX: %d, StartY: %d, EndX: %d, EndY: %d\n",
+    DPRINT("1: StartX: %d, StartY: %d, EndX: %d, EndY: %d\n",
                XRadialStart,YRadialStart,XRadialEnd,YRadialEnd);
 
     RectBounds.left   = Left;
@@ -136,7 +125,7 @@ IntArc( DC *dc,
 
     IntLPtoDP(dc, (LPPOINT)&RectBounds, 2);
 
-    DPRINT1("1: Left: %d, Top: %d, Right: %d, Bottom: %d\n",
+    DPRINT("1: Left: %d, Top: %d, Right: %d, Bottom: %d\n",
                RectBounds.left,RectBounds.top,RectBounds.right,RectBounds.bottom);
 
     RadiusX = max((RectBounds.right - RectBounds.left) / 2, 1);
@@ -186,7 +175,7 @@ IntArc( DC *dc,
 
        if (dc->DcLevel.flPath & DCPATH_CLOCKWISE)
        {
-          DPRINT1("Arc CW\n");
+          DPRINT("Arc CW\n");
           for (; AngS < AngT; AngS += Factor)
           {
               x = (RadiusX * Rcos(AngS));
@@ -208,7 +197,7 @@ IntArc( DC *dc,
        }
        else
        {
-          DPRINT1("Arc CCW\n");
+          DPRINT("Arc CCW\n");
           for (; AngT < AngS; AngS -= Factor)
           {
               x = (RadiusX * Rcos(AngS));
@@ -237,7 +226,7 @@ IntArc( DC *dc,
     PenBrushObj->ptPenWidth.x = PenOrigWidth;
     BITMAPOBJ_UnlockBitmap(BitmapObj);
     PENOBJ_UnlockPen(PenBrushObj);
-    DPRINT1("IntArc Exit.\n");
+    DPRINT("IntArc Exit.\n");
     return ret;
 }
 
@@ -256,12 +245,13 @@ IntGdiArcInternal(
           int YEndArc)
 {
   BOOL Ret;
-  RECT rc, rc1;
 
-  DPRINT1("StartX: %d, StartY: %d, EndX: %d, EndY: %d\n",
+  DPRINT("StartX: %d, StartY: %d, EndX: %d, EndY: %d\n",
            XStartArc,YStartArc,XEndArc,YEndArc);
-  DPRINT1("Left: %d, Top: %d, Right: %d, Bottom: %d\n",
+  DPRINT("Left: %d, Top: %d, Right: %d, Bottom: %d\n",
            LeftRect,TopRect,RightRect,BottomRect);
+
+  if ((LeftRect == RightRect) || (TopRect == BottomRect)) return TRUE;
 
   if (PATH_IsPathOpen(dc->DcLevel))
   {
@@ -285,22 +275,15 @@ IntGdiArcInternal(
        IntGdiLineTo(dc, XStartArc, YStartArc);
   }
 
-  IntGdiSetRect(&rc, LeftRect, TopRect, RightRect, BottomRect);
-  IntGdiSetRect(&rc1, XStartArc, YStartArc, XEndArc, YEndArc);
-
-//  IntLPtoDP(dc, (LPPOINT)&rc, 2);
-//  IntLPtoDP(dc, (LPPOINT)&rc1, 2);
-
-
   Ret = IntArc( dc,
-           rc.left,
-            rc.top,
-          rc.right,
-         rc.bottom,
-          rc1.left,
-           rc1.top,
-         rc1.right,
-        rc1.bottom,
+          LeftRect,
+           TopRect,
+         RightRect,
+        BottomRect,
+         XStartArc,
+         YStartArc,
+           XEndArc,
+           YEndArc,
            arctype);
 
   if (arctype == GdiTypeArcTo)
