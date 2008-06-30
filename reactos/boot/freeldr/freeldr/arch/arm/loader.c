@@ -1461,6 +1461,22 @@ ArmPrepareForReactOS(IN BOOLEAN Setup)
     ArmLoaderBlock->Thread = ArmLoaderBlock->Process + sizeof(EPROCESS);
     
     //
+    // Check if we're booting from RAM disk
+    //
+    if ((gRamDiskBase) && (gRamDiskSize))
+    {
+        //
+        // Allocate a descriptor to describe it
+        //
+        Status = ArmCreateMemoryDescriptor(LoaderXIPRom,
+                                           (ULONG_PTR)gRamDiskBase >> PAGE_SHIFT,
+                                           gRamDiskSize / PAGE_SIZE,
+                                           0,
+                                           &Dummy);
+        if (Status != STATUS_SUCCESS) return;
+    }
+    
+    //
     // Loop memory list
     //    
     NextEntry = ArmLoaderBlock->MemoryDescriptorListHead.Flink;
