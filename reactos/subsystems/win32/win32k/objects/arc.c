@@ -133,11 +133,14 @@ IntArc( DC *dc,
     RectBounds.right  = Right;
     RectBounds.top    = Top;
     RectBounds.bottom = Bottom;
+
+    IntLPtoDP(dc, (LPPOINT)&RectBounds, 2);
+
     DPRINT1("1: Left: %d, Top: %d, Right: %d, Bottom: %d\n",
                RectBounds.left,RectBounds.top,RectBounds.right,RectBounds.bottom);
 
-    RadiusX = (RectBounds.right - RectBounds.left) / 2;
-    RadiusY = (RectBounds.bottom - RectBounds.top) / 2;
+    RadiusX = max((RectBounds.right - RectBounds.left) / 2, 1);
+    RadiusY = max((RectBounds.bottom - RectBounds.top) / 2, 1);
     CenterX = (RectBounds.right + RectBounds.left) / 2;
     CenterY = (RectBounds.bottom + RectBounds.top) / 2;
     AngleEnd   = atan2((YRadialEnd - CenterY), XRadialEnd - CenterX)*(360.0/(M_PI*2));
@@ -151,13 +154,13 @@ IntArc( DC *dc,
     if ((arctype == GdiTypePie) || (arctype == GdiTypeChord))
     {
         ret = IntFillArc( dc,
-             RectBounds.left,
+              RectBounds.left,
               RectBounds.top,
-             fabs(RectBounds.right-RectBounds.left), // Width
-             fabs(RectBounds.bottom-RectBounds.top), // Height
-                  AngleStart,
-                    AngleEnd,
-                     arctype);
+              abs(RectBounds.right-RectBounds.left), // Width
+              abs(RectBounds.bottom-RectBounds.top), // Height
+              AngleStart,
+              AngleEnd,
+              arctype);
     }
 
     BitmapObj = BITMAPOBJ_LockBitmap(dc->w.hBitmap);

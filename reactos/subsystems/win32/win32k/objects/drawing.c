@@ -802,7 +802,12 @@ IntFillArc( PDC dc,
   r.y = YLeft;
   r.width = Width;
   r.height = Height;
-  app_fill_arc(dc, r, Start-90, End-90, FillBrushObj, Chord);
+  // Sort out alignment here.
+  app_fill_arc(dc, r, 
+              (dc->DcLevel.flPath & DCPATH_CLOCKWISE) ? -End : -Start,
+              (dc->DcLevel.flPath & DCPATH_CLOCKWISE) ? -Start : -End,
+               FillBrushObj, Chord);
+
 
   BRUSHOBJ_UnlockBrush(FillBrushObj);    
   return TRUE;
