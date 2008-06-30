@@ -57,6 +57,30 @@
 #define IO_METHOD_FROM_CTL_CODE(c)                      (c & 0x00000003)
 
 //
+// Bugcheck codes for RAM disk booting
+//
+//
+// No LoaderXIPRom descriptor was found in the loader memory list
+//
+#define RD_NO_XIPROM_DESCRIPTOR  1
+//
+// Unable to open the RAM disk driver (ramdisk.sys or \Device\Ramdisk)
+//
+#define RD_NO_RAMDISK_DRIVER     2
+//
+// FSCTL_CREATE_RAM_DISK failed
+//
+#define RD_FSCTL_FAILED          3
+//
+// Unable to create GUID string from binary GUID
+//
+#define RD_GUID_CONVERT_FAILED   4
+//
+// Unable to create symbolic link pointing to the RAM disk device
+//
+#define RD_SYMLINK_CREATE_FAILED 5
+
+//
 // Packet Types when piggybacking on the IRP Overlay
 //
 #define IrpCompletionPacket                             0x1
@@ -984,6 +1008,15 @@ VOID
 NTAPI
 IopDeleteIoCompletion(
     PVOID ObjectBody
+);
+
+//
+// Ramdisk Routines
+//
+NTSTATUS
+NTAPI
+IopStartRamdisk(
+    IN PLOADER_PARAMETER_BLOCK LoaderBlock
 );
 
 //

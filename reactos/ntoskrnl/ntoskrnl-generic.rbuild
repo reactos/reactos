@@ -256,6 +256,7 @@
 			<file>iowork.c</file>
 			<file>irp.c</file>
 			<file>irq.c</file>
+			<file>ramdisk.c</file>
 			<file>rawfs.c</file>
 			<file>remlock.c</file>
 			<file>util.c</file>
