@@ -1580,7 +1580,6 @@ MingwModuleHandler::GenerateLinkerCommand (
 {
 	const FileLocation *target_file = GetTargetFilename ( module, NULL );
 	const FileLocation *definitionFilename = GetDefinitionFilename ();
-	const FileLocation temp_obj ( TemporaryDirectory, "", module.name + ".temp.ld" );
 	string linker = "${ld}";
 	string objectsMacro = GetObjectsMacro ( module );
 	string libsMacro = GetLibsMacro ();
@@ -1604,28 +1603,23 @@ MingwModuleHandler::GenerateLinkerCommand (
 	string targetName ( module.output->name );
 
 	/* HACK: if we have C++ in kernel, link it with some user mode dlls (kernel32 + msvcrt) ... */
-	static const string libsCppKernel = " \"$(shell ${TARGET_CC} -print-file-name=libkernel32.a)\" \"$(shell ${TARGET_CC} -print-file-name=libmsvcrt.a)\"";
+	static const string libsCppKernel = " '$(shell ${TARGET_CC} -print-file-name=libkernel32.a)' '$(shell ${TARGET_CC} -print-file-name=libmsvcrt.a)'";
 
-	fprintf ( fMakefile, "\t@echo $(subst $(SEP),/,%s)%s%s $(subst $(SEP),/,%s) > %s\n",
-	          objectsMacro.c_str (),
-	          module.cplusplus ? " $(PROJECT_LPPFLAGS)" : "",
-	          module.cplusplus && (module.type == KernelModeDLL || module.type == KernelModeDriver) ? libsCppKernel.c_str () : "",
-	          libsMacro.c_str (),
-	          backend->GetFullName ( temp_obj ).c_str () );
-	CLEAN_FILE ( temp_obj );
-
-	if ( !module.IsDLL () )
+	if ( !module.HasImportLibrary() )
 	{
 		fprintf ( fMakefile,
-		          "\t%s %s%s @%s %s -o %s\n",
+		          "\t%s %s%s %s %s%s%s %s -o %s\n",
 		          linker.c_str (),
 		          linkerParameters.c_str (),
 		          linkerScriptArgument.c_str (),
-		          backend->GetFullName ( temp_obj ).c_str (),
+		          objectsMacro.c_str (),
+		          module.cplusplus ? "$(PROJECT_LPPFLAGS) " : "",
+		          module.cplusplus && (module.type == KernelModeDLL || module.type == KernelModeDriver) ? libsCppKernel.c_str () : "",
+		          libsMacro.c_str (),
 		          GetLinkerMacro ().c_str (),
 		          target_macro.c_str () );
 	}
-	else if ( module.HasImportLibrary () )
+	else
 	{
 		FileLocation temp_exp ( TemporaryDirectory,
 		                        "",
@@ -1641,12 +1635,15 @@ MingwModuleHandler::GenerateLinkerCommand (
 		          module.underscoreSymbols ? " --add-underscore" : "" );
 
 		fprintf ( fMakefile,
-		          "\t%s %s%s %s @%s %s -o %s\n",
+		          "\t%s %s%s %s %s %s%s%s %s -o %s\n",
 		          linker.c_str (),
 		          linkerParameters.c_str (),
 		          linkerScriptArgument.c_str (),
 		          backend->GetFullName ( temp_exp ).c_str (),
-		          backend->GetFullName ( temp_obj ).c_str (),
+		          objectsMacro.c_str (),
+		          module.cplusplus ? "$(PROJECT_LPPFLAGS) " : "",
+		          module.cplusplus && (module.type == KernelModeDLL || module.type == KernelModeDriver) ? libsCppKernel.c_str () : "",
+		          libsMacro.c_str (),
 		          GetLinkerMacro ().c_str (),
 		          target_macro.c_str () );
 
@@ -1658,23 +1655,6 @@ MingwModuleHandler::GenerateLinkerCommand (
 		fprintf ( fMakefile,
 		          "\t-@${rm} %s 2>$(NUL)\n",
 		          backend->GetFullName ( temp_exp ).c_str () );
-	}
-	else
-	{
-		/* XXX: need to workaround binutils bug, which exports
-		 * all functions in a dll if no .def file or an empty
-		 * one has been provided... */
-		/* See bug 1244 */
-		//printf ( "%s will have all its functions exported\n",
-		//         module.target->name.c_str () );
-		fprintf ( fMakefile,
-		          "\t%s %s%s @%s %s -o %s\n",
-		          linker.c_str (),
-		          linkerParameters.c_str (),
-		          linkerScriptArgument.c_str (),
-		          backend->GetFullName ( temp_obj ).c_str (),
-		          GetLinkerMacro ().c_str (),
-		          target_macro.c_str () );
 	}
 
 	GenerateBuildMapCode ();
