@@ -1148,6 +1148,21 @@ KiRosFrldrLpbToNtLpb(IN PROS_LOADER_PARAMETER_BLOCK RosLoaderBlock,
                               KERNEL_DESCRIPTOR_PAGE(RosEntry->ModEnd),
                               0,
                               &Base);
+    
+    //
+    // Check if we have a ramdisk
+    //
+    if ((RosLoaderBlock->RdAddr) && (RosLoaderBlock->RdLength))
+    {
+        //
+        // Build a descriptor for it
+        //
+        KiRosAllocateNtDescriptor(LoaderXIPRom,
+                                  KERNEL_DESCRIPTOR_PAGE(RosLoaderBlock->RdAddr),
+                                  (RosLoaderBlock->RdLength + PAGE_SIZE - 1) >> PAGE_SHIFT,
+                                  0,
+                                  &Base);
+    }
 
     /* Setup command line */
     LoaderBlock->LoadOptions = BldrCommandLine;
