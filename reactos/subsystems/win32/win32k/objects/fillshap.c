@@ -76,10 +76,7 @@ IntGdiPolygon(PDC    dc,
         UnsafePoints[CurrentPoint].x += dc->ptlDCOrig.x;
         UnsafePoints[CurrentPoint].y += dc->ptlDCOrig.y;
     }
-
-    if (PATH_IsPathOpen(dc->DcLevel))
-        ret = PATH_Polygon(dc, UnsafePoints, Count );
-    else
+    // No need to have path here.
     {
         DestRect.left   = UnsafePoints[0].x;
         DestRect.right  = UnsafePoints[0].x;
@@ -157,6 +154,8 @@ IntGdiPolyPolygon(DC      *dc,
                   LPINT   PolyCounts,
                   int     Count)
 {
+    if (PATH_IsPathOpen(dc->DcLevel))
+        return PATH_PolyPolygon ( dc, Points, PolyCounts, Count);
     while (--Count >=0)
     {
         if (!IntGdiPolygon ( dc, Points, *PolyCounts ))
@@ -225,15 +224,6 @@ NtGdiEllipse(
 
     if ((nLeftRect == nRightRect) || (nTopRect == nBottomRect)) return TRUE;
 
-    if (nRightRect < nLeftRect)
-    {
-       INT tmp = nRightRect; nRightRect = nLeftRect; nLeftRect = tmp;
-    }
-    if (nBottomRect < nTopRect)
-    {
-       INT tmp = nBottomRect; nBottomRect = nTopRect; nTopRect = tmp;
-    }
-
     /*
      * Get pointers to all necessary GDI objects.
      */
@@ -244,11 +234,28 @@ NtGdiEllipse(
         SetLastWin32Error(ERROR_INVALID_HANDLE);
         return FALSE;
     }
+
     if (dc->DC_Type == DC_TYPE_INFO)
     {
         DC_UnlockDc(dc);
         /* Yes, Windows really returns TRUE in this case */
         return TRUE;
+    }
+
+    if (PATH_IsPathOpen(dc->DcLevel))
+    {
+       ret = PATH_Ellipse(dc, nLeftRect, nTopRect, nRightRect, nBottomRect);
+       DC_UnlockDc(dc);
+       return ret;
+    }
+
+    if (nRightRect < nLeftRect)
+    {
+       INT tmp = nRightRect; nRightRect = nLeftRect; nLeftRect = tmp;
+    }
+    if (nBottomRect < nTopRect)
+    {
+       INT tmp = nBottomRect; nBottomRect = nTopRect; nTopRect = tmp;
     }
 
     Dc_Attr = dc->pDc_Attr;

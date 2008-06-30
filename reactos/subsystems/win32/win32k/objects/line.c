@@ -102,17 +102,15 @@ IntGdiLineTo(DC  *dc,
     if (PATH_IsPathOpen(dc->DcLevel))
     {
         Ret = PATH_LineTo(dc, XEnd, YEnd);
-//#if 0
         if (Ret)
         {
-            // FIXME - PATH_LineTo should maybe do this...
+            // FIXME - PATH_LineTo should maybe do this? No
             Dc_Attr->ptlCurrent.x = XEnd;
             Dc_Attr->ptlCurrent.y = YEnd;
             Dc_Attr->ptfxCurrent = Dc_Attr->ptlCurrent;
             CoordLPtoDP(dc, &Dc_Attr->ptfxCurrent); // Update fx
             Dc_Attr->ulDirty_ &= ~(DIRTY_PTLCURRENT|DIRTY_PTFXCURRENT|DIRTY_STYLESTATE);
         }
-//#endif
         return Ret;
     }
     else
@@ -361,6 +359,9 @@ IntGdiPolyPolyline(DC      *dc,
     BOOL ret = FALSE; // default to failure
     pts = pt;
     pc = PolyPoints;
+
+    if (PATH_IsPathOpen(dc->DcLevel))
+        return PATH_PolyPolyline( dc, pt, PolyPoints, Count );
 
     for (i = 0; i < Count; i++)
     {
