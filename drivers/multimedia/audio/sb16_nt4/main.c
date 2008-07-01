@@ -14,6 +14,8 @@
 #include <ntddsnd.h>
 #include <debug.h>
 
+#include <devname.h>
+
 typedef struct _SOUND_BLASTER_EXTENSION
 {
     ULONG NothingHereYet;
@@ -90,6 +92,49 @@ UnloadSoundBlaster(
     INFO_(IHVAUDIO, "Sound Blaster driver being unloaded");
 }
 
+
+#define SOUND_PARAMETERS_KEYNAME_W      L"Parameters"
+#define SOUND_DEVICES_KEYNAME_W         L"Devices"
+#define SOUND_DEVICE_KEYNAME_PREFIX_W   L"Device"
+
+/* NT4 */
+ULONG
+GetSoundDeviceCount(
+    IN  PUNICODE_STRING RegistryPath)
+{
+    NTSTATUS Status;
+    OBJECT_ATTRIBUTES Attributes;
+    HANDLE KeyHandle;
+    ULONG DeviceCount = 0;
+    PCWSTR RegistryPathBuffer;
+    UNICODE_STRING FullRegistryPath;
+    ULONG PathLength;
+
+    //PathLength = RegistryPath.Length +;
+
+    /* TODO */
+    /*RegistryPathBuffer = ExAllocatePoolWithTag(PAGED_POOL,*/
+
+    InitializeObjectAttributes(&Attributes,
+                               RegistryPath,
+                               OBJ_KERNEL_HANDLE,
+                               NULL,
+                               NULL);
+
+    Status = ZwOpenKey(&KeyHandle,
+                       KEY_QUERY_VALUE | KEY_ENUMERATE_SUB_KEYS,
+                       &Attributes);
+
+    if ( ! NT_SUCCESS(Status) )
+    {
+        return 0;
+    }
+
+    //ZwEnumerateKey(Key
+}
+
+
+
 NTSTATUS STDCALL
 DriverEntry(
     IN  PDRIVER_OBJECT DriverObject,
@@ -107,6 +152,9 @@ DriverEntry(
     DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = ControlSoundBlaster;
     DriverObject->MajorFunction[IRP_MJ_WRITE] = WriteSoundBlaster;
     DriverObject->DriverUnload = UnloadSoundBlaster;
+
+    DEVICE_OBJECT device;
+    CreateSoundDeviceWithDefaultName(DriverObject, 0, 69, 0, &device);
 
     return STATUS_SUCCESS;
 }
