@@ -145,8 +145,8 @@ KiInsertQueueApc(IN PKAPC Apc,
             /* Get the APC */
             QueuedApc = CONTAINING_RECORD(NextEntry, KAPC, ApcListEntry);
 
-            /* Is this a Normal APC? If so, break */
-            if (QueuedApc->NormalRoutine) break;
+            /* Is this a No-Normal APC? If so, break */
+            if (!QueuedApc->NormalRoutine) break;
 
             /* Move to the next APC in the Queue */
             NextEntry = NextEntry->Blink;
@@ -319,6 +319,9 @@ KiDeliverApc(IN KPROCESSOR_MODE DeliveryMode,
             KiReleaseApcLock(&ApcLock);
             break;
         }
+
+        /* It's not pending anymore */
+        Thread->ApcState.KernelApcPending = FALSE;
 
         /* Get the next Entry */
         ApcListEntry = Thread->ApcState.ApcListHead[KernelMode].Flink;
