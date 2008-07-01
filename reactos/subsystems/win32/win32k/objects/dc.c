@@ -840,7 +840,7 @@ IntGdiCreateDC(PUNICODE_STRING Driver,
     NewDC->erclWindow.top = NewDC->erclWindow.left = 0;
     NewDC->erclWindow.right  = ((PGDIDEVICE)NewDC->pPDev)->GDIInfo.ulHorzRes;
     NewDC->erclWindow.bottom = ((PGDIDEVICE)NewDC->pPDev)->GDIInfo.ulVertRes;
-    NewDC->DcLevel.flPath = DCPATH_CLOCKWISE;
+    NewDC->DcLevel.flPath &= ~DCPATH_CLOCKWISE; // Default is CCW.
 
     DC_UnlockDc( NewDC );
 
