@@ -137,7 +137,7 @@ KiInsertQueueApc(IN PKAPC Apc,
     }
     else
     {
-        /* Special APC, find the first Normal APC in the list */
+        /* Special APC, find the last one in the list */
         ListHead = &ApcState->ApcListHead[ApcMode];
         NextEntry = ListHead->Blink;
         while (NextEntry != ListHead)
@@ -148,7 +148,7 @@ KiInsertQueueApc(IN PKAPC Apc,
             /* Is this a No-Normal APC? If so, break */
             if (!QueuedApc->NormalRoutine) break;
 
-            /* Move to the next APC in the Queue */
+            /* Move to the previous APC in the Queue */
             NextEntry = NextEntry->Blink;
         }
 
