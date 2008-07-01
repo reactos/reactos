@@ -42,7 +42,7 @@ IntArc( DC *dc,
         ARCTYPE arctype)
 {
     PDC_ATTR Dc_Attr;
-    RECTL RectBounds;
+    RECTL RectBounds, RectSEpts;
     PGDIBRUSHOBJ PenBrushObj;
     GDIBRUSHINST PenBrushInst;
     BITMAPOBJ *BitmapObj;
@@ -66,17 +66,6 @@ IntArc( DC *dc,
         ((Right - Left == 1) ||
         (Bottom - Top == 1))))
        return TRUE;
-
-    if (dc->DcLevel.flPath & DCPATH_CLOCKWISE)
-    { 
-       INT X, Y;
-       X = XRadialStart;
-       Y = YRadialStart;
-       XRadialStart = XRadialEnd;
-       YRadialStart = YRadialEnd;
-       XRadialEnd = X;
-       YRadialEnd = Y;
-    }
 
     Dc_Attr = dc->pDc_Attr;
     if(!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
@@ -105,25 +94,31 @@ IntArc( DC *dc,
     if (!PenWidth) PenWidth = 1;
     PenBrushObj->ptPenWidth.x = PenWidth;  
 
-    Left   += dc->ptlDCOrig.x;
-    Right  += dc->ptlDCOrig.x;
-    Top    += dc->ptlDCOrig.y;
-    Bottom += dc->ptlDCOrig.y;
-
-    XRadialStart += dc->ptlDCOrig.x;
-    YRadialStart += dc->ptlDCOrig.y;
-    XRadialEnd   += dc->ptlDCOrig.x;
-    YRadialEnd   += dc->ptlDCOrig.y;
-
-    DPRINT("1: StartX: %d, StartY: %d, EndX: %d, EndY: %d\n",
-               XRadialStart,YRadialStart,XRadialEnd,YRadialEnd);
-
     RectBounds.left   = Left;
     RectBounds.right  = Right;
     RectBounds.top    = Top;
     RectBounds.bottom = Bottom;
 
+    RectSEpts.left   = XRadialStart;
+    RectSEpts.top    = YRadialStart;
+    RectSEpts.right  = XRadialEnd;
+    RectSEpts.bottom = YRadialEnd;
+
     IntLPtoDP(dc, (LPPOINT)&RectBounds, 2);
+    IntLPtoDP(dc, (LPPOINT)&RectSEpts, 2);
+    
+    RectBounds.left   += dc->ptlDCOrig.x;
+    RectBounds.right  += dc->ptlDCOrig.x;
+    RectBounds.top    += dc->ptlDCOrig.y;
+    RectBounds.bottom += dc->ptlDCOrig.y;
+
+    RectSEpts.left    += dc->ptlDCOrig.x;
+    RectSEpts.top     += dc->ptlDCOrig.y;
+    RectSEpts.right   += dc->ptlDCOrig.x;
+    RectSEpts.bottom  += dc->ptlDCOrig.y;
+
+    DPRINT("1: StartX: %d, StartY: %d, EndX: %d, EndY: %d\n",
+               RectSEpts.left,RectSEpts.top,RectSEpts.right,RectSEpts.bottom);
 
     DPRINT("1: Left: %d, Top: %d, Right: %d, Bottom: %d\n",
                RectBounds.left,RectBounds.top,RectBounds.right,RectBounds.bottom);
@@ -132,8 +127,8 @@ IntArc( DC *dc,
     RadiusY = max((RectBounds.bottom - RectBounds.top) / 2, 1);
     CenterX = (RectBounds.right + RectBounds.left) / 2;
     CenterY = (RectBounds.bottom + RectBounds.top) / 2;
-    AngleEnd   = atan2((YRadialEnd - CenterY), XRadialEnd - CenterX)*(360.0/(M_PI*2));
-    AngleStart = atan2((YRadialStart - CenterY), XRadialStart - CenterX)*(360.0/(M_PI*2));
+    AngleEnd   = atan2((RectSEpts.bottom - CenterY), RectSEpts.right - CenterX)*(360.0/(M_PI*2));
+    AngleStart = atan2((RectSEpts.top - CenterY), RectSEpts.left - CenterX)*(360.0/(M_PI*2));
 
     SfCx = (Rcos(AngleStart) * RadiusX);
     SfCy = (Rsin(AngleStart) * RadiusY);
@@ -175,7 +170,7 @@ IntArc( DC *dc,
 
        if (dc->DcLevel.flPath & DCPATH_CLOCKWISE)
        {
-          DPRINT("Arc CW\n");
+          DPRINT1("Arc CW\n");
           for (; AngS < AngT; AngS += Factor)
           {
               x = (RadiusX * Rcos(AngS));
@@ -197,7 +192,7 @@ IntArc( DC *dc,
        }
        else
        {
-          DPRINT("Arc CCW\n");
+          DPRINT1("Arc CCW\n");
           for (; AngT < AngS; AngS -= Factor)
           {
               x = (RadiusX * Rcos(AngS));

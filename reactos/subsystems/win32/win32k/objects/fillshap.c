@@ -41,6 +41,12 @@
        &RectBounds,                              \
        ROP2_TO_MIX(Dc_Attr->jROP2));
 
+#define Rsin(d) ((d) == 0.0 ? 0.0 : ((d) == 90.0 ? 1.0 : sin(d*M_PI/180.0)))
+#define Rcos(d) ((d) == 0.0 ? 1.0 : ((d) == 90.0 ? 0.0 : cos(d*M_PI/180.0)))
+
+BOOL FASTCALL IntFillEllipse( PDC dc, INT XLeft, INT YLeft, INT Width, INT Height);
+BOOL FASTCALL IntDrawEllipse( PDC dc, INT XLeft, INT YLeft, INT Width, INT Height, PGDIBRUSHOBJ PenBrushObj);
+
 BOOL FASTCALL
 IntGdiPolygon(PDC    dc,
               PPOINT UnsafePoints,
@@ -133,9 +139,9 @@ IntGdiPolygon(PDC    dc,
                 ret = IntEngLineTo(&BitmapObj->SurfObj,
                                    dc->CombinedClip,
                                    &PenBrushInst.BrushObject,
-                                   UnsafePoints[Count-1].x,          /* From */
+                                   UnsafePoints[Count-1].x, /* From */
                                    UnsafePoints[Count-1].y,
-                                   UnsafePoints[0].x,          /* To */
+                                   UnsafePoints[0].x,       /* To */
                                    UnsafePoints[0].y,
                                    &DestRect,
                                    ROP2_TO_MIX(Dc_Attr->jROP2)); /* MIX */
@@ -156,6 +162,7 @@ IntGdiPolyPolygon(DC      *dc,
 {
     if (PATH_IsPathOpen(dc->DcLevel))
         return PATH_PolyPolygon ( dc, Points, PolyCounts, Count);
+
     while (--Count >=0)
     {
         if (!IntGdiPolygon ( dc, Points, *PolyCounts ))
@@ -179,247 +186,124 @@ IntGdiPolyPolygon(DC      *dc,
  *    This function uses optimized Bresenham's ellipse algorithm. It draws
  *    four lines of the ellipse in one pass.
  *
- * Todo
- *    Make it look like a Windows ellipse.
  */
 
 BOOL STDCALL
 NtGdiEllipse(
     HDC hDC,
-    int nLeftRect,
-    int nTopRect,
-    int nRightRect,
-    int nBottomRect)
+    int Left,
+    int Top,
+    int Right,
+    int Bottom)
 {
-    int ix, iy;
-    int A, B, C, D;
-    int da, db;
-    int NewA, NewB, NewC, NewD;
-    int nx, ny;
-    int CenterX, CenterY;
-    int RadiusX, RadiusY;
-    int Temp;
-    PGDIBRUSHOBJ FillBrush, PenBrush;
-    GDIBRUSHINST FillBrushInst, PenBrushInst;
-    BITMAPOBJ *BitmapObj;
-    RECTL RectBounds;
     PDC dc;
     PDC_ATTR Dc_Attr;
-    BOOL ret = TRUE, Cond1, Cond2;
-/*                  top
-            ___________________
-          +|                   |
-           |                   |
-           |                   |
-      left |                   | right
-           |                   |
-           |                   |
-          0|___________________|
-            0     bottom       +
- */
-    /*
-     * Check the parameters.
-     */
-    DPRINT("nLeftRect: %d, nTopRect: %d, nRightRect: %d, nBottomRect: %d\n",nLeftRect,nTopRect,nRightRect,nBottomRect);
+    RECTL RectBounds;
+    PGDIBRUSHOBJ PenBrushObj;
+    BOOL ret = TRUE;
+    LONG PenWidth, PenOrigWidth;
+    LONG RadiusX, RadiusY, CenterX, CenterY;
 
-    if ((nLeftRect == nRightRect) || (nTopRect == nBottomRect)) return TRUE;
-
-    /*
-     * Get pointers to all necessary GDI objects.
-     */
+    if ((Left == Right) || (Top == Bottom)) return TRUE;
 
     dc = DC_LockDc(hDC);
     if (dc == NULL)
     {
-        SetLastWin32Error(ERROR_INVALID_HANDLE);
-        return FALSE;
+       SetLastWin32Error(ERROR_INVALID_HANDLE);
+       return FALSE;
     }
-
     if (dc->DC_Type == DC_TYPE_INFO)
     {
-        DC_UnlockDc(dc);
-        /* Yes, Windows really returns TRUE in this case */
-        return TRUE;
+       DC_UnlockDc(dc);
+       /* Yes, Windows really returns TRUE in this case */
+       return TRUE;
     }
 
     if (PATH_IsPathOpen(dc->DcLevel))
     {
-       ret = PATH_Ellipse(dc, nLeftRect, nTopRect, nRightRect, nBottomRect);
-       DC_UnlockDc(dc);
-       return ret;
+        ret = PATH_Ellipse(dc, Left, Top, Right, Bottom);
+        DC_UnlockDc(dc);
+        return ret;
     }
 
-    if (nRightRect < nLeftRect)
+    if (Right < Left)
     {
-       INT tmp = nRightRect; nRightRect = nLeftRect; nLeftRect = tmp;
+       INT tmp = Right; Right = Left; Left = tmp;
     }
-    if (nBottomRect < nTopRect)
+    if (Bottom < Top)
     {
-       INT tmp = nBottomRect; nBottomRect = nTopRect; nTopRect = tmp;
+       INT tmp = Bottom; Bottom = Top; Top = tmp;
     }
 
     Dc_Attr = dc->pDc_Attr;
     if(!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
 
-    FillBrush = BRUSHOBJ_LockBrush(Dc_Attr->hbrush);
-    if (NULL == FillBrush)
+    PenBrushObj = PENOBJ_LockPen(Dc_Attr->hpen);
+    if (NULL == PenBrushObj)
     {
+        DPRINT1("Ellipse Fail 1\n");
         DC_UnlockDc(dc);
         SetLastWin32Error(ERROR_INTERNAL_ERROR);
         return FALSE;
     }
 
-    PenBrush = PENOBJ_LockPen(Dc_Attr->hpen);
-    if (NULL == PenBrush)
+    PenOrigWidth = PenWidth = PenBrushObj->ptPenWidth.x;
+    if (PenBrushObj->ulPenStyle == PS_NULL) PenWidth = 0;
+
+    if (PenBrushObj->ulPenStyle == PS_INSIDEFRAME)
     {
-        BRUSHOBJ_UnlockBrush(FillBrush);
-        DC_UnlockDc(dc);
-        SetLastWin32Error(ERROR_INTERNAL_ERROR);
-        return FALSE;
+       if (2*PenWidth > (Right - Left)) PenWidth = (Right -Left + 1)/2;
+       if (2*PenWidth > (Bottom - Top)) PenWidth = (Bottom -Top + 1)/2;
+       Left   += PenWidth / 2;
+       Right  -= (PenWidth - 1) / 2;
+       Top    += PenWidth / 2;
+       Bottom -= (PenWidth - 1) / 2;
     }
 
-    BitmapObj = BITMAPOBJ_LockBitmap(dc->w.hBitmap);
-    if (NULL == BitmapObj)
-    {
-        BRUSHOBJ_UnlockBrush(FillBrush);
-        PENOBJ_UnlockPen(PenBrush);
-        DC_UnlockDc(dc);
-        SetLastWin32Error(ERROR_INTERNAL_ERROR);
-        return FALSE;
-    }
+    if (!PenWidth) PenWidth = 1;
+    PenBrushObj->ptPenWidth.x = PenWidth;  
 
-    IntGdiInitBrushInstance(&FillBrushInst, FillBrush, dc->XlateBrush);
-    IntGdiInitBrushInstance(&PenBrushInst, PenBrush, dc->XlatePen);
-
-    RectBounds.left = nLeftRect;
-    RectBounds.right = nRightRect;
-    RectBounds.top = nTopRect;
-    RectBounds.bottom = nBottomRect;
-
+    RectBounds.left   = Left;
+    RectBounds.right  = Right;
+    RectBounds.top    = Top;
+    RectBounds.bottom = Bottom;
+                
     IntLPtoDP(dc, (LPPOINT)&RectBounds, 2);
-    DPRINT("1: Left: %d, Top: %d, Right: %d, Bottom: %d\n",
-               RectBounds.left,RectBounds.top,RectBounds.right,RectBounds.bottom);
-
+ 
     RectBounds.left += dc->ptlDCOrig.x;
     RectBounds.right += dc->ptlDCOrig.x;
     RectBounds.top += dc->ptlDCOrig.y;
     RectBounds.bottom += dc->ptlDCOrig.y;
-    DPRINT("2: Left: %d, Top: %d, Right: %d, Bottom: %d\n",
+
+    // Setup for dynamic width and height.
+    RadiusX = max((RectBounds.right - RectBounds.left) / 2, 2); // Needs room
+    RadiusY = max((RectBounds.bottom - RectBounds.top) / 2, 2);
+    CenterX = (RectBounds.right + RectBounds.left) / 2;
+    CenterY = (RectBounds.bottom + RectBounds.top) / 2;
+
+    DPRINT("Ellipse 1: Left: %d, Top: %d, Right: %d, Bottom: %d\n",
                RectBounds.left,RectBounds.top,RectBounds.right,RectBounds.bottom);
 
-    RadiusX = max((RectBounds.right - RectBounds.left) >> 1, 1);
-    RadiusY = max((RectBounds.bottom - RectBounds.top) >> 1, 1);
-    CenterX = RectBounds.left + RadiusX;
-    CenterY = RectBounds.top + RadiusY;
-    DPRINT("3: RadiusX: %d, RadiusY: %d, CenterX: %d, CenterY: %d\n",
-           RadiusX,RadiusY,CenterX,CenterY);
+    DPRINT("Ellipse 2: XLeft: %d, YLeft: %d, Width: %d, Height: %d\n",
+               CenterX - RadiusX, CenterY + RadiusY, RadiusX*2, RadiusY*2);
 
-    if (RadiusX > RadiusY) 	 
-    { 	 
-       nx = RadiusX;
-       ny = RadiusY;
-    } 	 
-    else 	 
-    { 	 
-       nx = RadiusY; 	 
-       ny = RadiusX; 	 
-    }
-    da = -1;
-    db = 0xFFFF;
-    ix = 0;
-    iy = nx * 64;
-    NewA = 0;
-    NewB = (iy + 32) >> 6;
-    NewC = 0;
-    NewD = (NewB * ny) / nx;
+    ret = IntFillEllipse( dc,
+                          CenterX - RadiusX,
+                          CenterY - RadiusY,
+                          RadiusX*2, // Width
+                          RadiusY*2); // Height
+    if (ret)
+       ret = IntDrawEllipse( dc,
+                             CenterX - RadiusX,
+                             CenterY - RadiusY,
+                             RadiusX*2, // Width
+                             RadiusY*2, // Height
+                             PenBrushObj);
 
-    do {
-        A = NewA;
-        B = NewB;
-        C = NewC;
-        D = NewD;
-
-        ix += iy / nx;
-        iy -= ix / nx;
-        NewA = (ix + 32) >> 6;
-        NewB = (iy + 32) >> 6;
-        NewC = (NewA * ny) / nx;
-        NewD = (NewB * ny) / nx;
-
-        if (RadiusX > RadiusY)
-        {
-            Temp = A; A = C; C = Temp;
-            Temp = B; B = D; D = Temp;
-            Cond1 = ((C != NewA) || (B != NewD)) && (NewC <= NewD);
-            Cond2 = ((D != NewB) || (A != NewC)) && (NewC <= B);
-        }
-        else
-        {
-            Cond1 = ((C != NewC) || (B != NewB)) && (NewA <= NewB);
-            Cond2 = ((D != NewD) || (A != NewA)) && (NewA <= B);
-        }
-
-        /*
-         * Draw the lines going from inner to outer (+ mirrored).
-         */
-
-        if ((A > da) && (A < db))
-        {
-            PUTLINE(CenterX - D, CenterY + A, CenterX + D, CenterY + A, FillBrushInst);
-            if (A)
-            {
-                PUTLINE(CenterX - D, CenterY - A, CenterX + D, CenterY - A, FillBrushInst);
-            }
-            da = A;
-        }
-
-        /*
-         * Draw the lines going from outer to inner (+ mirrored).
-         */
-
-        if ((B < db) && (B > da))
-        {
-            PUTLINE(CenterX - C, CenterY + B, CenterX + C, CenterY + B, FillBrushInst);
-            PUTLINE(CenterX - C, CenterY - B, CenterX + C, CenterY - B, FillBrushInst);
-            db = B;
-        }
-
-        /*
-         * Draw the pixels on the margin.
-         */
-
-        if (Cond1)
-        {
-            PUTPIXEL(CenterX + C, CenterY + B, PenBrushInst);
-            if (C)
-                PUTPIXEL(CenterX - C, CenterY + B, PenBrushInst);
-            if (B)
-            {
-                PUTPIXEL(CenterX + C, CenterY - B, PenBrushInst);
-                if (C)
-                    PUTPIXEL(CenterX - C, CenterY - B, PenBrushInst);
-            }
-        }
-
-        if (Cond2)
-        {
-            PUTPIXEL(CenterX + D, CenterY + A, PenBrushInst);
-            if (D)
-                PUTPIXEL(CenterX - D, CenterY + A, PenBrushInst);
-            if (A)
-            {
-                PUTPIXEL(CenterX + D, CenterY - A, PenBrushInst);
-                if (D)
-                    PUTPIXEL(CenterX - D, CenterY - A, PenBrushInst);
-            }
-        }
-    } while (B > A);
-
-    BITMAPOBJ_UnlockBitmap(BitmapObj);
-    BRUSHOBJ_UnlockBrush(FillBrush);
-    PENOBJ_UnlockPen(PenBrush);
+    PenBrushObj->ptPenWidth.x = PenOrigWidth;
+    PENOBJ_UnlockPen(PenBrushObj);
     DC_UnlockDc(dc);
-    DPRINT("NtGdiEllipse exit \n");
+    DPRINT("Ellipse Exit.\n");
     return ret;
 }
 
