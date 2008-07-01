@@ -3,13 +3,15 @@
     Timing helper
 
     Author:
-        Andrew Greenwood (andrew.greenwood@silverblade.co.uk)
+        Andrew Greenwood (silverblade@reactos.org)
 
     History:
         31 May 2008 - Created
 
     Notes:
-        Timing may require testing!
+        Have checked timing in DebugView. A 10,000ms delay covered a period
+        of 124.305 sec to 134.308 sec. Not 100% accurate but likely down to
+        the delays in submitting the debug strings?
 */
 
 /*

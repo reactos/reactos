@@ -3,7 +3,7 @@
     MIDI UART support
 
     Author:
-        Andrew Greenwood (andrew.greenwood@silverblade.co.uk)
+        Andrew Greenwood (silverblade@reactos.org)
 
     History:
         26 May 2008 - Created
@@ -91,82 +91,3 @@ ReadMidiUartByte(
 
     return TRUE;
 }
-
-
-/* Experimental OO-style stuff */
-/*
-typedef struct _MIDIUART
-{
-    PUCHAR BasePort;
-    ULONG Timeout;
-} MIDIUART, *PMIDIUART;
-
-NTSTATUS
-MidiUart_Create(
-    IN  PUCHAR BasePort,
-    IN  ULONG Timeout,
-    OUT PMIDIUART* MidiUart)
-{
-    PMIDIUART NewMidiUart;
-
-    if ( ! MidiUart )
-        return STATUS_INVALID_PARAMETER;
-
-    NewMidiUart = ExAllocatePoolWithTag(sizeof(MIDIUART), PAGED_POOL, 'MIDU');
-
-    if ( ! NewMidiUart )
-        return STATUS_INSUFFICIENT_RESOURCES;
-
-    NewMidiUart->BasePort = BasePort;
-    NewMidiUart->Timeout = Timeout;
-
-    *MidiUart = NewMidiUart;
-
-    return STATUS_SUCCESS;
-}
-
-BOOLEAN
-MidiUart_WaitForStatus(
-    IN  PMIDIUART MidiUart,
-    IN  UCHAR StatusFlags)
-{
-    if ( ! MidiUart)
-        return FALSE;
-
-    return WaitForMidiUartStatus(MidiUart->BasePort,
-                                 StatusFlags,
-                                 MidiUart->Timeout);
-}
-
-#define MidiUart_WaitForCTS(inst) \
-    MidiUart_WaitForStatus(inst, MIDIUART_STATUS_CTS)
-
-#define MidiUart_WaitForDTR(inst) \
-    MidiUart_WaitForStatus(inst, MIDIUART_STATUS_DTR)
-
-BOOLEAN
-MidiUart_WriteByte(
-    IN  PMIDIUART MidiUart,
-    IN  UCHAR Data)
-{
-    if ( ! MidiUart )
-        return FALSE;
-
-    return WriteMidiUartByte(MidiUart->BasePort,
-                             Data,
-                             MidiUart->Timeout);
-}
-
-BOOLEAN
-MidiUart_ReadByte(
-    IN  PMIDIUART MidiUart,
-    OUT PUCHAR Data)
-{
-    if ( ! MidiUart )
-        return FALSE;
-
-    return ReadMidiUartByte(MidiUart->BasePort,
-                            Data,
-                            MidiUart->Timeout);
-}
-*/

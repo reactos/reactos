@@ -3,7 +3,7 @@
     MIDI constants
 
     Author:
-        Andrew Greenwood (andrew.greenwood@silverblade.co.uk)
+        Andrew Greenwood (silverblade@reactos.org)
 
     History:
         26 May 2008 - Created

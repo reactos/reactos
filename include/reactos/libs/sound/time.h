@@ -3,7 +3,7 @@
     Timing helper
 
     Author:
-        Andrew Greenwood (andrew.greenwood@silverblade.co.uk)
+        Andrew Greenwood (silverblade@reactos.org)
 
     History:
         1 July 2008 - Created

@@ -3,7 +3,7 @@
     Hardware interaction helper
 
     Author:
-        Andrew Greenwood (andrew.greenwood@silverblade.co.uk)
+        Andrew Greenwood (silverblade@reactos.org)
 
     History:
         25 May 2008 - Created
@@ -33,7 +33,7 @@ LegacyAttachInterrupt(
     KIRQL IrqLevel;
     KAFFINITY Affinity;
 
-    INFO_(IHVAUDIO, "Obtaining interrupt vector");
+    DPRINT("Obtaining interrupt vector");
 
     Vector = HalGetInterruptVector(Isa,
                                    0,
@@ -42,8 +42,8 @@ LegacyAttachInterrupt(
                                    &IrqLevel,
                                    &Affinity);
 
-    INFO_(IHVAUDIO, "Vector %d", Vector);
-    INFO_(IHVAUDIO, "Connecting IRQ %d", Irq);
+    DPRINT("Vector %d", Vector);
+    DPRINT("Connecting IRQ %d", Irq);
 
     Status = IoConnectInterrupt(InterruptObject,
                                 ServiceRoutine,

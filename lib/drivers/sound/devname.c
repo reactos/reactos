@@ -3,7 +3,7 @@
     Device naming & creation helper routines
 
     Author:
-        Andrew Greenwood (andrew.greenwood@silverblade.co.uk)
+        Andrew Greenwood (silverblade@reactos.org)
 
     History:
         25 May 2008 - Created
@@ -12,6 +12,7 @@
 #include <ntddk.h>
 #include <ntddsnd.h>
 #include <debug.h>
+
 
 /*
     Default device names
@@ -81,14 +82,14 @@ ConstructDeviceName(
     /* Check for NULL parameters */
     if ( ( ! Path ) || ( ! DeviceName ) )
     {
-        ERR_(IHVAUDIO, "Unexpected NULL parameter");
+        DPRINT("Unexpected NULL parameter");
         return STATUS_INVALID_PARAMETER;
     }
 
     /* Range-check */
     if ( Index >= SOUND_MAX_DEVICES )
     {
-        ERR_(IHVAUDIO, "Device index %d out of range", Index);
+        DPRINT("Device index %d out of range", Index);
         return STATUS_INVALID_PARAMETER;
     }
 
@@ -106,7 +107,7 @@ ConstructDeviceName(
 
     if ( ! DeviceName->Buffer )
     {
-        ERR_(IHVAUDIO, "Couldn't allocate memory for device name string");
+        DPRINT("Couldn't allocate memory for device name string");
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
@@ -171,7 +172,7 @@ GetDefaultSoundDeviceNameBodies(
 
     if ( DeviceType > MAX_DEVICE_TYPE )
     {
-        ERR_(IHVAUDIO, "Invalid device type");
+        DPRINT("Invalid device type");
         return STATUS_INVALID_PARAMETER;
     }
 
@@ -206,14 +207,14 @@ ConstructSoundDeviceNames(
     if ( ( ! DeviceNameBody ) || ( ! DosDeviceNameBody ) ||
          ( ! FullDeviceName ) || ( ! FullDosDeviceName ) )
     {
-        ERR_(IHVAUDIO, "Unexpected NULL parameter");
+        DPRINT("Unexpected NULL parameter");
         return STATUS_INVALID_PARAMETER;
     }
 
     /* Range-check */
     if ( Index >= SOUND_MAX_DEVICES )
     {
-        ERR_(IHVAUDIO, "Device %d exceeds maximum", Index);
+        DPRINT("Device %d exceeds maximum", Index);
         return STATUS_INVALID_PARAMETER;
     }
 
@@ -264,14 +265,14 @@ CreateSoundDevice(
     if ( ( ! DriverObject ) || ( ! DeviceObject ) ||
          ( ! WideDeviceName ) || ( ! WideDosDeviceName ) )
     {
-        ERR_(IHVAUDIO, "Unexpected NULL parameter");
+        DPRINT("Unexpected NULL parameter");
         return STATUS_INVALID_PARAMETER;
     }
 
     /* Range-check */
     if ( Index >= SOUND_MAX_DEVICES )
     {
-        ERR_(IHVAUDIO, "Device index %d exceeds maximum", Index);
+        DPRINT("Device index %d exceeds maximum", Index);
         return STATUS_INVALID_PARAMETER;
     }
 
@@ -345,14 +346,14 @@ CreateSoundDeviceWithDefaultName(
     /* Check for NULL parameters */
     if ( ( ! DriverObject ) || ( ! DeviceObject ) )
     {
-        ERR_(IHVAUDIO, "Unexpected NULL parameter");
+        DPRINT("Unexpected NULL parameter");
         return STATUS_INVALID_PARAMETER;
     }
 
     /* Range-check */
     if ( Index >= SOUND_MAX_DEVICES )
     {
-        ERR_(IHVAUDIO, "Device index %d exceeds maximum", Index);
+        DPRINT("Device index %d exceeds maximum", Index);
         return STATUS_INVALID_PARAMETER;
     }
 

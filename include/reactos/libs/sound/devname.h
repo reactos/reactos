@@ -3,7 +3,7 @@
     Device naming & creation helper routines
 
     Author:
-        Andrew Greenwood (andrew.greenwood@silverblade.co.uk)
+        Andrew Greenwood (silverblade@reactos.org)
 
     History:
         25 May 2008 - Created

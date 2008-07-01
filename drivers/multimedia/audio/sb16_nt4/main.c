@@ -4,10 +4,16 @@
     NT4 driver model
 
     Author:
-        Andrew Greenwood (andrew.greenwood@silverblade.co.uk)
+        Andrew Greenwood (silverblade@reactos.org)
 
     History:
         25 May 2008 - Created
+
+    Notes:
+        ** This driver is currently solely being used to test the sound
+        library, which actually implements the main body of the driver. This
+        will eventually be replaced with a proper driver. It assumes a
+        configuration of base port 0x220, IRQ 5, DMA channel 1 **
 */
 
 #include <ntddk.h>
@@ -16,6 +22,9 @@
 
 #include <sbdsp.h>
 #include <devname.h>
+
+#define SB_DEFAULT_TIMEOUT  1000
+
 
 typedef struct _SOUND_BLASTER_EXTENSION
 {
@@ -90,7 +99,8 @@ VOID STDCALL
 UnloadSoundBlaster(
     IN  PDRIVER_OBJECT DriverObject)
 {
-    INFO_(IHVAUDIO, "Sound Blaster driver being unloaded");
+    DbgPrint("Sound Blaster driver being unloaded\n");
+    /*INFO_(IHVAUDIO, "Sound Blaster driver being unloaded");*/
 }
 
 /* This is to be moved into the sound library later */
@@ -145,17 +155,64 @@ GetSoundDeviceCount(
 
     ie, this is pretty much as non-PnP as you can get!
 */
+
 STDCALL
 NTSTATUS
 ThisIsSparta(IN PDRIVER_OBJECT DriverObject)
 {
     DEVICE_OBJECT device;
-    BOOLEAN result;
-    CreateSoundDeviceWithDefaultName(DriverObject, 0, 69, 0, &device);
+    NTSTATUS result;
+    BOOLEAN speaker_state = TRUE;
+    UCHAR major = 0x69, minor = 0x96;
 
-    INFO_(IHVAUDIO, "Resetting SB...");
-    result = ResetSoundBlasterDSP((PUCHAR)0x220, 10000);
-    INFO_(IHVAUDIO, "SB reset returns %d", result);
+    /*CreateSoundDeviceWithDefaultName(DriverObject, 0, 69, 0, &device);*/
+
+    /* 0x220 is the port we expect to work */
+    DbgPrint("Resetting Sound Blaster DSP at 0x220\n");
+    result = SbDspReset((PUCHAR)0x220, SB_DEFAULT_TIMEOUT);
+    DbgPrint("Reset was %s\n",
+             NT_SUCCESS(result) ? "successful" : "unsuccessful");
+
+    /* 0x240, we don't expect to work */
+    DbgPrint("Resetting Sound Blaster DSP at 0x240\n");
+    result = SbDspReset((PUCHAR)0x240, SB_DEFAULT_TIMEOUT);
+    DbgPrint("Reset was %s\n",
+             NT_SUCCESS(result) ? "successful" : "unsuccessful");
+
+    /* Try getting version */
+    DbgPrint("Retrieving Sound Blaster version...\n");
+    result = SbDspGetVersion((PUCHAR)0x220, &major, &minor, SB_DEFAULT_TIMEOUT);
+
+    DbgPrint("Version retrival was %s\n",
+             NT_SUCCESS(result) ? "successful" : "unsuccessful");
+    DbgPrint("Sound Blaster DSP version is %d.%02d\n", major, minor);
+
+    result = SbDspIsSpeakerEnabled((PUCHAR)0x220, &speaker_state, SB_DEFAULT_TIMEOUT);
+    DbgPrint("Speaker state retrieval %s\n",
+             NT_SUCCESS(result) ? "succeeded" : "failed");
+
+    DbgPrint("Speaker state is presently %s\n",
+             speaker_state ? "ENABLED" : "DISABLED");
+
+    result = SbDspEnableSpeaker((PUCHAR)0x220, SB_DEFAULT_TIMEOUT);
+    DbgPrint("Speaker enable request %s\n",
+             NT_SUCCESS(result) ? "succeeded" : "failed");
+
+    result = SbDspIsSpeakerEnabled((PUCHAR)0x220, &speaker_state, SB_DEFAULT_TIMEOUT);
+    DbgPrint("Speaker state retrieval %s\n",
+             NT_SUCCESS(result) ? "succeeded" : "failed");
+    DbgPrint("Speaker state is now %s\n",
+             speaker_state ? "ENABLED" : "DISABLED");
+
+    result = SbDspDisableSpeaker((PUCHAR)0x220, SB_DEFAULT_TIMEOUT);
+    DbgPrint("Speaker disable request %s\n",
+             NT_SUCCESS(result) ? "succeeded" : "failed");
+
+    result = SbDspIsSpeakerEnabled((PUCHAR)0x220, &speaker_state, SB_DEFAULT_TIMEOUT);
+    DbgPrint("Speaker state retrieval %s\n",
+             NT_SUCCESS(result) ? "succeeded" : "failed");
+    DbgPrint("Speaker state is now %s\n",
+             speaker_state ? "ENABLED" : "DISABLED");
 
     return STATUS_SUCCESS;
 }
@@ -169,7 +226,8 @@ DriverEntry(
 {
     NTSTATUS status;
 
-    INFO_(IHVAUDIO, "Sound Blaster driver (NT4 model) by Silver Blade");
+    DbgPrint("Sound Blaster driver (NT4 model) by Silver Blade\n");
+    /*INFO_(IHVAUDIO, "Sound Blaster driver (NT4 model) by Silver Blade");*/
 
     DriverObject->Flags = 0;
 
@@ -183,4 +241,3 @@ DriverEntry(
     /* Hax */
     return ThisIsSparta(DriverObject);
 }
-
