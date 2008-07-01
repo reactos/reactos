@@ -256,7 +256,7 @@ NtfsGetVolumeData(PDEVICE_OBJECT DeviceObject,
   VolumeRecord = ExAllocatePoolWithTag(NonPagedPool, NtfsInfo->BytesPerFileRecord, TAG_NTFS);
   if (VolumeRecord == NULL)
   {
-    ExFreePool (MftRecord);
+    ExFreePool(MftRecord);
     return STATUS_INSUFFICIENT_RESOURCES;
   }
 
@@ -265,7 +265,7 @@ NtfsGetVolumeData(PDEVICE_OBJECT DeviceObject,
   Status = ReadFileRecord(DeviceExt, 3, VolumeRecord, MftRecord);
   if (!NT_SUCCESS(Status))
   {
-    ExFreePool (MftRecord);
+    ExFreePool(MftRecord);
     return Status;
   }
 
@@ -307,7 +307,8 @@ NtfsGetVolumeData(PDEVICE_OBJECT DeviceObject,
     NtfsInfo->Flags = VolumeInfo->Flags;
   }
 
-  ExFreePool (MftRecord);
+  ExFreePool(MftRecord);
+  ExFreePool(VolumeRecord);
 
   return Status;
 }
@@ -318,6 +319,7 @@ NtfsMountVolume(PDEVICE_OBJECT DeviceObject,
                 PIRP Irp)
 {
   PDEVICE_OBJECT NewDeviceObject = NULL;
+  PFILE_RECORD_HEADER MftRecord = NULL;
   PDEVICE_OBJECT DeviceToMount;
   PIO_STACK_LOCATION Stack;
   PNTFS_FCB Fcb = NULL;
@@ -354,7 +356,7 @@ NtfsMountVolume(PDEVICE_OBJECT DeviceObject,
   if (!NT_SUCCESS(Status))
     goto ByeBye;
 
-  NewDeviceObject->Flags = NewDeviceObject->Flags | DO_DIRECT_IO;
+  NewDeviceObject->Flags |= DO_DIRECT_IO;
   Vcb = (PVOID)NewDeviceObject->DeviceExtension;
   RtlZeroMemory(Vcb, sizeof(NTFS_VCB));
 
@@ -424,6 +426,26 @@ NtfsMountVolume(PDEVICE_OBJECT DeviceObject,
                        &(NtfsGlobalData->CacheMgrCallbacks),
                        Fcb);
 
+  /* FIXME: Use CC and get rid of this crappy code! */
+  MftRecord = ExAllocatePoolWithTag(NonPagedPool,
+                                    Vcb->NtfsInfo.BytesPerFileRecord, TAG_NTFS);
+  if (MftRecord == NULL)
+  {
+    Status = STATUS_INSUFFICIENT_RESOURCES;
+    goto ByeBye;
+  }
+
+  Status = NtfsReadSectors(Vcb->StorageDevice,
+                           Vcb->NtfsInfo.MftStart.u.LowPart * Vcb->NtfsInfo.SectorsPerCluster,
+                           Vcb->NtfsInfo.BytesPerFileRecord / Vcb->NtfsInfo.BytesPerSector,
+                           Vcb->NtfsInfo.BytesPerSector,
+                           (PVOID)MftRecord,
+                           TRUE);
+  if (!NT_SUCCESS(Status))
+    goto ByeBye;
+
+  Vcb->MftBuffer = MftRecord;
+
   ExInitializeResourceLite(&Vcb->DirResource);
 
   KeInitializeSpinLock(&Vcb->FcbListLock);
@@ -447,6 +469,8 @@ ByeBye:
   if (!NT_SUCCESS(Status))
   {
     /* Cleanup */
+    if (MftRecord)
+      ExFreePool(MftRecord);
     if (Vcb && Vcb->StreamFileObject)
       ObDereferenceObject(Vcb->StreamFileObject);
     if (Fcb)
