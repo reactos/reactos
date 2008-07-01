@@ -109,7 +109,7 @@ SbDspWrite(
 
     Status = SbDspWaitToWrite(BasePort, Timeout);
 
-    if ( ! NT_SUCCESS(Status) )
+    if ( Status != STATUS_SUCCESS )
     {
         return Status;
     }
@@ -135,7 +135,7 @@ SbDspRead(
 
     Status = SbDspWaitToRead(BasePort, Timeout);
 
-    if ( ! NT_SUCCESS(Status) )
+    if ( Status != STATUS_SUCCESS )
     {
         return Status;
     }
@@ -164,12 +164,12 @@ SbDspGetVersion(
 
     /* Send version request */
     Status = SbDspWrite(BasePort, SB_DSP_VERSION, Timeout);
-    if ( ! NT_SUCCESS(Status) )
+    if ( Status != STATUS_SUCCESS )
         return Status;
 
     /* Get the major version */
     Status = SbDspRead(BasePort, MajorVersion, Timeout);
-    if ( ! NT_SUCCESS(Status) )
+    if ( Status != STATUS_SUCCESS )
         return FALSE;
 
     /* Get the minor version */
@@ -194,10 +194,7 @@ SbDspDisableSpeaker(
 }
 
 /*
-    BUG?
-    It seems under VirtualBox this returns 0x05, irrespective
-    of the speaker state. I'm not sure if this will also occur
-    on real hardware.
+    VirtualBox doesn't seem to support this.
 */
 NTSTATUS
 SbDspIsSpeakerEnabled(
@@ -213,12 +210,12 @@ SbDspIsSpeakerEnabled(
 
     /* Request the speaker status */
     Status = SbDspWrite(BasePort, SB_DSP_SPEAKER_STATUS, Timeout);
-    if ( ! NT_SUCCESS(Status) )
+    if ( Status != STATUS_SUCCESS )
         return Status;
 
     /* Obtain the status */
     Status = SbDspRead(BasePort, &SpeakerStatus, Timeout);
-    if ( ! NT_SUCCESS(Status) )
+    if ( Status != STATUS_SUCCESS )
         return Status;
 
     DbgPrint("SBDSP - SpeakerStatus is %02x\n", SpeakerStatus);
@@ -228,72 +225,135 @@ SbDspIsSpeakerEnabled(
 }
 
 BOOLEAN
-SbDspIsValidRate(
-    IN  USHORT Rate)
+SbDspIsValidInputRate(
+    IN  UCHAR MajorVersion,
+    IN  UCHAR MinorVersion,
+    IN  USHORT Rate,
+    IN  BOOLEAN Stereo)
 {
-    /* Not sure if this range is 100% correct */
-    return ( ( Rate >= 5000 ) && ( Rate <= 45000 ) );
+    if ( MajorVersion == 1 )
+    {
+        if ( Stereo )
+            return FALSE;
+
+        return ( ( Rate >= 4000 ) && ( Rate <= 13000 ) );
+    }
+    else if ( MajorVersion == 2 )
+    {
+        if ( Stereo )
+            return FALSE;
+
+        if ( MinorVersion == 0 )
+            return ( ( Rate >= 4000 ) && ( Rate <= 15000 ) );
+        else
+            return ( ( Rate >= 4000 ) && ( Rate <= 44100 ) );
+    }
+    else if ( MajorVersion == 3 )
+    {
+        if ( Stereo )
+            return FALSE;
+
+        return ( ( Rate >= 4000 ) && ( Rate <= 13000 ) );
+    }
+    else /* 4.00 and above */
+    {
+        return ( ( Rate >= 5000 ) && ( Rate <= 44100 ) );
+    }
+}
+
+BOOLEAN
+SbDspIsValidOutputRate(
+    IN  UCHAR MajorVersion,
+    IN  UCHAR MinorVersion,
+    IN  USHORT Rate,
+    IN  BOOLEAN Stereo)
+{
+    if ( MajorVersion == 1 )
+    {
+        if ( Stereo )
+            return FALSE;
+
+        return ( ( Rate >= 4000 ) && ( Rate <= 23000 ) );
+    }
+    else if ( MajorVersion == 2 )
+    {
+        if ( Stereo )
+            return FALSE;
+
+        if ( MinorVersion == 0 )
+            return ( ( Rate >= 4000 ) && ( Rate <= 23000 ) );
+        else
+            return ( ( Rate >= 4000 ) && ( Rate <= 44100 ) );
+    }
+    else if ( MajorVersion == 3 )
+    {
+        if ( ! Stereo )
+            return ( ( Rate >= 4000 ) && ( Rate <= 44100 ) );
+        else
+            return ( ( Rate >= 11025 ) && ( Rate <= 22050 ) );
+    }
+    else /* 4.00 and above */
+    {
+        return ( ( Rate >= 5000 ) && ( Rate <= 44100 ) );
+    }
 }
 
 /* Internal routine - call only after submitting one of the rate commands */
 NTSTATUS
-SbDspWriteRate(
+SbDsp4WriteRate(
     IN  PUCHAR BasePort,
     IN  USHORT Rate,
     IN  ULONG Timeout)
 {
     NTSTATUS Status;
 
-    if ( ! SbDspIsValidRate(Rate) )
-        return STATUS_INVALID_PARAMETER_2;
+    /* NOTE - No check for validity of rate! */
 
     /* Write high byte */
     Status = SbDspWrite(BasePort, (Rate & 0xff00) >> 8, Timeout);
-    if ( ! NT_SUCCESS(Status) )
+    if ( Status != STATUS_SUCCESS )
         return Status;
 
     /* Write low byte */
     Status = SbDspWrite(BasePort, Rate & 0xff, Timeout);
-    if ( ! NT_SUCCESS(Status) )
+    if ( Status != STATUS_SUCCESS )
         return Status;
 
     return Status;
 }
 
 NTSTATUS
-SbDspSetOutputRate(
+SbDsp4SetOutputRate(
     IN  PUCHAR BasePort,
     IN  USHORT Rate,
     IN  ULONG Timeout)
 {
     NTSTATUS Status;
 
-    if ( ! SbDspIsValidRate(Rate) )
-        return STATUS_INVALID_PARAMETER_2;
+    /* NOTE - No check for validity of rate! */
 
     /* Prepare to write the output rate */
     Status = SbDspWrite(BasePort, SB_DSP_OUTPUT_RATE, (Rate & 0xff00) >> 8);
-    if ( ! NT_SUCCESS(Status) )
+    if ( Status != STATUS_SUCCESS )
         return Status;
 
-    return SbDspWriteRate(BasePort, Rate, Timeout);
+    return SbDsp4WriteRate(BasePort, Rate, Timeout);
 }
 
 NTSTATUS
-SbDspSetInputRate(
+SbDsp4SetInputRate(
     IN  PUCHAR BasePort,
     IN  USHORT Rate,
     IN  ULONG Timeout)
 {
     NTSTATUS Status;
 
-    if ( ! SbDspIsValidRate(Rate) )
-        return STATUS_INVALID_PARAMETER_2;
+    /* NOTE - No check for validity of rate! */
 
     /* Prepare to write the input rate */
     Status = SbDspWrite(BasePort, SB_DSP_OUTPUT_RATE, (Rate & 0xff00) >> 8);
-    if ( ! NT_SUCCESS(Status) )
+    if ( Status != STATUS_SUCCESS )
         return Status;
 
-    return SbDspWriteRate(BasePort, Rate, Timeout);
+    return SbDsp4WriteRate(BasePort, Rate, Timeout);
 }

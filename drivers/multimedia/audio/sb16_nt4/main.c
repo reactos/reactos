@@ -171,46 +171,46 @@ ThisIsSparta(IN PDRIVER_OBJECT DriverObject)
     DbgPrint("Resetting Sound Blaster DSP at 0x220\n");
     result = SbDspReset((PUCHAR)0x220, SB_DEFAULT_TIMEOUT);
     DbgPrint("Reset was %s\n",
-             NT_SUCCESS(result) ? "successful" : "unsuccessful");
+             result == STATUS_SUCCESS ? "successful" : "unsuccessful");
 
     /* 0x240, we don't expect to work */
     DbgPrint("Resetting Sound Blaster DSP at 0x240\n");
     result = SbDspReset((PUCHAR)0x240, SB_DEFAULT_TIMEOUT);
     DbgPrint("Reset was %s\n",
-             NT_SUCCESS(result) ? "successful" : "unsuccessful");
+             result == STATUS_SUCCESS ? "successful" : "unsuccessful");
 
     /* Try getting version */
     DbgPrint("Retrieving Sound Blaster version...\n");
     result = SbDspGetVersion((PUCHAR)0x220, &major, &minor, SB_DEFAULT_TIMEOUT);
 
     DbgPrint("Version retrival was %s\n",
-             NT_SUCCESS(result) ? "successful" : "unsuccessful");
+             result == STATUS_SUCCESS ? "successful" : "unsuccessful");
     DbgPrint("Sound Blaster DSP version is %d.%02d\n", major, minor);
 
     result = SbDspIsSpeakerEnabled((PUCHAR)0x220, &speaker_state, SB_DEFAULT_TIMEOUT);
     DbgPrint("Speaker state retrieval %s\n",
-             NT_SUCCESS(result) ? "succeeded" : "failed");
+             result == STATUS_SUCCESS ? "succeeded" : "failed");
 
     DbgPrint("Speaker state is presently %s\n",
              speaker_state ? "ENABLED" : "DISABLED");
 
     result = SbDspEnableSpeaker((PUCHAR)0x220, SB_DEFAULT_TIMEOUT);
     DbgPrint("Speaker enable request %s\n",
-             NT_SUCCESS(result) ? "succeeded" : "failed");
+             result == STATUS_SUCCESS ? "succeeded" : "failed");
 
     result = SbDspIsSpeakerEnabled((PUCHAR)0x220, &speaker_state, SB_DEFAULT_TIMEOUT);
     DbgPrint("Speaker state retrieval %s\n",
-             NT_SUCCESS(result) ? "succeeded" : "failed");
+             result == STATUS_SUCCESS ? "succeeded" : "failed");
     DbgPrint("Speaker state is now %s\n",
              speaker_state ? "ENABLED" : "DISABLED");
 
     result = SbDspDisableSpeaker((PUCHAR)0x220, SB_DEFAULT_TIMEOUT);
     DbgPrint("Speaker disable request %s\n",
-             NT_SUCCESS(result) ? "succeeded" : "failed");
+             result == STATUS_SUCCESS ? "succeeded" : "failed");
 
     result = SbDspIsSpeakerEnabled((PUCHAR)0x220, &speaker_state, SB_DEFAULT_TIMEOUT);
     DbgPrint("Speaker state retrieval %s\n",
-             NT_SUCCESS(result) ? "succeeded" : "failed");
+             result == STATUS_SUCCESS ? "succeeded" : "failed");
     DbgPrint("Speaker state is now %s\n",
              speaker_state ? "ENABLED" : "DISABLED");
 

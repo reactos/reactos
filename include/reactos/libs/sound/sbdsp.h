@@ -15,7 +15,19 @@
 #ifndef ROS_SOUND_SBDSP_H
 #define ROS_SOUND_SBDSP_H
 
-#include <sound/time.h>
+/*
+    Product versions
+    DSP 1.0, 1.5, 2.0, 2.01 correspond with respective Sound Blaster versions.
+    DSP 3.xx is Sound Blaster Pro
+    DSP 4.xx is Sound Blaster 16
+*/
+
+#define SOUND_BLASTER_1_0       L"Sound Blaster 1.0"
+#define SOUND_BLASTER_1_5       L"Sound Blaster 1.5"
+#define SOUND_BLASTER_2_0       L"Sound Blaster 2.0"
+#define SOUND_BLASTER_PRO       L"Sound Blaster Pro"
+#define SOUND_BLASTER_16        L"Sound Blaster 16"
+
 
 /*
     Sound Blaster ports I/O
@@ -155,19 +167,33 @@ SbDspIsSpeakerEnabled(
     IN  ULONG Timeout);
 
 /*
-    Validate the sample rate
-    * DSP 4.xx only
+    Validate the input sample rate. The major and minor versions are required
+    to determine the capabilities of the card.
 */
 BOOLEAN
-SbDspIsValidRate(
-    IN  USHORT Rate);
+SbDspIsValidInputRate(
+    IN  UCHAR MajorVersion,
+    IN  UCHAR MinorVersion,
+    IN  USHORT Rate,
+    IN  BOOLEAN Stereo);
+
+/*
+    Validate the output sample rate. The major and minor versions are required
+    to determine the capabilities of the card.
+*/
+BOOLEAN
+SbDspIsValidOutputRate(
+    IN  UCHAR MajorVersion,
+    IN  UCHAR MinorVersion,
+    IN  USHORT Rate,
+    IN  BOOLEAN Stereo);
 
 /*
     Set the output/playback rate
     * DSP 4.xx only
 */
 NTSTATUS
-SbDspSetOutputRate(
+SbDsp4SetOutputRate(
     IN  PUCHAR BasePort,
     IN  USHORT Rate,
     IN  ULONG Timeout);
@@ -177,7 +203,7 @@ SbDspSetOutputRate(
     * DSP 4.xx only
 */
 NTSTATUS
-SbDspSetInputRate(
+SbDsp4SetInputRate(
     IN  PUCHAR BasePort,
     IN  USHORT Rate,
     IN  ULONG Timeout);
