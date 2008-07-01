@@ -249,7 +249,7 @@ NtfsGetVolumeData(PDEVICE_OBJECT DeviceObject,
                            TRUE);
   if (!NT_SUCCESS(Status))
   {
-    ExFreePool (MftRecord);
+    ExFreePool(MftRecord);
     return Status;
   }
 
@@ -265,7 +265,7 @@ NtfsGetVolumeData(PDEVICE_OBJECT DeviceObject,
   Status = ReadFileRecord(DeviceExt, 3, VolumeRecord, MftRecord);
   if (!NT_SUCCESS(Status))
   {
-    ExFreePool (MftRecord);
+    ExFreePool(MftRecord);
     return Status;
   }
 
@@ -307,7 +307,8 @@ NtfsGetVolumeData(PDEVICE_OBJECT DeviceObject,
     NtfsInfo->Flags = VolumeInfo->Flags;
   }
 
-  ExFreePool (MftRecord);
+  ExFreePool(MftRecord);
+  ExFreePool(VolumeRecord);
 
   return Status;
 }
@@ -354,7 +355,7 @@ NtfsMountVolume(PDEVICE_OBJECT DeviceObject,
   if (!NT_SUCCESS(Status))
     goto ByeBye;
 
-  NewDeviceObject->Flags = NewDeviceObject->Flags | DO_DIRECT_IO;
+  NewDeviceObject->Flags |= DO_DIRECT_IO;
   Vcb = (PVOID)NewDeviceObject->DeviceExtension;
   RtlZeroMemory(Vcb, sizeof(NTFS_VCB));
 
