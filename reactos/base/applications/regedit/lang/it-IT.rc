@@ -268,7 +268,7 @@ BEGIN
     ID_EDIT_NEW_KEY         "Aggiunge una nuova chiave"
     ID_EDIT_NEW_STRINGVALUE "Aggiunge un nuovo valore stringa"
     ID_EDIT_NEW_BINARYVALUE "Aggiunge un nuovo valore binario"
-    ID_EDIT_NEW_DWORDVALUE  "Aggiunge un nuovo valore a doppia parola"
+    ID_EDIT_NEW_DWORDVALUE  "Aggiunge un nuovo valore DWORD"
     ID_REGISTRY_IMPORTREGISTRYFILE "Importa un file di testo nel Registro"
     ID_REGISTRY_EXPORTREGISTRYFILE
                             "Esporta tutto o parte del Registro in un file di testo"
@@ -314,7 +314,7 @@ BEGIN
     IDS_ERR_DELVAL_CAPTION  "Errore nella cancellazione dei valori"
     IDS_ERR_DELETEVALUE     "Impossibile cancellare tutti i valori indicati!"
     IDS_ERR_RENVAL_CAPTION  "Errore nel rinominare il valore"
-    IDS_ERR_RENVAL_TOEMPTY  "Impossibile rinominare  %s. Il nome indicato è vuoto. Riprovate con un altro nome."
+    IDS_ERR_RENVAL_TOEMPTY  "Impossibile rinominare %s. Il nome indicato è vuoto. Riprovate con un altro nome."
     IDS_NEW_KEY             "Nuova chiave #%d"
     IDS_NEW_VALUE           "Nuovo valore #%d"
 END

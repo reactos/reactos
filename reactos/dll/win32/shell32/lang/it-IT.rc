@@ -423,10 +423,10 @@ BEGIN
 	LTEXT "Questa cartella contiene un file a solo lettura con nome '%2'.", 12292, 41, 10, 222, 22, SS_NOPREFIX
 	LTEXT "Questa cartella contiene un file di sistema con nome '%2'.", 12293, 41, 10, 222, 22, SS_NOPREFIX
 	LTEXT "Volete sostituire il file esistente", -1, 44, 35, 228, 10, SS_NOPREFIX
-	LTEXT "(unknown date and size)", 12302, 79, 51, 198, 20, SS_NOPREFIX
+	LTEXT "(data e dimensione sconosciuti)", 12302, 79, 51, 198, 20, SS_NOPREFIX
 	ICON "", 12300, 50, 49, 21, 20, SS_REALSIZECONTROL
 	LTEXT "con questo?", -1, 44, 75, 228, 10, SS_NOPREFIX
-	LTEXT "(unknown date and size)", 12303, 79, 91, 198, 20, SS_NOPREFIX
+	LTEXT "(data e dimensione sconosciuti)", 12303, 79, 91, 198, 20, SS_NOPREFIX
 	ICON "", 12301, 50, 89, 21, 20, SS_REALSIZECONTROL
 END
 
@@ -619,7 +619,7 @@ BEGIN
 	IDS_FAVORITES               "Preferiti"
 	IDS_STARTUP                 "Menu Avvio\\Programmi\\AvvioAutomatico"
 	IDS_RECENT                  "Recenti"
-	IDS_SENDTO                  "InviaA"
+	IDS_SENDTO                  "Invia A"
 	IDS_STARTMENU               "Menu Avvio"
 	IDS_MYMUSIC                 "Musica"
 	IDS_MYVIDEO                 "Video"
@@ -660,7 +660,7 @@ BEGIN
 	IDS_FOLDER_OPTIONS          "Opzioni della cartella"
 	IDS_RECYCLEBIN_LOCATION     "Posizione del Cestino"
 	IDS_RECYCLEBIN_DISKSPACE    "Spazio disponibile"
-	IDS_EMPTY_BITBUCKET         "Empty Recycle Bin"
+	IDS_EMPTY_BITBUCKET         "Svuota cestino"
 	IDS_PICK_ICON_TITLE         "Scegliere un icona"
 	IDS_PICK_ICON_FILTER        "Icone(*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0"
 	IDS_OPEN_WITH_FILTER        "File eseguibili\0*.exe\0"
