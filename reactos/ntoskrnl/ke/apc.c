@@ -320,9 +320,6 @@ KiDeliverApc(IN KPROCESSOR_MODE DeliveryMode,
             break;
         }
 
-        /* It's not pending anymore */
-        Thread->ApcState.KernelApcPending = FALSE;
-
         /* Get the next Entry */
         ApcListEntry = Thread->ApcState.ApcListHead[KernelMode].Flink;
         Apc = CONTAINING_RECORD(ApcListEntry, KAPC, ApcListEntry);
