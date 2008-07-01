@@ -9,8 +9,8 @@
         1 July 2008 - Created
 */
 
-#ifndef ROS_SOUND_TIME
-#define ROS_SOUND_TIME
+#ifndef ROS_SOUND_TIME_H
+#define ROS_SOUND_TIME_H
 
 VOID
 SleepMs(ULONG Milliseconds);

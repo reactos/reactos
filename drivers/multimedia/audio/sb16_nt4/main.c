@@ -14,6 +14,7 @@
 #include <ntddsnd.h>
 #include <debug.h>
 
+#include <sbdsp.h>
 #include <devname.h>
 
 typedef struct _SOUND_BLASTER_EXTENSION
@@ -92,12 +93,13 @@ UnloadSoundBlaster(
     INFO_(IHVAUDIO, "Sound Blaster driver being unloaded");
 }
 
-
+/* This is to be moved into the sound library later */
 #define SOUND_PARAMETERS_KEYNAME_W      L"Parameters"
 #define SOUND_DEVICES_KEYNAME_W         L"Devices"
 #define SOUND_DEVICE_KEYNAME_PREFIX_W   L"Device"
 
 /* NT4 */
+#if 0
 ULONG
 GetSoundDeviceCount(
     IN  PUNICODE_STRING RegistryPath)
@@ -132,6 +134,31 @@ GetSoundDeviceCount(
 
     //ZwEnumerateKey(Key
 }
+#endif
+
+
+/*
+    This is purely for testing the sound library at present. Eventually this
+    should be re-formed to consider that some (admittedly slightly crazy)
+    users might have more than one sound blaster card, or perhaps might have
+    a different configuration.
+
+    ie, this is pretty much as non-PnP as you can get!
+*/
+STDCALL
+NTSTATUS
+ThisIsSparta(IN PDRIVER_OBJECT DriverObject)
+{
+    DEVICE_OBJECT device;
+    BOOLEAN result;
+    CreateSoundDeviceWithDefaultName(DriverObject, 0, 69, 0, &device);
+
+    INFO_(IHVAUDIO, "Resetting SB...");
+    result = ResetSoundBlasterDSP((PUCHAR)0x220, 10000);
+    INFO_(IHVAUDIO, "SB reset returns %d", result);
+
+    return STATUS_SUCCESS;
+}
 
 
 
@@ -153,9 +180,7 @@ DriverEntry(
     DriverObject->MajorFunction[IRP_MJ_WRITE] = WriteSoundBlaster;
     DriverObject->DriverUnload = UnloadSoundBlaster;
 
-    DEVICE_OBJECT device;
-    CreateSoundDeviceWithDefaultName(DriverObject, 0, 69, 0, &device);
-
-    return STATUS_SUCCESS;
+    /* Hax */
+    return ThisIsSparta(DriverObject);
 }
 
