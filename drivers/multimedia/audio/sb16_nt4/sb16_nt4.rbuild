@@ -6,7 +6,8 @@
 	<include base="sb16_nt4">..</include>
     <include base="ReactOS">include/reactos/libs/sound</include>
 	<importlibrary definition="sb16_nt4.def" />
-    <library>sound</library>
+    <library>soundblaster</library>
+    <library>audio</library>
 	<library>ntoskrnl</library>
 	<library>hal</library>
 	<file>main.c</file>

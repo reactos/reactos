@@ -77,6 +77,44 @@
 #define SB_DSP_SPEAKER_STATUS   0xD8
 #define SB_DSP_VERSION          0xE1
 
+/*
+    Mixer lines (legacy)
+*/
+#define SB_MIX_VOC_LEVEL        0x04
+#define SB_MIX_LEGACY_MIC_LEVEL 0x0A
+#define SB_MIX_MASTER_LEVEL     0x22
+#define SB_MIX_FM_LEVEL         0x26
+#define SB_MIX_CD_LEVEL         0x28
+#define SB_MIX_LINE_LEVEL       0x2E
+
+/*
+    Mixer lines
+*/
+#define SB_MIX_MASTER_LEFT_LEVEL    0x30
+#define SB_MIX_MASTER_RIGHT_LEVEL   0x31
+#define SB_MIX_VOC_LEFT_LEVEL       0x32
+#define SB_MIX_VOC_RIGHT_LEVEL      0x33
+#define SB_MIX_MIDI_LEFT_LEVEL      0x34
+#define SB_MIX_MIDI_RIGHT_LEVEL     0x35
+#define SB_MIX_CD_LEFT_LEVEL        0x36
+#define SB_MIX_CD_RIGHT_LEVEL       0x37
+#define SB_MIX_LINE_LEFT_LEVEL      0x38
+#define SB_MIX_LINE_RIGHT_LEVEL     0x39
+#define SB_MIX_MIC_LEVEL            0x3A
+#define SB_MIX_PC_SPEAKER_LEVEL     0x3B
+#define SB_MIX_OUTPUT_SWITCHES      0x3C
+#define SB_MIX_INPUT_LEFT_LEVEL     0x3D
+#define SB_MIX_INPUT_RIGHT_LEVEL    0x3E
+#define SB_MIX_INPUT_LEFT_GAIN      0x3F
+#define SB_MIX_INPUT_RIGHT_GAIN     0x40
+#define SB_MIX_OUTPUT_LEFT_GAIN     0x41
+#define SB_MIX_OUTPUT_RIGHT_GAIN    0x42
+#define SB_MIX_AGC                  0x43
+#define SB_MIX_TREBLE_LEFT_LEVEL    0x44
+#define SB_MIX_TREBLE_RIGHT_LEVEL   0x45
+#define SB_MIX_BASS_LEFT_LEVEL      0x46
+#define SB_MIX_BASS_RIGHT_LEVEL     0x47
+
 
 /*
     Reset the Sound Blaster DSP.
