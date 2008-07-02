@@ -179,6 +179,7 @@
   <property name="BASEADDRESS_DNSAPI" value="0x77fb0000" />
   <property name="BASEADDRESS_MSVCRT" value="0x78000000" />
   <property name="BASEADDRESS_MSVCRT20" value="0x78500000" />
+  <property name="BASEADDRESS_MSVCRT40" value="0x78700000" />
   <property name="BASEADDRESS_MSCOREE" value="0x79000000" />
   <property name="BASEADDRESS_KERNEL32" value="0x7c800000" />
   <property name="BASEADDRESS_NTDLL" value="0x7c900000" />
