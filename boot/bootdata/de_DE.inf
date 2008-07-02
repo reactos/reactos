@@ -5,7 +5,7 @@ Signature="$ReactOS$
 
 ; Country Codes
 
-HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\1","Name",0x00000000,"Vereinigte Staten von Amerika"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\1","Name",0x00000000,"Vereinigte Staaten von Amerika"
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\106","Name",0x00000000,"Britische Jungferninseln"
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\107","Name",0x00000000,"Kanada"
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\109","Name",0x00000000,"Dominica"

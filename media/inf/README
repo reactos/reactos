@@ -1,0 +1,53 @@
+Internationalization of INF-files:
+
+For internationalization of INF-files each [Strings]-section need a language
+sepcific additional one. This section have the name [Strings.LanguageId] e.g.
+[Strings.0407] for German. During setup dependent on the system language the
+language dependent substitations will be applied and the result will be 
+stored in the registry. That's the way Microsoft described in MSDN:
+http://msdn.microsoft.com/en-us/library/ms794543.aspx
+The result is, that we have a system language, where all strings are 
+translated in best case. A fictional example:
+
+[a_inf_section]
+
+an_arbitrary_key = %value_1%
+
+[Strings]
+
+value_1 = "english version value_1"
+
+[Strings.0407]
+
+value_1 = "deutsche version value_1"
+
+All of the INF-files containting translated strings have to be encoded in 
+16 bit unicode (UTF-16) with byte order mark.
+Remember, during installation we make one translated version and store that to
+registry, all other versions provided in INF-file will discard. Due to this
+fact, there is (at least) one question left: How to realize multiple system
+languages simultanously in a Microsoft compatible manner? A suggestion is to
+store all translations in registry. Let's assume we have a key (like in example
+above) in registry:
+
+an_arbitrary_key = "english version value_1"
+
+Whether it's a translated or the english default one. For each other language
+that comes with INF-file we create a new key in the Strings.LanguageID manner:
+
+an_arbitrary_key.0407 = "deutsche version value_1"
+
+In the hope Windows will ignore that additional keys, we can use it to handle
+multiple languages at the same time with a default language as well not limited
+to english. Additional to Windows we have to implement/modify the 
+registry-related functions to consider the language specific keys, but that's
+a little effort and i think it doesn't lead into incompatibility.
+To prevent a bloated registry we could modify that way and add the translated 
+strings to registry only if a user select new (still uninstalled) language.
+
+General issues of multiple (system) languages:
+
+We can translate the programm files and perhaps the registry entries in the 
+described above. But how to handle files/directories with translatabel names?
+If we intend to have a (native) language for each user, so the directory 
+structure may become confusing and hard to handle correctly.
