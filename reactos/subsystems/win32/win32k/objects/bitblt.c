@@ -40,8 +40,8 @@ NtGdiAlphaBlend(
 	BLENDFUNCTION  BlendFunc,
 	HANDLE hcmXform)
 {
-	PDC DCDest = NULL;
-	PDC DCSrc  = NULL;
+	PDC DCDest;
+	PDC DCSrc;
 	BITMAPOBJ *BitmapDest, *BitmapSrc;
 	RECTL DestRect, SourceRect;
 	BOOL Status;
@@ -106,7 +106,8 @@ NtGdiAlphaBlend(
 	BitmapDest = BITMAPOBJ_LockBitmap(DCDest->w.hBitmap);
 	if (!BitmapDest)
 	{
-		DC_UnlockDc(DCSrc);
+		if (hDCSrc != hDCDest)
+			DC_UnlockDc(DCSrc);
 		DC_UnlockDc(DCDest);
 		return FALSE;
 	}
@@ -115,10 +116,11 @@ NtGdiAlphaBlend(
 	else
 	{
 		BitmapSrc = BITMAPOBJ_LockBitmap(DCSrc->w.hBitmap);
-		if (!BitmapDest)
+		if (!BitmapSrc)
 		{
 			BITMAPOBJ_UnlockBitmap(BitmapDest);
-			DC_UnlockDc(DCSrc);
+			if (hDCSrc != hDCDest)
+				DC_UnlockDc(DCSrc);
 			DC_UnlockDc(DCDest);
 			return FALSE;
 		}
@@ -169,7 +171,7 @@ NtGdiBitBlt(
 	IN DWORD crBackColor,
 	IN FLONG fl)
 {
-	PDC DCDest = NULL;
+	PDC DCDest;
 	PDC DCSrc  = NULL;
 	PDC_ATTR Dc_Attr = NULL;
 	BITMAPOBJ *BitmapDest, *BitmapSrc = NULL;
@@ -219,10 +221,6 @@ NtGdiBitBlt(
 			DCSrc = DCDest;
 		}
 	}
-	else
-	{
-		DCSrc = NULL;
-	}
 
 	Dc_Attr = DCDest->pDc_Attr;
 	if (!Dc_Attr) Dc_Attr = &DCDest->Dc_Attr;
@@ -265,10 +263,6 @@ NtGdiBitBlt(
 				goto cleanup;
 		}
 	}
-	else
-	{
-		BitmapSrc = NULL;
-	}
 
 	if (UsesPattern)
 	{
@@ -280,10 +274,6 @@ NtGdiBitBlt(
 		}
 		BrushOrigin = *((PPOINTL)&BrushObj->ptOrigin);
 		IntGdiInitBrushInstance(&BrushInst, BrushObj, DCDest->XlateBrush);
-	}
-	else
-	{
-		BrushObj = NULL;
 	}
 
 	/* Create the XLATEOBJ. */
@@ -301,7 +291,7 @@ NtGdiBitBlt(
 	}
 
 	/* Perform the bitblt operation */
-    Status = IntEngBitBlt( BitmapDest ? &BitmapDest->SurfObj : NULL, BitmapSrc ? &BitmapSrc->SurfObj : NULL, NULL,
+    Status = IntEngBitBlt(&BitmapDest->SurfObj, BitmapSrc ? &BitmapSrc->SurfObj : NULL, NULL,
                           DCDest->CombinedClip, XlateObj, &DestRect,
                           &SourcePoint, NULL,
                           BrushObj ? &BrushInst.BrushObject : NULL,
@@ -315,7 +305,7 @@ cleanup:
 	{
 		BITMAPOBJ_UnlockBitmap(BitmapDest);
 	}
-	if (UsesSource && BitmapSrc != BitmapDest)
+	if (BitmapSrc != NULL && BitmapSrc != BitmapDest)
 	{
 		BITMAPOBJ_UnlockBitmap(BitmapSrc);
 	}
@@ -734,13 +724,13 @@ NtGdiStretchBlt(
 	DWORD  ROP,
 	IN DWORD dwBackColor)
 {
-	PDC DCDest = NULL;
+	PDC DCDest;
 	PDC DCSrc  = NULL;
 	PDC_ATTR Dc_Attr;
-	BITMAPOBJ *BitmapDest, *BitmapSrc;
+	BITMAPOBJ *BitmapDest, *BitmapSrc = NULL;
 	RECTL DestRect;
 	RECTL SourceRect;
-	BOOL Status;
+	BOOL Status = FALSE;
 	XLATEOBJ *XlateObj = NULL;
 	PGDIBRUSHOBJ BrushObj = NULL;
 	BOOL UsesSource = ((ROP & 0xCC0000) >> 2) != (ROP & 0x330000);
@@ -790,10 +780,6 @@ NtGdiStretchBlt(
 			DCSrc = DCDest;
 		}
 	}
-	else
-	{
-		DCSrc = NULL;
-	}
 
 	/* Offset the destination and source by the origin of their DCs. */
 	// FIXME: ptlDCOrig is in device coordinates!
@@ -817,12 +803,20 @@ NtGdiStretchBlt(
 
 	/* Determine surfaces to be used in the bitblt */
 	BitmapDest = BITMAPOBJ_LockBitmap(DCDest->w.hBitmap);
+	if (BitmapDest == NULL)
+		goto failed;
 	if (UsesSource)
 	{
 		if (DCSrc->w.hBitmap == DCDest->w.hBitmap)
+		{
 			BitmapSrc = BitmapDest;
+		}
 		else
+		{
 			BitmapSrc = BITMAPOBJ_LockBitmap(DCSrc->w.hBitmap);
+			if (BitmapSrc == NULL)
+				goto failed;
+		}
 
 		int sw = BitmapSrc->SurfObj.sizlBitmap.cx;
 		int sh = BitmapSrc->SurfObj.sizlBitmap.cy;
@@ -871,7 +865,6 @@ NtGdiStretchBlt(
 		if (0 == (DestRect.right-DestRect.left) || 0 == (DestRect.bottom-DestRect.top) || 0 == (SourceRect.right-SourceRect.left) || 0 == (SourceRect.bottom-SourceRect.top))
 		{
 			SetLastWin32Error(ERROR_INVALID_PARAMETER);
-			Status = FALSE;
 			goto failed;
 		}
 
@@ -880,13 +873,9 @@ NtGdiStretchBlt(
 		if (XlateObj == (XLATEOBJ*)-1)
 		{
 			SetLastWin32Error(ERROR_NO_SYSTEM_RESOURCES);
-			Status = FALSE;
+			XlateObj = NULL;
 			goto failed;
 		}
-	}
-	else
-	{
-		BitmapSrc = NULL;
 	}
 
 	if (UsesPattern)
@@ -897,13 +886,8 @@ NtGdiStretchBlt(
 		if (NULL == BrushObj)
 		{
 			SetLastWin32Error(ERROR_INVALID_HANDLE);
-			Status = FALSE;
 			goto failed;
 		}
-	}
-	else
-	{
-		BrushObj = NULL;
 	}
 
 	/* Perform the bitblt operation */
@@ -921,11 +905,14 @@ failed:
 	{
 		BRUSHOBJ_UnlockBrush(BrushObj);
 	}
-	if (UsesSource && DCSrc->w.hBitmap != DCDest->w.hBitmap)
+	if (BitmapSrc && DCSrc->w.hBitmap != DCDest->w.hBitmap)
 	{
 		BITMAPOBJ_UnlockBitmap(BitmapSrc);
 	}
-	BITMAPOBJ_UnlockBitmap(BitmapDest);
+	if (BitmapDest)
+	{
+		BITMAPOBJ_UnlockBitmap(BitmapDest);
+	}
 	if (UsesSource && hDCSrc != hDCDest)
 	{
 		DC_UnlockDc(DCSrc);
@@ -1162,7 +1149,7 @@ NtGdiPolyPatBlt(
       }
    }
 
-   Ret = IntGdiPolyPatBlt(hDC, dwRop, (PPATRECT)pRects, cRects, Mode);
+   Ret = IntGdiPolyPatBlt(hDC, dwRop, rb, cRects, Mode);
 
    if (cRects > 0)
       ExFreePool(rb);
