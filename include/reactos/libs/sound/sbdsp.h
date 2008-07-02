@@ -90,6 +90,7 @@
 /*
     Mixer lines
 */
+#define SB_MIX_RESET                0x00
 #define SB_MIX_MASTER_LEFT_LEVEL    0x30
 #define SB_MIX_MASTER_RIGHT_LEVEL   0x31
 #define SB_MIX_VOC_LEFT_LEVEL       0x32
@@ -103,8 +104,8 @@
 #define SB_MIX_MIC_LEVEL            0x3A
 #define SB_MIX_PC_SPEAKER_LEVEL     0x3B
 #define SB_MIX_OUTPUT_SWITCHES      0x3C
-#define SB_MIX_INPUT_LEFT_LEVEL     0x3D
-#define SB_MIX_INPUT_RIGHT_LEVEL    0x3E
+#define SB_MIX_INPUT_LEFT_SWITCHES  0x3D
+#define SB_MIX_INPUT_RIGHT_SWITCHES 0x3E
 #define SB_MIX_INPUT_LEFT_GAIN      0x3F
 #define SB_MIX_INPUT_RIGHT_GAIN     0x40
 #define SB_MIX_OUTPUT_LEFT_GAIN     0x41
@@ -245,6 +246,49 @@ SbDsp4SetInputRate(
     IN  PUCHAR BasePort,
     IN  USHORT Rate,
     IN  ULONG Timeout);
+
+
+/*
+    Reset the mixer
+*/
+VOID
+SbMixerReset(IN PUCHAR BasePort);
+
+/*
+    Pack mixer level data
+*/
+NTSTATUS
+SbMixerPackLevelData(
+    IN  UCHAR Line,
+    IN  UCHAR Level,
+    OUT PUCHAR PackedLevel);
+
+/*
+    Unpack mixer level data
+*/
+NTSTATUS
+SbMixerUnpackLevelData(
+    IN  UCHAR Line,
+    IN  UCHAR PackedLevel,
+    OUT PUCHAR Level);
+
+/*
+    Set a mixer line level
+*/
+NTSTATUS
+SbMixerSetLevel(
+    IN  PUCHAR BasePort,
+    IN  UCHAR Line,
+    IN  UCHAR Level);
+
+/*
+    Get a mixer line level
+*/
+NTSTATUS
+SbMixerGetLevel(
+    IN  PUCHAR BasePort,
+    IN  UCHAR Line,
+    OUT PUCHAR Level);
 
 
 #endif

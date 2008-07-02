@@ -164,6 +164,7 @@ ThisIsSparta(IN PDRIVER_OBJECT DriverObject)
     NTSTATUS result;
     BOOLEAN speaker_state = TRUE;
     UCHAR major = 0x69, minor = 0x96;
+    UCHAR level = 0;
 
     /*CreateSoundDeviceWithDefaultName(DriverObject, 0, 69, 0, &device);*/
 
@@ -213,6 +214,20 @@ ThisIsSparta(IN PDRIVER_OBJECT DriverObject)
              result == STATUS_SUCCESS ? "succeeded" : "failed");
     DbgPrint("Speaker state is now %s\n",
              speaker_state ? "ENABLED" : "DISABLED");
+
+    DbgPrint("Resetting SB Mixer\n");
+    SbMixerReset((PUCHAR)0x220);
+
+    DbgPrint("Setting master level to 0F\n");
+    result = SbMixerSetLevel((PUCHAR)0x220, SB_MIX_MASTER_LEVEL, 0x0f);
+    DbgPrint("Request %s\n",
+             result == STATUS_SUCCESS ? "succeeded" : "failed");
+
+    DbgPrint("Getting master level\n");
+    result = SbMixerGetLevel((PUCHAR)0x220, SB_MIX_MASTER_LEVEL, &level);
+    DbgPrint("Request %s\n",
+             result == STATUS_SUCCESS ? "succeeded" : "failed");
+    DbgPrint("Level is 0x%x\n", level);
 
     return STATUS_SUCCESS;
 }
