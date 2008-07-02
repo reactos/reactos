@@ -169,8 +169,8 @@
 	<directory name="kbdtat">
 		<xi:include href="kbdtat/kbdtat.rbuild" />
 	</directory>
-	<directory name="kbdth">
-		<xi:include href="kbdth/kbdth.rbuild" />
+	<directory name="kbdth2">
+		<xi:include href="kbdth2/kbdth.rbuild" />
 	</directory>
 	<directory name="kbdtuf">
 		<xi:include href="kbdtuf/kbdtuf.rbuild" />
