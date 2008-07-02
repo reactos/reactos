@@ -335,7 +335,10 @@ static HEAP *HEAP_GetPtr(
     HEAP *heapPtr = (HEAP *)heap;
     if (!heapPtr || (heapPtr->magic != HEAP_MAGIC))
     {
-        ERR("Invalid heap %p, magic:%4s!\n", heap,heapPtr->magic );
+        if (heapPtr)
+            ERR("Invalid heap %p, magic:%.4s!\n", heap, &heapPtr->magic );
+        else
+            ERR("Invalid heap %p!\n", heap );
         //KeDumpStackFrames(NULL);
         return NULL;
     }
