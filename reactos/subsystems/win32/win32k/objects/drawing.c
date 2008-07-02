@@ -1392,7 +1392,7 @@ IntFillRoundRect( PDC dc,
   if (Wellipse > r.width)
   {
      if (Hellipse > r.height) // > W > H
-        ret = app_fill_ellipse(dc, r, FillBrushObj);
+        app_fill_ellipse(dc, r, FillBrushObj);
      else // > W < H
      {
 
