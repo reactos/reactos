@@ -8,6 +8,7 @@
 	<importlibrary definition="sb16_nt4.def" />
     <library>soundblaster</library>
     <library>audio</library>
+    <library>audioleg</library>
 	<library>ntoskrnl</library>
 	<library>hal</library>
 	<file>main.c</file>

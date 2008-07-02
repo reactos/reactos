@@ -20,6 +20,7 @@
 #include <ntddsnd.h>
 #include <debug.h>
 
+#include <hardware.h>
 #include <sbdsp.h>
 #include <devname.h>
 
@@ -95,11 +96,64 @@ WriteSoundBlaster(
 
     return STATUS_SUCCESS;}
 
+
+/*
+    ============ HACKY TESTING CODE FOLLOWS ==============
+*/
+
+PDEVICE_OBJECT g_device;
+PKINTERRUPT g_interrupt = 0;
+
+STDCALL
+BOOLEAN
+InterruptService(
+    IN  struct _KINTERRUPT *Interrupt,
+    IN  PVOID ServiceContext)
+{
+    DbgPrint("ISR called\n");
+    return TRUE;
+}
+
+
+
+NTSTATUS
+PrepareSoundBlaster(
+    IN  PDRIVER_OBJECT DriverObject)
+{
+    NTSTATUS result;
+
+    DbgPrint("Creating sound device\n");
+    result = CreateSoundDeviceWithDefaultName(DriverObject, 0, 69, 0, &g_device);
+    DbgPrint("Request returned status 0x%08x\n",
+             result);
+
+    DbgPrint("Attaching interrupt\n");
+    /* Interrupt */
+    result = LegacyAttachInterrupt(g_device, 5, InterruptService, &g_interrupt);
+    DbgPrint("Request %s\n",
+             result == STATUS_SUCCESS ? "succeeded" : "failed");
+
+    return result;
+}
+
+
 VOID STDCALL
 UnloadSoundBlaster(
     IN  PDRIVER_OBJECT DriverObject)
 {
+    NTSTATUS Status;
     DbgPrint("Sound Blaster driver being unloaded\n");
+
+    if ( g_interrupt )
+    {
+        DbgPrint("Disconnecting interrupt\n");
+        IoDisconnectInterrupt(g_interrupt);
+    }
+
+    DbgPrint("Destroying devices\n");
+    Status = DestroySoundDeviceWithDefaultName(g_device, 0, 69);
+    DbgPrint("Status 0x%08x\n", Status);
+
     /*INFO_(IHVAUDIO, "Sound Blaster driver being unloaded");*/
 }
 
@@ -158,15 +212,12 @@ GetSoundDeviceCount(
 
 STDCALL
 NTSTATUS
-ThisIsSparta(IN PDRIVER_OBJECT DriverObject)
+TestSoundBlasterLibrary()
 {
-    DEVICE_OBJECT device;
     NTSTATUS result;
-    BOOLEAN speaker_state = TRUE;
+    BOOLEAN speaker_state = TRUE, agc_enabled = FALSE;
     UCHAR major = 0x69, minor = 0x96;
     UCHAR level = 0;
-
-    /*CreateSoundDeviceWithDefaultName(DriverObject, 0, 69, 0, &device);*/
 
     /* 0x220 is the port we expect to work */
     DbgPrint("Resetting Sound Blaster DSP at 0x220\n");
@@ -187,6 +238,8 @@ ThisIsSparta(IN PDRIVER_OBJECT DriverObject)
     DbgPrint("Version retrival was %s\n",
              result == STATUS_SUCCESS ? "successful" : "unsuccessful");
     DbgPrint("Sound Blaster DSP version is %d.%02d\n", major, minor);
+
+    /* Speaker tests */
 
     result = SbDspIsSpeakerEnabled((PUCHAR)0x220, &speaker_state, SB_DEFAULT_TIMEOUT);
     DbgPrint("Speaker state retrieval %s\n",
@@ -215,6 +268,9 @@ ThisIsSparta(IN PDRIVER_OBJECT DriverObject)
     DbgPrint("Speaker state is now %s\n",
              speaker_state ? "ENABLED" : "DISABLED");
 
+
+    /* Mixer tests */
+
     DbgPrint("Resetting SB Mixer\n");
     SbMixerReset((PUCHAR)0x220);
 
@@ -229,8 +285,23 @@ ThisIsSparta(IN PDRIVER_OBJECT DriverObject)
              result == STATUS_SUCCESS ? "succeeded" : "failed");
     DbgPrint("Level is 0x%x\n", level);
 
+
+    /* AGC testing */
+
+    agc_enabled = SbMixerIsAGCEnabled((PUCHAR)0x220);
+    DbgPrint("AGC enabled? %d\n", agc_enabled);
+
+    SbMixerEnableAGC((PUCHAR)0x220);
+    agc_enabled = SbMixerIsAGCEnabled((PUCHAR)0x220);
+    DbgPrint("AGC enabled? %d\n", agc_enabled);
+
+    SbMixerDisableAGC((PUCHAR)0x220);
+    agc_enabled = SbMixerIsAGCEnabled((PUCHAR)0x220);
+    DbgPrint("AGC enabled? %d\n", agc_enabled);
+
     return STATUS_SUCCESS;
 }
+
 
 
 
@@ -254,5 +325,6 @@ DriverEntry(
     DriverObject->DriverUnload = UnloadSoundBlaster;
 
     /* Hax */
-    return ThisIsSparta(DriverObject);
+    TestSoundBlasterLibrary();
+    return PrepareSoundBlaster(DriverObject);
 }

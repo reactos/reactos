@@ -12,8 +12,10 @@
     Notes:
         Functions documented in sbdsp.h
 
-        Currently, input/output switches and AGC are not
-        supported. Nor is PC speaker volume.
+        Currently, input/output switches and PC speaker volume
+        level are not supported.
+
+        The I/O switches are used for muting/unmuting mic, etc.
 */
 
 #include <ntddk.h>
@@ -217,4 +219,28 @@ SbMixerGetLevel(
     DbgPrint("SbMixerGetLevel: Line 0x%x, raw level 0x%x, packed 0x%x\n", Line, Level, PackedLevel);
 
     return STATUS_SUCCESS;
+}
+
+VOID
+SbMixerEnableAGC(IN PUCHAR BasePort)
+{
+    /* Untested... */
+    WRITE_SB_MIXER_REGISTER(BasePort, SB_MIX_AGC);
+    WRITE_SB_MIXER_DATA(BasePort, 1);
+}
+
+VOID
+SbMixerDisableAGC(IN PUCHAR BasePort)
+{
+    /* Untested... */
+    WRITE_SB_MIXER_REGISTER(BasePort, SB_MIX_AGC);
+    WRITE_SB_MIXER_DATA(BasePort, 0);
+}
+
+BOOLEAN
+SbMixerIsAGCEnabled(IN PUCHAR BasePort)
+{
+    /* Untested... */
+    WRITE_SB_MIXER_REGISTER(BasePort, SB_MIX_AGC);
+    return (READ_SB_MIXER_DATA(BasePort) != 0);
 }

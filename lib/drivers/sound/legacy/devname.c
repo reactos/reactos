@@ -167,17 +167,25 @@ GetDefaultSoundDeviceNameBodies(
     OUT PCWSTR* DeviceNameBody,
     OUT PCWSTR* DosDeviceNameBody)
 {
-    ASSERT(DeviceNameBody != NULL);
-    ASSERT(DosDeviceNameBody != NULL);
-
     if ( DeviceType > MAX_DEVICE_TYPE )
     {
         DPRINT("Invalid device type");
         return STATUS_INVALID_PARAMETER;
     }
 
-    *DeviceNameBody = SoundDeviceNameBodies[DeviceType].DeviceName;
-    *DosDeviceNameBody = SoundDeviceNameBodies[DeviceType].DosDeviceName;
+    if ( DeviceNameBody )
+    {
+        DPRINT("Reporting device name\n");
+        *DeviceNameBody = SoundDeviceNameBodies[DeviceType].DeviceName;
+        DPRINT("%ws\n", *DeviceNameBody);
+    }
+
+    if ( DosDeviceNameBody )
+    {
+        DPRINT("Reporting DOS device name\n");
+        *DosDeviceNameBody = SoundDeviceNameBodies[DeviceType].DosDeviceName;
+        DPRINT("%ws\n", *DosDeviceNameBody);
+    }
 
     return STATUS_SUCCESS;
 }
@@ -254,7 +262,7 @@ CreateSoundDevice(
     IN  PCWSTR WideDosDeviceName,
     IN  UCHAR Index,
     IN  ULONG ExtensionSize,
-    OUT PDEVICE_OBJECT DeviceObject)
+    OUT PDEVICE_OBJECT* DeviceObject)
 {
     NTSTATUS Status;
 
@@ -288,6 +296,8 @@ CreateSoundDevice(
         return Status;
     }
 
+    DPRINT("Creating device %ws\n", WideDeviceName);
+
     /* Now create the device */
     Status = IoCreateDevice(DriverObject,
                             ExtensionSize,
@@ -295,7 +305,7 @@ CreateSoundDevice(
                             FILE_DEVICE_SOUND,
                             0,
                             FALSE,
-                            &DeviceObject);
+                            DeviceObject);
 
     if ( ! NT_SUCCESS(Status) )
     {
@@ -306,12 +316,14 @@ CreateSoundDevice(
         return Status;
     }
 
+    DPRINT("Creating link %ws\n", WideDosDeviceName);
+
     /* Create a symbolic link for the DOS deviec name */
     Status = IoCreateSymbolicLink(&DosDeviceName, &DeviceName);
 
     if ( ! NT_SUCCESS(Status) )
     {
-        /* IoDeleteDevice( --- What are we deleting? */
+        IoDeleteDevice(*DeviceObject);
 
         /* These will have been allocated by ConstructSoundDeviceNames */
         FreeUnicodeStringBuffer(&DeviceName);
@@ -337,7 +349,7 @@ CreateSoundDeviceWithDefaultName(
     IN  UCHAR DeviceType,
     IN  UCHAR Index,
     IN  ULONG ExtensionSize,
-    OUT PDEVICE_OBJECT DeviceObject)
+    OUT PDEVICE_OBJECT* DeviceObject)
 {
     NTSTATUS Status;
     PCWSTR WideDeviceName = NULL;
@@ -382,4 +394,87 @@ CreateSoundDeviceWithDefaultName(
     }
 
     return STATUS_SUCCESS;
+}
+
+NTSTATUS
+DestroySoundDevice(
+    IN  PDEVICE_OBJECT DeviceObject,
+    IN  PCWSTR WideDosDeviceName,
+    IN  UCHAR Index)
+{
+    NTSTATUS Status;
+    UNICODE_STRING DosDeviceName;
+
+    /* Check for NULL parameters */
+    if ( ( ! WideDosDeviceName ) || ( ! DeviceObject ) )
+    {
+        DPRINT("Unexpected NULL parameter");
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* Range-check */
+    if ( Index >= SOUND_MAX_DEVICES )
+    {
+        DPRINT("Device %d exceeds maximum", Index);
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    Status = ConstructDeviceName(WideDosDeviceName, Index, &DosDeviceName);
+
+    if ( ! NT_SUCCESS(Status) )
+    {
+        return Status;
+    }
+
+    DPRINT("Deleting symlink %ws\n", WideDosDeviceName);
+
+    Status = IoDeleteSymbolicLink(&DosDeviceName);
+    DPRINT("Status of symlink deletion is 0x%08x\n", Status);
+/*
+    ASSERT(NT_SUCCESS(Status));
+*/
+
+    IoDeleteDevice(DeviceObject);
+
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+DestroySoundDeviceWithDefaultName(
+    IN  PDEVICE_OBJECT DeviceObject,
+    IN  UCHAR DeviceType,
+    IN  UCHAR Index)
+{
+    NTSTATUS Status;
+    PCWSTR WideDosDeviceName = NULL;
+
+    /* Check for NULL parameters */
+    if ( ( ! DeviceObject ) )
+    {
+        DPRINT("Unexpected NULL parameter");
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* Range-check */
+    if ( Index >= SOUND_MAX_DEVICES )
+    {
+        DPRINT("Device index %d exceeds maximum", Index);
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* Look-up the default name based on the device type */
+    Status = GetDefaultSoundDeviceNameBodies(DeviceType,
+                                             NULL,
+                                             &WideDosDeviceName);
+
+    if ( ! NT_SUCCESS(Status) )
+    {
+        return Status;
+    }
+
+    DPRINT("DOS device name at %p\n", WideDosDeviceName);
+
+    DPRINT("DOS device name is based on %ws\n", WideDosDeviceName);
+
+    return DestroySoundDevice(DeviceObject, WideDosDeviceName, Index);
 }

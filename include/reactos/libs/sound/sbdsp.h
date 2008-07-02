@@ -116,6 +116,18 @@
 #define SB_MIX_BASS_LEFT_LEVEL      0x46
 #define SB_MIX_BASS_RIGHT_LEVEL     0x47
 
+/*
+    Mixer switches
+    (are these correct?)
+*/
+#define SB_MIX_MIDI_LEFT_SWITCH     0x01
+#define SB_MIX_MIDI_RIGHT_SWITCH    0x02
+#define SB_MIX_LINE_LEFT_SWITCH     0x04
+#define SB_MIX_LINE_RIGHT_SWITCH    0x08
+#define SB_MIX_CD_LEFT_SWITCH       0x10
+#define SB_MIX_CD_RIGHT_SWITCH      0x20
+#define SB_MIX_MIC_SWITCH           0x40
+
 
 /*
     Reset the Sound Blaster DSP.
@@ -289,6 +301,24 @@ SbMixerGetLevel(
     IN  PUCHAR BasePort,
     IN  UCHAR Line,
     OUT PUCHAR Level);
+
+/*
+    Enable automatic gain control
+*/
+VOID
+SbMixerEnableAGC(IN PUCHAR BasePort);
+
+/*
+    Disable automatic gain control
+*/
+VOID
+SbMixerDisableAGC(IN PUCHAR BasePort);
+
+/*
+    Retrieve the current state of the automatic gain control
+*/
+BOOLEAN
+SbMixerIsAGCEnabled(IN PUCHAR BasePort);
 
 
 #endif

@@ -92,7 +92,7 @@ CreateSoundDevice(
     IN  PCWSTR WideDosDeviceName,
     IN  UCHAR Index,
     IN  ULONG ExtensionSize,
-    OUT PDEVICE_OBJECT DeviceObject);
+    OUT PDEVICE_OBJECT* DeviceObject);
 
 
 /*
@@ -108,6 +108,31 @@ CreateSoundDeviceWithDefaultName(
     IN  UCHAR DeviceType,
     IN  UCHAR Index,
     IN  ULONG ExtensionSize,
-    OUT PDEVICE_OBJECT DeviceObject);
+    OUT PDEVICE_OBJECT* DeviceObject);
+
+
+/*
+    DestroySoundDevice
+
+    Destroy a device and its symbolic link
+*/
+NTSTATUS
+DestroySoundDevice(
+    IN  PDEVICE_OBJECT DeviceObject,
+    IN  PCWSTR WideDosDeviceName,
+    IN  UCHAR Index);
+
+
+/*
+    DestroySoundDeviceWithDefaultName
+
+    Similar to DestroySoundDevice, but operating on one of the
+    default device names.
+*/
+NTSTATUS
+DestroySoundDeviceWithDefaultName(
+    IN  PDEVICE_OBJECT DeviceObject,
+    IN  UCHAR DeviceType,
+    IN  UCHAR Index);
 
 #endif
