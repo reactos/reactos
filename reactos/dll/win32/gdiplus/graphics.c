@@ -1106,6 +1106,40 @@ GpStatus WINGDIPAPI GdipDrawCurve2I(GpGraphics *graphics, GpPen *pen,
     return ret;
 }
 
+GpStatus WINGDIPAPI GdipDrawEllipse(GpGraphics *graphics, GpPen *pen, REAL x,
+    REAL y, REAL width, REAL height)
+{
+    INT save_state;
+    GpPointF ptf[2];
+    POINT pti[2];
+
+    if(!graphics || !pen)
+        return InvalidParameter;
+
+    ptf[0].X = x;
+    ptf[0].Y = y;
+    ptf[1].X = x + width;
+    ptf[1].Y = y + height;
+
+    save_state = prepare_dc(graphics, pen);
+    SelectObject(graphics->hdc, GetStockObject(NULL_BRUSH));
+
+    transform_and_round_points(graphics, pti, ptf, 2);
+
+    Ellipse(graphics->hdc, pti[0].x, pti[0].y, pti[1].x, pti[1].y);
+
+    restore_dc(graphics, save_state);
+
+    return Ok;
+}
+
+GpStatus WINGDIPAPI GdipDrawEllipseI(GpGraphics *graphics, GpPen *pen, INT x,
+    INT y, INT width, INT height)
+{
+    return GdipDrawEllipse(graphics,pen,(REAL)x,(REAL)y,(REAL)width,(REAL)height);
+}
+
+
 GpStatus WINGDIPAPI GdipDrawImage(GpGraphics *graphics, GpImage *image, REAL x, REAL y)
 {
     /* IPicture::Render uses LONG coords */
@@ -1955,6 +1989,19 @@ GpStatus WINGDIPAPI GdipFillRectanglesI(GpGraphics *graphics, GpBrush *brush, GD
     GdipFree(rectsF);
 
     return ret;
+}
+
+GpStatus WINGDIPAPI GdipFlush(GpGraphics *graphics, GpFlushIntention intention)
+{
+    static int calls;
+
+    if(!graphics)
+        return InvalidParameter;
+
+    if(!(calls++))
+        FIXME("not implemented\n");
+
+    return NotImplemented;
 }
 
 /* FIXME: Compositing mode is not used anywhere except the getter/setter. */

@@ -88,14 +88,19 @@ GpStatus WINGDIPAPI GdipCreatePen1(ARGB color, REAL width, GpUnit unit,
     GpPen **pen)
 {
     GpBrush *brush;
+    GpStatus status;
+
     GdipCreateSolidFill(color, (GpSolidFill **)(&brush));
-    return GdipCreatePen2(brush, width, unit, pen);
+    status = GdipCreatePen2(brush, width, unit, pen);
+    GdipDeleteBrush(brush);
+    return status;
 }
 
 GpStatus WINGDIPAPI GdipCreatePen2(GpBrush *brush, REAL width, GpUnit unit,
     GpPen **pen)
 {
     GpPen *gp_pen;
+    GpBrush *clone_brush;
 
     if(!pen || !brush)
         return InvalidParameter;
@@ -111,13 +116,15 @@ GpStatus WINGDIPAPI GdipCreatePen2(GpBrush *brush, REAL width, GpUnit unit,
     gp_pen->miterlimit = 10.0;
     gp_pen->dash = DashStyleSolid;
     gp_pen->offset = 0.0;
-    gp_pen->brush = brush;
 
     if(!((gp_pen->unit == UnitWorld) || (gp_pen->unit == UnitPixel))) {
         FIXME("UnitWorld, UnitPixel only supported units\n");
         GdipFree(gp_pen);
         return NotImplemented;
     }
+
+    GdipCloneBrush(brush, &clone_brush);
+    gp_pen->brush = clone_brush;
 
     *pen = gp_pen;
 
@@ -170,6 +177,16 @@ GpStatus WINGDIPAPI GdipGetPenDashArray(GpPen *pen, REAL *dash, INT count)
     return Ok;
 }
 
+GpStatus WINGDIPAPI GdipGetPenDashCap197819(GpPen *pen, GpDashCap *dashCap)
+{
+    if(!pen || !dashCap)
+        return InvalidParameter;
+
+    *dashCap = pen->dashcap;
+
+    return Ok;
+}
+
 GpStatus WINGDIPAPI GdipGetPenDashOffset(GpPen *pen, REAL *offset)
 {
     if(!pen || !offset)
@@ -186,6 +203,66 @@ GpStatus WINGDIPAPI GdipGetPenDashStyle(GpPen *pen, GpDashStyle *dash)
         return InvalidParameter;
 
     *dash = pen->dash;
+
+    return Ok;
+}
+
+GpStatus WINGDIPAPI GdipGetPenEndCap(GpPen *pen, GpLineCap *endCap)
+{
+    if(!pen || !endCap)
+        return InvalidParameter;
+
+    *endCap = pen->endcap;
+
+    return Ok;
+}
+
+GpStatus WINGDIPAPI GdipGetPenLineJoin(GpPen *pen, GpLineJoin *lineJoin)
+{
+    if(!pen || !lineJoin)
+        return InvalidParameter;
+
+    *lineJoin = pen->join;
+
+    return Ok;
+}
+
+GpStatus WINGDIPAPI GdipGetPenMiterLimit(GpPen *pen, REAL *miterLimit)
+{
+    if(!pen || !miterLimit)
+        return InvalidParameter;
+
+    *miterLimit = pen->miterlimit;
+
+    return Ok;
+}
+
+GpStatus WINGDIPAPI GdipGetPenStartCap(GpPen *pen, GpLineCap *startCap)
+{
+    if(!pen || !startCap)
+        return InvalidParameter;
+
+    *startCap = pen->startcap;
+
+    return Ok;
+}
+
+GpStatus WINGDIPAPI GdipGetPenUnit(GpPen *pen, GpUnit *unit)
+{
+    if(!pen || !unit)
+        return InvalidParameter;
+
+    *unit = pen->unit;
+
+    return Ok;
+}
+
+GpStatus WINGDIPAPI GdipGetPenWidth(GpPen *pen, REAL *width)
+{
+    if(!pen || !width)
+        return InvalidParameter;
+
+    *width = pen->width;
 
     return Ok;
 }

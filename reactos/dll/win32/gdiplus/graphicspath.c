@@ -346,6 +346,55 @@ GpStatus WINGDIPAPI GdipAddPathPath(GpPath *path, GDIPCONST GpPath* addingPath,
     return Ok;
 }
 
+GpStatus WINGDIPAPI GdipAddPathPolygon(GpPath *path, GDIPCONST GpPointF *points, INT count)
+{
+    INT old_count;
+
+    if(!path || !points || count < 3)
+        return InvalidParameter;
+
+    if(!lengthen_path(path, count))
+        return OutOfMemory;
+
+    old_count = path->pathdata.Count;
+
+    memcpy(&path->pathdata.Points[old_count], points, count*sizeof(GpPointF));
+    memset(&path->pathdata.Types[old_count + 1], PathPointTypeLine, count - 1);
+
+    /* A polygon is an intrinsic figure */
+    path->pathdata.Types[old_count] = PathPointTypeStart;
+    path->pathdata.Types[old_count + count - 1] |= PathPointTypeCloseSubpath;
+    path->newfigure = TRUE;
+    path->pathdata.Count += count;
+
+    return Ok;
+}
+
+GpStatus WINGDIPAPI GdipAddPathPolygonI(GpPath *path, GDIPCONST GpPoint *points, INT count)
+{
+    GpPointF *ptf;
+    GpStatus status;
+    INT i;
+
+    if(!points || count < 3)
+        return InvalidParameter;
+
+    ptf = GdipAlloc(sizeof(GpPointF) * count);
+    if(!ptf)
+        return OutOfMemory;
+
+    for(i = 0; i < count; i++){
+        ptf[i].X = (REAL)points[i].X;
+        ptf[i].Y = (REAL)points[i].Y;
+    }
+
+    status = GdipAddPathPolygon(path, ptf, count);
+
+    GdipFree(ptf);
+
+    return status;
+}
+
 GpStatus WINGDIPAPI GdipClonePath(GpPath* path, GpPath **clone)
 {
     if(!path || !clone)
@@ -479,12 +528,39 @@ GpStatus WINGDIPAPI GdipDeletePath(GpPath *path)
     return Ok;
 }
 
+GpStatus WINGDIPAPI GdipGetPathData(GpPath *path, GpPathData* pathData)
+{
+    if(!path || !pathData)
+        return InvalidParameter;
+
+    /* Only copy data. pathData allocation/freeing controlled by wrapper class.
+       Assumed that pathData is enough wide to get all data - controlled by wrapper too. */
+    memcpy(pathData->Points, path->pathdata.Points, sizeof(PointF) * pathData->Count);
+    memcpy(pathData->Types , path->pathdata.Types , pathData->Count);
+
+    return Ok;
+}
+
 GpStatus WINGDIPAPI GdipGetPathFillMode(GpPath *path, GpFillMode *fillmode)
 {
     if(!path || !fillmode)
         return InvalidParameter;
 
     *fillmode = path->fill;
+
+    return Ok;
+}
+
+GpStatus WINGDIPAPI GdipGetPathLastPoint(GpPath* path, GpPointF* lastPoint)
+{
+    INT count;
+
+    if(!path || !lastPoint)
+        return InvalidParameter;
+
+    count = path->pathdata.Count;
+    if(count > 0)
+        *lastPoint = path->pathdata.Points[count-1];
 
     return Ok;
 }
@@ -757,4 +833,99 @@ GpStatus WINGDIPAPI GdipAddPathRectangleI(GpPath *path, INT x, INT y,
     INT width, INT height)
 {
     return GdipAddPathRectangle(path,(REAL)x,(REAL)y,(REAL)width,(REAL)height);
+}
+
+GpStatus WINGDIPAPI GdipAddPathRectangles(GpPath *path, GDIPCONST GpRectF *rects, INT count)
+{
+    GpPath *backup;
+    GpStatus retstat;
+    INT i;
+
+    /* count == 0 - verified condition  */
+    if(!path || !rects || count == 0)
+        return InvalidParameter;
+
+    if(count < 0)
+        return OutOfMemory;
+
+    /* make a backup copy */
+    if((retstat = GdipClonePath(path, &backup)) != Ok)
+        return retstat;
+
+    for(i = 0; i < count; i++){
+        if((retstat = GdipAddPathRectangle(path,rects[i].X,rects[i].Y,rects[i].Width,rects[i].Height)) != Ok)
+            goto fail;
+    }
+
+    /* free backup */
+    GdipDeletePath(backup);
+    return Ok;
+
+fail:
+    /* reverting */
+    GdipDeletePath(path);
+    GdipClonePath(backup, &path);
+    GdipDeletePath(backup);
+
+    return retstat;
+}
+
+GpStatus WINGDIPAPI GdipAddPathRectanglesI(GpPath *path, GDIPCONST GpRect *rects, INT count)
+{
+    GpRectF *rectsF;
+    GpStatus retstat;
+    INT i;
+
+    if(!rects || count == 0)
+        return InvalidParameter;
+
+    if(count < 0)
+        return OutOfMemory;
+
+    rectsF = GdipAlloc(sizeof(GpRectF)*count);
+
+    for(i = 0;i < count;i++){
+        rectsF[i].X      = (REAL)rects[i].X;
+        rectsF[i].Y      = (REAL)rects[i].Y;
+        rectsF[i].Width  = (REAL)rects[i].Width;
+        rectsF[i].Height = (REAL)rects[i].Height;
+    }
+
+    retstat = GdipAddPathRectangles(path, rectsF, count);
+    GdipFree(rectsF);
+
+    return retstat;
+}
+
+GpStatus WINGDIPAPI GdipSetPathMarker(GpPath* path)
+{
+    INT count;
+
+    if(!path)
+        return InvalidParameter;
+
+    count = path->pathdata.Count;
+
+    /* set marker flag */
+    if(count > 0)
+        path->pathdata.Types[count-1] |= PathPointTypePathMarker;
+
+    return Ok;
+}
+
+GpStatus WINGDIPAPI GdipClearPathMarkers(GpPath* path)
+{
+    INT count;
+    INT i;
+
+    if(!path)
+        return InvalidParameter;
+
+    count = path->pathdata.Count;
+
+    for(i = 0; i < count - 1; i++){
+        path->pathdata.Types[i] &= ~PathPointTypePathMarker;
+    }
+
+    return Ok;
 }

@@ -131,3 +131,13 @@ GpStatus WINGDIPAPI GdipPathIterRewind(GpPathIterator *iterator)
 
     return Ok;
 }
+
+GpStatus WINGDIPAPI GdipPathIterGetCount(GpPathIterator* iterator, INT* count)
+{
+    if(!iterator || !count)
+        return InvalidParameter;
+
+    *count = iterator->pathdata.Count;
+
+    return Ok;
+}

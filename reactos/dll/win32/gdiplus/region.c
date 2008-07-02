@@ -67,6 +67,27 @@ WINE_DEFAULT_DEBUG_CHANNEL(gdiplus);
  *
  */
 
+GpStatus WINGDIPAPI GdipCombineRegionRect(GpRegion *region, GDIPCONST GpRectF *rect,
+                                          CombineMode mode)
+{
+    FIXME("(%p %p %d): stub\n", region, rect, mode);
+    return NotImplemented;
+}
+
+GpStatus WINGDIPAPI GdipCombineRegionRectI(GpRegion *region, GDIPCONST GpRect *rect,
+                                           CombineMode mode)
+{
+    FIXME("(%p %p %d): stub\n", region, rect, mode);
+    return NotImplemented;
+}
+
+GpStatus WINGDIPAPI GdipCombineRegionRegion(GpRegion *region1, GpRegion *region2,
+                                            CombineMode mode)
+{
+    FIXME("(%p %p %d): stub\n", region1, region2, mode);
+    return NotImplemented;
+}
+
 GpStatus WINGDIPAPI GdipCreateRegion(GpRegion **region)
 {
     FIXME("(%p): stub\n", region);
@@ -83,9 +104,39 @@ GpStatus WINGDIPAPI GdipCreateRegionPath(GpPath *path, GpRegion **region)
     return NotImplemented;
 }
 
+GpStatus WINGDIPAPI GdipCreateRegionRect(GDIPCONST GpRectF *rect, GpRegion **region)
+{
+    FIXME("(%p, %p): stub\n", rect, region);
+
+    *region = NULL;
+    return NotImplemented;
+}
+
+GpStatus WINGDIPAPI GdipCreateRegionRectI(GDIPCONST GpRect *rect, GpRegion **region)
+{
+    FIXME("(%p, %p): stub\n", rect, region);
+
+    *region = NULL;
+    return NotImplemented;
+}
+
 GpStatus WINGDIPAPI GdipDeleteRegion(GpRegion *region)
 {
     FIXME("(%p): stub\n", region);
+    return NotImplemented;
+}
+
+GpStatus WINGDIPAPI GdipGetRegionData(GpRegion *region, BYTE *buffer, UINT size, UINT *needed)
+{
+    FIXME("(%p, %p, %d, %p): stub\n", region, buffer, size, needed);
+
+    return NotImplemented;
+}
+
+GpStatus WINGDIPAPI GdipGetRegionDataSize(GpRegion *region, UINT *needed)
+{
+    FIXME("(%p, %p): stub\n", region, needed);
+
     return NotImplemented;
 }
 

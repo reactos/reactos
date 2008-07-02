@@ -101,15 +101,25 @@ GpStatus WINGDIPAPI GdipBitmapLockBits(GpBitmap* bitmap, GDIPCONST GpRect* rect,
     BITMAPINFO bmi;
     BYTE *buff = NULL;
     UINT abs_height;
+    GpRect act_rect; /* actual rect to be used */
 
     TRACE("%p %p %d %d %p\n", bitmap, rect, flags, format, lockeddata);
 
-    if(!lockeddata || !bitmap || !rect)
+    if(!lockeddata || !bitmap)
         return InvalidParameter;
 
-    if(rect->X < 0 || rect->Y < 0 || (rect->X + rect->Width > bitmap->width) ||
-       (rect->Y + rect->Height > bitmap->height) || !flags)
-        return InvalidParameter;
+    if(rect){
+        if(rect->X < 0 || rect->Y < 0 || (rect->X + rect->Width > bitmap->width) ||
+          (rect->Y + rect->Height > bitmap->height) || !flags)
+            return InvalidParameter;
+
+        act_rect = *rect;
+    }
+    else{
+        act_rect.X = act_rect.Y = 0;
+        act_rect.Width  = bitmap->width;
+        act_rect.Height = bitmap->height;
+    }
 
     if(flags & ImageLockModeUserInputBuf)
         return NotImplemented;
@@ -151,19 +161,19 @@ GpStatus WINGDIPAPI GdipBitmapLockBits(GpBitmap* bitmap, GDIPCONST GpRect* rect,
     if(!buff)
         return OutOfMemory;
 
-    lockeddata->Width = rect->Width;
-    lockeddata->Height = rect->Height;
+    lockeddata->Width  = act_rect.Width;
+    lockeddata->Height = act_rect.Height;
     lockeddata->PixelFormat = format;
     lockeddata->Reserved = flags;
 
     if(bmi.bmiHeader.biHeight > 0){
         lockeddata->Stride = -stride;
-        lockeddata->Scan0 = buff + (bitspp / 8) * rect->X +
-                            stride * (abs_height - 1 - rect->Y);
+        lockeddata->Scan0  = buff + (bitspp / 8) * act_rect.X +
+                             stride * (abs_height - 1 - act_rect.Y);
     }
     else{
         lockeddata->Stride = stride;
-        lockeddata->Scan0 = buff + (bitspp / 8) * rect->X + stride * rect->Y;
+        lockeddata->Scan0  = buff + (bitspp / 8) * act_rect.X + stride * act_rect.Y;
     }
 
     bitmap->lockmode = flags;
@@ -676,6 +686,19 @@ GpStatus WINGDIPAPI GdipImageGetFrameCount(GpImage *image,
         FIXME("not implemented\n");
 
     return NotImplemented;
+}
+
+GpStatus WINGDIPAPI GdipImageGetFrameDimensionsCount(GpImage *image,
+    UINT* count)
+{
+    if(!image || !count)
+        return InvalidParameter;
+
+    *count = 1;
+
+    FIXME("stub\n");
+
+    return Ok;
 }
 
 GpStatus WINGDIPAPI GdipImageGetFrameDimensionsList(GpImage* image,
