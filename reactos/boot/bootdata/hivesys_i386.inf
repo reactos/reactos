@@ -212,9 +212,21 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000041d","Layout File",
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000041d","Layout Text",0x00000000,"Swedish"
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000041d","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5022"
 
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000041e","Layout File",0x00000000,"kbdth0.dll"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000041e","Layout Text",0x00000000,"Thai Kedmanee"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000041e","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5079"
+
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0001041e","Layout File",0x00000000,"kbdth1.dll"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0001041e","Layout Text",0x00000000,"Thai Pattachote"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0001041e","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5080"
+
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0002041e","Layout File",0x00000000,"kbdth2.dll"
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0002041e","Layout Text",0x00000000,"Thai Kedmanee (non-ShiftLock)"
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0002041e","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5081"
+
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0003041e","Layout File",0x00000000,"kbdth3.dll"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0003041e","Layout Text",0x00000000,"Thai Pattachote (non-ShiftLock)"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0003041e","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5082"
 
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000422","Layout File",0x00000000,"kbdur.dll"
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000422","Layout Text",0x00000000,"Ukrainian"
