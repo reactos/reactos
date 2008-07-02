@@ -118,6 +118,9 @@
 	<directory name="kbdinmal">
 		<xi:include href="kbdinmal/kbdinmal.rbuild" />
 	</directory>
+	<directory name="kbdir">
+		<xi:include href="kbdir/kbdir.rbuild" />
+	</directory>
 	<directory name="kbdit">
 		<xi:include href="kbdit/kbdit.rbuild" />
 	</directory>

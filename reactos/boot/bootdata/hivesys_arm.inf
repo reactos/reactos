@@ -123,6 +123,10 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00050409","Layout Id",  
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00050409","Layout Text",0x00000000,"US English (IBM Arabic 238_L)"
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00050409","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5123"
 
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00001809","Layout File",0x00000000,"kbdir.dll"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00001809","Layout Text",0x00000000,"Irish"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00001809","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5014"
+
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000040a","Layout File",0x00000000,"kbdes.dll"
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000040a","Layout Text",0x00000000,"Spanish"
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000040a","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5020"
