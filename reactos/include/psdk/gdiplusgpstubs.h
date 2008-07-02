@@ -37,6 +37,8 @@ class GpPathGradient : public GpBrush {};
 class GpLineGradient : public GpBrush {};
 class GpTexture : public GpBrush {};
 class GpFont {};
+class GpFontCollection {};
+class GpFontFamily {};
 class GpStringFormat {};
 class GpRegion {};
 class CGpEffect {};
@@ -59,6 +61,8 @@ typedef struct GpPathGradient GpPathGradient;
 typedef struct GpLineGradient GpLineGradient;
 typedef struct GpTexture GpTexture;
 typedef struct GpFont GpFont;
+typedef struct GpFontCollection GpFontCollection;
+typedef struct GpFontFamily GpFontFamily;
 typedef struct GpStringFormat GpStringFormat;
 typedef struct GpRegion GpRegion;
 typedef struct CGpEffect CGpEffect;
@@ -81,5 +85,6 @@ typedef MatrixOrder GpMatrixOrder;
 typedef Point GpPoint;
 typedef WrapMode GpWrapMode;
 typedef Color GpColor;
+typedef FlushIntention GpFlushIntention;
 
 #endif

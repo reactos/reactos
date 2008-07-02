@@ -250,6 +250,16 @@ enum StringTrimming
     StringTrimmingEllipsisPath         = 5
 };
 
+enum FontStyle
+{
+    FontStyleRegular    = 0,
+    FontStyleBold       = 1,
+    FontStyleItalic     = 2,
+    FontStyleBoldItalic = 3,
+    FontStyleUnderline  = 4,
+    FontStyleStrikeout  = 8
+};
+
 enum HotkeyPrefix
 {
     HotkeyPrefixNone   = 0,
@@ -298,6 +308,12 @@ enum CombineMode
     CombineModeComplement
 };
 
+enum FlushIntention
+{
+    FlushIntentionFlush = 0,
+    FlushIntentionSync  = 1
+};
+
 #ifndef __cplusplus
 
 typedef enum Unit Unit;
@@ -324,11 +340,13 @@ typedef enum CompositingMode CompositingMode;
 typedef enum TextRenderingHint TextRenderingHint;
 typedef enum StringAlignment StringAlignment;
 typedef enum StringTrimming StringTrimming;
+typedef enum FontStyle FontStyle;
 typedef enum StringFormatFlags StringFormatFlags;
 typedef enum HotkeyPrefix HotkeyPrefix;
 typedef enum PenAlignment GpPenAlignment;
 typedef enum ImageCodecFlags ImageCodecFlags;
 typedef enum CombineMode CombineMode;
+typedef enum FlushIntention FlushIntention;
 
 #endif /* end of c typedefs */
 
