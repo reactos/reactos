@@ -2475,24 +2475,20 @@ size_t CDECL fwrite(const void *ptr, size_t size, size_t nmemb, FILE* file)
  */
 wint_t CDECL fputwc(wint_t wc, FILE* file)
 {
-  wchar_t mwc=wc;
-  char mbchar[10]; // MB_CUR_MAX_CONST
-  int mb_return;
-
   if (file->_flag & _IOBINARY)
   {
+    wchar_t mwc = wc;
+
     if (fwrite( &mwc, sizeof(mwc), 1, file) != 1)
       return WEOF;
   }
   else
   {
-    /* Convert to multibyte in text mode */
-    mb_return = wctomb(mbchar, mwc);
-    if (mb_return == -1) return WEOF;
+    /* Convert the character to ANSI */
+    char c = (unsigned char)wc;
 
-    /* Output all characters */
-    if (fwrite( mbchar, 1, mb_return, file) != 1)
-        return WEOF;
+    if (fwrite( &c, sizeof(c), 1, file) != 1)
+      return WEOF;
   }
 
   return wc;
