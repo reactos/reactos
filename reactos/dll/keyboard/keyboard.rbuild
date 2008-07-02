@@ -170,7 +170,7 @@
 		<xi:include href="kbdtat/kbdtat.rbuild" />
 	</directory>
 	<directory name="kbdth2">
-		<xi:include href="kbdth2/kbdth.rbuild" />
+		<xi:include href="kbdth2/kbdth2.rbuild" />
 	</directory>
 	<directory name="kbdtuf">
 		<xi:include href="kbdtuf/kbdtuf.rbuild" />

@@ -1,7 +1,7 @@
 ;
 ; ReactOS Operating System
 ;
-LIBRARY kbdth.dll
+LIBRARY kbdth2.dll
 
 EXPORTS
 KbdLayerDescriptor@0
