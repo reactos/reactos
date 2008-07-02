@@ -26,6 +26,7 @@
 #define Rcos(d) ((d) == 0.0 ? 1.0 : ((d) == 90.0 ? 0.0 : cos(d*M_PI/180.0)))
 
 BOOL FASTCALL IntFillArc( PDC dc, INT XLeft, INT YLeft, INT Width, INT Height, double StartArc, double EndArc, ARCTYPE arctype);
+BOOL FASTCALL IntDrawArc( PDC dc, INT XLeft, INT YLeft, INT Width, INT Height, double StartArc, double EndArc, ARCTYPE arctype, PGDIBRUSHOBJ PenBrushObj);
 
 static
 BOOL
@@ -147,6 +148,16 @@ IntArc( DC *dc,
               arctype);
     }
 
+    ret = IntDrawArc( dc,
+              RectBounds.left,
+              RectBounds.top,
+              abs(RectBounds.right-RectBounds.left), // Width
+              abs(RectBounds.bottom-RectBounds.top), // Height
+              AngleStart,
+              AngleEnd,
+              arctype,
+             PenBrushObj);
+
     BitmapObj = BITMAPOBJ_LockBitmap(dc->w.hBitmap);
     if (NULL == BitmapObj)
     {
@@ -161,63 +172,11 @@ IntArc( DC *dc,
     if (arctype == GdiTypePie)
     {
        PUTLINE(CenterX, CenterY, SfCx + CenterX, SfCy + CenterY, PenBrushInst);
-    }
-    {
-       double AngS = AngleStart, AngT = AngleEnd,
-       Factor = fabs(RadiusX) < 25 ? 1.0 : (25/fabs(RadiusX));
-       int x,y, ox = 0, oy = 0;
-       BOOL Start = TRUE;
-
-       if (dc->DcLevel.flPath & DCPATH_CLOCKWISE)
-       {
-          DPRINT1("Arc CW\n");
-          for (; AngS < AngT; AngS += Factor)
-          {
-              x = (RadiusX * Rcos(AngS));
-              y = (RadiusY * Rsin(AngS));
-
-              DPRINT("Arc CW -> %d, X: %d Y: %d\n",(INT)AngS,x,y);
-              if (Start)
-              {
-                 PUTPIXEL(x + CenterX, y + CenterY, PenBrushInst);
-                 ox = x;
-                 oy = y;
-                 Start = FALSE;
-                 continue;
-              }
-              PUTLINE(ox + CenterX, oy + CenterY, x + CenterX, y + CenterY, PenBrushInst);
-              ox = x;
-              oy = y;      
-          }
-       }
-       else
-       {
-          DPRINT1("Arc CCW\n");
-          for (; AngT < AngS; AngS -= Factor)
-          {
-              x = (RadiusX * Rcos(AngS));
-              y = (RadiusY * Rsin(AngS));
-
-              DPRINT("Arc CCW -> %d, X: %d Y: %d\n",(INT)AngS,x,y);
-              if (Start)
-              {
-                 PUTPIXEL(x + CenterX, y + CenterY, PenBrushInst);
-                 ox = x;
-                 oy = y;
-                 Start = FALSE;
-                 continue;
-              }
-              PUTLINE(ox + CenterX, oy + CenterY, x + CenterX, y + CenterY, PenBrushInst);
-              ox = x;
-              oy = y;
-          }        
-       }
-    }
-    if (arctype == GdiTypePie)
        PUTLINE(EfCx + CenterX, EfCy + CenterY, CenterX, CenterY, PenBrushInst);
+    }
     if (arctype == GdiTypeChord)
-       PUTLINE(EfCx + CenterX, EfCy + CenterY, SfCx + CenterX, SfCy + CenterY, PenBrushInst);
-
+        PUTLINE(EfCx + CenterX, EfCy + CenterY, SfCx + CenterX, SfCy + CenterY, PenBrushInst);
+           
     PenBrushObj->ptPenWidth.x = PenOrigWidth;
     BITMAPOBJ_UnlockBitmap(BitmapObj);
     PENOBJ_UnlockPen(PenBrushObj);

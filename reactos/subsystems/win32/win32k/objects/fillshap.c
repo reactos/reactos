@@ -46,6 +46,8 @@
 
 BOOL FASTCALL IntFillEllipse( PDC dc, INT XLeft, INT YLeft, INT Width, INT Height);
 BOOL FASTCALL IntDrawEllipse( PDC dc, INT XLeft, INT YLeft, INT Width, INT Height, PGDIBRUSHOBJ PenBrushObj);
+BOOL FASTCALL IntFillRoundRect( PDC dc, INT Left, INT Top, INT Right, INT Bottom, INT Wellipse, INT Hellipse);
+BOOL FASTCALL IntDrawRoundRect( PDC dc, INT Left, INT Top, INT Right, INT Bottom, INT Wellipse, INT Hellipse, PGDIBRUSHOBJ PenBrushObj);
 
 BOOL FASTCALL
 IntGdiPolygon(PDC    dc,
@@ -550,7 +552,7 @@ IntRectangle(PDC dc,
 
         DestRect.left = LeftRect;
         DestRect.right = RightRect;
-        DestRect.top = TopRect;
+        DestRect.top = TopRect;      
         DestRect.bottom = BottomRect;
 
         FillBrushObj = BRUSHOBJ_LockBrush(Dc_Attr->hbrush);
@@ -669,271 +671,97 @@ BOOL
 FASTCALL
 IntRoundRect(
     PDC  dc,
-    int  left,
-    int  top,
-    int  right,
-    int  bottom,
+    int  Left,
+    int  Top,
+    int  Right,
+    int  Bottom,
     int  xCurveDiameter,
     int  yCurveDiameter)
 {
     PDC_ATTR Dc_Attr;
-    BITMAPOBJ   *BitmapObj;
-    PGDIBRUSHOBJ   PenBrushObj, FillBrushObj;
-    GDIBRUSHINST FillBrushInst, PenBrushInst;
-    RECTL      RectBounds;
-    int potential_steps;
-    int i, col, row, width, height, x1, x1start, x2, x2start, y1, y2;
-    int xradius, yradius;
-    //float aspect_square;
-    long a_square, b_square,
-    two_a_square, two_b_square,
-    four_a_square, four_b_square,
-    d, dinc, ddec;
-    BOOL first,
-    ret = TRUE; // default to success
+    PGDIBRUSHOBJ   PenBrushObj;
+    RECTL RectBounds;
+    LONG PenWidth, PenOrigWidth;
+    BOOL ret = TRUE; // default to success
 
     ASSERT ( dc ); // caller's responsibility to set this up
 
     if ( PATH_IsPathOpen(dc->DcLevel) )
-        return PATH_RoundRect ( dc, left, top, right, bottom,
+        return PATH_RoundRect ( dc, Left, Top, Right, Bottom,
                                 xCurveDiameter, yCurveDiameter );
+
+    if ((Left == Right) || (Top == Bottom)) return TRUE;
+
+    xCurveDiameter = max(abs( xCurveDiameter ), 1);
+    yCurveDiameter = max(abs( yCurveDiameter ), 1);
+
+    if (Right < Left)
+    {
+       INT tmp = Right; Right = Left; Left = tmp;
+    }
+    if (Bottom < Top)
+    {
+       INT tmp = Bottom; Bottom = Top; Top = tmp;
+    }
+
     Dc_Attr = dc->pDc_Attr;
     if(!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
 
-    xradius = xCurveDiameter >> 1;
-    yradius = yCurveDiameter >> 1;
-
-    left += dc->ptlDCOrig.x;
-    right += dc->ptlDCOrig.x;
-    top += dc->ptlDCOrig.y;
-    bottom += dc->ptlDCOrig.y;
-
-    RectBounds.left = left;
-    RectBounds.right = right;
-    RectBounds.top = top;
-    RectBounds.bottom = bottom;
-
-    BitmapObj = BITMAPOBJ_LockBitmap(dc->w.hBitmap);
-    if (!BitmapObj)
+    PenBrushObj = PENOBJ_LockPen(Dc_Attr->hpen);
+    if (!PenBrushObj)
     {
         /* Nothing to do, as we don't have a bitmap */
         SetLastWin32Error(ERROR_INTERNAL_ERROR);
         return FALSE;
     }
 
-    FillBrushObj = BRUSHOBJ_LockBrush(Dc_Attr->hbrush);
-    if (FillBrushObj)
+    PenOrigWidth = PenWidth = PenBrushObj->ptPenWidth.x;
+    if (PenBrushObj->ulPenStyle == PS_NULL) PenWidth = 0;
+
+    if (PenBrushObj->ulPenStyle == PS_INSIDEFRAME)
     {
-        if (FillBrushObj->flAttrs & GDIBRUSH_IS_NULL)
-        {
-            /* make null brush check simpler... */
-            BRUSHOBJ_UnlockBrush(FillBrushObj);
-            FillBrushObj = NULL;
-        }
-        else
-        {
-            IntGdiInitBrushInstance(&FillBrushInst, FillBrushObj, dc->XlateBrush);
-        }
+       if (2*PenWidth > (Right - Left)) PenWidth = (Right -Left + 1)/2;
+       if (2*PenWidth > (Bottom - Top)) PenWidth = (Bottom -Top + 1)/2;
+       Left   += PenWidth / 2;
+       Right  -= (PenWidth - 1) / 2;
+       Top    += PenWidth / 2;
+       Bottom -= (PenWidth - 1) / 2;
     }
 
-    PenBrushObj = PENOBJ_LockPen(Dc_Attr->hpen);
-    if (PenBrushObj)
-    {
-        if (PenBrushObj->flAttrs & GDIBRUSH_IS_NULL)
-        {
-            /* make null pen check simpler... */
-            PENOBJ_UnlockPen(PenBrushObj);
-            PenBrushObj = NULL;
-        }
-        else
-        {
-            IntGdiInitBrushInstance(&PenBrushInst, PenBrushObj, dc->XlatePen);
-        }
-    }
+    if (!PenWidth) PenWidth = 1;
+    PenBrushObj->ptPenWidth.x = PenWidth;  
 
-    right--;
-    bottom--;
+    RectBounds.left = Left;
+    RectBounds.top = Top;
+    RectBounds.right = Right;
+    RectBounds.bottom = Bottom;
 
-    width = right - left;
-    height = bottom - top;
+    IntLPtoDP(dc, (LPPOINT)&RectBounds, 2);
 
-    if ( (xradius<<1) > width )
-        xradius = width >> 1;
-    if ( (yradius<<1) > height )
-        yradius = height >> 1;
+    RectBounds.left   += dc->ptlDCOrig.x;
+    RectBounds.top    += dc->ptlDCOrig.y;
+    RectBounds.right  += dc->ptlDCOrig.x;
+    RectBounds.bottom += dc->ptlDCOrig.y;
 
-    b_square = yradius * yradius;
-    a_square = xradius * xradius;
-    row = yradius;
-    col = 0;
-    two_a_square = a_square << 1;
-    four_a_square = a_square << 2;
-    four_b_square = b_square << 2;
-    two_b_square = b_square << 1;
-    d = two_a_square * ((row - 1) * (row))
-        + a_square
-        + two_b_square * (1 - a_square);
+    ret = IntFillRoundRect( dc,
+               RectBounds.left,
+                RectBounds.top,
+              RectBounds.right,
+             RectBounds.bottom,
+                xCurveDiameter,
+                yCurveDiameter);
+    if (ret)
+       ret = IntDrawRoundRect( dc,
+                  RectBounds.left,
+                   RectBounds.top,
+                 RectBounds.right,
+                RectBounds.bottom,
+                   xCurveDiameter,
+                   yCurveDiameter,
+                   PenBrushObj);
 
-    x1 = left+xradius;
-    x2 = right-xradius;
-    y1 = top;
-    y2 = bottom;
-
-    x1start = x1;
-    x2start = x2;
-
-    dinc = two_b_square*3; /* two_b_square * (3 + (col << 1)); */
-    ddec = four_a_square * row;
-
-    first = TRUE;
-    for ( ;; )
-    {
-        if ( d >= 0 )
-        {
-            if ( FillBrushObj )
-                PUTLINE ( x1, y1, x2, y1, FillBrushInst );
-            if ( first )
-            {
-                if ( PenBrushObj )
-                {
-                    if ( x1start > x1 )
-                    {
-                        PUTLINE ( x1, y1, x1start, y1, PenBrushInst );
-                        PUTLINE ( x2start+1, y2, x2+1, y2, PenBrushInst );
-                    }
-                    else
-                    {
-                        PUTPIXEL ( x1, y1, PenBrushInst );
-                        PUTPIXEL ( x2, y2, PenBrushInst );
-                    }
-                }
-                first = FALSE;
-            }
-            else
-            {
-                if ( FillBrushObj )
-                    PUTLINE ( x1, y2, x2, y2, FillBrushInst );
-                if ( PenBrushObj )
-                {
-                    if ( x1start >= x1 )
-                    {
-                        PUTLINE ( x1, y1, x1start+1, y1, PenBrushInst );
-                        PUTLINE ( x2start, y2, x2+1, y2, PenBrushInst );
-                    }
-                    else
-                    {
-                        PUTPIXEL ( x1, y1, PenBrushInst );
-                        PUTPIXEL ( x2, y2, PenBrushInst );
-                    }
-                }
-            }
-            if ( PenBrushObj )
-            {
-                if ( x1start > x1 )
-                {
-                    PUTLINE ( x1, y2, x1start+1, y2, PenBrushInst );
-                    PUTLINE ( x2start, y1, x2+1, y1, PenBrushInst );
-                }
-                else
-                {
-                    PUTPIXEL ( x1, y2, PenBrushInst );
-                    PUTPIXEL ( x2, y1, PenBrushInst );
-                }
-            }
-            x1start = x1-1;
-            x2start = x2+1;
-            row--, y1++, y2--, ddec -= four_a_square;
-            d -= ddec;
-        }
-
-        potential_steps = ( a_square * row ) / b_square - col + 1;
-        while ( d < 0 && potential_steps-- )
-        {
-            d += dinc; /* two_b_square * (3 + (col << 1)); */
-            col++, x1--, x2++, dinc += four_b_square;
-        }
-
-        if ( a_square * row <= b_square * col )
-            break;
-    };
-
-    d = two_b_square * (col + 1) * col
-        + two_a_square * (row * (row - 2) + 1)
-        + (1 - two_a_square) * b_square;
-    dinc = ddec; /* four_b_square * col; */
-    ddec = two_a_square * ((row << 1) - 3);
-
-    while ( row )
-    {
-        if ( FillBrushObj )
-        {
-            PUTLINE ( x1, y1, x2, y1, FillBrushInst );
-            PUTLINE ( x1, y2, x2, y2, FillBrushInst );
-        }
-        if ( PenBrushObj )
-        {
-            PUTPIXEL ( x2, y1, PenBrushInst );
-            PUTPIXEL ( x1, y2, PenBrushInst );
-            PUTPIXEL ( x2, y2, PenBrushInst );
-            PUTPIXEL ( x1, y1, PenBrushInst );
-        }
-
-        if ( d <= 0 )
-        {
-            col++, x1--, x2++, dinc += four_b_square;
-            d += dinc; //four_b_square * col;
-        }
-
-        row--, y1++, y2--, ddec -= four_a_square;
-        d -= ddec; //two_a_square * ((row << 1) - 3);
-    }
-
-    if ( FillBrushObj )
-    {
-        PUTLINE ( left, y1, right, y1, FillBrushInst );
-        PUTLINE ( left, y2, right, y2, FillBrushInst );
-    }
-    if ( PenBrushObj )
-    {
-        if ( x1 > (left+1) )
-        {
-            PUTLINE ( left, y1, x1, y1, PenBrushInst );
-            PUTLINE ( x2+1, y1, right, y1, PenBrushInst );
-            PUTLINE ( left+1, y2, x1, y2, PenBrushInst );
-            PUTLINE ( x2+1, y2, right+1, y2, PenBrushInst );
-        }
-        else
-        {
-            PUTPIXEL ( left, y1, PenBrushInst );
-            PUTPIXEL ( right, y2, PenBrushInst );
-        }
-    }
-
-    x1 = left+xradius;
-    x2 = right-xradius;
-    y1 = top+yradius;
-    y2 = bottom-yradius;
-
-    if ( FillBrushObj )
-    {
-        for ( i = y1+1; i < y2; i++ )
-            PUTLINE ( left, i, right, i, FillBrushInst );
-    }
-
-    if ( PenBrushObj )
-    {
-        PUTLINE ( x1,    top,    x2,    top,    PenBrushInst );
-        PUTLINE ( right, y1,     right, y2,     PenBrushInst );
-        PUTLINE ( x2,    bottom, x1,    bottom, PenBrushInst );
-        PUTLINE ( left,  y2,     left,  y1,     PenBrushInst );
-    }
-
-    BITMAPOBJ_UnlockBitmap(BitmapObj);
-    if (PenBrushObj != NULL)
-        PENOBJ_UnlockPen(PenBrushObj);
-    if (FillBrushObj != NULL)
-        BRUSHOBJ_UnlockBrush(FillBrushObj);
-
+    PenBrushObj->ptPenWidth.x = PenOrigWidth;
+    PENOBJ_UnlockPen(PenBrushObj);
     return ret;
 }
 
