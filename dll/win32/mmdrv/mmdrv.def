@@ -6,9 +6,9 @@
 ;
 LIBRARY mmdrv.dll
 EXPORTS
-DriverProc@20
+;DriverProc@20
 ;widMessage@20
-wodMessage@20
+;wodMessage@20
 ;midMessage@20
 ;modMessage@20
 ;auxMessage@20

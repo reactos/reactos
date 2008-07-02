@@ -296,7 +296,7 @@ CreateSoundDevice(
         return Status;
     }
 
-    DPRINT("Creating device %ws\n", WideDeviceName);
+    DPRINT("Creating device %ws\n", DeviceName.Buffer);
 
     /* Now create the device */
     Status = IoCreateDevice(DriverObject,
@@ -316,7 +316,7 @@ CreateSoundDevice(
         return Status;
     }
 
-    DPRINT("Creating link %ws\n", WideDosDeviceName);
+    DPRINT("Creating link %ws\n", DosDeviceName.Buffer);
 
     /* Create a symbolic link for the DOS deviec name */
     Status = IoCreateSymbolicLink(&DosDeviceName, &DeviceName);
@@ -426,7 +426,7 @@ DestroySoundDevice(
         return Status;
     }
 
-    DPRINT("Deleting symlink %ws\n", WideDosDeviceName);
+    DPRINT("Deleting symlink %ws\n", DosDeviceName.Buffer);
 
     Status = IoDeleteSymbolicLink(&DosDeviceName);
     DPRINT("Status of symlink deletion is 0x%08x\n", Status);
