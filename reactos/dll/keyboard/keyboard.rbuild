@@ -130,6 +130,9 @@
 	<directory name="kbdkaz">
 		<xi:include href="kbdkaz/kbdkaz.rbuild" />
 	</directory>
+	<directory name="kbdla">
+		<xi:include href="kbdla/kbdla.rbuild" />
+	</directory>
 	<directory name="kbdlt">
 		<xi:include href="kbdlt/kbdlt.rbuild" />
 	</directory>
