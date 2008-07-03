@@ -855,6 +855,8 @@ PopupMenu::PopupMenu(UINT nid)
 {
 	HMENU hMenu = LoadMenu(g_Globals._hInstance, MAKEINTRESOURCE(nid));
 	_hmenu = GetSubMenu(hMenu, 0);
+	RemoveMenu(hMenu, 0, MF_BYPOSITION);
+	DestroyMenu(hMenu);
 }
 
 
