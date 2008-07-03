@@ -99,8 +99,6 @@ NtfsCreateFCB(PCWSTR FileName, PNTFS_VCB Vcb)
   ExInitializeResourceLite(&Fcb->MainResource);
   
   Fcb->RFCB.Resource = &(Fcb->MainResource);
-  
-  InsertTailList(&(Vcb->FcbListHead), &(Fcb->FcbListEntry));
 
   return(Fcb);
 }
@@ -113,8 +111,6 @@ NtfsDestroyFCB(PNTFS_FCB Fcb)
   ASSERT(Fcb->Identifier.Type == NTFS_TYPE_FCB);
 
   ExDeleteResourceLite(&Fcb->MainResource);
-
-  RemoveEntryList(&(Fcb->FcbListEntry));
 
   ExFreePool(Fcb);
 }
