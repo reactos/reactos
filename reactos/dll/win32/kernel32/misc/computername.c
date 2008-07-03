@@ -298,7 +298,7 @@ IsValidComputerName (
   p = (PWCHAR)lpComputerName;
   while (*p != 0)
     {
-      if (!(iswalnum(*p) || *p == L'!' || *p == L'@' || *p == L'#' ||
+      if (!(iswctype(*p, _ALPHA | _DIGIT) || *p == L'!' || *p == L'@' || *p == L'#' ||
        *p == L'$' || *p == L'%' || *p == L'^' || *p == L'&' || *p == L'\'' ||
        *p == L')' || *p == L'(' || *p == L'.' || *p == L'-' || *p == L'_' ||
        *p == L'{' || *p == L'}' || *p == L'~'))
