@@ -275,7 +275,7 @@ KdPortInitializeEx(
     sprintf(buffer,
             "\nSerial port COM%ld found at 0x%lx\n",
             PortInformation->ComPort,
-            ComPortBase];
+            ComPortBase);
     HalDisplayString(buffer);
 #endif /* NDEBUG */
 
