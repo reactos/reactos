@@ -48,6 +48,7 @@
 
 #undef sprintf
 #undef wsprintf
+#undef snprintf
 #undef vsnprintf
 #undef vprintf
 #undef vwprintf
