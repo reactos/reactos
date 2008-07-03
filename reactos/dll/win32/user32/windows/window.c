@@ -923,7 +923,7 @@ GetLastActivePopup(HWND hWnd)
 {
     PWINDOW Wnd, WndParent;
     HWND Ret = NULL;
-
+    WARN("Not fully implemented!");
     Wnd = ValidateHwnd(hWnd);
     if (Wnd != NULL)
     {
