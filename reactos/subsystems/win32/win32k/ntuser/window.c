@@ -3634,6 +3634,8 @@ co_UserSetWindowLong(HWND hWnd, DWORD Index, LONG NewValue, BOOL Ansi)
 
    Wnd = Window->Wnd;
 
+   if (!Wnd) return 0; // No go on zero.
+
    if ((INT)Index >= 0)
    {
       if ((Index + sizeof(LONG)) > Wnd->ExtraDataSize)
