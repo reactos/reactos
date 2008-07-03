@@ -108,7 +108,8 @@ co_IntSendActivateMessages(HWND hWndPrev, HWND hWnd, BOOL MouseActivate)
 
          if (OldTID != NewTID)
          {
-            if ((List = IntWinListChildren(UserGetWindowObject(IntGetDesktopWindow()))))
+            List = IntWinListChildren(UserGetWindowObject(IntGetDesktopWindow()));
+            if (List)
             {
                for (phWnd = List; *phWnd; ++phWnd)
                {
