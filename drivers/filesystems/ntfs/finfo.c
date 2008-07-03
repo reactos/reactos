@@ -177,10 +177,19 @@ NtfsGetInternalInformation(PNTFS_FCB Fcb,
   return(STATUS_SUCCESS);
 }
 
+static NTSTATUS
+NtfsGetNetworkOpenInformation(PNTFS_FCB Fcb,
+                              PNTFS_VCB Vcb,
+                              PFILE_NETWORK_OPEN_INFORMATION NetworkInfo,
+                              PULONG BufferLength)
+{
+  UNIMPLEMENTED;
+  return STATUS_SUCCESS;
+}
 
 NTSTATUS NTAPI
 NtfsFsdQueryInformation(PDEVICE_OBJECT DeviceObject,
-                     PIRP Irp)
+                        PIRP Irp)
 /*
  * FUNCTION: Retrieve the specified file information
  */
@@ -189,6 +198,7 @@ NtfsFsdQueryInformation(PDEVICE_OBJECT DeviceObject,
   PIO_STACK_LOCATION Stack;
   PFILE_OBJECT FileObject;
   PNTFS_FCB Fcb;
+  PNTFS_VCB Vcb;
   PVOID SystemBuffer;
   ULONG BufferLength;
 
@@ -200,6 +210,7 @@ NtfsFsdQueryInformation(PDEVICE_OBJECT DeviceObject,
   FileInformationClass = Stack->Parameters.QueryFile.FileInformationClass;
   FileObject = Stack->FileObject;
   Fcb = FileObject->FsContext;
+  Vcb = DeviceObject->DeviceExtension;
 
   SystemBuffer = Irp->AssociatedIrp.SystemBuffer;
   BufferLength = Stack->Parameters.QueryFile.Length;
@@ -239,6 +250,12 @@ NtfsFsdQueryInformation(PDEVICE_OBJECT DeviceObject,
       Status = NtfsGetInternalInformation(Fcb,
                                           SystemBuffer,
                                           &BufferLength);
+      break;
+    case FileNetworkOpenInformation:
+      Status = NtfsGetNetworkOpenInformation(Fcb,
+                                             Vcb,
+                                             SystemBuffer,
+                                             &BufferLength);
       break;
 
     case FileAlternateNameInformation:
