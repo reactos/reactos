@@ -540,6 +540,7 @@ NtUserSetSysColors(
      ProbeForRead(lpaRgbValues,
                    sizeof(INT),
                    1);
+// Developers: We are thread locked and calling gdi.
      Ret = IntSetSysColors(cElements, (INT*)lpaElements, (COLORREF*)lpaRgbValues);
   }
   _SEH_HANDLE
@@ -551,6 +552,10 @@ NtUserSetSysColors(
   {
       SetLastNtError(Status);
       Ret = FALSE;
+  }
+  if (Ret)
+  {
+     UserPostMessage(HWND_BROADCAST, WM_SYSCOLORCHANGE, 0, 0);
   }
   UserLeave();
   return Ret;
