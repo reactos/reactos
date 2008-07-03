@@ -921,8 +921,24 @@ GetGUIThreadInfo(DWORD idThread,
 HWND STDCALL
 GetLastActivePopup(HWND hWnd)
 {
-  UNIMPLEMENTED;
-  return 0;
+    PWINDOW Wnd, WndParent;
+    HWND Ret = NULL;
+
+    Wnd = ValidateHwnd(hWnd);
+    if (Wnd != NULL)
+    {
+        _SEH_TRY
+        {
+            WndParent = NULL;
+            Ret = hWnd;
+        }
+        _SEH_HANDLE
+        {
+            /* Do nothing */
+        }
+        _SEH_END;
+    }
+    return Ret;
 }
 
 
