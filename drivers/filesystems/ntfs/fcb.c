@@ -97,10 +97,11 @@ NtfsCreateFCB(PCWSTR FileName, PNTFS_VCB Vcb)
   }
 
   ExInitializeResourceLite(&Fcb->MainResource);
-  
   Fcb->RFCB.Resource = &(Fcb->MainResource);
-  
-  InsertTailList(&(Vcb->FcbListHead), &(Fcb->FcbListEntry));
+
+#if 0
+  ExInterlockedInsertTailList(&(Vcb->FcbListHead), &(Fcb->FcbListEntry), &(Vcb->FcbListLock));
+#endif
 
   return(Fcb);
 }
@@ -109,12 +110,20 @@ NtfsCreateFCB(PCWSTR FileName, PNTFS_VCB Vcb)
 VOID
 NtfsDestroyFCB(PNTFS_FCB Fcb)
 {
+#if 0
+  KIRQL  oldIrql;
+#endif
+
   ASSERT(Fcb);
   ASSERT(Fcb->Identifier.Type == NTFS_TYPE_FCB);
 
   ExDeleteResourceLite(&Fcb->MainResource);
 
+#if 0
+  KeAcquireSpinLock(&(Fcb->Vcb->FcbListLock), &oldIrql);
   RemoveEntryList(&(Fcb->FcbListEntry));
+  KeReleaseSpinLock(&(Fcb->Vcb->FcbListLock), oldIrql);
+#endif
 
   ExFreePool(Fcb);
 }
