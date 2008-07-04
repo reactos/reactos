@@ -3952,12 +3952,14 @@ NtUserMoveWindow(
 
  0 = QWUniqueProcessId
  1 = QWUniqueThreadId
+ 2 = QWActiveWindow
+ 3 = QWFocusWindow
  4 = QWIsHung            Implements IsHungAppWindow found
                                 by KJK::Hyperion.
 
-        9 = QWKillWindow        When I called this with hWnd ==
-                                DesktopWindow, it shutdown the system
-                                and rebooted.
+ 9 = QWKillWindow        When I called this with hWnd ==
+                           DesktopWindow, it shutdown the system
+                           and rebooted.
 */
 /*
  * @implemented
@@ -3985,6 +3987,14 @@ NtUserQueryWindow(HWND hWnd, DWORD Index)
 
       case QUERY_WINDOW_UNIQUE_THREAD_ID:
          Result = (DWORD)IntGetWndThreadId(Window);
+         break;
+
+      case QUERY_WINDOW_ACTIVE:
+         Result = (DWORD)UserGetActiveWindow();
+         break;
+
+      case QUERY_WINDOW_FOCUS:
+         Result = (DWORD)IntGetFocusWindow();
          break;
 
       case QUERY_WINDOW_ISHUNG:
