@@ -133,13 +133,11 @@ BITMAP_Cleanup(PVOID ObjectBody)
 	{
 		if (pBmp->dib == NULL)
 		{
-			if (pBmp->SurfObj.pvBits != NULL)
-			    ExFreePool(pBmp->SurfObj.pvBits);
+			ExFreePool(pBmp->SurfObj.pvBits);
 		}
 		else
 		{
-			if (pBmp->SurfObj.pvBits != NULL)
-				EngFreeUserMem(pBmp->SurfObj.pvBits);
+			EngFreeUserMem(pBmp->SurfObj.pvBits);
 		}
 		if (pBmp->hDIBPalette != NULL)
 		{
@@ -152,6 +150,9 @@ BITMAP_Cleanup(PVOID ObjectBody)
 		ExFreePoolWithTag(pBmp->BitsLock, TAG_BITMAPOBJ);
 		pBmp->BitsLock = NULL;
 	}
+
+	if (pBmp->dib)
+		ExFreePoolWithTag(pBmp->dib, TAG_DIB);
 
 	return TRUE;
 }
@@ -218,18 +219,32 @@ NtGdiGetBitmapDimension(
 	LPSIZE  Dimension)
 {
 	PBITMAPOBJ  bmp;
+	BOOL Ret = TRUE;
+
+	if (hBitmap == NULL)
+		return FALSE;
 
 	bmp = BITMAPOBJ_LockBitmap(hBitmap);
 	if (bmp == NULL)
 	{
+		SetLastWin32Error(ERROR_INVALID_HANDLE);
 		return FALSE;
 	}
 
-	*Dimension = bmp->dimension;
+	_SEH_TRY
+	{
+		ProbeForWrite(Dimension, sizeof(SIZE), 1);
+		*Dimension = bmp->dimension;
+	}
+	_SEH_HANDLE
+	{
+		Ret = FALSE;
+	}
+	_SEH_END
 
 	BITMAPOBJ_UnlockBitmap(bmp);
 
-	return  TRUE;
+	return Ret;
 }
 
 COLORREF STDCALL
@@ -504,23 +519,39 @@ NtGdiSetBitmapDimension(
 	LPSIZE  Size)
 {
 	PBITMAPOBJ  bmp;
+	BOOL Ret = TRUE;
+
+	if (hBitmap == NULL)
+		return FALSE;
 
 	bmp = BITMAPOBJ_LockBitmap(hBitmap);
 	if (bmp == NULL)
 	{
+		SetLastWin32Error(ERROR_INVALID_HANDLE);
 		return FALSE;
 	}
 
 	if (Size)
 	{
-		*Size = bmp->dimension;
+		_SEH_TRY
+		{
+			ProbeForWrite(Size, sizeof(SIZE), 1);
+			*Size = bmp->dimension;
+		}
+		_SEH_HANDLE
+		{
+			Ret = FALSE;
+		}
+		_SEH_END
 	}
+
+	/* The dimension is changed even if writing the old value failed */
 	bmp->dimension.cx = Width;
 	bmp->dimension.cy = Height;
 
 	BITMAPOBJ_UnlockBitmap (bmp);
 
-	return TRUE;
+	return Ret;
 }
 
 BOOL STDCALL
@@ -746,8 +777,11 @@ NtGdiGetDCforBitmap(
 {
   HDC hDC = NULL;
   PBITMAPOBJ bmp = BITMAPOBJ_LockBitmap( hsurf );
-  hDC = bmp->hDC;
-  BITMAPOBJ_UnlockBitmap( bmp );
+  if (bmp)
+  {
+    hDC = bmp->hDC;
+    BITMAPOBJ_UnlockBitmap( bmp );
+  }
   return hDC;
 }
 
