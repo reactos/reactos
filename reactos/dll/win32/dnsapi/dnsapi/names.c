@@ -145,7 +145,7 @@ DNS_STATUS WINAPI DnsValidateName_UTF8
 			    sizeof( WCHAR ) * (StrLenWc + 1) );
   mbstowcs( Buffer, Name, StrLenWc + 1 );
   Status = DnsValidateName_W( Buffer, Format );
-  RtlFreeHeap( GetProcessHeap(), 0, Buffer );
+  RtlFreeHeap( RtlGetProcessHeap(), 0, Buffer );
   
   return Status;
 }

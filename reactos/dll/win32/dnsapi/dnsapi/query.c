@@ -102,14 +102,14 @@ DNS_STATUS WINAPI DnsQuery_A
       if( adns_error != adns_s_ok ) {
         adns_finish( astate );
         if ( CurrentName != Name ) {
-          RtlFreeHeap( CurrentName, 0, GetProcessHeap() );
+          RtlFreeHeap( RtlGetProcessHeap(), 0, CurrentName );
         }
         return DnsIntTranslateAdnsToDNS_STATUS( adns_error );
       }
 
       if( answer && answer->rrs.addr ) {
         if ( CurrentName != Name ) {
-          RtlFreeHeap( CurrentName, 0, GetProcessHeap() );
+          RtlFreeHeap( RtlGetProcessHeap(), 0, CurrentName );
         }
         *QueryResultSet =
           (PDNS_RECORD)RtlAllocateHeap( RtlGetProcessHeap(), 0,
@@ -132,12 +132,12 @@ DNS_STATUS WINAPI DnsQuery_A
            NULL == answer->cname ) {
         adns_finish( astate );
         if ( CurrentName != Name ) {
-          RtlFreeHeap( CurrentName, 0, GetProcessHeap() );
+          RtlFreeHeap( RtlGetProcessHeap(), 0, CurrentName );
         }
         return ERROR_FILE_NOT_FOUND;
       }
       if ( CurrentName != Name ) {
-        RtlFreeHeap( CurrentName, 0, GetProcessHeap() );
+        RtlFreeHeap( RtlGetProcessHeap(), 0, CurrentName );
       }
       CurrentName = xstrsave( answer->cname );
       if ( NULL == CurrentName ) {
@@ -146,7 +146,7 @@ DNS_STATUS WINAPI DnsQuery_A
       }
     }
     adns_finish( astate );
-    RtlFreeHeap( CurrentName, 0, GetProcessHeap() );
+    RtlFreeHeap( RtlGetProcessHeap(), 0, CurrentName );
     return ERROR_FILE_NOT_FOUND;
   default:
     return ERROR_OUTOFMEMORY; /* XXX arty: find a better error code. */
@@ -298,8 +298,8 @@ DNS_STATUS WINAPI DnsQuery_UTF8
   PIP4_ARRAY Servers,
   PDNS_RECORD *QueryResultSet,
   PVOID *Reserved ) {
-  return DnsQuery_UTF8( Name, Type, Options, Servers, QueryResultSet,
-			Reserved );
+  UNIMPLEMENTED;
+  return ERROR_OUTOFMEMORY;
 }
 
 void DnsIntFreeRecordList( PDNS_RECORD ToDelete ) {

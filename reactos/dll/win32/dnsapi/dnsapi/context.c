@@ -46,6 +46,12 @@ DNS_STATUS WINAPI DnsAcquireContextHandle_W
     /* For now, don't worry about the user's identity. */
     Context = (PWINDNS_CONTEXT)RtlAllocateHeap( RtlGetProcessHeap(), 0,
 						sizeof( WINDNS_CONTEXT ) );
+
+    if(!Context){
+        *ContextHandle = 0;
+        return ERROR_OUTOFMEMORY;
+    }
+
     /* The real work here is to create an adns_state that will help us
      * do what we want to later. */
     adns_status = adns_init( &Context->State,
@@ -55,6 +61,7 @@ DNS_STATUS WINAPI DnsAcquireContextHandle_W
 			     0 );
     if( adns_status != adns_s_ok ) {
       *ContextHandle = 0;
+      RtlFreeHeap( RtlGetProcessHeap(), 0, Context );
       return DnsIntTranslateAdnsToDNS_STATUS( adns_status );
     } else {
       *ContextHandle = (HANDLE)Context;
@@ -114,4 +121,5 @@ void WINAPI DnsReleaseContextHandle
   adns_finish( Context->State );
   RtlFreeHeap( RtlGetProcessHeap(), 0, Context );
 }
+
 
