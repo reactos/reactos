@@ -434,6 +434,174 @@ LdrPEFixupImports(IN PVOID DllBase,
     return STATUS_SUCCESS;
 }
 
+PVOID
+NTAPI
+FrLdrReadAndMapImage(IN FILE *Image,
+                     IN PCHAR Name,
+                     IN ULONG ImageType)
+{
+    PVOID ImageBase, LoadBase, ReadBuffer;
+    ULONG ImageId = LoaderBlock.ModsCount;
+    ULONG i, Size, ImageSize, SizeOfHeaders;
+    PIMAGE_NT_HEADERS NtHeader;
+    PIMAGE_SECTION_HEADER Section;
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    /* Try to see, maybe it's loaded already */
+    if (LdrGetModuleObject(Name) != NULL)
+    {
+        /* It's loaded, return NULL. It would be wise to return
+         correct LoadBase, but it seems to be ignored almost everywhere */
+        return NULL;
+    }
+
+    /* Set the virtual (image) and physical (load) addresses */
+    LoadBase = (PVOID)NextModuleBase;
+    ImageBase = RVA(LoadBase, KSEG0_BASE);
+
+    /* Allocate a temporary buffer for the read */
+    ReadBuffer = MmHeapAlloc(MM_PAGE_SIZE);
+    if (!ReadBuffer)
+    {
+        /* Fail */
+        DbgPrint("Failed to allocate a temporary buffer for the read\n");
+        return NULL;
+    }
+
+    /* Set the file pointer to zero */
+    FsSetFilePointer(Image, 0);
+
+    /* Load first page of the file image */
+    if (!FsReadFile(Image, MM_PAGE_SIZE, NULL, ReadBuffer))
+    {
+        /* Fail */
+        DbgPrint("Failed to read image: %s\n", Name);
+        return NULL;
+    }
+
+    /* Get image headers */
+    NtHeader = RtlImageNtHeader(ReadBuffer);
+
+    /* Allocate memory for the driver */
+    ImageSize = NtHeader->OptionalHeader.SizeOfImage;
+    LoadBase = MmAllocateMemoryAtAddress(ImageSize, LoadBase, LoaderSystemCode);
+    ASSERT(LoadBase);
+
+    /* Copy headers over */
+    SizeOfHeaders = NtHeader->OptionalHeader.SizeOfHeaders;
+    if (SizeOfHeaders < MM_PAGE_SIZE)
+    {
+        RtlMoveMemory(LoadBase, ReadBuffer, SizeOfHeaders);
+    }
+    else
+    {
+        RtlMoveMemory(LoadBase, ReadBuffer, MM_PAGE_SIZE);
+        if (!FsReadFile(Image, SizeOfHeaders - MM_PAGE_SIZE, NULL,
+                        (PVOID)((ULONG_PTR)LoadBase + MM_PAGE_SIZE)))
+        {
+            DbgPrint("Failed to read image: %s\n", Name);
+            return NULL;
+        }
+    }
+
+    /* Free the temporary buffer */
+    MmHeapFree(ReadBuffer);
+
+    /* Get the first section */
+    NtHeader = RtlImageNtHeader(LoadBase);
+    Section = IMAGE_FIRST_SECTION(NtHeader);
+
+    /*  Read image sections into virtual section  */
+    for (i = 0; i < NtHeader->FileHeader.NumberOfSections; i++)
+    {
+        /* Get the size of this section and check if it's valid */
+        Size = Section[i].VirtualAddress + Section[i].Misc.VirtualSize;
+        if (Size <= ImageSize)
+        {
+            if (Section[i].SizeOfRawData)
+            {
+                /* Copy the data from the disk to the image */
+                FsSetFilePointer(Image, Section[i].PointerToRawData);
+                if (!FsReadFile(Image,
+                                Section[i].Misc.VirtualSize >
+                                Section[i].SizeOfRawData ?
+                                Section[i].SizeOfRawData :
+                                Section[i].Misc.VirtualSize,
+                                NULL,
+                                (PVOID)((ULONG_PTR)LoadBase +
+                                        Section[i].VirtualAddress)))
+                {
+                    DbgPrint("Failed to read image: %s\n", Name);
+                    return NULL;
+                }
+            }
+            else
+            {
+                /* Clear the BSS area */
+                RtlZeroMemory((PVOID)((ULONG_PTR)LoadBase +
+                                      Section[i].VirtualAddress),
+                              Section[i].Misc.VirtualSize);
+            }
+        }
+    }
+
+    /* Calculate Difference between Real Base and Compiled Base*/
+    Status = LdrRelocateImageWithBias(LoadBase,
+                                      (ULONG_PTR)ImageBase -
+                                      (ULONG_PTR)LoadBase,
+                                      "FreeLdr",
+                                      STATUS_SUCCESS,
+                                      STATUS_UNSUCCESSFUL,
+                                      STATUS_UNSUCCESSFUL);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Fail */
+        DbgPrint("Failed to relocate image: %s\n", Name);
+        return NULL;
+    }
+
+    /* Fill out Module Data Structure */
+    reactos_modules[ImageId].ModStart = (ULONG_PTR)ImageBase;
+    reactos_modules[ImageId].ModEnd = (ULONG_PTR)ImageBase + ImageSize;
+    strcpy(reactos_module_strings[ImageId], Name);
+    reactos_modules[ImageId].String = (ULONG_PTR)reactos_module_strings[ImageId];
+    LoaderBlock.ModsCount++;
+
+    /* Detect kernel or HAL */
+    if (!_stricmp(Name, "ntoskrnl.exe"))
+    {
+        KernelData = (PVOID)NextModuleBase;
+        KernelSize = ImageSize;
+    }
+    else if (!_stricmp(Name, "hal.dll"))
+    {
+        HalData = (PVOID)NextModuleBase;
+        HalSize = ImageSize;
+    }
+    else
+    {
+        DriverName[Drivers] = reactos_module_strings[ImageId];
+        DriverData[Drivers] = (PVOID)NextModuleBase;
+        DriverSize[Drivers] = ImageSize;
+        Drivers++;
+    }
+
+    /* Increase the next Load Base */
+    NextModuleBase = ROUND_UP(NextModuleBase + ImageSize, PAGE_SIZE);
+
+    /* Perform import fixups */
+    if (!NT_SUCCESS(LdrPEFixupImports(LoadBase, Name)))
+    {
+        /* Fixup failed, just don't include it in the list */
+        // NextModuleBase = OldNextModuleBase;
+        LoaderBlock.ModsCount = ImageId;
+        return NULL;
+    }
+
+    /* Return the final mapped address */
+    return LoadBase;
+}
+
 ULONG
 NTAPI
 FrLdrReMapImage(IN PVOID Base,
@@ -519,6 +687,12 @@ FrLdrMapImage(IN FILE *Image,
     
     /* Allocate a temporary buffer for the read */
     ReadBuffer = MmHeapAlloc(ImageSize);
+    if (!ReadBuffer)
+    {
+        /* Fail */
+        DbgPrint("Failed to allocate a temporary buffer for the read\n");
+        return NULL;
+    }
 
     /* Load the file image */
     if (!FsReadFile(Image, ImageSize, NULL, ReadBuffer))

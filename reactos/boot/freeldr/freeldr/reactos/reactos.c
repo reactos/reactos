@@ -120,7 +120,7 @@ FrLdrLoadDriver(PCHAR szFileName,
     UiDrawStatusText(value);
 
     /* Load the driver */
-    FrLdrMapImage(FilePointer, szFileName, 0);
+    FrLdrReadAndMapImage(FilePointer, szFileName, 0);
 
     /* Update status and return */
     UiDrawProgressBarCenter(nPos, 100, szLoadingMsg);
@@ -182,7 +182,7 @@ FrLdrLoadImage(IN PCHAR szFileName,
     UiDrawStatusText(szBuffer);
 
     /* Do the actual loading */
-    LoadBase = FrLdrMapImage(FilePointer, szShortName, ImageType);
+    LoadBase = FrLdrReadAndMapImage(FilePointer, szShortName, ImageType);
 
     /* Update Processbar and return success */
     if (!FrLdrBootType) UiDrawProgressBarCenter(nPos, 100, szLoadingMsg);

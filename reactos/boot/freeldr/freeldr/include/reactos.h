@@ -113,6 +113,14 @@ FrLdrMapImage(
 
 PVOID
 NTAPI
+FrLdrReadAndMapImage(
+    IN FILE *Image,
+    IN PCHAR ShortName,
+    IN ULONG ImageType
+);
+
+PVOID
+NTAPI
 FrLdrLoadImage(
     IN PCHAR szFileName,
     IN INT nPos,

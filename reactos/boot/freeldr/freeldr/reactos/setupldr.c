@@ -82,7 +82,7 @@ static FrLdrLoadKernel(IN PCHAR szFileName,
     UiDrawStatusText(szBuffer);
 
     /* Do the actual loading */
-    LoadBase = FrLdrMapImage(FilePointer, szShortName, 1);
+    LoadBase = FrLdrReadAndMapImage(FilePointer, szShortName, 1);
 
     /* Get the NT header, kernel base and kernel entry */
     NtHeader = RtlImageNtHeader(LoadBase);
