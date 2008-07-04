@@ -1,5 +1,4 @@
-/* $Id$
- *
+/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/window.c
@@ -916,21 +915,21 @@ GetGUIThreadInfo(DWORD idThread,
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 HWND STDCALL
 GetLastActivePopup(HWND hWnd)
 {
-    PWINDOW Wnd, WndParent;
-    HWND Ret = NULL;
-    WARN("Not fully implemented!");
+    PWINDOW Wnd;
+    HWND Ret = hWnd;
+
     Wnd = ValidateHwnd(hWnd);
     if (Wnd != NULL)
     {
         _SEH_TRY
         {
-            WndParent = NULL;
-            Ret = hWnd;
+            if (Wnd->hWndLastActive)
+               Ret = Wnd->hWndLastActive;
         }
         _SEH_HANDLE
         {

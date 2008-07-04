@@ -1627,6 +1627,7 @@ co_IntCreateWindowEx(DWORD dwExStyle,
 
        Wnd->ti = ti;
        Wnd->pi = ti->kpi;
+       Wnd->hWndLastActive = hWnd;
    }
 
    DPRINT("Created object with handle %X\n", hWnd);

@@ -16,7 +16,6 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- * $Id$
  */
 
 #include <w32k.h>
@@ -85,17 +84,12 @@ co_IntSendActivateMessages(HWND hWndPrev, HWND hWnd, BOOL MouseActivate)
          co_IntShellHookNotify(HSHELL_WINDOWACTIVATED, (LPARAM) hWnd);
       }
 
-      UserDerefObjectCo(Window);
-
-      /* FIXME: IntIsWindow */
-
-      CHECKPOINT;
-      co_IntPostOrSendMessage(hWnd, WM_NCACTIVATE, (WPARAM)(hWnd == UserGetForegroundWindow()), 0);
-      /* FIXME: WA_CLICKACTIVE */
-      co_IntPostOrSendMessage(hWnd, WM_ACTIVATE,
-                              MAKEWPARAM(MouseActivate ? WA_CLICKACTIVE : WA_ACTIVE,
-                                         UserGetWindowLong(hWnd, GWL_STYLE, FALSE) & WS_MINIMIZE),
-                              (LPARAM)hWndPrev);
+      if (Window->Wnd)
+      {  // Set last active for window and it's owner.
+         Window->Wnd->hWndLastActive = hWnd;
+         if (Window->Wnd->Owner)
+            Window->Wnd->Owner->hWndLastActive = hWnd;
+      }
 
       if (Window && hWndPrev)
       {
@@ -133,6 +127,18 @@ co_IntSendActivateMessages(HWND hWndPrev, HWND hWnd, BOOL MouseActivate)
             }
          }
       }
+
+      UserDerefObjectCo(Window);
+
+      /* FIXME: IntIsWindow */
+
+      CHECKPOINT;
+      co_IntPostOrSendMessage(hWnd, WM_NCACTIVATE, (WPARAM)(hWnd == UserGetForegroundWindow()), 0);
+      /* FIXME: WA_CLICKACTIVE */
+      co_IntPostOrSendMessage(hWnd, WM_ACTIVATE,
+                              MAKEWPARAM(MouseActivate ? WA_CLICKACTIVE : WA_ACTIVE,
+                                         UserGetWindowLong(hWnd, GWL_STYLE, FALSE) & WS_MINIMIZE),
+                              (LPARAM)hWndPrev);
    }
 }
 

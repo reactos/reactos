@@ -154,6 +154,8 @@ typedef struct _WINDOW
     /* Context help id */
     DWORD ContextHelpId;
 
+    HWND hWndLastActive;
+
     struct
     {
         RECT NormalRect;

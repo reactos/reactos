@@ -220,16 +220,6 @@ DceReleaseDC(DCE* dce, BOOL EndPaint)
          dce->DCXFlags |= DCX_DCEEMPTY;
        }
      }
-     else
-     { // Save Users Dc_Attr.
-       PDC dc = DC_LockDc(dce->hDC);
-       if(dc)
-       {
-         PDC_ATTR Dc_Attr = dc->pDc_Attr;
-         if(Dc_Attr) MmCopyFromCaller(&dc->Dc_Attr, Dc_Attr, sizeof(DC_ATTR));
-         DC_UnlockDc(dc);
-       }
-     }
      dce->DCXFlags &= ~DCX_DCEBUSY;
      DPRINT("Exit!!!!! DCX_CACHE!!!!!!   hDC-> %x \n", dce->hDC);
      if (!IntGdiSetDCOwnerEx( dce->hDC, GDI_OBJ_HMGR_NONE, FALSE))
@@ -427,17 +417,8 @@ UserGetDCEx(PWINDOW_OBJECT Window OPTIONAL, HANDLE ClipRegion, ULONG Flags)
    // Window nz, check to see if we still own this or it is just cheap wine tonight.
    if (!(Flags & DCX_CACHE))
    {
-      if ( Wnd->ti != GetW32ThreadInfo()) Flags |= DCX_CACHE; // Ah~ Not Powned! Forced to be cheap~
-      // Can only have one POWNED or CLASS.
-      if ( !Window->Dce && (Wnd->Class->Style & CS_OWNDC))
-         Window->Dce = DceAllocDCE(NULL, DCE_WINDOW_DC);
-      else
-         Flags |= DCX_CACHE;
-
-      if ( !Wnd->Class->Dce && (Wnd->Class->Style & CS_CLASSDC))
-         Wnd->Class->Dce = DceAllocDCE(NULL, DCE_CLASS_DC);
-      else
-         Flags |= DCX_CACHE;
+      if ( Wnd->ti != GetW32ThreadInfo())
+         Flags |= DCX_CACHE; // Ah~ Not Powned! Forced to be cheap~
    }
 
    DcxFlags = Flags & DCX_CACHECOMPAREMASK;
@@ -455,7 +436,10 @@ UserGetDCEx(PWINDOW_OBJECT Window OPTIONAL, HANDLE ClipRegion, ULONG Flags)
 // Need to test for null here. Not sure if this is a bug or a feature.
 // First time use hax, need to use DceAllocDCE during window display init.
          if (!Dce) break;
-
+//
+// The way I understand this, you can have more than one DC per window.
+// Only one Owned if one was requested and saved and one Cached. 
+//
          if ((Dce->DCXFlags & (DCX_CACHE | DCX_DCEBUSY)) == DCX_CACHE)
          {
             DceUnused = Dce;
@@ -469,7 +453,6 @@ UserGetDCEx(PWINDOW_OBJECT Window OPTIONAL, HANDLE ClipRegion, ULONG Flags)
 #if 0 /* FIXME */
                UpdateVisRgn = FALSE;
 #endif
-
                UpdateClipOrigin = TRUE;
                break;
             }
@@ -531,8 +514,6 @@ UserGetDCEx(PWINDOW_OBJECT Window OPTIONAL, HANDLE ClipRegion, ULONG Flags)
       /* FIXME: Handle error */
    }
 
-   Dce->DCXFlags = Flags | DCX_DCEBUSY;
-   
    if (!(Flags & (DCX_EXCLUDERGN | DCX_INTERSECTRGN)) && ClipRegion)
    {
       if (!(Flags & DCX_KEEPCLIPRGN))
@@ -546,6 +527,8 @@ UserGetDCEx(PWINDOW_OBJECT Window OPTIONAL, HANDLE ClipRegion, ULONG Flags)
       DceDeleteClipRgn(Dce);
    }
 #endif
+
+   Dce->DCXFlags = Flags | DCX_DCEBUSY;
 
    if (0 != (Flags & DCX_INTERSECTUPDATE) && NULL == ClipRegion)
    {
