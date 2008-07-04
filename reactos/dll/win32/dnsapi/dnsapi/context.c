@@ -30,96 +30,95 @@
  * TODO: Which ones area allowed?
  */
 
-extern DNS_STATUS WINAPI DnsAcquireContextHandle_UTF8
-( DWORD CredentialsFlags,
-  PVOID Credentials,
-  HANDLE *ContextHandle );
+extern DNS_STATUS WINAPI DnsAcquireContextHandle_UTF8(DWORD CredentialsFlags, PVOID Credentials, HANDLE *ContextHandle);
 
-DNS_STATUS WINAPI DnsAcquireContextHandle_W
-( DWORD CredentialsFlags,
-  PVOID Credentials,
-  HANDLE *ContextHandle ) {
-  if( CredentialsFlags ) {
-    PWINDNS_CONTEXT Context;
-    int adns_status;
+DNS_STATUS WINAPI
+DnsAcquireContextHandle_W(DWORD CredentialsFlags,
+                          PVOID Credentials,
+                          HANDLE *ContextHandle)
+{
+    if(CredentialsFlags)
+    {
+        PWINDNS_CONTEXT Context;
+        int adns_status;
 
-    /* For now, don't worry about the user's identity. */
-    Context = (PWINDNS_CONTEXT)RtlAllocateHeap( RtlGetProcessHeap(), 0,
-						sizeof( WINDNS_CONTEXT ) );
+        /* For now, don't worry about the user's identity. */
+        Context = (PWINDNS_CONTEXT)RtlAllocateHeap(RtlGetProcessHeap(), 0, sizeof(WINDNS_CONTEXT));
 
-    if(!Context){
-        *ContextHandle = 0;
-        return ERROR_OUTOFMEMORY;
+        if(!Context)
+        {
+            *ContextHandle = 0;
+            return ERROR_OUTOFMEMORY;
+        }
+
+        /* The real work here is to create an adns_state that will help us
+         * do what we want to later. */
+        adns_status = adns_init(&Context->State, adns_if_noenv | adns_if_noerrprint | adns_if_noserverwarn, 0);
+
+        if(adns_status != adns_s_ok)
+        {
+            *ContextHandle = 0;
+            RtlFreeHeap(RtlGetProcessHeap(), 0, Context);
+            return DnsIntTranslateAdnsToDNS_STATUS(adns_status);
+        }
+        else
+        {
+            *ContextHandle = (HANDLE)Context;
+            return ERROR_SUCCESS;
+        }
     }
-
-    /* The real work here is to create an adns_state that will help us
-     * do what we want to later. */
-    adns_status = adns_init( &Context->State,
-			     adns_if_noenv |
-			     adns_if_noerrprint |
-			     adns_if_noserverwarn,
-			     0 );
-    if( adns_status != adns_s_ok ) {
-      *ContextHandle = 0;
-      RtlFreeHeap( RtlGetProcessHeap(), 0, Context );
-      return DnsIntTranslateAdnsToDNS_STATUS( adns_status );
-    } else {
-      *ContextHandle = (HANDLE)Context;
-      return ERROR_SUCCESS;
+    else
+    {
+        return DnsAcquireContextHandle_UTF8(CredentialsFlags, Credentials, ContextHandle);
     }
-  } else {
-    return DnsAcquireContextHandle_UTF8( CredentialsFlags,
-					 Credentials,
-					 ContextHandle );
-  }
 }
 
-DNS_STATUS WINAPI DnsAcquireContextHandle_UTF8
-( DWORD CredentialsFlags,
-  PVOID Credentials,
-  HANDLE *ContextHandle ) {
-  if( CredentialsFlags ) {
-    return DnsAcquireContextHandle_W( CredentialsFlags,
-				      Credentials,
-				      ContextHandle );
-  } else {
-    /* Convert to unicode, then call the _W version
-     * For now, there is no conversion */
-    DNS_STATUS Status;
+DNS_STATUS WINAPI
+DnsAcquireContextHandle_UTF8(DWORD CredentialsFlags,
+                             PVOID Credentials,
+                             HANDLE *ContextHandle)
+{
+    if( CredentialsFlags )
+    {
+        return DnsAcquireContextHandle_W(CredentialsFlags, Credentials, ContextHandle);
+    }
+    else
+    {
+        /* Convert to unicode, then call the _W version
+         * For now, there is no conversion */
+        DNS_STATUS Status;
 
-    Status = DnsAcquireContextHandle_W( TRUE,
-					Credentials, /* XXX arty */
-					ContextHandle );
+        Status = DnsAcquireContextHandle_W(TRUE, Credentials, /* XXX arty */ ContextHandle);
 
-    /* Free the unicode credentials when they exist. */
+        /* Free the unicode credentials when they exist. */
 
-    return Status;
-  }
+        return Status;
+    }
 }
 
-DNS_STATUS WINAPI DnsAcquireContextHandle_A
-( DWORD CredentialFlags,
-  PVOID Credentials,
-  HANDLE *ContextHandle ) {
-  if( CredentialFlags ) {
-    return DnsAcquireContextHandle_W( CredentialFlags,
-				      Credentials,
-				      ContextHandle );
-  } else {
-    return DnsAcquireContextHandle_UTF8( CredentialFlags,
-					 Credentials,
-					 ContextHandle );
-  }
+DNS_STATUS WINAPI
+DnsAcquireContextHandle_A(DWORD CredentialFlags,
+                          PVOID Credentials,
+                          HANDLE *ContextHandle)
+{
+    if(CredentialFlags)
+    {
+        return DnsAcquireContextHandle_W(CredentialFlags, Credentials, ContextHandle);
+    }
+    else
+    {
+        return DnsAcquireContextHandle_UTF8(CredentialFlags, Credentials, ContextHandle);
+    }
 }
+
 /* DnsReleaseContextHandle *************
  * Release a context handle, freeing all resources.
  */
+void WINAPI
+DnsReleaseContextHandle(HANDLE ContextHandle)
+{
+    PWINDNS_CONTEXT Context = (PWINDNS_CONTEXT)ContextHandle;
 
-void WINAPI DnsReleaseContextHandle
-( HANDLE ContextHandle ) {
-  PWINDNS_CONTEXT Context = (PWINDNS_CONTEXT)ContextHandle;
-  adns_finish( Context->State );
-  RtlFreeHeap( RtlGetProcessHeap(), 0, Context );
+    adns_finish(Context->State);
+    RtlFreeHeap(RtlGetProcessHeap(), 0, Context);
 }
-
-
