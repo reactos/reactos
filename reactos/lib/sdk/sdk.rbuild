@@ -23,7 +23,4 @@
 	<directory name="scrnsave">
 		<xi:include href="scrnsave/scrnsave.rbuild" />
 	</directory>
-	<directory name="strsafe">
-		<xi:include href="strsafe/strsafe.rbuild" />
-	</directory>
 </group>
