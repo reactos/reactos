@@ -111,7 +111,7 @@ co_IntSendActivateMessages(HWND hWndPrev, HWND hWnd, BOOL MouseActivate)
                   if (cWindow && (IntGetWndThreadId(cWindow) == OldTID))
                   {  // FALSE if the window is being deactivated,
                      // ThreadId that owns the window being activated.
-                    co_IntSendMessage(*phWnd, WM_ACTIVATEAPP, FALSE, (LPARAM)NewTID);
+                    co_IntPostOrSendMessage(*phWnd, WM_ACTIVATEAPP, FALSE, (LPARAM)NewTID);
                   }
                }
                for (phWnd = List; *phWnd; ++phWnd)
@@ -120,7 +120,7 @@ co_IntSendActivateMessages(HWND hWndPrev, HWND hWnd, BOOL MouseActivate)
                   if (cWindow && (IntGetWndThreadId(cWindow) == NewTID))
                   { // TRUE if the window is being activated,
                     // ThreadId that owns the window being deactivated.
-                    co_IntSendMessage(*phWnd, WM_ACTIVATEAPP, TRUE, (LPARAM)OldTID);
+                    co_IntPostOrSendMessage(*phWnd, WM_ACTIVATEAPP, TRUE, (LPARAM)OldTID);
                   }
                }
                ExFreePool(List);
