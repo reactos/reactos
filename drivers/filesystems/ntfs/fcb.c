@@ -68,20 +68,15 @@ NtfsWSubString(PWCHAR pTarget, const PWCHAR pSource, size_t pLength)
 
 
 PNTFS_FCB
-NtfsCreateFCB(PCWSTR FileName, PNTFS_VCB Vcb)
+NtfsCreateFCB(PCWSTR FileName)
 {
   PNTFS_FCB Fcb;
-
-  ASSERT(Vcb);
-  ASSERT(Vcb->Identifier.Type == NTFS_TYPE_VCB);
 
   Fcb = ExAllocatePoolWithTag(NonPagedPool, sizeof(NTFS_FCB), TAG_FCB);
   RtlZeroMemory(Fcb, sizeof(NTFS_FCB));
 
   Fcb->Identifier.Type = NTFS_TYPE_FCB;
   Fcb->Identifier.Size = sizeof(NTFS_TYPE_FCB);
-  
-  Fcb->Vcb = Vcb;
 
   if (FileName)
   {
@@ -99,10 +94,6 @@ NtfsCreateFCB(PCWSTR FileName, PNTFS_VCB Vcb)
   ExInitializeResourceLite(&Fcb->MainResource);
   Fcb->RFCB.Resource = &(Fcb->MainResource);
 
-#if 0
-  ExInterlockedInsertTailList(&(Vcb->FcbListHead), &(Fcb->FcbListEntry), &(Vcb->FcbListLock));
-#endif
-
   return(Fcb);
 }
 
@@ -110,20 +101,16 @@ NtfsCreateFCB(PCWSTR FileName, PNTFS_VCB Vcb)
 VOID
 NtfsDestroyFCB(PNTFS_FCB Fcb)
 {
-#if 0
   KIRQL  oldIrql;
-#endif
 
   ASSERT(Fcb);
   ASSERT(Fcb->Identifier.Type == NTFS_TYPE_FCB);
 
   ExDeleteResourceLite(&Fcb->MainResource);
 
-#if 0
   KeAcquireSpinLock(&(Fcb->Vcb->FcbListLock), &oldIrql);
   RemoveEntryList(&(Fcb->FcbListEntry));
   KeReleaseSpinLock(&(Fcb->Vcb->FcbListLock), oldIrql);
-#endif
 
   ExFreePool(Fcb);
 }
@@ -189,12 +176,8 @@ VOID
 NtfsAddFCBToTable(PNTFS_VCB Vcb,
                   PNTFS_FCB Fcb)
 {
-  KIRQL  oldIrql;
-
-  KeAcquireSpinLock(&Vcb->FcbListLock, &oldIrql);
   Fcb->Vcb = Vcb;
-  InsertTailList(&Vcb->FcbListHead, &Fcb->FcbListEntry);
-  KeReleaseSpinLock(&Vcb->FcbListLock, oldIrql);
+  ExInterlockedInsertTailList(&(Vcb->FcbListHead), &(Fcb->FcbListEntry), &(Vcb->FcbListLock));
 }
 
 
@@ -286,7 +269,7 @@ NtfsMakeRootFCB(PNTFS_VCB Vcb)
 {
   PNTFS_FCB Fcb;
 
-  Fcb = NtfsCreateFCB(L"\\", Vcb);
+  Fcb = NtfsCreateFCB(L"\\");
 
 //  memset(Fcb->entry.Filename, ' ', 11);
 

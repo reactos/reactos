@@ -381,8 +381,9 @@ NtfsMountVolume(PDEVICE_OBJECT DeviceObject,
                                                    Vcb->StorageDevice);
 
   InitializeListHead(&Vcb->FcbListHead);
+  KeInitializeSpinLock(&Vcb->FcbListLock);
 
-  Fcb = NtfsCreateFCB(NULL, Vcb);
+  Fcb = NtfsCreateFCB(NULL);
   if (Fcb == NULL)
   {
     Status = STATUS_INSUFFICIENT_RESOURCES;
@@ -447,8 +448,6 @@ NtfsMountVolume(PDEVICE_OBJECT DeviceObject,
   Vcb->MftBuffer = MftRecord;
 
   ExInitializeResourceLite(&Vcb->DirResource);
-
-  KeInitializeSpinLock(&Vcb->FcbListLock);
 
   ExAcquireResourceExclusiveLite(&NtfsGlobalData->VolumeListLock, TRUE);
   InsertHeadList(&NtfsGlobalData->VolumeListHead, &Vcb->VolumeListEntry);

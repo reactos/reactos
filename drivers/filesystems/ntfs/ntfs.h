@@ -434,7 +434,7 @@ NtfsRelReadAhead(PVOID Context);
 /* fcb.c */
 
 PNTFS_FCB
-NtfsCreateFCB(PCWSTR FileName, PNTFS_VCB Vcb);
+NtfsCreateFCB(PCWSTR FileName);
 
 VOID
 NtfsDestroyFCB(PNTFS_FCB Fcb);
