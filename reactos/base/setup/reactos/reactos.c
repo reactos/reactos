@@ -1,6 +1,6 @@
 /*
  *  ReactOS applications
- *  Copyright (C) 2004 ReactOS Team
+ *  Copyright (C) 2004-2008 ReactOS Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -21,24 +21,90 @@
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS GUI first stage setup application
  * FILE:        subsys/system/reactos/reactos.c
- * PROGRAMMERS: Eric Kohl
+ * PROGRAMMERS: Eric Kohl, Matthias Kupfer
  */
 
 #include <windows.h>
-#include <tchar.h>
+#include <commctrl.h>
 
 #include "resource.h"
 
 
-/* GLOBALS ******************************************************************/
-
-TCHAR szCaption[256];
-TCHAR szText[256];
-
-HINSTANCE hInstance;
-
-
 /* FUNCTIONS ****************************************************************/
+
+static VOID
+CenterWindow(HWND hWnd)
+{
+  HWND hWndParent;
+  RECT rcParent;
+  RECT rcWindow;
+
+  hWndParent = GetParent(hWnd);
+  if (hWndParent == NULL)
+    hWndParent = GetDesktopWindow();
+
+  GetWindowRect(hWndParent, &rcParent);
+  GetWindowRect(hWnd, &rcWindow);
+
+  SetWindowPos(hWnd,
+	       HWND_TOP,
+	       ((rcParent.right - rcParent.left) - (rcWindow.right - rcWindow.left)) / 2,
+	       ((rcParent.bottom - rcParent.top) - (rcWindow.bottom - rcWindow.top)) / 2,
+	       0,
+	       0,
+	       SWP_NOSIZE);
+}
+
+static INT_PTR CALLBACK
+StartDlgProc(HWND hwndDlg,
+               UINT uMsg,
+               WPARAM wParam,
+               LPARAM lParam)
+{
+  switch (uMsg)
+  {
+	  case WM_INITDIALOG:
+	  {
+		HWND hwndControl;
+		DWORD dwStyle;
+
+          	hwndControl = GetParent(hwndDlg);
+
+		/* Center the wizard window */
+                CenterWindow (hwndControl);
+
+          	dwStyle = GetWindowLong(hwndControl, GWL_STYLE);
+	        SetWindowLong(hwndControl, GWL_STYLE, dwStyle & ~WS_SYSMENU);
+		
+		/* Hide and disable the 'Cancel' button at the moment,
+		 * later we use this button to cancel the setup process
+		 * like F3 in usetup
+		 */
+		hwndControl = GetDlgItem(GetParent(hwndDlg), IDCANCEL);
+		ShowWindow (hwndControl, SW_HIDE);
+		EnableWindow (hwndControl, FALSE);
+	  }
+	  break;
+	  case WM_NOTIFY:
+	  {
+          LPNMHDR lpnm = (LPNMHDR)lParam;
+
+		  switch (lpnm->code)
+		  {		
+		      case PSN_SETACTIVE: // Only "Finish" for closing the App
+			PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_FINISH);
+			break;
+		      default:
+			break;
+		  }
+	  break;
+	  default:
+	  	break;
+	  }
+
+  }
+  return FALSE;
+}
 
 int WINAPI
 WinMain(HINSTANCE hInst,
@@ -46,26 +112,38 @@ WinMain(HINSTANCE hInst,
 	LPSTR lpszCmdLine,
 	int nCmdShow)
 {
-  hInstance = hInst;
+  PROPSHEETHEADER psh;
+  HPROPSHEETPAGE ahpsp[1];
+  PROPSHEETPAGE psp = {0};
+  UINT nPages = 0;
 
-  if (!LoadString(hInstance,
-                  IDS_CAPTION,
-                  szCaption,
-                  (sizeof szCaption / sizeof szCaption[0])))
-    return 0;
+  /* Create the Start page */
+  psp.dwSize = sizeof(PROPSHEETPAGE);
+  psp.dwFlags = PSP_DEFAULT | PSP_HIDEHEADER;
+  psp.hInstance = hInst;
+  psp.lParam = 0;
+  psp.pfnDlgProc = StartDlgProc;
+  psp.pszTemplate = MAKEINTRESOURCE(IDD_STARTPAGE);
+  ahpsp[nPages++] = CreatePropertySheetPage(&psp);
 
-  if (!LoadString(hInstance,
-                  IDS_TEXT,
-                  szText,
-                  (sizeof szText / sizeof szText[0])))
-    return 0;
+  // Here we can add the next pages and switch on later
 
-  MessageBox(NULL,
-	     szText,
-	     szCaption,
-	     MB_OK | MB_ICONINFORMATION);
+  /* Create the property sheet */
+  psh.dwSize = sizeof(PROPSHEETHEADER);
+  psh.dwFlags = PSH_WIZARD97 | PSH_WATERMARK | PSH_HEADER;
+  psh.hInstance = hInst;
+  psh.hwndParent = NULL;
+  psh.nPages = nPages;
+  psh.nStartPage = 0;
+  psh.phpage = ahpsp;
+  psh.pszbmWatermark = MAKEINTRESOURCE(IDB_WATERMARK);
+  psh.pszbmHeader = MAKEINTRESOURCE(IDB_HEADER);
+
+  /* Display the wizard */
+  PropertySheet(&psh);
 
   return 0;
+
 }
 
 /* EOF */
