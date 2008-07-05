@@ -10,13 +10,13 @@
     <file>thread.c</file>
     <file>testing.c</file>
     <directory name="mme">
-        <file>entry.c</file>
-        <file>wod.c</file>
-        <file>wid.c</file>
-        <file>mod.c</file>
-        <file>mid.c</file>
-        <file>mxd.c</file>
-        <file>aux.c</file>
+        <file>DriverProc.c</file>
+        <file>wodMessage.c</file>
+        <file>widMessage.c</file>
+        <file>modMessage.c</file>
+        <file>midMessage.c</file>
+        <file>mxdMessage.c</file>
+        <file>auxMessage.c</file>
     </directory>
     <directory name="wave">
         <file>wavethread.c</file>
