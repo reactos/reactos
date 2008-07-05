@@ -10,6 +10,7 @@
 
     History:
         4 July 2008 - Created
+        5 July 2008 - Implemented basic request processing
 */
 
 /*
@@ -22,26 +23,52 @@
 
 #include <mmebuddy.h>
 
+
 DWORD WINAPI
 SoundThreadProc(
     IN  LPVOID lpParameter)
 {
     PSOUND_DEVICE_INSTANCE Instance;
     PSOUND_THREAD Thread;
-    HANDLE Events[2];
+    /*HANDLE Events[2];*/
 
     Instance = (PSOUND_DEVICE_INSTANCE) lpParameter;
     Thread = Instance->Thread;
 
+/*
     Events[0] = Thread->KillEvent;
     Events[1] = Thread->RequestEvent;
+*/
 
     Thread->Running = TRUE;
 
-    MessageBox(0, L"Hi from thread!", L"Hi!", MB_OK | MB_TASKMODAL);
+    /* We're ready to do work */
+    SetEvent(Thread->ReadyEvent);
+
+    /*MessageBox(0, L"Hi from thread!", L"Hi!", MB_OK | MB_TASKMODAL);*/
 
     while ( Thread->Running )
     {
+        /* Wait for some work */
+        WaitForSingleObject(Thread->RequestEvent, INFINITE);
+
+        /* Do the work (request 0 kills the thread) */
+        Thread->Request.Result =
+            Thread->RequestHandler(Instance,
+                                   Thread->Request.RequestId,
+                                   Thread->Request.Data);
+
+        if ( Thread->Request.RequestId == 0 )
+        {
+            Thread->Running = FALSE;
+            Thread->Request.Result = MMSYSERR_NOERROR;
+        }
+
+        /* Notify the caller that the work is done */
+        SetEvent(Thread->ReadyEvent);
+        SetEvent(Thread->DoneEvent);
+
+/*
         DWORD Signalled = 0;
 
         Signalled = WaitForMultipleObjects(2, Events, FALSE, INFINITE);
@@ -52,11 +79,11 @@ SoundThreadProc(
         }
         else if ( Signalled == WAIT_OBJECT_0 + 1 )
         {
-            /* ... */
         }
+*/
     }
 
-    MessageBox(0, L"Bye from thread!", L"Bye!", MB_OK | MB_TASKMODAL);
+    /*MessageBox(0, L"Bye from thread!", L"Bye!", MB_OK | MB_TASKMODAL);*/
 
     ExitThread(0);
     return 0;
@@ -74,21 +101,21 @@ CreateThreadEvents(
         return MMSYSERR_NOMEM;
     }
 
-    /* Create the request completion event */
-    Thread->RequestCompletionEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
+    /* Create the 'ready' event */
+    Thread->ReadyEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
 
-    if ( ! Thread->RequestCompletionEvent )
+    if ( ! Thread->ReadyEvent )
     {
         CloseHandle(Thread->RequestEvent);
         return MMSYSERR_NOMEM;
     }
 
-    /* Create the kill event */
-    Thread->KillEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
+    /* Create the 'done' event */
+    Thread->DoneEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
 
-    if ( ! Thread->KillEvent )
+    if ( ! Thread->DoneEvent )
     {
-        CloseHandle(Thread->RequestCompletionEvent);
+        CloseHandle(Thread->ReadyEvent);
         CloseHandle(Thread->RequestEvent);
         return MMSYSERR_NOMEM;
     }
@@ -101,8 +128,13 @@ DestroyThreadEvents(
     IN  PSOUND_THREAD Thread)
 {
     CloseHandle(Thread->RequestEvent);
-    CloseHandle(Thread->RequestCompletionEvent);
-    CloseHandle(Thread->KillEvent);
+    Thread->RequestEvent = INVALID_HANDLE_VALUE;
+
+    CloseHandle(Thread->ReadyEvent);
+    Thread->ReadyEvent = INVALID_HANDLE_VALUE;
+
+    CloseHandle(Thread->DoneEvent);
+    Thread->DoneEvent = INVALID_HANDLE_VALUE;
 
     return MMSYSERR_NOERROR;
 }
@@ -110,7 +142,8 @@ DestroyThreadEvents(
 
 MMRESULT
 StartSoundThread(
-    IN  PSOUND_DEVICE_INSTANCE Instance)
+    IN  PSOUND_DEVICE_INSTANCE Instance,
+    IN  SOUND_THREAD_REQUEST_HANDLER RequestHandler)
 {
     PSOUND_THREAD SoundThread = NULL;
 
@@ -118,14 +151,15 @@ StartSoundThread(
     if ( ! Instance )
         return MMSYSERR_INVALPARAM;
 
+    if ( ! RequestHandler )
+        return MMSYSERR_INVALPARAM;
+
     /* Only allowed one thread per instance */
     if ( Instance->Thread )
         return MMSYSERR_ERROR;
 
     /* Allocate memory for the thread info */
-    SoundThread = (PSOUND_THREAD) HeapAlloc(GetProcessHeap(),
-                                            HEAP_ZERO_MEMORY,
-                                            sizeof(SOUND_THREAD));
+    SoundThread = AllocateMemoryFor(SOUND_THREAD);
 
     if ( ! SoundThread )
         return MMSYSERR_NOMEM;
@@ -133,19 +167,24 @@ StartSoundThread(
     /* Initialise */
     SoundThread->Running = FALSE;
     SoundThread->Handle = INVALID_HANDLE_VALUE;
-    SoundThread->FirstOperation = NULL;
+    SoundThread->RequestHandler = RequestHandler;
+    SoundThread->ReadyEvent = INVALID_HANDLE_VALUE;
+    SoundThread->RequestEvent = INVALID_HANDLE_VALUE;
+    SoundThread->DoneEvent = INVALID_HANDLE_VALUE;
+
+    /* No need to initialise the requests */
 
     /* Create the events */
     if ( CreateThreadEvents(SoundThread) != MMSYSERR_NOERROR )
     {
-        HeapFree(GetProcessHeap(), 0, SoundThread);
+        FreeMemory(SoundThread);
         return MMSYSERR_NOMEM;
     }
 
     if ( ! SoundThread->RequestEvent )
     {
         CloseHandle(SoundThread->RequestEvent);
-        HeapFree(GetProcessHeap(), 0, SoundThread);
+        FreeMemory(SoundThread);
         return MMSYSERR_NOMEM;
     }
 
@@ -159,7 +198,7 @@ StartSoundThread(
 
     if (SoundThread->Handle == INVALID_HANDLE_VALUE )
     {
-        HeapFree(GetProcessHeap(), 0, SoundThread);
+        FreeMemory(SoundThread);
         return Win32ErrorToMmResult(GetLastError());
     }
 
@@ -182,49 +221,57 @@ StopSoundThread(
     if ( ! Instance->Thread )
         return MMSYSERR_ERROR;
 
-    /* Make the thread quit */
-    Instance->Thread->Running = FALSE;
+    /* Send request zero to ask the thread to end */
+    CallSoundThread(Instance, 0, NULL);
 
-    /* Wait for the thread to respond to our gentle nudge */
-    SetEvent(Instance->Thread->KillEvent);
-    WaitForSingleObject(Instance->Thread, INFINITE);
-    CloseHandle(Instance->Thread);  /* correct way? */
+    /* Wait for the thread to exit */
+    WaitForSingleObject(Instance->Thread->Handle, INFINITE);
+ 
+    /* Finish with the thread */
+    CloseHandle(Instance->Thread->Handle);
+    Instance->Thread->Handle = INVALID_HANDLE_VALUE;
 
-    /* TODO: A bunch of other stuff - WAIT for thread to die */
-    /* Also clean up the events */
-
+    /* Clean up the thread events */
     DestroyThreadEvents(Instance->Thread);
-    HeapFree(GetProcessHeap(), 0, Instance->Thread);
+
+    /* Free memory associated with the thread */
+    FreeMemory(Instance->Thread);
+    Instance->Thread = NULL;
 
     return MMSYSERR_NOERROR;
 }
 
-
-/*
-    Thread must be started before calling this!
-*/
-
 MMRESULT
-AddSoundThreadOperation(
-    PSOUND_DEVICE_INSTANCE Instance,
-    DWORD OperationId,
-    SOUND_THREAD_OPERATION OperationFunc)
+CallSoundThread(
+    IN  PSOUND_DEVICE_INSTANCE Instance,
+    IN  DWORD RequestId,
+    IN  PVOID RequestData)
 {
-    /*SOUND_THREAD_OPERATION OriginalFirstOp;*/
+    MMRESULT Result;
 
     if ( ! Instance )
-        return MMSYSERR_INVALPARAM;
-
-    if ( ! OperationFunc )
         return MMSYSERR_INVALPARAM;
 
     if ( ! Instance->Thread )
         return MMSYSERR_ERROR;
 
-/*
-    OriginalFirstOp = Instance->Thread->FirstOperation;
-    Instance->Thread->FirstOperation->Next = 
-*/
+    /* Wait for the thread to be ready */
+    WaitForSingleObject(Instance->Thread->ReadyEvent, INFINITE);
 
-    return MMSYSERR_NOTSUPPORTED;
+    /* Load the request */
+    Instance->Thread->Request.DeviceInstance = Instance;
+    Instance->Thread->Request.RequestId = RequestId;
+    Instance->Thread->Request.Data = RequestData;
+    Instance->Thread->Request.Result = MMSYSERR_NOTSUPPORTED;
+
+    /* Notify the thread that there's a request to be processed */
+    SetEvent(Instance->Thread->RequestEvent);
+
+    /* Wait for the thread to be ready (request complete) */
+    WaitForSingleObject(Instance->Thread->DoneEvent, INFINITE);
+
+    /* Grab the result */
+    Result = Instance->Thread->Request.Result;
+
+    return Result;
 }

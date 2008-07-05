@@ -131,7 +131,8 @@ DestroySoundDevices(
         /* Save the next device pointer so we can reference it later */
         NextDevice = CurrentDevice->Next;
 
-        HeapFree(GetProcessHeap(), 0, CurrentDevice);
+        FreeMemory(CurrentDevice);
+        /*HeapFree(GetProcessHeap(), 0, CurrentDevice);*/
         CurrentDevice = NextDevice;
     }
 
@@ -157,7 +158,6 @@ CreateSoundDevice(
     LPWSTR DevicePath)
 {
     PSOUND_DEVICE NewDevice;
-    ULONG DevicePathSize = 0;
     UCHAR TypeIndex;
 
     DPRINT("Adding a sound device to list %d\n", DeviceType);
@@ -169,31 +169,37 @@ CreateSoundDevice(
 
     TypeIndex = DeviceType - MIN_SOUND_DEVICE_TYPE;
 
+    NewDevice = AllocateMemoryFor(SOUND_DEVICE);
+/*
     NewDevice = (PSOUND_DEVICE)
         HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(SOUND_DEVICE));
+*/
 
     if ( ! NewDevice )
     {
         return FALSE;
     }
 
-    DevicePathSize = (wcslen(DevicePath) + 1) * sizeof(WCHAR);
-
     NewDevice->Next = NULL;
     NewDevice->FirstInstance = NULL;
     NewDevice->DeviceType = DeviceType;
     NewDevice->Handle = INVALID_HANDLE_VALUE;
 
+    NewDevice->DevicePath = AllocateWideString(wcslen(DevicePath));
+/*
     NewDevice->DevicePath = (LPWSTR)
         HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, DevicePathSize);
+*/
 
     if ( ! NewDevice->DevicePath )
     {
-        HeapFree(GetProcessHeap(), 0, NewDevice);
+        FreeMemory(NewDevice);
+        /*HeapFree(GetProcessHeap(), 0, NewDevice);*/
         return FALSE;
     }
 
-    CopyMemory(NewDevice->DevicePath, DevicePath, DevicePathSize);
+    CopyWideString(NewDevice->DevicePath, DevicePath);
+    /*CopyMemory(NewDevice->DevicePath, DevicePath, DevicePathSize);*/
 
     /* Set up function table */
     InitSoundDeviceFunctionTable(NewDevice);
@@ -280,7 +286,9 @@ DestroySoundDevice(
             }
 
             /* Free the memory associated with the device info */
-            HeapFree(GetProcessHeap(), 0, CurrentDevice);
+            FreeMemory(CurrentDevice->DevicePath);
+            FreeMemory(CurrentDevice);
+            /*HeapFree(GetProcessHeap(), 0, CurrentDevice);*/
             CurrentDevice = NULL;
 
             DPRINT("Removal succeeded\n");

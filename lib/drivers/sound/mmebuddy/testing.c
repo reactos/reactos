@@ -174,6 +174,18 @@ TestDevEnum()
 }
 
 
+MMRESULT
+TestThreadCallback(
+    IN  struct _SOUND_DEVICE_INSTANCE* Instance,
+    IN  DWORD RequestId,
+    IN  PVOID Data)
+{
+    MessageBox(0, L"Thread Request Callback", L"Woot", MB_OK | MB_TASKMODAL);
+
+    return MMSYSERR_NOERROR;
+}
+
+
 WINAPI VOID
 TestThreading()
 {
@@ -196,16 +208,19 @@ TestThreading()
         return;
     }
 
-    Result = StartSoundThread(Instance);
+    Result = StartWaveThread(Instance);
     if ( Result != MMSYSERR_NOERROR )
     {
-        MessageBox(0, L"Fail 2", L"Fail 2", MB_OK | MB_TASKMODAL);
+        MessageBox(0, L"Fail 3", L"Fail 3", MB_OK | MB_TASKMODAL);
         return;
     }
 
+    MessageBox(0, L"Click to send a request", L"Bai", MB_OK | MB_TASKMODAL);
+    CallSoundThread(Instance, 69, NULL); 
+
     MessageBox(0, L"Click to kill thread", L"Bai", MB_OK | MB_TASKMODAL);
 
-    StopSoundThread(Instance);
+    StopWaveThread(Instance);
 /*
     P
 
@@ -223,7 +238,10 @@ int APIENTRY wWinMain(
     LPWSTR lpCmdLine,
     int nCmdShow)
 {
+    TestDevEnum();
+/*
     TestThreading();
+*/
     MessageBox(0, L"Le end", L"Bai", MB_OK | MB_TASKMODAL);
     return 0;
 }

@@ -15,6 +15,40 @@
 #ifndef ROS_AUDIO_MMEBUDDY_H
 #define ROS_AUDIO_MMEBUDDY_H
 
+/*
+    Hacky debug macro
+*/
+
+#define SOUND_DEBUG(x) \
+    MessageBox(0, x, L"Debug", MB_OK | MB_TASKMODAL);
+
+
+/*
+    Some memory allocation helper macros
+*/
+
+#define AllocateMemory(size) \
+    HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, size)
+
+#define FreeMemory(ptr) \
+    HeapFree(GetProcessHeap(), 0, ptr)
+
+#define AllocateMemoryFor(thing) \
+    (thing*) AllocateMemory(sizeof(thing))
+
+#define StringLengthToBytes(chartype, string_length) \
+    ( ( string_length + 1 ) * sizeof(chartype) )
+
+#define AllocateWideString(string_length) \
+    (PWSTR) AllocateMemory(StringLengthToBytes(WCHAR, string_length))
+
+#define ZeroWideString(string) \
+    ZeroMemory(string, StringLengthToBytes(WCHAR, wcslen(string)))
+
+#define CopyWideString(dest, source) \
+    CopyMemory(dest, source, StringLengthToBytes(WCHAR, wcslen(source)))
+
+
 struct _SOUND_DEVICE;
 struct _SOUND_DEVICE_INSTANCE;
 
@@ -34,28 +68,34 @@ typedef union _UNIVERSAL_CAPS
 
 
 /*
+    Used internally to shuttle data to/from the sound processing thread.
+*/
+typedef struct _THREAD_REQUEST
+{
+    struct _SOUND_DEVICE_INSTANCE* DeviceInstance;
+    DWORD RequestId;
+    PVOID Data;
+    MMRESULT Result;
+} THREAD_REQUEST, *PTHREAD_REQUEST;
+
+
+/*
     Thread helper operations
 */
-
-typedef MMRESULT (*SOUND_THREAD_OPERATION)(
+typedef MMRESULT (*SOUND_THREAD_REQUEST_HANDLER)(
     IN  struct _SOUND_DEVICE_INSTANCE* Instance,
+    IN  DWORD RequestId,
     IN  PVOID Data);
-
-typedef struct _THREAD_OPERATIONS
-{
-    struct _THREAD_OPERATIONS* Next;
-    DWORD Id;
-    SOUND_THREAD_OPERATION Operation;
-} THREAD_OPERATIONS, *PTHREAD_OPERATIONS;
 
 typedef struct _SOUND_THREAD
 {
     HANDLE Handle;
     BOOLEAN Running;
-    PTHREAD_OPERATIONS FirstOperation;
-    HANDLE KillEvent;
-    HANDLE RequestEvent;
-    HANDLE RequestCompletionEvent;
+    SOUND_THREAD_REQUEST_HANDLER RequestHandler;
+    HANDLE ReadyEvent;      /* Thread waiting for a request */
+    HANDLE RequestEvent;    /* Caller sending a request */
+    HANDLE DoneEvent;       /* Thread completed a request */
+    THREAD_REQUEST Request;
 } SOUND_THREAD, *PSOUND_THREAD;
 
 
@@ -289,10 +329,27 @@ DefaultGetSoundDeviceCapabilities(
 
 MMRESULT
 StartSoundThread(
-    IN  PSOUND_DEVICE_INSTANCE Instance);
+    IN  PSOUND_DEVICE_INSTANCE Instance,
+    IN  SOUND_THREAD_REQUEST_HANDLER RequestHandler);
 
 MMRESULT
 StopSoundThread(
+    IN  PSOUND_DEVICE_INSTANCE Instance);
+
+MMRESULT
+CallSoundThread(
+    IN  PSOUND_DEVICE_INSTANCE Instance,
+    IN  DWORD RequestId,
+    IN  PVOID RequestData);
+
+
+
+MMRESULT
+StartWaveThread(
+    IN  PSOUND_DEVICE_INSTANCE Instance);
+
+MMRESULT
+StopWaveThread(
     IN  PSOUND_DEVICE_INSTANCE Instance);
 
 

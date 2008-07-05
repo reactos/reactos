@@ -45,14 +45,15 @@ OpenSoundDriverParametersRegKey(
     /* Work out how long the string will be */
     KeyLength = wcslen(REG_SERVICES_KEY_NAME_U) + 1
               + wcslen(ServiceName) + 1
-              + wcslen(REG_PARAMETERS_KEY_NAME_U) + 1;
-
-    KeyLength *= sizeof(WCHAR);
+              + wcslen(REG_PARAMETERS_KEY_NAME_U);
 
     /* Allocate memory for the string */
+    ParametersKeyName = AllocateWideString(KeyLength);
+/*
     ParametersKeyName = (PWCHAR) HeapAlloc(GetProcessHeap(),
                                            HEAP_ZERO_MEMORY,
                                            KeyLength);
+*/
 
     if ( ! ParametersKeyName )
         return MMSYSERR_NOMEM;
@@ -74,11 +75,13 @@ OpenSoundDriverParametersRegKey(
                       KeyHandle) != ERROR_SUCCESS )
     {
         /* Couldn't open the key */
-        HeapFree(GetProcessHeap(), 0, ParametersKeyName);
+        FreeMemory(ParametersKeyName);
+        /*HeapFree(GetProcessHeap(), 0, ParametersKeyName);*/
         return MMSYSERR_ERROR;
     }
 
-    HeapFree(GetProcessHeap(), 0, ParametersKeyName);
+    FreeMemory(ParametersKeyName);
+    /*HeapFree(GetProcessHeap(), 0, ParametersKeyName);*/
 
     return MMSYSERR_NOERROR;
 }
@@ -93,7 +96,7 @@ OpenSoundDeviceRegKey(
     IN  DWORD DeviceIndex,
     OUT PHKEY KeyHandle)
 {
-    DWORD PathSize;
+    DWORD PathLength;
     PWCHAR RegPath;
 
     if ( ! ServiceName )
@@ -110,18 +113,19 @@ OpenSoundDeviceRegKey(
                 Parameters\
                     Device123\
     */
-    PathSize = wcslen(REG_SERVICES_KEY_NAME_U) + 1
-             + wcslen(ServiceName) + 1
-             + wcslen(REG_PARAMETERS_KEY_NAME_U) + 1
-             + wcslen(REG_DEVICE_KEY_NAME_U)
-             + GetDigitCount(DeviceIndex) + 1;
-
-    PathSize *= sizeof(WCHAR);
+    PathLength = wcslen(REG_SERVICES_KEY_NAME_U) + 1
+               + wcslen(ServiceName) + 1
+               + wcslen(REG_PARAMETERS_KEY_NAME_U) + 1
+               + wcslen(REG_DEVICE_KEY_NAME_U)
+               + GetDigitCount(DeviceIndex);
 
     /* Allocate storage for the string */
+    RegPath = AllocateWideString(PathLength);
+/*
     RegPath = (PWCHAR) HeapAlloc(GetProcessHeap(),
                                  HEAP_ZERO_MEMORY,
                                  PathSize);
+*/
 
     if ( ! RegPath )
     {
@@ -147,11 +151,13 @@ OpenSoundDeviceRegKey(
                       KeyHandle) != ERROR_SUCCESS )
     {
         /* Couldn't open the key */
-        HeapFree(GetProcessHeap(), 0, RegPath);
+        FreeMemory(RegPath);
+        /*HeapFree(GetProcessHeap(), 0, RegPath);*/
         return MMSYSERR_ERROR;
     }
 
-    HeapFree(GetProcessHeap(), HEAP_ZERO_MEMORY, RegPath);
+    FreeMemory(RegPath);
+    /*HeapFree(GetProcessHeap(), HEAP_ZERO_MEMORY, RegPath);*/
 
     return MMSYSERR_NOERROR;
 }
@@ -206,13 +212,14 @@ EnumerateNt4ServiceSoundDevices(
             }
 
             /* Account for terminating NULL */
-            ++ MaxNameLength;
+/*            ++ MaxNameLength;
 
-            DevicePath = (PWSTR) HeapAlloc(GetProcessHeap(),
-                                           HEAP_ZERO_MEMORY,
-                                           (MaxNameLength +
-                                            strlen("\\\\.\\")) *
-                                            sizeof(WCHAR));
+            DevicePath = (PWSTR) AllocateMemory((MaxNameLength +
+                                                strlen("\\\\.\\")) *
+                                                sizeof(WCHAR));
+*/
+            DevicePath = AllocateWideString(MaxNameLength +
+                                            strlen("\\\\.\\"));
 
             /* Check that the memory allocation was successful */
             if ( ! DevicePath )
@@ -230,8 +237,8 @@ EnumerateNt4ServiceSoundDevices(
             /* The offset of the string following this prefix */
             ValueName = DevicePath + strlen("\\\\.\\");
 
-            /* Copy this so that it may be overwritten */
-            ValueNameLength = MaxNameLength;
+            /* Copy this so that it may be overwritten - include NULL */
+            ValueNameLength = MaxNameLength + sizeof(WCHAR);
 
             while ( RegEnumValue(DevicesKey,
                                  ValueIndex,
@@ -253,8 +260,9 @@ EnumerateNt4ServiceSoundDevices(
                 }
 
                 /* Reset variables for the next iteration */
-                ValueNameLength = MaxNameLength;
-                ZeroMemory(ValueName, MaxNameLength);
+                ValueNameLength = MaxNameLength + sizeof(WCHAR);
+                ZeroMemory(ValueName, (MaxNameLength+1)*sizeof(WCHAR));
+                /*ZeroWideString(ValueName);*/
                 ValueDataLength = sizeof(DWORD);
                 ValueData = 0;
                 ValueType = REG_NONE;
@@ -262,7 +270,8 @@ EnumerateNt4ServiceSoundDevices(
                 ++ ValueIndex;
             }
 
-            HeapFree(GetProcessHeap(), 0, DevicePath);
+            FreeMemory(DevicePath);
+            /*HeapFree(GetProcessHeap(), 0, DevicePath);*/
 
             RegCloseKey(DevicesKey);
         }
@@ -291,7 +300,6 @@ DetectNt4SoundDevices(
     SOUND_DEVICE_DETECTED_PROC SoundDeviceDetectedProc)
 {
     ULONG DeviceNameLength = 0;
-    ULONG DeviceNameSize = 0;
     PWSTR DeviceName = NULL;
     ULONG Index = 0, Count = 0;
     HANDLE DeviceHandle;
@@ -307,13 +315,12 @@ DetectNt4SoundDevices(
     DeviceNameLength = wcslen(BaseDeviceName);
     /* Consider the length of the number */
     DeviceNameLength += GetDigitCount(Index);
-    /* ...and the terminating NULL */
-    DeviceNameLength += 1;
-    /* Finally, this is a wide string, so... */
-    DeviceNameSize = DeviceNameLength * sizeof(WCHAR);
 
+    DeviceName = AllocateWideString(DeviceNameLength);
+/*
     DeviceName = (PWSTR)
         HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, DeviceNameSize);
+*/
 
     if ( ! DeviceName )
     {
@@ -323,7 +330,8 @@ DetectNt4SoundDevices(
     while ( DoSearch )
     {
         /* Nothing like a nice clean device name */
-        ZeroMemory(DeviceName, DeviceNameSize);
+        ZeroWideString(DeviceName);
+/*        ZeroMemory(DeviceName, DeviceNameSize);*/
         wsprintf(DeviceName, L"%ls%d", BaseDeviceName, Index);
 
         if ( OpenKernelSoundDeviceByName(DeviceName,
@@ -348,7 +356,8 @@ DetectNt4SoundDevices(
         }
     }
 
-    HeapFree(GetProcessHeap(), 0, DeviceName);
+    FreeMemory(DeviceName);
+    /*HeapFree(GetProcessHeap(), 0, DeviceName);*/
 
     return MMSYSERR_NOERROR;
 }

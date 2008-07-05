@@ -36,10 +36,13 @@ CreateSoundDeviceInstance(
     if ( ! Instance )
         return MMSYSERR_INVALPARAM;
 
+    NewInstance = AllocateMemoryFor(SOUND_DEVICE_INSTANCE);
+/*
     NewInstance = (PSOUND_DEVICE_INSTANCE)
         HeapAlloc(GetProcessHeap(),
                   HEAP_ZERO_MEMORY,
                   sizeof(SOUND_DEVICE_INSTANCE));
+*/
 
     if ( ! NewInstance )
         return MMSYSERR_NOMEM;
@@ -114,7 +117,8 @@ DestroySoundDeviceInstance(
     }
 
     /* Kill it! */
-    HeapFree(GetProcessHeap(), 0, Instance);
+    FreeMemory(Instance);
+    /*HeapFree(GetProcessHeap(), 0, Instance);*/
 
     return MMSYSERR_NOTSUPPORTED;
 }
