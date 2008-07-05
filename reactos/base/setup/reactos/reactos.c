@@ -26,9 +26,13 @@
 
 #include <windows.h>
 #include <commctrl.h>
+#include <tchar.h>
 
 #include "resource.h"
 
+/* GLOBALS ******************************************************************/
+
+HFONT hTitleFont;
 
 /* FUNCTIONS ****************************************************************/
 
@@ -53,6 +57,31 @@ CenterWindow(HWND hWnd)
 	       0,
 	       0,
 	       SWP_NOSIZE);
+}
+
+static HFONT
+CreateTitleFont(VOID)
+{
+  NONCLIENTMETRICS ncm;
+  LOGFONT LogFont;
+  HDC hdc;
+  INT FontSize;
+  HFONT hFont;
+
+  ncm.cbSize = sizeof(NONCLIENTMETRICS);
+  SystemParametersInfo(SPI_GETNONCLIENTMETRICS, 0, &ncm, 0);
+
+  LogFont = ncm.lfMessageFont;
+  LogFont.lfWeight = FW_BOLD;
+  _tcscpy(LogFont.lfFaceName, _T("MS Shell Dlg"));
+
+  hdc = GetDC(NULL);
+  FontSize = 12;
+  LogFont.lfHeight = 0 - GetDeviceCaps (hdc, LOGPIXELSY) * FontSize / 72;
+  hFont = CreateFontIndirect(&LogFont);
+  ReleaseDC(NULL, hdc);
+
+  return hFont;
 }
 
 static INT_PTR CALLBACK
@@ -83,7 +112,14 @@ StartDlgProc(HWND hwndDlg,
 		hwndControl = GetDlgItem(GetParent(hwndDlg), IDCANCEL);
 		ShowWindow (hwndControl, SW_HIDE);
 		EnableWindow (hwndControl, FALSE);
-	  }
+	        
+		/* Set title font */
+		SendDlgItemMessage(hwndDlg,
+                             IDC_STARTTITLE,
+                             WM_SETFONT,
+                             (WPARAM)hTitleFont,
+                             (LPARAM)TRUE);
+}
 	  break;
 	  case WM_NOTIFY:
 	  {
@@ -139,8 +175,13 @@ WinMain(HINSTANCE hInst,
   psh.pszbmWatermark = MAKEINTRESOURCE(IDB_WATERMARK);
   psh.pszbmHeader = MAKEINTRESOURCE(IDB_HEADER);
 
+  /* Create title font */
+  hTitleFont = CreateTitleFont();
+
   /* Display the wizard */
   PropertySheet(&psh);
+
+  DeleteObject(hTitleFont);
 
   return 0;
 
