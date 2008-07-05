@@ -1550,6 +1550,8 @@ co_IntDoSendMessage(HWND hWnd,
          MmCopyToCaller(UnsafeInfo, &Info, sizeof(NTUSERSENDMESSAGEINFO));
          return 0;
       }
+      if (!Window->Wnd)
+         return 0;
    }
 
    /* FIXME: Check for an exiting window. */
