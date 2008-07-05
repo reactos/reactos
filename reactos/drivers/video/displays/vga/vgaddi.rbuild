@@ -3,8 +3,7 @@
 <module name="vgaddi" type="kernelmodedll" entrypoint="DrvEnableDriver@12" installbase="system32" installname="vgaddi.dll">
 	<importlibrary definition="vgaddi.def" />
 	<include base="vgaddi">.</include>
-	<library>ntoskrnl</library>
-	<library>hal</library>
+	<library>libcntpr</library>
 	<library>win32k</library>
 	<directory name="main">
 		<file>enable.c</file>

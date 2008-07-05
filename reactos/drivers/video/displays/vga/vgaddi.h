@@ -10,6 +10,7 @@
 #include <winddi.h>
 #include <winioctl.h>
 #include <ntddvdeo.h>
+#include <ioaccess.h>
 
 #include "vgavideo/vgavideo.h"
 #include "objects/brush.h"
@@ -30,10 +31,6 @@
 #define DDKCDECLAPI __cdecl
 
 ULONG DbgPrint(PCCH Format,...);
-VOID DDKAPI WRITE_PORT_UCHAR(IN PUCHAR Port, IN UCHAR Value);
-VOID DDKAPI WRITE_PORT_USHORT(IN PUSHORT Port, IN USHORT Value);
-VOID DDKAPI WRITE_REGISTER_UCHAR(IN PUCHAR Register, IN UCHAR Value);
-UCHAR DDKAPI READ_REGISTER_UCHAR(IN PUCHAR Register);
 
 static __inline BOOLEAN
 RemoveEntryList(
