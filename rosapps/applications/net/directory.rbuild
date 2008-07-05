@@ -12,6 +12,10 @@
 		<xi:include href="niclist/niclist.rbuild" />
 	</directory>
 
+	<directory name="roshttpd">
+		<xi:include href="roshttpd/roshttpd.rbuild" />
+	</directory>
+
 	<directory name="tditest">
 		<xi:include href="tditest/tditest.rbuild" />
 	</directory>

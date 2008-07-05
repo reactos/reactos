@@ -25,24 +25,8 @@
 		<xi:include href="fraginator/fraginator.rbuild" />
 	</directory>
 -->
-	<directory name="gettype">
-		<xi:include href="gettype/gettype.rbuild" />
-	</directory>
-
-	<directory name="imagesoft">
-		<xi:include href="imagesoft/imagesoft.rbuild" />
-	</directory>
-
-	<directory name="logevent">
-		<xi:include href="logevent/logevent.rbuild" />
-	</directory>
-
 	<directory name="magnify">
 		<xi:include href="magnify/magnify.rbuild" />
-	</directory>
-
-	<directory name="mc">
-		<xi:include href="mc/mc.rbuild" />
 	</directory>
 
 	<directory name="net">
@@ -58,14 +42,6 @@
 		<xi:include href="packmgr/directory.rbuild" />
 	</directory>
 	-->
-
-	<directory name="roshttpd">
-		<xi:include href="roshttpd/roshttpd.rbuild" />
-	</directory>
-
-	<directory name="screenshot">
-		<xi:include href="screenshot/screenshot.rbuild" />
-	</directory>
 
 	<directory name="sysutils">
 		<xi:include href="sysutils/sysutils.rbuild" />

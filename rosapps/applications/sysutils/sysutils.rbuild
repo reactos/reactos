@@ -14,8 +14,16 @@
 	</directory>
 	-->
 
+	<directory name="gettype">
+		<xi:include href="gettype/gettype.rbuild" />
+	</directory>
+
 	<directory name="kill">
 		<xi:include href="kill/kill.rbuild" />
+	</directory>
+
+	<directory name="logevent">
+		<xi:include href="logevent/logevent.rbuild" />
 	</directory>
 
 	<directory name="lsdd">
@@ -32,6 +40,10 @@
 
 	<directory name="regexpl">
 		<xi:include href="regexpl/regexpl.rbuild" />
+	</directory>
+
+	<directory name="screenshot">
+		<xi:include href="screenshot/screenshot.rbuild" />
 	</directory>
 
 	<directory name="systeminfo">
