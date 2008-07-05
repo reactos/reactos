@@ -1,4 +1,4 @@
-$Id: readme.txt,v 1.1 1999/05/15 07:23:34 ea Exp $
+$Id$
 
 ReactOS Coders Console Parade
 -----------------------------

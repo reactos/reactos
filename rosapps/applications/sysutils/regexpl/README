@@ -1,5 +1,5 @@
 -*- Mode: Text -*-
-$Id: README,v 1.1 2003/02/09 02:13:27 narnaoud Exp $
+$Id$
 
 Registry Explorer is console mode tool for reading/writing ReactOS
 registry. Currently, access is provided only by means of interactive
