@@ -13,4 +13,7 @@
     <directory name="uartmidi">
         <xi:include href="uartmidi/uartmidi.rbuild" />
     </directory>
+    <directory name="mmebuddy">
+        <xi:include href="mmebuddy/mmebuddy.rbuild" />
+    </directory>
 </group>

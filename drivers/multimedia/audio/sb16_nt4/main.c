@@ -123,7 +123,7 @@ PrepareSoundBlaster(
     NTSTATUS result;
 
     DbgPrint("Creating sound device\n");
-    result = CreateSoundDeviceWithDefaultName(DriverObject, 0, 69, 0, &g_device);
+    result = CreateSoundDeviceWithDefaultName(DriverObject, WAVE_OUT_DEVICE_TYPE, 0, 0, &g_device);
     DbgPrint("Request returned status 0x%08x\n",
              result);
 

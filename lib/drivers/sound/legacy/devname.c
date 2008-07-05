@@ -167,7 +167,7 @@ GetDefaultSoundDeviceNameBodies(
     OUT PCWSTR* DeviceNameBody,
     OUT PCWSTR* DosDeviceNameBody)
 {
-    if ( DeviceType > MAX_DEVICE_TYPE )
+    if ( ! VALID_SOUND_DEVICE_TYPE(DeviceType) )
     {
         DPRINT("Invalid device type");
         return STATUS_INVALID_PARAMETER;

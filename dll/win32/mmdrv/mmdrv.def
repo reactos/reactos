@@ -11,4 +11,13 @@ EXPORTS
 ;wodMessage@20
 ;midMessage@20
 ;modMessage@20
+;mxdMessage@20
 ;auxMessage@20
+;
+; These entries are here for testing purposes only!!!!
+; See testing.c
+;
+Test@0
+TestGetCaps@0
+TestDevEnum@0
+TestThreading@0

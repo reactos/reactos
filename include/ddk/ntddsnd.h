@@ -29,16 +29,24 @@
 
 /*
     Device types
-    (not part of the original DDK header)
+
+    Not part of the original DDK header, but based on the values stored in
+    registry by sndblst
 */
 
-#define WAVE_IN_DEVICE_TYPE     0
-#define WAVE_OUT_DEVICE_TYPE    1
-#define MIDI_IN_DEVICE_TYPE     2
-#define MIDI_OUT_DEVICE_TYPE    3
-#define MIXER_DEVICE_TYPE       4
+#define WAVE_IN_DEVICE_TYPE     1
+#define WAVE_OUT_DEVICE_TYPE    2
+#define MIDI_IN_DEVICE_TYPE     3
+#define MIDI_OUT_DEVICE_TYPE    4
 #define AUX_DEVICE_TYPE         5
-#define MAX_DEVICE_TYPE         AUX_DEVICE_TYPE
+#define MIXER_DEVICE_TYPE       6
+
+#define MIN_SOUND_DEVICE_TYPE   WAVE_IN_DEVICE_TYPE
+#define MAX_SOUND_DEVICE_TYPE   MIXER_DEVICE_TYPE
+#define SOUND_DEVICE_TYPES      6
+
+#define VALID_SOUND_DEVICE_TYPE(x) \
+    ( ( x >= MIN_SOUND_DEVICE_TYPE ) && ( x <= MAX_SOUND_DEVICE_TYPE ) )
 
 
 /*
@@ -53,35 +61,57 @@
 
 #define SOUND_MAX_DEVICE_NAME           80
 
-#define DD_WAVE_IN_DEVICE_NAME          "\\Device\\WaveIn"
-#define DD_WAVE_IN_DEVICE_NAME_U       L"\\Device\\WaveIn"
-#define DD_WAVE_IN_DOS_DEVICE_NAME      "\\DosDevices\\WaveIn"
-#define DD_WAVE_IN_DOS_DEVICE_NAME_U   L"\\DosDevices\\WaveIn"
+#define DD_WAVE_IN_DEVICE_NAME              "\\Device\\WaveIn"
+#define DD_WAVE_IN_DEVICE_NAME_U           L"\\Device\\WaveIn"
+#define DD_WAVE_IN_DOS_DEVICE_NAME          "\\DosDevices\\WaveIn"
+#define DD_WAVE_IN_DOS_DEVICE_NAME_U       L"\\DosDevices\\WaveIn"
+#define DD_WAVE_IN_WIN32_DEVICE_NAME        "\\\\.\\WaveIn"
+#define DD_WAVE_IN_WIN32_DEVICE_NAME_U     L"\\\\.\\WaveIn"
 
-#define DD_WAVE_OUT_DEVICE_NAME         "\\Device\\WaveOut"
-#define DD_WAVE_OUT_DEVICE_NAME_U      L"\\Device\\WaveOut"
-#define DD_WAVE_OUT_DOS_DEVICE_NAME     "\\DosDevices\\WaveOut"
-#define DD_WAVE_OUT_DOS_DEVICE_NAME_U  L"\\DosDevices\\WaveOut"
+#define DD_WAVE_OUT_DEVICE_NAME             "\\Device\\WaveOut"
+#define DD_WAVE_OUT_DEVICE_NAME_U          L"\\Device\\WaveOut"
+#define DD_WAVE_OUT_DOS_DEVICE_NAME         "\\DosDevices\\WaveOut"
+#define DD_WAVE_OUT_DOS_DEVICE_NAME_U      L"\\DosDevices\\WaveOut"
+#define DD_WAVE_OUT_WIN32_DEVICE_NAME       "\\\\.\\WaveOut"
+#define DD_WAVE_OUT_WIN32_DEVICE_NAME_U    L"\\\\.\\WaveOut"
 
-#define DD_MIDI_IN_DEVICE_NAME          "\\Device\\MidiIn"
-#define DD_MIDI_IN_DEVICE_NAME_U       L"\\Device\\MidiIn"
-#define DD_MIDI_IN_DOS_DEVICE_NAME      "\\DosDevices\\MidiIn"
-#define DD_MIDI_IN_DOS_DEVICE_NAME_U   L"\\DosDevices\\MidiIn"
+#define DD_MIDI_IN_DEVICE_NAME              "\\Device\\MidiIn"
+#define DD_MIDI_IN_DEVICE_NAME_U           L"\\Device\\MidiIn"
+#define DD_MIDI_IN_DOS_DEVICE_NAME          "\\DosDevices\\MidiIn"
+#define DD_MIDI_IN_DOS_DEVICE_NAME_U       L"\\DosDevices\\MidiIn"
+#define DD_MIDI_IN_WIN32_DEVICE_NAME        "\\\\.\\MidiIn"
+#define DD_MIDI_IN_WIN32_DEVICE_NAME_U     L"\\\\.\\MidiIn"
 
-#define DD_MIDI_OUT_DEVICE_NAME         "\\Device\\MidiOut"
-#define DD_MIDI_OUT_DEVICE_NAME_U      L"\\Device\\MidiOut"
-#define DD_MIDI_OUT_DOS_DEVICE_NAME     "\\DosDevices\\MidiOut"
-#define DD_MIDI_OUT_DOS_DEVICE_NAME_U  L"\\DosDevices\\MidiOut"
+#define DD_MIDI_OUT_DEVICE_NAME             "\\Device\\MidiOut"
+#define DD_MIDI_OUT_DEVICE_NAME_U          L"\\Device\\MidiOut"
+#define DD_MIDI_OUT_DOS_DEVICE_NAME         "\\DosDevices\\MidiOut"
+#define DD_MIDI_OUT_DOS_DEVICE_NAME_U      L"\\DosDevices\\MidiOut"
+#define DD_MIDI_OUT_WIN32_DEVICE_NAME       "\\\\.\\MidiOut"
+#define DD_MIDI_OUT_WIN32_DEVICE_NAME_U    L"\\\\.\\MidiOut"
 
-#define DD_MIX_DEVICE_NAME              "\\Device\\MMMix"
-#define DD_MIX_DEVICE_NAME_U           L"\\Device\\MMMix"
-#define DD_MIX_DOS_DEVICE_NAME          "\\DosDevices\\MMMix"
-#define DD_MIX_DOS_DEVICE_NAME_U       L"\\DosDevices\\MMMix"
+#define DD_MIX_DEVICE_NAME                  "\\Device\\MMMix"
+#define DD_MIX_DEVICE_NAME_U               L"\\Device\\MMMix"
+#define DD_MIX_DOS_DEVICE_NAME              "\\DosDevices\\MMMix"
+#define DD_MIX_DOS_DEVICE_NAME_U           L"\\DosDevices\\MMMix"
+#define DD_MIX_WIN32_DEVICE_NAME            "\\\\.\\MMMix"
+#define DD_MIX_WIN32_DEVICE_NAME_U         L"\\\\.\\MMMix"
 
-#define DD_AUX_DEVICE_NAME              "\\Device\\MMAux"
-#define DD_AUX_DEVICE_NAME_U           L"\\Device\\MMAux"
-#define DD_AUX_DOS_DEVICE_NAME          "\\DosDevices\\MMAux"
-#define DD_AUX_DOS_DEVICE_NAME_U       L"\\DosDevices\\MMAux"
+#define DD_AUX_DEVICE_NAME                  "\\Device\\MMAux"
+#define DD_AUX_DEVICE_NAME_U               L"\\Device\\MMAux"
+#define DD_AUX_DOS_DEVICE_NAME              "\\DosDevices\\MMAux"
+#define DD_AUX_DOS_DEVICE_NAME_U           L"\\DosDevices\\MMAux"
+#define DD_AUX_WIN32_DEVICE_NAME            "\\\\.\\MMAux"
+#define DD_AUX_WIN32_DEVICE_NAME_U         L"\\\\.\\MMAux"
+
+/*
+    Registry keys
+*/
+
+#define REG_SERVICES_KEY_NAME_U            L"System\\CurrentControlSet\\Services"
+#define REG_PARAMETERS_KEY_NAME_U          L"Parameters"
+#define REG_DEVICE_KEY_NAME_U              L"Device"
+#define REG_DEVICES_KEY_NAME_U             L"Devices"
+
 
 /*
     Base control codes
