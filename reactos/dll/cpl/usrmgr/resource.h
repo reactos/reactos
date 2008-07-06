@@ -87,6 +87,9 @@
 #define IDC_GROUP_NEW_DESCRIPTION    392
 
 
+#define IDD_USER_ADD_MEMBERSHIP      400
+#define IDC_USER_ADD_MEMBERSHIP_LIST 401
+
 /* Strings */
 
 #define IDS_CPLNAME                 2000
