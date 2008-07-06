@@ -49,38 +49,34 @@ SoundThreadProc(
 
     while ( Thread->Running )
     {
-        /* Wait for some work */
-        WaitForSingleObject(Thread->RequestEvent, INFINITE);
+        DWORD WaitResult;
 
-        /* Do the work (request 0 kills the thread) */
-        Thread->Request.Result =
-            Thread->RequestHandler(Instance,
-                                   Thread->Request.RequestId,
-                                   Thread->Request.Data);
+        /* Wait for some work, or I/O completion */
+        WaitResult = WaitForSingleObjectEx(Thread->RequestEvent, INFINITE, TRUE);
 
-        if ( Thread->Request.RequestId == 0 )
+        if ( WaitResult == WAIT_OBJECT_0 )
         {
-            Thread->Running = FALSE;
-            Thread->Request.Result = MMSYSERR_NOERROR;
+            /* Do the work (request 0 kills the thread) */
+            Thread->Request.Result =
+                Thread->RequestHandler(Instance,
+                                       Thread->Request.RequestId,
+                                       Thread->Request.Data);
+
+            if ( Thread->Request.RequestId == 0 )
+            {
+                Thread->Running = FALSE;
+                Thread->Request.Result = MMSYSERR_NOERROR;
+            }
+
+            /* Notify the caller that the work is done */
+            SetEvent(Thread->ReadyEvent);
+            SetEvent(Thread->DoneEvent);
         }
-
-        /* Notify the caller that the work is done */
-        SetEvent(Thread->ReadyEvent);
-        SetEvent(Thread->DoneEvent);
-
-/*
-        DWORD Signalled = 0;
-
-        Signalled = WaitForMultipleObjects(2, Events, FALSE, INFINITE);
-
-        if ( Signalled == WAIT_OBJECT_0 )
+        else if ( WaitResult == WAIT_IO_COMPLETION )
         {
-            Thread->Running = FALSE;
+            /* This gets called after I/O completion */
+            /* Do we need to do anything special here? */
         }
-        else if ( Signalled == WAIT_OBJECT_0 + 1 )
-        {
-        }
-*/
     }
 
     /*MessageBox(0, L"Bye from thread!", L"Bye!", MB_OK | MB_TASKMODAL);*/
@@ -226,7 +222,7 @@ StopSoundThread(
 
     /* Wait for the thread to exit */
     WaitForSingleObject(Instance->Thread->Handle, INFINITE);
- 
+
     /* Finish with the thread */
     CloseHandle(Instance->Thread->Handle);
     Instance->Thread->Handle = INVALID_HANDLE_VALUE;

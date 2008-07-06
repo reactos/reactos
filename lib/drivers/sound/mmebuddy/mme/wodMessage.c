@@ -30,6 +30,7 @@ wodMessage(
 {
     MMRESULT Result = MMSYSERR_NOERROR;
     PSOUND_DEVICE Device = NULL;
+    PSOUND_DEVICE_INSTANCE Instance = NULL;
     DPRINT("wodMessageStub called\n");
 
     switch ( message )
@@ -55,10 +56,43 @@ wodMessage(
         }
 
         case WODM_OPEN :
-            /*
-                OpenSoundDevice();
-            */
-            return MMSYSERR_BADDEVICEID;
+        {
+            WAVEOPENDESC* OpenParameters = (WAVEOPENDESC*) parameter1;
+
+            Result = GetSoundDevice(WAVE_OUT_DEVICE_TYPE, device_id, &Device);
+            if ( Result != MMSYSERR_NOERROR )
+                return Result;
+
+/*
+            if ( parameter2 & WAVE_FORMAT_QUERY )
+            {
+                Result = QueryWaveDeviceFormat(Device,
+                                               OpenParameters->lpFormat,
+                                               sizeof(WAVEFORMATEX));
+
+                return Result;
+            }
+*/
+
+            Result = CreateSoundDeviceInstance(Device, &Instance);
+            if ( Result != MMSYSERR_NOERROR )
+                return Result;
+
+            Result = SetWaveDeviceFormat(Instance,
+                                         OpenParameters->lpFormat,
+                                         sizeof(WAVEFORMATEX));
+
+            if ( Result != MMSYSERR_NOERROR )
+            {
+                DestroySoundDeviceInstance(Instance);
+                return Result;
+            }
+
+
+            /* TODO: Send callback... */
+
+            return MMSYSERR_NOERROR;
+        }
 
         case WODM_CLOSE :
             /* CloseSoundDevice() */

@@ -10,6 +10,7 @@
 
     History:
         4 July 2008 - Created
+        5 July 2008 - Implemented format support
 */
 
 
@@ -431,7 +432,7 @@ DefaultQueryWaveDeviceFormatSupport(
         return MMSYSERR_INVALPARAM;
 
     /* Make sure we have a wave device */
-    if ( IS_WAVE_DEVICE_TYPE(Device->DeviceType) )
+    if ( ! IS_WAVE_DEVICE_TYPE(Device->DeviceType) )
     {
         return MMSYSERR_INVALPARAM;
     }
@@ -448,11 +449,11 @@ DefaultQueryWaveDeviceFormatSupport(
 
 MMRESULT
 SetWaveDeviceFormat(
-    IN  PSOUND_DEVICE Device,
+    IN  PSOUND_DEVICE_INSTANCE Instance,
     IN  PWAVEFORMATEX WaveFormat,
     IN  DWORD WaveFormatSize)
 {
-    if ( ! Device )
+    if ( ! Instance )
         return MMSYSERR_INVALPARAM;
 
     if ( ! WaveFormat )
@@ -460,31 +461,31 @@ SetWaveDeviceFormat(
 
     /* TODO: Should we check the size? */
 
-    return Device->Functions.SetWaveFormat(Device, WaveFormat, WaveFormatSize);
+    return Instance->Device->Functions.SetWaveFormat(Instance, WaveFormat, WaveFormatSize);
 }
 
 MMRESULT
 DefaultSetWaveDeviceFormat(
-    IN  PSOUND_DEVICE Device,
+    IN  PSOUND_DEVICE_INSTANCE Instance,
     IN  PWAVEFORMATEX WaveFormat,
     IN  DWORD WaveFormatSize)
 {
     MMRESULT Result;
     DWORD BytesReturned = 0;
 
-    if ( ! Device )
+    if ( ! Instance )
         return MMSYSERR_INVALPARAM;
 
     if ( ! WaveFormat )
         return MMSYSERR_INVALPARAM;
 
     /* Make sure we have a wave device */
-    if ( IS_WAVE_DEVICE_TYPE(Device->DeviceType) )
+    if ( ! IS_WAVE_DEVICE_TYPE(Instance->Device->DeviceType) )
     {
         return MMSYSERR_INVALPARAM;
     }
 
-    Result = WriteSoundDevice(Device,
+    Result = WriteSoundDevice(Instance->Device,
                               IOCTL_WAVE_SET_FORMAT,
                               (LPVOID) WaveFormat,
                               WaveFormatSize,
@@ -494,3 +495,34 @@ DefaultSetWaveDeviceFormat(
     return Result;
 }
 
+MMRESULT
+QueueWaveDeviceBuffer(
+    IN  PSOUND_DEVICE_INSTANCE Instance,
+    IN  PWAVEHDR BufferHeader)
+{
+    MMRESULT Result;
+
+    if ( ! Instance )
+        return MMSYSERR_INVALPARAM;
+
+    if ( ! BufferHeader )
+        return MMSYSERR_INVALPARAM;
+
+    if ( ! BufferHeader->lpData )
+        return MMSYSERR_INVALPARAM;
+
+    if ( ! BufferHeader->dwBufferLength )
+        return MMSYSERR_INVALPARAM;
+
+    if ( ! (BufferHeader->dwFlags & WHDR_PREPARED ) )
+        return WAVERR_UNPREPARED;
+
+    /* TODO: WHDR_INQUEUE */
+
+    BufferHeader->dwFlags &= ~WHDR_DONE;
+    BufferHeader->lpNext = NULL;
+
+    Result = CallSoundThread(Instance, WAVEREQUEST_QUEUE_BUFFER, BufferHeader);
+
+    return Result;
+}

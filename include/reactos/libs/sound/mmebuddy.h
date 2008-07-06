@@ -22,6 +22,24 @@
 #define SOUND_DEBUG(x) \
     MessageBox(0, x, L"Debug", MB_OK | MB_TASKMODAL);
 
+#define SOUND_DEBUG_HEX(x) \
+    { \
+        WCHAR dbgmsg[1024], dbgtitle[1024]; \
+        wsprintf(dbgtitle, L"%hS[%d]", __FILE__, __LINE__); \
+        wsprintf(dbgmsg, L"%hS == %x", #x, x); \
+        MessageBox(0, dbgmsg, dbgtitle, MB_OK | MB_TASKMODAL); \
+    }
+
+#define SOUND_ASSERT(x) \
+    { \
+        if ( ! ( x ) ) \
+        { \
+            WCHAR dbgmsg[1024], dbgtitle[1024]; \
+            wsprintf(dbgtitle, L"%hS[%d]", __FILE__, __LINE__); \
+            wsprintf(dbgmsg, L"ASSERT FAILED:\n%hS", #x); \
+        } \
+    }
+
 
 /*
     Some memory allocation helper macros
@@ -112,11 +130,16 @@ typedef MMRESULT (*MMCLOSE_FUNC)(
     IN  HANDLE Handle);
 
 typedef MMRESULT (*MMGETCAPS_FUNC)(
-    IN  struct _SOUND_DEVICE* SoundDevice,
+    IN  struct _SOUND_DEVICE* Device,
     OUT PUNIVERSAL_CAPS Capabilities);
 
-typedef MMRESULT (*MMWAVEFORMAT_FUNC)(
-    IN  struct _SOUND_DEVICE* SoundDevice,
+typedef MMRESULT (*MMWAVEQUERYFORMAT_FUNC)(
+    IN  struct _SOUND_DEVICE* Device,
+    IN  PWAVEFORMATEX WaveFormat,
+    IN  DWORD WaveFormatSize);
+
+typedef MMRESULT (*MMWAVESETFORMAT_FUNC)(
+    IN  struct _SOUND_DEVICE_INSTANCE* Instance,
     IN  PWAVEFORMATEX WaveFormat,
     IN  DWORD WaveFormatSize);
 
@@ -126,8 +149,8 @@ typedef struct _MMFUNCTION_TABLE
     MMCLOSE_FUNC            Close;
     MMGETCAPS_FUNC          GetCapabilities;
 
-    MMWAVEFORMAT_FUNC       QueryWaveFormat;
-    MMWAVEFORMAT_FUNC       SetWaveFormat;
+    MMWAVEQUERYFORMAT_FUNC  QueryWaveFormat;
+    MMWAVESETFORMAT_FUNC    SetWaveFormat;
 } MMFUNCTION_TABLE, *PMMFUNCTION_TABLE;
 
 
@@ -155,7 +178,29 @@ typedef struct _SOUND_DEVICE_INSTANCE
     struct _SOUND_DEVICE_INSTANCE* Next;
     PSOUND_DEVICE Device;
     PSOUND_THREAD Thread;
+
+    /* Everything below this is used by the worker thread only */
+    OVERLAPPED Overlapped;
+
+    union
+    {
+        struct
+        {
+            DWORD BufferCount;
+            PWAVEHDR CurrentBuffer;
+            PWAVEHDR FirstBuffer;
+            PWAVEHDR LastBuffer;
+        } Wave;
+    };
 } SOUND_DEVICE_INSTANCE, *PSOUND_DEVICE_INSTANCE;
+
+
+/*
+    Thread requests
+*/
+
+#define THREADREQUEST_EXIT              0
+#define WAVEREQUEST_QUEUE_BUFFER        1
 
 
 /*
@@ -285,6 +330,13 @@ WriteSoundDevice(
     LPDWORD BytesReturned,
     LPOVERLAPPED Overlapped);
 
+MMRESULT
+WriteSoundDeviceBuffer(
+    PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
+    LPVOID Buffer,
+    DWORD BufferSize,
+    LPOVERLAPPED_COMPLETION_ROUTINE CompletionRoutine);
+
 
 /*
     utility.c
@@ -344,15 +396,20 @@ DefaultQueryWaveDeviceFormatSupport(
 
 MMRESULT
 SetWaveDeviceFormat(
-    IN  PSOUND_DEVICE Device,
+    IN  PSOUND_DEVICE_INSTANCE Instance,
     IN  PWAVEFORMATEX WaveFormat,
     IN  DWORD WaveFormatSize);
 
 MMRESULT
 DefaultSetWaveDeviceFormat(
-    IN  PSOUND_DEVICE Device,
+    IN  PSOUND_DEVICE_INSTANCE Instance,
     IN  PWAVEFORMATEX WaveFormat,
     IN  DWORD WaveFormatSize);
+
+MMRESULT
+QueueWaveDeviceBuffer(
+    IN  PSOUND_DEVICE_INSTANCE Instance,
+    IN  PWAVEHDR BufferHeader);
 
 
 /*

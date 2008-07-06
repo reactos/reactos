@@ -17,12 +17,19 @@
 #include <ntddsnd.h>
 #include <debug.h>
 
+#include <ntddk.h>
 #include <mmebuddy.h>
 
 
 /*
     **** TESTING CODE ONLY ****
 */
+
+PSOUND_DEVICE Device;
+PSOUND_DEVICE_INSTANCE Instance;
+WAVEHDR waveheader;
+WORD JunkBuffer[65536];
+
 
 #define IDS_WAVEOUT_PNAME   0x68
 
@@ -159,6 +166,92 @@ TestFormatQuery()
 }
 
 
+VOID CALLBACK
+OverlappedCallback(
+    IN  DWORD dwErrorCode,
+    IN  DWORD dwNumberOfBytesTransferred,
+    IN  LPOVERLAPPED lpOverlapped)
+{
+    MessageBox(0, L"Job done!", L"File IO Callback", MB_OK | MB_TASKMODAL);
+}
+
+
+VOID
+TestPlaybackHackingly()
+{
+    WCHAR msg[1024];
+    MMRESULT Result;
+    WAVEFORMATEX fmt;
+    ULONG i;
+
+    for ( i = 0; i < 65536; ++ i )
+        JunkBuffer[i] = rand();
+
+    AddSoundDevice(WAVE_OUT_DEVICE_TYPE, L"\\\\.\\SBWaveOut0");
+    Result = GetSoundDevice(WAVE_OUT_DEVICE_TYPE, 0, &Device);
+
+    if ( Result != MMSYSERR_NOERROR )
+    {
+        MessageBox(0, L"Fail 1", L"Fail", MB_OK | MB_TASKMODAL);
+        return;
+    }
+
+    Result = OpenKernelSoundDevice(Device, GENERIC_READ | GENERIC_WRITE);
+    if ( Result != MMSYSERR_NOERROR )
+    {
+        MessageBox(0, L"Fail open", L"Fail", MB_OK | MB_TASKMODAL);
+        return;
+    }
+    wsprintf(msg, L"Opened handle %x", Device->Handle);
+    MessageBox(0, msg, L"Result", MB_OK | MB_TASKMODAL);
+
+    Result = CreateSoundDeviceInstance(Device, &Instance);
+    if ( Result != MMSYSERR_NOERROR )
+    {
+        MessageBox(0, L"Fail 2", L"Fail 2", MB_OK | MB_TASKMODAL);
+        return;
+    }
+
+    /* Request a valid format */
+    fmt.wFormatTag = WAVE_FORMAT_PCM;
+    fmt.nChannels = 1;
+    fmt.nSamplesPerSec = 22050;
+    fmt.wBitsPerSample = 16;
+    fmt.nBlockAlign = fmt.nChannels * (fmt.wBitsPerSample / 8);
+    fmt.nAvgBytesPerSec = fmt.nSamplesPerSec * fmt.nBlockAlign;
+    fmt.cbSize = 0;
+
+    Result = SetWaveDeviceFormat(Instance, &fmt, sizeof(WAVEFORMATEX));
+
+    wsprintf(msg, L"Format support set result: %d\nClick to play!", Result);
+    MessageBox(0, msg, L"Result", MB_OK | MB_TASKMODAL);
+
+    //SOUND_DEBUG_HEX(Instance->Device->Handle);
+
+    Result = StartWaveThread(Instance);
+    if ( Result != MMSYSERR_NOERROR )
+    {
+        MessageBox(0, L"Failed to start thread", L"Fail 3", MB_OK | MB_TASKMODAL);
+        return;
+    }
+
+    //SOUND_DEBUG_HEX(Instance->Device->Handle);
+
+    waveheader.lpData = (PVOID) JunkBuffer;
+    waveheader.dwBufferLength = 65536;
+    waveheader.dwFlags = WHDR_PREPARED;
+
+    Result = QueueWaveDeviceBuffer(Instance, &waveheader);
+//    CallSoundThread(Instance, WAVEREQUEST_QUEUE_BUFFER, &waveheader);
+/*
+    Result = WriteSoundDeviceBuffer(Instance,
+                                    JunkBuffer, 65535, OverlappedCallback);
+*/
+    wsprintf(msg, L"Play result: %d", Result);
+    MessageBox(0, msg, L"Result", MB_OK | MB_TASKMODAL);
+}
+
+
 APIENTRY VOID
 TestDevEnum()
 {
@@ -225,7 +318,8 @@ int APIENTRY wWinMain(
     LPWSTR lpCmdLine,
     int nCmdShow)
 {
-    TestFormatQuery();
+//    TestFormatQuery();
+    TestPlaybackHackingly();
 //    TestDevEnum();
 /*
     TestThreading();
